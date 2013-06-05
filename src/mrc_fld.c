@@ -4,6 +4,7 @@
 #include <mrc_vec.h>
 #include <mrc_io.h>
 #include <mrc_params.h>
+#include <mrc_profile.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -13,6 +14,11 @@
 
 // ======================================================================
 // mrc_fld
+
+typedef void (*mrc_fld_copy_to_func_t)(struct mrc_fld *,
+				       struct mrc_fld *);
+typedef void (*mrc_fld_copy_from_func_t)(struct mrc_fld *,
+					 struct mrc_fld *);
 
 // ----------------------------------------------------------------------
 // mrc_fld_destroy
@@ -52,6 +58,7 @@ _mrc_fld_setup(struct mrc_fld *fld)
     fld->_len *= fld->_ghost_dims[d];
   }
 
+  mrc_vec_set_type(fld->_vec, mrc_fld_type(fld));
   mrc_vec_set_param_int(fld->_vec, "len", fld->_len);
   mrc_fld_setup_member_objs(fld); // sets up our .vec member
 
@@ -296,8 +303,159 @@ mrc_fld_write_comps(struct mrc_fld *fld, struct mrc_io *io, int mm[])
   }
 }
 
+// ----------------------------------------------------------------------
+// mrc_fld_get_as
+//
+// convert fld_base to mrc_fld of type "type"
+
+struct mrc_fld *
+mrc_fld_get_as(struct mrc_fld *fld_base, const char *type)
+{
+  const char *type_base = mrc_fld_type(fld_base);
+  // if we're already the subtype, nothing to be done
+  if (strcmp(type_base, type) == 0)
+    return fld_base;
+
+  static int pr;
+  if (!pr) {
+    pr = prof_register("mrc_fld_get_as", 1., 0, 0);
+  }
+  prof_start(pr);
+
+  struct mrc_fld *fld = mrc_fld_create(mrc_fld_comm(fld_base));
+  mrc_fld_set_type(fld, type);
+  mrc_fld_set_param_int_array(fld, "dims", fld_base->_dims.nr_vals, fld_base->_dims.vals);
+  mrc_fld_set_param_int_array(fld, "offs", fld_base->_offs.nr_vals, fld_base->_offs.vals);
+  mrc_fld_set_param_int_array(fld, "sw", fld_base->_sw.nr_vals, fld_base->_sw.vals);
+  fld->_domain = fld_base->_domain;
+  // FIXME, component names, too
+  mrc_fld_setup(fld);
+
+  char s[strlen(type) + 12]; sprintf(s, "copy_to_%s", type);
+  mrc_fld_copy_to_func_t copy_to = (mrc_fld_copy_to_func_t)
+    mrc_fld_get_method(fld_base, s);
+  if (copy_to) {
+    copy_to(fld_base, fld);
+  } else {
+    sprintf(s, "copy_from_%s", type_base);
+    mrc_fld_copy_from_func_t copy_from = (mrc_fld_copy_from_func_t)
+      mrc_fld_get_method(fld, s);
+    if (copy_from) {
+      copy_from(fld, fld_base);
+    } else {
+      fprintf(stderr, "ERROR: no 'copy_to_%s' in mrc_fld '%s' and "
+	      "no 'copy_from_%s' in '%s'!\n",
+	      type, mrc_fld_type(fld_base), type_base, mrc_fld_type(fld));
+      assert(0);
+    }
+  }
+
+  prof_stop(pr);
+  return fld;
+}
+
+// ----------------------------------------------------------------------
+// mrc_fld_put_as
+//
+// after being done with the fields gotten from get_as(), need to put them
+// back using this routine, which will copy the contents from fld back
+// to fld_base
+
+void
+mrc_fld_put_as(struct mrc_fld *fld, struct mrc_fld *fld_base)
+{
+  const char *type_base = mrc_fld_type(fld_base);
+  const char *type = mrc_fld_type(fld);
+  // If we're already the subtype, nothing to be done
+  if (strcmp(type_base, type) == 0)
+    return;
+
+  static int pr;
+  if (!pr) {
+    pr = prof_register("mrc_fld_put_as", 1., 0, 0);
+  }
+  prof_start(pr);
+
+  char s[strlen(type) + 12]; sprintf(s, "copy_from_%s", type);
+  mrc_fld_copy_from_func_t copy_from = (mrc_fld_copy_from_func_t)
+    mrc_fld_get_method(fld_base, s);
+  if (copy_from) {
+    copy_from(fld_base, fld);
+  } else {
+    sprintf(s, "copy_to_%s", type_base);
+    mrc_fld_copy_to_func_t copy_to = (mrc_fld_copy_to_func_t)
+      mrc_fld_get_method(fld, s);
+    if (copy_to) {
+      copy_to(fld, fld_base);
+    } else {
+      fprintf(stderr, "ERROR: no 'copy_from_%s' in mrc_fld '%s' and "
+	      "no 'copy_to_%s' in '%s'!\n",
+	      type, mrc_fld_type(fld_base), type_base, mrc_fld_type(fld));
+      assert(0);
+    }
+  }
+
+  mrc_fld_destroy(fld);
+
+  prof_stop(pr);
+}
+
 // ======================================================================
 // mrc_fld subclasses
+
+// ----------------------------------------------------------------------
+// mrc_fld_float_copy_from_double
+
+static void
+mrc_fld_float_copy_from_double(struct mrc_fld *fld_float,
+			       struct mrc_fld *fld_double)
+{
+  assert(mrc_fld_same_shape(fld_float, fld_double));
+  assert(fld_float->_data_type == MRC_NT_FLOAT);
+  assert(fld_double->_data_type == MRC_NT_DOUBLE);
+  float *f_arr = fld_float->_arr;
+  double *d_arr = fld_double->_arr;
+  for (int i = 0; i < fld_float->_len; i++) {
+    f_arr[i] = d_arr[i];
+  }
+}
+
+// ----------------------------------------------------------------------
+// mrc_fld_float_copy_to_double
+
+static void
+mrc_fld_float_copy_to_double(struct mrc_fld *fld_float,
+			     struct mrc_fld *fld_double)
+{
+  assert(mrc_fld_same_shape(fld_float, fld_double));
+  assert(fld_float->_data_type == MRC_NT_FLOAT);
+  assert(fld_double->_data_type == MRC_NT_DOUBLE);
+  float *f_arr = fld_float->_arr;
+  double *d_arr = fld_double->_arr;
+  for (int i = 0; i < fld_float->_len; i++) {
+    d_arr[i] = f_arr[i];
+  }
+}
+
+// ----------------------------------------------------------------------
+// mrc_fld_*_methods
+
+static struct mrc_obj_method mrc_fld_double_methods[] = {
+  {}
+};
+
+static struct mrc_obj_method mrc_fld_float_methods[] = {
+  MRC_OBJ_METHOD("copy_to_double",   mrc_fld_float_copy_to_double),
+  MRC_OBJ_METHOD("copy_from_double", mrc_fld_float_copy_from_double),
+  {}
+};
+
+static struct mrc_obj_method mrc_fld_int_methods[] = {
+  {}
+};
+
+// ----------------------------------------------------------------------
+// create float, double, int subclasses
 
 #define MAKE_MRC_FLD_TYPE(type, TYPE)			\
 							\
@@ -310,6 +468,7 @@ mrc_fld_write_comps(struct mrc_fld *fld, struct mrc_io *io, int mm[])
   							\
   static struct mrc_fld_ops mrc_fld_##type##_ops = {	\
     .name                  = #type,			\
+    .methods               = mrc_fld_##type##_methods,	\
     .create                = mrc_fld_##type##_create,	\
   };							\
 

@@ -90,7 +90,6 @@ test_56(int sw)
   mrc_fld_destroy(fld);
 }
 
-
 // ----------------------------------------------------------------------
 // test_78
 //
@@ -121,6 +120,55 @@ test_78(int sw)
   mrc_fld_destroy(fld);
 }
 
+// ----------------------------------------------------------------------
+// test_as
+//
+// test get_as/put_as
+
+static void
+test_as(int sw, const char *type, const char *as_type)
+{
+  struct mrc_fld *fld = mrc_fld_create(MPI_COMM_WORLD);
+  mrc_fld_set_type(fld, type);
+  mrc_fld_set_param_int_array(fld, "offs", 4, (int []) { 1, 2, 3, 0 });
+  mrc_fld_set_param_int_array(fld, "dims", 4, (int []) { 2, 3, 4, 2 });
+  mrc_fld_set_param_int_array(fld, "sw", 4, (int []) { sw, sw, sw, 0 });
+  mrc_fld_set_from_options(fld);
+  mrc_fld_setup(fld);
+  mrc_fld_view(fld);
+
+  if (strcmp(type, "float") == 0) {
+    mrc_fld_foreach(fld, ix,iy,iz, sw, sw) {
+      MRC_S4(fld, ix,iy,iz,1) = ix * 10000 + iy * 100 + iz;
+    } mrc_fld_foreach_end;
+  } else if (strcmp(type, "double") == 0) {
+    mrc_fld_foreach(fld, ix,iy,iz, sw, sw) {
+      MRC_D4(fld, ix,iy,iz,1) = ix * 10000 + iy * 100 + iz;
+    } mrc_fld_foreach_end;
+  } else {
+    assert(0);
+  }
+
+  struct mrc_fld *f = mrc_fld_get_as(fld, as_type);
+  mrc_fld_view(f);
+
+  if (strcmp(as_type, "float") == 0) {
+    mrc_fld_foreach(f, ix,iy,iz, sw, sw) {
+      assert(MRC_S4(f, ix,iy,iz,1) == ix * 10000 + iy * 100 + iz);
+    } mrc_fld_foreach_end;
+  } else if (strcmp(as_type, "double") == 0) {
+    mrc_fld_foreach(f, ix,iy,iz, sw, sw) {
+      assert(MRC_D4(f, ix,iy,iz,1) == ix * 10000 + iy * 100 + iz);
+    } mrc_fld_foreach_end;
+  } else {
+    assert(0);
+  }
+
+  mrc_fld_put_as(f, fld);
+
+  mrc_fld_destroy(fld);
+}
+
 
 // ----------------------------------------------------------------------
 // main
@@ -143,6 +191,9 @@ main(int argc, char **argv)
   case 6: test_56(1); break;
   case 7: test_78(0); break;
   case 8: test_78(1); break;
+  case 9: test_as(1, "float", "float"); break;
+  case 10: test_as(1, "float", "double"); break;
+  case 11: test_as(1, "double", "float"); break;
   default: assert(0);
   }
 

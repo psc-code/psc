@@ -52,6 +52,7 @@ TESTS = \
 	test_ddc_0.sh \
 	test_mrc_domain_simple_0.sh \
 	test_mrc_domain_multi_0.sh \
+	test_mrc_fld.sh \
 	test_mrc_m1_0.sh \
 	test_mrc_m1_1.sh \
 	test_mrc_m3_0.sh \
