@@ -96,6 +96,15 @@ AS_IF([test "x$have_papi" != "xyes"],
      [AC_MSG_ERROR([PAPI requested but not found.])])
   ])
 
+
+MRC_CHECK_PETSC(3.4.0)
+CFLAGS="$PETSC_CFLAGS $CFLAGS"
+LIBS="$PETSC_LIBS $LIBS"
+AS_IF([test "$have_petsc" != "no"],
+      [AC_DEFINE([HAVE_PETSC], [], [we have petsc library + headers])])
+AM_CONDITIONAL([HAVE_PETSC], [test "$have_petsc" != "no"])
+
+
 # Checks for options
 
 AC_ARG_VAR([MPIRUN], [mpirun command to run tests])
