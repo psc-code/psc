@@ -26,8 +26,10 @@ typedef void (*mrc_fld_copy_from_func_t)(struct mrc_fld *,
 static void
 _mrc_fld_destroy(struct mrc_fld *fld)
 {
-  mrc_vec_put_array(fld->_vec, fld->_arr);
-  fld->_arr = NULL;
+  if (fld->_arr) {
+    mrc_vec_put_array(fld->_vec, fld->_arr);
+    fld->_arr = NULL;
+  }
 
   for (int m = 0; m < fld->_nr_allocated_comp_name; m++) {
     free(fld->_comp_name[m]);
