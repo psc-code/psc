@@ -88,3 +88,4 @@ src/libmrc/tests/tutorial_mrc_obj
 src/libmrc/tests/run.*
 *.aux
 *.synctex.gz
+test-driver
