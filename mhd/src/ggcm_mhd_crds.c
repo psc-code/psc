@@ -89,6 +89,7 @@ _ggcm_mhd_crds_destroy(struct ggcm_mhd_crds *crds)
 static void
 _ggcm_mhd_crds_read(struct ggcm_mhd_crds *crds, struct mrc_io *io)
 {
+  ggcm_mhd_crds_read_member_objs(crds, io);
   crds->f1[0] = mrc_io_read_ref(io, crds, "f1[0]", mrc_f1);
   crds->f1[1] = mrc_io_read_ref(io, crds, "f1[1]", mrc_f1);
   crds->f1[2] = mrc_io_read_ref(io, crds, "f1[2]", mrc_f1);

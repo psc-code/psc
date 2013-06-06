@@ -712,7 +712,16 @@ mrc_obj_setup_member_objs_sub(struct mrc_obj *obj)
 void
 mrc_obj_read_member_objs(struct mrc_obj *obj, struct mrc_io *io)
 {
-  read_member_objs(io, obj, obj, obj->cls->param_descr);
+  char *p = (char *) obj + obj->cls->param_offset;
+  read_member_objs(io, obj, p, obj->cls->param_descr);
+}
+
+void
+mrc_obj_read_member_objs_sub(struct mrc_obj *obj, struct mrc_io *io)
+{
+  assert(obj->ops);
+  char *p = (char *) obj->subctx + obj->ops->param_offset;
+  read_member_objs(io, obj, p, obj->ops->param_descr);
 }
 
 void
