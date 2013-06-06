@@ -237,13 +237,22 @@ do_T_1st_run(int p, fields_t *pf, struct psc_particles *prts)
     particle_real_t vxi[3];
     particle_calc_vxi(part, vxi);
     particle_real_t *pxi = &part->pxi;
-
-    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 0, particle_mni(part) * pxi[0] * vxi[0]);
-    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 1, particle_mni(part) * pxi[1] * vxi[1]);
-    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 2, particle_mni(part) * pxi[2] * vxi[2]);
-    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 3, particle_mni(part) * pxi[0] * vxi[1]);
-    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 4, particle_mni(part) * pxi[0] * vxi[2]);
-    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 5, particle_mni(part) * pxi[1] * vxi[2]);
+    particle_real_t vx[3] = {
+      vxi[0] * cos(ppsc->prm.theta_xz) - vxi[2] * sin(ppsc->prm.theta_xz),
+      vxi[1],
+      vxi[0] * sin(ppsc->prm.theta_xz) + vxi[2] * cos(ppsc->prm.theta_xz),
+    };
+    particle_real_t px[3] = {
+      pxi[0] * cos(ppsc->prm.theta_xz) - pxi[2] * sin(ppsc->prm.theta_xz),
+      pxi[1],
+      pxi[0] * sin(ppsc->prm.theta_xz) + pxi[2] * cos(ppsc->prm.theta_xz),
+    };
+    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 0, particle_mni(part) * px[0] * vx[0]);
+    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 1, particle_mni(part) * px[1] * vx[1]);
+    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 2, particle_mni(part) * px[2] * vx[2]);
+    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 3, particle_mni(part) * px[0] * vx[1]);
+    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 4, particle_mni(part) * px[0] * vx[2]);
+    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 5, particle_mni(part) * px[1] * vx[2]);
   }
 }
 

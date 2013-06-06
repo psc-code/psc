@@ -151,6 +151,8 @@ static struct param psc_descr[] = {
   { "detailed_profiling"
                     , VAR(prm.detailed_profiling) , PARAM_BOOL(false),
     .help = "output profiling information by MPI process rather than aggregated." },
+  { "theta_xz"      , VAR(prm.theta_xz)           , PARAM_DOUBLE(0.),
+    .help = "rotate initial particle shifted Maxwellian in x-z plane." },
   {},
 };
 
@@ -820,11 +822,11 @@ psc_setup_particle(struct psc *psc, particle_t *prt, struct psc_particle_npt *np
   } while (ran1 >= 1.f || ran2 >= 1.f || ran3 >= 1.f ||
 	   ran4 >= 1.f || ran5 >= 1.f || ran6 >= 1.f);
 	      
-  prt->pxi = npt->p[0] +
+  double pxi = npt->p[0] +
     sqrtf(-2.f*npt->T[0]/npt->m*sqr(beta)*logf(1.0-ran1)) * cosf(2.f*M_PI*ran2);
-  prt->pyi = npt->p[1] +
+  double pyi = npt->p[1] +
     sqrtf(-2.f*npt->T[1]/npt->m*sqr(beta)*logf(1.0-ran3)) * cosf(2.f*M_PI*ran4);
-  prt->pzi = npt->p[2] +
+  double pzi = npt->p[2] +
     sqrtf(-2.f*npt->T[2]/npt->m*sqr(beta)*logf(1.0-ran5)) * cosf(2.f*M_PI*ran6);
   assert(npt->kind >= 0 && npt->kind < psc->nr_kinds);
   prt->kind = npt->kind;
@@ -835,6 +837,9 @@ psc_setup_particle(struct psc *psc, particle_t *prt, struct psc_particle_npt *np
   prt->xi = xx[0] - psc->patch[p].xb[0];
   prt->yi = xx[1] - psc->patch[p].xb[1];
   prt->zi = xx[2] - psc->patch[p].xb[2];
+  prt->pxi = pxi * cos(psc->prm.theta_xz) + pzi * sin(psc->prm.theta_xz);
+  prt->pyi = pyi;
+  prt->pzi = - pxi * sin(psc->prm.theta_xz) + pzi * cos(psc->prm.theta_xz);
 }	      
 
 // ----------------------------------------------------------------------

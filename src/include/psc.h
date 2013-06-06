@@ -110,6 +110,7 @@ struct psc_param {
   unsigned int particles_base_flags; ///< additional flags for the particles base type
   int stats_every; ///< output timing and other info every so many steps
   bool detailed_profiling; ///< output profiling info for each process separately
+  double theta_xz; ///< rotate anisotropic maxwellian in x-z plane
 };
 
 /// coefficients needed for computations
