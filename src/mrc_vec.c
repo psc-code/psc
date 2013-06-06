@@ -143,6 +143,10 @@ mrc_vec_init()
   mrc_class_register_subclass(&mrc_class_mrc_vec, &mrc_vec_float_ops);
   mrc_class_register_subclass(&mrc_class_mrc_vec, &mrc_vec_double_ops);
   mrc_class_register_subclass(&mrc_class_mrc_vec, &mrc_vec_int_ops);
+#ifdef HAVE_PETSC
+  mrc_class_register_subclass(&mrc_class_mrc_vec, &mrc_vec_petsc_ops);
+#endif
+  
 }
 
 // ----------------------------------------------------------------------

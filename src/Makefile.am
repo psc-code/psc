@@ -50,6 +50,11 @@ libmrc_la_SOURCES += \
 	mrc_io_xdmf_lib.c
 endif HAVE_HDF5
 
+if HAVE_PETSC
+libmrc_la_SOURCES += \
+	mrc_vec_petsc.c
+endif HAVE_PETSC
+
 libmrctest_la_SOURCES = \
 	mrctest.c
 

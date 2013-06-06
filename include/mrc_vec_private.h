@@ -22,4 +22,6 @@ struct mrc_vec_ops {
   void (*put_array)(struct mrc_vec *vec, void *arr);
 };
 
+
+extern struct mrc_vec_ops mrc_vec_petsc_ops;
 #endif
