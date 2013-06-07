@@ -468,6 +468,15 @@ mrc_obj_set_param_type(struct mrc_obj *obj, const char *name,
       return;
   }
 
+  struct mrc_dict_entry *e;
+  __list_for_each_entry(e, &obj->dict_list, entry, struct mrc_dict_entry) {
+    if (strcmp(e->prm.name, name) == 0) {
+      assert(e->prm.type == type);
+      e->val = *uval;
+      return;
+    }
+  }
+
   fprintf(stderr, "ERROR: option '%s' not found (type %d)!\n", name, type);
   abort();
 }
@@ -487,6 +496,15 @@ mrc_obj_get_param_type(struct mrc_obj *obj, const char *name,
     char *p = (char *) obj->subctx + ops->param_offset;
     if (mrc_params_get_type(p, ops->param_descr, name, type, uval) == 0)
       return;
+  }
+
+  struct mrc_dict_entry *e;
+  __list_for_each_entry(e, &obj->dict_list, entry, struct mrc_dict_entry) {
+    if (strcmp(e->prm.name, name) == 0) {
+      assert(e->prm.type == type);
+      *uval = e->val;
+      return;
+    }
   }
 
   fprintf(stderr, "ERROR: option '%s' not found (type %d)!\n", name, type);
