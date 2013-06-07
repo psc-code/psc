@@ -579,6 +579,14 @@ mrc_obj_set_param_obj(struct mrc_obj *obj, const char *name, void* val)
 }
 
 void
+mrc_obj_get_param_bool(struct mrc_obj *obj, const char *name, bool *pval)
+{
+  union param_u uval;
+  mrc_obj_get_param_type(obj, name, PT_BOOL, &uval);
+  *pval = uval.u_bool;
+}
+
+void
 mrc_obj_get_param_int(struct mrc_obj *obj, const char *name, int *pval)
 {
   union param_u uval;
