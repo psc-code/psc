@@ -10,6 +10,12 @@
 #include <stdarg.h>
 #include <assert.h>
 
+
+#ifdef HAVE_PETSC
+#include <petsc.h>
+#endif
+
+
 struct option {
   char *name;
   char *value;
@@ -58,6 +64,15 @@ void
 libmrc_params_init(int argc, char **argv)
 {
   MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
+
+#ifdef HAVE_PETSC
+  // Need to fire up petsc. If MPI_Init hasn't been called,
+  // this will do it.
+  // Do it after MPI_Comm_rank, so we won't hide a failure to
+  // call MPI_Init in non-petsc codes
+  PetscInitialize(&argc, &argv, (char *)0, NULL);
+#endif
+
   
   for (int i = 1; i < argc; i++) {
     if (strncmp(argv[i], "--", 2) != 0) {
