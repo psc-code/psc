@@ -8,6 +8,10 @@
 #include <assert.h>
 #include <string.h>
 
+#ifdef HAVE_PETSC
+#include <petsc.h>
+#endif
+
 // ----------------------------------------------------------------------
 // test_12
 
@@ -62,6 +66,8 @@ test_34(int sw)
 
   mrc_fld_destroy(fld);
 }
+
+
 
 // ----------------------------------------------------------------------
 // test_56
@@ -176,7 +182,11 @@ test_as(int sw, const char *type, const char *as_type)
 int
 main(int argc, char **argv)
 {
+#ifdef HAVE_PETSC
+  PetscInitialize(&argc, &argv, (char *)0, NULL);
+#else
   MPI_Init(&argc, &argv);
+#endif
   libmrc_params_init(argc, argv);
 
   int testcase = 1;

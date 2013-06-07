@@ -12,6 +12,12 @@
 #include <math.h>
 #include <assert.h>
 
+// Don't like dirtying main libmrc code in this way
+#ifdef HAVE_PETSC
+#include <petscconf.h>
+#endif
+
+
 // ======================================================================
 // mrc_fld
 
@@ -74,8 +80,23 @@ _mrc_fld_setup(struct mrc_fld *fld)
     fld->_len *= fld->_ghost_dims[d];
   }
 
+
   const char *vec_type = mrc_fld_ops(fld)->vec_type;
   if (vec_type) {
+    // The dispatch is actually slightly prettier with the ops->vec_type
+    // method, but still ugly
+#if defined(PETSC_USE_REAL_SINGLE) && !defined(PETSC_USE_COMPLEX)
+    if (strcmp(vec_type, "float")==0) {
+      vec_type = "petsc";
+      mrc_fld_ops(fld)->vec_type = "petsc";
+    }
+#endif
+#if defined(PETSC_USE_REAL_DOUBLE) && !defined(PETSC_USE_COMPLEX)
+    if (strcmp(vec_type, "double")==0) {
+      vec_type = "petsc";
+      mrc_fld_ops(fld)->vec_type = "petsc";
+    }
+#endif
     mrc_vec_set_type(fld->_vec, vec_type);
     mrc_vec_set_param_int(fld->_vec, "len", fld->_len);
     mrc_fld_setup_member_objs(fld); // sets up our .vec member
