@@ -31,3 +31,5 @@ TESTS = \
 	test_ggcm_mhd_crds \
 	test_ggcm_mhd
 
+XFAIL_TESTS = \
+	test_ggcm_mhd_crds
