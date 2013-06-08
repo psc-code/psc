@@ -650,6 +650,14 @@ mrc_obj_get_param_double3(struct mrc_obj *obj, const char *name, double *pval)
   }
 }
 
+struct mrc_obj *
+mrc_obj_get_param_obj(struct mrc_obj *obj, const char *name)
+{
+  union param_u uval;
+  mrc_obj_get_param_type(obj, name, PT_OBJ, &uval);
+  return uval.u_obj;
+}
+
 static void
 mrc_obj_view_this(struct mrc_obj *obj)
 {

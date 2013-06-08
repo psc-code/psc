@@ -115,6 +115,7 @@ void mrc_obj_get_param_string(struct mrc_obj *obj, const char *name, const char 
 void mrc_obj_get_param_int3(struct mrc_obj *obj, const char *name, int *pval);
 void mrc_obj_get_param_float3(struct mrc_obj *obj, const char *name, float *pval);
 void mrc_obj_get_param_double3(struct mrc_obj *obj, const char *name, double *pval);
+struct mrc_obj *mrc_obj_get_param_obj(struct mrc_obj *obj, const char *name);
 
 void mrc_obj_get_var(struct mrc_obj *obj, const char *name, union param_u **pv);
 struct mrc_obj *mrc_obj_get_var_obj(struct mrc_obj *obj, const char *name);
@@ -318,6 +319,12 @@ mrc_void_func_t mrc_obj_get_method(struct mrc_obj *obj, const char *name);
   pfx ## _get_param_double3(obj_type *obj, const char *name, double *pval) \
   {									\
     mrc_obj_get_param_double3((struct mrc_obj *)obj, name, pval);	\
+  }									\
+									\
+  static inline void *							\
+  pfx ## _get_param_obj(obj_type *obj, const char *name)		\
+  {									\
+    return mrc_obj_get_param_obj((struct mrc_obj *)obj, name);		\
   }									\
 									\
   static inline void 							\
