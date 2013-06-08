@@ -33,7 +33,6 @@ extern struct ggcm_mhd_flds_ops ggcm_mhd_flds_ops_c;
 struct ggcm_mhd_flds_cgen {
   float *flds;
   float *_flds1, *_flds2, *_fldsp, *_dummy_dma;
-  float *_crdx[NR_CRDS], *_crdy[NR_CRDS], *_crdz[NR_CRDS];
 };
 
 #define ggcm_mhd_flds_cgen(flds) mrc_to_subobj(flds, struct ggcm_mhd_flds_cgen)
