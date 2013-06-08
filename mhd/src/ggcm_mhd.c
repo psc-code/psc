@@ -38,6 +38,7 @@ _ggcm_mhd_create(struct ggcm_mhd *mhd)
   ggcm_mhd_bnd_set_param_obj(mhd->bnd, "mhd", mhd);
   ggcm_mhd_ic_set_param_obj(mhd->ic, "mhd", mhd);
   ggcm_mhd_flds_set_param_obj(mhd->flds_base, "mhd", mhd);
+  ggcm_mhd_flds_set_param_obj(mhd->flds_base, "domain", mhd->domain);
 }
 
 // ----------------------------------------------------------------------

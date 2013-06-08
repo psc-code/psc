@@ -8,7 +8,8 @@
 
 struct ggcm_mhd_flds {
   struct mrc_obj obj;
-  struct ggcm_mhd *mhd;
+  struct ggcm_mhd *_mhd;
+  struct mrc_domain *domain;
   struct mrc_fld *fld;
 };
 

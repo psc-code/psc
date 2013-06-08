@@ -89,14 +89,14 @@ static void
 ggcm_mhd_flds_c_setup(struct ggcm_mhd_flds *flds)
 {
   int nr_patches;
-  struct mrc_patch *patches = mrc_domain_get_patches(flds->mhd->domain, &nr_patches);
+  struct mrc_patch *patches = mrc_domain_get_patches(flds->domain, &nr_patches);
   assert(nr_patches == 1);
   int *ldims = patches[0].ldims;
   mrc_fld_set_param_int_array(flds->fld, "dims", 4,
 			      (int[4]) { ldims[0], ldims[1], ldims[2], _NR_FLDS });
   mrc_fld_set_param_int_array(flds->fld, "sw", 4,
 			      (int[4]) { BND, BND, BND, 0 });
-  flds->fld->_domain = flds->mhd->domain;
+  flds->fld->_domain = flds->domain;
   mrc_fld_setup(flds->fld);
   for (int m = 0; m < _NR_FLDS; m++) {
     mrc_fld_set_comp_name(flds->fld, m, fldname[m]);
