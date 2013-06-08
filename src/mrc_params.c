@@ -792,6 +792,9 @@ mrc_params_get_type(void *p, struct param *params, const char *name,
     case PT_PTR:
       pval->u_ptr = pv->u_ptr;
       break;
+    case PT_OBJ:
+      pval->u_obj = pv->u_obj;
+      break;
     default:
       assert(0);
     }
