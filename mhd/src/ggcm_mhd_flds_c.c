@@ -21,6 +21,7 @@ ggcm_mhd_flds_c_create(struct ggcm_mhd_flds *flds)
 }
 
 // ----------------------------------------------------------------------
+<<<<<<< HEAD
 // ggcm_mhd_flds_c_read
 
 static void
@@ -43,6 +44,8 @@ ggcm_mhd_flds_c_copy(struct ggcm_mhd_flds *to, struct ggcm_mhd_flds *from_base)
 }
 
 // ----------------------------------------------------------------------
+=======
+>>>>>>> ggcm_mhd_flds: mv ::read -> base class
 // ggcm_mhd_flds_c_copy_from_fortran
 
 static void
@@ -75,6 +78,5 @@ struct ggcm_mhd_flds_ops ggcm_mhd_flds_ops_c = {
   .name             = "c",
   .methods          = ggcm_mhd_flds_c_methods,
   .create           = ggcm_mhd_flds_c_create,
-  .read             = ggcm_mhd_flds_c_read,
   .copy             = ggcm_mhd_flds_c_copy,
 };

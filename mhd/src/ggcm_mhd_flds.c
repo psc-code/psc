@@ -111,6 +111,15 @@ _ggcm_mhd_flds_destroy(struct ggcm_mhd_flds *flds)
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_flds_read
+
+static void
+_ggcm_mhd_flds_read(struct ggcm_mhd_flds *flds, struct mrc_io *io)
+{
+  flds->fld = mrc_io_read_ref(io, flds, "fld", mrc_fld);
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_flds_write
 
 static void
@@ -302,6 +311,7 @@ struct mrc_class_ggcm_mhd_flds mrc_class_ggcm_mhd_flds = {
   .create           = _ggcm_mhd_flds_create,
   .setup            = _ggcm_mhd_flds_setup,
   .destroy          = _ggcm_mhd_flds_destroy,
+  .read             = _ggcm_mhd_flds_read,
   .write            = _ggcm_mhd_flds_write,
 };
 
