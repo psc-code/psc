@@ -1281,13 +1281,30 @@ ds_xdmf_write_f3(struct mrc_io *io, const char *path, struct mrc_fld *fld, float
   for (int m = 0; m < nr_comps; m++) {
     assert(mrc_fld_comp_name(fld, m));
     save_fld_info(xs, strdup(mrc_fld_comp_name(fld, m)), strdup(path), false);
-    hsize_t hdims[3] = { fld->_ghost_dims[2], fld->_ghost_dims[1], fld->_ghost_dims[0] };
     hid_t group = H5Gcreate(group0, mrc_fld_comp_name(fld, m), 
 			    H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     ierr = H5LTset_attribute_int(group, ".", "m", &m, 1); CE;
-    ierr = H5LTmake_dataset_float(group, "3d", 3, hdims,
-				  &MRC_F3(fld, m, fld->_ghost_offs[0], fld->_ghost_offs[1],
-					  fld->_ghost_offs[2])); CE;
+
+    hsize_t fdims[3] = { mrc_fld_dims(fld)[2],
+			 mrc_fld_dims(fld)[1],
+			 mrc_fld_dims(fld)[0] };
+    hsize_t mdims[3] = { mrc_fld_ghost_dims(fld)[2],
+			 mrc_fld_ghost_dims(fld)[1],
+			 mrc_fld_ghost_dims(fld)[0] };
+    hsize_t offs[3] = { -mrc_fld_ghost_offs(fld)[2],
+			-mrc_fld_ghost_offs(fld)[1],
+			-mrc_fld_ghost_offs(fld)[0] };
+
+    hid_t filespace = H5Screate_simple(3, fdims, NULL);
+    hid_t memspace = H5Screate_simple(3, mdims, NULL);
+    H5Sselect_hyperslab(memspace, H5S_SELECT_SET, offs, NULL, fdims, NULL);
+
+    hid_t dset = H5Dcreate(group, "3d", H5T_NATIVE_FLOAT, filespace, H5P_DEFAULT,
+			   H5P_DEFAULT, H5P_DEFAULT);
+    ierr  = H5Dwrite(dset, H5T_NATIVE_FLOAT, memspace, filespace, H5P_DEFAULT,
+		     fld->_arr); CE;
+    ierr = H5Dclose(dset); CE;
+
     ierr = H5Gclose(group); CE;
   }
 
