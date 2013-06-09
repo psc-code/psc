@@ -13,6 +13,7 @@ libmhd_la_SOURCES = \
 	ggcm_mhd_bnd_none.c \
 	ggcm_mhd_bnd_conducting.c \
 	ggcm_mhd_bnd_conducting_x.c \
+	ggcm_mhd_bnd_open_x.c \
 	\
 	ggcm_mhd_commu.c \
 	ggcm_mhd_commu_c.c \
@@ -29,7 +30,7 @@ libmhd_la_SOURCES = \
 	ggcm_mhd_diag_item.c \
 	ggcm_mhd_diag_item_state.c \
 	ggcm_mhd_diag_item_divb.c \
-	ggcm_mhd_diag_item_j.c \	
+	ggcm_mhd_diag_item_j.c \
 	calc_currcc.c \
 	calc_divb.c \
 	\

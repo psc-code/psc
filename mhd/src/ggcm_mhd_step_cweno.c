@@ -16,13 +16,13 @@
 // ggcm_mhd_get_fields
 
 static struct mrc_fld *
-ggcm_mhd_get_fields(struct ggcm_mhd *mhd, const char *name, int nr_comps)
-{ 
-  struct mrc_fld *fld = mrc_domain_fld_create(mhd->domain, SW_2, NULL);
-  mrc_fld_set_name(fld, name);
-  mrc_fld_set_nr_comps(fld, nr_comps);
-  mrc_fld_setup(fld);
-  return fld;
+ggcm_mhd_get_fields(struct ggcm_mhd *mhd, const char *name, int nr_comp)
+{   
+  struct mrc_fld *f3 = mrc_domain_fld_create(mhd->domain, SW_2, NULL);
+  mrc_fld_set_name(f3, name);
+  mrc_fld_set_nr_comps(f3, nr_comp);
+  mrc_fld_setup(f3);
+  return f3;
 }
 
 
@@ -36,6 +36,7 @@ ggcm_mhd_get_fields(struct ggcm_mhd *mhd, const char *name, int nr_comps)
 #define sign(x) (( x > 0 ) - ( x < 0 ))
 // KNP[0] or KT[1]? 
 #define KT 0
+#define incws 1
 
 enum {
   _EX = _B1Z + 1,
@@ -452,6 +453,8 @@ calc_cweno_fluxes(struct mrc_fld **flux, struct mrc_fld *flux_E[3], struct ggcm_
   float cAm;
   float cfp; 
   float cfm; 
+  float cwp; // whistler speed estimate
+  float cwm; 
   float ap; 
   float am; 
   float bp; 
@@ -462,6 +465,10 @@ calc_cweno_fluxes(struct mrc_fld **flux, struct mrc_fld *flux_E[3], struct ggcm_
   float ppm; 
   float rhoip;
   float rhoim; 
+
+  float *bdx1 = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD1);
+  float *bdy1 = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD1);
+  float *bdz1 = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD1);
 
   mrc_fld_foreach(u, ix,iy,iz, 1, 1) {
     
@@ -505,13 +512,34 @@ calc_cweno_fluxes(struct mrc_fld **flux, struct mrc_fld *flux_E[3], struct ggcm_
 				     - (4.* mpermi * sqr(csm * MRC_F3(u, _B1X, ix,iy,iz)) /  
 					MRC_F3(u_m[0], _RR1, ix,iy,iz))  )) );
 
+    /*
     ap = fmaxf(fmaxf((MRC_F3(u_p[0], _RV1X, ix-1,iy,iz) / MRC_F3(u_p[0], _RR1, ix-1,iy,iz)) + cfp,
 		     (MRC_F3(u_m[0], _RV1X, ix,iy,iz) / MRC_F3(u_m[0], _RR1, ix,iy,iz)) + cfm), 0.f);
 
     am = fminf(fminf( (MRC_F3(u_p[0], _RV1X, ix-1,iy,iz) / MRC_F3(u_p[0], _RR1, ix-1,iy,iz)) - cfp,
 		     (MRC_F3(u_m[0], _RV1X, ix,iy,iz) / MRC_F3(u_m[0], _RR1,ix,iy,iz)) - cfm), 0.f);
+    */
+
+    // cw =  ( |B|*pi )  /  ( e * rho * delta x ) 
+    cwp = d_i * cAp * sqrtf(1./MRC_F3(u_p[0], _RR1, ix-1,iy,iz)) * bdx1[ix+2]  ;
+    cwm = d_i * cAm * sqrtf(1./MRC_F3(u_m[0], _RR1, ix,iy,iz)) * bdx1[ix+2]  ; 
+
+#if incws == 0
+    cwp = 0;
+    cwm = 0;
+#endif
+
+    //printf("cAp %f cwp %f %f \n", cAp, d_i*(cAp*M_PI*gmhd->crdx[BD1][ix+2]) 
+    // sqrtf(MRC_F3(u_p[0], _RR1, ix-1,iy,iz)),gmhd->crdx[BD1][ix+2]  ); 
+
+    ap = fmaxf(fmaxf((MRC_F3(u_p[0], _RV1X, ix-1,iy,iz) / MRC_F3(u_p[0], _RR1, ix-1,iy,iz)) + cfp + cwp,
+		     (MRC_F3(u_m[0], _RV1X, ix,iy,iz) / MRC_F3(u_m[0], _RR1, ix,iy,iz)) + cfm + cwm ), 0.f);
+
+    am = fminf(fminf( (MRC_F3(u_p[0], _RV1X, ix-1,iy,iz) / MRC_F3(u_p[0], _RR1, ix-1,iy,iz)) - cfp - cwp,
+		     (MRC_F3(u_m[0], _RV1X, ix,iy,iz) / MRC_F3(u_m[0], _RR1,ix,iy,iz)) - cfm - cwm), 0.f);
     
    
+    
     
 #if KT == 1
     ap = fmaxf(ap,-am);
@@ -559,12 +587,30 @@ calc_cweno_fluxes(struct mrc_fld **flux, struct mrc_fld *flux_E[3], struct ggcm_
     cfm = sqrtf( 0.5 * (tmp + sqrtf( sqr( sqr(cAm) + sqr(csm) ) -  
 				     (4.f * mpermi * sqr(csm * MRC_F3(u, _B1Y, ix,iy,iz)) /  
 				      MRC_F3(u_m[1], _RR1, ix,iy,iz))) ));
+
+    /*
     bp = fmaxf(fmaxf( (MRC_F3(u_p[1], _RV1Y, ix,iy-1,iz) / MRC_F3(u_p[1], _RR1, ix,iy-1,iz)) + cfp,
 		      (MRC_F3(u_m[1], _RV1Y, ix,iy,iz) / MRC_F3(u_m[1], _RR1, ix,iy,iz)) + cfm), 0.f);
     bm = fminf(fminf( (MRC_F3(u_p[1], _RV1Y, ix,iy-1,iz) / MRC_F3(u_p[1], _RR1, ix,iy-1,iz)) - cfp,
 		      (MRC_F3(u_m[1], _RV1Y, ix,iy,iz) / MRC_F3(u_m[1], _RR1, ix,iy,iz)) - cfm), 0.f);
+    */
+    cwp =  d_i * cAp * sqrtf(1./MRC_F3(u_p[1], _RR1, ix,iy-1,iz)) * bdy1[iy+2];
+    cwm =  d_i * cAm * sqrtf(1./MRC_F3(u_m[1], _RR1, ix,iy,iz)) * bdy1[iy+2]; 
+    
+   
+#if incws == 0
+    cwp = 0;
+    cwm = 0;
+#endif
+    
+    bp = fmaxf(fmaxf( (MRC_F3(u_p[1], _RV1Y, ix,iy-1,iz) / MRC_F3(u_p[1], _RR1, ix,iy-1,iz)) + cfp + cwp,
+		      (MRC_F3(u_m[1], _RV1Y, ix,iy,iz) / MRC_F3(u_m[1], _RR1, ix,iy,iz)) + cfm + cwm), 0.f);
+    bm = fminf(fminf( (MRC_F3(u_p[1], _RV1Y, ix,iy-1,iz) / MRC_F3(u_p[1], _RR1, ix,iy-1,iz)) - cfp - cwp,
+		      (MRC_F3(u_m[1], _RV1Y, ix,iy,iz) / MRC_F3(u_m[1], _RR1, ix,iy,iz)) - cfm - cwm), 0.f);
 
   
+
+   
     
 #if KT == 1
     bp = fmaxf(bp,-bm);
@@ -617,11 +663,34 @@ calc_cweno_fluxes(struct mrc_fld **flux, struct mrc_fld *flux_E[3], struct ggcm_
 				      (4.* mpermi * sqr(csm * MRC_F3(u_m[2], _B1Z, ix,iy,iz)) /  
 				       MRC_F3(u_m[2], _RR1, ix,iy,iz))) ));
 
+    /*
     cp = fmaxf(fmaxf( (MRC_F3(u_p[2], _RV1Z, ix,iy,iz-1) / MRC_F3(u_p[2], _RR1, ix,iy,iz-1)) + cfp,
  		      (MRC_F3(u_m[2], _RV1Z, ix,iy,iz) / MRC_F3(u_m[2], _RR1, ix,iy,iz)) + cfm), 0.f);
     cm = fminf(fminf( (MRC_F3(u_p[2], _RV1Z, ix,iy,iz-1) / MRC_F3(u_p[2], _RR1, ix,iy,iz-1)) - cfp,
 		      (MRC_F3(u_m[2], _RV1Z, ix,iy,iz) / MRC_F3(u_m[2], _RR1, ix,iy,iz)) - cfm), 0.f);
+    */
 
+    
+    //cwp = d_i * cAp * M_PI * sqrtf(MRC_F3(u_p[2], _RR1, ix,iy,iz-1)) * bdz1[iz+2]  ;
+    //cwm = d_i * cAm * M_PI * sqrtf(MRC_F3(u_m[2], _RR1, ix,iy,iz)) * bdz1[iz+2]  ; 
+
+  
+    cwp = d_i * cAp * sqrtf(1./MRC_F3(u_p[2], _RR1, ix,iy,iz-1)) * bdz1[iz+2] ;
+    cwm = d_i * cAm * sqrtf(1./MRC_F3(u_m[2], _RR1, ix,iy,iz)) * bdz1[iz+2] ; 
+
+
+    
+    //printf("cAp %f cwp %f %f \n", cAp,cAp * M_PI * sqrtf(MRC_F3(u_p[2], _RR1, ix,iy,iz-1)) * gmhd->crdz[BD1][iz+2] , ); 
+
+#if incws == 0
+    cwp = 0;
+    cwm = 0;
+#endif
+
+    cp = fmaxf(fmaxf( (MRC_F3(u_p[2], _RV1Z, ix,iy,iz-1) / MRC_F3(u_p[2], _RR1, ix,iy,iz-1)) + cfp + cwp,
+ 		      (MRC_F3(u_m[2], _RV1Z, ix,iy,iz) / MRC_F3(u_m[2], _RR1, ix,iy,iz)) + cfm + cwm), 0.f);
+    cm = fminf(fminf( (MRC_F3(u_p[2], _RV1Z, ix,iy,iz-1) / MRC_F3(u_p[2], _RR1, ix,iy,iz-1)) - cfp - cwp,
+		      (MRC_F3(u_m[2], _RV1Z, ix,iy,iz) / MRC_F3(u_m[2], _RR1, ix,iy,iz)) - cfm - cwm), 0.f);
 
     
 #if KT == 1
