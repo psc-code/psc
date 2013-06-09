@@ -2,6 +2,7 @@
 #include "ggcm_mhd_private.h"
 
 #include "ggcm_mhd_defs.h"
+#include "ggcm_mhd_flds_private.h"
 #include "ggcm_mhd_crds.h"
 #include "ggcm_mhd_crds_gen.h"
 #include "ggcm_mhd_step.h"
@@ -37,7 +38,7 @@ _ggcm_mhd_create(struct ggcm_mhd *mhd)
   ggcm_mhd_diag_set_param_obj(mhd->diag, "mhd", mhd);
   ggcm_mhd_bnd_set_param_obj(mhd->bnd, "mhd", mhd);
   ggcm_mhd_ic_set_param_obj(mhd->ic, "mhd", mhd);
-  ggcm_mhd_flds_set_param_obj(mhd->flds_base, "domain", mhd->domain);
+  mhd->flds_base->fld->_domain = mhd->domain;
 }
 
 // ----------------------------------------------------------------------

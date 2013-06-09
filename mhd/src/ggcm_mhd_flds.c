@@ -87,14 +87,13 @@ static void
 _ggcm_mhd_flds_setup(struct ggcm_mhd_flds *flds)
 {
   int nr_patches;
-  struct mrc_patch *patches = mrc_domain_get_patches(flds->domain, &nr_patches);
+  struct mrc_patch *patches = mrc_domain_get_patches(flds->fld->_domain, &nr_patches);
   assert(nr_patches == 1);
   int *dims = patches[0].ldims;
   mrc_fld_set_param_int_array(flds->fld, "dims", 4,
 			      (int[4]) { dims[0], dims[1], dims[2], _NR_FLDS });
   mrc_fld_set_param_int_array(flds->fld, "sw", 4,
 			      (int[4]) { BND, BND, BND, 0 });
-  flds->fld->_domain = flds->domain;
 
   for (int m = 0; m < _NR_FLDS; m++) {
     mrc_fld_set_comp_name(flds->fld, m, fldname[m]);
@@ -133,7 +132,7 @@ ggcm_mhd_flds_duplicate(struct ggcm_mhd_flds *flds)
   } else {
     ggcm_mhd_flds_set_type(rv, ggcm_mhd_flds_type(flds));
   }
-  ggcm_mhd_flds_set_param_obj(rv, "domain", flds->domain);
+  rv->fld->_domain = flds->fld->_domain;
   ggcm_mhd_flds_setup(rv);
   return rv;
 }
@@ -181,7 +180,7 @@ ggcm_mhd_flds_get_as(struct ggcm_mhd_flds *flds_base, const char *type)
   if (strcmp(type_base, "fortran") == 0 && strcmp(type, "c") == 0) {
     struct ggcm_mhd_flds *flds = ggcm_mhd_flds_create(ggcm_mhd_flds_comm(flds_base));
     ggcm_mhd_flds_set_type(flds, type);
-    ggcm_mhd_flds_set_param_obj(flds, "domain", flds_base->domain);
+    flds->fld->_domain = flds_base->fld->_domain;
     mrc_fld_set_array(flds->fld, flds_base->fld->_arr);
     ggcm_mhd_flds_setup(flds);
     return flds;
@@ -195,7 +194,7 @@ ggcm_mhd_flds_get_as(struct ggcm_mhd_flds *flds_base, const char *type)
 
   struct ggcm_mhd_flds *flds = ggcm_mhd_flds_create(ggcm_mhd_flds_comm(flds_base));
   ggcm_mhd_flds_set_type(flds, type);
-  ggcm_mhd_flds_set_param_obj(flds, "domain", flds_base->domain);
+  flds->fld->_domain = flds_base->fld->_domain;
   ggcm_mhd_flds_setup(flds);
 
   char s[strlen(type) + 12]; sprintf(s, "copy_to_%s", type);
@@ -288,7 +287,6 @@ ggcm_mhd_flds_init()
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_flds, x)
 static struct param ggcm_mhd_flds_descr[] = {
-  { "domain"          , VAR(domain)          , PARAM_OBJ(mrc_domain)    },
   {},
 };
 #undef VAR
