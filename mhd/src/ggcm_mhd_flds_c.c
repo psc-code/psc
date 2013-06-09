@@ -21,18 +21,6 @@ ggcm_mhd_flds_c_create(struct ggcm_mhd_flds *flds)
 }
 
 // ----------------------------------------------------------------------
-<<<<<<< HEAD
-// ggcm_mhd_flds_c_read
-
-static void
-ggcm_mhd_flds_c_read(struct ggcm_mhd_flds *flds, struct mrc_io *io)
-{
-  // FIXME, this calls out ::setup(), which we don't really want...
-  ggcm_mhd_flds_read_super(flds, io);
-  flds->fld = mrc_io_read_ref(io, flds, "fld", mrc_fld);
-}
-
-// ----------------------------------------------------------------------
 // ggcm_mhd_flds_c_copy
 
 static void
@@ -44,8 +32,6 @@ ggcm_mhd_flds_c_copy(struct ggcm_mhd_flds *to, struct ggcm_mhd_flds *from_base)
 }
 
 // ----------------------------------------------------------------------
-=======
->>>>>>> ggcm_mhd_flds: mv ::read -> base class
 // ggcm_mhd_flds_c_copy_from_fortran
 
 static void

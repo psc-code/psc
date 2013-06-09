@@ -196,6 +196,13 @@ struct mrc_fld *
 mrc_fld_duplicate(struct mrc_fld *fld)
 {
   struct mrc_fld *fld_new = mrc_fld_create(mrc_fld_comm(fld));
+  if (strcmp(mrc_fld_type(fld), "fortran") == 0) {
+    // FIXME, this isn't really the right place to do this
+    mprintf("WARNING: duplicating mrc_fld of type 'fortran'!\n");
+    mrc_fld_set_type(fld_new, "float");
+  } else {
+    mrc_fld_set_type(fld_new, mrc_fld_type(fld));
+  }
   mrc_fld_set_param_int_array(fld_new, "dims", fld->_dims.nr_vals, fld->_dims.vals);
   mrc_fld_set_param_int_array(fld_new, "offs", fld->_offs.nr_vals, fld->_offs.vals);
   mrc_fld_set_param_int_array(fld_new, "sw", fld->_sw.nr_vals, fld->_sw.vals);
