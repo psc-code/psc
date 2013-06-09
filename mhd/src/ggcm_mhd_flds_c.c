@@ -12,6 +12,15 @@
 // ggcm_mhd_flds subclass "c"
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_flds_c_create
+
+static void
+ggcm_mhd_flds_c_create(struct ggcm_mhd_flds *flds)
+{
+  mrc_fld_set_type(flds->fld, "float");
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_flds_c_read
 
 static void
@@ -65,6 +74,7 @@ static struct mrc_obj_method ggcm_mhd_flds_c_methods[] = {
 struct ggcm_mhd_flds_ops ggcm_mhd_flds_ops_c = {
   .name             = "c",
   .methods          = ggcm_mhd_flds_c_methods,
+  .create           = ggcm_mhd_flds_c_create,
   .read             = ggcm_mhd_flds_c_read,
   .copy             = ggcm_mhd_flds_c_copy,
 };
