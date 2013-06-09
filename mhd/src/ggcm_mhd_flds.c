@@ -23,7 +23,6 @@ ggcm_mhd_flds_duplicate(struct ggcm_mhd_flds *flds)
   } else {
     ggcm_mhd_flds_set_type(rv, ggcm_mhd_flds_type(flds));
   }
-  ggcm_mhd_flds_set_param_obj(rv, "mhd", flds->_mhd);
   ggcm_mhd_flds_set_param_obj(rv, "domain", flds->domain);
   ggcm_mhd_flds_setup(rv);
   return rv;
@@ -72,7 +71,6 @@ ggcm_mhd_flds_get_as(struct ggcm_mhd_flds *flds_base, const char *type)
   if (strcmp(type_base, "fortran") == 0 && strcmp(type, "c") == 0) {
     struct ggcm_mhd_flds *flds = ggcm_mhd_flds_create(ggcm_mhd_flds_comm(flds_base));
     ggcm_mhd_flds_set_type(flds, type);
-    ggcm_mhd_flds_set_param_obj(flds, "mhd", flds_base->_mhd);
     ggcm_mhd_flds_set_param_obj(flds, "domain", flds_base->domain);
     mrc_fld_set_array(flds->fld, flds_base->fld->_arr);
     ggcm_mhd_flds_setup(flds);
@@ -87,7 +85,6 @@ ggcm_mhd_flds_get_as(struct ggcm_mhd_flds *flds_base, const char *type)
 
   struct ggcm_mhd_flds *flds = ggcm_mhd_flds_create(ggcm_mhd_flds_comm(flds_base));
   ggcm_mhd_flds_set_type(flds, type);
-  ggcm_mhd_flds_set_param_obj(flds, "mhd", flds_base->_mhd);
   ggcm_mhd_flds_set_param_obj(flds, "domain", flds_base->domain);
   ggcm_mhd_flds_setup(flds);
 
@@ -181,7 +178,6 @@ ggcm_mhd_flds_init()
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_flds, x)
 static struct param ggcm_mhd_flds_descr[] = {
-  { "mhd"             , VAR(_mhd)            , PARAM_OBJ(ggcm_mhd)      },
   { "domain"          , VAR(domain)          , PARAM_OBJ(mrc_domain)    },
   {},
 };
