@@ -25,16 +25,6 @@ typedef void (*ggcm_mhd_flds_copy_from_func_t)(struct ggcm_mhd_flds *,
 
 extern struct ggcm_mhd_flds_ops ggcm_mhd_flds_ops_c;
 
-// ======================================================================
-// this is the subclass struct for both aos and naos
-
-struct ggcm_mhd_flds_cgen {
-  float *flds;
-  float *_flds1, *_flds2, *_fldsp, *_dummy_dma;
-};
-
-#define ggcm_mhd_flds_cgen(flds) mrc_to_subobj(flds, struct ggcm_mhd_flds_cgen)
-
 #endif
 
 
