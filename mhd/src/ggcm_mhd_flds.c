@@ -17,7 +17,12 @@ struct ggcm_mhd_flds *
 ggcm_mhd_flds_duplicate(struct ggcm_mhd_flds *flds)
 {
   struct ggcm_mhd_flds *rv = ggcm_mhd_flds_create(ggcm_mhd_flds_comm(flds));
-  ggcm_mhd_flds_set_type(rv, ggcm_mhd_flds_type(flds));
+  if (strcmp(ggcm_mhd_flds_type(flds), "fortran") == 0) {
+    MHERE;
+    ggcm_mhd_flds_set_type(rv, "c");
+  } else {
+    ggcm_mhd_flds_set_type(rv, ggcm_mhd_flds_type(flds));
+  }
   ggcm_mhd_flds_set_param_obj(rv, "mhd", flds->mhd);
   ggcm_mhd_flds_setup(rv);
   return rv;
