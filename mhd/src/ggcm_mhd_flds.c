@@ -129,24 +129,6 @@ _ggcm_mhd_flds_write(struct ggcm_mhd_flds *flds, struct mrc_io *io)
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_flds_duplicate
-
-struct ggcm_mhd_flds *
-ggcm_mhd_flds_duplicate(struct ggcm_mhd_flds *flds)
-{
-  struct ggcm_mhd_flds *rv = ggcm_mhd_flds_create(ggcm_mhd_flds_comm(flds));
-  if (strcmp(ggcm_mhd_flds_type(flds), "fortran") == 0) {
-    MHERE;
-    ggcm_mhd_flds_set_type(rv, "c");
-  } else {
-    ggcm_mhd_flds_set_type(rv, ggcm_mhd_flds_type(flds));
-  }
-  rv->fld->_domain = flds->fld->_domain;
-  ggcm_mhd_flds_setup(rv);
-  return rv;
-}
-
-// ----------------------------------------------------------------------
 // ggcm_mhd_flds_get_mrc_fld
 //
 // returns the underlying mrc_fld that contains the MHD field data
