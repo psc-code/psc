@@ -38,6 +38,7 @@ struct ggcm_mhd {
   struct ggcm_mhd_ic *ic;
 
   // mhd state
+  struct mrc_fld *fld;
   float time; // current time
   float dt;   // current timestep (parameter to pred/corr, so can be .5 dt)
   int istep;
