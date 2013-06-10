@@ -92,7 +92,7 @@ static void
 _ggcm_mhd_setup(struct ggcm_mhd *mhd)
 {
   ggcm_mhd_setup_member_objs(mhd);
-  mhd->fld = ggcm_mhd_flds_get_mrc_fld(mhd->flds_base);
+  mhd->fld = mhd->flds_base->fld;
 
   struct mrc_patch_info info;
   mrc_domain_get_local_patch_info(mhd->domain, 0, &info);

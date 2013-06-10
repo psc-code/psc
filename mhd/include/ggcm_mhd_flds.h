@@ -11,7 +11,5 @@
 
 MRC_CLASS_DECLARE(ggcm_mhd_flds, struct ggcm_mhd_flds);
 
-struct mrc_fld *ggcm_mhd_flds_get_mrc_fld(struct ggcm_mhd_flds *flds);
-
 #endif
 

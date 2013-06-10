@@ -4,7 +4,7 @@
 
 #include <mrc_obj.h>
 
-#include "ggcm_mhd_flds.h"
+#include <mrc_fld.h>
 
 // ======================================================================
 // ggcm_mhd
