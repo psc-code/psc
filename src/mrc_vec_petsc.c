@@ -21,10 +21,25 @@ static void
 _mrc_vec_petsc_setup(struct mrc_vec *vec)
 {
   int ierr;
-  // FIXME: if with_array is given we should do a VecCreateMPIWithArray
+  MPI_Comm petsccomm;
+  // This seems to be a valid way to handle the MPI_COMM_NULL edge case,
+  // but I'm not entirely sure how VecCreateMPI behaves on PETSC_COMM_SELF
+  if (vec->obj.comm != MPI_COMM_NULL) {
+    petsccomm = vec->obj.comm;
+  } else {
+    petsccomm = PETSC_COMM_SELF;
+  }
+  
   if (!vec->with_array) {
-    //     vec->arr = calloc(vec->len, vec->size_of_type);
-    ierr = VecCreateMPI(vec->obj.comm, vec->len, PETSC_DETERMINE, (Vec *) &vec->_priv_arr); CE;
+    //vec->obj.comm
+    ierr = VecCreateMPI(petsccomm, vec->len, PETSC_DETERMINE, (Vec *) &vec->_priv_arr); CE;
+  } else {
+    // I'd rather have this in vec_set_sub_set_array, but the calling order doesn't work
+    // Petsc needs the len to initialize, and that isn't assigned until mrc_fld_setup.
+    // Since 'set array' is called before 'setup' we have to create the petsc vec here instead of there
+    assert(vec->arr);
+    ierr = VecCreateMPIWithArray(petsccomm, 1, vec->len, PETSC_DECIDE, vec->arr, (Vec *) &vec->_priv_arr); CE;
+    // FIXME: I guess our blocksize is 1 for now?
   }
 }
 
@@ -35,9 +50,8 @@ static void
 _mrc_vec_petsc_destroy(struct mrc_vec *vec)
 {
   int ierr;
-  if (!vec->with_array) {
-    ierr = VecDestroy((Vec *) &vec->_priv_arr); CE;
-  }
+  // Petsc won't dealloc memory for WithArray vecs, so it's always safe to call this
+  ierr = VecDestroy((Vec *) &vec->_priv_arr); CE;
   vec->_priv_arr = NULL;
 }
 
@@ -47,7 +61,7 @@ _mrc_vec_petsc_destroy(struct mrc_vec *vec)
 static void
 mrc_vec_sub_set_array(struct mrc_vec *vec, void *arr)
 {
-  assert(!vec->arr);
+  assert(!vec->arr);  
   vec->arr = arr;
   vec->with_array = true;
 }
