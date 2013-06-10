@@ -125,13 +125,26 @@ mrc_fld_comp_name(struct mrc_fld *fld, int m)
 }
 
 // ----------------------------------------------------------------------
+// mrc_fld_comp_dim
+
+static int
+mrc_fld_comp_dim(struct mrc_fld *fld)
+{
+  if (fld->_dims.nr_vals == 0 && fld->_domain) {
+    mrc_fld_set_param_int_array(fld, "dims", 4, NULL);
+  }
+
+  assert(fld->_dims.nr_vals > 0);
+  return fld->_dims.nr_vals - 1;
+}
+
+// ----------------------------------------------------------------------
 // mrc_fld_nr_comps
 
 int
 mrc_fld_nr_comps(struct mrc_fld *fld)
 {
-  int comp_dim = fld->_dims.nr_vals - 1;
-  assert(comp_dim >= 0);
+  int comp_dim = mrc_fld_comp_dim(fld);
   return fld->_dims.vals[comp_dim];
 }
 
@@ -141,7 +154,7 @@ mrc_fld_nr_comps(struct mrc_fld *fld)
 void
 mrc_fld_set_nr_comps(struct mrc_fld *fld, int nr_comps)
 {
-  int comp_dim = fld->_dims.nr_vals - 1;
+  int comp_dim = mrc_fld_comp_dim(fld);
   fld->_dims.vals[comp_dim] = nr_comps;
 }
 
@@ -153,11 +166,35 @@ mrc_fld_set_nr_comps(struct mrc_fld *fld, int nr_comps)
 void
 mrc_fld_set_comp_names(struct mrc_fld *fld, const char *comps)
 {
+  assert(comps);
   char *s1, *s = strdup(comps), *s_save = s;
+  // count nr of components first
+  int nr_comps = 0;
+  while (strsep(&s, ",:")) {
+    nr_comps++;
+  }
+  mrc_fld_set_nr_comps(fld, nr_comps);
+
+  s = s_save;
+  strcpy(s, comps);
+  // then parse the names
   for (int m = 0; (s1 = strsep(&s, ",:")); m++) {
     mrc_fld_set_comp_name(fld, m, s1);
   }
   free(s_save);
+}
+
+// ----------------------------------------------------------------------
+// mrc_fld_set_sw
+//
+// if the mrc_fld is based on a mrc_domain, this function can be used
+// to easily set the number of ghostpoints (stencil width)
+
+void
+mrc_fld_set_sw(struct mrc_fld *fld, int sw)
+{
+  assert(fld->_domain);
+  mrc_fld_set_param_int_array(fld, "sw", 4, (int[4]) { sw, sw, sw, 0 });
 }
 
 // ----------------------------------------------------------------------

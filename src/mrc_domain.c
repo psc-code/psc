@@ -228,29 +228,18 @@ mrc_domain_f1_create(struct mrc_domain *domain)
 struct mrc_fld *
 mrc_domain_fld_create(struct mrc_domain *domain, int sw, const char *comps)
 {
+  struct mrc_fld *fld = mrc_fld_create(mrc_domain_comm(domain));
+  mrc_fld_set_param_obj(fld, "domain", domain);
+  mrc_fld_set_comp_names(fld, comps);
+
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(domain, &nr_patches);
   assert(nr_patches == 1);
-  struct mrc_fld *fld = mrc_fld_create(mrc_domain_comm(domain));
-  mrc_fld_set_param_obj(fld, "domain", domain);
-  if (!comps) {
-    comps = ""; // FIXME?
-  }
-
-  char *s1, *s = strdup(comps), *s_save = s;
-  // count nr of components first
-  int nr_comps = 0;
-  while (strsep(&s, ",:")) {
-    nr_comps++;
-  }
-  free(s_save);
 
   int *dims = patches[0].ldims;
   mrc_fld_set_param_int_array(fld, "dims", 4,
-			      (int[4]) { dims[0], dims[1], dims[2], nr_comps });
-  mrc_fld_set_param_int_array(fld, "sw", 4,
-			      (int[4]) { sw, sw, sw, 0 });
-  mrc_fld_set_comp_names(fld, comps);
+			      (int[4]) { dims[0], dims[1], dims[2], mrc_fld_nr_comps(fld) });
+  mrc_fld_set_sw(fld, sw);
 
   return fld;
 }
