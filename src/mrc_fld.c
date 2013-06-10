@@ -15,11 +15,6 @@
 // ======================================================================
 // mrc_fld
 
-typedef void (*mrc_fld_copy_to_func_t)(struct mrc_fld *,
-				       struct mrc_fld *);
-typedef void (*mrc_fld_copy_from_func_t)(struct mrc_fld *,
-					 struct mrc_fld *);
-
 // ----------------------------------------------------------------------
 // mrc_fld_destroy
 

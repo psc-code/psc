@@ -178,16 +178,16 @@ ggcm_mhd_flds_get_as(struct ggcm_mhd_flds *flds_base, const char *type)
   ggcm_mhd_flds_setup(flds);
 
   char s[strlen(type) + 12]; sprintf(s, "copy_to_%s", type);
-  ggcm_mhd_flds_copy_to_func_t copy_to = (ggcm_mhd_flds_copy_to_func_t)
-    ggcm_mhd_flds_get_method(flds_base, s);
+  mrc_fld_copy_to_func_t copy_to = (mrc_fld_copy_to_func_t)
+    mrc_fld_get_method(flds_base->fld, s);
   if (copy_to) {
-    copy_to(flds_base, flds);
+    copy_to(flds_base->fld, flds->fld);
   } else {
     sprintf(s, "copy_from_%s", type_base);
-    ggcm_mhd_flds_copy_from_func_t copy_from = (ggcm_mhd_flds_copy_from_func_t)
-      ggcm_mhd_flds_get_method(flds, s);
+    mrc_fld_copy_from_func_t copy_from = (mrc_fld_copy_from_func_t)
+      mrc_fld_get_method(flds->fld, s);
     if (copy_from) {
-      copy_from(flds, flds_base);
+      copy_from(flds->fld, flds_base->fld);
     } else {
       fprintf(stderr, "ERROR: no 'copy_to_%s' in ggcm_mhd_flds '%s' and "
 	      "no 'copy_from_%s' in '%s'!\n",
@@ -230,16 +230,16 @@ ggcm_mhd_flds_put_as(struct ggcm_mhd_flds *flds, struct ggcm_mhd_flds *flds_base
   prof_start(pr);
 
   char s[strlen(type) + 12]; sprintf(s, "copy_from_%s", type);
-  ggcm_mhd_flds_copy_from_func_t copy_from = (ggcm_mhd_flds_copy_from_func_t)
-    ggcm_mhd_flds_get_method(flds_base, s);
+  mrc_fld_copy_from_func_t copy_from = (mrc_fld_copy_from_func_t)
+    mrc_fld_get_method(flds_base->fld, s);
   if (copy_from) {
-    copy_from(flds_base, flds);
+    copy_from(flds_base->fld, flds->fld);
   } else {
     sprintf(s, "copy_to_%s", type_base);
-    ggcm_mhd_flds_copy_to_func_t copy_to = (ggcm_mhd_flds_copy_to_func_t)
-      ggcm_mhd_flds_get_method(flds, s);
+    mrc_fld_copy_to_func_t copy_to = (mrc_fld_copy_to_func_t)
+      mrc_fld_get_method(flds->fld, s);
     if (copy_to) {
-      copy_to(flds, flds_base);
+      copy_to(flds->fld, flds_base->fld);
     } else {
       fprintf(stderr, "ERROR: no 'copy_from_%s' in ggcm_mhd_flds '%s' and "
 	      "no 'copy_to_%s' in '%s'!\n",
