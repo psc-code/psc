@@ -34,18 +34,6 @@ ggcm_mhd_step_corr(struct ggcm_mhd_step *step)
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_step_push
-
-void
-ggcm_mhd_step_push(struct ggcm_mhd_step *step)
-{
-  ggcm_mhd_commu_run(step->mhd->commu, _RR1, _RR1 + 8);
-  ggcm_mhd_step_pred(step);
-  ggcm_mhd_commu_run(step->mhd->commu, _RR2, _RR2 + 8);
-  ggcm_mhd_step_corr(step);
-}
-
-// ----------------------------------------------------------------------
 // ggcm_mhd_step_calc_rhs
 
 void

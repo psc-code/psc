@@ -177,12 +177,6 @@ ggcm_mhd_newstep(struct ggcm_mhd *mhd, float *dtn)
   ops->newstep(mhd, dtn);
 }
 
-void
-ggcm_mhd_push_step(struct ggcm_mhd *mhd)
-{
-  ggcm_mhd_step_push(mhd->step);
-}
-
 int
 ggcm_mhd_ntot(struct ggcm_mhd *mhd)
 {

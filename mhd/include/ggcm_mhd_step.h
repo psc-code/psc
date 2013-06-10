@@ -21,10 +21,6 @@ void ggcm_mhd_step_pred(struct ggcm_mhd_step *step);
 // operations, e.g., primvar() having been called
 void ggcm_mhd_step_corr(struct ggcm_mhd_step *step);
 
-// perform an entire time step -- will do all that's needed (MHD only),
-// and call back into ggcm_mhd for filling ghost points
-void ggcm_mhd_step_push(struct ggcm_mhd_step *step);
-
 // calculate the r.h.s. in the given scheme
 // should be more general than taking mrc_fld, eventually
 void ggcm_mhd_step_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
