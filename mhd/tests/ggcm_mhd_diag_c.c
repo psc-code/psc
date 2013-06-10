@@ -204,12 +204,11 @@ static void
 write_fields(struct ggcm_mhd_diag *diag, struct mrc_io *io, int diag_type, float plane)
 {
   struct ggcm_mhd *mhd = diag->mhd;
-  struct ggcm_mhd_flds *flds = ggcm_mhd_flds_get_as(mhd->flds_base, "c");
-  struct mrc_fld *f = ggcm_mhd_flds_get_mrc_fld(flds);
+  struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, "float");
 
   struct ggcm_mhd_diag_item *item;
   list_for_each_entry(item, &diag->obj.children_list, obj.child_entry) {
-    ggcm_mhd_diag_item_run(item, io, f, diag_type, plane);
+    ggcm_mhd_diag_item_run(item, io, fld, diag_type, plane);
   }
 
 #if 0
@@ -220,7 +219,7 @@ write_fields(struct ggcm_mhd_diag *diag, struct mrc_io *io, int diag_type, float
   }
 #endif
 
-  ggcm_mhd_flds_put_as(flds, mhd->flds_base);
+  mrc_fld_put_as(fld, mhd->fld);
 }
 
 // ----------------------------------------------------------------------

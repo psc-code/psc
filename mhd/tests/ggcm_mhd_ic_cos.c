@@ -26,8 +26,7 @@ ggcm_mhd_ic_cos_run(struct ggcm_mhd_ic *ic)
 {
   struct ggcm_mhd_ic_cos *ic_cos = mrc_to_subobj(ic, struct ggcm_mhd_ic_cos);
   struct ggcm_mhd *mhd = ic->mhd;
-  struct ggcm_mhd_flds *flds = ggcm_mhd_flds_get_as(mhd->flds_base, "fortran");
-  struct mrc_fld *f = ggcm_mhd_flds_get_mrc_fld(flds);
+  struct mrc_fld *f = mrc_fld_get_as(mhd->fld, "fortran");
   struct mrc_crds *crds = mrc_domain_get_crds(f->domain);
   float n_b = ic_cos->n_b;
 
@@ -67,7 +66,7 @@ ggcm_mhd_ic_cos_run(struct ggcm_mhd_ic *ic)
   } mrc_fld_foreach_end;
 
   mrc_fld_destroy(fld_psi);
-  ggcm_mhd_flds_put_as(flds, mhd->flds_base);
+  mrc_fld_put_as(f, mhd->fld);
 }
 
 // ----------------------------------------------------------------------

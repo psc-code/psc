@@ -14,14 +14,13 @@
 // default in input.defines is false, and that is what is done here. 
 
 void
-ggcm_mhd_calc_currcc(struct ggcm_mhd *mhd, struct ggcm_mhd_flds *flds_base, int m,
+ggcm_mhd_calc_currcc(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
 		     struct mrc_fld *currcc)
 {
   struct mrc_patch_info info;
   mrc_domain_get_local_patch_info(mhd->domain, 0, &info);
   //const char *dptype = ggcm_dipole_type(mhd->dipole);
-  struct ggcm_mhd_flds *flds = ggcm_mhd_flds_get_as(flds_base, "c");
-  struct mrc_fld *f = ggcm_mhd_flds_get_mrc_fld(flds);
+  struct mrc_fld *f = mrc_fld_get_as(fld, "float");
   struct mrc_fld *tmp = mrc_fld_duplicate(currcc);
   float *bd4x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD4);
   float *bd4y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD4);
@@ -53,6 +52,7 @@ ggcm_mhd_calc_currcc(struct ggcm_mhd *mhd, struct ggcm_mhd_flds *flds_base, int 
       (MRC_F3(tmp, 2, ix,iy  ,iz) + MRC_F3(tmp, 2, ix-1,iy,iz  ) + 
        MRC_F3(tmp, 2, ix,iy-1,iz) + MRC_F3(tmp, 2, ix-1,iy-1,iz));
   } mrc_fld_foreach_end;     
-  ggcm_mhd_flds_put_as(flds, flds_base);
+
+  mrc_fld_put_as(f, fld);
 }
 

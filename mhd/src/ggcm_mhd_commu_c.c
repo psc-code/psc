@@ -76,11 +76,9 @@ ggcm_mhd_commu_c_run(struct ggcm_mhd_commu *commu, int mb, int me)
 {
   struct ggcm_mhd_commu_c *commu_c = ggcm_mhd_commu_c(commu);
 
-  struct ggcm_mhd_flds *flds =
-    ggcm_mhd_flds_get_as(commu->mhd->flds_base, "c");
-  struct mrc_fld *f = ggcm_mhd_flds_get_mrc_fld(flds);
+  struct mrc_fld *f = mrc_fld_get_as(commu->mhd->fld, "float");
   mrc_ddc_fill_ghosts(commu_c->ddc, mb, me, f);
-  ggcm_mhd_flds_put_as(flds, commu->mhd->flds_base);
+  mrc_fld_put_as(f, commu->mhd->fld);
 }
 
 // ----------------------------------------------------------------------
