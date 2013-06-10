@@ -32,7 +32,7 @@ ggcm_mhd_ic_hydroblast_run(struct ggcm_mhd_ic *ic)
 {
   struct ggcm_mhd_ic_hydroblast *sub = mrc_to_subobj(ic, struct ggcm_mhd_ic_hydroblast);
   struct ggcm_mhd *gmhd = ic->mhd;  
-  struct mrc_fld *fld = ggcm_mhd_flds_get_mrc_fld(gmhd->flds_base);
+  struct mrc_fld *fld = gmhd->fld;
   struct mrc_crds *crds = mrc_domain_get_crds(gmhd->domain);  
   float xl[3], xh[3], L[3], r[3];
   mrc_crds_get_xl_xh(crds, xl, xh);

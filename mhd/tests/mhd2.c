@@ -158,7 +158,7 @@ main(int argc, char **argv)
   mrc_ts_add_monitor(ts, mon_diag);
 
   mrc_ts_set_dt(ts, 1e-6);
-  mrc_ts_set_solution(ts, mrc_fld_to_mrc_obj(ggcm_mhd_flds_get_mrc_fld(mhd->flds_base)));
+  mrc_ts_set_solution(ts, mrc_fld_to_mrc_obj(mhd->fld));
   mrc_ts_set_rhs_function(ts, ts_ggcm_mhd_step_calc_rhs, mhd);
   mrc_ts_set_from_options(ts);
   mrc_ts_view(ts);

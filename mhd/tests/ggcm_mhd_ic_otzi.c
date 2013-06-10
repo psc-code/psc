@@ -19,7 +19,7 @@ static void
 ggcm_mhd_ic_otzi_run(struct ggcm_mhd_ic *ic)
 {
   struct ggcm_mhd *mhd = ic->mhd;
-  struct mrc_fld *fld = ggcm_mhd_flds_get_mrc_fld(mhd->flds_base);
+  struct mrc_fld *fld = mhd->fld;
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);  
 
   float gamma = mhd->par.gamm;

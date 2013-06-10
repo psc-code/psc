@@ -19,7 +19,7 @@ static void
 ggcm_mhd_ic_wave_sound_run(struct ggcm_mhd_ic *ic)
 {
   struct ggcm_mhd *gmhd = ic->mhd;
-  struct mrc_fld *fld = ggcm_mhd_flds_get_mrc_fld(gmhd->flds_base);
+  struct mrc_fld *fld = gmhd->fld;
   struct mrc_crds *crds = mrc_domain_get_crds(gmhd->domain);  
 
   float gamma = gmhd->par.gamm;

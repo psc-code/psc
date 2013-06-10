@@ -26,7 +26,7 @@ ggcm_mhd_ic_ot_run(struct ggcm_mhd_ic *ic)
   struct ggcm_mhd_ic_ot *sub = mrc_to_subobj(ic, struct ggcm_mhd_ic_ot);
 
   struct ggcm_mhd *gmhd = ic->mhd;
-  struct mrc_fld *fld = ggcm_mhd_flds_get_mrc_fld(gmhd->flds_base);
+  struct mrc_fld *fld = gmhd->fld;
   struct mrc_crds *crds = mrc_domain_get_crds(gmhd->domain);  
 
   float gamma = gmhd->par.gamm;
