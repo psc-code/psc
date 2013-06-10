@@ -257,7 +257,7 @@ mrc_domain_fld_create(struct mrc_domain *domain, int sw, const char *comps)
   }
   free(s_save);
 
-  fld->_domain = domain;
+  mrc_fld_set_param_obj(fld, "domain", domain);
   return fld;
 }
 

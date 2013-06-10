@@ -48,7 +48,7 @@ mod_domain(struct mrc_mod *mod, void *arg)
   struct mrc_fld *fld = mrc_fld_create(comm);
   mrc_fld_set_param_int_array(fld, "dims", 3, (int[3]) { mx, my, 1 });
   mrc_fld_set_comp_name(fld, 0, "test_2d_0");
-  fld->_domain = domain;
+  mrc_fld_set_param_obj(fld, "domain", domain);
   mrc_fld_setup(fld);
 
   for (int iy = 0; iy < my; iy++) {

@@ -77,7 +77,6 @@ mrc_fld_set_array(struct mrc_fld *fld, void *arr)
 static void
 _mrc_fld_write(struct mrc_fld *fld, struct mrc_io *io)
 {
-  mrc_io_write_ref(io, fld, "domain", fld->_domain);
   mrc_io_write_fld(io, mrc_io_obj_path(io, fld), fld);
 }
 
@@ -87,8 +86,6 @@ _mrc_fld_write(struct mrc_fld *fld, struct mrc_io *io)
 static void
 _mrc_fld_read(struct mrc_fld *fld, struct mrc_io *io)
 {
-  fld->_domain = mrc_io_read_ref(io, fld, "domain", mrc_domain);
-
   // instead of reading back fld->_vec (which doesn't contain anything useful,
   // anyway, since mrc_fld saves/restores the data rather than mrc_vec),
   // we make a new one, so at least we're sure that with_array won't be honored
@@ -300,7 +297,7 @@ mrc_fld_write_comps(struct mrc_fld *fld, struct mrc_io *io, int mm[])
     mrc_fld_set_array(fld1, &MRC_F3(fld,mm[i], ib[0], ib[1], ib[2]));
     mrc_fld_set_name(fld1, fld->_comp_name[mm[i]]);
     mrc_fld_set_comp_name(fld1, 0, fld->_comp_name[mm[i]]);
-    fld1->_domain = fld->_domain;
+    mrc_fld_set_param_obj(fld1, "domain", fld->_domain);
     mrc_fld_setup(fld1);
     mrc_fld_write(fld1, io);
     mrc_fld_destroy(fld1);
@@ -499,6 +496,8 @@ static struct param mrc_fld_descr[] = {
   { "offs"            , VAR(_offs)        , PARAM_INT_ARRAY(0, 0) },
   { "dims"            , VAR(_dims)        , PARAM_INT_ARRAY(0, 0) },
   { "sw"              , VAR(_sw)          , PARAM_INT_ARRAY(0, 0) },
+
+  { "domain"          , VAR(_domain)      , PARAM_OBJ(mrc_domain) },
 
   { "size_of_type"    , VAR(_size_of_type), MRC_VAR_INT           },
   { "len"             , VAR(_len)         , MRC_VAR_INT           },

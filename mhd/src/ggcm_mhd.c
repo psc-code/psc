@@ -38,7 +38,8 @@ _ggcm_mhd_create(struct ggcm_mhd *mhd)
   ggcm_mhd_diag_set_param_obj(mhd->diag, "mhd", mhd);
   ggcm_mhd_bnd_set_param_obj(mhd->bnd, "mhd", mhd);
   ggcm_mhd_ic_set_param_obj(mhd->ic, "mhd", mhd);
-  mhd->flds_base->fld->_domain = mhd->domain;
+  mhd->fld = mhd->flds_base->fld;
+  mrc_fld_set_param_obj(mhd->fld, "domain", mhd->domain);
 }
 
 // ----------------------------------------------------------------------
@@ -92,7 +93,6 @@ static void
 _ggcm_mhd_setup(struct ggcm_mhd *mhd)
 {
   ggcm_mhd_setup_member_objs(mhd);
-  mhd->fld = mhd->flds_base->fld;
 
   struct mrc_patch_info info;
   mrc_domain_get_local_patch_info(mhd->domain, 0, &info);
