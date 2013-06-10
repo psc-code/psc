@@ -15,6 +15,8 @@
 // ======================================================================
 // mrc_fld
 
+#define mrc_fld_ops(fld) ((struct mrc_fld_ops *) (fld)->obj.ops)
+
 // ----------------------------------------------------------------------
 // mrc_fld_destroy
 
@@ -72,11 +74,14 @@ _mrc_fld_setup(struct mrc_fld *fld)
     fld->_len *= fld->_ghost_dims[d];
   }
 
-  mrc_vec_set_type(fld->_vec, mrc_fld_type(fld));
-  mrc_vec_set_param_int(fld->_vec, "len", fld->_len);
-  mrc_fld_setup_member_objs(fld); // sets up our .vec member
-
-  fld->_arr = mrc_vec_get_array(fld->_vec);
+  const char *vec_type = mrc_fld_ops(fld)->vec_type;
+  if (vec_type) {
+    mrc_vec_set_type(fld->_vec, vec_type);
+    mrc_vec_set_param_int(fld->_vec, "len", fld->_len);
+    mrc_fld_setup_member_objs(fld); // sets up our .vec member
+    
+    fld->_arr = mrc_vec_get_array(fld->_vec);
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -540,6 +545,7 @@ static struct mrc_obj_method mrc_fld_int_methods[] = {
     .name                  = #type,			\
     .methods               = mrc_fld_##type##_methods,	\
     .create                = mrc_fld_##type##_create,	\
+    .vec_type              = #type,			\
   };							\
 
 MAKE_MRC_FLD_TYPE(float, FLOAT)

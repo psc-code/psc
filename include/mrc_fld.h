@@ -137,6 +137,7 @@ mrc_fld_same_shape(struct mrc_fld *fld_1, struct mrc_fld *fld_2)
 
 struct mrc_fld_ops {
   MRC_SUBCLASS_OPS(struct mrc_fld);
+  const char *vec_type;
 };
 
 typedef void (*mrc_fld_copy_to_func_t)(struct mrc_fld *,
