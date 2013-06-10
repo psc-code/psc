@@ -146,6 +146,21 @@ mrc_fld_set_nr_comps(struct mrc_fld *fld, int nr_comps)
 }
 
 // ----------------------------------------------------------------------
+// mrc_fld_set_comp_names
+//
+// sets all component names from one :-separated string
+
+void
+mrc_fld_set_comp_names(struct mrc_fld *fld, const char *comps)
+{
+  char *s1, *s = strdup(comps), *s_save = s;
+  for (int m = 0; (s1 = strsep(&s, ",:")); m++) {
+    mrc_fld_set_comp_name(fld, m, s1);
+  }
+  free(s_save);
+}
+
+// ----------------------------------------------------------------------
 // mrc_fld_offs
 
 const int *

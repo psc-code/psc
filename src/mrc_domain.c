@@ -232,6 +232,7 @@ mrc_domain_fld_create(struct mrc_domain *domain, int sw, const char *comps)
   struct mrc_patch *patches = mrc_domain_get_patches(domain, &nr_patches);
   assert(nr_patches == 1);
   struct mrc_fld *fld = mrc_fld_create(mrc_domain_comm(domain));
+  mrc_fld_set_param_obj(fld, "domain", domain);
   if (!comps) {
     comps = ""; // FIXME?
   }
@@ -242,22 +243,15 @@ mrc_domain_fld_create(struct mrc_domain *domain, int sw, const char *comps)
   while (strsep(&s, ",:")) {
     nr_comps++;
   }
+  free(s_save);
 
   int *dims = patches[0].ldims;
   mrc_fld_set_param_int_array(fld, "dims", 4,
 			      (int[4]) { dims[0], dims[1], dims[2], nr_comps });
   mrc_fld_set_param_int_array(fld, "sw", 4,
 			      (int[4]) { sw, sw, sw, 0 });
+  mrc_fld_set_comp_names(fld, comps);
 
-  // parse component names
-  s = s_save;
-  strcpy(s, comps);
-  for (int m = 0; (s1 = strsep(&s, ",:")); m++) {
-    mrc_fld_set_comp_name(fld, m, s1);
-  }
-  free(s_save);
-
-  mrc_fld_set_param_obj(fld, "domain", domain);
   return fld;
 }
 
