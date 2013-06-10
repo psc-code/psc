@@ -131,7 +131,7 @@ main(int argc, char **argv)
   struct ggcm_mhd *mhd = ggcm_mhd_create(MPI_COMM_WORLD);
   ggcm_mhd_set_type(mhd, "cweno");
   ggcm_mhd_step_set_type(mhd->step, "cweno");
-  ggcm_mhd_flds_set_type(mhd->flds_base, "c");
+  mrc_fld_set_type(mhd->fld, "float");
   ggcm_mhd_set_from_options(mhd);
   ggcm_mhd_setup(mhd);
   ggcm_mhd_view(mhd);

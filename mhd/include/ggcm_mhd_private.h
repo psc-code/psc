@@ -29,7 +29,7 @@ struct ggcm_mhd {
   struct mrc_obj obj;
   struct ggcm_mhd_params par;
   struct mrc_domain *domain;
-  struct ggcm_mhd_flds *flds_base;
+  struct mrc_fld *fld;
   struct ggcm_mhd_crds *crds;
   struct ggcm_mhd_step *step;
   struct ggcm_mhd_commu *commu;
@@ -38,7 +38,6 @@ struct ggcm_mhd {
   struct ggcm_mhd_ic *ic;
 
   // mhd state
-  struct mrc_fld *fld;
   float time; // current time
   float dt;   // current timestep (parameter to pred/corr, so can be .5 dt)
   int istep;

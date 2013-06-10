@@ -99,7 +99,7 @@ _ggcm_mhd_create(struct ggcm_mhd *mhd)
   ggcm_mhd_diag_set_param_obj(mhd->diag, "mhd", mhd);
   ggcm_mhd_bnd_set_param_obj(mhd->bnd, "mhd", mhd);
   ggcm_mhd_ic_set_param_obj(mhd->ic, "mhd", mhd);
-  mhd->fld = mhd->flds_base->fld;
+  mrc_fld_set_type(mhd->fld, "fortran");
   mrc_fld_set_param_obj(mhd->fld, "domain", mhd->domain);
   mrc_fld_set_sw(mhd->fld, BND);
   mrc_fld_set_nr_comps(mhd->fld, _NR_FLDS);
@@ -245,7 +245,7 @@ static struct param ggcm_mhd_descr[] = {
   { "dacttime"        , VAR(dacttime)        , MRC_VAR_DOUBLE        },
 
   { "domain"          , VAR(domain)          , MRC_VAR_OBJ(mrc_domain)        },
-  { "flds_base"       , VAR(flds_base)       , MRC_VAR_OBJ(ggcm_mhd_flds)     },
+  { "fld"             , VAR(fld)             , MRC_VAR_OBJ(mrc_fld)           },
   { "crds"            , VAR(crds)            , MRC_VAR_OBJ(ggcm_mhd_crds)     },
   { "step"            , VAR(step)            , MRC_VAR_OBJ(ggcm_mhd_step)     },
   { "commu"           , VAR(commu)           , MRC_VAR_OBJ(ggcm_mhd_commu)    },
