@@ -2,7 +2,6 @@
 #include "ggcm_mhd_private.h"
 
 #include "ggcm_mhd_defs.h"
-#include "ggcm_mhd_flds_private.h"
 #include "ggcm_mhd_crds.h"
 #include "ggcm_mhd_crds_gen.h"
 #include "ggcm_mhd_step.h"

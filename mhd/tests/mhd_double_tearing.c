@@ -47,7 +47,7 @@ ggcm_mhd_ic_double_tearing_run(struct ggcm_mhd_ic *ic)
 {
   struct ggcm_mhd_ic_double_tearing *sub = mrc_to_subobj(ic, struct ggcm_mhd_ic_double_tearing);
   struct ggcm_mhd *mhd = ic->mhd;
-  struct mrc_fld *f3 = ggcm_mhd_flds_get_mrc_fld(mhd->flds_base);
+  struct mrc_fld *f3 = mrc_fld_get_as(mhd->fld, "float");
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);  
 
   struct mrc_fld *fld_psi = mrc_domain_fld_create(mhd->domain, SW_2, NULL);
@@ -199,7 +199,6 @@ main(int argc, char **argv)
   struct ggcm_mhd *mhd = ggcm_mhd_create(MPI_COMM_WORLD);
   ggcm_mhd_set_type(mhd, "double_tearing");
   ggcm_mhd_step_set_type(mhd->step, "cweno");
-  ggcm_mhd_flds_set_type(mhd->flds_base, "c");
   ggcm_mhd_set_from_options(mhd);
   ggcm_mhd_setup(mhd);
   ggcm_mhd_view(mhd);
@@ -219,7 +218,7 @@ main(int argc, char **argv)
   mrc_ts_add_monitor(ts, mon_output);
 
   mrc_ts_set_dt(ts, 1e-6);
-  mrc_ts_set_solution(ts, mrc_fld_to_mrc_obj(ggcm_mhd_flds_get_mrc_fld(mhd->flds_base)));
+  mrc_ts_set_solution(ts, mrc_fld_to_mrc_obj(mhd->fld));
   mrc_ts_set_rhs_function(ts, ts_ggcm_mhd_step_calc_rhs, mhd);
   mrc_ts_set_from_options(ts);
   mrc_ts_view(ts);

@@ -4,7 +4,6 @@
 #include "ggcm_mhd_defs.h"
 #include "ggcm_mhd_private.h"
 #include "ggcm_mhd_commu.h"
-#include "ggcm_mhd_flds.h"
 #include "ggcm_mhd_crds.h"
 
 #include "ggcm_mhd_crds.h"
@@ -44,8 +43,7 @@ ggcm_mhd_bnd_open_x_fill_ghosts(struct ggcm_mhd_bnd *bnd, int m,
 
   ggcm_mhd_commu_run(mhd->commu, m, m+8);
 
-  struct ggcm_mhd_flds *flds = ggcm_mhd_flds_get_as(mhd->flds_base, "c");
-  struct mrc_fld *f3 = ggcm_mhd_flds_get_mrc_fld(flds);
+  struct mrc_fld *f3 = mrc_fld_get_as(mhd->fld, "float");
   const int *dims = mrc_fld_dims(f3);
   int nx = dims[0], ny = dims[1], nz = dims[2];
   int sw = SW_2; 
@@ -196,7 +194,7 @@ ggcm_mhd_bnd_open_x_fill_ghosts(struct ggcm_mhd_bnd *bnd, int m,
     }
   }
 
-ggcm_mhd_flds_put_as(flds, mhd->flds_base);
+  mrc_fld_put_as(f3, mhd->fld);
 }
 
 

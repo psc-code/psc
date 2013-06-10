@@ -34,9 +34,6 @@ libmhd_la_SOURCES = \
 	calc_currcc.c \
 	calc_divb.c \
 	\
-	ggcm_mhd_flds.c \
-	ggcm_mhd_flds_c.c \
-	\
 	ggcm_mhd_ic.c \
 	\
 	ggcm_mhd_step.c \

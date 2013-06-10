@@ -764,8 +764,7 @@ calc_cweno_fluxes(struct mrc_fld **flux, struct mrc_fld *flux_E[3], struct ggcm_
 static void
 fill_ghost_fld(struct ggcm_mhd *mhd, struct mrc_fld *fld)
 {
-  struct ggcm_mhd_flds *flds = ggcm_mhd_flds_get_as(mhd->flds_base, "c");
-  struct mrc_fld *f3 = ggcm_mhd_flds_get_mrc_fld(flds);
+  struct mrc_fld *f3 = mrc_fld_get_as(mhd->fld, "float");
   int sw = 2; 
   int gdims[3];
   mrc_domain_get_global_dims(mhd->domain, gdims);

@@ -4,7 +4,6 @@
 #include "ggcm_mhd_defs.h"
 #include "ggcm_mhd_private.h"
 #include "ggcm_mhd_step.h"
-#include "ggcm_mhd_flds.h"
 #include "ggcm_mhd_crds_private.h"
 #include "ggcm_mhd_crds_gen.h"
 #include "ggcm_mhd_bnd.h"

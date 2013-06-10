@@ -3,7 +3,6 @@
 
 #include "ggcm_mhd_defs.h"
 #include "ggcm_mhd_private.h"
-#include "ggcm_mhd_flds.h"
 
 #include <mrc_domain.h>
 #include <mrc_crds.h>

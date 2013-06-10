@@ -4,9 +4,6 @@
 #include "ggcm_mhd_defs.h"
 #include "ggcm_mhd_private.h"
 #include "ggcm_mhd_commu.h"
-#include "ggcm_mhd_flds.h"
-#include "ggcm_mhd_crds.h"
-
 #include "ggcm_mhd_crds.h"
 
 #include <mrc_domain.h>
