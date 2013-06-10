@@ -38,6 +38,23 @@ _mrc_fld_destroy(struct mrc_fld *fld)
 static void
 _mrc_fld_setup(struct mrc_fld *fld)
 {
+  if (fld->_domain) {
+    // if we have a domain, use that to set _dims
+    if (fld->_dims.nr_vals == 0) {
+      // mrc_fld_set_nr_comps hasn't been called, default to 1
+      mrc_fld_set_nr_comps(fld, 1);
+    }
+    assert(fld->_dims.nr_vals == 4);
+
+    int nr_patches;
+    struct mrc_patch *patches = mrc_domain_get_patches(fld->_domain, &nr_patches);
+    assert(nr_patches == 1);
+    
+    for (int d = 0; d < 3; d++) {
+      fld->_dims.vals[d] = patches[0].ldims[d];
+    }
+  }
+
   if (fld->_offs.nr_vals == 0) {
     mrc_fld_set_param_int_array(fld, "offs", fld->_dims.nr_vals, NULL);
   }
