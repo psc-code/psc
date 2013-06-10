@@ -19,6 +19,67 @@
 
 #define ggcm_mhd_ops(mhd) ((struct ggcm_mhd_ops *) mhd->obj.ops)
 
+static const char *fldname[_NR_FLDS] = {
+  [_RR1 ] = "rr1",
+  [_RV1X] = "rv1x",
+  [_RV1Y] = "rv1y",
+  [_RV1Z] = "rv1z",
+  [_UU1 ] = "uu1",
+  [_B1X ] = "b1x",
+  [_B1Y ] = "b1y",
+  [_B1Z ] = "b1z",
+
+  [_RR2 ] = "rr2",
+  [_RV2X] = "rv2x",
+  [_RV2Y] = "rv2y",
+  [_RV2Z] = "rv2z",
+  [_UU2 ] = "uu2",
+  [_B2X ] = "b2x",
+  [_B2Y ] = "b2y",
+  [_B2Z ] = "b2z",
+
+  [_YMASK] = "ymask",
+  [_ZMASK] = "zmask",
+  [_CMSV ] = "cmsv",
+
+  [_RR  ] = "rr",
+  [_PP  ] = "pp",
+  [_VX  ] = "vx",
+  [_VY  ] = "vy",
+  [_VZ  ] = "vz",
+  [_BX  ] = "bx",
+  [_BY  ] = "by",
+  [_BZ  ] = "bz",
+
+  [_TMP1] = "tmp1",
+  [_TMP2] = "tmp2",
+  [_TMP3] = "tmp3",
+  [_TMP4] = "tmp4",
+
+  [_FLX ] = "ex",
+  [_FLY ] = "ey",
+  [_FLZ ] = "ez",
+
+  [_CX  ] = "cx",
+  [_CY  ] = "cy",
+  [_CZ  ] = "cz",
+
+  [_XTRA1] = "xtra1",
+  [_XTRA2] = "xtra2",
+
+  [_RESIS] = "resis",
+
+  [_CURRX] = "currx",
+  [_CURRY] = "curry",
+  [_CURRZ] = "currz",
+
+  [_RMASK] = "rmask",
+
+  [_BDIPX] = "bdipx",
+  [_BDIPY] = "bdipy",
+  [_BDIPZ] = "bdipz",
+};
+
 // ----------------------------------------------------------------------
 // ggcm_mhd methods
 
@@ -40,6 +101,10 @@ _ggcm_mhd_create(struct ggcm_mhd *mhd)
   ggcm_mhd_ic_set_param_obj(mhd->ic, "mhd", mhd);
   mhd->fld = mhd->flds_base->fld;
   mrc_fld_set_param_obj(mhd->fld, "domain", mhd->domain);
+  mrc_fld_set_nr_comps(mhd->fld, _NR_FLDS);
+  for (int m = 0; m < _NR_FLDS; m++) {
+    mrc_fld_set_comp_name(mhd->fld, m, fldname[m]);
+  }
 }
 
 // ----------------------------------------------------------------------
