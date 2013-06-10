@@ -13,7 +13,6 @@ struct ggcm_mhd_flds {
 
 struct ggcm_mhd_flds_ops {
   MRC_SUBCLASS_OPS(struct ggcm_mhd_flds);
-  void (*copy)(struct ggcm_mhd_flds *to, struct ggcm_mhd_flds *from);
 };
 
 typedef void (*ggcm_mhd_flds_copy_to_func_t)(struct ggcm_mhd_flds *,

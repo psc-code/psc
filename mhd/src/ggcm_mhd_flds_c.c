@@ -21,17 +21,6 @@ ggcm_mhd_flds_c_create(struct ggcm_mhd_flds *flds)
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_flds_c_copy
-
-static void
-ggcm_mhd_flds_c_copy(struct ggcm_mhd_flds *to, struct ggcm_mhd_flds *from_base)
-{
-  struct ggcm_mhd_flds *from = ggcm_mhd_flds_get_as(from_base, "c");
-  mrc_fld_copy(to->fld, from->fld);
-  ggcm_mhd_flds_put_as(from, from_base);
-}
-
-// ----------------------------------------------------------------------
 // ggcm_mhd_flds_c_copy_from_fortran
 
 static void
@@ -64,5 +53,4 @@ struct ggcm_mhd_flds_ops ggcm_mhd_flds_ops_c = {
   .name             = "c",
   .methods          = ggcm_mhd_flds_c_methods,
   .create           = ggcm_mhd_flds_c_create,
-  .copy             = ggcm_mhd_flds_c_copy,
 };

@@ -12,7 +12,6 @@
 MRC_CLASS_DECLARE(ggcm_mhd_flds, struct ggcm_mhd_flds);
 
 struct ggcm_mhd_flds *ggcm_mhd_flds_duplicate(struct ggcm_mhd_flds *flds);
-void ggcm_mhd_flds_copy(struct ggcm_mhd_flds *to, struct ggcm_mhd_flds *from);
 struct ggcm_mhd_flds *ggcm_mhd_flds_get_as(struct ggcm_mhd_flds *flds_base,
 					   const char *type);
 void ggcm_mhd_flds_put_as(struct ggcm_mhd_flds *flds,

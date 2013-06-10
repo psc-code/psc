@@ -147,17 +147,6 @@ ggcm_mhd_flds_duplicate(struct ggcm_mhd_flds *flds)
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_flds_copy
-
-void
-ggcm_mhd_flds_copy(struct ggcm_mhd_flds *to, struct ggcm_mhd_flds *from)
-{
-  struct ggcm_mhd_flds_ops *ops = ggcm_mhd_flds_ops(to);
-  assert(ops && ops->copy);
-  ops->copy(to, from);
-}
-
-// ----------------------------------------------------------------------
 // ggcm_mhd_flds_get_mrc_fld
 //
 // returns the underlying mrc_fld that contains the MHD field data
