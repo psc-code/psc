@@ -86,11 +86,6 @@ static void
 _ggcm_mhd_create(struct ggcm_mhd *mhd)
 {
   mrc_domain_set_type(mhd->domain, "simple");
-  // if we're being compiled standalone, let's default the domain parameters
-  // to match what the hardcoded Fortan parts say.
-#ifdef GNX
-  mrc_domain_set_param_int3(mhd->domain, "lm", (int[3]) { GNX, GNY, GNZ });
-#endif
 
   ggcm_mhd_crds_set_param_obj(mhd->crds, "domain", mhd->domain);
   ggcm_mhd_step_set_param_obj(mhd->step, "mhd", mhd);
