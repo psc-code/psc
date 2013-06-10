@@ -13,10 +13,10 @@
 // ggcm_mhd_commu_run (forward -> subclass)
 
 void
-ggcm_mhd_commu_run(struct ggcm_mhd_commu *commu, int mb, int me)
+ggcm_mhd_commu_run(struct ggcm_mhd_commu *commu, struct mrc_fld *fld, int mb, int me)
 {
   struct ggcm_mhd_commu_ops *ops = ggcm_mhd_commu_ops(commu);
-  ops->run(commu, mb, me);
+  ops->run(commu, fld, mb, me);
 }
 
 // ----------------------------------------------------------------------

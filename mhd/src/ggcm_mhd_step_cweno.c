@@ -140,13 +140,11 @@ static void
 calc_cweno_fluxes(struct mrc_fld **flux, struct mrc_fld *flux_E[3], struct ggcm_mhd *mhd,
 		  struct mrc_fld *u, struct mrc_crds *crds)
 {
-  struct mrc_ddc *ddc = mrc_domain_get_ddc(mhd->domain);
-
   float mpermi = 1.f;
   float gamma = mhd->par.gamm;
   float d_i = mhd->par.d_i;
   float eta = mhd->par.diffco;
-  mrc_ddc_fill_ghosts(ddc, 0, _B1Z + 1, u);
+  ggcm_mhd_fill_ghosts(mhd, u, 0, mhd->time);
 
   // initialize deltas for reconstruction
   struct mrc_fld *u_delta[3];
@@ -270,9 +268,9 @@ calc_cweno_fluxes(struct mrc_fld **flux, struct mrc_fld *flux_E[3], struct ggcm_
 
 #endif
 
-  mrc_ddc_fill_ghosts(ddc, 0, _B1Z + 1, u_delta[0]);
-  mrc_ddc_fill_ghosts(ddc, 0, _B1Z + 1, u_delta[1]);
-  mrc_ddc_fill_ghosts(ddc, 0, _B1Z + 1, u_delta[2]);
+  ggcm_mhd_fill_ghosts(mhd, u_delta[0], 0, mhd->time);
+  ggcm_mhd_fill_ghosts(mhd, u_delta[1], 0, mhd->time);
+  ggcm_mhd_fill_ghosts(mhd, u_delta[2], 0, mhd->time);
                        
   //initialize cell surface center variables			    
   struct mrc_fld *u_p[3], *u_m[3];

@@ -164,10 +164,10 @@ _ggcm_mhd_setup(struct ggcm_mhd *mhd)
 }
 
 void
-ggcm_mhd_fill_ghosts(struct ggcm_mhd *mhd, int m, float bntim)
+ggcm_mhd_fill_ghosts(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m, float bntim)
 {
-  ggcm_mhd_commu_run(mhd->commu, m, m + 8);
-  ggcm_mhd_bnd_fill_ghosts(mhd->bnd, m, bntim);
+  ggcm_mhd_commu_run(mhd->commu, fld, m, m + 8);
+  ggcm_mhd_bnd_fill_ghosts(mhd->bnd, fld, m, bntim);
 }
 
 void

@@ -282,7 +282,7 @@ ggcm_mhd_diag_c_run(struct ggcm_mhd_diag *diag)
   itdia3d = mhd->istep;
   itdia2d = mhd->istep;
 
-  ggcm_mhd_fill_ghosts(mhd, _RR1, mhd->time);
+  ggcm_mhd_fill_ghosts(mhd, mhd->fld, _RR1, mhd->time);
 
   char time_str[80] = "TIME";
   //  ggcm_diag_lib_make_time_string(time_str, mhd->time, mhd->dacttime);

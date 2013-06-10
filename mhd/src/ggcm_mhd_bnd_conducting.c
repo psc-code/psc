@@ -3,7 +3,6 @@
 
 #include "ggcm_mhd_defs.h"
 #include "ggcm_mhd_private.h"
-#include "ggcm_mhd_commu.h"
 #include "ggcm_mhd_crds.h"
 
 #include <mrc_domain.h>
@@ -37,14 +36,13 @@ enum {
    + MRC_F3(fld, i, ix, iy-2, iz) ) / s ) 
 
 static void
-ggcm_mhd_bnd_conducting_fill_ghosts(struct ggcm_mhd_bnd *bnd, int m,
-				float bntim)
+ggcm_mhd_bnd_conducting_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld_base,
+				    int m, float bntim)
 {
   struct ggcm_mhd *mhd = bnd->mhd;
 
-  ggcm_mhd_commu_run(mhd->commu, m, m+8);
+  struct mrc_fld *fld = mrc_fld_get_as(fld_base, "float");
 
-  struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, "float");
   const int *dims = mrc_fld_dims(fld);
   int nx = dims[0], ny = dims[1], nz = dims[2];
   int sw = SW_2; 
@@ -213,7 +211,7 @@ ggcm_mhd_bnd_conducting_fill_ghosts(struct ggcm_mhd_bnd *bnd, int m,
     }
   }
 
-  mrc_fld_put_as(fld, mhd->fld);
+  mrc_fld_put_as(fld, fld_base);
 }
 
 

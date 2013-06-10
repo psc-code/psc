@@ -11,7 +11,8 @@ struct ggcm_mhd_bnd {
 
 struct ggcm_mhd_bnd_ops {
   MRC_SUBCLASS_OPS(struct ggcm_mhd_bnd);
-  void (*fill_ghosts)(struct ggcm_mhd_bnd *bnd, int m, float bntim);
+  void (*fill_ghosts)(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld,
+		      int m, float bntim);
 };
 
 extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_none;

@@ -12,7 +12,8 @@ struct ggcm_mhd_commu {
 
 struct ggcm_mhd_commu_ops {
   MRC_SUBCLASS_OPS(struct ggcm_mhd_commu);
-  void (*run)(struct ggcm_mhd_commu *commu, int mb, int me);
+  void (*run)(struct ggcm_mhd_commu *commu, struct mrc_fld *fld,
+	      int mb, int me);
 };
 
 extern struct ggcm_mhd_commu_ops ggcm_mhd_commu_c_ops;

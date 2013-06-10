@@ -71,13 +71,14 @@ ggcm_mhd_commu_c_destroy(struct ggcm_mhd_commu *commu)
 // ggcm_mhd_commu_c_run
 
 void
-ggcm_mhd_commu_c_run(struct ggcm_mhd_commu *commu, int mb, int me)
+ggcm_mhd_commu_c_run(struct ggcm_mhd_commu *commu, struct mrc_fld *fld,
+		     int mb, int me)
 {
   struct ggcm_mhd_commu_c *commu_c = ggcm_mhd_commu_c(commu);
 
-  struct mrc_fld *f = mrc_fld_get_as(commu->mhd->fld, "float");
+  struct mrc_fld *f = mrc_fld_get_as(fld, "float");
   mrc_ddc_fill_ghosts(commu_c->ddc, mb, me, f);
-  mrc_fld_put_as(f, commu->mhd->fld);
+  mrc_fld_put_as(f, fld);
 }
 
 // ----------------------------------------------------------------------
