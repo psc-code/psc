@@ -230,7 +230,11 @@ mrc_domain_fld_create(struct mrc_domain *domain, int sw, const char *comps)
 {
   struct mrc_fld *fld = mrc_fld_create(mrc_domain_comm(domain));
   mrc_fld_set_param_obj(fld, "domain", domain);
-  mrc_fld_set_comp_names(fld, comps);
+  if (comps) {
+    mrc_fld_set_comp_names(fld, comps);
+  } else {
+    mrc_fld_set_nr_comps(fld, 1);
+  }
   mrc_fld_set_sw(fld, sw);
   return fld;
 }
