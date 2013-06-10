@@ -99,6 +99,7 @@ int
 main(int argc, char **argv)
 {
   MPI_Init(&argc, &argv);
+  libmrc_params_init(argc, argv);
 
   test(false); // non periodic
   test(true);  // periodic
