@@ -25,15 +25,6 @@ _ggcm_mhd_flds_create(struct ggcm_mhd_flds *flds)
 static void
 _ggcm_mhd_flds_setup(struct ggcm_mhd_flds *flds)
 {
-  int nr_patches;
-  struct mrc_patch *patches = mrc_domain_get_patches(flds->fld->_domain, &nr_patches);
-  assert(nr_patches == 1);
-  int *dims = patches[0].ldims;
-  mrc_fld_set_param_int_array(flds->fld, "dims", 4,
-			      (int[4]) { dims[0], dims[1], dims[2], _NR_FLDS });
-  mrc_fld_set_param_int_array(flds->fld, "sw", 4,
-			      (int[4]) { BND, BND, BND, 0 });
-
   mrc_fld_setup(flds->fld);
 }
 
