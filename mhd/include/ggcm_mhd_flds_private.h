@@ -15,11 +15,6 @@ struct ggcm_mhd_flds_ops {
   MRC_SUBCLASS_OPS(struct ggcm_mhd_flds);
 };
 
-typedef void (*ggcm_mhd_flds_copy_to_func_t)(struct ggcm_mhd_flds *,
-					     struct ggcm_mhd_flds *);
-typedef void (*ggcm_mhd_flds_copy_from_func_t)(struct ggcm_mhd_flds *,
-					       struct ggcm_mhd_flds *);
-
 #define ggcm_mhd_flds_ops(flds) ((struct ggcm_mhd_flds_ops *)(flds)->obj.ops)
 
 extern struct ggcm_mhd_flds_ops ggcm_mhd_flds_ops_c;
