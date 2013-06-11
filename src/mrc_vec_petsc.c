@@ -14,12 +14,23 @@
 
 #define CE CHKERRABORT(vec->obj.comm, ierr)
 
+// ======================================================================
+// mrc_vec_petsc subclass
+
+struct mrc_vec_petsc {
+  Vec petsc_vec;
+};
+
+#define mrc_vec_petsc(vec) mrc_to_subobj(vec, struct mrc_vec_petsc)
+
 // ----------------------------------------------------------------------
 // mrc_vec_setup
 
 static void
 _mrc_vec_petsc_setup(struct mrc_vec *vec)
 {
+  struct mrc_vec_petsc *sub = mrc_vec_petsc(vec);
+
   int ierr;
   MPI_Comm petsccomm;
   // This seems to be a valid way to handle the MPI_COMM_NULL edge case,
@@ -32,13 +43,13 @@ _mrc_vec_petsc_setup(struct mrc_vec *vec)
   
   if (!vec->with_array) {
     //vec->obj.comm
-    ierr = VecCreateMPI(petsccomm, vec->len, PETSC_DETERMINE, (Vec *) &vec->_priv_arr); CE;
+    ierr = VecCreateMPI(petsccomm, vec->len, PETSC_DETERMINE, &sub->petsc_vec); CE;
   } else {
     // I'd rather have this in vec_set_sub_set_array, but the calling order doesn't work
     // Petsc needs the len to initialize, and that isn't assigned until mrc_fld_setup.
     // Since 'set array' is called before 'setup' we have to create the petsc vec here instead of there
     assert(vec->arr);
-    ierr = VecCreateMPIWithArray(petsccomm, 1, vec->len, PETSC_DECIDE, vec->arr, (Vec *) &vec->_priv_arr); CE;
+    ierr = VecCreateMPIWithArray(petsccomm, 1, vec->len, PETSC_DECIDE, vec->arr, &sub->petsc_vec); CE;
     // FIXME: I guess our blocksize is 1 for now?
   }
 }
@@ -49,10 +60,11 @@ _mrc_vec_petsc_setup(struct mrc_vec *vec)
 static void
 _mrc_vec_petsc_destroy(struct mrc_vec *vec)
 {
+  struct mrc_vec_petsc *sub = mrc_vec_petsc(vec);
+
   int ierr;
   // Petsc won't dealloc memory for WithArray vecs, so it's always safe to call this
-  ierr = VecDestroy((Vec *) &vec->_priv_arr); CE;
-  vec->_priv_arr = NULL;
+  ierr = VecDestroy(&sub->petsc_vec); CE;
 }
 
 // ----------------------------------------------------------------------
@@ -72,8 +84,9 @@ mrc_vec_sub_set_array(struct mrc_vec *vec, void *arr)
 static void *
 mrc_vec_sub_get_array(struct mrc_vec *vec)
 {
+  struct mrc_vec_petsc *sub = mrc_vec_petsc(vec);
   int ierr;
-  ierr = VecGetArray((Vec) vec->_priv_arr, (PetscScalar **) &vec->arr); CE;
+  ierr = VecGetArray(sub->petsc_vec, (PetscScalar **) &vec->arr); CE;
   return vec->arr;
 }
 
@@ -83,15 +96,11 @@ mrc_vec_sub_get_array(struct mrc_vec *vec)
 static void
 mrc_vec_sub_put_array(struct mrc_vec *vec, void *arr)
 {
+  struct mrc_vec_petsc *sub = mrc_vec_petsc(vec);
   int ierr;
   assert(arr == vec->arr);
-  ierr = VecRestoreArray((Vec) vec->_priv_arr, (PetscScalar **) &vec->arr); CE;
+  ierr = VecRestoreArray(sub->petsc_vec, (PetscScalar **) &vec->arr); CE;
 }
-
-// ======================================================================
-// mrc_vec_petsc subclass
-
-
 
 // ----------------------------------------------------------------------
 // mrc_vec_petsc_create
@@ -103,8 +112,12 @@ mrc_vec_petsc_create(struct mrc_vec *vec)
   vec->size_of_type = sizeof(PetscScalar);
 }
 
+// ----------------------------------------------------------------------
+// mrc_vec subclass "petsc"
+
 struct mrc_vec_ops mrc_vec_petsc_ops = {
-  .name                  = "petsc",			
+  .name                  = "petsc",		
+  .size                  = sizeof(struct mrc_vec_petsc),
   .create                = mrc_vec_petsc_create,	
   .setup                 = _mrc_vec_petsc_setup,
   .destroy               = _mrc_vec_petsc_destroy,

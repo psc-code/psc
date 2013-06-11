@@ -13,9 +13,6 @@ struct mrc_vec {
   // state
   int size_of_type;
   void *arr;
-
-  // hidden info
-  void *_priv_arr;
 };
 
 struct mrc_vec_ops {
