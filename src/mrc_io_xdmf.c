@@ -1618,7 +1618,7 @@ communicate_fld(struct mrc_io *io, struct mrc_fld *gfld, int m, float scale,
 	mrc_fld_set_param_int_array(recv_fld, "dims", 4,
 				   (int[4]) { dim[0], dim[1], dim[2], 1 });
 	mrc_fld_set_param_int_array(recv_fld, "offs", 4,
-				   (int[4]) { off[0], off[1], off[2], 1 });
+				   (int[4]) { off[0], off[1], off[2], 0 });
 	mrc_fld_setup(recv_fld);
 	MPI_Recv(recv_fld->_arr, recv_fld->_len, MPI_FLOAT, n, TAG_DATA, io->obj.comm,
 		 MPI_STATUS_IGNORE);

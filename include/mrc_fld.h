@@ -18,24 +18,14 @@
       assert((ix) >= (f1)->_ghost_off[0] && (ix) < (f1)->_ghost_off[0] + (f1)->_ghost_dims[0]);	\
       p;}))
 
-#define MRC_F3(f3,m, ix,iy,iz)						\
-  (*({ float *p = &((float *) (f3)->_arr)[(((m) * (f3)->_ghost_dims[2] + (iz) - (f3)->_ghost_offs[2]) * \
-	  (f3)->_ghost_dims[1] + (iy) - (f3)->_ghost_offs[1]) *		\
-	(f3)->_ghost_dims[0] + (ix) - (f3)->_ghost_offs[0]];		\
-      assert((m) >= 0 && (m) < (f3)->_nr_comp);				\
-      assert((ix) >= (f3)->_ghost_offs[0] && (ix) < (f3)->_ghost_offs[0] + (f3)->_ghost_dims[0]); \
-      assert((iy) >= (f3)->_ghost_offs[1] && (iy) < (f3)->_ghost_offs[1] + (f3)->_ghost_dims[1]); \
-      assert((iz) >= (f3)->_ghost_offs[2] && (iz) < (f3)->_ghost_offs[2] + (f3)->_ghost_dims[2]); \
-      p;}))
-
 #else
 
 #define MRC_F1(f1,m, ix)					\
   ((f1)->arr[(m) * (f1)->_ghost_dims[0] + (ix) - (f1)->_ghost_off[0]])
 
-#define MRC_F3(f3,m, ix,iy,iz) MRC_S4(f3, ix,iy,iz,m)
-
 #endif
+
+#define MRC_F3(f3,m, ix,iy,iz) MRC_S4(f3, ix,iy,iz,m)
 
 #define MRC_F2(f3,m, ix,iy) MRC_S3(f3, ix,iy,m)
 
@@ -112,13 +102,36 @@ mrc_fld_same_shape(struct mrc_fld *fld_1, struct mrc_fld *fld_2)
   return true;
 }
 
-// FIXME, add BOUNDSCHECK/DEBUG versions
+#ifdef BOUNDS_CHECK
+
+#include <string.h>
+
+#define MRC_FLD(fld, type, i0,i1,i2,i3)					\
+  (*({									\
+      if (strcmp(#type, "float") == 0) assert(fld->_data_type == MRC_NT_FLOAT);	\
+      if (strcmp(#type, "double") == 0) assert(fld->_data_type == MRC_NT_DOUBLE); \
+      if (strcmp(#type, "int") == 0) assert(fld->_data_type == MRC_NT_INT); \
+      assert(i0 >= (fld)->_ghost_offs[0] && i0 < (fld)->_ghost_offs[0] + (fld)->_ghost_dims[0]); \
+      assert(i1 >= (fld)->_ghost_offs[1] && i1 < (fld)->_ghost_offs[1] + (fld)->_ghost_dims[1]); \
+      assert(i2 >= (fld)->_ghost_offs[2] && i2 < (fld)->_ghost_offs[2] + (fld)->_ghost_dims[2]); \
+      assert(i3 >= (fld)->_ghost_offs[3] && i3 < (fld)->_ghost_offs[3] + (fld)->_ghost_dims[3]); \
+      assert((fld)->_arr);						\
+      type *p  =							\
+	&(((type *) (fld)->_arr)[(((i3) *				\
+				   (fld)->_ghost_dims[2] + (i2) - (fld)->_ghost_offs[2]) * \
+				  (fld)->_ghost_dims[1] + (i1) - (fld)->_ghost_offs[1]) * \
+				 (fld)->_ghost_dims[0] + (i0) - (fld)->_ghost_offs[0]]); \
+      p; }))
+
+#else
 
 #define MRC_FLD(fld, type, ix,iy,iz,m)					\
   (((type *) (fld)->_arr)[(((m) *					\
 			    (fld)->_ghost_dims[2] + (iz) - (fld)->_ghost_offs[2]) * \
 			   (fld)->_ghost_dims[1] + (iy) - (fld)->_ghost_offs[1]) * \
 			  (fld)->_ghost_dims[0] + (ix) - (fld)->_ghost_offs[0]])
+
+#endif
 
 #define MRC_S3(fld, ix,iy,iz) MRC_FLD(fld, float, ix,iy,iz,0)
 #define MRC_D3(fld, ix,iy,iz) MRC_FLD(fld, double, ix,iy,iz,0)

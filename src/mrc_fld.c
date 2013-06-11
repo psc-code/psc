@@ -74,12 +74,15 @@ _mrc_fld_setup(struct mrc_fld *fld)
   assert(fld->_dims.nr_vals <= MRC_FLD_MAXDIMS);
 
   fld->_len = 1;
-  for (int d = 0; d < fld->_dims.nr_vals; d++) {
-    fld->_ghost_offs[d] = fld->_offs.vals[d] - fld->_sw.vals[d];
-    fld->_ghost_dims[d] = fld->_dims.vals[d] + 2 * fld->_sw.vals[d];
+  for (int d = 0; d < MRC_FLD_MAXDIMS; d++) {
+    if (d < fld->_dims.nr_vals) {
+      fld->_ghost_offs[d] = fld->_offs.vals[d] - fld->_sw.vals[d];
+      fld->_ghost_dims[d] = fld->_dims.vals[d] + 2 * fld->_sw.vals[d];
+    } else {
+      fld->_ghost_dims[d] = 1;
+    }
     fld->_len *= fld->_ghost_dims[d];
   }
-
 
   const char *vec_type = mrc_fld_ops(fld)->vec_type;
   if (vec_type) {
