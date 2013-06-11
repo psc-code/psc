@@ -62,11 +62,9 @@ calc_neg_divg(struct mrc_fld *rhs, int m, struct mrc_fld *flux, struct mrc_crds 
       float cw =(MRC_CRD(crds, i, ind[i]+1) - MRC_CRD(crds, i, ind[i]));
       MRC_F3(rhs, m, ix, iy, iz) -=( MRC_F3(flux, i, ix+dind[0],iy+dind[1],iz+dind[2]) -
       				     MRC_F3(flux, i, ix,iy,iz))/ cw;
+      assert(isfinite(MRC_F3(rhs, m, ix,iy,iz)));
     }
   } mrc_fld_foreach_end; 
-
-  // make code stop if NaN or inf encountered, use 1 grid value in density as test   
-  assert(isfinite(  MRC_F3(rhs, 0, 0, 0, 0)));
 }
 
 // ----------------------------------------------------------------------
@@ -865,6 +863,7 @@ calc_fct_rhs(struct ggcm_mhd *mhd, struct mrc_fld *rhs, struct mrc_fld *fld, str
                        
 
   struct mrc_ddc *ddc = mrc_domain_get_ddc(mhd->domain);
+  mrc_ddc_set_param_int(ddc, "max_n_fields", 3);
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
   struct mrc_fld *E_ec = ggcm_mhd_get_fields(mhd, "E_ec", 3);
   struct mrc_fld *fex = flux_E[0], *fey = flux_E[1], *fez = flux_E[2];
