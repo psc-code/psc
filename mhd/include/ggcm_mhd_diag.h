@@ -4,6 +4,8 @@
 
 #include <mrc_obj.h>
 
+#include <mrc_fld.h>
+
 // ======================================================================
 // ggcm_mhd_diag
 //
@@ -15,6 +17,11 @@ MRC_CLASS_DECLARE(ggcm_mhd_diag, struct ggcm_mhd_diag);
 // (called at every timestep, most of the time it doesn't
 // actually write any output, but just returns.)
 void ggcm_mhd_diag_run(struct ggcm_mhd_diag *diag);
+
+// Run output of the specified field (which should be an MHD state) now,
+// of the specific type diag_type and with an output index of itdia.
+void ggcm_mhd_diag_run_now(struct ggcm_mhd_diag *diag, struct mrc_fld *fld,
+			   int diag_type, int itdia);
 
 // Shutdown the output server (if any).
 void ggcm_mhd_diag_shutdown(struct ggcm_mhd_diag *diag);

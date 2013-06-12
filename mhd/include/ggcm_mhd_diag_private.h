@@ -14,6 +14,8 @@ struct ggcm_mhd_diag {
 struct ggcm_mhd_diag_ops {
   MRC_SUBCLASS_OPS(struct ggcm_mhd_diag);
   void (*run)(struct ggcm_mhd_diag *);
+  void (*run_now)(struct ggcm_mhd_diag *diag, struct mrc_fld *fld,
+		  int diag_type, int itdia);
   void (*shutdown)(struct ggcm_mhd_diag *);
 };
 
