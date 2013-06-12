@@ -85,6 +85,18 @@ enum {
 #define B1Y(f, ix,iy,iz) B1XYZ(f, 1, ix,iy,iz)
 #define B1Z(f, ix,iy,iz) B1XYZ(f, 2, ix,iy,iz)
 
+#define RR1(f, ix,iy,iz)  MRC_F3(f, _RR1, ix,iy,iz)
+#define RV1X(f, ix,iy,iz) MRC_F3(f, _RV1X, ix,iy,iz)
+#define RV1Y(f, ix,iy,iz) MRC_F3(f, _RV1Y, ix,iy,iz)
+#define RV1Z(f, ix,iy,iz) MRC_F3(f, _RV1Z, ix,iy,iz)
+#define UU1(f, ix,iy,iz)  MRC_F3(f, _UU1, ix,iy,iz)
+
+#define RR(f, ix,iy,iz) MRC_F3(f, _RR, ix,iy,iz)
+#define VX(f, ix,iy,iz) MRC_F3(f, _VX, ix,iy,iz)
+#define VY(f, ix,iy,iz) MRC_F3(f, _VY, ix,iy,iz)
+#define VZ(f, ix,iy,iz) MRC_F3(f, _VZ, ix,iy,iz)
+#define PP(f, ix,iy,iz) MRC_F3(f, _PP, ix,iy,iz)
+
 // ----------------------------------------------------------------------
 // coordinates
 

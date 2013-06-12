@@ -86,17 +86,23 @@ ggcm_mhd_ic_fadeev_run(struct ggcm_mhd_ic *ic)
     B1X(fld, ix,iy,iz) =  (MRC_F3(fld_psi, 0, ix,iy+1,iz) - MRC_F3(fld_psi, 0, ix,iy,iz)) / bd2y[iy];
     B1Y(fld, ix,iy,iz) = -(MRC_F3(fld_psi, 0, ix+1,iy,iz) - MRC_F3(fld_psi, 0, ix,iy,iz)) / bd2x[ix];
 
-    MRC_F3(fld, _RR1, ix, iy, iz)  = 0.5*sqr(Bo) * (1.0-sqr(eps)) * 
+    RR(fld, ix,iy,iz)  = 0.5*sqr(Bo) * (1.0-sqr(eps)) * 
       exp(2.0*kk* MRC_F3(fld_psi, 0, ix,iy,iz)/(Bo)) + 0.5*sqr(Boz) + sub->dens0;
-    MRC_F3(fld, _RV1X, ix,iy,iz) = (pert) * (1.-kk*kk*r[0]*r[0]) *
-      MRC_F3(fld, _RR1, ix, iy, iz) * exp(-kk*kk*r[1]*r[1])*sin(kk*r[0]*0.5);	
-    MRC_F3(fld, _RV1Y, ix,iy,iz) = -(pert) * ( 0.5*kk*r[1] ) * MRC_F3(fld, _RR1, ix, iy, iz) *
+    VX(fld, ix,iy,iz) = (pert) * (1.-kk*kk*r[0]*r[0]) *
+      exp(-kk*kk*r[1]*r[1])*sin(kk*r[0]*0.5);	
+    VY(fld, ix,iy,iz) = -(pert) * ( 0.5*kk*r[1] ) *
       exp(-kk*kk*r[1]*r[1])*cos(kk*r[0]*0.5);            
-    
-    MRC_F3(fld, _UU1 , ix, iy, iz) =  MRC_F3(fld, _RR1, ix, iy, iz) / (gamma -1.f) + 	
-      .5f * (sqr(MRC_F3(fld, _RV1X, ix, iy, iz)) +
-	     sqr(MRC_F3(fld, _RV1Y, ix, iy, iz)) +
-	     sqr(MRC_F3(fld, _RV1Z, ix, iy, iz))) / MRC_F3(fld, _RR1, ix, iy, iz) +
+    PP(fld, ix,iy,iz) = RR(fld, ix,iy,iz);
+
+    RR1 (fld, ix,iy,iz) = RR(fld, ix,iy,iz);
+    RV1X(fld, ix,iy,iz) = RR(fld, ix,iy,iz) * VX(fld, ix,iy,iz);
+    RV1Y(fld, ix,iy,iz) = RR(fld, ix,iy,iz) * VY(fld, ix,iy,iz);
+    RV1Z(fld, ix,iy,iz) = RR(fld, ix,iy,iz) * VZ(fld, ix,iy,iz);
+   
+    UU1 (fld, ix,iy,iz) = PP(fld, ix,iy,iz) / (gamma - 1.f) + 	
+      .5f * RR(fld, ix, iy, iz) * (sqr(VX(fld, ix,iy,iz)) +
+				   sqr(VY(fld, ix,iy,iz)) +
+				   sqr(VZ(fld, ix,iy,iz)))  +
       .5f * (sqr(.5*(B1X(fld, ix,iy,iz) + B1X(fld, ix+1,iy,iz))) +
 	     sqr(.5*(B1Y(fld, ix,iy,iz) + B1Y(fld, ix,iy+1,iz))) +
 	     sqr(.5*(B1Z(fld, ix,iy,iz) + B1Z(fld, ix,iy,iz+1))));
