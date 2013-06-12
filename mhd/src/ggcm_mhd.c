@@ -279,7 +279,7 @@ ggcm_mhd_init_full_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_base
 {
   float gamma = mhd->par.gamm;
 
-  struct mrc_fld *fld = mrc_fld_get_as(fld_base, "float");
+  struct mrc_fld *fld = mrc_fld_get_as(fld_base, "mhd_fc_float");
 
   mrc_fld_foreach(fld, ix, iy, iz, 1, 1) {
     RR1 (fld, ix,iy,iz) = RR(fld, ix,iy,iz);
