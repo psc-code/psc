@@ -7,10 +7,12 @@
 
 #include <mrc_domain.h>
 #include <mrc_ddc.h>
+#include <mrc_io.h>
 
 #include <assert.h>
 #include <math.h>
 
+#define DEBUG
 
 // ----------------------------------------------------------------------
 // ggcm_mhd_get_fields
@@ -266,10 +268,22 @@ calc_cweno_fluxes(struct mrc_fld **flux, struct mrc_fld *flux_E[3], struct ggcm_
 
 #endif
 
+#ifdef DEBUG
+  mrc_fld_foreach(u, ix,iy,iz, 1, 1) {
+    assert(MRC_F3(u, 0, ix,iy,iz) > 0.);
+  } mrc_fld_foreach_end;
+#endif
+
   ggcm_mhd_fill_ghosts(mhd, u_delta[0], 0, mhd->time);
   ggcm_mhd_fill_ghosts(mhd, u_delta[1], 0, mhd->time);
   ggcm_mhd_fill_ghosts(mhd, u_delta[2], 0, mhd->time);
-                       
+
+#ifdef DEBUG
+  mrc_fld_foreach(u, ix,iy,iz, 1, 1) {
+    assert(MRC_F3(u, 0, ix,iy,iz) > 0.);
+  } mrc_fld_foreach_end;
+#endif
+
   //initialize cell surface center variables			    
   struct mrc_fld *u_p[3], *u_m[3];
   for (int f = 0; f < 3; f++) {
@@ -972,6 +986,24 @@ ggcm_mhd_step_cweno_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
   
   fill_ghost_fld(mhd, fld);
 
+#ifdef DEBUG
+  {
+    static struct mrc_io *io;
+    static int cnt;
+    if (!io) {
+      io = mrc_io_create(ggcm_mhd_comm(mhd));
+      mrc_io_set_param_string(io, "basename", "x");
+      mrc_io_set_from_options(io);
+      mrc_io_setup(io);
+      mrc_io_view(io);
+    }
+    mrc_io_open(io, "w", cnt, cnt);
+    mrc_fld_write_comps(mhd->fld, io, (int []) { 0, 1, 2, 3, 4, 5, 6, 7, -1 });
+    mrc_io_close(io);
+    cnt++;
+  }
+#endif
+
   struct mrc_fld *flux[_UU1 + 1];
   for (int m = 0; m < _UU1 + 1; m++) {
     flux[m] = ggcm_mhd_get_fields(mhd, "flux", 3);
@@ -988,7 +1020,30 @@ ggcm_mhd_step_cweno_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
   }
   //fill_ghost_fld(mhd, fld);
   calc_fct_rhs(mhd, rhs, fld, flux_E); 
-  
+
+#ifdef DEBUG
+  {
+    static struct mrc_io *io;
+    static int cnt;
+    if (!io) {
+      io = mrc_io_create(ggcm_mhd_comm(mhd));
+      mrc_io_set_param_string(io, "basename", "rhs");
+      mrc_io_set_from_options(io);
+      mrc_io_setup(io);
+      mrc_io_view(io);
+    }
+    mrc_io_open(io, "w", cnt, cnt);
+    for (int m = 0; m < 8; m++) {
+      char s[10];
+      sprintf(s, "m%d", m);
+      mrc_fld_set_comp_name(rhs, m, s);
+    }
+    mrc_fld_write_comps(rhs, io, (int []) { 0, 1, 2, 3, 4, 5, 6, 7, -1 });
+    mrc_io_close(io);
+    cnt++;
+  }
+#endif
+
   for (int m = 0; m < _UU1 + 1; m++) {
     mrc_fld_destroy(flux[m]);
   }
