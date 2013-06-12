@@ -548,6 +548,20 @@ mrc_fld_get_as(struct mrc_fld *fld_base, const char *type)
   mrc_fld_set_param_int_array(fld, "sw", fld_base->_sw.nr_vals, fld_base->_sw.vals);
   fld->_domain = fld_base->_domain;
   // FIXME, component names, too
+
+  // FIXME, this is openggcm specific and shouldn't be handled here
+  if (strcmp(type, "float") == 0 && strcmp(type_base, "fortran") == 0) {
+    // special case: float from fortran, just use same memory
+    mrc_fld_set_array(fld, fld_base->_arr);
+    mrc_fld_setup(fld);
+    prof_stop(pr);
+    return fld;
+  }
+  if (strcmp(type, "fortran") == 0) {
+    // special case: convert something else to Fortran
+    mprintf("ERROR: trying to convert '%s' to 'fortran'\n", type_base);
+    abort();
+  }
   mrc_fld_setup(fld);
 
   char s[strlen(type) + 12]; sprintf(s, "copy_to_%s", type);
@@ -594,6 +608,18 @@ mrc_fld_put_as(struct mrc_fld *fld, struct mrc_fld *fld_base)
     pr = prof_register("mrc_fld_put_as", 1., 0, 0);
   }
   prof_start(pr);
+
+  // FIXME, this is openggcm specific and shouldn't be handled here
+  if (strcmp(type, "float") == 0 && strcmp(type_base, "fortran") == 0) {
+    // special case: float from fortran, no need to copy back
+    mrc_fld_destroy(fld);
+    prof_stop(pr);
+    return;
+  }
+  if (strcmp(type, "fortran") == 0) {
+    // special case: convert something else to Fortran
+    assert(0); // can't happen
+  }
 
   char s[strlen(type) + 12]; sprintf(s, "copy_from_%s", type);
   mrc_fld_copy_from_func_t copy_from = (mrc_fld_copy_from_func_t)
