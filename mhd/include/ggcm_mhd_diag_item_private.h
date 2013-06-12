@@ -20,6 +20,10 @@ extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_rr1;
 extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_uu1;
 extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_rv1;
 extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_b1;
+extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_rr;
+extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_v;
+extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_pp;
+extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_b;
 extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_j;
 extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_divb;
 
