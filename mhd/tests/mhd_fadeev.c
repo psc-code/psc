@@ -66,7 +66,7 @@ ggcm_mhd_ic_fadeev_run(struct ggcm_mhd_ic *ic)
   float lam = (sub->lambda)*L[0] ;  // defines island size   
   float kk = (2.*M_PI) / lam ;      
 
-  mrc_fld_foreach(fld, ix, iy, iz, 2, 2) {
+  mrc_fld_foreach(fld, ix, iy, iz, 1, 2) {
     r[0] = .5*(MRC_CRDX(crds, ix) + MRC_CRDX(crds, ix-1));
     r[1] = .5*(MRC_CRDY(crds, iy) + MRC_CRDY(crds, iy-1));
     

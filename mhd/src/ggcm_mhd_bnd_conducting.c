@@ -100,8 +100,8 @@ ggcm_mhd_bnd_conducting_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fl
       }
     }
     // set normal magnetic field component for divB=0
-    for (int iz = -sw; iz < nz + sw; iz++) {
-      for (int ix = -sw; ix < nx + sw; ix++) {
+    for (int iz = -sw+1; iz < nz + sw; iz++) {
+      for (int ix = -sw+1; ix < nx + sw; ix++) {
 	MRC_F3(fld,_B1Y, ix,-1,iz) = MRC_F3(fld,_B1Y, ix,0,iz) + bd2y[0] *  
 	  ((MRC_F3(fld,_B1X, ix,0,iz) - MRC_F3(fld,_B1X, ix-1,0,iz) ) / bd2x[ix] + 
 	   (MRC_F3(fld,_B1Z, ix,0,iz) - MRC_F3(fld,_B1Z, ix,0,iz-1) ) / bd2z[iz]);
@@ -118,8 +118,8 @@ ggcm_mhd_bnd_conducting_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fl
       }
     }
     // set normal magnetic field component for divB=0
-    for (int iz = -sw; iz < nz + sw; iz++) {
-      for (int ix = -sw; ix < nx + sw; ix++) {
+    for (int iz = -sw+1; iz < nz + sw; iz++) {
+      for (int ix = -sw+1; ix < nx + sw; ix++) {
 	MRC_F3(fld,_B1Y, ix,-2,iz) = MRC_F3(fld,_B1Y, ix,-1,iz) + bd2y[-1] * 
 	  ((MRC_F3(fld,_B1X, ix,-1,iz) - MRC_F3(fld,_B1X, ix-1,-1,iz) ) / bd2x[ix] + 
            (MRC_F3(fld,_B1Z, ix,-1,iz) - MRC_F3(fld,_B1Z, ix,-1,iz-1) ) / bd2z[iz]);      
@@ -159,10 +159,10 @@ ggcm_mhd_bnd_conducting_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fl
       }
     }
     // set normal magnetic field component for divB=0
-    for (int iz = -sw; iz < nz + sw; iz++) {
-      for (int ix = -sw; ix < nx + sw; ix++) {
+    for (int iz = -sw+1; iz < nz + sw; iz++) {
+      for (int ix = -sw+1; ix < nx + sw; ix++) {
 	MRC_F3(fld,_B1Y, ix,ny-1,iz) = MRC_F3(fld,_B1Y, ix,ny-2,iz) - bd2y[ny-1] *  
-	  ((MRC_F3(fld,_B1X, ix,ny-1,iz) - MRC_F3(fld,_B1X, ix-1,ny-1,iz) ) / bd2x[ix] +  										
+	  ((MRC_F3(fld,_B1X, ix,ny-1,iz) - MRC_F3(fld,_B1X, ix-1,ny-1,iz) ) / bd2x[ix] +
 	   (MRC_F3(fld,_B1Z, ix,ny-1,iz) - MRC_F3(fld,_B1Z, ix,ny-1,iz-1) ) / bd2z[iz]);
       }
     }	
@@ -176,8 +176,8 @@ ggcm_mhd_bnd_conducting_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fl
       }
     }
     // set normal magnetic field component for divB=0
-    for (int iz = -sw; iz < nz + sw; iz++) {
-      for (int ix = -sw; ix < nx + sw; ix++) {
+    for (int iz = -sw+1; iz < nz + sw; iz++) {
+      for (int ix = -sw+1; ix < nx + sw; ix++) {
 	MRC_F3(fld,_B1Y, ix,ny,iz) = MRC_F3(fld,_B1Y, ix,ny-1,iz) - bd2y[ny] *  
 	  ((MRC_F3(fld,_B1X, ix,ny,iz) - MRC_F3(fld,_B1X, ix-1,ny,iz) ) / bd2x[ix] + 
 	   (MRC_F3(fld,_B1Z, ix,ny,iz) - MRC_F3(fld,_B1Z, ix,ny,iz-1) ) / bd2z[iz]);
