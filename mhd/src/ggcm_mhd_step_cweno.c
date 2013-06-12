@@ -4,6 +4,7 @@
 #include "ggcm_mhd_defs.h"
 #include "ggcm_mhd_private.h"
 #include "ggcm_mhd_crds.h"
+#include "ggcm_mhd_diag.h"
 
 #include <mrc_domain.h>
 #include <mrc_ddc.h>
@@ -12,7 +13,7 @@
 #include <assert.h>
 #include <math.h>
 
-#define DEBUG
+//#define DEBUG
 
 // ----------------------------------------------------------------------
 // ggcm_mhd_get_fields
@@ -64,7 +65,7 @@ calc_neg_divg(struct mrc_fld *rhs, int m, struct mrc_fld *flux, struct mrc_crds 
       float cw =(MRC_CRD(crds, i, ind[i]+1) - MRC_CRD(crds, i, ind[i]));
       MRC_F3(rhs, m, ix, iy, iz) -=( MRC_F3(flux, i, ix+dind[0],iy+dind[1],iz+dind[2]) -
       				     MRC_F3(flux, i, ix,iy,iz))/ cw;
-      assert(isfinite(MRC_F3(rhs, m, ix,iy,iz)));
+      //      assert(isfinite(MRC_F3(rhs, m, ix,iy,iz)));
     }
   } mrc_fld_foreach_end; 
 }
@@ -988,19 +989,16 @@ ggcm_mhd_step_cweno_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
 
 #ifdef DEBUG
   {
-    static struct mrc_io *io;
+    static struct ggcm_mhd_diag *diag;
     static int cnt;
-    if (!io) {
-      io = mrc_io_create(ggcm_mhd_comm(mhd));
-      mrc_io_set_param_string(io, "basename", "x");
-      mrc_io_set_from_options(io);
-      mrc_io_setup(io);
-      mrc_io_view(io);
+    if (!diag) {
+      diag = ggcm_mhd_diag_create(ggcm_mhd_comm(mhd));
+      ggcm_mhd_diag_set_param_obj(diag, "mhd", mhd);
+      ggcm_mhd_diag_set_param_string(diag, "run", "fld");
+      ggcm_mhd_diag_setup(diag);
+      ggcm_mhd_diag_view(diag);
     }
-    mrc_io_open(io, "w", cnt, cnt);
-    mrc_fld_write_comps(mhd->fld, io, (int []) { 0, 1, 2, 3, 4, 5, 6, 7, -1 });
-    mrc_io_close(io);
-    cnt++;
+    ggcm_mhd_diag_run_now(diag, mhd->fld, DIAG_TYPE_3D, cnt++);
   }
 #endif
 
@@ -1023,24 +1021,16 @@ ggcm_mhd_step_cweno_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
 
 #ifdef DEBUG
   {
-    static struct mrc_io *io;
+    static struct ggcm_mhd_diag *diag;
     static int cnt;
-    if (!io) {
-      io = mrc_io_create(ggcm_mhd_comm(mhd));
-      mrc_io_set_param_string(io, "basename", "rhs");
-      mrc_io_set_from_options(io);
-      mrc_io_setup(io);
-      mrc_io_view(io);
+    if (!diag) {
+      diag = ggcm_mhd_diag_create(ggcm_mhd_comm(mhd));
+      ggcm_mhd_diag_set_param_obj(diag, "mhd", mhd);
+      ggcm_mhd_diag_set_param_string(diag, "run", "rhs");
+      ggcm_mhd_diag_setup(diag);
+      ggcm_mhd_diag_view(diag);
     }
-    mrc_io_open(io, "w", cnt, cnt);
-    for (int m = 0; m < 8; m++) {
-      char s[10];
-      sprintf(s, "m%d", m);
-      mrc_fld_set_comp_name(rhs, m, s);
-    }
-    mrc_fld_write_comps(rhs, io, (int []) { 0, 1, 2, 3, 4, 5, 6, 7, -1 });
-    mrc_io_close(io);
-    cnt++;
+    ggcm_mhd_diag_run_now(diag, mhd->fld, DIAG_TYPE_3D, cnt++);
   }
 #endif
 
