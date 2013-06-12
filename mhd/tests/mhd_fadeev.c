@@ -77,15 +77,17 @@ ggcm_mhd_ic_fadeev_run(struct ggcm_mhd_ic *ic)
   float *bd2y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD2);
 
   mrc_fld_foreach(fld, ix, iy, iz, 1, 1) {
+    B1X(fld, ix,iy,iz) =  (MRC_F3(fld_psi, 0, ix,iy+1,iz) - MRC_F3(fld_psi, 0, ix,iy,iz)) / bd2y[iy];
+    B1Y(fld, ix,iy,iz) = -(MRC_F3(fld_psi, 0, ix+1,iy,iz) - MRC_F3(fld_psi, 0, ix,iy,iz)) / bd2x[ix];
+  } mrc_fld_foreach_end;
+
+  mrc_fld_foreach(fld, ix, iy, iz, 1, 1) {
     // FIXME! the staggering for B is okay, but fld_psi and other stuff below needs to be
     // fixed / checked for cell-centered
     r[0] = MRC_CRD(crds, 0, ix);
     r[1] = MRC_CRD(crds, 1, iy);
     r[2] = MRC_CRD(crds, 2, iz);
     
-    B1X(fld, ix,iy,iz) =  (MRC_F3(fld_psi, 0, ix,iy+1,iz) - MRC_F3(fld_psi, 0, ix,iy,iz)) / bd2y[iy];
-    B1Y(fld, ix,iy,iz) = -(MRC_F3(fld_psi, 0, ix+1,iy,iz) - MRC_F3(fld_psi, 0, ix,iy,iz)) / bd2x[ix];
-
     RR(fld, ix,iy,iz)  = 0.5*sqr(Bo) * (1.0-sqr(eps)) * 
       exp(2.0*kk* MRC_F3(fld_psi, 0, ix,iy,iz)/(Bo)) + 0.5*sqr(Boz) + sub->dens0;
     VX(fld, ix,iy,iz) = (pert) * (1.-kk*kk*r[0]*r[0]) *
