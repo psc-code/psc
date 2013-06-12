@@ -1,6 +1,7 @@
 
-#include <mrc_io.h>
+#include "ggcm_mhd_diag_private.h"
 
+#include <mrc_io.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -41,15 +42,14 @@ make_basename(const char *run, float sheet, int outtype)
 // ggcm_diag_lib_create_mrc_io
 
 struct mrc_io *
-ggcm_diag_lib_create_mrc_io(MPI_Comm comm, const char *outputmode,
+ggcm_diag_lib_create_mrc_io(MPI_Comm comm, const char *run, const char *outputmode,
 			    int outtype, float sheet, int rank_diagsrv)
 {
   struct mrc_io *io = mrc_io_create(comm);
   mrc_io_set_type(io, outputmode);
 
-  const char *outdir = ".", *run = "run";
+  const char *outdir = ".";
   mrc_params_get_option_string("outdir", &outdir);
-  mrc_params_get_option_string("run", &run);
   char *basename = make_basename(run, sheet, outtype);
   mrc_io_set_param_string(io, "basename", basename);
   if (rank_diagsrv >= 0) {

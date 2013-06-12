@@ -27,7 +27,7 @@ void ggcm_mhd_diag_c_write_one_fld(struct mrc_io *io, struct mrc_fld *f,
 
 // ----------------------------------------------------------------------
 
-struct mrc_io * ggcm_diag_lib_create_mrc_io(MPI_Comm comm, const char *outputmode,
+struct mrc_io * ggcm_diag_lib_create_mrc_io(MPI_Comm comm, const char *run, const char *outputmode,
 					    int outtype, float sheet, int rank_diagsrv);
 void ggcm_diag_lib_write_openggcm_attrs(struct mrc_io *io, const char *time_str);
 void ggcm_diag_lib_make_time_string(char s[80], float time, double dacttime);

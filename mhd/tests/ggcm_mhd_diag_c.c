@@ -20,6 +20,7 @@
 
 struct ggcm_mhd_diag_c {
   // parameters
+  char *run;
   char *fields;
   char *outplanex;
   char *outplaney;
@@ -50,13 +51,13 @@ create_mrc_io(struct ggcm_mhd_diag *diag, int outtype, float sheet)
   struct mrc_io *io;
 
   if (sub->rank_diagsrv > 0) {
-    io = ggcm_diag_lib_create_mrc_io(ggcm_mhd_diag_comm(diag), "combined",
+    io = ggcm_diag_lib_create_mrc_io(ggcm_mhd_diag_comm(diag), sub->run, "combined",
 				     outtype, sheet, sub->rank_diagsrv);
   } else {
     const char *outputmode = "xdmf_collective";
     mrc_params_get_option_string("outputmode", &outputmode);
 
-    io = ggcm_diag_lib_create_mrc_io(ggcm_mhd_diag_comm(diag), outputmode,
+    io = ggcm_diag_lib_create_mrc_io(ggcm_mhd_diag_comm(diag), sub->run, outputmode,
 				     outtype, sheet, -1);
   }
 
@@ -324,6 +325,7 @@ ggcm_mhd_diag_c_shutdown(struct ggcm_mhd_diag *diag)
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_diag_c, x)
 static struct param ggcm_mhd_diag_c_descr[] = {
+  { "run"             , VAR(run)             , PARAM_STRING("run")        },
   { "fields"          , VAR(fields)          , PARAM_STRING("rr:pp:v:b")  },
   { "outplanex"       , VAR(outplanex)       , PARAM_STRING("")           },
   { "outplaney"       , VAR(outplaney)       , PARAM_STRING("")           },
