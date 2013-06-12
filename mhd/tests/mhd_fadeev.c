@@ -58,7 +58,6 @@ ggcm_mhd_ic_fadeev_run(struct ggcm_mhd_ic *ic)
     L[i] = xh[i] - xl[i];
   }
   
-  float gamma = mhd->par.gamm;
   float Bo = sub->Bo;
   float pert = sub->pert;
   float Boz = sub->Boz;
@@ -77,16 +76,14 @@ ggcm_mhd_ic_fadeev_run(struct ggcm_mhd_ic *ic)
   float *bd2y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD2);
 
   mrc_fld_foreach(fld, ix, iy, iz, 1, 1) {
-    B1X(fld, ix,iy,iz) =  (MRC_F3(fld_psi, 0, ix,iy+1,iz) - MRC_F3(fld_psi, 0, ix,iy,iz)) / bd2y[iy];
-    B1Y(fld, ix,iy,iz) = -(MRC_F3(fld_psi, 0, ix+1,iy,iz) - MRC_F3(fld_psi, 0, ix,iy,iz)) / bd2x[ix];
-  } mrc_fld_foreach_end;
-
-  mrc_fld_foreach(fld, ix, iy, iz, 1, 1) {
     // FIXME! the staggering for B is okay, but fld_psi and other stuff below needs to be
     // fixed / checked for cell-centered
     r[0] = MRC_CRD(crds, 0, ix);
     r[1] = MRC_CRD(crds, 1, iy);
     r[2] = MRC_CRD(crds, 2, iz);
+
+    B1X(fld, ix,iy,iz) =  (MRC_F3(fld_psi, 0, ix,iy+1,iz) - MRC_F3(fld_psi, 0, ix,iy,iz)) / bd2y[iy];
+    B1Y(fld, ix,iy,iz) = -(MRC_F3(fld_psi, 0, ix+1,iy,iz) - MRC_F3(fld_psi, 0, ix,iy,iz)) / bd2x[ix];
     
     RR(fld, ix,iy,iz)  = 0.5*sqr(Bo) * (1.0-sqr(eps)) * 
       exp(2.0*kk* MRC_F3(fld_psi, 0, ix,iy,iz)/(Bo)) + 0.5*sqr(Boz) + sub->dens0;
@@ -95,20 +92,9 @@ ggcm_mhd_ic_fadeev_run(struct ggcm_mhd_ic *ic)
     VY(fld, ix,iy,iz) = -(pert) * ( 0.5*kk*r[1] ) *
       exp(-kk*kk*r[1]*r[1])*cos(kk*r[0]*0.5);            
     PP(fld, ix,iy,iz) = RR(fld, ix,iy,iz);
-
-    RR1 (fld, ix,iy,iz) = RR(fld, ix,iy,iz);
-    RV1X(fld, ix,iy,iz) = RR(fld, ix,iy,iz) * VX(fld, ix,iy,iz);
-    RV1Y(fld, ix,iy,iz) = RR(fld, ix,iy,iz) * VY(fld, ix,iy,iz);
-    RV1Z(fld, ix,iy,iz) = RR(fld, ix,iy,iz) * VZ(fld, ix,iy,iz);
-   
-    UU1 (fld, ix,iy,iz) = PP(fld, ix,iy,iz) / (gamma - 1.f) + 	
-      .5f * RR(fld, ix, iy, iz) * (sqr(VX(fld, ix,iy,iz)) +
-				   sqr(VY(fld, ix,iy,iz)) +
-				   sqr(VZ(fld, ix,iy,iz)))  +
-      .5f * (sqr(.5*(B1X(fld, ix,iy,iz) + B1X(fld, ix+1,iy,iz))) +
-	     sqr(.5*(B1Y(fld, ix,iy,iz) + B1Y(fld, ix,iy+1,iz))) +
-	     sqr(.5*(B1Z(fld, ix,iy,iz) + B1Z(fld, ix,iy,iz+1))));
   } mrc_fld_foreach_end;
+
+  ggcm_mhd_init_full_from_primitive(mhd, fld);
 }
 
 // ----------------------------------------------------------------------
