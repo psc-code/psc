@@ -128,7 +128,7 @@ ggcm_mhd_diag_item_pp_full_run(struct ggcm_mhd_diag_item *item,
   struct mrc_fld *r = mrc_fld_get_as(fld_r, "float");
   struct mrc_fld *f = mrc_fld_get_as(fld, "mhd_fc_float");
 
-  mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
+  mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
     float rvv = (sqr(MRC_F3(f, _RV1X, ix,iy,iz)) +
 		 sqr(MRC_F3(f, _RV1Y, ix,iy,iz)) +
 		 sqr(MRC_F3(f, _RV1Z, ix,iy,iz))) / MRC_F3(f, _RR1, ix,iy,iz);

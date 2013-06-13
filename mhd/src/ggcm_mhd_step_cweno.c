@@ -173,20 +173,20 @@ calc_cweno_fluxes(struct mrc_fld **_flux, struct mrc_fld *_flux_E[3], struct ggc
   }
 
 #if LMTR == 1
-  // TVD slope limiter  (van Leer 1977) geometric mean
+  // TVD slope limiter  (van Leer 1977) harmonic mean
   // (dxu_)ijk = max{ (u_i+1jk-u_ijk)*(u_ijk-u_i-1jk)  / (u_i+1jk - u_i-1jk)}
   mrc_fld_foreach(u, ix,iy,iz, 1, 1) {
     for (int m = 0; m < _B1Z+1; m++) {
       MRC_F3(u_delta[0], m, ix,iy,iz) = 
-	0.5*fmaxf((MRC_F3(u, m, ix+1,iy,iz) - MRC_F3(u, m, ix  ,iy,iz)) *
+	fmaxf((MRC_F3(u, m, ix+1,iy,iz) - MRC_F3(u, m, ix  ,iy,iz)) *
 	      (MRC_F3(u, m, ix  ,iy,iz) - MRC_F3(u, m, ix-1,iy,iz)) , 0.f) /
 	(MRC_F3(u, m, ix+1,iy,iz) - MRC_F3(u, m, ix-1,iy,iz));
       MRC_F3(u_delta[1], m, ix,iy,iz) = 
-	0.5*fmaxf((MRC_F3(u, m, ix,iy+1,iz) - MRC_F3(u, m, ix,iy  ,iz)) *
+	fmaxf((MRC_F3(u, m, ix,iy+1,iz) - MRC_F3(u, m, ix,iy  ,iz)) *
 	      (MRC_F3(u, m, ix,iy  ,iz) - MRC_F3(u, m, ix,iy-1,iz)), 0.f) / 
 	(MRC_F3(u, m, ix,iy+1,iz) - MRC_F3(u, m, ix,iy-1,iz));
       MRC_F3(u_delta[2], m, ix,iy,iz) = 
-	0.5*fmaxf((MRC_F3(u, m, ix,iy,iz+1) - MRC_F3(u, m, ix,iy,iz  )) *
+	fmaxf((MRC_F3(u, m, ix,iy,iz+1) - MRC_F3(u, m, ix,iy,iz  )) *
 	      (MRC_F3(u, m, ix,iy,iz  ) - MRC_F3(u, m, ix,iy,iz-1)), 0.f) /
 	(MRC_F3(u, m, ix,iy,iz+1) - MRC_F3(u, m, ix,iy,iz-1));
       // FIXME, need to make sure NaN -> 0
@@ -395,7 +395,7 @@ calc_cweno_fluxes(struct mrc_fld **_flux, struct mrc_fld *_flux_E[3], struct ggc
   float *bdz3 = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD3);
 
   for (int i = 0; i < 3; i++) {    
-    mrc_fld_foreach(u, ix,iy,iz, 2, 2) {	
+    mrc_fld_foreach(u, ix,iy,iz, 1, 1) {	
       // _p
       MRC_F3(u_p[i],_JX, ix,iy,iz) = 
 	0.5*((MRC_F3(u,_B1Z, ix,iy+1,iz) - MRC_F3(u,_B1Z, ix,iy-1,iz)) * bdy3[iy] - 
