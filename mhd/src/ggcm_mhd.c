@@ -100,6 +100,7 @@ _ggcm_mhd_create(struct ggcm_mhd *mhd)
   for (int m = 0; m < _NR_FLDS; m++) {
     mrc_fld_set_comp_name(mhd->fld, m, fldname[m]);
   }
+  mrc_fld_dict_add_obj(mhd->fld, "mhd", mhd);
 }
 
 // ----------------------------------------------------------------------
