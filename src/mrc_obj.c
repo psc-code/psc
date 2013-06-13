@@ -1127,6 +1127,14 @@ mrc_obj_dict_add_string(struct mrc_obj *obj, const char *name, const char *val)
   mrc_obj_dict_add(obj, PT_STRING, name, &uval);
 }
 
+void
+mrc_obj_dict_add_obj(struct mrc_obj *obj, const char *name, struct mrc_obj *val)
+{
+  union param_u uval;
+  uval.u_obj = val;
+  mrc_obj_dict_add(obj, PT_OBJ, name, &uval);
+}
+
 static void
 get_var(void *p, struct param *descr, const char *name, int type, union param_u **pv)
 {

@@ -127,6 +127,7 @@ void mrc_obj_dict_add_bool(struct mrc_obj *obj, const char *name, bool val);
 void mrc_obj_dict_add_float(struct mrc_obj *obj, const char *name, float val);
 void mrc_obj_dict_add_double(struct mrc_obj *obj, const char *name, double val);
 void mrc_obj_dict_add_string(struct mrc_obj *obj, const char *name, const char *val);
+void mrc_obj_dict_add_obj(struct mrc_obj *obj, const char *name, struct mrc_obj *val);
 
 void mrc_obj_view(struct mrc_obj *obj);
 void mrc_obj_setup(struct mrc_obj *obj);
@@ -376,6 +377,13 @@ mrc_void_func_t mrc_obj_get_method(struct mrc_obj *obj, const char *name);
   pfx ## _dict_add_string(obj_type *obj, const char *name, const char *val) \
   {									\
     mrc_obj_dict_add_string((struct mrc_obj *)obj, name, val);		\
+  }									\
+									\
+  static inline void							\
+  pfx ## _dict_add_obj(obj_type *obj, const char *name, void *val)	\
+  {									\
+    mrc_obj_dict_add_obj((struct mrc_obj *)obj, name,			\
+			 (struct mrc_obj *)val);			\
   }									\
 									\
   static inline void 							\
