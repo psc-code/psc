@@ -42,9 +42,15 @@ ggcm_mhd_get_fields(struct ggcm_mhd *mhd, const char *name, int nr_comp)
 #define incws 1
 
 enum {
+  // reuse B in the _fluxes_ (only) to store E field
+  _EX = _B1X,
+  _EY,
+  _EZ,
+
   _JX = 11,
   _JY,
   _JZ,
+
   __NR_FLDS,
 };
 
@@ -730,33 +736,33 @@ calc_cweno_fluxes(struct mrc_fld *_flux[5], struct ggcm_mhd *mhd,
 #endif    
 
     // Flux of _EX,_EY,_EZ through the x faces
-    MRC_F3(flux[5+0], 0, ix,iy,iz) = 
+    MRC_F3(flux[_EX], 0, ix,iy,iz) = 
       (1.f/(ap - am)) * ( (ap*am) * ( MRC_F3(u_m[0], _B1X, ix,iy,iz) - MRC_F3(u_p[0], _B1X, ix-1,iy,iz)));
-    MRC_F3(flux[5+1], 0, ix,iy,iz) = 
+    MRC_F3(flux[_EY], 0, ix,iy,iz) = 
       (1.f/(ap - am)) * (   - ap * MRC_F3(E_p[0], 2, ix-1, iy,iz) + am *  MRC_F3(E_m[0], 2, ix,iy,iz) + 
 			 (ap*am)*   ( MRC_F3(u_m[0], _B1Y, ix,iy,iz) -  MRC_F3(u_p[0], _B1Y, ix-1,iy,iz) ));
-    MRC_F3(flux[5+2], 0, ix,iy,iz) = 
+    MRC_F3(flux[_EZ], 0, ix,iy,iz) = 
       (1.f/(ap - am)) * (     ap * MRC_F3(E_p[0], 1, ix-1,iy,iz) - am *  MRC_F3(E_m[0], 1, ix,iy,iz) + 
 			 (ap*am) * ( MRC_F3(u_m[0], _B1Z, ix,iy,iz) - MRC_F3(u_p[0], _B1Z, ix-1,iy,iz) ));  
     
     // flux of _EX,_EY,_EZ through the y faces    
-    MRC_F3(flux[5+0], 1, ix,iy,iz) =
+    MRC_F3(flux[_EX], 1, ix,iy,iz) =
        (1.f/(bp - bm)) * (     bp  *  MRC_F3(E_p[1], 2, ix,iy-1,iz) - bm * MRC_F3(E_m[1], 2, ix,iy,iz) + 
 		         (bp * bm) *  ( MRC_F3(u_m[1], _B1X, ix,iy,iz) -    MRC_F3(u_p[1], _B1X, ix,iy-1,iz) ));
-    MRC_F3(flux[5+1], 1, ix,iy,iz) =
+    MRC_F3(flux[_EY], 1, ix,iy,iz) =
        (1.f/(bp - bm)) * ( (bp * bm)* ( MRC_F3(u_m[1], _B1Y, ix,iy,iz) - MRC_F3(u_p[1], _B1Y, ix,iy-1,iz) ));    
-    MRC_F3(flux[5+2], 1, ix,iy,iz) =
+    MRC_F3(flux[_EZ], 1, ix,iy,iz) =
        (1.f/(bp - bm)) * (    - bp * MRC_F3(E_p[1], 0, ix,iy-1,iz) + bm *  MRC_F3(E_m[1], 0, ix,iy,iz) + 
 		         (bp * bm) *  ( MRC_F3(u_m[1], _B1Z, ix,iy,iz) -     MRC_F3(u_p[1], _B1Z, ix,iy-1,iz) ));  
     
     // flux of _EX,_EY,_EZ through the z faces
-    MRC_F3(flux[5+0], 2, ix,iy,iz) = 
+    MRC_F3(flux[_EX], 2, ix,iy,iz) = 
       (1.f/(cp - cm))*( - cp * MRC_F3(E_p[2], 1, ix,iy,iz-1) + cm * MRC_F3(E_m[2], 1, ix,iy,iz) + 
 			 (cp * cm) * ( MRC_F3(u_m[2], _B1X, ix,iy,iz) - MRC_F3(u_p[2], _B1X, ix,iy,iz-1) ));
-    MRC_F3(flux[5+1], 2, ix,iy,iz) =
+    MRC_F3(flux[_EY], 2, ix,iy,iz) =
       (1.f/(cp - cm)) *(  cp * MRC_F3(E_p[2], 0, ix,iy,iz-1) - cm * MRC_F3(E_m[2], 0, ix,iy,iz) +
 		         (cp * cm) * ( MRC_F3(u_m[2], _B1Y, ix,iy,iz) -    MRC_F3(u_p[2], _B1Y, ix,iy,iz-1) ));
-    MRC_F3(flux[5+2], 2, ix,iy,iz) = 
+    MRC_F3(flux[_EZ], 2, ix,iy,iz) = 
       (1.f/(cp - cm))*(  (cp * cm) * ( MRC_F3(u_m[2], _B1Z, ix,iy,iz) - MRC_F3(u_p[2], _B1Z, ix,iy,iz-1) ));    
 
     for (int m = 0; m < _UU1+1; m++) {
@@ -922,9 +928,9 @@ calc_fct_rhs(struct ggcm_mhd *mhd, struct mrc_fld *_rhs, struct mrc_fld *_flux[8
   struct mrc_fld *_E_ec = ggcm_mhd_get_fields(mhd, "E_ec", 3);
 
   struct mrc_fld *E_ec = mrc_fld_get_as(_E_ec, "float");
-  struct mrc_fld *fex = mrc_fld_get_as(_flux[5], "float");
-  struct mrc_fld *fey = mrc_fld_get_as(_flux[6], "float");
-  struct mrc_fld *fez = mrc_fld_get_as(_flux[7], "float");
+  struct mrc_fld *fex = mrc_fld_get_as(_flux[_EX], "float");
+  struct mrc_fld *fey = mrc_fld_get_as(_flux[_EY], "float");
+  struct mrc_fld *fez = mrc_fld_get_as(_flux[_EZ], "float");
 
   //initialize cell edge center Electric field structure      
   mrc_fld_foreach(E_ec, ix,iy,iz, 1, 1) { 
@@ -947,12 +953,13 @@ calc_fct_rhs(struct ggcm_mhd *mhd, struct mrc_fld *_rhs, struct mrc_fld *_flux[8
   //  we can (correctly apply the boundary condition). 
   /////////////////////////////////////////////////
 
-  mrc_fld_put_as(E_ec, _E_ec);
   mrc_fld_put_as(fex, _flux[5]);
   mrc_fld_put_as(fey, _flux[6]);
   mrc_fld_put_as(fez, _flux[7]);
 
-  //  fill_ghost_fld(mhd, fld);
+  mrc_fld_put_as(E_ec, _E_ec);
+
+  //  fill_ghost_fld(mhd, E_ec);
 
   struct mrc_fld *rhs = mrc_fld_get_as(_rhs, "float");
   E_ec = mrc_fld_get_as(_E_ec, "float");
