@@ -25,9 +25,6 @@ void ggcm_mhd_set_state(struct ggcm_mhd *mhd);
 
 int ggcm_mhd_ntot(struct ggcm_mhd *mhd);
 
-void ggcm_mhd_init_from_primitive(struct ggcm_mhd *mhd,
-				  struct mrc_fld *fld_base);
-
 void ts_ggcm_mhd_step_calc_rhs(void *ctx, struct mrc_obj *_rhs, float time,
 			       struct mrc_obj *_fld);
 

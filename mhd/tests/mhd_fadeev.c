@@ -65,7 +65,7 @@ ggcm_mhd_ic_fadeev_run(struct ggcm_mhd_ic *ic)
   float kk = (2.*M_PI) / lam ;      
 
   struct mrc_fld *psi = mrc_fld_get_as(fld_psi, "float");
-  struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, "float");
+  struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, "mhd_pr_float");
 
   mrc_fld_foreach(psi, ix, iy, iz, 1, 2) {
     r[0] = .5*(MRC_CRDX(crds, ix) + MRC_CRDX(crds, ix-1));
@@ -82,24 +82,21 @@ ggcm_mhd_ic_fadeev_run(struct ggcm_mhd_ic *ic)
     // fixed / checked for cell-centered
     r[0] = MRC_CRD(crds, 0, ix);
     r[1] = MRC_CRD(crds, 1, iy);
-    r[2] = MRC_CRD(crds, 2, iz);
 
     B1X(fld, ix,iy,iz) =  (MRC_F3(fld_psi, 0, ix,iy+1,iz) - MRC_F3(fld_psi, 0, ix,iy,iz)) / bd2y[iy];
     B1Y(fld, ix,iy,iz) = -(MRC_F3(fld_psi, 0, ix+1,iy,iz) - MRC_F3(fld_psi, 0, ix,iy,iz)) / bd2x[ix];
     
-    RR(fld, ix,iy,iz)  = 0.5*sqr(Bo) * (1.0-sqr(eps)) * 
+    RR1(fld, ix,iy,iz)  = 0.5*sqr(Bo) * (1.0-sqr(eps)) * 
       exp(2.0*kk* MRC_F3(fld_psi, 0, ix,iy,iz)/(Bo)) + 0.5*sqr(Boz) + sub->dens0;
-    VX(fld, ix,iy,iz) = (pert) * (1.-kk*kk*r[0]*r[0]) *
+    V1X(fld, ix,iy,iz) = (pert) * (1.-kk*kk*r[0]*r[0]) *
       exp(-kk*kk*r[1]*r[1])*sin(kk*r[0]*0.5);	
-    VY(fld, ix,iy,iz) = -(pert) * ( 0.5*kk*r[1] ) *
+    V1Y(fld, ix,iy,iz) = -(pert) * ( 0.5*kk*r[1] ) *
       exp(-kk*kk*r[1]*r[1])*cos(kk*r[0]*0.5);            
-    PP(fld, ix,iy,iz) = RR(fld, ix,iy,iz);
+    PP1(fld, ix,iy,iz) = RR1(fld, ix,iy,iz);
   } mrc_fld_foreach_end;
 
   mrc_fld_put_as(psi, fld_psi);
   mrc_fld_put_as(fld, mhd->fld);
-
-  ggcm_mhd_init_from_primitive(mhd, fld);
 }
 
 // ----------------------------------------------------------------------
