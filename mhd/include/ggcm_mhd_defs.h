@@ -67,6 +67,12 @@ enum {
   _BDIPY, 
   _BDIPZ,
   _NR_FLDS,
+
+  // for (mhd_pr_float) primitive fields, reuse indices from 0 to 7
+  _V1X = _RV1X,
+  _V1Y = _RV1Y,
+  _V1Z = _RV1Z,
+  _PP1 = _UU1,
 };
 
 // ----------------------------------------------------------------------
@@ -90,6 +96,11 @@ enum {
 #define RV1Y(f, ix,iy,iz) MRC_F3(f, _RV1Y, ix,iy,iz)
 #define RV1Z(f, ix,iy,iz) MRC_F3(f, _RV1Z, ix,iy,iz)
 #define UU1(f, ix,iy,iz)  MRC_F3(f, _UU1, ix,iy,iz)
+
+#define V1X(f, ix,iy,iz) MRC_F3(f, _V1X, ix,iy,iz)
+#define V1Y(f, ix,iy,iz) MRC_F3(f, _V1Y, ix,iy,iz)
+#define V1Z(f, ix,iy,iz) MRC_F3(f, _V1Z, ix,iy,iz)
+#define PP1(f, ix,iy,iz) MRC_F3(f, _PP1, ix,iy,iz)
 
 #define RR(f, ix,iy,iz) MRC_F3(f, _RR, ix,iy,iz)
 #define VX(f, ix,iy,iz) MRC_F3(f, _VX, ix,iy,iz)

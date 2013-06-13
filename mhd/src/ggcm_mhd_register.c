@@ -9,7 +9,8 @@
 
 extern struct mrc_ts_ops mrc_ts_ggcm_ops;
 
-extern struct mrc_fld_mhd_fc_float_ops mrc_fld_ops_mhd_fc_float;
+extern struct mrc_fld_ops mrc_fld_ops_mhd_pr_float;
+extern struct mrc_fld_ops mrc_fld_ops_mhd_fc_float;
 
 extern struct mrc_ts_monitor_ops mrc_ts_monitor_ggcm_ops;
 
@@ -33,6 +34,7 @@ ggcm_mhd_register()
   // force regular subclasses to be registered first
   struct mrc_fld *fld = mrc_fld_create(MPI_COMM_NULL);
   mrc_fld_destroy(fld);
+  mrc_class_register_subclass(&mrc_class_mrc_fld, &mrc_fld_ops_mhd_pr_float);
   mrc_class_register_subclass(&mrc_class_mrc_fld, &mrc_fld_ops_mhd_fc_float);
 #if 0
   mrc_class_register_subclass(&mrc_class_mrc_ts, &mrc_ts_ggcm_ops);
