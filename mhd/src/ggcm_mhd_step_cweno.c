@@ -938,7 +938,7 @@ fill_ghost_fld(struct ggcm_mhd *mhd, struct mrc_fld *_fld)
 #endif
 
 static void
-calc_fct_rhs(struct ggcm_mhd *mhd, struct mrc_fld *_rhs, struct mrc_fld *_fld, struct mrc_fld *_flux[8])
+calc_fct_rhs(struct ggcm_mhd *mhd, struct mrc_fld *_rhs, struct mrc_fld *_flux[8])
 {  
   // compute edge centered electric fields by interpolation (iv)  here tmp_fld are edge centered 
   // so that e.g.  MRC_F3(tmp_fld, 0, 0, 0, 0) is E_x 0,-1/2,-1/2  
@@ -949,50 +949,27 @@ calc_fct_rhs(struct ggcm_mhd *mhd, struct mrc_fld *_rhs, struct mrc_fld *_fld, s
   struct mrc_ddc *ddc = mrc_domain_get_ddc(mhd->domain);
   mrc_ddc_set_param_int(ddc, "max_n_fields", 3);
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-  /* struct mrc_fld *E_ec = ggcm_mhd_get_fields(mhd, "E_ec", 3); */
+  struct mrc_fld *_E_ec = ggcm_mhd_get_fields(mhd, "E_ec", 3);
 
-  struct mrc_fld *fld = mrc_fld_get_as(_fld, "float");
+  struct mrc_fld *E_ec = mrc_fld_get_as(_E_ec, "float");
   struct mrc_fld *fex = mrc_fld_get_as(_flux[5], "float");
   struct mrc_fld *fey = mrc_fld_get_as(_flux[6], "float");
   struct mrc_fld *fez = mrc_fld_get_as(_flux[7], "float");
 
   //initialize cell edge center Electric field structure      
-  mrc_fld_foreach(fld, ix, iy,  iz, 1, 1) { 
-
-    /*
-    MRC_F3(E_ec, 0, ix, iy, iz) = 0.25*(-MRC_F3(fez, 1, ix, iy, iz) -
-					 MRC_F3(fez, 1, ix, iy, iz-1) +
-					 MRC_F3(fey, 2, ix, iy, iz) +
-					 MRC_F3(fey, 2, ix, iy-1, iz));    
-    //MRC_F3(fld,_EX, ix, iy, iz) = MRC_F3(E_ec, 0, ix, iy, iz);    
-    MRC_F3(E_ec, 1, ix, iy, iz) = 0.25*( MRC_F3(fez, 0, ix, iy, iz) +
-					 MRC_F3(fez, 0, ix, iy, iz-1) -
-					 MRC_F3(fex, 2, ix, iy, iz) -
-					 MRC_F3(fex, 2, ix-1, iy, iz));    
-    //MRC_F3(fld,_EY, ix, iy, iz) = MRC_F3(E_ec, 1, ix, iy, iz);        
-    MRC_F3(E_ec, 2, ix, iy, iz) = 0.25*(-MRC_F3(fey, 0, ix, iy, iz) -
-					 MRC_F3(fey, 0, ix, iy-1, iz) +
-					 MRC_F3(fex, 1, ix, iy, iz) +
-					 MRC_F3(fex, 1, ix-1, iy, iz));    
-    //MRC_F3(fld,_EZ, ix, iy, iz) = MRC_F3(E_ec, 2, ix, iy, iz);
-    */
-
-    MRC_F3(fld, _EX, ix, iy, iz) = 0.25*(-MRC_F3(fez, 1, ix, iy, iz) -
-					 MRC_F3(fez, 1, ix, iy, iz-1) +
-					 MRC_F3(fey, 2, ix, iy, iz) +
-					 MRC_F3(fey, 2, ix, iy-1, iz));    
-    //MRC_F3(fld,_EX, ix, iy, iz) = MRC_F3(E_ec, 0, ix, iy, iz);    
-    MRC_F3(fld, _EY, ix, iy, iz) = 0.25*( MRC_F3(fez, 0, ix, iy, iz) +
-					 MRC_F3(fez, 0, ix, iy, iz-1) -
-					 MRC_F3(fex, 2, ix, iy, iz) -
-					 MRC_F3(fex, 2, ix-1, iy, iz));    
-    //MRC_F3(fld,_EY, ix, iy, iz) = MRC_F3(E_ec, 1, ix, iy, iz);        
-    MRC_F3(fld, _EZ, ix, iy, iz) = 0.25*(-MRC_F3(fey, 0, ix, iy, iz) -
-					 MRC_F3(fey, 0, ix, iy-1, iz) +
-					 MRC_F3(fex, 1, ix, iy, iz) +
-					 MRC_F3(fex, 1, ix-1, iy, iz));    
-    //MRC_F3(fld,_EZ, ix, iy, iz) = MRC_F3(E_ec, 2, ix, iy, iz);
-
+  mrc_fld_foreach(E_ec, ix,iy,iz, 1, 1) { 
+    MRC_F3(E_ec, 0, ix,iy,iz) = .25f*(- MRC_F3(fez, 1, ix  ,iy  ,iz  )
+				      - MRC_F3(fez, 1, ix  ,iy  ,iz-1) 
+				      + MRC_F3(fey, 2, ix  ,iy  ,iz  )
+				      + MRC_F3(fey, 2, ix  ,iy-1,iz  ));    
+    MRC_F3(E_ec, 1, ix,iy,iz) = .25f*(- MRC_F3(fex, 2, ix  ,iy  ,iz  )
+				      - MRC_F3(fex, 2, ix-1,iy  ,iz  )
+				      + MRC_F3(fez, 0, ix  ,iy  ,iz  )
+				      + MRC_F3(fez, 0, ix  ,iy  ,iz-1));
+    MRC_F3(E_ec, 2, ix,iy,iz) = .25f*(- MRC_F3(fey, 0, ix  ,iy  ,iz  )
+				      - MRC_F3(fey, 0, ix  ,iy-1,iz  )
+				      + MRC_F3(fex, 1, ix  ,iy  ,iz  )
+				      + MRC_F3(fex, 1, ix-1,iy  ,iz  ));    
   } mrc_fld_foreach_end;
   
   /////////////////////////////////////////////////
@@ -1000,7 +977,7 @@ calc_fct_rhs(struct ggcm_mhd *mhd, struct mrc_fld *_rhs, struct mrc_fld *_fld, s
   //  we can (correctly apply the boundary condition). 
   /////////////////////////////////////////////////
 
-  mrc_fld_put_as(fld, _fld);
+  mrc_fld_put_as(E_ec, _E_ec);
   mrc_fld_put_as(fex, _flux[5]);
   mrc_fld_put_as(fey, _flux[6]);
   mrc_fld_put_as(fez, _flux[7]);
@@ -1008,53 +985,32 @@ calc_fct_rhs(struct ggcm_mhd *mhd, struct mrc_fld *_rhs, struct mrc_fld *_fld, s
   //  fill_ghost_fld(mhd, fld);
 
   struct mrc_fld *rhs = mrc_fld_get_as(_rhs, "float");
-  fld = mrc_fld_get_as(_fld, "float");
+  E_ec = mrc_fld_get_as(_E_ec, "float");
 
   mrc_fld_foreach(rhs, ix, iy,  iz, 1, 1) {
-    
     B1X(rhs, ix, iy, iz) =  
-      (-(( MRC_F3(fld, _EZ, ix, iy+1, iz) - MRC_F3(fld, _EZ, ix, iy, iz) ) /
-	 (.5f*( MRC_CRDY(crds, iy+1) - MRC_CRDY(crds, iy-1) ))) 
-       +(( MRC_F3(fld, _EY, ix, iy, iz+1) - MRC_F3(fld, _EY, ix, iy, iz) ) /
-	 (.5f*( MRC_CRDZ(crds, iz+1) - MRC_CRDZ(crds, iz-1) )))); 
+      (-((MRC_F3(E_ec, 2, ix, iy+1, iz) - MRC_F3(E_ec, 2, ix, iy, iz)) /
+	 (.5f*( MRC_CRDY(crds, iy+1) - MRC_CRDY(crds, iy-1)))) 
+       +((MRC_F3(E_ec, 1, ix, iy, iz+1) - MRC_F3(E_ec, 1, ix, iy, iz)) /
+	 (.5f*( MRC_CRDZ(crds, iz+1) - MRC_CRDZ(crds, iz-1))))); 
     
     B1Y(rhs, ix, iy, iz) = 
-      (-(( MRC_F3(fld, _EX, ix, iy, iz+1) - MRC_F3(fld, _EX, ix, iy, iz) ) /
-	 (.5f*( MRC_CRD(crds, 2, iz+1) - MRC_CRD(crds, 2, iz-1) )))
-       +(( MRC_F3(fld, _EZ, ix+1, iy, iz) - MRC_F3(fld, _EZ, ix, iy, iz) ) /
-	 (.5f*(MRC_CRD(crds, 0, ix+1) - MRC_CRD(crds, 0, ix-1) )))); 
+      (-((MRC_F3(E_ec, 0, ix, iy, iz+1) - MRC_F3(E_ec, 0, ix, iy, iz)) /
+	 (.5f*( MRC_CRD(crds, 2, iz+1) - MRC_CRD(crds, 2, iz-1))))
+       +((MRC_F3(E_ec, 2, ix+1, iy, iz) - MRC_F3(E_ec, 2, ix, iy, iz)) /
+	 (.5f*(MRC_CRD(crds, 0, ix+1) - MRC_CRD(crds, 0, ix-1))))); 
     
     B1Z(rhs, ix, iy, iz) = 
-      (-(( MRC_F3( fld, _EY, ix+1, iy, iz) - MRC_F3(fld, _EY, ix, iy, iz) ) /
-	 (.5f*( MRC_CRD(crds, 0, ix+1) - MRC_CRD(crds, 0, ix-1) )))  
-       +(( MRC_F3( fld, _EX, ix, iy+1, iz) - MRC_F3(fld, _EX, ix, iy, iz) ) /
-	 (.5f*( MRC_CRD(crds, 1, iy+1) - MRC_CRD(crds, 1, iy-1) )))); 
-
-    /*
-    B1X(rhs, ix, iy, iz) =  
-      (-(( MRC_F3(E_ec, 2, ix, iy+1, iz) - MRC_F3(E_ec, 2, ix, iy, iz) ) /
-	 (.5f*( MRC_CRDY(crds, iy+1) - MRC_CRDY(crds, iy-1) ))) 
-       +(( MRC_F3(E_ec, 1, ix, iy, iz+1) - MRC_F3(E_ec, 1, ix, iy, iz) ) /
-	 (.5f*( MRC_CRDZ(crds, iz+1) - MRC_CRDZ(crds, iz-1) )))); 
-    
-    B1Y(rhs, ix, iy, iz) = 
-      (-(( MRC_F3(E_ec,  0, ix, iy, iz+1) - MRC_F3(E_ec, 0, ix, iy, iz) ) /
-	 (.5f*( MRC_CRD(crds, 2, iz+1) - MRC_CRD(crds, 2, iz-1) )))
-       +(( MRC_F3(E_ec, 2, ix+1, iy, iz) - MRC_F3(E_ec, 2, ix, iy, iz) ) /
-	 (.5f*(MRC_CRD(crds, 0, ix+1) - MRC_CRD(crds, 0, ix-1) )))); 
-    
-    B1Z(rhs, ix, iy, iz) = 
-      (-(( MRC_F3(E_ec, 1, ix+1, iy, iz) - MRC_F3(E_ec, 1, ix, iy, iz) ) /
-	 (.5f*( MRC_CRD(crds, 0, ix+1) - MRC_CRD(crds, 0, ix-1) )))  
-       +(( MRC_F3(E_ec, 0, ix, iy+1, iz) - MRC_F3(E_ec, 0, ix, iy, iz) ) /
-	 (.5f*( MRC_CRD(crds, 1, iy+1) - MRC_CRD(crds, 1, iy-1) )))); 
-    */
+      (-((MRC_F3( E_ec, 1, ix+1, iy, iz) - MRC_F3(E_ec, 1, ix, iy, iz)) /
+	 (.5f*( MRC_CRD(crds, 0, ix+1) - MRC_CRD(crds, 0, ix-1))))  
+       +((MRC_F3( E_ec, 0, ix, iy+1, iz) - MRC_F3(E_ec, 0, ix, iy, iz)) /
+	 (.5f*( MRC_CRD(crds, 1, iy+1) - MRC_CRD(crds, 1, iy-1))))); 
   } mrc_fld_foreach_end;
     
-  mrc_fld_put_as(fld, _fld);
+  mrc_fld_put_as(E_ec, _E_ec);
   mrc_fld_put_as(rhs, _rhs);
 
-  /* mrc_fld_destroy(E_ec);  */
+  mrc_fld_destroy(_E_ec);
 }
 
 static void
@@ -1091,7 +1047,7 @@ ggcm_mhd_step_cweno_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
     calc_neg_divg(rhs, m, flux[m], crds);
   }
   //fill_ghost_fld(mhd, fld);
-  calc_fct_rhs(mhd, rhs, fld, flux); 
+  calc_fct_rhs(mhd, rhs, flux);
 
 #ifdef DEBUG
   {

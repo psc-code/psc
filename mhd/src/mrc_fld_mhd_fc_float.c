@@ -49,9 +49,6 @@ mrc_fld_mhd_fc_float_copy_from_float(struct mrc_fld *fld_fc, struct mrc_fld *fld
     B1X (fc, ix,iy,iz) = B1X (sc, ix,iy,iz);
     B1Y (fc, ix,iy,iz) = B1Y (sc, ix,iy,iz);
     B1Z (fc, ix,iy,iz) = B1Z (sc, ix,iy,iz);
-    for (int m = 8; m < 11; m++) {
-      MRC_F3(fc, m, ix,iy,iz) = MRC_F3(sc, m, ix,iy,iz);
-    }
     MRC_F3(fc, _YMASK, ix,iy,iz) = MRC_F3(sc, _YMASK, ix,iy,iz);
   } mrc_fld_foreach_end;
 
@@ -80,9 +77,6 @@ mrc_fld_mhd_fc_float_copy_to_float(struct mrc_fld *fld_fc, struct mrc_fld *fld_s
     B1X (sc, ix,iy,iz) = B1X (fc, ix,iy,iz);
     B1Y (sc, ix,iy,iz) = B1Y (fc, ix,iy,iz);
     B1Z (sc, ix,iy,iz) = B1Z (fc, ix,iy,iz);
-    for (int m = 8; m < 11; m++) {
-      MRC_F3(sc, m, ix,iy,iz) = MRC_F3(fc, m, ix,iy,iz);
-    }
     MRC_F3(sc, _YMASK, ix,iy,iz) = MRC_F3(fc, _YMASK, ix,iy,iz);
   } mrc_fld_foreach_end;
 
