@@ -42,17 +42,20 @@ ggcm_mhd_ic_ot_run(struct ggcm_mhd_ic *ic)
 
   // FIXME, the "1" no of ghosts is ugly here, and caused by the use of
   // the B1* macros which shift the index (due to staggering)...
+  // FIXME, need to set all components, can't rely on things being initialized to
+  // zero because of the -> primitive conversion which divides by RR :(
   mrc_fld_foreach(fld, ix,iy,iz, 1, 1) {
     float r[3];
     r[0] = MRC_CRD(crds, 0, ix);
     r[1] = MRC_CRD(crds, 1, iy);
     RR1(fld, ix,iy,iz) = 25. / (36.*M_PI);
-    V1X(fld, ix,iy,iz) = - sin(2. * M_PI * r[1]);
-    V1Y(fld, ix,iy,iz) =   sin(2. * M_PI * r[0] );
     PP1(fld, ix,iy,iz) = RR1(fld, ix,iy,iz);
+    V1X(fld, ix,iy,iz) = - sin(2. * M_PI * r[1]);
+    V1Y(fld, ix,iy,iz) =   sin(2. * M_PI * r[0]);
+    V1Z(fld, ix,iy,iz) = 0.;
     B1X(fld, ix,iy,iz) = - sqrt(1./(4.*M_PI)) * sin(2. * M_PI * r[1]); 
     B1Y(fld, ix,iy,iz) =   sqrt(1./(4.*M_PI)) * sin(4. * M_PI * r[0]);
-    B1Z(fld, ix,iy,iz) = 0.0;
+    B1Z(fld, ix,iy,iz) = 0.;
   } mrc_fld_foreach_end;
 
   mrc_fld_put_as(fld, mhd->fld);
@@ -132,6 +135,7 @@ main(int argc, char **argv)
  
   struct ggcm_mhd *mhd = ggcm_mhd_create(MPI_COMM_WORLD);
   ggcm_mhd_set_type(mhd, "ot");
+  mrc_fld_set_type(mhd->fld, "mhd_fc_float");
   ggcm_mhd_step_set_type(mhd->step, "cweno");
   ggcm_mhd_set_from_options(mhd);
   ggcm_mhd_setup(mhd);

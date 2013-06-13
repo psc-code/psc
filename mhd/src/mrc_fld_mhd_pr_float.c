@@ -37,7 +37,6 @@ mrc_fld_mhd_pr_float_create(struct mrc_fld *fld)
 static void
 mrc_fld_mhd_pr_float_copy_from_float(struct mrc_fld *fld_pr, struct mrc_fld *fld_sc)
 {
-  return;
   struct mrc_fld *pr = mrc_fld_get_as(fld_pr, "mhd_pr_float");
   struct mrc_fld *sc = mrc_fld_get_as(fld_sc, "float");
 
@@ -105,11 +104,83 @@ mrc_fld_mhd_pr_float_copy_to_float(struct mrc_fld *fld_pr, struct mrc_fld *fld_s
 }
 
 // ----------------------------------------------------------------------
+// mrc_fld_mhd_pr_float_copy_from_mhd_fc_float
+
+static void
+mrc_fld_mhd_pr_float_copy_from_mhd_fc_float(struct mrc_fld *fld_pr, struct mrc_fld *fld_fc)
+{
+  struct mrc_fld *pr = mrc_fld_get_as(fld_pr, "mhd_pr_float");
+  struct mrc_fld *fc = mrc_fld_get_as(fld_fc, "mhd_fc_float");
+
+  struct ggcm_mhd *mhd = mrc_fld_get_param_obj(fld_fc, "mhd");
+  assert(mhd);
+  float gamma = mhd->par.gamm;
+
+  mrc_fld_foreach(pr, ix, iy, iz, 1, 1) {
+    RR1(pr, ix,iy,iz) = RR1 (fc, ix,iy,iz);
+    V1X(pr, ix,iy,iz) = RV1X(fc, ix,iy,iz) / RR1(fc, ix,iy,iz);
+    V1Y(pr, ix,iy,iz) = RV1Y(fc, ix,iy,iz) / RR1(fc, ix,iy,iz);
+    V1Z(pr, ix,iy,iz) = RV1Z(fc, ix,iy,iz) / RR1(fc, ix,iy,iz);
+    PP1(pr, ix,iy,iz) = (gamma - 1.f) * 
+      (UU1 (fc, ix,iy,iz) -
+      .5f * RR1(pr, ix, iy, iz) * (sqr(V1X(pr, ix,iy,iz)) +
+				   sqr(V1Y(pr, ix,iy,iz)) +
+				   sqr(V1Z(pr, ix,iy,iz))) -
+      .5f * (sqr(.5*(B1X(fc, ix,iy,iz) + B1X(fc, ix+1,iy,iz))) +
+	     sqr(.5*(B1Y(fc, ix,iy,iz) + B1Y(fc, ix,iy+1,iz))) +
+	     sqr(.5*(B1Z(fc, ix,iy,iz) + B1Z(fc, ix,iy,iz+1)))));
+    B1X (pr, ix,iy,iz) = B1X (fc, ix,iy,iz);
+    B1Y (pr, ix,iy,iz) = B1Y (fc, ix,iy,iz);
+    B1Z (pr, ix,iy,iz) = B1Z (fc, ix,iy,iz);
+  } mrc_fld_foreach_end;
+
+  mrc_fld_put_as(pr, fld_pr);
+  mrc_fld_put_as(fc, fld_fc);
+}
+
+// ----------------------------------------------------------------------
+// mrc_fld_mhd_pr_float_copy_to_mhd_fc_float
+
+static void
+mrc_fld_mhd_pr_float_copy_to_mhd_fc_float(struct mrc_fld *fld_pr, struct mrc_fld *fld_fc)
+{
+  struct mrc_fld *pr = mrc_fld_get_as(fld_pr, "mhd_pr_float");
+  struct mrc_fld *fc = mrc_fld_get_as(fld_fc, "mhd_fc_float");
+
+  struct ggcm_mhd *mhd = mrc_fld_get_param_obj(fld_fc, "mhd");
+  assert(mhd);
+  float gamma = mhd->par.gamm;
+
+  mrc_fld_foreach(fc, ix, iy, iz, 2, 2) {
+    RR1 (fc, ix,iy,iz) = RR1(pr, ix,iy,iz);
+    RV1X(fc, ix,iy,iz) = RR1(pr, ix,iy,iz) * V1X(pr, ix,iy,iz);
+    RV1Y(fc, ix,iy,iz) = RR1(pr, ix,iy,iz) * V1Y(pr, ix,iy,iz);
+    RV1Z(fc, ix,iy,iz) = RR1(pr, ix,iy,iz) * V1Z(pr, ix,iy,iz);
+    UU1 (fc, ix,iy,iz) = PP1(pr, ix,iy,iz) / (gamma - 1.f) + 	
+      .5f * RR1(pr, ix, iy, iz) * (sqr(V1X(pr, ix,iy,iz)) +
+				   sqr(V1Y(pr, ix,iy,iz)) +
+				   sqr(V1Z(pr, ix,iy,iz))) +
+      .5f * (sqr(.5*(B1X(pr, ix,iy,iz) + B1X(pr, ix+1,iy,iz))) +
+	     sqr(.5*(B1Y(pr, ix,iy,iz) + B1Y(pr, ix,iy+1,iz))) +
+	     sqr(.5*(B1Z(pr, ix,iy,iz) + B1Z(pr, ix,iy,iz+1))));
+
+    B1X (fc, ix,iy,iz) = B1X(pr, ix,iy,iz);
+    B1Y (fc, ix,iy,iz) = B1Y(pr, ix,iy,iz);
+    B1Z (fc, ix,iy,iz) = B1Z(pr, ix,iy,iz);
+  } mrc_fld_foreach_end;
+
+  mrc_fld_put_as(pr, fld_pr);
+  mrc_fld_put_as(fc, fld_fc);
+}
+
+// ----------------------------------------------------------------------
 // mrc_fld subclass "mhd_pr_float" 
 
 static struct mrc_obj_method mrc_fld_mhd_pr_float_methods[] = {
-  MRC_OBJ_METHOD("copy_to_float",   mrc_fld_mhd_pr_float_copy_to_float),
-  MRC_OBJ_METHOD("copy_from_float", mrc_fld_mhd_pr_float_copy_from_float),
+  MRC_OBJ_METHOD("copy_to_float"         , mrc_fld_mhd_pr_float_copy_to_float),
+  MRC_OBJ_METHOD("copy_from_float"       , mrc_fld_mhd_pr_float_copy_from_float),
+  MRC_OBJ_METHOD("copy_to_mhd_fc_float"  , mrc_fld_mhd_pr_float_copy_to_mhd_fc_float),
+  MRC_OBJ_METHOD("copy_from_mhd_fc_float", mrc_fld_mhd_pr_float_copy_from_mhd_fc_float),
   {}
 };
 

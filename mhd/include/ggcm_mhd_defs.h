@@ -102,12 +102,6 @@ enum {
 #define V1Z(f, ix,iy,iz) MRC_F3(f, _V1Z, ix,iy,iz)
 #define PP1(f, ix,iy,iz) MRC_F3(f, _PP1, ix,iy,iz)
 
-#define RR(f, ix,iy,iz) MRC_F3(f, _RR, ix,iy,iz)
-#define VX(f, ix,iy,iz) MRC_F3(f, _VX, ix,iy,iz)
-#define VY(f, ix,iy,iz) MRC_F3(f, _VY, ix,iy,iz)
-#define VZ(f, ix,iy,iz) MRC_F3(f, _VZ, ix,iy,iz)
-#define PP(f, ix,iy,iz) MRC_F3(f, _PP, ix,iy,iz)
-
 // ----------------------------------------------------------------------
 // coordinates
 
