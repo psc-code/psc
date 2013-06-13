@@ -188,8 +188,10 @@ hdf5_write_field2d_serial(struct mrc_io *io, float scale, struct mrc_fld *fld,
   hid_t filespace = H5Screate_simple(2, fdims, NULL); H5_CHK(filespace);
   hid_t dataset = H5Dcreate(group, "2d", H5T_NATIVE_FLOAT, filespace,
 			    H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT); H5_CHK(dataset);
-  
-  ierr = H5Dwrite(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, fld->_arr); CE;
+
+  struct mrc_fld *f = mrc_fld_get_as(fld, "float");
+  ierr = H5Dwrite(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, f->_arr); CE;
+  mrc_fld_put_as(f, fld);
 
   ierr = H5Dclose(dataset); CE;
   ierr = H5Sclose(filespace); CE;

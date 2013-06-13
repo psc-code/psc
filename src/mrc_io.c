@@ -212,15 +212,19 @@ mrc_io_write_f3(struct mrc_io *io, const char *path, struct mrc_fld *fld, float 
       mrc_fld_set_comp_name(m3, m, mrc_fld_comp_name(fld, m));
     }
     mrc_fld_setup(m3);
+
+    struct mrc_fld *f = mrc_fld_get_as(fld, "float");
     for (int m = 0; m < nr_comps; m++) {
       mrc_fld_foreach_patch(m3, p) {
 	struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, p);
 	mrc_m3_foreach_bnd(m3p, ix,iy,iz) {
-	  MRC_M3(m3p, m, ix,iy,iz) = MRC_F3(fld, m, ix,iy,iz) * scale;
+	  MRC_M3(m3p, m, ix,iy,iz) = MRC_F3(f, m, ix,iy,iz) * scale;
 	} mrc_m3_foreach_end;
 	mrc_fld_patch_put(m3);
       }
     }
+    mrc_fld_put_as(f, fld);
+
     mrc_io_write_m3(io, path, m3);
     mrc_fld_destroy(m3);
   }
@@ -324,39 +328,49 @@ mrc_io_write_field_slice(struct mrc_io *io, float scale, struct mrc_fld *fld,
     s1 *= scale;
     s2 *= scale;
 
+    struct mrc_fld *f = mrc_fld_get_as(fld, "float");
     switch (dim) {
-    case 0:
+    case 0: {
       mrc_fld_set_param_int_array(f2, "dims", 3, (int[3]) { dims[1], dims[2], 1 });
       mrc_fld_setup(f2);
+      struct mrc_fld *_f2 = mrc_fld_get_as(f2, "float");
       for(int iz = 0; iz < dims[2]; iz++) {
 	for(int iy = 0; iy < dims[1]; iy++) {
-	  MRC_F2(f2,0, iy,iz) = (s1 * MRC_F3(fld,0, ii-2,iy,iz) +
-				 s2 * MRC_F3(fld,0, ii-1,iy,iz));
+	  MRC_F2(_f2,0, iy,iz) = (s1 * MRC_F3(f,0, ii-2,iy,iz) +
+				  s2 * MRC_F3(f,0, ii-1,iy,iz));
 	}
       }
+      mrc_fld_put_as(_f2, f2);
+    }
       break;
-    case 1:
+    case 1: {
       mrc_fld_set_param_int_array(f2, "dims", 3, (int[3]) { dims[0], dims[2], 1 });
       mrc_fld_setup(f2);
+      struct mrc_fld *_f2 = mrc_fld_get_as(f2, "float");
       for(int iz = 0; iz < dims[2]; iz++) {
 	for(int ix = 0; ix < dims[0]; ix++) {
-	  MRC_F2(f2,0, ix,iz) = (s1 * MRC_F3(fld,0, ix,ii-2,iz) +
-				 s2 * MRC_F3(fld,0, ix,ii-1,iz));
+	  MRC_F2(_f2,0, ix,iz) = (s1 * MRC_F3(f,0, ix,ii-2,iz) +
+				  s2 * MRC_F3(f,0, ix,ii-1,iz));
 	}
       }
-      break;
-    case 2:
-      mrc_fld_set_param_int_array(f2, "dims", 3, (int[3]) { dims[0], dims[1], 1 });
-      mrc_fld_setup(f2);
-      for(int iy = 0; iy < dims[1]; iy++) {
-	for(int ix = 0; ix < dims[0]; ix++) {
-	  MRC_F2(f2,0, ix,iy) = (s1 * MRC_F3(fld,0, ix,iy,ii-2) +
-				 s2 * MRC_F3(fld,0, ix,iy,ii-1));
-	}
-      }
+      mrc_fld_put_as(_f2, f2);
       break;
     }
-
+    case 2: {
+      mrc_fld_set_param_int_array(f2, "dims", 3, (int[3]) { dims[0], dims[1], 1 });
+      mrc_fld_setup(f2);
+      struct mrc_fld *_f2 = mrc_fld_get_as(f2, "float");
+      for(int iy = 0; iy < dims[1]; iy++) {
+	for(int ix = 0; ix < dims[0]; ix++) {
+	  MRC_F2(_f2,0, ix,iy) = (s1 * MRC_F3(f,0, ix,iy,ii-2) +
+				  s2 * MRC_F3(f,0, ix,iy,ii-1));
+	}
+      }
+      mrc_fld_put_as(_f2, f2);
+      break;
+    }
+    }
+    mrc_fld_put_as(f, fld);
   } else {
     // not on local proc
     mrc_fld_set_param_int_array(f2, "dims", 3, (int[3]) { 0, 0, 1 });

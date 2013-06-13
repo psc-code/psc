@@ -975,6 +975,8 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
     mrc_fld_setup(recv_fld);
     ctx->recvs[rr].fld = recv_fld;
     
+    struct mrc_fld *rf = mrc_fld_get_as(recv_fld, "float");
+    assert(rf == recv_fld);
     /* mprintf("MPI_Irecv <- %d gp %d len %d\n", info.rank, info.global_patch, recv_fld->len); */
     MPI_Irecv(recv_fld->_arr, recv_fld->_len, MPI_FLOAT, info.rank,
 	      info.global_patch, mrc_io_comm(io), &ctx->recv_reqs[rr++]);
@@ -1009,6 +1011,7 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
 	}
       }
     }
+    mrc_fld_put_as(recv_fld, recv_fld);
     mrc_fld_destroy(recv_fld);
   }
 
@@ -1154,15 +1157,18 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
     }
     int nr_1 = 1;
     H5LTset_attribute_int(group0, ".", "nr_patches", &nr_1, 1);
+
+    struct mrc_fld *f = mrc_fld_get_as(fld, "float");
     
     for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
-      collective_recv_fld_begin(&ctx, io, fld, m3);
+      collective_recv_fld_begin(&ctx, io, f, m3);
       collective_send_fld_begin(&ctx, io, m3, m);
-      collective_recv_fld_local(&ctx, io, fld, m3, m);
-      collective_recv_fld_end(&ctx, io, fld, m3, m);
-      collective_write_fld(&ctx, io, path, fld, m, m3, xs, group0);
+      collective_recv_fld_local(&ctx, io, f, m3, m);
+      collective_recv_fld_end(&ctx, io, f, m3, m);
+      collective_write_fld(&ctx, io, path, f, m, m3, xs, group0);
       collective_send_fld_end(&ctx, io, m3, m);
     }
+    mrc_fld_put_as(f, fld);
 
     H5Gclose(group0);
     mrc_fld_destroy(fld);

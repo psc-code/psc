@@ -18,10 +18,12 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
   struct mrc_patch_info info;
   mrc_domain_get_local_patch_info(fld->_domain, 0, &info);
 
-  struct mrc_fld *f = mrc_fld_get_as(fld, "float");
   float *bd2x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD2);
   float *bd2y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD2);
   float *bd2z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD2);
+
+  struct mrc_fld *f = mrc_fld_get_as(fld, "float");
+  struct mrc_fld *d = mrc_fld_get_as(divb, "float");
 
   float max = 0.;
   mrc_fld_foreach(divb, ix,iy,iz, 0, 0) {
@@ -37,7 +39,10 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
 
     max = fmaxf(max, fabsf(MRC_F3(divb,0, ix,iy,iz)));
   } mrc_fld_foreach_end;
+
   mrc_fld_put_as(f, fld);
+  mrc_fld_put_as(d, divb);
+
   mprintf("max divb = %g\n", max);
 }
 

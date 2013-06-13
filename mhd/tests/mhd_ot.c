@@ -68,6 +68,8 @@ ggcm_mhd_ic_ot_run(struct ggcm_mhd_ic *ic)
 	     sqr(.5*(B1Y(f3, ix,iy,iz) + B1Y(f3, ix,iy+1,iz))) +
 	     sqr(.5*(B1Z(f3, ix,iy,iz) + B1Z(f3, ix,iy,iz+1))));
   } mrc_fld_foreach_end;
+
+  mrc_fld_put_as(f3, mhd->fld);
 }
 
 // ----------------------------------------------------------------------

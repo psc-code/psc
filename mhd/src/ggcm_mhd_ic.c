@@ -17,11 +17,13 @@
 static void
 ggcm_mhd_ic_init_masks_default(struct ggcm_mhd_ic *ic)
 {
-  struct mrc_fld *fld = ic->mhd->fld;
+  struct mrc_fld *fld = mrc_fld_get_as(ic->mhd->fld, "float");
 
   mrc_fld_foreach(fld, ix, iy, iz, 1, 1) {
     MRC_F3(fld, _YMASK, ix,iy,iz) = 1.;
   } mrc_fld_foreach_end;
+
+  mrc_fld_put_as(fld, ic->mhd->fld);
 }
 
 // ----------------------------------------------------------------------

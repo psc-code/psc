@@ -19,11 +19,14 @@ ggcm_mhd_calc_currcc(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
   struct mrc_patch_info info;
   mrc_domain_get_local_patch_info(mhd->domain, 0, &info);
   //const char *dptype = ggcm_dipole_type(mhd->dipole);
-  struct mrc_fld *f = mrc_fld_get_as(fld, "float");
   struct mrc_fld *tmp = mrc_fld_duplicate(currcc);
   float *bd4x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD4);
   float *bd4y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD4);
   float *bd4z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD4);
+
+  struct mrc_fld *f = mrc_fld_get_as(fld, "float");
+  struct mrc_fld *t = mrc_fld_get_as(tmp, "float");
+  struct mrc_fld *c = mrc_fld_get_as(currcc, "float");
   
   mrc_fld_foreach(tmp,ix,iy,iz, 1, 1) {
     // compute current on edge first    
@@ -52,6 +55,8 @@ ggcm_mhd_calc_currcc(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
        MRC_F3(tmp, 2, ix,iy-1,iz) + MRC_F3(tmp, 2, ix-1,iy-1,iz));
   } mrc_fld_foreach_end;     
 
+  mrc_fld_put_as(c, currcc);
+  mrc_fld_put_as(t, tmp);
   mrc_fld_put_as(f, fld);
 }
 

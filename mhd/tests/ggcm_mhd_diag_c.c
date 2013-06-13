@@ -189,9 +189,14 @@ ggcm_mhd_diag_c_write_one_field(struct mrc_io *io, struct mrc_fld *f, int m,
   sprintf(s, "mrc_fld_%s", name);
   mrc_fld_set_name(fld, s);
   mrc_fld_setup(fld);
+
+  struct mrc_fld *_fld = mrc_fld_get_as(fld, "float");
+  struct mrc_fld *_f = mrc_fld_get_as(f, "float");
   mrc_fld_foreach(fld, ix,iy,iz, 2, 2) {
-    MRC_F3(fld,0, ix,iy,iz) = scale * MRC_F3(f,m, ix,iy,iz);
+    MRC_F3(_fld,0, ix,iy,iz) = scale * MRC_F3(_f,m, ix,iy,iz);
   } mrc_fld_foreach_end;
+  mrc_fld_put_as(_fld, fld);
+  mrc_fld_put_as(_f, f);
 
   ggcm_mhd_diag_c_write_one_fld(io, fld, outtype, plane);
 
@@ -205,11 +210,10 @@ static void
 write_fields(struct ggcm_mhd_diag *diag, struct mrc_io *io, int diag_type, float plane)
 {
   struct ggcm_mhd *mhd = diag->mhd;
-  struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, "float");
 
   struct ggcm_mhd_diag_item *item;
   list_for_each_entry(item, &diag->obj.children_list, obj.child_entry) {
-    ggcm_mhd_diag_item_run(item, io, fld, diag_type, plane);
+    ggcm_mhd_diag_item_run(item, io, mhd->fld, diag_type, plane);
   }
 
 #if 0
@@ -219,8 +223,6 @@ write_fields(struct ggcm_mhd_diag *diag, struct mrc_io *io, int diag_type, float
     diag_write_field_c(1.,fbmask,#nnx,#nny,#nnz,'rcmmask',diag_type_3d,-1.,-99);
   }
 #endif
-
-  mrc_fld_put_as(fld, mhd->fld);
 }
 
 // ----------------------------------------------------------------------
