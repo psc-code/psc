@@ -29,21 +29,6 @@ mrc_fld_mhd_fc_float_create(struct mrc_fld *fld)
 }
 
 // ----------------------------------------------------------------------
-// mrc_fld_mhd_fc_float_setup
-
-static void
-mrc_fld_mhd_fc_float_setup(struct mrc_fld *fld)
-{
-  mrc_fld_setup_super(fld);
-
-  mrc_vec_set_type(fld->_vec, "float");
-  mrc_vec_set_param_int(fld->_vec, "len", fld->_len);
-  mrc_fld_setup_member_objs(fld); // sets up our .vec member
-
-  fld->_arr = mrc_vec_get_array(fld->_vec);
-}
-
-// ----------------------------------------------------------------------
 // mrc_fld_mhd_fc_float_copy_from_float
 
 static void
@@ -58,7 +43,7 @@ mrc_fld_mhd_fc_float_copy_from_float(struct mrc_fld *fld_fc, struct mrc_fld *fld
     RV1Y(fc, ix,iy,iz) = RV1Y(sc, ix,iy,iz);
     RV1Z(fc, ix,iy,iz) = RV1Z(sc, ix,iy,iz);
     UU1 (fc, ix,iy,iz) = UU1 (sc, ix,iy,iz) + 
-      00*.5f * (sqr(.5*(B1X(sc, ix,iy,iz) + B1X(sc, ix+1,iy,iz))) +
+      .5f * (sqr(.5*(B1X(sc, ix,iy,iz) + B1X(sc, ix+1,iy,iz))) +
 	     sqr(.5*(B1Y(sc, ix,iy,iz) + B1Y(sc, ix,iy+1,iz))) +
 	     sqr(.5*(B1Z(sc, ix,iy,iz) + B1Z(sc, ix,iy,iz+1))));
     B1X (fc, ix,iy,iz) = B1X (sc, ix,iy,iz);
@@ -85,7 +70,7 @@ mrc_fld_mhd_fc_float_copy_to_float(struct mrc_fld *fld_fc, struct mrc_fld *fld_s
     RV1Y(sc, ix,iy,iz) = RV1Y(fc, ix,iy,iz);
     RV1Z(sc, ix,iy,iz) = RV1Z(fc, ix,iy,iz);
     UU1 (sc, ix,iy,iz) = UU1 (fc, ix,iy,iz) -
-      00*.5f * (sqr(.5*(B1X(sc, ix,iy,iz) + B1X(fc, ix+1,iy,iz))) +
+      .5f * (sqr(.5*(B1X(sc, ix,iy,iz) + B1X(fc, ix+1,iy,iz))) +
 	     sqr(.5*(B1Y(sc, ix,iy,iz) + B1Y(fc, ix,iy+1,iz))) +
 	     sqr(.5*(B1Z(sc, ix,iy,iz) + B1Z(fc, ix,iy,iz+1))));
     B1X (sc, ix,iy,iz) = B1X (fc, ix,iy,iz);
@@ -111,6 +96,6 @@ struct mrc_fld_ops mrc_fld_ops_mhd_fc_float = {
   .size             = sizeof(struct mrc_fld_mhd_fc_float),
   .methods          = mrc_fld_mhd_fc_float_methods,
   .create           = mrc_fld_mhd_fc_float_create,
-  .setup            = mrc_fld_mhd_fc_float_setup,
+  .vec_type         = "float",
 };
 
