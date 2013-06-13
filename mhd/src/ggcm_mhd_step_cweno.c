@@ -155,7 +155,7 @@ calc_fluxes_per_face(struct mrc_fld **_flux, struct ggcm_mhd *mhd, struct mrc_fl
 // flux[5-7] are E-field "fluxes" (not B-field!)
 
 static void
-calc_cweno_fluxes(struct mrc_fld *_flux[5], struct mrc_fld *_flux_E[3], struct ggcm_mhd *mhd,
+calc_cweno_fluxes(struct mrc_fld *_flux[5], struct ggcm_mhd *mhd,
 		  struct mrc_fld *_u, struct mrc_crds *crds)
 {
   float mpermi = 1.f;
@@ -531,11 +531,8 @@ calc_cweno_fluxes(struct mrc_fld *_flux[5], struct mrc_fld *_flux_E[3], struct g
   }
 
   struct mrc_fld *flux[8];
-  for (int m = 0; m < 5; m++) {
+  for (int m = 0; m < 8; m++) {
     flux[m] = mrc_fld_get_as(_flux[m], "float");
-  }
-  for (int m = 0; m < 3; m++) {
-    flux[5+m] = mrc_fld_get_as(_flux_E[m], "float");
   }
   
   mrc_fld_foreach(u, ix,iy,iz, 1, 1) {
@@ -809,11 +806,8 @@ calc_cweno_fluxes(struct mrc_fld *_flux[5], struct mrc_fld *_flux_E[3], struct g
     } 
   } mrc_fld_foreach_end;
  
-  for (int m = 0; m < 5; m++) {
+  for (int m = 0; m < 8; m++) {
     mrc_fld_put_as(flux[m], _flux[m]);
-  }
-  for (int m = 0; m < 3; m++) {
-    mrc_fld_put_as(flux[5+m], _flux_E[m]);
   }
   mrc_fld_put_as(u, _u);
   for (int m = 0; m < 3; m++) {
@@ -944,7 +938,7 @@ fill_ghost_fld(struct ggcm_mhd *mhd, struct mrc_fld *_fld)
 #endif
 
 static void
-calc_fct_rhs(struct ggcm_mhd *mhd, struct mrc_fld *_rhs, struct mrc_fld *_fld, struct mrc_fld *_flux_E[3])
+calc_fct_rhs(struct ggcm_mhd *mhd, struct mrc_fld *_rhs, struct mrc_fld *_fld, struct mrc_fld *_flux[8])
 {  
   // compute edge centered electric fields by interpolation (iv)  here tmp_fld are edge centered 
   // so that e.g.  MRC_F3(tmp_fld, 0, 0, 0, 0) is E_x 0,-1/2,-1/2  
@@ -958,9 +952,9 @@ calc_fct_rhs(struct ggcm_mhd *mhd, struct mrc_fld *_rhs, struct mrc_fld *_fld, s
   /* struct mrc_fld *E_ec = ggcm_mhd_get_fields(mhd, "E_ec", 3); */
 
   struct mrc_fld *fld = mrc_fld_get_as(_fld, "float");
-  struct mrc_fld *fex = mrc_fld_get_as(_flux_E[0], "float");
-  struct mrc_fld *fey = mrc_fld_get_as(_flux_E[1], "float");
-  struct mrc_fld *fez = mrc_fld_get_as(_flux_E[2], "float");
+  struct mrc_fld *fex = mrc_fld_get_as(_flux[5], "float");
+  struct mrc_fld *fey = mrc_fld_get_as(_flux[6], "float");
+  struct mrc_fld *fez = mrc_fld_get_as(_flux[7], "float");
 
   //initialize cell edge center Electric field structure      
   mrc_fld_foreach(fld, ix, iy,  iz, 1, 1) { 
@@ -1007,9 +1001,9 @@ calc_fct_rhs(struct ggcm_mhd *mhd, struct mrc_fld *_rhs, struct mrc_fld *_fld, s
   /////////////////////////////////////////////////
 
   mrc_fld_put_as(fld, _fld);
-  mrc_fld_put_as(fex, _flux_E[0]);
-  mrc_fld_put_as(fey, _flux_E[1]);
-  mrc_fld_put_as(fez, _flux_E[2]);
+  mrc_fld_put_as(fex, _flux[5]);
+  mrc_fld_put_as(fey, _flux[6]);
+  mrc_fld_put_as(fez, _flux[7]);
 
   //  fill_ghost_fld(mhd, fld);
 
@@ -1087,22 +1081,17 @@ ggcm_mhd_step_cweno_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
   }
 #endif
 
-  struct mrc_fld *flux[_UU1 + 1];
-  for (int m = 0; m < _UU1 + 1; m++) {
+  struct mrc_fld *flux[8];
+  for (int m = 0; m < 8; m++) {
     flux[m] = ggcm_mhd_get_fields(mhd, "flux", 3);
   }
-  struct mrc_fld *flux_E[3];
-  for (int m = 0; m < 3; m++) {
-    flux_E[m] = ggcm_mhd_get_fields(mhd, "flux_E", 3);
-  }
-   
-  calc_cweno_fluxes(flux, flux_E, mhd, fld, crds);
+  calc_cweno_fluxes(flux, mhd, fld, crds);
 
   for (int m = 0; m < _UU1+1; m++) {
     calc_neg_divg(rhs, m, flux[m], crds);
   }
   //fill_ghost_fld(mhd, fld);
-  calc_fct_rhs(mhd, rhs, fld, flux_E); 
+  calc_fct_rhs(mhd, rhs, fld, flux); 
 
 #ifdef DEBUG
   {
@@ -1119,11 +1108,8 @@ ggcm_mhd_step_cweno_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
   }
 #endif
 
-  for (int m = 0; m < _UU1 + 1; m++) {
+  for (int m = 0; m < 8; m++) {
     mrc_fld_destroy(flux[m]);
-  }
-  for (int m = 0; m < 3; m++) {
-    mrc_fld_destroy(flux_E[m]);
   }
 }
 
