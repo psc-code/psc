@@ -55,28 +55,33 @@ enum {
 };
 
 static void
-calc_neg_divg(struct mrc_fld *_rhs, int m, struct mrc_fld *_flux, struct mrc_crds *crds)
+calc_neg_divg(struct ggcm_mhd *mhd, struct mrc_fld *_rhs, struct mrc_fld *_flux[8])
 {
+  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
+
   struct mrc_fld *rhs = mrc_fld_get_as(_rhs, "float");
-  struct mrc_fld *flux = mrc_fld_get_as(_flux, "float");
 
-  mrc_fld_foreach(rhs, ix, iy, iz, 0, 0) {
-    int ind[3] = { ix, iy, iz };
+  for (int m = 0; m <= _UU1; m++) {
+    struct mrc_fld *flux = mrc_fld_get_as(_flux[m], "float");
 
-    MRC_F3(rhs, m, ix, iy, iz) = 0.;
-    for(int i=0; i<3; i++) {
-      int dind[3] = {0, 0, 0};
-      dind[i] = 1;      
+    mrc_fld_foreach(rhs, ix, iy, iz, 0, 0) {
+      int ind[3] = { ix, iy, iz };
+      
+      MRC_F3(rhs, m, ix, iy, iz) = 0.;
+      for(int i=0; i<3; i++) {
+	int dind[3] = {0, 0, 0};
+	dind[i] = 1;      
+	
+	MRC_F3(rhs, m, ix, iy, iz) -=
+	  (MRC_F3(flux, i, ix+dind[0],iy+dind[1],iz+dind[2]) - MRC_F3(flux, i, ix,iy,iz))
+	  / (MRC_CRD(crds, i, ind[i]+1) - MRC_CRD(crds, i, ind[i]));
+      }
+    } mrc_fld_foreach_end; 
 
-      float cw =(MRC_CRD(crds, i, ind[i]+1) - MRC_CRD(crds, i, ind[i]));
-      MRC_F3(rhs, m, ix, iy, iz) -=( MRC_F3(flux, i, ix+dind[0],iy+dind[1],iz+dind[2]) -
-      				     MRC_F3(flux, i, ix,iy,iz))/ cw;
-      //      assert(isfinite(MRC_F3(rhs, m, ix,iy,iz)));
-    }
-  } mrc_fld_foreach_end; 
+    mrc_fld_put_as(flux, _flux[m]);
+  }
 
   mrc_fld_put_as(rhs, _rhs);
-  mrc_fld_put_as(flux, _flux);
 }
 
 // ----------------------------------------------------------------------
@@ -158,8 +163,8 @@ calc_fluxes_per_face(struct mrc_fld **_flux, struct ggcm_mhd *mhd, struct mrc_fl
 // flux[5-7] are E-field "fluxes" (not B-field!)
 
 static void
-calc_cweno_fluxes(struct mrc_fld *_flux[5], struct ggcm_mhd *mhd,
-		  struct mrc_fld *_u, struct mrc_crds *crds)
+calc_cweno_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[8],
+		  struct mrc_fld *_u)
 {
   float mpermi = 1.f;
   float gamma = mhd->par.gamm;
@@ -995,7 +1000,6 @@ ggcm_mhd_step_cweno_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
 			     struct mrc_fld *fld)
 {
   struct ggcm_mhd *mhd = step->mhd;  
-  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
   
   //fill_ghost_fld(mhd, fld);
 
@@ -1018,12 +1022,9 @@ ggcm_mhd_step_cweno_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
   for (int m = 0; m < 8; m++) {
     flux[m] = ggcm_mhd_get_fields(mhd, "flux", 3);
   }
-  calc_cweno_fluxes(flux, mhd, fld, crds);
 
-  for (int m = 0; m < _UU1+1; m++) {
-    calc_neg_divg(rhs, m, flux[m], crds);
-  }
-  //fill_ghost_fld(mhd, fld);
+  calc_cweno_fluxes(mhd, flux, fld);
+  calc_neg_divg(mhd, rhs, flux);
   calc_fct_rhs(mhd, rhs, flux);
 
 #ifdef DEBUG
