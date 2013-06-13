@@ -30,6 +30,9 @@ ggcm_mhd_register()
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_bnd, &ggcm_mhd_bnd_conducting_x_ops);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_bnd, &ggcm_mhd_bnd_open_x_ops);
 
+  // force regular subclasses to be registered first
+  struct mrc_fld *fld = mrc_fld_create(MPI_COMM_NULL);
+  mrc_fld_destroy(fld);
   mrc_class_register_subclass(&mrc_class_mrc_fld, &mrc_fld_ops_mhd_fc_float);
 #if 0
   mrc_class_register_subclass(&mrc_class_mrc_ts, &mrc_ts_ggcm_ops);

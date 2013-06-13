@@ -1,4 +1,5 @@
 
+#include "ggcm_mhd_defs.h"
 #include "ggcm_mhd_private.h"
 
 #include <mrc_domain.h>
@@ -46,20 +47,54 @@ mrc_fld_mhd_fc_float_setup(struct mrc_fld *fld)
 // mrc_fld_mhd_fc_float_copy_from_float
 
 static void
-mrc_fld_mhd_fc_float_copy_from_float(struct mrc_fld *fld_mhd_fc_float,
-				     struct mrc_fld *fld_float)
+mrc_fld_mhd_fc_float_copy_from_float(struct mrc_fld *fld_fc, struct mrc_fld *fld_sc)
 {
-  mrc_fld_copy(fld_mhd_fc_float, fld_float);
+  struct mrc_fld *fc = mrc_fld_get_as(fld_fc, "mhd_fc_float");
+  struct mrc_fld *sc = mrc_fld_get_as(fld_sc, "float");
+
+  mrc_fld_foreach(fc, ix, iy, iz, 2, 2) {
+    RR1 (fc, ix,iy,iz) = RR1 (sc, ix,iy,iz);
+    RV1X(fc, ix,iy,iz) = RV1X(sc, ix,iy,iz);
+    RV1Y(fc, ix,iy,iz) = RV1Y(sc, ix,iy,iz);
+    RV1Z(fc, ix,iy,iz) = RV1Z(sc, ix,iy,iz);
+    UU1 (fc, ix,iy,iz) = UU1 (sc, ix,iy,iz) + 
+      00*.5f * (sqr(.5*(B1X(sc, ix,iy,iz) + B1X(sc, ix+1,iy,iz))) +
+	     sqr(.5*(B1Y(sc, ix,iy,iz) + B1Y(sc, ix,iy+1,iz))) +
+	     sqr(.5*(B1Z(sc, ix,iy,iz) + B1Z(sc, ix,iy,iz+1))));
+    B1X (fc, ix,iy,iz) = B1X (sc, ix,iy,iz);
+    B1Y (fc, ix,iy,iz) = B1Y (sc, ix,iy,iz);
+    B1Z (fc, ix,iy,iz) = B1Z (sc, ix,iy,iz);
+  } mrc_fld_foreach_end;
+
+  mrc_fld_put_as(fc, fld_fc);
+  mrc_fld_put_as(sc, fld_sc);
 }
 
 // ----------------------------------------------------------------------
 // mrc_fld_mhd_fc_float_copy_to_float
 
 static void
-mrc_fld_mhd_fc_float_copy_to_float(struct mrc_fld *fld_mhd_fc_float,
-				   struct mrc_fld *fld_float)
+mrc_fld_mhd_fc_float_copy_to_float(struct mrc_fld *fld_fc, struct mrc_fld *fld_sc)
 {
-  mrc_fld_copy(fld_float, fld_mhd_fc_float);
+  struct mrc_fld *fc = mrc_fld_get_as(fld_fc, "mhd_fc_float");
+  struct mrc_fld *sc = mrc_fld_get_as(fld_sc, "float");
+
+  mrc_fld_foreach(sc, ix, iy, iz, 2, 2) {
+    RR1 (sc, ix,iy,iz) = RR1 (fc, ix,iy,iz);
+    RV1X(sc, ix,iy,iz) = RV1X(fc, ix,iy,iz);
+    RV1Y(sc, ix,iy,iz) = RV1Y(fc, ix,iy,iz);
+    RV1Z(sc, ix,iy,iz) = RV1Z(fc, ix,iy,iz);
+    UU1 (sc, ix,iy,iz) = UU1 (fc, ix,iy,iz) -
+      00*.5f * (sqr(.5*(B1X(sc, ix,iy,iz) + B1X(fc, ix+1,iy,iz))) +
+	     sqr(.5*(B1Y(sc, ix,iy,iz) + B1Y(fc, ix,iy+1,iz))) +
+	     sqr(.5*(B1Z(sc, ix,iy,iz) + B1Z(fc, ix,iy,iz+1))));
+    B1X (sc, ix,iy,iz) = B1X (fc, ix,iy,iz);
+    B1Y (sc, ix,iy,iz) = B1Y (fc, ix,iy,iz);
+    B1Z (sc, ix,iy,iz) = B1Z (fc, ix,iy,iz);
+  } mrc_fld_foreach_end;
+
+  mrc_fld_put_as(fc, fld_fc);
+  mrc_fld_put_as(sc, fld_sc);
 }
 
 // ----------------------------------------------------------------------

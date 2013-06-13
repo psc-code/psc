@@ -1011,7 +1011,11 @@ ggcm_mhd_step_cweno_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
     flux_E[m] = ggcm_mhd_get_fields(mhd, "flux_E", 3);
   }
    
-  calc_cweno_fluxes(flux, flux_E, mhd, fld, crds);
+  struct mrc_fld *f = mrc_fld_get_as(fld, "mhd_fc_float");
+
+  calc_cweno_fluxes(flux, flux_E, mhd, f, crds);
+
+  mrc_fld_put_as(f, fld);
 
   for (int m = 0; m < _UU1+1; m++) {
     calc_neg_divg(rhs, m, flux[m], crds);

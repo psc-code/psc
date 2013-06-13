@@ -94,7 +94,7 @@ ggcm_mhd_ic_fadeev_run(struct ggcm_mhd_ic *ic)
     PP(fld, ix,iy,iz) = RR(fld, ix,iy,iz);
   } mrc_fld_foreach_end;
 
-  ggcm_mhd_init_full_from_primitive(mhd, fld);
+  ggcm_mhd_init_from_primitive(mhd, fld);
 }
 
 // ----------------------------------------------------------------------

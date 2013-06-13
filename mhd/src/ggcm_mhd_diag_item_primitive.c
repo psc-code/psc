@@ -71,14 +71,32 @@ struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_rr = {
 
 static void
 ggcm_mhd_diag_item_pp_run(struct ggcm_mhd_diag_item *item,
-			  struct mrc_io *io, struct mrc_fld *f,
+			  struct mrc_io *io, struct mrc_fld *fld,
 			  int diag_type, float plane)
 {
   struct ggcm_mhd *mhd = item->diag->mhd;
 
-  primvar1_c(mhd);
-  float scale_pp = mhd->par.ppnorm;
-  ggcm_mhd_diag_c_write_one_field(io, f, _PP, "pp", scale_pp, diag_type, plane);
+  struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, SW_2, "pp");
+  mrc_fld_setup(fld_r);
+
+  float gamm = mhd->par.gamm;
+
+  struct mrc_fld *r = mrc_fld_get_as(fld_r, "float");
+  struct mrc_fld *f = mrc_fld_get_as(fld, "float");
+
+  mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
+    float rvv = (sqr(MRC_F3(f, _RV1X, ix,iy,iz)) +
+		 sqr(MRC_F3(f, _RV1Y, ix,iy,iz)) +
+		 sqr(MRC_F3(f, _RV1Z, ix,iy,iz))) / MRC_F3(f, _RR1, ix,iy,iz);
+    MRC_F3(r,0, ix,iy,iz) = (gamm - 1.f) * (MRC_F3(f,_UU1, ix,iy,iz) - .5f * rvv);
+  } mrc_fld_foreach_end;
+
+  mrc_fld_put_as(r, fld_r);
+  mrc_fld_put_as(f, fld);
+
+  ggcm_mhd_diag_c_write_one_field(io, fld_r, 0, "pp", mhd->par.ppnorm, diag_type, plane);
+
+  mrc_fld_destroy(fld_r);
 }
 
 // ----------------------------------------------------------------------
@@ -108,7 +126,7 @@ ggcm_mhd_diag_item_pp_full_run(struct ggcm_mhd_diag_item *item,
   float gamm = mhd->par.gamm;
 
   struct mrc_fld *r = mrc_fld_get_as(fld_r, "float");
-  struct mrc_fld *f = mrc_fld_get_as(fld, "float");
+  struct mrc_fld *f = mrc_fld_get_as(fld, "mhd_fc_float");
 
   mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
     float rvv = (sqr(MRC_F3(f, _RV1X, ix,iy,iz)) +
@@ -123,9 +141,7 @@ ggcm_mhd_diag_item_pp_full_run(struct ggcm_mhd_diag_item *item,
   mrc_fld_put_as(r, fld_r);
   mrc_fld_put_as(f, fld);
 
-  primvar1_c(mhd);
-  float scale_pp = mhd->par.ppnorm;
-  ggcm_mhd_diag_c_write_one_field(io, fld_r, 0, "pp_full", scale_pp, diag_type, plane);
+  ggcm_mhd_diag_c_write_one_field(io, fld_r, 0, "pp_full", mhd->par.ppnorm, diag_type, plane);
 
   mrc_fld_destroy(fld_r);
 }

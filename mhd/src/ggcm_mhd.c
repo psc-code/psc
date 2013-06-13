@@ -275,22 +275,21 @@ ts_ggcm_mhd_step_calc_rhs(void *ctx, struct mrc_obj *_rhs, float time, struct mr
 // ======================================================================
 
 void
-ggcm_mhd_init_full_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_base)
+ggcm_mhd_init_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_base)
 {
   float gamma = mhd->par.gamm;
 
-  struct mrc_fld *fld = mrc_fld_get_as(fld_base, "mhd_fc_float");
+  struct mrc_fld *fld = mrc_fld_get_as(fld_base, "float");
 
   mrc_fld_foreach(fld, ix, iy, iz, 1, 1) {
     RR1 (fld, ix,iy,iz) = RR(fld, ix,iy,iz);
     RV1X(fld, ix,iy,iz) = RR(fld, ix,iy,iz) * VX(fld, ix,iy,iz);
     RV1Y(fld, ix,iy,iz) = RR(fld, ix,iy,iz) * VY(fld, ix,iy,iz);
     RV1Z(fld, ix,iy,iz) = RR(fld, ix,iy,iz) * VZ(fld, ix,iy,iz);
-   
     UU1 (fld, ix,iy,iz) = PP(fld, ix,iy,iz) / (gamma - 1.f) + 	
       .5f * RR(fld, ix, iy, iz) * (sqr(VX(fld, ix,iy,iz)) +
 				   sqr(VY(fld, ix,iy,iz)) +
-				   sqr(VZ(fld, ix,iy,iz)))  +
+				   sqr(VZ(fld, ix,iy,iz))) +
       .5f * (sqr(.5*(B1X(fld, ix,iy,iz) + B1X(fld, ix+1,iy,iz))) +
 	     sqr(.5*(B1Y(fld, ix,iy,iz) + B1Y(fld, ix,iy+1,iz))) +
 	     sqr(.5*(B1Z(fld, ix,iy,iz) + B1Z(fld, ix,iy,iz+1))));
