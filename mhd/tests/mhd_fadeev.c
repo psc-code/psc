@@ -45,7 +45,6 @@ ggcm_mhd_ic_fadeev_run(struct ggcm_mhd_ic *ic)
 {
   struct ggcm_mhd_ic_fadeev *sub = mrc_to_subobj(ic, struct ggcm_mhd_ic_fadeev);
   struct ggcm_mhd *mhd = ic->mhd;
-  struct mrc_fld *fld = mhd->fld;
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);  
 
   struct mrc_fld *fld_psi = mrc_domain_fld_create(mhd->domain, SW_2, "psi");
@@ -65,11 +64,14 @@ ggcm_mhd_ic_fadeev_run(struct ggcm_mhd_ic *ic)
   float lam = (sub->lambda)*L[0] ;  // defines island size   
   float kk = (2.*M_PI) / lam ;      
 
-  mrc_fld_foreach(fld, ix, iy, iz, 1, 2) {
+  struct mrc_fld *psi = mrc_fld_get_as(fld_psi, "float");
+  struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, "float");
+
+  mrc_fld_foreach(psi, ix, iy, iz, 1, 2) {
     r[0] = .5*(MRC_CRDX(crds, ix) + MRC_CRDX(crds, ix-1));
     r[1] = .5*(MRC_CRDY(crds, iy) + MRC_CRDY(crds, iy-1));
     
-    MRC_F3(fld_psi, 0, ix,iy,iz) = -(Bo / kk)*( log(cosh(kk*r[1]) + eps*cos(kk*r[0])));      
+    MRC_F3(psi, 0, ix,iy,iz) = -(Bo / kk)*( log(cosh(kk*r[1]) + eps*cos(kk*r[0])));
   } mrc_fld_foreach_end;
 
   float *bd2x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD2);
@@ -93,6 +95,9 @@ ggcm_mhd_ic_fadeev_run(struct ggcm_mhd_ic *ic)
       exp(-kk*kk*r[1]*r[1])*cos(kk*r[0]*0.5);            
     PP(fld, ix,iy,iz) = RR(fld, ix,iy,iz);
   } mrc_fld_foreach_end;
+
+  mrc_fld_put_as(psi, fld_psi);
+  mrc_fld_put_as(fld, mhd->fld);
 
   ggcm_mhd_init_from_primitive(mhd, fld);
 }

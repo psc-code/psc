@@ -834,7 +834,7 @@ calc_cweno_fluxes(struct mrc_fld **_flux, struct mrc_fld *_flux_E[3], struct ggc
   }
 }
 
-
+#if 0
 
 // ----------------------------------------------------------------------
 // fill_ghost_fld 
@@ -844,9 +844,10 @@ calc_cweno_fluxes(struct mrc_fld **_flux, struct mrc_fld *_flux_E[3], struct ggc
 // boundaries will give inf and nan values for non-periodic boudnaries.
 
 static void
-fill_ghost_fld(struct ggcm_mhd *mhd, struct mrc_fld *fld)
+fill_ghost_fld(struct ggcm_mhd *mhd, struct mrc_fld *_fld)
 {
   struct mrc_fld *f3 = mrc_fld_get_as(mhd->fld, "float");
+  struct mrc_fld *fld = mrc_fld_get_as(_fld, "float");
   int sw = 2; 
   int gdims[3];
   mrc_domain_get_global_dims(mhd->domain, gdims);
@@ -936,8 +937,10 @@ fill_ghost_fld(struct ggcm_mhd *mhd, struct mrc_fld *fld)
   }  
 
   mrc_fld_put_as(f3, mhd->fld);
+  mrc_fld_put_as(fld, _fld);
 }
 
+#endif
 
 static void
 calc_fct_rhs(struct ggcm_mhd *mhd, struct mrc_fld *_rhs, struct mrc_fld *_fld, struct mrc_fld *_flux_E[3])
@@ -1007,7 +1010,7 @@ calc_fct_rhs(struct ggcm_mhd *mhd, struct mrc_fld *_rhs, struct mrc_fld *_fld, s
   mrc_fld_put_as(fey, _flux_E[1]);
   mrc_fld_put_as(fez, _flux_E[2]);
 
-  fill_ghost_fld(mhd, fld);
+  //  fill_ghost_fld(mhd, fld);
 
   struct mrc_fld *rhs = mrc_fld_get_as(_rhs, "float");
   fld = mrc_fld_get_as(_fld, "float");
@@ -1066,7 +1069,7 @@ ggcm_mhd_step_cweno_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
   struct ggcm_mhd *mhd = step->mhd;  
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
   
-  fill_ghost_fld(mhd, fld);
+  //fill_ghost_fld(mhd, fld);
 
 #ifdef DEBUG
   {
