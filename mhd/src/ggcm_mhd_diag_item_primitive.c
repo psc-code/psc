@@ -162,17 +162,36 @@ struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_pp_full = {
 
 static void
 ggcm_mhd_diag_item_b_run(struct ggcm_mhd_diag_item *item,
-			 struct mrc_io *io, struct mrc_fld *f,
+			 struct mrc_io *io, struct mrc_fld *fld,
 			 int diag_type, float plane)
 {
   struct ggcm_mhd *mhd = item->diag->mhd;
 
-  assert(f == mhd->fld);
-  primbb_c(mhd);
+  struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, SW_2, "pp_full");
+  mrc_fld_set_nr_comps(fld_r, 3);
+  mrc_fld_setup(fld_r);
+
+  struct mrc_fld *r = mrc_fld_get_as(fld_r, "float");
+  struct mrc_fld *f = mrc_fld_get_as(fld, "float");
+
+  mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
+    MRC_F3(fld_r, 0, ix,iy,iz) = .5f*(MRC_F3(f,_B1X, ix,iy,iz) +
+				      MRC_F3(f,_B1X, ix-1,iy,iz));
+    MRC_F3(fld_r, 1, ix,iy,iz) = .5f*(MRC_F3(f,_B1Y, ix,iy,iz) +
+				      MRC_F3(f,_B1Y, ix,iy-1,iz));
+    MRC_F3(fld_r, 2, ix,iy,iz) = .5f*(MRC_F3(f,_B1Z, ix,iy,iz) +
+				      MRC_F3(f,_B1Z, ix,iy,iz-1));
+  } mrc_fld_foreach_end;
+
+  mrc_fld_put_as(r, fld_r);
+  mrc_fld_put_as(f, fld);
+
   float scale_bb = mhd->par.bbnorm;
-  ggcm_mhd_diag_c_write_one_field(io, f, _BX, "bx", scale_bb, diag_type, plane);
-  ggcm_mhd_diag_c_write_one_field(io, f, _BY, "by", scale_bb, diag_type, plane);
-  ggcm_mhd_diag_c_write_one_field(io, f, _BZ, "bz", scale_bb, diag_type, plane);
+  ggcm_mhd_diag_c_write_one_field(io, fld_r, 0, "bx", scale_bb, diag_type, plane);
+  ggcm_mhd_diag_c_write_one_field(io, fld_r, 1, "by", scale_bb, diag_type, plane);
+  ggcm_mhd_diag_c_write_one_field(io, fld_r, 2, "bz", scale_bb, diag_type, plane);
+
+  mrc_fld_destroy(fld_r);
 }
 
 // ----------------------------------------------------------------------
