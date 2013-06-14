@@ -1,0 +1,17 @@
+
+# mbpro is Kai's macbook, and this is mostly just to demo the host-* specific configuration
+# options
+
+if test -z "$CFLAGS"; then
+   CFLAGS="-g -O3 -ffast-math"
+fi
+
+if test -z "$FFLAGS"; then
+   FFLAGS="-g -O3 -ffast-math"
+fi
+
+if test -z "$MPIRUN"; then
+   MPIRUN="openmpirun"
+fi
+
+

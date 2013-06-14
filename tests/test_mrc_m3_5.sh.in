@@ -1,0 +1,11 @@
+#! /bin/sh
+
+set -e
+
+@MPIRUN@ -n 1 ./test_mrc_m3 --npx 1 --npy 1 --npz 1 --mrc_io_type xdmf_collective \
+    --case 2
+@MPIRUN@ -n 1 ./test_mrc_m3 --npx 2 --npy 1 --npz 1 --mrc_io_type xdmf_collective \
+    --case 2
+@MPIRUN@ -n 2 ./test_mrc_m3 --npx 2 --npy 1 --npz 2 --mrc_io_type xdmf_collective \
+    --case 2
+
