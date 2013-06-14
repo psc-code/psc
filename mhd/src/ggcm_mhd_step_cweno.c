@@ -61,7 +61,7 @@ calc_neg_divg(struct ggcm_mhd *mhd, struct mrc_fld *_rhs, struct mrc_fld *_flux[
 {
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
 
-  struct mrc_fld *rhs = mrc_fld_get_as(_rhs, "float");
+  struct mrc_fld *rhs = mrc_fld_get_as(_rhs, "mhd_fc_float");
 
   struct mrc_fld *flux[3];
   for (int f = 0; f < 3; f++) {
@@ -298,7 +298,7 @@ limit_4(struct mrc_fld *u_delta[3], struct mrc_fld *u)
 static void
 calc_u_delta(struct mrc_fld *_u_delta[3], struct mrc_fld *_u)
 {
-  struct mrc_fld *u = mrc_fld_get_as(_u, "float");
+  struct mrc_fld *u = mrc_fld_get_as(_u, "mhd_fc_float");
   struct mrc_fld *u_delta[3];
   for (int f = 0; f < 3; f++) {
     u_delta[f] = mrc_fld_get_as(_u_delta[f], "float");
@@ -332,7 +332,7 @@ calc_u_pm(struct ggcm_mhd *mhd, struct mrc_fld *_u_p[3], struct mrc_fld *_u_m[3]
   float d_i = mhd->par.d_i;
   float eta = mhd->par.diffco;
 
-  struct mrc_fld *u = mrc_fld_get_as(_u, "float");
+  struct mrc_fld *u = mrc_fld_get_as(_u, "mhd_fc_float");
   struct mrc_fld *u_delta[3], *u_p[3], *u_m[3], *E_p[3], *E_m[3];
   for (int f = 0; f < 3; f++) {
     u_delta[f] = mrc_fld_get_as(_u_delta[f], "float");
@@ -515,7 +515,7 @@ calc_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
 
   struct mrc_fld *flux[3], *flux_p[3], *flux_m[3];
   struct mrc_fld *u_p[3], *u_m[3], *E_p[3], *E_m[3];
-  struct mrc_fld *u = mrc_fld_get_as(_u, "float");
+  struct mrc_fld *u = mrc_fld_get_as(_u, "mhd_fc_float");
   for (int f = 0; f < 3; f++) {
     flux[f] = mrc_fld_get_as(_flux[f], "float");
     flux_p[f] = mrc_fld_get_as(_flux_p[f], "float");
@@ -843,6 +843,7 @@ calc_cweno_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
   }
   
   calc_fluxes(mhd, _flux, _flux_p, _flux_m, _u, _u_p, _u_m, _E_p, _E_m);
+
   for (int f = 0; f < 3; f++) {
     mrc_fld_destroy(_flux_p[f]);
     mrc_fld_destroy(_flux_m[f]);
@@ -1005,7 +1006,7 @@ calc_fct_rhs(struct ggcm_mhd *mhd, struct mrc_fld *_rhs, struct mrc_fld *_flux[3
 
   //  fill_ghost_fld(mhd, E_ec);
 
-  struct mrc_fld *rhs = mrc_fld_get_as(_rhs, "float");
+  struct mrc_fld *rhs = mrc_fld_get_as(_rhs, "mhd_fc_float");
   E_ec = mrc_fld_get_as(_E_ec, "float");
 
   mrc_fld_foreach(rhs, ix, iy,  iz, 1, 1) {
@@ -1053,7 +1054,7 @@ ggcm_mhd_step_cweno_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
       ggcm_mhd_diag_setup(diag);
       ggcm_mhd_diag_view(diag);
     }
-    ggcm_mhd_diag_run_now(diag, mhd->fld, DIAG_TYPE_3D, cnt++);
+    ggcm_mhd_diag_run_now(diag, fld, DIAG_TYPE_3D, cnt++);
   }
 #endif
 
@@ -1077,7 +1078,7 @@ ggcm_mhd_step_cweno_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
       ggcm_mhd_diag_setup(diag);
       ggcm_mhd_diag_view(diag);
     }
-    ggcm_mhd_diag_run_now(diag, mhd->fld, DIAG_TYPE_3D, cnt++);
+    ggcm_mhd_diag_run_now(diag, rhs, DIAG_TYPE_3D, cnt++);
   }
 #endif
 

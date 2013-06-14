@@ -100,6 +100,8 @@ ggcm_mhd_ot_create(struct ggcm_mhd *mhd)
   mrc_crds_set_param_float3(crds, "l", (float[3]) {  0.0, 0.0, 0.0 });
   mrc_crds_set_param_float3(crds, "h", (float[3]) {  1.0, 1.0, 0.1 });
 
+  ggcm_mhd_bnd_set_type(mhd->bnd, "none");
+
   /* set defaults for the ddc, this does the communication */
   struct mrc_ddc *ddc = mrc_domain_get_ddc(mhd->domain);
   mrc_ddc_set_param_int(ddc, "max_n_fields", 8);

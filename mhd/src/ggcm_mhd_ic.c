@@ -17,7 +17,8 @@
 static void
 ggcm_mhd_ic_init_masks_default(struct ggcm_mhd_ic *ic)
 {
-  struct mrc_fld *fld = mrc_fld_get_as(ic->mhd->fld, "float");
+  assert(ic->mhd->fld->_data_type == MRC_NT_FLOAT);
+  struct mrc_fld *fld = mrc_fld_get_as(ic->mhd->fld, mrc_fld_type(ic->mhd->fld));
 
   mrc_fld_foreach(fld, ix, iy, iz, 1, 1) {
     MRC_F3(fld, _YMASK, ix,iy,iz) = 1.;

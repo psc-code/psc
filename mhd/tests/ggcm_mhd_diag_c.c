@@ -190,8 +190,9 @@ ggcm_mhd_diag_c_write_one_field(struct mrc_io *io, struct mrc_fld *f, int m,
   mrc_fld_set_name(fld, s);
   mrc_fld_setup(fld);
 
+  assert(f->_data_type == MRC_NT_FLOAT);
+  struct mrc_fld *_f = mrc_fld_get_as(f, mrc_fld_type(f));
   struct mrc_fld *_fld = mrc_fld_get_as(fld, "float");
-  struct mrc_fld *_f = mrc_fld_get_as(f, "float");
   mrc_fld_foreach(fld, ix,iy,iz, 2, 2) {
     MRC_F3(_fld,0, ix,iy,iz) = scale * MRC_F3(_f,m, ix,iy,iz);
   } mrc_fld_foreach_end;

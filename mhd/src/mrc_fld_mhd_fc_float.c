@@ -42,14 +42,17 @@ mrc_fld_mhd_fc_float_copy_from_float(struct mrc_fld *fld_fc, struct mrc_fld *fld
     RV1X(fc, ix,iy,iz) = RV1X(sc, ix,iy,iz);
     RV1Y(fc, ix,iy,iz) = RV1Y(sc, ix,iy,iz);
     RV1Z(fc, ix,iy,iz) = RV1Z(sc, ix,iy,iz);
-    UU1 (fc, ix,iy,iz) = UU1 (sc, ix,iy,iz) + 
-      00*.5f * (sqr(.5*(B1X(sc, ix,iy,iz) + B1X(sc, ix+1,iy,iz))) +
-	     sqr(.5*(B1Y(sc, ix,iy,iz) + B1Y(sc, ix,iy+1,iz))) +
-	     sqr(.5*(B1Z(sc, ix,iy,iz) + B1Z(sc, ix,iy,iz+1))));
     B1X (fc, ix,iy,iz) = B1X (sc, ix,iy,iz);
     B1Y (fc, ix,iy,iz) = B1Y (sc, ix,iy,iz);
     B1Z (fc, ix,iy,iz) = B1Z (sc, ix,iy,iz);
     MRC_F3(fc, _YMASK, ix,iy,iz) = MRC_F3(sc, _YMASK, ix,iy,iz);
+  } mrc_fld_foreach_end;
+
+  mrc_fld_foreach(fc, ix, iy, iz, 1, 1) {
+    UU1 (fc, ix,iy,iz) = UU1 (sc, ix,iy,iz) + 
+      .5f * (sqr(.5*(B1X(sc, ix,iy,iz) + B1X(sc, ix+1,iy,iz))) +
+	     sqr(.5*(B1Y(sc, ix,iy,iz) + B1Y(sc, ix,iy+1,iz))) +
+	     sqr(.5*(B1Z(sc, ix,iy,iz) + B1Z(sc, ix,iy,iz+1))));
   } mrc_fld_foreach_end;
 
   mrc_fld_put_as(fc, fld_fc);
@@ -70,14 +73,17 @@ mrc_fld_mhd_fc_float_copy_to_float(struct mrc_fld *fld_fc, struct mrc_fld *fld_s
     RV1X(sc, ix,iy,iz) = RV1X(fc, ix,iy,iz);
     RV1Y(sc, ix,iy,iz) = RV1Y(fc, ix,iy,iz);
     RV1Z(sc, ix,iy,iz) = RV1Z(fc, ix,iy,iz);
-    UU1 (sc, ix,iy,iz) = UU1 (fc, ix,iy,iz) -
-      00*.5f * (sqr(.5*(B1X(sc, ix,iy,iz) + B1X(fc, ix+1,iy,iz))) +
-	     sqr(.5*(B1Y(sc, ix,iy,iz) + B1Y(fc, ix,iy+1,iz))) +
-	     sqr(.5*(B1Z(sc, ix,iy,iz) + B1Z(fc, ix,iy,iz+1))));
     B1X (sc, ix,iy,iz) = B1X (fc, ix,iy,iz);
     B1Y (sc, ix,iy,iz) = B1Y (fc, ix,iy,iz);
     B1Z (sc, ix,iy,iz) = B1Z (fc, ix,iy,iz);
     MRC_F3(sc, _YMASK, ix,iy,iz) = MRC_F3(fc, _YMASK, ix,iy,iz);
+  } mrc_fld_foreach_end;
+
+  mrc_fld_foreach(sc, ix, iy, iz, 1, 1) {
+    UU1 (sc, ix,iy,iz) = UU1 (fc, ix,iy,iz) -
+      .5f * (sqr(.5*(B1X(sc, ix,iy,iz) + B1X(fc, ix+1,iy,iz))) +
+	     sqr(.5*(B1Y(sc, ix,iy,iz) + B1Y(fc, ix,iy+1,iz))) +
+	     sqr(.5*(B1Z(sc, ix,iy,iz) + B1Z(fc, ix,iy,iz+1))));
   } mrc_fld_foreach_end;
 
   mrc_fld_put_as(fc, fld_fc);
