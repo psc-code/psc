@@ -1225,8 +1225,10 @@ ds_xdmf_write_f3(struct mrc_io *io, const char *path, struct mrc_fld *fld, float
 
     hid_t dset = H5Dcreate(group, "3d", H5T_NATIVE_FLOAT, filespace, H5P_DEFAULT,
 			   H5P_DEFAULT, H5P_DEFAULT);
+    struct mrc_fld *f = mrc_fld_get_as(fld, "float");
     ierr  = H5Dwrite(dset, H5T_NATIVE_FLOAT, memspace, filespace, H5P_DEFAULT,
-		     fld->_arr); CE;
+		     f->_arr); CE;
+    mrc_fld_put_as(f, fld);
     ierr = H5Dclose(dset); CE;
 
     ierr = H5Gclose(group); CE;

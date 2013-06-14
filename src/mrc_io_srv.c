@@ -167,10 +167,12 @@ diagc_combined_destroy(struct mrc_io *io)
 static void
 copy_and_scale(float *buf, struct mrc_fld *fld, int m, float scale)
 {
+  struct mrc_fld *f = mrc_fld_get_as(fld, "float");
   int i = 0;
-  mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
-    buf[i++] = scale * MRC_F3(fld, m, ix,iy,iz);
+  mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
+    buf[i++] = scale * MRC_F3(f, m, ix,iy,iz);
   } mrc_fld_foreach_end;
+  mrc_fld_put_as(f, fld);
 }
 
 static void
@@ -736,7 +738,7 @@ add_to_field_2d(struct mrc_fld *g, struct mrc_fld *l, int ib[2])
   struct mrc_fld *_l = mrc_fld_get_as(l, "float");
   for (int iy = 0; iy < l->_dims.vals[1]; iy++) {
     for (int ix = 0; ix < l->_dims.vals[0]; ix++) {
-      MRC_F2(g,0, ix+ib[0],iy+ib[1]) = MRC_F2(l,0, ix,iy);
+      MRC_F2(_g,0, ix+ib[0],iy+ib[1]) = MRC_F2(_l,0, ix,iy);
     }
   }
   mrc_fld_put_as(_g, g);
@@ -746,9 +748,13 @@ add_to_field_2d(struct mrc_fld *g, struct mrc_fld *l, int ib[2])
 static void
 add_to_field_3d(struct mrc_fld *g, struct mrc_fld *l, int ib[3])
 {
+  struct mrc_fld *_g = mrc_fld_get_as(g, "float");
+  struct mrc_fld *_l = mrc_fld_get_as(l, "float");
   mrc_fld_foreach(l, ix,iy,iz, 0, 0) {
-    MRC_F3(g,0, ix+ib[0],iy+ib[1],iz+ib[2]) = MRC_F3(l,0, ix,iy,iz);
+    MRC_F3(_g,0, ix+ib[0],iy+ib[1],iz+ib[2]) = MRC_F3(_l,0, ix,iy,iz);
   } mrc_fld_foreach_end;
+  mrc_fld_put_as(_g, g);
+  mrc_fld_put_as(_l, l);
 }
 
 // ----------------------------------------------------------------------
@@ -1027,8 +1033,10 @@ static struct param diagsrv_params_descr[] = {
 				       (int[4]) { dims[0], dims[1], dims[2], 1 });
 	    mrc_fld_set_array(lfld3, w2);
 	    mrc_fld_setup(lfld3);
+	    struct mrc_fld *_lfld3 = mrc_fld_get_as(lfld3, "float");
 	    MPI_Recv(lfld3->_arr, lfld3->_len, MPI_FLOAT, k, ID_DIAGS_DATA, MPI_COMM_WORLD,
 		     MPI_STATUS_IGNORE);
+	    mrc_fld_put_as(_lfld3, lfld3);
 	    add_to_field_3d(gfld3, lfld3, off);
 	    mrc_fld_destroy(lfld3);
 	  }
