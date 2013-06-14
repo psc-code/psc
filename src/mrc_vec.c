@@ -88,6 +88,7 @@ mrc_vec_put_array(struct mrc_vec *vec, void *arr)
 static void
 mrc_vec_sub_set_array(struct mrc_vec *vec, void *arr)
 {
+  assert(arr);
   assert(!vec->arr);
   vec->arr = arr;
   vec->with_array = true;
@@ -99,6 +100,7 @@ mrc_vec_sub_set_array(struct mrc_vec *vec, void *arr)
 static void *
 mrc_vec_sub_get_array(struct mrc_vec *vec)
 {
+  assert(mrc_vec_is_setup(vec));
   return vec->arr;
 }
 
@@ -108,6 +110,7 @@ mrc_vec_sub_get_array(struct mrc_vec *vec)
 static void
 mrc_vec_sub_put_array(struct mrc_vec *vec, void *arr)
 {
+  assert(mrc_vec_is_setup(vec));
   assert(arr == vec->arr);
 }
 
