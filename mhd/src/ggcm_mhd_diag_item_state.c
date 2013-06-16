@@ -5,8 +5,10 @@
 #include "ggcm_mhd_private.h"
 #include "ggcm_mhd_diag_private.h"
 
+#include <mrc_domain.h>
 #include <stdio.h>
 #include <assert.h>
+#include <math.h>
 
 // ======================================================================
 // ggcm_mhd_diag_item subclass "rr1"
@@ -20,9 +22,15 @@ ggcm_mhd_diag_item_rr1_run(struct ggcm_mhd_diag_item *item,
 			   int diag_type, float plane)
 {
   struct ggcm_mhd *mhd = item->diag->mhd;
+  struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, SW_2, "divB");
+  mrc_fld_set_nr_comps(fld_r, _NR_FLDS);
+  mrc_fld_setup(fld_r);
+  mrc_fld_copy(fld_r, f);
 
   float scale_rr = mhd->par.rrnorm;
-  ggcm_mhd_diag_c_write_one_field(io, f, _RR1, "rr1", scale_rr, diag_type, plane);
+  ggcm_mhd_diag_c_write_one_field(io, fld_r, _RR1, "rr1", scale_rr, diag_type, plane);
+
+  mrc_fld_destroy(fld_r);
 }
 
 // ----------------------------------------------------------------------
@@ -41,11 +49,33 @@ struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_rr1 = {
 
 static void
 ggcm_mhd_diag_item_uu1_run(struct ggcm_mhd_diag_item *item,
-			   struct mrc_io *io, struct mrc_fld *f,
+			   struct mrc_io *io, struct mrc_fld *fld,
 			   int diag_type, float plane)
 {
+  struct ggcm_mhd *mhd = item->diag->mhd;
+  struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, SW_2, "divB");
+  mrc_fld_set_nr_comps(fld_r, _NR_FLDS);
+  mrc_fld_setup(fld_r);
+  //  mrc_fld_copy(fld_r, fld);
+
+  struct mrc_fld *f = mrc_fld_get_as(fld, "mhd_fc_float");
+  struct mrc_fld *r = mrc_fld_get_as(fld_r, "float");
+
+  float max = 0.;
+  mrc_fld_foreach(r, ix,iy,iz, 0, 0) {
+    MRC_F3(r,_UU1, ix,iy,iz) = MRC_F3(f,_UU1, ix,iy,iz);
+    max = fmaxf(max, fabsf(MRC_F3(r,_UU1, ix,iy,iz)));
+    if (!isfinite(MRC_F3(r,_UU1, ix,iy,iz))) max = 9999.;
+  } mrc_fld_foreach_end;
+
+  mrc_fld_put_as(f, fld);
+  mrc_fld_put_as(r, fld_r);
+
   float scale_uu = 1.;
-  ggcm_mhd_diag_c_write_one_field(io, f, _UU1, "uu1", scale_uu, diag_type, plane);
+  ggcm_mhd_diag_c_write_one_field(io, fld_r, _UU1, "uu1", scale_uu, diag_type, plane);
+
+  mrc_fld_destroy(fld_r);
+  mprintf("max uu1 = %g\n", max);
 }
 
 // ----------------------------------------------------------------------
@@ -67,10 +97,18 @@ ggcm_mhd_diag_item_rv1_run(struct ggcm_mhd_diag_item *item,
 			   struct mrc_io *io, struct mrc_fld *f,
 			   int diag_type, float plane)
 {
+  struct ggcm_mhd *mhd = item->diag->mhd;
+  struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, SW_2, "divB");
+  mrc_fld_set_nr_comps(fld_r, _NR_FLDS);
+  mrc_fld_setup(fld_r);
+  mrc_fld_copy(fld_r, f);
+
   float scale_rv = 1.;
-  ggcm_mhd_diag_c_write_one_field(io, f, _RV1X, "rv1x", scale_rv, diag_type, plane);
-  ggcm_mhd_diag_c_write_one_field(io, f, _RV1Y, "rv1y", scale_rv, diag_type, plane);
-  ggcm_mhd_diag_c_write_one_field(io, f, _RV1Z, "rv1z", scale_rv, diag_type, plane);
+  ggcm_mhd_diag_c_write_one_field(io, fld_r, _RV1X, "rv1x", scale_rv, diag_type, plane);
+  ggcm_mhd_diag_c_write_one_field(io, fld_r, _RV1Y, "rv1y", scale_rv, diag_type, plane);
+  ggcm_mhd_diag_c_write_one_field(io, fld_r, _RV1Z, "rv1z", scale_rv, diag_type, plane);
+
+  mrc_fld_destroy(fld_r);
 }
 
 // ----------------------------------------------------------------------
@@ -92,10 +130,18 @@ ggcm_mhd_diag_item_b1_run(struct ggcm_mhd_diag_item *item,
 			  struct mrc_io *io, struct mrc_fld *f,
 			  int diag_type, float plane)
 {
-  float scale_rv = 1.;
-  ggcm_mhd_diag_c_write_one_field(io, f, _B1X, "b1x", scale_rv, diag_type, plane);
-  ggcm_mhd_diag_c_write_one_field(io, f, _B1Y, "b1y", scale_rv, diag_type, plane);
-  ggcm_mhd_diag_c_write_one_field(io, f, _B1Z, "b1z", scale_rv, diag_type, plane);
+  struct ggcm_mhd *mhd = item->diag->mhd;
+  struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, SW_2, "divB");
+  mrc_fld_set_nr_comps(fld_r, _NR_FLDS);
+  mrc_fld_setup(fld_r);
+  mrc_fld_copy(fld_r, f);
+
+  float scale_bb = 1.;
+  ggcm_mhd_diag_c_write_one_field(io, fld_r, _B1X, "b1x", scale_bb, diag_type, plane);
+  ggcm_mhd_diag_c_write_one_field(io, fld_r, _B1Y, "b1y", scale_bb, diag_type, plane);
+  ggcm_mhd_diag_c_write_one_field(io, fld_r, _B1Z, "b1z", scale_bb, diag_type, plane);
+
+  mrc_fld_destroy(fld_r);
 }
 
 // ----------------------------------------------------------------------

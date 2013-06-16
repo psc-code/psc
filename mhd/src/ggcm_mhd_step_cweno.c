@@ -745,6 +745,7 @@ calc_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
     cm=-cp;
 #endif    
 
+    ap = 1e-3; am = -1e-3;
     // Flux of _EX,_EY,_EZ through the x faces
     FLUX(flux, 0, _EX, ix,iy,iz) = 
       (1.f/(ap - am)) * ( (ap*am) * ( MRC_F3(u_m[0], _B1X, ix,iy,iz) - MRC_F3(u_p[0], _B1X, ix-1,iy,iz)));
@@ -755,6 +756,7 @@ calc_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
       (1.f/(ap - am)) * (     ap * MRC_F3(E_p[0], 1, ix-1,iy,iz) - am *  MRC_F3(E_m[0], 1, ix,iy,iz) + 
 			 (ap*am) * ( MRC_F3(u_m[0], _B1Z, ix,iy,iz) - MRC_F3(u_p[0], _B1Z, ix-1,iy,iz) ));  
     
+    bp = 1e-3; bm = -1e-3;
     // flux of _EX,_EY,_EZ through the y faces    
     FLUX(flux, 1, _EX, ix,iy,iz) =
        (1.f/(bp - bm)) * (     bp  *  MRC_F3(E_p[1], 2, ix,iy-1,iz) - bm * MRC_F3(E_m[1], 2, ix,iy,iz) + 
@@ -765,6 +767,7 @@ calc_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
        (1.f/(bp - bm)) * (    - bp * MRC_F3(E_p[1], 0, ix,iy-1,iz) + bm *  MRC_F3(E_m[1], 0, ix,iy,iz) + 
 		         (bp * bm) *  ( MRC_F3(u_m[1], _B1Z, ix,iy,iz) -     MRC_F3(u_p[1], _B1Z, ix,iy-1,iz) ));  
     
+    cp = 1e-3; cm = -1e-3;
     // flux of _EX,_EY,_EZ through the z faces
     FLUX(flux, 2, _EX, ix,iy,iz) = 
       (1.f/(cp - cm))*( - cp * MRC_F3(E_p[2], 1, ix,iy,iz-1) + cm * MRC_F3(E_m[2], 1, ix,iy,iz) + 
@@ -776,6 +779,7 @@ calc_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
       (1.f/(cp - cm))*(  (cp * cm) * ( MRC_F3(u_m[2], _B1Z, ix,iy,iz) - MRC_F3(u_p[2], _B1Z, ix,iy,iz-1) ));    
 
     for (int m = 0; m <= _UU1; m++) {
+#if 1
       FLUX(flux, 0, m, ix,iy,iz) =
 	(ap * FLUX(flux_p, 0, m, ix-1,iy,iz) - am * FLUX(flux_m, 0, m, ix,iy,iz)) / (ap - am) +
 	(ap * am) / (ap - am) * (MRC_F3(u_m[0], m, ix ,iy,iz) - MRC_F3(u_p[0], m, ix-1,iy,iz));
@@ -785,6 +789,11 @@ calc_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
       FLUX(flux, 2, m, ix,iy,iz) =   
 	(cp * FLUX(flux_p, 2, m, ix,iy,iz-1) - cm * FLUX(flux_m, 2, m, ix,iy,iz)) / (cp - cm) +
 	(cp * cm) / (cp - cm) * (MRC_F3(u_m[2], m, ix,iy,iz ) - MRC_F3(u_p[2], m, ix,iy,iz-1));
+#else
+      FLUX(flux, 0, m, ix,iy,iz) = .5f * (FLUX(flux_p, 0, m, ix-1,iy,iz) + FLUX(flux_m, 0, m, ix,iy,iz));
+      FLUX(flux, 1, m, ix,iy,iz) = .5f * (FLUX(flux_p, 1, m, ix-1,iy,iz) + FLUX(flux_m, 1, m, ix,iy,iz));
+      FLUX(flux, 2, m, ix,iy,iz) = .5f * (FLUX(flux_p, 2, m, ix-1,iy,iz) + FLUX(flux_m, 2, m, ix,iy,iz));
+#endif
     } 
   } mrc_fld_foreach_end;
  
@@ -829,9 +838,9 @@ calc_cweno_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
 
   calc_u_delta(_u_delta, _u);
 
-  ggcm_mhd_fill_ghosts(mhd, _u_delta[0], 0, mhd->time);
-  ggcm_mhd_fill_ghosts(mhd, _u_delta[1], 0, mhd->time);
-  ggcm_mhd_fill_ghosts(mhd, _u_delta[2], 0, mhd->time);
+  /* ggcm_mhd_fill_ghosts(mhd, _u_delta[0], 0, mhd->time); */
+  /* ggcm_mhd_fill_ghosts(mhd, _u_delta[1], 0, mhd->time); */
+  /* ggcm_mhd_fill_ghosts(mhd, _u_delta[2], 0, mhd->time); */
 
   calc_u_pm(mhd, _u_p, _u_m, _E_p, _E_m, _u, _u_delta);
   
@@ -1028,7 +1037,7 @@ calc_fct_rhs(struct ggcm_mhd *mhd, struct mrc_fld *_rhs, struct mrc_fld *_flux[3
        +((MRC_F3( E_ec, 0, ix, iy+1, iz) - MRC_F3(E_ec, 0, ix, iy, iz)) /
 	 (.5f*( MRC_CRD(crds, 1, iy+1) - MRC_CRD(crds, 1, iy-1))))); 
   } mrc_fld_foreach_end;
-    
+
   mrc_fld_put_as(E_ec, _E_ec);
   mrc_fld_put_as(rhs, _rhs);
 
@@ -1051,6 +1060,7 @@ ggcm_mhd_step_cweno_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
       diag = ggcm_mhd_diag_create(ggcm_mhd_comm(mhd));
       ggcm_mhd_diag_set_param_obj(diag, "mhd", mhd);
       ggcm_mhd_diag_set_param_string(diag, "run", "fld");
+      ggcm_mhd_diag_set_param_string(diag, "fields", "rr1:rv1:uu1:b1:divb:pp:pp_full");
       ggcm_mhd_diag_setup(diag);
       ggcm_mhd_diag_view(diag);
     }
@@ -1067,6 +1077,19 @@ ggcm_mhd_step_cweno_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
   calc_neg_divg(mhd, rhs, flux);
   calc_fct_rhs(mhd, rhs, flux);
 
+  struct mrc_fld *r = mrc_fld_get_as(rhs, "mhd_fc_float");
+  struct mrc_fld *f = mrc_fld_get_as(mhd->fld, "float");
+
+  mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
+    for (int m = 0; m < 8; m++) {
+      MRC_F3(r, m, ix,iy,iz) *= MRC_F3(f, _YMASK, ix,iy,iz);
+    }
+  } mrc_fld_foreach_end;
+
+  mrc_fld_put_as(r, rhs);
+  mrc_fld_put_as(f, mhd->fld);
+
+
 #ifdef DEBUG
   {
     static struct ggcm_mhd_diag *diag;
@@ -1075,6 +1098,7 @@ ggcm_mhd_step_cweno_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
       diag = ggcm_mhd_diag_create(ggcm_mhd_comm(mhd));
       ggcm_mhd_diag_set_param_obj(diag, "mhd", mhd);
       ggcm_mhd_diag_set_param_string(diag, "run", "rhs");
+      ggcm_mhd_diag_set_param_string(diag, "fields", "rr1:rv1:uu1:b1:divb");
       ggcm_mhd_diag_setup(diag);
       ggcm_mhd_diag_view(diag);
     }
