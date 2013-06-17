@@ -207,14 +207,16 @@ ggcm_mhd_diag_c_write_one_field(struct mrc_io *io, struct mrc_fld *f, int m,
 // ----------------------------------------------------------------------
 // write_fields
 
-static void
-write_fields(struct ggcm_mhd_diag *diag, struct mrc_io *io, int diag_type, float plane)
-{
-  struct ggcm_mhd *mhd = diag->mhd;
+// ----------------------------------------------------------------------
+// write_fields
 
+static void
+write_fields(struct ggcm_mhd_diag *diag, struct mrc_fld *fld,
+	     struct mrc_io *io, int diag_type, float plane)
+{
   struct ggcm_mhd_diag_item *item;
   list_for_each_entry(item, &diag->obj.children_list, obj.child_entry) {
-    ggcm_mhd_diag_item_run(item, io, mhd->fld, diag_type, plane);
+    ggcm_mhd_diag_item_run(item, io, fld, diag_type, plane);
   }
 
 #if 0
@@ -230,14 +232,15 @@ write_fields(struct ggcm_mhd_diag *diag, struct mrc_io *io, int diag_type, float
 // diagc3
 
 static void
-diagc3(struct ggcm_mhd_diag *diag, int itdia, char *time_str)
+diagc3(struct ggcm_mhd_diag *diag, struct mrc_fld *fld, int itdia,
+       char *time_str)
 {
   struct ggcm_mhd *mhd = diag->mhd;
 
   struct mrc_io *io = get_mrc_io(diag, DIAG_TYPE_3D, -1)->io;
   mrc_io_open(io, "w", itdia, mhd->time);
   ggcm_diag_lib_write_openggcm_attrs(io, time_str);
-  write_fields(diag, io, DIAG_TYPE_3D, -1);
+  write_fields(diag, fld, io, DIAG_TYPE_3D, -1);
   mrc_io_close(io);
 }
 
@@ -245,7 +248,8 @@ diagc3(struct ggcm_mhd_diag *diag, int itdia, char *time_str)
 // diagcxyz
 
 static void
-diagcxyz(struct ggcm_mhd_diag *diag, int itdia, char *time_str, int d)
+diagcxyz(struct ggcm_mhd_diag *diag, struct mrc_fld *fld, int itdia,
+	 char *time_str, int d)
 {
   struct ggcm_mhd_diag_c *sub = ggcm_mhd_diag_c(diag);
   struct ggcm_mhd *mhd = diag->mhd;
@@ -267,8 +271,39 @@ diagcxyz(struct ggcm_mhd_diag *diag, int itdia, char *time_str, int d)
     struct mrc_io *io = get_mrc_io(diag, diag_type, plane)->io;
     mrc_io_open(io, "w", itdia, mhd->time);
     ggcm_diag_lib_write_openggcm_attrs(io, time_str);
-    write_fields(diag, io, diag_type, plane);
+    write_fields(diag, fld, io, diag_type, plane);
     mrc_io_close(io);
+  }
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_diag_c_run_now
+
+static void
+ggcm_mhd_diag_c_run_now(struct ggcm_mhd_diag *diag, struct mrc_fld *fld,
+			int diag_type, int itdia)
+{
+  char time_str[80] = "TIME";
+  //  ggcm_diag_lib_make_time_string(time_str, mhd->time, mhd->dacttime);
+
+  switch (diag_type) {
+  case DIAG_TYPE_2D_X:
+    mpi_printf(ggcm_mhd_diag_comm(diag),
+	     "ggcm_mhd_diag: writing 2d output (step %d)\n", itdia);
+    /* fall through */
+  case DIAG_TYPE_2D_Y:
+  case DIAG_TYPE_2D_Z:
+    diagcxyz(diag, fld, itdia, time_str, diag_type - DIAG_TYPE_2D_X);
+    break;
+
+  case DIAG_TYPE_3D:
+    mpi_printf(ggcm_mhd_diag_comm(diag),
+	     "ggcm_mhd_diag: writing 3d output (step %d)\n", itdia);
+    diagc3(diag, fld, itdia, time_str);
+    break;
+
+  default:
+    assert(0);
   }
 }
 
@@ -288,21 +323,14 @@ ggcm_mhd_diag_c_run(struct ggcm_mhd_diag *diag)
 
   ggcm_mhd_fill_ghosts(mhd, mhd->fld, _RR1, mhd->time);
 
-  char time_str[80] = "TIME";
-  //  ggcm_diag_lib_make_time_string(time_str, mhd->time, mhd->dacttime);
-
   if (output3d) {
-    mpi_printf(ggcm_mhd_diag_comm(diag),
-	       "ggcm_mhd_diag: writing 3d output (step %d)\n", itdia3d);
-    diagc3(diag, itdia3d, time_str);
+    ggcm_mhd_diag_run_now(diag, mhd->fld, DIAG_TYPE_3D, itdia3d);
   }
 
   if (output2d) {
-    mpi_printf(ggcm_mhd_diag_comm(diag),
-	       "ggcm_mhd_diag: writing 2d output (step %d)\n", itdia2d);
-    diagcxyz(diag, itdia2d, time_str, 0);
-    diagcxyz(diag, itdia2d, time_str, 1);
-    diagcxyz(diag, itdia2d, time_str, 2);
+    ggcm_mhd_diag_run_now(diag, mhd->fld, DIAG_TYPE_2D_X + 0, itdia2d);
+    ggcm_mhd_diag_run_now(diag, mhd->fld, DIAG_TYPE_2D_X + 1, itdia2d);
+    ggcm_mhd_diag_run_now(diag, mhd->fld, DIAG_TYPE_2D_X + 2, itdia2d);
   }
 }
 
@@ -348,6 +376,7 @@ struct ggcm_mhd_diag_ops ggcm_mhd_diag_c_ops = {
   .setup       = ggcm_mhd_diag_c_setup,
   .read        = ggcm_mhd_diag_c_read,
   .run         = ggcm_mhd_diag_c_run,
+  .run_now     = ggcm_mhd_diag_c_run_now,
   .shutdown    = ggcm_mhd_diag_c_shutdown,
 };
 

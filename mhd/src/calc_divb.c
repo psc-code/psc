@@ -8,6 +8,7 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <assert.h>
 
 // ----------------------------------------------------------------------
 // ggcm_mhd_calc_divb
@@ -22,7 +23,8 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
   float *bd2y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD2);
   float *bd2z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD2);
 
-  struct mrc_fld *f = mrc_fld_get_as(fld, "float");
+  assert(fld->_data_type == MRC_NT_FLOAT);
+  struct mrc_fld *f = mrc_fld_get_as(fld, mrc_fld_type(fld));
   struct mrc_fld *d = mrc_fld_get_as(divb, "float");
 
   float max = 0.;

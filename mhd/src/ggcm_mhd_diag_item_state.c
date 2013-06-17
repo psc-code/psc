@@ -18,16 +18,25 @@
 
 static void
 ggcm_mhd_diag_item_rr1_run(struct ggcm_mhd_diag_item *item,
-			   struct mrc_io *io, struct mrc_fld *f,
+			   struct mrc_io *io, struct mrc_fld *fld,
 			   int diag_type, float plane)
 {
   struct ggcm_mhd *mhd = item->diag->mhd;
   struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, SW_2, "divB");
   mrc_fld_set_nr_comps(fld_r, _NR_FLDS);
   mrc_fld_setup(fld_r);
-  mrc_fld_copy(fld_r, f);
 
-  float scale_rr = mhd->par.rrnorm;
+  struct mrc_fld *f = mrc_fld_get_as(fld, mrc_fld_type(fld));
+  struct mrc_fld *r = mrc_fld_get_as(fld_r, "float");
+
+  mrc_fld_foreach(r, ix,iy,iz, 0, 0) {
+    MRC_F3(r, _RR1, ix,iy,iz) = MRC_F3(f, _RR1, ix,iy,iz);
+  } mrc_fld_foreach_end;
+
+  mrc_fld_put_as(f, fld);
+  mrc_fld_put_as(r, fld_r);
+
+  float scale_rr = 1.;
   ggcm_mhd_diag_c_write_one_field(io, fld_r, _RR1, "rr1", scale_rr, diag_type, plane);
 
   mrc_fld_destroy(fld_r);
@@ -53,12 +62,12 @@ ggcm_mhd_diag_item_uu1_run(struct ggcm_mhd_diag_item *item,
 			   int diag_type, float plane)
 {
   struct ggcm_mhd *mhd = item->diag->mhd;
-  struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, SW_2, "divB");
+  struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, SW_2, "uu1");
   mrc_fld_set_nr_comps(fld_r, _NR_FLDS);
   mrc_fld_setup(fld_r);
   //  mrc_fld_copy(fld_r, fld);
 
-  struct mrc_fld *f = mrc_fld_get_as(fld, "mhd_fc_float");
+  struct mrc_fld *f = mrc_fld_get_as(fld, mrc_fld_type(fld));
   struct mrc_fld *r = mrc_fld_get_as(fld_r, "float");
 
   float max = 0.;
@@ -99,7 +108,7 @@ ggcm_mhd_diag_item_rv1_run(struct ggcm_mhd_diag_item *item,
 {
   struct ggcm_mhd *mhd = item->diag->mhd;
   struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, SW_2, "divB");
-  mrc_fld_set_nr_comps(fld_r, _NR_FLDS);
+  mrc_fld_set_nr_comps(fld_r, mrc_fld_nr_comps(f));
   mrc_fld_setup(fld_r);
   mrc_fld_copy(fld_r, f);
 
@@ -132,7 +141,7 @@ ggcm_mhd_diag_item_b1_run(struct ggcm_mhd_diag_item *item,
 {
   struct ggcm_mhd *mhd = item->diag->mhd;
   struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, SW_2, "divB");
-  mrc_fld_set_nr_comps(fld_r, _NR_FLDS);
+  mrc_fld_set_nr_comps(fld_r, mrc_fld_nr_comps(f));
   mrc_fld_setup(fld_r);
   mrc_fld_copy(fld_r, f);
 

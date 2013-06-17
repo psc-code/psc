@@ -11,9 +11,10 @@
 #include <mrc_io.h>
 
 #include <assert.h>
+#include <stdio.h>
 #include <math.h>
 
-//#define DEBUG
+#define DEBUG
 
 // ----------------------------------------------------------------------
 // ggcm_mhd_get_fields
@@ -81,6 +82,7 @@ calc_neg_divg(struct ggcm_mhd *mhd, struct mrc_fld *_rhs, struct mrc_fld *_flux[
 	  (FLUX(flux, i, m, ix+dind[0],iy+dind[1],iz+dind[2]) - 
 	   FLUX(flux, i, m, ix,iy,iz))
 	  / (MRC_CRD(crds, i, ind[i]+1) - MRC_CRD(crds, i, ind[i]));
+	assert(isfinite(MRC_F3(rhs, m, ix, iy, iz)));
       }
     } mrc_fld_foreach_end; 
   }
@@ -171,7 +173,7 @@ static void __unused
 limit_1(struct mrc_fld *u_delta[3], struct mrc_fld *u)
 {
   mrc_fld_foreach(u, ix,iy,iz, 1, 1) {
-    for (int m = 0; m <= _B1Z; m++) {
+    for (int m = 0; m <= _UU1; m++) {
       MRC_F3(u_delta[0], m, ix,iy,iz) = 
 	fmaxf((MRC_F3(u, m, ix+1,iy,iz) - MRC_F3(u, m, ix  ,iy,iz)) *
 	      (MRC_F3(u, m, ix  ,iy,iz) - MRC_F3(u, m, ix-1,iy,iz)) , 0.f) /
@@ -188,7 +190,25 @@ limit_1(struct mrc_fld *u_delta[3], struct mrc_fld *u)
       if (!isfinite(MRC_F3(u_delta[0], m, ix,iy,iz))) MRC_F3(u_delta[0], m, ix,iy,iz) = 0.f;
       if (!isfinite(MRC_F3(u_delta[1], m, ix,iy,iz))) MRC_F3(u_delta[1], m, ix,iy,iz) = 0.f;
       if (!isfinite(MRC_F3(u_delta[2], m, ix,iy,iz))) MRC_F3(u_delta[2], m, ix,iy,iz) = 0.f;
-    }   
+    }
+    for (int m = 0; m < 3; m++) {
+      MRC_F3(u_delta[0], _B1X + m, ix,iy,iz) = 
+	fmaxf((B1XYZ(u, m, ix+1,iy,iz) - B1XYZ(u, m, ix  ,iy,iz)) *
+	      (B1XYZ(u, m, ix  ,iy,iz) - B1XYZ(u, m, ix-1,iy,iz)), 0.f) /
+	(B1XYZ(u, m, ix+1,iy,iz) - B1XYZ(u, m, ix-1,iy,iz));
+      MRC_F3(u_delta[1], _B1X + m, ix,iy,iz) = 
+	fmaxf((B1XYZ(u, m, ix,iy+1,iz) - B1XYZ(u, m, ix,iy  ,iz)) *
+	      (B1XYZ(u, m, ix,iy  ,iz) - B1XYZ(u, m, ix,iy-1,iz)), 0.f) / 
+	(B1XYZ(u, m, ix,iy+1,iz) - B1XYZ(u, m, ix,iy-1,iz));
+      MRC_F3(u_delta[2], _B1X + m, ix,iy,iz) = 
+	fmaxf((B1XYZ(u, m, ix,iy,iz+1) - B1XYZ(u, m, ix,iy,iz  )) *
+	      (B1XYZ(u, m, ix,iy,iz  ) - B1XYZ(u, m, ix,iy,iz-1)), 0.f) /
+	(B1XYZ(u, m, ix,iy,iz+1) - B1XYZ(u, m, ix,iy,iz-1));
+    // FIXME, need to make sure NaN -> 0
+      if (!isfinite(MRC_F3(u_delta[0], _B1X + m, ix,iy,iz))) MRC_F3(u_delta[0], _B1X + m, ix,iy,iz) = 0.f;
+      if (!isfinite(MRC_F3(u_delta[1], _B1X + m, ix,iy,iz))) MRC_F3(u_delta[1], _B1X + m, ix,iy,iz) = 0.f;
+      if (!isfinite(MRC_F3(u_delta[2], _B1X + m, ix,iy,iz))) MRC_F3(u_delta[2], _B1X + m, ix,iy,iz) = 0.f;
+    }
   } mrc_fld_foreach_end;
 }
 
@@ -377,16 +397,16 @@ calc_u_pm(struct ggcm_mhd *mhd, struct mrc_fld *_u_p[3], struct mrc_fld *_u_m[3]
 
       dind[ip1]=1;
       MRC_F3(u_p[i], _B1X+ip1, ix,iy,iz) =
-	(0.5*(B1XYZ(u, ip1, ix+dind[0],iy+dind[1],iz+dind[2]) +
-	      MRC_F3(u_delta[i], _B1X+ip1, ix+dind[0],iy+dind[1],iz+dind[2]) +
-	      B1XYZ(u, ip1, ix,iy,iz) + MRC_F3(u_delta[i], _B1X+ip1, ix,iy,iz)));      
+      	(0.5*(B1XYZ(u, ip1, ix+dind[0],iy+dind[1],iz+dind[2]) +
+      	      MRC_F3(u_delta[i], _B1X+ip1, ix+dind[0],iy+dind[1],iz+dind[2]) +
+      	      B1XYZ(u, ip1, ix,iy,iz) + MRC_F3(u_delta[i], _B1X+ip1, ix,iy,iz)));
       dind[ip1]=0;
        
       dind[ip2]=1;
       MRC_F3(u_p[i], _B1X+ip2, ix,iy,iz) =
-	(0.5*(B1XYZ(u, ip2, ix+dind[0],iy+dind[1],iz+dind[2] ) + 
-	      MRC_F3(u_delta[i], _B1X+ip2, ix+dind[0],iy+dind[1],iz+dind[2]) +
-	      B1XYZ(u, ip2, ix,iy,iz) + MRC_F3(u_delta[i], _B1X+ip2, ix,iy,iz)));
+      	(0.5*(B1XYZ(u, ip2, ix+dind[0],iy+dind[1],iz+dind[2] ) +
+      	      MRC_F3(u_delta[i], _B1X+ip2, ix+dind[0],iy+dind[1],iz+dind[2]) +
+      	      B1XYZ(u, ip2, ix,iy,iz) + MRC_F3(u_delta[i], _B1X+ip2, ix,iy,iz)));
       dind[ip2]=0;
       
       // _m
@@ -708,6 +728,9 @@ calc_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
     cfp = sqrtf( 0.5f * (tmpp + sqrtf( sqr( sqr(cAp) + sqr(csp) ) - 
 				       (4. * mpermi * sqr(csp * MRC_F3(u_p[2], _B1Z, ix,iy,iz-1)) /  
 					MRC_F3(u_p[2], _RR1, ix,iy,iz-1))) ));      
+    if (!isfinite(cfp)) {
+      mprintf("ix %d %d %d cfp = csp %g cAp %g rr %g ppp %g ppm %g\n", ix,iy,iz, csp, cAp, MRC_F3(u_p[2], _RR1, ix,iy,iz-1), ppp, ppm);
+    }
 
     tmpm = sqr(csm) + sqr(cAm);
     cfm = sqrtf( 0.5f * (tmpm + sqrtf( sqr( sqr(cAm) + sqr(csm) ) -
@@ -739,13 +762,18 @@ calc_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
 			    (MRC_F3(u_m[2], _RV1Z, ix,iy,iz) / MRC_F3(u_m[2], _RR1, ix,iy,iz)) + cfm + cwm), 0.f);
     float cm = fminf(fminf( (MRC_F3(u_p[2], _RV1Z, ix,iy,iz-1) / MRC_F3(u_p[2], _RR1, ix,iy,iz-1)) - cfp - cwp,
 			    (MRC_F3(u_m[2], _RV1Z, ix,iy,iz) / MRC_F3(u_m[2], _RR1, ix,iy,iz)) - cfm - cwm), 0.f);
+    if (cp == 0. && cm == 0.) {
+      mprintf("ix %d %d %d cfp %g cwp %g\n", ix,iy,iz, cfp, cwp);
+    }
 
 #if KT == 1
     cp = fmaxf(cp,-cm);
     cm=-cp;
 #endif    
 
-    ap = 1e-3; am = -1e-3;
+    assert(isfinite(ap));
+    assert(isfinite(am));
+    //    ap = 1e-3; am = -1e-3;
     // Flux of _EX,_EY,_EZ through the x faces
     FLUX(flux, 0, _EX, ix,iy,iz) = 
       (1.f/(ap - am)) * ( (ap*am) * ( MRC_F3(u_m[0], _B1X, ix,iy,iz) - MRC_F3(u_p[0], _B1X, ix-1,iy,iz)));
@@ -756,7 +784,9 @@ calc_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
       (1.f/(ap - am)) * (     ap * MRC_F3(E_p[0], 1, ix-1,iy,iz) - am *  MRC_F3(E_m[0], 1, ix,iy,iz) + 
 			 (ap*am) * ( MRC_F3(u_m[0], _B1Z, ix,iy,iz) - MRC_F3(u_p[0], _B1Z, ix-1,iy,iz) ));  
     
-    bp = 1e-3; bm = -1e-3;
+    assert(isfinite(bp));
+    assert(isfinite(bm));
+    //    bp = 1e-3; bm = -1e-3;
     // flux of _EX,_EY,_EZ through the y faces    
     FLUX(flux, 1, _EX, ix,iy,iz) =
        (1.f/(bp - bm)) * (     bp  *  MRC_F3(E_p[1], 2, ix,iy-1,iz) - bm * MRC_F3(E_m[1], 2, ix,iy,iz) + 
@@ -767,7 +797,9 @@ calc_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
        (1.f/(bp - bm)) * (    - bp * MRC_F3(E_p[1], 0, ix,iy-1,iz) + bm *  MRC_F3(E_m[1], 0, ix,iy,iz) + 
 		         (bp * bm) *  ( MRC_F3(u_m[1], _B1Z, ix,iy,iz) -     MRC_F3(u_p[1], _B1Z, ix,iy-1,iz) ));  
     
-    cp = 1e-3; cm = -1e-3;
+    assert(isfinite(cp));
+    assert(isfinite(cm));
+    //    cp = 1e-3; cm = -1e-3;
     // flux of _EX,_EY,_EZ through the z faces
     FLUX(flux, 2, _EX, ix,iy,iz) = 
       (1.f/(cp - cm))*( - cp * MRC_F3(E_p[2], 1, ix,iy,iz-1) + cm * MRC_F3(E_m[2], 1, ix,iy,iz) + 
@@ -794,6 +826,16 @@ calc_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
       FLUX(flux, 1, m, ix,iy,iz) = .5f * (FLUX(flux_p, 1, m, ix-1,iy,iz) + FLUX(flux_m, 1, m, ix,iy,iz));
       FLUX(flux, 2, m, ix,iy,iz) = .5f * (FLUX(flux_p, 2, m, ix-1,iy,iz) + FLUX(flux_m, 2, m, ix,iy,iz));
 #endif
+      if (ix > 1 && ix < 64 &&
+	  iy > 1 && iy < 64 &&
+	  iz > 1 && iz < 64) {
+	assert(isfinite(FLUX(flux, 0, m, ix,iy,iz)));
+	assert(isfinite(FLUX(flux, 1, m, ix,iy,iz)));
+	if (!isfinite(FLUX(flux, 2, m, ix,iy,iz))) {
+	  mprintf("ix %d %d %d cp %g cm %g\n", ix,iy,iz, cp, cm);
+	}
+	assert(isfinite(FLUX(flux, 2, m, ix,iy,iz)));
+      }
     } 
   } mrc_fld_foreach_end;
  
@@ -844,6 +886,35 @@ calc_cweno_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
 
   calc_u_pm(mhd, _u_p, _u_m, _E_p, _E_m, _u, _u_delta);
   
+#ifdef DEBUG
+  {
+    static struct ggcm_mhd_diag *diag;
+    static int cnt;
+    if (!diag) {
+      diag = ggcm_mhd_diag_create(ggcm_mhd_comm(mhd));
+      ggcm_mhd_diag_set_param_obj(diag, "mhd", mhd);
+      ggcm_mhd_diag_set_param_string(diag, "run", "u_p0");
+      ggcm_mhd_diag_set_param_string(diag, "fields", "rr1:rv1:uu1:b1");
+      ggcm_mhd_diag_setup(diag);
+      ggcm_mhd_diag_view(diag);
+    }
+    ggcm_mhd_diag_run_now(diag, _u_p[0], DIAG_TYPE_3D, cnt++);
+  }
+  {
+    static struct ggcm_mhd_diag *diag;
+    static int cnt;
+    if (!diag) {
+      diag = ggcm_mhd_diag_create(ggcm_mhd_comm(mhd));
+      ggcm_mhd_diag_set_param_obj(diag, "mhd", mhd);
+      ggcm_mhd_diag_set_param_string(diag, "run", "u_m0");
+      ggcm_mhd_diag_set_param_string(diag, "fields", "rr1:rv1:uu1:b1");
+      ggcm_mhd_diag_setup(diag);
+      ggcm_mhd_diag_view(diag);
+    }
+    ggcm_mhd_diag_run_now(diag, _u_m[0], DIAG_TYPE_3D, cnt++);
+  }
+#endif
+
   // calculate fluxes per face (small f's) using reconstructed 
   // variables U^N(SWETB) and B^N(SWETB) = (Bx,By,Bz)^N(SEWTB)
   for (int f = 0; f < 3; f++) {
@@ -1060,7 +1131,7 @@ ggcm_mhd_step_cweno_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
       diag = ggcm_mhd_diag_create(ggcm_mhd_comm(mhd));
       ggcm_mhd_diag_set_param_obj(diag, "mhd", mhd);
       ggcm_mhd_diag_set_param_string(diag, "run", "fld");
-      ggcm_mhd_diag_set_param_string(diag, "fields", "rr1:rv1:uu1:b1:divb:pp:pp_full");
+      ggcm_mhd_diag_set_param_string(diag, "fields", "rr1:rv1:uu1:b1:divb:pp_full:b");
       ggcm_mhd_diag_setup(diag);
       ggcm_mhd_diag_view(diag);
     }
@@ -1078,7 +1149,8 @@ ggcm_mhd_step_cweno_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
   calc_fct_rhs(mhd, rhs, flux);
 
   struct mrc_fld *r = mrc_fld_get_as(rhs, "mhd_fc_float");
-  struct mrc_fld *f = mrc_fld_get_as(mhd->fld, "float");
+  assert(mhd->fld->_data_type == MRC_NT_FLOAT);
+  struct mrc_fld *f = mrc_fld_get_as(mhd->fld, mrc_fld_type(mhd->fld));
 
   mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
     for (int m = 0; m < 8; m++) {
