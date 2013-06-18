@@ -75,7 +75,6 @@ check_domain(struct psc_bnd *bnd)
     mrc_ddc_destroy(bnd->ddc);
 
     ops->create_ddc(bnd);
-    ops->setup(bnd);
   }
 }
 

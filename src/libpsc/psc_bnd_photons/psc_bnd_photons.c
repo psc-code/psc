@@ -49,6 +49,7 @@ static void
 psc_bnd_photons_unsetup(struct psc_bnd_photons *bnd)
 {
   ddc_particles_destroy(bnd->ddcp);
+  ((struct mrc_obj *)bnd)->is_setup = false;
 }
 
 // ----------------------------------------------------------------------

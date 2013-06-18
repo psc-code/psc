@@ -367,9 +367,6 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
   assert(nr_patches_old == flds_old->nr_patches);
   assert(nr_patches_old > 0);
   
-  fields_t *f_old = psc_mfields_get_patch(flds_old, 0);
-  fields_t *f_new = psc_mfields_get_patch(flds_new, 0);
-
   MPI_Request *send_reqs = calloc(nr_patches_old, sizeof(*send_reqs));
   // send from old local patches
   for (int p = 0; p < nr_patches_old; p++) {
@@ -379,7 +376,7 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
     if (info_new.rank == rank || info_new.rank < 0) {
       send_reqs[p] = MPI_REQUEST_NULL;
     } else {
-      fields_t *pf_old = &f_old[p];
+      fields_t *pf_old = psc_mfields_get_patch(flds_old, p);
       int nn = psc_fields_size(pf_old) * pf_old->nr_comp;
       int *ib = pf_old->ib;
       void *addr_old = &F3(pf_old, 0, ib[0], ib[1], ib[2]);
@@ -401,7 +398,7 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
       //Seed new data
     }
     else {
-      fields_t *pf_new = &f_new[p];
+      fields_t *pf_new = psc_mfields_get_patch(flds_new, p);
       int nn = psc_fields_size(pf_new) * pf_new->nr_comp;
       int *ib = pf_new->ib;
       void *addr_new = &F3(pf_new, 0, ib[0], ib[1], ib[2]);
@@ -420,8 +417,8 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
       continue;
     }
 
-    fields_t *pf_old = &f_old[info_old.patch];
-    fields_t *pf_new = &f_new[p];
+    fields_t *pf_old = psc_mfields_get_patch(flds_old, info_old.patch);
+    fields_t *pf_new = psc_mfields_get_patch(flds_new, p);
 
     assert(pf_old->nr_comp == pf_new->nr_comp);
     assert(psc_fields_size(pf_old) == psc_fields_size(pf_new));
@@ -499,10 +496,10 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
   __list_for_each_entry(p, &psc_mfields_base_list, entry, struct psc_mfields_list_entry) {
     mfields_base_t *flds_base_old = *p->flds_p;
     
-    if (flds_base_old != psc->flds) {
-      fprintf(stderr, "WARNING: not rebalancing some extra field -- expect crash!\n");
-      continue; // FIXME!!!
-    }
+    // if (flds_base_old != psc->flds) {
+    //   fprintf(stderr, "WARNING: not rebalancing some extra field -- expect crash!\n");
+    //   continue; // FIXME!!!
+    // }
     mfields_base_t *flds_base_new;
     flds_base_new = psc_mfields_create(mrc_domain_comm(domain_new));
     psc_mfields_set_type(flds_base_new, psc_mfields_type(flds_base_old));
@@ -512,6 +509,13 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
     psc_mfields_set_param_int(flds_base_new, "first_comp", flds_base_old->first_comp);
     psc_mfields_set_param_int3(flds_base_new, "ibn", flds_base_old->ibn);
     psc_mfields_setup(flds_base_new);
+    for (int m = flds_base_old->first_comp;
+	 m < flds_base_old->first_comp + flds_base_old->nr_fields; m++) {
+      const char *s = psc_mfields_comp_name(flds_base_old, m);
+      if (s) {
+	psc_mfields_set_comp_name(flds_base_new, m, s);
+      }
+    }
 
     mfields_t *flds_old =
       psc_mfields_get_cf(flds_base_old, flds_base_old->first_comp,
@@ -522,8 +526,8 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
     psc_mfields_put_cf(flds_new, flds_base_new, flds_base_new->first_comp,
 		       flds_base_new->first_comp + flds_base_new->nr_fields);
 
-    psc_mfields_destroy(psc->flds);
-    psc->flds = flds_base_new;
+    psc_mfields_destroy(*p->flds_p);
+    *p->flds_p = flds_base_new;
   }
 
   psc_balance_seed_patches(domain_old, domain_new);	//TODO required here?
@@ -626,27 +630,39 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   struct psc_mfields_list_entry *p;
   __list_for_each_entry(p, &psc_mfields_base_list, entry, struct psc_mfields_list_entry) {
     mfields_base_t *flds_base_old = *p->flds_p;
-    if (flds_base_old != psc->flds) {
-      fprintf(stderr, "WARNING: not rebalancing some extra field -- expect crash!\n");
-      continue; // FIXME!!!
-    }
+    // if (flds_base_old != psc->flds) {
+    //   fprintf(stderr, "WARNING: not rebalancing some extra field (%p) -- expect crash!\n",
+    // 	      flds_base_old);
+    //   continue; // FIXME!!!
+    // }
     mfields_base_t *flds_base_new;
     flds_base_new = psc_mfields_create(mrc_domain_comm(domain_new));
-    psc_mfields_set_type(flds_base_new, psc->prm.fields_base);
+    psc_mfields_set_type(flds_base_new, psc_mfields_type(flds_base_old));
     psc_mfields_set_name(flds_base_new, "mfields");
     psc_mfields_set_domain(flds_base_new, domain_new);
-    psc_mfields_set_param_int(flds_base_new, "nr_fields", NR_FIELDS);
-    psc_mfields_set_param_int3(flds_base_new, "ibn", psc->ibn);
+    psc_mfields_set_param_int(flds_base_new, "nr_fields", flds_base_old->nr_fields);
+    psc_mfields_set_param_int(flds_base_new, "first_comp", flds_base_old->first_comp);
+    psc_mfields_set_param_int3(flds_base_new, "ibn", flds_base_old->ibn);
     psc_mfields_setup(flds_base_new);
+    for (int m = flds_base_old->first_comp;
+	 m < flds_base_old->first_comp + flds_base_old->nr_fields; m++) {
+      const char *s = psc_mfields_comp_name(flds_base_old, m);
+      if (s) {
+	psc_mfields_set_comp_name(flds_base_new, m, s);
+      }
+    }
 
-    mfields_t *flds_old = psc_mfields_get_cf(flds_base_old, 0, 12); // FIXME NR_FIELDS?
+    mfields_t *flds_old =
+      psc_mfields_get_cf(flds_base_old, flds_base_old->first_comp,
+			 flds_base_old->first_comp + flds_base_old->nr_fields);
     mfields_t *flds_new = psc_mfields_get_cf(flds_base_new, 0, 0);
     communicate_fields(domain_old, domain_new, flds_old, flds_new);
     psc_mfields_put_cf(flds_old, flds_base_old, 0, 0);
-    psc_mfields_put_cf(flds_new, flds_base_new, 0, 12);
+    psc_mfields_put_cf(flds_new, flds_base_new, flds_base_new->first_comp,
+		       flds_base_new->first_comp + flds_base_new->nr_fields);
 
-    psc_mfields_destroy(psc->flds);
-    psc->flds = flds_base_new;
+    psc_mfields_destroy(*p->flds_p);
+    *p->flds_p = flds_base_new;
   }
   
   psc_balance_seed_patches(domain_old, domain_new);
