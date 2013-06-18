@@ -40,7 +40,7 @@ ggcm_mhd_get_fields(struct ggcm_mhd *mhd, const char *name, int nr_comp)
 #define sign(x) (( x > 0 ) - ( x < 0 ))
 // KNP[0] or KT[1]? 
 #define KT 0
-#define incws 1
+#define incws 0
 
 enum {
   // reuse B in the _fluxes_ (only) to store E field
@@ -571,6 +571,14 @@ calc_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
        .5f * (sqr(MRC_F3(u_m[0], _B1X, ix,iy,iz)) +
 	      sqr(MRC_F3(u_m[0], _B1Y, ix,iy,iz)) +
 	      sqr(MRC_F3(u_m[0], _B1Z, ix,iy,iz))));
+
+
+    if (ppm < 0) { 
+      ppm = 0; 
+    }
+    if (ppp < 0) { 
+      ppp = 0; 
+    } 
     
     float csp = sqrtf((gamma * ppp) / (MRC_F3(u_p[0], _RR1, ix-1,iy,iz)));
     float csm = sqrtf((gamma * ppm) / (MRC_F3(u_m[0], _RR1, ix,iy,iz)));   
@@ -618,6 +626,10 @@ calc_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
     float am = fminf(fminf( (MRC_F3(u_p[0], _RV1X, ix-1,iy,iz) / MRC_F3(u_p[0], _RR1, ix-1,iy,iz)) - cfp - cwp,
 			    (MRC_F3(u_m[0], _RV1X, ix,iy,iz) / MRC_F3(u_m[0], _RR1,ix,iy,iz)) - cfm - cwm), 0.f);
     
+
+
+
+
 #if KT == 1
     ap = fmaxf(ap,-am);
     am=-ap;
@@ -642,6 +654,15 @@ calc_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
        .5f * (sqr(MRC_F3(u_m[1], _B1X, ix,iy,iz)) +
 	      sqr(MRC_F3(u_m[1], _B1Y, ix,iy,iz)) +
 	      sqr(MRC_F3(u_m[1], _B1Z, ix,iy,iz))));
+
+
+    if (ppm < 0) { 
+      ppm = 0; 
+    }
+    if (ppp < 0) { 
+      ppp = 0; 
+    } 
+
     
     csp = sqrtf((gamma * ppp) / (MRC_F3(u_p[1], _RR1, ix,iy-1,iz)));
     csm = sqrtf((gamma * ppm) / (MRC_F3(u_m[1], _RR1, ix,iy,iz)));
@@ -657,12 +678,11 @@ calc_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
     			  	  
     tmpp = sqr(csp) + sqr(cAp);
     cfp = sqrtf( 0.5 * (tmpp + sqrtf( sqr( sqr(cAp) + sqr(csp) ) - 
-				      (4.f * mpermi * sqr(csp * MRC_F3(u, _B1Y, ix,iy-1,iz)) /  
-				       MRC_F3(u_p[1], _RR1, ix,iy-1,iz))) ));      
+				      (4.f * mpermi * sqr(csp * MRC_F3(u, _B1Y, ix,iy-1,iz)) * rhoip))));      
     tmpm = sqr(csm) + sqr(cAm);
     cfm = sqrtf( 0.5 * (tmpm + sqrtf( sqr( sqr(cAm) + sqr(csm) ) -  
-				      (4.f * mpermi * sqr(csm * MRC_F3(u, _B1Y, ix,iy,iz)) /  
-				       MRC_F3(u_m[1], _RR1, ix,iy,iz))) ));
+				      (4.f * mpermi * sqr(csm * MRC_F3(u, _B1Y, ix,iy,iz)) * rhoim)))); 
+
 
     /*
     bp = fmaxf(fmaxf( (MRC_F3(u_p[1], _RV1Y, ix,iy-1,iz) / MRC_F3(u_p[1], _RR1, ix,iy-1,iz)) + cfp,
@@ -690,8 +710,8 @@ calc_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
 
    // Coeffiecents cp and cm 
 
-    rhoip = 1.f / MRC_F3(u_p[2], _RR1, ix,iy,iz-1);
-    rhoim = 1.f / MRC_F3(u_m[2], _RR1, ix,iy,iz); 
+    rhoip = 1.f / MRC_F3(u_p[2], _RR1, ix,iy,iz);
+    rhoim = 1.f / MRC_F3(u_m[2], _RR1, ix,iy,iz-1); 
 
 
     ppp = (gamma - 1.f) *
@@ -710,32 +730,45 @@ calc_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
 	      sqr(MRC_F3(u_m[2], _B1Y, ix,iy,iz)) +
 	      sqr(MRC_F3(u_m[2], _B1Z, ix,iy,iz))));
        
+    float tmpbe =  .5f * (sqr(MRC_F3(u_p[2], _B1X, ix,iy,iz)) +
+	      sqr(MRC_F3(u_p[2], _B1Y, ix,iy,iz)) +
+			  sqr(MRC_F3(u_p[2], _B1Z, ix,iy,iz)));
 
-  
-    csp = sqrtf((gamma * ppp) / (MRC_F3(u_p[2], _RR1, ix,iy,iz-1)));
-    csm = sqrtf((gamma * ppm) / (MRC_F3(u_m[2], _RR1, ix,iy,iz)));
+    float tmpke = rhoip ;// 0.5f * rhoip * (sqr(MRC_F3(u_p[2], _RV1X, ix,iy,iz)) +
+    //sqr(MRC_F3(u_p[2], _RV1Y, ix,iy,iz)) +
+    //				   sqr(MRC_F3(u_p[2], _RV1Z, ix,iy,iz)));  
+    float tmpee = MRC_F3(u_p[2], _UU1, ix,iy,iz); 
+
+    csp = sqrtf((gamma * ppp) * rhoip);
+    csm = sqrtf((gamma * ppm) * rhoim);
    			
     cAp = sqrtf( (sqr(MRC_F3(u_p[2], _B1X, ix,iy,iz-1))+
 		  sqr(MRC_F3(u_p[2], _B1Y, ix,iy,iz-1))+
-		  sqr(MRC_F3(u_p[2], _B1Z, ix,iy,iz-1)))/ MRC_F3(u_p[2], _RR1, ix,iy,iz-1) );
+		  sqr(MRC_F3(u_p[2], _B1Z, ix,iy,iz-1))) * rhoip);// MRC_F3(u_p[2], _RR1, ix,iy,iz-1) );
     
     cAm = sqrtf( (sqr(MRC_F3(u_m[2], _B1X, ix,iy,iz))+
 		  sqr(MRC_F3(u_m[2], _B1Y, ix,iy,iz))+
-		  sqr(MRC_F3(u_m[2], _B1Z, ix,iy,iz)))/ MRC_F3(u_m[2], _RR1, ix,iy,iz) );
+		  sqr(MRC_F3(u_m[2], _B1Z, ix,iy,iz))) * rhoim); // MRC_F3(u_m[2], _RR1, ix,iy,iz) );
 
+    if (ppm < 0) { 
+      ppm = 0; 
+    }
+    if (ppp < 0) { 
+      ppp = 0; 
+    } 
 
     tmpp = sqr(csp) + sqr(cAp);
     cfp = sqrtf( 0.5f * (tmpp + sqrtf( sqr( sqr(cAp) + sqr(csp) ) - 
-				       (4. * mpermi * sqr(csp * MRC_F3(u_p[2], _B1Z, ix,iy,iz-1)) /  
-					MRC_F3(u_p[2], _RR1, ix,iy,iz-1))) ));      
+				       (4. * mpermi * sqr(csp * MRC_F3(u_p[2], _B1Z, ix,iy,iz-1)) *  
+					rhoip )) ));      
     if (!isfinite(cfp)) {
-      mprintf("ix %d %d %d cfp = csp %g cAp %g rr %g ppp %g ppm %g\n", ix,iy,iz, csp, cAp, MRC_F3(u_p[2], _RR1, ix,iy,iz-1), ppp, ppm);
+      mprintf("ix %d %d %d cfp = csp %g cAp %g rr %g ppp %g ppm %g tmpbe %g tmpke %g tmpee %g \n", ix,iy,iz, csp, cAp, MRC_F3(u_p[2], _RR1, ix,iy,iz-1), ppp, ppm, tmpbe, tmpke, tmpee);
     }
 
     tmpm = sqr(csm) + sqr(cAm);
     cfm = sqrtf( 0.5f * (tmpm + sqrtf( sqr( sqr(cAm) + sqr(csm) ) -
-				       (4.* mpermi * sqr(csm * MRC_F3(u_m[2], _B1Z, ix,iy,iz)) /  
-					MRC_F3(u_m[2], _RR1, ix,iy,iz))) ));
+				       (4.* mpermi * sqr(csm * MRC_F3(u_m[2], _B1Z, ix,iy,iz)) *  
+					rhoim)) ));
 
     /*
     cp = fmaxf(fmaxf( (MRC_F3(u_p[2], _RV1Z, ix,iy,iz-1) / MRC_F3(u_p[2], _RR1, ix,iy,iz-1)) + cfp,
@@ -748,8 +781,8 @@ calc_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
     //cwp = d_i * cAp * M_PI * sqrtf(MRC_F3(u_p[2], _RR1, ix,iy,iz-1)) * bdz1[iz+2]  ;
     //cwm = d_i * cAm * M_PI * sqrtf(MRC_F3(u_m[2], _RR1, ix,iy,iz)) * bdz1[iz+2]  ; 
 
-    cwp = d_i * cAp * sqrtf(1./MRC_F3(u_p[2], _RR1, ix,iy,iz-1)) * bdz1[iz+2] ;
-    cwm = d_i * cAm * sqrtf(1./MRC_F3(u_m[2], _RR1, ix,iy,iz)) * bdz1[iz+2] ; 
+    cwp = d_i * cAp * sqrtf(rhoip) * bdz1[iz+2] ;
+    cwm = d_i * cAm * sqrtf(rhoim) * bdz1[iz+2] ; 
 
     //printf("cAp %f cwp %f %f \n", cAp,cAp * M_PI * sqrtf(MRC_F3(u_p[2], _RR1, ix,iy,iz-1)) * gmhd->crdz[BD1][iz+2] , ); 
 
@@ -763,7 +796,7 @@ calc_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
     float cm = fminf(fminf( (MRC_F3(u_p[2], _RV1Z, ix,iy,iz-1) / MRC_F3(u_p[2], _RR1, ix,iy,iz-1)) - cfp - cwp,
 			    (MRC_F3(u_m[2], _RV1Z, ix,iy,iz) / MRC_F3(u_m[2], _RR1, ix,iy,iz)) - cfm - cwm), 0.f);
     if (cp == 0. && cm == 0.) {
-      mprintf("ix %d %d %d cfp %g cwp %g\n", ix,iy,iz, cfp, cwp);
+      //mprintf("ix %d %d %d cfp %g cwp %g\n", ix,iy,iz, cfp, cwp);
     }
 
 #if KT == 1
