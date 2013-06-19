@@ -275,11 +275,11 @@ xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
       char s_patch[10];
       sprintf(s_patch, "p%d", p);
 
-      hsize_t mdims[3] = { m3p->im[2], m3p->im[1], m3p->im[0] };
-      hsize_t fdims[3] = { m3p->im[2] + 2 * m3p->ib[2] + 2*sw,
-			   m3p->im[1] + 2 * m3p->ib[1] + 2*sw,
-			   m3p->im[0] + 2 * m3p->ib[0] + 2*sw};
-      hsize_t off[3] = { -m3p->ib[2]-sw, -m3p->ib[1]-sw, -m3p->ib[0]-sw };
+      hsize_t mdims[3] = { m3->im[2], m3->im[1], m3->im[0] };
+      hsize_t fdims[3] = { m3->im[2] + 2 * m3->ib[2] + 2*sw,
+			   m3->im[1] + 2 * m3->ib[1] + 2*sw,
+			   m3->im[0] + 2 * m3->ib[0] + 2*sw};
+      hsize_t off[3] = { -m3->ib[2]-sw, -m3->ib[1]-sw, -m3->ib[0]-sw };
 
       hid_t group = H5Gcreate(group_fld, s_patch, H5P_DEFAULT,
 			      H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group);
@@ -293,7 +293,7 @@ xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
       hid_t dset = H5Dcreate(group, "3d", H5T_NATIVE_FLOAT, filespace, H5P_DEFAULT,
 			     H5P_DEFAULT, H5P_DEFAULT);
       H5Dwrite(dset, H5T_NATIVE_FLOAT, memspace, filespace, H5P_DEFAULT,
-	       &MRC_M3(m3p, m, m3p->ib[0], m3p->ib[1], m3p->ib[2]));
+	       &MRC_M3(m3p, m, m3->ib[0], m3->ib[1], m3->ib[2]));
       H5Dclose(dset);
       ierr = H5Gclose(group); CE;
       mrc_m3_patch_put(m3);
@@ -770,9 +770,9 @@ xdmf_parallel_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
       mrc_domain_get_local_patch_info(m3->domain, p, &info);
       struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, p);
 
-      hsize_t mdims[3] = { m3p->im[2], m3p->im[1], m3p->im[0] };
+      hsize_t mdims[3] = { m3->im[2], m3->im[1], m3->im[0] };
       hsize_t mcount[3] = { info.ldims[2], info.ldims[1], info.ldims[0] };
-      hsize_t moff[3] = { -m3p->ib[2], -m3p->ib[1], -m3p->ib[0] };
+      hsize_t moff[3] = { -m3->ib[2], -m3->ib[1], -m3->ib[0] };
       hsize_t foff[3] = { info.off[2], info.off[1], info.off[0] };
 
       H5Sselect_hyperslab(filespace, H5S_SELECT_SET, foff, NULL, mcount, NULL);
@@ -780,7 +780,7 @@ xdmf_parallel_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
       H5Sselect_hyperslab(memspace, H5S_SELECT_SET, moff, NULL, mcount, NULL);
 
       H5Dwrite(dset, H5T_NATIVE_FLOAT, memspace, filespace, dxpl,
-	       &MRC_M3(m3p, m, m3p->ib[0], m3p->ib[1], m3p->ib[2]));
+	       &MRC_M3(m3p, m, m3->ib[0], m3->ib[1], m3->ib[2]));
 
       H5Sclose(memspace);
 

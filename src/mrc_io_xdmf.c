@@ -1327,7 +1327,7 @@ ds_xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
     if (!xs) {
       int np[3];
       mrc_domain_get_param_int3(m3->domain, "np", np);
-      xs = xdmf_spatial_create_3d(io, m3p->im, p, np[0] * np[1] * np[2]);
+      xs = xdmf_spatial_create_3d(io, m3->im, p, np[0] * np[1] * np[2]);
       if (p == 0) {
 	hdf5_write_mcrds(io, m3->domain, m3->sw);
       }
@@ -1339,7 +1339,7 @@ ds_xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
       sprintf(fld_name, "%s-%d", m3->name[m], p);
 
       save_fld_info(xs, strdup(fld_name), strdup(path), false);
-      hsize_t hdims[3] = { m3p->im[2], m3p->im[1], m3p->im[0] };
+      hsize_t hdims[3] = { m3->im[2], m3->im[1], m3->im[0] };
       hid_t group = H5Gcreate(group0, fld_name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
       ierr = H5LTmake_dataset_float(group, "3d", 3, hdims, m3p->arr); CE;
       ierr = H5Gclose(group); CE;
