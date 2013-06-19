@@ -1,12 +1,14 @@
 
-#include "psc_cuda.h"
-#include "particles_cuda.h"
+#undef _GLIBCXX_USE_INT128
 
 #include <thrust/functional.h>
 #include <thrust/transform_scan.h>
 #include <thrust/count.h>
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
+
+#include "psc_cuda.h"
+#include "particles_cuda.h"
 
 #include <b40c/radixsort_scanscatter_kernel4.h>
 

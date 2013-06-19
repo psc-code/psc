@@ -2,13 +2,13 @@
 #ifndef CUDA_SORT2_H
 #define CUDA_SORT2_H
 
+#include <thrust/device_vector.h>
+#include <b40c/kernel_utils.h>
+
 #include "psc_cuda.h"
 #include "cuda_common.h"
 
 #include <mrc_profile.h>
-
-#include <thrust/device_vector.h>
-#include <b40c/kernel_utils.h>
 
 #undef FAST_COMPILE
 #ifdef FAST_COMPILE

@@ -1,5 +1,6 @@
 
-#include "psc_cuda.h"
+#undef _GLIBCXX_USE_INT128
+
 #include "cuda_sort2.h"
 
 #if 0

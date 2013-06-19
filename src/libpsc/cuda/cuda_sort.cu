@@ -1,8 +1,11 @@
 
-#include <psc_cuda.h>
+#undef _GLIBCXX_USE_INT128
+
 #include <thrust/sort.h>
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
+
+#include <psc_cuda.h>
 
 EXTERN_C void
 sort_pairs_host(int *_d_keys, int *_d_vals, int n)

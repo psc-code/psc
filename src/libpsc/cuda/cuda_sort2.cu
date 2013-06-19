@@ -1,4 +1,6 @@
 
+#undef _GLIBCXX_USE_INT128
+
 #include "cuda_sort2.h"
 #include "cuda_sort2_spine.h"
 #include "particles_cuda.h"
