@@ -206,7 +206,8 @@ mrc_ddc_amr_apply(struct mrc_ddc *ddc, struct mrc_m3 *fld)
 
   float **fldp = malloc(fld->nr_patches * sizeof(*fldp));
   for (int p = 0; p < fld->nr_patches; p++) {
-    fldp[p] = mrc_m3_patch_get(fld, p)->arr;
+    struct mrc_m3_patch *m3p = mrc_m3_patch_get(fld, p);
+    fldp[p] = &MRC_M3(m3p, 0, fld->ib[0], fld->ib[1], fld->ib[2]);
   }
   mrc_ddc_amr_fill_ghosts(ddc, -1, -1, fldp);
 

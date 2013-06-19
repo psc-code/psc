@@ -265,7 +265,7 @@ mrc_m1_patch_put(struct mrc_m1 *m1)
 // mrc_m3
 
 struct mrc_m3_patch {
-  float *arr;
+  float *_arr;
   int _im[3];
   int _ib[3];
 };
@@ -276,6 +276,7 @@ struct mrc_m3 {
   int nr_patches;
   int im[3];
   int ib[3];
+  float *arr;
   struct mrc_m3_patch *patches;
   struct mrc_domain *domain; //< based on this mrc_domain
   int sw; //< # of ghost points
@@ -321,9 +322,9 @@ mrc_m3_patch_put(struct mrc_m3 *m3)
 #else
 
 #define MRC_M3(m3p,m, ix,iy,iz)					\
-  ((m3p)->arr[(((m) * (m3p)->_im[2] + (iz) - (m3p)->_ib[2]) *	\
-	       (m3p)->_im[1] + (iy) - (m3p)->_ib[1]) *		\
-	      (m3p)->_im[0] + (ix) - (m3p)->_ib[0]])
+  ((m3p)->_arr[(((m) * (m3p)->_im[2] + (iz) - (m3p)->_ib[2]) *	\
+		(m3p)->_im[1] + (iy) - (m3p)->_ib[1]) *		\
+	       (m3p)->_im[0] + (ix) - (m3p)->_ib[0]])
 
 #endif
 

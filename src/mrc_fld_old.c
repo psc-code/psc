@@ -397,10 +397,7 @@ struct mrc_class_mrc_m1 mrc_class_mrc_m1 = {
 static void
 _mrc_m3_destroy(struct mrc_m3 *m3)
 {
-  for (int p = 0; p < m3->nr_patches; p++) {
-    struct mrc_m3_patch *m3p = &m3->patches[p];
-    free(m3p->arr);
-  }
+  free(m3->arr);
   free(m3->patches);
 
   if (m3->name) {
@@ -427,14 +424,15 @@ _mrc_m3_setup(struct mrc_m3 *m3)
     m3->im[d] = patches[0].ldims[d] + 2 * m3->sw;
   }
   int len = m3->im[0] * m3->im[1] * m3->im[2] * m3->nr_comp;
+  m3->arr = calloc(len * nr_patches, sizeof(float));
   for (int p = 0; p < nr_patches; p++) {
     struct mrc_m3_patch *m3p = &m3->patches[p];
     for (int d = 0; d < 3; d++) {
-      assert(m3->im[d] == patches[p].ldims[d]);
+      assert(m3->im[d] = patches[p].ldims[d] + 2 * m3->sw);
       m3p->_ib[d] = m3->ib[d];
       m3p->_im[d] = m3->im[d];
     }
-    m3p->arr = calloc(len, sizeof(*m3p->arr));
+    m3p->_arr = (float *) m3->arr + p * len;
   }
 }
 

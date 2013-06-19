@@ -1341,7 +1341,8 @@ ds_xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
       save_fld_info(xs, strdup(fld_name), strdup(path), false);
       hsize_t hdims[3] = { m3->im[2], m3->im[1], m3->im[0] };
       hid_t group = H5Gcreate(group0, fld_name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-      ierr = H5LTmake_dataset_float(group, "3d", 3, hdims, m3p->arr); CE;
+      ierr = H5LTmake_dataset_float(group, "3d", 3, hdims,
+				    &MRC_M3(m3p, 0, m3->ib[0], m3->ib[1], m3->ib[2])); CE;
       ierr = H5Gclose(group); CE;
       mrc_m3_patch_put(m3);
     }
