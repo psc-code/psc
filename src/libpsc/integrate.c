@@ -106,8 +106,10 @@ psc_step(struct psc *psc)
   
   // particle propagation n*dt -> (n+1.0)*dt
   psc_push_particles_run(psc->push_particles, psc->particles, psc->flds);
+    
+  // field propagation (n+0.5)*dt -> (n+1.0)*dt
   psc_push_fields_step_b1(psc->push_fields, psc->flds);
-	prof_start(pr); MPI_Barrier(MPI_COMM_WORLD); prof_stop(pr);
+
   psc_bnd_particles_exchange(psc->bnd_particles, psc->particles);
   psc_push_particles_run_b(psc->push_particles, psc->particles, psc->flds);
   
