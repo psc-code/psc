@@ -427,10 +427,9 @@ _mrc_m3_setup(struct mrc_m3 *m3)
   m3->arr = calloc(len * nr_patches, sizeof(float));
   for (int p = 0; p < nr_patches; p++) {
     struct mrc_m3_patch *m3p = &m3->patches[p];
+    m3p->_m3 = m3;
     for (int d = 0; d < 3; d++) {
       assert(m3->im[d] = patches[p].ldims[d] + 2 * m3->sw);
-      m3p->_ib[d] = m3->ib[d];
-      m3p->_im[d] = m3->im[d];
     }
     m3p->_arr = (float *) m3->arr + p * len;
   }

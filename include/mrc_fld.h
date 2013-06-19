@@ -266,8 +266,7 @@ mrc_m1_patch_put(struct mrc_m1 *m1)
 
 struct mrc_m3_patch {
   float *_arr;
-  int _im[3];
-  int _ib[3];
+  struct mrc_m3 *_m3;
 };
 
 struct mrc_m3 {
@@ -322,32 +321,32 @@ mrc_m3_patch_put(struct mrc_m3 *m3)
 #else
 
 #define MRC_M3(m3p,m, ix,iy,iz)					\
-  ((m3p)->_arr[(((m) * (m3p)->_im[2] + (iz) - (m3p)->_ib[2]) *	\
-		(m3p)->_im[1] + (iy) - (m3p)->_ib[1]) *		\
-	       (m3p)->_im[0] + (ix) - (m3p)->_ib[0]])
+  ((m3p)->_arr[(((m) * (m3p)->_m3->im[2] + (iz) - (m3p)->_m3->ib[2]) *	\
+		(m3p)->_m3->im[1] + (iy) - (m3p)->_m3->ib[1]) *		\
+	       (m3p)->_m3->im[0] + (ix) - (m3p)->_m3->ib[0]])
 
 #endif
 
 #define mrc_m3_foreach_patch(m3, p) \
   for (int p = 0; p < m3->nr_patches; p++)
 
-#define mrc_m3_foreach(m3p, ix,iy,iz, l,r) {		\
-  int _l[3] = { -l, -l, -l };				\
-  int _r[3] = { m3p->_im[0] + 2 * m3p->_ib[0] + r,	\
-		m3p->_im[1] + 2 * m3p->_ib[1] + r,	\
-		m3p->_im[2] + 2 * m3p->_ib[2] + r};	\
-  for (int iz = _l[2]; iz < _r[2]; iz++) {		\
-    for (int iy = _l[1]; iy < _r[1]; iy++) {		\
-      for (int ix = _l[0]; ix < _r[0]; ix++)		\
+#define mrc_m3_foreach(m3p, ix,iy,iz, l,r) {			\
+  int _l[3] = { -l, -l, -l };					\
+  int _r[3] = { m3p->_m3->im[0] + 2 * m3p->_m3->ib[0] + r,	\
+		m3p->_m3->im[1] + 2 * m3p->_m3->ib[1] + r,	\
+		m3p->_m3->im[2] + 2 * m3p->_m3->ib[2] + r};	\
+  for (int iz = _l[2]; iz < _r[2]; iz++) {			\
+    for (int iy = _l[1]; iy < _r[1]; iy++) {			\
+      for (int ix = _l[0]; ix < _r[0]; ix++)			\
 
 #define mrc_m3_foreach_bnd(m3p, ix,iy,iz) {		\
-  int _l[3] = { m3p->_ib[0], m3p->_ib[1], m3p->_ib[2] };	\
-  int _r[3] = { m3p->_ib[0] + m3p->_im[0],		\
-		m3p->_ib[1] + m3p->_im[1],		\
-		m3p->_ib[2] + m3p->_im[2] };		\
-  for (int iz = _l[2]; iz < _r[2]; iz++) {		\
-    for (int iy = _l[1]; iy < _r[1]; iy++) {		\
-      for (int ix = _l[0]; ix < _r[0]; ix++)		\
+  int _l[3] = { m3p->_m3->ib[0], m3p->_m3->ib[1], m3p->_m3->ib[2] };	\
+  int _r[3] = { m3p->_m3->ib[0] + m3p->_m3->im[0],			\
+		m3p->_m3->ib[1] + m3p->_m3->im[1],			\
+		m3p->_m3->ib[2] + m3p->_m3->im[2] };			\
+  for (int iz = _l[2]; iz < _r[2]; iz++) {				\
+    for (int iy = _l[1]; iy < _r[1]; iy++) {				\
+      for (int ix = _l[0]; ix < _r[0]; ix++)				\
 
 #define mrc_m3_foreach_end  }}}
   
