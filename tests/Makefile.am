@@ -70,7 +70,6 @@ TESTS = \
 XFAIL_TESTS = \
 	test_mrc_m1_0.sh \
 	test_mrc_m1_1.sh \
-	test_mrc_m3_0.sh \
 	test_mrc_m3_1.sh \
 	test_mrc_m3_2.sh \
 	test_mrc_m3_3.sh \
