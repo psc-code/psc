@@ -41,7 +41,7 @@ enum {
   MRC_NT_NR,
 };
 
-#define MRC_FLD_MAXDIMS (4)
+#define MRC_FLD_MAXDIMS (5)
 
 struct mrc_fld {
   struct mrc_obj obj;
@@ -106,7 +106,7 @@ mrc_fld_same_shape(struct mrc_fld *fld_1, struct mrc_fld *fld_2)
 
 #include <string.h>
 
-#define MRC_FLD(fld, type, i0,i1,i2,i3)					\
+#define MRC_FLD(fld, type, i0,i1,i2,i3,i4)				\
   (*({									\
       if (strcmp(#type, "float") == 0) assert(fld->_data_type == MRC_NT_FLOAT);	\
       if (strcmp(#type, "double") == 0) assert(fld->_data_type == MRC_NT_DOUBLE); \
@@ -115,9 +115,11 @@ mrc_fld_same_shape(struct mrc_fld *fld_1, struct mrc_fld *fld_2)
       assert(i1 >= (fld)->_ghost_offs[1] && i1 < (fld)->_ghost_offs[1] + (fld)->_ghost_dims[1]); \
       assert(i2 >= (fld)->_ghost_offs[2] && i2 < (fld)->_ghost_offs[2] + (fld)->_ghost_dims[2]); \
       assert(i3 >= (fld)->_ghost_offs[3] && i3 < (fld)->_ghost_offs[3] + (fld)->_ghost_dims[3]); \
+      assert(i4 >= (fld)->_ghost_offs[4] && i4 < (fld)->_ghost_offs[4] + (fld)->_ghost_dims[4]); \
       assert((fld)->_arr);						\
       type *p  =							\
-	&(((type *) (fld)->_arr)[(((i3) *				\
+	&(((type *) (fld)->_arr)[((((i4) *				\
+				    (fld)->_ghost_dims[3] + (i3) - (fld)->_ghost_offs[3]) * \
 				   (fld)->_ghost_dims[2] + (i2) - (fld)->_ghost_offs[2]) * \
 				  (fld)->_ghost_dims[1] + (i1) - (fld)->_ghost_offs[1]) * \
 				 (fld)->_ghost_dims[0] + (i0) - (fld)->_ghost_offs[0]]); \
@@ -125,19 +127,23 @@ mrc_fld_same_shape(struct mrc_fld *fld_1, struct mrc_fld *fld_2)
 
 #else
 
-#define MRC_FLD(fld, type, ix,iy,iz,m)					\
-  (((type *) (fld)->_arr)[(((m) *					\
-			    (fld)->_ghost_dims[2] + (iz) - (fld)->_ghost_offs[2]) * \
-			   (fld)->_ghost_dims[1] + (iy) - (fld)->_ghost_offs[1]) * \
-			  (fld)->_ghost_dims[0] + (ix) - (fld)->_ghost_offs[0]])
+#define MRC_FLD(fld, type, i0,i1,i2,i3,i4)				\
+  (((type *) (fld)->_arr)[((((i4) *					\
+			     (fld)->_ghost_dims[3] + (i3) - (fld)->_ghost_offs[3]) * \
+			    (fld)->_ghost_dims[2] + (i2) - (fld)->_ghost_offs[2]) * \
+			   (fld)->_ghost_dims[1] + (i1) - (fld)->_ghost_offs[1]) * \
+			  (fld)->_ghost_dims[0] + (i0) - (fld)->_ghost_offs[0]])
 
 #endif
 
-#define MRC_S3(fld, ix,iy,iz) MRC_FLD(fld, float, ix,iy,iz,0)
-#define MRC_D3(fld, ix,iy,iz) MRC_FLD(fld, double, ix,iy,iz,0)
+#define MRC_S3(fld, i0,i1,i2) MRC_FLD(fld, float, i0,i1,i2,0,0)
+#define MRC_D3(fld, i0,i1,i2) MRC_FLD(fld, double, i0,i1,i2,0,0)
 
-#define MRC_S4(fld, ix,iy,iz,m) MRC_FLD(fld, float, ix,iy,iz,m)
-#define MRC_D4(fld, ix,iy,iz,m) MRC_FLD(fld, double, ix,iy,iz,m)
+#define MRC_S4(fld, i0,i1,i2,i3) MRC_FLD(fld, float, i0,i1,i2,i3,0)
+#define MRC_D4(fld, i0,i1,i2,i3) MRC_FLD(fld, double, i0,i1,i2,i3,0)
+
+#define MRC_S5(fld, i0,i1,i2,i3,i4) MRC_FLD(fld, float, i0,i1,i2,i3,i4)
+#define MRC_D5(fld, i0,i1,i2,i3,i4) MRC_FLD(fld, double, i0,i1,i2,i3,i4)
 
 #define mrc_fld_foreach(fld, ix,iy,iz, l,r)				\
   for (int iz = (fld)->_offs.vals[2] - (l); iz < (fld)->_offs.vals[2] + (fld)->_dims.vals[2] + (r); iz++) { \

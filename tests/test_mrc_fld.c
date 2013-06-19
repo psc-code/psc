@@ -171,6 +171,41 @@ test_as(int sw, const char *type, const char *as_type)
   mrc_fld_destroy(fld);
 }
 
+// ----------------------------------------------------------------------
+// test_fld5d
+
+static void
+test_fld5d(int sw)
+{
+  struct mrc_fld *fld = mrc_fld_create(MPI_COMM_WORLD);
+  mrc_fld_set_name(fld, "test_fld");
+  mrc_fld_set_type(fld, "float");
+  mrc_fld_set_param_int_array(fld, "offs", 5, (int [5]) { 1, 2, 3, 4, 5 });
+  mrc_fld_set_param_int_array(fld, "dims", 5, (int [5]) { 2, 3, 4, 5, 6 });
+  mrc_fld_set_param_int_array(fld, "sw"  , 5, (int [5]) { sw, sw, sw, 0, 0 });
+  mrc_fld_set_from_options(fld);
+  mrc_fld_setup(fld);
+  mrc_fld_view(fld);
+
+  for (int p = 5; p < 5 + 6; p++) {
+    for (int m = 4; m < 4 + 5; m++) {
+      mrc_fld_foreach(fld, ix,iy,iz, sw, sw) {
+	MRC_D5(fld, ix,iy,iz,m,p) = p * 1e8 + m * 1e6 + ix * 10000 + iy * 100 + iz;
+      } mrc_fld_foreach_end;
+    }
+  }
+
+  for (int p = 5; p < 5 + 6; p++) {
+    for (int m = 4; m < 4 + 5; m++) {
+      mrc_fld_foreach(fld, ix,iy,iz, sw, sw) {
+	assert(MRC_D5(fld, ix,iy,iz,m,p) == p * 1e8 + m * 1e6 + ix * 10000 + iy * 100 + iz);
+      } mrc_fld_foreach_end;
+    }
+  }
+
+  mrc_fld_destroy(fld);
+}
+
 
 // ----------------------------------------------------------------------
 // main
@@ -196,6 +231,8 @@ main(int argc, char **argv)
   case 9: test_as(1, "float", "float"); break;
   case 10: test_as(1, "float", "double"); break;
   case 11: test_as(1, "double", "float"); break;
+  case 12: test_fld5d(0); break;
+  case 13: test_fld5d(1); break;
   default: assert(0);
   }
 
