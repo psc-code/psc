@@ -265,7 +265,7 @@ mrc_m1_patch_put(struct mrc_m1 *m1)
 // mrc_m3
 
 struct mrc_m3_patch {
-  float *_arr;
+  int _p;
   struct mrc_m3 *_m3;
 };
 
@@ -320,10 +320,12 @@ mrc_m3_patch_put(struct mrc_m3 *m3)
 
 #else
 
-#define MRC_M3(m3p,m, ix,iy,iz)					\
-  ((m3p)->_arr[(((m) * (m3p)->_m3->im[2] + (iz) - (m3p)->_m3->ib[2]) *	\
-		(m3p)->_m3->im[1] + (iy) - (m3p)->_m3->ib[1]) *		\
-	       (m3p)->_m3->im[0] + (ix) - (m3p)->_m3->ib[0]])
+#define MRC_M3(m3p,m, ix,iy,iz)						\
+  ((m3p)->_m3->arr[((((m3p)->_p *					\
+		      (m3p)->_m3->nr_comp + (m)) *			\
+		     (m3p)->_m3->im[2] + (iz) - (m3p)->_m3->ib[2]) *	\
+		    (m3p)->_m3->im[1] + (iy) - (m3p)->_m3->ib[1]) *	\
+		   (m3p)->_m3->im[0] + (ix) - (m3p)->_m3->ib[0]])
 
 #endif
 
