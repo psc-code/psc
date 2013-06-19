@@ -38,13 +38,13 @@ psc_cuda_init(void)
     printf("\nDevice %d: \"%s\"\n", dev, deviceProp.name);
     printf("  CUDA Capability Major revision number:         %d\n", deviceProp.major);
     printf("  CUDA Capability Minor revision number:         %d\n", deviceProp.minor);
-    printf("  Total amount of global memory:                 %u bytes\n", deviceProp.totalGlobalMem);
+    printf("  Total amount of global memory:                 %lu bytes\n", deviceProp.totalGlobalMem);
 #if CUDART_VERSION >= 2000
     printf("  Number of multiprocessors:                     %d\n", deviceProp.multiProcessorCount);
     printf("  Number of cores:                               %d\n", 8 * deviceProp.multiProcessorCount);
 #endif
-    printf("  Total amount of constant memory:               %u bytes\n", deviceProp.totalConstMem); 
-    printf("  Total amount of shared memory per block:       %u bytes\n", deviceProp.sharedMemPerBlock);
+    printf("  Total amount of constant memory:               %lu bytes\n", deviceProp.totalConstMem); 
+    printf("  Total amount of shared memory per block:       %lu bytes\n", deviceProp.sharedMemPerBlock);
     printf("  Total number of registers available per block: %d\n", deviceProp.regsPerBlock);
     printf("  Warp size:                                     %d\n", deviceProp.warpSize);
     printf("  Maximum number of threads per block:           %d\n", deviceProp.maxThreadsPerBlock);
@@ -56,8 +56,8 @@ psc_cuda_init(void)
 	   deviceProp.maxGridSize[0],
 	   deviceProp.maxGridSize[1],
 	   deviceProp.maxGridSize[2]);
-    printf("  Maximum memory pitch:                          %u bytes\n", deviceProp.memPitch);
-    printf("  Texture alignment:                             %u bytes\n", deviceProp.textureAlignment);
+    printf("  Maximum memory pitch:                          %lu bytes\n", deviceProp.memPitch);
+    printf("  Texture alignment:                             %lu bytes\n", deviceProp.textureAlignment);
     printf("  Clock rate:                                    %.2f GHz\n", deviceProp.clockRate * 1e-6f);
 #if CUDART_VERSION >= 2000
     printf("  Concurrent copy and execution:                 %s\n", deviceProp.deviceOverlap ? "Yes" : "No");
