@@ -189,6 +189,8 @@ mrc_io_read_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
     ops->read_fld(io, path, fld);
   } else if (fld->_dims.nr_vals == 4) {
     mrc_io_read_f3(io, path, fld);
+  } else if (fld->_dims.nr_vals == 5) {
+    mrc_io_read_m3(io, path, fld);
   } else {
     assert(0);
   }
@@ -205,6 +207,8 @@ mrc_io_write_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
     ops->write_fld(io, path, fld);
   } else if (fld->_dims.nr_vals == 4) {
     mrc_io_write_f3(io, path, fld, 1.f);
+  } else if (fld->_dims.nr_vals == 5) {
+    mrc_io_write_m3(io, path, fld);
   } else {
     assert(0);
   }

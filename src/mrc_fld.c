@@ -661,21 +661,6 @@ struct mrc_class_mrc_fld mrc_class_mrc_fld = {
 // ======================================================================
 // mrc_m3
 
-static void
-_mrc_m3_write(struct mrc_m3 *m3, struct mrc_io *io)
-{
-  mrc_io_write_m3(io, mrc_io_obj_path(io, m3), m3);
-}
-
-static void
-_mrc_m3_read(struct mrc_m3 *m3, struct mrc_io *io)
-{
-  mrc_m3_setup(m3);
-  mrc_io_read_m3(io, mrc_io_obj_path(io, m3), m3);
-}
-
-// ----------------------------------------------------------------------
-
 int
 mrc_m3_nr_patches(struct mrc_m3 *m3)
 {
@@ -737,6 +722,6 @@ struct mrc_class_mrc_m3 mrc_class_mrc_m3 = {
   .init         = mrc_m3_init,
   .destroy      = _mrc_fld_destroy,
   .setup        = _mrc_fld_setup,
-  .read         = _mrc_m3_read,
-  .write        = _mrc_m3_write,
+  .read         = _mrc_fld_read,
+  .write        = _mrc_fld_write,
 };
