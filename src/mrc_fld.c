@@ -242,7 +242,9 @@ void
 mrc_fld_set_sw(struct mrc_fld *fld, int sw)
 {
   assert(fld->_domain);
-  mrc_fld_set_param_int_array(fld, "sw", 4, (int[4]) { sw, sw, sw, 0 });
+  assert(fld->_dims.nr_vals > 3);
+  mrc_fld_set_param_int_array(fld, "sw", fld->_dims.nr_vals,
+			      (int[5]) { sw, sw, sw, 0, 0 });
 }
 
 // ----------------------------------------------------------------------

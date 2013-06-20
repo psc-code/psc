@@ -473,37 +473,6 @@ mrc_m3_nr_patches(struct mrc_m3 *m3)
   return m3->_ghost_dims[4];
 }
 
-void
-mrc_m3_set_sw(struct mrc_m3 *m3, int sw)
-{
-  assert(m3->_domain);
-  mrc_m3_set_param_int_array(m3, "sw", 5, (int[5]) { sw, sw, sw, 0, 0 });
-}
-
-void
-mrc_m3_set_nr_comps(struct mrc_m3 *m3, int nr_comps)
-{
-  mrc_fld_set_nr_comps(m3, nr_comps);
-}
-
-int
-mrc_m3_nr_comps(struct mrc_m3 *m3)
-{
-  return mrc_fld_nr_comps(m3);
-}
-
-void
-mrc_m3_set_comp_name(struct mrc_m3 *m3, int m, const char *name)
-{
-  return mrc_fld_set_comp_name(m3, m, name);
-}
-
-const char *
-mrc_m3_comp_name(struct mrc_m3 *m3, int m)
-{
-  return mrc_fld_comp_name(m3, m);
-}
-
 static void
 _mrc_m3_write(struct mrc_m3 *m3, struct mrc_io *io)
 {
@@ -541,6 +510,38 @@ mrc_m3_same_shape(struct mrc_m3 *m3_1, struct mrc_m3 *m3_2)
     }
   }
   return true;
+}
+
+// ----------------------------------------------------------------------
+
+void
+mrc_m3_set_sw(struct mrc_m3 *m3, int sw)
+{
+  mrc_fld_set_sw(m3, sw);
+}
+
+void
+mrc_m3_set_nr_comps(struct mrc_m3 *m3, int nr_comps)
+{
+  mrc_fld_set_nr_comps(m3, nr_comps);
+}
+
+int
+mrc_m3_nr_comps(struct mrc_m3 *m3)
+{
+  return mrc_fld_nr_comps(m3);
+}
+
+void
+mrc_m3_set_comp_name(struct mrc_m3 *m3, int m, const char *name)
+{
+  return mrc_fld_set_comp_name(m3, m, name);
+}
+
+const char *
+mrc_m3_comp_name(struct mrc_m3 *m3, int m)
+{
+  return mrc_fld_comp_name(m3, m);
 }
 
 // ----------------------------------------------------------------------
