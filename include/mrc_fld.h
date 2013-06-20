@@ -311,28 +311,7 @@ mrc_m3_patch_put(struct mrc_m3 *m3)
 {
 }
 
-#ifdef BOUNDS_CHECK
-
-#define MRC_M3(m3p,m, ix,iy,iz) (*({					\
-  assert((ix) >= (m3p)->ib[0] && ix < (m3p)->ib[0] + (m3p)->im[0]);     \
-  assert((iy) >= (m3p)->ib[1] && iy < (m3p)->ib[1] + (m3p)->im[1]);     \
-  assert((iz) >= (m3p)->ib[2] && iz < (m3p)->ib[2] + (m3p)->im[2]);     \
-  float *__p = &((m3p)->arr[(((m) * (m3p)->im[2] + (iz) - (m3p)->ib[2]) * \
-			    (m3p)->im[1] + (iy) - (m3p)->ib[1]) *	\
-			   (m3p)->im[0] + (ix) - (m3p)->ib[0]]);	\
-  __p;									\
-      }))
-
-#else
-
-#define MRC_M3(m3p,m, ix,iy,iz)						\
-  (((float *) (m3p)->_m3->_arr)[((((m3p)->_p *				\
-		      (m3p)->_m3->_ghost_dims[3] + (m)) *			\
-		     (m3p)->_m3->_ghost_dims[2] + (iz) - (m3p)->_m3->_ghost_offs[2]) *	\
-		    (m3p)->_m3->_ghost_dims[1] + (iy) - (m3p)->_m3->_ghost_offs[1]) *	\
-		   (m3p)->_m3->_ghost_dims[0] + (ix) - (m3p)->_m3->_ghost_offs[0]])
-
-#endif
+#define MRC_M3(m3p, m, ix,iy,iz) MRC_S5((m3p)->_m3, ix, iy, iz, m, (m3p)->_p)
 
 #define mrc_m3_foreach_patch(m3, p) \
   for (int p = 0; p < mrc_m3_nr_patches(m3); p++)
