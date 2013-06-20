@@ -277,8 +277,8 @@ struct mrc_m3 {
   int _ghost_dims[MRC_FLD_MAXDIMS];
   int _data_type;
   int _size_of_type;
+  void *_arr;
 
-  float *arr;
   struct mrc_m3_patch *patches;
   struct mrc_domain *domain; //< based on this mrc_domain
   int sw; //< # of ghost points
@@ -326,7 +326,7 @@ mrc_m3_patch_put(struct mrc_m3 *m3)
 #else
 
 #define MRC_M3(m3p,m, ix,iy,iz)						\
-  ((m3p)->_m3->arr[((((m3p)->_p *					\
+  (((float *) (m3p)->_m3->_arr)[((((m3p)->_p *				\
 		      (m3p)->_m3->_ghost_dims[3] + (m)) *			\
 		     (m3p)->_m3->_ghost_dims[2] + (iz) - (m3p)->_m3->_ghost_offs[2]) *	\
 		    (m3p)->_m3->_ghost_dims[1] + (iy) - (m3p)->_m3->_ghost_offs[1]) *	\

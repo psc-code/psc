@@ -404,7 +404,7 @@ _mrc_m3_create(struct mrc_m3 *m3)
 static void
 _mrc_m3_destroy(struct mrc_m3 *m3)
 {
-  free(m3->arr);
+  free(m3->_arr);
   free(m3->patches);
 
   if (m3->name) {
@@ -430,7 +430,7 @@ _mrc_m3_setup(struct mrc_m3 *m3)
   }
   m3->_ghost_dims[4] = nr_patches;
   int len = m3->_ghost_dims[0] * m3->_ghost_dims[1] * m3->_ghost_dims[2] * m3->_ghost_dims[3] * m3->_ghost_dims[4];
-  m3->arr = calloc(len, sizeof(float));
+  m3->_arr = calloc(len, m3->_size_of_type);
 
   m3->patches = calloc(nr_patches, sizeof(*m3->patches));
   for (int p = 0; p < nr_patches; p++) {
