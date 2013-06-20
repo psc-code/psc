@@ -721,33 +721,13 @@ _mrc_m3_read(struct mrc_m3 *m3, struct mrc_io *io)
   mrc_io_read_m3(io, mrc_io_obj_path(io, m3), m3);
 }
 
+// ----------------------------------------------------------------------
+
 bool
 mrc_m3_same_shape(struct mrc_m3 *m3_1, struct mrc_m3 *m3_2)
 {
-  if (mrc_m3_nr_comps(m3_1) != mrc_m3_nr_comps(m3_2))
-    return false;
-
-  if (m3_1->_sw.vals[0] != m3_2->_sw.vals[0])
-    return false;
-
-  int nr_patches_1, nr_patches_2;
-  struct mrc_patch *patches_1 = mrc_domain_get_patches(m3_1->_domain, &nr_patches_1);
-  struct mrc_patch *patches_2 = mrc_domain_get_patches(m3_2->_domain, &nr_patches_2);
-  if (nr_patches_1 != nr_patches_2)
-    return false;
-
-  mrc_m3_foreach_patch(m3_1, p) {
-    for (int d = 0; d < 3; d++) {
-      if (patches_1[p].ldims[d] != patches_2[p].ldims[d])
-	return false;
-      if (patches_1[p].off[d] != patches_2[p].off[d])
-	return false;
-    }
-  }
-  return true;
+  return mrc_fld_same_shape(m3_1, m3_2);
 }
-
-// ----------------------------------------------------------------------
 
 void
 mrc_m3_set_sw(struct mrc_m3 *m3, int sw)
