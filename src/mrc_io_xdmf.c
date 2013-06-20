@@ -1335,9 +1335,9 @@ ds_xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
     }
 
     for (int m = 0; m < mrc_m3_nr_comps(m3); m++) {
-      char fld_name[strlen(m3->name[m]) + 5];
+      char fld_name[strlen(mrc_m3_comp_name(m3, m)) + 5];
 
-      sprintf(fld_name, "%s-%d", m3->name[m], p);
+      sprintf(fld_name, "%s-%d", mrc_m3_comp_name(m3, m), p);
 
       save_fld_info(xs, strdup(fld_name), strdup(path), false);
       hsize_t hdims[3] = { m3->_ghost_dims[2], m3->_ghost_dims[1], m3->_ghost_dims[0] };

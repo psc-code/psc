@@ -282,7 +282,7 @@ struct mrc_m3 {
   struct mrc_m3_patch *patches;
   struct mrc_domain *domain; //< based on this mrc_domain
   int sw; //< # of ghost points
-  char **name;
+  char **_comp_name;
 };
 
 MRC_CLASS_DECLARE(mrc_m3, struct mrc_m3);

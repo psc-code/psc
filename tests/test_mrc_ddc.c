@@ -100,8 +100,8 @@ main(int argc, char **argv)
   mrc_m3_set_param_int(m3, "sw", 1);
   mrc_m3_set_from_options(m3);
   mrc_m3_setup(m3);
-  m3->name[0] = strdup("fld0");
-  m3->name[1] = strdup("fld1");
+  mrc_m3_set_comp_name(m3, 0, "fld0");
+  mrc_m3_set_comp_name(m3, 1, "fld1");
   mrc_m3_view(m3);
 
   set_m3(m3);

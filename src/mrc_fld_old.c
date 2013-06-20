@@ -407,18 +407,18 @@ _mrc_m3_destroy(struct mrc_m3 *m3)
   free(m3->_arr);
   free(m3->patches);
 
-  if (m3->name) {
-    for (int m = 0; m < m3->_ghost_dims[3]; m++) {
-      free(m3->name[m]);
+  if (m3->_comp_name) {
+    for (int m = 0; m < mrc_m3_nr_comps(m3); m++) {
+      free(m3->_comp_name[m]);
     }
-    free(m3->name);
+    free(m3->_comp_name);
   }
 }
 
 static void
 _mrc_m3_setup(struct mrc_m3 *m3)
 {
-  m3->name = calloc(m3->_ghost_dims[3], sizeof(*m3->name));
+  m3->_comp_name = calloc(m3->_ghost_dims[3], sizeof(*m3->_comp_name));
 
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(m3->domain, &nr_patches);
@@ -487,15 +487,15 @@ void
 mrc_m3_set_comp_name(struct mrc_m3 *m3, int m, const char *name)
 {
   assert(m < mrc_m3_nr_comps(m3));
-  free(m3->name[m]);
-  m3->name[m] = name ? strdup(name) : NULL;
+  free(m3->_comp_name[m]);
+  m3->_comp_name[m] = name ? strdup(name) : NULL;
 }
 
 const char *
 mrc_m3_comp_name(struct mrc_m3 *m3, int m)
 {
   assert(m < mrc_m3_nr_comps(m3));
-  return m3->name[m];
+  return m3->_comp_name[m];
 }
 
 static void
