@@ -1419,6 +1419,13 @@ GROUP "/" {
       }
    }
    GROUP "test_m3-uid" {
+      ATTRIBUTE "dims" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 5 ) / ( 5 ) }
+         DATA {
+         (0): 0, 0, 0, 2, 0
+         }
+      }
       ATTRIBUTE "domain" {
          DATATYPE  H5T_STRING {
             STRSIZE 30;
@@ -1460,6 +1467,18 @@ GROUP "/" {
          DATASPACE  SCALAR
          DATA {
          (0): "test_m3"
+         }
+      }
+      ATTRIBUTE "mrc_obj_type" {
+         DATATYPE  H5T_STRING {
+            STRSIZE 6;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+         DATA {
+         (0): "float"
          }
       }
       ATTRIBUTE "nr_patches" {

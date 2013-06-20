@@ -637,13 +637,6 @@ struct mrc_class_mrc_fld mrc_class_mrc_fld = {
 // mrc_m3
 
 static void
-_mrc_m3_create(struct mrc_m3 *m3)
-{
-  m3->_data_type = MRC_NT_FLOAT;
-  m3->_size_of_type = sizeof(float);
-}
-
-static void
 _mrc_m3_destroy(struct mrc_m3 *m3)
 {
   free(m3->_arr);
@@ -787,6 +780,15 @@ mrc_m3_comp_name(struct mrc_m3 *m3, int m)
 }
 
 // ----------------------------------------------------------------------
+// mrc_m3_init
+
+static void
+mrc_m3_init()
+{
+  mrc_class_register_subclass(&mrc_class_mrc_m3, &mrc_fld_float_ops);
+}
+
+// ----------------------------------------------------------------------
 // mrc_class_mrc_m3
 
 #define VAR(x) (void *)offsetof(struct mrc_m3, x)
@@ -802,7 +804,7 @@ struct mrc_class_mrc_m3 mrc_class_mrc_m3 = {
   .name         = "mrc_m3",
   .size         = sizeof(struct mrc_m3),
   .param_descr  = mrc_m3_params_descr,
-  .create       = _mrc_m3_create,
+  .init         = mrc_m3_init,
   .destroy      = _mrc_m3_destroy,
   .setup        = _mrc_m3_setup,
   .view         = _mrc_m3_view,
