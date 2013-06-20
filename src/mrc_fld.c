@@ -248,6 +248,20 @@ mrc_fld_set_sw(struct mrc_fld *fld, int sw)
 }
 
 // ----------------------------------------------------------------------
+// mrc_fld_nr_patches
+//
+// returns the number of patches on the this processor that comprise the
+// local domain (only works on former "mrc_m3" for now)
+
+int
+mrc_fld_nr_patches(struct mrc_fld *fld)
+{
+  assert(fld->_domain);
+  assert(fld->_dims.nr_vals == 5);
+  return fld->_ghost_dims[4];
+}
+
+// ----------------------------------------------------------------------
 // mrc_fld_offs
 
 const int *
@@ -680,12 +694,6 @@ _mrc_m3_setup(struct mrc_m3 *m3)
   }
 }
 
-int
-mrc_m3_nr_patches(struct mrc_m3 *m3)
-{
-  return m3->_ghost_dims[4];
-}
-
 static void
 _mrc_m3_write(struct mrc_m3 *m3, struct mrc_io *io)
 {
@@ -700,6 +708,12 @@ _mrc_m3_read(struct mrc_m3 *m3, struct mrc_io *io)
 }
 
 // ----------------------------------------------------------------------
+
+int
+mrc_m3_nr_patches(struct mrc_m3 *m3)
+{
+  return mrc_fld_nr_patches(m3);
+}
 
 bool
 mrc_m3_same_shape(struct mrc_m3 *m3_1, struct mrc_m3 *m3_2)
