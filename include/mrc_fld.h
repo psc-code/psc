@@ -275,6 +275,8 @@ struct mrc_m3 {
   // state
   int _ghost_offs[MRC_FLD_MAXDIMS];
   int _ghost_dims[MRC_FLD_MAXDIMS];
+  int _data_type;
+  int _size_of_type;
 
   float *arr;
   struct mrc_m3_patch *patches;

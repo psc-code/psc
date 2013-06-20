@@ -395,6 +395,13 @@ struct mrc_class_mrc_m1 mrc_class_mrc_m1 = {
 #define to_mrc_m3(o) container_of(o, struct mrc_m3, obj)
 
 static void
+_mrc_m3_create(struct mrc_m3 *m3)
+{
+  m3->_data_type = MRC_NT_FLOAT;
+  m3->_size_of_type = sizeof(float);
+}
+
+static void
 _mrc_m3_destroy(struct mrc_m3 *m3)
 {
   free(m3->arr);
@@ -546,6 +553,7 @@ struct mrc_class_mrc_m3 mrc_class_mrc_m3 = {
   .name         = "mrc_m3",
   .size         = sizeof(struct mrc_m3),
   .param_descr  = mrc_m3_params_descr,
+  .create       = _mrc_m3_create,
   .destroy      = _mrc_m3_destroy,
   .setup        = _mrc_m3_setup,
   .view         = _mrc_m3_view,
