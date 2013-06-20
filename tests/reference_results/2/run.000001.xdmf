@@ -16,12 +16,12 @@
 
      <Attribute Name="fld0" AttributeType="Scalar" Center="Cell">
        <DataItem Dimensions="32 16 11" NumberType="Float" Precision="4" Format="HDF">
-        run.000001_p000000.h5:/test_m3/fld0/p0/3d
+        run.000001_p000000.h5:/test_m3-uid/fld0/p0/3d
        </DataItem>
      </Attribute>
      <Attribute Name="fld1" AttributeType="Scalar" Center="Cell">
        <DataItem Dimensions="32 16 11" NumberType="Float" Precision="4" Format="HDF">
-        run.000001_p000000.h5:/test_m3/fld1/p0/3d
+        run.000001_p000000.h5:/test_m3-uid/fld1/p0/3d
        </DataItem>
      </Attribute>
    </Grid>
@@ -38,12 +38,12 @@
 
      <Attribute Name="fld0" AttributeType="Scalar" Center="Cell">
        <DataItem Dimensions="32 16 11" NumberType="Float" Precision="4" Format="HDF">
-        run.000001_p000000.h5:/test_m3/fld0/p1/3d
+        run.000001_p000000.h5:/test_m3-uid/fld0/p1/3d
        </DataItem>
      </Attribute>
      <Attribute Name="fld1" AttributeType="Scalar" Center="Cell">
        <DataItem Dimensions="32 16 11" NumberType="Float" Precision="4" Format="HDF">
-        run.000001_p000000.h5:/test_m3/fld1/p1/3d
+        run.000001_p000000.h5:/test_m3-uid/fld1/p1/3d
        </DataItem>
      </Attribute>
    </Grid>
@@ -60,12 +60,12 @@
 
      <Attribute Name="fld0" AttributeType="Scalar" Center="Cell">
        <DataItem Dimensions="32 16 10" NumberType="Float" Precision="4" Format="HDF">
-        run.000001_p000001.h5:/test_m3/fld0/p0/3d
+        run.000001_p000001.h5:/test_m3-uid/fld0/p0/3d
        </DataItem>
      </Attribute>
      <Attribute Name="fld1" AttributeType="Scalar" Center="Cell">
        <DataItem Dimensions="32 16 10" NumberType="Float" Precision="4" Format="HDF">
-        run.000001_p000001.h5:/test_m3/fld1/p0/3d
+        run.000001_p000001.h5:/test_m3-uid/fld1/p0/3d
        </DataItem>
      </Attribute>
    </Grid>
@@ -82,12 +82,12 @@
 
      <Attribute Name="fld0" AttributeType="Scalar" Center="Cell">
        <DataItem Dimensions="32 16 11" NumberType="Float" Precision="4" Format="HDF">
-        run.000001_p000001.h5:/test_m3/fld0/p1/3d
+        run.000001_p000001.h5:/test_m3-uid/fld0/p1/3d
        </DataItem>
      </Attribute>
      <Attribute Name="fld1" AttributeType="Scalar" Center="Cell">
        <DataItem Dimensions="32 16 11" NumberType="Float" Precision="4" Format="HDF">
-        run.000001_p000001.h5:/test_m3/fld1/p1/3d
+        run.000001_p000001.h5:/test_m3-uid/fld1/p1/3d
        </DataItem>
      </Attribute>
    </Grid>
@@ -104,12 +104,12 @@
 
      <Attribute Name="fld0" AttributeType="Scalar" Center="Cell">
        <DataItem Dimensions="32 16 11" NumberType="Float" Precision="4" Format="HDF">
-        run.000001_p000002.h5:/test_m3/fld0/p0/3d
+        run.000001_p000002.h5:/test_m3-uid/fld0/p0/3d
        </DataItem>
      </Attribute>
      <Attribute Name="fld1" AttributeType="Scalar" Center="Cell">
        <DataItem Dimensions="32 16 11" NumberType="Float" Precision="4" Format="HDF">
-        run.000001_p000002.h5:/test_m3/fld1/p0/3d
+        run.000001_p000002.h5:/test_m3-uid/fld1/p0/3d
        </DataItem>
      </Attribute>
    </Grid>
@@ -126,12 +126,12 @@
 
      <Attribute Name="fld0" AttributeType="Scalar" Center="Cell">
        <DataItem Dimensions="32 16 10" NumberType="Float" Precision="4" Format="HDF">
-        run.000001_p000003.h5:/test_m3/fld0/p0/3d
+        run.000001_p000003.h5:/test_m3-uid/fld0/p0/3d
        </DataItem>
      </Attribute>
      <Attribute Name="fld1" AttributeType="Scalar" Center="Cell">
        <DataItem Dimensions="32 16 10" NumberType="Float" Precision="4" Format="HDF">
-        run.000001_p000003.h5:/test_m3/fld1/p0/3d
+        run.000001_p000003.h5:/test_m3-uid/fld1/p0/3d
        </DataItem>
      </Attribute>
    </Grid>
