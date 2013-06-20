@@ -2,6 +2,8 @@
 #ifndef MRC_FLD_H
 #define MRC_FLD_H
 
+#define mrc_m3 mrc_fld
+
 #include <mrc_common.h>
 #include <mrc_obj.h>
 
@@ -43,6 +45,12 @@ enum {
 
 #define MRC_FLD_MAXDIMS (5)
 
+// for mrc_m3 emulation
+struct mrc_m3_patch {
+  int _p;
+  struct mrc_m3 *_m3;
+};
+
 struct mrc_fld {
   struct mrc_obj obj;
   // parameters
@@ -62,6 +70,8 @@ struct mrc_fld {
   // for mrc_f3 emulation
   int _nr_allocated_comp_name;
   char **_comp_name;
+  // for mrc_m3 emulation (FIXME, should be eliminated eventually (?))
+  struct mrc_m3_patch *_patches;
 };
 
 MRC_CLASS_DECLARE(mrc_fld, struct mrc_fld);
@@ -263,28 +273,6 @@ mrc_m1_patch_put(struct mrc_m1 *m1)
 
 // ======================================================================
 // mrc_m3
-
-struct mrc_m3_patch {
-  int _p;
-  struct mrc_m3 *_m3;
-};
-
-struct mrc_m3 {
-  struct mrc_obj obj;
-  // parameters
-  struct mrc_param_int_array _sw;
-
-  // state
-  int _ghost_offs[MRC_FLD_MAXDIMS];
-  int _ghost_dims[MRC_FLD_MAXDIMS];
-  int _data_type;
-  int _size_of_type;
-  void *_arr;
-
-  struct mrc_m3_patch *_patches;
-  struct mrc_domain *_domain; //< based on this mrc_domain
-  char **_comp_name;
-};
 
 MRC_CLASS_DECLARE(mrc_m3, struct mrc_m3);
 
