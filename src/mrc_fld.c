@@ -177,9 +177,7 @@ static int
 mrc_fld_comp_dim(struct mrc_fld *fld)
 {
   if (fld->_domain) {
-    if (fld->_dims.nr_vals == 0) {
-      mrc_fld_set_param_int_array(fld, "dims", 4, NULL);
-    }
+    assert(fld->_dims.nr_vals > 3);
     return 3;
   }
 
