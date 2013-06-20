@@ -176,8 +176,11 @@ mrc_fld_comp_name(struct mrc_fld *fld, int m)
 static int
 mrc_fld_comp_dim(struct mrc_fld *fld)
 {
-  if (fld->_dims.nr_vals == 0 && fld->_domain) {
-    mrc_fld_set_param_int_array(fld, "dims", 4, NULL);
+  if (fld->_domain) {
+    if (fld->_dims.nr_vals == 0) {
+      mrc_fld_set_param_int_array(fld, "dims", 4, NULL);
+    }
+    return 3;
   }
 
   assert(fld->_dims.nr_vals > 0);
@@ -191,6 +194,7 @@ int
 mrc_fld_nr_comps(struct mrc_fld *fld)
 {
   int comp_dim = mrc_fld_comp_dim(fld);
+  assert(comp_dim < fld->_dims.nr_vals);
   return fld->_dims.vals[comp_dim];
 }
 

@@ -266,9 +266,11 @@ mrc_io_write_f3(struct mrc_io *io, const char *path, struct mrc_fld *fld, float 
     struct mrc_m3 *m3 = mrc_domain_m3_create(fld->_domain);
     mrc_m3_set_nr_comps(m3, nr_comps);
     mrc_m3_set_sw(m3, fld->_sw.vals[0]); // FIXME, how about 1,2
-    mrc_m3_setup(m3);
     for (int m = 0; m < nr_comps; m++) {
       mrc_m3_set_comp_name(m3, m, mrc_fld_comp_name(fld, m));
+    }
+    mrc_m3_setup(m3);
+    for (int m = 0; m < nr_comps; m++) {
       mrc_m3_foreach_patch(m3, p) {
 	struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, p);
 	mrc_m3_foreach_bnd(m3p, ix,iy,iz) {
