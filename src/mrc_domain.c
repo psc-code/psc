@@ -245,8 +245,8 @@ mrc_domain_fld_create(struct mrc_domain *domain, int sw, const char *comps)
 struct mrc_m3 *
 mrc_domain_m3_create(struct mrc_domain *domain)
 {
-  struct mrc_m3 *m3 = mrc_m3_create(domain->obj.comm);
-  m3->_domain = domain;
+  struct mrc_m3 *m3 = mrc_m3_create(mrc_domain_comm(domain));
+  mrc_m3_set_param_obj(m3, "domain", domain);
   return m3;
 }
 

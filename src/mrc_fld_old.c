@@ -512,14 +512,12 @@ mrc_m3_comp_name(struct mrc_m3 *m3, int m)
 static void
 _mrc_m3_write(struct mrc_m3 *m3, struct mrc_io *io)
 {
-  mrc_io_write_ref(io, m3, "domain", m3->_domain);
   mrc_io_write_m3(io, mrc_io_obj_path(io, m3), m3);
 }
 
 static void
 _mrc_m3_read(struct mrc_m3 *m3, struct mrc_io *io)
 {
-  m3->_domain = mrc_io_read_ref(io, m3, "domain", mrc_domain);
   mrc_m3_setup(m3);
   mrc_io_read_m3(io, mrc_io_obj_path(io, m3), m3);
 }
@@ -556,6 +554,7 @@ mrc_m3_same_shape(struct mrc_m3 *m3_1, struct mrc_m3 *m3_2)
 #define VAR(x) (void *)offsetof(struct mrc_m3, x)
 static struct param mrc_m3_params_descr[] = {
   { "sw"              , VAR(_sw)           , PARAM_INT_ARRAY(0, 0)     },
+  { "domain"          , VAR(_domain)       , PARAM_OBJ(mrc_domain)     },
   {},
 };
 #undef VAR
