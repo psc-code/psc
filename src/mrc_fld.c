@@ -633,3 +633,179 @@ struct mrc_class_mrc_fld mrc_class_mrc_fld = {
   .read         = _mrc_fld_read,
 };
 
+// ======================================================================
+// mrc_m3
+
+static void
+_mrc_m3_create(struct mrc_m3 *m3)
+{
+  m3->_data_type = MRC_NT_FLOAT;
+  m3->_size_of_type = sizeof(float);
+}
+
+static void
+_mrc_m3_destroy(struct mrc_m3 *m3)
+{
+  free(m3->_arr);
+  free(m3->_patches);
+
+  for (int m = 0; m < m3->_nr_allocated_comp_name; m++) {
+    free(m3->_comp_name[m]);
+  }
+  free(m3->_comp_name);
+}
+
+static void
+_mrc_m3_setup(struct mrc_m3 *m3)
+{
+  if (m3->_sw.nr_vals == 0) {
+    mrc_m3_set_param_int_array(m3, "sw", 5, NULL);
+  }
+
+  int nr_patches;
+  struct mrc_patch *patches = mrc_domain_get_patches(m3->_domain, &nr_patches);
+
+  assert(nr_patches > 0);
+  for (int d = 0; d < 3; d++) {
+    m3->_ghost_offs[d] = -m3->_sw.vals[d];
+    m3->_ghost_dims[d] = patches[0].ldims[d] + 2 * m3->_sw.vals[d];
+  }
+  assert(m3->_dims.nr_vals >= 4); // FIXME!
+  m3->_ghost_dims[3] = m3->_dims.vals[3];
+  m3->_ghost_dims[4] = nr_patches;
+  int len = m3->_ghost_dims[0] * m3->_ghost_dims[1] * m3->_ghost_dims[2] * m3->_ghost_dims[3] * m3->_ghost_dims[4];
+  m3->_arr = calloc(len, m3->_size_of_type);
+
+  m3->_patches = calloc(nr_patches, sizeof(*m3->_patches));
+  for (int p = 0; p < nr_patches; p++) {
+    struct mrc_m3_patch *m3p = &m3->_patches[p];
+    m3p->_m3 = m3;
+    m3p->_p = p;
+    for (int d = 0; d < 3; d++) {
+      assert(m3->_ghost_dims[d] = patches[p].ldims[d] + 2 * m3->_sw.vals[d]);
+    }
+  }
+}
+
+static void
+_mrc_m3_view(struct mrc_m3 *m3)
+{
+#if 0
+  int rank, size;
+  MPI_Comm_rank(obj->comm, &rank);
+  MPI_Comm_size(obj->comm, &size);
+
+  for (int r = 0; r < size; r++) {
+    if (r == rank) {
+      mrc_m3_foreach_patch(m3, p) {
+	struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, p);
+	mprintf("patch %d: ib = %dx%dx%d im = %dx%dx%d\n", p,
+		m3p->ib[0], m3p->ib[1], m3p->ib[2],
+		m3p->im[0], m3p->im[1], m3p->im[2]);
+      }
+    }
+    MPI_Barrier(obj->comm);
+  }
+#endif
+}
+
+int
+mrc_m3_nr_patches(struct mrc_m3 *m3)
+{
+  return m3->_ghost_dims[4];
+}
+
+static void
+_mrc_m3_write(struct mrc_m3 *m3, struct mrc_io *io)
+{
+  mrc_io_write_m3(io, mrc_io_obj_path(io, m3), m3);
+}
+
+static void
+_mrc_m3_read(struct mrc_m3 *m3, struct mrc_io *io)
+{
+  mrc_m3_setup(m3);
+  mrc_io_read_m3(io, mrc_io_obj_path(io, m3), m3);
+}
+
+bool
+mrc_m3_same_shape(struct mrc_m3 *m3_1, struct mrc_m3 *m3_2)
+{
+  if (mrc_m3_nr_comps(m3_1) != mrc_m3_nr_comps(m3_2))
+    return false;
+
+  if (m3_1->_sw.vals[0] != m3_2->_sw.vals[0])
+    return false;
+
+  int nr_patches_1, nr_patches_2;
+  struct mrc_patch *patches_1 = mrc_domain_get_patches(m3_1->_domain, &nr_patches_1);
+  struct mrc_patch *patches_2 = mrc_domain_get_patches(m3_2->_domain, &nr_patches_2);
+  if (nr_patches_1 != nr_patches_2)
+    return false;
+
+  mrc_m3_foreach_patch(m3_1, p) {
+    for (int d = 0; d < 3; d++) {
+      if (patches_1[p].ldims[d] != patches_2[p].ldims[d])
+	return false;
+      if (patches_1[p].off[d] != patches_2[p].off[d])
+	return false;
+    }
+  }
+  return true;
+}
+
+// ----------------------------------------------------------------------
+
+void
+mrc_m3_set_sw(struct mrc_m3 *m3, int sw)
+{
+  mrc_fld_set_sw(m3, sw);
+}
+
+void
+mrc_m3_set_nr_comps(struct mrc_m3 *m3, int nr_comps)
+{
+  mrc_fld_set_nr_comps(m3, nr_comps);
+}
+
+int
+mrc_m3_nr_comps(struct mrc_m3 *m3)
+{
+  return mrc_fld_nr_comps(m3);
+}
+
+void
+mrc_m3_set_comp_name(struct mrc_m3 *m3, int m, const char *name)
+{
+  return mrc_fld_set_comp_name(m3, m, name);
+}
+
+const char *
+mrc_m3_comp_name(struct mrc_m3 *m3, int m)
+{
+  return mrc_fld_comp_name(m3, m);
+}
+
+// ----------------------------------------------------------------------
+// mrc_class_mrc_m3
+
+#define VAR(x) (void *)offsetof(struct mrc_m3, x)
+static struct param mrc_m3_params_descr[] = {
+  { "dims"            , VAR(_dims)         , PARAM_INT_ARRAY(0, 0)     },
+  { "sw"              , VAR(_sw)           , PARAM_INT_ARRAY(0, 0)     },
+  { "domain"          , VAR(_domain)       , PARAM_OBJ(mrc_domain)     },
+  {},
+};
+#undef VAR
+
+struct mrc_class_mrc_m3 mrc_class_mrc_m3 = {
+  .name         = "mrc_m3",
+  .size         = sizeof(struct mrc_m3),
+  .param_descr  = mrc_m3_params_descr,
+  .create       = _mrc_m3_create,
+  .destroy      = _mrc_m3_destroy,
+  .setup        = _mrc_m3_setup,
+  .view         = _mrc_m3_view,
+  .read         = _mrc_m3_read,
+  .write        = _mrc_m3_write,
+};
