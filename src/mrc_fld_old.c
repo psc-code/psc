@@ -416,15 +416,16 @@ _mrc_m3_setup(struct mrc_m3 *m3)
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(m3->domain, &nr_patches);
 
-  m3->nr_patches = nr_patches;
-  m3->patches = calloc(nr_patches, sizeof(*m3->patches));
-  assert(m3->nr_patches > 0);
+  assert(nr_patches > 0);
   for (int d = 0; d < 3; d++) {
     m3->_ghost_offs[d] = -m3->sw;
     m3->_ghost_dims[d] = patches[0].ldims[d] + 2 * m3->sw;
   }
-  int len = m3->_ghost_dims[0] * m3->_ghost_dims[1] * m3->_ghost_dims[2] * m3->_ghost_dims[3];
-  m3->arr = calloc(len * nr_patches, sizeof(float));
+  m3->_ghost_dims[4] = nr_patches;
+  int len = m3->_ghost_dims[0] * m3->_ghost_dims[1] * m3->_ghost_dims[2] * m3->_ghost_dims[3] * m3->_ghost_dims[4];
+  m3->arr = calloc(len, sizeof(float));
+
+  m3->patches = calloc(nr_patches, sizeof(*m3->patches));
   for (int p = 0; p < nr_patches; p++) {
     struct mrc_m3_patch *m3p = &m3->patches[p];
     m3p->_m3 = m3;
@@ -455,6 +456,12 @@ _mrc_m3_view(struct mrc_m3 *m3)
     MPI_Barrier(obj->comm);
   }
 #endif
+}
+
+int
+mrc_m3_nr_patches(struct mrc_m3 *m3)
+{
+  return m3->_ghost_dims[4];
 }
 
 void

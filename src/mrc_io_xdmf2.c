@@ -254,7 +254,8 @@ xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
 
   int sw = xdmf->sw;
   hid_t group0 = H5Gopen(file->h5_file, path, H5P_DEFAULT);
-  H5LTset_attribute_int(group0, ".", "nr_patches", &m3->nr_patches, 1);
+  int nr_patches = mrc_m3_nr_patches(m3);
+  H5LTset_attribute_int(group0, ".", "nr_patches", &nr_patches, 1);
 
   struct xdmf_spatial *xs = xdmf_spatial_find(&file->xdmf_spatial_list,
 					      mrc_domain_name(m3->domain));

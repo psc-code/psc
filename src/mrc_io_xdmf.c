@@ -1318,7 +1318,8 @@ ds_xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
 
   hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT); H5_CHK(group0);
-  H5LTset_attribute_int(group0, ".", "nr_patches", &m3->nr_patches, 1);
+  int nr_patches = mrc_m3_nr_patches(m3);
+  H5LTset_attribute_int(group0, ".", "nr_patches", &nr_patches, 1);
 
   mrc_m3_foreach_patch(m3, p) {
     struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, p);

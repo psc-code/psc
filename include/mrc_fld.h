@@ -276,7 +276,6 @@ struct mrc_m3 {
   int _ghost_offs[MRC_FLD_MAXDIMS];
   int _ghost_dims[MRC_FLD_MAXDIMS];
 
-  int nr_patches;
   float *arr;
   struct mrc_m3_patch *patches;
   struct mrc_domain *domain; //< based on this mrc_domain
@@ -288,6 +287,7 @@ MRC_CLASS_DECLARE(mrc_m3, struct mrc_m3);
 
 void mrc_m3_set_nr_comps(struct mrc_m3 *m3, int nr_comps); // FIXME
 int mrc_m3_nr_comps(struct mrc_m3 *m3);
+int mrc_m3_nr_patches(struct mrc_m3 *m3);
 void mrc_m3_set_comp_name(struct mrc_m3 *m3, int m, const char *name);
 const char *mrc_m3_comp_name(struct mrc_m3 *m3, int m);
 struct mrc_m3 *mrc_m3_duplicate(struct mrc_m3 *m3);
@@ -333,7 +333,7 @@ mrc_m3_patch_put(struct mrc_m3 *m3)
 #endif
 
 #define mrc_m3_foreach_patch(m3, p) \
-  for (int p = 0; p < m3->nr_patches; p++)
+  for (int p = 0; p < mrc_m3_nr_patches(m3); p++)
 
 #define mrc_m3_foreach(m3p, ix,iy,iz, l,r) {			\
   int _l[3] = { -l, -l, -l };					\

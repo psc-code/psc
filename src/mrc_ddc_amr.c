@@ -204,8 +204,8 @@ mrc_ddc_amr_apply(struct mrc_ddc *ddc, struct mrc_m3 *fld)
 {
   assert(ddc->size_of_type == sizeof(float));
 
-  float **fldp = malloc(fld->nr_patches * sizeof(*fldp));
-  for (int p = 0; p < fld->nr_patches; p++) {
+  float **fldp = malloc(mrc_m3_nr_patches(fld) * sizeof(*fldp));
+  for (int p = 0; p < mrc_m3_nr_patches(fld); p++) {
     struct mrc_m3_patch *m3p = mrc_m3_patch_get(fld, p);
     fldp[p] = &MRC_M3(m3p, 0, fld->_ghost_offs[0], fld->_ghost_offs[1], fld->_ghost_offs[2]);
   }
