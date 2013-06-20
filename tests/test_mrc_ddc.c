@@ -14,7 +14,7 @@
 static void
 set_m3(struct mrc_m3 *m3)
 {
-  struct mrc_patch *patches = mrc_domain_get_patches(m3->domain, NULL);
+  struct mrc_patch *patches = mrc_domain_get_patches(m3->_domain, NULL);
 
   mrc_m3_foreach_patch(m3, p) {
     struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, p);
@@ -31,10 +31,10 @@ static void
 check_m3(struct mrc_m3 *m3)
 {
   int bc[3], gdims[3];
-  mrc_domain_get_bc(m3->domain, bc);
-  mrc_domain_get_global_dims(m3->domain, gdims);
+  mrc_domain_get_bc(m3->_domain, bc);
+  mrc_domain_get_global_dims(m3->_domain, gdims);
 
-  struct mrc_patch *patches = mrc_domain_get_patches(m3->domain, NULL);
+  struct mrc_patch *patches = mrc_domain_get_patches(m3->_domain, NULL);
   mrc_m3_foreach_patch(m3, p) {
     struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, p);
     int *off = patches[p].off;

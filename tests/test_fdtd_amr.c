@@ -191,7 +191,7 @@ find_ghosts(struct mrc_domain *domain, struct mrc_m3 *fld, int m,
 	    int ext[3], int bnd)
 {
   int ldims[3];
-  mrc_domain_get_param_int3(fld->domain, "m", ldims);
+  mrc_domain_get_param_int3(fld->_domain, "m", ldims);
   int nr_patches;
   mrc_domain_get_patches(domain, &nr_patches);
 
@@ -220,10 +220,10 @@ find_ghosts(struct mrc_domain *domain, struct mrc_m3 *fld, int m,
 static void
 step_fdtd(struct mrc_m3 *fld, struct mrc_ddc *ddc_E, struct mrc_ddc *ddc_H)
 {
-  struct mrc_crds *crds = mrc_domain_get_crds(fld->domain);
+  struct mrc_crds *crds = mrc_domain_get_crds(fld->_domain);
   int ldims[3], nr_levels;
-  mrc_domain_get_param_int3(fld->domain, "m", ldims);
-  mrc_domain_get_nr_levels(fld->domain, &nr_levels);
+  mrc_domain_get_param_int3(fld->_domain, "m", ldims);
+  mrc_domain_get_nr_levels(fld->_domain, &nr_levels);
   float dx = 1. / (ldims[0] << (nr_levels - 1));
   float dt = dx / sqrt(2.);
 
@@ -398,7 +398,7 @@ main(int argc, char **argv)
   mrc_m3_set_comp_name(fld, HZ, "HZ");
 
   int ldims[3];
-  mrc_domain_get_param_int3(fld->domain, "m", ldims);
+  mrc_domain_get_param_int3(fld->_domain, "m", ldims);
 
   mrc_m3_foreach_patch(fld, p) {
     struct mrc_m3_patch *fldp = mrc_m3_patch_get(fld, p);

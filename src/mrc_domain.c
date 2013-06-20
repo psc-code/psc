@@ -246,7 +246,7 @@ struct mrc_m3 *
 mrc_domain_m3_create(struct mrc_domain *domain)
 {
   struct mrc_m3 *m3 = mrc_m3_create(domain->obj.comm);
-  m3->domain = domain;
+  m3->_domain = domain;
   return m3;
 }
 

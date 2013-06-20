@@ -74,7 +74,7 @@ ds_ascii_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
     }
     fprintf(file, "\n");
 
-    struct mrc_m3_patch *m3p = &m3->patches[p];
+    struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, p);
     mrc_m3_foreach(m3p, ix,iy,iz, 0,0) {
       fprintf(file, "%d %d %d", ix, iy, iz);
       for (int m = 0; m < mrc_m3_nr_comps(m3); m++) {

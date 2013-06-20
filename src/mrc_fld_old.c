@@ -405,7 +405,7 @@ static void
 _mrc_m3_destroy(struct mrc_m3 *m3)
 {
   free(m3->_arr);
-  free(m3->patches);
+  free(m3->_patches);
 
   if (m3->_comp_name) {
     for (int m = 0; m < mrc_m3_nr_comps(m3); m++) {
@@ -425,7 +425,7 @@ _mrc_m3_setup(struct mrc_m3 *m3)
   m3->_comp_name = calloc(m3->_ghost_dims[3], sizeof(*m3->_comp_name));
 
   int nr_patches;
-  struct mrc_patch *patches = mrc_domain_get_patches(m3->domain, &nr_patches);
+  struct mrc_patch *patches = mrc_domain_get_patches(m3->_domain, &nr_patches);
 
   assert(nr_patches > 0);
   for (int d = 0; d < 3; d++) {
@@ -436,9 +436,9 @@ _mrc_m3_setup(struct mrc_m3 *m3)
   int len = m3->_ghost_dims[0] * m3->_ghost_dims[1] * m3->_ghost_dims[2] * m3->_ghost_dims[3] * m3->_ghost_dims[4];
   m3->_arr = calloc(len, m3->_size_of_type);
 
-  m3->patches = calloc(nr_patches, sizeof(*m3->patches));
+  m3->_patches = calloc(nr_patches, sizeof(*m3->_patches));
   for (int p = 0; p < nr_patches; p++) {
-    struct mrc_m3_patch *m3p = &m3->patches[p];
+    struct mrc_m3_patch *m3p = &m3->_patches[p];
     m3p->_m3 = m3;
     m3p->_p = p;
     for (int d = 0; d < 3; d++) {
@@ -478,7 +478,7 @@ mrc_m3_nr_patches(struct mrc_m3 *m3)
 void
 mrc_m3_set_sw(struct mrc_m3 *m3, int sw)
 {
-  assert(m3->domain);
+  assert(m3->_domain);
   mrc_m3_set_param_int_array(m3, "sw", 5, (int[5]) { sw, sw, sw, 0, 0 });
 }
 
@@ -512,14 +512,14 @@ mrc_m3_comp_name(struct mrc_m3 *m3, int m)
 static void
 _mrc_m3_write(struct mrc_m3 *m3, struct mrc_io *io)
 {
-  mrc_io_write_ref(io, m3, "domain", m3->domain);
+  mrc_io_write_ref(io, m3, "domain", m3->_domain);
   mrc_io_write_m3(io, mrc_io_obj_path(io, m3), m3);
 }
 
 static void
 _mrc_m3_read(struct mrc_m3 *m3, struct mrc_io *io)
 {
-  m3->domain = mrc_io_read_ref(io, m3, "domain", mrc_domain);
+  m3->_domain = mrc_io_read_ref(io, m3, "domain", mrc_domain);
   mrc_m3_setup(m3);
   mrc_io_read_m3(io, mrc_io_obj_path(io, m3), m3);
 }
@@ -534,8 +534,8 @@ mrc_m3_same_shape(struct mrc_m3 *m3_1, struct mrc_m3 *m3_2)
     return false;
 
   int nr_patches_1, nr_patches_2;
-  struct mrc_patch *patches_1 = mrc_domain_get_patches(m3_1->domain, &nr_patches_1);
-  struct mrc_patch *patches_2 = mrc_domain_get_patches(m3_2->domain, &nr_patches_2);
+  struct mrc_patch *patches_1 = mrc_domain_get_patches(m3_1->_domain, &nr_patches_1);
+  struct mrc_patch *patches_2 = mrc_domain_get_patches(m3_2->_domain, &nr_patches_2);
   if (nr_patches_1 != nr_patches_2)
     return false;
 

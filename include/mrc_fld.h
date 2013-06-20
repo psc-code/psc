@@ -281,8 +281,8 @@ struct mrc_m3 {
   int _size_of_type;
   void *_arr;
 
-  struct mrc_m3_patch *patches;
-  struct mrc_domain *domain; //< based on this mrc_domain
+  struct mrc_m3_patch *_patches;
+  struct mrc_domain *_domain; //< based on this mrc_domain
   char **_comp_name;
 };
 
@@ -305,7 +305,7 @@ bool mrc_m3_same_shape(struct mrc_m3 *m3_1, struct mrc_m3 *m3_2);
 static inline struct mrc_m3_patch *
 mrc_m3_patch_get(struct mrc_m3 *m3, int p)
 {
-  return &m3->patches[p];
+  return &m3->_patches[p];
 }
 
 static inline void
