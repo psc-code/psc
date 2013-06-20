@@ -420,17 +420,17 @@ _mrc_m3_setup(struct mrc_m3 *m3)
   m3->patches = calloc(nr_patches, sizeof(*m3->patches));
   assert(m3->nr_patches > 0);
   for (int d = 0; d < 3; d++) {
-    m3->ib[d] = -m3->sw;
-    m3->im[d] = patches[0].ldims[d] + 2 * m3->sw;
+    m3->_ghost_offs[d] = -m3->sw;
+    m3->_ghost_dims[d] = patches[0].ldims[d] + 2 * m3->sw;
   }
-  int len = m3->im[0] * m3->im[1] * m3->im[2] * m3->nr_comp;
+  int len = m3->_ghost_dims[0] * m3->_ghost_dims[1] * m3->_ghost_dims[2] * m3->nr_comp;
   m3->arr = calloc(len * nr_patches, sizeof(float));
   for (int p = 0; p < nr_patches; p++) {
     struct mrc_m3_patch *m3p = &m3->patches[p];
     m3p->_m3 = m3;
     m3p->_p = p;
     for (int d = 0; d < 3; d++) {
-      assert(m3->im[d] = patches[p].ldims[d] + 2 * m3->sw);
+      assert(m3->_ghost_dims[d] = patches[p].ldims[d] + 2 * m3->sw);
     }
   }
 }

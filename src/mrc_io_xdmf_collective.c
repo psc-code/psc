@@ -868,9 +868,9 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
       mrc_domain_get_local_patch_info(m3->domain, p, &info);
       struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, p);
       /* mprintf("MPI_Isend -> %d gp %d len %d\n", xdmf->writers[writer], info.global_patch, */
-      /* 	      m3->im[0] * m3->im[1] * m3->im[2]); */
-      MPI_Isend(&MRC_M3(m3p, m, m3->ib[0], m3->ib[1], m3->ib[2]),
-		m3->im[0] * m3->im[1] * m3->im[2], MPI_FLOAT,
+      /* 	      m3->_ghost_dims[0] * m3->_ghost_dims[1] * m3->_ghost_dims[2]); */
+      MPI_Isend(&MRC_M3(m3p, m, m3->_ghost_offs[0], m3->_ghost_offs[1], m3->_ghost_offs[2]),
+		m3->_ghost_dims[0] * m3->_ghost_dims[1] * m3->_ghost_dims[2], MPI_FLOAT,
 		xdmf->writers[writer], info.global_patch,
 		mrc_io_comm(io), &ctx->send_reqs[sr++]);
       mrc_m3_patch_put(m3);

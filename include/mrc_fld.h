@@ -271,10 +271,13 @@ struct mrc_m3_patch {
 
 struct mrc_m3 {
   struct mrc_obj obj;
+
+  // state
+  int _ghost_offs[MRC_FLD_MAXDIMS];
+  int _ghost_dims[MRC_FLD_MAXDIMS];
+
   int nr_comp;
   int nr_patches;
-  int im[3];
-  int ib[3];
   float *arr;
   struct mrc_m3_patch *patches;
   struct mrc_domain *domain; //< based on this mrc_domain
@@ -323,9 +326,9 @@ mrc_m3_patch_put(struct mrc_m3 *m3)
 #define MRC_M3(m3p,m, ix,iy,iz)						\
   ((m3p)->_m3->arr[((((m3p)->_p *					\
 		      (m3p)->_m3->nr_comp + (m)) *			\
-		     (m3p)->_m3->im[2] + (iz) - (m3p)->_m3->ib[2]) *	\
-		    (m3p)->_m3->im[1] + (iy) - (m3p)->_m3->ib[1]) *	\
-		   (m3p)->_m3->im[0] + (ix) - (m3p)->_m3->ib[0]])
+		     (m3p)->_m3->_ghost_dims[2] + (iz) - (m3p)->_m3->_ghost_offs[2]) *	\
+		    (m3p)->_m3->_ghost_dims[1] + (iy) - (m3p)->_m3->_ghost_offs[1]) *	\
+		   (m3p)->_m3->_ghost_dims[0] + (ix) - (m3p)->_m3->_ghost_offs[0]])
 
 #endif
 
@@ -334,18 +337,18 @@ mrc_m3_patch_put(struct mrc_m3 *m3)
 
 #define mrc_m3_foreach(m3p, ix,iy,iz, l,r) {			\
   int _l[3] = { -l, -l, -l };					\
-  int _r[3] = { m3p->_m3->im[0] + 2 * m3p->_m3->ib[0] + r,	\
-		m3p->_m3->im[1] + 2 * m3p->_m3->ib[1] + r,	\
-		m3p->_m3->im[2] + 2 * m3p->_m3->ib[2] + r};	\
+  int _r[3] = { m3p->_m3->_ghost_dims[0] + 2 * m3p->_m3->_ghost_offs[0] + r,	\
+		m3p->_m3->_ghost_dims[1] + 2 * m3p->_m3->_ghost_offs[1] + r,	\
+		m3p->_m3->_ghost_dims[2] + 2 * m3p->_m3->_ghost_offs[2] + r};	\
   for (int iz = _l[2]; iz < _r[2]; iz++) {			\
     for (int iy = _l[1]; iy < _r[1]; iy++) {			\
       for (int ix = _l[0]; ix < _r[0]; ix++)			\
 
 #define mrc_m3_foreach_bnd(m3p, ix,iy,iz) {		\
-  int _l[3] = { m3p->_m3->ib[0], m3p->_m3->ib[1], m3p->_m3->ib[2] };	\
-  int _r[3] = { m3p->_m3->ib[0] + m3p->_m3->im[0],			\
-		m3p->_m3->ib[1] + m3p->_m3->im[1],			\
-		m3p->_m3->ib[2] + m3p->_m3->im[2] };			\
+  int _l[3] = { m3p->_m3->_ghost_offs[0], m3p->_m3->_ghost_offs[1], m3p->_m3->_ghost_offs[2] };	\
+  int _r[3] = { m3p->_m3->_ghost_offs[0] + m3p->_m3->_ghost_dims[0],			\
+		m3p->_m3->_ghost_offs[1] + m3p->_m3->_ghost_dims[1],			\
+		m3p->_m3->_ghost_offs[2] + m3p->_m3->_ghost_dims[2] };			\
   for (int iz = _l[2]; iz < _r[2]; iz++) {				\
     for (int iy = _l[1]; iy < _r[1]; iy++) {				\
       for (int ix = _l[0]; ix < _r[0]; ix++)				\
