@@ -8,6 +8,7 @@
 #include <mrc_obj.h>
 
 #include <stdbool.h>
+#include <assert.h>
 
 //#define BOUNDS_CHECK
 
@@ -295,6 +296,7 @@ bool mrc_m3_same_shape(struct mrc_m3 *m3_1, struct mrc_m3 *m3_2);
 static inline struct mrc_m3_patch *
 mrc_m3_patch_get(struct mrc_m3 *m3, int p)
 {
+  assert(m3->_patches);
   return &m3->_patches[p];
 }
 

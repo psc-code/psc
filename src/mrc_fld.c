@@ -48,18 +48,29 @@ _mrc_fld_setup(struct mrc_fld *fld)
 {
   if (fld->_domain) {
     // if we have a domain, use that to set _dims
-    if (fld->_dims.nr_vals == 0) {
-      // mrc_fld_set_nr_comps hasn't been called, default to 1
-      mrc_fld_set_nr_comps(fld, 1);
-    }
-    if (fld->_dims.nr_vals == 4) {
-      int nr_patches;
-      struct mrc_patch *patches = mrc_domain_get_patches(fld->_domain, &nr_patches);
-      assert(nr_patches == 1);
-      
-      for (int d = 0; d < 3; d++) {
-	fld->_dims.vals[d] = patches[0].ldims[d];
+
+    assert(mrc_fld_nr_comps(fld) > 0);
+    int nr_patches;
+    struct mrc_patch *patches = mrc_domain_get_patches(fld->_domain, &nr_patches);
+
+    assert((fld->_dims.nr_vals == 4 && nr_patches == 1) ||
+	   (fld->_dims.nr_vals == 5 && nr_patches >= 1));
+
+    if (fld->_dims.nr_vals == 5) {
+      fld->_patches = calloc(nr_patches, sizeof(*fld->_patches));
+      for (int p = 0; p < nr_patches; p++) {
+	struct mrc_m3_patch *m3p = &fld->_patches[p];
+	m3p->_m3 = fld;
+	m3p->_p = p;
+	for (int d = 0; d < 3; d++) {
+	  assert(patches[p].ldims[d] == patches[0].ldims[d]);
+	}
       }
+      fld->_dims.vals[4] = nr_patches;
+    }
+
+    for (int d = 0; d < 3; d++) {
+      fld->_dims.vals[d] = patches[0].ldims[d];
     }
   }
 
@@ -651,50 +662,6 @@ struct mrc_class_mrc_fld mrc_class_mrc_fld = {
 // mrc_m3
 
 static void
-_mrc_m3_destroy(struct mrc_m3 *m3)
-{
-  free(m3->_arr);
-  free(m3->_patches);
-
-  for (int m = 0; m < m3->_nr_allocated_comp_name; m++) {
-    free(m3->_comp_name[m]);
-  }
-  free(m3->_comp_name);
-}
-
-static void
-_mrc_m3_setup(struct mrc_m3 *m3)
-{
-  if (m3->_sw.nr_vals == 0) {
-    mrc_m3_set_param_int_array(m3, "sw", 5, NULL);
-  }
-
-  int nr_patches;
-  struct mrc_patch *patches = mrc_domain_get_patches(m3->_domain, &nr_patches);
-
-  assert(nr_patches > 0);
-  for (int d = 0; d < 3; d++) {
-    m3->_ghost_offs[d] = -m3->_sw.vals[d];
-    m3->_ghost_dims[d] = patches[0].ldims[d] + 2 * m3->_sw.vals[d];
-  }
-  assert(m3->_dims.nr_vals >= 4); // FIXME!
-  m3->_ghost_dims[3] = m3->_dims.vals[3];
-  m3->_ghost_dims[4] = nr_patches;
-  int len = m3->_ghost_dims[0] * m3->_ghost_dims[1] * m3->_ghost_dims[2] * m3->_ghost_dims[3] * m3->_ghost_dims[4];
-  m3->_arr = calloc(len, m3->_size_of_type);
-
-  m3->_patches = calloc(nr_patches, sizeof(*m3->_patches));
-  for (int p = 0; p < nr_patches; p++) {
-    struct mrc_m3_patch *m3p = &m3->_patches[p];
-    m3p->_m3 = m3;
-    m3p->_p = p;
-    for (int d = 0; d < 3; d++) {
-      assert(m3->_ghost_dims[d] = patches[p].ldims[d] + 2 * m3->_sw.vals[d]);
-    }
-  }
-}
-
-static void
 _mrc_m3_write(struct mrc_m3 *m3, struct mrc_io *io)
 {
   mrc_io_write_m3(io, mrc_io_obj_path(io, m3), m3);
@@ -763,22 +730,13 @@ mrc_m3_init()
 // ----------------------------------------------------------------------
 // mrc_class_mrc_m3
 
-#define VAR(x) (void *)offsetof(struct mrc_m3, x)
-static struct param mrc_m3_params_descr[] = {
-  { "dims"            , VAR(_dims)         , PARAM_INT_ARRAY(0, 0)     },
-  { "sw"              , VAR(_sw)           , PARAM_INT_ARRAY(0, 0)     },
-  { "domain"          , VAR(_domain)       , PARAM_OBJ(mrc_domain)     },
-  {},
-};
-#undef VAR
-
 struct mrc_class_mrc_m3 mrc_class_mrc_m3 = {
   .name         = "mrc_m3",
   .size         = sizeof(struct mrc_m3),
-  .param_descr  = mrc_m3_params_descr,
+  .param_descr  = mrc_fld_descr,
   .init         = mrc_m3_init,
-  .destroy      = _mrc_m3_destroy,
-  .setup        = _mrc_m3_setup,
+  .destroy      = _mrc_fld_destroy,
+  .setup        = _mrc_fld_setup,
   .read         = _mrc_m3_read,
   .write        = _mrc_m3_write,
 };

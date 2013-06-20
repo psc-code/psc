@@ -1403,12 +1403,64 @@ GROUP "/" {
          }
       }
    }
+   GROUP "mrc_vec-uid" {
+      ATTRIBUTE "len" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 16384
+         }
+      }
+      ATTRIBUTE "mrc_obj_class" {
+         DATATYPE  H5T_STRING {
+            STRSIZE 8;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+         DATA {
+         (0): "mrc_vec"
+         }
+      }
+      ATTRIBUTE "mrc_obj_dict_count" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
+         }
+      }
+      ATTRIBUTE "mrc_obj_name" {
+         DATATYPE  H5T_STRING {
+            STRSIZE 8;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+         DATA {
+         (0): "mrc_vec"
+         }
+      }
+      ATTRIBUTE "mrc_obj_type" {
+         DATATYPE  H5T_STRING {
+            STRSIZE 6;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+         DATA {
+         (0): "float"
+         }
+      }
+   }
    GROUP "test_m3-uid" {
       ATTRIBUTE "dims" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 5 ) / ( 5 ) }
          DATA {
-         (0): 0, 0, 0, 2, 0
+         (0): 32, 8, 8, 2, 4
          }
       }
       ATTRIBUTE "domain" {
@@ -1473,11 +1525,30 @@ GROUP "/" {
          (0): 1
          }
       }
+      ATTRIBUTE "offs" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 5 ) / ( 5 ) }
+         DATA {
+         (0): 0, 0, 0, 0, 0
+         }
+      }
       ATTRIBUTE "sw" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 5 ) / ( 5 ) }
          DATA {
          (0): 0, 0, 0, 0, 0
+         }
+      }
+      ATTRIBUTE "vec" {
+         DATATYPE  H5T_STRING {
+            STRSIZE 27;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+         DATA {
+         (0): "mrc_vec-uid"
          }
       }
       GROUP "fld0" {
