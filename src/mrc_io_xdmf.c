@@ -1330,7 +1330,7 @@ ds_xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
       mrc_domain_get_param_int3(m3->domain, "np", np);
       xs = xdmf_spatial_create_3d(io, m3->_ghost_dims, p, np[0] * np[1] * np[2]);
       if (p == 0) {
-	hdf5_write_mcrds(io, m3->domain, m3->sw);
+	hdf5_write_mcrds(io, m3->domain, m3->_sw.vals[0]); // FIXME, 1,2 may be different
       }
     }
 

@@ -1471,9 +1471,9 @@ GROUP "/" {
       }
       ATTRIBUTE "sw" {
          DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATASPACE  SIMPLE { ( 5 ) / ( 5 ) }
          DATA {
-         (0): 0
+         (0): 0, 0, 0, 0, 0
          }
       }
       GROUP "fld0" {

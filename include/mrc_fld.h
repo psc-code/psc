@@ -271,6 +271,8 @@ struct mrc_m3_patch {
 
 struct mrc_m3 {
   struct mrc_obj obj;
+  // parameters
+  struct mrc_param_int_array _sw;
 
   // state
   int _ghost_offs[MRC_FLD_MAXDIMS];
@@ -281,7 +283,6 @@ struct mrc_m3 {
 
   struct mrc_m3_patch *patches;
   struct mrc_domain *domain; //< based on this mrc_domain
-  int sw; //< # of ghost points
   char **_comp_name;
 };
 
@@ -292,6 +293,7 @@ int mrc_m3_nr_comps(struct mrc_m3 *m3);
 int mrc_m3_nr_patches(struct mrc_m3 *m3);
 void mrc_m3_set_comp_name(struct mrc_m3 *m3, int m, const char *name);
 const char *mrc_m3_comp_name(struct mrc_m3 *m3, int m);
+void mrc_m3_set_sw(struct mrc_m3 *m3, int sw);
 struct mrc_m3 *mrc_m3_duplicate(struct mrc_m3 *m3);
 void mrc_m3_copy(struct mrc_m3 *m3_to, struct mrc_m3 *m3_from);
 void mrc_m3_set(struct mrc_m3 *m3, float val);

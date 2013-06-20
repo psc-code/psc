@@ -97,7 +97,7 @@ main(int argc, char **argv)
   struct mrc_m3 *m3 = mrc_domain_m3_create(domain);
   mrc_m3_set_name(m3, "test_m3");
   mrc_m3_set_nr_comps(m3, 2);
-  mrc_m3_set_param_int(m3, "sw", 1);
+  mrc_m3_set_sw(m3, 1);
   mrc_m3_set_from_options(m3);
   mrc_m3_setup(m3);
   mrc_m3_set_comp_name(m3, 0, "fld0");
@@ -106,11 +106,9 @@ main(int argc, char **argv)
 
   set_m3(m3);
 
-  int bnd;
-  mrc_m3_get_param_int(m3, "sw", &bnd);
   struct mrc_ddc *ddc = mrc_domain_create_ddc(domain);
   mrc_ddc_set_funcs(ddc, &mrc_ddc_funcs_m3);
-  mrc_ddc_set_param_int3(ddc, "ibn", (int [3]) { bnd, bnd, bnd });
+  mrc_ddc_set_param_int3(ddc, "ibn", m3->_sw.vals);
   mrc_ddc_set_param_int(ddc, "max_n_fields", 2);
   mrc_ddc_set_param_int(ddc, "size_of_type", sizeof(float));
   mrc_ddc_setup(ddc);

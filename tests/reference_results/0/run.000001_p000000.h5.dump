@@ -653,13 +653,6 @@ GROUP "/" {
          (0): 1
          }
       }
-      ATTRIBUTE "sw" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 0
-         }
-      }
       GROUP "fld0" {
          GROUP "p0" {
             ATTRIBUTE "global_patch" {

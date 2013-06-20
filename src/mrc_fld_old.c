@@ -418,6 +418,10 @@ _mrc_m3_destroy(struct mrc_m3 *m3)
 static void
 _mrc_m3_setup(struct mrc_m3 *m3)
 {
+  if (m3->_sw.nr_vals == 0) {
+    mrc_m3_set_param_int_array(m3, "sw", 5, NULL);
+  }
+
   m3->_comp_name = calloc(m3->_ghost_dims[3], sizeof(*m3->_comp_name));
 
   int nr_patches;
@@ -425,8 +429,8 @@ _mrc_m3_setup(struct mrc_m3 *m3)
 
   assert(nr_patches > 0);
   for (int d = 0; d < 3; d++) {
-    m3->_ghost_offs[d] = -m3->sw;
-    m3->_ghost_dims[d] = patches[0].ldims[d] + 2 * m3->sw;
+    m3->_ghost_offs[d] = -m3->_sw.vals[d];
+    m3->_ghost_dims[d] = patches[0].ldims[d] + 2 * m3->_sw.vals[d];
   }
   m3->_ghost_dims[4] = nr_patches;
   int len = m3->_ghost_dims[0] * m3->_ghost_dims[1] * m3->_ghost_dims[2] * m3->_ghost_dims[3] * m3->_ghost_dims[4];
@@ -438,7 +442,7 @@ _mrc_m3_setup(struct mrc_m3 *m3)
     m3p->_m3 = m3;
     m3p->_p = p;
     for (int d = 0; d < 3; d++) {
-      assert(m3->_ghost_dims[d] = patches[p].ldims[d] + 2 * m3->sw);
+      assert(m3->_ghost_dims[d] = patches[p].ldims[d] + 2 * m3->_sw.vals[d]);
     }
   }
 }
@@ -469,6 +473,13 @@ int
 mrc_m3_nr_patches(struct mrc_m3 *m3)
 {
   return m3->_ghost_dims[4];
+}
+
+void
+mrc_m3_set_sw(struct mrc_m3 *m3, int sw)
+{
+  assert(m3->domain);
+  mrc_m3_set_param_int_array(m3, "sw", 5, (int[5]) { sw, sw, sw, 0, 0 });
 }
 
 void
@@ -519,7 +530,7 @@ mrc_m3_same_shape(struct mrc_m3 *m3_1, struct mrc_m3 *m3_2)
   if (mrc_m3_nr_comps(m3_1) != mrc_m3_nr_comps(m3_2))
     return false;
 
-  if (m3_1->sw != m3_2->sw)
+  if (m3_1->_sw.vals[0] != m3_2->_sw.vals[0])
     return false;
 
   int nr_patches_1, nr_patches_2;
@@ -544,7 +555,7 @@ mrc_m3_same_shape(struct mrc_m3 *m3_1, struct mrc_m3 *m3_2)
 
 #define VAR(x) (void *)offsetof(struct mrc_m3, x)
 static struct param mrc_m3_params_descr[] = {
-  { "sw"              , VAR(sw)           , PARAM_INT(0)           },
+  { "sw"              , VAR(_sw)           , PARAM_INT_ARRAY(0, 0)     },
   {},
 };
 #undef VAR

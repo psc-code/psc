@@ -162,7 +162,7 @@ mrc_io_read_f3(struct mrc_io *io, const char *path, struct mrc_fld *fld)
   } else {
     assert(fld->_domain);
     struct mrc_m3 *m3 = mrc_domain_m3_create(fld->_domain);
-    mrc_m3_set_param_int(m3, "sw", fld->_sw.vals[0]);
+    mrc_m3_set_sw(m3, fld->_sw.vals[0]);
     mrc_m3_set_nr_comps(m3, mrc_fld_nr_comps(fld));
     mrc_m3_setup(m3);
     mrc_io_read_m3(io, path, m3);
@@ -265,7 +265,7 @@ mrc_io_write_f3(struct mrc_io *io, const char *path, struct mrc_fld *fld, float 
     int nr_comps = mrc_fld_nr_comps(fld);
     struct mrc_m3 *m3 = mrc_domain_m3_create(fld->_domain);
     mrc_m3_set_nr_comps(m3, nr_comps);
-    mrc_m3_set_param_int(m3, "sw", fld->_sw.vals[0]);
+    mrc_m3_set_sw(m3, fld->_sw.vals[0]); // FIXME, how about 1,2
     mrc_m3_setup(m3);
     for (int m = 0; m < nr_comps; m++) {
       mrc_m3_set_comp_name(m3, m, mrc_fld_comp_name(fld, m));

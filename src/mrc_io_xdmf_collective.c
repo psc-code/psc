@@ -943,7 +943,7 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
     mrc_fld_set_param_int_array(recv_fld, "dims", 4,
 			       (int[4]) { info.ldims[0], info.ldims[1], info.ldims[2], 1 });
     mrc_fld_set_param_int_array(recv_fld, "sw", 4,
-			       (int[4]) { m3->sw, m3->sw, m3->sw, 0 });
+			       (int[4]) { m3->_sw.vals[0], m3->_sw.vals[1], m3->_sw.vals[2], 0 });
     mrc_fld_setup(recv_fld);
     ctx->recvs[rr].fld = recv_fld;
     
