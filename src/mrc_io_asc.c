@@ -69,7 +69,7 @@ ds_ascii_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
     fprintf(ascii->file, "# see %s\n", filename);
     FILE *file = fopen(filename, "w");
     fprintf(file, "# ix iy iz");
-    for (int m = 0; m < m3->nr_comp; m++) {
+    for (int m = 0; m < mrc_m3_nr_comps(m3); m++) {
       fprintf(file, " %s", mrc_m3_comp_name(m3, m));
     }
     fprintf(file, "\n");
@@ -77,7 +77,7 @@ ds_ascii_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
     struct mrc_m3_patch *m3p = &m3->patches[p];
     mrc_m3_foreach(m3p, ix,iy,iz, 0,0) {
       fprintf(file, "%d %d %d", ix, iy, iz);
-      for (int m = 0; m < m3->nr_comp; m++) {
+      for (int m = 0; m < mrc_m3_nr_comps(m3); m++) {
 	fprintf(file, " %g", MRC_M3(m3p, m, ix,iy,iz));
       }
       fprintf(file, "\n");

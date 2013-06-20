@@ -295,7 +295,7 @@ mrctest_m3_compare(struct mrc_m3 *m3_1, struct mrc_m3 *m3_2)
     struct mrc_m3_patch *m3p_1 = mrc_m3_patch_get(m3_1, p);
     struct mrc_m3_patch *m3p_2 = mrc_m3_patch_get(m3_2, p);
     float diff = 0.;
-    for (int m = 0; m < m3_1->nr_comp; m++) {
+    for (int m = 0; m < mrc_m3_nr_comps(m3_1); m++) {
       mrc_m3_foreach_bnd(m3p_1, ix,iy,iz) {
 	diff = fmaxf(diff, fabsf(MRC_M3(m3p_1, 0, ix,iy,iz) - MRC_M3(m3p_2, 0, ix,iy,iz)));
 	if (diff > 0.) {

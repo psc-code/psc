@@ -818,13 +818,6 @@ GROUP "/" {
          (0): "test_m3"
          }
       }
-      ATTRIBUTE "nr_comps" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 2
-         }
-      }
       ATTRIBUTE "nr_patches" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }

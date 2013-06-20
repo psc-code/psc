@@ -401,7 +401,7 @@ _mrc_m3_destroy(struct mrc_m3 *m3)
   free(m3->patches);
 
   if (m3->name) {
-    for (int m = 0; m < m3->nr_comp; m++) {
+    for (int m = 0; m < m3->_ghost_dims[3]; m++) {
       free(m3->name[m]);
     }
     free(m3->name);
@@ -411,7 +411,7 @@ _mrc_m3_destroy(struct mrc_m3 *m3)
 static void
 _mrc_m3_setup(struct mrc_m3 *m3)
 {
-  m3->name = calloc(m3->nr_comp, sizeof(*m3->name));
+  m3->name = calloc(m3->_ghost_dims[3], sizeof(*m3->name));
 
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(m3->domain, &nr_patches);
@@ -423,7 +423,7 @@ _mrc_m3_setup(struct mrc_m3 *m3)
     m3->_ghost_offs[d] = -m3->sw;
     m3->_ghost_dims[d] = patches[0].ldims[d] + 2 * m3->sw;
   }
-  int len = m3->_ghost_dims[0] * m3->_ghost_dims[1] * m3->_ghost_dims[2] * m3->nr_comp;
+  int len = m3->_ghost_dims[0] * m3->_ghost_dims[1] * m3->_ghost_dims[2] * m3->_ghost_dims[3];
   m3->arr = calloc(len * nr_patches, sizeof(float));
   for (int p = 0; p < nr_patches; p++) {
     struct mrc_m3_patch *m3p = &m3->patches[p];
@@ -458,9 +458,21 @@ _mrc_m3_view(struct mrc_m3 *m3)
 }
 
 void
+mrc_m3_set_nr_comps(struct mrc_m3 *m3, int nr_comps)
+{
+  m3->_ghost_dims[3] = nr_comps;
+}
+
+int
+mrc_m3_nr_comps(struct mrc_m3 *m3)
+{
+  return m3->_ghost_dims[3];
+}
+
+void
 mrc_m3_set_comp_name(struct mrc_m3 *m3, int m, const char *name)
 {
-  assert(m < m3->nr_comp);
+  assert(m < mrc_m3_nr_comps(m3));
   free(m3->name[m]);
   m3->name[m] = name ? strdup(name) : NULL;
 }
@@ -468,7 +480,7 @@ mrc_m3_set_comp_name(struct mrc_m3 *m3, int m, const char *name)
 const char *
 mrc_m3_comp_name(struct mrc_m3 *m3, int m)
 {
-  assert(m < m3->nr_comp);
+  assert(m < mrc_m3_nr_comps(m3));
   return m3->name[m];
 }
 
@@ -490,7 +502,7 @@ _mrc_m3_read(struct mrc_m3 *m3, struct mrc_io *io)
 bool
 mrc_m3_same_shape(struct mrc_m3 *m3_1, struct mrc_m3 *m3_2)
 {
-  if (m3_1->nr_comp != m3_2->nr_comp)
+  if (mrc_m3_nr_comps(m3_1) != mrc_m3_nr_comps(m3_2))
     return false;
 
   if (m3_1->sw != m3_2->sw)
@@ -518,7 +530,6 @@ mrc_m3_same_shape(struct mrc_m3 *m3_1, struct mrc_m3 *m3_2)
 
 #define VAR(x) (void *)offsetof(struct mrc_m3, x)
 static struct param mrc_m3_params_descr[] = {
-  { "nr_comps"        , VAR(nr_comp)      , PARAM_INT(1)           },
   { "sw"              , VAR(sw)           , PARAM_INT(0)           },
   {},
 };

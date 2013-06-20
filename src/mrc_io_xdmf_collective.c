@@ -1127,7 +1127,7 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
     int nr_1 = 1;
     H5LTset_attribute_int(group0, ".", "nr_patches", &nr_1, 1);
     
-    for (int m = 0; m < m3->nr_comp; m++) {
+    for (int m = 0; m < mrc_m3_nr_comps(m3); m++) {
       collective_recv_fld_begin(&ctx, io, fld, m3);
       collective_send_fld_begin(&ctx, io, m3, m);
       collective_recv_fld_local(&ctx, io, fld, m3, m);
@@ -1139,7 +1139,7 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
     H5Gclose(group0);
     mrc_fld_destroy(fld);
   } else {
-    for (int m = 0; m < m3->nr_comp; m++) {
+    for (int m = 0; m < mrc_m3_nr_comps(m3); m++) {
       collective_send_fld_begin(&ctx, io, m3, m);
       collective_send_fld_end(&ctx, io, m3, m);
     }
@@ -1297,7 +1297,7 @@ collective_m3_recv_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
 			       (int[4]) { ilo[0], ilo[1], ilo[2], 0 });
     mrc_fld_set_param_int_array(fld, "dims", 4,
 			       (int[4]) { ihi[0] - ilo[0], ihi[1] - ilo[1], ihi[2] - ilo[2],
-				   m3->nr_comp });
+				   mrc_m3_nr_comps(m3) });
     mrc_fld_setup(fld);
     
     MPI_Irecv(fld->_arr, fld->_len, MPI_FLOAT, recv->rank,
@@ -1317,7 +1317,7 @@ collective_m3_recv_end(struct mrc_io *io, struct collective_m3_ctx *ctx,
     struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, recv->patch);
 
     int *ilo = recv->ilo, *ihi = recv->ihi;
-    for (int m = 0; m < m3->nr_comp; m++) {
+    for (int m = 0; m < mrc_m3_nr_comps(m3); m++) {
       for (int iz = ilo[2]; iz < ihi[2]; iz++) {
 	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
@@ -1435,7 +1435,7 @@ xdmf_collective_read_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
 
   if (xdmf->is_writer) {
     struct mrc_fld *gfld = mrc_fld_create(MPI_COMM_SELF);
-    mrc_fld_set_nr_comps(gfld, m3->nr_comp);
+    mrc_fld_set_nr_comps(gfld, mrc_m3_nr_comps(m3));
 
     hid_t group0 = H5Gopen(file->h5_file, path, H5P_DEFAULT); H5_CHK(group0);
     collective_m3_read_fld(io, &ctx, group0, gfld);

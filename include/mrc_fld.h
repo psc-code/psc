@@ -276,7 +276,6 @@ struct mrc_m3 {
   int _ghost_offs[MRC_FLD_MAXDIMS];
   int _ghost_dims[MRC_FLD_MAXDIMS];
 
-  int nr_comp;
   int nr_patches;
   float *arr;
   struct mrc_m3_patch *patches;
@@ -288,6 +287,7 @@ struct mrc_m3 {
 MRC_CLASS_DECLARE(mrc_m3, struct mrc_m3);
 
 void mrc_m3_set_nr_comps(struct mrc_m3 *m3, int nr_comps); // FIXME
+int mrc_m3_nr_comps(struct mrc_m3 *m3);
 void mrc_m3_set_comp_name(struct mrc_m3 *m3, int m, const char *name);
 const char *mrc_m3_comp_name(struct mrc_m3 *m3, int m);
 struct mrc_m3 *mrc_m3_duplicate(struct mrc_m3 *m3);
@@ -325,7 +325,7 @@ mrc_m3_patch_put(struct mrc_m3 *m3)
 
 #define MRC_M3(m3p,m, ix,iy,iz)						\
   ((m3p)->_m3->arr[((((m3p)->_p *					\
-		      (m3p)->_m3->nr_comp + (m)) *			\
+		      (m3p)->_m3->_ghost_dims[3] + (m)) *			\
 		     (m3p)->_m3->_ghost_dims[2] + (iz) - (m3p)->_m3->_ghost_offs[2]) *	\
 		    (m3p)->_m3->_ghost_dims[1] + (iy) - (m3p)->_m3->_ghost_offs[1]) *	\
 		   (m3p)->_m3->_ghost_dims[0] + (ix) - (m3p)->_m3->_ghost_offs[0]])

@@ -386,7 +386,7 @@ main(int argc, char **argv)
 
   struct mrc_m3 *fld = mrc_domain_m3_create(domain);
   mrc_m3_set_name(fld, "fld");
-  mrc_m3_set_param_int(fld, "nr_comps", NR_COMPS);
+  mrc_m3_set_nr_comps(fld, NR_COMPS);
   mrc_m3_set_param_int(fld, "sw", 3);
   mrc_m3_set_from_options(fld);
   mrc_m3_setup(fld);

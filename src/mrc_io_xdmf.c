@@ -1333,7 +1333,7 @@ ds_xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
       }
     }
 
-    for (int m = 0; m < m3->nr_comp; m++) {
+    for (int m = 0; m < mrc_m3_nr_comps(m3); m++) {
       char fld_name[strlen(m3->name[m]) + 5];
 
       sprintf(fld_name, "%s-%d", m3->name[m], p);
