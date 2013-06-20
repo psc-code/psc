@@ -680,28 +680,6 @@ _mrc_m3_setup(struct mrc_m3 *m3)
   }
 }
 
-static void
-_mrc_m3_view(struct mrc_m3 *m3)
-{
-#if 0
-  int rank, size;
-  MPI_Comm_rank(obj->comm, &rank);
-  MPI_Comm_size(obj->comm, &size);
-
-  for (int r = 0; r < size; r++) {
-    if (r == rank) {
-      mrc_m3_foreach_patch(m3, p) {
-	struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, p);
-	mprintf("patch %d: ib = %dx%dx%d im = %dx%dx%d\n", p,
-		m3p->ib[0], m3p->ib[1], m3p->ib[2],
-		m3p->im[0], m3p->im[1], m3p->im[2]);
-      }
-    }
-    MPI_Barrier(obj->comm);
-  }
-#endif
-}
-
 int
 mrc_m3_nr_patches(struct mrc_m3 *m3)
 {
@@ -787,7 +765,6 @@ struct mrc_class_mrc_m3 mrc_class_mrc_m3 = {
   .init         = mrc_m3_init,
   .destroy      = _mrc_m3_destroy,
   .setup        = _mrc_m3_setup,
-  .view         = _mrc_m3_view,
   .read         = _mrc_m3_read,
   .write        = _mrc_m3_write,
 };
