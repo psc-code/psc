@@ -15,8 +15,8 @@
 struct psc_output_fields_item_ops psc_output_fields_item_n_1st_nc_c_ops = {
   .name               = "n_1st_nc_c",
   .nr_comp            = 1,
-  .fld_names          = { "n" },
+  .fld_names          = { "n_nc" },
   .run                = n_run,
-  .flags              = POFI_ADD_GHOSTS,
+  .flags              = POFI_ADD_GHOSTS | POFI_BY_KIND,
 };
 
