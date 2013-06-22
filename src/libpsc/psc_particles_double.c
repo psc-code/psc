@@ -28,17 +28,17 @@ psc_particles_double_destroy(struct psc_particles *prts)
   free(dbl->particles);
 }
 
-#if 0
 void
-particles_double_realloc(particles_double_t *pp, int new_n_part)
+particles_double_realloc(struct psc_particles *prts, int new_n_part)
 {
-  if (new_n_part <= pp->n_alloced)
+  struct psc_particles_double *dbl = psc_particles_double(prts);
+
+  if (new_n_part <= dbl->n_alloced)
     return;
 
-  pp->n_alloced = new_n_part * 1.2;
-  pp->particles = realloc(pp->particles, pp->n_alloced * sizeof(*pp->particles));
+  dbl->n_alloced = new_n_part * 1.2;
+  dbl->particles = realloc(dbl->particles, dbl->n_alloced * sizeof(*dbl->particles));
 }
-#endif
 
 static inline void
 calc_vxi(particle_double_real_t vxi[3], particle_double_t *part)
