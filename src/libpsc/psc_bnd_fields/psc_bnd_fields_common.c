@@ -87,17 +87,17 @@ conducting_wall_E_hi(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
       }
     }
 #endif
-    for (int iz = -1; iz < patch->ldims[2] + 2; iz++) {
+    for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
       for (int ix = -2; ix < patch->ldims[0] + 2; ix++) {
 	F3(pf, EX, ix,my  ,iz) = 0.;
 	F3(pf, EX, ix,my+1,iz) =  F3(pf, EX, ix, my-1,iz);
-	F3(pf, EY, ix,my,iz)   = -F3(pf, EY, ix, my-1,iz);
+	F3(pf, EY, ix,my  ,iz) = -F3(pf, EY, ix, my-1,iz);
       }
     }
 
-    for (int iz = -1; iz < patch->ldims[2] + 1; iz++) {
+    for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
       for (int ix = -2; ix < patch->ldims[0] + 2; ix++) {
-	F3(pf, EZ, ix,my,iz) = 0.;
+	F3(pf, EZ, ix,my  ,iz) = 0.;
 	F3(pf, EZ, ix,my+1,iz) =  F3(pf, EZ, ix, my-1,iz);
       }
     }
