@@ -34,6 +34,7 @@ struct psc_kh {
   double Ti_over_Te;
   double pert;
   double pert_vpic;
+  double k_vpic;
 
   // calculated from the above
   double B0;
@@ -53,6 +54,7 @@ static struct param psc_kh_descr[] = {
   { "Ti_over_Te"    , VAR(Ti_over_Te)      , PARAM_DOUBLE(1.)            },
   { "pert"          , VAR(pert)            , PARAM_DOUBLE(.0)            },
   { "pert_vpic"     , VAR(pert_vpic)       , PARAM_DOUBLE(.0)            },
+  { "k_vpic"        , VAR(k_vpic)          , PARAM_DOUBLE(.5)            },
   {},
 };
 #undef VAR
@@ -157,7 +159,7 @@ vz_profile(struct psc *psc, double y, double z)
 
   double yl = psc->domain.length[1], zl = psc->domain.length[2];
   double vz = kh->v0z * tanh((y - .5 * yl * (1. + kh->pert * sin(2*M_PI * z / zl))) / kh->delta);
-  vz += kh->pert_vpic * kh->v0z * sin(.5 * z / kh->delta) * exp(-sqr(y - .5 * yl)/sqr(kh->delta));
+  vz += kh->pert_vpic * kh->v0z * sin(kh->k_vpic * z / kh->delta) * exp(-sqr(y - .5 * yl)/sqr(kh->delta));
   return vz;
 }
 
