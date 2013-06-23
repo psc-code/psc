@@ -1,0 +1,2 @@
+#! /bin/sh
+./test_io_read_multi --mrc_io_type xdmf_collective --case 1

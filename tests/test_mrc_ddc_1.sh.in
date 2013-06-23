@@ -1,0 +1,3 @@
+#! /bin/sh
+
+@MPIRUN@ -n 4 ./test_mrc_ddc --mx 33 --npx 3 --npy 2
