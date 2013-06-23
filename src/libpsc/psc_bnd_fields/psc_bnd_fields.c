@@ -93,6 +93,16 @@ _psc_bnd_fields_destroy(struct psc_bnd_fields *bnd)
 }
 
 // ----------------------------------------------------------------------
+// psc_bnd_fields_read
+
+// FIXME, shouldn't be needed
+static void
+_psc_bnd_fields_read(struct psc_bnd_fields *bnd, struct mrc_io *io)
+{
+  _psc_bnd_fields_create(bnd);
+}
+
+// ----------------------------------------------------------------------
 // psc_bnd_fields_get_pulse_*
 
 struct psc_pulse *
@@ -284,5 +294,6 @@ struct mrc_class_psc_bnd_fields mrc_class_psc_bnd_fields = {
   .set_from_options = _psc_bnd_fields_set_from_options,
   .setup            = _psc_bnd_fields_setup,
   .view             = _psc_bnd_fields_view,
+  .read             = _psc_bnd_fields_read,
 };
 

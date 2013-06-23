@@ -6,13 +6,6 @@
 #include <mrc_profile.h>
 #include <mrc_params.h>
 
-static void
-_psc_push_fields_create(struct psc_push_fields *push)
-{
-  push->bnd_fields = psc_bnd_fields_create(psc_push_fields_comm(push));
-  psc_push_fields_add_child(push, (struct mrc_obj *) push->bnd_fields);
-}
-
 struct psc_bnd_fields *
 psc_push_fields_get_bnd_fields(struct psc_push_fields *push)
 {
@@ -226,6 +219,9 @@ static struct param psc_push_fields_descr[] = {
   "(0): default (traditional way with 4 fill_ghosts()) "
   "(1): optimized with only 1 fill_ghosts(), 1st order "
   "particle shape only" },
+
+  { "bnd_fields"       , VAR(bnd_fields)       , MRC_VAR_OBJ(psc_bnd_fields), },
+
   {},
 };
 #undef VAR
@@ -238,6 +234,5 @@ struct mrc_class_psc_push_fields mrc_class_psc_push_fields = {
   .size             = sizeof(struct psc_push_fields),
   .param_descr      = psc_push_fields_descr,
   .init             = psc_push_fields_init,
-  .create           = _psc_push_fields_create,
 };
 

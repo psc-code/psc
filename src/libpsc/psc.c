@@ -153,6 +153,22 @@ static struct param psc_descr[] = {
     .help = "output profiling information by MPI process rather than aggregated." },
   { "theta_xz"      , VAR(prm.theta_xz)           , PARAM_DOUBLE(0.),
     .help = "rotate initial particle shifted Maxwellian in x-z plane." },
+
+  { "push_particles"          , VAR(push_particles)          , MRC_VAR_OBJ(psc_push_particles) },
+  { "push_fields"             , VAR(push_fields)             , MRC_VAR_OBJ(psc_push_fields) },
+  { "bnd"                     , VAR(bnd)                     , MRC_VAR_OBJ(psc_bnd) },
+  { "bnd_particles"           , VAR(bnd_particles)           , MRC_VAR_OBJ(psc_bnd_particles) },
+  { "bnd_photons"             , VAR(bnd_photons)             , MRC_VAR_OBJ(psc_bnd_photons) },
+  { "collision"               , VAR(collision)               , MRC_VAR_OBJ(psc_collision) },
+  { "randomize"               , VAR(randomize)               , MRC_VAR_OBJ(psc_randomize) },
+  { "sort"                    , VAR(sort)                    , MRC_VAR_OBJ(psc_sort) },
+  { "diag"                    , VAR(diag)                    , MRC_VAR_OBJ(psc_diag) },
+  { "output_fields_collection", VAR(output_fields_collection), MRC_VAR_OBJ(psc_output_fields_collection) },
+  { "output_particles"        , VAR(output_particles)        , MRC_VAR_OBJ(psc_output_particles) },
+  { "output_photons"          , VAR(output_photons)          , MRC_VAR_OBJ(psc_output_photons) },
+  { "event_generator"         , VAR(event_generator)         , MRC_VAR_OBJ(psc_event_generator) },
+  { "balance"                 , VAR(balance)                 , MRC_VAR_OBJ(psc_balance) },
+
   {},
 };
 
@@ -174,38 +190,10 @@ _psc_create(struct psc *psc)
   // default: 2 species (e-, i+)
   psc_set_kinds(psc, 2, NULL);
 
-  psc->push_particles = psc_push_particles_create(comm);
-  psc_add_child(psc, (struct mrc_obj *) psc->push_particles);
-  psc->push_fields = psc_push_fields_create(comm);
-  psc_add_child(psc, (struct mrc_obj *) psc->push_fields);
-  psc->bnd = psc_bnd_create(comm);
   psc_bnd_set_psc(psc->bnd, psc); // FIXME, do general parent interface?
-  psc_add_child(psc, (struct mrc_obj *) psc->bnd);
-  psc->bnd_particles = psc_bnd_particles_create(comm);
   psc_bnd_particles_set_psc(psc->bnd_particles, psc);
-  psc_add_child(psc, (struct mrc_obj *) psc->bnd_particles);
-  psc->bnd_photons = psc_bnd_photons_create(comm);
   psc_bnd_photons_set_psc(psc->bnd_photons, psc);
-  psc_add_child(psc, (struct mrc_obj *) psc->bnd_photons);
-  psc->collision = psc_collision_create(comm);
-  psc_add_child(psc, (struct mrc_obj *) psc->collision);
-  psc->randomize = psc_randomize_create(comm);
-  psc_add_child(psc, (struct mrc_obj *) psc->randomize);
-  psc->sort = psc_sort_create(comm);
-  psc_add_child(psc, (struct mrc_obj *) psc->sort);
-  psc->diag = psc_diag_create(comm);
-  psc_add_child(psc, (struct mrc_obj *) psc->diag);
-  psc->output_fields_collection = psc_output_fields_collection_create(comm);
   psc_output_fields_collection_set_psc(psc->output_fields_collection, psc);
-  psc_add_child(psc, (struct mrc_obj *) psc->output_fields_collection);
-  psc->output_particles = psc_output_particles_create(comm);
-  psc_add_child(psc, (struct mrc_obj *) psc->output_particles);
-  psc->output_photons = psc_output_photons_create(comm);
-  psc_add_child(psc, (struct mrc_obj *) psc->output_photons);
-  psc->event_generator = psc_event_generator_create(comm);
-  psc_add_child(psc, (struct mrc_obj *) psc->event_generator);
-  psc->balance = psc_balance_create(comm);
-  psc_add_child(psc, (struct mrc_obj *) psc->balance);
 
   psc->time_start = MPI_Wtime();
 }
@@ -588,7 +576,7 @@ static void
 _psc_setup(struct psc *psc)
 {
   if (!psc_ops(psc)) { // old-style: setup is handled by psc_case
-    psc_setup_children(psc);
+    psc_setup_member_objs(psc);
     return;
   }
 
@@ -600,9 +588,9 @@ _psc_setup(struct psc *psc)
   psc_setup_photons(psc);
   psc_setup_fortran(psc);
 
-  psc_setup_children(psc);
+  psc_setup_member_objs(psc);
 
-  // this is in some sense part of setup_fields(), but can't be done until the children
+  // this is in some sense part of setup_fields(), but can't be done until the member objs
   // are set up, for finding ghosts
   psc_push_particles_calc_j(psc->push_particles, psc->particles, psc->flds);
 }
@@ -661,7 +649,8 @@ _psc_write(struct psc *psc, struct mrc_io *io)
 static void
 _psc_read(struct psc *psc, struct mrc_io *io)
 {
-  _psc_create(psc);
+  assert(!ppsc);
+  ppsc = psc;
 
   psc_setup_coeff(psc);
 
@@ -690,7 +679,7 @@ _psc_read(struct psc *psc, struct mrc_io *io)
   psc_mfields_list_add(&psc_mfields_base_list, &psc->flds);
   psc->mphotons = mrc_io_read_ref(io, psc, "mphotons", psc_mphotons);
 
-  psc_read_children(psc, io);
+  psc_read_member_objs(psc, io);
 }
 
 // ----------------------------------------------------------------------

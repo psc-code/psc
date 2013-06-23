@@ -213,6 +213,17 @@ psc_kh_init_npt(struct psc *psc, int kind, double x[3],
   }
 }
 
+// ----------------------------------------------------------------------
+// psc_kh_read
+
+static void
+psc_kh_read(struct psc *psc, struct mrc_io *io)
+{
+  // do nothing -- but having this function is important so that
+  // psc_kh_create() doesn't get called instead
+  psc_read_super(psc, io);
+}
+
 // ======================================================================
 // psc_kh_ops
 
@@ -221,6 +232,7 @@ struct psc_ops psc_kh_ops = {
   .size             = sizeof(struct psc_kh),
   .param_descr      = psc_kh_descr,
   .create           = psc_kh_create,
+  .read             = psc_kh_read,
   .setup            = psc_kh_setup,
   .init_field       = psc_kh_init_field,
   .init_npt         = psc_kh_init_npt,
