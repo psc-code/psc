@@ -661,6 +661,8 @@ _psc_write(struct psc *psc, struct mrc_io *io)
 static void
 _psc_read(struct psc *psc, struct mrc_io *io)
 {
+  _psc_create(psc);
+
   psc_setup_coeff(psc);
 
   mrc_io_read_int(io, psc, "timestep", &psc->timestep);
