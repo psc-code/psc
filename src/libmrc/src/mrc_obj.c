@@ -849,6 +849,7 @@ mrc_obj_read_super(struct mrc_obj *obj, struct mrc_io *io)
   if (cls->read) {
     cls->read(obj, io);
   } else {
+    mrc_obj_read_member_objs(obj, io);
     mrc_obj_read_children(obj, io);
     // FIXME, ugly: basically the same as mrc_obj_setup(), but skipping the children
     // setup
@@ -936,10 +937,10 @@ mrc_obj_read2(struct mrc_obj *obj, struct mrc_io *io, const char *path)
   if (obj->ops && obj->ops->read) {
     obj->ops->read(obj, io);
   } else {
+    mrc_obj_read_super(obj, io);
     if (obj->ops && obj->ops->create) {
       obj->ops->create(obj);
     }
-    mrc_obj_read_super(obj, io);
   }
 }
 
