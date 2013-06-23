@@ -1,0 +1,17 @@
+#! /bin/sh
+
+set -e
+
+@MPIRUN@ -n 1 ./test_mrc_fld --case 1
+@MPIRUN@ -n 1 ./test_mrc_fld --case 2
+@MPIRUN@ -n 1 ./test_mrc_fld --case 3
+@MPIRUN@ -n 1 ./test_mrc_fld --case 4
+@MPIRUN@ -n 1 ./test_mrc_fld --case 5
+@MPIRUN@ -n 1 ./test_mrc_fld --case 6
+@MPIRUN@ -n 1 ./test_mrc_fld --case 7
+@MPIRUN@ -n 1 ./test_mrc_fld --case 8
+@MPIRUN@ -n 1 ./test_mrc_fld --case 9
+@MPIRUN@ -n 1 ./test_mrc_fld --case 10
+@MPIRUN@ -n 1 ./test_mrc_fld --case 11
+@MPIRUN@ -n 1 ./test_mrc_fld --case 12
+@MPIRUN@ -n 1 ./test_mrc_fld --case 13

@@ -1,0 +1,9 @@
+<?xml version='1.0' ?>
+<Xdmf xmlns:xi='http://www.w3.org/2001/XInclude' Version='2.0'>
+<Domain>
+  <Grid GridType='Collection' CollectionType='Temporal'>
+  <xi:include href='run.000000.xdmf' xpointer='xpointer(//Xdmf/Domain/Grid)'/>
+  <xi:include href='run.000001.xdmf' xpointer='xpointer(//Xdmf/Domain/Grid)'/>
+  </Grid>
+  </Domain>
+</Xdmf>

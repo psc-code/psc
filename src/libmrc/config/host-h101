@@ -1,0 +1,20 @@
+
+# Apparently zaphod's old autotools don't honor our hint to try finding mpicc/mpif77
+
+if test -z "$CC"; then
+   CC="mpicc"
+fi
+
+if test -z "$F77"; then
+   F77="mpif77"
+fi
+
+if test -z "$CFLAGS"; then
+   CFLAGS="-g -O3 -ffast-math"
+fi
+
+if test -z "$FFLAGS"; then
+   FFLAGS="-g -O3 -ffast-math"
+fi
+
+

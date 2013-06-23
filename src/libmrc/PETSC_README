@@ -1,0 +1,32 @@
+Current Status and notes on Petsc integration:
+
+BUILDING:
+1) Petsc >= 3.4.0 required (the build system will enforce this)
+2) I recommend using a petsc built in your home directory.
+   System installed petsc's have some issues.
+3) I also recommend using a petsc-arch, archless petsc builds have problems.
+4) Petsc seems to have problems switching between float and double in arch installs.
+   It's recommended to have two different Petsc directories.
+5) The build system defaults to no petsc, so use a --with-petsc flag to enable it
+6) If --with-petsc is given without an argument the value of the envionment PETSC_DIR will be used.
+7) If --with-petsc-arch is not given or given without an argument the value of PETSC_ARCH will be used.
+8) If you really, really want to use an arch-less petsc give --without-petsc-arch
+
+RUNNING AND WRITING:
+mrc_vec_petsc will automatically replace whatever mrc_vec datatype matches PetscScalar. This is (in my opinion)
+non-ideal behaviour, but a better solution isn't clear.
+PetscInitialize is called by libmrc_params_init, so this must be called before vectors are used.
+Petsc just allocates space for vectors right now, nothing fancy.
+
+KNOWN ISSUES:
+***
+Petsc sneaks in and replaces the vector type which it matches. When a field gets written,
+it seems the vector type is written as meta-data, which results in test_mrc_f3_[0,1] failing
+because the written fields are type 'petsc' instead of 'float'. It's not clean how to handle this
+at the moment, so I'm leaving these tests as unexpected failures.
+***
+mrc objects which don't have collective behaviour are given MPI_COMM_NULL communicators to avoid
+an issue with MPI_COMM_SELF spawning unique communicators ad nauseum. Petsc won't accept a NULL comm,
+so we need to catch them and pass PETSC_COMM_SELF instead of the object's communicator. Hopefully petsc
+deals with the COMM_SELF problem internally. The behaviour of VecCreatMPI with PETSC_COMM_SELF is not
+currently clear, but it doesn't seem to cause a problem.

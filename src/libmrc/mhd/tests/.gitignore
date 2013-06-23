@@ -1,0 +1,12 @@
+test_ggcm_mhd_crds
+test_ggcm_mhd
+mhd_fadeev
+mhd2
+mhd_bw
+mhd_cosine
+mhd_double_tearing
+mhd_fadeev
+mhd_ot
+mhd_whistler
+*.log
+*.trs

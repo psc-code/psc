@@ -1,0 +1,140 @@
+<?xml version='1.0' ?>
+<Xdmf xmlns:xi='http://www.w3.org/2001/XInclude' Version='2.0'>
+<Domain>
+<Grid GridType="Collection" CollectionType="Spatial">
+<Time Type="Single" Value="1" />
+   <Grid Name="patch-mrc_domain-0" GridType="Uniform">
+     <Topology TopologyType="3DCoRectMesh" Dimensions="33 17 12"/>
+     <Geometry GeometryType="Origin_DxDyDz">
+     <DataItem Name="Origin" DataType="Float" Dimensions="3" Format="XML">
+        0 0 0
+     </DataItem>
+     <DataItem Name="DxDyDz" DataType="Float" Dimensions="3" Format="XML">
+        0.03125 0.03125 0.030303
+     </DataItem>
+     </Geometry>
+
+     <Attribute Name="fld0" AttributeType="Scalar" Center="Cell">
+       <DataItem Dimensions="32 16 11" NumberType="Float" Precision="4" Format="HDF">
+        run.000001_p000000.h5:/test_m3-uid/fld0/p0/3d
+       </DataItem>
+     </Attribute>
+     <Attribute Name="fld1" AttributeType="Scalar" Center="Cell">
+       <DataItem Dimensions="32 16 11" NumberType="Float" Precision="4" Format="HDF">
+        run.000001_p000000.h5:/test_m3-uid/fld1/p0/3d
+       </DataItem>
+     </Attribute>
+   </Grid>
+   <Grid Name="patch-mrc_domain-1" GridType="Uniform">
+     <Topology TopologyType="3DCoRectMesh" Dimensions="33 17 12"/>
+     <Geometry GeometryType="Origin_DxDyDz">
+     <DataItem Name="Origin" DataType="Float" Dimensions="3" Format="XML">
+        0 0 0.333333
+     </DataItem>
+     <DataItem Name="DxDyDz" DataType="Float" Dimensions="3" Format="XML">
+        0.03125 0.03125 0.030303
+     </DataItem>
+     </Geometry>
+
+     <Attribute Name="fld0" AttributeType="Scalar" Center="Cell">
+       <DataItem Dimensions="32 16 11" NumberType="Float" Precision="4" Format="HDF">
+        run.000001_p000000.h5:/test_m3-uid/fld0/p1/3d
+       </DataItem>
+     </Attribute>
+     <Attribute Name="fld1" AttributeType="Scalar" Center="Cell">
+       <DataItem Dimensions="32 16 11" NumberType="Float" Precision="4" Format="HDF">
+        run.000001_p000000.h5:/test_m3-uid/fld1/p1/3d
+       </DataItem>
+     </Attribute>
+   </Grid>
+   <Grid Name="patch-mrc_domain-2" GridType="Uniform">
+     <Topology TopologyType="3DCoRectMesh" Dimensions="33 17 12"/>
+     <Geometry GeometryType="Origin_DxDyDz">
+     <DataItem Name="Origin" DataType="Float" Dimensions="3" Format="XML">
+        0 0 0.666667
+     </DataItem>
+     <DataItem Name="DxDyDz" DataType="Float" Dimensions="3" Format="XML">
+        0.03125 0.03125 0.030303
+     </DataItem>
+     </Geometry>
+
+     <Attribute Name="fld0" AttributeType="Scalar" Center="Cell">
+       <DataItem Dimensions="32 16 11" NumberType="Float" Precision="4" Format="HDF">
+        run.000001_p000001.h5:/test_m3-uid/fld0/p0/3d
+       </DataItem>
+     </Attribute>
+     <Attribute Name="fld1" AttributeType="Scalar" Center="Cell">
+       <DataItem Dimensions="32 16 11" NumberType="Float" Precision="4" Format="HDF">
+        run.000001_p000001.h5:/test_m3-uid/fld1/p0/3d
+       </DataItem>
+     </Attribute>
+   </Grid>
+   <Grid Name="patch-mrc_domain-3" GridType="Uniform">
+     <Topology TopologyType="3DCoRectMesh" Dimensions="33 17 12"/>
+     <Geometry GeometryType="Origin_DxDyDz">
+     <DataItem Name="Origin" DataType="Float" Dimensions="3" Format="XML">
+        0 0.5 0
+     </DataItem>
+     <DataItem Name="DxDyDz" DataType="Float" Dimensions="3" Format="XML">
+        0.03125 0.03125 0.030303
+     </DataItem>
+     </Geometry>
+
+     <Attribute Name="fld0" AttributeType="Scalar" Center="Cell">
+       <DataItem Dimensions="32 16 11" NumberType="Float" Precision="4" Format="HDF">
+        run.000001_p000001.h5:/test_m3-uid/fld0/p1/3d
+       </DataItem>
+     </Attribute>
+     <Attribute Name="fld1" AttributeType="Scalar" Center="Cell">
+       <DataItem Dimensions="32 16 11" NumberType="Float" Precision="4" Format="HDF">
+        run.000001_p000001.h5:/test_m3-uid/fld1/p1/3d
+       </DataItem>
+     </Attribute>
+   </Grid>
+   <Grid Name="patch-mrc_domain-4" GridType="Uniform">
+     <Topology TopologyType="3DCoRectMesh" Dimensions="33 17 12"/>
+     <Geometry GeometryType="Origin_DxDyDz">
+     <DataItem Name="Origin" DataType="Float" Dimensions="3" Format="XML">
+        0 0.5 0.333333
+     </DataItem>
+     <DataItem Name="DxDyDz" DataType="Float" Dimensions="3" Format="XML">
+        0.03125 0.03125 0.030303
+     </DataItem>
+     </Geometry>
+
+     <Attribute Name="fld0" AttributeType="Scalar" Center="Cell">
+       <DataItem Dimensions="32 16 11" NumberType="Float" Precision="4" Format="HDF">
+        run.000001_p000002.h5:/test_m3-uid/fld0/p0/3d
+       </DataItem>
+     </Attribute>
+     <Attribute Name="fld1" AttributeType="Scalar" Center="Cell">
+       <DataItem Dimensions="32 16 11" NumberType="Float" Precision="4" Format="HDF">
+        run.000001_p000002.h5:/test_m3-uid/fld1/p0/3d
+       </DataItem>
+     </Attribute>
+   </Grid>
+   <Grid Name="patch-mrc_domain-5" GridType="Uniform">
+     <Topology TopologyType="3DCoRectMesh" Dimensions="33 17 12"/>
+     <Geometry GeometryType="Origin_DxDyDz">
+     <DataItem Name="Origin" DataType="Float" Dimensions="3" Format="XML">
+        0 0.5 0.666667
+     </DataItem>
+     <DataItem Name="DxDyDz" DataType="Float" Dimensions="3" Format="XML">
+        0.03125 0.03125 0.030303
+     </DataItem>
+     </Geometry>
+
+     <Attribute Name="fld0" AttributeType="Scalar" Center="Cell">
+       <DataItem Dimensions="32 16 11" NumberType="Float" Precision="4" Format="HDF">
+        run.000001_p000003.h5:/test_m3-uid/fld0/p0/3d
+       </DataItem>
+     </Attribute>
+     <Attribute Name="fld1" AttributeType="Scalar" Center="Cell">
+       <DataItem Dimensions="32 16 11" NumberType="Float" Precision="4" Format="HDF">
+        run.000001_p000003.h5:/test_m3-uid/fld1/p0/3d
+       </DataItem>
+     </Attribute>
+   </Grid>
+</Grid>
+</Domain>
+</Xdmf>

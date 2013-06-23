@@ -1,0 +1,16 @@
+
+# Hartmuts GPU-Cluster at LRZ
+
+#actually we should test if the right lrz-hdf5 is loaded (later)
+if test -z "$HDF5_DIR"; then
+   HDF5_DIR=$HDF5_BASE
+fi
+
+
+if test -z "$LIBS"; then
+   LIBS="-lz $SZIP_SHLIB "
+fi
+
+
+
+
