@@ -270,10 +270,12 @@ _mrc_m1_destroy(struct mrc_m1 *m1)
   }
   free(m1->patches);
 
-  for (int m = 0; m < m1->nr_comp; m++) {
-    free(m1->_comp_name[m]);
+  if (m1->_comp_name) {
+    for (int m = 0; m < m1->nr_comp; m++) {
+      free(m1->_comp_name[m]);
+    }
+    free(m1->_comp_name);
   }
-  free(m1->_comp_name);
 }
 
 static void
