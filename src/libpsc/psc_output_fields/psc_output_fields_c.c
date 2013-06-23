@@ -65,8 +65,8 @@ write_fields(struct psc_output_fields_c *out, struct psc_fields_list *list,
     // FIXME, 3 doesn't work -- how about 0?
     struct mrc_m3 *mrc_fld = mrc_domain_m3_create(ppsc->mrc_domain);
     mrc_m3_set_name(mrc_fld, psc_mfields_name(flds));
-    mrc_m3_set_param_int(mrc_fld, "sw", 2);
-    mrc_m3_set_param_int(mrc_fld, "nr_comps", fld->nr_comp);
+    mrc_m3_set_sw(mrc_fld, 2);
+    mrc_m3_set_nr_comps(mrc_fld, fld->nr_comp);
     mrc_m3_setup(mrc_fld);
     for (int m = 0; m < fld->nr_comp; m++) {
       mrc_m3_set_comp_name(mrc_fld, m, psc_mfields_comp_name(flds, m));
