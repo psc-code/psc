@@ -15,17 +15,17 @@
 // copy_to_mrc_fld
 
 static void
-copy_to_mrc_fld(struct mrc_m3 *m3, mfields_c_t *flds)
+copy_to_mrc_fld(struct mrc_fld *m3, mfields_c_t *flds)
 {
   psc_foreach_patch(ppsc, p) {
     struct psc_fields *pf = psc_mfields_get_patch(flds, p);
-    struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, p);
-    mrc_m3_foreach(m3p, ix,iy,iz, 0,0) {
+    struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, p);
+    mrc_fld_foreach(m3, ix,iy,iz, 0,0) {
       for (int m = 0; m < flds->nr_fields; m++) {
 	MRC_M3(m3p,m, ix,iy,iz) = F3_C(pf,m, ix,iy,iz);
       }
-    } mrc_m3_foreach_end;
-    mrc_m3_patch_put(m3);
+    } mrc_fld_foreach_end;
+    mrc_fld_patch_put(m3);
   }
 }
 
@@ -63,13 +63,13 @@ write_fields(struct psc_output_fields_c *out, struct psc_fields_list *list,
 
     // FIXME, what if !(ibn[0] == ibn[1] == ibn[2])
     // FIXME, 3 doesn't work -- how about 0?
-    struct mrc_m3 *mrc_fld = mrc_domain_m3_create(ppsc->mrc_domain);
-    mrc_m3_set_name(mrc_fld, psc_mfields_name(flds));
-    mrc_m3_set_sw(mrc_fld, 2);
-    mrc_m3_set_nr_comps(mrc_fld, fld->nr_comp);
-    mrc_m3_setup(mrc_fld);
+    struct mrc_fld *mrc_fld = mrc_domain_m3_create(ppsc->mrc_domain);
+    mrc_fld_set_name(mrc_fld, psc_mfields_name(flds));
+    mrc_fld_set_sw(mrc_fld, 2);
+    mrc_fld_set_nr_comps(mrc_fld, fld->nr_comp);
+    mrc_fld_setup(mrc_fld);
     for (int m = 0; m < fld->nr_comp; m++) {
-      mrc_m3_set_comp_name(mrc_fld, m, psc_mfields_comp_name(flds, m));
+      mrc_fld_set_comp_name(mrc_fld, m, psc_mfields_comp_name(flds, m));
     }
     copy_to_mrc_fld(mrc_fld, flds);
 
@@ -77,9 +77,9 @@ write_fields(struct psc_output_fields_c *out, struct psc_fields_list *list,
       mrc_io_set_param_int3(io, "slab_off", slab_off);
       mrc_io_set_param_int3(io, "slab_dims", slab_dims);
     }
-    mrc_m3_write(mrc_fld, io);
+    mrc_fld_write(mrc_fld, io);
 
-    mrc_m3_destroy(mrc_fld);
+    mrc_fld_destroy(mrc_fld);
   }
   mrc_io_close(io);
 }
