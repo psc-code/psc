@@ -56,28 +56,28 @@ ds_ascii_write_field(struct mrc_io *io, const char *path,
 }
 
 static void
-ds_ascii_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
+ds_ascii_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3)
 {
   struct mrc_io_ascii *ascii = to_mrc_io_ascii(io);
   
   struct mrc_io_params *par = &io->par;
 
-  for (int p = 0; p < mrc_m3_nr_patches(m3); p++) {
+  for (int p = 0; p < mrc_fld_nr_patches(m3); p++) {
     char filename[strlen(par->outdir) + strlen(par->basename) + 30];
     sprintf(filename, "%s/%s.%06d_p%06d_%s.asc", par->outdir, par->basename,
-	    io->step, p, mrc_m3_name(m3));
+	    io->step, p, mrc_fld_name(m3));
     fprintf(ascii->file, "# see %s\n", filename);
     FILE *file = fopen(filename, "w");
     fprintf(file, "# ix iy iz");
-    for (int m = 0; m < mrc_m3_nr_comps(m3); m++) {
-      fprintf(file, " %s", mrc_m3_comp_name(m3, m));
+    for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
+      fprintf(file, " %s", mrc_fld_comp_name(m3, m));
     }
     fprintf(file, "\n");
 
-    struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, p);
+    struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, p);
     mrc_m3_foreach(m3p, ix,iy,iz, 0,0) {
       fprintf(file, "%d %d %d", ix, iy, iz);
-      for (int m = 0; m < mrc_m3_nr_comps(m3); m++) {
+      for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
 	fprintf(file, " %g", MRC_M3(m3p, m, ix,iy,iz));
       }
       fprintf(file, "\n");

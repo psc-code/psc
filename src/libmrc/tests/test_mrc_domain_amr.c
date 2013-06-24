@@ -87,22 +87,22 @@ main(int argc, char **argv)
 
   // create and fill a field
 
-  struct mrc_m3 *fld = mrc_domain_m3_create(domain);
-  mrc_m3_set_name(fld, "fld");
-  mrc_m3_set_from_options(fld);
-  mrc_m3_setup(fld);
-  mrc_m3_set_comp_name(fld, 0, "m0");
+  struct mrc_fld *fld = mrc_domain_m3_create(domain);
+  mrc_fld_set_name(fld, "fld");
+  mrc_fld_set_from_options(fld);
+  mrc_fld_setup(fld);
+  mrc_fld_set_comp_name(fld, 0, "m0");
 
   float kx = 2. * M_PI, ky = 2. * M_PI;
 
-  mrc_m3_foreach_patch(fld, p) {
-    struct mrc_m3_patch *m3p = mrc_m3_patch_get(fld, p);
+  mrc_fld_foreach_patch(fld, p) {
+    struct mrc_fld_patch *m3p = mrc_fld_patch_get(fld, p);
     mrc_crds_patch_get(crds, p);
     mrc_m3_foreach(m3p, ix,iy,iz, 0, 0) {
       float xx = MRC_MCRDX(crds, ix), yy = MRC_MCRDY(crds, iy);
       MRC_M3(m3p, 0, ix,iy,iz) = sin(kx * xx) * cos(ky * yy);
     } mrc_m3_foreach_end;
-    mrc_m3_patch_put(fld);
+    mrc_fld_patch_put(fld);
     mrc_crds_patch_put(crds);
   }
 
@@ -113,11 +113,11 @@ main(int argc, char **argv)
   mrc_io_set_from_options(io);
   mrc_io_setup(io);
   mrc_io_open(io, "w", 0, 0.);
-  mrc_m3_write(fld, io);
+  mrc_fld_write(fld, io);
   mrc_io_close(io);
   mrc_io_destroy(io);
 
-  mrc_m3_destroy(fld);
+  mrc_fld_destroy(fld);
 
   mrc_domain_destroy(domain);
 

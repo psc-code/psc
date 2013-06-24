@@ -246,7 +246,7 @@ xdmf_spatial_write_crds(struct xdmf_spatial *xs, struct xdmf_file *file,
 }
 
 static void
-xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
+xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3)
 {
   struct xdmf *xdmf = to_xdmf(io);
   struct xdmf_file *file = &xdmf->file;
@@ -254,7 +254,7 @@ xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
 
   int sw = xdmf->sw;
   hid_t group0 = H5Gopen(file->h5_file, path, H5P_DEFAULT);
-  int nr_patches = mrc_m3_nr_patches(m3);
+  int nr_patches = mrc_fld_nr_patches(m3);
   H5LTset_attribute_int(group0, ".", "nr_patches", &nr_patches, 1);
 
   struct xdmf_spatial *xs = xdmf_spatial_find(&file->xdmf_spatial_list,
@@ -265,13 +265,13 @@ xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
     xdmf_spatial_write_mcrds(io, xs, file, m3->_domain, xdmf->sw);
   }
 
-  for (int m = 0; m < mrc_m3_nr_comps(m3); m++) {
-    xdmf_spatial_save_fld_info(xs, strdup(mrc_m3_comp_name(m3, m)), strdup(path), false);
+  for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
+    xdmf_spatial_save_fld_info(xs, strdup(mrc_fld_comp_name(m3, m)), strdup(path), false);
 
-    hid_t group_fld = H5Gcreate(group0, mrc_m3_comp_name(m3, m), H5P_DEFAULT,
+    hid_t group_fld = H5Gcreate(group0, mrc_fld_comp_name(m3, m), H5P_DEFAULT,
 				H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group_fld);
-    mrc_m3_foreach_patch(m3, p) {
-      struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, p);
+    mrc_fld_foreach_patch(m3, p) {
+      struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, p);
 
       char s_patch[10];
       sprintf(s_patch, "p%d", p);
@@ -297,7 +297,7 @@ xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
 	       &MRC_M3(m3p, m, m3->_ghost_offs[0], m3->_ghost_offs[1], m3->_ghost_offs[2]));
       H5Dclose(dset);
       ierr = H5Gclose(group); CE;
-      mrc_m3_patch_put(m3);
+      mrc_fld_patch_put(m3);
     }
     H5Gclose(group_fld);
   }
@@ -695,7 +695,7 @@ xdmf_spatial_write_mcrds_parallel(struct xdmf_spatial *xs,
 // xdmf_parallel_write_m3
 
 static void
-xdmf_parallel_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
+xdmf_parallel_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3)
 {
   struct xdmf *xdmf = to_xdmf(io);
   struct xdmf_file *file = &xdmf->file;
@@ -731,10 +731,10 @@ xdmf_parallel_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
   MPI_Allreduce(&nr_patches, &nr_patches_max, 1, MPI_INT, MPI_MAX,
 		mrc_domain_comm(m3->_domain));
 
-  for (int m = 0; m < mrc_m3_nr_comps(m3); m++) {
-    xdmf_spatial_save_fld_info(xs, strdup(mrc_m3_comp_name(m3, m)), strdup(path), false);
+  for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
+    xdmf_spatial_save_fld_info(xs, strdup(mrc_fld_comp_name(m3, m)), strdup(path), false);
 
-    hid_t group_fld = H5Gcreate(group0, mrc_m3_comp_name(m3, m), H5P_DEFAULT,
+    hid_t group_fld = H5Gcreate(group0, mrc_fld_comp_name(m3, m), H5P_DEFAULT,
 				H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group_fld);
     hid_t group = H5Gcreate(group_fld, "p0", H5P_DEFAULT,
 			    H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group);
@@ -769,7 +769,7 @@ xdmf_parallel_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
       }
       struct mrc_patch_info info;
       mrc_domain_get_local_patch_info(m3->_domain, p, &info);
-      struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, p);
+      struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, p);
 
       hsize_t mdims[3] = { m3->_ghost_dims[2], m3->_ghost_dims[1], m3->_ghost_dims[0] };
       hsize_t mcount[3] = { info.ldims[2], info.ldims[1], info.ldims[0] };
@@ -785,7 +785,7 @@ xdmf_parallel_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
 
       H5Sclose(memspace);
 
-      mrc_m3_patch_put(m3);
+      mrc_fld_patch_put(m3);
     }
     H5Dclose(dset);
     H5Sclose(filespace);
