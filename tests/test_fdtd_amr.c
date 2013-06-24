@@ -187,7 +187,7 @@ static struct mrc_ddc_amr_stencil stencils_fine[NR_COMPS] = {
 };
 
 static void __unused
-find_ghosts(struct mrc_domain *domain, struct mrc_m3 *fld, int m,
+find_ghosts(struct mrc_domain *domain, struct mrc_fld *fld, int m,
 	    int ext[3], int bnd)
 {
   int ldims[3];
@@ -196,7 +196,7 @@ find_ghosts(struct mrc_domain *domain, struct mrc_m3 *fld, int m,
   mrc_domain_get_patches(domain, &nr_patches);
 
   for (int p = 0; p < nr_patches; p++) {
-    struct mrc_m3_patch *fldp = mrc_m3_patch_get(fld, p);
+    struct mrc_fld_patch *fldp = mrc_fld_patch_get(fld, p);
     for (int iz = 0; iz < ldims[2] + 0; iz++) {
       for (int iy = -bnd; iy < ldims[1] + ext[1] + bnd; iy++) {
 	for (int ix = -bnd; ix < ldims[0] + ext[0] + bnd; ix++) {
@@ -218,7 +218,7 @@ find_ghosts(struct mrc_domain *domain, struct mrc_m3 *fld, int m,
 #define mrc_domain_amr(domain) mrc_to_subobj(domain, struct mrc_domain_amr)
 
 static void
-step_fdtd(struct mrc_m3 *fld, struct mrc_ddc *ddc_E, struct mrc_ddc *ddc_H)
+step_fdtd(struct mrc_fld *fld, struct mrc_ddc *ddc_E, struct mrc_ddc *ddc_H)
 {
   struct mrc_crds *crds = mrc_domain_get_crds(fld->_domain);
   int ldims[3], nr_levels;
@@ -229,8 +229,8 @@ step_fdtd(struct mrc_m3 *fld, struct mrc_ddc *ddc_E, struct mrc_ddc *ddc_H)
 
   mrc_ddc_amr_apply(ddc_H, fld);
 
-  mrc_m3_foreach_patch(fld, p) {
-    struct mrc_m3_patch *fldp = mrc_m3_patch_get(fld, p);
+  mrc_fld_foreach_patch(fld, p) {
+    struct mrc_fld_patch *fldp = mrc_fld_patch_get(fld, p);
     mrc_crds_patch_get(crds, p);
     float dx = MRC_MCRDX(crds, 1) - MRC_MCRDX(crds, 0); // FIXME
     float dy = MRC_MCRDY(crds, 1) - MRC_MCRDY(crds, 0);
@@ -250,14 +250,14 @@ step_fdtd(struct mrc_m3 *fld, struct mrc_ddc *ddc_E, struct mrc_ddc *ddc_H)
       	cnx * (F3(fldp, HY, ix,iy,iz) - F3(fldp, HY, ix-1,iy,iz)) -
       	cny * (F3(fldp, HX, ix,iy,iz) - F3(fldp, HX, ix,iy-1,iz));
     } mrc_m3_foreach_end;
-    mrc_m3_patch_put(fld);
+    mrc_fld_patch_put(fld);
     mrc_crds_patch_put(crds);
   }
 
   mrc_ddc_amr_apply(ddc_E, fld);
 
-  mrc_m3_foreach_patch(fld, p) {
-    struct mrc_m3_patch *fldp = mrc_m3_patch_get(fld, p);
+  mrc_fld_foreach_patch(fld, p) {
+    struct mrc_fld_patch *fldp = mrc_fld_patch_get(fld, p);
     mrc_crds_patch_get(crds, p);
     float dx = MRC_MCRDX(crds, 1) - MRC_MCRDX(crds, 0); // FIXME
     float dy = MRC_MCRDY(crds, 1) - MRC_MCRDY(crds, 0);
@@ -277,12 +277,12 @@ step_fdtd(struct mrc_m3 *fld, struct mrc_ddc *ddc_E, struct mrc_ddc *ddc_H)
 	cnx * (F3(fldp, EY, ix+1,iy,iz) - F3(fldp, EY, ix,iy,iz)) -
 	cny * (F3(fldp, EX, ix,iy+1,iz) - F3(fldp, EX, ix,iy,iz));
     } mrc_m3_foreach_end;
-    mrc_m3_patch_put(fld);
+    mrc_fld_patch_put(fld);
     mrc_crds_patch_put(crds);
   }
 
-  mrc_m3_foreach_patch(fld, p) {
-    struct mrc_m3_patch *fldp = mrc_m3_patch_get(fld, p);
+  mrc_fld_foreach_patch(fld, p) {
+    struct mrc_fld_patch *fldp = mrc_fld_patch_get(fld, p);
     mrc_crds_patch_get(crds, p);
     float dx = MRC_MCRDX(crds, 1) - MRC_MCRDX(crds, 0); // FIXME
     float dy = MRC_MCRDY(crds, 1) - MRC_MCRDY(crds, 0);
@@ -302,14 +302,14 @@ step_fdtd(struct mrc_m3 *fld, struct mrc_ddc *ddc_E, struct mrc_ddc *ddc_H)
 	cnx * (F3(fldp, EY, ix+1,iy,iz) - F3(fldp, EY, ix,iy,iz)) -
 	cny * (F3(fldp, EX, ix,iy+1,iz) - F3(fldp, EX, ix,iy,iz));
     } mrc_m3_foreach_end;
-    mrc_m3_patch_put(fld);
+    mrc_fld_patch_put(fld);
     mrc_crds_patch_put(crds);
   }
 
   mrc_ddc_amr_apply(ddc_H, fld);
 
-  mrc_m3_foreach_patch(fld, p) {
-    struct mrc_m3_patch *fldp = mrc_m3_patch_get(fld, p);
+  mrc_fld_foreach_patch(fld, p) {
+    struct mrc_fld_patch *fldp = mrc_fld_patch_get(fld, p);
     mrc_crds_patch_get(crds, p);
     float dx = MRC_MCRDX(crds, 1) - MRC_MCRDX(crds, 0); // FIXME
     float dy = MRC_MCRDY(crds, 1) - MRC_MCRDY(crds, 0);
@@ -329,7 +329,7 @@ step_fdtd(struct mrc_m3 *fld, struct mrc_ddc *ddc_E, struct mrc_ddc *ddc_H)
 	cnx * (F3(fldp, HY, ix,iy,iz) - F3(fldp, HY, ix-1,iy,iz)) -
 	cny * (F3(fldp, HX, ix,iy,iz) - F3(fldp, HX, ix,iy-1,iz));
     } mrc_m3_foreach_end;
-    mrc_m3_patch_put(fld);
+    mrc_fld_patch_put(fld);
     mrc_crds_patch_put(crds);
   }
 
@@ -384,24 +384,24 @@ main(int argc, char **argv)
 
   // create and fill a field
 
-  struct mrc_m3 *fld = mrc_domain_m3_create(domain);
-  mrc_m3_set_name(fld, "fld");
-  mrc_m3_set_nr_comps(fld, NR_COMPS);
-  mrc_m3_set_sw(fld, 3);
-  mrc_m3_set_from_options(fld);
-  mrc_m3_setup(fld);
-  mrc_m3_set_comp_name(fld, EX, "EX");
-  mrc_m3_set_comp_name(fld, EY, "EY");
-  mrc_m3_set_comp_name(fld, EZ, "EZ");
-  mrc_m3_set_comp_name(fld, HX, "HX");
-  mrc_m3_set_comp_name(fld, HY, "HY");
-  mrc_m3_set_comp_name(fld, HZ, "HZ");
+  struct mrc_fld *fld = mrc_domain_m3_create(domain);
+  mrc_fld_set_name(fld, "fld");
+  mrc_fld_set_nr_comps(fld, NR_COMPS);
+  mrc_fld_set_sw(fld, 3);
+  mrc_fld_set_from_options(fld);
+  mrc_fld_setup(fld);
+  mrc_fld_set_comp_name(fld, EX, "EX");
+  mrc_fld_set_comp_name(fld, EY, "EY");
+  mrc_fld_set_comp_name(fld, EZ, "EZ");
+  mrc_fld_set_comp_name(fld, HX, "HX");
+  mrc_fld_set_comp_name(fld, HY, "HY");
+  mrc_fld_set_comp_name(fld, HZ, "HZ");
 
   int ldims[3];
   mrc_domain_get_param_int3(fld->_domain, "m", ldims);
 
-  mrc_m3_foreach_patch(fld, p) {
-    struct mrc_m3_patch *fldp = mrc_m3_patch_get(fld, p);
+  mrc_fld_foreach_patch(fld, p) {
+    struct mrc_fld_patch *fldp = mrc_fld_patch_get(fld, p);
     mrc_crds_patch_get(crds, p);
 
 #if 1
@@ -438,7 +438,7 @@ main(int argc, char **argv)
 	MRC_M3(fldp, HZ, ix,iy,iz) = func(x_cc, y_cc, HZ);
       }
     } mrc_m3_foreach_end;
-    mrc_m3_patch_put(fld);
+    mrc_fld_patch_put(fld);
     mrc_crds_patch_put(crds);
   }
 
@@ -473,7 +473,7 @@ main(int argc, char **argv)
   mrc_io_setup(io);
 
   mrc_io_open(io, "w", 0, 0);
-  mrc_m3_write(fld, io);
+  mrc_fld_write(fld, io);
   mrc_io_close(io);
 
   mrc_ddc_amr_apply(ddc_E, fld);
@@ -484,12 +484,12 @@ main(int argc, char **argv)
 #endif
 
   mrc_io_open(io, "w", 1, 1);
-  mrc_m3_write(fld, io);
+  mrc_fld_write(fld, io);
   mrc_io_close(io);
 
   for (int n = 0; n <= 100; n++) {
     mrc_io_open(io, "w", n+2, n+2);
-    mrc_m3_write(fld, io);
+    mrc_fld_write(fld, io);
     mrc_io_close(io);
 
     step_fdtd(fld, ddc_E, ddc_H);
@@ -500,7 +500,7 @@ main(int argc, char **argv)
   mrc_ddc_destroy(ddc_E);
   mrc_ddc_destroy(ddc_H);
 
-  mrc_m3_destroy(fld);
+  mrc_fld_destroy(fld);
 
   mrc_domain_destroy(domain);
 

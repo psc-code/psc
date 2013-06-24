@@ -59,7 +59,7 @@ _mrc_fld_setup(struct mrc_fld *fld)
     if (fld->_dims.nr_vals == 5) {
       fld->_patches = calloc(nr_patches, sizeof(*fld->_patches));
       for (int p = 0; p < nr_patches; p++) {
-	struct mrc_m3_patch *m3p = &fld->_patches[p];
+	struct mrc_fld_patch *m3p = &fld->_patches[p];
 	m3p->_m3 = fld;
 	m3p->_p = p;
 	for (int d = 0; d < 3; d++) {
@@ -262,7 +262,7 @@ mrc_fld_set_sw(struct mrc_fld *fld, int sw)
 // mrc_fld_nr_patches
 //
 // returns the number of patches on the this processor that comprise the
-// local domain (only works on former "mrc_m3" for now)
+// local domain (only works on former "mrc_fld" for now)
 
 int
 mrc_fld_nr_patches(struct mrc_fld *fld)
@@ -658,70 +658,3 @@ struct mrc_class_mrc_fld mrc_class_mrc_fld = {
   .read         = _mrc_fld_read,
 };
 
-// ======================================================================
-// mrc_m3
-
-int
-mrc_m3_nr_patches(struct mrc_m3 *m3)
-{
-  return mrc_fld_nr_patches(m3);
-}
-
-bool
-mrc_m3_same_shape(struct mrc_m3 *m3_1, struct mrc_m3 *m3_2)
-{
-  return mrc_fld_same_shape(m3_1, m3_2);
-}
-
-void
-mrc_m3_set_sw(struct mrc_m3 *m3, int sw)
-{
-  mrc_fld_set_sw(m3, sw);
-}
-
-void
-mrc_m3_set_nr_comps(struct mrc_m3 *m3, int nr_comps)
-{
-  mrc_fld_set_nr_comps(m3, nr_comps);
-}
-
-int
-mrc_m3_nr_comps(struct mrc_m3 *m3)
-{
-  return mrc_fld_nr_comps(m3);
-}
-
-void
-mrc_m3_set_comp_name(struct mrc_m3 *m3, int m, const char *name)
-{
-  return mrc_fld_set_comp_name(m3, m, name);
-}
-
-const char *
-mrc_m3_comp_name(struct mrc_m3 *m3, int m)
-{
-  return mrc_fld_comp_name(m3, m);
-}
-
-// ----------------------------------------------------------------------
-// mrc_m3_init
-
-static void
-mrc_m3_init()
-{
-  mrc_class_register_subclass(&mrc_class_mrc_m3, &mrc_fld_float_ops);
-}
-
-// ----------------------------------------------------------------------
-// mrc_class_mrc_m3
-
-struct mrc_class_mrc_m3 mrc_class_mrc_m3 = {
-  .name         = "mrc_m3",
-  .size         = sizeof(struct mrc_m3),
-  .param_descr  = mrc_fld_descr,
-  .init         = mrc_m3_init,
-  .destroy      = _mrc_fld_destroy,
-  .setup        = _mrc_fld_setup,
-  .read         = _mrc_fld_read,
-  .write        = _mrc_fld_write,
-};
