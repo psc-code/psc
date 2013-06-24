@@ -12,31 +12,31 @@
 // ======================================================================
 
 static void
-set_m3(struct mrc_m3 *m3)
+set_m3(struct mrc_fld *m3)
 {
   struct mrc_patch *patches = mrc_domain_get_patches(m3->_domain, NULL);
 
-  mrc_m3_foreach_patch(m3, p) {
-    struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, p);
+  mrc_fld_foreach_patch(m3, p) {
+    struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, p);
     int *off = patches[p].off;
     mrc_m3_foreach(m3p, ix,iy,iz, 0,0) {
       MRC_M3(m3p, 0, ix,iy,iz) =
 	(iz + off[2]) * 10000 + (iy + off[1]) * 100 + (ix + off[0]);
     } mrc_m3_foreach_end;
-    mrc_m3_patch_put(m3);
+    mrc_fld_patch_put(m3);
   }
 }
 
 static void
-check_m3(struct mrc_m3 *m3)
+check_m3(struct mrc_fld *m3)
 {
   int bc[3], gdims[3];
   mrc_domain_get_bc(m3->_domain, bc);
   mrc_domain_get_global_dims(m3->_domain, gdims);
 
   struct mrc_patch *patches = mrc_domain_get_patches(m3->_domain, NULL);
-  mrc_m3_foreach_patch(m3, p) {
-    struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, p);
+  mrc_fld_foreach_patch(m3, p) {
+    struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, p);
     int *off = patches[p].off;
     mrc_m3_foreach_bnd(m3p, ix,iy,iz) {
       int jx = ix + off[0];
@@ -72,7 +72,7 @@ check_m3(struct mrc_m3 *m3)
 #endif
       assert(MRC_M3(m3p, 0, ix,iy,iz) == jz * 10000 + jy * 100 + jx);
     } mrc_m3_foreach_end;
-    mrc_m3_patch_put(m3);
+    mrc_fld_patch_put(m3);
   }
 }
 
@@ -94,15 +94,15 @@ main(int argc, char **argv)
   mrc_domain_view(domain);
   mrc_domain_plot(domain);
 
-  struct mrc_m3 *m3 = mrc_domain_m3_create(domain);
-  mrc_m3_set_name(m3, "test_m3");
-  mrc_m3_set_nr_comps(m3, 2);
-  mrc_m3_set_sw(m3, 1);
-  mrc_m3_set_from_options(m3);
-  mrc_m3_setup(m3);
-  mrc_m3_set_comp_name(m3, 0, "fld0");
-  mrc_m3_set_comp_name(m3, 1, "fld1");
-  mrc_m3_view(m3);
+  struct mrc_fld *m3 = mrc_domain_m3_create(domain);
+  mrc_fld_set_name(m3, "test_m3");
+  mrc_fld_set_nr_comps(m3, 2);
+  mrc_fld_set_sw(m3, 1);
+  mrc_fld_set_from_options(m3);
+  mrc_fld_setup(m3);
+  mrc_fld_set_comp_name(m3, 0, "fld0");
+  mrc_fld_set_comp_name(m3, 1, "fld1");
+  mrc_fld_view(m3);
 
   set_m3(m3);
 
@@ -118,7 +118,7 @@ main(int argc, char **argv)
 
   check_m3(m3);
 
-  mrc_m3_destroy(m3);
+  mrc_fld_destroy(m3);
 
   mrc_domain_destroy(domain);
 
