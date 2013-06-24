@@ -185,8 +185,6 @@ _psc_create(struct psc *psc)
   assert(!ppsc);
   ppsc = psc;
 
-  MPI_Comm comm = psc_comm(psc);
-
   // default: 2 species (e-, i+)
   psc_set_kinds(psc, 2, NULL);
 
