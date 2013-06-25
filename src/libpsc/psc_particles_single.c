@@ -2,6 +2,7 @@
 #include "psc.h"
 #include "psc_particles_single.h"
 #include "psc_particles_c.h"
+#include "psc_particles_double.h"
 
 #include <mrc_io.h>
 #include <stdlib.h>
@@ -234,6 +235,55 @@ psc_particles_single_copy_from_c(struct psc_particles *prts_base,
   }
 }
 
+// ----------------------------------------------------------------------
+// psc_particles_single_copy_to_double
+
+static void
+psc_particles_single_copy_to_double(struct psc_particles *prts_base,
+				    struct psc_particles *prts, unsigned int flags)
+{
+  prts->n_part = prts_base->n_part;
+  assert(prts->n_part <= psc_particles_double(prts)->n_alloced);
+  for (int n = 0; n < prts_base->n_part; n++) {
+    particle_single_t *part_base = particles_single_get_one(prts_base, n);
+    particle_double_t *part = particles_double_get_one(prts, n);
+    
+    part->xi      = part_base->xi;
+    part->yi      = part_base->yi;
+    part->zi      = part_base->zi;
+    part->pxi     = part_base->pxi;
+    part->pyi     = part_base->pyi;
+    part->pzi     = part_base->pzi;
+    part->qni_wni = part_base->qni_wni;
+    part->kind    = part_base->kind;
+  }
+}
+
+// ----------------------------------------------------------------------
+// psc_particles_single_copy_from_double
+
+static void
+psc_particles_single_copy_from_double(struct psc_particles *prts_base,
+				      struct psc_particles *prts, unsigned int flags)
+{
+  struct psc_particles_single *sngl = psc_particles_single(prts_base);
+  prts_base->n_part = prts->n_part;
+  assert(prts_base->n_part <= sngl->n_alloced);
+  for (int n = 0; n < prts_base->n_part; n++) {
+    particle_single_t *part_base = particles_single_get_one(prts_base, n);
+    particle_double_t *part = particles_double_get_one(prts, n);
+
+    part_base->xi      = part->xi;
+    part_base->yi      = part->yi;
+    part_base->zi      = part->zi;
+    part_base->pxi     = part->pxi;
+    part_base->pyi     = part->pyi;
+    part_base->pzi     = part->pzi;
+    part_base->qni_wni = part->qni_wni;
+    part_base->kind    = part->kind;
+  }
+}
+
 // ======================================================================
 // psc_mparticles: subclass "single"
   
@@ -245,8 +295,10 @@ struct psc_mparticles_ops psc_mparticles_single_ops = {
 // psc_particles: subclass "single"
 
 static struct mrc_obj_method psc_particles_single_methods[] = {
-  MRC_OBJ_METHOD("copy_to_c",   psc_particles_single_copy_to_c),
-  MRC_OBJ_METHOD("copy_from_c", psc_particles_single_copy_from_c),
+  MRC_OBJ_METHOD("copy_to_c"       , psc_particles_single_copy_to_c),
+  MRC_OBJ_METHOD("copy_from_c"     , psc_particles_single_copy_from_c),
+  MRC_OBJ_METHOD("copy_to_double"  , psc_particles_single_copy_to_double),
+  MRC_OBJ_METHOD("copy_from_double", psc_particles_single_copy_from_double),
   {}
 };
 

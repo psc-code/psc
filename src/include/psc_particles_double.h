@@ -63,7 +63,7 @@ particle_double_kind(particle_double_t *prt)
 }
 
 static inline void
-__calc_vxi(particle_double_real_t vxi[3], particle_double_t *part)
+particle_double_calc_vxi(particle_double_real_t vxi[3], particle_double_t *part)
 {
   particle_double_real_t root =
     1.f / sqrtf(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
@@ -77,7 +77,7 @@ particle_double_get_relative_pos(particle_double_t *p, double xb[3],
 				 particle_double_real_t xi[3])
 {
   particle_double_real_t vxi[3];
-  __calc_vxi(vxi, p);
+  particle_double_calc_vxi(vxi, p);
   particle_double_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
   // don't shift in invariant directions
   for (int d = 0; d < 3; d++) {
