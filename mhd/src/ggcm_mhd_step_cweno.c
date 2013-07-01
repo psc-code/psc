@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#define DEBUG
+//#define DEBUG
 
 // ----------------------------------------------------------------------
 // ggcm_mhd_get_fields
@@ -22,6 +22,7 @@
 static struct mrc_fld *
 ggcm_mhd_get_fields(struct ggcm_mhd *mhd, const char *name, int nr_comp)
 {   
+  MHERE;
   struct mrc_fld *f3 = mrc_domain_fld_create(mhd->domain, SW_2, NULL);
   mrc_fld_set_name(f3, name);
   mrc_fld_set_nr_comps(f3, nr_comp);
@@ -39,7 +40,7 @@ ggcm_mhd_get_fields(struct ggcm_mhd *mhd, const char *name, int nr_comp)
 #define LMTR 1
 #define sign(x) (( x > 0 ) - ( x < 0 ))
 // KNP[0] or KT[1]? 
-#define KT 0
+#define KT 1
 #define incws 0
 
 enum {
@@ -572,13 +573,15 @@ calc_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
 	      sqr(MRC_F3(u_m[0], _B1Y, ix,iy,iz)) +
 	      sqr(MRC_F3(u_m[0], _B1Z, ix,iy,iz))));
 
-
+#ifdef DEBUG 
     if (ppm < 0) { 
-      ppm = 0; 
+      ppm = 1.01e-13; 
     }
     if (ppp < 0) { 
-      ppp = 0; 
+      ppp = 1.e-13; 
     } 
+#endif
+
     
     float csp = sqrtf((gamma * ppp) / (MRC_F3(u_p[0], _RR1, ix-1,iy,iz)));
     float csm = sqrtf((gamma * ppm) / (MRC_F3(u_m[0], _RR1, ix,iy,iz)));   
@@ -656,12 +659,14 @@ calc_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
 	      sqr(MRC_F3(u_m[1], _B1Z, ix,iy,iz))));
 
 
+#ifdef DEBUG 
     if (ppm < 0) { 
-      ppm = 0; 
+      ppm = 1.01e-13; 
     }
     if (ppp < 0) { 
-      ppp = 0; 
+      ppp = 1e-13; 
     } 
+#endif
 
     
     csp = sqrtf((gamma * ppp) / (MRC_F3(u_p[1], _RR1, ix,iy-1,iz)));
@@ -750,19 +755,21 @@ calc_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
 		  sqr(MRC_F3(u_m[2], _B1Y, ix,iy,iz))+
 		  sqr(MRC_F3(u_m[2], _B1Z, ix,iy,iz))) * rhoim); // MRC_F3(u_m[2], _RR1, ix,iy,iz) );
 
+#ifdef DEBUG 
     if (ppm < 0) { 
-      ppm = 0; 
+      ppm = 1.01e-13; 
     }
     if (ppp < 0) { 
-      ppp = 0; 
+      ppp = 1.e-13; 
     } 
+#endif
 
     tmpp = sqr(csp) + sqr(cAp);
     cfp = sqrtf( 0.5f * (tmpp + sqrtf( sqr( sqr(cAp) + sqr(csp) ) - 
 				       (4. * mpermi * sqr(csp * MRC_F3(u_p[2], _B1Z, ix,iy,iz-1)) *  
 					rhoip )) ));      
     if (!isfinite(cfp)) {
-      mprintf("ix %d %d %d cfp = csp %g cAp %g rr %g ppp %g ppm %g tmpbe %g tmpke %g tmpee %g \n", ix,iy,iz, csp, cAp, MRC_F3(u_p[2], _RR1, ix,iy,iz-1), ppp, ppm, tmpbe, tmpke, tmpee);
+      //mprintf("ix %d %d %d cfp = csp %g cAp %g rr %g ppp %g ppm %g tmpbe %g tmpke %g tmpee %g \n", ix,iy,iz, csp, cAp, MRC_F3(u_p[2], _RR1, ix,iy,iz-1), ppp, ppm, tmpbe, tmpke, tmpee);
     }
 
     tmpm = sqr(csm) + sqr(cAm);
@@ -832,7 +839,7 @@ calc_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
     
     assert(isfinite(cp));
     assert(isfinite(cm));
-    //    cp = 1e-3; cm = -1e-3;
+    cp = 1e-3; cm = -1e-3;
     // flux of _EX,_EY,_EZ through the z faces
     FLUX(flux, 2, _EX, ix,iy,iz) = 
       (1.f/(cp - cm))*( - cp * MRC_F3(E_p[2], 1, ix,iy,iz-1) + cm * MRC_F3(E_m[2], 1, ix,iy,iz) + 
@@ -913,9 +920,9 @@ calc_cweno_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
 
   calc_u_delta(_u_delta, _u);
 
-  /* ggcm_mhd_fill_ghosts(mhd, _u_delta[0], 0, mhd->time); */
-  /* ggcm_mhd_fill_ghosts(mhd, _u_delta[1], 0, mhd->time); */
-  /* ggcm_mhd_fill_ghosts(mhd, _u_delta[2], 0, mhd->time); */
+  ggcm_mhd_fill_ghosts(mhd, _u_delta[0], 0, mhd->time); 
+  ggcm_mhd_fill_ghosts(mhd, _u_delta[1], 0, mhd->time); 
+  ggcm_mhd_fill_ghosts(mhd, _u_delta[2], 0, mhd->time); 
 
   calc_u_pm(mhd, _u_p, _u_m, _E_p, _E_m, _u, _u_delta);
   

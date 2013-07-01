@@ -41,7 +41,8 @@ ggcm_mhd_ic_bw_run(struct ggcm_mhd_ic *ic)
 {
   struct ggcm_mhd_ic_bw *sub = mrc_to_subobj(ic, struct ggcm_mhd_ic_bw);
   struct ggcm_mhd *mhd = ic->mhd;
-  struct mrc_fld *f3 = mrc_fld_get_as(mhd->fld, "float");
+  //struct mrc_fld *f3 = mrc_fld_get_as(mhd->fld, "float");
+  struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, "mhd_pr_float");
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);  
 
   float xl[3], xh[3], L[3], r[3];
@@ -53,12 +54,40 @@ ggcm_mhd_ic_bw_run(struct ggcm_mhd_ic *ic)
   float gamma = mhd->par.gamm;
 
   //ggcm_mhd_bnd_set_type(mhd->bnd, "bw");
-  mrc_fld_foreach(f3, ix, iy, iz, 2, 2) {
+  mrc_fld_foreach(fld, ix, iy, iz, 2, 2) {
     r[0] = MRC_CRD(crds, 0, ix);
     r[1] = MRC_CRD(crds, 1, iy);
     r[2] = MRC_CRD(crds, 2, iz);
     
     if(strcmp(sub->pdim, "x") == 0){
+
+      MHERE;
+      if(fabs(r[0]) < 0.5*L[0]){
+	// Left                         
+	RR1(fld, ix,iy,iz) = 1.0;
+	PP1(fld, ix,iy,iz) = RR1(fld, ix,iy,iz);
+	V1X(fld, ix,iy,iz) = 0.0;
+	V1Y(fld, ix,iy,iz) = 0.0;
+	V1Z(fld, ix,iy,iz) = 0.0;
+	B1X(fld, ix,iy,iz) = 0.75; 
+	B1Y(fld, ix,iy,iz) = 1.0;
+	B1Z(fld, ix,iy,iz) = 0.0;
+      } else {
+	// Right
+	// Left                         
+	RR1(fld, ix,iy,iz) = 0.125;	 
+	PP1(fld, ix,iy,iz) = RR1(fld, ix,iy,iz);
+	V1X(fld, ix,iy,iz) = 0.0;
+	V1Y(fld, ix,iy,iz) = 0.0;
+	V1Z(fld, ix,iy,iz) = 0.0;
+	B1X(fld, ix,iy,iz) = 0.75;
+	B1Y(fld, ix,iy,iz) = -1.0;
+	B1Z(fld, ix,iy,iz) = 0.0;
+
+
+#if 0        
+
+	/*
       if(fabs(r[0]) < 0.5*L[0]){
 	// Left                         
 	MRC_F3(f3, _RR1, ix, iy, iz) = 1.0;
@@ -83,11 +112,6 @@ ggcm_mhd_ic_bw_run(struct ggcm_mhd_ic *ic)
 	MRC_F3(f3, _B1X, ix, iy, iz) = 0.75;
 	MRC_F3(f3, _B1Y, ix, iy, iz) = -1.0;
 	MRC_F3(f3, _B1Z, ix, iy, iz) = 0.0;
-	/*
-	B1X(f3, ix,iy,iz) = 0.75;
-	B1Y(f3, ix,iy,iz) = -1.0;
-	B1Z(f3, ix,iy,iz) = 0.0; 
-	*/
 
 	MRC_F3(f3, _UU1 , ix, iy, iz) = 0.1 / (gamma - 1.f) +
 	  .5f * (sqr(MRC_F3(f3, _RV1X, ix, iy, iz)) +
@@ -96,8 +120,14 @@ ggcm_mhd_ic_bw_run(struct ggcm_mhd_ic *ic)
 	  .5f * (sqr(.5*(B1X(f3, ix,iy,iz) + B1X(f3, ix+1,iy,iz))) +
 		 sqr(.5*(B1Y(f3, ix,iy,iz) + B1Y(f3, ix,iy+1,iz))) +
 		 sqr(.5*(B1Z(f3, ix,iy,iz) + B1Z(f3, ix,iy,iz+1))));
+	*/
+#endif
+
+
       }
   } else if(strcmp(sub->pdim, "y") == 1){
+
+      /*
     if(fabs(r[1]) < 0.5*L[1]){
       // Left 
       MRC_F3(f3, _RR1, ix, iy, iz) = 1.0;
@@ -159,14 +189,20 @@ ggcm_mhd_ic_bw_run(struct ggcm_mhd_ic *ic)
 	       sqr(MRC_F3(f3, _B1Y, ix, iy, iz)) +
 	       sqr(MRC_F3(f3, _B1Z, ix, iy, iz)));      
     }
+      */
+
+      /*
     MRC_F3(f3, _RV1X , ix, iy, iz) = 0.0;
     MRC_F3(f3, _RV1Y , ix, iy, iz) = 0.0;	
     MRC_F3(f3, _RV1Z , ix, iy, iz) = 0.0;       
+      */
+
   } else {           
     assert(0); /* unknown initial condition */
   }
   } mrc_fld_foreach_end;
-
+  
+  mrc_fld_put_as(fld, mhd->fld);
 }
 
 // ----------------------------------------------------------------------
@@ -252,11 +288,11 @@ main(int argc, char **argv)
 
   mrc_class_register_subclass(&mrc_class_ggcm_mhd, &ggcm_mhd_bw_ops);  
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_diag, &ggcm_mhd_diag_c_ops);
-
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_bw_ops);  
  
   struct ggcm_mhd *mhd = ggcm_mhd_create(MPI_COMM_WORLD);
   ggcm_mhd_set_type(mhd, "bw");
+  mrc_fld_set_type(mhd->fld, "mhd_fc_float");
   ggcm_mhd_step_set_type(mhd->step, "cweno");
   ggcm_mhd_set_from_options(mhd);
   ggcm_mhd_setup(mhd);
