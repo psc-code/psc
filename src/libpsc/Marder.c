@@ -183,16 +183,16 @@ do_Marder_correction(struct psc_fields *flds_base, struct psc_particles *prts,
   psc_foreach_3d(ppsc, f->p, ix, iy, iz, 0, 0) {
     // FIXME: F3 correct?
     F3(flds, EX, ix,iy,iz) += 
-      (  F3(f, DIVE_MARDER, ix,iy,iz) - F3(f, DIVE_MARDER, ix-dx,iy,iz)
-       - F3(f, N_MARDER,    ix,iy,iz) + F3(f, N_MARDER,    ix-dx,iy,iz)
+      (  F3(f, DIVE_MARDER, ix+dx,iy,iz) - F3(f, DIVE_MARDER, ix,iy,iz)
+       - F3(f, N_MARDER,    ix+dx,iy,iz) + F3(f, N_MARDER,    ix,iy,iz)
        ) * .5 * ppsc->dt * diffusion / deltax;
     F3(flds, EY, ix,iy,iz) += 
-      (  F3(f, DIVE_MARDER, ix,iy,iz) - F3(f, DIVE_MARDER, ix,iy-dy,iz)
-       - F3(f, N_MARDER,    ix,iy,iz) + F3(f, N_MARDER,    ix,iy-dy,iz)
+      (  F3(f, DIVE_MARDER, ix,iy+dy,iz) - F3(f, DIVE_MARDER, ix,iy,iz)
+       - F3(f, N_MARDER,    ix,iy+dy,iz) + F3(f, N_MARDER,    ix,iy,iz)
        ) * .5 * ppsc->dt * diffusion / deltay;
     F3(flds, EZ, ix,iy,iz) += 
-      (  F3(f, DIVE_MARDER, ix,iy,iz) - F3(f, DIVE_MARDER, ix,iy,iz-dz)
-       - F3(f, N_MARDER,    ix,iy,iz) + F3(f, N_MARDER,    ix,iy,iz-dz)
+      (  F3(f, DIVE_MARDER, ix,iy,iz+dz) - F3(f, DIVE_MARDER, ix,iy,iz)
+       - F3(f, N_MARDER,    ix,iy,iz+dz) + F3(f, N_MARDER,    ix,iy,iz)
        ) * .5 * ppsc->dt * diffusion / deltaz;
   } foreach_3d_end;
   psc_fields_put_as(flds, flds_base, JXI, EX + 3);
