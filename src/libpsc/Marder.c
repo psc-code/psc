@@ -178,7 +178,7 @@ do_Marder_correction(struct psc_fields *flds_base, struct psc_particles *prts,
   double diffusion_max = 1. / 2. / (.5 * ppsc->dt) / inv_sum;
   double diffusion     = diffusion_max * .75;
 
-  struct psc_fields *flds = psc_fields_get_as(flds_base, FIELDS_TYPE, EX, EX + 3);
+  struct psc_fields *flds = psc_fields_get_as(flds_base, FIELDS_TYPE, JXI, EX + 3);
   psc_foreach_3d(ppsc, f->p, ix, iy, iz, 0, 0) {
     // FIXME: F3 correct?
     F3(flds, EX, ix,iy,iz) += 
@@ -194,7 +194,7 @@ do_Marder_correction(struct psc_fields *flds_base, struct psc_particles *prts,
        - F3(f, N_MARDER,    ix,iy,iz) + F3(f, N_MARDER,    ix,iy,iz-dx)
        ) * .5 * ppsc->dt * diffusion / deltaz;
   } foreach_3d_end;
-  psc_fields_put_as(flds, flds_base, EX, EX + 3);
+  psc_fields_put_as(flds, flds_base, JXI, EX + 3);
 }
 
 void
