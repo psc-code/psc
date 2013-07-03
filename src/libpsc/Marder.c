@@ -121,7 +121,8 @@ do_n_run(int p, fields_t *pf, struct psc_particles *prts, int n_comp)
   for (int n = 0; n < prts->n_part; n++) {
     particle_t *part = particles_get_one(prts, n);
     int m = /* particle_kind(part) */ n_comp; // calculate total n only
-    DEPOSIT_TO_GRID_1ST_NC(part, pf, m, 1.f);
+    DEPOSIT_TO_GRID_1ST_NC(part, pf, m,  
+      ppsc->kinds[particle_kind(part)].q);
   }
 }
 
