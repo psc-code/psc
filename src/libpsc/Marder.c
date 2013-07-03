@@ -191,8 +191,8 @@ do_Marder_correction(struct psc_fields *flds_base, struct psc_particles *prts,
        - F3(f, N_MARDER,    ix,iy,iz) + F3(f, N_MARDER,    ix,iy-dy,iz)
        ) * .5 * ppsc->dt * diffusion / deltay;
     F3(flds, EZ, ix,iy,iz) += 
-      (  F3(f, DIVE_MARDER, ix,iy,iz) - F3(f, DIVE_MARDER, ix,iy,iz-dx)
-       - F3(f, N_MARDER,    ix,iy,iz) + F3(f, N_MARDER,    ix,iy,iz-dx)
+      (  F3(f, DIVE_MARDER, ix,iy,iz) - F3(f, DIVE_MARDER, ix,iy,iz-dz)
+       - F3(f, N_MARDER,    ix,iy,iz) + F3(f, N_MARDER,    ix,iy,iz-dz)
        ) * .5 * ppsc->dt * diffusion / deltaz;
   } foreach_3d_end;
   psc_fields_put_as(flds, flds_base, JXI, EX + 3);
