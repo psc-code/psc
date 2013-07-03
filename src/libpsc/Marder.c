@@ -95,16 +95,16 @@ calc_dive_nc(struct psc_fields *flds_base,
 {
   define_dxdydz(dx, dy, dz);
   struct psc_fields *flds = psc_fields_get_as(flds_base, FIELDS_TYPE, JXI, HX + 3);
-  // advance to (n+.5) dt; FIXME: should we do this?
-  psc_push_fields_sub_push_E(NULL, flds, ppsc->dt);
+  // advance to (n+.5) dt, skipped; FIXME: should we do this?
+  // psc_push_fields_sub_push_E(NULL, flds, ppsc->dt);
   psc_foreach_3d(ppsc, f->p, ix, iy, iz, 0, 0) {
     F3(f, dive_comp, ix,iy,iz) = 
       ((F3(flds, EX, ix,iy,iz) - F3(flds, EX, ix-dx,iy,iz)) / ppsc->patch[f->p].dx[0] +
        (F3(flds, EY, ix,iy,iz) - F3(flds, EY, ix,iy-dy,iz)) / ppsc->patch[f->p].dx[1] +
        (F3(flds, EZ, ix,iy,iz) - F3(flds, EZ, ix,iy,iz-dz)) / ppsc->patch[f->p].dx[2]);
   } foreach_3d_end;
-  // back to n dt
-  psc_push_fields_sub_push_E(NULL, flds, -ppsc->dt);
+  // back to n dt, skipped
+  // psc_push_fields_sub_push_E(NULL, flds, -ppsc->dt);
   psc_fields_put_as(flds, flds_base, 0, 0);
 }
 
