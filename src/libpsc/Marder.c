@@ -167,7 +167,16 @@ do_Marder_correction(struct psc_fields *flds_base, struct psc_particles *prts,
   double deltax = ppsc->patch[f->p].dx[0];
   double deltay = ppsc->patch[f->p].dx[1];
   double deltaz = ppsc->patch[f->p].dx[2];
-  double diffusion = 0.75 * 0.5 / (.5 * ppsc->dt) * (deltay*deltay*deltaz*deltaz) / (deltay*deltay + deltaz*deltaz);
+  double inv_sum = 0.;
+  int nr_levels;
+  mrc_domain_get_nr_levels(ppsc->mrc_domain, &nr_levels);
+  for (int d=0;d<3;d++) {
+    if (ppsc->domain.gdims[d] > 1) {
+      inv_sum += 1. / sqr(ppsc->patch[f->p].dx[d] / (1 << (nr_levels - 1)));
+    }
+  }
+  double diffusion_max = 1. / 2. / (.5 * ppsc->dt) / inv_sum;
+  double diffusion     = diffusion_max * .75;
 
   struct psc_fields *flds = psc_fields_get_as(flds_base, FIELDS_TYPE, EX, EX + 3);
   psc_foreach_3d(ppsc, f->p, ix, iy, iz, 0, 0) {
