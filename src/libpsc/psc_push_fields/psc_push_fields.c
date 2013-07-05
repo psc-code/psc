@@ -5,6 +5,7 @@
 #include "psc_bnd_fields.h"
 #include <mrc_profile.h>
 #include <mrc_params.h>
+#include <Marder.h>
 
 struct psc_bnd_fields *
 psc_push_fields_get_bnd_fields(struct psc_push_fields *push)
@@ -73,6 +74,9 @@ psc_push_fields_step_a_default(struct psc_push_fields *push, mfields_base_t *fld
   psc_bnd_fields_fill_ghosts_a_E(push->bnd_fields, flds);
   psc_bnd_fill_ghosts(ppsc->bnd, flds, EX, EX + 3);
   
+  // E at t^n+.5, particles at t^n, but the "double" particles would be at t^n+.5
+  Marder_correction(ppsc->flds, ppsc->particles);
+
   psc_push_fields_push_H(push, flds);
   psc_bnd_fields_fill_ghosts_a_H(push->bnd_fields, flds);
   psc_bnd_fill_ghosts(ppsc->bnd, flds, HX, HX + 3);
