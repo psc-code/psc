@@ -4,7 +4,7 @@
 #include "psc_fields_as_c.h"
 #include "psc_particles_as_double.h"
 #include <math.h>
-#include "psc_output_fields/common_moments.c"
+#include "../psc_output_fields/common_moments.c"
 
 enum {DIVE_MARDER, N_MARDER, NR_MARDER};
 
