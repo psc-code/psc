@@ -153,6 +153,7 @@ Marder_calc_aid_fields(mfields_base_t *flds, mparticles_base_t *particles, mfiel
 	     psc_mfields_get_patch(res, p), N_MARDER);
   }
   psc_bnd_add_ghosts(ppsc->bnd, res, N_MARDER, N_MARDER+1); //+1 or not, check!!!
+  psc_bnd_fill_ghosts(ppsc->bnd, res, DIVE_MARDER, N_MARDER+1);
 }
 
 // ======================================================================
