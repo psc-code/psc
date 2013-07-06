@@ -899,6 +899,7 @@ struct mrc_class_mrc_f1 mrc_class_mrc_f1 = {
   .size         = sizeof(struct mrc_f1),
   .param_descr  = mrc_f1_params_descr,
   .methods      = mrc_f1_methods,
+  .init         = mrc_fld_init,
   .destroy      = _mrc_fld_destroy,
   .setup        = _mrc_f1_setup,
   .read         = _mrc_f1_read,
