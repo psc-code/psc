@@ -224,9 +224,9 @@ mrc_io_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *fld)
   if (ops->write_f1) {
     ops->write_f1(io, path, fld);
   } else if (fld->domain) {
-    int dim, nr_comps;
-    mrc_f1_get_param_int(fld, "nr_comps", &nr_comps);
+    int nr_comps = mrc_f1_nr_comps(fld);
     int sw = fld->_sw.vals[0];
+    int dim;
     mrc_f1_get_param_int(fld, "dim", &dim);
     struct mrc_m1 *m1 = mrc_domain_m1_create(fld->domain);
     mrc_m1_set_param_int(m1, "nr_comps", nr_comps); 

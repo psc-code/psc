@@ -33,6 +33,9 @@ _mrc_f1_setup(struct mrc_f1 *f1)
 {
   free(f1->_comp_name);
 
+  if (f1->nr_comp == 0) {
+    f1->nr_comp = 1;
+  }
   f1->_comp_name = calloc(f1->nr_comp, sizeof(*f1->_comp_name));
   if (f1->domain) {
     int nr_patches;
@@ -86,7 +89,7 @@ mrc_f1_duplicate(struct mrc_f1 *f1_in)
   mrc_f1_set_param_int_array(f1, "offs", f1_in->_offs.nr_vals, f1_in->_offs.vals);
   mrc_f1_set_param_int_array(f1, "dims", f1_in->_dims.nr_vals, f1_in->_dims.vals);
   mrc_f1_set_param_int_array(f1, "sw"  , f1_in->_sw.nr_vals  , f1_in->_sw.vals);
-  mrc_f1_set_param_int(f1, "nr_comps", f1_in->nr_comp);
+  f1->nr_comp = f1_in->nr_comp;
   f1->domain = f1_in->domain;
   mrc_f1_setup(f1);
 
@@ -98,6 +101,18 @@ mrc_f1_set_sw(struct mrc_f1 *f1, int sw)
 {
   assert(f1->_sw.nr_vals == 2);
   f1->_sw.vals[0] = sw;
+}
+
+void
+mrc_f1_set_nr_comps(struct mrc_f1 *f1, int nr_comps)
+{
+  f1->nr_comp = nr_comps;
+}
+
+int
+mrc_f1_nr_comps(struct mrc_f1 *f1)
+{
+  return f1->nr_comp;
 }
 
 void
@@ -233,7 +248,6 @@ static struct param mrc_f1_params_descr[] = {
   { "offs"            , VAR(_offs)        , PARAM_INT_ARRAY(2, 0)    },
   { "dims"            , VAR(_dims)        , PARAM_INT_ARRAY(2, 0)    },
   { "sw"              , VAR(_sw)          , PARAM_INT_ARRAY(2, 0)    },
-  { "nr_comps"        , VAR(nr_comp)      , PARAM_INT(1)             },
   { "dim"             , VAR(dim)          , PARAM_INT(0)             },
   {},
 };

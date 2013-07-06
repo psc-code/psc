@@ -79,7 +79,7 @@ main(int argc, char **argv)
   struct mrc_f1 *x = mrc_domain_f1_create(domain);
   mrc_f1_set_name(x, "x");
   mrc_f1_set_sw(x, BND);
-  mrc_f1_set_param_int(x, "nr_comps", NR_FLDS);
+  mrc_f1_set_nr_comps(x, NR_FLDS);
   mrc_f1_setup(x);
   mrc_f1_set_comp_name(x, U, "u");
 

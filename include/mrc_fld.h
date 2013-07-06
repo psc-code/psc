@@ -246,6 +246,8 @@ struct mrc_f1 {
 MRC_CLASS_DECLARE(mrc_f1, struct mrc_f1);
 struct mrc_f1 *mrc_f1_duplicate(struct mrc_f1 *x);
 void mrc_f1_set_sw(struct mrc_f1 *f1, int sw);
+void mrc_f1_set_nr_comps(struct mrc_f1 *f1, int nr_comps);
+int mrc_f1_nr_comps(struct mrc_f1 *f1);
 void mrc_f1_set_comp_name(struct mrc_f1 *x, int m, const char *name);
 const char *mrc_f1_comp_name(struct mrc_f1 *x, int m);
 const int *mrc_f1_off(struct mrc_f1 *x);

@@ -663,7 +663,7 @@ xdmf_collective_read_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
 
   if (xdmf->is_writer) {
     struct mrc_f1 *f1 = mrc_f1_create(MPI_COMM_SELF);
-    mrc_f1_set_param_int(f1, "nr_comps", nr_comps);
+    nr_comps = mrc_f1_nr_comps(f1);
     mrc_f1_set_param_int_array(f1, "dims", 2, (int [2]) { gdims[ctx.dim], 1});
     mrc_f1_set_sw(f1, ctx.sw);
     mrc_f1_setup(f1);
