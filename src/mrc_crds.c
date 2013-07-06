@@ -290,7 +290,7 @@ mrc_crds_rectilinear_set_values(struct mrc_crds *crds, float *crdx, int mx,
   int m[3] = { mx, my, mz };
   for (int d = 0; d < 3; d++) {
     mrc_crds_alloc(crds, d, m[d], crds->par.sw);
-    memcpy(crds->crd[d]->arr, crd[d] - crds->par.sw, crds->crd[d]->len * sizeof(*crd[d]));
+    memcpy(crds->crd[d]->_arr, crd[d] - crds->par.sw, crds->crd[d]->len * sizeof(*crd[d]));
   }
 }
 

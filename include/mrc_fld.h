@@ -13,25 +13,9 @@
 
 //#define BOUNDS_CHECK
 
-#ifdef BOUNDS_CHECK
-
-#include <assert.h>
-
-#define MRC_F1(f1,m, ix)						\
-  (*({ float *p = &(f1)->arr[(m) * (f1)->_ghost_dims[0] + (ix) - (f1)->_ghost_offs[0]];	\
-      assert((ix) >= (f1)->_ghost_offs[0] && (ix) < (f1)->_ghost_offs[0] + (f1)->_ghost_dims[0]);	\
-      p;}))
-
-#else
-
-#define MRC_F1(f1,m, ix)					\
-  ((f1)->arr[(m) * (f1)->_ghost_dims[0] + (ix) - (f1)->_ghost_offs[0]])
-
-#endif
-
 #define MRC_F3(f3,m, ix,iy,iz) MRC_S4(f3, ix,iy,iz,m)
-
 #define MRC_F2(f3,m, ix,iy) MRC_S3(f3, ix,iy,m)
+#define MRC_F1(f1,m, ix) MRC_S2(f1, ix,m)
 
 struct mrc_io;
 
@@ -150,6 +134,9 @@ mrc_fld_same_shape(struct mrc_fld *fld_1, struct mrc_fld *fld_2)
 
 #endif
 
+#define MRC_S2(fld, i0,i1) MRC_FLD(fld, float, i0,i1,0,0,0)
+#define MRC_D2(fld, i0,i1) MRC_FLD(fld, double, i0,i1,0,0,0)
+
 #define MRC_S3(fld, i0,i1,i2) MRC_FLD(fld, float, i0,i1,i2,0,0)
 #define MRC_D3(fld, i0,i1,i2) MRC_FLD(fld, double, i0,i1,i2,0,0)
 
@@ -234,7 +221,7 @@ struct mrc_f1 {
   int _ghost_offs[MRC_FLD_MAXDIMS];
   int _ghost_dims[MRC_FLD_MAXDIMS];
 
-  float *arr;
+  float *_arr;
   int len;
   bool with_array;
   struct mrc_domain *_domain; //< optional, if allocated through mrc_domain

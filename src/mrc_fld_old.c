@@ -16,9 +16,9 @@ static void
 _mrc_f1_destroy(struct mrc_f1 *f1)
 {
   if (!f1->with_array) {
-    free(f1->arr);
+    free(f1->_arr);
   }
-  f1->arr = NULL;
+  f1->_arr = NULL;
 
   if (f1->_comp_name) {
     for (int m = 0; m < f1->_dims.vals[1]; m++) {
@@ -48,8 +48,8 @@ _mrc_f1_setup(struct mrc_f1 *f1)
   f1->_ghost_dims[0] = f1->_dims.vals[0] + 2 * f1->_sw.vals[0];
   f1->len = f1->_ghost_dims[0] * mrc_f1_nr_comps(f1);
 
-  if (!f1->arr) {
-    f1->arr = calloc(f1->len, sizeof(*f1->arr));
+  if (!f1->_arr) {
+    f1->_arr = calloc(f1->len, sizeof(float));
     f1->with_array = false;
   } else {
     f1->with_array = true;
@@ -59,8 +59,8 @@ _mrc_f1_setup(struct mrc_f1 *f1)
 void
 mrc_f1_set_array(struct mrc_f1 *f1, float *arr)
 {
-  assert(!f1->arr);
-  f1->arr = arr;
+  assert(!f1->_arr);
+  f1->_arr = arr;
 }
 
 static void
