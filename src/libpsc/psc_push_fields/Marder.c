@@ -156,6 +156,19 @@ Marder_calc_aid_fields(mfields_base_t *flds, mparticles_base_t *particles, mfiel
   psc_bnd_fill_ghosts(ppsc->bnd, res, DIVE_MARDER, N_MARDER+1);
 }
 
+
+#define psc_foreach_3d_more(psc, p, ix, iy, iz, l, r) {			\
+  int __ilo[3] = { -l[0], -l[1], -l[2] };					\
+  int __ihi[3] = { psc->patch[p].ldims[0] + r[0],				\
+		   psc->patch[p].ldims[1] + r[1],				\
+		   psc->patch[p].ldims[2] + r[2] };				\
+  for (int iz = __ilo[2]; iz < __ihi[2]; iz++) {			\
+    for (int iy = __ilo[1]; iy < __ihi[1]; iy++) {			\
+      for (int ix = __ilo[0]; ix < __ihi[0]; ix++)
+
+#define psc_foreach_3d_more_end				\
+  } } }
+
 // ======================================================================
 // Do the modified Marder correction (See eq.(5, 7, 9, 10) in Mardahl and Verboncoeur, CPC, 1997)
 
@@ -178,10 +191,21 @@ do_Marder_correction(struct psc_fields *flds_base, struct psc_particles *prts,
     }
   }
   double diffusion_max = 1. / 2. / (.5 * ppsc->dt) / inv_sum;
-  double diffusion     = diffusion_max * .75;
+  double diffusion     = diffusion_max * .95;
 
   struct psc_fields *flds = psc_fields_get_as(flds_base, FIELDS_TYPE, JXI, EX + 3);
-  psc_foreach_3d(ppsc, f->p, ix, iy, iz, 0, 0) {
+
+  int l[3] = {0, 0, 0}, r[3] = {0, 0, 0};
+  for (int d = 0; d < 3; d++) {
+   if (ppsc->domain.bnd_fld_lo[d] == BND_FLD_CONDUCTING_WALL && ppsc->patch[flds->p].off[d] == 0) {
+    l[d] = -2;
+   }
+   if (ppsc->domain.bnd_fld_hi[d] == BND_FLD_CONDUCTING_WALL && ppsc->patch[flds->p].off[d] + ppsc->patch[flds->p].ldims[d] == ppsc->domain.gdims[d]) {
+    r[d] = -2;
+   }
+  }
+
+  psc_foreach_3d_more(ppsc, f->p, ix, iy, iz, l, r) {
     // FIXME: F3 correct?
     F3(flds, EX, ix,iy,iz) += 
       (  F3(f, DIVE_MARDER, ix+dx,iy,iz) - F3(f, DIVE_MARDER, ix,iy,iz)
@@ -195,7 +219,7 @@ do_Marder_correction(struct psc_fields *flds_base, struct psc_particles *prts,
       (  F3(f, DIVE_MARDER, ix,iy,iz+dz) - F3(f, DIVE_MARDER, ix,iy,iz)
        - F3(f, N_MARDER,    ix,iy,iz+dz) + F3(f, N_MARDER,    ix,iy,iz)
        ) * .5 * ppsc->dt * diffusion / deltaz;
-  } foreach_3d_end;
+  } psc_foreach_3d_more_end;
   psc_fields_put_as(flds, flds_base, JXI, EX + 3);
 }
 
@@ -218,3 +242,5 @@ Marder_correction(mfields_base_t *flds, mparticles_base_t *particles)
   Marder_destroy_aid_fields(res);
 }
 
+#undef psc_foreach_3d_more
+#undef psc_foreach_3d_more_end
