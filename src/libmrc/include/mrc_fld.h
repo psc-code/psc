@@ -9,6 +9,7 @@
 
 #include <stdbool.h>
 #include <assert.h>
+#include <stdio.h>
 
 //#define BOUNDS_CHECK
 
@@ -130,18 +131,18 @@ mrc_fld_same_shape(struct mrc_fld *fld_1, struct mrc_fld *fld_2)
       assert(i3 >= (fld)->_ghost_offs[3] && i3 < (fld)->_ghost_offs[3] + (fld)->_ghost_dims[3]); \
       assert(i4 >= (fld)->_ghost_offs[4] && i4 < (fld)->_ghost_offs[4] + (fld)->_ghost_dims[4]); \
       assert((fld)->_arr);						\
-      type *p  =							\
-	&(((type *) (fld)->_arr)[((((i4) *				\
+      type *_p  =							\
+	&(((type *) (fld)->_arr)[(((((i4) - (fld)->_ghost_offs[4]) *	\
 				    (fld)->_ghost_dims[3] + (i3) - (fld)->_ghost_offs[3]) * \
 				   (fld)->_ghost_dims[2] + (i2) - (fld)->_ghost_offs[2]) * \
 				  (fld)->_ghost_dims[1] + (i1) - (fld)->_ghost_offs[1]) * \
 				 (fld)->_ghost_dims[0] + (i0) - (fld)->_ghost_offs[0]]); \
-      p; }))
+      _p; }))
 
 #else
 
 #define MRC_FLD(fld, type, i0,i1,i2,i3,i4)				\
-  (((type *) (fld)->_arr)[((((i4) *					\
+  (((type *) (fld)->_arr)[(((((i4) - (fld)->_ghost_offs[4]) *		\
 			     (fld)->_ghost_dims[3] + (i3) - (fld)->_ghost_offs[3]) * \
 			    (fld)->_ghost_dims[2] + (i2) - (fld)->_ghost_offs[2]) * \
 			   (fld)->_ghost_dims[1] + (i1) - (fld)->_ghost_offs[1]) * \
