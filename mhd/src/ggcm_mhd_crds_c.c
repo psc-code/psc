@@ -21,7 +21,7 @@ ggcm_mhd_crds_c_setup(struct ggcm_mhd_crds *crds)
 
   for (int d = 0; d < 3; d++) {
     mrc_f1_set_param_int(crds->f1[d], "offx", -BND);
-    mrc_f1_set_param_int(crds->f1[d], "dimsx", info.ldims[d] + 2*BND);
+    mrc_f1_set_param_int_array(crds->f1[d], "dims", 2, (int [2]) { info.ldims[d] + 2*BND, 1 });
   }
 
   ggcm_mhd_crds_setup_super(crds);

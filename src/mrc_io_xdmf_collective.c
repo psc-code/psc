@@ -505,7 +505,7 @@ xdmf_collective_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
     // we're creating the f1 on all writers, but only fill and actually write
     // it on writers[0]
     struct mrc_f1 *f1 = mrc_f1_create(MPI_COMM_SELF);
-    mrc_f1_set_param_int(f1, "dimsx", xdmf->slab_dims[0]);
+    mrc_f1_set_param_int_array(f1, "dims", 2, (int [2]) { xdmf->slab_dims[0], 1});
     mrc_f1_set_param_int(f1, "offx", xdmf->slab_off[0]);
     mrc_f1_setup(f1);
 
@@ -664,7 +664,7 @@ xdmf_collective_read_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
   if (xdmf->is_writer) {
     struct mrc_f1 *f1 = mrc_f1_create(MPI_COMM_SELF);
     mrc_f1_set_param_int(f1, "nr_comps", nr_comps);
-    mrc_f1_set_param_int(f1, "dimsx", gdims[ctx.dim]);
+    mrc_f1_set_param_int_array(f1, "dims", 2, (int [2]) { gdims[ctx.dim], 1});
     mrc_f1_set_param_int(f1, "sw", ctx.sw);
     mrc_f1_setup(f1);
 
