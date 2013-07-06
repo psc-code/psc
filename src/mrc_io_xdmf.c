@@ -1044,7 +1044,7 @@ ds_xdmf_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
   hid_t group = H5Gopen(hdf5->file, path, H5P_DEFAULT); H5_CHK(group);
   
   hsize_t hdims[1] = { f1->_ghost_dims[0] };
-  for (int m = 0; m < f1->nr_comp; m++) {
+  for (int m = 0; m < mrc_f1_nr_comps(f1); m++) {
     assert(mrc_f1_comp_name(f1, m));
     hid_t groupc = H5Gcreate(group, mrc_f1_comp_name(f1, m), H5P_DEFAULT, H5P_DEFAULT,
 			     H5P_DEFAULT); H5_CHK(groupc);
@@ -2011,7 +2011,7 @@ ds_xdmf_parallel_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1
   hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT);
   const int *ghost_dims = mrc_f1_ghost_dims(f1);
   hsize_t hdims[1] = { ghost_dims[0] };
-  for (int m = 0; m < f1->nr_comp; m++) {
+  for (int m = 0; m < mrc_f1_nr_comps(f1); m++) {
     hid_t group = H5Gcreate(group0, mrc_f1_comp_name(f1, m), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     H5LTset_attribute_int(group, ".", "m", &m, 1);
     

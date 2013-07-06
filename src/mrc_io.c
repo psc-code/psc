@@ -134,7 +134,7 @@ mrc_io_read_f1(struct mrc_io *io, const char *path, struct mrc_f1 *fld)
     struct mrc_m1 *m1 = mrc_domain_m1_create(fld->domain);
     mrc_m1_set_param_int(m1, "sw", fld->_sw.vals[0]);
     mrc_m1_set_param_int(m1, "dim", fld->dim);
-    mrc_m1_set_param_int(m1, "nr_comps", fld->nr_comp);
+    mrc_m1_set_param_int(m1, "nr_comps", mrc_f1_nr_comps(fld));
     mrc_m1_setup(m1);
     mrc_io_read_m1(io, path, m1);
 
@@ -233,7 +233,7 @@ mrc_io_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *fld)
     mrc_m1_set_param_int(m1, "sw", sw);
     mrc_m1_set_param_int(m1, "dim", dim); 
     mrc_m1_setup(m1);
-    for (int m = 0; m < fld->nr_comp; m++) {
+    for (int m = 0; m < nr_comps; m++) {
       mrc_m1_set_comp_name(m1, m, mrc_f1_comp_name(fld, m));
       mrc_m1_foreach_patch(m1, p) {
 	struct mrc_m1_patch *m1p = mrc_m1_patch_get(m1, p);

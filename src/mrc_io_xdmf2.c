@@ -323,7 +323,7 @@ xdmf_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
     xdmf_spatial_write_crds(xs, file, f1->domain);
   }
 
-  for (int m = 0; m < f1->nr_comp; m++) {
+  for (int m = 0; m < mrc_f1_nr_comps(f1); m++) {
     const char *fld_name = mrc_f1_comp_name(f1, m);
     if (!fld_name) {
       char tmp_fld_name[10];

@@ -219,6 +219,7 @@ mrc_domain_f1_create(struct mrc_domain *domain)
   assert(nr_patches == 1);
   struct mrc_f1 *f1 = mrc_f1_create(mrc_domain_comm(domain));
   f1->domain = domain;
+  mrc_f1_set_nr_comps(f1, 1);
   return f1;
 }
 

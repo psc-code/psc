@@ -21,7 +21,7 @@ _mrc_f1_destroy(struct mrc_f1 *f1)
   f1->arr = NULL;
 
   if (f1->_comp_name) {
-    for (int m = 0; m < f1->nr_comp; m++) {
+    for (int m = 0; m < f1->_dims.vals[1]; m++) {
       free(f1->_comp_name[m]);
     }
     free(f1->_comp_name);
@@ -33,10 +33,8 @@ _mrc_f1_setup(struct mrc_f1 *f1)
 {
   free(f1->_comp_name);
 
-  if (f1->nr_comp == 0) {
-    f1->nr_comp = 1;
-  }
-  f1->_comp_name = calloc(f1->nr_comp, sizeof(*f1->_comp_name));
+  assert(mrc_f1_nr_comps(f1) > 0);
+  f1->_comp_name = calloc(mrc_f1_nr_comps(f1), sizeof(*f1->_comp_name));
   if (f1->domain) {
     int nr_patches;
     struct mrc_patch *patches = mrc_domain_get_patches(f1->domain, &nr_patches);
@@ -48,7 +46,7 @@ _mrc_f1_setup(struct mrc_f1 *f1)
   }
   f1->_ghost_offs[0] = f1->_offs.vals[0] - f1->_sw.vals[0];
   f1->_ghost_dims[0] = f1->_dims.vals[0] + 2 * f1->_sw.vals[0];
-  f1->len = f1->_ghost_dims[0] * f1->nr_comp;
+  f1->len = f1->_ghost_dims[0] * mrc_f1_nr_comps(f1);
 
   if (!f1->arr) {
     f1->arr = calloc(f1->len, sizeof(*f1->arr));
@@ -89,7 +87,6 @@ mrc_f1_duplicate(struct mrc_f1 *f1_in)
   mrc_f1_set_param_int_array(f1, "offs", f1_in->_offs.nr_vals, f1_in->_offs.vals);
   mrc_f1_set_param_int_array(f1, "dims", f1_in->_dims.nr_vals, f1_in->_dims.vals);
   mrc_f1_set_param_int_array(f1, "sw"  , f1_in->_sw.nr_vals  , f1_in->_sw.vals);
-  f1->nr_comp = f1_in->nr_comp;
   f1->domain = f1_in->domain;
   mrc_f1_setup(f1);
 
@@ -106,19 +103,21 @@ mrc_f1_set_sw(struct mrc_f1 *f1, int sw)
 void
 mrc_f1_set_nr_comps(struct mrc_f1 *f1, int nr_comps)
 {
-  f1->nr_comp = nr_comps;
+  assert(f1->_dims.nr_vals == 2);
+  f1->_dims.vals[1] = nr_comps;
 }
 
 int
 mrc_f1_nr_comps(struct mrc_f1 *f1)
 {
-  return f1->nr_comp;
+  assert(f1->_dims.nr_vals == 2);
+  return f1->_dims.vals[1];
 }
 
 void
 mrc_f1_set_comp_name(struct mrc_f1 *f1, int m, const char *name)
 {
-  assert(m < f1->nr_comp);
+  assert(m < mrc_f1_nr_comps(f1));
   assert(f1->_comp_name);
   free(f1->_comp_name[m]);
   f1->_comp_name[m] = name ? strdup(name) : NULL;
@@ -127,7 +126,7 @@ mrc_f1_set_comp_name(struct mrc_f1 *f1, int m, const char *name)
 const char *
 mrc_f1_comp_name(struct mrc_f1 *f1, int m)
 {
-  assert(m < f1->nr_comp);
+  assert(m < mrc_f1_nr_comps(f1));
   return f1->_comp_name[m];
 }
 
@@ -167,7 +166,7 @@ void
 mrc_f1_zero(struct mrc_f1 *x)
 {
   mrc_f1_foreach(x, ix, 0, 0) {
-    for (int m = 0; m < x->nr_comp; m++) {
+    for (int m = 0; m < mrc_f1_nr_comps(x); m++) {
       MRC_F1(x,m, ix) = 0.;
     }
   } mrc_f1_foreach_end;
@@ -176,11 +175,11 @@ mrc_f1_zero(struct mrc_f1 *x)
 void
 mrc_f1_copy(struct mrc_f1 *x, struct mrc_f1 *y)
 {
-  assert(x->nr_comp == y->nr_comp);
+  assert(mrc_f1_nr_comps(x) == mrc_f1_nr_comps(y));
   assert(x->_ghost_dims[0] == y->_ghost_dims[0]);
 
   mrc_f1_foreach(x, ix, 0, 0) {
-    for (int m = 0; m < y->nr_comp; m++) {
+    for (int m = 0; m < mrc_f1_nr_comps(y); m++) {
       MRC_F1(x,m, ix) = MRC_F1(y,m, ix);
     }
   } mrc_f1_foreach_end;
@@ -189,13 +188,13 @@ mrc_f1_copy(struct mrc_f1 *x, struct mrc_f1 *y)
 void
 mrc_f1_waxpy(struct mrc_f1 *w, float alpha, struct mrc_f1 *x, struct mrc_f1 *y)
 {
-  assert(w->nr_comp == x->nr_comp);
-  assert(w->nr_comp == y->nr_comp);
+  assert(mrc_f1_nr_comps(w) == mrc_f1_nr_comps(x));
+  assert(mrc_f1_nr_comps(w) == mrc_f1_nr_comps(y));
   assert(w->_ghost_dims[0] == x->_ghost_dims[0]);
   assert(w->_ghost_dims[0] == y->_ghost_dims[0]);
 
   mrc_f1_foreach(w, ix, 0, 0) {
-    for (int m = 0; m < w->nr_comp; m++) {
+    for (int m = 0; m < mrc_f1_nr_comps(w); m++) {
       MRC_F1(w,m, ix) = alpha * MRC_F1(x,m, ix) + MRC_F1(y,m, ix);
     }
   } mrc_f1_foreach_end;
@@ -204,11 +203,11 @@ mrc_f1_waxpy(struct mrc_f1 *w, float alpha, struct mrc_f1 *x, struct mrc_f1 *y)
 void
 mrc_f1_axpy(struct mrc_f1 *y, float alpha, struct mrc_f1 *x)
 {
-  assert(x->nr_comp == y->nr_comp);
+  assert(mrc_f1_nr_comps(x) == mrc_f1_nr_comps(y));
   assert(x->_ghost_dims[0] == y->_ghost_dims[0]);
 
   mrc_f1_foreach(x, ix, 0, 0) {
-    for (int m = 0; m < y->nr_comp; m++) {
+    for (int m = 0; m < mrc_f1_nr_comps(y); m++) {
       MRC_F1(y,m, ix) += alpha * MRC_F1(x,m, ix);
     }
   } mrc_f1_foreach_end;
@@ -219,7 +218,7 @@ mrc_f1_norm(struct mrc_f1 *x)
 {
   float res = 0.;
   mrc_f1_foreach(x, ix, 0, 0) {
-    for (int m = 0; m < x->nr_comp; m++) {
+    for (int m = 0; m < mrc_f1_nr_comps(x); m++) {
       res = fmaxf(res, fabsf(MRC_F1(x,m, ix)));
     }
   } mrc_f1_foreach_end;
