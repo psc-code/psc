@@ -225,12 +225,6 @@ const int *mrc_f1_dims(struct mrc_f1 *x);
 const int *mrc_f1_ghost_dims(struct mrc_f1 *x);
 void mrc_f1_set_array(struct mrc_f1 *x, float *arr);
 void mrc_f1_dump(struct mrc_f1 *x, const char *basename, int n);
-void mrc_f1_zero(struct mrc_f1 *x);
-void mrc_f1_copy(struct mrc_f1 *x, struct mrc_f1 *y);
-void mrc_f1_axpy(struct mrc_f1 *y, float alpha, struct mrc_f1 *x);
-void mrc_f1_waxpy(struct mrc_f1 *w, float alpha, struct mrc_f1 *x,
-		  struct mrc_f1 *y);
-float mrc_f1_norm(struct mrc_f1 *x);
 float mrc_f1_norm_comp(struct mrc_f1 *x, int m);
 
 #define mrc_f1_foreach(f1, ix, l,r)					\

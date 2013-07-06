@@ -396,13 +396,23 @@ float
 mrc_fld_norm(struct mrc_fld *x)
 {
   assert(x->_data_type == MRC_NT_FLOAT);
-  assert(x->_dims.nr_vals == 4);
-  int nr_comps = mrc_fld_nr_comps(x);
   float res = 0.;
-  for (int m = 0; m < nr_comps; m++) {
-    mrc_fld_foreach(x, ix, iy, iz, 0, 0) {
-      res = fmaxf(res, fabsf(MRC_F3(x,m, ix,iy,iz)));
-    } mrc_fld_foreach_end;
+  int nr_comps = mrc_fld_nr_comps(x);
+  
+  if (x->_dims.nr_vals == 4) {
+    for (int m = 0; m < nr_comps; m++) {
+      mrc_fld_foreach(x, ix, iy, iz, 0, 0) {
+	res = fmaxf(res, fabsf(MRC_F3(x,m, ix,iy,iz)));
+      } mrc_fld_foreach_end;
+    }
+  } else if (x->_dims.nr_vals == 2) {
+    for (int m = 0; m < nr_comps; m++) {
+      mrc_f1_foreach(x, ix, 0, 0) {
+	res = fmaxf(res, fabsf(MRC_F1(x,m, ix)));
+      } mrc_f1_foreach_end;
+    }
+  } else {
+    assert(0);
   }
 
   MPI_Allreduce(MPI_IN_PLACE, &res, 1, MPI_FLOAT, MPI_MAX, mrc_fld_comm(x));
@@ -723,12 +733,6 @@ _mrc_f1_write(struct mrc_f1 *f1, struct mrc_io *io)
   mrc_io_write_f1(io, mrc_io_obj_path(io, f1), f1);
 }
 
-struct mrc_f1 *
-mrc_f1_duplicate(struct mrc_f1 *f1_in)
-{
-  return mrc_fld_duplicate(f1_in);
-}
-
 void
 mrc_f1_set_sw(struct mrc_f1 *f1, int sw)
 {
@@ -762,19 +766,19 @@ mrc_f1_comp_name(struct mrc_f1 *f1, int m)
 const int *
 mrc_f1_dims(struct mrc_f1 *f1)
 {
-  return f1->_dims.vals;
+  return mrc_fld_dims(f1);
 }
 
 const int *
 mrc_f1_off(struct mrc_f1 *f1)
 {
-  return f1->_offs.vals;
+  return mrc_fld_offs(f1);
 }
 
 const int *
 mrc_f1_ghost_dims(struct mrc_f1 *f1)
 {
-  return f1->_ghost_dims;
+  return mrc_fld_ghost_dims(f1);
 }
 
 void
@@ -789,71 +793,6 @@ mrc_f1_dump(struct mrc_f1 *x, const char *basename, int n)
   mrc_f1_write(x, io);
   mrc_io_close(io);
   mrc_io_destroy(io);
-}
-
-void
-mrc_f1_zero(struct mrc_f1 *x)
-{
-  mrc_f1_foreach(x, ix, 0, 0) {
-    for (int m = 0; m < mrc_f1_nr_comps(x); m++) {
-      MRC_F1(x,m, ix) = 0.;
-    }
-  } mrc_f1_foreach_end;
-}
-
-void
-mrc_f1_copy(struct mrc_f1 *x, struct mrc_f1 *y)
-{
-  assert(mrc_f1_nr_comps(x) == mrc_f1_nr_comps(y));
-  assert(x->_ghost_dims[0] == y->_ghost_dims[0]);
-
-  mrc_f1_foreach(x, ix, 0, 0) {
-    for (int m = 0; m < mrc_f1_nr_comps(y); m++) {
-      MRC_F1(x,m, ix) = MRC_F1(y,m, ix);
-    }
-  } mrc_f1_foreach_end;
-}
-
-void
-mrc_f1_waxpy(struct mrc_f1 *w, float alpha, struct mrc_f1 *x, struct mrc_f1 *y)
-{
-  assert(mrc_f1_nr_comps(w) == mrc_f1_nr_comps(x));
-  assert(mrc_f1_nr_comps(w) == mrc_f1_nr_comps(y));
-  assert(w->_ghost_dims[0] == x->_ghost_dims[0]);
-  assert(w->_ghost_dims[0] == y->_ghost_dims[0]);
-
-  mrc_f1_foreach(w, ix, 0, 0) {
-    for (int m = 0; m < mrc_f1_nr_comps(w); m++) {
-      MRC_F1(w,m, ix) = alpha * MRC_F1(x,m, ix) + MRC_F1(y,m, ix);
-    }
-  } mrc_f1_foreach_end;
-}
-
-void
-mrc_f1_axpy(struct mrc_f1 *y, float alpha, struct mrc_f1 *x)
-{
-  assert(mrc_f1_nr_comps(x) == mrc_f1_nr_comps(y));
-  assert(x->_ghost_dims[0] == y->_ghost_dims[0]);
-
-  mrc_f1_foreach(x, ix, 0, 0) {
-    for (int m = 0; m < mrc_f1_nr_comps(y); m++) {
-      MRC_F1(y,m, ix) += alpha * MRC_F1(x,m, ix);
-    }
-  } mrc_f1_foreach_end;
-}
-
-float
-mrc_f1_norm(struct mrc_f1 *x)
-{
-  float res = 0.;
-  mrc_f1_foreach(x, ix, 0, 0) {
-    for (int m = 0; m < mrc_f1_nr_comps(x); m++) {
-      res = fmaxf(res, fabsf(MRC_F1(x,m, ix)));
-    }
-  } mrc_f1_foreach_end;
-
-  MPI_Allreduce(MPI_IN_PLACE, &res, 1, MPI_FLOAT, MPI_MAX, mrc_f1_comm(x));
-  return res;
 }
 
 float
@@ -885,20 +824,11 @@ static struct param mrc_f1_params_descr[] = {
 };
 #undef VAR
 
-static struct mrc_obj_method mrc_f1_methods[] = {
-  MRC_OBJ_METHOD("duplicate", mrc_f1_duplicate),
-  MRC_OBJ_METHOD("copy"     , mrc_f1_copy),
-  MRC_OBJ_METHOD("axpy"     , mrc_f1_axpy),
-  MRC_OBJ_METHOD("waxpy"    , mrc_f1_waxpy),
-  MRC_OBJ_METHOD("norm"     , mrc_f1_norm),
-  {}
-};
-
 struct mrc_class_mrc_f1 mrc_class_mrc_f1 = {
   .name         = "mrc_f1",
   .size         = sizeof(struct mrc_f1),
   .param_descr  = mrc_f1_params_descr,
-  .methods      = mrc_f1_methods,
+  .methods      = mrc_fld_methods,
   .init         = mrc_fld_init,
   .destroy      = _mrc_fld_destroy,
   .setup        = _mrc_f1_setup,
