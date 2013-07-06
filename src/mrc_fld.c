@@ -457,6 +457,23 @@ mrc_fld_write_comps(struct mrc_fld *fld, struct mrc_io *io, int mm[])
 }
 
 // ----------------------------------------------------------------------
+// mrc_fld_dump
+
+void
+mrc_fld_dump(struct mrc_fld *x, const char *basename, int n)
+{
+  struct mrc_io *io = mrc_io_create(mrc_fld_comm(x));
+  mrc_io_set_name(io, "mrc_fld_dump");
+  mrc_io_set_param_string(io, "basename", basename);
+  mrc_io_set_from_options(io);
+  mrc_io_setup(io);
+  mrc_io_open(io, "w", n, n);
+  mrc_fld_write(x, io);
+  mrc_io_close(io);
+  mrc_io_destroy(io);
+}
+
+// ----------------------------------------------------------------------
 // mrc_fld_get_as
 //
 // convert fld_base to mrc_fld of type "type"
@@ -774,15 +791,7 @@ mrc_f1_ghost_dims(struct mrc_f1 *f1)
 void
 mrc_f1_dump(struct mrc_f1 *x, const char *basename, int n)
 {
-  struct mrc_io *io = mrc_io_create(MPI_COMM_WORLD);
-  mrc_io_set_name(io, "mrc_f1_dump");
-  mrc_io_set_param_string(io, "basename", basename);
-  mrc_io_set_from_options(io);
-  mrc_io_setup(io);
-  mrc_io_open(io, "w", n, n);
-  mrc_f1_write(x, io);
-  mrc_io_close(io);
-  mrc_io_destroy(io);
+  mrc_fld_dump(x, basename, n);
 }
 
 float

@@ -80,6 +80,7 @@ const int *mrc_fld_ghost_dims(struct mrc_fld *x);
 struct mrc_fld *mrc_fld_duplicate(struct mrc_fld *fld);
 void mrc_fld_copy(struct mrc_fld *fld_to, struct mrc_fld *fld_from);
 void mrc_fld_write_comps(struct mrc_fld *fld, struct mrc_io *io, int mm[]);
+void mrc_fld_dump(struct mrc_fld *fld, const char *basename, int n);
 // for multi-patch mrc_fld only (former mrc_m3)
 int mrc_fld_nr_patches(struct mrc_fld *fld);
 
