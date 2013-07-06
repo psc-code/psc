@@ -41,7 +41,7 @@ _mrc_f1_setup(struct mrc_f1 *f1)
     f1->_off[0] = 0;
     f1->_dims[0] = patches[0].ldims[f1->dim];
   }
-  f1->_ghost_off[0] = f1->_off[0] - f1->_sw;
+  f1->_ghost_offs[0] = f1->_off[0] - f1->_sw;
   f1->_ghost_dims[0] = f1->_dims[0] + 2 * f1->_sw;
   f1->len = f1->_ghost_dims[0] * f1->nr_comp;
 

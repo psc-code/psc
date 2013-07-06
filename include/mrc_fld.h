@@ -18,14 +18,14 @@
 #include <assert.h>
 
 #define MRC_F1(f1,m, ix)						\
-  (*({ float *p = &(f1)->arr[(m) * (f1)->_ghost_dims[0] + (ix) - (f1)->_ghost_off[0]];	\
-      assert((ix) >= (f1)->_ghost_off[0] && (ix) < (f1)->_ghost_off[0] + (f1)->_ghost_dims[0]);	\
+  (*({ float *p = &(f1)->arr[(m) * (f1)->_ghost_dims[0] + (ix) - (f1)->_ghost_offs[0]];	\
+      assert((ix) >= (f1)->_ghost_offs[0] && (ix) < (f1)->_ghost_offs[0] + (f1)->_ghost_dims[0]);	\
       p;}))
 
 #else
 
 #define MRC_F1(f1,m, ix)					\
-  ((f1)->arr[(m) * (f1)->_ghost_dims[0] + (ix) - (f1)->_ghost_off[0]])
+  ((f1)->arr[(m) * (f1)->_ghost_dims[0] + (ix) - (f1)->_ghost_offs[0]])
 
 #endif
 
@@ -225,9 +225,12 @@ typedef void (*mrc_fld_copy_from_func_t)(struct mrc_fld *,
 
 struct mrc_f1 {
   struct mrc_obj obj;
+
+  // state
+  int _ghost_offs[MRC_FLD_MAXDIMS];
+  int _ghost_dims[MRC_FLD_MAXDIMS];
+
   float *arr;
-  int _ghost_off[1];
-  int _ghost_dims[1];
   int _off[1];
   int _dims[1];
   int nr_comp;

@@ -622,7 +622,7 @@ read_m1_cb(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
 {
   struct read_m1_cb_data *data = op_data;
   struct mrc_f1 *gfld = data->gfld;
-  int *ib = gfld->_ghost_off;
+  int *ib = gfld->_ghost_offs;
   int ierr;
 
   hid_t group_fld = H5Gopen(g_id, name, H5P_DEFAULT); H5_CHK(group_fld);
