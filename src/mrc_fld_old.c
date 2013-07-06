@@ -2,6 +2,7 @@
 #include <mrc_fld.h>
 #include <mrc_io.h>
 #include <mrc_params.h>
+#include <mrc_vec.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -15,10 +16,10 @@
 static void
 _mrc_f1_destroy(struct mrc_f1 *f1)
 {
-  if (!f1->with_array) {
-    free(f1->_arr);
+  if (f1->_arr) {
+    mrc_vec_put_array(f1->_vec, f1->_arr);
+    f1->_arr = NULL;
   }
-  f1->_arr = NULL;
 
   if (f1->_comp_name) {
     for (int m = 0; m < f1->_dims.vals[1]; m++) {
@@ -48,24 +49,26 @@ _mrc_f1_setup(struct mrc_f1 *f1)
   f1->_ghost_dims[0] = f1->_dims.vals[0] + 2 * f1->_sw.vals[0];
   f1->_len = f1->_ghost_dims[0] * mrc_f1_nr_comps(f1);
 
-  if (!f1->_arr) {
-    f1->_arr = calloc(f1->_len, sizeof(float));
-    f1->with_array = false;
-  } else {
-    f1->with_array = true;
-  }
+  mrc_vec_set_type(f1->_vec, "float");
+  mrc_vec_set_param_int(f1->_vec, "len", f1->_len);
+  mrc_f1_setup_member_objs(f1); // sets up our .vec member
+  
+  f1->_arr = mrc_vec_get_array(f1->_vec);
 }
 
 void
 mrc_f1_set_array(struct mrc_f1 *f1, float *arr)
 {
-  assert(!f1->_arr);
-  f1->_arr = arr;
+  mrc_vec_set_array(f1->_vec, arr);
 }
 
 static void
 _mrc_f1_read(struct mrc_f1 *f1, struct mrc_io *io)
 {
+  // instead of reading back fld->_vec (which doesn't contain anything useful,
+  // anyway, since mrc_fld saves/restores the data rather than mrc_vec),
+  // we make a new one, so at least we're sure that with_array won't be honored
+  f1->_vec = mrc_vec_create(mrc_f1_comm(f1));
   mrc_f1_setup(f1);
   mrc_io_read_f1(io, mrc_io_obj_path(io, f1), f1);
 }
@@ -247,6 +250,8 @@ static struct param mrc_f1_params_descr[] = {
   { "dim"             , VAR(dim)          , PARAM_INT(0)             },
 
   { "domain"          , VAR(_domain)      , PARAM_OBJ(mrc_domain) },
+
+  { "vec"             , VAR(_vec)         , MRC_VAR_OBJ(mrc_vec)  },
   {},
 };
 #undef VAR

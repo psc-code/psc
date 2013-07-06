@@ -223,7 +223,7 @@ struct mrc_f1 {
 
   float *_arr;
   int _len;
-  bool with_array;
+  struct mrc_vec *_vec; //< underlying mrc_vec that manages memory alloc/free (could be petsc)
   struct mrc_domain *_domain; //< optional, if allocated through mrc_domain
   int dim; //< # along this dim of the domain
   char **_comp_name;
