@@ -152,12 +152,13 @@ static struct psc_fields *
 cache_fields_from_em(fields_t *pf)
 {
   struct psc_fields *fld = psc_fields_create(psc_fields_comm(pf));
+  psc_fields_set_type(fld, F3_CACHE_TYPE);
   // FIXME, can do -1 .. 1?
   psc_fields_set_param_int3(fld, "ib", (int[3]) { 0, -2, -2 });
   psc_fields_set_param_int3(fld, "im", (int[3]) { 1,
 	pf->im[1] + 2 * pf->ib[1] + 5, pf->im[2] + 2 * pf->ib[2] + 5});
   psc_fields_set_param_int(fld, "nr_comp", 9); // JX .. HZ
-  psc_fields_set_type(fld, F3_CACHE_TYPE);
+  psc_fields_set_param_int(fld, "p", pf->p);
   psc_fields_setup(fld);
   for (int iz = fld->ib[2]; iz < fld->ib[2] + fld->im[2]; iz++) {
     for (int iy = fld->ib[1]; iy < fld->ib[1] + fld->im[1]; iy++) {
