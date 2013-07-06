@@ -420,6 +420,28 @@ mrc_fld_norm(struct mrc_fld *x)
 }
 
 // ----------------------------------------------------------------------
+// mrc_fld_norm_comp
+
+// FIXME, should go away, use view instead
+float
+mrc_fld_norm_comp(struct mrc_fld *x, int m)
+{
+  assert(x->_data_type == MRC_NT_FLOAT);
+  float res = 0.;
+  if (x->_dims.nr_vals == 2) {
+    mrc_f1_foreach(x, ix, 0, 0) {
+      res = fmaxf(res, fabsf(MRC_F1(x,m, ix)));
+    } mrc_f1_foreach_end;
+  } else {
+    assert(0);
+  }
+
+  MPI_Allreduce(MPI_IN_PLACE, &res, 1, MPI_FLOAT, MPI_MAX, mrc_fld_comm(x));
+  return res;
+}
+
+
+// ----------------------------------------------------------------------
 // mrc_fld_set
 
 void
@@ -797,13 +819,7 @@ mrc_f1_dump(struct mrc_f1 *x, const char *basename, int n)
 float
 mrc_f1_norm_comp(struct mrc_f1 *x, int m)
 {
-  float res = 0.;
-  mrc_f1_foreach(x, ix, 0, 0) {
-    res = fmaxf(res, fabsf(MRC_F1(x,m, ix)));
-  } mrc_f1_foreach_end;
-
-  MPI_Allreduce(MPI_IN_PLACE, &res, 1, MPI_FLOAT, MPI_MAX, mrc_f1_comm(x));
-  return res;
+  return mrc_fld_norm_comp(x, m);
 }
 
 // ----------------------------------------------------------------------
