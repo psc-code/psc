@@ -39,8 +39,9 @@ _ggcm_mhd_crds_create(struct ggcm_mhd_crds *crds)
     crds->f1[d] = mrc_f1_create(MPI_COMM_SELF);
     char s[10]; sprintf(s, "f1[%d]", d);
     mrc_f1_set_name(crds->f1[d], s);
-    mrc_f1_set_nr_comps(crds->f1[d], NR_CRDS);
+    mrc_f1_set_param_int_array(crds->f1[d], "dims", 2, NULL);
     mrc_f1_set_param_int(crds->f1[d], "dim", d);
+    mrc_f1_set_nr_comps(crds->f1[d], NR_CRDS);
   }
 }
 

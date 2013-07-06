@@ -651,6 +651,7 @@ static struct param mrc_fld_descr[] = {
   { "sw"              , VAR(_sw)          , PARAM_INT_ARRAY(0, 0) },
 
   { "domain"          , VAR(_domain)      , PARAM_OBJ(mrc_domain) },
+  { "dim"             , VAR(_dim)         , PARAM_INT(-1)         },
 
   { "size_of_type"    , VAR(_size_of_type), MRC_VAR_INT           },
   { "len"             , VAR(_len)         , MRC_VAR_INT           },
@@ -694,11 +695,17 @@ _mrc_f1_setup(struct mrc_f1 *f1)
     int nr_patches;
     struct mrc_patch *patches = mrc_domain_get_patches(f1->_domain, &nr_patches);
     assert(nr_patches == 1);
-    assert(f1->_offs.nr_vals == 2);
-    f1->_offs.vals[0] = 0;
     assert(f1->_dims.nr_vals == 2);
     f1->_dims.vals[0] = patches[0].ldims[f1->_dim];
   }
+
+  if (f1->_offs.nr_vals == 0) {
+    mrc_f1_set_param_int_array(f1, "offs", f1->_dims.nr_vals, NULL);
+  }
+  if (f1->_sw.nr_vals == 0) {
+    mrc_f1_set_param_int_array(f1, "sw", f1->_dims.nr_vals, NULL);
+  }
+
   f1->_ghost_offs[0] = f1->_offs.vals[0] - f1->_sw.vals[0];
   f1->_ghost_dims[0] = f1->_dims.vals[0] + 2 * f1->_sw.vals[0];
   f1->_len = f1->_ghost_dims[0] * mrc_f1_nr_comps(f1);
@@ -714,23 +721,6 @@ void
 mrc_f1_set_array(struct mrc_f1 *f1, float *arr)
 {
   mrc_fld_set_array(f1, arr);
-}
-
-static void
-_mrc_f1_read(struct mrc_f1 *f1, struct mrc_io *io)
-{
-  // instead of reading back fld->_vec (which doesn't contain anything useful,
-  // anyway, since mrc_fld saves/restores the data rather than mrc_vec),
-  // we make a new one, so at least we're sure that with_array won't be honored
-  f1->_vec = mrc_vec_create(mrc_f1_comm(f1));
-  mrc_f1_setup(f1);
-  mrc_io_read_f1(io, mrc_io_obj_path(io, f1), f1);
-}
-
-static void
-_mrc_f1_write(struct mrc_f1 *f1, struct mrc_io *io)
-{
-  mrc_io_write_f1(io, mrc_io_obj_path(io, f1), f1);
 }
 
 void
@@ -810,29 +800,15 @@ mrc_f1_norm_comp(struct mrc_f1 *x, int m)
 // ----------------------------------------------------------------------
 // mrc_class_mrc_f1
 
-#define VAR(x) (void *)offsetof(struct mrc_f1, x)
-static struct param mrc_f1_params_descr[] = {
-  { "offs"            , VAR(_offs)        , PARAM_INT_ARRAY(2, 0)    },
-  { "dims"            , VAR(_dims)        , PARAM_INT_ARRAY(2, 0)    },
-  { "sw"              , VAR(_sw)          , PARAM_INT_ARRAY(2, 0)    },
-  { "dim"             , VAR(_dim)         , PARAM_INT(-1)            },
-
-  { "domain"          , VAR(_domain)      , PARAM_OBJ(mrc_domain)    },
-
-  { "vec"             , VAR(_vec)         , MRC_VAR_OBJ(mrc_vec)     },
-  {},
-};
-#undef VAR
-
 struct mrc_class_mrc_f1 mrc_class_mrc_f1 = {
   .name         = "mrc_f1",
   .size         = sizeof(struct mrc_f1),
-  .param_descr  = mrc_f1_params_descr,
+  .param_descr  = mrc_fld_descr,
   .methods      = mrc_fld_methods,
   .init         = mrc_fld_init,
   .destroy      = _mrc_fld_destroy,
   .setup        = _mrc_f1_setup,
-  .read         = _mrc_f1_read,
-  .write        = _mrc_f1_write,
+  .read         = _mrc_fld_read,
+  .write        = _mrc_fld_write,
 };
 
