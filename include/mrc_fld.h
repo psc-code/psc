@@ -222,7 +222,7 @@ struct mrc_f1 {
   int _ghost_dims[MRC_FLD_MAXDIMS];
 
   float *_arr;
-  int len;
+  int _len;
   bool with_array;
   struct mrc_domain *_domain; //< optional, if allocated through mrc_domain
   int dim; //< # along this dim of the domain

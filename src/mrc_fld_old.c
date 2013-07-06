@@ -46,10 +46,10 @@ _mrc_f1_setup(struct mrc_f1 *f1)
   }
   f1->_ghost_offs[0] = f1->_offs.vals[0] - f1->_sw.vals[0];
   f1->_ghost_dims[0] = f1->_dims.vals[0] + 2 * f1->_sw.vals[0];
-  f1->len = f1->_ghost_dims[0] * mrc_f1_nr_comps(f1);
+  f1->_len = f1->_ghost_dims[0] * mrc_f1_nr_comps(f1);
 
   if (!f1->_arr) {
-    f1->_arr = calloc(f1->len, sizeof(float));
+    f1->_arr = calloc(f1->_len, sizeof(float));
     f1->with_array = false;
   } else {
     f1->with_array = true;
