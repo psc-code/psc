@@ -316,11 +316,11 @@ xdmf_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
   H5LTset_attribute_int(group0, ".", "nr_patches", &i1, 1);
 
   struct xdmf_spatial *xs = xdmf_spatial_find(&file->xdmf_spatial_list,
-					      mrc_domain_name(f1->domain));
+					      mrc_domain_name(f1->_domain));
   if (!xs) {
     xs = xdmf_spatial_create_f1(&file->xdmf_spatial_list,
-				mrc_domain_name(f1->domain), f1->domain);
-    xdmf_spatial_write_crds(xs, file, f1->domain);
+				mrc_domain_name(f1->_domain), f1->_domain);
+    xdmf_spatial_write_crds(xs, file, f1->_domain);
   }
 
   for (int m = 0; m < mrc_f1_nr_comps(f1); m++) {

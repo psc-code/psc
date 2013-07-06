@@ -35,9 +35,9 @@ _mrc_f1_setup(struct mrc_f1 *f1)
 
   assert(mrc_f1_nr_comps(f1) > 0);
   f1->_comp_name = calloc(mrc_f1_nr_comps(f1), sizeof(*f1->_comp_name));
-  if (f1->domain) {
+  if (f1->_domain) {
     int nr_patches;
-    struct mrc_patch *patches = mrc_domain_get_patches(f1->domain, &nr_patches);
+    struct mrc_patch *patches = mrc_domain_get_patches(f1->_domain, &nr_patches);
     assert(nr_patches == 1);
     assert(f1->_offs.nr_vals == 2);
     f1->_offs.vals[0] = 0;
@@ -66,8 +66,6 @@ mrc_f1_set_array(struct mrc_f1 *f1, float *arr)
 static void
 _mrc_f1_read(struct mrc_f1 *f1, struct mrc_io *io)
 {
-  f1->domain = mrc_io_read_ref(io, f1, "domain", mrc_domain);
-  
   mrc_f1_setup(f1);
   mrc_io_read_f1(io, mrc_io_obj_path(io, f1), f1);
 }
@@ -75,7 +73,6 @@ _mrc_f1_read(struct mrc_f1 *f1, struct mrc_io *io)
 static void
 _mrc_f1_write(struct mrc_f1 *f1, struct mrc_io *io)
 {
-  mrc_io_write_ref(io, f1, "domain", f1->domain);
   mrc_io_write_f1(io, mrc_io_obj_path(io, f1), f1);
 }
 
@@ -87,7 +84,7 @@ mrc_f1_duplicate(struct mrc_f1 *f1_in)
   mrc_f1_set_param_int_array(f1, "offs", f1_in->_offs.nr_vals, f1_in->_offs.vals);
   mrc_f1_set_param_int_array(f1, "dims", f1_in->_dims.nr_vals, f1_in->_dims.vals);
   mrc_f1_set_param_int_array(f1, "sw"  , f1_in->_sw.nr_vals  , f1_in->_sw.vals);
-  f1->domain = f1_in->domain;
+  mrc_f1_set_param_obj(f1, "domain", f1_in->_domain);
   mrc_f1_setup(f1);
 
   return f1;
@@ -248,6 +245,8 @@ static struct param mrc_f1_params_descr[] = {
   { "dims"            , VAR(_dims)        , PARAM_INT_ARRAY(2, 0)    },
   { "sw"              , VAR(_sw)          , PARAM_INT_ARRAY(2, 0)    },
   { "dim"             , VAR(dim)          , PARAM_INT(0)             },
+
+  { "domain"          , VAR(_domain)      , PARAM_OBJ(mrc_domain) },
   {},
 };
 #undef VAR

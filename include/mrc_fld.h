@@ -237,7 +237,7 @@ struct mrc_f1 {
   float *arr;
   int len;
   bool with_array;
-  struct mrc_domain *domain; //< optional, if allocated through mrc_domain
+  struct mrc_domain *_domain; //< optional, if allocated through mrc_domain
   int dim; //< # along this dim of the domain
   char **_comp_name;
 };
