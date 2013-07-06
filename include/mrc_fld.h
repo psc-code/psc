@@ -3,6 +3,7 @@
 #define MRC_FLD_H
 
 #define mrc_m3 mrc_fld
+#define mrc_f1 mrc_fld
 
 #include <mrc_common.h>
 #include <mrc_obj.h>
@@ -58,6 +59,8 @@ struct mrc_fld {
   char **_comp_name;
   // for mrc_m3 emulation (FIXME, should be eliminated eventually (?))
   struct mrc_fld_patch *_patches;
+  // for mrc_f1 emulation
+  int _dim; //< # along this dim of the domain
 };
 
 MRC_CLASS_DECLARE(mrc_fld, struct mrc_fld);
@@ -209,25 +212,6 @@ typedef void (*mrc_fld_copy_from_func_t)(struct mrc_fld *,
 
 // ======================================================================
 // mrc_f1
-
-struct mrc_f1 {
-  struct mrc_obj obj;
-  // parameters
-  struct mrc_param_int_array _dims;
-  struct mrc_param_int_array _offs;
-  struct mrc_param_int_array _sw;
-
-  // state
-  int _ghost_offs[MRC_FLD_MAXDIMS];
-  int _ghost_dims[MRC_FLD_MAXDIMS];
-
-  float *_arr;
-  int _len;
-  struct mrc_vec *_vec; //< underlying mrc_vec that manages memory alloc/free (could be petsc)
-  struct mrc_domain *_domain; //< optional, if allocated through mrc_domain
-  int dim; //< # along this dim of the domain
-  char **_comp_name;
-};
 
 MRC_CLASS_DECLARE(mrc_f1, struct mrc_f1);
 struct mrc_f1 *mrc_f1_duplicate(struct mrc_f1 *x);

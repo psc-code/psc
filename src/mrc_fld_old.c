@@ -43,7 +43,7 @@ _mrc_f1_setup(struct mrc_f1 *f1)
     assert(f1->_offs.nr_vals == 2);
     f1->_offs.vals[0] = 0;
     assert(f1->_dims.nr_vals == 2);
-    f1->_dims.vals[0] = patches[0].ldims[f1->dim];
+    f1->_dims.vals[0] = patches[0].ldims[f1->_dim];
   }
   f1->_ghost_offs[0] = f1->_offs.vals[0] - f1->_sw.vals[0];
   f1->_ghost_dims[0] = f1->_dims.vals[0] + 2 * f1->_sw.vals[0];
@@ -247,11 +247,11 @@ static struct param mrc_f1_params_descr[] = {
   { "offs"            , VAR(_offs)        , PARAM_INT_ARRAY(2, 0)    },
   { "dims"            , VAR(_dims)        , PARAM_INT_ARRAY(2, 0)    },
   { "sw"              , VAR(_sw)          , PARAM_INT_ARRAY(2, 0)    },
-  { "dim"             , VAR(dim)          , PARAM_INT(0)             },
+  { "dim"             , VAR(_dim)         , PARAM_INT(-1)            },
 
-  { "domain"          , VAR(_domain)      , PARAM_OBJ(mrc_domain) },
+  { "domain"          , VAR(_domain)      , PARAM_OBJ(mrc_domain)    },
 
-  { "vec"             , VAR(_vec)         , MRC_VAR_OBJ(mrc_vec)  },
+  { "vec"             , VAR(_vec)         , MRC_VAR_OBJ(mrc_vec)     },
   {},
 };
 #undef VAR
