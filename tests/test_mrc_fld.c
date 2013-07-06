@@ -179,7 +179,7 @@ test_fld5d(int sw)
 {
   struct mrc_fld *fld = mrc_fld_create(MPI_COMM_WORLD);
   mrc_fld_set_name(fld, "test_fld");
-  mrc_fld_set_type(fld, "float");
+  mrc_fld_set_type(fld, "double");
   mrc_fld_set_param_int_array(fld, "offs", 5, (int [5]) { 1, 2, 3, 4, 5 });
   mrc_fld_set_param_int_array(fld, "dims", 5, (int [5]) { 2, 3, 4, 5, 6 });
   mrc_fld_set_param_int_array(fld, "sw"  , 5, (int [5]) { sw, sw, sw, 0, 0 });
