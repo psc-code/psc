@@ -1,6 +1,7 @@
 
 #include "psc.h"
 #include "psc_bnd.h"
+#include "psc_push_fields_private.h"
 #include "psc_fields_as_c.h"
 #include "psc_particles_as_double.h"
 #include <math.h>
@@ -8,19 +9,11 @@
 
 enum {DIVE_MARDER, N_MARDER, NR_MARDER};
 
-/* store parameters; not used for now
-struct psc_gauss_correction_Marder_c {
-  int step;
-  float diffusion;
-  struct psc_bnd *bnd;
-};
-*/
-
 // ======================================================================
 // Create/Destroy space for "aid" fields, i.e., divE and n
 
 mfields_t *
-Marder_create_aid_fields(struct psc *psc)
+Marder_create_aid_fields(struct psc_push_fields *push, struct psc *psc)
 {
   mfields_base_t *f = psc_mfields_create(psc_comm(psc));
   psc_mfields_set_type(f, FIELDS_TYPE);
@@ -33,7 +26,7 @@ Marder_create_aid_fields(struct psc *psc)
 }
 
 static void
-Marder_destroy_aid_fields(mfields_t *f)
+Marder_destroy_aid_fields(struct psc_push_fields *push, mfields_t *f)
 {
   psc_mfields_destroy(f);
 }
@@ -139,7 +132,8 @@ n_run(struct psc_fields *flds,
 // ======================================================================
 
 static void
-Marder_calc_aid_fields(mfields_base_t *flds, mparticles_base_t *particles, mfields_t *res)
+Marder_calc_aid_fields(struct psc_push_fields *push, 
+  mfields_base_t *flds, mparticles_base_t *particles, mfields_t *res)
 {
   for (int p = 0; p < res->nr_patches; p++) {
     calc_dive_nc(psc_mfields_get_patch(flds, p),
@@ -173,7 +167,8 @@ Marder_calc_aid_fields(mfields_base_t *flds, mparticles_base_t *particles, mfiel
 // Do the modified Marder correction (See eq.(5, 7, 9, 10) in Mardahl and Verboncoeur, CPC, 1997)
 
 static void
-do_Marder_correction(struct psc_fields *flds_base, struct psc_particles *prts, 
+do_Marder_correction(struct psc_push_fields *push, 
+  struct psc_fields *flds_base, struct psc_particles *prts, 
   struct psc_fields *f, int comp_dive, int comp_n)
 {
   define_dxdydz(dx, dy, dz);
@@ -191,7 +186,7 @@ do_Marder_correction(struct psc_fields *flds_base, struct psc_particles *prts,
     }
   }
   double diffusion_max = 1. / 2. / (.5 * ppsc->dt) / inv_sum;
-  double diffusion     = diffusion_max * .95;
+  double diffusion     = diffusion_max * push->Marder_diffusion;
 
   struct psc_fields *flds = psc_fields_get_as(flds_base, FIELDS_TYPE, JXI, EX + 3);
 
@@ -224,22 +219,27 @@ do_Marder_correction(struct psc_fields *flds_base, struct psc_particles *prts,
 }
 
 void
-Marder_correction_run(mfields_base_t *flds, mparticles_base_t *particles, mfields_t *res)
+Marder_correction_run(struct psc_push_fields *push, 
+  mfields_base_t *flds, mparticles_base_t *particles, mfields_t *res)
 {
   for (int p = 0; p < res->nr_patches; p++) {
-    do_Marder_correction(psc_mfields_get_patch(flds, p),
+    do_Marder_correction(push, psc_mfields_get_patch(flds, p),
 	     psc_mparticles_get_patch(particles, p),
 	     psc_mfields_get_patch(res, p), DIVE_MARDER, N_MARDER);
   }
 }
 
 void
-Marder_correction(mfields_base_t *flds, mparticles_base_t *particles)
+Marder_correction(struct psc_push_fields *push, 
+  mfields_base_t *flds, mparticles_base_t *particles)
 {
-  mfields_t *res = Marder_create_aid_fields(ppsc);
-  Marder_calc_aid_fields(flds, particles, res);
-  Marder_correction_run(flds, particles, res);
-  Marder_destroy_aid_fields(res);
+  if (push->Marder_step < 0 || ppsc->timestep % push->Marder_step != 0) 
+   return;
+
+  mfields_t *res = Marder_create_aid_fields(push, ppsc);
+  Marder_calc_aid_fields(push, flds, particles, res);
+  Marder_correction_run(push, flds, particles, res);
+  Marder_destroy_aid_fields(push, res);
 }
 
 #undef psc_foreach_3d_more

@@ -1,2 +1,3 @@
 
-void Marder_correction(mfields_base_t *flds, mparticles_base_t *particles);
+void Marder_correction(struct psc_push_fields *push, 
+  mfields_base_t *flds, mparticles_base_t *particles);
