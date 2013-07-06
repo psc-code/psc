@@ -227,13 +227,13 @@ struct mrc_f1 {
   struct mrc_obj obj;
   // parameters
   struct mrc_param_int_array _dims;
+  struct mrc_param_int_array _offs;
 
   // state
   int _ghost_offs[MRC_FLD_MAXDIMS];
   int _ghost_dims[MRC_FLD_MAXDIMS];
 
   float *arr;
-  int _off[1];
   int nr_comp;
   int len;
   bool with_array;
@@ -261,7 +261,7 @@ float mrc_f1_norm(struct mrc_f1 *x);
 float mrc_f1_norm_comp(struct mrc_f1 *x, int m);
 
 #define mrc_f1_foreach(f1, ix, l,r)					\
-  for (int ix = (f1)->_off[0] - l; ix < (f1)->_off[0] + (f1)->_dims.vals[0] + r; ix++) \
+  for (int ix = (f1)->_offs.vals[0] - l; ix < (f1)->_offs.vals[0] + (f1)->_dims.vals[0] + r; ix++) \
 
 #define mrc_f1_foreach_end do {} while (0)	\
 
