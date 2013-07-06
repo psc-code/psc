@@ -47,7 +47,7 @@ error(const char *fmt, ...)
   fprintf(stderr, "[%d] ERROR: ", mpi_rank);
   vfprintf(stderr, fmt, ap);
   va_end(ap);
-  exit(-1);
+  abort();
 }
 
 static void __attribute__ ((format (printf, 1, 2)))
