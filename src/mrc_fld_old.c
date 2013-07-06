@@ -43,8 +43,8 @@ _mrc_f1_setup(struct mrc_f1 *f1)
     assert(f1->_dims.nr_vals == 2);
     f1->_dims.vals[0] = patches[0].ldims[f1->dim];
   }
-  f1->_ghost_offs[0] = f1->_offs.vals[0] - f1->_sw;
-  f1->_ghost_dims[0] = f1->_dims.vals[0] + 2 * f1->_sw;
+  f1->_ghost_offs[0] = f1->_offs.vals[0] - f1->_sw.vals[0];
+  f1->_ghost_dims[0] = f1->_dims.vals[0] + 2 * f1->_sw.vals[0];
   f1->len = f1->_ghost_dims[0] * f1->nr_comp;
 
   if (!f1->arr) {
@@ -85,12 +85,19 @@ mrc_f1_duplicate(struct mrc_f1 *f1_in)
 
   mrc_f1_set_param_int_array(f1, "offs", f1_in->_offs.nr_vals, f1_in->_offs.vals);
   mrc_f1_set_param_int_array(f1, "dims", f1_in->_dims.nr_vals, f1_in->_dims.vals);
+  mrc_f1_set_param_int_array(f1, "sw"  , f1_in->_sw.nr_vals  , f1_in->_sw.vals);
   mrc_f1_set_param_int(f1, "nr_comps", f1_in->nr_comp);
-  mrc_f1_set_param_int(f1, "sw", f1_in->_sw);
   f1->domain = f1_in->domain;
   mrc_f1_setup(f1);
 
   return f1;
+}
+
+void
+mrc_f1_set_sw(struct mrc_f1 *f1, int sw)
+{
+  assert(f1->_sw.nr_vals == 2);
+  f1->_sw.vals[0] = sw;
 }
 
 void
@@ -225,8 +232,8 @@ mrc_f1_norm_comp(struct mrc_f1 *x, int m)
 static struct param mrc_f1_params_descr[] = {
   { "offs"            , VAR(_offs)        , PARAM_INT_ARRAY(2, 0)    },
   { "dims"            , VAR(_dims)        , PARAM_INT_ARRAY(2, 0)    },
+  { "sw"              , VAR(_sw)          , PARAM_INT_ARRAY(2, 0)    },
   { "nr_comps"        , VAR(nr_comp)      , PARAM_INT(1)             },
-  { "sw"              , VAR(_sw)          , PARAM_INT(0)             },
   { "dim"             , VAR(dim)          , PARAM_INT(0)             },
   {},
 };

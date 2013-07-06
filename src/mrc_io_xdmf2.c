@@ -538,7 +538,7 @@ xdmf_spatial_write_crds_multi_parallel(struct mrc_io *io, struct mrc_domain *dom
 	tmp_nc = calloc(info.ldims[d] + 1, sizeof(*tmp_nc));
 
 	// get node-centered coordinates
-	if (crd->_sw > 0) {
+	if (crd->_sw.vals[0] > 0) {
 	  for (int i = 0; i <= info.ldims[d]; i++) {
 	    tmp_nc[i] = .5 * (MRC_F1(crd,0, i-1) + MRC_F1(crd,0, i));
 	  }

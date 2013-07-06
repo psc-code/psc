@@ -228,6 +228,7 @@ struct mrc_f1 {
   // parameters
   struct mrc_param_int_array _dims;
   struct mrc_param_int_array _offs;
+  struct mrc_param_int_array _sw;
 
   // state
   int _ghost_offs[MRC_FLD_MAXDIMS];
@@ -239,12 +240,12 @@ struct mrc_f1 {
   bool with_array;
   struct mrc_domain *domain; //< optional, if allocated through mrc_domain
   int dim; //< # along this dim of the domain
-  int _sw; //< # of ghost points
   char **_comp_name;
 };
 
 MRC_CLASS_DECLARE(mrc_f1, struct mrc_f1);
 struct mrc_f1 *mrc_f1_duplicate(struct mrc_f1 *x);
+void mrc_f1_set_sw(struct mrc_f1 *f1, int sw);
 void mrc_f1_set_comp_name(struct mrc_f1 *x, int m, const char *name);
 const char *mrc_f1_comp_name(struct mrc_f1 *x, int m);
 const int *mrc_f1_off(struct mrc_f1 *x);

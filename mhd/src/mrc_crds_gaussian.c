@@ -19,7 +19,7 @@ mrc_crds_alloc(struct mrc_crds *crds, int d, int dim, int sw)
   crds->crd[d] = mrc_domain_f1_create(crds->domain);
   char s[5]; sprintf(s, "crd%d", d);
   mrc_f1_set_name(crds->crd[d], s);
-  mrc_f1_set_param_int(crds->crd[d], "sw", sw);
+  mrc_f1_set_sw(crds->crd[d], sw);
   mrc_f1_set_param_int(crds->crd[d], "dim", d);
   mrc_f1_setup(crds->crd[d]);
   mrc_f1_set_comp_name(crds->crd[d], 0, s);

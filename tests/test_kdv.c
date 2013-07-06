@@ -51,7 +51,7 @@ kdv_get_fld(struct kdv *kdv, int nr_comps, const char *name)
 {
   struct mrc_f1 *x = mrc_domain_f1_create(kdv->domain);
   mrc_f1_set_name(x, name);
-  mrc_f1_set_param_int(x, "sw", BND);
+  mrc_f1_set_sw(x, BND);
   mrc_f1_set_param_int(x, "nr_comps", nr_comps);
   mrc_f1_setup(x);
   return x;
