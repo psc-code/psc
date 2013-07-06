@@ -11,7 +11,6 @@
 #include "mpi.h"
 #include "psc.h"
 #include "mrc_domain.h"
-#include "mrc_fld.h"
 #include <mrc_params.h>
 #include <assert.h>
 #include <string.h>

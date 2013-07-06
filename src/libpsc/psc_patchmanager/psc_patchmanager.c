@@ -1,6 +1,5 @@
 #include <mrc_domain.h>
 #include <mrc_domain_dynamic.h>
-#include <mrc_fld.h>
 
 #include "psc.h"
 #include "psc_balance.h"
