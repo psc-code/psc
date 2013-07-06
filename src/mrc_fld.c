@@ -261,9 +261,16 @@ void
 mrc_fld_set_sw(struct mrc_fld *fld, int sw)
 {
   assert(fld->_domain);
-  assert(fld->_dims.nr_vals > 3);
-  mrc_fld_set_param_int_array(fld, "sw", fld->_dims.nr_vals,
-			      (int[5]) { sw, sw, sw, 0, 0 });
+  if (fld->_dims.nr_vals > 3) {
+    mrc_fld_set_param_int_array(fld, "sw", fld->_dims.nr_vals,
+				(int[5]) { sw, sw, sw, 0, 0 });
+  } else if (fld->_dims.nr_vals == 2) {
+    assert(fld->_dim >= 0);
+    mrc_fld_set_param_int_array(fld, "sw", 2,
+				(int[2]) { sw, 0 });
+  } else {
+    assert(0);
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -333,7 +340,7 @@ mrc_fld_duplicate(struct mrc_fld *fld)
   mrc_fld_set_param_int_array(fld_new, "dims", fld->_dims.nr_vals, fld->_dims.vals);
   mrc_fld_set_param_int_array(fld_new, "offs", fld->_offs.nr_vals, fld->_offs.vals);
   mrc_fld_set_param_int_array(fld_new, "sw", fld->_sw.nr_vals, fld->_sw.vals);
-  fld_new->_domain = fld->_domain;
+  mrc_fld_set_param_obj(fld_new, "domain", fld->_domain);
   mrc_fld_setup(fld_new);
   return fld_new;
 }
@@ -670,20 +677,6 @@ struct mrc_class_mrc_fld mrc_class_mrc_fld = {
 // mrc_f1
 
 static void
-_mrc_f1_destroy(struct mrc_f1 *f1)
-{
-  if (f1->_arr) {
-    mrc_vec_put_array(f1->_vec, f1->_arr);
-    f1->_arr = NULL;
-  }
-
-  for (int m = 0; m < f1->_nr_allocated_comp_name; m++) {
-    free(f1->_comp_name[m]);
-  }
-  free(f1->_comp_name);
-}
-
-static void
 _mrc_f1_setup(struct mrc_f1 *f1)
 {
   assert(mrc_f1_nr_comps(f1) > 0);
@@ -710,7 +703,7 @@ _mrc_f1_setup(struct mrc_f1 *f1)
 void
 mrc_f1_set_array(struct mrc_f1 *f1, float *arr)
 {
-  mrc_vec_set_array(f1->_vec, arr);
+  mrc_fld_set_array(f1, arr);
 }
 
 static void
@@ -733,36 +726,25 @@ _mrc_f1_write(struct mrc_f1 *f1, struct mrc_io *io)
 struct mrc_f1 *
 mrc_f1_duplicate(struct mrc_f1 *f1_in)
 {
-  struct mrc_f1 *f1 = mrc_f1_create(mrc_f1_comm(f1_in));
-
-  mrc_f1_set_param_int_array(f1, "offs", f1_in->_offs.nr_vals, f1_in->_offs.vals);
-  mrc_f1_set_param_int_array(f1, "dims", f1_in->_dims.nr_vals, f1_in->_dims.vals);
-  mrc_f1_set_param_int_array(f1, "sw"  , f1_in->_sw.nr_vals  , f1_in->_sw.vals);
-  mrc_f1_set_param_obj(f1, "domain", f1_in->_domain);
-  mrc_f1_setup(f1);
-
-  return f1;
+  return mrc_fld_duplicate(f1_in);
 }
 
 void
 mrc_f1_set_sw(struct mrc_f1 *f1, int sw)
 {
-  assert(f1->_sw.nr_vals == 2);
-  f1->_sw.vals[0] = sw;
+  mrc_fld_set_sw(f1, sw);
 }
 
 void
 mrc_f1_set_nr_comps(struct mrc_f1 *f1, int nr_comps)
 {
-  assert(f1->_dims.nr_vals == 2);
-  f1->_dims.vals[1] = nr_comps;
+  mrc_fld_set_nr_comps(f1, nr_comps);
 }
 
 int
 mrc_f1_nr_comps(struct mrc_f1 *f1)
 {
-  assert(f1->_dims.nr_vals == 2);
-  return f1->_dims.vals[1];
+  return mrc_fld_nr_comps(f1);
 }
 
 void
@@ -917,7 +899,7 @@ struct mrc_class_mrc_f1 mrc_class_mrc_f1 = {
   .size         = sizeof(struct mrc_f1),
   .param_descr  = mrc_f1_params_descr,
   .methods      = mrc_f1_methods,
-  .destroy      = _mrc_f1_destroy,
+  .destroy      = _mrc_fld_destroy,
   .setup        = _mrc_f1_setup,
   .read         = _mrc_f1_read,
   .write        = _mrc_f1_write,

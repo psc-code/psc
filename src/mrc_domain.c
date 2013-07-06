@@ -219,7 +219,9 @@ mrc_domain_f1_create(struct mrc_domain *domain)
   assert(nr_patches == 1);
   struct mrc_f1 *f1 = mrc_f1_create(mrc_domain_comm(domain));
   mrc_f1_set_param_obj(f1, "domain", domain);
-
+  // default direction to 0 == x, which is also used to indicate that this
+  // is instead a mrc_f1
+  mrc_f1_set_param_int(f1, "dim", 0);
   mrc_f1_set_nr_comps(f1, 1);
   return f1;
 }
