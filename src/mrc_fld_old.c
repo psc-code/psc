@@ -21,21 +21,16 @@ _mrc_f1_destroy(struct mrc_f1 *f1)
     f1->_arr = NULL;
   }
 
-  if (f1->_comp_name) {
-    for (int m = 0; m < f1->_dims.vals[1]; m++) {
-      free(f1->_comp_name[m]);
-    }
-    free(f1->_comp_name);
+  for (int m = 0; m < f1->_nr_allocated_comp_name; m++) {
+    free(f1->_comp_name[m]);
   }
+  free(f1->_comp_name);
 }
 
 static void
 _mrc_f1_setup(struct mrc_f1 *f1)
 {
-  free(f1->_comp_name);
-
   assert(mrc_f1_nr_comps(f1) > 0);
-  f1->_comp_name = calloc(mrc_f1_nr_comps(f1), sizeof(*f1->_comp_name));
   if (f1->_domain) {
     int nr_patches;
     struct mrc_patch *patches = mrc_domain_get_patches(f1->_domain, &nr_patches);
@@ -117,17 +112,13 @@ mrc_f1_nr_comps(struct mrc_f1 *f1)
 void
 mrc_f1_set_comp_name(struct mrc_f1 *f1, int m, const char *name)
 {
-  assert(m < mrc_f1_nr_comps(f1));
-  assert(f1->_comp_name);
-  free(f1->_comp_name[m]);
-  f1->_comp_name[m] = name ? strdup(name) : NULL;
+  mrc_fld_set_comp_name(f1, m, name);
 }
 
 const char *
 mrc_f1_comp_name(struct mrc_f1 *f1, int m)
 {
-  assert(m < mrc_f1_nr_comps(f1));
-  return f1->_comp_name[m];
+  return mrc_fld_comp_name(f1, m);
 }
 
 const int *

@@ -188,8 +188,16 @@ static int
 mrc_fld_comp_dim(struct mrc_fld *fld)
 {
   if (fld->_domain) {
-    assert(fld->_dims.nr_vals > 3);
-    return 3;
+    if (fld->_dims.nr_vals > 3) {
+      // emulating mrc_f3, mrc_m3
+      return 3;
+    } else if (fld->_dims.nr_vals == 2) {
+      // emulating mrc_f1
+      assert(fld->_dim >= 0);
+      return 1;
+    } else {
+      assert(0);
+    }
   }
 
   assert(fld->_dims.nr_vals > 0);
