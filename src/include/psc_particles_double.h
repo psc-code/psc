@@ -4,7 +4,7 @@
 
 #include "psc_particles_private.h"
 
-typedef float particle_double_real_t;
+typedef double particle_double_real_t;
 
 #define MPI_PARTICLES_DOUBLE_REAL MPI_FLOAT
 
