@@ -411,8 +411,9 @@ mrc_fld_waxpy(struct mrc_fld *w, float alpha, struct mrc_fld *x, struct mrc_fld 
 
 // FIXME, should return double
 float
-mrc_fld_norm(struct mrc_fld *x)
+mrc_fld_norm(struct mrc_fld *fld)
 {
+  struct mrc_fld *x = mrc_fld_get_as(fld, "float");  
   assert(x->_data_type == MRC_NT_FLOAT);
   float res = 0.;
   int nr_comps = mrc_fld_nr_comps(x);
@@ -434,6 +435,7 @@ mrc_fld_norm(struct mrc_fld *x)
   } else {
     assert(0);
   }
+  mrc_fld_put_as(x, fld);
 
   MPI_Allreduce(MPI_IN_PLACE, &res, 1, MPI_FLOAT, MPI_MAX, mrc_fld_comm(x));
   return res;
@@ -457,7 +459,6 @@ mrc_fld_norm_comp(struct mrc_fld *x, int m)
   } else {
     assert(0);
   }
-
   MPI_Allreduce(MPI_IN_PLACE, &res, 1, MPI_FLOAT, MPI_MAX, mrc_fld_comm(x));
   return res;
 }
@@ -467,13 +468,15 @@ mrc_fld_norm_comp(struct mrc_fld *x, int m)
 // mrc_fld_set
 
 void
-mrc_fld_set(struct mrc_fld *x, float val)
+mrc_fld_set(struct mrc_fld *fld, float val)
 {
-  assert(x->_data_type == MRC_NT_FLOAT);
+  struct mrc_fld *x = mrc_fld_get_as(fld, "float");  
+  assert(fld->_data_type == MRC_NT_FLOAT);
   float *arr = x->_arr;
   for (int i = 0; i < x->_len; i++) {
     arr[i] = val;
   }
+  mrc_fld_put_as(x, fld);
 }
 
 // ----------------------------------------------------------------------

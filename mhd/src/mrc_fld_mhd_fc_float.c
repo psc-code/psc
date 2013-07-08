@@ -34,7 +34,7 @@ mrc_fld_mhd_fc_float_create(struct mrc_fld *fld)
 static void
 mrc_fld_mhd_fc_float_copy_from_float(struct mrc_fld *fld_fc, struct mrc_fld *fld_sc)
 {
-  MHERE;
+
   struct mrc_fld *fc = mrc_fld_get_as(fld_fc, "mhd_fc_float");
   struct mrc_fld *sc = mrc_fld_get_as(fld_sc, "float");
 
@@ -66,7 +66,7 @@ mrc_fld_mhd_fc_float_copy_from_float(struct mrc_fld *fld_fc, struct mrc_fld *fld
 static void
 mrc_fld_mhd_fc_float_copy_to_float(struct mrc_fld *fld_fc, struct mrc_fld *fld_sc)
 {
-  MHERE;
+
   struct mrc_fld *fc = mrc_fld_get_as(fld_fc, "mhd_fc_float");
   struct mrc_fld *sc = mrc_fld_get_as(fld_sc, "float");
 
