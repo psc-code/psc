@@ -22,7 +22,7 @@
 static struct mrc_fld *
 ggcm_mhd_get_fields(struct ggcm_mhd *mhd, const char *name, int nr_comp)
 {   
-  MHERE;
+  //MHERE;
   struct mrc_fld *f3 = mrc_domain_fld_create(mhd->domain, SW_2, NULL);
   mrc_fld_set_name(f3, name);
   mrc_fld_set_nr_comps(f3, nr_comp);
