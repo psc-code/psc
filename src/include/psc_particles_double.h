@@ -6,7 +6,7 @@
 
 typedef double particle_double_real_t;
 
-#define MPI_PARTICLES_DOUBLE_REAL MPI_FLOAT
+#define MPI_PARTICLES_DOUBLE_REAL MPI_DOUBLE
 
 typedef struct psc_particle_double {
   particle_double_real_t xi, yi, zi;
