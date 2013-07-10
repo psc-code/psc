@@ -53,8 +53,9 @@ _mrc_fld_setup(struct mrc_fld *fld)
     int nr_patches;
     struct mrc_patch *patches = mrc_domain_get_patches(fld->_domain, &nr_patches);
 
-    assert((fld->_dims.nr_vals == 4 && nr_patches == 1) ||
-	   (fld->_dims.nr_vals == 5 && nr_patches >= 1));
+    assert((fld->_dims.nr_vals == 2 && nr_patches == 1) || // mrc_f1
+	   (fld->_dims.nr_vals == 4 && nr_patches == 1) || // mrc_f3
+	   (fld->_dims.nr_vals == 5 && nr_patches >= 1));  // mrc_m3
 
     if (fld->_dims.nr_vals == 5) {
       fld->_patches = calloc(nr_patches, sizeof(*fld->_patches));
@@ -69,8 +70,12 @@ _mrc_fld_setup(struct mrc_fld *fld)
       fld->_dims.vals[4] = nr_patches;
     }
 
-    for (int d = 0; d < 3; d++) {
-      fld->_dims.vals[d] = patches[0].ldims[d];
+    if (fld->_dim >= 0 && fld->_dims.nr_vals == 2) {
+      fld->_dims.vals[0] = patches[0].ldims[fld->_dim];
+    } else {
+      for (int d = 0; d < 3; d++) {
+	fld->_dims.vals[d] = patches[0].ldims[d];
+      }
     }
   }
 
@@ -726,36 +731,6 @@ struct mrc_class_mrc_fld mrc_class_mrc_fld = {
 // ======================================================================
 // mrc_f1
 
-static void
-_mrc_f1_setup(struct mrc_f1 *f1)
-{
-  assert(mrc_f1_nr_comps(f1) > 0);
-  if (f1->_domain) {
-    int nr_patches;
-    struct mrc_patch *patches = mrc_domain_get_patches(f1->_domain, &nr_patches);
-    assert(nr_patches == 1);
-    assert(f1->_dims.nr_vals == 2);
-    f1->_dims.vals[0] = patches[0].ldims[f1->_dim];
-  }
-
-  if (f1->_offs.nr_vals == 0) {
-    mrc_f1_set_param_int_array(f1, "offs", f1->_dims.nr_vals, NULL);
-  }
-  if (f1->_sw.nr_vals == 0) {
-    mrc_f1_set_param_int_array(f1, "sw", f1->_dims.nr_vals, NULL);
-  }
-
-  f1->_ghost_offs[0] = f1->_offs.vals[0] - f1->_sw.vals[0];
-  f1->_ghost_dims[0] = f1->_dims.vals[0] + 2 * f1->_sw.vals[0];
-  f1->_len = f1->_ghost_dims[0] * mrc_f1_nr_comps(f1);
-
-  mrc_vec_set_type(f1->_vec, "float");
-  mrc_vec_set_param_int(f1->_vec, "len", f1->_len);
-  mrc_f1_setup_member_objs(f1); // sets up our .vec member
-  
-  f1->_arr = mrc_vec_get_array(f1->_vec);
-}
-
 void
 mrc_f1_set_array(struct mrc_f1 *f1, float *arr)
 {
@@ -823,6 +798,17 @@ mrc_f1_norm_comp(struct mrc_f1 *x, int m)
 }
 
 // ----------------------------------------------------------------------
+// mrc_f1_init
+
+static void
+mrc_f1_init()
+{
+  mrc_class_register_subclass(&mrc_class_mrc_f1, &mrc_fld_float_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_f1, &mrc_fld_double_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_f1, &mrc_fld_int_ops);
+}
+
+// ----------------------------------------------------------------------
 // mrc_class_mrc_f1
 
 struct mrc_class_mrc_f1 mrc_class_mrc_f1 = {
@@ -830,9 +816,9 @@ struct mrc_class_mrc_f1 mrc_class_mrc_f1 = {
   .size         = sizeof(struct mrc_f1),
   .param_descr  = mrc_fld_descr,
   .methods      = mrc_fld_methods,
-  .init         = mrc_fld_init,
+  .init         = mrc_f1_init,
   .destroy      = _mrc_fld_destroy,
-  .setup        = _mrc_f1_setup,
+  .setup        = _mrc_fld_setup,
   .read         = _mrc_fld_read,
   .write        = _mrc_fld_write,
 };

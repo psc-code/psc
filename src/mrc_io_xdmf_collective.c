@@ -506,7 +506,7 @@ xdmf_collective_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
     // it on writers[0]
     struct mrc_f1 *f1 = mrc_f1_create(MPI_COMM_SELF);
     mrc_f1_set_param_int_array(f1, "dims", 2, (int [2]) { xdmf->slab_dims[0], 1 });
-    mrc_f1_set_param_int_array(f1, "offs", 2, (int [2]) { xdmf->slab_off[0], 1 });
+    mrc_f1_set_param_int_array(f1, "offs", 2, (int [2]) { xdmf->slab_off[0] , 0 });
     mrc_f1_setup(f1);
 
     hid_t group0 = H5Gopen(file->h5_file, path, H5P_DEFAULT); H5_CHK(group0);
