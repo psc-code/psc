@@ -177,9 +177,11 @@ xdmf_collective_write_attr(struct mrc_io *io, const char *path, int type,
   switch (type) {
   case PT_SELECT:
   case PT_INT:
+  case MRC_VAR_INT:
     ierr = H5LTset_attribute_int(group, ".", name, &pv->u_int, 1); CE;
     break;
-  case PT_BOOL: {
+  case PT_BOOL: 
+  case MRC_VAR_BOOL: {
     int val = pv->u_bool;
     ierr = H5LTset_attribute_int(group, ".", name, &val, 1); CE;
     break;
@@ -203,6 +205,12 @@ xdmf_collective_write_attr(struct mrc_io *io, const char *path, int type,
     ierr = H5LTset_attribute_int(group, ".", name, pv->u_int_array.vals,
 				 pv->u_int_array.nr_vals); CE;
     break;
+  case PT_PTR:
+    break;
+  default:
+    mprintf("mrc_io_xdmf_collective: not writing attr '%s' (type %d)\n",
+	    name, type);
+    assert(0);
   }
   ierr = H5Gclose(group); CE;
 }
@@ -221,9 +229,11 @@ xdmf_collective_read_attr(struct mrc_io *io, const char *path, int type,
     switch (type) {
     case PT_SELECT:
     case PT_INT:
+    case MRC_VAR_INT:
       ierr = H5LTget_attribute_int(group, ".", name, &pv->u_int); CE;
       break;
-    case PT_BOOL: ;
+    case PT_BOOL:
+    case MRC_VAR_BOOL: ;
       int val;
       ierr = H5LTget_attribute_int(group, ".", name, &val); CE;
       pv->u_bool = val;
@@ -258,6 +268,12 @@ xdmf_collective_read_attr(struct mrc_io *io, const char *path, int type,
       ierr = H5LTget_attribute_int(group, ".", name, pv->u_int_array.vals); CE;
       break;
     }
+    case PT_PTR:
+      break;
+    default:
+      mprintf("mrc_io_xdmf_collective: not reading attr '%s' (type %d)\n", name, type);
+      assert(0);
+      break;
     }
     ierr = H5Gclose(group); CE;
   }
@@ -267,9 +283,11 @@ xdmf_collective_read_attr(struct mrc_io *io, const char *path, int type,
   switch (type) {
   case PT_SELECT:
   case PT_INT:
+  case MRC_VAR_INT:
     MPI_Bcast(&pv->u_int, 1, MPI_INT, root, comm);
     break;
-  case PT_BOOL: ;
+  case PT_BOOL:
+  case MRC_VAR_BOOL: ;
     int val = pv->u_int;
     MPI_Bcast(&val, 1, MPI_INT, root, comm);
     pv->u_int = val;
@@ -297,6 +315,20 @@ xdmf_collective_read_attr(struct mrc_io *io, const char *path, int type,
     break;
   case PT_FLOAT3:
     MPI_Bcast(pv->u_float3, 3, MPI_FLOAT, root, comm);
+    break;
+  case PT_INT_ARRAY:
+    MPI_Bcast(&pv->u_int_array.nr_vals, 1, MPI_INT, root, comm);
+    if (io->rank != root) {
+      free(pv->u_int_array.vals);
+      pv->u_int_array.vals = calloc(pv->u_int_array.nr_vals, sizeof(int));
+    }
+    MPI_Bcast(pv->u_int_array.vals, pv->u_int_array.nr_vals, MPI_INT, root, comm);
+    break;
+  case PT_PTR:
+    break;
+  default:
+    mprintf("mrc_io_xdmf_collective: attr '%s' (type %d)\n", name, type);
+    assert(0);
     break;
   }
 }
@@ -663,9 +695,8 @@ xdmf_collective_read_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
 
   if (xdmf->is_writer) {
     struct mrc_f1 *f1 = mrc_f1_create(MPI_COMM_SELF);
-    nr_comps = mrc_f1_nr_comps(f1);
-    mrc_f1_set_param_int_array(f1, "dims", 2, (int [2]) { gdims[ctx.dim], 1});
-    mrc_f1_set_sw(f1, ctx.sw);
+    mrc_f1_set_param_int_array(f1, "dims", 2, (int [2]) { gdims[ctx.dim], nr_comps });
+    mrc_f1_set_param_int_array(f1, "sw", 2, (int [2]) { ctx.sw, 0 });
     mrc_f1_setup(f1);
 
     hid_t group0 = H5Gopen(file->h5_file, path, H5P_DEFAULT); H5_CHK(group0);
