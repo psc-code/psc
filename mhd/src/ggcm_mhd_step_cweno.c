@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <math.h>
 
-//#define DEBUG
+#define DEBUG
 
 // ----------------------------------------------------------------------
 // ggcm_mhd_get_fields
@@ -826,7 +826,7 @@ calc_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
     
     assert(isfinite(bp));
     assert(isfinite(bm));
-    //    bp = 1e-3; bm = -1e-3;
+    //bp = 1e-3; bm = -1e-3;
     // flux of _EX,_EY,_EZ through the y faces    
     FLUX(flux, 1, _EX, ix,iy,iz) =
        (1.f/(bp - bm)) * (     bp  *  MRC_F3(E_p[1], 2, ix,iy-1,iz) - bm * MRC_F3(E_m[1], 2, ix,iy,iz) + 
