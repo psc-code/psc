@@ -1,3 +1,4 @@
+#!/bin/sh
 
 # Brio-Wu Shock Tube test [Brio & Wu JCP, 1988 75, 2, 400] 
 pdim='x'
@@ -20,7 +21,7 @@ openmpirun -n 2 mhd_bw \
     --init bw  --ggcm_mhd_ic_pdim x --lmx 0 --lmy 0 --lmz 0 \
     --mx 1024 --my 2 --mz 2 --mrc_ts_dt 0.000125 --npx 2 \
     --ggcm_mhd_diag_fields rr1:rv1:uu1:b1:j \
-    --mrc_ts_max_time 0.5 --mrc_ts_output_every_time 0.002
+    --mrc_ts_max_time 0.0005 --mrc_ts_output_every_time 0.002
 fi 
 
 
