@@ -25,6 +25,11 @@ struct ggcm_mhd_step_ops {
   int task_corr1_const;
 };
 
+
+//struct mrc_fld *
+//ggcm_mhd_get_fields(struct ggcm_mhd *mhd, const char *name, int nr_comp)
+
+
 #define ggcm_mhd_step_ops(step) ((struct ggcm_mhd_step_ops *)(step)->obj.ops)
 
 extern struct ggcm_mhd_step_ops ggcm_mhd_step_cweno_ops;

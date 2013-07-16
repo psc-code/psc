@@ -40,6 +40,16 @@ libmhd_la_SOURCES = \
 	ggcm_mhd_ic.c \
 	\
 	ggcm_mhd_step.c \
+	ggcm_mhd_get_fields.c \
+	calc_neg_divg.c \
+	calc_fluxes_per_face.c \
+	calc_u_delta.c \
+	calc_u_pm.c \
+	calc_KNP_fluxes.c \
+	calc_cweno_fluxes.c \
+	calc_ct_rhs.c \
+	ggcm_mhd_fill_ghost_fld.c \
+	ggcm_mhd_get_fields.c \
 	ggcm_mhd_step_cweno.c \
 	\
 	mrc_ts_monitor_ggcm.c \
