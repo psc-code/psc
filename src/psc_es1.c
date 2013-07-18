@@ -12,11 +12,37 @@
 #include <math.h>
 #include <time.h>
 
-// plasma oscillation
-// src/psc_es1 --psc_output_particles_type ascii --psc_output_particles_every_step 1 --mrc_io_type ascii --pfield_step 1 --psc_diag_every_step 1
+// ======================================================================
+// psc_es1
+//
+// This code replicates, to some extent, the ES1 code from Birdsall/Langdon
+//
+// However, PSC is an electromagnetic code, so changes in charge density don't
+// cause instantaneous changes in electric potential/field everywhere, information
+// propagates at the speed of light (which is a parameter)
 
-// two-stream
-// src/ psc_es1 --psc_output_particles_type ascii --psc_output_particles_every_step 10 --mrc_io_type ascii --write_tfield no --pfield_step 10 --psc_diag_every_step 10 --particle_kinds e1,e2 --v0_1 1. --v0_2 -1. --cc 6. --nicell 32
+
+/* plasma oscillation
+   
+   src/psc_es1					\
+   --psc_output_particles_type ascii		\
+   --psc_output_particles_every_step 1		\
+   --mrc_io_type ascii				\
+   --pfield_step 1				\
+   --psc_diag_every_step 1
+*/
+
+/* two-stream instability
+   
+   src/psc_es1								\
+   --psc_output_particles_type ascii					\
+   --psc_output_particles_every_step 10					\
+   --mrc_io_type ascii							\
+   --write_tfield no --pfield_step 10					\
+   --psc_diag_every_step 10						\
+   --particle_kinds e1,e2						\
+   --v0_1 1. --v0_2 -1. --cc 6. --nicell 32
+*/
 
 struct psc_es1_species {
   int nlg; // number of loading groups
@@ -34,8 +60,6 @@ struct psc_es1_species {
 
 struct psc_es1 {
   // parameters
-  double om_pe;
-  double om_ce;
   struct psc_es1_species species[MAX_KINDS];
 };
 
@@ -43,9 +67,6 @@ struct psc_es1 {
 
 #define VAR(x) (void *)offsetof(struct psc_es1, x)
 static struct param psc_es1_descr[] = {
-  { "om_pe"         , VAR(om_pe)            , PARAM_DOUBLE(1.)            },
-  { "om_ce"         , VAR(om_ce)            , PARAM_DOUBLE(2.)            },
-
   { "nlg_1"         , VAR(species[0].nlg)   , PARAM_INT(1)                },
   { "q_1"           , VAR(species[0].q)     , PARAM_DOUBLE(-1.)           },
   { "m_1"           , VAR(species[0].m)     , PARAM_DOUBLE(1.)            },
@@ -121,7 +142,7 @@ psc_es1_init_field(struct psc *psc, double x[3], int m)
     for (int kind = 0; kind < psc->nr_kinds; kind++) {
       struct psc_es1_species *s = &es1->species[kind];
       double theta = 2. * M_PI * s->mode / psc->domain.length[2] * x[2];
-      ez += s->q * s->x1 * cos(theta + s->thetax);
+      ez -= s->q * s->x1 * cos(theta + s->thetax);
     }
     return ez;
 
@@ -182,6 +203,7 @@ psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 	p->qni = s->q;
 	p->mni = s->m;
 	p->wni = 1.;
+	p->kind = kind;
       }
       for (int i = 0; i < n; i++) {
 	particle_t *p = particles_get_one(prts, il1++);
