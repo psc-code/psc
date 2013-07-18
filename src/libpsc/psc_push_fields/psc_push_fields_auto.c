@@ -27,9 +27,8 @@ psc_push_fields_auto_setup(struct psc_push_fields *push)
   psc_push_fields_setup(sub->fwd);
   psc_push_fields_add_child(push, (struct mrc_obj *) sub->fwd);
 
-  list_del(&push->bnd_fields->obj.child_entry);
   psc_bnd_fields_destroy(push->bnd_fields);
-  push->bnd_fields = sub->fwd->bnd_fields;
+  push->bnd_fields = psc_bnd_fields_get(sub->fwd->bnd_fields);
 }
 
 static void
