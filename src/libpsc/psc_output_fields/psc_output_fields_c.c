@@ -56,6 +56,16 @@ write_fields(struct psc_output_fields_c *out, struct psc_fields_list *list,
   }
 
   mrc_io_open(io, "w", ppsc->timestep, ppsc->timestep * ppsc->dt);
+
+  // save some basic info about the run in the output file
+  struct mrc_obj *obj = mrc_obj_create(mrc_io_comm(io));
+  mrc_obj_set_name(obj, "psc");
+  mrc_obj_dict_add_int(obj, "timestep", ppsc->timestep);
+  mrc_obj_dict_add_float(obj, "time", ppsc->timestep * ppsc->dt);
+  mrc_obj_dict_add_float(obj, "cc", ppsc->prm.cc);
+  mrc_obj_write(obj, io);
+  mrc_obj_destroy(obj);
+
   for (int m = 0; m < list->nr_flds; m++) {
     mfields_c_t *flds = list->flds[m];
     struct psc_fields *fld = psc_mfields_get_patch(flds, 0);
