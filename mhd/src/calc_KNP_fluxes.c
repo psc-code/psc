@@ -50,20 +50,22 @@ calc_KNP_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
     float rhoip = 1.f / MRC_F3(u_p[0], _RR1, ix-1,iy,iz);	
     float rhoim = 1.f / MRC_F3(u_m[0], _RR1, ix,iy,iz);	
     float ppp = (gamma - 1.f) *
-      (MRC_F3(u_p[0], _UU1, ix-1,iy,iz) - .5f * rhoip * (sqr(MRC_F3(u_p[0], _RV1X, ix-1,iy,iz)) +
-						     sqr(MRC_F3(u_p[0], _RV1Y, ix-1,iy,iz)) +
-						     sqr(MRC_F3(u_p[0], _RV1Z, ix-1,iy,iz)))- 
-       .5f * (sqr(MRC_F3(u_p[0], _B1X, ix-1,iy,iz)) +
-	      sqr(MRC_F3(u_p[0], _B1Y, ix-1,iy,iz)) +
-	      sqr(MRC_F3(u_p[0], _B1Z, ix-1,iy,iz))));
-       
+      (MRC_F3(u_p[0], _UU1, ix-1,iy,iz) - .5f * rhoip * 
+       (sqr(MRC_F3(u_p[0], _RV1X, ix-1,iy,iz)) +
+	sqr(MRC_F3(u_p[0], _RV1Y, ix-1,iy,iz)) +
+	sqr(MRC_F3(u_p[0], _RV1Z, ix-1,iy,iz)))- 
+      .5f * (sqr(MRC_F3(u_p[0], _B1X, ix-1,iy,iz)) +
+	     sqr(MRC_F3(u_p[0], _B1Y, ix-1,iy,iz)) +
+	     sqr(MRC_F3(u_p[0], _B1Z, ix-1,iy,iz))));
+    
     float ppm = (gamma - 1.f) *
-      (MRC_F3(u_m[0], _UU1, ix,iy,iz) - .5f * rhoim * (sqr(MRC_F3(u_m[0], _RV1X, ix,iy,iz)) +
-						       sqr(MRC_F3(u_m[0], _RV1Y, ix,iy,iz)) +
-						       sqr(MRC_F3(u_m[0], _RV1Z, ix,iy,iz)))-       
-       .5f * (sqr(MRC_F3(u_m[0], _B1X, ix,iy,iz)) +
-	      sqr(MRC_F3(u_m[0], _B1Y, ix,iy,iz)) +
-	      sqr(MRC_F3(u_m[0], _B1Z, ix,iy,iz))));
+      (MRC_F3(u_m[0], _UU1, ix,iy,iz) - .5f * rhoim * 
+       (sqr(MRC_F3(u_m[0], _RV1X, ix,iy,iz)) +
+	sqr(MRC_F3(u_m[0], _RV1Y, ix,iy,iz)) +
+	sqr(MRC_F3(u_m[0], _RV1Z, ix,iy,iz)))-       
+      .5f * (sqr(MRC_F3(u_m[0], _B1X, ix,iy,iz)) +
+	     sqr(MRC_F3(u_m[0], _B1Y, ix,iy,iz)) +
+	     sqr(MRC_F3(u_m[0], _B1Z, ix,iy,iz))));
 
 #ifdef DEBUG 
     if (ppm < 0) { 

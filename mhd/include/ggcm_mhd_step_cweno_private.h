@@ -30,6 +30,9 @@
 // include whistler speed? 
 #define incws 0
 
+// toggle between semi-conservative and conservative form
+#define SEMICONSV 1
+
 enum {
   // reuse B in the _fluxes_ (only) to store E field
   _EX = _B1X,
@@ -69,6 +72,13 @@ void ggcm_mhd_fill_ghost_fld(struct ggcm_mhd *mhd, struct mrc_fld *_fld);
 void calc_u_delta(struct mrc_fld *_u_delta[3], struct mrc_fld *_u);
 
 // ----------------------------------------------------------------------
+// calc_semiconsv_rhs
+//
+// calculates rhs for semi-conservative mhd
+
+void calc_semiconsv_rhs(struct ggcm_mhd *mhd, struct mrc_fld *_rhs, struct mrc_fld *_flux[3]);
+
+// ----------------------------------------------------------------------
 // calc_neg_divg
 // 
 // calculates negative divergence 
@@ -105,8 +115,6 @@ void calc_KNP_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
 		     struct mrc_fld *_u,
 		     struct mrc_fld *_u_p[3], struct mrc_fld *_u_m[3],
 		     struct mrc_fld *_E_p[3], struct mrc_fld *_E_m[3]);
-
-
 
 // ----------------------------------------------------------------------
 // calc_ct_rhs 

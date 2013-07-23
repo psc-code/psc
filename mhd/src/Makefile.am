@@ -48,6 +48,7 @@ libmhd_la_SOURCES = \
 	calc_KNP_fluxes.c \
 	calc_cweno_fluxes.c \
 	calc_ct_rhs.c \
+	calc_semiconsv_rhs.c \
 	ggcm_mhd_fill_ghost_fld.c \
 	ggcm_mhd_get_fields.c \
 	ggcm_mhd_step_cweno.c \

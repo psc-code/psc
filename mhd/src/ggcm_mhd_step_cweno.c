@@ -41,11 +41,25 @@ ggcm_mhd_step_cweno_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
   for (int f = 0; f < 3; f++) {
     flux[f] = ggcm_mhd_get_fields(mhd, "flux", 8);
   }
-
+ 
   calc_cweno_fluxes(mhd, flux, fld);
-  calc_neg_divg(mhd, rhs, flux);
-  calc_ct_rhs(mhd, rhs, flux);
 
+#if SEMICONSV   
+  
+  /*
+  struct mrc_fld *J_cc = ggcm_mhd_get_fields(mhd, "J_cc", 3); 
+  struct mrc_fld *E_cc = ggcm_mhd_get_fields(mhd, "E_cc", 3); 
+  calc_jxB(mhd, jxB, J_cc);  
+  calc_jdotE(mhd, jdotE, J_cc, E_cc);
+  calc_sc_source_terms( , jxB, jdotE); 
+  */
+  calc_semiconsv_rhs(mhd, rhs, flux);//, fld); 
+  
+#else 
+  calc_neg_divg(mhd, rhs, flux);
+#endif 
+
+  calc_ct_rhs(mhd, rhs, flux);
   struct mrc_fld *r = mrc_fld_get_as(rhs, "mhd_fc_float");
   assert(mhd->fld->_data_type == MRC_NT_FLOAT);
   struct mrc_fld *f = mrc_fld_get_as(mhd->fld, mrc_fld_type(mhd->fld));
@@ -79,6 +93,7 @@ ggcm_mhd_step_cweno_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
   for (int f = 0; f < 3; f++) {
     mrc_fld_destroy(flux[f]);
   }
+
 }
 
 // ----------------------------------------------------------------------
