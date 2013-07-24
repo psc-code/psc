@@ -10,6 +10,35 @@
 #include <stdio.h>
 #include <math.h>
 
+#define U_M(var, m) MRC_F3(u_m[m], var, ix, iy, iz)
+#define U_P(var, m) MRC_F3(u_p[m], var, \
+		     (ix) - ((m) == 0), \
+		     (iy) - ((m) == 1),	\
+		     (iz) - ((m) == 2))
+
+#if SEMICONSV 
+
+#define P_M(ndx) (gamma - 1.f) * ( U_M( _UU1, ndx) - ((.5f / U_M( _RR1, ndx) ) * \
+		 (sqr(U_M( _RV1X, ndx)) + sqr(U_M( _RV1Y, ndx)) + sqr(U_M( _RV1Z, ndx)) )))
+
+#define P_P(ndx) (gamma - 1.f) * ( U_P( _UU1, ndx) - ((.5f / U_P( _RR1, ndx) ) * \
+		 (sqr(U_P( _RV1X, ndx)) + sqr(U_P( _RV1Y, ndx)) + sqr(U_P( _RV1Z, ndx)) )))
+#else 
+
+
+#define P_M(ndx) (gamma - 1.f) * ( U_M( _UU1, ndx) - ((.5f / U_M( _RR1, ndx) ) * \
+		   (sqr(U_M( _RV1X, ndx)) + sqr(U_M( _RV1Y, ndx)) + sqr(U_M( _RV1Z, ndx)) )) - \
+	    (.5f * (sqr(U_M( _B1X, ndx)) + sqr(U_M(_B1Y, ndx)) + sqr(U_M(_B1Z, ndx)))))
+
+#define P_P(ndx) (gamma - 1.f) * ( U_P( _UU1, ndx) - ((.5f / U_P( _RR1, ndx) ) * \
+		   (sqr(U_P( _RV1X, ndx)) + sqr(U_P( _RV1Y, ndx)) + sqr(U_P( _RV1Z, ndx)) )) - \
+	    (.5f * (sqr(U_P( _B1X, ndx))  + sqr(U_P( _B1Y, ndx))  + sqr(U_P(_B1Z, ndx)))))
+
+
+#endif 
+
+
+
 // ----------------------------------------------------------------------
 // calc_KNP_fluxes 
 // A. Kurganov, S. Noelle, G. Petrova, SIAM J. Sci. Comput. 23 (2001) 707.
@@ -49,6 +78,7 @@ calc_KNP_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
  
     float rhoip = 1.f / MRC_F3(u_p[0], _RR1, ix-1,iy,iz);	
     float rhoim = 1.f / MRC_F3(u_m[0], _RR1, ix,iy,iz);	
+    /*
     float ppp = (gamma - 1.f) *
       (MRC_F3(u_p[0], _UU1, ix-1,iy,iz) - .5f * rhoip * 
        (sqr(MRC_F3(u_p[0], _RV1X, ix-1,iy,iz)) +
@@ -57,7 +87,8 @@ calc_KNP_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
       .5f * (sqr(MRC_F3(u_p[0], _B1X, ix-1,iy,iz)) +
 	     sqr(MRC_F3(u_p[0], _B1Y, ix-1,iy,iz)) +
 	     sqr(MRC_F3(u_p[0], _B1Z, ix-1,iy,iz))));
-    
+    */
+    /*
     float ppm = (gamma - 1.f) *
       (MRC_F3(u_m[0], _UU1, ix,iy,iz) - .5f * rhoim * 
        (sqr(MRC_F3(u_m[0], _RV1X, ix,iy,iz)) +
@@ -66,7 +97,10 @@ calc_KNP_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
       .5f * (sqr(MRC_F3(u_m[0], _B1X, ix,iy,iz)) +
 	     sqr(MRC_F3(u_m[0], _B1Y, ix,iy,iz)) +
 	     sqr(MRC_F3(u_m[0], _B1Z, ix,iy,iz))));
-
+    */
+    float ppp = P_P(0);
+    float ppm = P_M(0);
+    
 #ifdef DEBUG 
     if (ppm < 0) { 
       ppm = 1.01e-13; 
@@ -75,7 +109,6 @@ calc_KNP_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
       ppp = 1.e-13; 
     } 
 #endif
-
     
     float csp = sqrtf((gamma * ppp) / (MRC_F3(u_p[0], _RR1, ix-1,iy,iz)));
     float csm = sqrtf((gamma * ppm) / (MRC_F3(u_m[0], _RR1, ix,iy,iz)));   
@@ -113,7 +146,14 @@ calc_KNP_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
     cwp = 0;
     cwm = 0;
 #endif
-
+    float acfm = cfm; 
+    float acfp = cfp; 
+    float acAp = cAp; 
+    float acAm = cAm;
+    float acsp = csp; 
+    float acsm = csm;
+    float acpp = U_P( _UU1, 0) ; 
+    float acpm = U_M( _UU1, 0) ; 
     //printf("cAp %f cwp %f %f \n", cAp, d_i*(cAp*M_PI*gmhd->crdx[BD1][ix+2]) 
     // sqrtf(MRC_F3(u_p[0], _RR1, ix-1,iy,iz)),gmhd->crdx[BD1][ix+2]  ); 
 
@@ -135,7 +175,7 @@ calc_KNP_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
     // Coeffiecents bp and bm 
     rhoip = 1.f / MRC_F3(u_p[1], _RR1, ix,iy-1,iz);
     rhoim = 1.f / MRC_F3(u_m[1], _RR1, ix,iy,iz); 
-    
+    /*
     ppp = (gamma - 1.f) *
       (MRC_F3(u_p[1], _UU1, ix,iy-1,iz) - .5f * rhoip * (sqr(MRC_F3(u_p[1], _RV1X, ix,iy-1,iz)) +
 						    sqr(MRC_F3(u_p[1], _RV1Y, ix,iy-1,iz)) +
@@ -152,6 +192,9 @@ calc_KNP_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
 	      sqr(MRC_F3(u_m[1], _B1Y, ix,iy,iz)) +
 	      sqr(MRC_F3(u_m[1], _B1Z, ix,iy,iz))));
 
+    */
+    ppp = P_P(1); 
+    ppm = P_M(1); 
 
 #ifdef DEBUG 
     if (ppm < 0) { 
@@ -213,6 +256,7 @@ calc_KNP_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
     rhoim = 1.f / MRC_F3(u_m[2], _RR1, ix,iy,iz-1); 
 
 
+    /*
     ppp = (gamma - 1.f) *
       (MRC_F3(u_p[2], _UU1, ix,iy,iz-1) - .5f * rhoip * (sqr(MRC_F3(u_p[2], _RV1X, ix,iy,iz-1)) +
 						     sqr(MRC_F3(u_p[2], _RV1Y, ix,iy,iz-1)) +
@@ -228,6 +272,10 @@ calc_KNP_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
        .5f * (sqr(MRC_F3(u_m[2], _B1X, ix,iy,iz)) +
 	      sqr(MRC_F3(u_m[2], _B1Y, ix,iy,iz)) +
 	      sqr(MRC_F3(u_m[2], _B1Z, ix,iy,iz))));
+    */
+    ppm = P_M(2);
+    ppp = P_P(2); 
+
        
     float tmpbe =  .5f * (sqr(MRC_F3(u_p[2], _B1X, ix,iy,iz)) +
 	      sqr(MRC_F3(u_p[2], _B1Y, ix,iy,iz)) +
@@ -333,7 +381,7 @@ calc_KNP_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
     
     assert(isfinite(cp));
     assert(isfinite(cm));
-    cp = 1e-3; cm = -1e-3;
+    //cp = 1e-3; cm = -1e-3;
     // flux of _EX,_EY,_EZ through the z faces
     FLUX(flux, 2, _EX, ix,iy,iz) = 
       (1.f/(cp - cm))*( - cp * MRC_F3(E_p[2], 1, ix,iy,iz-1) + cm * MRC_F3(E_m[2], 1, ix,iy,iz) + 
@@ -360,16 +408,19 @@ calc_KNP_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
       FLUX(flux, 1, m, ix,iy,iz) = .5f * (FLUX(flux_p, 1, m, ix-1,iy,iz) + FLUX(flux_m, 1, m, ix,iy,iz));
       FLUX(flux, 2, m, ix,iy,iz) = .5f * (FLUX(flux_p, 2, m, ix-1,iy,iz) + FLUX(flux_m, 2, m, ix,iy,iz));
 #endif
+
+      
       if (ix > 1 && ix < 64 &&
 	  iy > 1 && iy < 64 &&
 	  iz > 1 && iz < 64) {
-	assert(isfinite(FLUX(flux, 0, m, ix,iy,iz)));
-	assert(isfinite(FLUX(flux, 1, m, ix,iy,iz)));
-	if (!isfinite(FLUX(flux, 2, m, ix,iy,iz))) {
-	  mprintf("ix %d %d %d cp %g cm %g\n", ix,iy,iz, cp, cm);
+	//assert(isfinite(FLUX(flux, 0, m, ix,iy,iz)));
+	//	assert(isfinite(FLUX(flux, 1, m, ix,iy,iz)));
+	if (!isfinite(FLUX(flux, 0, m, ix,iy,iz))) {
+	  mprintf("%d ix %d %d %d ap %g am %g acfm %g acfp %g acAp %g acAm %g acsp %g acsm %g acpp %g acpm %g \n", m, ix,iy,iz, ap, am, acfm, acfp, acAp, acAm, acsp, acsm, acpp, acpm);
 	}
-	assert(isfinite(FLUX(flux, 2, m, ix,iy,iz)));
+	assert(isfinite(FLUX(flux, 0, m, ix,iy,iz)));
       }
+      
     } 
   } mrc_fld_foreach_end;
  

@@ -74,8 +74,11 @@ calc_semiconsv_rhs(struct ggcm_mhd *mhd, struct mrc_fld *_rhs, struct mrc_fld *_
 
   
   // add JdotE source term 
-  
-  struct mrc_fld *J_cc = mrc_fld_get_as(_J_cc, "float");
+ 
+ struct mrc_fld *J_cc = mrc_fld_get_as(_J_cc, "float");
+#if 0
+
+ //struct mrc_fld *J_cc = mrc_fld_get_as(_J_cc, "float");
   mrc_fld_foreach(rhs, ix, iy, iz, 0, 0) {
     int ind[3] = { ix, iy, iz };
     MRC_F3(rhs, _UU1, ix, iy, iz) += 
@@ -83,7 +86,9 @@ calc_semiconsv_rhs(struct ggcm_mhd *mhd, struct mrc_fld *_rhs, struct mrc_fld *_
       MRC_F3(E_cc, 1, ix, iy, iz) * MRC_F3(J_cc, 1, ix, iy, iz) + 
       MRC_F3(E_cc, 2, ix, iy, iz) * MRC_F3(J_cc, 2, ix, iy, iz) ;   
   } mrc_fld_foreach_end; 
+#endif
   
+#if 1
   // add JxB source term
   
   mrc_fld_foreach(rhs, ix, iy, iz, 0, 0) {
@@ -102,8 +107,9 @@ calc_semiconsv_rhs(struct ggcm_mhd *mhd, struct mrc_fld *_rhs, struct mrc_fld *_
   for (int f = 0; f < 3; f++) {
     mrc_fld_put_as(flux[f], _flux[f]);
   }
-
-  mrc_fld_destroy(E_cc);
   mrc_fld_destroy(J_cc);
+#endif
+  mrc_fld_destroy(E_cc);
+  //  mrc_fld_destroy(J_cc);
   mrc_fld_put_as(rhs, _rhs);
 }
