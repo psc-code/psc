@@ -73,22 +73,27 @@ calc_semiconsv_rhs(struct ggcm_mhd *mhd, struct mrc_fld *_rhs, struct mrc_fld *_
   }
 
   
-  // add JdotE source term 
+  // add JdotE source term  
  
  struct mrc_fld *J_cc = mrc_fld_get_as(_J_cc, "float");
-#if 0
-
- //struct mrc_fld *J_cc = mrc_fld_get_as(_J_cc, "float");
+#if 1
+ 
+ // struct mrc_fld *J_cc = mrc_fld_get_as(_J_cc, "float");
   mrc_fld_foreach(rhs, ix, iy, iz, 0, 0) {
     int ind[3] = { ix, iy, iz };
     MRC_F3(rhs, _UU1, ix, iy, iz) += 
       MRC_F3(E_cc, 0, ix, iy, iz) * MRC_F3(J_cc, 0, ix, iy, iz) + 
       MRC_F3(E_cc, 1, ix, iy, iz) * MRC_F3(J_cc, 1, ix, iy, iz) + 
       MRC_F3(E_cc, 2, ix, iy, iz) * MRC_F3(J_cc, 2, ix, iy, iz) ;   
+    /*
+    printf("ecc0 %f ecc1 %f ecc2 %f ecc3 %f \n", 
+	   FLUX(flux, 1, _EZ,ix,iy,iz),
+	   FLUX(flux, 1, _EZ,ix,iy-1,iz), 
+	   FLUX(flux, 2, _EY,ix,iy,iz-), 
+	   FLUX(flux, 2, _EY,ix,iy,iz-1));
+    */
   } mrc_fld_foreach_end; 
-#endif
-  
-#if 1
+
   // add JxB source term
   
   mrc_fld_foreach(rhs, ix, iy, iz, 0, 0) {
@@ -107,9 +112,13 @@ calc_semiconsv_rhs(struct ggcm_mhd *mhd, struct mrc_fld *_rhs, struct mrc_fld *_
   for (int f = 0; f < 3; f++) {
     mrc_fld_put_as(flux[f], _flux[f]);
   }
-  mrc_fld_destroy(J_cc);
+
 #endif
+  mrc_fld_destroy(fld);
+  mrc_fld_destroy(J_cc);
   mrc_fld_destroy(E_cc);
+  //mrc_fld_destroy(_E_cc);
+  //mrc_fld_destroy(_J_cc);
   //  mrc_fld_destroy(J_cc);
   mrc_fld_put_as(rhs, _rhs);
 }

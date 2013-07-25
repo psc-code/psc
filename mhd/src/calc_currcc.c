@@ -54,9 +54,9 @@ ggcm_mhd_calc_currcc(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
       (MRC_F3(tmp, 2, ix,iy  ,iz) + MRC_F3(tmp, 2, ix-1,iy,iz  ) + 
        MRC_F3(tmp, 2, ix,iy-1,iz) + MRC_F3(tmp, 2, ix-1,iy-1,iz));
   } mrc_fld_foreach_end;     
-
   mrc_fld_put_as(c, currcc);
   mrc_fld_put_as(t, tmp);
   mrc_fld_put_as(f, fld);
+  mrc_fld_destroy(tmp); 
 }
 
