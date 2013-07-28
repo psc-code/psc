@@ -16,7 +16,7 @@ typedef struct psc_particle_c {
   particle_c_real_t qni;
   particle_c_real_t mni;
   particle_c_real_t wni;
-  long              kind; // 64 bits to match the other members, for bnd exchange
+  long long         kind; // 64 bits to match the other members, for bnd exchange
 } particle_c_t;
 
 struct psc_particles_c {
