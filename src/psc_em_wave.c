@@ -55,6 +55,7 @@ psc_em_wave_init_field(struct psc *psc, double x[3], int m)
 
   switch (m) {
   case EX: return sin(k * x[2]);
+  case HY: return sin(k * x[2]);
   default: return 0.;
   }
 }
