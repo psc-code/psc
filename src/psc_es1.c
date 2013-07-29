@@ -45,6 +45,8 @@
 */
 
 struct psc_es1_species {
+  double vt1; // thermal velocity for random velocities
+  double vt2; // thermal velocity for order velocities
   int nlg; // number of loading groups
   double q;
   double m;
@@ -67,6 +69,8 @@ struct psc_es1 {
 
 #define VAR(x) (void *)offsetof(struct psc_es1, x)
 static struct param psc_es1_descr[] = {
+  { "vt1_1"         , VAR(species[0].vt1)   , PARAM_DOUBLE(0.)            },
+  { "vt2_1"         , VAR(species[0].vt2)   , PARAM_DOUBLE(0.)            },
   { "nlg_1"         , VAR(species[0].nlg)   , PARAM_INT(1)                },
   { "q_1"           , VAR(species[0].q)     , PARAM_DOUBLE(-1.)           },
   { "m_1"           , VAR(species[0].m)     , PARAM_DOUBLE(1.)            },
@@ -77,6 +81,8 @@ static struct param psc_es1_descr[] = {
   { "thetax_1"      , VAR(species[0].thetax), PARAM_DOUBLE(0.)            },
   { "thetav_1"      , VAR(species[0].thetav), PARAM_DOUBLE(0.)            },
 
+  { "vt1_2"         , VAR(species[1].vt1)   , PARAM_DOUBLE(0.)            },
+  { "vt2_2"         , VAR(species[1].vt2)   , PARAM_DOUBLE(0.)            },
   { "nlg_2"         , VAR(species[1].nlg)   , PARAM_INT(1)                },
   { "q_2"           , VAR(species[1].q)     , PARAM_DOUBLE(-1.)           },
   { "m_2"           , VAR(species[1].m)     , PARAM_DOUBLE(1.)            },
@@ -135,7 +141,6 @@ psc_es1_init_field(struct psc *psc, double x[3], int m)
 {
   struct psc_es1 *es1 = to_psc_es1(psc);
 
-
   switch (m) {
   case EZ: ;
     double ez = 0;
@@ -151,11 +156,174 @@ psc_es1_init_field(struct psc *psc, double x[3], int m)
 }
 
 // ----------------------------------------------------------------------
-// psc_es1_setup_particles
+// ranf
+//
+// return random number between 0 and 1
 
+static double
+ranf()
+{
+  return (double) random() / RAND_MAX;
+
+}
+
+// ----------------------------------------------------------------------
+// psc_es1_init_species
+
+static void
+psc_es1_init_species(struct psc *psc, int kind, struct psc_es1_species *s,
+		     struct psc_particles *prts, int *p_il1)
+{
+  int p = 0;
+  int il1 = *p_il1;
+  int *ldims = psc->patch[p].ldims;
+  int n = ldims[0] * ldims[1] * ldims[2] * psc->prm.nicell; // FIXME
+  double l = psc->domain.length[2];
+
+  // load first of nlg groups of particles.
+  int ngr = n / s->nlg;
+  double lg = l / s->nlg;
+  double ddx = l / n;
+
+  double *x = calloc(n, sizeof(*x));
+  double *vx = calloc(n, sizeof(*vx));
+
+  // load evenly spaced, with drift.
+  // also does cold case.
+  for (int i = 0; i < ngr; i++) {
+    double x0 = (i + .5) * ddx;
+    int i1 = i; // + il1;
+    x [i1] = x0;
+    vx[i1] = s->v0;
+  }
+
+  // load order velocities in vx ("quiet start", or at least subdued).
+  // is set up for maxwellian*v*nv2, but can do any smooth distribution.
+  // hereafter, ngr is prferably a power of 2
+  if (s->vt2 != 0.) {
+    // first store indefinite integral of distribution function in x array.
+    // use midpoint rule -simple and quite accurate.
+    double vmax = 5. * s->vt2;
+    double dv = 2.*vmax / (n-1);
+    double vvnv2 = 1.;
+    x[0] = 0.;
+    for (int i = 2; i <= n; i++) {
+      double vv = ((i-1.5) * dv - vmax) / s->vt2;
+#if 0
+      if (s->nv2 != 0.) {
+	vvnv2 = pow(vv, s->nv2);
+      }
+#endif
+      double fv = vvnv2*exp(-.5 * sqr(vv));
+      int i1 = i-1;
+      x[i1] = x[i1-1] + fmax(fv, 0.);
+      printf("i1 %d x %g\n", i1, x[i1]);
+    }
+    
+    // for evenly spaced (half-integer multiples) valus of the integral,
+    // find corresponding velocities by inverse linear interpolation
+    double df = x[n-1] / ngr;
+    int i1 = 0;
+    int j = 0;
+    for (int i = 1;i <= ngr; i++) {
+      double fv = (i - .5) * df;
+      while (fv >= x[j+1]) {
+	j++;
+	assert(j < n - 1);
+      }
+      double vv = dv * (j + (fv - x[j])/(x[j+1] - x[j])) - vmax;
+      vx[i1] += vv;
+      i1++;
+    }
+
+    // for ordered velocities, scramble positions to reduce correlations
+    float xs = 0.0;
+    for (int i=1; i <= ngr; i++)
+    {
+      i1 = i - 1;
+      x[i1] = xs * lg + 0.5*ddx;
+      float xsi = 1.0;
+      do {
+	xsi *= 0.5;
+	xs -= xsi;
+      } while (xs >= 0.0);
+      xs += 2.0*xsi;
+    }
+  }
+
+  // if magnetized, rotate (vx, 0) into (vx, vy)
+#if 0
+  if (s->wc != 0.) {
+    assert(0);
+  }
+#endif
+
+  // copy first group into rest of groups.
+  if (s->nlg > 1) {
+    int xs = 0.;
+    for (int i = ngr + 1; i <= n; i += ngr) {
+      xs += lg;
+      for (int j = 1; j <= ngr; j++) {
+	int i1 = j - 1 - 1;
+	int i2 = i1 + i - 1 - 1;
+	x [i2] = x [i1] + xs;
+	vx[i2] = vx[i1];
+#if 0
+	if (s->wc != 0.) {
+	  vy[i2] = vy[i1];
+	}
+#endif
+      }
+    }
+  }
+
+  // add random maxwellian.
+  if (s->vt1 != 0.) {
+    for (int i = 1; i < n; i++) {
+      int i1 = i - 1;
+      for (int j = 1; j < 12.; j++) {
+#if 0
+	if (s->wc != 0.) {
+	} 
+#endif
+	vx[i1] += s->vt1 * (ranf() - .5);
+      }
+    }
+  }
+
+  // add perturbation.p5
+  for (int i = 0; i < n; i++) {
+    double theta = 2. * M_PI * s->mode * x[i] / l;
+    x [i] += s->x1 * cos(theta + s->thetax);
+    vx[i] += s->v1 * sin(theta + s->thetav);
+  }
+
+  // copy to PSC data structure
+  for (int i = 0; i < n; i++) {
+    particle_t *p = particles_get_one(prts, il1 + i);
+    if (x[i] < 0.) x[i] += l;
+    if (x[i] >= l) x[i] -= l;
+    p->zi  = x[i];
+    p->pzi = vx[i] / psc->prm.cc;
+    p->qni = s->q;
+    p->mni = s->m;
+    p->wni = 1.;
+    p->kind = kind;
+  }
+
+  free(x);
+  free(vx);
+
+  il1 += n;
+  *p_il1 = il1;
+}
+
+// ----------------------------------------------------------------------
+// psc_es1_setup_particles
+  
 void
 psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
-		       bool count_only)
+			bool count_only)
 {
   struct psc_es1 *es1 = to_psc_es1(psc);
 
@@ -171,46 +339,14 @@ psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
     return;
   }
 
-  int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-  if (psc->prm.seed_by_time) {
-    srandom(10*rank + time(NULL));
-  } else {
-    srandom(rank);
-  }
-
-  double l = psc->domain.length[2];
-
+  assert(psc->nr_patches == 1);
   psc_foreach_patch(psc, p) {
     struct psc_particles *prts_base = psc_mparticles_get_patch(psc->particles, p);
     struct psc_particles *prts = psc_particles_get_as(prts_base, "c", MP_DONT_COPY);
   
     int il1 = 0;
     for (int kind = 0; kind < psc->nr_kinds; kind++) {
-      struct psc_es1_species *s = &es1->species[kind];
-      int *ldims = psc->patch[p].ldims;
-      int n = ldims[0] * ldims[1] * ldims[2] * psc->prm.nicell;
-      int ngr = n / s->nlg;
-      //double lg = l / nlg;
-      double ddx = l / n;
-      for (int i = 0; i < ngr; i++) {
-	particle_t *p = particles_get_one(prts, il1 + i);
-	double x0 = (i + .5) * ddx;
-	
-	p->zi = x0;
-	p->pzi = s->v0 / psc->prm.cc;
-	p->qni = s->q;
-	p->mni = s->m;
-	p->wni = 1.;
-	p->kind = kind;
-      }
-      for (int i = 0; i < n; i++) {
-	particle_t *p = particles_get_one(prts, il1++);
-	double theta = 2. * M_PI * s->mode * p->zi / l;
-	p->zi  += s->x1 * cos(theta + s->thetax);
-	p->pzi += s->v1 * sin(theta + s->thetav);
-      }
+      psc_es1_init_species(psc, kind, &es1->species[kind], prts, &il1);
     }
     prts->n_part = il1;
     assert(prts->n_part == nr_particles_by_patch[p]);
