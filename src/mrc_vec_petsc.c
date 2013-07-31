@@ -19,6 +19,7 @@
 
 struct mrc_vec_petsc {
   Vec petsc_vec;
+  int block_size;
 };
 
 #define mrc_vec_petsc(vec) mrc_to_subobj(vec, struct mrc_vec_petsc)
@@ -41,16 +42,26 @@ _mrc_vec_petsc_setup(struct mrc_vec *vec)
     petsccomm = PETSC_COMM_SELF;
   }
   
-  if (!vec->with_array) {
+  if (!vec->with_array && !sub->petsc_vec) {
     //vec->obj.comm
-    ierr = VecCreateMPI(petsccomm, vec->len, PETSC_DETERMINE, &sub->petsc_vec); CE;
-  } else {
+    if (sub->block_size) {
+      ierr = VecCreate(petsccomm, &sub->petsc_vec); CE;
+      ierr = VecSetSizes(sub->petsc_vec, vec->len, PETSC_DECIDE); CE;
+      ierr = VecSetBlockSize(sub->petsc_vec, sub->block_size); CE;
+      ierr = VecSetUp(sub->petsc_vec); CE;
+    } else {
+      ierr = VecCreateMPI(petsccomm, vec->len, PETSC_DETERMINE, &sub->petsc_vec); CE;
+    }
+  } else if (!sub->petsc_vec) {
     // I'd rather have this in vec_set_sub_set_array, but the calling order doesn't work
     // Petsc needs the len to initialize, and that isn't assigned until mrc_fld_setup.
     // Since 'set array' is called before 'setup' we have to create the petsc vec here instead of there
     assert(vec->arr);
     ierr = VecCreateMPIWithArray(petsccomm, 1, vec->len, PETSC_DECIDE, vec->arr, &sub->petsc_vec); CE;
     // FIXME: I guess our blocksize is 1 for now?
+  } else {
+    ierr = VecGetBlockSize(sub->petsc_vec, &sub->block_size); CE;
+    ierr = VecGetLocalSize(sub->petsc_vec, &vec->len); CE;
   }
 }
 
@@ -112,12 +123,22 @@ mrc_vec_petsc_create(struct mrc_vec *vec)
   vec->size_of_type = sizeof(PetscScalar);
 }
 
+
+#define VAR(x) (void *)offsetof(struct mrc_vec_petsc, x)
+static struct param mrc_vec_petsc_descr[] = {
+  { "petsc_vec"      , VAR(petsc_vec)   , PARAM_PTR(NULL)        },
+  { "block_size"     , VAR(block_size)  , PARAM_INT(0)           },
+  {},
+};
+#undef VAR
+
 // ----------------------------------------------------------------------
 // mrc_vec subclass "petsc"
 
 struct mrc_vec_ops mrc_vec_petsc_ops = {
   .name                  = "petsc",		
   .size                  = sizeof(struct mrc_vec_petsc),
+  .param_descr           = mrc_vec_petsc_descr,
   .create                = mrc_vec_petsc_create,	
   .setup                 = _mrc_vec_petsc_setup,
   .destroy               = _mrc_vec_petsc_destroy,
