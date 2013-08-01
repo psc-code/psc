@@ -20,6 +20,8 @@
 struct mrc_vec_petsc {
   Vec petsc_vec;
   int block_size;
+  bool with_petsc_vec;
+  bool gotten_petsc_vec;
 };
 
 #define mrc_vec_petsc(vec) mrc_to_subobj(vec, struct mrc_vec_petsc)
@@ -42,7 +44,7 @@ _mrc_vec_petsc_setup(struct mrc_vec *vec)
     petsccomm = PETSC_COMM_SELF;
   }
   
-  if (!vec->with_array && !sub->petsc_vec) {
+  if (!vec->with_array && !sub->with_petsc_vec) {
     //vec->obj.comm
     if (sub->block_size) {
       ierr = VecCreate(petsccomm, &sub->petsc_vec); CE;
@@ -72,10 +74,12 @@ static void
 _mrc_vec_petsc_destroy(struct mrc_vec *vec)
 {
   struct mrc_vec_petsc *sub = mrc_vec_petsc(vec);
-
+  assert(!sub->gotten_petsc_vec);
   int ierr;
+  if (!sub->with_petsc_vec) {
   // Petsc won't dealloc memory for WithArray vecs, so it's always safe to call this
-  ierr = VecDestroy(&sub->petsc_vec); CE;
+    ierr = VecDestroy(&sub->petsc_vec); CE;
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -126,17 +130,65 @@ mrc_vec_petsc_create(struct mrc_vec *vec)
 
 #define VAR(x) (void *)offsetof(struct mrc_vec_petsc, x)
 static struct param mrc_vec_petsc_descr[] = {
-  { "petsc_vec"      , VAR(petsc_vec)   , PARAM_PTR(NULL)        },
-  { "block_size"     , VAR(block_size)  , PARAM_INT(0)           },
+  { "block_size"     , VAR(block_size)     , PARAM_INT(0)    },
   {},
 };
 #undef VAR
+
+// ----------------------------------------------------------------------
+// mrc_vec_petsc_set_petsc_vec
+static void
+mrc_vec_petsc_set_petsc(struct mrc_vec *vec, Vec invec)
+{
+  assert(!mrc_vec_petsc(vec)->petsc_vec);
+  struct mrc_vec_petsc *sub = mrc_vec_petsc(vec);
+  sub->with_petsc_vec = true;
+  sub->petsc_vec = invec;
+}
+
+// ----------------------------------------------------------------------
+// mrc_vec_petsc_get_petsc_vec
+static void
+mrc_vec_petsc_get_petsc(struct mrc_vec *vec, Vec *retvec)
+{
+  struct mrc_vec_petsc *sub = mrc_vec_petsc(vec);
+  assert(!sub->gotten_petsc_vec);
+  sub->gotten_petsc_vec = true;
+  *retvec = sub->petsc_vec;
+}
+
+// ----------------------------------------------------------------------
+// mrc_vec_petsc_get_petsc_vec
+static void
+mrc_vec_petsc_put_petsc(struct mrc_vec *vec, Vec *invec)
+{
+  struct mrc_vec_petsc *sub = mrc_vec_petsc(vec);
+  assert( sub->gotten_petsc_vec && 
+	  (sub->petsc_vec == *invec) );
+  sub->gotten_petsc_vec = false;
+  *invec = NULL;
+}
+
+
+// ----------------------------------------------------------------------
+// mrc_vec_petsc_methods
+// I think I'm using this right???
+// These should probably be renamed as they are very confusing.
+// On the other hand, they are palindromic, which I think is super cool.
+static struct mrc_obj_method mrc_vec_petsc_methods[] = {
+  MRC_OBJ_METHOD("set_petsc_vec", mrc_vec_petsc_set_petsc),
+  MRC_OBJ_METHOD("get_petsc_vec", mrc_vec_petsc_get_petsc),
+  MRC_OBJ_METHOD("put_petsc_vec", mrc_vec_petsc_put_petsc),
+  {},
+};
+
 
 // ----------------------------------------------------------------------
 // mrc_vec subclass "petsc"
 
 struct mrc_vec_ops mrc_vec_petsc_ops = {
   .name                  = "petsc",		
+  .methods               = mrc_vec_petsc_methods,
   .size                  = sizeof(struct mrc_vec_petsc),
   .param_descr           = mrc_vec_petsc_descr,
   .create                = mrc_vec_petsc_create,	
