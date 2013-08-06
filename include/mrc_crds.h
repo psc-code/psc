@@ -15,7 +15,7 @@ struct mrc_crds {
   struct mrc_obj obj;
   struct mrc_crds_params par;
   struct mrc_domain *domain;
-  struct mrc_f1 *crd[3];
+  struct mrc_fld *crd[3];
   struct mrc_m1 *mcrd[3];
   struct mrc_m1 *mcrd_nc[3];
 

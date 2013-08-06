@@ -124,7 +124,7 @@ mrc_io_close(struct mrc_io *io)
 // mrc_io_read_f1
 
 void
-mrc_io_read_f1(struct mrc_io *io, const char *path, struct mrc_f1 *fld)
+mrc_io_read_f1(struct mrc_io *io, const char *path, struct mrc_fld *fld)
 {
   struct mrc_io_ops *ops = mrc_io_ops(io);
   if (ops->read_f1) {
@@ -134,13 +134,13 @@ mrc_io_read_f1(struct mrc_io *io, const char *path, struct mrc_f1 *fld)
     struct mrc_m1 *m1 = mrc_domain_m1_create(fld->_domain);
     mrc_m1_set_param_int(m1, "sw", fld->_sw.vals[0]);
     mrc_m1_set_param_int(m1, "dim", fld->_dim);
-    mrc_m1_set_param_int(m1, "nr_comps", mrc_f1_nr_comps(fld));
+    mrc_m1_set_param_int(m1, "nr_comps", mrc_fld_nr_comps(fld));
     mrc_m1_setup(m1);
     mrc_io_read_m1(io, path, m1);
 
     struct mrc_m1_patch *m1p = mrc_m1_patch_get(m1, 0);
     for (int m = 0; m < m1->nr_comp; m++) {
-      mrc_f1_set_comp_name(fld, m, mrc_m1_comp_name(m1, m));
+      mrc_fld_set_comp_name(fld, m, mrc_m1_comp_name(m1, m));
       mrc_m1_foreach_bnd(m1p, ix) {
 	MRC_F1(fld, m, ix) = MRC_M1(m1p, m, ix);
       } mrc_m1_foreach_end;
@@ -222,23 +222,23 @@ mrc_io_write_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
 // mrc_io_write_f1
 
 void
-mrc_io_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *fld)
+mrc_io_write_f1(struct mrc_io *io, const char *path, struct mrc_fld *fld)
 {
   struct mrc_io_ops *ops = mrc_io_ops(io);
   if (ops->write_f1) {
     ops->write_f1(io, path, fld);
   } else if (fld->_domain) {
-    int nr_comps = mrc_f1_nr_comps(fld);
+    int nr_comps = mrc_fld_nr_comps(fld);
     int sw = fld->_sw.vals[0];
     int dim;
-    mrc_f1_get_param_int(fld, "dim", &dim);
+    mrc_fld_get_param_int(fld, "dim", &dim);
     struct mrc_m1 *m1 = mrc_domain_m1_create(fld->_domain);
     mrc_m1_set_param_int(m1, "nr_comps", nr_comps); 
     mrc_m1_set_param_int(m1, "sw", sw);
     mrc_m1_set_param_int(m1, "dim", dim); 
     mrc_m1_setup(m1);
     for (int m = 0; m < nr_comps; m++) {
-      mrc_m1_set_comp_name(m1, m, mrc_f1_comp_name(fld, m));
+      mrc_m1_set_comp_name(m1, m, mrc_fld_comp_name(fld, m));
       mrc_m1_foreach_patch(m1, p) {
 	struct mrc_m1_patch *m1p = mrc_m1_patch_get(m1, p);
 	mrc_m1_foreach(m1p, ix, sw, sw) {

@@ -53,7 +53,7 @@ _mrc_fld_setup(struct mrc_fld *fld)
     int nr_patches;
     struct mrc_patch *patches = mrc_domain_get_patches(fld->_domain, &nr_patches);
 
-    assert((fld->_dims.nr_vals == 2 && nr_patches == 1) || // mrc_f1
+    assert((fld->_dims.nr_vals == 2 && nr_patches == 1) || // mrc_fld
 	   (fld->_dims.nr_vals == 4 && nr_patches == 1) || // mrc_f3
 	   (fld->_dims.nr_vals == 5 && nr_patches >= 1));  // mrc_m3
 
@@ -197,7 +197,7 @@ mrc_fld_comp_dim(struct mrc_fld *fld)
       // emulating mrc_f3, mrc_m3
       return 3;
     } else if (fld->_dims.nr_vals == 2) {
-      // emulating mrc_f1
+      // emulating mrc_fld
       assert(fld->_dim >= 0);
       return 1;
     } else {
@@ -726,100 +726,5 @@ struct mrc_class_mrc_fld mrc_class_mrc_fld = {
   .setup        = _mrc_fld_setup,
   .write        = _mrc_fld_write,
   .read         = _mrc_fld_read,
-};
-
-// ======================================================================
-// mrc_f1
-
-void
-mrc_f1_set_array(struct mrc_f1 *f1, float *arr)
-{
-  mrc_fld_set_array(f1, arr);
-}
-
-void
-mrc_f1_set_sw(struct mrc_f1 *f1, int sw)
-{
-  mrc_fld_set_sw(f1, sw);
-}
-
-void
-mrc_f1_set_nr_comps(struct mrc_f1 *f1, int nr_comps)
-{
-  mrc_fld_set_nr_comps(f1, nr_comps);
-}
-
-int
-mrc_f1_nr_comps(struct mrc_f1 *f1)
-{
-  return mrc_fld_nr_comps(f1);
-}
-
-void
-mrc_f1_set_comp_name(struct mrc_f1 *f1, int m, const char *name)
-{
-  mrc_fld_set_comp_name(f1, m, name);
-}
-
-const char *
-mrc_f1_comp_name(struct mrc_f1 *f1, int m)
-{
-  return mrc_fld_comp_name(f1, m);
-}
-
-const int *
-mrc_f1_dims(struct mrc_f1 *f1)
-{
-  return mrc_fld_dims(f1);
-}
-
-const int *
-mrc_f1_off(struct mrc_f1 *f1)
-{
-  return mrc_fld_offs(f1);
-}
-
-const int *
-mrc_f1_ghost_dims(struct mrc_f1 *f1)
-{
-  return mrc_fld_ghost_dims(f1);
-}
-
-void
-mrc_f1_dump(struct mrc_f1 *x, const char *basename, int n)
-{
-  mrc_fld_dump(x, basename, n);
-}
-
-float
-mrc_f1_norm_comp(struct mrc_f1 *x, int m)
-{
-  return mrc_fld_norm_comp(x, m);
-}
-
-// ----------------------------------------------------------------------
-// mrc_f1_init
-
-static void
-mrc_f1_init()
-{
-  mrc_class_register_subclass(&mrc_class_mrc_f1, &mrc_fld_float_ops);
-  mrc_class_register_subclass(&mrc_class_mrc_f1, &mrc_fld_double_ops);
-  mrc_class_register_subclass(&mrc_class_mrc_f1, &mrc_fld_int_ops);
-}
-
-// ----------------------------------------------------------------------
-// mrc_class_mrc_f1
-
-struct mrc_class_mrc_f1 mrc_class_mrc_f1 = {
-  .name         = "mrc_f1",
-  .size         = sizeof(struct mrc_f1),
-  .param_descr  = mrc_fld_descr,
-  .methods      = mrc_fld_methods,
-  .init         = mrc_f1_init,
-  .destroy      = _mrc_fld_destroy,
-  .setup        = _mrc_fld_setup,
-  .read         = _mrc_fld_read,
-  .write        = _mrc_fld_write,
 };
 

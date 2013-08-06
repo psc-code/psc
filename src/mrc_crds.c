@@ -23,7 +23,7 @@ static void
 _mrc_crds_destroy(struct mrc_crds *crds)
 {
   for (int d = 0; d < 3; d++) {
-    mrc_f1_destroy(crds->crd[d]);
+    mrc_fld_destroy(crds->crd[d]);
     mrc_m1_destroy(crds->mcrd[d]);
   }
 }
@@ -43,7 +43,7 @@ _mrc_crds_read(struct mrc_crds *crds, struct mrc_io *io)
     for (int d = 0; d < 3; d++) {
       char s[5];
       sprintf(s, "crd%d", d);
-      crds->crd[d] = mrc_io_read_ref(io, crds, s, mrc_f1);
+      crds->crd[d] = mrc_io_read_ref(io, crds, s, mrc_fld);
     }
   }
   mrc_crds_setup(crds);
@@ -73,7 +73,7 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 
 	  mrc_m1_foreach_patch(crd_nc, p) {
 	    struct mrc_m1_patch *m1p_nc = mrc_m1_patch_get(crd_nc, p);
-	    struct mrc_f1 *crd = crds->crd[d];
+	    struct mrc_fld *crd = crds->crd[d];
 	    if (crds->par.sw > 0) {
 	      mrc_m1_foreach(m1p_nc, i, 0, 1) {
 		MRC_M1(m1p_nc, 0, i) = .5 * (MRC_F1(crd,0, i-1) + MRC_F1(crd,0, i));
@@ -82,7 +82,7 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 	      mrc_m1_foreach(m1p_nc, i, -1, 0) {
 		MRC_M1(m1p_nc, 0, i) = .5 * (MRC_F1(crd,0, i-1) + MRC_F1(crd,0, i));
 	      } mrc_m1_foreach_end;
-	      int ld = mrc_f1_dims(crd)[0];
+	      int ld = mrc_fld_dims(crd)[0];
 	      // extrapolate
 	      MRC_M1(m1p_nc, 0, 0) = MRC_F1(crd,0, 0) - .5 * (MRC_F1(crd,0, 1) - MRC_F1(crd,0, 0));
 	      MRC_M1(m1p_nc, 0, ld) = MRC_F1(crd,0, ld-1) + .5 * (MRC_F1(crd,0, ld-1) - MRC_F1(crd,0, ld-2));
@@ -210,14 +210,14 @@ mrc_crds_get_dx(struct mrc_crds *crds, float dx[3])
 static void
 mrc_crds_alloc(struct mrc_crds *crds, int d, int dim, int sw)
 {
-  mrc_f1_destroy(crds->crd[d]);
+  mrc_fld_destroy(crds->crd[d]);
   crds->crd[d] = mrc_domain_f1_create(crds->domain);
   char s[5]; sprintf(s, "crd%d", d);
-  mrc_f1_set_name(crds->crd[d], s);
-  mrc_f1_set_sw(crds->crd[d], sw);
-  mrc_f1_set_param_int(crds->crd[d], "dim", d);
-  mrc_f1_setup(crds->crd[d]);
-  mrc_f1_set_comp_name(crds->crd[d], 0, s);
+  mrc_fld_set_name(crds->crd[d], s);
+  mrc_fld_set_sw(crds->crd[d], sw);
+  mrc_fld_set_param_int(crds->crd[d], "dim", d);
+  mrc_fld_setup(crds->crd[d]);
+  mrc_fld_set_comp_name(crds->crd[d], 0, s);
 }
 
 static void

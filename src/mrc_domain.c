@@ -211,19 +211,19 @@ mrc_domain_create_ddc(struct mrc_domain *domain)
 
 // ======================================================================
 
-struct mrc_f1 *
+struct mrc_fld *
 mrc_domain_f1_create(struct mrc_domain *domain)
 {
   int nr_patches;
   mrc_domain_get_patches(domain, &nr_patches);
   assert(nr_patches == 1);
-  struct mrc_f1 *f1 = mrc_f1_create(mrc_domain_comm(domain));
-  mrc_f1_set_param_obj(f1, "domain", domain);
-  mrc_f1_set_param_int_array(f1, "dims", 2, NULL);
+  struct mrc_fld *f1 = mrc_fld_create(mrc_domain_comm(domain));
+  mrc_fld_set_param_obj(f1, "domain", domain);
+  mrc_fld_set_param_int_array(f1, "dims", 2, NULL);
   // default direction to 0 == x, which is also used to indicate that this
-  // is instead a mrc_f1
-  mrc_f1_set_param_int(f1, "dim", 0);
-  mrc_f1_set_nr_comps(f1, 1);
+  // is instead a mrc_fld
+  mrc_fld_set_param_int(f1, "dim", 0);
+  mrc_fld_set_nr_comps(f1, 1);
   return f1;
 }
 

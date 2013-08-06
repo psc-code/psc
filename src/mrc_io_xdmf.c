@@ -1036,7 +1036,7 @@ ds_xdmf_write_field2d(struct mrc_io *io, float scale, struct mrc_fld *fld,
 }
 
 static void
-ds_xdmf_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
+ds_xdmf_write_f1(struct mrc_io *io, const char *path, struct mrc_fld *f1)
 {
   int ierr;
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
@@ -1044,9 +1044,9 @@ ds_xdmf_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
   hid_t group = H5Gopen(hdf5->file, path, H5P_DEFAULT); H5_CHK(group);
   
   hsize_t hdims[1] = { f1->_ghost_dims[0] };
-  for (int m = 0; m < mrc_f1_nr_comps(f1); m++) {
-    assert(mrc_f1_comp_name(f1, m));
-    hid_t groupc = H5Gcreate(group, mrc_f1_comp_name(f1, m), H5P_DEFAULT, H5P_DEFAULT,
+  for (int m = 0; m < mrc_fld_nr_comps(f1); m++) {
+    assert(mrc_fld_comp_name(f1, m));
+    hid_t groupc = H5Gcreate(group, mrc_fld_comp_name(f1, m), H5P_DEFAULT, H5P_DEFAULT,
 			     H5P_DEFAULT); H5_CHK(groupc);
     ierr = H5LTset_attribute_int(groupc, ".", "m", &m, 1); CE;
     ierr = H5LTmake_dataset_float(groupc, "1d", 1, hdims,
@@ -1059,7 +1059,7 @@ ds_xdmf_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
 
 struct read_f1_cb0_data {
   struct mrc_io *io;
-  struct mrc_f1 *f1;
+  struct mrc_fld *f1;
   hid_t filespace;
   hid_t memspace;
 };
@@ -1073,7 +1073,7 @@ read_f1_cb0(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
   hid_t group = H5Gopen(g_id, name, H5P_DEFAULT); H5_CHK(group);
   int m;
   ierr = H5LTget_attribute_int(group, ".", "m", &m); CE;
-  mrc_f1_set_comp_name(data->f1, m, name);
+  mrc_fld_set_comp_name(data->f1, m, name);
 
   hid_t dset = H5Dopen(group, "1d", H5P_DEFAULT); H5_CHK(dset);
   ierr = H5Dread(dset, H5T_NATIVE_FLOAT, data->memspace, data->filespace, H5P_DEFAULT,
@@ -1085,7 +1085,7 @@ read_f1_cb0(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
 }
 
 static void
-ds_xdmf_read_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
+ds_xdmf_read_f1(struct mrc_io *io, const char *path, struct mrc_fld *f1)
 {
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
   herr_t ierr;
@@ -1837,8 +1837,8 @@ hdf5_write_crds_parallel(struct mrc_io *io, struct mrc_fld *fld)
 
 struct read_f1_cb_data {
   struct mrc_io *io;
-  struct mrc_f1 *fld;
-  struct mrc_f1 *lfld;
+  struct mrc_fld *fld;
+  struct mrc_fld *lfld;
   hid_t filespace;
   hid_t memspace;
   hid_t dxpl;
@@ -1864,7 +1864,7 @@ read_f1_cb(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
 }
 
 static void
-ds_xdmf_parallel_read_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
+ds_xdmf_parallel_read_f1(struct mrc_io *io, const char *path, struct mrc_fld *f1)
 {
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
   herr_t ierr;
@@ -1875,7 +1875,7 @@ ds_xdmf_parallel_read_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
 #endif
 
   hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT);
-  const int *ghost_dims = mrc_f1_ghost_dims(f1);
+  const int *ghost_dims = mrc_fld_ghost_dims(f1);
   hsize_t hdims[1] = { ghost_dims[0] };
 
   hid_t filespace = H5Screate_simple(1, hdims, NULL);
@@ -1995,7 +1995,7 @@ ds_xdmf_parallel_read_f3(struct mrc_io *io, const char *path, struct mrc_fld *fl
 }
 
 static void
-ds_xdmf_parallel_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
+ds_xdmf_parallel_write_f1(struct mrc_io *io, const char *path, struct mrc_fld *f1)
 {
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
   herr_t ierr;
@@ -2009,10 +2009,10 @@ ds_xdmf_parallel_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1
 
   assert(io->size == 1);
   hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT);
-  const int *ghost_dims = mrc_f1_ghost_dims(f1);
+  const int *ghost_dims = mrc_fld_ghost_dims(f1);
   hsize_t hdims[1] = { ghost_dims[0] };
-  for (int m = 0; m < mrc_f1_nr_comps(f1); m++) {
-    hid_t group = H5Gcreate(group0, mrc_f1_comp_name(f1, m), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  for (int m = 0; m < mrc_fld_nr_comps(f1); m++) {
+    hid_t group = H5Gcreate(group0, mrc_fld_comp_name(f1, m), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     H5LTset_attribute_int(group, ".", "m", &m, 1);
     
     hid_t dxpl = H5Pcreate(H5P_DATASET_XFER);

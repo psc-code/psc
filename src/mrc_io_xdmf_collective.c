@@ -341,13 +341,13 @@ xdmf_collective_read_attr(struct mrc_io *io, const char *path, int type,
 // only called on writer procs
 
 static void
-collective_m1_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1,
+collective_m1_write_f1(struct mrc_io *io, const char *path, struct mrc_fld *f1,
 		       int m, hid_t group0)
 {
   struct xdmf *xdmf = to_xdmf(io);
   int ierr;
 
-  hid_t group_fld = H5Gcreate(group0, mrc_f1_comp_name(f1, m), H5P_DEFAULT,
+  hid_t group_fld = H5Gcreate(group0, mrc_fld_comp_name(f1, m), H5P_DEFAULT,
 			      H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group_fld);
   ierr = H5LTset_attribute_int(group_fld, ".", "m", &m, 1); CE;
   
@@ -356,7 +356,7 @@ collective_m1_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1,
   int i0 = 0;
   ierr = H5LTset_attribute_int(group, ".", "global_patch", &i0, 1); CE;
 
-  hsize_t fdims[1] = { mrc_f1_ghost_dims(f1)[0] };
+  hsize_t fdims[1] = { mrc_fld_ghost_dims(f1)[0] };
   hid_t filespace = H5Screate_simple(1, fdims, NULL); H5_CHK(filespace);
   hid_t dset = H5Dcreate(group, "1d", H5T_NATIVE_FLOAT, filespace, H5P_DEFAULT,
 			 H5P_DEFAULT, H5P_DEFAULT); H5_CHK(dset);
@@ -452,7 +452,7 @@ collective_m1_send_end(struct mrc_io *io, struct collective_m1_ctx *ctx)
 
 static void
 collective_m1_recv_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
-			 struct mrc_domain *domain, struct mrc_f1 *f1, int m)
+			 struct mrc_domain *domain, struct mrc_fld *f1, int m)
 {
   struct xdmf *xdmf = to_xdmf(io);
 
@@ -536,14 +536,14 @@ xdmf_collective_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
   if (xdmf->is_writer) {
     // we're creating the f1 on all writers, but only fill and actually write
     // it on writers[0]
-    struct mrc_f1 *f1 = mrc_f1_create(MPI_COMM_SELF);
-    mrc_f1_set_param_int_array(f1, "dims", 2, (int [2]) { xdmf->slab_dims[0], 1 });
-    mrc_f1_set_param_int_array(f1, "offs", 2, (int [2]) { xdmf->slab_off[0] , 0 });
-    mrc_f1_setup(f1);
+    struct mrc_fld *f1 = mrc_fld_create(MPI_COMM_SELF);
+    mrc_fld_set_param_int_array(f1, "dims", 2, (int [2]) { xdmf->slab_dims[0], 1 });
+    mrc_fld_set_param_int_array(f1, "offs", 2, (int [2]) { xdmf->slab_off[0] , 0 });
+    mrc_fld_setup(f1);
 
     hid_t group0 = H5Gopen(file->h5_file, path, H5P_DEFAULT); H5_CHK(group0);
     for (int m = 0; m < nr_comps; m++) {
-      mrc_f1_set_comp_name(f1, 0, mrc_m1_comp_name(m1, m));
+      mrc_fld_set_comp_name(f1, 0, mrc_m1_comp_name(m1, m));
       collective_m1_recv_begin(io, &ctx, m1->domain, f1, m);
       collective_m1_send_begin(io, &ctx, m1, m);
       collective_m1_recv_end(io, &ctx);
@@ -552,7 +552,7 @@ xdmf_collective_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
     }
     ierr = H5Gclose(group0); CE;
 
-    mrc_f1_destroy(f1);
+    mrc_fld_destroy(f1);
   } else { // not writer
     for (int m = 0; m < nr_comps; m++) {
       collective_m1_send_begin(io, &ctx, m1, m);
@@ -602,7 +602,7 @@ collective_m1_read_recv_end(struct mrc_io *io, struct collective_m1_ctx *ctx,
 
 static void
 collective_m1_read_send_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
-			      struct mrc_domain *domain, struct mrc_f1 *f1, int m)
+			      struct mrc_domain *domain, struct mrc_fld *f1, int m)
 {
   struct xdmf *xdmf = to_xdmf(io);
 
@@ -612,7 +612,7 @@ collective_m1_read_send_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
   int dim = ctx->dim;
   ctx->send_reqs = calloc(io->size + ctx->nr_global_patches, sizeof(*ctx->send_reqs));
   ctx->nr_send_reqs = 0;
-  const char *comp_name = mrc_f1_comp_name(f1, m);
+  const char *comp_name = mrc_fld_comp_name(f1, m);
   assert(comp_name && strlen(comp_name) < 99);
   for (int r = 0; r < io->size; r++) {
     MPI_Isend((char *) comp_name, strlen(comp_name) + 1, MPI_CHAR,
@@ -643,7 +643,7 @@ collective_m1_read_send_end(struct mrc_io *io, struct collective_m1_ctx *ctx)
 
 struct read_m1_cb_data {
   struct mrc_io *io;
-  struct mrc_f1 *gfld;
+  struct mrc_fld *gfld;
   hid_t filespace;
   hid_t memspace;
   hid_t dxpl;
@@ -653,14 +653,14 @@ static herr_t
 read_m1_cb(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
 {
   struct read_m1_cb_data *data = op_data;
-  struct mrc_f1 *gfld = data->gfld;
+  struct mrc_fld *gfld = data->gfld;
   int *ib = gfld->_ghost_offs;
   int ierr;
 
   hid_t group_fld = H5Gopen(g_id, name, H5P_DEFAULT); H5_CHK(group_fld);
   int m;
   ierr = H5LTget_attribute_int(group_fld, ".", "m", &m); CE;
-  mrc_f1_set_comp_name(data->gfld, m, name);
+  mrc_fld_set_comp_name(data->gfld, m, name);
   hid_t group = H5Gopen(group_fld, "p0", H5P_DEFAULT); H5_CHK(group);
 
   hid_t dset = H5Dopen(group, "1d", H5P_DEFAULT); H5_CHK(dset);
@@ -694,14 +694,14 @@ xdmf_collective_read_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
   mrc_domain_get_patches(m1->domain, &ctx.nr_patches);
 
   if (xdmf->is_writer) {
-    struct mrc_f1 *f1 = mrc_f1_create(MPI_COMM_SELF);
-    mrc_f1_set_param_int_array(f1, "dims", 2, (int [2]) { gdims[ctx.dim], nr_comps });
-    mrc_f1_set_param_int_array(f1, "sw", 2, (int [2]) { ctx.sw, 0 });
-    mrc_f1_setup(f1);
+    struct mrc_fld *f1 = mrc_fld_create(MPI_COMM_SELF);
+    mrc_fld_set_param_int_array(f1, "dims", 2, (int [2]) { gdims[ctx.dim], nr_comps });
+    mrc_fld_set_param_int_array(f1, "sw", 2, (int [2]) { ctx.sw, 0 });
+    mrc_fld_setup(f1);
 
     hid_t group0 = H5Gopen(file->h5_file, path, H5P_DEFAULT); H5_CHK(group0);
 
-    hsize_t hgdims[1] = { mrc_f1_ghost_dims(f1)[0] };
+    hsize_t hgdims[1] = { mrc_fld_ghost_dims(f1)[0] };
 
     hid_t filespace = H5Screate_simple(1, hgdims, NULL); H5_CHK(filespace);
     hid_t memspace;

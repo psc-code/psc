@@ -36,12 +36,12 @@ static void
 _ggcm_mhd_crds_create(struct ggcm_mhd_crds *crds)
 {
   for (int d = 0; d < 3; d++) {
-    crds->f1[d] = mrc_f1_create(MPI_COMM_SELF);
+    crds->f1[d] = mrc_fld_create(MPI_COMM_SELF);
     char s[10]; sprintf(s, "f1[%d]", d);
-    mrc_f1_set_name(crds->f1[d], s);
-    mrc_f1_set_param_int_array(crds->f1[d], "dims", 2, NULL);
-    mrc_f1_set_param_int(crds->f1[d], "dim", d);
-    mrc_f1_set_nr_comps(crds->f1[d], NR_CRDS);
+    mrc_fld_set_name(crds->f1[d], s);
+    mrc_fld_set_param_int_array(crds->f1[d], "dims", 2, NULL);
+    mrc_fld_set_param_int(crds->f1[d], "dim", d);
+    mrc_fld_set_nr_comps(crds->f1[d], NR_CRDS);
   }
 }
 
@@ -52,9 +52,9 @@ static void
 _ggcm_mhd_crds_setup(struct ggcm_mhd_crds *crds)
 {
   for (int d = 0; d < 3; d++) {
-    mrc_f1_setup(crds->f1[d]);
+    mrc_fld_setup(crds->f1[d]);
     for (int m = 0; m < NR_CRDS; m++) {
-      mrc_f1_set_comp_name(crds->f1[d], m, crdname[m]);
+      mrc_fld_set_comp_name(crds->f1[d], m, crdname[m]);
     }
   }
 
@@ -80,7 +80,7 @@ static void
 _ggcm_mhd_crds_destroy(struct ggcm_mhd_crds *crds)
 {
   for (int d = 0; d < 3; d++) {
-    mrc_f1_destroy(crds->f1[d]);
+    mrc_fld_destroy(crds->f1[d]);
   }
 }
 
@@ -91,9 +91,9 @@ static void
 _ggcm_mhd_crds_read(struct ggcm_mhd_crds *crds, struct mrc_io *io)
 {
   ggcm_mhd_crds_read_member_objs(crds, io);
-  crds->f1[0] = mrc_io_read_ref(io, crds, "f1[0]", mrc_f1);
-  crds->f1[1] = mrc_io_read_ref(io, crds, "f1[1]", mrc_f1);
-  crds->f1[2] = mrc_io_read_ref(io, crds, "f1[2]", mrc_f1);
+  crds->f1[0] = mrc_io_read_ref(io, crds, "f1[0]", mrc_fld);
+  crds->f1[1] = mrc_io_read_ref(io, crds, "f1[1]", mrc_fld);
+  crds->f1[2] = mrc_io_read_ref(io, crds, "f1[2]", mrc_fld);
 }
 
 // ----------------------------------------------------------------------

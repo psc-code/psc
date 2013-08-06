@@ -3,7 +3,6 @@
 #define MRC_FLD_H
 
 #define mrc_m3 mrc_fld
-#define mrc_f1 mrc_fld
 
 #include <mrc_common.h>
 #include <mrc_obj.h>
@@ -83,6 +82,7 @@ void mrc_fld_write_comps(struct mrc_fld *fld, struct mrc_io *io, int mm[]);
 void mrc_fld_dump(struct mrc_fld *fld, const char *basename, int n);
 // for multi-patch mrc_fld only (former mrc_m3)
 int mrc_fld_nr_patches(struct mrc_fld *fld);
+float mrc_fld_norm_comp(struct mrc_fld *x, int m);
 
 struct mrc_fld *mrc_fld_get_as(struct mrc_fld *fld_base,
 			       const char *type);
@@ -160,6 +160,14 @@ mrc_fld_same_shape(struct mrc_fld *fld_1, struct mrc_fld *fld_2)
     } do {} while (0)				\
 
 // ----------------------------------------------------------------------
+// mrc_f1
+
+#define mrc_f1_foreach(f1, ix, l,r)					\
+  for (int ix = (f1)->_offs.vals[0] - l; ix < (f1)->_offs.vals[0] + (f1)->_dims.vals[0] + r; ix++) \
+
+#define mrc_f1_foreach_end do {} while (0)	\
+
+// ----------------------------------------------------------------------
 // mrc_m3 emulation
 
 #define mrc_fld_foreach_patch(m3, p) \
@@ -210,28 +218,6 @@ typedef void (*mrc_fld_copy_to_func_t)(struct mrc_fld *,
 				       struct mrc_fld *);
 typedef void (*mrc_fld_copy_from_func_t)(struct mrc_fld *,
 					 struct mrc_fld *);
-
-// ======================================================================
-// mrc_f1
-
-MRC_CLASS_DECLARE(mrc_f1, struct mrc_f1);
-struct mrc_f1 *mrc_f1_duplicate(struct mrc_f1 *x);
-void mrc_f1_set_sw(struct mrc_f1 *f1, int sw);
-void mrc_f1_set_nr_comps(struct mrc_f1 *f1, int nr_comps);
-int mrc_f1_nr_comps(struct mrc_f1 *f1);
-void mrc_f1_set_comp_name(struct mrc_f1 *x, int m, const char *name);
-const char *mrc_f1_comp_name(struct mrc_f1 *x, int m);
-const int *mrc_f1_off(struct mrc_f1 *x);
-const int *mrc_f1_dims(struct mrc_f1 *x);
-const int *mrc_f1_ghost_dims(struct mrc_f1 *x);
-void mrc_f1_set_array(struct mrc_f1 *x, float *arr);
-void mrc_f1_dump(struct mrc_f1 *x, const char *basename, int n);
-float mrc_f1_norm_comp(struct mrc_f1 *x, int m);
-
-#define mrc_f1_foreach(f1, ix, l,r)					\
-  for (int ix = (f1)->_offs.vals[0] - l; ix < (f1)->_offs.vals[0] + (f1)->_dims.vals[0] + r; ix++) \
-
-#define mrc_f1_foreach_end do {} while (0)	\
 
 // ======================================================================
 // mrc_m1
