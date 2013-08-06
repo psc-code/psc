@@ -11,8 +11,8 @@
 static void
 set_m1(struct mrc_m1 *m1)
 {
-  struct mrc_patch *patches = mrc_domain_get_patches(m1->domain, NULL);
-  struct mrc_crds *crds = mrc_domain_get_crds(m1->domain);
+  struct mrc_patch *patches = mrc_domain_get_patches(m1->_domain, NULL);
+  struct mrc_crds *crds = mrc_domain_get_crds(m1->_domain);
 
   mrc_m1_foreach_patch(m1, p) {
     struct mrc_m1_patch *m1p = mrc_m1_patch_get(m1, p);
@@ -30,7 +30,7 @@ set_m1(struct mrc_m1 *m1)
 static void
 check_m1(struct mrc_m1 *m1)
 {
-  struct mrc_patch *patches = mrc_domain_get_patches(m1->domain, NULL);
+  struct mrc_patch *patches = mrc_domain_get_patches(m1->_domain, NULL);
 
   mrc_m1_foreach_patch(m1, p) {
     struct mrc_m1_patch *m1p = mrc_m1_patch_get(m1, p);

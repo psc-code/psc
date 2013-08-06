@@ -264,7 +264,8 @@ struct mrc_m1 *
 mrc_domain_m1_create(struct mrc_domain *domain)
 {
   struct mrc_m1 *m1 = mrc_m1_create(domain->obj.comm);
-  m1->domain = domain;
+  m1->_domain = domain;
+  mrc_m1_set_param_int_array(m1, "dims", 3, NULL);
   return m1;
 }
 

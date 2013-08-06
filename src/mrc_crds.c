@@ -65,9 +65,10 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 	  crds->mcrd_nc[d] = crd_nc;
 	  sprintf(s, "crd%d_nc", d);
 	  mrc_m1_set_name(crd_nc, s);
-	  crd_nc->domain = crds->domain;
+	  crd_nc->_domain = crds->domain;
 	  mrc_m1_set_param_int(crd_nc, "dim", d);
 	  mrc_m1_set_param_int(crd_nc, "sw", 1);
+	  mrc_m1_set_param_int_array(crd_nc, "dims", 3, NULL);
 	  mrc_m1_setup(crd_nc);
 	  mrc_m1_set_comp_name(crd_nc, 0, s);
 
@@ -125,9 +126,10 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 	struct mrc_m1 *crd_nc = mrc_m1_create(mrc_crds_comm(crds)); // FIXME, leaked
 	crds->mcrd_nc[d] = crd_nc;
 	mrc_m1_set_name(crd_nc, s);
-	crd_nc->domain = crds->domain;
+	crd_nc->_domain = crds->domain;
 	mrc_m1_set_param_int(crd_nc, "dim", d);
 	mrc_m1_set_param_int(crd_nc, "sw", 1);
+	mrc_m1_set_param_int_array(crd_nc, "dims", 3, NULL);
 	mrc_m1_setup(crd_nc);
 	mrc_m1_set_comp_name(crd_nc, 0, s);
 	

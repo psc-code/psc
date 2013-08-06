@@ -40,16 +40,17 @@ static void
 _mrc_m1_setup(struct mrc_m1 *m1)
 {
   int nr_patches;
-  struct mrc_patch *patches = mrc_domain_get_patches(m1->domain, &nr_patches);
+  struct mrc_patch *patches = mrc_domain_get_patches(m1->_domain, &nr_patches);
 
   m1->nr_patches = nr_patches;
   m1->patches = calloc(nr_patches, sizeof(*patches));
   assert(nr_patches > 0);
+  assert(m1->_dims.nr_vals >= 1);
+  m1->_dims.vals[0] = patches[0].ldims[m1->_dim];
   m1->_ghost_offs[0] = -m1->sw;
-  m1->_ghost_dims[0] = patches[0].ldims[m1->dim] + 2 * m1->sw;
-  m1->_dims[0] = patches[0].ldims[m1->dim];
+  m1->_ghost_dims[0] = m1->_dims.vals[0] + 2 * m1->sw;
   for (int p = 0; p < nr_patches; p++) {
-    assert(patches[p].ldims[m1->dim] == patches[0].ldims[m1->dim]);
+    assert(patches[p].ldims[m1->_dim] == patches[0].ldims[m1->_dim]);
     struct mrc_m1_patch *m1p = &m1->patches[p];
     int len = m1->_ghost_dims[0] * m1->nr_comp;
     m1p->arr = calloc(len, sizeof(*m1p->arr));
@@ -81,14 +82,14 @@ _mrc_m1_view(struct mrc_m1 *m1)
 static void
 _mrc_m1_write(struct mrc_m1 *m1, struct mrc_io *io)
 {
-  mrc_io_write_ref(io, m1, "domain", m1->domain);
+  mrc_io_write_ref(io, m1, "domain", m1->_domain);
   mrc_io_write_m1(io, mrc_io_obj_path(io, m1), m1);
 }
 
 static void
 _mrc_m1_read(struct mrc_m1 *m1, struct mrc_io *io)
 {
-  m1->domain = mrc_io_read_ref(io, m1, "domain", mrc_domain);
+  m1->_domain = mrc_io_read_ref(io, m1, "domain", mrc_domain);
   
   m1->_comp_name = calloc(m1->nr_comp, sizeof(*m1->_comp_name));
   mrc_m1_setup(m1);
@@ -123,7 +124,7 @@ mrc_m1_same_shape(struct mrc_m1 *m1_1, struct mrc_m1 *m1_2)
 const int *
 mrc_m1_dims(struct mrc_m1 *x)
 {
-  return x->_dims;
+  return x->_dims.vals;
 }
 
 const int *
@@ -144,9 +145,11 @@ mrc_m1_ghost_dims(struct mrc_m1 *x)
 
 #define VAR(x) (void *)offsetof(struct mrc_m1, x)
 static struct param mrc_m1_params_descr[] = {
+  { "dims"            , VAR(_dims)        , PARAM_INT_ARRAY(0, 0)  },
+
   { "nr_comps"        , VAR(nr_comp)      , PARAM_INT(1)           },
   { "sw"              , VAR(sw)           , PARAM_INT(0)           },
-  { "dim"             , VAR(dim)          , PARAM_INT(0)           },
+  { "dim"             , VAR(_dim)         , PARAM_INT(0)           },
   {},
 };
 #undef VAR

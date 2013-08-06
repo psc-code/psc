@@ -53,7 +53,7 @@ _mrc_fld_setup(struct mrc_fld *fld)
     int nr_patches;
     struct mrc_patch *patches = mrc_domain_get_patches(fld->_domain, &nr_patches);
 
-    assert((fld->_dims.nr_vals == 2 && nr_patches == 1) || // mrc_fld
+    assert((fld->_dims.nr_vals == 2 && nr_patches == 1) || // mrc_f1
 	   (fld->_dims.nr_vals == 4 && nr_patches == 1) || // mrc_f3
 	   (fld->_dims.nr_vals == 5 && nr_patches >= 1));  // mrc_m3
 

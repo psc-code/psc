@@ -229,15 +229,20 @@ struct mrc_m1_patch {
 
 struct mrc_m1 {
   struct mrc_obj obj;
-  int _dims[MRC_FLD_MAXDIMS];
+  // parameters
+  struct mrc_param_int_array _dims;
+
   // state
   int _ghost_offs[MRC_FLD_MAXDIMS];
   int _ghost_dims[MRC_FLD_MAXDIMS];
+
+  struct mrc_domain *_domain; //< optional, if allocated through mrc_domain
+  // for mrc_f1 emulation
+  int _dim; //< # along this dim of the domain
+
   int nr_comp;
   int nr_patches;
-  int dim; //< this dimension of the domain
   struct mrc_m1_patch *patches;
-  struct mrc_domain *domain;
   int sw;
   char **_comp_name;
 };

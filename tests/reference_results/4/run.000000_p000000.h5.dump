@@ -8,6 +8,13 @@ GROUP "/" {
          (0): 0
          }
       }
+      ATTRIBUTE "dims" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+         DATA {
+         (0): 32, 0, 0
+         }
+      }
       ATTRIBUTE "domain" {
          DATATYPE  H5T_STRING {
             STRSIZE 30;
@@ -105,6 +112,13 @@ GROUP "/" {
          (0): 0
          }
       }
+      ATTRIBUTE "dims" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+         DATA {
+         (0): 32, 0, 0
+         }
+      }
       ATTRIBUTE "domain" {
          DATATYPE  H5T_STRING {
             STRSIZE 30;
@@ -198,6 +212,13 @@ GROUP "/" {
          DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
          DATA {
          (0): 1
+         }
+      }
+      ATTRIBUTE "dims" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+         DATA {
+         (0): 8, 0, 0
          }
       }
       ATTRIBUTE "domain" {
@@ -297,6 +318,13 @@ GROUP "/" {
          (0): 1
          }
       }
+      ATTRIBUTE "dims" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+         DATA {
+         (0): 8, 0, 0
+         }
+      }
       ATTRIBUTE "domain" {
          DATATYPE  H5T_STRING {
             STRSIZE 30;
@@ -390,6 +418,13 @@ GROUP "/" {
          DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
          DATA {
          (0): 2
+         }
+      }
+      ATTRIBUTE "dims" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+         DATA {
+         (0): 8, 0, 0
          }
       }
       ATTRIBUTE "domain" {
@@ -487,6 +522,13 @@ GROUP "/" {
          DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
          DATA {
          (0): 2
+         }
+      }
+      ATTRIBUTE "dims" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+         DATA {
+         (0): 8, 0, 0
          }
       }
       ATTRIBUTE "domain" {
