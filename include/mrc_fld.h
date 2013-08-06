@@ -34,7 +34,7 @@ enum {
 // for mrc_m3 emulation
 struct mrc_fld_patch {
   int _p;
-  struct mrc_m3 *_m3;
+  struct mrc_fld *_fld;
 };
 
 struct mrc_fld {
@@ -185,22 +185,22 @@ mrc_fld_patch_put(struct mrc_fld *fld)
 {
 }
 
-#define MRC_M3(m3p, m, ix,iy,iz) MRC_S5((m3p)->_m3, ix, iy, iz, m, (m3p)->_p)
+#define MRC_M3(m3p, m, ix,iy,iz) MRC_S5((m3p)->_fld, ix, iy, iz, m, (m3p)->_p)
 
 #define mrc_m3_foreach(m3p, ix,iy,iz, l,r) {			\
   int _l[3] = { -l, -l, -l };					\
-  int _r[3] = { m3p->_m3->_ghost_dims[0] + 2 * m3p->_m3->_ghost_offs[0] + r,	\
-		m3p->_m3->_ghost_dims[1] + 2 * m3p->_m3->_ghost_offs[1] + r,	\
-		m3p->_m3->_ghost_dims[2] + 2 * m3p->_m3->_ghost_offs[2] + r};	\
+  int _r[3] = { m3p->_fld->_ghost_dims[0] + 2 * m3p->_fld->_ghost_offs[0] + r,	\
+		m3p->_fld->_ghost_dims[1] + 2 * m3p->_fld->_ghost_offs[1] + r,	\
+		m3p->_fld->_ghost_dims[2] + 2 * m3p->_fld->_ghost_offs[2] + r }; \
   for (int iz = _l[2]; iz < _r[2]; iz++) {			\
     for (int iy = _l[1]; iy < _r[1]; iy++) {			\
       for (int ix = _l[0]; ix < _r[0]; ix++)			\
 
 #define mrc_m3_foreach_bnd(m3p, ix,iy,iz) {		\
-  int _l[3] = { m3p->_m3->_ghost_offs[0], m3p->_m3->_ghost_offs[1], m3p->_m3->_ghost_offs[2] };	\
-  int _r[3] = { m3p->_m3->_ghost_offs[0] + m3p->_m3->_ghost_dims[0],			\
-		m3p->_m3->_ghost_offs[1] + m3p->_m3->_ghost_dims[1],			\
-		m3p->_m3->_ghost_offs[2] + m3p->_m3->_ghost_dims[2] };			\
+  int _l[3] = { m3p->_fld->_ghost_offs[0], m3p->_fld->_ghost_offs[1], m3p->_fld->_ghost_offs[2] };	\
+  int _r[3] = { m3p->_fld->_ghost_offs[0] + m3p->_fld->_ghost_dims[0],	\
+		m3p->_fld->_ghost_offs[1] + m3p->_fld->_ghost_dims[1],	\
+		m3p->_fld->_ghost_offs[2] + m3p->_fld->_ghost_dims[2] }; \
   for (int iz = _l[2]; iz < _r[2]; iz++) {				\
     for (int iy = _l[1]; iy < _r[1]; iy++) {				\
       for (int ix = _l[0]; ix < _r[0]; ix++)				\

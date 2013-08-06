@@ -61,7 +61,7 @@ _mrc_fld_setup(struct mrc_fld *fld)
       fld->_patches = calloc(nr_patches, sizeof(*fld->_patches));
       for (int p = 0; p < nr_patches; p++) {
 	struct mrc_fld_patch *m3p = &fld->_patches[p];
-	m3p->_m3 = fld;
+	m3p->_fld = fld;
 	m3p->_p = p;
 	for (int d = 0; d < 3; d++) {
 	  assert(patches[p].ldims[d] == patches[0].ldims[d]);
