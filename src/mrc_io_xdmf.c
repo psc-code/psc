@@ -657,7 +657,7 @@ hdf5_write_mcrds(struct mrc_io *io, struct mrc_domain *domain, int sw)
     struct mrc_m1 *mcrd = crds->mcrd[d];
     mrc_m1_foreach_patch(mcrd, p) {
       struct mrc_m1_patch *mcrdp = mrc_m1_patch_get(mcrd, p);
-      int im = mcrdp->_m1->im[0];
+      int im = mrc_m1_ghost_dims(mcrd)[0];
       float *crd_nc = calloc(im + 1, sizeof(*crd_nc));
       if (sw > 0) {
 	for (int i = 0; i <= im; i++) {
@@ -1125,12 +1125,12 @@ ds_xdmf_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
     hid_t group = H5Gcreate(group0, name, H5P_DEFAULT, H5P_DEFAULT,
 			    H5P_DEFAULT); H5_CHK(group);
 
-    hsize_t hdims[3] = { m1p->_m1->im[0] };
+    hsize_t hdims[3] = { mrc_m1_ghost_dims(m1)[0] };
     for (int m = 0; m < m1->nr_comp; m++) {
       hid_t groupc = H5Gcreate(group, mrc_m1_comp_name(m1, m), H5P_DEFAULT, H5P_DEFAULT,
 			       H5P_DEFAULT); H5_CHK(groupc);
       ierr = H5LTset_attribute_int(groupc, ".", "m", &m, 1); CE;
-      ierr = H5LTmake_dataset_float(groupc, "1d", 1, hdims, &MRC_M1(m1p, m, m1p->_m1->ib[0])); CE;
+      ierr = H5LTmake_dataset_float(groupc, "1d", 1, hdims, &MRC_M1(m1p, m, mrc_m1_ghost_offs(m1)[0])); CE;
       H5Gclose(groupc);
     }
     mrc_m1_patch_put(m1);
@@ -1159,7 +1159,7 @@ read_m1_cb(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
 
   hid_t dset = H5Dopen(group, "1d", H5P_DEFAULT); H5_CHK(dset);
   ierr = H5Dread(dset, H5T_NATIVE_FLOAT, data->memspace, data->filespace, H5P_DEFAULT,
-		 &MRC_M1(data->m1p, m, data->m1p->_m1->ib[0])); CE;
+		 &MRC_M1(data->m1p, m, mrc_m1_ghost_offs(data->m1p->_m1)[0])); CE;
   ierr = H5Dclose(dset); CE;
 
   ierr = H5Gclose(group); CE;
@@ -1181,7 +1181,7 @@ ds_xdmf_read_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
     struct mrc_m1_patch *m1p = mrc_m1_patch_get(m1, p);
     char name[10]; sprintf(name, "p%d", p);
     hid_t group = H5Gopen(group0, name, H5P_DEFAULT); H5_CHK(group);
-    hsize_t hdims[1] = { m1p->_m1->im[0] };
+    hsize_t hdims[1] = { mrc_m1_ghost_dims(m1)[0] };
     hid_t filespace = H5Screate_simple(1, hdims, NULL);
     hid_t memspace = H5Screate_simple(1, hdims, NULL);
 

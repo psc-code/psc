@@ -155,10 +155,10 @@ xdmf_spatial_write_mcrds_multi(struct mrc_io *io, struct xdmf_file *file,
 
     mrc_m1_foreach_patch(mcrd, p) {
       struct mrc_m1_patch *mcrdp = mrc_m1_patch_get(mcrd, p);
-      int im = mcrdp->_m1->im[0] + 2 * mcrdp->_m1->ib[0];
+      int im = mrc_m1_dims(mcrd)[0];
       // get node-centered coordinates
       float *crd_nc = calloc(im + 2*sw + 1, sizeof(*crd_nc));
-      if (mcrdp->_m1->ib[0] < -sw) {
+      if (mrc_m1_ghost_offs(mcrd)[0] < -sw) {
 	for (int i = -sw; i <= im + sw; i++) {
 	  crd_nc[i + sw] = .5 * (MRC_M1(mcrdp,0, i-1) + MRC_M1(mcrdp,0, i));
 	}
@@ -470,7 +470,7 @@ xdmf_spatial_write_mcrds_multi_parallel(struct xdmf_file *file,
       // get node-centered coordinates
       int im = info.ldims[d];
       float *crd_nc = calloc(im + 1, sizeof(*crd_nc));
-      if (mcrdp->_m1->ib[0] < 0) {
+      if (mrc_m1_ghost_offs(mcrd)[0] < 0) {
 	for (int i = 0; i <= im; i++) {
 	  crd_nc[i] = .5 * (MRC_M1(mcrdp,0, i-1) + MRC_M1(mcrdp,0, i));
 	}

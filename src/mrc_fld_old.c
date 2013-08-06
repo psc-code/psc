@@ -45,12 +45,13 @@ _mrc_m1_setup(struct mrc_m1 *m1)
   m1->nr_patches = nr_patches;
   m1->patches = calloc(nr_patches, sizeof(*patches));
   assert(nr_patches > 0);
-  m1->ib[0] = -m1->sw;
-  m1->im[0] = patches[0].ldims[m1->dim] + 2 * m1->sw;
+  m1->_ghost_offs[0] = -m1->sw;
+  m1->_ghost_dims[0] = patches[0].ldims[m1->dim] + 2 * m1->sw;
+  m1->_dims[0] = patches[0].ldims[m1->dim];
   for (int p = 0; p < nr_patches; p++) {
     assert(patches[p].ldims[m1->dim] == patches[0].ldims[m1->dim]);
     struct mrc_m1_patch *m1p = &m1->patches[p];
-    int len = m1->im[0] * m1->nr_comp;
+    int len = m1->_ghost_dims[0] * m1->nr_comp;
     m1p->arr = calloc(len, sizeof(*m1p->arr));
     m1p->_m1 = m1;
   }
@@ -114,9 +115,27 @@ mrc_m1_same_shape(struct mrc_m1 *m1_1, struct mrc_m1 *m1_2)
 {
   if (m1_1->nr_comp != m1_2->nr_comp) return false;
   if (m1_1->nr_patches != m1_2->nr_patches) return false;
-  if (m1_1->im[0] != m1_2->im[0]) return false;
+  if (m1_1->_ghost_dims[0] != m1_2->_ghost_dims[0]) return false;
 
   return true;
+}
+
+const int *
+mrc_m1_dims(struct mrc_m1 *x)
+{
+  return x->_dims;
+}
+
+const int *
+mrc_m1_ghost_offs(struct mrc_m1 *x)
+{
+  return x->_ghost_offs;
+}
+
+const int *
+mrc_m1_ghost_dims(struct mrc_m1 *x)
+{
+  return x->_ghost_dims;
 }
 
 

@@ -229,8 +229,10 @@ struct mrc_m1_patch {
 
 struct mrc_m1 {
   struct mrc_obj obj;
-  int im[1];
-  int ib[1];
+  int _dims[MRC_FLD_MAXDIMS];
+  // state
+  int _ghost_offs[MRC_FLD_MAXDIMS];
+  int _ghost_dims[MRC_FLD_MAXDIMS];
   int nr_comp;
   int nr_patches;
   int dim; //< this dimension of the domain
@@ -245,6 +247,9 @@ MRC_CLASS_DECLARE(mrc_m1, struct mrc_m1);
 void mrc_m1_set_comp_name(struct mrc_m1 *x, int m, const char *name);
 const char *mrc_m1_comp_name(struct mrc_m1 *x, int m);
 bool mrc_m1_same_shape(struct mrc_m1 *m1_1, struct mrc_m1 *m1_2);
+const int *mrc_m1_dims(struct mrc_m1 *x);
+const int *mrc_m1_ghost_offs(struct mrc_m1 *x);
+const int *mrc_m1_ghost_dims(struct mrc_m1 *x);
 
 static inline struct mrc_m1_patch *
 mrc_m1_patch_get(struct mrc_m1 *m1, int p)
@@ -258,19 +263,19 @@ mrc_m1_patch_put(struct mrc_m1 *m1)
 }
 
 #define MRC_M1(m1p,m, ix)					\
-  ((m1p)->arr[((m) * (m1p)->_m1->im[0] + (ix) - (m1p)->_m1->ib[0])])
+  ((m1p)->arr[((m) * (m1p)->_m1->_ghost_dims[0] + (ix) - (m1p)->_m1->_ghost_offs[0])])
 
 #define mrc_m1_foreach_patch(m1, p) \
   for (int p = 0; p < m1->nr_patches; p++)
 
 #define mrc_m1_foreach(m1p, ix, l,r) {			\
   int _l[1] = { -l };					\
-  int _r[1] = { m1p->_m1->im[0] + 2 * m1p->_m1->ib[0]  + r};	\
+  int _r[1] = { m1p->_m1->_ghost_dims[0] + 2 * m1p->_m1->_ghost_offs[0]  + r};	\
   for (int ix = _l[0]; ix < _r[0]; ix++)		\
 
 #define mrc_m1_foreach_bnd(m1p, ix) {			\
-  int _l[1] = { m1p->_m1->ib[0] };				\
-  int _r[1] = { m1p->_m1->ib[0] + m1p->_m1->im[0]};		\
+  int _l[1] = { m1p->_m1->_ghost_offs[0] };				\
+  int _r[1] = { m1p->_m1->_ghost_offs[0] + m1p->_m1->_ghost_dims[0]};	\
   for (int ix = _l[0]; ix < _r[0]; ix++)		\
 
 #define mrc_m1_foreach_end  }
