@@ -37,7 +37,7 @@ ggcm_mhd_calc_currcc(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
   } mrc_fld_foreach_end;
 
   mrc_fld_foreach(tmp,ix,iy,iz, 1, 1) {
-    // compute current on edge first        
+    // compute current      
     MRC_F3(c,0,ix,iy,iz) = 
       .5f*(MRC_F3(tmp, 2, ix,iy+1,iz) - MRC_F3(tmp, 2, ix,iy-1,iz)) * bd4y[iy] - 
       .5f*(MRC_F3(tmp, 1, ix,iy,iz+1) - MRC_F3(tmp, 1, ix,iy,iz-1)) * bd4z[iz] ;     
