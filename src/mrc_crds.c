@@ -142,7 +142,7 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 	    mrc_m1_foreach(m1p, i, -1, 0) {
 	      MRC_M1(m1p_nc, 0, i) = .5 * (MRC_M1(m1p,0, i-1) + MRC_M1(m1p,0, i));
 	    } mrc_m1_foreach_end;
-	    int ld = m1p->im[0] + 2 * m1p->ib[0];
+	    int ld = m1p->_m1->im[0] + 2 * m1p->_m1->ib[0];
 	    // extrapolate
 	    MRC_M1(m1p_nc, 0, 0) = MRC_M1(m1p,0, 0) - .5 * (MRC_M1(m1p,0, 1) - MRC_M1(m1p,0, 0));
 	    MRC_M1(m1p_nc, 0, ld) = MRC_M1(m1p,0, ld-1) + .5 * (MRC_M1(m1p,0, ld-1) - MRC_M1(m1p,0, ld-2));
