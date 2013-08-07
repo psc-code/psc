@@ -121,34 +121,6 @@ mrc_io_close(struct mrc_io *io)
 }
 
 // ----------------------------------------------------------------------
-// mrc_io_read_f1
-
-void
-mrc_io_read_f1(struct mrc_io *io, const char *path, struct mrc_fld *fld)
-{
-  struct mrc_io_ops *ops = mrc_io_ops(io);
-  if (ops->read_f1) {
-    ops->read_f1(io, path, fld);
-  } else {
-    assert(fld->_domain);
-    struct mrc_fld *m1 = mrc_domain_m1_create(fld->_domain);
-    mrc_fld_set_sw(m1, fld->_sw.vals[0]);
-    mrc_fld_set_param_int(m1, "dim", fld->_dim);
-    mrc_fld_set_nr_comps(m1, mrc_fld_nr_comps(fld));
-    mrc_fld_setup(m1);
-    mrc_io_read_m1(io, path, m1);
-
-    for (int m = 0; m < mrc_fld_nr_comps(m1); m++) {
-      mrc_fld_set_comp_name(fld, m, mrc_fld_comp_name(m1, m));
-      mrc_m1_foreach_bnd(m1, ix) {
-	MRC_F1(fld, m, ix) = MRC_M1(m1, m, ix, 0);
-      } mrc_m1_foreach_end;
-    }
-    mrc_fld_destroy(m1);
-  }
-}
-
-// ----------------------------------------------------------------------
 // mrc_io_read_f3
 
 void
@@ -213,40 +185,6 @@ mrc_io_write_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
     mrc_io_write_m3(io, path, fld);
   } else {
     assert(0);
-  }
-}
-
-// ----------------------------------------------------------------------
-// mrc_io_write_f1
-
-void
-mrc_io_write_f1(struct mrc_io *io, const char *path, struct mrc_fld *fld)
-{
-  struct mrc_io_ops *ops = mrc_io_ops(io);
-  if (ops->write_f1) {
-    ops->write_f1(io, path, fld);
-  } else if (fld->_domain) {
-    int nr_comps = mrc_fld_nr_comps(fld);
-    int sw = fld->_sw.vals[0];
-    int dim;
-    mrc_fld_get_param_int(fld, "dim", &dim);
-    struct mrc_fld *m1 = mrc_domain_m1_create(fld->_domain);
-    mrc_fld_set_nr_comps(m1, nr_comps); 
-    mrc_fld_set_sw(m1, sw);
-    mrc_fld_set_param_int(m1, "dim", dim); 
-    mrc_fld_setup(m1);
-    for (int m = 0; m < nr_comps; m++) {
-      mrc_fld_set_comp_name(m1, m, mrc_fld_comp_name(fld, m));
-      mrc_m1_foreach_patch(m1, p) {
-	mrc_m1_foreach(m1, ix, sw, sw) {
-	  MRC_M1(m1, m, ix, p) = MRC_F1(fld, m, ix);
-	} mrc_m1_foreach_end;
-      }
-    }
-    mrc_io_write_m1(io, path, m1);
-    mrc_fld_destroy(m1);
-  } else {
-    MHERE;
   }
 }
 
