@@ -96,27 +96,6 @@ _mrc_m1_setup(struct mrc_m1 *m1)
 }
 
 static void
-_mrc_m1_view(struct mrc_m1 *m1)
-{
-#if 0
-  int rank, size;
-  MPI_Comm_rank(obj->comm, &rank);
-  MPI_Comm_size(obj->comm, &size);
-
-  for (int r = 0; r < size; r++) {
-    if (r == rank) {
-      mrc_m1_foreach_patch(m1, p) {
-	struct mrc_m1_patch *m1p = mrc_m1_patch_get(m1, p);
-	mprintf("patch %d: ib = %d im = %d\n", p,
-		m1p->ib[0], m1p->im[0]);
-      }
-    }
-    MPI_Barrier(obj->comm);
-  }
-#endif
-}
-
-static void
 _mrc_m1_write(struct mrc_m1 *m1, struct mrc_io *io)
 {
   mrc_io_write_m1(io, mrc_io_obj_path(io, m1), m1);
@@ -136,37 +115,19 @@ _mrc_m1_read(struct mrc_m1 *fld, struct mrc_io *io)
 void
 mrc_m1_set_comp_name(struct mrc_m1 *fld, int m, const char *name)
 {
-  int nr_comps = mrc_m1_nr_comps(fld);
-  assert(m < nr_comps);
-  if (nr_comps > fld->_nr_allocated_comp_name) {
-    for (int i = 0; i < fld->_nr_allocated_comp_name; i++) {
-      free(fld->_comp_name[m]);
-    }
-    free(fld->_comp_name);
-    fld->_comp_name = calloc(nr_comps, sizeof(*fld->_comp_name));
-    fld->_nr_allocated_comp_name = nr_comps;
-  }
-  free(fld->_comp_name[m]);
-  fld->_comp_name[m] = name ? strdup(name) : NULL;
+  mrc_fld_set_comp_name(fld, m, name);
 }
 
 const char *
 mrc_m1_comp_name(struct mrc_m1 *fld, int m)
 {
-  assert(m < mrc_m1_nr_comps(fld) && m < fld->_nr_allocated_comp_name);
-  return fld->_comp_name[m];
+  return mrc_fld_comp_name(fld, m);
 }
 
 void
 mrc_m1_set_sw(struct mrc_m1 *fld, int sw)
 {
-  assert(fld->_domain);
-  if (fld->_dims.nr_vals == 3) {
-    mrc_m1_set_param_int_array(fld, "sw", fld->_dims.nr_vals,
-			       (int[3]) { sw, 0, 0 });
-  } else {
-    assert(0);
-  }
+  mrc_fld_set_sw(fld, sw);
 }
 
 bool
@@ -236,7 +197,6 @@ struct mrc_class_mrc_m1 mrc_class_mrc_m1 = {
   .param_descr  = mrc_m1_params_descr,
   .destroy      = _mrc_m1_destroy,
   .setup        = _mrc_m1_setup,
-  .view         = _mrc_m1_view,
   .read         = _mrc_m1_read,
   .write        = _mrc_m1_write,
 };

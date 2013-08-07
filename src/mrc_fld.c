@@ -269,8 +269,10 @@ mrc_fld_set_sw(struct mrc_fld *fld, int sw)
   if (fld->_dims.nr_vals > 3) {
     mrc_fld_set_param_int_array(fld, "sw", fld->_dims.nr_vals,
 				(int[5]) { sw, sw, sw, 0, 0 });
-  } else if (fld->_dims.nr_vals == 2) {
-    assert(fld->_dim >= 0);
+  } else if (fld->_dims.nr_vals == 3) { // mrc_m1
+    mrc_fld_set_param_int_array(fld, "sw", 3,
+				(int[3]) { sw, 0, 0 });
+  } else if (fld->_dims.nr_vals == 2) { // mrc_f1
     mrc_fld_set_param_int_array(fld, "sw", 2,
 				(int[2]) { sw, 0 });
   } else {
