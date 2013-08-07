@@ -12,7 +12,7 @@
 
 #include <petscvec.h>
 
-#define CE CHKERRABORT(vec->obj.comm, ierr)
+#define CE CHKERRABORT(PETSC_COMM_WORLD, ierr)
 
 // ======================================================================
 // mrc_vec_petsc subclass
@@ -169,6 +169,44 @@ mrc_vec_petsc_put_petsc(struct mrc_vec *vec, Vec *invec)
   *invec = NULL;
 }
 
+static void
+mrc_vec_petsc_axpy(struct mrc_vec *y, double alpha, struct mrc_vec *x)
+{
+  int ierr = VecAXPY(mrc_vec_petsc(y)->petsc_vec, 
+		     (PetscScalar) alpha, 
+		     mrc_vec_petsc(x)->petsc_vec); CE;
+}
+
+static void
+mrc_vec_petsc_waxpy(struct mrc_vec *w, double alpha, struct mrc_vec *x,  struct mrc_vec *y)
+{
+  int ierr = VecWAXPY(mrc_vec_petsc(w)->petsc_vec, 
+		     (PetscScalar) alpha, 
+		      mrc_vec_petsc(x)->petsc_vec,
+		      mrc_vec_petsc(y)->petsc_vec); CE;
+}
+
+static double
+mrc_vec_petsc_norm(struct mrc_vec *x)
+{
+  PetscReal norm;
+  int ierr = VecNorm(mrc_vec_petsc(x)->petsc_vec, NORM_2, &norm); CE;
+  return (double) norm;
+}
+
+static void
+mrc_vec_petsc_set(struct mrc_vec *x, double val)
+{
+  int ierr = VecSet(mrc_vec_petsc(x)->petsc_vec, (PetscScalar) val); CE;
+}
+
+static void
+mrc_vec_petsc_copy(struct mrc_vec *vec_to, struct mrc_vec *vec_from)
+{
+  int ierr = VecCopy(mrc_vec_petsc(vec_to)->petsc_vec, 
+		     mrc_vec_petsc(vec_from)->petsc_vec); CE;
+}
+
 
 // ----------------------------------------------------------------------
 // mrc_vec_petsc_methods
@@ -179,6 +217,11 @@ static struct mrc_obj_method mrc_vec_petsc_methods[] = {
   MRC_OBJ_METHOD("set_petsc_vec", mrc_vec_petsc_set_petsc),
   MRC_OBJ_METHOD("get_petsc_vec", mrc_vec_petsc_get_petsc),
   MRC_OBJ_METHOD("put_petsc_vec", mrc_vec_petsc_put_petsc),
+  MRC_OBJ_METHOD("axpy", mrc_vec_petsc_axpy),
+  MRC_OBJ_METHOD("waxpy", mrc_vec_petsc_waxpy),
+  MRC_OBJ_METHOD("norm", mrc_vec_petsc_norm),
+  MRC_OBJ_METHOD("set", mrc_vec_petsc_set),
+  MRC_OBJ_METHOD("copy", mrc_vec_petsc_copy),
   {},
 };
 
@@ -196,6 +239,10 @@ struct mrc_vec_ops mrc_vec_petsc_ops = {
   .destroy               = _mrc_vec_petsc_destroy,
   .set_array             = mrc_vec_sub_set_array,	
   .get_array             = mrc_vec_sub_get_array,	
-  .put_array             = mrc_vec_sub_put_array,	
+  .put_array             = mrc_vec_sub_put_array,
+  .axpy                  = mrc_vec_petsc_axpy,
+  .waxpy                 = mrc_vec_petsc_waxpy,
+  .set                   = mrc_vec_petsc_set,
+  .copy                  = mrc_vec_petsc_copy,
 };
 

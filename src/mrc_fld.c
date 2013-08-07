@@ -360,9 +360,13 @@ void
 mrc_fld_copy(struct mrc_fld *fld_to, struct mrc_fld *fld_from)
 {
   assert(mrc_fld_same_shape(fld_to, fld_from));
-
-  memcpy(fld_to->_arr, fld_from->_arr, fld_to->_len * sizeof(float));
+  mrc_vec_copy(fld_to->_vec, fld_from->_vec);
 }
+
+
+// ======================================================================
+// fld math operations
+// FIXME: I don't really understand why these math operations are methods...
 
 // ----------------------------------------------------------------------
 // mrc_fld_axpy
@@ -371,12 +375,7 @@ void
 mrc_fld_axpy(struct mrc_fld *y, float alpha, struct mrc_fld *x)
 {
   assert(mrc_fld_same_shape(x, y));
-
-  assert(y->_data_type == MRC_NT_FLOAT);
-  float *y_arr = y->_arr, *x_arr = x->_arr;
-  for (int i = 0; i < y->_len; i++) {
-    y_arr[i] += alpha * x_arr[i];
-  }
+  mrc_vec_axpy(y->_vec, (double) alpha, x->_vec);
 }
 
 // ----------------------------------------------------------------------
@@ -388,12 +387,7 @@ mrc_fld_waxpy(struct mrc_fld *w, float alpha, struct mrc_fld *x, struct mrc_fld 
 {
   assert(mrc_fld_same_shape(x, y));
   assert(mrc_fld_same_shape(x, w));
-
-  assert(y->_data_type == MRC_NT_FLOAT);
-  float *y_arr = y->_arr, *x_arr = x->_arr, *w_arr = w->_arr;
-  for (int i = 0; i < y->_len; i++) {
-    w_arr[i] = alpha * x_arr[i] + y_arr[i];
-  }
+  mrc_vec_waxpy(w->_vec, (double) alpha, x->_vec, y->_vec);
 }
 
 // ----------------------------------------------------------------------
@@ -403,9 +397,15 @@ mrc_fld_waxpy(struct mrc_fld *w, float alpha, struct mrc_fld *x, struct mrc_fld 
 float
 mrc_fld_norm(struct mrc_fld *fld)
 {
+  float res = 0.;
+  double (*vec_norm)(struct mrc_vec *);
+  vec_norm = (double (*)(struct mrc_vec *)) mrc_vec_get_method(fld->_vec, "norm");
+  if (vec_norm) {
+    res = (float) vec_norm(fld->_vec);
+    return res;
+  }
   struct mrc_fld *x = mrc_fld_get_as(fld, "float");  
   assert(x->_data_type == MRC_NT_FLOAT);
-  float res = 0.;
   int nr_comps = mrc_fld_nr_comps(x);
   
   if (x->_dims.nr_vals == 4) {
@@ -460,13 +460,7 @@ mrc_fld_norm_comp(struct mrc_fld *x, int m)
 void
 mrc_fld_set(struct mrc_fld *fld, float val)
 {
-  struct mrc_fld *x = mrc_fld_get_as(fld, "float");  
-  assert(fld->_data_type == MRC_NT_FLOAT);
-  float *arr = x->_arr;
-  for (int i = 0; i < x->_len; i++) {
-    arr[i] = val;
-  }
-  mrc_fld_put_as(x, fld);
+  mrc_vec_set(fld->_vec, (double) val);
 }
 
 // ----------------------------------------------------------------------
