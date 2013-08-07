@@ -3,6 +3,7 @@
 #define MRC_FLD_H
 
 #define mrc_m3 mrc_fld
+#define mrc_m1 mrc_fld
 
 #include <mrc_common.h>
 #include <mrc_obj.h>
@@ -227,33 +228,6 @@ struct mrc_m1_patch {
   struct mrc_m1 *_m1;
 };
 
-struct mrc_m1 {
-  struct mrc_obj obj;
-  // parameters
-  struct mrc_param_int_array _dims;
-  struct mrc_param_int_array _offs;
-  struct mrc_param_int_array _sw;
-
-  // state
-  int _ghost_offs[MRC_FLD_MAXDIMS];
-  int _ghost_dims[MRC_FLD_MAXDIMS];
-  int _data_type;
-  int _size_of_type;
-  void *_arr;
-  int _len;
-  struct mrc_vec *_vec; //< underlying mrc_vec that manages memory alloc/free (could be petsc)
-  struct mrc_domain *_domain; //< optional, if allocated through mrc_domain
-  // for mrc_f3 emulation
-  int _nr_allocated_comp_name;
-  char **_comp_name;
-  // for mrc_m3 emulation (FIXME, should be eliminated eventually (?))
-  struct mrc_fld_patch *_patches;
-  // for mrc_f1 emulation
-  int _dim; //< # along this dim of the domain
-
-  struct mrc_m1_patch *patches;
-};
-
 MRC_CLASS_DECLARE(mrc_m1, struct mrc_m1);
 
 void mrc_m1_set_comp_name(struct mrc_m1 *x, int m, const char *name);
@@ -270,7 +244,7 @@ int mrc_m1_nr_patches(struct mrc_m1 *x);
 static inline struct mrc_m1_patch *
 mrc_m1_patch_get(struct mrc_m1 *m1, int p)
 {
-  return &m1->patches[p];
+  return (struct mrc_m1_patch *) &m1->_patches[p];
 }
 
 static inline void
