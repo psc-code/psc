@@ -194,8 +194,8 @@ mrctest_create_m1_1(struct mrc_domain *domain, int dim)
   struct mrc_m1 *m1 = mrc_domain_m1_create(domain);
   mrc_fld_set_sw(m1, 2);
   mrc_fld_set_nr_comps(m1, 1);
-  mrc_m1_set_param_int(m1, "dim", dim);
-  mrc_m1_setup(m1);
+  mrc_fld_set_param_int(m1, "dim", dim);
+  mrc_fld_setup(m1);
   mrc_fld_set_comp_name(m1, 0, "test");
   
   mrc_m1_foreach_patch(m1, p) {

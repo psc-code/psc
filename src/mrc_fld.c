@@ -743,34 +743,3 @@ struct mrc_class_mrc_fld mrc_class_mrc_fld = {
 
 
 
-// ======================================================================
-// mrc_m1
-
-#define to_mrc_m1(o) container_of(o, struct mrc_m1, obj)
-
-// ----------------------------------------------------------------------
-// mrc_m1_init
-
-static void
-mrc_m1_init()
-{
-  mrc_class_register_subclass(&mrc_class_mrc_m1, &mrc_fld_float_ops);
-  mrc_class_register_subclass(&mrc_class_mrc_m1, &mrc_fld_double_ops);
-  mrc_class_register_subclass(&mrc_class_mrc_m1, &mrc_fld_int_ops);
-}
-
-// ----------------------------------------------------------------------
-// mrc_class_mrc_m1
-
-struct mrc_class_mrc_m1 mrc_class_mrc_m1 = {
-  .name         = "mrc_m1",
-  .size         = sizeof(struct mrc_m1),
-  .param_descr  = mrc_fld_descr,
-  .init         = mrc_m1_init,
-  .destroy      = _mrc_fld_destroy,
-  .setup        = _mrc_fld_setup,
-  .read         = _mrc_fld_read,
-  .write        = _mrc_fld_write,
-};
-
-

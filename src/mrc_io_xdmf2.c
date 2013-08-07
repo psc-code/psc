@@ -437,7 +437,7 @@ xdmf_spatial_write_mcrds_multi_parallel(struct xdmf_file *file,
   for (int d = 0; d < 3; d++) {
     struct mrc_m1 *mcrd = crds->mcrd[d];
 
-    hid_t group_crd1 = H5Gcreate(file->h5_file, mrc_m1_name(mcrd), H5P_DEFAULT,
+    hid_t group_crd1 = H5Gcreate(file->h5_file, mrc_fld_name(mcrd), H5P_DEFAULT,
 				 H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group_crd1);
 
     hid_t group_crdp = H5Gcreate(group_crd1, "p0", H5P_DEFAULT,
@@ -643,7 +643,7 @@ xdmf_spatial_write_mcrds_multi_uniform_parallel(struct xdmf_file *file,
   for (int d = 0; d < 3; d++) {
     struct mrc_m1 *mcrd = crds->mcrd[d];
 
-    hid_t group_crd1 = H5Gcreate(file->h5_file, mrc_m1_name(mcrd), H5P_DEFAULT,
+    hid_t group_crd1 = H5Gcreate(file->h5_file, mrc_fld_name(mcrd), H5P_DEFAULT,
 				 H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group_crd1);
 
     hid_t group_crdp = H5Gcreate(group_crd1, "p0", H5P_DEFAULT,
