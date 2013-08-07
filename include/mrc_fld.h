@@ -227,17 +227,6 @@ typedef void (*mrc_fld_copy_from_func_t)(struct mrc_fld *,
 
 MRC_CLASS_DECLARE(mrc_m1, struct mrc_m1);
 
-static inline struct mrc_fld_patch *
-mrc_m1_patch_get(struct mrc_m1 *m1, int p)
-{
-  return &m1->_patches[p];
-}
-
-static inline void
-mrc_m1_patch_put(struct mrc_m1 *m1)
-{
-}
-
 #define mrc_m1_foreach_patch(m1, p) \
   for (int p = 0; p < mrc_fld_nr_patches(m1); p++)
 

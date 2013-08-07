@@ -144,7 +144,6 @@ mrc_io_read_f1(struct mrc_io *io, const char *path, struct mrc_fld *fld)
 	MRC_F1(fld, m, ix) = MRC_M1P(m1, m, ix, 0);
       } mrc_m1_foreach_end;
     }
-    mrc_m1_patch_put(m1);
     mrc_m1_destroy(m1);
   }
 }
@@ -246,7 +245,6 @@ mrc_io_write_f1(struct mrc_io *io, const char *path, struct mrc_fld *fld)
 	mrc_m1_foreach(m1, ix, sw, sw) {
 	  MRC_M1P(m1, m, ix, p) = MRC_F1(fld, m, ix);
 	} mrc_m1_foreach_end;
-	mrc_m1_patch_put(m1);
       }
     }
     mrc_io_write_m1(io, path, m1);

@@ -125,7 +125,6 @@ mrctest_set_crds_multi_rectilinear_1(struct mrc_domain *domain)
 	int jx = ix + patches[p].off[d];
 	MRC_M1P(crds->mcrd[d], 0, ix, p) = jx*jx;
       } mrc_m1_foreach_end;
-      mrc_m1_patch_put(crds->mcrd[d]);
     }
   }
 }
@@ -203,7 +202,6 @@ mrctest_create_m1_1(struct mrc_domain *domain, int dim)
     mrc_m1_foreach(m1, ix, 2, 2) {
       MRC_M1P(m1, 0, ix, p) = 1.f + ix * ix;
     } mrc_m1_foreach_end;
-    mrc_m1_patch_put(m1);
   }
   return m1;
 }
@@ -268,9 +266,6 @@ mrctest_m1_compare(struct mrc_m1 *m1_1, struct mrc_m1 *m1_2, float eps)
       mrc_m1_foreach(m1_1, ix, sw, sw) {
 	diff = fmaxf(diff, fabsf(MRC_M1P(m1_1, m, ix, p) - MRC_M1P(m1_2, m, ix, p)));
       } mrc_m1_foreach_end;
-
-      mrc_m1_patch_put(m1_1);
-      mrc_m1_patch_put(m1_2);
     }
     if (diff > eps) {
       mprintf("mrctest_m1_compare: m = %d diff = %g\n", m, diff);
@@ -341,8 +336,6 @@ mrctest_crds_compare(struct mrc_crds *crds1, struct mrc_crds *crds2)
 	    assert(0);
 	  }
 	} mrc_m1_foreach_end;
-	mrc_m1_patch_put(crds1->mcrd[d]);
-	mrc_m1_patch_put(crds2->mcrd[d]);
       }
     }
   }

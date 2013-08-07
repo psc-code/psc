@@ -438,7 +438,6 @@ collective_m1_send_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
     MPI_Isend(&MRC_M1P(m1, m, ib, p), ie - ib, MPI_FLOAT,
 	      xdmf->writers[0], info.global_patch, mrc_io_comm(io),
 	      &ctx->send_reqs[ctx->nr_send_reqs++]);
-    mrc_m1_patch_put(m1);
   }
 }
 
@@ -584,7 +583,6 @@ collective_m1_read_recv_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
     MPI_Irecv(&MRC_M1P(m1, m, ib, p), ie - ib, MPI_FLOAT,
 	      xdmf->writers[0], info.global_patch, mrc_io_comm(io),
 	      &ctx->recv_reqs[ctx->nr_recv_reqs++]);
-    mrc_m1_patch_put(m1);
   }
 }
 

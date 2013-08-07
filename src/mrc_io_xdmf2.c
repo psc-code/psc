@@ -178,7 +178,6 @@ xdmf_spatial_write_mcrds_multi(struct mrc_io *io, struct xdmf_file *file,
       H5Gclose(group_crdp);
 
       free(crd_nc);
-      mrc_m1_patch_put(mcrd);
     }
 
     H5Gclose(group_crd1);

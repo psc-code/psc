@@ -16,7 +16,6 @@ set_m3(struct mrc_fld *m3)
 
   mrc_fld_foreach_patch(m3, p) {
     struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, p);
-    mrc_crds_patch_get(crds, p);
     int *off = patches[p].off;
     mrc_m3_foreach(m3p, ix,iy,iz, 0,0) {
       MRC_M3(m3p, 0, ix,iy,iz) =
@@ -24,7 +23,6 @@ set_m3(struct mrc_fld *m3)
       MRC_M3(m3p, 1, ix,iy,iz) = MRC_MCRD(crds, 0, ix, p);
     } mrc_m3_foreach_end;
     mrc_fld_patch_put(m3);
-    mrc_crds_patch_put(crds);
   }
 }
 

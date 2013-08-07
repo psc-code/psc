@@ -40,8 +40,6 @@ void mrc_crds_set_values(struct mrc_crds *crds, float *crdx, int mx,
 			 float *crdy, int my, float *crdz, int mz);
 void mrc_crds_get_xl_xh(struct mrc_crds *crds, float xl[3], float xh[3]);
 void mrc_crds_get_dx(struct mrc_crds *crds, float dx[3]);
-void mrc_crds_patch_get(struct mrc_crds *crds, int p);
-void mrc_crds_patch_put(struct mrc_crds *crds);
 
 struct mrc_crds_ops {
   MRC_SUBCLASS_OPS(struct mrc_crds);

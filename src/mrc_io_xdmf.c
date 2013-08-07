@@ -676,7 +676,6 @@ hdf5_write_mcrds(struct mrc_io *io, struct mrc_domain *domain, int sw)
       H5LTmake_dataset_float(hdf5->group_crd, name, 1, &im1, crd_nc);
 
       free(crd_nc);
-      mrc_m1_patch_put(mcrd);
     }
     hdf5->crd_written[d] = true;
   }
@@ -1132,7 +1131,6 @@ ds_xdmf_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
       ierr = H5LTmake_dataset_float(groupc, "1d", 1, hdims, &MRC_M1P(m1, m, mrc_fld_ghost_offs(m1)[0], p)); CE;
       H5Gclose(groupc);
     }
-    mrc_m1_patch_put(m1);
     H5Gclose(group);
   }
 
@@ -1141,7 +1139,8 @@ ds_xdmf_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
 
 struct read_m1_cb_data {
   struct mrc_io *io;
-  struct mrc_fld_patch *m1p;
+  struct mrc_fld *m1;
+  int p;
   hid_t filespace;
   hid_t memspace;
 };
@@ -1158,7 +1157,7 @@ read_m1_cb(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
 
   hid_t dset = H5Dopen(group, "1d", H5P_DEFAULT); H5_CHK(dset);
   ierr = H5Dread(dset, H5T_NATIVE_FLOAT, data->memspace, data->filespace, H5P_DEFAULT,
-		 &MRC_M1P(data->m1p->_fld, m, mrc_fld_ghost_offs(data->m1p->_fld)[0], data->m1p->_p)); CE;
+		 &MRC_M1P(data->m1, m, mrc_fld_ghost_offs(data->m1)[0], data->p)); CE;
   ierr = H5Dclose(dset); CE;
 
   ierr = H5Gclose(group); CE;
@@ -1177,7 +1176,6 @@ ds_xdmf_read_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
 
   hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT); H5_CHK(group0);
   for (int p = 0; p < mrc_fld_nr_patches(m1); p++) {
-    struct mrc_fld_patch *m1p = mrc_m1_patch_get(m1, p);
     char name[10]; sprintf(name, "p%d", p);
     hid_t group = H5Gopen(group0, name, H5P_DEFAULT); H5_CHK(group);
     hsize_t hdims[1] = { mrc_fld_ghost_dims(m1)[0] };
@@ -1186,7 +1184,8 @@ ds_xdmf_read_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
 
     struct read_m1_cb_data cb_data = {
       .io        = io,
-      .m1p       = m1p,
+      .m1        = m1,
+      .p         = p,
       .filespace = filespace,
       .memspace  = memspace,
     };
@@ -1197,7 +1196,6 @@ ds_xdmf_read_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
     ierr = H5Sclose(filespace); CE;
     ierr = H5Sclose(memspace); CE;
     ierr = H5Gclose(group); CE;
-    mrc_m1_patch_put(m1);
   }
 
   ierr = H5Gclose(group0); CE;

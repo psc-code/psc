@@ -88,8 +88,6 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 	      MRC_M1P(crd_nc, 0, 0 , p) = MRC_F1(crd,0, 0) - .5 * (MRC_F1(crd,0, 1) - MRC_F1(crd,0, 0));
 	      MRC_M1P(crd_nc, 0, ld, p) = MRC_F1(crd,0, ld-1) + .5 * (MRC_F1(crd,0, ld-1) - MRC_F1(crd,0, ld-2));
 	    }
-	    mrc_m1_patch_put(crd_nc);
-	    mrc_m1_patch_put(crds->mcrd[d]);
 	  }
 	}
 	int gdims[3];
@@ -151,8 +149,6 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 	    MRC_M1P(crd_nc,0, ld, p) = MRC_M1P(crd_cc,0, ld-1, p)
 	      + .5 * (MRC_M1P(crd_cc,0, ld-1, p) - MRC_M1P(crd_cc,0, ld-2, p));
 	  }
-	  mrc_m1_patch_put(crd_nc);
-	  mrc_m1_patch_put(crds->mcrd[d]);
 	}
 	int gdims[3];
 	mrc_domain_get_global_dims(crds->domain, gdims);
@@ -236,22 +232,6 @@ mrc_crds_multi_alloc(struct mrc_crds *crds, int d)
   mrc_m1_set_param_int(crds->mcrd[d], "dim", d);
   mrc_m1_setup(crds->mcrd[d]);
   mrc_fld_set_comp_name(crds->mcrd[d], 0, s);
-}
-
-void
-mrc_crds_patch_get(struct mrc_crds *crds, int p)
-{
-  for (int d = 0; d < 3; d++) {
-    crds->mcrd_p[d] = mrc_m1_patch_get(crds->mcrd[d], p);
-  }
-}
-
-void
-mrc_crds_patch_put(struct mrc_crds *crds)
-{
-  for (int d = 0; d < 3; d++) {
-    crds->mcrd_p[d] = NULL;
-  }
 }
 
 // ======================================================================
@@ -411,7 +391,6 @@ mrc_crds_multi_uniform_setup(struct mrc_crds *crds)
       mrc_m1_foreach_bnd(mcrd, i) {
 	MRC_M1P(mcrd,0, i, p) = xl[d] + (i + patches[p].off[d] + .5) / gdims[d] * (xh[d] - xl[d]);
       } mrc_m1_foreach_end;
-      mrc_m1_patch_put(mcrd);
     }
   }
 }
@@ -450,7 +429,6 @@ mrc_crds_amr_uniform_setup(struct mrc_crds *crds)
       mrc_m1_foreach_bnd(mcrd, i) {
 	MRC_M1P(mcrd,0, i, p) = xl[d] + (xb + (i + .5) * dx) / gdims[d] * (xh[d] - xl[d]);
       } mrc_m1_foreach_end;
-      mrc_m1_patch_put(mcrd);
     }
   }
 }
