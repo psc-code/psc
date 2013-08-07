@@ -22,7 +22,7 @@ void mrctest_finalize();
 // ----------------------------------------------------------------------
 
 void mrctest_fld_compare(struct mrc_fld *fld1, struct mrc_fld *fld2, float eps);
-void mrctest_m1_compare(struct mrc_m1 *m1, struct mrc_m1 *m2, float eps);
+void mrctest_m1_compare(struct mrc_fld *fld1, struct mrc_fld *fld2, float eps);
 void mrctest_m3_compare(struct mrc_m3 *m3_1, struct mrc_m3 *m3_2);
 void mrctest_crds_compare(struct mrc_crds *crds1, struct mrc_crds *crds2);
 
@@ -45,7 +45,7 @@ void mrctest_set_crds_multi_rectilinear_1(struct mrc_domain *domain);
 void mrctest_set_crds_rectilinear_1(struct mrc_domain *domain);
 struct mrc_fld *mrctest_create_field_1(struct mrc_domain *domain);
 struct mrc_fld *mrctest_create_field_2(struct mrc_domain *domain);
-struct mrc_m1 *mrctest_create_m1_1(struct mrc_domain *domain, int dim);
+struct mrc_fld *mrctest_create_m1_1(struct mrc_domain *domain, int dim);
 
 // ----------------------------------------------------------------------
 // mrctest_set_amr_domain

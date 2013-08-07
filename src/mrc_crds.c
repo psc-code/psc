@@ -59,7 +59,7 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
       sprintf(s, "crd%d", d);
       mrc_io_write_ref(io, crds, s, crds->crd[d]);
       if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) { // FIXME
-	struct mrc_m1 *crd_nc = crds->mcrd_nc[d];
+	struct mrc_fld *crd_nc = crds->mcrd_nc[d];
 	if (!crd_nc) {
 	  crd_nc = mrc_fld_create(mrc_crds_comm(crds)); // FIXME, leaked
 	  crds->mcrd_nc[d] = crd_nc;
@@ -121,7 +121,7 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 
       if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) {
 	sprintf(s, "crd%d_nc", d);
-	struct mrc_m1 *crd_nc = mrc_fld_create(mrc_crds_comm(crds)); // FIXME, leaked
+	struct mrc_fld *crd_nc = mrc_fld_create(mrc_crds_comm(crds)); // FIXME, leaked
 	crds->mcrd_nc[d] = crd_nc;
 	mrc_fld_set_name(crd_nc, s);
 	mrc_fld_set_param_obj(crd_nc, "domain", crds->domain);
@@ -386,7 +386,7 @@ mrc_crds_multi_uniform_setup(struct mrc_crds *crds)
   struct mrc_patch *patches = mrc_domain_get_patches(crds->domain, NULL);
   for (int d = 0; d < 3; d++) {
     mrc_crds_multi_alloc(crds, d);
-    struct mrc_m1 *mcrd = crds->mcrd[d];
+    struct mrc_fld *mcrd = crds->mcrd[d];
     mrc_m1_foreach_patch(mcrd, p) {
       mrc_m1_foreach_bnd(mcrd, i) {
 	MRC_M1(mcrd,0, i, p) = xl[d] + (i + patches[p].off[d] + .5) / gdims[d] * (xh[d] - xl[d]);
@@ -418,7 +418,7 @@ mrc_crds_amr_uniform_setup(struct mrc_crds *crds)
 
   for (int d = 0; d < 3; d++) {
     mrc_crds_multi_alloc(crds, d);
-    struct mrc_m1 *mcrd = crds->mcrd[d];
+    struct mrc_fld *mcrd = crds->mcrd[d];
     mrc_m1_foreach_patch(mcrd, p) {
       struct mrc_patch_info info;
       mrc_domain_get_local_patch_info(crds->domain, p, &info);

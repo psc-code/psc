@@ -16,11 +16,8 @@ struct mrc_crds {
   struct mrc_crds_params par;
   struct mrc_domain *domain;
   struct mrc_fld *crd[3];
-  struct mrc_m1 *mcrd[3];
-  struct mrc_m1 *mcrd_nc[3];
-
-  // temporally available between patch_get() and patch_put()
-  struct mrc_fld_patch *mcrd_p[3];
+  struct mrc_fld *mcrd[3];
+  struct mrc_fld *mcrd_nc[3];
 };
 
 #define MRC_CRD(crds, d, ix) MRC_F1((crds)->crd[d],0, ix)

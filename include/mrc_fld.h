@@ -3,7 +3,6 @@
 #define MRC_FLD_H
 
 #define mrc_m3 mrc_fld
-#define mrc_m1 mrc_fld
 
 #include <mrc_common.h>
 #include <mrc_obj.h>

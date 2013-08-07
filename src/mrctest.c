@@ -188,10 +188,10 @@ mrctest_create_field_2(struct mrc_domain *domain)
   return fld;
 }
 
-struct mrc_m1 *
+struct mrc_fld *
 mrctest_create_m1_1(struct mrc_domain *domain, int dim)
 {
-  struct mrc_m1 *m1 = mrc_domain_m1_create(domain);
+  struct mrc_fld *m1 = mrc_domain_m1_create(domain);
   mrc_fld_set_sw(m1, 2);
   mrc_fld_set_nr_comps(m1, 1);
   mrc_fld_set_param_int(m1, "dim", dim);
@@ -256,7 +256,7 @@ mrctest_fld_compare(struct mrc_fld *fld1, struct mrc_fld *fld2, float eps)
 // mrctest_m1_compare
 
 void
-mrctest_m1_compare(struct mrc_m1 *m1_1, struct mrc_m1 *m1_2, float eps)
+mrctest_m1_compare(struct mrc_fld *m1_1, struct mrc_fld *m1_2, float eps)
 {
   assert(mrc_fld_same_shape(m1_1, m1_2));
   int sw = m1_1->_sw.vals[0];

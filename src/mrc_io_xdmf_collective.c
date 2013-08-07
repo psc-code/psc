@@ -403,7 +403,7 @@ struct collective_m1_ctx {
 
 static void
 collective_m1_send_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
-			 struct mrc_m1 *m1, int m)
+			 struct mrc_fld *m1, int m)
 {
   struct xdmf *xdmf = to_xdmf(io);
   int dim = ctx->dim;
@@ -506,7 +506,7 @@ collective_m1_recv_end(struct mrc_io *io, struct collective_m1_ctx *ctx)
 // xdmf_collective_write_m1
 
 static void
-xdmf_collective_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
+xdmf_collective_write_m1(struct mrc_io *io, const char *path, struct mrc_fld *m1)
 {
   struct xdmf *xdmf = to_xdmf(io);
   struct xdmf_file *file = &xdmf->file;
@@ -564,7 +564,7 @@ xdmf_collective_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
 
 static void
 collective_m1_read_recv_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
-			      struct mrc_m1 *m1, int m)
+			      struct mrc_fld *m1, int m)
 {
   struct xdmf *xdmf = to_xdmf(io);
 
@@ -588,7 +588,7 @@ collective_m1_read_recv_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
 
 static void
 collective_m1_read_recv_end(struct mrc_io *io, struct collective_m1_ctx *ctx,
-			    struct mrc_m1 *m1, int m)
+			    struct mrc_fld *m1, int m)
 {
   MPI_Waitall(ctx->nr_recv_reqs, ctx->recv_reqs, MPI_STATUSES_IGNORE);
   free(ctx->recv_reqs);
@@ -673,7 +673,7 @@ read_m1_cb(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
 // xdmf_collective_read_m1
 
 static void
-xdmf_collective_read_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
+xdmf_collective_read_m1(struct mrc_io *io, const char *path, struct mrc_fld *m1)
 {
   struct xdmf *xdmf = to_xdmf(io);
   struct xdmf_file *file = &xdmf->file;

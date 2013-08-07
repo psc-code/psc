@@ -131,7 +131,7 @@ mrc_io_read_f1(struct mrc_io *io, const char *path, struct mrc_fld *fld)
     ops->read_f1(io, path, fld);
   } else {
     assert(fld->_domain);
-    struct mrc_m1 *m1 = mrc_domain_m1_create(fld->_domain);
+    struct mrc_fld *m1 = mrc_domain_m1_create(fld->_domain);
     mrc_fld_set_sw(m1, fld->_sw.vals[0]);
     mrc_fld_set_param_int(m1, "dim", fld->_dim);
     mrc_fld_set_nr_comps(m1, mrc_fld_nr_comps(fld));
@@ -234,7 +234,7 @@ mrc_io_write_f1(struct mrc_io *io, const char *path, struct mrc_fld *fld)
     int sw = fld->_sw.vals[0];
     int dim;
     mrc_fld_get_param_int(fld, "dim", &dim);
-    struct mrc_m1 *m1 = mrc_domain_m1_create(fld->_domain);
+    struct mrc_fld *m1 = mrc_domain_m1_create(fld->_domain);
     mrc_fld_set_nr_comps(m1, nr_comps); 
     mrc_fld_set_sw(m1, sw);
     mrc_fld_set_param_int(m1, "dim", dim); 
@@ -296,7 +296,7 @@ mrc_io_write_f3(struct mrc_io *io, const char *path, struct mrc_fld *fld, float 
 // mrc_io_write_m1
 
 void
-mrc_io_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *fld)
+mrc_io_write_m1(struct mrc_io *io, const char *path, struct mrc_fld *fld)
 {
   struct mrc_io_ops *ops = mrc_io_ops(io);
   if (ops->write_m1) {
@@ -310,7 +310,7 @@ mrc_io_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *fld)
 // mrc_io_read_m1
 
 void
-mrc_io_read_m1(struct mrc_io *io, const char *path, struct mrc_m1 *fld)
+mrc_io_read_m1(struct mrc_io *io, const char *path, struct mrc_fld *fld)
 {
   struct mrc_io_ops *ops = mrc_io_ops(io);
   assert(ops->read_m1);

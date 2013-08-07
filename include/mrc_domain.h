@@ -54,8 +54,7 @@ struct mrc_ddc *mrc_domain_get_ddc(struct mrc_domain *domain);
 
 struct mrc_fld *mrc_domain_f1_create(struct mrc_domain *domain);
 struct mrc_m3 *mrc_domain_m3_create(struct mrc_domain *domain);
-struct mrc_m1 *mrc_domain_m1_create(struct mrc_domain *domain);
-struct mrc_a3 *mrc_domain_a3_create(struct mrc_domain *domain);
+struct mrc_fld *mrc_domain_m1_create(struct mrc_domain *domain);
 struct mrc_fld *mrc_domain_fld_create(struct mrc_domain *domain, int sw, const char *comps);
 
 struct mrc_ddc *mrc_domain_create_ddc(struct mrc_domain *domain);

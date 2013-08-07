@@ -654,7 +654,7 @@ hdf5_write_mcrds(struct mrc_io *io, struct mrc_domain *domain, int sw)
     if (hdf5->crd_written[d])
       continue;
 
-    struct mrc_m1 *mcrd = crds->mcrd[d];
+    struct mrc_fld *mcrd = crds->mcrd[d];
     mrc_m1_foreach_patch(mcrd, p) {
       int im = mrc_fld_ghost_dims(mcrd)[0];
       float *crd_nc = calloc(im + 1, sizeof(*crd_nc));
@@ -1109,7 +1109,7 @@ ds_xdmf_read_f1(struct mrc_io *io, const char *path, struct mrc_fld *f1)
 }
 
 static void
-ds_xdmf_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
+ds_xdmf_write_m1(struct mrc_io *io, const char *path, struct mrc_fld *m1)
 {
   int ierr;
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
@@ -1165,7 +1165,7 @@ read_m1_cb(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
 }
 
 static void
-ds_xdmf_read_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
+ds_xdmf_read_m1(struct mrc_io *io, const char *path, struct mrc_fld *m1)
 {
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
   herr_t ierr;

@@ -260,10 +260,10 @@ mrc_domain_m3_create(struct mrc_domain *domain)
 // ======================================================================
 // mrc_domain_m1_create
 
-struct mrc_m1 *
+struct mrc_fld *
 mrc_domain_m1_create(struct mrc_domain *domain)
 {
-  struct mrc_m1 *m1 = mrc_fld_create(domain->obj.comm);
+  struct mrc_fld *m1 = mrc_fld_create(domain->obj.comm);
   mrc_fld_set_param_obj(m1, "domain", domain);
   mrc_fld_set_param_int_array(m1, "dims", 3, NULL);
   return m1;

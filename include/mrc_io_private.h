@@ -39,8 +39,8 @@ struct mrc_io_ops {
   void (*write_f1)(struct mrc_io *, const char *path, struct mrc_fld *fld);
   void (*write_f3)(struct mrc_io *, const char *path,
 		   struct mrc_fld *fld, float scale);
-  void (*read_m1)(struct mrc_io *, const char *path, struct mrc_m1 *m1);
-  void (*write_m1)(struct mrc_io *, const char *path, struct mrc_m1 *m1);
+  void (*read_m1)(struct mrc_io *, const char *path, struct mrc_fld *m1);
+  void (*write_m1)(struct mrc_io *, const char *path, struct mrc_fld *m1);
   void (*read_m3)(struct mrc_io *, const char *path, struct mrc_m3 *m3);
   void (*write_m3)(struct mrc_io *, const char *path, struct mrc_m3 *m3);
   void (*write_field)(struct mrc_io *, const char *path,

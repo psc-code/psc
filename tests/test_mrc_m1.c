@@ -9,7 +9,7 @@
 #include <string.h>
 
 static void
-set_m1(struct mrc_m1 *m1)
+set_m1(struct mrc_fld *m1)
 {
   struct mrc_patch *patches = mrc_domain_get_patches(m1->_domain, NULL);
   struct mrc_crds *crds = mrc_domain_get_crds(m1->_domain);
@@ -24,7 +24,7 @@ set_m1(struct mrc_m1 *m1)
 }
 
 static void
-check_m1(struct mrc_m1 *m1)
+check_m1(struct mrc_fld *m1)
 {
   struct mrc_patch *patches = mrc_domain_get_patches(m1->_domain, NULL);
 
@@ -37,7 +37,7 @@ check_m1(struct mrc_m1 *m1)
 }
 
 static void
-test_write_m1(struct mrc_m1 *m1)
+test_write_m1(struct mrc_fld *m1)
 {
   struct mrc_io *io = mrc_io_create(mrc_fld_comm(m1));
   mrc_io_set_from_options(io);
@@ -55,7 +55,7 @@ test_write_m1(struct mrc_m1 *m1)
 }
 
 static void
-test_write_read_m1(struct mrc_m1 *m1)
+test_write_read_m1(struct mrc_fld *m1)
 {
   struct mrc_io *io = mrc_io_create(mrc_fld_comm(m1));
   mrc_io_set_from_options(io);
@@ -69,7 +69,7 @@ test_write_read_m1(struct mrc_m1 *m1)
   mrc_io_set_from_options(io);
   mrc_io_setup(io);
   mrc_io_open(io, "r", 0, 0.);
-  struct mrc_m1 *m1_2 = mrc_io_read_path(io, "/m1", "m1", mrc_fld);
+  struct mrc_fld *m1_2 = mrc_io_read_path(io, "/m1", "m1", mrc_fld);
   mrc_io_close(io);
   mrc_io_destroy(io);
 
@@ -99,7 +99,7 @@ main(int argc, char **argv)
     mrctest_set_crds_multi_rectilinear_1(domain);
   }
 
-  struct mrc_m1 *m1 = mrc_domain_m1_create(domain);
+  struct mrc_fld *m1 = mrc_domain_m1_create(domain);
   mrc_fld_set_name(m1, "test_m1");
   mrc_fld_set_param_int(m1, "dim", 0);
   mrc_fld_set_nr_comps(m1, 2);
