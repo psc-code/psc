@@ -28,10 +28,10 @@ struct mrc_crds {
 #define MRC_CRDY(crds, iy) MRC_CRD(crds, 1, iy)
 #define MRC_CRDZ(crds, iz) MRC_CRD(crds, 2, iz)
 
-#define MRC_MCRD(crds, d, ix) MRC_M1((crds)->mcrd_p[d],0, ix)
-#define MRC_MCRDX(crds, ix) MRC_MCRD(crds, 0, ix)
-#define MRC_MCRDY(crds, iy) MRC_MCRD(crds, 1, iy)
-#define MRC_MCRDZ(crds, iz) MRC_MCRD(crds, 2, iz)
+#define MRC_MCRD(crds, d, ix, p) MRC_M1P((crds)->mcrd[d],0, ix, p)
+#define MRC_MCRDX(crds, ix, p) MRC_MCRD(crds, 0, ix, p)
+#define MRC_MCRDY(crds, iy, p) MRC_MCRD(crds, 1, iy, p)
+#define MRC_MCRDZ(crds, iz, p) MRC_MCRD(crds, 2, iz, p)
 
 MRC_CLASS_DECLARE(mrc_crds, struct mrc_crds);
 

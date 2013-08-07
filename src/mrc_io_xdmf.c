@@ -656,20 +656,19 @@ hdf5_write_mcrds(struct mrc_io *io, struct mrc_domain *domain, int sw)
 
     struct mrc_m1 *mcrd = crds->mcrd[d];
     mrc_m1_foreach_patch(mcrd, p) {
-      struct mrc_fld_patch *mcrdp = mrc_m1_patch_get(mcrd, p);
       int im = mrc_fld_ghost_dims(mcrd)[0];
       float *crd_nc = calloc(im + 1, sizeof(*crd_nc));
       if (sw > 0) {
 	for (int i = 0; i <= im; i++) {
-	  crd_nc[i] = .5 * (MRC_M1(mcrdp,0, i-1) + MRC_M1(mcrdp,0, i));
+	  crd_nc[i] = .5 * (MRC_M1P(mcrd,0, i-1, p) + MRC_M1P(mcrd,0, i, p));
 	}
       } else {
 	for (int i = 1; i < im; i++) {
-	  crd_nc[i] = .5 * (MRC_M1(mcrdp,0, i-1) + MRC_M1(mcrdp,0, i));
+	  crd_nc[i] = .5 * (MRC_M1P(mcrd,0, i-1, p) + MRC_M1P(mcrd,0, i, p));
 	}
 	// extrapolate
-	crd_nc[0]  = MRC_M1(mcrdp,0, 0) - .5 * (MRC_M1(mcrdp,0, 1) - MRC_M1(mcrdp,0, 0));
-	crd_nc[im] = MRC_M1(mcrdp,0, im-1) + .5 * (MRC_M1(mcrdp,0, im-1) - MRC_M1(mcrdp,0, im-2));
+	crd_nc[0]  = MRC_M1P(mcrd,0, 0   , p) - .5 * (MRC_M1P(mcrd,0, 1   , p) - MRC_M1P(mcrd,0, 0   , p));
+	crd_nc[im] = MRC_M1P(mcrd,0, im-1, p) + .5 * (MRC_M1P(mcrd,0, im-1, p) - MRC_M1P(mcrd,0, im-2, p));
       }
       hsize_t im1 = im + 1;
       char name[20];
@@ -1121,7 +1120,6 @@ ds_xdmf_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
   H5LTset_attribute_int(group0, ".", "nr_patches", &nr_patches, 1);
 
   mrc_m1_foreach_patch(m1, p) {
-    struct mrc_fld_patch *m1p = mrc_m1_patch_get(m1, p);
     char name[10]; sprintf(name, "p%d", p);
     hid_t group = H5Gcreate(group0, name, H5P_DEFAULT, H5P_DEFAULT,
 			    H5P_DEFAULT); H5_CHK(group);
@@ -1131,7 +1129,7 @@ ds_xdmf_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
       hid_t groupc = H5Gcreate(group, mrc_fld_comp_name(m1, m), H5P_DEFAULT, H5P_DEFAULT,
 			       H5P_DEFAULT); H5_CHK(groupc);
       ierr = H5LTset_attribute_int(groupc, ".", "m", &m, 1); CE;
-      ierr = H5LTmake_dataset_float(groupc, "1d", 1, hdims, &MRC_M1(m1p, m, mrc_fld_ghost_offs(m1)[0])); CE;
+      ierr = H5LTmake_dataset_float(groupc, "1d", 1, hdims, &MRC_M1P(m1, m, mrc_fld_ghost_offs(m1)[0], p)); CE;
       H5Gclose(groupc);
     }
     mrc_m1_patch_put(m1);
@@ -1160,7 +1158,7 @@ read_m1_cb(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
 
   hid_t dset = H5Dopen(group, "1d", H5P_DEFAULT); H5_CHK(dset);
   ierr = H5Dread(dset, H5T_NATIVE_FLOAT, data->memspace, data->filespace, H5P_DEFAULT,
-		 &MRC_M1(data->m1p, m, mrc_fld_ghost_offs(data->m1p->_fld)[0])); CE;
+		 &MRC_M1P(data->m1p->_fld, m, mrc_fld_ghost_offs(data->m1p->_fld)[0], data->m1p->_p)); CE;
   ierr = H5Dclose(dset); CE;
 
   ierr = H5Gclose(group); CE;

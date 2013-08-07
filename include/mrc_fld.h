@@ -223,7 +223,7 @@ typedef void (*mrc_fld_copy_from_func_t)(struct mrc_fld *,
 // ======================================================================
 // mrc_m1
 
-#define MRC_M1(m1p, m, ix) MRC_S3((m1p)->_fld, ix, m, (m1p)->_p)
+#define MRC_M1P(fld, m, ix, p) MRC_S3(fld, ix, m, p)
 
 MRC_CLASS_DECLARE(mrc_m1, struct mrc_m1);
 

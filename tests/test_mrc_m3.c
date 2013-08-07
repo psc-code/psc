@@ -21,7 +21,7 @@ set_m3(struct mrc_fld *m3)
     mrc_m3_foreach(m3p, ix,iy,iz, 0,0) {
       MRC_M3(m3p, 0, ix,iy,iz) =
 	(iz + off[2]) * 10000 + (iy + off[1]) * 100 + (ix + off[0]);
-      MRC_M3(m3p, 1, ix,iy,iz) = MRC_MCRD(crds, 0, ix);
+      MRC_M3(m3p, 1, ix,iy,iz) = MRC_MCRD(crds, 0, ix, p);
     } mrc_m3_foreach_end;
     mrc_fld_patch_put(m3);
     mrc_crds_patch_put(crds);

@@ -154,21 +154,20 @@ xdmf_spatial_write_mcrds_multi(struct mrc_io *io, struct xdmf_file *file,
 			       H5P_DEFAULT); H5_CHK(group_crd1);
 
     mrc_m1_foreach_patch(mcrd, p) {
-      struct mrc_fld_patch *mcrdp = mrc_m1_patch_get(mcrd, p);
       int im = mrc_fld_dims(mcrd)[0];
       // get node-centered coordinates
       float *crd_nc = calloc(im + 2*sw + 1, sizeof(*crd_nc));
       if (mrc_fld_ghost_offs(mcrd)[0] < -sw) {
 	for (int i = -sw; i <= im + sw; i++) {
-	  crd_nc[i + sw] = .5 * (MRC_M1(mcrdp,0, i-1) + MRC_M1(mcrdp,0, i));
+	  crd_nc[i + sw] = .5 * (MRC_M1P(mcrd,0, i-1, p) + MRC_M1P(mcrd,0, i, p));
 	}
       } else {
 	for (int i = 1-sw; i < im+sw; i++) {
-	  crd_nc[i + sw] = .5 * (MRC_M1(mcrdp,0, i-1) + MRC_M1(mcrdp,0, i));
+	  crd_nc[i + sw] = .5 * (MRC_M1P(mcrd,0, i-1, p) + MRC_M1P(mcrd,0, i, p));
 	}
 	// extrapolate
-	crd_nc[0      ] = MRC_M1(mcrdp,0, -sw)     - .5 * (MRC_M1(mcrdp,0, -sw+1)    - MRC_M1(mcrdp,0, -sw));
-	crd_nc[im+2*sw] = MRC_M1(mcrdp,0, im+sw-1) + .5 * (MRC_M1(mcrdp,0, im+sw-1) - MRC_M1(mcrdp,0, im+sw-2));
+	crd_nc[0      ] = MRC_M1P(mcrd,0, -sw    , p) - .5 * (MRC_M1P(mcrd,0, -sw+1  , p) - MRC_M1P(mcrd,0, -sw    , p));
+	crd_nc[im+2*sw] = MRC_M1P(mcrd,0, im+sw-1, p) + .5 * (MRC_M1P(mcrd,0, im+sw-1, p) - MRC_M1P(mcrd,0, im+sw-2, p));
       }
       hsize_t im1 = im + 2*sw + 1;
       char s_patch[10];
@@ -451,7 +450,6 @@ xdmf_spatial_write_mcrds_multi_parallel(struct xdmf_file *file,
 			   H5P_DEFAULT, H5P_DEFAULT);
 
     mrc_m1_foreach_patch(mcrd, p) {
-      struct mrc_fld_patch *mcrdp = mrc_m1_patch_get(mcrd, p);
       struct mrc_patch_info info;
       mrc_domain_get_local_patch_info(domain, p, &info);
       bool skip_write = false;
@@ -472,15 +470,15 @@ xdmf_spatial_write_mcrds_multi_parallel(struct xdmf_file *file,
       float *crd_nc = calloc(im + 1, sizeof(*crd_nc));
       if (mrc_fld_ghost_offs(mcrd)[0] < 0) {
 	for (int i = 0; i <= im; i++) {
-	  crd_nc[i] = .5 * (MRC_M1(mcrdp,0, i-1) + MRC_M1(mcrdp,0, i));
+	  crd_nc[i] = .5 * (MRC_M1P(mcrd,0, i-1, p) + MRC_M1P(mcrd,0, i, p));
 	}
       } else {
 	for (int i = 1; i < im; i++) {
-	  crd_nc[i] = .5 * (MRC_M1(mcrdp,0, i-1) + MRC_M1(mcrdp,0, i));
+	  crd_nc[i] = .5 * (MRC_M1P(mcrd,0, i-1, p) + MRC_M1P(mcrd,0, i, p));
 	}
 	// extrapolate
-	crd_nc[0]  = MRC_M1(mcrdp,0, 0) - .5 * (MRC_M1(mcrdp,0, 1) - MRC_M1(mcrdp,0, 0));
-	crd_nc[im] = MRC_M1(mcrdp,0, im-1) + .5 * (MRC_M1(mcrdp,0, im-1) - MRC_M1(mcrdp,0, im-2));
+	crd_nc[0]  = MRC_M1P(mcrd,0, 0   , p) - .5 * (MRC_M1P(mcrd,0, 1   , p) - MRC_M1P(mcrd,0, 0   , p));
+	crd_nc[im] = MRC_M1P(mcrd,0, im-1, p) + .5 * (MRC_M1P(mcrd,0, im-1, p) - MRC_M1P(mcrd,0, im-2, p));
       }
 
       hsize_t mdims[1] = { info.ldims[d] + (info.off[d] == 0 ? 1 : 0) };

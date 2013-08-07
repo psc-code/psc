@@ -424,7 +424,6 @@ collective_m1_send_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
       continue;
     }
     
-    struct mrc_fld_patch *m1p = mrc_m1_patch_get(m1, p);
     // FIXME, should use intersection, probably won't work if slab_dims are actually smaller
     int ib = 0;
     if (info.off[dim] == 0) { // FIXME, -> generic code
@@ -436,7 +435,7 @@ collective_m1_send_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
     }
     //mprintf("send to %d tag %d len %d\n", xdmf->writers[0], info.global_patch, ie - ib);
     assert(ib < ie);
-    MPI_Isend(&MRC_M1(m1p, m, ib), ie - ib, MPI_FLOAT,
+    MPI_Isend(&MRC_M1P(m1, m, ib, p), ie - ib, MPI_FLOAT,
 	      xdmf->writers[0], info.global_patch, mrc_io_comm(io),
 	      &ctx->send_reqs[ctx->nr_send_reqs++]);
     mrc_m1_patch_put(m1);
@@ -581,9 +580,8 @@ collective_m1_read_recv_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
     mrc_domain_get_local_patch_info(m1->_domain, p, &info);
     int ib = -ctx->sw;
     int ie = info.ldims[ctx->dim] + ctx->sw;
-    struct mrc_fld_patch *m1p = mrc_m1_patch_get(m1, p);
     //	mprintf("recv to %d tag %d\n", xdmf->writers[0], info.global_patch);
-    MPI_Irecv(&MRC_M1(m1p, m, ib), ie - ib, MPI_FLOAT,
+    MPI_Irecv(&MRC_M1P(m1, m, ib, p), ie - ib, MPI_FLOAT,
 	      xdmf->writers[0], info.global_patch, mrc_io_comm(io),
 	      &ctx->recv_reqs[ctx->nr_recv_reqs++]);
     mrc_m1_patch_put(m1);
