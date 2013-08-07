@@ -33,6 +33,7 @@ _mrc_fld_destroy(struct mrc_fld *fld)
     mrc_vec_put_array(fld->_vec, fld->_arr);
     fld->_arr = NULL;
   }
+  free(fld->_patches);
 
   for (int m = 0; m < fld->_nr_allocated_comp_name; m++) {
     free(fld->_comp_name[m]);

@@ -18,7 +18,10 @@
 static void
 _mrc_m1_destroy(struct mrc_m1 *m1)
 {
-  free(m1->_arr);
+  if (m1->_arr) {
+    mrc_vec_put_array(m1->_vec, m1->_arr);
+    m1->_arr = NULL;
+  }
   free(m1->_patches);
 
   for (int m = 0; m < m1->_nr_allocated_comp_name; m++) {
@@ -42,6 +45,13 @@ _mrc_m1_setup(struct mrc_m1 *m1)
   m1->_dims.vals[0] = patches[0].ldims[m1->_dim];
   m1->_dims.vals[2] = nr_patches;
 
+  for (int p = 0; p < nr_patches; p++) {
+    assert(patches[p].ldims[m1->_dim] == patches[0].ldims[m1->_dim]);
+    struct mrc_fld_patch *m1p = &m1->_patches[p];
+    m1p->_p = p;
+    m1p->_fld = m1;
+  }
+
   if (m1->_offs.nr_vals == 0) {
     mrc_m1_set_param_int_array(m1, "offs", m1->_dims.nr_vals, NULL);
   }
@@ -61,11 +71,27 @@ _mrc_m1_setup(struct mrc_m1 *m1)
   }
   m1->_arr = calloc(m1->_len, sizeof(float));
 
-  for (int p = 0; p < nr_patches; p++) {
-    assert(patches[p].ldims[m1->_dim] == patches[0].ldims[m1->_dim]);
-    struct mrc_fld_patch *m1p = &m1->_patches[p];
-    m1p->_p = p;
-    m1p->_fld = m1;
+  const char *vec_type = "float";
+  if (vec_type) {
+    // The dispatch is actually slightly prettier with the ops->vec_type
+    // method, but still ugly
+#if defined(PETSC_USE_REAL_SINGLE) && !defined(PETSC_USE_COMPLEX)
+    if (strcmp(vec_type, "float")==0) {
+      vec_type = "petsc";
+      mrc_fld_ops(fld)->vec_type = "petsc";
+    }
+#endif
+#if defined(PETSC_USE_REAL_DOUBLE) && !defined(PETSC_USE_COMPLEX)
+    if (strcmp(vec_type, "double")==0) {
+      vec_type = "petsc";
+      mrc_fld_ops(fld)->vec_type = "petsc";
+    }
+#endif
+    mrc_vec_set_type(m1->_vec, vec_type);
+    mrc_vec_set_param_int(m1->_vec, "len", m1->_len);
+    mrc_fld_setup_member_objs(m1); // sets up our .vec member
+    
+    m1->_arr = mrc_vec_get_array(m1->_vec);
   }
 }
 
@@ -93,17 +119,18 @@ _mrc_m1_view(struct mrc_m1 *m1)
 static void
 _mrc_m1_write(struct mrc_m1 *m1, struct mrc_io *io)
 {
-  mrc_io_write_ref(io, m1, "domain", m1->_domain);
   mrc_io_write_m1(io, mrc_io_obj_path(io, m1), m1);
 }
 
 static void
-_mrc_m1_read(struct mrc_m1 *m1, struct mrc_io *io)
+_mrc_m1_read(struct mrc_m1 *fld, struct mrc_io *io)
 {
-  m1->_domain = mrc_io_read_ref(io, m1, "domain", mrc_domain);
-  
-  mrc_m1_setup(m1);
-  mrc_io_read_m1(io, mrc_io_obj_path(io, m1), m1);
+  // instead of reading back fld->_vec (which doesn't contain anything useful,
+  // anyway, since mrc_fld saves/restores the data rather than mrc_vec),
+  // we make a new one, so at least we're sure that with_array won't be honored
+  fld->_vec = mrc_vec_create(mrc_fld_comm(fld));
+  mrc_fld_setup(fld);
+  mrc_io_read_m1(io, mrc_io_obj_path(io, fld), fld);
 }
 
 void
@@ -219,6 +246,9 @@ static struct param mrc_m1_params_descr[] = {
   { "domain"          , VAR(_domain)      , PARAM_OBJ(mrc_domain) },
   { "dim"             , VAR(_dim)         , PARAM_INT(-1)         },
 
+  { "size_of_type"    , VAR(_size_of_type), MRC_VAR_INT           },
+  { "len"             , VAR(_len)         , MRC_VAR_INT           },
+  { "vec"             , VAR(_vec)         , MRC_VAR_OBJ(mrc_vec)  },
   {},
 };
 #undef VAR
