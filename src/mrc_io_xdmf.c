@@ -654,7 +654,7 @@ hdf5_write_mcrds(struct mrc_io *io, struct mrc_domain *domain, int sw)
     if (hdf5->crd_written[d])
       continue;
 
-    struct mrc_fld *mcrd = crds->mcrd[d];
+    struct mrc_fld *mcrd = crds->crd[d];
     mrc_m1_foreach_patch(mcrd, p) {
       int im = mrc_fld_ghost_dims(mcrd)[0];
       float *crd_nc = calloc(im + 1, sizeof(*crd_nc));

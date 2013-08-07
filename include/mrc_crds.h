@@ -16,8 +16,7 @@ struct mrc_crds {
   struct mrc_crds_params par;
   struct mrc_domain *domain;
   struct mrc_fld *crd[3];
-  struct mrc_fld *mcrd[3];
-  struct mrc_fld *mcrd_nc[3];
+  struct mrc_fld *crd_nc[3];
 };
 
 #define MRC_CRD(crds, d, ix) MRC_F1((crds)->crd[d],0, ix)
@@ -25,7 +24,7 @@ struct mrc_crds {
 #define MRC_CRDY(crds, iy) MRC_CRD(crds, 1, iy)
 #define MRC_CRDZ(crds, iz) MRC_CRD(crds, 2, iz)
 
-#define MRC_MCRD(crds, d, ix, p) MRC_M1((crds)->mcrd[d],0, ix, p)
+#define MRC_MCRD(crds, d, ix, p) MRC_M1((crds)->crd[d],0, ix, p)
 #define MRC_MCRDX(crds, ix, p) MRC_MCRD(crds, 0, ix, p)
 #define MRC_MCRDY(crds, iy, p) MRC_MCRD(crds, 1, iy, p)
 #define MRC_MCRDZ(crds, iz, p) MRC_MCRD(crds, 2, iz, p)
