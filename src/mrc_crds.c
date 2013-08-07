@@ -74,14 +74,13 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 	  mrc_fld_set_comp_name(crd_nc, 0, s);
 
 	  mrc_m1_foreach_patch(crd_nc, p) {
-	    struct mrc_fld_patch *m1p_nc = mrc_m1_patch_get(crd_nc, p);
 	    struct mrc_fld *crd = crds->crd[d];
 	    if (crds->par.sw > 0) {
-	      mrc_m1_foreach(m1p_nc, i, 0, 1) {
+	      mrc_m1_foreach(crd_nc, i, 0, 1) {
 		MRC_M1P(crd_nc, 0, i, p) = .5 * (MRC_F1(crd,0, i-1) + MRC_F1(crd,0, i));
 	      } mrc_m1_foreach_end;
 	    } else {
-	      mrc_m1_foreach(m1p_nc, i, -1, 0) {
+	      mrc_m1_foreach(crd_nc, i, -1, 0) {
 		MRC_M1P(crd_nc, 0, i, p) = .5 * (MRC_F1(crd,0, i-1) + MRC_F1(crd,0, i));
 	      } mrc_m1_foreach_end;
 	      int ld = mrc_fld_dims(crd)[0];
@@ -137,13 +136,12 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 	
 	mrc_m1_foreach_patch(crd_nc, p) {
 	  struct mrc_fld *crd_cc = crds->mcrd[d];
-	  struct mrc_fld_patch *m1p = mrc_m1_patch_get(crds->mcrd[d], p);
 	  if (crds->par.sw > 0) {
-	    mrc_m1_foreach(m1p, i, 0, 1) {
+	    mrc_m1_foreach(crd_cc, i, 0, 1) {
 	      MRC_M1P(crd_nc,0, i, p) = .5 * (MRC_M1P(crd_cc,0, i-1, p) + MRC_M1P(crd_cc,0, i, p));
 	    } mrc_m1_foreach_end;
 	  } else {
-	    mrc_m1_foreach(m1p, i, -1, 0) {
+	    mrc_m1_foreach(crd_cc, i, -1, 0) {
 	      MRC_M1P(crd_nc,0, i, p) = .5 * (MRC_M1P(crd_cc,0, i-1, p) + MRC_M1P(crd_cc,0, i, p));
 	    } mrc_m1_foreach_end;
 	    int ld = mrc_fld_dims(crd_nc)[0];
@@ -410,8 +408,7 @@ mrc_crds_multi_uniform_setup(struct mrc_crds *crds)
     mrc_crds_multi_alloc(crds, d);
     struct mrc_m1 *mcrd = crds->mcrd[d];
     mrc_m1_foreach_patch(mcrd, p) {
-      struct mrc_fld_patch *mcrd_p = mrc_m1_patch_get(mcrd, p);
-      mrc_m1_foreach_bnd(mcrd_p, i) {
+      mrc_m1_foreach_bnd(mcrd, i) {
 	MRC_M1P(mcrd,0, i, p) = xl[d] + (i + patches[p].off[d] + .5) / gdims[d] * (xh[d] - xl[d]);
       } mrc_m1_foreach_end;
       mrc_m1_patch_put(mcrd);
@@ -450,8 +447,7 @@ mrc_crds_amr_uniform_setup(struct mrc_crds *crds)
       float xe = (float) (info.off[d] + info.ldims[d]) / (1 << info.level);
       float dx = (xe - xb) / info.ldims[d];
 
-      struct mrc_fld_patch *mcrd_p = mrc_m1_patch_get(mcrd, p);
-      mrc_m1_foreach_bnd(mcrd_p, i) {
+      mrc_m1_foreach_bnd(mcrd, i) {
 	MRC_M1P(mcrd,0, i, p) = xl[d] + (xb + (i + .5) * dx) / gdims[d] * (xh[d] - xl[d]);
       } mrc_m1_foreach_end;
       mrc_m1_patch_put(mcrd);

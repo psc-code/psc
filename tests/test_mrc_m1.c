@@ -15,10 +15,9 @@ set_m1(struct mrc_m1 *m1)
   struct mrc_crds *crds = mrc_domain_get_crds(m1->_domain);
 
   mrc_m1_foreach_patch(m1, p) {
-    struct mrc_fld_patch *m1p = mrc_m1_patch_get(m1, p);
     mrc_crds_patch_get(crds, p);
     int *off = patches[p].off;
-    mrc_m1_foreach(m1p, ix, 0,0) {
+    mrc_m1_foreach(m1, ix, 0,0) {
       MRC_M1P(m1, 0, ix, p) = ix + off[0];
       MRC_M1P(m1, 1, ix, p) = MRC_MCRD(crds, 0, ix, p);
     } mrc_m1_foreach_end;
@@ -33,9 +32,8 @@ check_m1(struct mrc_m1 *m1)
   struct mrc_patch *patches = mrc_domain_get_patches(m1->_domain, NULL);
 
   mrc_m1_foreach_patch(m1, p) {
-    struct mrc_fld_patch *m1p = mrc_m1_patch_get(m1, p);
     int *off = patches[p].off;
-    mrc_m1_foreach(m1p, ix, 0,0) {
+    mrc_m1_foreach(m1, ix, 0,0) {
       assert(MRC_M1P(m1, 0, ix, p) == ix + off[0]);
     } mrc_m1_foreach_end;
     mrc_m1_patch_put(m1);

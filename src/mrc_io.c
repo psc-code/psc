@@ -138,10 +138,9 @@ mrc_io_read_f1(struct mrc_io *io, const char *path, struct mrc_fld *fld)
     mrc_m1_setup(m1);
     mrc_io_read_m1(io, path, m1);
 
-    struct mrc_fld_patch *m1p = mrc_m1_patch_get(m1, 0);
     for (int m = 0; m < mrc_fld_nr_comps(m1); m++) {
       mrc_fld_set_comp_name(fld, m, mrc_fld_comp_name(m1, m));
-      mrc_m1_foreach_bnd(m1p, ix) {
+      mrc_m1_foreach_bnd(m1, ix) {
 	MRC_F1(fld, m, ix) = MRC_M1P(m1, m, ix, 0);
       } mrc_m1_foreach_end;
     }
@@ -244,8 +243,7 @@ mrc_io_write_f1(struct mrc_io *io, const char *path, struct mrc_fld *fld)
     for (int m = 0; m < nr_comps; m++) {
       mrc_fld_set_comp_name(m1, m, mrc_fld_comp_name(fld, m));
       mrc_m1_foreach_patch(m1, p) {
-	struct mrc_fld_patch *m1p = mrc_m1_patch_get(m1, p);
-	mrc_m1_foreach(m1p, ix, sw, sw) {
+	mrc_m1_foreach(m1, ix, sw, sw) {
 	  MRC_M1P(m1, m, ix, p) = MRC_F1(fld, m, ix);
 	} mrc_m1_foreach_end;
 	mrc_m1_patch_put(m1);
