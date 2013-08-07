@@ -74,7 +74,7 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 	  mrc_m1_set_comp_name(crd_nc, 0, s);
 
 	  mrc_m1_foreach_patch(crd_nc, p) {
-	    struct mrc_m1_patch *m1p_nc = mrc_m1_patch_get(crd_nc, p);
+	    struct mrc_fld_patch *m1p_nc = mrc_m1_patch_get(crd_nc, p);
 	    struct mrc_fld *crd = crds->crd[d];
 	    if (crds->par.sw > 0) {
 	      mrc_m1_foreach(m1p_nc, i, 0, 1) {
@@ -136,8 +136,8 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 	mrc_m1_set_comp_name(crd_nc, 0, s);
 	
 	mrc_m1_foreach_patch(crd_nc, p) {
-	  struct mrc_m1_patch *m1p_nc = mrc_m1_patch_get(crd_nc, p);
-	  struct mrc_m1_patch *m1p = mrc_m1_patch_get(crds->mcrd[d], p);
+	  struct mrc_fld_patch *m1p_nc = mrc_m1_patch_get(crd_nc, p);
+	  struct mrc_fld_patch *m1p = mrc_m1_patch_get(crds->mcrd[d], p);
 	  if (crds->par.sw > 0) {
 	    mrc_m1_foreach(m1p, i, 0, 1) {
 	    MRC_M1(m1p_nc, 0, i) = .5 * (MRC_M1(m1p,0, i-1) + MRC_M1(m1p,0, i));
@@ -408,7 +408,7 @@ mrc_crds_multi_uniform_setup(struct mrc_crds *crds)
     mrc_crds_multi_alloc(crds, d);
     struct mrc_m1 *mcrd = crds->mcrd[d];
     mrc_m1_foreach_patch(mcrd, p) {
-      struct mrc_m1_patch *mcrd_p = mrc_m1_patch_get(mcrd, p);
+      struct mrc_fld_patch *mcrd_p = mrc_m1_patch_get(mcrd, p);
       mrc_m1_foreach_bnd(mcrd_p, i) {
 	MRC_M1(mcrd_p,0, i) = xl[d] + (i + patches[p].off[d] + .5) / gdims[d] * (xh[d] - xl[d]);
       } mrc_m1_foreach_end;
@@ -448,7 +448,7 @@ mrc_crds_amr_uniform_setup(struct mrc_crds *crds)
       float xe = (float) (info.off[d] + info.ldims[d]) / (1 << info.level);
       float dx = (xe - xb) / info.ldims[d];
 
-      struct mrc_m1_patch *mcrd_p = mrc_m1_patch_get(mcrd, p);
+      struct mrc_fld_patch *mcrd_p = mrc_m1_patch_get(mcrd, p);
       mrc_m1_foreach_bnd(mcrd_p, i) {
 	MRC_M1(mcrd_p,0, i) = xl[d] + (xb + (i + .5) * dx) / gdims[d] * (xh[d] - xl[d]);
       } mrc_m1_foreach_end;

@@ -223,12 +223,7 @@ typedef void (*mrc_fld_copy_from_func_t)(struct mrc_fld *,
 // ======================================================================
 // mrc_m1
 
-struct mrc_m1_patch {
-  int _p;
-  struct mrc_m1 *_m1;
-};
-
-#define MRC_M1(m1p, m, ix) MRC_S3((m1p)->_m1, ix, m, (m1p)->_p)
+#define MRC_M1(m1p, m, ix) MRC_S3((m1p)->_fld, ix, m, (m1p)->_p)
 
 MRC_CLASS_DECLARE(mrc_m1, struct mrc_m1);
 
@@ -243,10 +238,10 @@ const int *mrc_m1_ghost_offs(struct mrc_m1 *x);
 const int *mrc_m1_ghost_dims(struct mrc_m1 *x);
 int mrc_m1_nr_patches(struct mrc_m1 *x);
 
-static inline struct mrc_m1_patch *
+static inline struct mrc_fld_patch *
 mrc_m1_patch_get(struct mrc_m1 *m1, int p)
 {
-  return (struct mrc_m1_patch *) &m1->_patches[p];
+  return &m1->_patches[p];
 }
 
 static inline void
@@ -259,12 +254,12 @@ mrc_m1_patch_put(struct mrc_m1 *m1)
 
 #define mrc_m1_foreach(m1p, ix, l,r) {			\
   int _l[1] = { -l };					\
-  int _r[1] = { m1p->_m1->_ghost_dims[0] + 2 * m1p->_m1->_ghost_offs[0]  + r};	\
+  int _r[1] = { m1p->_fld->_ghost_dims[0] + 2 * m1p->_fld->_ghost_offs[0]  + r};	\
   for (int ix = _l[0]; ix < _r[0]; ix++)		\
 
 #define mrc_m1_foreach_bnd(m1p, ix) {			\
-  int _l[1] = { m1p->_m1->_ghost_offs[0] };				\
-  int _r[1] = { m1p->_m1->_ghost_offs[0] + m1p->_m1->_ghost_dims[0]};	\
+  int _l[1] = { m1p->_fld->_ghost_offs[0] };				\
+  int _r[1] = { m1p->_fld->_ghost_offs[0] + m1p->_fld->_ghost_dims[0]};	\
   for (int ix = _l[0]; ix < _r[0]; ix++)		\
 
 #define mrc_m1_foreach_end  }

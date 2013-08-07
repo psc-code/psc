@@ -154,7 +154,7 @@ xdmf_spatial_write_mcrds_multi(struct mrc_io *io, struct xdmf_file *file,
 			       H5P_DEFAULT); H5_CHK(group_crd1);
 
     mrc_m1_foreach_patch(mcrd, p) {
-      struct mrc_m1_patch *mcrdp = mrc_m1_patch_get(mcrd, p);
+      struct mrc_fld_patch *mcrdp = mrc_m1_patch_get(mcrd, p);
       int im = mrc_m1_dims(mcrd)[0];
       // get node-centered coordinates
       float *crd_nc = calloc(im + 2*sw + 1, sizeof(*crd_nc));
@@ -451,7 +451,7 @@ xdmf_spatial_write_mcrds_multi_parallel(struct xdmf_file *file,
 			   H5P_DEFAULT, H5P_DEFAULT);
 
     mrc_m1_foreach_patch(mcrd, p) {
-      struct mrc_m1_patch *mcrdp = mrc_m1_patch_get(mcrd, p);
+      struct mrc_fld_patch *mcrdp = mrc_m1_patch_get(mcrd, p);
       struct mrc_patch_info info;
       mrc_domain_get_local_patch_info(domain, p, &info);
       bool skip_write = false;

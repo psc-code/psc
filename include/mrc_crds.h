@@ -20,7 +20,7 @@ struct mrc_crds {
   struct mrc_m1 *mcrd_nc[3];
 
   // temporally available between patch_get() and patch_put()
-  struct mrc_m1_patch *mcrd_p[3];
+  struct mrc_fld_patch *mcrd_p[3];
 };
 
 #define MRC_CRD(crds, d, ix) MRC_F1((crds)->crd[d],0, ix)
