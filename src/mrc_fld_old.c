@@ -38,6 +38,7 @@ _mrc_m1_setup(struct mrc_m1 *m1)
   m1->_patches = calloc(nr_patches, sizeof(*patches));
   assert(nr_patches > 0);
   assert(m1->_dims.nr_vals >= 1);
+  assert(m1->_dim >= 0);
   m1->_dims.vals[0] = patches[0].ldims[m1->_dim];
   m1->_dims.vals[2] = nr_patches;
 
@@ -215,7 +216,9 @@ static struct param mrc_m1_params_descr[] = {
   { "dims"            , VAR(_dims)        , PARAM_INT_ARRAY(0, 0) },
   { "sw"              , VAR(_sw)          , PARAM_INT_ARRAY(0, 0) },
 
-  { "dim"             , VAR(_dim)         , PARAM_INT(0)           },
+  { "domain"          , VAR(_domain)      , PARAM_OBJ(mrc_domain) },
+  { "dim"             , VAR(_dim)         , PARAM_INT(-1)         },
+
   {},
 };
 #undef VAR
