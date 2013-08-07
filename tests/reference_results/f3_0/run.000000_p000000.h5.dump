@@ -207,6 +207,18 @@ GROUP "/" {
          (0): "crd0_nc"
          }
       }
+      ATTRIBUTE "mrc_obj_type" {
+         DATATYPE  H5T_STRING {
+            STRSIZE 6;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+         DATA {
+         (0): "float"
+         }
+      }
       ATTRIBUTE "offs" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
@@ -218,7 +230,7 @@ GROUP "/" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
          DATA {
-         (0): 0
+         (0): 4
          }
       }
       ATTRIBUTE "sw" {
@@ -477,6 +489,18 @@ GROUP "/" {
          (0): "crd1_nc"
          }
       }
+      ATTRIBUTE "mrc_obj_type" {
+         DATATYPE  H5T_STRING {
+            STRSIZE 6;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+         DATA {
+         (0): "float"
+         }
+      }
       ATTRIBUTE "offs" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
@@ -488,7 +512,7 @@ GROUP "/" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
          DATA {
-         (0): 0
+         (0): 4
          }
       }
       ATTRIBUTE "sw" {
@@ -747,6 +771,18 @@ GROUP "/" {
          (0): "crd2_nc"
          }
       }
+      ATTRIBUTE "mrc_obj_type" {
+         DATATYPE  H5T_STRING {
+            STRSIZE 6;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+         DATA {
+         (0): "float"
+         }
+      }
       ATTRIBUTE "offs" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
@@ -758,7 +794,7 @@ GROUP "/" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
          DATA {
-         (0): 0
+         (0): 4
          }
       }
       ATTRIBUTE "sw" {

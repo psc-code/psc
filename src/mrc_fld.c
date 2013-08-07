@@ -55,6 +55,7 @@ _mrc_fld_setup(struct mrc_fld *fld)
     struct mrc_patch *patches = mrc_domain_get_patches(fld->_domain, &nr_patches);
 
     assert((fld->_dims.nr_vals == 2 && nr_patches == 1) || // mrc_f1
+	   (fld->_dims.nr_vals == 3 && nr_patches >= 1) || // mrc_m1
 	   (fld->_dims.nr_vals == 4 && nr_patches == 1) || // mrc_f3
 	   (fld->_dims.nr_vals == 5 && nr_patches >= 1));  // mrc_m3
 
@@ -73,6 +74,16 @@ _mrc_fld_setup(struct mrc_fld *fld)
 
     if (fld->_dim >= 0 && fld->_dims.nr_vals == 2) {
       fld->_dims.vals[0] = patches[0].ldims[fld->_dim];
+    } else if (fld->_dim >= 0 && fld->_dims.nr_vals == 3) {
+      fld->_dims.vals[0] = patches[0].ldims[fld->_dim];
+      fld->_patches = calloc(nr_patches, sizeof(*fld->_patches));
+      for (int p = 0; p < nr_patches; p++) {
+	struct mrc_fld_patch *m1p = &fld->_patches[p];
+	m1p->_p = p;
+	m1p->_fld = fld;
+	assert(patches[p].ldims[fld->_dim] == patches[0].ldims[fld->_dim]);
+      }
+      fld->_dims.vals[2] = nr_patches;
     } else {
       for (int d = 0; d < 3; d++) {
 	fld->_dims.vals[d] = patches[0].ldims[d];
@@ -753,71 +764,6 @@ struct mrc_class_mrc_fld mrc_class_mrc_fld = {
 #define to_mrc_m1(o) container_of(o, struct mrc_m1, obj)
 
 static void
-_mrc_m1_setup(struct mrc_m1 *m1)
-{
-  assert(mrc_m1_nr_comps(m1) > 0);
-
-  int nr_patches;
-  struct mrc_patch *patches = mrc_domain_get_patches(m1->_domain, &nr_patches);
-
-  m1->_patches = calloc(nr_patches, sizeof(*patches));
-  assert(nr_patches > 0);
-  assert(m1->_dims.nr_vals >= 1);
-  assert(m1->_dim >= 0);
-  m1->_dims.vals[0] = patches[0].ldims[m1->_dim];
-  m1->_dims.vals[2] = nr_patches;
-
-  for (int p = 0; p < nr_patches; p++) {
-    assert(patches[p].ldims[m1->_dim] == patches[0].ldims[m1->_dim]);
-    struct mrc_fld_patch *m1p = &m1->_patches[p];
-    m1p->_p = p;
-    m1p->_fld = m1;
-  }
-
-  if (m1->_offs.nr_vals == 0) {
-    mrc_m1_set_param_int_array(m1, "offs", m1->_dims.nr_vals, NULL);
-  }
-  if (m1->_sw.nr_vals == 0) {
-    mrc_m1_set_param_int_array(m1, "sw", m1->_dims.nr_vals, NULL);
-  }
-
-  m1->_len = 1;
-  for (int d = 0; d < MRC_FLD_MAXDIMS; d++) {
-    if (d < m1->_dims.nr_vals) {
-      m1->_ghost_offs[d] = m1->_offs.vals[d] - m1->_sw.vals[d];
-      m1->_ghost_dims[d] = m1->_dims.vals[d] + 2 * m1->_sw.vals[d];
-    } else {
-      m1->_ghost_dims[d] = 1;
-    }
-    m1->_len *= m1->_ghost_dims[d];
-  }
-  m1->_arr = calloc(m1->_len, sizeof(float));
-
-  const char *vec_type = "float";
-  if (vec_type) {
-    // The dispatch is actually slightly prettier with the ops->vec_type
-    // method, but still ugly
-#if defined(PETSC_USE_REAL_SINGLE) && !defined(PETSC_USE_COMPLEX)
-    if (strcmp(vec_type, "float")==0) {
-      vec_type = "petsc";
-      mrc_fld_ops(fld)->vec_type = "petsc";
-    }
-#endif
-#if defined(PETSC_USE_REAL_DOUBLE) && !defined(PETSC_USE_COMPLEX)
-    if (strcmp(vec_type, "double")==0) {
-      vec_type = "petsc";
-      mrc_fld_ops(fld)->vec_type = "petsc";
-    }
-#endif
-    mrc_vec_set_type(m1->_vec, vec_type);
-    mrc_vec_set_param_int(m1->_vec, "len", m1->_len);
-    mrc_fld_setup_member_objs(m1); // sets up our .vec member
-    
-    m1->_arr = mrc_vec_get_array(m1->_vec);
-  }
-}
-
-static void
 _mrc_m1_write(struct mrc_m1 *m1, struct mrc_io *io)
 {
   mrc_io_write_m1(io, mrc_io_obj_path(io, m1), m1);
@@ -895,14 +841,26 @@ mrc_m1_nr_patches(struct mrc_m1 *fld)
 }
 
 // ----------------------------------------------------------------------
+// mrc_m1_init
+
+static void
+mrc_m1_init()
+{
+  mrc_class_register_subclass(&mrc_class_mrc_m1, &mrc_fld_float_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_m1, &mrc_fld_double_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_m1, &mrc_fld_int_ops);
+}
+
+// ----------------------------------------------------------------------
 // mrc_class_mrc_m1
 
 struct mrc_class_mrc_m1 mrc_class_mrc_m1 = {
   .name         = "mrc_m1",
   .size         = sizeof(struct mrc_m1),
   .param_descr  = mrc_fld_descr,
+  .init         = mrc_m1_init,
   .destroy      = _mrc_fld_destroy,
-  .setup        = _mrc_m1_setup,
+  .setup        = _mrc_fld_setup,
   .read         = _mrc_m1_read,
   .write        = _mrc_m1_write,
 };
