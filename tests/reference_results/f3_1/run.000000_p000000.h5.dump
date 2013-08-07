@@ -10,9 +10,9 @@ GROUP "/" {
       }
       ATTRIBUTE "dims" {
          DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
+         DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
          DATA {
-         (0): 32, 1
+         (0): 32, 1, 1
          }
       }
       ATTRIBUTE "domain" {
@@ -79,9 +79,9 @@ GROUP "/" {
       }
       ATTRIBUTE "offs" {
          DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
+         DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
          DATA {
-         (0): 0, 0
+         (0): 0, 0, 0
          }
       }
       ATTRIBUTE "size_of_type" {
@@ -93,9 +93,9 @@ GROUP "/" {
       }
       ATTRIBUTE "sw" {
          DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
+         DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
          DATA {
-         (0): 0, 0
+         (0): 0, 0, 0
          }
       }
       ATTRIBUTE "vec" {
@@ -289,9 +289,9 @@ GROUP "/" {
       }
       ATTRIBUTE "dims" {
          DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
+         DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
          DATA {
-         (0): 32, 1
+         (0): 32, 1, 1
          }
       }
       ATTRIBUTE "domain" {
@@ -358,9 +358,9 @@ GROUP "/" {
       }
       ATTRIBUTE "offs" {
          DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
+         DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
          DATA {
-         (0): 0, 0
+         (0): 0, 0, 0
          }
       }
       ATTRIBUTE "size_of_type" {
@@ -372,9 +372,9 @@ GROUP "/" {
       }
       ATTRIBUTE "sw" {
          DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
+         DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
          DATA {
-         (0): 0, 0
+         (0): 0, 0, 0
          }
       }
       ATTRIBUTE "vec" {
@@ -568,9 +568,9 @@ GROUP "/" {
       }
       ATTRIBUTE "dims" {
          DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
+         DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
          DATA {
-         (0): 32, 1
+         (0): 32, 1, 1
          }
       }
       ATTRIBUTE "domain" {
@@ -637,9 +637,9 @@ GROUP "/" {
       }
       ATTRIBUTE "offs" {
          DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
+         DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
          DATA {
-         (0): 0, 0
+         (0): 0, 0, 0
          }
       }
       ATTRIBUTE "size_of_type" {
@@ -651,9 +651,9 @@ GROUP "/" {
       }
       ATTRIBUTE "sw" {
          DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
+         DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
          DATA {
-         (0): 0, 0
+         (0): 0, 0, 0
          }
       }
       ATTRIBUTE "vec" {
