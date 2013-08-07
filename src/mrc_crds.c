@@ -62,59 +62,32 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
       mrc_io_set_param_int3(io, "slab_dims", (int[3]) { 0, 0, 0 });
     }
 
+    struct mrc_fld *crd_cc;
+    if (crds->crd[d]) {
+      crd_cc = crds->crd[d];
+    }
+    if (crds->mcrd[d]) {
+      crd_cc = crds->mcrd[d];
+    }
+    
     if (crds->crd[d]) {
       char s[10];
       sprintf(s, "crd%d", d);
-      mrc_io_write_ref(io, crds, s, crds->crd[d]);
+      mrc_io_write_ref(io, crds, s, crd_cc);
     }
     if (crds->mcrd[d]) {
       char s[10];
       sprintf(s, "mcrd%d", d);
-      mrc_io_write_ref(io, crds, s, crds->mcrd[d]);
+      mrc_io_write_ref(io, crds, s, crd_cc);
     }
 
     if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) { // FIXME
-      struct mrc_fld *crd_nc;
-      if (crds->crd[d]) {
-	crd_nc = crds->mcrd_nc[d];
-	if (!crd_nc) {
-	  char s[10];
-	  crd_nc = mrc_fld_create(mrc_crds_comm(crds)); // FIXME, leaked
-	  crds->mcrd_nc[d] = crd_nc;
-	  sprintf(s, "crd%d_nc", d);
-	  mrc_fld_set_name(crd_nc, s);
-	  mrc_fld_set_param_obj(crd_nc, "domain", crds->domain);
-	  mrc_fld_set_param_int(crd_nc, "dim", d);
-	  mrc_fld_set_param_int_array(crd_nc, "dims", 3, NULL);
-	  mrc_fld_set_sw(crd_nc, 1);
-	  mrc_fld_set_nr_comps(crd_nc, 1);
-	  mrc_fld_setup(crd_nc);
-	  mrc_fld_set_comp_name(crd_nc, 0, s);
-
-	  mrc_m1_foreach_patch(crd_nc, p) {
-	    struct mrc_fld *crd = crds->crd[d];
-	    if (crds->par.sw > 0) {
-	      mrc_m1_foreach(crd_nc, i, 0, 1) {
-		MRC_M1(crd_nc, 0, i, p) = .5 * (MRC_F1(crd,0, i-1) + MRC_F1(crd,0, i));
-	      } mrc_m1_foreach_end;
-	    } else {
-	      mrc_m1_foreach(crd_nc, i, -1, 0) {
-		MRC_M1(crd_nc, 0, i, p) = .5 * (MRC_F1(crd,0, i-1) + MRC_F1(crd,0, i));
-	      } mrc_m1_foreach_end;
-	      int ld = mrc_fld_dims(crd)[0];
-	      // extrapolate
-	      MRC_M1(crd_nc, 0, 0 , p) = MRC_F1(crd,0, 0) - .5 * (MRC_F1(crd,0, 1) - MRC_F1(crd,0, 0));
-	      MRC_M1(crd_nc, 0, ld, p) = MRC_F1(crd,0, ld-1) + .5 * (MRC_F1(crd,0, ld-1) - MRC_F1(crd,0, ld-2));
-	    }
-	  }
-	}
-      }
-
-      if (crds->mcrd[d]) {
-	char s[10];
-	sprintf(s, "crd%d_nc", d);
+      struct mrc_fld *crd_nc = crds->mcrd_nc[d];
+      if (!crd_nc) {
 	crd_nc = mrc_fld_create(mrc_crds_comm(crds)); // FIXME, leaked
 	crds->mcrd_nc[d] = crd_nc;
+	char s[10];
+	sprintf(s, "crd%d_nc", d);
 	mrc_fld_set_name(crd_nc, s);
 	mrc_fld_set_param_obj(crd_nc, "domain", crds->domain);
 	mrc_fld_set_param_int(crd_nc, "dim", d);
@@ -123,9 +96,8 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 	mrc_fld_set_nr_comps(crd_nc, 1);
 	mrc_fld_setup(crd_nc);
 	mrc_fld_set_comp_name(crd_nc, 0, s);
-	
+
 	mrc_m1_foreach_patch(crd_nc, p) {
-	  struct mrc_fld *crd_cc = crds->mcrd[d];
 	  if (crds->par.sw > 0) {
 	    mrc_m1_foreach(crd_cc, i, 0, 1) {
 	      MRC_M1(crd_nc,0, i, p) = .5 * (MRC_M1(crd_cc,0, i-1, p) + MRC_M1(crd_cc,0, i, p));
