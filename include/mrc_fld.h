@@ -231,6 +231,8 @@ struct mrc_m1 {
   struct mrc_obj obj;
   // parameters
   struct mrc_param_int_array _dims;
+  struct mrc_param_int_array _offs;
+  struct mrc_param_int_array _sw;
 
   // state
   int _ghost_offs[MRC_FLD_MAXDIMS];
@@ -243,7 +245,6 @@ struct mrc_m1 {
   int nr_comp;
   int nr_patches;
   struct mrc_m1_patch *patches;
-  int sw;
   char **_comp_name;
 };
 
@@ -251,6 +252,7 @@ MRC_CLASS_DECLARE(mrc_m1, struct mrc_m1);
 
 void mrc_m1_set_comp_name(struct mrc_m1 *x, int m, const char *name);
 const char *mrc_m1_comp_name(struct mrc_m1 *x, int m);
+void mrc_m1_set_sw(struct mrc_m1 *x, int sw);
 bool mrc_m1_same_shape(struct mrc_m1 *m1_1, struct mrc_m1 *m1_2);
 const int *mrc_m1_dims(struct mrc_m1 *x);
 const int *mrc_m1_ghost_offs(struct mrc_m1 *x);

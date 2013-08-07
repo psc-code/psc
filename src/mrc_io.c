@@ -132,7 +132,7 @@ mrc_io_read_f1(struct mrc_io *io, const char *path, struct mrc_fld *fld)
   } else {
     assert(fld->_domain);
     struct mrc_m1 *m1 = mrc_domain_m1_create(fld->_domain);
-    mrc_m1_set_param_int(m1, "sw", fld->_sw.vals[0]);
+    mrc_m1_set_sw(m1, fld->_sw.vals[0]);
     mrc_m1_set_param_int(m1, "dim", fld->_dim);
     mrc_m1_set_param_int(m1, "nr_comps", mrc_fld_nr_comps(fld));
     mrc_m1_setup(m1);
@@ -234,7 +234,7 @@ mrc_io_write_f1(struct mrc_io *io, const char *path, struct mrc_fld *fld)
     mrc_fld_get_param_int(fld, "dim", &dim);
     struct mrc_m1 *m1 = mrc_domain_m1_create(fld->_domain);
     mrc_m1_set_param_int(m1, "nr_comps", nr_comps); 
-    mrc_m1_set_param_int(m1, "sw", sw);
+    mrc_m1_set_sw(m1, sw);
     mrc_m1_set_param_int(m1, "dim", dim); 
     mrc_m1_setup(m1);
     for (int m = 0; m < nr_comps; m++) {

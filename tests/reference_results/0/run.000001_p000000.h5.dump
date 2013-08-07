@@ -58,13 +58,6 @@ GROUP "/" {
          (0): 1
          }
       }
-      ATTRIBUTE "sw" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 0
-         }
-      }
       GROUP "p0" {
          DATASET "1d" {
             DATATYPE  H5T_IEEE_F32LE
@@ -137,13 +130,6 @@ GROUP "/" {
          (0): 1
          }
       }
-      ATTRIBUTE "sw" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 0
-         }
-      }
       GROUP "p0" {
          DATASET "1d" {
             DATATYPE  H5T_IEEE_F32LE
@@ -214,13 +200,6 @@ GROUP "/" {
          DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
          DATA {
          (0): 1
-         }
-      }
-      ATTRIBUTE "sw" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 0
          }
       }
       GROUP "p0" {

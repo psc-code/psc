@@ -67,8 +67,8 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 	  mrc_m1_set_name(crd_nc, s);
 	  crd_nc->_domain = crds->domain;
 	  mrc_m1_set_param_int(crd_nc, "dim", d);
-	  mrc_m1_set_param_int(crd_nc, "sw", 1);
 	  mrc_m1_set_param_int_array(crd_nc, "dims", 3, NULL);
+	  mrc_m1_set_sw(crd_nc, 1);
 	  mrc_m1_setup(crd_nc);
 	  mrc_m1_set_comp_name(crd_nc, 0, s);
 
@@ -128,8 +128,8 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 	mrc_m1_set_name(crd_nc, s);
 	crd_nc->_domain = crds->domain;
 	mrc_m1_set_param_int(crd_nc, "dim", d);
-	mrc_m1_set_param_int(crd_nc, "sw", 1);
 	mrc_m1_set_param_int_array(crd_nc, "dims", 3, NULL);
+	mrc_m1_set_sw(crd_nc, 1);
 	mrc_m1_setup(crd_nc);
 	mrc_m1_set_comp_name(crd_nc, 0, s);
 	
@@ -229,7 +229,7 @@ mrc_crds_multi_alloc(struct mrc_crds *crds, int d)
   crds->mcrd[d] = mrc_domain_m1_create(crds->domain);
   char s[5]; sprintf(s, "crd%d", d);
   mrc_m1_set_name(crds->mcrd[d], s);
-  mrc_m1_set_param_int(crds->mcrd[d], "sw", crds->par.sw);
+  mrc_m1_set_sw(crds->mcrd[d], crds->par.sw);
   mrc_m1_set_param_int(crds->mcrd[d], "dim", d);
   mrc_m1_setup(crds->mcrd[d]);
   mrc_m1_set_comp_name(crds->mcrd[d], 0, s);

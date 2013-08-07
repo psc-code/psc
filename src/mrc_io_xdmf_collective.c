@@ -518,7 +518,7 @@ xdmf_collective_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
   int nr_comps;
   mrc_m1_get_param_int(m1, "nr_comps", &nr_comps);
   mrc_m1_get_param_int(m1, "dim", &ctx.dim);
-  mrc_m1_get_param_int(m1, "sw", &ctx.sw);
+  ctx.sw = m1->_sw.vals[0];
   mrc_domain_get_global_dims(m1->_domain, ctx.gdims);
   mrc_domain_get_nr_global_patches(m1->_domain, &ctx.nr_global_patches);
   mrc_domain_get_nr_procs(m1->_domain, ctx.np);
@@ -688,7 +688,7 @@ xdmf_collective_read_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
   int nr_comps, gdims[3];
   mrc_m1_get_param_int(m1, "nr_comps", &nr_comps);
   mrc_m1_get_param_int(m1, "dim", &ctx.dim);
-  mrc_m1_get_param_int(m1, "sw", &ctx.sw);
+  ctx.sw = m1->_sw.vals[0];
   mrc_domain_get_global_dims(m1->_domain, gdims);
   mrc_domain_get_nr_global_patches(m1->_domain, &ctx.nr_global_patches);
   mrc_domain_get_patches(m1->_domain, &ctx.nr_patches);

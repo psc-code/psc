@@ -47,8 +47,17 @@ _mrc_m1_setup(struct mrc_m1 *m1)
   assert(nr_patches > 0);
   assert(m1->_dims.nr_vals >= 1);
   m1->_dims.vals[0] = patches[0].ldims[m1->_dim];
-  m1->_ghost_offs[0] = -m1->sw;
-  m1->_ghost_dims[0] = m1->_dims.vals[0] + 2 * m1->sw;
+
+  if (m1->_offs.nr_vals == 0) {
+    mrc_m1_set_param_int_array(m1, "offs", m1->_dims.nr_vals, NULL);
+  }
+  if (m1->_sw.nr_vals == 0) {
+    mrc_m1_set_param_int_array(m1, "sw", m1->_dims.nr_vals, NULL);
+  }
+
+
+  m1->_ghost_offs[0] = -m1->_sw.vals[0];
+  m1->_ghost_dims[0] = m1->_dims.vals[0] + 2 * m1->_sw.vals[0];
   for (int p = 0; p < nr_patches; p++) {
     assert(patches[p].ldims[m1->_dim] == patches[0].ldims[m1->_dim]);
     struct mrc_m1_patch *m1p = &m1->patches[p];
@@ -111,6 +120,18 @@ mrc_m1_comp_name(struct mrc_m1 *m1, int m)
   return m1->_comp_name[m];
 }
 
+void
+mrc_m1_set_sw(struct mrc_m1 *fld, int sw)
+{
+  assert(fld->_domain);
+  if (fld->_dims.nr_vals == 3) {
+    mrc_m1_set_param_int_array(fld, "sw", fld->_dims.nr_vals,
+			       (int[3]) { sw, 0, 0 });
+  } else {
+    assert(0);
+  }
+}
+
 bool
 mrc_m1_same_shape(struct mrc_m1 *m1_1, struct mrc_m1 *m1_2)
 {
@@ -145,10 +166,11 @@ mrc_m1_ghost_dims(struct mrc_m1 *x)
 
 #define VAR(x) (void *)offsetof(struct mrc_m1, x)
 static struct param mrc_m1_params_descr[] = {
-  { "dims"            , VAR(_dims)        , PARAM_INT_ARRAY(0, 0)  },
+  { "offs"            , VAR(_offs)        , PARAM_INT_ARRAY(0, 0) },
+  { "dims"            , VAR(_dims)        , PARAM_INT_ARRAY(0, 0) },
+  { "sw"              , VAR(_sw)          , PARAM_INT_ARRAY(0, 0) },
 
   { "nr_comps"        , VAR(nr_comp)      , PARAM_INT(1)           },
-  { "sw"              , VAR(sw)           , PARAM_INT(0)           },
   { "dim"             , VAR(_dim)         , PARAM_INT(0)           },
   {},
 };
