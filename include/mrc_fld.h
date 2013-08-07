@@ -227,17 +227,6 @@ typedef void (*mrc_fld_copy_from_func_t)(struct mrc_fld *,
 
 MRC_CLASS_DECLARE(mrc_m1, struct mrc_m1);
 
-void mrc_m1_set_comp_name(struct mrc_m1 *x, int m, const char *name);
-const char *mrc_m1_comp_name(struct mrc_m1 *x, int m);
-void mrc_m1_set_sw(struct mrc_m1 *x, int sw);
-void mrc_m1_set_nr_comps(struct mrc_m1 *x, int nr_comps);
-int mrc_m1_nr_comps(struct mrc_m1 *x);
-bool mrc_m1_same_shape(struct mrc_m1 *m1_1, struct mrc_m1 *m1_2);
-const int *mrc_m1_dims(struct mrc_m1 *x);
-const int *mrc_m1_ghost_offs(struct mrc_m1 *x);
-const int *mrc_m1_ghost_dims(struct mrc_m1 *x);
-int mrc_m1_nr_patches(struct mrc_m1 *x);
-
 static inline struct mrc_fld_patch *
 mrc_m1_patch_get(struct mrc_m1 *m1, int p)
 {
@@ -250,7 +239,7 @@ mrc_m1_patch_put(struct mrc_m1 *m1)
 }
 
 #define mrc_m1_foreach_patch(m1, p) \
-  for (int p = 0; p < mrc_m1_nr_patches(m1); p++)
+  for (int p = 0; p < mrc_fld_nr_patches(m1); p++)
 
 #define mrc_m1_foreach(m1p, ix, l,r) {			\
   int _l[1] = { -l };					\

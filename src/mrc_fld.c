@@ -748,66 +748,6 @@ struct mrc_class_mrc_fld mrc_class_mrc_fld = {
 
 #define to_mrc_m1(o) container_of(o, struct mrc_m1, obj)
 
-void
-mrc_m1_set_comp_name(struct mrc_m1 *fld, int m, const char *name)
-{
-  mrc_fld_set_comp_name(fld, m, name);
-}
-
-const char *
-mrc_m1_comp_name(struct mrc_m1 *fld, int m)
-{
-  return mrc_fld_comp_name(fld, m);
-}
-
-void
-mrc_m1_set_sw(struct mrc_m1 *fld, int sw)
-{
-  mrc_fld_set_sw(fld, sw);
-}
-
-bool
-mrc_m1_same_shape(struct mrc_m1 *m1_1, struct mrc_m1 *m1_2)
-{
-  return mrc_fld_same_shape(m1_1, m1_2);
-}
-
-const int *
-mrc_m1_dims(struct mrc_m1 *x)
-{
-  return mrc_fld_dims(x);
-}
-
-const int *
-mrc_m1_ghost_offs(struct mrc_m1 *x)
-{
-  return mrc_fld_ghost_offs(x);
-}
-
-const int *
-mrc_m1_ghost_dims(struct mrc_m1 *x)
-{
-  return mrc_fld_ghost_dims(x);
-}
-
-int
-mrc_m1_nr_comps(struct mrc_m1 *fld)
-{
-  return mrc_fld_nr_comps(fld);
-}
-
-void
-mrc_m1_set_nr_comps(struct mrc_m1 *fld, int nr_comps)
-{
-  mrc_fld_set_nr_comps(fld, nr_comps);
-}
-
-int
-mrc_m1_nr_patches(struct mrc_m1 *fld)
-{
-  return mrc_fld_nr_patches(fld);
-}
-
 // ----------------------------------------------------------------------
 // mrc_m1_init
 

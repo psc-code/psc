@@ -515,7 +515,7 @@ xdmf_collective_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
   int ierr;
 
   struct collective_m1_ctx ctx;
-  int nr_comps = mrc_m1_nr_comps(m1);
+  int nr_comps = mrc_fld_nr_comps(m1);
   mrc_m1_get_param_int(m1, "dim", &ctx.dim);
   ctx.sw = m1->_sw.vals[0];
   mrc_domain_get_global_dims(m1->_domain, ctx.gdims);
@@ -542,7 +542,7 @@ xdmf_collective_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
 
     hid_t group0 = H5Gopen(file->h5_file, path, H5P_DEFAULT); H5_CHK(group0);
     for (int m = 0; m < nr_comps; m++) {
-      mrc_fld_set_comp_name(f1, 0, mrc_m1_comp_name(m1, m));
+      mrc_fld_set_comp_name(f1, 0, mrc_fld_comp_name(m1, m));
       collective_m1_recv_begin(io, &ctx, m1->_domain, f1, m);
       collective_m1_send_begin(io, &ctx, m1, m);
       collective_m1_recv_end(io, &ctx);
@@ -596,7 +596,7 @@ collective_m1_read_recv_end(struct mrc_io *io, struct collective_m1_ctx *ctx,
 {
   MPI_Waitall(ctx->nr_recv_reqs, ctx->recv_reqs, MPI_STATUSES_IGNORE);
   free(ctx->recv_reqs);
-  mrc_m1_set_comp_name(m1, m, ctx->comp_name);
+  mrc_fld_set_comp_name(m1, m, ctx->comp_name);
 }
 
 static void
@@ -685,7 +685,7 @@ xdmf_collective_read_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
 
   struct collective_m1_ctx ctx;
   int gdims[3];
-  int nr_comps = mrc_m1_nr_comps(m1);
+  int nr_comps = mrc_fld_nr_comps(m1);
   mrc_m1_get_param_int(m1, "dim", &ctx.dim);
   ctx.sw = m1->_sw.vals[0];
   mrc_domain_get_global_dims(m1->_domain, gdims);

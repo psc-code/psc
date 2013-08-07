@@ -108,11 +108,11 @@ main(int argc, char **argv)
   struct mrc_m1 *m1 = mrc_domain_m1_create(domain);
   mrc_m1_set_name(m1, "test_m1");
   mrc_m1_set_param_int(m1, "dim", 0);
-  mrc_m1_set_nr_comps(m1, 2);
+  mrc_fld_set_nr_comps(m1, 2);
   mrc_m1_set_from_options(m1);
   mrc_m1_setup(m1);
-  mrc_m1_set_comp_name(m1, 0, "fld0");
-  mrc_m1_set_comp_name(m1, 1, "fld1");
+  mrc_fld_set_comp_name(m1, 0, "fld0");
+  mrc_fld_set_comp_name(m1, 1, "fld1");
   mrc_m1_view(m1);
   
   set_m1(m1);

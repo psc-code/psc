@@ -68,10 +68,10 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 	  crd_nc->_domain = crds->domain;
 	  mrc_m1_set_param_int(crd_nc, "dim", d);
 	  mrc_m1_set_param_int_array(crd_nc, "dims", 3, NULL);
-	  mrc_m1_set_sw(crd_nc, 1);
-	  mrc_m1_set_nr_comps(crd_nc, 1);
+	  mrc_fld_set_sw(crd_nc, 1);
+	  mrc_fld_set_nr_comps(crd_nc, 1);
 	  mrc_m1_setup(crd_nc);
-	  mrc_m1_set_comp_name(crd_nc, 0, s);
+	  mrc_fld_set_comp_name(crd_nc, 0, s);
 
 	  mrc_m1_foreach_patch(crd_nc, p) {
 	    struct mrc_fld_patch *m1p_nc = mrc_m1_patch_get(crd_nc, p);
@@ -130,10 +130,10 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 	crd_nc->_domain = crds->domain;
 	mrc_m1_set_param_int(crd_nc, "dim", d);
 	mrc_m1_set_param_int_array(crd_nc, "dims", 3, NULL);
-	mrc_m1_set_sw(crd_nc, 1);
-	mrc_m1_set_nr_comps(crd_nc, 1);
+	mrc_fld_set_sw(crd_nc, 1);
+	mrc_fld_set_nr_comps(crd_nc, 1);
 	mrc_m1_setup(crd_nc);
-	mrc_m1_set_comp_name(crd_nc, 0, s);
+	mrc_fld_set_comp_name(crd_nc, 0, s);
 	
 	mrc_m1_foreach_patch(crd_nc, p) {
 	  struct mrc_fld_patch *m1p_nc = mrc_m1_patch_get(crd_nc, p);
@@ -146,7 +146,7 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 	    mrc_m1_foreach(m1p, i, -1, 0) {
 	      MRC_M1(m1p_nc, 0, i) = .5 * (MRC_M1(m1p,0, i-1) + MRC_M1(m1p,0, i));
 	    } mrc_m1_foreach_end;
-	    int ld = mrc_m1_dims(crd_nc)[0];
+	    int ld = mrc_fld_dims(crd_nc)[0];
 	    // extrapolate
 	    MRC_M1(m1p_nc, 0, 0) = MRC_M1(m1p,0, 0) - .5 * (MRC_M1(m1p,0, 1) - MRC_M1(m1p,0, 0));
 	    MRC_M1(m1p_nc, 0, ld) = MRC_M1(m1p,0, ld-1) + .5 * (MRC_M1(m1p,0, ld-1) - MRC_M1(m1p,0, ld-2));
@@ -231,11 +231,11 @@ mrc_crds_multi_alloc(struct mrc_crds *crds, int d)
   crds->mcrd[d] = mrc_domain_m1_create(crds->domain);
   char s[5]; sprintf(s, "crd%d", d);
   mrc_m1_set_name(crds->mcrd[d], s);
-  mrc_m1_set_sw(crds->mcrd[d], crds->par.sw);
-  mrc_m1_set_nr_comps(crds->mcrd[d], 1);
+  mrc_fld_set_sw(crds->mcrd[d], crds->par.sw);
+  mrc_fld_set_nr_comps(crds->mcrd[d], 1);
   mrc_m1_set_param_int(crds->mcrd[d], "dim", d);
   mrc_m1_setup(crds->mcrd[d]);
-  mrc_m1_set_comp_name(crds->mcrd[d], 0, s);
+  mrc_fld_set_comp_name(crds->mcrd[d], 0, s);
 }
 
 void

@@ -194,11 +194,11 @@ struct mrc_m1 *
 mrctest_create_m1_1(struct mrc_domain *domain, int dim)
 {
   struct mrc_m1 *m1 = mrc_domain_m1_create(domain);
-  mrc_m1_set_sw(m1, 2);
-  mrc_m1_set_nr_comps(m1, 1);
+  mrc_fld_set_sw(m1, 2);
+  mrc_fld_set_nr_comps(m1, 1);
   mrc_m1_set_param_int(m1, "dim", dim);
   mrc_m1_setup(m1);
-  mrc_m1_set_comp_name(m1, 0, "test");
+  mrc_fld_set_comp_name(m1, 0, "test");
   
   mrc_m1_foreach_patch(m1, p) {
     struct mrc_fld_patch *m1p = mrc_m1_patch_get(m1, p);
@@ -262,9 +262,9 @@ mrctest_fld_compare(struct mrc_fld *fld1, struct mrc_fld *fld2, float eps)
 void
 mrctest_m1_compare(struct mrc_m1 *m1_1, struct mrc_m1 *m1_2, float eps)
 {
-  assert(mrc_m1_same_shape(m1_1, m1_2));
+  assert(mrc_fld_same_shape(m1_1, m1_2));
   int sw = m1_1->_sw.vals[0];
-  for (int m = 0; m < mrc_m1_nr_comps(m1_2); m++) {
+  for (int m = 0; m < mrc_fld_nr_comps(m1_2); m++) {
     float diff = 0.;
     mrc_m1_foreach_patch(m1_1, p) {
       struct mrc_fld_patch *m1p_1 = mrc_m1_patch_get(m1_1, p);
