@@ -753,21 +753,6 @@ struct mrc_class_mrc_fld mrc_class_mrc_fld = {
 #define to_mrc_m1(o) container_of(o, struct mrc_m1, obj)
 
 static void
-_mrc_m1_destroy(struct mrc_m1 *m1)
-{
-  if (m1->_arr) {
-    mrc_vec_put_array(m1->_vec, m1->_arr);
-    m1->_arr = NULL;
-  }
-  free(m1->_patches);
-
-  for (int m = 0; m < m1->_nr_allocated_comp_name; m++) {
-    free(m1->_comp_name[m]);
-  }
-  free(m1->_comp_name);
-}
-
-static void
 _mrc_m1_setup(struct mrc_m1 *m1)
 {
   assert(mrc_m1_nr_comps(m1) > 0);
@@ -912,27 +897,11 @@ mrc_m1_nr_patches(struct mrc_m1 *fld)
 // ----------------------------------------------------------------------
 // mrc_class_mrc_m1
 
-#define VAR(x) (void *)offsetof(struct mrc_m1, x)
-static struct param mrc_m1_params_descr[] = {
-  { "offs"            , VAR(_offs)        , PARAM_INT_ARRAY(0, 0) },
-  { "dims"            , VAR(_dims)        , PARAM_INT_ARRAY(0, 0) },
-  { "sw"              , VAR(_sw)          , PARAM_INT_ARRAY(0, 0) },
-
-  { "domain"          , VAR(_domain)      , PARAM_OBJ(mrc_domain) },
-  { "dim"             , VAR(_dim)         , PARAM_INT(-1)         },
-
-  { "size_of_type"    , VAR(_size_of_type), MRC_VAR_INT           },
-  { "len"             , VAR(_len)         , MRC_VAR_INT           },
-  { "vec"             , VAR(_vec)         , MRC_VAR_OBJ(mrc_vec)  },
-  {},
-};
-#undef VAR
-
 struct mrc_class_mrc_m1 mrc_class_mrc_m1 = {
   .name         = "mrc_m1",
   .size         = sizeof(struct mrc_m1),
-  .param_descr  = mrc_m1_params_descr,
-  .destroy      = _mrc_m1_destroy,
+  .param_descr  = mrc_fld_descr,
+  .destroy      = _mrc_fld_destroy,
   .setup        = _mrc_m1_setup,
   .read         = _mrc_m1_read,
   .write        = _mrc_m1_write,
