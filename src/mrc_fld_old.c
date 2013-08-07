@@ -60,11 +60,10 @@ _mrc_m1_setup(struct mrc_m1 *m1)
   }
   m1->_arr = calloc(m1->_len, sizeof(float));
 
-  int len = m1->_ghost_dims[0] * m1->_ghost_dims[1];
   for (int p = 0; p < nr_patches; p++) {
     assert(patches[p].ldims[m1->_dim] == patches[0].ldims[m1->_dim]);
     struct mrc_m1_patch *m1p = (struct mrc_m1_patch *) &m1->_patches[p];
-    m1p->arr = (float *) m1->_arr + p * len;
+    m1p->_p = p;
     m1p->_m1 = m1;
   }
 }
