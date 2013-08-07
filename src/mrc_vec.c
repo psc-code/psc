@@ -15,6 +15,36 @@
 
 #define mrc_vec_ops(vec) ((struct mrc_vec_ops *) vec->obj.ops)
 
+// Public wrappers for math/data ops.
+void 
+mrc_vec_axpy(struct mrc_vec *y, double alpha, struct mrc_vec *x)
+{
+  assert(mrc_vec_ops(y)->axpy);
+  mrc_vec_ops(y)->axpy(y, alpha, x);
+}
+
+void
+mrc_vec_waxpy(struct mrc_vec *w, double alpha, struct mrc_vec *x, struct mrc_vec *y)
+{
+  assert(mrc_vec_ops(w)->waxpy);
+  mrc_vec_ops(w)->waxpy(w, alpha, x, y);
+}
+
+void 
+mrc_vec_set(struct mrc_vec *x, double alpha)
+{
+  assert(mrc_vec_ops(x)->set);
+  mrc_vec_ops(x)->set(x, alpha);
+}
+
+void
+mrc_vec_copy(struct mrc_vec *vec_to, struct mrc_vec *vec_from)
+{
+  assert(mrc_vec_ops(vec_to)->copy);
+  mrc_vec_ops(vec_to)->copy(vec_to, vec_from);
+}
+
+
 // ----------------------------------------------------------------------
 // mrc_vec_setup
 
@@ -117,21 +147,78 @@ mrc_vec_sub_put_array(struct mrc_vec *vec, void *arr)
 // ======================================================================
 // mrc_vec subclasses
 
-#define MAKE_MRC_VEC_TYPE(type, TYPE)			\
-							\
-  static void						\
-  mrc_vec_##type##_create(struct mrc_vec *vec)		\
-  {							\
-    vec->size_of_type = sizeof(type);			\
-  }							\
-  							\
-  static struct mrc_vec_ops mrc_vec_##type##_ops = {	\
-    .name                  = #type,			\
-    .create                = mrc_vec_##type##_create,	\
-    .set_array             = mrc_vec_sub_set_array,	\
-    .get_array             = mrc_vec_sub_get_array,	\
-    .put_array             = mrc_vec_sub_put_array,	\
-  };							\
+#define MAKE_MRC_VEC_TYPE(type, TYPE)					\
+									\
+  static void								\
+  mrc_vec_##type##_create(struct mrc_vec *vec)				\
+  {									\
+    vec->size_of_type = sizeof(type);					\
+  }									\
+									\
+  static void								\
+  mrc_vec_##type##_axpy(struct mrc_vec *y, double alpha, struct mrc_vec *x) \
+  {									\
+    assert(y->len == x->len);						\
+    assert(strcmp(mrc_vec_type(y), mrc_vec_type(x)) == 0);		\
+    type *y_arr = y->arr, *x_arr =  x->arr;				\
+    type talpha = (type) alpha;						\
+    for (int i = 0; i < y->len; i++) {					\
+      y_arr[i] += talpha * x_arr[i];					\
+     }									\
+  }									\
+									\
+  static void								\
+  mrc_vec_##type##_waxpy(struct mrc_vec *w, double alpha, struct mrc_vec *x, struct mrc_vec *y)	\
+  {									\
+    assert(y->len == x->len);						\
+    assert(w->len == x->len);						\
+    assert(strcmp(mrc_vec_type(y), mrc_vec_type(x)) == 0);		\
+    assert(strcmp(mrc_vec_type(w), mrc_vec_type(x)) == 0);		\
+    type *y_arr = y->arr, *x_arr = x->arr, *w_arr =  w->arr;		\
+    type talpha = (type) alpha;						\
+    for (int i = 0; i < y->len; i++) {					\
+      w_arr[i] = talpha * x_arr[i] + y_arr[i];				\
+    }									\
+  }									\
+									\
+  static void								\
+  mrc_vec_##type##_set(struct mrc_vec *x, double val)			\
+  {									\
+    type *arr = x->arr;							\
+    type tval = (type) val;						\
+    for (int i = 0; i < x->len; i++) {					\
+      arr[i] = tval;							\
+    }									\
+  }									\
+									\
+  static void								\
+  mrc_vec_##type##_copy(struct mrc_vec *vec_to, struct mrc_vec *vec_from) \
+  {									\
+    assert(vec_to->len == vec_from->len);				\
+    assert(strcmp(mrc_vec_type(vec_to), mrc_vec_type(vec_from)) == 0);	\
+    memcpy(vec_to->arr, vec_from->arr, vec_to->len * sizeof(type));	\
+  }									\
+  									\
+  static struct mrc_obj_method mrc_vec_##type##_methods[] = {		\
+    MRC_OBJ_METHOD("axpy", mrc_vec_##type##_axpy),			\
+    MRC_OBJ_METHOD("waxpy", mrc_vec_##type##_waxpy),			\
+    MRC_OBJ_METHOD("set", mrc_vec_##type##_set),			\
+    MRC_OBJ_METHOD("copy", mrc_vec_##type##_copy),			\
+    {},									\
+  };									\
+									\
+  static struct mrc_vec_ops mrc_vec_##type##_ops = {			\
+    .name                  = #type,					\
+    .methods               = mrc_vec_##type##_methods,			\
+    .create                = mrc_vec_##type##_create,			\
+    .set_array             = mrc_vec_sub_set_array,			\
+    .get_array             = mrc_vec_sub_get_array,			\
+    .put_array             = mrc_vec_sub_put_array,			\
+    .axpy                  = mrc_vec_##type##_axpy,			\
+    .waxpy                 = mrc_vec_##type##_waxpy,			\
+    .set                   = mrc_vec_##type##_set,			\
+    .copy                  = mrc_vec_##type##_copy,			\
+  };
 
 MAKE_MRC_VEC_TYPE(float, FLOAT)
 MAKE_MRC_VEC_TYPE(double, DOUBLE)

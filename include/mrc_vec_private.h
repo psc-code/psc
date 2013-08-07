@@ -20,6 +20,10 @@ struct mrc_vec_ops {
   void (*set_array)(struct mrc_vec *vec, void *arr);
   void *(*get_array)(struct mrc_vec *vec);
   void (*put_array)(struct mrc_vec *vec, void *arr);
+  void (*axpy)(struct mrc_vec *y, double alpha, struct mrc_vec *x);
+  void (*waxpy)(struct mrc_vec *w, double alpha, struct mrc_vec *x, struct mrc_vec *y);
+  void (*set)(struct mrc_vec *x, double val);
+  void (*copy)(struct mrc_vec *vec_to, struct mrc_vec *vec_from);
 };
 
 
