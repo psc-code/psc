@@ -18,10 +18,7 @@
 static void
 _mrc_m1_destroy(struct mrc_m1 *m1)
 {
-  for (int p = 0; p < mrc_m1_nr_patches(m1); p++) {
-    struct mrc_m1_patch *m1p = (struct mrc_m1_patch *) &m1->_patches[p];
-    free(m1p->arr);
-  }
+  free(m1->_arr);
   free(m1->_patches);
 
   for (int m = 0; m < m1->_nr_allocated_comp_name; m++) {
@@ -51,15 +48,23 @@ _mrc_m1_setup(struct mrc_m1 *m1)
     mrc_m1_set_param_int_array(m1, "sw", m1->_dims.nr_vals, NULL);
   }
 
-  for (int d = 0; d < 3; d++) {
-    m1->_ghost_offs[d] = -m1->_sw.vals[d];
-    m1->_ghost_dims[d] = m1->_dims.vals[d] + 2 * m1->_sw.vals[d];
+  m1->_len = 1;
+  for (int d = 0; d < MRC_FLD_MAXDIMS; d++) {
+    if (d < m1->_dims.nr_vals) {
+      m1->_ghost_offs[d] = m1->_offs.vals[d] - m1->_sw.vals[d];
+      m1->_ghost_dims[d] = m1->_dims.vals[d] + 2 * m1->_sw.vals[d];
+    } else {
+      m1->_ghost_dims[d] = 1;
+    }
+    m1->_len *= m1->_ghost_dims[d];
   }
+  m1->_arr = calloc(m1->_len, sizeof(float));
+
+  int len = m1->_ghost_dims[0] * m1->_ghost_dims[1];
   for (int p = 0; p < nr_patches; p++) {
     assert(patches[p].ldims[m1->_dim] == patches[0].ldims[m1->_dim]);
     struct mrc_m1_patch *m1p = (struct mrc_m1_patch *) &m1->_patches[p];
-    int len = m1->_ghost_dims[0] * m1->_ghost_dims[1];
-    m1p->arr = calloc(len, sizeof(*m1p->arr));
+    m1p->arr = (float *) m1->_arr + p * len;
     m1p->_m1 = m1;
   }
 }
