@@ -148,30 +148,18 @@ mrc_crds_get_dx(struct mrc_crds *crds, float dx[3])
 }
 
 static void
-mrc_crds_alloc(struct mrc_crds *crds, int d, int dim, int sw)
+mrc_crds_alloc(struct mrc_crds *crds)
 {
-  mrc_fld_destroy(crds->crd[d]);
-  crds->crd[d] = mrc_domain_f1_create(crds->domain);
-  char s[5]; sprintf(s, "crd%d", d);
-  mrc_fld_set_name(crds->crd[d], s);
-  mrc_fld_set_sw(crds->crd[d], sw);
-  mrc_fld_set_param_int(crds->crd[d], "dim", d);
-  mrc_fld_setup(crds->crd[d]);
-  mrc_fld_set_comp_name(crds->crd[d], 0, s);
-}
-
-static void
-mrc_crds_multi_alloc(struct mrc_crds *crds, int d)
-{
-  mrc_fld_destroy(crds->crd[d]);
-  crds->crd[d] = mrc_domain_m1_create(crds->domain);
-  char s[5]; sprintf(s, "crd%d", d);
-  mrc_fld_set_name(crds->crd[d], s);
-  mrc_fld_set_sw(crds->crd[d], crds->par.sw);
-  mrc_fld_set_nr_comps(crds->crd[d], 1);
-  mrc_fld_set_param_int(crds->crd[d], "dim", d);
-  mrc_fld_setup(crds->crd[d]);
-  mrc_fld_set_comp_name(crds->crd[d], 0, s);
+  for (int d = 0; d < 3; d++) {
+    mrc_fld_destroy(crds->crd[d]);
+    crds->crd[d] = mrc_domain_m1_create(crds->domain);
+    char s[5]; sprintf(s, "crd%d", d);
+    mrc_fld_set_name(crds->crd[d], s);
+    mrc_fld_set_sw(crds->crd[d], crds->par.sw);
+    mrc_fld_set_param_int(crds->crd[d], "dim", d);
+    mrc_fld_setup(crds->crd[d]);
+    mrc_fld_set_comp_name(crds->crd[d], 0, s);
+  }
 }
 
 // ======================================================================
@@ -191,8 +179,8 @@ mrc_crds_uniform_setup(struct mrc_crds *crds)
   struct mrc_patch *patches = mrc_domain_get_patches(crds->domain, &nr_patches);
   assert(nr_patches == 1);
   float *xl = crds->par.xl, *xh = crds->par.xh;
+  mrc_crds_alloc(crds);
   for (int d = 0; d < 3; d++) {
-    mrc_crds_alloc(crds, d, patches[0].ldims[d], sw);
     for (int i = -sw; i < patches[0].ldims[d] +  sw; i++) {
       MRC_CRD(crds, d, i) = xl[d] + (i + patches[0].off[d] + .5) / gdims[d] * (xh[d] - xl[d]);
     }
@@ -211,10 +199,9 @@ static void
 mrc_crds_rectilinear_set_values(struct mrc_crds *crds, float *crdx, int mx,
 				float *crdy, int my, float *crdz, int mz)
 {
+  mrc_crds_alloc(crds);
   float *crd[3] = { crdx, crdy, crdz };
-  int m[3] = { mx, my, mz };
   for (int d = 0; d < 3; d++) {
-    mrc_crds_alloc(crds, d, m[d], crds->par.sw);
     memcpy(crds->crd[d]->_arr, crd[d] - crds->par.sw, crds->crd[d]->_len * sizeof(*crd[d]));
   }
 }
@@ -226,16 +213,8 @@ mrc_crds_rectilinear_setup(struct mrc_crds *crds)
   if (!mrc_domain_is_setup(crds->domain))
     return;
 
-  int sw = crds->par.sw;
-  int gdims[3];
-  mrc_domain_get_global_dims(crds->domain, gdims);
-  int nr_patches;
-  struct mrc_patch *patches = mrc_domain_get_patches(crds->domain, &nr_patches);
-  assert(nr_patches == 1);
-  for (int d = 0; d < 3; d++) {
-    if (!crds->crd[d]) {
-      mrc_crds_alloc(crds, d, patches[0].ldims[d], sw);
-    }
+  if (!crds->crd[0]) {
+    mrc_crds_alloc(crds);
   }
 }
 
@@ -285,12 +264,12 @@ mrc_crds_rectilinear_jr2_setup(struct mrc_crds *crds)
 
   // FIXME, parallel
   float xm = jr2->xm, xn = jr2->xn, dx0 = jr2->dx0;
+  mrc_crds_alloc(crds);
   for (int d = 0; d < 3; d++) {
     assert(-xl[d] == xh[d]);
     float Lx2 = xh[d];
     float xc = gdims[d] / 2 - .5;
     float a = (pow((Lx2) / (dx0 * xc), 1./xm) - 1.) / pow(xc, 2.*xn);
-    mrc_crds_alloc(crds, d, patches[0].ldims[d], sw);
     for (int i = -sw; i < patches[0].ldims[d] +  sw; i++) {
       float xi = i - xc;
       float s = 1 + a*(pow(xi, (2. * xn)));
@@ -323,9 +302,9 @@ mrc_crds_multi_uniform_setup(struct mrc_crds *crds)
   mrc_domain_get_global_dims(crds->domain, gdims);
   float *xl = crds->par.xl, *xh = crds->par.xh;
 
+  mrc_crds_alloc(crds);
   struct mrc_patch *patches = mrc_domain_get_patches(crds->domain, NULL);
   for (int d = 0; d < 3; d++) {
-    mrc_crds_multi_alloc(crds, d);
     struct mrc_fld *mcrd = crds->crd[d];
     mrc_m1_foreach_patch(mcrd, p) {
       mrc_m1_foreach_bnd(mcrd, i) {
@@ -356,8 +335,8 @@ mrc_crds_amr_uniform_setup(struct mrc_crds *crds)
   mrc_domain_get_global_dims(crds->domain, gdims);
   float *xl = crds->par.xl, *xh = crds->par.xh;
 
+  mrc_crds_alloc(crds);
   for (int d = 0; d < 3; d++) {
-    mrc_crds_multi_alloc(crds, d);
     struct mrc_fld *mcrd = crds->crd[d];
     mrc_m1_foreach_patch(mcrd, p) {
       struct mrc_patch_info info;
@@ -388,10 +367,8 @@ mrc_crds_multi_rectilinear_setup(struct mrc_crds *crds)
   if (!mrc_domain_is_setup(crds->domain))
     return;
 
-  for (int d = 0; d < 3; d++) {
-    if (!crds->crd[d]) {
-      mrc_crds_multi_alloc(crds, d);
-    }
+  if (!crds->crd[0]) {
+    mrc_crds_alloc(crds);
   }
 }
 
