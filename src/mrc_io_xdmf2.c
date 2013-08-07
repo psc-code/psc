@@ -315,7 +315,7 @@ xdmf_write_f1(struct mrc_io *io, const char *path, struct mrc_fld *f1)
 
   struct xdmf_spatial *xs = xdmf_spatial_find(&file->xdmf_spatial_list,
 					      mrc_domain_name(f1->_domain));
-  if (!xs) {
+  if (0 && !xs) {
     xs = xdmf_spatial_create_f1(&file->xdmf_spatial_list,
 				mrc_domain_name(f1->_domain), f1->_domain);
     xdmf_spatial_write_crds(xs, file, f1->_domain);
@@ -330,7 +330,7 @@ xdmf_write_f1(struct mrc_io *io, const char *path, struct mrc_fld *f1)
       MHERE;
       sprintf(tmp_fld_name, "m%d", m);
     }
-    xdmf_spatial_save_fld_info(xs, strdup(fld_name), strdup(path), false);
+    //    xdmf_spatial_save_fld_info(xs, strdup(fld_name), strdup(path), false);
 
     hid_t group_fld = H5Gcreate(group0, fld_name, H5P_DEFAULT,
 				H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group_fld);

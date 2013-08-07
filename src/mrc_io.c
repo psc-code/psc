@@ -301,8 +301,10 @@ mrc_io_write_m1(struct mrc_io *io, const char *path, struct mrc_fld *fld)
   struct mrc_io_ops *ops = mrc_io_ops(io);
   if (ops->write_m1) {
     ops->write_m1(io, path, fld);
+  } else if (mrc_fld_nr_patches(fld) == 1 && ops->write_f1) {
+    ops->write_f1(io, path, fld);
   } else {
-    //    MHERE; // FIXME
+    MHERE; // FIXME
   }
 }
 
@@ -313,8 +315,13 @@ void
 mrc_io_read_m1(struct mrc_io *io, const char *path, struct mrc_fld *fld)
 {
   struct mrc_io_ops *ops = mrc_io_ops(io);
-  assert(ops->read_m1);
-  ops->read_m1(io, path, fld);
+  if (ops->read_m1) {
+    ops->read_m1(io, path, fld);
+  } else if (mrc_fld_nr_patches(fld) == 1 && ops->read_f1) {
+    ops->read_f1(io, path, fld);
+  } else {
+    assert(0);
+  }
 }
 
 // ----------------------------------------------------------------------
