@@ -32,18 +32,15 @@ static void
 _mrc_crds_read(struct mrc_crds *crds, struct mrc_io *io)
 {
   crds->domain = mrc_io_read_ref(io, crds, "domain", mrc_domain);
-  if (strcmp(mrc_crds_type(crds), "multi_uniform") == 0 ||
-      strcmp(mrc_crds_type(crds), "multi_rectilinear") == 0) {
-    for (int d = 0; d < 3; d++) {
-      char s[6];
-      sprintf(s, "mcrd%d", d);
-      crds->mcrd[d] = mrc_io_read_ref(io, crds, s, mrc_fld);
-    }
-  } else {
-    for (int d = 0; d < 3; d++) {
-      char s[5];
-      sprintf(s, "crd%d", d);
-      crds->crd[d] = mrc_io_read_ref(io, crds, s, mrc_fld);
+  for (int d = 0; d < 3; d++) {
+    char s[5];
+    sprintf(s, "crd%d", d);
+    struct mrc_fld *crd_cc = mrc_io_read_ref(io, crds, s, mrc_fld);
+    if (strcmp(mrc_crds_type(crds), "multi_uniform") == 0 ||
+	strcmp(mrc_crds_type(crds), "multi_rectilinear") == 0) {
+      crds->mcrd[d] = crd_cc;
+    } else {
+      crds->crd[d] = crd_cc;
     }
   }
   mrc_crds_setup(crds);
@@ -70,16 +67,9 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
       crd_cc = crds->mcrd[d];
     }
     
-    if (crds->crd[d]) {
-      char s[10];
-      sprintf(s, "crd%d", d);
-      mrc_io_write_ref(io, crds, s, crd_cc);
-    }
-    if (crds->mcrd[d]) {
-      char s[10];
-      sprintf(s, "mcrd%d", d);
-      mrc_io_write_ref(io, crds, s, crd_cc);
-    }
+    char s[10];
+    sprintf(s, "crd%d", d);
+    mrc_io_write_ref(io, crds, s, crd_cc);
 
     if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) { // FIXME
       struct mrc_fld *crd_nc = crds->mcrd_nc[d];
