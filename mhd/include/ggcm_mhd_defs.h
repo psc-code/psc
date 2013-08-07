@@ -78,7 +78,7 @@ enum {
 // ----------------------------------------------------------------------
 // macros to ease field access
 
-#if 1
+#if 0
 #define B1XYZ(f,m, ix,iy,iz) MRC_F3(f, _B1X+(m), ix,iy,iz)
 #else // GGCM staggering
 #define B1XYZ(f,m, ix,iy,iz) MRC_F3(f, _B1X+(m),		\

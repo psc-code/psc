@@ -16,8 +16,6 @@
 		     (iy) - ((m) == 1),	\
 		     (iz) - ((m) == 2))
 
-
-
 #if SEMICONSV 
 
 #define P_M(ndx) (gamma - 1.f) * ( U_M( _UU1, ndx) - ((.5f / U_M( _RR1, ndx) ) * \
@@ -27,7 +25,6 @@
 		 (sqr(U_P( _RV1X, ndx)) + sqr(U_P( _RV1Y, ndx)) + sqr(U_P( _RV1Z, ndx)) )))
 #else 
 
-
 #define P_M(ndx) (gamma - 1.f) * ( U_M( _UU1, ndx) - ((.5f / U_M( _RR1, ndx) ) * \
 		   (sqr(U_M( _RV1X, ndx)) + sqr(U_M( _RV1Y, ndx)) + sqr(U_M( _RV1Z, ndx)) )) - \
 	    (.5f * (sqr(U_M( _B1X, ndx)) + sqr(U_M(_B1Y, ndx)) + sqr(U_M(_B1Z, ndx)))))
@@ -35,7 +32,6 @@
 #define P_P(ndx) (gamma - 1.f) * ( U_P( _UU1, ndx) - ((.5f / U_P( _RR1, ndx) ) * \
 		   (sqr(U_P( _RV1X, ndx)) + sqr(U_P( _RV1Y, ndx)) + sqr(U_P( _RV1Z, ndx)) )) - \
 	    (.5f * (sqr(U_P( _B1X, ndx))  + sqr(U_P( _B1Y, ndx))  + sqr(U_P(_B1Z, ndx)))))
-
 #endif 
 
 
@@ -93,10 +89,8 @@ calc_KNP_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
     float cAm = sqrtf( (sqr(MRC_F3(u_m[0], _B1X, ix,iy,iz))+
 			sqr(MRC_F3(u_m[0], _B1Y, ix,iy,iz))+
 			sqr(MRC_F3(u_m[0], _B1Z, ix,iy,iz)))/ MRC_F3(u_m[0], _RR1, ix,iy,iz) );
- 	
-    //    cAp = 0.0; 
-    //cAm = 0.0;
-#if 0
+
+#if 1
     float tmpp = sqr(csp) + sqr(cAp);
     float cfp = sqrtf( 0.5 * ( tmpp + sqrtf( sqr( sqr(cAp) + sqr(csp) )
 					     - (4. * mpermi * sqr(csp * MRC_F3(u, _B1X, ix-1,iy,iz)) /  
@@ -248,6 +242,10 @@ calc_KNP_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
 
     assert(isfinite(ap));
     assert(isfinite(am));
+
+
+#if 0
+
     //    ap = 1e-3; am = -1e-3;
     // Flux of _EX,_EY,_EZ through the x faces
     FLUX(flux, 0, _EX, ix,iy,iz) = 
@@ -274,7 +272,7 @@ calc_KNP_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
     
     assert(isfinite(cp));
     assert(isfinite(cm));
-    //cp = 1e-6; cm = -1e-6;
+    //cp = 1e-3; cm = -1e-3;
     // flux of _EX,_EY,_EZ through the z faces
     FLUX(flux, 2, _EX, ix,iy,iz) = 
       (1.f/(cp - cm))*( - cp * MRC_F3(E_p[2], 1, ix,iy,iz-1) + cm * MRC_F3(E_m[2], 1, ix,iy,iz) + 
@@ -284,6 +282,46 @@ calc_KNP_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
 		         (cp * cm) * ( MRC_F3(u_m[2], _B1Y, ix,iy,iz) -    MRC_F3(u_p[2], _B1Y, ix,iy,iz-1) ));
     FLUX(flux, 2, _EZ, ix,iy,iz) = 
       (1.f/(cp - cm))*(  (cp * cm) * ( MRC_F3(u_m[2], _B1Z, ix,iy,iz) - MRC_F3(u_p[2], _B1Z, ix,iy,iz-1) ));    
+
+#else 
+ //    ap = 1e-3; am = -1e-3;
+    // Flux of _EX,_EY,_EZ through the x faces
+    FLUX(flux, 0, _EX, ix,iy,iz) = 
+      (1.f/(ap - am)) * ( (ap*am) * ( MRC_F3(u_m[0], _B1X, ix,iy,iz) - MRC_F3(u_p[0], _B1X, ix-1,iy,iz)));
+    FLUX(flux, 0, _EY, ix,iy,iz) = 
+      (1.f/(ap - am)) * (ap*am)*   ( MRC_F3(u_m[0], _B1Y, ix,iy,iz) -  MRC_F3(u_p[0], _B1Y, ix-1,iy,iz));
+    FLUX(flux, 0, _EZ, ix,iy,iz) = 
+      (1.f/(ap - am)) * (ap*am) * ( MRC_F3(u_m[0], _B1Z, ix,iy,iz) - MRC_F3(u_p[0], _B1Z, ix-1,iy,iz));  
+     
+    assert(isfinite(bp));
+    assert(isfinite(bm));
+    //bp = 1e-3; bm = -1e-3;
+    // flux of _EX,_EY,_EZ through the y faces    
+    FLUX(flux, 1, _EX, ix,iy,iz) =
+      (1.f/(bp - bm)) * (bp * bm) *  ( MRC_F3(u_m[1], _B1X, ix,iy,iz) -    MRC_F3(u_p[1], _B1X, ix,iy-1,iz));
+    FLUX(flux, 1, _EY, ix,iy,iz) =
+      (1.f/(bp - bm)) * ( (bp * bm)* ( MRC_F3(u_m[1], _B1Y, ix,iy,iz) - MRC_F3(u_p[1], _B1Y, ix,iy-1,iz)));    
+    FLUX(flux, 1, _EZ, ix,iy,iz) =
+      (1.f/(bp - bm)) * (bp * bm) *  ( MRC_F3(u_m[1], _B1Z, ix,iy,iz) -     MRC_F3(u_p[1], _B1Z, ix,iy-1,iz));  
+    
+    assert(isfinite(cp));
+    assert(isfinite(cm));
+    //cp = 1e-3; cm = -1e-3;
+    // flux of _EX,_EY,_EZ through the z faces
+    FLUX(flux, 2, _EX, ix,iy,iz) = 
+      (1.f/(cp - cm)) *  (cp * cm) * ( MRC_F3(u_m[2], _B1X, ix,iy,iz) - MRC_F3(u_p[2], _B1X, ix,iy,iz-1));
+    FLUX(flux, 2, _EY, ix,iy,iz) =
+      (1.f/(cp - cm)) *  (cp * cm) * ( MRC_F3(u_m[2], _B1Y, ix,iy,iz) -    MRC_F3(u_p[2], _B1Y, ix,iy,iz-1));;
+    FLUX(flux, 2, _EZ, ix,iy,iz) = 
+      (1.f/(cp - cm))*(  (cp * cm) * ( MRC_F3(u_m[2], _B1Z, ix,iy,iz) - MRC_F3(u_p[2], _B1Z, ix,iy,iz-1)));    
+
+
+#endif
+
+
+
+
+
 
     for (int m = 0; m <= _UU1; m++) {
 #if 1
@@ -309,7 +347,7 @@ calc_KNP_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
 	//assert(isfinite(FLUX(flux, 0, m, ix,iy,iz)));
 	//	assert(isfinite(FLUX(flux, 1, m, ix,iy,iz)));
 
-	assert(isfinite(FLUX(flux, 0, m, ix,iy,iz)));
+	//assert(isfinite(FLUX(flux, 0, m, ix,iy,iz)));
       }
       
     } 

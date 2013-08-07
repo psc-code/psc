@@ -69,7 +69,7 @@ calc_semiconsv_rhs(struct ggcm_mhd *mhd, struct mrc_fld *_rhs, struct mrc_fld *_
 	  (FLUX(flux, i, m, ix+dind[0],iy+dind[1],iz+dind[2]) - 
 	   FLUX(flux, i, m, ix,iy,iz))
 	  / (MRC_CRD(crds, i, ind[i]+1) - MRC_CRD(crds, i, ind[i]));
-	assert(isfinite(MRC_F3(rhs, m, ix, iy, iz)));
+	//	assert(isfinite(MRC_F3(rhs, m, ix, iy, iz)));
       }
     } mrc_fld_foreach_end; 
   }
@@ -77,6 +77,7 @@ calc_semiconsv_rhs(struct ggcm_mhd *mhd, struct mrc_fld *_rhs, struct mrc_fld *_
   
   // add JdotE source term  
  struct mrc_fld *J_cc = mrc_fld_get_as(_J_cc, "float");
+ 
 
  mrc_fld_foreach(rhs, ix, iy, iz, 0, 0) {
     MRC_F3(rhs, _UU1, ix, iy, iz) += 
@@ -86,6 +87,8 @@ calc_semiconsv_rhs(struct ggcm_mhd *mhd, struct mrc_fld *_rhs, struct mrc_fld *_
   } mrc_fld_foreach_end; 
 
   // add JxB source term
+
+
   mrc_fld_foreach(rhs, ix, iy, iz, 0, 0) {    
     MRC_F3(rhs, _RV1X, ix, iy, iz) +=  
       MRC_F3(J_cc, 1, ix, iy, iz) * 0.5*(MRC_F3(fld, _B1Z, ix,iy,iz)+MRC_F3(fld, _B1Z, ix,iy,iz+1)) -   
