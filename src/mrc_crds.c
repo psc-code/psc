@@ -54,13 +54,30 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 {
   mrc_io_write_ref(io, crds, "domain", crds->domain);
   for (int d = 0; d < 3; d++) {
+    int slab_off_save[3], slab_dims_save[3];
+    if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) { // FIXME
+      mrc_io_get_param_int3(io, "slab_off", slab_off_save);
+      mrc_io_get_param_int3(io, "slab_dims", slab_dims_save);
+      mrc_io_set_param_int3(io, "slab_off", (int[3]) { 0, 0, 0});
+      mrc_io_set_param_int3(io, "slab_dims", (int[3]) { 0, 0, 0 });
+    }
+
     if (crds->crd[d]) {
       char s[10];
       sprintf(s, "crd%d", d);
       mrc_io_write_ref(io, crds, s, crds->crd[d]);
+    }
+    if (crds->mcrd[d]) {
+      char s[10];
+      sprintf(s, "mcrd%d", d);
+      mrc_io_write_ref(io, crds, s, crds->mcrd[d]);
+    }
+
+    if (crds->crd[d]) {
       if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) { // FIXME
 	struct mrc_fld *crd_nc = crds->mcrd_nc[d];
 	if (!crd_nc) {
+	  char s[10];
 	  crd_nc = mrc_fld_create(mrc_crds_comm(crds)); // FIXME, leaked
 	  crds->mcrd_nc[d] = crd_nc;
 	  sprintf(s, "crd%d_nc", d);
@@ -93,32 +110,12 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 	int gdims[3];
 	mrc_domain_get_global_dims(crds->domain, gdims);
 	// FIXME, this is really too hacky... should per m1 / m3, not per mrc_io
-	int slab_off_save[3], slab_dims_save[3];
-	mrc_io_get_param_int3(io, "slab_off", slab_off_save);
-	mrc_io_get_param_int3(io, "slab_dims", slab_dims_save);
 	mrc_io_set_param_int3(io, "slab_off", (int[3]) { 0, 0, 0});
 	mrc_io_set_param_int3(io, "slab_dims", (int[3]) { gdims[d] + 1, 0, 0 });
 	mrc_fld_write(crd_nc, io);
-	mrc_io_set_param_int3(io, "slab_off", slab_off_save);
-	mrc_io_set_param_int3(io, "slab_dims", slab_dims_save);
       }
     }
     if (crds->mcrd[d]) {
-      char s[10];
-      int slab_off_save[3], slab_dims_save[3];
-      if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) {
-	mrc_io_get_param_int3(io, "slab_off", slab_off_save);
-	mrc_io_get_param_int3(io, "slab_dims", slab_dims_save);
-	mrc_io_set_param_int3(io, "slab_off", (int[3]) { 0, 0, 0});
-	mrc_io_set_param_int3(io, "slab_dims", (int[3]) { 0, 0, 0 });
-      }
-      sprintf(s, "mcrd%d", d);
-      mrc_io_write_ref(io, crds, s, crds->mcrd[d]);
-      if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) {
-	mrc_io_set_param_int3(io, "slab_off", slab_off_save);
-	mrc_io_set_param_int3(io, "slab_dims", slab_dims_save);
-      }
-
       if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) {
 	sprintf(s, "crd%d_nc", d);
 	struct mrc_fld *crd_nc = mrc_fld_create(mrc_crds_comm(crds)); // FIXME, leaked
@@ -152,15 +149,14 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 	}
 	int gdims[3];
 	mrc_domain_get_global_dims(crds->domain, gdims);
-	int slab_off_save[3], slab_dims_save[3];
-	mrc_io_get_param_int3(io, "slab_off", slab_off_save);
-	mrc_io_get_param_int3(io, "slab_dims", slab_dims_save);
 	mrc_io_set_param_int3(io, "slab_off", (int[3]) { 0, 0, 0});
 	mrc_io_set_param_int3(io, "slab_dims", (int[3]) { gdims[d] + 1, 0, 0 });
 	mrc_fld_write(crd_nc, io);
-	mrc_io_set_param_int3(io, "slab_off", slab_off_save);
-	mrc_io_set_param_int3(io, "slab_dims", slab_dims_save);
       }
+    }
+    if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) { // FIXME
+      mrc_io_set_param_int3(io, "slab_off", slab_off_save);
+      mrc_io_set_param_int3(io, "slab_dims", slab_dims_save);
     }
   }
 }
