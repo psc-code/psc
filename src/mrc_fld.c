@@ -743,42 +743,10 @@ struct mrc_class_mrc_fld mrc_class_mrc_fld = {
 
 
 
-
-
-
-
-#include <mrc_fld.h>
-#include <mrc_io.h>
-#include <mrc_params.h>
-#include <mrc_vec.h>
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
-#include <assert.h>
-
 // ======================================================================
 // mrc_m1
 
 #define to_mrc_m1(o) container_of(o, struct mrc_m1, obj)
-
-static void
-_mrc_m1_write(struct mrc_m1 *m1, struct mrc_io *io)
-{
-  mrc_io_write_m1(io, mrc_io_obj_path(io, m1), m1);
-}
-
-static void
-_mrc_m1_read(struct mrc_m1 *fld, struct mrc_io *io)
-{
-  // instead of reading back fld->_vec (which doesn't contain anything useful,
-  // anyway, since mrc_fld saves/restores the data rather than mrc_vec),
-  // we make a new one, so at least we're sure that with_array won't be honored
-  fld->_vec = mrc_vec_create(mrc_fld_comm(fld));
-  mrc_fld_setup(fld);
-  mrc_io_read_m1(io, mrc_io_obj_path(io, fld), fld);
-}
 
 void
 mrc_m1_set_comp_name(struct mrc_m1 *fld, int m, const char *name)
@@ -861,8 +829,8 @@ struct mrc_class_mrc_m1 mrc_class_mrc_m1 = {
   .init         = mrc_m1_init,
   .destroy      = _mrc_fld_destroy,
   .setup        = _mrc_fld_setup,
-  .read         = _mrc_m1_read,
-  .write        = _mrc_m1_write,
+  .read         = _mrc_fld_read,
+  .write        = _mrc_fld_write,
 };
 
 
