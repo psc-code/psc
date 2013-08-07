@@ -159,15 +159,15 @@ xdmf_spatial_write_mcrds_multi(struct mrc_io *io, struct xdmf_file *file,
       float *crd_nc = calloc(im + 2*sw + 1, sizeof(*crd_nc));
       if (mrc_fld_ghost_offs(mcrd)[0] < -sw) {
 	for (int i = -sw; i <= im + sw; i++) {
-	  crd_nc[i + sw] = .5 * (MRC_M1P(mcrd,0, i-1, p) + MRC_M1P(mcrd,0, i, p));
+	  crd_nc[i + sw] = .5 * (MRC_M1(mcrd,0, i-1, p) + MRC_M1(mcrd,0, i, p));
 	}
       } else {
 	for (int i = 1-sw; i < im+sw; i++) {
-	  crd_nc[i + sw] = .5 * (MRC_M1P(mcrd,0, i-1, p) + MRC_M1P(mcrd,0, i, p));
+	  crd_nc[i + sw] = .5 * (MRC_M1(mcrd,0, i-1, p) + MRC_M1(mcrd,0, i, p));
 	}
 	// extrapolate
-	crd_nc[0      ] = MRC_M1P(mcrd,0, -sw    , p) - .5 * (MRC_M1P(mcrd,0, -sw+1  , p) - MRC_M1P(mcrd,0, -sw    , p));
-	crd_nc[im+2*sw] = MRC_M1P(mcrd,0, im+sw-1, p) + .5 * (MRC_M1P(mcrd,0, im+sw-1, p) - MRC_M1P(mcrd,0, im+sw-2, p));
+	crd_nc[0      ] = MRC_M1(mcrd,0, -sw    , p) - .5 * (MRC_M1(mcrd,0, -sw+1  , p) - MRC_M1(mcrd,0, -sw    , p));
+	crd_nc[im+2*sw] = MRC_M1(mcrd,0, im+sw-1, p) + .5 * (MRC_M1(mcrd,0, im+sw-1, p) - MRC_M1(mcrd,0, im+sw-2, p));
       }
       hsize_t im1 = im + 2*sw + 1;
       char s_patch[10];
@@ -469,15 +469,15 @@ xdmf_spatial_write_mcrds_multi_parallel(struct xdmf_file *file,
       float *crd_nc = calloc(im + 1, sizeof(*crd_nc));
       if (mrc_fld_ghost_offs(mcrd)[0] < 0) {
 	for (int i = 0; i <= im; i++) {
-	  crd_nc[i] = .5 * (MRC_M1P(mcrd,0, i-1, p) + MRC_M1P(mcrd,0, i, p));
+	  crd_nc[i] = .5 * (MRC_M1(mcrd,0, i-1, p) + MRC_M1(mcrd,0, i, p));
 	}
       } else {
 	for (int i = 1; i < im; i++) {
-	  crd_nc[i] = .5 * (MRC_M1P(mcrd,0, i-1, p) + MRC_M1P(mcrd,0, i, p));
+	  crd_nc[i] = .5 * (MRC_M1(mcrd,0, i-1, p) + MRC_M1(mcrd,0, i, p));
 	}
 	// extrapolate
-	crd_nc[0]  = MRC_M1P(mcrd,0, 0   , p) - .5 * (MRC_M1P(mcrd,0, 1   , p) - MRC_M1P(mcrd,0, 0   , p));
-	crd_nc[im] = MRC_M1P(mcrd,0, im-1, p) + .5 * (MRC_M1P(mcrd,0, im-1, p) - MRC_M1P(mcrd,0, im-2, p));
+	crd_nc[0]  = MRC_M1(mcrd,0, 0   , p) - .5 * (MRC_M1(mcrd,0, 1   , p) - MRC_M1(mcrd,0, 0   , p));
+	crd_nc[im] = MRC_M1(mcrd,0, im-1, p) + .5 * (MRC_M1(mcrd,0, im-1, p) - MRC_M1(mcrd,0, im-2, p));
       }
 
       hsize_t mdims[1] = { info.ldims[d] + (info.off[d] == 0 ? 1 : 0) };

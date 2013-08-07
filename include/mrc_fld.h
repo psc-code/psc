@@ -223,7 +223,7 @@ typedef void (*mrc_fld_copy_from_func_t)(struct mrc_fld *,
 // ======================================================================
 // mrc_m1
 
-#define MRC_M1P(fld, m, ix, p) MRC_S3(fld, ix, m, p)
+#define MRC_M1(fld, m, ix, p) MRC_S3(fld, ix, m, p)
 
 #define mrc_m1_foreach_patch(m1, p) \
   for (int p = 0; p < mrc_fld_nr_patches(m1); p++)

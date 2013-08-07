@@ -17,8 +17,8 @@ set_m1(struct mrc_m1 *m1)
   mrc_m1_foreach_patch(m1, p) {
     int *off = patches[p].off;
     mrc_m1_foreach(m1, ix, 0,0) {
-      MRC_M1P(m1, 0, ix, p) = ix + off[0];
-      MRC_M1P(m1, 1, ix, p) = MRC_MCRD(crds, 0, ix, p);
+      MRC_M1(m1, 0, ix, p) = ix + off[0];
+      MRC_M1(m1, 1, ix, p) = MRC_MCRD(crds, 0, ix, p);
     } mrc_m1_foreach_end;
   }
 }
@@ -31,7 +31,7 @@ check_m1(struct mrc_m1 *m1)
   mrc_m1_foreach_patch(m1, p) {
     int *off = patches[p].off;
     mrc_m1_foreach(m1, ix, 0,0) {
-      assert(MRC_M1P(m1, 0, ix, p) == ix + off[0]);
+      assert(MRC_M1(m1, 0, ix, p) == ix + off[0]);
     } mrc_m1_foreach_end;
   }
 }
