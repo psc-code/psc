@@ -94,12 +94,11 @@ main(int argc, char **argv)
 
   struct mrc_domain *domain = mrc_domain_create(MPI_COMM_WORLD);
   mrc_domain_set_type(domain, "multi");
-  struct mrc_crds *crds = mrc_domain_get_crds(domain);
-  mrc_crds_set_type(crds, "multi_uniform");
   mrc_domain_set_from_options(domain);
   mrc_domain_setup(domain);
   mrc_domain_view(domain);
   
+  struct mrc_crds *crds = mrc_domain_get_crds(domain);
   if (strcmp(mrc_crds_type(crds), "multi_rectilinear") == 0) {
     mrctest_set_crds_multi_rectilinear_1(domain);
   }

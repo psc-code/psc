@@ -172,17 +172,18 @@ mrc_crds_uniform_setup(struct mrc_crds *crds)
   if (!mrc_domain_is_setup(crds->domain))
     return;
 
-  int sw = crds->par.sw;
   int gdims[3];
   mrc_domain_get_global_dims(crds->domain, gdims);
-  int nr_patches;
-  struct mrc_patch *patches = mrc_domain_get_patches(crds->domain, &nr_patches);
-  assert(nr_patches == 1);
   float *xl = crds->par.xl, *xh = crds->par.xh;
+
   mrc_crds_alloc(crds);
+  struct mrc_patch *patches = mrc_domain_get_patches(crds->domain, NULL);
   for (int d = 0; d < 3; d++) {
-    for (int i = -sw; i < patches[0].ldims[d] +  sw; i++) {
-      MRC_CRD(crds, d, i) = xl[d] + (i + patches[0].off[d] + .5) / gdims[d] * (xh[d] - xl[d]);
+    struct mrc_fld *mcrd = crds->crd[d];
+    mrc_m1_foreach_patch(mcrd, p) {
+      mrc_m1_foreach_bnd(mcrd, i) {
+	MRC_M1(mcrd,0, i, p) = xl[d] + (i + patches[p].off[d] + .5) / gdims[d] * (xh[d] - xl[d]);
+      } mrc_m1_foreach_end;
     }
   }
 }
@@ -289,37 +290,6 @@ static struct mrc_crds_ops mrc_crds_rectilinear_jr2_ops = {
 };
 
 // ======================================================================
-// mrc_crds_multi_uniform
-
-static void
-mrc_crds_multi_uniform_setup(struct mrc_crds *crds)
-{
-  assert(crds->domain);
-  if (!mrc_domain_is_setup(crds->domain))
-    return;
-
-  int gdims[3];
-  mrc_domain_get_global_dims(crds->domain, gdims);
-  float *xl = crds->par.xl, *xh = crds->par.xh;
-
-  mrc_crds_alloc(crds);
-  struct mrc_patch *patches = mrc_domain_get_patches(crds->domain, NULL);
-  for (int d = 0; d < 3; d++) {
-    struct mrc_fld *mcrd = crds->crd[d];
-    mrc_m1_foreach_patch(mcrd, p) {
-      mrc_m1_foreach_bnd(mcrd, i) {
-	MRC_M1(mcrd,0, i, p) = xl[d] + (i + patches[p].off[d] + .5) / gdims[d] * (xh[d] - xl[d]);
-      } mrc_m1_foreach_end;
-    }
-  }
-}
-
-static struct mrc_crds_ops mrc_crds_multi_uniform_ops = {
-  .name  = "multi_uniform",
-  .setup = mrc_crds_multi_uniform_setup,
-};
-
-// ======================================================================
 // mrc_crds_amr_uniform
 
 // FIXME, this should use mrc_a1 not mrc_m1
@@ -386,7 +356,6 @@ mrc_crds_init()
   mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_uniform_ops);
   mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_rectilinear_ops);
   mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_rectilinear_jr2_ops);
-  mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_multi_uniform_ops);
   mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_multi_rectilinear_ops);
   mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_amr_uniform_ops);
 }

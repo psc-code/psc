@@ -50,7 +50,7 @@ main(int argc, char **argv)
 
   switch (testcase) {
   case 1:
-    mrc_crds_set_type(crds, "multi_uniform");
+    mrc_crds_set_type(crds, "uniform");
     mrc_domain_set_from_options(domain);
     mrc_domain_setup(domain);
     test_read_write(domain);

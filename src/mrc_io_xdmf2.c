@@ -193,12 +193,7 @@ xdmf_spatial_write_mcrds(struct mrc_io *io, struct xdmf_spatial *xs, struct xdmf
 
   xs->crds_done = true;
 
-  struct mrc_crds *crds = mrc_domain_get_crds(domain);
-  if (strcmp(mrc_crds_type(crds), "multi_uniform") == 0) {
-    xdmf_spatial_write_mcrds_multi(io, file, domain, sw); // FIXME
-  } else {
-    xdmf_spatial_write_mcrds_multi(io, file, domain, sw);
-  }
+  xdmf_spatial_write_mcrds_multi(io, file, domain, sw);
 }
 
 static void
@@ -633,11 +628,11 @@ xdmf_spatial_write_crds_multi_parallel(struct mrc_io *io, struct mrc_domain *dom
 }
 
 // ----------------------------------------------------------------------
-// xdmf_spatial_write_mcrds_multi_uniform_parallel
+// xdmf_spatial_write_crds_uniform_parallel
 
 static void
-xdmf_spatial_write_mcrds_multi_uniform_parallel(struct xdmf_file *file,
-						struct mrc_domain *domain)
+xdmf_spatial_write_crds_uniform_parallel(struct xdmf_file *file,
+					 struct mrc_domain *domain)
 {
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
 
@@ -675,15 +670,12 @@ xdmf_spatial_write_mcrds_parallel(struct xdmf_spatial *xs,
   xs->crds_done = true;
 
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
-  if (strcmp(mrc_crds_type(crds), "multi_uniform") == 0) {
-    xdmf_spatial_write_mcrds_multi_uniform_parallel(file, domain);
+  if (strcmp(mrc_crds_type(crds), "uniform") == 0) {
+    xdmf_spatial_write_crds_uniform_parallel(file, domain);
   } else if (strcmp(mrc_crds_type(crds), "multi") == 0) {
     // FIXME, broken since not all are writers
     assert(0);
     xdmf_spatial_write_mcrds_multi_parallel(file, domain);
-  } else if (strcmp(mrc_crds_type(crds), "uniform") == 0) {
-    // FIXME, should do XDMF uniform, or rather just use m1, not f1
-    xdmf_spatial_write_crds_multi_parallel(io, domain);
   } else if (strcmp(mrc_crds_type(crds), "rectilinear") == 0) {
     // FIXME, should do XDMF uniform, or rather just use m1, not f1
     xdmf_spatial_write_crds_multi_parallel(io, domain);
