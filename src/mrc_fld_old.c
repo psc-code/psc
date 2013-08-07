@@ -24,7 +24,7 @@ _mrc_m1_create(struct mrc_m1 *m1)
 static void
 _mrc_m1_destroy(struct mrc_m1 *m1)
 {
-  for (int p = 0; p < m1->nr_patches; p++) {
+  for (int p = 0; p < mrc_m1_nr_patches(m1); p++) {
     struct mrc_m1_patch *m1p = &m1->patches[p];
     free(m1p->arr);
   }
@@ -42,11 +42,11 @@ _mrc_m1_setup(struct mrc_m1 *m1)
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(m1->_domain, &nr_patches);
 
-  m1->nr_patches = nr_patches;
   m1->patches = calloc(nr_patches, sizeof(*patches));
   assert(nr_patches > 0);
   assert(m1->_dims.nr_vals >= 1);
   m1->_dims.vals[0] = patches[0].ldims[m1->_dim];
+  m1->_dims.vals[2] = nr_patches;
 
   if (m1->_offs.nr_vals == 0) {
     mrc_m1_set_param_int_array(m1, "offs", m1->_dims.nr_vals, NULL);
@@ -55,9 +55,10 @@ _mrc_m1_setup(struct mrc_m1 *m1)
     mrc_m1_set_param_int_array(m1, "sw", m1->_dims.nr_vals, NULL);
   }
 
-
-  m1->_ghost_offs[0] = -m1->_sw.vals[0];
-  m1->_ghost_dims[0] = m1->_dims.vals[0] + 2 * m1->_sw.vals[0];
+  for (int d = 0; d < 3; d++) {
+    m1->_ghost_offs[d] = -m1->_sw.vals[d];
+    m1->_ghost_dims[d] = m1->_dims.vals[d] + 2 * m1->_sw.vals[d];
+  }
   for (int p = 0; p < nr_patches; p++) {
     assert(patches[p].ldims[m1->_dim] == patches[0].ldims[m1->_dim]);
     struct mrc_m1_patch *m1p = &m1->patches[p];
@@ -136,7 +137,7 @@ bool
 mrc_m1_same_shape(struct mrc_m1 *m1_1, struct mrc_m1 *m1_2)
 {
   if (m1_1->nr_comp != m1_2->nr_comp) return false;
-  if (m1_1->nr_patches != m1_2->nr_patches) return false;
+  if (mrc_m1_nr_patches(m1_1) != mrc_m1_nr_patches(m1_2)) return false;
   if (m1_1->_ghost_dims[0] != m1_2->_ghost_dims[0]) return false;
 
   return true;
@@ -160,6 +161,13 @@ mrc_m1_ghost_dims(struct mrc_m1 *x)
   return x->_ghost_dims;
 }
 
+int
+mrc_m1_nr_patches(struct mrc_m1 *fld)
+{
+  assert(fld->_domain);
+  assert(fld->_dims.nr_vals == 3);
+  return fld->_ghost_dims[2];
+}
 
 // ----------------------------------------------------------------------
 // mrc_class_mrc_m1

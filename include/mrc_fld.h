@@ -237,15 +237,22 @@ struct mrc_m1 {
   // state
   int _ghost_offs[MRC_FLD_MAXDIMS];
   int _ghost_dims[MRC_FLD_MAXDIMS];
-
+  int _data_type;
+  int _size_of_type;
+  void *_arr;
+  int _len;
+  struct mrc_vec *_vec; //< underlying mrc_vec that manages memory alloc/free (could be petsc)
   struct mrc_domain *_domain; //< optional, if allocated through mrc_domain
+  // for mrc_f3 emulation
+  int _nr_allocated_comp_name;
+  char **_comp_name;
+  // for mrc_m3 emulation (FIXME, should be eliminated eventually (?))
+  struct mrc_fld_patch *_patches;
   // for mrc_f1 emulation
   int _dim; //< # along this dim of the domain
 
   int nr_comp;
-  int nr_patches;
   struct mrc_m1_patch *patches;
-  char **_comp_name;
 };
 
 MRC_CLASS_DECLARE(mrc_m1, struct mrc_m1);
@@ -257,6 +264,7 @@ bool mrc_m1_same_shape(struct mrc_m1 *m1_1, struct mrc_m1 *m1_2);
 const int *mrc_m1_dims(struct mrc_m1 *x);
 const int *mrc_m1_ghost_offs(struct mrc_m1 *x);
 const int *mrc_m1_ghost_dims(struct mrc_m1 *x);
+int mrc_m1_nr_patches(struct mrc_m1 *x);
 
 static inline struct mrc_m1_patch *
 mrc_m1_patch_get(struct mrc_m1 *m1, int p)
@@ -273,7 +281,7 @@ mrc_m1_patch_put(struct mrc_m1 *m1)
   ((m1p)->arr[((m) * (m1p)->_m1->_ghost_dims[0] + (ix) - (m1p)->_m1->_ghost_offs[0])])
 
 #define mrc_m1_foreach_patch(m1, p) \
-  for (int p = 0; p < m1->nr_patches; p++)
+  for (int p = 0; p < mrc_m1_nr_patches(m1); p++)
 
 #define mrc_m1_foreach(m1p, ix, l,r) {			\
   int _l[1] = { -l };					\

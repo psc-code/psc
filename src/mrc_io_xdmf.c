@@ -1117,7 +1117,8 @@ ds_xdmf_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
 
   hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT); H5_CHK(group0);
-  H5LTset_attribute_int(group0, ".", "nr_patches", &m1->nr_patches, 1);
+  int nr_patches = mrc_m1_nr_patches(m1);
+  H5LTset_attribute_int(group0, ".", "nr_patches", &nr_patches, 1);
 
   mrc_m1_foreach_patch(m1, p) {
     struct mrc_m1_patch *m1p = mrc_m1_patch_get(m1, p);
@@ -1177,7 +1178,7 @@ ds_xdmf_read_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
 #endif
 
   hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT); H5_CHK(group0);
-  for (int p = 0; p < m1->nr_patches; p++) {
+  for (int p = 0; p < mrc_m1_nr_patches(m1); p++) {
     struct mrc_m1_patch *m1p = mrc_m1_patch_get(m1, p);
     char name[10]; sprintf(name, "p%d", p);
     hid_t group = H5Gopen(group0, name, H5P_DEFAULT); H5_CHK(group);

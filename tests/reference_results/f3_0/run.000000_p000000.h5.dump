@@ -154,7 +154,7 @@ GROUP "/" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
          DATA {
-         (0): 32, 0, 0
+         (0): 32, 0, 1
          }
       }
       ATTRIBUTE "domain" {
@@ -405,7 +405,7 @@ GROUP "/" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
          DATA {
-         (0): 32, 0, 0
+         (0): 32, 0, 1
          }
       }
       ATTRIBUTE "domain" {
@@ -656,7 +656,7 @@ GROUP "/" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
          DATA {
-         (0): 32, 0, 0
+         (0): 32, 0, 1
          }
       }
       ATTRIBUTE "domain" {
