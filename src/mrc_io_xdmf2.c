@@ -304,10 +304,14 @@ xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3)
 }
 
 static void
-xdmf_write_f1(struct mrc_io *io, const char *path, struct mrc_fld *f1)
+xdmf_write_m1(struct mrc_io *io, const char *path, struct mrc_fld *f1)
 {
   struct xdmf *xdmf = to_xdmf(io);
   struct xdmf_file *file = &xdmf->file;
+
+  if (mrc_fld_nr_patches(f1) != 1) {
+    return;
+  }
 
   hid_t group0 = H5Gopen(file->h5_file, path, H5P_DEFAULT);
   const int i1 = 1, i0 = 0;
@@ -376,7 +380,7 @@ struct mrc_io_ops mrc_io_xdmf2_ops = {
   .close         = xdmf_close,
   .write_attr    = xdmf_write_attr,
   .write_m3      = xdmf_write_m3,
-  .write_f1      = xdmf_write_f1,
+  .write_m1      = xdmf_write_m1,
 };
 
 

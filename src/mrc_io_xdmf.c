@@ -1034,81 +1034,6 @@ ds_xdmf_write_field2d(struct mrc_io *io, float scale, struct mrc_fld *fld,
 }
 
 static void
-ds_xdmf_write_f1(struct mrc_io *io, const char *path, struct mrc_fld *f1)
-{
-  int ierr;
-  struct diag_hdf5 *hdf5 = diag_hdf5(io);
-
-  hid_t group = H5Gopen(hdf5->file, path, H5P_DEFAULT); H5_CHK(group);
-  
-  hsize_t hdims[1] = { f1->_ghost_dims[0] };
-  for (int m = 0; m < mrc_fld_nr_comps(f1); m++) {
-    assert(mrc_fld_comp_name(f1, m));
-    hid_t groupc = H5Gcreate(group, mrc_fld_comp_name(f1, m), H5P_DEFAULT, H5P_DEFAULT,
-			     H5P_DEFAULT); H5_CHK(groupc);
-    ierr = H5LTset_attribute_int(groupc, ".", "m", &m, 1); CE;
-    ierr = H5LTmake_dataset_float(groupc, "1d", 1, hdims,
-				  &MRC_F1(f1, m, f1->_ghost_offs[0])); CE;
-    H5Gclose(groupc);
-  }
-
-  H5Gclose(group);
-}
-
-struct read_f1_cb0_data {
-  struct mrc_io *io;
-  struct mrc_fld *f1;
-  hid_t filespace;
-  hid_t memspace;
-};
-
-static herr_t
-read_f1_cb0(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
-{
-  struct read_f1_cb0_data *data = op_data;
-  herr_t ierr;
-
-  hid_t group = H5Gopen(g_id, name, H5P_DEFAULT); H5_CHK(group);
-  int m;
-  ierr = H5LTget_attribute_int(group, ".", "m", &m); CE;
-  mrc_fld_set_comp_name(data->f1, m, name);
-
-  hid_t dset = H5Dopen(group, "1d", H5P_DEFAULT); H5_CHK(dset);
-  ierr = H5Dread(dset, H5T_NATIVE_FLOAT, data->memspace, data->filespace, H5P_DEFAULT,
-		 &MRC_F1(data->f1, m, data->f1->_ghost_offs[0])); CE;
-  ierr = H5Dclose(dset); CE;
-
-  ierr = H5Gclose(group); CE;
-  return 0;
-}
-
-static void
-ds_xdmf_read_f1(struct mrc_io *io, const char *path, struct mrc_fld *f1)
-{
-  struct diag_hdf5 *hdf5 = diag_hdf5(io);
-  herr_t ierr;
-
-  hid_t group = H5Gopen(hdf5->file, path, H5P_DEFAULT); H5_CHK(group);
-  hsize_t hdims[1] = { f1->_ghost_dims[0] };
-  hid_t filespace = H5Screate_simple(1, hdims, NULL);
-  hid_t memspace = H5Screate_simple(1, hdims, NULL);
-
-  struct read_f1_cb0_data cb_data = {
-    .io        = io,
-    .f1        = f1,
-    .filespace = filespace,
-    .memspace  = memspace,
-  };
-  hsize_t idx = 0;
-  ierr = H5Literate_by_name(group, ".", H5_INDEX_NAME, H5_ITER_INC, &idx,
-			    read_f1_cb0, &cb_data, H5P_DEFAULT); CE;
-  
-  ierr = H5Sclose(filespace); CE;
-  ierr = H5Sclose(memspace); CE;
-  ierr = H5Gclose(group); CE;
-}
-
-static void
 ds_xdmf_write_m1(struct mrc_io *io, const char *path, struct mrc_fld *m1)
 {
   int ierr;
@@ -1422,7 +1347,7 @@ struct mrc_io_ops mrc_io_xdmf_ops = {
   .write_field   = ds_xdmf_write_field,
   .write_field2d = ds_xdmf_write_field2d,
   .write_attr    = ds_xdmf_write_attr,
-  .write_f1      = ds_xdmf_write_f1,
+  .write_m1      = ds_xdmf_write_m1,
   .write_m3      = ds_xdmf_write_m3,
 };
 
@@ -1437,8 +1362,6 @@ struct mrc_io_ops mrc_io_xdmf_serial_ops = {
   .write_field2d = ds_xdmf_write_field2d,
   .write_f3      = ds_xdmf_write_f3,
   .read_f3       = ds_xdmf_read_f3,
-  .write_f1      = ds_xdmf_write_f1,
-  .read_f1       = ds_xdmf_read_f1,
   .write_m1      = ds_xdmf_write_m1,
   .read_m1       = ds_xdmf_read_m1,
   .write_attr    = ds_xdmf_write_attr,
@@ -1457,8 +1380,6 @@ struct mrc_io_ops mrc_io_hdf5_serial_ops = {
   .write_field2d = ds_xdmf_write_field2d,
   .write_fld     = ds_xdmf_write_fld,
   .read_fld      = ds_xdmf_read_fld,
-  .write_f1      = ds_xdmf_write_f1,
-  .read_f1       = ds_xdmf_read_f1,
   .write_m1      = ds_xdmf_write_m1,
   .read_m1       = ds_xdmf_read_m1,
   .write_attr    = ds_xdmf_write_attr,
@@ -1861,10 +1782,12 @@ read_f1_cb(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
 }
 
 static void
-ds_xdmf_parallel_read_f1(struct mrc_io *io, const char *path, struct mrc_fld *f1)
+ds_xdmf_parallel_read_m1(struct mrc_io *io, const char *path, struct mrc_fld *f1)
 {
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
   herr_t ierr;
+
+  assert(mrc_fld_nr_patches(f1) == 1);
 
   assert(io->size == 1);
 #ifndef NDEBUG
@@ -1992,10 +1915,12 @@ ds_xdmf_parallel_read_f3(struct mrc_io *io, const char *path, struct mrc_fld *fl
 }
 
 static void
-ds_xdmf_parallel_write_f1(struct mrc_io *io, const char *path, struct mrc_fld *f1)
+ds_xdmf_parallel_write_m1(struct mrc_io *io, const char *path, struct mrc_fld *f1)
 {
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
   herr_t ierr;
+
+  assert(mrc_fld_nr_patches(f1) == 1);
 
 #ifndef NDEBUG
   MPI_Barrier(io->obj.comm);
@@ -2112,9 +2037,9 @@ struct mrc_io_ops mrc_io_xdmf_parallel_ops = {
   .setup         = ds_xdmf_setup,
   .open          = ds_xdmf_parallel_open,
   .close         = ds_xdmf_parallel_close,
-  .read_f1       = ds_xdmf_parallel_read_f1,
+  .read_m1       = ds_xdmf_parallel_read_m1,
   .read_f3       = ds_xdmf_parallel_read_f3,
-  .write_f1      = ds_xdmf_parallel_write_f1,
+  .write_m1      = ds_xdmf_parallel_write_m1,
   .write_field   = ds_xdmf_parallel_write_field,
   .read_attr     = ds_xdmf_read_attr,
   .write_attr    = ds_xdmf_write_attr,
