@@ -251,7 +251,6 @@ struct mrc_m1 {
   // for mrc_f1 emulation
   int _dim; //< # along this dim of the domain
 
-  int nr_comp;
   struct mrc_m1_patch *patches;
 };
 
@@ -260,6 +259,8 @@ MRC_CLASS_DECLARE(mrc_m1, struct mrc_m1);
 void mrc_m1_set_comp_name(struct mrc_m1 *x, int m, const char *name);
 const char *mrc_m1_comp_name(struct mrc_m1 *x, int m);
 void mrc_m1_set_sw(struct mrc_m1 *x, int sw);
+void mrc_m1_set_nr_comps(struct mrc_m1 *x, int nr_comps);
+int mrc_m1_nr_comps(struct mrc_m1 *x);
 bool mrc_m1_same_shape(struct mrc_m1 *m1_1, struct mrc_m1 *m1_2);
 const int *mrc_m1_dims(struct mrc_m1 *x);
 const int *mrc_m1_ghost_offs(struct mrc_m1 *x);

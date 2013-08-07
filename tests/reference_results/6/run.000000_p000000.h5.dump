@@ -12,7 +12,7 @@ GROUP "/" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
          DATA {
-         (0): 32, 0, 4
+         (0): 32, 1, 4
          }
       }
       ATTRIBUTE "domain" {
@@ -56,13 +56,6 @@ GROUP "/" {
          DATASPACE  SCALAR
          DATA {
          (0): "crd0"
-         }
-      }
-      ATTRIBUTE "nr_comps" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 1
          }
       }
       ATTRIBUTE "offs" {
@@ -119,7 +112,7 @@ GROUP "/" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
          DATA {
-         (0): 32, 0, 4
+         (0): 32, 1, 4
          }
       }
       ATTRIBUTE "domain" {
@@ -163,13 +156,6 @@ GROUP "/" {
          DATASPACE  SCALAR
          DATA {
          (0): "crd0_nc"
-         }
-      }
-      ATTRIBUTE "nr_comps" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 1
          }
       }
       ATTRIBUTE "offs" {
@@ -227,7 +213,7 @@ GROUP "/" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
          DATA {
-         (0): 8, 0, 4
+         (0): 8, 1, 4
          }
       }
       ATTRIBUTE "domain" {
@@ -271,13 +257,6 @@ GROUP "/" {
          DATASPACE  SCALAR
          DATA {
          (0): "crd1"
-         }
-      }
-      ATTRIBUTE "nr_comps" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 1
          }
       }
       ATTRIBUTE "offs" {
@@ -334,7 +313,7 @@ GROUP "/" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
          DATA {
-         (0): 8, 0, 4
+         (0): 8, 1, 4
          }
       }
       ATTRIBUTE "domain" {
@@ -378,13 +357,6 @@ GROUP "/" {
          DATASPACE  SCALAR
          DATA {
          (0): "crd1_nc"
-         }
-      }
-      ATTRIBUTE "nr_comps" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 1
          }
       }
       ATTRIBUTE "offs" {
@@ -442,7 +414,7 @@ GROUP "/" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
          DATA {
-         (0): 8, 0, 4
+         (0): 8, 1, 4
          }
       }
       ATTRIBUTE "domain" {
@@ -486,13 +458,6 @@ GROUP "/" {
          DATASPACE  SCALAR
          DATA {
          (0): "crd2"
-         }
-      }
-      ATTRIBUTE "nr_comps" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 1
          }
       }
       ATTRIBUTE "offs" {
@@ -549,7 +514,7 @@ GROUP "/" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
          DATA {
-         (0): 8, 0, 4
+         (0): 8, 1, 4
          }
       }
       ATTRIBUTE "domain" {
@@ -593,13 +558,6 @@ GROUP "/" {
          DATASPACE  SCALAR
          DATA {
          (0): "crd2_nc"
-         }
-      }
-      ATTRIBUTE "nr_comps" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 1
          }
       }
       ATTRIBUTE "offs" {

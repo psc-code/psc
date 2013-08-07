@@ -16,12 +16,6 @@
 #define to_mrc_m1(o) container_of(o, struct mrc_m1, obj)
 
 static void
-_mrc_m1_create(struct mrc_m1 *m1)
-{
-  m1->_comp_name = calloc(m1->nr_comp, sizeof(*m1->_comp_name));
-}
-
-static void
 _mrc_m1_destroy(struct mrc_m1 *m1)
 {
   for (int p = 0; p < mrc_m1_nr_patches(m1); p++) {
@@ -30,7 +24,7 @@ _mrc_m1_destroy(struct mrc_m1 *m1)
   }
   free(m1->patches);
 
-  for (int m = 0; m < m1->nr_comp; m++) {
+  for (int m = 0; m < m1->_nr_allocated_comp_name; m++) {
     free(m1->_comp_name[m]);
   }
   free(m1->_comp_name);
@@ -39,6 +33,8 @@ _mrc_m1_destroy(struct mrc_m1 *m1)
 static void
 _mrc_m1_setup(struct mrc_m1 *m1)
 {
+  assert(mrc_m1_nr_comps(m1) > 0);
+
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(m1->_domain, &nr_patches);
 
@@ -62,7 +58,7 @@ _mrc_m1_setup(struct mrc_m1 *m1)
   for (int p = 0; p < nr_patches; p++) {
     assert(patches[p].ldims[m1->_dim] == patches[0].ldims[m1->_dim]);
     struct mrc_m1_patch *m1p = &m1->patches[p];
-    int len = m1->_ghost_dims[0] * m1->nr_comp;
+    int len = m1->_ghost_dims[0] * m1->_ghost_dims[1];
     m1p->arr = calloc(len, sizeof(*m1p->arr));
     m1p->_m1 = m1;
   }
@@ -101,24 +97,32 @@ _mrc_m1_read(struct mrc_m1 *m1, struct mrc_io *io)
 {
   m1->_domain = mrc_io_read_ref(io, m1, "domain", mrc_domain);
   
-  m1->_comp_name = calloc(m1->nr_comp, sizeof(*m1->_comp_name));
   mrc_m1_setup(m1);
   mrc_io_read_m1(io, mrc_io_obj_path(io, m1), m1);
 }
 
 void
-mrc_m1_set_comp_name(struct mrc_m1 *m1, int m, const char *name)
+mrc_m1_set_comp_name(struct mrc_m1 *fld, int m, const char *name)
 {
-  assert(m < m1->nr_comp);
-  free(m1->_comp_name[m]);
-  m1->_comp_name[m] = name ? strdup(name) : NULL;
+  int nr_comps = mrc_m1_nr_comps(fld);
+  assert(m < nr_comps);
+  if (nr_comps > fld->_nr_allocated_comp_name) {
+    for (int i = 0; i < fld->_nr_allocated_comp_name; i++) {
+      free(fld->_comp_name[m]);
+    }
+    free(fld->_comp_name);
+    fld->_comp_name = calloc(nr_comps, sizeof(*fld->_comp_name));
+    fld->_nr_allocated_comp_name = nr_comps;
+  }
+  free(fld->_comp_name[m]);
+  fld->_comp_name[m] = name ? strdup(name) : NULL;
 }
 
 const char *
-mrc_m1_comp_name(struct mrc_m1 *m1, int m)
+mrc_m1_comp_name(struct mrc_m1 *fld, int m)
 {
-  assert(m < m1->nr_comp);
-  return m1->_comp_name[m];
+  assert(m < mrc_m1_nr_comps(fld) && m < fld->_nr_allocated_comp_name);
+  return fld->_comp_name[m];
 }
 
 void
@@ -136,7 +140,7 @@ mrc_m1_set_sw(struct mrc_m1 *fld, int sw)
 bool
 mrc_m1_same_shape(struct mrc_m1 *m1_1, struct mrc_m1 *m1_2)
 {
-  if (m1_1->nr_comp != m1_2->nr_comp) return false;
+  if (mrc_m1_nr_comps(m1_1) != mrc_m1_nr_comps(m1_2)) return false;
   if (mrc_m1_nr_patches(m1_1) != mrc_m1_nr_patches(m1_2)) return false;
   if (m1_1->_ghost_dims[0] != m1_2->_ghost_dims[0]) return false;
 
@@ -161,6 +165,35 @@ mrc_m1_ghost_dims(struct mrc_m1 *x)
   return x->_ghost_dims;
 }
 
+static int
+mrc_m1_comp_dim(struct mrc_m1 *fld)
+{
+  if (fld->_domain) {
+    if (fld->_dims.nr_vals == 3) {
+      // emulating mrc_f3, mrc_m3
+      return 1;
+    } else {
+      assert(0);
+    }
+  }
+  assert(0);
+}
+
+int
+mrc_m1_nr_comps(struct mrc_m1 *fld)
+{
+  int comp_dim = mrc_m1_comp_dim(fld);
+  assert(comp_dim < fld->_dims.nr_vals);
+  return fld->_dims.vals[comp_dim];
+}
+
+void
+mrc_m1_set_nr_comps(struct mrc_m1 *fld, int nr_comps)
+{
+  int comp_dim = mrc_m1_comp_dim(fld);
+  fld->_dims.vals[comp_dim] = nr_comps;
+}
+
 int
 mrc_m1_nr_patches(struct mrc_m1 *fld)
 {
@@ -178,7 +211,6 @@ static struct param mrc_m1_params_descr[] = {
   { "dims"            , VAR(_dims)        , PARAM_INT_ARRAY(0, 0) },
   { "sw"              , VAR(_sw)          , PARAM_INT_ARRAY(0, 0) },
 
-  { "nr_comps"        , VAR(nr_comp)      , PARAM_INT(1)           },
   { "dim"             , VAR(_dim)         , PARAM_INT(0)           },
   {},
 };
@@ -188,7 +220,6 @@ struct mrc_class_mrc_m1 mrc_class_mrc_m1 = {
   .name         = "mrc_m1",
   .size         = sizeof(struct mrc_m1),
   .param_descr  = mrc_m1_params_descr,
-  .create       = _mrc_m1_create,
   .destroy      = _mrc_m1_destroy,
   .setup        = _mrc_m1_setup,
   .view         = _mrc_m1_view,

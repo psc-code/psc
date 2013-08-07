@@ -51,13 +51,6 @@ GROUP "/" {
          (0): "crd0"
          }
       }
-      ATTRIBUTE "nr_comps" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 1
-         }
-      }
       GROUP "p0" {
          DATASET "1d" {
             DATATYPE  H5T_IEEE_F32LE
@@ -118,13 +111,6 @@ GROUP "/" {
          DATASPACE  SCALAR
          DATA {
          (0): "crd1"
-         }
-      }
-      ATTRIBUTE "nr_comps" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 1
          }
       }
       GROUP "p0" {
@@ -188,13 +174,6 @@ GROUP "/" {
          DATASPACE  SCALAR
          DATA {
          (0): "crd2"
-         }
-      }
-      ATTRIBUTE "nr_comps" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 1
          }
       }
       GROUP "p0" {

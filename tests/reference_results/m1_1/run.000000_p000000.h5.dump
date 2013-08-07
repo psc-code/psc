@@ -14,7 +14,7 @@ GROUP "/" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
          DATA {
-         (0): 32, 0, 1
+         (0): 32, 1, 1
          }
       }
       ATTRIBUTE "domain" {
@@ -58,13 +58,6 @@ GROUP "/" {
          DATASPACE  SCALAR
          DATA {
          (0): "crd0"
-         }
-      }
-      ATTRIBUTE "nr_comps" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 1
          }
       }
       ATTRIBUTE "nr_patches" {
@@ -125,7 +118,7 @@ GROUP "/" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
          DATA {
-         (0): 32, 0, 1
+         (0): 32, 1, 1
          }
       }
       ATTRIBUTE "domain" {
@@ -169,13 +162,6 @@ GROUP "/" {
          DATASPACE  SCALAR
          DATA {
          (0): "crd1"
-         }
-      }
-      ATTRIBUTE "nr_comps" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 1
          }
       }
       ATTRIBUTE "nr_patches" {
@@ -236,7 +222,7 @@ GROUP "/" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
          DATA {
-         (0): 32, 0, 1
+         (0): 32, 1, 1
          }
       }
       ATTRIBUTE "domain" {
@@ -280,13 +266,6 @@ GROUP "/" {
          DATASPACE  SCALAR
          DATA {
          (0): "crd2"
-         }
-      }
-      ATTRIBUTE "nr_comps" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 1
          }
       }
       ATTRIBUTE "nr_patches" {
@@ -765,7 +744,7 @@ GROUP "/" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
          DATA {
-         (0): 32, 0, 1
+         (0): 32, 2, 1
          }
       }
       ATTRIBUTE "domain" {
@@ -809,13 +788,6 @@ GROUP "/" {
          DATASPACE  SCALAR
          DATA {
          (0): "test_m1"
-         }
-      }
-      ATTRIBUTE "nr_comps" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 2
          }
       }
       ATTRIBUTE "nr_patches" {

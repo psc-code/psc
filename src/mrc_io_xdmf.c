@@ -1127,7 +1127,7 @@ ds_xdmf_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
 			    H5P_DEFAULT); H5_CHK(group);
 
     hsize_t hdims[3] = { mrc_m1_ghost_dims(m1)[0] };
-    for (int m = 0; m < m1->nr_comp; m++) {
+    for (int m = 0; m < mrc_m1_nr_comps(m1); m++) {
       hid_t groupc = H5Gcreate(group, mrc_m1_comp_name(m1, m), H5P_DEFAULT, H5P_DEFAULT,
 			       H5P_DEFAULT); H5_CHK(groupc);
       ierr = H5LTset_attribute_int(groupc, ".", "m", &m, 1); CE;
