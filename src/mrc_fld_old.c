@@ -172,66 +172,43 @@ mrc_m1_set_sw(struct mrc_m1 *fld, int sw)
 bool
 mrc_m1_same_shape(struct mrc_m1 *m1_1, struct mrc_m1 *m1_2)
 {
-  if (mrc_m1_nr_comps(m1_1) != mrc_m1_nr_comps(m1_2)) return false;
-  if (mrc_m1_nr_patches(m1_1) != mrc_m1_nr_patches(m1_2)) return false;
-  if (m1_1->_ghost_dims[0] != m1_2->_ghost_dims[0]) return false;
-
-  return true;
+  return mrc_fld_same_shape(m1_1, m1_2);
 }
 
 const int *
 mrc_m1_dims(struct mrc_m1 *x)
 {
-  return x->_dims.vals;
+  return mrc_fld_dims(x);
 }
 
 const int *
 mrc_m1_ghost_offs(struct mrc_m1 *x)
 {
-  return x->_ghost_offs;
+  return mrc_fld_ghost_offs(x);
 }
 
 const int *
 mrc_m1_ghost_dims(struct mrc_m1 *x)
 {
-  return x->_ghost_dims;
-}
-
-static int
-mrc_m1_comp_dim(struct mrc_m1 *fld)
-{
-  if (fld->_domain) {
-    if (fld->_dims.nr_vals == 3) {
-      // emulating mrc_f3, mrc_m3
-      return 1;
-    } else {
-      assert(0);
-    }
-  }
-  assert(0);
+  return mrc_fld_ghost_dims(x);
 }
 
 int
 mrc_m1_nr_comps(struct mrc_m1 *fld)
 {
-  int comp_dim = mrc_m1_comp_dim(fld);
-  assert(comp_dim < fld->_dims.nr_vals);
-  return fld->_dims.vals[comp_dim];
+  return mrc_fld_nr_comps(fld);
 }
 
 void
 mrc_m1_set_nr_comps(struct mrc_m1 *fld, int nr_comps)
 {
-  int comp_dim = mrc_m1_comp_dim(fld);
-  fld->_dims.vals[comp_dim] = nr_comps;
+  mrc_fld_set_nr_comps(fld, nr_comps);
 }
 
 int
 mrc_m1_nr_patches(struct mrc_m1 *fld)
 {
-  assert(fld->_domain);
-  assert(fld->_dims.nr_vals == 3);
-  return fld->_ghost_dims[2];
+  return mrc_fld_nr_patches(fld);
 }
 
 // ----------------------------------------------------------------------

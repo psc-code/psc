@@ -197,9 +197,8 @@ mrc_fld_comp_dim(struct mrc_fld *fld)
     if (fld->_dims.nr_vals > 3) {
       // emulating mrc_f3, mrc_m3
       return 3;
-    } else if (fld->_dims.nr_vals == 2) {
-      // emulating mrc_fld
-      assert(fld->_dim >= 0);
+    } else if (fld->_dims.nr_vals == 2 || fld->_dims.nr_vals == 3) {
+      // emulating mrc_f1, mrc_m1
       return 1;
     } else {
       assert(0);
@@ -283,14 +282,14 @@ mrc_fld_set_sw(struct mrc_fld *fld, int sw)
 // mrc_fld_nr_patches
 //
 // returns the number of patches on the this processor that comprise the
-// local domain (only works on former "mrc_fld" for now)
+// local domain (only works on former "mrc_m1/m3" for now)
 
 int
 mrc_fld_nr_patches(struct mrc_fld *fld)
 {
   assert(fld->_domain);
-  assert(fld->_dims.nr_vals == 5);
-  return fld->_ghost_dims[4];
+  assert(fld->_dims.nr_vals == 3 || fld->_dims.nr_vals == 5);
+  return fld->_ghost_dims[fld->_dims.nr_vals - 1];
 }
 
 // ----------------------------------------------------------------------
