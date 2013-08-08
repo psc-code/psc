@@ -41,10 +41,6 @@ libmhd_la_SOURCES = \
 	\
 	mrc_ts_monitor_ggcm.c \
 	\
-	mrc_crds_gen.c \
-	mrc_crds_gen_ggcm_x.c \
-	mrc_crds_gen_ggcm_yz.c \
-	\
 	mrc_crds_gaussian.c
 
 

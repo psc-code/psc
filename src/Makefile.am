@@ -18,6 +18,9 @@ libmrc_la_SOURCES = \
 	mrc_domain_amr.c \
 	mrc_domain_lib.c \
 	mrc_crds.c \
+	mrc_crds_gen.c \
+	mrc_crds_gen_ggcm_x.c \
+	mrc_crds_gen_ggcm_yz.c \
 	mrc_vec.c \
 	mrc_fld.c \
 	mrc_params.c \
