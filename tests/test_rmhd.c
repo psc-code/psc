@@ -77,28 +77,6 @@ _rmhd_setup(struct rmhd *rmhd)
 
   rmhd_setup_member_objs(rmhd);
 
-  int gdims[3];
-  mrc_domain_get_global_dims(crds->domain, gdims);
-  struct mrc_patch_info info;
-  mrc_domain_get_local_patch_info(crds->domain, 0, &info);
-
-  for (int d = 0; d < 3; d ++) {
-    struct mrc_crds_gen *gen = crds->crds_gen[d];
-    mrc_crds_gen_view(gen);
-    
-    float *xx = malloc((gdims[d] + 2*BND + 1) * sizeof(float));
-    float *dx = malloc((gdims[d] + 2*BND + 1) * sizeof(float));
-
-    mrc_crds_gen_run(gen, xx + BND, dx + BND);
-
-    // shift to beginning of local domain
-    float *xxl = xx + BND + info.off[d];
-
-    mrc_m1_foreach_bnd(crds->crd[d], ix) {
-      MRC_CRD(crds, d, ix) = xxl[ix];
-    } mrc_m1_foreach_end;
-  }
-
   rmhd->By0 = rmhd_get_fld(rmhd, 1, "By0");
 }
 

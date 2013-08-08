@@ -186,6 +186,34 @@ mrc_crds_rectilinear_setup(struct mrc_crds *crds)
     return;
 
   mrc_crds_alloc(crds);
+
+  int gdims[3];
+  mrc_domain_get_global_dims(crds->domain, gdims);
+  int nr_patches;
+  struct mrc_patch *patches = mrc_domain_get_patches(crds->domain, &nr_patches);
+  int sw = crds->sw;
+
+  for (int d = 0; d < 3; d ++) {
+    struct mrc_crds_gen *gen = crds->crds_gen[d];
+    mrc_crds_gen_view(gen);
+    
+    float *xx = malloc((gdims[d] + 2*sw + 1) * sizeof(float));
+    float *dx = malloc((gdims[d] + 2*sw + 1) * sizeof(float));
+
+    mrc_crds_gen_run(gen, xx + sw, dx + sw);
+
+    mrc_m1_foreach_patch(crds->crd[d], p) {
+      // shift to beginning of local domain
+      float *xxl = xx + sw + patches[p].off[d];
+
+      mrc_m1_foreach_bnd(crds->crd[d], ix) {
+	MRC_MCRD(crds, d, ix, p) = xxl[ix];
+      } mrc_m1_foreach_end;
+    }
+
+    free(xx);
+    free(dx);
+  }
 }
 
 static struct mrc_crds_ops mrc_crds_rectilinear_ops = {
