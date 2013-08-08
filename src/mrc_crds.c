@@ -20,27 +20,8 @@ struct mrc_crds_ops *mrc_crds_ops(struct mrc_crds *crds)
 // mrc_crds_* wrappers
 
 static void
-_mrc_crds_create(struct mrc_crds *crds)
-{
-  for (int d = 0; d < 3; d++) {
-    crds->crd[d] = mrc_fld_create(mrc_crds_comm(crds));
-    char s[5]; sprintf(s, "crd%d", d);
-    mrc_fld_set_name(crds->crd[d], s);
-  }
-}
-
-static void
-_mrc_crds_destroy(struct mrc_crds *crds)
-{
-  for (int d = 0; d < 3; d++) {
-    mrc_fld_destroy(crds->crd[d]);
-  }
-}
-
-static void
 _mrc_crds_read(struct mrc_crds *crds, struct mrc_io *io)
 {
-  crds->domain = mrc_io_read_ref(io, crds, "domain", mrc_domain);
   for (int d = 0; d < 3; d++) {
     char s[5];
     sprintf(s, "crd%d", d);
@@ -51,7 +32,6 @@ _mrc_crds_read(struct mrc_crds *crds, struct mrc_io *io)
 static void
 _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 {
-  mrc_io_write_ref(io, crds, "domain", crds->domain);
   for (int d = 0; d < 3; d++) {
     int slab_off_save[3], slab_dims_save[3];
     if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) { // FIXME
@@ -155,6 +135,8 @@ static void
 mrc_crds_alloc(struct mrc_crds *crds)
 {
   for (int d = 0; d < 3; d++) {
+    char s[7]; sprintf(s, "crd[%d]", d);
+    mrc_fld_set_name(crds->crd[d], s);
     mrc_fld_set_param_obj(crds->crd[d], "domain", crds->domain);
     mrc_fld_set_param_int_array(crds->crd[d], "dims", 3, NULL);
     mrc_fld_set_param_int(crds->crd[d], "dim", d);
@@ -366,8 +348,11 @@ static struct param mrc_crds_params_descr[] = {
   { "l"              , VAR(xl)            , PARAM_FLOAT3(0., 0., 0.) },
   { "h"              , VAR(xh)            , PARAM_FLOAT3(1., 1., 1.) },
   { "sw"             , VAR(sw)            , PARAM_INT(0)             },
-
   { "domain"         , VAR(domain)        , PARAM_OBJ(mrc_domain)    },
+
+  { "crd[0]"         , VAR(crd[0])        , MRC_VAR_OBJ(mrc_fld)     },
+  { "crd[1]"         , VAR(crd[1])        , MRC_VAR_OBJ(mrc_fld)     },
+  { "crd[2]"         , VAR(crd[2])        , MRC_VAR_OBJ(mrc_fld)     },
 
   {},
 };
@@ -378,8 +363,6 @@ struct mrc_class_mrc_crds mrc_class_mrc_crds = {
   .size         = sizeof(struct mrc_crds),
   .param_descr  = mrc_crds_params_descr,
   .init         = mrc_crds_init,
-  .create       = _mrc_crds_create,
-  .destroy      = _mrc_crds_destroy,
   .write        = _mrc_crds_write,
   .read         = _mrc_crds_read,
 };

@@ -1,6 +1,6 @@
 HDF5 "run.000000_p000000.h5" {
 GROUP "/" {
-   GROUP "crd0" {
+   GROUP "crd[0]" {
       GROUP "p0" {
          ATTRIBUTE "xh" {
             DATATYPE  H5T_IEEE_F32LE
@@ -18,7 +18,7 @@ GROUP "/" {
          }
       }
    }
-   GROUP "crd1" {
+   GROUP "crd[1]" {
       GROUP "p0" {
          ATTRIBUTE "xh" {
             DATATYPE  H5T_IEEE_F32LE
@@ -36,7 +36,7 @@ GROUP "/" {
          }
       }
    }
-   GROUP "crd2" {
+   GROUP "crd[2]" {
       GROUP "p0" {
          ATTRIBUTE "xh" {
             DATATYPE  H5T_IEEE_F32LE
