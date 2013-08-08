@@ -1,5 +1,6 @@
 
 #include <mrc_crds.h>
+#include <mrc_crds_gen.h>
 #include <mrc_params.h>
 #include <mrc_domain.h>
 #include <mrc_io.h>
@@ -18,6 +19,22 @@ struct mrc_crds_ops *mrc_crds_ops(struct mrc_crds *crds)
 
 // ----------------------------------------------------------------------
 // mrc_crds_* wrappers
+
+static void
+_mrc_crds_create(struct mrc_crds *crds)
+{
+  for (int d = 0; d < 3; d++) {
+    char s[20];
+
+    sprintf(s, "crd[%d]", d);
+    mrc_fld_set_name(crds->crd[d], s);
+
+    sprintf(s, "crds_gen_%c", 'x' + d);
+    mrc_crds_gen_set_name(crds->crds_gen[d], s);
+    mrc_crds_gen_set_param_int(crds->crds_gen[d], "d", d);
+    mrc_crds_gen_set_param_obj(crds->crds_gen[d], "crds", crds);
+  }
+}
 
 static void
 _mrc_crds_read(struct mrc_crds *crds, struct mrc_io *io)
@@ -117,8 +134,6 @@ static void
 mrc_crds_alloc(struct mrc_crds *crds)
 {
   for (int d = 0; d < 3; d++) {
-    char s[7]; sprintf(s, "crd[%d]", d);
-    mrc_fld_set_name(crds->crd[d], s);
     mrc_fld_set_param_obj(crds->crd[d], "domain", crds->domain);
     mrc_fld_set_param_int_array(crds->crd[d], "dims", 3, NULL);
     mrc_fld_set_param_int(crds->crd[d], "dim", d);
@@ -241,6 +256,10 @@ static struct param mrc_crds_params_descr[] = {
   { "crd[1]"         , VAR(crd[1])        , MRC_VAR_OBJ(mrc_fld)     },
   { "crd[2]"         , VAR(crd[2])        , MRC_VAR_OBJ(mrc_fld)     },
 
+  { "crds_gen_x"     , VAR(crds_gen[0])   , MRC_VAR_OBJ(mrc_crds_gen)},
+  { "crds_gen_y"     , VAR(crds_gen[1])   , MRC_VAR_OBJ(mrc_crds_gen)},
+  { "crds_gen_z"     , VAR(crds_gen[2])   , MRC_VAR_OBJ(mrc_crds_gen)},
+
   {},
 };
 #undef VAR
@@ -250,6 +269,7 @@ struct mrc_class_mrc_crds mrc_class_mrc_crds = {
   .size         = sizeof(struct mrc_crds),
   .param_descr  = mrc_crds_params_descr,
   .init         = mrc_crds_init,
+  .create       = _mrc_crds_create,
   .write        = _mrc_crds_write,
   .read         = _mrc_crds_read,
 };

@@ -16,6 +16,8 @@ struct mrc_crds {
   struct mrc_domain *domain;
   struct mrc_fld *crd[3];
   struct mrc_fld *crd_nc[3];
+
+  struct mrc_crds_gen *crds_gen[3];
 };
 
 #define MRC_CRD(crds, d, ix) MRC_F1((crds)->crd[d],0, ix)
