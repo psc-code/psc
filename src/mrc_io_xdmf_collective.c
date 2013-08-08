@@ -187,9 +187,11 @@ xdmf_collective_write_attr(struct mrc_io *io, const char *path, int type,
     break;
   }
   case PT_FLOAT:
+  case MRC_VAR_FLOAT:
     ierr = H5LTset_attribute_float(group, ".", name, &pv->u_float, 1); CE;
     break;
   case PT_DOUBLE:
+  case MRC_VAR_DOUBLE:
     ierr = H5LTset_attribute_double(group, ".", name, &pv->u_double, 1); CE;
     break;
   case PT_STRING:
@@ -544,7 +546,7 @@ xdmf_collective_write_m1(struct mrc_io *io, const char *path, struct mrc_fld *m1
       collective_m1_recv_begin(io, &ctx, m1->_domain, f1, m);
       collective_m1_send_begin(io, &ctx, m1, m);
       collective_m1_recv_end(io, &ctx);
-      collective_m1_write_f1(io, path, f1, m, group0);
+      collective_m1_write_f1(io, path, f1, 0, group0);
       collective_m1_send_end(io, &ctx);
     }
     ierr = H5Gclose(group0); CE;
