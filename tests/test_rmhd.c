@@ -1,10 +1,11 @@
-#define BOUNDS_CHECK
+
 #include <mrc_ts.h>
 #include <mrc_fld.h>
 #include <mrc_domain.h>
 #include <mrc_params.h>
 #include <mrc_nr.h>
 #include <mrc_bits.h>
+#include <mrc_crds_gen.h>
 
 #include <mrc_ts_monitor_private.h>
 #include <mrc_ts_private.h>
@@ -54,8 +55,8 @@ _rmhd_create(struct rmhd *rmhd)
 {
   rmhd->domain = mrc_domain_create(rmhd_comm(rmhd));
   mrc_domain_set_param_int3(rmhd->domain, "m", (int [3]) { 100, 1, 1 });
-  struct mrc_crds *crds = mrc_domain_get_crds(rmhd->domain);
-  mrc_crds_set_type(crds, "rectilinear_jr2");
+  //  struct mrc_crds *crds = mrc_domain_get_crds(rmhd->domain);
+  //  mrc_crds_set_type(crds, "rectilinear_jr2");
 }
 
 static void
@@ -83,6 +84,35 @@ _rmhd_setup(struct rmhd *rmhd)
   mrc_crds_set_param_float3(crds, "h", (float [3]) {  rmhd->Lx / 2. });
   mrc_crds_set_param_int(crds, "sw", BND);
   mrc_domain_setup(rmhd->domain);
+
+  int gdims[3];
+  mrc_domain_get_global_dims(crds->domain, gdims);
+  struct mrc_patch_info info;
+  mrc_domain_get_local_patch_info(crds->domain, 0, &info);
+
+  for (int d = 0; d < 1; d++) {
+    struct mrc_crds_gen *gen = mrc_crds_gen_create(rmhd_comm(rmhd));
+    mrc_crds_gen_set_name(gen, "crds_gen_x");
+    mrc_crds_gen_set_param_obj(gen, "crds", crds);
+    mrc_crds_gen_set_param_int(gen, "d", d);
+    mrc_crds_gen_set_from_options(gen);
+    mrc_crds_gen_setup(gen);
+    mrc_crds_gen_view(gen);
+    
+    float *xx = malloc((gdims[d] + 2*BND + 1) * sizeof(float));
+    float *dx = malloc((gdims[d] + 2*BND + 1) * sizeof(float));
+
+    mrc_crds_gen_run(gen, xx + BND, dx + BND);
+
+    // shift to beginning of local domain
+    float *xxl = xx + BND + info.off[d];
+
+    mrc_m1_foreach_bnd(crds->crd[d], ix) {
+      MRC_CRD(crds, d, ix) = xxl[ix];
+    } mrc_m1_foreach_end;
+
+    mrc_crds_gen_destroy(gen);
+  }
 
   rmhd->By0 = rmhd_get_fld(rmhd, 1, "By0");
 }
