@@ -107,8 +107,8 @@ mrc_crds_gaussian_setup(struct mrc_crds *crds)
   assert(crds->domain);
   if (!mrc_domain_is_setup(crds->domain))
     return;
-  int sw = crds->par.sw;
-  float *xl = crds->par.xl, *xh = crds->par.xh;
+  int sw = crds->sw;
+  float *xl = crds->xl, *xh = crds->xh;
 
 
   int gdims[3];
@@ -156,8 +156,8 @@ mrc_crds_two_gaussian_setup(struct mrc_crds *crds)
   assert(crds->domain);
   if (!mrc_domain_is_setup(crds->domain))
     return;
-  int sw = crds->par.sw;
-  float *xl = crds->par.xl, *xh = crds->par.xh;
+  int sw = crds->sw;
+  float *xl = crds->xl, *xh = crds->xh;
   
 
   int gdims[3];
@@ -205,8 +205,8 @@ mrc_crds_gaussian_2D_setup(struct mrc_crds *crds)
   assert(crds->domain);
   if (!mrc_domain_is_setup(crds->domain))
     return;
-  int sw = crds->par.sw;
-  float *xl = crds->par.xl, *xh = crds->par.xh;
+  int sw = crds->sw;
+  float *xl = crds->xl, *xh = crds->xh;
 
   int gdims[3];
   mrc_domain_get_global_dims(crds->domain, gdims);

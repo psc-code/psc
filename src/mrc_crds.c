@@ -74,7 +74,7 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 	mrc_fld_set_comp_name(crd_nc, 0, s);
 
 	mrc_m1_foreach_patch(crd_nc, p) {
-	  if (crds->par.sw > 0) {
+	  if (crds->sw > 0) {
 	    mrc_m1_foreach(crd_cc, i, 0, 1) {
 	      MRC_M1(crd_nc,0, i, p) = .5 * (MRC_M1(crd_cc,0, i-1, p) + MRC_M1(crd_cc,0, i, p));
 	    } mrc_m1_foreach_end;
@@ -127,12 +127,12 @@ mrc_crds_get_xl_xh(struct mrc_crds *crds, float xl[3], float xh[3])
 {
   if (xl) {
     for (int d = 0; d < 3; d++) {
-      xl[d] = crds->par.xl[d];
+      xl[d] = crds->xl[d];
     }
   }
   if (xh) {
     for (int d = 0; d < 3; d++) {
-      xh[d] = crds->par.xh[d];
+      xh[d] = crds->xh[d];
     }
   }
 }
@@ -144,7 +144,7 @@ mrc_crds_get_dx(struct mrc_crds *crds, float dx[3])
   mrc_domain_get_global_dims(crds->domain, gdims);
   // FIXME, only makes sense for uniform coords, should be dispatched!!!
   for (int d = 0; d < 3; d++) {
-    dx[d] = (crds->par.xh[d] - crds->par.xl[d]) / gdims[d];
+    dx[d] = (crds->xh[d] - crds->xl[d]) / gdims[d];
   }
 }
 
@@ -156,7 +156,7 @@ mrc_crds_alloc(struct mrc_crds *crds)
     crds->crd[d] = mrc_domain_m1_create(crds->domain);
     char s[5]; sprintf(s, "crd%d", d);
     mrc_fld_set_name(crds->crd[d], s);
-    mrc_fld_set_sw(crds->crd[d], crds->par.sw);
+    mrc_fld_set_sw(crds->crd[d], crds->sw);
     mrc_fld_set_param_int(crds->crd[d], "dim", d);
     mrc_fld_setup(crds->crd[d]);
     mrc_fld_set_comp_name(crds->crd[d], 0, s);
@@ -175,7 +175,7 @@ mrc_crds_uniform_setup(struct mrc_crds *crds)
 
   int gdims[3];
   mrc_domain_get_global_dims(crds->domain, gdims);
-  float *xl = crds->par.xl, *xh = crds->par.xh;
+  float *xl = crds->xl, *xh = crds->xh;
 
   mrc_crds_alloc(crds);
   struct mrc_patch *patches = mrc_domain_get_patches(crds->domain, NULL);
@@ -203,7 +203,7 @@ mrc_crds_rectilinear_set_values(struct mrc_crds *crds, float *crdx, int mx,
 {
   float *crd[3] = { crdx, crdy, crdz };
   for (int d = 0; d < 3; d++) {
-    memcpy(crds->crd[d]->_arr, crd[d] - crds->par.sw, crds->crd[d]->_len * sizeof(*crd[d]));
+    memcpy(crds->crd[d]->_arr, crd[d] - crds->sw, crds->crd[d]->_len * sizeof(*crd[d]));
   }
 }
 
@@ -253,8 +253,8 @@ mrc_crds_rectilinear_jr2_setup(struct mrc_crds *crds)
   if (!mrc_domain_is_setup(crds->domain))
     return;
 
-  int sw = crds->par.sw;
-  float *xl = crds->par.xl, *xh = crds->par.xh;
+  int sw = crds->sw;
+  float *xl = crds->xl, *xh = crds->xh;
 
   int gdims[3];
   mrc_domain_get_global_dims(crds->domain, gdims);
@@ -302,7 +302,7 @@ mrc_crds_amr_uniform_setup(struct mrc_crds *crds)
 
   int gdims[3];
   mrc_domain_get_global_dims(crds->domain, gdims);
-  float *xl = crds->par.xl, *xh = crds->par.xh;
+  float *xl = crds->xl, *xh = crds->xh;
 
   mrc_crds_alloc(crds);
   for (int d = 0; d < 3; d++) {
@@ -361,7 +361,7 @@ mrc_crds_init()
 // ======================================================================
 // mrc_crds class
 
-#define VAR(x) (void *)offsetof(struct mrc_crds_params, x)
+#define VAR(x) (void *)offsetof(struct mrc_crds, x)
 static struct param mrc_crds_params_descr[] = {
   { "l"              , VAR(xl)            , PARAM_FLOAT3(0., 0., 0.) },
   { "h"              , VAR(xh)            , PARAM_FLOAT3(1., 1., 1.) },
@@ -374,7 +374,6 @@ struct mrc_class_mrc_crds mrc_class_mrc_crds = {
   .name         = "mrc_crds",
   .size         = sizeof(struct mrc_crds),
   .param_descr  = mrc_crds_params_descr,
-  .param_offset = offsetof(struct mrc_crds, par),
   .init         = mrc_crds_init,
   .destroy      = _mrc_crds_destroy,
   .write        = _mrc_crds_write,

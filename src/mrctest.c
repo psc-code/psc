@@ -306,12 +306,12 @@ mrctest_m3_compare(struct mrc_fld *m3_1, struct mrc_fld *m3_2)
 void
 mrctest_crds_compare(struct mrc_crds *crds1, struct mrc_crds *crds2)
 {
-  int sw = crds1->par.sw;
+  int sw = crds1->sw;
 
-  assert(crds1->par.sw == crds2->par.sw);
+  assert(crds1->sw == crds2->sw);
   for (int d = 0; d < 3; d++) {
-    assert(crds1->par.xl[d] == crds2->par.xl[d]);
-    assert(crds1->par.xh[d] == crds2->par.xh[d]);
+    assert(crds1->xl[d] == crds2->xl[d]);
+    assert(crds1->xh[d] == crds2->xh[d]);
   }
 
   assert(strcmp(mrc_crds_type(crds1), mrc_crds_type(crds2)) == 0);

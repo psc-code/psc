@@ -5,15 +5,14 @@
 #include <mrc_obj.h>
 #include <mrc_fld.h>
 
-struct mrc_crds_params {
+struct mrc_crds {
+  struct mrc_obj obj;
+  // parameters
   float xl[3];
   float xh[3];
   int sw;
-};
 
-struct mrc_crds {
-  struct mrc_obj obj;
-  struct mrc_crds_params par;
+  // state
   struct mrc_domain *domain;
   struct mrc_fld *crd[3];
   struct mrc_fld *crd_nc[3];
