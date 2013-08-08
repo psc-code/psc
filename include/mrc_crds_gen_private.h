@@ -18,6 +18,7 @@ struct mrc_crds_gen_ops {
 
 #define mrc_crds_gen_ops(gen) ((struct mrc_crds_gen_ops *)(gen)->obj.ops)
 
+extern struct mrc_crds_gen_ops mrc_crds_gen_uniform_ops;
 extern struct mrc_crds_gen_ops mrc_crds_gen_ggcm_x_ops;
 extern struct mrc_crds_gen_ops mrc_crds_gen_ggcm_yz_ops;
 
