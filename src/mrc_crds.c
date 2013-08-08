@@ -36,7 +36,6 @@ _mrc_crds_read(struct mrc_crds *crds, struct mrc_io *io)
     sprintf(s, "crd%d", d);
     crds->crd[d] = mrc_io_read_ref(io, crds, s, mrc_fld);
   }
-  mrc_crds_setup(crds);
 }
 
 static void
