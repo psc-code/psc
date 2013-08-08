@@ -105,21 +105,6 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 }
 
 void
-mrc_crds_get_xl_xh(struct mrc_crds *crds, float xl[3], float xh[3])
-{
-  if (xl) {
-    for (int d = 0; d < 3; d++) {
-      xl[d] = crds->xl[d];
-    }
-  }
-  if (xh) {
-    for (int d = 0; d < 3; d++) {
-      xh[d] = crds->xh[d];
-    }
-  }
-}
-
-void
 mrc_crds_get_dx(struct mrc_crds *crds, float dx[3])
 {
   int gdims[3];
@@ -131,7 +116,7 @@ mrc_crds_get_dx(struct mrc_crds *crds, float dx[3])
 }
 
 static void
-_mrc_crds_setup(struct mrc_crds *crds)
+mrc_crds_setup_alloc_only(struct mrc_crds *crds)
 {
   assert(crds->domain && mrc_domain_is_setup(crds->domain));
 
@@ -146,6 +131,39 @@ _mrc_crds_setup(struct mrc_crds *crds)
   }
 }
 
+static void
+_mrc_crds_setup(struct mrc_crds *crds)
+{
+  mrc_crds_setup_alloc_only(crds);
+
+  int gdims[3];
+  mrc_domain_get_global_dims(crds->domain, gdims);
+  int nr_patches;
+  struct mrc_patch *patches = mrc_domain_get_patches(crds->domain, &nr_patches);
+  int sw = crds->sw;
+
+  for (int d = 0; d < 3; d ++) {
+    struct mrc_fld *x = mrc_fld_create(MPI_COMM_SELF);
+    mrc_fld_set_param_int_array(x, "dims", 2, (int[2]) { gdims[d] + 1, 2 });
+    mrc_fld_set_param_int_array(x, "sw"  , 2, (int[2]) { sw, 0 });
+    mrc_fld_setup(x);
+
+    struct mrc_crds_gen *gen = crds->crds_gen[d];
+    mrc_crds_gen_run(gen, &MRC_S2(x, 0, 0), &MRC_S2(x, 0, 1));
+
+    mrc_m1_foreach_patch(crds->crd[d], p) {
+      // shift to beginning of local domain
+      int off = patches[p].off[d];
+
+      mrc_m1_foreach_bnd(crds->crd[d], ix) {
+	MRC_MCRD(crds, d, ix, p) = MRC_S2(x, ix + off, 0);
+      } mrc_m1_foreach_end;
+    }
+
+    mrc_fld_destroy(x);
+  }
+}
+
 // ======================================================================
 // mrc_crds_uniform
 
@@ -157,33 +175,6 @@ mrc_crds_uniform_setup(struct mrc_crds *crds)
   }
 
   mrc_crds_setup_super(crds);
-
-  int gdims[3];
-  mrc_domain_get_global_dims(crds->domain, gdims);
-  int nr_patches;
-  struct mrc_patch *patches = mrc_domain_get_patches(crds->domain, &nr_patches);
-  int sw = crds->sw;
-
-  for (int d = 0; d < 3; d ++) {
-    struct mrc_fld *x = mrc_fld_create(MPI_COMM_SELF);
-    mrc_fld_set_param_int_array(x, "dims", 2, (int[2]) { gdims[d] + 1, 2 });
-    mrc_fld_set_param_int_array(x, "sw"  , 2, (int[2]) { sw, 0 });
-    mrc_fld_setup(x);
-
-    struct mrc_crds_gen *gen = crds->crds_gen[d];
-    mrc_crds_gen_run(gen, &MRC_S2(x, 0, 0), &MRC_S2(x, 0, 1));
-
-    mrc_m1_foreach_patch(crds->crd[d], p) {
-      // shift to beginning of local domain
-      int off = patches[p].off[d];
-
-      mrc_m1_foreach_bnd(crds->crd[d], ix) {
-	MRC_MCRD(crds, d, ix, p) = MRC_S2(x, ix + off, 0);
-      } mrc_m1_foreach_end;
-    }
-
-    mrc_fld_destroy(x);
-  }
 }
 
 static struct mrc_crds_ops mrc_crds_uniform_ops = {
@@ -194,42 +185,8 @@ static struct mrc_crds_ops mrc_crds_uniform_ops = {
 // ======================================================================
 // mrc_crds_rectilinear
 
-static void
-mrc_crds_rectilinear_setup(struct mrc_crds *crds)
-{
-  mrc_crds_setup_super(crds);
-
-  int gdims[3];
-  mrc_domain_get_global_dims(crds->domain, gdims);
-  int nr_patches;
-  struct mrc_patch *patches = mrc_domain_get_patches(crds->domain, &nr_patches);
-  int sw = crds->sw;
-
-  for (int d = 0; d < 3; d ++) {
-    struct mrc_fld *x = mrc_fld_create(MPI_COMM_SELF);
-    mrc_fld_set_param_int_array(x, "dims", 2, (int[2]) { gdims[d] + 1, 2 });
-    mrc_fld_set_param_int_array(x, "sw"  , 2, (int[2]) { sw, 0 });
-    mrc_fld_setup(x);
-
-    struct mrc_crds_gen *gen = crds->crds_gen[d];
-    mrc_crds_gen_run(gen, &MRC_S2(x, 0, 0), &MRC_S2(x, 0, 1));
-
-    mrc_m1_foreach_patch(crds->crd[d], p) {
-      // shift to beginning of local domain
-      int off = patches[p].off[d];
-
-      mrc_m1_foreach_bnd(crds->crd[d], ix) {
-	MRC_MCRD(crds, d, ix, p) = MRC_S2(x, ix + off, 0);
-      } mrc_m1_foreach_end;
-    }
-
-    mrc_fld_destroy(x);
-  }
-}
-
 static struct mrc_crds_ops mrc_crds_rectilinear_ops = {
   .name       = "rectilinear",
-  .setup      = mrc_crds_rectilinear_setup,
 };
 
 // ======================================================================
@@ -240,7 +197,7 @@ static struct mrc_crds_ops mrc_crds_rectilinear_ops = {
 static void
 mrc_crds_amr_uniform_setup(struct mrc_crds *crds)
 {
-  mrc_crds_setup_super(crds);
+  mrc_crds_setup_alloc_only(crds);
 
   int gdims[3];
   mrc_domain_get_global_dims(crds->domain, gdims);

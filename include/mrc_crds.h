@@ -32,7 +32,6 @@ struct mrc_crds {
 
 MRC_CLASS_DECLARE(mrc_crds, struct mrc_crds);
 
-void mrc_crds_get_xl_xh(struct mrc_crds *crds, float xl[3], float xh[3]);
 void mrc_crds_get_dx(struct mrc_crds *crds, float dx[3]);
 
 struct mrc_crds_ops {
