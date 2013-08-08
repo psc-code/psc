@@ -113,7 +113,7 @@ mrctest_create_domain_rectilinear(MPI_Comm comm, struct mrctest_domain_params *p
 }
 
 void
-mrctest_set_crds_multi_rectilinear_1(struct mrc_domain *domain)
+mrctest_set_crds_rectilinear_1(struct mrc_domain *domain)
 {
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   int sw;
@@ -126,22 +126,6 @@ mrctest_set_crds_multi_rectilinear_1(struct mrc_domain *domain)
 	MRC_M1(crds->crd[d], 0, ix, p) = jx*jx;
       } mrc_m1_foreach_end;
     }
-  }
-}
-
-void
-mrctest_set_crds_rectilinear_1(struct mrc_domain *domain)
-{
-  struct mrc_crds *crds = mrc_domain_get_crds(domain);
-  int sw;
-  mrc_crds_get_param_int(crds, "sw", &sw);
-  struct mrc_patch_info info;
-  mrc_domain_get_local_patch_info(domain, 0, &info);
-  for (int d = 0; d < 3; d++) {
-    mrc_f1_foreach(crds->crd[d], ix, sw, sw) {
-      int jx = ix + info.off[d];
-      MRC_F1(crds->crd[d], 0, ix) = jx*jx*jx;
-    } mrc_f1_foreach_end;
   }
 }
 

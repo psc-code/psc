@@ -217,24 +217,6 @@ static struct mrc_crds_ops mrc_crds_amr_uniform_ops = {
 };
 
 // ======================================================================
-// mrc_crds_multi_rectilinear
-
-static void
-mrc_crds_multi_rectilinear_setup(struct mrc_crds *crds)
-{
-  assert(crds->domain);
-  if (!mrc_domain_is_setup(crds->domain))
-    return;
-
-  mrc_crds_alloc(crds);
-}
-
-static struct mrc_crds_ops mrc_crds_multi_rectilinear_ops = {
-  .name  = "multi_rectilinear",
-  .setup = mrc_crds_multi_rectilinear_setup,
-};
-
-// ======================================================================
 // mrc_crds_init
 
 static void
@@ -242,7 +224,6 @@ mrc_crds_init()
 {
   mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_uniform_ops);
   mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_rectilinear_ops);
-  mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_multi_rectilinear_ops);
   mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_amr_uniform_ops);
 }
 

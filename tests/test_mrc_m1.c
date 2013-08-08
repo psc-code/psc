@@ -94,8 +94,8 @@ main(int argc, char **argv)
   mrc_domain_setup(domain);
   mrc_domain_view(domain);
   
-  if (strcmp(mrc_crds_type(crds), "multi_rectilinear") == 0) {
-    mrctest_set_crds_multi_rectilinear_1(domain);
+  if (strcmp(mrc_crds_type(crds), "rectilinear") == 0) {
+    mrctest_set_crds_rectilinear_1(domain);
   }
 
   struct mrc_fld *m1 = mrc_domain_m1_create(domain);

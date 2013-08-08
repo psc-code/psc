@@ -41,7 +41,6 @@ struct mrc_domain *mrctest_create_domain_rectilinear(MPI_Comm comm,
 						     struct mrctest_domain_params *par);
 void mrctest_domain_init_values_0(struct mrc_fld *f);
 void mrctest_domain(void (*mod_domain)(struct mrc_mod *mod, void *arg));
-void mrctest_set_crds_multi_rectilinear_1(struct mrc_domain *domain);
 void mrctest_set_crds_rectilinear_1(struct mrc_domain *domain);
 struct mrc_fld *mrctest_create_field_1(struct mrc_domain *domain);
 struct mrc_fld *mrctest_create_field_2(struct mrc_domain *domain);
