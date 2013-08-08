@@ -69,10 +69,10 @@ _ggcm_mhd_crds_setup(struct ggcm_mhd_crds *crds)
   mrc_domain_get_local_patch_info(crds->domain, 0, &info);
 
   struct mrc_crds *mrc_crds = mrc_domain_get_crds(crds->domain);
-  mrc_crds_set_values(mrc_crds,
-		      ggcm_mhd_crds_get_crd(crds, 0, FX1), info.ldims[0],
-		      ggcm_mhd_crds_get_crd(crds, 1, FX1), info.ldims[1],
-		      ggcm_mhd_crds_get_crd(crds, 2, FX1), info.ldims[2]);
+  for (int d = 0; d < 3; d++) {
+    memcpy(mrc_crds->crd[d]->_arr, ggcm_mhd_crds_get_crd(crds, d, FX1) - mrc_crds->sw,
+	   mrc_crds->crd[d]->_len * sizeof(float));
+  }
 }
 
 // ----------------------------------------------------------------------
