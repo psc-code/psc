@@ -201,70 +201,6 @@ static struct mrc_crds_ops mrc_crds_rectilinear_ops = {
 };
 
 // ======================================================================
-// mrc_crds_rectilinear_jr2
-
-struct mrc_crds_rectilinear_jr2 {
-  float xm;
-  float xn;
-  float dx0;
-};
-
-#define VAR(x) (void *)offsetof(struct mrc_crds_rectilinear_jr2, x)
-static struct param mrc_crds_rectilinear_jr2_param_descr[] = {
-  { "dx0"             , VAR(dx0)            , PARAM_FLOAT(.1)       },
-  { "xn"              , VAR(xn)             , PARAM_FLOAT(2.)       },
-  { "xm"              , VAR(xm)             , PARAM_FLOAT(.5)       },
-  {},
-};
-#undef VAR
-
-#define to_mrc_crds_rectilinear_jr2(crds) \
-  mrc_to_subobj(crds, struct mrc_crds_rectilinear_jr2)
-
-static void
-mrc_crds_rectilinear_jr2_setup(struct mrc_crds *crds)
-{
-  struct mrc_crds_rectilinear_jr2 *jr2 = to_mrc_crds_rectilinear_jr2(crds);
-  assert(crds->domain);
-  if (!mrc_domain_is_setup(crds->domain))
-    return;
-
-  int sw = crds->sw;
-  float *xl = crds->xl, *xh = crds->xh;
-
-  int gdims[3];
-  mrc_domain_get_global_dims(crds->domain, gdims);
-  int nr_patches;
-  struct mrc_patch *patches = mrc_domain_get_patches(crds->domain, &nr_patches);
-  assert(nr_patches == 1);
-
-  // FIXME, parallel
-  float xm = jr2->xm, xn = jr2->xn, dx0 = jr2->dx0;
-  mrc_crds_alloc(crds);
-  for (int d = 0; d < 3; d++) {
-    assert(-xl[d] == xh[d]);
-    float Lx2 = xh[d];
-    float xc = gdims[d] / 2 - .5;
-    float a = (pow((Lx2) / (dx0 * xc), 1./xm) - 1.) / pow(xc, 2.*xn);
-    for (int i = -sw; i < patches[0].ldims[d] +  sw; i++) {
-      float xi = i - xc;
-      float s = 1 + a*(pow(xi, (2. * xn)));
-      float sm = pow(s, xm);
-      float g = dx0 * xi * sm;
-      //    float dg = rmhd->dx0 * (sm + rmhd->xm*xi*2.*rmhd->xn*a*(pow(xi, (2.*rmhd->xn-1.))) * sm / s);
-      MRC_CRD(crds, d, i) = g;
-    }
-  }
-}
-
-static struct mrc_crds_ops mrc_crds_rectilinear_jr2_ops = {
-  .name        = "rectilinear_jr2",
-  .size        = sizeof(struct mrc_crds_rectilinear_jr2),
-  .param_descr = mrc_crds_rectilinear_jr2_param_descr,
-  .setup       = mrc_crds_rectilinear_jr2_setup,
-};
-
-// ======================================================================
 // mrc_crds_amr_uniform
 
 // FIXME, this should use mrc_a1 not mrc_m1
@@ -328,7 +264,6 @@ mrc_crds_init()
 {
   mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_uniform_ops);
   mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_rectilinear_ops);
-  mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_rectilinear_jr2_ops);
   mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_multi_rectilinear_ops);
   mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_amr_uniform_ops);
 }
