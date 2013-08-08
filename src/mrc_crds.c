@@ -194,25 +194,24 @@ mrc_crds_rectilinear_setup(struct mrc_crds *crds)
   int sw = crds->sw;
 
   for (int d = 0; d < 3; d ++) {
-    struct mrc_crds_gen *gen = crds->crds_gen[d];
-    mrc_crds_gen_view(gen);
-    
-    float *xx = malloc((gdims[d] + 2*sw + 1) * sizeof(float));
-    float *dx = malloc((gdims[d] + 2*sw + 1) * sizeof(float));
+    struct mrc_fld *x = mrc_fld_create(MPI_COMM_SELF);
+    mrc_fld_set_param_int_array(x, "dims", 2, (int[2]) { gdims[d] + 1, 2 });
+    mrc_fld_set_param_int_array(x, "sw"  , 2, (int[2]) { sw, 0 });
+    mrc_fld_setup(x);
 
-    mrc_crds_gen_run(gen, xx + sw, dx + sw);
+    struct mrc_crds_gen *gen = crds->crds_gen[d];
+    mrc_crds_gen_run(gen, &MRC_S2(x, 0, 0), &MRC_S2(x, 0, 1));
 
     mrc_m1_foreach_patch(crds->crd[d], p) {
       // shift to beginning of local domain
-      float *xxl = xx + sw + patches[p].off[d];
+      int off = patches[p].off[d];
 
       mrc_m1_foreach_bnd(crds->crd[d], ix) {
-	MRC_MCRD(crds, d, ix, p) = xxl[ix];
+	MRC_MCRD(crds, d, ix, p) = MRC_S2(x, ix + off, 0);
       } mrc_m1_foreach_end;
     }
 
-    free(xx);
-    free(dx);
+    mrc_fld_destroy(x);
   }
 }
 
