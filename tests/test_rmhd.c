@@ -1,4 +1,4 @@
-
+#define BOUNDS_CHECK
 #include <mrc_ts.h>
 #include <mrc_fld.h>
 #include <mrc_domain.h>

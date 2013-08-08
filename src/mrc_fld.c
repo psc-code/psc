@@ -354,10 +354,11 @@ mrc_fld_duplicate(struct mrc_fld *fld)
   } else {
     mrc_fld_set_type(fld_new, mrc_fld_type(fld));
   }
+  mrc_fld_set_param_obj(fld_new, "domain", fld->_domain);
+  mrc_fld_set_param_int(fld_new, "dim", fld->_dim);
   mrc_fld_set_param_int_array(fld_new, "dims", fld->_dims.nr_vals, fld->_dims.vals);
   mrc_fld_set_param_int_array(fld_new, "offs", fld->_offs.nr_vals, fld->_offs.vals);
   mrc_fld_set_param_int_array(fld_new, "sw", fld->_sw.nr_vals, fld->_sw.vals);
-  mrc_fld_set_param_obj(fld_new, "domain", fld->_domain);
   mrc_fld_setup(fld_new);
   return fld_new;
 }
@@ -422,11 +423,13 @@ mrc_fld_norm(struct mrc_fld *x)
 	res = fmaxf(res, fabsf(MRC_F3(x,m, ix,iy,iz)));
       } mrc_fld_foreach_end;
     }
-  } else if (x->_dims.nr_vals == 2) {
+  } else if (x->_dims.nr_vals == 3) {
     for (int m = 0; m < nr_comps; m++) {
-      mrc_f1_foreach(x, ix, 0, 0) {
-	res = fmaxf(res, fabsf(MRC_F1(x,m, ix)));
-      } mrc_f1_foreach_end;
+      mrc_m1_foreach_patch(x, p) {
+	mrc_m1_foreach(x, ix, 0, 0) {
+	  res = fmaxf(res, fabsf(MRC_M1(x,m, ix, p)));
+	} mrc_m1_foreach_end;
+      }
     }
   } else {
     assert(0);
@@ -445,10 +448,12 @@ mrc_fld_norm_comp(struct mrc_fld *x, int m)
 {
   assert(x->_data_type == MRC_NT_FLOAT);
   float res = 0.;
-  if (x->_dims.nr_vals == 2) {
-    mrc_f1_foreach(x, ix, 0, 0) {
-      res = fmaxf(res, fabsf(MRC_F1(x,m, ix)));
-    } mrc_f1_foreach_end;
+  if (x->_dims.nr_vals == 3) {
+    mrc_m1_foreach_patch(x, p) {
+      mrc_m1_foreach(x, ix, 0, 0) {
+	res = fmaxf(res, fabsf(MRC_M1(x,m, ix, p)));
+      } mrc_m1_foreach_end;
+    }
   } else {
     assert(0);
   }
@@ -507,6 +512,11 @@ mrc_fld_dump(struct mrc_fld *x, const char *basename, int n)
   mrc_io_set_from_options(io);
   mrc_io_setup(io);
   mrc_io_open(io, "w", n, n);
+  for (int m = 0; m < mrc_fld_nr_comps(x); m++) {
+    char s[10];
+    sprintf(s, "m%d", m);
+    mrc_fld_set_comp_name(x, m, s);
+  }
   mrc_fld_write(x, io);
   mrc_io_close(io);
   mrc_io_destroy(io);
