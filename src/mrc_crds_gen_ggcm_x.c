@@ -95,6 +95,8 @@ mrc_crds_gen_ggcm_x_run(struct mrc_crds_gen *gen, float *xx, float *dx)
   float xl[3], xh[3];
   mrc_crds_get_param_float3(gen->crds, "l", xl);
   mrc_crds_get_param_float3(gen->crds, "h", xh);
+  int sw;
+  mrc_crds_get_param_int(gen->crds, "sw", &sw);
   
   sub->x0  = xl[gen->d];
   sub->xn  = xh[gen->d];
@@ -133,7 +135,7 @@ mrc_crds_gen_ggcm_x_run(struct mrc_crds_gen *gen, float *xx, float *dx)
   int step_out = sub->n / 20;
   if (step_out > 20) step_out = 20;
 
-  for (int i = -2; i <= sub->n + 2; i++) {
+  for (int i = -sw; i <= sub->n + sw; i++) {
     xx[i] = ff(i+1, sub);
     dx[i] = f(xx[i], sub);
 
