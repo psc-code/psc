@@ -23,7 +23,7 @@ static void
 _mrc_domain_create(struct mrc_domain *domain)
 {
   domain->crds = mrc_crds_create(mrc_domain_comm(domain));
-  mrc_crds_set_domain(domain->crds, domain); // FIXME, should be added as child
+  mrc_crds_set_param_obj(domain->crds, "domain", domain);
 
   domain->ddc = mrc_ddc_create(mrc_domain_comm(domain));
   // FIXME, this isn't really general, though ok if we always use

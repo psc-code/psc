@@ -105,12 +105,6 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 }
 
 void
-mrc_crds_set_domain(struct mrc_crds *crds, struct mrc_domain *domain)
-{
-  crds->domain = domain;
-}
-
-void
 mrc_crds_set_values(struct mrc_crds *crds, float *crdx, int mx,
 		    float *crdy, int my, float *crdz, int mz)
 {
@@ -365,6 +359,9 @@ static struct param mrc_crds_params_descr[] = {
   { "l"              , VAR(xl)            , PARAM_FLOAT3(0., 0., 0.) },
   { "h"              , VAR(xh)            , PARAM_FLOAT3(1., 1., 1.) },
   { "sw"             , VAR(sw)            , PARAM_INT(0)             },
+
+  { "domain"         , VAR(domain)        , PARAM_OBJ(mrc_domain)    },
+
   {},
 };
 #undef VAR
