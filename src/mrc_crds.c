@@ -22,30 +22,22 @@ struct mrc_crds_ops *mrc_crds_ops(struct mrc_crds *crds)
 static void
 _mrc_crds_read(struct mrc_crds *crds, struct mrc_io *io)
 {
-  for (int d = 0; d < 3; d++) {
-    char s[5];
-    sprintf(s, "crd%d", d);
-    crds->crd[d] = mrc_io_read_ref(io, crds, s, mrc_fld);
-  }
+  mrc_crds_read_member_objs(crds, io);
 }
 
 static void
 _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 {
+  int slab_off_save[3], slab_dims_save[3];
+  if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) { // FIXME
+    mrc_io_get_param_int3(io, "slab_off", slab_off_save);
+    mrc_io_get_param_int3(io, "slab_dims", slab_dims_save);
+    mrc_io_set_param_int3(io, "slab_off", (int[3]) { 0, 0, 0});
+    mrc_io_set_param_int3(io, "slab_dims", (int[3]) { 0, 0, 0 });
+  }
+
   for (int d = 0; d < 3; d++) {
-    int slab_off_save[3], slab_dims_save[3];
-    if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) { // FIXME
-      mrc_io_get_param_int3(io, "slab_off", slab_off_save);
-      mrc_io_get_param_int3(io, "slab_dims", slab_dims_save);
-      mrc_io_set_param_int3(io, "slab_off", (int[3]) { 0, 0, 0});
-      mrc_io_set_param_int3(io, "slab_dims", (int[3]) { 0, 0, 0 });
-    }
-
     struct mrc_fld *crd_cc = crds->crd[d];
-    char s[10];
-    sprintf(s, "crd%d", d);
-    mrc_io_write_ref(io, crds, s, crd_cc);
-
     if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) { // FIXME
       struct mrc_fld *crd_nc = crds->crd_nc[d];
       if (!crd_nc) {
@@ -87,10 +79,11 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
       mrc_io_set_param_int3(io, "slab_dims", (int[3]) { gdims[d] + 1, 0, 0 });
       mrc_fld_write(crd_nc, io);
     }
-    if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) { // FIXME
-      mrc_io_set_param_int3(io, "slab_off", slab_off_save);
-      mrc_io_set_param_int3(io, "slab_dims", slab_dims_save);
-    }
+  }
+
+  if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) { // FIXME
+    mrc_io_set_param_int3(io, "slab_off", slab_off_save);
+    mrc_io_set_param_int3(io, "slab_dims", slab_dims_save);
   }
 }
 

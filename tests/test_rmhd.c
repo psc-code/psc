@@ -57,7 +57,6 @@ _rmhd_create(struct rmhd *rmhd)
 {
   mrc_domain_set_param_int3(rmhd->domain, "m", (int [3]) { 100, 1, 1 });
   struct mrc_crds *crds = mrc_domain_get_crds(rmhd->domain);
-  //  mrc_crds_set_type(crds, "rectilinear_jr2");
 
   for (int d = 0; d < 3; d++) {
     mrc_crds_gen_set_param_obj(rmhd->crds_gen[d], "crds", crds);

@@ -852,42 +852,6 @@ GROUP "/" {
       }
    }
    GROUP "mrc_crds-uid" {
-      ATTRIBUTE "crd0" {
-         DATATYPE  H5T_STRING {
-            STRSIZE 26;
-            STRPAD H5T_STR_NULLTERM;
-            CSET H5T_CSET_ASCII;
-            CTYPE H5T_C_S1;
-         }
-         DATASPACE  SCALAR
-         DATA {
-         (0): "crd[0]-uid"
-         }
-      }
-      ATTRIBUTE "crd1" {
-         DATATYPE  H5T_STRING {
-            STRSIZE 26;
-            STRPAD H5T_STR_NULLTERM;
-            CSET H5T_CSET_ASCII;
-            CTYPE H5T_C_S1;
-         }
-         DATASPACE  SCALAR
-         DATA {
-         (0): "crd[1]-uid"
-         }
-      }
-      ATTRIBUTE "crd2" {
-         DATATYPE  H5T_STRING {
-            STRSIZE 26;
-            STRPAD H5T_STR_NULLTERM;
-            CSET H5T_CSET_ASCII;
-            CTYPE H5T_C_S1;
-         }
-         DATASPACE  SCALAR
-         DATA {
-         (0): "crd[2]-uid"
-         }
-      }
       ATTRIBUTE "crd[0]" {
          DATATYPE  H5T_STRING {
             STRSIZE 26;
