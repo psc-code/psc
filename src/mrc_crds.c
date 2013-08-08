@@ -20,6 +20,16 @@ struct mrc_crds_ops *mrc_crds_ops(struct mrc_crds *crds)
 // mrc_crds_* wrappers
 
 static void
+_mrc_crds_create(struct mrc_crds *crds)
+{
+  for (int d = 0; d < 3; d++) {
+    crds->crd[d] = mrc_fld_create(mrc_crds_comm(crds));
+    char s[5]; sprintf(s, "crd%d", d);
+    mrc_fld_set_name(crds->crd[d], s);
+  }
+}
+
+static void
 _mrc_crds_destroy(struct mrc_crds *crds)
 {
   for (int d = 0; d < 3; d++) {
@@ -145,14 +155,13 @@ static void
 mrc_crds_alloc(struct mrc_crds *crds)
 {
   for (int d = 0; d < 3; d++) {
-    mrc_fld_destroy(crds->crd[d]);
-    crds->crd[d] = mrc_domain_m1_create(crds->domain);
-    char s[5]; sprintf(s, "crd%d", d);
-    mrc_fld_set_name(crds->crd[d], s);
-    mrc_fld_set_sw(crds->crd[d], crds->sw);
+    mrc_fld_set_param_obj(crds->crd[d], "domain", crds->domain);
+    mrc_fld_set_param_int_array(crds->crd[d], "dims", 3, NULL);
     mrc_fld_set_param_int(crds->crd[d], "dim", d);
+    mrc_fld_set_nr_comps(crds->crd[d], 1);
+    mrc_fld_set_sw(crds->crd[d], crds->sw);
+    mrc_fld_set_comp_name(crds->crd[d], 0, mrc_fld_name(crds->crd[d]));
     mrc_fld_setup(crds->crd[d]);
-    mrc_fld_set_comp_name(crds->crd[d], 0, s);
   }
 }
 
@@ -207,7 +216,6 @@ mrc_crds_rectilinear_setup(struct mrc_crds *crds)
   if (!mrc_domain_is_setup(crds->domain))
     return;
 
-  assert(!crds->crd[0]);
   mrc_crds_alloc(crds);
 }
 
@@ -329,7 +337,6 @@ mrc_crds_multi_rectilinear_setup(struct mrc_crds *crds)
   if (!mrc_domain_is_setup(crds->domain))
     return;
 
-  assert(!crds->crd[0]);
   mrc_crds_alloc(crds);
 }
 
@@ -371,6 +378,7 @@ struct mrc_class_mrc_crds mrc_class_mrc_crds = {
   .size         = sizeof(struct mrc_crds),
   .param_descr  = mrc_crds_params_descr,
   .init         = mrc_crds_init,
+  .create       = _mrc_crds_create,
   .destroy      = _mrc_crds_destroy,
   .write        = _mrc_crds_write,
   .read         = _mrc_crds_read,
