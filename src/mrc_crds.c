@@ -115,6 +115,7 @@ void
 mrc_crds_set_values(struct mrc_crds *crds, float *crdx, int mx,
 		    float *crdy, int my, float *crdz, int mz)
 {
+  assert(mrc_crds_is_setup(crds));
   struct mrc_crds_ops *ops = mrc_crds_ops(crds);
   if (ops->set_values) {
     ops->set_values(crds, crdx, mx, crdy, my, crdz, mz);
@@ -200,7 +201,6 @@ static void
 mrc_crds_rectilinear_set_values(struct mrc_crds *crds, float *crdx, int mx,
 				float *crdy, int my, float *crdz, int mz)
 {
-  mrc_crds_alloc(crds);
   float *crd[3] = { crdx, crdy, crdz };
   for (int d = 0; d < 3; d++) {
     memcpy(crds->crd[d]->_arr, crd[d] - crds->par.sw, crds->crd[d]->_len * sizeof(*crd[d]));
@@ -214,9 +214,8 @@ mrc_crds_rectilinear_setup(struct mrc_crds *crds)
   if (!mrc_domain_is_setup(crds->domain))
     return;
 
-  if (!crds->crd[0]) {
-    mrc_crds_alloc(crds);
-  }
+  assert(!crds->crd[0]);
+  mrc_crds_alloc(crds);
 }
 
 static struct mrc_crds_ops mrc_crds_rectilinear_ops = {
@@ -337,9 +336,8 @@ mrc_crds_multi_rectilinear_setup(struct mrc_crds *crds)
   if (!mrc_domain_is_setup(crds->domain))
     return;
 
-  if (!crds->crd[0]) {
-    mrc_crds_alloc(crds);
-  }
+  assert(!crds->crd[0]);
+  mrc_crds_alloc(crds);
 }
 
 static struct mrc_crds_ops mrc_crds_multi_rectilinear_ops = {
