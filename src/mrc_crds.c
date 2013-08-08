@@ -227,12 +227,20 @@ static struct mrc_crds_ops mrc_crds_amr_uniform_ops = {
 // ======================================================================
 // mrc_crds_init
 
+extern struct mrc_crds_ops mrc_crds_two_gaussian_ops;
+extern struct mrc_crds_ops mrc_crds_gaussian_ops;
+extern struct mrc_crds_ops mrc_crds_gaussian_2D_ops;
+
 static void
 mrc_crds_init()
 {
   mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_uniform_ops);
   mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_rectilinear_ops);
   mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_amr_uniform_ops);
+
+  mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_two_gaussian_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_gaussian_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_gaussian_2D_ops);
 }
 
 // ======================================================================
