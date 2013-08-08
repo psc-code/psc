@@ -42,6 +42,8 @@ struct rmhd {
 
   struct mrc_domain *domain;
   struct mrc_fld *By0;
+
+  struct mrc_crds_gen *crds_gen[3];
 };
 
 MRC_CLASS_DECLARE(rmhd, struct rmhd);
@@ -53,16 +55,14 @@ MRC_CLASS_DECLARE(rmhd, struct rmhd);
 static void
 _rmhd_create(struct rmhd *rmhd)
 {
-  rmhd->domain = mrc_domain_create(rmhd_comm(rmhd));
   mrc_domain_set_param_int3(rmhd->domain, "m", (int [3]) { 100, 1, 1 });
-  //  struct mrc_crds *crds = mrc_domain_get_crds(rmhd->domain);
+  struct mrc_crds *crds = mrc_domain_get_crds(rmhd->domain);
   //  mrc_crds_set_type(crds, "rectilinear_jr2");
-}
 
-static void
-_rmhd_set_from_options(struct rmhd *rmhd)
-{
-  mrc_domain_set_from_options(rmhd->domain);
+  for (int d = 0; d < 3; d++) {
+    mrc_crds_gen_set_param_obj(rmhd->crds_gen[d], "crds", crds);
+    mrc_crds_gen_set_param_int(rmhd->crds_gen[d], "d", d);
+  }
 }
 
 static struct mrc_fld *
@@ -83,20 +83,16 @@ _rmhd_setup(struct rmhd *rmhd)
   mrc_crds_set_param_float3(crds, "l", (float [3]) { -rmhd->Lx / 2. });
   mrc_crds_set_param_float3(crds, "h", (float [3]) {  rmhd->Lx / 2. });
   mrc_crds_set_param_int(crds, "sw", BND);
-  mrc_domain_setup(rmhd->domain);
+
+  rmhd_setup_member_objs(rmhd);
 
   int gdims[3];
   mrc_domain_get_global_dims(crds->domain, gdims);
   struct mrc_patch_info info;
   mrc_domain_get_local_patch_info(crds->domain, 0, &info);
 
-  for (int d = 0; d < 1; d++) {
-    struct mrc_crds_gen *gen = mrc_crds_gen_create(rmhd_comm(rmhd));
-    mrc_crds_gen_set_name(gen, "crds_gen_x");
-    mrc_crds_gen_set_param_obj(gen, "crds", crds);
-    mrc_crds_gen_set_param_int(gen, "d", d);
-    mrc_crds_gen_set_from_options(gen);
-    mrc_crds_gen_setup(gen);
+  for (int d = 0; d < 3; d ++) {
+    struct mrc_crds_gen *gen = rmhd->crds_gen[d];
     mrc_crds_gen_view(gen);
     
     float *xx = malloc((gdims[d] + 2*BND + 1) * sizeof(float));
@@ -110,8 +106,6 @@ _rmhd_setup(struct rmhd *rmhd)
     mrc_m1_foreach_bnd(crds->crd[d], ix) {
       MRC_CRD(crds, d, ix) = xxl[ix];
     } mrc_m1_foreach_end;
-
-    mrc_crds_gen_destroy(gen);
   }
 
   rmhd->By0 = rmhd_get_fld(rmhd, 1, "By0");
@@ -257,6 +251,12 @@ static struct param rmhd_param_descr[] = {
   { "d_i"             , VAR(d_i)            , PARAM_FLOAT(0.)       },
   { "ky"              , VAR(ky)             , PARAM_FLOAT(.5)       },
   { "cfl"             , VAR(cfl)            , PARAM_FLOAT(.5)       },
+
+  { "domain"          , VAR(domain)         , MRC_VAR_OBJ(mrc_domain)    },
+  { "crds_gen_x"      , VAR(crds_gen[0])    , MRC_VAR_OBJ(mrc_crds_gen)  },
+  { "crds_gen_y"      , VAR(crds_gen[1])    , MRC_VAR_OBJ(mrc_crds_gen)  },
+  { "crds_gen_z"      , VAR(crds_gen[2])    , MRC_VAR_OBJ(mrc_crds_gen)  },
+
   {},
 };
 #undef VAR
@@ -266,7 +266,6 @@ struct mrc_class_rmhd mrc_class_rmhd = {
   .size             = sizeof(struct rmhd),
   .param_descr      = rmhd_param_descr,
   .create           = _rmhd_create,
-  .set_from_options = _rmhd_set_from_options,
   .setup            = _rmhd_setup,
   .destroy          = _rmhd_destroy,
 };
