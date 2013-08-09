@@ -47,7 +47,7 @@ error(const char *fmt, ...)
   fprintf(stderr, "[%d] ERROR: ", mpi_rank);
   vfprintf(stderr, fmt, ap);
   va_end(ap);
-  exit(-1);
+  abort();
 }
 
 static void __attribute__ ((format (printf, 1, 2)))
@@ -1042,7 +1042,7 @@ mrc_params_print_one(void *p, struct param *prm, MPI_Comm comm)
 	sprintf(tmp, ",%d", pv->u_int_array.vals[d]);
 	strcat(s, tmp);
       }
-      mpi_printf(comm, "%-20s| %s\n", prm->name, s);
+      mrc_view_printf(comm, "%-20s| %s\n", prm->name, s);
     }
     break;
   case PT_PTR:

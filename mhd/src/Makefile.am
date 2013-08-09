@@ -39,12 +39,6 @@ libmhd_la_SOURCES = \
 	ggcm_mhd_step.c \
 	ggcm_mhd_step_cweno.c \
 	\
-	mrc_ts_monitor_ggcm.c \
-	\
-	mrc_crds_gen.c \
-	mrc_crds_gen_ggcm_x.c \
-	mrc_crds_gen_ggcm_yz.c \
-	\
-	mrc_crds_gaussian.c
+	mrc_ts_monitor_ggcm.c
 
 

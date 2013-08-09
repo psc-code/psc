@@ -54,7 +54,8 @@ ggcm_mhd_ic_double_tearing_run(struct ggcm_mhd_ic *ic)
   mrc_fld_setup(fld_psi);
 
   float xl[3], xh[3], L[3], r[3];
-  mrc_crds_get_xl_xh(crds, xl, xh);
+  mrc_crds_get_param_float3(crds, "l", xl);
+  mrc_crds_get_param_float3(crds, "h", xh);
   for(int i = 0; i < 3; i++){
     L[i] = xh[i] - xl[i];
   }

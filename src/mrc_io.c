@@ -121,36 +121,6 @@ mrc_io_close(struct mrc_io *io)
 }
 
 // ----------------------------------------------------------------------
-// mrc_io_read_f1
-
-void
-mrc_io_read_f1(struct mrc_io *io, const char *path, struct mrc_f1 *fld)
-{
-  struct mrc_io_ops *ops = mrc_io_ops(io);
-  if (ops->read_f1) {
-    ops->read_f1(io, path, fld);
-  } else {
-    assert(fld->domain);
-    struct mrc_m1 *m1 = mrc_domain_m1_create(fld->domain);
-    mrc_m1_set_param_int(m1, "sw", fld->_sw);
-    mrc_m1_set_param_int(m1, "dim", fld->dim);
-    mrc_m1_set_param_int(m1, "nr_comps", fld->nr_comp);
-    mrc_m1_setup(m1);
-    mrc_io_read_m1(io, path, m1);
-
-    struct mrc_m1_patch *m1p = mrc_m1_patch_get(m1, 0);
-    for (int m = 0; m < m1->nr_comp; m++) {
-      mrc_f1_set_comp_name(fld, m, mrc_m1_comp_name(m1, m));
-      mrc_m1_foreach_bnd(m1p, ix) {
-	MRC_F1(fld, m, ix) = MRC_M1(m1p, m, ix);
-      } mrc_m1_foreach_end;
-    }
-    mrc_m1_patch_put(m1);
-    mrc_m1_destroy(m1);
-  }
-}
-
-// ----------------------------------------------------------------------
 // mrc_io_read_f3
 
 void
@@ -187,6 +157,8 @@ mrc_io_read_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
   struct mrc_io_ops *ops = mrc_io_ops(io);
   if (ops->read_fld) {
     ops->read_fld(io, path, fld);
+  } else if (fld->_dims.nr_vals == 3) {
+    mrc_io_read_m1(io, path, fld);
   } else if (fld->_dims.nr_vals == 4) {
     mrc_io_read_f3(io, path, fld);
   } else if (fld->_dims.nr_vals == 5) {
@@ -205,48 +177,14 @@ mrc_io_write_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
   struct mrc_io_ops *ops = mrc_io_ops(io);
   if (ops->write_fld) {
     ops->write_fld(io, path, fld);
+  } else if (fld->_dims.nr_vals == 3) {
+    mrc_io_write_m1(io, path, fld);
   } else if (fld->_dims.nr_vals == 4) {
     mrc_io_write_f3(io, path, fld, 1.f);
   } else if (fld->_dims.nr_vals == 5) {
     mrc_io_write_m3(io, path, fld);
   } else {
     assert(0);
-  }
-}
-
-// ----------------------------------------------------------------------
-// mrc_io_write_f1
-
-void
-mrc_io_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *fld)
-{
-  struct mrc_io_ops *ops = mrc_io_ops(io);
-  if (ops->write_f1) {
-    ops->write_f1(io, path, fld);
-  } else if (fld->domain) {
-    int sw, dim, nr_comps;
-    mrc_f1_get_param_int(fld, "nr_comps", &nr_comps);
-    mrc_f1_get_param_int(fld, "sw", &sw);
-    mrc_f1_get_param_int(fld, "dim", &dim);
-    struct mrc_m1 *m1 = mrc_domain_m1_create(fld->domain);
-    mrc_m1_set_param_int(m1, "nr_comps", nr_comps); 
-    mrc_m1_set_param_int(m1, "sw", sw);
-    mrc_m1_set_param_int(m1, "dim", dim); 
-    mrc_m1_setup(m1);
-    for (int m = 0; m < fld->nr_comp; m++) {
-      mrc_m1_set_comp_name(m1, m, mrc_f1_comp_name(fld, m));
-      mrc_m1_foreach_patch(m1, p) {
-	struct mrc_m1_patch *m1p = mrc_m1_patch_get(m1, p);
-	mrc_m1_foreach(m1p, ix, sw, sw) {
-	  MRC_M1(m1p, m, ix) = MRC_F1(fld, m, ix);
-	} mrc_m1_foreach_end;
-	mrc_m1_patch_put(m1);
-      }
-    }
-    mrc_io_write_m1(io, path, m1);
-    mrc_m1_destroy(m1);
-  } else {
-    MHERE;
   }
 }
 
@@ -292,13 +230,13 @@ mrc_io_write_f3(struct mrc_io *io, const char *path, struct mrc_fld *fld, float 
 // mrc_io_write_m1
 
 void
-mrc_io_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *fld)
+mrc_io_write_m1(struct mrc_io *io, const char *path, struct mrc_fld *fld)
 {
   struct mrc_io_ops *ops = mrc_io_ops(io);
   if (ops->write_m1) {
     ops->write_m1(io, path, fld);
   } else {
-    //    MHERE; // FIXME
+    MHERE; // FIXME
   }
 }
 
@@ -306,11 +244,14 @@ mrc_io_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *fld)
 // mrc_io_read_m1
 
 void
-mrc_io_read_m1(struct mrc_io *io, const char *path, struct mrc_m1 *fld)
+mrc_io_read_m1(struct mrc_io *io, const char *path, struct mrc_fld *fld)
 {
   struct mrc_io_ops *ops = mrc_io_ops(io);
-  assert(ops->read_m1);
-  ops->read_m1(io, path, fld);
+  if (ops->read_m1) {
+    ops->read_m1(io, path, fld);
+  } else {
+    assert(0);
+  }
 }
 
 // ----------------------------------------------------------------------

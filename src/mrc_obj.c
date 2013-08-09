@@ -873,6 +873,9 @@ mrc_obj_read_params(struct mrc_obj *obj, void *p, struct param *params,
     union param_u *pv = p + (unsigned long) prm->var;
     if (prm->type == PT_OBJ) {
       pv->u_obj = __mrc_io_read_ref(io, obj, prm->name, prm->u.mrc_obj.cls);
+    } else if (prm->type == MRC_VAR_OBJ) {
+      // do nothing, member objects are read explicitly by calling 
+      // mrc_obj_read_member_objs()
     } else {
       mrc_io_read_attr(io, path, prm->type, prm->name, pv);
     }

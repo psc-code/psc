@@ -13,25 +13,9 @@
 
 //#define BOUNDS_CHECK
 
-#ifdef BOUNDS_CHECK
-
-#include <assert.h>
-
-#define MRC_F1(f1,m, ix)						\
-  (*({ float *p = &(f1)->arr[(m) * (f1)->_ghost_dims[0] + (ix) - (f1)->_ghost_off[0]];	\
-      assert((ix) >= (f1)->_ghost_off[0] && (ix) < (f1)->_ghost_off[0] + (f1)->_ghost_dims[0]);	\
-      p;}))
-
-#else
-
-#define MRC_F1(f1,m, ix)					\
-  ((f1)->arr[(m) * (f1)->_ghost_dims[0] + (ix) - (f1)->_ghost_off[0]])
-
-#endif
-
 #define MRC_F3(f3,m, ix,iy,iz) MRC_S4(f3, ix,iy,iz,m)
-
 #define MRC_F2(f3,m, ix,iy) MRC_S3(f3, ix,iy,m)
+#define MRC_F1(f1,m, ix) MRC_S2(f1, ix,m)
 
 struct mrc_io;
 
@@ -50,7 +34,7 @@ enum {
 // for mrc_m3 emulation
 struct mrc_fld_patch {
   int _p;
-  struct mrc_m3 *_m3;
+  struct mrc_fld *_fld;
 };
 
 struct mrc_fld {
@@ -74,6 +58,8 @@ struct mrc_fld {
   char **_comp_name;
   // for mrc_m3 emulation (FIXME, should be eliminated eventually (?))
   struct mrc_fld_patch *_patches;
+  // for mrc_f1 emulation
+  int _dim; //< # along this dim of the domain
 };
 
 MRC_CLASS_DECLARE(mrc_fld, struct mrc_fld);
@@ -93,8 +79,10 @@ const int *mrc_fld_ghost_dims(struct mrc_fld *x);
 struct mrc_fld *mrc_fld_duplicate(struct mrc_fld *fld);
 void mrc_fld_copy(struct mrc_fld *fld_to, struct mrc_fld *fld_from);
 void mrc_fld_write_comps(struct mrc_fld *fld, struct mrc_io *io, int mm[]);
+void mrc_fld_dump(struct mrc_fld *fld, const char *basename, int n);
 // for multi-patch mrc_fld only (former mrc_m3)
 int mrc_fld_nr_patches(struct mrc_fld *fld);
+float mrc_fld_norm_comp(struct mrc_fld *x, int m);
 
 struct mrc_fld *mrc_fld_get_as(struct mrc_fld *fld_base,
 			       const char *type);
@@ -150,6 +138,9 @@ mrc_fld_same_shape(struct mrc_fld *fld_1, struct mrc_fld *fld_2)
 
 #endif
 
+#define MRC_S2(fld, i0,i1) MRC_FLD(fld, float, i0,i1,0,0,0)
+#define MRC_D2(fld, i0,i1) MRC_FLD(fld, double, i0,i1,0,0,0)
+
 #define MRC_S3(fld, i0,i1,i2) MRC_FLD(fld, float, i0,i1,i2,0,0)
 #define MRC_D3(fld, i0,i1,i2) MRC_FLD(fld, double, i0,i1,i2,0,0)
 
@@ -169,6 +160,14 @@ mrc_fld_same_shape(struct mrc_fld *fld_1, struct mrc_fld *fld_2)
     } do {} while (0)				\
 
 // ----------------------------------------------------------------------
+// mrc_f1
+
+#define mrc_f1_foreach(f1, ix, l,r)					\
+  for (int ix = (f1)->_offs.vals[0] - l; ix < (f1)->_offs.vals[0] + (f1)->_dims.vals[0] + r; ix++) \
+
+#define mrc_f1_foreach_end do {} while (0)	\
+
+// ----------------------------------------------------------------------
 // mrc_m3 emulation
 
 #define mrc_fld_foreach_patch(m3, p) \
@@ -186,22 +185,22 @@ mrc_fld_patch_put(struct mrc_fld *fld)
 {
 }
 
-#define MRC_M3(m3p, m, ix,iy,iz) MRC_S5((m3p)->_m3, ix, iy, iz, m, (m3p)->_p)
+#define MRC_M3(m3p, m, ix,iy,iz) MRC_S5((m3p)->_fld, ix, iy, iz, m, (m3p)->_p)
 
 #define mrc_m3_foreach(m3p, ix,iy,iz, l,r) {			\
   int _l[3] = { -l, -l, -l };					\
-  int _r[3] = { m3p->_m3->_ghost_dims[0] + 2 * m3p->_m3->_ghost_offs[0] + r,	\
-		m3p->_m3->_ghost_dims[1] + 2 * m3p->_m3->_ghost_offs[1] + r,	\
-		m3p->_m3->_ghost_dims[2] + 2 * m3p->_m3->_ghost_offs[2] + r};	\
+  int _r[3] = { m3p->_fld->_ghost_dims[0] + 2 * m3p->_fld->_ghost_offs[0] + r,	\
+		m3p->_fld->_ghost_dims[1] + 2 * m3p->_fld->_ghost_offs[1] + r,	\
+		m3p->_fld->_ghost_dims[2] + 2 * m3p->_fld->_ghost_offs[2] + r }; \
   for (int iz = _l[2]; iz < _r[2]; iz++) {			\
     for (int iy = _l[1]; iy < _r[1]; iy++) {			\
       for (int ix = _l[0]; ix < _r[0]; ix++)			\
 
 #define mrc_m3_foreach_bnd(m3p, ix,iy,iz) {		\
-  int _l[3] = { m3p->_m3->_ghost_offs[0], m3p->_m3->_ghost_offs[1], m3p->_m3->_ghost_offs[2] };	\
-  int _r[3] = { m3p->_m3->_ghost_offs[0] + m3p->_m3->_ghost_dims[0],			\
-		m3p->_m3->_ghost_offs[1] + m3p->_m3->_ghost_dims[1],			\
-		m3p->_m3->_ghost_offs[2] + m3p->_m3->_ghost_dims[2] };			\
+  int _l[3] = { m3p->_fld->_ghost_offs[0], m3p->_fld->_ghost_offs[1], m3p->_fld->_ghost_offs[2] };	\
+  int _r[3] = { m3p->_fld->_ghost_offs[0] + m3p->_fld->_ghost_dims[0],	\
+		m3p->_fld->_ghost_offs[1] + m3p->_fld->_ghost_dims[1],	\
+		m3p->_fld->_ghost_offs[2] + m3p->_fld->_ghost_dims[2] }; \
   for (int iz = _l[2]; iz < _r[2]; iz++) {				\
     for (int iy = _l[1]; iy < _r[1]; iy++) {				\
       for (int ix = _l[0]; ix < _r[0]; ix++)				\
@@ -221,98 +220,22 @@ typedef void (*mrc_fld_copy_from_func_t)(struct mrc_fld *,
 					 struct mrc_fld *);
 
 // ======================================================================
-// mrc_f1
-
-struct mrc_f1 {
-  struct mrc_obj obj;
-  float *arr;
-  int _ghost_off[1];
-  int _ghost_dims[1];
-  int _off[1];
-  int _dims[1];
-  int nr_comp;
-  int len;
-  bool with_array;
-  struct mrc_domain *domain; //< optional, if allocated through mrc_domain
-  int dim; //< # along this dim of the domain
-  int _sw; //< # of ghost points
-  char **_comp_name;
-};
-
-MRC_CLASS_DECLARE(mrc_f1, struct mrc_f1);
-struct mrc_f1 *mrc_f1_duplicate(struct mrc_f1 *x);
-void mrc_f1_set_comp_name(struct mrc_f1 *x, int m, const char *name);
-const char *mrc_f1_comp_name(struct mrc_f1 *x, int m);
-const int *mrc_f1_off(struct mrc_f1 *x);
-const int *mrc_f1_dims(struct mrc_f1 *x);
-const int *mrc_f1_ghost_dims(struct mrc_f1 *x);
-void mrc_f1_set_array(struct mrc_f1 *x, float *arr);
-void mrc_f1_dump(struct mrc_f1 *x, const char *basename, int n);
-void mrc_f1_zero(struct mrc_f1 *x);
-void mrc_f1_copy(struct mrc_f1 *x, struct mrc_f1 *y);
-void mrc_f1_axpy(struct mrc_f1 *y, float alpha, struct mrc_f1 *x);
-void mrc_f1_waxpy(struct mrc_f1 *w, float alpha, struct mrc_f1 *x,
-		  struct mrc_f1 *y);
-float mrc_f1_norm(struct mrc_f1 *x);
-float mrc_f1_norm_comp(struct mrc_f1 *x, int m);
-
-#define mrc_f1_foreach(f1, ix, l,r)					\
-  for (int ix = (f1)->_off[0] - l; ix < (f1)->_off[0] + (f1)->_dims[0] + r; ix++) \
-
-#define mrc_f1_foreach_end do {} while (0)	\
-
-// ======================================================================
 // mrc_m1
 
-struct mrc_m1_patch {
-  float *arr;
-  int im[1];
-  int ib[1];
-};
-
-struct mrc_m1 {
-  struct mrc_obj obj;
-  int nr_comp;
-  int nr_patches;
-  int dim; //< this dimension of the domain
-  struct mrc_m1_patch *patches;
-  struct mrc_domain *domain;
-  int sw;
-  char **_comp_name;
-};
-
-MRC_CLASS_DECLARE(mrc_m1, struct mrc_m1);
-
-void mrc_m1_set_comp_name(struct mrc_m1 *x, int m, const char *name);
-const char *mrc_m1_comp_name(struct mrc_m1 *x, int m);
-bool mrc_m1_same_shape(struct mrc_m1 *m1_1, struct mrc_m1 *m1_2);
-
-static inline struct mrc_m1_patch *
-mrc_m1_patch_get(struct mrc_m1 *m1, int p)
-{
-  return &m1->patches[p];
-}
-
-static inline void
-mrc_m1_patch_put(struct mrc_m1 *m1)
-{
-}
-
-#define MRC_M1(m1p,m, ix)					\
-  ((m1p)->arr[((m) * (m1p)->im[0] + (ix) - (m1p)->ib[0])])
+#define MRC_M1(fld, m, ix, p) MRC_S3(fld, ix, m, p)
 
 #define mrc_m1_foreach_patch(m1, p) \
-  for (int p = 0; p < m1->nr_patches; p++)
+  for (int p = 0; p < mrc_fld_nr_patches(m1); p++)
 
-#define mrc_m1_foreach(m1p, ix, l,r) {			\
-  int _l[1] = { -l };					\
-  int _r[1] = { m1p->im[0] + 2 * m1p->ib[0]  + r};	\
-  for (int ix = _l[0]; ix < _r[0]; ix++)		\
+#define mrc_m1_foreach(m1, ix, l,r) {					\
+  int _l[1] = { -l };							\
+  int _r[1] = { m1->_ghost_dims[0] + 2 * m1->_ghost_offs[0]  + r};	\
+  for (int ix = _l[0]; ix < _r[0]; ix++)				\
 
-#define mrc_m1_foreach_bnd(m1p, ix) {			\
-  int _l[1] = { m1p->ib[0] };				\
-  int _r[1] = { m1p->ib[0] + m1p->im[0]};		\
-  for (int ix = _l[0]; ix < _r[0]; ix++)		\
+#define mrc_m1_foreach_bnd(m1, ix) {					\
+  int _l[1] = { m1->_ghost_offs[0] };					\
+  int _r[1] = { m1->_ghost_offs[0] + m1->_ghost_dims[0]};		\
+  for (int ix = _l[0]; ix < _r[0]; ix++)				\
 
 #define mrc_m1_foreach_end  }
   

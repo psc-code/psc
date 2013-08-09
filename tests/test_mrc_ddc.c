@@ -87,8 +87,6 @@ main(int argc, char **argv)
   mrc_domain_set_param_int(domain, "bcx", BC_PERIODIC);
   mrc_domain_set_param_int(domain, "bcy", BC_PERIODIC);
   mrc_domain_set_param_int(domain, "bcz", BC_PERIODIC);
-  struct mrc_crds *crds = mrc_domain_get_crds(domain);
-  mrc_crds_set_type(crds, "multi_uniform");
   mrc_domain_set_from_options(domain);
   mrc_domain_setup(domain);
   mrc_domain_view(domain);

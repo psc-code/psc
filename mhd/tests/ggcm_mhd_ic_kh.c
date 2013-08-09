@@ -44,7 +44,8 @@ ggcm_mhd_ic_kh_run(struct ggcm_mhd_ic *ic)
   mrc_domain_set_param_int(gmhd->domain, "bcy", BC_PERIODIC);
   mrc_domain_set_param_int(gmhd->domain, "bcz", BC_PERIODIC);
 
-  mrc_crds_get_xl_xh(crds, xl, xh);
+  mrc_crds_get_param_float3(crds, "l", xl);
+  mrc_crds_get_param_float3(crds, "h", xh);
   for(int i=0; i<3; i++){
     L[i] = xh[i] - xl[i];
     xmid[i] = 0.5 * (xh[i] + xl[i]);

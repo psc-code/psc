@@ -33,6 +33,7 @@ _mrc_fld_destroy(struct mrc_fld *fld)
     mrc_vec_put_array(fld->_vec, fld->_arr);
     fld->_arr = NULL;
   }
+  free(fld->_patches);
 
   for (int m = 0; m < fld->_nr_allocated_comp_name; m++) {
     free(fld->_comp_name[m]);
@@ -53,14 +54,15 @@ _mrc_fld_setup(struct mrc_fld *fld)
     int nr_patches;
     struct mrc_patch *patches = mrc_domain_get_patches(fld->_domain, &nr_patches);
 
-    assert((fld->_dims.nr_vals == 4 && nr_patches == 1) ||
-	   (fld->_dims.nr_vals == 5 && nr_patches >= 1));
+    assert((fld->_dims.nr_vals == 3 && nr_patches >= 1) || // mrc_m1
+	   (fld->_dims.nr_vals == 4 && nr_patches == 1) || // mrc_f3
+	   (fld->_dims.nr_vals == 5 && nr_patches >= 1));  // mrc_m3
 
     if (fld->_dims.nr_vals == 5) {
       fld->_patches = calloc(nr_patches, sizeof(*fld->_patches));
       for (int p = 0; p < nr_patches; p++) {
 	struct mrc_fld_patch *m3p = &fld->_patches[p];
-	m3p->_m3 = fld;
+	m3p->_fld = fld;
 	m3p->_p = p;
 	for (int d = 0; d < 3; d++) {
 	  assert(patches[p].ldims[d] == patches[0].ldims[d]);
@@ -69,8 +71,22 @@ _mrc_fld_setup(struct mrc_fld *fld)
       fld->_dims.vals[4] = nr_patches;
     }
 
-    for (int d = 0; d < 3; d++) {
-      fld->_dims.vals[d] = patches[0].ldims[d];
+    if (fld->_dim >= 0 && fld->_dims.nr_vals == 2) {
+      fld->_dims.vals[0] = patches[0].ldims[fld->_dim];
+    } else if (fld->_dim >= 0 && fld->_dims.nr_vals == 3) {
+      fld->_dims.vals[0] = patches[0].ldims[fld->_dim];
+      fld->_patches = calloc(nr_patches, sizeof(*fld->_patches));
+      for (int p = 0; p < nr_patches; p++) {
+	struct mrc_fld_patch *m1p = &fld->_patches[p];
+	m1p->_p = p;
+	m1p->_fld = fld;
+	assert(patches[p].ldims[fld->_dim] == patches[0].ldims[fld->_dim]);
+      }
+      fld->_dims.vals[2] = nr_patches;
+    } else {
+      for (int d = 0; d < 3; d++) {
+	fld->_dims.vals[d] = patches[0].ldims[d];
+      }
     }
   }
 
@@ -188,8 +204,15 @@ static int
 mrc_fld_comp_dim(struct mrc_fld *fld)
 {
   if (fld->_domain) {
-    assert(fld->_dims.nr_vals > 3);
-    return 3;
+    if (fld->_dims.nr_vals > 3) {
+      // emulating mrc_f3, mrc_m3
+      return 3;
+    } else if (fld->_dims.nr_vals == 2 || fld->_dims.nr_vals == 3) {
+      // emulating mrc_f1, mrc_m1
+      return 1;
+    } else {
+      assert(0);
+    }
   }
 
   assert(fld->_dims.nr_vals > 0);
@@ -253,23 +276,32 @@ void
 mrc_fld_set_sw(struct mrc_fld *fld, int sw)
 {
   assert(fld->_domain);
-  assert(fld->_dims.nr_vals > 3);
-  mrc_fld_set_param_int_array(fld, "sw", fld->_dims.nr_vals,
-			      (int[5]) { sw, sw, sw, 0, 0 });
+  if (fld->_dims.nr_vals > 3) {
+    mrc_fld_set_param_int_array(fld, "sw", fld->_dims.nr_vals,
+				(int[5]) { sw, sw, sw, 0, 0 });
+  } else if (fld->_dims.nr_vals == 3) { // mrc_m1
+    mrc_fld_set_param_int_array(fld, "sw", 3,
+				(int[3]) { sw, 0, 0 });
+  } else if (fld->_dims.nr_vals == 2) { // mrc_f1
+    mrc_fld_set_param_int_array(fld, "sw", 2,
+				(int[2]) { sw, 0 });
+  } else {
+    assert(0);
+  }
 }
 
 // ----------------------------------------------------------------------
 // mrc_fld_nr_patches
 //
 // returns the number of patches on the this processor that comprise the
-// local domain (only works on former "mrc_fld" for now)
+// local domain (only works on former "mrc_m1/m3" for now)
 
 int
 mrc_fld_nr_patches(struct mrc_fld *fld)
 {
   assert(fld->_domain);
-  assert(fld->_dims.nr_vals == 5);
-  return fld->_ghost_dims[4];
+  assert(fld->_dims.nr_vals == 3 || fld->_dims.nr_vals == 5);
+  return fld->_ghost_dims[fld->_dims.nr_vals - 1];
 }
 
 // ----------------------------------------------------------------------
@@ -322,10 +354,11 @@ mrc_fld_duplicate(struct mrc_fld *fld)
   } else {
     mrc_fld_set_type(fld_new, mrc_fld_type(fld));
   }
+  mrc_fld_set_param_obj(fld_new, "domain", fld->_domain);
+  mrc_fld_set_param_int(fld_new, "dim", fld->_dim);
   mrc_fld_set_param_int_array(fld_new, "dims", fld->_dims.nr_vals, fld->_dims.vals);
   mrc_fld_set_param_int_array(fld_new, "offs", fld->_offs.nr_vals, fld->_offs.vals);
   mrc_fld_set_param_int_array(fld_new, "sw", fld->_sw.nr_vals, fld->_sw.vals);
-  fld_new->_domain = fld->_domain;
   mrc_fld_setup(fld_new);
   return fld_new;
 }
@@ -381,18 +414,54 @@ float
 mrc_fld_norm(struct mrc_fld *x)
 {
   assert(x->_data_type == MRC_NT_FLOAT);
-  assert(x->_dims.nr_vals == 4);
-  int nr_comps = mrc_fld_nr_comps(x);
   float res = 0.;
-  for (int m = 0; m < nr_comps; m++) {
-    mrc_fld_foreach(x, ix, iy, iz, 0, 0) {
-      res = fmaxf(res, fabsf(MRC_F3(x,m, ix,iy,iz)));
-    } mrc_fld_foreach_end;
+  int nr_comps = mrc_fld_nr_comps(x);
+  
+  if (x->_dims.nr_vals == 4) {
+    for (int m = 0; m < nr_comps; m++) {
+      mrc_fld_foreach(x, ix, iy, iz, 0, 0) {
+	res = fmaxf(res, fabsf(MRC_F3(x,m, ix,iy,iz)));
+      } mrc_fld_foreach_end;
+    }
+  } else if (x->_dims.nr_vals == 3) {
+    for (int m = 0; m < nr_comps; m++) {
+      mrc_m1_foreach_patch(x, p) {
+	mrc_m1_foreach(x, ix, 0, 0) {
+	  res = fmaxf(res, fabsf(MRC_M1(x,m, ix, p)));
+	} mrc_m1_foreach_end;
+      }
+    }
+  } else {
+    assert(0);
   }
 
   MPI_Allreduce(MPI_IN_PLACE, &res, 1, MPI_FLOAT, MPI_MAX, mrc_fld_comm(x));
   return res;
 }
+
+// ----------------------------------------------------------------------
+// mrc_fld_norm_comp
+
+// FIXME, should go away, use view instead
+float
+mrc_fld_norm_comp(struct mrc_fld *x, int m)
+{
+  assert(x->_data_type == MRC_NT_FLOAT);
+  float res = 0.;
+  if (x->_dims.nr_vals == 3) {
+    mrc_m1_foreach_patch(x, p) {
+      mrc_m1_foreach(x, ix, 0, 0) {
+	res = fmaxf(res, fabsf(MRC_M1(x,m, ix, p)));
+      } mrc_m1_foreach_end;
+    }
+  } else {
+    assert(0);
+  }
+
+  MPI_Allreduce(MPI_IN_PLACE, &res, 1, MPI_FLOAT, MPI_MAX, mrc_fld_comm(x));
+  return res;
+}
+
 
 // ----------------------------------------------------------------------
 // mrc_fld_set
@@ -429,6 +498,28 @@ mrc_fld_write_comps(struct mrc_fld *fld, struct mrc_io *io, int mm[])
     mrc_fld_write(fld1, io);
     mrc_fld_destroy(fld1);
   }
+}
+
+// ----------------------------------------------------------------------
+// mrc_fld_dump
+
+void
+mrc_fld_dump(struct mrc_fld *x, const char *basename, int n)
+{
+  struct mrc_io *io = mrc_io_create(mrc_fld_comm(x));
+  mrc_io_set_name(io, "mrc_fld_dump");
+  mrc_io_set_param_string(io, "basename", basename);
+  mrc_io_set_from_options(io);
+  mrc_io_setup(io);
+  mrc_io_open(io, "w", n, n);
+  for (int m = 0; m < mrc_fld_nr_comps(x); m++) {
+    char s[10];
+    sprintf(s, "m%d", m);
+    mrc_fld_set_comp_name(x, m, s);
+  }
+  mrc_fld_write(x, io);
+  mrc_io_close(io);
+  mrc_io_destroy(io);
 }
 
 // ----------------------------------------------------------------------
@@ -626,6 +717,7 @@ static struct param mrc_fld_descr[] = {
   { "sw"              , VAR(_sw)          , PARAM_INT_ARRAY(0, 0) },
 
   { "domain"          , VAR(_domain)      , PARAM_OBJ(mrc_domain) },
+  { "dim"             , VAR(_dim)         , PARAM_INT(-1)         },
 
   { "size_of_type"    , VAR(_size_of_type), MRC_VAR_INT           },
   { "len"             , VAR(_len)         , MRC_VAR_INT           },
@@ -657,4 +749,6 @@ struct mrc_class_mrc_fld mrc_class_mrc_fld = {
   .write        = _mrc_fld_write,
   .read         = _mrc_fld_read,
 };
+
+
 

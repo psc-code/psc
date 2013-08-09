@@ -23,7 +23,7 @@ static void
 _mrc_domain_create(struct mrc_domain *domain)
 {
   domain->crds = mrc_crds_create(mrc_domain_comm(domain));
-  mrc_crds_set_domain(domain->crds, domain); // FIXME, should be added as child
+  mrc_crds_set_param_obj(domain->crds, "domain", domain);
 
   domain->ddc = mrc_ddc_create(mrc_domain_comm(domain));
   // FIXME, this isn't really general, though ok if we always use
@@ -211,15 +211,29 @@ mrc_domain_create_ddc(struct mrc_domain *domain)
 
 // ======================================================================
 
-struct mrc_f1 *
+struct mrc_fld *
 mrc_domain_f1_create(struct mrc_domain *domain)
 {
   int nr_patches;
   mrc_domain_get_patches(domain, &nr_patches);
   assert(nr_patches == 1);
-  struct mrc_f1 *f1 = mrc_f1_create(mrc_domain_comm(domain));
-  f1->domain = domain;
-  return f1;
+  return mrc_domain_m1_create(domain);
+}
+
+// ======================================================================
+// mrc_domain_m1_create
+
+struct mrc_fld *
+mrc_domain_m1_create(struct mrc_domain *domain)
+{
+  struct mrc_fld *m1 = mrc_fld_create(domain->obj.comm);
+  mrc_fld_set_param_obj(m1, "domain", domain);
+  mrc_fld_set_param_int_array(m1, "dims", 3, NULL);
+  // default direction to 0 == x, which is also used to indicate that this
+  // is instead a mrc_fld
+  mrc_fld_set_param_int(m1, "dim", 0);
+  mrc_fld_set_nr_comps(m1, 1);
+  return m1;
 }
 
 // ======================================================================
@@ -250,17 +264,6 @@ mrc_domain_m3_create(struct mrc_domain *domain)
   mrc_fld_set_param_obj(m3, "domain", domain);
   mrc_fld_set_param_int_array(m3, "dims", 5, NULL);
   return m3;
-}
-
-// ======================================================================
-// mrc_domain_m1_create
-
-struct mrc_m1 *
-mrc_domain_m1_create(struct mrc_domain *domain)
-{
-  struct mrc_m1 *m1 = mrc_m1_create(domain->obj.comm);
-  m1->domain = domain;
-  return m1;
 }
 
 // ======================================================================

@@ -230,15 +230,14 @@ xdmf_spatial_create_m3(list_t *xdmf_spatial_list, const char *name,
 
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   float xl[3], dx[3];
-  if (strcmp(mrc_crds_type(crds), "multi_uniform") == 0 ||
-      strcmp(mrc_crds_type(crds), "amr_uniform") == 0 ||
+  if (strcmp(mrc_crds_type(crds), "amr_uniform") == 0 ||
       strcmp(mrc_crds_type(crds), "uniform") == 0) {
     xs->uniform = true;
-    mrc_crds_get_xl_xh(crds, xl, NULL);
+    mrc_crds_get_param_float3(crds, "l", xl);
     mrc_crds_get_dx(crds, dx);
   } else {
     for (int d = 0; d < 3; d++) {
-      xs->crd_nc_path[d] = mrc_io_obj_path(io, crds->mcrd_nc[d]);
+      xs->crd_nc_path[d] = mrc_io_obj_path(io, crds->crd_nc[d]);
     }
   }
 
@@ -281,12 +280,11 @@ xdmf_spatial_create_m3_parallel(list_t *xdmf_spatial_list, const char *name,
   }
 
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
-  if (strcmp(mrc_crds_type(crds), "multi_uniform") == 0 ||
-      strcmp(mrc_crds_type(crds), "amr_uniform") == 0 ||
+  if (strcmp(mrc_crds_type(crds), "amr_uniform") == 0 ||
       strcmp(mrc_crds_type(crds), "uniform") == 0) {
     xs->uniform = true;
     float xl[3], dx[3];
-    mrc_crds_get_xl_xh(crds, xl, NULL);
+    mrc_crds_get_param_float3(crds, "l", xl);
     mrc_crds_get_dx(crds, dx);
     for (int d = 0; d < 3; d++) {
       xs->xl[d][0] = xl[d] + slab_off[d] * dx[d];
@@ -294,7 +292,7 @@ xdmf_spatial_create_m3_parallel(list_t *xdmf_spatial_list, const char *name,
     }
   } else {
     for (int d = 0; d < 3; d++) {
-      xs->crd_nc_path[d] = strdup(mrc_io_obj_path(io, crds->mcrd_nc[d]));
+      xs->crd_nc_path[d] = strdup(mrc_io_obj_path(io, crds->crd_nc[d]));
     }
   }
 
