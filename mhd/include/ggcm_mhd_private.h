@@ -21,6 +21,7 @@ struct ggcm_mhd_params {
   float isphere, timelo;
   float d_i;
   float dtmin;
+  double dbasetime;
   int modnewstep;
   int magdiffu;
 };
