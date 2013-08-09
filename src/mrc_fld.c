@@ -1,7 +1,7 @@
 
 #include <mrc_fld.h>
 
-#include <mrc_vec_private.h>
+#include <mrc_vec.h>
 #include <mrc_io.h>
 #include <mrc_params.h>
 #include <mrc_profile.h>
@@ -130,6 +130,8 @@ _mrc_fld_setup(struct mrc_fld *fld)
     mrc_vec_set_type(fld->_vec, vec_type);
     mrc_vec_set_param_int(fld->_vec, "len", fld->_len);
     mrc_fld_setup_member_objs(fld); // sets up our .vec member
+    
+    fld->_arr = mrc_vec_get_array(fld->_vec);
   }
 }
 
@@ -368,12 +370,8 @@ void
 mrc_fld_copy(struct mrc_fld *fld_to, struct mrc_fld *fld_from)
 {
   assert(mrc_fld_same_shape(fld_to, fld_from));
-  assert(fld_to->_data_type == fld_from->_data_type);
-  void *arr_to = mrc_vec_get_array(fld_to->_vec);
-  void *arr_from = mrc_vec_get_array(fld_from->_vec);
-  memcpy(arr_to, arr_from, fld_to->_len * fld_to->_size_of_type);
-  mrc_vec_put_array(fld_to->_vec, arr_to);
-  mrc_vec_put_array(fld_from->_vec, arr_from);
+
+  memcpy(fld_to->_arr, fld_from->_arr, fld_to->_len * sizeof(float));
 }
 
 // ----------------------------------------------------------------------
@@ -383,10 +381,9 @@ void
 mrc_fld_axpy(struct mrc_fld *y, float alpha, struct mrc_fld *x)
 {
   assert(mrc_fld_same_shape(x, y));
-  assert(x->_data_type == MRC_NT_FLOAT);
+
   assert(y->_data_type == MRC_NT_FLOAT);
-  // FIXME, this should be done in mrc_vec, and is broken for non-standard vecs
-  float *y_arr = y->_vec->arr, *x_arr = x->_vec->arr;
+  float *y_arr = y->_arr, *x_arr = x->_arr;
   for (int i = 0; i < y->_len; i++) {
     y_arr[i] += alpha * x_arr[i];
   }
@@ -401,11 +398,9 @@ mrc_fld_waxpy(struct mrc_fld *w, float alpha, struct mrc_fld *x, struct mrc_fld 
 {
   assert(mrc_fld_same_shape(x, y));
   assert(mrc_fld_same_shape(x, w));
-  assert(x->_data_type == MRC_NT_FLOAT);
+
   assert(y->_data_type == MRC_NT_FLOAT);
-  assert(w->_data_type == MRC_NT_FLOAT);
-  // FIXME, this should be done in mrc_vec, and is broken for non-standard vecs
-  float *y_arr = y->_vec->arr, *x_arr = x->_vec->arr, *w_arr = w->_vec->arr;
+  float *y_arr = y->_arr, *x_arr = x->_arr, *w_arr = w->_arr;
   for (int i = 0; i < y->_len; i++) {
     w_arr[i] = alpha * x_arr[i] + y_arr[i];
   }
@@ -487,7 +482,6 @@ mrc_fld_set(struct mrc_fld *x, float val)
 void
 mrc_fld_write_comps(struct mrc_fld *fld, struct mrc_io *io, int mm[])
 {
-  struct mrc_fld *f = mrc_fld_get_as(fld, "float");
   for (int i = 0; mm[i] >= 0; i++) {
     struct mrc_fld *fld1 = mrc_fld_create(mrc_fld_comm(fld));
     mrc_fld_set_param_int_array(fld1, "offs", fld->_offs.nr_vals, fld->_offs.vals);
@@ -496,7 +490,7 @@ mrc_fld_write_comps(struct mrc_fld *fld, struct mrc_io *io, int mm[])
 				(int[4]) { dims[0], dims[1], dims[2], 1 });
     mrc_fld_set_param_int_array(fld1, "sw", fld->_sw.nr_vals, fld->_sw.vals);
     int *ib = fld->_ghost_offs;
-    mrc_fld_set_array(fld1, &MRC_F3(f, mm[i], ib[0],ib[1],ib[2]));
+    mrc_fld_set_array(fld1, &MRC_F3(fld,mm[i], ib[0], ib[1], ib[2]));
     mrc_fld_set_name(fld1, fld->_comp_name[mm[i]]);
     mrc_fld_set_comp_name(fld1, 0, fld->_comp_name[mm[i]]);
     mrc_fld_set_param_obj(fld1, "domain", fld->_domain);
@@ -504,7 +498,6 @@ mrc_fld_write_comps(struct mrc_fld *fld, struct mrc_io *io, int mm[])
     mrc_fld_write(fld1, io);
     mrc_fld_destroy(fld1);
   }
-  mrc_fld_put_as(f, fld);
 }
 
 // ----------------------------------------------------------------------
@@ -537,20 +530,10 @@ mrc_fld_dump(struct mrc_fld *x, const char *basename, int n)
 struct mrc_fld *
 mrc_fld_get_as(struct mrc_fld *fld_base, const char *type)
 {
-  /* static int cnt; */
-  /* mprintf("mrc_fld_get_as (%d) %p\n", cnt++, fld_base); */
-#if 0
-  if (cnt - 1 == 4) {
-    abort();
-  }
-#endif
   const char *type_base = mrc_fld_type(fld_base);
   // if we're already the subtype, nothing to be done
-  if (strcmp(type_base, type) == 0) {
-    assert(!fld_base->_arr);
-    fld_base->_arr = mrc_vec_get_array(fld_base->_vec);
+  if (strcmp(type_base, type) == 0)
     return fld_base;
-  }
 
   static int pr;
   if (!pr) {
@@ -566,16 +549,12 @@ mrc_fld_get_as(struct mrc_fld *fld_base, const char *type)
   fld->_domain = fld_base->_domain;
   // FIXME, component names, too
 
-  mrc_fld_setup(fld);
-
   // FIXME, this is openggcm specific and shouldn't be handled here
   if (strcmp(type, "float") == 0 && strcmp(type_base, "fortran") == 0) {
     // special case: float from fortran, just use same memory
-    mrc_vec_destroy(fld->_vec);
-    fld->_vec = mrc_vec_get(fld_base->_vec);
+    mrc_fld_set_array(fld, fld_base->_arr);
+    mrc_fld_setup(fld);
     prof_stop(pr);
-    assert(!fld->_arr);
-    fld->_arr = mrc_vec_get_array(fld->_vec);
     return fld;
   }
   if (strcmp(type, "fortran") == 0) {
@@ -583,6 +562,7 @@ mrc_fld_get_as(struct mrc_fld *fld_base, const char *type)
     mprintf("ERROR: trying to convert '%s' to 'fortran'\n", type_base);
     abort();
   }
+  mrc_fld_setup(fld);
 
   char s[strlen(type) + 12]; sprintf(s, "copy_to_%s", type);
   mrc_fld_copy_to_func_t copy_to = (mrc_fld_copy_to_func_t)
@@ -603,15 +583,6 @@ mrc_fld_get_as(struct mrc_fld *fld_base, const char *type)
     }
   }
 
-  assert(!fld->_arr);
-  // FIXME, this is hacky:
-  // if the mrc_fld doesn't really use the underlying mrc_vec,
-  // it doesn't get set up, so we fake it for now
-  if (mrc_vec_is_setup(fld->_vec)) {
-    fld->_arr = mrc_vec_get_array(fld->_vec);
-  } else {
-    fld->_arr = (void *) -1;
-  }
   prof_stop(pr);
   return fld;
 }
@@ -626,23 +597,11 @@ mrc_fld_get_as(struct mrc_fld *fld_base, const char *type)
 void
 mrc_fld_put_as(struct mrc_fld *fld, struct mrc_fld *fld_base)
 {
-  /* static int cnt; */
-  /* mprintf("mrc_fld_put_as (%d) %p\n", cnt++, fld_base); */
-
   const char *type_base = mrc_fld_type(fld_base);
   const char *type = mrc_fld_type(fld);
-
-  assert(fld->_arr);
-  if (mrc_vec_is_setup(fld->_vec)) {
-    // FIXME, same hack as in get_as()
-    mrc_vec_put_array(fld->_vec, fld->_arr);
-  }
-  fld->_arr = NULL;
-
   // If we're already the subtype, nothing to be done
-  if (strcmp(type_base, type) == 0) {
+  if (strcmp(type_base, type) == 0)
     return;
-  }
 
   static int pr;
   if (!pr) {
