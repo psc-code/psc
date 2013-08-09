@@ -1010,7 +1010,12 @@ mrc_obj_write_dict(struct mrc_obj *obj, const char *path, struct mrc_io *io)
   mrc_io_write_attr_int(io, path, "mrc_obj_dict_count", cnt);
 
   __list_for_each_entry(e, &obj->dict_list, entry, struct mrc_dict_entry) {
-    mrc_io_write_attr(io, path, e->prm.type, e->prm.name, &e->val);
+    if (e->prm.type == PT_OBJ ||
+	e->prm.type == MRC_VAR_OBJ) {
+      mrc_io_write_ref(io, obj, e->prm.name, e->val.u_obj);
+    } else {
+      mrc_io_write_attr(io, path, e->prm.type, e->prm.name, &e->val);
+    }
   }
 }
 
