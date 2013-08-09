@@ -94,7 +94,7 @@ _ggcm_mhd_create(struct ggcm_mhd *mhd)
   ggcm_mhd_bnd_set_param_obj(mhd->bnd, "mhd", mhd);
   ggcm_mhd_ic_set_param_obj(mhd->ic, "mhd", mhd);
   mrc_fld_set_param_obj(mhd->fld, "domain", mhd->domain);
-  mrc_fld_set_param_int_array(mhd->fld, "dims", 4, NULL);
+  mrc_fld_set_param_int_array(mhd->fld, "dims", 5, NULL);
   mrc_fld_set_sw(mhd->fld, BND);
   mrc_fld_set_nr_comps(mhd->fld, _NR_FLDS);
   for (int m = 0; m < _NR_FLDS; m++) {
