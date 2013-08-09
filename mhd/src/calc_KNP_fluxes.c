@@ -324,7 +324,7 @@ calc_KNP_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
 
 
     for (int m = 0; m <= _UU1; m++) {
-#if 1
+#if 0
       FLUX(flux, 0, m, ix,iy,iz) =
 	(ap * FLUX(flux_p, 0, m, ix-1,iy,iz) - am * FLUX(flux_m, 0, m, ix,iy,iz)) / (ap - am) +
 	(ap * am) / (ap - am) * (MRC_F3(u_m[0], m, ix ,iy,iz) - MRC_F3(u_p[0], m, ix-1,iy,iz));
