@@ -51,6 +51,9 @@ mrc_ts_set_solution(struct mrc_ts *ts, struct mrc_obj *x)
   ts->vec_norm =
     (float (*)(struct mrc_obj *)) mrc_obj_get_method(x, "norm");
   assert(ts->vec_norm);
+  ts->vec_set =
+    (void (*)(struct mrc_obj *, float)) mrc_obj_get_method(x, "set");
+  assert(ts->vec_set);
 }
 
 void
@@ -171,6 +174,7 @@ mrc_ts_init()
   mrc_class_register_subclass(&mrc_class_mrc_ts, &mrc_ts_ode45_ops);
   mrc_class_register_subclass(&mrc_class_mrc_ts, &mrc_ts_rk2_ops);
   mrc_class_register_subclass(&mrc_class_mrc_ts, &mrc_ts_rk4_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_ts, &mrc_ts_rkf45_ops);
 }
 
 // ======================================================================

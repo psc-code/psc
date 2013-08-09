@@ -732,6 +732,7 @@ static struct mrc_obj_method mrc_fld_methods[] = {
   MRC_OBJ_METHOD("axpy"     , mrc_fld_axpy),
   MRC_OBJ_METHOD("waxpy"    , mrc_fld_waxpy),
   MRC_OBJ_METHOD("norm"     , mrc_fld_norm),
+  MRC_OBJ_METHOD("set"      , mrc_fld_set),
   {}
 };
 

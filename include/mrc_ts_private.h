@@ -25,6 +25,7 @@ struct mrc_ts {
   void (*vec_axpy)(struct mrc_obj *, float, struct mrc_obj *);
   void (*vec_waxpy)(struct mrc_obj *, float, struct mrc_obj *, struct mrc_obj *);
   float (*vec_norm)(struct mrc_obj *);
+  void (*vec_set)(struct mrc_obj *, float);
 
   list_t monitors;
 
@@ -74,6 +75,12 @@ mrc_ts_vec_norm(struct mrc_ts *ts, struct mrc_obj *vec)
   return ts->vec_norm(vec);
 }
 
+static inline void
+mrc_ts_vec_set(struct mrc_ts *ts, struct mrc_obj *vec, float val)
+{
+  return ts->vec_set(vec, val);
+}
+
 // ----------------------------------------------------------------------
 
 struct mrc_ts_ops {
@@ -84,6 +91,7 @@ struct mrc_ts_ops {
 
 extern struct mrc_ts_ops mrc_ts_rk2_ops;
 extern struct mrc_ts_ops mrc_ts_rk4_ops;
+extern struct mrc_ts_ops mrc_ts_rkf45_ops;
 extern struct mrc_ts_ops mrc_ts_ode45_ops;
 
 #endif
