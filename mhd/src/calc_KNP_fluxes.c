@@ -16,6 +16,8 @@
 		     (iy) - ((m) == 1),	\
 		     (iz) - ((m) == 2))
 
+
+
 #if SEMICONSV 
 
 #define P_M(ndx) (gamma - 1.f) * ( U_M( _UU1, ndx) - ((.5f / U_M( _RR1, ndx) ) * \
@@ -33,7 +35,6 @@
 #define P_P(ndx) (gamma - 1.f) * ( U_P( _UU1, ndx) - ((.5f / U_P( _RR1, ndx) ) * \
 		   (sqr(U_P( _RV1X, ndx)) + sqr(U_P( _RV1Y, ndx)) + sqr(U_P( _RV1Z, ndx)) )) - \
 	    (.5f * (sqr(U_P( _B1X, ndx))  + sqr(U_P( _B1Y, ndx))  + sqr(U_P(_B1Z, ndx)))))
-
 
 #endif 
 
@@ -92,7 +93,10 @@ calc_KNP_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
     float cAm = sqrtf( (sqr(MRC_F3(u_m[0], _B1X, ix,iy,iz))+
 			sqr(MRC_F3(u_m[0], _B1Y, ix,iy,iz))+
 			sqr(MRC_F3(u_m[0], _B1Z, ix,iy,iz)))/ MRC_F3(u_m[0], _RR1, ix,iy,iz) );
- 						      
+ 	
+    //    cAp = 0.0; 
+    //cAm = 0.0;
+#if 0
     float tmpp = sqr(csp) + sqr(cAp);
     float cfp = sqrtf( 0.5 * ( tmpp + sqrtf( sqr( sqr(cAp) + sqr(csp) )
 					     - (4. * mpermi * sqr(csp * MRC_F3(u, _B1X, ix-1,iy,iz)) /  
@@ -102,6 +106,19 @@ calc_KNP_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
 					     - (4.* mpermi * sqr(csm * MRC_F3(u, _B1X, ix,iy,iz)) /  
 						MRC_F3(u_m[0], _RR1, ix,iy,iz))  )) );
     
+#else 
+
+    float tmpp = sqr(csp) + sqr(cAp);
+    float cfp = sqrtf( 0.5 * ( tmpp + sqrtf( sqr( sqr(cAp) + sqr(csp) )
+					     - (4. * mpermi * sqr(csp * MRC_F3(u_p[0], _B1X, ix-1,iy,iz)) /  
+						MRC_F3(u_p[0], _RR1, ix-1,iy,iz)) )) );      
+    float tmpm = sqr(csm) + sqr(cAm);
+    float cfm = sqrtf( 0.5 * ( tmpm + sqrtf( sqr( sqr(cAm) + sqr(csm) )
+					     - (4.* mpermi * sqr(csm * MRC_F3(u_p[0], _B1X, ix,iy,iz)) /  
+						MRC_F3(u_m[0], _RR1, ix,iy,iz))  )) );
+    
+#endif 
+
     float cwp = d_i * cAp * sqrtf(1./MRC_F3(u_p[0], _RR1, ix-1,iy,iz)) * bdx1[ix+2]  ;
     float cwm = d_i * cAm * sqrtf(1./MRC_F3(u_m[0], _RR1, ix,iy,iz)) * bdx1[ix+2]  ; 
 
@@ -291,9 +308,7 @@ calc_KNP_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
 	  iz > 1 && iz < 64) {
 	//assert(isfinite(FLUX(flux, 0, m, ix,iy,iz)));
 	//	assert(isfinite(FLUX(flux, 1, m, ix,iy,iz)));
-	if (!isfinite(FLUX(flux, 0, m, ix,iy,iz))) {
-	  mprintf("%d ix %d %d %d ap %g am %g acfm %g acfp %g acAp %g acAm %g acsp %g acsm %g acpp %g acpm %g \n", m, ix,iy,iz, ap, am, acfm, acfp, acAp, acAm, acsp, acsm, acpp, acpm);
-	}
+
 	assert(isfinite(FLUX(flux, 0, m, ix,iy,iz)));
       }
       

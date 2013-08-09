@@ -25,8 +25,10 @@
 //#define DEBUG
 // Define limiter: [1] van Leer(1977) , [2] minmod (Roe 1976) [3] moncen [4] genminmod
 #define LMTR 1
+
 // KNP[0] or KT[1]? 
 #define KT 0
+
 // include whistler speed? 
 #define incws 0
 

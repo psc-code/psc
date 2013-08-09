@@ -8,6 +8,7 @@ bin_PROGRAMS = \
 	mhd_bw \
 	mhd_ot \
 	mhd_kh \
+	mhd_alfven \
 	mhd_whistler
 
 check_PROGRAMS = \
