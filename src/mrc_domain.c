@@ -244,7 +244,7 @@ mrc_domain_fld_create(struct mrc_domain *domain, int sw, const char *comps)
 {
   struct mrc_fld *fld = mrc_fld_create(mrc_domain_comm(domain));
   mrc_fld_set_param_obj(fld, "domain", domain);
-  mrc_fld_set_param_int_array(fld, "dims", 4, NULL);
+  mrc_fld_set_param_int_array(fld, "dims", 5, NULL);
   if (comps) {
     mrc_fld_set_comp_names(fld, comps);
   } else {
