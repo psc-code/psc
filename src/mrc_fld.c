@@ -486,8 +486,7 @@ mrc_fld_write_comps(struct mrc_fld *fld, struct mrc_io *io, int mm[])
     struct mrc_fld *fld1 = mrc_fld_create(mrc_fld_comm(fld));
     mrc_fld_set_param_int_array(fld1, "offs", fld->_offs.nr_vals, fld->_offs.vals);
     int *dims = fld->_dims.vals;
-    mrc_fld_set_param_int_array(fld1, "dims", 4,
-				(int[4]) { dims[0], dims[1], dims[2], 1 });
+    mrc_fld_set_param_int_array(fld1, "dims", 5, (int[5]) { dims[0], dims[1], dims[2], 1, 1 });
     mrc_fld_set_param_int_array(fld1, "sw", fld->_sw.nr_vals, fld->_sw.vals);
     int *ib = fld->_ghost_offs;
     mrc_fld_set_array(fld1, &MRC_F3(fld,mm[i], ib[0], ib[1], ib[2]));
