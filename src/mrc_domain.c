@@ -230,6 +230,7 @@ mrc_domain_fld_create(struct mrc_domain *domain, int sw, const char *comps)
 {
   struct mrc_fld *fld = mrc_fld_create(mrc_domain_comm(domain));
   mrc_fld_set_param_obj(fld, "domain", domain);
+  mrc_fld_set_param_int_array(fld, "dims", 4, NULL);
   if (comps) {
     mrc_fld_set_comp_names(fld, comps);
   } else {
@@ -242,11 +243,12 @@ mrc_domain_fld_create(struct mrc_domain *domain, int sw, const char *comps)
 // ======================================================================
 // mrc_domain_m3_create
 
-struct mrc_m3 *
+struct mrc_fld *
 mrc_domain_m3_create(struct mrc_domain *domain)
 {
-  struct mrc_m3 *m3 = mrc_m3_create(domain->obj.comm);
-  m3->domain = domain;
+  struct mrc_fld *m3 = mrc_fld_create(mrc_domain_comm(domain));
+  mrc_fld_set_param_obj(m3, "domain", domain);
+  mrc_fld_set_param_int_array(m3, "dims", 5, NULL);
   return m3;
 }
 

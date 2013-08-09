@@ -7,4 +7,4 @@ set -e
 @MPIRUN@ -n 1 ./test_mrc_domain_multi --mrc_io_type xdmf_collective --case 2 --npx 2
 @MPIRUN@ -n 2 ./test_mrc_domain_multi --mrc_io_type xdmf_collective --case 2 --npx 2
 @MPIRUN@ -n 2 ./test_mrc_domain_multi --mrc_io_type xdmf_collective --case 2 \
-    --npx 3 --nr_writers 2
+    --mx 33 --npx 3 --nr_writers 2

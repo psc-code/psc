@@ -40,7 +40,7 @@ mrc_ddc_amr_setup(struct mrc_ddc *ddc)
 
   int ldims[3];
   mrc_domain_get_param_int3(amr->domain, "m", ldims);
-  // needs to be compatible with how mrc_m3 indexes its fields
+  // needs to be compatible with how mrc_fld indexes its fields
   for (int d = 0; d < 3; d++) {
     amr->ib[d] = -amr->sw;
     amr->im[d] = ldims[d] + 2 * amr->sw;
@@ -200,13 +200,14 @@ mrc_ddc_amr_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 // mrc_ddc_amr_apply
 
 void
-mrc_ddc_amr_apply(struct mrc_ddc *ddc, struct mrc_m3 *fld)
+mrc_ddc_amr_apply(struct mrc_ddc *ddc, struct mrc_fld *fld)
 {
   assert(ddc->size_of_type == sizeof(float));
 
-  float **fldp = malloc(fld->nr_patches * sizeof(*fldp));
-  for (int p = 0; p < fld->nr_patches; p++) {
-    fldp[p] = mrc_m3_patch_get(fld, p)->arr;
+  float **fldp = malloc(mrc_fld_nr_patches(fld) * sizeof(*fldp));
+  for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
+    struct mrc_fld_patch *m3p = mrc_fld_patch_get(fld, p);
+    fldp[p] = &MRC_M3(m3p, 0, fld->_ghost_offs[0], fld->_ghost_offs[1], fld->_ghost_offs[2]);
   }
   mrc_ddc_amr_fill_ghosts(ddc, -1, -1, fldp);
 

@@ -820,12 +820,12 @@ get_writer_off_dims(struct collective_m3_ctx *ctx, int writer,
 
 static void
 collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
-			  struct mrc_m3 *m3, int m)
+			  struct mrc_fld *m3, int m)
 {
   struct xdmf *xdmf = to_xdmf(io);
 
   int nr_patches;
-  struct mrc_patch *patches = mrc_domain_get_patches(m3->domain, &nr_patches);
+  struct mrc_patch *patches = mrc_domain_get_patches(m3->_domain, &nr_patches);
   ctx->nr_sends = 0;
   for (int p = 0; p < nr_patches; p++) {
     int *off = patches[p].off, *ldims = patches[p].ldims;
@@ -865,15 +865,15 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
 	continue;
 
       struct mrc_patch_info info;
-      mrc_domain_get_local_patch_info(m3->domain, p, &info);
-      struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, p);
+      mrc_domain_get_local_patch_info(m3->_domain, p, &info);
+      struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, p);
       /* mprintf("MPI_Isend -> %d gp %d len %d\n", xdmf->writers[writer], info.global_patch, */
-      /* 	      m3p->im[0] * m3p->im[1] * m3p->im[2]); */
-      MPI_Isend(&MRC_M3(m3p, m, m3p->ib[0], m3p->ib[1], m3p->ib[2]),
-		m3p->im[0] * m3p->im[1] * m3p->im[2], MPI_FLOAT,
+      /* 	      m3->_ghost_dims[0] * m3->_ghost_dims[1] * m3->_ghost_dims[2]); */
+      MPI_Isend(&MRC_M3(m3p, m, m3->_ghost_offs[0], m3->_ghost_offs[1], m3->_ghost_offs[2]),
+		m3->_ghost_dims[0] * m3->_ghost_dims[1] * m3->_ghost_dims[2], MPI_FLOAT,
 		xdmf->writers[writer], info.global_patch,
 		mrc_io_comm(io), &ctx->send_reqs[sr++]);
-      mrc_m3_patch_put(m3);
+      mrc_fld_patch_put(m3);
     }
   }
 }
@@ -883,7 +883,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
 
 static void
 collective_send_fld_end(struct collective_m3_ctx *ctx, struct mrc_io *io,
-			struct mrc_m3 *m3, int m)
+			struct mrc_fld *m3, int m)
 {
   MPI_Waitall(ctx->nr_sends, ctx->send_reqs, MPI_STATUSES_IGNORE);
   free(ctx->send_reqs);
@@ -895,18 +895,18 @@ collective_send_fld_end(struct collective_m3_ctx *ctx, struct mrc_io *io,
 static void
 collective_recv_fld_begin(struct collective_m3_ctx *ctx,
 			  struct mrc_io *io, struct mrc_fld *fld,
-			  struct mrc_m3 *m3)
+			  struct mrc_fld *m3)
 {
   // find out who's sending, OPT: this way is not very scalable
   // could also be optimized by just looking at slow_dim
   // FIXME, figure out pattern and cache, at least across components
 
   int nr_global_patches;
-  mrc_domain_get_nr_global_patches(m3->domain, &nr_global_patches);
+  mrc_domain_get_nr_global_patches(m3->_domain, &nr_global_patches);
   ctx->nr_recvs = 0;
   for (int gp = 0; gp < nr_global_patches; gp++) {
     struct mrc_patch_info info;
-    mrc_domain_get_global_patch_info(m3->domain, gp, &info);
+    mrc_domain_get_global_patch_info(m3->_domain, gp, &info);
     // skip local patches for now
     if (info.rank == io->rank) {
       continue;
@@ -927,7 +927,7 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
 
   for (int gp = 0; gp < nr_global_patches; gp++) {
     struct mrc_patch_info info;
-    mrc_domain_get_global_patch_info(m3->domain, gp, &info);
+    mrc_domain_get_global_patch_info(m3->_domain, gp, &info);
     // skip local patches for now
     if (info.rank == io->rank) {
       continue;
@@ -943,7 +943,7 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
     mrc_fld_set_param_int_array(recv_fld, "dims", 4,
 			       (int[4]) { info.ldims[0], info.ldims[1], info.ldims[2], 1 });
     mrc_fld_set_param_int_array(recv_fld, "sw", 4,
-			       (int[4]) { m3->sw, m3->sw, m3->sw, 0 });
+			       (int[4]) { m3->_sw.vals[0], m3->_sw.vals[1], m3->_sw.vals[2], 0 });
     mrc_fld_setup(recv_fld);
     ctx->recvs[rr].fld = recv_fld;
     
@@ -959,13 +959,13 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
 static void
 collective_recv_fld_end(struct collective_m3_ctx *ctx,
 			struct mrc_io *io, struct mrc_fld *fld,
-			struct mrc_m3 *m3, int m)
+			struct mrc_fld *m3, int m)
 {
   MPI_Waitall(ctx->nr_recvs, ctx->recv_reqs, MPI_STATUSES_IGNORE);
 
   for (int rr = 0; rr < ctx->nr_recvs; rr++) {
     struct mrc_patch_info info;
-    mrc_domain_get_global_patch_info(m3->domain, ctx->recv_gps[rr], &info);
+    mrc_domain_get_global_patch_info(m3->_domain, ctx->recv_gps[rr], &info);
     int *off = info.off;
     // OPT, could be cached 2nd(?) and 3rd time
     int ilo[3], ihi[3];
@@ -995,10 +995,10 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
 static void
 collective_recv_fld_local(struct collective_m3_ctx *ctx,
 			  struct mrc_io *io, struct mrc_fld *fld,
-			  struct mrc_m3 *m3, int m)
+			  struct mrc_fld *m3, int m)
 {
   int nr_patches;
-  struct mrc_patch *patches = mrc_domain_get_patches(m3->domain, &nr_patches);
+  struct mrc_patch *patches = mrc_domain_get_patches(m3->_domain, &nr_patches);
 
   for (int p = 0; p < nr_patches; p++) {
     struct mrc_patch *patch = &patches[p];
@@ -1010,7 +1010,7 @@ collective_recv_fld_local(struct collective_m3_ctx *ctx,
     if (!has_intersection) {
       continue;
     }
-    struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, p);
+    struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, p);
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
       for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
@@ -1019,7 +1019,7 @@ collective_recv_fld_local(struct collective_m3_ctx *ctx,
 	}
       }
     }
-    mrc_m3_patch_put(m3);
+    mrc_fld_patch_put(m3);
   }
 }
 
@@ -1031,13 +1031,13 @@ collective_recv_fld_local(struct collective_m3_ctx *ctx,
 static void
 collective_write_fld(struct collective_m3_ctx *ctx, struct mrc_io *io,
 		    const char *path, struct mrc_fld *fld, int m,
-		    struct mrc_m3 *m3, struct xdmf_spatial *xs, hid_t group0)
+		    struct mrc_fld *m3, struct xdmf_spatial *xs, hid_t group0)
 {
   int ierr;
 
-  xdmf_spatial_save_fld_info(xs, strdup(m3->name[m]), strdup(path), false);
+  xdmf_spatial_save_fld_info(xs, strdup(mrc_fld_comp_name(m3, m)), strdup(path), false);
 
-  hid_t group_fld = H5Gcreate(group0, m3->name[m], H5P_DEFAULT,
+  hid_t group_fld = H5Gcreate(group0, mrc_fld_comp_name(m3, m), H5P_DEFAULT,
 			      H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group_fld);
   ierr = H5LTset_attribute_int(group_fld, ".", "m", &m, 1); CE;
   
@@ -1083,20 +1083,20 @@ collective_write_fld(struct collective_m3_ctx *ctx, struct mrc_io *io,
 // xdmf_collective_write_m3
 
 static void
-xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
+xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3)
 {
   struct xdmf *xdmf = to_xdmf(io);
 
   struct collective_m3_ctx ctx;
-  collective_m3_init(io, &ctx, m3->domain);
+  collective_m3_init(io, &ctx, m3->_domain);
 
   struct xdmf_file *file = &xdmf->file;
   struct xdmf_spatial *xs = xdmf_spatial_find(&file->xdmf_spatial_list,
-					      mrc_domain_name(m3->domain));
+					      mrc_domain_name(m3->_domain));
   if (!xs) {
     xs = xdmf_spatial_create_m3_parallel(&file->xdmf_spatial_list,
-					 mrc_domain_name(m3->domain),
-					 m3->domain,
+					 mrc_domain_name(m3->_domain),
+					 m3->_domain,
 					 ctx.slab_off, ctx.slab_dims, io);
   }
 
@@ -1127,7 +1127,7 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
     int nr_1 = 1;
     H5LTset_attribute_int(group0, ".", "nr_patches", &nr_1, 1);
     
-    for (int m = 0; m < m3->nr_comp; m++) {
+    for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
       collective_recv_fld_begin(&ctx, io, fld, m3);
       collective_send_fld_begin(&ctx, io, m3, m);
       collective_recv_fld_local(&ctx, io, fld, m3, m);
@@ -1139,7 +1139,7 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
     H5Gclose(group0);
     mrc_fld_destroy(fld);
   } else {
-    for (int m = 0; m < m3->nr_comp; m++) {
+    for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
       collective_send_fld_begin(&ctx, io, m3, m);
       collective_send_fld_end(&ctx, io, m3, m);
     }
@@ -1284,7 +1284,7 @@ collective_m3_recv_setup(struct mrc_io *io, struct collective_m3_ctx *ctx,
 
 static void
 collective_m3_recv_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
-			 struct mrc_domain *domain, struct mrc_m3 *m3)
+			 struct mrc_domain *domain, struct mrc_fld *m3)
 {
   collective_m3_recv_setup(io, ctx, domain);
 
@@ -1297,7 +1297,7 @@ collective_m3_recv_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
 			       (int[4]) { ilo[0], ilo[1], ilo[2], 0 });
     mrc_fld_set_param_int_array(fld, "dims", 4,
 			       (int[4]) { ihi[0] - ilo[0], ihi[1] - ilo[1], ihi[2] - ilo[2],
-				   m3->nr_comp });
+				   mrc_fld_nr_comps(m3) });
     mrc_fld_setup(fld);
     
     MPI_Irecv(fld->_arr, fld->_len, MPI_FLOAT, recv->rank,
@@ -1308,16 +1308,16 @@ collective_m3_recv_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
 
 static void
 collective_m3_recv_end(struct mrc_io *io, struct collective_m3_ctx *ctx,
-		       struct mrc_domain *domain, struct mrc_m3 *m3)
+		       struct mrc_domain *domain, struct mrc_fld *m3)
 {
   MPI_Waitall(ctx->nr_recvs, ctx->recv_reqs, MPI_STATUSES_IGNORE);
   
   for (int i = 0; i < ctx->nr_recvs; i++) {
     struct collective_m3_entry *recv = &ctx->recvs[i];
-    struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, recv->patch);
+    struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, recv->patch);
 
     int *ilo = recv->ilo, *ihi = recv->ihi;
-    for (int m = 0; m < m3->nr_comp; m++) {
+    for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
       for (int iz = ilo[2]; iz < ihi[2]; iz++) {
 	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
@@ -1326,7 +1326,7 @@ collective_m3_recv_end(struct mrc_io *io, struct collective_m3_ctx *ctx,
 	}
       }
     }
-    mrc_m3_patch_put(m3);
+    mrc_fld_patch_put(m3);
     mrc_fld_destroy(recv->fld);
   }
   free(ctx->recvs);
@@ -1424,31 +1424,31 @@ collective_m3_read_fld(struct mrc_io *io, struct collective_m3_ctx *ctx,
 }
 
 static void
-xdmf_collective_read_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
+xdmf_collective_read_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3)
 {
   struct xdmf *xdmf = to_xdmf(io);
   struct xdmf_file *file = &xdmf->file;
   int ierr;
 
   struct collective_m3_ctx ctx;
-  collective_m3_init(io, &ctx, m3->domain);
+  collective_m3_init(io, &ctx, m3->_domain);
 
   if (xdmf->is_writer) {
     struct mrc_fld *gfld = mrc_fld_create(MPI_COMM_SELF);
-    mrc_fld_set_nr_comps(gfld, m3->nr_comp);
+    mrc_fld_set_nr_comps(gfld, mrc_fld_nr_comps(m3));
 
     hid_t group0 = H5Gopen(file->h5_file, path, H5P_DEFAULT); H5_CHK(group0);
     collective_m3_read_fld(io, &ctx, group0, gfld);
     ierr = H5Gclose(group0); CE;
 
-    collective_m3_recv_begin(io, &ctx, m3->domain, m3);
-    collective_m3_send_begin(io, &ctx, m3->domain, gfld);
-    collective_m3_recv_end(io, &ctx, m3->domain, m3);
+    collective_m3_recv_begin(io, &ctx, m3->_domain, m3);
+    collective_m3_send_begin(io, &ctx, m3->_domain, gfld);
+    collective_m3_recv_end(io, &ctx, m3->_domain, m3);
     collective_m3_send_end(io, &ctx);
     mrc_fld_destroy(gfld);
   } else {
-    collective_m3_recv_begin(io, &ctx, m3->domain, m3);
-    collective_m3_recv_end(io, &ctx, m3->domain, m3);
+    collective_m3_recv_begin(io, &ctx, m3->_domain, m3);
+    collective_m3_recv_end(io, &ctx, m3->_domain, m3);
   }
 }
 

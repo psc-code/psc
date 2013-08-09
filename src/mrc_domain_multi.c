@@ -240,6 +240,7 @@ mrc_domain_multi_setup(struct mrc_domain *domain)
     int ldims[3], rmndr[3];
     ldims[d] = multi->gdims[d] / np[d];
     rmndr[d] = multi->gdims[d] % np[d];
+    assert(rmndr[d] == 0); // we used to support this, but not anymore
 
     multi->ldims[d] = calloc(np[d], sizeof(*multi->ldims[d]));
     multi->off[d] = calloc(np[d], sizeof(*multi->off[d]));

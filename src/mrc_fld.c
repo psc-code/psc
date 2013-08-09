@@ -48,18 +48,29 @@ _mrc_fld_setup(struct mrc_fld *fld)
 {
   if (fld->_domain) {
     // if we have a domain, use that to set _dims
-    if (fld->_dims.nr_vals == 0) {
-      // mrc_fld_set_nr_comps hasn't been called, default to 1
-      mrc_fld_set_nr_comps(fld, 1);
-    }
-    if (fld->_dims.nr_vals == 4) {
-      int nr_patches;
-      struct mrc_patch *patches = mrc_domain_get_patches(fld->_domain, &nr_patches);
-      assert(nr_patches == 1);
-      
-      for (int d = 0; d < 3; d++) {
-	fld->_dims.vals[d] = patches[0].ldims[d];
+
+    assert(mrc_fld_nr_comps(fld) > 0);
+    int nr_patches;
+    struct mrc_patch *patches = mrc_domain_get_patches(fld->_domain, &nr_patches);
+
+    assert((fld->_dims.nr_vals == 4 && nr_patches == 1) ||
+	   (fld->_dims.nr_vals == 5 && nr_patches >= 1));
+
+    if (fld->_dims.nr_vals == 5) {
+      fld->_patches = calloc(nr_patches, sizeof(*fld->_patches));
+      for (int p = 0; p < nr_patches; p++) {
+	struct mrc_fld_patch *m3p = &fld->_patches[p];
+	m3p->_m3 = fld;
+	m3p->_p = p;
+	for (int d = 0; d < 3; d++) {
+	  assert(patches[p].ldims[d] == patches[0].ldims[d]);
+	}
       }
+      fld->_dims.vals[4] = nr_patches;
+    }
+
+    for (int d = 0; d < 3; d++) {
+      fld->_dims.vals[d] = patches[0].ldims[d];
     }
   }
 
@@ -176,8 +187,9 @@ mrc_fld_comp_name(struct mrc_fld *fld, int m)
 static int
 mrc_fld_comp_dim(struct mrc_fld *fld)
 {
-  if (fld->_dims.nr_vals == 0 && fld->_domain) {
-    mrc_fld_set_param_int_array(fld, "dims", 4, NULL);
+  if (fld->_domain) {
+    assert(fld->_dims.nr_vals > 3);
+    return 3;
   }
 
   assert(fld->_dims.nr_vals > 0);
@@ -191,6 +203,7 @@ int
 mrc_fld_nr_comps(struct mrc_fld *fld)
 {
   int comp_dim = mrc_fld_comp_dim(fld);
+  assert(comp_dim < fld->_dims.nr_vals);
   return fld->_dims.vals[comp_dim];
 }
 
@@ -240,7 +253,23 @@ void
 mrc_fld_set_sw(struct mrc_fld *fld, int sw)
 {
   assert(fld->_domain);
-  mrc_fld_set_param_int_array(fld, "sw", 4, (int[4]) { sw, sw, sw, 0 });
+  assert(fld->_dims.nr_vals > 3);
+  mrc_fld_set_param_int_array(fld, "sw", fld->_dims.nr_vals,
+			      (int[5]) { sw, sw, sw, 0, 0 });
+}
+
+// ----------------------------------------------------------------------
+// mrc_fld_nr_patches
+//
+// returns the number of patches on the this processor that comprise the
+// local domain (only works on former "mrc_fld" for now)
+
+int
+mrc_fld_nr_patches(struct mrc_fld *fld)
+{
+  assert(fld->_domain);
+  assert(fld->_dims.nr_vals == 5);
+  return fld->_ghost_dims[4];
 }
 
 // ----------------------------------------------------------------------

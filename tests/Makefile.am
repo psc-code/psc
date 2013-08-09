@@ -60,7 +60,6 @@ TESTS = \
 	test_mrc_m3_2.sh \
 	test_mrc_m3_3.sh \
 	test_mrc_m3_4.sh \
-	test_mrc_m3_5.sh \
 	test_mrc_m3_6.sh \
 	test_mrc_f3_0.sh \
 	test_mrc_f3_1.sh \
@@ -70,11 +69,5 @@ TESTS = \
 XFAIL_TESTS = \
 	test_mrc_m1_0.sh \
 	test_mrc_m1_1.sh \
-	test_mrc_m3_0.sh \
-	test_mrc_m3_1.sh \
-	test_mrc_m3_2.sh \
-	test_mrc_m3_3.sh \
-	test_mrc_m3_4.sh \
 	test_mrc_m3_5.sh \
-	test_mrc_m3_6.sh \
 	test_mrc_f3_2.sh

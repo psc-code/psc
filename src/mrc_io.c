@@ -161,20 +161,20 @@ mrc_io_read_f3(struct mrc_io *io, const char *path, struct mrc_fld *fld)
     ops->read_f3(io, path, fld);
   } else {
     assert(fld->_domain);
-    struct mrc_m3 *m3 = mrc_domain_m3_create(fld->_domain);
-    mrc_m3_set_param_int(m3, "sw", fld->_sw.vals[0]);
-    mrc_m3_set_param_int(m3, "nr_comps", mrc_fld_nr_comps(fld));
-    mrc_m3_setup(m3);
+    struct mrc_fld *m3 = mrc_domain_m3_create(fld->_domain);
+    mrc_fld_set_sw(m3, fld->_sw.vals[0]);
+    mrc_fld_set_nr_comps(m3, mrc_fld_nr_comps(fld));
+    mrc_fld_setup(m3);
     mrc_io_read_m3(io, path, m3);
 
-    struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, 0);
-    for (int m = 0; m < m3->nr_comp; m++) {
+    struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, 0);
+    for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
       mrc_m3_foreach_bnd(m3p, ix,iy,iz) {
 	MRC_F3(fld, m, ix,iy,iz) = MRC_M3(m3p, m, ix,iy,iz);
       } mrc_m3_foreach_end;
     }
-    mrc_m3_patch_put(m3);
-    mrc_m3_destroy(m3);
+    mrc_fld_patch_put(m3);
+    mrc_fld_destroy(m3);
   }
 }
 
@@ -189,6 +189,8 @@ mrc_io_read_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
     ops->read_fld(io, path, fld);
   } else if (fld->_dims.nr_vals == 4) {
     mrc_io_read_f3(io, path, fld);
+  } else if (fld->_dims.nr_vals == 5) {
+    mrc_io_read_m3(io, path, fld);
   } else {
     assert(0);
   }
@@ -205,6 +207,8 @@ mrc_io_write_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
     ops->write_fld(io, path, fld);
   } else if (fld->_dims.nr_vals == 4) {
     mrc_io_write_f3(io, path, fld, 1.f);
+  } else if (fld->_dims.nr_vals == 5) {
+    mrc_io_write_m3(io, path, fld);
   } else {
     assert(0);
   }
@@ -263,22 +267,24 @@ mrc_io_write_f3(struct mrc_io *io, const char *path, struct mrc_fld *fld, float 
     }
   } else {
     int nr_comps = mrc_fld_nr_comps(fld);
-    struct mrc_m3 *m3 = mrc_domain_m3_create(fld->_domain);
-    mrc_m3_set_param_int(m3, "nr_comps", nr_comps);
-    mrc_m3_set_param_int(m3, "sw", fld->_sw.vals[0]);
-    mrc_m3_setup(m3);
+    struct mrc_fld *m3 = mrc_domain_m3_create(fld->_domain);
+    mrc_fld_set_nr_comps(m3, nr_comps);
+    mrc_fld_set_sw(m3, fld->_sw.vals[0]); // FIXME, how about 1,2
     for (int m = 0; m < nr_comps; m++) {
-      mrc_m3_set_comp_name(m3, m, mrc_fld_comp_name(fld, m));
-      mrc_m3_foreach_patch(m3, p) {
-	struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, p);
+      mrc_fld_set_comp_name(m3, m, mrc_fld_comp_name(fld, m));
+    }
+    mrc_fld_setup(m3);
+    for (int m = 0; m < nr_comps; m++) {
+      mrc_fld_foreach_patch(m3, p) {
+	struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, p);
 	mrc_m3_foreach_bnd(m3p, ix,iy,iz) {
 	  MRC_M3(m3p, m, ix,iy,iz) = MRC_F3(fld, m, ix,iy,iz) * scale;
 	} mrc_m3_foreach_end;
-	mrc_m3_patch_put(m3);
+	mrc_fld_patch_put(m3);
       }
     }
     mrc_io_write_m3(io, path, m3);
-    mrc_m3_destroy(m3);
+    mrc_fld_destroy(m3);
   }
 }
 
@@ -311,7 +317,7 @@ mrc_io_read_m1(struct mrc_io *io, const char *path, struct mrc_m1 *fld)
 // mrc_io_write_m3
 
 void
-mrc_io_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *fld)
+mrc_io_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *fld)
 {
   struct mrc_io_ops *ops = mrc_io_ops(io);
   assert(ops->write_m3);
@@ -322,7 +328,7 @@ mrc_io_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *fld)
 // mrc_io_read_m3
 
 void
-mrc_io_read_m3(struct mrc_io *io, const char *path, struct mrc_m3 *fld)
+mrc_io_read_m3(struct mrc_io *io, const char *path, struct mrc_fld *fld)
 {
   struct mrc_io_ops *ops = mrc_io_ops(io);
   assert(ops->read_m3);

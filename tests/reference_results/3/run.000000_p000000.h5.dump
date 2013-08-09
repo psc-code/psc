@@ -54,7 +54,7 @@ GROUP "/" {
          }
       }
    }
-   GROUP "test_m3" {
+   GROUP "test_m3-uid" {
       ATTRIBUTE "nr_patches" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }

@@ -13,3 +13,5 @@ set -e
 @MPIRUN@ -n 1 ./test_mrc_fld --case 9
 @MPIRUN@ -n 1 ./test_mrc_fld --case 10
 @MPIRUN@ -n 1 ./test_mrc_fld --case 11
+@MPIRUN@ -n 1 ./test_mrc_fld --case 12
+@MPIRUN@ -n 1 ./test_mrc_fld --case 13
