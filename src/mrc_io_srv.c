@@ -607,6 +607,7 @@ ds_srv_cache_put_gfld_2d(struct diagsrv_one *ds, struct mrc_fld *gfld, char *fld
   srv->outtypes[srv->nr_flds] = outtype;
   srv->sheets[srv->nr_flds] = sheet;
   srv->nr_flds++;
+  mrc_fld_destroy(gfld);
 }
 
 static void
