@@ -179,8 +179,6 @@ mrc_io_write_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
     ops->write_fld(io, path, fld);
   } else if (fld->_dims.nr_vals == 3) {
     mrc_io_write_m1(io, path, fld);
-  } else if (fld->_dims.nr_vals == 4) {
-    mrc_io_write_f3(io, path, fld, 1.f);
   } else if (fld->_dims.nr_vals == 5) {
     mrc_io_write_m3(io, path, fld);
   } else {

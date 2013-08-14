@@ -1250,7 +1250,7 @@ ds_xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3)
   mrc_fld_foreach_patch(m3, p) {
     struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, p);
 
-    struct xdmf_spatial *xs = xdmf_spatial_find(io, "3df", p);
+    struct xdmf_spatial *xs = xdmf_spatial_find(io, "3df", -1);
     if (!xs) {
       int np[3];
       mrc_domain_get_param_int3(m3->_domain, "np", np);
@@ -1263,7 +1263,11 @@ ds_xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3)
     for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
       char fld_name[strlen(mrc_fld_comp_name(m3, m)) + 5];
 
-      sprintf(fld_name, "%s-%d", mrc_fld_comp_name(m3, m), p);
+      if (nr_patches == 1) {
+	sprintf(fld_name, "%s", mrc_fld_comp_name(m3, m));
+      } else {
+	sprintf(fld_name, "%s-%d", mrc_fld_comp_name(m3, m), p);
+      }
 
       save_fld_info(xs, strdup(fld_name), strdup(path), false);
       hsize_t hdims[3] = { m3->_ghost_dims[2], m3->_ghost_dims[1], m3->_ghost_dims[0] };
@@ -1365,6 +1369,7 @@ struct mrc_io_ops mrc_io_xdmf_serial_ops = {
   .write_field   = ds_xdmf_write_field,
   .write_field2d = ds_xdmf_write_field2d,
   .write_f3      = ds_xdmf_write_f3,
+  .write_m3      = ds_xdmf_write_m3,
   .read_f3       = ds_xdmf_read_f3,
   .write_m1      = ds_xdmf_write_m1,
   .read_m1       = ds_xdmf_read_m1,

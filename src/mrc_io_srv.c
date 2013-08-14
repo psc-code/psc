@@ -215,6 +215,16 @@ diagc_combined_write_field(struct mrc_io *io, const char *path,
 }
 
 static void
+diagc_combined_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *fld)
+{
+  int nr_comps = mrc_fld_nr_comps(fld);
+  for (int m = 0; m < nr_comps; m++) {
+    assert(mrc_fld_comp_name(fld, m));
+    diagc_combined_write_field(io, path, 1.f, fld, m);
+  }
+}
+
+static void
 diagc_combined_write_field2d(struct mrc_io *io, float scale, struct mrc_fld *fld,
 			     int outtype, float sheet)
 {
@@ -315,7 +325,7 @@ struct mrc_io_ops mrc_io_combined_ops = {
   .setup         = diagc_combined_setup,
   .destroy       = diagc_combined_destroy,
   .open          = diagc_combined_open,
-  .write_field   = diagc_combined_write_field,
+  .write_m3      = diagc_combined_write_m3,
   .write_field2d = diagc_combined_write_field2d,
   .write_attr    = diagc_combined_write_attr,
   .close         = diagc_combined_close,
