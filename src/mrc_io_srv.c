@@ -464,8 +464,8 @@ ds_srv_get_gfld_2d(struct diagsrv_one *ds, int gdims[2])
   struct mrc_fld *f2 = mrc_fld_create(MPI_COMM_SELF);
   mrc_fld_set_param_int_array(f2, "dims", 3, (int[3]) { gdims[0], gdims[1], 1 });
   mrc_fld_set_array(f2, srv->gfld);
-  f2->_domain = srv->domain; // FIXME, quite a hack
   mrc_fld_setup(f2);
+  f2->_domain = srv->domain; // FIXME, quite a hack
   return f2;
 }
 
@@ -589,8 +589,8 @@ ds_srv_cache_get_gfld_2d(struct diagsrv_one *ds, int gdims[2])
   struct mrc_fld *f2 = mrc_fld_create(MPI_COMM_SELF);
   mrc_fld_set_param_int_array(f2, "dims", 3, (int[3]) { gdims[0], gdims[1], 1 });
   mrc_fld_set_array(f2, srv->gflds[srv->nr_flds]);
-  f2->_domain = srv->domain; // FIXME, quite a hack
   mrc_fld_setup(f2);
+  f2->_domain = srv->domain; // FIXME, quite a hack
   return f2;
 }
 
@@ -678,9 +678,9 @@ ds_srv_cache_close(struct diagsrv_one *ds)
       struct mrc_fld *gfld2 = mrc_fld_create(MPI_COMM_SELF);
       mrc_fld_set_param_int_array(gfld2, "dims", 3, (int[3]) { gdims[1], gdims[2], 1 });
       mrc_fld_set_array(gfld2, srv->gflds[i]);
-      gfld2->_domain = srv->domain; // FIXME, quite a hack
       mrc_fld_set_comp_name(gfld2, 0, srv->fld_names[i]);
       mrc_fld_setup(gfld2);
+      gfld2->_domain = srv->domain; // FIXME, quite a hack
       mrc_io_write_field2d(ds->io, 1., gfld2, DIAG_TYPE_2D_X, srv->sheets[i]);
       mrc_fld_destroy(gfld2);
       break;
@@ -689,9 +689,9 @@ ds_srv_cache_close(struct diagsrv_one *ds)
       struct mrc_fld *gfld2 = mrc_fld_create(MPI_COMM_SELF);
       mrc_fld_set_param_int_array(gfld2, "dims", 3, (int[3]) { gdims[0], gdims[2], 1 });
       mrc_fld_set_array(gfld2, srv->gflds[i]);
-      gfld2->_domain = srv->domain; // FIXME, quite a hack
       mrc_fld_set_comp_name(gfld2, 0, srv->fld_names[i]);
       mrc_fld_setup(gfld2);
+      gfld2->_domain = srv->domain; // FIXME, quite a hack
       mrc_io_write_field2d(ds->io, 1., gfld2, DIAG_TYPE_2D_Y, srv->sheets[i]);
       mrc_fld_destroy(gfld2);
       break;
@@ -700,9 +700,9 @@ ds_srv_cache_close(struct diagsrv_one *ds)
       struct mrc_fld *gfld2 = mrc_fld_create(MPI_COMM_SELF);
       mrc_fld_set_param_int_array(gfld2, "dims", 3, (int[3]) { gdims[0], gdims[1], 1 });
       mrc_fld_set_array(gfld2, srv->gflds[i]);
-      gfld2->_domain = srv->domain; // FIXME, quite a hack
       mrc_fld_set_comp_name(gfld2, 0, srv->fld_names[i]);
       mrc_fld_setup(gfld2);
+      gfld2->_domain = srv->domain; // FIXME, quite a hack
       mrc_io_write_field2d(ds->io, 1., gfld2, DIAG_TYPE_2D_Z, srv->sheets[i]);
       mrc_fld_destroy(gfld2);
       break;

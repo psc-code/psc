@@ -374,7 +374,7 @@ mrc_io_write_field_slice(struct mrc_io *io, float scale, struct mrc_fld *fld,
     mrc_fld_set_param_int_array(f2, "dims", 5, (int[5]) { 0, 0, 0, 1, 1 });
     mrc_fld_setup(f2);
   }
-  f2->_domain = fld->_domain;
+  f2->_domain = fld->_domain; // FIXME, 2D field isn't directly based on domain, so shouldn't link to it (?)
   mrc_fld_set_comp_name(f2, 0, mrc_fld_comp_name(fld, 0));
   ops->write_field2d(io, 1., f2, outtype, sheet);
   mrc_fld_destroy(f2);
