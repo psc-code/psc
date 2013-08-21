@@ -164,6 +164,15 @@ _mrc_crds_setup(struct mrc_crds *crds)
   }
 }
 
+static void
+_mrc_crds_destroy(struct mrc_crds *crds)
+{
+  for (int d=0; d < 3; d++) {
+    mrc_fld_destroy(crds->crd_nc[d]);
+  }
+}
+
+
 // ======================================================================
 // mrc_crds_uniform
 
@@ -266,6 +275,7 @@ struct mrc_class_mrc_crds mrc_class_mrc_crds = {
   .size         = sizeof(struct mrc_crds),
   .param_descr  = mrc_crds_params_descr,
   .init         = mrc_crds_init,
+  .destroy      = _mrc_crds_destroy,
   .create       = _mrc_crds_create,
   .write        = _mrc_crds_write,
   .read         = _mrc_crds_read,
