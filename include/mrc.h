@@ -3,6 +3,7 @@
 #define MRC_H
 
 #include <mrc_common.h>
+#include <stdbool.h>
 
 // ======================================================================
 // global flags 
@@ -26,6 +27,8 @@ enum {
 
 void mrc_set_flags(unsigned long flags);
 void mrc_clear_flags(unsigned long flags);
+
+void libmrc_finalize(bool assert_clean, int class_info_verbosity);
 
 // private to libmrc
 

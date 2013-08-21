@@ -2,12 +2,17 @@
 #include <mrc_obj.h>
 #include <mrc_params.h>
 #include <mrc_io.h>
+#include <mrc_list.h>
 
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <assert.h>
+#include <stdbool.h>
+#include <execinfo.h>
+
+static list_t active_classes_head;
 
 int mrc_view_level = 0;
 
@@ -95,6 +100,11 @@ read_member_objs(struct mrc_io *io, struct mrc_obj *obj, void *p, struct param *
 static struct mrc_obj *
 obj_create(MPI_Comm comm, struct mrc_class *cls, bool basic_only)
 {
+  // this is for printing a backtrace if creating a watched class
+  void *backtrace_addr[4];
+  size_t size, frame;
+  char **backtrace_str;
+
   assert_collective(comm);
 
   assert(cls->size >= sizeof(struct mrc_obj));
@@ -118,6 +128,26 @@ obj_create(MPI_Comm comm, struct mrc_class *cls, bool basic_only)
 
   // no ref count for this reference, will be deleted on final destroy()
   list_add_tail(&obj->instance_entry, &cls->instances);
+
+  // keep track what classes have been instantiated
+  if (active_classes_head.next == NULL) {
+    INIT_LIST_HEAD(&active_classes_head);
+  }
+  if (cls->active_classes.next == NULL) {
+    list_add(&cls->active_classes, &active_classes_head);
+  }
+  cls->nr_instances++;
+  cls->nr_creates++;
+
+  // print extra info if we're creating a watched class
+  if (cls->watch) {
+    size = backtrace(backtrace_addr, 4);
+    backtrace_str = backtrace_symbols(backtrace_addr, size);
+    frame = size >= 4 ? 3 : size - 1;  // pick frame 4, or less...
+    mprintf("Class Watcher:: (%s) created near (%s)\n",
+            cls->name, backtrace_str[frame]);
+    obj->creation_trace = backtrace_addr[frame];
+  }
 
   // if we're read()'ing this, we don't call the actual create() functions
   if (basic_only) {
@@ -261,6 +291,21 @@ mrc_obj_put(struct mrc_obj *obj)
   if (obj->name != obj->cls->name) {
     free(obj->name);
   }
+
+  // in the event we want to note when watched classes are freed
+  // if (obj->cls->watch) {
+  // }
+
+  obj->cls->nr_instances -= 1;
+  obj->cls->nr_frees += 1;
+  // uncommenting this suppresses class info for classes with no more instances,
+  // but keeping the list adds no extra overhead
+  // if (obj->cls->nr_instances == 0) {
+  //   list_del(&obj->cls->active_classes);
+  //   obj->cls->active_classes.next = NULL;
+  //   obj->cls->active_classes.prev = NULL;
+  // }
+
   free(obj);
 }
 
@@ -1226,3 +1271,48 @@ mrc_obj_get_method(struct mrc_obj *obj, const char *name)
   return NULL;
 }
 
+// print classes that have been created, how the number of instances has
+// changed since the last call, and how many times that class has been
+// created / destroyed.
+// Returns the total number of instances of all classes
+// @verbosity: CLASS_INFO_VERB_NONE => print nothing
+//             CLASS_INFO_VERB_DIFF => print only the changes since last call
+//             CLASS_INFO_VERB_ACTIVE => print all classes with >= 1 instance
+//             CLASS_INFO_VERB_FULL => print all classes that have been created
+int
+mrc_obj_print_class_info(int verbosity) {
+  int total_instances = 0;
+  struct mrc_class *cls;
+  struct mrc_obj *instance;
+  bool do_print;
+
+  list_for_each_entry(cls, &active_classes_head, active_classes) {
+    total_instances += cls->nr_instances;
+
+    do_print = (verbosity == CLASS_INFO_VERB_DIFF && 
+                ((cls->nr_instances != cls->nr_instances_last_printed) || 
+                 (cls->nr_creates != cls->nr_creates_last_printed)));
+    do_print |= (verbosity == CLASS_INFO_VERB_ACTIVE && cls->nr_instances > 0);
+    do_print |= (verbosity >= CLASS_INFO_VERB_FULL);
+
+    if (do_print) {
+      mprintf("Class Info:: (%s):  %d (%d change)  %d+  %d-\n",
+              cls->name, 
+              cls->nr_instances, cls->nr_instances - cls->nr_instances_last_printed,
+              cls->nr_creates, cls->nr_frees);
+      cls->nr_instances_last_printed = cls->nr_instances;
+      cls->nr_creates_last_printed = cls->nr_creates;    
+      assert(cls->nr_instances == cls->nr_creates - cls->nr_frees);
+    }
+
+    // print watcher information
+    if (verbosity >= CLASS_INFO_VERB_ACTIVE && cls->watch) {  
+      list_for_each_entry(instance, &cls->instances, instance_entry) {
+        mprintf("Class Watcher:: I remember a (%s, %s) was created near (%p)\n",
+                cls->name, instance->name, instance->creation_trace);
+      }
+    }
+  }
+
+  return total_instances;
+}

@@ -85,6 +85,8 @@ kdv_rhsf(void *ctx, struct mrc_fld *rhs, float time, struct mrc_fld *x)
   mrc_f1_foreach(x, ix, 0, 0) {
     MRC_F1(rhs, U, ix) =  - Dxxx(x, U, ix) + 6. * MRC_F1(x, U, ix) * Dx(x, U, ix);
   } mrc_f1_foreach_end;
+
+  mrc_obj_print_class_info(CLASS_INFO_VERB_DIFF);
 }
 
 // ======================================================================
@@ -107,6 +109,7 @@ int
 main(int argc, char **argv)
 {
   MPI_Init(&argc, &argv);
+  mrc_class_mrc_fld.watch = true;
   libmrc_params_init(argc, argv);
 
   struct kdv *kdv = kdv_create(MPI_COMM_WORLD);
@@ -138,6 +141,9 @@ main(int argc, char **argv)
   mrc_fld_destroy(x);
 
   kdv_destroy(kdv);
+
+  // FIXME: mrc_crds.c:61 leaks 1D crds fld with a fixme comment (==6)
+  assert(mrc_obj_print_class_info(CLASS_INFO_VERB_ACTIVE) == 6);
 
   MPI_Finalize();
   return 0;

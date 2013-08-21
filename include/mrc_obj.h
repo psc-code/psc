@@ -24,6 +24,7 @@ struct mrc_obj {
   list_t dict_list; //< keep track of additional, dynamic, properties
   bool view_flag; //< if true, call ::view() at the end of ::setup()
   bool is_setup; //< keep track of whether ::setup() was already called
+  void *creation_trace;
 };
 
 struct mrc_dict_entry {
@@ -67,6 +68,13 @@ struct mrc_obj_ops {
     const char *name;					\
     list_t subclasses;					\
     list_t instances;					\
+    int nr_instances;         \
+    int nr_instances_last_printed; \
+    int nr_creates_last_printed;   \
+    int nr_creates;           \
+    int nr_frees;          \
+    list_t active_classes;    \
+    bool watch;          \
     size_t size;					\
     struct param *param_descr;				\
     struct mrc_obj_method *methods;                     \
@@ -145,6 +153,14 @@ void mrc_obj_read_member_objs_sub(struct mrc_obj *obj, struct mrc_io *io);
 void mrc_obj_read_children(struct mrc_obj *obj, struct mrc_io *io);
 bool mrc_obj_is_setup(struct mrc_obj *obj);
 mrc_void_func_t mrc_obj_get_method(struct mrc_obj *obj, const char *name);
+
+enum {
+  CLASS_INFO_VERB_NONE = 0,
+  CLASS_INFO_VERB_DIFF,
+  CLASS_INFO_VERB_ACTIVE,
+  CLASS_INFO_VERB_FULL
+};
+int mrc_obj_print_class_info(int verbosity);
 
 #define MRC_CLASS_DECLARE(pfx, obj_type)				\
   obj_type;								\
