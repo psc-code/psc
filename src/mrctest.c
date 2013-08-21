@@ -1,6 +1,7 @@
 
 #include "mrctest.h"
 
+#include <mrc.h>
 #include <mrc_domain.h>
 #include <mrc_fld.h>
 #include <mrc_params.h>
@@ -42,7 +43,7 @@ void
 mrctest_finalize()
 {
   prof_print();
-  libmrc_params_finalize();
+  libmrc_finalize(false, CLASS_INFO_VERB_ACTIVE);
   MPI_Finalize();
 }
 

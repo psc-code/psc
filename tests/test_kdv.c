@@ -142,9 +142,7 @@ main(int argc, char **argv)
 
   kdv_destroy(kdv);
 
-  // FIXME: mrc_crds.c:61 leaks 1D crds fld with a fixme comment (==6)
-  assert(mrc_obj_print_class_info(CLASS_INFO_VERB_ACTIVE) == 6);
-
+  libmrc_finalize(true, CLASS_INFO_VERB_ACTIVE);
   MPI_Finalize();
   return 0;
 }

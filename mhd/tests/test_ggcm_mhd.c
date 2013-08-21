@@ -1,6 +1,7 @@
 
 #include "ggcm_mhd.h"
 
+#include <mrc.h>
 #include <mrc_io.h>
 
 int
@@ -24,6 +25,6 @@ main(int argc, char **argv)
   mrc_io_destroy(io);
 
   ggcm_mhd_destroy(mhd);
-  mrc_obj_print_class_info(CLASS_INFO_VERB_ACTIVE);
+  libmrc_finalize(false, CLASS_INFO_VERB_ACTIVE);
   MPI_Finalize();
 }
