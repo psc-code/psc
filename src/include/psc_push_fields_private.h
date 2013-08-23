@@ -6,11 +6,13 @@
 
 struct psc_push_fields {
   struct mrc_obj obj;
-  int variant; ///< 0: default, 1: optimized version with fewer fill_ghosts()
-  struct psc_bnd_fields *bnd_fields;
+  // parameters
+  int marder_step; //< do Marder correction every so many steps
+  double marder_diffusion; //< diffusion coefficient for Marder correction
+  int variant; //< 0: default, 1: optimized version with fewer fill_ghosts()
 
-  int Marder_step;
-  double Marder_diffusion;
+  // state
+  struct psc_bnd_fields *bnd_fields;
 };
 
 struct psc_push_fields_ops {

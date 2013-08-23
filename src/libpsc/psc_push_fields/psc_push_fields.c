@@ -75,7 +75,7 @@ psc_push_fields_step_a_default(struct psc_push_fields *push, mfields_base_t *fld
   psc_bnd_fill_ghosts(ppsc->bnd, flds, EX, EX + 3);
   
   // E at t^n+.5, particles at t^n, but the "double" particles would be at t^n+.5
-  Marder_correction(push, flds, ppsc->particles);
+  marder_correction(push, flds, ppsc->particles);
 
   psc_push_fields_push_H(push, flds);
   psc_bnd_fields_fill_ghosts_a_H(push->bnd_fields, flds);
@@ -225,8 +225,8 @@ static struct param psc_push_fields_descr[] = {
   "particle shape only" },
 
   { "bnd_fields"       , VAR(bnd_fields)       , MRC_VAR_OBJ(psc_bnd_fields), },
-  { "Marder_step"      , VAR(Marder_step)      , PARAM_INT(-1), },
-  { "Marder_diffusion" , VAR(Marder_diffusion) , PARAM_DOUBLE(0.9), },
+  { "marder_step"      , VAR(marder_step)      , PARAM_INT(-1), },
+  { "marder_diffusion" , VAR(marder_diffusion) , PARAM_DOUBLE(0.9), },
 
   {},
 };
