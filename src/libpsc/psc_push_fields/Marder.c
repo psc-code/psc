@@ -2,8 +2,8 @@
 #include "psc.h"
 #include "psc_bnd.h"
 #include "psc_push_fields_private.h"
-#include "psc_fields_as_c.h"
-#include "psc_particles_as_double.h"
+#include "psc_fields_as_single.h"
+#include "psc_particles_as_single.h"
 #include <math.h>
 #include "../psc_output_fields/common_moments.c"
 
