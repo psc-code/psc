@@ -207,13 +207,6 @@ gather_loads(struct mrc_domain *domain, double *loads, int nr_patches,
   return loads_all;
 }
 
-static inline int
-mpi_tag(struct mrc_patch_info *info)
-{
-  // This works up to 1000 patches per direction
-  return info->idx3[0] + (info->idx3[1] << 10) + (info->idx3[2] << 20);
-}
-
 static void
 communicate_new_nr_particles(struct mrc_domain *domain_old,
 			     struct mrc_domain *domain_new, int **p_nr_particles_by_patch)
@@ -231,8 +224,9 @@ communicate_new_nr_particles(struct mrc_domain *domain_old,
   int *nr_particles_by_patch_new = calloc(nr_patches_new,
 					  sizeof(nr_particles_by_patch_new));
 
-  MPI_Request *send_reqs = calloc(nr_patches_old, sizeof(*send_reqs));
   // send info from old local patches
+  MPI_Request *send_reqs = calloc(nr_patches_old, sizeof(*send_reqs));
+  int *nr_patches_new_by_rank = calloc(size, sizeof(*nr_patches_new_by_rank));
   for (int p = 0; p < nr_patches_old; p++) {
     struct mrc_patch_info info, info_new;
     mrc_domain_get_local_patch_info(domain_old, p, &info);
@@ -245,12 +239,17 @@ communicate_new_nr_particles(struct mrc_domain *domain_old,
       if(nr_particles_by_patch_old[p] > 0) printf("Warning: losing %d particles in patch deallocation\n", nr_particles_by_patch_old[p]);
       send_reqs[p] = MPI_REQUEST_NULL;
     } else {
+      int tag = nr_patches_new_by_rank[info_new.rank]++;
+      //      mprintf("send -> %d (tags %d %d) %d\n", info_new.rank, mpi_tag(&info), tag, info_new.global_patch);
       MPI_Isend(&nr_particles_by_patch_old[p], 1, MPI_INT, info_new.rank,
-		mpi_tag(&info), comm, &send_reqs[p]);
+		tag, comm, &send_reqs[p]);
     }
   }
+  free(nr_patches_new_by_rank);
+
   // recv info for new local patches
   MPI_Request *recv_reqs = calloc(nr_patches_new, sizeof(*recv_reqs));
+  int *nr_patches_old_by_rank = calloc(size, sizeof(*nr_patches_old_by_rank));
   for (int p = 0; p < nr_patches_new; p++) {
     struct mrc_patch_info info, info_old;
     mrc_domain_get_local_patch_info(domain_new, p, &info);
@@ -264,10 +263,13 @@ communicate_new_nr_particles(struct mrc_domain *domain_old,
       recv_reqs[p] = MPI_REQUEST_NULL;
     } else {
       //printf("a: rank: %d tag: %d\n", info_old.rank, mpi_tag(&info));
-      MPI_Irecv(&nr_particles_by_patch_new[p], 1, MPI_INT, info_old.rank, mpi_tag(&info),
-		comm, &recv_reqs[p]);
+      int tag = nr_patches_old_by_rank[info_old.rank]++;
+      //      mprintf("recv <- %d (tags %d %d)\n", info_old.rank, mpi_tag(&info), tag);
+      MPI_Irecv(&nr_particles_by_patch_new[p], 1, MPI_INT, info_old.rank,
+		tag, comm, &recv_reqs[p]);
     }
   }
+  free(nr_patches_old_by_rank);
   
   MPI_Waitall(nr_patches_old, send_reqs, MPI_STATUSES_IGNORE);
   MPI_Waitall(nr_patches_new, recv_reqs, MPI_STATUSES_IGNORE);
@@ -298,6 +300,7 @@ communicate_particles(struct mrc_domain *domain_old, struct mrc_domain *domain_n
   }
 
   MPI_Request *send_reqs = calloc(nr_patches_old, sizeof(*send_reqs));
+  int *nr_patches_new_by_rank = calloc(size, sizeof(*nr_patches_new_by_rank));
   // send from old local patches
   for (int p = 0; p < nr_patches_old; p++) {
     struct mrc_patch_info info, info_new;
@@ -309,13 +312,16 @@ communicate_particles(struct mrc_domain *domain_old, struct mrc_domain *domain_n
       struct psc_particles *pp_old = psc_mparticles_get_patch(particles_old, p);
       struct psc_particles_double *c_old = psc_particles_double(pp_old);
       int nn = pp_old->n_part * (sizeof(particle_t)  / sizeof(particle_real_t));
+      int tag = nr_patches_new_by_rank[info_new.rank];
       MPI_Isend(c_old->particles, nn, MPI_PARTICLES_REAL, info_new.rank,
-		mpi_tag(&info), comm, &send_reqs[p]);
+		tag, comm, &send_reqs[p]);
     }
   }
+  free(nr_patches_new_by_rank);
 
   // recv for new local patches
   MPI_Request *recv_reqs = calloc(nr_patches_new, sizeof(*recv_reqs));
+  int *nr_patches_old_by_rank = calloc(size, sizeof(*nr_patches_new_by_rank));
   for (int p = 0; p < nr_patches_new; p++) {
     struct mrc_patch_info info, info_old;
     mrc_domain_get_local_patch_info(domain_new, p, &info);
@@ -329,10 +335,12 @@ communicate_particles(struct mrc_domain *domain_old, struct mrc_domain *domain_n
       struct psc_particles *pp_new = psc_mparticles_get_patch(particles_new, p);
       struct psc_particles_double *c_new = psc_particles_double(pp_new);
       int nn = pp_new->n_part * (sizeof(particle_t)  / sizeof(particle_real_t));
+      int tag = nr_patches_old_by_rank[info_old.rank];
       MPI_Irecv(c_new->particles, nn, MPI_PARTICLES_REAL, info_old.rank,
-		mpi_tag(&info), comm, &recv_reqs[p]);
+		tag, comm, &recv_reqs[p]);
     }
   }
+  free(nr_patches_old_by_rank);
 
   // local particles
   // OPT: could keep the alloced arrays, just move pointers...
@@ -383,8 +391,9 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
   assert(nr_patches_old == flds_old->nr_patches);
   assert(nr_patches_old > 0);
   
-  MPI_Request *send_reqs = calloc(nr_patches_old, sizeof(*send_reqs));
   // send from old local patches
+  MPI_Request *send_reqs = calloc(nr_patches_old, sizeof(*send_reqs));
+  int *nr_patches_new_by_rank = calloc(size, sizeof(*nr_patches_new_by_rank));
   for (int p = 0; p < nr_patches_old; p++) {
     struct mrc_patch_info info, info_new;
     mrc_domain_get_local_patch_info(domain_old, p, &info);
@@ -396,13 +405,16 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
       int nn = psc_fields_size(pf_old) * pf_old->nr_comp;
       int *ib = pf_old->ib;
       void *addr_old = &F3(pf_old, 0, ib[0], ib[1], ib[2]);
+      int tag = nr_patches_new_by_rank[info_new.rank];
       MPI_Isend(addr_old, nn, MPI_FIELDS_REAL, info_new.rank,
-		mpi_tag(&info), comm, &send_reqs[p]);
+		tag, comm, &send_reqs[p]);
     }
   }
+  free(nr_patches_new_by_rank);
 
   // recv for new local patches
   MPI_Request *recv_reqs = calloc(nr_patches_new, sizeof(*recv_reqs));
+  int *nr_patches_old_by_rank = calloc(size, sizeof(*nr_patches_new_by_rank));
   for (int p = 0; p < nr_patches_new; p++) {
     struct mrc_patch_info info, info_old;
     mrc_domain_get_local_patch_info(domain_new, p, &info);
@@ -418,10 +430,12 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
       int nn = psc_fields_size(pf_new) * pf_new->nr_comp;
       int *ib = pf_new->ib;
       void *addr_new = &F3(pf_new, 0, ib[0], ib[1], ib[2]);
+      int tag = nr_patches_old_by_rank[info_old.rank];
       MPI_Irecv(addr_new, nn, MPI_FIELDS_REAL, info_old.rank,
-		mpi_tag(&info), comm, &recv_reqs[p]);
+		tag, comm, &recv_reqs[p]);
     }
   }
+  free(nr_patches_old_by_rank);
 
   // local fields
   // OPT: could keep the alloced arrays, just move pointers...
