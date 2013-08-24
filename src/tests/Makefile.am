@@ -11,25 +11,27 @@ LDADD = libpsctest.la ../libpsc/libpsc.la ../libmrc/src/libmrc.la
 
 noinst_PROGRAMS = \
 	test_psc_mparticles \
-	test_part_xy \
 	test_part_yz \
+	test_exchange_particles_multi
+
+#	test_part_xy \
 	test_part_xz \
 	test_part_z \
 	test_field \
 	test_bnd \
 	test_bnd_multi \
 	test_exchange_particles \
-	test_exchange_particles_multi \
 	test_sort
 
-TESTS = test_part_xy \
-	test_part_yz_fortran.sh \
+TESTS = test_part_yz_fortran.sh \
 	test_part_yz_generic_c.sh \
 	test_part_yz_1st.sh \
+	test_exchange_particles_multi_0.sh \
+	test_exchange_particles_multi_1.sh
+
+#	test_part_xy \
 	test_part_xz \
 	test_part_z \
-	test_exchange_particles_multi_0.sh \
-	test_exchange_particles_multi_1.sh \
 	test_field \
 	test_bnd \
 	test_exchange_particles \
@@ -51,13 +53,13 @@ endif
 
 # HACK to have automake use the CXX linker 
 nodist_EXTRA_test_psc_mparticles_SOURCES = dummy.cxx
-nodist_EXTRA_test_part_xy_SOURCES = dummy.cxx
 nodist_EXTRA_test_part_yz_SOURCES = dummy.cxx
-nodist_EXTRA_test_part_xz_SOURCES = dummy.cxx
-nodist_EXTRA_test_part_z_SOURCES = dummy.cxx
-nodist_EXTRA_test_field_SOURCES = dummy.cxx
-nodist_EXTRA_test_bnd_SOURCES = dummy.cxx
-nodist_EXTRA_test_bnd_multi_SOURCES = dummy.cxx
-nodist_EXTRA_test_exchange_particles_SOURCES = dummy.cxx
+#nodist_EXTRA_test_part_xy_SOURCES = dummy.cxx
+#nodist_EXTRA_test_part_xz_SOURCES = dummy.cxx
+#nodist_EXTRA_test_part_z_SOURCES = dummy.cxx
+#nodist_EXTRA_test_field_SOURCES = dummy.cxx
+#nodist_EXTRA_test_bnd_SOURCES = dummy.cxx
+#nodist_EXTRA_test_bnd_multi_SOURCES = dummy.cxx
+#nodist_EXTRA_test_exchange_particles_SOURCES = dummy.cxx
 nodist_EXTRA_test_exchange_particles_multi_SOURCES = dummy.cxx
-nodist_EXTRA_test_sort_SOURCES = dummy.cxx
+#nodist_EXTRA_test_sort_SOURCES = dummy.cxx
