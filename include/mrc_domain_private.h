@@ -76,6 +76,8 @@ struct mrc_sfc {
   // for sfc hilbert
   int hilbert_nr_dims;
   int hilbert_dim[3];
+  int *hilbert_map_h_to_p;
+  int *hilbert_map_p_to_h;
 };
 
 void sfc_setup(struct mrc_sfc *sfc, int *np);
