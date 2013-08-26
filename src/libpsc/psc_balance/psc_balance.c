@@ -40,7 +40,8 @@ static void
 psc_get_loads_initial(struct psc *psc, double *loads, int *nr_particles_by_patch)
 {
   psc_foreach_patch(psc, p) {
-    loads[p] = nr_particles_by_patch[p] + 1;
+    int *ldims = psc->patch[p].ldims;
+    loads[p] = nr_particles_by_patch[p] + ldims[0] * ldims[1] * ldims[2];
   }
 }
 
@@ -49,7 +50,8 @@ psc_get_loads(struct psc *psc, double *loads)
 {
   psc_foreach_patch(psc, p) {
     struct psc_particles *prts = psc_mparticles_get_patch(psc->particles, p);
-    loads[p] = prts->n_part + 1;
+    int *ldims = psc->patch[p].ldims;
+    loads[p] = prts->n_part + ldims[0] * ldims[1] * ldims[2];
   }
 }
 
