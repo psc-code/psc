@@ -41,8 +41,6 @@ do_push_part_yz(int p, fields_t *pf, struct psc_particles *pp)
     particle_real_t vyi = part->pyi * root;
     particle_real_t vzi = part->pzi * root;
 
-    //    if (n == 0) mprintf("yi %g (%g)\n", part->yi, vyi * yl);
-
     /* assert(part->yi * dyi >= 0 && part->yi * dyi <= ldims[1]); */
     /* assert(part->zi * dzi >= 0 && part->zi * dzi <= ldims[2]); */
 
@@ -88,6 +86,10 @@ do_push_part_yz(int p, fields_t *pf, struct psc_particles *pp)
 
     // FIELD INTERPOLATION
 
+    /* assert(l2 - 1 >= -1); */
+    /* assert(j2 - 1 >= -1); */
+    /* assert(l2 + 1 < ldims[1] + 1); */
+    /* assert(j2 + 1 < ldims[1] + 2); */
     particle_real_t exq=gmz*(gmy*F3(pf, EX, l1,j2-1,j3-1)
 		  +g0y*F3(pf, EX, l1,j2  ,j3-1)
 		  +g1y*F3(pf, EX, l1,j2+1,j3-1))
