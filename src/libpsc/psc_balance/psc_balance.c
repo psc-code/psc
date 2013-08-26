@@ -3,7 +3,7 @@
 #include "psc_bnd_fields.h"
 #include "psc_push_particles.h"
 #include "psc_push_fields.h"
-#include "psc_particles_as_c.h"
+#include "psc_particles_as_double.h" // FIXME, hardcoded
 #include "psc_fields_as_c.h"
 
 #include <mrc_params.h>
@@ -307,7 +307,7 @@ communicate_particles(struct mrc_domain *domain_old, struct mrc_domain *domain_n
       send_reqs[p] = MPI_REQUEST_NULL;
     } else {
       struct psc_particles *pp_old = psc_mparticles_get_patch(particles_old, p);
-      struct psc_particles_c *c_old = psc_particles_c(pp_old);
+      struct psc_particles_double *c_old = psc_particles_double(pp_old);
       int nn = pp_old->n_part * (sizeof(particle_t)  / sizeof(particle_real_t));
       MPI_Isend(c_old->particles, nn, MPI_PARTICLES_REAL, info_new.rank,
 		mpi_tag(&info), comm, &send_reqs[p]);
@@ -327,7 +327,7 @@ communicate_particles(struct mrc_domain *domain_old, struct mrc_domain *domain_n
       //TODO Seed particles
     } else {
       struct psc_particles *pp_new = psc_mparticles_get_patch(particles_new, p);
-      struct psc_particles_c *c_new = psc_particles_c(pp_new);
+      struct psc_particles_double *c_new = psc_particles_double(pp_new);
       int nn = pp_new->n_part * (sizeof(particle_t)  / sizeof(particle_real_t));
       MPI_Irecv(c_new->particles, nn, MPI_PARTICLES_REAL, info_old.rank,
 		mpi_tag(&info), comm, &recv_reqs[p]);
@@ -345,9 +345,9 @@ communicate_particles(struct mrc_domain *domain_old, struct mrc_domain *domain_n
     }
 
     struct psc_particles *pp_old = psc_mparticles_get_patch(particles_old, info_old.patch);
-    struct psc_particles_c *c_old = psc_particles_c(pp_old);
+    struct psc_particles_double *c_old = psc_particles_double(pp_old);
     struct psc_particles *pp_new = psc_mparticles_get_patch(particles_new, p);
-    struct psc_particles_c *c_new = psc_particles_c(pp_new);
+    struct psc_particles_double *c_new = psc_particles_double(pp_new);
     assert(pp_old->n_part == pp_new->n_part);
     for (int n = 0; n < pp_new->n_part; n++) {
       c_new->particles[n] = c_old->particles[n];
