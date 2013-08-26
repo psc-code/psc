@@ -26,7 +26,7 @@ psc_push_fields_sub_push_E(struct psc_push_fields *push, struct psc_fields *flds
   // using Hx^{n}[-1:1][-1.5:1.5][-1.5:1.5]
   //       jx^{n+1}[-.5:.5][-1:1][-1:1]
 
-  psc_foreach_3d(ppsc, flds->p, ix, iy, iz, 1, 2) {
+  psc_foreach_3d(ppsc, flds->p, ix, iy, iz, 2, 2) {
     F3(flds, EX, ix,iy,iz) +=
       cny * (F3(flds, HZ, ix,iy,iz) - F3(flds, HZ, ix,iy-1,iz)) -
       cnz * (F3(flds, HY, ix,iy,iz) - F3(flds, HY, ix,iy,iz-1)) -
@@ -70,7 +70,7 @@ psc_push_fields_sub_push_H(struct psc_push_fields *push, struct psc_fields *flds
   // Hx^{n}[:][-.5:.5][-.5:.5] -> Hx^{n+.5}[:][-.5:.5][-.5:.5]
   // using Ex^{n+.5}[-.5:+.5][-1:1][-1:1]
 
-  psc_foreach_3d(ppsc, flds->p, ix, iy, iz, 1, 1) {
+  psc_foreach_3d(ppsc, flds->p, ix, iy, iz, 1, 2) {
     F3(flds, HX, ix,iy,iz) -=
       cny * (F3(flds, EZ, ix,iy+1,iz) - F3(flds, EZ, ix,iy,iz)) -
       cnz * (F3(flds, EY, ix,iy,iz+1) - F3(flds, EY, ix,iy,iz));
