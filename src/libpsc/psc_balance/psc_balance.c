@@ -18,6 +18,7 @@ struct psc_balance {
   struct mrc_obj obj;
   int every;
   int force_update;
+  double factor_fields;
 };
 
 static double
@@ -41,7 +42,8 @@ psc_get_loads_initial(struct psc *psc, double *loads, int *nr_particles_by_patch
 {
   psc_foreach_patch(psc, p) {
     int *ldims = psc->patch[p].ldims;
-    loads[p] = nr_particles_by_patch[p] + ldims[0] * ldims[1] * ldims[2];
+    loads[p] = nr_particles_by_patch[p] + 
+      psc->balance->factor_fields * ldims[0] * ldims[1] * ldims[2];
   }
 }
 
@@ -51,7 +53,8 @@ psc_get_loads(struct psc *psc, double *loads)
   psc_foreach_patch(psc, p) {
     struct psc_particles *prts = psc_mparticles_get_patch(psc->particles, p);
     int *ldims = psc->patch[p].ldims;
-    loads[p] = prts->n_part + ldims[0] * ldims[1] * ldims[2];
+    loads[p] = prts->n_part +
+      psc->balance->factor_fields * ldims[0] * ldims[1] * ldims[2];
   }
 }
 
@@ -706,6 +709,7 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
 static struct param psc_balance_descr[] = {
   { "every"            , VAR(every)               , PARAM_INT(0)        },
   { "force_update"     , VAR(force_update)	  , PARAM_INT(0)	},
+  { "factor_fields"    , VAR(factor_fields)       , PARAM_DOUBLE(1.)    },
   {},
 };
 #undef VAR
