@@ -1,9 +1,7 @@
 
-//#include "psc_generic_c.h"
-
 #include "psc.h"
 #include "psc_fields_as_c.h"
-#include "psc_particles_as_c.h"
+#include "psc_particles_as_double.h"
 
 #include <mrc_profile.h>
 #include <math.h>
@@ -23,8 +21,6 @@ do_push_part_yz(int p, fields_t *pf, struct psc_particles *pp)
   particle_real_t s0y[5] = {}, s0z[5] = {}, s1y[5], s1z[5];
 
   particle_real_t dt = ppsc->dt;
-  particle_real_t yl = .5f * dt;
-  particle_real_t zl = .5f * dt;
   particle_real_t dqs = .5f * ppsc->coeff.eta * dt;
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t fnqys = ppsc->patch[p].dx[1] * fnqs / dt;
@@ -45,8 +41,7 @@ do_push_part_yz(int p, fields_t *pf, struct psc_particles *pp)
     particle_real_t vyi = part->pyi * root;
     particle_real_t vzi = part->pzi * root;
 
-    part->yi += vyi * yl;
-    part->zi += vzi * zl;
+    //    if (n == 0) mprintf("yi %g (%g)\n", part->yi, vyi * yl);
 
     /* assert(part->yi * dyi >= 0 && part->yi * dyi <= ldims[1]); */
     /* assert(part->zi * dzi >= 0 && part->zi * dzi <= ldims[2]); */
@@ -155,7 +150,7 @@ do_push_part_yz(int p, fields_t *pf, struct psc_particles *pp)
 
      // c x^(n+.5), p^n -> x^(n+1.0), p^(n+1.0) 
 
-    particle_real_t dq = dqs * part->qni / part->mni;
+    particle_real_t dq = dqs * particle_qni_div_mni(part);
     particle_real_t pxm = part->pxi + dq*exq;
     particle_real_t pym = part->pyi + dq*eyq;
     particle_real_t pzm = part->pzi + dq*ezq;
@@ -185,17 +180,14 @@ do_push_part_yz(int p, fields_t *pf, struct psc_particles *pp)
     vyi = part->pyi * root;
     vzi = part->pzi * root;
 
-    part->yi += vyi * yl;
-    part->zi += vzi * zl;
-
     // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt 
-    // x^(n+1), p^(n+1) -> x^(n+1.5f), p^(n+1)
+    // x^(n+.5), p^(n+1) -> x^(n+1.5), p^(n+1)
 
-    particle_real_t yi = part->yi + vyi * yl;
-    particle_real_t zi = part->zi + vzi * zl;
+    part->yi += vyi * dt;
+    part->zi += vzi * dt;
 
-    v = yi * dyi;
-    w = zi * dzi;
+    v = part->yi * dyi;
+    w = part->zi * dzi;
     int k2 = particle_real_nint(v);
     int k3 = particle_real_nint(w);
     h2 = k2 - v;
@@ -244,9 +236,9 @@ do_push_part_yz(int p, fields_t *pf, struct psc_particles *pp)
 
 #define JZH(i) jzh[i+2]
 
-    particle_real_t fnqx = vxi * part->qni * part->wni * fnqs;
-    particle_real_t fnqy = part->qni * part->wni * fnqys;
-    particle_real_t fnqz = part->qni * part->wni * fnqzs;
+    particle_real_t fnqx = vxi * particle_qni_wni(part) * fnqs;
+    particle_real_t fnqy = particle_qni_wni(part) * fnqys;
+    particle_real_t fnqz = particle_qni_wni(part) * fnqzs;
     for (int l2 = l2min; l2 <= l2max; l2++) {
       JZH(l2) = 0.f;
     }
