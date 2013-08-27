@@ -2036,6 +2036,12 @@ ds_xdmf_parallel_write_field(struct mrc_io *io, const char *path,
   mrc_fld_destroy(lfld);
 }
 
+static void
+ds_xdmf_parallel_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3)
+{
+  ds_xdmf_parallel_write_field(io, path, 1.0, m3, 0);
+}
+
 struct mrc_io_ops mrc_io_xdmf_parallel_ops = {
   .name          = "xdmf_parallel",
   .size          = sizeof(struct diag_hdf5),
@@ -2050,6 +2056,7 @@ struct mrc_io_ops mrc_io_xdmf_parallel_ops = {
   .read_f3       = ds_xdmf_parallel_read_f3,
   .write_m1      = ds_xdmf_parallel_write_m1,
   .write_field   = ds_xdmf_parallel_write_field,
+  .write_m3      = ds_xdmf_parallel_write_m3,
   .read_attr     = ds_xdmf_read_attr,
   .write_attr    = ds_xdmf_write_attr,
 };
