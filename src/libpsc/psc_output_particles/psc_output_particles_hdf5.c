@@ -450,9 +450,9 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
 	for (int jy = ilo[1]; jy < ihi[1]; jy++) {
 	  for (int jx = ilo[0]; jx < ihi[0]; jx++) {
 	    for (int kind = 0; kind < nr_kinds; kind++) {
-	      int ix = jx + info.off[0];
-	      int iy = jy + info.off[1];
-	      int iz = jz + info.off[2];
+	      int ix = jx + info.off[0] - hdf5->lo[0];
+	      int iy = jy + info.off[1] - hdf5->lo[1];
+	      int iz = jz + info.off[2] - hdf5->lo[2];
 	      int jj = ((kind * ld[2] + jz - ilo[2])
 			* ld[1] + jy - ilo[1]) * ld[0] + jx - ilo[0];
 	      int ii = ((kind * wdims[2] + iz) * wdims[1] + iy) * wdims[0] + ix;
@@ -478,9 +478,9 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
 	for (int jy = ilo[1]; jy < ihi[1]; jy++) {
 	  for (int jx = ilo[0]; jx < ihi[0]; jx++) {
 	    for (int kind = 0; kind < nr_kinds; kind++) {
-	      int ix = jx + info.off[0];
-	      int iy = jy + info.off[1];
-	      int iz = jz + info.off[2];
+	      int ix = jx + info.off[0] - hdf5->lo[0];
+	      int iy = jy + info.off[1] - hdf5->lo[1];
+	      int iz = jz + info.off[2] - hdf5->lo[2];
 	      int jj = ((kind * ld[2] + jz - ilo[2])
 			* ld[1] + jy - ilo[1]) * ld[0] + jx - ilo[0];
 	      int ii = ((kind * wdims[2] + iz) * wdims[1] + iy) * wdims[0] + ix;
