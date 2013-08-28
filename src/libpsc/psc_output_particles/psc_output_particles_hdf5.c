@@ -260,6 +260,7 @@ make_local_particle_array(struct psc_output_particles *out,
     int ilo[3], ihi[3], ld[3], sz;
     find_patch_bounds(hdf5, &info, ilo, ihi, ld, &sz);
     idx[p] = malloc(2 * sz * sizeof(*idx));
+    struct psc_patch *patch = &ppsc->patch[p];
 
     for (int jz = ilo[2]; jz < ihi[2]; jz++) {
       for (int jy = ilo[1]; jy < ihi[1]; jy++) {
@@ -272,9 +273,9 @@ make_local_particle_array(struct psc_output_particles *out,
 	    idx[p][jj + sz] = nn + n_off + off[p][si+1] - off[p][si];
 	    for (int n = off[p][si]; n < off[p][si+1]; n++, nn++) {
 	      particle_c_t *part = particles_c_get_one(prts, map[p][n]);
-	      arr[nn].x  = part->xi;
-	      arr[nn].y  = part->yi;
-	      arr[nn].z  = part->zi;
+	      arr[nn].x  = part->xi + patch->xb[0];
+	      arr[nn].y  = part->yi + patch->xb[1];
+	      arr[nn].z  = part->zi + patch->xb[2];
 	      arr[nn].px = part->pxi;
 	      arr[nn].py = part->pyi;
 	      arr[nn].pz = part->pzi;
