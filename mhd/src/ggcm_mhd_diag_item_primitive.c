@@ -186,7 +186,7 @@ ggcm_mhd_diag_item_b_run(struct ggcm_mhd_diag_item *item,
   mrc_fld_put_as(r, fld_r);
   mrc_fld_put_as(f, fld);
 
-  float scale_bb = 1.;//mhd->par.bbnorm;
+  float scale_bb = mhd->par.bbnorm;
   ggcm_mhd_diag_c_write_one_field(io, fld_r, 0, "bx", scale_bb, diag_type, plane);
   ggcm_mhd_diag_c_write_one_field(io, fld_r, 1, "by", scale_bb, diag_type, plane);
   ggcm_mhd_diag_c_write_one_field(io, fld_r, 2, "bz", scale_bb, diag_type, plane);
