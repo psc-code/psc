@@ -40,4 +40,13 @@ void mrc_view_printf(MPI_Comm comm, const char *fmt, ...);
 #define __unused __attribute__((__unused__))
 #endif
 
+#ifndef __deprecated
+  #ifdef __GNUC__
+    #define __deprecated(func) (func) __attribute__ ((deprecated))
+  #else
+    #pragma message("WARNING: __deprecated not implemented for this compiler")
+    #define __deprecated(func) (func)
+  #endif
+#endif
+
 #endif
