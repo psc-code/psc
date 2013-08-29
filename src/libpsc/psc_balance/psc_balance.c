@@ -609,7 +609,7 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
 
   psc_balance_seed_patches(domain_old, domain_new);	//TODO required here?
 
-  mrc_domain_destroy(domain_old);
+  // FIXME mrc_domain_destroy(domain_old);
   psc->mrc_domain = domain_new;
 }
 
@@ -760,7 +760,7 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   psc->mphotons = mphotons_new;
 
 
-  mrc_domain_destroy(domain_old);
+  // FIXME mrc_domain_destroy(domain_old);
   psc->mrc_domain = domain_new;
 
   psc_stats_stop(st_time_balance);
