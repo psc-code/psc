@@ -393,9 +393,19 @@ communicate_particles(struct mrc_domain *domain_old, struct mrc_domain *domain_n
     struct psc_particles *pp_new = psc_mparticles_get_patch(particles_new, p);
     struct psc_particles_double *c_new = psc_particles_double(pp_new);
     assert(pp_old->n_part == pp_new->n_part);
+#if 0
     for (int n = 0; n < pp_new->n_part; n++) {
       c_new->particles[n] = c_old->particles[n];
     }
+#else
+    // FIXME, this needs at least a proper interface -- if not separately alloc'ed, bad things
+    // are going to happen
+    free(c_new->particles);
+    c_new->particles = c_old->particles;
+    c_new->n_alloced = c_old->n_alloced;
+    c_old->particles = NULL; // prevent from being freed
+    c_old->n_alloced = 0;
+#endif
   }
   
   MPI_Waitall(nr_patches_old, send_reqs, MPI_STATUSES_IGNORE);
