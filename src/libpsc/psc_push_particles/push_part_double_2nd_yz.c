@@ -3,6 +3,9 @@
 #include "psc_fields_as_c.h"
 #include "psc_particles_as_double.h"
 
+#define F3_CACHE_TYPE "c"
+#define F3_CACHE F3_C
+
 #include <mrc_profile.h>
 #include <math.h>
 #include <stdlib.h>
@@ -11,7 +14,7 @@
 // FIXME, this really should share almost all code with its generic_c counterpart
 
 static void
-do_push_part_yz(int p, fields_t *pf, struct psc_particles *pp)
+do_push_part_yz(int p, struct psc_fields *pf, struct psc_particles *pp)
 {
 #define S0Y(off) s0y[off+2]
 #define S0Z(off) s0z[off+2]
@@ -90,65 +93,67 @@ do_push_part_yz(int p, fields_t *pf, struct psc_particles *pp)
     /* assert(j2 - 1 >= -1); */
     /* assert(l2 + 1 < ldims[1] + 1); */
     /* assert(j2 + 1 < ldims[1] + 2); */
-    particle_real_t exq=gmz*(gmy*F3(pf, EX, l1,j2-1,j3-1)
-		  +g0y*F3(pf, EX, l1,j2  ,j3-1)
-		  +g1y*F3(pf, EX, l1,j2+1,j3-1))
-             +g0z*(gmy*F3(pf, EX, l1,j2-1,j3  )
-    	          +g0y*F3(pf, EX, l1,j2  ,j3  )
-	          +g1y*F3(pf, EX, l1,j2+1,j3  ))
-             +g1z*(gmy*F3(pf, EX, l1,j2-1,j3+1)
-	          +g0y*F3(pf, EX, l1,j2  ,j3+1)
-	          +g1y*F3(pf, EX, l1,j2+1,j3+1));
+    l1 = 0;
+    j1 = 0;
+    particle_real_t exq=gmz*(gmy*F3_CACHE(pf, EX, l1,j2-1,j3-1)
+		  +g0y*F3_CACHE(pf, EX, l1,j2  ,j3-1)
+		  +g1y*F3_CACHE(pf, EX, l1,j2+1,j3-1))
+             +g0z*(gmy*F3_CACHE(pf, EX, l1,j2-1,j3  )
+    	          +g0y*F3_CACHE(pf, EX, l1,j2  ,j3  )
+	          +g1y*F3_CACHE(pf, EX, l1,j2+1,j3  ))
+             +g1z*(gmy*F3_CACHE(pf, EX, l1,j2-1,j3+1)
+	          +g0y*F3_CACHE(pf, EX, l1,j2  ,j3+1)
+	          +g1y*F3_CACHE(pf, EX, l1,j2+1,j3+1));
 
-    particle_real_t eyq=gmz*(hmy*F3(pf, EY, j1,l2-1,j3-1)
-                  +h0y*F3(pf, EY, j1,l2  ,j3-1)
-                  +h1y*F3(pf, EY, j1,l2+1,j3-1))
-             +g0z*(hmy*F3(pf, EY, j1,l2-1,j3  )
-                  +h0y*F3(pf, EY, j1,l2  ,j3  )
-                  +h1y*F3(pf, EY, j1,l2+1,j3  ))
-             +g1z*(hmy*F3(pf, EY, j1,l2-1,j3+1)
-                  +h0y*F3(pf, EY, j1,l2  ,j3+1)
-	          +h1y*F3(pf, EY, j1,l2+1,j3+1));
+    particle_real_t eyq=gmz*(hmy*F3_CACHE(pf, EY, j1,l2-1,j3-1)
+                  +h0y*F3_CACHE(pf, EY, j1,l2  ,j3-1)
+                  +h1y*F3_CACHE(pf, EY, j1,l2+1,j3-1))
+             +g0z*(hmy*F3_CACHE(pf, EY, j1,l2-1,j3  )
+                  +h0y*F3_CACHE(pf, EY, j1,l2  ,j3  )
+                  +h1y*F3_CACHE(pf, EY, j1,l2+1,j3  ))
+             +g1z*(hmy*F3_CACHE(pf, EY, j1,l2-1,j3+1)
+                  +h0y*F3_CACHE(pf, EY, j1,l2  ,j3+1)
+	          +h1y*F3_CACHE(pf, EY, j1,l2+1,j3+1));
 
-    particle_real_t ezq=hmz*(gmy*F3(pf, EZ, j1,j2-1,l3-1)
-		  +g0y*F3(pf, EZ, j1,j2  ,l3-1)
-                  +g1y*F3(pf, EZ, j1,j2+1,l3-1))
-             +h0z*(gmy*F3(pf, EZ, j1,j2-1,l3  )
-                  +g0y*F3(pf, EZ, j1,j2  ,l3  )
-                  +g1y*F3(pf, EZ, j1,j2+1,l3  ))
-             +h1z*(gmy*F3(pf, EZ, j1,j2-1,l3+1)
-                  +g0y*F3(pf, EZ, j1,j2  ,l3+1)
-		  +g1y*F3(pf, EZ, j1,j2+1,l3+1));
+    particle_real_t ezq=hmz*(gmy*F3_CACHE(pf, EZ, j1,j2-1,l3-1)
+		  +g0y*F3_CACHE(pf, EZ, j1,j2  ,l3-1)
+                  +g1y*F3_CACHE(pf, EZ, j1,j2+1,l3-1))
+             +h0z*(gmy*F3_CACHE(pf, EZ, j1,j2-1,l3  )
+                  +g0y*F3_CACHE(pf, EZ, j1,j2  ,l3  )
+                  +g1y*F3_CACHE(pf, EZ, j1,j2+1,l3  ))
+             +h1z*(gmy*F3_CACHE(pf, EZ, j1,j2-1,l3+1)
+                  +g0y*F3_CACHE(pf, EZ, j1,j2  ,l3+1)
+		  +g1y*F3_CACHE(pf, EZ, j1,j2+1,l3+1));
 
-    particle_real_t hxq=hmz*(hmy*F3(pf, HX, j1,l2-1,l3-1)
-                  +h0y*F3(pf, HX, j1,l2  ,l3-1)
-                  +h1y*F3(pf, HX, j1,l2+1,l3-1))
-             +h0z*(hmy*F3(pf, HX, j1,l2-1,l3  )
-                  +h0y*F3(pf, HX, j1,l2  ,l3  )
-                  +h1y*F3(pf, HX, j1,l2+1,l3  ))
-             +h1z*(hmy*F3(pf, HX, j1,l2-1,l3+1)
-                  +h0y*F3(pf, HX, j1,l2  ,l3+1)
-		  +h1y*F3(pf, HX, j1,l2+1,l3+1));
+    particle_real_t hxq=hmz*(hmy*F3_CACHE(pf, HX, j1,l2-1,l3-1)
+                  +h0y*F3_CACHE(pf, HX, j1,l2  ,l3-1)
+                  +h1y*F3_CACHE(pf, HX, j1,l2+1,l3-1))
+             +h0z*(hmy*F3_CACHE(pf, HX, j1,l2-1,l3  )
+                  +h0y*F3_CACHE(pf, HX, j1,l2  ,l3  )
+                  +h1y*F3_CACHE(pf, HX, j1,l2+1,l3  ))
+             +h1z*(hmy*F3_CACHE(pf, HX, j1,l2-1,l3+1)
+                  +h0y*F3_CACHE(pf, HX, j1,l2  ,l3+1)
+		  +h1y*F3_CACHE(pf, HX, j1,l2+1,l3+1));
 
-    particle_real_t hyq=hmz*(gmy*F3(pf, HY, l1,j2-1,l3-1)
-                  +g0y*F3(pf, HY, l1,j2  ,l3-1)
-                  +g1y*F3(pf, HY, l1,j2+1,l3-1))
-             +h0z*(gmy*F3(pf, HY, l1,j2-1,l3  )
-                  +g0y*F3(pf, HY, l1,j2  ,l3  )
-                  +g1y*F3(pf, HY, l1,j2+1,l3  ))
-             +h1z*(gmy*F3(pf, HY, l1,j2-1,l3+1)
-                  +g0y*F3(pf, HY, l1,j2  ,l3+1)
-	          +g1y*F3(pf, HY, l1,j2+1,l3+1));
+    particle_real_t hyq=hmz*(gmy*F3_CACHE(pf, HY, l1,j2-1,l3-1)
+                  +g0y*F3_CACHE(pf, HY, l1,j2  ,l3-1)
+                  +g1y*F3_CACHE(pf, HY, l1,j2+1,l3-1))
+             +h0z*(gmy*F3_CACHE(pf, HY, l1,j2-1,l3  )
+                  +g0y*F3_CACHE(pf, HY, l1,j2  ,l3  )
+                  +g1y*F3_CACHE(pf, HY, l1,j2+1,l3  ))
+             +h1z*(gmy*F3_CACHE(pf, HY, l1,j2-1,l3+1)
+                  +g0y*F3_CACHE(pf, HY, l1,j2  ,l3+1)
+	          +g1y*F3_CACHE(pf, HY, l1,j2+1,l3+1));
 
-    particle_real_t hzq=gmz*(hmy*F3(pf, HZ, l1,l2-1,j3-1)
-		  +h0y*F3(pf, HZ, l1,l2  ,j3-1)
-                  +h1y*F3(pf, HZ, l1,l2+1,j3-1))
-             +g0z*(hmy*F3(pf, HZ, l1,l2-1,j3  )
-                  +h0y*F3(pf, HZ, l1,l2  ,j3  )
-                  +h1y*F3(pf, HZ, l1,l2+1,j3  ))
-             +g1z*(hmy*F3(pf, HZ, l1,l2-1,j3+1)
-                  +h0y*F3(pf, HZ, l1,l2  ,j3+1)
-		  +h1y*F3(pf, HZ, l1,l2+1,j3+1));
+    particle_real_t hzq=gmz*(hmy*F3_CACHE(pf, HZ, l1,l2-1,j3-1)
+		  +h0y*F3_CACHE(pf, HZ, l1,l2  ,j3-1)
+                  +h1y*F3_CACHE(pf, HZ, l1,l2+1,j3-1))
+             +g0z*(hmy*F3_CACHE(pf, HZ, l1,l2-1,j3  )
+                  +h0y*F3_CACHE(pf, HZ, l1,l2  ,j3  )
+                  +h1y*F3_CACHE(pf, HZ, l1,l2+1,j3  ))
+             +g1z*(hmy*F3_CACHE(pf, HZ, l1,l2-1,j3+1)
+                  +h0y*F3_CACHE(pf, HZ, l1,l2  ,j3+1)
+		  +h1y*F3_CACHE(pf, HZ, l1,l2+1,j3+1));
 
      // c x^(n+.5), p^n -> x^(n+1.0), p^(n+1.0) 
 
@@ -258,10 +263,47 @@ do_push_part_yz(int p, fields_t *pf, struct psc_particles *pp)
 	jyh -= fnqy*wy;
 	JZH(l2) -= fnqz*wz;
 
-	F3(pf, JXI, j1,j2+l2,j3+l3) += jxh;
-	F3(pf, JYI, j1,j2+l2,j3+l3) += jyh;
-	F3(pf, JZI, j1,j2+l2,j3+l3) += JZH(l2);
+	F3_CACHE(pf, JXI, j1,j2+l2,j3+l3) += jxh;
+	F3_CACHE(pf, JYI, j1,j2+l2,j3+l3) += jyh;
+	F3_CACHE(pf, JZI, j1,j2+l2,j3+l3) += JZH(l2);
       }
+    }
+  }
+}
+
+static struct psc_fields *
+cache_fields_from_em(fields_t *pf)
+{
+  struct psc_fields *fld = psc_fields_create(MPI_COMM_SELF);
+  psc_fields_set_type(fld, F3_CACHE_TYPE);
+  // FIXME, can do -1 .. 1?
+  psc_fields_set_param_int3(fld, "ib", (int[3]) { 0, -2, -2 });
+  psc_fields_set_param_int3(fld, "im", (int[3]) { 1,
+	pf->im[1] + 2 * pf->ib[1] + 5, pf->im[2] + 2 * pf->ib[2] + 5});
+  psc_fields_set_param_int(fld, "nr_comp", 9); // JX .. HZ
+  psc_fields_set_param_int(fld, "p", pf->p);
+  psc_fields_setup(fld);
+  for (int iz = fld->ib[2]; iz < fld->ib[2] + fld->im[2]; iz++) {
+    for (int iy = fld->ib[1]; iy < fld->ib[1] + fld->im[1]; iy++) {
+      F3_CACHE(fld, EX, 0,iy,iz) = F3(pf, EX, 0,iy,iz);
+      F3_CACHE(fld, EY, 0,iy,iz) = F3(pf, EY, 0,iy,iz);
+      F3_CACHE(fld, EZ, 0,iy,iz) = F3(pf, EZ, 0,iy,iz);
+      F3_CACHE(fld, HX, 0,iy,iz) = F3(pf, HX, 0,iy,iz);
+      F3_CACHE(fld, HY, 0,iy,iz) = F3(pf, HY, 0,iy,iz);
+      F3_CACHE(fld, HZ, 0,iy,iz) = F3(pf, HZ, 0,iy,iz);
+    }
+  }
+  return fld;
+}
+
+static void __unused
+cache_fields_to_j(struct psc_fields *fld, fields_t *pf)
+{
+  for (int iz = fld->ib[2]; iz < fld->ib[2] + fld->im[2]; iz++) {
+    for (int iy = fld->ib[1]; iy < fld->ib[1] + fld->im[1]; iy++) {
+      F3(pf, JXI, 0,iy,iz) += F3_CACHE(fld, JXI, 0,iy,iz);
+      F3(pf, JYI, 0,iy,iz) += F3_CACHE(fld, JYI, 0,iy,iz);
+      F3(pf, JZI, 0,iy,iz) += F3_CACHE(fld, JZI, 0,iy,iz);
     }
   }
 }
@@ -281,7 +323,10 @@ psc_push_particles_2nd_double_push_a_yz(struct psc_push_particles *push,
 
   prof_start(pr);
   psc_fields_zero_range(flds, JXI, JXI + 3);
-  do_push_part_yz(prts->p, flds, prts);
+  struct psc_fields *flds_cache = cache_fields_from_em(flds);
+  do_push_part_yz(prts->p, flds_cache, prts);
+  cache_fields_to_j(flds_cache, flds);
+  psc_fields_destroy(flds_cache);
   prof_stop(pr);
 
   psc_particles_put_as(prts, prts_base, 0);
