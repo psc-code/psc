@@ -992,7 +992,6 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
       ctx->recv_bufs[rank] = malloc(buf_sizes[rank] * sizeof(ctx->recv_bufs[rank]));
     }
   }
-  int rr = 0;
   ctx->recv_reqs = calloc(ctx->nr_recvs, sizeof(*ctx->recv_reqs));
   ctx->recvs = calloc(ctx->nr_recvs, sizeof(*ctx->recvs));
 
@@ -1000,33 +999,34 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
     buf_sizes[rank] = 0;
   }
 
-  for (int rank = 0; rank < io->size; rank++) {
-    if (!ctx->recv_bufs[rank]) {
+  int rr = 0;
+  for (int gp = 0; gp < nr_global_patches; gp++) {
+    struct mrc_patch_info info;
+    mrc_domain_get_global_patch_info(m3->_domain, gp, &info);
+    // only consider recvs from remote ranks
+    if (info.rank == io->rank) {
       continue;
     }
-
-    for (int gp = 0; gp < nr_global_patches; gp++) {
-      struct mrc_patch_info info;
-      mrc_domain_get_global_patch_info(m3->_domain, gp, &info);
-      // only consider recvs from "rank" for now
-      if (info.rank != rank) {
-	continue;
-      }
-      int ilo[3], ihi[3];
-      int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
-					       mrc_fld_ghost_offs(fld), mrc_fld_ghost_dims(fld));
-      if (!has_intersection) {
-	continue;
-      }
-      int len = (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
-      
-      mprintf("MPI_Irecv <- %d gp %d len %d\n", info.rank, info.global_patch, len);
-      float *recv_buf = ctx->recv_bufs[rank] + buf_sizes[rank];
-      MPI_Irecv(recv_buf, len, MPI_FLOAT, info.rank,
-		info.global_patch, mrc_io_comm(io), &ctx->recv_reqs[rr++]);
-      buf_sizes[rank] += len;
+    // no patches at all expected from this rank, so don't have to check this patch
+    if (!ctx->recv_bufs[info.rank]) {
+      continue;
     }
+    
+    int ilo[3], ihi[3];
+    int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
+					     mrc_fld_ghost_offs(fld), mrc_fld_ghost_dims(fld));
+    if (!has_intersection) {
+      continue;
+    }
+    int len = (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
+    
+    mprintf("MPI_Irecv <- %d gp %d len %d\n", info.rank, info.global_patch, len);
+    float *recv_buf = ctx->recv_bufs[info.rank] + buf_sizes[info.rank];
+    MPI_Irecv(recv_buf, len, MPI_FLOAT, info.rank,
+	      info.global_patch, mrc_io_comm(io), &ctx->recv_reqs[rr++]);
+    buf_sizes[info.rank] += len;
   }
+  assert(rr == ctx->nr_recvs);
 
   free(buf_sizes);
 }
@@ -1047,40 +1047,38 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
 
   int *buf_sizes = calloc(io->size, sizeof(*buf_sizes));
 
-  for (int rank = 0; rank < io->size; rank++) {
-    if (!ctx->recv_bufs[rank]) {
+  for (int gp = 0; gp < nr_global_patches; gp++) {
+    struct mrc_patch_info info;
+    mrc_domain_get_global_patch_info(m3->_domain, gp, &info);
+    // only consider recvs from remote ranks
+    if (info.rank == io->rank) {
+      continue;
+    }
+    // no patches at all expected from this rank, so don't have to check this patch
+    if (!ctx->recv_bufs[info.rank]) {
+      continue;
+    }
+      
+    int *off = info.off;
+    // OPT, could be cached 2nd(?) and 3rd time
+    int ilo[3], ihi[3];
+    int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
+					     mrc_fld_ghost_offs(fld), mrc_fld_ghost_dims(fld));
+    if (!has_intersection) {
       continue;
     }
     
-    for (int gp = 0; gp < nr_global_patches; gp++) {
-      struct mrc_patch_info info;
-      mrc_domain_get_global_patch_info(m3->_domain, gp, &info);
-      // only consider recvs from "rank" for now
-      if (info.rank != rank) {
-	continue;
-      }
-      
-      int *off = info.off;
-      // OPT, could be cached 2nd(?) and 3rd time
-      int ilo[3], ihi[3];
-      int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
-					       mrc_fld_ghost_offs(fld), mrc_fld_ghost_dims(fld));
-      if (!has_intersection) {
-	continue;
-      }
-      
-      int len = (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
-      float *buf_ptr = ctx->recv_bufs[rank] + buf_sizes[rank];
-      for (int iz = ilo[2]; iz < ihi[2]; iz++) {
-	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
-	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	    MRC_F3(fld,0, ix,iy,iz) = *buf_ptr++;
-	  }
+    int len = (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
+    float *buf_ptr = ctx->recv_bufs[info.rank] + buf_sizes[info.rank];
+    for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+      for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+	  MRC_F3(fld,0, ix,iy,iz) = *buf_ptr++;
 	}
       }
-      buf_sizes[rank] += len;
-      rr++;
     }
+    buf_sizes[info.rank] += len;
+    rr++;
   }
 
   free(ctx->recv_reqs);
