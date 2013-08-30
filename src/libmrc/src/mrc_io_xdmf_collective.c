@@ -746,6 +746,7 @@ find_intersection(int *ilo, int *ihi, const int *ib1, const int *im1,
 
 struct collective_m3_entry {
   struct mrc_fld *fld;
+  float *buf;
   int ilo[3];
   int ihi[3];
   int patch;
@@ -988,14 +989,11 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
       continue;
     }
     ctx->recv_gps[rr] = gp;
-    struct mrc_fld *recv_fld = mrc_fld_create(MPI_COMM_NULL);
-    mrc_fld_set_param_int_array(recv_fld, "dims", 4,
-			       (int[4]) { info.ldims[0], info.ldims[1], info.ldims[2], 1 });
-    mrc_fld_setup(recv_fld);
-    ctx->recvs[rr].fld = recv_fld;
+    int len = info.ldims[0] * info.ldims[1] * info.ldims[2];
+    ctx->recvs[rr].buf = malloc(len * sizeof(*ctx->recvs[rr].buf));
     
     /* mprintf("MPI_Irecv <- %d gp %d len %d\n", info.rank, info.global_patch, recv_fld->len); */
-    MPI_Irecv(recv_fld->_arr, recv_fld->_len, MPI_FLOAT, info.rank,
+    MPI_Irecv(ctx->recvs[rr].buf, len, MPI_FLOAT, info.rank,
 	      info.global_patch, mrc_io_comm(io), &ctx->recv_reqs[rr++]);
   }
 }
@@ -1019,8 +1017,7 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
     find_intersection(ilo, ihi, info.off, info.ldims,
 		      mrc_fld_ghost_offs(fld), mrc_fld_ghost_dims(fld));
 
-    struct mrc_fld *recv_fld = ctx->recvs[rr].fld;
-    float *buf_ptr = recv_fld->_arr;
+    float *buf_ptr = ctx->recvs[rr].buf;
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
       for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
@@ -1028,7 +1025,7 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
 	}
       }
     }
-    mrc_fld_destroy(recv_fld);
+    free(ctx->recvs[rr].buf);
   }
 
   free(ctx->recv_reqs);
