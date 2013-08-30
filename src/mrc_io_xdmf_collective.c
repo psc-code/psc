@@ -884,7 +884,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
 	}
       }
 
-      int len = m3->_dims.vals[0] * m3->_dims.vals[1] * m3->_dims.vals[2];
+      int len = (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
       buf_size[writer] += len;
     }
   }
@@ -916,7 +916,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
       struct mrc_patch_info info;
       mrc_domain_get_local_patch_info(m3->_domain, p, &info);
 
-      int len = m3->_dims.vals[0] * m3->_dims.vals[1] * m3->_dims.vals[2];
+      int len = (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
       mprintf("MPI_Isend -> %d gp %d len %d\n", xdmf->writers[writer],
 	      info.global_patch, len);
       MPI_Isend(&buf[writer][buf_size[writer]], len, MPI_FLOAT,
@@ -989,7 +989,7 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
       continue;
     }
     ctx->recv_gps[rr] = gp;
-    int len = info.ldims[0] * info.ldims[1] * info.ldims[2];
+    int len = m3->_dims.vals[0] * m3->_dims.vals[1] * m3->_dims.vals[2];
     ctx->recvs[rr].buf = malloc(len * sizeof(*ctx->recvs[rr].buf));
     
     /* mprintf("MPI_Irecv <- %d gp %d len %d\n", info.rank, info.global_patch, recv_fld->len); */
