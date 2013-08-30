@@ -997,8 +997,11 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
   ctx->recvs = calloc(ctx->nr_recvs, sizeof(*ctx->recvs));
 
   for (int rank = 0; rank < io->size; rank++) {
-    float *recv_buf = ctx->recv_bufs[rank];
-    if (!recv_buf) {
+    buf_sizes[rank] = 0;
+  }
+
+  for (int rank = 0; rank < io->size; rank++) {
+    if (!ctx->recv_bufs[rank]) {
       continue;
     }
 
@@ -1018,9 +1021,10 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
       int len = (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
       
       mprintf("MPI_Irecv <- %d gp %d len %d\n", info.rank, info.global_patch, len);
+      float *recv_buf = ctx->recv_bufs[rank] + buf_sizes[rank];
       MPI_Irecv(recv_buf, len, MPI_FLOAT, info.rank,
 		info.global_patch, mrc_io_comm(io), &ctx->recv_reqs[rr++]);
-      recv_buf += len;
+      buf_sizes[rank] += len;
     }
   }
 
@@ -1041,9 +1045,10 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
   mrc_domain_get_nr_global_patches(m3->_domain, &nr_global_patches);
   int rr = 0;
 
+  int *buf_sizes = calloc(io->size, sizeof(*buf_sizes));
+
   for (int rank = 0; rank < io->size; rank++) {
-    float *recv_buf = ctx->recv_bufs[rank];
-    if (!recv_buf) {
+    if (!ctx->recv_bufs[rank]) {
       continue;
     }
     
@@ -1065,8 +1070,7 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
       }
       
       int len = (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
-      float *buf_ptr = recv_buf;
-      recv_buf += len;
+      float *buf_ptr = ctx->recv_bufs[rank] + buf_sizes[rank];
       for (int iz = ilo[2]; iz < ihi[2]; iz++) {
 	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
@@ -1074,6 +1078,7 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
 	  }
 	}
       }
+      buf_sizes[rank] += len;
       rr++;
     }
   }
@@ -1085,6 +1090,7 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
     free(ctx->recv_bufs[rank]);
   }
   free(ctx->recv_bufs);
+  free(buf_sizes);
 }
 
 // ----------------------------------------------------------------------
