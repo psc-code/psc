@@ -863,8 +863,9 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
     // fill buf per writer
     for (int p = 0; p < nr_patches; p++) {
       int ilo[3], ihi[3];
+      int *off = patches[p].off;
       bool has_intersection =
-	find_intersection(ilo, ihi, patches[p].off, patches[p].ldims,
+	find_intersection(ilo, ihi, off, patches[p].ldims,
 			  writer_off, writer_dims);
       if (!has_intersection)
 	continue;
@@ -872,11 +873,17 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
       struct mrc_patch_info info;
       mrc_domain_get_local_patch_info(m3->_domain, p, &info);
       float *buf_ptr = &buf[writer][buf_size[writer]];
-      mrc_fld_foreach(m3, ix,iy,iz, 0, 0) {
-	*buf_ptr++ = MRC_S5(m3, ix,iy,iz, m, p);
-      } mrc_fld_foreach_end;
+      mprintf("ilo %d %d %d ihi %d %d %d\n", ilo[0], ilo[1], ilo[2],
+	      ihi[0], ihi[1], ihi[2]);
+      for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+	    *buf_ptr++ = MRC_S5(m3, ix-off[0],iy-off[1],iz-off[2], m, p);
+	  }
+	}
+      }
+
       int len = m3->_dims.vals[0] * m3->_dims.vals[1] * m3->_dims.vals[2];
-      assert(buf_ptr - &buf[writer][buf_size[writer]] == len);
       buf_size[writer] += len;
     }
   }
@@ -1013,11 +1020,11 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
 		      mrc_fld_ghost_offs(fld), mrc_fld_ghost_dims(fld));
 
     struct mrc_fld *recv_fld = ctx->recvs[rr].fld;
+    float *buf_ptr = recv_fld->_arr;
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
       for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	  MRC_F3(fld,0, ix,iy,iz) =
-	    MRC_F3(recv_fld, 0, ix - off[0], iy - off[1], iz - off[2]);
+	  MRC_F3(fld,0, ix,iy,iz) = *buf_ptr++;
 	}
       }
     }
