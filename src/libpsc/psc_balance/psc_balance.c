@@ -238,8 +238,46 @@ gather_loads(struct mrc_domain *domain, double *loads, int nr_patches,
   return loads_all;
 }
 
+struct communicate_ctx {
+  int nr_patches_old;
+  int nr_patches_new;
+  int *new_rank_by_old_patch;
+  int *old_rank_by_new_patch;
+};
+
 static void
-communicate_new_nr_particles(struct mrc_domain *domain_old,
+communicate_setup(struct communicate_ctx *ctx, struct mrc_domain *domain_old,
+		  struct mrc_domain *domain_new)
+{
+  mrc_domain_get_patches(domain_old, &ctx->nr_patches_old);
+  mrc_domain_get_patches(domain_new, &ctx->nr_patches_new);
+
+  ctx->new_rank_by_old_patch = calloc(ctx->nr_patches_old, sizeof(*ctx->new_rank_by_old_patch));
+  ctx->old_rank_by_new_patch = calloc(ctx->nr_patches_new, sizeof(*ctx->old_rank_by_new_patch));
+
+  for (int p = 0; p < ctx->nr_patches_old; p++) {
+    struct mrc_patch_info info_old, info_new;
+    mrc_domain_get_local_patch_info(domain_old, p, &info_old);
+    mrc_domain_get_level_idx3_patch_info(domain_new, info_old.level, info_old.idx3, &info_new);
+    ctx->new_rank_by_old_patch[p] = info_new.rank;
+  }
+  for (int p = 0; p < ctx->nr_patches_new; p++) {
+    struct mrc_patch_info info_old, info_new;
+    mrc_domain_get_local_patch_info(domain_new, p, &info_new);
+    mrc_domain_get_level_idx3_patch_info(domain_old, info_new.level, info_new.idx3, &info_old);
+    ctx->old_rank_by_new_patch[p] = info_old.rank;
+  }
+}
+
+static void
+communicate_free(struct communicate_ctx *ctx)
+{
+  free(ctx->old_rank_by_new_patch);
+  free(ctx->new_rank_by_old_patch);
+}
+
+static void
+communicate_new_nr_particles(struct communicate_ctx *ctx, struct mrc_domain *domain_old,
 			     struct mrc_domain *domain_new, int **p_nr_particles_by_patch)
 {
   MPI_Comm comm = mrc_domain_comm(domain_new);
@@ -247,63 +285,60 @@ communicate_new_nr_particles(struct mrc_domain *domain_old,
   MPI_Comm_rank(comm, &rank);
   MPI_Comm_size(comm, &size);
 
-  int nr_patches_old, nr_patches_new;
-  mrc_domain_get_patches(domain_old, &nr_patches_old);
-  mrc_domain_get_patches(domain_new, &nr_patches_new);
+  // send info from old local patches
 
   int *nr_particles_by_patch_old = *p_nr_particles_by_patch;
-  int *nr_particles_by_patch_new = calloc(nr_patches_new,
+  int *nr_particles_by_patch_new = calloc(ctx->nr_patches_new,
 					  sizeof(nr_particles_by_patch_new));
-
-  // send info from old local patches
-  MPI_Request *send_reqs = calloc(nr_patches_old, sizeof(*send_reqs));
+  MPI_Request *send_reqs = calloc(ctx->nr_patches_old, sizeof(*send_reqs));
   int *nr_patches_new_by_rank = calloc(size, sizeof(*nr_patches_new_by_rank));
-  for (int p = 0; p < nr_patches_old; p++) {
-    struct mrc_patch_info info, info_new;
-    mrc_domain_get_local_patch_info(domain_old, p, &info);
-    mrc_domain_get_level_idx3_patch_info(domain_new, info.level, info.idx3, &info_new);
-    if (info_new.rank == rank) {
+  for (int p = 0; p < ctx->nr_patches_old; p++) {
+    int new_rank = ctx->new_rank_by_old_patch[p];
+    if (new_rank == rank) {
+      // FIXME
+      struct mrc_patch_info info, info_new;
+      mrc_domain_get_local_patch_info(domain_old, p, &info);
+      mrc_domain_get_level_idx3_patch_info(domain_new, info.level, info.idx3, &info_new);
       nr_particles_by_patch_new[info_new.patch] = nr_particles_by_patch_old[p];
       send_reqs[p] = MPI_REQUEST_NULL;
-    } else if ( info_new.rank < 0 ) {	//This patch has been deleted
+    } else if (new_rank < 0 ) {	//This patch has been deleted
       //Issue a warning if there will be particles lost
       if(nr_particles_by_patch_old[p] > 0) printf("Warning: losing %d particles in patch deallocation\n", nr_particles_by_patch_old[p]);
       send_reqs[p] = MPI_REQUEST_NULL;
     } else {
-      int tag = nr_patches_new_by_rank[info_new.rank]++;
+      int tag = nr_patches_new_by_rank[new_rank]++;
       //      mprintf("send -> %d (tags %d %d) %d\n", info_new.rank, mpi_tag(&info), tag, info_new.global_patch);
-      MPI_Isend(&nr_particles_by_patch_old[p], 1, MPI_INT, info_new.rank,
+      MPI_Isend(&nr_particles_by_patch_old[p], 1, MPI_INT, new_rank,
 		tag, comm, &send_reqs[p]);
     }
   }
   free(nr_patches_new_by_rank);
 
   // recv info for new local patches
-  MPI_Request *recv_reqs = calloc(nr_patches_new, sizeof(*recv_reqs));
+
   int *nr_patches_old_by_rank = calloc(size, sizeof(*nr_patches_old_by_rank));
-  for (int p = 0; p < nr_patches_new; p++) {
-    struct mrc_patch_info info, info_old;
-    mrc_domain_get_local_patch_info(domain_new, p, &info);
-    mrc_domain_get_level_idx3_patch_info(domain_old, info.level, info.idx3, &info_old);
-    if (info_old.rank == rank) {
+  MPI_Request *recv_reqs = calloc(ctx->nr_patches_new, sizeof(*recv_reqs));
+  for (int p = 0; p < ctx->nr_patches_new; p++) {
+    int old_rank = ctx->old_rank_by_new_patch[p];
+    if (old_rank == rank) {
       recv_reqs[p] = MPI_REQUEST_NULL;
-    } else if ( info_old.rank < 0 ) {
+    } else if (old_rank < 0) {
       //TODO Get number of particles
       assert(0);
       //nr_particles_by_patch_new[p] = psc_case_calc_nr_particles_in_patch(ppsc->patchmanager.currentcase, p);
       recv_reqs[p] = MPI_REQUEST_NULL;
     } else {
-      //printf("a: rank: %d tag: %d\n", info_old.rank, mpi_tag(&info));
-      int tag = nr_patches_old_by_rank[info_old.rank]++;
+      //printf("a: rank: %d tag: %d\n", old_rank, mpi_tag(&info));
+      int tag = nr_patches_old_by_rank[old_rank]++;
       //      mprintf("recv <- %d (tags %d %d)\n", info_old.rank, mpi_tag(&info), tag);
-      MPI_Irecv(&nr_particles_by_patch_new[p], 1, MPI_INT, info_old.rank,
+      MPI_Irecv(&nr_particles_by_patch_new[p], 1, MPI_INT, old_rank,
 		tag, comm, &recv_reqs[p]);
     }
   }
   free(nr_patches_old_by_rank);
-  
-  MPI_Waitall(nr_patches_old, send_reqs, MPI_STATUSES_IGNORE);
-  MPI_Waitall(nr_patches_new, recv_reqs, MPI_STATUSES_IGNORE);
+
+  MPI_Waitall(ctx->nr_patches_old, send_reqs, MPI_STATUSES_IGNORE);
+  MPI_Waitall(ctx->nr_patches_new, recv_reqs, MPI_STATUSES_IGNORE);
   free(send_reqs);
   free(recv_reqs);
 
@@ -573,7 +608,12 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
   psc_balance_comp_time_by_patch = calloc(nr_patches_new,
 					  sizeof(*psc_balance_comp_time_by_patch));
 
-  communicate_new_nr_particles(domain_old, domain_new, p_nr_particles_by_patch);
+  struct communicate_ctx _ctx, *ctx = &_ctx;
+  communicate_setup(ctx, domain_old, domain_new);
+
+  communicate_new_nr_particles(ctx, domain_old, domain_new, p_nr_particles_by_patch);
+
+  communicate_free(ctx);
 
   // ----------------------------------------------------------------------
   // fields
@@ -715,7 +755,13 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
     nr_particles_by_patch[p] =
       psc_mparticles_nr_particles_by_patch(psc->particles, p);
   }
-  communicate_new_nr_particles(domain_old, domain_new, &nr_particles_by_patch);
+
+  struct communicate_ctx _ctx, *ctx = &_ctx;
+  communicate_setup(ctx, domain_old, domain_new);
+
+  communicate_new_nr_particles(ctx, domain_old, domain_new, &nr_particles_by_patch);
+
+  communicate_free(ctx);
 
   // alloc new particles
   mparticles_base_t *mparticles_base_new = 
