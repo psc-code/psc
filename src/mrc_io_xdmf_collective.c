@@ -746,7 +746,6 @@ find_intersection(int *ilo, int *ihi, const int *ib1, const int *im1,
 
 struct collective_m3_entry {
   struct mrc_fld *fld;
-  float *buf;
   int ilo[3];
   int ihi[3];
   int patch;
@@ -762,7 +761,7 @@ struct collective_m3_ctx {
   int slow_dim;
   int slow_indices_per_writer;
   int slow_indices_rmndr;
-  int *recv_gps;
+
   struct collective_m3_entry *sends;
   float **send_bufs; // one for each writer
   MPI_Request *send_reqs;
@@ -994,7 +993,6 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
     }
   }
   int rr = 0;
-  ctx->recv_gps = calloc(ctx->nr_recvs, sizeof(*ctx->recv_gps));
   ctx->recv_reqs = calloc(ctx->nr_recvs, sizeof(*ctx->recv_reqs));
   ctx->recvs = calloc(ctx->nr_recvs, sizeof(*ctx->recvs));
 
@@ -1017,14 +1015,12 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
       if (!has_intersection) {
 	continue;
       }
-      ctx->recv_gps[rr] = gp;
       int len = (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
-      ctx->recvs[rr].buf = recv_buf;
-      recv_buf += len;
       
       mprintf("MPI_Irecv <- %d gp %d len %d\n", info.rank, info.global_patch, len);
-      MPI_Irecv(ctx->recvs[rr].buf, len, MPI_FLOAT, info.rank,
+      MPI_Irecv(recv_buf, len, MPI_FLOAT, info.rank,
 		info.global_patch, mrc_io_comm(io), &ctx->recv_reqs[rr++]);
+      recv_buf += len;
     }
   }
 
@@ -1068,7 +1064,9 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
 	continue;
       }
       
-      float *buf_ptr = ctx->recvs[rr].buf;
+      int len = (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
+      float *buf_ptr = recv_buf;
+      recv_buf += len;
       for (int iz = ilo[2]; iz < ihi[2]; iz++) {
 	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
@@ -1082,7 +1080,6 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
 
   free(ctx->recv_reqs);
   free(ctx->recvs);
-  free(ctx->recv_gps);
 
   for (int rank = 0; rank < io->size; rank++) {
     free(ctx->recv_bufs[rank]);
