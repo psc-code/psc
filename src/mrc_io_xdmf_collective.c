@@ -769,6 +769,7 @@ struct collective_m3_ctx {
   int nr_sends;
 
   struct collective_m3_entry *recvs;
+  float **recv_bufs; // one for each rank
   MPI_Request *recv_reqs;
   int nr_recvs;
 };
@@ -966,27 +967,8 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
   int nr_global_patches;
   mrc_domain_get_nr_global_patches(m3->_domain, &nr_global_patches);
   ctx->nr_recvs = 0;
-  for (int gp = 0; gp < nr_global_patches; gp++) {
-    struct mrc_patch_info info;
-    mrc_domain_get_global_patch_info(m3->_domain, gp, &info);
-    // skip local patches for now
-    if (info.rank == io->rank) {
-      continue;
-    }
-    int ilo[3], ihi[3];
-    int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
-					     mrc_fld_ghost_offs(fld), mrc_fld_ghost_dims(fld));
-    if (has_intersection) {
-      ctx->nr_recvs++;
-    }
-  }
-
-  mprintf("nr_recvs = %d\n", ctx->nr_recvs);
-  int rr = 0;
-  ctx->recv_gps = calloc(ctx->nr_recvs, sizeof(*ctx->recv_gps));
-  ctx->recv_reqs = calloc(ctx->nr_recvs, sizeof(*ctx->recv_reqs));
-  ctx->recvs = calloc(ctx->nr_recvs, sizeof(*ctx->recvs));
-
+  ctx->recv_bufs = calloc(io->size, sizeof(*ctx->recv_bufs));
+  int *buf_sizes = calloc(io->size, sizeof(*buf_sizes));
   for (int gp = 0; gp < nr_global_patches; gp++) {
     struct mrc_patch_info info;
     mrc_domain_get_global_patch_info(m3->_domain, gp, &info);
@@ -1000,14 +982,53 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
     if (!has_intersection) {
       continue;
     }
-    ctx->recv_gps[rr] = gp;
-    int len = m3->_dims.vals[0] * m3->_dims.vals[1] * m3->_dims.vals[2];
-    ctx->recvs[rr].buf = malloc(len * sizeof(*ctx->recvs[rr].buf));
-    
-    /* mprintf("MPI_Irecv <- %d gp %d len %d\n", info.rank, info.global_patch, recv_fld->len); */
-    MPI_Irecv(ctx->recvs[rr].buf, len, MPI_FLOAT, info.rank,
-	      info.global_patch, mrc_io_comm(io), &ctx->recv_reqs[rr++]);
+    ctx->nr_recvs++;
+    int len = (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
+    buf_sizes[info.rank] += len;
   }
+  mprintf("nr_recvs = %d\n", ctx->nr_recvs);
+  for (int rank = 0; rank < io->size; rank++) {
+    mprintf("recv buf_sizes[%d] = %d\n", rank, buf_sizes[rank]);
+    if (buf_sizes[rank] > 0) {
+      ctx->recv_bufs[rank] = malloc(buf_sizes[rank] * sizeof(ctx->recv_bufs[rank]));
+    }
+  }
+  int rr = 0;
+  ctx->recv_gps = calloc(ctx->nr_recvs, sizeof(*ctx->recv_gps));
+  ctx->recv_reqs = calloc(ctx->nr_recvs, sizeof(*ctx->recv_reqs));
+  ctx->recvs = calloc(ctx->nr_recvs, sizeof(*ctx->recvs));
+
+  for (int rank = 0; rank < io->size; rank++) {
+    float *recv_buf = ctx->recv_bufs[rank];
+    if (!recv_buf) {
+      continue;
+    }
+
+    for (int gp = 0; gp < nr_global_patches; gp++) {
+      struct mrc_patch_info info;
+      mrc_domain_get_global_patch_info(m3->_domain, gp, &info);
+      // only consider recvs from "rank" for now
+      if (info.rank != rank) {
+	continue;
+      }
+      int ilo[3], ihi[3];
+      int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
+					       mrc_fld_ghost_offs(fld), mrc_fld_ghost_dims(fld));
+      if (!has_intersection) {
+	continue;
+      }
+      ctx->recv_gps[rr] = gp;
+      int len = (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
+      ctx->recvs[rr].buf = recv_buf;
+      recv_buf += len;
+      
+      mprintf("MPI_Irecv <- %d gp %d len %d\n", info.rank, info.global_patch, len);
+      MPI_Irecv(ctx->recvs[rr].buf, len, MPI_FLOAT, info.rank,
+		info.global_patch, mrc_io_comm(io), &ctx->recv_reqs[rr++]);
+    }
+  }
+
+  free(buf_sizes);
 }
 
 // ----------------------------------------------------------------------
@@ -1037,12 +1058,17 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
 	}
       }
     }
-    free(ctx->recvs[rr].buf);
+    //    free(ctx->recvs[rr].buf);
   }
 
   free(ctx->recv_reqs);
   free(ctx->recvs);
   free(ctx->recv_gps);
+
+  for (int rank = 0; rank < io->size; rank++) {
+    free(ctx->recv_bufs[rank]);
+  }
+  free(ctx->recv_bufs);
 }
 
 // ----------------------------------------------------------------------
