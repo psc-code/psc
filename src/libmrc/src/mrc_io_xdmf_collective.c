@@ -1041,24 +1041,43 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
 {
   MPI_Waitall(ctx->nr_recvs, ctx->recv_reqs, MPI_STATUSES_IGNORE);
 
-  for (int rr = 0; rr < ctx->nr_recvs; rr++) {
-    struct mrc_patch_info info;
-    mrc_domain_get_global_patch_info(m3->_domain, ctx->recv_gps[rr], &info);
-    int *off = info.off;
-    // OPT, could be cached 2nd(?) and 3rd time
-    int ilo[3], ihi[3];
-    find_intersection(ilo, ihi, info.off, info.ldims,
-		      mrc_fld_ghost_offs(fld), mrc_fld_ghost_dims(fld));
+  int nr_global_patches;
+  mrc_domain_get_nr_global_patches(m3->_domain, &nr_global_patches);
+  int rr = 0;
 
-    float *buf_ptr = ctx->recvs[rr].buf;
-    for (int iz = ilo[2]; iz < ihi[2]; iz++) {
-      for (int iy = ilo[1]; iy < ihi[1]; iy++) {
-	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	  MRC_F3(fld,0, ix,iy,iz) = *buf_ptr++;
+  for (int rank = 0; rank < io->size; rank++) {
+    float *recv_buf = ctx->recv_bufs[rank];
+    if (!recv_buf) {
+      continue;
+    }
+    
+    for (int gp = 0; gp < nr_global_patches; gp++) {
+      struct mrc_patch_info info;
+      mrc_domain_get_global_patch_info(m3->_domain, gp, &info);
+      // only consider recvs from "rank" for now
+      if (info.rank != rank) {
+	continue;
+      }
+      
+      int *off = info.off;
+      // OPT, could be cached 2nd(?) and 3rd time
+      int ilo[3], ihi[3];
+      int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
+					       mrc_fld_ghost_offs(fld), mrc_fld_ghost_dims(fld));
+      if (!has_intersection) {
+	continue;
+      }
+      
+      float *buf_ptr = ctx->recvs[rr].buf;
+      for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+	    MRC_F3(fld,0, ix,iy,iz) = *buf_ptr++;
+	  }
 	}
       }
+      rr++;
     }
-    //    free(ctx->recvs[rr].buf);
   }
 
   free(ctx->recv_reqs);
