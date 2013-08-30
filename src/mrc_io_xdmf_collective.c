@@ -851,7 +851,8 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
 	continue;
 
       ctx->nr_sends++;
-      buf_size[writer] += m3->_ghost_dims[0] * m3->_ghost_dims[1] * m3->_ghost_dims[2];
+      int len = m3->_dims.vals[0] * m3->_dims.vals[1] * m3->_dims.vals[2];
+      buf_size[writer] += len;
     }
 
     // allocate buf per writer
@@ -871,10 +872,10 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
       struct mrc_patch_info info;
       mrc_domain_get_local_patch_info(m3->_domain, p, &info);
       float *buf_ptr = &buf[writer][buf_size[writer]];
-      mrc_fld_foreach(m3, ix,iy,iz, 2, 2) {
+      mrc_fld_foreach(m3, ix,iy,iz, 0, 0) {
 	*buf_ptr++ = MRC_S5(m3, ix,iy,iz, m, p);
       } mrc_fld_foreach_end;
-      int len = m3->_ghost_dims[0] * m3->_ghost_dims[1] * m3->_ghost_dims[2];
+      int len = m3->_dims.vals[0] * m3->_dims.vals[1] * m3->_dims.vals[2];
       assert(buf_ptr - &buf[writer][buf_size[writer]] == len);
       buf_size[writer] += len;
     }
@@ -907,7 +908,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
       struct mrc_patch_info info;
       mrc_domain_get_local_patch_info(m3->_domain, p, &info);
 
-      int len = m3->_ghost_dims[0] * m3->_ghost_dims[1] * m3->_ghost_dims[2];
+      int len = m3->_dims.vals[0] * m3->_dims.vals[1] * m3->_dims.vals[2];
       mprintf("MPI_Isend -> %d gp %d len %d\n", xdmf->writers[writer],
 	      info.global_patch, len);
       MPI_Isend(&buf[writer][buf_size[writer]], len, MPI_FLOAT,
@@ -960,7 +961,7 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
     }
   }
 
-  //  mprintf("nr_recvs = %d\n", nr_recvs);
+  mprintf("nr_recvs = %d\n", ctx->nr_recvs);
   int rr = 0;
   ctx->recv_gps = calloc(ctx->nr_recvs, sizeof(*ctx->recv_gps));
   ctx->recv_reqs = calloc(ctx->nr_recvs, sizeof(*ctx->recv_reqs));
@@ -983,8 +984,6 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
     struct mrc_fld *recv_fld = mrc_fld_create(MPI_COMM_NULL);
     mrc_fld_set_param_int_array(recv_fld, "dims", 4,
 			       (int[4]) { info.ldims[0], info.ldims[1], info.ldims[2], 1 });
-    mrc_fld_set_param_int_array(recv_fld, "sw", 4,
-			       (int[4]) { m3->_sw.vals[0], m3->_sw.vals[1], m3->_sw.vals[2], 0 });
     mrc_fld_setup(recv_fld);
     ctx->recvs[rr].fld = recv_fld;
     
@@ -995,7 +994,7 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
 }
 
 // ----------------------------------------------------------------------
-// collective_recv_fld
+// collective_recv_fld_end
 
 static void
 collective_recv_fld_end(struct collective_m3_ctx *ctx,
