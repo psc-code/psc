@@ -856,7 +856,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
     }
 
     // allocate buf per writer
-    mprintf("to writer %d buf_size %d\n", writer, buf_sizes[writer]);
+    //mprintf("to writer %d buf_size %d\n", writer, buf_sizes[writer]);
     if (buf_sizes[writer] == 0) {
       ctx->send_reqs[writer] = MPI_REQUEST_NULL;
       continue;
@@ -951,7 +951,7 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
 
   ctx->recv_reqs = calloc(io->size, sizeof(*ctx->recv_reqs));
   for (int rank = 0; rank < io->size; rank++) {
-    mprintf("recv buf_sizes[%d] = %d\n", rank, buf_sizes[rank]);
+    //mprintf("recv buf_sizes[%d] = %d\n", rank, buf_sizes[rank]);
     if (buf_sizes[rank] == 0) {
       ctx->recv_reqs[rank] = MPI_REQUEST_NULL;
       continue;
@@ -997,7 +997,6 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
       continue;
     }
       
-    int *off = info.off;
     // OPT, could be cached 2nd(?) and 3rd time
     int ilo[3], ihi[3];
     int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
