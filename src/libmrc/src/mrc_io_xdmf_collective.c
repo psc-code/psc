@@ -827,18 +827,19 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(m3->_domain, &nr_patches);
   ctx->nr_sends = 0;
-  for (int p = 0; p < nr_patches; p++) {
-    int *off = patches[p].off, *ldims = patches[p].ldims;
-    for (int writer = 0; writer < xdmf->nr_writers; writer++) {
-      // don't send to self
-      if (xdmf->writers[writer] == io->rank) {
-	continue;
-      }
-      int writer_off[3], writer_dims[3];
-      get_writer_off_dims(ctx, writer, writer_off, writer_dims);
+  for (int writer = 0; writer < xdmf->nr_writers; writer++) {
+    // don't send to self
+    if (xdmf->writers[writer] == io->rank) {
+      continue;
+    }
+    int writer_off[3], writer_dims[3];
+    get_writer_off_dims(ctx, writer, writer_off, writer_dims);
+
+    for (int p = 0; p < nr_patches; p++) {
       int ilo[3], ihi[3];
       bool has_intersection =
-	find_intersection(ilo, ihi, off, ldims, writer_off, writer_dims);
+	find_intersection(ilo, ihi, patches[p].off, patches[p].ldims,
+			  writer_off, writer_dims);
       if (has_intersection) {
 	ctx->nr_sends++;
       }
@@ -846,25 +847,25 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
   }
   mprintf("nr_sends = %d\n", ctx->nr_sends);
 
-  int sr = 0;
-  ctx->send_reqs = calloc(ctx->nr_sends, sizeof(*ctx->send_reqs));
-
+  // find buf_size per writer
   int buf_size[xdmf->nr_writers];
   for (int writer = 0; writer < xdmf->nr_writers; writer++) {
     buf_size[writer] = 0;
   }
-  for (int p = 0; p < nr_patches; p++) {
-    int *off = patches[p].off, *ldims = patches[p].ldims;
-    for (int writer = 0; writer < xdmf->nr_writers; writer++) {
-      // don't send to self
-      if (xdmf->writers[writer] == io->rank) {
-	continue;
-      }
-      int writer_off[3], writer_dims[3];
-      get_writer_off_dims(ctx, writer, writer_off, writer_dims);
+
+  for (int writer = 0; writer < xdmf->nr_writers; writer++) {
+    // don't send to self
+    if (xdmf->writers[writer] == io->rank) {
+      continue;
+    }
+    int writer_off[3], writer_dims[3];
+    get_writer_off_dims(ctx, writer, writer_off, writer_dims);
+    
+    for (int p = 0; p < nr_patches; p++) {
       int ilo[3], ihi[3];
       bool has_intersection =
-	find_intersection(ilo, ihi, off, ldims, writer_off, writer_dims);
+	find_intersection(ilo, ihi, patches[p].off, patches[p].ldims,
+			  writer_off, writer_dims);
       if (!has_intersection)
 	continue;
 
@@ -872,6 +873,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
     }
   }
 
+  // allocate buf per writer
   float *buf[xdmf->nr_writers];
   for (int writer = 0; writer < xdmf->nr_writers; writer++) {
     mprintf("to writer %d buf_size %d\n", writer, buf_size[writer]);
@@ -879,18 +881,19 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
     buf_size[writer] = 0;
   }
 
-  for (int p = 0; p < nr_patches; p++) {
-    int *off = patches[p].off, *ldims = patches[p].ldims;
-    for (int writer = 0; writer < xdmf->nr_writers; writer++) {
-      // don't send to self
-      if (xdmf->writers[writer] == io->rank) {
-	continue;
-      }
-      int writer_off[3], writer_dims[3];
-      get_writer_off_dims(ctx, writer, writer_off, writer_dims);
+  // fill buf per writer
+  for (int writer = 0; writer < xdmf->nr_writers; writer++) {
+    // don't send to self
+    if (xdmf->writers[writer] == io->rank) {
+      continue;
+    }
+    int writer_off[3], writer_dims[3];
+    get_writer_off_dims(ctx, writer, writer_off, writer_dims);
+    for (int p = 0; p < nr_patches; p++) {
       int ilo[3], ihi[3];
       bool has_intersection =
-	find_intersection(ilo, ihi, off, ldims, writer_off, writer_dims);
+	find_intersection(ilo, ihi, patches[p].off, patches[p].ldims,
+			  writer_off, writer_dims);
       if (!has_intersection)
 	continue;
 
@@ -902,7 +905,37 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
       } mrc_fld_foreach_end;
       int len = m3->_ghost_dims[0] * m3->_ghost_dims[1] * m3->_ghost_dims[2];
       assert(buf_ptr - &buf[writer][buf_size[writer]] == len);
+      buf_size[writer] += len;
+    }
+  }
 
+  // send buf per writer
+  for (int writer = 0; writer < xdmf->nr_writers; writer++) {
+    buf_size[writer] = 0;
+  }
+
+  int sr = 0;
+  ctx->send_reqs = calloc(ctx->nr_sends, sizeof(*ctx->send_reqs));
+
+  for (int writer = 0; writer < xdmf->nr_writers; writer++) {
+    // don't send to self
+    if (xdmf->writers[writer] == io->rank) {
+      continue;
+    }
+    int writer_off[3], writer_dims[3];
+    get_writer_off_dims(ctx, writer, writer_off, writer_dims);
+    for (int p = 0; p < nr_patches; p++) {
+      int ilo[3], ihi[3];
+      bool has_intersection =
+	find_intersection(ilo, ihi, patches[p].off, patches[p].ldims,
+			  writer_off, writer_dims);
+      if (!has_intersection)
+	continue;
+
+      struct mrc_patch_info info;
+      mrc_domain_get_local_patch_info(m3->_domain, p, &info);
+
+      int len = m3->_ghost_dims[0] * m3->_ghost_dims[1] * m3->_ghost_dims[2];
       mprintf("MPI_Isend -> %d gp %d len %d\n", xdmf->writers[writer],
 	      info.global_patch, len);
       MPI_Isend(&buf[writer][buf_size[writer]], len, MPI_FLOAT,
