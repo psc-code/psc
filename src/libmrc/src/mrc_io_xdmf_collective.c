@@ -844,10 +844,40 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
       }
     }
   }
-  //  mprintf("nr_sends = %d\n", nr_sends);
+  mprintf("nr_sends = %d\n", ctx->nr_sends);
 
   int sr = 0;
   ctx->send_reqs = calloc(ctx->nr_sends, sizeof(*ctx->send_reqs));
+
+  int buf_size[xdmf->nr_writers];
+  for (int writer = 0; writer < xdmf->nr_writers; writer++) {
+    buf_size[writer] = 0;
+  }
+  for (int p = 0; p < nr_patches; p++) {
+    int *off = patches[p].off, *ldims = patches[p].ldims;
+    for (int writer = 0; writer < xdmf->nr_writers; writer++) {
+      // don't send to self
+      if (xdmf->writers[writer] == io->rank) {
+	continue;
+      }
+      int writer_off[3], writer_dims[3];
+      get_writer_off_dims(ctx, writer, writer_off, writer_dims);
+      int ilo[3], ihi[3];
+      bool has_intersection =
+	find_intersection(ilo, ihi, off, ldims, writer_off, writer_dims);
+      if (!has_intersection)
+	continue;
+
+      buf_size[writer] += m3->_ghost_dims[0] * m3->_ghost_dims[1] * m3->_ghost_dims[2];
+    }
+  }
+
+  float *buf[xdmf->nr_writers];
+  for (int writer = 0; writer < xdmf->nr_writers; writer++) {
+    mprintf("to writer %d buf_size %d\n", writer, buf_size[writer]);
+    buf[writer] = malloc(buf_size[writer] * sizeof(*buf[writer]));
+    buf_size[writer] = 0;
+  }
 
   for (int p = 0; p < nr_patches; p++) {
     int *off = patches[p].off, *ldims = patches[p].ldims;
@@ -866,14 +896,20 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
 
       struct mrc_patch_info info;
       mrc_domain_get_local_patch_info(m3->_domain, p, &info);
-      struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, p);
-      /* mprintf("MPI_Isend -> %d gp %d len %d\n", xdmf->writers[writer], info.global_patch, */
-      /* 	      m3->_ghost_dims[0] * m3->_ghost_dims[1] * m3->_ghost_dims[2]); */
-      MPI_Isend(&MRC_M3(m3p, m, m3->_ghost_offs[0], m3->_ghost_offs[1], m3->_ghost_offs[2]),
-		m3->_ghost_dims[0] * m3->_ghost_dims[1] * m3->_ghost_dims[2], MPI_FLOAT,
+      float *buf_ptr = &buf[writer][buf_size[writer]];
+      mrc_fld_foreach(m3, ix,iy,iz, 2, 2) {
+	*buf_ptr++ = MRC_S5(m3, ix,iy,iz, m, p);
+      } mrc_fld_foreach_end;
+      int len = m3->_ghost_dims[0] * m3->_ghost_dims[1] * m3->_ghost_dims[2];
+      assert(buf_ptr - &buf[writer][buf_size[writer]] == len);
+
+      mprintf("MPI_Isend -> %d gp %d len %d\n", xdmf->writers[writer],
+	      info.global_patch, len);
+      MPI_Isend(&buf[writer][buf_size[writer]], len, MPI_FLOAT,
 		xdmf->writers[writer], info.global_patch,
 		mrc_io_comm(io), &ctx->send_reqs[sr++]);
-      mrc_fld_patch_put(m3);
+
+      buf_size[writer] += len;
     }
   }
 }
