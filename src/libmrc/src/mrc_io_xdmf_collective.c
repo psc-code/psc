@@ -764,6 +764,7 @@ struct collective_m3_ctx {
   int slow_indices_rmndr;
   int *recv_gps;
   struct collective_m3_entry *sends;
+  float **send_bufs; // one for each writer
   MPI_Request *send_reqs;
   int nr_sends;
 
@@ -830,7 +831,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
 
   ctx->nr_sends = 0;
   int buf_size[xdmf->nr_writers];
-  float *buf[xdmf->nr_writers];
+  ctx->send_bufs = calloc(xdmf->nr_writers, sizeof(*ctx->send_bufs));
 
   for (int writer = 0; writer < xdmf->nr_writers; writer++) {
     // don't send to self
@@ -858,7 +859,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
 
     // allocate buf per writer
     mprintf("to writer %d buf_size %d\n", writer, buf_size[writer]);
-    buf[writer] = malloc(buf_size[writer] * sizeof(*buf[writer]));
+    ctx->send_bufs[writer] = malloc(buf_size[writer] * sizeof(*ctx->send_bufs[writer]));
     buf_size[writer] = 0;
 
     // fill buf per writer
@@ -873,7 +874,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
 
       struct mrc_patch_info info;
       mrc_domain_get_local_patch_info(m3->_domain, p, &info);
-      float *buf_ptr = &buf[writer][buf_size[writer]];
+      float *buf_ptr = &ctx->send_bufs[writer][buf_size[writer]];
       mprintf("ilo %d %d %d ihi %d %d %d\n", ilo[0], ilo[1], ilo[2],
 	      ihi[0], ihi[1], ihi[2]);
       for (int iz = ilo[2]; iz < ihi[2]; iz++) {
@@ -919,7 +920,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
       int len = (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
       mprintf("MPI_Isend -> %d gp %d len %d\n", xdmf->writers[writer],
 	      info.global_patch, len);
-      MPI_Isend(&buf[writer][buf_size[writer]], len, MPI_FLOAT,
+      MPI_Isend(&ctx->send_bufs[writer][buf_size[writer]], len, MPI_FLOAT,
 		xdmf->writers[writer], info.global_patch,
 		mrc_io_comm(io), &ctx->send_reqs[sr++]);
 
@@ -935,7 +936,18 @@ static void
 collective_send_fld_end(struct collective_m3_ctx *ctx, struct mrc_io *io,
 			struct mrc_fld *m3, int m)
 {
+  struct xdmf *xdmf = to_xdmf(io);
+
   MPI_Waitall(ctx->nr_sends, ctx->send_reqs, MPI_STATUSES_IGNORE);
+
+  for (int writer = 0; writer < xdmf->nr_writers; writer++) {
+    // don't send to self
+    if (xdmf->writers[writer] == io->rank) {
+      continue;
+    }
+    free(ctx->send_bufs[writer]);
+  }
+  free(ctx->send_bufs);
   free(ctx->send_reqs);
 }
     
