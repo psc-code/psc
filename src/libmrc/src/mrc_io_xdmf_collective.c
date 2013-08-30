@@ -764,11 +764,13 @@ struct collective_m3_ctx {
 
   struct collective_m3_entry *sends;
   float **send_bufs; // one for each writer
+  MPI_Request *send_reqs2;
   MPI_Request *send_reqs;
   int nr_sends;
 
   struct collective_m3_entry *recvs;
   float **recv_bufs; // one for each rank
+  MPI_Request *recv_reqs2;
   MPI_Request *recv_reqs;
   int nr_recvs;
 };
@@ -874,9 +876,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
 
       struct mrc_patch_info info;
       mrc_domain_get_local_patch_info(m3->_domain, p, &info);
-      float *buf_ptr = &ctx->send_bufs[writer][buf_size[writer]];
-      mprintf("ilo %d %d %d ihi %d %d %d\n", ilo[0], ilo[1], ilo[2],
-	      ihi[0], ihi[1], ihi[2]);
+      float *buf_ptr = ctx->send_bufs[writer] + buf_size[writer];
       for (int iz = ilo[2]; iz < ihi[2]; iz++) {
 	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
@@ -888,6 +888,20 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
       int len = (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
       buf_size[writer] += len;
     }
+  }
+
+  // send whole buffers to corresponding writers
+  ctx->send_reqs2 = calloc(xdmf->nr_writers, sizeof(*ctx->send_reqs2));
+  for (int writer = 0; writer < xdmf->nr_writers; writer++) {
+    // check if we have anything to send
+    if (!ctx->send_bufs[writer]) {
+      ctx->send_reqs2[writer] = MPI_REQUEST_NULL;
+      continue;
+    }
+
+    MPI_Isend(ctx->send_bufs[writer], buf_size[writer], MPI_FLOAT,
+	      xdmf->writers[writer], 0x1000, mrc_io_comm(io),
+	      &ctx->send_reqs2[writer]);
   }
 
   // send buf per writer
@@ -904,6 +918,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
     if (xdmf->writers[writer] == io->rank) {
       continue;
     }
+
     int writer_off[3], writer_dims[3];
     get_writer_off_dims(ctx, writer, writer_off, writer_dims);
     for (int p = 0; p < nr_patches; p++) {
@@ -920,7 +935,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
       int len = (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
       mprintf("MPI_Isend -> %d gp %d len %d\n", xdmf->writers[writer],
 	      info.global_patch, len);
-      MPI_Isend(&ctx->send_bufs[writer][buf_size[writer]], len, MPI_FLOAT,
+      MPI_Isend(ctx->send_bufs[writer] + buf_size[writer], len, MPI_FLOAT,
 		xdmf->writers[writer], info.global_patch,
 		mrc_io_comm(io), &ctx->send_reqs[sr++]);
 
@@ -938,6 +953,7 @@ collective_send_fld_end(struct collective_m3_ctx *ctx, struct mrc_io *io,
 {
   struct xdmf *xdmf = to_xdmf(io);
 
+  MPI_Waitall(xdmf->nr_writers, ctx->send_reqs2, MPI_STATUSES_IGNORE);
   MPI_Waitall(ctx->nr_sends, ctx->send_reqs, MPI_STATUSES_IGNORE);
 
   for (int writer = 0; writer < xdmf->nr_writers; writer++) {
@@ -992,6 +1008,21 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
       ctx->recv_bufs[rank] = malloc(buf_sizes[rank] * sizeof(ctx->recv_bufs[rank]));
     }
   }
+
+  // recv whole buffers from nodes that have patches to send
+  ctx->recv_reqs2 = calloc(io->size, sizeof(*ctx->recv_reqs2));
+  for (int rank = 0; rank < io->size; rank++) {
+     // check if we have anything to recv
+   if (!ctx->recv_bufs[rank]) {
+      ctx->recv_reqs2[rank] = MPI_REQUEST_NULL;
+      continue;
+    }
+
+    MPI_Irecv(ctx->recv_bufs[rank], buf_sizes[rank], MPI_FLOAT,
+	      rank, 0x1000, mrc_io_comm(io),
+	      &ctx->recv_reqs2[rank]);
+  }
+
   ctx->recv_reqs = calloc(ctx->nr_recvs, sizeof(*ctx->recv_reqs));
   ctx->recvs = calloc(ctx->nr_recvs, sizeof(*ctx->recvs));
 
@@ -1039,6 +1070,7 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
 			struct mrc_io *io, struct mrc_fld *fld,
 			struct mrc_fld *m3, int m)
 {
+  MPI_Waitall(io->size, ctx->recv_reqs2, MPI_STATUSES_IGNORE);
   MPI_Waitall(ctx->nr_recvs, ctx->recv_reqs, MPI_STATUSES_IGNORE);
 
   int nr_global_patches;
