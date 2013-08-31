@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define DEBUG_BALANCE
+//#define DEBUG_BALANCE
 
 LIST_HEAD(psc_mfields_base_list);
 
@@ -658,7 +658,7 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
     st_time_balance = psc_stats_register("time balancing");
   }
   static int pr_bal_gather, pr_bal_decomp_A, pr_bal_decomp_B, pr_bal_decomp_C, pr_bal_decomp_D,
-    pr_bal_prts, pr_bal_flds, pr_bal_flds_comm, pr_bal_ctx;
+    pr_bal_prts, pr_bal_flds, pr_bal_flds_comm, pr_bal_ctx, pr_bal_flds_A, pr_bal_flds_B, pr_bal_flds_C;
   if (!pr_bal_gather) {
     pr_bal_gather = prof_register("bal gather", 1., 0, 0);
     pr_bal_decomp_A = prof_register("bal decomp A", 1., 0, 0);
@@ -669,6 +669,9 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
     pr_bal_prts = prof_register("bal prts", 1., 0, 0);
     pr_bal_flds = prof_register("bal flds", 1., 0, 0);
     pr_bal_flds_comm = prof_register("bal flds comm", 1., 0, 0);
+    pr_bal_flds_A = prof_register("bal flds A", 1., 0, 0);
+    pr_bal_flds_B = prof_register("bal flds B", 1., 0, 0);
+    pr_bal_flds_C = prof_register("bal flds C", 1., 0, 0);
   }
 
   MPI_Barrier(psc_comm(psc));
@@ -772,10 +775,15 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   MPI_Barrier(psc_comm(psc));
   prof_start(pr_bal_flds_comm);
   prof_stop(pr_bal_flds_comm);
+  /* prof_start(pr_bal_flds_A); */
+  /* prof_stop(pr_bal_flds_A); */
+  prof_start(pr_bal_flds_B);
+  prof_stop(pr_bal_flds_B);
 
   prof_start(pr_bal_flds);
   struct psc_mfields_list_entry *p;
   __list_for_each_entry(p, &psc_mfields_base_list, entry, struct psc_mfields_list_entry) {
+    MPI_Barrier(MPI_COMM_WORLD);
     mfields_base_t *flds_base_old = *p->flds_p;
     // if (flds_base_old != psc->flds) {
     //   fprintf(stderr, "WARNING: not rebalancing some extra field (%p) -- expect crash!\n",
@@ -790,7 +798,10 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
     psc_mfields_set_param_int(flds_base_new, "nr_fields", flds_base_old->nr_fields);
     psc_mfields_set_param_int(flds_base_new, "first_comp", flds_base_old->first_comp);
     psc_mfields_set_param_int3(flds_base_new, "ibn", flds_base_old->ibn);
+
+    prof_start(pr_bal_flds_A);
     psc_mfields_setup(flds_base_new);
+    prof_stop(pr_bal_flds_A);
     for (int m = flds_base_old->first_comp;
 	 m < flds_base_old->first_comp + flds_base_old->nr_fields; m++) {
       const char *s = psc_mfields_comp_name(flds_base_old, m);
@@ -799,16 +810,22 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
       }
     }
 
+    prof_restart(pr_bal_flds_B);
     mfields_t *flds_old =
       psc_mfields_get_cf(flds_base_old, flds_base_old->first_comp,
 			 flds_base_old->first_comp + flds_base_old->nr_fields);
     mfields_t *flds_new = psc_mfields_get_cf(flds_base_new, 0, 0);
+    prof_stop(pr_bal_flds_B);
+
     prof_restart(pr_bal_flds_comm);
     communicate_fields(ctx, flds_old, flds_new);
     prof_stop(pr_bal_flds_comm);
+
+    prof_restart(pr_bal_flds_C);
     psc_mfields_put_cf(flds_old, flds_base_old, 0, 0);
     psc_mfields_put_cf(flds_new, flds_base_new, flds_base_new->first_comp,
 		       flds_base_new->first_comp + flds_base_new->nr_fields);
+    prof_stop(pr_bal_flds_C);
 
     psc_mfields_destroy(*p->flds_p);
     *p->flds_p = flds_base_new;
