@@ -339,14 +339,6 @@ communicate_new_nr_particles(struct communicate_ctx *ctx, int **p_nr_particles_b
     }
   }
 
-  /* for (int ri = 0; ri < nr_send_ranks; ri++) { */
-  /*   mprintf("send ri %d -> %d\n", ri, send_ri_to_rank[ri]); */
-  /* } */
-  /* for (int ri = 0; ri < nr_recv_ranks; ri++) { */
-  /*   mprintf("recv ri %d -> %d\n", ri, recv_ri_to_rank[ri]); */
-  /* } */
-  /* MPI_Barrier(MPI_COMM_WORLD); */
-
   int *nr_particles_by_patch_old = *p_nr_particles_by_patch;
   int *nr_particles_by_patch_new = calloc(ctx->nr_patches_new,
 					  sizeof(nr_particles_by_patch_new));
@@ -376,8 +368,8 @@ communicate_new_nr_particles(struct communicate_ctx *ctx, int **p_nr_particles_b
       continue;
     }
     int ri = send_rank_to_ri[send_rank];
-    int tag = nr_patches_send_by_ri[ri]++;
-    nr_particles_send_by_ri[ri][tag] = nr_particles_by_patch_old[p];
+    int n = nr_patches_send_by_ri[ri]++;
+    nr_particles_send_by_ri[ri][n] = nr_particles_by_patch_old[p];
   }
 
   // actual send
@@ -407,11 +399,8 @@ communicate_new_nr_particles(struct communicate_ctx *ctx, int **p_nr_particles_b
     }
   }
 
-  int **nr_particles_recv_by_rank = calloc(ctx->mpi_size, sizeof(*nr_particles_recv_by_rank));
   int **nr_particles_recv_by_ri = calloc(nr_recv_ranks, sizeof(*nr_particles_recv_by_ri));
   for (int ri = 0; ri < nr_recv_ranks; ri++) {
-    int r = recv_ri_to_rank[ri];
-    nr_particles_recv_by_rank[r] = calloc(nr_patches_recv_by_ri[ri], sizeof(*nr_particles_recv_by_rank[r]));
     nr_particles_recv_by_ri[ri] = calloc(nr_patches_recv_by_ri[ri], sizeof(*nr_particles_recv_by_ri[ri]));
   }
 
@@ -420,9 +409,8 @@ communicate_new_nr_particles(struct communicate_ctx *ctx, int **p_nr_particles_b
     int send_ri = send_rank_to_ri[ctx->mpi_rank];
     int recv_ri = recv_rank_to_ri[ctx->mpi_rank];
     assert(nr_patches_send_by_ri[send_ri] == nr_patches_recv_by_ri[recv_ri]);
-    for (int tag = 0; tag < nr_patches_send_by_ri[send_ri]; tag++) {
-      nr_particles_recv_by_rank[ctx->mpi_rank][tag] = nr_particles_send_by_ri[send_ri][tag];
-      nr_particles_recv_by_ri[recv_ri][tag] = nr_particles_send_by_ri[send_ri][tag];
+    for (int n = 0; n < nr_patches_send_by_ri[send_ri]; n++) {
+      nr_particles_recv_by_ri[recv_ri][n] = nr_particles_send_by_ri[send_ri][n];
     }
   }
 
@@ -432,7 +420,7 @@ communicate_new_nr_particles(struct communicate_ctx *ctx, int **p_nr_particles_b
     int r = recv_ri_to_rank[ri];
     if (r != ctx->mpi_rank) {
       mprintf("recv <- %d (len %d)\n", r, nr_patches_recv_by_ri[ri]);
-      MPI_Irecv(nr_particles_recv_by_rank[r], nr_patches_recv_by_ri[ri], MPI_INT,
+      MPI_Irecv(nr_particles_recv_by_ri[ri], nr_patches_recv_by_ri[ri], MPI_INT,
 		r, 10, ctx->comm, &recv_reqs[nr_recv_reqs++]);
     }
   }
@@ -449,8 +437,8 @@ communicate_new_nr_particles(struct communicate_ctx *ctx, int **p_nr_particles_b
       continue;
     }
     int ri = recv_rank_to_ri[recv_rank];
-    int tag = nr_patches_recv_by_ri[ri]++;
-    nr_particles_by_patch_new[p] = nr_particles_recv_by_rank[recv_rank][tag];
+    int n = nr_patches_recv_by_ri[ri]++;
+    nr_particles_by_patch_new[p] = nr_particles_recv_by_ri[ri][n];
   }
 
   MPI_Waitall(nr_send_reqs, send_reqs, MPI_STATUSES_IGNORE);
@@ -461,10 +449,10 @@ communicate_new_nr_particles(struct communicate_ctx *ctx, int **p_nr_particles_b
   free(nr_particles_send_by_ri);
   free(nr_patches_send_by_ri);
 
-  for (int r = 0; r < ctx->mpi_size; r++) {
-    free(nr_particles_recv_by_rank[r]);
+  for (int ri = 0; ri < nr_recv_ranks; ri++) {
+    free(nr_particles_recv_by_ri[ri]);
   }
-  free(nr_particles_recv_by_rank);
+  free(nr_particles_recv_by_ri);
   free(nr_patches_recv_by_ri);
 
   free(send_reqs);
