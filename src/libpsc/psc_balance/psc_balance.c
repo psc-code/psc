@@ -307,7 +307,9 @@ communicate_new_nr_particles(struct communicate_ctx *ctx, int **p_nr_particles_b
   int *nr_patches_send_by_rank = calloc(ctx->mpi_size, sizeof(*nr_patches_send_by_rank));
   for (int p = 0; p < ctx->nr_patches_old; p++) {
     int new_rank = ctx->send_info[p].rank;
-    nr_patches_send_by_rank[new_rank]++;
+    if (new_rank >= 0) {
+      nr_patches_send_by_rank[new_rank]++;
+    }
   }
 
   int **nr_particles_send_by_rank = calloc(ctx->mpi_size, sizeof(*nr_particles_send_by_rank));
@@ -325,22 +327,18 @@ communicate_new_nr_particles(struct communicate_ctx *ctx, int **p_nr_particles_b
 	mprintf("Warning: losing %d particles in patch deallocation\n",
 		nr_particles_by_patch_old[p]);
       }
-    } else {
-      int tag = nr_patches_send_by_rank[new_rank]++;
-      nr_particles_send_by_rank[new_rank][tag] = nr_particles_by_patch_old[p];
-    }
-  }
-
-  int nr_send_reqs = 0;
-  for (int r = 0; r < ctx->mpi_size; r++) {
-    if (r == ctx->mpi_rank) {
       continue;
     }
-    for (int tag = 0; tag < nr_patches_send_by_rank[r]; tag++) {
-      //mprintf("send -> %d (tag %d) %d\n", r, tag, nr_send_reqs);
-      MPI_Isend(&nr_particles_send_by_rank[r][tag], 1, MPI_INT, r,
-      		tag, ctx->comm, &send_reqs[nr_send_reqs++]);
-      assert(nr_send_reqs <= ctx->nr_patches_old);
+    int tag = nr_patches_send_by_rank[new_rank]++;
+    nr_particles_send_by_rank[new_rank][tag] = nr_particles_by_patch_old[p];
+  }
+
+  // actual send
+  int nr_send_reqs = 0;
+  for (int r = 0; r < ctx->mpi_size; r++) {
+    if (r != ctx->mpi_rank && nr_patches_send_by_rank[r] > 0) {
+      MPI_Isend(nr_particles_send_by_rank[r], nr_patches_send_by_rank[r], MPI_INT,
+		r, 10, ctx->comm, &send_reqs[nr_send_reqs++]);
     }
   }
 
@@ -363,30 +361,12 @@ communicate_new_nr_particles(struct communicate_ctx *ctx, int **p_nr_particles_b
     }
   }
 
-  // copy local particle numbers
-  {
-    int r = ctx->mpi_rank;
-    assert(nr_patches_send_by_rank[r] == nr_patches_recv_by_rank[r]);
-    for (int tag = 0; tag < nr_patches_send_by_rank[r]; tag++) {
-      nr_particles_recv_by_rank[r][tag] = nr_particles_send_by_rank[r][tag];
-    }
-  }
-
-  // recv
+  // actual recv
   int nr_recv_reqs = 0;
   for (int r = 0; r < ctx->mpi_size; r++) {
-    if (r == ctx->mpi_rank) {
-      assert(nr_patches_send_by_rank[r] == nr_patches_recv_by_rank[r]);
-      for (int tag = 0; tag < nr_patches_send_by_rank[r]; tag++) {
-	nr_particles_recv_by_rank[r][tag] = nr_particles_send_by_rank[r][tag];
-      }
-      continue;
-    }
-    for (int tag = 0; tag < nr_patches_recv_by_rank[r]; tag++) {
-      //mprintf("recv <- %d (tag %d) %d\n", r, tag, nr_recv_reqs);
-      MPI_Irecv(&nr_particles_recv_by_rank[r][tag], 1, MPI_INT, r,
-      		tag, ctx->comm, &recv_reqs[nr_recv_reqs++]);
-      assert(nr_recv_reqs <= ctx->nr_patches_new);
+    if (r != ctx->mpi_rank && nr_patches_recv_by_rank[r] > 0) {
+      MPI_Irecv(nr_particles_recv_by_rank[r], nr_patches_recv_by_rank[r], MPI_INT,
+		r, 10, ctx->comm, &recv_reqs[nr_recv_reqs++]);
     }
   }
 
