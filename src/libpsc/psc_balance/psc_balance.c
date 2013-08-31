@@ -445,70 +445,54 @@ communicate_particles(struct communicate_ctx *ctx,
 }
 
 static void
-communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
+communicate_fields(struct communicate_ctx *ctx,
 		   mfields_t *flds_old, mfields_t *flds_new)
 {
-  MPI_Comm comm = mrc_domain_comm(domain_new);
-  int rank, size;
-  MPI_Comm_rank(comm, &rank);
-  MPI_Comm_size(comm, &size);
-
-  int nr_patches_old, nr_patches_new;
-  mrc_domain_get_patches(domain_old, &nr_patches_old);
-  mrc_domain_get_patches(domain_new, &nr_patches_new);
+  //HACK: Don't communicate output fields if they don't correspond to the domain
+  //This is needed e.g. for the boosted output which handles its MPI communication internally
+  //printf("Field: %s\n", flds->f[0].name);
+  
+  if (ctx->nr_patches_old != flds_old->nr_patches /* || strncmp(flds->f[0].name, "lab", 3) == 0 */) return;
 	
-	//HACK: Don't communicate output fields if they don't correspond to the domain
-	//This is needed e.g. for the boosted output which handles its MPI communication internally
-	//printf("Field: %s\n", flds->f[0].name);
-	
-	if(nr_patches_old != flds_old->nr_patches /* || strncmp(flds->f[0].name, "lab", 3) == 0 */) return;
-	
-	
-  assert(nr_patches_old == flds_old->nr_patches);
-  assert(nr_patches_old > 0);
+  assert(ctx->nr_patches_old == flds_old->nr_patches);
+  assert(ctx->nr_patches_old > 0);
   
   // send from old local patches
-  MPI_Request *send_reqs = calloc(nr_patches_old, sizeof(*send_reqs));
-  int *nr_patches_new_by_rank = calloc(size, sizeof(*nr_patches_new_by_rank));
-  for (int p = 0; p < nr_patches_old; p++) {
-    struct mrc_patch_info info, info_new;
-    mrc_domain_get_local_patch_info(domain_old, p, &info);
-    mrc_domain_get_level_idx3_patch_info(domain_new, info.level, info.idx3, &info_new);
-    if (info_new.rank == rank || info_new.rank < 0) {
+  MPI_Request *send_reqs = calloc(ctx->nr_patches_old, sizeof(*send_reqs));
+  int *nr_patches_new_by_rank = calloc(ctx->mpi_size, sizeof(*nr_patches_new_by_rank));
+  for (int p = 0; p < ctx->nr_patches_old; p++) {
+    int new_rank = ctx->send_info[p].rank;
+    if (new_rank == ctx->mpi_rank || new_rank < 0) {
       send_reqs[p] = MPI_REQUEST_NULL;
     } else {
       fields_t *pf_old = psc_mfields_get_patch(flds_old, p);
       int nn = psc_fields_size(pf_old) * pf_old->nr_comp;
       int *ib = pf_old->ib;
       void *addr_old = &F3(pf_old, 0, ib[0], ib[1], ib[2]);
-      int tag = nr_patches_new_by_rank[info_new.rank];
-      MPI_Isend(addr_old, nn, MPI_FIELDS_REAL, info_new.rank,
-		tag, comm, &send_reqs[p]);
+      int tag = nr_patches_new_by_rank[new_rank];
+      MPI_Isend(addr_old, nn, MPI_FIELDS_REAL, new_rank, tag, ctx->comm, &send_reqs[p]);
     }
   }
   free(nr_patches_new_by_rank);
 
   // recv for new local patches
-  MPI_Request *recv_reqs = calloc(nr_patches_new, sizeof(*recv_reqs));
-  int *nr_patches_old_by_rank = calloc(size, sizeof(*nr_patches_new_by_rank));
-  for (int p = 0; p < nr_patches_new; p++) {
-    struct mrc_patch_info info, info_old;
-    mrc_domain_get_local_patch_info(domain_new, p, &info);
-    mrc_domain_get_level_idx3_patch_info(domain_old, info.level, info.idx3, &info_old);
-    if (info_old.rank == rank) {
+  MPI_Request *recv_reqs = calloc(ctx->nr_patches_new, sizeof(*recv_reqs));
+  int *nr_patches_old_by_rank = calloc(ctx->mpi_size, sizeof(*nr_patches_new_by_rank));
+  for (int p = 0; p < ctx->nr_patches_new; p++) {
+    int old_rank = ctx->recv_info[p].rank;
+    if (old_rank == ctx->mpi_rank) {
       recv_reqs[p] = MPI_REQUEST_NULL;
-    } else if (info_old.rank < 0) {	//this patch did not exist before
+    } else if (old_rank < 0) { //this patch did not exist before
       recv_reqs[p] = MPI_REQUEST_NULL;
       //Seed new data
-    }
-    else {
+    } else {
       fields_t *pf_new = psc_mfields_get_patch(flds_new, p);
       int nn = psc_fields_size(pf_new) * pf_new->nr_comp;
       int *ib = pf_new->ib;
       void *addr_new = &F3(pf_new, 0, ib[0], ib[1], ib[2]);
-      int tag = nr_patches_old_by_rank[info_old.rank];
-      MPI_Irecv(addr_new, nn, MPI_FIELDS_REAL, info_old.rank,
-		tag, comm, &recv_reqs[p]);
+      int tag = nr_patches_old_by_rank[old_rank];
+      MPI_Irecv(addr_new, nn, MPI_FIELDS_REAL, old_rank,
+		tag, ctx->comm, &recv_reqs[p]);
     }
   }
   free(nr_patches_old_by_rank);
@@ -521,15 +505,12 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
   prof_start(pr);
   // local fields
   // OPT: could keep the alloced arrays, just move pointers...
-  for (int p = 0; p < nr_patches_new; p++) {
-    struct mrc_patch_info info, info_old;
-    mrc_domain_get_local_patch_info(domain_new, p, &info);
-    mrc_domain_get_level_idx3_patch_info(domain_old, info.level, info.idx3, &info_old);
-    if (info_old.rank != rank) {
+  for (int p = 0; p < ctx->nr_patches_new; p++) {
+    if (ctx->recv_info[p].rank != ctx->mpi_rank) {
       continue;
     }
 
-    fields_t *pf_old = psc_mfields_get_patch(flds_old, info_old.patch);
+    fields_t *pf_old = psc_mfields_get_patch(flds_old, ctx->recv_info[p].patch);
     fields_t *pf_new = psc_mfields_get_patch(flds_new, p);
 
     assert(pf_old->nr_comp == pf_new->nr_comp);
@@ -542,8 +523,8 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
   }
   prof_stop(pr);
 
-  MPI_Waitall(nr_patches_old, send_reqs, MPI_STATUSES_IGNORE);
-  MPI_Waitall(nr_patches_new, recv_reqs, MPI_STATUSES_IGNORE);
+  MPI_Waitall(ctx->nr_patches_old, send_reqs, MPI_STATUSES_IGNORE);
+  MPI_Waitall(ctx->nr_patches_new, recv_reqs, MPI_STATUSES_IGNORE);
   free(send_reqs);
   free(recv_reqs);
 }
@@ -606,8 +587,6 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
 
   communicate_new_nr_particles(ctx, p_nr_particles_by_patch);
 
-  communicate_free(ctx);
-
   // ----------------------------------------------------------------------
   // fields
 
@@ -640,7 +619,7 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
       psc_mfields_get_cf(flds_base_old, flds_base_old->first_comp,
 			 flds_base_old->first_comp + flds_base_old->nr_fields);
     mfields_t *flds_new = psc_mfields_get_cf(flds_base_new, 0, 0);
-    communicate_fields(domain_old, domain_new, flds_old, flds_new);
+    communicate_fields(ctx, flds_old, flds_new);
     psc_mfields_put_cf(flds_old, flds_base_old, 0, 0);
     psc_mfields_put_cf(flds_new, flds_base_new, flds_base_new->first_comp,
 		       flds_base_new->first_comp + flds_base_new->nr_fields);
@@ -648,6 +627,8 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
     psc_mfields_destroy(*p->flds_p);
     *p->flds_p = flds_base_new;
   }
+
+  communicate_free(ctx);
 
   psc_balance_seed_patches(domain_old, domain_new);	//TODO required here?
 
@@ -781,8 +762,6 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
 
   prof_stop(pr_bal_prts);
 
-  communicate_free(ctx);
-
   // ----------------------------------------------------------------------
   // fields
 
@@ -820,7 +799,7 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
 			 flds_base_old->first_comp + flds_base_old->nr_fields);
     mfields_t *flds_new = psc_mfields_get_cf(flds_base_new, 0, 0);
     prof_restart(pr_bal_flds_comm);
-    communicate_fields(domain_old, domain_new, flds_old, flds_new);
+    communicate_fields(ctx, flds_old, flds_new);
     prof_stop(pr_bal_flds_comm);
     psc_mfields_put_cf(flds_old, flds_base_old, 0, 0);
     psc_mfields_put_cf(flds_new, flds_base_new, flds_base_new->first_comp,
@@ -831,6 +810,8 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   }
   prof_stop(pr_bal_flds);
   
+  communicate_free(ctx);
+
   psc_balance_seed_patches(domain_old, domain_new);
 
   // ----------------------------------------------------------------------
