@@ -316,7 +316,7 @@ communicate_new_nr_particles(struct communicate_ctx *ctx, int **p_nr_particles_b
       send_reqs[p] = MPI_REQUEST_NULL;
     } else {
       int tag = nr_patches_new_by_rank[new_rank]++;
-      //      mprintf("send -> %d (tags %d %d) %d\n", info_new.rank, mpi_tag(&info), tag, info_new.global_patch);
+      //mprintf("send -> %d (tag %d) %d\n", new_rank, tag, p);
       MPI_Isend(&nr_particles_by_patch_old[p], 1, MPI_INT, new_rank,
 		tag, ctx->comm, &send_reqs[p]);
     }
@@ -337,9 +337,8 @@ communicate_new_nr_particles(struct communicate_ctx *ctx, int **p_nr_particles_b
       //nr_particles_by_patch_new[p] = psc_case_calc_nr_particles_in_patch(ppsc->patchmanager.currentcase, p);
       recv_reqs[p] = MPI_REQUEST_NULL;
     } else {
-      //printf("a: rank: %d tag: %d\n", old_rank, mpi_tag(&info));
       int tag = nr_patches_old_by_rank[old_rank]++;
-      //      mprintf("recv <- %d (tags %d %d)\n", info_old.rank, mpi_tag(&info), tag);
+      //mprintf("recv <- %d (tag %d) %d\n", old_rank, tag, p);
       MPI_Irecv(&nr_particles_by_patch_new[p], 1, MPI_INT, old_rank,
 		tag, ctx->comm, &recv_reqs[p]);
     }
@@ -376,7 +375,7 @@ communicate_particles(struct communicate_ctx *ctx,
       struct psc_particles *pp_old = psc_mparticles_get_patch(particles_old, p);
       struct psc_particles_double *c_old = psc_particles_double(pp_old);
       int nn = pp_old->n_part * (sizeof(particle_t)  / sizeof(particle_real_t));
-      int tag = nr_patches_new_by_rank[new_rank];
+      int tag = nr_patches_new_by_rank[new_rank]++;
       MPI_Isend(c_old->particles, nn, MPI_PARTICLES_REAL, new_rank,
 		tag, ctx->comm, &send_reqs[p]);
     }
@@ -397,7 +396,7 @@ communicate_particles(struct communicate_ctx *ctx,
       struct psc_particles *pp_new = psc_mparticles_get_patch(particles_new, p);
       struct psc_particles_double *c_new = psc_particles_double(pp_new);
       int nn = pp_new->n_part * (sizeof(particle_t)  / sizeof(particle_real_t));
-      int tag = nr_patches_old_by_rank[old_rank];
+      int tag = nr_patches_old_by_rank[old_rank]++;
       MPI_Irecv(c_new->particles, nn, MPI_PARTICLES_REAL, old_rank,
 		tag, ctx->comm, &recv_reqs[p]);
     }
@@ -469,7 +468,7 @@ communicate_fields(struct communicate_ctx *ctx,
       int nn = psc_fields_size(pf_old) * pf_old->nr_comp;
       int *ib = pf_old->ib;
       void *addr_old = &F3(pf_old, 0, ib[0], ib[1], ib[2]);
-      int tag = nr_patches_new_by_rank[new_rank];
+      int tag = nr_patches_new_by_rank[new_rank]++;
       MPI_Isend(addr_old, nn, MPI_FIELDS_REAL, new_rank, tag, ctx->comm, &send_reqs[p]);
     }
   }
@@ -490,7 +489,7 @@ communicate_fields(struct communicate_ctx *ctx,
       int nn = psc_fields_size(pf_new) * pf_new->nr_comp;
       int *ib = pf_new->ib;
       void *addr_new = &F3(pf_new, 0, ib[0], ib[1], ib[2]);
-      int tag = nr_patches_old_by_rank[old_rank];
+      int tag = nr_patches_old_by_rank[old_rank]++;
       MPI_Irecv(addr_new, nn, MPI_FIELDS_REAL, old_rank,
 		tag, ctx->comm, &recv_reqs[p]);
     }
@@ -659,13 +658,14 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
     st_time_balance = psc_stats_register("time balancing");
   }
   static int pr_bal_gather, pr_bal_decomp_A, pr_bal_decomp_B, pr_bal_decomp_C, pr_bal_decomp_D,
-    pr_bal_prts, pr_bal_flds, pr_bal_flds_comm;
+    pr_bal_prts, pr_bal_flds, pr_bal_flds_comm, pr_bal_ctx;
   if (!pr_bal_gather) {
     pr_bal_gather = prof_register("bal gather", 1., 0, 0);
     pr_bal_decomp_A = prof_register("bal decomp A", 1., 0, 0);
     pr_bal_decomp_B = prof_register("bal decomp B", 1., 0, 0);
     pr_bal_decomp_C = prof_register("bal decomp C", 1., 0, 0);
     pr_bal_decomp_D = prof_register("bal decomp D", 1., 0, 0);
+    pr_bal_ctx = prof_register("bal ctx", 1., 0, 0);
     pr_bal_prts = prof_register("bal prts", 1., 0, 0);
     pr_bal_flds = prof_register("bal flds", 1., 0, 0);
     pr_bal_flds_comm = prof_register("bal flds comm", 1., 0, 0);
@@ -719,11 +719,17 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
 
   // OPT: if local patches didn't change at all, no need to do anything...
 
+  MPI_Barrier(psc_comm(psc));
+  prof_start(pr_bal_ctx);
   struct communicate_ctx _ctx, *ctx = &_ctx;
   communicate_setup(ctx, domain_old, domain_new);
+  prof_stop(pr_bal_ctx);
 
   // ----------------------------------------------------------------------
   // particles
+
+  MPI_Barrier(psc_comm(psc));
+  prof_start(pr_bal_prts);
 
   int *nr_particles_by_patch = calloc(nr_patches, sizeof(*nr_particles_by_patch));
   for (int p = 0; p < nr_patches; p++) {
@@ -731,8 +737,6 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
       psc_mparticles_nr_particles_by_patch(psc->particles, p);
   }
 
-  MPI_Barrier(psc_comm(psc));
-  prof_start(pr_bal_prts);
   communicate_new_nr_particles(ctx, &nr_particles_by_patch);
 
   // alloc new particles
@@ -768,6 +772,7 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   MPI_Barrier(psc_comm(psc));
   prof_start(pr_bal_flds_comm);
   prof_stop(pr_bal_flds_comm);
+
   prof_start(pr_bal_flds);
   struct psc_mfields_list_entry *p;
   __list_for_each_entry(p, &psc_mfields_base_list, entry, struct psc_mfields_list_entry) {
