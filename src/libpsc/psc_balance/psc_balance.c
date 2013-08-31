@@ -331,30 +331,18 @@ communicate_new_nr_particles(struct communicate_ctx *ctx, int **p_nr_particles_b
     }
   }
 
+  int nr_send_reqs = 0;
   for (int r = 0; r < ctx->mpi_size; r++) {
-    nr_patches_send_by_rank[r] = 0;
-  }
-
-  for (int p = 0; p < ctx->nr_patches_old; p++) {
-    int new_rank = ctx->send_info[p].rank;
-    if (new_rank == ctx->mpi_rank) {
-      nr_particles_by_patch_new[ctx->send_info[p].patch] = nr_particles_by_patch_old[p];
-      send_reqs[p] = MPI_REQUEST_NULL;
-    } else if (new_rank < 0 ) {
-      send_reqs[p] = MPI_REQUEST_NULL;
-    } else {
-      int tag = nr_patches_send_by_rank[new_rank]++;
-      //mprintf("send -> %d (tag %d) %d\n", new_rank, tag, p);
-      MPI_Isend(&nr_particles_send_by_rank[new_rank][tag], 1, MPI_INT, new_rank,
-		tag, ctx->comm, &send_reqs[p]);
+    if (r == ctx->mpi_rank) {
+      continue;
+    }
+    for (int tag = 0; tag < nr_patches_send_by_rank[r]; tag++) {
+      //mprintf("send -> %d (tag %d) %d\n", r, tag, nr_send_reqs);
+      MPI_Isend(&nr_particles_send_by_rank[r][tag], 1, MPI_INT, r,
+      		tag, ctx->comm, &send_reqs[nr_send_reqs++]);
+      assert(nr_send_reqs <= ctx->nr_patches_old);
     }
   }
-
-  for (int r = 0; r < ctx->mpi_size; r++) {
-    free(nr_particles_send_by_rank[r]);
-  }
-  free(nr_particles_send_by_rank);
-  free(nr_patches_send_by_rank);
 
   // recv info for new local patches
 
@@ -373,25 +361,57 @@ communicate_new_nr_particles(struct communicate_ctx *ctx, int **p_nr_particles_b
     if (nr_patches_recv_by_rank[r] > 0) {
       nr_particles_recv_by_rank[r] = calloc(nr_patches_recv_by_rank[r], sizeof(*nr_particles_recv_by_rank[r]));
     }
+  }
+
+  // copy local particle numbers
+  {
+    int r = ctx->mpi_rank;
+    assert(nr_patches_send_by_rank[r] == nr_patches_recv_by_rank[r]);
+    for (int tag = 0; tag < nr_patches_send_by_rank[r]; tag++) {
+      nr_particles_recv_by_rank[r][tag] = nr_particles_send_by_rank[r][tag];
+    }
+  }
+
+  // recv
+  int nr_recv_reqs = 0;
+  for (int r = 0; r < ctx->mpi_size; r++) {
+    if (r == ctx->mpi_rank) {
+      assert(nr_patches_send_by_rank[r] == nr_patches_recv_by_rank[r]);
+      for (int tag = 0; tag < nr_patches_send_by_rank[r]; tag++) {
+	nr_particles_recv_by_rank[r][tag] = nr_particles_send_by_rank[r][tag];
+      }
+      continue;
+    }
+    for (int tag = 0; tag < nr_patches_recv_by_rank[r]; tag++) {
+      //mprintf("recv <- %d (tag %d) %d\n", r, tag, nr_recv_reqs);
+      MPI_Irecv(&nr_particles_recv_by_rank[r][tag], 1, MPI_INT, r,
+      		tag, ctx->comm, &recv_reqs[nr_recv_reqs++]);
+      assert(nr_recv_reqs <= ctx->nr_patches_new);
+    }
+  }
+
+  MPI_Waitall(nr_recv_reqs, recv_reqs, MPI_STATUSES_IGNORE);
+
+  for (int r = 0; r < ctx->mpi_size; r++) {
     nr_patches_recv_by_rank[r] = 0;
   }
 
   for (int p = 0; p < ctx->nr_patches_new; p++) {
     int old_rank = ctx->recv_info[p].rank;
-    if (old_rank == ctx->mpi_rank) {
-      recv_reqs[p] = MPI_REQUEST_NULL;
-    } else if (old_rank < 0) {
-      //TODO Get number of particles
-      assert(0);
-      //nr_particles_by_patch_new[p] = psc_case_calc_nr_particles_in_patch(ppsc->patchmanager.currentcase, p);
-      recv_reqs[p] = MPI_REQUEST_NULL;
-    } else {
-      int tag = nr_patches_recv_by_rank[old_rank]++;
-      //mprintf("recv <- %d (tag %d) %d\n", old_rank, tag, p);
-      MPI_Irecv(&nr_particles_by_patch_new[p], 1, MPI_INT, old_rank,
-		tag, ctx->comm, &recv_reqs[p]);
+    if (old_rank < 0) {
+      continue;
     }
+    int tag = nr_patches_recv_by_rank[old_rank]++;
+    nr_particles_by_patch_new[p] = nr_particles_recv_by_rank[old_rank][tag];
   }
+
+  MPI_Waitall(nr_send_reqs, send_reqs, MPI_STATUSES_IGNORE);
+
+  for (int r = 0; r < ctx->mpi_size; r++) {
+    free(nr_particles_send_by_rank[r]);
+  }
+  free(nr_particles_send_by_rank);
+  free(nr_patches_send_by_rank);
 
   for (int r = 0; r < ctx->mpi_size; r++) {
     free(nr_particles_recv_by_rank[r]);
@@ -399,8 +419,6 @@ communicate_new_nr_particles(struct communicate_ctx *ctx, int **p_nr_particles_b
   free(nr_particles_recv_by_rank);
   free(nr_patches_recv_by_rank);
 
-  MPI_Waitall(ctx->nr_patches_old, send_reqs, MPI_STATUSES_IGNORE);
-  MPI_Waitall(ctx->nr_patches_new, recv_reqs, MPI_STATUSES_IGNORE);
   free(send_reqs);
   free(recv_reqs);
 
