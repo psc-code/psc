@@ -428,6 +428,13 @@ communicate_free(struct communicate_ctx *ctx)
 static void
 communicate_new_nr_particles(struct communicate_ctx *ctx, int **p_nr_particles_by_patch)
 {
+  static int pr;
+  if (!pr) {
+    pr   = prof_register("comm nr prts", 1., 0, 0);
+  }
+
+  prof_start(pr);
+
   int *nr_particles_by_patch_old = *p_nr_particles_by_patch;
   int *nr_particles_by_patch_new = calloc(ctx->nr_patches_new,
 					  sizeof(nr_particles_by_patch_new));
@@ -517,6 +524,8 @@ communicate_new_nr_particles(struct communicate_ctx *ctx, int **p_nr_particles_b
 
   free(*p_nr_particles_by_patch);
   *p_nr_particles_by_patch = nr_particles_by_patch_new;
+
+  prof_stop(pr);
 }
 
 static void
@@ -524,6 +533,18 @@ communicate_particles(struct communicate_ctx *ctx,
 		      mparticles_t *particles_old, mparticles_t *particles_new,
 		      int *nr_particles_by_patch_new)
 {
+  static int pr, pr_A, pr_B, pr_C, pr_D;
+  if (!pr) {
+    pr   = prof_register("comm prts", 1., 0, 0);
+    pr_A = prof_register("comm prts A", 1., 0, 0);
+    pr_B = prof_register("comm prts B", 1., 0, 0);
+    pr_C = prof_register("comm prts C", 1., 0, 0);
+    pr_D = prof_register("comm prts D", 1., 0, 0);
+  }
+
+  prof_start(pr);
+
+  prof_start(pr_A);
   for (int p = 0; p < ctx->nr_patches_new; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(particles_new, p);
     prts->n_part = nr_particles_by_patch_new[p];
@@ -531,16 +552,6 @@ communicate_particles(struct communicate_ctx *ctx,
 
   assert(sizeof(particle_t) % sizeof(particle_real_t) == 0); // FIXME
 
-  static int pr_A, pr_B, pr_C, pr_D;
-  if (!pr_A) {
-    pr_A = prof_register("comm prts A", 1., 0, 0);
-    pr_B = prof_register("comm prts B", 1., 0, 0);
-    pr_C = prof_register("comm prts C", 1., 0, 0);
-    pr_D = prof_register("comm prts D", 1., 0, 0);
-  }
-
-  MPI_Barrier(MPI_COMM_WORLD);
-  prof_start(pr_A);
   // recv for new local patches
   MPI_Request *recv_reqs = calloc(ctx->nr_patches_new, sizeof(*recv_reqs));
   int nr_recv_reqs = 0;
@@ -562,7 +573,6 @@ communicate_particles(struct communicate_ctx *ctx,
   }
   prof_stop(pr_A);
 
-  MPI_Barrier(MPI_COMM_WORLD);
   prof_start(pr_B);
   // send from old local patches
   MPI_Request *send_reqs = calloc(ctx->nr_patches_old, sizeof(*send_reqs));
@@ -579,7 +589,7 @@ communicate_particles(struct communicate_ctx *ctx,
       struct psc_particles *pp_old = psc_mparticles_get_patch(particles_old, p);
       struct psc_particles_double *c_old = psc_particles_double(pp_old);
       int nn = pp_old->n_part * (sizeof(particle_t)  / sizeof(particle_real_t));
-      mprintf("A send -> %d tag %d (patch %d)\n", send->rank, pi, p);
+      //mprintf("A send -> %d tag %d (patch %d)\n", send->rank, pi, p);
       MPI_Isend(c_old->particles, nn, MPI_PARTICLES_REAL, send->rank,
       		pi, ctx->comm, &send_reqs[nr_send_reqs++]);
     }
@@ -615,13 +625,14 @@ communicate_particles(struct communicate_ctx *ctx,
   }
   prof_stop(pr_C);
   
-  MPI_Barrier(MPI_COMM_WORLD);
   prof_start(pr_D);
   MPI_Waitall(nr_send_reqs, send_reqs, MPI_STATUSES_IGNORE);
   MPI_Waitall(nr_recv_reqs, recv_reqs, MPI_STATUSES_IGNORE);
-  prof_stop(pr_D);
   free(send_reqs);
   free(recv_reqs);
+  prof_stop(pr_D);
+
+  prof_stop(pr);
 }
 
 static void
@@ -840,6 +851,7 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   }
   static int pr_bal_gather, pr_bal_decomp_A, pr_bal_decomp_B, pr_bal_decomp_C, pr_bal_decomp_D,
     pr_bal_prts, pr_bal_flds, pr_bal_flds_comm, pr_bal_ctx, pr_bal_flds_A, pr_bal_flds_B, pr_bal_flds_C;
+  static int pr_bal_prts_A, pr_bal_prts_B, pr_bal_prts_C, pr_bal_prts_B1;
   if (!pr_bal_gather) {
     pr_bal_gather = prof_register("bal gather", 1., 0, 0);
     pr_bal_decomp_A = prof_register("bal decomp A", 1., 0, 0);
@@ -848,6 +860,10 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
     pr_bal_decomp_D = prof_register("bal decomp D", 1., 0, 0);
     pr_bal_ctx = prof_register("bal ctx", 1., 0, 0);
     pr_bal_prts = prof_register("bal prts", 1., 0, 0);
+    pr_bal_prts_A = prof_register("bal prts A", 1., 0, 0);
+    pr_bal_prts_B = prof_register("bal prts B", 1., 0, 0);
+    pr_bal_prts_B1 = prof_register("bal prts B1", 1., 0, 0);
+    pr_bal_prts_C = prof_register("bal prts C", 1., 0, 0);
     pr_bal_flds = prof_register("bal flds", 1., 0, 0);
     pr_bal_flds_comm = prof_register("bal flds comm", 1., 0, 0);
     pr_bal_flds_A = prof_register("bal flds A", 1., 0, 0);
@@ -855,7 +871,6 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
     pr_bal_flds_C = prof_register("bal flds C", 1., 0, 0);
   }
 
-  MPI_Barrier(psc_comm(psc));
   psc_stats_start(st_time_balance);
   prof_start(pr_bal_gather);
   struct mrc_domain *domain_old = psc->mrc_domain;
@@ -871,25 +886,21 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   free(loads);
   prof_stop(pr_bal_gather);
 
-  MPI_Barrier(psc_comm(psc));
   prof_start(pr_bal_decomp_A);
   int nr_patches_new = find_best_mapping(domain_old, nr_global_patches,
 					 loads_all);
   prof_stop(pr_bal_decomp_A);
 
-  MPI_Barrier(psc_comm(psc));
   prof_start(pr_bal_decomp_B);
   free(loads_all);
 
   free(psc->patch);
   struct mrc_domain *domain_new = psc_setup_mrc_domain(psc, nr_patches_new);
   prof_stop(pr_bal_decomp_B);
-  MPI_Barrier(psc_comm(psc));
   prof_start(pr_bal_decomp_C);
   //  mrc_domain_view(domain_new);
   psc_setup_patches(psc, domain_new);
   prof_stop(pr_bal_decomp_C);
-  MPI_Barrier(psc_comm(psc));
   prof_start(pr_bal_decomp_D);
   free(psc_balance_comp_time_by_patch);
   psc_balance_comp_time_by_patch = calloc(nr_patches_new,
@@ -903,7 +914,6 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
 
   // OPT: if local patches didn't change at all, no need to do anything...
 
-  MPI_Barrier(psc_comm(psc));
   prof_start(pr_bal_ctx);
   struct communicate_ctx _ctx, *ctx = &_ctx;
   communicate_setup(ctx, domain_old, domain_new);
@@ -912,17 +922,19 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   // ----------------------------------------------------------------------
   // particles
 
-  MPI_Barrier(psc_comm(psc));
   prof_start(pr_bal_prts);
 
+  prof_start(pr_bal_prts_A);
   int *nr_particles_by_patch = calloc(nr_patches, sizeof(*nr_particles_by_patch));
   for (int p = 0; p < nr_patches; p++) {
     nr_particles_by_patch[p] =
       psc_mparticles_nr_particles_by_patch(psc->particles, p);
   }
+  prof_stop(pr_bal_prts_A);
 
   communicate_new_nr_particles(ctx, &nr_particles_by_patch);
 
+  prof_start(pr_bal_prts_B);
   // alloc new particles
   mparticles_base_t *mparticles_base_new = 
     psc_mparticles_create(mrc_domain_comm(domain_new));
@@ -932,13 +944,18 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   unsigned int mp_flags;
   psc_mparticles_get_param_int(psc->particles, "flags", (int *) &mp_flags);
   psc_mparticles_set_param_int(mparticles_base_new, "flags", mp_flags);
+  prof_start(pr_bal_prts_B1);
   psc_mparticles_setup(mparticles_base_new);
+  prof_stop(pr_bal_prts_B1);
 
   mparticles_t *mparticles_new = psc_mparticles_get_cf(mparticles_base_new, MP_DONT_COPY);
   mparticles_t *mparticles_old = psc_mparticles_get_cf(psc->particles, 0);
+  prof_stop(pr_bal_prts_B);
     
   // communicate particles
   communicate_particles(ctx, mparticles_old, mparticles_new, nr_particles_by_patch);
+
+  prof_start(pr_bal_prts_C);
   free(nr_particles_by_patch);
 
   psc_mparticles_put_cf(mparticles_old, psc->particles, MP_DONT_COPY);
@@ -947,13 +964,13 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   // replace particles by redistributed ones
   psc_mparticles_destroy(psc->particles);
   psc->particles = mparticles_base_new;
+  prof_stop(pr_bal_prts_C);
 
   prof_stop(pr_bal_prts);
 
   // ----------------------------------------------------------------------
   // fields
 
-  MPI_Barrier(psc_comm(psc));
   prof_start(pr_bal_flds_comm);
   prof_stop(pr_bal_flds_comm);
   /* prof_start(pr_bal_flds_A); */
@@ -964,7 +981,6 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   prof_start(pr_bal_flds);
   struct psc_mfields_list_entry *p;
   __list_for_each_entry(p, &psc_mfields_base_list, entry, struct psc_mfields_list_entry) {
-    MPI_Barrier(MPI_COMM_WORLD);
     mfields_base_t *flds_base_old = *p->flds_p;
     // if (flds_base_old != psc->flds) {
     //   fprintf(stderr, "WARNING: not rebalancing some extra field (%p) -- expect crash!\n",
