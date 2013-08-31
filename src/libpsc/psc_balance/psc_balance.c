@@ -529,11 +529,29 @@ communicate_particles(struct communicate_ctx *ctx,
     prts->n_part = nr_particles_by_patch_new[p];
   }
 
-  int *nr_patches_new_by_rank = calloc(ctx->mpi_size, sizeof(*nr_patches_new_by_rank));
   // send from old local patches
   MPI_Request *send_reqs = calloc(ctx->nr_patches_old, sizeof(*send_reqs));
   int nr_send_reqs = 0;
 
+  assert(sizeof(particle_t) % sizeof(particle_real_t) == 0); // FIXME
+  for (int ri = 0; ri < ctx->nr_send_ranks; ri++) {
+    struct by_ri *send = &ctx->send_by_ri[ri];
+    if (send->rank == ctx->mpi_rank) {
+      continue;
+    }
+
+    for (int pi = 0; pi < send->nr_patches; pi++) {
+      int p = send->pi_to_patch[pi];
+      struct psc_particles *pp_old = psc_mparticles_get_patch(particles_old, p);
+      struct psc_particles_double *c_old = psc_particles_double(pp_old);
+      int nn = pp_old->n_part * (sizeof(particle_t)  / sizeof(particle_real_t));
+      mprintf("A send -> %d tag %d (patch %d)\n", send->rank, pi, p);
+      MPI_Isend(c_old->particles, nn, MPI_PARTICLES_REAL, send->rank,
+      		pi, ctx->comm, &send_reqs[nr_send_reqs++]);
+    }
+  }
+
+  int *nr_patches_new_by_rank = calloc(ctx->mpi_size, sizeof(*nr_patches_new_by_rank));
   for (int p = 0; p < ctx->nr_patches_old; p++) {
     int new_rank = ctx->send_info[p].rank;
     if (new_rank >= 0 && new_rank != ctx->mpi_rank) {
@@ -541,8 +559,9 @@ communicate_particles(struct communicate_ctx *ctx,
       struct psc_particles_double *c_old = psc_particles_double(pp_old);
       int nn = pp_old->n_part * (sizeof(particle_t)  / sizeof(particle_real_t));
       int tag = nr_patches_new_by_rank[new_rank]++;
-      MPI_Isend(c_old->particles, nn, MPI_PARTICLES_REAL, new_rank,
-		tag, ctx->comm, &send_reqs[nr_send_reqs++]);
+      mprintf("B send -> %d tag %d (patch %d)\n", new_rank, tag, p);
+      /* MPI_Isend(c_old->particles, nn, MPI_PARTICLES_REAL, new_rank, */
+      /* 		tag, ctx->comm, &send_reqs[nr_send_reqs++]); */
     }
   }
   free(nr_patches_new_by_rank);
@@ -550,6 +569,23 @@ communicate_particles(struct communicate_ctx *ctx,
   // recv for new local patches
   MPI_Request *recv_reqs = calloc(ctx->nr_patches_new, sizeof(*recv_reqs));
   int nr_recv_reqs = 0;
+
+  for (int ri = 0; ri < ctx->nr_recv_ranks; ri++) {
+    struct by_ri *recv = &ctx->recv_by_ri[ri];
+    if (recv->rank == ctx->mpi_rank) {
+      continue;
+    }
+
+    for (int pi = 0; pi < recv->nr_patches; pi++) {
+      int p = recv->pi_to_patch[pi];
+      struct psc_particles *pp_new = psc_mparticles_get_patch(particles_new, p);
+      struct psc_particles_double *c_new = psc_particles_double(pp_new);
+      int nn = pp_new->n_part * (sizeof(particle_t)  / sizeof(particle_real_t));
+      //int tag = nr_patches_old_by_rank[old_rank]++;
+      MPI_Irecv(c_new->particles, nn, MPI_PARTICLES_REAL, recv->rank,
+		pi, ctx->comm, &recv_reqs[nr_recv_reqs++]);
+    }
+  }
 
   int *nr_patches_old_by_rank = calloc(ctx->mpi_size, sizeof(*nr_patches_new_by_rank));
   for (int p = 0; p < ctx->nr_patches_new; p++) {
@@ -559,8 +595,8 @@ communicate_particles(struct communicate_ctx *ctx,
       struct psc_particles_double *c_new = psc_particles_double(pp_new);
       int nn = pp_new->n_part * (sizeof(particle_t)  / sizeof(particle_real_t));
       int tag = nr_patches_old_by_rank[old_rank]++;
-      MPI_Irecv(c_new->particles, nn, MPI_PARTICLES_REAL, old_rank,
-		tag, ctx->comm, &recv_reqs[nr_recv_reqs++]);
+      /* MPI_Irecv(c_new->particles, nn, MPI_PARTICLES_REAL, old_rank, */
+      /* 		tag, ctx->comm, &recv_reqs[nr_recv_reqs++]); */
     }
   }
   free(nr_patches_old_by_rank);
