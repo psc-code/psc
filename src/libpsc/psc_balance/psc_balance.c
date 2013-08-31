@@ -474,8 +474,6 @@ communicate_new_nr_particles(struct communicate_ctx *ctx, int **p_nr_particles_b
   {
     int send_ri = ctx->send_rank_to_ri[ctx->mpi_rank];
     int recv_ri = ctx->recv_rank_to_ri[ctx->mpi_rank];
-    mprintf("np %d %d -- %d %d\n", send_ri, recv_ri, 
-	    ctx->send_by_ri[send_ri].nr_patches, ctx->recv_by_ri[recv_ri].nr_patches);
     if (send_ri < 0) { // no local patches to copy
       assert(recv_ri < 0);
     } else {
@@ -531,41 +529,38 @@ communicate_particles(struct communicate_ctx *ctx,
     prts->n_part = nr_particles_by_patch_new[p];
   }
 
-  MPI_Request *send_reqs = calloc(ctx->nr_patches_old, sizeof(*send_reqs));
   int *nr_patches_new_by_rank = calloc(ctx->mpi_size, sizeof(*nr_patches_new_by_rank));
   // send from old local patches
+  MPI_Request *send_reqs = calloc(ctx->nr_patches_old, sizeof(*send_reqs));
+  int nr_send_reqs = 0;
+
   for (int p = 0; p < ctx->nr_patches_old; p++) {
     int new_rank = ctx->send_info[p].rank;
-    if (new_rank == ctx->mpi_rank || new_rank < 0) {
-      send_reqs[p] = MPI_REQUEST_NULL;
-    } else {
+    if (new_rank >= 0 && new_rank != ctx->mpi_rank) {
       struct psc_particles *pp_old = psc_mparticles_get_patch(particles_old, p);
       struct psc_particles_double *c_old = psc_particles_double(pp_old);
       int nn = pp_old->n_part * (sizeof(particle_t)  / sizeof(particle_real_t));
       int tag = nr_patches_new_by_rank[new_rank]++;
       MPI_Isend(c_old->particles, nn, MPI_PARTICLES_REAL, new_rank,
-		tag, ctx->comm, &send_reqs[p]);
+		tag, ctx->comm, &send_reqs[nr_send_reqs++]);
     }
   }
   free(nr_patches_new_by_rank);
 
   // recv for new local patches
   MPI_Request *recv_reqs = calloc(ctx->nr_patches_new, sizeof(*recv_reqs));
+  int nr_recv_reqs = 0;
+
   int *nr_patches_old_by_rank = calloc(ctx->mpi_size, sizeof(*nr_patches_new_by_rank));
   for (int p = 0; p < ctx->nr_patches_new; p++) {
     int old_rank = ctx->recv_info[p].rank;
-    if (old_rank == ctx->mpi_rank) {
-      recv_reqs[p] = MPI_REQUEST_NULL;
-    } else if (old_rank < 0) {
-      recv_reqs[p] = MPI_REQUEST_NULL;
-      //TODO Seed particles
-    } else {
+    if (old_rank >= 0 && old_rank != ctx->mpi_rank) {
       struct psc_particles *pp_new = psc_mparticles_get_patch(particles_new, p);
       struct psc_particles_double *c_new = psc_particles_double(pp_new);
       int nn = pp_new->n_part * (sizeof(particle_t)  / sizeof(particle_real_t));
       int tag = nr_patches_old_by_rank[old_rank]++;
       MPI_Irecv(c_new->particles, nn, MPI_PARTICLES_REAL, old_rank,
-		tag, ctx->comm, &recv_reqs[p]);
+		tag, ctx->comm, &recv_reqs[nr_recv_reqs++]);
     }
   }
   free(nr_patches_old_by_rank);
@@ -604,8 +599,8 @@ communicate_particles(struct communicate_ctx *ctx,
   }
   prof_stop(pr);
   
-  MPI_Waitall(ctx->nr_patches_old, send_reqs, MPI_STATUSES_IGNORE);
-  MPI_Waitall(ctx->nr_patches_new, recv_reqs, MPI_STATUSES_IGNORE);
+  MPI_Waitall(nr_send_reqs, send_reqs, MPI_STATUSES_IGNORE);
+  MPI_Waitall(nr_recv_reqs, recv_reqs, MPI_STATUSES_IGNORE);
   free(send_reqs);
   free(recv_reqs);
 }
