@@ -11,8 +11,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-//#define DEBUG_BALANCE
-
 LIST_HEAD(psc_mfields_base_list);
 
 double *psc_balance_comp_time_by_patch;
@@ -22,6 +20,8 @@ struct psc_balance {
   int every;
   int force_update;
   double factor_fields;
+  bool print_loads;
+  bool write_loads;
 };
 
 static double
@@ -63,12 +63,18 @@ psc_get_loads(struct psc *psc, double *loads)
     } else {
       double comp_time = psc_balance_comp_time_by_patch[p];
       loads[p] = comp_time;
+#if 0
+      int rank;
+      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+      loads[p] = 1 + rank;
+#endif
     }
   }
 }
 
 static int
-find_best_mapping(struct mrc_domain *domain, int nr_global_patches, double *loads_all)
+find_best_mapping(struct psc_balance *bal, struct mrc_domain *domain,
+		  int nr_global_patches, double *loads_all)
 {
   MPI_Comm comm = mrc_domain_comm(domain);
   int rank, size;
@@ -92,11 +98,8 @@ find_best_mapping(struct mrc_domain *domain, int nr_global_patches, double *load
       capability_sum += capability[p];
     }
     double load_target = loads_sum / capability_sum;
-#ifdef DEBUG_BALANCE
-    mprintf("loads_sum %g capability_sum %g load_target %g\n",
+    mprintf("psc_balance: loads_sum %g capability_sum %g load_target %g\n",
 	    loads_sum, capability_sum, load_target);
-#endif
-
     int p = 0, nr_new_patches = 0;
     double load = 0.;
     double next_target = load_target * capability[0];
@@ -125,18 +128,21 @@ find_best_mapping(struct mrc_domain *domain, int nr_global_patches, double *load
       }
     }
     
-#ifdef DEBUG_BALANCE
     int pp = 0;
     double min_diff = 0, max_diff = 0;
     for (int p = 0; p < size; p++) {
       double load = 0.;
       for (int i = 0; i < nr_patches_all_new[p]; i++) {
 	load += loads_all[pp++];
-	//mprintf("  pp %d load %g : %g\n", pp-1, loads_all[pp-1], load);
+	if (bal->print_loads) {
+	  mprintf("  pp %d load %g : %g\n", pp-1, loads_all[pp-1], load);
+	}
       }
       double diff = load - load_target * capability[p];
-      mprintf("p %d # = %d load %g / %g : diff %g\n", p, nr_patches_all_new[p],
-	      load, load_target * capability[p], diff);
+      if (bal->print_loads) {
+	mprintf("p %d # = %d load %g / %g : diff %g\n", p, nr_patches_all_new[p],
+		load, load_target * capability[p], diff);
+      }
       if (diff < min_diff) {
 	min_diff = diff;
       }
@@ -144,20 +150,21 @@ find_best_mapping(struct mrc_domain *domain, int nr_global_patches, double *load
 	max_diff = diff;
       }
     }
-    mprintf("achieved target %g (%g %% -- %g %%)\n", load_target,
+    mprintf("psc_balance: achieved target %g (%g %% -- %g %%)\n", load_target,
 	    100 * min_diff / load_target, 100 * max_diff / load_target);
-	      
-    int gp = 0;
-    char s[20]; sprintf(s, "loads2-%06d.asc", ppsc->timestep);
-    FILE *f = fopen(s, "w");
-    for (int r = 0; r < size; r++) {
-      for (int p = 0; p < nr_patches_all_new[r]; p++) {
-	fprintf(f, "%d %g %d\n", gp, loads_all[gp], r);
-	gp++;
+
+    if (bal->write_loads) {
+      int gp = 0;
+      char s[20]; sprintf(s, "loads2-%06d.asc", ppsc->timestep);
+      FILE *f = fopen(s, "w");
+      for (int r = 0; r < size; r++) {
+	for (int p = 0; p < nr_patches_all_new[r]; p++) {
+	  fprintf(f, "%d %g %d\n", gp, loads_all[gp], r);
+	  gp++;
+	}
       }
+      fclose(f);
     }
-    fclose(f);
-#endif
   }
   // then scatter
   int nr_patches_new;
@@ -218,7 +225,7 @@ gather_loads(struct mrc_domain *domain, double *loads, int nr_patches,
   MPI_Gatherv(loads, nr_patches, MPI_DOUBLE, loads_all, nr_patches_all, displs,
 	      MPI_DOUBLE, 0, comm);
 
-#ifdef DEBUG_BALANCE
+#if 0
   if (rank == 0) {
     int rl = 0;
     char s[20]; sprintf(s, "loads-%06d.asc", ppsc->timestep);
@@ -761,7 +768,7 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
 				   &nr_global_patches);
   free(loads);
 
-  int nr_patches_new = find_best_mapping(domain_old, nr_global_patches,
+  int nr_patches_new = find_best_mapping(bal, domain_old, nr_global_patches,
 					 loads_all);
 
   free(loads_all);
@@ -887,7 +894,7 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   prof_stop(pr_bal_gather);
 
   prof_start(pr_bal_decomp_A);
-  int nr_patches_new = find_best_mapping(domain_old, nr_global_patches,
+  int nr_patches_new = find_best_mapping(bal, domain_old, nr_global_patches,
 					 loads_all);
   prof_stop(pr_bal_decomp_A);
 
@@ -1057,9 +1064,11 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
 
 #define VAR(x) (void *)offsetof(struct psc_balance, x)
 static struct param psc_balance_descr[] = {
-  { "every"            , VAR(every)               , PARAM_INT(0)        },
-  { "force_update"     , VAR(force_update)	  , PARAM_INT(0)	},
-  { "factor_fields"    , VAR(factor_fields)       , PARAM_DOUBLE(1.)    },
+  { "every"            , VAR(every)            , PARAM_INT(0)            },
+  { "force_update"     , VAR(force_update)     , PARAM_INT(0)            },
+  { "factor_fields"    , VAR(factor_fields)    , PARAM_DOUBLE(1.)        },
+  { "print_loads"      , VAR(print_loads)      , PARAM_BOOL(false)       },
+  { "write_loads"      , VAR(write_loads)      , PARAM_BOOL(false)       },
   {},
 };
 #undef VAR
