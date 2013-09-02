@@ -12,6 +12,7 @@
 struct psc_bubble {
   double BB;
   double nnb;
+  double nn0;
   double MMach;
   double LLn;
   double LLB;
@@ -23,6 +24,7 @@ struct psc_bubble {
 static struct param psc_bubble_descr[] = {
   { "BB"            , VAR(BB)              , PARAM_DOUBLE(.07)    },
   { "nnb"           , VAR(nnb)             , PARAM_DOUBLE(.1)     },
+  { "nn0"           , VAR(nn0)             , PARAM_DOUBLE(1.)     },
   { "MMach"         , VAR(MMach)           , PARAM_DOUBLE(3.)     },
   { "LLn"           , VAR(LLn)             , PARAM_DOUBLE(200.)   },
   { "LLB"           , VAR(LLB)             , PARAM_DOUBLE(200./6.)},
@@ -166,20 +168,21 @@ psc_bubble_init_npt(struct psc *psc, int kind, double x[3],
   double V0 = bubble->MMach * sqrt(psc->kinds[KIND_ELECTRON].T / psc->kinds[KIND_ION].m);
 
   double nnb = bubble->nnb;
+  double nn0 = bubble->nn0;
 
   double r1 = sqrt(sqr(x[2]) + sqr(x[1] + LLn));
   double r2 = sqrt(sqr(x[2]) + sqr(x[1] - LLn));
 
   npt->n = nnb;
   if (r1 < LLn) {
-    npt->n += (1. - nnb) * sqr(cos(M_PI / 2. * r1 / LLn));
+    npt->n += (nn0 - nnb) * sqr(cos(M_PI / 2. * r1 / LLn));
     if (r1 > 0.0) {
       npt->p[2] += V0 * sin(M_PI * r1 / LLn) * x[2] / r1;
       npt->p[1] += V0 * sin(M_PI * r1 / LLn) * (x[1] + 1.*LLn) / r1;
     }
   }
   if (r2 < LLn) {
-    npt->n += (1. - nnb) * sqr(cos(M_PI / 2. * r2 / LLn));
+    npt->n += (nn0 - nnb) * sqr(cos(M_PI / 2. * r2 / LLn));
     if (r2 > 0.0) {
       npt->p[2] += V0 * sin(M_PI * r2 / LLn) * x[2] / r2;
       npt->p[1] += V0 * sin(M_PI * r2 / LLn) * (x[1] - 1.*LLn) / r2;
