@@ -44,6 +44,12 @@ particles_double_get_one(struct psc_particles *prts, int n)
       rv;							\
     })
 
+#define particle_double_mni(p) ({				\
+      particle_double_real_t rv;				\
+      rv = ppsc->kinds[p->kind].m;				\
+      rv;							\
+    })
+
 #define particle_double_wni(p) ({				\
       particle_double_real_t rv;				\
       rv = p->qni_wni / ppsc->kinds[p->kind].q;			\

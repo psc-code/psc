@@ -12,6 +12,7 @@ if HAVE_HDF5
 libsubdir_la_SOURCES += \
 	psc_output_particles_hdf5.c \
 	psc_output_particles_hdf5_single.c \
+	psc_output_particles_hdf5_double.c \
 	psc_output_particles_custom_binary.c \
 	psc_output_particles_xdmf_compact.c \
 	psc_output_particles_xdmf_spread.c \

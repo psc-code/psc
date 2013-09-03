@@ -15,6 +15,7 @@ typedef mparticles_double_t mparticles_t;
 #define particle_qni_div_mni        particle_double_qni_div_mni
 #define particle_qni_wni            particle_double_qni_wni
 #define particle_qni                particle_double_qni
+#define particle_mni                particle_double_mni
 #define particle_wni                particle_double_wni
 #define particle_kind               particle_double_kind
 #define particle_get_relative_pos   particle_double_get_relative_pos
