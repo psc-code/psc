@@ -274,7 +274,7 @@ do_push_part_yz(int p, struct psc_fields *pf, struct psc_particles *pp)
 static struct psc_fields *
 cache_fields_from_em(fields_t *pf)
 {
-  struct psc_fields *fld = psc_fields_create(MPI_COMM_SELF);
+  struct psc_fields *fld = psc_fields_create(MPI_COMM_NULL);
   psc_fields_set_type(fld, F3_CACHE_TYPE);
   // FIXME, can do -1 .. 1?
   psc_fields_set_param_int3(fld, "ib", (int[3]) { 0, -2, -2 });

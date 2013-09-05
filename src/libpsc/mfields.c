@@ -21,7 +21,7 @@ _psc_mfields_setup(struct psc_mfields *flds)
 						     &flds->nr_patches);
   flds->flds = calloc(flds->nr_patches, sizeof(*flds->flds));
   for (int p = 0; p < flds->nr_patches; p++) {
-    struct psc_fields *pf = psc_fields_create(MPI_COMM_SELF);
+    struct psc_fields *pf = psc_fields_create(MPI_COMM_NULL);
     psc_fields_set_type(pf, ops->name);
     char name[20]; sprintf(name, "flds%d", p);
     psc_fields_set_name(pf, name);
