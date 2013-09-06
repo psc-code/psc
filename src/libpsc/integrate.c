@@ -128,6 +128,11 @@ psc_step(struct psc *psc)
   
   // field propagation (n+0.5)*dt -> (n+1.0)*dt
   psc_push_fields_step_b2(psc->push_fields, psc->flds);
+
+  if (psc->prm.write_checkpoint_every_step > 0 &&
+      psc->timestep % psc->prm.write_checkpoint_every_step  == 0) {
+    psc_write_checkpoint(psc);
+  }
 }
 
 extern void dynamicwindow_timestep();

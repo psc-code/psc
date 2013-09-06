@@ -140,6 +140,8 @@ static struct param psc_descr[] = {
                     , VAR(prm.wallclock_limit)    , PARAM_DOUBLE(0.) },
   { "write_checkpoint"
                     , VAR(prm.write_checkpoint)   , PARAM_BOOL(false) },
+  { "write_checkpoint_every_step"
+                    , VAR(prm.write_checkpoint_every_step), PARAM_INT(-1) },
 
   { "fields_base"   , VAR(prm.fields_base)        , PARAM_STRING("c") },
   { "particles_base", VAR(prm.particles_base)     , PARAM_STRING("c") },

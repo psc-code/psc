@@ -104,6 +104,7 @@ struct psc_param {
   bool gdims_in_terms_of_cells; 
   double wallclock_limit;
   bool write_checkpoint;
+  int write_checkpoint_every_step;
   double initial_particle_shift;
   char *fields_base; ///< base type for psc_mfields ("c", "fortran", "cuda")
   char *particles_base; ///< base type for psc_mparticles ("c", "fortran", "cuda")
