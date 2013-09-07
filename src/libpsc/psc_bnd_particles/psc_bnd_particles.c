@@ -6,6 +6,7 @@
 #include <mrc_io.h>
 #include <mrc_ddc.h>
 #include <mrc_profile.h>
+#include <mrc_domain_private.h> // FIXME
 
 // ----------------------------------------------------------------------
 // psc_bnd_particles_destroy
@@ -54,8 +55,8 @@ psc_bnd_particles_set_psc(struct psc_bnd_particles *bnd, struct psc *psc)
 // which might happen, e.g., through rebalancing.
 // In this case, do setup() over.
 
-static void
-check_domain(struct psc_bnd_particles *bnd)
+void
+psc_bnd_particles_check_domain(struct psc_bnd_particles *bnd)
 {
   if (!bnd->ddcp) {
     return;
@@ -63,10 +64,8 @@ check_domain(struct psc_bnd_particles *bnd)
 
   struct psc_bnd_particles_ops *ops = psc_bnd_particles_ops(bnd);
 
-  if (bnd->ddcp->domain != bnd->psc->mrc_domain) {
-    ops->unsetup(bnd);
-    ops->setup(bnd);
-  }
+  ops->unsetup(bnd);
+  ops->setup(bnd);
 }
 
 // ----------------------------------------------------------------------
@@ -80,7 +79,7 @@ psc_bnd_particles_exchange(struct psc_bnd_particles *bnd, struct psc_mparticles 
     pr = prof_register("xchg_prts", 1., 0, 0);
   }
 
-  check_domain(bnd);
+  //  psc_bnd_particles_check_domain(bnd);
 
   prof_start(pr);
   psc_stats_start(st_time_comm);

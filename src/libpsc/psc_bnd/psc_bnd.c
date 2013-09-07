@@ -65,17 +65,18 @@ _psc_bnd_read(struct psc_bnd *bnd, struct mrc_io *io)
 // which might happen, e.g., through rebalancing.
 // In this case, do setup() over.
 
-static void
-check_domain(struct psc_bnd *bnd)
+void
+psc_bnd_check_domain(struct psc_bnd *bnd)
 {
   struct psc_bnd_ops *ops = psc_bnd_ops(bnd);
 
-  struct mrc_domain *domain = mrc_ddc_get_domain(bnd->ddc);
-  if (domain != bnd->psc->mrc_domain) {
-    mrc_ddc_destroy(bnd->ddc);
-
-    ops->create_ddc(bnd);
+  if (!bnd->ddc) {
+    return;
   }
+
+  struct mrc_domain *domain = mrc_ddc_get_domain(bnd->ddc);
+  mrc_ddc_destroy(bnd->ddc);
+  ops->create_ddc(bnd);
 }
 
 // ======================================================================
@@ -89,7 +90,7 @@ psc_bnd_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me)
     pr = prof_register("add_ghosts", 1., 0, 0);
   }
 
-  check_domain(bnd);
+  //  psc_bnd_check_domain(bnd);
 
   psc_stats_start(st_time_comm);
   prof_start(pr);
@@ -110,7 +111,7 @@ psc_bnd_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me)
     pr = prof_register("fill_ghosts", 1., 0, 0);
   }
 
-  check_domain(bnd);
+  //  psc_bnd_check_domain(bnd);
 
   psc_stats_start(st_time_comm);
   prof_start(pr);

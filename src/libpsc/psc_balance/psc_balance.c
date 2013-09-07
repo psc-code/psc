@@ -747,6 +747,10 @@ static void psc_balance_seed_patches(struct mrc_domain *domain_old, struct mrc_d
   }
 }
 
+void psc_bnd_particles_check_domain(struct psc_bnd_particles *bnd);
+void psc_bnd_check_domain(struct psc_bnd *bnd);
+extern bool psc_output_fields_check_bnd;
+
 void
 psc_balance_initial(struct psc_balance *bal, struct psc *psc,
 		    int **p_nr_particles_by_patch)
@@ -828,8 +832,11 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
 
   psc_balance_seed_patches(domain_old, domain_new);	//TODO required here?
 
-  // FIXME mrc_domain_destroy(domain_old);
   psc->mrc_domain = domain_new;
+  psc_bnd_particles_check_domain(psc->bnd_particles);
+  psc_bnd_check_domain(psc->bnd);
+  psc_output_fields_check_bnd = true;
+  mrc_domain_destroy(domain_old);
 }
 
 // FIXME, way too much duplication from the above
@@ -1051,8 +1058,12 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   psc->mphotons = mphotons_new;
 
 
-  // FIXME mrc_domain_destroy(domain_old);
   psc->mrc_domain = domain_new;
+  psc_bnd_particles_check_domain(psc->bnd_particles);
+  psc_bnd_check_domain(psc->bnd);
+  psc_output_fields_check_bnd = true;
+  
+  mrc_domain_destroy(domain_old);
 
   psc_stats_stop(st_time_balance);
 }
