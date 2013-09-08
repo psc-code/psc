@@ -200,6 +200,13 @@ sfc_hilbert_idx_to_idx3(struct mrc_sfc *sfc, int idx, int p[3])
   }
 }
 
+static void
+sfc_hilbert_destroy(struct mrc_sfc *sfc)
+{
+  free(sfc->hilbert_map_p_to_h);
+  free(sfc->hilbert_map_h_to_p);
+}
+
 // ----------------------------------------------------------------------
 // space filling curve
 
@@ -210,6 +217,17 @@ sfc_setup(struct mrc_sfc *sfc, int *np)
   case CURVE_BYDIM: sfc_bydim_setup(sfc, np); break;
   case CURVE_MORTON: sfc_morton_setup(sfc, np); break;
   case CURVE_HILBERT: sfc_hilbert_setup(sfc, np); break;
+  default: assert(0);
+  }
+}
+
+void
+sfc_destroy(struct mrc_sfc *sfc)
+{
+  switch (sfc->curve_type) {
+  case CURVE_BYDIM: break;
+  case CURVE_MORTON: break;
+  case CURVE_HILBERT: sfc_hilbert_destroy(sfc); break;
   default: assert(0);
   }
 }

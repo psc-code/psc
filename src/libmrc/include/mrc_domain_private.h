@@ -81,6 +81,7 @@ struct mrc_sfc {
 };
 
 void sfc_setup(struct mrc_sfc *sfc, int *np);
+void sfc_destroy(struct mrc_sfc *sfc);
 int  sfc_idx3_to_idx(struct mrc_sfc *sfc, const int p[3]);
 void sfc_idx_to_idx3(struct mrc_sfc *sfc, int idx, int p[3]);
 
