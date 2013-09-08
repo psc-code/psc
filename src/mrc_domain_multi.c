@@ -288,6 +288,7 @@ mrc_domain_multi_destroy(struct mrc_domain *domain)
   if (multi->have_activepatches) {
     bitfield3d_destroy(&multi->activepatches);
   }
+  sfc_destroy(&multi->sfc);
 }
 
 static struct mrc_patch *
