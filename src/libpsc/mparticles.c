@@ -53,6 +53,7 @@ _psc_mparticles_destroy(struct psc_mparticles *mparticles)
   for (int p = 0; p < mparticles->nr_patches; p++) {
     psc_particles_destroy(mparticles->prts[p]);
   }
+  free(mparticles->prts);
 }
 
 static void
