@@ -80,7 +80,8 @@ _psc_mparticles_read(struct psc_mparticles *mparticles, struct mrc_io *io)
     calloc(mparticles->nr_patches, sizeof(*mparticles->nr_particles_by_patch));
   for (int p = 0; p < mparticles->nr_patches; p++) {
     char name[20]; sprintf(name, "prts%d", p);
-    mparticles->prts[p] = mrc_io_read_ref(io, mparticles, name, psc_particles);
+    mparticles->prts[p] = mrc_io_read_ref_comm(io, mparticles, name, psc_particles,
+					       MPI_COMM_NULL);
   }
 }
 

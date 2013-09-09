@@ -90,7 +90,8 @@ _psc_mfields_read(struct psc_mfields *mflds, struct mrc_io *io)
   mprintf("nr_p %d\n", mflds->nr_patches);
   for (int p = 0; p < mflds->nr_patches; p++) {
     char name[20]; sprintf(name, "flds%d", p);
-    mflds->flds[p] = mrc_io_read_ref(io, mflds, name, psc_fields);
+    mflds->flds[p] = mrc_io_read_ref_comm(io, mflds, name, psc_fields,
+					  MPI_COMM_NULL);
   }
   // FIXME mark as set up?
 }
