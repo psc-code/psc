@@ -154,14 +154,18 @@ psc_integrate(struct psc *psc)
   st_time_comm = psc_stats_register("time communication");
   st_time_output = psc_stats_register("time output");
 
+  bool first_iteration = true;
   for (; psc->timestep < psc->prm.nmax; psc->timestep++) {
     prof_start(pr);
     psc_stats_start(st_time_step);
 
-    if (psc->prm.write_checkpoint_every_step > 0 &&
-	psc->timestep % psc->prm.write_checkpoint_every_step  == 0) {
+    if (!first_iteration &&
+	psc->prm.write_checkpoint_every_step > 0 &&
+	psc->timestep % psc->prm.write_checkpoint_every_step == 0) {
       psc_write_checkpoint(psc);
     }
+    first_iteration = false;
+
     psc_step(psc);
 
     psc_stats_stop(st_time_step);
