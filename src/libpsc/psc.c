@@ -635,6 +635,8 @@ static void
 _psc_write(struct psc *psc, struct mrc_io *io)
 {
   mrc_io_write_int(io, psc, "timestep", psc->timestep);
+  mrc_io_write_int(io, psc, "nr_kinds", psc->nr_kinds);
+
   for (int k = 0; k < psc->nr_kinds; k++) {
     char s[20];
     sprintf(s, "kind_q%d", k);
@@ -667,7 +669,9 @@ _psc_read(struct psc *psc, struct mrc_io *io)
   psc_setup_coeff(psc);
 
   mrc_io_read_int(io, psc, "timestep", &psc->timestep);
+  mrc_io_read_int(io, psc, "nr_kinds", &psc->nr_kinds);
 
+  psc->kinds = calloc(psc->nr_kinds, sizeof(*psc->kinds));
   for (int k = 0; k < psc->nr_kinds; k++) {
     char s[20];
     sprintf(s, "kind_q%d", k);
