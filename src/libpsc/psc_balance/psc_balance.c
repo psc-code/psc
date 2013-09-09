@@ -1068,6 +1068,18 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   psc_stats_stop(st_time_balance);
 }
 
+// ----------------------------------------------------------------------
+// _psc_balance_read
+
+static void
+_psc_balance_read(struct psc_balance *bal, struct mrc_io *io)
+{
+  int nr_patches;
+  mrc_domain_get_patches(ppsc->mrc_domain, &nr_patches);
+  psc_balance_comp_time_by_patch = calloc(nr_patches,// leaked the very last time
+					  sizeof(*psc_balance_comp_time_by_patch));
+}
+
 // ======================================================================
 // psc_balance class
 
@@ -1086,5 +1098,6 @@ struct mrc_class_psc_balance mrc_class_psc_balance = {
   .name             = "psc_balance",
   .size             = sizeof(struct psc_balance),
   .param_descr      = psc_balance_descr,
+  .read             = _psc_balance_read,
 };
 
