@@ -975,6 +975,23 @@ mrc_obj_read(struct mrc_io *io, const char *path, struct mrc_class *cls)
   return obj;
 }
 
+struct mrc_obj *
+mrc_obj_read_comm(struct mrc_io *io, const char *path, struct mrc_class *cls,
+		  MPI_Comm comm)
+{
+  init_class(cls);
+
+  struct mrc_obj *obj = mrc_io_find_obj(io, path);
+  if (obj) {
+    assert(obj->cls == cls);
+    return obj;
+  }
+
+  obj = obj_create(comm, cls, true);
+  mrc_obj_read2(obj, io, path);
+  return obj;
+}
+
 static void
 mrc_obj_write_params(struct mrc_obj *obj, void *p, struct param *params,
 		     const char *path, struct mrc_io *io)

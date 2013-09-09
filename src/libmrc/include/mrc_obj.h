@@ -138,6 +138,8 @@ void mrc_obj_add_child(struct mrc_obj *obj, struct mrc_obj *child);
 struct mrc_obj *mrc_obj_find_child(struct mrc_obj *obj, const char *name);
 void mrc_obj_write(struct mrc_obj *obj, struct mrc_io *io);
 struct mrc_obj *mrc_obj_read(struct mrc_io *io, const char *path, struct mrc_class *cls);
+struct mrc_obj *mrc_obj_read_comm(struct mrc_io *io, const char *path, struct mrc_class *cls,
+				  MPI_Comm comm);
 void mrc_obj_read_super(struct mrc_obj *obj, struct mrc_io *io);
 void mrc_obj_read_member_objs(struct mrc_obj *obj, struct mrc_io *io);
 void mrc_obj_read_member_objs_sub(struct mrc_obj *obj, struct mrc_io *io);
