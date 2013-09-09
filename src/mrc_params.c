@@ -66,16 +66,29 @@ libmrc_params_init(int argc, char **argv)
   MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
 
 #ifdef HAVE_PETSC
-  // Need to fire up petsc. If MPI_Init hasn't been called,
-  // this will do it.
-  // Do it after MPI_Comm_rank, so we won't hide a failure to
-  // call MPI_Init in non-petsc codes
-  PetscInitialize(&argc, &argv, (char *)0, NULL);
+  int petsc_argc = 1;
+  char **petsc_argv;
+  petsc_argv = calloc(argc, sizeof(char *));
+  petsc_argv[0] = argv[0];
 #endif
-
   
   for (int i = 1; i < argc; i++) {
     if (strncmp(argv[i], "--", 2) != 0) {
+      // Nasty little hack because petsc options
+      // only have one"-", and apparently isn't flexible
+#ifdef HAVE_PETSC
+      if (strncmp(argv[i], "-", 1) == 0) {
+	mprintf("passing argument '%s' to petsc\n", argv[i]);
+	petsc_argv[petsc_argc] = argv[i];
+	petsc_argc++;
+	if (i < argc - 1 && strncmp(argv[i+1], "-", 1) != 0) {
+	  i++;
+	  petsc_argv[petsc_argc] = argv[i];
+	  petsc_argc++;
+	}
+	continue;
+      }
+#endif
       error("expected argument '%s' to specify an option like '--something'\n",
 	    argv[i]);
     }
@@ -96,6 +109,17 @@ libmrc_params_init(int argc, char **argv)
     // check whether "--help" is given
     mrc_params_get_option_bool("help", &do_print_help);
   }
+
+#ifdef HAVE_PETSC
+  // Need to fire up petsc. If MPI_Init hasn't been called,
+  // this will do it.
+  // Do it after MPI_Comm_rank, so we won't hide a failure to
+  // call MPI_Init in non-petsc codes
+  int ierr = PetscInitialize(&petsc_argc, &petsc_argv, (char *)0, NULL);
+  assert(ierr == 0);
+  free(petsc_argv);
+#endif
+
 }
 
 void
