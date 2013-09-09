@@ -87,6 +87,15 @@ psc_bubble_set_from_options(struct psc *psc)
 }
 
 // ----------------------------------------------------------------------
+// psc_bubble_read
+
+static void
+psc_bubble_read(struct psc *psc, struct mrc_io *io)
+{
+  psc_read_super(psc, io);
+}
+
+// ----------------------------------------------------------------------
 // psc_bubble_init_field
 
 static double
@@ -216,6 +225,7 @@ struct psc_ops psc_bubble_ops = {
   .param_descr      = psc_bubble_descr,
   .create           = psc_bubble_create,
   .set_from_options = psc_bubble_set_from_options,
+  .read             = psc_bubble_read,
   .init_field       = psc_bubble_init_field,
   .init_npt         = psc_bubble_init_npt,
 };

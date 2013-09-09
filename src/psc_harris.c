@@ -228,6 +228,15 @@ psc_harris_init_npt(struct psc *psc, int pop, double x[3],
   }
 }
 
+// ----------------------------------------------------------------------
+// psc_harris_read
+
+static void
+psc_harris_read(struct psc *psc, struct mrc_io *io)
+{
+  psc_read_super(psc, io);
+}
+
 // ======================================================================
 // psc_harris_ops
 
@@ -237,6 +246,7 @@ struct psc_ops psc_harris_ops = {
   .param_descr      = psc_harris_descr,
   .create           = psc_harris_create,
   .setup            = psc_harris_setup,
+  .read             = psc_harris_read,
   .init_field       = psc_harris_init_field,
   .init_npt         = psc_harris_init_npt,
 };
