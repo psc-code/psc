@@ -1017,7 +1017,9 @@ static unsigned long
 mrc_obj_uid(struct mrc_obj *obj)
 {
   unsigned long uid = (unsigned long) obj;
-  MPI_Bcast(&uid, 1, MPI_LONG, 0, obj->comm);
+  if (obj->comm != MPI_COMM_NULL) {
+    MPI_Bcast(&uid, 1, MPI_LONG, 0, obj->comm);
+  }
   return uid;
 }
 
