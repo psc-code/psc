@@ -8,5 +8,7 @@ mhd_double_tearing
 mhd_fadeev
 mhd_ot
 mhd_whistler
+mhd_alfven
+mhd_kh
 *.log
 *.trs
