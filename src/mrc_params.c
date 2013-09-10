@@ -469,7 +469,9 @@ _mrc_params_get_option_int_array(const char *name, struct mrc_param_int_array *p
   }
 
   if (pval->nr_vals != n) {
-    free(pval->vals);
+    if(pval->vals) {
+      free(pval->vals);
+    }
     pval->nr_vals = n;
     pval->vals = calloc(n, sizeof(int));
   }
@@ -497,6 +499,12 @@ mrc_params_get_option_int3_help(const char *name, int *pval,
 				const char *help)
 {
   return _mrc_params_get_option_int3(name, pval, false, help);
+}
+
+int
+mrc_params_get_option_int_array(const char *name, struct mrc_param_int_array *pval)
+{
+  return _mrc_params_get_option_int_array(name, pval, false, NULL);
 }
 
 int
@@ -532,6 +540,61 @@ _mrc_params_get_option_float3(const char *name, float *pval, bool deprecated,
     print_help("--%s: <%g> %s\n", namex, pval[d], help ? help : "");
   }
   return retval;
+}
+
+int
+_mrc_params_get_option_float_array(const char *name, struct mrc_param_float_array *pval,
+         bool deprecated, const char *help)
+{
+  struct option *p = find_option(name, deprecated);
+  if (!p) {
+    if (!deprecated) { // don't advertise deprecated un-prefixed options
+      print_help("--%s: <%f> (default) %s...\n", name, pval->vals ? pval->vals[0] : 0.0,
+     help ? help : "");
+    }
+    return -1;
+  }
+
+  char *s1, *s_save = strdup(p->value), *s = s_save;
+
+  // count first
+  int n = 0;
+  while (strsep(&s, ",:")) {
+    n++;
+  }
+
+  if (pval->nr_vals != n) {
+    if(pval->vals) {
+      free(pval->vals);
+    }
+    pval->nr_vals = n;
+    pval->vals = calloc(n, sizeof(float));
+  }
+  s = s_save;
+  strcpy(s, p->value);
+  for (int i = 0; (s1 = strsep(&s, ",:")); i++) {
+    if (strcmp(s1, "_") == 0) {
+      continue;
+    }
+    // pval->vals[i] = (float)(atof(s1));
+    sscanf(s1, "%g", &(pval->vals[i]));
+  }
+  free(s_save);
+
+  return 0;
+}
+
+int
+mrc_params_get_option_float_array(const char *name, struct mrc_param_float_array *pval)
+{
+  return _mrc_params_get_option_float_array(name, pval, false, NULL);
+}
+
+int
+mrc_params_get_option_float_array_help(const char *name, struct mrc_param_float_array *pval,
+             const char *help)
+{
+  return _mrc_params_get_option_float_array(name, pval, false, help);
 }
 
 int
@@ -653,6 +716,20 @@ mrc_params_set_default(void *p, struct param *params)
 	}
       }
       break;
+    case PT_FLOAT_ARRAY:
+      {
+  pv->u_float_array.nr_vals = params[i].u.float_array.nr_vals;
+  free(pv->u_float_array.vals);
+  if(pv->u_float_array.nr_vals == 0) {
+    pv->u_float_array.vals = NULL;
+  } else {
+    pv->u_float_array.vals = calloc(pv->u_float_array.nr_vals, sizeof(float));
+  }
+  for (int d = 0; d < pv->u_float_array.nr_vals; d++) {
+    pv->u_float_array.vals[d] = params[i].u.float_array.default_value;
+  }
+      }
+      break;      
     case PT_OBJ:
     case MRC_VAR_INT:
     case MRC_VAR_BOOL:
@@ -681,6 +758,8 @@ mrc_params_set_type(void *p, struct param *params, const char *name,
 	// except a PT_SELECT can be set by a PT_INT
       } else if (params[i].type == PT_INT_ARRAY && type == PT_INT3) {
 	// or INT3 can be used to set INT_ARRAY
+      } else if (params[i].type == PT_FLOAT_ARRAY && type == PT_FLOAT3) {
+  // or FLOAT3 can be used to set FLOAT_ARRAY
       } else {
 	error("option '%s' is not of type %d!\n", name, type);
       }
@@ -722,8 +801,17 @@ mrc_params_set_type(void *p, struct param *params, const char *name,
       }
       break;
     case PT_FLOAT3:
-      for (int d = 0; d < 3; d++) {
-	pv->u_float3[d] = pval->u_float3[d];
+      if (params[i].type == PT_FLOAT3) {
+  for (int d = 0; d < 3; d++) {
+    pv->u_float3[d] = pval->u_float3[d];
+  }
+      } else if (params[i].type == PT_FLOAT_ARRAY) {
+  pv->u_float_array.nr_vals = 3;
+  free(pv->u_float_array.vals);
+  pv->u_float_array.vals = calloc(3, sizeof(float));
+  for (int d = 0; d < 3; d++) {
+    pv->u_float_array.vals[d] = pval->u_float3[d];
+  }
       }
       break;
     case PT_DOUBLE3:
@@ -745,6 +833,20 @@ mrc_params_set_type(void *p, struct param *params, const char *name,
 	}
       }
       break;
+    case PT_FLOAT_ARRAY:
+      {
+  pv->u_float_array.nr_vals = pval->u_float_array.nr_vals;
+  free(pv->u_float_array.vals);
+  pv->u_float_array.vals = calloc(pv->u_float_array.nr_vals, sizeof(float));
+  if (!pval->u_float_array.vals) {
+    break;
+  }
+  for (int d = 0; d < pval->u_float_array.nr_vals; d++) {
+    // FIXME?, abuse of u_float3
+    pv->u_float_array.vals[d] = pval->u_float_array.vals[d];
+  }
+      }
+      break;      
     case PT_PTR:
       pv->u_ptr = pval->u_ptr;
       break;
@@ -920,6 +1022,10 @@ mrc_params_parse_nodefault(void *p, struct param *params, const char *title,
       break;
     case PT_INT_ARRAY:
       _mrc_params_get_option_int_array(params[i].name, &pv->u_int_array, true, NULL);
+      break;
+    case PT_FLOAT_ARRAY:
+      _mrc_params_get_option_float_array(params[i].name, &pv->u_float_array, true, NULL);      
+      break;
     case PT_PTR:
       break;
     case PT_OBJ:
@@ -977,6 +1083,9 @@ mrc_params_parse_pfx(void *p, struct param *params, const char *title,
       break;
     case PT_INT_ARRAY:
       mrc_params_get_option_int_array_help(name, &pv->u_int_array, params[i].help);
+      break;
+    case PT_FLOAT_ARRAY:
+      mrc_params_get_option_float_array_help(name, &pv->u_float_array, params[i].help);
       break;
     case PT_PTR:
     case PT_OBJ:
@@ -1045,6 +1154,19 @@ mrc_params_print_one(void *p, struct param *prm, MPI_Comm comm)
       mrc_view_printf(comm, "%-20s| %s\n", prm->name, s);
     }
     break;
+  case PT_FLOAT_ARRAY:
+    {
+      char s[100], tmp[100];
+      int nr_vals = pv->u_float_array.nr_vals;
+      sprintf(s, "[%d] %f", nr_vals, pv->u_float_array.vals[0]);
+
+      for (int d = 1; d < nr_vals; d++) {
+  sprintf(tmp, ",%f", pv->u_float_array.vals[d]);
+  strcat(s, tmp);
+      }
+      mrc_view_printf(comm, "%-20s| %s\n", prm->name, s);
+    }
+    break;    
   case PT_PTR:
     mrc_view_printf(comm, "%-20s| %p\n", prm->name, pv->u_ptr);
     break;
