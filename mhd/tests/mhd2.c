@@ -82,26 +82,8 @@ main(int argc, char **argv)
   // set up initial condition
   ggcm_mhd_ic_run(mhd->ic);
 
-  // run time integration
-  struct mrc_ts *ts = mrc_ts_create(mrc_domain_comm(mhd->domain));
-  mrc_ts_set_type(ts, "rk2");
-  mrc_ts_set_context(ts, ggcm_mhd_to_mrc_obj(mhd));
+  ggcm_mhd_main(mhd);
 
-  struct mrc_ts_monitor *mon_output =
-    mrc_ts_monitor_create(mrc_ts_comm(ts));
-  mrc_ts_monitor_set_type(mon_output, "ggcm");
-  mrc_ts_monitor_set_name(mon_output, "mrc_ts_output");
-  mrc_ts_add_monitor(ts, mon_output);
-
-  mrc_ts_set_dt(ts, 1e-6);
-  mrc_ts_set_solution(ts, mrc_fld_to_mrc_obj(mhd->fld));
-  mrc_ts_set_rhs_function(ts, ts_ggcm_mhd_step_calc_rhs, mhd);
-  mrc_ts_set_from_options(ts);
-  mrc_ts_view(ts);
-  mrc_ts_setup(ts);
-  mrc_ts_solve(ts);
-  mrc_ts_view(ts);
-  mrc_ts_destroy(ts);  
   ggcm_mhd_destroy(mhd);
 
   MPI_Finalize();

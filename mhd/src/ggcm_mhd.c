@@ -13,6 +13,8 @@
 
 #include <mrc_domain.h>
 #include <mrc_ddc.h>
+#include <mrc_ts.h>
+#include <mrc_ts_monitor.h>
 #include <mrc_profile.h>
 
 #include <assert.h>
@@ -313,3 +315,35 @@ ts_ggcm_mhd_step_calc_rhs(void *ctx, struct mrc_obj *_rhs, float time, struct mr
   mhd->time = time;
   ggcm_mhd_step_calc_rhs(mhd->step, rhs, fld);
 }
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_main
+//
+// helper function that does most of the work of actually running a
+// ggcm_mhd based simulation
+
+void
+ggcm_mhd_main(struct ggcm_mhd *mhd)
+{
+  // run time integration
+  struct mrc_ts *ts = mrc_ts_create(mrc_domain_comm(mhd->domain));
+  mrc_ts_set_type(ts, "rk2");
+  mrc_ts_set_context(ts, ggcm_mhd_to_mrc_obj(mhd));
+
+  struct mrc_ts_monitor *mon_output =
+    mrc_ts_monitor_create(mrc_ts_comm(ts));
+  mrc_ts_monitor_set_type(mon_output, "ggcm");
+  mrc_ts_monitor_set_name(mon_output, "mrc_ts_output");
+  mrc_ts_add_monitor(ts, mon_output);
+
+  mrc_ts_set_dt(ts, 1e-6);
+  mrc_ts_set_solution(ts, mrc_fld_to_mrc_obj(mhd->fld));
+  mrc_ts_set_rhs_function(ts, ts_ggcm_mhd_step_calc_rhs, mhd);
+  mrc_ts_set_from_options(ts);
+  mrc_ts_view(ts);
+  mrc_ts_setup(ts);
+  mrc_ts_solve(ts);
+  mrc_ts_view(ts);
+  mrc_ts_destroy(ts);  
+}
+
