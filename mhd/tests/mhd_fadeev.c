@@ -164,7 +164,6 @@ main(int argc, char **argv)
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_fadeev_ops);  
  
   struct ggcm_mhd *mhd = ggcm_mhd_create(MPI_COMM_WORLD);
-  ggcm_mhd_set_type(mhd, "fadeev");
   ggcm_mhd_step_set_type(mhd->step, "cweno");
   mrc_fld_set_type(mhd->fld, "float");
   ggcm_mhd_set_from_options(mhd);
