@@ -169,18 +169,7 @@ main(int argc, char **argv)
 
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_cosine_ops);  
  
-  struct ggcm_mhd *mhd = ggcm_mhd_create(MPI_COMM_WORLD);
-  ggcm_mhd_step_set_type(mhd->step, "cweno");
-  ggcm_mhd_set_from_options(mhd);
-  ggcm_mhd_setup(mhd);
-  ggcm_mhd_view(mhd);
-
-  // set up initial condition
-  ggcm_mhd_ic_run(mhd->ic);
-
-  ggcm_mhd_main(mhd);
-
-  ggcm_mhd_destroy(mhd);
+  ggcm_mhd_main();
 
   MPI_Finalize();
   return 0;

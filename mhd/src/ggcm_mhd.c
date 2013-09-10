@@ -228,6 +228,9 @@ ggcm_mhd_default_box(struct ggcm_mhd *mhd)
 
   // generate MHD solver grid from mrc_crds
   ggcm_mhd_crds_gen_set_type(mhd->crds->crds_gen, "mrc");
+
+  // default time stepping to CWENO
+  ggcm_mhd_step_set_type(mhd->step, "cweno");
 }
 
 // ======================================================================
@@ -323,13 +326,24 @@ ts_ggcm_mhd_step_calc_rhs(void *ctx, struct mrc_obj *_rhs, float time, struct mr
 // ggcm_mhd based simulation
 
 void
-ggcm_mhd_main(struct ggcm_mhd *mhd)
+ggcm_mhd_main()
 {
-  double time_start = MPI_Wtime();
+  struct ggcm_mhd *mhd = ggcm_mhd_create(MPI_COMM_WORLD);
+  mrc_fld_set_type(mhd->fld, "mhd_fc_float");
+  ggcm_mhd_set_from_options(mhd);
+  ggcm_mhd_setup(mhd);
+  ggcm_mhd_view(mhd);
+
+  // set up initial condition
+
+  mpi_printf(MPI_COMM_WORLD, "Setting initial condition...\n");
+  ggcm_mhd_ic_run(mhd->ic);
+  
+  // run time integration
 
   mpi_printf(MPI_COMM_WORLD, "Starting time integration...\n");
+  double time_start = MPI_Wtime();
 
-  // run time integration
   struct mrc_ts *ts = mrc_ts_create(mrc_domain_comm(mhd->domain));
   mrc_ts_set_type(ts, "rk2");
   mrc_ts_set_context(ts, ggcm_mhd_to_mrc_obj(mhd));
@@ -361,5 +375,7 @@ ggcm_mhd_main(struct ggcm_mhd *mhd)
 	     (double) gsize * mrc_ts_step_number(ts) / cpu_time);
 
   mrc_ts_destroy(ts);  
+
+  ggcm_mhd_destroy(mhd);
 }
 
