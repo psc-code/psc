@@ -187,6 +187,31 @@ ggcm_mhd_ntot(struct ggcm_mhd *mhd)
   return (info.ldims[0] + 2 * BND) * (info.ldims[1] + 2 * BND) * (info.ldims[2] + 2 * BND);
 }
 
+// ----------------------------------------------------------------------
+// ggcm_mhd_default_box
+//
+// This function can be called in a subclass's ::create() function to
+// set defaults for non-GGCM, normalized MHD-in-a-box simulations
+//
+// TODO: This should probably be the default in the first place
+
+void
+ggcm_mhd_default_box(struct ggcm_mhd *mhd)
+{
+  mhd->par.rrnorm = 1.f;
+  mhd->par.ppnorm = 1.f;
+  mhd->par.vvnorm = 1.f;
+  mhd->par.bbnorm = 1.f;
+  mhd->par.ccnorm = 1.f;
+  mhd->par.eenorm = 1.f;
+  mhd->par.resnorm = 1.f;
+  mhd->par.diffco = 0.f;
+
+  ggcm_mhd_set_param_float(mhd, "isphere", 0.);
+  ggcm_mhd_set_param_float(mhd, "diffsphere", 0.);
+  ggcm_mhd_set_param_float(mhd, "speedlimit", 1e9);
+}
+
 // ======================================================================
 // ggcm_mhd class
 

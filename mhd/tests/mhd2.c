@@ -28,14 +28,7 @@
 static void
 ggcm_mhd_cweno_create(struct ggcm_mhd *mhd)
 {
-  mhd->par.rrnorm = 1.f;
-  mhd->par.ppnorm = 1.f;
-  mhd->par.vvnorm = 1.f;
-  mhd->par.bbnorm = 1.f;
-  mhd->par.ccnorm = 1.f;
-  mhd->par.eenorm = 1.f;
-  mhd->par.resnorm = 1.f;
-  mhd->par.diffco = 0.f;
+  ggcm_mhd_default_box(mhd);
 
   ggcm_mhd_bnd_set_type(mhd->bnd, "none");
 
@@ -57,9 +50,6 @@ ggcm_mhd_cweno_create(struct ggcm_mhd *mhd)
 
   // generate MHD solver grid from mrc_crds
   ggcm_mhd_crds_gen_set_type(mhd->crds->crds_gen, "mrc");
-  ggcm_mhd_set_param_float(mhd, "isphere", 0.);
-  ggcm_mhd_set_param_float(mhd, "diffsphere", 0.);
-  ggcm_mhd_set_param_float(mhd, "speedlimit", 1e9);
 }
 
 static struct ggcm_mhd_ops ggcm_mhd_cweno_ops = {
