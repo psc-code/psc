@@ -82,18 +82,12 @@ ggcm_mhd_ot_create(struct ggcm_mhd *mhd)
 {
   ggcm_mhd_default_box(mhd);
 
-  mrc_domain_set_param_int(mhd->domain, "bcx", BC_PERIODIC);
-  mrc_domain_set_param_int(mhd->domain, "bcy", BC_PERIODIC);	   
-  mrc_domain_set_param_int(mhd->domain, "bcz", BC_PERIODIC);
-
   /* set defaults for coord arrays */
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
   mrc_crds_set_type(crds, "uniform");
   mrc_crds_set_param_int(crds, "sw", SW_2);   // 'stencil width' 
   mrc_crds_set_param_float3(crds, "l", (float[3]) {  0.0, 0.0, 0.0 });
   mrc_crds_set_param_float3(crds, "h", (float[3]) {  1.0, 1.0, 0.1 });
-
-  ggcm_mhd_bnd_set_type(mhd->bnd, "none");
 
   /* set defaults for the ddc, this does the communication */
   struct mrc_ddc *ddc = mrc_domain_get_ddc(mhd->domain);

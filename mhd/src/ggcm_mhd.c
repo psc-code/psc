@@ -210,6 +210,12 @@ ggcm_mhd_default_box(struct ggcm_mhd *mhd)
   ggcm_mhd_set_param_float(mhd, "isphere", 0.);
   ggcm_mhd_set_param_float(mhd, "diffsphere", 0.);
   ggcm_mhd_set_param_float(mhd, "speedlimit", 1e9);
+
+  // default to periodic boundary conditions
+  ggcm_mhd_bnd_set_type(mhd->bnd, "none");
+  mrc_domain_set_param_int(mhd->domain, "bcx", BC_PERIODIC);
+  mrc_domain_set_param_int(mhd->domain, "bcy", BC_PERIODIC);
+  mrc_domain_set_param_int(mhd->domain, "bcz", BC_PERIODIC);
 }
 
 // ======================================================================

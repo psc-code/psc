@@ -145,10 +145,7 @@ ggcm_mhd_double_tearing_create(struct ggcm_mhd *mhd)
   ggcm_mhd_default_box(mhd);
 
   ggcm_mhd_bnd_set_type(mhd->bnd, "conducting_x");
-
   mrc_domain_set_param_int(mhd->domain, "bcx", BC_NONE);
-  mrc_domain_set_param_int(mhd->domain, "bcy", BC_PERIODIC);	   
-  mrc_domain_set_param_int(mhd->domain, "bcz", BC_PERIODIC);
 
   /* set defaults for coord arrays */
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);

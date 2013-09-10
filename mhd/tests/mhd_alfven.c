@@ -54,7 +54,6 @@ ggcm_mhd_ic_alfven_run(struct ggcm_mhd_ic *ic)
   for(int i = 0; i < 3; i++){
     L[i] = xh[i] - xl[i];
   }
-  //ggcm_mhd_bnd_set_type(mhd->bnd, "alfven");
   mrc_fld_foreach(fld, ix, iy, iz, 2, 2) {
     r[0] = MRC_CRD(crds, 0, ix);
     r[1] = MRC_CRD(crds, 1, iy);
@@ -135,10 +134,6 @@ static void
 ggcm_mhd_alfven_create(struct ggcm_mhd *mhd)
 {
   ggcm_mhd_default_box(mhd);
-
-  mrc_domain_set_param_int(mhd->domain, "bcx", BC_PERIODIC);
-  mrc_domain_set_param_int(mhd->domain, "bcy", BC_PERIODIC);	   
-  mrc_domain_set_param_int(mhd->domain, "bcz", BC_PERIODIC);
 
   /* set defaults for coord arrays */
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);

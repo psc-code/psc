@@ -40,9 +40,6 @@ ggcm_mhd_ic_kh_run(struct ggcm_mhd_ic *ic)
   struct mrc_fld *fld = gmhd->fld;
   struct mrc_crds *crds = mrc_domain_get_crds(gmhd->domain);  
   float xl[3], xh[3],  xmid[3], L[3], r[3];
-  mrc_domain_set_param_int(gmhd->domain, "bcx", BC_PERIODIC);
-  mrc_domain_set_param_int(gmhd->domain, "bcy", BC_PERIODIC);
-  mrc_domain_set_param_int(gmhd->domain, "bcz", BC_PERIODIC);
 
   mrc_crds_get_param_float3(crds, "l", xl);
   mrc_crds_get_param_float3(crds, "h", xh);
