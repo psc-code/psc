@@ -62,9 +62,9 @@ ggcm_mhd_ic_kh_run(struct ggcm_mhd_ic *ic)
     L[i] = xh[i] - xl[i];
     xmid[i] = 0.5 * (xh[i] + xl[i]);
   }
-  float wave1; 
+  //float wave1; 
 
-  float tmp = sub-> lambda; 
+  //float tmp = sub-> lambda; 
   mrc_fld_foreach(fld, ix,iy,iz, 1, 1) {
     r[0] = MRC_CRD(crds, 0, ix); 
     r[1] = MRC_CRD(crds, 1, iy);

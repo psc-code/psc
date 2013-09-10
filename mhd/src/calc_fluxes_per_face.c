@@ -20,9 +20,8 @@
 void 
 calc_fluxes_per_face(struct mrc_fld **_flux, struct ggcm_mhd *mhd, struct mrc_fld *_fld, int i)
 {
-  float mpermi = 1.f;
   float gamma = mhd->par.gamm;
-  float d_i = mhd->par.d_i;
+  //float d_i = mhd->par.d_i;
 
   struct mrc_fld *fld = mrc_fld_get_as(_fld, "float");
   struct mrc_fld *flux[3];

@@ -20,13 +20,11 @@ ggcm_mhd_calc_currcc(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
   mrc_domain_get_local_patch_info(mhd->domain, 0, &info);
   //const char *dptype = ggcm_dipole_type(mhd->dipole);
   struct mrc_fld *tmp = mrc_fld_duplicate(currcc);
-  // struct mrc_fld *tmp1 = mrc_fld_duplicate(currcc); 
   float *bd4x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD4);
   float *bd4y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD4);
   float *bd4z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD4);
 
   struct mrc_fld *f = mrc_fld_get_as(fld, "float");
-  // struct mrc_fld *t = mrc_fld_get_as(tmp, "float");
   struct mrc_fld *c = mrc_fld_get_as(currcc, "float");
 
   // average B first to cell centers 
@@ -53,7 +51,6 @@ ggcm_mhd_calc_currcc(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
   mrc_fld_put_as(tmp, tmp);
   mrc_fld_put_as(f, fld);
   mrc_fld_destroy(tmp); 
-  // mrc_fld_destroy(tmp1);
 }
 
 

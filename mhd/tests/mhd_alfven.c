@@ -54,7 +54,6 @@ ggcm_mhd_ic_alfven_run(struct ggcm_mhd_ic *ic)
   for(int i = 0; i < 3; i++){
     L[i] = xh[i] - xl[i];
   }
-  float gamma = mhd->par.gamm;
   //ggcm_mhd_bnd_set_type(mhd->bnd, "alfven");
   mrc_fld_foreach(fld, ix, iy, iz, 2, 2) {
     r[0] = MRC_CRD(crds, 0, ix);

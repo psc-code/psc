@@ -120,6 +120,7 @@ calc_KNP_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
     cwp = 0;
     cwm = 0;
 #endif
+#if 0
     float acfm = cfm; 
     float acfp = cfp; 
     float acAp = cAp; 
@@ -128,6 +129,7 @@ calc_KNP_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
     float acsm = csm;
     float acpp = U_P( _UU1, 0) ; 
     float acpm = U_M( _UU1, 0) ; 
+#endif
     //printf("cAp %f cwp %f %f \n", cAp, d_i*(cAp*M_PI*gmhd->crdx[BD1][ix+2]) 
     // sqrtf(MRC_F3(u_p[0], _RR1, ix-1,iy,iz)),gmhd->crdx[BD1][ix+2]  ); 
 
