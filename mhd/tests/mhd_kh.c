@@ -13,10 +13,7 @@
 #include <mrc_fld.h>
 #include <mrc_domain.h>
 #include <mrc_crds.h> 
-#include <mrc_params.h>
 #include <mrc_ddc.h>
-#include <mrctest.h>
-#include <mrc_io.h> 
 
 #include <math.h>
 #include <string.h>
