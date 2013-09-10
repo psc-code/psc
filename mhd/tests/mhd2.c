@@ -38,25 +38,6 @@ static struct ggcm_mhd_ops ggcm_mhd_cweno_ops = {
 
 // ======================================================================
 
-static void
-diag_write(void *_mhd, float time, struct mrc_obj *_x, FILE *file)
-{
-  struct mrc_fld *x = (struct mrc_fld *) _x;
-
-  int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  if (rank != 0)
-    return;
-
-  fprintf(file, "%g", time);
-  for (int m = _RR1; m <= _B1Z; m++) {
-    fprintf(file, " %g", MRC_F3(x, m, 0,0,0));
-  }
-  fprintf(file, "\n");
-}
-
-// ======================================================================
-
 extern struct ggcm_mhd_diag_ops ggcm_mhd_diag_c_ops;
 
 extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_mirdip_ops;
@@ -111,13 +92,6 @@ main(int argc, char **argv)
   mrc_ts_monitor_set_type(mon_output, "ggcm");
   mrc_ts_monitor_set_name(mon_output, "mrc_ts_output");
   mrc_ts_add_monitor(ts, mon_output);
-
-  struct mrc_ts_monitor *mon_diag =
-    mrc_ts_monitor_create(mrc_ts_comm(ts));
-  mrc_ts_monitor_set_type(mon_diag, "diag");
-  mrc_ts_monitor_set_name(mon_diag, "mrc_ts_diag");
-  mrc_ts_monitor_diag_set_function(mon_diag, diag_write, mhd);
-  mrc_ts_add_monitor(ts, mon_diag);
 
   mrc_ts_set_dt(ts, 1e-6);
   mrc_ts_set_solution(ts, mrc_fld_to_mrc_obj(mhd->fld));
