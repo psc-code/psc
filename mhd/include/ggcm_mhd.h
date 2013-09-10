@@ -32,7 +32,7 @@ void ggcm_mhd_default_box(struct ggcm_mhd *mhd);
 
 void ts_ggcm_mhd_step_calc_rhs(void *ctx, struct mrc_obj *_rhs, float time,
 			       struct mrc_obj *_fld);
-void ggcm_mhd_main(void);
+int ggcm_mhd_main(int *argc, char ***argv);
 
 // ----------------------------------------------------------------------
 

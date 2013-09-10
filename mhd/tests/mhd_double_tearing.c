@@ -162,18 +162,10 @@ extern struct ggcm_mhd_diag_ops ggcm_mhd_diag_c_ops;
 int
 main(int argc, char **argv)
 {
-  MPI_Init(&argc, &argv);
-  libmrc_params_init(argc, argv);
-  ggcm_mhd_register();
-
   mrc_class_register_subclass(&mrc_class_ggcm_mhd, &ggcm_mhd_double_tearing_ops);  
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_diag, &ggcm_mhd_diag_c_ops);
-
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_double_tearing_ops);  
  
-  ggcm_mhd_main();
-
-  MPI_Finalize();
-  return 0;
+  return ggcm_mhd_main(&argc, &argv);
 }
 

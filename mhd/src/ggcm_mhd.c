@@ -322,12 +322,20 @@ ts_ggcm_mhd_step_calc_rhs(void *ctx, struct mrc_obj *_rhs, float time, struct mr
 // ----------------------------------------------------------------------
 // ggcm_mhd_main
 //
-// helper function that does most of the work of actually running a
-// ggcm_mhd based simulation
+// Helper function that does most of the work of actually running a
+// ggcm_mhd based simulation.
+// The subclass of ggcm_mhd, and ggcm_mhd_ic are not explicitly set,
+// so the default will be used unless overridden on the command line.
+// This typically "just works", since the default will be the class you
+// registered before calling this function.
 
-void
-ggcm_mhd_main()
+int
+ggcm_mhd_main(int *argc, char ***argv)
 {
+  MPI_Init(argc, argv);
+  libmrc_params_init(*argc, *argv);
+  ggcm_mhd_register();
+
   struct ggcm_mhd *mhd = ggcm_mhd_create(MPI_COMM_WORLD);
   mrc_fld_set_type(mhd->fld, "mhd_fc_float");
   ggcm_mhd_set_from_options(mhd);
@@ -377,5 +385,8 @@ ggcm_mhd_main()
   mrc_ts_destroy(ts);  
 
   ggcm_mhd_destroy(mhd);
+
+  MPI_Finalize();
+  return 0;
 }
 
