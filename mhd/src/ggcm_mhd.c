@@ -325,6 +325,10 @@ ts_ggcm_mhd_step_calc_rhs(void *ctx, struct mrc_obj *_rhs, float time, struct mr
 void
 ggcm_mhd_main(struct ggcm_mhd *mhd)
 {
+  double time_start = MPI_Wtime();
+
+  mpi_printf(MPI_COMM_WORLD, "Starting time integration...\n");
+
   // run time integration
   struct mrc_ts *ts = mrc_ts_create(mrc_domain_comm(mhd->domain));
   mrc_ts_set_type(ts, "rk2");
@@ -344,6 +348,18 @@ ggcm_mhd_main(struct ggcm_mhd *mhd)
   mrc_ts_setup(ts);
   mrc_ts_solve(ts);
   mrc_ts_view(ts);
+
+  double time_end = MPI_Wtime();
+
+  int gdims[3];
+  mrc_domain_get_global_dims(mhd->domain, gdims);
+  int gsize = gdims[0] * gdims[1] * gdims[2];
+
+  double cpu_time = time_end - time_start;
+  mpi_printf(MPI_COMM_WORLD,"elapsed time = %g sec.\n", cpu_time);
+  mpi_printf(MPI_COMM_WORLD,"\ncell-steps / second = %e\n",
+	     (double) gsize * mrc_ts_step_number(ts) / cpu_time);
+
   mrc_ts_destroy(ts);  
 }
 
