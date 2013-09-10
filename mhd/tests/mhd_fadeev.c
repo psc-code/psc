@@ -24,7 +24,6 @@
 // ggcm_mhd_ic subclass "fadeev"
 
 struct ggcm_mhd_ic_fadeev {
-  float mpermi;
   float Bo; 
   float Boz;
   float pert; 
@@ -100,7 +99,6 @@ ggcm_mhd_ic_fadeev_run(struct ggcm_mhd_ic *ic)
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_ic_fadeev, x)
 static struct param ggcm_mhd_ic_fadeev_descr[] = {
-  {"mpermi", VAR(mpermi), PARAM_FLOAT(1.)},
   {"Bo", VAR(Bo), PARAM_FLOAT(1.0)},
   {"Boz", VAR(Boz), PARAM_FLOAT(10.0)},
   {"pert", VAR(pert), PARAM_FLOAT(0.001)},

@@ -16,7 +16,6 @@
 // ggcm_mhd_ic subclass "bw"
 
 struct ggcm_mhd_ic_bw {
-  float mpermi;
   const char* pdim; 
 };
 // ----------------------------------------------------------------------
@@ -152,7 +151,6 @@ ggcm_mhd_ic_bw_run(struct ggcm_mhd_ic *ic)
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_ic_bw, x)
 static struct param ggcm_mhd_ic_bw_descr[] = {
-  {"mpermi", VAR(mpermi), PARAM_FLOAT(1.)},
   {"pdim", VAR(pdim), PARAM_STRING("x")},  
   {},
 };

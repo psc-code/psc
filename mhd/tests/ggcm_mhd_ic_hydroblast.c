@@ -16,7 +16,6 @@
 // ggcm_mhd_ic subclass "hydroblast"
 
 struct ggcm_mhd_ic_hydroblast {
-  float mpermi;  
   float initrad; // inital radius
   float pin; // initial inside  pressure
   float pout; // initial outside pressure
@@ -110,7 +109,6 @@ ggcm_mhd_ic_hydroblast_run(struct ggcm_mhd_ic *ic)
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_ic_hydroblast, x)
 static struct param ggcm_mhd_ic_hydroblast_descr[] = {
-  {"mpermi", VAR(mpermi), PARAM_FLOAT(1.)},
   {"initrad", VAR(initrad), PARAM_FLOAT(0.1)},
   {"pin", VAR(pin), PARAM_FLOAT(10.0)},
   {"pout", VAR(pout), PARAM_FLOAT(0.1)},

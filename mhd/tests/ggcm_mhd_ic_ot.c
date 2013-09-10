@@ -14,16 +14,14 @@
 // ggcm_mhd_ic subclass "ot"
 
 struct ggcm_mhd_ic_ot {
-  float mpermi;
 };
+
 // ----------------------------------------------------------------------
 // ggcm_mhd_ic_ot_run
 
 static void
 ggcm_mhd_ic_ot_run(struct ggcm_mhd_ic *ic)
 {
-  struct ggcm_mhd_ic_ot *sub = mrc_to_subobj(ic, struct ggcm_mhd_ic_ot);
-
   struct ggcm_mhd *gmhd = ic->mhd;
   struct mrc_fld *fld = gmhd->fld;
   struct mrc_crds *crds = mrc_domain_get_crds(gmhd->domain);  
@@ -46,9 +44,9 @@ ggcm_mhd_ic_ot_run(struct ggcm_mhd_ic *ic)
       (.5f * (sqr(MRC_F3(fld, _RV1X, ix, iy, iz)) +
 	      sqr(MRC_F3(fld, _RV1Y, ix, iy, iz)) +
 	      sqr(MRC_F3(fld, _RV1Z, ix, iy, iz))) / MRC_F3(fld, _RR1, ix, iy, iz))+
-      (0.5f) *(sub->mpermi) * (sqr(MRC_F3(fld, _B1X, ix,iy,iz)) +
-				 sqr(MRC_F3(fld, _B1Y, ix,iy,iz)) +
-				 sqr(MRC_F3(fld, _B1Z, ix,iy,iz)));
+      (0.5f) * (sqr(MRC_F3(fld, _B1X, ix,iy,iz)) +
+		sqr(MRC_F3(fld, _B1Y, ix,iy,iz)) +
+		sqr(MRC_F3(fld, _B1Z, ix,iy,iz)));
   } mrc_fld_foreach_end;
     
 }
@@ -58,7 +56,6 @@ ggcm_mhd_ic_ot_run(struct ggcm_mhd_ic *ic)
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_ic_ot, x)
 static struct param ggcm_mhd_ic_ot_descr[] = {
-  //  { "mpermi"          , VAR(mpermi)             , PARAM_FLOAT(1.)         },
   {},
 };
 #undef VAR

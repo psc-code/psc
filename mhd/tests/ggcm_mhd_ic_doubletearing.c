@@ -12,7 +12,6 @@
 // ggcm_mhd_ic subclass "doubletearing"
 
 struct ggcm_mhd_ic_doubletearing {
-  float mpermi;  
   float n0; // initial density 
 };
 // ----------------------------------------------------------------------
@@ -64,7 +63,6 @@ ggcm_mhd_ic_doubletearing_run(struct ggcm_mhd_ic *ic)
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_ic_doubletearing, x)
 static struct param ggcm_mhd_ic_doubletearing_descr[] = {
-  {"mpermi", VAR(mpermi), PARAM_FLOAT(1.)},
   {"n0", VAR(n0), PARAM_FLOAT(1.0)},
   {},
 };

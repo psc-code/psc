@@ -63,9 +63,9 @@ ggcm_mhd_ic_otzi_run(struct ggcm_mhd_ic *ic)
       (.5f * (sqr(MRC_F3(fld, _RV1X, ix, iy, iz)) +
 	      sqr(MRC_F3(fld, _RV1Y, ix, iy, iz)) +
 	      sqr(MRC_F3(fld, _RV1Z, ix, iy, iz))) / MRC_F3(fld, _RR1, ix, iy, iz))+
-      (0.5f) *(sub->mpermi) * (sqr(MRC_F3(fld, _B1X, ix,iy,iz)) +
-				 sqr(MRC_F3(fld, _B1Y, ix,iy,iz)) +
-				 sqr(MRC_F3(fld, _B1Z, ix,iy,iz)));
+      (0.5f) * (sqr(MRC_F3(fld, _B1X, ix,iy,iz)) +
+		sqr(MRC_F3(fld, _B1Y, ix,iy,iz)) +
+		sqr(MRC_F3(fld, _B1Z, ix,iy,iz)));
   } mrc_fld_foreach_end;
 #endif
 }

@@ -18,7 +18,6 @@
 #include <assert.h>
 
 struct ggcm_mhd_ic_whistler {
-  float mpermi;
   float Boz;
   float pert; 
   float eps; 
@@ -51,7 +50,7 @@ ggcm_mhd_ic_whistler_run(struct ggcm_mhd_ic *ic)
     float kk= (sub->lambda * 2.*M_PI) / L[2] ;
     const int *dims = mrc_fld_dims(f3);
     int nz = dims[2];
-    float vp= 2.*M_PI*sub->Boz*nz/((sub->mpermi)*(sub->n0)*L[2]); 
+    float vp= 2.*M_PI*sub->Boz*nz/((sub->n0)*L[2]); 
     MRC_F3(f3, _B1X, ix+1,iy,iz) = (sub->pert) * vp * sin( kk*r[2] ) ;       
     MRC_F3(f3, _B1Y, ix,iy+1,iz) = -(sub->pert) * vp * cos( kk*r[2] ) ;   
     MRC_F3(f3, _B1Z, ix,iy,iz+1) = sub->Boz ; 
@@ -74,7 +73,6 @@ ggcm_mhd_ic_whistler_run(struct ggcm_mhd_ic *ic)
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_ic_whistler, x)
 static struct param ggcm_mhd_ic_whistler_descr[] = {
-  {"mpermi", VAR(mpermi), PARAM_FLOAT(1.0)},
   {"pert", VAR(pert), PARAM_FLOAT(1e-5)},
   {"Boz", VAR(Boz), PARAM_FLOAT(1.0)},
   {"n0", VAR(n0), PARAM_FLOAT(25.)},

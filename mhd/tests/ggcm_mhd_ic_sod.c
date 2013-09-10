@@ -17,7 +17,6 @@
 // ggcm_mhd_ic subclass "sod"
 
 struct ggcm_mhd_ic_sod {
-  float mpermi;  
   float initrad; // inital radius
   float pin; // initial inside  pressure
   float pout; // initial outside pressure
@@ -125,7 +124,6 @@ ggcm_mhd_ic_sod_run(struct ggcm_mhd_ic *ic)
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_ic_sod, x)
 static struct param ggcm_mhd_ic_sod_descr[] = {
-  {"mpermi", VAR(mpermi), PARAM_FLOAT(1.)},
   {"pin", VAR(pin), PARAM_FLOAT(10.0)},
   {"pout", VAR(pout), PARAM_FLOAT(0.1)},
   {"n0", VAR(n0), PARAM_FLOAT(1.0)},

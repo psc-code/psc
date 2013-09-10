@@ -16,7 +16,6 @@
 // ggcm_mhd_ic subclass "ici"
 
 struct ggcm_mhd_ic_ici {
-  float mpermi;  
   float v0; // initial velocity  
   float n0; // initial density 
 };
@@ -68,7 +67,6 @@ ggcm_mhd_ic_ici_run(struct ggcm_mhd_ic *ic)
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_ic_ici, x)
 static struct param ggcm_mhd_ic_ici_descr[] = {
-  {"mpermi", VAR(mpermi), PARAM_FLOAT(1.)},
   {"v0", VAR(v0), PARAM_FLOAT(0.1)},
   {"n0", VAR(n0), PARAM_FLOAT(1.0)},
   {},

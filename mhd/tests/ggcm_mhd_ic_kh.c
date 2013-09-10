@@ -16,7 +16,6 @@
 // ggcm_mhd_ic subclass "kh"
 
 struct ggcm_mhd_ic_kh {
-  float mpermi;  
   float pert; // initial pertubation amplitude
   float r0; // initial density 0 
   float r1; // initial density 1  
@@ -85,7 +84,6 @@ ggcm_mhd_ic_kh_run(struct ggcm_mhd_ic *ic)
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_ic_kh, x)
 static struct param ggcm_mhd_ic_kh_descr[] = {
-  {"mpermi", VAR(mpermi), PARAM_FLOAT(1.)},
   {"pert", VAR(pert), PARAM_FLOAT(1e-7)},  
   {"r0", VAR(r0), PARAM_FLOAT(2.0)},
   {"r1", VAR(r1), PARAM_FLOAT(1.0)},
