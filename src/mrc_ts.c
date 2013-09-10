@@ -25,6 +25,24 @@ _mrc_ts_view(struct mrc_ts *ts)
   mpi_printf(comm, "nr_rhsf_evals = %d\n", ts->nr_rhsf_evals);
 }
 
+float
+mrc_ts_time(struct mrc_ts *ts)
+{
+  return ts->time;
+}
+
+float
+mrc_ts_dt(struct mrc_ts *ts)
+{
+  return ts->dt;
+}
+
+int
+mrc_ts_step_number(struct mrc_ts *ts)
+{
+  return ts->n;
+}
+
 void
 mrc_ts_set_dt(struct mrc_ts *ts, float dt)
 {

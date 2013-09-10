@@ -10,6 +10,9 @@ struct mrc_ts_monitor;
 
 MRC_CLASS_DECLARE(mrc_ts, struct mrc_ts);
 
+float mrc_ts_time(struct mrc_ts *ts);
+float mrc_ts_dt(struct mrc_ts *ts);
+int mrc_ts_step_number(struct mrc_ts *ts);
 void mrc_ts_set_dt(struct mrc_ts *ts, float dt);
 void mrc_ts_set_solution(struct mrc_ts *ts, struct mrc_obj *x);
 void mrc_ts_add_monitor(struct mrc_ts *ts, struct mrc_ts_monitor *mon);
