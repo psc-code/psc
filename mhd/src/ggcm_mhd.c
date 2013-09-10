@@ -12,6 +12,7 @@
 #include "ggcm_mhd_ic.h"
 
 #include <mrc_domain.h>
+#include <mrc_ddc.h>
 #include <mrc_profile.h>
 
 #include <assert.h>
@@ -217,6 +218,11 @@ ggcm_mhd_default_box(struct ggcm_mhd *mhd)
   mrc_domain_set_param_int(mhd->domain, "bcx", BC_PERIODIC);
   mrc_domain_set_param_int(mhd->domain, "bcy", BC_PERIODIC);
   mrc_domain_set_param_int(mhd->domain, "bcz", BC_PERIODIC);
+
+  // set defaults for the ddc, this does the communication
+  struct mrc_ddc *ddc = mrc_domain_get_ddc(mhd->domain);
+  mrc_ddc_set_param_int(ddc, "max_n_fields", 8);
+  mrc_ddc_set_param_int3(ddc, "ibn", (int[3]) { SW_2, SW_2, SW_2 });
 
   // generate MHD solver grid from mrc_crds
   ggcm_mhd_crds_gen_set_type(mhd->crds->crds_gen, "mrc");

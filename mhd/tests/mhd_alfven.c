@@ -12,7 +12,6 @@
 #include <mrc_ts_monitor.h>
 #include <mrc_fld.h>
 #include <mrc_domain.h>
-#include <mrc_ddc.h>
 
 #include <math.h>
 #include <string.h>
@@ -136,11 +135,6 @@ ggcm_mhd_alfven_create(struct ggcm_mhd *mhd)
   mrc_crds_set_param_int(crds, "sw", SW_2);   // 'stencil width' 
   mrc_crds_set_param_float3(crds, "l", (float[3]) {  0.0, 0.0, 0.0 });
   mrc_crds_set_param_float3(crds, "h", (float[3]) {  1.0, 0.05, 0.05 });
-
-  /* set defaults for the ddc, this does the communication */
-  struct mrc_ddc *ddc = mrc_domain_get_ddc(mhd->domain);
-  mrc_ddc_set_param_int(ddc, "max_n_fields", 8);
-  mrc_ddc_set_param_int3(ddc, "ibn", (int[3]) { SW_2, SW_2, SW_2 });
 }
 
 static struct ggcm_mhd_ops ggcm_mhd_alfven_ops = {
