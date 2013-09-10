@@ -62,17 +62,14 @@ extern struct ggcm_mhd_diag_ops ggcm_mhd_diag_c_ops;
 extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_mirdip_ops;
 extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_mirdip2_ops;
 extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_mirdip3_ops;
-extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_whistler_ops;
 extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_otzi_ops;
 extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_ot_ops;
 extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_harris_ops;
 extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_fadeev_ops;
-extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_bw_ops;
 extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_hydroblast_ops;
 extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_mhdblast_ops;
 extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_ici_ops;
 extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_harris;
-extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_kh_ops;
 extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_wave_sound_ops;
 extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_wave_alfven_ops;
 
@@ -86,13 +83,9 @@ main(int argc, char **argv)
   mrc_class_register_subclass(&mrc_class_ggcm_mhd, &ggcm_mhd_cweno_ops);  
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_diag, &ggcm_mhd_diag_c_ops);
 
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_whistler_ops);
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_bw_ops); 
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_ot_ops);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_otzi_ops);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_hydroblast_ops);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_mhdblast_ops);    
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_kh_ops);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_ici_ops); 
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_wave_sound_ops);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_wave_alfven_ops);
