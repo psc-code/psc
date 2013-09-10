@@ -3,6 +3,7 @@
 
 #include "ggcm_mhd_defs.h"
 #include "ggcm_mhd_crds.h"
+#include "ggcm_mhd_crds_private.h"
 #include "ggcm_mhd_crds_gen.h"
 #include "ggcm_mhd_step.h"
 #include "ggcm_mhd_commu.h"
@@ -216,6 +217,9 @@ ggcm_mhd_default_box(struct ggcm_mhd *mhd)
   mrc_domain_set_param_int(mhd->domain, "bcx", BC_PERIODIC);
   mrc_domain_set_param_int(mhd->domain, "bcy", BC_PERIODIC);
   mrc_domain_set_param_int(mhd->domain, "bcz", BC_PERIODIC);
+
+  // generate MHD solver grid from mrc_crds
+  ggcm_mhd_crds_gen_set_type(mhd->crds->crds_gen, "mrc");
 }
 
 // ======================================================================

@@ -4,9 +4,7 @@
 #include "ggcm_mhd_defs.h"
 #include "ggcm_mhd_private.h"
 #include "ggcm_mhd_step.h"
-#include "ggcm_mhd_crds_private.h"
-#include "ggcm_mhd_crds_gen.h"
-#include "ggcm_mhd_bnd.h"
+#include "ggcm_mhd_crds.h"
 #include "ggcm_mhd_diag.h"
 #include "ggcm_mhd_ic_private.h"
 
@@ -93,9 +91,6 @@ ggcm_mhd_ot_create(struct ggcm_mhd *mhd)
   struct mrc_ddc *ddc = mrc_domain_get_ddc(mhd->domain);
   mrc_ddc_set_param_int(ddc, "max_n_fields", 8);
   mrc_ddc_set_param_int3(ddc, "ibn", (int[3]) { SW_2, SW_2, SW_2 });
-
-  // generate MHD solver grid from mrc_crds
-  ggcm_mhd_crds_gen_set_type(mhd->crds->crds_gen, "mrc");
 }
 
 static struct ggcm_mhd_ops ggcm_mhd_ot_ops = {
