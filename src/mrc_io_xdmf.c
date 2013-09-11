@@ -754,6 +754,8 @@ ds_xdmf_read_attr(struct mrc_io *io, const char *path, int type,
     ierr = H5LTget_attribute_int(group, ".", name, pv->u_int_array.vals); CE;
     break;
   }
+  default:
+    assert(0);
   }
   ierr = H5Gclose(group); CE;
 }

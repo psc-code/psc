@@ -942,8 +942,15 @@ mrc_obj_read_dict(struct mrc_obj *obj, const char *path, struct mrc_io *io)
     mrc_io_read_attr_int(io, path, s, &type);
 
     union param_u pv;
-    mrc_io_read_attr(io, path, type, name, &pv);
-    mrc_obj_dict_add(obj, type, name, &pv);
+    if (type == PT_OBJ || type == MRC_VAR_OBJ) {
+      mpi_printf(mrc_io_comm(io),
+		 "!!! WARNING: cannot read back dictionary object %s (type %d) in %s!!!\n",
+		 name, type, mrc_obj_name(obj));
+      //pv->u_obj = __mrc_io_read_ref(io, obj, name, descr[i].u.mrc_obj.cls);
+    } else {
+      mrc_io_read_attr(io, path, type, name, &pv);
+      mrc_obj_dict_add(obj, type, name, &pv);
+    }
 
     free(name);
   }
