@@ -1,15 +1,9 @@
 
-//#define BOUNDS_CHECK
-
 #include "ggcm_mhd_defs.h"
 #include "ggcm_mhd_private.h"
-#include "ggcm_mhd_step.h"
 #include "ggcm_mhd_diag.h"
 #include "ggcm_mhd_ic.h"
 
-#include <mrc_ts.h>
-#include <mrc_ts_monitor.h>
-#include <mrc_fld.h>
 #include <mrc_domain.h>
 
 #include <math.h>
