@@ -754,6 +754,9 @@ ds_xdmf_read_attr(struct mrc_io *io, const char *path, int type,
     ierr = H5LTget_attribute_int(group, ".", name, pv->u_int_array.vals); CE;
     break;
   }
+  case PT_PTR:
+    mpi_printf(mrc_io_comm(io), "WARNING: not reading back pointer attribute\n");
+    break;
   default:
     assert(0);
   }
