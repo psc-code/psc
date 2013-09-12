@@ -159,8 +159,6 @@ mrc_io_read_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
     ops->read_fld(io, path, fld);
   } else if (fld->_dims.nr_vals == 3) {
     mrc_io_read_m1(io, path, fld);
-  } else if (fld->_dims.nr_vals == 4) {
-    mrc_io_read_f3(io, path, fld);
   } else if (fld->_dims.nr_vals == 5) {
     mrc_io_read_m3(io, path, fld);
   } else {
@@ -202,29 +200,7 @@ mrc_io_write_f3(struct mrc_io *io, const char *path, struct mrc_fld *fld, float 
       ops->write_field(io, path, scale, fld, m);
     }
   } else {
-    int nr_comps = mrc_fld_nr_comps(fld);
-    struct mrc_fld *m3 = mrc_domain_m3_create(fld->_domain);
-    mrc_fld_set_nr_comps(m3, nr_comps);
-    mrc_fld_set_sw(m3, fld->_sw.vals[0]); // FIXME, how about 1,2
-    for (int m = 0; m < nr_comps; m++) {
-      mrc_fld_set_comp_name(m3, m, mrc_fld_comp_name(fld, m));
-    }
-    mrc_fld_setup(m3);
-
-    struct mrc_fld *f = mrc_fld_get_as(fld, "float");
-    for (int m = 0; m < nr_comps; m++) {
-      mrc_fld_foreach_patch(m3, p) {
-	struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, p);
-	mrc_m3_foreach_bnd(m3p, ix,iy,iz) {
-	  MRC_M3(m3p, m, ix,iy,iz) = MRC_F3(f, m, ix,iy,iz) * scale;
-	} mrc_m3_foreach_end;
-	mrc_fld_patch_put(m3);
-      }
-    }
-    mrc_fld_put_as(f, fld);
-
-    mrc_io_write_m3(io, path, m3);
-    mrc_fld_destroy(m3);
+    assert(0);
   }
 }
 
@@ -263,8 +239,14 @@ void
 mrc_io_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *fld)
 {
   struct mrc_io_ops *ops = mrc_io_ops(io);
-  assert(ops->write_m3);
-  ops->write_m3(io, path, fld);
+  if (ops->write_m3) {
+    ops->write_m3(io, path, fld);
+  } else if (ops->write_f3 || ops->write_field) {
+    assert(mrc_fld_nr_patches(fld) == 1);
+    mrc_io_write_f3(io, path, fld, 1.);
+  } else {
+    assert(0);
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -274,8 +256,14 @@ void
 mrc_io_read_m3(struct mrc_io *io, const char *path, struct mrc_fld *fld)
 {
   struct mrc_io_ops *ops = mrc_io_ops(io);
-  assert(ops->read_m3);
-  ops->read_m3(io, path, fld);
+  if (ops->read_m3) {
+    ops->read_m3(io, path, fld);
+  } else if (ops->read_f3) {
+    assert(mrc_fld_nr_patches(fld) == 1);
+    mrc_io_read_f3(io, path, fld);
+  } else {
+    assert(0);
+  }
 }
 
 // ----------------------------------------------------------------------
