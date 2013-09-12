@@ -60,6 +60,7 @@ struct mrc_fld {
   struct mrc_fld_patch *_patches;
   // for mrc_f1 emulation
   int _dim; //< # along this dim of the domain
+  int _is_aos; //< indicates whether the layout (w.r.t to domain) is array-of-struct
 };
 
 MRC_CLASS_DECLARE(mrc_fld, struct mrc_fld);

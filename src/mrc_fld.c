@@ -208,6 +208,7 @@ mrc_fld_comp_dim(struct mrc_fld *fld)
       // emulating mrc_f3, mrc_m3
       return 3;
     } else if (fld->_dims.nr_vals == 3) {
+      assert(!fld->_is_aos);
       // emulating mrc_f1, mrc_m1
       return 1;
     } else {
@@ -691,6 +692,10 @@ static struct mrc_obj_method mrc_fld_double_methods[] = {
   {}
 };
 
+static struct mrc_obj_method mrc_fld_double_aos_methods[] = {
+  {}
+};
+
 static struct mrc_obj_method mrc_fld_float_methods[] = {
   MRC_OBJ_METHOD("copy_to_double",   mrc_fld_float_copy_to_double),
   MRC_OBJ_METHOD("copy_from_double", mrc_fld_float_copy_from_double),
@@ -704,25 +709,27 @@ static struct mrc_obj_method mrc_fld_int_methods[] = {
 // ----------------------------------------------------------------------
 // create float, double, int subclasses
 
-#define MAKE_MRC_FLD_TYPE(type, TYPE)			\
+#define MAKE_MRC_FLD_TYPE(NAME, type, TYPE, IS_AOS)	\
 							\
   static void						\
-  mrc_fld_##type##_create(struct mrc_fld *fld)		\
+  mrc_fld_##NAME##_create(struct mrc_fld *fld)		\
   {							\
     fld->_data_type = MRC_NT_##TYPE;			\
     fld->_size_of_type = sizeof(type);			\
+    fld->_is_aos = IS_AOS;				\
   }							\
   							\
-  static struct mrc_fld_ops mrc_fld_##type##_ops = {	\
-    .name                  = #type,			\
-    .methods               = mrc_fld_##type##_methods,	\
-    .create                = mrc_fld_##type##_create,	\
+  static struct mrc_fld_ops mrc_fld_##NAME##_ops = {	\
+    .name                  = #NAME,			\
+    .methods               = mrc_fld_##NAME##_methods,	\
+    .create                = mrc_fld_##NAME##_create,	\
     .vec_type              = #type,			\
   };							\
 
-MAKE_MRC_FLD_TYPE(float, FLOAT)
-MAKE_MRC_FLD_TYPE(double, DOUBLE)
-MAKE_MRC_FLD_TYPE(int, INT)
+MAKE_MRC_FLD_TYPE(float, float, FLOAT, false)
+MAKE_MRC_FLD_TYPE(double, double, DOUBLE, false)
+MAKE_MRC_FLD_TYPE(double_aos, double, DOUBLE, true)
+MAKE_MRC_FLD_TYPE(int, int, INT, false)
 
 // ----------------------------------------------------------------------
 // mrc_fld_init
@@ -732,6 +739,7 @@ mrc_fld_init()
 {
   mrc_class_register_subclass(&mrc_class_mrc_fld, &mrc_fld_float_ops);
   mrc_class_register_subclass(&mrc_class_mrc_fld, &mrc_fld_double_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_fld, &mrc_fld_double_aos_ops);
   mrc_class_register_subclass(&mrc_class_mrc_fld, &mrc_fld_int_ops);
 }
 
