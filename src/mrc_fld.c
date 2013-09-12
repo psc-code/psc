@@ -44,13 +44,15 @@ _mrc_fld_destroy(struct mrc_fld *fld)
 // ----------------------------------------------------------------------
 // mrc_fld_setup
 
+static int mrc_fld_comp_dim(struct mrc_fld *fld);
+
 static void
 _mrc_fld_setup(struct mrc_fld *fld)
 {
   if (fld->_domain) {
-    // if we have a domain, use that to set _dims
+    // if we have a domain, use that to set _dims, _sw
 
-    assert(mrc_fld_nr_comps(fld) > 0);
+    assert(fld->_nr_comps > 0);
     int nr_patches;
     struct mrc_patch *patches = mrc_domain_get_patches(fld->_domain, &nr_patches);
 
@@ -67,6 +69,8 @@ _mrc_fld_setup(struct mrc_fld *fld)
 	  assert(patches[p].ldims[d] == patches[0].ldims[d]);
 	}
       }
+      int comp_dim = mrc_fld_comp_dim(fld);
+      fld->_dims.vals[comp_dim] = fld->_nr_comps;
       fld->_dims.vals[4] = nr_patches;
       for (int d = 0; d < 3; d++) {
 	fld->_dims.vals[d + fld->_is_aos] = patches[0].ldims[d];
@@ -81,6 +85,8 @@ _mrc_fld_setup(struct mrc_fld *fld)
 	m1p->_fld = fld;
 	assert(patches[p].ldims[fld->_dim] == patches[0].ldims[fld->_dim]);
       }
+      int comp_dim = mrc_fld_comp_dim(fld);
+      fld->_dims.vals[comp_dim] = fld->_nr_comps;
       fld->_dims.vals[2] = nr_patches;
     }
   }
@@ -225,9 +231,7 @@ mrc_fld_comp_dim(struct mrc_fld *fld)
 int
 mrc_fld_nr_comps(struct mrc_fld *fld)
 {
-  int comp_dim = mrc_fld_comp_dim(fld);
-  assert(comp_dim < fld->_dims.nr_vals);
-  return fld->_dims.vals[comp_dim];
+  return fld->_nr_comps;
 }
 
 // ----------------------------------------------------------------------
@@ -236,8 +240,7 @@ mrc_fld_nr_comps(struct mrc_fld *fld)
 void
 mrc_fld_set_nr_comps(struct mrc_fld *fld, int nr_comps)
 {
-  int comp_dim = mrc_fld_comp_dim(fld);
-  fld->_dims.vals[comp_dim] = nr_comps;
+  fld->_nr_comps = nr_comps;
 }
 
 // ----------------------------------------------------------------------
@@ -756,6 +759,7 @@ static struct param mrc_fld_descr[] = {
   { "domain"          , VAR(_domain)         , PARAM_OBJ(mrc_domain) },
   { "nr_spatial_dims" , VAR(_nr_spatial_dims), PARAM_INT(-1)         },
   { "dim"             , VAR(_dim)            , PARAM_INT(-1)         },
+  { "nr_comps"        , VAR(_nr_comps)       , PARAM_INT(1)          },
 
   { "size_of_type"    , VAR(_size_of_type)   , MRC_VAR_INT           },
   { "len"             , VAR(_len)            , MRC_VAR_INT           },

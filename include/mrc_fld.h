@@ -48,6 +48,7 @@ struct mrc_fld {
   struct mrc_domain *_domain; //< optional, if allocated through mrc_domain
   int _nr_spatial_dims; //< number of spatial dims to use (1 or 3)
   int _dim; //< if number of spatial dims == 1, field is along this dim of the domain
+  int _nr_comps; //< number of components of the field
 
   // state
   int _ghost_offs[MRC_FLD_MAXDIMS];
