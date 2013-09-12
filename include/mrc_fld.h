@@ -152,14 +152,23 @@ mrc_fld_same_shape(struct mrc_fld *fld_1, struct mrc_fld *fld_2)
 #define MRC_S5(fld, i0,i1,i2,i3,i4) MRC_FLD(fld, float, i0,i1,i2,i3,i4)
 #define MRC_D5(fld, i0,i1,i2,i3,i4) MRC_FLD(fld, double, i0,i1,i2,i3,i4)
 
-#define mrc_fld_foreach(fld, ix,iy,iz, l,r)				\
-  for (int iz = (fld)->_offs.vals[2] - (l); iz < (fld)->_offs.vals[2] + (fld)->_dims.vals[2] + (r); iz++) { \
-  for (int iy = (fld)->_offs.vals[1] - (l); iy < (fld)->_offs.vals[1] + (fld)->_dims.vals[1] + (r); iy++) { \
-  for (int ix = (fld)->_offs.vals[0] - (l); ix < (fld)->_offs.vals[0] + (fld)->_dims.vals[0] + (r); ix++) \
+#define mrc_fld_foreach(fld, ix,iy,iz, l,r) do {			\
+  int *_offs = (fld)->_offs.vals + (fld)->_is_aos;			\
+  int *_dims = (fld)->_dims.vals + (fld)->_is_aos;			\
+  int _l[3] = { _offs[0]            - (_dims[0] > 1 ? (l) : 0),		\
+		_offs[1]            - (_dims[1] > 1 ? (l) : 0),		\
+		_offs[2]            - (_dims[2] > 1 ? (l) : 0) };	\
+  int _r[3] = { _offs[0] + _dims[0] + (_dims[0] > 1 ? (r) : 0),		\
+		_offs[1] + _dims[1] + (_dims[1] > 1 ? (r) : 0),		\
+		_offs[2] + _dims[2] + (_dims[2] > 1 ? (r) : 0) };	\
+  for (int iz = _l[2]; iz < _r[2]; iz++) {				\
+  for (int iy = _l[1]; iy < _r[1]; iy++) {				\
+  for (int ix = _l[0]; ix < _r[0]; ix++)				\
 
 #define mrc_fld_foreach_end			\
   }						\
-    } do {} while (0)				\
+  }						\
+  } while (0)				\
 
 // ----------------------------------------------------------------------
 // mrc_f1

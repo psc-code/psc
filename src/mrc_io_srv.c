@@ -757,15 +757,15 @@ add_to_field_2d(struct mrc_fld *g, struct mrc_fld *l, int ib[2])
 }
 
 static void
-add_to_field_3d(struct mrc_fld *g, struct mrc_fld *l, int ib[3])
+add_to_field_3d(struct mrc_fld *g_, struct mrc_fld *l_, int ib[3])
 {
-  struct mrc_fld *_g = mrc_fld_get_as(g, "float");
-  struct mrc_fld *_l = mrc_fld_get_as(l, "float");
+  struct mrc_fld *g = mrc_fld_get_as(g_, "float");
+  struct mrc_fld *l = mrc_fld_get_as(l_, "float");
   mrc_fld_foreach(l, ix,iy,iz, 0, 0) {
-    MRC_F3(_g,0, ix+ib[0],iy+ib[1],iz+ib[2]) = MRC_F3(_l,0, ix,iy,iz);
+    MRC_F3(g,0, ix+ib[0],iy+ib[1],iz+ib[2]) = MRC_F3(l,0, ix,iy,iz);
   } mrc_fld_foreach_end;
-  mrc_fld_put_as(_g, g);
-  mrc_fld_put_as(_l, l);
+  mrc_fld_put_as(g, g_);
+  mrc_fld_put_as(l, l_);
 }
 
 // ----------------------------------------------------------------------
