@@ -523,10 +523,16 @@ mrc_fld_get_as(struct mrc_fld *fld_base, const char *type)
 
   struct mrc_fld *fld = mrc_fld_create(mrc_fld_comm(fld_base));
   mrc_fld_set_type(fld, type);
-  mrc_fld_set_param_int_array(fld, "dims", fld_base->_dims.nr_vals, fld_base->_dims.vals);
-  mrc_fld_set_param_int_array(fld, "offs", fld_base->_offs.nr_vals, fld_base->_offs.vals);
-  mrc_fld_set_param_int_array(fld, "sw", fld_base->_sw.nr_vals, fld_base->_sw.vals);
-  fld->_domain = fld_base->_domain;
+  if (fld_base->_domain) {
+    fld->_domain = fld_base->_domain;
+    fld->_nr_spatial_dims = fld_base->_nr_spatial_dims;
+    fld->_nr_comps = fld_base->_nr_comps;
+    fld->_nr_ghosts = fld_base->_nr_ghosts;
+  } else {
+    mrc_fld_set_param_int_array(fld, "dims", fld_base->_dims.nr_vals, fld_base->_dims.vals);
+    mrc_fld_set_param_int_array(fld, "offs", fld_base->_offs.nr_vals, fld_base->_offs.vals);
+    mrc_fld_set_param_int_array(fld, "sw", fld_base->_sw.nr_vals, fld_base->_sw.vals);
+  }
   // FIXME, component names, too
 
   // FIXME, this is openggcm specific and shouldn't be handled here
