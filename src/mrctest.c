@@ -177,8 +177,7 @@ struct mrc_fld *
 mrctest_create_m1_1(struct mrc_domain *domain, int dim)
 {
   struct mrc_fld *m1 = mrc_domain_m1_create(domain);
-  mrc_fld_set_sw(m1, 2);
-  mrc_fld_set_nr_comps(m1, 1);
+  mrc_fld_set_param_int(m1, "nr_ghosts", 2);
   mrc_fld_set_param_int(m1, "dim", dim);
   mrc_fld_setup(m1);
   mrc_fld_set_comp_name(m1, 0, "test");

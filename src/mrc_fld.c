@@ -271,18 +271,6 @@ mrc_fld_set_comp_names(struct mrc_fld *fld, const char *comps)
 }
 
 // ----------------------------------------------------------------------
-// mrc_fld_set_sw
-//
-// if the mrc_fld is based on a mrc_domain, this function can be used
-// to easily set the number of ghostpoints (stencil width)
-
-void
-mrc_fld_set_sw(struct mrc_fld *fld, int sw)
-{
-  fld->_nr_ghosts = sw;
-}
-
-// ----------------------------------------------------------------------
 // mrc_fld_nr_patches
 //
 // returns the number of patches on the this processor that comprise the

@@ -53,7 +53,7 @@ _ggcm_mhd_crds_setup(struct ggcm_mhd_crds *crds)
     mrc_fld_set_param_int(crds->f1[d], "nr_spatial_dims", 1);
     mrc_fld_set_param_int(crds->f1[d], "dim", d);
     mrc_fld_set_nr_comps(crds->f1[d], NR_CRDS);
-    mrc_fld_set_sw(crds->f1[d], BND);
+    mrc_fld_set_param_int(crds->f1[d], "nr_ghosts", BND);
     for (int m = 0; m < NR_CRDS; m++) {
       mrc_fld_set_comp_name(crds->f1[d], m, crdname[m]);
     }

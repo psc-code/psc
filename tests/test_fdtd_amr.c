@@ -379,7 +379,7 @@ main(int argc, char **argv)
   struct mrc_fld *fld = mrc_domain_m3_create(domain);
   mrc_fld_set_name(fld, "fld");
   mrc_fld_set_nr_comps(fld, NR_COMPS);
-  mrc_fld_set_sw(fld, 3);
+  mrc_fld_set_param_int(fld, "nr_ghosts", 3);
   mrc_fld_set_from_options(fld);
   mrc_fld_setup(fld);
   mrc_fld_set_comp_name(fld, EX, "EX");

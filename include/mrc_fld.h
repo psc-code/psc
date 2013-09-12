@@ -71,7 +71,6 @@ MRC_CLASS_DECLARE(mrc_fld, struct mrc_fld);
 void mrc_fld_set_array(struct mrc_fld *x, void *arr);
 void mrc_fld_set_comp_names(struct mrc_fld *fld, const char *comps);
 void mrc_fld_set_comp_name(struct mrc_fld *fld, int m, const char *name);
-void mrc_fld_set_sw(struct mrc_fld *fld, int sw);
 const char *mrc_fld_comp_name(struct mrc_fld *fld, int m);
 void mrc_fld_set(struct mrc_fld *x, float val);
 void mrc_fld_set_nr_comps(struct mrc_fld *fld, int nr_comps);

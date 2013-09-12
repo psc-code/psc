@@ -78,7 +78,7 @@ main(int argc, char **argv)
 
   struct mrc_fld *x = mrc_domain_f1_create(domain);
   mrc_fld_set_name(x, "x");
-  mrc_fld_set_sw(x, BND);
+  mrc_fld_set_param_int(x, "nr_ghosts", BND);
   mrc_fld_set_nr_comps(x, NR_FLDS);
   mrc_fld_setup(x);
   mrc_fld_set_comp_name(x, U, "u");

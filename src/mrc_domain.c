@@ -247,7 +247,7 @@ mrc_domain_fld_create(struct mrc_domain *domain, int sw, const char *comps)
   if (comps) {
     mrc_fld_set_comp_names(fld, comps);
   }
-  mrc_fld_set_sw(fld, sw);
+  mrc_fld_set_param_int(fld, "nr_ghosts", sw);
   return fld;
 }
 
