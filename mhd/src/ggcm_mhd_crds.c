@@ -51,7 +51,6 @@ _ggcm_mhd_crds_setup(struct ggcm_mhd_crds *crds)
   for (int d = 0; d < 3; d++) {
     mrc_fld_set_param_obj(crds->f1[d], "domain", crds->domain);
     mrc_fld_set_param_int(crds->f1[d], "nr_spatial_dims", 1);
-    mrc_fld_set_param_int_array(crds->f1[d], "dims", 3, NULL);
     mrc_fld_set_param_int(crds->f1[d], "dim", d);
     mrc_fld_set_nr_comps(crds->f1[d], NR_CRDS);
     mrc_fld_set_sw(crds->f1[d], BND);

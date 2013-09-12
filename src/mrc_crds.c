@@ -66,7 +66,6 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 	mrc_fld_set_param_obj(crd_nc, "domain", crds->domain);
 	mrc_fld_set_param_int(crd_nc, "nr_spatial_dims", 1);
 	mrc_fld_set_param_int(crd_nc, "dim", d);
-	mrc_fld_set_param_int_array(crd_nc, "dims", 3, NULL);
 	mrc_fld_set_sw(crd_nc, 1);
 	mrc_fld_set_nr_comps(crd_nc, 1);
 	mrc_fld_setup(crd_nc);
@@ -125,7 +124,6 @@ mrc_crds_setup_alloc_only(struct mrc_crds *crds)
     mrc_fld_set_param_obj(crds->crd[d], "domain", crds->domain);
     mrc_fld_set_param_int(crds->crd[d], "nr_spatial_dims", 1);
     mrc_fld_set_param_int(crds->crd[d], "dim", d);
-    mrc_fld_set_param_int_array(crds->crd[d], "dims", 3, NULL);
     mrc_fld_set_nr_comps(crds->crd[d], 1);
     mrc_fld_set_sw(crds->crd[d], crds->sw);
     mrc_fld_set_comp_name(crds->crd[d], 0, mrc_fld_name(crds->crd[d]));

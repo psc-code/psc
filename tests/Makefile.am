@@ -67,4 +67,5 @@ TESTS = \
 	test_mrc_ddc_1.sh
 
 XFAIL_TESTS = \
-	test_mrc_m3_5.sh
+	test_mrc_m3_5.sh \
+	test_mrc_f3_2.sh

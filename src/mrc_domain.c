@@ -229,7 +229,6 @@ mrc_domain_m1_create(struct mrc_domain *domain)
   struct mrc_fld *m1 = mrc_fld_create(domain->obj.comm);
   mrc_fld_set_param_obj(m1, "domain", domain);
   mrc_fld_set_param_int(m1, "nr_spatial_dims", 1);
-  mrc_fld_set_param_int_array(m1, "dims", 3, NULL);
   // default direction to 0 == x
   mrc_fld_set_param_int(m1, "dim", 0);
   mrc_fld_set_nr_comps(m1, 1);
@@ -245,11 +244,8 @@ mrc_domain_fld_create(struct mrc_domain *domain, int sw, const char *comps)
   struct mrc_fld *fld = mrc_fld_create(mrc_domain_comm(domain));
   mrc_fld_set_param_obj(fld, "domain", domain);
   mrc_fld_set_param_int(fld, "nr_spatial_dims", 3);
-  mrc_fld_set_param_int_array(fld, "dims", 5, NULL);
   if (comps) {
     mrc_fld_set_comp_names(fld, comps);
-  } else {
-    mrc_fld_set_nr_comps(fld, 1);
   }
   mrc_fld_set_sw(fld, sw);
   return fld;
@@ -264,7 +260,6 @@ mrc_domain_m3_create(struct mrc_domain *domain)
   struct mrc_fld *m3 = mrc_fld_create(mrc_domain_comm(domain));
   mrc_fld_set_param_obj(m3, "domain", domain);
   mrc_fld_set_param_int(m3, "nr_spatial_dims", 3);
-  mrc_fld_set_param_int_array(m3, "dims", 5, NULL);
   return m3;
 }
 

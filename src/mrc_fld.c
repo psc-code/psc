@@ -42,6 +42,51 @@ _mrc_fld_destroy(struct mrc_fld *fld)
 }
 
 // ----------------------------------------------------------------------
+// mrc_fld_setup_vec
+
+static void
+mrc_fld_setup_vec(struct mrc_fld *fld)
+{
+  assert(fld->_dims.nr_vals == fld->_offs.nr_vals &&
+	 fld->_dims.nr_vals == fld->_sw.nr_vals);
+  assert(fld->_dims.nr_vals <= MRC_FLD_MAXDIMS);
+
+  fld->_len = 1;
+  for (int d = 0; d < MRC_FLD_MAXDIMS; d++) {
+    if (d < fld->_dims.nr_vals) {
+      fld->_ghost_offs[d] = fld->_offs.vals[d] - fld->_sw.vals[d];
+      fld->_ghost_dims[d] = fld->_dims.vals[d] + 2 * fld->_sw.vals[d];
+    } else {
+      fld->_ghost_dims[d] = 1;
+    }
+    fld->_len *= fld->_ghost_dims[d];
+  }
+
+  const char *vec_type = mrc_fld_ops(fld)->vec_type;
+  if (vec_type) {
+    // The dispatch is actually slightly prettier with the ops->vec_type
+    // method, but still ugly
+#if defined(PETSC_USE_REAL_SINGLE) && !defined(PETSC_USE_COMPLEX)
+    if (strcmp(vec_type, "float")==0) {
+      vec_type = "petsc";
+      mrc_fld_ops(fld)->vec_type = "petsc";
+    }
+#endif
+#if defined(PETSC_USE_REAL_DOUBLE) && !defined(PETSC_USE_COMPLEX)
+    if (strcmp(vec_type, "double")==0) {
+      vec_type = "petsc";
+      mrc_fld_ops(fld)->vec_type = "petsc";
+    }
+#endif
+    mrc_vec_set_type(fld->_vec, vec_type);
+    mrc_vec_set_param_int(fld->_vec, "len", fld->_len);
+    mrc_fld_setup_member_objs(fld); // sets up our .vec member
+    
+    fld->_arr = mrc_vec_get_array(fld->_vec);
+  }
+}
+
+// ----------------------------------------------------------------------
 // mrc_fld_setup
 
 static void
@@ -50,6 +95,9 @@ _mrc_fld_setup(struct mrc_fld *fld)
   if (fld->_domain) {
     // if we have a domain, use that to set _dims, _sw
 
+    // if "domain" is set, can't set "dims", too, which will be set automatically
+    // based on "domain"
+    assert(fld->_dims.nr_vals == 0);
     assert(fld->_nr_comps > 0);
     int nr_patches;
     struct mrc_patch *patches = mrc_domain_get_patches(fld->_domain, &nr_patches);
@@ -112,43 +160,8 @@ _mrc_fld_setup(struct mrc_fld *fld)
   if (fld->_sw.nr_vals == 0) {
     mrc_fld_set_param_int_array(fld, "sw", fld->_dims.nr_vals, NULL);
   }
-  assert(fld->_dims.nr_vals == fld->_offs.nr_vals &&
-	 fld->_dims.nr_vals == fld->_sw.nr_vals);
-  assert(fld->_dims.nr_vals <= MRC_FLD_MAXDIMS);
 
-  fld->_len = 1;
-  for (int d = 0; d < MRC_FLD_MAXDIMS; d++) {
-    if (d < fld->_dims.nr_vals) {
-      fld->_ghost_offs[d] = fld->_offs.vals[d] - fld->_sw.vals[d];
-      fld->_ghost_dims[d] = fld->_dims.vals[d] + 2 * fld->_sw.vals[d];
-    } else {
-      fld->_ghost_dims[d] = 1;
-    }
-    fld->_len *= fld->_ghost_dims[d];
-  }
-
-  const char *vec_type = mrc_fld_ops(fld)->vec_type;
-  if (vec_type) {
-    // The dispatch is actually slightly prettier with the ops->vec_type
-    // method, but still ugly
-#if defined(PETSC_USE_REAL_SINGLE) && !defined(PETSC_USE_COMPLEX)
-    if (strcmp(vec_type, "float")==0) {
-      vec_type = "petsc";
-      mrc_fld_ops(fld)->vec_type = "petsc";
-    }
-#endif
-#if defined(PETSC_USE_REAL_DOUBLE) && !defined(PETSC_USE_COMPLEX)
-    if (strcmp(vec_type, "double")==0) {
-      vec_type = "petsc";
-      mrc_fld_ops(fld)->vec_type = "petsc";
-    }
-#endif
-    mrc_vec_set_type(fld->_vec, vec_type);
-    mrc_vec_set_param_int(fld->_vec, "len", fld->_len);
-    mrc_fld_setup_member_objs(fld); // sets up our .vec member
-    
-    fld->_arr = mrc_vec_get_array(fld->_vec);
-  }
+  mrc_fld_setup_vec(fld);
 }
 
 // ----------------------------------------------------------------------
@@ -179,7 +192,7 @@ _mrc_fld_read(struct mrc_fld *fld, struct mrc_io *io)
   // anyway, since mrc_fld saves/restores the data rather than mrc_vec),
   // we make a new one, so at least we're sure that with_array won't be honored
   fld->_vec = mrc_vec_create(mrc_fld_comm(fld));
-  mrc_fld_setup(fld);
+  mrc_fld_setup_vec(fld);
   mrc_io_read_fld(io, mrc_io_obj_path(io, fld), fld);
 }
 
