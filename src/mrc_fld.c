@@ -230,8 +230,12 @@ mrc_fld_set_comp_name(struct mrc_fld *fld, int m, const char *name)
 const char *
 mrc_fld_comp_name(struct mrc_fld *fld, int m)
 {
-  assert(m < mrc_fld_nr_comps(fld) && m < fld->_nr_allocated_comp_name);
-  return fld->_comp_name[m];
+  assert(m < mrc_fld_nr_comps(fld));
+  if (m < fld->_nr_allocated_comp_name) {
+    return fld->_comp_name[m];
+  } else {
+    return NULL;
+  }
 }
 
 // ----------------------------------------------------------------------
