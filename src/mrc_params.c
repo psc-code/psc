@@ -69,7 +69,9 @@ libmrc_params_init(int argc, char **argv)
   int petsc_argc = 1;
   char **petsc_argv;
   petsc_argv = calloc(argc, sizeof(char *));
-  petsc_argv[0] = argv[0];
+  if (argv) {
+    petsc_argv[0] = argv[0];
+  }
 #endif
   
   for (int i = 1; i < argc; i++) {
