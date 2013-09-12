@@ -105,7 +105,7 @@ main(int argc, char **argv)
 
   struct mrc_fld *m3 = mrc_domain_m3_create(domain);
   mrc_fld_set_name(m3, "test_m3");
-  mrc_fld_set_nr_comps(m3, 2);
+  mrc_fld_set_param_int(m3, "nr_comps", 2);
   mrc_fld_set_from_options(m3);
   mrc_fld_setup(m3);
   mrc_fld_set_comp_name(m3, 0, "fld0");

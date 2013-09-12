@@ -23,7 +23,7 @@ ggcm_mhd_diag_item_rr1_run(struct ggcm_mhd_diag_item *item,
 {
   struct ggcm_mhd *mhd = item->diag->mhd;
   struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, SW_2, "divB");
-  mrc_fld_set_nr_comps(fld_r, _NR_FLDS);
+  mrc_fld_set_param_int(fld_r, "nr_comps", _NR_FLDS);
   mrc_fld_setup(fld_r);
 
   struct mrc_fld *f = mrc_fld_get_as(fld, mrc_fld_type(fld));
@@ -63,7 +63,7 @@ ggcm_mhd_diag_item_uu1_run(struct ggcm_mhd_diag_item *item,
 {
   struct ggcm_mhd *mhd = item->diag->mhd;
   struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, SW_2, "uu1");
-  mrc_fld_set_nr_comps(fld_r, _NR_FLDS);
+  mrc_fld_set_param_int(fld_r, "nr_comps", _NR_FLDS);
   mrc_fld_setup(fld_r);
   //  mrc_fld_copy(fld_r, fld);
 
@@ -108,7 +108,7 @@ ggcm_mhd_diag_item_rv1_run(struct ggcm_mhd_diag_item *item,
 {
   struct ggcm_mhd *mhd = item->diag->mhd;
   struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, SW_2, "divB");
-  mrc_fld_set_nr_comps(fld_r, mrc_fld_nr_comps(f));
+  mrc_fld_set_param_int(fld_r, "nr_comps", mrc_fld_nr_comps(f));
   mrc_fld_setup(fld_r);
   mrc_fld_copy(fld_r, f);
 
@@ -141,7 +141,7 @@ ggcm_mhd_diag_item_b1_run(struct ggcm_mhd_diag_item *item,
 {
   struct ggcm_mhd *mhd = item->diag->mhd;
   struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, SW_2, "divB");
-  mrc_fld_set_nr_comps(fld_r, mrc_fld_nr_comps(f));
+  mrc_fld_set_param_int(fld_r, "nr_comps", mrc_fld_nr_comps(f));
   mrc_fld_setup(fld_r);
   mrc_fld_copy(fld_r, f);
 

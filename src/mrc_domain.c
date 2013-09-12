@@ -231,7 +231,6 @@ mrc_domain_m1_create(struct mrc_domain *domain)
   mrc_fld_set_param_int(m1, "nr_spatial_dims", 1);
   // default direction to 0 == x
   mrc_fld_set_param_int(m1, "dim", 0);
-  mrc_fld_set_nr_comps(m1, 1);
   return m1;
 }
 

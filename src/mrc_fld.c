@@ -236,15 +236,6 @@ mrc_fld_nr_comps(struct mrc_fld *fld)
 }
 
 // ----------------------------------------------------------------------
-// mrc_fld_set_nr_comps
-
-void
-mrc_fld_set_nr_comps(struct mrc_fld *fld, int nr_comps)
-{
-  fld->_nr_comps = nr_comps;
-}
-
-// ----------------------------------------------------------------------
 // mrc_fld_set_comp_names
 //
 // sets all component names from one :-separated string
@@ -259,7 +250,7 @@ mrc_fld_set_comp_names(struct mrc_fld *fld, const char *comps)
   while (strsep(&s, ",:")) {
     nr_comps++;
   }
-  mrc_fld_set_nr_comps(fld, nr_comps);
+  fld->_nr_comps = nr_comps;
 
   s = s_save;
   strcpy(s, comps);

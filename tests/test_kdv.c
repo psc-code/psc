@@ -52,7 +52,7 @@ kdv_get_fld(struct kdv *kdv, int nr_comps, const char *name)
   struct mrc_fld *x = mrc_domain_f1_create(kdv->domain);
   mrc_fld_set_name(x, name);
   mrc_fld_set_param_int(x, "nr_ghosts", BND);
-  mrc_fld_set_nr_comps(x, nr_comps);
+  mrc_fld_set_param_int(x, "nr_comps", nr_comps);
   mrc_fld_setup(x);
   return x;
 }

@@ -168,7 +168,7 @@ ggcm_mhd_diag_item_b_run(struct ggcm_mhd_diag_item *item,
   struct ggcm_mhd *mhd = item->diag->mhd;
 
   struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, SW_2, "pp_full");
-  mrc_fld_set_nr_comps(fld_r, 3);
+  mrc_fld_set_param_int(fld_r, "nr_comps", 3);
   mrc_fld_setup(fld_r);
 
   struct mrc_fld *r = mrc_fld_get_as(fld_r, "float");

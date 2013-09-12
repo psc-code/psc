@@ -1477,7 +1477,7 @@ xdmf_collective_read_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3)
 
   if (xdmf->is_writer) {
     struct mrc_fld *gfld = mrc_fld_create(MPI_COMM_SELF);
-    mrc_fld_set_nr_comps(gfld, mrc_fld_nr_comps(m3));
+    mrc_fld_set_param_int(gfld, "nr_comps", mrc_fld_nr_comps(m3));
 
     hid_t group0 = H5Gopen(file->h5_file, path, H5P_DEFAULT); H5_CHK(group0);
     collective_m3_read_fld(io, &ctx, group0, gfld);
