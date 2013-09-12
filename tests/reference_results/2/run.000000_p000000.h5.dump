@@ -63,6 +63,13 @@ GROUP "/" {
          (0): "float"
          }
       }
+      ATTRIBUTE "nr_spatial_dims" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 1
+         }
+      }
       ATTRIBUTE "vec" {
          DATATYPE  H5T_STRING {
             STRSIZE 27;
@@ -157,6 +164,13 @@ GROUP "/" {
          DATASPACE  SCALAR
          DATA {
          (0): "float"
+         }
+      }
+      ATTRIBUTE "nr_spatial_dims" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 1
          }
       }
       ATTRIBUTE "vec" {
@@ -255,6 +269,13 @@ GROUP "/" {
          DATASPACE  SCALAR
          DATA {
          (0): "float"
+         }
+      }
+      ATTRIBUTE "nr_spatial_dims" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 1
          }
       }
       ATTRIBUTE "vec" {
@@ -1342,6 +1363,13 @@ GROUP "/" {
          DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
          DATA {
          (0): 2
+         }
+      }
+      ATTRIBUTE "nr_spatial_dims" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 3
          }
       }
       ATTRIBUTE "vec" {

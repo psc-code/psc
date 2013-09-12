@@ -54,10 +54,10 @@ _mrc_fld_setup(struct mrc_fld *fld)
     int nr_patches;
     struct mrc_patch *patches = mrc_domain_get_patches(fld->_domain, &nr_patches);
 
-    assert((fld->_dims.nr_vals == 3 && nr_patches >= 1) || // mrc_m1
-	   (fld->_dims.nr_vals == 5 && nr_patches >= 1));  // mrc_m3
+    assert(fld->_nr_spatial_dims == 1 || fld->_nr_spatial_dims == 3);
 
-    if (fld->_dims.nr_vals == 5) {
+    if (fld->_nr_spatial_dims == 3) {
+      assert(fld->_dim < 0);
       fld->_patches = calloc(nr_patches, sizeof(*fld->_patches));
       for (int p = 0; p < nr_patches; p++) {
 	struct mrc_fld_patch *m3p = &fld->_patches[p];
@@ -71,9 +71,7 @@ _mrc_fld_setup(struct mrc_fld *fld)
       for (int d = 0; d < 3; d++) {
 	fld->_dims.vals[d + fld->_is_aos] = patches[0].ldims[d];
       }
-    }
-
-    if (fld->_dims.nr_vals == 3) {
+    } else if (fld->_nr_spatial_dims == 1) {
       assert(fld->_dim >= 0);
       fld->_dims.vals[0] = patches[0].ldims[fld->_dim];
       fld->_patches = calloc(nr_patches, sizeof(*fld->_patches));
@@ -751,16 +749,17 @@ mrc_fld_init()
 
 #define VAR(x) (void *)offsetof(struct mrc_fld, x)
 static struct param mrc_fld_descr[] = {
-  { "offs"            , VAR(_offs)        , PARAM_INT_ARRAY(0, 0) },
-  { "dims"            , VAR(_dims)        , PARAM_INT_ARRAY(0, 0) },
-  { "sw"              , VAR(_sw)          , PARAM_INT_ARRAY(0, 0) },
+  { "offs"            , VAR(_offs)           , PARAM_INT_ARRAY(0, 0) },
+  { "dims"            , VAR(_dims)           , PARAM_INT_ARRAY(0, 0) },
+  { "sw"              , VAR(_sw)             , PARAM_INT_ARRAY(0, 0) },
 
-  { "domain"          , VAR(_domain)      , PARAM_OBJ(mrc_domain) },
-  { "dim"             , VAR(_dim)         , PARAM_INT(-1)         },
+  { "domain"          , VAR(_domain)         , PARAM_OBJ(mrc_domain) },
+  { "nr_spatial_dims" , VAR(_nr_spatial_dims), PARAM_INT(-1)         },
+  { "dim"             , VAR(_dim)            , PARAM_INT(-1)         },
 
-  { "size_of_type"    , VAR(_size_of_type), MRC_VAR_INT           },
-  { "len"             , VAR(_len)         , MRC_VAR_INT           },
-  { "vec"             , VAR(_vec)         , MRC_VAR_OBJ(mrc_vec)  },
+  { "size_of_type"    , VAR(_size_of_type)   , MRC_VAR_INT           },
+  { "len"             , VAR(_len)            , MRC_VAR_INT           },
+  { "vec"             , VAR(_vec)            , MRC_VAR_OBJ(mrc_vec)  },
   {},
 };
 #undef VAR

@@ -43,6 +43,11 @@ struct mrc_fld {
   struct mrc_param_int_array _dims;
   struct mrc_param_int_array _offs;
   struct mrc_param_int_array _sw;
+  // if (optinally) allocated through mrc_domain, _domain will be set, and the 
+  // following quantities will be used to set up _dims, _offs, _sw in mrc_fld_setup()
+  struct mrc_domain *_domain; //< optional, if allocated through mrc_domain
+  int _nr_spatial_dims; //< number of spatial dims to use (1 or 3)
+  int _dim; //< if number of spatial dims == 1, field is along this dim of the domain
 
   // state
   int _ghost_offs[MRC_FLD_MAXDIMS];
@@ -52,15 +57,11 @@ struct mrc_fld {
   void *_arr;
   int _len;
   struct mrc_vec *_vec; //< underlying mrc_vec that manages memory alloc/free (could be petsc)
-  struct mrc_domain *_domain; //< optional, if allocated through mrc_domain
-  // for mrc_f3 emulation
   int _nr_allocated_comp_name;
   char **_comp_name;
+  int _is_aos; //< indicates whether the layout (w.r.t to domain) is array-of-struct
   // for mrc_m3 emulation (FIXME, should be eliminated eventually (?))
   struct mrc_fld_patch *_patches;
-  // for mrc_f1 emulation
-  int _dim; //< # along this dim of the domain
-  int _is_aos; //< indicates whether the layout (w.r.t to domain) is array-of-struct
 };
 
 MRC_CLASS_DECLARE(mrc_fld, struct mrc_fld);
