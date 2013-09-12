@@ -44,8 +44,6 @@ _mrc_fld_destroy(struct mrc_fld *fld)
 // ----------------------------------------------------------------------
 // mrc_fld_setup
 
-static int mrc_fld_comp_dim(struct mrc_fld *fld);
-
 static void
 _mrc_fld_setup(struct mrc_fld *fld)
 {
@@ -69,7 +67,7 @@ _mrc_fld_setup(struct mrc_fld *fld)
 	  assert(patches[p].ldims[d] == patches[0].ldims[d]);
 	}
       }
-      int comp_dim = mrc_fld_comp_dim(fld);
+      int comp_dim = (fld->_is_aos) ? 0 : 3;
       fld->_dims.vals[comp_dim] = fld->_nr_comps;
       fld->_dims.vals[4] = nr_patches;
       for (int d = 0; d < 3; d++) {
@@ -85,8 +83,7 @@ _mrc_fld_setup(struct mrc_fld *fld)
 	m1p->_fld = fld;
 	assert(patches[p].ldims[fld->_dim] == patches[0].ldims[fld->_dim]);
       }
-      int comp_dim = mrc_fld_comp_dim(fld);
-      fld->_dims.vals[comp_dim] = fld->_nr_comps;
+      fld->_dims.vals[1] = fld->_nr_comps;
       fld->_dims.vals[2] = nr_patches;
     }
   }
@@ -196,33 +193,6 @@ mrc_fld_comp_name(struct mrc_fld *fld, int m)
 {
   assert(m < mrc_fld_nr_comps(fld) && m < fld->_nr_allocated_comp_name);
   return fld->_comp_name[m];
-}
-
-// ----------------------------------------------------------------------
-// mrc_fld_comp_dim
-
-static int
-mrc_fld_comp_dim(struct mrc_fld *fld)
-{
-  if (fld->_domain) {
-    if (fld->_dims.nr_vals == 5) {
-      // emulating mrc_f3, mrc_m3
-      if (fld->_is_aos) {
-	return 0;
-      } else {
-	return 3;
-      }
-    } else if (fld->_dims.nr_vals == 3) {
-      assert(!fld->_is_aos);
-      // emulating mrc_f1, mrc_m1
-      return 1;
-    } else {
-      assert(0);
-    }
-  }
-
-  assert(fld->_dims.nr_vals > 0);
-  return fld->_dims.nr_vals - 1;
 }
 
 // ----------------------------------------------------------------------
