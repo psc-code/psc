@@ -71,12 +71,17 @@ _mrc_fld_setup(struct mrc_fld *fld)
 	}
       }
 
+      int sw = fld->_nr_ghosts;
       if (fld->_is_aos) {
 	mrc_fld_set_param_int_array(fld, "dims", 5,
 				    (int[5]) { fld->_nr_comps, ldims[0], ldims[1], ldims[2], nr_patches });
+	mrc_fld_set_param_int_array(fld, "sw", fld->_dims.nr_vals,
+				    (int[5]) { 0, sw, sw, sw, 0 });
       } else {
 	mrc_fld_set_param_int_array(fld, "dims", 5,
 				    (int[5]) { ldims[0], ldims[1], ldims[2], fld->_nr_comps, nr_patches });
+	mrc_fld_set_param_int_array(fld, "sw", fld->_dims.nr_vals,
+				    (int[5]) { sw, sw, sw, 0, 0 });
       }
     } else if (fld->_nr_spatial_dims == 1) {
       assert(fld->_dim >= 0);
@@ -89,9 +94,16 @@ _mrc_fld_setup(struct mrc_fld *fld)
 	assert(patches[p].ldims[fld->_dim] == ldims[fld->_dim]);
       }
 
+      int sw = fld->_nr_ghosts;
       mrc_fld_set_param_int_array(fld, "dims", 3,
 				  (int[3]) { ldims[fld->_dim], fld->_nr_comps, nr_patches });
+      mrc_fld_set_param_int_array(fld, "sw", 3,
+				  (int[3]) { sw, 0, 0 });
+
     }
+  } else {
+    assert(fld->_nr_spatial_dims < 0);
+    assert(fld->_nr_ghosts == 0);
   }
 
   if (fld->_offs.nr_vals == 0) {
@@ -254,21 +266,7 @@ mrc_fld_set_comp_names(struct mrc_fld *fld, const char *comps)
 void
 mrc_fld_set_sw(struct mrc_fld *fld, int sw)
 {
-  assert(fld->_domain);
-  if (fld->_dims.nr_vals == 5) {
-    if (fld->_is_aos) {
-      mrc_fld_set_param_int_array(fld, "sw", fld->_dims.nr_vals,
-				  (int[5]) { 0, sw, sw, sw, 0 });
-    } else {
-      mrc_fld_set_param_int_array(fld, "sw", fld->_dims.nr_vals,
-				  (int[5]) { sw, sw, sw, 0, 0 });
-    }
-  } else if (fld->_dims.nr_vals == 3) { // mrc_m1
-    mrc_fld_set_param_int_array(fld, "sw", 3,
-				(int[3]) { sw, 0, 0 });
-  } else {
-    assert(0);
-  }
+  fld->_nr_ghosts = sw;
 }
 
 // ----------------------------------------------------------------------
@@ -736,6 +734,7 @@ static struct param mrc_fld_descr[] = {
   { "nr_spatial_dims" , VAR(_nr_spatial_dims), PARAM_INT(-1)         },
   { "dim"             , VAR(_dim)            , PARAM_INT(-1)         },
   { "nr_comps"        , VAR(_nr_comps)       , PARAM_INT(1)          },
+  { "nr_ghosts"       , VAR(_nr_ghosts)      , PARAM_INT(0)          },
 
   { "size_of_type"    , VAR(_size_of_type)   , MRC_VAR_INT           },
   { "len"             , VAR(_len)            , MRC_VAR_INT           },
