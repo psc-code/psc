@@ -53,38 +53,44 @@ _mrc_fld_setup(struct mrc_fld *fld)
     assert(fld->_nr_comps > 0);
     int nr_patches;
     struct mrc_patch *patches = mrc_domain_get_patches(fld->_domain, &nr_patches);
+    assert(nr_patches > 0);
+    int *ldims = patches[0].ldims;
 
     assert(fld->_nr_spatial_dims == 1 || fld->_nr_spatial_dims == 3);
 
     if (fld->_nr_spatial_dims == 3) {
       assert(fld->_dim < 0);
+
       fld->_patches = calloc(nr_patches, sizeof(*fld->_patches));
       for (int p = 0; p < nr_patches; p++) {
 	struct mrc_fld_patch *m3p = &fld->_patches[p];
 	m3p->_fld = fld;
 	m3p->_p = p;
 	for (int d = 0; d < 3; d++) {
-	  assert(patches[p].ldims[d] == patches[0].ldims[d]);
+	  assert(patches[p].ldims[d] == ldims[d]);
 	}
       }
-      int comp_dim = (fld->_is_aos) ? 0 : 3;
-      fld->_dims.vals[comp_dim] = fld->_nr_comps;
-      fld->_dims.vals[4] = nr_patches;
-      for (int d = 0; d < 3; d++) {
-	fld->_dims.vals[d + fld->_is_aos] = patches[0].ldims[d];
+
+      if (fld->_is_aos) {
+	mrc_fld_set_param_int_array(fld, "dims", 5,
+				    (int[5]) { fld->_nr_comps, ldims[0], ldims[1], ldims[2], nr_patches });
+      } else {
+	mrc_fld_set_param_int_array(fld, "dims", 5,
+				    (int[5]) { ldims[0], ldims[1], ldims[2], fld->_nr_comps, nr_patches });
       }
     } else if (fld->_nr_spatial_dims == 1) {
       assert(fld->_dim >= 0);
-      fld->_dims.vals[0] = patches[0].ldims[fld->_dim];
+
       fld->_patches = calloc(nr_patches, sizeof(*fld->_patches));
       for (int p = 0; p < nr_patches; p++) {
 	struct mrc_fld_patch *m1p = &fld->_patches[p];
 	m1p->_p = p;
 	m1p->_fld = fld;
-	assert(patches[p].ldims[fld->_dim] == patches[0].ldims[fld->_dim]);
+	assert(patches[p].ldims[fld->_dim] == ldims[fld->_dim]);
       }
-      fld->_dims.vals[1] = fld->_nr_comps;
-      fld->_dims.vals[2] = nr_patches;
+
+      mrc_fld_set_param_int_array(fld, "dims", 3,
+				  (int[3]) { ldims[fld->_dim], fld->_nr_comps, nr_patches });
     }
   }
 
