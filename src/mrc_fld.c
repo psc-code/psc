@@ -325,11 +325,18 @@ mrc_fld_duplicate(struct mrc_fld *fld)
   } else {
     mrc_fld_set_type(fld_new, mrc_fld_type(fld));
   }
-  mrc_fld_set_param_obj(fld_new, "domain", fld->_domain);
-  mrc_fld_set_param_int(fld_new, "dim", fld->_dim);
-  mrc_fld_set_param_int_array(fld_new, "dims", fld->_dims.nr_vals, fld->_dims.vals);
-  mrc_fld_set_param_int_array(fld_new, "offs", fld->_offs.nr_vals, fld->_offs.vals);
-  mrc_fld_set_param_int_array(fld_new, "sw", fld->_sw.nr_vals, fld->_sw.vals);
+  if (fld->_domain) {
+    // if we're based on a domain, dims/offs/sw will be set by setup()
+    mrc_fld_set_param_obj(fld_new, "domain", fld->_domain);
+    mrc_fld_set_param_int(fld_new, "nr_spatial_dims", fld->_nr_spatial_dims);
+    mrc_fld_set_param_int(fld_new, "nr_comps", fld->_nr_comps);
+    mrc_fld_set_param_int(fld_new, "nr_ghosts", fld->_nr_ghosts);
+    mrc_fld_set_param_int(fld_new, "dim", fld->_dim);
+  } else {
+    mrc_fld_set_param_int_array(fld_new, "dims", fld->_dims.nr_vals, fld->_dims.vals);
+    mrc_fld_set_param_int_array(fld_new, "offs", fld->_offs.nr_vals, fld->_offs.vals);
+    mrc_fld_set_param_int_array(fld_new, "sw", fld->_sw.nr_vals, fld->_sw.vals);
+  }
   mrc_fld_setup(fld_new);
   return fld_new;
 }
