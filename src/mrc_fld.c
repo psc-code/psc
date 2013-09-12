@@ -545,8 +545,9 @@ mrc_fld_get_as(struct mrc_fld *fld_base, const char *type)
     mrc_fld_set_param_int_array(fld, "offs", fld_base->_offs.nr_vals, fld_base->_offs.vals);
     mrc_fld_set_param_int_array(fld, "sw", fld_base->_sw.nr_vals, fld_base->_sw.vals);
   }
-  // FIXME, component names, too
-
+  for (int m = 0; m < fld_base->_nr_comps; m++) {
+    mrc_fld_set_comp_name(fld, m, mrc_fld_comp_name(fld_base, m));
+  }
   // FIXME, this is openggcm specific and shouldn't be handled here
   if (strcmp(type, "float") == 0 && strcmp(type_base, "fortran") == 0) {
     // special case: float from fortran, just use same memory
