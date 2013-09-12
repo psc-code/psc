@@ -55,7 +55,6 @@ _mrc_fld_setup(struct mrc_fld *fld)
     struct mrc_patch *patches = mrc_domain_get_patches(fld->_domain, &nr_patches);
 
     assert((fld->_dims.nr_vals == 3 && nr_patches >= 1) || // mrc_m1
-	   (fld->_dims.nr_vals == 4 && nr_patches == 1) || // mrc_f3
 	   (fld->_dims.nr_vals == 5 && nr_patches >= 1));  // mrc_m3
 
     if (fld->_dims.nr_vals == 5) {
@@ -69,11 +68,13 @@ _mrc_fld_setup(struct mrc_fld *fld)
 	}
       }
       fld->_dims.vals[4] = nr_patches;
+      for (int d = 0; d < 3; d++) {
+	fld->_dims.vals[d + fld->_is_aos] = patches[0].ldims[d];
+      }
     }
 
-    if (fld->_dim >= 0 && fld->_dims.nr_vals == 2) {
-      fld->_dims.vals[0] = patches[0].ldims[fld->_dim];
-    } else if (fld->_dim >= 0 && fld->_dims.nr_vals == 3) {
+    if (fld->_dims.nr_vals == 3) {
+      assert(fld->_dim >= 0);
       fld->_dims.vals[0] = patches[0].ldims[fld->_dim];
       fld->_patches = calloc(nr_patches, sizeof(*fld->_patches));
       for (int p = 0; p < nr_patches; p++) {
@@ -83,10 +84,6 @@ _mrc_fld_setup(struct mrc_fld *fld)
 	assert(patches[p].ldims[fld->_dim] == patches[0].ldims[fld->_dim]);
       }
       fld->_dims.vals[2] = nr_patches;
-    } else {
-      for (int d = 0; d < 3; d++) {
-	fld->_dims.vals[d] = patches[0].ldims[d];
-      }
     }
   }
 
@@ -206,7 +203,11 @@ mrc_fld_comp_dim(struct mrc_fld *fld)
   if (fld->_domain) {
     if (fld->_dims.nr_vals == 5) {
       // emulating mrc_f3, mrc_m3
-      return 3;
+      if (fld->_is_aos) {
+	return 0;
+      } else {
+	return 3;
+      }
     } else if (fld->_dims.nr_vals == 3) {
       assert(!fld->_is_aos);
       // emulating mrc_f1, mrc_m1
@@ -277,15 +278,17 @@ void
 mrc_fld_set_sw(struct mrc_fld *fld, int sw)
 {
   assert(fld->_domain);
-  if (fld->_dims.nr_vals > 3) {
-    mrc_fld_set_param_int_array(fld, "sw", fld->_dims.nr_vals,
-				(int[5]) { sw, sw, sw, 0, 0 });
+  if (fld->_dims.nr_vals == 5) {
+    if (fld->_is_aos) {
+      mrc_fld_set_param_int_array(fld, "sw", fld->_dims.nr_vals,
+				  (int[5]) { 0, sw, sw, sw, 0 });
+    } else {
+      mrc_fld_set_param_int_array(fld, "sw", fld->_dims.nr_vals,
+				  (int[5]) { sw, sw, sw, 0, 0 });
+    }
   } else if (fld->_dims.nr_vals == 3) { // mrc_m1
     mrc_fld_set_param_int_array(fld, "sw", 3,
 				(int[3]) { sw, 0, 0 });
-  } else if (fld->_dims.nr_vals == 2) { // mrc_f1
-    mrc_fld_set_param_int_array(fld, "sw", 2,
-				(int[2]) { sw, 0 });
   } else {
     assert(0);
   }
