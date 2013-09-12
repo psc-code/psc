@@ -119,17 +119,25 @@ _mrc_fld_setup(struct mrc_fld *fld)
 	}
       }
 
-      int sw = fld->_nr_ghosts;
+      int sw[3];
+      for (int d = 0; d < 3; d++) {
+	if (ldims[d] > 1) {
+	  sw[d] = fld->_nr_ghosts;
+	} else {
+	  sw[d] = 0;
+	}
+      }
+
       if (fld->_is_aos) {
 	mrc_fld_set_param_int_array(fld, "dims", 5,
 				    (int[5]) { fld->_nr_comps, ldims[0], ldims[1], ldims[2], nr_patches });
 	mrc_fld_set_param_int_array(fld, "sw", fld->_dims.nr_vals,
-				    (int[5]) { 0, sw, sw, sw, 0 });
+				    (int[5]) { 0, sw[0], sw[1], sw[2], 0 });
       } else {
 	mrc_fld_set_param_int_array(fld, "dims", 5,
 				    (int[5]) { ldims[0], ldims[1], ldims[2], fld->_nr_comps, nr_patches });
 	mrc_fld_set_param_int_array(fld, "sw", fld->_dims.nr_vals,
-				    (int[5]) { sw, sw, sw, 0, 0 });
+				    (int[5]) { sw[0], sw[1], sw[2], 0, 0 });
       }
     } else if (fld->_nr_spatial_dims == 1) {
       assert(fld->_dim >= 0);
