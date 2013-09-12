@@ -204,10 +204,10 @@ static int
 mrc_fld_comp_dim(struct mrc_fld *fld)
 {
   if (fld->_domain) {
-    if (fld->_dims.nr_vals > 3) {
+    if (fld->_dims.nr_vals == 5) {
       // emulating mrc_f3, mrc_m3
       return 3;
-    } else if (fld->_dims.nr_vals == 2 || fld->_dims.nr_vals == 3) {
+    } else if (fld->_dims.nr_vals == 3) {
       // emulating mrc_f1, mrc_m1
       return 1;
     } else {
