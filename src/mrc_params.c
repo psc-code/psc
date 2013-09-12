@@ -885,6 +885,9 @@ mrc_params_get_type(void *p, struct param *params, const char *name,
     case PT_FLOAT:
       pval->u_float = pv->u_float;
       break;
+    case PT_DOUBLE:
+      pval->u_double = pv->u_double;
+      break;
     case PT_STRING:
       pval->u_string = pv->u_string;
       break;

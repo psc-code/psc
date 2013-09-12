@@ -119,6 +119,7 @@ void mrc_obj_set_param_ptr(struct mrc_obj *obj, const char *name, void* val);
 void mrc_obj_set_param_obj(struct mrc_obj *obj, const char *name, void* val);
 void mrc_obj_get_param_bool(struct mrc_obj *obj, const char *name, bool *pval);
 void mrc_obj_get_param_int(struct mrc_obj *obj, const char *name, int *pval);
+void mrc_obj_get_param_double(struct mrc_obj *obj, const char *name, double *pval);
 void mrc_obj_get_param_string(struct mrc_obj *obj, const char *name, const char **val);
 void mrc_obj_get_param_int3(struct mrc_obj *obj, const char *name, int *pval);
 void mrc_obj_get_param_float3(struct mrc_obj *obj, const char *name, float *pval);
@@ -312,6 +313,12 @@ int mrc_obj_print_class_info(int verbosity);
   pfx ## _get_param_int(obj_type *obj, const char *name, int *pval)	\
   {									\
     mrc_obj_get_param_int((struct mrc_obj *)obj, name, pval);		\
+  }									\
+									\
+  static inline void 							\
+  pfx ## _get_param_double(obj_type *obj, const char *name, double *pval) \
+  {									\
+    mrc_obj_get_param_double((struct mrc_obj *)obj, name, pval);	\
   }									\
 									\
   static inline void 							\

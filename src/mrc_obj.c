@@ -658,6 +658,14 @@ mrc_obj_get_param_int(struct mrc_obj *obj, const char *name, int *pval)
 }
 
 void
+mrc_obj_get_param_double(struct mrc_obj *obj, const char *name, double *pval)
+{
+  union param_u uval;
+  mrc_obj_get_param_type(obj, name, PT_DOUBLE, &uval);
+  *pval = uval.u_double;
+}
+
+void
 mrc_obj_get_param_string(struct mrc_obj *obj, const char *name, const char **val)
 {
   union param_u uval;
