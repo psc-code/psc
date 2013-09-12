@@ -195,7 +195,11 @@ xdmf_collective_write_attr(struct mrc_io *io, const char *path, int type,
     ierr = H5LTset_attribute_double(group, ".", name, &pv->u_double, 1); CE;
     break;
   case PT_STRING:
-    ierr = H5LTset_attribute_string(group, ".", name, pv->u_string); CE;
+    if (pv->u_string) {
+      ierr = H5LTset_attribute_string(group, ".", name, pv->u_string); CE;
+    } else {
+      ierr = H5LTset_attribute_string(group, ".", name, "(NULL)"); CE;
+    }
     break;
   case PT_INT3:
     ierr = H5LTset_attribute_int(group, ".", name, pv->u_int3, 3); CE;
@@ -253,6 +257,10 @@ xdmf_collective_read_attr(struct mrc_io *io, const char *path, int type,
       ierr = H5LTget_attribute_info(group, ".", name, &dims, &class, &sz); CE;
       pv->u_string = malloc(sz);
       ierr = H5LTget_attribute_string(group, ".", name, (char *)pv->u_string); CE;
+      if (strcmp(pv->u_string, "(NULL)") == 0) {
+	free((char *) pv->u_string);
+	pv->u_string = NULL;
+      }
       break;
     case PT_INT3:
       ierr = H5LTget_attribute_int(group, ".", name, pv->u_int3); CE;
