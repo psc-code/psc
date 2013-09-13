@@ -79,7 +79,7 @@ psc_cuda_init(void)
 	   
 	   
 // FIXME, hardcoding is bad, needs to be consistent, etc...
-#define BND  (3)
+#define BND  (2)
 #define MAX_BND_COMPONENTS (3)
 
 EXTERN_C void

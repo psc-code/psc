@@ -61,6 +61,8 @@ struct psc_mfields_cuda {
 
 //OPT: precalc offset, don't do ghost points in invar dir
 
+#define BND (2)
+
 #define F3_DEV_OFF_YZ(fldnr, jy,jz)					\
   ((((fldnr)								\
      *prm.mx[2] + ((jz)-prm.ilg[2]))					\
@@ -74,7 +76,7 @@ struct psc_mfields_cuda {
   ((((fldnr)								\
      *c_mx[2] + ((jz)-c_ilg[2]))					\
     *c_mx[1] + ((jy)-c_ilg[1]))						\
-   *7 + (0-(-3)))
+   *(2*BND+1) + (0-(-BND)))
 
 #define F3_DEV_YZ_(fldnr,jy,jz) \
   (d_flds)[F3_DEV_OFF_YZ_(fldnr, jy,jz)]
