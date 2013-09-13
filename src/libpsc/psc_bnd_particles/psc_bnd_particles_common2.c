@@ -266,6 +266,9 @@ psc_bnd_particles_sub_exchange_particles_post(struct psc_bnd_particles *bnd, str
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub_exchange_particles
 
+extern double *psc_balance_comp_time_by_patch;
+extern int pr_time_step_no_comm;
+
 static void
 psc_bnd_particles_sub_exchange_particles(struct psc_bnd_particles *bnd, mparticles_base_t *particles_base)
 {
@@ -280,9 +283,13 @@ psc_bnd_particles_sub_exchange_particles(struct psc_bnd_particles *bnd, mparticl
   mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
 
   prof_start(pr_A);
+  prof_restart(pr_time_step_no_comm);
   for (int p = 0; p < particles->nr_patches; p++) {
+    psc_balance_comp_time_by_patch[p] -= MPI_Wtime();
     psc_bnd_particles_sub_exchange_particles_prep(bnd, psc_mparticles_get_patch(particles, p));
+    psc_balance_comp_time_by_patch[p] += MPI_Wtime();
   }
+  prof_stop(pr_time_step_no_comm);
   prof_stop(pr_A);
 
   prof_start(pr_B);
