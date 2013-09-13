@@ -4,6 +4,7 @@
 #include "psc_bnd_cuda.h"
 #include "psc_particles_cuda.h"
 #include "psc_particles_single.h"
+#include "psc_particles_double.h"
 #include "psc_push_particles.h"
 #include "particles_cuda.h"
 
@@ -347,14 +348,6 @@ psc_particles_cuda_copy_from_single(struct psc_particles *prts_cuda,
     xi4[n].z = xi[2];
   }
   
-  int bs[3];
-  for (int d = 0; d < 3; d++) {
-    bs[d] = cuda->blocksize[d];
-    if (bs[d] != 1) {
-      bs[d] *= 2; // sort not only within blocks, but also on lowest block
-      // bit, so we can do the checkerboard passes
-    }
-  }
   __particles_cuda_to_device(prts_cuda, xi4, pxi4);
   
   free(xi4);
@@ -392,6 +385,89 @@ psc_particles_cuda_copy_to_single(struct psc_particles *prts_cuda,
 }
 
 // ======================================================================
+// conversion to "double"
+
+static void
+psc_particles_cuda_copy_from_double(struct psc_particles *prts_cuda,
+				    struct psc_particles *prts, unsigned int flags)
+{
+  int p = prts_cuda->p;
+  struct psc_particles_cuda *cuda = psc_particles_cuda(prts_cuda);
+  assert(prts_cuda->n_part == prts->n_part);
+  
+  float4 *xi4  = calloc(prts->n_part, sizeof(float4));
+  float4 *pxi4 = calloc(prts->n_part, sizeof(float4));
+  
+  for (int n = 0; n < prts->n_part; n++) {
+    particle_double_t *part = particles_double_get_one(prts, n);
+    
+    xi4[n].x  = part->xi;
+    xi4[n].y  = part->yi;
+    xi4[n].z  = part->zi;
+    xi4[n].w  = cuda_int_as_float(part->kind);
+    pxi4[n].x = part->pxi;
+    pxi4[n].y = part->pyi;
+    pxi4[n].z = part->pzi;
+    pxi4[n].w = part->qni_wni;
+    
+    float xi[3] = { xi4[n].x, xi4[n].y, xi4[n].z };
+    for (int d = 0; d < 3; d++) {
+      int bi = particle_double_real_fint(xi[d] * cuda->b_dxi[d]);
+      if (bi < 0 || bi >= cuda->b_mx[d]) {
+	printf("XXX p %d xi %g %g %g\n", p, xi[0], xi[1], xi[2]);
+	printf("XXX p %d n %d d %d xi4[n] %g biy %d // %d\n",
+	       p, n, d, xi[d], bi, cuda->b_mx[d]);
+	if (bi < 0) {
+	  xi[d] = 0.f;
+	} else {
+	  xi[d] *= (1. - 1e-6);
+	}
+      }
+      bi = particle_double_real_fint(xi[d] * cuda->b_dxi[d]);
+      assert(bi >= 0 && bi < cuda->b_mx[d]);
+    }
+    xi4[n].x = xi[0];
+    xi4[n].y = xi[1];
+    xi4[n].z = xi[2];
+  }
+  
+  __particles_cuda_to_device(prts_cuda, xi4, pxi4);
+  
+  free(xi4);
+  free(pxi4);
+}
+
+static void
+psc_particles_cuda_copy_to_double(struct psc_particles *prts_cuda,
+				  struct psc_particles *prts, unsigned int flags)
+{
+  struct psc_particles_double *sngl = psc_particles_double(prts);
+  prts->n_part = prts_cuda->n_part;
+  assert(prts->n_part <= sngl->n_alloced);
+  
+  float4 *xi4  = calloc(prts_cuda->n_part, sizeof(float4));
+  float4 *pxi4 = calloc(prts_cuda->n_part, sizeof(float4));
+  
+  __particles_cuda_from_device(prts_cuda, xi4, pxi4);
+  
+  for (int n = 0; n < prts->n_part; n++) {
+    particle_double_t *part_base = particles_double_get_one(prts, n);
+
+    part_base->xi  = xi4[n].x;
+    part_base->yi  = xi4[n].y;
+    part_base->zi  = xi4[n].z;
+    part_base->kind = cuda_float_as_int(xi4[n].w);
+    part_base->pxi = pxi4[n].x;
+    part_base->pyi = pxi4[n].y;
+    part_base->pzi = pxi4[n].z;
+    part_base->qni_wni = pxi4[n].w;
+  }
+
+  free(xi4);
+  free(pxi4);
+}
+
+// ======================================================================
 // psc_particles: subclass "cuda"
 
 static struct mrc_obj_method psc_particles_cuda_methods[] = {
@@ -399,6 +475,8 @@ static struct mrc_obj_method psc_particles_cuda_methods[] = {
   MRC_OBJ_METHOD("copy_from_c"     , psc_particles_cuda_copy_from_c),
   MRC_OBJ_METHOD("copy_to_single"  , psc_particles_cuda_copy_to_single),
   MRC_OBJ_METHOD("copy_from_single", psc_particles_cuda_copy_from_single),
+  MRC_OBJ_METHOD("copy_to_double"  , psc_particles_cuda_copy_to_double),
+  MRC_OBJ_METHOD("copy_from_double", psc_particles_cuda_copy_from_double),
   {}
 };
 
