@@ -79,7 +79,6 @@ psc_cuda_init(void)
 	   
 	   
 // FIXME, hardcoding is bad, needs to be consistent, etc...
-#define BND  (2)
 #define MAX_BND_COMPONENTS (3)
 
 EXTERN_C void
@@ -263,12 +262,15 @@ __psc_mfields_cuda_setup(struct psc_mfields *mflds)
     }
     unsigned int size = flds->im[0] * flds->im[1] * flds->im[2];
     total_size += size;
-    if (flds->im[0] == 1 + 2*BND) {
+    if (flds->im[0] == 1) {;// + 2*BND) {
       int B = 2*BND;
       buf_size = 2*B * (flds->im[1] + flds->im[2] - 2*B);
+    } else {
+      assert(0);
     }
   }
 
+  mprintf("nr_fields %d tsize %d\n", mflds->nr_fields, total_size);
   check(cudaMalloc((void **) &mflds_cuda->d_flds,
 		   mflds->nr_fields * total_size * sizeof(float)));
   check(cudaMalloc((void **) &mflds_cuda->d_bnd_buf,
@@ -361,8 +363,8 @@ k_fields_device_pack_yz(real *d_buf, real *d_flds, int gmy, int gmz,
 			int nr_patches, int nr_fields)
 {
   unsigned int buf_size = 2*B * (gmy + gmz - 2*B);
-  int gmx = 2*BND + 1;
-  int jx = BND;
+  int gmx = 1;//2*BND + 1;
+  int jx = 0;//BND;
   int tid = threadIdx.x + blockIdx.x * THREADS_PER_BLOCK;
   int n_threads = NR_COMPONENTS * buf_size;
   int p = tid / n_threads;

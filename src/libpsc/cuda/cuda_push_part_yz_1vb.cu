@@ -140,9 +140,12 @@ set_params(struct cuda_params *prm, struct psc *psc,
     for (int d = 0; d < 3; d++) {
       prm->mx[d] = mflds_cuda->im[d];
       prm->ilg[d] = mflds_cuda->ib[d];
-      assert(mflds_cuda->ib[d] == -BND);
+      if (d > 0) {
+	assert(mflds_cuda->ib[d] == -BND);
+      } else {
+	assert(mflds_cuda->im[d] == 1);// + 2*BND);
+      }
     }
-    assert(mflds_cuda->im[0] == 1 + 2*BND);
   }
 
   //  check(cudaMalloc(&prm->d_error_count, 1 * sizeof(int)));

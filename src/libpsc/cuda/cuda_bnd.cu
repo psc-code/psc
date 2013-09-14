@@ -8,7 +8,7 @@
 #define PFX(x) cuda_bnd_##x
 #include "constants.c"
 
-#define SW (3) // FIXME
+#define SW (2) // FIXME
 
 // OPT lots of optimization opportunity in the single-proc/patch ones,
 // but they may not be that important for real production

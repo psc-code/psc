@@ -5,15 +5,15 @@
 // they really only need -1:2 and -1:1, respectively (for 1st order)
 // but always doing 2:2 seems cheap enough
 
-#define BND 2
+//#define BND 2
 
 // FIXME, merge with F3_DEV{,_YZ}, OPT (precalc offset)
 
 #define X3_DEV_OFF_YZ(fldnr, jy,jz)					\
   ((((fldnr)								\
-     *mz + ((jz)+3))							\
-    *my + ((jy)+3))							\
-   *7 + (0+3))
+     *mz + ((jz)+2))							\
+    *my + ((jy)+2))							\
+   *1 + (0))
 
 #undef F3_DEV
 
@@ -30,7 +30,7 @@ push_fields_E_yz(real *d_flds0, real dt, real cny, real cnz, int my, int mz,
   int iy = blockIdx.x * blockDim.x + threadIdx.x;
   int iz = bidx_y * blockDim.y + threadIdx.y;
 
-  if (!(iy < my - 2 * (3-BND) && iz < mz - 2 * (3-BND)))
+  if (!(iy < my - 2 * (2-BND) && iz < mz - 2 * (2-BND)))
     return;
   iy -= BND;
   iz -= BND;
@@ -62,7 +62,7 @@ push_fields_H_yz(real *d_flds0, real cny, real cnz, int my, int mz,
   int iy = blockIdx.x * blockDim.x + threadIdx.x;
   int iz = bidx_y * blockDim.y + threadIdx.y;
 
-  if (!(iy < my - 2 * (3-BND) && iz < mz - 2 * (3-BND)))
+  if (!(iy < my - 2 * (2-BND) && iz < mz - 2 * (2-BND)))
     return;
   iy -= BND;
   iz -= BND;
