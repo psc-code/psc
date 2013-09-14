@@ -261,7 +261,15 @@ cuda_mprts_spine_reduce(struct psc_mparticles *mprts)
   thrust::fill(d_spine_cnts, d_spine_cnts + 1 + nr_total_blocks * (CUDA_BND_STRIDE + 1), 0);
 
   const int threads = B40C_RADIXSORT_THREADS;
-  if (b_mx[0] == 1 && b_mx[1] == 8 && b_mx[2] == 8) {
+  if (b_mx[0] == 1 && b_mx[1] == 2 && b_mx[2] == 2) {
+    RakingReduction3x<K, V, 0, RADIX_BITS, 0,
+		      NopFunctor<K>, 2, 2> <<<nr_total_blocks, threads>>>
+      (mprts_cuda->d_bnd_spine_cnts, mprts_cuda->d_bidx, mprts_cuda->d_off, nr_total_blocks);
+  } else if (b_mx[0] == 1 && b_mx[1] == 4 && b_mx[2] == 4) {
+    RakingReduction3x<K, V, 0, RADIX_BITS, 0,
+		      NopFunctor<K>, 4, 4> <<<nr_total_blocks, threads>>>
+      (mprts_cuda->d_bnd_spine_cnts, mprts_cuda->d_bidx, mprts_cuda->d_off, nr_total_blocks);
+  } else if (b_mx[0] == 1 && b_mx[1] == 8 && b_mx[2] == 8) {
     RakingReduction3x<K, V, 0, RADIX_BITS, 0,
 		      NopFunctor<K>, 8, 8> <<<nr_total_blocks, threads>>>
       (mprts_cuda->d_bnd_spine_cnts, mprts_cuda->d_bidx, mprts_cuda->d_off, nr_total_blocks);
@@ -276,6 +284,10 @@ cuda_mprts_spine_reduce(struct psc_mparticles *mprts)
   } else if (b_mx[0] == 1 && b_mx[1] == 64 && b_mx[2] == 64) {
     RakingReduction3x<K, V, 0, RADIX_BITS, 0,
 		      NopFunctor<K>, 64, 64> <<<nr_total_blocks, threads>>>
+      (mprts_cuda->d_bnd_spine_cnts, mprts_cuda->d_bidx, mprts_cuda->d_off, nr_total_blocks);
+  } else if (b_mx[0] == 1 && b_mx[1] == 128 && b_mx[2] == 128) {
+    RakingReduction3x<K, V, 0, RADIX_BITS, 0,
+                      NopFunctor<K>, 128, 128> <<<nr_total_blocks, threads>>>
       (mprts_cuda->d_bnd_spine_cnts, mprts_cuda->d_bidx, mprts_cuda->d_off, nr_total_blocks);
   } else {
     mprintf("no support for b_mx %d x %d x %d!\n", b_mx[0], b_mx[1], b_mx[2]);
@@ -404,6 +416,14 @@ cuda_mprts_sort_pairs_device(struct psc_mparticles *mprts)
 			NopFunctor<K>,
 			NopFunctor<K>,
 			64, 64> 
+      <<<nr_total_blocks, B40C_RADIXSORT_THREADS>>>
+      (mprts_cuda->d_bnd_spine_sums, mprts_cuda->d_bidx,
+       mprts_cuda->d_ids, mprts_cuda->d_off, nr_total_blocks);
+  } else if (b_mx[0] == 1 && b_mx[1] == 128 && b_mx[2] == 128) {
+    ScanScatterDigits3x<K, V, 0, RADIX_BITS, 0,
+                        NopFunctor<K>,
+                        NopFunctor<K>,
+                        128, 128>
       <<<nr_total_blocks, B40C_RADIXSORT_THREADS>>>
       (mprts_cuda->d_bnd_spine_sums, mprts_cuda->d_bidx,
        mprts_cuda->d_ids, mprts_cuda->d_off, nr_total_blocks);
