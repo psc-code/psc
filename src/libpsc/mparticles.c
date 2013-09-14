@@ -139,6 +139,13 @@ psc_mparticles_get_as(struct psc_mparticles *mp_base, const char *type,
   free(nr_particles_by_patch);
 
   if (!(flags & MP_DONT_COPY)) {
+#ifdef USE_CUDA
+    if (strcmp(type_base, "cuda") == 0) { // FIXME
+      extern void psc_mparticles_cuda_reorder(struct psc_mparticles *);
+      psc_mparticles_cuda_reorder(mp_base);
+    }
+#endif
+
     for (int p = 0; p < mp_base->nr_patches; p++) {
       struct psc_particles *prts_base = psc_mparticles_get_patch(mp_base, p);
       struct psc_particles *prts = psc_mparticles_get_patch(mp, p);

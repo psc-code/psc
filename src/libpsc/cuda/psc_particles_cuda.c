@@ -589,3 +589,13 @@ struct psc_mparticles_ops psc_mparticles_cuda_ops = {
   .setup_internals         = psc_mparticles_cuda_setup_internals,
 };
 
+void
+psc_mparticles_cuda_reorder(struct psc_mparticles *mprts)
+{
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+
+  if (mprts_cuda->need_reorder) {
+    cuda_mprts_reorder(mprts);
+    mprts_cuda->need_reorder = false;
+  }
+}
