@@ -39,14 +39,15 @@ do_n_2nd_nc_run(fields_t *pf, struct psc_particles *prts)
     creal g1y=.5f*(.5f-h2)*(.5f-h2);
     creal g1z=.5f*(.5f-h3)*(.5f-h3);
       
+    int j1d = 1, j2d = 1, j3d = 1;
     if (ppsc->domain.gdims[0] == 1) {
-      j1 = 0; gmx = 0.; g0x = 1.; g1x = 0.;
+      j1 = 0; gmx = 0.; g0x = 1.; g1x = 0.; j1d = 0;
     }
     if (ppsc->domain.gdims[1] == 1) {
-      j2 = 0; gmy = 0.; g0y = 1.; g1y = 0.;
+      j2 = 0; gmy = 0.; g0y = 1.; g1y = 0.; j2d = 0;
     }
     if (ppsc->domain.gdims[2] == 1) {
-      j3 = 0; gmz = 0.; g0z = 1.; g1z = 0.;
+      j3 = 0; gmz = 0.; g0z = 1.; g1z = 0.; j3d = 0;
     }
 
     creal fnq;
@@ -61,33 +62,33 @@ do_n_2nd_nc_run(fields_t *pf, struct psc_particles *prts)
       fnq = part->wni * fnqs;
       m = 2;
     }
-    F3(pf, m, j1-1,j2-1,j3-1) += fnq*gmx*gmy*gmz;
-    F3(pf, m, j1  ,j2-1,j3-1) += fnq*g0x*gmy*gmz;
-    F3(pf, m, j1+1,j2-1,j3-1) += fnq*g1x*gmy*gmz;
-    F3(pf, m, j1-1,j2  ,j3-1) += fnq*gmx*g0y*gmz;
-    F3(pf, m, j1  ,j2  ,j3-1) += fnq*g0x*g0y*gmz;
-    F3(pf, m, j1+1,j2  ,j3-1) += fnq*g1x*g0y*gmz;
-    F3(pf, m, j1-1,j2+1,j3-1) += fnq*gmx*g1y*gmz;
-    F3(pf, m, j1  ,j2+1,j3-1) += fnq*g0x*g1y*gmz;
-    F3(pf, m, j1+1,j2+1,j3-1) += fnq*g1x*g1y*gmz;
-    F3(pf, m, j1-1,j2-1,j3  ) += fnq*gmx*gmy*g0z;
-    F3(pf, m, j1  ,j2-1,j3  ) += fnq*g0x*gmy*g0z;
-    F3(pf, m, j1+1,j2-1,j3  ) += fnq*g1x*gmy*g0z;
-    F3(pf, m, j1-1,j2  ,j3  ) += fnq*gmx*g0y*g0z;
-    F3(pf, m, j1  ,j2  ,j3  ) += fnq*g0x*g0y*g0z;
-    F3(pf, m, j1+1,j2  ,j3  ) += fnq*g1x*g0y*g0z;
-    F3(pf, m, j1-1,j2+1,j3  ) += fnq*gmx*g1y*g0z;
-    F3(pf, m, j1  ,j2+1,j3  ) += fnq*g0x*g1y*g0z;
-    F3(pf, m, j1+1,j2+1,j3  ) += fnq*g1x*g1y*g0z;
-    F3(pf, m, j1-1,j2-1,j3+1) += fnq*gmx*gmy*g1z;
-    F3(pf, m, j1  ,j2-1,j3+1) += fnq*g0x*gmy*g1z;
-    F3(pf, m, j1+1,j2-1,j3+1) += fnq*g1x*gmy*g1z;
-    F3(pf, m, j1-1,j2  ,j3+1) += fnq*gmx*g0y*g1z;
-    F3(pf, m, j1  ,j2  ,j3+1) += fnq*g0x*g0y*g1z;
-    F3(pf, m, j1+1,j2  ,j3+1) += fnq*g1x*g0y*g1z;
-    F3(pf, m, j1-1,j2+1,j3+1) += fnq*gmx*g1y*g1z;
-    F3(pf, m, j1  ,j2+1,j3+1) += fnq*g0x*g1y*g1z;
-    F3(pf, m, j1+1,j2+1,j3+1) += fnq*g1x*g1y*g1z;
+    F3(pf, m, j1-j1d,j2-1,j3-1) += fnq*gmx*gmy*gmz;
+    F3(pf, m, j1    ,j2-1,j3-1) += fnq*g0x*gmy*gmz;
+    F3(pf, m, j1+j1d,j2-1,j3-1) += fnq*g1x*gmy*gmz;
+    F3(pf, m, j1-j1d,j2  ,j3-1) += fnq*gmx*g0y*gmz;
+    F3(pf, m, j1    ,j2  ,j3-1) += fnq*g0x*g0y*gmz;
+    F3(pf, m, j1+j1d,j2  ,j3-1) += fnq*g1x*g0y*gmz;
+    F3(pf, m, j1-j1d,j2+1,j3-1) += fnq*gmx*g1y*gmz;
+    F3(pf, m, j1    ,j2+1,j3-1) += fnq*g0x*g1y*gmz;
+    F3(pf, m, j1+j1d,j2+1,j3-1) += fnq*g1x*g1y*gmz;
+    F3(pf, m, j1-j1d,j2-1,j3  ) += fnq*gmx*gmy*g0z;
+    F3(pf, m, j1    ,j2-1,j3  ) += fnq*g0x*gmy*g0z;
+    F3(pf, m, j1+j1d,j2-1,j3  ) += fnq*g1x*gmy*g0z;
+    F3(pf, m, j1-j1d,j2  ,j3  ) += fnq*gmx*g0y*g0z;
+    F3(pf, m, j1    ,j2  ,j3  ) += fnq*g0x*g0y*g0z;
+    F3(pf, m, j1+j1d,j2  ,j3  ) += fnq*g1x*g0y*g0z;
+    F3(pf, m, j1-j1d,j2+1,j3  ) += fnq*gmx*g1y*g0z;
+    F3(pf, m, j1    ,j2+1,j3  ) += fnq*g0x*g1y*g0z;
+    F3(pf, m, j1+j1d,j2+1,j3  ) += fnq*g1x*g1y*g0z;
+    F3(pf, m, j1-j1d,j2-1,j3+1) += fnq*gmx*gmy*g1z;
+    F3(pf, m, j1    ,j2-1,j3+1) += fnq*g0x*gmy*g1z;
+    F3(pf, m, j1+j1d,j2-1,j3+1) += fnq*g1x*gmy*g1z;
+    F3(pf, m, j1-j1d,j2  ,j3+1) += fnq*gmx*g0y*g1z;
+    F3(pf, m, j1    ,j2  ,j3+1) += fnq*g0x*g0y*g1z;
+    F3(pf, m, j1+j1d,j2  ,j3+1) += fnq*g1x*g0y*g1z;
+    F3(pf, m, j1-j1d,j2+1,j3+1) += fnq*gmx*g1y*g1z;
+    F3(pf, m, j1    ,j2+1,j3+1) += fnq*g0x*g1y*g1z;
+    F3(pf, m, j1+j1d,j2+1,j3+1) += fnq*g1x*g1y*g1z;
   }
 }
 

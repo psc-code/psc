@@ -19,14 +19,15 @@
     particle_real_t g1y = h2;						\
     particle_real_t g1z = h3;						\
     									\
+    int jxd = 1, jyd = 1, jzd = 1;					\
     if (ppsc->domain.gdims[0] == 1) {					\
-      jx = 0; g0x = 1.; g1x = 0.;					\
+      jx = 0; g0x = 1.; g1x = 0.; jxd = 0;				\
     }									\
     if (ppsc->domain.gdims[1] == 1) {					\
-      jy = 0; g0y = 1.; g1y = 0.;					\
+      jy = 0; g0y = 1.; g1y = 0.; jyd = 0;				\
     }									\
     if (ppsc->domain.gdims[2] == 1) {					\
-      jz = 0; g0z = 1.; g1z = 0.;					\
+      jz = 0; g0z = 1.; g1z = 0.; jzd = 0;				\
     }									\
     									\
     assert(jx >= -1 && jx < patch->ldims[0]);				\
@@ -35,14 +36,14 @@
     									\
     particle_real_t fnq = particle_wni(part) * fnqs;			\
 									\
-    F3(pf, m, jx  ,jy  ,jz  ) += fnq*g0x*g0y*g0z * (val);		\
-    F3(pf, m, jx+1,jy  ,jz  ) += fnq*g1x*g0y*g0z * (val);		\
-    F3(pf, m, jx  ,jy+1,jz  ) += fnq*g0x*g1y*g0z * (val);		\
-    F3(pf, m, jx+1,jy+1,jz  ) += fnq*g1x*g1y*g0z * (val);		\
-    F3(pf, m, jx  ,jy  ,jz+1) += fnq*g0x*g0y*g1z * (val);		\
-    F3(pf, m, jx+1,jy  ,jz+1) += fnq*g1x*g0y*g1z * (val);		\
-    F3(pf, m, jx  ,jy+1,jz+1) += fnq*g0x*g1y*g1z * (val);		\
-    F3(pf, m, jx+1,jy+1,jz+1) += fnq*g1x*g1y*g1z * (val);		\
+    F3(pf, m, jx    ,jy  ,jz  ) += fnq*g0x*g0y*g0z * (val);		\
+    F3(pf, m, jx+jxd,jy  ,jz  ) += fnq*g1x*g0y*g0z * (val);		\
+    F3(pf, m, jx    ,jy+1,jz  ) += fnq*g0x*g1y*g0z * (val);		\
+    F3(pf, m, jx+jxd,jy+1,jz  ) += fnq*g1x*g1y*g0z * (val);		\
+    F3(pf, m, jx    ,jy  ,jz+1) += fnq*g0x*g0y*g1z * (val);		\
+    F3(pf, m, jx+jxd,jy  ,jz+1) += fnq*g1x*g0y*g1z * (val);		\
+    F3(pf, m, jx    ,jy+1,jz+1) += fnq*g0x*g1y*g1z * (val);		\
+    F3(pf, m, jx+jxd,jy+1,jz+1) += fnq*g1x*g1y*g1z * (val);		\
   } while (0)
 
 #define DEPOSIT_TO_GRID_1ST_NC(part, pf, m, val) do {			\

@@ -444,6 +444,8 @@ psc_setup_domain(struct psc *psc)
       domain->bnd_fld_hi[d] = BND_FLD_PERIODIC;
       domain->bnd_part_lo[d]   = BND_PART_PERIODIC;
       domain->bnd_part_hi[d]   = BND_PART_PERIODIC;
+      // and no ghost points
+      psc->ibn[d] = 0;
     } else {
       if ((domain->bnd_fld_lo[d] >= BND_FLD_UPML && domain->bnd_fld_lo[d] <= BND_FLD_TIME) ||
 	  (domain->bnd_fld_hi[d] >= BND_FLD_UPML && domain->bnd_fld_hi[d] <= BND_FLD_TIME)) {
