@@ -38,8 +38,8 @@ ip_fields_to_j(int p, fields_ip_t *fld, fields_t *pf)
   struct psc_patch *patch = ppsc->patch + p;
   
   // FIXME, goes out of bounds
-  for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
-    for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
+  for (int iz = -2; iz < patch->ldims[2] + 1; iz++) {
+    for (int iy = -2; iy < patch->ldims[1] + 1; iy++) {
       fields_ip_real_t jx = F3_IP(fld, JXI, 0,iy,iz);
       F3(pf, JXI, 0,iy  ,iz  ) += jx.f00;
       F3(pf, JXI, 0,iy  ,iz+1) += jx.f01;
@@ -145,8 +145,8 @@ ip_fields_from_em(int p, fields_ip_t *fld, fields_t *pf)
   struct psc_patch *patch = ppsc->patch + p;
 
   for (int m = EX; m <= HZ; m++) {
-    for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
-      for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
+    for (int iz = -2; iz < patch->ldims[2] + 1; iz++) {
+      for (int iy = -2; iy < patch->ldims[1] + 1; iy++) {
 	float f00 = F3(pf, m, 0,iy  ,iz  );
 	float f01 = F3(pf, m, 0,iy  ,iz+1);
 	float f10 = F3(pf, m, 0,iy+1,iz  );
