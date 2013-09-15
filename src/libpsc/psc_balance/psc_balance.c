@@ -1,5 +1,5 @@
 
-#include "psc_balance.h"
+#include "psc_balance_private.h"
 #include "psc_bnd_fields.h"
 #include "psc_push_particles.h"
 #include "psc_push_fields.h"
@@ -14,15 +14,6 @@
 LIST_HEAD(psc_mfields_base_list);
 
 double *psc_balance_comp_time_by_patch;
-
-struct psc_balance {
-  struct mrc_obj obj;
-  int every;
-  int force_update;
-  double factor_fields;
-  bool print_loads;
-  bool write_loads;
-};
 
 static double
 capability_default(int p)
@@ -243,40 +234,26 @@ gather_loads(struct mrc_domain *domain, double *loads, int nr_patches,
   return loads_all;
 }
 
-struct send_info {
-  int rank;
-  int patch;
-};
+void
+psc_balance_communicate_particles(struct psc_balance *bal, struct communicate_ctx *ctx,
+				  struct psc_mparticles *mprts_old, struct psc_mparticles *mprts_new,
+				  int *nr_particles_by_patch_new)
+{
+  struct psc_balance_ops *ops = psc_balance_ops(bal);
 
-struct recv_info {
-  int rank;
-  int patch;
-};
+  assert(ops && ops->communicate_particles);
+  ops->communicate_particles(bal, ctx, mprts_old, mprts_new, nr_particles_by_patch_new);
+}
 
-struct by_ri {
-  int rank;
-  int nr_patches;
-  int *pi_to_patch;
-};
+static void
+psc_balance_communicate_fields(struct psc_balance *bal, struct communicate_ctx *ctx,
+			       struct psc_mfields *mflds_old, struct psc_mfields *mflds_new)
+{
+  struct psc_balance_ops *ops = psc_balance_ops(bal);
 
-struct communicate_ctx {
-  MPI_Comm comm;
-  int mpi_rank;
-  int mpi_size;
-  int nr_patches_old;
-  int nr_patches_new;
-  struct send_info *send_info; // by old patch on this proc
-  struct recv_info *recv_info; // by new patch on this proc
-
-  int *send_rank_to_ri; // map from send target rank to contiguous "rank index"
-  int *recv_rank_to_ri; // map from recv source rank to contiguous "rank index"
-
-  int nr_send_ranks;
-  struct by_ri *send_by_ri;
-
-  int nr_recv_ranks;
-  struct by_ri *recv_by_ri;
-};
+  assert(ops && ops->communicate_fields);
+  ops->communicate_fields(bal, ctx, mflds_old, mflds_new);
+}
 
 static void
 communicate_setup(struct communicate_ctx *ctx, struct mrc_domain *domain_old,
@@ -534,9 +511,9 @@ communicate_new_nr_particles(struct communicate_ctx *ctx, int **p_nr_particles_b
 }
 
 static void
-communicate_particles(struct communicate_ctx *ctx,
-		      struct psc_mparticles *mprts_old, struct psc_mparticles *mprts_new,
-		      int *nr_particles_by_patch_new)
+psc_balance_sub_communicate_particles(struct psc_balance *bal, struct communicate_ctx *ctx,
+				      struct psc_mparticles *mprts_old, struct psc_mparticles *mprts_new,
+				      int *nr_particles_by_patch_new)
 {
   static int pr, pr_A, pr_B, pr_C, pr_D;
   if (!pr) {
@@ -641,16 +618,16 @@ communicate_particles(struct communicate_ctx *ctx,
 }
 
 static void
-communicate_fields(struct communicate_ctx *ctx,
-		   mfields_t *flds_old, mfields_t *flds_new)
+psc_balance_sub_communicate_fields(struct psc_balance *bal, struct communicate_ctx *ctx,
+				   struct psc_mfields *mflds_old, struct psc_mfields *mflds_new)
 {
   //HACK: Don't communicate output fields if they don't correspond to the domain
   //This is needed e.g. for the boosted output which handles its MPI communication internally
   //printf("Field: %s\n", flds->f[0].name);
   
-  if (ctx->nr_patches_old != flds_old->nr_patches /* || strncmp(flds->f[0].name, "lab", 3) == 0 */) return;
+  if (ctx->nr_patches_old != mflds_old->nr_patches /* || strncmp(flds->f[0].name, "lab", 3) == 0 */) return;
 	
-  assert(ctx->nr_patches_old == flds_old->nr_patches);
+  assert(ctx->nr_patches_old == mflds_old->nr_patches);
   assert(ctx->nr_patches_old > 0);
   
   // send from old local patches
@@ -661,7 +638,7 @@ communicate_fields(struct communicate_ctx *ctx,
     if (new_rank == ctx->mpi_rank || new_rank < 0) {
       send_reqs[p] = MPI_REQUEST_NULL;
     } else {
-      fields_t *pf_old = psc_mfields_get_patch(flds_old, p);
+      fields_t *pf_old = psc_mfields_get_patch(mflds_old, p);
       int nn = psc_fields_size(pf_old) * pf_old->nr_comp;
       int *ib = pf_old->ib;
       void *addr_old = &F3(pf_old, 0, ib[0], ib[1], ib[2]);
@@ -682,7 +659,7 @@ communicate_fields(struct communicate_ctx *ctx,
       recv_reqs[p] = MPI_REQUEST_NULL;
       //Seed new data
     } else {
-      fields_t *pf_new = psc_mfields_get_patch(flds_new, p);
+      fields_t *pf_new = psc_mfields_get_patch(mflds_new, p);
       int nn = psc_fields_size(pf_new) * pf_new->nr_comp;
       int *ib = pf_new->ib;
       void *addr_new = &F3(pf_new, 0, ib[0], ib[1], ib[2]);
@@ -706,8 +683,8 @@ communicate_fields(struct communicate_ctx *ctx,
       continue;
     }
 
-    fields_t *pf_old = psc_mfields_get_patch(flds_old, ctx->recv_info[p].patch);
-    fields_t *pf_new = psc_mfields_get_patch(flds_new, p);
+    fields_t *pf_old = psc_mfields_get_patch(mflds_old, ctx->recv_info[p].patch);
+    fields_t *pf_new = psc_mfields_get_patch(mflds_new, p);
 
     assert(pf_old->nr_comp == pf_new->nr_comp);
     assert(psc_fields_size(pf_old) == psc_fields_size(pf_new));
@@ -816,7 +793,7 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
       psc_mfields_get_cf(flds_base_old, flds_base_old->first_comp,
 			 flds_base_old->first_comp + flds_base_old->nr_fields);
     mfields_t *flds_new = psc_mfields_get_cf(flds_base_new, 0, 0);
-    communicate_fields(ctx, flds_old, flds_new);
+    psc_balance_communicate_fields(bal, ctx, flds_old, flds_new);
     psc_mfields_put_cf(flds_old, flds_base_old, 0, 0);
     psc_mfields_put_cf(flds_new, flds_base_new, flds_base_new->first_comp,
 		       flds_base_new->first_comp + flds_base_new->nr_fields);
@@ -962,7 +939,7 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   prof_stop(pr_bal_prts_B);
     
   // communicate particles
-  communicate_particles(ctx, mprts_old, mprts_new, nr_particles_by_patch);
+  psc_balance_communicate_particles(bal, ctx, mprts_old, mprts_new, nr_particles_by_patch);
 
   prof_start(pr_bal_prts_C);
   free(nr_particles_by_patch);
@@ -1024,7 +1001,7 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
     prof_stop(pr_bal_flds_B);
 
     prof_restart(pr_bal_flds_comm);
-    communicate_fields(ctx, flds_old, flds_new);
+    psc_balance_communicate_fields(bal, ctx, flds_old, flds_new);
     prof_stop(pr_bal_flds_comm);
 
     prof_restart(pr_bal_flds_C);
@@ -1077,6 +1054,15 @@ _psc_balance_read(struct psc_balance *bal, struct mrc_io *io)
 					  sizeof(*psc_balance_comp_time_by_patch));
 }
 
+// ----------------------------------------------------------------------
+// psc_balance_init
+
+static void
+psc_balance_init(void)
+{
+  mrc_class_register_subclass(&mrc_class_psc_balance, &psc_balance_double_ops);
+}
+
 // ======================================================================
 // psc_balance class
 
@@ -1095,6 +1081,14 @@ struct mrc_class_psc_balance mrc_class_psc_balance = {
   .name             = "psc_balance",
   .size             = sizeof(struct psc_balance),
   .param_descr      = psc_balance_descr,
+  .init             = psc_balance_init,
   .read             = _psc_balance_read,
 };
 
+// ======================================================================
+
+struct psc_balance_ops psc_balance_double_ops = {
+  .name                  = "double",
+  .communicate_particles = psc_balance_sub_communicate_particles,
+  .communicate_fields    = psc_balance_sub_communicate_fields,
+};
