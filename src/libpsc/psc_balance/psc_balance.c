@@ -3,8 +3,6 @@
 #include "psc_bnd_fields.h"
 #include "psc_push_particles.h"
 #include "psc_push_fields.h"
-#include "psc_particles_as_double.h" // FIXME, hardcoded
-#include "psc_fields_as_c.h"
 
 #include <mrc_params.h>
 #include <mrc_profile.h>
@@ -597,13 +595,16 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
       }
     }
 
-    mfields_t *flds_old =
-      psc_mfields_get_cf(flds_base_old, flds_base_old->first_comp,
+    struct psc_balance_ops *ops = psc_balance_ops(bal);
+
+    struct psc_mfields *flds_old =
+      psc_mfields_get_as(flds_base_old, ops->mflds_type, flds_base_old->first_comp,
 			 flds_base_old->first_comp + flds_base_old->nr_fields);
-    mfields_t *flds_new = psc_mfields_get_cf(flds_base_new, 0, 0);
+    struct psc_mfields *flds_new =
+      psc_mfields_get_as(flds_base_new, ops->mflds_type, 0, 0);
     psc_balance_communicate_fields(bal, ctx, flds_old, flds_new);
-    psc_mfields_put_cf(flds_old, flds_base_old, 0, 0);
-    psc_mfields_put_cf(flds_new, flds_base_new, flds_base_new->first_comp,
+    psc_mfields_put_as(flds_old, flds_base_old, 0, 0);
+    psc_mfields_put_as(flds_new, flds_base_new, flds_base_new->first_comp,
 		       flds_base_new->first_comp + flds_base_new->nr_fields);
 
     psc_mfields_destroy(*p->flds_p);
@@ -742,8 +743,10 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   psc_mparticles_setup(mprts_base_new);
   prof_stop(pr_bal_prts_B1);
 
-  mparticles_t *mprts_new = psc_mparticles_get_as(mprts_base_new, PARTICLE_TYPE, MP_DONT_COPY);
-  mparticles_t *mprts_old = psc_mparticles_get_as(psc->particles, PARTICLE_TYPE, 0);
+  struct psc_balance_ops *ops = psc_balance_ops(bal);
+
+  struct psc_mparticles *mprts_new = psc_mparticles_get_as(mprts_base_new, ops->mprts_type, MP_DONT_COPY);
+  struct psc_mparticles *mprts_old = psc_mparticles_get_as(psc->particles, ops->mprts_type, 0);
   prof_stop(pr_bal_prts_B);
     
   // communicate particles
@@ -802,10 +805,11 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
     }
 
     prof_restart(pr_bal_flds_B);
-    mfields_t *flds_old =
-      psc_mfields_get_cf(flds_base_old, flds_base_old->first_comp,
+    struct psc_mfields *flds_old =
+      psc_mfields_get_as(flds_base_old, ops->mflds_type, flds_base_old->first_comp,
 			 flds_base_old->first_comp + flds_base_old->nr_fields);
-    mfields_t *flds_new = psc_mfields_get_cf(flds_base_new, 0, 0);
+    struct psc_mfields *flds_new =
+      psc_mfields_get_as(flds_base_new, ops->mflds_type, 0, 0);
     prof_stop(pr_bal_flds_B);
 
     prof_restart(pr_bal_flds_comm);
@@ -813,8 +817,8 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
     prof_stop(pr_bal_flds_comm);
 
     prof_restart(pr_bal_flds_C);
-    psc_mfields_put_cf(flds_old, flds_base_old, 0, 0);
-    psc_mfields_put_cf(flds_new, flds_base_new, flds_base_new->first_comp,
+    psc_mfields_put_as(flds_old, flds_base_old, 0, 0);
+    psc_mfields_put_as(flds_new, flds_base_new, flds_base_new->first_comp,
 		       flds_base_new->first_comp + flds_base_new->nr_fields);
     prof_stop(pr_bal_flds_C);
 
