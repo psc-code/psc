@@ -39,9 +39,8 @@ psc_balance_sub_communicate_particles(struct psc_balance *bal, struct communicat
     for (int pi = 0; pi < recv->nr_patches; pi++) {
       int p = recv->pi_to_patch[pi];
       struct psc_particles *pp_new = psc_mparticles_get_patch(mprts_new, p);
-      struct psc_particles_double *c_new = psc_particles_double(pp_new);
       int nn = pp_new->n_part * (sizeof(particle_t)  / sizeof(particle_real_t));
-      MPI_Irecv(c_new->particles, nn, MPI_PARTICLES_REAL, recv->rank,
+      MPI_Irecv(particles_get_one(pp_new, 0), nn, MPI_PARTICLES_REAL, recv->rank,
 		pi, ctx->comm, &recv_reqs[nr_recv_reqs++]);
     }
   }
@@ -61,10 +60,9 @@ psc_balance_sub_communicate_particles(struct psc_balance *bal, struct communicat
     for (int pi = 0; pi < send->nr_patches; pi++) {
       int p = send->pi_to_patch[pi];
       struct psc_particles *pp_old = psc_mparticles_get_patch(mprts_old, p);
-      struct psc_particles_double *c_old = psc_particles_double(pp_old);
       int nn = pp_old->n_part * (sizeof(particle_t)  / sizeof(particle_real_t));
       //mprintf("A send -> %d tag %d (patch %d)\n", send->rank, pi, p);
-      MPI_Isend(c_old->particles, nn, MPI_PARTICLES_REAL, send->rank,
+      MPI_Isend(particles_get_one(pp_old, 0), nn, MPI_PARTICLES_REAL, send->rank,
       		pi, ctx->comm, &send_reqs[nr_send_reqs++]);
     }
   }
@@ -79,13 +77,11 @@ psc_balance_sub_communicate_particles(struct psc_balance *bal, struct communicat
     }
 
     struct psc_particles *pp_old = psc_mparticles_get_patch(mprts_old, ctx->recv_info[p].patch);
-    struct psc_particles_double *c_old = psc_particles_double(pp_old);
     struct psc_particles *pp_new = psc_mparticles_get_patch(mprts_new, p);
-    struct psc_particles_double *c_new = psc_particles_double(pp_new);
     assert(pp_old->n_part == pp_new->n_part);
 #if 1
     for (int n = 0; n < pp_new->n_part; n++) {
-      c_new->particles[n] = c_old->particles[n];
+      *particles_get_one(pp_new, n) = *particles_get_one(pp_old, n);
     }
 #else
     // FIXME, this needs at least a proper interface -- if not separately alloc'ed, bad things

@@ -873,6 +873,7 @@ static void
 psc_balance_init(void)
 {
   mrc_class_register_subclass(&mrc_class_psc_balance, &psc_balance_double_ops);
+  mrc_class_register_subclass(&mrc_class_psc_balance, &psc_balance_single_ops);
 }
 
 // ======================================================================
