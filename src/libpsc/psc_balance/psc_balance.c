@@ -535,7 +535,7 @@ communicate_new_nr_particles(struct communicate_ctx *ctx, int **p_nr_particles_b
 
 static void
 communicate_particles(struct communicate_ctx *ctx,
-		      mparticles_t *particles_old, mparticles_t *particles_new,
+		      struct psc_mparticles *mprts_old, struct psc_mparticles *mprts_new,
 		      int *nr_particles_by_patch_new)
 {
   static int pr, pr_A, pr_B, pr_C, pr_D;
@@ -551,7 +551,7 @@ communicate_particles(struct communicate_ctx *ctx,
 
   prof_start(pr_A);
   for (int p = 0; p < ctx->nr_patches_new; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(particles_new, p);
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts_new, p);
     prts->n_part = nr_particles_by_patch_new[p];
   }
 
@@ -569,7 +569,7 @@ communicate_particles(struct communicate_ctx *ctx,
 
     for (int pi = 0; pi < recv->nr_patches; pi++) {
       int p = recv->pi_to_patch[pi];
-      struct psc_particles *pp_new = psc_mparticles_get_patch(particles_new, p);
+      struct psc_particles *pp_new = psc_mparticles_get_patch(mprts_new, p);
       struct psc_particles_double *c_new = psc_particles_double(pp_new);
       int nn = pp_new->n_part * (sizeof(particle_t)  / sizeof(particle_real_t));
       MPI_Irecv(c_new->particles, nn, MPI_PARTICLES_REAL, recv->rank,
@@ -591,7 +591,7 @@ communicate_particles(struct communicate_ctx *ctx,
 
     for (int pi = 0; pi < send->nr_patches; pi++) {
       int p = send->pi_to_patch[pi];
-      struct psc_particles *pp_old = psc_mparticles_get_patch(particles_old, p);
+      struct psc_particles *pp_old = psc_mparticles_get_patch(mprts_old, p);
       struct psc_particles_double *c_old = psc_particles_double(pp_old);
       int nn = pp_old->n_part * (sizeof(particle_t)  / sizeof(particle_real_t));
       //mprintf("A send -> %d tag %d (patch %d)\n", send->rank, pi, p);
@@ -609,9 +609,9 @@ communicate_particles(struct communicate_ctx *ctx,
       continue;
     }
 
-    struct psc_particles *pp_old = psc_mparticles_get_patch(particles_old, ctx->recv_info[p].patch);
+    struct psc_particles *pp_old = psc_mparticles_get_patch(mprts_old, ctx->recv_info[p].patch);
     struct psc_particles_double *c_old = psc_particles_double(pp_old);
-    struct psc_particles *pp_new = psc_mparticles_get_patch(particles_new, p);
+    struct psc_particles *pp_new = psc_mparticles_get_patch(mprts_new, p);
     struct psc_particles_double *c_new = psc_particles_double(pp_new);
     assert(pp_old->n_part == pp_new->n_part);
 #if 1
@@ -755,9 +755,6 @@ void
 psc_balance_initial(struct psc_balance *bal, struct psc *psc,
 		    int **p_nr_particles_by_patch)
 {
-  /*if (bal->every <= 0)
-    return;*/
-
   struct mrc_domain *domain_old = psc->mrc_domain;
 
   int nr_patches;
@@ -948,34 +945,34 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
 
   prof_start(pr_bal_prts_B);
   // alloc new particles
-  mparticles_base_t *mparticles_base_new = 
+  mparticles_base_t *mprts_base_new = 
     psc_mparticles_create(mrc_domain_comm(domain_new));
-  psc_mparticles_set_type(mparticles_base_new, psc->prm.particles_base);
-  psc_mparticles_set_domain_nr_particles(mparticles_base_new, domain_new,
-					      nr_particles_by_patch);
+  psc_mparticles_set_type(mprts_base_new, psc->prm.particles_base);
+  psc_mparticles_set_domain_nr_particles(mprts_base_new, domain_new,
+					 nr_particles_by_patch);
   unsigned int mp_flags;
   psc_mparticles_get_param_int(psc->particles, "flags", (int *) &mp_flags);
-  psc_mparticles_set_param_int(mparticles_base_new, "flags", mp_flags);
+  psc_mparticles_set_param_int(mprts_base_new, "flags", mp_flags);
   prof_start(pr_bal_prts_B1);
-  psc_mparticles_setup(mparticles_base_new);
+  psc_mparticles_setup(mprts_base_new);
   prof_stop(pr_bal_prts_B1);
 
-  mparticles_t *mparticles_new = psc_mparticles_get_cf(mparticles_base_new, MP_DONT_COPY);
-  mparticles_t *mparticles_old = psc_mparticles_get_cf(psc->particles, 0);
+  mparticles_t *mprts_new = psc_mparticles_get_as(mprts_base_new, PARTICLE_TYPE, MP_DONT_COPY);
+  mparticles_t *mprts_old = psc_mparticles_get_as(psc->particles, PARTICLE_TYPE, 0);
   prof_stop(pr_bal_prts_B);
     
   // communicate particles
-  communicate_particles(ctx, mparticles_old, mparticles_new, nr_particles_by_patch);
+  communicate_particles(ctx, mprts_old, mprts_new, nr_particles_by_patch);
 
   prof_start(pr_bal_prts_C);
   free(nr_particles_by_patch);
 
-  psc_mparticles_put_cf(mparticles_old, psc->particles, MP_DONT_COPY);
-  psc_mparticles_put_cf(mparticles_new, mparticles_base_new, 0);
+  psc_mparticles_put_as(mprts_old, psc->particles, MP_DONT_COPY);
+  psc_mparticles_put_as(mprts_new, mprts_base_new, 0);
 
   // replace particles by redistributed ones
   psc_mparticles_destroy(psc->particles);
-  psc->particles = mparticles_base_new;
+  psc->particles = mprts_base_new;
   prof_stop(pr_bal_prts_C);
 
   prof_stop(pr_bal_prts);
