@@ -44,8 +44,8 @@ struct mrc_ddc_amr {
 static void
 mrc_ddc_amr_set_domain(struct mrc_ddc *ddc, struct mrc_domain *domain)
 {
-  struct mrc_ddc_amr *amr = mrc_ddc_amr(ddc);
-  amr->domain = domain;
+  struct mrc_ddc_amr *sub = mrc_ddc_amr(ddc);
+  sub->domain = domain;
 }
 
 // ----------------------------------------------------------------------
@@ -54,8 +54,8 @@ mrc_ddc_amr_set_domain(struct mrc_ddc *ddc, struct mrc_domain *domain)
 static struct mrc_domain *
 mrc_ddc_amr_get_domain(struct mrc_ddc *ddc)
 {
-  struct mrc_ddc_amr *amr = mrc_ddc_amr(ddc);
-  return amr->domain;
+  struct mrc_ddc_amr *sub = mrc_ddc_amr(ddc);
+  return sub->domain;
 }
 
 // ----------------------------------------------------------------------
@@ -64,25 +64,25 @@ mrc_ddc_amr_get_domain(struct mrc_ddc *ddc)
 static void
 mrc_ddc_amr_setup(struct mrc_ddc *ddc)
 {
-  struct mrc_ddc_amr *amr = mrc_ddc_amr(ddc);
-  assert(amr->domain);
+  struct mrc_ddc_amr *sub = mrc_ddc_amr(ddc);
+  assert(sub->domain);
 
   int ldims[3];
-  mrc_domain_get_param_int3(amr->domain, "m", ldims);
+  mrc_domain_get_param_int3(sub->domain, "m", ldims);
   // needs to be compatible with how mrc_fld indexes its fields
   for (int d = 0; d < 3; d++) {
-    amr->ib[d] = -amr->sw;
-    amr->im[d] = ldims[d] + 2 * amr->sw;
+    sub->ib[d] = -sub->sw;
+    sub->im[d] = ldims[d] + 2 * sub->sw;
   }
 
-  amr->nr_rows_alloced = 1000;
-  amr->nr_entries_alloced = 2000;
+  sub->nr_rows_alloced = 1000;
+  sub->nr_entries_alloced = 2000;
 
-  amr->rows = calloc(amr->nr_rows_alloced, sizeof(*amr->rows));
-  amr->entries = calloc(amr->nr_entries_alloced, sizeof(*amr->entries));
+  sub->rows = calloc(sub->nr_rows_alloced, sizeof(*sub->rows));
+  sub->entries = calloc(sub->nr_entries_alloced, sizeof(*sub->entries));
 
-  amr->nr_entries = 0;
-  amr->nr_rows = 0;
+  sub->nr_entries = 0;
+  sub->nr_rows = 0;
 }
 
 // ----------------------------------------------------------------------
@@ -91,10 +91,10 @@ mrc_ddc_amr_setup(struct mrc_ddc *ddc)
 static void
 mrc_ddc_amr_destroy(struct mrc_ddc *ddc)
 {
-  struct mrc_ddc_amr *amr = mrc_ddc_amr(ddc);
+  struct mrc_ddc_amr *sub = mrc_ddc_amr(ddc);
 
-  free(amr->rows);
-  free(amr->entries);
+  free(sub->rows);
+  free(sub->entries);
 }
 
 // ----------------------------------------------------------------------
@@ -106,51 +106,51 @@ mrc_ddc_amr_add_value(struct mrc_ddc *ddc,
 		      int col_patch, int colm, int col[3],
 		      float val)
 {
-  struct mrc_ddc_amr *amr = mrc_ddc_amr(ddc);
+  struct mrc_ddc_amr *sub = mrc_ddc_amr(ddc);
 
   // WARNING, all elements for any given row must be added contiguously!
 
   assert(row_patch >= 0);
   assert(col_patch >= 0);
 
-  int row_idx = (((rowm * amr->im[2] + row[2] - amr->ib[2]) *
-		  amr->im[1] + row[1] - amr->ib[1]) *
-		 amr->im[0] + row[0] - amr->ib[0]);
-  int col_idx = (((colm * amr->im[2] + col[2] - amr->ib[2]) *
-		  amr->im[1] + col[1] - amr->ib[1]) *
-		 amr->im[0] + col[0] - amr->ib[0]);
+  int row_idx = (((rowm * sub->im[2] + row[2] - sub->ib[2]) *
+		  sub->im[1] + row[1] - sub->ib[1]) *
+		 sub->im[0] + row[0] - sub->ib[0]);
+  int col_idx = (((colm * sub->im[2] + col[2] - sub->ib[2]) *
+		  sub->im[1] + col[1] - sub->ib[1]) *
+		 sub->im[0] + col[0] - sub->ib[0]);
   
-  if (amr->nr_rows == 0 ||
-      amr->rows[amr->nr_rows - 1].idx != row_idx ||
-      amr->rows[amr->nr_rows - 1].patch != row_patch) {
+  if (sub->nr_rows == 0 ||
+      sub->rows[sub->nr_rows - 1].idx != row_idx ||
+      sub->rows[sub->nr_rows - 1].patch != row_patch) {
     // start new row
-    if (amr->nr_rows >= amr->nr_rows_alloced - 1) {
-      amr->nr_rows_alloced *= 2;
-      amr->rows = realloc(amr->rows, amr->nr_rows_alloced * sizeof(*amr->rows));
+    if (sub->nr_rows >= sub->nr_rows_alloced - 1) {
+      sub->nr_rows_alloced *= 2;
+      sub->rows = realloc(sub->rows, sub->nr_rows_alloced * sizeof(*sub->rows));
     }
-    amr->rows[amr->nr_rows].patch = row_patch;
-    amr->rows[amr->nr_rows].idx = row_idx;
-    amr->rows[amr->nr_rows].first_entry = amr->nr_entries;
-    amr->nr_rows++;
+    sub->rows[sub->nr_rows].patch = row_patch;
+    sub->rows[sub->nr_rows].idx = row_idx;
+    sub->rows[sub->nr_rows].first_entry = sub->nr_entries;
+    sub->nr_rows++;
   }
 
   // if we already have an entry for this column in the current row, just add to it
-  for (int i = amr->rows[amr->nr_rows - 1].first_entry; i < amr->nr_entries; i++) {
-    if (amr->entries[i].patch == col_patch && amr->entries[i].idx == col_idx) {
-      amr->entries[i].val += val;
+  for (int i = sub->rows[sub->nr_rows - 1].first_entry; i < sub->nr_entries; i++) {
+    if (sub->entries[i].patch == col_patch && sub->entries[i].idx == col_idx) {
+      sub->entries[i].val += val;
       return;
     }
   }
 
   // otherwise, need to append a new entry
-  if (amr->nr_entries >= amr->nr_entries_alloced) {
-    amr->nr_entries_alloced *= 2;
-    amr->entries = realloc(amr->entries, amr->nr_entries_alloced * sizeof(*amr->entries));
+  if (sub->nr_entries >= sub->nr_entries_alloced) {
+    sub->nr_entries_alloced *= 2;
+    sub->entries = realloc(sub->entries, sub->nr_entries_alloced * sizeof(*sub->entries));
   }
-  amr->entries[amr->nr_entries].patch = col_patch;
-  amr->entries[amr->nr_entries].idx = col_idx;
-  amr->entries[amr->nr_entries].val = val;
-  amr->nr_entries++;
+  sub->entries[sub->nr_entries].patch = col_patch;
+  sub->entries[sub->nr_entries].idx = col_idx;
+  sub->entries[sub->nr_entries].val = val;
+  sub->nr_entries++;
 }
 
 // ----------------------------------------------------------------------
@@ -159,10 +159,10 @@ mrc_ddc_amr_add_value(struct mrc_ddc *ddc,
 void
 mrc_ddc_amr_assemble(struct mrc_ddc *ddc)
 {
-  struct mrc_ddc_amr *amr = mrc_ddc_amr(ddc);
+  struct mrc_ddc_amr *sub = mrc_ddc_amr(ddc);
 
-  amr->rows[amr->nr_rows].first_entry = amr->nr_entries;
-  mprintf("nr_rows %d nr_entries %d\n", amr->nr_rows, amr->nr_entries);
+  sub->rows[sub->nr_rows].first_entry = sub->nr_entries;
+  mprintf("nr_rows %d nr_entries %d\n", sub->nr_rows, sub->nr_entries);
 }
 
 // ----------------------------------------------------------------------
@@ -174,20 +174,20 @@ mrc_ddc_amr_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
   // mb, me is meaningless here, make sure the caller knows
   assert(mb < 0 && me < 0);
 
-  struct mrc_ddc_amr *amr = mrc_ddc_amr(ddc);
+  struct mrc_ddc_amr *sub = mrc_ddc_amr(ddc);
 
   if (ddc->size_of_type == sizeof(float)) {
     float **fldp = ctx;
     
-    for (int row = 0; row < amr->nr_rows; row++) {
-      int row_patch = amr->rows[row].patch;
-      int row_idx = amr->rows[row].idx;
+    for (int row = 0; row < sub->nr_rows; row++) {
+      int row_patch = sub->rows[row].patch;
+      int row_idx = sub->rows[row].idx;
       float sum = 0.;
-      for (int entry = amr->rows[row].first_entry;
-	   entry < amr->rows[row + 1].first_entry; entry++) {
-	int col_patch =  amr->entries[entry].patch;
-	int col_idx = amr->entries[entry].idx;
-	float val = amr->entries[entry].val;
+      for (int entry = sub->rows[row].first_entry;
+	   entry < sub->rows[row + 1].first_entry; entry++) {
+	int col_patch =  sub->entries[entry].patch;
+	int col_idx = sub->entries[entry].idx;
+	float val = sub->entries[entry].val;
 	sum += val * fldp[col_patch][col_idx];
       }
       fldp[row_patch][row_idx] = sum;
@@ -197,15 +197,15 @@ mrc_ddc_amr_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
     // conversions
     double **fldp = ctx;
 
-    for (int row = 0; row < amr->nr_rows; row++) {
-      int row_patch = amr->rows[row].patch;
-      int row_idx = amr->rows[row].idx;
+    for (int row = 0; row < sub->nr_rows; row++) {
+      int row_patch = sub->rows[row].patch;
+      int row_idx = sub->rows[row].idx;
       float sum = 0.;
-      for (int entry = amr->rows[row].first_entry;
-	   entry < amr->rows[row + 1].first_entry; entry++) {
-	int col_patch =  amr->entries[entry].patch;
-	int col_idx = amr->entries[entry].idx;
-	double val = amr->entries[entry].val;
+      for (int entry = sub->rows[row].first_entry;
+	   entry < sub->rows[row + 1].first_entry; entry++) {
+	int col_patch =  sub->entries[entry].patch;
+	int col_idx = sub->entries[entry].idx;
+	double val = sub->entries[entry].val;
 	sum += val * fldp[col_patch][col_idx];
       }
       fldp[row_patch][row_idx] = sum;

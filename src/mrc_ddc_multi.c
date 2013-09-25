@@ -62,7 +62,7 @@ struct mrc_ddc_multi {
   struct mrc_ddc_pattern2 fill_ghosts2;
 };
 
-#define to_mrc_ddc_multi(ddc) ((struct mrc_ddc_multi *) (ddc)->obj.subctx)
+#define mrc_ddc_multi(ddc) mrc_to_subobj(ddc, struct mrc_ddc_multi)
 
 // ----------------------------------------------------------------------
 // mrc_ddc_multi_get_nei_rank_patch
@@ -71,28 +71,28 @@ static void
 mrc_ddc_multi_get_nei_rank_patch(struct mrc_ddc *ddc, int p, int dir[3],
 				 int *nei_rank, int *nei_patch)
 {
-  struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
+  struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
 
   struct mrc_patch_info info;
-  mrc_domain_get_local_patch_info(multi->domain, p, &info);
+  mrc_domain_get_local_patch_info(sub->domain, p, &info);
   int patch_idx_nei[3];
   for (int d = 0; d < 3; d++) {
     patch_idx_nei[d] = info.idx3[d] + dir[d];
-    if (multi->bc[d] == BC_PERIODIC) {
+    if (sub->bc[d] == BC_PERIODIC) {
       if (patch_idx_nei[d] < 0) {
-	patch_idx_nei[d] += multi->np[d];
+	patch_idx_nei[d] += sub->np[d];
       }
-      if (patch_idx_nei[d] >= multi->np[d]) {
-	patch_idx_nei[d] -= multi->np[d];
+      if (patch_idx_nei[d] >= sub->np[d]) {
+	patch_idx_nei[d] -= sub->np[d];
       }
     }
-    if (patch_idx_nei[d] < 0 || patch_idx_nei[d] >= multi->np[d]) {
+    if (patch_idx_nei[d] < 0 || patch_idx_nei[d] >= sub->np[d]) {
       *nei_rank = -1;
       *nei_patch = -1;
       return;
     }
   }
-  mrc_domain_get_level_idx3_patch_info(multi->domain, 0, patch_idx_nei, &info);
+  mrc_domain_get_level_idx3_patch_info(sub->domain, 0, patch_idx_nei, &info);
   *nei_rank = info.rank;
   *nei_patch = info.patch;
 }
@@ -103,7 +103,7 @@ mrc_ddc_multi_get_nei_rank_patch(struct mrc_ddc *ddc, int p, int dir[3],
 static void
 ddc_init_outside(struct mrc_ddc *ddc, int p, struct mrc_ddc_sendrecv *sr, int dir[3])
 {
-  struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
+  struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
 
   if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
     sr->nei_rank = -1;
@@ -118,7 +118,7 @@ ddc_init_outside(struct mrc_ddc *ddc, int p, struct mrc_ddc_sendrecv *sr, int di
   int ilo[3], ihi[3];
   for (int d = 0; d < 3; d++) {
     ilo[d] = 0;
-    ihi[d] = multi->patches[p].ldims[d];
+    ihi[d] = sub->patches[p].ldims[d];
     switch (dir[d]) {
     case -1:
       sr->ilo[d] = ilo[d] - ddc->ibn[d];
@@ -143,7 +143,7 @@ ddc_init_outside(struct mrc_ddc *ddc, int p, struct mrc_ddc_sendrecv *sr, int di
 static void
 ddc_init_inside(struct mrc_ddc *ddc, int p, struct mrc_ddc_sendrecv *sr, int dir[3])
 {
-  struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
+  struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
 
   if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
     sr->nei_rank = -1;
@@ -158,7 +158,7 @@ ddc_init_inside(struct mrc_ddc *ddc, int p, struct mrc_ddc_sendrecv *sr, int dir
   int ilo[3], ihi[3];
   for (int d = 0; d < 3; d++) {
     ilo[d] = 0;
-    ihi[d] = multi->patches[p].ldims[d];
+    ihi[d] = sub->patches[p].ldims[d];
     switch (dir[d]) {
     case -1:
       sr->ilo[d] = ilo[d];
@@ -183,9 +183,9 @@ ddc_init_inside(struct mrc_ddc *ddc, int p, struct mrc_ddc_sendrecv *sr, int dir
 static void
 mrc_ddc_multi_set_domain(struct mrc_ddc *ddc, struct mrc_domain *domain)
 {
-  struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
+  struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
 
-  multi->domain = domain;
+  sub->domain = domain;
 }
 
 // ----------------------------------------------------------------------
@@ -194,9 +194,9 @@ mrc_ddc_multi_set_domain(struct mrc_ddc *ddc, struct mrc_domain *domain)
 static struct mrc_domain *
 mrc_ddc_multi_get_domain(struct mrc_ddc *ddc)
 {
-  struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
+  struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
 
-  return multi->domain;
+  return sub->domain;
 }
 
 // ----------------------------------------------------------------------
@@ -209,15 +209,15 @@ mrc_ddc_multi_setup_pattern2(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2
 			     void (*init_recv)(struct mrc_ddc *, int p,
 					       struct mrc_ddc_sendrecv *, int [3]))
 {
-  struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
+  struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
 
-  struct mrc_ddc_rank_info *ri = calloc(multi->mpi_size, sizeof(*ri));
+  struct mrc_ddc_rank_info *ri = calloc(sub->mpi_size, sizeof(*ri));
   patt2->ri = ri;
 
   int dir[3];
 
   // count how many {send,recv}_entries per rank
-  for (int p = 0; p < multi->nr_patches; p++) {
+  for (int p = 0; p < sub->nr_patches; p++) {
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
 	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
@@ -236,11 +236,11 @@ mrc_ddc_multi_setup_pattern2(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2
   }
 
   // alloc {send,recv}_entries
-  for (int r = 0; r < multi->mpi_size; r++) {
+  for (int r = 0; r < sub->mpi_size; r++) {
     if (ri[r].n_send_entries) {
       ri[r].send_entry = malloc(ri[r].n_send_entries * sizeof(*ri[r].send_entry));
       ri[r].n_send_entries = 0;
-      if (r != multi->mpi_rank) {
+      if (r != sub->mpi_rank) {
 	patt2->n_send_ranks++;
       }
     }
@@ -248,14 +248,14 @@ mrc_ddc_multi_setup_pattern2(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2
       ri[r].recv_entry = malloc(ri[r].n_recv_entries * sizeof(*ri[r].recv_entry));
       ri[r].recv_entry_ = malloc(ri[r].n_recv_entries * sizeof(*ri[r].recv_entry_));
       ri[r].n_recv_entries = 0;
-      if (r != multi->mpi_rank) {
+      if (r != sub->mpi_rank) {
 	patt2->n_recv_ranks++;
       }
     }
   }
 
   // set up {send,recv}_entries per rank
-  for (int p = 0; p < multi->nr_patches; p++) {
+  for (int p = 0; p < sub->nr_patches; p++) {
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
 	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
@@ -273,7 +273,7 @@ mrc_ddc_multi_setup_pattern2(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2
 	    memcpy(se->ilo, sr.ilo, 3 * sizeof(*se->ilo));
 	    memcpy(se->ihi, sr.ihi, 3 * sizeof(*se->ihi));
 	    ri[sr.nei_rank].n_send += sr.len;
-	    if (sr.nei_rank != multi->mpi_rank) {
+	    if (sr.nei_rank != sub->mpi_rank) {
 	      patt2->n_send += sr.len;
 	    }
 	  }
@@ -289,7 +289,7 @@ mrc_ddc_multi_setup_pattern2(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2
 	    memcpy(re->ilo, sr.ilo, 3 * sizeof(*re->ilo));
 	    memcpy(re->ihi, sr.ihi, 3 * sizeof(*re->ihi));
 	    ri[sr.nei_rank].n_recv += sr.len;
-	    if (sr.nei_rank != multi->mpi_rank) {
+	    if (sr.nei_rank != sub->mpi_rank) {
 	      patt2->n_recv += sr.len;
 	    }
 	  }
@@ -299,7 +299,7 @@ mrc_ddc_multi_setup_pattern2(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2
   }
 
   // reorganize recv_entries into right order (same as send on the sending rank)
-  for (int r = 0; r < multi->mpi_size; r++) {
+  for (int r = 0; r < sub->mpi_size; r++) {
     for (int p = 0, cnt = 0; cnt < ri[r].n_recv_entries; p++) {
       for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
 	for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
@@ -322,8 +322,8 @@ mrc_ddc_multi_setup_pattern2(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2
 
   // find buffer size for local exchange
   int local_buf_size = 0;
-  for (int i = 0; i < ri[multi->mpi_rank].n_recv_entries; i++) {
-    struct mrc_ddc_sendrecv_entry *re = &ri[multi->mpi_rank].recv_entry[i];
+  for (int i = 0; i < ri[sub->mpi_rank].n_recv_entries; i++) {
+    struct mrc_ddc_sendrecv_entry *re = &ri[sub->mpi_rank].recv_entry[i];
     local_buf_size = MAX(local_buf_size,
 			 (re->ihi[0] - re->ilo[0]) * 
 			 (re->ihi[1] - re->ilo[1]) * 
@@ -344,7 +344,7 @@ mrc_ddc_multi_setup_pattern2(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2
 static void
 mrc_ddc_multi_destroy_pattern2(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2)
 {
-  struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
+  struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
 
   free(patt2->send_req);
   free(patt2->recv_req);
@@ -353,7 +353,7 @@ mrc_ddc_multi_destroy_pattern2(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *pat
   free(patt2->recv_buf);
   free(patt2->local_buf);
 
-  for (int r = 0; r < multi->mpi_size; r++) {
+  for (int r = 0; r < sub->mpi_size; r++) {
     free(patt2->ri[r].send_entry);
     free(patt2->ri[r].recv_entry);
   }
@@ -366,7 +366,7 @@ mrc_ddc_multi_destroy_pattern2(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *pat
 static void
 mrc_ddc_multi_setup(struct mrc_ddc *ddc)
 {
-  struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
+  struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
 
   if (ddc->size_of_type == sizeof(float)) {
     ddc->mpi_type = MPI_FLOAT;
@@ -377,19 +377,19 @@ mrc_ddc_multi_setup(struct mrc_ddc *ddc)
   }
 
   assert(ddc->max_n_fields > 0);
-  assert(multi->domain);
-  mrc_domain_get_nr_procs(multi->domain, multi->np);
-  mrc_domain_get_bc(multi->domain, multi->bc);
+  assert(sub->domain);
+  mrc_domain_get_nr_procs(sub->domain, sub->np);
+  mrc_domain_get_bc(sub->domain, sub->bc);
 
-  multi->patches = mrc_domain_get_patches(multi->domain,
-					  &multi->nr_patches);
+  sub->patches = mrc_domain_get_patches(sub->domain,
+					&sub->nr_patches);
 
-  MPI_Comm_rank(mrc_ddc_comm(ddc), &multi->mpi_rank);
-  MPI_Comm_size(mrc_ddc_comm(ddc), &multi->mpi_size);
+  MPI_Comm_rank(mrc_ddc_comm(ddc), &sub->mpi_rank);
+  MPI_Comm_size(mrc_ddc_comm(ddc), &sub->mpi_size);
 
-  mrc_ddc_multi_setup_pattern2(ddc, &multi->fill_ghosts2,
+  mrc_ddc_multi_setup_pattern2(ddc, &sub->fill_ghosts2,
 			       ddc_init_inside, ddc_init_outside);
-  mrc_ddc_multi_setup_pattern2(ddc, &multi->add_ghosts2,
+  mrc_ddc_multi_setup_pattern2(ddc, &sub->add_ghosts2,
 			       ddc_init_outside, ddc_init_inside);
 }
 
@@ -399,10 +399,10 @@ mrc_ddc_multi_setup(struct mrc_ddc *ddc)
 static void
 mrc_ddc_multi_destroy(struct mrc_ddc *ddc)
 {
-  struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
+  struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
 
-  mrc_ddc_multi_destroy_pattern2(ddc, &multi->fill_ghosts2);
-  mrc_ddc_multi_destroy_pattern2(ddc, &multi->add_ghosts2);
+  mrc_ddc_multi_destroy_pattern2(ddc, &sub->fill_ghosts2);
+  mrc_ddc_multi_destroy_pattern2(ddc, &sub->add_ghosts2);
 }
 
 // ----------------------------------------------------------------------
@@ -414,14 +414,14 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
 	void (*to_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf, void *ctx),
 	void (*from_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf, void *ctx))
 {
-  struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
+  struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
   struct mrc_ddc_rank_info *ri = patt2->ri;
 
   // communicate aggregated buffers
   int recv_cnt = 0;
   void *p = patt2->recv_buf;
-  for (int r = 0; r < multi->mpi_size; r++) {
-    if (r != multi->mpi_rank && ri[r].n_recv_entries) {
+  for (int r = 0; r < sub->mpi_size; r++) {
+    if (r != sub->mpi_rank && ri[r].n_recv_entries) {
       MPI_Irecv(p, ri[r].n_recv * (me - mb), ddc->mpi_type,
 		r, 0, ddc->obj.comm, &patt2->recv_req[recv_cnt++]);
       p += ri[r].n_recv * (me - mb) * ddc->size_of_type;
@@ -431,8 +431,8 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
   
   p = patt2->send_buf;
   int send_cnt = 0;
-  for (int r = 0; r < multi->mpi_size; r++) {
-    if (r != multi->mpi_rank && ri[r].n_send_entries) {
+  for (int r = 0; r < sub->mpi_size; r++) {
+    if (r != sub->mpi_rank && ri[r].n_send_entries) {
       void *p0 = p;
       for (int i = 0; i < ri[r].n_send_entries; i++) {
 	struct mrc_ddc_sendrecv_entry *se = &ri[r].send_entry[i];
@@ -446,9 +446,9 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
   assert(p == patt2->send_buf + patt2->n_send * (me - mb) * ddc->size_of_type);
 
   // overlap: local exchange
-  for (int i = 0; i < ri[multi->mpi_rank].n_send_entries; i++) {
-    struct mrc_ddc_sendrecv_entry *se = &ri[multi->mpi_rank].send_entry[i];
-    struct mrc_ddc_sendrecv_entry *re = &ri[multi->mpi_rank].recv_entry[i];
+  for (int i = 0; i < ri[sub->mpi_rank].n_send_entries; i++) {
+    struct mrc_ddc_sendrecv_entry *se = &ri[sub->mpi_rank].send_entry[i];
+    struct mrc_ddc_sendrecv_entry *re = &ri[sub->mpi_rank].recv_entry[i];
     to_buf(mb, me, se->patch, se->ilo, se->ihi, patt2->local_buf, ctx);
     from_buf(mb, me, se->nei_patch, re->ilo, re->ihi, patt2->local_buf, ctx);
   }
@@ -456,8 +456,8 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
   MPI_Waitall(recv_cnt, patt2->recv_req, MPI_STATUSES_IGNORE);
 
   p = patt2->recv_buf;
-  for (int r = 0; r < multi->mpi_size; r++) {
-    if (r != multi->mpi_rank) {
+  for (int r = 0; r < sub->mpi_size; r++) {
+    if (r != sub->mpi_rank) {
       for (int i = 0; i < ri[r].n_recv_entries; i++) {
 	struct mrc_ddc_sendrecv_entry *re = &ri[r].recv_entry[i];
 	from_buf(mb, me, re->patch, re->ilo, re->ihi, p, ctx);
@@ -475,9 +475,9 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
 static void
 mrc_ddc_multi_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 {
-  struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
+  struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
 
-  ddc_run(ddc, &multi->add_ghosts2, mb, me, ctx,
+  ddc_run(ddc, &sub->add_ghosts2, mb, me, ctx,
 	  ddc->funcs->copy_to_buf, ddc->funcs->add_from_buf);
 }
 
@@ -488,10 +488,10 @@ static void
 mrc_ddc_multi_fill_ghosts_fld(struct mrc_ddc *ddc, int mb, int me,
 			      struct mrc_fld *fld)
 {
-  struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
+  struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
 
   assert(fld->_size_of_type == ddc->size_of_type);
-  ddc_run(ddc, &multi->fill_ghosts2, mb, me, fld,
+  ddc_run(ddc, &sub->fill_ghosts2, mb, me, fld,
 	  mrc_fld_ddc_copy_to_buf, mrc_fld_ddc_copy_from_buf);
 }
 
@@ -501,9 +501,9 @@ mrc_ddc_multi_fill_ghosts_fld(struct mrc_ddc *ddc, int mb, int me,
 static void
 mrc_ddc_multi_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 {
-  struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
+  struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
 
-  ddc_run(ddc, &multi->fill_ghosts2, mb, me, ctx,
+  ddc_run(ddc, &sub->fill_ghosts2, mb, me, ctx,
 	  ddc->funcs->copy_to_buf, ddc->funcs->copy_from_buf);
 }
 
