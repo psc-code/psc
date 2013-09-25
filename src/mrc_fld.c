@@ -536,10 +536,11 @@ mrc_fld_get_as(struct mrc_fld *fld_base, const char *type)
   struct mrc_fld *fld = mrc_fld_create(mrc_fld_comm(fld_base));
   mrc_fld_set_type(fld, type);
   if (fld_base->_domain) {
-    fld->_domain = fld_base->_domain;
-    fld->_nr_spatial_dims = fld_base->_nr_spatial_dims;
-    fld->_nr_comps = fld_base->_nr_comps;
-    fld->_nr_ghosts = fld_base->_nr_ghosts;
+    // if we're based on a domain, dims/offs/sw will be set by setup()
+    mrc_fld_set_param_obj(fld, "domain", fld_base->_domain);
+    mrc_fld_set_param_int(fld, "nr_spatial_dims", fld_base->_nr_spatial_dims);
+    mrc_fld_set_param_int(fld, "nr_comps", fld_base->_nr_comps);
+    mrc_fld_set_param_int(fld, "nr_ghosts", fld_base->_nr_ghosts);
   } else {
     mrc_fld_set_param_int_array(fld, "dims", fld_base->_dims.nr_vals, fld_base->_dims.vals);
     mrc_fld_set_param_int_array(fld, "offs", fld_base->_offs.nr_vals, fld_base->_offs.vals);
@@ -682,6 +683,58 @@ mrc_fld_float_copy_to_double(struct mrc_fld *fld_float,
 }
 
 // ----------------------------------------------------------------------
+// mrc_fld "float" methods
+
+static struct mrc_obj_method mrc_fld_float_methods[] = {
+  MRC_OBJ_METHOD("copy_to_double",   mrc_fld_float_copy_to_double),
+  MRC_OBJ_METHOD("copy_from_double", mrc_fld_float_copy_from_double),
+  {}
+};
+
+// ----------------------------------------------------------------------
+// mrc_fld_float_aos_copy_from_double_aos
+
+static void
+mrc_fld_float_aos_copy_from_double_aos(struct mrc_fld *fld_float,
+				       struct mrc_fld *fld_double)
+{
+  assert(mrc_fld_same_shape(fld_float, fld_double));
+  assert(fld_float->_data_type == MRC_NT_FLOAT);
+  assert(fld_double->_data_type == MRC_NT_DOUBLE);
+  float *f_arr = fld_float->_arr;
+  double *d_arr = fld_double->_arr;
+  for (int i = 0; i < fld_float->_len; i++) {
+    f_arr[i] = d_arr[i];
+  }
+}
+
+// ----------------------------------------------------------------------
+// mrc_fld_float_aos_copy_to_double_aos
+
+static void
+mrc_fld_float_aos_copy_to_double_aos(struct mrc_fld *fld_float,
+				     struct mrc_fld *fld_double)
+{
+  assert(mrc_fld_same_shape(fld_float, fld_double));
+  assert(fld_float->_data_type == MRC_NT_FLOAT);
+  assert(fld_double->_data_type == MRC_NT_DOUBLE);
+  float *f_arr = fld_float->_arr;
+  double *d_arr = fld_double->_arr;
+  for (int i = 0; i < fld_float->_len; i++) {
+    d_arr[i] = f_arr[i];
+  }
+}
+
+// ----------------------------------------------------------------------
+// mrc_fld "float_aos" methods
+
+static struct mrc_obj_method mrc_fld_float_aos_methods[] = {
+  MRC_OBJ_METHOD("copy_to_double_aos",   mrc_fld_float_aos_copy_to_double_aos),
+  MRC_OBJ_METHOD("copy_from_double_aos", mrc_fld_float_aos_copy_from_double_aos),
+  {}
+};
+
+// ----------------------------------------------------------------------
 // mrc_fld_*_methods
 
 static struct mrc_obj_method mrc_fld_double_methods[] = {
@@ -689,12 +742,6 @@ static struct mrc_obj_method mrc_fld_double_methods[] = {
 };
 
 static struct mrc_obj_method mrc_fld_double_aos_methods[] = {
-  {}
-};
-
-static struct mrc_obj_method mrc_fld_float_methods[] = {
-  MRC_OBJ_METHOD("copy_to_double",   mrc_fld_float_copy_to_double),
-  MRC_OBJ_METHOD("copy_from_double", mrc_fld_float_copy_from_double),
   {}
 };
 
@@ -723,6 +770,7 @@ static struct mrc_obj_method mrc_fld_int_methods[] = {
   };							\
 
 MAKE_MRC_FLD_TYPE(float, float, FLOAT, false)
+MAKE_MRC_FLD_TYPE(float_aos, float, FLOAT, true)
 MAKE_MRC_FLD_TYPE(double, double, DOUBLE, false)
 MAKE_MRC_FLD_TYPE(double_aos, double, DOUBLE, true)
 MAKE_MRC_FLD_TYPE(int, int, INT, false)
@@ -734,6 +782,7 @@ static void
 mrc_fld_init()
 {
   mrc_class_register_subclass(&mrc_class_mrc_fld, &mrc_fld_float_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_fld, &mrc_fld_float_aos_ops);
   mrc_class_register_subclass(&mrc_class_mrc_fld, &mrc_fld_double_ops);
   mrc_class_register_subclass(&mrc_class_mrc_fld, &mrc_fld_double_aos_ops);
   mrc_class_register_subclass(&mrc_class_mrc_fld, &mrc_fld_int_ops);
