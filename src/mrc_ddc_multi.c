@@ -357,8 +357,6 @@ mrc_ddc_multi_setup_pattern2(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2
   patt2->local_buf_size = local_buf_size;
   patt2->send_req = malloc(patt2->n_send_ranks * sizeof(*patt2->send_req));
   patt2->recv_req = malloc(patt2->n_recv_ranks * sizeof(*patt2->recv_req));
-
-  mrc_ddc_multi_alloc_buffers(ddc, patt2);
 }
 
 // ----------------------------------------------------------------------
@@ -371,8 +369,6 @@ mrc_ddc_multi_destroy_pattern2(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *pat
 
   free(patt2->send_req);
   free(patt2->recv_req);
-
-  mrc_ddc_multi_free_buffers(ddc, patt2);
 
   for (int r = 0; r < sub->mpi_size; r++) {
     free(patt2->ri[r].send_entry);
@@ -412,6 +408,9 @@ mrc_ddc_multi_setup(struct mrc_ddc *ddc)
 			       ddc_init_inside, ddc_init_outside);
   mrc_ddc_multi_setup_pattern2(ddc, &sub->add_ghosts2,
 			       ddc_init_outside, ddc_init_inside);
+
+  mrc_ddc_multi_alloc_buffers(ddc, &sub->fill_ghosts2);
+  mrc_ddc_multi_alloc_buffers(ddc, &sub->add_ghosts2);
 }
 
 // ----------------------------------------------------------------------
@@ -421,6 +420,9 @@ static void
 mrc_ddc_multi_destroy(struct mrc_ddc *ddc)
 {
   struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
+
+  mrc_ddc_multi_free_buffers(ddc, &sub->fill_ghosts2);
+  mrc_ddc_multi_free_buffers(ddc, &sub->add_ghosts2);
 
   mrc_ddc_multi_destroy_pattern2(ddc, &sub->fill_ghosts2);
   mrc_ddc_multi_destroy_pattern2(ddc, &sub->add_ghosts2);
