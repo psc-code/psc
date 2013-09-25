@@ -104,7 +104,8 @@ mrc_ddc_multi_get_nei_rank_patch(struct mrc_ddc *ddc, int p, int dir[3],
 // ddc_init_outside
 
 static void
-ddc_init_outside(struct mrc_ddc *ddc, int p, struct mrc_ddc_sendrecv *sr, int dir[3])
+ddc_init_outside(struct mrc_ddc *ddc, int p, struct mrc_ddc_sendrecv *sr,
+		 int dir[3], int ibn[3])
 {
   struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
 
@@ -124,7 +125,7 @@ ddc_init_outside(struct mrc_ddc *ddc, int p, struct mrc_ddc_sendrecv *sr, int di
     ihi[d] = sub->patches[p].ldims[d];
     switch (dir[d]) {
     case -1:
-      sr->ilo[d] = ilo[d] - ddc->ibn[d];
+      sr->ilo[d] = ilo[d] - ibn[d];
       sr->ihi[d] = ilo[d];
       break;
     case 0:
@@ -133,7 +134,7 @@ ddc_init_outside(struct mrc_ddc *ddc, int p, struct mrc_ddc_sendrecv *sr, int di
       break;
     case 1:
       sr->ilo[d] = ihi[d];
-      sr->ihi[d] = ihi[d] + ddc->ibn[d];
+      sr->ihi[d] = ihi[d] + ibn[d];
       break;
     }
     sr->len *= (sr->ihi[d] - sr->ilo[d]);
@@ -144,7 +145,8 @@ ddc_init_outside(struct mrc_ddc *ddc, int p, struct mrc_ddc_sendrecv *sr, int di
 // ddc_init_inside
 
 static void
-ddc_init_inside(struct mrc_ddc *ddc, int p, struct mrc_ddc_sendrecv *sr, int dir[3])
+ddc_init_inside(struct mrc_ddc *ddc, int p, struct mrc_ddc_sendrecv *sr,
+		int dir[3], int ibn[3])
 {
   struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
 
@@ -165,14 +167,14 @@ ddc_init_inside(struct mrc_ddc *ddc, int p, struct mrc_ddc_sendrecv *sr, int dir
     switch (dir[d]) {
     case -1:
       sr->ilo[d] = ilo[d];
-      sr->ihi[d] = ilo[d] + ddc->ibn[d];
+      sr->ihi[d] = ilo[d] + ibn[d];
       break;
     case 0:
       sr->ilo[d] = ilo[d];
       sr->ihi[d] = ihi[d];
       break;
     case 1:
-      sr->ilo[d] = ihi[d] - ddc->ibn[d];
+      sr->ilo[d] = ihi[d] - ibn[d];
       sr->ihi[d] = ihi[d];
       break;
     }
@@ -232,9 +234,10 @@ mrc_ddc_multi_free_buffers(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2)
 static void
 mrc_ddc_multi_setup_pattern2(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
 			     void (*init_send)(struct mrc_ddc *, int p,
-					       struct mrc_ddc_sendrecv *, int [3]),
+					       struct mrc_ddc_sendrecv *, int [3], int[3]),
 			     void (*init_recv)(struct mrc_ddc *, int p,
-					       struct mrc_ddc_sendrecv *, int [3]))
+					       struct mrc_ddc_sendrecv *, int [3], int[3]),
+			     int ibn[3])
 {
   struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
 
@@ -249,11 +252,11 @@ mrc_ddc_multi_setup_pattern2(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
 	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
 	  struct mrc_ddc_sendrecv sr;
-	  init_send(ddc, p, &sr, dir);
+	  init_send(ddc, p, &sr, dir, ibn);
 	  if (sr.nei_rank >= 0) {
 	    ri[sr.nei_rank].n_send_entries++;
 	  }
-	  init_recv(ddc, p, &sr, dir);
+	  init_recv(ddc, p, &sr, dir, ibn);
 	  if (sr.nei_rank >= 0) {
 	    ri[sr.nei_rank].n_recv_entries++;
 	  }
@@ -289,7 +292,7 @@ mrc_ddc_multi_setup_pattern2(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2
 	  int dir1 = mrc_ddc_dir2idx(dir);
 
 	  struct mrc_ddc_sendrecv sr;
-	  init_send(ddc, p, &sr, dir);
+	  init_send(ddc, p, &sr, dir, ibn);
 	  if (sr.nei_rank >= 0) {
 	    struct mrc_ddc_sendrecv_entry *se =
 	      &ri[sr.nei_rank].send_entry[ri[sr.nei_rank].n_send_entries++];
@@ -305,7 +308,7 @@ mrc_ddc_multi_setup_pattern2(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2
 	    }
 	  }
 
-	  init_recv(ddc, p, &sr, dir);
+	  init_recv(ddc, p, &sr, dir, ibn);
 	  if (sr.nei_rank >= 0) {
 	    struct mrc_ddc_sendrecv_entry *re =
 	      &ri[sr.nei_rank].recv_entry_[ri[sr.nei_rank].n_recv_entries++];
@@ -417,9 +420,9 @@ mrc_ddc_multi_setup(struct mrc_ddc *ddc)
   MPI_Comm_size(mrc_ddc_comm(ddc), &sub->mpi_size);
 
   mrc_ddc_multi_setup_pattern2(ddc, &sub->fill_ghosts2,
-			       ddc_init_inside, ddc_init_outside);
+			       ddc_init_inside, ddc_init_outside, ddc->ibn);
   mrc_ddc_multi_setup_pattern2(ddc, &sub->add_ghosts2,
-			       ddc_init_outside, ddc_init_inside);
+			       ddc_init_outside, ddc_init_inside, ddc->ibn);
 
   if (ddc->max_n_fields > 0) {
     mrc_ddc_multi_alloc_buffers(ddc, &sub->fill_ghosts2);
