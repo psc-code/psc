@@ -51,6 +51,9 @@ struct mrc_ddc_pattern2 {
   // buffers with the above sizes
   void *send_buf, *recv_buf;
   void *local_buf;
+  // we allocated for types up to this size, and this many fields
+  int max_size_of_type;
+  int max_n_fields;
 };
 
 struct mrc_ddc_multi {
@@ -62,7 +65,6 @@ struct mrc_ddc_multi {
   int mpi_rank, mpi_size;
   struct mrc_ddc_pattern2 add_ghosts2;
   struct mrc_ddc_pattern2 fill_ghosts2;
-  int max_size_of_type;
 };
 
 #define mrc_ddc_multi(ddc) mrc_to_subobj(ddc, struct mrc_ddc_multi)
@@ -205,19 +207,6 @@ mrc_ddc_multi_get_domain(struct mrc_ddc *ddc)
 }
 
 // ----------------------------------------------------------------------
-// mrc_ddc_multi_alloc_buffers
-
-static void
-mrc_ddc_multi_alloc_buffers(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2)
-{
-  struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
-
-  patt2->recv_buf = malloc(patt2->n_recv * ddc->max_n_fields * sub->max_size_of_type);
-  patt2->send_buf = malloc(patt2->n_send * ddc->max_n_fields * sub->max_size_of_type);
-  patt2->local_buf = malloc(patt2->local_buf_size * ddc->max_n_fields * sub->max_size_of_type);
-}
-
-// ----------------------------------------------------------------------
 // mrc_ddc_multi_free_buffers
 
 static void
@@ -226,6 +215,31 @@ mrc_ddc_multi_free_buffers(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2)
   free(patt2->send_buf);
   free(patt2->recv_buf);
   free(patt2->local_buf);
+}
+
+// ----------------------------------------------------------------------
+// mrc_ddc_multi_alloc_buffers
+
+static void
+mrc_ddc_multi_alloc_buffers(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
+			    int n_fields)
+{
+  if (ddc->size_of_type > patt2->max_size_of_type ||
+      n_fields > patt2->max_n_fields) {
+
+    if (ddc->size_of_type > patt2->max_size_of_type) {
+      patt2->max_size_of_type = ddc->size_of_type;
+    }
+    if (n_fields > patt2->max_n_fields) {
+      patt2->max_n_fields = n_fields;
+    }
+
+    mrc_ddc_multi_free_buffers(ddc, patt2);
+
+    patt2->recv_buf = malloc(patt2->n_recv * patt2->max_n_fields * patt2->max_size_of_type);
+    patt2->send_buf = malloc(patt2->n_send * patt2->max_n_fields * patt2->max_size_of_type);
+    patt2->local_buf = malloc(patt2->local_buf_size * patt2->max_n_fields * patt2->max_size_of_type);
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -423,11 +437,6 @@ mrc_ddc_multi_setup(struct mrc_ddc *ddc)
 			       ddc_init_inside, ddc_init_outside, ddc->ibn);
   mrc_ddc_multi_setup_pattern2(ddc, &sub->add_ghosts2,
 			       ddc_init_outside, ddc_init_inside, ddc->ibn);
-
-  if (ddc->max_n_fields > 0) {
-    mrc_ddc_multi_alloc_buffers(ddc, &sub->fill_ghosts2);
-    mrc_ddc_multi_alloc_buffers(ddc, &sub->add_ghosts2);
-  }
 }
 
 // ----------------------------------------------------------------------
@@ -510,29 +519,6 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
 }
 
 // ----------------------------------------------------------------------
-// mrc_ddc_multi_realloc_buffers
-
-static void
-mrc_ddc_multi_realloc_buffers(struct mrc_ddc *ddc, int n_fields)
-{
-  struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
-
-  if (n_fields > ddc->max_n_fields ||
-      ddc->size_of_type > sub->max_size_of_type) {
-    if (n_fields > ddc->max_n_fields) {
-      ddc->max_n_fields = n_fields;
-    }
-    if (ddc->size_of_type > sub->max_size_of_type) {
-      sub->max_size_of_type = ddc->size_of_type;
-    }
-    mrc_ddc_multi_free_buffers(ddc, &sub->fill_ghosts2);
-    mrc_ddc_multi_free_buffers(ddc, &sub->add_ghosts2);
-    mrc_ddc_multi_alloc_buffers(ddc, &sub->fill_ghosts2);
-    mrc_ddc_multi_alloc_buffers(ddc, &sub->add_ghosts2);
-  }
-}
-
-// ----------------------------------------------------------------------
 // mrc_ddc_multi_add_ghosts
 
 static void
@@ -541,7 +527,7 @@ mrc_ddc_multi_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
   struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
 
   mrc_ddc_multi_set_mpi_type(ddc);
-  mrc_ddc_multi_realloc_buffers(ddc, me - mb);
+  mrc_ddc_multi_alloc_buffers(ddc, &sub->add_ghosts2, me - mb);
   ddc_run(ddc, &sub->add_ghosts2, mb, me, ctx,
 	  ddc->funcs->copy_to_buf, ddc->funcs->add_from_buf);
 }
@@ -557,7 +543,7 @@ mrc_ddc_multi_fill_ghosts_fld(struct mrc_ddc *ddc, int mb, int me,
 
   ddc->size_of_type = fld->_size_of_type;
   mrc_ddc_multi_set_mpi_type(ddc);
-  mrc_ddc_multi_realloc_buffers(ddc, me - mb);
+  mrc_ddc_multi_alloc_buffers(ddc, &sub->fill_ghosts2, me - mb);
   ddc_run(ddc, &sub->fill_ghosts2, mb, me, fld,
 	  mrc_fld_ddc_copy_to_buf, mrc_fld_ddc_copy_from_buf);
 }
@@ -571,7 +557,7 @@ mrc_ddc_multi_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
   struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
 
   mrc_ddc_multi_set_mpi_type(ddc);
-  mrc_ddc_multi_realloc_buffers(ddc, me - mb);
+  mrc_ddc_multi_alloc_buffers(ddc, &sub->fill_ghosts2, me - mb);
   ddc_run(ddc, &sub->fill_ghosts2, mb, me, ctx,
 	  ddc->funcs->copy_to_buf, ddc->funcs->copy_from_buf);
 }
