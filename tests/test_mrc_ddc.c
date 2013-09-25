@@ -105,7 +105,6 @@ main(int argc, char **argv)
   set_m3(m3);
 
   struct mrc_ddc *ddc = mrc_domain_create_ddc(domain);
-  mrc_ddc_set_param_int3(ddc, "ibn", m3->_sw.vals);
   mrc_ddc_setup(ddc);
   mrc_ddc_view(ddc);
   mrc_ddc_fill_ghosts_fld(ddc, 0, 2, m3);

@@ -13,6 +13,11 @@
 // ======================================================================
 // mrc_ddc_multi
 
+// we dynamically create patterns for mrc_fld exchange up to this many layers of
+// ghost points
+
+#define MAX_NR_GHOSTS (5)
+
 struct mrc_ddc_sendrecv_entry {
   int patch; // patch on this rank
   int nei_patch; // partner patch (partner rank is index in send/recv_entry)
@@ -65,6 +70,8 @@ struct mrc_ddc_multi {
   int mpi_rank, mpi_size;
   struct mrc_ddc_pattern2 add_ghosts2;
   struct mrc_ddc_pattern2 fill_ghosts2;
+
+  struct mrc_ddc_pattern2 *fill_ghosts[MAX_NR_GHOSTS + 1];
 };
 
 #define mrc_ddc_multi(ddc) mrc_to_subobj(ddc, struct mrc_ddc_multi)
@@ -452,6 +459,13 @@ mrc_ddc_multi_destroy(struct mrc_ddc *ddc)
 
   mrc_ddc_multi_destroy_pattern2(ddc, &sub->fill_ghosts2);
   mrc_ddc_multi_destroy_pattern2(ddc, &sub->add_ghosts2);
+
+  for (int nr_ghosts = 1; nr_ghosts <= MAX_NR_GHOSTS; nr_ghosts++) {
+    if (sub->fill_ghosts[nr_ghosts]) {
+      mrc_ddc_multi_free_buffers(ddc, sub->fill_ghosts[nr_ghosts]);
+      mrc_ddc_multi_destroy_pattern2(ddc, sub->fill_ghosts[nr_ghosts]);
+    }
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -541,10 +555,19 @@ mrc_ddc_multi_fill_ghosts_fld(struct mrc_ddc *ddc, int mb, int me,
 {
   struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
 
+  int nr_ghosts = fld->_nr_ghosts;
+  assert(nr_ghosts > 0 && nr_ghosts <= MAX_NR_GHOSTS);
+  if (!sub->fill_ghosts[nr_ghosts]) {
+    sub->fill_ghosts[nr_ghosts] = calloc(1, sizeof(*sub->fill_ghosts[0]));
+    mrc_ddc_multi_setup_pattern2(ddc, sub->fill_ghosts[nr_ghosts],
+				 ddc_init_inside, ddc_init_outside,
+				 &fld->_sw.vals[fld->_is_aos]);
+  }
+
   ddc->size_of_type = fld->_size_of_type;
   mrc_ddc_multi_set_mpi_type(ddc);
-  mrc_ddc_multi_alloc_buffers(ddc, &sub->fill_ghosts2, me - mb);
-  ddc_run(ddc, &sub->fill_ghosts2, mb, me, fld,
+  mrc_ddc_multi_alloc_buffers(ddc, sub->fill_ghosts[nr_ghosts], me - mb);
+  ddc_run(ddc, sub->fill_ghosts[nr_ghosts], mb, me, fld,
 	  mrc_fld_ddc_copy_to_buf, mrc_fld_ddc_copy_from_buf);
 }
 

@@ -69,9 +69,6 @@ main(int argc, char **argv)
   mrc_crds_set_param_float3(crds, "l", (float[3]) { -8., 0., 0. });
   mrc_crds_set_param_float3(crds, "h", (float[3]) {  8., 1., 1. });
 
-  struct mrc_ddc *ddc = mrc_domain_get_ddc(domain);
-  mrc_ddc_set_param_int3(ddc, "ibn", (int[3]) { BND, BND, BND });
-
   mrc_domain_set_from_options(domain);
   mrc_domain_setup(domain);
 
