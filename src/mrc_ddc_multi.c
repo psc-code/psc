@@ -62,6 +62,7 @@ struct mrc_ddc_multi {
   int mpi_rank, mpi_size;
   struct mrc_ddc_pattern2 add_ghosts2;
   struct mrc_ddc_pattern2 fill_ghosts2;
+  int max_size_of_type;
 };
 
 #define mrc_ddc_multi(ddc) mrc_to_subobj(ddc, struct mrc_ddc_multi)
@@ -207,9 +208,11 @@ mrc_ddc_multi_get_domain(struct mrc_ddc *ddc)
 static void
 mrc_ddc_multi_alloc_buffers(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2)
 {
-  patt2->recv_buf = malloc(patt2->n_recv * ddc->max_n_fields * ddc->size_of_type);
-  patt2->send_buf = malloc(patt2->n_send * ddc->max_n_fields * ddc->size_of_type);
-  patt2->local_buf = malloc(patt2->local_buf_size * ddc->max_n_fields * ddc->size_of_type);
+  struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
+
+  patt2->recv_buf = malloc(patt2->n_recv * ddc->max_n_fields * sub->max_size_of_type);
+  patt2->send_buf = malloc(patt2->n_send * ddc->max_n_fields * sub->max_size_of_type);
+  patt2->local_buf = malloc(patt2->local_buf_size * ddc->max_n_fields * sub->max_size_of_type);
 }
 
 // ----------------------------------------------------------------------
@@ -378,13 +381,14 @@ mrc_ddc_multi_destroy_pattern2(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *pat
 }
 
 // ----------------------------------------------------------------------
-// mrc_ddc_multi_setup
+// mrc_ddc_multi_set_mpi_type
+//
+// FIXME, this could be done more nicely for mrc_fld interface by having
+// mrc_fld know what MPI type to use, or at least use MRC_NT_*
 
 static void
-mrc_ddc_multi_setup(struct mrc_ddc *ddc)
+mrc_ddc_multi_set_mpi_type(struct mrc_ddc *ddc)
 {
-  struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
-
   if (ddc->size_of_type == sizeof(float)) {
     ddc->mpi_type = MPI_FLOAT;
   } else if (ddc->size_of_type == sizeof(double)) {
@@ -392,6 +396,15 @@ mrc_ddc_multi_setup(struct mrc_ddc *ddc)
   } else {
     assert(0);
   }
+}
+
+// ----------------------------------------------------------------------
+// mrc_ddc_multi_setup
+
+static void
+mrc_ddc_multi_setup(struct mrc_ddc *ddc)
+{
+  struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
 
   assert(sub->domain);
   mrc_domain_get_nr_procs(sub->domain, sub->np);
@@ -501,8 +514,14 @@ mrc_ddc_multi_realloc_buffers(struct mrc_ddc *ddc, int n_fields)
 {
   struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
 
-  if (n_fields > ddc->max_n_fields) {
-    ddc->max_n_fields = n_fields;
+  if (n_fields > ddc->max_n_fields ||
+      ddc->size_of_type > sub->max_size_of_type) {
+    if (n_fields > ddc->max_n_fields) {
+      ddc->max_n_fields = n_fields;
+    }
+    if (ddc->size_of_type > sub->max_size_of_type) {
+      sub->max_size_of_type = ddc->size_of_type;
+    }
     mrc_ddc_multi_free_buffers(ddc, &sub->fill_ghosts2);
     mrc_ddc_multi_free_buffers(ddc, &sub->add_ghosts2);
     mrc_ddc_multi_alloc_buffers(ddc, &sub->fill_ghosts2);
@@ -518,6 +537,7 @@ mrc_ddc_multi_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 {
   struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
 
+  mrc_ddc_multi_set_mpi_type(ddc);
   mrc_ddc_multi_realloc_buffers(ddc, me - mb);
   ddc_run(ddc, &sub->add_ghosts2, mb, me, ctx,
 	  ddc->funcs->copy_to_buf, ddc->funcs->add_from_buf);
@@ -532,7 +552,8 @@ mrc_ddc_multi_fill_ghosts_fld(struct mrc_ddc *ddc, int mb, int me,
 {
   struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
 
-  assert(fld->_size_of_type == ddc->size_of_type);
+  ddc->size_of_type = fld->_size_of_type;
+  mrc_ddc_multi_set_mpi_type(ddc);
   mrc_ddc_multi_realloc_buffers(ddc, me - mb);
   ddc_run(ddc, &sub->fill_ghosts2, mb, me, fld,
 	  mrc_fld_ddc_copy_to_buf, mrc_fld_ddc_copy_from_buf);
@@ -546,6 +567,7 @@ mrc_ddc_multi_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 {
   struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
 
+  mrc_ddc_multi_set_mpi_type(ddc);
   mrc_ddc_multi_realloc_buffers(ddc, me - mb);
   ddc_run(ddc, &sub->fill_ghosts2, mb, me, ctx,
 	  ddc->funcs->copy_to_buf, ddc->funcs->copy_from_buf);

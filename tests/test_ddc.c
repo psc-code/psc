@@ -41,7 +41,6 @@ test(bool periodic)
   struct mrc_ddc *ddc = mrc_domain_create_ddc(domain);
   mrc_ddc_set_funcs(ddc, &mrc_ddc_funcs_fld);
   mrc_ddc_set_param_int3(ddc, "ibn", (int [3]) { bnd, bnd, bnd });
-  mrc_ddc_set_param_int(ddc, "size_of_type", sizeof(float));
   mrc_ddc_setup(ddc);
   mrc_ddc_view(ddc);
 

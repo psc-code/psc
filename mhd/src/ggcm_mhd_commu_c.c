@@ -40,7 +40,6 @@ ggcm_mhd_commu_c_setup(struct ggcm_mhd_commu *commu)
   assert(commu->mhd);
   commu_c->ddc = mrc_domain_create_ddc(commu->mhd->domain);
   mrc_ddc_set_param_int3(commu_c->ddc, "ibn", (int[3]) { 2, 2, 2});
-  mrc_ddc_set_param_int(commu_c->ddc, "size_of_type", sizeof(float));
   mrc_ddc_setup(commu_c->ddc);
 }
 

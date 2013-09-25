@@ -11,6 +11,8 @@
 // in point in comparing performance...
 
 // TODO: support dynamically adapting "max_n_fields" to whatever is needed
+// TODO: add a fill_ghosts_fld() method and have it handle different data types
+// dynamically
 
 // ======================================================================
 // mrc_ddc_simple
