@@ -46,6 +46,8 @@ struct mrc_ddc_pattern2 {
   MPI_Request *send_req, *recv_req;
   // total number of (ddc->mpi_type) we're sending / receivng to all ranks
   int n_send, n_recv;
+  // size of largest used local buffer
+  int local_buf_size;
   // buffers with the above sizes
   void *send_buf, *recv_buf;
   void *local_buf;
@@ -200,6 +202,28 @@ mrc_ddc_multi_get_domain(struct mrc_ddc *ddc)
 }
 
 // ----------------------------------------------------------------------
+// mrc_ddc_multi_alloc_buffers
+
+static void
+mrc_ddc_multi_alloc_buffers(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2)
+{
+  patt2->recv_buf = malloc(patt2->n_recv * ddc->max_n_fields * ddc->size_of_type);
+  patt2->send_buf = malloc(patt2->n_send * ddc->max_n_fields * ddc->size_of_type);
+  patt2->local_buf = malloc(patt2->local_buf_size * ddc->max_n_fields * ddc->size_of_type);
+}
+
+// ----------------------------------------------------------------------
+// mrc_ddc_multi_free_buffers
+
+static void
+mrc_ddc_multi_free_buffers(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2)
+{
+  free(patt2->send_buf);
+  free(patt2->recv_buf);
+  free(patt2->local_buf);
+}
+
+// ----------------------------------------------------------------------
 // mrc_ddc_multi_setup_pattern2
 
 static void
@@ -330,12 +354,11 @@ mrc_ddc_multi_setup_pattern2(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2
 			 (re->ihi[2] - re->ilo[2]));
   }
 
+  patt2->local_buf_size = local_buf_size;
   patt2->send_req = malloc(patt2->n_send_ranks * sizeof(*patt2->send_req));
   patt2->recv_req = malloc(patt2->n_recv_ranks * sizeof(*patt2->recv_req));
 
-  patt2->recv_buf = malloc(patt2->n_recv * ddc->max_n_fields * ddc->size_of_type);
-  patt2->send_buf = malloc(patt2->n_send * ddc->max_n_fields * ddc->size_of_type);
-  patt2->local_buf = malloc(local_buf_size * ddc->max_n_fields * ddc->size_of_type);
+  mrc_ddc_multi_alloc_buffers(ddc, patt2);
 }
 
 // ----------------------------------------------------------------------
@@ -349,9 +372,7 @@ mrc_ddc_multi_destroy_pattern2(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *pat
   free(patt2->send_req);
   free(patt2->recv_req);
 
-  free(patt2->send_buf);
-  free(patt2->recv_buf);
-  free(patt2->local_buf);
+  mrc_ddc_multi_free_buffers(ddc, patt2);
 
   for (int r = 0; r < sub->mpi_size; r++) {
     free(patt2->ri[r].send_entry);
