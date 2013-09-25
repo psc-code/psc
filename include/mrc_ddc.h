@@ -61,6 +61,7 @@ void mrc_ddc_amr_set_by_stencil(struct mrc_ddc *ddc, int m, int bnd, int ext[3],
 
 extern struct mrc_ddc_funcs mrc_ddc_funcs_fld;
 extern struct mrc_ddc_funcs mrc_ddc_funcs_m3;
+extern struct mrc_ddc_funcs mrc_ddc_funcs_fld_double_aos;
 
 static inline int
 mrc_ddc_dir2idx(int dir[3])
