@@ -26,14 +26,14 @@ libmrc_la_SOURCES = \
 	mrc_crds_gen_gaussian.c \
 	mrc_vec.c \
 	mrc_fld.c \
+	mrc_fld_float.c \
+	mrc_fld_double.c \
+	mrc_fld_float_aos.c \
+	mrc_fld_double_aos.c \
 	mrc_params.c \
 	mrc_ddc.c \
 	mrc_ddc_simple.c \
 	mrc_ddc_multi.c \
-	mrc_ddc_multi_float.c \
-	mrc_ddc_multi_double.c \
-	mrc_ddc_multi_float_aos.c \
-	mrc_ddc_multi_double_aos.c \
 	mrc_ddc_amr.c \
 	mrc_ddc_amr_stencil.c \
 	mrc_profile.c \
