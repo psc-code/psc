@@ -92,7 +92,6 @@ void
 mrc_ddc_fill_ghosts_fld(struct mrc_ddc *ddc, int mb, int me,
 			struct mrc_fld *fld)
 {
-  assert(me - mb <= ddc->max_n_fields);
   struct mrc_ddc_ops *ops = mrc_ddc_ops(ddc);
   assert(ops->fill_ghosts_fld);
   ops->fill_ghosts_fld(ddc, mb, me, fld);
@@ -106,7 +105,6 @@ mrc_ddc_fill_ghosts_fld(struct mrc_ddc *ddc, int mb, int me,
 void
 mrc_ddc_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 {
-  assert(me - mb <= ddc->max_n_fields);
   struct mrc_ddc_ops *ops = mrc_ddc_ops(ddc);
   assert(ops->fill_ghosts);
   ops->fill_ghosts(ddc, mb, me, ctx);
@@ -120,7 +118,6 @@ mrc_ddc_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 void
 mrc_ddc_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 {
-  assert(me - mb <= ddc->max_n_fields);
   struct mrc_ddc_ops *ops = mrc_ddc_ops(ddc);
   assert(ops->add_ghosts);
   ops->add_ghosts(ddc, mb, me, ctx);

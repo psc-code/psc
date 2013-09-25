@@ -22,8 +22,6 @@ calc_ct_rhs(struct ggcm_mhd *mhd, struct mrc_fld *_rhs, struct mrc_fld *_flux[3]
   //           and MRC_F3(tmp_fld, 1, 0, 0, 0) is E_y -1/2,0,-1/2  etc etc 
                        
 
-  struct mrc_ddc *ddc = mrc_domain_get_ddc(mhd->domain);
-  mrc_ddc_set_param_int(ddc, "max_n_fields", 3);
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
   struct mrc_fld *_E_ec = ggcm_mhd_get_fields(mhd, "E_ec", 3);
 

@@ -223,7 +223,6 @@ ggcm_mhd_default_box(struct ggcm_mhd *mhd)
 
   // set defaults for the ddc, this does the communication
   struct mrc_ddc *ddc = mrc_domain_get_ddc(mhd->domain);
-  mrc_ddc_set_param_int(ddc, "max_n_fields", 8);
   mrc_ddc_set_param_int3(ddc, "ibn", (int[3]) { SW_2, SW_2, SW_2 });
 
   // generate MHD solver grid from mrc_crds

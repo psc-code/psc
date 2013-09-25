@@ -393,7 +393,6 @@ mrc_ddc_multi_setup(struct mrc_ddc *ddc)
     assert(0);
   }
 
-  assert(ddc->max_n_fields > 0);
   assert(sub->domain);
   mrc_domain_get_nr_procs(sub->domain, sub->np);
   mrc_domain_get_bc(sub->domain, sub->bc);
@@ -409,8 +408,10 @@ mrc_ddc_multi_setup(struct mrc_ddc *ddc)
   mrc_ddc_multi_setup_pattern2(ddc, &sub->add_ghosts2,
 			       ddc_init_outside, ddc_init_inside);
 
-  mrc_ddc_multi_alloc_buffers(ddc, &sub->fill_ghosts2);
-  mrc_ddc_multi_alloc_buffers(ddc, &sub->add_ghosts2);
+  if (ddc->max_n_fields > 0) {
+    mrc_ddc_multi_alloc_buffers(ddc, &sub->fill_ghosts2);
+    mrc_ddc_multi_alloc_buffers(ddc, &sub->add_ghosts2);
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -493,6 +494,23 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
 }
 
 // ----------------------------------------------------------------------
+// mrc_ddc_multi_realloc_buffers
+
+static void
+mrc_ddc_multi_realloc_buffers(struct mrc_ddc *ddc, int n_fields)
+{
+  struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
+
+  if (n_fields > ddc->max_n_fields) {
+    ddc->max_n_fields = n_fields;
+    mrc_ddc_multi_free_buffers(ddc, &sub->fill_ghosts2);
+    mrc_ddc_multi_free_buffers(ddc, &sub->add_ghosts2);
+    mrc_ddc_multi_alloc_buffers(ddc, &sub->fill_ghosts2);
+    mrc_ddc_multi_alloc_buffers(ddc, &sub->add_ghosts2);
+  }
+}
+
+// ----------------------------------------------------------------------
 // mrc_ddc_multi_add_ghosts
 
 static void
@@ -500,6 +518,7 @@ mrc_ddc_multi_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 {
   struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
 
+  mrc_ddc_multi_realloc_buffers(ddc, me - mb);
   ddc_run(ddc, &sub->add_ghosts2, mb, me, ctx,
 	  ddc->funcs->copy_to_buf, ddc->funcs->add_from_buf);
 }
@@ -514,6 +533,7 @@ mrc_ddc_multi_fill_ghosts_fld(struct mrc_ddc *ddc, int mb, int me,
   struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
 
   assert(fld->_size_of_type == ddc->size_of_type);
+  mrc_ddc_multi_realloc_buffers(ddc, me - mb);
   ddc_run(ddc, &sub->fill_ghosts2, mb, me, fld,
 	  mrc_fld_ddc_copy_to_buf, mrc_fld_ddc_copy_from_buf);
 }
@@ -526,6 +546,7 @@ mrc_ddc_multi_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 {
   struct mrc_ddc_multi *sub = mrc_ddc_multi(ddc);
 
+  mrc_ddc_multi_realloc_buffers(ddc, me - mb);
   ddc_run(ddc, &sub->fill_ghosts2, mb, me, ctx,
 	  ddc->funcs->copy_to_buf, ddc->funcs->copy_from_buf);
 }

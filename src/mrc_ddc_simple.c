@@ -10,6 +10,8 @@
 // However, "multi" will do aggregation, while "simple" does not, so there may be
 // in point in comparing performance...
 
+// TODO: support dynamically adapting "max_n_fields" to whatever is needed
+
 // ======================================================================
 // mrc_ddc_simple
 
@@ -268,6 +270,7 @@ mrc_ddc_simple_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 {
   struct mrc_ddc_simple *sub = mrc_ddc_simple(ddc);
 
+  assert(me - mb <= ddc->max_n_fields);
   ddc_run(ddc, &sub->add_ghosts, mb, me, ctx,
 	  ddc->funcs->copy_to_buf, ddc->funcs->add_from_buf);
 }
@@ -280,6 +283,7 @@ mrc_ddc_simple_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 {
   struct mrc_ddc_simple *sub = mrc_ddc_simple(ddc);
 
+  assert(me - mb <= ddc->max_n_fields);
   ddc_run(ddc, &sub->fill_ghosts, mb, me, ctx,
 	  ddc->funcs->copy_to_buf, ddc->funcs->copy_from_buf);
 }
