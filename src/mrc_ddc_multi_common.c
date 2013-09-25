@@ -45,7 +45,7 @@ mrc_fld_copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
   }
 }
 
-struct mrc_ddc_funcs mrc_ddc_funcs_fld = {
+struct mrc_ddc_funcs mrc_ddc_funcs_fld_TYPE = {
   .copy_to_buf   = mrc_fld_copy_to_buf,
   .copy_from_buf = mrc_fld_copy_from_buf,
 };
