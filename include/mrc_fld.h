@@ -61,7 +61,7 @@ struct mrc_fld {
   struct mrc_vec *_vec; //< underlying mrc_vec that manages memory alloc/free (could be petsc)
   int _nr_allocated_comp_name;
   char **_comp_name;
-  int _is_aos; //< indicates whether the layout (w.r.t to domain) is array-of-struct
+  bool _is_aos; //< indicates whether the layout (w.r.t to domain) is array-of-struct
   // for mrc_m3 emulation (FIXME, should be eliminated eventually (?))
   struct mrc_fld_patch *_patches;
 };
