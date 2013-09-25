@@ -31,6 +31,8 @@ libmrc_la_SOURCES = \
 	mrc_ddc_simple.c \
 	mrc_ddc_multi.c \
 	mrc_ddc_multi_float.c \
+	mrc_ddc_multi_double.c \
+	mrc_ddc_multi_float_aos.c \
 	mrc_ddc_multi_double_aos.c \
 	mrc_ddc_amr.c \
 	mrc_ddc_amr_stencil.c \

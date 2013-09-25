@@ -50,3 +50,19 @@ struct mrc_ddc_funcs mrc_ddc_funcs_fld_TYPE = {
   .copy_from_buf = mrc_fld_copy_from_buf,
 };
 
+// for new-style mrc_fld boundary (the above interface is obsolete, but this part 
+// should go -> mrc_fld once we get rid of the above).
+
+void
+mrc_fld_TYPE_ddc_copy_to_buf(struct mrc_fld *fld, int mb, int me, int p,
+			     int ilo[3], int ihi[3], void *buf)
+{
+  mrc_fld_copy_to_buf(mb, me, p, ilo, ihi, buf, fld);
+}
+
+void
+mrc_fld_TYPE_ddc_copy_from_buf(struct mrc_fld *fld, int mb, int me, int p,
+			       int ilo[3], int ihi[3], void *buf)
+{
+  mrc_fld_copy_from_buf(mb, me, p, ilo, ihi, buf, fld);
+}

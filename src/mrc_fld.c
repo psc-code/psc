@@ -645,6 +645,33 @@ mrc_fld_put_as(struct mrc_fld *fld, struct mrc_fld *fld_base)
   prof_stop(pr);
 }
 
+void
+mrc_fld_ddc_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *buf,
+			void *_fld)
+{
+  struct mrc_fld *fld = _fld;
+  assert(mrc_fld_ops(fld)->ddc_copy_to_buf);
+  mrc_fld_ops(fld)->ddc_copy_to_buf(fld, mb, me, p, ilo, ihi, buf);
+}
+
+void
+mrc_fld_ddc_copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *buf,
+			  void *_fld)
+{
+  struct mrc_fld *fld = _fld;
+  assert(mrc_fld_ops(fld)->ddc_copy_from_buf);
+  mrc_fld_ops(fld)->ddc_copy_from_buf(fld, mb, me, p, ilo, ihi, buf);
+}
+
+void
+mrc_fld_ddc_add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *buf,
+			 void *_fld)
+{
+  struct mrc_fld *fld = _fld;
+  assert(mrc_fld_ops(fld)->ddc_add_from_buf);
+  mrc_fld_ops(fld)->ddc_add_from_buf(fld, mb, me, p, ilo, ihi, buf);
+}
+
 // ======================================================================
 // mrc_fld subclasses
 
@@ -790,25 +817,49 @@ static struct mrc_obj_method mrc_fld_int_methods[] = {
   {}
 };
 
+// no ddc support for mrc_fld "int" (though it could be added)
+
+void
+mrc_fld_int_ddc_copy_from_buf(struct mrc_fld *fld, int mb, int me, int p,
+			      int ilo[3], int ihi[3], void *buf)
+{
+  assert(0);
+}
+
+void
+mrc_fld_int_ddc_copy_to_buf(struct mrc_fld *fld, int mb, int me, int p,
+			    int ilo[3], int ihi[3], void *buf)
+{
+  assert(0);
+}
+
+
 // ----------------------------------------------------------------------
 // create float, double, int subclasses
 
-#define MAKE_MRC_FLD_TYPE(NAME, type, TYPE, IS_AOS)	\
-							\
-  static void						\
-  mrc_fld_##NAME##_create(struct mrc_fld *fld)		\
-  {							\
-    fld->_data_type = MRC_NT_##TYPE;			\
-    fld->_size_of_type = sizeof(type);			\
-    fld->_is_aos = IS_AOS;				\
-  }							\
-  							\
-  static struct mrc_fld_ops mrc_fld_##NAME##_ops = {	\
-    .name                  = #NAME,			\
-    .methods               = mrc_fld_##NAME##_methods,	\
-    .create                = mrc_fld_##NAME##_create,	\
-    .vec_type              = #type,			\
-  };							\
+#define MAKE_MRC_FLD_TYPE(NAME, type, TYPE, IS_AOS)			\
+									\
+  static void								\
+  mrc_fld_##NAME##_create(struct mrc_fld *fld)				\
+  {									\
+    fld->_data_type = MRC_NT_##TYPE;					\
+    fld->_size_of_type = sizeof(type);					\
+    fld->_is_aos = IS_AOS;						\
+  }									\
+  									\
+  void mrc_fld_##NAME##_ddc_copy_from_buf(struct mrc_fld *, int, int,	\
+					  int, int[3], int[3], void *); \
+  void mrc_fld_##NAME##_ddc_copy_to_buf(struct mrc_fld *, int, int,	\
+					int, int[3], int[3], void *);	\
+  									\
+  static struct mrc_fld_ops mrc_fld_##NAME##_ops = {			\
+    .name                  = #NAME,					\
+    .methods               = mrc_fld_##NAME##_methods,			\
+    .create                = mrc_fld_##NAME##_create,			\
+    .ddc_copy_from_buf	   = mrc_fld_##NAME##_ddc_copy_from_buf,	\
+    .ddc_copy_to_buf	   = mrc_fld_##NAME##_ddc_copy_to_buf,		\
+    .vec_type              = #type,					\
+  };									\
 
 MAKE_MRC_FLD_TYPE(float, float, FLOAT, false)
 MAKE_MRC_FLD_TYPE(float_aos, float, FLOAT, true)

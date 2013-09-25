@@ -223,7 +223,22 @@ mrc_fld_patch_put(struct mrc_fld *fld)
 struct mrc_fld_ops {
   MRC_SUBCLASS_OPS(struct mrc_fld);
   const char *vec_type;
+  void (*ddc_copy_to_buf)(struct mrc_fld *fld, int mb, int me, int p,
+			  int ilo[3], int ihi[3], void *buf);
+  void (*ddc_copy_from_buf)(struct mrc_fld *fld, int mb, int me, int p,
+			    int ilo[3], int ihi[3], void *buf);
+  void (*ddc_add_from_buf)(struct mrc_fld *fld, int mb, int me, int p,
+			   int ilo[3], int ihi[3], void *buf);
 };
+
+// FIXME, fld should be the first argument (and struct mrc_fld *), but we want compatibility with the
+// old-style mrc_ddc_funcs until the go away.
+void mrc_fld_ddc_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *buf,
+			     void *fld);
+void mrc_fld_ddc_copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *buf,
+			       void *fld);
+void mrc_fld_ddc_add_form_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *buf,
+			      void *fld);
 
 typedef void (*mrc_fld_copy_to_func_t)(struct mrc_fld *,
 				       struct mrc_fld *);

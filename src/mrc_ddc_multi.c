@@ -430,6 +430,20 @@ mrc_ddc_multi_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 }
 
 // ----------------------------------------------------------------------
+// mrc_ddc_multi_fill_ghosts_fld
+
+static void
+mrc_ddc_multi_fill_ghosts_fld(struct mrc_ddc *ddc, int mb, int me,
+			      struct mrc_fld *fld)
+{
+  struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
+
+  assert(fld->_size_of_type == ddc->size_of_type);
+  ddc_run(ddc, &multi->fill_ghosts2, mb, me, fld,
+	  mrc_fld_ddc_copy_to_buf, mrc_fld_ddc_copy_from_buf);
+}
+
+// ----------------------------------------------------------------------
 // mrc_ddc_multi_fill_ghosts
 
 static void
@@ -451,6 +465,7 @@ struct mrc_ddc_ops mrc_ddc_multi_ops = {
   .destroy               = mrc_ddc_multi_destroy,
   .set_domain            = mrc_ddc_multi_set_domain,
   .get_domain            = mrc_ddc_multi_get_domain,
+  .fill_ghosts_fld       = mrc_ddc_multi_fill_ghosts_fld,
   .fill_ghosts           = mrc_ddc_multi_fill_ghosts,
   .add_ghosts            = mrc_ddc_multi_add_ghosts,
 };
