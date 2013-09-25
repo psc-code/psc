@@ -23,8 +23,13 @@ void mrc_ddc_set_domain(struct mrc_ddc *ddc, struct mrc_domain *domain);
 struct mrc_domain *mrc_ddc_get_domain(struct mrc_ddc *ddc);
 void mrc_ddc_setup(struct mrc_ddc *ddc);
 void mrc_ddc_destroy(struct mrc_ddc *ddc);
-void mrc_ddc_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx);
+void mrc_ddc_fill_ghosts_fld(struct mrc_ddc *ddc, int mb, int me, struct mrc_fld *fld);
+
+// OBSOLETE: when doing boundary exchange on a mrc_fld, use the API above
+// this one is more flexible, and still used in PSC, but it should go away when we
+// always use mrc_fld's
 void mrc_ddc_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx);
+void mrc_ddc_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx);
 
 // AMR-specific functionality
 // should probably be given a more generic interface,

@@ -78,7 +78,7 @@ ggcm_mhd_commu_c_run(struct ggcm_mhd_commu *commu, struct mrc_fld *fld,
 
   assert(fld->_data_type == MRC_NT_FLOAT);
   struct mrc_fld *f = mrc_fld_get_as(fld, mrc_fld_type(fld));
-  mrc_ddc_fill_ghosts(commu_c->ddc, mb, me, f);
+  mrc_ddc_fill_ghosts_fld(commu_c->ddc, mb, me, f);
   mrc_fld_put_as(f, fld);
 }
 

@@ -111,7 +111,7 @@ main(int argc, char **argv)
   mrc_ddc_set_param_int(ddc, "size_of_type", sizeof(float));
   mrc_ddc_setup(ddc);
   mrc_ddc_view(ddc);
-  mrc_ddc_fill_ghosts(ddc, 0, 2, m3);
+  mrc_ddc_fill_ghosts_fld(ddc, 0, 2, m3);
   mrc_ddc_destroy(ddc);
 
   check_m3(m3);

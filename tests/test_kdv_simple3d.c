@@ -43,7 +43,7 @@ calc_rhs(void *ctx, struct mrc_obj *_rhs, float time, struct mrc_obj *_x)
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   struct mrc_ddc *ddc = mrc_domain_get_ddc(domain);
   
-  mrc_ddc_fill_ghosts(ddc, 0, NR_FLDS, x);
+  mrc_ddc_fill_ghosts_fld(ddc, 0, NR_FLDS, x);
 
   mrc_fld_foreach(x, ix, iy, iz, 0, 0) {
     MRC_F3(rhs, U, ix,iy,iz) =  - Dxxx(x, U, ix,iy,iz) +

@@ -59,7 +59,7 @@ test(bool periodic)
   } mrc_fld_foreach_end;
 
   for (int i = 0; i < 1; i++) {
-    mrc_ddc_fill_ghosts(ddc, 0, 2, fld);
+    mrc_ddc_fill_ghosts_fld(ddc, 0, 2, fld);
   }
 
   int N[3];
