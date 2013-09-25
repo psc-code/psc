@@ -6,6 +6,31 @@
 #include <stdlib.h>
 #include <assert.h>
 
+// This entire file may be obsolete, since "multi" will do the same and more
+// However, "multi" will do aggregation, while "simple" does not, so there may be
+// in point in comparing performance...
+
+// ======================================================================
+// mrc_ddc_simple
+
+struct mrc_ddc_pattern {
+  struct mrc_ddc_sendrecv send[N_DIR];
+  struct mrc_ddc_sendrecv recv[N_DIR];
+};
+
+struct mrc_ddc_simple {
+  // parameters
+  int n_proc[3]; // # procs in 3D grid
+  int ilo[3], ihi[3]; // local domain (no ghosts)
+  int bc[3]; // boundary condition
+
+  int proc[3]; // this proc's position in the 3D proc grid
+  struct mrc_ddc_pattern add_ghosts;
+  struct mrc_ddc_pattern fill_ghosts;
+  MPI_Request send_reqs[N_DIR];
+  MPI_Request recv_reqs[N_DIR];
+};
+
 #define to_mrc_ddc_simple(ddc) ((struct mrc_ddc_simple *) (ddc)->obj.subctx)
 
 // ----------------------------------------------------------------------

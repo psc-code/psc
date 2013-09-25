@@ -7,6 +7,35 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+// ======================================================================
+// mrc_ddc_amr
+
+struct mrc_ddc_amr_row {
+  int patch;
+  int idx;
+  int first_entry;
+};
+
+struct mrc_ddc_amr_entry {
+  int patch;
+  int idx;
+  float val;
+};
+
+struct mrc_ddc_amr {
+  struct mrc_ddc_amr_row *rows;
+  struct mrc_ddc_amr_entry *entries;
+
+  int nr_rows;
+  int nr_entries;
+  int nr_rows_alloced;
+  int nr_entries_alloced;
+
+  struct mrc_domain *domain;
+  int sw;
+  int ib[3], im[3];
+};
+
 #define mrc_ddc_amr(ddc) mrc_to_subobj(ddc, struct mrc_ddc_amr)
 
 // ----------------------------------------------------------------------
