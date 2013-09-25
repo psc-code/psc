@@ -1,18 +1,16 @@
 
-#include <mrc_domain.h>
 #include <mrc_ddc.h>
 
-// ======================================================================
-// mrc_ddc_funcs_fld
+// This file is included multiple times to generate versions for various
+// TYPE's (e.g., float, double, float_aos, ...)
 
-#include <mrc_fld.h>
+// ----------------------------------------------------------------------
+// mrc_fld_TYPE_ddc_copy_to_buf
 
-static void
-mrc_fld_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3],
-		   void *_buf, void *ctx)
+void
+mrc_fld_TYPE_ddc_copy_to_buf(struct mrc_fld *fld, int mb, int me, int p,
+			     int ilo[3], int ihi[3], void *_buf)
 {
-  //mprintf("to %d:%d x %d:%d x %d:%d\n", ilo[0], ihi[0], ilo[1], ihi[1], ilo[2], ihi[2]);
-  struct mrc_fld *fld = ctx;
   mrc_fld_data_t *buf = _buf;
 
   for (int m = mb; m < me; m++) {
@@ -26,12 +24,14 @@ mrc_fld_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3],
   }
 }
 
-static void
-mrc_fld_copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
-		     void *_buf, void *ctx)
+// ----------------------------------------------------------------------
+// mrc_fld_TYPE_ddc_copy_from_buf
+
+void
+mrc_fld_TYPE_ddc_copy_from_buf(struct mrc_fld *fld, int mb, int me, int p,
+			       int ilo[3], int ihi[3], void *_buf)
 {
   //mprintf("from %d:%d x %d:%d x %d:%d\n", ilo[0], ihi[0], ilo[1], ihi[1], ilo[2], ihi[2]);
-  struct mrc_fld *fld = ctx;
   mrc_fld_data_t *buf = _buf;
 
   for (int m = mb; m < me; m++) {
@@ -43,26 +43,4 @@ mrc_fld_copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
       }
     }
   }
-}
-
-struct mrc_ddc_funcs mrc_ddc_funcs_fld_TYPE = {
-  .copy_to_buf   = mrc_fld_copy_to_buf,
-  .copy_from_buf = mrc_fld_copy_from_buf,
-};
-
-// for new-style mrc_fld boundary (the above interface is obsolete, but this part 
-// should go -> mrc_fld once we get rid of the above).
-
-void
-mrc_fld_TYPE_ddc_copy_to_buf(struct mrc_fld *fld, int mb, int me, int p,
-			     int ilo[3], int ihi[3], void *buf)
-{
-  mrc_fld_copy_to_buf(mb, me, p, ilo, ihi, buf, fld);
-}
-
-void
-mrc_fld_TYPE_ddc_copy_from_buf(struct mrc_fld *fld, int mb, int me, int p,
-			       int ilo[3], int ihi[3], void *buf)
-{
-  mrc_fld_copy_from_buf(mb, me, p, ilo, ihi, buf, fld);
 }

@@ -105,7 +105,6 @@ main(int argc, char **argv)
   set_m3(m3);
 
   struct mrc_ddc *ddc = mrc_domain_create_ddc(domain);
-  mrc_ddc_set_funcs(ddc, &mrc_ddc_funcs_m3);
   mrc_ddc_set_param_int3(ddc, "ibn", m3->_sw.vals);
   mrc_ddc_set_param_int(ddc, "max_n_fields", 2);
   mrc_ddc_set_param_int(ddc, "size_of_type", sizeof(float));
