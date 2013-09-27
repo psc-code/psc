@@ -9,6 +9,7 @@ libsubdir_la_SOURCES = \
 	psc_bnd_particles_c.c \
 	psc_bnd_particles_single.c \
 	psc_bnd_particles_double.c \
+	psc_bnd_particles_double_omp.c \
 	psc_bnd_particles_single2.c
 
 if USE_CUDA
@@ -18,6 +19,7 @@ endif USE_CUDA
 
 EXTRA_libsubdir_la_SOURCES = \
 	psc_bnd_particles_common.c \
+	psc_bnd_particles_common_omp.c \
 	psc_bnd_particles_common2.c \
 	psc_bnd_particles_exchange_particles_pre.c
 
