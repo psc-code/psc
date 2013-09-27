@@ -51,7 +51,7 @@ def p1():
               [1, 2, 2, 3, 1, 2],
               [2, 3, 3, 3, 2, 3]]
 
-    text(-1, -0, "block indices", horizontalalignment="right",
+    text(-1, -0, "cell indices", horizontalalignment="right",
          verticalalignment="center", size=fontsize)
     ii = 0
     ib = 0
@@ -103,7 +103,7 @@ def p1():
                  verticalalignment="center", size=fontsize, color=colors2[j])
             ii += len(b) + 1
 
-    text(-1, -11, "scan blocks", horizontalalignment="right",
+    text(-1, -11, "scan cells", horizontalalignment="right",
          verticalalignment="center", size=fontsize)
 
     targets = blocks[:]
@@ -131,7 +131,7 @@ def p1():
         ii += len(b) + 1
         ib += len(b)
 
-    text(-1, -14, "block bounds", horizontalalignment="right",
+    text(-1, -14, "cell bounds", horizontalalignment="right",
          verticalalignment="center", size=fontsize)
     offsets = array([0, 8, 16, 22, 27])
     ii = 0
@@ -157,7 +157,7 @@ def p2():
     offsets = [0, 8, 15, 21, 27]
     offsets2 = [0, 9, 17, 24, 31]
 
-    text(-1, -0, "block indices", horizontalalignment="right",
+    text(-1, -0, "cell indices", horizontalalignment="right",
          verticalalignment="center", size=fontsize)
     ii = 0
     ib = 0
@@ -225,7 +225,7 @@ def p2():
                  verticalalignment="center", size=fontsize, color=colorss2[j])
             ii += len(b) + 1
 
-    text(-1, -11, "scan blocks", horizontalalignment="right",
+    text(-1, -11, "scan cells", horizontalalignment="right",
          verticalalignment="center", size=fontsize)
 
     targets = blocks[:]
@@ -254,7 +254,7 @@ def p2():
         ii += len(b) + 1
         ib += len(b)
 
-    text(-1, -14, "block bounds", horizontalalignment="right",
+    text(-1, -14, "cell bounds", horizontalalignment="right",
          verticalalignment="center", size=fontsize)
     offsets = array([0, 8, 16, 22, 27])
     ii = 0
@@ -271,5 +271,8 @@ def p2():
     gca().get_yaxis().set_visible(False)
     savefig("sort2.pdf")
 
+figure()
+p1()
+figure()
 p2()
 print "done"
