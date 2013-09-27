@@ -35,6 +35,7 @@ psc_push_fields_push_E(struct psc_push_fields *push, mfields_base_t *flds)
     ops->push_mflds_E(push, flds);
   } else {
     assert(ops->push_E);
+#pragma omp parallel for
     for (int p = 0; p < flds->nr_patches; p++) {
       psc_balance_comp_time_by_patch[p] -= MPI_Wtime();
       ops->push_E(push, psc_mfields_get_patch(flds, p));
@@ -62,6 +63,7 @@ psc_push_fields_push_H(struct psc_push_fields *push, mfields_base_t *flds)
     ops->push_mflds_H(push, flds);
   } else {
     assert(ops->push_H);
+#pragma omp parallel for
     for (int p = 0; p < flds->nr_patches; p++) {
       psc_balance_comp_time_by_patch[p] -= MPI_Wtime();
       ops->push_H(push, psc_mfields_get_patch(flds, p));
@@ -162,6 +164,7 @@ psc_push_fields_step_a(struct psc_push_fields *push, mfields_base_t *flds)
     // pml could become a separate push_fields subclass
     struct psc_push_fields_ops *ops = psc_push_fields_ops(push);
     assert(ops->pml_a);
+#pragma omp parallel for
     for (int p = 0; p < flds->nr_patches; p++) {
       ops->pml_a(push, psc_mfields_get_patch(flds, p));
     }
@@ -193,6 +196,7 @@ psc_push_fields_step_b2(struct psc_push_fields *push, mfields_base_t *flds)
   if (ppsc->domain.use_pml) {
     struct psc_push_fields_ops *ops = psc_push_fields_ops(push);
     assert(ops->pml_b);
+#pragma omp parallel for
     for (int p = 0; p < flds->nr_patches; p++) {
       ops->pml_b(push, psc_mfields_get_patch(flds, p));
     }

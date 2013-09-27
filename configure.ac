@@ -46,6 +46,8 @@ if test -z "$CC" || test "X$CC" = "Xno"; then
   AC_MSG_ERROR([No suitable C99 compiler found])
 fi
 AM_PROG_CC_C_O
+AC_OPENMP
+CFLAGS="$CFLAGS $OPENMP_CFLAGS"
 
 AC_PROG_CXX([openmpicxx mpicxx])
 

@@ -21,6 +21,7 @@ push_a_yz(struct psc_push_particles *push, struct psc_mparticles *mprts,
 
   prof_restart(pr_time_step_no_comm);
   if (ops->push_a_yz) {
+#pragma omp parallel for
     for (int p = 0; p < mprts->nr_patches; p++) {
       psc_balance_comp_time_by_patch[p] -= MPI_Wtime();
       ops->push_a_yz(push, psc_mparticles_get_patch(mprts, p),
@@ -51,6 +52,7 @@ psc_push_particles_run(struct psc_push_particles *push,
   if (im[0] == 1 && im[1] > 1 && im[2] > 1) { // yz
     push_a_yz(push, mprts, mflds);
   } else {
+#pragma omp parallel for
     for (int p = 0; p < mprts->nr_patches; p++) {
       struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
       struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
@@ -86,6 +88,7 @@ psc_push_particles_run_b(struct psc_push_particles *push,
   psc_stats_start(st_time_particle);
   struct psc_push_particles_ops *ops = psc_push_particles_ops(push);
   int *im = ppsc->domain.gdims;
+#pragma omp parallel for
   for (int p = 0; p < particles->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
     struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
@@ -111,6 +114,7 @@ psc_push_particles_calc_j(struct psc_push_particles *push,
 
   bool have_calc_j = false;
   int *im = ppsc->domain.gdims;
+#pragma omp parallel for
   for (int p = 0; p < particles->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
     struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
