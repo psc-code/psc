@@ -2,6 +2,9 @@
 #include <mrc.h>
 #include <mrc_params.h>
 #include <mrc_obj.h>
+#ifdef HAVE_PETSC
+#include <petsc.h>
+#endif
 
 #include <assert.h>
 
@@ -22,6 +25,9 @@ mrc_clear_flags(unsigned long flags)
 void
 libmrc_finalize(bool assert_clean, int class_info_verbosity)
 {
+#ifdef HAVE_PETSC
+  int ierr = PetscFinalize(); assert(ierr == 0);
+#endif
   int status = 0;
 
   struct mrc_param_select class_info_verb_options[] = {
