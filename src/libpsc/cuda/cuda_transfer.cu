@@ -229,6 +229,7 @@ __psc_mparticles_cuda_free(struct psc_mparticles *mprts)
   check(cudaFree(mprts_cuda->d_alt_bidx));
   check(cudaFree(mprts_cuda->d_ids));
   check(cudaFree(mprts_cuda->d_sums));
+  check(cudaFree(mprts_cuda->d_off));
   check(cudaFree(mprts_cuda->d_bnd_spine_cnts));
   check(cudaFree(mprts_cuda->d_bnd_spine_sums));
 

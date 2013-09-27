@@ -5,8 +5,6 @@
 #include "particles_cuda.h"
 #include "psc_bnd_cuda.h"
 
-#include <thrust/device_vector.h>
-
 #define PFX(x) xchg_##x
 #include "constants.c"
 
