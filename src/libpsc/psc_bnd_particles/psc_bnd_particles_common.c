@@ -221,6 +221,7 @@ psc_bnd_particles_sub_exchange_particles(struct psc_bnd_particles *bnd, mparticl
   // in the invariant direction
 
   prof_restart(pr_time_step_no_comm);
+#pragma omp parallel for
   psc_foreach_patch(psc, p) {
     psc_balance_comp_time_by_patch[p] -= MPI_Wtime();
     psc_bnd_particles_sub_exchange_particles_prep(bnd, psc_mparticles_get_patch(particles, p));
