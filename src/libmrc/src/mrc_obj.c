@@ -117,6 +117,7 @@ obj_create(MPI_Comm comm, struct mrc_class *cls, bool basic_only)
   }
 
   // no ref count for this reference, will be deleted on final destroy()
+#pragma omp critical
   list_add_tail(&obj->instance_entry, &cls->instances);
 
   // if we're read()'ing this, we don't call the actual create() functions
@@ -217,6 +218,7 @@ mrc_obj_put(struct mrc_obj *obj)
     return;
 
   struct mrc_class *cls = obj->cls;
+#pragma omp critical
   list_del(&obj->instance_entry);
 
   if (obj->ops) {
