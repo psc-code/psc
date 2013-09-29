@@ -354,29 +354,30 @@ mrc_ddc_multi_destroy(struct mrc_ddc *ddc)
 }
 
 // ----------------------------------------------------------------------
-// ddc_run
+// ddc_run_begin
 
 static void
-ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
-	int mb, int me, void *ctx,
-	void (*to_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf, void *ctx),
-	void (*from_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf, void *ctx))
+ddc_run_begin(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
+	      int mb, int me, void *ctx,
+	      void (*to_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf, void *ctx))
 {
   struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
   struct mrc_ddc_rank_info *ri = patt2->ri;
 
   // communicate aggregated buffers
-  int recv_cnt = 0;
+  // post receives
+  patt2->recv_cnt = 0;
   void *p = patt2->recv_buf;
   for (int r = 0; r < multi->mpi_size; r++) {
     if (r != multi->mpi_rank && ri[r].n_recv_entries) {
       MPI_Irecv(p, ri[r].n_recv * (me - mb), ddc->mpi_type,
-		r, 0, ddc->obj.comm, &patt2->recv_req[recv_cnt++]);
+		r, 0, ddc->obj.comm, &patt2->recv_req[patt2->recv_cnt++]);
       p += ri[r].n_recv * (me - mb) * ddc->size_of_type;
     }
   }  
   assert(p == patt2->recv_buf + patt2->n_recv * (me - mb) * ddc->size_of_type);
-  
+
+  // post sends
   p = patt2->send_buf;
   int send_cnt = 0;
   for (int r = 0; r < multi->mpi_size; r++) {
@@ -392,18 +393,22 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
     }
   }  
   assert(p == patt2->send_buf + patt2->n_send * (me - mb) * ddc->size_of_type);
+}
 
-  // overlap: local exchange
-  for (int i = 0; i < ri[multi->mpi_rank].n_send_entries; i++) {
-    struct mrc_ddc_sendrecv_entry *se = &ri[multi->mpi_rank].send_entry[i];
-    struct mrc_ddc_sendrecv_entry *re = &ri[multi->mpi_rank].recv_entry[i];
-    to_buf(mb, me, se->patch, se->ilo, se->ihi, patt2->local_buf, ctx);
-    from_buf(mb, me, se->nei_patch, re->ilo, re->ihi, patt2->local_buf, ctx);
-  }
+// ----------------------------------------------------------------------
+// ddc_run_end
 
-  MPI_Waitall(recv_cnt, patt2->recv_req, MPI_STATUSES_IGNORE);
+static void
+ddc_run_end(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
+	    int mb, int me, void *ctx,
+	    void (*from_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf, void *ctx))
+{
+  struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
+  struct mrc_ddc_rank_info *ri = patt2->ri;
 
-  p = patt2->recv_buf;
+  MPI_Waitall(patt2->recv_cnt, patt2->recv_req, MPI_STATUSES_IGNORE);
+
+  void *p = patt2->recv_buf;
   for (int r = 0; r < multi->mpi_size; r++) {
     if (r != multi->mpi_rank) {
       for (int i = 0; i < ri[r].n_recv_entries; i++) {
@@ -414,7 +419,42 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
     }
   }
 
-  MPI_Waitall(send_cnt, patt2->send_req, MPI_STATUSES_IGNORE);
+  MPI_Waitall(patt2->send_cnt, patt2->send_req, MPI_STATUSES_IGNORE);
+}
+
+// ----------------------------------------------------------------------
+// ddc_run_local
+
+static void
+ddc_run_local(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
+	      int mb, int me, void *ctx,
+	      void (*to_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf, void *ctx),
+	      void (*from_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf, void *ctx))
+{
+  struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
+  struct mrc_ddc_rank_info *ri = patt2->ri;
+
+  // overlap: local exchange
+  for (int i = 0; i < ri[multi->mpi_rank].n_send_entries; i++) {
+    struct mrc_ddc_sendrecv_entry *se = &ri[multi->mpi_rank].send_entry[i];
+    struct mrc_ddc_sendrecv_entry *re = &ri[multi->mpi_rank].recv_entry[i];
+    to_buf(mb, me, se->patch, se->ilo, se->ihi, patt2->local_buf, ctx);
+    from_buf(mb, me, se->nei_patch, re->ilo, re->ihi, patt2->local_buf, ctx);
+  }
+}
+
+// ----------------------------------------------------------------------
+// ddc_run
+
+static void
+ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
+	int mb, int me, void *ctx,
+	void (*to_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf, void *ctx),
+	void (*from_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf, void *ctx))
+{
+  ddc_run_begin(ddc, patt2, mb, me, ctx, to_buf);
+  ddc_run_local(ddc, patt2, mb, me, ctx, to_buf, from_buf);
+  ddc_run_end(ddc, patt2, mb, me, ctx, from_buf);
 }
 
 // ----------------------------------------------------------------------
