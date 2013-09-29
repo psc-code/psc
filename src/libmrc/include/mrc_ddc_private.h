@@ -37,7 +37,9 @@ struct mrc_ddc_pattern2 {
   int n_recv_ranks, n_send_ranks;
   // one request each per rank we're communicating with
   MPI_Request *send_req, *recv_req;
-  // total number of (ddc->mpi_type) we're sending / receivng to all ranks
+  // number of messages we're expecting to send / receive
+  int send_cnt, recv_cnt;
+  // total number of (ddc->mpi_type) we're sending / receiving to all ranks
   int n_send, n_recv;
   // buffers with the above sizes
   void *send_buf, *recv_buf;
