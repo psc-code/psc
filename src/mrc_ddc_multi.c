@@ -10,8 +10,6 @@
 #include <assert.h>
 #include <string.h>
 
-#define to_mrc_ddc_multi(ddc) ((struct mrc_ddc_multi *) (ddc)->obj.subctx)
-
 // ----------------------------------------------------------------------
 // mrc_ddc_multi_get_nei_rank_patch
 
@@ -481,6 +479,36 @@ mrc_ddc_multi_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 	  ddc->funcs->copy_to_buf, ddc->funcs->copy_from_buf);
 }
 
+// ----------------------------------------------------------------------
+// mrc_ddc_multi_fill_ghosts_begin
+
+static void
+mrc_ddc_multi_fill_ghosts_begin(struct mrc_ddc *ddc, int mb, int me, void *ctx)
+{
+  struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
+
+  ddc_run_begin(ddc, &multi->fill_ghosts2, mb, me, ctx,
+		ddc->funcs->copy_to_buf);
+}
+
+static void
+mrc_ddc_multi_fill_ghosts_end(struct mrc_ddc *ddc, int mb, int me, void *ctx)
+{
+  struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
+
+  ddc_run_end(ddc, &multi->fill_ghosts2, mb, me, ctx,
+	      ddc->funcs->copy_from_buf);
+}
+
+static void
+mrc_ddc_multi_fill_ghosts_local(struct mrc_ddc *ddc, int mb, int me, void *ctx)
+{
+  struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
+
+  ddc_run_local(ddc, &multi->fill_ghosts2, mb, me, ctx,
+		ddc->funcs->copy_to_buf, ddc->funcs->copy_from_buf);
+}
+
 // ======================================================================
 // mrc_ddc_multi_ops
 
@@ -492,6 +520,9 @@ struct mrc_ddc_ops mrc_ddc_multi_ops = {
   .set_domain            = mrc_ddc_multi_set_domain,
   .get_domain            = mrc_ddc_multi_get_domain,
   .fill_ghosts           = mrc_ddc_multi_fill_ghosts,
+  .fill_ghosts_begin     = mrc_ddc_multi_fill_ghosts_begin,
+  .fill_ghosts_end       = mrc_ddc_multi_fill_ghosts_end,
+  .fill_ghosts_local     = mrc_ddc_multi_fill_ghosts_local,
   .add_ghosts            = mrc_ddc_multi_add_ghosts,
 };
 

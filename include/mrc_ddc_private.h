@@ -76,6 +76,9 @@ struct mrc_ddc_ops {
   void (*set_domain)(struct mrc_ddc *ddc, struct mrc_domain *domain);
   struct mrc_domain *(*get_domain)(struct mrc_ddc *ddc);
   void (*fill_ghosts)(struct mrc_ddc *ddc, int mb, int me, void *ctx);
+  void (*fill_ghosts_begin)(struct mrc_ddc *ddc, int mb, int me, void *ctx);
+  void (*fill_ghosts_end)(struct mrc_ddc *ddc, int mb, int me, void *ctx);
+  void (*fill_ghosts_local)(struct mrc_ddc *ddc, int mb, int me, void *ctx);
   void (*add_ghosts)(struct mrc_ddc *ddc, int mb, int me, void *ctx);
 };
 
@@ -112,6 +115,8 @@ struct mrc_ddc_multi {
 };
 
 extern struct mrc_ddc_ops mrc_ddc_multi_ops;
+
+#define to_mrc_ddc_multi(ddc) ((struct mrc_ddc_multi *) (ddc)->obj.subctx)
 
 // ======================================================================
 // mrc_ddc_amr
