@@ -69,12 +69,18 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
 #if defined(PETSC_USE_REAL_SINGLE) && !defined(PETSC_USE_COMPLEX)
     if (strcmp(vec_type, "float")==0) {
       vec_type = "petsc";
+      if (fld->_is_aos) {
+	mrc_vec_set_param_int(fld->_vec, "block_size", fld->_nr_comps);
+      }
       mrc_fld_ops(fld)->vec_type = "petsc";
     }
 #endif
 #if defined(PETSC_USE_REAL_DOUBLE) && !defined(PETSC_USE_COMPLEX)
     if (strcmp(vec_type, "double")==0) {
       vec_type = "petsc";
+      if (fld->_is_aos) {
+	mrc_vec_set_param_int(fld->_vec, "block_size", fld->_nr_comps);
+      }
       mrc_fld_ops(fld)->vec_type = "petsc";
     }
 #endif
