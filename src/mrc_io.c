@@ -185,26 +185,6 @@ mrc_io_write_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
 }
 
 // ----------------------------------------------------------------------
-// mrc_io_write_f3
-
-void
-mrc_io_write_f3(struct mrc_io *io, const char *path, struct mrc_fld *fld, float scale)
-{
-  struct mrc_io_ops *ops = mrc_io_ops(io);
-  if (ops->write_f3) {
-    ops->write_f3(io, path, fld, scale);
-  } else if (ops->write_field) {
-    int nr_comps = mrc_fld_nr_comps(fld);
-    for (int m = 0; m < nr_comps; m++) {
-      assert(mrc_fld_comp_name(fld, m));
-      ops->write_field(io, path, scale, fld, m);
-    }
-  } else {
-    assert(0);
-  }
-}
-
-// ----------------------------------------------------------------------
 // mrc_io_write_m1
 
 void
@@ -241,9 +221,13 @@ mrc_io_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *fld)
   struct mrc_io_ops *ops = mrc_io_ops(io);
   if (ops->write_m3) {
     ops->write_m3(io, path, fld);
-  } else if (ops->write_f3 || ops->write_field) {
+  } else if (ops->write_field) {
     assert(mrc_fld_nr_patches(fld) == 1);
-    mrc_io_write_f3(io, path, fld, 1.);
+    int nr_comps = mrc_fld_nr_comps(fld);
+    for (int m = 0; m < nr_comps; m++) {
+      assert(mrc_fld_comp_name(fld, m));
+      ops->write_field(io, path, 1., fld, m);
+    }
   } else {
     assert(0);
   }

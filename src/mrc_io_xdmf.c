@@ -1193,59 +1193,6 @@ ds_xdmf_write_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
 }
 
 static void
-ds_xdmf_write_f3(struct mrc_io *io, const char *path, struct mrc_fld *fld, float scale)
-{
-  int ierr;
-  struct diag_hdf5 *hdf5 = diag_hdf5(io);
-
-  hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT); H5_CHK(group0);
-
-  assert(scale == 1.f);
-
-
-  struct xdmf_spatial *xs = xdmf_spatial_find(io, "3df", -1);
-  if (!xs) {
-    xs = xdmf_spatial_create_3d(io, fld->_dims.vals, -1, io->size);
-    hdf5_write_crds(io, fld->_dims.vals, fld->_domain, fld->_sw.vals[0]);
-  }
-
-  int nr_comps = mrc_fld_nr_comps(fld);
-  for (int m = 0; m < nr_comps; m++) {
-    assert(mrc_fld_comp_name(fld, m));
-    save_fld_info(xs, strdup(mrc_fld_comp_name(fld, m)), strdup(path), false);
-    hid_t group = H5Gcreate(group0, mrc_fld_comp_name(fld, m), 
-			    H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    ierr = H5LTset_attribute_int(group, ".", "m", &m, 1); CE;
-
-    hsize_t fdims[3] = { mrc_fld_dims(fld)[2],
-			 mrc_fld_dims(fld)[1],
-			 mrc_fld_dims(fld)[0] };
-    hsize_t mdims[3] = { mrc_fld_ghost_dims(fld)[2],
-			 mrc_fld_ghost_dims(fld)[1],
-			 mrc_fld_ghost_dims(fld)[0] };
-    hsize_t offs[3] = { -mrc_fld_ghost_offs(fld)[2],
-			-mrc_fld_ghost_offs(fld)[1],
-			-mrc_fld_ghost_offs(fld)[0] };
-
-    hid_t filespace = H5Screate_simple(3, fdims, NULL);
-    hid_t memspace = H5Screate_simple(3, mdims, NULL);
-    H5Sselect_hyperslab(memspace, H5S_SELECT_SET, offs, NULL, fdims, NULL);
-
-    hid_t dset = H5Dcreate(group, "3d", H5T_NATIVE_FLOAT, filespace, H5P_DEFAULT,
-			   H5P_DEFAULT, H5P_DEFAULT);
-    struct mrc_fld *f = mrc_fld_get_as(fld, "float");
-    ierr  = H5Dwrite(dset, H5T_NATIVE_FLOAT, memspace, filespace, H5P_DEFAULT,
-		     f->_arr); CE;
-    mrc_fld_put_as(f, fld);
-    ierr = H5Dclose(dset); CE;
-
-    ierr = H5Gclose(group); CE;
-  }
-
-  ierr = H5Gclose(group0); CE;
-}
-
-static void
 ds_xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3)
 {
   int ierr;
@@ -1399,7 +1346,6 @@ struct mrc_io_ops mrc_io_xdmf_serial_ops = {
   .close         = ds_xdmf_close,
   .write_field   = ds_xdmf_write_field,
   .write_field2d = ds_xdmf_write_field2d,
-  .write_f3      = ds_xdmf_write_f3,
   .write_m3      = ds_xdmf_write_m3,
   .read_f3       = ds_xdmf_read_f3,
   .write_m1      = ds_xdmf_write_m1,

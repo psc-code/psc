@@ -30,7 +30,6 @@ void mrc_io_close(struct mrc_io *io);
 void mrc_io_read_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld);
 void mrc_io_read_f3(struct mrc_io *io, const char *path, struct mrc_fld *fld);
 void mrc_io_write_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld);
-void mrc_io_write_f3(struct mrc_io *io, const char *path, struct mrc_fld *fld, float scale);
 void mrc_io_read_m1(struct mrc_io *io, const char *path, struct mrc_fld *m1);
 void mrc_io_write_m1(struct mrc_io *io, const char *path, struct mrc_fld *m1);
 void mrc_io_read_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3);
