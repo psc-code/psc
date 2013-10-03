@@ -53,12 +53,38 @@ _psc_output_fields_collection_write(struct psc_output_fields_collection *out, st
 }
 
 // ----------------------------------------------------------------------
+// psc_output_fields_collection_add_children_checkpoint
+
+static void
+_psc_output_fields_collection_add_children_checkpoint(struct psc_output_fields_collection *coll)
+{
+  char *s = strdup(coll->names), *p;
+  while ((p = strsep(&s, ", "))) {
+    struct psc_output_fields *out =
+      psc_output_fields_create(psc_output_fields_collection_comm(coll));
+    psc_output_fields_set_name(out, p);
+    if (strcmp(p, "psc_output_fields") != 0) {
+      char s[100];
+      sprintf(s, "pfd_%s", p);
+      psc_output_fields_set_param_string(out, "pfd", s);
+      sprintf(s, "tfd_%s", p);
+      psc_output_fields_set_param_string(out, "tfd", s);
+    }
+    psc_output_fields_set_psc(out, coll->psc);
+    // skip setting-up child; read from io later instead
+    psc_output_fields_collection_add_child(coll, (struct mrc_obj *) out);
+  }
+  free(s);
+}
+
+// ----------------------------------------------------------------------
 // psc_output_fields_collection_read
 
 static void
 _psc_output_fields_collection_read(struct psc_output_fields_collection *out, struct mrc_io *io)
 {
   out->psc = mrc_io_read_ref(io, out, "psc", psc);
+  _psc_output_fields_collection_add_children_checkpoint(out);
   psc_output_fields_collection_read_children(out, io);
 }
 
