@@ -62,6 +62,9 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 	struct mrc_m1 *crd_nc = crds->mcrd_nc[d];
 	if (!crd_nc) {
 	  crd_nc = mrc_m1_create(mrc_crds_comm(crds)); // FIXME, leaked
+      if (crds->mcrd_nc[d]) {
+        mrc_m1_destroy(crds->mcrd_nc[d]);
+      }
 	  crds->mcrd_nc[d] = crd_nc;
 	  sprintf(s, "crd%d_nc", d);
 	  mrc_m1_set_name(crd_nc, s);
@@ -123,6 +126,9 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
       if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) {
 	sprintf(s, "crd%d_nc", d);
 	struct mrc_m1 *crd_nc = mrc_m1_create(mrc_crds_comm(crds)); // FIXME, leaked
+    if (crds->mcrd_nc[d]) {
+      mrc_m1_destroy(crds->mcrd_nc[d]);
+    }
 	crds->mcrd_nc[d] = crd_nc;
 	mrc_m1_set_name(crd_nc, s);
 	crd_nc->domain = crds->domain;
