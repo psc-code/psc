@@ -38,6 +38,10 @@ _mrc_fld_destroy(struct mrc_fld *fld)
     free(fld->_comp_name[m]);
   }
   free(fld->_comp_name);
+  
+  if (fld->_dims.nr_vals == 5) {
+    free(fld->_patches);
+  }
 }
 
 // ----------------------------------------------------------------------
