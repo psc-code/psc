@@ -250,6 +250,7 @@ mrc_obj_put(struct mrc_obj *obj)
     if (p->prm.type == PT_STRING) {
       free((char *)p->val.u_string);
     }
+    free((char *)p->prm.name);
     list_del(&p->entry);
     free(p);
   }
