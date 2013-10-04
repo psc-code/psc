@@ -24,6 +24,7 @@ static void
 _psc_output_fields_collection_setup(struct psc_output_fields_collection *coll)
 {
   char *s = strdup(coll->names), *p;
+  char *s_save = s;
   while ((p = strsep(&s, ", "))) {
     struct psc_output_fields *out =
       psc_output_fields_create(psc_output_fields_collection_comm(coll));
@@ -41,6 +42,7 @@ _psc_output_fields_collection_setup(struct psc_output_fields_collection *coll)
     psc_output_fields_collection_add_child(coll, (struct mrc_obj *) out);
   }
   free(s);
+  free(s_save);
 }
 
 // ----------------------------------------------------------------------
@@ -59,6 +61,7 @@ static void
 _psc_output_fields_collection_add_children_checkpoint(struct psc_output_fields_collection *coll)
 {
   char *s = strdup(coll->names), *p;
+  char *s_save = s;
   while ((p = strsep(&s, ", "))) {
     struct psc_output_fields *out =
       psc_output_fields_create(psc_output_fields_collection_comm(coll));
@@ -75,6 +78,7 @@ _psc_output_fields_collection_add_children_checkpoint(struct psc_output_fields_c
     psc_output_fields_collection_add_child(coll, (struct mrc_obj *) out);
   }
   free(s);
+  free(s_save);
 }
 
 // ----------------------------------------------------------------------

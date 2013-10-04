@@ -21,6 +21,8 @@ _psc_diag_setup(struct psc_diag *diag)
     psc_diag_item_set_name(item, p);
     psc_diag_add_child(diag, (struct mrc_obj *) item);
   }
+  free(s);
+  free(s_orig);
 
   int rank;
   MPI_Comm_rank(psc_diag_comm(diag), &rank);

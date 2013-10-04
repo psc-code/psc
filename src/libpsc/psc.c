@@ -224,21 +224,26 @@ _psc_set_from_options(struct psc *psc)
   char *p, *ss;
   int k = 0;
   ss = strdup(*ps);
+  char *ss_save;
+  ss_save = ss;
   
   while ((p = strsep(&ss, ", "))) {
     k++;
   }
   free(ss);
+  free(ss_save);
   psc_set_kinds(psc, k, NULL);
 
   k = 0;
   ss = strdup(*ps);
+  ss_save = ss;
   while ((p = strsep(&ss, ", "))) {
     free(psc->kinds[k].name);
     psc->kinds[k].name = strdup(p);
     k++;
   }
   free(ss);
+  free(ss_save);
   s = s_save;
     
   // allow setting of parameters for each kind
