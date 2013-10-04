@@ -616,6 +616,13 @@ _psc_destroy(struct psc *psc)
     psc_patchmanager_destroy(&psc->patchmanager);
   }
 
+  if (psc->kinds) {
+    for (int k = 0; k < psc->nr_kinds; k++) {
+      free(psc->kinds[k].name);
+    }
+    free(psc->kinds);
+  }
+  
   ppsc = NULL;
 }
 
