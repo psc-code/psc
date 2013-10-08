@@ -764,6 +764,8 @@ cuda_push_mprts_a_reorder(struct psc_mparticles *mprts, struct psc_mfields *mfld
 // OPT: reduce two at a time
 // OPT: try splitting current calc / measuring by itself
 
+// OPT: don't need as many ghost points for current and EM fields (?)
+
 #define NR_CBLOCKS 16
 #define CBLOCK_ID (threadIdx.x & (NR_CBLOCKS - 1))
 #define CBLOCK_SIZE_Y (BLOCKSIZE_Y + 2*SW)
