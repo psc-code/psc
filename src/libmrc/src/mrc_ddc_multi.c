@@ -376,8 +376,8 @@ ddc_run_begin(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
   assert(p == patt2->recv_buf + patt2->n_recv * (me - mb) * ddc->size_of_type);
 
   // post sends
+  patt2->send_cnt = 0;
   p = patt2->send_buf;
-  int send_cnt = 0;
   for (int r = 0; r < multi->mpi_size; r++) {
     if (r != multi->mpi_rank && ri[r].n_send_entries) {
       void *p0 = p;
@@ -387,7 +387,7 @@ ddc_run_begin(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
 	p += se->len * (me - mb) * ddc->size_of_type;
       }
       MPI_Isend(p0, ri[r].n_send * (me - mb), ddc->mpi_type,
-		r, 0, ddc->obj.comm, &patt2->send_req[send_cnt++]);
+		r, 0, ddc->obj.comm, &patt2->send_req[patt2->send_cnt++]);
     }
   }  
   assert(p == patt2->send_buf + patt2->n_send * (me - mb) * ddc->size_of_type);
