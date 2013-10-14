@@ -6,8 +6,8 @@
 #include <stdbool.h>
 
 // ======================================================================
-// global flags 
-// 
+// global flags
+//
 // these are used to change fundamental libmrc behavior
 // they can be combined using logical |, &, and set with
 // the two functions below.
@@ -28,7 +28,7 @@ enum {
 void mrc_set_flags(unsigned long flags);
 void mrc_clear_flags(unsigned long flags);
 
-void libmrc_finalize(bool assert_clean, int class_info_verbosity);
+void libmrc_finalize();
 
 // private to libmrc
 

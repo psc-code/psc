@@ -25,6 +25,6 @@ main(int argc, char **argv)
   mrc_io_destroy(io);
 
   ggcm_mhd_destroy(mhd);
-  libmrc_finalize(false, CLASS_INFO_VERB_ACTIVE);
+  libmrc_finalize();
   MPI_Finalize();
 }

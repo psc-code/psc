@@ -43,7 +43,7 @@ void
 mrctest_finalize()
 {
   prof_print();
-  libmrc_finalize(false, CLASS_INFO_VERB_ACTIVE);
+  libmrc_finalize();
   MPI_Finalize();
 }
 
@@ -181,7 +181,7 @@ mrctest_create_m1_1(struct mrc_domain *domain, int dim)
   mrc_fld_set_param_int(m1, "dim", dim);
   mrc_fld_setup(m1);
   mrc_fld_set_comp_name(m1, 0, "test");
-  
+
   mrc_m1_foreach_patch(m1, p) {
     mrc_m1_foreach(m1, ix, 2, 2) {
       MRC_M1(m1, 0, ix, p) = 1.f + ix * ix;
