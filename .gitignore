@@ -10,6 +10,7 @@ okfile
 *.a
 *.la
 *.asc
+*.pyc
 .libs
 BACKUP
 SELECT

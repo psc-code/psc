@@ -183,7 +183,9 @@ AS_IF(
 )
 AC_SUBST([MPIRUN])
 
-AC_CONFIG_FILES([Makefile src/Makefile
+AC_CONFIG_FILES([Makefile
+		 python/Makefile
+		 src/Makefile
 	         src/tests/Makefile
 	         src/include/Makefile
 	         src/libpsc/Makefile
