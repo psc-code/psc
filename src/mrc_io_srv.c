@@ -67,7 +67,7 @@ diagc_combined_send_domain_info(struct mrc_io *io, struct mrc_domain *domain)
     return;
 
   struct diagc_combined_params *par = io->obj.subctx;
-    
+
   int iw[9], *off = iw, *ldims = iw + 3, *gdims = iw + 6;
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(domain, &nr_patches);
@@ -360,7 +360,7 @@ struct diagsrv_srv_ops {
   void  (*open)(struct diagsrv_one *ds, int step, float time);
   struct mrc_fld *(*get_gfld_2d)(struct diagsrv_one *ds, int dims[2]);
   struct mrc_fld *(*get_gfld_3d)(struct diagsrv_one *ds, int dims[3]);
-  void  (*put_gfld_2d)(struct diagsrv_one *ds, struct mrc_fld *fld, char *fld_name, 
+  void  (*put_gfld_2d)(struct diagsrv_one *ds, struct mrc_fld *fld, char *fld_name,
 		       int outtype, float sheet);
   void  (*put_gfld_3d)(struct diagsrv_one *ds, struct mrc_fld *fld);
   void  (*write_attr)(struct diagsrv_one *ds, const char *path, int type,
@@ -643,7 +643,7 @@ ds_srv_cache_write_attr(struct diagsrv_one *ds, const char *path, int type,
     if (strcmp(p->path, path) == 0)
       goto found;
   }
-  
+
   p = calloc(1, sizeof(*p));
   p->attrs = mrc_obj_create(MPI_COMM_SELF);
   mrc_obj_set_name(p->attrs, path);
@@ -780,7 +780,7 @@ static struct diagsrv_srv_ops *ds_srvs[] = {
 static struct diagsrv_srv_ops *
 find_ds_srv(const char *ds_srv)
 {
-#if 0  
+#if 0
   fprintf(stderr,"Available ds_srvs:\n");
   for (int i = 0; ds_srvs[i]; i++){
     fprintf(stderr,"ds_srvs[i]:%s\n",ds_srvs[i]->name);
@@ -820,7 +820,7 @@ diagsrv_recv_domain_info(int nr_procs, int ldims[3])
     for (int d = 0; d < 3; d++) {
       // find max local domain
       if (ldims[d] < _ldims[d]) {
-	ldims[d] = _ldims[d];
+        ldims[d] = _ldims[d];
       }
       // FIXME, this is a bit stupid, but by far the easiest way without assuming
       // internal mpi_domain knowledge -- we repeatedly receive the same pieces
@@ -829,7 +829,7 @@ diagsrv_recv_domain_info(int nr_procs, int ldims[3])
       MPI_Recv(buf, _ldims[d], MPI_FLOAT, rank, ID_DIAGS_CMD_CRDX + d, MPI_COMM_WORLD,
 	       MPI_STATUS_IGNORE);
       for (int i = 0; i < _ldims[d]; i++) {
-	MRC_CRD(crds, d, i + off[d]) = buf[i];
+        MRC_CRD(crds, d, i + off[d]) = buf[i];
       }
       free(buf);
     }
@@ -918,7 +918,7 @@ static struct param diagsrv_params_descr[] = {
     }
 
     for (;;) { //waiting for field to write.
-  
+
       char fld_name80[80];
       MPI_Recv(fld_name80, 80, MPI_CHAR, 0, MPI_ANY_TAG, MPI_COMM_WORLD,
 	       &status);
@@ -986,7 +986,7 @@ static struct param diagsrv_params_descr[] = {
 
       char obj_name80[80];
       strcpy(obj_name80, fld_name80);
-      
+
       MPI_Recv(fld_name80, 80, MPI_CHAR, 0, ID_DIAGS_FLDNAME, MPI_COMM_WORLD,
 	       MPI_STATUS_IGNORE);
 
@@ -1010,10 +1010,10 @@ static struct param diagsrv_params_descr[] = {
 
 	struct mrc_fld *gfld2 = srv_ops->get_gfld_2d(&ds, (int [2]) { gdims[i0], gdims[i1] });
 
-	for (int k = 0; k < nr_procs; k++) { 
+	for (int k = 0; k < nr_procs; k++) {
 	  int iw[6], *off = iw, *dims = iw + 3; // off, then dims
 	  MPI_Recv(iw, 6, MPI_INT, k, ID_DIAGS_SUBDOMAIN, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-	  
+
 	  // receive data and add to field
 	  if (iw[0] > -1) {
 	    struct mrc_fld *lfld2 = mrc_fld_create(MPI_COMM_SELF);
@@ -1028,15 +1028,15 @@ static struct param diagsrv_params_descr[] = {
 	    mrc_fld_destroy(lfld2);
 	  }
 	}
-	
+
 	srv_ops->put_gfld_2d(&ds, gfld2, fld_name80, outtype, sheet);
       } else {
 	struct mrc_fld *gfld3 = srv_ops->get_gfld_3d(&ds, gdims);
 
-	for (int k = 0; k < nr_procs; k++) { 
+	for (int k = 0; k < nr_procs; k++) {
 	  int iw[6], *off = iw, *dims = iw + 3; // off, then dims
 	  MPI_Recv(iw, 6, MPI_INT, k, ID_DIAGS_SUBDOMAIN, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-	  
+
 	  // receive data and add to field
 	  if (iw[0] > -1) {
 	    struct mrc_fld *lfld3 = mrc_fld_create(MPI_COMM_SELF);
@@ -1057,7 +1057,7 @@ static struct param diagsrv_params_descr[] = {
 	mrc_fld_set_comp_name(gfld3, 0, fld_name80);
 	srv_ops->put_gfld_3d(&ds, gfld3);
       }
-    }  
+    }
     srv_ops->close(&ds);
     ds.io = NULL;
   }  //for (;;) //loop waiting for data to write...
