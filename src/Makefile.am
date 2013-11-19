@@ -6,6 +6,7 @@ SUBDIRS = include libmrc libpsc tests
 bin_PROGRAMS = \
 	psc_es1 \
 	psc_em_wave \
+	psc_shocks \
 	psc_bohm \
 	psc_spitzer \
 	psc_kelvin_helmholtz \
@@ -27,6 +28,7 @@ LDADD = libpsc/libpsc.la libmrc/src/libmrc.la
 # HACK to have automake use the CXX linker 
 nodist_EXTRA_psc_es1_SOURCES = dummy.cxx
 nodist_EXTRA_psc_em_wave_SOURCES = dummy.cxx
+nodist_EXTRA_psc_shocks_SOURCES = dummy.cxx
 nodist_EXTRA_psc_bohm_SOURCES = dummy.cxx
 nodist_EXTRA_psc_spitzer_SOURCES = dummy.cxx
 nodist_EXTRA_psc_kelvin_helmholtz_SOURCES = dummy.cxx
