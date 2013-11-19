@@ -196,6 +196,8 @@ psc_bnd_particles_sub_exchange_particles_post(struct psc_bnd_particles *bnd, str
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub_exchange_particles
 
+extern int pr_time_step_no_comm;
+
 static void
 psc_bnd_particles_sub_exchange_particles(struct psc_bnd_particles *bnd, mparticles_base_t *particles_base)
 {
@@ -217,9 +219,12 @@ psc_bnd_particles_sub_exchange_particles(struct psc_bnd_particles *bnd, mparticl
   // FIXME we should make sure (assert) we don't quietly drop particle which left
   // in the invariant direction
 
+  prof_restart(pr_time_step_no_comm);
   psc_foreach_patch(psc, p) {
     psc_bnd_particles_sub_exchange_particles_prep(bnd, psc_mparticles_get_patch(particles, p));
   }
+  prof_stop(pr_time_step_no_comm);
+
   prof_stop(pr_A);
 
   prof_start(pr_B);

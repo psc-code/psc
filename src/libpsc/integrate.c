@@ -76,6 +76,11 @@ psc_output(struct psc *psc)
 /// psc_step
 ///
 
+// This measures the time spent pushing particles and fields, exclusive of
+// communication.
+// Only works correctly for push_fields "variant 1"!
+int pr_time_step_no_comm; // FIXME, don't like globals
+
 void
 psc_step(struct psc *psc)
 {
@@ -84,10 +89,10 @@ psc_step(struct psc *psc)
     return;
   }
 
-  static int pr;
-  if (!pr) {
-    pr = prof_register("barrier", 1., 0, 0);
+  if (!pr_time_step_no_comm) {
+    pr_time_step_no_comm = prof_register("time step w/o comm", 1., 0, 0);
   }
+
   // default psc_step() implementation
 
   if (psc->use_dynamic_patches) {
@@ -99,6 +104,10 @@ psc_step(struct psc *psc)
   
   psc_randomize_run(psc->randomize, psc->particles);
   psc_sort_run(psc->sort, psc->particles);
+
+  prof_start(pr_time_step_no_comm);
+  prof_stop(pr_time_step_no_comm); // actual measurements are done w/ restart
+
   psc_collision_run(psc->collision, psc->particles);
   
   // field propagation n*dt -> (n+0.5)*dt

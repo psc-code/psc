@@ -7,6 +7,8 @@
 #include <mrc_params.h>
 #include <Marder.h>
 
+extern int pr_time_step_no_comm;
+
 struct psc_bnd_fields *
 psc_push_fields_get_bnd_fields(struct psc_push_fields *push)
 {
@@ -27,6 +29,7 @@ psc_push_fields_push_E(struct psc_push_fields *push, mfields_base_t *flds)
   
   psc_stats_start(st_time_field);
   prof_start(pr);
+  prof_restart(pr_time_step_no_comm);
   if (ops->push_mflds_E) {
     ops->push_mflds_E(push, flds);
   } else {
@@ -35,6 +38,7 @@ psc_push_fields_push_E(struct psc_push_fields *push, mfields_base_t *flds)
       ops->push_E(push, psc_mfields_get_patch(flds, p));
     }
   }
+  prof_stop(pr_time_step_no_comm);
   prof_stop(pr);
   psc_stats_start(st_time_field);
 }
@@ -50,6 +54,7 @@ psc_push_fields_push_H(struct psc_push_fields *push, mfields_base_t *flds)
   
   psc_stats_start(st_time_field);
   prof_start(pr);
+  prof_restart(pr_time_step_no_comm);
   if (ops->push_mflds_H) {
     ops->push_mflds_H(push, flds);
   } else {
@@ -59,6 +64,7 @@ psc_push_fields_push_H(struct psc_push_fields *push, mfields_base_t *flds)
     }
   }
   prof_stop(pr);
+  prof_stop(pr_time_step_no_comm);
   psc_stats_start(st_time_field);
 }
 
@@ -124,6 +130,8 @@ psc_push_fields_step_b1_opt(struct psc_push_fields *push, struct psc_mfields *mf
 {
   psc_push_fields_push_H(push, mflds);
 }
+
+extern int pr_time_step_no_comm;
 
 static void
 psc_push_fields_step_b2_opt(struct psc_push_fields *push, struct psc_mfields *mflds)

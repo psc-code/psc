@@ -10,12 +10,15 @@
 // ======================================================================
 // forward to subclass
 
+extern int pr_time_step_no_comm;
+
 static void
 push_a_yz(struct psc_push_particles *push, struct psc_mparticles *mprts,
 	  struct psc_mfields *mflds)
 {
   struct psc_push_particles_ops *ops = psc_push_particles_ops(push);
 
+  prof_restart(pr_time_step_no_comm);
   if (ops->push_a_yz) {
     for (int p = 0; p < mprts->nr_patches; p++) {
       ops->push_a_yz(push, psc_mparticles_get_patch(mprts, p),
@@ -25,6 +28,7 @@ push_a_yz(struct psc_push_particles *push, struct psc_mparticles *mprts,
     assert(ops->push_mprts_yz);
     ops->push_mprts_yz(push, mprts, mflds);
   }
+  prof_stop(pr_time_step_no_comm);
 }
 
 void
