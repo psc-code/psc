@@ -8,6 +8,7 @@
 #include <Marder.h>
 
 extern int pr_time_step_no_comm;
+extern double *psc_balance_comp_time_by_patch;
 
 struct psc_bnd_fields *
 psc_push_fields_get_bnd_fields(struct psc_push_fields *push)
@@ -35,7 +36,9 @@ psc_push_fields_push_E(struct psc_push_fields *push, mfields_base_t *flds)
   } else {
     assert(ops->push_E);
     for (int p = 0; p < flds->nr_patches; p++) {
+      psc_balance_comp_time_by_patch[p] -= MPI_Wtime();
       ops->push_E(push, psc_mfields_get_patch(flds, p));
+      psc_balance_comp_time_by_patch[p] += MPI_Wtime();
     }
   }
   prof_stop(pr_time_step_no_comm);
@@ -60,7 +63,9 @@ psc_push_fields_push_H(struct psc_push_fields *push, mfields_base_t *flds)
   } else {
     assert(ops->push_H);
     for (int p = 0; p < flds->nr_patches; p++) {
+      psc_balance_comp_time_by_patch[p] -= MPI_Wtime();
       ops->push_H(push, psc_mfields_get_patch(flds, p));
+      psc_balance_comp_time_by_patch[p] += MPI_Wtime();
     }
   }
   prof_stop(pr);
@@ -130,8 +135,6 @@ psc_push_fields_step_b1_opt(struct psc_push_fields *push, struct psc_mfields *mf
 {
   psc_push_fields_push_H(push, mflds);
 }
-
-extern int pr_time_step_no_comm;
 
 static void
 psc_push_fields_step_b2_opt(struct psc_push_fields *push, struct psc_mfields *mflds)

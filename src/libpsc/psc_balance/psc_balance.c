@@ -14,6 +14,8 @@
 
 LIST_HEAD(psc_mfields_base_list);
 
+double *psc_balance_comp_time_by_patch;
+
 struct psc_balance {
   struct mrc_obj obj;
   int every;
@@ -51,10 +53,16 @@ static void
 psc_get_loads(struct psc *psc, double *loads)
 {
   psc_foreach_patch(psc, p) {
-    struct psc_particles *prts = psc_mparticles_get_patch(psc->particles, p);
-    int *ldims = psc->patch[p].ldims;
-    loads[p] = prts->n_part +
-      psc->balance->factor_fields * ldims[0] * ldims[1] * ldims[2];
+    if (psc->balance->factor_fields >= 0.) {
+      struct psc_particles *prts = psc_mparticles_get_patch(psc->particles, p);
+      int *ldims = psc->patch[p].ldims;
+      loads[p] = prts->n_part +
+	psc->balance->factor_fields * ldims[0] * ldims[1] * ldims[2];
+      //mprintf("loads p %d %g %g ratio %g\n", p, loads[p], comp_time, loads[p] / comp_time);
+    } else {
+      double comp_time = psc_balance_comp_time_by_patch[p];
+      loads[p] = comp_time;
+    }
   }
 }
 
@@ -139,6 +147,16 @@ find_best_mapping(struct mrc_domain *domain, int nr_global_patches, double *load
 	    100 * min_diff / load_target, 100 * max_diff / load_target);
 	      
 #endif
+    int gp = 0;
+    char s[20]; sprintf(s, "loads2-%06d.asc", ppsc->timestep);
+    FILE *f = fopen(s, "w");
+    for (int r = 0; r < size; r++) {
+      for (int p = 0; p < nr_patches_all_new[r]; p++) {
+	fprintf(f, "%d %g %d\n", gp, loads_all[gp], r);
+	gp++;
+      }
+    }
+    fclose(f);
   }
   // then scatter
   int nr_patches_new;
@@ -158,6 +176,14 @@ gather_loads(struct mrc_domain *domain, double *loads, int nr_patches,
   int rank, size;
   MPI_Comm_rank(comm, &rank);
   MPI_Comm_size(comm, &size);
+
+  double minl = 1e10, maxl = 0, suml = 0;
+  for (int p = 0; p < nr_patches; p++) {
+    minl = fmin(minl, loads[p]);
+    maxl = fmax(maxl, loads[p]);
+    suml += loads[p];
+  }
+  mprintf("ld min = %g max = %g sum = %g np = %d\n", minl, maxl, suml, nr_patches);
 
   // gather nr_patches for all procs on proc 0
   int *nr_patches_all = NULL;
@@ -200,6 +226,16 @@ gather_loads(struct mrc_domain *domain, double *loads, int nr_patches,
 	      MPI_DOUBLE, 0, comm);
 
   if (rank == 0) {
+    int rl = 0;
+    char s[20]; sprintf(s, "loads-%06d.asc", ppsc->timestep);
+    FILE *f = fopen(s, "w");
+    for (int p = 0; p < *p_nr_global_patches; p++) {
+      if (rl < size - 1 && p >= displs[rl+1]) {
+	rl++;
+      }
+      fprintf(f, "%d %g %d\n", p, loads_all[p], rl);
+    }
+    fclose(f);
     free(nr_patches_all);
     free(displs);
   }
@@ -508,14 +544,15 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
 
   int nr_patches_new = find_best_mapping(domain_old, nr_global_patches,
 					 loads_all);
-	
-	
+
   free(loads_all);
 
   free(psc->patch);
   struct mrc_domain *domain_new = psc_setup_mrc_domain(psc, nr_patches_new);
   //  mrc_domain_view(domain_new);
   psc_setup_patches(psc, domain_new);
+  psc_balance_comp_time_by_patch = calloc(nr_patches_new,
+					  sizeof(*psc_balance_comp_time_by_patch));
 
   communicate_new_nr_particles(domain_old, domain_new, p_nr_particles_by_patch);
 
@@ -610,6 +647,9 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   struct mrc_domain *domain_new = psc_setup_mrc_domain(psc, nr_patches_new);
   //  mrc_domain_view(domain_new);
   psc_setup_patches(psc, domain_new);
+  free(psc_balance_comp_time_by_patch);
+  psc_balance_comp_time_by_patch = calloc(nr_patches_new,
+					  sizeof(*psc_balance_comp_time_by_patch));
   
   //If there are no active patches, exit here
   int n_global_patches;

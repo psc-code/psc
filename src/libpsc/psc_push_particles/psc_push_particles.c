@@ -11,6 +11,7 @@
 // forward to subclass
 
 extern int pr_time_step_no_comm;
+extern double *psc_balance_comp_time_by_patch;
 
 static void
 push_a_yz(struct psc_push_particles *push, struct psc_mparticles *mprts,
@@ -21,8 +22,10 @@ push_a_yz(struct psc_push_particles *push, struct psc_mparticles *mprts,
   prof_restart(pr_time_step_no_comm);
   if (ops->push_a_yz) {
     for (int p = 0; p < mprts->nr_patches; p++) {
+      psc_balance_comp_time_by_patch[p] -= MPI_Wtime();
       ops->push_a_yz(push, psc_mparticles_get_patch(mprts, p),
 		     psc_mfields_get_patch(mflds, p));
+      psc_balance_comp_time_by_patch[p] += MPI_Wtime();
     }
   } else {
     assert(ops->push_mprts_yz);
