@@ -26,4 +26,6 @@ include_HEADERS = \
 	mrc_ts_monitor.h \
 	mrc_ts_monitor_private.h \
 	mrc_ts_private.h \
+	mrc_vec.h \
+	mrc_vec_private.h \
 	mrctest.h

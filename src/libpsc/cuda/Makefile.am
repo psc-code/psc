@@ -27,7 +27,7 @@ libsubdir_la_SOURCES = \
 	cuda_sort2_spine.h \
 	particles_cuda.h \
 	psc_bnd_cuda.h \
-	psc_bnd_cuda_fields.h
+	psc_bnd_cuda_fields.h \
 	psc_cuda.h
 
 libsubdir_la_LIBADD = \
