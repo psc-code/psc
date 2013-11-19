@@ -113,15 +113,26 @@ find_best_mapping(struct mrc_domain *domain, int nr_global_patches, double *load
     
 #ifdef DEBUG_BALANCE
     int pp = 0;
+    double min_diff = 0, max_diff = 0;
     for (int p = 0; p < size; p++) {
       double load = 0.;
       for (int i = 0; i < nr_patches_all_new[p]; i++) {
 	load += loads_all[pp++];
-	mprintf("  pp %d load %g : %g\n", pp-1, loads_all[pp-1], load);
+	//mprintf("  pp %d load %g : %g\n", pp-1, loads_all[pp-1], load);
       }
+      double diff = load - load_target * capability[p];
       mprintf("p %d # = %d load %g / %g : diff %g\n", p, nr_patches_all_new[p],
-	      load, load_target * capability[p], load - load_target * capability[p]);
+	      load, load_target * capability[p], diff);
+      if (diff < min_diff) {
+	min_diff = diff;
+      }
+      if (diff > max_diff) {
+	max_diff = diff;
+      }
     }
+    mprintf("achieved target %g (%g %% -- %g %%)\n", load_target,
+	    100 * min_diff / load_target, 100 * max_diff / load_target);
+	      
 #endif
   }
   // then scatter
