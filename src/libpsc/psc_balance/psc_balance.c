@@ -614,7 +614,7 @@ communicate_particles(struct communicate_ctx *ctx,
     struct psc_particles *pp_new = psc_mparticles_get_patch(particles_new, p);
     struct psc_particles_double *c_new = psc_particles_double(pp_new);
     assert(pp_old->n_part == pp_new->n_part);
-#if 0
+#if 1
     for (int n = 0; n < pp_new->n_part; n++) {
       c_new->particles[n] = c_old->particles[n];
     }
