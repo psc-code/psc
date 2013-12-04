@@ -30,6 +30,14 @@ struct psc_mfields_cuda {
   fields_cuda_real_t *d_bnd_buf;
   fields_cuda_real_t *h_bnd_buf;
   int ib[3], im[3];
+  int *h_nei_patch;
+  int *d_nei_patch;
+  int *h_map_out; // maps thread id to a particular offset for ghosts in the flds array 
+  int *d_map_out;
+  int nr_map_out; // number of entries in the map
+  int *h_map_in; // maps thread id to a particular offset for ghosts in the flds array 
+  int *d_map_in;
+  int nr_map_in; // number of entries in the map
 };
 
 #define psc_mfields_cuda(pf) mrc_to_subobj(pf, struct psc_mfields_cuda)

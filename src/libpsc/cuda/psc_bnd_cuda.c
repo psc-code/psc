@@ -5,7 +5,6 @@
 #include "particles_cuda.h"
 
 #include <mrc_ddc.h>
-#include <mrc_ddc_private.h>
 #include <mrc_profile.h>
 
 // ======================================================================
@@ -68,27 +67,6 @@ psc_bnd_fld_cuda_copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], vo
       for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
 	  F3_CF(cf, m, ix,iy,iz) = MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
-	}
-      }
-    }
-  }
-}
-
-static void
-psc_bnd_fld_cuda_copy(int mb, int me, int s_p, int s_ilo[3], int s_ihi[3],
-		      int r_p, int r_ilo[3], int r_ihi[3], struct psc_mfields *mflds)
-{
-  struct psc_fields *s_flds = psc_mfields_get_patch(mflds, s_p);
-  struct psc_fields *r_flds = psc_mfields_get_patch(mflds, r_p);
-  struct psc_fields_cuda_bnd *s_cf = &psc_fields_cuda(s_flds)->bnd;
-  struct psc_fields_cuda_bnd *r_cf = &psc_fields_cuda(r_flds)->bnd;
-
-  for (int m = mb; m < me; m++) {
-    for (int iz = 0; iz < s_ihi[2] - s_ilo[2]; iz++) {
-      for (int iy = 0; iy < s_ihi[1] - s_ilo[1]; iy++) {
-	for (int ix = 0; ix < s_ihi[0] - s_ilo[0]; ix++) {
-	  F3_CF(r_cf, m, ix + r_ilo[0],iy + r_ilo[1],iz + r_ilo[2]) =
-	    F3_CF(s_cf, m, ix + s_ilo[0],iy + s_ilo[1],iz + s_ilo[2]);
 	}
       }
     }
@@ -187,27 +165,28 @@ psc_bnd_fld_cuda_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int
   } else {
     mfields_cuda_t *flds_cuda = psc_mfields_get_cuda(flds_base, mb, me);
 
+    EXTERN_C void __fields_cuda_fill_ghosts_setup(struct psc_mfields *mflds, struct mrc_ddc *ddc);
+    __fields_cuda_fill_ghosts_setup(flds_cuda, bnd->ddc);
+
+    EXTERN_C void __fields_cuda_from_device_inside_only(struct psc_mfields *mflds, int mb, int me);
     prof_start(pr1);
-    __fields_cuda_from_device_inside(flds_cuda, mb, me);
+    __fields_cuda_from_device_inside_only(flds_cuda, mb, me);
     prof_stop(pr1);
 
     prof_start(pr2);
     mrc_ddc_fill_ghosts_begin(bnd->ddc, 0, me - mb, flds_cuda);
     prof_stop(pr2);
     prof_start(pr3);
-    mrc_ddc_fill_ghosts_end(bnd->ddc, 0, me - mb, flds_cuda);
+#if 0
+    mrc_ddc_fill_ghosts_local(bnd->ddc, 0, me - mb, flds_cuda);
+#endif
+#if 1
+    EXTERN_C void __fields_cuda_fill_ghosts_local(struct psc_mfields *mflds, int mb, int me);
+    __fields_cuda_fill_ghosts_local(flds_cuda, mb, me);
+#endif
     prof_stop(pr3);
     prof_start(pr4);
-    struct mrc_ddc_multi *multi = to_mrc_ddc_multi(bnd->ddc);
-    struct mrc_ddc_pattern2 *patt2 = &multi->fill_ghosts2;
-    struct mrc_ddc_rank_info *ri = patt2->ri;
-
-    for (int i = 0; i < ri[multi->mpi_rank].n_send_entries; i++) {
-      struct mrc_ddc_sendrecv_entry *se = &ri[multi->mpi_rank].send_entry[i];
-      struct mrc_ddc_sendrecv_entry *re = &ri[multi->mpi_rank].recv_entry[i];
-      psc_bnd_fld_cuda_copy(0, me - mb, se->patch, se->ilo, se->ihi,
-			    se->nei_patch, re->ilo, re->ihi, flds_cuda);
-    }
+    mrc_ddc_fill_ghosts_end(bnd->ddc, 0, me - mb, flds_cuda);
     prof_stop(pr4);
 
     prof_start(pr5);
