@@ -19,7 +19,7 @@ capability_default(int p)
   return 1.;
 }
 
-static double __unused
+static double _mrc_unused
 capability_jaguar(int p)
 {
   if (p % 16 == 0) {

@@ -81,7 +81,7 @@ find_block_indices_count(unsigned int *b_idx, unsigned int *b_cnts, struct psc_p
 // ----------------------------------------------------------------------
 // find_block_indices_count_reorder
 
-static void __unused
+static void _mrc_unused
 find_block_indices_count_reorder(struct psc_particles *prts)
 {
   struct psc_particles_single *sngl = psc_particles_single(prts);
@@ -106,7 +106,7 @@ find_block_indices_count_reorder(struct psc_particles *prts)
   }
 }
 
-static void __unused
+static void _mrc_unused
 count_and_reorder_to_back(struct psc_particles *prts)
 {
   struct psc_particles_single *sngl = psc_particles_single(prts);
@@ -123,7 +123,7 @@ count_and_reorder_to_back(struct psc_particles *prts)
   }
 }
 
-static void __unused
+static void _mrc_unused
 reorder_to_back(struct psc_particles *prts)
 {
   struct psc_particles_single *sngl = psc_particles_single(prts);

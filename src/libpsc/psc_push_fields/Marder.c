@@ -39,9 +39,9 @@ marder_destroy_aid_fields(struct psc_push_fields *push, mfields_t *f)
 // Calculate divE at node centers, copied from psc_gauss_correction_item_jeh.c
 
 #define define_dxdydz(dx, dy, dz)					\
-  int dx __unused = (ppsc->domain.gdims[0] == 1) ? 0 : 1;		\
-  int dy __unused = (ppsc->domain.gdims[1] == 1) ? 0 : 1;		\
-  int dz __unused = (ppsc->domain.gdims[2] == 1) ? 0 : 1
+  int dx _mrc_unused = (ppsc->domain.gdims[0] == 1) ? 0 : 1;		\
+  int dy _mrc_unused = (ppsc->domain.gdims[1] == 1) ? 0 : 1;		\
+  int dz _mrc_unused = (ppsc->domain.gdims[2] == 1) ? 0 : 1
 
 static void
 calc_dive_nc(struct psc_fields *flds_base, 

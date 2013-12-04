@@ -484,17 +484,4 @@ extern int st_time_field;    //< time spent in field computation
 
 #define sqr(a) ((a) * (a))
 
-#define HERE do { int __rank; MPI_Comm_rank(MPI_COMM_WORLD, &__rank); printf("[%d] HERE: in %s() at %s:%d\n", __rank, __FUNCTION__, __FILE__, __LINE__); } while(0)
-
-// ----------------------------------------------------------------------
-// compiler bits
-
-#ifndef __unused
-#ifdef __GNUC__
-#define	__unused	__attribute__((__unused__))
-#else
-#define	__unused	/* no attribute */
-#endif
-#endif
-
 #endif

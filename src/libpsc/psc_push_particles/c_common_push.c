@@ -173,7 +173,7 @@ cache_fields_from_em(fields_t *pf)
   return fld;
 }
 
-static void __unused
+static void _mrc_unused
 cache_fields_to_j(struct psc_fields *fld, fields_t *pf)
 {
   for (int iz = fld->ib[2]; iz < fld->ib[2] + fld->im[2]; iz++) {

@@ -13,21 +13,17 @@
 #include <string.h>
 #include <math.h>
 
-#ifndef __unused
-#define __unused __attribute__((unused))
-#endif
+static struct {
+  int x, y;
+} threadIdx _mrc_unused;
 
 static struct {
   int x, y;
-} threadIdx __unused;
+} blockIdx _mrc_unused;
 
 static struct {
   int x, y;
-} blockIdx __unused;
-
-static struct {
-  int x, y;
-} blockDim __unused;
+} blockDim _mrc_unused;
 
 #define RUN_KERNEL(dimGrid, dimBlock, func, params) do {		\
     blockDim.x = dimBlock[0];						\

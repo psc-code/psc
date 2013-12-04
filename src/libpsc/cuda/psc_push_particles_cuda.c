@@ -129,7 +129,7 @@ cuda_push_partq_b(struct psc_push_particles *push,
 // ----------------------------------------------------------------------
 // push_z
 
-static void __unused
+static void _mrc_unused
 psc_push_particles_cuda_push_z(struct psc_push_particles *push,
 			       struct psc_particles *prts_base,
 			       struct psc_fields *flds_base)
@@ -143,7 +143,7 @@ psc_push_particles_cuda_push_z(struct psc_push_particles *push,
 		 z_cuda_push_part_p5);
 }
 
-static void __unused
+static void _mrc_unused
 psc_push_particles_cuda_push_z2(struct psc_push_particles *push,
 			       struct psc_particles *prts_base,
 			       struct psc_fields *flds_base)
@@ -157,7 +157,7 @@ psc_push_particles_cuda_push_z2(struct psc_push_particles *push,
 		 z2_cuda_push_part_p5);
 }
 
-static void __unused
+static void _mrc_unused
 psc_push_particles_cuda_push_z3(struct psc_push_particles *push,
 			       struct psc_particles *prts_base,
 			       struct psc_fields *flds_base)
@@ -174,7 +174,7 @@ psc_push_particles_cuda_push_z3(struct psc_push_particles *push,
 // ----------------------------------------------------------------------
 // push_yz
 
-static void __unused
+static void _mrc_unused
 psc_push_particles_cuda_push_yz(struct psc_push_particles *push,
 				struct psc_particles *prts_base,
 				struct psc_fields *flds_base)
@@ -188,7 +188,7 @@ psc_push_particles_cuda_push_yz(struct psc_push_particles *push,
 		 yz_cuda_push_part_p5);
 }
 
-static void __unused
+static void _mrc_unused
 psc_push_particles_cuda_push_yz2(struct psc_push_particles *push,
 				 struct psc_particles *prts_base,
 				 struct psc_fields *flds_base)
@@ -202,7 +202,7 @@ psc_push_particles_cuda_push_yz2(struct psc_push_particles *push,
 		 yz2_cuda_push_part_p5);
 }
 
-static void __unused
+static void _mrc_unused
 psc_push_particles_cuda_push_yz3(struct psc_push_particles *push,
 				 struct psc_particles *prts_base,
 				 struct psc_fields *flds_base)
@@ -216,7 +216,7 @@ psc_push_particles_cuda_push_yz3(struct psc_push_particles *push,
 		 yz3_cuda_push_part_p5);
 }
 
-static void __unused
+static void _mrc_unused
 psc_push_particles_cuda_push_yz4(struct psc_push_particles *push,
 				 struct psc_particles *prts_base,
 				 struct psc_fields *flds_base)
@@ -230,7 +230,7 @@ psc_push_particles_cuda_push_yz4(struct psc_push_particles *push,
 		 yz4_cuda_push_part_p5);
 }
 
-static void __unused
+static void _mrc_unused
 psc_push_particles_cuda_push_yz5(struct psc_push_particles *push,
 				 struct psc_particles *prts_base,
 				 struct psc_fields *flds_base)
@@ -242,7 +242,7 @@ psc_push_particles_cuda_push_yz5(struct psc_push_particles *push,
   /* 		  yz5_cuda_push_part_p3); */
 }
 
-static void __unused
+static void _mrc_unused
 psc_push_particles_cuda_push_yz6(struct psc_push_particles *push,
 				 mparticles_base_t *particles_base,
 				 mfields_base_t *flds_base)
