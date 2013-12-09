@@ -83,7 +83,7 @@ psc_particles_double_copy_to_c(struct psc_particles *prts_base,
     part->qni = qni;
     part->mni = mni;
     part->wni = wni;
-    part->kind = part->kind;
+    part->kind = part_base->kind;
   }
 }
 
