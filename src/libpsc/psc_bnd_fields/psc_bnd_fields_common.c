@@ -1,6 +1,8 @@
 
 #include "psc.h"
 
+#include <mrc_bits.h>
+
 #define DEBUG
 
 static void
@@ -11,7 +13,7 @@ conducting_wall_E_lo(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
   if (d == 1) {
 #ifdef DEBUG
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
-      for (int ix = -2; ix < patch->ldims[0] + 2; ix++) {
+      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
 	*(long int *)&F3(pf, EX, ix, -1,iz) = 0x7ff8000000000000;
 	*(long int *)&F3(pf, EY, ix, -1,iz) = 0x7ff8000000000000;
 	*(long int *)&F3(pf, EZ, ix, -1,iz) = 0x7ff8000000000000;
@@ -22,7 +24,8 @@ conducting_wall_E_lo(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
     }
 #endif
     for (int iz = -1; iz < patch->ldims[2] + 2; iz++) {
-      for (int ix = -2; ix < patch->ldims[0] + 2; ix++) {
+      // FIXME, needs to be for other dir, too, and it's ugly
+      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
 	F3(pf, EX, ix, 0,iz) =  0.;
 	F3(pf, EX, ix,-1,iz) =  F3(pf, EX, ix, 1,iz);
 	F3(pf, EY, ix,-1,iz) = -F3(pf, EY, ix, 0,iz);
@@ -30,7 +33,7 @@ conducting_wall_E_lo(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
     }
 
     for (int iz = -1; iz < patch->ldims[2] + 1; iz++) {
-      for (int ix = -2; ix < patch->ldims[0] + 2; ix++) {
+      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
 	F3(pf, EZ, ix, 0,iz) =  0.;
 	F3(pf, EZ, ix,-1,iz) =  F3(pf, EZ, ix, 1,iz);
       }
@@ -77,7 +80,7 @@ conducting_wall_E_hi(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
     int my = patch->ldims[1];
 #ifdef DEBUG
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
-      for (int ix = -2; ix < patch->ldims[0] + 2; ix++) {
+      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
 	*(long int *)&F3(pf, EX, ix, my  ,iz) = 0x7ff8000000000000;
 	*(long int *)&F3(pf, EX, ix, my+1,iz) = 0x7ff8000000000000;
 	*(long int *)&F3(pf, EY, ix, my  ,iz) = 0x7ff8000000000000;
@@ -88,7 +91,7 @@ conducting_wall_E_hi(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
     }
 #endif
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
-      for (int ix = -2; ix < patch->ldims[0] + 2; ix++) {
+      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
 	F3(pf, EX, ix,my  ,iz) = 0.;
 	F3(pf, EX, ix,my+1,iz) =  F3(pf, EX, ix, my-1,iz);
 	F3(pf, EY, ix,my  ,iz) = -F3(pf, EY, ix, my-1,iz);
@@ -96,7 +99,7 @@ conducting_wall_E_hi(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
     }
 
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
-      for (int ix = -2; ix < patch->ldims[0] + 2; ix++) {
+      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
 	F3(pf, EZ, ix,my  ,iz) = 0.;
 	F3(pf, EZ, ix,my+1,iz) =  F3(pf, EZ, ix, my-1,iz);
       }
@@ -143,7 +146,7 @@ conducting_wall_H_lo(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
   if (d == 1) {
 #ifdef DEBUG
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
-      for (int ix = -2; ix < patch->ldims[0] + 2; ix++) {
+      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
 	*(long int *)&F3(pf, HX, ix, -1,iz) = 0x7ff8000000000000;
 	*(long int *)&F3(pf, HX, ix, -2,iz) = 0x7ff8000000000000;
 	*(long int *)&F3(pf, HY, ix, -1,iz) = 0x7ff8000000000000;
@@ -154,13 +157,13 @@ conducting_wall_H_lo(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
     }
 #endif
     for (int iz = -1; iz < patch->ldims[2] + 1; iz++) {
-      for (int ix = -2; ix < patch->ldims[0] + 2; ix++) {
+      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
 	F3(pf, HY, ix,-1,iz) =  F3(pf, HY, ix, 1,iz);
 	F3(pf, HX, ix,-1,iz) = -F3(pf, HX, ix, 0,iz);
       }
     }
     for (int iz = -1; iz < patch->ldims[2] + 2; iz++) {
-      for (int ix = -2; ix < patch->ldims[0] + 2; ix++) {
+      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
 	F3(pf, HZ, ix,-1,iz) = -F3(pf, HZ, ix, 0,iz);
       }
     }
@@ -204,7 +207,7 @@ conducting_wall_H_hi(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
     int my = patch->ldims[1];
 #ifdef DEBUG
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
-      for (int ix = -2; ix < patch->ldims[0] + 2; ix++) {
+      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
 	*(long int *)&F3(pf, HX, ix,my  ,iz) = 0x7ff8000000000000;
 	*(long int *)&F3(pf, HX, ix,my+1,iz) = 0x7ff8000000000000;
 	*(long int *)&F3(pf, HY, ix,my+1,iz) = 0x7ff8000000000000;
@@ -214,13 +217,13 @@ conducting_wall_H_hi(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
     }
 #endif
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
-      for (int ix = -2; ix < patch->ldims[0] + 2; ix++) {
+      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
 	F3(pf, HY, ix,my+1,iz) =  F3(pf, HY, ix, my-1,iz);
 	F3(pf, HX, ix,my  ,iz) = -F3(pf, HX, ix, my-1,iz);
       }
     }
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
-      for (int ix = -2; ix < patch->ldims[0] + 2; ix++) {
+      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
 	F3(pf, HZ, ix,my  ,iz) = -F3(pf, HZ, ix, my-1,iz);
       }
     }
@@ -262,7 +265,7 @@ conducting_wall_J_lo(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
 
   if (d == 1) {
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
-      for (int ix = -1; ix < patch->ldims[0] + 1; ix++) {
+      for (int ix = MAX(-1, pf->ib[0]); ix < MIN(patch->ldims[0] + 1, pf->ib[0] + pf->im[0]) ; ix++) {
 	F3(pf, JYI, ix, 0,iz) -= F3(pf, JYI, ix,-1,iz);
 	F3(pf, JYI, ix,-1,iz) = 0.;
 	// FIXME, JXI/JZI?
@@ -270,7 +273,7 @@ conducting_wall_J_lo(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
     }
   } else  if (d == 2) {
     for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
-      for (int ix = -2; ix < patch->ldims[0] + 2; ix++) {
+      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
 	F3(pf, JZI, ix, iy, 0) -= F3(pf, JZI, ix, iy,-1);
 	F3(pf, JZI, ix, iy,-1) = 0.;
 	F3(pf, JXI, ix, iy, 1) += F3(pf, JXI, ix, iy,-1);
@@ -292,7 +295,7 @@ conducting_wall_J_hi(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
   if (d == 1) {
     int my = patch->ldims[1];
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
-      for (int ix = -1; ix < patch->ldims[0] + 1; ix++) {
+      for (int ix = MAX(-1, pf->ib[0]); ix < MIN(patch->ldims[0] + 1, pf->ib[0] + pf->im[0]) ; ix++) {
 	F3(pf, JYI, ix,my-1,iz) -= F3(pf, JYI, ix,my,iz);
 	F3(pf, JYI, ix,my  ,iz) = 0.;
       }
@@ -300,7 +303,7 @@ conducting_wall_J_hi(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
   } else if (d == 2) {
     int mz = patch->ldims[2];
     for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
-      for (int ix = -2; ix < patch->ldims[0] + 2; ix++) {
+      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
 	F3(pf, JZI, ix, iy, mz-1) -= F3(pf, JZI, ix, iy,mz);
 	F3(pf, JZI, ix, iy, mz) = 0.;
 	F3(pf, JXI, ix, iy, mz-1) += F3(pf, JXI, ix, iy,mz+1);
