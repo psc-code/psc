@@ -12,6 +12,7 @@ enum {
   SW_0,
   SW_1,
   SW_2,
+  MAX_SW
 };
 
 struct mrc_patch {
