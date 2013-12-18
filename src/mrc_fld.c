@@ -17,7 +17,6 @@
 #include <petscconf.h>
 #endif
 
-
 // ======================================================================
 // mrc_fld
 
@@ -645,6 +644,54 @@ mrc_fld_put_as(struct mrc_fld *fld, struct mrc_fld *fld_base)
   prof_stop(pr);
 }
 
+#ifdef HAVE_PETSC
+// Need to surface petsc_vecs somehow. Interface here is less than ideal, 
+// and it's not really clear to me how we should handle this.
+#include <petscvec.h>
+// ----------------------------------------------------------------------
+// mrc_fld_set_petsc_vec
+//
+
+void
+mrc_fld_set_petsc_vec(struct mrc_fld *fld, Vec petsc_vec)
+{
+  assert(strcmp(mrc_fld_ops(fld)->vec_type, "petsc")==0);
+  void (*vec_set_petsc)( struct mrc_vec *, Vec); 
+  vec_set_petsc = (void (*)( struct mrc_vec *, Vec)) mrc_vec_get_method(fld->_vec, "set_petsc_vec");
+  assert(vec_set_petsc);
+  vec_set_petsc(fld->_vec, petsc_vec);
+}
+
+// ----------------------------------------------------------------------
+// mrc_fld_get_petsc_vec
+// We're not really supposed to surface vectors at all, but petsc
+// vecs are sort of a special case, since they need to be passed into petsc
+// functions.
+Vec 
+mrc_fld_get_petsc_vec(struct mrc_fld *fld)
+{
+  assert(strcmp(mrc_fld_ops(fld)->vec_type, "petsc")==0);
+  Vec rv;
+  void (*vec_get_petsc)( struct mrc_vec *, Vec *); 
+  vec_get_petsc = (void (*)(struct mrc_vec *, Vec *)) mrc_vec_get_method(fld->_vec, "get_petsc_vec");
+  vec_get_petsc(fld->_vec, &rv);
+  return rv;
+}
+
+// ----------------------------------------------------------------------
+// mrc_fld_put_petsc_vec
+// If you get a petsc vec, you damn well better put it back
+void
+mrc_fld_put_petsc_vec(struct mrc_fld *fld, Vec *invec)
+{
+  assert(strcmp(mrc_fld_ops(fld)->vec_type, "petsc")==0);
+  void (*vec_put_petsc)(struct mrc_vec * , Vec *);
+  vec_put_petsc = (void (*)(struct mrc_vec * , Vec *)) mrc_vec_get_method(fld->_vec, "put_petsc_vec");
+  vec_put_petsc(fld->_vec, invec);
+}
+
+#endif
+
 void
 mrc_fld_ddc_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *buf,
 			void *_fld)
@@ -909,6 +956,10 @@ static struct mrc_obj_method mrc_fld_methods[] = {
   MRC_OBJ_METHOD("waxpy"    , mrc_fld_waxpy),
   MRC_OBJ_METHOD("norm"     , mrc_fld_norm),
   MRC_OBJ_METHOD("set"      , mrc_fld_set),
+  MRC_OBJ_METHOD("set_petsc_vec", mrc_fld_set_petsc_vec),
+  MRC_OBJ_METHOD("get_petsc_vec", mrc_fld_set),
+  MRC_OBJ_METHOD("put_petsc_vec", mrc_fld_set),
+  
   {}
 };
 

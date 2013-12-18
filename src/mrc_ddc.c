@@ -97,6 +97,31 @@ mrc_ddc_fill_ghosts_fld(struct mrc_ddc *ddc, int mb, int me,
   ops->fill_ghosts_fld(ddc, mb, me, fld);
 }
 
+
+// FIXME: Needed for MB and nothing else!!
+// ----------------------------------------------------------------------
+// mrc_ddc_global_to_local_fld
+
+void
+mrc_ddc_global_to_local_fld(struct mrc_ddc *ddc, struct mrc_fld *gfld, struct mrc_fld *lfld)
+{
+  struct mrc_ddc_ops *ops = mrc_ddc_ops(ddc);
+  assert(ops->global_to_local_fld);
+  ops->global_to_local_fld(ddc, gfld, lfld);
+}
+
+// ----------------------------------------------------------------------
+// mrc_ddc_fill_ghost_edges_fld
+
+void
+mrc_ddc_fill_ghost_edged_fld(struct mrc_ddc *ddc, int mb, int me,
+			     struct mrc_fld *fld)
+{
+  struct mrc_ddc_ops *ops = mrc_ddc_ops(ddc);
+  assert(ops->fill_ghost_edges_fld);
+  ops->fill_ghost_edges_fld(ddc, mb, me, fld);
+}
+
 // ----------------------------------------------------------------------
 // mrc_ddc_fill_ghosts
 //
@@ -132,6 +157,7 @@ mrc_ddc_init()
   mrc_class_register_subclass(&mrc_class_mrc_ddc, &mrc_ddc_simple_ops);
   mrc_class_register_subclass(&mrc_class_mrc_ddc, &mrc_ddc_multi_ops);
   mrc_class_register_subclass(&mrc_class_mrc_ddc, &mrc_ddc_amr_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_ddc, &mrc_ddc_mb_ops);
 }
 
 // ======================================================================

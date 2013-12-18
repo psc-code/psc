@@ -12,12 +12,31 @@ enum {
   SW_0,
   SW_1,
   SW_2,
-  MAX_SW
+  MAX_SW,
+};
+
+#define MAX_BS (27)
+
+enum {
+  FACE_LEFT,
+  FACE_RIGHT,
+  FACE_BOTTOM,
+  FACE_TOP,
+  FACE_BACK,
+  FACE_FRONT,
+  NR_FACES,
 };
 
 struct mrc_patch {
   int ldims[3];
   int off[3];
+};
+
+struct MB_pface {      // patch face info
+  int pf_patch;
+  int pf_face;
+  int pf_map[3];
+  int pf_btype;
 };
 
 struct mrc_patch_info {
@@ -28,6 +47,12 @@ struct mrc_patch_info {
   int idx3[3];
   int ldims[3];
   int off[3];
+  // stuff needed by mb
+  // (could trim a bit)
+  int p_bmx[3];            // size of parent block (cache)
+  int p_ix[3];             // index of this patch in block
+  int p_block;             // parent block
+  struct MB_pface p_pface[NR_FACES];
 };
 
 MRC_CLASS_DECLARE(mrc_domain, struct mrc_domain);

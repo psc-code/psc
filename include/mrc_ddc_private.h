@@ -32,6 +32,11 @@ struct mrc_ddc_ops {
   struct mrc_domain *(*get_domain)(struct mrc_ddc *ddc);
   void (*fill_ghosts_fld)(struct mrc_ddc *ddc, int mb, int me,
 			  struct mrc_fld *fld);
+  // FIXME: Needed for MB and nothing else!
+  void (*global_to_local_fld)(struct mrc_ddc *ddc, struct mrc_fld *gfld,
+			      struct mrc_fld *lfld);
+  void (*fill_ghost_edges_fld)(struct mrc_ddc *ddc, int mb, int me,
+			  struct mrc_fld *fld);  
   // OBSOLETE
   void (*fill_ghosts)(struct mrc_ddc *ddc, int mb, int me, void *ctx);
   void (*add_ghosts)(struct mrc_ddc *ddc, int mb, int me, void *ctx);
@@ -40,5 +45,5 @@ struct mrc_ddc_ops {
 extern struct mrc_ddc_ops mrc_ddc_simple_ops;
 extern struct mrc_ddc_ops mrc_ddc_multi_ops;
 extern struct mrc_ddc_ops mrc_ddc_amr_ops;
-
+extern struct mrc_ddc_ops mrc_ddc_mb_ops;
 #endif

@@ -25,6 +25,10 @@ void mrc_ddc_setup(struct mrc_ddc *ddc);
 void mrc_ddc_destroy(struct mrc_ddc *ddc);
 void mrc_ddc_fill_ghosts_fld(struct mrc_ddc *ddc, int mb, int me, struct mrc_fld *fld);
 
+// FIXME: I have to have these for MB, but they don't really make sense for anything else
+void mrc_ddc_global_to_local_fld(struct mrc_ddc *ddc, struct mrc_fld *gfld, struct mrc_fld *lfld);
+void mrc_ddc_fill_ghost_edges_fld(struct mrc_ddc *ddc, int mb, int me, struct mrc_fld *fld);
+
 // OBSOLETE: when doing boundary exchange on a mrc_fld, use the API above
 // this one is more flexible, and still used in PSC, but it should go away when we
 // always use mrc_fld's

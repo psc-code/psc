@@ -141,4 +141,138 @@ struct mrc_domain_amr {
 
 extern struct mrc_domain_ops mrc_domain_amr_ops;
 
+// ======================================================================
+// mrc_domain_mb (multi-block)
+
+enum {
+  MB_NONE,
+  MB_X, 
+  MB_Y,
+  MB_Z,
+  MB_R  = 4,
+  MB_XR = MB_X | MB_R,
+  MB_YR = MB_Y | MB_R,
+  MB_ZR = MB_Z | MB_R,
+};
+
+  
+// ----------------------------------------------------------------------
+// return dir (0,1,2) perpendicular to given face
+
+static inline int
+face2dir(int face)
+{
+  return face / 2;
+}
+
+// ----------------------------------------------------------------------
+// return 1 for boundary at positive side, 0 at zero side
+
+static inline int
+face2bnd(int face)
+{
+  return face % 2;
+}
+
+static inline int
+map2dir(int map)
+{
+  return (map & 3) - 1;
+}
+
+// ----------------------------------------------------------------------
+
+enum {
+  BTYPE_NONE,  // none specified, typically block-internal
+  BTYPE_PATCH, // patch-internal boundary
+  BTYPE_OUTER, // used by MB_CreateSimple(), also cylindrical / butterfly
+  BTYPE_SP,    // cylindrical, butterfly
+  BTYPE_SPC,   // butterfly
+  BTYPE_USER = 10,
+};
+
+
+
+struct MB_face {
+  int block; // Which block do we exchange points for?
+  int face;  // Which face on that block has my points?
+  int map[3]; // Which dimension [x, y, z] on that face maps to each of my dimensions [0,1,2]?
+  int btype; // What boundary condition should I use when exchanging data?
+};
+
+
+struct MB_block {
+  int mx[3];
+  struct MB_face faces[NR_FACES];
+  int nr_block;
+  int lxs[3]; // position of this block in the logical grid
+  // (which does not necessarily uniquely exist, but helpful for
+  //  some I/O, debugging etc.)
+};
+
+struct mrc_domain_mb { 
+  int gdims[3]; // Global number of points (w/o ghosts)
+  int bc[3]; // boundary conditions in x/y/z
+
+  // unique block related bits
+  struct mrc_trafo *_trafo; 
+  const char *_factory_type;
+  int ppb[3]; // how to subdivide blocks into patches
+  int mb_ppb_total; // total patches per block
+  int nr_blocks;
+  struct MB_block *mb_blocks;
+
+  // Patch related bits: similar to multi domain, but with a little more info
+  int nr_global_patches;         //Number of patches on all procs
+  struct mrc_patch *patches;      // Array of global patches
+  struct mrc_patch_info *patch_info; // bunch of pre-calculated patch information
+
+  int nr_patches;                // Number of local patches
+  int gpatch_off;                // Offset of this procs patches in global array
+                                 // (takes the place of loc_patches list)
+
+  // FIXME: These don't really belong in the domain.
+  // The idea of carrying around values for each SW bothers me, let's see if
+  // we can do without it
+  /*
+  int mb_N[MAX_SW];
+  int mb_loc_N[MAX_SW];
+  int mb_loc_start; // offset of local part into global vector
+  */
+};
+
+extern struct mrc_domain_ops mrc_domain_mb_ops;
+
+#define MB_foreach_block(mb, block)					\
+  for (struct MB_block *block = mrc_domain_mb(mb)->mb_blocks;		\
+       block != mrc_domain_mb(mb)->mb_blocks + mrc_domain_mb(mb)->nr_blocks; block++) { \
+    struct MB_block __attribute__((unused)) __mrc_block = *block;	\
+    
+#define MB_foreach_block_end }
+
+    
+#define MB_foreach_patch(mb, p)					\
+  {								\
+  for (int p = 0; p < mrc_domain_mb(mb)->nr_patches; p++)	\
+    {
+
+#define MB_foreach_patch_end }}
+
+#define mrc_patch_foreach(mb, patch, jx, jy, jz, l, r)			\
+  struct mrc_patch_info _info;						\
+  mrc_domain_get_local_patch_info(mb, patch, &_info);			\
+  for (int jz = -(l); jz < _info.ldims[2]+(r); jz++) {			\
+    for (int jy = -(l); jy < _info.ldims[1]+(r); jy++) {			\
+      for (int jx = -(l); jx < _info.ldims[0]+(r); jx++)			\
+
+#define mrc_patch_foreach_2d(mb, patch, jx, jy, jz, l, r)			\
+  struct mrc_patch_info _info;						\
+  mrc_domain_get_local_patch_info(mb, patch, &_info);			\
+  for (int jz = 0; jz < _info.ldims[2]; jz++) {				\
+    for (int jy = -(l); jy < _info.ldims[1]+(r); jy++) {			\
+      for (int jx = -(l); jx < _info.ldims[0]+(r); jx++)			\
+
+#define mrc_patch_foreach_end }}
+
+
 #endif
