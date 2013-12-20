@@ -392,6 +392,19 @@ mrc_io_read_attr_int(struct mrc_io *io, const char *path, const char *name,
 }
 
 void
+mrc_io_read_attr_int3(struct mrc_io *io, const char *path, const char *name,
+		      int (*val)[3])
+{
+  struct mrc_io_ops *ops = mrc_io_ops(io);
+  assert(ops->read_attr);
+  union param_u u;
+  ops->read_attr(io, path, PT_INT3, name, &u);
+  for (int d = 0; d < 3; d++) {
+    (*val)[d] = u.u_int3[d];
+  }
+}
+
+void
 mrc_io_read_attr_double(struct mrc_io *io, const char *path, const char *name,
 			double *val)
 {
