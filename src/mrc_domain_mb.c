@@ -6,6 +6,7 @@
 #include <mrc_crds.h>
 #include <mrc_params.h>
 #include <mrc_ddc.h>
+#include <mrc_io.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -30,10 +31,13 @@ const char *face2str[NR_FACES] = {
 // mrc_domain_create
 
 static void
-_mrc_domain_create(struct mrc_domain *mb)
+_mrc_domain_mb_create(struct mrc_domain *domain)
 {
-  // fixme: should probably add the trafo here,
-  // handled by factories at the moment.
+  struct mrc_domain_mb *sub = mrc_domain_mb(domain);
+  sub->_trafo = mrc_trafo_create(mrc_domain_comm(domain));
+  mrc_trafo_set_param_obj(sub->_trafo, "domain", domain);
+  // FIXME: Will this actually work?
+  mrc_domain_add_child(domain, (struct mrc_obj*) sub->_trafo);
 }
 
 
@@ -48,9 +52,6 @@ _mrc_domain_mb_destroy(struct mrc_domain *mb)
   free(sub->patches);
   free(sub->patch_info);
 
-  if (sub->_trafo) {
-     mrc_trafo_destroy(sub->_trafo);
-  }
 }  
 
 
@@ -164,6 +165,13 @@ _mrc_domain_mb_setup(struct mrc_domain *mb)
 	  for (int d = 0; d < 3; d++) {
 	    patch->ldims[d] = block->mx[d] / sub->ppb[d];
 	    info->p_ix[d]  = kk[d] * patch->ldims[d];
+	    // FIXME: This just lines all the blocks up in X !!
+	    patch->off[d] = info->p_ix[d];
+	    if (d == 0) {
+	      for (int b = block->nr_block - 1; b >= 0; b++) {
+		patch->off[d] += sub->mb_blocks[b].mx[d];
+	      }
+	    }
 	    info->p_bmx[d] = block->mx[d];
 	  }
 
@@ -217,14 +225,12 @@ _mrc_domain_mb_setup(struct mrc_domain *mb)
     }
   } MB_foreach_block_end;
 
-  mb->ddc = mrc_ddc_create(mrc_domain_comm(mb));
-  mrc_ddc_set_type(mb->ddc, "mb");
-  mrc_ddc_set_domain(mb->ddc, mb);
-  mrc_domain_setup_super(mb);
-
-  if (sub->_trafo) {
-    mrc_trafo_setup(sub->_trafo);
+  if (mb->ddc) {
+    mrc_ddc_set_type(mb->ddc, "mb");
+    mrc_ddc_set_domain(mb->ddc, mb);
   }
+  
+  mrc_domain_setup_super(mb);
 
 };
 
@@ -247,6 +253,107 @@ mrc_domain_mb_get_global_dims(struct mrc_domain *domain, int *dims)
   }
 }
 
+static void
+mrc_domain_mb_get_nr_procs(struct mrc_domain *domain, int *nr_procs)
+{
+  // FIXME: the 3d nr procs is meaningless for multiblock domains,
+  // so this is just a hacky work around so fld writers don't 
+  // choke
+  struct mrc_domain_mb *sub = mrc_domain_mb(domain);
+  nr_procs[0] = sub->nr_blocks * sub->ppb[0];
+  for (int d = 1; d < 3; d++) {
+    nr_procs[d] = sub->ppb[d];
+  }
+}
+
+
+static struct mrc_patch *
+mrc_domain_mb_get_patches(struct mrc_domain *domain, int *nr_patches)
+{
+  struct mrc_domain_mb *mb = mrc_domain_mb(domain);
+  if (nr_patches) {
+    *nr_patches = mb->nr_patches;
+  }
+  return &mb->patches[mb->gpatch_off];
+}
+
+static void
+mrc_domain_mb_get_nr_global_patches(struct mrc_domain *domain, int *nr_global_patches)
+{
+  struct mrc_domain_mb *mb = mrc_domain_mb(domain);
+
+  *nr_global_patches = mb->nr_global_patches;
+}
+
+static struct mrc_ddc *
+mrc_domain_mb_create_ddc(struct mrc_domain *domain)
+{
+  struct mrc_ddc *ddc = mrc_ddc_create(domain->obj.comm);
+  mrc_ddc_set_type(ddc, "mb");
+  mrc_ddc_set_domain(ddc, domain);
+  return ddc;
+}
+
+static void
+mrc_domain_mb_write(struct mrc_domain *domain, struct mrc_io *io)
+{
+
+  struct mrc_domain_mb *sub = mrc_domain_mb(domain);
+  mrc_io_write_int(io, domain, "nr_blocks", sub->nr_blocks);
+  char path[strlen(mrc_domain_name(domain)) + 10];
+  for (int b = 0; b < sub->nr_blocks; b++) {
+    sprintf(path, "%s/block-%d", mrc_io_obj_path(io, domain), b);
+    struct MB_block *block = &sub->mb_blocks[b];
+    mrc_io_write_attr_int3(io, path, "mx", block->mx);
+    mrc_io_write_attr_int3(io, path, "lxs", block->lxs);
+    
+    for (int f = 0; f < NR_FACES; f++) {
+      struct MB_face *face = &block->faces[f];
+      char face_path[strlen(path) + 10];
+      sprintf(face_path, "%s/face-%d", path, f);
+      mrc_io_write_attr_int(io, face_path, "block", face->block);
+      mrc_io_write_attr_int(io, face_path, "face", face->face);
+      mrc_io_write_attr_int3(io, face_path, "map", face->map);
+      mrc_io_write_attr_int(io, face_path, "btype", face->btype);
+    }
+  }
+}
+
+
+static void
+mrc_domain_mb_read(struct mrc_domain *domain, struct mrc_io *io)
+{
+#warning MB initialization orders are all sorts of messed up here
+
+  struct mrc_domain_mb *sub = mrc_domain_mb(domain);
+  mrc_io_read_int(io, domain, "nr_blocks", &sub->nr_blocks);
+  sub->mb_blocks = (struct MB_block *) calloc(sub->nr_blocks, sizeof(struct MB_block));
+  char path[strlen(mrc_domain_name(domain)) + 10];
+  for (int b = 0; b < sub->nr_blocks; b++) {
+    sprintf(path, "%s/block-%d", mrc_io_obj_path(io, domain), b);
+    struct MB_block *block = &sub->mb_blocks[b];
+    mrc_io_read_attr_int3(io, path, "mx", &block->mx);
+    mrc_io_read_attr_int3(io, path, "lxs", &block->lxs);
+    
+    for (int f = 0; f < NR_FACES; f++) {
+      struct MB_face *face = &block->faces[f];
+      char face_path[strlen(path) + 10];
+      sprintf(face_path, "%s/face-%d", path, f);
+      mrc_io_read_attr_int(io, face_path, "block", &face->block);
+      mrc_io_read_attr_int(io, face_path, "face", &face->face);
+      mrc_io_read_attr_int3(io, face_path, "map", &face->map);
+      mrc_io_read_attr_int(io, face_path, "btype", &face->btype);
+    }
+  }
+  
+  // For some reason this doesn't get created anymore?
+  if( ! domain->ddc) {
+    domain->ddc = mrc_domain_create_ddc(domain);
+  }
+  mrc_domain_read_super(domain, io);
+}
+
+
 static struct mrc_param_select bc_descr[] = {
   { .val = BC_NONE       , .str = "none"     },
   { .val = BC_PERIODIC   , .str = "periodic" },
@@ -258,9 +365,8 @@ static struct param mrc_domain_mb_params_descr[] = {
   { "block_factory"   , VAR(_factory_type)   , PARAM_STRING(NULL) },
   { "m"               , VAR(gdims)           , PARAM_INT3(32, 32, 32),
     .help = "global number of grid points in x, y, z direction" },
-  { "ppb_x"           , VAR(ppb[0])          , PARAM_INT(1)               },
-  { "ppb_y"           , VAR(ppb[1])          , PARAM_INT(1)               },
-  { "ppb_z"           , VAR(ppb[2])          , PARAM_INT(1)               },
+  { "ppb"             , VAR(ppb)             , PARAM_INT3(1,1,1),
+    .help = " number of patches per block in x, y, z direction" },
   { "bcx"             , VAR(bc[0])           , PARAM_SELECT(BC_NONE,
 							    bc_descr),
     .help = "Boundary condition in x direction" },
@@ -280,10 +386,17 @@ struct mrc_domain_ops mrc_domain_mb_ops = {
   .size                      = sizeof(struct mrc_domain_mb),
   .param_descr               = mrc_domain_mb_params_descr,
   .setup                     = _mrc_domain_mb_setup,
+  .create                    = _mrc_domain_mb_create,
   .destroy                   = _mrc_domain_mb_destroy,
+  .write                     = mrc_domain_mb_write,
+  .read                      = mrc_domain_mb_read,
   .get_global_dims           = mrc_domain_mb_get_global_dims,
+  .get_nr_procs              = mrc_domain_mb_get_nr_procs,
   .get_global_patch_info     = mrc_domain_mb_get_global_patch_info,
   .get_local_patch_info      = mrc_domain_mb_get_local_patch_info,
+  .get_nr_global_patches     = mrc_domain_mb_get_nr_global_patches,
+  .get_patches               = mrc_domain_mb_get_patches,
+  .create_ddc                = mrc_domain_mb_create_ddc,
 };
 
 
@@ -481,104 +594,7 @@ struct mrc_domain_ops mrc_domain_mb_ops = {
 /* // ====================================================================== */
 /* // MB_WriteH5 */
 
-/* int */
-/* MB_WriteH5(struct mrc_domain *mb, hid_t loc, const char *name) */
-/* { */
-/*   int ierr; */
-
-/*   pfb; */
-/*   hid_t group = MRC_H5Gcreate(loc, name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT); */
-/*   struct mrc_domain_mb *sub = mrc_domain_mb(mb); */
-/*   ierr = MRC_H5Awrite_int(group, "nr_blocks", sub->nr_blocks); CE;  */
-/*   for (int b = 0; b < sub->nr_blocks; b++) { */
-/*     struct MB_block *block = &sub->mb_blocks[b]; */
-/*     char s[20]; */
-/*     sprintf(s, "block-%d", b); */
-/*     hid_t b_id = MRC_H5Gcreate(group, s, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT); */
-/*     ierr = MRC_H5Awrite_int_1d(b_id, "mx", block->mx, 3); CE; */
-/*     ierr = MRC_H5Awrite_int_1d(b_id, "lxs", block->lxs, 3); CE; */
-    
-/*     for (int f = 0; f < NR_FACES; f++) { */
-/*       struct MB_face *face = &block->faces[f]; */
-/*       char s[20]; */
-/*       sprintf(s, "face-%d", f); */
-/*       hid_t f_id = MRC_H5Gcreate(b_id, s, H5P_DEFAULT,H5P_DEFAULT,H5P_DEFAULT); */
-/*       ierr = MRC_H5Awrite_int(f_id, "block", face->block); CE; */
-/*       ierr = MRC_H5Awrite_int(f_id, "face", face->face); CE; */
-/*       ierr = MRC_H5Awrite_int_1d(f_id, "map", face->map, 3); CE; */
-/*       ierr = MRC_H5Awrite_int(f_id, "btype", face->btype); CE; */
-/*       ierr = MRC_H5Gclose(f_id); */
-/*     } */
-    
-/*     ierr = MRC_H5Gclose(b_id); */
-/*   } */
-
-/*   ierr = MB_coord_WriteH5(mb->mb_coord, group, "coord"); CE; */
-/*   ierr = mrc_trafo_WriteH5(sub->_trafo, group, "trafo"); CE; */
-
-/*   ierr = MRC_H5Gclose(group); CE; */
-/*   pfr; */
-/* } */
-
 // ======================================================================
 // MB_ReadH5
- 
-
-/* int */
-/* MB_ReadH5(MPI_Comm comm, hid_t loc, const char *name, struct mrc_domain **pmb) */
-/* { */
-/* #warning MB initialization orders are all sorts of messed up here */
-/*   int ierr; */
-/*   struct mrc_domain *mb = NULL; */
-
-/*   pfb; */
-/*   mb = mrc_domain_create(comm); */
-/*   struct mrc_domain_mb *sub = mrc_domain_mb(mb); */
-
-/*   hid_t group = MRC_H5Gopen(loc, name, H5P_DEFAULT); */
-/*   ierr = MRC_H5Aread_int(group, "nr_blocks", &sub->nr_blocks); CE;  */
-
-/*   ierr = PetscMalloc(sizeof(sub->mb_blocks[0])*sub->nr_blocks, &sub->mb_blocks); CE; */
-/*   for (int b = 0; b < sub->nr_blocks; b++) { */
-/*     struct MB_block *block = &sub->mb_blocks[b]; */
-/*     block->nr_block = b; */
-/*     char s[20]; */
-/*     sprintf(s, "block-%d", b); */
-/*     hid_t b_id = MRC_H5Gopen(group, s, H5P_DEFAULT); */
-/*     ierr = MRC_H5Aread_int_1d(b_id, "mx", block->mx, 3); CE; */
-/*     ierr = MRC_H5Aread_int_1d(b_id, "lxs", block->lxs, 3); CE; */
-
-/*     for (int f = 0; f < NR_FACES; f++) { */
-/*       struct MB_face *face = &block->faces[f]; */
-/*       char s[20]; */
-/*       sprintf(s, "face-%d", f); */
-/*       hid_t f_id = MRC_H5Gopen(b_id, s, H5P_DEFAULT); */
-/*       ierr = MRC_H5Aread_int(f_id, "block", &face->block); CE; */
-/*       ierr = MRC_H5Aread_int(f_id, "face", &face->face); CE; */
-/*       ierr = MRC_H5Aread_int_1d(f_id, "map", face->map, 3); CE; */
-/*       ierr = MRC_H5Aread_int(f_id, "btype", &face->btype); CE; */
-/*       ierr = MRC_H5Gclose(f_id); */
-/*     } */
-
-/*     ierr = MRC_H5Gclose(b_id); */
-/*   } */
-
-/*   // I'm not going to bother checking blocks on a read anymore. */
-/*   //  ierr = check_blocks(sub); CE; */
-  
-/*   // This is a really bad place for this, but I need to have it called */
-/*   // somewhere, even on read in. */
-/*   // FIXME!! */
-
-/*   mrc_domain_set_from_options(mb); */
-/*   mrc_domain_setup(mb); */
-/*   mrc_domain_view(mb); */
-/*   ierr = MB_coord_ReadH5(mb, group, "coord", &mb->mb_coord); CE; */
-/*   ierr = mrc_trafo_ReadH5(mb, group, "trafo", &sub->_trafo); CE; */
-
-/*   ierr = MRC_H5Gclose(group); CE; */
-/*   *pmb = mb; */
-/*   pfr; */
-/* } */
 
 

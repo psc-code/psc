@@ -482,15 +482,23 @@ MB_CorrectChristoffelAlt(struct mrc_domain *mb)
 #endif
 
 static void
-MB_GetFld(struct mrc_domain *domain, int bs, int sw, struct mrc_fld *fld)
+MB_GetFld(struct mrc_domain *domain, int bs, int sw, struct mrc_fld *fld, char *name)
 {
   // FIXME: There's no reason these have to be double_aos, as far as I can
   // tell, but until I'm sure I'm going to leave them this way.
   mrc_fld_set_type(fld, "double_aos");
+  mrc_fld_set_name(fld, name);
   mrc_fld_set_param_obj(fld, "domain", domain);
   mrc_fld_set_param_int(fld, "nr_spatial_dims", 3);
   mrc_fld_set_param_int(fld, "nr_comps", bs);
   mrc_fld_set_param_int(fld, "nr_ghosts", sw);
+  // FIXME; strdup is screwing the pooch is comp_name is NULL, so 
+  // I'm tossing in some null strings here
+  for (int d = 0; d < bs; d++) {
+    char s[5];
+    sprintf(s, "%d", d);
+    mrc_fld_set_comp_name(fld, d, s);
+  }
   mrc_fld_setup(fld);
 }
 
@@ -501,14 +509,16 @@ _mrc_trafo_setup(struct mrc_trafo *trafo)
 
   // setup the mapping fields.  
   for (int d = 0; d < 3; d++) {
-    MB_GetFld(trafo->_domain,  1, SW_2, trafo->_cc[d]);
+    char s[30];
+    sprintf(s, "trafo_cc[%d]", d);
+    MB_GetFld(trafo->_domain,  1, SW_2, trafo->_cc[d], s);
   }
-  MB_GetFld(trafo->_domain,  1, SW_1, trafo->_jac);
-  MB_GetFld(trafo->_domain,  9, SW_1, trafo->_el);
-  MB_GetFld(trafo->_domain,  9, SW_1, trafo->_eu);
-  MB_GetFld(trafo->_domain,  9, SW_1, trafo->_gll);
-  MB_GetFld(trafo->_domain,  9, SW_1, trafo->_guu);
-  MB_GetFld(trafo->_domain, 27, SW_1, trafo->_gam);
+  MB_GetFld(trafo->_domain,  1, SW_1, trafo->_jac, "trafo_jac");
+  MB_GetFld(trafo->_domain,  9, SW_1, trafo->_el, "trafo_el");
+  MB_GetFld(trafo->_domain,  9, SW_1, trafo->_eu, "trafo_eu");
+  MB_GetFld(trafo->_domain,  9, SW_1, trafo->_gll, "trafo_gll");
+  MB_GetFld(trafo->_domain,  9, SW_1, trafo->_guu, "trafo_guu");
+  MB_GetFld(trafo->_domain, 27, SW_1, trafo->_gam, "trafo_gam");
 
   // actually fill in the data for the mapping fields
   SetupTrafoCoord(trafo);
@@ -555,7 +565,7 @@ static struct param mrc_trafo_descr[] = {
   { "cc0"             , VAR(_cc[0])       , MRC_VAR_OBJ(mrc_fld)   },
   { "cc1"             , VAR(_cc[1])       , MRC_VAR_OBJ(mrc_fld)   },
   { "cc2"             , VAR(_cc[2])       , MRC_VAR_OBJ(mrc_fld)   },
-  { "nc"              , VAR(_nc)          , MRC_VAR_OBJ(mrc_fld)   },
+  //  { "nc"              , VAR(_nc)          , MRC_VAR_OBJ(mrc_fld)   },
   { "jac"             , VAR(_jac)         , MRC_VAR_OBJ(mrc_fld)   },
   { "eu"              , VAR(_eu)          , MRC_VAR_OBJ(mrc_fld)   },
   { "el"              , VAR(_el)          , MRC_VAR_OBJ(mrc_fld)   },

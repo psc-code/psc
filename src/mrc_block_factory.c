@@ -53,7 +53,7 @@ check_blocks(struct mrc_domain_mb *mb)
 void
 mrc_block_factory_run(struct mrc_block_factory *fac, struct mrc_domain *domain)
 {
-  assert(strcmp(mrc_domain_type(domain), "x") == 0);
+  assert(strcmp(mrc_domain_type(domain), "mb") == 0);
   struct mrc_block_factory_ops *ops = mrc_block_factory_ops(fac);
   assert(ops && ops->run);
   ops->run(fac, domain);

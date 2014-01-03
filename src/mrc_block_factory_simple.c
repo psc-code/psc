@@ -26,6 +26,7 @@ mrc_block_factory_simple2d_run(struct mrc_block_factory *fac, struct mrc_domain 
   
   mb->mb_blocks = blocks;
 
+  assert(gdims[2] == 1);
   blocks[0] = (struct MB_block) {
     .mx = { gdims[0], gdims[1], 1 }, // Dimensions of the block
     .faces = { // Default boundary mapping for the faces

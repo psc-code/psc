@@ -98,7 +98,7 @@ _mrc_ddc_mb_destroy(struct mrc_ddc *ddc)
 // ----------------------------------------------------------------------
 // mrc_ddc_multi_set_domain
 
-void
+static void
 mrc_ddc_mb_set_domain(struct mrc_ddc *ddc, struct mrc_domain *domain)
 {
   struct mrc_ddc_mb *sub = to_mrc_ddc_mb(ddc);
@@ -739,6 +739,8 @@ struct mrc_ddc_ops mrc_ddc_mb_ops = {
   .name                  = "mb",
   .size                  = sizeof(struct mrc_ddc_mb),
   .destroy               = _mrc_ddc_mb_destroy,
+  .set_domain            = mrc_ddc_mb_set_domain,
+  .get_domain            = mrc_ddc_mb_get_domain,
   .fill_ghosts_fld       = mrc_ddc_mb_fill_ghosts_fld,
   .global_to_local_fld   = mrc_ddc_mb_global_to_local_fld,
   .fill_ghost_edges_fld  = mrc_ddc_mb_fill_ghost_edges_fld,
