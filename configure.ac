@@ -140,7 +140,12 @@ AC_CONFIG_FILES([Makefile
 		 tests/test_io_read_multi_1.sh
 		 tests/test_mrc_domain_simple_0.sh
 		 tests/test_mrc_domain_multi_0.sh
+		 tests/test_mrc_domain_mb_0.sh
 		 tests/test_mrc_fld.sh
+		 tests/test_mrc_fld_io_xdmf_collective.sh
+		 tests/test_mrc_fld_io_xdmf2_parallel.sh
+		 tests/test_mrc_fld_io_hdf5_serial.sh
+		 tests/test_mrc_fld_io_ascii.sh
 		 tests/test_mrc_m1_0.sh
 		 tests/test_mrc_m1_1.sh
 		 tests/test_mrc_m3_0.sh
