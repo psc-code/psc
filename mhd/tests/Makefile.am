@@ -20,12 +20,10 @@ noinst_LTLIBRARIES = libmhdtbd.la
 
 libmhdtbd_la_SOURCES = \
 	ggcm_mhd_ic_ot.c \
-	ggcm_mhd_ic_otzi.c \
 	ggcm_mhd_ic_hydroblast.c \
 	ggcm_mhd_ic_mhdblast.c \
 	ggcm_mhd_ic_ici.c \
 	ggcm_mhd_ic_wave_sound.c \
-	ggcm_mhd_ic_wave_alfven.c \
 	ggcm_mhd_diag_c.c \
 	ggcm_diag_lib.c
 
