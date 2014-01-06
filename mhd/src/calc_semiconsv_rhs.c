@@ -105,8 +105,11 @@ calc_semiconsv_rhs(struct ggcm_mhd *mhd, struct mrc_fld *_rhs, struct mrc_fld *_
     mrc_fld_put_as(flux[f], _flux[f]);
   }
 
-  mrc_fld_destroy(fld);
-  mrc_fld_destroy(J_cc);
-  mrc_fld_destroy(E_cc);
+  mrc_fld_put_as(J_cc, _J_cc);
+  mrc_fld_destroy(_J_cc);
+  mrc_fld_put_as(E_cc, _E_cc);
+  mrc_fld_destroy(_E_cc);
+
+  mrc_fld_put_as(fld, mhd->fld);
   mrc_fld_put_as(rhs, _rhs);
 }
