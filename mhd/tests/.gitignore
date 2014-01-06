@@ -9,6 +9,7 @@ mhd_fadeev
 mhd_ot
 mhd_whistler
 mhd_alfven
+mhd_sound
 mhd_kh
 *.log
 *.trs

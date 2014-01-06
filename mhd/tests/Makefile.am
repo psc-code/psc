@@ -9,6 +9,7 @@ bin_PROGRAMS = \
 	mhd_ot \
 	mhd_kh \
 	mhd_alfven \
+	mhd_sound \
 	mhd_whistler
 
 check_PROGRAMS = \
@@ -23,7 +24,6 @@ libmhdtbd_la_SOURCES = \
 	ggcm_mhd_ic_hydroblast.c \
 	ggcm_mhd_ic_mhdblast.c \
 	ggcm_mhd_ic_ici.c \
-	ggcm_mhd_ic_wave_sound.c \
 	ggcm_mhd_diag_c.c \
 	ggcm_diag_lib.c
 
