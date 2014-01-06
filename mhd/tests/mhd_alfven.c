@@ -37,12 +37,9 @@ ggcm_mhd_ic_alfven_run(struct ggcm_mhd_ic *ic)
   struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, "mhd_pr_float");
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);  
 
-  float xl[3], xh[3], L[3], r[3];
+  float xl[3], xh[3], r[3];
   mrc_crds_get_param_float3(crds, "l", xl);
   mrc_crds_get_param_float3(crds, "h", xh);
-  for(int i = 0; i < 3; i++){
-    L[i] = xh[i] - xl[i];
-  }
   mrc_fld_foreach(fld, ix, iy, iz, 2, 2) {
     r[0] = MRC_CRD(crds, 0, ix);
     r[1] = MRC_CRD(crds, 1, iy);
