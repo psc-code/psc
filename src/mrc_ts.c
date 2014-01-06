@@ -97,6 +97,16 @@ mrc_ts_set_rhs_function(struct mrc_ts *ts,
 }
 
 void
+mrc_ts_set_step_function(struct mrc_ts *ts,
+			 void (*stepf)(void *ctx, struct mrc_ts *ts,
+				       struct mrc_obj *x),
+			 void *ctx)
+{
+  ts->stepf = stepf;
+  ts->stepf_ctx = ctx;
+}
+
+void
 mrc_ts_add_monitor(struct mrc_ts *ts, struct mrc_ts_monitor *mon)
 {
   list_add_tail(&mon->monitors_entry, &ts->monitors);
