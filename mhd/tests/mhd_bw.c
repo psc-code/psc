@@ -51,135 +51,48 @@ ggcm_mhd_ic_bw_run(struct ggcm_mhd_ic *ic)
 	// Left                         
 	RR1(fld, ix,iy,iz) = 1.0;
 	PP1(fld, ix,iy,iz) = RR1(fld, ix,iy,iz);
-	V1X(fld, ix,iy,iz) = 0.0;
-	V1Y(fld, ix,iy,iz) = 0.0;
-	V1Z(fld, ix,iy,iz) = 0.0;
 	B1X(fld, ix,iy,iz) = 0.75; 
 	B1Y(fld, ix,iy,iz) = 1.0;
-	B1Z(fld, ix,iy,iz) = 0.0;
       } else {
 	// Right
-	// Left                         
 	RR1(fld, ix,iy,iz) = 0.125;	 
 	PP1(fld, ix,iy,iz) = RR1(fld, ix,iy,iz);
-	V1X(fld, ix,iy,iz) = 0.0;
-	V1Y(fld, ix,iy,iz) = 0.0;
-	V1Z(fld, ix,iy,iz) = 0.0;
 	B1X(fld, ix,iy,iz) = 0.75;
 	B1Y(fld, ix,iy,iz) = -1.0;
 	B1Z(fld, ix,iy,iz) = 0.0;
-
-
-#if 0        
-
-	/*
-      if(fabs(r[0]) < 0.5*L[0]){
-	// Left                         
-	MRC_F3(f3, _RR1, ix, iy, iz) = 1.0;
-	MRC_F3(f3, _B1X, ix, iy, iz) = 0.75;
-	MRC_F3(f3, _B1Y, ix, iy, iz) = 1.0;
-	MRC_F3(f3, _B1Z, ix, iy, iz) = 0.0;
-	//B1X(f3, ix,iy,iz) = 0.75;
-	//B1Y(f3, ix,iy,iz) = 1.0;
-	//B1Z(f3, ix,iy,iz) = 0.0; 
-	
-	MRC_F3(f3, _UU1 , ix, iy, iz) = 1.0 / (gamma - 1.f) +
-	  .5f * (sqr(MRC_F3(f3, _RV1X, ix, iy, iz)) +
-		 sqr(MRC_F3(f3, _RV1Y, ix, iy, iz)) +
-		 sqr(MRC_F3(f3, _RV1Z, ix, iy, iz))) / MRC_F3(f3, _RR1, ix, iy, iz) +
-	  .5f * (sqr(.5*(B1X(f3, ix,iy,iz) + B1X(f3, ix+1,iy,iz))) +
-		 sqr(.5*(B1Y(f3, ix,iy,iz) + B1Y(f3, ix,iy+1,iz))) +
-		 sqr(.5*(B1Z(f3, ix,iy,iz) + B1Z(f3, ix,iy,iz+1))));
-	
-      } else {
-	// Right
-	MRC_F3(f3, _RR1, ix, iy, iz) = 0.125;
-	MRC_F3(f3, _B1X, ix, iy, iz) = 0.75;
-	MRC_F3(f3, _B1Y, ix, iy, iz) = -1.0;
-	MRC_F3(f3, _B1Z, ix, iy, iz) = 0.0;
-
-	MRC_F3(f3, _UU1 , ix, iy, iz) = 0.1 / (gamma - 1.f) +
-	  .5f * (sqr(MRC_F3(f3, _RV1X, ix, iy, iz)) +
-		 sqr(MRC_F3(f3, _RV1Y, ix, iy, iz)) +
-		 sqr(MRC_F3(f3, _RV1Z, ix, iy, iz))) / MRC_F3(f3, _RR1, ix, iy, iz) +
-	  .5f * (sqr(.5*(B1X(f3, ix,iy,iz) + B1X(f3, ix+1,iy,iz))) +
-		 sqr(.5*(B1Y(f3, ix,iy,iz) + B1Y(f3, ix,iy+1,iz))) +
-		 sqr(.5*(B1Z(f3, ix,iy,iz) + B1Z(f3, ix,iy,iz+1))));
-	*/
-#endif
-
-
       }
-  } else if(strcmp(sub->pdim, "y") == 1){
 
       /*
+  } else if(strcmp(sub->pdim, "y") == 1){
+
     if(fabs(r[1]) < 0.5*L[1]){
       // Left 
-      MRC_F3(f3, _RR1, ix, iy, iz) = 1.0;
-      MRC_F3(f3, _B1Y , ix, iy, iz) = 0.75;
-      MRC_F3(f3, _B1X , ix, iy, iz) = 1.0;
-      MRC_F3(f3, _B1Z , ix, iy, iz) = 0.0;
-      MRC_F3(f3, _UU1 , ix, iy, iz) = 1.0 / (gamma - 1.f) +
-	.5f * (sqr(MRC_F3(f3, _RV1X, ix, iy, iz)) +
-	       sqr(MRC_F3(f3, _RV1Y, ix, iy, iz)) +
-	       sqr(MRC_F3(f3, _RV1Z, ix, iy, iz))) / MRC_F3(f3, _RR1, ix, iy, iz) +
-	.5f * (sqr(MRC_F3(f3, _B1X, ix, iy, iz)) +
-	       sqr(MRC_F3(f3, _B1Y, ix, iy, iz)) +
-	       sqr(MRC_F3(f3, _B1Z, ix, iy, iz)));      
+      F3(fld, _RR1, ix, iy, iz) = 1.0;
+      PP1(fld, ix,iy,iz) = RR1(fld, ix,iy,iz);
+      F3(fld, _B1Y , ix, iy, iz) = 0.75;
+      F3(fld, _B1X , ix, iy, iz) = 1.0;
+      F3(fld, _B1Z , ix, iy, iz) = 0.0;
     }else{
       // Right
-      MRC_F3(f3, _RR1, ix, iy, iz) = 0.125;
-      MRC_F3(f3, _B1Y , ix, iy, iz) = 0.75;
-      MRC_F3(f3, _B1X , ix, iy, iz) = -1.0;
-      MRC_F3(f3, _B1Z , ix, iy, iz) = 0.0;
-      MRC_F3(f3, _UU1 , ix, iy, iz) = 0.1 / (gamma - 1.f) +
-	.5f * (sqr(MRC_F3(f3, _RV1X, ix, iy, iz)) +
-	       sqr(MRC_F3(f3, _RV1Y, ix, iy, iz)) +
-	       sqr(MRC_F3(f3, _RV1Z, ix, iy, iz))) / MRC_F3(f3, _RR1, ix, iy, iz) +
-	.5f * (sqr(MRC_F3(f3, _B1X, ix, iy, iz)) +
-	       sqr(MRC_F3(f3, _B1Y, ix, iy, iz)) +
-	       sqr(MRC_F3(f3, _B1Z, ix, iy, iz)));      
+      F3(fld, _RR1, ix, iy, iz) = 0.125;
+      PP1(fld, ix,iy,iz) = RR1(fld, ix,iy,iz);
+      F3(fld, _B1Y , ix, iy, iz) = 0.75;
+      F3(fld, _B1X , ix, iy, iz) = -1.0;
+      F3(fld, _B1Z , ix, iy, iz) = 0.0;
     }
-    MRC_F3(f3, _RV1Z , ix, iy, iz) = 0.0;
-    MRC_F3(f3, _RV1X , ix, iy, iz) = 0.0;
-    MRC_F3(f3, _RV1Y , ix, iy, iz) = 0.0;
-    
   } else if(strcmp(sub->pdim, "z") == 1){
     if(fabs(r[2]) < 0.5*L[2]){
       // Left 
-      MRC_F3(f3, _RR1, ix, iy, iz) = 1.0;
-      MRC_F3(f3, _RV1X , ix, iy, iz) = 0.0;
-      MRC_F3(f3, _RV1Y , ix, iy, iz) = 0.0;	
-      MRC_F3(f3, _B1Y , ix, iy, iz) = 0.0;
-      MRC_F3(f3, _B1Z , ix, iy, iz) = 0.75;
-      MRC_F3(f3, _B1X , ix, iy, iz) = 1.0;
-      MRC_F3(f3, _UU1 , ix, iy, iz) = 1.0 / (gamma - 1.f) +
-	.5f * (sqr(MRC_F3(f3, _RV1X, ix, iy, iz)) +
-	       sqr(MRC_F3(f3, _RV1Y, ix, iy, iz)) +
-	       sqr(MRC_F3(f3, _RV1Z, ix, iy, iz))) / MRC_F3(f3, _RR1, ix, iy, iz) +
-	.5f * (sqr(MRC_F3(f3, _B1X, ix, iy, iz)) +
-	       sqr(MRC_F3(f3, _B1Y, ix, iy, iz)) +
-	       sqr(MRC_F3(f3, _B1Z, ix, iy, iz)));      
+      F3(fld, _RR1, ix, iy, iz) = 1.0;
+      PP1(fld, ix,iy,iz) = RR1(fld, ix,iy,iz);
+      F3(fld, _B1Z , ix, iy, iz) = 0.75;
+      F3(fld, _B1X , ix, iy, iz) = 1.0;
     }else{
       // Right
-      MRC_F3(f3, _RR1, ix, iy, iz) = 0.125;
-      MRC_F3(f3, _B1Y , ix, iy, iz) = 0.0;
-      MRC_F3(f3, _B1X , ix, iy, iz) = -1.0;
-      MRC_F3(f3, _B1Z , ix, iy, iz) = 0.75;
-      MRC_F3(f3, _UU1 , ix, iy, iz) = 0.1 / (gamma - 1.f) +
-	.5f * (sqr(MRC_F3(f3, _RV1X, ix, iy, iz)) +
-	       sqr(MRC_F3(f3, _RV1Y, ix, iy, iz)) +
-	       sqr(MRC_F3(f3, _RV1Z, ix, iy, iz))) / MRC_F3(f3, _RR1, ix, iy, iz) +
-	.5f * (sqr(MRC_F3(f3, _B1X, ix, iy, iz)) +
-	       sqr(MRC_F3(f3, _B1Y, ix, iy, iz)) +
-	       sqr(MRC_F3(f3, _B1Z, ix, iy, iz)));      
-    }
-      */
-
-      /*
-    MRC_F3(f3, _RV1X , ix, iy, iz) = 0.0;
-    MRC_F3(f3, _RV1Y , ix, iy, iz) = 0.0;	
-    MRC_F3(f3, _RV1Z , ix, iy, iz) = 0.0;       
+      F3(fld, _RR1, ix, iy, iz) = 0.125;
+      F3(fld, _B1X , ix, iy, iz) = -1.0;
+      F3(fld, _B1Z , ix, iy, iz) = 0.75;
+      PP1(fld, ix,iy,iz) = RR1(fld, ix,iy,iz);
       */
 
   } else {           

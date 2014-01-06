@@ -5,6 +5,7 @@
 #include "ggcm_mhd_ic_private.h"
 
 #include <mrc_fld.h>
+#include <mrc_fld_as_float.h>
 #include <mrc_domain.h>
 
 #include <math.h>
@@ -23,22 +24,19 @@ struct ggcm_mhd_ic_whistler {
 // ----------------------------------------------------------------------
 // ggcm_mhd_ic_whistler_run
 
-#define F3 MRC_F3 // FIXME
-
 static void
 ggcm_mhd_ic_whistler_run(struct ggcm_mhd_ic *ic)
 {
   struct ggcm_mhd_ic_whistler *sub = mrc_to_subobj(ic, struct ggcm_mhd_ic_whistler);
-  struct ggcm_mhd *gmhd = ic->mhd;  
-  struct mrc_fld *f3 = mrc_fld_get_as(gmhd->fld, "float");
-  struct mrc_crds *crds = mrc_domain_get_crds(gmhd->domain);  
+  struct ggcm_mhd *mhd = ic->mhd;  
+  struct mrc_fld *f3 = mrc_fld_get_as(mhd->fld, FLD_TYPE);
+  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);  
   float xl[3], xh[3], L[3], r[3];
   mrc_crds_get_param_float3(crds, "l", xl);
   mrc_crds_get_param_float3(crds, "h", xh);
   for(int i=0; i<3; i++){
     L[i] = xh[i] - xl[i];
   }
-  float gamma = gmhd->par.gamm;
   mrc_fld_foreach(f3, ix, iy, iz, 1, 1) {
     r[0] = MRC_CRD(crds, 0, ix);
     r[1] = MRC_CRD(crds, 1, iy);
@@ -49,21 +47,18 @@ ggcm_mhd_ic_whistler_run(struct ggcm_mhd_ic *ic)
     const int *dims = mrc_fld_dims(f3);
     int nz = dims[2];
     float vp= 2.*M_PI*sub->Boz*nz/((sub->n0)*L[2]); 
-    MRC_F3(f3, _B1X, ix+1,iy,iz) = (sub->pert) * vp * sin( kk*r[2] ) ;       
-    MRC_F3(f3, _B1Y, ix,iy+1,iz) = -(sub->pert) * vp * cos( kk*r[2] ) ;   
-    MRC_F3(f3, _B1Z, ix,iy,iz+1) = sub->Boz ; 
-    MRC_F3(f3, _RV1X, ix,iy,iz) = (sub->pert) * sub->n0 * sin( kk*r[2] ) ;      
-    MRC_F3(f3, _RV1Y, ix,iy,iz) = -(sub->pert) * sub->n0 * cos( kk*r[2] ) ;
-    MRC_F3(f3, _RR1, ix, iy, iz) = sub->n0 ;       
-
-    MRC_F3(f3, _UU1 , ix, iy, iz) =  MRC_F3(f3, _RR1, ix, iy, iz) / (gamma -1.f) + 	
-      .5f * (sqr(MRC_F3(f3, _RV1X, ix, iy, iz)) +
-	     sqr(MRC_F3(f3, _RV1Y, ix, iy, iz)) +
-	     sqr(MRC_F3(f3, _RV1Z, ix, iy, iz))) / MRC_F3(f3, _RR1, ix, iy, iz) +
-      .5f * (sqr(.5*(B1X(f3, ix,iy,iz) + B1X(f3, ix+1,iy,iz))) +
-	     sqr(.5*(B1Y(f3, ix,iy,iz) + B1Y(f3, ix,iy+1,iz))) +
-	     sqr(.5*(B1Z(f3, ix,iy,iz) + B1Z(f3, ix,iy,iz+1))));
+    RR1(f3, ix,iy,iz) = sub->n0 ;       
+    V1X(f3, ix,iy,iz) = (sub->pert) * sin( kk*r[2] ) ;      
+    V1Y(f3, ix,iy,iz) = -(sub->pert) * cos( kk*r[2] ) ;
+    PP1(f3, ix,iy,iz) = RR1(f3, ix,iy, iz);
+    B1X(f3, ix+1,iy,iz) = (sub->pert) * vp * sin( kk*r[2] ) ;       
+    B1Y(f3, ix,iy+1,iz) = -(sub->pert) * vp * cos( kk*r[2] ) ;   
+    B1Z(f3, ix,iy,iz+1) = sub->Boz ; 
   } mrc_fld_foreach_end;
+
+  mrc_fld_put_as(f3, mhd->fld);
+
+  ggcm_mhd_convert_fc_from_primitive(mhd, mhd->fld);
 }
 
 // ----------------------------------------------------------------------

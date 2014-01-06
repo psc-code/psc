@@ -6,6 +6,7 @@
 #include "ggcm_mhd_diag.h"
 #include "ggcm_mhd_ic_private.h"
 
+#include <mrc_fld_as_float.h>
 #include <mrc_domain.h>
 
 #include <math.h>
@@ -31,17 +32,16 @@ struct ggcm_mhd_ic_double_tearing {
 // ----------------------------------------------------------------------
 // ggcm_mhd_ic_double_tearing_run
 
-#define F3 MRC_F3 // FIXME
-
 static void
 ggcm_mhd_ic_double_tearing_run(struct ggcm_mhd_ic *ic)
 {
   struct ggcm_mhd_ic_double_tearing *sub = mrc_to_subobj(ic, struct ggcm_mhd_ic_double_tearing);
   struct ggcm_mhd *mhd = ic->mhd;
-  struct mrc_fld *f3 = mrc_fld_get_as(mhd->fld, "float");
+  struct mrc_fld *f3 = mrc_fld_get_as(mhd->fld, FLD_TYPE);
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);  
 
   struct mrc_fld *fld_psi = mrc_domain_fld_create(mhd->domain, SW_2, NULL);
+  mrc_fld_set_type(fld_psi, FLD_TYPE);
   mrc_fld_setup(fld_psi);
 
   float xl[3], xh[3], L[3], r[3];
@@ -64,7 +64,7 @@ ggcm_mhd_ic_double_tearing_run(struct ggcm_mhd_ic *ic)
     r[0] = .5*(MRC_CRDX(crds, ix) + MRC_CRDX(crds, ix-1));
     r[1] = .5*(MRC_CRDY(crds, iy) + MRC_CRDY(crds, iy-1));
     
-    MRC_F3(fld_psi, 0, ix,iy,iz) = -(pert*sqr(l_b)) * (exp(-sqr(r[0]-xs)/ 2. / sqr(l_b) )
+    F3(fld_psi, 0, ix,iy,iz) = -(pert*sqr(l_b)) * (exp(-sqr(r[0]-xs)/ 2. / sqr(l_b) )
       + exp(- sqr(r[0] + xs) /2. / sqr(l_b) ))* sin((2.*M_PI * r[1])/L[1]);
       //-(Bo / kk)*( log(cosh(kk*r[1]) + eps*cos(kk*r[0])));      
   } mrc_fld_foreach_end;
@@ -80,20 +80,18 @@ ggcm_mhd_ic_double_tearing_run(struct ggcm_mhd_ic *ic)
     r[2] = MRC_CRD(crds, 2, iz); 
     
     B1Y(f3, ix,iy,iz) = (1. + tanh((r[0] - xs) / l_b) - tanh((r[0]+xs) / l_b ))  
-      -(MRC_F3(fld_psi, 0, ix+1,iy,iz) - MRC_F3(fld_psi, 0, ix,iy,iz)) / bd2x[ix];;
-    B1X(f3, ix,iy,iz) = (MRC_F3(fld_psi, 0, ix,iy+1,iz) - 
-				 MRC_F3(fld_psi, 0, ix,iy,iz)) / bd2y[iy];
+      -(F3(fld_psi, 0, ix+1,iy,iz) - F3(fld_psi, 0, ix,iy,iz)) / bd2x[ix];;
+    B1X(f3, ix,iy,iz) = (F3(fld_psi, 0, ix,iy+1,iz) - 
+				 F3(fld_psi, 0, ix,iy,iz)) / bd2y[iy];
     B1Z(f3, ix,iy,iz) = bz0; 
-    MRC_F3(f3, _RR1, ix, iy, iz) = rho0 + (sqr(by0)- sqr(B1Y(f3, ix,iy,iz))) /2.0 / (1. + tau) ; 
-
-    MRC_F3(f3, _UU1 , ix, iy, iz) =  MRC_F3(f3, _RR1, ix, iy, iz) / (mhd->par.gamm -1.f) + 	
-      .5f * (sqr(MRC_F3(f3, _RV1X, ix, iy, iz)) +
-	     sqr(MRC_F3(f3, _RV1Y, ix, iy, iz)) +
-	     sqr(MRC_F3(f3, _RV1Z, ix, iy, iz))) / MRC_F3(f3, _RR1, ix, iy, iz) +
-      .5f * (sqr(.5*(B1X(f3, ix,iy,iz) + B1X(f3, ix+1,iy,iz))) +
-	     sqr(.5*(B1Y(f3, ix,iy,iz) + B1Y(f3, ix,iy+1,iz))) +
-	     sqr(.5*(B1Z(f3, ix,iy,iz) + B1Z(f3, ix,iy,iz+1))));
+    RR1(f3, ix,iy,iz) = rho0 + (sqr(by0)- sqr(B1Y(f3, ix,iy,iz))) /2.0 / (1. + tau) ; 
+    PP1(f3, ix,iy,iz) = RR1(f3, ix,iy,iz);
   } mrc_fld_foreach_end;
+
+  mrc_fld_put_as(f3, mhd->fld);
+  mrc_fld_destroy(fld_psi);
+
+  ggcm_mhd_convert_fc_from_primitive(mhd, mhd->fld);
 }
 
 // ----------------------------------------------------------------------
