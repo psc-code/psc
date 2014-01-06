@@ -36,7 +36,6 @@ extern struct ggcm_mhd_diag_ops ggcm_mhd_diag_c_ops;
 
 extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_hydroblast_ops;
 extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_mhdblast_ops;
-extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_ici_ops;
 
 int
 main(int argc, char **argv)
@@ -46,7 +45,6 @@ main(int argc, char **argv)
 
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_hydroblast_ops);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_mhdblast_ops);    
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_ici_ops); 
  
   return ggcm_mhd_main(&argc, &argv);
 }

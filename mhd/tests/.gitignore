@@ -11,5 +11,6 @@ mhd_whistler
 mhd_alfven
 mhd_sound
 mhd_kh
+mhd_ici
 *.log
 *.trs
