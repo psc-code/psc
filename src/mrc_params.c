@@ -1174,10 +1174,10 @@ mrc_params_print_one(void *p, struct param *prm, MPI_Comm comm)
     {
       char s[100], tmp[100];
       int nr_vals = pv->u_int_array.nr_vals;
-      sprintf(s, "[%d] %d", nr_vals, pv->u_int_array.vals[0]);
+      sprintf(s, "[%d] ", nr_vals);
 
-      for (int d = 1; d < nr_vals; d++) {
-	sprintf(tmp, ",%d", pv->u_int_array.vals[d]);
+      for (int d = 0; d < nr_vals; d++) {
+	sprintf(tmp, "%s%d", d > 0 ? "," : "", pv->u_int_array.vals[d]);
 	strcat(s, tmp);
       }
       mrc_view_printf(comm, "%-20s| %s\n", prm->name, s);
@@ -1187,11 +1187,11 @@ mrc_params_print_one(void *p, struct param *prm, MPI_Comm comm)
     {
       char s[100], tmp[100];
       int nr_vals = pv->u_float_array.nr_vals;
-      sprintf(s, "[%d] %f", nr_vals, pv->u_float_array.vals[0]);
+      sprintf(s, "[%d]", nr_vals);
 
-      for (int d = 1; d < nr_vals; d++) {
-  sprintf(tmp, ",%f", pv->u_float_array.vals[d]);
-  strcat(s, tmp);
+      for (int d = 0; d < nr_vals; d++) {
+	sprintf(tmp, "%s%g", d > 0 ? "," : "", pv->u_float_array.vals[d]);
+	strcat(s, tmp);
       }
       mrc_view_printf(comm, "%-20s| %s\n", prm->name, s);
     }
