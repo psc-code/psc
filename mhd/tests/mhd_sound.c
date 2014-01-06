@@ -7,6 +7,8 @@
 
 #include <mrc_domain.h>
 #include <mrc_fld.h>
+#include <mrc_fld_as_float.h>
+
 #include <math.h>
 
 // ======================================================================
@@ -18,11 +20,11 @@
 static void
 ggcm_mhd_ic_sound_run(struct ggcm_mhd_ic *ic)
 {
-  struct ggcm_mhd *gmhd = ic->mhd;
-  struct mrc_fld *fld = gmhd->fld;
-  struct mrc_crds *crds = mrc_domain_get_crds(gmhd->domain);  
+  struct ggcm_mhd *mhd = ic->mhd;
+  struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
+  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);  
 
-  float gamma = gmhd->par.gamm;
+  float gamma = mhd->par.gamm;
   float cs = sqrt(gamma);
   float pert = 1e-3;
   float xl[3], xh[3];
@@ -36,10 +38,14 @@ ggcm_mhd_ic_sound_run(struct ggcm_mhd_ic *ic)
     float rr = 1 + pert / cs * sin(k * xx);
     float vx = pert * sin(k * xx);
     float pp = 1 + pert * gamma / cs * sin(k * xx);
-    MRC_F3(fld, _RR1, ix, iy, iz) = rr;
-    MRC_F3(fld, _RV1X , ix, iy, iz) = rr * vx;
-    MRC_F3(fld, _UU1 , ix, iy, iz) = pp / (gamma - 1);
+    RR1(fld, ix,iy,iz) = rr;
+    PP1(fld, ix,iy,iz) = pp;
+    V1X(fld, ix,iy,iz) = vx;
   } mrc_fld_foreach_end;
+
+  mrc_fld_put_as(fld, mhd->fld);
+
+  ggcm_mhd_convert_fc_from_primitive(mhd, mhd->fld);
 }
 
 // ----------------------------------------------------------------------
