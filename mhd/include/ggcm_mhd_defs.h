@@ -68,7 +68,7 @@ enum {
   _BDIPZ,
   _NR_FLDS,
 
-  // for (mhd_pr_float) primitive fields, reuse indices from 0 to 7
+  // for primitive fields, reuse indices from 0 to 7
   _V1X = _RV1X,
   _V1Y = _RV1Y,
   _V1Z = _RV1Z,

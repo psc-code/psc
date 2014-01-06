@@ -56,7 +56,6 @@ libmhd_la_SOURCES = \
 	\
 	mrc_ts_monitor_ggcm.c \
 	\
-	mrc_fld_mhd_pr_float.c \
 	mrc_fld_mhd_fc_float.c
 
 
