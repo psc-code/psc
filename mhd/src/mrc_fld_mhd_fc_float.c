@@ -103,11 +103,19 @@ static struct mrc_obj_method mrc_fld_mhd_fc_float_methods[] = {
   {}
 };
 
+// FIXME, reusing these is a hack...
+void mrc_fld_float_ddc_copy_from_buf(struct mrc_fld *, int, int,
+                                    int, int[3], int[3], void *);
+void mrc_fld_float_ddc_copy_to_buf(struct mrc_fld *, int, int,
+                                  int, int[3], int[3], void *);
+
 struct mrc_fld_ops mrc_fld_ops_mhd_fc_float = {
   .name             = "mhd_fc_float",
   .size             = sizeof(struct mrc_fld_mhd_fc_float),
   .methods          = mrc_fld_mhd_fc_float_methods,
   .create           = mrc_fld_mhd_fc_float_create,
+  .ddc_copy_from_buf= mrc_fld_float_ddc_copy_from_buf,
+  .ddc_copy_to_buf  = mrc_fld_float_ddc_copy_to_buf,
   .vec_type         = "float",
 };
 
