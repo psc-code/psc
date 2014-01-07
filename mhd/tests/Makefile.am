@@ -22,7 +22,6 @@ check_PROGRAMS = \
 noinst_LTLIBRARIES = libmhdtbd.la
 
 libmhdtbd_la_SOURCES = \
-	ggcm_mhd_ic_ot.c \
 	ggcm_mhd_diag_c.c \
 	ggcm_diag_lib.c
 
