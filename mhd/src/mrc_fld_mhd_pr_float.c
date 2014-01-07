@@ -34,6 +34,8 @@ mrc_fld_mhd_pr_float_create(struct mrc_fld *fld)
 // ----------------------------------------------------------------------
 // mrc_fld_mhd_pr_float_copy_from_float
 
+#define F3 MRC_F3 // FIXME
+
 static void
 mrc_fld_mhd_pr_float_copy_from_float(struct mrc_fld *fld_pr, struct mrc_fld *fld_sc)
 {

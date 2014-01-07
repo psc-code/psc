@@ -13,6 +13,8 @@
 // ----------------------------------------------------------------------
 // ggcm_mhd_calc_divb
 
+#define F3 MRC_F3 // FIXME
+
 void
 ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *divb)
 {

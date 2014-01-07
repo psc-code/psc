@@ -38,6 +38,8 @@ enum {
   (( 3.0*MRC_F3(fld, i, ix,iy,iz) - 4.0* MRC_F3(fld, i, ix-1,iy,iz)  \
    + MRC_F3(fld, i, ix-2, iy, iz) ) / s ) 
 
+#define F3 MRC_F3 // FIXME
+
 static void
 ggcm_mhd_bnd_conducting_x_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld,
 				      int m, float bntim)

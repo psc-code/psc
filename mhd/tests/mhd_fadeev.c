@@ -28,6 +28,8 @@ struct ggcm_mhd_ic_fadeev {
 // ----------------------------------------------------------------------
 // ggcm_mhd_ic_fadeev_run
 
+#define F3 MRC_F3 // FIXME
+
 static void
 ggcm_mhd_ic_fadeev_run(struct ggcm_mhd_ic *ic)
 {

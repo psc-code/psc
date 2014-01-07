@@ -113,6 +113,8 @@ struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_pp = {
 // ----------------------------------------------------------------------
 // ggcm_mhd_diag_item_pp_full_run
 
+#define F3 MRC_F3 // FIXME
+
 static void
 ggcm_mhd_diag_item_pp_full_run(struct ggcm_mhd_diag_item *item,
 			       struct mrc_io *io, struct mrc_fld *fld,

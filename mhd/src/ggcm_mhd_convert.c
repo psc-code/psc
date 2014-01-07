@@ -3,6 +3,7 @@
 #include "ggcm_mhd_defs.h"
 
 #include <mrc_domain.h>
+#include <mrc_fld_as_float.h>
 
 #include <string.h>
 
@@ -18,6 +19,7 @@ ggcm_mhd_convert_fc_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_bas
 {
   float gamma_m1 = mhd->par.gamm - 1.;
 
+  // FIXME, should use FLD_TYPE, but that's "float"
   assert(strcmp(mrc_fld_type(fld_base), "mhd_fc_float") == 0);
   struct mrc_fld *fld = mrc_fld_get_as(fld_base, "mhd_fc_float");
 

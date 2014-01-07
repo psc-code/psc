@@ -31,6 +31,8 @@ struct ggcm_mhd_ic_double_tearing {
 // ----------------------------------------------------------------------
 // ggcm_mhd_ic_double_tearing_run
 
+#define F3 MRC_F3 // FIXME
+
 static void
 ggcm_mhd_ic_double_tearing_run(struct ggcm_mhd_ic *ic)
 {

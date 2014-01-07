@@ -31,6 +31,8 @@ struct ggcm_mhd_ic_cosine {
 // ----------------------------------------------------------------------
 // ggcm_mhd_ic_cosine_run
 
+#define F3 MRC_F3 // FIXME
+
 static void
 ggcm_mhd_ic_cosine_run(struct ggcm_mhd_ic *ic)
 {

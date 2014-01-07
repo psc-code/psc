@@ -6,6 +6,7 @@
 #include "ggcm_mhd_ic_private.h"
 
 #include <mrc_fld.h>
+#include <mrc_fld_as_float.h>
 #include <mrc_domain.h>
 
 #include <math.h>

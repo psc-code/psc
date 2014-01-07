@@ -23,6 +23,8 @@ struct ggcm_mhd_ic_bw {
 // ----------------------------------------------------------------------
 // ggcm_mhd_ic_bw_run
 
+#define F3 MRC_F3 // FIXME
+
 static void
 ggcm_mhd_ic_bw_run(struct ggcm_mhd_ic *ic)
 {
