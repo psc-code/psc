@@ -26,27 +26,66 @@ ggcm_mhd_ic_ot_run(struct ggcm_mhd_ic *ic)
   //  struct ggcm_mhd_ic_ot *sub = mrc_to_subobj(ic, struct ggcm_mhd_ic_ot);
 
   struct ggcm_mhd *mhd = ic->mhd;
-  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);  
-  struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, "mhd_pr_float");
+  struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, "float");
 
-  // FIXME, the "1" no of ghosts is ugly here, and caused by the use of
-  // the B1* macros which shift the index (due to staggering)...
-  // FIXME, need to set all components, can't rely on things being initialized to
-  // zero because of the -> primitive conversion which divides by RR :(
-  mrc_fld_foreach(fld, ix,iy,iz, 1, 1) {
-    float r[3];
-    r[0] = MRC_CRD(crds, 0, ix);
-    r[1] = MRC_CRD(crds, 1, iy);
-    RR1(fld, ix,iy,iz) = 25. / (36.*M_PI);
-    PP1(fld, ix,iy,iz) = RR1(fld, ix,iy,iz);
-    V1X(fld, ix,iy,iz) = - sin(2. * M_PI * r[1]);
-    V1Y(fld, ix,iy,iz) =   sin(2. * M_PI * r[0]);
-    V1Z(fld, ix,iy,iz) = 0.;
-    B1X(fld, ix,iy,iz) = - sqrt(1./(4.*M_PI)) * sin(2. * M_PI * r[1]); 
-    B1Y(fld, ix,iy,iz) =   sqrt(1./(4.*M_PI)) * sin(4. * M_PI * r[0]);
-    B1Z(fld, ix,iy,iz) = 0.;
+  float gamma_m1 = mhd->par.gamm - 1.;
+
+  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
+  float dx[3];
+  mrc_crds_get_dx(crds, dx);
+
+  struct mrc_fld *Az = mrc_domain_fld_create(mhd->domain, 2, "Az");
+  mrc_fld_set_type(Az, "float");
+  mrc_fld_setup(Az);
+  mrc_fld_view(Az);
+
+  float B0 = 1./sqrt(4.*M_PI);
+  float rr0 = 25./(36.*M_PI);
+  float v0 = 1.;
+  float pp0 = 5./(12.*M_PI);
+
+  /* Initialize vector potential */
+
+  mrc_fld_foreach(fld, ix,iy,iz, 0, 1) {
+    float xx = MRC_CRDX(crds, ix) - .5 * dx[0], yy = MRC_CRDY(crds, iy) - .5 * dx[1];
+    MRC_F3(Az, 0, ix,iy,iz) = B0 / (4.*M_PI) * cos(4.*M_PI * xx) + B0 / (2.*M_PI) * cos(2.*M_PI * yy);
   } mrc_fld_foreach_end;
 
+  /* Initialize face-centered fields */
+
+  mrc_fld_foreach(fld, ix,iy,iz, 0, 1) {
+    B1X(fld, ix,iy,iz) =  (MRC_F3(Az, 0, ix,iy+1,iz) - MRC_F3(Az, 0, ix,iy,iz)) / dx[1];
+    B1Y(fld, ix,iy,iz) = -(MRC_F3(Az, 0, ix+1,iy,iz) - MRC_F3(Az, 0, ix,iy,iz)) / dx[0];
+  } mrc_fld_foreach_end;
+
+  /* Initialize density, momentum, total energy */
+
+  mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
+    float xx = MRC_CRDX(crds, ix), yy = MRC_CRDY(crds, iy);
+
+    RR1 (fld, ix,iy,iz) = rr0;
+    RV1X(fld, ix,iy,iz) = -rr0*v0*sin(2.*M_PI * yy);
+    RV1Y(fld, ix,iy,iz) =  rr0*v0*sin(2.*M_PI * xx);
+    UU1 (fld, ix,iy,iz) = pp0 / gamma_m1
+      + .5*(sqr(.5*(B1X(fld, ix,iy,iz) + B1X(fld, ix+1,iy,iz))) +
+            sqr(.5*(B1Y(fld, ix,iy,iz) + B1Y(fld, ix,iy+1,iz))) +
+            sqr(B1Z(fld, ix,iy,iz)))
+      + .5*(sqr(RV1X(fld, ix,iy,iz)) +
+            sqr(RV1Y(fld, ix,iy,iz)) +
+            sqr(RV1Z(fld, ix,iy,iz))) / RR1(fld, ix,iy,iz);
+  } mrc_fld_foreach_end;
+
+  double max = 0.;
+  mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
+    double val =
+      (B1X(fld, ix+1,iy,iz) - B1X(fld, ix,iy,iz)) / dx[0] +
+      (B1Y(fld, ix,iy+1,iz) - B1Y(fld, ix,iy,iz)) / dx[1];
+
+    max = fmaxf(max, fabs(val));
+  } mrc_fld_foreach_end;
+  mprintf("max divb = %g\n", max);
+
+  mrc_fld_destroy(Az);
   mrc_fld_put_as(fld, mhd->fld);
 }
 
