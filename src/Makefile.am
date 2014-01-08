@@ -65,8 +65,10 @@ libmrc_la_SOURCES += \
 	mrc_io_xdmf.c \
 	mrc_io_xdmf2.c \
 	mrc_io_xdmf_collective.c \
-	mrc_io_xdmf_lib.c
+	mrc_io_xdmf_lib.c \
+	mrc_io_hdf5_parallel.c
 endif HAVE_HDF5
+
 
 if HAVE_PETSC
 libmrc_la_SOURCES += \

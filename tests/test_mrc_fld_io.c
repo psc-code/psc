@@ -27,7 +27,7 @@ static struct mrc_fld *
 setup_with_domain(struct mrc_domain *domain)
 {
   struct mrc_fld *fld = mrc_domain_fld_create(domain, sw, "1,2,3,4,5,6");
-  mrc_fld_set_param_int_array(fld, "offs", 5, (int [5]) { 1, 2, 3, 4, 0 });
+  //  mrc_fld_set_param_int_array(fld, "offs", 5, (int [5]) { 0, 2, 3, 0, 0 });
   mrc_fld_set_from_options(fld);
   mrc_fld_setup(fld);
   mrc_fld_view(fld);
@@ -62,14 +62,15 @@ init_standard(struct mrc_fld *fld)
 }
 
 
-#define assert_equal(a, b, tol) { \
-  double _norm = sqrt((a)*(a) - (b)*(b))/fabs(a); \
-  if (_norm > (tol)) {				  \
-    fprintf(stderr, "i0 %d i1 %d i2 %d i3 %d i4 %d f1 %g f2 %g: norm %g > %g\n", i0, i1, i2, i3, i4,(a),(b), _norm, tol); \
-    assert(0); \
-    } \
-  }
+/* #define assert_equal(a, b, tol) { \ */
+/*   double _norm = sqrt((a)*(a) - (b)*(b))/fabs(a); \ */
+/*   if (_norm > (tol)) {				  \ */
+/*     fprintf(stderr, "i0 %d i1 %d i2 %d i3 %d i4 %d f1 %g f2 %g: norm %g > %g\n", i0, i1, i2, i3, i4,(a),(b), _norm, tol); \ */
+/*     assert(0); \ */
+/*     } \ */
+/*   } */
 
+#define assert_equal(a, b, tol) assert((a) == (b))
 static void
 check_standard(struct mrc_fld *fld1, struct mrc_fld *fld2)
 {
