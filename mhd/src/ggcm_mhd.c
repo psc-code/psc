@@ -97,6 +97,8 @@ _ggcm_mhd_create(struct ggcm_mhd *mhd)
   ggcm_mhd_diag_set_param_obj(mhd->diag, "mhd", mhd);
   ggcm_mhd_bnd_set_param_obj(mhd->bnd, "mhd", mhd);
   ggcm_mhd_ic_set_param_obj(mhd->ic, "mhd", mhd);
+
+  mrc_fld_set_name(mhd->fld, "ggcm_mhd_fld");
   mrc_fld_set_param_obj(mhd->fld, "domain", mhd->domain);
   mrc_fld_set_param_int(mhd->fld, "nr_spatial_dims", 3);
   mrc_fld_set_param_int(mhd->fld, "nr_ghosts", BND);
