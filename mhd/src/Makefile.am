@@ -33,6 +33,7 @@ libmhd_la_SOURCES = \
 	ggcm_mhd_diag_item_primitive.c \
 	primvar.c \
 	primbb.c \
+	zmaskn.c \
 	ggcm_mhd_diag_item_divb.c \
 	ggcm_mhd_diag_item_j.c \
 	calc_currcc.c \

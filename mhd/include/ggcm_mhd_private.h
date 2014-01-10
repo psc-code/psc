@@ -65,5 +65,6 @@ extern struct ggcm_mhd_ops ggcm_mhd_ops_box;
 
 void primvar1_c(struct ggcm_mhd *mhd);
 void primbb_c(struct ggcm_mhd *mhd);
+void zmaskn_c(struct ggcm_mhd *mhd);
 
 #endif
