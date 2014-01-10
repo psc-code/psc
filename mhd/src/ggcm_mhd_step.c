@@ -52,6 +52,7 @@ static void
 ggcm_mhd_step_init()
 {
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_step, &ggcm_mhd_step_cweno_ops);
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_step, &ggcm_mhd_step_c_ops);
 }
 
 // ----------------------------------------------------------------------
