@@ -289,7 +289,6 @@ hdf5_parallel_write_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld
   hid_t group0;
   if (H5Lexists(ph5->h5_file, path, H5P_DEFAULT) > 0) {
     group0 = H5Gopen(ph5->h5_file, path, H5P_DEFAULT);
-    MHERE;
   } else {
     group0 = H5Gcreate(ph5->h5_file, path, H5P_DEFAULT,
 		       H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group0);
@@ -318,6 +317,13 @@ hdf5_parallel_write_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld
   for (int d=1; d<nr_file_dims; d++) {
     fdims[d] = fld_dims[nr_file_dims - 1 - d];
     mdims[d] = fld->_ghost_dims[nr_file_dims - 1 - d];
+  }
+
+  // FIXME: crds write ghost points, but this is a really hacky way to do this
+  // I actually would like it if we added an interface to choose to write ghosts
+  // for mrc_flds, since then I could just read trafo bits back in too.
+  if (nr_spatial_dims == 1) {
+    fdims[2] += 2*fld->_nr_ghosts;
   }
 
   hid_t filespace = H5Screate_simple(nr_file_dims, fdims, NULL);
@@ -360,7 +366,12 @@ hdf5_parallel_write_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld
     moff[d] = fld->_sw.vals[nr_file_dims - 1 - d];
     foff[d] = 0;
   }
-  
+
+  // FIXME: another hack for writing crds with ghosts
+  if (nr_spatial_dims == 1) {
+    moff[2] -= fld->_nr_ghosts;
+  }
+
   H5Sselect_hyperslab(filespace, H5S_SELECT_SET, foff, NULL, mcount, NULL);
   H5Sselect_hyperslab(memspace, H5S_SELECT_SET, moff, NULL, mcount, NULL);
 
@@ -413,6 +424,13 @@ hdf5_parallel_read_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
     fdims[d] = fld_dims[nr_file_dims - 1 - d];
     mdims[d] = fld->_ghost_dims[nr_file_dims - 1 - d];
   }
+  // FIXME: crds write ghost points, but this is a really hacky way to do this
+  // I actually would like it if we added an interface to choose to write/read ghosts
+  // for mrc_flds, since then I could just read trafo bits back in too.
+  if (nr_spatial_dims == 1) {
+    fdims[2] += 2*fld->_nr_ghosts;
+  }
+
 
   hid_t memspace = H5Screate_simple(nr_file_dims, mdims, NULL);
 
@@ -464,7 +482,7 @@ hdf5_parallel_read_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
     moff[d] = fld->_sw.vals[nr_file_dims - 1 - d];
     foff[d] = 0;
   }
-  
+
   H5Sselect_hyperslab(filespace, H5S_SELECT_SET, foff, NULL, mcount, NULL);
   H5Sselect_hyperslab(memspace, H5S_SELECT_SET, moff, NULL, mcount, NULL);
 
