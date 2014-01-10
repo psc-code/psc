@@ -88,60 +88,50 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
   }
 }
 
+
 // ----------------------------------------------------------------------
 // mrc_fld_setup
 
 static void
-_mrc_fld_setup(struct mrc_fld *fld)
+setup_3d_from_domain(struct mrc_fld *fld, int *ldims, int nr_patches, struct mrc_patch *patches)
 {
-  if (fld->_domain) {
-    // if we have a domain, use that to set _dims, _sw
+  assert(fld->_dim < 0);
+  fld->_patches = calloc(nr_patches, sizeof(*fld->_patches));
+  for (int p = 0; p < nr_patches; p++) {
+    struct mrc_fld_patch *m3p = &fld->_patches[p];
+    m3p->_fld = fld;
+    m3p->_p = p;
+    for (int d = 0; d < 3; d++) {
+      assert(patches[p].ldims[d] == ldims[d]);
+    }
+  }
+  
+  int sw[3];
+  for (int d = 0; d < 3; d++) {
+    if (ldims[d] > 1) {
+      sw[d] = fld->_nr_ghosts;
+    } else {
+      sw[d] = 0;
+    }
+  }
+  
+  if (fld->_is_aos) {
+    mrc_fld_set_param_int_array(fld, "dims", 5,
+				(int[5]) { fld->_nr_comps, ldims[0], ldims[1], ldims[2], nr_patches });
+    mrc_fld_set_param_int_array(fld, "sw", fld->_dims.nr_vals,
+				(int[5]) { 0, sw[0], sw[1], sw[2], 0 });
+  } else {
+    mrc_fld_set_param_int_array(fld, "dims", 5,
+				(int[5]) { ldims[0], ldims[1], ldims[2], fld->_nr_comps, nr_patches });
+    mrc_fld_set_param_int_array(fld, "sw", fld->_dims.nr_vals,
+				(int[5]) { sw[0], sw[1], sw[2], 0, 0 });
+  }
+  
+}
 
-    // if "domain" is set, can't set "dims", too, which will be set automatically
-    // based on "domain"
-    assert(fld->_dims.nr_vals == 0);
-    assert(fld->_nr_comps > 0);
-    int nr_patches;
-    struct mrc_patch *patches = mrc_domain_get_patches(fld->_domain, &nr_patches);
-    assert(nr_patches > 0);
-    int *ldims = patches[0].ldims;
-
-    assert(fld->_nr_spatial_dims == 1 || fld->_nr_spatial_dims == 3);
-
-    if (fld->_nr_spatial_dims == 3) {
-      assert(fld->_dim < 0);
-
-      fld->_patches = calloc(nr_patches, sizeof(*fld->_patches));
-      for (int p = 0; p < nr_patches; p++) {
-	struct mrc_fld_patch *m3p = &fld->_patches[p];
-	m3p->_fld = fld;
-	m3p->_p = p;
-	for (int d = 0; d < 3; d++) {
-	  assert(patches[p].ldims[d] == ldims[d]);
-	}
-      }
-
-      int sw[3];
-      for (int d = 0; d < 3; d++) {
-	if (ldims[d] > 1) {
-	  sw[d] = fld->_nr_ghosts;
-	} else {
-	  sw[d] = 0;
-	}
-      }
-
-      if (fld->_is_aos) {
-	mrc_fld_set_param_int_array(fld, "dims", 5,
-				    (int[5]) { fld->_nr_comps, ldims[0], ldims[1], ldims[2], nr_patches });
-	mrc_fld_set_param_int_array(fld, "sw", fld->_dims.nr_vals,
-				    (int[5]) { 0, sw[0], sw[1], sw[2], 0 });
-      } else {
-	mrc_fld_set_param_int_array(fld, "dims", 5,
-				    (int[5]) { ldims[0], ldims[1], ldims[2], fld->_nr_comps, nr_patches });
-	mrc_fld_set_param_int_array(fld, "sw", fld->_dims.nr_vals,
-				    (int[5]) { sw[0], sw[1], sw[2], 0, 0 });
-      }
-    } else if (fld->_nr_spatial_dims == 1) {
+static void
+setup_1d_from_domain(struct mrc_fld *fld, int *ldims, int nr_patches, struct mrc_patch *patches)
+{
       assert(fld->_dim >= 0);
 
       fld->_patches = calloc(nr_patches, sizeof(*fld->_patches));
@@ -157,7 +147,30 @@ _mrc_fld_setup(struct mrc_fld *fld)
 				  (int[3]) { ldims[fld->_dim], fld->_nr_comps, nr_patches });
       mrc_fld_set_param_int_array(fld, "sw", 3,
 				  (int[3]) { sw, 0, 0 });
+}
 
+static void
+_mrc_fld_setup(struct mrc_fld *fld)
+{
+  if (fld->_domain) {
+    // if we have a domain, use that to set _dims, _sw
+    
+    // if "domain" is set, can't set "dims", too, which will be set automatically
+    // based on "domain"
+    assert(fld->_dims.nr_vals == 0);
+    assert(fld->_nr_comps > 0);
+    int nr_patches;
+    struct mrc_patch *patches = mrc_domain_get_patches(fld->_domain, &nr_patches);
+    assert(nr_patches > 0);
+    int *ldims = patches[0].ldims;
+
+    assert(fld->_nr_spatial_dims == 1 || fld->_nr_spatial_dims == 3);
+
+    if (fld->_nr_spatial_dims == 3) {
+      setup_3d_from_domain(fld, ldims, nr_patches, patches);
+      
+    } else if (fld->_nr_spatial_dims == 1) {
+      setup_1d_from_domain(fld, ldims, nr_patches, patches);
     }
   } else {
     assert(fld->_nr_spatial_dims < 0);
@@ -198,11 +211,40 @@ _mrc_fld_write(struct mrc_fld *fld, struct mrc_io *io)
 static void
 _mrc_fld_read(struct mrc_fld *fld, struct mrc_io *io)
 {
+  // If the fld has a domain and we don't run a minimal setup
+  // the metadata can't be trusted.
+  // This will overwrite the obsolete read-in metadata
+  if (fld->_domain) {
+    if (fld->_patches) free(fld->_patches);
+    int nr_patches;
+    struct mrc_patch *patches = mrc_domain_get_patches(fld->_domain, &nr_patches);
+    assert(nr_patches > 0);
+    int *ldims = patches[0].ldims;
+
+    if (fld->_nr_spatial_dims == 3) {
+      setup_3d_from_domain(fld, ldims, nr_patches, patches);
+      
+    } else if (fld->_nr_spatial_dims == 1) {
+      setup_1d_from_domain(fld, ldims, nr_patches, patches);
+    }
+  }
+
+  if (fld->_offs.nr_vals == 0) {
+    mrc_fld_set_param_int_array(fld, "offs", fld->_dims.nr_vals, NULL);
+  }
+  if (fld->_sw.nr_vals == 0) {
+    mrc_fld_set_param_int_array(fld, "sw", fld->_dims.nr_vals, NULL);
+  }
+
   // instead of reading back fld->_vec (which doesn't contain anything useful,
   // anyway, since mrc_fld saves/restores the data rather than mrc_vec),
   // we make a new one, so at least we're sure that with_array won't be honored
   fld->_vec = mrc_vec_create(mrc_fld_comm(fld));
   mrc_fld_setup_vec(fld);
+  // FIXME: Hacky, but we are basically set up now, so we should advertise it
+  fld->obj.is_setup = true;
+
+  // Now we can actually read the data
   mrc_io_read_fld(io, mrc_io_obj_path(io, fld), fld);
 }
 
