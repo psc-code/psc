@@ -20,7 +20,7 @@ zmaskn_c(struct ggcm_mhd *mhd)
   }
   prof_start(PR);
 
-  struct mrc_fld *f = mrc_fld_get_as(mhd->fld, "fortran");
+  struct mrc_fld *f = mrc_fld_get_as(mhd->fld, "float");
   float va02i = 1.f / sqr(mhd->par.speedlimit / mhd->par.vvnorm);
   float eps   = 1e-15f;
 
