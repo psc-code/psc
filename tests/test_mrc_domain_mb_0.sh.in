@@ -2,9 +2,8 @@
 
 set -e
 
-@MPIRUN@ -n 1 ./test_mrc_domain_mb --mrc_io_type xdmf_collective --case 1
-@MPIRUN@ -n 1 ./test_mrc_domain_mb --mrc_io_type xdmf_collective --case 2
-@MPIRUN@ -n 1 ./test_mrc_domain_mb --mrc_io_type xdmf_collective --case 2 --npx 2
-@MPIRUN@ -n 2 ./test_mrc_domain_mb --mrc_io_type xdmf_collective --case 2 --ppbx 2
-@MPIRUN@ -n 2 ./test_mrc_domain_mb --mrc_io_type xdmf_collective --case 2 \
-    --mx 33 --ppbx 3 --nr_writers 2
+@MPIRUN@ -n 1 ./test_mrc_domain_mb --mrc_io_type hdf5_parallel --case 1
+@MPIRUN@ -n 1 ./test_mrc_domain_mb --mrc_io_type hdf5_parallel --case 1 --ppbx 2
+@MPIRUN@ -n 2 ./test_mrc_domain_mb --mrc_io_type hdf5_parallel --case 1 --ppbx 2
+@MPIRUN@ -n 2 ./test_mrc_domain_mb --mrc_io_type hdf5_parallel --case 1 \
+    --mx 33 --ppbx 3 

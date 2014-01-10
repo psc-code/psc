@@ -507,7 +507,6 @@ _mrc_trafo_setup(struct mrc_trafo *trafo)
 {
   int ierr;
 
-  // setup the mapping fields.  
   for (int d = 0; d < 3; d++) {
     char s[30];
     sprintf(s, "trafo_cc[%d]", d);
@@ -531,6 +530,27 @@ _mrc_trafo_setup(struct mrc_trafo *trafo)
   ierr = MB_CorrectChristoffel(trafo); CE;
 }
 
+
+// ----------------------------------------------------------------------
+// mrc_trafo_read
+static void
+_mrc_trafo_read(struct mrc_trafo *trafo, struct mrc_io *io)
+{
+  // These don't get created during standard read, and we need them
+  // to be. Since trafo elements have BC bits that get filled during
+  // setup, we won't read them back.(FIXME: should trafos be able to exist without domains?)
+  trafo->_cc[0] = mrc_fld_create(mrc_trafo_comm(trafo));
+  trafo->_cc[1] = mrc_fld_create(mrc_trafo_comm(trafo));
+  trafo->_cc[2] = mrc_fld_create(mrc_trafo_comm(trafo));
+  trafo->_jac = mrc_fld_create(mrc_trafo_comm(trafo));
+  trafo->_eu = mrc_fld_create(mrc_trafo_comm(trafo));
+  trafo->_el = mrc_fld_create(mrc_trafo_comm(trafo));
+  trafo->_guu = mrc_fld_create(mrc_trafo_comm(trafo));
+  trafo->_gll = mrc_fld_create(mrc_trafo_comm(trafo));
+  trafo->_gam = mrc_fld_create(mrc_trafo_comm(trafo));
+
+  mrc_trafo_setup(trafo);
+}
 
 // ======================================================================
 // mrc_trafo_block_factory_type
@@ -582,6 +602,7 @@ struct mrc_class_mrc_trafo mrc_class_mrc_trafo = {
   .size             = sizeof(struct mrc_trafo),
   .init             = _mrc_trafo_init,
   .setup            = _mrc_trafo_setup,
+  .read             = _mrc_trafo_read,
   .param_descr      = mrc_trafo_descr,
 };
 

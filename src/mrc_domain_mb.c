@@ -36,8 +36,6 @@ _mrc_domain_mb_create(struct mrc_domain *domain)
   struct mrc_domain_mb *sub = mrc_domain_mb(domain);
   sub->_trafo = mrc_trafo_create(mrc_domain_comm(domain));
   mrc_trafo_set_param_obj(sub->_trafo, "domain", domain);
-  // FIXME: Will this actually work?
-  mrc_domain_add_child(domain, (struct mrc_obj*) sub->_trafo);
 }
 
 
@@ -51,9 +49,23 @@ _mrc_domain_mb_destroy(struct mrc_domain *mb)
   free(sub->mb_blocks);
   free(sub->patches);
   free(sub->patch_info);
+  mrc_trafo_destroy(sub->_trafo);
 
 }  
 
+static void
+_mrc_domain_mb_set_from_options(struct mrc_domain *domain)
+{
+  struct mrc_domain_mb *sub = mrc_domain_mb(domain);
+  mrc_trafo_set_from_options(sub->_trafo);
+}
+
+static void
+_mrc_domain_mb_view(struct mrc_domain *domain)
+{
+  struct mrc_domain_mb *sub = mrc_domain_mb(domain);
+  mrc_trafo_view(sub->_trafo);
+}
 
 // ----------------------------------------------------------------------
 // MB_Setup
@@ -232,14 +244,19 @@ _mrc_domain_mb_setup(struct mrc_domain *mb)
   
   mrc_domain_setup_super(mb);
 
+  if (sub->_trafo) {
+    mrc_trafo_setup(sub->_trafo);
+  }
+
+
 };
 
 
-struct mrc_trafo *
-mrc_domain_get_trafo(struct mrc_domain *domain)
+static void
+mrc_domain_mb_get_trafo(struct mrc_domain *domain, struct mrc_trafo **trafo)
 {
   struct mrc_domain_mb *sub = mrc_domain_mb(domain);
-  return sub->_trafo;
+  *trafo = sub->_trafo;
 }
 
 
@@ -317,6 +334,7 @@ mrc_domain_mb_write(struct mrc_domain *domain, struct mrc_io *io)
       mrc_io_write_attr_int(io, face_path, "btype", face->btype);
     }
   }
+  mrc_io_write_ref(io, domain, "trafo", sub->_trafo);
 }
 
 
@@ -350,7 +368,12 @@ mrc_domain_mb_read(struct mrc_domain *domain, struct mrc_io *io)
   if( ! domain->ddc) {
     domain->ddc = mrc_domain_create_ddc(domain);
   }
+  
+  mrc_trafo_destroy(sub->_trafo);
+  sub->_trafo = NULL;  
+
   mrc_domain_read_super(domain, io);
+  sub->_trafo = mrc_io_read_ref(io, domain, "trafo", mrc_trafo);
 }
 
 
@@ -381,13 +404,20 @@ static struct param mrc_domain_mb_params_descr[] = {
 #undef VAR
 
 
+static struct mrc_obj_method mrc_domain_mb_methods[] = {
+  MRC_OBJ_METHOD("get_trafo", mrc_domain_mb_get_trafo),
+};
+
 struct mrc_domain_ops mrc_domain_mb_ops = {
   .name                      = "mb",
+  .methods                   = mrc_domain_mb_methods,
   .size                      = sizeof(struct mrc_domain_mb),
   .param_descr               = mrc_domain_mb_params_descr,
   .setup                     = _mrc_domain_mb_setup,
   .create                    = _mrc_domain_mb_create,
   .destroy                   = _mrc_domain_mb_destroy,
+  .set_from_options          = _mrc_domain_mb_set_from_options,
+  .view                      = _mrc_domain_mb_view,
   .write                     = mrc_domain_mb_write,
   .read                      = mrc_domain_mb_read,
   .get_global_dims           = mrc_domain_mb_get_global_dims,
