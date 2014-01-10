@@ -55,6 +55,7 @@ libmhd_la_SOURCES = \
 	ggcm_mhd_get_fields.c \
 	ggcm_mhd_step_cweno.c \
 	\
+	mrc_ts_ggcm.c \
 	mrc_ts_monitor_ggcm.c \
 	\
 	mrc_fld_mhd_fc_float.c
