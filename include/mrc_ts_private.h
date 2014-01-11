@@ -91,6 +91,7 @@ struct mrc_ts_ops {
   void (*solve)(struct mrc_ts *);
 };
 
+extern struct mrc_ts_ops mrc_ts_step_ops;
 extern struct mrc_ts_ops mrc_ts_rk2_ops;
 extern struct mrc_ts_ops mrc_ts_rk4_ops;
 extern struct mrc_ts_ops mrc_ts_rkf45_ops;
