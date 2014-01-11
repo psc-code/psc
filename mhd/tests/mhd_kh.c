@@ -78,7 +78,7 @@ ggcm_mhd_ic_kh_run(struct ggcm_mhd_ic *ic)
 
   mrc_fld_put_as(fld, mhd->fld);
 
-  ggcm_mhd_convert_fc_from_primitive(mhd, mhd->fld);
+  ggcm_mhd_convert_from_primitive(mhd, mhd->fld);
 }
 
 

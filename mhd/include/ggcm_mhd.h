@@ -27,8 +27,8 @@ int ggcm_mhd_ntot(struct ggcm_mhd *mhd);
 
 void ggcm_mhd_default_box(struct ggcm_mhd *mhd);
 
-void ggcm_mhd_convert_fc_from_primitive(struct ggcm_mhd *mhd,
-					struct mrc_fld *fld_base);
+void ggcm_mhd_convert_from_primitive(struct ggcm_mhd *mhd,
+				     struct mrc_fld *fld_base);
 
 // ----------------------------------------------------------------------
 // wrappers / helpers

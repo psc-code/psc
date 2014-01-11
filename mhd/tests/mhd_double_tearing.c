@@ -91,7 +91,7 @@ ggcm_mhd_ic_double_tearing_run(struct ggcm_mhd_ic *ic)
   mrc_fld_put_as(f3, mhd->fld);
   mrc_fld_destroy(fld_psi);
 
-  ggcm_mhd_convert_fc_from_primitive(mhd, mhd->fld);
+  ggcm_mhd_convert_from_primitive(mhd, mhd->fld);
 }
 
 // ----------------------------------------------------------------------

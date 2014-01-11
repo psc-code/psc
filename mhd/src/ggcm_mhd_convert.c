@@ -8,19 +8,48 @@
 #include <string.h>
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_convert_sc_from_primitive
+//
+// converts from primitive variables to semi-conservative in-place.
+// No ghost points are set.
+
+static void
+ggcm_mhd_convert_sc_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_base)
+{
+  float gamma_m1 = mhd->par.gamm - 1.;
+
+  assert(strcmp(mrc_fld_type(fld_base), "fortran") == 0 ||
+	 strcmp(mrc_fld_type(fld_base), "float") == 0);
+  // FIXME, should use FLD_TYPE, but that's "float"
+  struct mrc_fld *fld = mrc_fld_get_as(fld_base, mrc_fld_type(fld_base));
+
+  mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
+    RV1X(fld, ix,iy,iz) = RR1(fld, ix,iy,iz) * V1X(fld, ix,iy,iz);
+    RV1Y(fld, ix,iy,iz) = RR1(fld, ix,iy,iz) * V1Y(fld, ix,iy,iz);
+    RV1Z(fld, ix,iy,iz) = RR1(fld, ix,iy,iz) * V1Z(fld, ix,iy,iz);
+    UU1(fld, ix,iy,iz) = PP1(fld, ix,iy,iz) / gamma_m1
+      + .5*(sqr(RV1X(fld, ix,iy,iz)) +
+	    sqr(RV1Y(fld, ix,iy,iz)) +
+	    sqr(RV1Z(fld, ix,iy,iz))) / RR1(fld, ix,iy,iz);
+  } mrc_fld_foreach_end;
+  
+  mrc_fld_put_as(fld, fld_base);
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_convert_fc_from_primitive
 //
 // converts from primitive variables to fully-conservative in-place.
 // No ghost points are set, the staggered B fields need to exist on all faces
 // (that means one more than cell-centered dims)
 
-void
+static void
 ggcm_mhd_convert_fc_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_base)
 {
   float gamma_m1 = mhd->par.gamm - 1.;
 
-  // FIXME, should use FLD_TYPE, but that's "float"
   assert(strcmp(mrc_fld_type(fld_base), "mhd_fc_float") == 0);
+  // FIXME, should use FLD_TYPE, but that's "float"
   struct mrc_fld *fld = mrc_fld_get_as(fld_base, "mhd_fc_float");
 
   // don't go into ghost cells in invariant directions
@@ -46,3 +75,21 @@ ggcm_mhd_convert_fc_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_bas
   mrc_fld_put_as(fld, fld_base);
 }
 
+// ----------------------------------------------------------------------
+// ggcm_mhd_convert_from_primitive
+//
+// converts from primitive variables to the appropriate fully-conservative /
+// semi-conservative state vector.
+
+void
+ggcm_mhd_convert_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_base)
+{
+  if (strcmp(mrc_fld_type(fld_base), "fortran") == 0 ||
+      strcmp(mrc_fld_type(fld_base), "float") == 0) {
+    return ggcm_mhd_convert_sc_from_primitive(mhd, fld_base);
+  } else if (strcmp(mrc_fld_type(fld_base), "mhd_fc_float") == 0) {
+    return ggcm_mhd_convert_fc_from_primitive(mhd, fld_base);
+  } else {
+    assert(0);
+  }
+}
