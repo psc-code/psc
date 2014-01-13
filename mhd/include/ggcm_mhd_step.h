@@ -26,4 +26,7 @@ void ggcm_mhd_step_corr(struct ggcm_mhd_step *step);
 void ggcm_mhd_step_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
 			    struct mrc_fld *x);
 
+// perform one entire time step in the given scheme
+void ggcm_mhd_step_run(struct ggcm_mhd_step *step, struct mrc_fld *x);
+
 #endif

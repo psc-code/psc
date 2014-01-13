@@ -5,6 +5,7 @@
 #include <mrc_obj.h>
 
 #include <mrc_fld.h>
+#include <mrc_ts.h>
 
 // ======================================================================
 // ggcm_mhd
@@ -34,7 +35,9 @@ void ggcm_mhd_convert_from_primitive(struct ggcm_mhd *mhd,
 // wrappers / helpers
 
 void ts_ggcm_mhd_step_calc_rhs(void *ctx, struct mrc_obj *_rhs, float time,
-			       struct mrc_obj *_fld);
+			       struct mrc_obj *_x);
+void ts_ggcm_mhd_step_run(void *ctx, struct mrc_ts *ts, struct mrc_obj *_x);
+
 int ggcm_mhd_main(int *argc, char ***argv);
 
 // ----------------------------------------------------------------------

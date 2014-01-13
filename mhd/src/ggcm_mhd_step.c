@@ -45,6 +45,19 @@ ggcm_mhd_step_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_step_run
+
+void
+ggcm_mhd_step_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
+{
+  struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
+  assert(ops && ops->run);
+  ops->run(step, x);
+}
+
+
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_step_init
 
 static void
