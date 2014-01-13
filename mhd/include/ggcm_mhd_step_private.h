@@ -26,10 +26,7 @@ struct ggcm_mhd_step_ops {
   int task_corr1_const;
 };
 
-
-//struct mrc_fld *
-//ggcm_mhd_get_fields(struct ggcm_mhd *mhd, const char *name, int nr_comp)
-
+void ggcm_mhd_step_run_predcorr(struct ggcm_mhd_step *step, struct mrc_fld *x);
 
 #define ggcm_mhd_step_ops(step) ((struct ggcm_mhd_step_ops *)(step)->obj.ops)
 

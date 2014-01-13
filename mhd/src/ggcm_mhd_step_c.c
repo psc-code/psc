@@ -608,4 +608,5 @@ struct ggcm_mhd_step_ops ggcm_mhd_step_c_ops = {
   .name        = "c",
   .pred        = ggcm_mhd_step_c_pred,
   .corr        = ggcm_mhd_step_c_corr,
+  .run         = ggcm_mhd_step_run_predcorr,
 };

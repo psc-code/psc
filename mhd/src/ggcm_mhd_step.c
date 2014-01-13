@@ -5,6 +5,7 @@
 #include "ggcm_mhd_private.h"
 
 #include <mrc_io.h>
+#include <mrc_profile.h>
 #include <assert.h>
 
 // ======================================================================
@@ -53,9 +54,36 @@ ggcm_mhd_step_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
   assert(ops && ops->run);
   ops->run(step, x);
+
 }
 
+// ----------------------------------------------------------------------
+// ggcm_mhd_step_run_predcorr
+//
+// library-type function to be used by ggcm_mhd_step subclasses that
+// implement the OpenGGCM predictor-corrector scheme
 
+void
+ggcm_mhd_step_run_predcorr(struct ggcm_mhd_step *step, struct mrc_fld *x)
+{
+  static int PR_push;
+  if (!PR_push) {
+    PR_push = prof_register("ggcm_mhd_step_run_predcorr", 1., 0, 0);
+  }
+
+  prof_start(PR_push);
+
+  struct ggcm_mhd *mhd = step->mhd;
+  assert(x == mhd->fld);
+
+  ggcm_mhd_fill_ghosts(mhd, x, _RR1, mhd->time);
+  ggcm_mhd_step_pred(mhd->step);
+
+  ggcm_mhd_fill_ghosts(mhd, x, _RR2, mhd->time + mhd->bndt);
+  ggcm_mhd_step_corr(mhd->step);
+
+  prof_stop(PR_push);
+}
 
 // ----------------------------------------------------------------------
 // ggcm_mhd_step_init
