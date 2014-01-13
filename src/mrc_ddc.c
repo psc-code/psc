@@ -114,7 +114,7 @@ mrc_ddc_global_to_local_fld(struct mrc_ddc *ddc, struct mrc_fld *gfld, struct mr
 // mrc_ddc_fill_ghost_edges_fld
 
 void
-mrc_ddc_fill_ghost_edged_fld(struct mrc_ddc *ddc, int mb, int me,
+mrc_ddc_fill_ghost_edges_fld(struct mrc_ddc *ddc, int mb, int me,
 			     struct mrc_fld *fld)
 {
   struct mrc_ddc_ops *ops = mrc_ddc_ops(ddc);
