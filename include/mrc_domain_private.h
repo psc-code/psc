@@ -182,16 +182,6 @@ map2dir(int map)
 
 // ----------------------------------------------------------------------
 
-enum {
-  BTYPE_NONE,  // none specified, typically block-internal
-  BTYPE_PATCH, // patch-internal boundary
-  BTYPE_OUTER, // used by MB_CreateSimple(), also cylindrical / butterfly
-  BTYPE_SP,    // cylindrical, butterfly
-  BTYPE_SPC,   // butterfly
-  BTYPE_USER = 10,
-};
-
-
 
 struct MB_face {
   int block; // Which block do we exchange points for?

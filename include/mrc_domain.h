@@ -27,6 +27,18 @@ enum {
   NR_FACES,
 };
 
+// Btypes, needed visible by domain_mb. If these can't be made general,
+// they need to go away.
+enum {
+  BTYPE_NONE,  // none specified, typically block-internal
+  BTYPE_PATCH, // patch-internal boundary
+  BTYPE_OUTER, // used by MB_CreateSimple(), also cylindrical / butterfly
+  BTYPE_SP,    // cylindrical, butterfly
+  BTYPE_SPC,   // butterfly
+  BTYPE_USER = 10,
+};
+
+
 struct mrc_patch {
   int ldims[3];
   int off[3];
