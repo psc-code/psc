@@ -21,12 +21,14 @@ struct ph5 {
   int sw;
   // parallel only
   bool use_independent_io;
+  char *separator; // seperator between basename & numbers
 };
 
 #define VAR(x) (void *)offsetof(struct ph5, x)
 static struct param ph5_descr[] = {
   { "sw"                     , VAR(sw)                      , PARAM_INT(0)           },
   { "independent"            , VAR(use_independent_io)      , PARAM_BOOL(true)       },
+  { "separator"              , VAR(separator)               , PARAM_STRING(".")      },
   {},
 };
 #undef VAR
@@ -243,8 +245,10 @@ hdf5_parallel_open(struct mrc_io *io, const char *mode)
   // a real mpi_info here and set romio_[cb/ds]_write bits
 
   char filename[strlen(io->par.outdir) + strlen(io->par.basename) + 20];
-  sprintf(filename, "%s/%s.%06d.h5", io->par.outdir, io->par.basename,
-	  io->step);
+  // using '.' as a separator causes all sorts of problems with io/analysis in
+  // mrc-v3, but I don't want to break compatibility with the other io types
+  sprintf(filename, "%s/%s%s%06d.h5", io->par.outdir, io->par.basename,
+	  ph5->separator, io->step);
 
   hid_t plist = H5Pcreate(H5P_FILE_ACCESS);
   H5Pset_fapl_mpio(plist, io->obj.comm, MPI_INFO_NULL);
