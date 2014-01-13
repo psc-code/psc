@@ -3,7 +3,6 @@
 
 #include "ggcm_mhd_defs.h"
 #include "ggcm_mhd_private.h"
-#include "ggcm_mhd_commu.h"
 
 #include <mrc_io.h>
 #include <assert.h>

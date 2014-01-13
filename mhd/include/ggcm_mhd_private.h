@@ -33,7 +33,6 @@ struct ggcm_mhd {
   struct mrc_fld *fld;
   struct ggcm_mhd_crds *crds;
   struct ggcm_mhd_step *step;
-  struct ggcm_mhd_commu *commu;
   struct ggcm_mhd_bnd *bnd;
   struct ggcm_mhd_diag *diag;
   struct ggcm_mhd_ic *ic;

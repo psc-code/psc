@@ -2,7 +2,6 @@
 #include <mrc_ts_monitor_private.h>
 
 #include "ggcm_mhd_private.h"
-#include "ggcm_mhd_commu.h"
 #include "ggcm_mhd_diag.h"
 
 #include <mrc_ts_private.h> // FIXME?
