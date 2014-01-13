@@ -12,28 +12,6 @@
 // ggcm_mhd_step class
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_step_pred
-
-void
-ggcm_mhd_step_pred(struct ggcm_mhd_step *step)
-{
-  struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
-  assert(ops && ops->pred);
-  ops->pred(step);
-}
-
-// ----------------------------------------------------------------------
-// ggcm_mhd_step_corr
-
-void
-ggcm_mhd_step_corr(struct ggcm_mhd_step *step)
-{
-  struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
-  assert(ops && ops->corr);
-  ops->corr(step);
-}
-
-// ----------------------------------------------------------------------
 // ggcm_mhd_step_calc_rhs
 
 void
@@ -73,14 +51,17 @@ ggcm_mhd_step_run_predcorr(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
   prof_start(PR_push);
 
+  struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
   struct ggcm_mhd *mhd = step->mhd;
   assert(x == mhd->fld);
 
   ggcm_mhd_fill_ghosts(mhd, x, _RR1, mhd->time);
-  ggcm_mhd_step_pred(mhd->step);
+  assert(ops && ops->pred);
+  ops->pred(step);
 
   ggcm_mhd_fill_ghosts(mhd, x, _RR2, mhd->time + mhd->bndt);
-  ggcm_mhd_step_corr(mhd->step);
+  assert(ops && ops->corr);
+  ops->corr(step);
 
   prof_stop(PR_push);
 }
