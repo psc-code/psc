@@ -11,9 +11,9 @@
 // Umm.. I'm pretty sure this isn't right...
 // Maybe these just never get used? Code gen
 // uses XI0 instead...
-#define CA_CRD0(trafo,jx,jy,jz,patch) XI0(trafo->_domain->mb_coord,jx,patch)
-#define CA_CRD1(trafo,jx,jy,jz,patch) XI1(trafo->_domain->mb_coord,jx,patch)
-#define CA_CRD2(trafo,jx,jy,jz,patch) XI2(trafo->_domain->mb_coord,jx,patch)
+#define CA_CRD0(trafo,jx,jy,jz,patch) XI0(mrc_domain_get_crds(trafo->_domain),jx,patch)
+#define CA_CRD1(trafo,jx,jy,jz,patch) XI1(mrc_domain_get_crds(trafo->_domain),jx,patch)
+#define CA_CRD2(trafo,jx,jy,jz,patch) XI2(mrc_domain_get_crds(trafo->_domain),jx,patch)
 
 #define CA_JAC(trafo,jx,jy,jz,patch)  (1.)
 
