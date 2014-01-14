@@ -353,7 +353,6 @@ ggcm_mhd_main(int *argc, char ***argv)
   ggcm_mhd_register();
 
   struct ggcm_mhd *mhd = ggcm_mhd_create(MPI_COMM_WORLD);
-  mrc_fld_set_type(mhd->fld, "mhd_fc_float");
   ggcm_mhd_set_from_options(mhd);
   ggcm_mhd_setup(mhd);
   ggcm_mhd_view(mhd);

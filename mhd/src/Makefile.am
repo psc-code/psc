@@ -53,8 +53,6 @@ libmhd_la_SOURCES = \
 	ggcm_mhd_step_cweno.c \
 	ggcm_mhd_step_c.c \
 	\
-	mrc_ts_monitor_ggcm.c \
-	\
-	mrc_fld_mhd_fc_float.c
+	mrc_ts_monitor_ggcm.c
 
 

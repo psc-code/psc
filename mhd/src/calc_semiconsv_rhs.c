@@ -16,7 +16,7 @@ calc_semiconsv_rhs(struct ggcm_mhd *mhd, struct mrc_fld *_rhs, struct mrc_fld *_
 {
 
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-  struct mrc_fld *rhs = mrc_fld_get_as(_rhs, "mhd_fc_float");
+  struct mrc_fld *rhs = mrc_fld_get_as(_rhs, "float");
   struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, "float");
   
   //struct mrc_fld *_J_cc[3] = mrc_fld_get_as(mhd, _J_cc, "float");
