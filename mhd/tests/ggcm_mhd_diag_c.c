@@ -7,6 +7,7 @@
 
 #include <mrc_io.h>
 #include <mrc_mod.h>
+#include <mrc_fld_as_float.h>
 
 #include <assert.h>
 #include <string.h>
@@ -157,9 +158,12 @@ ggcm_mhd_diag_c_read(struct ggcm_mhd_diag *diag, struct mrc_io *io)
 // ggcm_mhd_diag_c_write_one_fld
 
 void
-ggcm_mhd_diag_c_write_one_fld(struct mrc_io *io, struct mrc_fld *fld,
+ggcm_mhd_diag_c_write_one_fld(struct mrc_io *io, struct mrc_fld *_fld,
 			      int outtype, float plane)
 {
+  // FIXME, this works around mrc_fld_write() not handling AOS layout fields
+  struct mrc_fld *fld = mrc_fld_get_as(_fld, FLD_TYPE);
+
   switch (outtype) {
   case DIAG_TYPE_3D: {
     mrc_fld_write(fld, io);
@@ -174,34 +178,39 @@ ggcm_mhd_diag_c_write_one_fld(struct mrc_io *io, struct mrc_fld *fld,
   default:
     assert(0);
   }
+
+  mrc_fld_put_as(fld, _fld);
 }
 
 // ----------------------------------------------------------------------
 // ggcm_mhd_diag_c_write_one_field
 
 void
-ggcm_mhd_diag_c_write_one_field(struct mrc_io *io, struct mrc_fld *f, int m,
+ggcm_mhd_diag_c_write_one_field(struct mrc_io *io, struct mrc_fld *_f, int m,
 				const char *name, float scale, int outtype,
 				float plane)
 {
+  struct mrc_fld *f = mrc_fld_get_as(_f, FLD_TYPE);
+
   struct mrc_fld *fld = mrc_domain_fld_create(f->_domain, SW_2, name);
+  mrc_fld_set_type(fld, FLD_TYPE);
   char s[strlen(name) + 10];
   sprintf(s, "mrc_fld_%s", name);
   mrc_fld_set_name(fld, s);
   mrc_fld_setup(fld);
 
-  assert(f->_data_type == MRC_NT_FLOAT);
-  struct mrc_fld *_f = mrc_fld_get_as(f, mrc_fld_type(f));
-  struct mrc_fld *_fld = mrc_fld_get_as(fld, "float");
   mrc_fld_foreach(fld, ix,iy,iz, 2, 2) {
-    MRC_F3(_fld,0, ix,iy,iz) = scale * MRC_F3(_f,m, ix,iy,iz);
+    F3(fld,0, ix,iy,iz) = scale * F3(f,m, ix,iy,iz);
   } mrc_fld_foreach_end;
-  mrc_fld_put_as(_fld, fld);
-  mrc_fld_put_as(_f, f);
 
   ggcm_mhd_diag_c_write_one_fld(io, fld, outtype, plane);
 
   mrc_fld_destroy(fld);
+
+  // FIXME, should use _put_as, but don't want copy-back
+  if (strcmp(mrc_fld_type(_f), FLD_TYPE) != 0) {
+    mrc_fld_destroy(f);
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -214,9 +223,11 @@ static void
 write_fields(struct ggcm_mhd_diag *diag, struct mrc_fld *fld,
 	     struct mrc_io *io, int diag_type, float plane)
 {
+  struct ggcm_mhd *mhd = diag->mhd;
+
   struct ggcm_mhd_diag_item *item;
   list_for_each_entry(item, &diag->obj.children_list, obj.child_entry) {
-    ggcm_mhd_diag_item_run(item, io, fld, diag_type, plane);
+    ggcm_mhd_diag_item_run(item, io, mhd->fld, diag_type, plane);
   }
 
 #if 0
