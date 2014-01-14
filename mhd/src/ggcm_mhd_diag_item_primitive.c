@@ -5,6 +5,7 @@
 #include "ggcm_mhd_private.h"
 #include "ggcm_mhd_diag_private.h"
 
+#include <mrc_fld_as_float.h>
 #include <mrc_domain.h>
 #include <stdio.h>
 #include <assert.h>
@@ -25,14 +26,14 @@ ggcm_mhd_diag_item_v_run(struct ggcm_mhd_diag_item *item,
   struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, SW_2, "vx:vy:vz");
   mrc_fld_setup(fld_r);
 
-  struct mrc_fld *r = mrc_fld_get_as(fld_r, "float");
-  struct mrc_fld *f = mrc_fld_get_as(fld, "float");
+  struct mrc_fld *r = mrc_fld_get_as(fld_r, FLD_TYPE);
+  struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
 
   mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
-    float rri = 1.f / MRC_F3(f, _RR1, ix,iy,iz);
-    MRC_F3(r, 0, ix,iy,iz) = rri * MRC_F3(f, _RV1X, ix,iy,iz);
-    MRC_F3(r, 1, ix,iy,iz) = rri * MRC_F3(f, _RV1Y, ix,iy,iz);
-    MRC_F3(r, 2, ix,iy,iz) = rri * MRC_F3(f, _RV1Z, ix,iy,iz);
+    float rri = 1.f / RR1(f, ix,iy,iz);
+    F3(r, 0, ix,iy,iz) = rri * RV1X(f, ix,iy,iz);
+    F3(r, 1, ix,iy,iz) = rri * RV1Y(f, ix,iy,iz);
+    F3(r, 2, ix,iy,iz) = rri * RV1Z(f, ix,iy,iz);
   } mrc_fld_foreach_end;
 
   mrc_fld_put_as(r, fld_r);
@@ -62,13 +63,13 @@ struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_v = {
 
 static void
 ggcm_mhd_diag_item_rr_run(struct ggcm_mhd_diag_item *item,
-			  struct mrc_io *io, struct mrc_fld *f,
+			  struct mrc_io *io, struct mrc_fld *fld,
 			  int diag_type, float plane)
 {
   struct ggcm_mhd *mhd = item->diag->mhd;
 
   float scale_rr = mhd->par.rrnorm;
-  ggcm_mhd_diag_c_write_one_field(io, f, _RR1, "rr", scale_rr, diag_type, plane);
+  ggcm_mhd_diag_c_write_one_field(io, fld, _RR1, "rr", scale_rr, diag_type, plane);
 }
 
 // ----------------------------------------------------------------------
@@ -85,8 +86,6 @@ struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_rr = {
 // ----------------------------------------------------------------------
 // ggcm_mhd_diag_item_pp_run
 
-#define F3 MRC_F3 // FIXME
-
 static void
 ggcm_mhd_diag_item_pp_run(struct ggcm_mhd_diag_item *item,
 			  struct mrc_io *io, struct mrc_fld *fld,
@@ -102,25 +101,25 @@ ggcm_mhd_diag_item_pp_run(struct ggcm_mhd_diag_item *item,
 
   float gamm = mhd->par.gamm;
 
-  struct mrc_fld *r = mrc_fld_get_as(fld_r, "float");
-  struct mrc_fld *f = mrc_fld_get_as(fld, "float");
+  struct mrc_fld *r = mrc_fld_get_as(fld_r, FLD_TYPE);
+  struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
 
   if (mhd_type == MT_SEMI_CONSERVATIVE) {
     mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
-      float rvv = (sqr(MRC_F3(f, _RV1X, ix,iy,iz)) +
-		   sqr(MRC_F3(f, _RV1Y, ix,iy,iz)) +
-		   sqr(MRC_F3(f, _RV1Z, ix,iy,iz))) / MRC_F3(f, _RR1, ix,iy,iz);
-      MRC_F3(r,0, ix,iy,iz) = (gamm - 1.f) * (MRC_F3(f,_UU1, ix,iy,iz) - .5f * rvv);
+      float rvv = (sqr(RV1X(f, ix,iy,iz)) +
+		   sqr(RV1Y(f, ix,iy,iz)) +
+		   sqr(RV1Z(f, ix,iy,iz))) / RR1(f, ix,iy,iz);
+      F3(r,0, ix,iy,iz) = (gamm - 1.f) * (UU1(f, ix,iy,iz) - .5f * rvv);
     } mrc_fld_foreach_end;
   } else if (mhd_type == MT_FULLY_CONSERVATIVE) {
     mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
-      float rvv = (sqr(MRC_F3(f, _RV1X, ix,iy,iz)) +
-		   sqr(MRC_F3(f, _RV1Y, ix,iy,iz)) +
-		   sqr(MRC_F3(f, _RV1Z, ix,iy,iz))) / MRC_F3(f, _RR1, ix,iy,iz);
-      float b2  = (sqr(.5*(B1X(f, ix,iy,iz) + B1X(f, ix+1,iy  ,iz  ))) +
-		   sqr(.5*(B1Y(f, ix,iy,iz) + B1Y(f, ix  ,iy+1,iz  ))) +
-		   sqr(.5*(B1Z(f, ix,iy,iz) + B1Z(f, ix  ,iy  ,iz+1))));
-      MRC_F3(r,0, ix,iy,iz) = (gamm - 1.f) * (MRC_F3(f,_UU1, ix,iy,iz) - .5f * rvv - .5f * b2);
+      float rvv = (sqr(RV1X(f, ix,iy,iz)) +
+		   sqr(RV1Y(f, ix,iy,iz)) +
+		   sqr(RV1Z(f, ix,iy,iz))) / RR1(f, ix,iy,iz);
+      float b2  = (sqr(.5f * (B1X(f, ix,iy,iz) + B1X(f, ix+1,iy  ,iz  ))) +
+		   sqr(.5f * (B1Y(f, ix,iy,iz) + B1Y(f, ix  ,iy+1,iz  ))) +
+		   sqr(.5f * (B1Z(f, ix,iy,iz) + B1Z(f, ix  ,iy  ,iz+1))));
+      F3(r,0, ix,iy,iz) = (gamm - 1.f) * (UU1(f, ix,iy,iz) - .5f * rvv - .5f * b2);
     } mrc_fld_foreach_end;
   } else {
     assert(0);
@@ -159,16 +158,13 @@ ggcm_mhd_diag_item_b_run(struct ggcm_mhd_diag_item *item,
   mrc_fld_set_param_int(fld_r, "nr_comps", 3);
   mrc_fld_setup(fld_r);
 
-  struct mrc_fld *r = mrc_fld_get_as(fld_r, "float");
-  struct mrc_fld *f = mrc_fld_get_as(fld, "float");
+  struct mrc_fld *r = mrc_fld_get_as(fld_r, FLD_TYPE);
+  struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
 
   mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
-    MRC_F3(fld_r, 0, ix,iy,iz) = .5f*(MRC_F3(f,_B1X, ix,iy,iz) +
-				      MRC_F3(f,_B1X, ix-1,iy,iz));
-    MRC_F3(fld_r, 1, ix,iy,iz) = .5f*(MRC_F3(f,_B1Y, ix,iy,iz) +
-				      MRC_F3(f,_B1Y, ix,iy-1,iz));
-    MRC_F3(fld_r, 2, ix,iy,iz) = .5f*(MRC_F3(f,_B1Z, ix,iy,iz) +
-				      MRC_F3(f,_B1Z, ix,iy,iz-1));
+    F3(fld_r, 0, ix,iy,iz) = .5f * (B1X(f, ix,iy,iz) + B1X(f, ix-1,iy,iz));
+    F3(fld_r, 1, ix,iy,iz) = .5f * (B1Y(f, ix,iy,iz) + B1Y(f, ix,iy-1,iz));
+    F3(fld_r, 2, ix,iy,iz) = .5f * (B1Z(f, ix,iy,iz) + B1Z(f, ix,iy,iz-1));
   } mrc_fld_foreach_end;
 
   mrc_fld_put_as(r, fld_r);
@@ -189,5 +185,4 @@ struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_b = {
   .name             = "b",
   .run              = ggcm_mhd_diag_item_b_run,
 };
-
 

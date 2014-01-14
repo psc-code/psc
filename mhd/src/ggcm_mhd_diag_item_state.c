@@ -5,6 +5,7 @@
 #include "ggcm_mhd_private.h"
 #include "ggcm_mhd_diag_private.h"
 
+#include <mrc_fld_as_float.h>
 #include <mrc_domain.h>
 #include <stdio.h>
 #include <assert.h>
@@ -50,12 +51,12 @@ ggcm_mhd_diag_item_uu1_run(struct ggcm_mhd_diag_item *item,
     mprintf("WARNING: uu1 output includes magnetic energy!\n");
   }
 
-  struct mrc_fld *f = mrc_fld_get_as(fld, "float");
+  struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
 
   float max = 0.;
   mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
-    max = fmaxf(max, fabsf(MRC_F3(f,_UU1, ix,iy,iz)));
-    if (!isfinite(MRC_F3(f,_UU1, ix,iy,iz))) max = 9999.;
+    max = fmaxf(max, fabsf(UU1(f, ix,iy,iz)));
+    if (!isfinite(UU1(f, ix,iy,iz))) max = 9999.;
   } mrc_fld_foreach_end;
 
   mrc_fld_put_as(f, fld);
