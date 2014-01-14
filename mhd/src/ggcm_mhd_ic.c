@@ -5,6 +5,7 @@
 #include "ggcm_mhd_private.h"
 
 #include <mrc_io.h>
+#include <mrc_fld_as_double_aos.h>
 
 #include <assert.h>
 
@@ -17,13 +18,12 @@
 static void
 ggcm_mhd_ic_init_masks_default(struct ggcm_mhd_ic *ic)
 {
-  assert(ic->mhd->fld->_data_type == MRC_NT_FLOAT);
-  struct mrc_fld *fld = mrc_fld_get_as(ic->mhd->fld, mrc_fld_type(ic->mhd->fld));
+  struct mrc_fld *fld = mrc_fld_get_as(ic->mhd->fld, FLD_TYPE);
 
   mrc_fld_foreach(fld, ix, iy, iz, 1, 1) {
-    MRC_F3(fld, _YMASK, ix,iy,iz) = 1.;
+    F3(fld, _YMASK, ix,iy,iz) = 1.;
   } mrc_fld_foreach_end;
-
+    
   mrc_fld_put_as(fld, ic->mhd->fld);
 }
 
