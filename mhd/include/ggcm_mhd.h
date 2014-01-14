@@ -31,6 +31,13 @@ void ggcm_mhd_default_box(struct ggcm_mhd *mhd);
 void ggcm_mhd_convert_from_primitive(struct ggcm_mhd *mhd,
 				     struct mrc_fld *fld_base);
 
+enum {
+  MT_PRIMITIVE,
+  MT_SEMI_CONSERVATIVE,
+  MT_FULLY_CONSERVATIVE,
+  N_MT,
+};
+
 // ----------------------------------------------------------------------
 // wrappers / helpers
 

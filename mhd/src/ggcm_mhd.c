@@ -159,6 +159,8 @@ _ggcm_mhd_setup(struct ggcm_mhd *mhd)
 {
   ggcm_mhd_setup_member_objs(mhd);
 
+  mrc_fld_dict_add_int(mhd->fld, "mhd_type", ggcm_mhd_step_mhd_type(mhd->step));
+
   struct mrc_patch_info info;
   mrc_domain_get_local_patch_info(mhd->domain, 0, &info);
   for (int d = 0; d < 3; d++) {

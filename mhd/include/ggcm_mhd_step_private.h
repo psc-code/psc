@@ -24,6 +24,8 @@ struct ggcm_mhd_step_ops {
   int task_pred_const;
   int task_corr_const;
   int task_corr1_const;
+
+  int mhd_type; // works on fully vs semi-conservative state vector?
 };
 
 void ggcm_mhd_step_run_predcorr(struct ggcm_mhd_step *step, struct mrc_fld *x);

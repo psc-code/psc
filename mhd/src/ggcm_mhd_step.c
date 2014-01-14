@@ -53,7 +53,9 @@ ggcm_mhd_step_run_predcorr(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
   struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
   struct ggcm_mhd *mhd = step->mhd;
-  assert(x == mhd->fld);
+  int mhd_type;
+  mrc_fld_get_param_int(x, "mhd_type", &mhd_type);
+  assert(mhd_type == MT_SEMI_CONSERVATIVE);
 
   ggcm_mhd_fill_ghosts(mhd, x, _RR1, mhd->time);
   assert(ops && ops->pred);
@@ -64,6 +66,16 @@ ggcm_mhd_step_run_predcorr(struct ggcm_mhd_step *step, struct mrc_fld *x)
   ops->corr(step);
 
   prof_stop(PR_push);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_step_mhd_type
+
+int
+ggcm_mhd_step_mhd_type(struct ggcm_mhd_step *step)
+{
+  struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
+  return ops->mhd_type;
 }
 
 // ----------------------------------------------------------------------

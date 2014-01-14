@@ -606,6 +606,7 @@ ggcm_mhd_step_c_corr(struct ggcm_mhd_step *step)
 
 struct ggcm_mhd_step_ops ggcm_mhd_step_c_ops = {
   .name        = "c",
+  .mhd_type    = MT_SEMI_CONSERVATIVE,
   .pred        = ggcm_mhd_step_c_pred,
   .corr        = ggcm_mhd_step_c_corr,
   .run         = ggcm_mhd_step_run_predcorr,
