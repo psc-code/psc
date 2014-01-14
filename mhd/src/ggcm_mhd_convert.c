@@ -16,10 +16,9 @@
 static void
 ggcm_mhd_convert_sc_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_base)
 {
-  float gamma_m1 = mhd->par.gamm - 1.;
+  mrc_fld_data_t gamma_m1 = mhd->par.gamm - 1.;
 
-  // FIXME, should use FLD_TYPE, but that's "float"
-  struct mrc_fld *fld = mrc_fld_get_as(fld_base, mrc_fld_type(fld_base));
+  struct mrc_fld *fld = mrc_fld_get_as(fld_base, FLD_TYPE);
 
   mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
     RV1X(fld, ix,iy,iz) = RR1(fld, ix,iy,iz) * V1X(fld, ix,iy,iz);
@@ -44,10 +43,9 @@ ggcm_mhd_convert_sc_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_bas
 static void
 ggcm_mhd_convert_fc_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_base)
 {
-  float gamma_m1 = mhd->par.gamm - 1.;
+  mrc_fld_data_t gamma_m1 = mhd->par.gamm - 1.;
 
-  // FIXME, should use FLD_TYPE, but that's "float"
-  struct mrc_fld *fld = mrc_fld_get_as(fld_base, "mhd_fc_float");
+  struct mrc_fld *fld = mrc_fld_get_as(fld_base, FLD_TYPE);
 
   // don't go into ghost cells in invariant directions
   int gdims[3];
