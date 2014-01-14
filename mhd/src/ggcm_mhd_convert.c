@@ -18,8 +18,6 @@ ggcm_mhd_convert_sc_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_bas
 {
   float gamma_m1 = mhd->par.gamm - 1.;
 
-  assert(strcmp(mrc_fld_type(fld_base), "fortran") == 0 ||
-	 strcmp(mrc_fld_type(fld_base), "float") == 0);
   // FIXME, should use FLD_TYPE, but that's "float"
   struct mrc_fld *fld = mrc_fld_get_as(fld_base, mrc_fld_type(fld_base));
 
@@ -48,7 +46,6 @@ ggcm_mhd_convert_fc_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_bas
 {
   float gamma_m1 = mhd->par.gamm - 1.;
 
-  assert(strcmp(mrc_fld_type(fld_base), "mhd_fc_float") == 0);
   // FIXME, should use FLD_TYPE, but that's "float"
   struct mrc_fld *fld = mrc_fld_get_as(fld_base, "mhd_fc_float");
 
@@ -84,10 +81,12 @@ ggcm_mhd_convert_fc_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_bas
 void
 ggcm_mhd_convert_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_base)
 {
-  if (strcmp(mrc_fld_type(fld_base), "fortran") == 0 ||
-      strcmp(mrc_fld_type(fld_base), "float") == 0) {
+  int mhd_type;
+  mrc_fld_get_param_int(fld_base, "mhd_type", &mhd_type);
+
+  if (mhd_type == MT_SEMI_CONSERVATIVE) {
     return ggcm_mhd_convert_sc_from_primitive(mhd, fld_base);
-  } else if (strcmp(mrc_fld_type(fld_base), "mhd_fc_float") == 0) {
+  } else if (mhd_type == MT_FULLY_CONSERVATIVE) {
     return ggcm_mhd_convert_fc_from_primitive(mhd, fld_base);
   } else {
     assert(0);
