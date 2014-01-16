@@ -25,14 +25,14 @@ typedef Vec (*fgp_t)(struct mrc_fld *);
 typedef void (*fpp_t)(struct mrc_fld *, Vec *);
 typedef void (*fsp_t)(struct mrc_fld *, Vec);
 
-#define global_size(mb, sw) (((mb)->patches[0].ldims[0] + 2 * (sw)) *	\
-			     ((mb)->patches[0].ldims[1] + 2 * (sw)) *	\
-			     ((mb)->patches[0].ldims[2] + 2 * (sw)) *	\
+#define global_size(mb, sw) (((mb)->patches[0].ldims[0] + 2 * (sw[0])) *	\
+			     ((mb)->patches[0].ldims[1] + 2 * (sw[1])) *	\
+			     ((mb)->patches[0].ldims[2] + 2 * (sw[2])) *	\
 			     (mb)->nr_global_patches)
 
-#define local_size(mb, sw) (((mb)->patches[0].ldims[0] + 2 * (sw)) *  \
-			    ((mb)->patches[0].ldims[1] + 2 * (sw)) *  \
-			    ((mb)->patches[0].ldims[2] + 2 * (sw)) *  \
+#define local_size(mb, sw) (((mb)->patches[0].ldims[0] + 2 * (sw[0])) *  \
+			    ((mb)->patches[0].ldims[1] + 2 * (sw[1])) *  \
+			    ((mb)->patches[0].ldims[2] + 2 * (sw[2])) *  \
 			    (mb)->nr_patches)
 
 #define to_mrc_ddc_mb(ddc) ((struct mrc_ddc_mb *) (ddc)->obj.subctx)
@@ -54,7 +54,7 @@ mrc_patch_index(struct mrc_domain *domain, int b, int k[3])
 // gpatch is a global patch number (ie, old patch->nr)
 static inline int
 get_world_array_index(struct mrc_domain *mb, 
-		 int gpatch, int s, 
+		 int gpatch, int s[3], 
 		 int jx, int jy, int jz)
 {
   
@@ -64,17 +64,17 @@ get_world_array_index(struct mrc_domain *mb,
   // part of the mapping from coordinate indicies to vector index.
   // Comes out if you expand out all the index
   // mappings.
-  int p_off_shift = (((sub)->patches[0].ldims[0] + 2 * (s)) *
-		     ((sub)->patches[0].ldims[1] + 2 * (s)) *
-		     ((sub)->patches[0].ldims[2] + 2 * (s)) * 
+  int p_off_shift = (((sub)->patches[0].ldims[0] + 2 * (s[0])) *
+		     ((sub)->patches[0].ldims[1] + 2 * (s[1])) *
+		     ((sub)->patches[0].ldims[2] + 2 * (s[2])) * 
 		     (gpatch)) 
-    - (((-s)*(pmb->ldims[1] + 2*s)+(-s))*(pmb->ldims[0] + 2*s)+(-s));
+    - (((-s[2])*(pmb->ldims[1] + 2*s[1])+(-s[1]))*(pmb->ldims[0] + 2*s[0])+(-s[0]));
 
-  assert(jx >= -s && jx < (pmb)->ldims[0]+s);
-  assert(jy >= -s && jy < (pmb)->ldims[1]+s);
-  assert(jz >= -s && jz < (pmb)->ldims[2]+s);
+  assert(jx >= -s[0] && jx < (pmb)->ldims[0]+s[0]);
+  assert(jy >= -s[1] && jy < (pmb)->ldims[1]+s[1]);
+  assert(jz >= -s[2] && jz < (pmb)->ldims[2]+s[2]);
   return p_off_shift + 
-    ((jz)*(pmb->ldims[1] + 2*s)+(jy))*(pmb->ldims[0] + 2*s)+(jx);
+    ((jz)*(pmb->ldims[1] + 2*s[1])+(jy))*(pmb->ldims[0] + 2*s[0])+(jx);
 }
 
 static void
@@ -249,7 +249,7 @@ lmap_apply(const struct face_map *map, const int ix[3], int il[3])
 }
 
 static inline void
-fill_ghost(struct mrc_domain *mb, int sw, int kl, const int il[3], int *idxl, int *idxg, int *pcnt)
+fill_ghost(struct mrc_domain *mb, int sw[3], int kl, const int il[3], int *idxl, int *idxg, int *pcnt)
 {
   int ig[3], kg;
   int rc = mb_patch_map_to_interior(mb, kl, il, &kg, ig);
@@ -262,7 +262,7 @@ fill_ghost(struct mrc_domain *mb, int sw, int kl, const int il[3], int *idxl, in
 }
 
 static void
-map_and_fill_ghosts(struct mrc_domain *mb, int sw, const struct face_map *gmap, int k,
+map_and_fill_ghosts(struct mrc_domain *mb, int sw[3], const struct face_map *gmap, int k,
 		    int *idxl, int *idxg, int *pcnt,
 		    const int ixs[3], const int ixe[3])
 {
@@ -280,7 +280,7 @@ map_and_fill_ghosts(struct mrc_domain *mb, int sw, const struct face_map *gmap, 
 
 
 static void
-fill_face(struct mrc_domain *mb, int sw, struct face_map *lmap, int lk, int lf, int *idxl, int *idxg, 
+fill_face(struct mrc_domain *mb, int sw[3], struct face_map *lmap, int lk, int lf, int *idxl, int *idxg, 
 	  int *pcnt)
 {
   struct mrc_domain_mb *sub = mrc_domain_mb(mb);
@@ -305,10 +305,13 @@ fill_face(struct mrc_domain *mb, int sw, struct face_map *lmap, int lk, int lf, 
 
   int ix[3];
   int ixs, ixe;
+  // FIXME: Steve made this change, but he doesn't understand this function...
+  // set the number of ghost points we need in the normal (dim[0]) direction
+  int nr_ghosts = sw[lmap->idx[0]];
   if (lmap->bnd == 1) {
-    ixs = 0; ixe = sw;
+    ixs = 0; ixe = nr_ghosts;
   } else {
-    ixs = -sw; ixe = 0;
+    ixs = -nr_ghosts; ixe = 0;
   }
   int mx[3] = { lmap->dim[0], lmap->dim[1], lmap->dim[2] };
   int cnt = *pcnt;
@@ -340,14 +343,16 @@ fill_face(struct mrc_domain *mb, int sw, struct face_map *lmap, int lk, int lf, 
 // MB_GetVector
 
 static int
-MB_GetVector(struct mrc_domain *mb, int bs, int sw, Vec *pv)
+MB_GetVector(struct mrc_domain *mb, int bs, int sw[3], Vec *pv)
 {
   int ierr;
   Vec v;
 
   struct mrc_domain_mb *sub = mrc_domain_mb(mb);
   pfb;
-  assert(sw < MAX_SW);
+  int nr_ghosts = MAX(sw[0], sw[1]);
+  nr_ghosts = MAX(nr_ghosts, sw[2]);
+  assert(nr_ghosts < MAX_SW);
   if (!mrc_domain_is_setup(mb)) {
     mrc_domain_setup(mb);
   }
@@ -379,7 +384,7 @@ MB_RestoreVector(struct mrc_domain *mb, Vec *pv)
 
 
 static int
-getGtoL(struct mrc_ddc *ddc, int bs, int sw, VecScatter *pgtol)
+getGtoL(struct mrc_ddc *ddc, int bs, int sw[3], VecScatter *pgtol)
 {
   int ierr;
 
@@ -387,11 +392,14 @@ getGtoL(struct mrc_ddc *ddc, int bs, int sw, VecScatter *pgtol)
   struct mrc_domain_mb *sub = mrc_domain_mb(mb);
   struct mrc_ddc_mb *ddc_sub = to_mrc_ddc_mb(ddc);
 
+  int nr_ghosts = MAX(sw[0],sw[1]);
+  nr_ghosts = MAX(nr_ghosts, sw[2]);
+
   pfb;
   *pgtol = NULL;
   assert(bs-1 < MAX_BS);
-  if (ddc_sub->mb_gtol[sw][bs-1]) {
-    *pgtol = ddc_sub->mb_gtol[sw][bs-1];
+  if (ddc_sub->mb_gtol[nr_ghosts][bs-1]) {
+    *pgtol = ddc_sub->mb_gtol[nr_ghosts][bs-1];
     pfr;
   }
 
@@ -420,11 +428,14 @@ getGtoL(struct mrc_ddc *ddc, int bs, int sw, VecScatter *pgtol)
       }
       struct face_map lmap;
       map_setup(&lmap, mb, info.global_patch, f);
+      int f_sw[3]; // The ghost points mapped into the face normal frame.
+      f_sw[0] = sw[lmap.idx[0]];
       int i = 1;
       for (int d = 0; d < 3; d++) {
 	if (pface->pf_map[d] != 0) {
 	  lmap.idx[i] = d;
 	  lmap.dim[i] = info.ldims[lmap.idx[i]];
+	  f_sw[i] = sw[lmap.idx[i]];
 	  i++;
 	}
       }
@@ -433,37 +444,37 @@ getGtoL(struct mrc_ddc *ddc, int bs, int sw, VecScatter *pgtol)
 
       int ixs, ixe;
       if (lmap.bnd == 1) {
-	ixs = 0; ixe = sw;
+	ixs = 0; ixe = f_sw[0];
       } else {
-	ixs = -sw; ixe = 0;
+	ixs = -f_sw[0]; ixe = 0;
       }
       int mx[3] = { lmap.dim[0], lmap.dim[1], lmap.dim[2] };
       // edges
       map_and_fill_ghosts(mb, sw, &lmap, info.global_patch, idxl, idxg, &cnt,
-			  (int[3]) { ixs, -sw     ,  0        },
+			  (int[3]) { ixs, -f_sw[1]  ,  0        },
 			  (int[3]) { ixe,  0      ,  mx[2]    });
       map_and_fill_ghosts(mb, sw, &lmap, info.global_patch, idxl, idxg, &cnt,
 			  (int[3]) { ixs, mx[1]   ,  0        },
-			  (int[3]) { ixe, mx[1]+sw,  mx[2]    });
+			  (int[3]) { ixe, mx[1]+f_sw[1], mx[2]    });
       map_and_fill_ghosts(mb, sw, &lmap, info.global_patch, idxl, idxg, &cnt,
-			  (int[3]) { ixs, 0      ,  -sw       },
+			  (int[3]) { ixs, 0      ,  -f_sw[2]  },
 			  (int[3]) { ixe, mx[1]  ,  0         });
       map_and_fill_ghosts(mb, sw, &lmap, info.global_patch, idxl, idxg, &cnt,
 			  (int[3]) { ixs, 0      ,  mx[2]     },
-			  (int[3]) { ixe, mx[1]  ,  mx[2]+sw  });
+			  (int[3]) { ixe, mx[1]  ,  mx[2]+f_sw[2] });
       // corners
       map_and_fill_ghosts(mb, sw, &lmap, info.global_patch, idxl, idxg, &cnt,
-			  (int[3]) { ixs, -sw     ,  -sw      },
+			  (int[3]) { ixs, -f_sw[1] ,  -f_sw[2]   },
 			  (int[3]) { ixe, 0       ,  0        });
       map_and_fill_ghosts(mb, sw, &lmap, info.global_patch, idxl, idxg, &cnt,
-			  (int[3]) { ixs, -sw     ,  mx[2]    },
-			  (int[3]) { ixe, 0       ,  mx[2]+sw });
+			  (int[3]) { ixs, -f_sw[1] ,  mx[2]    },
+			  (int[3]) { ixe, 0       ,  mx[2]+f_sw[2] });
       map_and_fill_ghosts(mb, sw, &lmap, info.global_patch, idxl, idxg, &cnt,
-			  (int[3]) { ixs, mx[1]   ,  -sw      },
-			  (int[3]) { ixe, mx[1]+sw,  0        });
+			  (int[3]) { ixs, mx[1]   ,  -f_sw[2]    },
+			  (int[3]) { ixe, mx[1]+f_sw[1],  0        });
       map_and_fill_ghosts(mb, sw, &lmap, info.global_patch, idxl, idxg, &cnt,
 			  (int[3]) { ixs, mx[1]   ,  mx[2]    },
-			  (int[3]) { ixe, mx[1]+sw,  mx[2]+sw });
+			  (int[3]) { ixe, mx[1]+f_sw[1],  mx[2]+f_sw[2] });
     }
     //    ASSERT(cnt <= mb->gN); FIXME!!!
   } MB_foreach_patch_end;
@@ -486,13 +497,13 @@ getGtoL(struct mrc_ddc *ddc, int bs, int sw, VecScatter *pgtol)
   Vec lvec, gvec;
   ierr = MB_GetVector(mb, bs, 0, &gvec); CE;
   ierr = MB_GetVector(mb, bs, sw, &lvec); CE;
-  ierr = VecScatterCreate(gvec, isg, lvec, isl, &ddc_sub->mb_gtol[sw][bs-1]); CE;
+  ierr = VecScatterCreate(gvec, isg, lvec, isl, &ddc_sub->mb_gtol[nr_ghosts][bs-1]); CE;
   ierr = MB_RestoreVector(mb, &gvec); CE;
   ierr = MB_RestoreVector(mb, &lvec); CE;
   ierr = ISDestroy(&isl); CE;
   ierr = ISDestroy(&isg); CE;
 
-  *pgtol = ddc_sub->mb_gtol[sw][bs-1];
+  *pgtol = ddc_sub->mb_gtol[nr_ghosts][bs-1];
   pfr;
 }
 
@@ -521,7 +532,16 @@ mrc_ddc_mb_global_to_local_fld(struct mrc_ddc *ddc, struct mrc_fld *gfld, struct
   Vec lfld_v = fld_get_petsc(lfld);
 
 
-  ierr = getGtoL(ddc, mrc_fld_nr_comps(lfld), lfld->_nr_ghosts, &gtol); CE;
+  // we're going to access private mrc_fld stuff, because I'm to lazy to write in 
+  // a get_param_int_array
+  assert(lfld->_sw.nr_vals == 5);
+  int sw[3];
+  int dshift = (int) lfld->_is_aos;
+  for(int d = 0; d < 3; d++) {
+    sw[d] = lfld->_sw.vals[d + dshift];
+  }
+
+  ierr = getGtoL(ddc, mrc_fld_nr_comps(lfld), sw, &gtol); CE;
 
   ierr = VecScatterBegin(gtol, gfld_v, lfld_v, 
 			 INSERT_VALUES, SCATTER_FORWARD); CE;
@@ -538,7 +558,7 @@ mrc_ddc_mb_global_to_local_fld(struct mrc_ddc *ddc, struct mrc_fld *gfld, struct
 
 // p is GLOBAL patch number
 static void
-fill_bnd_edge(struct mrc_domain *mb, int jxs[3], int jxe[3], int p, int sw,
+fill_bnd_edge(struct mrc_domain *mb, int jxs[3], int jxe[3], int p, int sw[3],
 	      int *idxg, int *idxl, int *pcnt)
 {
   struct mrc_domain_mb *sub = mrc_domain_mb(mb);
@@ -590,7 +610,7 @@ fill_bnd_edge(struct mrc_domain *mb, int jxs[3], int jxe[3], int p, int sw,
   }
 }
 static int
-getLtoL_Edge(struct mrc_ddc *ddc, int bs, int sw, VecScatter *pltol)
+getLtoL_Edge(struct mrc_ddc *ddc, int bs, int sw[3], VecScatter *pltol)
 {
   int ierr;
   struct mrc_domain *mb = mrc_ddc_mb_get_domain(ddc);
@@ -601,13 +621,19 @@ getLtoL_Edge(struct mrc_ddc *ddc, int bs, int sw, VecScatter *pltol)
 
   *pltol = NULL;
   assert(bs-1 < MAX_BS);
-  if (ddc_sub->mb_ltol_edge[sw][bs-1]) {
-    *pltol = ddc_sub->mb_ltol_edge[sw][bs-1];
+
+  int nr_ghosts = MAX(sw[0], sw[1]);
+  nr_ghosts = MAX(nr_ghosts, sw[2]);
+
+  if (ddc_sub->mb_ltol_edge[nr_ghosts][bs-1]) {
+    *pltol = ddc_sub->mb_ltol_edge[nr_ghosts][bs-1];
     pfr;
   }
 
   int *idxg, *idxl, cnt=0;
-  int local_size = local_size(sub, 1);
+
+ // FIXME: this should be more than it needs.. not a big deal
+  int local_size = local_size(sub,((int[3]){1, 1, 1}) );
   ierr = PetscMalloc(sizeof(*idxg) * local_size, &idxg); CE;
   ierr = PetscMalloc(sizeof(*idxl) * local_size, &idxl); CE;
   // OPT we don't need to recreate the index array for every bs
@@ -617,13 +643,15 @@ getLtoL_Edge(struct mrc_ddc *ddc, int bs, int sw, VecScatter *pltol)
     mrc_domain_get_local_patch_info(mb, patch, &info);
     int *mx = info.ldims;
     int jxs[3], jxe[3];
+    // FIXME: I'm going to take a gamble here and assume that because we're using
+    // patch ldims that dir represents regular x,y,z numbering.
     for (int dir = 0; dir < 1; dir++) {
       for (int f = 0; f < 2; f++) {
 	if (info.p_pface[2*dir+f].pf_patch < 0) { // external?
 	  if (f == 0) {
-	    jxs[dir] = -sw; jxe[dir] = 0;
+	    jxs[dir] = -sw[dir]; jxe[dir] = 0;
 	  } else {
-	    jxs[dir] = mx[dir]; jxe[dir] = mx[dir]+sw;
+	    jxs[dir] = mx[dir]; jxe[dir] = mx[dir]+sw[dir];
 	  }
 	  
 	  for (int dir1 = dir+1; dir1 < 3; dir1++) {
@@ -632,9 +660,9 @@ getLtoL_Edge(struct mrc_ddc *ddc, int bs, int sw, VecScatter *pltol)
 		continue;
 	      
 	      if (f1 == 0) {
-		jxs[dir1] = -sw; jxe[dir1] = 0;
+		jxs[dir1] = -sw[dir1]; jxe[dir1] = 0;
 	      } else {
-		jxs[dir1] = mx[dir1]; jxe[dir1] = mx[dir1]+sw;
+		jxs[dir1] = mx[dir1]; jxe[dir1] = mx[dir1]+sw[dir1];
 	      }
 	      for (int dir2 = 0; dir2 < 3; dir2++) {
 		if (dir2 == dir || dir2 == dir1)
@@ -670,12 +698,12 @@ getLtoL_Edge(struct mrc_ddc *ddc, int bs, int sw, VecScatter *pltol)
   Vec lvec;
   ierr = MB_GetVector(mb, bs, sw, &lvec); CE;
   ierr = VecScatterCreate(lvec, isg, lvec, isl, 
-			  &ddc_sub->mb_ltol_edge[sw][bs-1]); CE;
+			  &ddc_sub->mb_ltol_edge[nr_ghosts][bs-1]); CE;
   ierr = MB_RestoreVector(mb, &lvec); CE;
   ierr = ISDestroy(&isl); CE;
   ierr = ISDestroy(&isg); CE;
 
-  *pltol = ddc_sub->mb_ltol_edge[sw][bs-1];
+  *pltol = ddc_sub->mb_ltol_edge[nr_ghosts][bs-1];
   pfr;
 }
 
@@ -689,7 +717,13 @@ mrc_ddc_mb_fill_ghost_edges_fld(struct mrc_ddc *ddc, int mb, int me,
 
   VecScatter ltol;
   // FIXME: shouldn't have to access private var to get nr_ghosts
-  ierr = getLtoL_Edge(ddc, mrc_fld_nr_comps(x), x->_nr_ghosts, &ltol); CE;
+  assert(x->_sw.nr_vals == 5);
+  int sw[3];
+  int dshift = (int) x->_is_aos;
+  for(int d = 0; d < 3; d++) {
+    sw[d] = x->_sw.vals[d + dshift];
+  }  
+  ierr = getLtoL_Edge(ddc, mrc_fld_nr_comps(x), sw, &ltol); CE;
 
   fgp_t fld_get_petsc = (fgp_t) mrc_fld_get_method(x, "get_petsc_vec");
   Vec x_v = fld_get_petsc(x);
