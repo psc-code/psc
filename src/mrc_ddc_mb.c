@@ -257,7 +257,7 @@ fill_ghost(struct mrc_domain *mb, int sw[3], int kl, const int il[3], int *idxl,
     return;
   }
   idxl[*pcnt] = get_world_array_index(mb,kl,sw, il[0],il[1],il[2]);
-  idxg[*pcnt] = get_world_array_index(mb,kg, 0, ig[0],ig[1],ig[2]);
+  idxg[*pcnt] = get_world_array_index(mb,kg, (int[3]){0,0,0}, ig[0],ig[1],ig[2]);
   (*pcnt)++;
 }
 
@@ -330,7 +330,7 @@ fill_face(struct mrc_domain *mb, int sw[3], struct face_map *lmap, int lk, int l
 	
 	idxl[cnt] = get_world_array_index(mb,lk,sw, ig[0],ig[1],ig[2]);
 	assert(idxl[cnt] >= 0);
-	idxg[cnt] = get_world_array_index(mb,gpatch_nr,0 , is[0],is[1],is[2]);
+	idxg[cnt] = get_world_array_index(mb,gpatch_nr,(int[3]){0,0,0} , is[0],is[1],is[2]);
 	assert(idxg[cnt] >= 0);
 	cnt++;
       }
@@ -413,7 +413,7 @@ getGtoL(struct mrc_ddc *ddc, int bs, int sw[3], VecScatter *pgtol)
     // interior
     mrc_patch_foreach(mb, patch, jx,jy,jz, 0, 0) {      
       idxl[cnt] = get_world_array_index(mb,sub->gpatch_off + patch,sw, jx,jy,jz);
-      idxg[cnt] = get_world_array_index(mb,sub->gpatch_off + patch,0 , jx,jy,jz);
+      idxg[cnt] = get_world_array_index(mb,sub->gpatch_off + patch,(int[3]){0,0,0}, jx,jy,jz);
       cnt++;
     } mrc_patch_foreach_end;
 
@@ -495,7 +495,7 @@ getGtoL(struct mrc_ddc *ddc, int bs, int sw[3], VecScatter *pgtol)
   ierr = PetscFree(idxg); CE;
 
   Vec lvec, gvec;
-  ierr = MB_GetVector(mb, bs, 0, &gvec); CE;
+  ierr = MB_GetVector(mb, bs, (int[3]){0,0,0}, &gvec); CE;
   ierr = MB_GetVector(mb, bs, sw, &lvec); CE;
   ierr = VecScatterCreate(gvec, isg, lvec, isl, &ddc_sub->mb_gtol[nr_ghosts][bs-1]); CE;
   ierr = MB_RestoreVector(mb, &gvec); CE;
@@ -803,7 +803,7 @@ int mrc_matrix_find_global_index(struct mrc_domain *domain,
 {
   struct mrc_domain_mb *mb = mrc_domain_mb(domain);
   return get_world_array_index(domain, mb->gpatch_off + lpatch,
-			       0, jx, jy, jz);
+			       (int[3]){0,0,0}, jx, jy, jz);
 }
 
 static inline int
@@ -814,7 +814,7 @@ MB_get_index(struct mrc_domain *mb, int k1, int i1x, int i1y, int i1z)
   if (ierr) {
     return -1;
   }
-  return get_world_array_index(mb,k2,0, i2[0], i2[1], i2[2]);
+  return get_world_array_index(mb,k2,(int[3]){0,0,0}, i2[0], i2[1], i2[2]);
 }
 
 // FIXME bc arg never used
