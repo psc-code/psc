@@ -406,6 +406,7 @@ static struct param mrc_domain_mb_params_descr[] = {
 
 static struct mrc_obj_method mrc_domain_mb_methods[] = {
   MRC_OBJ_METHOD("get_trafo", mrc_domain_mb_get_trafo),
+  MRC_OBJ_METHOD("block_idx_to_patch_idx", block_index_to_patch_index),
 };
 
 struct mrc_domain_ops mrc_domain_mb_ops = {
