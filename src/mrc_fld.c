@@ -40,6 +40,30 @@ _mrc_fld_destroy(struct mrc_fld *fld)
   free(fld->_comp_name);
 }
 
+
+static inline void
+dispatch_vec_type(struct mrc_fld *fld)
+{
+  const char *vec_type = mrc_fld_ops(fld)->vec_type;
+  // The dispatch is actually slightly prettier with the ops->vec_type
+  // method, but still ugly
+#if defined(PETSC_USE_REAL_SINGLE) && !defined(PETSC_USE_COMPLEX)
+  if (strcmp(vec_type, "float")==0) {
+    vec_type = "petsc";
+    mrc_fld_ops(fld)->vec_type = "petsc";
+  }
+#endif
+#if defined(PETSC_USE_REAL_DOUBLE) && !defined(PETSC_USE_COMPLEX)
+  if (strcmp(vec_type, "double")==0) {
+    vec_type = "petsc";
+    mrc_fld_ops(fld)->vec_type = "petsc";
+  }
+#endif
+  mrc_vec_set_type(fld->_vec, vec_type);
+  if (fld->_is_aos && (strcmp(vec_type, "petsc")==0)){
+    mrc_vec_set_param_int(fld->_vec, "block_size", fld->_nr_comps);
+  }  
+}
 // ----------------------------------------------------------------------
 // mrc_fld_setup_vec
 
@@ -63,24 +87,7 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
 
   const char *vec_type = mrc_fld_ops(fld)->vec_type;
   if (vec_type) {
-    // The dispatch is actually slightly prettier with the ops->vec_type
-    // method, but still ugly
-#if defined(PETSC_USE_REAL_SINGLE) && !defined(PETSC_USE_COMPLEX)
-    if (strcmp(vec_type, "float")==0) {
-      vec_type = "petsc";
-      mrc_fld_ops(fld)->vec_type = "petsc";
-    }
-#endif
-#if defined(PETSC_USE_REAL_DOUBLE) && !defined(PETSC_USE_COMPLEX)
-    if (strcmp(vec_type, "double")==0) {
-      vec_type = "petsc";
-      mrc_fld_ops(fld)->vec_type = "petsc";
-    }
-#endif
-    mrc_vec_set_type(fld->_vec, vec_type);
-    if (fld->_is_aos && (strcmp(vec_type, "petsc")==0)){
-      mrc_vec_set_param_int(fld->_vec, "block_size", fld->_nr_comps);
-    }
+    dispatch_vec_type(fld);
     mrc_vec_set_param_int(fld->_vec, "len", fld->_len);
     mrc_fld_setup_member_objs(fld); // sets up our .vec member
     
@@ -694,7 +701,19 @@ mrc_fld_put_as(struct mrc_fld *fld, struct mrc_fld *fld_base)
 void
 mrc_fld_set_petsc_vec(struct mrc_fld *fld, Vec petsc_vec)
 {
-  assert(strcmp(mrc_fld_ops(fld)->vec_type, "petsc")==0);
+  if (mrc_fld_ops(fld)->vec_type) {
+    dispatch_vec_type(fld);
+  } else {
+    fprintf(stderr, "Cannot set petsc vec for fld type %s (This field doesn't have a vec_type)\n", 
+	    mrc_fld_type(fld));
+    assert(0);
+  }
+  if ( strcmp(mrc_fld_ops(fld)->vec_type, "petsc")!=0 ){
+    fprintf(stderr, "Cannot set petsc vec for fld type %s", mrc_fld_type(fld));
+    fprintf(stderr, " (petsc element size: %zu B, mrc_fld element size: %d B)\n",
+	    sizeof(PetscScalar), fld->_size_of_type);
+    assert(0);
+  }
   void (*vec_set_petsc)( struct mrc_vec *, Vec); 
   vec_set_petsc = (void (*)( struct mrc_vec *, Vec)) mrc_vec_get_method(fld->_vec, "set_petsc_vec");
   assert(vec_set_petsc);
