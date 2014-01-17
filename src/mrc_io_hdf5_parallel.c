@@ -487,6 +487,11 @@ hdf5_parallel_read_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
     foff[d] = 0;
   }
 
+  // FIXME: another hack for writing crds with ghosts
+  if (nr_spatial_dims == 1) {
+    moff[2] -= fld->_nr_ghosts;
+  }
+
   H5Sselect_hyperslab(filespace, H5S_SELECT_SET, foff, NULL, mcount, NULL);
   H5Sselect_hyperslab(memspace, H5S_SELECT_SET, moff, NULL, mcount, NULL);
 
