@@ -22,7 +22,6 @@ mrc_domain_ops(struct mrc_domain *domain)
 static void
 _mrc_domain_create(struct mrc_domain *domain)
 {
-  domain->crds = mrc_crds_create(mrc_domain_comm(domain));
   mrc_crds_set_param_obj(domain->crds, "domain", domain);
 
   // FIXME, this isn't really general, though ok if we always use
@@ -32,45 +31,19 @@ _mrc_domain_create(struct mrc_domain *domain)
   mrc_ddc_set_domain(domain->ddc, domain);
   mrc_ddc_set_param_int(domain->ddc, "size_of_type", sizeof(float));
   mrc_ddc_set_funcs(domain->ddc, &mrc_ddc_funcs_fld);
-  mrc_domain_add_child(domain, (struct mrc_obj *) domain->ddc);
-}
-
-static void
-_mrc_domain_destroy(struct mrc_domain *domain)
-{
-  mrc_crds_destroy(domain->crds);
-}
-
-static void
-_mrc_domain_set_from_options(struct mrc_domain *domain)
-{
-  mrc_crds_set_from_options(domain->crds);
-}
-
-static void
-_mrc_domain_view(struct mrc_domain *domain)
-{
-  mrc_crds_view(domain->crds);
 }
 
 static void
 _mrc_domain_setup(struct mrc_domain *domain)
 {
-  if (domain->crds) {
-    mrc_crds_setup(domain->crds);
-  }
-  mrc_domain_setup_children(domain);
+  mrc_domain_setup_member_objs(domain);
 }
 
 static void
 _mrc_domain_read(struct mrc_domain *domain, struct mrc_io *io)
 {
-  mrc_crds_destroy(domain->crds);
-  domain->crds = NULL;
-
-  mrc_domain_setup(domain);
-  domain->crds = mrc_io_read_ref(io, domain, "crds", mrc_crds);
-
+  // FIXME, mrc_obj should do this by itself
+  domain->obj.is_setup = true;
   mrc_domain_read_member_objs(domain, io);
 }
 
@@ -78,7 +51,6 @@ static void
 _mrc_domain_write(struct mrc_domain *domain, struct mrc_io *io)
 {
   mrc_io_write_int(io, domain, "mpi_size", domain->size);
-  mrc_io_write_ref(io, domain, "crds", domain->crds);
 }
 
 struct mrc_patch *
@@ -279,6 +251,7 @@ mrc_domain_init()
 
 #define VAR(x) (void *)offsetof(struct mrc_domain, x)
 static struct param mrc_domain_descr[] = {
+  { "crds"           , VAR(crds)          , MRC_VAR_OBJ(mrc_crds)   },
   { "ddc"            , VAR(ddc)           , MRC_VAR_OBJ(mrc_ddc)    },
   {},
 };
@@ -290,9 +263,6 @@ struct mrc_class_mrc_domain mrc_class_mrc_domain = {
   .param_descr      = mrc_domain_descr,
   .init             = mrc_domain_init,
   .create           = _mrc_domain_create,
-  .destroy          = _mrc_domain_destroy,
-  .set_from_options = _mrc_domain_set_from_options,
-  .view             = _mrc_domain_view,
   .setup            = _mrc_domain_setup,
   .read             = _mrc_domain_read,
   .write            = _mrc_domain_write,
