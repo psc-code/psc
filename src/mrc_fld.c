@@ -44,7 +44,7 @@ _mrc_fld_destroy(struct mrc_fld *fld)
 // ----------------------------------------------------------------------
 // mrc_fld_setup_vec
 
-static void
+void
 mrc_fld_setup_vec(struct mrc_fld *fld)
 {
   assert(fld->_dims.nr_vals == fld->_offs.nr_vals &&
