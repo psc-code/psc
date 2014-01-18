@@ -25,7 +25,6 @@ _mrc_domain_create(struct mrc_domain *domain)
   domain->crds = mrc_crds_create(mrc_domain_comm(domain));
   mrc_crds_set_param_obj(domain->crds, "domain", domain);
 
-  domain->ddc = mrc_ddc_create(mrc_domain_comm(domain));
   // FIXME, this isn't really general, though ok if we always use
   // multi for whatever domain. Otherwise, we need a call back for set type to
   // updated the sub type accordingly... Similar problem exists with crds, btw.
@@ -71,6 +70,8 @@ _mrc_domain_read(struct mrc_domain *domain, struct mrc_io *io)
 
   mrc_domain_setup(domain);
   domain->crds = mrc_io_read_ref(io, domain, "crds", mrc_crds);
+
+  mrc_domain_read_member_objs(domain, io);
 }
 
 static void
@@ -276,9 +277,17 @@ mrc_domain_init()
 // ======================================================================
 // mrc_domain class
 
+#define VAR(x) (void *)offsetof(struct mrc_domain, x)
+static struct param mrc_domain_descr[] = {
+  { "ddc"            , VAR(ddc)           , MRC_VAR_OBJ(mrc_ddc)    },
+  {},
+};
+#undef VAR
+
 struct mrc_class_mrc_domain mrc_class_mrc_domain = {
   .name             = "mrc_domain",
   .size             = sizeof(struct mrc_domain),
+  .param_descr      = mrc_domain_descr,
   .init             = mrc_domain_init,
   .create           = _mrc_domain_create,
   .destroy          = _mrc_domain_destroy,
