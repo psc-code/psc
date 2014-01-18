@@ -588,9 +588,17 @@ mrc_ddc_multi_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 // ======================================================================
 // mrc_ddc_multi_ops
 
+#define VAR(x) (void *)offsetof(struct mrc_ddc_multi, x)
+static struct param mrc_ddc_multi_descr[] = {
+  { "domain"          , VAR(domain)       , PARAM_OBJ(mrc_domain) },
+  {},
+};
+#undef VAR
+
 struct mrc_ddc_ops mrc_ddc_multi_ops = {
   .name                  = "multi",
   .size                  = sizeof(struct mrc_ddc_multi),
+  .param_descr           = mrc_ddc_multi_descr,
   .setup                 = mrc_ddc_multi_setup,
   .destroy               = mrc_ddc_multi_destroy,
   .set_domain            = mrc_ddc_multi_set_domain,
