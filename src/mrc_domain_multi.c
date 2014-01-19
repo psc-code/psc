@@ -218,7 +218,7 @@ mrc_domain_multi_setup_map(struct mrc_domain *domain)
 }
 
 static void
-mrc_domain_multi_setup(struct mrc_domain *domain)
+mrc_domain_multi_do_setup(struct mrc_domain *domain)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
@@ -269,7 +269,12 @@ mrc_domain_multi_setup(struct mrc_domain *domain)
       multi->patches[p].off[d] = info.off[d];
     }
   }
+}
 
+static void
+mrc_domain_multi_setup(struct mrc_domain *domain)
+{
+  mrc_domain_multi_do_setup(domain);
   mrc_domain_setup_super(domain);
 }
 
@@ -431,6 +436,10 @@ mrc_domain_multi_read(struct mrc_domain *domain, struct mrc_io *io)
       multi->nr_patches = nr_patches;
     }
   }
+
+  // FIXME? We're mostly redoing things from scratch, rather
+  // than reading them...
+  mrc_domain_multi_do_setup(domain);
 
   mrc_domain_read_super(domain, io);
 }
