@@ -203,8 +203,8 @@ mrc_vec_petsc_set(struct mrc_vec *x, double val)
 static void
 mrc_vec_petsc_copy(struct mrc_vec *vec_to, struct mrc_vec *vec_from)
 {
-  int ierr = VecCopy(mrc_vec_petsc(vec_to)->petsc_vec, 
-		     mrc_vec_petsc(vec_from)->petsc_vec); CE;
+  int ierr = VecCopy(mrc_vec_petsc(vec_from)->petsc_vec,
+		     mrc_vec_petsc(vec_to)->petsc_vec); CE;
 }
 
 
