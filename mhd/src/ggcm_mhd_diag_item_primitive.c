@@ -104,7 +104,7 @@ ggcm_mhd_diag_item_pp_run(struct ggcm_mhd_diag_item *item,
   struct mrc_fld *r = mrc_fld_get_as(fld_r, FLD_TYPE);
   struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
 
-  if (mhd_type == MT_SEMI_CONSERVATIVE ||
+  if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM ||
       mhd_type == MT_SEMI_CONSERVATIVE_ALT_B) {
     mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
       float rvv = (sqr(RV1X(f, ix,iy,iz)) +
@@ -163,7 +163,7 @@ ggcm_mhd_diag_item_b_run(struct ggcm_mhd_diag_item *item,
 
   struct mrc_fld *r = mrc_fld_get_as(fld_r, FLD_TYPE);
   struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
-  if (mhd_type == MT_SEMI_CONSERVATIVE) {
+  if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM) {
     mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
       F3(fld_r, 0, ix,iy,iz) = .5f * (B1X(f, ix,iy,iz) + B1X(f, ix-1,iy,iz));
       F3(fld_r, 1, ix,iy,iz) = .5f * (B1Y(f, ix,iy,iz) + B1Y(f, ix,iy-1,iz));

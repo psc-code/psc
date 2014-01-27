@@ -56,7 +56,7 @@ ggcm_mhd_diag_item_uu1_run(struct ggcm_mhd_diag_item *item,
   struct mrc_fld *r = mrc_fld_get_as(fld_r, FLD_TYPE);
   struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
 
-  if (mhd_type == MT_SEMI_CONSERVATIVE ||
+  if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM ||
       mhd_type == MT_SEMI_CONSERVATIVE_ALT_B) {
     mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
       MRC_F3(r, 0, ix,iy,iz) = UU1(f, ix,iy,iz);

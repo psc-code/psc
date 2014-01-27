@@ -8,13 +8,13 @@
 #include <string.h>
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_convert_sc_from_primitive
+// ggcm_mhd_convert_sc_ggcm_from_primitive
 //
 // converts from primitive variables to semi-conservative in-place.
 // No ghost points are set.
 
 static void
-ggcm_mhd_convert_sc_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_base)
+ggcm_mhd_convert_sc_ggcm_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_base)
 {
   mrc_fld_data_t gamma_m1 = mhd->par.gamm - 1.;
 
@@ -111,8 +111,8 @@ ggcm_mhd_convert_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_base)
   int mhd_type;
   mrc_fld_get_param_int(fld_base, "mhd_type", &mhd_type);
 
-  if (mhd_type == MT_SEMI_CONSERVATIVE) {
-    return ggcm_mhd_convert_sc_from_primitive(mhd, fld_base);
+  if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM) {
+    return ggcm_mhd_convert_sc_ggcm_from_primitive(mhd, fld_base);
   } else if (mhd_type == MT_FULLY_CONSERVATIVE_ALT_B) {
     return ggcm_mhd_convert_fc_alt_b_from_primitive(mhd, fld_base);
   } else if (mhd_type == MT_SEMI_CONSERVATIVE_ALT_B) {
