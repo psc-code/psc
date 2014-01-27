@@ -104,7 +104,8 @@ ggcm_mhd_diag_item_pp_run(struct ggcm_mhd_diag_item *item,
   struct mrc_fld *r = mrc_fld_get_as(fld_r, FLD_TYPE);
   struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
 
-  if (mhd_type == MT_SEMI_CONSERVATIVE) {
+  if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM ||
+      mhd_type == MT_SEMI_CONSERVATIVE) {
     mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
       float rvv = (sqr(RV1X(f, ix,iy,iz)) +
 		   sqr(RV1Y(f, ix,iy,iz)) +
@@ -154,18 +155,30 @@ ggcm_mhd_diag_item_b_run(struct ggcm_mhd_diag_item *item,
 {
   struct ggcm_mhd *mhd = item->diag->mhd;
 
-  struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, SW_2, "pp_full");
-  mrc_fld_set_param_int(fld_r, "nr_comps", 3);
+  int mhd_type;
+  mrc_fld_get_param_int(fld, "mhd_type", &mhd_type);
+
+  struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, SW_2, "bx:by:bz");
   mrc_fld_setup(fld_r);
 
   struct mrc_fld *r = mrc_fld_get_as(fld_r, FLD_TYPE);
   struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
-
-  mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
-    F3(fld_r, 0, ix,iy,iz) = .5f * (B1X(f, ix,iy,iz) + B1X(f, ix-1,iy,iz));
-    F3(fld_r, 1, ix,iy,iz) = .5f * (B1Y(f, ix,iy,iz) + B1Y(f, ix,iy-1,iz));
-    F3(fld_r, 2, ix,iy,iz) = .5f * (B1Z(f, ix,iy,iz) + B1Z(f, ix,iy,iz-1));
-  } mrc_fld_foreach_end;
+  if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM) {
+    mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
+      F3(fld_r, 0, ix,iy,iz) = .5f * (B1X(f, ix,iy,iz) + B1X(f, ix-1,iy,iz));
+      F3(fld_r, 1, ix,iy,iz) = .5f * (B1Y(f, ix,iy,iz) + B1Y(f, ix,iy-1,iz));
+      F3(fld_r, 2, ix,iy,iz) = .5f * (B1Z(f, ix,iy,iz) + B1Z(f, ix,iy,iz-1));
+    } mrc_fld_foreach_end;
+  } else if (mhd_type == MT_SEMI_CONSERVATIVE ||
+	     mhd_type == MT_FULLY_CONSERVATIVE) {
+    mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
+      F3(fld_r, 0, ix,iy,iz) = .5f * (B1X(f, ix,iy,iz) + B1X(f, ix+1,iy,iz));
+      F3(fld_r, 1, ix,iy,iz) = .5f * (B1Y(f, ix,iy,iz) + B1Y(f, ix,iy+1,iz));
+      F3(fld_r, 2, ix,iy,iz) = .5f * (B1Z(f, ix,iy,iz) + B1Z(f, ix,iy,iz+1));
+    } mrc_fld_foreach_end;
+  } else {
+    assert(0);
+  }
 
   mrc_fld_put_as(r, fld_r);
   mrc_fld_put_as(f, fld);

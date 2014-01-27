@@ -101,6 +101,11 @@ ggcm_mhd_step_cweno_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
 
 struct ggcm_mhd_step_ops ggcm_mhd_step_cweno_ops = {
   .name        = "cweno",
+#ifdef SEMICONSV
+  .mhd_type    = MT_SEMI_CONSERVATIVE,
+#else
+  .mhd_type    = MT_FULLY_CONSERVATIVE,
+#endif
   .calc_rhs    = ggcm_mhd_step_cweno_calc_rhs,
 };
 
