@@ -35,9 +35,9 @@ enum {
   MT_PRIMITIVE,
   // the following have B staggered the openggcm way: [-1..mx[
   MT_SEMI_CONSERVATIVE_GGCM,
-  // the following have B staggered the alt way: [0..mx]
-  MT_SEMI_CONSERVATIVE_ALT_B,
-  MT_FULLY_CONSERVATIVE_ALT_B,
+  // the following have B staggered the "normal" way: [0..mx]
+  MT_SEMI_CONSERVATIVE,
+  MT_FULLY_CONSERVATIVE,
 
   N_MT,
 };

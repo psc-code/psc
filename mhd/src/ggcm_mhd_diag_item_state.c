@@ -57,11 +57,11 @@ ggcm_mhd_diag_item_uu1_run(struct ggcm_mhd_diag_item *item,
   struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
 
   if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM ||
-      mhd_type == MT_SEMI_CONSERVATIVE_ALT_B) {
+      mhd_type == MT_SEMI_CONSERVATIVE) {
     mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
       MRC_F3(r, 0, ix,iy,iz) = UU1(f, ix,iy,iz);
     } mrc_fld_foreach_end;
-  } else if (mhd_type == MT_FULLY_CONSERVATIVE_ALT_B) {
+  } else if (mhd_type == MT_FULLY_CONSERVATIVE) {
     mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
       float b2  = (sqr(.5f * (B1X(f, ix,iy,iz) + B1X(f, ix+1,iy  ,iz  ))) +
 		   sqr(.5f * (B1Y(f, ix,iy,iz) + B1Y(f, ix  ,iy+1,iz  ))) +
