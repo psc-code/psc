@@ -20,6 +20,35 @@ ggcm_mhd_convert_sc_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_bas
 
   struct mrc_fld *fld = mrc_fld_get_as(fld_base, FLD_TYPE);
 
+  mrc_fld_foreach(fld, ix,iy,iz, 0, 1) {
+    RV1X(fld, ix,iy,iz) = RR1(fld, ix,iy,iz) * V1X(fld, ix,iy,iz);
+    RV1Y(fld, ix,iy,iz) = RR1(fld, ix,iy,iz) * V1Y(fld, ix,iy,iz);
+    RV1Z(fld, ix,iy,iz) = RR1(fld, ix,iy,iz) * V1Z(fld, ix,iy,iz);
+    UU1(fld, ix,iy,iz) = PP1(fld, ix,iy,iz) / gamma_m1
+      + .5*(sqr(RV1X(fld, ix,iy,iz)) +
+	    sqr(RV1Y(fld, ix,iy,iz)) +
+	    sqr(RV1Z(fld, ix,iy,iz))) / RR1(fld, ix,iy,iz);
+    B1X(fld, ix-1,iy,iz) = B1X(fld, ix,iy,iz);
+    B1Y(fld, ix,iy-1,iz) = B1Y(fld, ix,iy,iz);
+    B1Z(fld, ix,iy,iz-1) = B1Z(fld, ix,iy,iz);
+  } mrc_fld_foreach_end;
+  
+  mrc_fld_put_as(fld, fld_base);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_convert_sc_alt_b_from_primitive
+//
+// converts from primitive variables to semi-conservative alt B in-place.
+// No ghost points are set.
+
+static void
+ggcm_mhd_convert_sc_alt_b_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_base)
+{
+  mrc_fld_data_t gamma_m1 = mhd->par.gamm - 1.;
+
+  struct mrc_fld *fld = mrc_fld_get_as(fld_base, FLD_TYPE);
+
   mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
     RV1X(fld, ix,iy,iz) = RR1(fld, ix,iy,iz) * V1X(fld, ix,iy,iz);
     RV1Y(fld, ix,iy,iz) = RR1(fld, ix,iy,iz) * V1Y(fld, ix,iy,iz);
@@ -34,14 +63,14 @@ ggcm_mhd_convert_sc_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_bas
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_convert_fc_from_primitive
+// ggcm_mhd_convert_fc_alt_b_from_primitive
 //
 // converts from primitive variables to fully-conservative in-place.
 // No ghost points are set, the staggered B fields need to exist on all faces
 // (that means one more than cell-centered dims)
 
 static void
-ggcm_mhd_convert_fc_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_base)
+ggcm_mhd_convert_fc_alt_b_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_base)
 {
   mrc_fld_data_t gamma_m1 = mhd->par.gamm - 1.;
 
@@ -84,8 +113,10 @@ ggcm_mhd_convert_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_base)
 
   if (mhd_type == MT_SEMI_CONSERVATIVE) {
     return ggcm_mhd_convert_sc_from_primitive(mhd, fld_base);
-  } else if (mhd_type == MT_FULLY_CONSERVATIVE) {
-    return ggcm_mhd_convert_fc_from_primitive(mhd, fld_base);
+  } else if (mhd_type == MT_FULLY_CONSERVATIVE_ALT_B) {
+    return ggcm_mhd_convert_fc_alt_b_from_primitive(mhd, fld_base);
+  } else if (mhd_type == MT_SEMI_CONSERVATIVE_ALT_B) {
+    return ggcm_mhd_convert_sc_alt_b_from_primitive(mhd, fld_base);
   } else {
     assert(0);
   }

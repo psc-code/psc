@@ -45,14 +45,14 @@ ggcm_mhd_ic_ot_run(struct ggcm_mhd_ic *ic)
 
   /* Initialize vector potential */
 
-  mrc_fld_foreach(fld, ix,iy,iz, 0, 1) {
+  mrc_fld_foreach(fld, ix,iy,iz, 1, 2) {
     float xx = MRC_CRDX(crds, ix) - .5 * dx[0], yy = MRC_CRDY(crds, iy) - .5 * dx[1];
     MRC_F3(Az, 0, ix,iy,iz) = B0 / (4.*M_PI) * cos(4.*M_PI * xx) + B0 / (2.*M_PI) * cos(2.*M_PI * yy);
   } mrc_fld_foreach_end;
 
   /* Initialize face-centered fields */
 
-  mrc_fld_foreach(fld, ix,iy,iz, 0, 1) {
+  mrc_fld_foreach(fld, ix,iy,iz, 1, 1) {
     B1X(fld, ix,iy,iz) =  (MRC_F3(Az, 0, ix,iy+1,iz) - MRC_F3(Az, 0, ix,iy,iz)) / dx[1];
     B1Y(fld, ix,iy,iz) = -(MRC_F3(Az, 0, ix+1,iy,iz) - MRC_F3(Az, 0, ix,iy,iz)) / dx[0];
   } mrc_fld_foreach_end;

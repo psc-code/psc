@@ -78,18 +78,11 @@ enum {
 // ----------------------------------------------------------------------
 // macros to ease field access
 
-#if 1
 #define B1XYZ(f,m, ix,iy,iz) F3(f, _B1X+(m), ix,iy,iz)
-#else // GGCM staggering
-#define B1XYZ(f,m, ix,iy,iz) F3(f, _B1X+(m),		\
-				(ix) - ((m) == 0),		\
-				(iy) - ((m) == 1),		\
-				(iz) - ((m) == 2))
-#endif
 
-#define B1X(f, ix,iy,iz) B1XYZ(f, 0, ix,iy,iz)
-#define B1Y(f, ix,iy,iz) B1XYZ(f, 1, ix,iy,iz)
-#define B1Z(f, ix,iy,iz) B1XYZ(f, 2, ix,iy,iz)
+#define B1X(f, ix,iy,iz) F3(f, _B1X, ix,iy,iz)
+#define B1Y(f, ix,iy,iz) F3(f, _B1Y, ix,iy,iz)
+#define B1Z(f, ix,iy,iz) F3(f, _B1Z, ix,iy,iz)
 
 #define RR1(f, ix,iy,iz)  F3(f, _RR1, ix,iy,iz)
 #define RV1X(f, ix,iy,iz) F3(f, _RV1X, ix,iy,iz)

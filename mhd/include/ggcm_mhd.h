@@ -33,8 +33,12 @@ void ggcm_mhd_convert_from_primitive(struct ggcm_mhd *mhd,
 
 enum {
   MT_PRIMITIVE,
+  // the following have B staggered the openggcm way: [-1..mx[
   MT_SEMI_CONSERVATIVE,
-  MT_FULLY_CONSERVATIVE,
+  // the following have B staggered the alt way: [0..mx]
+  MT_SEMI_CONSERVATIVE_ALT_B,
+  MT_FULLY_CONSERVATIVE_ALT_B,
+
   N_MT,
 };
 
