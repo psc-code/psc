@@ -533,6 +533,7 @@ _mrc_trafo_setup(struct mrc_trafo *trafo)
 
 // ----------------------------------------------------------------------
 // mrc_trafo_read
+// FIXME: This doesn't so much read as it does regenerate. That's... not good.
 static void
 _mrc_trafo_read(struct mrc_trafo *trafo, struct mrc_io *io)
 {
@@ -559,7 +560,6 @@ _mrc_trafo_read(struct mrc_trafo *trafo, struct mrc_io *io)
 const char *
 mrc_trafo_block_factory_type(struct mrc_trafo *trafo)
 {
-  fprintf(stderr, "Block factory %s\n", mrc_trafo_ops(trafo)->_block_factory);
   return mrc_trafo_ops(trafo)->_block_factory;
 }
 

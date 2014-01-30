@@ -2,11 +2,6 @@
 #include <mrc_trafo_cylindrical.h>
 #include <mrc_crds.h>
 #include <math.h>
-
-struct mrc_trafo_cylindrical {
-  int mx, my;
-  double xe, eps;
-};
   
 #define mrc_trafo_cyl(trafo) mrc_to_subobj(trafo, struct mrc_trafo_cylindrical)
 
@@ -113,24 +108,11 @@ _trafo_cyl_gam(struct mrc_trafo *trafo, int block, const double xi[3], int i, in
   }
 }
 
-#define VAR(x) (void *)offsetof(struct mrc_trafo_cylindrical, x)
-static struct param mrc_trafo_cyl_descr[] = {
-  { "mx"            , VAR(mx)           , PARAM_INT(32)                  },
-  { "my"            , VAR(my)           , PARAM_INT(32)                  },
-  { "xe"            , VAR(xe)           , PARAM_DOUBLE(1.)               },
-  { "eps"           , VAR(eps)          , PARAM_DOUBLE(.1)               },
-  {},
-};
-#undef VAR
-
-
 // ======================================================================
 // mrc_trafo_cylindrical_ops
 
 struct mrc_trafo_ops mrc_trafo_cylindrical_ops = {
   .name             = "cylindrical",
-  .size             = sizeof(struct mrc_trafo_cylindrical),
-  .param_descr      = mrc_trafo_cyl_descr,
   ._block_factory   = "cylindrical",
   .calcCRD  = _trafo_cyl_coord,
   .calcJAC  = _trafo_cyl_jac,
