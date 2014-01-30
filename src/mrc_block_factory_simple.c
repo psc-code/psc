@@ -107,7 +107,8 @@ mrc_block_factory_simple2d_run(struct mrc_block_factory *fac, struct mrc_domain 
 struct mrc_block_factory_ops mrc_block_factory_simple2d = {
   .name        = "simple2d",
   .size        = sizeof(struct mrc_bf_simple),
-  .read             = _mrc_block_factory_read,
+  .create      = _bf_simple_create,
+  .read        = _mrc_block_factory_read,
   .param_descr = mrc_bf_simple_param_descr,
   .run         = mrc_block_factory_simple2d_run,
 };
