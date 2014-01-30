@@ -156,6 +156,9 @@ enum {
 };
 
   
+// These are too clever for their own good: Look at value of face enums
+// to see why they works.
+
 // ----------------------------------------------------------------------
 // return dir (0,1,2) perpendicular to given face
 
@@ -183,30 +186,11 @@ map2dir(int map)
 // ----------------------------------------------------------------------
 
 
-struct MB_face {
-  int block; // Which block do we exchange points for?
-  int face;  // Which face on that block has my points?
-  int map[3]; // Which dimension [x, y, z] on that face maps to each of my dimensions [0,1,2]?
-  int btype; // What boundary condition should I use when exchanging data?
-};
-
-
-struct MB_block {
-  int mx[3];
-  struct MB_face faces[NR_FACES];
-  int nr_block;
-  int lxs[3]; // position of this block in the logical grid
-  // (which does not necessarily uniquely exist, but helpful for
-  //  some I/O, debugging etc.)
-};
-
 struct mrc_domain_mb { 
-  int gdims[3]; // Global number of points (w/o ghosts)
   int bc[3]; // boundary conditions in x/y/z
 
   // unique block related bits
-  struct mrc_trafo *_trafo; 
-  const char *_factory_type;
+  struct mrc_block_factory * _block_factory;
   int ppb[3]; // how to subdivide blocks into patches
   int mb_ppb_total; // total patches per block
   int nr_blocks;

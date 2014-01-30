@@ -88,9 +88,7 @@ mrc_crds_gen_ggcm_x_run(struct mrc_crds_gen *gen, float *xx, float *dx)
 {
   struct mrc_crds_gen_ggcm_x *sub = mrc_crds_gen_ggcm_x(gen);
 
-  int gdims[3];
-  mrc_domain_get_global_dims(gen->crds->domain, gdims);
-  sub->n = gdims[gen->d];
+  sub->n = gen->dims[gen->d];
   
   float xl[3], xh[3];
   mrc_crds_get_param_float3(gen->crds, "l", xl);

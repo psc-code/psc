@@ -3,6 +3,7 @@
 
 #include <mrc_domain.h> // will become just mrc_domain.h
 #include <mrc_params.h>
+#include <mrc_io.h>
 #include <string.h>
 #include <mrc_bits.h>
 

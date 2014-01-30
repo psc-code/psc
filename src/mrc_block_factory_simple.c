@@ -1,6 +1,7 @@
 
 #include "mrc_block_factory_private.h"
 #include <mrc_domain.h> // will become just mrc_domain.h
+#include <mrc_crds_gen.h>
 
 #include <stdlib.h>
 
@@ -13,28 +14,71 @@
 // ----------------------------------------------------------------------
 // mrc_block_factory_simple2d_run
 
+struct mrc_bf_simple {
+  float xb, xe;
+  float yb, ye;
+  float zb, ze;
+  int dims[3];
+  struct mrc_crds_gen *coord_gen[3];
+};
+
+static void
+_bf_simple_create(struct mrc_block_factory *fac)
+{
+  struct mrc_bf_simple *sub = mrc_to_subobj(fac, struct mrc_bf_simple);
+  mrc_crds_gen_set_name(sub->coord_gen[0], "coord_gen_x");
+  mrc_crds_gen_set_name(sub->coord_gen[1], "coord_gen_y");
+  mrc_crds_gen_set_name(sub->coord_gen[2], "coord_gen_z");
+}
+
+static void
+_mrc_block_factory_read(struct mrc_block_factory *fac, struct mrc_io *io)
+{
+  mrc_block_factory_read_member_objs(fac, io);
+}
+
+
+#define VAR(x) (void *)offsetof(struct mrc_bf_simple, x)
+static struct param mrc_bf_simple_param_descr[] = {
+  { "xb"              , VAR(xb)             , PARAM_FLOAT(0)         },
+  { "xe"              , VAR(xe)             , PARAM_FLOAT(1.0  )     },
+  { "yb"              , VAR(yb)             , PARAM_FLOAT(0)         },
+  { "ye"              , VAR(ye)             , PARAM_FLOAT(1.0  )     },
+  { "zb"              , VAR(zb)             , PARAM_FLOAT(0)         },
+  { "ze"              , VAR(ze)             , PARAM_FLOAT(1.0  )     },
+  { "m"                , VAR(dims)          , PARAM_INT3(16,16,16)   },
+  { "coord_gen_x"       , VAR(coord_gen[0])    , MRC_VAR_OBJ(mrc_crds_gen)},
+  { "coord_gen_y"       , VAR(coord_gen[1])    , MRC_VAR_OBJ(mrc_crds_gen)},
+  { "coord_gen_z"       , VAR(coord_gen[2])    , MRC_VAR_OBJ(mrc_crds_gen)},
+  {}
+};
+#undef VAR
+
+
+// FIXME: This is kind of redundent, could be handled by the 3D version just fine.
 static void 
 mrc_block_factory_simple2d_run(struct mrc_block_factory *fac, struct mrc_domain *domain)
 {
   struct mrc_domain_mb *mb = mrc_domain_mb(domain);
-  int gdims[3];
-  mrc_domain_get_global_dims(domain, gdims);
-  
+  struct mrc_bf_simple *sub = mrc_to_subobj(fac, struct mrc_bf_simple);
+
   int nr_blocks = 1;
   mb->nr_blocks = nr_blocks;
   struct MB_block *blocks = (struct MB_block *) calloc(nr_blocks, sizeof(struct MB_block));
   
   mb->mb_blocks = blocks;
 
-  assert(gdims[2] == 1);
   blocks[0] = (struct MB_block) {
-    .mx = { gdims[0], gdims[1], 1 }, // Dimensions of the block
+    .mx = { sub->dims[0], sub->dims[1], 1 }, // Dimensions of the block
     .faces = { // Default boundary mapping for the faces
       [FACE_LEFT  ] = { .btype = BTYPE_OUTER },
       [FACE_RIGHT ] = { .btype = BTYPE_OUTER },
       [FACE_BOTTOM] = { .btype = BTYPE_OUTER },
       [FACE_TOP   ] = { .btype = BTYPE_OUTER },
     },
+    .coord_gen = {sub->coord_gen[0] , sub->coord_gen[1], sub->coord_gen[2]},
+    .xl = { sub->xb, sub->yb, sub->zb },
+    .xh = { sub->xe, sub->ye, sub->ze },   
   };
   
   // check if any of our directions is periodic. If so, assign 
@@ -56,11 +100,15 @@ mrc_block_factory_simple2d_run(struct mrc_block_factory *fac, struct mrc_domain 
 
 }
 
+
 // ----------------------------------------------------------------------
 // mrc_block_factory subclass "simple2d"
 
 struct mrc_block_factory_ops mrc_block_factory_simple2d = {
   .name        = "simple2d",
+  .size        = sizeof(struct mrc_bf_simple),
+  .read             = _mrc_block_factory_read,
+  .param_descr = mrc_bf_simple_param_descr,
   .run         = mrc_block_factory_simple2d_run,
 };
 
@@ -72,8 +120,7 @@ static void
 mrc_block_factory_simple3d_run(struct mrc_block_factory *fac, struct mrc_domain *domain)
 {
   struct mrc_domain_mb *mb = mrc_domain_mb(domain);
-  int gdims[3];
-  mrc_domain_get_global_dims(domain, gdims);
+  struct mrc_bf_simple *sub = mrc_to_subobj(fac, struct mrc_bf_simple);
   
   int nr_blocks = 1;
   mb->nr_blocks = nr_blocks;
@@ -82,7 +129,7 @@ mrc_block_factory_simple3d_run(struct mrc_block_factory *fac, struct mrc_domain 
   mb->mb_blocks = blocks;
 
    blocks[0] = (struct MB_block){
-     .mx = { gdims[0], gdims[1], gdims[2] },
+     .mx = { sub->dims[0], sub->dims[1], sub->dims[2] }, // Dimensions of the block
      .faces = {
        [FACE_LEFT  ] = { .btype = BTYPE_OUTER },
        [FACE_RIGHT ] = { .btype = BTYPE_OUTER },
@@ -91,6 +138,9 @@ mrc_block_factory_simple3d_run(struct mrc_block_factory *fac, struct mrc_domain 
        [FACE_FRONT ] = { .btype = BTYPE_OUTER },
        [FACE_BACK  ] = { .btype = BTYPE_OUTER },
      },
+     .coord_gen = {sub->coord_gen[0] , sub->coord_gen[1], sub->coord_gen[2]},
+     .xl = { sub->xb, sub->yb, sub->zb },
+     .xh = { sub->xe, sub->ye, sub->ze } ,   
    };
 
   if (mb->bc[0] == BC_PERIODIC) {
@@ -118,6 +168,10 @@ mrc_block_factory_simple3d_run(struct mrc_block_factory *fac, struct mrc_domain 
 
 struct mrc_block_factory_ops mrc_block_factory_simple3d = {
   .name        = "simple3d",
+  .size        = sizeof(struct mrc_bf_simple),
+  .create      = _bf_simple_create,
+  .read             = _mrc_block_factory_read,
+  .param_descr = mrc_bf_simple_param_descr,
   .run         = mrc_block_factory_simple3d_run,
 };
 

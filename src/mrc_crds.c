@@ -147,6 +147,7 @@ _mrc_crds_setup(struct mrc_crds *crds)
     mrc_fld_setup(x);
 
     struct mrc_crds_gen *gen = crds->crds_gen[d];
+    mrc_crds_gen_set_param_int3(gen, "m", (int[3]){gdims[0], gdims[1], gdims[2]});
     mrc_crds_gen_run(gen, &MRC_S2(x, 0, 0), &MRC_S2(x, 0, 1));
 
     mrc_m1_foreach_patch(crds->crd[d], p) {
@@ -231,6 +232,85 @@ static struct mrc_crds_ops mrc_crds_amr_uniform_ops = {
   .setup = mrc_crds_amr_uniform_setup,
 };
 
+
+// ======================================================================
+// mrc_crds_mb
+// We need a new type of coords to be able to handle multi-block domains,
+// since they don't generally have a global coordinate system. We'll iterate
+// through and create each block local coordinate system.
+
+
+static void
+mrc_crds_mb_setup(struct mrc_crds *crds)
+{
+  // this should still work
+  mrc_crds_setup_alloc_only(crds);
+
+  typedef void (*dgb_t)(struct mrc_domain *, struct MB_block **pblock, int *nr_blocks);
+  dgb_t domain_get_blocks = (dgb_t) mrc_domain_get_method(crds->domain, "get_blocks");
+
+  int nr_blocks;
+  struct MB_block *blocks;
+
+  domain_get_blocks(crds->domain, &blocks, &nr_blocks);
+  
+  int nr_patches;
+  mrc_domain_get_patches(crds->domain, &nr_patches);
+  int sw = crds->sw;
+
+  for (int b = 0; b < nr_blocks; b++)
+    {
+      struct MB_block *block = &(blocks[b]);
+      // FIXME: This is a bad abuse, but it's the only way
+      // to get the block bounds to crds_gens in a way they
+      // understand
+      mrc_crds_set_param_float3(crds, "l", (float[3]){block->xl[0], block->xl[1], block->xl[2]});
+      mrc_crds_set_param_float3(crds, "h", (float[3]){block->xh[0], block->xh[1], block->xh[2]});
+
+      for (int d = 0; d < 3; d ++) {
+
+	struct mrc_fld *x = mrc_fld_create(MPI_COMM_SELF);
+	mrc_fld_set_param_int_array(x, "dims", 2, (int[2]) { block->mx[d] + 1, 2 });
+	mrc_fld_set_param_int_array(x, "sw"  , 2, (int[2]) { sw, 0 });
+	mrc_fld_setup(x);
+	
+	// If I had my way, I'd kill off the original crds_gen children to minimize confusion,
+	// but I guess I'll just have to write the docs to make it clear what's going on here.
+	assert(block->coord_gen[d]);
+	
+	// FIXME:
+	// I hate having to add this "m" hack more than any other.
+	// Could go in block factory, I suppose...
+	mrc_crds_gen_set_param_int3(block->coord_gen[d], "m", block->mx);
+	mrc_crds_gen_set_param_int(block->coord_gen[d], "d", d);
+	mrc_crds_gen_set_param_obj(block->coord_gen[d], "crds", crds);
+
+	mrc_crds_gen_run(block->coord_gen[d], &MRC_S2(x, 0, 0), &MRC_S2(x, 0, 1));
+	
+	mrc_m1_foreach_patch(crds->crd[d], p) {
+	  struct mrc_patch_info info;
+	  mrc_domain_get_local_patch_info(crds->domain, p, &info);
+	  if (b == info.p_block) {
+	    // This is offset of the patch in the block
+	    int off = info.p_ix[d];
+	    mrc_m1_foreach_bnd(crds->crd[d], ix) {
+	      MRC_MCRD(crds, d, ix, p) = MRC_S2(x, ix + off, 0);
+	    } mrc_m1_foreach_end;
+
+	  }
+	}
+	mrc_fld_destroy(x);
+      }
+    }
+
+ }
+
+
+static struct mrc_crds_ops mrc_crds_mb_ops = {
+  .name  = "mb",
+  .setup = mrc_crds_mb_setup,
+};
+
 // ======================================================================
 // mrc_crds_init
 
@@ -244,6 +324,7 @@ mrc_crds_init()
   mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_uniform_ops);
   mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_rectilinear_ops);
   mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_amr_uniform_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_mb_ops);
 }
 
 // ======================================================================

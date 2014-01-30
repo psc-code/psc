@@ -1,6 +1,7 @@
 
 #include <mrc_params.h>
 #include <mrc_domain.h>
+#include <mrc_block_factory.h>
 #include <mrc_fld.h>
 #include <mrc_io.h>
 #include <mrctest.h>
@@ -59,13 +60,6 @@ test_read_write(struct mrc_domain *domain)
   mrctest_crds_compare(mrc_domain_get_crds(domain),
 		       mrc_domain_get_crds(domain2));
 
-  typedef struct mrc_trafo* (*dgt_t)(struct mrc_domain *, struct mrc_trafo **);
-  dgt_t domain_get_trafo = (dgt_t) mrc_domain_get_method(domain, "get_trafo");
-  struct mrc_trafo *trafo1, *trafo2;
-  domain_get_trafo(domain, &trafo1);
-  domain_get_trafo(domain2, &trafo2);
-  check_trafos(trafo1, trafo2);
-
   mrc_domain_destroy(domain2);
 }
 
@@ -77,23 +71,21 @@ main(int argc, char **argv)
 
   struct mrc_domain *domain = mrc_domain_create(MPI_COMM_WORLD);
   mrc_domain_set_type(domain, "mb");
-  mrc_domain_set_param_string(domain, "block_factory", "simple3d");
+  struct mrc_block_factory *blk_fac = mrc_domain_get_param_obj(domain, "block_factory");
+
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   int testcase = 1;
   mrc_params_get_option_int("case", &testcase);
 
   switch (testcase) {
   case 1:
-    mrc_crds_set_type(crds, "uniform");
+    mrc_block_factory_set_type(blk_fac, "simple3d");
     mrc_domain_set_from_options(domain);
     mrc_domain_setup(domain);
     test_read_write(domain);
     break;
   case 2: ;
-    // THIS CASE WILL ALWAYS FAIL! TRAFO GETS ASSIGNED AT CREATION
-    // NO WAY TO REGENERATE TRAFO!
-    // Though I could totally do that, if I felt like it.
-    mrc_crds_set_type(crds, "rectilinear");
+    mrc_block_factory_set_type(blk_fac, "simple3d");
     mrc_crds_set_param_int(crds, "sw", 2);
     mrc_domain_set_from_options(domain);
     mrc_domain_setup(domain);
@@ -101,6 +93,13 @@ main(int argc, char **argv)
     mrctest_set_crds_rectilinear_1(domain);
     test_read_write(domain);
     break;
+  case 3:
+    mrc_block_factory_set_type(blk_fac, "cylindrical");
+    mrc_domain_set_from_options(domain);
+    mrc_domain_setup(domain);
+    test_read_write(domain);
+    break;
+
   }
   mrc_domain_destroy(domain);
 

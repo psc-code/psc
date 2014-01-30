@@ -67,6 +67,26 @@ struct mrc_patch_info {
   struct MB_pface p_pface[NR_FACES];
 };
 
+
+struct MB_face {
+  int block; // Which block do we exchange points for?
+  int face;  // Which face on that block has my points?
+  int map[3]; // Which dimension [x, y, z] on that face maps to each of my dimensions [0,1,2]?
+  int btype; // What boundary condition should I use when exchanging data?
+};
+
+struct MB_block {
+  int mx[3];
+  struct MB_face faces[NR_FACES];
+  int nr_block;
+  int lxs[3]; // position of this block in the logical grid
+  // (which does not necessarily uniquely exist, but helpful for
+  //  some I/O, debugging etc.)
+  struct mrc_crds_gen *coord_gen[3]; // What generators are used for the 0,1,2 coordinates
+  float xl[3]; // Lower bounds of this block in coordinate space
+  float xh[3]; // Upper bounds of this block in coordinate space
+};
+
 MRC_CLASS_DECLARE(mrc_domain, struct mrc_domain);
 
 void mrc_domain_get_global_dims(struct mrc_domain *domain, int *dims);

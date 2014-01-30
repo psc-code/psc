@@ -45,8 +45,8 @@ mrc_crds_gen_gaussian_run(struct mrc_crds_gen *gen, float *xx, float *dx)
 {
   struct mrc_crds_gen_gaussian *sub = mrc_crds_gen_gaussian(gen);
 
-  int gdims[3];
-  mrc_domain_get_global_dims(gen->crds->domain, gdims);
+  int d = gen->d;
+  int n = gen->dims[d];
 
   float xl[3], xh[3];
   mrc_crds_get_param_float3(gen->crds, "l", xl);
@@ -55,25 +55,24 @@ mrc_crds_gen_gaussian_run(struct mrc_crds_gen *gen, float *xx, float *dx)
   int sw;
   mrc_crds_get_param_int(gen->crds, "sw", &sw);
 
-  int d = gen->d;
 
   // Calculate a set of grid points
   float *_xx, *ncxx;
-  _xx = (float *)calloc(gdims[d]+1+2*sw, sizeof(*xx));
+  _xx = (float *)calloc(n+1+2*sw, sizeof(*xx));
   ncxx = _xx + sw;
-  for (int jx = 0; jx < gdims[d] + sw; jx++) {
-    ncxx[jx+1] = ncxx[jx] + f_dx(sub, (jx + .5)/gdims[d]);
+  for (int jx = 0; jx < n + sw; jx++) {
+    ncxx[jx+1] = ncxx[jx] + f_dx(sub, (jx + .5)/n);
   }
   for (int jx = 0; jx > -sw; jx--) {
-    ncxx[jx-1] = ncxx[jx] - f_dx(sub, (jx - .5)/gdims[d]);
+    ncxx[jx-1] = ncxx[jx] - f_dx(sub, (jx - .5)/n);
   }
-  double fac = 1. / ncxx[gdims[d]];
-  for (int jx = -sw; jx<= gdims[d] + sw; jx++){
+  double fac = 1. / ncxx[n];
+  for (int jx = -sw; jx<= n + sw; jx++){
     ncxx[jx] *= fac;
   }
 
   // average them down to the actual coordinates (basically NC to CC)
-  for (int ii = -sw; ii < gdims[d] + sw; ii++) {
+  for (int ii = -sw; ii < n + sw; ii++) {
     xx[ii] = xl[d] + 0.5*(ncxx[ii] + ncxx[ii+1]) * (xh[d] - xl[d]);
   }
   free(_xx);
@@ -131,8 +130,8 @@ mrc_crds_gen_two_gaussian_run(struct mrc_crds_gen *gen, float *xx, float *dx)
 {
   struct mrc_crds_gen_two_gaussian *sub = mrc_crds_gen_two_gaussian(gen);
 
-  int gdims[3];
-  mrc_domain_get_global_dims(gen->crds->domain, gdims);
+  int d = gen->d;
+  int n = gen->dims[d];
 
   float xl[3], xh[3];
   mrc_crds_get_param_float3(gen->crds, "l", xl);
@@ -141,27 +140,26 @@ mrc_crds_gen_two_gaussian_run(struct mrc_crds_gen *gen, float *xx, float *dx)
   int sw;
   mrc_crds_get_param_int(gen->crds, "sw", &sw);
 
-  int d = gen->d;
   
   // Calculate a set of grid points
   float *_xx, *ncxx;
-  _xx = (float *)calloc(gdims[d]+1+2*sw, sizeof(*xx));
+  _xx = (float *)calloc(n+1+2*sw, sizeof(*xx));
   ncxx = _xx + sw;
-  for (int jx = 0; jx < gdims[d] + sw; jx++) {
-    ncxx[jx+1] = ncxx[jx] + f2_dx(sub, (jx + .5)/gdims[d]);
+  for (int jx = 0; jx < n + sw; jx++) {
+    ncxx[jx+1] = ncxx[jx] + f2_dx(sub, (jx + .5)/n);
   }
   for (int jx = 0; jx > -sw; jx--) {
-    ncxx[jx-1] = ncxx[jx] - f2_dx(sub, (jx - .5)/gdims[d]);
+    ncxx[jx-1] = ncxx[jx] - f2_dx(sub, (jx - .5)/n);
   }
 
   // normalize the domain to [0,1]
-  double fac = 1. / ncxx[gdims[d]];
-  for (int jx = -sw; jx<= gdims[d] + sw; jx++){
+  double fac = 1. / ncxx[n];
+  for (int jx = -sw; jx<= n + sw; jx++){
     ncxx[jx] *= fac;
   }
 
   // average them down to the actual coordinates (basically NC to CC, I thnk)
-  for (int ii = -sw; ii < gdims[d] + sw; ii++) {
+  for (int ii = -sw; ii < n + sw; ii++) {
     xx[ii] = xl[d] + 0.5*(ncxx[ii] + ncxx[ii+1]) * (xh[d] - xl[d]);
   }
   free(_xx);

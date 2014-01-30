@@ -2,7 +2,6 @@
 #include <mrc_domain_private.h>
 #include <mrc_fld.h>
 #include <mrc_block_factory.h>
-#include <mrc_trafo.h>
 #include <mrc_crds.h>
 #include <mrc_params.h>
 #include <mrc_ddc.h>
@@ -27,17 +26,18 @@ const char *face2str[NR_FACES] = {
 // MB_Create
 
 
-// ----------------------------------------------------------------------
-// mrc_domain_create
-
 static void
-_mrc_domain_mb_create(struct mrc_domain *domain)
+_mrc_domain_mb_create(struct mrc_domain *mb)
 {
-  struct mrc_domain_mb *sub = mrc_domain_mb(domain);
-  sub->_trafo = mrc_trafo_create(mrc_domain_comm(domain));
-  mrc_trafo_set_param_obj(sub->_trafo, "domain", domain);
+  mrc_crds_set_type(mb->crds, "mb");
+  // I would prefer this to be marked as a member object in the params
+  // struct, but there doesn't seem to be any easy way to recover
+  // via the params interface. So we do it this hacky way.
+  struct mrc_domain_mb *sub = mrc_domain_mb(mb);
+  sub->_block_factory = mrc_block_factory_create(mrc_domain_comm(mb));
+  mrc_domain_add_child(mb, (struct mrc_obj *) sub->_block_factory);
+  
 }
-
 
 static void
 _mrc_domain_mb_destroy(struct mrc_domain *mb)
@@ -49,22 +49,13 @@ _mrc_domain_mb_destroy(struct mrc_domain *mb)
   free(sub->mb_blocks);
   free(sub->patches);
   free(sub->patch_info);
-  mrc_trafo_destroy(sub->_trafo);
 
 }  
-
-static void
-_mrc_domain_mb_set_from_options(struct mrc_domain *domain)
-{
-  struct mrc_domain_mb *sub = mrc_domain_mb(domain);
-  mrc_trafo_set_from_options(sub->_trafo);
-}
 
 static void
 _mrc_domain_mb_view(struct mrc_domain *domain)
 {
   struct mrc_domain_mb *sub = mrc_domain_mb(domain);
-  mrc_trafo_view(sub->_trafo);
 }
 
 // ----------------------------------------------------------------------
@@ -76,6 +67,14 @@ block_index_to_patch_index(struct mrc_domain *mb, int b, int k[3])
   struct mrc_domain_mb *sub = mrc_domain_mb(mb);
   return b * sub->mb_ppb_total + 
     (k[2]*sub->ppb[1] + k[1])*sub->ppb[0] + k[0];
+}
+
+static void
+mrc_domain_mb_get_blocks(struct mrc_domain *domain, struct MB_block **blocks, int *nr_blocks)
+{
+  struct mrc_domain_mb *sub = mrc_domain_mb(domain);
+  *nr_blocks = sub->nr_blocks;
+  *blocks = sub->mb_blocks;
 }
 
 static void
@@ -117,21 +116,7 @@ _mrc_domain_mb_setup(struct mrc_domain *mb)
   // Blocks may already exist (if we read the domain from a file),
   // otherwise we need to run a factory.
   if ( !sub->mb_blocks ) {
-    // Setup out blocks (call the factory to set everything up)
-    if (!sub->_factory_type ) {
-      if (sub->_trafo && mrc_trafo_block_factory_type(sub->_trafo)) {
-	mrc_domain_set_param_string(mb, "block_factory", mrc_trafo_block_factory_type(sub->_trafo));
-      }
-      else {
-	mprintf("Block Factory not set, and trafo does not provide a default!\n");
-	assert(0);
-      }
-    }
-    struct mrc_block_factory *factory= mrc_block_factory_create(mrc_domain_comm(mb));
-    mrc_block_factory_set_type(factory, sub->_factory_type);
-    mrc_block_factory_setup(factory);
-    mrc_block_factory_run(factory, mb);
-    mrc_block_factory_destroy(factory);
+    mrc_block_factory_run(sub->_block_factory, mb);
   }
   // global list of all patches and related info
   sub->mb_ppb_total = sub->ppb[0]*sub->ppb[1]*sub->ppb[2];
@@ -180,7 +165,7 @@ _mrc_domain_mb_setup(struct mrc_domain *mb)
 	    // FIXME: This just lines all the blocks up in X !!
 	    patch->off[d] = info->p_ix[d];
 	    if (d == 0) {
-	      for (int b = block->nr_block - 1; b >= 0; b++) {
+	      for (int b = block->nr_block - 1; b >= 0; b--) {
 		patch->off[d] += sub->mb_blocks[b].mx[d];
 	      }
 	    }
@@ -244,30 +229,15 @@ _mrc_domain_mb_setup(struct mrc_domain *mb)
   
   mrc_domain_setup_super(mb);
 
-  if (sub->_trafo) {
-    mrc_trafo_setup(sub->_trafo);
-  }
-
-
 };
-
-
-static void
-mrc_domain_mb_get_trafo(struct mrc_domain *domain, struct mrc_trafo **trafo)
-{
-  struct mrc_domain_mb *sub = mrc_domain_mb(domain);
-  *trafo = sub->_trafo;
-}
 
 
 static void
 mrc_domain_mb_get_global_dims(struct mrc_domain *domain, int *dims)
 {
-  struct mrc_domain_mb *sub = mrc_domain_mb(domain);
+  // This isn't well defined for multi-block domains
+  assert(0);
 
-  for (int d = 0; d < 3; d++) {
-    dims[d] = sub->gdims[d];
-  }
 }
 
 static void
@@ -334,7 +304,6 @@ mrc_domain_mb_write(struct mrc_domain *domain, struct mrc_io *io)
       mrc_io_write_attr_int(io, face_path, "btype", face->btype);
     }
   }
-  mrc_io_write_ref(io, domain, "trafo", sub->_trafo);
 }
 
 
@@ -369,11 +338,7 @@ mrc_domain_mb_read(struct mrc_domain *domain, struct mrc_io *io)
     domain->ddc = mrc_domain_create_ddc(domain);
   }
   
-  mrc_trafo_destroy(sub->_trafo);
-  sub->_trafo = NULL;  
-
   mrc_domain_read_super(domain, io);
-  sub->_trafo = mrc_io_read_ref(io, domain, "trafo", mrc_trafo);
 }
 
 
@@ -383,13 +348,13 @@ static struct mrc_param_select bc_descr[] = {
   {},
 };
 
+
 #define VAR(x) (void *)offsetof(struct mrc_domain_mb, x)
 static struct param mrc_domain_mb_params_descr[] = {
-  { "block_factory"   , VAR(_factory_type)   , PARAM_STRING(NULL) },
-  { "m"               , VAR(gdims)           , PARAM_INT3(32, 32, 32),
-    .help = "global number of grid points in x, y, z direction" },
+  { "block_factory"   , VAR(_block_factory)   , PARAM_OBJ(mrc_block_factory) },
   { "ppb"             , VAR(ppb)             , PARAM_INT3(1,1,1),
     .help = " number of patches per block in x, y, z direction" },
+  // FIXME: These don't make sense either!!!
   { "bcx"             , VAR(bc[0])           , PARAM_SELECT(BC_NONE,
 							    bc_descr),
     .help = "Boundary condition in x direction" },
@@ -405,8 +370,8 @@ static struct param mrc_domain_mb_params_descr[] = {
 
 
 static struct mrc_obj_method mrc_domain_mb_methods[] = {
-  MRC_OBJ_METHOD("get_trafo", mrc_domain_mb_get_trafo),
   MRC_OBJ_METHOD("block_idx_to_patch_idx", block_index_to_patch_index),
+  MRC_OBJ_METHOD("get_blocks", mrc_domain_mb_get_blocks),
 };
 
 struct mrc_domain_ops mrc_domain_mb_ops = {
@@ -414,10 +379,9 @@ struct mrc_domain_ops mrc_domain_mb_ops = {
   .methods                   = mrc_domain_mb_methods,
   .size                      = sizeof(struct mrc_domain_mb),
   .param_descr               = mrc_domain_mb_params_descr,
-  .setup                     = _mrc_domain_mb_setup,
   .create                    = _mrc_domain_mb_create,
+  .setup                     = _mrc_domain_mb_setup,
   .destroy                   = _mrc_domain_mb_destroy,
-  .set_from_options          = _mrc_domain_mb_set_from_options,
   .view                      = _mrc_domain_mb_view,
   .write                     = mrc_domain_mb_write,
   .read                      = mrc_domain_mb_read,

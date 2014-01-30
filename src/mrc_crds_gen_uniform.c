@@ -16,9 +16,7 @@ static void
 mrc_crds_gen_uniform_run(struct mrc_crds_gen *gen, float *xx, float *dx)
 {
   int d = gen->d;
-  int gdims[3];
-  mrc_domain_get_global_dims(gen->crds->domain, gdims);
-  int n = gdims[d];
+  int n = gen->dims[d];
 
   float xl[3], xh[3];
   mrc_crds_get_param_float3(gen->crds, "l", xl);
