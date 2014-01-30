@@ -11,26 +11,13 @@
 const int sw = 2;
 
 static struct mrc_fld *
-setup_without_domain(void)
-{
-  struct mrc_fld *fld = mrc_fld_create(MPI_COMM_WORLD);
-  mrc_fld_set_param_int_array(fld, "offs", 5, (int [5]) { 1, 2, 3, 4, 0 });
-  mrc_fld_set_param_int_array(fld, "dims", 5, (int [5]) { 2, 3, 4, 5, 6 });
-  mrc_fld_set_param_int_array(fld, "sw"  , 5, (int [5]) { sw, sw, sw, 0, 0 });
-  mrc_fld_set_from_options(fld);
-  mrc_fld_setup(fld);
-  mrc_fld_view(fld);
-  return(fld);
-}
-
-static struct mrc_fld *
 setup_with_domain(struct mrc_domain *domain)
 {
   struct mrc_fld *fld = mrc_domain_fld_create(domain, sw, "1,2,3,4,5,6");
   //  mrc_fld_set_param_int_array(fld, "offs", 5, (int [5]) { 0, 2, 3, 0, 0 });
   mrc_fld_set_from_options(fld);
   mrc_fld_setup(fld);
-  mrc_fld_view(fld);
+  //mrc_fld_view(fld);
   return(fld);
 }
 
@@ -114,7 +101,7 @@ main(int argc, char **argv)
   mrc_domain_set_param_int3(domain, "np", (int[3]){1,1,1});
   mrc_domain_set_from_options(domain);
   mrc_domain_setup(domain);
-  mrc_domain_view(domain);
+  //  mrc_domain_view(domain);
 
   //struct mrc_fld *fld = setup_without_domain();
   struct mrc_fld *fld = setup_with_domain(domain);
@@ -124,7 +111,7 @@ main(int argc, char **argv)
   struct mrc_io *io = mrc_io_create(mrc_fld_comm(fld));
   mrc_io_set_from_options(io);
   mrc_io_setup(io);
-  mrc_io_view(io);
+  //mrc_io_view(io);
 
 
   mrc_io_open(io, "w", 0, 0.);
@@ -136,14 +123,14 @@ main(int argc, char **argv)
   io = mrc_io_create(mrc_fld_comm(fld));
   mrc_io_set_from_options(io);
   mrc_io_setup(io);
-  mrc_io_view(io);
+  //mrc_io_view(io);
 
   mrc_io_open(io, "r", 0, 0.);
   struct mrc_fld *fld2 = mrc_io_read_path(io, "/fld", "test_fld", mrc_fld);
   mrc_io_close(io);
   mrc_io_destroy(io);
 
-  mrc_fld_view(fld2);
+  // mrc_fld_view(fld2);
 
   assert(strcmp(mrc_fld_type(fld), mrc_fld_type(fld2)) == 0);
   const int *offs1 = mrc_fld_offs(fld);

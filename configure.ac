@@ -122,8 +122,13 @@ AC_CONFIG_FILES([Makefile
 		 tests/Makefile
 		 mhd/Makefile
 		 mhd/include/Makefile
-		 mhd/src/Makefile
+		 mhd/src/Makefile		
 		 mhd/tests/Makefile
+		 tests/templates/mrc_fld_io_checks
+		 tests/templates/update_xdmf_ref
+		 tests/templates/update_hdf5_ref
+		 tests/templates/check_xdmf_ref
+		 tests/templates/check_hdf5_ref
 		 tests/test_ddc_0.sh
 		 tests/test_mrc_ddc_1.sh
 		 tests/test_io_0.sh
