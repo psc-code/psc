@@ -241,6 +241,23 @@ static struct mrc_crds_ops mrc_crds_amr_uniform_ops = {
 
 
 static void
+mrc_crds_mb_create(struct mrc_crds *crds)
+{
+  // Name the standard 3 crds_gen to "UNUSED" to (hopefully) avoid some confusion
+  for (int d = 0; d < 3; d++) {
+    mrc_crds_gen_set_name(crds->crds_gen[d], "UNUSED");
+  }
+}
+
+static void
+mrc_crds_mb_read(struct mrc_crds *crds, struct mrc_io *io)
+{
+  // need to make sure subclass create doesn't get called at read, but
+  // the superclass read does.
+  mrc_crds_read_super(crds, io);
+}
+
+static void
 mrc_crds_mb_setup(struct mrc_crds *crds)
 {
   // this should still work
@@ -307,8 +324,10 @@ mrc_crds_mb_setup(struct mrc_crds *crds)
 
 
 static struct mrc_crds_ops mrc_crds_mb_ops = {
-  .name  = "mb",
-  .setup = mrc_crds_mb_setup,
+  .name      = "mb",
+  .create    = mrc_crds_mb_create,
+  .setup     = mrc_crds_mb_setup,
+  .read      = mrc_crds_mb_read,
 };
 
 // ======================================================================
