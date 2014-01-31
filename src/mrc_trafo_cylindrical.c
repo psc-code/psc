@@ -14,7 +14,7 @@ static void
 _trafo_cyl_coord(struct mrc_trafo *trafo, int block, const double xi[3], double xx[3])
 {
   
-  double r = xi[0], phi = xi[1] + M_PI * (block == 1);
+  double r = xi[0], phi = xi[1];// + M_PI * (block == 1);
   if (r < 0) {
     r += dr_hack;
   }
@@ -43,7 +43,7 @@ static void
 _trafo_cyl_el(struct mrc_trafo *trafo, int block, const double xi[3], int d, double el[3])
 {
   
-  double r = xi[0], phi = xi[1] + M_PI * (block == 1);
+  double r = xi[0], phi = xi[1];// + M_PI * (block == 1);
   if (r < 0) {
     r += dr_hack;
   }
@@ -70,7 +70,7 @@ _trafo_cyl_el(struct mrc_trafo *trafo, int block, const double xi[3], int d, dou
 static void
 _trafo_cyl_eu(struct mrc_trafo *trafo, int block, const double xi[3], int d, double eu[3])
 {
-  double r = xi[0], phi = xi[1] + M_PI * (block == 1);
+  double r = xi[0], phi = xi[1];// + M_PI * (block == 1);
   if (r < 0) {
     r += dr_hack;
   }
