@@ -287,17 +287,20 @@ mrc_domain_mb_write(struct mrc_domain *domain, struct mrc_io *io)
 
   struct mrc_domain_mb *sub = mrc_domain_mb(domain);
   mrc_io_write_int(io, domain, "nr_blocks", sub->nr_blocks);
-  char path[strlen(mrc_domain_name(domain)) + 10];
+
+  const char *path = mrc_io_obj_path(io, domain);  
+  char path2[strlen(path) + 10];
+
   for (int b = 0; b < sub->nr_blocks; b++) {
-    sprintf(path, "%s/block-%d", mrc_io_obj_path(io, domain), b);
+    sprintf(path2, "%s/block-%d", path, b);
     struct MB_block *block = &sub->mb_blocks[b];
-    mrc_io_write_attr_int3(io, path, "mx", block->mx);
-    mrc_io_write_attr_int3(io, path, "lxs", block->lxs);
+    mrc_io_write_attr_int3(io, path2, "mx", block->mx);
+    mrc_io_write_attr_int3(io, path2, "lxs", block->lxs);
     
     for (int f = 0; f < NR_FACES; f++) {
       struct MB_face *face = &block->faces[f];
-      char face_path[strlen(path) + 10];
-      sprintf(face_path, "%s/face-%d", path, f);
+      char face_path[strlen(path2) + 10];
+      sprintf(face_path, "%s/face-%d", path2, f);
       mrc_io_write_attr_int(io, face_path, "block", face->block);
       mrc_io_write_attr_int(io, face_path, "face", face->face);
       mrc_io_write_attr_int3(io, face_path, "map", face->map);
@@ -311,21 +314,23 @@ static void
 mrc_domain_mb_read(struct mrc_domain *domain, struct mrc_io *io)
 {
 #warning MB initialization orders are all sorts of messed up here
-
   struct mrc_domain_mb *sub = mrc_domain_mb(domain);
   mrc_io_read_int(io, domain, "nr_blocks", &sub->nr_blocks);
   sub->mb_blocks = (struct MB_block *) calloc(sub->nr_blocks, sizeof(struct MB_block));
-  char path[strlen(mrc_domain_name(domain)) + 10];
+
+  const char *path = mrc_io_obj_path(io, domain);  
+  char path2[strlen(path) + 10];
+  
   for (int b = 0; b < sub->nr_blocks; b++) {
-    sprintf(path, "%s/block-%d", mrc_io_obj_path(io, domain), b);
+    sprintf(path2, "%s/block-%d", path, b);
     struct MB_block *block = &sub->mb_blocks[b];
-    mrc_io_read_attr_int3(io, path, "mx", &block->mx);
-    mrc_io_read_attr_int3(io, path, "lxs", &block->lxs);
+    mrc_io_read_attr_int3(io, path2, "mx", &block->mx);
+    mrc_io_read_attr_int3(io, path2, "lxs", &block->lxs);
     
     for (int f = 0; f < NR_FACES; f++) {
       struct MB_face *face = &block->faces[f];
-      char face_path[strlen(path) + 10];
-      sprintf(face_path, "%s/face-%d", path, f);
+      char face_path[strlen(path2) + 10];
+      sprintf(face_path, "%s/face-%d", path2, f);
       mrc_io_read_attr_int(io, face_path, "block", &face->block);
       mrc_io_read_attr_int(io, face_path, "face", &face->face);
       mrc_io_read_attr_int3(io, face_path, "map", &face->map);
@@ -334,10 +339,9 @@ mrc_domain_mb_read(struct mrc_domain *domain, struct mrc_io *io)
   }
   
   // For some reason this doesn't get created anymore?
-  if( ! domain->ddc) {
-    domain->ddc = mrc_domain_create_ddc(domain);
-  }
-  
+  //  if( ! domain->ddc) {
+  //    domain->ddc = mrc_domain_create_ddc(domain);
+  //  }
   mrc_domain_read_super(domain, io);
 }
 

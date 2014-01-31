@@ -97,7 +97,7 @@ phdf5_write_attr(struct mrc_io *io, const char *path, int type,
   case PT_PTR:
     break;
   default:
-    mpi_printf("mrc_io_hdf5_parallel: not writing attr '%s' (type %d)\n",
+    mpi_printf(mrc_io_comm(io), "mrc_io_hdf5_parallel: not writing attr '%s' (type %d)\n",
 	    name, type);
     assert(0);
   }
@@ -163,7 +163,7 @@ phdf5_read_attr(struct mrc_io *io, const char *path, int type,
   case PT_PTR:
     break;
   default:
-    mpi_printf("mrc_io_hdf5_parallel: not reading attr '%s' (type %d)\n", name, type);
+    mpi_printf(mrc_io_comm(io), "mrc_io_hdf5_parallel: not reading attr '%s' (type %d)\n", name, type);
     assert(0);
     break;
   }
