@@ -767,14 +767,15 @@ static bool
 find_intersection(int *ilo, int *ihi, const int *ib1, const int *im1,
 		  const int *ib2, const int *im2)
 {
+  bool has_intersection = true;
   for (int d = 0; d < 3; d++) {
     ilo[d] = MAX(ib1[d], ib2[d]);
     ihi[d] = MIN(ib1[d] + im1[d], ib2[d] + im2[d]);
     if (ihi[d] - ilo[d] <= 0) {
-      return false;
+      has_intersection = false;
     }
   }
-  return true;
+  return has_intersection;
 }
 
 // ----------------------------------------------------------------------
