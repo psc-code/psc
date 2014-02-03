@@ -295,8 +295,11 @@ mrc_domain_mb_write(struct mrc_domain *domain, struct mrc_io *io)
     sprintf(path2, "%s/block-%d", path, b);
     struct MB_block *block = &sub->mb_blocks[b];
     mrc_io_write_attr_int3(io, path2, "mx", block->mx);
-    mrc_io_write_attr_int3(io, path2, "lxs", block->lxs);
-    
+    mrc_io_write_attr_int(io, path2, "nr_block", block->nr_block);
+    mrc_io_write_attr_float3(io, path2, "xl", block->xl);
+    mrc_io_write_attr_float3(io, path2, "xh", block->xh);
+    // FIXME: write coord_gens?
+
     for (int f = 0; f < NR_FACES; f++) {
       struct MB_face *face = &block->faces[f];
       char face_path[strlen(path2) + 10];
@@ -325,7 +328,9 @@ mrc_domain_mb_read(struct mrc_domain *domain, struct mrc_io *io)
     sprintf(path2, "%s/block-%d", path, b);
     struct MB_block *block = &sub->mb_blocks[b];
     mrc_io_read_attr_int3(io, path2, "mx", &block->mx);
-    mrc_io_read_attr_int3(io, path2, "lxs", &block->lxs);
+    mrc_io_read_attr_int(io, path2, "nr_block", &block->nr_block);
+    mrc_io_read_attr_float3(io, path2, "xl", &block->xl);
+    mrc_io_read_attr_float3(io, path2, "xh", &block->xh);
     
     for (int f = 0; f < NR_FACES; f++) {
       struct MB_face *face = &block->faces[f];
@@ -337,11 +342,18 @@ mrc_domain_mb_read(struct mrc_domain *domain, struct mrc_io *io)
       mrc_io_read_attr_int(io, face_path, "btype", &face->btype);
     }
   }
-  
-  // For some reason this doesn't get created anymore?
-  //  if( ! domain->ddc) {
-  //    domain->ddc = mrc_domain_create_ddc(domain);
-  //  }
+
+  // Because we have a subclass create the superclass create
+  // doesn't get called during read, which means no ddc.
+  // I'm not crazy about this behaviour, btw.
+
+  domain->ddc = mrc_domain_create_ddc(domain);
+  mrc_ddc_set_type(domain->ddc, "multi");
+  mrc_ddc_set_domain(domain->ddc, domain);
+  mrc_ddc_set_param_int(domain->ddc, "size_of_type", sizeof(float));
+  mrc_ddc_set_funcs(domain->ddc, &mrc_ddc_funcs_fld);
+  mrc_domain_add_child(domain, (struct mrc_obj *) domain->ddc);
+
   mrc_domain_read_super(domain, io);
 }
 
