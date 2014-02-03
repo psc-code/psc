@@ -5,6 +5,7 @@
 #include <mrc_crds_gen.h>
 
 #include <stdlib.h>
+#include <math.h>
 
 #define mrc_domain_mb(domain) mrc_to_subobj(domain, struct mrc_domain_mb)
 // ======================================================================
@@ -78,7 +79,6 @@ mrc_block_factory_cylindrical_run(struct mrc_block_factory *fac, struct mrc_doma
   //    int mx[3]; ------------------------ number of points in each dim
   //    struct MB_face faces[NR_FACES]; --- Face mappings (6 faces total)
   //    int nr_block; --------------------- The number of this block
-  //    int lxs[3]; ----------------------- Position in the logical grid
   //    char (*coord_names)[3]; // What coordinates the 0,1,2 dims are (used for crds_gen_parsing)
   //    float xl[3]; // Lower bounds of this block in coordinate space
   //   float xh[3]; // Upper bounds of this block in coordinate space
@@ -95,12 +95,12 @@ mrc_block_factory_cylindrical_run(struct mrc_block_factory *fac, struct mrc_doma
   //  };
   ////////////////////
 
-#define FPI 3.14159265359f
-
+  float pi = M_PI;
   // First block
   
   blocks[0] = (struct MB_block) {
     .mx = { sub->dims[0], sub->dims[1]/2, 1 },
+    .nr_block = 0,
     .faces = {
       // The Left face lies at the coordinate singularity in a circle, and has a special
       // boundary type.
@@ -117,7 +117,7 @@ mrc_block_factory_cylindrical_run(struct mrc_block_factory *fac, struct mrc_doma
     .coord_gen = {sub->coord_gen[0] , sub->coord_gen[1], sub->coord_gen[2]},
     // Assign the coordinate boundaries for each local axis.
     .xl = { sub->rb,  0, 0 },
-    .xh = { sub->re, FPI, sub->ze },
+    .xh = { sub->re, pi, sub->ze },
   };
     
   // Second block. Note that each block requests its ghost points from another block. 
@@ -125,6 +125,7 @@ mrc_block_factory_cylindrical_run(struct mrc_block_factory *fac, struct mrc_doma
   // partner.
   blocks[1] = (struct MB_block) {
     .mx = { sub->dims[0], sub->dims[1]/2, 1 },
+    .nr_block = 1,
     .faces = {
       [FACE_LEFT  ] = { 0, FACE_LEFT  , .map = { 0, MB_Y, MB_Z },
 			.btype = BTYPE_SP    },
@@ -133,8 +134,8 @@ mrc_block_factory_cylindrical_run(struct mrc_block_factory *fac, struct mrc_doma
       [FACE_TOP   ] = { 0, FACE_BOTTOM, .map = { MB_X, 0, MB_Z } },
     },
     .coord_gen = {sub->coord_gen[0] , sub->coord_gen[1], sub->coord_gen[2]},
-    .xl = { sub->rb,  FPI, 0 },
-    .xh = { sub->re, 2.0 * FPI, sub->ze },
+    .xl = { sub->rb,  pi, 0 },
+    .xh = { sub->re, 2. * pi, sub->ze },
   };
 }
 

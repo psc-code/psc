@@ -77,11 +77,8 @@ struct MB_face {
 
 struct MB_block {
   int mx[3];
-  struct MB_face faces[NR_FACES];
-  int nr_block;
-  int lxs[3]; // position of this block in the logical grid
-  // (which does not necessarily uniquely exist, but helpful for
-  //  some I/O, debugging etc.)
+  int nr_block; // Sort of pointless to have this, but it's expected at the moment.
+  struct MB_face faces[NR_FACES];  
   struct mrc_crds_gen *coord_gen[3]; // What generators are used for the 0,1,2 coordinates
   float xl[3]; // Lower bounds of this block in coordinate space
   float xh[3]; // Upper bounds of this block in coordinate space
