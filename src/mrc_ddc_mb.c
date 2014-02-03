@@ -198,10 +198,11 @@ mb_patch_map_to_interior(struct mrc_domain *mb, int kg, const int ig[3], int *pk
   int bg, _ig[3], bl, _il[3];
 
   struct mrc_domain_mb *sub = mrc_domain_mb(mb);
-  struct mrc_patch_info *ginfo = &sub->patch_info[kg];
-  bg = ginfo->p_block;
+  struct mrc_patch_info ginfo;
+  mrc_domain_get_global_patch_info(mb, kg, &ginfo);
+  bg = ginfo.p_block;
   for (int d = 0; d < 3; d++) {
-    _ig[d] = ig[d] + ginfo->p_ix[d];
+    _ig[d] = ig[d] + ginfo.p_ix[d];
   }
   if (map_to_interior(mb, bg, _ig, &bl, _il) < 0)
     return -1;
@@ -284,8 +285,9 @@ fill_face(struct mrc_domain *mb, int sw[3], struct face_map *lmap, int lk, int l
 	  int *pcnt)
 {
   struct mrc_domain_mb *sub = mrc_domain_mb(mb);
-  struct mrc_patch_info *linfo = &sub->patch_info[lk];
-  struct MB_pface *lpface = &linfo->p_pface[lf];
+  struct mrc_patch_info linfo;
+  mrc_domain_get_global_patch_info(mb, lk, &linfo);
+  struct MB_pface *lpface = &linfo.p_pface[lf];
   int gpatch_nr = lpface->pf_patch;
   struct mrc_patch *gpatch = &sub->patches[gpatch_nr];
   struct face_map smap;
