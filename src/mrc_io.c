@@ -405,6 +405,30 @@ mrc_io_read_attr_int3(struct mrc_io *io, const char *path, const char *name,
 }
 
 void
+mrc_io_read_attr_float(struct mrc_io *io, const char *path, const char *name,
+		     float *val)
+{
+  struct mrc_io_ops *ops = mrc_io_ops(io);
+  assert(ops->read_attr);
+  union param_u u;
+  ops->read_attr(io, path, PT_FLOAT, name, &u);
+  *val = u.u_float;
+}
+
+void
+mrc_io_read_attr_float3(struct mrc_io *io, const char *path, const char *name,
+		      float (*val)[3])
+{
+  struct mrc_io_ops *ops = mrc_io_ops(io);
+  assert(ops->read_attr);
+  union param_u u;
+  ops->read_attr(io, path, PT_FLOAT3, name, &u);
+  for (int d = 0; d < 3; d++) {
+    (*val)[d] = u.u_float3[d];
+  }
+}
+
+void
 mrc_io_read_attr_double(struct mrc_io *io, const char *path, const char *name,
 			double *val)
 {
@@ -472,6 +496,32 @@ mrc_io_write_attr_int3(struct mrc_io *io, const char *path, const char *name,
     ops->write_attr(io, path, PT_INT3, name, &u);
   }
 }
+
+
+
+void
+mrc_io_write_attr_float(struct mrc_io *io, const char *path, const char *name,
+		      float val)
+{
+  struct mrc_io_ops *ops = mrc_io_ops(io);
+  if (ops->write_attr) {
+    union param_u u = { .u_float = val };
+    ops->write_attr(io, path, PT_FLOAT, name, &u);
+  }
+}
+
+void
+mrc_io_write_attr_float3(struct mrc_io *io, const char *path, const char *name,
+		       float val[3])
+{
+  struct mrc_io_ops *ops = mrc_io_ops(io);
+  if (ops->write_attr) {
+    union param_u u = { .u_float3 = { val[0], val[1], val[2] } };
+    ops->write_attr(io, path, PT_FLOAT3, name, &u);
+  }
+}
+
+
 
 void
 mrc_io_write_attr_string(struct mrc_io *io, const char *path, const char *name,
