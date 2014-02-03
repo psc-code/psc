@@ -172,6 +172,7 @@ mrc_vec_petsc_put_petsc(struct mrc_vec *vec, Vec *invec)
 static void
 mrc_vec_petsc_axpy(struct mrc_vec *y, double alpha, struct mrc_vec *x)
 {
+  assert(strcmp(mrc_vec_type(y), mrc_vec_type(x)) == 0);
   int ierr = VecAXPY(mrc_vec_petsc(y)->petsc_vec, 
 		     (PetscScalar) alpha, 
 		     mrc_vec_petsc(x)->petsc_vec); CE;
@@ -180,6 +181,8 @@ mrc_vec_petsc_axpy(struct mrc_vec *y, double alpha, struct mrc_vec *x)
 static void
 mrc_vec_petsc_waxpy(struct mrc_vec *w, double alpha, struct mrc_vec *x,  struct mrc_vec *y)
 {
+  assert(strcmp(mrc_vec_type(y), mrc_vec_type(x)) == 0);
+  assert(strcmp(mrc_vec_type(w), mrc_vec_type(x)) == 0);
   int ierr = VecWAXPY(mrc_vec_petsc(w)->petsc_vec, 
 		     (PetscScalar) alpha, 
 		      mrc_vec_petsc(x)->petsc_vec,
@@ -203,6 +206,7 @@ mrc_vec_petsc_set(struct mrc_vec *x, double val)
 static void
 mrc_vec_petsc_copy(struct mrc_vec *vec_to, struct mrc_vec *vec_from)
 {
+  assert(strcmp(mrc_vec_type(vec_to), mrc_vec_type(vec_from)) == 0);
   int ierr = VecCopy(mrc_vec_petsc(vec_from)->petsc_vec,
 		     mrc_vec_petsc(vec_to)->petsc_vec); CE;
 }
