@@ -72,7 +72,8 @@ endif HAVE_HDF5
 
 if HAVE_PETSC
 libmrc_la_SOURCES += \
-	mrc_vec_petsc.c
+	mrc_vec_petsc.c \
+	mrc_ts_petsc.c
 endif HAVE_PETSC
 
 libmrctest_la_SOURCES = \

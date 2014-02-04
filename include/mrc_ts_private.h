@@ -89,9 +89,38 @@ struct mrc_ts_ops {
   void (*solve)(struct mrc_ts *);
 };
 
+
+#ifdef HAVE_PETSC
+#include <petscts.h>
+// mrc_ts_petsc - struct layout needed by any monitor that hooks into petsc
+// ----------------------------------------------------------------------
+
+// libmrc doesn't understand the distinction between global and local
+// vectors, but petsc does, and any implicit solver will require
+// a global vector to come in, so we actually need to copy the state
+// vector in a hacky localtoglobal and feed that in.
+struct mrc_ts_petsc {
+  TS petsc_ts; // Petsc timestepper object 
+  struct mrc_fld *F; // Computed RHS function will be stored here
+  Vec F_vec;
+  struct mrc_fld *xg; // Global (no ghost) version of the state vector
+  Vec xg_vec;
+  struct mrc_fld *xlocal; // temp X local for use in the calc_rhs wrapper.
+  Mat J; // Jacobian Matrix.
+  int debug_rhs;
+  int (*calc_jac)(Mat J, Vec x, float t, void *ctx);
+  int (*get_jac_mat)(void *ctx, Mat *M);
+  void *jacf_ctx;
+};
+
+extern struct mrc_ts_ops mrc_ts_petsc_ops;
+
+#endif
+
 extern struct mrc_ts_ops mrc_ts_rk2_ops;
 extern struct mrc_ts_ops mrc_ts_rk4_ops;
 extern struct mrc_ts_ops mrc_ts_rkf45_ops;
 extern struct mrc_ts_ops mrc_ts_ode45_ops;
+
 
 #endif

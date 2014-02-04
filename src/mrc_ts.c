@@ -4,6 +4,7 @@
 
 #include <mrc_ts_monitor.h>
 #include <mrc_params.h>
+#include <mrc_common.h>
 #include <assert.h>
 
 #define mrc_ts_ops(ts) ((struct mrc_ts_ops *) ts->obj.ops)
@@ -192,6 +193,13 @@ mrc_ts_init()
   mrc_class_register_subclass(&mrc_class_mrc_ts, &mrc_ts_ode45_ops);
   mrc_class_register_subclass(&mrc_class_mrc_ts, &mrc_ts_rk2_ops);
   mrc_class_register_subclass(&mrc_class_mrc_ts, &mrc_ts_rk4_ops);
+  
+#ifdef HAVE_PETSC
+  mrc_class_register_subclass(&mrc_class_mrc_ts, &mrc_ts_petsc_ops);
+#endif
+
+  // Did this break or something? 'Cause, I could fix it, if I had known it was broken. 
+  // This is why we have a bug tracking system people...
   //  mrc_class_register_subclass(&mrc_class_mrc_ts, &mrc_ts_rkf45_ops);
 }
 
