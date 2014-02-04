@@ -24,6 +24,7 @@ ggcm_mhd_diag_item_v_run(struct ggcm_mhd_diag_item *item,
   struct ggcm_mhd *mhd = item->diag->mhd;
 
   struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, SW_2, "vx:vy:vz");
+  mrc_fld_set_type(fld_r, FLD_TYPE);
   mrc_fld_setup(fld_r);
 
   struct mrc_fld *r = mrc_fld_get_as(fld_r, FLD_TYPE);
@@ -97,6 +98,7 @@ ggcm_mhd_diag_item_pp_run(struct ggcm_mhd_diag_item *item,
   mrc_fld_get_param_int(fld, "mhd_type", &mhd_type);
 
   struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, SW_2, "pp");
+  mrc_fld_set_type(fld_r, FLD_TYPE);
   mrc_fld_setup(fld_r);
 
   float gamm = mhd->par.gamm;
@@ -159,6 +161,7 @@ ggcm_mhd_diag_item_b_run(struct ggcm_mhd_diag_item *item,
   mrc_fld_get_param_int(fld, "mhd_type", &mhd_type);
 
   struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, SW_2, "bx:by:bz");
+  mrc_fld_set_type(fld_r, FLD_TYPE);
   mrc_fld_setup(fld_r);
 
   struct mrc_fld *r = mrc_fld_get_as(fld_r, FLD_TYPE);
