@@ -3,7 +3,6 @@
 #include <math.h>
 #include <petscts.h>
 
-// FIXME These shouldn't be mb specific
 #include <mrc_fld.h>
 #include <mrc_domain.h>
 #include <mrc_ddc.h>
@@ -46,6 +45,8 @@ wrap_mrc_monitors(TS petsc_ts, int nstep, PetscReal t, Vec xg, void *_ctx)
   pfr;
 }
 
+// this is almost a duplicate except it changes the number of ghosts.
+// FIXME: Adapt this to work without domains
 static inline void
 set_global_from_fld(struct mrc_fld *gfld, struct mrc_fld *from)
 {
@@ -288,21 +289,30 @@ static void
 _mrc_ts_petsc_solve(struct mrc_ts *ts)
 {
   struct mrc_ts_petsc *sub = mrc_ts_petsc(ts);
-  // copy the local vector x into the global vector xg before starting the petsc solver.
-#warning mrc_ts_petsc polluted with mb
-  struct mrc_fld *x = (struct mrc_fld *) ts->x;
-  int bs = mrc_fld_nr_comps(x);
 
-  struct mrc_domain *mb = (x)->_domain;
-  // FIXME: Need to get these copies to work more generally...
-  mrc_fld_foreach_patch(x, patch) {
-    mrc_fld_foreach(x, jx,jy,jz, 0,0) {
-      for (int m = 0; m < bs; m++) {
-	MRC_D5(sub->xg,m, jx,jy,jz,patch) = MRC_D5(x,m, jx,jy,jz,patch);
+  struct mrc_fld *x = (struct mrc_fld *) ts->x;
+
+  // copy the local vector x into the global vector xg before starting the petsc solver.
+  // FIXME: HACKY and only works for 5D flds!
+  const int *dims = mrc_fld_dims(x);
+  for (int i4 = 0; i4 < dims[4]; i4++) {
+    for (int i3 = 0; i3 < dims[3]; i3++) {
+      for (int i2 = 0; i2 < dims[2]; i2++) {
+	for (int i1 = 0; i1 < dims[1]; i1++) {
+	  for (int i0 = 0; i0 < dims[0]; i0++) {
+	    if (x->_data_type == MRC_NT_DOUBLE) {
+	      MRC_D5(sub->xg, i0, i1, i2, i3, i4) = MRC_D5(x, i0, i1, i2, i3, i4);
+	    } else if (x->_data_type == MRC_NT_FLOAT) {
+	      MRC_S5(sub->xg, i0, i1, i2, i3, i4) = MRC_S5(x, i0, i1, i2, i3, i4);
+	    } else {
+	      assert(0);
+	    }
+	  }
+	}
       }
-    } mrc_fld_foreach_end;
+    }
   }
-  
+
   // Run solver here
   int ierr = TSSolve(sub->petsc_ts, NULL); CE;
 
