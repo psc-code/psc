@@ -1,7 +1,10 @@
 
 AM_CPPFLAGS = -I$(srcdir)/../include
 
-noinst_LTLIBRARIES = libmrc.la libmrctest.la
+
+lib_LTLIBRARIES = libmrc.la 
+
+noinst_LTLIBRARIES = libmrctest.la
 
 libmrc_la_SOURCES = \
 	mrc_mod.c \
