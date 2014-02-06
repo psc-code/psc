@@ -106,7 +106,7 @@ mrc_domain_mb_get_local_patch_info(struct mrc_domain *domain, int patch,
 // subclass setup
 
 static void
-_mrc_domain_mb_setup(struct mrc_domain *mb)
+mrc_domain_mb_do_setup(struct mrc_domain *mb)
 {
   MPI_Comm comm = mrc_domain_comm(mb);
   MPI_Comm_size(comm, &mb->size);
@@ -221,16 +221,23 @@ _mrc_domain_mb_setup(struct mrc_domain *mb)
       }
     }
   } MB_foreach_block_end;
+  
+};
+
+static void
+_mrc_domain_mb_setup(struct mrc_domain *mb) 
+{
+
+  mrc_domain_mb_do_setup(mb);
 
   if (mb->ddc) {
     mrc_ddc_set_type(mb->ddc, "mb");
     mrc_ddc_set_domain(mb->ddc, mb);
   }
-  
+
   mrc_domain_setup_super(mb);
-
-};
-
+ 
+}
 
 static void
 mrc_domain_mb_get_global_dims(struct mrc_domain *domain, int *dims)
@@ -343,17 +350,8 @@ mrc_domain_mb_read(struct mrc_domain *domain, struct mrc_io *io)
     }
   }
 
-  // Because we have a subclass create the superclass create
-  // doesn't get called during read, which means no ddc.
-  // I'm not crazy about this behaviour, btw.
 
-  domain->ddc = mrc_domain_create_ddc(domain);
-  mrc_ddc_set_type(domain->ddc, "multi");
-  mrc_ddc_set_domain(domain->ddc, domain);
-  mrc_ddc_set_param_int(domain->ddc, "size_of_type", sizeof(float));
-  mrc_ddc_set_funcs(domain->ddc, &mrc_ddc_funcs_fld);
-  mrc_domain_add_child(domain, (struct mrc_obj *) domain->ddc);
-
+  mrc_domain_mb_do_setup(domain);
   mrc_domain_read_super(domain, io);
 }
 
