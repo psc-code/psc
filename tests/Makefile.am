@@ -81,3 +81,8 @@ XFAIL_TESTS = \
 	test_mrc_fld_io_xdmf2_parallel.sh \
 	test_mrc_fld_io_hdf5_serial.sh \
 	test_mrc_fld_io_ascii.sh
+
+if !HAVE_PETSC
+XFAIL_TESTS += \
+	test_mrc_domain_mb_0.sh
+endif !HAVE_PETSC

@@ -271,7 +271,9 @@ mrc_domain_init()
   mrc_class_register_subclass(&mrc_class_mrc_domain, &mrc_domain_simple_ops);
   mrc_class_register_subclass(&mrc_class_mrc_domain, &mrc_domain_multi_ops);
   mrc_class_register_subclass(&mrc_class_mrc_domain, &mrc_domain_amr_ops);
+#ifdef HAVE_PETSC
   mrc_class_register_subclass(&mrc_class_mrc_domain, &mrc_domain_mb_ops);
+#endif
 }
 
 // ======================================================================

@@ -20,7 +20,6 @@ libmrc_la_SOURCES = \
 	mrc_domain_simple.c \
 	mrc_domain_multi.c \
 	mrc_domain_amr.c \
-	mrc_domain_mb.c \
 	mrc_domain_lib.c \
 	mrc_crds.c \
 	mrc_crds_gen.c \
@@ -40,7 +39,6 @@ libmrc_la_SOURCES = \
 	mrc_ddc_multi.c \
 	mrc_ddc_amr.c \
 	mrc_ddc_amr_stencil.c \
-	mrc_ddc_mb.c \
 	mrc_profile.c \
 	mrc_io.c \
 	mrc_io_util.c \
@@ -52,9 +50,6 @@ libmrc_la_SOURCES = \
 	mrc_trafo.c \
 	mrc_trafo_cylindrical.c \
 	mrc_trafo_cartesian.c \
-	mrc_block_factory.c \
-	mrc_block_factory_simple.c \
-	mrc_block_factory_cylindrical.c \
 	mrc_mat.c \
 	init.c \
 	hilbert.c \
@@ -76,7 +71,12 @@ endif HAVE_HDF5
 if HAVE_PETSC
 libmrc_la_SOURCES += \
 	mrc_vec_petsc.c \
-	mrc_ts_petsc.c
+	mrc_ts_petsc.c \
+	mrc_domain_mb.c \
+	mrc_block_factory.c \
+	mrc_block_factory_simple.c \
+	mrc_block_factory_cylindrical.c \
+	mrc_ddc_mb.c
 endif HAVE_PETSC
 
 libmrctest_la_SOURCES = \
