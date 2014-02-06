@@ -6,6 +6,7 @@
 #include <mrc_domain.h>
 #include <mrc_ddc.h>
 
+#define F3 MRC_F3 // FIXME
 
 
 // ----------------------------------------------------------------------
@@ -23,7 +24,7 @@ calc_u_pm(struct ggcm_mhd *mhd, struct mrc_fld *_u_p[3], struct mrc_fld *_u_m[3]
   float d_i = mhd->par.d_i;
   float eta = mhd->par.diffco;
 
-  struct mrc_fld *u = mrc_fld_get_as(_u, "mhd_fc_float");
+  struct mrc_fld *u = mrc_fld_get_as(_u, "float");
   struct mrc_fld *u_delta[3], *u_p[3], *u_m[3], *E_p[3], *E_m[3];
   for (int f = 0; f < 3; f++) {
     u_delta[f] = mrc_fld_get_as(_u_delta[f], "float");

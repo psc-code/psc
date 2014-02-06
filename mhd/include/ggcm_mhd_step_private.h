@@ -16,6 +16,7 @@ struct ggcm_mhd_step_ops {
   void (*corr)(struct ggcm_mhd_step *);
   void (*calc_rhs)(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
 		   struct mrc_fld *x);
+  void (*run)(struct ggcm_mhd_step *step, struct mrc_fld *x);
 
   int task_pred_nl1;
   int task_corr_nl1;
@@ -23,15 +24,16 @@ struct ggcm_mhd_step_ops {
   int task_pred_const;
   int task_corr_const;
   int task_corr1_const;
+
+  int mhd_type; // works on fully vs semi-conservative state vector?
 };
 
-
-//struct mrc_fld *
-//ggcm_mhd_get_fields(struct ggcm_mhd *mhd, const char *name, int nr_comp)
-
+void ggcm_mhd_step_run_predcorr(struct ggcm_mhd_step *step, struct mrc_fld *x);
 
 #define ggcm_mhd_step_ops(step) ((struct ggcm_mhd_step_ops *)(step)->obj.ops)
 
 extern struct ggcm_mhd_step_ops ggcm_mhd_step_cweno_ops;
+extern struct ggcm_mhd_step_ops ggcm_mhd_step_c_ops;
+
 
 #endif

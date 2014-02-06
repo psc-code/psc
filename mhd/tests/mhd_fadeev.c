@@ -6,6 +6,7 @@
 #include "ggcm_mhd_diag.h"
 #include "ggcm_mhd_ic_private.h"
 
+#include <mrc_fld_as_float.h>
 #include <mrc_domain.h>
 
 #include <math.h>
@@ -36,6 +37,7 @@ ggcm_mhd_ic_fadeev_run(struct ggcm_mhd_ic *ic)
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);  
 
   struct mrc_fld *fld_psi = mrc_domain_fld_create(mhd->domain, SW_2, "psi");
+  mrc_fld_set_type(fld_psi, FLD_TYPE);
   mrc_fld_setup(fld_psi);
 
   float xl[3], xh[3], L[3], r[3];
@@ -52,14 +54,14 @@ ggcm_mhd_ic_fadeev_run(struct ggcm_mhd_ic *ic)
   float lam = (sub->lambda)*L[0] ;  // defines island size   
   float kk = (2.*M_PI) / lam ;      
 
-  struct mrc_fld *psi = mrc_fld_get_as(fld_psi, "float");
-  struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, "mhd_pr_float");
+  struct mrc_fld *psi = mrc_fld_get_as(fld_psi, FLD_TYPE);
+  struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
 
   mrc_fld_foreach(psi, ix, iy, iz, 1, 2) {
     r[0] = .5*(MRC_CRDX(crds, ix) + MRC_CRDX(crds, ix-1));
     r[1] = .5*(MRC_CRDY(crds, iy) + MRC_CRDY(crds, iy-1));
     
-    MRC_F3(psi, 0, ix,iy,iz) = -(Bo / kk)*( log(cosh(kk*r[1]) + eps*cos(kk*r[0])));
+    F3(psi, 0, ix,iy,iz) = -(Bo / kk)*( log(cosh(kk*r[1]) + eps*cos(kk*r[0])));
   } mrc_fld_foreach_end;
 
   float *bd2x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD2);
@@ -72,20 +74,22 @@ ggcm_mhd_ic_fadeev_run(struct ggcm_mhd_ic *ic)
     r[1] = MRC_CRD(crds, 1, iy);
 
     RR1(fld, ix,iy,iz)  = 0.5*sqr(Bo) * (1.0-sqr(eps)) * 
-      exp(2.0*kk* MRC_F3(fld_psi, 0, ix,iy,iz)/(Bo)) + 0.5*sqr(Boz) + sub->dens0;
+      exp(2.0*kk* F3(fld_psi, 0, ix,iy,iz)/(Bo)) + 0.5*sqr(Boz) + sub->dens0;
     PP1(fld, ix,iy,iz) = RR1(fld, ix,iy,iz);
     V1X(fld, ix,iy,iz) = (pert) * (1.-kk*kk*r[0]*r[0]) *
       exp(-kk*kk*r[1]*r[1])*sin(kk*r[0]*0.5);	
     V1Y(fld, ix,iy,iz) = -(pert) * ( 0.5*kk*r[1] ) *
       exp(-kk*kk*r[1]*r[1])*cos(kk*r[0]*0.5);            
     V1Z(fld, ix,iy,iz) = 0.;
-    B1X(fld, ix,iy,iz) =  (MRC_F3(fld_psi, 0, ix,iy+1,iz) - MRC_F3(fld_psi, 0, ix,iy,iz)) / bd2y[iy];
-    B1Y(fld, ix,iy,iz) = -(MRC_F3(fld_psi, 0, ix+1,iy,iz) - MRC_F3(fld_psi, 0, ix,iy,iz)) / bd2x[ix]; 
+    B1X(fld, ix,iy,iz) =  (F3(fld_psi, 0, ix,iy+1,iz) - F3(fld_psi, 0, ix,iy,iz)) / bd2y[iy];
+    B1Y(fld, ix,iy,iz) = -(F3(fld_psi, 0, ix+1,iy,iz) - F3(fld_psi, 0, ix,iy,iz)) / bd2x[ix]; 
     B1Z(fld, ix,iy,iz) = 0.;
   } mrc_fld_foreach_end;
 
   mrc_fld_put_as(psi, fld_psi);
   mrc_fld_put_as(fld, mhd->fld);
+
+  ggcm_mhd_convert_from_primitive(mhd, mhd->fld);
 }
 
 // ----------------------------------------------------------------------

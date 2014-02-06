@@ -54,7 +54,7 @@ calc_KNP_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
 
   struct mrc_fld *flux[3], *flux_p[3], *flux_m[3];
   struct mrc_fld *u_p[3], *u_m[3], *E_p[3], *E_m[3];
-  struct mrc_fld *u = mrc_fld_get_as(_u, "mhd_fc_float");
+  struct mrc_fld *u = mrc_fld_get_as(_u, "float");
   for (int f = 0; f < 3; f++) {
     flux[f] = mrc_fld_get_as(_flux[f], "float");
     flux_p[f] = mrc_fld_get_as(_flux_p[f], "float");

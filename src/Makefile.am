@@ -9,6 +9,7 @@ noinst_LTLIBRARIES = libmrctest.la
 libmrc_la_SOURCES = \
 	mrc_mod.c \
 	mrc_ts.c \
+	mrc_ts_step.c \
 	mrc_ts_rk2.c \
 	mrc_ts_rk4.c \
 	mrc_ts_rkf45.c \

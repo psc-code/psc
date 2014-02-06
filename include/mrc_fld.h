@@ -85,6 +85,7 @@ void mrc_fld_dump(struct mrc_fld *fld, const char *basename, int n);
 // for multi-patch mrc_fld only (former mrc_m3)
 int mrc_fld_nr_patches(struct mrc_fld *fld);
 float mrc_fld_norm_comp(struct mrc_fld *x, int m);
+void mrc_fld_setup_vec(struct mrc_fld *fld);
 
 struct mrc_fld *mrc_fld_get_as(struct mrc_fld *fld_base,
 			       const char *type);

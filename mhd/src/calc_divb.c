@@ -13,6 +13,8 @@
 // ----------------------------------------------------------------------
 // ggcm_mhd_calc_divb
 
+#define F3 MRC_F3 // FIXME
+
 void
 ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *divb)
 {
@@ -28,19 +30,37 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
   struct mrc_fld *d = mrc_fld_get_as(divb, "float");
 
   float max = 0.;
-  mrc_fld_foreach(divb, ix,iy,iz, 0, 0) {
-    MRC_F3(divb,0, ix,iy,iz) = 
-      (B1X(f, ix+1,iy,iz) - B1X(f, ix,iy,iz)) / bd2x[ix] +
-      (B1Y(f, ix,iy+1,iz) - B1Y(f, ix,iy,iz)) / bd2y[iy] +
-      (B1Z(f, ix,iy,iz+1) - B1Z(f, ix,iy,iz)) / bd2z[iz];
-    MRC_F3(divb,0, ix,iy,iz) *= MRC_F3(f,_YMASK, ix,iy,iz);
 
-    // the incoming solar wind won't match and hence divb != 0 here
-    if (info.off[0] == 0 && ix <= 0)
-      continue;
+  int mhd_type;
+  mrc_fld_get_param_int(fld, "mhd_type", &mhd_type);
 
-    max = fmaxf(max, fabsf(MRC_F3(divb,0, ix,iy,iz)));
-  } mrc_fld_foreach_end;
+  if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM) {
+    mrc_fld_foreach(divb, ix,iy,iz, 0, 0) {
+      MRC_F3(divb,0, ix,iy,iz) = 
+	(B1X(f, ix,iy,iz) - B1X(f, ix-1,iy,iz)) / bd2x[ix] +
+	(B1Y(f, ix,iy,iz) - B1Y(f, ix,iy-1,iz)) / bd2y[iy] +
+	(B1Z(f, ix,iy,iz) - B1Z(f, ix,iy,iz-1)) / bd2z[iz];
+      MRC_F3(divb,0, ix,iy,iz) *= MRC_F3(f,_YMASK, ix,iy,iz);
+
+      // the incoming solar wind won't match and hence divb != 0 here
+      if (info.off[0] == 0 && ix <= 0)
+	continue;
+      max = fmaxf(max, fabsf(MRC_F3(divb,0, ix,iy,iz)));
+    } mrc_fld_foreach_end;
+  } else if (mhd_type == MT_SEMI_CONSERVATIVE ||
+	     mhd_type == MT_FULLY_CONSERVATIVE) {
+    mrc_fld_foreach(divb, ix,iy,iz, 0, 0) {
+      MRC_F3(divb,0, ix,iy,iz) = 
+	(B1X(f, ix+1,iy,iz) - B1X(f, ix,iy,iz)) / bd2x[ix] +
+	(B1Y(f, ix,iy+1,iz) - B1Y(f, ix,iy,iz)) / bd2y[iy] +
+	(B1Z(f, ix,iy,iz+1) - B1Z(f, ix,iy,iz)) / bd2z[iz];
+      MRC_F3(divb,0, ix,iy,iz) *= MRC_F3(f,_YMASK, ix,iy,iz);
+
+      max = fmaxf(max, fabsf(MRC_F3(divb,0, ix,iy,iz)));
+    } mrc_fld_foreach_end;
+  } else {
+    assert(0);
+  }
 
   mrc_fld_put_as(f, fld);
   mrc_fld_put_as(d, divb);

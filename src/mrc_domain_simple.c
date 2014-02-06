@@ -38,8 +38,11 @@ mrc_domain_simple_proc2rank(struct mrc_domain *domain, int proc[3])
   return ((proc[2] * simple->nr_procs[1]) + proc[1]) * simple->nr_procs[0] + proc[0];
 }
 
+static int
+mrc_domain_simple_get_neighbor_rank(struct mrc_domain *domain, int shift[3]);
+
 static void
-mrc_domain_simple_setup(struct mrc_domain *domain)
+mrc_domain_simple_do_setup(struct mrc_domain *domain)
 {
   struct mrc_domain_simple *simple = mrc_domain_simple(domain);
 
@@ -73,7 +76,7 @@ mrc_domain_simple_setup(struct mrc_domain *domain)
     if (proc[d] > 0) {
       int dir[3] = {};
       dir[d] = -1;
-      int rank_nei = mrc_domain_get_neighbor_rank(domain, dir);
+      int rank_nei = mrc_domain_simple_get_neighbor_rank(domain, dir);
       MPI_Recv(&simple->patch.off[d], 1, MPI_INTEGER, rank_nei, TAG_SCAN_OFF + d, domain->obj.comm,
 	       MPI_STATUS_IGNORE);
     } else {
@@ -85,7 +88,7 @@ mrc_domain_simple_setup(struct mrc_domain *domain)
       int off_nei = simple->patch.off[d] + simple->patch.ldims[d];
       int dir[3] = {};
       dir[d] = 1;
-      int rank_nei = mrc_domain_get_neighbor_rank(domain, dir);
+      int rank_nei = mrc_domain_simple_get_neighbor_rank(domain, dir);
       MPI_Send(&off_nei, 1, MPI_INTEGER, rank_nei, TAG_SCAN_OFF + d, domain->obj.comm);
     }
   }
@@ -103,8 +106,20 @@ mrc_domain_simple_setup(struct mrc_domain *domain)
 
   //  mprintf("off   %d %d %d\n", simple->off[0], simple->off[1], simple->off[2]);
   //  mprintf("gdims %d %d %d\n", simple->gdims[0], simple->gdims[1], simple->gdims[2]);
+}
 
+static void
+mrc_domain_simple_setup(struct mrc_domain *domain)
+{
+  mrc_domain_simple_do_setup(domain);
   mrc_domain_setup_super(domain);
+}
+
+static void
+mrc_domain_simple_read(struct mrc_domain *domain, struct mrc_io *io)
+{
+  mrc_domain_simple_do_setup(domain);
+  mrc_domain_read_super(domain, io);
 }
 
 static int
@@ -266,6 +281,7 @@ struct mrc_domain_ops mrc_domain_simple_ops = {
   .size                      = sizeof(struct mrc_domain_simple),
   .param_descr               = mrc_domain_simple_params_descr,
   .setup                     = mrc_domain_simple_setup,
+  .read                      = mrc_domain_simple_read,
   .get_neighbor_rank         = mrc_domain_simple_get_neighbor_rank,
   .get_neighbor_rank_patch   = mrc_domain_simple_get_neighbor_rank_patch,
   .get_patches               = mrc_domain_simple_get_patches,

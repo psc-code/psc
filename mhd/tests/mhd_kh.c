@@ -6,6 +6,7 @@
 #include "ggcm_mhd_ic_private.h"
 
 #include <mrc_fld.h>
+#include <mrc_fld_as_float.h>
 #include <mrc_domain.h>
 #include <mrc_crds.h> 
 
@@ -37,7 +38,7 @@ ggcm_mhd_ic_kh_run(struct ggcm_mhd_ic *ic)
 {
   struct ggcm_mhd *mhd = ic->mhd;
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);  
-  struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, "mhd_pr_float");
+  struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
   struct ggcm_mhd_ic_kh *sub = mrc_to_subobj(ic, struct ggcm_mhd_ic_kh);
   // FIXME, the "1" no of ghosts is ugly here, and caused by the use of
   // the B1* macros which shift the index (due to staggering)...
@@ -76,8 +77,9 @@ ggcm_mhd_ic_kh_run(struct ggcm_mhd_ic *ic)
   } mrc_fld_foreach_end;
 
   mrc_fld_put_as(fld, mhd->fld);
-}
 
+  ggcm_mhd_convert_from_primitive(mhd, mhd->fld);
+}
 
 
 // ----------------------------------------------------------------------

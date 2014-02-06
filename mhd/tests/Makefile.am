@@ -8,24 +8,20 @@ bin_PROGRAMS = \
 	mhd_bw \
 	mhd_ot \
 	mhd_kh \
+	mhd_ici \
+	mhd_hydroblast \
+	mhd_mhdblast \
 	mhd_alfven \
+	mhd_sound \
 	mhd_whistler
 
 check_PROGRAMS = \
 	test_ggcm_mhd_crds \
-	test_ggcm_mhd \
-	mhd2
+	test_ggcm_mhd
 
 noinst_LTLIBRARIES = libmhdtbd.la
 
 libmhdtbd_la_SOURCES = \
-	ggcm_mhd_ic_ot.c \
-	ggcm_mhd_ic_otzi.c \
-	ggcm_mhd_ic_hydroblast.c \
-	ggcm_mhd_ic_mhdblast.c \
-	ggcm_mhd_ic_ici.c \
-	ggcm_mhd_ic_wave_sound.c \
-	ggcm_mhd_ic_wave_alfven.c \
 	ggcm_mhd_diag_c.c \
 	ggcm_diag_lib.c
 

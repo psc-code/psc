@@ -19,6 +19,8 @@ struct mrc_ts {
   struct mrc_obj *ctx_obj;
   void *rhsf_ctx;
   void (*rhsf)(void *ctx, struct mrc_obj *rhs, float time, struct mrc_obj *x);
+  struct mrc_obj *stepf_ctx;
+  void (*stepf)(void *ctx, struct mrc_ts *ts, struct mrc_obj *x);
 
   struct mrc_obj *(*vec_duplicate)(struct mrc_obj *);
   void (*vec_copy)(struct mrc_obj *, struct mrc_obj *);
@@ -117,6 +119,7 @@ extern struct mrc_ts_ops mrc_ts_petsc_ops;
 
 #endif
 
+extern struct mrc_ts_ops mrc_ts_step_ops;
 extern struct mrc_ts_ops mrc_ts_rk2_ops;
 extern struct mrc_ts_ops mrc_ts_rk4_ops;
 extern struct mrc_ts_ops mrc_ts_rkf45_ops;

@@ -6,6 +6,7 @@
 #include "ggcm_mhd_ic_private.h"
 
 #include <mrc_fld.h>
+#include <mrc_fld_as_float.h>
 #include <mrc_domain.h>
 
 #include <math.h>
@@ -33,16 +34,12 @@ ggcm_mhd_ic_alfven_run(struct ggcm_mhd_ic *ic)
 {
   struct ggcm_mhd_ic_alfven *sub = mrc_to_subobj(ic, struct ggcm_mhd_ic_alfven);
   struct ggcm_mhd *mhd = ic->mhd;
-  //struct mrc_fld *f3 = mrc_fld_get_as(mhd->fld, "float");
-  struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, "mhd_pr_float");
+  struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);  
 
-  float xl[3], xh[3], L[3], r[3];
+  float xl[3], xh[3], r[3];
   mrc_crds_get_param_float3(crds, "l", xl);
   mrc_crds_get_param_float3(crds, "h", xh);
-  for(int i = 0; i < 3; i++){
-    L[i] = xh[i] - xl[i];
-  }
   mrc_fld_foreach(fld, ix, iy, iz, 2, 2) {
     r[0] = MRC_CRD(crds, 0, ix);
     r[1] = MRC_CRD(crds, 1, iy);
@@ -86,6 +83,8 @@ ggcm_mhd_ic_alfven_run(struct ggcm_mhd_ic *ic)
   } mrc_fld_foreach_end;
   
   mrc_fld_put_as(fld, mhd->fld);
+
+  ggcm_mhd_convert_from_primitive(mhd, mhd->fld);
 }
 
 // ----------------------------------------------------------------------

@@ -33,7 +33,6 @@ struct ggcm_mhd {
   struct mrc_fld *fld;
   struct ggcm_mhd_crds *crds;
   struct ggcm_mhd_step *step;
-  struct ggcm_mhd_commu *commu;
   struct ggcm_mhd_bnd *bnd;
   struct ggcm_mhd_diag *diag;
   struct ggcm_mhd_ic *ic;
@@ -63,7 +62,9 @@ extern struct ggcm_mhd_ops ggcm_mhd_ops_box;
 
 // ----------------------------------------------------------------------
 
+void primvar_c(struct ggcm_mhd *mhd, int m_curr);
 void primvar1_c(struct ggcm_mhd *mhd);
-void primbb_c(struct ggcm_mhd *mhd);
+void primbb_c(struct ggcm_mhd *mhd, int m_curr);
+void zmaskn_c(struct ggcm_mhd *mhd);
 
 #endif

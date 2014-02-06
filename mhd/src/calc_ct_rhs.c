@@ -6,6 +6,7 @@
 #include <mrc_domain.h>
 #include <mrc_ddc.h>
 
+#define F3 MRC_F3 // FIXME
 
 // ----------------------------------------------------------------------
 // calc_ct_rhs 
@@ -54,7 +55,7 @@ calc_ct_rhs(struct ggcm_mhd *mhd, struct mrc_fld *_rhs, struct mrc_fld *_flux[3]
 
   //  fill_ghost_fld(mhd, E_ec);
 
-  struct mrc_fld *rhs = mrc_fld_get_as(_rhs, "mhd_fc_float");
+  struct mrc_fld *rhs = mrc_fld_get_as(_rhs, "float");
   E_ec = mrc_fld_get_as(_E_ec, "float");
 
   mrc_fld_foreach(rhs, ix, iy,  iz, 1, 1) {

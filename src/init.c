@@ -1,4 +1,6 @@
 
+#include <stdbool.h>
+
 #include <mrc.h>
 #include <mrc_params.h>
 #include <mrc_obj.h>
@@ -23,12 +25,14 @@ mrc_clear_flags(unsigned long flags)
 }
 
 void
-libmrc_finalize(bool assert_clean, int class_info_verbosity)
+libmrc_finalize()
 {
 #ifdef HAVE_PETSC
   int ierr = PetscFinalize(); assert(ierr == 0);
 #endif
   int status = 0;
+  int class_info_verbosity = CLASS_INFO_VERB_ACTIVE;
+  bool assert_clean = false;
 
   struct mrc_param_select class_info_verb_options[] = {
     { .val = CLASS_INFO_VERB_NONE,   .str = "none"    },

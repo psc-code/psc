@@ -26,6 +26,5 @@ extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_pp;
 extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_b;
 extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_j;
 extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_divb;
-extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_pp_full;
 
 #endif

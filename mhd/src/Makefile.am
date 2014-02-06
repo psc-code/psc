@@ -8,15 +8,13 @@ libmhd_la_SOURCES = \
 	\
 	ggcm_mhd.c \
 	ggcm_mhd_box.c \
+	ggcm_mhd_convert.c \
 	\
 	ggcm_mhd_bnd.c \
 	ggcm_mhd_bnd_none.c \
 	ggcm_mhd_bnd_conducting.c \
 	ggcm_mhd_bnd_conducting_x.c \
 	ggcm_mhd_bnd_open_x.c \
-	\
-	ggcm_mhd_commu.c \
-	ggcm_mhd_commu_c.c \
 	\
 	ggcm_mhd_crds.c \
 	ggcm_mhd_crds_c.c \
@@ -32,6 +30,7 @@ libmhd_la_SOURCES = \
 	ggcm_mhd_diag_item_primitive.c \
 	primvar.c \
 	primbb.c \
+	zmaskn.c \
 	ggcm_mhd_diag_item_divb.c \
 	ggcm_mhd_diag_item_j.c \
 	calc_currcc.c \
@@ -52,10 +51,8 @@ libmhd_la_SOURCES = \
 	ggcm_mhd_fill_ghost_fld.c \
 	ggcm_mhd_get_fields.c \
 	ggcm_mhd_step_cweno.c \
+	ggcm_mhd_step_c.c \
 	\
-	mrc_ts_monitor_ggcm.c \
-	\
-	mrc_fld_mhd_pr_float.c \
-	mrc_fld_mhd_fc_float.c
+	mrc_ts_monitor_ggcm.c
 
 

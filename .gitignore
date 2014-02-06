@@ -22,5 +22,6 @@ ltmain.sh
 missing
 depcomp
 stamp-h1
+.dirstamp
 .deps
 test-driver

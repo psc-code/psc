@@ -9,6 +9,10 @@ mhd_fadeev
 mhd_ot
 mhd_whistler
 mhd_alfven
+mhd_sound
 mhd_kh
+mhd_ici
+mhd_hydroblast
+mhd_mhdblast
 *.log
 *.trs

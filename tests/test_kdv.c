@@ -142,7 +142,7 @@ main(int argc, char **argv)
 
   kdv_destroy(kdv);
 
-  libmrc_finalize(true, CLASS_INFO_VERB_ACTIVE);
+  libmrc_finalize();
   MPI_Finalize();
   return 0;
 }

@@ -6,6 +6,8 @@
 #include <mrc_domain.h>
 #include <mrc_ddc.h>
 
+#define F3 MRC_F3 // FIXME
+
 // ----------------------------------------------------------------------
 // limit_1
 //
@@ -162,7 +164,7 @@ limit_4(struct mrc_fld *u_delta[3], struct mrc_fld *u)
 void
 calc_u_delta(struct mrc_fld *_u_delta[3], struct mrc_fld *_u)
 {
-  struct mrc_fld *u = mrc_fld_get_as(_u, "mhd_fc_float");
+  struct mrc_fld *u = mrc_fld_get_as(_u, "float");
   struct mrc_fld *u_delta[3];
   for (int f = 0; f < 3; f++) {
     u_delta[f] = mrc_fld_get_as(_u_delta[f], "float");

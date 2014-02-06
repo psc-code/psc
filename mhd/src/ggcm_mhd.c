@@ -6,7 +6,6 @@
 #include "ggcm_mhd_crds_private.h"
 #include "ggcm_mhd_crds_gen.h"
 #include "ggcm_mhd_step.h"
-#include "ggcm_mhd_commu.h"
 #include "ggcm_mhd_diag.h"
 #include "ggcm_mhd_bnd.h"
 #include "ggcm_mhd_ic.h"
@@ -93,10 +92,11 @@ _ggcm_mhd_create(struct ggcm_mhd *mhd)
 
   ggcm_mhd_crds_set_param_obj(mhd->crds, "domain", mhd->domain);
   ggcm_mhd_step_set_param_obj(mhd->step, "mhd", mhd);
-  ggcm_mhd_commu_set_param_obj(mhd->commu, "mhd", mhd);
   ggcm_mhd_diag_set_param_obj(mhd->diag, "mhd", mhd);
   ggcm_mhd_bnd_set_param_obj(mhd->bnd, "mhd", mhd);
   ggcm_mhd_ic_set_param_obj(mhd->ic, "mhd", mhd);
+
+  mrc_fld_set_name(mhd->fld, "ggcm_mhd_fld");
   mrc_fld_set_param_obj(mhd->fld, "domain", mhd->domain);
   mrc_fld_set_param_int(mhd->fld, "nr_spatial_dims", 3);
   mrc_fld_set_param_int(mhd->fld, "nr_ghosts", BND);
@@ -159,6 +159,8 @@ _ggcm_mhd_setup(struct ggcm_mhd *mhd)
 {
   ggcm_mhd_setup_member_objs(mhd);
 
+  mrc_fld_dict_add_int(mhd->fld, "mhd_type", ggcm_mhd_step_mhd_type(mhd->step));
+
   struct mrc_patch_info info;
   mrc_domain_get_local_patch_info(mhd->domain, 0, &info);
   for (int d = 0; d < 3; d++) {
@@ -172,7 +174,7 @@ _ggcm_mhd_setup(struct ggcm_mhd *mhd)
 void
 ggcm_mhd_fill_ghosts(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m, float bntim)
 {
-  ggcm_mhd_commu_run(mhd->commu, fld, m, m + 8);
+  mrc_ddc_fill_ghosts_fld(mrc_domain_get_ddc(mhd->domain), m, m + 8, fld);
   ggcm_mhd_bnd_fill_ghosts(mhd->bnd, fld, m, bntim);
 }
 
@@ -279,7 +281,6 @@ static struct param ggcm_mhd_descr[] = {
   { "fld"             , VAR(fld)             , MRC_VAR_OBJ(mrc_fld)           },
   { "crds"            , VAR(crds)            , MRC_VAR_OBJ(ggcm_mhd_crds)     },
   { "step"            , VAR(step)            , MRC_VAR_OBJ(ggcm_mhd_step)     },
-  { "commu"           , VAR(commu)           , MRC_VAR_OBJ(ggcm_mhd_commu)    },
   { "diag"            , VAR(diag)            , MRC_VAR_OBJ(ggcm_mhd_diag)     },
   { "bnd"             , VAR(bnd)             , MRC_VAR_OBJ(ggcm_mhd_bnd)      },
   { "ic"              , VAR(ic)              , MRC_VAR_OBJ(ggcm_mhd_ic)       },
@@ -315,6 +316,26 @@ ts_ggcm_mhd_step_calc_rhs(void *ctx, struct mrc_obj *_rhs, float time, struct mr
 }
 
 // ----------------------------------------------------------------------
+// ts_ggcm_mhd_step_run
+//
+// wrapper to be used in a mrc_ts object
+
+void
+ts_ggcm_mhd_step_run(void *ctx, struct mrc_ts *ts, struct mrc_obj *_x)
+{
+  struct ggcm_mhd *mhd = ctx;
+  struct mrc_fld *x = (struct mrc_fld *) _x;
+  
+  mhd->time = mrc_ts_time(ts);
+  mhd->dt = mrc_ts_dt(ts);
+  mhd->istep = mrc_ts_step_number(ts);
+
+  ggcm_mhd_step_run(mhd->step, x);
+
+  mrc_ts_set_dt(ts, mhd->dt);
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_main
 //
 // Helper function that does most of the work of actually running a
@@ -332,7 +353,6 @@ ggcm_mhd_main(int *argc, char ***argv)
   ggcm_mhd_register();
 
   struct ggcm_mhd *mhd = ggcm_mhd_create(MPI_COMM_WORLD);
-  mrc_fld_set_type(mhd->fld, "mhd_fc_float");
   ggcm_mhd_set_from_options(mhd);
   ggcm_mhd_setup(mhd);
   ggcm_mhd_view(mhd);
@@ -360,6 +380,7 @@ ggcm_mhd_main(int *argc, char ***argv)
   mrc_ts_set_dt(ts, 1e-6);
   mrc_ts_set_solution(ts, mrc_fld_to_mrc_obj(mhd->fld));
   mrc_ts_set_rhs_function(ts, ts_ggcm_mhd_step_calc_rhs, mhd);
+  mrc_ts_set_step_function(ts, ts_ggcm_mhd_step_run, mhd);
   mrc_ts_set_from_options(ts);
   mrc_ts_view(ts);
   mrc_ts_setup(ts);
