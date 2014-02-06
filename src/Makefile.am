@@ -50,7 +50,6 @@ libmrc_la_SOURCES = \
 	mrc_trafo.c \
 	mrc_trafo_cylindrical.c \
 	mrc_trafo_cartesian.c \
-	mrc_mat.c \
 	init.c \
 	hilbert.c \
 	bitfield3d.c \
@@ -76,7 +75,8 @@ libmrc_la_SOURCES += \
 	mrc_block_factory.c \
 	mrc_block_factory_simple.c \
 	mrc_block_factory_cylindrical.c \
-	mrc_ddc_mb.c
+	mrc_ddc_mb.c \
+	mrc_mat.c
 endif HAVE_PETSC
 
 libmrctest_la_SOURCES = \

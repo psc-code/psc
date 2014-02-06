@@ -157,7 +157,9 @@ mrc_ddc_init()
   mrc_class_register_subclass(&mrc_class_mrc_ddc, &mrc_ddc_simple_ops);
   mrc_class_register_subclass(&mrc_class_mrc_ddc, &mrc_ddc_multi_ops);
   mrc_class_register_subclass(&mrc_class_mrc_ddc, &mrc_ddc_amr_ops);
+#if HAVE_PETSC
   mrc_class_register_subclass(&mrc_class_mrc_ddc, &mrc_ddc_mb_ops);
+#endif
 }
 
 // ======================================================================

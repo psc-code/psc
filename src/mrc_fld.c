@@ -1014,10 +1014,11 @@ static struct mrc_obj_method mrc_fld_methods[] = {
   MRC_OBJ_METHOD("waxpy"    , mrc_fld_waxpy),
   MRC_OBJ_METHOD("norm"     , mrc_fld_norm),
   MRC_OBJ_METHOD("set"      , mrc_fld_set),
+#ifdef HAVE_PETSC
   MRC_OBJ_METHOD("set_petsc_vec", mrc_fld_set_petsc_vec),
   MRC_OBJ_METHOD("get_petsc_vec", mrc_fld_get_petsc_vec),
   MRC_OBJ_METHOD("put_petsc_vec", mrc_fld_put_petsc_vec),
-  
+#endif
   {}
 };
 
