@@ -33,11 +33,29 @@
 // function in the documentation.
 
 struct mrc_bf_cylindrical {
-  float rb, re;
-  float zb, ze;
+  float rb, re; // Bounds in the radial (coord_gen_r) direction
+  float zb, ze; // Bounds in the Z (coord_gen_z) direction
   int dims[2]; // FIXME: just 2D for now
-  struct mrc_crds_gen *coord_gen[3];
+  struct mrc_crds_gen *coord_gen[3]; // Coordinate generation objects 
+                                     //for the 3 domain coordinates.
 };
+
+#define VAR(x) (void *)offsetof(struct mrc_bf_cylindrical, x)
+static struct param mrc_bf_cylindrical_param_descr[] = {
+  { "rb"              , VAR(rb)             , PARAM_FLOAT(1e-15)     },
+  { "re"              , VAR(re)             , PARAM_FLOAT(1.0  )     },
+  { "zb"              , VAR(zb)             , PARAM_FLOAT(0)         },
+  { "ze"              , VAR(ze)             , PARAM_FLOAT(1.0  )     },
+  { "mr"                , VAR(dims[0])          , PARAM_INT(16)          },
+  { "mth"               , VAR(dims[1])          , PARAM_INT(16)          },
+  { "coord_gen_r"       , VAR(coord_gen[0])    , MRC_VAR_OBJ(mrc_crds_gen)},
+  { "coord_gen_th"      , VAR(coord_gen[1])    , MRC_VAR_OBJ(mrc_crds_gen)},
+  { "coord_gen_z"       , VAR(coord_gen[2])    , MRC_VAR_OBJ(mrc_crds_gen)},
+  {}
+};
+#undef VAR
+// FIXME: Just a 2D plane for now..
+//   { "mz"                , VAR(dims[2])          , PARAM_INT(1)           },
 
 static void
 _bf_cylindrical_create(struct mrc_block_factory *fac)
@@ -99,8 +117,8 @@ mrc_block_factory_cylindrical_run(struct mrc_block_factory *fac, struct mrc_doma
   // First block
   
   blocks[0] = (struct MB_block) {
-    .mx = { sub->dims[0], sub->dims[1]/2, 1 },
     .nr_block = 0,
+    .mx = { sub->dims[0], sub->dims[1]/2, 1 },
     .faces = {
       // The Left face lies at the coordinate singularity in a circle, and has a special
       // boundary type.
@@ -124,8 +142,8 @@ mrc_block_factory_cylindrical_run(struct mrc_block_factory *fac, struct mrc_doma
   // If the exchange is bi-directional than both each block needs to have a mapping for its
   // partner.
   blocks[1] = (struct MB_block) {
-    .mx = { sub->dims[0], sub->dims[1]/2, 1 },
     .nr_block = 1,
+    .mx = { sub->dims[0], sub->dims[1]/2, 1 },
     .faces = {
       [FACE_LEFT  ] = { 0, FACE_LEFT  , .map = { 0, MB_Y, MB_Z },
 			.btype = BTYPE_SP    },
@@ -139,24 +157,6 @@ mrc_block_factory_cylindrical_run(struct mrc_block_factory *fac, struct mrc_doma
   };
 }
 
-
-#define VAR(x) (void *)offsetof(struct mrc_bf_cylindrical, x)
-static struct param mrc_bf_cylindrical_param_descr[] = {
-  { "rb"              , VAR(rb)             , PARAM_FLOAT(1e-15)     },
-  { "re"              , VAR(re)             , PARAM_FLOAT(1.0  )     },
-  { "zb"              , VAR(zb)             , PARAM_FLOAT(0)         },
-  { "ze"              , VAR(ze)             , PARAM_FLOAT(1.0  )     },
-  { "mr"                , VAR(dims[0])          , PARAM_INT(16)          },
-  { "mth"               , VAR(dims[1])          , PARAM_INT(16)          },
-  { "coord_gen_r"       , VAR(coord_gen[0])    , MRC_VAR_OBJ(mrc_crds_gen)},
-  { "coord_gen_th"      , VAR(coord_gen[1])    , MRC_VAR_OBJ(mrc_crds_gen)},
-  { "coord_gen_z"       , VAR(coord_gen[2])    , MRC_VAR_OBJ(mrc_crds_gen)},
-  {}
-};
-#undef VAR
-
-// FIXME: Just a 2D plane for now..
-//   { "mz"                , VAR(dims[2])          , PARAM_INT(1)           },
 
 // ----------------------------------------------------------------------
 // mrc_block_factory subclass "cylindrical"

@@ -7,7 +7,7 @@ Class Overview
 
 Block factories are helper classes attached to :c:type:`mrc_domain`
 objects of type :c:type:`mb <mrc_domain_mb>`. They are responsible for
-carving the global domain into seperate blocks and creating the
+carving the global domain into separate blocks and creating the
 mappings between those blocks which allow boundary exchanges.
 
 While each block has only three coordinate axes the total number of
@@ -28,6 +28,8 @@ grid points along each computational coordinate.
 	     axis, i.e. the logical dimensions of every block must be
 	     identical! Block factories should probably check that
 	     this is the case...
+
+.. _block_factory_types:
 
 Types
 -----
@@ -66,7 +68,7 @@ mapping table shows which faces are connected for each block.
      * "coord_gen_y"
 
 
-   :param param_float [x,y,z]b: Beginning of the domian in [x,y,z]
+   :param param_float [x,y,z]b: Beginning of the domain in [x,y,z]
 
    :param param_float [x,y,z]e: End of the domain in [x,y,z]
 
@@ -112,7 +114,7 @@ mapping table shows which faces are connected for each block.
      * "coord_gen_z"
 
 
-   :param param_float [x,y]b: Beginning of the domian in [x,y,z]
+   :param param_float [x,y]b: Beginning of the domain in [x,y,z]
 
    :param param_float [x,y]e: End of the domain in [x,y,z]
 
@@ -187,22 +189,23 @@ Relationships
 * :c:type:`mrc_domain`
 
   Block Factories exist only to create the block layout for
-  :c:type:`"Multi-Block" <mrc_domain_mb>` domains. "mb" domains set the type, create,
-  and call block factories. The factory feeds back in a list of
-  blocks which the domain uses.
+  :c:type:`"Multi-Block" <mrc_domain_mb>` domains. "mb" domains create,
+  call, and destroy block factories. The factory feeds back in a list of
+  blocks which the domain uses. The block factory object can be recovered
+  from the domain via the :c:func:`get_trafo` method.
 
 * :c:type:`mrc_crds`
 
   Multi-block domains require coordinates to be generated in a
   consistent manner across all pieces of the domain. Thus block
   factories must store enough :c:type:`mrc_crds_gen` objects to cover
-  the domain's differenent coordinate axes, as well as assign them to
-  the approriate axes in each block. These will be processed by the
-  :c:type:`mrc_crds_mb` subtype to form the domain.
+  the domain's different coordinate axes, as well as assign them to
+  the appropriate axes in each block. These will be processed by the
+  :c:type:`mrc_crds_mb` sub-type to form the domain.
 
   .. note:: To make it explicit that we're dealing with multi-block
 	    domain coordinates (of which there can be more than three)
-	    I've adopted the convetion of using `coord` instead of
+	    I've adopted the convention of using `coord` instead of
 	    `crds`. We'll see if that sticks...
 
 * :c:type:`mrc_trafo`
@@ -215,14 +218,18 @@ User Interface
 
 .. c:type:: struct mrc_block_factory
 
-   Standard block factories are hidden from the user. Type selection
-   should be handled purely through the :c:type:`mrc_domain_mb`
-   interface. 
+   Block factories are responsible for constructing the domain. The
+   concepts of global dimensions and length don't mean much in
+   multi-block arrangements. Each block factory will provide some
+   public parameter interface for setting the number of grid points
+   and coordinate boundaries. Additionally, each block factory will
+   define a set of `coord_gen` names which can
+   be used to apply nonuniform grids. These are :c:type:`mrc_crds_gen`
+   objects except that the names have been changed to indicate that
+   they are block coordinates. See the :ref:`types list <block_factory_types>` 
+   for what options each type can support.
 
-   In the future individual subtypes may have command line tunable
-   parameters. For this to be supported the domain would need to make
-   a `mrc_block_factory_set_from_options` call during its setup
-   phase. A minor change.
+
 
 Writing A Subclass
 ===================
@@ -239,25 +246,175 @@ Required Elements
    :param struct mrc_domain* domain: The domain where blocks should be
 				     assembled. The domain is assured
 				     to be multi-block (an assert in
-				     the superclass will trip if it's
+				     the super-class will trip if it's
 				     not).
 
 The run function is responsible for allocating space in the `mb` domain
-subcontext at the member `mb->mb_blocks`, setting the number of blocks
+sub-context at the member `mb->mb_blocks`, setting the number of blocks
 at `mb->nr_blocks`, then constructing the mapping for each block.
 
-The best way to illustrate the structure of a `run` function is
-through this example from the :c:type:`mrc_block_factory_cylindrical`
-subtype::
+.. warning:: All blocks must have the same number of grid points in
+	     the logical dimensions (`0,1,2`), due to the
+	     limitations of :c:type:`mrc_fld` storage and domain decomposition.
+	     This *does not* mean that mappings between the logical
+	     axis and computational coordinate must be the same on
+	     each block.
 
-  FIXME: I want to include a source file example here, but I don't
-  want to copy paste it. There has to be a better way, I just need to
-  learn what it is.
+
+* **Coordinate Generator Objects**: Each computational coordinate in the
+  domain must have a :c:type:`mrc_crds_gen` object which is assigned to
+  the appropriate block local axis during the run function. It is
+  recommended, but not required, that these objects be registered as
+  member objects and have sensible public names so they can be
+  manipulated from the command line.
+
+Optional Elements
+------------------
+Any input parameters which are necessary to initialize the block
+mappings and domain, such as numbers of grid points, 
 
 
+Tutorial
+--------------
+
+Constructing block factory sub-types can be rather complicated. This
+tutorial will examine, in depth, the construction of the 
+:c:type:`cylindrical <mrc_block_factory_cylindrical>` block
+factory, which is a relatively simple two block factory with three
+global computational coordinates. 
+
+
+Input Parameter Definition
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+We need to define a subclass context to contain the public
+parameters. This should have elements for, at the least, the
+coordinate dimensions, bounds, and generation objects. For the
+cylindrical domain the bounds on the :math:`\theta` coordinate are
+fixed at :math:`[0, 2\pi]`, so we only need bounds in :math:`r` and
+:math:`z`. Currently this factory only creates 2D domains and
+the number of grid points in :math:`\theta` is split evenly between
+the two blocks, so we only need two dimensions variables and will
+hard-code the number of :math:`z` grid points to 1. Despite this, we
+still need three :c:type:`coord_gen <mrc_crds_gen>` objects, one for
+each of the three coordinates. The :c:type:`coordinate object <mrc_crds>` 
+will still expect a `coord_gen` for each block local direction, even
+if that direction only has one point. These generator objects should
+be registered as member objects (`MRC_VAR_OBJ`) in the parameter
+definition so they will be created, destroyed, and setup along with the subclass.
+
+.. literalinclude:: ../../../src/mrc_block_factory_cylindrical.c
+   :lines: 35-58
+
+Setting the `coord_gen` Names
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A subclass create function is required to set the coordinate generator
+names. As names will be used on the command line to modify grid point
+distributions the names should be unique. The following convention is
+suggested: `coord_gen_$` where `$` is the name of the computational
+coordinate.
+
+.. warning:: A read function which reads member objects *must* exist if the subclass create is
+	     used to set the generator names, lest the subclass create
+	     try to set the names during read in when the
+	     member objects haven't been created. Yes, this is
+	     hacky. No, I don't care enough to fix it.
+
+.. literalinclude:: ../../../src/mrc_block_factory_cylindrical.c
+   :lines: 60-75
+
+
+The `run` Function
+^^^^^^^^^^^^^^^^^^^^
+
+Housekeeping
+"""""""""""""
+
+The run function needs to assign the number of blocks in the
+:c:type:`mrc_domain_mb` sub-context and allocate the space to hold
+them.
+
+.. literalinclude:: ../../../src/mrc_block_factory_cylindrical.c
+   :lines: 82-90
+	   
+This function should also initialize the block mappings into the
+allocated space.
+
+Accessing Domain Parameters
+""""""""""""""""""""""""""""
+
+Block factories may assume that all the publicly tunable parameters of
+the domain have been set, such as the `mb->bc` boundary condition
+parameters. These can be used to set the block mappings. As block
+factories are run at the beginning of the `mrc_domain` setup process
+one *cannot* assume private members of the domain have been
+initialized.
+
+
+
+Block Mappings
+^^^^^^^^^^^^^^^
+
+Each block contains a lot of information as to where it fits in the
+domain.
+
+.. c:type:: struct MB_block
+
+   .. c:member:: int nr_block 
+      
+      The number of this block (seems redundant but *must* be set)
+  
+   .. c:member:: int mx[3] 
+
+      Number of points in each block local logical dimension
+
+   .. c:member:: struct MB_face faces[NR_FACES]
+    
+      Face mappings (6 total)
+   
+   .. c:member:: struct mrc_crds_gen* coord_gen[3]
+   
+      Coordinate generators for the block local coordinates.
+
+   .. c:member:: float xl[3]
+   
+      Lower bounds of this block in coordinate space (passed to the
+      `coord_gen` objects)
+
+   .. c:member:: float xh[3]
+     
+      Upper bounds of this block in coordinate space. (passed to the
+      `coord_gen` objects)
+
+For the first block of our cylindrical example, the initialization looks
+like this:
+
+.. literalinclude:: ../../../src/mrc_block_factory_cylindrical.c
+   :lines: 119-139
+
+And the second block:
+
+.. literalinclude:: ../../../src/mrc_block_factory_cylindrical.c
+   :lines: 141-157
+
+
+Let's go over each of these elements in more depth.
+
+Block Number
+"""""""""""""
+
+.. literalinclude:: ../../../src/mrc_block_factory_cylindrical.c
+   :lines: 120
+
+Assigning the number of this block is sort of redundant, but it's need
+for backwards compatibility with some of the domain systems.
 
 Grid Dimensions
-^^^^^^^^^^^^^^^^
+""""""""""""""""
+
+.. literalinclude:: ../../../src/mrc_block_factory_cylindrical.c
+   :lines: 121
 
 Each factory should have parameters allowing the grid size in each
 computational coordinate to be specified. These are then used to set
@@ -269,7 +426,10 @@ methods. It would probably be a good idea to add some checks to each
 factory to ensure this is the case.
 
 Face Mappings
-^^^^^^^^^^^^^^
+""""""""""""""
+
+.. literalinclude:: ../../../src/mrc_block_factory_cylindrical.c
+   :lines: 122-133
 
 Each block is a standard 3D cube with faces:
 
@@ -306,11 +466,11 @@ following:
 
   * MB_Z 
 
-  * MB_XR : X direction but reveresed
+  * MB_XR : X direction but reversed
 
-  * MB_YR : Y direction but reveresed
+  * MB_YR : Y direction but reversed
 
-  * MB_ZR : Z direction but reveresed
+  * MB_ZR : Z direction but reversed
 
 Additionally each face should specify a boundary type
 `.btype`. Options are:
@@ -320,7 +480,7 @@ Additionally each face should specify a boundary type
   * BTYPE_OUTER : Outer boundary, no boundary exchange occurs
 
   * BTYPE_SP : The boundary is a coordinate singularity. Ghost point
-    exchange will occur but addtional processing must be performed.
+    exchange will occur but additional processing must be performed.
 
   * BTYPE_SPC : The boundary is a transition between two coordinate
     systems. Ghost point exchange will occur but additional processing
@@ -331,12 +491,15 @@ Additionally each face should specify a boundary type
 
 
 Coordinate Generation
-^^^^^^^^^^^^^^^^^^^^^^
+""""""""""""""""""""""
 
-Each factory subtype should have, as member objects, enough
+.. literalinclude:: ../../../src/mrc_block_factory_cylindrical.c
+   :lines: 134-138
+
+Each factory sub-type should have, as member objects, enough
 :c:type:`coordinate generators <mrc_crds_gen>` to handle its
 computational coordinates. The generators should have unique names set
-during subtype creation that would allow command line parsing of
+during sub-type creation that would allow command line parsing of
 coordinate generation parameters, otherwise there will be issues with
 generating non-uniform coordinates. I've adopted the convention of
 using the `coord` prefix, instead of the standard `crds`, to indicate
@@ -344,17 +507,23 @@ that these code generators are associated with computational
 coordinates in a multi-block domain, but that may change. 
 
 These generators must be assigned to the appropriate local axes of each
-block in the `.coord_gen` atrribute. Additionally, the lower and upper
+block in the `.coord_gen` attribute. Additionally, the lower and upper
 coordinate bounds of each block are set in the `.xl` and `.xh`
 attributes, respectively.
 
-Accessing Domain Parameters
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Wrapping it up
+^^^^^^^^^^^^^^^^
 
-Block factories may assume that all the publicly tunable parameters of
-the domain have been set, such as the `mb->bc` boundary condition
-parameters. These can be used to set the block mappings. As block
-factories are run at the beginning of the `mrc_domain` setup process
-one *cannot* assume private members of the domain have been
-initialized.
+All that remains after the run function is a standard
+:c:type:`mrc_obj_ops` declaration.
+
+.. literalinclude:: ../../../src/mrc_block_factory_cylindrical.c
+   :lines: 161-171
+
+
+Keep in mind that the sub-type must be registered before it can be
+selected:
+
+.. literalinclude:: ../../../src/mrc_block_factory.c
+   :lines: 89
 
