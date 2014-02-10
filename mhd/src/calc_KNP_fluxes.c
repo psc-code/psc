@@ -66,23 +66,8 @@ calc_KNP_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *flux[3],
   float d_i = mhd->par.d_i;
   float mpermi = 1.f;
 
-  /*
-  struct mrc_fld *flux[3], *flux_p[3], *flux_m[3];
-  struct mrc_fld *u_p[3], *u_m[3], *E_p[3], *E_m[3];
-  */
   struct mrc_fld *u = mrc_fld_get_as(_u, "float");
   
-  /*
-  for (int f = 0; f < 3; f++) {
-    flux[f] = mrc_fld_get_as(_flux[f], "float");
-    flux_p[f] = mrc_fld_get_as(_flux_p[f], "float");
-    flux_m[f] = mrc_fld_get_as(_flux_m[f], "float");
-    u_p[f] = mrc_fld_get_as(_u_p[f], "float");
-    u_m[f] = mrc_fld_get_as(_u_m[f], "float");
-    E_p[f] = mrc_fld_get_as(_E_p[f], "float");
-    E_m[f] = mrc_fld_get_as(_E_m[f], "float");
-  }
-  */
   float *bdx1 = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD1);
   float *bdy1 = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD1);
   float *bdz1 = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD1);
@@ -242,15 +227,5 @@ calc_KNP_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *flux[3],
   } mrc_fld_foreach_end;
  
   mrc_fld_put_as(u, _u);
-  /*
-  for (int f = 0; f < 3; f++) {
-    mrc_fld_put_as(flux[f], _flux[f]);
-    mrc_fld_put_as(flux_p[f], _flux_p[f]);
-    mrc_fld_put_as(flux_m[f], _flux_m[f]);
-    mrc_fld_put_as(u_p[f], _u_p[f]);
-    mrc_fld_put_as(u_m[f], _u_m[f]);
-    mrc_fld_put_as(E_p[f], _E_p[f]);
-    mrc_fld_put_as(E_m[f], _E_m[f]);
-  }
-  */
+  
 }

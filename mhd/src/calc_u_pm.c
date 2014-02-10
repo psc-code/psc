@@ -22,21 +22,7 @@ calc_u_pm(struct ggcm_mhd *mhd, struct mrc_fld *u_p[3], struct mrc_fld *u_m[3],
 {
   float d_i = mhd->par.d_i;
   float eta = mhd->par.diffco;
-  //struct mrc_fld *u = mrc_fld_get_as(_u, "float");
-
-  //struct mrc_fld *u_delta[3], *u_p[3], *u_m[3], *E_p[3], *E_m[3];
-  //struct mrc_fld *u_p[3], *u_m[3], *E_p[3], *E_m[3];
-
-  /*
-  for (int f = 0; f < 3; f++) {
-    //u_delta[f] = mrc_fld_get_as(_u_delta[f], "float");
-    u_p[f] = mrc_fld_get_as(_u_p[f], "float");
-    u_m[f] = mrc_fld_get_as(_u_m[f], "float");
-    E_p[f] = mrc_fld_get_as(_E_p[f], "float");
-    E_m[f] = mrc_fld_get_as(_E_m[f], "float");
-  }
-  */
-
+ 
   // Reconstruction    UijkE  = u_ijk + (dxu_)ijk    UijkW = u_ijk - (dxu_)ijk
   mrc_fld_foreach(u, ix,iy,iz, 1, 1) {
     for (int m = 0; m <= _UU1; m++) {
@@ -80,26 +66,7 @@ calc_u_pm(struct ggcm_mhd *mhd, struct mrc_fld *u_p[3], struct mrc_fld *u_m[3],
     if (MRC_F3(u_m[2], _RR1, ix,iy,iz) <= 0.f) { 
       MRC_F3(u_m[2], _RR1, ix,iy,iz) = RMIN;
     }
-    /*
-    if  (MRC_F3(u_p[0], _UU1, ix,iy,iz) <= 0.f) {
-      MRC_F3(u_p[0], _UU1, ix,iy,iz) = 0.f;
-    }
-    if  (MRC_F3(u_p[1], _UU1, ix,iy,iz) <= 0.f) {
-      MRC_F3(u_p[1], _UU1, ix,iy,iz) = 0.f;
-    }
-    if  (MRC_F3(u_p[2], _UU1, ix,iy,iz) <= 0.f) {
-      MRC_F3(u_p[2], _UU1, ix,iy,iz) = 0.f;
-    }    
-    if (MRC_F3(u_m[0], _UU1, ix,iy,iz) <= 0.f) { 
-      MRC_F3(u_m[0], _UU1, ix,iy,iz) = 0.f;
-    }
-    if  (MRC_F3(u_m[1], _UU1, ix,iy,iz) <= 0.f) {
-      MRC_F3(u_m[1], _UU1, ix,iy,iz) = 0.f;
-    }    
-    if (MRC_F3(u_m[2], _UU1, ix,iy,iz) <= 0.f) { 
-      MRC_F3(u_m[2], _UU1, ix,iy,iz) = 0.f;
-    }
-    */
+   
   } mrc_fld_foreach_end;
   
 
@@ -235,16 +202,5 @@ calc_u_pm(struct ggcm_mhd *mhd, struct mrc_fld *u_p[3], struct mrc_fld *u_m[3],
 		 (MRC_F3(u_m[i], _B1X, ix,iy,iz) * MRC_F3(u_m[i], _JY, ix,iy,iz) / MRC_F3(u_m[i], _RR1, ix,iy,iz)));   
     }    
   } mrc_fld_foreach_end;
-  
-  /*
-  mrc_fld_put_as(u, _u);
-  for (int f = 0; f < 3; f++) {
-    //mrc_fld_put_as(u_delta[f], _u_delta[f]);
-    mrc_fld_put_as(u_p[f], _u_p[f]);
-    mrc_fld_put_as(u_m[f], _u_m[f]);
-    mrc_fld_put_as(E_p[f], _E_p[f]);
-    mrc_fld_put_as(E_m[f], _E_m[f]);
-  }
-  */
 
 }

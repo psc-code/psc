@@ -45,19 +45,6 @@ limit_1(struct mrc_fld *u_delta[3], struct mrc_fld *u)
       if (!isfinite(MRC_F3(u_delta[2], m, ix,iy,iz))) MRC_F3(u_delta[2], m, ix,iy,iz) = 0.f;
     }
 
-    /*
-    for (int m = 0; m < 3; m++) {
-      MRC_F3(u_delta[0], _B1X + m, ix,iy,iz) = 0.0;
-      MRC_F3(u_delta[1], _B1X + m, ix,iy,iz) = 0.0;
-      MRC_F3(u_delta[2], _B1X + m, ix,iy,iz) = 0.0;
-     // FIXME, need to make sure NaN -> 0
-      if (!isfinite(MRC_F3(u_delta[0], _B1X + m, ix,iy,iz))) MRC_F3(u_delta[0], _B1X + m, ix,iy,iz) = 0.f;
-      if (!isfinite(MRC_F3(u_delta[1], _B1X + m, ix,iy,iz))) MRC_F3(u_delta[1], _B1X + m, ix,iy,iz) = 0.f;
-      if (!isfinite(MRC_F3(u_delta[2], _B1X + m, ix,iy,iz))) MRC_F3(u_delta[2], _B1X + m, ix,iy,iz) = 0.f;
-    }
-    */
-
-    
     for (int m = 0; m < 3; m++) {
       MRC_F3(u_delta[0], _B1X + m, ix,iy,iz) = 
 	fmaxf((B1XYZ(u, m, ix+1,iy,iz) - B1XYZ(u, m, ix  ,iy,iz)) *
@@ -219,64 +206,6 @@ limit_4(struct mrc_fld *u_delta[3], struct mrc_fld *u)
     dind[i] = 0;
   }
 }
-// ----------------------------------------------------------------------
-// limit_5
-//
-/*
-void 
-limit_5(struct mrc_fld *u_delta[3], struct mrc_fld *u, struct ggcm_mhd *mhd)
-{
-   // CWENO reconstruction (Kurganov & Levy 2000)
-
-  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-  for (int i = 0; i < 3; i++) {    
-    float *bd2 = ggcm_mhd_crds_get_crd(crds, i, BD2); //coordinate array in i direction 
-    //float *fx1 =  ggcm_mhd_crds_get_crd(crds, i, FX1);    ; // coordinate array in i direction 
-    // dx[i] 
- 
-    
-    float Pr =  MRC_F3(u, m, ix+dind[0], iy+dind[1], iz+dind[2])  - MRC_F3(u, m, ix, iy, iz));
-    float Pl =  MRC_F3(u, m, ix, iy, iz)  - MRC_F3(u, m, ix-dind[0], iy-dind[1], iz-dind[2]));
-    float Pc = 
-
-
-      MRC_F3(u_delta[i], m, ix, iy, iz) = 
-
-  }
-
-
-  for (int i = 0; i < 3; i++) {    
-    dind[i] = 1; 
-    mrc_fld_foreach(u, ix,iy,iz, 1, 1) {
-      for (int m = 0; m <= _UU1; m++) {    
-	float rl =  theta *( MRC_F3(u, m, ix+dind[0], iy+dind[1], iz+dind[2])  - MRC_F3(u, m, ix, iy, iz));
-	float rr =  theta *( MRC_F3(u, m, ix, iy, iz)  - MRC_F3(u, m, ix-dind[0], iy-dind[1], iz-dind[2]));
-	float cen = .5f *( MRC_F3(u, m, ix+dind[0], iy+dind[1], iz+dind[2])  - 
-			   MRC_F3(u, m, ix-dind[0], iy-dind[1], iz-dind[2]) ) ; 		  
-	if ( (cen*rl*rr) > 0) {
-	  MRC_F3(u_delta[i], m, ix,iy,iz) = 0.5*sign(cen)*fmin(fabsf(cen),fmin(fabsf(rl),fabsf(rr))) ; 
-	} else {
-	  MRC_F3(u_delta[i], m, ix,iy,iz) = 0.0 ; 
-	}	  
-	if (!isfinite(MRC_F3(u_delta[i], m, ix,iy,iz))) MRC_F3(u_delta[i], m, ix,iy,iz) = 0.f;	 
-      }      
-      for (int m = 0; m <3; m++) {    
-	float rl =  theta *( B1XYZ(u, _B1X +m, ix+dind[0], iy+dind[1], iz+dind[2])  - B1XYZ(u, _B1X +m, ix, iy, iz));
-	float rr =  theta *( B1XYZ(u, _B1X +m, ix, iy, iz)  - B1XYZ(u, _B1X +m, ix-dind[0], iy-dind[1], iz-dind[2]));
-	float cen = .5f *( B1XYZ(u, _B1X +m, ix+dind[0], iy+dind[1], iz+dind[2])  - 
-			   B1XYZ(u, _B1X +m, ix-dind[0], iy-dind[1], iz-dind[2]) ) ; 		  
-	if ( (cen*rl*rr) > 0) {	  
-	  MRC_F3(u_delta[i], _B1X +m, ix,iy,iz) = 0.5*sign(cen)*fmin(fabsf(cen),fmin(fabsf(rl),fabsf(rr))) ; 
-	} else {
-	  MRC_F3(u_delta[i], _B1X +m, ix,iy,iz) = 0.0 ; 
-	}	  
-	if (!isfinite(MRC_F3(u_delta[i], _B1X +m, ix,iy,iz))) MRC_F3(u_delta[i], _B1X +m, ix,iy,iz) = 0.f;	 
-      }
-    } mrc_fld_foreach_end;        
-    dind[i] = 0;
-  }
-}
-*/
 
 
 // ----------------------------------------------------------------------
@@ -285,14 +214,6 @@ limit_5(struct mrc_fld *u_delta[3], struct mrc_fld *u, struct ggcm_mhd *mhd)
 void
 calc_u_delta(struct mrc_fld *u_delta[3], struct mrc_fld *u, struct ggcm_mhd *mhd)
 {
-
-  //struct mrc_fld *u = mrc_fld_get_as(_u, "float");
-  /*
-  struct mrc_fld *u_delta[3];
-  for (int f = 0; f < 3; f++) {
-    u_delta[f] = mrc_fld_get_as(_u_delta[f], "float");
-  }
-  */
   // --- find u_delta
 #if LMTR == 0 
   limit_0(u_delta,u); 
@@ -304,14 +225,6 @@ calc_u_delta(struct mrc_fld *u_delta[3], struct mrc_fld *u, struct ggcm_mhd *mhd
   limit_3(u_delta, u);
 #elif LMTR == 4
   limit_4(u_delta, u);
-  //#elif LMTR == 5
-  //limit_5(u_delta, u);
 #endif
   
-  //mrc_fld_put_as(u, _u);
-  /*
-  for (int f = 0; f < 3; f++) {
-    mrc_fld_put_as(u_delta[f], _u_delta[f]);
-  }
-  */
 }

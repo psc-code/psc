@@ -27,12 +27,6 @@ calc_ct_rhs(struct ggcm_mhd *mhd, struct mrc_fld *rhs, struct mrc_fld *flux[3])
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
   struct mrc_fld *E_ec = ggcm_mhd_get_fields(mhd, "E_ec", 3);
 
-  //struct mrc_fld *E_ec = mrc_fld_get_as(_E_ec, "float");
-  //struct mrc_fld *flux[3];
-  //for (int f = 0; f < 3; f++) {
-  // flux[f] = mrc_fld_get_as(_flux[f], "float");
-  //}
-
   //initialize cell edge center Electric field structure      
   mrc_fld_foreach(E_ec, ix,iy,iz, 2, 2) { 
     MRC_F3(E_ec, 0, ix,iy,iz) = .25f*(- FLUX(flux, 1, _EZ, ix  ,iy  ,iz  )
@@ -49,16 +43,6 @@ calc_ct_rhs(struct ggcm_mhd *mhd, struct mrc_fld *rhs, struct mrc_fld *flux[3])
 				      + FLUX(flux, 1, _EX, ix-1,iy  ,iz  ));    
   } mrc_fld_foreach_end;
   
-  //for (int f = 0; f < 3; f++) {
-  // mrc_fld_put_as(flux[f], _flux[f]);
-  //}
-  //mrc_fld_put_as(E_ec, _E_ec);
-
-
-  //struct mrc_fld *rhs = mrc_fld_get_as(_rhs, "float");
-
-
-  //E_ec = mrc_fld_get_as(_E_ec, "float");
 
   mrc_fld_foreach(rhs, ix, iy,  iz, 2, 2) {
     B1X(rhs, ix, iy, iz) =  
@@ -106,10 +90,5 @@ calc_ct_rhs(struct ggcm_mhd *mhd, struct mrc_fld *rhs, struct mrc_fld *flux[3])
     }
   }
 #endif
-
-
-  //mrc_fld_put_as(E_ec, _E_ec);
-  //mrc_fld_put_as(rhs, _rhs);
-
   mrc_fld_destroy(E_ec);
 }

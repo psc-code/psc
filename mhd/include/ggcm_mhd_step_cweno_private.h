@@ -47,7 +47,7 @@
 #define SWBND 0
 
 //CWENO REC for fluid variables toggle 
-#define CWENOREC 1
+#define CWENOREC 0
 
 enum {
   // reuse B in the _fluxes_ (only) to store E field

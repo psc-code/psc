@@ -23,19 +23,10 @@ calc_fluxes_per_face(struct mrc_fld **flux, struct ggcm_mhd *mhd, struct mrc_fld
   float gamma = mhd->par.gamm;
   float d_i = mhd->par.d_i;
 
-  //struct mrc_fld *fld = mrc_fld_get_as(_fld, "float");
-  //struct mrc_fld *flux[3];
-
-  /*
-  for (int f = 0; f < 3; f++) {
-    flux[f] = mrc_fld_get_as(_flux[f], "float");
-  }
-  */
   mrc_fld_foreach(fld, ix, iy, iz, 1, 1) {
 
 #if SEMICONSV
     float rhoi = 1.f / MRC_F3(fld, _RR1, ix,iy,iz);
-      
     float pp = (gamma - 1.f) *
       (MRC_F3(fld, _UU1, ix,iy,iz) - .5f * rhoi * (sqr(MRC_F3(fld, _RV1X, ix,iy,iz)) +
 						   sqr(MRC_F3(fld, _RV1Y, ix,iy,iz)) +
@@ -57,21 +48,16 @@ calc_fluxes_per_face(struct mrc_fld **flux, struct ggcm_mhd *mhd, struct mrc_fld
 
 #else 
 
-    float rhoi = 1.f / MRC_F3(fld, _RR1, ix,iy,iz);
-      
+    float rhoi = 1.f / MRC_F3(fld, _RR1, ix,iy,iz);      
     float BB = (0.5f) * (sqr(MRC_F3(fld, _B1X, ix,iy,iz)) +
 				 sqr(MRC_F3(fld, _B1Y, ix,iy,iz)) +
-				 sqr(MRC_F3(fld, _B1Z, ix,iy,iz)));
-    
+				 sqr(MRC_F3(fld, _B1Z, ix,iy,iz)));    
     float mB = (MRC_F3(fld, _B1X, ix,iy,iz) * MRC_F3(fld, _RV1X, ix,iy,iz)) + 
       (MRC_F3(fld, _B1Y, ix,iy,iz) * MRC_F3(fld, _RV1Y, ix,iy,iz)) + 
       (MRC_F3(fld, _B1Z, ix,iy,iz) * MRC_F3(fld, _RV1Z, ix,iy,iz)) ; 
-
-    
     float JB = -(MRC_F3(fld, _B1X, ix,iy,iz)  * MRC_F3(fld, _JX, ix,iy,iz))  
       -(MRC_F3(fld, _B1Y, ix,iy,iz) * MRC_F3(fld, _JY, ix,iy,iz))  
       -(MRC_F3(fld, _B1Z, ix,iy,iz) * MRC_F3(fld, _JZ, ix,iy,iz)) ; 
-
     float pp = (gamma - 1.f) *
       (MRC_F3(fld, _UU1, ix,iy,iz) - .5f * rhoi * (sqr(MRC_F3(fld, _RV1X, ix,iy,iz)) +
 						 sqr(MRC_F3(fld, _RV1Y, ix,iy,iz)) +
@@ -99,10 +85,4 @@ calc_fluxes_per_face(struct mrc_fld **flux, struct ggcm_mhd *mhd, struct mrc_fld
 #endif 
   } mrc_fld_foreach_end;
 
-  /*
-  mrc_fld_put_as(fld, _fld);
-  for (int f = 0; f < 3; f++) {
-    mrc_fld_put_as(flux[f], _flux[f]);
-  }
-  */
 }

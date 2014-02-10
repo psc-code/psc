@@ -25,9 +25,6 @@ calc_cweno_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *flux[3],
 		  struct mrc_fld *u)
 {
   //initialize cell surface center variables			    
-
-
-  
   struct mrc_fld *u_delta[3], *u_p[3], *u_m[3], *E_p[3], *E_m[3];
   struct mrc_fld *flux_p[3], *flux_m[3];
   
