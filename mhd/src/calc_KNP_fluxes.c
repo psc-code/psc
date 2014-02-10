@@ -64,7 +64,6 @@ calc_KNP_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *flux[3],
 {
   float gamma = mhd->par.gamm;
   float d_i = mhd->par.d_i;
-  float mpermi = 1.f;
 
   struct mrc_fld *u = mrc_fld_get_as(_u, "float");
   

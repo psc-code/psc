@@ -79,7 +79,7 @@ limit_1(struct mrc_fld *u_delta[3], struct mrc_fld *u)
 // return zero if they are not all postivie or all negative  
 // minmod(a,b) = 0.5[sign(a)+sign(b)]*min(|a|,|b|) eq (41) 
 
-static void 
+static void __unused
 limit_2(struct mrc_fld *u_delta[3], struct mrc_fld *u)
 {
   int dind[3] = {0, 0, 0};  
