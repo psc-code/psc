@@ -36,11 +36,21 @@ calc_cweno_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *_flux[3],
     _flux_p[f] = ggcm_mhd_get_fields(mhd, "flux_p", 8);
     _flux_m[f] = ggcm_mhd_get_fields(mhd, "flux_m", 8);
   }
-
+  
   ggcm_mhd_fill_ghosts(mhd, _u, 0, mhd->time);
 
-  calc_u_delta(_u_delta, _u);
+  calc_u_delta(_u_delta, _u, mhd);
+  
+  ggcm_mhd_fill_ghosts(mhd, _u_delta[0], 0, mhd->time); 
+  ggcm_mhd_fill_ghosts(mhd, _u_delta[1], 0, mhd->time); 
+  ggcm_mhd_fill_ghosts(mhd, _u_delta[2], 0, mhd->time); 
+  
+
+#if CWENOREC
+  calc_u_cweno(mhd, _u_p, _u_m, _E_p, _E_m, _u, _u_delta);
+#else 
   calc_u_pm(mhd, _u_p, _u_m, _E_p, _E_m, _u, _u_delta);
+#endif 
   
 #ifdef DEBUG
   {

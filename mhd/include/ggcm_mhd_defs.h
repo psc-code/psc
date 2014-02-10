@@ -68,7 +68,7 @@ enum {
   _BDIPZ,
   _NR_FLDS,
 
-  // for primitive fields, reuse indices from 0 to 7
+  // for (mhd_pr_float) primitive fields, reuse indices from 0 to 7
   _V1X = _RV1X,
   _V1Y = _RV1Y,
   _V1Z = _RV1Z,
@@ -78,22 +78,29 @@ enum {
 // ----------------------------------------------------------------------
 // macros to ease field access
 
-#define B1XYZ(f,m, ix,iy,iz) F3(f, _B1X+(m), ix,iy,iz)
+#if 0
+#define B1XYZ(f,m, ix,iy,iz) MRC_F3(f, _B1X+(m), ix,iy,iz)
+#else // GGCM staggering
+#define B1XYZ(f,m, ix,iy,iz) MRC_F3(f, _B1X+(m),		\
+				    (ix) - ((m) == 0),		\
+				    (iy) - ((m) == 1),		\
+				    (iz) - ((m) == 2))
+#endif
 
-#define B1X(f, ix,iy,iz) F3(f, _B1X, ix,iy,iz)
-#define B1Y(f, ix,iy,iz) F3(f, _B1Y, ix,iy,iz)
-#define B1Z(f, ix,iy,iz) F3(f, _B1Z, ix,iy,iz)
+#define B1X(f, ix,iy,iz) B1XYZ(f, 0, ix,iy,iz)
+#define B1Y(f, ix,iy,iz) B1XYZ(f, 1, ix,iy,iz)
+#define B1Z(f, ix,iy,iz) B1XYZ(f, 2, ix,iy,iz)
 
-#define RR1(f, ix,iy,iz)  F3(f, _RR1, ix,iy,iz)
-#define RV1X(f, ix,iy,iz) F3(f, _RV1X, ix,iy,iz)
-#define RV1Y(f, ix,iy,iz) F3(f, _RV1Y, ix,iy,iz)
-#define RV1Z(f, ix,iy,iz) F3(f, _RV1Z, ix,iy,iz)
-#define UU1(f, ix,iy,iz)  F3(f, _UU1, ix,iy,iz)
+#define RR1(f, ix,iy,iz)  MRC_F3(f, _RR1, ix,iy,iz)
+#define RV1X(f, ix,iy,iz) MRC_F3(f, _RV1X, ix,iy,iz)
+#define RV1Y(f, ix,iy,iz) MRC_F3(f, _RV1Y, ix,iy,iz)
+#define RV1Z(f, ix,iy,iz) MRC_F3(f, _RV1Z, ix,iy,iz)
+#define UU1(f, ix,iy,iz)  MRC_F3(f, _UU1, ix,iy,iz)
 
-#define V1X(f, ix,iy,iz) F3(f, _V1X, ix,iy,iz)
-#define V1Y(f, ix,iy,iz) F3(f, _V1Y, ix,iy,iz)
-#define V1Z(f, ix,iy,iz) F3(f, _V1Z, ix,iy,iz)
-#define PP1(f, ix,iy,iz) F3(f, _PP1, ix,iy,iz)
+#define V1X(f, ix,iy,iz) MRC_F3(f, _V1X, ix,iy,iz)
+#define V1Y(f, ix,iy,iz) MRC_F3(f, _V1Y, ix,iy,iz)
+#define V1Z(f, ix,iy,iz) MRC_F3(f, _V1Z, ix,iy,iz)
+#define PP1(f, ix,iy,iz) MRC_F3(f, _PP1, ix,iy,iz)
 
 // ----------------------------------------------------------------------
 // coordinates

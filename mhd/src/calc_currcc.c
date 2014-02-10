@@ -25,32 +25,38 @@ ggcm_mhd_calc_currcc(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
   float *bd4z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD4);
 
   struct mrc_fld *f = mrc_fld_get_as(fld, "float");
+  struct mrc_fld *t = mrc_fld_get_as(tmp, "float");
   struct mrc_fld *c = mrc_fld_get_as(currcc, "float");
-
-  // average B first to cell centers 
+  
   mrc_fld_foreach(tmp,ix,iy,iz, 1, 1) {
-    MRC_F3(tmp,0,ix,iy,iz) = .5f*(MRC_F3(f, m, ix,iy,iz) + MRC_F3(f, m, ix+1,iy,iz));
-    MRC_F3(tmp,1,ix,iy,iz) = .5f*(MRC_F3(f, m+1, ix,iy,iz) + MRC_F3(f, m+1, ix,iy+1,iz));
-    MRC_F3(tmp,2,ix,iy,iz) = .5f*(MRC_F3(f, m+2, ix,iy,iz) + MRC_F3(f, m+2, ix,iy,iz+1));
+    // compute current on edge first    
+    MRC_F3(tmp,0,ix,iy,iz) = 
+      (MRC_F3(f, m+2, ix,iy+1,iz) - MRC_F3(f, m+2, ix,iy,iz)) * bd4y[iy] - 
+      (MRC_F3(f, m+1, ix,iy,iz+1) - MRC_F3(f, m+1, ix,iy,iz)) * bd4z[iz] ;     
+    MRC_F3(tmp,1,ix,iy,iz) = 
+      (MRC_F3(f, m  , ix,iy,iz+1) - MRC_F3(f, m  , ix,iy,iz)) * bd4z[iz] -
+      (MRC_F3(f, m+2, ix+1,iy,iz) - MRC_F3(f, m+2, ix,iy,iz)) * bd4x[ix];         
+    MRC_F3(tmp,2, ix,iy,iz) = 
+      (MRC_F3(f,m+1 , ix+1,iy,iz) - MRC_F3(f, m+1, ix,iy,iz)) * bd4x[ix] - 
+      (MRC_F3(f,m   , ix,iy+1,iz) - MRC_F3(f, m  , ix,iy,iz)) * bd4y[iy]; 
   } mrc_fld_foreach_end;
-
-  mrc_fld_foreach(tmp,ix,iy,iz, 1, 1) {
-    // compute current      
-    MRC_F3(c,0,ix,iy,iz) = 
-      .5f*(MRC_F3(tmp, 2, ix,iy+1,iz) - MRC_F3(tmp, 2, ix,iy-1,iz)) * bd4y[iy] - 
-      .5f*(MRC_F3(tmp, 1, ix,iy,iz+1) - MRC_F3(tmp, 1, ix,iy,iz-1)) * bd4z[iz] ;     
-    MRC_F3(c,1,ix,iy,iz) = 
-      .5f*(MRC_F3(tmp, 0, ix,iy,iz+1) - MRC_F3(tmp, 0, ix,iy,iz-1)) * bd4z[iz] -
-      .5f*(MRC_F3(tmp, 2, ix+1,iy,iz) - MRC_F3(tmp, 2, ix-1,iy,iz)) * bd4x[ix];         
-    MRC_F3(c,2, ix,iy,iz) = 
-      .5f*(MRC_F3(tmp, 1, ix+1,iy,iz) - MRC_F3(tmp, 1, ix-1,iy,iz)) * bd4x[ix] - 
-      .5f*(MRC_F3(tmp, 0, ix,iy+1,iz) - MRC_F3(tmp, 0, ix,iy-1,iz)) * bd4y[iy];     
-  } mrc_fld_foreach_end;
-
+    
+  mrc_fld_foreach(currcc, ix,iy,iz, 1, 1) {
+    // average to the center 
+    // FIXME: note, this originally used zmask, not ymask
+    MRC_F3(currcc, 0, ix,iy,iz) = 0.25 *  
+      (MRC_F3(tmp, 0, ix,iy,iz  ) + MRC_F3(tmp, 0, ix,iy-1,iz  ) + 
+       MRC_F3(tmp, 0, ix,iy,iz-1) + MRC_F3(tmp, 0, ix,iy-1,iz-1));
+    MRC_F3(currcc, 1, ix,iy,iz) = 0.25 *
+      (MRC_F3(tmp, 1, ix,iy,iz  ) + MRC_F3(tmp, 1, ix-1,iy,iz  ) + 
+       MRC_F3(tmp, 1, ix,iy,iz-1) + MRC_F3(tmp, 1, ix-1,iy,iz-1));
+    MRC_F3(currcc, 2, ix,iy,iz) = 0.25 *
+      (MRC_F3(tmp, 2, ix,iy  ,iz) + MRC_F3(tmp, 2, ix-1,iy,iz  ) + 
+       MRC_F3(tmp, 2, ix,iy-1,iz) + MRC_F3(tmp, 2, ix-1,iy-1,iz));
+  } mrc_fld_foreach_end;     
   mrc_fld_put_as(c, currcc);
-  mrc_fld_put_as(tmp, tmp);
+  mrc_fld_put_as(t, tmp);
   mrc_fld_put_as(f, fld);
   mrc_fld_destroy(tmp); 
 }
-
 

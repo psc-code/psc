@@ -23,8 +23,9 @@
 
 // Toggle debugging output/tests
 //#define DEBUG
-// Define limiter: [1] van Leer(1977) , [2] minmod (Roe 1976) [3] moncen [4] genminmod
-#define LMTR 2
+
+// Define limiter: [0] none [1] van Leer(1977) , [2] minmod (Roe 1976) [3] moncen [4] genminmod
+#define LMTR 1
 
 // KNP[0] or KT[1]? 
 #define KT 0
@@ -33,7 +34,20 @@
 #define incws 0
 
 // toggle between semi-conservative and conservative form
-#define SEMICONSV 1
+#define SEMICONSV 0
+
+// reduction factor for JxB and pressure terms
+#define RFACT 1.0  
+//#define RFACT MRC_F3(mhd->fld, _ZMASK, ix,iy,iz)
+
+//density floor
+#define RMIN 6.000000e-04
+
+//SW BND toggle 
+#define SWBND 0
+
+//CWENO REC for fluid variables toggle 
+#define CWENOREC 1
 
 enum {
   // reuse B in the _fluxes_ (only) to store E field
@@ -55,7 +69,6 @@ enum {
 // ggcm_mhd_get_fields
 
 struct mrc_fld * ggcm_mhd_get_fields(struct ggcm_mhd *mhd, const char *name, int nr_comp);
-void calc_u_delta(struct mrc_fld *_u_delta[3], struct mrc_fld *_u);
 
 // ----------------------------------------------------------------------
 // fill_ghost_fld 
@@ -71,7 +84,7 @@ void ggcm_mhd_fill_ghost_fld(struct ggcm_mhd *mhd, struct mrc_fld *_fld);
 //
 // calculate reconstruction to cell interfaces 
 
-void calc_u_delta(struct mrc_fld *_u_delta[3], struct mrc_fld *_u);
+void calc_u_delta(struct mrc_fld *_u_delta[3], struct mrc_fld *_u, struct ggcm_mhd *mhd);
 
 // ----------------------------------------------------------------------
 // calc_semiconsv_rhs
