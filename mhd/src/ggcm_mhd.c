@@ -135,13 +135,11 @@ ggcm_mhd_set_state(struct ggcm_mhd *mhd)
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_read
+// ggcm_mhd_setup_internal
 
 static void
-_ggcm_mhd_read(struct ggcm_mhd *mhd, struct mrc_io *io)
+ggcm_mhd_setup_internal(struct ggcm_mhd *mhd)
 {
-  ggcm_mhd_read_member_objs(mhd, io);
-
   // domain params
   struct mrc_patch_info info;
   mrc_domain_get_local_patch_info(mhd->domain, 0, &info);
@@ -153,6 +151,17 @@ _ggcm_mhd_read(struct ggcm_mhd *mhd, struct mrc_io *io)
   }
 }
 
+// ----------------------------------------------------------------------
+// ggcm_mhd_read
+
+static void
+_ggcm_mhd_read(struct ggcm_mhd *mhd, struct mrc_io *io)
+{
+  ggcm_mhd_read_member_objs(mhd, io);
+
+  ggcm_mhd_setup_internal(mhd);
+}
+
 static void
 _ggcm_mhd_setup(struct ggcm_mhd *mhd)
 {
@@ -162,14 +171,7 @@ _ggcm_mhd_setup(struct ggcm_mhd *mhd)
 
   mrc_fld_dict_add_int(mhd->fld, "mhd_type", ggcm_mhd_step_mhd_type(mhd->step));
 
-  struct mrc_patch_info info;
-  mrc_domain_get_local_patch_info(mhd->domain, 0, &info);
-  for (int d = 0; d < 3; d++) {
-    // local domain size
-    mhd->im[d] = info.ldims[d];
-    // local domain size incl ghost points
-    mhd->img[d] = info.ldims[d] + 2 * mhd->par.nr_ghosts;
-  }
+  ggcm_mhd_setup_internal(mhd);
 }
 
 void
