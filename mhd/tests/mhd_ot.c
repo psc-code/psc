@@ -24,44 +24,42 @@
 static void
 ggcm_mhd_ic_ot_run(struct ggcm_mhd_ic *ic)
 {
-  //  struct ggcm_mhd_ic_ot *sub = mrc_to_subobj(ic, struct ggcm_mhd_ic_ot);
-
   struct ggcm_mhd *mhd = ic->mhd;
-  struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, "float");
+  struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
 
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
   float dx[3];
   mrc_crds_get_dx(crds, dx);
 
   struct mrc_fld *Az = mrc_domain_fld_create(mhd->domain, 2, "Az");
-  mrc_fld_set_type(Az, "float");
+  mrc_fld_set_type(Az, FLD_TYPE);
   mrc_fld_setup(Az);
   mrc_fld_view(Az);
 
-  float B0 = 1./sqrt(4.*M_PI);
-  float rr0 = 25./(36.*M_PI);
-  float v0 = 1.;
-  float pp0 = 5./(12.*M_PI);
+  mrc_fld_data_t B0 = 1. / sqrt(4.*M_PI);
+  mrc_fld_data_t rr0 = 25. / (36.*M_PI);
+  mrc_fld_data_t v0 = 1.;
+  mrc_fld_data_t pp0 = 5. / (12.*M_PI);
 
   /* Initialize vector potential */
 
   mrc_fld_foreach(fld, ix,iy,iz, 1, 2) {
-    float xx = MRC_CRDX(crds, ix) - .5 * dx[0], yy = MRC_CRDY(crds, iy) - .5 * dx[1];
-    MRC_F3(Az, 0, ix,iy,iz) = B0 / (4.*M_PI) * cos(4.*M_PI * xx) + B0 / (2.*M_PI) * cos(2.*M_PI * yy);
+    mrc_fld_data_t xx = MRC_CRDX(crds, ix) - .5 * dx[0], yy = MRC_CRDY(crds, iy) - .5 * dx[1];
+    F3(Az, 0, ix,iy,iz) = B0 / (4.*M_PI) * cos(4.*M_PI * xx) + B0 / (2.*M_PI) * cos(2.*M_PI * yy);
   } mrc_fld_foreach_end;
 
   /* Initialize face-centered fields */
 
   mrc_fld_foreach(fld, ix,iy,iz, 1, 1) {
-    B1X(fld, ix,iy,iz) =  (MRC_F3(Az, 0, ix,iy+1,iz) - MRC_F3(Az, 0, ix,iy,iz)) / dx[1];
-    B1Y(fld, ix,iy,iz) = -(MRC_F3(Az, 0, ix+1,iy,iz) - MRC_F3(Az, 0, ix,iy,iz)) / dx[0];
+    B1X(fld, ix,iy,iz) =  (F3(Az, 0, ix,iy+1,iz) - F3(Az, 0, ix,iy,iz)) / dx[1];
+    B1Y(fld, ix,iy,iz) = -(F3(Az, 0, ix+1,iy,iz) - F3(Az, 0, ix,iy,iz)) / dx[0];
   } mrc_fld_foreach_end;
 
   /* Initialize density, momentum, total energy */
 
   mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
-    float xx = MRC_CRDX(crds, ix), yy = MRC_CRDY(crds, iy);
-
+    mrc_fld_data_t xx = MRC_CRDX(crds, ix), yy = MRC_CRDY(crds, iy);
+    
     RR1(fld, ix,iy,iz) = rr0;
     V1X(fld, ix,iy,iz) = -v0*sin(2.*M_PI * yy);
     V1Y(fld, ix,iy,iz) =  v0*sin(2.*M_PI * xx);
