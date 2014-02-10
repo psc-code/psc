@@ -29,92 +29,106 @@ calc_u_cweno(struct ggcm_mhd *mhd, struct mrc_fld *u_p[3], struct mrc_fld *u_m[3
   float *bdy3 = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD3); 
   float *bdz3 = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD3); 
   
-  float eps = 1e-15; 
-  float cl = 0.25; 
-  float cr = 0.25; 
-  float cc = 0.5; 
-  float pp = 2.0; 
+  float cl = 0.25, cr = 0.25, cc = 0.5; 
+  float eps = 1e-18, pp = 2.0;   
   
-  for (int m = 0; m <= _UU1; m++){ 
-    mrc_fld_foreach(u, ix,iy,iz, 1, 1) {    
+  float Ir0, Il0, Ic0, ar0, al0, ac0, at0; 
+  float Ir1, Il1, Ic1, ar1, al1, ac1, at1; 
+  float Ir2, Il2, Ic2, ar2, al2, ac2, at2; 
+  
+  float duR0, duL0, dm0, dp0; 
+  float duR1, duL1, dm1, dp1; 
+  float duR2, duL2, dm2, dp2; 
+  
+  
+  mrc_fld_foreach(u, ix,iy,iz, 1, 1) {    
+    for (int m = 0; m <= _UU1; m++){ 
+
       //reuse u_j+1-u_j/dx  for adjacent Pm and Pp to half the cost of computation. 	
       //Pj(x) = wl Pl + wr Pr + wc  Pc 
       
       // pre-compute some quantities for re-use
-      float duR0 = MRC_F3(u, m, ix+1,iy,iz) - MRC_F3(u, m,ix,iy,iz);
-      float duL0 = MRC_F3(u, m,ix,iy,iz) - MRC_F3(u, m,ix-1,iy,iz);
-      float dm0 = (duR0-duL0); 
+      duR0 = MRC_F3(u, m, ix+1,iy,iz) - MRC_F3(u, m,ix,iy,iz);
+      duL0 = MRC_F3(u, m, ix,iy,iz) - MRC_F3(u, m,ix-1,iy,iz);
+      dm0 = (duR0-duL0); 
+      dp0 = (duR0+duL0); 
       
-      float duR1 = MRC_F3(u, m, ix,iy+1,iz) - MRC_F3(u, m,ix,iy,iz);
-      float duL1 = MRC_F3(u, m,ix,iy,iz) - MRC_F3(u, m,ix,iy-1,iz);
-      float dm1 = (duR1-duL1); 
+      duR1 = MRC_F3(u, m, ix,iy+1,iz) - MRC_F3(u, m,ix,iy,iz);
+      duL1 = MRC_F3(u, m,ix,iy,iz) - MRC_F3(u, m,ix,iy-1,iz);
+      dm1 = (duR1-duL1); 
+      dp1 = (duR1+duL1);
       
-      float duR2 = MRC_F3(u, m, ix,iy,iz+1) - MRC_F3(u, m,ix,iy,iz);
-      float duL2 = MRC_F3(u, m,ix,iy,iz) - MRC_F3(u, m,ix,iy,iz-1);
-      float dm2 = (duR2-duL2); 
+      duR2 = MRC_F3(u, m, ix,iy,iz+1) - MRC_F3(u, m,ix,iy,iz);
+      duL2 = MRC_F3(u, m,ix,iy,iz) - MRC_F3(u, m,ix,iy,iz-1);
+      dm2 = (duR2-duL2); 
+      dp2 = (duR2+duL2); 
       
-      // x
-      float dp = MRC_F3(u, m,ix+1,iy,iz) - MRC_F3(u, m,ix-1,iy,iz);
-      float Ir = duR0*duR0;
-      float Il = duL0*duL0;
-      float Ic = (13./3.)*dm0*dm0 + (0.25)*dp*dp;
-      float ar = cr / pow(eps+Ir,pp); 
-      float al = cl / pow(eps+Il,pp);
-      float ac = cc / pow(eps+Ic,pp);
-      float at = ar+al+ac ; 
+      // compute smoothness indicators and weightes using only density. 
+      // computing smoothness indicators for all quantities increasaes numerical viscosity (c.f. 
+      if ( m == 0 ) { 
+	Ir0 = duR0*duR0;
+	Il0 = duL0*duL0;
+	Ic0 = (13./3.)*dm0*dm0 + (0.25)*dp0*dp0;
+	ar0 = cr / pow(eps+Ir0,pp); 
+	al0 = cl / pow(eps+Il0,pp);
+	ac0 = cc / pow(eps+Ic0,pp);
+	at0 = ar0+al0+ac0 ; 
+	
+	Ir1 = duR1*duR1;
+	Il1 = duL1*duL1;
+	Ic1 = (13./3.)*dm1*dm1 + (0.25)*dp1*dp1 ;
+	ar1 = cr / pow(eps+Ir1,pp); 
+	al1 = cl / pow(eps+Il1,pp);
+	ac1 = cc / pow(eps+Ic1,pp);
+	at1 = ar1+al1+ac1 ; 	
+	
+	Ir2 = duR2*duR2;
+	Il2 = duL2*duL2;
+	Ic2 = (13./3.)*dm2*dm2 + (0.25)*dp2*dp2 ;
+	ar2 = cr / pow(eps+Ir2,pp); 
+	al2 = cl / pow(eps+Il2,pp);
+	ac2 = cc / pow(eps+Ic2,pp);
+	at2 = ar2+al2+ac2 ; 
+      }
+    
+      // x 
       MRC_F3(u_p[0], m, ix,iy,iz) =    
-	(ar * ( MRC_F3(u, m, ix,iy,iz) + 0.5*duR0 * bdx3[ix] / (bdx1[ix]) ) + 
-	 al * ( MRC_F3(u, m, ix,iy,iz) + 0.5*duL0 * bdx3[ix] / (bdx1[ix]) ) + 
-	 ac * ( MRC_F3(u, m, ix,iy,iz) - dm0 / 12. - dm1 / 12. -  dm2 / 12. + 
-		dp * 0.25 * bdx3[ix] / (bdx1[ix])  +  dm0 * 0.25 * ( pow( bdx3[ix] / bdx1[ix],2.)) ))/at ;
+	(ar0 * ( MRC_F3(u, m, ix,iy,iz) + 0.5*duR0 * bdx3[ix] / (bdx1[ix]) ) + 
+	 al0 * ( MRC_F3(u, m, ix,iy,iz) + 0.5*duL0 * bdx3[ix] / (bdx1[ix]) ) + 
+	 ac0 * ( MRC_F3(u, m, ix,iy,iz) - dm0 / 12. - dm1 / 12. -  dm2 / 12. + 
+		dp0 * 0.25 * bdx3[ix] / (bdx1[ix])  +  dm0 * 0.25 * ( pow( bdx3[ix] / bdx1[ix],2.)) ))/at0 ;
       MRC_F3(u_m[0], m, ix,iy,iz) =  
-	(ar * ( MRC_F3(u, m, ix,iy,iz) + 0.5*duR0 * bdx3[ix] / (-bdx1[ix]) ) + 
-	 al * ( MRC_F3(u, m, ix,iy,iz) + 0.5*duL0 * bdx3[ix] / (-bdx1[ix]) ) + 
-	 ac * ( MRC_F3(u, m, ix,iy,iz) - dm0 / 12. - dm1 / 12. - dm2 / 12. + 
-		dp * 0.25 * bdx3[ix] / (-bdx1[ix])  +  dm0 * 0.25 * ( pow( bdx3[ix] / bdx1[ix],2.)) )) /at ; 
+	(ar0 * ( MRC_F3(u, m, ix,iy,iz) + 0.5*duR0 * bdx3[ix] / (-bdx1[ix]) ) + 
+	 al0 * ( MRC_F3(u, m, ix,iy,iz) + 0.5*duL0 * bdx3[ix] / (-bdx1[ix]) ) + 
+	 ac0 * ( MRC_F3(u, m, ix,iy,iz) - dm0 / 12. - dm1 / 12. - dm2 / 12. + 
+		dp0 * 0.25 * bdx3[ix] / (-bdx1[ix])  +  dm0 * 0.25 * ( pow( bdx3[ix] / bdx1[ix],2.)) )) /at0 ; 
 
        // y 		 
-	dp = MRC_F3(u, m,ix,iy+1,iz) - MRC_F3(u, m,ix,iy-1,iz);
-	Ir = duR1*duR1;
-	Il = duL1*duL1;
-	Ic = (13./3.)*dm1*dm1 + (0.25)*dp*dp ;
-	ar = cr / pow(eps+Ir,pp); 
-	al = cl / pow(eps+Il,pp);
-	ac = cc / pow(eps+Ic,pp);
-	at = ar+al+ac ; 	
         MRC_F3(u_p[1], m, ix,iy,iz) =  
-	  (ar * ( MRC_F3(u, m, ix,iy,iz) +  0.5*duR1 * bdy3[iy] / bdy1[iy] ) + 
-	   al * ( MRC_F3(u, m, ix,iy,iz) +  0.5*duL1 * bdy3[iy] / bdy1[iy] ) + 
-	   ac * ( MRC_F3(u, m, ix,iy,iz) - dm1 / 12. - dm0 / 12. -  dm2 / 12.  + 
-		  dp * 0.25 * bdy3[iy] / bdy1[iy]  +  dm1 * 0.25  * ( pow( bdy3[iy] / bdy1[iy],2.)) ))/at ; 
+	  (ar1 * ( MRC_F3(u, m, ix,iy,iz) +  0.5*duR1 * bdy3[iy] / bdy1[iy] ) + 
+	   al1 * ( MRC_F3(u, m, ix,iy,iz) +  0.5*duL1 * bdy3[iy] / bdy1[iy] ) + 
+	   ac1 * ( MRC_F3(u, m, ix,iy,iz) - dm1 / 12. - dm0 / 12. -  dm2 / 12.  + 
+		  dp1 * 0.25 * bdy3[iy] / bdy1[iy]  +  dm1 * 0.25  * ( pow( bdy3[iy] / bdy1[iy],2.)) ))/at1 ; 
         MRC_F3(u_m[1], m, ix,iy,iz) =    
-	   (ar * ( MRC_F3(u, m, ix,iy,iz) +  0.5*duR1 * bdy3[iy] / (-bdy1[iy]) ) + 
-	    al * ( MRC_F3(u, m, ix,iy,iz) +  0.5*duL1 * bdy3[iy] / (-bdy1[iy]) ) + 
-	    ac * ( MRC_F3(u, m, ix,iy,iz) - dm2 / 12. -  dm0 / 12. - dm1 / 12.  + 
-		   dp * 0.25 * bdy3[iy] / (-bdy1[iy])  +  dm1 * 0.25 * ( pow( bdy3[iy] / bdy1[iy],2.)) ))/at ;	
+	   (ar1 * ( MRC_F3(u, m, ix,iy,iz) +  0.5*duR1 * bdy3[iy] / (-bdy1[iy]) ) + 
+	    al1 * ( MRC_F3(u, m, ix,iy,iz) +  0.5*duL1 * bdy3[iy] / (-bdy1[iy]) ) + 
+	    ac1 * ( MRC_F3(u, m, ix,iy,iz) - dm2 / 12. -  dm0 / 12. - dm1 / 12.  + 
+		   dp1 * 0.25 * bdy3[iy] / (-bdy1[iy])  +  dm1 * 0.25 * ( pow( bdy3[iy] / bdy1[iy],2.)) ))/at1 ;	
 
        // z		
-	dp = MRC_F3(u, m,ix,iy,iz+1) - MRC_F3(u, m,ix,iy,iz-1);
-	Ir = duR2*duR2;
-	Il = duL2*duL2;
-	Ic = (13./3.)*dm2*dm2 + (0.25)*dp*dp ;
-	ar = cr / pow(eps+Ir,pp); 
-	al = cl / pow(eps+Il,pp);
-	ac = cc / pow(eps+Ic,pp);
-	at = ar+al+ac ; 
         MRC_F3(u_p[2], m, ix,iy,iz) =  
-	  (ar * ( MRC_F3(u, m, ix,iy,iz) + 0.5* duR2 * bdz3[iz] / bdz1[iz] ) + 
-	   al * ( MRC_F3(u, m, ix,iy,iz) + 0.5*duL2 * bdz3[iz] / bdz1[iz] ) + 
-	   ac * ( MRC_F3(u, m, ix,iy,iz) - dm2 / 12. - dm0 / 12. - dm1 / 12. + 
-		  dp * 0.25 * bdz3[iz] / bdz1[iz]  +  dm2 * 0.25 * ( pow( bdz3[iz] / bdz1[iz],2.)) ))/at ;
+	  (ar2 * ( MRC_F3(u, m, ix,iy,iz) + 0.5* duR2 * bdz3[iz] / bdz1[iz] ) + 
+	   al2 * ( MRC_F3(u, m, ix,iy,iz) + 0.5*duL2 * bdz3[iz] / bdz1[iz] ) + 
+	   ac2 * ( MRC_F3(u, m, ix,iy,iz) - dm2 / 12. - dm0 / 12. - dm1 / 12. + 
+		  dp2 * 0.25 * bdz3[iz] / bdz1[iz]  +  dm2 * 0.25 * ( pow( bdz3[iz] / bdz1[iz],2.)) ))/at2 ;
         MRC_F3(u_m[2], m, ix,iy,iz) =    
-	  (ar * ( MRC_F3(u, m, ix,iy,iz) + 0.5* duR2 * bdz3[iz] / (-bdz1[iz]) ) + 
-	   al * ( MRC_F3(u, m, ix,iy,iz) + 0.5* duL2 * bdz3[iz] / (-bdz1[iz]) ) + 
-	   ac * ( MRC_F3(u, m, ix,iy,iz) - dm2 / 12. - dm0 / 12. - dm1 / 12.  + 
-		  dp * 0.25 * bdz3[iz] / (-bdz1[iz])  +  dm2 * 0.25 * ( pow( bdz3[iz] / bdz1[iz],2.)) ))/at ;	
-	
-     } mrc_fld_foreach_end;
+	  (ar2 * ( MRC_F3(u, m, ix,iy,iz) + 0.5* duR2 * bdz3[iz] / (-bdz1[iz]) ) + 
+	   al2 * ( MRC_F3(u, m, ix,iy,iz) + 0.5* duL2 * bdz3[iz] / (-bdz1[iz]) ) + 
+	   ac2 * ( MRC_F3(u, m, ix,iy,iz) - dm2 / 12. - dm0 / 12. - dm1 / 12.  + 
+		  dp2 * 0.25 * bdz3[iz] / (-bdz1[iz])  +  dm2 * 0.25 * ( pow( bdz3[iz] / bdz1[iz],2.)) ))/at2 ;	
     }
+  } mrc_fld_foreach_end;
+
   mrc_fld_foreach(u, ix,iy,iz, 2, 1) {
     if  (MRC_F3(u_p[0], _RR1, ix,iy,iz) <= 0.f) {
       MRC_F3(u_p[0], _RR1, ix,iy,iz) = RMIN;
