@@ -1,11 +1,12 @@
 
-#include "ggcm_mhd_defs.h"
-#include "ggcm_mhd_private.h"
-#include "ggcm_mhd_crds.h"
-#include "ggcm_mhd_diag.h"
-#include "ggcm_mhd_ic_private.h"
+#include <ggcm_mhd_private.h>
+#include <ggcm_mhd_step.h>
+#include <ggcm_mhd_ic_private.h>
+#include <ggcm_mhd_crds_private.h>
+#include <ggcm_mhd_crds_gen.h>
+#include <ggcm_mhd_bnd.h>
+#include <ggcm_mhd_diag.h>
 
-#include <mrc_fld.h>
 #include <mrc_fld_as_float.h>
 #include <mrc_domain.h>
 
@@ -91,9 +92,8 @@ struct ggcm_mhd_ic_ops ggcm_mhd_ic_ot_ops = {
 };
 
 
-
 // ======================================================================
-// ggcm_mhd class "ot"
+// ggcm_mhd subclass "ot"
 
 // ----------------------------------------------------------------------
 // ggcm_mhd_ot_create
@@ -111,12 +111,16 @@ ggcm_mhd_ot_create(struct ggcm_mhd *mhd)
   mrc_crds_set_param_float3(crds, "h", (float[3]) {  1.0, 1.0, 0.1 });
 }
 
+// ----------------------------------------------------------------------
+// ggcm_mhd_ot_ops
+
 static struct ggcm_mhd_ops ggcm_mhd_ot_ops = {
   .name             = "ot",
   .create           = ggcm_mhd_ot_create,
 };
 
 // ======================================================================
+// main
 
 extern struct ggcm_mhd_diag_ops ggcm_mhd_diag_c_ops;
 
