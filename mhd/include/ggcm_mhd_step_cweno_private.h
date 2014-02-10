@@ -34,7 +34,7 @@
 #define incws 0
 
 // toggle between semi-conservative and conservative form
-#define SEMICONSV 0
+#define SEMICONSV 1
 
 // reduction factor for JxB and pressure terms
 #define RFACT 1.0  
@@ -47,7 +47,7 @@
 #define SWBND 0
 
 //CWENO REC for fluid variables toggle 
-#define CWENOREC 0
+#define CWENOREC 1
 
 enum {
   // reuse B in the _fluxes_ (only) to store E field
