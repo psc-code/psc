@@ -99,7 +99,6 @@ _ggcm_mhd_create(struct ggcm_mhd *mhd)
   mrc_fld_set_name(mhd->fld, "ggcm_mhd_fld");
   mrc_fld_set_param_obj(mhd->fld, "domain", mhd->domain);
   mrc_fld_set_param_int(mhd->fld, "nr_spatial_dims", 3);
-  mrc_fld_set_param_int(mhd->fld, "nr_ghosts", BND);
   mrc_fld_set_param_int(mhd->fld, "nr_comps", _NR_FLDS);
   for (int m = 0; m < _NR_FLDS; m++) {
     mrc_fld_set_comp_name(mhd->fld, m, fldname[m]);
@@ -150,13 +149,15 @@ _ggcm_mhd_read(struct ggcm_mhd *mhd, struct mrc_io *io)
     // local domain size
     mhd->im[d] = info.ldims[d];
     // local domain size incl ghost points
-    mhd->img[d] = info.ldims[d] + 2 * BND;
+    mhd->img[d] = info.ldims[d] + 2 * mhd->par.nr_ghosts;
   }
 }
 
 static void
 _ggcm_mhd_setup(struct ggcm_mhd *mhd)
 {
+  mrc_fld_set_param_int(mhd->fld, "nr_ghosts", mhd->par.nr_ghosts);
+
   ggcm_mhd_setup_member_objs(mhd);
 
   mrc_fld_dict_add_int(mhd->fld, "mhd_type", ggcm_mhd_step_mhd_type(mhd->step));
@@ -167,7 +168,7 @@ _ggcm_mhd_setup(struct ggcm_mhd *mhd)
     // local domain size
     mhd->im[d] = info.ldims[d];
     // local domain size incl ghost points
-    mhd->img[d] = info.ldims[d] + 2 * BND;
+    mhd->img[d] = info.ldims[d] + 2 * mhd->par.nr_ghosts;
   }
 }
 
@@ -190,7 +191,8 @@ ggcm_mhd_ntot(struct ggcm_mhd *mhd)
 {
   struct mrc_patch_info info;
   mrc_domain_get_local_patch_info(mhd->domain, 0, &info);
-  return (info.ldims[0] + 2 * BND) * (info.ldims[1] + 2 * BND) * (info.ldims[2] + 2 * BND);
+  int sw = mhd->par.nr_ghosts;
+  return (info.ldims[0] + 2 * sw) * (info.ldims[1] + 2 * sw) * (info.ldims[2] + 2 * sw);
 }
 
 // ----------------------------------------------------------------------
@@ -270,6 +272,7 @@ static struct param ggcm_mhd_descr[] = {
   { "modnewstep"      , VAR(par.modnewstep)  , PARAM_INT(1)          },
   { "magdiffu"        , VAR(par.magdiffu)    , PARAM_SELECT(MAGDIFFU_NL1,
 							    magdiffu_descr) },
+  { "nr_ghosts"       , VAR(par.nr_ghosts)   , PARAM_INT(2)          },
 
   { "time"            , VAR(time)            , MRC_VAR_FLOAT         },
   { "dt"              , VAR(dt)              , MRC_VAR_FLOAT         },
