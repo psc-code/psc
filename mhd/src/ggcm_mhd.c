@@ -166,11 +166,11 @@ static void
 _ggcm_mhd_setup(struct ggcm_mhd *mhd)
 {
   mrc_fld_set_param_int(mhd->fld, "nr_ghosts", mhd->par.nr_ghosts);
-
-  ggcm_mhd_setup_member_objs(mhd);
-
+  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
+  mrc_crds_set_param_int(crds, "sw", mhd->par.nr_ghosts);
   mrc_fld_dict_add_int(mhd->fld, "mhd_type", ggcm_mhd_step_mhd_type(mhd->step));
 
+  ggcm_mhd_setup_member_objs(mhd);
   ggcm_mhd_setup_internal(mhd);
 }
 
