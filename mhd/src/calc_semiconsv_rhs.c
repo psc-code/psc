@@ -12,26 +12,14 @@
 // calculates rhs for semi-conservative mhd
 
 void 
-calc_semiconsv_rhs(struct ggcm_mhd *mhd, struct mrc_fld *rhs, struct mrc_fld *_flux[3])
+calc_semiconsv_rhs(struct ggcm_mhd *mhd, struct mrc_fld *rhs, struct mrc_fld *flux[3])
 {
 
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-  struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, "float");  
+  struct mrc_fld *fld = mhd->fld;
 
-  //#if SEMICONSV
-  //struct mrc_fld *rhs = mrc_fld_get_as(_rhs, "float");
-  //#else 
-
-  //struct mrc_fld *rhs = mrc_fld_get_as(_rhs, "mhd_fc_float");  
-  //#endif
- 
   struct mrc_fld *E_cc = ggcm_mhd_get_fields(mhd, "E_cc", 3);
-  //struct mrc_fld *E_cc = mrc_fld_get_as(_E_cc, "float");
-  struct mrc_fld *_J_cc = ggcm_mhd_get_fields(mhd, "J_cc", 3);
-  struct mrc_fld *flux[3];
-  for (int f = 0; f < 3; f++) {
-    flux[f] = mrc_fld_get_as(_flux[f], "float");
-  }
+  struct mrc_fld *J_cc = ggcm_mhd_get_fields(mhd, "J_cc", 3);
 
  // initialize cell center Electric field structure      
 
@@ -53,7 +41,7 @@ calc_semiconsv_rhs(struct ggcm_mhd *mhd, struct mrc_fld *rhs, struct mrc_fld *_f
   } mrc_fld_foreach_end;
  
   // calculate cell centered J
-  ggcm_mhd_calc_currcc( mhd, mhd->fld, _B1X, _J_cc );
+  ggcm_mhd_calc_currcc( mhd, mhd->fld, _B1X, J_cc );
  
 
   // calculate neg divg 
@@ -77,19 +65,11 @@ calc_semiconsv_rhs(struct ggcm_mhd *mhd, struct mrc_fld *rhs, struct mrc_fld *_f
 
   
   // add JdotE source term  
- struct mrc_fld *J_cc = mrc_fld_get_as(_J_cc, "float");
  mrc_fld_foreach(rhs, ix, iy, iz, 0, 0) {
     MRC_F3(rhs, _UU1, ix, iy, iz) += 
-      MRC_F3(E_cc, 0, ix, iy, iz) * MRC_F3(J_cc, 0, ix, iy, iz)* RFACT  + 
-      MRC_F3(E_cc, 1, ix, iy, iz) * MRC_F3(J_cc, 1, ix, iy, iz)* RFACT  + 
-      MRC_F3(E_cc, 2, ix, iy, iz) * MRC_F3(J_cc, 2, ix, iy, iz)* RFACT  ;   
-    /*
-     printf("E_cc %e, J_cc %e, %e, %d %d %d \n",  
-	   MRC_F3(E_cc, 1, ix, iy, iz),  MRC_F3(J_cc, 1, ix, iy, iz) , ix, iy, iz,
-	   (MRC_F3(E_cc, 0, ix, iy, iz) * MRC_F3(J_cc, 0, ix, iy, iz) + 
-	    MRC_F3(E_cc, 1, ix, iy, iz) * MRC_F3(J_cc, 1, ix, iy, iz) + 
-	    MRC_F3(E_cc, 2, ix, iy, iz) * MRC_F3(J_cc, 2, ix, iy, iz))/ MRC_F3(rhs, _UU1, ix, iy, iz) ); 
-    */
+      MRC_F3(E_cc, 0, ix, iy, iz) * MRC_F3(J_cc, 0, ix, iy, iz) + 
+      MRC_F3(E_cc, 1, ix, iy, iz) * MRC_F3(J_cc, 1, ix, iy, iz) + 
+      MRC_F3(E_cc, 2, ix, iy, iz) * MRC_F3(J_cc, 2, ix, iy, iz) ;   
   } mrc_fld_foreach_end; 
 
   // add JxB source term
@@ -111,13 +91,6 @@ calc_semiconsv_rhs(struct ggcm_mhd *mhd, struct mrc_fld *rhs, struct mrc_fld *_f
       (B1X(fld, ix,iy,iz)+ B1X(fld, ix+1,iy,iz));
   } mrc_fld_foreach_end; 
 
-  for (int f = 0; f < 3; f++) {
-    mrc_fld_put_as(flux[f], _flux[f]);
-  }
-  
-
-  mrc_fld_destroy(fld);
   mrc_fld_destroy(J_cc);
   mrc_fld_destroy(E_cc);
-  //mrc_fld_put_as(rhs, _rhs);
 }

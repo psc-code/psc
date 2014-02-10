@@ -36,21 +36,19 @@ calc_Pj(struct mrc_fld *u, int m,  int ix, int iy, int iz, int i, float x,)
 */
 
 void
-calc_u_cweno(struct ggcm_mhd *mhd, struct mrc_fld *_u_p[3], struct mrc_fld *_u_m[3],
-	  struct mrc_fld *_E_p[3], struct mrc_fld *_E_m[3],
-	  struct mrc_fld *_u, struct mrc_fld *u_delta[3])
+calc_u_cweno(struct ggcm_mhd *mhd, struct mrc_fld *u_p[3], struct mrc_fld *u_m[3],
+	  struct mrc_fld *E_p[3], struct mrc_fld *E_m[3],
+	  struct mrc_fld *u, struct mrc_fld *u_delta[3])
 {
   float d_i = mhd->par.d_i;
   float eta = mhd->par.diffco;
-
-#if SEMICONSV
-  struct mrc_fld *u = mrc_fld_get_as(_u, "float");
-#else
-  struct mrc_fld *u = mrc_fld_get_as(_u, "mhd_fc_float");
-#endif 
+  
+  //struct mrc_fld *u = mrc_fld_get_as(_u, "float");
 
   //struct mrc_fld *u_delta[3], *u_p[3], *u_m[3], *E_p[3], *E_m[3];
-  struct mrc_fld *u_p[3], *u_m[3], *E_p[3], *E_m[3];
+  //struct mrc_fld *u_p[3], *u_m[3], *E_p[3], *E_m[3];
+
+  /*
   for (int f = 0; f < 3; f++) {
     //u_delta[f] = mrc_fld_get_as(_u_delta[f], "float");
     u_p[f] = mrc_fld_get_as(_u_p[f], "float");
@@ -58,7 +56,7 @@ calc_u_cweno(struct ggcm_mhd *mhd, struct mrc_fld *_u_p[3], struct mrc_fld *_u_m
     E_p[f] = mrc_fld_get_as(_E_p[f], "float");
     E_m[f] = mrc_fld_get_as(_E_m[f], "float");
   }
-    
+  */
   //int dind[3] = {0, 0, 0};
   //for (int i = 0; i <= 3; i++) {
   //  dind[i]=1; 
@@ -104,16 +102,16 @@ calc_u_cweno(struct ggcm_mhd *mhd, struct mrc_fld *_u_p[3], struct mrc_fld *_u_m
 	float al = cl / pow(eps+Il,pp);
 	float ac = cc / pow(eps+Ic,pp);
 	float at = ar+al+ac ; 
+	MRC_F3(u_p[0], m, ix,iy,iz) =    
+	  (ar * ( MRC_F3(u, m, ix,iy,iz) + 0.5*duR0 * bdx3[ix] / (bdx1[ix]) ) + 
+	   al * ( MRC_F3(u, m, ix,iy,iz) + 0.5*duL0 * bdx3[ix] / (bdx1[ix]) ) + 
+	   ac * ( MRC_F3(u, m, ix,iy,iz) - dm0 / 12. - dm1 / 12. -  dm2 / 12. + 
+		  dp * 0.5 * bdx3[ix] / (bdx1[ix])  +  dm0 * ( pow( bdx3[ix] / bdx1[ix],2.)) ))/at ;
         MRC_F3(u_m[0], m, ix,iy,iz) =  
-	  (ar * ( MRC_F3(u, m, ix,iy,iz) - 0.5*duR0 * bdx3[ix] / bdx1[ix] ) + 
-	   al * ( MRC_F3(u, m, ix,iy,iz) - 0.5*duL0 * bdx3[ix] / bdx1[ix] ) + 
+	  (ar * ( MRC_F3(u, m, ix,iy,iz) + 0.5*duR0 * bdx3[ix] / (-bdx1[ix]) ) + 
+	   al * ( MRC_F3(u, m, ix,iy,iz) + 0.5*duL0 * bdx3[ix] / (-bdx1[ix]) ) + 
 	   ac * ( MRC_F3(u, m, ix,iy,iz) - dm0 / 12. - dm1 / 12. - dm2 / 12. + 
 		  dp * 0.5 * bdx3[ix] / (-bdx1[ix])  +  dm0 * ( pow( bdx3[ix] / bdx1[ix],2.)) )) /at ; 
-        MRC_F3(u_p[0], m, ix,iy,iz) =    
-	  (ar * ( MRC_F3(u, m, ix,iy,iz) + 0.5*duR0 * bdx3[ix] / (-bdx1[ix]) ) + 
-	  al * ( MRC_F3(u, m, ix,iy,iz) + 0.5*duL0 * bdx3[ix] / (-bdx1[ix]) ) + 
-	    ac * ( MRC_F3(u, m, ix,iy,iz) - dm0 / 12.  - dm1 / 12. - dm2 / 12. + 
-		   dp * 0.5 * bdx3[ix] / (bdx1[ix])  +  dm0 * ( pow( bdx3[ix] / bdx1[ix],2.)) ))/at ;
 
        // y 		 
 	dp = MRC_F3(u, m,ix,iy+1,iz) - MRC_F3(u, m,ix,iy-1,iz);
@@ -122,17 +120,17 @@ calc_u_cweno(struct ggcm_mhd *mhd, struct mrc_fld *_u_p[3], struct mrc_fld *_u_m
 	Ic = (13./3.)*dm1*dm1 + (0.25)*dp*dp ;
 	ar = cr / pow(eps+Ir,pp); 
 	al = cl / pow(eps+Il,pp);
-	ac = cc /  pow(eps+Ic,pp);
+	ac = cc / pow(eps+Ic,pp);
 	at = ar+al+ac ; 	
         MRC_F3(u_p[1], m, ix,iy,iz) =  
 	  (ar * ( MRC_F3(u, m, ix,iy,iz) +  0.5*duR1 * bdy3[iy] / bdy1[iy] ) + 
 	   al * ( MRC_F3(u, m, ix,iy,iz) +  0.5*duL1 * bdy3[iy] / bdy1[iy] ) + 
-	   ac * ( MRC_F3(u, m, ix,iy,iz) - dm1 / 12. - dm0 / 12. - dm2 / 12.  + 
+	   ac * ( MRC_F3(u, m, ix,iy,iz) - dm1 / 12. - dm0 / 12. -  dm2 / 12.  + 
 		  dp * 0.5 * bdy3[iy] / bdy1[iy]  +  dm1 * ( pow( bdy3[iy] / bdy1[iy],2.)) ))/at ; 
         MRC_F3(u_m[1], m, ix,iy,iz) =    
 	   (ar * ( MRC_F3(u, m, ix,iy,iz) +  0.5*duR1 * bdy3[iy] / (-bdy1[iy]) ) + 
 	    al * ( MRC_F3(u, m, ix,iy,iz) +  0.5*duL1 * bdy3[iy] / (-bdy1[iy]) ) + 
-	    ac * ( MRC_F3(u, m, ix,iy,iz) - dm1 / 12. - dm0 / 12. - dm2 / 12.  + 
+	    ac * ( MRC_F3(u, m, ix,iy,iz) - dm2 / 12. -  dm0 / 12. - dm1 / 12.  + 
 		   dp * 0.5 * bdy3[iy] / (-bdy1[iy])  +  dm1  * ( pow( bdy3[iy] / bdy1[iy],2.)) ))/at ;	
 
        // z		
@@ -152,8 +150,8 @@ calc_u_cweno(struct ggcm_mhd *mhd, struct mrc_fld *_u_p[3], struct mrc_fld *_u_m
         MRC_F3(u_m[2], m, ix,iy,iz) =    
 	  (ar * ( MRC_F3(u, m, ix,iy,iz) + 0.5* duR2 * bdz3[iz] / (-bdz1[iz]) ) + 
 	   al * ( MRC_F3(u, m, ix,iy,iz) + 0.5* duL2 * bdz3[iz] / (-bdz1[iz]) ) + 
-	    ac * ( MRC_F3(u, m, ix,iy,iz) - dm2 / 12. - dm0 / 12. - dm1 / 12.  + 
-		   dp * 0.5 * bdz3[iz] / (-bdz1[iz])  +  dm2 * ( pow( bdz3[iz] / bdz1[iz],2.)) ))/at ;	
+	   ac * ( MRC_F3(u, m, ix,iy,iz) - dm2 / 12. - dm0 / 12. - dm1 / 12.  + 
+		  dp * 0.5 * bdz3[iz] / (-bdz1[iz])  +  dm2 * ( pow( bdz3[iz] / bdz1[iz],2.)) ))/at ;	
 	
      } mrc_fld_foreach_end;
     }
@@ -335,6 +333,7 @@ calc_u_cweno(struct ggcm_mhd *mhd, struct mrc_fld *_u_p[3], struct mrc_fld *_u_m
     }    
   } mrc_fld_foreach_end;
 
+  /*
   mrc_fld_put_as(u, _u);
   for (int f = 0; f < 3; f++) {
     //mrc_fld_put_as(u_delta[f], _u_delta[f]);
@@ -343,4 +342,6 @@ calc_u_cweno(struct ggcm_mhd *mhd, struct mrc_fld *_u_p[3], struct mrc_fld *_u_m
     mrc_fld_put_as(E_p[f], _E_p[f]);
     mrc_fld_put_as(E_m[f], _E_m[f]);
   }
+  */
+
 }

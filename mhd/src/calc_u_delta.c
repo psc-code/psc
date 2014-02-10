@@ -283,14 +283,10 @@ limit_5(struct mrc_fld *u_delta[3], struct mrc_fld *u, struct ggcm_mhd *mhd)
 // calc_u_delta
 
 void
-calc_u_delta(struct mrc_fld *u_delta[3], struct mrc_fld *_u, struct ggcm_mhd *mhd)
+calc_u_delta(struct mrc_fld *u_delta[3], struct mrc_fld *u, struct ggcm_mhd *mhd)
 {
 
-#if SEMICONSV
-  struct mrc_fld *u = mrc_fld_get_as(_u, "float");
-#else 
-  struct mrc_fld *u = mrc_fld_get_as(_u, "mhd_fc_float");
-#endif
+  //struct mrc_fld *u = mrc_fld_get_as(_u, "float");
   /*
   struct mrc_fld *u_delta[3];
   for (int f = 0; f < 3; f++) {
@@ -312,7 +308,7 @@ calc_u_delta(struct mrc_fld *u_delta[3], struct mrc_fld *_u, struct ggcm_mhd *mh
   //limit_5(u_delta, u);
 #endif
   
-  mrc_fld_put_as(u, _u);
+  //mrc_fld_put_as(u, _u);
   /*
   for (int f = 0; f < 3; f++) {
     mrc_fld_put_as(u_delta[f], _u_delta[f]);

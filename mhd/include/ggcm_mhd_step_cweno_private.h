@@ -59,7 +59,7 @@ enum {
   _JY,
   _JZ,
 
-  __NR_FLDS,
+  __NR_FLDS,  
 };
 
 // function prototypes: 

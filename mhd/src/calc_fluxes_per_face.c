@@ -18,17 +18,19 @@
 // (Ziegler 2004 section 3.1) 
 
 void 
-calc_fluxes_per_face(struct mrc_fld **_flux, struct ggcm_mhd *mhd, struct mrc_fld *_fld, int i)
+calc_fluxes_per_face(struct mrc_fld **flux, struct ggcm_mhd *mhd, struct mrc_fld *fld, int i)
 {
   float gamma = mhd->par.gamm;
   float d_i = mhd->par.d_i;
 
-  struct mrc_fld *fld = mrc_fld_get_as(_fld, "float");
-  struct mrc_fld *flux[3];
+  //struct mrc_fld *fld = mrc_fld_get_as(_fld, "float");
+  //struct mrc_fld *flux[3];
+
+  /*
   for (int f = 0; f < 3; f++) {
     flux[f] = mrc_fld_get_as(_flux[f], "float");
   }
-
+  */
   mrc_fld_foreach(fld, ix, iy, iz, 1, 1) {
 
 #if SEMICONSV
@@ -97,8 +99,10 @@ calc_fluxes_per_face(struct mrc_fld **_flux, struct ggcm_mhd *mhd, struct mrc_fl
 #endif 
   } mrc_fld_foreach_end;
 
+  /*
   mrc_fld_put_as(fld, _fld);
   for (int f = 0; f < 3; f++) {
     mrc_fld_put_as(flux[f], _flux[f]);
   }
+  */
 }

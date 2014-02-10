@@ -16,21 +16,18 @@
 // (Ziegler 2004 section 3.2) 
 
 void
-calc_u_pm(struct ggcm_mhd *mhd, struct mrc_fld *_u_p[3], struct mrc_fld *_u_m[3],
-	  struct mrc_fld *_E_p[3], struct mrc_fld *_E_m[3],
-	  struct mrc_fld *_u, struct mrc_fld *u_delta[3])
+calc_u_pm(struct ggcm_mhd *mhd, struct mrc_fld *u_p[3], struct mrc_fld *u_m[3],
+	  struct mrc_fld *E_p[3], struct mrc_fld *E_m[3],
+	  struct mrc_fld *u, struct mrc_fld *u_delta[3])
 {
   float d_i = mhd->par.d_i;
   float eta = mhd->par.diffco;
-
-#if SEMICONSV
-  struct mrc_fld *u = mrc_fld_get_as(_u, "float");
-#else
-  struct mrc_fld *u = mrc_fld_get_as(_u, "mhd_fc_float");
-#endif 
+  //struct mrc_fld *u = mrc_fld_get_as(_u, "float");
 
   //struct mrc_fld *u_delta[3], *u_p[3], *u_m[3], *E_p[3], *E_m[3];
-  struct mrc_fld *u_p[3], *u_m[3], *E_p[3], *E_m[3];
+  //struct mrc_fld *u_p[3], *u_m[3], *E_p[3], *E_m[3];
+
+  /*
   for (int f = 0; f < 3; f++) {
     //u_delta[f] = mrc_fld_get_as(_u_delta[f], "float");
     u_p[f] = mrc_fld_get_as(_u_p[f], "float");
@@ -38,6 +35,7 @@ calc_u_pm(struct ggcm_mhd *mhd, struct mrc_fld *_u_p[3], struct mrc_fld *_u_m[3]
     E_p[f] = mrc_fld_get_as(_E_p[f], "float");
     E_m[f] = mrc_fld_get_as(_E_m[f], "float");
   }
+  */
 
   // Reconstruction    UijkE  = u_ijk + (dxu_)ijk    UijkW = u_ijk - (dxu_)ijk
   mrc_fld_foreach(u, ix,iy,iz, 1, 1) {
@@ -237,7 +235,8 @@ calc_u_pm(struct ggcm_mhd *mhd, struct mrc_fld *_u_p[3], struct mrc_fld *_u_m[3]
 		 (MRC_F3(u_m[i], _B1X, ix,iy,iz) * MRC_F3(u_m[i], _JY, ix,iy,iz) / MRC_F3(u_m[i], _RR1, ix,iy,iz)));   
     }    
   } mrc_fld_foreach_end;
-
+  
+  /*
   mrc_fld_put_as(u, _u);
   for (int f = 0; f < 3; f++) {
     //mrc_fld_put_as(u_delta[f], _u_delta[f]);
@@ -246,4 +245,6 @@ calc_u_pm(struct ggcm_mhd *mhd, struct mrc_fld *_u_p[3], struct mrc_fld *_u_m[3]
     mrc_fld_put_as(E_p[f], _E_p[f]);
     mrc_fld_put_as(E_m[f], _E_m[f]);
   }
+  */
+
 }
