@@ -12,32 +12,6 @@
 #include <assert.h>
 
 static void
-check_trafos(struct mrc_trafo *trafo1, struct mrc_trafo *trafo2)
-{
-  
-  mrc_fld_foreach_patch(trafo1->_jac, p) {
-    mrc_fld_foreach(trafo1->_jac, jx, jy, jz, 0, 0) {
-      assert(TRAFO_CRD0(trafo1, jx, jy, jz, p) == TRAFO_CRD0(trafo2, jx, jy, jz, p));
-      assert(TRAFO_CRD1(trafo1, jx, jy, jz, p) == TRAFO_CRD1(trafo2, jx, jy, jz, p));
-      assert(TRAFO_CRD2(trafo1, jx, jy, jz, p) == TRAFO_CRD2(trafo2, jx, jy, jz, p));
-      assert(TRAFO_JAC(trafo1, jx, jy, jz, p) == TRAFO_JAC(trafo2, jx, jy, jz, p));
-      for (int i = 0; i < 3; i++) {
-	for (int j = 0; j < 3; j++) {
-	  assert(TRAFO_EL(trafo1, i, j, jx, jy, jz, p) == TRAFO_EL(trafo2, i, j, jx, jy, jz, p));
-	  assert(TRAFO_EU(trafo1, i, j, jx, jy, jz, p) == TRAFO_EU(trafo2, i, j, jx, jy, jz, p));
-	  assert(TRAFO_GLL(trafo1, i, j, jx, jy, jz, p) == TRAFO_GLL(trafo2, i, j, jx, jy, jz, p));
-	  assert(TRAFO_GUU(trafo1, i, j, jx, jy, jz, p) == TRAFO_GUU(trafo2, i, j, jx, jy, jz, p));
-	  for (int k = 0; k < 3; k++) {
-	    assert(TRAFO_GAM(trafo1, i, j, k, jx, jy, jz, p) == TRAFO_GAM(trafo2, i, j, k, jx, jy, jz, p));
-	  }
-	}
-      }
-      
-    } mrc_fld_foreach_end;
-  }
-}
-
-static void
 test_read_write(struct mrc_domain *domain)
 {
   struct mrc_io *io = mrc_io_create(mrc_domain_comm(domain));
