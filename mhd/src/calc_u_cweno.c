@@ -6,48 +6,116 @@
 #include <mrc_domain.h>
 #include <mrc_ddc.h>
 
-
-
 // ----------------------------------------------------------------------
-// calc_u_pm  
+// calc_u_cweno
 //
 // calculate point values of variables at cell surface centers using 
-// linear reconstrcution with TVD slope limiters 
-// (Ziegler 2004 section 3.2) 
+// thrid order CWENO reconstrcution 
+// (Kurganov & Levy 2000 section 2.1)  (Ziegler 2004) 
 
 void
-calc_u_pm(struct ggcm_mhd *mhd, struct mrc_fld *u_p[3], struct mrc_fld *u_m[3],
+calc_u_cweno(struct ggcm_mhd *mhd, struct mrc_fld *u_p[3], struct mrc_fld *u_m[3],
 	  struct mrc_fld *E_p[3], struct mrc_fld *E_m[3],
 	  struct mrc_fld *u, struct mrc_fld *u_delta[3])
 {
   float d_i = mhd->par.d_i;
   float eta = mhd->par.diffco;
- 
-  // Reconstruction    UijkE  = u_ijk + (dxu_)ijk    UijkW = u_ijk - (dxu_)ijk
-  mrc_fld_foreach(u, ix,iy,iz, 1, 1) {
-    for (int m = 0; m <= _UU1; m++) {
-      // defined like this, both u_p and u_m are coplaner when indices are the same
-      
-  if ( 1 > 0) {   
-      MRC_F3(u_p[0], m, ix,iy,iz) = MRC_F3(u, m, ix,iy,iz) + MRC_F3(u_delta[0], m, ix,iy,iz);
-      MRC_F3(u_p[1], m, ix,iy,iz) = MRC_F3(u, m, ix,iy,iz) + MRC_F3(u_delta[1], m, ix,iy,iz);
-      MRC_F3(u_p[2], m, ix,iy,iz) = MRC_F3(u, m, ix,iy,iz) + MRC_F3(u_delta[2], m, ix,iy,iz);
-      MRC_F3(u_m[0], m, ix,iy,iz) = MRC_F3(u, m, ix,iy,iz) - MRC_F3(u_delta[0], m, ix,iy,iz);
-      MRC_F3(u_m[1], m, ix,iy,iz) = MRC_F3(u, m, ix,iy,iz) - MRC_F3(u_delta[1], m, ix,iy,iz);
-      MRC_F3(u_m[2], m, ix,iy,iz) = MRC_F3(u, m, ix,iy,iz) - MRC_F3(u_delta[2], m, ix,iy,iz);
-     } else { 
-      MRC_F3(u_p[0], m, ix,iy,iz) = MRC_F3(u, m, ix,iy,iz);// + MRC_F3(u_delta[0], m, ix,iy,iz);
-      MRC_F3(u_p[1], m, ix,iy,iz) = MRC_F3(u, m, ix,iy,iz);// + MRC_F3(u_delta[1], m, ix,iy,iz);
-      MRC_F3(u_p[2], m, ix,iy,iz) = MRC_F3(u, m, ix,iy,iz);// + MRC_F3(u_delta[2], m, ix,iy,iz);
-      MRC_F3(u_m[0], m, ix,iy,iz) = MRC_F3(u, m, ix,iy,iz);// - MRC_F3(u_delta[0], m, ix,iy,iz);
-      MRC_F3(u_m[1], m, ix,iy,iz) = MRC_F3(u, m, ix,iy,iz);// - MRC_F3(u_delta[1], m, ix,iy,iz);
-      MRC_F3(u_m[2], m, ix,iy,iz) = MRC_F3(u, m, ix,iy,iz);// - MRC_F3(u_delta[2], m, ix,iy,iz);
-     }
-    }
-  } mrc_fld_foreach_end;
-
   
-     mrc_fld_foreach(u, ix,iy,iz, 2, 1) {
+  float *bdx1 = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD1);
+  float *bdy1 = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD1); 
+  float *bdz1 = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD1); 
+  
+  float *bdx3 = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD3);
+  float *bdy3 = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD3); 
+  float *bdz3 = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD3); 
+  
+  float eps = 1e-15; 
+  float cl = 0.25; 
+  float cr = 0.25; 
+  float cc = 0.5; 
+  float pp = 2.0; 
+  
+  for (int m = 0; m <= _UU1; m++){ 
+    mrc_fld_foreach(u, ix,iy,iz, 1, 1) {    
+      //reuse u_j+1-u_j/dx  for adjacent Pm and Pp to half the cost of computation. 	
+      //Pj(x) = wl Pl + wr Pr + wc  Pc 
+      
+      // pre-compute some quantities for re-use
+      float duR0 = MRC_F3(u, m, ix+1,iy,iz) - MRC_F3(u, m,ix,iy,iz);
+      float duL0 = MRC_F3(u, m,ix,iy,iz) - MRC_F3(u, m,ix-1,iy,iz);
+      float dm0 = (duR0-duL0); 
+      
+      float duR1 = MRC_F3(u, m, ix,iy+1,iz) - MRC_F3(u, m,ix,iy,iz);
+      float duL1 = MRC_F3(u, m,ix,iy,iz) - MRC_F3(u, m,ix,iy-1,iz);
+      float dm1 = (duR1-duL1); 
+      
+      float duR2 = MRC_F3(u, m, ix,iy,iz+1) - MRC_F3(u, m,ix,iy,iz);
+      float duL2 = MRC_F3(u, m,ix,iy,iz) - MRC_F3(u, m,ix,iy,iz-1);
+      float dm2 = (duR2-duL2); 
+      
+      // x
+      float dp = MRC_F3(u, m,ix+1,iy,iz) - MRC_F3(u, m,ix-1,iy,iz);
+      float Ir = duR0*duR0;
+      float Il = duL0*duL0;
+      float Ic = (13./3.)*dm0*dm0 + (0.25)*dp*dp;
+      float ar = cr / pow(eps+Ir,pp); 
+      float al = cl / pow(eps+Il,pp);
+      float ac = cc / pow(eps+Ic,pp);
+      float at = ar+al+ac ; 
+      MRC_F3(u_p[0], m, ix,iy,iz) =    
+	(ar * ( MRC_F3(u, m, ix,iy,iz) + 0.5*duR0 * bdx3[ix] / (bdx1[ix]) ) + 
+	 al * ( MRC_F3(u, m, ix,iy,iz) + 0.5*duL0 * bdx3[ix] / (bdx1[ix]) ) + 
+	 ac * ( MRC_F3(u, m, ix,iy,iz) - dm0 / 12. - dm1 / 12. -  dm2 / 12. + 
+		dp * 0.25 * bdx3[ix] / (bdx1[ix])  +  dm0 * 0.25 * ( pow( bdx3[ix] / bdx1[ix],2.)) ))/at ;
+      MRC_F3(u_m[0], m, ix,iy,iz) =  
+	(ar * ( MRC_F3(u, m, ix,iy,iz) + 0.5*duR0 * bdx3[ix] / (-bdx1[ix]) ) + 
+	 al * ( MRC_F3(u, m, ix,iy,iz) + 0.5*duL0 * bdx3[ix] / (-bdx1[ix]) ) + 
+	 ac * ( MRC_F3(u, m, ix,iy,iz) - dm0 / 12. - dm1 / 12. - dm2 / 12. + 
+		dp * 0.25 * bdx3[ix] / (-bdx1[ix])  +  dm0 * 0.25 * ( pow( bdx3[ix] / bdx1[ix],2.)) )) /at ; 
+
+       // y 		 
+	dp = MRC_F3(u, m,ix,iy+1,iz) - MRC_F3(u, m,ix,iy-1,iz);
+	Ir = duR1*duR1;
+	Il = duL1*duL1;
+	Ic = (13./3.)*dm1*dm1 + (0.25)*dp*dp ;
+	ar = cr / pow(eps+Ir,pp); 
+	al = cl / pow(eps+Il,pp);
+	ac = cc / pow(eps+Ic,pp);
+	at = ar+al+ac ; 	
+        MRC_F3(u_p[1], m, ix,iy,iz) =  
+	  (ar * ( MRC_F3(u, m, ix,iy,iz) +  0.5*duR1 * bdy3[iy] / bdy1[iy] ) + 
+	   al * ( MRC_F3(u, m, ix,iy,iz) +  0.5*duL1 * bdy3[iy] / bdy1[iy] ) + 
+	   ac * ( MRC_F3(u, m, ix,iy,iz) - dm1 / 12. - dm0 / 12. -  dm2 / 12.  + 
+		  dp * 0.25 * bdy3[iy] / bdy1[iy]  +  dm1 * 0.25  * ( pow( bdy3[iy] / bdy1[iy],2.)) ))/at ; 
+        MRC_F3(u_m[1], m, ix,iy,iz) =    
+	   (ar * ( MRC_F3(u, m, ix,iy,iz) +  0.5*duR1 * bdy3[iy] / (-bdy1[iy]) ) + 
+	    al * ( MRC_F3(u, m, ix,iy,iz) +  0.5*duL1 * bdy3[iy] / (-bdy1[iy]) ) + 
+	    ac * ( MRC_F3(u, m, ix,iy,iz) - dm2 / 12. -  dm0 / 12. - dm1 / 12.  + 
+		   dp * 0.25 * bdy3[iy] / (-bdy1[iy])  +  dm1 * 0.25 * ( pow( bdy3[iy] / bdy1[iy],2.)) ))/at ;	
+
+       // z		
+	dp = MRC_F3(u, m,ix,iy,iz+1) - MRC_F3(u, m,ix,iy,iz-1);
+	Ir = duR2*duR2;
+	Il = duL2*duL2;
+	Ic = (13./3.)*dm2*dm2 + (0.25)*dp*dp ;
+	ar = cr / pow(eps+Ir,pp); 
+	al = cl / pow(eps+Il,pp);
+	ac = cc / pow(eps+Ic,pp);
+	at = ar+al+ac ; 
+        MRC_F3(u_p[2], m, ix,iy,iz) =  
+	  (ar * ( MRC_F3(u, m, ix,iy,iz) + 0.5* duR2 * bdz3[iz] / bdz1[iz] ) + 
+	   al * ( MRC_F3(u, m, ix,iy,iz) + 0.5*duL2 * bdz3[iz] / bdz1[iz] ) + 
+	   ac * ( MRC_F3(u, m, ix,iy,iz) - dm2 / 12. - dm0 / 12. - dm1 / 12. + 
+		  dp * 0.25 * bdz3[iz] / bdz1[iz]  +  dm2 * 0.25 * ( pow( bdz3[iz] / bdz1[iz],2.)) ))/at ;
+        MRC_F3(u_m[2], m, ix,iy,iz) =    
+	  (ar * ( MRC_F3(u, m, ix,iy,iz) + 0.5* duR2 * bdz3[iz] / (-bdz1[iz]) ) + 
+	   al * ( MRC_F3(u, m, ix,iy,iz) + 0.5* duL2 * bdz3[iz] / (-bdz1[iz]) ) + 
+	   ac * ( MRC_F3(u, m, ix,iy,iz) - dm2 / 12. - dm0 / 12. - dm1 / 12.  + 
+		  dp * 0.25 * bdz3[iz] / (-bdz1[iz])  +  dm2 * 0.25 * ( pow( bdz3[iz] / bdz1[iz],2.)) ))/at ;	
+	
+     } mrc_fld_foreach_end;
+    }
+  mrc_fld_foreach(u, ix,iy,iz, 2, 1) {
     if  (MRC_F3(u_p[0], _RR1, ix,iy,iz) <= 0.f) {
       MRC_F3(u_p[0], _RR1, ix,iy,iz) = RMIN;
     }
@@ -66,7 +134,6 @@ calc_u_pm(struct ggcm_mhd *mhd, struct mrc_fld *u_p[3], struct mrc_fld *u_m[3],
     if (MRC_F3(u_m[2], _RR1, ix,iy,iz) <= 0.f) { 
       MRC_F3(u_m[2], _RR1, ix,iy,iz) = RMIN;
     }
-   
   } mrc_fld_foreach_end;
   
 
@@ -125,10 +192,11 @@ calc_u_pm(struct ggcm_mhd *mhd, struct mrc_fld *u_p[3], struct mrc_fld *u_m[3],
   } mrc_fld_foreach_end;
 
   // find currents at cell faces
+  /*
   float *bdx3 = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD3);
   float *bdy3 = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD3);
   float *bdz3 = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD3);
-
+  */
   for (int i = 0; i < 3; i++) {    
     mrc_fld_foreach(u, ix,iy,iz, 2, 2) {	
       // _p

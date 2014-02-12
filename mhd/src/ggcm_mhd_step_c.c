@@ -5,6 +5,7 @@
 #include "ggcm_mhd_crds.h"
 
 #include <mrc_domain.h>
+#include <mrc_fld_as_float.h>
 
 #include <math.h>
 
@@ -34,7 +35,7 @@ rmaskn_c(struct ggcm_mhd *mhd)
   float *fx1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FX1);
 
   mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
-    MRC_F3(f,_RMASK, ix,iy,iz) = 0.f;
+    F3(f,_RMASK, ix,iy,iz) = 0.f;
     float xxx = fx1x[ix];
     if (xxx < -15.f)
       continue;
@@ -49,7 +50,7 @@ rmaskn_c(struct ggcm_mhd *mhd)
     if (iz + info.off[2] >= gdims[2] - 2)
       continue;
 
-    MRC_F3(f, _RMASK, ix,iy,iz) = diffco * MRC_F3(f, _ZMASK, ix,iy,iz);
+    F3(f, _RMASK, ix,iy,iz) = diffco * F3(f, _ZMASK, ix,iy,iz);
   } mrc_fld_foreach_end;
 }
 
@@ -59,10 +60,10 @@ vgflrr_c(struct ggcm_mhd *mhd)
   struct mrc_fld *f = mhd->fld;
 
   mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
-    float a = MRC_F3(f,_RR, ix,iy,iz);
-    MRC_F3(f,_TMP1, ix,iy,iz) = a * MRC_F3(f,_VX, ix,iy,iz);
-    MRC_F3(f,_TMP2, ix,iy,iz) = a * MRC_F3(f,_VY, ix,iy,iz);
-    MRC_F3(f,_TMP3, ix,iy,iz) = a * MRC_F3(f,_VZ, ix,iy,iz);
+    float a = F3(f,_RR, ix,iy,iz);
+    F3(f,_TMP1, ix,iy,iz) = a * F3(f,_VX, ix,iy,iz);
+    F3(f,_TMP2, ix,iy,iz) = a * F3(f,_VY, ix,iy,iz);
+    F3(f,_TMP3, ix,iy,iz) = a * F3(f,_VZ, ix,iy,iz);
   } mrc_fld_foreach_end;
 }
 
@@ -72,10 +73,10 @@ vgflrvx_c(struct ggcm_mhd *mhd)
   struct mrc_fld *f = mhd->fld;
 
   mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
-    float a = MRC_F3(f,_RR, ix,iy,iz) * MRC_F3(f,_VX, ix,iy,iz);
-    MRC_F3(f,_TMP1, ix,iy,iz) = a * MRC_F3(f,_VX, ix,iy,iz);
-    MRC_F3(f,_TMP2, ix,iy,iz) = a * MRC_F3(f,_VY, ix,iy,iz);
-    MRC_F3(f,_TMP3, ix,iy,iz) = a * MRC_F3(f,_VZ, ix,iy,iz);
+    float a = F3(f,_RR, ix,iy,iz) * F3(f,_VX, ix,iy,iz);
+    F3(f,_TMP1, ix,iy,iz) = a * F3(f,_VX, ix,iy,iz);
+    F3(f,_TMP2, ix,iy,iz) = a * F3(f,_VY, ix,iy,iz);
+    F3(f,_TMP3, ix,iy,iz) = a * F3(f,_VZ, ix,iy,iz);
   } mrc_fld_foreach_end;
 }
 
@@ -85,10 +86,10 @@ vgflrvy_c(struct ggcm_mhd *mhd)
   struct mrc_fld *f = mhd->fld;
 
   mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
-    float a = MRC_F3(f,_RR, ix,iy,iz) * MRC_F3(f,_VY, ix,iy,iz);
-    MRC_F3(f,_TMP1, ix,iy,iz) = a * MRC_F3(f,_VX, ix,iy,iz);
-    MRC_F3(f,_TMP2, ix,iy,iz) = a * MRC_F3(f,_VY, ix,iy,iz);
-    MRC_F3(f,_TMP3, ix,iy,iz) = a * MRC_F3(f,_VZ, ix,iy,iz);
+    float a = F3(f,_RR, ix,iy,iz) * F3(f,_VY, ix,iy,iz);
+    F3(f,_TMP1, ix,iy,iz) = a * F3(f,_VX, ix,iy,iz);
+    F3(f,_TMP2, ix,iy,iz) = a * F3(f,_VY, ix,iy,iz);
+    F3(f,_TMP3, ix,iy,iz) = a * F3(f,_VZ, ix,iy,iz);
   } mrc_fld_foreach_end;
 }
 
@@ -98,10 +99,10 @@ vgflrvz_c(struct ggcm_mhd *mhd)
   struct mrc_fld *f = mhd->fld;
 
   mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
-    float a = MRC_F3(f,_RR, ix,iy,iz) * MRC_F3(f,_VZ, ix,iy,iz);
-    MRC_F3(f,_TMP1, ix,iy,iz) = a * MRC_F3(f,_VX, ix,iy,iz);
-    MRC_F3(f,_TMP2, ix,iy,iz) = a * MRC_F3(f,_VY, ix,iy,iz);
-    MRC_F3(f,_TMP3, ix,iy,iz) = a * MRC_F3(f,_VZ, ix,iy,iz);
+    float a = F3(f,_RR, ix,iy,iz) * F3(f,_VZ, ix,iy,iz);
+    F3(f,_TMP1, ix,iy,iz) = a * F3(f,_VX, ix,iy,iz);
+    F3(f,_TMP2, ix,iy,iz) = a * F3(f,_VY, ix,iy,iz);
+    F3(f,_TMP3, ix,iy,iz) = a * F3(f,_VZ, ix,iy,iz);
   } mrc_fld_foreach_end;
 }
 
@@ -113,13 +114,13 @@ vgfluu_c(struct ggcm_mhd *mhd)
   float gamma = mhd->par.gamm;
   float s = gamma / (gamma - 1.f);
   mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
-    float ep = s * MRC_F3(f,_PP, ix,iy,iz) +
-      .5f * MRC_F3(f,_RR, ix,iy,iz) * (sqr(MRC_F3(f,_VX, ix,iy,iz)) + 
-				       sqr(MRC_F3(f,_VY, ix,iy,iz)) + 
-				       sqr(MRC_F3(f,_VZ, ix,iy,iz)));
-    MRC_F3(f,_TMP1, ix,iy,iz) = ep * MRC_F3(f,_VX, ix,iy,iz);
-    MRC_F3(f,_TMP2, ix,iy,iz) = ep * MRC_F3(f,_VY, ix,iy,iz);
-    MRC_F3(f,_TMP3, ix,iy,iz) = ep * MRC_F3(f,_VZ, ix,iy,iz);
+    float ep = s * F3(f,_PP, ix,iy,iz) +
+      .5f * F3(f,_RR, ix,iy,iz) * (sqr(F3(f,_VX, ix,iy,iz)) + 
+				   sqr(F3(f,_VY, ix,iy,iz)) + 
+				   sqr(F3(f,_VZ, ix,iy,iz)));
+    F3(f,_TMP1, ix,iy,iz) = ep * F3(f,_VX, ix,iy,iz);
+    F3(f,_TMP2, ix,iy,iz) = ep * F3(f,_VY, ix,iy,iz);
+    F3(f,_TMP3, ix,iy,iz) = ep * F3(f,_VZ, ix,iy,iz);
   } mrc_fld_foreach_end;
 }
 
@@ -129,17 +130,17 @@ fluxl_c(struct ggcm_mhd *mhd, int m)
   struct mrc_fld *f = mhd->fld;
 
   mrc_fld_foreach(f, ix,iy,iz, 1, 0) {
-    float aa = MRC_F3(f,m, ix,iy,iz);
-    float cmsv = MRC_F3(f,_CMSV, ix,iy,iz);
-    MRC_F3(f,_FLX, ix,iy,iz) =
-      .5f * ((MRC_F3(f,_TMP1, ix  ,iy,iz) + MRC_F3(f,_TMP1, ix+1,iy,iz)) -
-	     .5f * (MRC_F3(f,_CMSV, ix+1,iy,iz) + cmsv) * (MRC_F3(f,m, ix+1,iy,iz) - aa));
-    MRC_F3(f,_FLY, ix,iy,iz) =
-      .5f * ((MRC_F3(f,_TMP2, ix,iy  ,iz) + MRC_F3(f,_TMP2, ix,iy+1,iz)) -
-	     .5f * (MRC_F3(f,_CMSV, ix,iy+1,iz) + cmsv) * (MRC_F3(f,m, ix,iy+1,iz) - aa));
-    MRC_F3(f,_FLZ, ix,iy,iz) =
-      .5f * ((MRC_F3(f,_TMP3, ix,iy,iz  ) + MRC_F3(f,_TMP3, ix,iy,iz+1)) -
-	     .5f * (MRC_F3(f,_CMSV, ix,iy,iz+1) + cmsv) * (MRC_F3(f,m, ix,iy,iz+1) - aa));
+    float aa = F3(f,m, ix,iy,iz);
+    float cmsv = F3(f,_CMSV, ix,iy,iz);
+    F3(f,_FLX, ix,iy,iz) =
+      .5f * ((F3(f,_TMP1, ix  ,iy,iz) + F3(f,_TMP1, ix+1,iy,iz)) -
+	     .5f * (F3(f,_CMSV, ix+1,iy,iz) + cmsv) * (F3(f,m, ix+1,iy,iz) - aa));
+    F3(f,_FLY, ix,iy,iz) =
+      .5f * ((F3(f,_TMP2, ix,iy  ,iz) + F3(f,_TMP2, ix,iy+1,iz)) -
+	     .5f * (F3(f,_CMSV, ix,iy+1,iz) + cmsv) * (F3(f,m, ix,iy+1,iz) - aa));
+    F3(f,_FLZ, ix,iy,iz) =
+      .5f * ((F3(f,_TMP3, ix,iy,iz  ) + F3(f,_TMP3, ix,iy,iz+1)) -
+	     .5f * (F3(f,_CMSV, ix,iy,iz+1) + cmsv) * (F3(f,m, ix,iy,iz+1) - aa));
   } mrc_fld_foreach_end;
 }
 
@@ -152,31 +153,31 @@ fluxb_c(struct ggcm_mhd *mhd, int m)
   float s7 = 7.f * s1;
 
   mrc_fld_foreach(f, ix,iy,iz, 1, 0) {
-    float fhx = (s7 * (MRC_F3(f, _TMP1, ix  ,iy,iz) + MRC_F3(f, _TMP1, ix+1,iy,iz)) -
-		 s1 * (MRC_F3(f, _TMP1, ix-1,iy,iz) + MRC_F3(f, _TMP1, ix+2,iy,iz)));
-    float fhy = (s7 * (MRC_F3(f, _TMP2, ix,iy  ,iz) + MRC_F3(f, _TMP2, ix,iy+1,iz)) -
-		 s1 * (MRC_F3(f, _TMP2, ix,iy-1,iz) + MRC_F3(f, _TMP2, ix,iy+2,iz)));
-    float fhz = (s7 * (MRC_F3(f, _TMP3, ix,iy,iz  ) + MRC_F3(f, _TMP3, ix,iy,iz+1)) -
-		 s1 * (MRC_F3(f, _TMP3, ix,iy,iz-1) + MRC_F3(f, _TMP3, ix,iy,iz+2)));
+    float fhx = (s7 * (F3(f, _TMP1, ix  ,iy,iz) + F3(f, _TMP1, ix+1,iy,iz)) -
+		 s1 * (F3(f, _TMP1, ix-1,iy,iz) + F3(f, _TMP1, ix+2,iy,iz)));
+    float fhy = (s7 * (F3(f, _TMP2, ix,iy  ,iz) + F3(f, _TMP2, ix,iy+1,iz)) -
+		 s1 * (F3(f, _TMP2, ix,iy-1,iz) + F3(f, _TMP2, ix,iy+2,iz)));
+    float fhz = (s7 * (F3(f, _TMP3, ix,iy,iz  ) + F3(f, _TMP3, ix,iy,iz+1)) -
+		 s1 * (F3(f, _TMP3, ix,iy,iz-1) + F3(f, _TMP3, ix,iy,iz+2)));
 
-    float aa = MRC_F3(f,m, ix,iy,iz);
-    float cmsv = MRC_F3(f,_CMSV, ix,iy,iz);
+    float aa = F3(f,m, ix,iy,iz);
+    float cmsv = F3(f,_CMSV, ix,iy,iz);
     float flx =
-      .5f * ((MRC_F3(f,_TMP1, ix  ,iy,iz) + MRC_F3(f,_TMP1, ix+1,iy,iz)) -
-	     .5f * (MRC_F3(f,_CMSV, ix+1,iy,iz) + cmsv) * (MRC_F3(f,m, ix+1,iy,iz) - aa));
+      .5f * ((F3(f,_TMP1, ix  ,iy,iz) + F3(f,_TMP1, ix+1,iy,iz)) -
+	     .5f * (F3(f,_CMSV, ix+1,iy,iz) + cmsv) * (F3(f,m, ix+1,iy,iz) - aa));
     float fly =
-      .5f * ((MRC_F3(f,_TMP2, ix,iy  ,iz) + MRC_F3(f,_TMP2, ix,iy+1,iz)) -
-	     .5f * (MRC_F3(f,_CMSV, ix,iy+1,iz) + cmsv) * (MRC_F3(f,m, ix,iy+1,iz) - aa));
+      .5f * ((F3(f,_TMP2, ix,iy  ,iz) + F3(f,_TMP2, ix,iy+1,iz)) -
+	     .5f * (F3(f,_CMSV, ix,iy+1,iz) + cmsv) * (F3(f,m, ix,iy+1,iz) - aa));
     float flz = 
-      .5f * ((MRC_F3(f,_TMP3, ix,iy,iz  ) + MRC_F3(f,_TMP3, ix,iy,iz+1)) -
-	     .5f * (MRC_F3(f,_CMSV, ix,iy,iz+1) + cmsv) * (MRC_F3(f,m, ix,iy,iz+1) - aa));
+      .5f * ((F3(f,_TMP3, ix,iy,iz  ) + F3(f,_TMP3, ix,iy,iz+1)) -
+	     .5f * (F3(f,_CMSV, ix,iy,iz+1) + cmsv) * (F3(f,m, ix,iy,iz+1) - aa));
 
-    float cx = MRC_F3(f, _CX, ix,iy,iz);
-    MRC_F3(f, _FLX, ix,iy,iz) = cx * flx + (1.f - cx) * fhx;
-    float cy = MRC_F3(f, _CY, ix,iy,iz);
-    MRC_F3(f, _FLY, ix,iy,iz) = cy * fly + (1.f - cy) * fhy;
-    float cz = MRC_F3(f, _CZ, ix,iy,iz);
-    MRC_F3(f, _FLZ, ix,iy,iz) = cz * flz + (1.f - cz) * fhz;
+    float cx = F3(f, _CX, ix,iy,iz);
+    F3(f, _FLX, ix,iy,iz) = cx * flx + (1.f - cx) * fhx;
+    float cy = F3(f, _CY, ix,iy,iz);
+    F3(f, _FLY, ix,iy,iz) = cy * fly + (1.f - cy) * fhy;
+    float cz = F3(f, _CZ, ix,iy,iz);
+    F3(f, _FLZ, ix,iy,iz) = cz * flz + (1.f - cz) * fhz;
   } mrc_fld_foreach_end;
 }
 
@@ -189,11 +190,11 @@ pushn_c(struct ggcm_mhd *mhd, int ma, int mc, float dt)
   float *fd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FD1);
 
   mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
-    float s = dt * MRC_F3(f,_YMASK, ix,iy,iz);
-    MRC_F3(f,mc, ix,iy,iz) = MRC_F3(f,ma, ix,iy,iz)
-      - s * (fd1x[ix] * (MRC_F3(f,_FLX, ix,iy,iz) - MRC_F3(f,_FLX, ix-1,iy,iz)) +
-	     fd1y[iy] * (MRC_F3(f,_FLY, ix,iy,iz) - MRC_F3(f,_FLY, ix,iy-1,iz)) +
-	     fd1z[iz] * (MRC_F3(f,_FLZ, ix,iy,iz) - MRC_F3(f,_FLZ, ix,iy,iz-1)));
+    float s = dt * F3(f,_YMASK, ix,iy,iz);
+    F3(f,mc, ix,iy,iz) = F3(f,ma, ix,iy,iz)
+      - s * (fd1x[ix] * (F3(f,_FLX, ix,iy,iz) - F3(f,_FLX, ix-1,iy,iz)) +
+	     fd1y[iy] * (F3(f,_FLY, ix,iy,iz) - F3(f,_FLY, ix,iy-1,iz)) +
+	     fd1z[iz] * (F3(f,_FLZ, ix,iy,iz) - F3(f,_FLZ, ix,iy,iz-1)));
   } mrc_fld_foreach_end;
 }
 
@@ -207,13 +208,13 @@ pushpp_c(struct ggcm_mhd *mhd, float dt, int m)
 
   float dth = -.5f * dt;
   mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
-    float fpx = fd1x[ix] * (MRC_F3(f, _PP, ix+1,iy,iz) - MRC_F3(f, _PP, ix-1,iy,iz));
-    float fpy = fd1y[iy] * (MRC_F3(f, _PP, ix,iy+1,iz) - MRC_F3(f, _PP, ix,iy-1,iz));
-    float fpz = fd1z[iz] * (MRC_F3(f, _PP, ix,iy,iz+1) - MRC_F3(f, _PP, ix,iy,iz-1));
-    float z = dth * MRC_F3(f,_ZMASK, ix,iy,iz);
-    MRC_F3(f, m + _RV1X, ix,iy,iz) += z * fpx;
-    MRC_F3(f, m + _RV1Y, ix,iy,iz) += z * fpy;
-    MRC_F3(f, m + _RV1Z, ix,iy,iz) += z * fpz;
+    float fpx = fd1x[ix] * (F3(f, _PP, ix+1,iy,iz) - F3(f, _PP, ix-1,iy,iz));
+    float fpy = fd1y[iy] * (F3(f, _PP, ix,iy+1,iz) - F3(f, _PP, ix,iy-1,iz));
+    float fpz = fd1z[iz] * (F3(f, _PP, ix,iy,iz+1) - F3(f, _PP, ix,iy,iz-1));
+    float z = dth * F3(f,_ZMASK, ix,iy,iz);
+    F3(f, m + _RV1X, ix,iy,iz) += z * fpx;
+    F3(f, m + _RV1Y, ix,iy,iz) += z * fpy;
+    F3(f, m + _RV1Z, ix,iy,iz) += z * fpz;
   } mrc_fld_foreach_end;
 }
 
@@ -221,7 +222,7 @@ static void
 vgrs(struct mrc_fld *f, int m, float s)
 {
   mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
-    MRC_F3(f, m, ix,iy,iz) = s;
+    F3(f, m, ix,iy,iz) = s;
   } mrc_fld_foreach_end;
 }
 
@@ -229,7 +230,7 @@ static void
 vgrv(struct mrc_fld *f, int m_to, int m_from)
 {
   mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
-    MRC_F3(f, m_to, ix,iy,iz) = MRC_F3(f, m_from, ix,iy,iz);
+    F3(f, m_to, ix,iy,iz) = F3(f, m_from, ix,iy,iz);
   } mrc_fld_foreach_end;
 }
 
@@ -241,9 +242,9 @@ limit1a(struct mrc_fld *f, int m, int ix, int iy, int iz, int IX, int IY, int IZ
   const float teps = 1.e-25;
 
   // Harten/Zwas type switch
-  float aa = MRC_F3(f, m, ix,iy,iz);
-  float a1 = MRC_F3(f, m, ix+IX,iy+IY,iz+IZ);
-  float a2 = MRC_F3(f, m, ix-IX,iy-IY,iz-IZ);
+  float aa = F3(f, m, ix,iy,iz);
+  float a1 = F3(f, m, ix+IX,iy+IY,iz+IZ);
+  float a2 = F3(f, m, ix-IX,iy-IY,iz-IZ);
   float d1 = aa - a2;
   float d2 = a1 - aa;
   float s1 = fabsf(d1);
@@ -258,8 +259,8 @@ limit1a(struct mrc_fld *f, int m, int ix, int iy, int iz, int IX, int IY, int IZ
   r3 = r3 * r3;
   r3 = r3 * r3;
   r3 = fminf(2.f * r3, 1.);
-  MRC_F3(f, C, ix   ,iy   ,iz   ) = fmaxf(MRC_F3(f, C, ix   ,iy   ,iz   ), r3);
-  MRC_F3(f, C, ix-IX,iy-IY,iz-IZ) = fmaxf(MRC_F3(f, C, ix-IX,iy-IY,iz-IZ), r3);
+  F3(f, C, ix   ,iy   ,iz   ) = fmaxf(F3(f, C, ix   ,iy   ,iz   ), r3);
+  F3(f, C, ix-IX,iy-IY,iz-IZ) = fmaxf(F3(f, C, ix-IX,iy-IY,iz-IZ), r3);
 }
 
 static void
@@ -323,21 +324,21 @@ currbb_c(struct ggcm_mhd *mhd, int m_curr)
   float *bd4z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD4);
 
   mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
-    MRC_F3(f, _XJX, ix,iy,iz) =
-      (MRC_F3(f, m_curr + _B1Z, ix,iy+1,iz) - MRC_F3(f, m_curr + _B1Z, ix,iy,iz)) * bd4y[iy] -
-      (MRC_F3(f, m_curr + _B1Y, ix,iy,iz+1) - MRC_F3(f, m_curr + _B1Y, ix,iy,iz)) * bd4z[iz];
-    MRC_F3(f, _XJY, ix,iy,iz) =
-      (MRC_F3(f, m_curr + _B1X, ix,iy,iz+1) - MRC_F3(f, m_curr + _B1X, ix,iy,iz)) * bd4z[iz] -
-      (MRC_F3(f, m_curr + _B1Z, ix+1,iy,iz) - MRC_F3(f, m_curr + _B1Z, ix,iy,iz)) * bd4x[ix];
-    MRC_F3(f, _XJZ, ix,iy,iz) =
-      (MRC_F3(f, m_curr + _B1Y, ix+1,iy,iz) - MRC_F3(f, m_curr + _B1Y, ix,iy,iz)) * bd4x[ix] -
-      (MRC_F3(f, m_curr + _B1X, ix,iy+1,iz) - MRC_F3(f, m_curr + _B1X, ix,iy,iz)) * bd4y[iy];
-    MRC_F3(f,_TMP1, ix,iy,iz) = .5f * (MRC_F3(f, m_curr + _B1X, ix,iy,iz) +
-				       MRC_F3(f, m_curr + _B1X, ix-1,iy,iz));
-    MRC_F3(f,_TMP2, ix,iy,iz) = .5f * (MRC_F3(f, m_curr + _B1Y, ix,iy,iz) +
-				       MRC_F3(f, m_curr + _B1Y, ix,iy-1,iz));
-    MRC_F3(f,_TMP3, ix,iy,iz) = .5f * (MRC_F3(f, m_curr + _B1Z, ix,iy,iz) +
-				       MRC_F3(f, m_curr + _B1Z, ix,iy,iz-1));
+    F3(f, _XJX, ix,iy,iz) =
+      (F3(f, m_curr + _B1Z, ix,iy+1,iz) - F3(f, m_curr + _B1Z, ix,iy,iz)) * bd4y[iy] -
+      (F3(f, m_curr + _B1Y, ix,iy,iz+1) - F3(f, m_curr + _B1Y, ix,iy,iz)) * bd4z[iz];
+    F3(f, _XJY, ix,iy,iz) =
+      (F3(f, m_curr + _B1X, ix,iy,iz+1) - F3(f, m_curr + _B1X, ix,iy,iz)) * bd4z[iz] -
+      (F3(f, m_curr + _B1Z, ix+1,iy,iz) - F3(f, m_curr + _B1Z, ix,iy,iz)) * bd4x[ix];
+    F3(f, _XJZ, ix,iy,iz) =
+      (F3(f, m_curr + _B1Y, ix+1,iy,iz) - F3(f, m_curr + _B1Y, ix,iy,iz)) * bd4x[ix] -
+      (F3(f, m_curr + _B1X, ix,iy+1,iz) - F3(f, m_curr + _B1X, ix,iy,iz)) * bd4y[iy];
+    F3(f,_TMP1, ix,iy,iz) = .5f * (F3(f, m_curr + _B1X, ix,iy,iz) +
+				   F3(f, m_curr + _B1X, ix-1,iy,iz));
+    F3(f,_TMP2, ix,iy,iz) = .5f * (F3(f, m_curr + _B1Y, ix,iy,iz) +
+				   F3(f, m_curr + _B1Y, ix,iy-1,iz));
+    F3(f,_TMP3, ix,iy,iz) = .5f * (F3(f, m_curr + _B1Z, ix,iy,iz) +
+				   F3(f, m_curr + _B1Z, ix,iy,iz-1));
   } mrc_fld_foreach_end;
 }
 
@@ -354,33 +355,33 @@ curbc_c(struct ggcm_mhd *mhd, int m_curr)
   float *bd4z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD4);
 
   mrc_fld_foreach(f, ix,iy,iz, 2, 1) {
-    MRC_F3(f, _TX, ix,iy,iz) =
-      (MRC_F3(f, m_curr + _B1Z, ix,iy+1,iz) - MRC_F3(f, m_curr + _B1Z, ix,iy,iz)) * bd4y[iy] -
-      (MRC_F3(f, m_curr + _B1Y, ix,iy,iz+1) - MRC_F3(f, m_curr + _B1Y, ix,iy,iz)) * bd4z[iz];
-    MRC_F3(f, _TY, ix,iy,iz) =
-      (MRC_F3(f, m_curr + _B1X, ix,iy,iz+1) - MRC_F3(f, m_curr + _B1X, ix,iy,iz)) * bd4z[iz] -
-      (MRC_F3(f, m_curr + _B1Z, ix+1,iy,iz) - MRC_F3(f, m_curr + _B1Z, ix,iy,iz)) * bd4x[ix];
-    MRC_F3(f, _TZ, ix,iy,iz) =
-      (MRC_F3(f, m_curr + _B1Y, ix+1,iy,iz) - MRC_F3(f, m_curr + _B1Y, ix,iy,iz)) * bd4x[ix] -
-      (MRC_F3(f, m_curr + _B1X, ix,iy+1,iz) - MRC_F3(f, m_curr + _B1X, ix,iy,iz)) * bd4y[iy];
+    F3(f, _TX, ix,iy,iz) =
+      (F3(f, m_curr + _B1Z, ix,iy+1,iz) - F3(f, m_curr + _B1Z, ix,iy,iz)) * bd4y[iy] -
+      (F3(f, m_curr + _B1Y, ix,iy,iz+1) - F3(f, m_curr + _B1Y, ix,iy,iz)) * bd4z[iz];
+    F3(f, _TY, ix,iy,iz) =
+      (F3(f, m_curr + _B1X, ix,iy,iz+1) - F3(f, m_curr + _B1X, ix,iy,iz)) * bd4z[iz] -
+      (F3(f, m_curr + _B1Z, ix+1,iy,iz) - F3(f, m_curr + _B1Z, ix,iy,iz)) * bd4x[ix];
+    F3(f, _TZ, ix,iy,iz) =
+      (F3(f, m_curr + _B1Y, ix+1,iy,iz) - F3(f, m_curr + _B1Y, ix,iy,iz)) * bd4x[ix] -
+      (F3(f, m_curr + _B1X, ix,iy+1,iz) - F3(f, m_curr + _B1X, ix,iy,iz)) * bd4y[iy];
 
     // FIXME, not needed (?), and staggering is suspicious
-    MRC_F3(f, _BBX, ix,iy,iz) = .5f * (MRC_F3(f, m_curr + _B1X, ix,iy,iz) +
-				       MRC_F3(f, m_curr + _B1X, ix+1,iy,iz));
-    MRC_F3(f, _BBY, ix,iy,iz) = .5f * (MRC_F3(f, m_curr + _B1Y, ix,iy,iz) +
-				       MRC_F3(f, m_curr + _B1Y, ix,iy+1,iz));
-    MRC_F3(f, _BBZ, ix,iy,iz) = .5f * (MRC_F3(f, m_curr + _B1Z, ix,iy,iz) +
-				       MRC_F3(f, m_curr + _B1Z, ix,iy,iz+1));
+    F3(f, _BBX, ix,iy,iz) = .5f * (F3(f, m_curr + _B1X, ix,iy,iz) +
+				   F3(f, m_curr + _B1X, ix+1,iy,iz));
+    F3(f, _BBY, ix,iy,iz) = .5f * (F3(f, m_curr + _B1Y, ix,iy,iz) +
+				   F3(f, m_curr + _B1Y, ix,iy+1,iz));
+    F3(f, _BBZ, ix,iy,iz) = .5f * (F3(f, m_curr + _B1Z, ix,iy,iz) +
+				   F3(f, m_curr + _B1Z, ix,iy,iz+1));
   } mrc_fld_foreach_end;
 
   mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
-    float s = .25f * MRC_F3(f, _ZMASK, ix, iy, iz);
-    MRC_F3(f, _CURRX, ix,iy,iz) = s * (MRC_F3(f, _TX, ix,iy  ,iz  ) + MRC_F3(f, _TX, ix,iy-1,iz  ) +
-				       MRC_F3(f, _TX, ix,iy  ,iz-1) + MRC_F3(f, _TX, ix,iy-1,iz-1));
-    MRC_F3(f, _CURRY, ix,iy,iz) = s * (MRC_F3(f, _TY, ix  ,iy,iz  ) + MRC_F3(f, _TY, ix-1,iy,iz  ) +
-				       MRC_F3(f, _TY, ix  ,iy,iz-1) + MRC_F3(f, _TY, ix-1,iy,iz-1));
-    MRC_F3(f, _CURRZ, ix,iy,iz) = s * (MRC_F3(f, _TZ, ix  ,iy  ,iz) + MRC_F3(f, _TZ, ix-1,iy  ,iz) +
-				       MRC_F3(f, _TZ, ix  ,iy-1,iz) + MRC_F3(f, _TZ, ix-1,iy-1,iz));
+    float s = .25f * F3(f, _ZMASK, ix, iy, iz);
+    F3(f, _CURRX, ix,iy,iz) = s * (F3(f, _TX, ix,iy  ,iz  ) + F3(f, _TX, ix,iy-1,iz  ) +
+				   F3(f, _TX, ix,iy  ,iz-1) + F3(f, _TX, ix,iy-1,iz-1));
+    F3(f, _CURRY, ix,iy,iz) = s * (F3(f, _TY, ix  ,iy,iz  ) + F3(f, _TY, ix-1,iy,iz  ) +
+				   F3(f, _TY, ix  ,iy,iz-1) + F3(f, _TY, ix-1,iy,iz-1));
+    F3(f, _CURRZ, ix,iy,iz) = s * (F3(f, _TZ, ix  ,iy  ,iz) + F3(f, _TZ, ix-1,iy  ,iz) +
+				   F3(f, _TZ, ix  ,iy-1,iz) + F3(f, _TZ, ix-1,iy-1,iz));
   } mrc_fld_foreach_end;
 }
 
@@ -395,34 +396,34 @@ push_ej_c(struct ggcm_mhd *mhd, float dt, int m_curr, int m_next)
 
   float s1 = .25f * dt;
   mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
-    float z = MRC_F3(f,_ZMASK, ix,iy,iz);
+    float z = F3(f,_ZMASK, ix,iy,iz);
     float s2 = s1 * z;
-    float cx = (MRC_F3(f,_XJX, ix  ,iy  ,iz  ) +
-		MRC_F3(f,_XJX, ix  ,iy-1,iz  ) +
-		MRC_F3(f,_XJX, ix  ,iy  ,iz-1) +
-		MRC_F3(f,_XJX, ix  ,iy-1,iz-1));
-    float cy = (MRC_F3(f,_XJY, ix  ,iy  ,iz  ) +
-		MRC_F3(f,_XJY, ix-1,iy  ,iz  ) +
-		MRC_F3(f,_XJY, ix  ,iy  ,iz-1) +
-		MRC_F3(f,_XJY, ix-1,iy  ,iz-1));
-    float cz = (MRC_F3(f,_XJZ, ix  ,iy  ,iz  ) +
-		MRC_F3(f,_XJZ, ix-1,iy  ,iz  ) +
-		MRC_F3(f,_XJZ, ix  ,iy-1,iz  ) +
-		MRC_F3(f,_XJZ, ix-1,iy-1,iz  ));
-    float ffx = s2 * (cy * MRC_F3(f, _TMP3, ix,iy,iz) -
-		      cz * MRC_F3(f, _TMP2, ix,iy,iz));
-    float ffy = s2 * (cz * MRC_F3(f, _TMP1, ix,iy,iz) -
-		      cx * MRC_F3(f, _TMP3, ix,iy,iz));
-    float ffz = s2 * (cx * MRC_F3(f, _TMP2, ix,iy,iz) -
-		      cy * MRC_F3(f, _TMP1, ix,iy,iz));
-    float duu = (ffx * MRC_F3(f, _VX, ix,iy,iz) +
-		 ffy * MRC_F3(f, _VY, ix,iy,iz) +
-		 ffz * MRC_F3(f, _VZ, ix,iy,iz));
+    float cx = (F3(f,_XJX, ix  ,iy  ,iz  ) +
+		F3(f,_XJX, ix  ,iy-1,iz  ) +
+		F3(f,_XJX, ix  ,iy  ,iz-1) +
+		F3(f,_XJX, ix  ,iy-1,iz-1));
+    float cy = (F3(f,_XJY, ix  ,iy  ,iz  ) +
+		F3(f,_XJY, ix-1,iy  ,iz  ) +
+		F3(f,_XJY, ix  ,iy  ,iz-1) +
+		F3(f,_XJY, ix-1,iy  ,iz-1));
+    float cz = (F3(f,_XJZ, ix  ,iy  ,iz  ) +
+		F3(f,_XJZ, ix-1,iy  ,iz  ) +
+		F3(f,_XJZ, ix  ,iy-1,iz  ) +
+		F3(f,_XJZ, ix-1,iy-1,iz  ));
+    float ffx = s2 * (cy * F3(f, _TMP3, ix,iy,iz) -
+		      cz * F3(f, _TMP2, ix,iy,iz));
+    float ffy = s2 * (cz * F3(f, _TMP1, ix,iy,iz) -
+		      cx * F3(f, _TMP3, ix,iy,iz));
+    float ffz = s2 * (cx * F3(f, _TMP2, ix,iy,iz) -
+		      cy * F3(f, _TMP1, ix,iy,iz));
+    float duu = (ffx * F3(f, _VX, ix,iy,iz) +
+		 ffy * F3(f, _VY, ix,iy,iz) +
+		 ffz * F3(f, _VZ, ix,iy,iz));
 
-    MRC_F3(f, m_next + _RV1X, ix,iy,iz) += ffx;
-    MRC_F3(f, m_next + _RV1Y, ix,iy,iz) += ffy;
-    MRC_F3(f, m_next + _RV1Z, ix,iy,iz) += ffz;
-    MRC_F3(f, m_next + _UU1 , ix,iy,iz) += duu;
+    F3(f, m_next + _RV1X, ix,iy,iz) += ffx;
+    F3(f, m_next + _RV1Y, ix,iy,iz) += ffy;
+    F3(f, m_next + _RV1Z, ix,iy,iz) += ffz;
+    F3(f, m_next + _UU1 , ix,iy,iz) += duu;
   } mrc_fld_foreach_end;
 }
 
@@ -446,7 +447,7 @@ res1_const_c(struct ggcm_mhd *mhd)
   float *fx2z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FX2);
 
   mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
-    MRC_F3(f, _RESIS, ix,iy,iz) = 0.f;
+    F3(f, _RESIS, ix,iy,iz) = 0.f;
     float r2 = fx2x[ix] + fx2y[iy] + fx2z[iz];
     if (r2 < diffsphere2)
       continue;
@@ -461,7 +462,7 @@ res1_const_c(struct ggcm_mhd *mhd)
     if (iz + info.off[2] >= gdims[2] - res1border)
       continue;
 
-    MRC_F3(f, _RESIS, ix,iy,iz) = diff;
+    F3(f, _RESIS, ix,iy,iz) = diff;
   } mrc_fld_foreach_end;
 }
 
@@ -507,35 +508,35 @@ bcthy3z_NL1(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int IZ
   mrc_fld_foreach(f, ix,iy,iz, 2, 1) {
     float bd1[3] = { bd1x[ix], bd1y[iy], bd1z[iz] };
 
-    MRC_F3(f, _TMP1, ix,iy,iz) = bd1[ZZ] * 
-      (MRC_F3(f, m_curr + _B1X + YY, ix+JX2,iy+JY2,iz+JZ2) - MRC_F3(f, m_curr + _B1X + YY, ix,iy,iz));
-    MRC_F3(f, _TMP2, ix,iy,iz) = bd1[YY] * 
-      (MRC_F3(f, m_curr + _B1X + ZZ, ix+JX1,iy+JY1,iz+JZ1) - MRC_F3(f, m_curr + _B1X + ZZ, ix,iy,iz));
+    F3(f, _TMP1, ix,iy,iz) = bd1[ZZ] * 
+      (F3(f, m_curr + _B1X + YY, ix+JX2,iy+JY2,iz+JZ2) - F3(f, m_curr + _B1X + YY, ix,iy,iz));
+    F3(f, _TMP2, ix,iy,iz) = bd1[YY] * 
+      (F3(f, m_curr + _B1X + ZZ, ix+JX1,iy+JY1,iz+JZ1) - F3(f, m_curr + _B1X + ZZ, ix,iy,iz));
   } mrc_fld_foreach_end;
 
   // harmonic average if same sign
   mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
     float s1, s2;
-    s1 = MRC_F3(f, _TMP1, ix,iy,iz) * MRC_F3(f, _TMP1, ix-JX2,iy-JY2,iz-JZ2);
-    s2 = MRC_F3(f, _TMP1, ix,iy,iz) + MRC_F3(f, _TMP1, ix-JX2,iy-JY2,iz-JZ2);
-    MRC_F3(f, _TMP3, ix,iy,iz) = bcthy3f(s1, s2);
-    s1 = MRC_F3(f, _TMP2, ix,iy,iz) * MRC_F3(f, _TMP2, ix-JX1,iy-JY1,iz-JZ1);
-    s2 = MRC_F3(f, _TMP2, ix,iy,iz) + MRC_F3(f, _TMP2, ix-JX1,iy-JY1,iz-JZ1);
-    MRC_F3(f, _TMP4, ix,iy,iz) = bcthy3f(s1, s2);
+    s1 = F3(f, _TMP1, ix,iy,iz) * F3(f, _TMP1, ix-JX2,iy-JY2,iz-JZ2);
+    s2 = F3(f, _TMP1, ix,iy,iz) + F3(f, _TMP1, ix-JX2,iy-JY2,iz-JZ2);
+    F3(f, _TMP3, ix,iy,iz) = bcthy3f(s1, s2);
+    s1 = F3(f, _TMP2, ix,iy,iz) * F3(f, _TMP2, ix-JX1,iy-JY1,iz-JZ1);
+    s2 = F3(f, _TMP2, ix,iy,iz) + F3(f, _TMP2, ix-JX1,iy-JY1,iz-JZ1);
+    F3(f, _TMP4, ix,iy,iz) = bcthy3f(s1, s2);
   } mrc_fld_foreach_end;
 
   // edge centered velocity
   mrc_fld_foreach(f, ix,iy,iz, 1, 0) {
-    float vvYY = .25f * (MRC_F3(f, _VX + YY, ix   ,iy   ,iz   ) + 
-			 MRC_F3(f, _VX + YY, ix   ,iy+IY,iz+IZ) +
-			 MRC_F3(f, _VX + YY, ix+IX,iy   ,iz+IZ) +
-			 MRC_F3(f, _VX + YY, ix+IX,iy+IY,iz   ));
-    MRC_F3(f, _TMP1, ix,iy,iz) = vvYY; /* - d_i * vcurrYY */
-    float vvZZ = .25f * (MRC_F3(f, _VX + ZZ, ix   ,iy   ,iz   ) + 
-			 MRC_F3(f, _VX + ZZ, ix   ,iy+IY,iz+IZ) +
-			 MRC_F3(f, _VX + ZZ, ix+IX,iy   ,iz+IZ) +
-			 MRC_F3(f, _VX + ZZ, ix+IX,iy+IY,iz   ));
-    MRC_F3(f, _TMP2, ix,iy,iz) = vvZZ; /* - d_i * vcurrZZ */
+    float vvYY = .25f * (F3(f, _VX + YY, ix   ,iy   ,iz   ) + 
+			 F3(f, _VX + YY, ix   ,iy+IY,iz+IZ) +
+			 F3(f, _VX + YY, ix+IX,iy   ,iz+IZ) +
+			 F3(f, _VX + YY, ix+IX,iy+IY,iz   ));
+    F3(f, _TMP1, ix,iy,iz) = vvYY; /* - d_i * vcurrYY */
+    float vvZZ = .25f * (F3(f, _VX + ZZ, ix   ,iy   ,iz   ) + 
+			 F3(f, _VX + ZZ, ix   ,iy+IY,iz+IZ) +
+			 F3(f, _VX + ZZ, ix+IX,iy   ,iz+IZ) +
+			 F3(f, _VX + ZZ, ix+IX,iy+IY,iz   ));
+    F3(f, _TMP2, ix,iy,iz) = vvZZ; /* - d_i * vcurrZZ */
   } mrc_fld_foreach_end;
 
   float diffmul=1.0;
@@ -548,40 +549,40 @@ bcthy3z_NL1(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int IZ
     float bd2[3] = { bd2x[ix], bd2y[iy], bd2z[iz] };
     float bd2p[3] = { bd2x[ix+1], bd2y[iy+1], bd2z[iz+1] };
     float e1, vv;
-    vv = MRC_F3(f, _TMP1, ix,iy,iz);
+    vv = F3(f, _TMP1, ix,iy,iz);
     if (vv > 0.f) {
-      e1 = MRC_F3(f, m_curr + _B1X + ZZ, ix,iy,iz) +
-	MRC_F3(f, _TMP4, ix,iy,iz) * (bd2[YY] - dt*vv);
+      e1 = F3(f, m_curr + _B1X + ZZ, ix,iy,iz) +
+	F3(f, _TMP4, ix,iy,iz) * (bd2[YY] - dt*vv);
     } else {
-      e1 = MRC_F3(f, m_curr + _B1X + ZZ, ix+JX1,iy+JY1,iz+JZ1) -
-	MRC_F3(f, _TMP4, ix+JX1,iy+JY1,iz+JZ1) * (bd2p[YY] + dt*vv);
+      e1 = F3(f, m_curr + _B1X + ZZ, ix+JX1,iy+JY1,iz+JZ1) -
+	F3(f, _TMP4, ix+JX1,iy+JY1,iz+JZ1) * (bd2p[YY] + dt*vv);
     }
     float ttmp1 = e1 * vv;
 
-    vv = MRC_F3(f, _TMP2, ix,iy,iz);
+    vv = F3(f, _TMP2, ix,iy,iz);
     if (vv > 0.f) {
-      e1 = MRC_F3(f, m_curr + _B1X + YY, ix,iy,iz) +
-	MRC_F3(f, _TMP3, ix,iy,iz) * (bd2[ZZ] - dt*vv);
+      e1 = F3(f, m_curr + _B1X + YY, ix,iy,iz) +
+	F3(f, _TMP3, ix,iy,iz) * (bd2[ZZ] - dt*vv);
     } else {
-      e1 = MRC_F3(f, m_curr + _B1X + YY, ix+JX2,iy+JY2,iz+JZ2) -
-	MRC_F3(f, _TMP3, ix+JX2,iy+JY2,iz+JZ2) * (bd2p[ZZ] + dt*vv);
+      e1 = F3(f, m_curr + _B1X + YY, ix+JX2,iy+JY2,iz+JZ2) -
+	F3(f, _TMP3, ix+JX2,iy+JY2,iz+JZ2) * (bd2p[ZZ] + dt*vv);
     }
     float ttmp2 = e1 * vv;
 
-    float t1m = MRC_F3(f, m_curr + _B1X + ZZ, ix+JX1,iy+JY1,iz+JZ1) - MRC_F3(f, m_curr + _B1X + ZZ, ix,iy,iz);
-    float t1p = fabsf(MRC_F3(f, m_curr + _B1X + ZZ, ix+JX1,iy+JY1,iz+JZ1)) + fabsf(MRC_F3(f, m_curr + _B1X + ZZ, ix,iy,iz));
-    float t2m = MRC_F3(f, m_curr + _B1X + YY, ix+JX2,iy+JY2,iz+JZ2) - MRC_F3(f, m_curr + _B1X + YY, ix,iy,iz);
-    float t2p = fabsf(MRC_F3(f, m_curr + _B1X + YY, ix+JX2,iy+JY2,iz+JZ2)) + fabsf(MRC_F3(f, m_curr + _B1X + YY, ix,iy,iz));
+    float t1m = F3(f, m_curr + _B1X + ZZ, ix+JX1,iy+JY1,iz+JZ1) - F3(f, m_curr + _B1X + ZZ, ix,iy,iz);
+    float t1p = fabsf(F3(f, m_curr + _B1X + ZZ, ix+JX1,iy+JY1,iz+JZ1)) + fabsf(F3(f, m_curr + _B1X + ZZ, ix,iy,iz));
+    float t2m = F3(f, m_curr + _B1X + YY, ix+JX2,iy+JY2,iz+JZ2) - F3(f, m_curr + _B1X + YY, ix,iy,iz);
+    float t2p = fabsf(F3(f, m_curr + _B1X + YY, ix+JX2,iy+JY2,iz+JZ2)) + fabsf(F3(f, m_curr + _B1X + YY, ix,iy,iz));
     float tp = t1p + t2p + REPS;
     float tpi = diffmul / tp;
     float d1 = sqr(t1m * tpi);
     float d2 = sqr(t2m * tpi);
     if (d1 < mhd->par.diffth) d1 = 0.;
     if (d2 < mhd->par.diffth) d2 = 0.;
-    ttmp1 -= d1 * t1m * MRC_F3(f, _RMASK, ix,iy,iz);
-    ttmp2 -= d2 * t2m * MRC_F3(f, _RMASK, ix,iy,iz);
-    MRC_F3(f, _RESIS, ix,iy,iz) += fabsf(d1+d2) * MRC_F3(f, _ZMASK, ix,iy,iz);
-    MRC_F3(f, FF, ix,iy,iz) = ttmp1 - ttmp2;
+    ttmp1 -= d1 * t1m * F3(f, _RMASK, ix,iy,iz);
+    ttmp2 -= d2 * t2m * F3(f, _RMASK, ix,iy,iz);
+    F3(f, _RESIS, ix,iy,iz) += fabsf(d1+d2) * F3(f, _ZMASK, ix,iy,iz);
+    F3(f, FF, ix,iy,iz) = ttmp1 - ttmp2;
   } mrc_fld_foreach_end;
 }
 
@@ -604,35 +605,35 @@ bcthy3z_const(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int 
   mrc_fld_foreach(f, ix,iy,iz, 2, 1) {
     float bd1[3] = { bd1x[ix], bd1y[iy], bd1z[iz] };
 
-    MRC_F3(f, _TMP1, ix,iy,iz) = bd1[ZZ] * 
-      (MRC_F3(f, m_curr + _B1X + YY, ix+JX2,iy+JY2,iz+JZ2) - MRC_F3(f, m_curr + _B1X + YY, ix,iy,iz));
-    MRC_F3(f, _TMP2, ix,iy,iz) = bd1[YY] * 
-      (MRC_F3(f, m_curr + _B1X + ZZ, ix+JX1,iy+JY1,iz+JZ1) - MRC_F3(f, m_curr + _B1X + ZZ, ix,iy,iz));
+    F3(f, _TMP1, ix,iy,iz) = bd1[ZZ] * 
+      (F3(f, m_curr + _B1X + YY, ix+JX2,iy+JY2,iz+JZ2) - F3(f, m_curr + _B1X + YY, ix,iy,iz));
+    F3(f, _TMP2, ix,iy,iz) = bd1[YY] * 
+      (F3(f, m_curr + _B1X + ZZ, ix+JX1,iy+JY1,iz+JZ1) - F3(f, m_curr + _B1X + ZZ, ix,iy,iz));
   } mrc_fld_foreach_end;
 
   // harmonic average if same sign
   mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
     float s1, s2;
-    s1 = MRC_F3(f, _TMP1, ix,iy,iz) * MRC_F3(f, _TMP1, ix-JX2,iy-JY2,iz-JZ2);
-    s2 = MRC_F3(f, _TMP1, ix,iy,iz) + MRC_F3(f, _TMP1, ix-JX2,iy-JY2,iz-JZ2);
-    MRC_F3(f, _TMP3, ix,iy,iz) = bcthy3f(s1, s2);
-    s1 = MRC_F3(f, _TMP2, ix,iy,iz) * MRC_F3(f, _TMP2, ix-JX1,iy-JY1,iz-JZ1);
-    s2 = MRC_F3(f, _TMP2, ix,iy,iz) + MRC_F3(f, _TMP2, ix-JX1,iy-JY1,iz-JZ1);
-    MRC_F3(f, _TMP4, ix,iy,iz) = bcthy3f(s1, s2);
+    s1 = F3(f, _TMP1, ix,iy,iz) * F3(f, _TMP1, ix-JX2,iy-JY2,iz-JZ2);
+    s2 = F3(f, _TMP1, ix,iy,iz) + F3(f, _TMP1, ix-JX2,iy-JY2,iz-JZ2);
+    F3(f, _TMP3, ix,iy,iz) = bcthy3f(s1, s2);
+    s1 = F3(f, _TMP2, ix,iy,iz) * F3(f, _TMP2, ix-JX1,iy-JY1,iz-JZ1);
+    s2 = F3(f, _TMP2, ix,iy,iz) + F3(f, _TMP2, ix-JX1,iy-JY1,iz-JZ1);
+    F3(f, _TMP4, ix,iy,iz) = bcthy3f(s1, s2);
   } mrc_fld_foreach_end;
 
   // edge centered velocity
   mrc_fld_foreach(f, ix,iy,iz, 1, 0) {
-    float vvYY = .25f * (MRC_F3(f, _VX + YY, ix   ,iy   ,iz   ) + 
-			 MRC_F3(f, _VX + YY, ix   ,iy+IY,iz+IZ) +
-			 MRC_F3(f, _VX + YY, ix+IX,iy   ,iz+IZ) +
-			 MRC_F3(f, _VX + YY, ix+IX,iy+IY,iz   ));
-    MRC_F3(f, _TMP1, ix,iy,iz) = vvYY; /* - d_i * vcurrYY */
-    float vvZZ = .25f * (MRC_F3(f, _VX + ZZ, ix   ,iy   ,iz   ) + 
-			 MRC_F3(f, _VX + ZZ, ix   ,iy+IY,iz+IZ) +
-			 MRC_F3(f, _VX + ZZ, ix+IX,iy   ,iz+IZ) +
-			 MRC_F3(f, _VX + ZZ, ix+IX,iy+IY,iz   ));
-    MRC_F3(f, _TMP2, ix,iy,iz) = vvZZ; /* - d_i * vcurrZZ */
+    float vvYY = .25f * (F3(f, _VX + YY, ix   ,iy   ,iz   ) + 
+			 F3(f, _VX + YY, ix   ,iy+IY,iz+IZ) +
+			 F3(f, _VX + YY, ix+IX,iy   ,iz+IZ) +
+			 F3(f, _VX + YY, ix+IX,iy+IY,iz   ));
+    F3(f, _TMP1, ix,iy,iz) = vvYY; /* - d_i * vcurrYY */
+    float vvZZ = .25f * (F3(f, _VX + ZZ, ix   ,iy   ,iz   ) + 
+			 F3(f, _VX + ZZ, ix   ,iy+IY,iz+IZ) +
+			 F3(f, _VX + ZZ, ix+IX,iy   ,iz+IZ) +
+			 F3(f, _VX + ZZ, ix+IX,iy+IY,iz   ));
+    F3(f, _TMP2, ix,iy,iz) = vvZZ; /* - d_i * vcurrZZ */
   } mrc_fld_foreach_end;
 
   // edge centered E = - v x B (+ dissipation)
@@ -640,35 +641,35 @@ bcthy3z_const(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int 
     float bd2[3] = { bd2x[ix], bd2y[iy], bd2z[iz] };
     float bd2p[3] = { bd2x[ix+1], bd2y[iy+1], bd2z[iz+1] };
     float e1, vv;
-    vv = MRC_F3(f, _TMP1, ix,iy,iz);
+    vv = F3(f, _TMP1, ix,iy,iz);
     if (vv > 0.f) {
-      e1 = MRC_F3(f, m_curr + _B1X + ZZ, ix,iy,iz) +
-	MRC_F3(f, _TMP4, ix,iy,iz) * (bd2[YY] - dt*vv);
+      e1 = F3(f, m_curr + _B1X + ZZ, ix,iy,iz) +
+	F3(f, _TMP4, ix,iy,iz) * (bd2[YY] - dt*vv);
     } else {
-      e1 = MRC_F3(f, m_curr + _B1X + ZZ, ix+JX1,iy+JY1,iz+JZ1) -
-	MRC_F3(f, _TMP4, ix+JX1,iy+JY1,iz+JZ1) * (bd2p[YY] + dt*vv);
+      e1 = F3(f, m_curr + _B1X + ZZ, ix+JX1,iy+JY1,iz+JZ1) -
+	F3(f, _TMP4, ix+JX1,iy+JY1,iz+JZ1) * (bd2p[YY] + dt*vv);
     }
     float ttmp1 = e1 * vv;
 
-    vv = MRC_F3(f, _TMP2, ix,iy,iz);
+    vv = F3(f, _TMP2, ix,iy,iz);
     if (vv > 0.f) {
-      e1 = MRC_F3(f, m_curr + _B1X + YY, ix,iy,iz) +
-	MRC_F3(f, _TMP3, ix,iy,iz) * (bd2[ZZ] - dt*vv);
+      e1 = F3(f, m_curr + _B1X + YY, ix,iy,iz) +
+	F3(f, _TMP3, ix,iy,iz) * (bd2[ZZ] - dt*vv);
     } else {
-      e1 = MRC_F3(f, m_curr + _B1X + YY, ix+JX2,iy+JY2,iz+JZ2) -
-	MRC_F3(f, _TMP3, ix+JX2,iy+JY2,iz+JZ2) * (bd2p[ZZ] + dt*vv);
+      e1 = F3(f, m_curr + _B1X + YY, ix+JX2,iy+JY2,iz+JZ2) -
+	F3(f, _TMP3, ix+JX2,iy+JY2,iz+JZ2) * (bd2p[ZZ] + dt*vv);
     }
     float ttmp2 = e1 * vv;
 
-    float vcurrXX = .25f * (MRC_F3(f, _CURRX + XX, ix   ,iy   ,iz   ) + 
-			    MRC_F3(f, _CURRX + XX, ix   ,iy+IY,iz+IZ) +
-			    MRC_F3(f, _CURRX + XX, ix+IX,iy   ,iz+IZ) +
-			    MRC_F3(f, _CURRX + XX, ix+IX,iy+IY,iz   ));
-    float vresis = .25f * (MRC_F3(f, _RESIS, ix   ,iy   ,iz   ) + 
-			   MRC_F3(f, _RESIS, ix   ,iy+IY,iz+IZ) +
-			   MRC_F3(f, _RESIS, ix+IX,iy   ,iz+IZ) +
-			   MRC_F3(f, _RESIS, ix+IX,iy+IY,iz   ));
-    MRC_F3(f, FF, ix,iy,iz) = ttmp1 - ttmp2 - vresis * vcurrXX;
+    float vcurrXX = .25f * (F3(f, _CURRX + XX, ix   ,iy   ,iz   ) + 
+			    F3(f, _CURRX + XX, ix   ,iy+IY,iz+IZ) +
+			    F3(f, _CURRX + XX, ix+IX,iy   ,iz+IZ) +
+			    F3(f, _CURRX + XX, ix+IX,iy+IY,iz   ));
+    float vresis = .25f * (F3(f, _RESIS, ix   ,iy   ,iz   ) + 
+			   F3(f, _RESIS, ix   ,iy+IY,iz+IZ) +
+			   F3(f, _RESIS, ix+IX,iy   ,iz+IZ) +
+			   F3(f, _RESIS, ix+IX,iy+IY,iz   ));
+    F3(f, FF, ix,iy,iz) = ttmp1 - ttmp2 - vresis * vcurrXX;
   } mrc_fld_foreach_end;
 }
 
@@ -710,15 +711,15 @@ bpush_c(struct ggcm_mhd *mhd, float dt, int m_prev, int m_next)
   float *bd3z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD3);
 
   mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
-    MRC_F3(f, m_next + _B1X, ix,iy,iz) = MRC_F3(f, m_prev + _B1X, ix,iy,iz) +
-      dt * (bd3y[iy] * (MRC_F3(f,_FLZ, ix,iy,iz) - MRC_F3(f,_FLZ, ix,iy-1,iz)) -
-	    bd3z[iz] * (MRC_F3(f,_FLY, ix,iy,iz) - MRC_F3(f,_FLY, ix,iy,iz-1)));
-    MRC_F3(f, m_next + _B1Y, ix,iy,iz) = MRC_F3(f, m_prev + _B1Y, ix,iy,iz) +
-      dt * (bd3z[iz] * (MRC_F3(f,_FLX, ix,iy,iz) - MRC_F3(f,_FLX, ix,iy,iz-1)) -
-	    bd3x[ix] * (MRC_F3(f,_FLZ, ix,iy,iz) - MRC_F3(f,_FLZ, ix-1,iy,iz)));
-    MRC_F3(f, m_next + _B1Z, ix,iy,iz) = MRC_F3(f, m_prev + _B1Z, ix,iy,iz) +
-      dt * (bd3x[ix] * (MRC_F3(f,_FLY, ix,iy,iz) - MRC_F3(f,_FLY, ix-1,iy,iz)) -
-	    bd3y[iy] * (MRC_F3(f,_FLX, ix,iy,iz) - MRC_F3(f,_FLX, ix,iy-1,iz)));
+    F3(f, m_next + _B1X, ix,iy,iz) = F3(f, m_prev + _B1X, ix,iy,iz) +
+      dt * (bd3y[iy] * (F3(f,_FLZ, ix,iy,iz) - F3(f,_FLZ, ix,iy-1,iz)) -
+	    bd3z[iz] * (F3(f,_FLY, ix,iy,iz) - F3(f,_FLY, ix,iy,iz-1)));
+    F3(f, m_next + _B1Y, ix,iy,iz) = F3(f, m_prev + _B1Y, ix,iy,iz) +
+      dt * (bd3z[iz] * (F3(f,_FLX, ix,iy,iz) - F3(f,_FLX, ix,iy,iz-1)) -
+	    bd3x[ix] * (F3(f,_FLZ, ix,iy,iz) - F3(f,_FLZ, ix-1,iy,iz)));
+    F3(f, m_next + _B1Z, ix,iy,iz) = F3(f, m_prev + _B1Z, ix,iy,iz) +
+      dt * (bd3x[ix] * (F3(f,_FLY, ix,iy,iz) - F3(f,_FLY, ix-1,iy,iz)) -
+	    bd3y[iy] * (F3(f,_FLX, ix,iy,iz) - F3(f,_FLX, ix,iy-1,iz)));
   } mrc_fld_foreach_end;
 }
 

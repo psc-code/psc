@@ -43,6 +43,7 @@ libmhd_la_SOURCES = \
 	calc_neg_divg.c \
 	calc_fluxes_per_face.c \
 	calc_u_delta.c \
+	calc_u_cweno.c \
 	calc_u_pm.c \
 	calc_KNP_fluxes.c \
 	calc_cweno_fluxes.c \

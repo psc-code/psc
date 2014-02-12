@@ -6,6 +6,7 @@
 #include "ggcm_mhd_diag_private.h"
 
 #include <mrc_domain.h>
+#include <mrc_fld_as_float.h>
 
 #include <stdio.h>
 #include <assert.h>
@@ -23,6 +24,7 @@ ggcm_mhd_diag_item_divb_run(struct ggcm_mhd_diag_item *item,
 {
   struct ggcm_mhd *mhd = item->diag->mhd;
   struct mrc_fld *fld_divB = mrc_domain_fld_create(mhd->domain, SW_2, "divB");
+  mrc_fld_set_type(fld_divB, FLD_TYPE);
   mrc_fld_setup(fld_divB);
   
   ggcm_mhd_calc_divb(mhd, mhd->fld, fld_divB);

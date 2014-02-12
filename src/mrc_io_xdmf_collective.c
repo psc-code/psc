@@ -357,6 +357,7 @@ collective_m1_write_f1(struct mrc_io *io, const char *path, struct mrc_fld *f1,
   struct xdmf *xdmf = to_xdmf(io);
   int ierr;
 
+  assert(f1->_data_type == MRC_NT_FLOAT);
   hid_t group_fld = H5Gcreate(group0, mrc_fld_comp_name(f1, m), H5P_DEFAULT,
 			      H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group_fld);
   ierr = H5LTset_attribute_int(group_fld, ".", "m", &m, 1); CE;
@@ -418,6 +419,7 @@ collective_m1_send_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
   struct xdmf *xdmf = to_xdmf(io);
   int dim = ctx->dim;
 
+  assert(m1->_data_type == MRC_NT_FLOAT);
   ctx->send_reqs = calloc(ctx->nr_patches, sizeof(*ctx->send_reqs));
   ctx->nr_send_reqs = 0;
 
@@ -689,6 +691,7 @@ xdmf_collective_read_m1(struct mrc_io *io, const char *path, struct mrc_fld *m1)
   struct xdmf_file *file = &xdmf->file;
   int ierr;
 
+  assert(m1->_data_type == MRC_NT_FLOAT);
   struct collective_m1_ctx ctx;
   int gdims[3];
   int nr_comps = mrc_fld_nr_comps(m1);
@@ -767,14 +770,15 @@ static bool
 find_intersection(int *ilo, int *ihi, const int *ib1, const int *im1,
 		  const int *ib2, const int *im2)
 {
+  bool has_intersection = true;
   for (int d = 0; d < 3; d++) {
     ilo[d] = MAX(ib1[d], ib2[d]);
     ihi[d] = MIN(ib1[d] + im1[d], ib2[d] + im2[d]);
     if (ihi[d] - ilo[d] <= 0) {
-      return false;
+      has_intersection = false;
     }
   }
-  return true;
+  return has_intersection;
 }
 
 // ----------------------------------------------------------------------
@@ -902,14 +906,26 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
 
       struct mrc_patch_info info;
       mrc_domain_get_local_patch_info(m3->_domain, p, &info);
-      struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, p);
       /* mprintf("MPI_Isend -> %d gp %d len %d\n", xdmf->writers[writer], info.global_patch, */
       /* 	      m3->_ghost_dims[0] * m3->_ghost_dims[1] * m3->_ghost_dims[2]); */
-      MPI_Isend(&MRC_M3(m3p, m, m3->_ghost_offs[0], m3->_ghost_offs[1], m3->_ghost_offs[2]),
-		m3->_ghost_dims[0] * m3->_ghost_dims[1] * m3->_ghost_dims[2], MPI_FLOAT,
-		xdmf->writers[writer], info.global_patch,
+      assert(!m3->_is_aos);
+      void *arr;
+      MPI_Datatype mpi_dtype;
+      switch (m3->_data_type) {
+      case MRC_NT_FLOAT:
+	arr = &MRC_S5(m3, m3->_ghost_offs[0], m3->_ghost_offs[1], m3->_ghost_offs[2], m, p);
+	mpi_dtype = MPI_FLOAT;
+	break;
+      case MRC_NT_DOUBLE:
+	arr = &MRC_D5(m3, m3->_ghost_offs[0], m3->_ghost_offs[1], m3->_ghost_offs[2], m, p);
+	mpi_dtype = MPI_DOUBLE;
+	break;
+      default:
+	assert(0);
+      }
+      MPI_Isend(arr, m3->_ghost_dims[0] * m3->_ghost_dims[1] * m3->_ghost_dims[2],
+		mpi_dtype, xdmf->writers[writer], info.global_patch,
 		mrc_io_comm(io), &ctx->send_reqs[sr++]);
-      mrc_fld_patch_put(m3);
     }
   }
 }
@@ -976,6 +992,22 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
     }
     ctx->recv_gps[rr] = gp;
     struct mrc_fld *recv_fld = mrc_fld_create(MPI_COMM_NULL);
+
+    assert(!m3->_is_aos);
+    MPI_Datatype mpi_dtype;
+    switch (m3->_data_type) {
+    case MRC_NT_FLOAT:
+      mrc_fld_set_type(recv_fld, "float");
+      mpi_dtype = MPI_FLOAT;
+      break;
+    case MRC_NT_DOUBLE:
+      mrc_fld_set_type(recv_fld, "double");
+      mpi_dtype = MPI_DOUBLE;
+      break;
+    default:
+      assert(0);
+    }
+
     mrc_fld_set_param_int_array(recv_fld, "dims", 4,
 			       (int[4]) { info.ldims[0], info.ldims[1], info.ldims[2], 1 });
     mrc_fld_set_param_int_array(recv_fld, "sw", 4,
@@ -983,10 +1015,8 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
     mrc_fld_setup(recv_fld);
     ctx->recvs[rr].fld = recv_fld;
     
-    struct mrc_fld *rf = mrc_fld_get_as(recv_fld, "float");
-    assert(rf == recv_fld);
     /* mprintf("MPI_Irecv <- %d gp %d len %d\n", info.rank, info.global_patch, recv_fld->len); */
-    MPI_Irecv(recv_fld->_arr, recv_fld->_len, MPI_FLOAT, info.rank,
+    MPI_Irecv(recv_fld->_arr, recv_fld->_len, mpi_dtype, info.rank,
 	      info.global_patch, mrc_io_comm(io), &ctx->recv_reqs[rr++]);
   }
 }
@@ -1011,15 +1041,31 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
 		      mrc_fld_ghost_offs(fld), mrc_fld_ghost_dims(fld));
 
     struct mrc_fld *recv_fld = ctx->recvs[rr].fld;
-    for (int iz = ilo[2]; iz < ihi[2]; iz++) {
-      for (int iy = ilo[1]; iy < ihi[1]; iy++) {
-	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	  MRC_F3(fld,0, ix,iy,iz) =
-	    MRC_F3(recv_fld, 0, ix - off[0], iy - off[1], iz - off[2]);
+    assert(recv_fld->_data_type == fld->_data_type);
+    switch (recv_fld->_data_type) {
+    case MRC_NT_FLOAT:
+      for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+	    MRC_S4(fld, ix,iy,iz, 0) =
+	      MRC_S4(recv_fld, ix - off[0], iy - off[1], iz - off[2], 0);
+	  }
 	}
       }
+      break;
+    case MRC_NT_DOUBLE:
+      for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+	    MRC_D4(fld, ix,iy,iz, 0) =
+	      MRC_D4(recv_fld, ix - off[0], iy - off[1], iz - off[2], 0);
+	  }
+	}
+      }
+      break;
+    default:
+      assert(0);
     }
-    mrc_fld_put_as(recv_fld, recv_fld);
     mrc_fld_destroy(recv_fld);
   }
 
@@ -1049,16 +1095,32 @@ collective_recv_fld_local(struct collective_m3_ctx *ctx,
     if (!has_intersection) {
       continue;
     }
-    struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, p);
-    for (int iz = ilo[2]; iz < ihi[2]; iz++) {
-      for (int iy = ilo[1]; iy < ihi[1]; iy++) {
-	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	  MRC_F3(fld,0, ix,iy,iz) =
-	    MRC_M3(m3p, m, ix - off[0], iy - off[1], iz - off[2]);
+    assert(fld->_data_type == m3->_data_type);
+    assert(!m3->_is_aos);
+    switch (fld->_data_type) {
+    case MRC_NT_FLOAT:
+      for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+	    MRC_S4(fld, ix,iy,iz, 0) =
+	      MRC_S5(m3, ix - off[0], iy - off[1], iz - off[2], m, p);
+	  }
 	}
       }
+      break;
+    case MRC_NT_DOUBLE:
+      for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+	    MRC_D4(fld, ix,iy,iz, 0) =
+	      MRC_D5(m3, ix - off[0], iy - off[1], iz - off[2], m, p);
+	  }
+	}
+      }
+      break;
+    default:
+      assert(0);
     }
-    mrc_fld_patch_put(m3);
   }
 }
 
@@ -1087,7 +1149,14 @@ collective_write_fld(struct collective_m3_ctx *ctx, struct mrc_io *io,
 
   hsize_t fdims[3] = { ctx->slab_dims[2], ctx->slab_dims[1], ctx->slab_dims[0] };
   hid_t filespace = H5Screate_simple(3, fdims, NULL); H5_CHK(filespace);
-  hid_t dset = H5Dcreate(group, "3d", H5T_NATIVE_FLOAT, filespace, H5P_DEFAULT,
+  hid_t dtype;
+  switch (fld->_data_type) {
+  case MRC_NT_FLOAT: dtype = H5T_NATIVE_FLOAT; break;
+  case MRC_NT_DOUBLE: dtype = H5T_NATIVE_DOUBLE; break;
+  default: assert(0);
+  }
+  assert(!fld->_is_aos);
+  hid_t dset = H5Dcreate(group, "3d", dtype, filespace, H5P_DEFAULT,
 			 H5P_DEFAULT, H5P_DEFAULT); H5_CHK(dset);
   hid_t dxpl = H5Pcreate(H5P_DATASET_XFER); H5_CHK(dxpl);
 #ifdef H5_HAVE_PARALLEL
@@ -1107,7 +1176,7 @@ collective_write_fld(struct collective_m3_ctx *ctx, struct mrc_io *io,
   ierr = H5Sselect_hyperslab(filespace, H5S_SELECT_SET, foff, NULL,
 			     mdims, NULL); CE;
 
-  ierr = H5Dwrite(dset, H5T_NATIVE_FLOAT, memspace, filespace, dxpl, fld->_arr); CE;
+  ierr = H5Dwrite(dset, dtype, memspace, filespace, dxpl, fld->_arr); CE;
   
   ierr = H5Dclose(dset); CE;
   ierr = H5Sclose(memspace); CE;
@@ -1149,6 +1218,11 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
     /* 	    writer_dims[0], writer_dims[1], writer_dims[2]); */
 
     struct mrc_fld *fld = mrc_fld_create(MPI_COMM_NULL);
+    switch (m3->_data_type) {
+    case MRC_NT_FLOAT: mrc_fld_set_type(fld, "float"); break;
+    case MRC_NT_DOUBLE: mrc_fld_set_type(fld, "double"); break;
+    default: assert(0);
+    }
     mrc_fld_set_param_int_array(fld, "dims", 4,
 				(int[4]) { writer_dims[0], writer_dims[1], writer_dims[2], 1 });
     mrc_fld_set_param_int_array(fld, "offs", 4,
@@ -1166,17 +1240,14 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
     int nr_1 = 1;
     H5LTset_attribute_int(group0, ".", "nr_patches", &nr_1, 1);
 
-    struct mrc_fld *f = mrc_fld_get_as(fld, "float");
-    
     for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
-      collective_recv_fld_begin(&ctx, io, f, m3);
+      collective_recv_fld_begin(&ctx, io, fld, m3);
       collective_send_fld_begin(&ctx, io, m3, m);
-      collective_recv_fld_local(&ctx, io, f, m3, m);
-      collective_recv_fld_end(&ctx, io, f, m3, m);
-      collective_write_fld(&ctx, io, path, f, m, m3, xs, group0);
+      collective_recv_fld_local(&ctx, io, fld, m3, m);
+      collective_recv_fld_end(&ctx, io, fld, m3, m);
+      collective_write_fld(&ctx, io, path, fld, m, m3, xs, group0);
       collective_send_fld_end(&ctx, io, m3, m);
     }
-    mrc_fld_put_as(f, fld);
 
     H5Gclose(group0);
     mrc_fld_destroy(fld);
@@ -1472,6 +1543,7 @@ xdmf_collective_read_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3)
   struct xdmf_file *file = &xdmf->file;
   int ierr;
 
+  assert(m3->_data_type == MRC_NT_FLOAT);
   struct collective_m3_ctx ctx;
   collective_m3_init(io, &ctx, m3->_domain);
 

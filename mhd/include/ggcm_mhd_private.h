@@ -24,6 +24,8 @@ struct ggcm_mhd_params {
   double dbasetime;
   int modnewstep;
   int magdiffu;
+
+  int nr_ghosts; // number of ghost points to use for ::fld, and ::domain->mrc_crds
 };
 
 struct ggcm_mhd {

@@ -3,6 +3,8 @@
 #define MRC_FLD_AS_FLOAT_H
 
 typedef float mrc_fld_data_t;
+#define mrc_fld_abs fabsf
+#define mrc_fld_max fmaxf
 
 #define F3(f, m, i,j,k) MRC_S4(f, i,j,k, m)
 #define M3(f, m, i,j,k, p) MRC_S5(f, i,j,k, m, p)
