@@ -189,22 +189,30 @@ static void
 psc_kh_init_npt(struct psc *psc, int kind, double x[3],
 		struct psc_particle_npt *npt)
 {
-  double vz = vz_profile(psc, x[1], x[2]);
+  struct psc_kh *kh = to_psc_kh(psc);
 
+  double vz = vz_profile(psc, x[1], x[2]);
   npt->p[2] = vz;
+
+  double yl = psc->domain.length[1];
+  double B0x = kh->B0 * sin(kh->theta_B);
+  double n = 1.;
+  if (kind == KH_ELECTRON1 || kind == KH_ELECTRON2) {
+    n += B0x * kh->v0z / (kh->delta * sqr(cosh((x[1] - .5 * yl) / kh->delta)));
+  }
   switch (kind) {
   case KH_ELECTRON1:
   case KH_ION1:
     if (vz < 0.) {
       npt->n = 0.;
     } else {
-      npt->n = 1.;
+      npt->n = n;
     }
     break;
   case KH_ELECTRON2:
   case KH_ION2:
     if (vz < 0.) {
-      npt->n = 1.;
+      npt->n = n;
     } else {
       npt->n = 0.;
     }
