@@ -66,6 +66,8 @@ class PscFields:
             return self._read_f3("j", what)
         elif what in ["ne", "ni", "nn"]:
             return self._read_f3("n", what)
+        elif what in ["dive", "divj"]:
+            return self._read_f3(what, what)
         else:
             func = "_get_" + what
             return getattr(self, func)()
