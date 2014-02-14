@@ -24,8 +24,8 @@
 // Toggle debugging output/tests
 //#define DEBUG
 
-// Define limiter: [0] none [1] van Leer(1977) , [2] minmod (Roe 1976) [3] moncen [4] genminmod
-#define LMTR 1
+// Define limiter: [0] none [1] van Leer, [2] minmod [3] moncen [4] genminmod [5] Van Albada
+#define LMTR 2
 
 // KNP[0] or KT[1]? 
 #define KT 0
