@@ -774,6 +774,10 @@ pushstage_c(struct ggcm_mhd *mhd, float dt, int m_prev, int m_curr, int m_next,
 static void
 ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step)
 {
+  int mhd_type;
+  mrc_fld_get_param_int(step->mhd->fld, "mhd_type", &mhd_type);
+  assert(mhd_type == MT_SEMI_CONSERVATIVE_GGCM);
+
   primvar_c(step->mhd, _RR1);
   primbb_c(step->mhd, _RR1);
   zmaskn_c(step->mhd);

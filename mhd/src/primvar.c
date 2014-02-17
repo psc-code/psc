@@ -22,7 +22,8 @@ primvar_c(struct ggcm_mhd *mhd, int m_curr)
 
   int mhd_type;
   mrc_fld_get_param_int(mhd->fld, "mhd_type", &mhd_type);
-  assert(mhd_type == MT_SEMI_CONSERVATIVE_GGCM);
+  assert(mhd_type == MT_SEMI_CONSERVATIVE_GGCM ||
+	 mhd_type == MT_SEMI_CONSERVATIVE);
 
   struct mrc_fld *f = mrc_fld_get_as(mhd->fld, FLD_TYPE);
   float gamm = mhd->par.gamm;

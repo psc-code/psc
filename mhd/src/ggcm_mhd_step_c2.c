@@ -326,20 +326,20 @@ currbb_c(struct ggcm_mhd *mhd, int m_curr)
 
   mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
     F3(f, _XJX, ix,iy,iz) =
-      (F3(f, m_curr + _B1Z, ix,iy+1,iz) - F3(f, m_curr + _B1Z, ix,iy,iz)) * bd4y[iy] -
-      (F3(f, m_curr + _B1Y, ix,iy,iz+1) - F3(f, m_curr + _B1Y, ix,iy,iz)) * bd4z[iz];
+      (F3(f, m_curr + _B1Z, ix,iy+1,iz+1) - F3(f, m_curr + _B1Z, ix,iy,iz+1)) * bd4y[iy] -
+      (F3(f, m_curr + _B1Y, ix,iy+1,iz+1) - F3(f, m_curr + _B1Y, ix,iy+1,iz)) * bd4z[iz];
     F3(f, _XJY, ix,iy,iz) =
-      (F3(f, m_curr + _B1X, ix,iy,iz+1) - F3(f, m_curr + _B1X, ix,iy,iz)) * bd4z[iz] -
-      (F3(f, m_curr + _B1Z, ix+1,iy,iz) - F3(f, m_curr + _B1Z, ix,iy,iz)) * bd4x[ix];
+      (F3(f, m_curr + _B1X, ix+1,iy,iz+1) - F3(f, m_curr + _B1X, ix+1,iy,iz)) * bd4z[iz] -
+      (F3(f, m_curr + _B1Z, ix+1,iy,iz+1) - F3(f, m_curr + _B1Z, ix,iy,iz+1)) * bd4x[ix];
     F3(f, _XJZ, ix,iy,iz) =
-      (F3(f, m_curr + _B1Y, ix+1,iy,iz) - F3(f, m_curr + _B1Y, ix,iy,iz)) * bd4x[ix] -
-      (F3(f, m_curr + _B1X, ix,iy+1,iz) - F3(f, m_curr + _B1X, ix,iy,iz)) * bd4y[iy];
+      (F3(f, m_curr + _B1Y, ix+1,iy+1,iz) - F3(f, m_curr + _B1Y, ix,iy+1,iz)) * bd4x[ix] -
+      (F3(f, m_curr + _B1X, ix+1,iy+1,iz) - F3(f, m_curr + _B1X, ix+1,iy,iz)) * bd4y[iy];
     F3(f,_TMP1, ix,iy,iz) = .5f * (F3(f, m_curr + _B1X, ix,iy,iz) +
-				   F3(f, m_curr + _B1X, ix-1,iy,iz));
+				   F3(f, m_curr + _B1X, ix+1,iy,iz));
     F3(f,_TMP2, ix,iy,iz) = .5f * (F3(f, m_curr + _B1Y, ix,iy,iz) +
-				   F3(f, m_curr + _B1Y, ix,iy-1,iz));
+				   F3(f, m_curr + _B1Y, ix,iy+1,iz));
     F3(f,_TMP3, ix,iy,iz) = .5f * (F3(f, m_curr + _B1Z, ix,iy,iz) +
-				   F3(f, m_curr + _B1Z, ix,iy,iz-1));
+				   F3(f, m_curr + _B1Z, ix,iy,iz+1));
   } mrc_fld_foreach_end;
 }
 
@@ -357,22 +357,14 @@ curbc_c(struct ggcm_mhd *mhd, int m_curr)
 
   mrc_fld_foreach(f, ix,iy,iz, 2, 1) {
     F3(f, _TX, ix,iy,iz) =
-      (F3(f, m_curr + _B1Z, ix,iy+1,iz) - F3(f, m_curr + _B1Z, ix,iy,iz)) * bd4y[iy] -
-      (F3(f, m_curr + _B1Y, ix,iy,iz+1) - F3(f, m_curr + _B1Y, ix,iy,iz)) * bd4z[iz];
+      (F3(f, m_curr + _B1Z, ix,iy+1,iz+1) - F3(f, m_curr + _B1Z, ix,iy,iz+1)) * bd4y[iy] -
+      (F3(f, m_curr + _B1Y, ix,iy+1,iz+1) - F3(f, m_curr + _B1Y, ix,iy+1,iz)) * bd4z[iz];
     F3(f, _TY, ix,iy,iz) =
-      (F3(f, m_curr + _B1X, ix,iy,iz+1) - F3(f, m_curr + _B1X, ix,iy,iz)) * bd4z[iz] -
-      (F3(f, m_curr + _B1Z, ix+1,iy,iz) - F3(f, m_curr + _B1Z, ix,iy,iz)) * bd4x[ix];
+      (F3(f, m_curr + _B1X, ix+1,iy,iz+1) - F3(f, m_curr + _B1X, ix+1,iy,iz)) * bd4z[iz] -
+      (F3(f, m_curr + _B1Z, ix+1,iy,iz+1) - F3(f, m_curr + _B1Z, ix,iy,iz+1)) * bd4x[ix];
     F3(f, _TZ, ix,iy,iz) =
-      (F3(f, m_curr + _B1Y, ix+1,iy,iz) - F3(f, m_curr + _B1Y, ix,iy,iz)) * bd4x[ix] -
-      (F3(f, m_curr + _B1X, ix,iy+1,iz) - F3(f, m_curr + _B1X, ix,iy,iz)) * bd4y[iy];
-
-    // FIXME, not needed (?), and staggering is suspicious
-    F3(f, _BBX, ix,iy,iz) = .5f * (F3(f, m_curr + _B1X, ix,iy,iz) +
-				   F3(f, m_curr + _B1X, ix+1,iy,iz));
-    F3(f, _BBY, ix,iy,iz) = .5f * (F3(f, m_curr + _B1Y, ix,iy,iz) +
-				   F3(f, m_curr + _B1Y, ix,iy+1,iz));
-    F3(f, _BBZ, ix,iy,iz) = .5f * (F3(f, m_curr + _B1Z, ix,iy,iz) +
-				   F3(f, m_curr + _B1Z, ix,iy,iz+1));
+      (F3(f, m_curr + _B1Y, ix+1,iy+1,iz) - F3(f, m_curr + _B1Y, ix,iy+1,iz)) * bd4x[ix] -
+      (F3(f, m_curr + _B1X, ix+1,iy+1,iz) - F3(f, m_curr + _B1X, ix+1,iy,iz)) * bd4y[iy];
   } mrc_fld_foreach_end;
 
   mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
@@ -607,9 +599,9 @@ bcthy3z_const(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int 
     float bd1[3] = { bd1x[ix], bd1y[iy], bd1z[iz] };
 
     F3(f, _TMP1, ix,iy,iz) = bd1[ZZ] * 
-      (F3(f, m_curr + _B1X + YY, ix+JX2,iy+JY2,iz+JZ2) - F3(f, m_curr + _B1X + YY, ix,iy,iz));
+      (F3(f, m_curr + _B1X + YY, ix+JX2+JX1,iy+JY2+JY1,iz+JZ2+JZ1) - F3(f, m_curr + _B1X + YY, ix+JX1,iy+JY1,iz+JZ1));
     F3(f, _TMP2, ix,iy,iz) = bd1[YY] * 
-      (F3(f, m_curr + _B1X + ZZ, ix+JX1,iy+JY1,iz+JZ1) - F3(f, m_curr + _B1X + ZZ, ix,iy,iz));
+      (F3(f, m_curr + _B1X + ZZ, ix+JX1+JX2,iy+JY1+JY2,iz+JZ1+JZ2) - F3(f, m_curr + _B1X + ZZ, ix+JX2,iy+JY2,iz+JZ2));
   } mrc_fld_foreach_end;
 
   // harmonic average if same sign
@@ -644,20 +636,20 @@ bcthy3z_const(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int 
     float e1, vv;
     vv = F3(f, _TMP1, ix,iy,iz);
     if (vv > 0.f) {
-      e1 = F3(f, m_curr + _B1X + ZZ, ix,iy,iz) +
+      e1 = F3(f, m_curr + _B1X + ZZ, ix+JX2,iy+JY2,iz+JZ2) +
 	F3(f, _TMP4, ix,iy,iz) * (bd2[YY] - dt*vv);
     } else {
-      e1 = F3(f, m_curr + _B1X + ZZ, ix+JX1,iy+JY1,iz+JZ1) -
+      e1 = F3(f, m_curr + _B1X + ZZ, ix+JX1+JX2,iy+JY1+JY2,iz+JZ1+JZ2) -
 	F3(f, _TMP4, ix+JX1,iy+JY1,iz+JZ1) * (bd2p[YY] + dt*vv);
     }
     float ttmp1 = e1 * vv;
 
     vv = F3(f, _TMP2, ix,iy,iz);
     if (vv > 0.f) {
-      e1 = F3(f, m_curr + _B1X + YY, ix,iy,iz) +
+      e1 = F3(f, m_curr + _B1X + YY, ix+JX1,iy+JY1,iz+JZ1) +
 	F3(f, _TMP3, ix,iy,iz) * (bd2[ZZ] - dt*vv);
     } else {
-      e1 = F3(f, m_curr + _B1X + YY, ix+JX2,iy+JY2,iz+JZ2) -
+      e1 = F3(f, m_curr + _B1X + YY, ix+JX2+JX1,iy+JY2+JY1,iz+JZ2+JZ1) -
 	F3(f, _TMP3, ix+JX2,iy+JY2,iz+JZ2) * (bd2p[ZZ] + dt*vv);
     }
     float ttmp2 = e1 * vv;
@@ -711,14 +703,14 @@ bpush_c(struct ggcm_mhd *mhd, float dt, int m_prev, int m_next)
   float *bd3y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD3);
   float *bd3z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD3);
 
-  mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
-    F3(f, m_next + _B1X, ix,iy,iz) = F3(f, m_prev + _B1X, ix,iy,iz) +
+  mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
+    F3(f, m_next + _B1X, ix+1,iy,iz) = F3(f, m_prev + _B1X, ix+1,iy,iz) +
       dt * (bd3y[iy] * (F3(f,_FLZ, ix,iy,iz) - F3(f,_FLZ, ix,iy-1,iz)) -
 	    bd3z[iz] * (F3(f,_FLY, ix,iy,iz) - F3(f,_FLY, ix,iy,iz-1)));
-    F3(f, m_next + _B1Y, ix,iy,iz) = F3(f, m_prev + _B1Y, ix,iy,iz) +
+    F3(f, m_next + _B1Y, ix,iy+1,iz) = F3(f, m_prev + _B1Y, ix,iy+1,iz) +
       dt * (bd3z[iz] * (F3(f,_FLX, ix,iy,iz) - F3(f,_FLX, ix,iy,iz-1)) -
 	    bd3x[ix] * (F3(f,_FLZ, ix,iy,iz) - F3(f,_FLZ, ix-1,iy,iz)));
-    F3(f, m_next + _B1Z, ix,iy,iz) = F3(f, m_prev + _B1Z, ix,iy,iz) +
+    F3(f, m_next + _B1Z, ix,iy,iz+1) = F3(f, m_prev + _B1Z, ix,iy,iz+1) +
       dt * (bd3x[ix] * (F3(f,_FLY, ix,iy,iz) - F3(f,_FLY, ix-1,iy,iz)) -
 	    bd3y[iy] * (F3(f,_FLX, ix,iy,iz) - F3(f,_FLX, ix,iy-1,iz)));
   } mrc_fld_foreach_end;
@@ -774,8 +766,12 @@ pushstage_c(struct ggcm_mhd *mhd, float dt, int m_prev, int m_curr, int m_next,
 static void
 ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step)
 {
+  int mhd_type;
+  mrc_fld_get_param_int(step->mhd->fld, "mhd_type", &mhd_type);
+  assert(mhd_type == MT_SEMI_CONSERVATIVE);
+
   primvar_c(step->mhd, _RR1);
-  primbb_c(step->mhd, _RR1);
+  primbb_c2_c(step->mhd, _RR1);
   zmaskn_c(step->mhd);
 
   float dth = .5f * step->mhd->dt;
@@ -795,7 +791,7 @@ static void
 ggcm_mhd_step_c_corr(struct ggcm_mhd_step *step)
 {
   primvar_c(step->mhd, _RR2);
-  primbb_c(step->mhd, _RR2);
+  primbb_c2_c(step->mhd, _RR2);
   //  zmaskn_c(step->mhd);
 
   pushstage_c(step->mhd, step->mhd->dt, _RR1, _RR2, _RR1, LIMIT_1);
@@ -806,7 +802,7 @@ ggcm_mhd_step_c_corr(struct ggcm_mhd_step *step)
 
 struct ggcm_mhd_step_ops ggcm_mhd_step_c2_ops = {
   .name        = "c2",
-  .mhd_type    = MT_SEMI_CONSERVATIVE_GGCM,
+  .mhd_type    = MT_SEMI_CONSERVATIVE,
   .pred        = ggcm_mhd_step_c_pred,
   .corr        = ggcm_mhd_step_c_corr,
   .run         = ggcm_mhd_step_run_predcorr,
