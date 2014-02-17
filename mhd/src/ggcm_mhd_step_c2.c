@@ -607,27 +607,27 @@ bcthy3z_const(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int 
   } mrc_fld_foreach_end;
 
   // harmonic average if same sign
-  mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
+  mrc_fld_foreach(f, ix,iy,iz, 0, 2) {
     float s1, s2;
-    s1 = F3(f, _TMP1, ix,iy,iz) * F3(f, _TMP1, ix-JX2,iy-JY2,iz-JZ2);
-    s2 = F3(f, _TMP1, ix,iy,iz) + F3(f, _TMP1, ix-JX2,iy-JY2,iz-JZ2);
+    s1 = F3(f, _TMP1, ix-IX,iy-IY,iz-IZ) * F3(f, _TMP1, ix-JX2-IX,iy-JY2-IY,iz-JZ2-IZ);
+    s2 = F3(f, _TMP1, ix-IX,iy-IY,iz-IZ) + F3(f, _TMP1, ix-JX2-IX,iy-JY2-IY,iz-JZ2-IZ);
     F3(f, _TMP3, ix,iy,iz) = bcthy3f(s1, s2);
-    s1 = F3(f, _TMP2, ix,iy,iz) * F3(f, _TMP2, ix-JX1,iy-JY1,iz-JZ1);
-    s2 = F3(f, _TMP2, ix,iy,iz) + F3(f, _TMP2, ix-JX1,iy-JY1,iz-JZ1);
+    s1 = F3(f, _TMP2, ix-IX,iy-IY,iz-IZ) * F3(f, _TMP2, ix-JX1-IX,iy-JY1-IY,iz-JZ1-IZ);
+    s2 = F3(f, _TMP2, ix-IX,iy-IY,iz-IZ) + F3(f, _TMP2, ix-JX1-IX,iy-JY1-IY,iz-JZ1-IZ);
     F3(f, _TMP4, ix,iy,iz) = bcthy3f(s1, s2);
   } mrc_fld_foreach_end;
 
   // edge centered velocity
-  mrc_fld_foreach(f, ix,iy,iz, 1, 0) {
-    float vvYY = .25f * (F3(f, _VX + YY, ix   ,iy   ,iz   ) + 
-			 F3(f, _VX + YY, ix   ,iy+IY,iz+IZ) +
-			 F3(f, _VX + YY, ix+IX,iy   ,iz+IZ) +
-			 F3(f, _VX + YY, ix+IX,iy+IY,iz   ));
+  mrc_fld_foreach(f, ix,iy,iz, 0, 1) {
+    float vvYY = .25f * (F3(f, _VX + YY, ix-IX,iy-IY,iz-IZ) + 
+			 F3(f, _VX + YY, ix-IX,iy   ,iz   ) +
+			 F3(f, _VX + YY, ix   ,iy-IY,iz   ) +
+			 F3(f, _VX + YY, ix   ,iy   ,iz-IZ));
     F3(f, _TMP1, ix,iy,iz) = vvYY; /* - d_i * vcurrYY */
-    float vvZZ = .25f * (F3(f, _VX + ZZ, ix   ,iy   ,iz   ) + 
-			 F3(f, _VX + ZZ, ix   ,iy+IY,iz+IZ) +
-			 F3(f, _VX + ZZ, ix+IX,iy   ,iz+IZ) +
-			 F3(f, _VX + ZZ, ix+IX,iy+IY,iz   ));
+    float vvZZ = .25f * (F3(f, _VX + ZZ, ix-IX,iy-IY,iz-IZ) + 
+			 F3(f, _VX + ZZ, ix-IX,iy   ,iz   ) +
+			 F3(f, _VX + ZZ, ix   ,iy-IY,iz   ) +
+			 F3(f, _VX + ZZ, ix   ,iy   ,iz-IZ));
     F3(f, _TMP2, ix,iy,iz) = vvZZ; /* - d_i * vcurrZZ */
   } mrc_fld_foreach_end;
 
@@ -636,23 +636,23 @@ bcthy3z_const(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int 
     float bd2[3] = { bd2x[ix-IX], bd2y[iy-IY], bd2z[iz-IZ] };
     float bd2p[3] = { bd2x[ix+1-IX], bd2y[iy+1-IY], bd2z[iz+1-IZ] };
     float e1, vv;
-    vv = F3(f, _TMP1, ix-IX,iy-IY,iz-IZ);
+    vv = F3(f, _TMP1, ix,iy,iz);
     if (vv > 0.f) {
       e1 = F3(f, m_curr + _B1X + ZZ, ix-JX1,iy-JY1,iz-JZ1) +
-	F3(f, _TMP4, ix-IX,iy-IY,iz-IZ) * (bd2[YY] - dt*vv);
+	F3(f, _TMP4, ix,iy,iz) * (bd2[YY] - dt*vv);
     } else {
       e1 = F3(f, m_curr + _B1X + ZZ, ix,iy,iz) -
-	F3(f, _TMP4, ix+JX1-IX,iy+JY1-IY,iz+JZ1-IZ) * (bd2p[YY] + dt*vv);
+	F3(f, _TMP4, ix+JX1,iy+JY1,iz+JZ1) * (bd2p[YY] + dt*vv);
     }
     float ttmp1 = e1 * vv;
 
-    vv = F3(f, _TMP2, ix-IX,iy-IY,iz-IZ);
+    vv = F3(f, _TMP2, ix,iy,iz);
     if (vv > 0.f) {
       e1 = F3(f, m_curr + _B1X + YY, ix-JX2,iy-JY2,iz-JZ2) +
-	F3(f, _TMP3, ix-IX,iy-IY,iz-IZ) * (bd2[ZZ] - dt*vv);
+	F3(f, _TMP3, ix,iy,iz) * (bd2[ZZ] - dt*vv);
     } else {
       e1 = F3(f, m_curr + _B1X + YY, ix,iy,iz) -
-	F3(f, _TMP3, ix+JX2-IX,iy+JY2-IY,iz+JZ2-IZ) * (bd2p[ZZ] + dt*vv);
+	F3(f, _TMP3, ix+JX2,iy+JY2,iz+JZ2) * (bd2p[ZZ] + dt*vv);
     }
     float ttmp2 = e1 * vv;
 
