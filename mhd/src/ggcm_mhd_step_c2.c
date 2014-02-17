@@ -355,26 +355,28 @@ curbc_c(struct ggcm_mhd *mhd, int m_curr)
   float *bd4y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD4);
   float *bd4z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD4);
 
+  // j on edges
   mrc_fld_foreach(f, ix,iy,iz, 2, 1) {
     F3(f, _TX, ix,iy,iz) =
-      (F3(f, m_curr + _B1Z, ix,iy+1,iz+1) - F3(f, m_curr + _B1Z, ix,iy,iz+1)) * bd4y[iy] -
-      (F3(f, m_curr + _B1Y, ix,iy+1,iz+1) - F3(f, m_curr + _B1Y, ix,iy+1,iz)) * bd4z[iz];
+      (F3(f, m_curr + _B1Z, ix,iy,iz) - F3(f, m_curr + _B1Z, ix,iy-1,iz)) * bd4y[iy] -
+      (F3(f, m_curr + _B1Y, ix,iy,iz) - F3(f, m_curr + _B1Y, ix,iy,iz-1)) * bd4z[iz];
     F3(f, _TY, ix,iy,iz) =
-      (F3(f, m_curr + _B1X, ix+1,iy,iz+1) - F3(f, m_curr + _B1X, ix+1,iy,iz)) * bd4z[iz] -
-      (F3(f, m_curr + _B1Z, ix+1,iy,iz+1) - F3(f, m_curr + _B1Z, ix,iy,iz+1)) * bd4x[ix];
+      (F3(f, m_curr + _B1X, ix,iy,iz) - F3(f, m_curr + _B1X, ix,iy,iz-1)) * bd4z[iz] -
+      (F3(f, m_curr + _B1Z, ix,iy,iz) - F3(f, m_curr + _B1Z, ix-1,iy,iz)) * bd4x[ix];
     F3(f, _TZ, ix,iy,iz) =
-      (F3(f, m_curr + _B1Y, ix+1,iy+1,iz) - F3(f, m_curr + _B1Y, ix,iy+1,iz)) * bd4x[ix] -
-      (F3(f, m_curr + _B1X, ix+1,iy+1,iz) - F3(f, m_curr + _B1X, ix+1,iy,iz)) * bd4y[iy];
+      (F3(f, m_curr + _B1Y, ix,iy,iz) - F3(f, m_curr + _B1Y, ix-1,iy,iz)) * bd4x[ix] -
+      (F3(f, m_curr + _B1X, ix,iy,iz) - F3(f, m_curr + _B1X, ix,iy-1,iz)) * bd4y[iy];
   } mrc_fld_foreach_end;
 
+  // j averaged to cell-centered
   mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
     float s = .25f * F3(f, _ZMASK, ix, iy, iz);
-    F3(f, _CURRX, ix,iy,iz) = s * (F3(f, _TX, ix,iy  ,iz  ) + F3(f, _TX, ix,iy-1,iz  ) +
-				   F3(f, _TX, ix,iy  ,iz-1) + F3(f, _TX, ix,iy-1,iz-1));
-    F3(f, _CURRY, ix,iy,iz) = s * (F3(f, _TY, ix  ,iy,iz  ) + F3(f, _TY, ix-1,iy,iz  ) +
-				   F3(f, _TY, ix  ,iy,iz-1) + F3(f, _TY, ix-1,iy,iz-1));
-    F3(f, _CURRZ, ix,iy,iz) = s * (F3(f, _TZ, ix  ,iy  ,iz) + F3(f, _TZ, ix-1,iy  ,iz) +
-				   F3(f, _TZ, ix  ,iy-1,iz) + F3(f, _TZ, ix-1,iy-1,iz));
+    F3(f, _CURRX, ix,iy,iz) = s * (F3(f, _TX, ix,iy+1,iz+1) + F3(f, _TX, ix,iy,iz+1) +
+				   F3(f, _TX, ix,iy+1,iz  ) + F3(f, _TX, ix,iy,iz  ));
+    F3(f, _CURRY, ix,iy,iz) = s * (F3(f, _TY, ix+1,iy,iz+1) + F3(f, _TY, ix,iy,iz+1) +
+				   F3(f, _TY, ix+1,iy,iz  ) + F3(f, _TY, ix,iy,iz  ));
+    F3(f, _CURRZ, ix,iy,iz) = s * (F3(f, _TZ, ix+1,iy+1,iz) + F3(f, _TZ, ix,iy+1,iz) +
+				   F3(f, _TZ, ix+1,iy  ,iz) + F3(f, _TZ, ix,iy  ,iz));
   } mrc_fld_foreach_end;
 }
 
@@ -640,20 +642,20 @@ bcthy3z_const(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int 
     float e1, vv;
     vv = F3(f, _TMP1, ix-IX,iy-IY,iz-IZ);
     if (vv > 0.f) {
-      e1 = F3(f, m_curr + _B1X + ZZ, ix+JX2-IX,iy+JY2-IY,iz+JZ2-IZ) +
+      e1 = F3(f, m_curr + _B1X + ZZ, ix-JX1,iy-JY1,iz-JZ1) +
 	F3(f, _TMP4, ix-IX,iy-IY,iz-IZ) * (bd2[YY] - dt*vv);
     } else {
-      e1 = F3(f, m_curr + _B1X + ZZ, ix+JX1+JX2-IX,iy+JY1+JY2-IY,iz+JZ1+JZ2-IZ) -
+      e1 = F3(f, m_curr + _B1X + ZZ, ix,iy,iz) -
 	F3(f, _TMP4, ix+JX1-IX,iy+JY1-IY,iz+JZ1-IZ) * (bd2p[YY] + dt*vv);
     }
     float ttmp1 = e1 * vv;
 
     vv = F3(f, _TMP2, ix-IX,iy-IY,iz-IZ);
     if (vv > 0.f) {
-      e1 = F3(f, m_curr + _B1X + YY, ix+JX1-IX,iy+JY1-IY,iz+JZ1-IZ) +
+      e1 = F3(f, m_curr + _B1X + YY, ix-JX2,iy-JY2,iz-JZ2) +
 	F3(f, _TMP3, ix-IX,iy-IY,iz-IZ) * (bd2[ZZ] - dt*vv);
     } else {
-      e1 = F3(f, m_curr + _B1X + YY, ix+JX2+JX1-IX,iy+JY2+JY1-IY,iz+JZ2+JZ1-IZ) -
+      e1 = F3(f, m_curr + _B1X + YY, ix,iy,iz) -
 	F3(f, _TMP3, ix+JX2-IX,iy+JY2-IY,iz+JZ2-IZ) * (bd2p[ZZ] + dt*vv);
     }
     float ttmp2 = e1 * vv;
