@@ -10,3 +10,11 @@ struct psc_push_particles_ops psc_push_particles_1vb_double_ops = {
   .push_a_yz             = psc_push_particles_1vb_double_push_a_yz,
 };
 
+// ======================================================================
+// psc_push_particles: subclass "1vbec_double"
+
+struct psc_push_particles_ops psc_push_particles_1vbec_double_ops = {
+  .name                  = "1vbec_double",
+  .push_a_yz             = psc_push_particles_1vbec_double_push_a_yz,
+};
+
