@@ -629,6 +629,10 @@ bcthy3z_const(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int 
     F3(f, _TMP2, ix,iy,iz) = vvZZ; /* - d_i * vcurrZZ */
   } mrc_fld_foreach_end;
 
+  mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
+    F3(f, FF, ix,iy,iz) = 0.;
+  } mrc_fld_foreach_end;
+
   // edge centered E = - v x B (+ dissipation)
   mrc_fld_foreach(f, ix,iy,iz, 1, 0) {
     float bd2[3] = { bd2x[ix], bd2y[iy], bd2z[iz] };
@@ -654,15 +658,16 @@ bcthy3z_const(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int 
     }
     float ttmp2 = e1 * vv;
 
-    float vcurrXX = .25f * (F3(f, _CURRX + XX, ix   ,iy   ,iz   ) + 
-			    F3(f, _CURRX + XX, ix   ,iy+IY,iz+IZ) +
-			    F3(f, _CURRX + XX, ix+IX,iy   ,iz+IZ) +
-			    F3(f, _CURRX + XX, ix+IX,iy+IY,iz   ));
-    float vresis = .25f * (F3(f, _RESIS, ix   ,iy   ,iz   ) + 
-			   F3(f, _RESIS, ix   ,iy+IY,iz+IZ) +
-			   F3(f, _RESIS, ix+IX,iy   ,iz+IZ) +
-			   F3(f, _RESIS, ix+IX,iy+IY,iz   ));
-    F3(f, FF, ix+IX,iy+IY,iz+IZ) = ttmp1 - ttmp2 - vresis * vcurrXX;
+    float vcurrXX = .25f * (F3(f, _CURRX + XX, ix-IX,iy-IY,iz-IZ) + 
+			    F3(f, _CURRX + XX, ix-IX,iy   ,iz   ) +
+			    F3(f, _CURRX + XX, ix   ,iy-IY,iz   ) +
+			    F3(f, _CURRX + XX, ix   ,iy   ,iz-IZ));
+    float vresis = .25f * (F3(f, _RESIS, ix-IX,iy-IY,iz-IZ) + 
+			   F3(f, _RESIS, ix-IX,iy   ,iz   ) +
+			   F3(f, _RESIS, ix   ,iy-IY,iz   ) +
+			   F3(f, _RESIS, ix   ,iy   ,iz-IZ));
+    F3(f, FF, ix+IX,iy+IY,iz+IZ) += ttmp1 - ttmp2;
+    F3(f, FF, ix,iy,iz) += - vresis * vcurrXX;
   } mrc_fld_foreach_end;
 }
 
