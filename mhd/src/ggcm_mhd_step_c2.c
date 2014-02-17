@@ -634,29 +634,31 @@ bcthy3z_const(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int 
   } mrc_fld_foreach_end;
 
   // edge centered E = - v x B (+ dissipation)
-  mrc_fld_foreach(f, ix,iy,iz, 1, 0) {
-    float bd2[3] = { bd2x[ix], bd2y[iy], bd2z[iz] };
-    float bd2p[3] = { bd2x[ix+1], bd2y[iy+1], bd2z[iz+1] };
+  mrc_fld_foreach(f, ix,iy,iz, 0, 1) {
+    float bd2[3] = { bd2x[ix-IX], bd2y[iy-IY], bd2z[iz-IZ] };
+    float bd2p[3] = { bd2x[ix+1-IX], bd2y[iy+1-IY], bd2z[iz+1-IZ] };
     float e1, vv;
-    vv = F3(f, _TMP1, ix,iy,iz);
+    vv = F3(f, _TMP1, ix-IX,iy-IY,iz-IZ);
     if (vv > 0.f) {
-      e1 = F3(f, m_curr + _B1X + ZZ, ix+JX2,iy+JY2,iz+JZ2) +
-	F3(f, _TMP4, ix,iy,iz) * (bd2[YY] - dt*vv);
+      e1 = F3(f, m_curr + _B1X + ZZ, ix+JX2-IX,iy+JY2-IY,iz+JZ2-IZ) +
+	F3(f, _TMP4, ix-IX,iy-IY,iz-IZ) * (bd2[YY] - dt*vv);
     } else {
-      e1 = F3(f, m_curr + _B1X + ZZ, ix+JX1+JX2,iy+JY1+JY2,iz+JZ1+JZ2) -
-	F3(f, _TMP4, ix+JX1,iy+JY1,iz+JZ1) * (bd2p[YY] + dt*vv);
+      e1 = F3(f, m_curr + _B1X + ZZ, ix+JX1+JX2-IX,iy+JY1+JY2-IY,iz+JZ1+JZ2-IZ) -
+	F3(f, _TMP4, ix+JX1-IX,iy+JY1-IY,iz+JZ1-IZ) * (bd2p[YY] + dt*vv);
     }
     float ttmp1 = e1 * vv;
 
-    vv = F3(f, _TMP2, ix,iy,iz);
+    vv = F3(f, _TMP2, ix-IX,iy-IY,iz-IZ);
     if (vv > 0.f) {
-      e1 = F3(f, m_curr + _B1X + YY, ix+JX1,iy+JY1,iz+JZ1) +
-	F3(f, _TMP3, ix,iy,iz) * (bd2[ZZ] - dt*vv);
+      e1 = F3(f, m_curr + _B1X + YY, ix+JX1-IX,iy+JY1-IY,iz+JZ1-IZ) +
+	F3(f, _TMP3, ix-IX,iy-IY,iz-IZ) * (bd2[ZZ] - dt*vv);
     } else {
-      e1 = F3(f, m_curr + _B1X + YY, ix+JX2+JX1,iy+JY2+JY1,iz+JZ2+JZ1) -
-	F3(f, _TMP3, ix+JX2,iy+JY2,iz+JZ2) * (bd2p[ZZ] + dt*vv);
+      e1 = F3(f, m_curr + _B1X + YY, ix+JX2+JX1-IX,iy+JY2+JY1-IY,iz+JZ2+JZ1-IZ) -
+	F3(f, _TMP3, ix+JX2-IX,iy+JY2-IY,iz+JZ2-IZ) * (bd2p[ZZ] + dt*vv);
     }
     float ttmp2 = e1 * vv;
+
+    F3(f, FF, ix,iy,iz) += ttmp1 - ttmp2;
 
     float vcurrXX = .25f * (F3(f, _CURRX + XX, ix-IX,iy-IY,iz-IZ) + 
 			    F3(f, _CURRX + XX, ix-IX,iy   ,iz   ) +
@@ -666,7 +668,6 @@ bcthy3z_const(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int 
 			   F3(f, _RESIS, ix-IX,iy   ,iz   ) +
 			   F3(f, _RESIS, ix   ,iy-IY,iz   ) +
 			   F3(f, _RESIS, ix   ,iy   ,iz-IZ));
-    F3(f, FF, ix+IX,iy+IY,iz+IZ) += ttmp1 - ttmp2;
     F3(f, FF, ix,iy,iz) += - vresis * vcurrXX;
   } mrc_fld_foreach_end;
 }
