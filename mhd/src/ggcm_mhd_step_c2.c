@@ -597,23 +597,23 @@ bcthy3z_const(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int 
   float *bd2z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD2);
 
   // d_z B_y, d_y B_z
-  mrc_fld_foreach(f, ix,iy,iz, 2, 1) {
-    float bd1[3] = { bd1x[ix], bd1y[iy], bd1z[iz] };
+  mrc_fld_foreach(f, ix,iy,iz, 1, 2) {
+    float bd1[3] = { bd1x[ix-IX], bd1y[iy-IY], bd1z[iz-IZ] };
 
     F3(f, _TMP1, ix,iy,iz) = bd1[ZZ] * 
-      (F3(f, m_curr + _B1X + YY, ix+JX2+JX1,iy+JY2+JY1,iz+JZ2+JZ1) - F3(f, m_curr + _B1X + YY, ix+JX1,iy+JY1,iz+JZ1));
+      (F3(f, m_curr + _B1X + YY, ix,iy,iz) - F3(f, m_curr + _B1X + YY, ix-JX2,iy-JY2,iz-JZ2));
     F3(f, _TMP2, ix,iy,iz) = bd1[YY] * 
-      (F3(f, m_curr + _B1X + ZZ, ix+JX1+JX2,iy+JY1+JY2,iz+JZ1+JZ2) - F3(f, m_curr + _B1X + ZZ, ix+JX2,iy+JY2,iz+JZ2));
+      (F3(f, m_curr + _B1X + ZZ, ix,iy,iz) - F3(f, m_curr + _B1X + ZZ, ix-JX1,iy-JY1,iz-JZ1));
   } mrc_fld_foreach_end;
 
   // harmonic average if same sign
   mrc_fld_foreach(f, ix,iy,iz, 0, 2) {
     float s1, s2;
-    s1 = F3(f, _TMP1, ix-IX,iy-IY,iz-IZ) * F3(f, _TMP1, ix-JX2-IX,iy-JY2-IY,iz-JZ2-IZ);
-    s2 = F3(f, _TMP1, ix-IX,iy-IY,iz-IZ) + F3(f, _TMP1, ix-JX2-IX,iy-JY2-IY,iz-JZ2-IZ);
+    s1 = F3(f, _TMP1, ix,iy,iz) * F3(f, _TMP1, ix-JX2,iy-JY2,iz-JZ2);
+    s2 = F3(f, _TMP1, ix,iy,iz) + F3(f, _TMP1, ix-JX2,iy-JY2,iz-JZ2);
     F3(f, _TMP3, ix,iy,iz) = bcthy3f(s1, s2);
-    s1 = F3(f, _TMP2, ix-IX,iy-IY,iz-IZ) * F3(f, _TMP2, ix-JX1-IX,iy-JY1-IY,iz-JZ1-IZ);
-    s2 = F3(f, _TMP2, ix-IX,iy-IY,iz-IZ) + F3(f, _TMP2, ix-JX1-IX,iy-JY1-IY,iz-JZ1-IZ);
+    s1 = F3(f, _TMP2, ix,iy,iz) * F3(f, _TMP2, ix-JX1,iy-JY1,iz-JZ1);
+    s2 = F3(f, _TMP2, ix,iy,iz) + F3(f, _TMP2, ix-JX1,iy-JY1,iz-JZ1);
     F3(f, _TMP4, ix,iy,iz) = bcthy3f(s1, s2);
   } mrc_fld_foreach_end;
 
