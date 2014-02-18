@@ -106,13 +106,13 @@ enum {
 // coordinates
 
 enum {
-  FX1, // node-centered, [-1:mx-1]
+  FX1, // x_{i+1/2} cell-centered, [-1:mx-1]
   FX2, // same as FX1, squared
-  FD1,
-  BD1,
-  BD2,
-  BD3,
-  BD4,
+  FD1, // 1 / (x_{i+1} - x_{i}) = 1 / (.5*(FX1[i+1] - FX1[i-1]))
+  BD1, // 1 / (x_{i+3/2} - x_{i+1/2}) = 1 / (FX1[i+1] - FX1[i])
+  BD2, // x_{i+1} - x_{i} = .5*(FX1[i+1] - FX1[i-1])
+  BD3, // 1 / BD2 == FD1
+  BD4, // == BD1
   NR_CRDS, // FIXME, update from Fortran
 };
 
