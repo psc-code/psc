@@ -314,26 +314,43 @@ pushfv_c(struct ggcm_mhd *mhd, int m, float dt, int m_prev, int m_curr, int m_ne
   pushn_c(mhd, m_prev + m, m_next + m, dt);
 }
 
-static void
-currbb_c(struct ggcm_mhd *mhd, int m_curr)
-{
-  enum { _XJX = _BX, _XJY = _BY, _XJZ = _BZ };
+// ----------------------------------------------------------------------
+// curr_c
+//
+// edge centered current density
 
+static void
+curr_c(struct ggcm_mhd *mhd, int m_j, int m_curr)
+{
   struct mrc_fld *f = mhd->fld;
   float *bd4x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD4);
   float *bd4y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD4);
   float *bd4z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD4);
 
   mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
-    F3(f, _XJX, ix,iy,iz) =
+    F3(f, m_j + 0, ix,iy,iz) =
       (F3(f, m_curr + _B1Z, ix,iy,iz) - F3(f, m_curr + _B1Z, ix,iy-1,iz)) * bd4y[iy] -
       (F3(f, m_curr + _B1Y, ix,iy,iz) - F3(f, m_curr + _B1Y, ix,iy,iz-1)) * bd4z[iz];
-    F3(f, _XJY, ix,iy,iz) =
+    F3(f, m_j + 1, ix,iy,iz) =
       (F3(f, m_curr + _B1X, ix,iy,iz) - F3(f, m_curr + _B1X, ix,iy,iz-1)) * bd4z[iz] -
       (F3(f, m_curr + _B1Z, ix,iy,iz) - F3(f, m_curr + _B1Z, ix-1,iy,iz)) * bd4x[ix];
-    F3(f, _XJZ, ix,iy,iz) =
+    F3(f, m_j + 2, ix,iy,iz) =
       (F3(f, m_curr + _B1Y, ix,iy,iz) - F3(f, m_curr + _B1Y, ix-1,iy,iz)) * bd4x[ix] -
       (F3(f, m_curr + _B1X, ix,iy,iz) - F3(f, m_curr + _B1X, ix,iy-1,iz)) * bd4y[iy];
+  } mrc_fld_foreach_end;
+}
+
+// ----------------------------------------------------------------------
+// currbb_c
+//
+// cell-averaged B
+
+static void
+currbb_c(struct ggcm_mhd *mhd, int m_curr)
+{
+  struct mrc_fld *f = mhd->fld;
+
+  mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
     F3(f,_TMP1, ix,iy,iz) = .5f * (F3(f, m_curr + _B1X, ix,iy,iz) +
 				   F3(f, m_curr + _B1X, ix+1,iy,iz));
     F3(f,_TMP2, ix,iy,iz) = .5f * (F3(f, m_curr + _B1Y, ix,iy,iz) +
@@ -343,30 +360,19 @@ currbb_c(struct ggcm_mhd *mhd, int m_curr)
   } mrc_fld_foreach_end;
 }
 
-  // bx12,by12,bz12,currx,curry,currz, tmp1,tmp2,tmp3,flx,fly,flz,zmask;
+// ----------------------------------------------------------------------
+// curbc_c
+//
+// cell-centered j
+
 static void
 curbc_c(struct ggcm_mhd *mhd, int m_curr)
 { 
   enum { _TX = _TMP1, _TY = _TMP2, _TZ = _TMP3 };
-  enum { _BBX = _FLX, _BBY = _FLY, _BBZ = _FLZ };
+
+  curr_c(mhd, _TX, m_curr);
 
   struct mrc_fld *f = mhd->fld;
-  float *bd4x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD4);
-  float *bd4y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD4);
-  float *bd4z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD4);
-
-  // j on edges
-  mrc_fld_foreach(f, ix,iy,iz, 2, 1) {
-    F3(f, _TX, ix,iy,iz) =
-      (F3(f, m_curr + _B1Z, ix,iy,iz) - F3(f, m_curr + _B1Z, ix,iy-1,iz)) * bd4y[iy] -
-      (F3(f, m_curr + _B1Y, ix,iy,iz) - F3(f, m_curr + _B1Y, ix,iy,iz-1)) * bd4z[iz];
-    F3(f, _TY, ix,iy,iz) =
-      (F3(f, m_curr + _B1X, ix,iy,iz) - F3(f, m_curr + _B1X, ix,iy,iz-1)) * bd4z[iz] -
-      (F3(f, m_curr + _B1Z, ix,iy,iz) - F3(f, m_curr + _B1Z, ix-1,iy,iz)) * bd4x[ix];
-    F3(f, _TZ, ix,iy,iz) =
-      (F3(f, m_curr + _B1Y, ix,iy,iz) - F3(f, m_curr + _B1Y, ix-1,iy,iz)) * bd4x[ix] -
-      (F3(f, m_curr + _B1X, ix,iy,iz) - F3(f, m_curr + _B1X, ix,iy-1,iz)) * bd4y[iy];
-  } mrc_fld_foreach_end;
 
   // j averaged to cell-centered
   mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
@@ -385,6 +391,7 @@ push_ej_c(struct ggcm_mhd *mhd, float dt, int m_curr, int m_next)
 {
   enum { _XJX = _BX, _XJY = _BY, _XJZ = _BZ };
 
+  curr_c(mhd, _XJX, m_curr);
   currbb_c(mhd, m_curr);
 	
   struct mrc_fld *f = mhd->fld;
