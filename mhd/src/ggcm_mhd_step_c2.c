@@ -584,7 +584,7 @@ bcthy3z_NL1(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int IZ
 static void
 bcthy3z_const(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int IZ,
 	      int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2,
-	      int FF, float dt, int m_curr)
+	      int EXX, float dt, int m_curr)
 {
   struct mrc_fld *f = mhd->fld;
 
@@ -617,44 +617,39 @@ bcthy3z_const(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int 
     F3(f, _TMP4, ix,iy,iz) = bcthy3f(s1, s2);
   } mrc_fld_foreach_end;
 
-  // edge centered velocity
-  mrc_fld_foreach(f, ix,iy,iz, 0, 1) {
-    float vvYY = .25f * (F3(f, _VX + YY, ix-IX,iy-IY,iz-IZ) + 
-			 F3(f, _VX + YY, ix-IX,iy   ,iz   ) +
-			 F3(f, _VX + YY, ix   ,iy-IY,iz   ) +
-			 F3(f, _VX + YY, ix   ,iy   ,iz-IZ));
-    F3(f, _TMP1, ix,iy,iz) = vvYY; /* - d_i * vcurrYY */
-    float vvZZ = .25f * (F3(f, _VX + ZZ, ix-IX,iy-IY,iz-IZ) + 
-			 F3(f, _VX + ZZ, ix-IX,iy   ,iz   ) +
-			 F3(f, _VX + ZZ, ix   ,iy-IY,iz   ) +
-			 F3(f, _VX + ZZ, ix   ,iy   ,iz-IZ));
-    F3(f, _TMP2, ix,iy,iz) = vvZZ; /* - d_i * vcurrZZ */
-  } mrc_fld_foreach_end;
-
   // edge centered E = - v x B (+ dissipation)
   mrc_fld_foreach(f, ix,iy,iz, 0, 1) {
     float bd2[3] = { bd2x[ix-IX], bd2y[iy-IY], bd2z[iz-IZ] };
     float bd2p[3] = { bd2x[ix+1-IX], bd2y[iy+1-IY], bd2z[iz+1-IZ] };
-    float e1, vv;
-    vv = F3(f, _TMP1, ix,iy,iz);
-    if (vv > 0.f) {
-      e1 = F3(f, m_curr + _B1X + ZZ, ix-JX1,iy-JY1,iz-JZ1) +
-	F3(f, _TMP4, ix,iy,iz) * (bd2[YY] - dt*vv);
+    // edge centered velocity
+    float vvYY = .25f * (F3(f, _VX + YY, ix-IX,iy-IY,iz-IZ) + 
+			F3(f, _VX + YY, ix-IX,iy   ,iz   ) +
+			F3(f, _VX + YY, ix   ,iy-IY,iz   ) +
+			F3(f, _VX + YY, ix   ,iy   ,iz-IZ));
+    float vbZZ;
+    if (vvYY > 0.f) {
+      vbZZ = F3(f, m_curr + _B1X + ZZ, ix-JX1,iy-JY1,iz-JZ1) +
+	F3(f, _TMP4, ix,iy,iz) * (bd2[YY] - dt*vvYY);
     } else {
-      e1 = F3(f, m_curr + _B1X + ZZ, ix,iy,iz) -
-	F3(f, _TMP4, ix+JX1,iy+JY1,iz+JZ1) * (bd2p[YY] + dt*vv);
+      vbZZ = F3(f, m_curr + _B1X + ZZ, ix,iy,iz) -
+	F3(f, _TMP4, ix+JX1,iy+JY1,iz+JZ1) * (bd2p[YY] + dt*vvYY);
     }
-    float ttmp1 = e1 * vv;
+    float vvYYbZZ = vvYY * vbZZ;
 
-    vv = F3(f, _TMP2, ix,iy,iz);
-    if (vv > 0.f) {
-      e1 = F3(f, m_curr + _B1X + YY, ix-JX2,iy-JY2,iz-JZ2) +
-	F3(f, _TMP3, ix,iy,iz) * (bd2[ZZ] - dt*vv);
+    // edge centered velocity
+    float vvZZ = .25f * (F3(f, _VX + ZZ, ix-IX,iy-IY,iz-IZ) + 
+			 F3(f, _VX + ZZ, ix-IX,iy   ,iz   ) +
+			 F3(f, _VX + ZZ, ix   ,iy-IY,iz   ) +
+			 F3(f, _VX + ZZ, ix   ,iy   ,iz-IZ));
+    float vbYY;
+    if (vvZZ > 0.f) {
+      vbYY = F3(f, m_curr + _B1X + YY, ix-JX2,iy-JY2,iz-JZ2) +
+	F3(f, _TMP3, ix,iy,iz) * (bd2[ZZ] - dt*vvZZ);
     } else {
-      e1 = F3(f, m_curr + _B1X + YY, ix,iy,iz) -
-	F3(f, _TMP3, ix+JX2,iy+JY2,iz+JZ2) * (bd2p[ZZ] + dt*vv);
+      vbYY = F3(f, m_curr + _B1X + YY, ix,iy,iz) -
+	F3(f, _TMP3, ix+JX2,iy+JY2,iz+JZ2) * (bd2p[ZZ] + dt*vvZZ);
     }
-    float ttmp2 = e1 * vv;
+    float vvZZbYY = vvZZ * vbYY;
 
     float vcurrXX = .25f * (F3(f, _CURRX + XX, ix-IX,iy-IY,iz-IZ) + 
 			    F3(f, _CURRX + XX, ix-IX,iy   ,iz   ) +
@@ -665,7 +660,7 @@ bcthy3z_const(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int 
 			   F3(f, _RESIS, ix   ,iy-IY,iz   ) +
 			   F3(f, _RESIS, ix   ,iy   ,iz-IZ));
 
-    F3(f, FF, ix,iy,iz) = ttmp1 - ttmp2 - vresis * vcurrXX;
+    F3(f, EXX, ix,iy,iz) = vvYYbZZ - vvZZbYY - vresis * vcurrXX;
   } mrc_fld_foreach_end;
 }
 
