@@ -61,11 +61,11 @@ ggcm_mhd_crds_gen_c_run(struct ggcm_mhd_crds_gen *gen, struct ggcm_mhd_crds *crd
     float *fxx1 = ggcm_mhd_crds_get_crd(crds, d, FX1);
     float *fdx1 = ggcm_mhd_crds_get_crd(crds, d, FD1);
 
-    for (int i = -2; i < ldims[0] + 2; i++) {
+    for (int i = -2; i < ldims[d] + 2; i++) {
       fxx1[i] = xxl[i];
     }
 
-    for (int i = -1; i < ldims[0] + 1; i++) {
+    for (int i = -1; i < ldims[d] + 1; i++) {
       fdx1[i] = 1. / (.5 * (xxl[i + 1] - xxl[i - 1]));
     }
 
