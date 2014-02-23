@@ -381,13 +381,7 @@ struct mrc_fld *
 mrc_fld_duplicate(struct mrc_fld *fld)
 {
   struct mrc_fld *fld_new = mrc_fld_create(mrc_fld_comm(fld));
-  if (strcmp(mrc_fld_type(fld), "fortran") == 0) {
-    // FIXME, this isn't really the right place to do this
-    mprintf("WARNING: duplicating mrc_fld of type 'fortran'!\n");
-    mrc_fld_set_type(fld_new, "float");
-  } else {
-    mrc_fld_set_type(fld_new, mrc_fld_type(fld));
-  }
+  mrc_fld_set_type(fld_new, mrc_fld_type(fld));
   if (fld->_domain) {
     // if we're based on a domain, dims/offs/sw will be set by setup()
     mrc_fld_set_param_obj(fld_new, "domain", fld->_domain);
@@ -593,19 +587,6 @@ mrc_fld_get_as(struct mrc_fld *fld_base, const char *type)
   }
   for (int m = 0; m < fld_base->_nr_comps; m++) {
     mrc_fld_set_comp_name(fld, m, mrc_fld_comp_name(fld_base, m));
-  }
-  // FIXME, this is openggcm specific and shouldn't be handled here
-  if (strcmp(type, "float") == 0 && strcmp(type_base, "fortran") == 0) {
-    // special case: float from fortran, just use same memory
-    mrc_fld_set_array(fld, fld_base->_arr);
-    mrc_fld_setup(fld);
-    prof_stop(pr);
-    return fld;
-  }
-  if (strcmp(type, "fortran") == 0) {
-    // special case: convert something else to Fortran
-    mprintf("ERROR: trying to convert '%s' to 'fortran'\n", type_base);
-    abort();
   }
   mrc_fld_setup(fld);
 
