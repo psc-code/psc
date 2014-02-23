@@ -106,6 +106,7 @@ struct ggcm_mhd_step_ops ggcm_mhd_step_cweno_ops = {
 #else
   .mhd_type    = MT_FULLY_CONSERVATIVE,
 #endif
+  .fld_type    = "float",
   .calc_rhs    = ggcm_mhd_step_cweno_calc_rhs,
 };
 

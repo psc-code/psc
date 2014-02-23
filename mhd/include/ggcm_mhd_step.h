@@ -22,5 +22,6 @@ void ggcm_mhd_step_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
 void ggcm_mhd_step_run(struct ggcm_mhd_step *step, struct mrc_fld *x);
 
 int ggcm_mhd_step_mhd_type(struct ggcm_mhd_step *step);
+const char *ggcm_mhd_step_fld_type(struct ggcm_mhd_step *step);
 
 #endif

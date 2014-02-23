@@ -165,6 +165,9 @@ _ggcm_mhd_read(struct ggcm_mhd *mhd, struct mrc_io *io)
 static void
 _ggcm_mhd_setup(struct ggcm_mhd *mhd)
 {
+  const char *fld_type = ggcm_mhd_step_fld_type(mhd->step);
+  assert(fld_type);
+  mrc_fld_set_type(mhd->fld, fld_type);
   mrc_fld_set_param_int(mhd->fld, "nr_ghosts", mhd->par.nr_ghosts);
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
   mrc_crds_set_param_int(crds, "sw", mhd->par.nr_ghosts);
