@@ -152,10 +152,10 @@ do_marder_correction(struct psc_push_fields *push,
   int l[3] = {0, 0, 0}, r[3] = {0, 0, 0};
   for (int d = 0; d < 3; d++) {
    if (ppsc->domain.bnd_fld_lo[d] == BND_FLD_CONDUCTING_WALL && ppsc->patch[flds->p].off[d] == 0) {
-    l[d] = -2;
+    l[d] = -1;
    }
    if (ppsc->domain.bnd_fld_hi[d] == BND_FLD_CONDUCTING_WALL && ppsc->patch[flds->p].off[d] + ppsc->patch[flds->p].ldims[d] == ppsc->domain.gdims[d]) {
-    r[d] = -2;
+    r[d] = 0;
    }
   }
 
