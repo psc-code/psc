@@ -28,7 +28,7 @@ enum {
 void mrc_set_flags(unsigned long flags);
 void mrc_clear_flags(unsigned long flags);
 
-void libmrc_finalize();
+void libmrc_finalize(void);
 
 // private to libmrc
 
