@@ -46,7 +46,11 @@ static struct param mrc_bf_simple_param_descr[] = {
   { "ye"              , VAR(ye)             , PARAM_FLOAT(1.0  )     },
   { "zb"              , VAR(zb)             , PARAM_FLOAT(0)         },
   { "ze"              , VAR(ze)             , PARAM_FLOAT(1.0  )     },
-  { "m"                , VAR(dims)          , PARAM_INT3(16,16,16)   },
+  // Fixme: I'd rather use an int3 here, but apparently the fancy namex
+  // appending only works on the command line
+  { "mx"                , VAR(dims[0])          , PARAM_INT(16 )     },
+  { "my"                , VAR(dims[1])          , PARAM_INT(16 )     },
+  { "mz"                , VAR(dims[2])          , PARAM_INT(16 )     },
   { "coord_gen_x"       , VAR(coord_gen[0])    , MRC_VAR_OBJ(mrc_crds_gen)},
   { "coord_gen_y"       , VAR(coord_gen[1])    , MRC_VAR_OBJ(mrc_crds_gen)},
   { "coord_gen_z"       , VAR(coord_gen[2])    , MRC_VAR_OBJ(mrc_crds_gen)},
