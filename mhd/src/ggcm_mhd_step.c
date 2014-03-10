@@ -32,7 +32,8 @@ ggcm_mhd_step_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
   assert(ops && ops->run);
   ops->run(step, x);
-
+  
+  prof_print();
 }
 
 // ----------------------------------------------------------------------

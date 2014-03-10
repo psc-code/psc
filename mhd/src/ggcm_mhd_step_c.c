@@ -5,6 +5,7 @@
 #include "ggcm_mhd_crds.h"
 
 #include <mrc_domain.h>
+#include <mrc_profile.h>
 #include <mrc_fld_as_float.h>
 
 #include <math.h>
@@ -778,7 +779,13 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step)
   zmaskn_c(step->mhd);
 
   float dth = .5f * step->mhd->dt;
+  static int PR;
+  if (!PR) {
+    PR = prof_register("pred_c", 1., 0, 0);
+  }
+  prof_start(PR);
   pushstage_c(step->mhd, dth, _RR1, _RR1, _RR2, LIMIT_NONE);
+  prof_stop(PR);
 }
 
 // ----------------------------------------------------------------------
