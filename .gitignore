@@ -4,6 +4,7 @@
 *.lo
 *.a
 *.la
+.libs
 Makefile
 Makefile.in
 aclocal.m4
