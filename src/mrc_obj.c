@@ -526,7 +526,7 @@ mrc_obj_set_param_type(struct mrc_obj *obj, const char *name,
   abort();
 }
 
-void
+int
 mrc_obj_get_param_type(struct mrc_obj *obj, const char *name,
 		       int type, union param_u *uval)
 {
@@ -534,13 +534,13 @@ mrc_obj_get_param_type(struct mrc_obj *obj, const char *name,
   if (cls->param_descr) {
     char *p = (char *) obj + cls->param_offset;
     if (mrc_params_get_type(p, cls->param_descr, name, type, uval) == 0)
-      return;
+      return 0;
   }
   struct mrc_obj_ops *ops = obj->ops;
   if (ops && ops->param_descr) {
     char *p = (char *) obj->subctx + ops->param_offset;
     if (mrc_params_get_type(p, ops->param_descr, name, type, uval) == 0)
-      return;
+      return 0;
   }
 
   struct mrc_dict_entry *e;
@@ -548,12 +548,12 @@ mrc_obj_get_param_type(struct mrc_obj *obj, const char *name,
     if (strcmp(e->prm.name, name) == 0) {
       assert(e->prm.type == type);
       *uval = e->val;
-      return;
+      return 0;
     }
   }
 
-  fprintf(stderr, "ERROR: option '%s' not found (type %d)!\n", name, type);
-  abort();
+  fprintf(stderr, "WARNING: option '%s' not found (type %d)!\n", name, type);
+  return -1;
 }
 
 void
@@ -711,12 +711,17 @@ mrc_obj_get_param_double3(struct mrc_obj *obj, const char *name, double *pval)
   }
 }
 
-void
+int
 mrc_obj_get_param_obj(struct mrc_obj *obj, const char *name, struct mrc_obj **pval)
 {
   union param_u uval;
-  mrc_obj_get_param_type(obj, name, PT_OBJ, &uval);
+  int rc = mrc_obj_get_param_type(obj, name, PT_OBJ, &uval);
+  if (rc < 0) {
+    return rc;
+  }
+
   *pval = uval.u_obj;
+  return 0;
 }
 
 static void
