@@ -45,7 +45,8 @@ main(int argc, char **argv)
 
   struct mrc_domain *domain = mrc_domain_create(MPI_COMM_WORLD);
   mrc_domain_set_type(domain, "mb");
-  struct mrc_block_factory *blk_fac = mrc_domain_get_param_obj(domain, "block_factory");
+  struct mrc_block_factory *blk_fac;
+  mrc_domain_get_param_obj(domain, "block_factory", &blk_fac);
 
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   int testcase = 1;
