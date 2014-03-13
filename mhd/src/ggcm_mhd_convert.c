@@ -130,32 +130,32 @@ ggcm_mhd_convert_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_base)
 // get mhd::fld as Fortran common block field
 
 struct mrc_fld *
-ggcm_mhd_get_fld_as_fortran(struct ggcm_mhd *mhd)
+ggcm_mhd_get_fld_as_fortran(struct mrc_fld *mhd_fld)
 {
   int mhd_type;
-  mrc_fld_get_param_int(mhd->fld, "mhd_type", &mhd_type);
+  mrc_fld_get_param_int(mhd_fld, "mhd_type", &mhd_type);
 
   if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM) {
     int nr_ghosts;
-    mrc_fld_get_param_int(mhd->fld, "nr_ghosts", &nr_ghosts);
+    mrc_fld_get_param_int(mhd_fld, "nr_ghosts", &nr_ghosts);
     assert(nr_ghosts == 2);
-    if (strcmp(mrc_fld_type(mhd->fld), "float") == 0) {
-      return mhd->fld;
+    if (strcmp(mrc_fld_type(mhd_fld), "float") == 0) {
+      return mhd_fld;
     } else {
       assert(0);
     }
   }
 
-  struct mrc_fld *fld = mrc_fld_create(ggcm_mhd_comm(mhd));
+  struct mrc_fld *fld = mrc_fld_create(mrc_fld_comm(mhd_fld));
   mrc_fld_set_type(fld, "float");
-  mrc_fld_set_param_obj(fld, "domain", mhd->domain);
+  mrc_fld_set_param_obj(fld, "domain", mhd_fld->_domain);
   mrc_fld_set_param_int(fld, "nr_spatial_dims", 3);
   mrc_fld_set_param_int(fld, "nr_comps", _NR_FLDS);
   mrc_fld_set_param_int(fld, "nr_ghosts", 2);
   mrc_fld_setup(fld);
 
   if (mhd_type == MT_SEMI_CONSERVATIVE) {
-    struct mrc_fld *f = mrc_fld_get_as(mhd->fld, "float");
+    struct mrc_fld *f = mrc_fld_get_as(mhd_fld, "float");
     struct mrc_fld *ff = mrc_fld_get_as(fld, "float");
     for (int m = 0; m < _NR_FLDS; m++) {
       if (m == _B1X || m == _B2X) {
@@ -176,7 +176,7 @@ ggcm_mhd_get_fld_as_fortran(struct ggcm_mhd *mhd)
 	} mrc_fld_foreach_end;
       }
     }
-    mrc_fld_put_as(f, mhd->fld);
+    mrc_fld_put_as(f, mhd_fld);
     mrc_fld_put_as(ff, fld);
   } else {
     assert(0);
@@ -189,14 +189,14 @@ ggcm_mhd_get_fld_as_fortran(struct ggcm_mhd *mhd)
 // ggcm_mhd_put_fld_as_fortran
 
 void
-ggcm_mhd_put_fld_as_fortran(struct ggcm_mhd *mhd, struct mrc_fld *fld)
+ggcm_mhd_put_fld_as_fortran(struct mrc_fld *mhd_fld, struct mrc_fld *fld)
 {
   int mhd_type;
-  mrc_fld_get_param_int(mhd->fld, "mhd_type", &mhd_type);
+  mrc_fld_get_param_int(mhd_fld, "mhd_type", &mhd_type);
 
   if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM) {
-    if (strcmp(mrc_fld_type(mhd->fld), "float") == 0) {
-      assert(fld == mhd->fld);
+    if (strcmp(mrc_fld_type(mhd_fld), "float") == 0) {
+      assert(fld == mhd_fld);
       return;
     } else {
       assert(0);
@@ -204,7 +204,7 @@ ggcm_mhd_put_fld_as_fortran(struct ggcm_mhd *mhd, struct mrc_fld *fld)
   }
 
   if (mhd_type == MT_SEMI_CONSERVATIVE) {
-    struct mrc_fld *f = mrc_fld_get_as(mhd->fld, "float");
+    struct mrc_fld *f = mrc_fld_get_as(mhd_fld, "float");
     struct mrc_fld *ff = mrc_fld_get_as(fld, "float");
     for (int m = 0; m < _NR_FLDS; m++) {
       if (m == _B1X || m == _B2X) {
@@ -225,7 +225,7 @@ ggcm_mhd_put_fld_as_fortran(struct ggcm_mhd *mhd, struct mrc_fld *fld)
 	} mrc_fld_foreach_end;
       }
     }
-    mrc_fld_put_as(f, mhd->fld);
+    mrc_fld_put_as(f, mhd_fld);
     mrc_fld_put_as(ff, fld);
   } else {
     assert(0);

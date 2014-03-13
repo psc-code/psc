@@ -31,8 +31,8 @@ void ggcm_mhd_default_box(struct ggcm_mhd *mhd);
 void ggcm_mhd_convert_from_primitive(struct ggcm_mhd *mhd,
 				     struct mrc_fld *fld_base);
 
-struct mrc_fld *ggcm_mhd_get_fld_as_fortran(struct ggcm_mhd *mhd);
-void ggcm_mhd_put_fld_as_fortran(struct ggcm_mhd *mhd, struct mrc_fld *f);
+struct mrc_fld *ggcm_mhd_get_fld_as_fortran(struct mrc_fld *mhd_fld);
+void ggcm_mhd_put_fld_as_fortran(struct mrc_fld *mhd_fld, struct mrc_fld *f);
 
 enum {
   MT_PRIMITIVE,
