@@ -46,18 +46,6 @@ ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic)
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_ic_ini_b
-
-void
-ggcm_mhd_ic_ini_b(struct ggcm_mhd_ic *ic, float b_sw[3])
-{
-  assert(ic->mhd);
-  struct ggcm_mhd_ic_ops *ops = ggcm_mhd_ic_ops(ic);
-  assert(ops && ops->ini_b);
-  ops->ini_b(ic, b_sw);
-}
-
-// ----------------------------------------------------------------------
 // ggcm_mhd_ic_init
 
 static void
