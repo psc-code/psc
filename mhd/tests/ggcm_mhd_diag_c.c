@@ -216,9 +216,6 @@ ggcm_mhd_diag_c_write_one_field(struct mrc_io *io, struct mrc_fld *_f, int m,
 // ----------------------------------------------------------------------
 // write_fields
 
-// ----------------------------------------------------------------------
-// write_fields
-
 static void
 write_fields(struct ggcm_mhd_diag *diag, struct mrc_fld *fld,
 	     struct mrc_io *io, int diag_type, float plane)

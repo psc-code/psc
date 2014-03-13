@@ -5,6 +5,7 @@
 #include "ggcm_mhd_diag.h"
 #include <mrc_domain.h>
 #include <mrc_ddc.h>
+#include <mrc_fld_as_float.h>
  
 
 // ----------------------------------------------------------------------
@@ -38,7 +39,7 @@ ggcm_mhd_fill_ghost_fld(struct ggcm_mhd *mhd, struct mrc_fld *_fld)
 	for (int ix = -sw; ix < 0; ix++) {  
 	  for (int iy = -sw; iy < ny + sw; iy++) {
 	    for (int iz = -sw; iz < nz + sw; iz++) {
-	      MRC_F3(fld,m, ix,iy,iz) = MRC_F3(f3,m, ix,iy,iz); 
+	      F3(fld,m, ix,iy,iz) = F3(f3,m, ix,iy,iz); 
 	    }	     
 	  }
 	}
@@ -49,7 +50,7 @@ ggcm_mhd_fill_ghost_fld(struct ggcm_mhd *mhd, struct mrc_fld *_fld)
 	for (int ix = nx; ix < nx + sw; ix++) {  
 	  for (int iy = -sw; iy < ny + sw; iy++) {
 	    for (int iz = -sw; iz < nz + sw; iz++) {
-	      MRC_F3(fld,m, ix,iy,iz) = MRC_F3(f3,m, ix,iy,iz);
+	      F3(fld,m, ix,iy,iz) = F3(f3,m, ix,iy,iz);
 		}		
 	  }
 	}
@@ -63,7 +64,7 @@ ggcm_mhd_fill_ghost_fld(struct ggcm_mhd *mhd, struct mrc_fld *_fld)
 	for (int iy = -sw; iy < 0; iy++) {  
 	  for (int ix = -sw; ix < nx + sw; ix++) {
 	    for (int iz = -sw; iz < nz + sw; iz++) {
-	      MRC_F3(fld,m, ix,iy,iz) = MRC_F3(f3,m, ix,iy,iz); 
+	      F3(fld,m, ix,iy,iz) = F3(f3,m, ix,iy,iz); 
 	    }
 	  }
 	}
@@ -74,7 +75,7 @@ ggcm_mhd_fill_ghost_fld(struct ggcm_mhd *mhd, struct mrc_fld *_fld)
 	for (int iy = ny; iy < ny + sw; iy++) {  
 	  for (int ix = -sw; ix < nx + sw; ix++) {
 	    for (int iz = -sw; iz < nz + sw; iz++) {
-	      MRC_F3(fld,m, ix,iy,iz) = MRC_F3(f3,m, ix,iy,iz);
+	      F3(fld,m, ix,iy,iz) = F3(f3,m, ix,iy,iz);
 		}		
 	  }
 	}
@@ -88,7 +89,7 @@ ggcm_mhd_fill_ghost_fld(struct ggcm_mhd *mhd, struct mrc_fld *_fld)
 	for (int iz = -sw; iz < 0; iz++) {  
 	  for (int iy = -sw; iy < ny + sw; iy++) {
 	    for (int ix = -sw; ix < nx + sw; ix++) {
-	      MRC_F3(fld,m, ix,iy,iz) = MRC_F3(f3,m, ix,iy,iz); 
+	      F3(fld,m, ix,iy,iz) = F3(f3,m, ix,iy,iz); 
 	    }
 	  }
 	}
@@ -99,7 +100,7 @@ ggcm_mhd_fill_ghost_fld(struct ggcm_mhd *mhd, struct mrc_fld *_fld)
 	for (int iz = nz; iz < nz + sw; iz++) {  
 	  for (int iy = -sw; iy < ny + sw; iy++) {
 	    for (int ix = -sw; ix < nx + sw; ix++) {
-	      MRC_F3(fld,m, ix,iy,iz) = MRC_F3(f3,m, ix,iy,iz);
+	      F3(fld,m, ix,iy,iz) = F3(f3,m, ix,iy,iz);
 		}		
 	  }
 	}
