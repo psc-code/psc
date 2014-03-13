@@ -269,7 +269,10 @@ conducting_wall_J_lo(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
       for (int ix = MAX(-1, pf->ib[0]); ix < MIN(patch->ldims[0] + 1, pf->ib[0] + pf->im[0]) ; ix++) {
 	F3(pf, JYI, ix, 0,iz) -= F3(pf, JYI, ix,-1,iz);
 	F3(pf, JYI, ix,-1,iz) = 0.;
-	// FIXME, JXI/JZI?
+	F3(pf, JXI, ix, 1,iz) += F3(pf, JXI, ix,-1,iz);
+	F3(pf, JXI, ix,-1,iz) = 0.;
+	F3(pf, JZI, ix, 1,iz) += F3(pf, JZI, ix,-1,iz);
+	F3(pf, JZI, ix,-1,iz) = 0.;
       }
     }
   } else  if (d == 2) {
@@ -299,6 +302,10 @@ conducting_wall_J_hi(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
       for (int ix = MAX(-1, pf->ib[0]); ix < MIN(patch->ldims[0] + 1, pf->ib[0] + pf->im[0]) ; ix++) {
 	F3(pf, JYI, ix,my-1,iz) -= F3(pf, JYI, ix,my,iz);
 	F3(pf, JYI, ix,my  ,iz) = 0.;
+	F3(pf, JXI, ix,my-1,iz) += F3(pf, JXI, ix,my+1,iz);
+	F3(pf, JXI, ix,my+1,iz) = 0.;
+	F3(pf, JZI, ix,my-1,iz) += F3(pf, JZI, ix,my+1,iz);
+	F3(pf, JZI, ix,my+1,iz) = 0.;
       }
     }
   } else if (d == 2) {
