@@ -165,12 +165,14 @@ static void
 _ggcm_mhd_setup(struct ggcm_mhd *mhd)
 {
   const char *fld_type = ggcm_mhd_step_fld_type(mhd->step);
+  int nr_ghosts = ggcm_mhd_step_nr_ghosts(mhd->step);
   assert(fld_type);
   mrc_fld_set_type(mhd->fld, fld_type);
-  mrc_fld_set_param_int(mhd->fld, "nr_ghosts", mhd->par.nr_ghosts);
-  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-  mrc_crds_set_param_int(crds, "sw", mhd->par.nr_ghosts);
+  mrc_fld_set_param_int(mhd->fld, "nr_ghosts", nr_ghosts);
   mrc_fld_dict_add_int(mhd->fld, "mhd_type", ggcm_mhd_step_mhd_type(mhd->step));
+
+  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
+  mrc_crds_set_param_int(crds, "sw", nr_ghosts);
 
   ggcm_mhd_setup_member_objs(mhd);
   ggcm_mhd_setup_internal(mhd);
@@ -274,8 +276,6 @@ static struct param ggcm_mhd_descr[] = {
   { "modnewstep"      , VAR(par.modnewstep)  , PARAM_INT(1)          },
   { "magdiffu"        , VAR(par.magdiffu)    , PARAM_SELECT(MAGDIFFU_NL1,
 							    magdiffu_descr) },
-  { "nr_ghosts"       , VAR(par.nr_ghosts)   , PARAM_INT(2)          },
-
   { "time"            , VAR(time)            , MRC_VAR_FLOAT         },
   { "dt"              , VAR(dt)              , MRC_VAR_FLOAT         },
   { "istep"           , VAR(istep)           , MRC_VAR_INT           },
