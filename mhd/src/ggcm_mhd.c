@@ -140,14 +140,13 @@ ggcm_mhd_set_state(struct ggcm_mhd *mhd)
 static void
 ggcm_mhd_setup_internal(struct ggcm_mhd *mhd)
 {
-  // domain params
-  struct mrc_patch_info info;
-  mrc_domain_get_local_patch_info(mhd->domain, 0, &info);
+  const int *ghost_dims = mrc_fld_ghost_dims(mhd->fld);
+  const int *dims = mrc_fld_dims(mhd->fld);
   for (int d = 0; d < 3; d++) {
     // local domain size
-    mhd->im[d] = info.ldims[d];
+    mhd->im[d] = dims[d];
     // local domain size incl ghost points
-    mhd->img[d] = info.ldims[d] + 2 * mhd->par.nr_ghosts;
+    mhd->img[d] = ghost_dims[d];
   }
 }
 
@@ -194,10 +193,8 @@ ggcm_mhd_newstep(struct ggcm_mhd *mhd, float *dtn)
 int
 ggcm_mhd_ntot(struct ggcm_mhd *mhd)
 {
-  struct mrc_patch_info info;
-  mrc_domain_get_local_patch_info(mhd->domain, 0, &info);
-  int sw = mhd->par.nr_ghosts;
-  return (info.ldims[0] + 2 * sw) * (info.ldims[1] + 2 * sw) * (info.ldims[2] + 2 * sw);
+  const int *ghost_dims = mrc_fld_ghost_dims(mhd->fld);
+  return ghost_dims[0] * ghost_dims[1] * ghost_dims[2];
 }
 
 // ----------------------------------------------------------------------
