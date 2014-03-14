@@ -7,6 +7,8 @@
 #include <math.h>
 #include "../psc_output_fields/common_moments.c"
 
+#include <mrc_io.h>
+
 enum {
   DIVE_MARDER,
   N_MARDER,
@@ -23,9 +25,10 @@ marder_create_aid_fields(struct psc_push_fields *push, struct psc *psc)
   psc_mfields_set_type(f, FIELDS_TYPE);
   psc_mfields_set_domain(f, psc->mrc_domain);
   psc_mfields_set_param_int(f, "nr_fields", NR_MARDER);
-  psc_mfields_set_param_int(f, "first_comp", DIVE_MARDER);
   psc_mfields_set_param_int3(f, "ibn", psc->ibn);
   psc_mfields_setup(f);
+  psc_mfields_set_comp_name(f, DIVE_MARDER, "div_E");
+  psc_mfields_set_comp_name(f, N_MARDER, "rho");
   return f;
 }
 
@@ -105,8 +108,28 @@ marder_calc_aid_fields(struct psc_push_fields *push,
 	  psc_mparticles_get_patch(particles, p),
 	  psc_mfields_get_patch(res, p), N_MARDER);
   }
-  psc_bnd_add_ghosts(ppsc->bnd, res, N_MARDER, N_MARDER+1); //+1 or not, check!!!
-  psc_bnd_fill_ghosts(ppsc->bnd, res, DIVE_MARDER, N_MARDER+1);
+  psc_bnd_add_ghosts(ppsc->bnd, res, N_MARDER, N_MARDER+1);
+  
+  static struct mrc_io *io;
+  if (!io) {
+    io = mrc_io_create(psc_comm(ppsc));
+    mrc_io_set_type(io, "xdmf_collective");
+    mrc_io_set_name(io, "mrc_io_marder");
+    mrc_io_set_param_string(io, "basename", "marder");
+    mrc_io_set_from_options(io);
+    mrc_io_setup(io);
+  }
+
+  if (ppsc->timestep % 10 == 0) {
+    mrc_io_open(io, "w", ppsc->timestep, ppsc->timestep * ppsc->dt);
+    psc_mfields_write_as_mrc_fld(res, io);
+    mrc_io_close(io);
+  }
+
+  //  mrc_io_destroy(io);
+
+  psc_mfields_axpy_comp(res, DIVE_MARDER, -1., res, N_MARDER);
+  psc_bnd_fill_ghosts(ppsc->bnd, res, DIVE_MARDER, DIVE_MARDER+1);
 }
 
 
@@ -127,8 +150,7 @@ marder_calc_aid_fields(struct psc_push_fields *push,
 
 static void
 do_marder_correction(struct psc_push_fields *push, 
-  struct psc_fields *flds_base, struct psc_particles *prts, 
-  struct psc_fields *f, int comp_dive, int comp_n)
+  struct psc_fields *flds_base, struct psc_fields *f)
 {
   define_dxdydz(dx, dy, dz);
 
@@ -147,7 +169,7 @@ do_marder_correction(struct psc_push_fields *push,
   double diffusion_max = 1. / 2. / (.5 * ppsc->dt) / inv_sum;
   double diffusion     = diffusion_max * push->marder_diffusion;
 
-  struct psc_fields *flds = psc_fields_get_as(flds_base, FIELDS_TYPE, JXI, EX + 3);
+  struct psc_fields *flds = psc_fields_get_as(flds_base, FIELDS_TYPE, EX, EX + 3);
 
   int l[3] = {0, 0, 0}, r[3] = {0, 0, 0};
   for (int d = 0; d < 3; d++) {
@@ -163,17 +185,14 @@ do_marder_correction(struct psc_push_fields *push,
   psc_foreach_3d_more(ppsc, f->p, ix, iy, iz, l, r) {
     // FIXME: F3 correct?
     F3(flds, EX, ix,iy,iz) += 
-      (  F3(f, DIVE_MARDER, ix+dx,iy,iz) - F3(f, DIVE_MARDER, ix,iy,iz)
-       - F3(f, N_MARDER,    ix+dx,iy,iz) + F3(f, N_MARDER,    ix,iy,iz)
-       ) * .5 * ppsc->dt * diffusion / deltax;
+      (F3(f, DIVE_MARDER, ix+dx,iy,iz) - F3(f, DIVE_MARDER, ix,iy,iz))
+      * .5 * ppsc->dt * diffusion / deltax;
     F3(flds, EY, ix,iy,iz) += 
-      (  F3(f, DIVE_MARDER, ix,iy+dy,iz) - F3(f, DIVE_MARDER, ix,iy,iz)
-       - F3(f, N_MARDER,    ix,iy+dy,iz) + F3(f, N_MARDER,    ix,iy,iz)
-       ) * .5 * ppsc->dt * diffusion / deltay;
+      (F3(f, DIVE_MARDER, ix,iy+dy,iz) - F3(f, DIVE_MARDER, ix,iy,iz))
+      * .5 * ppsc->dt * diffusion / deltay;
     F3(flds, EZ, ix,iy,iz) += 
-      (  F3(f, DIVE_MARDER, ix,iy,iz+dz) - F3(f, DIVE_MARDER, ix,iy,iz)
-       - F3(f, N_MARDER,    ix,iy,iz+dz) + F3(f, N_MARDER,    ix,iy,iz)
-       ) * .5 * ppsc->dt * diffusion / deltaz;
+      (F3(f, DIVE_MARDER, ix,iy,iz+dz) - F3(f, DIVE_MARDER, ix,iy,iz))
+      * .5 * ppsc->dt * diffusion / deltaz;
   } psc_foreach_3d_more_end;
 #endif
 
@@ -183,18 +202,16 @@ do_marder_correction(struct psc_push_fields *push,
   //  r[1] = -1;
   psc_foreach_3d_more(ppsc, f->p, ix, iy, iz, l, r) {
     F3(flds, EY, ix,iy,iz) += 
-      (  F3(f, DIVE_MARDER, ix,iy+dy,iz) - F3(f, DIVE_MARDER, ix,iy,iz)
-       - F3(f, N_MARDER,    ix,iy+dy,iz) + F3(f, N_MARDER,    ix,iy,iz)
-       ) * .5 * ppsc->dt * diffusion / deltay;
+      (F3(f, DIVE_MARDER, ix,iy+dy,iz) - F3(f, DIVE_MARDER, ix,iy,iz))
+      * .5 * ppsc->dt * diffusion / deltay;
   } psc_foreach_3d_more_end;
 
   //l[1] = -1;
   r[1] = 0;
   psc_foreach_3d_more(ppsc, f->p, ix, iy, iz, l, r) {
     F3(flds, EZ, ix,iy,iz) += 
-      (  F3(f, DIVE_MARDER, ix,iy,iz+dz) - F3(f, DIVE_MARDER, ix,iy,iz)
-       - F3(f, N_MARDER,    ix,iy,iz+dz) + F3(f, N_MARDER,    ix,iy,iz)
-       ) * .5 * ppsc->dt * diffusion / deltaz;
+      (F3(f, DIVE_MARDER, ix,iy,iz+dz) - F3(f, DIVE_MARDER, ix,iy,iz))
+      * .5 * ppsc->dt * diffusion / deltaz;
   } psc_foreach_3d_more_end;
 
   psc_fields_put_as(flds, flds_base, EX, EX + 3);
@@ -202,12 +219,11 @@ do_marder_correction(struct psc_push_fields *push,
 
 void
 marder_correction_run(struct psc_push_fields *push, 
-  mfields_base_t *flds, mparticles_base_t *particles, mfields_t *res)
+  mfields_base_t *flds, mfields_t *res)
 {
   for (int p = 0; p < res->nr_patches; p++) {
     do_marder_correction(push, psc_mfields_get_patch(flds, p),
-	     psc_mparticles_get_patch(particles, p),
-	     psc_mfields_get_patch(res, p), DIVE_MARDER, N_MARDER);
+			 psc_mfields_get_patch(res, p));
   }
 }
 
@@ -220,7 +236,7 @@ marder_correction(struct psc_push_fields *push,
 
   mfields_t *res = marder_create_aid_fields(push, ppsc);
   marder_calc_aid_fields(push, flds, particles, res);
-  marder_correction_run(push, flds, particles, res);
+  marder_correction_run(push, flds, res);
   marder_destroy_aid_fields(push, res);
 }
 
