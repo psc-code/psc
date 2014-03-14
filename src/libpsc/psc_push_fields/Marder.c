@@ -225,6 +225,7 @@ marder_correction_run(struct psc_push_fields *push,
     do_marder_correction(push, psc_mfields_get_patch(flds, p),
 			 psc_mfields_get_patch(res, p));
   }
+  psc_bnd_fill_ghosts(ppsc->bnd, flds, EX, EX+3);
 }
 
 void
@@ -235,8 +236,10 @@ marder_correction(struct psc_push_fields *push,
    return;
 
   mfields_t *res = marder_create_aid_fields(push, ppsc);
-  marder_calc_aid_fields(push, flds, particles, res);
-  marder_correction_run(push, flds, res);
+  for (int i = 0; i < 10; i++) {
+    marder_calc_aid_fields(push, flds, particles, res);
+    marder_correction_run(push, flds, res);
+  }
   marder_destroy_aid_fields(push, res);
 }
 
