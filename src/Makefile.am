@@ -24,7 +24,8 @@ bin_PROGRAMS = \
 	psc_test_twoparticles \
 	psc_test_heating \
 	psc_test_fdtd \
-	psc_test_lb
+	psc_test_lb \
+	psc_test_open
 
 LDADD = libpsc/libpsc.la libmrc/src/libmrc.la
 
