@@ -52,15 +52,15 @@ psc_test_open_create(struct psc *psc)
   psc->domain.bnd_fld_hi[0] = BND_FLD_PERIODIC;
   psc->domain.bnd_fld_lo[1] = BND_FLD_PERIODIC;
   psc->domain.bnd_fld_hi[1] = BND_FLD_PERIODIC;
-  psc->domain.bnd_fld_lo[2] = BND_FLD_PERIODIC;
-  psc->domain.bnd_fld_hi[2] = BND_FLD_PERIODIC;
+  psc->domain.bnd_fld_lo[2] = BND_FLD_OPEN;
+  psc->domain.bnd_fld_hi[2] = BND_FLD_OPEN;
  
   psc->domain.bnd_part_lo[0] = BND_PART_PERIODIC;
   psc->domain.bnd_part_hi[0] = BND_PART_PERIODIC;
   psc->domain.bnd_part_lo[1] = BND_PART_PERIODIC;
   psc->domain.bnd_part_hi[1] = BND_PART_PERIODIC;
-  psc->domain.bnd_part_lo[2] = BND_PART_PERIODIC;
-  psc->domain.bnd_part_hi[2] = BND_PART_PERIODIC;
+  psc->domain.bnd_part_lo[2] = BND_PART_OPEN;
+  psc->domain.bnd_part_hi[2] = BND_PART_OPEN;
 
   // FIXME: can only use 1st order pushers with current conducting wall b.c.
   psc_push_particles_set_type(psc->push_particles, "1vb");
@@ -108,16 +108,15 @@ psc_test_open_init_npt(struct psc *psc, int pop, double x[3],
   struct psc_test_open *sub = to_psc_test_open(psc);
 
   npt->n = 1.;
+  npt->p[2] = .1;
   switch (pop) {
   case KIND_ELECTRON: // electron
     npt->q = -1.;
     npt->m = 1.;
-    npt->p[2] = .1;
     break;
   case KIND_ION: // ion
     npt->q = 1.;
     npt->m = sub->mi_over_me;
-    npt->p[2] = .1;
     break;
   default:
     assert(0);

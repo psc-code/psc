@@ -125,6 +125,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd, str
 	      dir[d] = 0;
 	      break;
 	    case BND_PART_ABSORBING:
+	    case BND_PART_OPEN:
 	      drop = true;
 	      break;
 	    default:
@@ -152,6 +153,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd, str
 	      }
 	      break;
 	    case BND_PART_ABSORBING:
+	    case BND_PART_OPEN:
 	      drop = true;
 	      break;
 	    default:

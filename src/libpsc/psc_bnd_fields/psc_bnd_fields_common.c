@@ -353,6 +353,8 @@ psc_bnd_fields_sub_fill_ghosts_E(struct psc_bnd_fields *bnd, struct psc_fields *
       case BND_FLD_CONDUCTING_WALL:
 	conducting_wall_E_lo(bnd, flds, d);
 	break;
+      case BND_FLD_OPEN:
+	break;
       default:
 	assert(0);
       }
@@ -366,6 +368,8 @@ psc_bnd_fields_sub_fill_ghosts_E(struct psc_bnd_fields *bnd, struct psc_fields *
 	break;
       case BND_FLD_CONDUCTING_WALL:
 	conducting_wall_E_hi(bnd, flds, d);
+	break;
+      case BND_FLD_OPEN:
 	break;
       default:
 	assert(0);
@@ -393,6 +397,8 @@ psc_bnd_fields_sub_fill_ghosts_H(struct psc_bnd_fields *bnd, struct psc_fields *
       case BND_FLD_CONDUCTING_WALL:
 	conducting_wall_H_lo(bnd, flds, d);
 	break;
+      case BND_FLD_OPEN:
+	break;
       default:
 	assert(0);
       }
@@ -406,6 +412,8 @@ psc_bnd_fields_sub_fill_ghosts_H(struct psc_bnd_fields *bnd, struct psc_fields *
 	break;
       case BND_FLD_CONDUCTING_WALL:
 	conducting_wall_H_hi(bnd, flds, d);
+	break;
+      case BND_FLD_OPEN:
 	break;
       default:
 	assert(0);
@@ -430,6 +438,9 @@ psc_bnd_fields_sub_add_ghosts_J(struct psc_bnd_fields *bnd, struct psc_fields *f
       case BND_FLD_CONDUCTING_WALL:
 	conducting_wall_J_lo(bnd, flds, d);
 	break;
+      case BND_FLD_OPEN:
+	//open_J_lo(bnd, flds, d);
+	break;
       default:
 	assert(0);
       }
@@ -443,6 +454,9 @@ psc_bnd_fields_sub_add_ghosts_J(struct psc_bnd_fields *bnd, struct psc_fields *f
 	break;
       case BND_FLD_CONDUCTING_WALL:
 	conducting_wall_J_hi(bnd, flds, d);
+	break;
+      case BND_FLD_OPEN:
+	//	open_J_hi(bnd, flds, d);
 	break;
       default:
 	assert(0);
