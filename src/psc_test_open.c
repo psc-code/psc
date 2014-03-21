@@ -13,6 +13,7 @@ struct psc_test_open {
   double B0;
   double mi_over_me;
   double Te, Ti;
+  double vze, vzi;
 };
 
 #define to_psc_test_open(psc) mrc_to_subobj(psc, struct psc_test_open)
@@ -23,6 +24,8 @@ static struct param psc_test_open_descr[] = {
   { "mi_over_me"    , VAR(mi_over_me)      , PARAM_DOUBLE(25.)    },
   { "Te"            , VAR(Te)              , PARAM_DOUBLE(.1)     },
   { "Ti"            , VAR(Ti)              , PARAM_DOUBLE(.1)     },
+  { "vze"           , VAR(vze)             , PARAM_DOUBLE(.1)     },
+  { "vzi"           , VAR(vzi)             , PARAM_DOUBLE(.1)     },
   {},
 };
 #undef VAR
@@ -108,15 +111,16 @@ psc_test_open_init_npt(struct psc *psc, int pop, double x[3],
   struct psc_test_open *sub = to_psc_test_open(psc);
 
   npt->n = 1.;
-  npt->p[2] = .1;
   switch (pop) {
-  case KIND_ELECTRON: // electron
+  case KIND_ELECTRON:
     npt->q = -1.;
     npt->m = 1.;
+    npt->p[2] = sub->vze;
     break;
-  case KIND_ION: // ion
+  case KIND_ION:
     npt->q = 1.;
     npt->m = sub->mi_over_me;
+    npt->p[2] = sub->vzi;
     break;
   default:
     assert(0);
