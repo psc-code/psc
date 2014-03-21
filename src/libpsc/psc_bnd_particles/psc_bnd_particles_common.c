@@ -8,6 +8,8 @@
 #include <mrc_io.h>
 #include <string.h>
 
+static const int debug_every_step = 1;
+
 static void
 copy_to_mrc_fld(struct mrc_fld *m3, struct psc_mfields *flds)
 {
@@ -21,6 +23,26 @@ copy_to_mrc_fld(struct mrc_fld *m3, struct psc_mfields *flds)
     } mrc_fld_foreach_end;
     mrc_fld_patch_put(m3);
   }
+}
+
+static void
+debug_dump(struct mrc_io *io, struct psc_mfields *mflds)
+{
+  if (ppsc->timestep % debug_every_step != 0) {
+    return;
+  }
+
+  struct mrc_fld *mrc_fld = mrc_domain_m3_create(ppsc->mrc_domain);
+  mrc_fld_set_name(mrc_fld, psc_mfields_name(mflds));
+  mrc_fld_set_param_int(mrc_fld, "nr_ghosts", 2);
+  mrc_fld_set_param_int(mrc_fld, "nr_comps", mflds->nr_fields);
+  mrc_fld_setup(mrc_fld);
+  for (int m = 0; m < mflds->nr_fields; m++) {
+    mrc_fld_set_comp_name(mrc_fld, m, psc_mfields_comp_name(mflds, m));
+  }
+  copy_to_mrc_fld(mrc_fld, mflds);
+  mrc_fld_write(mrc_fld, io);
+  mrc_fld_destroy(mrc_fld);
 }
 
 static void
@@ -58,19 +80,16 @@ average_in_time(struct psc_mfields *mflds_av, struct psc_mfields *mflds_last,
     struct psc_fields *flds_av = psc_mfields_get_patch(mflds_av, p);
     struct psc_fields *flds_last = psc_mfields_get_patch(mflds_last, p);
     
-    if (first_time) {
-      for (int m = 0; m < mflds_av->nr_fields; m++) {
+    for (int m = 0; m < mflds_av->nr_fields; m++) {
+      if (!first_time) {
 	for (int iy = 0; iy < ppatch->ldims[1]; iy++) {
-	  F3_C(flds_last, m, 0,iy,0) = F3_C(flds_av, m, 0,iy,0);
+	  F3_C(flds_av, m, 0,iy,0) = 
+	    rr * F3_C(flds_av, m, 0,iy,0)
+	    + (1. - rr) * F3_C(flds_last, m, 0,iy,0);
 	}
       }
-    }
 
-    for (int m = 0; m < mflds_av->nr_fields; m++) {
       for (int iy = 0; iy < ppatch->ldims[1]; iy++) {
-	F3_C(flds_av, m, 0,iy,0) = 
-	  rr * F3_C(flds_av, m, 0,iy,0)
-	  + (1.0 - rr) * F3_C(flds_last, m, 0,iy,0);
 	F3_C(flds_last, m, 0,iy,0) = F3_C(flds_av, m, 0,iy,0);
       }
     }
@@ -261,8 +280,18 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd, str
 static void
 psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparticles *mprts)
 {
-  int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  static struct mrc_io *io;
+  if (!io) {
+    io = mrc_io_create(psc_comm(ppsc));
+    mrc_io_set_type(io, "xdmf_collective");
+    mrc_io_set_param_string(io, "basename", "open");
+    mrc_io_set_from_options(io);
+    mrc_io_setup(io);
+  }
+
+  if (ppsc->timestep % debug_every_step == 0) {
+    mrc_io_open(io, "w", ppsc->timestep, ppsc->timestep * ppsc->dt);
+  }
 
   struct psc_bnd *flds_bnd = psc_bnd_create(psc_mparticles_comm(mprts));
   psc_bnd_set_type(flds_bnd, "c");
@@ -273,7 +302,9 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
   //  int ninco=0;
   //  static int seed;
   if (!itime){
-   srandom(rank);
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    srandom(rank);
    //   seed=random();
   }
 
@@ -315,17 +346,16 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
   int nr_kinds = ppsc->nr_kinds;
 
   psc_output_fields_item_run(item_n, ppsc->flds, mprts, mflds_n);
-
   psc_output_fields_item_run(item_v, ppsc->flds, mprts, mflds_v);
-
   psc_output_fields_item_run(item_t, ppsc->flds, mprts, mflds_t);
+
   psc_bnd_fill_ghosts(flds_bnd, mflds_t, 0, nr_kinds);
 
+  // fix up zero density cells
   for (int p = 0; p < ppsc->nr_patches; p++) {
     struct psc_patch *ppatch = &ppsc->patch[p];
     struct psc_fields *flds_n = psc_mfields_get_patch(mflds_n, p);
 
-    // fix up zero density cells
     for (int m = 0; m < nr_kinds; m++) {
       for (int iz = 0; iz < ppatch->ldims[2]; iz++) {
 	for (int iy = 0; iy < ppatch->ldims[1]; iy++) {
@@ -338,12 +368,12 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
   }    
   psc_bnd_fill_ghosts(flds_bnd, mflds_n, 0, nr_kinds);
 
+  // normalize v moments
   for (int p = 0; p < ppsc->nr_patches; p++) {
     struct psc_patch *ppatch = &ppsc->patch[p];
     struct psc_fields *flds_n = psc_mfields_get_patch(mflds_n, p);
     struct psc_fields *flds_v = psc_mfields_get_patch(mflds_v, p);
     
-    // normalized v moments
     for (int m = 0; m < nr_kinds; m++) {
       for (int mm = 0; mm < 3; mm++) {
 	for (int iz = 0; iz < ppatch->ldims[2]; iz++) {
@@ -359,92 +389,11 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
   average_9_point(mflds_n_av, mflds_n);
   average_9_point(mflds_v_av, mflds_v);
 
-  static struct mrc_io *io;
-  if (!io) {
-    io = mrc_io_create(psc_comm(ppsc));
-    mrc_io_set_type(io, "xdmf_collective");
-    mrc_io_set_param_string(io, "basename", "open");
-    mrc_io_set_from_options(io);
-    mrc_io_setup(io);
-  }
-
-  if (ppsc->timestep % 1 == 0) {
-    mrc_io_open(io, "w", ppsc->timestep, ppsc->timestep * ppsc->dt);
-    struct mrc_fld *mrc_fld = mrc_domain_m3_create(ppsc->mrc_domain);
-    mrc_fld_set_name(mrc_fld, "v");
-    mrc_fld_set_param_int(mrc_fld, "nr_ghosts", 2);
-    mrc_fld_set_param_int(mrc_fld, "nr_comps", 3 * nr_kinds);
-    mrc_fld_setup(mrc_fld);
-    mrc_fld_set_comp_name(mrc_fld, 0, "vx_e");
-    mrc_fld_set_comp_name(mrc_fld, 1, "vy_e");
-    mrc_fld_set_comp_name(mrc_fld, 2, "vz_e");
-    mrc_fld_set_comp_name(mrc_fld, 3, "vx_i");
-    mrc_fld_set_comp_name(mrc_fld, 4, "vy_i");
-    mrc_fld_set_comp_name(mrc_fld, 5, "vz_i");
-    copy_to_mrc_fld(mrc_fld, mflds_v);
-    mrc_fld_write(mrc_fld, io);
-    mrc_fld_destroy(mrc_fld);
-
-    mrc_fld = mrc_domain_m3_create(ppsc->mrc_domain);
-    mrc_fld_set_name(mrc_fld, "n_av");
-    mrc_fld_set_param_int(mrc_fld, "nr_ghosts", 2);
-    mrc_fld_set_param_int(mrc_fld, "nr_comps", nr_kinds);
-    mrc_fld_setup(mrc_fld);
-    mrc_fld_set_comp_name(mrc_fld, 0, "n_av_e");
-    mrc_fld_set_comp_name(mrc_fld, 1, "n_av_i");
-    copy_to_mrc_fld(mrc_fld, mflds_n_av);
-    mrc_fld_write(mrc_fld, io);
-    mrc_fld_destroy(mrc_fld);
-
-    mrc_fld = mrc_domain_m3_create(ppsc->mrc_domain);
-    mrc_fld_set_name(mrc_fld, "v_av");
-    mrc_fld_set_param_int(mrc_fld, "nr_ghosts", 2);
-    mrc_fld_set_param_int(mrc_fld, "nr_comps", 3 * nr_kinds);
-    mrc_fld_setup(mrc_fld);
-    mrc_fld_set_comp_name(mrc_fld, 0, "vx_av_e");
-    mrc_fld_set_comp_name(mrc_fld, 1, "vy_av_e");
-    mrc_fld_set_comp_name(mrc_fld, 2, "vz_av_e");
-    mrc_fld_set_comp_name(mrc_fld, 3, "vx_av_i");
-    mrc_fld_set_comp_name(mrc_fld, 4, "vy_av_i");
-    mrc_fld_set_comp_name(mrc_fld, 5, "vz_av_i");
-    copy_to_mrc_fld(mrc_fld, mflds_v_av);
-    mrc_fld_write(mrc_fld, io);
-    mrc_fld_destroy(mrc_fld);
-  }
-
   average_in_time(mflds_n_av, mflds_n_last, first_time);
   average_in_time(mflds_v_av, mflds_v_last, first_time);
 
-  if (ppsc->timestep % 1 == 0) {
-    struct mrc_fld *mrc_fld = mrc_domain_m3_create(ppsc->mrc_domain);
-    mrc_fld_set_name(mrc_fld, "n_avt");
-    mrc_fld_set_param_int(mrc_fld, "nr_ghosts", 2);
-    mrc_fld_set_param_int(mrc_fld, "nr_comps", nr_kinds);
-    mrc_fld_setup(mrc_fld);
-    mrc_fld_set_comp_name(mrc_fld, 0, "n_avt_e");
-    mrc_fld_set_comp_name(mrc_fld, 1, "n_avt_i");
-    copy_to_mrc_fld(mrc_fld, mflds_n_av);
-    mrc_fld_write(mrc_fld, io);
-    mrc_fld_destroy(mrc_fld);
-
-    mrc_fld = mrc_domain_m3_create(ppsc->mrc_domain);
-    mrc_fld_set_name(mrc_fld, "v_avt");
-    mrc_fld_set_param_int(mrc_fld, "nr_ghosts", 2);
-    mrc_fld_set_param_int(mrc_fld, "nr_comps", 3 * nr_kinds);
-    mrc_fld_setup(mrc_fld);
-    mrc_fld_set_comp_name(mrc_fld, 0, "vx_avt_e");
-    mrc_fld_set_comp_name(mrc_fld, 1, "vy_avt_e");
-    mrc_fld_set_comp_name(mrc_fld, 2, "vz_avt_e");
-    mrc_fld_set_comp_name(mrc_fld, 3, "vx_avt_i");
-    mrc_fld_set_comp_name(mrc_fld, 4, "vy_avt_i");
-    mrc_fld_set_comp_name(mrc_fld, 5, "vz_avt_i");
-    copy_to_mrc_fld(mrc_fld, mflds_v_av);
-    mrc_fld_write(mrc_fld, io);
-    mrc_fld_destroy(mrc_fld);
-
-    mrc_io_close(io);
-  }
-
+  debug_dump(io, mflds_n_av);
+  debug_dump(io, mflds_v_av);
 
   psc_mfields_destroy(mflds_v_av);
   psc_mfields_destroy(mflds_n_av);
@@ -459,6 +408,10 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
   psc_bnd_destroy(flds_bnd);
 
   first_time = false;
+
+  if (ppsc->timestep % debug_every_step == 0) {
+    mrc_io_close(io);
+  }
 }
 
 // ----------------------------------------------------------------------
