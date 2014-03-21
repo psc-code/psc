@@ -349,8 +349,6 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
   psc_output_fields_item_run(item_v, ppsc->flds, mprts, mflds_v);
   psc_output_fields_item_run(item_t, ppsc->flds, mprts, mflds_t);
 
-  psc_bnd_fill_ghosts(flds_bnd, mflds_t, 0, nr_kinds);
-
   // fix up zero density cells
   for (int p = 0; p < ppsc->nr_patches; p++) {
     struct psc_patch *ppatch = &ppsc->patch[p];
@@ -386,14 +384,42 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
   }
   psc_bnd_fill_ghosts(flds_bnd, mflds_v, 0, 3 * nr_kinds);
 
+  // calculate <(v - U)(v - U)> moments
+  for (int p = 0; p < ppsc->nr_patches; p++) {
+    struct psc_patch *ppatch = &ppsc->patch[p];
+    struct psc_fields *flds_n = psc_mfields_get_patch(mflds_n, p);
+    struct psc_fields *flds_v = psc_mfields_get_patch(mflds_v, p);
+    struct psc_fields *flds_t = psc_mfields_get_patch(mflds_t, p);
+    
+    const int mm2mx[6] = { 0, 1, 2, 0, 0, 1 };
+    const int mm2my[6] = { 0, 1, 2, 1, 2, 2 };
+    for (int m = 0; m < nr_kinds; m++) {
+      for (int mm = 0; mm < 6; mm++) {
+	int mx = mm2mx[mm], my = mm2my[mm];
+	for (int iz = 0; iz < ppatch->ldims[2]; iz++) {
+	  for (int iy = 0; iy < ppatch->ldims[1]; iy++) {
+	    F3_C(flds_t, 6*m + mm, 0,iy,iz) -=
+	      ppsc->kinds[m].m * 
+	      F3_C(flds_n, m, 0,iy,iz) * 
+	      F3_C(flds_v, mx, 0,iy,iz) * F3_C(flds_v, my, 0,iy,iz);
+	  }
+	}
+      }
+    }
+  }
+  psc_bnd_fill_ghosts(flds_bnd, mflds_t, 0, 6 * nr_kinds);
+
   average_9_point(mflds_n_av, mflds_n);
   average_9_point(mflds_v_av, mflds_v);
+  average_9_point(mflds_t_av, mflds_t);
 
   average_in_time(mflds_n_av, mflds_n_last, first_time);
   average_in_time(mflds_v_av, mflds_v_last, first_time);
+  average_in_time(mflds_t_av, mflds_t_last, first_time);
 
   debug_dump(io, mflds_n_av);
   debug_dump(io, mflds_v_av);
+  debug_dump(io, mflds_t_av);
 
   psc_mfields_destroy(mflds_v_av);
   psc_mfields_destroy(mflds_n_av);
