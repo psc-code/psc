@@ -8,6 +8,17 @@ struct psc_bnd_particles {
   struct mrc_obj obj;
   struct psc *psc;
   struct ddc_particles *ddcp;
+
+  // for open b.c.
+  bool first_time;
+  struct psc_bnd *flds_bnd;
+  struct psc_output_fields_item *item_n;
+  struct psc_output_fields_item *item_v;
+  struct psc_output_fields_item *item_t;
+  struct psc_mfields *mflds_n_last;
+  struct psc_mfields *mflds_v_last;
+  struct psc_mfields *mflds_t_last;
+  struct psc_mfields *mflds_n_in;
 };
 
 struct psc_bnd_particles_ops {
