@@ -156,6 +156,9 @@ psc_bnd_particles_sub_setup(struct psc_bnd_particles *bnd)
   psc_output_fields_item_set_psc_bnd(bnd->item_t, bnd->flds_bnd);
   psc_output_fields_item_setup(bnd->item_t);
 
+  bnd->mflds_n_av = psc_output_fields_item_create_mfields(bnd->item_n);
+  bnd->mflds_v_av = psc_output_fields_item_create_mfields(bnd->item_v);
+  bnd->mflds_t_av = psc_output_fields_item_create_mfields(bnd->item_t);
   bnd->mflds_n_last = psc_output_fields_item_create_mfields(bnd->item_n);
   bnd->mflds_v_last = psc_output_fields_item_create_mfields(bnd->item_v);
   bnd->mflds_t_last = psc_output_fields_item_create_mfields(bnd->item_t);
@@ -170,6 +173,12 @@ psc_bnd_particles_sub_unsetup(struct psc_bnd_particles *bnd)
 {
   ddc_particles_destroy(bnd->ddcp);
 
+  psc_mfields_destroy(bnd->mflds_v_av);
+  psc_mfields_destroy(bnd->mflds_n_av);
+  psc_mfields_destroy(bnd->mflds_t_av);
+  psc_mfields_destroy(bnd->mflds_v_last);
+  psc_mfields_destroy(bnd->mflds_n_last);
+  psc_mfields_destroy(bnd->mflds_t_last);
   psc_output_fields_item_destroy(bnd->item_n);
   psc_output_fields_item_destroy(bnd->item_v);
   psc_output_fields_item_destroy(bnd->item_t);
@@ -317,9 +326,9 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd, str
 }
 
 static void
-psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparticles *mprts)
+psc_bnd_particles_open_calc_moments(struct psc_bnd_particles *bnd,
+				    struct psc_mparticles *mprts)
 {
-#ifndef NO_OPEN_BC
   static struct mrc_io *io;
   if (!io) {
     io = mrc_io_create(psc_comm(ppsc));
@@ -333,30 +342,11 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
     mrc_io_open(io, "w", ppsc->timestep, ppsc->timestep * ppsc->dt);
   }
 
-  struct psc_mfields *mflds_n = psc_output_fields_item_create_mfields(bnd->item_n);
-  struct psc_mfields *mflds_n_av = psc_output_fields_item_create_mfields(bnd->item_n);
-
-  struct psc_mfields *mflds_v = psc_output_fields_item_create_mfields(bnd->item_v);
-  struct psc_mfields *mflds_v_av = psc_output_fields_item_create_mfields(bnd->item_v);
-
-  struct psc_mfields *mflds_t = psc_output_fields_item_create_mfields(bnd->item_t);
-  struct psc_mfields *mflds_t_av = psc_output_fields_item_create_mfields(bnd->item_t);
-  struct psc_mfields *mflds_ipr = psc_output_fields_item_create_mfields(bnd->item_t);
-  psc_mfields_set_comp_name(mflds_ipr, 0, "Wxxe");
-  psc_mfields_set_comp_name(mflds_ipr, 1, "Wyye");
-  psc_mfields_set_comp_name(mflds_ipr, 2, "Wzze");
-  psc_mfields_set_comp_name(mflds_ipr, 3, "Wxye");
-  psc_mfields_set_comp_name(mflds_ipr, 4, "Wxze");
-  psc_mfields_set_comp_name(mflds_ipr, 5, "Wyze");
-  psc_mfields_set_comp_name(mflds_ipr, 6, "Wxxi");
-  psc_mfields_set_comp_name(mflds_ipr, 7, "Wyyi");
-  psc_mfields_set_comp_name(mflds_ipr, 8, "Wzzi");
-  psc_mfields_set_comp_name(mflds_ipr, 9, "Wxyi");
-  psc_mfields_set_comp_name(mflds_ipr, 10, "Wxzi");
-  psc_mfields_set_comp_name(mflds_ipr, 11, "Wyzi");
-
-
   int nr_kinds = ppsc->nr_kinds;
+
+  struct psc_mfields *mflds_n = psc_output_fields_item_create_mfields(bnd->item_n);
+  struct psc_mfields *mflds_v = psc_output_fields_item_create_mfields(bnd->item_v);
+  struct psc_mfields *mflds_t = psc_output_fields_item_create_mfields(bnd->item_t);
 
   psc_output_fields_item_run(bnd->item_n, ppsc->flds, mprts, mflds_n);
   psc_output_fields_item_run(bnd->item_v, ppsc->flds, mprts, mflds_v);
@@ -423,22 +413,55 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
   }
   psc_bnd_fill_ghosts(bnd->flds_bnd, mflds_t, 0, 6 * nr_kinds);
 
-  average_9_point(mflds_n_av, mflds_n);
-  average_9_point(mflds_v_av, mflds_v);
-  average_9_point(mflds_t_av, mflds_t);
+  average_9_point(bnd->mflds_n_av, mflds_n);
+  average_9_point(bnd->mflds_v_av, mflds_v);
+  average_9_point(bnd->mflds_t_av, mflds_t);
 
-  average_in_time(bnd, mflds_n_av, bnd->mflds_n_last);
-  average_in_time(bnd, mflds_v_av, bnd->mflds_v_last);
-  average_in_time(bnd, mflds_t_av, bnd->mflds_t_last);
+  average_in_time(bnd, bnd->mflds_n_av, bnd->mflds_n_last);
+  average_in_time(bnd, bnd->mflds_v_av, bnd->mflds_v_last);
+  average_in_time(bnd, bnd->mflds_t_av, bnd->mflds_t_last);
 
-  /* debug_dump(io, mflds_n_av); */
-  /* debug_dump(io, mflds_v_av); */
-  /* debug_dump(io, mflds_t_av); */
+  /* debug_dump(io, bnd->mflds_n_av); */
+  /* debug_dump(io, bnd->mflds_v_av); */
+  /* debug_dump(io, bnd->mflds_t_av); */
+
+  psc_mfields_destroy(mflds_v);
+  psc_mfields_destroy(mflds_n);
+  psc_mfields_destroy(mflds_t);
+
+  bnd->first_time = false;
+
+  if (ppsc->timestep % debug_every_step == 0) {
+    mrc_io_close(io);
+  }
+}
+
+static void
+psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparticles *mprts)
+{
+  psc_bnd_particles_open_calc_moments(bnd, mprts);
+
+#ifndef NO_OPEN_BC
+  int nr_kinds = ppsc->nr_kinds;
+
+  struct psc_mfields *mflds_ipr = psc_output_fields_item_create_mfields(bnd->item_t);
+  psc_mfields_set_comp_name(mflds_ipr, 0, "Wxxe");
+  psc_mfields_set_comp_name(mflds_ipr, 1, "Wyye");
+  psc_mfields_set_comp_name(mflds_ipr, 2, "Wzze");
+  psc_mfields_set_comp_name(mflds_ipr, 3, "Wxye");
+  psc_mfields_set_comp_name(mflds_ipr, 4, "Wxze");
+  psc_mfields_set_comp_name(mflds_ipr, 5, "Wyze");
+  psc_mfields_set_comp_name(mflds_ipr, 6, "Wxxi");
+  psc_mfields_set_comp_name(mflds_ipr, 7, "Wyyi");
+  psc_mfields_set_comp_name(mflds_ipr, 8, "Wzzi");
+  psc_mfields_set_comp_name(mflds_ipr, 9, "Wxyi");
+  psc_mfields_set_comp_name(mflds_ipr, 10, "Wxzi");
+  psc_mfields_set_comp_name(mflds_ipr, 11, "Wyzi");
 
   for (int p = 0; p < ppsc->nr_patches; p++) {
     struct psc_patch *ppatch = &ppsc->patch[p];
     struct psc_fields *flds_ipr = psc_mfields_get_patch(mflds_ipr, p);
-    struct psc_fields *flds_t_av = psc_mfields_get_patch(mflds_t_av, p);
+    struct psc_fields *flds_t_av = psc_mfields_get_patch(bnd->mflds_t_av, p);
     for (int m = 0; m < nr_kinds; m++) {
       for (int iy = 0; iy < ppatch->ldims[1]; iy++) {
 	double determ = F3_C(flds_t_av, 6*m+0, 0,iy,0)*F3_C(flds_t_av, 6*m+1, 0,iy,0)*F3_C(flds_t_av, 6*m+2, 0,iy,0) 
@@ -469,14 +492,14 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
     }
   }
 
-  debug_dump(io, mflds_ipr);
+  //  debug_dump(io, mflds_ipr);
 
   for (int p = 0; p < ppsc->nr_patches; p++) {
     struct psc_patch *ppatch = &ppsc->patch[p];
     struct psc_fields *flds_ipr = psc_mfields_get_patch(mflds_ipr, p);
-    struct psc_fields *flds_n_av = psc_mfields_get_patch(mflds_n_av, p);
-    struct psc_fields *flds_v_av = psc_mfields_get_patch(mflds_v_av, p);
-    struct psc_fields *flds_t_av = psc_mfields_get_patch(mflds_t_av, p);
+    struct psc_fields *flds_n_av = psc_mfields_get_patch(bnd->mflds_n_av, p);
+    struct psc_fields *flds_v_av = psc_mfields_get_patch(bnd->mflds_v_av, p);
+    struct psc_fields *flds_t_av = psc_mfields_get_patch(bnd->mflds_t_av, p);
     struct psc_fields *flds_n_in = psc_mfields_get_patch(bnd->mflds_n_in, p);
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
 
@@ -629,19 +652,7 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
    }
   }
 
-  psc_mfields_destroy(mflds_v_av);
-  psc_mfields_destroy(mflds_n_av);
-  psc_mfields_destroy(mflds_t_av);
-  psc_mfields_destroy(mflds_v);
-  psc_mfields_destroy(mflds_n);
-  psc_mfields_destroy(mflds_t);
   psc_mfields_destroy(mflds_ipr);
-
-  bnd->first_time = false;
-
-  if (ppsc->timestep % debug_every_step == 0) {
-    mrc_io_close(io);
-  }
 #endif
 }
 

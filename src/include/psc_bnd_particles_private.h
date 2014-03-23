@@ -15,6 +15,9 @@ struct psc_bnd_particles {
   struct psc_output_fields_item *item_n;
   struct psc_output_fields_item *item_v;
   struct psc_output_fields_item *item_t;
+  struct psc_mfields *mflds_n_av;
+  struct psc_mfields *mflds_v_av;
+  struct psc_mfields *mflds_t_av;
   struct psc_mfields *mflds_n_last;
   struct psc_mfields *mflds_v_last;
   struct psc_mfields *mflds_t_last;
