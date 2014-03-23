@@ -41,6 +41,7 @@ psc_test_open_create(struct psc *psc)
   psc->prm.nmax = 16000;
   psc->prm.nicell = 50;
   psc->prm.cfl = 0.98;
+  psc->prm.gdims_in_terms_of_cells = true;
 
   // will be set to actual values in psc_test_open_setup()
   psc->domain.length[0] = 1.; // no x dependence 
