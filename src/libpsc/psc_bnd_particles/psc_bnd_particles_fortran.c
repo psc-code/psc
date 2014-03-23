@@ -3,6 +3,7 @@
 #include "../psc_bnd/ddc_particles.h"
 #include "psc_particles_as_fortran.h"
 
+#define NO_OPEN_BC
 #include "psc_bnd_particles_common.c"
 
 // ======================================================================
