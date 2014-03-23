@@ -15,4 +15,5 @@ struct psc_bnd_particles_ops psc_bnd_particles_single_ops = {
   .exchange_particles      = psc_bnd_particles_sub_exchange_particles,
   .exchange_particles_prep = psc_bnd_particles_sub_exchange_particles_prep,
   .exchange_particles_post = psc_bnd_particles_sub_exchange_particles_post,
+  .open_calc_moments       = psc_bnd_particles_sub_open_calc_moments,
 };

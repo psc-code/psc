@@ -33,6 +33,7 @@ struct psc_bnd_particles_ops {
   void (*exchange_particles_post)(struct psc_bnd_particles *bnd, struct psc_particles *prts);
   void (*exchange_mprts_prep)(struct psc_bnd_particles *bnd, struct psc_mparticles *mprts);
   void (*exchange_mprts_post)(struct psc_bnd_particles *bnd, struct psc_mparticles *mprts);
+  void (*open_calc_moments)(struct psc_bnd_particles *bnd, struct psc_mparticles *mprts);
 };
 
 #define psc_bnd_particles_ops(bnd) ((struct psc_bnd_particles_ops *)((bnd)->obj.ops))

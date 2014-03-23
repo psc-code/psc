@@ -91,6 +91,17 @@ psc_bnd_particles_exchange(struct psc_bnd_particles *bnd, struct psc_mparticles 
 }
 
 // ----------------------------------------------------------------------
+// psc_bnd_particles_open_calc_moments
+
+void
+psc_bnd_particles_open_calc_moments(struct psc_bnd_particles *bnd, struct psc_mparticles *mprts)
+{
+  struct psc_bnd_particles_ops *ops = psc_bnd_particles_ops(bnd);
+  assert(ops->open_calc_moments);
+  ops->open_calc_moments(bnd, mprts);
+}
+
+// ----------------------------------------------------------------------
 // psc_bnd_particles_init
 
 static void

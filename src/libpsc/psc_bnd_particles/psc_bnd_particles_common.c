@@ -326,8 +326,8 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd, str
 }
 
 static void
-psc_bnd_particles_open_calc_moments(struct psc_bnd_particles *bnd,
-				    struct psc_mparticles *mprts)
+psc_bnd_particles_sub_open_calc_moments(struct psc_bnd_particles *bnd,
+					struct psc_mparticles *mprts_base)
 {
   static struct mrc_io *io;
   if (!io) {
@@ -342,6 +342,7 @@ psc_bnd_particles_open_calc_moments(struct psc_bnd_particles *bnd,
     mrc_io_open(io, "w", ppsc->timestep, ppsc->timestep * ppsc->dt);
   }
 
+  struct psc_mparticles *mprts = psc_mparticles_get_cf(mprts_base, 0);
   int nr_kinds = ppsc->nr_kinds;
 
   struct psc_mfields *mflds_n = psc_output_fields_item_create_mfields(bnd->item_n);
@@ -431,6 +432,8 @@ psc_bnd_particles_open_calc_moments(struct psc_bnd_particles *bnd,
 
   bnd->first_time = false;
 
+  psc_mparticles_put_cf(mprts, mprts_base, MP_DONT_COPY);
+
   if (ppsc->timestep % debug_every_step == 0) {
     mrc_io_close(io);
   }
@@ -439,8 +442,6 @@ psc_bnd_particles_open_calc_moments(struct psc_bnd_particles *bnd,
 static void
 psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparticles *mprts)
 {
-  psc_bnd_particles_open_calc_moments(bnd, mprts);
-
 #ifndef NO_OPEN_BC
   int nr_kinds = ppsc->nr_kinds;
 
