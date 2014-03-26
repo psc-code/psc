@@ -866,6 +866,24 @@ mrc_fld_double_aos_copy_from_float(struct mrc_fld *fld_double,
 }
 
 // ----------------------------------------------------------------------
+// mrc_fld_double_aos_copy_from_double
+
+static void
+mrc_fld_double_aos_copy_from_double(struct mrc_fld *fld_double_aos,
+				    struct mrc_fld *fld_double)
+{
+  assert(fld_double->_data_type == MRC_NT_DOUBLE);
+  assert(fld_double_aos->_data_type == MRC_NT_DOUBLE);
+  for (int p = 0; p < mrc_fld_nr_patches(fld_double); p++) {
+    mrc_fld_foreach(fld_double, ix,iy,iz, fld_double->_nr_ghosts, fld_double->_nr_ghosts) {
+      for (int m = 0; m < fld_double->_nr_comps; m++) {
+	MRC_D5(fld_double_aos, m, ix,iy,iz, p) = MRC_D5(fld_double, ix,iy,iz, m, p);
+      }
+    } mrc_fld_foreach_end;
+  }
+}
+
+// ----------------------------------------------------------------------
 // mrc_fld_double_aos_copy_to_float
 
 static void
@@ -884,11 +902,31 @@ mrc_fld_double_aos_copy_to_float(struct mrc_fld *fld_double,
 }
 
 // ----------------------------------------------------------------------
+// mrc_fld_double_aos_copy_to_double
+
+static void
+mrc_fld_double_aos_copy_to_double(struct mrc_fld *fld_double_aos,
+				  struct mrc_fld *fld_double)
+{
+  assert(fld_double->_data_type == MRC_NT_DOUBLE);
+  assert(fld_double_aos->_data_type == MRC_NT_DOUBLE);
+  for (int p = 0; p < mrc_fld_nr_patches(fld_double); p++) {
+    mrc_fld_foreach(fld_double, ix,iy,iz, fld_double->_nr_ghosts, fld_double->_nr_ghosts) {
+      for (int m = 0; m < fld_double->_nr_comps; m++) {
+	MRC_D5(fld_double, ix,iy,iz, m, p) = MRC_D5(fld_double_aos, m, ix,iy,iz, p);
+      }
+    } mrc_fld_foreach_end;
+  }
+}
+
+// ----------------------------------------------------------------------
 // mrc_fld "double_aos" methods
 
 static struct mrc_obj_method mrc_fld_double_aos_methods[] = {
   MRC_OBJ_METHOD("copy_to_float",   mrc_fld_double_aos_copy_to_float),
   MRC_OBJ_METHOD("copy_from_float", mrc_fld_double_aos_copy_from_float),
+  MRC_OBJ_METHOD("copy_to_double",   mrc_fld_double_aos_copy_to_double),
+  MRC_OBJ_METHOD("copy_from_double", mrc_fld_double_aos_copy_from_double),
   {}
 };
 
