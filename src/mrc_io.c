@@ -158,7 +158,9 @@ mrc_io_read_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
   if (ops->read_fld) {
     ops->read_fld(io, path, fld);
   } else if (fld->_dims.nr_vals == 3) {
-    mrc_io_read_m1(io, path, fld);
+    if (strcmp(mrc_fld_type(fld), "float") == 0) {
+      mrc_io_read_m1(io, path, fld);
+    }
   } else if (fld->_dims.nr_vals == 5) {
     mrc_io_read_m3(io, path, fld);
   } else {
@@ -176,7 +178,9 @@ mrc_io_write_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
   if (ops->write_fld) {
     ops->write_fld(io, path, fld);
   } else if (fld->_dims.nr_vals == 3) {
-    mrc_io_write_m1(io, path, fld);
+    if (strcmp(mrc_fld_type(fld), "float") == 0) {
+      mrc_io_write_m1(io, path, fld);
+    }
   } else if (fld->_dims.nr_vals == 5) {
     mrc_io_write_m3(io, path, fld);
   } else {

@@ -25,9 +25,9 @@
 
 
 struct mrc_crds_gen_gaussian {
-  float gc_x0; // Center (ie point of smallest dx)
-  float gc_r; // approximate ratio from peak to min crd
-  float gc_w; // Width, i.e. sigma of the gaussian
+  double gc_x0; // Center (ie point of smallest dx)
+  double gc_r; // approximate ratio from peak to min crd
+  double gc_w; // Width, i.e. sigma of the gaussian
 };
 
 #define mrc_crds_gen_gaussian(gen) mrc_to_subobj(gen, struct mrc_crds_gen_gaussian)
@@ -41,7 +41,7 @@ f_dx(struct mrc_crds_gen_gaussian *mbc, double x)
 
 
 static void
-mrc_crds_gen_gaussian_run(struct mrc_crds_gen *gen, float *xx, float *dx)
+mrc_crds_gen_gaussian_run(struct mrc_crds_gen *gen, double *xx, double *dx)
 {
   struct mrc_crds_gen_gaussian *sub = mrc_crds_gen_gaussian(gen);
 
@@ -57,8 +57,8 @@ mrc_crds_gen_gaussian_run(struct mrc_crds_gen *gen, float *xx, float *dx)
 
 
   // Calculate a set of grid points
-  float *_xx, *ncxx;
-  _xx = (float *)calloc(n+1+2*sw, sizeof(*xx));
+  double *_xx, *ncxx;
+  _xx = (double *)calloc(n+1+2*sw, sizeof(*xx));
   ncxx = _xx + sw;
   for (int jx = 0; jx < n + sw; jx++) {
     ncxx[jx+1] = ncxx[jx] + f_dx(sub, (jx + .5)/n);
@@ -81,9 +81,9 @@ mrc_crds_gen_gaussian_run(struct mrc_crds_gen *gen, float *xx, float *dx)
 
 #define VAR(x) (void *)offsetof(struct mrc_crds_gen_gaussian, x)
 static struct param mrc_crds_gen_gaussian_param_descr[] = {
-  { "gc_x0"             , VAR(gc_x0)            , PARAM_FLOAT(0.0)       },
-  { "gc_r"              , VAR(gc_r)             , PARAM_FLOAT(1.0)       },
-  { "gc_w"              , VAR(gc_w)             , PARAM_FLOAT(1.0)       },
+  { "gc_x0"             , VAR(gc_x0)            , PARAM_DOUBLE(0.0)       },
+  { "gc_r"              , VAR(gc_r)             , PARAM_DOUBLE(1.0)       },
+  { "gc_w"              , VAR(gc_w)             , PARAM_DOUBLE(1.0)       },
   {}
 };
 #undef VAR
@@ -105,12 +105,12 @@ struct mrc_crds_gen_ops mrc_crds_gen_gaussian_ops = {
 // Usefull for double tearing modes.
 
 struct mrc_crds_gen_two_gaussian {
-  float gc_x0; // Center (ie point of smallest dx)
-  float gc_r; // approximate ratio from peak to min crd
-  float gc_w; // Width, i.e. sigma of the gaussian
-  float gc_x1;  
-  float gc_rx; 
-  float gc_wx; 
+  double gc_x0; // Center (ie point of smallest dx)
+  double gc_r; // approximate ratio from peak to min crd
+  double gc_w; // Width, i.e. sigma of the gaussian
+  double gc_x1;  
+  double gc_rx; 
+  double gc_wx; 
 };
 
 
@@ -126,7 +126,7 @@ f2_dx(struct mrc_crds_gen_two_gaussian *mbc, double x)
 
 
 static void
-mrc_crds_gen_two_gaussian_run(struct mrc_crds_gen *gen, float *xx, float *dx)
+mrc_crds_gen_two_gaussian_run(struct mrc_crds_gen *gen, double *xx, double *dx)
 {
   struct mrc_crds_gen_two_gaussian *sub = mrc_crds_gen_two_gaussian(gen);
 
@@ -142,8 +142,8 @@ mrc_crds_gen_two_gaussian_run(struct mrc_crds_gen *gen, float *xx, float *dx)
 
   
   // Calculate a set of grid points
-  float *_xx, *ncxx;
-  _xx = (float *)calloc(n+1+2*sw, sizeof(*xx));
+  double *_xx, *ncxx;
+  _xx = (double *)calloc(n+1+2*sw, sizeof(*xx));
   ncxx = _xx + sw;
   for (int jx = 0; jx < n + sw; jx++) {
     ncxx[jx+1] = ncxx[jx] + f2_dx(sub, (jx + .5)/n);
@@ -168,12 +168,12 @@ mrc_crds_gen_two_gaussian_run(struct mrc_crds_gen *gen, float *xx, float *dx)
 
 #define VAR(x) (void *)offsetof(struct mrc_crds_gen_two_gaussian, x)
 static struct param mrc_crds_gen_two_gaussian_param_descr[] = {
-  { "gc_x0"             , VAR(gc_x0)            , PARAM_FLOAT(0.0)       },
-  { "gc_r"              , VAR(gc_r)             , PARAM_FLOAT(1.0)       },
-  { "gc_w"              , VAR(gc_w)             , PARAM_FLOAT(1.0)       },
-  { "gc_x1"             , VAR(gc_x1)            , PARAM_FLOAT(1.0)       },  
-  { "gc_rx"             , VAR(gc_rx)            , PARAM_FLOAT(1.0)       },
-  { "gc_wx"             , VAR(gc_wx)            , PARAM_FLOAT(1.0)       },
+  { "gc_x0"             , VAR(gc_x0)            , PARAM_DOUBLE(0.0)       },
+  { "gc_r"              , VAR(gc_r)             , PARAM_DOUBLE(1.0)       },
+  { "gc_w"              , VAR(gc_w)             , PARAM_DOUBLE(1.0)       },
+  { "gc_x1"             , VAR(gc_x1)            , PARAM_DOUBLE(1.0)       },  
+  { "gc_rx"             , VAR(gc_rx)            , PARAM_DOUBLE(1.0)       },
+  { "gc_wx"             , VAR(gc_wx)            , PARAM_DOUBLE(1.0)       },
   {}
 };
 #undef VAR

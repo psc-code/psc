@@ -17,7 +17,7 @@ struct mrc_crds_gen {
 
 struct mrc_crds_gen_ops {
   MRC_SUBCLASS_OPS(struct mrc_crds_gen);
-  void (*run)(struct mrc_crds_gen *gen, float *xx, float *dx);
+  void (*run)(struct mrc_crds_gen *gen, double *xx, double *dx);
 };
 
 #define mrc_crds_gen_ops(gen) ((struct mrc_crds_gen_ops *)(gen)->obj.ops)

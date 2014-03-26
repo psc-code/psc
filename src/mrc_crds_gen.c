@@ -16,7 +16,7 @@
 // xx and dx are arrays that need to support indexing from -2..n+1
 
 void
-mrc_crds_gen_run(struct mrc_crds_gen *gen, float *xx, float *dx)
+mrc_crds_gen_run(struct mrc_crds_gen *gen, double *xx, double *dx)
 {
   struct mrc_crds_gen_ops *ops = mrc_crds_gen_ops(gen);
   assert(ops && ops->run);
