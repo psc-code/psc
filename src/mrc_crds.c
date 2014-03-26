@@ -11,11 +11,11 @@
 #include <stdio.h>
 #include <math.h>
 
-static inline
-struct mrc_crds_ops *mrc_crds_ops(struct mrc_crds *crds)
-{
-  return (struct mrc_crds_ops *) crds->obj.ops;
-}
+// static inline
+// struct mrc_crds_ops *mrc_crds_ops(struct mrc_crds *crds)
+// {
+//   return (struct mrc_crds_ops *) crds->obj.ops;
+// }
 
 // ----------------------------------------------------------------------
 // mrc_crds_* wrappers
@@ -84,7 +84,7 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 	    } mrc_m1_foreach_end;
 	    int ld = mrc_fld_dims(crd_nc)[0];
 	    // extrapolate
-	    MRC_M1(crd_nc,0, 0 , p) = MRC_M1(crd_cc,0, 0   , p) 
+	    MRC_M1(crd_nc,0, 0 , p) = MRC_M1(crd_cc,0, 0   , p)
 	      - .5 * (MRC_M1(crd_cc,0,    1, p) - MRC_M1(crd_cc,0, 0   , p));
 	    MRC_M1(crd_nc,0, ld, p) = MRC_M1(crd_cc,0, ld-1, p)
 	      + .5 * (MRC_M1(crd_cc,0, ld-1, p) - MRC_M1(crd_cc,0, ld-2, p));
@@ -287,7 +287,7 @@ mrc_crds_mb_setup(struct mrc_crds *crds)
   struct MB_block *blocks;
 
   domain_get_blocks(crds->domain, &blocks, &nr_blocks);
-  
+
   int nr_patches;
   mrc_domain_get_patches(crds->domain, &nr_patches);
   int sw = crds->sw;
@@ -308,11 +308,11 @@ mrc_crds_mb_setup(struct mrc_crds *crds)
 	mrc_fld_set_param_int_array(x, "dims", 2, (int[2]) { block->mx[d] + 1, 2 });
 	mrc_fld_set_param_int_array(x, "sw"  , 2, (int[2]) { sw, 0 });
 	mrc_fld_setup(x);
-	
+
 	// If I had my way, I'd kill off the original crds_gen children to minimize confusion,
 	// but I guess I'll just have to write the docs to make it clear what's going on here.
 	assert(block->coord_gen[d]);
-	
+
 	// FIXME:
 	// I hate having to add this "m" hack more than any other.
 	// Could go in block factory, I suppose...
