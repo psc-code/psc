@@ -25,6 +25,13 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
   float *bd2y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD2);
   float *bd2z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD2);
 
+  mrc_fld_data_t hx = 1., hy = 1., hz = 1.;
+  int gdims[3];
+  mrc_domain_get_global_dims(fld->_domain, gdims);
+  if (gdims[0] == 1) hx = 0.;
+  if (gdims[1] == 1) hy = 0.;
+  if (gdims[2] == 1) hz = 0.;
+
   struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
   struct mrc_fld *d = mrc_fld_get_as(divb, FLD_TYPE);
 
@@ -50,9 +57,9 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
 	     mhd_type == MT_FULLY_CONSERVATIVE) {
     mrc_fld_foreach(divb, ix,iy,iz, 0, 0) {
       F3(d,0, ix,iy,iz) = 
-	(B1X(f, ix+1,iy,iz) - B1X(f, ix,iy,iz)) / bd2x[ix] +
-	(B1Y(f, ix,iy+1,iz) - B1Y(f, ix,iy,iz)) / bd2y[iy] +
-	(B1Z(f, ix,iy,iz+1) - B1Z(f, ix,iy,iz)) / bd2z[iz];
+	(B1X(f, ix+1,iy,iz) - B1X(f, ix,iy,iz)) * hx / bd2x[ix] +
+	(B1Y(f, ix,iy+1,iz) - B1Y(f, ix,iy,iz)) * hy / bd2y[iy] +
+	(B1Z(f, ix,iy,iz+1) - B1Z(f, ix,iy,iz)) * hz / bd2z[iz];
       F3(d,0, ix,iy,iz) *= F3(f,_YMASK, ix,iy,iz);
 
       max = mrc_fld_max(max, mrc_fld_abs(F3(d,0, ix,iy,iz)));
