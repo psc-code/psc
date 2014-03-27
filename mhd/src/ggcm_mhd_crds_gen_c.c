@@ -34,8 +34,8 @@ ggcm_mhd_crds_gen_c_run(struct ggcm_mhd_crds_gen *gen, struct ggcm_mhd_crds *crd
   mrc_crds_get_param_float3(mrc_crds, "h", xh);
 
   for (int d = 0; d < 3; d++) {
-    float *xx = malloc((gdims[d] + 2*BND + 1) * sizeof(float));
-    float *dx = malloc((gdims[d] + 2*BND + 1) * sizeof(float));
+    double *xx = malloc((gdims[d] + 2*BND + 1) * sizeof(double));
+    double *dx = malloc((gdims[d] + 2*BND + 1) * sizeof(double));
 
     struct mrc_crds_gen *gen = mrc_crds_gen_create(comm);
     if (d == 0) {
@@ -55,7 +55,7 @@ ggcm_mhd_crds_gen_c_run(struct ggcm_mhd_crds_gen *gen, struct ggcm_mhd_crds *crd
     mrc_crds_gen_destroy(gen);
 
     // shift to beginning of local domain
-    float *xxl = xx + info.off[d] + 2;
+    double *xxl = xx + info.off[d] + 2;
 
     // copy local part into fortran arrays
     float *fxx1 = ggcm_mhd_crds_get_crd(crds, d, FX1);
