@@ -28,6 +28,7 @@ struct mrc_crds_gen_gaussian {
   double gc_x0; // Center (ie point of smallest dx)
   double gc_r; // approximate ratio from peak to min crd
   double gc_w; // Width, i.e. sigma of the gaussian
+  bool bc_cyl; // Hack for cylindrical coord bc
 };
 
 #define mrc_crds_gen_gaussian(gen) mrc_to_subobj(gen, struct mrc_crds_gen_gaussian)
@@ -63,8 +64,14 @@ mrc_crds_gen_gaussian_run(struct mrc_crds_gen *gen, double *xx, double *dx)
   for (int jx = 0; jx < n + sw; jx++) {
     ncxx[jx+1] = ncxx[jx] + f_dx(sub, (jx + .5)/n);
   }
-  for (int jx = 0; jx > -sw; jx--) {
-    ncxx[jx-1] = ncxx[jx] - f_dx(sub, (jx - .5)/n);
+  if (sub->bc_cyl) {
+    for (int jx = -sw; jx < 0; jx++) {
+    ncxx[jx] = -ncxx[-jx];
+    }
+  } else { 
+    for (int jx = 0; jx > -sw; jx--) {
+      ncxx[jx-1] = ncxx[jx] - f_dx(sub, (jx - .5)/n);
+    }
   }
   double fac = 1. / ncxx[n];
   for (int jx = -sw; jx<= n + sw; jx++){
@@ -84,6 +91,7 @@ static struct param mrc_crds_gen_gaussian_param_descr[] = {
   { "gc_x0"             , VAR(gc_x0)            , PARAM_DOUBLE(0.0)       },
   { "gc_r"              , VAR(gc_r)             , PARAM_DOUBLE(1.0)       },
   { "gc_w"              , VAR(gc_w)             , PARAM_DOUBLE(1.0)       },
+  { "bc_cyl"            , VAR(bc_cyl)           , PARAM_BOOL(false)       },
   {}
 };
 #undef VAR
@@ -111,6 +119,7 @@ struct mrc_crds_gen_two_gaussian {
   double gc_x1;  
   double gc_rx; 
   double gc_wx; 
+  bool bc_cyl; // Hack for cylindrical coord bc
 };
 
 
@@ -148,8 +157,15 @@ mrc_crds_gen_two_gaussian_run(struct mrc_crds_gen *gen, double *xx, double *dx)
   for (int jx = 0; jx < n + sw; jx++) {
     ncxx[jx+1] = ncxx[jx] + f2_dx(sub, (jx + .5)/n);
   }
-  for (int jx = 0; jx > -sw; jx--) {
-    ncxx[jx-1] = ncxx[jx] - f2_dx(sub, (jx - .5)/n);
+
+  if (sub->bc_cyl) {
+    for (int jx = -sw; jx < 0; jx++) {
+    ncxx[jx] = -ncxx[-jx];
+    }
+  } else { 
+    for (int jx = 0; jx > -sw; jx--) {
+      ncxx[jx-1] = ncxx[jx] - f2_dx(sub, (jx - .5)/n);
+    }
   }
 
   // normalize the domain to [0,1]
@@ -174,6 +190,7 @@ static struct param mrc_crds_gen_two_gaussian_param_descr[] = {
   { "gc_x1"             , VAR(gc_x1)            , PARAM_DOUBLE(1.0)       },  
   { "gc_rx"             , VAR(gc_rx)            , PARAM_DOUBLE(1.0)       },
   { "gc_wx"             , VAR(gc_wx)            , PARAM_DOUBLE(1.0)       },
+  { "bc_cyl"            , VAR(bc_cyl)           , PARAM_BOOL(false)       },
   {}
 };
 #undef VAR
