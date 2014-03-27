@@ -3,7 +3,7 @@
     	b=`basename $a`
     	if sed 's/uid-0x[0-9a-f]*/uid/g' $b | diff -b -u $a -
     	then
-    	    echo "${b} matches, not updataing"
+    	    echo "${b} matches, not updating"
     	else
     	    echo "${b} doesn't match. Update?"
     	    select yn in "Yes" "No"; do

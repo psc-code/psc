@@ -2,14 +2,17 @@
     for a in @abs_srcdir@/../reference_results/$TEST/*.h5.dump; do 
 	b=`basename $a .dump`
 	h5dump $b > $b.dump
-	if   sed 's/uid-0x[0-9a-f]*/uid/g' $b.dump | diff -b -I 'STRSIZE [1-9][0-9]' -u $a -
+	if sed 's/uid-0x[0-9a-f]*/uid/g' $b.dump | 
+	   sed '/GROUP "mrc_vec-uid" {/,/^   }/d' |
+    	   diff -b -I 'STRSIZE [0-9]\{1,2\}' -u $a -
 	then
-	    echo "${b} matches, not updataing"
+	    echo "${b} matches, not updating"
 	else
 	    echo "${b} doesn't match. Update?"
 	    select yn in "Yes" "No"; do
 		case $yn in
-		    Yes ) sed 's/uid-0x[0-9a-f]*/uid/g' $b.dump > $a; break;;
+		    Yes ) sed 's/uid-0x[0-9a-f]*/uid/g' $b.dump |
+		          sed '/GROUP "mrc_vec-uid" {/,/^   }/d' > $a; break;;
 		    No ) break;;
 		esac
 	    done
