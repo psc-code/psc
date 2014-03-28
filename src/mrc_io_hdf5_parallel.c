@@ -84,11 +84,17 @@ phdf5_write_attr(struct mrc_io *io, const char *path, int type,
       ierr = H5LTset_attribute_string(group, ".", name, "(NULL)"); CE;
     }
     break;
+
   case PT_INT3:
     ierr = H5LTset_attribute_int(group, ".", name, pv->u_int3, 3); CE;
     break;
+
   case PT_FLOAT3:
     ierr = H5LTset_attribute_float(group, ".", name, pv->u_float3, 3); CE;
+    break;
+
+  case PT_DOUBLE3:
+    ierr = H5LTset_attribute_double(group, ".", name, pv->u_double3, 3); CE;
     break;
   case PT_INT_ARRAY:
     ierr = H5LTset_attribute_int(group, ".", name, pv->u_int_array.vals,
@@ -149,6 +155,9 @@ phdf5_read_attr(struct mrc_io *io, const char *path, int type,
     break;
   case PT_FLOAT3:
     ierr = H5LTget_attribute_float(group, ".", name, pv->u_float3); CE;
+    break;
+  case PT_DOUBLE3:
+    ierr = H5LTget_attribute_double(group, ".", name, pv->u_double3); CE;
     break;
   case PT_INT_ARRAY: {
     int attr = H5Aopen(group, name, H5P_DEFAULT); H5_CHK(attr);
