@@ -8,9 +8,9 @@
 
 // ======================================================================
 #define mrc_trafo_ops(trafo) ((struct mrc_trafo_ops *)trafo->obj.ops)
-#define XI0(crds, m, ix) MRC_MCRDX(crds, m, ix)
-#define XI1(crds, m, ix) MRC_MCRDY(crds, m, ix)
-#define XI2(crds, m, ix) MRC_MCRDZ(crds, m, ix)
+#define XI0(crds, m, ix) MRC_DMCRDX(crds, m, ix)
+#define XI1(crds, m, ix) MRC_DMCRDY(crds, m, ix)
+#define XI2(crds, m, ix) MRC_DMCRDZ(crds, m, ix)
 #define CE assert(ierr == 0);
 
 
