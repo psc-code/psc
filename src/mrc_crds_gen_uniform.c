@@ -21,13 +21,14 @@ mrc_crds_gen_uniform_run(struct mrc_crds_gen *gen, double *xx, double *dx)
   float xl[3], xh[3];
   mrc_crds_get_param_float3(gen->crds, "l", xl);
   mrc_crds_get_param_float3(gen->crds, "h", xh);
+  
   int sw;
   mrc_crds_get_param_int(gen->crds, "sw", &sw);
 
-  double h = (xh[d] - xl[d]) / n;
+  double h = ((double) xh[d] - (double) xl[d]) / n;
   
   for (int i = -sw; i < n + sw; i++) {
-    xx[i] = xl[d] + (i + .5) * h;
+    xx[i] = (double)xl[d] + (i + .5) * h;
     dx[i] = h;
   }
 }

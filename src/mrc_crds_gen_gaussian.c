@@ -80,7 +80,7 @@ mrc_crds_gen_gaussian_run(struct mrc_crds_gen *gen, double *xx, double *dx)
 
   // average them down to the actual coordinates (basically NC to CC)
   for (int ii = -sw; ii < n + sw; ii++) {
-    xx[ii] = xl[d] + 0.5*(ncxx[ii] + ncxx[ii+1]) * (xh[d] - xl[d]);
+    xx[ii] = (double)xl[d] + 0.5*(ncxx[ii] + ncxx[ii+1]) * ((double)xh[d] - (double)xl[d]);
   }
   free(_xx);
 }
@@ -176,7 +176,7 @@ mrc_crds_gen_two_gaussian_run(struct mrc_crds_gen *gen, double *xx, double *dx)
 
   // average them down to the actual coordinates (basically NC to CC, I thnk)
   for (int ii = -sw; ii < n + sw; ii++) {
-    xx[ii] = xl[d] + 0.5*(ncxx[ii] + ncxx[ii+1]) * (xh[d] - xl[d]);
+    xx[ii] = (double)xl[d] + 0.5*(ncxx[ii] + ncxx[ii+1]) * ((double)xh[d] - (double)xl[d]);
   }
   free(_xx);
 }
