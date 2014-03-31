@@ -134,6 +134,10 @@ ggcm_mhd_step_init()
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_step, x)
 static struct param ggcm_mhd_step_descr[] = {
   { "mhd"             , VAR(mhd)             , PARAM_OBJ(ggcm_mhd)       },
+  // This is a bit hacky, do_nwst may normally be set in the timeloop
+  // to determine whether to run newstep() the next timestep or not,
+  // but this allows to set it to "always on" easily for test runs
+  { "do_nwst"         , VAR(do_nwst)         , PARAM_BOOL(false)         },
   {},
 };
 #undef VAR
