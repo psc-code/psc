@@ -56,12 +56,13 @@ ggcm_mhd_step_run_predcorr(struct ggcm_mhd_step *step, struct mrc_fld *x)
   struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
   struct ggcm_mhd *mhd = step->mhd;
 
+  float dtn;
   if (step->do_nwst) {
     ggcm_mhd_fill_ghosts(mhd, mhd->fld, _RR1, mhd->time);
     primvar_c(mhd, _RR1);
     primbb_c(mhd, _RR1);
     zmaskn_c(mhd);
-    newstep_c(mhd, &step->dtn);
+    newstep_c(mhd, &dtn);
   }
 
   ggcm_mhd_fill_ghosts(mhd, x, _RR1, mhd->time);
@@ -73,7 +74,7 @@ ggcm_mhd_step_run_predcorr(struct ggcm_mhd_step *step, struct mrc_fld *x)
   ops->corr(step);
 
   if (step->do_nwst) {
-    float dtn = fminf(1., step->dtn); // FIXME, only kept for compatibility
+    dtn = fminf(1., dtn); // FIXME, only kept for compatibility
 
     if (dtn > 1.02 * mhd->dt || dtn < mhd->dt / 1.01) {
       mpi_printf(ggcm_mhd_comm(mhd), "switched dt %g <- %g\n",

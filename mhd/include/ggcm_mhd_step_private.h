@@ -10,9 +10,6 @@ struct ggcm_mhd_step {
   struct ggcm_mhd *mhd;
 
   bool do_nwst; // calculate new dt next timestep?
-
-  // new dt, calculated by the step and used from the next step on
-  float dtn;
 };
 
 struct ggcm_mhd_step_ops {
