@@ -140,10 +140,10 @@ wrap_mrc_jacobian_function(TS ts, PetscReal t, Vec xg, Mat *J, Mat *B,
   // FIXME at the very least, make that from the last recomputation...
   freq_step = 20000;
 
-  static Mat Bsave;
-  if (!Bsave) {
-    ierr = MatDuplicate(*J, MAT_DO_NOT_COPY_VALUES, &Bsave); CE;
-  }
+  /* static Mat Bsave; */
+  /* if (!Bsave) { */
+  /*   ierr = MatDuplicate(*J, MAT_DO_NOT_COPY_VALUES, &Bsave); CE; */
+  /* } */
 
   if ((step % freq_step) == 0 && it == 0) {
     goto compute;
@@ -154,9 +154,13 @@ wrap_mrc_jacobian_function(TS ts, PetscReal t, Vec xg, Mat *J, Mat *B,
     goto compute;
   }
 
-  //  ierr = PetscPrintf(PETSC_COMM_WORLD, "Skipping Jacobian...\n"); CE;
-  assert(Bsave);
-  ierr = MatCopy(Bsave, *B, SAME_NONZERO_PATTERN); CE;
+
+  // Modifications Kai made to this timestepper based on changes in Petsc.
+  // The petsc timestepper might be in need of some cleaning sometime soon...
+  goto compute;
+  ierr = PetscPrintf(PETSC_COMM_WORLD, "Skipping Jacobian...\n"); CE;
+  /* assert(Bsave); */
+  /* ierr = MatCopy(Bsave, *B, SAME_NONZERO_PATTERN); CE; */
 #warning should not be necessary to copy jacobian back???
   *flag = SAME_PRECONDITIONER;
   goto out;
@@ -170,7 +174,7 @@ wrap_mrc_jacobian_function(TS ts, PetscReal t, Vec xg, Mat *J, Mat *B,
     *flag = SAME_NONZERO_PATTERN;
     //    ierr = MatView(*J, PETSC_VIEWER_STDOUT_WORLD); CE;
     //    ierr = print_jac(*J); CE;
-    ierr = MatCopy(*B, Bsave, SAME_NONZERO_PATTERN); CE;
+    //ierr = MatCopy(*B, Bsave, SAME_NONZERO_PATTERN); CE;
 #if 0
     {
       int i,j, jx,jy,m, ix = 0, iy = 4, im = B0;
