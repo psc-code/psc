@@ -25,6 +25,15 @@ void mrc_ts_set_step_function(struct mrc_ts *ts,
 			      void (*stepf)(void *ctx, struct mrc_ts *ts,
 					    struct mrc_obj *x),
 			      void *ctx);
+void mrc_ts_set_pre_step_function(struct mrc_ts *ts,
+				  void (*pre_step)(void *ctx, struct mrc_ts *ts,
+						     struct mrc_obj *x),
+				  void *ctx);
+void mrc_ts_set_post_step_function(struct mrc_ts *ts,
+				  void (*post_step)(void *ctx, struct mrc_ts *ts,
+						    struct mrc_obj *x),
+				  void *ctx);
+
 void mrc_ts_step(struct mrc_ts *ts);
 void mrc_ts_solve(struct mrc_ts *ts);
 

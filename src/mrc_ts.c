@@ -108,6 +108,26 @@ mrc_ts_set_step_function(struct mrc_ts *ts,
 }
 
 void
+mrc_ts_set_pre_step_function(struct mrc_ts *ts,
+			     void (*pre_step)(void *ctx, struct mrc_ts *ts,
+					      struct mrc_obj *x),
+			     void *ctx)
+{
+  ts->pre_step = pre_step;
+  ts->pre_step_ctx = ctx;
+}
+
+void
+mrc_ts_set_post_step_function(struct mrc_ts *ts,
+			     void (*post_step)(void *ctx, struct mrc_ts *ts,
+					       struct mrc_obj *x),
+			     void *ctx)
+{
+  ts->post_step = post_step;
+  ts->post_step_ctx = ctx;
+}
+
+void
 mrc_ts_add_monitor(struct mrc_ts *ts, struct mrc_ts_monitor *mon)
 {
   list_add_tail(&mon->monitors_entry, &ts->monitors);
@@ -117,8 +137,17 @@ mrc_ts_add_monitor(struct mrc_ts *ts, struct mrc_ts_monitor *mon)
 void
 mrc_ts_step(struct mrc_ts *ts)
 {
+  if (ts->pre_step) {
+    ts->pre_step(ts->pre_step_ctx, ts, ts->x);
+  }
+
   assert(mrc_ts_ops(ts)->step);
   mrc_ts_ops(ts)->step(ts);
+
+  if (ts->post_step) {
+    ts->post_step(ts->post_step_ctx, ts, ts->x);
+  }
+
 }
 
 void

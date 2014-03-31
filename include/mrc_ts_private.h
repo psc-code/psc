@@ -21,6 +21,10 @@ struct mrc_ts {
   void (*rhsf)(void *ctx, struct mrc_obj *rhs, float time, struct mrc_obj *x);
   struct mrc_obj *stepf_ctx;
   void (*stepf)(void *ctx, struct mrc_ts *ts, struct mrc_obj *x);
+  struct mrc_obj *pre_step_ctx;
+  void (*pre_step)(void *ctx, struct mrc_ts *ts, struct mrc_obj *x);
+  struct mrc_obj *post_step_ctx;
+  void (*post_step)(void *ctx, struct mrc_ts *ts, struct mrc_obj *x);
 
   struct mrc_obj *(*vec_duplicate)(struct mrc_obj *);
   void (*vec_copy)(struct mrc_obj *, struct mrc_obj *);
