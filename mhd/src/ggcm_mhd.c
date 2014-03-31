@@ -185,13 +185,6 @@ ggcm_mhd_fill_ghosts(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m, float bnt
   ggcm_mhd_bnd_fill_ghosts(mhd->bnd, fld, m, bntim);
 }
 
-void
-ggcm_mhd_newstep(struct ggcm_mhd *mhd, float *dtn)
-{
-  struct ggcm_mhd_ops *ops = ggcm_mhd_ops(mhd);
-  ops->newstep(mhd, dtn);
-}
-
 int
 ggcm_mhd_ntot(struct ggcm_mhd *mhd)
 {

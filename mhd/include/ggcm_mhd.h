@@ -16,7 +16,6 @@ MRC_CLASS_DECLARE(ggcm_mhd, struct ggcm_mhd);
 
 void ggcm_mhd_fill_ghosts(struct ggcm_mhd *mhd, struct mrc_fld *fld,
 			  int m, float bntim);
-void ggcm_mhd_newstep(struct ggcm_mhd *mhd, float *dtn);
 void ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld,
 			struct mrc_fld *divb);
 void ggcm_mhd_calc_currcc(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
