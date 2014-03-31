@@ -6,6 +6,7 @@
 
 #include <mrc_io.h>
 #include <mrc_profile.h>
+#include <math.h>
 #include <assert.h>
 
 // ======================================================================
@@ -62,6 +63,16 @@ ggcm_mhd_step_run_predcorr(struct ggcm_mhd_step *step, struct mrc_fld *x)
   ggcm_mhd_fill_ghosts(mhd, x, _RR2, mhd->time + mhd->bndt);
   assert(ops && ops->corr);
   ops->corr(step);
+
+  if (step->do_nwst) {
+    float dtn = fminf(1., step->dtn); // FIXME, only kept for compatibility
+
+    if (dtn > 1.02 * mhd->dt || dtn < mhd->dt / 1.01) {
+      mpi_printf(ggcm_mhd_comm(mhd), "switched dt %g <- %g\n",
+		 dtn, mhd->dt);
+      mhd->dt = dtn;
+    }
+  }
 
   prof_stop(PR_push);
 }
