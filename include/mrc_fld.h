@@ -141,6 +141,8 @@ mrc_fld_same_shape(struct mrc_fld *fld_1, struct mrc_fld *fld_2)
 
 #endif
 
+#define MRC_S1(fld, i0) MRC_FLD(fld, float, i0,0,0,0,0)
+
 #define MRC_S2(fld, i0,i1) MRC_FLD(fld, float, i0,i1,0,0,0)
 #define MRC_D2(fld, i0,i1) MRC_FLD(fld, double, i0,i1,0,0,0)
 #define MRC_I2(fld, i0,i1) MRC_FLD(fld, int, i0,i1,0,0,0)
