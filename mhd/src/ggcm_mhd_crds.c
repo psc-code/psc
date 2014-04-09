@@ -37,8 +37,11 @@ _ggcm_mhd_crds_create(struct ggcm_mhd_crds *crds)
 {
   for (int d = 0; d < 3; d++) {
     crds->f1[d] = mrc_fld_create(MPI_COMM_SELF);
-    char s[10]; sprintf(s, "f1[%d]", d);
+    crds->global_f1[d] = mrc_fld_create(MPI_COMM_SELF);
+    char s[20]; sprintf(s, "f1[%d]", d);
+    char gs[20]; sprintf(gs, "global_f1[%d]", d);
     mrc_fld_set_name(crds->f1[d], s);
+    mrc_fld_set_name(crds->global_f1[d], gs);
   }
 }
 
@@ -48,6 +51,10 @@ _ggcm_mhd_crds_create(struct ggcm_mhd_crds *crds)
 static void
 _ggcm_mhd_crds_setup(struct ggcm_mhd_crds *crds)
 {
+  struct mrc_crds *mrc_crds = mrc_domain_get_crds(crds->domain);
+  int gdims[3];
+  mrc_domain_get_global_dims(crds->domain, gdims);
+
   for (int d = 0; d < 3; d++) {
     mrc_fld_set_param_obj(crds->f1[d], "domain", crds->domain);
     mrc_fld_set_param_int(crds->f1[d], "nr_spatial_dims", 1);
@@ -58,6 +65,10 @@ _ggcm_mhd_crds_setup(struct ggcm_mhd_crds *crds)
       mrc_fld_set_comp_name(crds->f1[d], m, crdname[m]);
     }
     mrc_fld_setup(crds->f1[d]);
+
+    mrc_fld_set_param_int_array(crds->global_f1[d], "dims", 1, (int[1]) { gdims[d] });
+    mrc_fld_set_param_int_array(crds->global_f1[d], "sw"  , 1, (int[1]) { mrc_crds->sw });
+    mrc_fld_setup(crds->global_f1[d]);
   }
 
   // set up values for Fortran coordinate arrays
@@ -68,10 +79,12 @@ _ggcm_mhd_crds_setup(struct ggcm_mhd_crds *crds)
   struct mrc_patch_info info;
   mrc_domain_get_local_patch_info(crds->domain, 0, &info);
 
-  struct mrc_crds *mrc_crds = mrc_domain_get_crds(crds->domain);
   for (int d = 0; d < 3; d++) {
     memcpy(mrc_crds->crd[d]->_arr, ggcm_mhd_crds_get_crd(crds, d, FX1) - mrc_crds->sw,
 	   mrc_crds->crd[d]->_len * sizeof(float));
+
+    memcpy(mrc_crds->global_crd[d]->_arr, ggcm_mhd_crds_get_global_crd(crds, d) - mrc_crds->sw,
+     mrc_crds->crd[d]->_len * sizeof(float));
   }
 }
 
@@ -83,6 +96,7 @@ _ggcm_mhd_crds_destroy(struct ggcm_mhd_crds *crds)
 {
   for (int d = 0; d < 3; d++) {
     mrc_fld_destroy(crds->f1[d]);
+    mrc_fld_destroy(crds->global_f1[d]);
   }
 }
 
@@ -96,6 +110,9 @@ _ggcm_mhd_crds_read(struct ggcm_mhd_crds *crds, struct mrc_io *io)
   crds->f1[0] = mrc_io_read_ref(io, crds, "f1[0]", mrc_fld);
   crds->f1[1] = mrc_io_read_ref(io, crds, "f1[1]", mrc_fld);
   crds->f1[2] = mrc_io_read_ref(io, crds, "f1[2]", mrc_fld);
+  crds->global_f1[0] = mrc_io_read_ref(io, crds, "global_f1[0]", mrc_fld);
+  crds->global_f1[1] = mrc_io_read_ref(io, crds, "global_f1[1]", mrc_fld);
+  crds->global_f1[2] = mrc_io_read_ref(io, crds, "global_f1[2]", mrc_fld);
 }
 
 // ----------------------------------------------------------------------
@@ -107,6 +124,9 @@ _ggcm_mhd_crds_write(struct ggcm_mhd_crds *crds, struct mrc_io *io)
   mrc_io_write_ref(io, crds, "f1[0]", crds->f1[0]);
   mrc_io_write_ref(io, crds, "f1[1]", crds->f1[1]);
   mrc_io_write_ref(io, crds, "f1[2]", crds->f1[2]);
+  mrc_io_write_ref(io, crds, "global_f1[0]", crds->global_f1[0]);
+  mrc_io_write_ref(io, crds, "global_f1[1]", crds->global_f1[1]);
+  mrc_io_write_ref(io, crds, "global_f1[2]", crds->global_f1[2]);
 }
 
 // ----------------------------------------------------------------------
@@ -116,6 +136,12 @@ float *
 ggcm_mhd_crds_get_crd(struct ggcm_mhd_crds *crds, int d, int m)
 {
   return &MRC_F1(crds->f1[d], m, 0);
+}
+
+float *
+ggcm_mhd_crds_get_global_crd(struct ggcm_mhd_crds *crds, int d)
+{
+  return &MRC_F1(crds->global_f1[d], 0, 0);
 }
 
 // ----------------------------------------------------------------------
