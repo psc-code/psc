@@ -118,7 +118,6 @@ ggcm_mhd_crds_gen_run(struct ggcm_mhd_crds_gen *gen, struct ggcm_mhd_crds *crds)
 static void
 ggcm_mhd_crds_gen_init()
 {
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_crds_gen, &ggcm_mhd_crds_gen_c_ops);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_crds_gen, &ggcm_mhd_crds_gen_mrc_ops);
 }
 

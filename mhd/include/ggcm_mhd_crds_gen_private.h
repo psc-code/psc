@@ -15,7 +15,6 @@ struct ggcm_mhd_crds_gen_ops {
   void (*run_aux)(struct ggcm_mhd_crds_gen *gen, struct ggcm_mhd_crds *crds);
 };
 
-extern struct ggcm_mhd_crds_gen_ops ggcm_mhd_crds_gen_c_ops;
 extern struct ggcm_mhd_crds_gen_ops ggcm_mhd_crds_gen_mrc_ops;
 
 #endif
