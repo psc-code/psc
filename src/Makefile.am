@@ -25,7 +25,9 @@ libmrc_la_SOURCES = \
 	mrc_crds.c \
 	mrc_crds_gen.c \
 	mrc_crds_gen_uniform.c \
-	mrc_crds_gen_ggcm_x.c \
+	mrc_ggcm_gridx_gen.c \
+	mrc_crds_gen_ggcm_x_tanh.c \
+	mrc_crds_gen_ggcm_x_cubic.c \
 	mrc_crds_gen_ggcm_yz.c \
 	mrc_crds_gen_gaussian.c \
 	mrc_vec.c \
