@@ -6,6 +6,7 @@
 
 struct ggcm_mhd_crds_gen {
   struct mrc_obj obj;
+  bool legacy_fd1;
 };
 
 struct ggcm_mhd_crds_gen_ops {

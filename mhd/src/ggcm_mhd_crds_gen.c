@@ -79,11 +79,22 @@ ggcm_mhd_crds_gen_init()
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_crds_gen description
+
+#define VAR(x) (void *)offsetof(struct ggcm_mhd_crds_gen, x)
+static struct param ggcm_mhd_crds_gen_descr[] = {
+  { "legacy_fd1",      VAR(legacy_fd1),      PARAM_BOOL(0)     },
+  {},
+};
+#undef VAR
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_crds_gen class
 
 struct mrc_class_ggcm_mhd_crds_gen mrc_class_ggcm_mhd_crds_gen = {
   .name             = "ggcm_mhd_crds_gen",
   .size             = sizeof(struct ggcm_mhd_crds_gen),
+  .param_descr      = ggcm_mhd_crds_gen_descr,
   .init             = ggcm_mhd_crds_gen_init,
 };
 

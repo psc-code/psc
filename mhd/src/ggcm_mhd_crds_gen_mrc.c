@@ -36,7 +36,12 @@ ggcm_mhd_crds_gen_mrc_run(struct ggcm_mhd_crds_gen *gen, struct ggcm_mhd_crds *c
 
     // have to move one in on both sides
     for (int i = -sw + 1; i < ldims[d] + sw - 1; i++) {
+      if (gen->legacy_fd1) {
+        int off = info.off[d];
+        fdx1[i] = 1.0 / MRC_F1(mrc_crds->global_crd[d], 1, i + off);
+      } else {
         fdx1[i] = 1.0 / (0.5 * (MRC_CRD(mrc_crds, d, i + 1) - MRC_CRD(mrc_crds, d, i - 1)));
+      }
     }
 
     mrc_f1_foreach(global_x, i, 0, 0) {
