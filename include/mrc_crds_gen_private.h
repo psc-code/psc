@@ -13,6 +13,10 @@ struct mrc_crds_gen {
   // domain global dims
   int dims[3];
   
+  int n;  // n interior points
+  int sw;  // stencil width
+  float xl;  // low edge
+  float xh;  // high edge
 };
 
 struct mrc_crds_gen_ops {

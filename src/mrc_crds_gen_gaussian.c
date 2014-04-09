@@ -45,35 +45,24 @@ mrc_crds_gen_gaussian_run(struct mrc_crds_gen *gen, double *xx, double *dx)
 {
   struct mrc_crds_gen_gaussian *sub = mrc_crds_gen_gaussian(gen);
 
-  int d = gen->d;
-  int n = gen->dims[d];
-
-  float xl[3], xh[3];
-  mrc_crds_get_param_float3(gen->crds, "l", xl);
-  mrc_crds_get_param_float3(gen->crds, "h", xh);
-
-  int sw;
-  mrc_crds_get_param_int(gen->crds, "sw", &sw);
-
-
   // Calculate a set of grid points
   double *_xx, *ncxx;
-  _xx = (double *)calloc(n+1+2*sw, sizeof(*xx));
-  ncxx = _xx + sw;
-  for (int jx = 0; jx < n + sw; jx++) {
-    ncxx[jx+1] = ncxx[jx] + f_dx(sub, (jx + .5)/n);
+  _xx = (double *)calloc(gen->n+1+2*gen->sw, sizeof(*xx));
+  ncxx = _xx + gen->sw;
+  for (int jx = 0; jx < gen->n + gen->sw; jx++) {
+    ncxx[jx+1] = ncxx[jx] + f_dx(sub, (jx + .5)/gen->n);
   }
-  for (int jx = 0; jx > -sw; jx--) {
-    ncxx[jx-1] = ncxx[jx] - f_dx(sub, (jx - .5)/n);
+  for (int jx = 0; jx > -gen->sw; jx--) {
+    ncxx[jx-1] = ncxx[jx] - f_dx(sub, (jx - .5)/gen->n);
   }
-  double fac = 1. / ncxx[n];
-  for (int jx = -sw; jx<= n + sw; jx++){
+  double fac = 1. / ncxx[gen->n];
+  for (int jx = -gen->sw; jx<= gen->n + gen->sw; jx++){
     ncxx[jx] *= fac;
   }
 
   // average them down to the actual coordinates (basically NC to CC)
-  for (int ii = -sw; ii < n + sw; ii++) {
-    xx[ii] = xl[d] + 0.5*(ncxx[ii] + ncxx[ii+1]) * (xh[d] - xl[d]);
+  for (int ii = -gen->sw; ii < gen->n + gen->sw; ii++) {
+    xx[ii] = gen->xl + 0.5*(ncxx[ii] + ncxx[ii+1]) * (gen->xh - gen->xl);
   }
   free(_xx);
 }
@@ -130,37 +119,26 @@ mrc_crds_gen_two_gaussian_run(struct mrc_crds_gen *gen, double *xx, double *dx)
 {
   struct mrc_crds_gen_two_gaussian *sub = mrc_crds_gen_two_gaussian(gen);
 
-  int d = gen->d;
-  int n = gen->dims[d];
-
-  float xl[3], xh[3];
-  mrc_crds_get_param_float3(gen->crds, "l", xl);
-  mrc_crds_get_param_float3(gen->crds, "h", xh);
-
-  int sw;
-  mrc_crds_get_param_int(gen->crds, "sw", &sw);
-
-  
   // Calculate a set of grid points
   double *_xx, *ncxx;
-  _xx = (double *)calloc(n+1+2*sw, sizeof(*xx));
-  ncxx = _xx + sw;
-  for (int jx = 0; jx < n + sw; jx++) {
-    ncxx[jx+1] = ncxx[jx] + f2_dx(sub, (jx + .5)/n);
+  _xx = (double *)calloc(gen->n+1+2*gen->sw, sizeof(*xx));
+  ncxx = _xx + gen->sw;
+  for (int jx = 0; jx < gen->n + gen->sw; jx++) {
+    ncxx[jx+1] = ncxx[jx] + f2_dx(sub, (jx + .5)/gen->n);
   }
-  for (int jx = 0; jx > -sw; jx--) {
-    ncxx[jx-1] = ncxx[jx] - f2_dx(sub, (jx - .5)/n);
+  for (int jx = 0; jx > -gen->sw; jx--) {
+    ncxx[jx-1] = ncxx[jx] - f2_dx(sub, (jx - .5)/gen->n);
   }
 
   // normalize the domain to [0,1]
-  double fac = 1. / ncxx[n];
-  for (int jx = -sw; jx<= n + sw; jx++){
+  double fac = 1. / ncxx[gen->n];
+  for (int jx = -gen->sw; jx<= gen->n + gen->sw; jx++){
     ncxx[jx] *= fac;
   }
 
   // average them down to the actual coordinates (basically NC to CC, I thnk)
-  for (int ii = -sw; ii < n + sw; ii++) {
-    xx[ii] = xl[d] + 0.5*(ncxx[ii] + ncxx[ii+1]) * (xh[d] - xl[d]);
+  for (int ii = -gen->sw; ii < gen->n + gen->sw; ii++) {
+    xx[ii] = gen->xl + 0.5*(ncxx[ii] + ncxx[ii+1]) * (gen->xh - gen->xl);
   }
   free(_xx);
 }

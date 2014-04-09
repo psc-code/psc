@@ -1,4 +1,5 @@
 
+#include "mrc_crds_gen_private.h"
 #include <mrc_crds.h>
 #include <mrc_crds_gen.h>
 #include <mrc_params.h>
@@ -145,13 +146,16 @@ mrc_crds_setup_alloc_only(struct mrc_crds *crds)
 static void
 _mrc_crds_setup(struct mrc_crds *crds)
 {
+  int gdims[3];
+  float xl[3], xh[3];
+  int nr_patches;
+  struct mrc_patch *patches;
+
   mrc_crds_setup_alloc_only(crds);
 
-  int gdims[3];
   mrc_domain_get_global_dims(crds->domain, gdims);
-  int nr_patches;
-  struct mrc_patch *patches = mrc_domain_get_patches(crds->domain, &nr_patches);
   int sw = crds->sw;
+  patches = mrc_domain_get_patches(crds->domain, &nr_patches);
 
   for (int d = 0; d < 3; d ++) {
     struct mrc_fld *x = mrc_fld_create(MPI_COMM_SELF);
@@ -161,7 +165,14 @@ _mrc_crds_setup(struct mrc_crds *crds)
     mrc_fld_setup(x);
 
     struct mrc_crds_gen *gen = crds->crds_gen[d];
+    mrc_crds_get_param_float3(gen->crds, "l", xl);
+    mrc_crds_get_param_float3(gen->crds, "h", xh);
+
     mrc_crds_gen_set_param_int3(gen, "m", (int[3]){gdims[0], gdims[1], gdims[2]});
+    mrc_crds_gen_set_param_int(gen, "n", gen->dims[d]);
+    mrc_crds_gen_set_param_int(gen, "sw", gen->crds->sw);
+    mrc_crds_gen_set_param_float(gen, "xl", xl[d]);
+    mrc_crds_gen_set_param_float(gen, "xh", xh[d]);
     mrc_crds_gen_run(gen, &MRC_D2(x, 0, 0), &MRC_D2(x, 0, 1));
 
     mrc_fld_foreach_patch(crds->crd[d], p) {
