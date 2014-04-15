@@ -17,7 +17,7 @@ make_basename(const char *run, float sheet, int outtype)
 
   switch (outtype) {
   case DIAG_TYPE_3D:
-    sprintf(filename, "%s.3df", run);
+    sprintf(filename, "%s.3d", run);
     break;
   case DIAG_TYPE_2D_Z:
     sprintf(filename, "%s.pz_%d", run, out_sheet);
