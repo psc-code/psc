@@ -475,6 +475,12 @@ calc_resis_const_c(struct ggcm_mhd *mhd, int m_curr)
   res1_const_c(mhd);
 }
 
+static void
+calc_resis_nl1_c(struct ggcm_mhd *mhd, int m_curr)
+{
+  // used to zero _RESIS field, but that's not needed.
+}
+
 static inline float
 bcthy3f(float s1, float s2)
 {
@@ -748,9 +754,9 @@ pushstage_c(struct ggcm_mhd *mhd, float dt, int m_prev, int m_curr, int m_next,
   pushpp_c(mhd, dt, m_next);
 
   switch (mhd->par.magdiffu) {
-  /* case MAGDIFFU_NL1: */
-  /*   calc_resis_nl1_c(mhd, m_curr); */
-  /*   break; */
+  case MAGDIFFU_NL1:
+    calc_resis_nl1_c(mhd, m_curr);
+    break;
   case MAGDIFFU_CONST:
     calc_resis_const_c(mhd, m_curr);
     break;
