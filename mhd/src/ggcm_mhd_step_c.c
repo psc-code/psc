@@ -568,7 +568,7 @@ bcthy3z_NL1(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int IZ
   mrc_fld_foreach(f, ix,iy,iz, 1, 0) {
     float bd2[3] = { bd2x[ix], bd2y[iy], bd2z[iz] };
     float bd2p[3] = { bd2x[ix+1], bd2y[iy+1], bd2z[iz+1] };
-    float e1, vv;
+    float e1, vv, ttmp[2];
     vv = F3(f, _TMP1, ix,iy,iz);
     if (vv > 0.f) {
       e1 = F3(f, m_curr + _B1X + ZZ, ix,iy,iz) +
@@ -577,7 +577,7 @@ bcthy3z_NL1(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int IZ
       e1 = F3(f, m_curr + _B1X + ZZ, ix+JX1,iy+JY1,iz+JZ1) -
 	F3(f, _TMP4, ix+JX1,iy+JY1,iz+JZ1) * (bd2p[YY] + dt*vv);
     }
-    float ttmp1 = e1 * vv;
+    ttmp[0] = e1 * vv;
 
     vv = F3(f, _TMP2, ix,iy,iz);
     if (vv > 0.f) {
@@ -587,7 +587,7 @@ bcthy3z_NL1(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int IZ
       e1 = F3(f, m_curr + _B1X + YY, ix+JX2,iy+JY2,iz+JZ2) -
 	F3(f, _TMP3, ix+JX2,iy+JY2,iz+JZ2) * (bd2p[ZZ] + dt*vv);
     }
-    float ttmp2 = e1 * vv;
+    ttmp[1] = e1 * vv;
 
     float t1m = F3(f, m_curr + _B1X + ZZ, ix+JX1,iy+JY1,iz+JZ1) - F3(f, m_curr + _B1X + ZZ, ix,iy,iz);
     float t1p = fabsf(F3(f, m_curr + _B1X + ZZ, ix+JX1,iy+JY1,iz+JZ1)) + fabsf(F3(f, m_curr + _B1X + ZZ, ix,iy,iz));
@@ -599,10 +599,10 @@ bcthy3z_NL1(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int IZ
     float d2 = sqr(t2m * tpi);
     if (d1 < mhd->par.diffth) d1 = 0.;
     if (d2 < mhd->par.diffth) d2 = 0.;
-    ttmp1 -= d1 * t1m * F3(f, _RMASK, ix,iy,iz);
-    ttmp2 -= d2 * t2m * F3(f, _RMASK, ix,iy,iz);
+    ttmp[0] -= d1 * t1m * F3(f, _RMASK, ix,iy,iz);
+    ttmp[1] -= d2 * t2m * F3(f, _RMASK, ix,iy,iz);
     F3(f, _RESIS, ix,iy,iz) += fabsf(d1+d2) * F3(f, _ZMASK, ix,iy,iz);
-    F3(f, FF, ix,iy,iz) = ttmp1 - ttmp2;
+    F3(f, FF, ix,iy,iz) = ttmp[0] - ttmp[1];
   } mrc_fld_foreach_end;
 }
 
@@ -624,7 +624,7 @@ bcthy3z_const(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int 
   mrc_fld_foreach(f, ix,iy,iz, 1, 0) {
     float bd2[3] = { bd2x[ix], bd2y[iy], bd2z[iz] };
     float bd2p[3] = { bd2x[ix+1], bd2y[iy+1], bd2z[iz+1] };
-    float e1, vv;
+    float e1, vv, ttmp[2];
     vv = F3(f, _TMP1, ix,iy,iz);
     if (vv > 0.f) {
       e1 = F3(f, m_curr + _B1X + ZZ, ix,iy,iz) +
@@ -633,7 +633,7 @@ bcthy3z_const(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int 
       e1 = F3(f, m_curr + _B1X + ZZ, ix+JX1,iy+JY1,iz+JZ1) -
 	F3(f, _TMP4, ix+JX1,iy+JY1,iz+JZ1) * (bd2p[YY] + dt*vv);
     }
-    float ttmp1 = e1 * vv;
+    ttmp[0] = e1 * vv;
 
     vv = F3(f, _TMP2, ix,iy,iz);
     if (vv > 0.f) {
@@ -643,7 +643,7 @@ bcthy3z_const(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int 
       e1 = F3(f, m_curr + _B1X + YY, ix+JX2,iy+JY2,iz+JZ2) -
 	F3(f, _TMP3, ix+JX2,iy+JY2,iz+JZ2) * (bd2p[ZZ] + dt*vv);
     }
-    float ttmp2 = e1 * vv;
+    ttmp[1] = e1 * vv;
 
     float vcurrXX = .25f * (F3(f, _CURRX + XX, ix   ,iy   ,iz   ) + 
 			    F3(f, _CURRX + XX, ix   ,iy+IY,iz+IZ) +
@@ -653,7 +653,7 @@ bcthy3z_const(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int 
 			   F3(f, _RESIS, ix   ,iy+IY,iz+IZ) +
 			   F3(f, _RESIS, ix+IX,iy   ,iz+IZ) +
 			   F3(f, _RESIS, ix+IX,iy+IY,iz   ));
-    F3(f, FF, ix,iy,iz) = ttmp1 - ttmp2 - vresis * vcurrXX;
+    F3(f, FF, ix,iy,iz) = ttmp[0] - ttmp[1] - vresis * vcurrXX;
   } mrc_fld_foreach_end;
 }
 
