@@ -526,6 +526,25 @@ calc_avg_dz_By(struct ggcm_mhd *mhd, struct mrc_fld *f, int m_curr, int XX, int 
   } mrc_fld_foreach_end;
 }
 
+#define CC_TO_EC(f, m, ix,iy,iz, IX,IY,IZ) \
+  (.25f * (F3(f, m, ix   ,iy   ,iz   ) +  \
+	   F3(f, m, ix   ,iy+IY,iz+IZ) +  \
+	   F3(f, m, ix+IX,iy   ,iz+IZ) +  \
+	   F3(f, m, ix+IX,iy+IY,iz   )))
+
+static inline void
+calc_ec_v(struct ggcm_mhd *mhd, struct mrc_fld *f, int XX, int YY, int ZZ,
+	  int IX, int IY, int IZ)
+{
+  // edge centered velocity
+  mrc_fld_foreach(f, ix,iy,iz, 1, 0) {
+    float vvYY = CC_TO_EC(f, _VX + YY, ix,iy,iz, IX,IY,IZ);
+    F3(f, _TMP1, ix,iy,iz) = vvYY; /* - d_i * vcurrYY */
+    float vvZZ = CC_TO_EC(f, _VX + ZZ, ix,iy,iz, IX,IY,IZ);
+    F3(f, _TMP2, ix,iy,iz) = vvZZ; /* - d_i * vcurrZZ */
+  } mrc_fld_foreach_end;
+}
+
 static void
 bcthy3z_NL1(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int IZ,
 	    int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2,
@@ -538,20 +557,7 @@ bcthy3z_NL1(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int IZ
   float *bd2z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD2);
 
   calc_avg_dz_By(mhd, f, m_curr, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2);
-
-  // edge centered velocity
-  mrc_fld_foreach(f, ix,iy,iz, 1, 0) {
-    float vvYY = .25f * (F3(f, _VX + YY, ix   ,iy   ,iz   ) + 
-			 F3(f, _VX + YY, ix   ,iy+IY,iz+IZ) +
-			 F3(f, _VX + YY, ix+IX,iy   ,iz+IZ) +
-			 F3(f, _VX + YY, ix+IX,iy+IY,iz   ));
-    F3(f, _TMP1, ix,iy,iz) = vvYY; /* - d_i * vcurrYY */
-    float vvZZ = .25f * (F3(f, _VX + ZZ, ix   ,iy   ,iz   ) + 
-			 F3(f, _VX + ZZ, ix   ,iy+IY,iz+IZ) +
-			 F3(f, _VX + ZZ, ix+IX,iy   ,iz+IZ) +
-			 F3(f, _VX + ZZ, ix+IX,iy+IY,iz   ));
-    F3(f, _TMP2, ix,iy,iz) = vvZZ; /* - d_i * vcurrZZ */
-  } mrc_fld_foreach_end;
+  calc_ec_v(mhd, f, XX, YY, ZZ, IX, IY, IZ);
 
   float diffmul=1.0;
   if (mhd->time < mhd->par.diff_timelo) { // no anomalous res at startup
@@ -612,20 +618,7 @@ bcthy3z_const(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int 
   float *bd2z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD2);
 
   calc_avg_dz_By(mhd, f, m_curr, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2);
-
-  // edge centered velocity
-  mrc_fld_foreach(f, ix,iy,iz, 1, 0) {
-    float vvYY = .25f * (F3(f, _VX + YY, ix   ,iy   ,iz   ) + 
-			 F3(f, _VX + YY, ix   ,iy+IY,iz+IZ) +
-			 F3(f, _VX + YY, ix+IX,iy   ,iz+IZ) +
-			 F3(f, _VX + YY, ix+IX,iy+IY,iz   ));
-    F3(f, _TMP1, ix,iy,iz) = vvYY; /* - d_i * vcurrYY */
-    float vvZZ = .25f * (F3(f, _VX + ZZ, ix   ,iy   ,iz   ) + 
-			 F3(f, _VX + ZZ, ix   ,iy+IY,iz+IZ) +
-			 F3(f, _VX + ZZ, ix+IX,iy   ,iz+IZ) +
-			 F3(f, _VX + ZZ, ix+IX,iy+IY,iz   ));
-    F3(f, _TMP2, ix,iy,iz) = vvZZ; /* - d_i * vcurrZZ */
-  } mrc_fld_foreach_end;
+  calc_ec_v(mhd, f, XX, YY, ZZ, IX, IY, IZ);
 
   // edge centered E = - v x B (+ dissipation)
   mrc_fld_foreach(f, ix,iy,iz, 1, 0) {
