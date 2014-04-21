@@ -545,6 +545,36 @@ calc_ec_v(struct ggcm_mhd *mhd, struct mrc_fld *f, int XX, int YY, int ZZ,
   } mrc_fld_foreach_end;
 }
 
+static inline void
+calc_v_x_B(float ttmp[2], struct mrc_fld *f, int m_curr, int ix, int iy, int iz,
+	   int XX, int YY, int ZZ, int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2,
+	   float *bd2x, float *bd2y, float *bd2z, float dt)
+{
+    float bd2[3] = { bd2x[ix], bd2y[iy], bd2z[iz] };
+    float bd2p[3] = { bd2x[ix+1], bd2y[iy+1], bd2z[iz+1] };
+    float e1, vv;
+    vv = F3(f, _TMP1, ix,iy,iz);
+    if (vv > 0.f) {
+      e1 = F3(f, m_curr + _B1X + ZZ, ix,iy,iz) +
+	F3(f, _TMP4, ix,iy,iz) * (bd2[YY] - dt*vv);
+    } else {
+      e1 = F3(f, m_curr + _B1X + ZZ, ix+JX1,iy+JY1,iz+JZ1) -
+	F3(f, _TMP4, ix+JX1,iy+JY1,iz+JZ1) * (bd2p[YY] + dt*vv);
+    }
+    ttmp[0] = e1 * vv;
+
+    vv = F3(f, _TMP2, ix,iy,iz);
+    if (vv > 0.f) {
+      e1 = F3(f, m_curr + _B1X + YY, ix,iy,iz) +
+	F3(f, _TMP3, ix,iy,iz) * (bd2[ZZ] - dt*vv);
+    } else {
+      e1 = F3(f, m_curr + _B1X + YY, ix+JX2,iy+JY2,iz+JZ2) -
+	F3(f, _TMP3, ix+JX2,iy+JY2,iz+JZ2) * (bd2p[ZZ] + dt*vv);
+    }
+    ttmp[1] = e1 * vv;
+
+}
+
 static void
 bcthy3z_NL1(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int IZ,
 	    int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2,
@@ -566,29 +596,10 @@ bcthy3z_NL1(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int IZ
 
   // edge centered E = - v x B (+ dissipation)
   mrc_fld_foreach(f, ix,iy,iz, 1, 0) {
-    float bd2[3] = { bd2x[ix], bd2y[iy], bd2z[iz] };
-    float bd2p[3] = { bd2x[ix+1], bd2y[iy+1], bd2z[iz+1] };
-    float e1, vv, ttmp[2];
-    vv = F3(f, _TMP1, ix,iy,iz);
-    if (vv > 0.f) {
-      e1 = F3(f, m_curr + _B1X + ZZ, ix,iy,iz) +
-	F3(f, _TMP4, ix,iy,iz) * (bd2[YY] - dt*vv);
-    } else {
-      e1 = F3(f, m_curr + _B1X + ZZ, ix+JX1,iy+JY1,iz+JZ1) -
-	F3(f, _TMP4, ix+JX1,iy+JY1,iz+JZ1) * (bd2p[YY] + dt*vv);
-    }
-    ttmp[0] = e1 * vv;
-
-    vv = F3(f, _TMP2, ix,iy,iz);
-    if (vv > 0.f) {
-      e1 = F3(f, m_curr + _B1X + YY, ix,iy,iz) +
-	F3(f, _TMP3, ix,iy,iz) * (bd2[ZZ] - dt*vv);
-    } else {
-      e1 = F3(f, m_curr + _B1X + YY, ix+JX2,iy+JY2,iz+JZ2) -
-	F3(f, _TMP3, ix+JX2,iy+JY2,iz+JZ2) * (bd2p[ZZ] + dt*vv);
-    }
-    ttmp[1] = e1 * vv;
-
+    float ttmp[2];
+    calc_v_x_B(ttmp, f, m_curr, ix, iy, iz, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2,
+	       bd2x, bd2y, bd2z, dt);
+    
     float t1m = F3(f, m_curr + _B1X + ZZ, ix+JX1,iy+JY1,iz+JZ1) - F3(f, m_curr + _B1X + ZZ, ix,iy,iz);
     float t1p = fabsf(F3(f, m_curr + _B1X + ZZ, ix+JX1,iy+JY1,iz+JZ1)) + fabsf(F3(f, m_curr + _B1X + ZZ, ix,iy,iz));
     float t2m = F3(f, m_curr + _B1X + YY, ix+JX2,iy+JY2,iz+JZ2) - F3(f, m_curr + _B1X + YY, ix,iy,iz);
@@ -622,28 +633,9 @@ bcthy3z_const(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int 
 
   // edge centered E = - v x B (+ dissipation)
   mrc_fld_foreach(f, ix,iy,iz, 1, 0) {
-    float bd2[3] = { bd2x[ix], bd2y[iy], bd2z[iz] };
-    float bd2p[3] = { bd2x[ix+1], bd2y[iy+1], bd2z[iz+1] };
-    float e1, vv, ttmp[2];
-    vv = F3(f, _TMP1, ix,iy,iz);
-    if (vv > 0.f) {
-      e1 = F3(f, m_curr + _B1X + ZZ, ix,iy,iz) +
-	F3(f, _TMP4, ix,iy,iz) * (bd2[YY] - dt*vv);
-    } else {
-      e1 = F3(f, m_curr + _B1X + ZZ, ix+JX1,iy+JY1,iz+JZ1) -
-	F3(f, _TMP4, ix+JX1,iy+JY1,iz+JZ1) * (bd2p[YY] + dt*vv);
-    }
-    ttmp[0] = e1 * vv;
-
-    vv = F3(f, _TMP2, ix,iy,iz);
-    if (vv > 0.f) {
-      e1 = F3(f, m_curr + _B1X + YY, ix,iy,iz) +
-	F3(f, _TMP3, ix,iy,iz) * (bd2[ZZ] - dt*vv);
-    } else {
-      e1 = F3(f, m_curr + _B1X + YY, ix+JX2,iy+JY2,iz+JZ2) -
-	F3(f, _TMP3, ix+JX2,iy+JY2,iz+JZ2) * (bd2p[ZZ] + dt*vv);
-    }
-    ttmp[1] = e1 * vv;
+    float ttmp[2];
+    calc_v_x_B(ttmp, f, m_curr, ix, iy, iz, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2,
+	       bd2x, bd2y, bd2z, dt);
 
     float vcurrXX = .25f * (F3(f, _CURRX + XX, ix   ,iy   ,iz   ) + 
 			    F3(f, _CURRX + XX, ix   ,iy+IY,iz+IZ) +
