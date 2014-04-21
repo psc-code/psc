@@ -515,6 +515,22 @@ calc_dz_By(struct ggcm_mhd *mhd, struct mrc_fld *f, int m_curr, int XX, int YY, 
   } mrc_fld_foreach_end;
 }
 
+static inline void
+calc_avg_dz_By(struct ggcm_mhd *mhd, struct mrc_fld *f,
+	       int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2)
+{
+  // harmonic average (up to factor of 2) if same sign
+  mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
+    float s1, s2;
+    s1 = F3(f, _TMP1, ix,iy,iz) * F3(f, _TMP1, ix-JX2,iy-JY2,iz-JZ2);
+    s2 = F3(f, _TMP1, ix,iy,iz) + F3(f, _TMP1, ix-JX2,iy-JY2,iz-JZ2);
+    F3(f, _TMP3, ix,iy,iz) = bcthy3f(s1, s2);
+    s1 = F3(f, _TMP2, ix,iy,iz) * F3(f, _TMP2, ix-JX1,iy-JY1,iz-JZ1);
+    s2 = F3(f, _TMP2, ix,iy,iz) + F3(f, _TMP2, ix-JX1,iy-JY1,iz-JZ1);
+    F3(f, _TMP4, ix,iy,iz) = bcthy3f(s1, s2);
+  } mrc_fld_foreach_end;
+}
+
 static void
 bcthy3z_NL1(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int IZ,
 	    int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2,
@@ -527,17 +543,7 @@ bcthy3z_NL1(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int IZ
   float *bd2z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD2);
 
   calc_dz_By(mhd, f, m_curr, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2);
-
-  // harmonic average if same sign
-  mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
-    float s1, s2;
-    s1 = F3(f, _TMP1, ix,iy,iz) * F3(f, _TMP1, ix-JX2,iy-JY2,iz-JZ2);
-    s2 = F3(f, _TMP1, ix,iy,iz) + F3(f, _TMP1, ix-JX2,iy-JY2,iz-JZ2);
-    F3(f, _TMP3, ix,iy,iz) = bcthy3f(s1, s2);
-    s1 = F3(f, _TMP2, ix,iy,iz) * F3(f, _TMP2, ix-JX1,iy-JY1,iz-JZ1);
-    s2 = F3(f, _TMP2, ix,iy,iz) + F3(f, _TMP2, ix-JX1,iy-JY1,iz-JZ1);
-    F3(f, _TMP4, ix,iy,iz) = bcthy3f(s1, s2);
-  } mrc_fld_foreach_end;
+  calc_avg_dz_By(mhd, f, JX1, JY1, JZ1, JX2, JY2, JZ2);
 
   // edge centered velocity
   mrc_fld_foreach(f, ix,iy,iz, 1, 0) {
@@ -612,17 +618,7 @@ bcthy3z_const(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int 
   float *bd2z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD2);
 
   calc_dz_By(mhd, f, m_curr, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2);
-
-  // harmonic average if same sign
-  mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
-    float s1, s2;
-    s1 = F3(f, _TMP1, ix,iy,iz) * F3(f, _TMP1, ix-JX2,iy-JY2,iz-JZ2);
-    s2 = F3(f, _TMP1, ix,iy,iz) + F3(f, _TMP1, ix-JX2,iy-JY2,iz-JZ2);
-    F3(f, _TMP3, ix,iy,iz) = bcthy3f(s1, s2);
-    s1 = F3(f, _TMP2, ix,iy,iz) * F3(f, _TMP2, ix-JX1,iy-JY1,iz-JZ1);
-    s2 = F3(f, _TMP2, ix,iy,iz) + F3(f, _TMP2, ix-JX1,iy-JY1,iz-JZ1);
-    F3(f, _TMP4, ix,iy,iz) = bcthy3f(s1, s2);
-  } mrc_fld_foreach_end;
+  calc_avg_dz_By(mhd, f, JX1, JY1, JZ1, JX2, JY2, JZ2);
 
   // edge centered velocity
   mrc_fld_foreach(f, ix,iy,iz, 1, 0) {
