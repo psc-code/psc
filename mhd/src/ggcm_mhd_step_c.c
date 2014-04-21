@@ -637,14 +637,8 @@ bcthy3z_const(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int 
     calc_v_x_B(ttmp, f, m_curr, ix, iy, iz, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2,
 	       bd2x, bd2y, bd2z, dt);
 
-    float vcurrXX = .25f * (F3(f, _CURRX + XX, ix   ,iy   ,iz   ) + 
-			    F3(f, _CURRX + XX, ix   ,iy+IY,iz+IZ) +
-			    F3(f, _CURRX + XX, ix+IX,iy   ,iz+IZ) +
-			    F3(f, _CURRX + XX, ix+IX,iy+IY,iz   ));
-    float vresis = .25f * (F3(f, _RESIS, ix   ,iy   ,iz   ) + 
-			   F3(f, _RESIS, ix   ,iy+IY,iz+IZ) +
-			   F3(f, _RESIS, ix+IX,iy   ,iz+IZ) +
-			   F3(f, _RESIS, ix+IX,iy+IY,iz   ));
+    float vcurrXX = CC_TO_EC(f, _CURRX + XX, ix,iy,iz, IX,IY,IZ);
+    float vresis = CC_TO_EC(f, _RESIS, ix,iy,iz, IX,IY,IZ);
     F3(f, FF, ix,iy,iz) = ttmp[0] - ttmp[1] - vresis * vcurrXX;
   } mrc_fld_foreach_end;
 }
