@@ -496,21 +496,13 @@ bcthy3f(float s1, float s2)
   return 0.f;
 }
 
-
-static void
-bcthy3z_NL1(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int IZ,
-	    int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2,
-	    int FF, float dt, int m_curr)
+static inline void
+calc_dz_By(struct ggcm_mhd *mhd, struct mrc_fld *f, int m_curr, int XX, int YY, int ZZ,
+	   int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2)
 {
-  struct mrc_fld *f = mhd->fld;
-
   float *bd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD1);
   float *bd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD1);
   float *bd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD1);
-
-  float *bd2x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD2);
-  float *bd2y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD2);
-  float *bd2z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD2);
 
   // d_z B_y, d_y B_z
   mrc_fld_foreach(f, ix,iy,iz, 2, 1) {
@@ -521,6 +513,20 @@ bcthy3z_NL1(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int IZ
     F3(f, _TMP2, ix,iy,iz) = bd1[YY] * 
       (F3(f, m_curr + _B1X + ZZ, ix+JX1,iy+JY1,iz+JZ1) - F3(f, m_curr + _B1X + ZZ, ix,iy,iz));
   } mrc_fld_foreach_end;
+}
+
+static void
+bcthy3z_NL1(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int IZ,
+	    int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2,
+	    int FF, float dt, int m_curr)
+{
+  struct mrc_fld *f = mhd->fld;
+
+  float *bd2x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD2);
+  float *bd2y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD2);
+  float *bd2z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD2);
+
+  calc_dz_By(mhd, f, m_curr, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2);
 
   // harmonic average if same sign
   mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
@@ -601,23 +607,11 @@ bcthy3z_const(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int 
 {
   struct mrc_fld *f = mhd->fld;
 
-  float *bd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD1);
-  float *bd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD1);
-  float *bd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD1);
-
   float *bd2x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD2);
   float *bd2y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD2);
   float *bd2z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD2);
 
-  // d_z B_y, d_y B_z
-  mrc_fld_foreach(f, ix,iy,iz, 2, 1) {
-    float bd1[3] = { bd1x[ix], bd1y[iy], bd1z[iz] };
-
-    F3(f, _TMP1, ix,iy,iz) = bd1[ZZ] * 
-      (F3(f, m_curr + _B1X + YY, ix+JX2,iy+JY2,iz+JZ2) - F3(f, m_curr + _B1X + YY, ix,iy,iz));
-    F3(f, _TMP2, ix,iy,iz) = bd1[YY] * 
-      (F3(f, m_curr + _B1X + ZZ, ix+JX1,iy+JY1,iz+JZ1) - F3(f, m_curr + _B1X + ZZ, ix,iy,iz));
-  } mrc_fld_foreach_end;
+  calc_dz_By(mhd, f, m_curr, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2);
 
   // harmonic average if same sign
   mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
