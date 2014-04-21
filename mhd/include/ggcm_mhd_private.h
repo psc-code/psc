@@ -19,6 +19,9 @@ struct ggcm_mhd_params {
   float diffsphere;
   float speedlimit, thx;
   float isphere, timelo;
+  float diff_timelo;
+  float diff_swbnd;
+  int diff_obnd;
   float d_i;
   float dtmin;
   double dbasetime;

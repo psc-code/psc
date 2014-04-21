@@ -28,6 +28,8 @@ rmaskn_c(struct ggcm_mhd *mhd)
   struct mrc_fld *f = mhd->fld;
 
   float diffco = mhd->par.diffco;
+  float diff_swbnd = mhd->par.diff_swbnd;
+  int diff_obnd = mhd->par.diff_obnd;
   int gdims[3];
   mrc_domain_get_global_dims(mhd->domain, gdims);
   struct mrc_patch_info info;
@@ -38,19 +40,18 @@ rmaskn_c(struct ggcm_mhd *mhd)
   mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
     F3(f,_RMASK, ix,iy,iz) = 0.f;
     float xxx = fx1x[ix];
-    if (xxx < -15.f)
+    if (xxx < diff_swbnd)
       continue;
-    if (iy + info.off[1] < 2)
+    if (iy + info.off[1] < diff_obnd)
       continue;
-    if (iz + info.off[2] < 2)
+    if (iz + info.off[2] < diff_obnd)
       continue;
-    if (ix + info.off[0] >= gdims[0] - 2)
+    if (ix + info.off[0] >= gdims[0] - diff_obnd)
       continue;
-    if (iy + info.off[1] >= gdims[1] - 2)
+    if (iy + info.off[1] >= gdims[1] - diff_obnd)
       continue;
-    if (iz + info.off[2] >= gdims[2] - 2)
+    if (iz + info.off[2] >= gdims[2] - diff_obnd)
       continue;
-
     F3(f, _RMASK, ix,iy,iz) = diffco * F3(f, _ZMASK, ix,iy,iz);
   } mrc_fld_foreach_end;
 }
@@ -541,7 +542,7 @@ bcthy3z_NL1(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int IZ
   } mrc_fld_foreach_end;
 
   float diffmul=1.0;
-  if (mhd->time < 600.f) { // no anomalous res at startup
+  if (mhd->time < mhd->par.diff_timelo) { // no anomalous res at startup
     diffmul = 0.f;
   }
 

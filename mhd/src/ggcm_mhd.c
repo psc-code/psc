@@ -272,6 +272,10 @@ static struct param ggcm_mhd_descr[] = {
   { "modnewstep"      , VAR(par.modnewstep)  , PARAM_INT(1)          },
   { "magdiffu"        , VAR(par.magdiffu)    , PARAM_SELECT(MAGDIFFU_NL1,
 							    magdiffu_descr) },
+  { "diff_timelo"     , VAR(par.diff_timelo) , PARAM_FLOAT(0.)       },
+  { "diff_swbnd"      , VAR(par.diff_swbnd)  , PARAM_FLOAT(-1e30)    },
+  { "diff_obnd"       , VAR(par.diff_obnd)   , PARAM_INT(0)          },
+
   { "time"            , VAR(time)            , MRC_VAR_FLOAT         },
   { "dt"              , VAR(dt)              , MRC_VAR_FLOAT         },
   { "istep"           , VAR(istep)           , MRC_VAR_INT           },
