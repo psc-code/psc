@@ -497,8 +497,8 @@ bcthy3f(float s1, float s2)
 }
 
 static inline void
-calc_dz_By(struct ggcm_mhd *mhd, struct mrc_fld *f, int m_curr, int XX, int YY, int ZZ,
-	   int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2)
+calc_avg_dz_By(struct ggcm_mhd *mhd, struct mrc_fld *f, int m_curr, int XX, int YY, int ZZ,
+	       int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2)
 {
   float *bd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD1);
   float *bd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD1);
@@ -513,12 +513,7 @@ calc_dz_By(struct ggcm_mhd *mhd, struct mrc_fld *f, int m_curr, int XX, int YY, 
     F3(f, _TMP2, ix,iy,iz) = bd1[YY] * 
       (F3(f, m_curr + _B1X + ZZ, ix+JX1,iy+JY1,iz+JZ1) - F3(f, m_curr + _B1X + ZZ, ix,iy,iz));
   } mrc_fld_foreach_end;
-}
 
-static inline void
-calc_avg_dz_By(struct ggcm_mhd *mhd, struct mrc_fld *f,
-	       int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2)
-{
   // harmonic average (up to factor of 2) if same sign
   mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
     float s1, s2;
@@ -542,8 +537,7 @@ bcthy3z_NL1(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int IZ
   float *bd2y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD2);
   float *bd2z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD2);
 
-  calc_dz_By(mhd, f, m_curr, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2);
-  calc_avg_dz_By(mhd, f, JX1, JY1, JZ1, JX2, JY2, JZ2);
+  calc_avg_dz_By(mhd, f, m_curr, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2);
 
   // edge centered velocity
   mrc_fld_foreach(f, ix,iy,iz, 1, 0) {
@@ -617,8 +611,7 @@ bcthy3z_const(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int 
   float *bd2y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD2);
   float *bd2z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD2);
 
-  calc_dz_By(mhd, f, m_curr, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2);
-  calc_avg_dz_By(mhd, f, JX1, JY1, JZ1, JX2, JY2, JZ2);
+  calc_avg_dz_By(mhd, f, m_curr, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2);
 
   // edge centered velocity
   mrc_fld_foreach(f, ix,iy,iz, 1, 0) {
