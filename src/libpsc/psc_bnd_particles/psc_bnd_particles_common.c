@@ -156,6 +156,11 @@ psc_bnd_particles_sub_setup(struct psc_bnd_particles *bnd)
   psc_output_fields_item_set_psc_bnd(bnd->item_t, bnd->flds_bnd);
   psc_output_fields_item_setup(bnd->item_t);
 
+  bnd->item_nvt = psc_output_fields_item_create(psc_bnd_particles_comm(bnd));
+  psc_output_fields_item_set_type(bnd->item_nvt, "nvt_1st_double");
+  psc_output_fields_item_set_psc_bnd(bnd->item_nvt, bnd->flds_bnd);
+  psc_output_fields_item_setup(bnd->item_nvt);
+
   bnd->mflds_n_av = psc_output_fields_item_create_mfields(bnd->item_n);
   bnd->mflds_v_av = psc_output_fields_item_create_mfields(bnd->item_v);
   bnd->mflds_t_av = psc_output_fields_item_create_mfields(bnd->item_t);
@@ -348,12 +353,14 @@ psc_bnd_particles_sub_open_calc_moments(struct psc_bnd_particles *bnd,
   struct psc_mfields *mflds_n = psc_output_fields_item_create_mfields(bnd->item_n);
   struct psc_mfields *mflds_v = psc_output_fields_item_create_mfields(bnd->item_v);
   struct psc_mfields *mflds_t = psc_output_fields_item_create_mfields(bnd->item_t);
+  struct psc_mfields *mflds_nvt = psc_output_fields_item_create_mfields(bnd->item_nvt);
 
   psc_output_fields_item_run(bnd->item_n, ppsc->flds, mprts, mflds_n);
   psc_output_fields_item_run(bnd->item_v, ppsc->flds, mprts, mflds_v);
   psc_output_fields_item_run(bnd->item_t, ppsc->flds, mprts, mflds_t);
+  psc_output_fields_item_run(bnd->item_nvt, ppsc->flds, mprts, mflds_nvt);
 
-  debug_dump(io, mflds_n);
+  //  debug_dump(io, mflds_nvt);
 
   // fix up zero density cells
   for (int p = 0; p < ppsc->nr_patches; p++) {

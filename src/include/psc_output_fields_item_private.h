@@ -14,6 +14,8 @@ enum {
   POFI_BY_KIND    = 2, // this item needs to be replicated by kind
 };
 
+#define POFI_MAX_COMPS (10)
+
 struct psc_output_fields_item_ops {
   MRC_SUBCLASS_OPS(struct psc_output_fields_item);
   void (*run)(struct psc_output_fields_item *item,
@@ -23,7 +25,7 @@ struct psc_output_fields_item_ops {
 		      struct psc_mfields *mflds, struct psc_mparticles *mprts,
 		      struct psc_mfields *mres);
   int nr_comp;
-  char *fld_names[6];
+  char *fld_names[POFI_MAX_COMPS];
   unsigned int flags;
 };
 
@@ -60,12 +62,14 @@ extern struct psc_output_fields_item_ops psc_output_fields_item_p_1st_single_ops
 extern struct psc_output_fields_item_ops psc_output_fields_item_T_1st_single_ops;
 extern struct psc_output_fields_item_ops psc_output_fields_item_v_1st_single_ops;
 extern struct psc_output_fields_item_ops psc_output_fields_item_vv_1st_single_ops;
+extern struct psc_output_fields_item_ops psc_output_fields_item_nvt_1st_single_ops;
 
 extern struct psc_output_fields_item_ops psc_output_fields_item_n_1st_double_ops;
 extern struct psc_output_fields_item_ops psc_output_fields_item_p_1st_double_ops;
 extern struct psc_output_fields_item_ops psc_output_fields_item_T_1st_double_ops;
 extern struct psc_output_fields_item_ops psc_output_fields_item_v_1st_double_ops;
 extern struct psc_output_fields_item_ops psc_output_fields_item_vv_1st_double_ops;
+extern struct psc_output_fields_item_ops psc_output_fields_item_nvt_1st_double_ops;
 
 
 extern struct psc_output_fields_item_ops psc_output_fields_item_n_1st_nc_c_ops;
