@@ -406,13 +406,17 @@ psc_bnd_particles_sub_open_calc_moments(struct psc_bnd_particles *bnd,
 	  for (int iy = 0; iy < ppatch->ldims[1]; iy++) {
 	    F3_C(flds_t, 6*m + mm, 0,iy,iz) =
 	      F3_C(flds_t, 6*m + mm, 0,iy,iz) / (ppsc->kinds[m].m * F3_C(flds_n, m, 0,iy,iz)) - 
-	      F3_C(flds_v, mx, 0,iy,iz) * F3_C(flds_v, my, 0,iy,iz);
+	      F3_C(flds_v, 3*m + mx, 0,iy,iz) * F3_C(flds_v, 3*m + my, 0,iy,iz);
 	  }
 	}
       }
     }
   }
   psc_bnd_fill_ghosts(bnd->flds_bnd, mflds_t, 0, 6 * nr_kinds);
+
+  debug_dump(io, mflds_n);
+  debug_dump(io, mflds_v);
+  debug_dump(io, mflds_t);
 
   average_9_point(bnd->mflds_n_av, mflds_n);
   average_9_point(bnd->mflds_v_av, mflds_v);
@@ -422,13 +426,10 @@ psc_bnd_particles_sub_open_calc_moments(struct psc_bnd_particles *bnd,
   average_in_time(bnd, bnd->mflds_v_av, bnd->mflds_v_last);
   average_in_time(bnd, bnd->mflds_t_av, bnd->mflds_t_last);
 
-  /* debug_dump(io, bnd->mflds_n_av); */
-  /* debug_dump(io, bnd->mflds_v_av); */
-  /* debug_dump(io, bnd->mflds_t_av); */
-
   psc_mfields_destroy(mflds_v);
   psc_mfields_destroy(mflds_n);
   psc_mfields_destroy(mflds_t);
+  psc_mfields_destroy(mflds_nvt);
 
   bnd->first_time = false;
 
