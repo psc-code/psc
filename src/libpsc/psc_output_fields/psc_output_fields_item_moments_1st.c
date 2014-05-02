@@ -15,8 +15,8 @@ add_ghosts_reflecting_lo(struct psc_fields *pf, int d, int mb, int me)
   struct psc_patch *patch = ppsc->patch + pf->p;
 
   if (d == 1) {
-    for (int iz = 0; iz < patch->ldims[2]; iz++) {
-      for (int ix = 0; ix < patch->ldims[0]; ix++) {
+    for (int iz = -1; iz < patch->ldims[2] + 1; iz++) {
+      for (int ix = -1; ix < patch->ldims[0] + 1; ix++) {
 	int iy = 0; {
 	  for (int m = mb; m < me; m++) {
 	    F3(pf, m, ix,iy,iz) += F3(pf, m, ix,iy-1,iz);
@@ -25,8 +25,8 @@ add_ghosts_reflecting_lo(struct psc_fields *pf, int d, int mb, int me)
       }
     }
   } else if (d == 2) {
-    for (int iy = 0; iy < patch->ldims[1]; iy++) {
-      for (int ix = 0; ix < patch->ldims[0]; ix++) {
+    for (int iy = -1; iy < patch->ldims[1] + 1; iy++) {
+      for (int ix = -1; ix < patch->ldims[0] + 1; ix++) {
 	int iz = 0; {
 	  for (int m = mb; m < me; m++) {
 	    F3(pf, m, ix,iy,iz) += F3(pf, m, ix,iy,iz-1);
@@ -45,8 +45,8 @@ add_ghosts_reflecting_hi(struct psc_fields *pf, int d, int mb, int me)
   struct psc_patch *patch = ppsc->patch + pf->p;
 
   if (d == 1) {
-    for (int iz = 0; iz < patch->ldims[2]; iz++) {
-      for (int ix = 0; ix < patch->ldims[0]; ix++) {
+    for (int iz = -1; iz < patch->ldims[2] + 1; iz++) {
+      for (int ix = -1; ix < patch->ldims[0] + 1; ix++) {
 	int iy = patch->ldims[1] - 1; {
 	  for (int m = mb; m < me; m++) {
 	    F3(pf, m, ix,iy,iz) += F3(pf, m, ix,iy+1,iz);
@@ -55,8 +55,8 @@ add_ghosts_reflecting_hi(struct psc_fields *pf, int d, int mb, int me)
       }
     }
   } else if (d == 2) {
-    for (int iy = 0; iy < patch->ldims[1]; iy++) {
-      for (int ix = 0; ix < patch->ldims[0]; ix++) {
+    for (int iy = -1; iy < patch->ldims[1] + 1; iy++) {
+      for (int ix = -1; ix < patch->ldims[0] + 1; ix++) {
 	int iz = patch->ldims[2] - 1; {
 	  for (int m = mb; m < me; m++) {
 	    F3(pf, m, ix,iy,iz) += F3(pf, m, ix,iy,iz+1);
@@ -322,6 +322,13 @@ do_nvt_a_1st_run(int p, fields_t *pf, struct psc_particles *prts)
     particle_real_t vxi[3];
     particle_calc_vxi(part, vxi);
 
+    particle_real_t *xi = &part->xi; /* don't shift back in time */	\
+    particle_real_t u = xi[0] * dxi - .5;				\
+    particle_real_t v = xi[1] * dyi - .5;				\
+    particle_real_t w = xi[2] * dzi - .5;				\
+    int jx = particle_real_fint(u);					\
+    int jy = particle_real_fint(v);					\
+    int jz = particle_real_fint(w);					\
     // density
     DEPOSIT_TO_GRID_1ST_CC(part, pf, mm, 1.f);
     // velocity
@@ -342,7 +349,7 @@ do_nvt_b_1st_run(int p, fields_t *pf, struct psc_particles *prts)
     particle_t *part = particles_get_one(prts, n);
     int mm = particle_kind(part) * 10;
 
-    particle_real_t *xi = &part->xi; /* don't shift back in time */	\
+    particle_real_t *xi = &part->xi;					\
     particle_real_t u = xi[0] * dxi - .5;				\
     particle_real_t v = xi[1] * dyi - .5;				\
     particle_real_t w = xi[2] * dzi - .5;				\
@@ -409,6 +416,7 @@ nvt_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
     struct psc_particles *prts = psc_particles_get_as(prts_base, PARTICLE_TYPE, 0);
     psc_fields_zero_range(res, 0, res->nr_comp);
     do_nvt_a_1st_run(res->p, res, prts);
+    add_ghosts_boundary(res, 0, res->nr_comp);
   }
 
   psc_bnd_add_ghosts(item->bnd, mres, 0, mres->nr_fields);
@@ -446,6 +454,7 @@ nvt_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
   for (int m = 0; m < ppsc->nr_kinds; m++) {
     psc_bnd_add_ghosts(item->bnd, mres, 10*m + 4, 10*m + 10);
   }
+  psc_bnd_fill_ghosts(item->bnd, mres, 0, mres->nr_fields);
 }
 
 // ======================================================================

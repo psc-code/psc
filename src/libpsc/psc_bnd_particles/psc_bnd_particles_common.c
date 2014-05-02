@@ -8,7 +8,7 @@
 #include <mrc_io.h>
 #include <string.h>
 
-static const int debug_every_step = 1;
+static const int debug_every_step = 10;
 
 static void
 copy_to_mrc_fld(struct mrc_fld *m3, struct psc_mfields *flds)
@@ -56,15 +56,15 @@ average_9_point(struct psc_mfields *mflds_av, struct psc_mfields *mflds)
     // at lower z bnd only FIXME
     for (int m = 0; m < mflds->nr_fields; m++) {
       for (int iy = 0; iy < ppatch->ldims[1]; iy++) {
-	F3_C(flds_av, m, 0,iy,0) = (F3_C(flds, m, 0,iy-1,0) +
-				    F3_C(flds, m, 0,iy-1,1) +
+	F3_C(flds_av, m, 0,iy,0) = (F3_C(flds, m, 0,iy-1,1) +
 				    F3_C(flds, m, 0,iy-1,2) +
-				    F3_C(flds, m, 0,iy  ,0) +
+				    F3_C(flds, m, 0,iy-1,3) +
 				    F3_C(flds, m, 0,iy  ,1) +
 				    F3_C(flds, m, 0,iy  ,2) +
-				    F3_C(flds, m, 0,iy+1,0) +
+				    F3_C(flds, m, 0,iy  ,3) +
 				    F3_C(flds, m, 0,iy+1,1) +
-				    F3_C(flds, m, 0,iy+1,2)) / 9.;
+				    F3_C(flds, m, 0,iy+1,2) +
+				    F3_C(flds, m, 0,iy+1,3)) / 9.;
       }
     }
   }
@@ -380,12 +380,12 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
     struct psc_fields *flds_nvt_av = psc_mfields_get_patch(bnd->mflds_nvt_av, p);
     for (int m = 0; m < nr_kinds; m++) {
       for (int iy = 0; iy < ppatch->ldims[1]; iy++) {
-	F3_C(flds_nvt_av, 10*m+4, 0,iy,0) = .01;
-	F3_C(flds_nvt_av, 10*m+5, 0,iy,0) = .01;
-	F3_C(flds_nvt_av, 10*m+6, 0,iy,0) = .01;
-	F3_C(flds_nvt_av, 10*m+7, 0,iy,0) = 0.;
-	F3_C(flds_nvt_av, 10*m+8, 0,iy,0) = 0.;
-	F3_C(flds_nvt_av, 10*m+9, 0,iy,0) = 0.;
+	/* F3_C(flds_nvt_av, 10*m+4, 0,iy,0) = .01; */
+	/* F3_C(flds_nvt_av, 10*m+5, 0,iy,0) = .01; */
+	/* F3_C(flds_nvt_av, 10*m+6, 0,iy,0) = .01; */
+	/* F3_C(flds_nvt_av, 10*m+7, 0,iy,0) = 0.; */
+	/* F3_C(flds_nvt_av, 10*m+8, 0,iy,0) = 0.; */
+	/* F3_C(flds_nvt_av, 10*m+9, 0,iy,0) = 0.; */
 	double determ =
 	  (F3_C(flds_nvt_av, 10*m+4, 0,iy,0)*F3_C(flds_nvt_av, 10*m+5, 0,iy,0)*F3_C(flds_nvt_av, 10*m+6, 0,iy,0) +
 	   F3_C(flds_nvt_av, 10*m+7, 0,iy,0)*F3_C(flds_nvt_av, 10*m+9, 0,iy,0)*F3_C(flds_nvt_av, 10*m+8, 0,iy,0) +
@@ -411,12 +411,6 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
 	F3_C(flds_ipr, 6*m+5, 0,iy,0)=(F3_C(flds_nvt_av, 10*m+4, 0,iy,0)*F3_C(flds_nvt_av, 10*m+9, 0,iy,0)
 				   -F3_C(flds_nvt_av, 10*m+7, 0,iy,0)*F3_C(flds_nvt_av, 10*m+8, 0,iy,0))
 	  /determ*0.5;
-	/* F3_C(flds_ipr, 10*m+4, 0,iy,0) = 10; */
-	/* F3_C(flds_ipr, 10*m+5, 0,iy,0) = 10; */
-	/* F3_C(flds_ipr, 10*m+6, 0,iy,0) = 10; */
-	/* F3_C(flds_ipr, 10*m+7, 0,iy,0) = 0; */
-	/* F3_C(flds_ipr, 10*m+8, 0,iy,0) = 0; */
-	/* F3_C(flds_ipr, 10*m+9, 0,iy,0) = 0; */
       }
     }
   }
@@ -433,9 +427,9 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
     // inject at z = 0
    if (ppatch->off[2]  == 0 ) {
     for (int iy = 0; iy < ppatch->ldims[1]; iy++) {
-      double vxea=0;F3_C(flds_nvt_av, 1, 0,iy,0);
-      double vyea=0;F3_C(flds_nvt_av, 2, 0,iy,0);
-      double vzea=.1;F3_C(flds_nvt_av, 3, 0,iy,0);
+      double vxea=F3_C(flds_nvt_av, 1, 0,iy,0);
+      double vyea=F3_C(flds_nvt_av, 2, 0,iy,0);
+      double vzea=F3_C(flds_nvt_av, 3, 0,iy,0);
       double c=1.0;
      int ninjo;
      int ninjn;
@@ -448,7 +442,7 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
      double  gs0=exp(-vzea*vzea/vsz/vsz)-exp(-(c-vzea)*(c-vzea)/vsz/vsz)
            +sqrt(M_PI)*vzea/vsz*(erf((c-vzea)/vsz)+erf(vzea/vsz)) ;
      ninjo=F3_C(flds_n_in, 0, 0,iy,0);
-     F3_C(flds_nvt_av, 0, 0,iy,0) = 1.;//!!!
+     //F3_C(flds_nvt_av, 0, 0,iy,0) = 1.;//!!!
      F3_C(flds_n_in, 0, 0,iy,0)=F3_C(flds_n_in, 0, 0,iy,0)+ppsc->dt*gs0*F3_C(flds_nvt_av, 0, 0,iy,0)
            *vsz/sqrt(M_PI)/2.0/ppsc->patch[p].dx[2]/ppsc->coeff.cori;
      ninjn=F3_C(flds_n_in, 0, 0,iy,0);
@@ -542,17 +536,17 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
 
        long seed=random();
        sr=((double) seed)/((double)RAND_MAX);
-       sr = .5;
+       //       sr = .5;
        prt->xi=sr*ppsc->patch[p].dx[0];
        //       prt->yi=((double)ppatch->off[1]+(double)iy+sr)*ppsc->patch[p].dx[1];
        seed=random();
        sr=((double) seed)/((double)RAND_MAX);
-       sr = .5;
+       //sr = .5;
        prt->yi=((double)iy+sr)*ppsc->patch[p].dx[1];
        seed=random();
-       /* sr=((double) seed)/((double)RAND_MAX); */
-       prt->zi=sr*ppsc->patch[p].dx[2];
-       //       prt->zi=0.;//0.0001*ppsc->patch[p].dx[2];
+       sr=((double) seed)/((double)RAND_MAX);
+       prt->zi=sr*prt->pzi * ppsc->dt;//ppsc->patch[p].dx[2];
+       //prt->zi=0.;//0.0001*ppsc->patch[p].dx[2];
        prt->qni_wni=ppsc->kinds[0].q;
        //prt->mni=ppsc->kinds[0].m;
        prt->kind = KIND_ELECTRON;
