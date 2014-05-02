@@ -19,5 +19,6 @@ struct mrc_block_factory_ops {
 extern struct mrc_block_factory_ops mrc_block_factory_simple2d;
 extern struct mrc_block_factory_ops mrc_block_factory_simple3d;
 extern struct mrc_block_factory_ops mrc_block_factory_cylindrical;
+extern struct mrc_block_factory_ops mrc_block_factory_half_cylinder;
 
 #endif

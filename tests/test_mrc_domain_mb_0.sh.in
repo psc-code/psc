@@ -13,6 +13,11 @@ set -e
 @MPIRUN@ -n 2 ./test_mrc_domain_mb --mrc_io_type hdf5_parallel --case 3 --ppbx 2
 @MPIRUN@ -n 2 ./test_mrc_domain_mb --mrc_io_type hdf5_parallel --case 3 \
     --mr 33 --mth 66 --ppbx 3 
+@MPIRUN@ -n 1 ./test_mrc_domain_mb --mrc_io_type hdf5_parallel --case 4
+@MPIRUN@ -n 1 ./test_mrc_domain_mb --mrc_io_type hdf5_parallel --case 4 --ppbx 2
+@MPIRUN@ -n 2 ./test_mrc_domain_mb --mrc_io_type hdf5_parallel --case 4 --ppbx 2
+@MPIRUN@ -n 2 ./test_mrc_domain_mb --mrc_io_type hdf5_parallel --case 4 \
+    --mr 33 --mth 66 --ppbx 3 
 @MPIRUN@ -n 1 ./test_mrc_domain_mb --mrc_io_type hdf5_parallel --case 1 \
     --mrc_block_factory_type "cylindrical"
 @MPIRUN@ -n 1 ./test_mrc_domain_mb --mrc_io_type hdf5_parallel --case 1 \

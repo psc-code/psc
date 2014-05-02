@@ -74,6 +74,12 @@ main(int argc, char **argv)
     mrc_domain_setup(domain);
     test_read_write(domain);
     break;
+  case 4:
+    mrc_block_factory_set_type(blk_fac, "half_cylinder");
+    mrc_domain_set_from_options(domain);
+    mrc_domain_setup(domain);
+    test_read_write(domain);
+    break;
 
   }
   mrc_domain_destroy(domain);

@@ -87,6 +87,7 @@ mrc_block_factory_init(void)
   mrc_class_register_subclass(&mrc_class_mrc_block_factory, &mrc_block_factory_simple2d);
   mrc_class_register_subclass(&mrc_class_mrc_block_factory, &mrc_block_factory_simple3d);
   mrc_class_register_subclass(&mrc_class_mrc_block_factory, &mrc_block_factory_cylindrical);
+  mrc_class_register_subclass(&mrc_class_mrc_block_factory, &mrc_block_factory_half_cylinder);
 }
 
 // ----------------------------------------------------------------------
