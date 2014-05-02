@@ -152,7 +152,7 @@ psc_bnd_particles_sub_setup(struct psc_bnd_particles *bnd)
   psc_output_fields_item_setup(bnd->item_v);
 
   bnd->item_t = psc_output_fields_item_create(psc_bnd_particles_comm(bnd));
-  psc_output_fields_item_set_type(bnd->item_t, "T_1st_double");
+  psc_output_fields_item_set_type(bnd->item_t, "Tvv_1st_double");
   psc_output_fields_item_set_psc_bnd(bnd->item_t, bnd->flds_bnd);
   psc_output_fields_item_setup(bnd->item_t);
 

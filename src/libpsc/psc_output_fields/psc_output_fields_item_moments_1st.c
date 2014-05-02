@@ -268,6 +268,42 @@ T_1st_run(struct psc_output_fields_item *item, struct psc_fields *flds,
 }
 
 // ======================================================================
+// Tvv_1st
+
+static void
+do_Tvv_1st_run(int p, fields_t *pf, struct psc_particles *prts)
+{
+  struct psc_patch *patch = &ppsc->patch[p];
+  particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+  particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
+
+  for (int n = 0; n < prts->n_part; n++) {
+    particle_t *part = particles_get_one(prts, n);
+    int mm = particle_kind(part) * 6;
+
+    particle_real_t vxi[3];
+    particle_calc_vxi(part, vxi);
+    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 0, particle_mni(part) * vxi[0] * vxi[0]);
+    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 1, particle_mni(part) * vxi[1] * vxi[1]);
+    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 2, particle_mni(part) * vxi[2] * vxi[2]);
+    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 3, particle_mni(part) * vxi[0] * vxi[1]);
+    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 4, particle_mni(part) * vxi[0] * vxi[2]);
+    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 5, particle_mni(part) * vxi[1] * vxi[2]);
+  }
+}
+
+static void
+Tvv_1st_run(struct psc_output_fields_item *item, struct psc_fields *flds,
+	   struct psc_particles *prts_base, struct psc_fields *res)
+{
+  struct psc_particles *prts = psc_particles_get_as(prts_base, PARTICLE_TYPE, 0);
+  psc_fields_zero_range(res, 0, res->nr_comp);
+  do_Tvv_1st_run(res->p, res, prts);
+  psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
+  add_ghosts_boundary(res, 0, res->nr_comp);
+}
+
+// ======================================================================
 // nvt_1st
 
 static void
@@ -409,6 +445,14 @@ struct psc_output_fields_item_ops psc_output_fields_item_T_1st_##TYPE##_ops = { 
   .flags              = POFI_ADD_GHOSTS | POFI_BY_KIND,			\
 };									\
 									\
+struct psc_output_fields_item_ops psc_output_fields_item_Tvv_1st_##TYPE##_ops = { \
+  .name               = "Tvv_1st_" #TYPE,					\
+  .nr_comp	      = 6,						\
+  .fld_names	      = { "vxvx", "vyvy", "vzvz", "vxvy", "vxvz", "vyvz" },	\
+  .run                = Tvv_1st_run,					\
+  .flags              = POFI_ADD_GHOSTS | POFI_BY_KIND,			\
+};									\
+									\
 struct psc_output_fields_item_ops psc_output_fields_item_nvt_1st_##TYPE##_ops = { \
   .name               = "nvt_1st_" #TYPE,				\
   .nr_comp	      = 10,						\
@@ -418,3 +462,4 @@ struct psc_output_fields_item_ops psc_output_fields_item_nvt_1st_##TYPE##_ops = 
   .flags              = POFI_ADD_GHOSTS | POFI_BY_KIND,			\
 };									\
 									\
+
