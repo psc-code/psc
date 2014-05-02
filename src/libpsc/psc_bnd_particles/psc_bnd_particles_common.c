@@ -141,33 +141,19 @@ psc_bnd_particles_sub_setup(struct psc_bnd_particles *bnd)
   psc_bnd_set_psc(bnd->flds_bnd, ppsc);
   psc_bnd_setup(bnd->flds_bnd);
 
-  bnd->item_n = psc_output_fields_item_create(psc_bnd_particles_comm(bnd));
-  psc_output_fields_item_set_type(bnd->item_n, "n_1st_double");
-  psc_output_fields_item_set_psc_bnd(bnd->item_n, bnd->flds_bnd);
-  psc_output_fields_item_setup(bnd->item_n);
-
-  bnd->item_v = psc_output_fields_item_create(psc_bnd_particles_comm(bnd));
-  psc_output_fields_item_set_type(bnd->item_v, "v_1st_double");
-  psc_output_fields_item_set_psc_bnd(bnd->item_v, bnd->flds_bnd);
-  psc_output_fields_item_setup(bnd->item_v);
-
-  bnd->item_t = psc_output_fields_item_create(psc_bnd_particles_comm(bnd));
-  psc_output_fields_item_set_type(bnd->item_t, "Tvv_1st_double");
-  psc_output_fields_item_set_psc_bnd(bnd->item_t, bnd->flds_bnd);
-  psc_output_fields_item_setup(bnd->item_t);
-
   bnd->item_nvt = psc_output_fields_item_create(psc_bnd_particles_comm(bnd));
   psc_output_fields_item_set_type(bnd->item_nvt, "nvt_1st_double");
   psc_output_fields_item_set_psc_bnd(bnd->item_nvt, bnd->flds_bnd);
   psc_output_fields_item_setup(bnd->item_nvt);
 
-  bnd->mflds_n_av = psc_output_fields_item_create_mfields(bnd->item_n);
-  bnd->mflds_v_av = psc_output_fields_item_create_mfields(bnd->item_v);
-  bnd->mflds_t_av = psc_output_fields_item_create_mfields(bnd->item_t);
-  bnd->mflds_n_last = psc_output_fields_item_create_mfields(bnd->item_n);
-  bnd->mflds_v_last = psc_output_fields_item_create_mfields(bnd->item_v);
-  bnd->mflds_t_last = psc_output_fields_item_create_mfields(bnd->item_t);
-  bnd->mflds_n_in = psc_output_fields_item_create_mfields(bnd->item_n);
+  bnd->mflds_nvt_av = psc_output_fields_item_create_mfields(bnd->item_nvt);
+  bnd->mflds_nvt_last = psc_output_fields_item_create_mfields(bnd->item_nvt);
+  bnd->mflds_n_in = psc_mfields_create(psc_bnd_particles_comm(bnd));
+  psc_mfields_set_type(bnd->mflds_n_in, "c");
+  psc_mfields_set_domain(bnd->mflds_n_in, ppsc->mrc_domain);
+  psc_mfields_set_param_int(bnd->mflds_n_in, "nr_fields", ppsc->nr_kinds);
+  psc_mfields_set_param_int3(bnd->mflds_n_in, "ibn", ppsc->ibn);
+  psc_mfields_setup(bnd->mflds_n_in);
 }
 
 // ----------------------------------------------------------------------
@@ -178,15 +164,10 @@ psc_bnd_particles_sub_unsetup(struct psc_bnd_particles *bnd)
 {
   ddc_particles_destroy(bnd->ddcp);
 
-  psc_mfields_destroy(bnd->mflds_v_av);
-  psc_mfields_destroy(bnd->mflds_n_av);
-  psc_mfields_destroy(bnd->mflds_t_av);
-  psc_mfields_destroy(bnd->mflds_v_last);
-  psc_mfields_destroy(bnd->mflds_n_last);
-  psc_mfields_destroy(bnd->mflds_t_last);
-  psc_output_fields_item_destroy(bnd->item_n);
-  psc_output_fields_item_destroy(bnd->item_v);
-  psc_output_fields_item_destroy(bnd->item_t);
+  psc_mfields_destroy(bnd->mflds_nvt_av);
+  psc_mfields_destroy(bnd->mflds_nvt_last);
+  psc_mfields_destroy(bnd->mflds_n_in);
+  psc_output_fields_item_destroy(bnd->item_nvt);
   psc_bnd_destroy(bnd->flds_bnd);
 }
 
@@ -348,98 +329,15 @@ psc_bnd_particles_sub_open_calc_moments(struct psc_bnd_particles *bnd,
   }
 
   struct psc_mparticles *mprts = psc_mparticles_get_cf(mprts_base, 0);
-  int nr_kinds = ppsc->nr_kinds;
-
-  struct psc_mfields *mflds_n = psc_output_fields_item_create_mfields(bnd->item_n);
-  struct psc_mfields *mflds_v = psc_output_fields_item_create_mfields(bnd->item_v);
-  struct psc_mfields *mflds_t = psc_output_fields_item_create_mfields(bnd->item_t);
   struct psc_mfields *mflds_nvt = psc_output_fields_item_create_mfields(bnd->item_nvt);
 
-  psc_output_fields_item_run(bnd->item_n, ppsc->flds, mprts, mflds_n);
-  psc_output_fields_item_run(bnd->item_v, ppsc->flds, mprts, mflds_v);
-  psc_output_fields_item_run(bnd->item_t, ppsc->flds, mprts, mflds_t);
   psc_output_fields_item_run(bnd->item_nvt, ppsc->flds, mprts, mflds_nvt);
 
   debug_dump(io, mflds_nvt);
 
-  // fix up zero density cells
-  for (int p = 0; p < ppsc->nr_patches; p++) {
-    struct psc_patch *ppatch = &ppsc->patch[p];
-    struct psc_fields *flds_n = psc_mfields_get_patch(mflds_n, p);
+  average_9_point(bnd->mflds_nvt_av, mflds_nvt);
+  average_in_time(bnd, bnd->mflds_nvt_av, bnd->mflds_nvt_last);
 
-    for (int m = 0; m < nr_kinds; m++) {
-      for (int iz = 0; iz < ppatch->ldims[2]; iz++) {
-	for (int iy = 0; iy < ppatch->ldims[1]; iy++) {
-	  if (F3_C(flds_n, m, 0,iy,iz) == 0.0) {
-	    F3_C(flds_n, m, 0,iy,iz) = 0.00001;
-	  }
-	}
-      }
-    }
-  }    
-  psc_bnd_fill_ghosts(bnd->flds_bnd, mflds_n, 0, nr_kinds);
-
-  // normalize v moments
-  for (int p = 0; p < ppsc->nr_patches; p++) {
-    struct psc_patch *ppatch = &ppsc->patch[p];
-    struct psc_fields *flds_n = psc_mfields_get_patch(mflds_n, p);
-    struct psc_fields *flds_v = psc_mfields_get_patch(mflds_v, p);
-    
-    for (int m = 0; m < nr_kinds; m++) {
-      for (int mm = 0; mm < 3; mm++) {
-	for (int iz = 0; iz < ppatch->ldims[2]; iz++) {
-	  for (int iy = 0; iy < ppatch->ldims[1]; iy++) {
-	    F3_C(flds_v, 3*m + mm, 0,iy,iz) /= F3_C(flds_n, m, 0,iy,iz);
-	  }
-	}
-      }
-    }
-  }
-  psc_bnd_fill_ghosts(bnd->flds_bnd, mflds_v, 0, 3 * nr_kinds);
-
-  // calculate <(v - U)(v - U)> moments
-  for (int p = 0; p < ppsc->nr_patches; p++) {
-    struct psc_patch *ppatch = &ppsc->patch[p];
-    struct psc_fields *flds_n = psc_mfields_get_patch(mflds_n, p);
-    struct psc_fields *flds_v = psc_mfields_get_patch(mflds_v, p);
-    struct psc_fields *flds_t = psc_mfields_get_patch(mflds_t, p);
-    
-    const int mm2mx[6] = { 0, 1, 2, 0, 0, 1 };
-    const int mm2my[6] = { 0, 1, 2, 1, 2, 2 };
-    for (int m = 0; m < nr_kinds; m++) {
-      for (int mm = 0; mm < 6; mm++) {
-	int mx = mm2mx[mm], my = mm2my[mm];
-	for (int iz = 0; iz < ppatch->ldims[2]; iz++) {
-	  for (int iy = 0; iy < ppatch->ldims[1]; iy++) {
-	    F3_C(flds_t, 6*m + mm, 0,iy,iz) =
-	      F3_C(flds_t, 6*m + mm, 0,iy,iz) / (ppsc->kinds[m].m * F3_C(flds_n, m, 0,iy,iz)) - 
-	      F3_C(flds_v, 3*m + mx, 0,iy,iz) * F3_C(flds_v, 3*m + my, 0,iy,iz);
-	  }
-	}
-      }
-    }
-  }
-  psc_bnd_fill_ghosts(bnd->flds_bnd, mflds_t, 0, 6 * nr_kinds);
-
-  /* debug_dump(io, mflds_n); */
-  /* debug_dump(io, mflds_v); */
-  /* debug_dump(io, mflds_t); */
-
-  average_9_point(bnd->mflds_n_av, mflds_n);
-  average_9_point(bnd->mflds_v_av, mflds_v);
-  average_9_point(bnd->mflds_t_av, mflds_t);
-
-  average_in_time(bnd, bnd->mflds_n_av, bnd->mflds_n_last);
-  average_in_time(bnd, bnd->mflds_v_av, bnd->mflds_v_last);
-  average_in_time(bnd, bnd->mflds_t_av, bnd->mflds_t_last);
-
-  /* debug_dump(io, bnd->mflds_n_av); */
-  /* debug_dump(io, bnd->mflds_v_av); */
-  /* debug_dump(io, bnd->mflds_t_av); */
-
-  psc_mfields_destroy(mflds_v);
-  psc_mfields_destroy(mflds_n);
-  psc_mfields_destroy(mflds_t);
   psc_mfields_destroy(mflds_nvt);
 
   bnd->first_time = false;
@@ -457,7 +355,12 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
 #ifndef NO_OPEN_BC
   int nr_kinds = ppsc->nr_kinds;
 
-  struct psc_mfields *mflds_ipr = psc_output_fields_item_create_mfields(bnd->item_t);
+  struct psc_mfields *mflds_ipr = psc_mfields_create(psc_bnd_particles_comm(bnd));
+  psc_mfields_set_type(mflds_ipr, "c");
+  psc_mfields_set_domain(mflds_ipr, ppsc->mrc_domain);
+  psc_mfields_set_param_int(mflds_ipr, "nr_fields", 12);
+  psc_mfields_set_param_int3(mflds_ipr, "ibn", ppsc->ibn);
+  psc_mfields_setup(mflds_ipr);
   psc_mfields_set_comp_name(mflds_ipr, 0, "Wxxe");
   psc_mfields_set_comp_name(mflds_ipr, 1, "Wyye");
   psc_mfields_set_comp_name(mflds_ipr, 2, "Wzze");
@@ -474,33 +377,46 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
   for (int p = 0; p < ppsc->nr_patches; p++) {
     struct psc_patch *ppatch = &ppsc->patch[p];
     struct psc_fields *flds_ipr = psc_mfields_get_patch(mflds_ipr, p);
-    struct psc_fields *flds_t_av = psc_mfields_get_patch(bnd->mflds_t_av, p);
+    struct psc_fields *flds_nvt_av = psc_mfields_get_patch(bnd->mflds_nvt_av, p);
     for (int m = 0; m < nr_kinds; m++) {
       for (int iy = 0; iy < ppatch->ldims[1]; iy++) {
-	double determ = F3_C(flds_t_av, 6*m+0, 0,iy,0)*F3_C(flds_t_av, 6*m+1, 0,iy,0)*F3_C(flds_t_av, 6*m+2, 0,iy,0) 
-	  +F3_C(flds_t_av, 6*m+3, 0,iy,0)*F3_C(flds_t_av, 6*m+5, 0,iy,0)*F3_C(flds_t_av, 6*m+4, 0,iy,0)
-	  +F3_C(flds_t_av, 6*m+4, 0,iy,0)*F3_C(flds_t_av, 6*m+3, 0,iy,0)*F3_C(flds_t_av, 6*m+5, 0,iy,0)
-	  -F3_C(flds_t_av, 6*m+4, 0,iy,0)*F3_C(flds_t_av, 6*m+1, 0,iy,0)*F3_C(flds_t_av, 6*m+4, 0,iy,0)
-	  -F3_C(flds_t_av, 6*m+3, 0,iy,0)*F3_C(flds_t_av, 6*m+3, 0,iy,0)*F3_C(flds_t_av, 6*m+2, 0,iy,0)
-	  -F3_C(flds_t_av, 6*m+0, 0,iy,0)*F3_C(flds_t_av, 6*m+5, 0,iy,0)*F3_C(flds_t_av, 6*m+5, 0,iy,0);
-	F3_C(flds_ipr, 6*m+0, 0,iy,0)=(F3_C(flds_t_av, 6*m+1, 0,iy,0)*F3_C(flds_t_av, 6*m+2, 0,iy,0)
-				   -F3_C(flds_t_av, 6*m+5, 0,iy,0)*F3_C(flds_t_av, 6*m+5, 0,iy,0))
+	F3_C(flds_nvt_av, 10*m+4, 0,iy,0) = .01;
+	F3_C(flds_nvt_av, 10*m+5, 0,iy,0) = .01;
+	F3_C(flds_nvt_av, 10*m+6, 0,iy,0) = .01;
+	F3_C(flds_nvt_av, 10*m+7, 0,iy,0) = 0.;
+	F3_C(flds_nvt_av, 10*m+8, 0,iy,0) = 0.;
+	F3_C(flds_nvt_av, 10*m+9, 0,iy,0) = 0.;
+	double determ =
+	  (F3_C(flds_nvt_av, 10*m+4, 0,iy,0)*F3_C(flds_nvt_av, 10*m+5, 0,iy,0)*F3_C(flds_nvt_av, 10*m+6, 0,iy,0) +
+	   F3_C(flds_nvt_av, 10*m+7, 0,iy,0)*F3_C(flds_nvt_av, 10*m+9, 0,iy,0)*F3_C(flds_nvt_av, 10*m+8, 0,iy,0) +
+	   F3_C(flds_nvt_av, 10*m+8, 0,iy,0)*F3_C(flds_nvt_av, 10*m+7, 0,iy,0)*F3_C(flds_nvt_av, 10*m+9, 0,iy,0) -
+	   F3_C(flds_nvt_av, 10*m+8, 0,iy,0)*F3_C(flds_nvt_av, 10*m+5, 0,iy,0)*F3_C(flds_nvt_av, 10*m+8, 0,iy,0) -
+	   F3_C(flds_nvt_av, 10*m+7, 0,iy,0)*F3_C(flds_nvt_av, 10*m+7, 0,iy,0)*F3_C(flds_nvt_av, 10*m+6, 0,iy,0) -
+	   F3_C(flds_nvt_av, 10*m+4, 0,iy,0)*F3_C(flds_nvt_av, 10*m+9, 0,iy,0)*F3_C(flds_nvt_av, 10*m+9, 0,iy,0));
+	F3_C(flds_ipr, 6*m+0, 0,iy,0)=(F3_C(flds_nvt_av, 10*m+5, 0,iy,0)*F3_C(flds_nvt_av, 10*m+6, 0,iy,0)
+				   -F3_C(flds_nvt_av, 10*m+9, 0,iy,0)*F3_C(flds_nvt_av, 10*m+9, 0,iy,0))
 	  /determ*0.5;
-	F3_C(flds_ipr, 6*m+1, 0,iy,0)=(F3_C(flds_t_av, 6*m+0, 0,iy,0)*F3_C(flds_t_av, 6*m+2, 0,iy,0)
-				   -F3_C(flds_t_av, 6*m+4, 0,iy,0)*F3_C(flds_t_av, 6*m+4, 0,iy,0))
+	F3_C(flds_ipr, 6*m+1, 0,iy,0)=(F3_C(flds_nvt_av, 10*m+4, 0,iy,0)*F3_C(flds_nvt_av, 10*m+6, 0,iy,0)
+				   -F3_C(flds_nvt_av, 10*m+8, 0,iy,0)*F3_C(flds_nvt_av, 10*m+8, 0,iy,0))
 	  /determ*0.5;
-	F3_C(flds_ipr, 6*m+2, 0,iy,0)=(F3_C(flds_t_av, 6*m+0, 0,iy,0)*F3_C(flds_t_av, 6*m+1, 0,iy,0)
-				   -F3_C(flds_t_av, 6*m+3, 0,iy,0)*F3_C(flds_t_av, 6*m+3, 0,iy,0))
+	F3_C(flds_ipr, 6*m+2, 0,iy,0)=(F3_C(flds_nvt_av, 10*m+4, 0,iy,0)*F3_C(flds_nvt_av, 10*m+5, 0,iy,0)
+				   -F3_C(flds_nvt_av, 10*m+7, 0,iy,0)*F3_C(flds_nvt_av, 10*m+7, 0,iy,0))
 	  /determ*0.5;
-	F3_C(flds_ipr, 6*m+3, 0,iy,0)=(F3_C(flds_t_av, 6*m+3, 0,iy,0)*F3_C(flds_t_av, 6*m+2, 0,iy,0)
-				   -F3_C(flds_t_av, 6*m+4, 0,iy,0)*F3_C(flds_t_av, 6*m+5, 0,iy,0))
+	F3_C(flds_ipr, 6*m+3, 0,iy,0)=(F3_C(flds_nvt_av, 10*m+7, 0,iy,0)*F3_C(flds_nvt_av, 10*m+6, 0,iy,0)
+				   -F3_C(flds_nvt_av, 10*m+8, 0,iy,0)*F3_C(flds_nvt_av, 10*m+9, 0,iy,0))
 	  /determ*0.5;
-	F3_C(flds_ipr, 6*m+4, 0,iy,0)=(F3_C(flds_t_av, 6*m+3, 0,iy,0)*F3_C(flds_t_av, 6*m+5, 0,iy,0)
-				   -F3_C(flds_t_av, 6*m+4, 0,iy,0)*F3_C(flds_t_av, 6*m+1, 0,iy,0))
+	F3_C(flds_ipr, 6*m+4, 0,iy,0)=(F3_C(flds_nvt_av, 10*m+7, 0,iy,0)*F3_C(flds_nvt_av, 10*m+9, 0,iy,0)
+				   -F3_C(flds_nvt_av, 10*m+8, 0,iy,0)*F3_C(flds_nvt_av, 10*m+5, 0,iy,0))
 	  /determ*0.5;
-	F3_C(flds_ipr, 6*m+5, 0,iy,0)=(F3_C(flds_t_av, 6*m+0, 0,iy,0)*F3_C(flds_t_av, 6*m+5, 0,iy,0)
-				   -F3_C(flds_t_av, 6*m+3, 0,iy,0)*F3_C(flds_t_av, 6*m+4, 0,iy,0))
+	F3_C(flds_ipr, 6*m+5, 0,iy,0)=(F3_C(flds_nvt_av, 10*m+4, 0,iy,0)*F3_C(flds_nvt_av, 10*m+9, 0,iy,0)
+				   -F3_C(flds_nvt_av, 10*m+7, 0,iy,0)*F3_C(flds_nvt_av, 10*m+8, 0,iy,0))
 	  /determ*0.5;
+	/* F3_C(flds_ipr, 10*m+4, 0,iy,0) = 10; */
+	/* F3_C(flds_ipr, 10*m+5, 0,iy,0) = 10; */
+	/* F3_C(flds_ipr, 10*m+6, 0,iy,0) = 10; */
+	/* F3_C(flds_ipr, 10*m+7, 0,iy,0) = 0; */
+	/* F3_C(flds_ipr, 10*m+8, 0,iy,0) = 0; */
+	/* F3_C(flds_ipr, 10*m+9, 0,iy,0) = 0; */
       }
     }
   }
@@ -510,19 +426,17 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
   for (int p = 0; p < ppsc->nr_patches; p++) {
     struct psc_patch *ppatch = &ppsc->patch[p];
     struct psc_fields *flds_ipr = psc_mfields_get_patch(mflds_ipr, p);
-    struct psc_fields *flds_n_av = psc_mfields_get_patch(bnd->mflds_n_av, p);
-    struct psc_fields *flds_v_av = psc_mfields_get_patch(bnd->mflds_v_av, p);
-    struct psc_fields *flds_t_av = psc_mfields_get_patch(bnd->mflds_t_av, p);
+    struct psc_fields *flds_nvt_av = psc_mfields_get_patch(bnd->mflds_nvt_av, p);
     struct psc_fields *flds_n_in = psc_mfields_get_patch(bnd->mflds_n_in, p);
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
 
     // inject at z = 0
    if (ppatch->off[2]  == 0 ) {
     for (int iy = 0; iy < ppatch->ldims[1]; iy++) {
-     double vxea=F3_C(flds_v_av, 0, 0,iy,0);
-     double vyea=F3_C(flds_v_av, 1, 0,iy,0);
-     double vzea=F3_C(flds_v_av, 2, 0,iy,0);
-     double c=1.0;
+      double vxea=0;F3_C(flds_nvt_av, 1, 0,iy,0);
+      double vyea=0;F3_C(flds_nvt_av, 2, 0,iy,0);
+      double vzea=.1;F3_C(flds_nvt_av, 3, 0,iy,0);
+      double c=1.0;
      int ninjo;
      int ninjn;
      int nvdx=100000;
@@ -530,11 +444,12 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
 
 //     F3_C(flds_n_av, 0, 0,iy,0)=0.2;
 
-     double  vsz=sqrt(2.0*(F3_C(flds_t_av, 2, 0,iy,0)));
+     double  vsz=sqrt(2.0*(F3_C(flds_nvt_av, 6, 0,iy,0)));
      double  gs0=exp(-vzea*vzea/vsz/vsz)-exp(-(c-vzea)*(c-vzea)/vsz/vsz)
            +sqrt(M_PI)*vzea/vsz*(erf((c-vzea)/vsz)+erf(vzea/vsz)) ;
      ninjo=F3_C(flds_n_in, 0, 0,iy,0);
-     F3_C(flds_n_in, 0, 0,iy,0)=F3_C(flds_n_in, 0, 0,iy,0)+ppsc->dt*gs0*F3_C(flds_n_av, 0, 0,iy,0)
+     F3_C(flds_nvt_av, 0, 0,iy,0) = 1.;//!!!
+     F3_C(flds_n_in, 0, 0,iy,0)=F3_C(flds_n_in, 0, 0,iy,0)+ppsc->dt*gs0*F3_C(flds_nvt_av, 0, 0,iy,0)
            *vsz/sqrt(M_PI)/2.0/ppsc->patch[p].dx[2]/ppsc->coeff.cori;
      ninjn=F3_C(flds_n_in, 0, 0,iy,0);
      int ninjc=0;
@@ -550,7 +465,7 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
       mprintf("vsz ele %f\n",vsz);
       mprintf("iy %d\n",iy);*/
       mprintf("iy ele %d\n",iy);
-      mprintf("n ele %f\n",F3_C(flds_n_av, 0, 0,iy,0));
+      mprintf("n ele %f\n",F3_C(flds_nvt_av, 0, 0,iy,0));
       mprintf("ninjc %d\n", ninjc);
 /*      mprintf("nav ele %f\n",F3_C(flds_n_av, 0, 0,iy,0));
       mprintf("vxav ele %f\n",F3_C(flds_v_av, 0, 0,iy,0));
@@ -585,7 +500,7 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
          prt->pzi=0.0;
          if(sr > fin[k] && sr < fin[k+1]){
           prt->pzi=dvz*((double) k+1.0)+(sr-fin[k])*dvz/(fin[k+1]-fin[k]);
-	  prt->pzi = .1;
+	  //	  prt->pzi = .1;
          }
          if(prt->pzi !=0.0) break;
         }
@@ -603,7 +518,7 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
        } while(fabs(yya-yy0) > 1.0E-15 && icount!=100);
        prt->pxi=vxea+yya*sqrt(F3_C(flds_ipr, 1, 0,iy,0)/(F3_C(flds_ipr, 0, 0,iy,0)*F3_C(flds_ipr, 1, 0,iy,0)
           -F3_C(flds_ipr, 3, 0,iy,0)*F3_C(flds_ipr, 3, 0,iy,0)))
-          +(prt->pzi-vzea)*F3_C(flds_t_av, 4, 0,iy,0)/F3_C(flds_t_av, 2, 0,iy,0);
+          +(prt->pzi-vzea)*F3_C(flds_nvt_av, 8, 0,iy,0)/F3_C(flds_nvt_av, 6, 0,iy,0);
    
 
        seed=random();
@@ -629,15 +544,15 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
        sr=((double) seed)/((double)RAND_MAX);
        sr = .5;
        prt->xi=sr*ppsc->patch[p].dx[0];
-//       prt->yi=((double)ppatch->off[1]+(double)iy+sr)*ppsc->patch[p].dx[1];
+       //       prt->yi=((double)ppatch->off[1]+(double)iy+sr)*ppsc->patch[p].dx[1];
        seed=random();
        sr=((double) seed)/((double)RAND_MAX);
        sr = .5;
        prt->yi=((double)iy+sr)*ppsc->patch[p].dx[1];
        seed=random();
        /* sr=((double) seed)/((double)RAND_MAX); */
-//       prt->zi=sr*ppsc->patch[p].dx[2];
-       prt->zi=0.;//0.0001*ppsc->patch[p].dx[2];
+       prt->zi=sr*ppsc->patch[p].dx[2];
+       //       prt->zi=0.;//0.0001*ppsc->patch[p].dx[2];
        prt->qni_wni=ppsc->kinds[0].q;
        //prt->mni=ppsc->kinds[0].m;
        prt->kind = KIND_ELECTRON;
@@ -647,7 +562,7 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
       mprintf("pxi ele1 %f\n",prt->pxi);
       mprintf("pyi ele1 %f\n",prt->pyi);
       mprintf("pzi ele2 %f\n",prt->pzi);*/
-       prt->pxi = 0.; prt->pyi = 0.;
+//       prt->pxi = 0.; prt->pyi = 0.;
        double gamma=1.0/sqrt(1.0-(prt->pxi*prt->pxi+prt->pyi*prt->pyi+prt->pzi*prt->pzi));
 //      mprintf("gamma %f\n",gamma);
        if(prt->pxi*prt->pxi+prt->pyi*prt->pyi+prt->pzi*prt->pzi>1.0) gamma=1.0;
