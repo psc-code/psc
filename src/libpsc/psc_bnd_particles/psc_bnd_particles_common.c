@@ -360,7 +360,7 @@ psc_bnd_particles_sub_open_calc_moments(struct psc_bnd_particles *bnd,
   psc_output_fields_item_run(bnd->item_t, ppsc->flds, mprts, mflds_t);
   psc_output_fields_item_run(bnd->item_nvt, ppsc->flds, mprts, mflds_nvt);
 
-  //  debug_dump(io, mflds_nvt);
+  debug_dump(io, mflds_nvt);
 
   // fix up zero density cells
   for (int p = 0; p < ppsc->nr_patches; p++) {
@@ -421,9 +421,9 @@ psc_bnd_particles_sub_open_calc_moments(struct psc_bnd_particles *bnd,
   }
   psc_bnd_fill_ghosts(bnd->flds_bnd, mflds_t, 0, 6 * nr_kinds);
 
-  debug_dump(io, mflds_n);
-  debug_dump(io, mflds_v);
-  debug_dump(io, mflds_t);
+  /* debug_dump(io, mflds_n); */
+  /* debug_dump(io, mflds_v); */
+  /* debug_dump(io, mflds_t); */
 
   average_9_point(bnd->mflds_n_av, mflds_n);
   average_9_point(bnd->mflds_v_av, mflds_v);
@@ -432,6 +432,10 @@ psc_bnd_particles_sub_open_calc_moments(struct psc_bnd_particles *bnd,
   average_in_time(bnd, bnd->mflds_n_av, bnd->mflds_n_last);
   average_in_time(bnd, bnd->mflds_v_av, bnd->mflds_v_last);
   average_in_time(bnd, bnd->mflds_t_av, bnd->mflds_t_last);
+
+  /* debug_dump(io, bnd->mflds_n_av); */
+  /* debug_dump(io, bnd->mflds_v_av); */
+  /* debug_dump(io, bnd->mflds_t_av); */
 
   psc_mfields_destroy(mflds_v);
   psc_mfields_destroy(mflds_n);

@@ -74,7 +74,8 @@ add_ghosts_boundary(struct psc_fields *res, int mb, int me)
   // lo
   for (int d = 0; d < 3; d++) {
     if (ppsc->patch[res->p].off[d] == 0) {
-      if (ppsc->domain.bnd_part_lo[d] == BND_PART_REFLECTING) {
+      if (ppsc->domain.bnd_part_lo[d] == BND_PART_REFLECTING ||
+	  ppsc->domain.bnd_part_lo[d] == BND_PART_OPEN) {
 	add_ghosts_reflecting_lo(res, d, mb, me);
       }
     }
@@ -340,9 +341,54 @@ do_nvt_b_1st_run(int p, fields_t *pf, struct psc_particles *prts)
     particle_t *part = particles_get_one(prts, n);
     int mm = particle_kind(part) * 10;
 
+    particle_real_t *xi = &part->xi; /* don't shift back in time */	\
+    particle_real_t u = xi[0] * dxi - .5;				\
+    particle_real_t v = xi[1] * dyi - .5;				\
+    particle_real_t w = xi[2] * dzi - .5;				\
+    int jx = particle_real_fint(u);					\
+    int jy = particle_real_fint(v);					\
+    int jz = particle_real_fint(w);					\
+    particle_real_t h1 = u - jx;					\
+    particle_real_t h2 = v - jy;					\
+    particle_real_t h3 = w - jz;					\
+    									\
+    particle_real_t g0x = 1.f - h1;					\
+    particle_real_t g0y = 1.f - h2;					\
+    particle_real_t g0z = 1.f - h3;					\
+    particle_real_t g1x = h1;						\
+    particle_real_t g1y = h2;						\
+    particle_real_t g1z = h3;						\
+    									\
+    int jxd = 1, jyd = 1, jzd = 1;					\
+    if (ppsc->domain.gdims[0] == 1) {					\
+      jx = 0; g0x = 1.; g1x = 0.; jxd = 0;				\
+    }									\
+    if (ppsc->domain.gdims[1] == 1) {					\
+      jy = 0; g0y = 1.; g1y = 0.; jyd = 0;				\
+    }									\
+    if (ppsc->domain.gdims[2] == 1) {					\
+      jz = 0; g0z = 1.; g1z = 0.; jzd = 0;				\
+    }									\
+    									\
+    assert(jx >= -1 && jx < patch->ldims[0]);				\
+    assert(jy >= -1 && jy < patch->ldims[1]);				\
+    assert(jz >= -1 && jz < patch->ldims[2]);				\
+    									\
     particle_real_t vxi[3];
     particle_calc_vxi(part, vxi);
-    particle_real_t *pxi = &part->pxi;
+    for (int d = 0; d < 3; d++) {
+      int m = mm + 1 + d;
+      double vavg = (g0x*g0y*g0z * F3(pf, m, jx    ,jy    ,jz    ) +
+		     g1x*g0y*g0z * F3(pf, m, jx+jxd,jy    ,jz    ) +
+		     g0x*g1y*g0z * F3(pf, m, jx    ,jy+jyd,jz    ) +
+		     g1x*g1y*g0z * F3(pf, m, jx+jxd,jy+jyd,jz    ) +
+		     g0x*g0y*g1z * F3(pf, m, jx    ,jy    ,jz+jzd) +
+		     g1x*g0y*g1z * F3(pf, m, jx+jxd,jy    ,jz+jzd) +
+		     g0x*g1y*g1z * F3(pf, m, jx    ,jy+jyd,jz+jzd) +
+		     g1x*g1y*g1z * F3(pf, m, jx+jxd,jy+jyd,jz+jzd));
+      vxi[d] -= vavg;
+    }
+    particle_real_t *pxi = vxi;
     DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 4 + 0, pxi[0] * vxi[0]);
     DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 4 + 1, pxi[1] * vxi[1]);
     DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 4 + 2, pxi[2] * vxi[2]);
@@ -382,23 +428,9 @@ nvt_1st_run(struct psc_output_fields_item *item, struct psc_fields *flds,
   }
   //psc_bnd_fill_ghosts(bnd->flds_bnd, mflds_v, 0, 3 * nr_kinds);
 
-  // calculate raw <vv> moments
+  // calculate <(v-U)(v-U)> moments
   do_nvt_b_1st_run(res->p, res, prts);
 
-  // calculate <(v - U)(v - U)> moments
-  const int mm2mx[6] = { 0, 1, 2, 0, 0, 1 };
-  const int mm2my[6] = { 0, 1, 2, 1, 2, 2 };
-  for (int m = 0; m < ppsc->nr_kinds; m++) {
-    for (int mm = 0; mm < 6; mm++) {
-      int mx = mm2mx[mm], my = mm2my[mm];
-      psc_foreach_3d(ppsc, res->p, ix, iy, iz, 0, 0) {
-	F3(res, 10*m + 4 + mm, ix,iy,iz) =
-	  F3(res, 10*m + 4 + mm, ix,iy,iz) / F3(res, 10*m, ix,iy,iz) - 
-	  F3(res, 10*m + 1 + mx, ix,iy,iz) * F3(res, 10*m + 1 + my, ix,iy,iz);
-      } psc_foreach_3d_end;
-    }
-  }
-  
   psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
 }
 
