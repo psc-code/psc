@@ -50,8 +50,8 @@ do_rho_run(int p, fields_t *pf, struct psc_particles *prts)
 }
 
 static void
-rho_run_patches(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-		struct psc_mparticles *mprts_base, struct psc_mfields *mres_base)
+rho_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
+	    struct psc_mparticles *mprts_base, struct psc_mfields *mres_base)
 {
   struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
   struct psc_mfields *mres = psc_mfields_get_as(mres_base, FIELDS_TYPE, 0, 0);

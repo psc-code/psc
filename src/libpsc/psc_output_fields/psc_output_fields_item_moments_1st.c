@@ -1,5 +1,6 @@
 
 #include "psc_output_fields_item_private.h"
+#include <psc_bnd.h>
 
 #include <math.h>
 
@@ -399,39 +400,52 @@ do_nvt_b_1st_run(int p, fields_t *pf, struct psc_particles *prts)
 }
 
 static void
-nvt_1st_run(struct psc_output_fields_item *item, struct psc_fields *flds,
-	  struct psc_particles *prts_base, struct psc_fields *res)
+nvt_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
+		struct psc_mparticles *mprts_base, struct psc_mfields *mres)
 {
-  struct psc_particles *prts = psc_particles_get_as(prts_base, PARTICLE_TYPE, 0);
-  psc_fields_zero_range(res, 0, res->nr_comp);
-  do_nvt_a_1st_run(res->p, res, prts);
-  //  add_ghosts_boundary(res, 0, res->nr_comp);
-
-  //  psc_bnd_fill_ghosts(bnd->flds_bnd, mflds_n, 0, nr_kinds);
-
-  // fix up zero density cells
-  for (int m = 0; m < ppsc->nr_kinds; m++) {
-    psc_foreach_3d(ppsc, res->p, ix, iy, iz, 0, 0) {
-      if (F3(res, 10*m, ix,iy,iz) == 0.0) {
-	F3(res, 10*m, ix,iy,iz) = 0.00001;
-      } psc_foreach_3d_end;
-    }
-  }    
-
-  // normalize v moments
-  for (int m = 0; m < ppsc->nr_kinds; m++) {
-    for (int mm = 0; mm < 3; mm++) {
-      psc_foreach_3d(ppsc, res->p, ix, iy, iz, 0, 0) {
-	F3(res, 10*m + mm + 1, ix,iy,iz) /= F3(res, 10*m, ix,iy,iz);
-      } psc_foreach_3d_end;
-    }
+  for (int p = 0; p < mres->nr_patches; p++) {
+    struct psc_fields *res = psc_mfields_get_patch(mres, p);
+    struct psc_particles *prts_base = psc_mparticles_get_patch(mprts_base, p);
+    struct psc_particles *prts = psc_particles_get_as(prts_base, PARTICLE_TYPE, 0);
+    psc_fields_zero_range(res, 0, res->nr_comp);
+    do_nvt_a_1st_run(res->p, res, prts);
   }
-  //psc_bnd_fill_ghosts(bnd->flds_bnd, mflds_v, 0, 3 * nr_kinds);
 
-  // calculate <(v-U)(v-U)> moments
-  do_nvt_b_1st_run(res->p, res, prts);
+  psc_bnd_add_ghosts(item->bnd, mres, 0, mres->nr_fields);
+  psc_bnd_fill_ghosts(item->bnd, mres, 0, mres->nr_fields);
 
-  psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
+  for (int p = 0; p < mres->nr_patches; p++) {
+    struct psc_fields *res = psc_mfields_get_patch(mres, p);
+    struct psc_particles *prts_base = psc_mparticles_get_patch(mprts_base, p);
+    struct psc_particles *prts = psc_particles_get_as(prts_base, PARTICLE_TYPE, 0);
+
+    // fix up zero density cells
+    for (int m = 0; m < ppsc->nr_kinds; m++) {
+      psc_foreach_3d(ppsc, res->p, ix, iy, iz, 1, 1) {
+	if (F3(res, 10*m, ix,iy,iz) == 0.0) {
+	  F3(res, 10*m, ix,iy,iz) = 0.00001;
+	} psc_foreach_3d_end;
+      }
+    }    
+
+    // normalize v moments
+    for (int m = 0; m < ppsc->nr_kinds; m++) {
+      for (int mm = 0; mm < 3; mm++) {
+	psc_foreach_3d(ppsc, res->p, ix, iy, iz, 1, 1) {
+	  F3(res, 10*m + mm + 1, ix,iy,iz) /= F3(res, 10*m, ix,iy,iz);
+	} psc_foreach_3d_end;
+      }
+    }
+
+    // calculate <(v-U)(v-U)> moments
+    do_nvt_b_1st_run(res->p, res, prts);
+
+    psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
+  }
+
+  for (int m = 0; m < ppsc->nr_kinds; m++) {
+    psc_bnd_add_ghosts(item->bnd, mres, 10*m + 4, 10*m + 10);
+  }
 }
 
 // ======================================================================
@@ -490,8 +504,8 @@ struct psc_output_fields_item_ops psc_output_fields_item_nvt_1st_##TYPE##_ops = 
   .nr_comp	      = 10,						\
   .fld_names	      = { "n", "vx", "vy", "vz",			\
 			  "Txx", "Tyy", "Tzz", "Txy", "Txz", "Tyz" },	\
-  .run                = nvt_1st_run,					\
-  .flags              = POFI_ADD_GHOSTS | POFI_BY_KIND,			\
+  .run_all            = nvt_1st_run_all,				\
+  .flags              = POFI_BY_KIND,					\
 };									\
 									\
 

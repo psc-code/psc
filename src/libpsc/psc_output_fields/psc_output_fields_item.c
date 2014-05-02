@@ -64,8 +64,8 @@ psc_output_fields_item_run(struct psc_output_fields_item *item,
       psc_mparticles_cuda_reorder(particles);
   }
 #endif
-  if (ops->run_patches) {
-    ops->run_patches(item, flds, particles, res);
+  if (ops->run_all) {
+    ops->run_all(item, flds, particles, res);
   } else {
     assert(ops->run);
     for (int p = 0; p < res->nr_patches; p++) {

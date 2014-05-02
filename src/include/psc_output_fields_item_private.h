@@ -21,9 +21,9 @@ struct psc_output_fields_item_ops {
   void (*run)(struct psc_output_fields_item *item,
 	      struct psc_fields *flds, struct psc_particles *prts,
 	      struct psc_fields *res);
-  void (*run_patches)(struct psc_output_fields_item *item,
-		      struct psc_mfields *mflds, struct psc_mparticles *mprts,
-		      struct psc_mfields *mres);
+  void (*run_all)(struct psc_output_fields_item *item,
+		  struct psc_mfields *mflds, struct psc_mparticles *mprts,
+		  struct psc_mfields *mres);
   int nr_comp;
   char *fld_names[POFI_MAX_COMPS];
   unsigned int flags;
