@@ -389,19 +389,24 @@ calc_W(struct psc_fields *flds_ipr, struct psc_fields *flds_nvt_av, int m)
   }
 }
 
+#ifndef NO_OPEN_BC
+
 static int
-inject_particles(struct psc_particles *prts, double n, double vxea, double vyea, double vzea, double vzvz, int ninjo)
+inject_particles(struct psc_particles *prts, double n, double v[3], double vv[6], double W[6],
+		 int ninjo, int iy, int m)
 {
   int p = prts->p;
   double c=1.0;
-  double vsz = sqrt(2.0*(vzvz));
-  double gs0 = exp(-sqr(vzea)/sqr(vsz))-exp(-sqr(c-vzea)/sqr(vsz))
-    +sqrt(M_PI)*vzea/vsz*(erf((c-vzea)/vsz)+erf(vzea/vsz));
+  double vsz = sqrt(2.0*(vv[2]));
+  double gs0 = exp(-sqr(v[2])/sqr(vsz))-exp(-sqr(c-v[2])/sqr(vsz))
+    +sqrt(M_PI)*v[2]/vsz*(erf((c-v[2])/vsz)+erf(v[2]/vsz));
   int ninjn = ninjo + ppsc->dt*gs0*n
     *vsz/sqrt(M_PI)/2.0/ppsc->patch[p].dx[2]/ppsc->coeff.cori;
 
   return ninjn;
 }
+
+#endif
 
 static void
 psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparticles *mprts)
@@ -435,14 +440,24 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
 	calc_W(flds_ipr, flds_nvt_av, m);
 
 	for (int iy = 0; iy < ppatch->ldims[1]; iy++) {
-	  double n    = F3_C(flds_nvt_av, 10*m + 0, 0,iy,0);
-	  double vxea = F3_C(flds_nvt_av, 10*m + 1, 0,iy,0);
-	  double vyea = F3_C(flds_nvt_av, 10*m + 2, 0,iy,0);
-	  double vzea = F3_C(flds_nvt_av, 10*m + 3, 0,iy,0);
-	  double vzvz = F3_C(flds_nvt_av, 10*m + 6, 0,iy,0);
+	  double n     =   F3_C(flds_nvt_av, 10*m + 0, 0,iy,0);
+	  double v[3]  = { F3_C(flds_nvt_av, 10*m + 1, 0,iy,0),
+			   F3_C(flds_nvt_av, 10*m + 2, 0,iy,0),
+			   F3_C(flds_nvt_av, 10*m + 3, 0,iy,0), };
+	  double vv[6] = { F3_C(flds_nvt_av, 10*m + 4, 0,iy,0),
+			   F3_C(flds_nvt_av, 10*m + 5, 0,iy,0),
+			   F3_C(flds_nvt_av, 10*m + 6, 0,iy,0),
+			   F3_C(flds_nvt_av, 10*m + 7, 0,iy,0),
+			   F3_C(flds_nvt_av, 10*m + 8, 0,iy,0),
+			   F3_C(flds_nvt_av, 10*m + 9, 0,iy,0), };
+	  double W[6]  = { F3_C(flds_ipr, 0, 0,iy,0),
+			   F3_C(flds_ipr, 1, 0,iy,0),
+			   F3_C(flds_ipr, 2, 0,iy,0),
+			   F3_C(flds_ipr, 3, 0,iy,0),
+			   F3_C(flds_ipr, 4, 0,iy,0),
+			   F3_C(flds_ipr, 5, 0,iy,0), };
 	  int ninjo = F3_C(flds_n_in, m, 0,iy,0);
-	  int ninjn = inject_particles(prts, n, vxea, vyea, vzea, vzvz, ninjo);
-
+	  int ninjn = inject_particles(prts, n, v, vv, W, ninjo, iy, m);
 	  F3_C(flds_n_in, m, 0,iy,0) = ninjn;
 	  int ninjc=0;
 	  if(ninjo < ninjn){
@@ -454,9 +469,9 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
 
 	  int nvdx=100000;
 	  double c = 1.;
-	  double vsz = sqrt(2.0*(vzvz));
-	  double gs0 = exp(-sqr(vzea)/sqr(vsz))-exp(-sqr(c-vzea)/sqr(vsz))
-	    +sqrt(M_PI)*vzea/vsz*(erf((c-vzea)/vsz)+erf(vzea/vsz));
+	  double vsz = sqrt(2.0*(vv[2]));
+	  double gs0 = exp(-sqr(v[2])/sqr(vsz))-exp(-sqr(c-v[2])/sqr(vsz))
+	    +sqrt(M_PI)*v[2]/vsz*(erf((c-v[2])/vsz)+erf(v[2]/vsz));
 	  double dvz = c/((double) nvdx);
 
 	  if(ninjc!=0) {
@@ -464,8 +479,8 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
 	    double  fin[nvdx];
 	    for(int jj=0; jj < nvdx; jj++){
 	      vzdin=vzdin+dvz;
-	      fin[jj]=(exp(-vzea*vzea/vsz/vsz)-exp(-(vzdin-vzea)*
-						   (vzdin-vzea)/vsz/vsz)+sqrt(M_PI)*vzea/vsz*(erf((vzdin-vzea)/vsz)+ erf(vzea/vsz)))/gs0;
+	      fin[jj]=(exp(-v[2]*v[2]/vsz/vsz)-exp(-(vzdin-v[2])*
+						   (vzdin-v[2])/vsz/vsz)+sqrt(M_PI)*v[2]/vsz*(erf((vzdin-v[2])/vsz)+ erf(v[2]/vsz)))/gs0;
 	    }
 	    for(int n=0; n< ninjc; n++){
 	      particle_t *prt = particles_get_one(prts, prts->n_part++); 
@@ -498,11 +513,9 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
 		  yy0=yya;
 		  yya=yy0-(erf(yy0)-(2.0*sr-1.0))/(2.0/sqrt(M_PI)*exp(-yy0*yy0));
 		} while(fabs(yya-yy0) > 1.0E-15 && icount!=100);
-		prt->pxi=vxea+yya*sqrt(F3_C(flds_ipr, 1, 0,iy,0)/(F3_C(flds_ipr, 0, 0,iy,0)*F3_C(flds_ipr, 1, 0,iy,0)
-									-sqr(F3_C(flds_ipr, 3, 0,iy,0))))
-		  +(prt->pzi-vzea)*F3_C(flds_nvt_av, 10*m + 8, 0,iy,0)/F3_C(flds_nvt_av, 10*m + 6, 0,iy,0);
+		prt->pxi=v[0]+yya*sqrt(W[1]/(W[0]*W[1]- sqr(W[3])))
+		  +(prt->pzi-v[2])*vv[4]/vv[2];
    
-		
 		seed=random();
 		sr=((double) seed)/((double)RAND_MAX);
 		yya=0.0;
@@ -512,8 +525,8 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
 		  yy0=yya;
 		  yya=yy0-(erf(yy0)-(2.0*sr-1.0))/(2.0/sqrt(M_PI)*exp(-yy0*yy0));
 		} while(fabs(yya-yy0) > 1.0E-15 && icount!=100);
-		prt->pyi=vyea+1.0/F3_C(flds_ipr, 1, 0,iy,0)*(sqrt(F3_C(flds_ipr, 1, 0,iy,0))*yya
-								   -(prt->pzi-vzea)*F3_C(flds_ipr, 5, 0,iy,0)-(prt->pxi-vxea)*F3_C(flds_ipr, 3, 0,iy,0));
+		prt->pyi=v[1]+1.0/W[1]*(sqrt(W[1])*yya
+					-(prt->pzi-v[2])*W[5]-(prt->pxi-v[0])*W[3]);
 		
 		if(nnm>100) break;
 	      } while(sqr(prt->pxi) + sqr(prt->pyi) + sqr(prt->pzi) > 1.0);
