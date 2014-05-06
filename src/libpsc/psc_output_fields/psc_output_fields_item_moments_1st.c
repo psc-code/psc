@@ -14,9 +14,10 @@ add_ghosts_reflecting_lo(struct psc_fields *pf, int d, int mb, int me)
 {
   struct psc_patch *patch = ppsc->patch + pf->p;
 
+  int bx = patch->ldims[0] == 1 ? 0 : 1;
   if (d == 1) {
     for (int iz = -1; iz < patch->ldims[2] + 1; iz++) {
-      for (int ix = -1; ix < patch->ldims[0] + 1; ix++) {
+      for (int ix = -bx; ix < patch->ldims[0] + bx; ix++) {
 	int iy = 0; {
 	  for (int m = mb; m < me; m++) {
 	    F3(pf, m, ix,iy,iz) += F3(pf, m, ix,iy-1,iz);
@@ -26,7 +27,7 @@ add_ghosts_reflecting_lo(struct psc_fields *pf, int d, int mb, int me)
     }
   } else if (d == 2) {
     for (int iy = -1; iy < patch->ldims[1] + 1; iy++) {
-      for (int ix = -1; ix < patch->ldims[0] + 1; ix++) {
+      for (int ix = -bx; ix < patch->ldims[0] + bx; ix++) {
 	int iz = 0; {
 	  for (int m = mb; m < me; m++) {
 	    F3(pf, m, ix,iy,iz) += F3(pf, m, ix,iy,iz-1);
@@ -322,13 +323,6 @@ do_nvt_a_1st_run(int p, fields_t *pf, struct psc_particles *prts)
     particle_real_t vxi[3];
     particle_calc_vxi(part, vxi);
 
-    particle_real_t *xi = &part->xi; /* don't shift back in time */	\
-    particle_real_t u = xi[0] * dxi - .5;				\
-    particle_real_t v = xi[1] * dyi - .5;				\
-    particle_real_t w = xi[2] * dzi - .5;				\
-    int jx = particle_real_fint(u);					\
-    int jy = particle_real_fint(v);					\
-    int jz = particle_real_fint(w);					\
     // density
     DEPOSIT_TO_GRID_1ST_CC(part, pf, mm, 1.f);
     // velocity
@@ -407,6 +401,49 @@ do_nvt_b_1st_run(int p, fields_t *pf, struct psc_particles *prts)
 }
 
 static void
+do_nvp_1st_run(int p, fields_t *pf, struct psc_particles *prts)
+{
+  struct psc_patch *patch = &ppsc->patch[p];
+  particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+  particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
+
+  for (int n = 0; n < prts->n_part; n++) {
+    particle_t *part = particles_get_one(prts, n);
+    int mm = particle_kind(part) * 10;
+
+    particle_real_t *xi = &part->xi;					\
+    particle_real_t u = xi[0] * dxi - .5;				\
+    particle_real_t v = xi[1] * dyi - .5;				\
+    particle_real_t w = xi[2] * dzi - .5;				\
+    int jx = particle_real_fint(u);					\
+    int jy = particle_real_fint(v);					\
+    int jz = particle_real_fint(w);					\
+    									\
+    assert(jx >= -1 && jx < patch->ldims[0]);				\
+    assert(jy >= -1 && jy < patch->ldims[1]);				\
+    assert(jz >= -1 && jz < patch->ldims[2]);				\
+    									\
+    particle_real_t vxi[3];
+    particle_calc_vxi(part, vxi);
+    particle_real_t *pxi = vxi;
+    // density
+    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm, 1.f);
+    // velocity
+    for (int m = 0; m < 3; m++) {
+      DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + m + 1, vxi[m]);
+    }
+    // pi * vj
+    // FIXME, this is really vxi * vxi, etc
+    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 4 + 0, pxi[0] * vxi[0]);
+    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 4 + 1, pxi[1] * vxi[1]);
+    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 4 + 2, pxi[2] * vxi[2]);
+    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 4 + 3, pxi[0] * vxi[1]);
+    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 4 + 4, pxi[0] * vxi[2]);
+    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 4 + 5, pxi[1] * vxi[2]);
+  }
+}
+
+static void
 nvt_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
 		struct psc_mparticles *mprts_base, struct psc_mfields *mres)
 {
@@ -455,6 +492,60 @@ nvt_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
     psc_bnd_add_ghosts(item->bnd, mres, 10*m + 4, 10*m + 10);
   }
   psc_bnd_fill_ghosts(item->bnd, mres, 0, mres->nr_fields);
+}
+
+static void
+nvp_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
+		struct psc_mparticles *mprts_base, struct psc_mfields *mres)
+{
+  for (int p = 0; p < mres->nr_patches; p++) {
+    struct psc_fields *res = psc_mfields_get_patch(mres, p);
+    struct psc_particles *prts_base = psc_mparticles_get_patch(mprts_base, p);
+    struct psc_particles *prts = psc_particles_get_as(prts_base, PARTICLE_TYPE, 0);
+    psc_fields_zero_range(res, 0, res->nr_comp);
+    do_nvp_1st_run(res->p, res, prts);
+    add_ghosts_boundary(res, 0, res->nr_comp);
+  }
+
+  psc_bnd_add_ghosts(item->bnd, mres, 0, mres->nr_fields);
+  psc_bnd_fill_ghosts(item->bnd, mres, 0, mres->nr_fields);
+
+  const int mm2mx[6] = { 0, 1, 2, 0, 0, 1 };
+  const int mm2my[6] = { 0, 1, 2, 1, 2, 2 };
+
+  for (int p = 0; p < mres->nr_patches; p++) {
+    struct psc_fields *res = psc_mfields_get_patch(mres, p);
+
+    // fix up zero density cells
+    for (int m = 0; m < ppsc->nr_kinds; m++) {
+      foreach_3d(res->p, ix, iy, iz, 1, 1) {
+	if (F3(res, 10*m, ix,iy,iz) == 0.0) {
+	  F3(res, 10*m, ix,iy,iz) = 0.00001;
+	} foreach_3d_end;
+      }
+    }    
+
+    // normalize v moments
+    for (int m = 0; m < ppsc->nr_kinds; m++) {
+      for (int mm = 0; mm < 3; mm++) {
+	foreach_3d(res->p, ix, iy, iz, 1, 1) {
+	  F3(res, 10*m + mm + 1, ix,iy,iz) /= F3(res, 10*m, ix,iy,iz);
+	} foreach_3d_end;
+      }
+    }
+
+    // calculate <(v - U)(v - U)> moments
+    for (int m = 0; m < ppsc->nr_kinds; m++) {
+      for (int mm = 0; mm < 6; mm++) {
+	int mx = mm2mx[mm], my = mm2my[mm];
+	foreach_3d(res->p, ix, iy, iz, 1, 1) {
+	  F3(res, 10*m + 4 + mm, ix,iy,iz) =
+	    F3(res, 10*m + 4 + mm, ix,iy,iz) / F3(res, 10*m, ix,iy,iz) - 
+	    F3(res, 10*m + 1 + mx, ix,iy,iz) * F3(res, 10*m + 1 + my, ix,iy,iz);
+	} foreach_3d_end;
+      }
+    }
+  }
 }
 
 // ======================================================================
@@ -514,6 +605,16 @@ struct psc_output_fields_item_ops psc_output_fields_item_nvt_1st_##TYPE##_ops = 
   .fld_names	      = { "n", "vx", "vy", "vz",			\
 			  "Txx", "Tyy", "Tzz", "Txy", "Txz", "Tyz" },	\
   .run_all            = nvt_1st_run_all,				\
+  .flags              = POFI_BY_KIND,					\
+};									\
+									\
+ /* FIXME, should include mass in Tij?! */				\
+struct psc_output_fields_item_ops psc_output_fields_item_nvp_1st_##TYPE##_ops = { \
+  .name               = "nvp_1st_" #TYPE,				\
+  .nr_comp	      = 10,						\
+  .fld_names	      = { "n", "vx", "vy", "vz",			\
+			  "Txx", "Tyy", "Tzz", "Txy", "Txz", "Tyz" },	\
+  .run_all            = nvp_1st_run_all,				\
   .flags              = POFI_BY_KIND,					\
 };									\
 									\
