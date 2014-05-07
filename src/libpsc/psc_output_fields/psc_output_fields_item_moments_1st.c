@@ -45,9 +45,10 @@ add_ghosts_reflecting_hi(struct psc_fields *pf, int d, int mb, int me)
 {
   struct psc_patch *patch = ppsc->patch + pf->p;
 
+  int bx = patch->ldims[0] == 1 ? 0 : 1;
   if (d == 1) {
     for (int iz = -1; iz < patch->ldims[2] + 1; iz++) {
-      for (int ix = -1; ix < patch->ldims[0] + 1; ix++) {
+      for (int ix = -bx; ix < patch->ldims[0] + bx; ix++) {
 	int iy = patch->ldims[1] - 1; {
 	  for (int m = mb; m < me; m++) {
 	    F3(pf, m, ix,iy,iz) += F3(pf, m, ix,iy+1,iz);
@@ -57,7 +58,7 @@ add_ghosts_reflecting_hi(struct psc_fields *pf, int d, int mb, int me)
     }
   } else if (d == 2) {
     for (int iy = -1; iy < patch->ldims[1] + 1; iy++) {
-      for (int ix = -1; ix < patch->ldims[0] + 1; ix++) {
+      for (int ix = -bx; ix < patch->ldims[0] + bx; ix++) {
 	int iz = patch->ldims[2] - 1; {
 	  for (int m = mb; m < me; m++) {
 	    F3(pf, m, ix,iy,iz) += F3(pf, m, ix,iy,iz+1);
@@ -85,7 +86,8 @@ add_ghosts_boundary(struct psc_fields *res, int mb, int me)
   // hi
   for (int d = 0; d < 3; d++) {
     if (ppsc->patch[res->p].off[d] + ppsc->patch[res->p].ldims[d] == ppsc->domain.gdims[d]) {
-      if (ppsc->domain.bnd_part_hi[d] == BND_PART_REFLECTING) {
+      if (ppsc->domain.bnd_part_hi[d] == BND_PART_REFLECTING ||
+	  ppsc->domain.bnd_part_hi[d] == BND_PART_OPEN) {
 	add_ghosts_reflecting_hi(res, d, mb, me);
       }
     }

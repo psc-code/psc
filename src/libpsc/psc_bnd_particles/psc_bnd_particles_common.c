@@ -53,18 +53,28 @@ average_9_point(struct psc_mfields *mflds_av, struct psc_mfields *mflds)
     struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
     struct psc_fields *flds_av = psc_mfields_get_patch(mflds_av, p);
     
-    // at lower z bnd only FIXME
+    // at lower and upper z bnd only FIXME
     for (int m = 0; m < mflds->nr_fields; m++) {
+      int mz = ppatch->ldims[2];
       for (int iy = 0; iy < ppatch->ldims[1]; iy++) {
-	F3_C(flds_av, m, 0,iy,0) = (F3_C(flds, m, 0,iy-1,0) +
-				    F3_C(flds, m, 0,iy-1,1) +
+	F3_C(flds_av, m, 0,iy,0) = (F3_C(flds, m, 0,iy-1,1) +
 				    F3_C(flds, m, 0,iy-1,2) +
-				    F3_C(flds, m, 0,iy  ,0) +
+				    F3_C(flds, m, 0,iy-1,3) +
 				    F3_C(flds, m, 0,iy  ,1) +
 				    F3_C(flds, m, 0,iy  ,2) +
-				    F3_C(flds, m, 0,iy+1,0) +
+				    F3_C(flds, m, 0,iy  ,3) +
 				    F3_C(flds, m, 0,iy+1,1) +
-				    F3_C(flds, m, 0,iy+1,2)) / 9.;
+				    F3_C(flds, m, 0,iy+1,2) +
+				    F3_C(flds, m, 0,iy+1,3)) / 9.;
+	F3_C(flds_av, m, 0,iy,mz-1) = (F3_C(flds, m, 0,iy-1,mz-2) +
+				       F3_C(flds, m, 0,iy-1,mz-3) +
+				       F3_C(flds, m, 0,iy-1,mz-4) +
+				       F3_C(flds, m, 0,iy  ,mz-2) +
+				       F3_C(flds, m, 0,iy  ,mz-3) +
+				       F3_C(flds, m, 0,iy  ,mz-4) +
+				       F3_C(flds, m, 0,iy+1,mz-2) +
+				       F3_C(flds, m, 0,iy+1,mz-3) +
+				       F3_C(flds, m, 0,iy+1,mz-4)) / 9.;
       }
     }
   }
@@ -80,17 +90,22 @@ average_in_time(struct psc_bnd_particles *bnd,
     struct psc_fields *flds_av = psc_mfields_get_patch(mflds_av, p);
     struct psc_fields *flds_last = psc_mfields_get_patch(mflds_last, p);
     
+    // at lower and upper z bnd only FIXME
     for (int m = 0; m < mflds_av->nr_fields; m++) {
       if (!bnd->first_time) {
-	for (int iy = 0; iy < ppatch->ldims[1]; iy++) {
-	  F3_C(flds_av, m, 0,iy,0) = 
-	    rr * F3_C(flds_av, m, 0,iy,0)
-	    + (1. - rr) * F3_C(flds_last, m, 0,iy,0);
+	for (int iz = 0; iz < ppatch->ldims[2]; iz += ppatch->ldims[2] + 1) {
+	  for (int iy = 0; iy < ppatch->ldims[1]; iy++) {
+	    F3_C(flds_av, m, 0,iy,iz) = 
+	      rr * F3_C(flds_av, m, 0,iy,iz)
+	      + (1. - rr) * F3_C(flds_last, m, 0,iy,iz);
+	  }
 	}
       }
 
-      for (int iy = 0; iy < ppatch->ldims[1]; iy++) {
-	F3_C(flds_last, m, 0,iy,0) = F3_C(flds_av, m, 0,iy,0);
+      for (int iz = 0; iz < ppatch->ldims[2]; iz += ppatch->ldims[2] + 1) {
+	for (int iy = 0; iy < ppatch->ldims[1]; iy++) {
+	  F3_C(flds_last, m, 0,iy,iz) = F3_C(flds_av, m, 0,iy,iz);
+	}
       }
     }
   }
@@ -350,67 +365,37 @@ psc_bnd_particles_sub_open_calc_moments(struct psc_bnd_particles *bnd,
 }
 
 static void __unused
-calc_W(struct psc_fields *flds_ipr, struct psc_fields *flds_nvt_av, int m)
+calc_W(double W[6], double vv[6], int m, int iy)
 {
-  struct psc_patch *ppatch = &ppsc->patch[flds_ipr->p];
-
-  for (int iy = 0; iy < ppatch->ldims[1]; iy++) {
-    /* F3_C(flds_nvt_av, 10*m+4, 0,iy,0) = .0004; */
-    /* F3_C(flds_nvt_av, 10*m+5, 0,iy,0) = .0004; */
-    /* F3_C(flds_nvt_av, 10*m+6, 0,iy,0) = .0004; */
-    /* F3_C(flds_nvt_av, 10*m+7, 0,iy,0) = 0.; */
-    /* F3_C(flds_nvt_av, 10*m+8, 0,iy,0) = 0.; */
-    /* F3_C(flds_nvt_av, 10*m+9, 0,iy,0) = 0.; */
-    double determ =
-      (F3_C(flds_nvt_av, 10*m+4, 0,iy,0)*F3_C(flds_nvt_av, 10*m+5, 0,iy,0)*F3_C(flds_nvt_av, 10*m+6, 0,iy,0) +
-       F3_C(flds_nvt_av, 10*m+7, 0,iy,0)*F3_C(flds_nvt_av, 10*m+9, 0,iy,0)*F3_C(flds_nvt_av, 10*m+8, 0,iy,0) +
-       F3_C(flds_nvt_av, 10*m+8, 0,iy,0)*F3_C(flds_nvt_av, 10*m+7, 0,iy,0)*F3_C(flds_nvt_av, 10*m+9, 0,iy,0) -
-       F3_C(flds_nvt_av, 10*m+8, 0,iy,0)*F3_C(flds_nvt_av, 10*m+5, 0,iy,0)*F3_C(flds_nvt_av, 10*m+8, 0,iy,0) -
-       F3_C(flds_nvt_av, 10*m+7, 0,iy,0)*F3_C(flds_nvt_av, 10*m+7, 0,iy,0)*F3_C(flds_nvt_av, 10*m+6, 0,iy,0) -
-       F3_C(flds_nvt_av, 10*m+4, 0,iy,0)*F3_C(flds_nvt_av, 10*m+9, 0,iy,0)*F3_C(flds_nvt_av, 10*m+9, 0,iy,0));
-    F3_C(flds_ipr, 0, 0,iy,0)=(F3_C(flds_nvt_av, 10*m+5, 0,iy,0)*F3_C(flds_nvt_av, 10*m+6, 0,iy,0)
-			       -F3_C(flds_nvt_av, 10*m+9, 0,iy,0)*F3_C(flds_nvt_av, 10*m+9, 0,iy,0))
-      /determ*0.5;
-    F3_C(flds_ipr, 1, 0,iy,0)=(F3_C(flds_nvt_av, 10*m+4, 0,iy,0)*F3_C(flds_nvt_av, 10*m+6, 0,iy,0)
-			       -F3_C(flds_nvt_av, 10*m+8, 0,iy,0)*F3_C(flds_nvt_av, 10*m+8, 0,iy,0))
-      /determ*0.5;
-    F3_C(flds_ipr, 2, 0,iy,0)=(F3_C(flds_nvt_av, 10*m+4, 0,iy,0)*F3_C(flds_nvt_av, 10*m+5, 0,iy,0)
-			       -F3_C(flds_nvt_av, 10*m+7, 0,iy,0)*F3_C(flds_nvt_av, 10*m+7, 0,iy,0))
-      /determ*0.5;
-    F3_C(flds_ipr, 3, 0,iy,0)=(F3_C(flds_nvt_av, 10*m+7, 0,iy,0)*F3_C(flds_nvt_av, 10*m+6, 0,iy,0)
-			       -F3_C(flds_nvt_av, 10*m+8, 0,iy,0)*F3_C(flds_nvt_av, 10*m+9, 0,iy,0))
-      /determ*0.5;
-    F3_C(flds_ipr, 4, 0,iy,0)=(F3_C(flds_nvt_av, 10*m+7, 0,iy,0)*F3_C(flds_nvt_av, 10*m+9, 0,iy,0)
-			       -F3_C(flds_nvt_av, 10*m+8, 0,iy,0)*F3_C(flds_nvt_av, 10*m+5, 0,iy,0))
-      /determ*0.5;
-    F3_C(flds_ipr, 5, 0,iy,0)=(F3_C(flds_nvt_av, 10*m+4, 0,iy,0)*F3_C(flds_nvt_av, 10*m+9, 0,iy,0)
-			       -F3_C(flds_nvt_av, 10*m+7, 0,iy,0)*F3_C(flds_nvt_av, 10*m+8, 0,iy,0))
-      /determ*0.5;
-  }
+  double determ =
+    (vv[0]*vv[1]*vv[2] + vv[3]*vv[5]*vv[4] + vv[4]*vv[3]*vv[5] -
+     vv[4]*vv[1]*vv[4] - vv[3]*vv[3]*vv[2] - vv[0]*vv[5]*vv[5]);
+  W[0] = (vv[1]*vv[2] - vv[5]*vv[5]) / determ*0.5;
+  W[1] = (vv[0]*vv[2] - vv[4]*vv[4]) / determ*0.5;
+  W[2] = (vv[0]*vv[1] - vv[3]*vv[3]) / determ*0.5;
+  W[3] = (vv[3]*vv[2] - vv[4]*vv[5]) / determ*0.5;
+  W[4] = (vv[3]*vv[5] - vv[4]*vv[1]) / determ*0.5;
+  W[5] = (vv[0]*vv[5] - vv[3]*vv[4]) / determ*0.5;
 }
 
 #ifndef NO_OPEN_BC
 
-static int
-inject_particles(struct psc_particles *prts, double n, double v[3], double vv[6], double W[6],
-		 int ninjo, int iy, int m)
+static double
+inject_particles_z(struct psc_particles *prts, double n, double v[3], double vv[6], double W[6],
+		   double ninjo, int m, double pos[3], double dir)
 {
   int p = prts->p;
   double c=1.0;
   double vsz = sqrt(2.0*(vv[2]));
   double gs0 = exp(-sqr(v[2])/sqr(vsz))-exp(-sqr(c-v[2])/sqr(vsz))
     +sqrt(M_PI)*v[2]/vsz*(erf((c-v[2])/vsz)+erf(v[2]/vsz));
-  int ninjn = ninjo + ppsc->dt*gs0*n
-    *vsz/sqrt(M_PI)/2.0/ppsc->patch[p].dx[2]/ppsc->coeff.cori;
+  double ninjn = ninjo + ppsc->dt*gs0*n
+    * vsz / sqrt(M_PI)/2.0/ppsc->patch[p].dx[2]/ppsc->coeff.cori;
 
-  int ninjc=0;
-  if(ninjo < ninjn){
-    // FIXME, doesn't seem right for partial particles
-    ninjc=ninjn-ninjo;
-  }
-  mprintf("iy ele %d\n", iy);
-  mprintf("n ele %f\n", n);
-  mprintf("ninjc %d\n", ninjc);
+  int ninjc = (int) ninjn;
+  /* mprintf("n ele %g ninjo %g ninjn %g ninjon %g ninjc %d\n", n,  */
+  /* 	  ninjo, ninjn, ninjn - ninjc, ninjc); */
+  ninjo = ninjn - ninjc;
   
   int nvdx=100000;
   double dvz = c/((double) nvdx);
@@ -475,28 +460,27 @@ inject_particles(struct psc_particles *prts, double n, double v[3], double vv[6]
       long seed=random();
       sr=((double) seed)/((double)RAND_MAX);
       //       sr = .5;
-      prt->xi=sr*ppsc->patch[p].dx[0];
+      prt->xi = pos[0] + sr*ppsc->patch[p].dx[0];
       //       prt->yi=((double)ppatch->off[1]+(double)iy+sr)*ppsc->patch[p].dx[1];
       seed=random();
       sr=((double) seed)/((double)RAND_MAX);
       //sr = .5;
-      prt->yi=((double)iy+sr)*ppsc->patch[p].dx[1];
+      prt->yi = pos[1] + sr * ppsc->patch[p].dx[1];
       seed=random();
       sr=((double) seed)/((double)RAND_MAX);
-      prt->zi=0;sr*prt->pzi * ppsc->dt;//ppsc->patch[p].dx[2]; // FIXME, right on the boundary for now
-      //prt->zi=0.;//0.0001*ppsc->patch[p].dx[2];
-      prt->qni_wni=ppsc->kinds[m].q;
+      prt->zi = pos[2] + 0 * dir * sr * prt->pzi * ppsc->dt; // FIXME, right on the boundary for now
+      prt->qni_wni = ppsc->kinds[m].q;
       prt->kind = m;
-      double gamma=1.0/sqrt(1.0-(sqr(prt->pxi)+sqr(prt->pyi)+sqr(prt->pzi)));
+      double gamma = 1.0/sqrt(1.0-(sqr(prt->pxi)+sqr(prt->pyi)+sqr(prt->pzi)));
       //      mprintf("gamma %f\n",gamma);
       if (sqr(prt->pxi) + sqr(prt->pyi) + sqr(prt->pzi) > 1.0) gamma=1.0;
-      prt->pxi=prt->pxi*gamma;
-      prt->pyi=prt->pyi*gamma;
-      prt->pzi=prt->pzi*gamma;
+      prt->pxi *= gamma;
+      prt->pyi *= gamma;
+      prt->pzi *= dir * gamma;
     }
   }
 
-  return ninjn;
+  return ninjo;
 }
 
 #endif
@@ -507,22 +491,8 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
 #ifndef NO_OPEN_BC
   int nr_kinds = ppsc->nr_kinds;
 
-  struct psc_mfields *mflds_ipr = psc_mfields_create(psc_bnd_particles_comm(bnd));
-  psc_mfields_set_type(mflds_ipr, "c");
-  psc_mfields_set_domain(mflds_ipr, ppsc->mrc_domain);
-  psc_mfields_set_param_int(mflds_ipr, "nr_fields", 6); // FIXME
-  psc_mfields_set_param_int3(mflds_ipr, "ibn", ppsc->ibn);
-  psc_mfields_setup(mflds_ipr);
-  psc_mfields_set_comp_name(mflds_ipr, 0, "Wxx");
-  psc_mfields_set_comp_name(mflds_ipr, 1, "Wyy");
-  psc_mfields_set_comp_name(mflds_ipr, 2, "Wzz");
-  psc_mfields_set_comp_name(mflds_ipr, 3, "Wxy");
-  psc_mfields_set_comp_name(mflds_ipr, 4, "Wxz");
-  psc_mfields_set_comp_name(mflds_ipr, 5, "Wyz");
-
   for (int p = 0; p < ppsc->nr_patches; p++) {
     struct psc_patch *ppatch = &ppsc->patch[p];
-    struct psc_fields *flds_ipr = psc_mfields_get_patch(mflds_ipr, p);
     struct psc_fields *flds_nvt_av = psc_mfields_get_patch(bnd->mflds_nvt_av, p);
     struct psc_fields *flds_n_in = psc_mfields_get_patch(bnd->mflds_n_in, p);
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
@@ -530,34 +500,56 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
     for (int m = 0; m < nr_kinds; m++) {
       // inject at z = 0
       if (ppatch->off[2]  == 0 ) {
-	calc_W(flds_ipr, flds_nvt_av, m);
-
+	int iz = 0;
 	for (int iy = 0; iy < ppatch->ldims[1]; iy++) {
-	  double n     =   F3_C(flds_nvt_av, 10*m + 0, 0,iy,0);
-	  double v[3]  = { F3_C(flds_nvt_av, 10*m + 1, 0,iy,0),
-			   F3_C(flds_nvt_av, 10*m + 2, 0,iy,0),
-			   F3_C(flds_nvt_av, 10*m + 3, 0,iy,0), };
-	  double vv[6] = { F3_C(flds_nvt_av, 10*m + 4, 0,iy,0),
-			   F3_C(flds_nvt_av, 10*m + 5, 0,iy,0),
-			   F3_C(flds_nvt_av, 10*m + 6, 0,iy,0),
-			   F3_C(flds_nvt_av, 10*m + 7, 0,iy,0),
-			   F3_C(flds_nvt_av, 10*m + 8, 0,iy,0),
-			   F3_C(flds_nvt_av, 10*m + 9, 0,iy,0), };
-	  double W[6]  = { F3_C(flds_ipr, 0, 0,iy,0),
-			   F3_C(flds_ipr, 1, 0,iy,0),
-			   F3_C(flds_ipr, 2, 0,iy,0),
-			   F3_C(flds_ipr, 3, 0,iy,0),
-			   F3_C(flds_ipr, 4, 0,iy,0),
-			   F3_C(flds_ipr, 5, 0,iy,0), };
-	  int ninjo = F3_C(flds_n_in, m, 0,iy,0);
-	  int ninjn = inject_particles(prts, n, v, vv, W, ninjo, iy, m);
-	  F3_C(flds_n_in, m, 0,iy,0) = ninjn;
+	  double n     =   F3_C(flds_nvt_av, 10*m + 0, 0,iy,iz);
+	  double v[3]  = { F3_C(flds_nvt_av, 10*m + 1, 0,iy,iz),
+			   F3_C(flds_nvt_av, 10*m + 2, 0,iy,iz),
+			   F3_C(flds_nvt_av, 10*m + 3, 0,iy,iz), };
+	  /* n = 1.; */
+	  /* v[0] = 0.; v[1] = 0.; v[2] = .1; */
+	  double vv[6] = { F3_C(flds_nvt_av, 10*m + 4, 0,iy,iz),
+			   F3_C(flds_nvt_av, 10*m + 5, 0,iy,iz),
+			   F3_C(flds_nvt_av, 10*m + 6, 0,iy,iz),
+			   F3_C(flds_nvt_av, 10*m + 7, 0,iy,iz),
+			   F3_C(flds_nvt_av, 10*m + 8, 0,iy,iz),
+			   F3_C(flds_nvt_av, 10*m + 9, 0,iy,iz), };
+	  double W[6];
+	  calc_W(W, vv, m, iy);
+
+	  double ninjo = F3_C(flds_n_in, m, 0,iy,iz);
+	  double pos[3] = { 0., iy * ppatch->dx[1], 0. };
+	  ninjo = inject_particles_z(prts, n, v, vv, W, ninjo, m, pos, +1.);
+	  F3_C(flds_n_in, m, 0,iy,iz) = ninjo;
+	}
+      }
+      // inject at z = zmax
+      if (ppatch->off[2] + ppatch->ldims[2] == ppsc->domain.gdims[2]) {
+	int iz = ppatch->ldims[2] - 1;
+	for (int iy = 0; iy < ppatch->ldims[1]; iy++) {
+	  double n     =   F3_C(flds_nvt_av, 10*m + 0, 0,iy,iz);
+	  double v[3]  = { F3_C(flds_nvt_av, 10*m + 1, 0,iy,iz),
+			   F3_C(flds_nvt_av, 10*m + 2, 0,iy,iz),
+			   - F3_C(flds_nvt_av, 10*m + 3, 0,iy,iz), };
+	  /* n = 1.; */
+	  /* v[0] = 0.; v[1] = 0.; v[2] = -.1; */
+	  double vv[6] = { F3_C(flds_nvt_av, 10*m + 4, 0,iy,iz),
+			   F3_C(flds_nvt_av, 10*m + 5, 0,iy,iz),
+			   F3_C(flds_nvt_av, 10*m + 6, 0,iy,iz),
+			   F3_C(flds_nvt_av, 10*m + 7, 0,iy,iz),
+			   - F3_C(flds_nvt_av, 10*m + 8, 0,iy,iz),
+			   - F3_C(flds_nvt_av, 10*m + 9, 0,iy,iz), };
+	  double W[6];
+	  calc_W(W, vv, m, iy);
+
+	  double ninjo = F3_C(flds_n_in, m, 0,iy,iz);
+	  double pos[3] = { 0., iy * ppatch->dx[1], (iz + 1) * (1-1e-6) * ppatch->dx[2] };
+	  ninjo = inject_particles_z(prts, n, v, vv, W, ninjo, m, pos, -1.);
+	  F3_C(flds_n_in, m, 0,iy,iz) = ninjo;
 	}
       }
     }
   }
-
-  psc_mfields_destroy(mflds_ipr);
 #endif
 }
 
