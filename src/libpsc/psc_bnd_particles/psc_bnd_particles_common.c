@@ -403,6 +403,99 @@ inject_particles(struct psc_particles *prts, double n, double v[3], double vv[6]
   int ninjn = ninjo + ppsc->dt*gs0*n
     *vsz/sqrt(M_PI)/2.0/ppsc->patch[p].dx[2]/ppsc->coeff.cori;
 
+  int ninjc=0;
+  if(ninjo < ninjn){
+    // FIXME, doesn't seem right for partial particles
+    ninjc=ninjn-ninjo;
+  }
+  mprintf("iy ele %d\n", iy);
+  mprintf("n ele %f\n", n);
+  mprintf("ninjc %d\n", ninjc);
+  
+  int nvdx=100000;
+  double dvz = c/((double) nvdx);
+	  
+  if (ninjc != 0) {
+    double vzdin=0.0;
+    double  fin[nvdx];
+    for(int jj=0; jj < nvdx; jj++){
+      vzdin=vzdin+dvz;
+      fin[jj]=(exp(-v[2]*v[2]/vsz/vsz)-exp(-(vzdin-v[2])*
+					   (vzdin-v[2])/vsz/vsz)+sqrt(M_PI)*v[2]/vsz*(erf((vzdin-v[2])/vsz)+ erf(v[2]/vsz)))/gs0;
+    }
+    for(int n=0; n< ninjc; n++){
+      particle_t *prt = particles_get_one(prts, prts->n_part++); 
+      double sr;
+
+      int nnm;
+      nnm=0;
+      do{
+	nnm++;
+	do{
+	  long seed=random();
+	  sr=((double) seed)/((double)RAND_MAX);
+      
+	  for(int k=0;k<nvdx-1;k++){
+	    prt->pzi=0.0;
+	    if(sr > fin[k] && sr < fin[k+1]){
+	      prt->pzi=dvz*((double) k+1.0)+(sr-fin[k])*dvz/(fin[k+1]-fin[k]);
+	    }
+	    if(prt->pzi !=0.0) break;
+	  }
+	} while(prt->pzi==0);
+        
+	long seed=random();
+	sr=((double) seed)/((double)RAND_MAX);
+	double yya=0.0;
+	double yy0;
+	int icount=0;
+	do {
+	  icount++;
+	  yy0=yya;
+	  yya=yy0-(erf(yy0)-(2.0*sr-1.0))/(2.0/sqrt(M_PI)*exp(-yy0*yy0));
+	} while(fabs(yya-yy0) > 1.0E-15 && icount!=100);
+	prt->pxi=v[0]+yya*sqrt(W[1]/(W[0]*W[1]- sqr(W[3])))
+	  +(prt->pzi-v[2])*vv[4]/vv[2];
+   
+	seed=random();
+	sr=((double) seed)/((double)RAND_MAX);
+	yya=0.0;
+	icount=0;
+	do {
+	  icount++;
+	  yy0=yya;
+	  yya=yy0-(erf(yy0)-(2.0*sr-1.0))/(2.0/sqrt(M_PI)*exp(-yy0*yy0));
+	} while(fabs(yya-yy0) > 1.0E-15 && icount!=100);
+	prt->pyi=v[1]+1.0/W[1]*(sqrt(W[1])*yya
+				-(prt->pzi-v[2])*W[5]-(prt->pxi-v[0])*W[3]);
+		
+	if(nnm>100) break;
+      } while(sqr(prt->pxi) + sqr(prt->pyi) + sqr(prt->pzi) > 1.0);
+	      
+      long seed=random();
+      sr=((double) seed)/((double)RAND_MAX);
+      //       sr = .5;
+      prt->xi=sr*ppsc->patch[p].dx[0];
+      //       prt->yi=((double)ppatch->off[1]+(double)iy+sr)*ppsc->patch[p].dx[1];
+      seed=random();
+      sr=((double) seed)/((double)RAND_MAX);
+      //sr = .5;
+      prt->yi=((double)iy+sr)*ppsc->patch[p].dx[1];
+      seed=random();
+      sr=((double) seed)/((double)RAND_MAX);
+      prt->zi=0;sr*prt->pzi * ppsc->dt;//ppsc->patch[p].dx[2]; // FIXME, right on the boundary for now
+      //prt->zi=0.;//0.0001*ppsc->patch[p].dx[2];
+      prt->qni_wni=ppsc->kinds[m].q;
+      prt->kind = m;
+      double gamma=1.0/sqrt(1.0-(sqr(prt->pxi)+sqr(prt->pyi)+sqr(prt->pzi)));
+      //      mprintf("gamma %f\n",gamma);
+      if (sqr(prt->pxi) + sqr(prt->pyi) + sqr(prt->pzi) > 1.0) gamma=1.0;
+      prt->pxi=prt->pxi*gamma;
+      prt->pyi=prt->pyi*gamma;
+      prt->pzi=prt->pzi*gamma;
+    }
+  }
+
   return ninjn;
 }
 
@@ -459,101 +552,6 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
 	  int ninjo = F3_C(flds_n_in, m, 0,iy,0);
 	  int ninjn = inject_particles(prts, n, v, vv, W, ninjo, iy, m);
 	  F3_C(flds_n_in, m, 0,iy,0) = ninjn;
-	  int ninjc=0;
-	  if(ninjo < ninjn){
-	    ninjc=ninjn-ninjo;
-	  }
-	  mprintf("iy ele %d\n",iy);
-	  mprintf("n ele %f\n",F3_C(flds_nvt_av, 10*m, 0,iy,0));
-	  mprintf("ninjc %d\n", ninjc);
-
-	  int nvdx=100000;
-	  double c = 1.;
-	  double vsz = sqrt(2.0*(vv[2]));
-	  double gs0 = exp(-sqr(v[2])/sqr(vsz))-exp(-sqr(c-v[2])/sqr(vsz))
-	    +sqrt(M_PI)*v[2]/vsz*(erf((c-v[2])/vsz)+erf(v[2]/vsz));
-	  double dvz = c/((double) nvdx);
-
-	  if(ninjc!=0) {
-	    double vzdin=0.0;
-	    double  fin[nvdx];
-	    for(int jj=0; jj < nvdx; jj++){
-	      vzdin=vzdin+dvz;
-	      fin[jj]=(exp(-v[2]*v[2]/vsz/vsz)-exp(-(vzdin-v[2])*
-						   (vzdin-v[2])/vsz/vsz)+sqrt(M_PI)*v[2]/vsz*(erf((vzdin-v[2])/vsz)+ erf(v[2]/vsz)))/gs0;
-	    }
-	    for(int n=0; n< ninjc; n++){
-	      particle_t *prt = particles_get_one(prts, prts->n_part++); 
-	      double sr;
-
-	      int nnm;
-	      nnm=0;
-	      do{
-		nnm++;
-		do{
-		  long seed=random();
-		  sr=((double) seed)/((double)RAND_MAX);
-      
-		  for(int k=0;k<nvdx-1;k++){
-		    prt->pzi=0.0;
-		    if(sr > fin[k] && sr < fin[k+1]){
-		      prt->pzi=dvz*((double) k+1.0)+(sr-fin[k])*dvz/(fin[k+1]-fin[k]);
-		    }
-		    if(prt->pzi !=0.0) break;
-		  }
-		} while(prt->pzi==0);
-        
-		long seed=random();
-		sr=((double) seed)/((double)RAND_MAX);
-		double yya=0.0;
-		double yy0;
-		int icount=0;
-		do {
-		  icount++;
-		  yy0=yya;
-		  yya=yy0-(erf(yy0)-(2.0*sr-1.0))/(2.0/sqrt(M_PI)*exp(-yy0*yy0));
-		} while(fabs(yya-yy0) > 1.0E-15 && icount!=100);
-		prt->pxi=v[0]+yya*sqrt(W[1]/(W[0]*W[1]- sqr(W[3])))
-		  +(prt->pzi-v[2])*vv[4]/vv[2];
-   
-		seed=random();
-		sr=((double) seed)/((double)RAND_MAX);
-		yya=0.0;
-		icount=0;
-		do {
-		  icount++;
-		  yy0=yya;
-		  yya=yy0-(erf(yy0)-(2.0*sr-1.0))/(2.0/sqrt(M_PI)*exp(-yy0*yy0));
-		} while(fabs(yya-yy0) > 1.0E-15 && icount!=100);
-		prt->pyi=v[1]+1.0/W[1]*(sqrt(W[1])*yya
-					-(prt->pzi-v[2])*W[5]-(prt->pxi-v[0])*W[3]);
-		
-		if(nnm>100) break;
-	      } while(sqr(prt->pxi) + sqr(prt->pyi) + sqr(prt->pzi) > 1.0);
-	      
-	      long seed=random();
-	      sr=((double) seed)/((double)RAND_MAX);
-	      //       sr = .5;
-	      prt->xi=sr*ppsc->patch[p].dx[0];
-	      //       prt->yi=((double)ppatch->off[1]+(double)iy+sr)*ppsc->patch[p].dx[1];
-	      seed=random();
-	      sr=((double) seed)/((double)RAND_MAX);
-	      //sr = .5;
-	      prt->yi=((double)iy+sr)*ppsc->patch[p].dx[1];
-	      seed=random();
-	      sr=((double) seed)/((double)RAND_MAX);
-	      prt->zi=0;sr*prt->pzi * ppsc->dt;//ppsc->patch[p].dx[2]; // FIXME, right on the boundary for now
-	      //prt->zi=0.;//0.0001*ppsc->patch[p].dx[2];
-	      prt->qni_wni=ppsc->kinds[m].q;
-	      prt->kind = m;
-	      double gamma=1.0/sqrt(1.0-(sqr(prt->pxi)+sqr(prt->pyi)+sqr(prt->pzi)));
-	      //      mprintf("gamma %f\n",gamma);
-	      if (sqr(prt->pxi) + sqr(prt->pyi) + sqr(prt->pzi) > 1.0) gamma=1.0;
-	      prt->pxi=prt->pxi*gamma;
-	      prt->pyi=prt->pyi*gamma;
-	      prt->pzi=prt->pzi*gamma;
-	    }
-	  }
 	}
       }
     }
