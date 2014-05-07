@@ -9,6 +9,7 @@
 #include <mrc_bits.h>
 #include <math.h>
 #include <assert.h>
+#include <mpi.h>
 
 // ======================================================================
 // ggcm_mhd_step class
@@ -78,9 +79,12 @@ ggcm_mhd_step_run_predcorr(struct ggcm_mhd_step *step, struct mrc_fld *x)
     dtn = fminf(1., dtn); // FIXME, only kept for compatibility
 
     if (dtn > 1.02 * mhd->dt || dtn < mhd->dt / 1.01) {
-      mpi_printf(ggcm_mhd_comm(mhd), "switched dt %g <- %g\n",
-		 dtn, mhd->dt);
+      mpi_printf(ggcm_mhd_comm(mhd), "switched dt %g <- %g\n", dtn, mhd->dt);
       mhd->dt = dtn;
+      if (mhd->dt < mhd->par.dtmin) {
+        mpi_printf(ggcm_mhd_comm(mhd), "!!! di < dtmin, aborting now!\n");
+        MPI_Abort(MPI_COMM_WORLD, 1);
+      }
     }
   }
 
