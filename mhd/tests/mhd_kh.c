@@ -44,9 +44,10 @@ ggcm_mhd_ic_kh_run(struct ggcm_mhd_ic *ic)
   // the B1* macros which shift the index (due to staggering)...
   // FIXME, need to set all components, can't rely on things being initialized to
   // zero because of the -> primitive conversion which divides by RR :(
-  float xl[3], xh[3],  xmid[3], L[3], r[3];
-  mrc_crds_get_param_float3(crds, "l", xl);
-  mrc_crds_get_param_float3(crds, "h", xh);
+  double xl[3], xh[3];
+  float xmid[3], L[3], r[3];
+  mrc_crds_get_param_double3(crds, "l", xl);
+  mrc_crds_get_param_double3(crds, "h", xh);
   for(int i=0; i<3; i++){
     L[i] = xh[i] - xl[i];
     xmid[i] = 0.5 * (xh[i] + xl[i]);
@@ -126,8 +127,8 @@ ggcm_mhd_kh_create(struct ggcm_mhd *mhd)
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
   mrc_crds_set_type(crds, "uniform");
   mrc_crds_set_param_int(crds, "sw", SW_2);   // 'stencil width' 
-  mrc_crds_set_param_float3(crds, "l", (float[3]) {  0.0, 0.0, 0.0 });
-  mrc_crds_set_param_float3(crds, "h", (float[3]) {  1.0, 1.0, 0.1 });
+  mrc_crds_set_param_double3(crds, "l", (double[3]) {  0.0, 0.0, 0.0 });
+  mrc_crds_set_param_double3(crds, "h", (double[3]) {  1.0, 1.0, 0.1 });
 }
 
 static struct ggcm_mhd_ops ggcm_mhd_kh_ops = {

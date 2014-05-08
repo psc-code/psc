@@ -80,8 +80,8 @@ struct MB_block {
   int nr_block; // Sort of pointless to have this, but it's expected at the moment.
   struct MB_face faces[NR_FACES];  
   struct mrc_crds_gen *coord_gen[3]; // What generators are used for the 0,1,2 coordinates
-  float xl[3]; // Lower bounds of this block in coordinate space
-  float xh[3]; // Upper bounds of this block in coordinate space
+  double xl[3]; // Lower bounds of this block in coordinate space
+  double xh[3]; // Upper bounds of this block in coordinate space
 };
 
 MRC_CLASS_DECLARE(mrc_domain, struct mrc_domain);

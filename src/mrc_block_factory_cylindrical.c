@@ -33,8 +33,8 @@
 // function in the documentation.
 
 struct mrc_bf_cylindrical {
-  float rb, re; // Bounds in the radial (coord_gen_r) direction
-  float zb, ze; // Bounds in the Z (coord_gen_z) direction
+  double rb, re; // Bounds in the radial (coord_gen_r) direction
+  double zb, ze; // Bounds in the Z (coord_gen_z) direction
   int dims[2]; // FIXME: just 2D for now
   struct mrc_crds_gen *coord_gen[3]; // Coordinate generation objects 
                                      //for the 3 domain coordinates.
@@ -42,10 +42,10 @@ struct mrc_bf_cylindrical {
 
 #define VAR(x) (void *)offsetof(struct mrc_bf_cylindrical, x)
 static struct param mrc_bf_cylindrical_param_descr[] = {
-  { "rb"              , VAR(rb)             , PARAM_FLOAT(1e-15)     },
-  { "re"              , VAR(re)             , PARAM_FLOAT(1.0  )     },
-  { "zb"              , VAR(zb)             , PARAM_FLOAT(0)         },
-  { "ze"              , VAR(ze)             , PARAM_FLOAT(1.0  )     },
+  { "rb"              , VAR(rb)             , PARAM_DOUBLE(1e-15)     },
+  { "re"              , VAR(re)             , PARAM_DOUBLE(1.0  )     },
+  { "zb"              , VAR(zb)             , PARAM_DOUBLE(0)         },
+  { "ze"              , VAR(ze)             , PARAM_DOUBLE(1.0  )     },
   { "mr"                , VAR(dims[0])          , PARAM_INT(16)          },
   { "mth"               , VAR(dims[1])          , PARAM_INT(16)          },
   { "coord_gen_r"       , VAR(coord_gen[0])    , MRC_VAR_OBJ(mrc_crds_gen)},
@@ -98,8 +98,8 @@ mrc_block_factory_cylindrical_run(struct mrc_block_factory *fac, struct mrc_doma
   //    struct MB_face faces[NR_FACES]; --- Face mappings (6 faces total)
   //    int nr_block; --------------------- The number of this block
   //    char (*coord_names)[3]; // What coordinates the 0,1,2 dims are (used for crds_gen_parsing)
-  //    float xl[3]; // Lower bounds of this block in coordinate space
-  //   float xh[3]; // Upper bounds of this block in coordinate space
+  //    double xl[3]; // Lower bounds of this block in coordinate space
+  //   double xh[3]; // Upper bounds of this block in coordinate space
   //  };
   ///////
 
@@ -113,7 +113,7 @@ mrc_block_factory_cylindrical_run(struct mrc_block_factory *fac, struct mrc_doma
   //  };
   ////////////////////
 
-  float pi = M_PI;
+  double pi = M_PI;
   // First block
   
   blocks[0] = (struct MB_block) {

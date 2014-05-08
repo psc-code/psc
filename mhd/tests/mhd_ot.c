@@ -107,8 +107,8 @@ ggcm_mhd_ot_create(struct ggcm_mhd *mhd)
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
   mrc_crds_set_type(crds, "uniform");
   mrc_crds_set_param_int(crds, "sw", SW_2);   // 'stencil width' 
-  mrc_crds_set_param_float3(crds, "l", (float[3]) {  0.0, 0.0, 0.0 });
-  mrc_crds_set_param_float3(crds, "h", (float[3]) {  1.0, 1.0, 0.1 });
+  mrc_crds_set_param_double3(crds, "l", (double[3]) {  0.0, 0.0, 0.0 });
+  mrc_crds_set_param_double3(crds, "h", (double[3]) {  1.0, 1.0, 0.1 });
 }
 
 // ----------------------------------------------------------------------

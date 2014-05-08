@@ -8,8 +8,8 @@
 struct mrc_crds {
   struct mrc_obj obj;
   // parameters
-  float xl[3];
-  float xh[3];
+  double xl[3];
+  double xh[3];
   int sw;
 
   // state
