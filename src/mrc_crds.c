@@ -350,6 +350,7 @@ mrc_crds_mb_setup(struct mrc_crds *crds)
 
 	mrc_crds_gen_set_param_int3(block->coord_gen[d], "m", block->mx);
 	mrc_crds_gen_set_param_int(block->coord_gen[d], "d", d);
+	mrc_crds_gen_set_param_int(block->coord_gen[d], "sw", sw);
 	mrc_crds_gen_set_param_obj(block->coord_gen[d], "crds", crds);
 	mrc_crds_gen_set_param_float(block->coord_gen[d], "xl", block->xl[d]);
 	mrc_crds_gen_set_param_float(block->coord_gen[d], "xh", block->xh[d]);
