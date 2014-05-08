@@ -336,14 +336,8 @@ mrc_crds_mb_setup(struct mrc_crds *crds)
   for (int b = 0; b < nr_blocks; b++)
     {
       struct MB_block *block = &(blocks[b]);
-      // FIXME: This is a bad abuse, but it's the only way
-      // to get the block bounds to crds_gens in a way they
-      // understand
-      mrc_crds_set_param_float3(crds, "l", (float[3]){block->xl[0], block->xl[1], block->xl[2]});
-      mrc_crds_set_param_float3(crds, "h", (float[3]){block->xh[0], block->xh[1], block->xh[2]});
 
       for (int d = 0; d < 3; d ++) {
-
 	struct mrc_fld *x = mrc_fld_create(MPI_COMM_SELF);
 	mrc_fld_set_type(x, "double");
 	mrc_fld_set_param_int_array(x, "dims", 2, (int[2]) { block->mx[d] + 1, 2 });
@@ -354,12 +348,11 @@ mrc_crds_mb_setup(struct mrc_crds *crds)
 	// but I guess I'll just have to write the docs to make it clear what's going on here.
 	assert(block->coord_gen[d]);
 
-	// FIXME:
-	// I hate having to add this "m" hack more than any other.
-	// Could go in block factory, I suppose...
 	mrc_crds_gen_set_param_int3(block->coord_gen[d], "m", block->mx);
 	mrc_crds_gen_set_param_int(block->coord_gen[d], "d", d);
 	mrc_crds_gen_set_param_obj(block->coord_gen[d], "crds", crds);
+	mrc_crds_gen_set_param_float(block->coord_gen[d], "xl", block->xl[d]);
+	mrc_crds_gen_set_param_float(block->coord_gen[d], "xh", block->xh[d]);
 
 	mrc_crds_gen_run(block->coord_gen[d], &MRC_D2(x, 0, 0), &MRC_D2(x, 0, 1));
 	
