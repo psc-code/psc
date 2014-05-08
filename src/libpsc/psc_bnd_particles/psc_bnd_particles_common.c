@@ -16,6 +16,18 @@ random1()
   return random() / (double) RAND_MAX;
 }
 
+static inline bool
+at_lo_boundary(int p, int d)
+{
+  return ppsc->patch[p].off[d] == 0;
+}
+
+static inline bool
+at_hi_boundary(int p, int d)
+{
+  return ppsc->patch[p].off[d] + ppsc->patch[p].ldims[d] == ppsc->domain.gdims[d];
+}
+
 static void
 copy_to_mrc_fld(struct mrc_fld *m3, struct psc_mfields *flds)
 {
@@ -224,7 +236,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd, str
   for (int d = 0; d < 3; d++ ) {
     if (psc->domain.bnd_part_hi[d] == BND_PART_REFLECTING &&
 	!psc->prm.gdims_in_terms_of_cells &&
-	ppatch->off[d] + ppatch->ldims[d] == psc->domain.gdims[d]) {
+	at_hi_boundary(prts->p, d)) {
       b_mx[d] = ppatch->ldims[d] - 1;
     } else {
       b_mx[d] = ppatch->ldims[d];
@@ -256,7 +268,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd, str
       int dir[3];
       for (int d = 0; d < 3; d++) {
 	if (b_pos[d] < 0) {
-	  if (ppatch->off[d] > 0 ||
+	  if (!at_lo_boundary(prts->p, d) ||
 	      psc->domain.bnd_part_lo[d] == BND_PART_PERIODIC) {
 	    xi[d] += xm[d];
 	    dir[d] = -1;
@@ -281,7 +293,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd, str
 	    }
 	  }
 	} else if (b_pos[d] >= b_mx[d]) {
-	  if (ppatch->off[d] + ppatch->ldims[d] < psc->domain.gdims[d] ||
+	  if (!at_hi_boundary(prts->p, d) ||
 	      psc->domain.bnd_part_hi[d] == BND_PART_PERIODIC) {
 	    xi[d] -= xm[d];
 	    dir[d] = +1;
@@ -499,7 +511,6 @@ inject_particles_z(struct psc_particles *prts, struct psc_fields *flds,
       prt->pzi *= dir * gamma;
     }
   }
- skip:
 
   return ninjo;
 }
@@ -522,7 +533,7 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
 
     for (int m = 0; m < nr_kinds; m++) {
       // inject at z = 0
-      if (ppatch->off[2]  == 0 ) {
+      if (at_lo_boundary(p, 2)) {
 	int iz = 0;
 	for (int iy = 0; iy < ppatch->ldims[1]; iy++) {
 	  double ninjo = F3_C(flds_n_in, m, 0,iy,iz);
@@ -532,7 +543,7 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
 	}
       }
       // inject at z = zmax
-      if (ppatch->off[2] + ppatch->ldims[2] == ppsc->domain.gdims[2]) {
+      if (at_hi_boundary(p, 2)) {
 	int iz = ppatch->ldims[2] - 1;
 	for (int iy = 0; iy < ppatch->ldims[1]; iy++) {
 	  double ninjo = F3_C(flds_n_in, m, 0,iy,iz);
