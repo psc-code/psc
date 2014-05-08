@@ -10,6 +10,12 @@
 
 static const int debug_every_step = 10;
 
+static inline double
+random1()
+{
+  return random() / (double) RAND_MAX;
+}
+
 static void
 copy_to_mrc_fld(struct mrc_fld *m3, struct psc_mfields *flds)
 {
@@ -381,8 +387,9 @@ calc_W(double W[6], double vv[6])
 #ifndef NO_OPEN_BC
 
 static double
-inject_particles_z(struct psc_particles *prts, struct psc_fields *flds_nvt_av,
-		   int ix, int iy, int iz, double ninjo, int m, double pos[3], double dir)
+inject_particles_z(struct psc_particles *prts, struct psc_fields *flds, 
+		   struct psc_fields *flds_nvt_av, int ix, int iy, int iz,
+		   double ninjo, int m, double pos[3], double dir)
 {
   double n     =   F3_C(flds_nvt_av, 10*m + 0, ix,iy,iz);
   double v[3]  = { F3_C(flds_nvt_av, 10*m + 1, ix,iy,iz),
@@ -408,10 +415,10 @@ inject_particles_z(struct psc_particles *prts, struct psc_fields *flds_nvt_av,
     * vsz / sqrt(M_PI)/2.0/ppsc->patch[p].dx[2]/ppsc->coeff.cori;
 
   int ninjc = (int) ninjn;
-  mprintf("n ele %g ninjo %g ninjn %g ninjon %g ninjc %d\n", n,
-  	  ninjo, ninjn, ninjn - ninjc, ninjc);
+  /* mprintf("n ele %g ninjo %g ninjn %g ninjon %g ninjc %d\n", n, */
+  /* 	  ninjo, ninjn, ninjn - ninjc, ninjc); */
   ninjo = ninjn - ninjc;
-  
+
   int nvdx=100000;
   double dvz = c/((double) nvdx);
 	  
@@ -425,6 +432,9 @@ inject_particles_z(struct psc_particles *prts, struct psc_fields *flds_nvt_av,
     }
     for(int n=0; n< ninjc; n++){
       particle_t *prt = particles_get_one(prts, prts->n_part++); 
+      prt->qni_wni = ppsc->kinds[m].q;
+      prt->kind = m;
+
       double sr;
 
       int nnm;
@@ -472,28 +482,24 @@ inject_particles_z(struct psc_particles *prts, struct psc_fields *flds_nvt_av,
 	if(nnm>100) break;
       } while(sqr(prt->pxi) + sqr(prt->pyi) + sqr(prt->pzi) > 1.0);
 	      
-      long seed=random();
-      sr=((double) seed)/((double)RAND_MAX);
-      //       sr = .5;
-      prt->xi = pos[0] + sr*ppsc->patch[p].dx[0];
-      //       prt->yi=((double)ppatch->off[1]+(double)iy+sr)*ppsc->patch[p].dx[1];
-      seed=random();
-      sr=((double) seed)/((double)RAND_MAX);
-      //sr = .5;
-      prt->yi = pos[1] + sr * ppsc->patch[p].dx[1];
-      seed=random();
-      sr=((double) seed)/((double)RAND_MAX);
-      prt->zi = pos[2] + 0 * dir * sr * prt->pzi * ppsc->dt; // FIXME, right on the boundary for now
-      prt->qni_wni = ppsc->kinds[m].q;
-      prt->kind = m;
+      double xr = random1();
+      prt->xi = pos[0] + xr * ppsc->patch[p].dx[0];
+      double yr = random1();
+      prt->yi = pos[1] + yr * ppsc->patch[p].dx[1];
+      sr = random1();
+      double dz = dir * sr * prt->pzi * ppsc->dt;
+      prt->zi = pos[2] + dz;
+      double Jz = prt->qni_wni * dz * ppsc->coeff.cori;
+      F3_C(flds, JZI, ix,iy  ,iz) += (1 - yr) * Jz / ppsc->dt;
+      F3_C(flds, JZI, ix,iy+1,iz) += (    yr) * Jz / ppsc->dt;
       double gamma = 1.0/sqrt(1.0-(sqr(prt->pxi)+sqr(prt->pyi)+sqr(prt->pzi)));
-      //      mprintf("gamma %f\n",gamma);
       if (sqr(prt->pxi) + sqr(prt->pyi) + sqr(prt->pzi) > 1.0) gamma=1.0;
       prt->pxi *= gamma;
       prt->pyi *= gamma;
       prt->pzi *= dir * gamma;
     }
   }
+ skip:
 
   return ninjo;
 }
@@ -501,7 +507,8 @@ inject_particles_z(struct psc_particles *prts, struct psc_fields *flds_nvt_av,
 #endif
 
 static void
-psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparticles *mprts)
+psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparticles *mprts,
+				struct psc_mfields *mflds)
 {
 #ifndef NO_OPEN_BC
   int nr_kinds = ppsc->nr_kinds;
@@ -510,6 +517,7 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
     struct psc_patch *ppatch = &ppsc->patch[p];
     struct psc_fields *flds_nvt_av = psc_mfields_get_patch(bnd->mflds_nvt_av, p);
     struct psc_fields *flds_n_in = psc_mfields_get_patch(bnd->mflds_n_in, p);
+    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
 
     for (int m = 0; m < nr_kinds; m++) {
@@ -520,7 +528,7 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
 	  double ninjo = F3_C(flds_n_in, m, 0,iy,iz);
 	  double pos[3] = { 0., iy * ppatch->dx[1], 0. };
 	  F3_C(flds_n_in, m, 0,iy,iz) =
-	    inject_particles_z(prts, flds_nvt_av, 0,iy,iz, ninjo, m, pos, +1.);
+	    inject_particles_z(prts, flds, flds_nvt_av, 0,iy,iz, ninjo, m, pos, +1.);
 	}
       }
       // inject at z = zmax
@@ -530,7 +538,7 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
 	  double ninjo = F3_C(flds_n_in, m, 0,iy,iz);
 	  double pos[3] = { 0., iy * ppatch->dx[1], (iz + 1) * (1-1e-6) * ppatch->dx[2] };
 	  F3_C(flds_n_in, m, 0,iy,iz) =
-	    inject_particles_z(prts, flds_nvt_av, 0,iy,iz, ninjo, m, pos, -1.);
+	    inject_particles_z(prts, flds, flds_nvt_av, 0,iy,iz, ninjo, m, pos, -1.);
 	}
       }
     }
@@ -561,6 +569,7 @@ psc_bnd_particles_sub_exchange_particles(struct psc_bnd_particles *bnd, mparticl
   struct psc *psc = bnd->psc;
 
   mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
+  struct psc_mfields *mflds = psc_mfields_get_as(psc->flds, "c", JXI, JXI + 3);
 
   static int pr_A, pr_B, pr_C;
   if (!pr_A) {
@@ -597,8 +606,9 @@ psc_bnd_particles_sub_exchange_particles(struct psc_bnd_particles *bnd, mparticl
   }
   prof_stop(pr_C);
 
-  psc_bnd_particles_open_boundary(bnd, particles);
+  psc_bnd_particles_open_boundary(bnd, particles, mflds);
 
   psc_mparticles_put_cf(particles, particles_base, 0);
+  psc_mfields_put_as(mflds, psc->flds, JXI, JXI + 3);
 }
 
