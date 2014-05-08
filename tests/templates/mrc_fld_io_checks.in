@@ -9,10 +9,10 @@ do
 	teststatus=$?
 	if test $teststatus -ne 0
 	then
-	    echo "FAILED"
+	    echo "XXX failed XXX"
 	    ESTATUS=${teststatus}
 	else
-	    echo "PASSED"
+	    echo "OOO passed OOO"
 	fi
 	
     done
