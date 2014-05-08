@@ -365,7 +365,7 @@ psc_bnd_particles_sub_open_calc_moments(struct psc_bnd_particles *bnd,
 }
 
 static void __unused
-calc_W(double W[6], double vv[6], int m, int iy)
+calc_W(double W[6], double vv[6])
 {
   double determ =
     (vv[0]*vv[1]*vv[2] + vv[3]*vv[5]*vv[4] + vv[4]*vv[3]*vv[5] -
@@ -381,9 +381,24 @@ calc_W(double W[6], double vv[6], int m, int iy)
 #ifndef NO_OPEN_BC
 
 static double
-inject_particles_z(struct psc_particles *prts, double n, double v[3], double vv[6], double W[6],
-		   double ninjo, int m, double pos[3], double dir)
+inject_particles_z(struct psc_particles *prts, struct psc_fields *flds_nvt_av,
+		   int ix, int iy, int iz, double ninjo, int m, double pos[3], double dir)
 {
+  double n     =   F3_C(flds_nvt_av, 10*m + 0, ix,iy,iz);
+  double v[3]  = { F3_C(flds_nvt_av, 10*m + 1, ix,iy,iz),
+		   F3_C(flds_nvt_av, 10*m + 2, ix,iy,iz),
+		   dir * F3_C(flds_nvt_av, 10*m + 3, ix,iy,iz), };
+  double vv[6] = { F3_C(flds_nvt_av, 10*m + 4, ix,iy,iz),
+		   F3_C(flds_nvt_av, 10*m + 5, ix,iy,iz),
+		   F3_C(flds_nvt_av, 10*m + 6, ix,iy,iz),
+		   F3_C(flds_nvt_av, 10*m + 7, ix,iy,iz),
+		   dir * F3_C(flds_nvt_av, 10*m + 8, ix,iy,iz),
+		   dir * F3_C(flds_nvt_av, 10*m + 9, ix,iy,iz), };
+  /* n = 1.; */
+  /* v[0] = 0.; v[1] = 0.; v[2] = .1; */
+  double W[6];
+  calc_W(W, vv);
+
   int p = prts->p;
   double c=1.0;
   double vsz = sqrt(2.0*(vv[2]));
@@ -393,8 +408,8 @@ inject_particles_z(struct psc_particles *prts, double n, double v[3], double vv[
     * vsz / sqrt(M_PI)/2.0/ppsc->patch[p].dx[2]/ppsc->coeff.cori;
 
   int ninjc = (int) ninjn;
-  /* mprintf("n ele %g ninjo %g ninjn %g ninjon %g ninjc %d\n", n,  */
-  /* 	  ninjo, ninjn, ninjn - ninjc, ninjc); */
+  mprintf("n ele %g ninjo %g ninjn %g ninjon %g ninjc %d\n", n,
+  	  ninjo, ninjn, ninjn - ninjc, ninjc);
   ninjo = ninjn - ninjc;
   
   int nvdx=100000;
@@ -502,50 +517,20 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
       if (ppatch->off[2]  == 0 ) {
 	int iz = 0;
 	for (int iy = 0; iy < ppatch->ldims[1]; iy++) {
-	  double n     =   F3_C(flds_nvt_av, 10*m + 0, 0,iy,iz);
-	  double v[3]  = { F3_C(flds_nvt_av, 10*m + 1, 0,iy,iz),
-			   F3_C(flds_nvt_av, 10*m + 2, 0,iy,iz),
-			   F3_C(flds_nvt_av, 10*m + 3, 0,iy,iz), };
-	  /* n = 1.; */
-	  /* v[0] = 0.; v[1] = 0.; v[2] = .1; */
-	  double vv[6] = { F3_C(flds_nvt_av, 10*m + 4, 0,iy,iz),
-			   F3_C(flds_nvt_av, 10*m + 5, 0,iy,iz),
-			   F3_C(flds_nvt_av, 10*m + 6, 0,iy,iz),
-			   F3_C(flds_nvt_av, 10*m + 7, 0,iy,iz),
-			   F3_C(flds_nvt_av, 10*m + 8, 0,iy,iz),
-			   F3_C(flds_nvt_av, 10*m + 9, 0,iy,iz), };
-	  double W[6];
-	  calc_W(W, vv, m, iy);
-
 	  double ninjo = F3_C(flds_n_in, m, 0,iy,iz);
 	  double pos[3] = { 0., iy * ppatch->dx[1], 0. };
-	  ninjo = inject_particles_z(prts, n, v, vv, W, ninjo, m, pos, +1.);
-	  F3_C(flds_n_in, m, 0,iy,iz) = ninjo;
+	  F3_C(flds_n_in, m, 0,iy,iz) =
+	    inject_particles_z(prts, flds_nvt_av, 0,iy,iz, ninjo, m, pos, +1.);
 	}
       }
       // inject at z = zmax
       if (ppatch->off[2] + ppatch->ldims[2] == ppsc->domain.gdims[2]) {
 	int iz = ppatch->ldims[2] - 1;
 	for (int iy = 0; iy < ppatch->ldims[1]; iy++) {
-	  double n     =   F3_C(flds_nvt_av, 10*m + 0, 0,iy,iz);
-	  double v[3]  = { F3_C(flds_nvt_av, 10*m + 1, 0,iy,iz),
-			   F3_C(flds_nvt_av, 10*m + 2, 0,iy,iz),
-			   - F3_C(flds_nvt_av, 10*m + 3, 0,iy,iz), };
-	  /* n = 1.; */
-	  /* v[0] = 0.; v[1] = 0.; v[2] = -.1; */
-	  double vv[6] = { F3_C(flds_nvt_av, 10*m + 4, 0,iy,iz),
-			   F3_C(flds_nvt_av, 10*m + 5, 0,iy,iz),
-			   F3_C(flds_nvt_av, 10*m + 6, 0,iy,iz),
-			   F3_C(flds_nvt_av, 10*m + 7, 0,iy,iz),
-			   - F3_C(flds_nvt_av, 10*m + 8, 0,iy,iz),
-			   - F3_C(flds_nvt_av, 10*m + 9, 0,iy,iz), };
-	  double W[6];
-	  calc_W(W, vv, m, iy);
-
 	  double ninjo = F3_C(flds_n_in, m, 0,iy,iz);
 	  double pos[3] = { 0., iy * ppatch->dx[1], (iz + 1) * (1-1e-6) * ppatch->dx[2] };
-	  ninjo = inject_particles_z(prts, n, v, vv, W, ninjo, m, pos, -1.);
-	  F3_C(flds_n_in, m, 0,iy,iz) = ninjo;
+	  F3_C(flds_n_in, m, 0,iy,iz) =
+	    inject_particles_z(prts, flds_nvt_av, 0,iy,iz, ninjo, m, pos, -1.);
 	}
       }
     }
