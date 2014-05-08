@@ -182,7 +182,7 @@ static void
 _mrc_crds_setup(struct mrc_crds *crds)
 {
   int gdims[3];
-  float xl[3], xh[3];
+  double xl[3], xh[3];
   int nr_patches;
   struct mrc_patch *patches;
 
@@ -196,14 +196,14 @@ _mrc_crds_setup(struct mrc_crds *crds)
     struct mrc_fld *x = crds->global_crd[d];
 
     struct mrc_crds_gen *gen = crds->crds_gen[d];
-    mrc_crds_get_param_float3(gen->crds, "l", xl);
-    mrc_crds_get_param_float3(gen->crds, "h", xh);
+    mrc_crds_get_param_double3(gen->crds, "l", xl);
+    mrc_crds_get_param_double3(gen->crds, "h", xh);
 
     mrc_crds_gen_set_param_int3(gen, "m", (int[3]){gdims[0], gdims[1], gdims[2]});
     mrc_crds_gen_set_param_int(gen, "n", gen->dims[d]);
     mrc_crds_gen_set_param_int(gen, "sw", gen->crds->sw);
-    mrc_crds_gen_set_param_float(gen, "xl", xl[d]);
-    mrc_crds_gen_set_param_float(gen, "xh", xh[d]);
+    mrc_crds_gen_set_param_double(gen, "xl", xl[d]);
+    mrc_crds_gen_set_param_double(gen, "xh", xh[d]);
     mrc_crds_gen_run(gen, &MRC_D2(x, 0, 0), &MRC_D2(x, 0, 1));
 
     mrc_fld_foreach_patch(crds->crd[d], p) {
@@ -265,7 +265,7 @@ mrc_crds_amr_uniform_setup(struct mrc_crds *crds)
 
   int gdims[3];
   mrc_domain_get_global_dims(crds->domain, gdims);
-  float *xl = crds->xl, *xh = crds->xh;
+  double *xl = crds->xl, *xh = crds->xh;
 
   for (int d = 0; d < 3; d++) {
     struct mrc_fld *mcrd = crds->crd[d];
@@ -352,8 +352,8 @@ mrc_crds_mb_setup(struct mrc_crds *crds)
 	mrc_crds_gen_set_param_int(block->coord_gen[d], "d", d);
 	mrc_crds_gen_set_param_int(block->coord_gen[d], "sw", sw);
 	mrc_crds_gen_set_param_obj(block->coord_gen[d], "crds", crds);
-	mrc_crds_gen_set_param_float(block->coord_gen[d], "xl", block->xl[d]);
-	mrc_crds_gen_set_param_float(block->coord_gen[d], "xh", block->xh[d]);
+	mrc_crds_gen_set_param_double(block->coord_gen[d], "xl", block->xl[d]);
+	mrc_crds_gen_set_param_double(block->coord_gen[d], "xh", block->xh[d]);
 
 	mrc_crds_gen_run(block->coord_gen[d], &MRC_D2(x, 0, 0), &MRC_D2(x, 0, 1));
 	
@@ -405,8 +405,8 @@ mrc_crds_init()
 
 #define VAR(x) (void *)offsetof(struct mrc_crds, x)
 static struct param mrc_crds_params_descr[] = {
-  { "l"              , VAR(xl)            , PARAM_FLOAT3(0., 0., 0.) },
-  { "h"              , VAR(xh)            , PARAM_FLOAT3(1., 1., 1.) },
+  { "l"              , VAR(xl)            , PARAM_DOUBLE3(0., 0., 0.) },
+  { "h"              , VAR(xh)            , PARAM_DOUBLE3(1., 1., 1.) },
   { "sw"             , VAR(sw)            , PARAM_INT(0)             },
   { "domain"         , VAR(domain)        , PARAM_OBJ(mrc_domain)    },
 

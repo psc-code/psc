@@ -70,8 +70,8 @@ main(int argc, char **argv)
   mrc_domain_set_param_int3(domain, "m", (int [3]) { 160, 1, 1 });
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   mrc_crds_set_param_int(crds, "sw", BND);
-  mrc_crds_set_param_float3(crds, "l", (float[3]) { -8., 0., 0. });
-  mrc_crds_set_param_float3(crds, "h", (float[3]) {  8., 0., 0. });
+  mrc_crds_set_param_double3(crds, "l", (double[3]) { -8., 0., 0. });
+  mrc_crds_set_param_double3(crds, "h", (double[3]) {  8., 0., 0. });
 
   mrc_domain_set_from_options(domain);
   mrc_domain_setup(domain);

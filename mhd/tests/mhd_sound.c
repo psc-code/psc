@@ -27,9 +27,9 @@ ggcm_mhd_ic_sound_run(struct ggcm_mhd_ic *ic)
   float gamma = mhd->par.gamm;
   float cs = sqrt(gamma);
   float pert = 1e-3;
-  float xl[3], xh[3];
-  mrc_crds_get_param_float3(crds, "l", xl);
-  mrc_crds_get_param_float3(crds, "h", xh);
+  double xl[3], xh[3];
+  mrc_crds_get_param_double3(crds, "l", xl);
+  mrc_crds_get_param_double3(crds, "h", xh);
   float k = 2. * M_PI / (xh[0] - xl[0]);
 
   mrc_fld_foreach(fld, ix, iy, iz, 1, 1) {

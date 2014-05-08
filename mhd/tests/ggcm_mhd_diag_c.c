@@ -270,9 +270,9 @@ diagcxyz(struct ggcm_mhd_diag *diag, struct mrc_fld *fld, int itdia,
   int gdims[3];
   mrc_domain_get_global_dims(mhd->domain, gdims);
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-  float xl[3], xh[3];
-  mrc_crds_get_param_float3(crds, "l", xl);
-  mrc_crds_get_param_float3(crds, "h", xh);
+  double xl[3], xh[3];
+  mrc_crds_get_param_double3(crds, "l", xl);
+  mrc_crds_get_param_double3(crds, "h", xh);
 
   for (int i = 0; i < sub->nr_planes[d]; i++) {
     float plane = sub->planes[d][i];

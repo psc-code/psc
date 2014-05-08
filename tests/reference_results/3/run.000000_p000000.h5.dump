@@ -3,14 +3,14 @@ GROUP "/" {
    GROUP "crd[0]" {
       GROUP "p0" {
          ATTRIBUTE "xh" {
-            DATATYPE  H5T_IEEE_F32LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
             DATA {
             (0): 1
             }
          }
          ATTRIBUTE "xl" {
-            DATATYPE  H5T_IEEE_F32LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
             DATA {
             (0): 0
@@ -21,14 +21,14 @@ GROUP "/" {
    GROUP "crd[1]" {
       GROUP "p0" {
          ATTRIBUTE "xh" {
-            DATATYPE  H5T_IEEE_F32LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
             DATA {
             (0): 1
             }
          }
          ATTRIBUTE "xl" {
-            DATATYPE  H5T_IEEE_F32LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
             DATA {
             (0): 0
@@ -39,14 +39,14 @@ GROUP "/" {
    GROUP "crd[2]" {
       GROUP "p0" {
          ATTRIBUTE "xh" {
-            DATATYPE  H5T_IEEE_F32LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
             DATA {
             (0): 1
             }
          }
          ATTRIBUTE "xl" {
-            DATATYPE  H5T_IEEE_F32LE
+            DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
             DATA {
             (0): 0

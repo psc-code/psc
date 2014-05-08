@@ -79,8 +79,8 @@ mrctest_create_domain(MPI_Comm comm, struct mrctest_domain_params *par)
   mrc_domain_set_param_int3(domain, "np", par->nproc);
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   mrc_crds_set_param_int(crds, "sw", SW_2);
-  mrc_crds_set_param_float3(crds, "l", (float[3]) { -30., -20., -20. });
-  mrc_crds_set_param_float3(crds, "h", (float[3]) {  50.,  20.,  20. });
+  mrc_crds_set_param_double3(crds, "l", (double[3]) { -30., -20., -20. });
+  mrc_crds_set_param_double3(crds, "h", (double[3]) {  50.,  20.,  20. });
   mrc_domain_set_from_options(domain);
   mrc_domain_setup(domain);
 
@@ -97,8 +97,8 @@ mrctest_create_domain_rectilinear(MPI_Comm comm, struct mrctest_domain_params *p
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   mrc_crds_set_type(crds, "rectilinear");
   mrc_crds_set_param_int(crds, "sw", SW_2);
-  mrc_crds_set_param_float3(crds, "l", (float[3]) { -30., -20., -20. });
-  mrc_crds_set_param_float3(crds, "h", (float[3]) {  50.,  20.,  20. });
+  mrc_crds_set_param_double3(crds, "l", (double[3]) { -30., -20., -20. });
+  mrc_crds_set_param_double3(crds, "h", (double[3]) {  50.,  20.,  20. });
   mrc_domain_set_from_options(domain);
   mrc_domain_setup(domain);
   int sw;

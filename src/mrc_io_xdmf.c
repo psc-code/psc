@@ -747,6 +747,9 @@ ds_xdmf_read_attr(struct mrc_io *io, const char *path, int type,
   case PT_FLOAT3:
     ierr = H5LTget_attribute_float(group, ".", name, pv->u_float3); CE;
     break;
+  case PT_DOUBLE3:
+    ierr = H5LTget_attribute_double(group, ".", name, pv->u_double3); CE;
+    break;
   case PT_INT_ARRAY: {
     int attr = H5Aopen(group, name, H5P_DEFAULT); H5_CHK(attr);
     H5A_info_t ainfo;
@@ -812,6 +815,9 @@ ds_xdmf_write_attr(struct mrc_io *io, const char *path, int type,
     break;
   case PT_FLOAT3:
     H5LTset_attribute_float(group, ".", name, pv->u_float3, 3);
+    break;
+  case PT_DOUBLE3:
+    H5LTset_attribute_double(group, ".", name, pv->u_double3, 3);
     break;
   case PT_INT_ARRAY:
     H5LTset_attribute_int(group, ".", name, pv->u_int_array.vals, pv->u_int_array.nr_vals);

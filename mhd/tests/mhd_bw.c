@@ -32,9 +32,10 @@ ggcm_mhd_ic_bw_run(struct ggcm_mhd_ic *ic)
   struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);  
 
-  float xl[3], xh[3], L[3], r[3];
-  mrc_crds_get_param_float3(crds, "l", xl);
-  mrc_crds_get_param_float3(crds, "h", xh);
+  double xl[3], xh[3];
+  float L[3], r[3];
+  mrc_crds_get_param_double3(crds, "l", xl);
+  mrc_crds_get_param_double3(crds, "h", xh);
   for(int i = 0; i < 3; i++){
     L[i] = xh[i] - xl[i];
   }
@@ -144,8 +145,8 @@ ggcm_mhd_bw_create(struct ggcm_mhd *mhd)
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
   mrc_crds_set_type(crds, "uniform");
   mrc_crds_set_param_int(crds, "sw", SW_2);   // 'stencil width' 
-  mrc_crds_set_param_float3(crds, "l", (float[3]) {  0.0, 0.0, 0.0 });
-  mrc_crds_set_param_float3(crds, "h", (float[3]) {  1.0, 0.05, 0.05 });
+  mrc_crds_set_param_double3(crds, "l", (double[3]) {  0.0, 0.0, 0.0 });
+  mrc_crds_set_param_double3(crds, "h", (double[3]) {  1.0, 0.05, 0.05 });
 }
 
 static struct ggcm_mhd_ops ggcm_mhd_bw_ops = {
