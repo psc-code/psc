@@ -137,12 +137,11 @@ mrc_crds_get_dx(struct mrc_crds *crds, float dx[3])
   }
 }
 
+// allocate the coordinate fields common to all crds types.
 static void
 mrc_crds_setup_alloc_only(struct mrc_crds *crds)
 {
-  int gdims[3];
   assert(crds->domain && mrc_domain_is_setup(crds->domain));
-  mrc_domain_get_global_dims(crds->domain, gdims);
 
   for (int d = 0; d < 3; d++) {
     mrc_fld_set_param_obj(crds->crd[d], "domain", crds->domain);
@@ -161,6 +160,17 @@ mrc_crds_setup_alloc_only(struct mrc_crds *crds)
     mrc_fld_set_comp_name(crds->dcrd[d], 0, mrc_fld_name(crds->dcrd[d]));
     mrc_fld_setup(crds->dcrd[d]);
 
+  }
+}
+
+// Allocate global coordinate fields (for domains that they make sense)
+static void
+mrc_crds_setup_alloc_global_array(struct mrc_crds *crds)
+{
+  int gdims[3];
+  mrc_domain_get_global_dims(crds->domain, gdims);
+  
+  for (int d = 0; d < 3; d++) {
     mrc_fld_set_type(crds->global_crd[d], "double");
     mrc_fld_set_param_int_array(crds->global_crd[d], "dims", 2, (int[2]) { gdims[d], 2 });
     mrc_fld_set_param_int_array(crds->global_crd[d], "sw"  , 2, (int[2]) { crds->sw, 0 });
@@ -177,6 +187,7 @@ _mrc_crds_setup(struct mrc_crds *crds)
   struct mrc_patch *patches;
 
   mrc_crds_setup_alloc_only(crds);
+  mrc_crds_setup_alloc_global_array(crds);
 
   mrc_domain_get_global_dims(crds->domain, gdims);
   patches = mrc_domain_get_patches(crds->domain, &nr_patches);
