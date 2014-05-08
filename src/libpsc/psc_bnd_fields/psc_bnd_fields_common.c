@@ -434,12 +434,10 @@ psc_bnd_fields_sub_add_ghosts_J(struct psc_bnd_fields *bnd, struct psc_fields *f
     if (ppsc->patch[flds->p].off[d] == 0) {
       switch (ppsc->domain.bnd_fld_lo[d]) {
       case BND_FLD_PERIODIC:
+      case BND_FLD_OPEN:
 	break;
       case BND_FLD_CONDUCTING_WALL:
 	conducting_wall_J_lo(bnd, flds, d);
-	break;
-      case BND_FLD_OPEN:
-	//open_J_lo(bnd, flds, d);
 	break;
       default:
 	assert(0);
@@ -451,12 +449,10 @@ psc_bnd_fields_sub_add_ghosts_J(struct psc_bnd_fields *bnd, struct psc_fields *f
     if (ppsc->patch[flds->p].off[d] + ppsc->patch[flds->p].ldims[d] == ppsc->domain.gdims[d]) {
       switch (ppsc->domain.bnd_fld_hi[d]) {
       case BND_FLD_PERIODIC:
+      case BND_FLD_OPEN:
 	break;
       case BND_FLD_CONDUCTING_WALL:
 	conducting_wall_J_hi(bnd, flds, d);
-	break;
-      case BND_FLD_OPEN:
-	//	open_J_hi(bnd, flds, d);
 	break;
       default:
 	assert(0);
