@@ -548,8 +548,7 @@ calc_W(double W[6], double vv[6])
 
 enum {
   NVT_N,
-  NVT_V,
-  NVT_VX = NVT_V,
+  NVT_VX,
   NVT_VY,
   NVT_VZ,
   NVT_VXVX,
@@ -562,18 +561,22 @@ enum {
 
 static inline double
 inject_particles(struct psc_particles *prts, struct psc_fields *flds, 
-		 struct psc_fields *flds_nvt_av,
-		 double vv[6], int ix, int iy, int iz,
+		 struct psc_fields *flds_nvt_av, int ix, int iy, int iz,
 		 double ninjo, int kind, double pos[3], double dir,
 		 int X, int Y, int Z)
 {
-  double dir3[3] = { 1., 1., 1. };
-  dir3[Z] = dir;
-
-  double n     =             F3_C(flds_nvt_av, 10*kind + NVT_N    , ix,iy,iz);
-  double v[3]  = { dir3[X] * F3_C(flds_nvt_av, 10*kind + NVT_V + X, ix,iy,iz),
-		   dir3[Y] * F3_C(flds_nvt_av, 10*kind + NVT_V + Y, ix,iy,iz),
-		   dir3[Z] * F3_C(flds_nvt_av, 10*kind + NVT_V + Z, ix,iy,iz), };
+  double n     =         F3_C(flds_nvt_av, 10*kind + NVT_N     , ix,iy,iz);
+  double v[3]  = {       F3_C(flds_nvt_av, 10*kind + NVT_VX + X, ix,iy,iz),
+		         F3_C(flds_nvt_av, 10*kind + NVT_VX + Y, ix,iy,iz),
+		   dir * F3_C(flds_nvt_av, 10*kind + NVT_VX + Z, ix,iy,iz), };
+  double vv[6] = {       F3_C(flds_nvt_av, 10*kind + NVT_VXVX + X, ix,iy,iz),
+			 F3_C(flds_nvt_av, 10*kind + NVT_VXVX + Y, ix,iy,iz),
+			 F3_C(flds_nvt_av, 10*kind + NVT_VXVX + Z, ix,iy,iz),
+			 F3_C(flds_nvt_av, 10*kind + NVT_VXVY + X, ix,iy,iz),
+		   dir * F3_C(flds_nvt_av, 10*kind + NVT_VXVY + Z, ix,iy,iz),
+		   dir * F3_C(flds_nvt_av, 10*kind + NVT_VXVY + Y, ix,iy,iz), };
+  /* n = 1.; */
+  /* v[0] = 0.; v[1] = 0.; v[2] = .1; */
 
   double W[6];
   calc_W(W, vv);
@@ -689,16 +692,7 @@ inject_particles_y(struct psc_particles *prts, struct psc_fields *flds,
 		   struct psc_fields *flds_nvt_av, int ix, int iy, int iz,
 		   double ninjo, int kind, double pos[3], double dir)
 {
-  double vv[6] = {       F3_C(flds_nvt_av, 10*kind + NVT_VZVZ, ix,iy,iz),
-			 F3_C(flds_nvt_av, 10*kind + NVT_VXVX, ix,iy,iz),
-			 F3_C(flds_nvt_av, 10*kind + NVT_VYVY, ix,iy,iz),
-			 F3_C(flds_nvt_av, 10*kind + NVT_VZVX, ix,iy,iz),
-		   dir * F3_C(flds_nvt_av, 10*kind + NVT_VYVZ, ix,iy,iz),
-		   dir * F3_C(flds_nvt_av, 10*kind + NVT_VXVY, ix,iy,iz), };
-  /* n = 1.; */
-  /* v[0] = 0.; v[1] = 0.; v[2] = .1; */
-
-  return inject_particles(prts, flds, flds_nvt_av, vv, ix, iy, iz, ninjo, kind, pos, dir,
+  return inject_particles(prts, flds, flds_nvt_av, ix, iy, iz, ninjo, kind, pos, dir,
 			  2, 0, 1);
 }
 
@@ -707,16 +701,7 @@ inject_particles_z(struct psc_particles *prts, struct psc_fields *flds,
 		   struct psc_fields *flds_nvt_av, int ix, int iy, int iz,
 		   double ninjo, int kind, double pos[3], double dir)
 {
-  double vv[6] = {       F3_C(flds_nvt_av, 10*kind + NVT_VXVX, ix,iy,iz),
-			 F3_C(flds_nvt_av, 10*kind + NVT_VYVY, ix,iy,iz),
-			 F3_C(flds_nvt_av, 10*kind + NVT_VZVZ, ix,iy,iz),
-			 F3_C(flds_nvt_av, 10*kind + NVT_VXVY, ix,iy,iz),
-		   dir * F3_C(flds_nvt_av, 10*kind + NVT_VZVX, ix,iy,iz),
-		   dir * F3_C(flds_nvt_av, 10*kind + NVT_VYVZ, ix,iy,iz), };
-  /* n = 1.; */
-  /* v[0] = 0.; v[1] = 0.; v[2] = .1; */
-
-  return inject_particles(prts, flds, flds_nvt_av, vv, ix, iy, iz, ninjo, kind, pos, dir,
+  return inject_particles(prts, flds, flds_nvt_av, ix, iy, iz, ninjo, kind, pos, dir,
 			  0, 1, 2);
 }
 
