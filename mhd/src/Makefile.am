@@ -21,7 +21,6 @@ libmhd_la_SOURCES = \
 	\
 	ggcm_mhd_crds_gen.c \
 	ggcm_mhd_crds_gen_mrc.c \
-	ggcm_mhd_crds_gen_c.c \
 	\
 	ggcm_mhd_diag.c \
 	\

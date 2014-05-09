@@ -9,5 +9,6 @@
 MRC_CLASS_DECLARE(ggcm_mhd_crds, struct ggcm_mhd_crds);
 
 float *ggcm_mhd_crds_get_crd(struct ggcm_mhd_crds *crds, int d, int m);
+float *ggcm_mhd_crds_get_global_crd(struct ggcm_mhd_crds *crds, int d);
 
 #endif

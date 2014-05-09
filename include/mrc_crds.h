@@ -8,8 +8,8 @@
 struct mrc_crds {
   struct mrc_obj obj;
   // parameters
-  float xl[3];
-  float xh[3];
+  double xl[3];
+  double xh[3];
   int sw;
 
   // state
@@ -18,6 +18,7 @@ struct mrc_crds {
   struct mrc_fld *dcrd[3]; // Double version of the coordinates
                            // not fully supported in io yet
   struct mrc_fld *crd_nc[3];
+  struct mrc_fld *global_crd[3];
 
   struct mrc_crds_gen *crds_gen[3];
 };

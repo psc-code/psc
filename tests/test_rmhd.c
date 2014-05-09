@@ -71,8 +71,8 @@ static void
 _rmhd_setup(struct rmhd *rmhd)
 {
   struct mrc_crds *crds = mrc_domain_get_crds(rmhd->domain);
-  mrc_crds_set_param_float3(crds, "l", (float [3]) { -rmhd->Lx / 2. });
-  mrc_crds_set_param_float3(crds, "h", (float [3]) {  rmhd->Lx / 2. });
+  mrc_crds_set_param_double3(crds, "l", (double[3]) { -rmhd->Lx / 2. });
+  mrc_crds_set_param_double3(crds, "h", (double[3]) {  rmhd->Lx / 2. });
   mrc_crds_set_param_int(crds, "sw", BND);
 
   rmhd_setup_member_objs(rmhd);

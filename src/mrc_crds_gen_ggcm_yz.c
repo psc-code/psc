@@ -41,24 +41,16 @@ mrc_crds_gen_ggcm_yz_run(struct mrc_crds_gen *gen, double *xx, double *dx)
 {
   struct mrc_crds_gen_ggcm_yz *sub = mrc_crds_gen_ggcm_yz(gen);
 
-  int n = gen->dims[gen->d];
-  
-  float xl[3], xh[3];
-  mrc_crds_get_param_float3(gen->crds, "l", xl);
-  mrc_crds_get_param_float3(gen->crds, "h", xh);
-  int sw;
-  mrc_crds_get_param_int(gen->crds, "sw", &sw);
-  
   // FIXME, maybe we should calculate xx2, xshift from this...
-  assert(xl[gen->d] == -xh[gen->d]);
-  double xx2 = xh[gen->d];
+  assert(gen->xl == -gen->xh);
+  double xx2 = gen->xh;
 
-  int nx2 = n / 2;
-  int nx1 = 1 - n / 2;
+  int nx2 = gen->n / 2;
+  int nx1 = 1 - gen->n / 2;
   double a = acoff(nx2, xx2, sub->xm, sub->xn, sub->dx0);
   //  printf("gridyz: n = %d nx12 = %d, %d a = %g\n", gen->n, nx1, nx2, a);
 
-  for (int i = -sw; i < n + sw; i++) {
+  for (int i = -gen->sw; i < gen->n + gen->sw; i++) {
     double x = i + nx1 - .5;
     double d0 = sub->dx0;
     double xn = sub->xn;

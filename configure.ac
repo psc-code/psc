@@ -124,6 +124,7 @@ AC_CONFIG_FILES([Makefile
 		 mhd/include/Makefile
 		 mhd/src/Makefile		
 		 mhd/tests/Makefile
+     util/Makefile
 		 tests/templates/mrc_fld_io_checks
 		 tests/templates/update_xdmf_ref
 		 tests/templates/update_hdf5_ref

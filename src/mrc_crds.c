@@ -1,4 +1,5 @@
 
+#include "mrc_crds_gen_private.h"
 #include <mrc_crds.h>
 #include <mrc_crds_gen.h>
 #include <mrc_params.h>
@@ -11,11 +12,11 @@
 #include <stdio.h>
 #include <math.h>
 
-static inline
-struct mrc_crds_ops *mrc_crds_ops(struct mrc_crds *crds)
-{
-  return (struct mrc_crds_ops *) crds->obj.ops;
-}
+// static inline
+// struct mrc_crds_ops *mrc_crds_ops(struct mrc_crds *crds)
+// {
+//   return (struct mrc_crds_ops *) crds->obj.ops;
+// }
 
 // ----------------------------------------------------------------------
 // mrc_crds_* wrappers
@@ -32,6 +33,10 @@ _mrc_crds_create(struct mrc_crds *crds)
     sprintf(s, "dcrd[%d]", d);
     mrc_fld_set_name(crds->dcrd[d], s);
     
+    crds->global_crd[d] = mrc_fld_create(mrc_crds_comm(crds));
+    sprintf(s, "global_crd[%d]", d);
+    mrc_fld_set_name(crds->global_crd[d], s);
+
     sprintf(s, "crds_gen_%c", 'x' + d);
     mrc_crds_gen_set_name(crds->crds_gen[d], s);
     mrc_crds_gen_set_param_int(crds->crds_gen[d], "d", d);
@@ -43,6 +48,13 @@ static void
 _mrc_crds_read(struct mrc_crds *crds, struct mrc_io *io)
 {
   mrc_crds_read_member_objs(crds, io);
+  // this is a carbon copy on all nodes that run the crd_gen, so this
+  // write is only for checkpointing
+  if (strcmp(mrc_io_type(io), "hdf5_serial") == 0) { // FIXME  
+    crds->global_crd[0] = mrc_io_read_ref(io, crds, "global_crd[0]", mrc_fld);
+    crds->global_crd[1] = mrc_io_read_ref(io, crds, "global_crd[1]", mrc_fld);
+    crds->global_crd[2] = mrc_io_read_ref(io, crds, "global_crd[2]", mrc_fld);
+  }
 }
 
 static void
@@ -84,7 +96,7 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 	    } mrc_m1_foreach_end;
 	    int ld = mrc_fld_dims(crd_nc)[0];
 	    // extrapolate
-	    MRC_M1(crd_nc,0, 0 , p) = MRC_M1(crd_cc,0, 0   , p) 
+	    MRC_M1(crd_nc,0, 0 , p) = MRC_M1(crd_cc,0, 0   , p)
 	      - .5 * (MRC_M1(crd_cc,0,    1, p) - MRC_M1(crd_cc,0, 0   , p));
 	    MRC_M1(crd_nc,0, ld, p) = MRC_M1(crd_cc,0, ld-1, p)
 	      + .5 * (MRC_M1(crd_cc,0, ld-1, p) - MRC_M1(crd_cc,0, ld-2, p));
@@ -98,6 +110,14 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
       mrc_io_set_param_int3(io, "slab_dims", (int[3]) { gdims[d] + 1, 0, 0 });
       mrc_fld_write(crd_nc, io);
     }
+  }
+
+  // this is a carbon copy on all nodes that run the crd_gen, so this
+  // write is only for checkpointing
+  if (strcmp(mrc_io_type(io), "hdf5_serial") == 0) { // FIXME
+    mrc_io_write_ref(io, crds, "global_crd[0]", crds->global_crd[0]);
+    mrc_io_write_ref(io, crds, "global_crd[1]", crds->global_crd[1]);
+    mrc_io_write_ref(io, crds, "global_crd[2]", crds->global_crd[2]);
   }
 
   if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) { // FIXME
@@ -117,6 +137,7 @@ mrc_crds_get_dx(struct mrc_crds *crds, float dx[3])
   }
 }
 
+// allocate the coordinate fields common to all crds types.
 static void
 mrc_crds_setup_alloc_only(struct mrc_crds *crds)
 {
@@ -142,26 +163,47 @@ mrc_crds_setup_alloc_only(struct mrc_crds *crds)
   }
 }
 
+// Allocate global coordinate fields (for domains that they make sense)
+static void
+mrc_crds_setup_alloc_global_array(struct mrc_crds *crds)
+{
+  int gdims[3];
+  mrc_domain_get_global_dims(crds->domain, gdims);
+  
+  for (int d = 0; d < 3; d++) {
+    mrc_fld_set_type(crds->global_crd[d], "double");
+    mrc_fld_set_param_int_array(crds->global_crd[d], "dims", 2, (int[2]) { gdims[d], 2 });
+    mrc_fld_set_param_int_array(crds->global_crd[d], "sw"  , 2, (int[2]) { crds->sw, 0 });
+    mrc_fld_setup(crds->global_crd[d]);
+  }
+}
+
 static void
 _mrc_crds_setup(struct mrc_crds *crds)
 {
-  mrc_crds_setup_alloc_only(crds);
-
   int gdims[3];
-  mrc_domain_get_global_dims(crds->domain, gdims);
+  double xl[3], xh[3];
   int nr_patches;
-  struct mrc_patch *patches = mrc_domain_get_patches(crds->domain, &nr_patches);
-  int sw = crds->sw;
+  struct mrc_patch *patches;
+
+  mrc_crds_setup_alloc_only(crds);
+  mrc_crds_setup_alloc_global_array(crds);
+
+  mrc_domain_get_global_dims(crds->domain, gdims);
+  patches = mrc_domain_get_patches(crds->domain, &nr_patches);
 
   for (int d = 0; d < 3; d ++) {
-    struct mrc_fld *x = mrc_fld_create(MPI_COMM_SELF);
-    mrc_fld_set_type(x, "double");
-    mrc_fld_set_param_int_array(x, "dims", 2, (int[2]) { gdims[d] + 1, 2 });
-    mrc_fld_set_param_int_array(x, "sw"  , 2, (int[2]) { sw, 0 });
-    mrc_fld_setup(x);
+    struct mrc_fld *x = crds->global_crd[d];
 
     struct mrc_crds_gen *gen = crds->crds_gen[d];
+    mrc_crds_get_param_double3(gen->crds, "l", xl);
+    mrc_crds_get_param_double3(gen->crds, "h", xh);
+
     mrc_crds_gen_set_param_int3(gen, "m", (int[3]){gdims[0], gdims[1], gdims[2]});
+    mrc_crds_gen_set_param_int(gen, "n", gen->dims[d]);
+    mrc_crds_gen_set_param_int(gen, "sw", gen->crds->sw);
+    mrc_crds_gen_set_param_double(gen, "xl", xl[d]);
+    mrc_crds_gen_set_param_double(gen, "xh", xh[d]);
     mrc_crds_gen_run(gen, &MRC_D2(x, 0, 0), &MRC_D2(x, 0, 1));
 
     mrc_fld_foreach_patch(crds->crd[d], p) {
@@ -173,8 +215,6 @@ _mrc_crds_setup(struct mrc_crds *crds)
 	MRC_MCRD(crds, d, ix, p) = (float)MRC_D2(x, ix + off, 0);
       } mrc_m1_foreach_end;
     }
-
-    mrc_fld_destroy(x);
   }
 }
 
@@ -182,6 +222,7 @@ static void
 _mrc_crds_destroy(struct mrc_crds *crds)
 {
   for (int d=0; d < 3; d++) {
+    mrc_fld_destroy(crds->global_crd[d]);
     mrc_fld_destroy(crds->crd_nc[d]);
   }
 }
@@ -224,7 +265,7 @@ mrc_crds_amr_uniform_setup(struct mrc_crds *crds)
 
   int gdims[3];
   mrc_domain_get_global_dims(crds->domain, gdims);
-  float *xl = crds->xl, *xh = crds->xh;
+  double *xl = crds->xl, *xh = crds->xh;
 
   for (int d = 0; d < 3; d++) {
     struct mrc_fld *mcrd = crds->crd[d];
@@ -287,7 +328,7 @@ mrc_crds_mb_setup(struct mrc_crds *crds)
   struct MB_block *blocks;
 
   domain_get_blocks(crds->domain, &blocks, &nr_blocks);
-  
+
   int nr_patches;
   mrc_domain_get_patches(crds->domain, &nr_patches);
   int sw = crds->sw;
@@ -295,30 +336,24 @@ mrc_crds_mb_setup(struct mrc_crds *crds)
   for (int b = 0; b < nr_blocks; b++)
     {
       struct MB_block *block = &(blocks[b]);
-      // FIXME: This is a bad abuse, but it's the only way
-      // to get the block bounds to crds_gens in a way they
-      // understand
-      mrc_crds_set_param_float3(crds, "l", (float[3]){block->xl[0], block->xl[1], block->xl[2]});
-      mrc_crds_set_param_float3(crds, "h", (float[3]){block->xh[0], block->xh[1], block->xh[2]});
 
       for (int d = 0; d < 3; d ++) {
-
 	struct mrc_fld *x = mrc_fld_create(MPI_COMM_SELF);
 	mrc_fld_set_type(x, "double");
 	mrc_fld_set_param_int_array(x, "dims", 2, (int[2]) { block->mx[d] + 1, 2 });
 	mrc_fld_set_param_int_array(x, "sw"  , 2, (int[2]) { sw, 0 });
 	mrc_fld_setup(x);
-	
+
 	// If I had my way, I'd kill off the original crds_gen children to minimize confusion,
 	// but I guess I'll just have to write the docs to make it clear what's going on here.
 	assert(block->coord_gen[d]);
-	
-	// FIXME:
-	// I hate having to add this "m" hack more than any other.
-	// Could go in block factory, I suppose...
+
 	mrc_crds_gen_set_param_int3(block->coord_gen[d], "m", block->mx);
 	mrc_crds_gen_set_param_int(block->coord_gen[d], "d", d);
+	mrc_crds_gen_set_param_int(block->coord_gen[d], "sw", sw);
 	mrc_crds_gen_set_param_obj(block->coord_gen[d], "crds", crds);
+	mrc_crds_gen_set_param_double(block->coord_gen[d], "xl", block->xl[d]);
+	mrc_crds_gen_set_param_double(block->coord_gen[d], "xh", block->xh[d]);
 
 	mrc_crds_gen_run(block->coord_gen[d], &MRC_D2(x, 0, 0), &MRC_D2(x, 0, 1));
 	
@@ -370,8 +405,8 @@ mrc_crds_init()
 
 #define VAR(x) (void *)offsetof(struct mrc_crds, x)
 static struct param mrc_crds_params_descr[] = {
-  { "l"              , VAR(xl)            , PARAM_FLOAT3(0., 0., 0.) },
-  { "h"              , VAR(xh)            , PARAM_FLOAT3(1., 1., 1.) },
+  { "l"              , VAR(xl)            , PARAM_DOUBLE3(0., 0., 0.) },
+  { "h"              , VAR(xh)            , PARAM_DOUBLE3(1., 1., 1.) },
   { "sw"             , VAR(sw)            , PARAM_INT(0)             },
   { "domain"         , VAR(domain)        , PARAM_OBJ(mrc_domain)    },
 

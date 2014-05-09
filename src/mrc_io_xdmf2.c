@@ -137,6 +137,9 @@ xdmf_write_attr(struct mrc_io *io, const char *path, int type,
   case PT_FLOAT3:
     H5LTset_attribute_float(group, ".", name, pv->u_float3, 3);
     break;
+  case PT_DOUBLE3:
+    H5LTset_attribute_double(group, ".", name, pv->u_double3, 3);
+    break;
   }
   H5Gclose(group);
 }
@@ -636,9 +639,9 @@ xdmf_spatial_write_crds_uniform_parallel(struct xdmf_file *file,
 {
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
 
-  float xl[3], xh[3];
-  mrc_crds_get_param_float3(crds, "l", xl);
-  mrc_crds_get_param_float3(crds, "h", xh);
+  double xl[3], xh[3];
+  mrc_crds_get_param_double3(crds, "l", xl);
+  mrc_crds_get_param_double3(crds, "h", xh);
 
   for (int d = 0; d < 3; d++) {
     struct mrc_fld *mcrd = crds->crd[d];
@@ -648,8 +651,8 @@ xdmf_spatial_write_crds_uniform_parallel(struct xdmf_file *file,
 
     hid_t group_crdp = H5Gcreate(group_crd1, "p0", H5P_DEFAULT,
 				 H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group_crd1);
-    H5LTset_attribute_float(group_crdp, ".", "xl", &xl[d], 1);
-    H5LTset_attribute_float(group_crdp, ".", "xh", &xh[d], 1);
+    H5LTset_attribute_double(group_crdp, ".", "xl", &xl[d], 1);
+    H5LTset_attribute_double(group_crdp, ".", "xh", &xh[d], 1);
     H5Gclose(group_crdp);
     H5Gclose(group_crd1);
   }

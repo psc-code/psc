@@ -15,20 +15,10 @@
 static void
 mrc_crds_gen_uniform_run(struct mrc_crds_gen *gen, double *xx, double *dx)
 {
-  int d = gen->d;
-  int n = gen->dims[d];
+  double h = (gen->xh - gen->xl) / gen->n;
 
-  float xl[3], xh[3];
-  mrc_crds_get_param_float3(gen->crds, "l", xl);
-  mrc_crds_get_param_float3(gen->crds, "h", xh);
-  
-  int sw;
-  mrc_crds_get_param_int(gen->crds, "sw", &sw);
-
-  double h = ((double) xh[d] - (double) xl[d]) / n;
-  
-  for (int i = -sw; i < n + sw; i++) {
-    xx[i] = (double)xl[d] + (i + .5) * h;
+  for (int i = -gen->sw; i < gen->n + gen->sw; i++) {
+    xx[i] = gen->xl + (i + .5) * h;
     dx[i] = h;
   }
 }

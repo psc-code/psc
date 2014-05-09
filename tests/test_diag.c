@@ -78,12 +78,12 @@ do_test_diag(MPI_Comm comm, struct test_diag_params *par, int rank_diagsrv,
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   mrc_domain_simple_set_params(domain, &simple_par);
   mrc_crds_set_param_int(crds, "sw", SW_2);
-  mrc_crds_set_param_float(crds, "xl", -30.);
-  mrc_crds_set_param_float(crds, "yl", -20.);
-  mrc_crds_set_param_float(crds, "zl", -20.);
-  mrc_crds_set_param_float(crds, "xh",  50.);
-  mrc_crds_set_param_float(crds, "yh",  20.);
-  mrc_crds_set_param_float(crds, "zh",  20.);
+  mrc_crds_set_param_double(crds, "xl", -30.);
+  mrc_crds_set_param_double(crds, "yl", -20.);
+  mrc_crds_set_param_double(crds, "zl", -20.);
+  mrc_crds_set_param_double(crds, "xh",  50.);
+  mrc_crds_set_param_double(crds, "yh",  20.);
+  mrc_crds_set_param_double(crds, "zh",  20.);
   mrc_domain_set_from_options(domain);
   mrc_domain_view(domain);
   mrc_domain_setup(domain);

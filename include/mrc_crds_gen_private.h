@@ -13,6 +13,10 @@ struct mrc_crds_gen {
   // domain global dims
   int dims[3];
   
+  int n;  // n interior points
+  int sw;  // stencil width
+  double xl;  // low edge
+  double xh;  // high edge
 };
 
 struct mrc_crds_gen_ops {
@@ -23,7 +27,8 @@ struct mrc_crds_gen_ops {
 #define mrc_crds_gen_ops(gen) ((struct mrc_crds_gen_ops *)(gen)->obj.ops)
 
 extern struct mrc_crds_gen_ops mrc_crds_gen_uniform_ops;
-extern struct mrc_crds_gen_ops mrc_crds_gen_ggcm_x_ops;
+extern struct mrc_crds_gen_ops mrc_crds_gen_ggcm_x_tanh_ops;
+extern struct mrc_crds_gen_ops mrc_crds_gen_ggcm_x_cubic_ops;
 extern struct mrc_crds_gen_ops mrc_crds_gen_ggcm_yz_ops;
 extern struct mrc_crds_gen_ops mrc_crds_gen_gaussian_ops;
 extern struct mrc_crds_gen_ops mrc_crds_gen_two_gaussian_ops;

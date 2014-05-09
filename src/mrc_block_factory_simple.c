@@ -15,9 +15,9 @@
 // mrc_block_factory_simple2d_run
 
 struct mrc_bf_simple {
-  float xb, xe;
-  float yb, ye;
-  float zb, ze;
+  double xb, xe;
+  double yb, ye;
+  double zb, ze;
   int dims[3];
   struct mrc_crds_gen *coord_gen[3];
 };
@@ -40,12 +40,12 @@ _mrc_block_factory_read(struct mrc_block_factory *fac, struct mrc_io *io)
 
 #define VAR(x) (void *)offsetof(struct mrc_bf_simple, x)
 static struct param mrc_bf_simple_param_descr[] = {
-  { "xb"              , VAR(xb)             , PARAM_FLOAT(0)         },
-  { "xe"              , VAR(xe)             , PARAM_FLOAT(1.0  )     },
-  { "yb"              , VAR(yb)             , PARAM_FLOAT(0)         },
-  { "ye"              , VAR(ye)             , PARAM_FLOAT(1.0  )     },
-  { "zb"              , VAR(zb)             , PARAM_FLOAT(0)         },
-  { "ze"              , VAR(ze)             , PARAM_FLOAT(1.0  )     },
+  { "xb"              , VAR(xb)             , PARAM_DOUBLE(0)         },
+  { "xe"              , VAR(xe)             , PARAM_DOUBLE(1.0  )     },
+  { "yb"              , VAR(yb)             , PARAM_DOUBLE(0)         },
+  { "ye"              , VAR(ye)             , PARAM_DOUBLE(1.0  )     },
+  { "zb"              , VAR(zb)             , PARAM_DOUBLE(0)         },
+  { "ze"              , VAR(ze)             , PARAM_DOUBLE(1.0  )     },
   // Fixme: I'd rather use an int3 here, but apparently the fancy namex
   // appending only works on the command line
   { "mx"                , VAR(dims[0])          , PARAM_INT(16 )     },

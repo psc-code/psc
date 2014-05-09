@@ -31,7 +31,8 @@ static void
 mrc_crds_gen_init()
 {
   mrc_class_register_subclass(&mrc_class_mrc_crds_gen, &mrc_crds_gen_uniform_ops);
-  mrc_class_register_subclass(&mrc_class_mrc_crds_gen, &mrc_crds_gen_ggcm_x_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_crds_gen, &mrc_crds_gen_ggcm_x_tanh_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_crds_gen, &mrc_crds_gen_ggcm_x_cubic_ops);
   mrc_class_register_subclass(&mrc_class_mrc_crds_gen, &mrc_crds_gen_ggcm_yz_ops);
   mrc_class_register_subclass(&mrc_class_mrc_crds_gen, &mrc_crds_gen_gaussian_ops);
   mrc_class_register_subclass(&mrc_class_mrc_crds_gen, &mrc_crds_gen_two_gaussian_ops);
@@ -45,6 +46,10 @@ static struct param mrc_crds_gen_descr[] = {
   { "crds"            , VAR(crds)            , PARAM_OBJ(mrc_crds)   },
   { "d"               , VAR(d)               , PARAM_INT(-1)         },
   { "m"               , VAR(dims)            , PARAM_INT3(0,0,0)     },
+  { "n"               , VAR(n)               , PARAM_INT(0)          },
+  { "sw"              , VAR(sw)              , PARAM_INT(0)          },
+  { "xl"              , VAR(xl)              , PARAM_DOUBLE(0.0)      },
+  { "xh"              , VAR(xh)              , PARAM_DOUBLE(0.0)      },
   {},
 };
 #undef VAR

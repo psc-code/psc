@@ -303,8 +303,8 @@ mrc_domain_mb_write(struct mrc_domain *domain, struct mrc_io *io)
     struct MB_block *block = &sub->mb_blocks[b];
     mrc_io_write_attr_int3(io, path2, "mx", block->mx);
     mrc_io_write_attr_int(io, path2, "nr_block", block->nr_block);
-    mrc_io_write_attr_float3(io, path2, "xl", block->xl);
-    mrc_io_write_attr_float3(io, path2, "xh", block->xh);
+    mrc_io_write_attr_double3(io, path2, "xl", block->xl);
+    mrc_io_write_attr_double3(io, path2, "xh", block->xh);
     // FIXME: write coord_gens?
 
     for (int f = 0; f < NR_FACES; f++) {
@@ -336,8 +336,8 @@ mrc_domain_mb_read(struct mrc_domain *domain, struct mrc_io *io)
     struct MB_block *block = &sub->mb_blocks[b];
     mrc_io_read_attr_int3(io, path2, "mx", &block->mx);
     mrc_io_read_attr_int(io, path2, "nr_block", &block->nr_block);
-    mrc_io_read_attr_float3(io, path2, "xl", &block->xl);
-    mrc_io_read_attr_float3(io, path2, "xh", &block->xh);
+    mrc_io_read_attr_double3(io, path2, "xl", &block->xl);
+    mrc_io_read_attr_double3(io, path2, "xh", &block->xh);
     
     for (int f = 0; f < NR_FACES; f++) {
       struct MB_face *face = &block->faces[f];
