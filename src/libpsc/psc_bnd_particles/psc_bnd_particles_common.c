@@ -535,8 +535,8 @@ enum {
   YY,
   ZZ,
   XY,
-  ZX,
   YZ,
+  ZX,
 };
 
 static void __unused
@@ -575,17 +575,19 @@ inject_particles(struct psc_particles *prts, struct psc_fields *flds,
 		 int X, int Y, int Z)
 {
   double n     =         F3_C(flds_nvt_av, 10*kind + NVT_N     , ix,iy,iz);
-  double v[3]  = {       F3_C(flds_nvt_av, 10*kind + NVT_VX + X, ix,iy,iz),
-		         F3_C(flds_nvt_av, 10*kind + NVT_VX + Y, ix,iy,iz),
-		   dir * F3_C(flds_nvt_av, 10*kind + NVT_VX + Z, ix,iy,iz), };
+  double v[3]  = {       F3_C(flds_nvt_av, 10*kind + NVT_VX, ix,iy,iz),
+		         F3_C(flds_nvt_av, 10*kind + NVT_VY, ix,iy,iz),
+			 F3_C(flds_nvt_av, 10*kind + NVT_VZ, ix,iy,iz), };
   double vv[6] = {       F3_C(flds_nvt_av, 10*kind + NVT_VXVX + X, ix,iy,iz),
 			 F3_C(flds_nvt_av, 10*kind + NVT_VXVX + Y, ix,iy,iz),
 			 F3_C(flds_nvt_av, 10*kind + NVT_VXVX + Z, ix,iy,iz),
 			 F3_C(flds_nvt_av, 10*kind + NVT_VXVY + X, ix,iy,iz),
-		   dir * F3_C(flds_nvt_av, 10*kind + NVT_VXVY + Z, ix,iy,iz),
-		   dir * F3_C(flds_nvt_av, 10*kind + NVT_VXVY + Y, ix,iy,iz), };
+		   dir * F3_C(flds_nvt_av, 10*kind + NVT_VXVY + Y, ix,iy,iz),
+		   dir * F3_C(flds_nvt_av, 10*kind + NVT_VXVY + Z, ix,iy,iz), };
   /* n = 1.; */
   /* v[0] = 0.; v[1] = 0.; v[2] = .1; */
+
+  v[Z] *= dir;
 
   double W[6];
   calc_W(W, vv);
@@ -593,8 +595,8 @@ inject_particles(struct psc_particles *prts, struct psc_fields *flds,
   int p = prts->p;
   double c=1.0;
   double vsz = sqrt(2. * vv[ZZ]);
-  double gs0 = exp(-sqr(v[2]) / sqr(vsz)) - exp(-sqr(c-v[2]) / sqr(vsz))
-    +sqrt(M_PI) * v[2] / vsz * (erf((c-v[2]) / vsz) + erf(v[2] / vsz));
+  double gs0 = exp(-sqr(v[Z]) / sqr(vsz)) - exp(-sqr(c - v[Z]) / sqr(vsz))
+    +sqrt(M_PI) * v[Z] / vsz * (erf((c - v[Z]) / vsz) + erf(v[Z] / vsz));
   double ninjn = ninjo + ppsc->dt * gs0 * n
     * vsz / sqrt(M_PI) / 2. / ppsc->patch[p].dx[Z] / ppsc->coeff.cori;
 
@@ -611,8 +613,8 @@ inject_particles(struct psc_particles *prts, struct psc_fields *flds,
     double  fin[nvdx];
     for (int jj = 0; jj < nvdx; jj++){
       vzdin += dvz;
-      fin[jj] = (exp(-sqr(v[2]/vsz)) - exp(-sqr(vzdin-v[2])/sqr(vsz)) + 
-		 sqrt(M_PI) * v[2] / vsz * (erf((vzdin-v[2])/vsz) + erf(v[2]/vsz))) / gs0;
+      fin[jj] = (exp(-sqr(v[Z] / vsz)) - exp(-sqr(vzdin - v[Z]) / sqr(vsz)) + 
+		 sqrt(M_PI) * v[Z] / vsz * (erf((vzdin - v[Z]) / vsz) + erf(v[Z] / vsz))) / gs0;
     }
     for (int n = 0; n < ninjc; n++) {
       particle_t *prt = particles_get_one(prts, prts->n_part++); 
@@ -646,9 +648,9 @@ inject_particles(struct psc_particles *prts, struct psc_fields *flds,
 	  icount++;
 	  yy0 = yya;
 	  yya = yy0 - (erf(yy0) - (2.*sr - 1.)) / (2./sqrt(M_PI) * exp(-sqr(yy0)));
-	} while(fabs(yya-yy0) > 1.e-15 && icount != 100);
-	pxi[X] = v[0] + yya * sqrt(W[YY] / (W[XX] * W[YY] - sqr(W[XY])))
-	  + (pxi[Z] - v[2]) * vv[ZX] / vv[ZZ];
+	} while (fabs(yya - yy0) > 1.e-15 && icount != 100);
+	pxi[X] = v[X] + yya * sqrt(W[YY] / (W[XX] * W[YY] - sqr(W[XY])))
+	  + (pxi[Z] - v[Z]) * vv[ZX] / vv[ZZ];
    
 	sr = random1();
 	yya = 0.0;
@@ -657,9 +659,9 @@ inject_particles(struct psc_particles *prts, struct psc_fields *flds,
 	  icount++;
 	  yy0 = yya;
 	  yya = yy0 - (erf(yy0) - (2.*sr - 1.)) / (2./sqrt(M_PI) * exp(-sqr(yy0)));
-	} while (fabs(yya-yy0) > 1.e-15 && icount != 100);
-	pxi[Y] = v[1] + 1. / W[YY] * (yya * sqrt(W[YY])
-				     - (pxi[Z] - v[2]) * W[YZ] - (pxi[X] - v[0]) * W[XY]);
+	} while (fabs(yya - yy0) > 1.e-15 && icount != 100);
+	pxi[Y] = v[Y] + 1. / W[YY] * (yya * sqrt(W[YY])
+				     - (pxi[Z] - v[Z]) * W[YZ] - (pxi[X] - v[X]) * W[XY]);
 		
 	if (nnm > 100) { assert(0); break; }
       } while (sqr(pxi[X]) + sqr(pxi[Y]) + sqr(pxi[Z]) > 1.);
