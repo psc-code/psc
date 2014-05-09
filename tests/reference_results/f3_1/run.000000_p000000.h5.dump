@@ -977,13 +977,6 @@ GROUP "/" {
          (0): 0
          }
       }
-      ATTRIBUTE "m" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-         DATA {
-         (0): 32, 32, 32
-         }
-      }
       ATTRIBUTE "mrc_obj_class" {
          DATATYPE  H5T_STRING {
                STRSIZE 13;
@@ -1076,13 +1069,6 @@ GROUP "/" {
          (0): 1
          }
       }
-      ATTRIBUTE "m" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-         DATA {
-         (0): 32, 32, 32
-         }
-      }
       ATTRIBUTE "mrc_obj_class" {
          DATATYPE  H5T_STRING {
                STRSIZE 13;
@@ -1173,13 +1159,6 @@ GROUP "/" {
          DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
          DATA {
          (0): 2
-         }
-      }
-      ATTRIBUTE "m" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-         DATA {
-         (0): 32, 32, 32
          }
       }
       ATTRIBUTE "mrc_obj_class" {

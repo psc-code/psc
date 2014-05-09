@@ -199,8 +199,7 @@ _mrc_crds_setup(struct mrc_crds *crds)
     mrc_crds_get_param_double3(gen->crds, "l", xl);
     mrc_crds_get_param_double3(gen->crds, "h", xh);
 
-    mrc_crds_gen_set_param_int3(gen, "m", (int[3]){gdims[0], gdims[1], gdims[2]});
-    mrc_crds_gen_set_param_int(gen, "n", gen->dims[d]);
+    mrc_crds_gen_set_param_int(gen, "n", gdims[d]);
     mrc_crds_gen_set_param_int(gen, "sw", gen->crds->sw);
     mrc_crds_gen_set_param_double(gen, "xl", xl[d]);
     mrc_crds_gen_set_param_double(gen, "xh", xh[d]);
@@ -348,7 +347,7 @@ mrc_crds_mb_setup(struct mrc_crds *crds)
 	// but I guess I'll just have to write the docs to make it clear what's going on here.
 	assert(block->coord_gen[d]);
 
-	mrc_crds_gen_set_param_int3(block->coord_gen[d], "m", block->mx);
+	mrc_crds_gen_set_param_int(block->coord_gen[d], "n", block->mx[d]);
 	mrc_crds_gen_set_param_int(block->coord_gen[d], "d", d);
 	mrc_crds_gen_set_param_int(block->coord_gen[d], "sw", sw);
 	mrc_crds_gen_set_param_obj(block->coord_gen[d], "crds", crds);
