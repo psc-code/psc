@@ -530,18 +530,27 @@ psc_bnd_particles_sub_open_calc_moments(struct psc_bnd_particles *bnd,
   }
 }
 
+enum {
+  XX,
+  YY,
+  ZZ,
+  XY,
+  ZX,
+  YZ,
+};
+
 static void __unused
 calc_W(double W[6], double vv[6])
 {
   double determ =
-    (vv[0]*vv[1]*vv[2] + vv[3]*vv[5]*vv[4] + vv[4]*vv[3]*vv[5] -
-     vv[4]*vv[1]*vv[4] - vv[3]*vv[3]*vv[2] - vv[0]*vv[5]*vv[5]);
-  W[0] = (vv[1]*vv[2] - vv[5]*vv[5]) / determ*0.5;
-  W[1] = (vv[0]*vv[2] - vv[4]*vv[4]) / determ*0.5;
-  W[2] = (vv[0]*vv[1] - vv[3]*vv[3]) / determ*0.5;
-  W[3] = (vv[3]*vv[2] - vv[4]*vv[5]) / determ*0.5;
-  W[4] = (vv[3]*vv[5] - vv[4]*vv[1]) / determ*0.5;
-  W[5] = (vv[0]*vv[5] - vv[3]*vv[4]) / determ*0.5;
+    (vv[XX]*vv[YY]*vv[ZZ] + vv[XY]*vv[YZ]*vv[ZX] + vv[ZX]*vv[XY]*vv[YZ] -
+     vv[ZX]*vv[YY]*vv[ZX] - vv[XY]*vv[XY]*vv[ZZ] - vv[XX]*vv[YZ]*vv[YZ]);
+  W[XX] = .5 * (vv[YY]*vv[ZZ] - vv[YZ]*vv[YZ]) / determ;
+  W[YY] = .5 * (vv[XX]*vv[ZZ] - vv[ZX]*vv[ZX]) / determ;
+  W[ZZ] = .5 * (vv[XX]*vv[YY] - vv[XY]*vv[XY]) / determ;
+  W[XY] = .5 * (vv[XY]*vv[ZZ] - vv[ZX]*vv[YZ]) / determ;
+  W[ZX] = .5 * (vv[XY]*vv[YZ] - vv[ZX]*vv[YY]) / determ;
+  W[YZ] = .5 * (vv[XX]*vv[YZ] - vv[XY]*vv[ZX]) / determ;
 }
 
 #ifndef NO_OPEN_BC
@@ -583,7 +592,7 @@ inject_particles(struct psc_particles *prts, struct psc_fields *flds,
 
   int p = prts->p;
   double c=1.0;
-  double vsz = sqrt(2. * vv[2]);
+  double vsz = sqrt(2. * vv[ZZ]);
   double gs0 = exp(-sqr(v[2]) / sqr(vsz)) - exp(-sqr(c-v[2]) / sqr(vsz))
     +sqrt(M_PI) * v[2] / vsz * (erf((c-v[2]) / vsz) + erf(v[2] / vsz));
   double ninjn = ninjo + ppsc->dt * gs0 * n
@@ -638,8 +647,8 @@ inject_particles(struct psc_particles *prts, struct psc_fields *flds,
 	  yy0 = yya;
 	  yya = yy0 - (erf(yy0) - (2.*sr - 1.)) / (2./sqrt(M_PI) * exp(-sqr(yy0)));
 	} while(fabs(yya-yy0) > 1.e-15 && icount != 100);
-	pxi[X] = v[0] + yya * sqrt(W[1] / (W[0] * W[1] - sqr(W[3])))
-	  + (pxi[Z] - v[2]) * vv[4] / vv[2];
+	pxi[X] = v[0] + yya * sqrt(W[YY] / (W[XX] * W[YY] - sqr(W[XY])))
+	  + (pxi[Z] - v[2]) * vv[ZX] / vv[ZZ];
    
 	sr = random1();
 	yya = 0.0;
@@ -649,8 +658,8 @@ inject_particles(struct psc_particles *prts, struct psc_fields *flds,
 	  yy0 = yya;
 	  yya = yy0 - (erf(yy0) - (2.*sr - 1.)) / (2./sqrt(M_PI) * exp(-sqr(yy0)));
 	} while (fabs(yya-yy0) > 1.e-15 && icount != 100);
-	pxi[Y] = v[1] + 1. / W[1] * (yya * sqrt(W[1])
-				     - (pxi[Z] - v[2]) * W[5] - (pxi[X] - v[0]) * W[3]);
+	pxi[Y] = v[1] + 1. / W[YY] * (yya * sqrt(W[YY])
+				     - (pxi[Z] - v[2]) * W[YZ] - (pxi[X] - v[0]) * W[XY]);
 		
 	if (nnm > 100) { assert(0); break; }
       } while (sqr(pxi[X]) + sqr(pxi[Y]) + sqr(pxi[Z]) > 1.);
