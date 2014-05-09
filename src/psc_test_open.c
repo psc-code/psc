@@ -54,15 +54,15 @@ psc_test_open_create(struct psc *psc)
 
   psc->domain.bnd_fld_lo[0] = BND_FLD_PERIODIC;
   psc->domain.bnd_fld_hi[0] = BND_FLD_PERIODIC;
-  psc->domain.bnd_fld_lo[1] = BND_FLD_PERIODIC;
-  psc->domain.bnd_fld_hi[1] = BND_FLD_PERIODIC;
+  psc->domain.bnd_fld_lo[1] = BND_FLD_OPEN;
+  psc->domain.bnd_fld_hi[1] = BND_FLD_OPEN;
   psc->domain.bnd_fld_lo[2] = BND_FLD_OPEN;
   psc->domain.bnd_fld_hi[2] = BND_FLD_OPEN;
  
   psc->domain.bnd_part_lo[0] = BND_PART_PERIODIC;
   psc->domain.bnd_part_hi[0] = BND_PART_PERIODIC;
-  psc->domain.bnd_part_lo[1] = BND_PART_PERIODIC;
-  psc->domain.bnd_part_hi[1] = BND_PART_PERIODIC;
+  psc->domain.bnd_part_lo[1] = BND_PART_OPEN;
+  psc->domain.bnd_part_hi[1] = BND_PART_OPEN;
   psc->domain.bnd_part_lo[2] = BND_PART_OPEN;
   psc->domain.bnd_part_hi[2] = BND_PART_OPEN;
 
