@@ -116,11 +116,13 @@ psc_test_open_init_npt(struct psc *psc, int pop, double x[3],
   case KIND_ELECTRON:
     npt->q = -1.;
     npt->m = 1.;
+    npt->p[1] = sub->vze;
     npt->p[2] = sub->vze;
     break;
   case KIND_ION:
     npt->q = 1.;
     npt->m = sub->mi_over_me;
+    npt->p[1] = sub->vzi;
     npt->p[2] = sub->vzi;
     break;
   default:
