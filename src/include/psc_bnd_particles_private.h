@@ -10,6 +10,7 @@ struct psc_bnd_particles {
   struct ddc_particles *ddcp;
 
   // for open b.c.
+  double time_relax;
   bool first_time;
   struct psc_bnd *flds_bnd;
   struct psc_output_fields_item *item_nvt;

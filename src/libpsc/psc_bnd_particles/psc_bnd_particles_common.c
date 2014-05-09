@@ -8,7 +8,7 @@
 #include <mrc_io.h>
 #include <string.h>
 
-static const int debug_every_step = 1;
+static const int debug_every_step = 10;
 
 static inline double
 random1()
@@ -66,6 +66,7 @@ debug_dump(struct mrc_io *io, struct psc_mfields *mflds)
 static void
 average_9_point(struct psc_mfields *mflds_av, struct psc_mfields *mflds)
 {
+  const int b = 1;
   for (int p = 0; p < ppsc->nr_patches; p++) {
     struct psc_patch *ppatch = &ppsc->patch[p];
     struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
@@ -81,15 +82,16 @@ average_9_point(struct psc_mfields *mflds_av, struct psc_mfields *mflds)
 	  ize--;
 	}
 	for (int iz = izb; iz < ize; iz++) {
-	  F3_C(flds_av, m, 0,0,iz) = (F3_C(flds, m, 0,1,iz-1) +
-				      F3_C(flds, m, 0,2,iz-1) +
-				      F3_C(flds, m, 0,3,iz-1) +
-				      F3_C(flds, m, 0,1,iz  ) +
-				      F3_C(flds, m, 0,2,iz  ) +
-				      F3_C(flds, m, 0,3,iz  ) +
-				      F3_C(flds, m, 0,1,iz+1) +
-				      F3_C(flds, m, 0,2,iz+1) +
-				      F3_C(flds, m, 0,3,iz+1)) / 9.;
+	  F3_C(flds_av, m, 0,0,iz) = (F3_C(flds, m, 0,b+0,iz-1) +
+				      F3_C(flds, m, 0,b+1,iz-1) +
+				      F3_C(flds, m, 0,b+2,iz-1) +
+				      F3_C(flds, m, 0,b+0,iz  ) +
+				      F3_C(flds, m, 0,b+1,iz  ) +
+				      F3_C(flds, m, 0,b+2,iz  ) +
+				      F3_C(flds, m, 0,b+0,iz+1) +
+				      F3_C(flds, m, 0,b+1,iz+1) +
+				      F3_C(flds, m, 0,b+2,iz+1)) / 9.;
+	  //F3_C(flds_av, m, 0,0,iz) = F3_C(flds, m, 0,b,iz);
 	}
       }
     }
@@ -105,15 +107,16 @@ average_9_point(struct psc_mfields *mflds_av, struct psc_mfields *mflds)
 	}
 	int iy = ppatch->ldims[1] - 1;
 	for (int iz = izb; iz < ize; iz++) {
-	  F3_C(flds_av, m, 0,iy,iz) = (F3_C(flds, m, 0,iy-1,iz-1) +
-				       F3_C(flds, m, 0,iy-2,iz-1) +
-				       F3_C(flds, m, 0,iy-3,iz-1) +
-				       F3_C(flds, m, 0,iy-1,iz  ) +
-				       F3_C(flds, m, 0,iy-2,iz  ) +
-				       F3_C(flds, m, 0,iy-3,iz  ) +
-				       F3_C(flds, m, 0,iy-1,iz+1) +
-				       F3_C(flds, m, 0,iy-2,iz+1) +
-				       F3_C(flds, m, 0,iy-3,iz+1)) / 9.;
+	  F3_C(flds_av, m, 0,iy,iz) = (F3_C(flds, m, 0,iy-b-0,iz-1) +
+				       F3_C(flds, m, 0,iy-b-1,iz-1) +
+				       F3_C(flds, m, 0,iy-b-2,iz-1) +
+				       F3_C(flds, m, 0,iy-b-0,iz  ) +
+				       F3_C(flds, m, 0,iy-b-1,iz  ) +
+				       F3_C(flds, m, 0,iy-b-2,iz  ) +
+				       F3_C(flds, m, 0,iy-b-0,iz+1) +
+				       F3_C(flds, m, 0,iy-b-1,iz+1) +
+				       F3_C(flds, m, 0,iy-b-2,iz+1)) / 9.;
+	  //F3_C(flds_av, m, 0,iy,iz) = F3_C(flds, m, 0,iy-b,iz);
 	}
       }
     }
@@ -128,15 +131,16 @@ average_9_point(struct psc_mfields *mflds_av, struct psc_mfields *mflds)
 	  iye--;
 	}
 	for (int iy = iyb; iy < iye; iy++) {
-	  F3_C(flds_av, m, 0,iy,0) = (F3_C(flds, m, 0,iy-1,1) +
-				      F3_C(flds, m, 0,iy-1,2) +
-				      F3_C(flds, m, 0,iy-1,3) +
-				      F3_C(flds, m, 0,iy  ,1) +
-				      F3_C(flds, m, 0,iy  ,2) +
-				      F3_C(flds, m, 0,iy  ,3) +
-				      F3_C(flds, m, 0,iy+1,1) +
-				      F3_C(flds, m, 0,iy+1,2) +
-				      F3_C(flds, m, 0,iy+1,3)) / 9.;
+	  F3_C(flds_av, m, 0,iy,0) = (F3_C(flds, m, 0,iy-1,b+0) +
+				      F3_C(flds, m, 0,iy-1,b+1) +
+				      F3_C(flds, m, 0,iy-1,b+2) +
+				      F3_C(flds, m, 0,iy  ,b+0) +
+				      F3_C(flds, m, 0,iy  ,b+1) +
+				      F3_C(flds, m, 0,iy  ,b+2) +
+				      F3_C(flds, m, 0,iy+1,b+0) +
+				      F3_C(flds, m, 0,iy+1,b+1) +
+				      F3_C(flds, m, 0,iy+1,b+2)) / 9.;
+	  //	  F3_C(flds_av, m, 0,iy,0) = F3_C(flds, m, 0,iy,b);
 	}
       }
     }
@@ -152,15 +156,16 @@ average_9_point(struct psc_mfields *mflds_av, struct psc_mfields *mflds)
 	  iye--;
 	}
 	for (int iy = iyb; iy < iye; iy++) {
-	  F3_C(flds_av, m, 0,iy,iz) = (F3_C(flds, m, 0,iy-1,iz-1) +
-				       F3_C(flds, m, 0,iy-1,iz-2) +
-				       F3_C(flds, m, 0,iy-1,iz-3) +
-				       F3_C(flds, m, 0,iy  ,iz-1) +
-				       F3_C(flds, m, 0,iy  ,iz-2) +
-				       F3_C(flds, m, 0,iy  ,iz-3) +
-				       F3_C(flds, m, 0,iy+1,iz-1) +
-				       F3_C(flds, m, 0,iy+1,iz-2) +
-				       F3_C(flds, m, 0,iy+1,iz-3)) / 9.;
+	  F3_C(flds_av, m, 0,iy,iz) = (F3_C(flds, m, 0,iy-1,iz-b-0) +
+				       F3_C(flds, m, 0,iy-1,iz-b-1) +
+				       F3_C(flds, m, 0,iy-1,iz-b-2) +
+				       F3_C(flds, m, 0,iy  ,iz-b-0) +
+				       F3_C(flds, m, 0,iy  ,iz-b-1) +
+				       F3_C(flds, m, 0,iy  ,iz-b-2) +
+				       F3_C(flds, m, 0,iy+1,iz-b-0) +
+				       F3_C(flds, m, 0,iy+1,iz-b-1) +
+				       F3_C(flds, m, 0,iy+1,iz-b-2)) / 9.;
+	  //	  F3_C(flds_av, m, 0,iy,iz) = F3_C(flds, m, 0,iy,iz-b);
 	}
       }
     }
@@ -239,7 +244,7 @@ static void
 average_in_time(struct psc_bnd_particles *bnd,
 		struct psc_mfields *mflds_av, struct psc_mfields *mflds_last)
 {
-  const double rr = 0.5; // FIXME
+  const double R = bnd->time_relax;
   for (int p = 0; p < ppsc->nr_patches; p++) {
     struct psc_patch *ppatch = &ppsc->patch[p];
     struct psc_fields *flds_av = psc_mfields_get_patch(mflds_av, p);
@@ -257,16 +262,16 @@ average_in_time(struct psc_bnd_particles *bnd,
 	for (int iz = 0; iz < ppatch->ldims[2]; iz += ppatch->ldims[2] + 1) {
 	  for (int iy = 0; iy < ppatch->ldims[1]; iy++) {
 	    F3_C(flds_av, m, 0,iy,iz) = 
-	      rr * F3_C(flds_av, m, 0,iy,iz)
-	      + (1. - rr) * F3_C(flds_last, m, 0,iy,iz);
+	      R * F3_C(flds_av, m, 0,iy,iz)
+	      + (1. - R) * F3_C(flds_last, m, 0,iy,iz);
 	    F3_C(flds_last, m, 0,iy,iz) = F3_C(flds_av, m, 0,iy,iz);
 	  }
 	}
 	for (int iz = 1; iz < ppatch->ldims[2] - 1; iz++) {
 	  for (int iy = 0; iy < ppatch->ldims[1]; iy += ppatch->ldims[1] + 1) {
 	    F3_C(flds_av, m, 0,iy,iz) = 
-	      rr * F3_C(flds_av, m, 0,iy,iz)
-	      + (1. - rr) * F3_C(flds_last, m, 0,iy,iz);
+	      R * F3_C(flds_av, m, 0,iy,iz)
+	      + (1. - R) * F3_C(flds_last, m, 0,iy,iz);
 	    F3_C(flds_last, m, 0,iy,iz) = F3_C(flds_av, m, 0,iy,iz);
 	  }
 	}
@@ -496,6 +501,15 @@ static void
 psc_bnd_particles_sub_open_calc_moments(struct psc_bnd_particles *bnd,
 					struct psc_mparticles *mprts_base)
 {
+  static int pr_A, pr_B, pr_C;
+  if (!pr_A) {
+    pr_A = prof_register("open_calc_moments", 1., 0, 0);
+    pr_B = prof_register("open_item_run", 1., 0, 0);
+    pr_C = prof_register("open_average", 1., 0, 0);
+  }
+
+  prof_start(pr_A);
+
   static struct mrc_io *io;
   if (!io) {
     io = mrc_io_create(psc_comm(ppsc));
@@ -512,12 +526,18 @@ psc_bnd_particles_sub_open_calc_moments(struct psc_bnd_particles *bnd,
   struct psc_mparticles *mprts = psc_mparticles_get_cf(mprts_base, 0);
   struct psc_mfields *mflds_nvt = psc_output_fields_item_create_mfields(bnd->item_nvt);
 
+  prof_start(pr_B);
   psc_output_fields_item_run(bnd->item_nvt, ppsc->flds, mprts, mflds_nvt);
+  prof_stop(pr_B);
 
-  debug_dump(io, mflds_nvt);
+  //debug_dump(io, mflds_nvt);
 
+  prof_start(pr_C);
   average_9_point(bnd->mflds_nvt_av, mflds_nvt);
+  debug_dump(io, bnd->mflds_nvt_av);
+
   average_in_time(bnd, bnd->mflds_nvt_av, bnd->mflds_nvt_last);
+  prof_stop(pr_C);
 
   psc_mfields_destroy(mflds_nvt);
 
@@ -528,6 +548,7 @@ psc_bnd_particles_sub_open_calc_moments(struct psc_bnd_particles *bnd,
   if (ppsc->timestep % debug_every_step == 0) {
     mrc_io_close(io);
   }
+  prof_stop(pr_A);
 }
 
 enum {
@@ -605,7 +626,7 @@ inject_particles(struct psc_particles *prts, struct psc_fields *flds,
   /* 	  ninjo, ninjn, ninjn - ninjc, ninjc); */
   ninjo = ninjn - ninjc;
 
-  int nvdx = 100000;
+  int nvdx = 1000;
   double dvz = c / ((double) nvdx);
 	  
   if (ninjc != 0) {
@@ -723,6 +744,12 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
 				struct psc_mfields *mflds)
 {
 #ifndef NO_OPEN_BC
+  static int pr_A;
+  if (!pr_A) {
+    pr_A = prof_register("open_boundary", 1., 0, 0);
+  }
+
+  prof_start(pr_A);
   int nr_kinds = ppsc->nr_kinds;
 
   for (int p = 0; p < ppsc->nr_patches; p++) {
@@ -775,6 +802,7 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
       }
     }
   }
+  prof_stop(pr_A);
 #endif
 }
 

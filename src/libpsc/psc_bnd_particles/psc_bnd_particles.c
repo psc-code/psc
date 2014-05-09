@@ -121,11 +121,22 @@ psc_bnd_particles_init()
 }
 
 // ======================================================================
+
+#define VAR(x) (void *)offsetof(struct psc_bnd_particles, x)
+static struct param psc_bnd_particles_descr[] = {
+  { "time_relax" , VAR(time_relax), PARAM_DOUBLE(.1), },
+
+  {},
+};
+#undef VAR
+
+// ======================================================================
 // psc_bnd_particles class
 
 struct mrc_class_psc_bnd_particles mrc_class_psc_bnd_particles = {
   .name             = "psc_bnd_particles",
   .size             = sizeof(struct psc_bnd_particles),
+  .param_descr      = psc_bnd_particles_descr,
   .init             = psc_bnd_particles_init,
   .destroy          = _psc_bnd_particles_destroy,
   .write            = _psc_bnd_particles_write,
