@@ -9,9 +9,6 @@ struct mrc_crds_gen {
   // parameters
   struct mrc_crds *crds;
   int d;
-  // To make multi-block domains works crds_gen can't rely on the
-  // domain global dims
-  int dims[3];
   
   int n;  // n interior points
   int sw;  // stencil width

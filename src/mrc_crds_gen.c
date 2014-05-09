@@ -45,7 +45,6 @@ mrc_crds_gen_init()
 static struct param mrc_crds_gen_descr[] = {
   { "crds"            , VAR(crds)            , PARAM_OBJ(mrc_crds)   },
   { "d"               , VAR(d)               , PARAM_INT(-1)         },
-  { "m"               , VAR(dims)            , PARAM_INT3(0,0,0)     },
   { "n"               , VAR(n)               , PARAM_INT(0)          },
   { "sw"              , VAR(sw)              , PARAM_INT(0)          },
   { "xl"              , VAR(xl)              , PARAM_DOUBLE(0.0)      },
