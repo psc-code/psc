@@ -560,7 +560,9 @@ enum {
   ZX,
 };
 
-static void __unused
+#ifndef NO_OPEN_BC
+
+static void
 calc_W(double W[6], double vv[6])
 {
   double determ =
@@ -573,8 +575,6 @@ calc_W(double W[6], double vv[6])
   W[ZX] = .5 * (vv[XY]*vv[YZ] - vv[ZX]*vv[YY]) / determ;
   W[YZ] = .5 * (vv[XX]*vv[YZ] - vv[XY]*vv[ZX]) / determ;
 }
-
-#ifndef NO_OPEN_BC
 
 enum {
   NVT_N,
