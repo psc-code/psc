@@ -440,8 +440,8 @@ do_nvp_1st_run(int p, fields_t *pf, struct psc_particles *prts)
     DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 4 + 1, pxi[1] * vxi[1]);
     DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 4 + 2, pxi[2] * vxi[2]);
     DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 4 + 3, pxi[0] * vxi[1]);
-    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 4 + 4, pxi[0] * vxi[2]);
-    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 4 + 5, pxi[1] * vxi[2]);
+    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 4 + 4, pxi[1] * vxi[2]);
+    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 4 + 5, pxi[2] * vxi[0]);
   }
 }
 
@@ -512,8 +512,8 @@ nvp_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
   psc_bnd_add_ghosts(item->bnd, mres, 0, mres->nr_fields);
   psc_bnd_fill_ghosts(item->bnd, mres, 0, mres->nr_fields);
 
-  const int mm2mx[6] = { 0, 1, 2, 0, 0, 1 };
-  const int mm2my[6] = { 0, 1, 2, 1, 2, 2 };
+  const int mm2mx[6] = { 0, 1, 2, 0, 1, 2 };
+  const int mm2my[6] = { 0, 1, 2, 1, 2, 0 };
 
   for (int p = 0; p < mres->nr_patches; p++) {
     struct psc_fields *res = psc_mfields_get_patch(mres, p);
@@ -615,7 +615,7 @@ struct psc_output_fields_item_ops psc_output_fields_item_nvp_1st_##TYPE##_ops = 
   .name               = "nvp_1st_" #TYPE,				\
   .nr_comp	      = 10,						\
   .fld_names	      = { "n", "vx", "vy", "vz",			\
-			  "Txx", "Tyy", "Tzz", "Txy", "Txz", "Tyz" },	\
+			  "Txx", "Tyy", "Tzz", "Txy", "Tyz", "Tzx" },	\
   .run_all            = nvp_1st_run_all,				\
   .flags              = POFI_BY_KIND,					\
 };									\

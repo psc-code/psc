@@ -556,8 +556,8 @@ enum {
   NVT_VYVY,
   NVT_VZVZ,
   NVT_VXVY,
-  NVT_VZVX,
   NVT_VYVZ,
+  NVT_VZVX,
 };
 
 static inline double
