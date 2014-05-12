@@ -402,12 +402,13 @@ struct ggcm_mhd_diag_ops ggcm_mhd_diag_c_ops = {
 int
 parse_float_array(const char *str, float *arr, int n)
 {
-  char *s1, *s = strdup(str);
+  //  return 0;
+  char *s1, *s = strdup(str), *orig_s = s;
   int i;
   for (i = 0; (s1 = strsep(&s, ":")) && i < n; i++) {
     arr[i] = atof(s1);
   }
-  free(s);
+  free(orig_s);
   return i;
 }
 

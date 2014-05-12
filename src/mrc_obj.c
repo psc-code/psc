@@ -50,6 +50,14 @@ destroy_member_objs(void *p, struct param *descr)
       union param_u *pv = p + (unsigned long) descr[i].var;
       mrc_obj_destroy(pv->u_obj);
     }
+    if (descr[i].type == PT_INT_ARRAY) { 
+      union param_u *pv = p + (unsigned long) descr[i].var;
+      free(pv->u_int_array.vals);
+    }
+    if (descr[i].type == PT_FLOAT_ARRAY) { 
+      union param_u *pv = p + (unsigned long) descr[i].var;
+      free(pv->u_float_array.vals);
+    }
   }
 }
 
