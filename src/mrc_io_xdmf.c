@@ -876,7 +876,7 @@ xdmf_spatial_create_3d(struct mrc_io *io, const int im[3], int p, int nr_subdoma
 
 static struct xdmf_spatial *
 xdmf_spatial_create_2d_x(struct mrc_io *io, int im[2], 
-			 const char *sfx, int sheet, int nr_subdomains)
+			 const char *sfx, float sheet, int nr_subdomains)
 {
   // OPT, we could skip this on procs which aren't writing xdmf
 
@@ -893,7 +893,7 @@ xdmf_spatial_create_2d_x(struct mrc_io *io, int im[2],
 
 static struct xdmf_spatial *
 xdmf_spatial_create_2d_y(struct mrc_io *io, int im[2], 
-			 const char *sfx, int sheet, int nr_subdomains)
+			 const char *sfx, float sheet, int nr_subdomains)
 {
   // OPT, we could skip this on procs which aren't writing xdmf
 
@@ -910,7 +910,7 @@ xdmf_spatial_create_2d_y(struct mrc_io *io, int im[2],
 
 static struct xdmf_spatial *
 xdmf_spatial_create_2d_z(struct mrc_io *io, int im[2], 
-			 const char *sfx, int sheet, int nr_subdomains)
+			 const char *sfx, float sheet, int nr_subdomains)
 {
   // OPT, we could skip this on procs which aren't writing xdmf
 
