@@ -85,6 +85,7 @@ ggcm_mhd_diag_item_uu1_run(struct ggcm_mhd_diag_item *item,
 
   float scale_uu = 1.;
   ggcm_mhd_diag_c_write_one_field(io, fld_r, 0, "uu1", scale_uu, diag_type, plane);
+  mrc_fld_destroy(fld_r);
 }
 
 // ----------------------------------------------------------------------
