@@ -213,6 +213,7 @@ ggcm_mhd_default_box(struct ggcm_mhd *mhd)
   mhd->par.ccnorm = 1.f;
   mhd->par.eenorm = 1.f;
   mhd->par.resnorm = 1.f;
+  mhd->par.tnorm = 1.f;
   mhd->par.diffco = 0.f;
 
   ggcm_mhd_set_param_float(mhd, "isphere", 0.);
@@ -259,6 +260,7 @@ static struct param ggcm_mhd_descr[] = {
   { "ccnorm"          , VAR(par.ccnorm)      , PARAM_FLOAT(3.81885)  },
   { "eenorm"          , VAR(par.eenorm)      , PARAM_FLOAT(204631.f) },
   { "resnorm"         , VAR(par.resnorm)     , PARAM_FLOAT(5.35845e7)},
+  { "tnorm"           , VAR(par.tnorm)       , PARAM_FLOAT(.95189935)},
   { "diffconstant"    , VAR(par.diffco)      , PARAM_FLOAT(.03f)     },
   { "diffthreshold"   , VAR(par.diffth)      , PARAM_FLOAT(.75f)     },
   { "diffsphere"      , VAR(par.diffsphere)  , PARAM_FLOAT(6.f)      },

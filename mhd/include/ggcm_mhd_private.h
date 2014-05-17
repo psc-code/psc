@@ -14,7 +14,7 @@ struct ggcm_mhd_params {
   float gamm;
   float rrmin;
   float bbnorm, vvnorm, rrnorm, ppnorm;
-  float ccnorm, eenorm, resnorm;
+  float ccnorm, eenorm, resnorm, tnorm;
   float diffco, diffth;
   float diffsphere;
   float speedlimit, thx;
