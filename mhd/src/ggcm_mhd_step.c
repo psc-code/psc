@@ -33,8 +33,12 @@ ggcm_mhd_step_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
   assert(ops && ops->run);
   ops->run(step, x);
-  
-  prof_print();
+
+  // FIXME, this should be done by mrc_ts
+  struct ggcm_mhd *mhd = step->mhd;
+  if ((mhd->istep % step->profile_every) == 0) {
+    prof_print_mpi(ggcm_mhd_comm(mhd));
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -138,6 +142,7 @@ static struct param ggcm_mhd_step_descr[] = {
   // to determine whether to run newstep() the next timestep or not,
   // but this allows to set it to "always on" easily for test runs
   { "do_nwst"         , VAR(do_nwst)         , PARAM_BOOL(false)         },
+  { "profile_every"   , VAR(profile_every)   , PARAM_INT(10)             },
   {},
 };
 #undef VAR

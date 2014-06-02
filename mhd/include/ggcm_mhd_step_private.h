@@ -10,6 +10,7 @@ struct ggcm_mhd_step {
   struct ggcm_mhd *mhd;
 
   bool do_nwst; // calculate new dt next timestep?
+  int profile_every; // print out profiling info every so many steps
 };
 
 struct ggcm_mhd_step_ops {
