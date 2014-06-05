@@ -3,6 +3,7 @@
 
 #include "ggcm_mhd_private.h"
 #include "ggcm_mhd_diag.h"
+#include "ggcm_mhd_defs.h"
 
 #include <mrc_ts_private.h> // FIXME?
 #include <mrc_io.h>
@@ -26,6 +27,7 @@ mrc_ts_monitor_ggcm_run(struct mrc_ts_monitor *mon, struct mrc_ts *ts)
   struct ggcm_mhd *mhd = (struct ggcm_mhd *) ts->ctx_obj;
 
   mhd->time = ts->time;
+  ggcm_mhd_fill_ghosts(mhd, mhd->fld, _RR1, mhd->time);
   ggcm_mhd_diag_run_now(mhd->diag, mhd->fld, DIAG_TYPE_3D, out->nr++);
 }
 
