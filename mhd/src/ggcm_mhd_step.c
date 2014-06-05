@@ -62,11 +62,7 @@ ggcm_mhd_step_run_predcorr(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
   float dtn;
   if (step->do_nwst) {
-    ggcm_mhd_fill_ghosts(mhd, mhd->fld, _RR1, mhd->time);
-    primvar_c(mhd, _RR1);
-    primbb_c(mhd, _RR1);
-    zmaskn_c(mhd);
-    newstep_c(mhd, &dtn);
+    newstep(mhd, &dtn);
   }
 
   ggcm_mhd_fill_ghosts(mhd, x, _RR1, mhd->time);

@@ -140,3 +140,12 @@ newstep_c2(struct ggcm_mhd *mhd, float *dtn)
   prof_stop(PR);
 }
 
+void
+newstep(struct ggcm_mhd *mhd, float *dtn)
+{
+  ggcm_mhd_fill_ghosts(mhd, mhd->fld, _RR1, mhd->time);
+  primvar_c(mhd, _RR1);
+  primbb_c(mhd, _RR1);
+  zmaskn_c(mhd);
+  newstep_c(mhd, dtn);
+}

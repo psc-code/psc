@@ -70,7 +70,6 @@ void primbb_c(struct ggcm_mhd *mhd, int m_curr);
 void primbb_c2_c(struct ggcm_mhd *mhd, int m_curr);
 void ymaskn_c(struct ggcm_mhd *mhd);
 void zmaskn_c(struct ggcm_mhd *mhd);
-void newstep_c(struct ggcm_mhd *mhd, float *dtn);
-void newstep_c2(struct ggcm_mhd *mhd, float *dtn);
+void newstep(struct ggcm_mhd *mhd, float *dtn);
 
 #endif
