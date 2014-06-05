@@ -144,8 +144,12 @@ void
 newstep(struct ggcm_mhd *mhd, float *dtn)
 {
   ggcm_mhd_fill_ghosts(mhd, mhd->fld, _RR1, mhd->time);
+#if 0
   primvar_c(mhd, _RR1);
   primbb_c(mhd, _RR1);
   zmaskn_c(mhd);
   newstep_c(mhd, dtn);
+#else
+  newstep_c2(mhd, dtn);
+#endif
 }
