@@ -1,7 +1,15 @@
 
-#include <mrc_fld_as_float.h>
+#include "ggcm_mhd_private.h"
+#include "ggcm_mhd_defs.h"
 
-#include "primvar_common.c"
+// ----------------------------------------------------------------------
+// primvar_c
+
+void
+primvar_c(struct ggcm_mhd *mhd, int m)
+{
+  return primvar_float(mhd, m);
+}
 
 // ----------------------------------------------------------------------
 // primvar1_c
