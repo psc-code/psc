@@ -10,7 +10,7 @@
 #include <math.h>
 #include <assert.h>
 
-#include <mrc_fld_as_float.h>
+#include <mrc_fld_as_double.h>
 
 // ----------------------------------------------------------------------
 // ggcm_mhd_calc_divb
