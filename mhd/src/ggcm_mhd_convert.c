@@ -3,7 +3,7 @@
 #include "ggcm_mhd_defs.h"
 
 #include <mrc_domain.h>
-#include <mrc_fld_as_float.h>
+#include <mrc_fld_as_double.h>
 
 #include <string.h>
 
