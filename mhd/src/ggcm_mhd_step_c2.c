@@ -1,4 +1,6 @@
 
+#include <mrc_fld_as_float.h>
+
 #include "ggcm_mhd_step_c2_common.c"
 
 // ----------------------------------------------------------------------
