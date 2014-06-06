@@ -4,10 +4,10 @@
 #include "ggcm_mhd_step_c2_common.c"
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_step subclass "c2"
+// ggcm_mhd_step subclass "c2_float"
 
-struct ggcm_mhd_step_ops ggcm_mhd_step_c2_ops = {
-  .name        = "c2",
+struct ggcm_mhd_step_ops ggcm_mhd_step_c2_float_ops = {
+  .name        = "c2_float",
   .mhd_type    = MT_SEMI_CONSERVATIVE,
   .fld_type    = FLD_TYPE,
   .nr_ghosts   = 2,

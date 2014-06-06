@@ -5,7 +5,7 @@ openmpirun -n 4 mhd_ot \
     --mrc_ts_max_time 1. \
     --mrc_ts_dt 0.001 \
     --mrc_ts_type step \
-    --ggcm_mhd_step_type c \
+    --ggcm_mhd_step_type c_float \
     --ggcm_mhd_crds_type c \
     --ggcm_mhd_diag_fields rr:pp:v:b:rr1:rv1:uu1:b1:divb \
     --ggcm_mhd_diag_run ot_c \

@@ -38,8 +38,8 @@ void ggcm_mhd_step_run_predcorr(struct ggcm_mhd_step *step, struct mrc_fld *x);
 #define ggcm_mhd_step_ops(step) ((struct ggcm_mhd_step_ops *)(step)->obj.ops)
 
 extern struct ggcm_mhd_step_ops ggcm_mhd_step_cweno_ops;
-extern struct ggcm_mhd_step_ops ggcm_mhd_step_c_ops;
-extern struct ggcm_mhd_step_ops ggcm_mhd_step_c2_ops;
+extern struct ggcm_mhd_step_ops ggcm_mhd_step_c_float_ops;
+extern struct ggcm_mhd_step_ops ggcm_mhd_step_c2_float_ops;
 
 
 #endif
