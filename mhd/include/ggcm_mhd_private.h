@@ -66,6 +66,7 @@ extern struct ggcm_mhd_ops ggcm_mhd_ops_box;
 
 void primvar_c(struct ggcm_mhd *mhd, int m_curr);
 void primvar_float(struct ggcm_mhd *mhd, int m_curr);
+void primvar_double(struct ggcm_mhd *mhd, int m_curr);
 void primvar1_c(struct ggcm_mhd *mhd);
 void primbb_c(struct ggcm_mhd *mhd, int m_curr);
 void primbb_c2_c(struct ggcm_mhd *mhd, int m_curr);
