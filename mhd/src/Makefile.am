@@ -31,6 +31,7 @@ libmhd_la_SOURCES = \
 	primvar_float.c \
 	primvar_double.c \
 	primbb.c \
+	primbb_float.c \
 	zmaskn.c \
 	ggcm_mhd_newstep.c \
 	ggcm_mhd_diag_item_divb.c \
