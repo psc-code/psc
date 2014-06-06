@@ -548,11 +548,11 @@ calc_v_x_B(float ttmp[2], struct mrc_fld *f, int m_curr, int ix, int iy, int iz,
     // edge centered velocity
     float vvYY = CC_TO_EC(f, _VX + YY, ix,iy,iz, IX,IY,IZ) /* - d_i * vcurrYY */;
     if (vvYY > 0.f) {
-      vbZZ = F3(f, m_curr + _B1X + ZZ, ix,iy,iz) +
-	F3(f, _TMP4, ix,iy,iz) * (bd2m[YY] - dt*vvYY);
+      vbZZ = F3(f, m_curr + _B1X + ZZ, ix-JX1,iy-JY1,iz-JZ1) +
+	F3(f, _TMP4, ix-JX1,iy-JY1,iz-JZ1) * (bd2m[YY] - dt*vvYY);
     } else {
-      vbZZ = F3(f, m_curr + _B1X + ZZ, ix+JX1,iy+JY1,iz+JZ1) -
-	F3(f, _TMP4, ix+JX1,iy+JY1,iz+JZ1) * (bd2[YY] + dt*vvYY);
+      vbZZ = F3(f, m_curr + _B1X + ZZ, ix,iy,iz) -
+	F3(f, _TMP4, ix,iy,iz) * (bd2[YY] + dt*vvYY);
     }
     ttmp[0] = vbZZ * vvYY;
 
@@ -560,11 +560,11 @@ calc_v_x_B(float ttmp[2], struct mrc_fld *f, int m_curr, int ix, int iy, int iz,
     // edge centered velocity
     float vvZZ = CC_TO_EC(f, _VX + ZZ, ix,iy,iz, IX,IY,IZ) /* - d_i * vcurrZZ */;
     if (vvZZ > 0.f) {
-      vbYY = F3(f, m_curr + _B1X + YY, ix,iy,iz) +
-	F3(f, _TMP3, ix,iy,iz) * (bd2m[ZZ] - dt*vvZZ);
+      vbYY = F3(f, m_curr + _B1X + YY, ix-JX2,iy-JY2,iz-JZ2) +
+	F3(f, _TMP3, ix-JX2,iy-JY2,iz-JZ2) * (bd2m[ZZ] - dt*vvZZ);
     } else {
-      vbYY = F3(f, m_curr + _B1X + YY, ix+JX2,iy+JY2,iz+JZ2) -
-	F3(f, _TMP3, ix+JX2,iy+JY2,iz+JZ2) * (bd2[ZZ] + dt*vvZZ);
+      vbYY = F3(f, m_curr + _B1X + YY, ix,iy,iz) -
+	F3(f, _TMP3, ix,iy,iz) * (bd2[ZZ] + dt*vvZZ);
     }
     ttmp[1] = vbYY * vvZZ;
 
