@@ -144,12 +144,24 @@ void
 newstep(struct ggcm_mhd *mhd, float *dtn)
 {
   ggcm_mhd_fill_ghosts(mhd, mhd->fld, _RR1, mhd->time);
+
+  int mhd_type;
+  mrc_fld_get_param_int(mhd->fld, "mhd_type", &mhd_type);
+  if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM) {
 #if 0
-  primvar_c(mhd, _RR1);
-  primbb_c(mhd, _RR1);
-  zmaskn_c(mhd);
-  newstep_c(mhd, dtn);
+    primvar_c(mhd, _RR1);
+    primbb_c(mhd, _RR1);
+    zmaskn_c(mhd);
+    newstep_c(mhd, dtn);
 #else
-  newstep_c2(mhd, dtn);
+    newstep_c2(mhd, dtn);
 #endif
+  } else if (mhd_type == MT_SEMI_CONSERVATIVE) {
+    primvar_c(mhd, _RR1);
+    primbb_c2_c(mhd, _RR1);
+    zmaskn_c(mhd);
+    newstep_c(mhd, dtn);
+  } else {
+    assert(0);
+  }
 }
