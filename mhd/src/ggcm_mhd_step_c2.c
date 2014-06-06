@@ -328,7 +328,7 @@ curr_c(struct ggcm_mhd *mhd, int m_j, int m_curr)
   float *bd4y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD4) - 1;
   float *bd4z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD4) - 1;
 
-  mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
+  mrc_fld_foreach(f, ix,iy,iz, 1, 2) {
     F3(f, m_j + 0, ix,iy,iz) =
       (F3(f, m_curr + _B1Z, ix,iy,iz) - F3(f, m_curr + _B1Z, ix,iy-1,iz)) * bd4y[iy] -
       (F3(f, m_curr + _B1Y, ix,iy,iz) - F3(f, m_curr + _B1Y, ix,iy,iz-1)) * bd4z[iz];
