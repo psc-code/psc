@@ -435,7 +435,7 @@ static void
 res1_const_c(struct ggcm_mhd *mhd)
 {
   // resistivity comes in ohm*m
-  int res1border = 4;
+  int diff_obnd = mhd->par.diff_obnd;
   float eta0i = 1.0/53.5848e6;
   float diffsphere2 = sqr(mhd->par.diffsphere);
   float diff = mhd->par.diffco * eta0i;
@@ -455,15 +455,15 @@ res1_const_c(struct ggcm_mhd *mhd)
     float r2 = fx2x[ix] + fx2y[iy] + fx2z[iz];
     if (r2 < diffsphere2)
       continue;
-    if (iy + info.off[1] < res1border)
+    if (iy + info.off[1] < diff_obnd)
       continue;
-    if (iz + info.off[2] < res1border)
+    if (iz + info.off[2] < diff_obnd)
       continue;
-    if (ix + info.off[0] >= gdims[0] - res1border)
+    if (ix + info.off[0] >= gdims[0] - diff_obnd)
       continue;
-    if (iy + info.off[1] >= gdims[1] - res1border)
+    if (iy + info.off[1] >= gdims[1] - diff_obnd)
       continue;
-    if (iz + info.off[2] >= gdims[2] - res1border)
+    if (iz + info.off[2] >= gdims[2] - diff_obnd)
       continue;
 
     F3(f, _RESIS, ix,iy,iz) = diff;
