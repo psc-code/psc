@@ -11,6 +11,7 @@
 #include <string.h>
 #include <math.h>
 #include <assert.h>
+#include <execinfo.h>
 
 // Don't like dirtying main libmrc code in this way
 #ifdef HAVE_PETSC
@@ -628,6 +629,20 @@ mrc_fld_put_as(struct mrc_fld *fld, struct mrc_fld *fld_base)
   // If we're already the subtype, nothing to be done
   if (strcmp(type_base, type) == 0)
     return;
+
+#if 0
+  int rank; MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  if (rank == 0 && strcmp(type, "float") == 0) {
+    mprintf("XXXXXXX put_as %s <- %s\n", type_base, type);
+    void* callstack[128];
+    int frames = backtrace(callstack, 128);
+    char** strs = backtrace_symbols(callstack, frames);
+    for (int i = 0; i < frames; i++) {
+      mprintf("%s\n", strs[i]);
+    }
+    free(strs);
+  }
+#endif
 
   static int pr;
   if (!pr) {
