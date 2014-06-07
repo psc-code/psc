@@ -12,4 +12,4 @@ openmpirun -n 4 mhd_ot \
     --diff_obnd -2 \
     --diffconstant 1e4 \
     --diffsphere 0. \
-    --do_nwst 0 \
+    --do_nwst 1 \
