@@ -9,6 +9,15 @@
 
 #include <math.h>
 
+// ======================================================================
+// ggcm_mhd_step subclass "c3"
+
+struct ggcm_mhd_step_c3 {
+  struct mrc_fld *x_half;
+};
+
+#define ggcm_mhd_step_c3(step) mrc_to_subobj(step, struct ggcm_mhd_step_c3)
+
 // TODO:
 // - handle various resistivity models
 // - handle limit2, limit3
@@ -20,6 +29,26 @@ enum {
   LIMIT_NONE,
   LIMIT_1,
 };
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_step_c_setup
+
+static void
+ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
+{
+  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
+  struct ggcm_mhd *mhd = step->mhd;
+
+  assert(mhd);
+  mrc_fld_set_type(sub->x_half, FLD_TYPE);
+  mrc_fld_set_param_obj(sub->x_half, "domain", mhd->domain);
+  mrc_fld_set_param_int(sub->x_half, "nr_spatial_dims", 3);
+  mrc_fld_set_param_int(sub->x_half, "nr_comps", 8);
+  mrc_fld_set_param_int(sub->x_half, "nr_ghosts", mhd->fld->_nr_ghosts);
+
+  ggcm_mhd_step_setup_member_objs_sub(step);
+  ggcm_mhd_step_setup_super(step);
+}
 
 static void
 rmaskn_c(struct ggcm_mhd *mhd)
@@ -722,12 +751,6 @@ pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_prev, int m_curr, int
   bpush_c(mhd, dt, m_prev, m_next);
 }
 
-// ======================================================================
-// ggcm_mhd_step subclass "c"
-//
-// this class will do full predictor / corrector steps,
-// ie., including primvar() etc.
-
 // ----------------------------------------------------------------------
 // ggcm_mhd_step_c_pred
 
@@ -787,4 +810,15 @@ ggcm_mhd_step_c_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
     }
   }
 }
+
+// ----------------------------------------------------------------------
+// subclass description
+
+#define VAR(x) (void *)offsetof(struct ggcm_mhd_step_c3, x)
+static struct param ggcm_mhd_step_c_descr[] = {
+  { "x_half"          , VAR(x_half)          , MRC_VAR_OBJ(mrc_fld)           },
+
+  {},
+};
+#undef VAR
 
