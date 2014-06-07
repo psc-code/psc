@@ -744,19 +744,10 @@ bpush_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_next)
 
 static void
 pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt,
-	    struct mrc_fld *x_prev, int m_prev,
 	    struct mrc_fld *x_curr, int m_curr,
 	    struct mrc_fld *x_next, int m_next,
 	    int limit)
 {
-  if (m_next != m_prev) {
-    mrc_fld_foreach(x_next, ix,iy,iz, 2, 2) {
-      for (int m = 0; m < 8; m++) {
-	F3(x_next, m_next + m, ix,iy,iz) = F3(x_prev, m_prev + m, ix,iy,iz);
-      }
-    } mrc_fld_foreach_end;
-  }
-
   rmaskn_c(mhd);
 
   if (limit != LIMIT_NONE) {
@@ -805,7 +796,14 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step,
   zmaskn_c(step->mhd);
 
   mrc_fld_data_t dth = .5f * step->mhd->dt;
-  pushstage_c(step->mhd, dth, x, _RR1, x, _RR1, x, _RR2, LIMIT_NONE);
+
+  mrc_fld_foreach(x, ix,iy,iz, 2, 2) {
+    for (int m = 0; m < 8; m++) {
+      F3(x, _RR2 + m, ix,iy,iz) = F3(x, _RR1 + m, ix,iy,iz);
+    }
+  } mrc_fld_foreach_end;
+
+  pushstage_c(step->mhd, dth, x, _RR1, x, _RR2, LIMIT_NONE);
 
   mrc_fld_foreach(x_half, ix,iy,iz, 2, 2) {
     for (int m = 0; m < 8; m++) {
@@ -834,7 +832,7 @@ ggcm_mhd_step_c_corr(struct ggcm_mhd_step *step,
   //  primbb_c2_c(step->mhd, _RR2);
   //  zmaskn_c(step->mhd);
 
-  pushstage_c(step->mhd, step->mhd->dt, x, _RR1, x, _RR2, x, _RR1, LIMIT_1);
+  pushstage_c(step->mhd, step->mhd->dt, x, _RR2, x, _RR1, LIMIT_1);
 }
 
 // ----------------------------------------------------------------------
