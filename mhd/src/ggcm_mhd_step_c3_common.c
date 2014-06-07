@@ -45,6 +45,7 @@ ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
   mrc_fld_set_param_int(sub->x_half, "nr_spatial_dims", 3);
   mrc_fld_set_param_int(sub->x_half, "nr_comps", 8);
   mrc_fld_set_param_int(sub->x_half, "nr_ghosts", mhd->fld->_nr_ghosts);
+  mrc_fld_dict_add_int(sub->x_half, "mhd_type", ggcm_mhd_step_mhd_type(step));
 
   ggcm_mhd_step_setup_member_objs_sub(step);
   ggcm_mhd_step_setup_super(step);
