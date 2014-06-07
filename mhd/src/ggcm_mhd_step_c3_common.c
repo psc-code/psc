@@ -51,6 +51,34 @@ ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
   ggcm_mhd_step_setup_super(step);
 }
 
+// ----------------------------------------------------------------------
+// ggcm_mhd_step_c_primvar
+
+static void
+ggcm_mhd_step_c_primvar(struct ggcm_mhd_step *step, struct mrc_fld *x_prim,
+			struct mrc_fld *x, int m_curr)
+{
+  mrc_fld_data_t gamm = step->mhd->par.gamm;
+  mrc_fld_data_t s = gamm - 1.f;
+
+  mrc_fld_foreach(x, ix,iy,iz, 2, 2) {
+    F3(x_prim,_RR, ix,iy,iz) = F3(x, m_curr + _RR1, ix,iy,iz);
+    mrc_fld_data_t rri = 1.f / F3(x, m_curr + _RR1, ix,iy,iz);
+    F3(x_prim,_VX, ix,iy,iz) = rri * F3(x, m_curr + _RV1X, ix,iy,iz);
+    F3(x_prim,_VY, ix,iy,iz) = rri * F3(x, m_curr + _RV1Y, ix,iy,iz);
+    F3(x_prim,_VZ, ix,iy,iz) = rri * F3(x, m_curr + _RV1Z, ix,iy,iz);
+    mrc_fld_data_t rvv =
+      F3(x,_VX, ix,iy,iz) * F3(x, m_curr + _RV1X, ix,iy,iz) +
+      F3(x,_VY, ix,iy,iz) * F3(x, m_curr + _RV1Y, ix,iy,iz) +
+      F3(x,_VZ, ix,iy,iz) * F3(x, m_curr + _RV1Z, ix,iy,iz);
+    F3(x_prim,_PP, ix,iy,iz) = s * (F3(x, m_curr + _UU1, ix,iy,iz) - .5f * rvv);
+    mrc_fld_data_t cs2 = mrc_fld_max(gamm * F3(x,_PP, ix,iy,iz) * rri, 0.f);
+    F3(x_prim,_CMSV, ix,iy,iz) = sqrtf(rvv * rri) + sqrtf(cs2);
+  } mrc_fld_foreach_end;
+}
+
+// ======================================================================
+
 static void
 rmaskn_c(struct ggcm_mhd *mhd)
 {
@@ -759,7 +787,9 @@ static void
 ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step,
 		     struct mrc_fld *x_half, struct mrc_fld *x)
 {
-  primvar_c(step->mhd, _RR1);
+  struct mrc_fld *x_prim = x;
+
+  ggcm_mhd_step_c_primvar(step, x_prim, x, _RR1);
   primbb_c2_c(step->mhd, _RR1);
   zmaskn_c(step->mhd);
 
@@ -780,13 +810,15 @@ static void
 ggcm_mhd_step_c_corr(struct ggcm_mhd_step *step,
 		     struct mrc_fld *x, struct mrc_fld *x_half)
 {
+  struct mrc_fld *x_prim = x;
+
   mrc_fld_foreach(x_half, ix,iy,iz, 2, 2) {
     for (int m = 0; m < 8; m++) {
       F3(x, m + 8, ix,iy,iz) = F3(x_half, m, ix,iy,iz);
     }
   } mrc_fld_foreach_end;
 
-  primvar_c(step->mhd, _RR2);
+  ggcm_mhd_step_c_primvar(step, x_prim, x, _RR2);
   //  primbb_c2_c(step->mhd, _RR2);
   //  zmaskn_c(step->mhd);
 
