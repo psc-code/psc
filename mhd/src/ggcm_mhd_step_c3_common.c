@@ -743,7 +743,10 @@ bpush_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_prev, int m_next)
 }
 
 static void
-pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_prev, int m_curr, int m_next,
+pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt,
+	    struct mrc_fld *x_prev, int m_prev,
+	    struct mrc_fld *x_curr, int m_curr,
+	    struct mrc_fld *x_next, int m_next,
 	    int limit)
 {
   rmaskn_c(mhd);
@@ -794,7 +797,7 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step,
   zmaskn_c(step->mhd);
 
   mrc_fld_data_t dth = .5f * step->mhd->dt;
-  pushstage_c(step->mhd, dth, _RR1, _RR1, _RR2, LIMIT_NONE);
+  pushstage_c(step->mhd, dth, x, _RR1, x, _RR1, x, _RR2, LIMIT_NONE);
 
   mrc_fld_foreach(x_half, ix,iy,iz, 2, 2) {
     for (int m = 0; m < 8; m++) {
@@ -823,7 +826,7 @@ ggcm_mhd_step_c_corr(struct ggcm_mhd_step *step,
   //  primbb_c2_c(step->mhd, _RR2);
   //  zmaskn_c(step->mhd);
 
-  pushstage_c(step->mhd, step->mhd->dt, _RR1, _RR2, _RR1, LIMIT_1);
+  pushstage_c(step->mhd, step->mhd->dt, x, _RR1, x, _RR2, x, _RR1, LIMIT_1);
 }
 
 // ----------------------------------------------------------------------
