@@ -9,6 +9,20 @@
 
 #include <math.h>
 
+// FIXME, mv to right place
+static void
+mrc_fld_copy_range(struct mrc_fld *to, struct mrc_fld *from, int mb, int me)
+{
+  assert(to->_nr_ghosts == from->_nr_ghosts);
+  int bnd = to->_nr_ghosts;
+
+   mrc_fld_foreach(to, ix,iy,iz, bnd, bnd) {
+    for (int m = mb; m < me; m++) {
+      F3(to, m, ix,iy,iz) = F3(from, m, ix,iy,iz);
+    }
+  } mrc_fld_foreach_end;
+}
+
 // ======================================================================
 // ggcm_mhd_step subclass "c3"
 
@@ -797,9 +811,12 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step,
 
   mrc_fld_data_t dth = .5f * step->mhd->dt;
 
+  // set x_half = x^n, then advance to n+1/2
+  mrc_fld_copy_range(x_half, x, 0, 8);
+
   mrc_fld_foreach(x, ix,iy,iz, 2, 2) {
     for (int m = 0; m < 8; m++) {
-      F3(x, _RR2 + m, ix,iy,iz) = F3(x, _RR1 + m, ix,iy,iz);
+      F3(x, _RR2 + m, ix,iy,iz) = F3(x_half, m, ix,iy,iz);
     }
   } mrc_fld_foreach_end;
 
