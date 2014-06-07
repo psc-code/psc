@@ -787,7 +787,7 @@ ggcm_mhd_step_c_corr(struct ggcm_mhd_step *step,
   } mrc_fld_foreach_end;
 
   primvar_c(step->mhd, _RR2);
-  primbb_c2_c(step->mhd, _RR2);
+  //  primbb_c2_c(step->mhd, _RR2);
   //  zmaskn_c(step->mhd);
 
   pushstage_c(step->mhd, step->mhd->dt, _RR1, _RR2, _RR1, LIMIT_1);
