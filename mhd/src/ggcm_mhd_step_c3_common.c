@@ -241,7 +241,7 @@ fluxb_c(struct ggcm_mhd *mhd, int m)
 }
 
 static void
-pushn_c(struct ggcm_mhd *mhd, int ma, int mc, mrc_fld_data_t dt)
+pushn_c(struct ggcm_mhd *mhd, int m, mrc_fld_data_t dt)
 {
   struct mrc_fld *f = mhd->fld;
   float *fd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FD1);
@@ -250,7 +250,7 @@ pushn_c(struct ggcm_mhd *mhd, int ma, int mc, mrc_fld_data_t dt)
 
   mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
     mrc_fld_data_t s = dt * F3(f,_YMASK, ix,iy,iz);
-    F3(f,mc, ix,iy,iz) = F3(f,ma, ix,iy,iz)
+    F3(f,m, ix,iy,iz) +=
       - s * (fd1x[ix] * (F3(f,_FLX, ix,iy,iz) - F3(f,_FLX, ix-1,iy,iz)) +
 	     fd1y[iy] * (F3(f,_FLY, ix,iy,iz) - F3(f,_FLY, ix,iy-1,iz)) +
 	     fd1z[iz] * (F3(f,_FLZ, ix,iy,iz) - F3(f,_FLZ, ix,iy,iz-1)));
@@ -355,7 +355,7 @@ vgfl_c(struct ggcm_mhd *mhd, int m)
 }
 
 static void
-pushfv_c(struct ggcm_mhd *mhd, int m, mrc_fld_data_t dt, int m_prev, int m_curr, int m_next,
+pushfv_c(struct ggcm_mhd *mhd, int m, mrc_fld_data_t dt, int m_curr, int m_next,
 	 int limit)
 {
   struct mrc_fld *f = mhd->fld;
@@ -369,7 +369,7 @@ pushfv_c(struct ggcm_mhd *mhd, int m, mrc_fld_data_t dt, int m_prev, int m_curr,
     fluxb_c(mhd, m_curr + m);
   }
 
-  pushn_c(mhd, m_prev + m, m_next + m, dt);
+  pushn_c(mhd, m_next + m, dt);
 }
 
 // ----------------------------------------------------------------------
@@ -722,7 +722,7 @@ calce_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_curr)
 }
 
 static void
-bpush_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_prev, int m_next)
+bpush_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_next)
 {
   struct mrc_fld *f = mhd->fld;
   float *bd3x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD3);
@@ -730,13 +730,13 @@ bpush_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_prev, int m_next)
   float *bd3z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD3);
 
   mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
-    F3(f, m_next + _B1X, ix,iy,iz) = F3(f, m_prev + _B1X, ix,iy,iz) +
+    F3(f, m_next + _B1X, ix,iy,iz) +=
       dt * (bd3y[iy] * (F3(f,_FLZ, ix,iy+1,iz) - F3(f,_FLZ, ix,iy,iz)) -
 	    bd3z[iz] * (F3(f,_FLY, ix,iy,iz+1) - F3(f,_FLY, ix,iy,iz)));
-    F3(f, m_next + _B1Y, ix,iy,iz) = F3(f, m_prev + _B1Y, ix,iy,iz) +
+    F3(f, m_next + _B1Y, ix,iy,iz) +=
       dt * (bd3z[iz] * (F3(f,_FLX, ix,iy,iz+1) - F3(f,_FLX, ix,iy,iz)) -
 	    bd3x[ix] * (F3(f,_FLZ, ix+1,iy,iz) - F3(f,_FLZ, ix,iy,iz)));
-    F3(f, m_next + _B1Z, ix,iy,iz) = F3(f, m_prev + _B1Z, ix,iy,iz) +
+    F3(f, m_next + _B1Z, ix,iy,iz) +=
       dt * (bd3x[ix] * (F3(f,_FLY, ix+1,iy,iz) - F3(f,_FLY, ix,iy,iz)) -
 	    bd3y[iy] * (F3(f,_FLX, ix,iy+1,iz) - F3(f,_FLX, ix,iy,iz)));
   } mrc_fld_foreach_end;
@@ -749,6 +749,14 @@ pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt,
 	    struct mrc_fld *x_next, int m_next,
 	    int limit)
 {
+  if (m_next != m_prev) {
+    mrc_fld_foreach(x_next, ix,iy,iz, 2, 2) {
+      for (int m = 0; m < 8; m++) {
+	F3(x_next, m_next + m, ix,iy,iz) = F3(x_prev, m_prev + m, ix,iy,iz);
+      }
+    } mrc_fld_foreach_end;
+  }
+
   rmaskn_c(mhd);
 
   if (limit != LIMIT_NONE) {
@@ -759,11 +767,11 @@ pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt,
     // limit2, 3
   }
 
-  pushfv_c(mhd, _RR1 , dt, m_prev, m_curr, m_next, limit);
-  pushfv_c(mhd, _RV1X, dt, m_prev, m_curr, m_next, limit);
-  pushfv_c(mhd, _RV1Y, dt, m_prev, m_curr, m_next, limit);
-  pushfv_c(mhd, _RV1Z, dt, m_prev, m_curr, m_next, limit);
-  pushfv_c(mhd, _UU1 , dt, m_prev, m_curr, m_next, limit);
+  pushfv_c(mhd, _RR1 , dt, m_curr, m_next, limit);
+  pushfv_c(mhd, _RV1X, dt, m_curr, m_next, limit);
+  pushfv_c(mhd, _RV1Y, dt, m_curr, m_next, limit);
+  pushfv_c(mhd, _RV1Z, dt, m_curr, m_next, limit);
+  pushfv_c(mhd, _UU1 , dt, m_curr, m_next, limit);
 
   pushpp_c(mhd, dt, m_next);
 
@@ -780,7 +788,7 @@ pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt,
 
   push_ej_c(mhd, dt, m_curr, m_next);
   calce_c(mhd, dt, m_curr);
-  bpush_c(mhd, dt, m_prev, m_next);
+  bpush_c(mhd, dt, m_next);
 }
 
 // ----------------------------------------------------------------------
