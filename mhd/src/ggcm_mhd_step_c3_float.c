@@ -11,7 +11,5 @@ struct ggcm_mhd_step_ops ggcm_mhd_step_c3_float_ops = {
   .mhd_type    = MT_SEMI_CONSERVATIVE,
   .fld_type    = FLD_TYPE,
   .nr_ghosts   = 2,
-  .pred        = ggcm_mhd_step_c_pred,
-  .corr        = ggcm_mhd_step_c_corr,
-  .run         = ggcm_mhd_step_run_predcorr,
+  .run         = ggcm_mhd_step_c_run,
 };

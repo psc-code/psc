@@ -761,3 +761,30 @@ ggcm_mhd_step_c_corr(struct ggcm_mhd_step *step)
   pushstage_c(step->mhd, step->mhd->dt, _RR1, _RR2, _RR1, LIMIT_1);
 }
 
+static void
+ggcm_mhd_step_c_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
+{
+  struct ggcm_mhd *mhd = step->mhd;
+
+  float dtn;
+  if (step->do_nwst) {
+    newstep(mhd, &dtn);
+  }
+
+  ggcm_mhd_fill_ghosts(mhd, x, _RR1, mhd->time);
+  ggcm_mhd_step_c_pred(step);
+
+  ggcm_mhd_fill_ghosts(mhd, x, _RR2, mhd->time + mhd->bndt);
+  ggcm_mhd_step_c_corr(step);
+
+  if (step->do_nwst) {
+    dtn = fminf(1., dtn); // FIXME, only kept for compatibility
+
+    if (dtn > 1.02 * mhd->dt || dtn < mhd->dt / 1.01) {
+      mpi_printf(ggcm_mhd_comm(mhd), "switched dt %g <- %g\n",
+		 dtn, mhd->dt);
+      mhd->dt = dtn;
+    }
+  }
+}
+
