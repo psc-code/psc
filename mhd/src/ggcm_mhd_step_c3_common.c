@@ -393,9 +393,8 @@ pushfv_c(struct ggcm_mhd_step *step, int m, mrc_fld_data_t dt, struct mrc_fld *x
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
-  struct mrc_fld *flux = mhd->fld, *tmp = mhd->fld;
   int m_flux = _FLX, m_tmp = _TMP1;
-  struct mrc_fld *prim = sub->prim, *bc = sub->bc;
+  struct mrc_fld *prim = sub->prim, *bc = sub->bc, *flux = sub->flux, *tmp = sub->tmp;
 
   vgfl_c(mhd, m, tmp, m_tmp, prim);
   if (limit == LIMIT_NONE) {
