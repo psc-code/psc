@@ -809,7 +809,7 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step,
   primbb_c2_c(step->mhd, _RR1);
   zmaskn_c(step->mhd);
 
-  mrc_fld_data_t dth = .5f * step->mhd->dt;
+  mrc_fld_data_t dt = .5f * step->mhd->dt;
 
   // set x_half = x^n, then advance to n+1/2
   mrc_fld_copy_range(x_half, x, 0, 8);
@@ -820,7 +820,45 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step,
     }
   } mrc_fld_foreach_end;
 
-  pushstage_c(step->mhd, dth, x, _RR1, x, _RR2, LIMIT_NONE);
+#if 0
+  pushstage_c(step->mhd, dt, x, _RR1, x, _RR2, LIMIT_NONE);
+#else
+  int limit = LIMIT_NONE;
+  struct ggcm_mhd *mhd = step->mhd;
+  int m_curr = _RR1, m_next = _RR2;
+  rmaskn_c(mhd);
+
+  if (limit != LIMIT_NONE) {
+    struct mrc_fld *f = mhd->fld;
+
+    vgrs(f, _BX, 0.f); vgrs(f, _BY, 0.f); vgrs(f, _BZ, 0.f);
+    limit1_c(f, _PP, mhd->time, mhd->par.timelo, _BX);
+    // limit2, 3
+  }
+
+  pushfv_c(mhd, _RR1 , dt, m_curr, m_next, limit);
+  pushfv_c(mhd, _RV1X, dt, m_curr, m_next, limit);
+  pushfv_c(mhd, _RV1Y, dt, m_curr, m_next, limit);
+  pushfv_c(mhd, _RV1Z, dt, m_curr, m_next, limit);
+  pushfv_c(mhd, _UU1 , dt, m_curr, m_next, limit);
+
+  pushpp_c(mhd, dt, m_next);
+
+  switch (mhd->par.magdiffu) {
+  case MAGDIFFU_NL1:
+    calc_resis_nl1_c(mhd, m_curr);
+    break;
+  case MAGDIFFU_CONST:
+    calc_resis_const_c(mhd, m_curr);
+    break;
+  default:
+    assert(0);
+  }
+
+  push_ej_c(mhd, dt, m_curr, m_next);
+  calce_c(mhd, dt, m_curr);
+  bpush_c(mhd, dt, m_next);
+#endif
 
   mrc_fld_foreach(x_half, ix,iy,iz, 2, 2) {
     for (int m = 0; m < 8; m++) {
