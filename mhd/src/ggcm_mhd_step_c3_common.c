@@ -395,8 +395,7 @@ pushfv_c(struct ggcm_mhd_step *step, int m, mrc_fld_data_t dt, struct mrc_fld *x
   struct ggcm_mhd *mhd = step->mhd;
   struct mrc_fld *flux = mhd->fld, *tmp = mhd->fld;
   int m_flux = _FLX, m_tmp = _TMP1;
-  struct mrc_fld *prim = mhd->fld; // FIXME
-  struct mrc_fld *bc = sub->bc;
+  struct mrc_fld *prim = sub->prim, *bc = sub->bc;
 
   vgfl_c(mhd, m, tmp, m_tmp, prim);
   if (limit == LIMIT_NONE) {
@@ -830,7 +829,8 @@ static void
 ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step,
 		     struct mrc_fld *x_half, struct mrc_fld *x)
 {
-  struct mrc_fld *prim = x;
+  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
+  struct mrc_fld *prim = sub->prim;
 
   ggcm_mhd_step_c_primvar(step, prim, x);
   primbb_c2_c(step->mhd, _RR1);
@@ -851,7 +851,6 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step,
   pushstage_c(step, dt, x, _RR1, x, _RR2, LIMIT_NONE);
 #else
   int limit = LIMIT_NONE;
-  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
   struct mrc_fld *x_curr = x, *x_next = x;
   int m_curr = _RR1, m_next = _RR2;
@@ -903,7 +902,8 @@ static void
 ggcm_mhd_step_c_corr(struct ggcm_mhd_step *step,
 		     struct mrc_fld *x, struct mrc_fld *x_half)
 {
-  struct mrc_fld *prim = x;
+  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
+  struct mrc_fld *prim = sub->prim;
 
   ggcm_mhd_step_c_primvar(step, prim, x_half);
 
