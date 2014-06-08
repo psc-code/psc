@@ -28,6 +28,12 @@ mrc_fld_copy_range(struct mrc_fld *to, struct mrc_fld *from, int mb, int me)
 
 struct ggcm_mhd_step_c3 {
   struct mrc_fld *x_half;
+
+  struct mrc_fld *masks;
+  struct mrc_fld *bc;
+  struct mrc_fld *flux;
+  struct mrc_fld *tmp;
+  struct mrc_fld *prim;
 };
 
 #define ggcm_mhd_step_c3(step) mrc_to_subobj(step, struct ggcm_mhd_step_c3)
@@ -60,6 +66,12 @@ ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
   mrc_fld_set_param_int(sub->x_half, "nr_comps", 8);
   mrc_fld_set_param_int(sub->x_half, "nr_ghosts", mhd->fld->_nr_ghosts);
   mrc_fld_dict_add_int(sub->x_half, "mhd_type", ggcm_mhd_step_mhd_type(step));
+
+  sub->masks = mhd->fld;
+  sub->bc    = mhd->fld;
+  sub->flux  = mhd->fld;
+  sub->tmp   = mhd->fld;
+  sub->prim  = mhd->fld;
 
   ggcm_mhd_step_setup_member_objs_sub(step);
   ggcm_mhd_step_setup_super(step);
@@ -760,17 +772,18 @@ bpush_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_next)
 }
 
 static void
-pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt,
+pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
 	    struct mrc_fld *x_curr, int m_curr,
 	    struct mrc_fld *x_next, int m_next,
 	    struct mrc_fld *prim,
 	    int limit)
 {
+  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
+  struct ggcm_mhd *mhd = step->mhd;
   rmaskn_c(mhd);
 
   if (limit != LIMIT_NONE) {
-    struct mrc_fld *bc = mhd->fld;
-    struct mrc_fld *prim = mhd->fld;
+    struct mrc_fld *prim = sub->prim, *bc = sub->bc;
 
     vgrs(bc, _BX, 0.f); vgrs(bc, _BY, 0.f); vgrs(bc, _BZ, 0.f);
     limit1_c(prim, _PP, mhd->time, mhd->par.timelo, bc, _BX);
@@ -826,7 +839,7 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step,
   } mrc_fld_foreach_end;
 
 #if 0
-  pushstage_c(step->mhd, dt, x, _RR1, x, _RR2, LIMIT_NONE);
+  pushstage_c(step, dt, x, _RR1, x, _RR2, LIMIT_NONE);
 #else
   int limit = LIMIT_NONE;
   struct ggcm_mhd *mhd = step->mhd;
@@ -894,7 +907,7 @@ ggcm_mhd_step_c_corr(struct ggcm_mhd_step *step,
   //  primbb_c2_c(step->mhd, _RR2);
   //  zmaskn_c(step->mhd);
 
-  pushstage_c(step->mhd, step->mhd->dt, x, _RR2, x, _RR1, prim, LIMIT_1);
+  pushstage_c(step, step->mhd->dt, x, _RR2, x, _RR1, prim, LIMIT_1);
 }
 
 // ----------------------------------------------------------------------
