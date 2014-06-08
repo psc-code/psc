@@ -305,16 +305,17 @@ vgrv(struct mrc_fld *f, int m_to, int m_from)
 }
 
 static inline void
-limit1a(struct mrc_fld *f, int m, int ix, int iy, int iz, int IX, int IY, int IZ, int C)
+limit1a(struct mrc_fld *x, int m, int ix, int iy, int iz, int IX, int IY, int IZ,
+	struct mrc_fld *c, int m_c)
 {
   const mrc_fld_data_t reps = 0.003;
   const mrc_fld_data_t seps = -0.001;
   const mrc_fld_data_t teps = 1.e-25;
 
   // Harten/Zwas type switch
-  mrc_fld_data_t aa = F3(f, m, ix,iy,iz);
-  mrc_fld_data_t a1 = F3(f, m, ix+IX,iy+IY,iz+IZ);
-  mrc_fld_data_t a2 = F3(f, m, ix-IX,iy-IY,iz-IZ);
+  mrc_fld_data_t aa = F3(x, m, ix,iy,iz);
+  mrc_fld_data_t a1 = F3(x, m, ix+IX,iy+IY,iz+IZ);
+  mrc_fld_data_t a2 = F3(x, m, ix-IX,iy-IY,iz-IZ);
   mrc_fld_data_t d1 = aa - a2;
   mrc_fld_data_t d2 = a1 - aa;
   mrc_fld_data_t s1 = fabsf(d1);
@@ -329,26 +330,27 @@ limit1a(struct mrc_fld *f, int m, int ix, int iy, int iz, int IX, int IY, int IZ
   r3 = r3 * r3;
   r3 = r3 * r3;
   r3 = fminf(2.f * r3, 1.);
-  F3(f, C, ix   ,iy   ,iz   ) = fmaxf(F3(f, C, ix   ,iy   ,iz   ), r3);
-  F3(f, C, ix-IX,iy-IY,iz-IZ) = fmaxf(F3(f, C, ix-IX,iy-IY,iz-IZ), r3);
+  F3(c, m_c, ix   ,iy   ,iz   ) = fmaxf(F3(c, m_c, ix   ,iy   ,iz   ), r3);
+  F3(c, m_c, ix-IX,iy-IY,iz-IZ) = fmaxf(F3(c, m_c, ix-IX,iy-IY,iz-IZ), r3);
 }
 
 static void
-limit1_c(struct mrc_fld *f, int m, mrc_fld_data_t time, mrc_fld_data_t timelo, int C)
+limit1_c(struct mrc_fld *x, int m, mrc_fld_data_t time, mrc_fld_data_t timelo,
+	 struct mrc_fld *bc, int m_c)
 {
   if (time < timelo) {
-    vgrs(f, C + 0, 1.f);
-    vgrs(f, C + 1, 1.f);
-    vgrs(f, C + 2, 1.f);
+    vgrs(bc, m_c + 0, 1.f);
+    vgrs(bc, m_c + 1, 1.f);
+    vgrs(bc, m_c + 2, 1.f);
     return;
   }
 
-  mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
+  mrc_fld_foreach(bc, ix,iy,iz, 1, 1) {
 /* .if (limit_aspect_low) then */
 /* .call lowmask(0,0,0,tl1) */
-    limit1a(f, m, ix,iy,iz, 1,0,0, C + 0);
-    limit1a(f, m, ix,iy,iz, 0,1,0, C + 1);
-    limit1a(f, m, ix,iy,iz, 0,0,1, C + 2);
+    limit1a(x, m, ix,iy,iz, 1,0,0, bc, m_c + 0);
+    limit1a(x, m, ix,iy,iz, 0,1,0, bc, m_c + 1);
+    limit1a(x, m, ix,iy,iz, 0,0,1, bc, m_c + 2);
   } mrc_fld_foreach_end;
 }
 
@@ -371,8 +373,7 @@ pushfv_c(struct ggcm_mhd *mhd, int m, mrc_fld_data_t dt, struct mrc_fld *x_curr,
 	 struct mrc_fld *x_next, int m_next,
 	 int limit)
 {
-  struct mrc_fld *f = mhd->fld;
-  struct mrc_fld *flux = mhd->fld, *tmp = mhd->fld;
+  struct mrc_fld *flux = mhd->fld, *tmp = mhd->fld, *bc = mhd->fld;
   int m_flux = _FLX, m_tmp = _TMP1;
   struct mrc_fld *prim = mhd->fld; // FIXME
 
@@ -380,9 +381,9 @@ pushfv_c(struct ggcm_mhd *mhd, int m, mrc_fld_data_t dt, struct mrc_fld *x_curr,
   if (limit == LIMIT_NONE) {
     fluxl_c(mhd, flux, m_flux, tmp, m_tmp, x_curr, m_curr + m, prim);
   } else {
-    vgrv(f, _CX, _BX); vgrv(f, _CY, _BY); vgrv(f, _CY, _BY);
-    limit1_c(f, m_curr + m, mhd->time, mhd->par.timelo, _CX);
-    fluxb_c(mhd, flux, m_flux, tmp, m_tmp, x_curr, m_curr + m, prim, f);
+    vgrv(bc, _CX, _BX); vgrv(bc, _CY, _BY); vgrv(bc, _CY, _BY);
+    limit1_c(x_curr, m_curr + m, mhd->time, mhd->par.timelo, bc, _CX);
+    fluxb_c(mhd, flux, m_flux, tmp, m_tmp, x_curr, m_curr + m, prim, bc);
   }
 
   pushn_c(mhd, x_next, m_next + m, flux, m_flux, dt);
@@ -768,10 +769,11 @@ pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt,
   rmaskn_c(mhd);
 
   if (limit != LIMIT_NONE) {
-    struct mrc_fld *f = mhd->fld;
+    struct mrc_fld *bc = mhd->fld;
+    struct mrc_fld *prim = mhd->fld;
 
-    vgrs(f, _BX, 0.f); vgrs(f, _BY, 0.f); vgrs(f, _BZ, 0.f);
-    limit1_c(f, _PP, mhd->time, mhd->par.timelo, _BX);
+    vgrs(bc, _BX, 0.f); vgrs(bc, _BY, 0.f); vgrs(bc, _BZ, 0.f);
+    limit1_c(prim, _PP, mhd->time, mhd->par.timelo, bc, _BX);
     // limit2, 3
   }
 
@@ -833,10 +835,11 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step,
   rmaskn_c(mhd);
 
   if (limit != LIMIT_NONE) {
-    struct mrc_fld *f = mhd->fld;
+    struct mrc_fld *bc = mhd->fld;
+    struct mrc_fld *prim = mhd->fld;
 
-    vgrs(f, _BX, 0.f); vgrs(f, _BY, 0.f); vgrs(f, _BZ, 0.f);
-    limit1_c(f, _PP, mhd->time, mhd->par.timelo, _BX);
+    vgrs(bc, _BX, 0.f); vgrs(bc, _BY, 0.f); vgrs(bc, _BZ, 0.f);
+    limit1_c(prim, _PP, mhd->time, mhd->par.timelo, bc, _BX);
     // limit2, 3
   }
 
