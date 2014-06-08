@@ -50,6 +50,16 @@ enum {
   LIMIT_1,
 };
 
+static void
+setup_mrc_fld_3d(struct mrc_fld *x, struct mrc_fld *tmpl, int nr_comps)
+{
+  mrc_fld_set_type(x, FLD_TYPE);
+  mrc_fld_set_param_obj(x, "domain", tmpl->_domain);
+  mrc_fld_set_param_int(x, "nr_spatial_dims", 3);
+  mrc_fld_set_param_int(x, "nr_comps", nr_comps);
+  mrc_fld_set_param_int(x, "nr_ghosts", tmpl->_nr_ghosts);
+}
+
 // ----------------------------------------------------------------------
 // ggcm_mhd_step_c_setup
 
@@ -60,11 +70,8 @@ ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
   struct ggcm_mhd *mhd = step->mhd;
 
   assert(mhd);
-  mrc_fld_set_type(sub->x_half, FLD_TYPE);
-  mrc_fld_set_param_obj(sub->x_half, "domain", mhd->domain);
-  mrc_fld_set_param_int(sub->x_half, "nr_spatial_dims", 3);
-  mrc_fld_set_param_int(sub->x_half, "nr_comps", 8);
-  mrc_fld_set_param_int(sub->x_half, "nr_ghosts", mhd->fld->_nr_ghosts);
+
+  setup_mrc_fld_3d(sub->x_half, mhd->fld, 8);
   mrc_fld_dict_add_int(sub->x_half, "mhd_type", ggcm_mhd_step_mhd_type(step));
 
   sub->masks = mhd->fld;
