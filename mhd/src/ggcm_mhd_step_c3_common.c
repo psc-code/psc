@@ -106,9 +106,11 @@ ggcm_mhd_step_c_primvar(struct ggcm_mhd_step *step, struct mrc_fld *prim,
 // ======================================================================
 
 static void
-rmaskn_c(struct ggcm_mhd *mhd)
+rmaskn_c(struct ggcm_mhd_step *step)
 {
-  struct mrc_fld *masks = mhd->fld;
+  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
+  struct ggcm_mhd *mhd = step->mhd;
+  struct mrc_fld *masks = sub->masks;
 
   mrc_fld_data_t diffco = mhd->par.diffco;
   mrc_fld_data_t diff_swbnd = mhd->par.diff_swbnd;
@@ -262,10 +264,12 @@ fluxb_c(struct ggcm_mhd *mhd, struct mrc_fld *flux, int m_flux,
 }
 
 static void
-pushn_c(struct ggcm_mhd *mhd, struct mrc_fld *x, int m,
+pushn_c(struct ggcm_mhd_step *step, struct mrc_fld *x, int m,
 	struct mrc_fld *flux, int m_flux, mrc_fld_data_t dt)
 {
-  struct mrc_fld *masks = mhd->fld;
+  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
+  struct ggcm_mhd *mhd = step->mhd;
+  struct mrc_fld *masks = sub->masks;
   float *fd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FD1);
   float *fd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FD1);
   float *fd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FD1);
@@ -280,10 +284,12 @@ pushn_c(struct ggcm_mhd *mhd, struct mrc_fld *x, int m,
 }
 
 static void
-pushpp_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, struct mrc_fld *x, int m,
+pushpp_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, struct mrc_fld *x, int m,
 	 struct mrc_fld *prim)
 {
-  struct mrc_fld *masks = mhd->fld;
+  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
+  struct ggcm_mhd *mhd = step->mhd;
+  struct mrc_fld *masks = sub->masks;
   float *fd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FD1);
   float *fd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FD1);
   float *fd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FD1);
@@ -381,10 +387,11 @@ vgfl_c(struct ggcm_mhd *mhd, int m, struct mrc_fld *tmp, int m_tmp,
 }
 
 static void
-pushfv_c(struct ggcm_mhd *mhd, int m, mrc_fld_data_t dt, struct mrc_fld *x_curr, int m_curr,
+pushfv_c(struct ggcm_mhd_step *step, int m, mrc_fld_data_t dt, struct mrc_fld *x_curr, int m_curr,
 	 struct mrc_fld *x_next, int m_next,
 	 int limit)
 {
+  struct ggcm_mhd *mhd = step->mhd;
   struct mrc_fld *flux = mhd->fld, *tmp = mhd->fld, *bc = mhd->fld;
   int m_flux = _FLX, m_tmp = _TMP1;
   struct mrc_fld *prim = mhd->fld; // FIXME
@@ -398,7 +405,7 @@ pushfv_c(struct ggcm_mhd *mhd, int m, mrc_fld_data_t dt, struct mrc_fld *x_curr,
     fluxb_c(mhd, flux, m_flux, tmp, m_tmp, x_curr, m_curr + m, prim, bc);
   }
 
-  pushn_c(mhd, x_next, m_next + m, flux, m_flux, dt);
+  pushn_c(step, x_next, m_next + m, flux, m_flux, dt);
 }
 
 // ----------------------------------------------------------------------
@@ -780,7 +787,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
-  rmaskn_c(mhd);
+  rmaskn_c(step);
 
   if (limit != LIMIT_NONE) {
     struct mrc_fld *prim = sub->prim, *bc = sub->bc;
@@ -790,13 +797,13 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
     // limit2, 3
   }
 
-  pushfv_c(mhd, _RR1 , dt, x_curr, m_curr, x_next, m_next, limit);
-  pushfv_c(mhd, _RV1X, dt, x_curr, m_curr, x_next, m_next, limit);
-  pushfv_c(mhd, _RV1Y, dt, x_curr, m_curr, x_next, m_next, limit);
-  pushfv_c(mhd, _RV1Z, dt, x_curr, m_curr, x_next, m_next, limit);
-  pushfv_c(mhd, _UU1 , dt, x_curr, m_curr, x_next, m_next, limit);
+  pushfv_c(step, _RR1 , dt, x_curr, m_curr, x_next, m_next, limit);
+  pushfv_c(step, _RV1X, dt, x_curr, m_curr, x_next, m_next, limit);
+  pushfv_c(step, _RV1Y, dt, x_curr, m_curr, x_next, m_next, limit);
+  pushfv_c(step, _RV1Z, dt, x_curr, m_curr, x_next, m_next, limit);
+  pushfv_c(step, _UU1 , dt, x_curr, m_curr, x_next, m_next, limit);
 
-  pushpp_c(mhd, dt, x_next, m_next, prim);
+  pushpp_c(step, dt, x_next, m_next, prim);
 
   switch (mhd->par.magdiffu) {
   case MAGDIFFU_NL1:
@@ -845,7 +852,7 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step,
   struct ggcm_mhd *mhd = step->mhd;
   struct mrc_fld *x_curr = x, *x_next = x;
   int m_curr = _RR1, m_next = _RR2;
-  rmaskn_c(mhd);
+  rmaskn_c(step);
 
   if (limit != LIMIT_NONE) {
     struct mrc_fld *bc = mhd->fld;
@@ -856,13 +863,13 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step,
     // limit2, 3
   }
 
-  pushfv_c(mhd, _RR1 , dt, x_curr, m_curr, x_next, m_next, limit);
-  pushfv_c(mhd, _RV1X, dt, x_curr, m_curr, x_next, m_next, limit);
-  pushfv_c(mhd, _RV1Y, dt, x_curr, m_curr, x_next, m_next, limit);
-  pushfv_c(mhd, _RV1Z, dt, x_curr, m_curr, x_next, m_next, limit);
-  pushfv_c(mhd, _UU1 , dt, x_curr, m_curr, x_next, m_next, limit);
+  pushfv_c(step, _RR1 , dt, x_curr, m_curr, x_next, m_next, limit);
+  pushfv_c(step, _RV1X, dt, x_curr, m_curr, x_next, m_next, limit);
+  pushfv_c(step, _RV1Y, dt, x_curr, m_curr, x_next, m_next, limit);
+  pushfv_c(step, _RV1Z, dt, x_curr, m_curr, x_next, m_next, limit);
+  pushfv_c(step, _UU1 , dt, x_curr, m_curr, x_next, m_next, limit);
 
-  pushpp_c(mhd, dt, x_next, m_next, prim);
+  pushpp_c(step, dt, x_next, m_next, prim);
 
   switch (mhd->par.magdiffu) {
   case MAGDIFFU_NL1:
