@@ -253,12 +253,13 @@ static void
 pushn_c(struct ggcm_mhd *mhd, struct mrc_fld *x, int m,
 	struct mrc_fld *flux, int m_flux, mrc_fld_data_t dt)
 {
+  struct mrc_fld *masks = mhd->fld;
   float *fd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FD1);
   float *fd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FD1);
   float *fd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FD1);
 
   mrc_fld_foreach(x, ix,iy,iz, 0, 0) {
-    mrc_fld_data_t s = dt * F3(mhd->fld,_YMASK, ix,iy,iz);
+    mrc_fld_data_t s = dt * F3(masks, _YMASK, ix,iy,iz);
     F3(x, m, ix,iy,iz) +=
       - s * (fd1x[ix] * (F3(flux, m_flux + 0, ix,iy,iz) - F3(flux, m_flux + 0, ix-1,iy,iz)) +
 	     fd1y[iy] * (F3(flux, m_flux + 1, ix,iy,iz) - F3(flux, m_flux + 1, ix,iy-1,iz)) +
@@ -267,22 +268,23 @@ pushn_c(struct ggcm_mhd *mhd, struct mrc_fld *x, int m,
 }
 
 static void
-pushpp_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m)
+pushpp_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, struct mrc_fld *x, int m,
+	 struct mrc_fld *prim)
 {
-  struct mrc_fld *f = mhd->fld;
+  struct mrc_fld *masks = mhd->fld;
   float *fd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FD1);
   float *fd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FD1);
   float *fd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FD1);
 
   mrc_fld_data_t dth = -.5f * dt;
-  mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
-    mrc_fld_data_t fpx = fd1x[ix] * (F3(f, _PP, ix+1,iy,iz) - F3(f, _PP, ix-1,iy,iz));
-    mrc_fld_data_t fpy = fd1y[iy] * (F3(f, _PP, ix,iy+1,iz) - F3(f, _PP, ix,iy-1,iz));
-    mrc_fld_data_t fpz = fd1z[iz] * (F3(f, _PP, ix,iy,iz+1) - F3(f, _PP, ix,iy,iz-1));
-    mrc_fld_data_t z = dth * F3(f,_ZMASK, ix,iy,iz);
-    F3(f, m + _RV1X, ix,iy,iz) += z * fpx;
-    F3(f, m + _RV1Y, ix,iy,iz) += z * fpy;
-    F3(f, m + _RV1Z, ix,iy,iz) += z * fpz;
+  mrc_fld_foreach(x, ix,iy,iz, 0, 0) {
+    mrc_fld_data_t fpx = fd1x[ix] * (F3(prim, _PP, ix+1,iy,iz) - F3(prim, _PP, ix-1,iy,iz));
+    mrc_fld_data_t fpy = fd1y[iy] * (F3(prim, _PP, ix,iy+1,iz) - F3(prim, _PP, ix,iy-1,iz));
+    mrc_fld_data_t fpz = fd1z[iz] * (F3(prim, _PP, ix,iy,iz+1) - F3(prim, _PP, ix,iy,iz-1));
+    mrc_fld_data_t z = dth * F3(masks, _ZMASK, ix,iy,iz);
+    F3(x, m + _RV1X, ix,iy,iz) += z * fpx;
+    F3(x, m + _RV1Y, ix,iy,iz) += z * fpy;
+    F3(x, m + _RV1Z, ix,iy,iz) += z * fpz;
   } mrc_fld_foreach_end;
 }
 
@@ -760,6 +762,7 @@ static void
 pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt,
 	    struct mrc_fld *x_curr, int m_curr,
 	    struct mrc_fld *x_next, int m_next,
+	    struct mrc_fld *prim,
 	    int limit)
 {
   rmaskn_c(mhd);
@@ -778,7 +781,7 @@ pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt,
   pushfv_c(mhd, _RV1Z, dt, x_curr, m_curr, x_next, m_next, limit);
   pushfv_c(mhd, _UU1 , dt, x_curr, m_curr, x_next, m_next, limit);
 
-  pushpp_c(mhd, dt, m_next);
+  pushpp_c(mhd, dt, x_next, m_next, prim);
 
   switch (mhd->par.magdiffu) {
   case MAGDIFFU_NL1:
@@ -803,9 +806,9 @@ static void
 ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step,
 		     struct mrc_fld *x_half, struct mrc_fld *x)
 {
-  struct mrc_fld *x_prim = x;
+  struct mrc_fld *prim = x;
 
-  ggcm_mhd_step_c_primvar(step, x_prim, x);
+  ggcm_mhd_step_c_primvar(step, prim, x);
   primbb_c2_c(step->mhd, _RR1);
   zmaskn_c(step->mhd);
 
@@ -843,7 +846,7 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step,
   pushfv_c(mhd, _RV1Z, dt, x_curr, m_curr, x_next, m_next, limit);
   pushfv_c(mhd, _UU1 , dt, x_curr, m_curr, x_next, m_next, limit);
 
-  pushpp_c(mhd, dt, m_next);
+  pushpp_c(mhd, dt, x_next, m_next, prim);
 
   switch (mhd->par.magdiffu) {
   case MAGDIFFU_NL1:
@@ -875,9 +878,9 @@ static void
 ggcm_mhd_step_c_corr(struct ggcm_mhd_step *step,
 		     struct mrc_fld *x, struct mrc_fld *x_half)
 {
-  struct mrc_fld *x_prim = x;
+  struct mrc_fld *prim = x;
 
-  ggcm_mhd_step_c_primvar(step, x_prim, x_half);
+  ggcm_mhd_step_c_primvar(step, prim, x_half);
 
   mrc_fld_foreach(x_half, ix,iy,iz, 2, 2) {
     for (int m = 0; m < 8; m++) {
@@ -888,7 +891,7 @@ ggcm_mhd_step_c_corr(struct ggcm_mhd_step *step,
   //  primbb_c2_c(step->mhd, _RR2);
   //  zmaskn_c(step->mhd);
 
-  pushstage_c(step->mhd, step->mhd->dt, x, _RR2, x, _RR1, LIMIT_1);
+  pushstage_c(step->mhd, step->mhd->dt, x, _RR2, x, _RR1, prim, LIMIT_1);
 }
 
 // ----------------------------------------------------------------------
