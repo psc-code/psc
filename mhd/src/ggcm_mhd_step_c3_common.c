@@ -96,7 +96,7 @@ ggcm_mhd_step_c_primvar(struct ggcm_mhd_step *step, struct mrc_fld *prim,
 static void
 rmaskn_c(struct ggcm_mhd *mhd)
 {
-  struct mrc_fld *f = mhd->fld;
+  struct mrc_fld *masks = mhd->fld;
 
   mrc_fld_data_t diffco = mhd->par.diffco;
   mrc_fld_data_t diff_swbnd = mhd->par.diff_swbnd;
@@ -108,8 +108,8 @@ rmaskn_c(struct ggcm_mhd *mhd)
 
   float *fx1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FX1);
 
-  mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
-    F3(f,_RMASK, ix,iy,iz) = 0.f;
+  mrc_fld_foreach(masks, ix,iy,iz, 2, 2) {
+    F3(masks, _RMASK, ix,iy,iz) = 0.f;
     mrc_fld_data_t xxx = fx1x[ix];
     if (xxx < diff_swbnd)
       continue;
@@ -123,7 +123,7 @@ rmaskn_c(struct ggcm_mhd *mhd)
       continue;
     if (iz + info.off[2] >= gdims[2] - diff_obnd)
       continue;
-    F3(f, _RMASK, ix,iy,iz) = diffco * F3(f, _ZMASK, ix,iy,iz);
+    F3(masks, _RMASK, ix,iy,iz) = diffco * F3(masks, _ZMASK, ix,iy,iz);
   } mrc_fld_foreach_end;
 }
 
