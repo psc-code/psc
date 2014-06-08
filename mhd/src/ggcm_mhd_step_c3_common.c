@@ -391,10 +391,12 @@ pushfv_c(struct ggcm_mhd_step *step, int m, mrc_fld_data_t dt, struct mrc_fld *x
 	 struct mrc_fld *x_next, int m_next,
 	 int limit)
 {
+  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
-  struct mrc_fld *flux = mhd->fld, *tmp = mhd->fld, *bc = mhd->fld;
+  struct mrc_fld *flux = mhd->fld, *tmp = mhd->fld;
   int m_flux = _FLX, m_tmp = _TMP1;
   struct mrc_fld *prim = mhd->fld; // FIXME
+  struct mrc_fld *bc = sub->bc;
 
   vgfl_c(mhd, m, tmp, m_tmp, prim);
   if (limit == LIMIT_NONE) {
@@ -849,14 +851,14 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step,
   pushstage_c(step, dt, x, _RR1, x, _RR2, LIMIT_NONE);
 #else
   int limit = LIMIT_NONE;
+  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
   struct mrc_fld *x_curr = x, *x_next = x;
   int m_curr = _RR1, m_next = _RR2;
   rmaskn_c(step);
 
   if (limit != LIMIT_NONE) {
-    struct mrc_fld *bc = mhd->fld;
-    struct mrc_fld *prim = mhd->fld;
+    struct mrc_fld *prim = sub->prim, *bc = sub->bc;
 
     vgrs(bc, _BX, 0.f); vgrs(bc, _BY, 0.f); vgrs(bc, _BZ, 0.f);
     limit1_c(prim, _PP, mhd->time, mhd->par.timelo, bc, _BX);
