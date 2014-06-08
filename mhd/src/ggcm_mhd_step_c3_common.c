@@ -69,25 +69,25 @@ ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
 // ggcm_mhd_step_c_primvar
 
 static void
-ggcm_mhd_step_c_primvar(struct ggcm_mhd_step *step, struct mrc_fld *x_prim,
+ggcm_mhd_step_c_primvar(struct ggcm_mhd_step *step, struct mrc_fld *prim,
 			struct mrc_fld *x)
 {
   mrc_fld_data_t gamm = step->mhd->par.gamm;
   mrc_fld_data_t s = gamm - 1.f;
 
   mrc_fld_foreach(x, ix,iy,iz, 2, 2) {
-    F3(x_prim,_RR, ix,iy,iz) = RR1(x, ix,iy,iz);
+    F3(prim,_RR, ix,iy,iz) = RR1(x, ix,iy,iz);
     mrc_fld_data_t rri = 1.f / RR1(x, ix,iy,iz);
-    F3(x_prim,_VX, ix,iy,iz) = rri * RV1X(x, ix,iy,iz);
-    F3(x_prim,_VY, ix,iy,iz) = rri * RV1Y(x, ix,iy,iz);
-    F3(x_prim,_VZ, ix,iy,iz) = rri * RV1Z(x, ix,iy,iz);
+    F3(prim,_VX, ix,iy,iz) = rri * RV1X(x, ix,iy,iz);
+    F3(prim,_VY, ix,iy,iz) = rri * RV1Y(x, ix,iy,iz);
+    F3(prim,_VZ, ix,iy,iz) = rri * RV1Z(x, ix,iy,iz);
     mrc_fld_data_t rvv =
-      F3(x_prim,_VX, ix,iy,iz) * RV1X(x, ix,iy,iz) +
-      F3(x_prim,_VY, ix,iy,iz) * RV1Y(x, ix,iy,iz) +
-      F3(x_prim,_VZ, ix,iy,iz) * RV1Z(x, ix,iy,iz);
-    F3(x_prim,_PP, ix,iy,iz) = s * (UU1(x, ix,iy,iz) - .5f * rvv);
-    mrc_fld_data_t cs2 = mrc_fld_max(gamm * F3(x_prim,_PP, ix,iy,iz) * rri, 0.f);
-    F3(x_prim,_CMSV, ix,iy,iz) = sqrtf(rvv * rri) + sqrtf(cs2);
+      F3(prim,_VX, ix,iy,iz) * RV1X(x, ix,iy,iz) +
+      F3(prim,_VY, ix,iy,iz) * RV1Y(x, ix,iy,iz) +
+      F3(prim,_VZ, ix,iy,iz) * RV1Z(x, ix,iy,iz);
+    F3(prim,_PP, ix,iy,iz) = s * (UU1(x, ix,iy,iz) - .5f * rvv);
+    mrc_fld_data_t cs2 = mrc_fld_max(gamm * F3(prim,_PP, ix,iy,iz) * rri, 0.f);
+    F3(prim,_CMSV, ix,iy,iz) = sqrtf(rvv * rri) + sqrtf(cs2);
   } mrc_fld_foreach_end;
 }
 
