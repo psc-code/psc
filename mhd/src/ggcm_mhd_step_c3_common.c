@@ -369,7 +369,8 @@ vgfl_c(struct ggcm_mhd *mhd, int m)
 }
 
 static void
-pushfv_c(struct ggcm_mhd *mhd, int m, mrc_fld_data_t dt, int m_curr, int m_next,
+pushfv_c(struct ggcm_mhd *mhd, int m, mrc_fld_data_t dt, struct mrc_fld *x_curr, int m_curr,
+	 struct mrc_fld *x_next, int m_next,
 	 int limit)
 {
   struct mrc_fld *f = mhd->fld;
@@ -772,11 +773,11 @@ pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt,
     // limit2, 3
   }
 
-  pushfv_c(mhd, _RR1 , dt, m_curr, m_next, limit);
-  pushfv_c(mhd, _RV1X, dt, m_curr, m_next, limit);
-  pushfv_c(mhd, _RV1Y, dt, m_curr, m_next, limit);
-  pushfv_c(mhd, _RV1Z, dt, m_curr, m_next, limit);
-  pushfv_c(mhd, _UU1 , dt, m_curr, m_next, limit);
+  pushfv_c(mhd, _RR1 , dt, x_curr, m_curr, x_next, m_next, limit);
+  pushfv_c(mhd, _RV1X, dt, x_curr, m_curr, x_next, m_next, limit);
+  pushfv_c(mhd, _RV1Y, dt, x_curr, m_curr, x_next, m_next, limit);
+  pushfv_c(mhd, _RV1Z, dt, x_curr, m_curr, x_next, m_next, limit);
+  pushfv_c(mhd, _UU1 , dt, x_curr, m_curr, x_next, m_next, limit);
 
   pushpp_c(mhd, dt, m_next);
 
@@ -825,6 +826,7 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step,
 #else
   int limit = LIMIT_NONE;
   struct ggcm_mhd *mhd = step->mhd;
+  struct mrc_fld *x_curr = x, *x_next = x;
   int m_curr = _RR1, m_next = _RR2;
   rmaskn_c(mhd);
 
@@ -836,11 +838,11 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step,
     // limit2, 3
   }
 
-  pushfv_c(mhd, _RR1 , dt, m_curr, m_next, limit);
-  pushfv_c(mhd, _RV1X, dt, m_curr, m_next, limit);
-  pushfv_c(mhd, _RV1Y, dt, m_curr, m_next, limit);
-  pushfv_c(mhd, _RV1Z, dt, m_curr, m_next, limit);
-  pushfv_c(mhd, _UU1 , dt, m_curr, m_next, limit);
+  pushfv_c(mhd, _RR1 , dt, x_curr, m_curr, x_next, m_next, limit);
+  pushfv_c(mhd, _RV1X, dt, x_curr, m_curr, x_next, m_next, limit);
+  pushfv_c(mhd, _RV1Y, dt, x_curr, m_curr, x_next, m_next, limit);
+  pushfv_c(mhd, _RV1Z, dt, x_curr, m_curr, x_next, m_next, limit);
+  pushfv_c(mhd, _UU1 , dt, x_curr, m_curr, x_next, m_next, limit);
 
   pushpp_c(mhd, dt, m_next);
 
