@@ -198,27 +198,27 @@ vgfluu_c(struct ggcm_mhd *mhd)
 }
 
 static void
-fluxl_c(struct ggcm_mhd *mhd, int m)
+fluxl_c(struct ggcm_mhd *mhd, int m, struct mrc_fld *flux, int m_flux)
 {
   struct mrc_fld *f = mhd->fld;
 
   mrc_fld_foreach(f, ix,iy,iz, 1, 0) {
     mrc_fld_data_t aa = F3(f,m, ix,iy,iz);
     mrc_fld_data_t cmsv = F3(f,_CMSV, ix,iy,iz);
-    F3(f,_FLX, ix,iy,iz) =
+    F3(flux, m_flux + 0, ix,iy,iz) =
       .5f * ((F3(f,_TMP1, ix  ,iy,iz) + F3(f,_TMP1, ix+1,iy,iz)) -
 	     .5f * (F3(f,_CMSV, ix+1,iy,iz) + cmsv) * (F3(f,m, ix+1,iy,iz) - aa));
-    F3(f,_FLY, ix,iy,iz) =
+    F3(flux, m_flux + 1, ix,iy,iz) =
       .5f * ((F3(f,_TMP2, ix,iy  ,iz) + F3(f,_TMP2, ix,iy+1,iz)) -
 	     .5f * (F3(f,_CMSV, ix,iy+1,iz) + cmsv) * (F3(f,m, ix,iy+1,iz) - aa));
-    F3(f,_FLZ, ix,iy,iz) =
+    F3(flux, m_flux + 2, ix,iy,iz) =
       .5f * ((F3(f,_TMP3, ix,iy,iz  ) + F3(f,_TMP3, ix,iy,iz+1)) -
 	     .5f * (F3(f,_CMSV, ix,iy,iz+1) + cmsv) * (F3(f,m, ix,iy,iz+1) - aa));
   } mrc_fld_foreach_end;
 }
 
 static void
-fluxb_c(struct ggcm_mhd *mhd, int m)
+fluxb_c(struct ggcm_mhd *mhd, int m, struct mrc_fld *flux, int m_flux)
 {
   struct mrc_fld *f = mhd->fld;
 
@@ -246,28 +246,28 @@ fluxb_c(struct ggcm_mhd *mhd, int m)
 	     .5f * (F3(f,_CMSV, ix,iy,iz+1) + cmsv) * (F3(f,m, ix,iy,iz+1) - aa));
 
     mrc_fld_data_t cx = F3(f, _CX, ix,iy,iz);
-    F3(f, _FLX, ix,iy,iz) = cx * flx + (1.f - cx) * fhx;
+    F3(flux, m_flux + 0, ix,iy,iz) = cx * flx + (1.f - cx) * fhx;
     mrc_fld_data_t cy = F3(f, _CY, ix,iy,iz);
-    F3(f, _FLY, ix,iy,iz) = cy * fly + (1.f - cy) * fhy;
+    F3(flux, m_flux + 1, ix,iy,iz) = cy * fly + (1.f - cy) * fhy;
     mrc_fld_data_t cz = F3(f, _CZ, ix,iy,iz);
-    F3(f, _FLZ, ix,iy,iz) = cz * flz + (1.f - cz) * fhz;
+    F3(flux, m_flux + 2, ix,iy,iz) = cz * flz + (1.f - cz) * fhz;
   } mrc_fld_foreach_end;
 }
 
 static void
-pushn_c(struct ggcm_mhd *mhd, int m, mrc_fld_data_t dt)
+pushn_c(struct ggcm_mhd *mhd, struct mrc_fld *x, int m,
+	struct mrc_fld *flux, int m_flux, mrc_fld_data_t dt)
 {
-  struct mrc_fld *f = mhd->fld;
   float *fd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FD1);
   float *fd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FD1);
   float *fd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FD1);
 
-  mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
-    mrc_fld_data_t s = dt * F3(f,_YMASK, ix,iy,iz);
-    F3(f,m, ix,iy,iz) +=
-      - s * (fd1x[ix] * (F3(f,_FLX, ix,iy,iz) - F3(f,_FLX, ix-1,iy,iz)) +
-	     fd1y[iy] * (F3(f,_FLY, ix,iy,iz) - F3(f,_FLY, ix,iy-1,iz)) +
-	     fd1z[iz] * (F3(f,_FLZ, ix,iy,iz) - F3(f,_FLZ, ix,iy,iz-1)));
+  mrc_fld_foreach(x, ix,iy,iz, 0, 0) {
+    mrc_fld_data_t s = dt * F3(mhd->fld,_YMASK, ix,iy,iz);
+    F3(x, m, ix,iy,iz) +=
+      - s * (fd1x[ix] * (F3(flux, m_flux + 0, ix,iy,iz) - F3(flux, m_flux + 0, ix-1,iy,iz)) +
+	     fd1y[iy] * (F3(flux, m_flux + 1, ix,iy,iz) - F3(flux, m_flux + 1, ix,iy-1,iz)) +
+	     fd1z[iz] * (F3(flux, m_flux + 2, ix,iy,iz) - F3(flux, m_flux + 2, ix,iy,iz-1)));
   } mrc_fld_foreach_end;
 }
 
@@ -374,17 +374,19 @@ pushfv_c(struct ggcm_mhd *mhd, int m, mrc_fld_data_t dt, struct mrc_fld *x_curr,
 	 int limit)
 {
   struct mrc_fld *f = mhd->fld;
+  struct mrc_fld *flux = mhd->fld;
+  int m_flux = _FLX;
 
   vgfl_c(mhd, m);
   if (limit == LIMIT_NONE) {
-    fluxl_c(mhd, m_curr + m);
+    fluxl_c(mhd, m_curr + m, flux, m_flux);
   } else {
     vgrv(f, _CX, _BX); vgrv(f, _CY, _BY); vgrv(f, _CY, _BY);
     limit1_c(f, m_curr + m, mhd->time, mhd->par.timelo, _CX);
-    fluxb_c(mhd, m_curr + m);
+    fluxb_c(mhd, m_curr + m, flux, m_flux);
   }
 
-  pushn_c(mhd, m_next + m, dt);
+  pushn_c(mhd, x_next, m_next + m, flux, m_flux, dt);
 }
 
 // ----------------------------------------------------------------------
