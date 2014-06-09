@@ -83,10 +83,10 @@ ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
   setup_mrc_fld_3d(sub->b   , mhd->fld, 3);
   setup_mrc_fld_3d(sub->c   , mhd->fld, 3);
   setup_mrc_fld_3d(sub->E   , mhd->fld, 3);
+  setup_mrc_fld_3d(sub->curr, mhd->fld, 3);
+  setup_mrc_fld_3d(sub->resis,mhd->fld, 1);
 
   sub->masks = mhd->fld;
-  sub->curr  = mhd->fld;
-  sub->resis = mhd->fld;
 
   ggcm_mhd_step_setup_member_objs_sub(step);
   ggcm_mhd_step_setup_super(step);
@@ -470,7 +470,7 @@ currbb_c(struct ggcm_mhd *mhd, struct mrc_fld *b_cc, int m_b_cc,
 // cell-centered j
 
 static void
-curbc_c(struct ggcm_mhd_step *step, struct mrc_fld *j_cc, int m_j_cc,
+curbc_c(struct ggcm_mhd_step *step, struct mrc_fld *j_cc,
 	struct mrc_fld *x, int m_curr)
 { 
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
@@ -484,12 +484,12 @@ curbc_c(struct ggcm_mhd_step *step, struct mrc_fld *j_cc, int m_j_cc,
   // then average to cell centers
   mrc_fld_foreach(j_cc, ix,iy,iz, 1, 1) {
     mrc_fld_data_t s = .25f * F3(masks, _ZMASK, ix, iy, iz);
-    F3(j_cc, m_j_cc + 0, ix,iy,iz) = s * (F3(j, 0, ix,iy+1,iz+1) + F3(j, 0, ix,iy,iz+1) +
-					  F3(j, 0, ix,iy+1,iz  ) + F3(j, 0, ix,iy,iz  ));
-    F3(j_cc, m_j_cc + 1, ix,iy,iz) = s * (F3(j, 1, ix+1,iy,iz+1) + F3(j, 1, ix,iy,iz+1) +
-					  F3(j, 1, ix+1,iy,iz  ) + F3(j, 1, ix,iy,iz  ));
-    F3(j_cc, m_j_cc + 2, ix,iy,iz) = s * (F3(j, 2, ix+1,iy+1,iz) + F3(j, 2, ix,iy+1,iz) +
-					  F3(j, 2, ix+1,iy  ,iz) + F3(j, 2, ix,iy  ,iz));
+    F3(j_cc, 0, ix,iy,iz) = s * (F3(j, 0, ix,iy+1,iz+1) + F3(j, 0, ix,iy,iz+1) +
+				 F3(j, 0, ix,iy+1,iz  ) + F3(j, 0, ix,iy,iz  ));
+    F3(j_cc, 1, ix,iy,iz) = s * (F3(j, 1, ix+1,iy,iz+1) + F3(j, 1, ix,iy,iz+1) +
+				 F3(j, 1, ix+1,iy,iz  ) + F3(j, 1, ix,iy,iz  ));
+    F3(j_cc, 2, ix,iy,iz) = s * (F3(j, 2, ix+1,iy+1,iz) + F3(j, 2, ix,iy+1,iz) +
+				 F3(j, 2, ix+1,iy  ,iz) + F3(j, 2, ix,iy  ,iz));
   } mrc_fld_foreach_end;
 }
 
@@ -530,7 +530,7 @@ push_ej_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, struct mrc_fld *x_curr,
 }
 
 static void
-res1_const_c(struct ggcm_mhd *mhd, struct mrc_fld *resis, int m_resis)
+res1_const_c(struct ggcm_mhd *mhd, struct mrc_fld *resis)
 {
   // resistivity comes in ohm*m
   int diff_obnd = mhd->par.diff_obnd;
@@ -548,7 +548,7 @@ res1_const_c(struct ggcm_mhd *mhd, struct mrc_fld *resis, int m_resis)
   float *fx2z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FX2);
 
   mrc_fld_foreach(resis, ix,iy,iz, 1, 1) {
-    F3(resis, m_resis, ix,iy,iz) = 0.f;
+    F3(resis, 0, ix,iy,iz) = 0.f;
     mrc_fld_data_t r2 = fx2x[ix] + fx2y[iy] + fx2z[iz];
     if (r2 < diffsphere2)
       continue;
@@ -563,18 +563,18 @@ res1_const_c(struct ggcm_mhd *mhd, struct mrc_fld *resis, int m_resis)
     if (iz + info.off[2] >= gdims[2] - diff_obnd)
       continue;
 
-    F3(resis, m_resis, ix,iy,iz) = diff;
+    F3(resis, 0, ix,iy,iz) = diff;
   } mrc_fld_foreach_end;
 }
 
 static void
-calc_resis_const_c(struct ggcm_mhd_step *step, struct mrc_fld *CURR, int m_CURR,
-		   struct mrc_fld *resis, int m_resis, struct mrc_fld *x, int m_curr)
+calc_resis_const_c(struct ggcm_mhd_step *step, struct mrc_fld *curr,
+		   struct mrc_fld *resis, struct mrc_fld *x, int m_curr)
 {
   struct ggcm_mhd *mhd = step->mhd;
 
-  curbc_c(step, CURR, m_CURR, x, m_curr);
-  res1_const_c(mhd, resis, m_resis);
+  curbc_c(step, curr, x, m_curr);
+  res1_const_c(mhd, resis);
 }
 
 static void
@@ -722,7 +722,7 @@ static void
 bcthy3z_const(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int IX, int IY, int IZ,
 	      int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2,
 	      struct mrc_fld *E, mrc_fld_data_t dt, struct mrc_fld *x, int m_curr,
-	      struct mrc_fld *curr, int m_CURR, struct mrc_fld *resis, int m_resis)
+	      struct mrc_fld *curr, struct mrc_fld *resis)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
@@ -740,8 +740,8 @@ bcthy3z_const(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int IX, int IY
     calc_v_x_B(ttmp, x, m_curr, prim, tmp, ix, iy, iz, XX, YY, ZZ, IX, IY, IZ,
 	       JX1, JY1, JZ1, JX2, JY2, JZ2, bd2x, bd2y, bd2z, dt);
 
-    mrc_fld_data_t vcurrXX = CC_TO_EC(curr, m_CURR + XX, ix,iy,iz, IX,IY,IZ);
-    mrc_fld_data_t vresis = CC_TO_EC(resis, m_resis, ix,iy,iz, IX,IY,IZ);
+    mrc_fld_data_t vcurrXX = CC_TO_EC(curr, XX, ix,iy,iz, IX,IY,IZ);
+    mrc_fld_data_t vresis = CC_TO_EC(resis, 0, ix,iy,iz, IX,IY,IZ);
     F3(E, XX, ix,iy,iz) = ttmp[0] - ttmp[1] - vresis * vcurrXX;
   } mrc_fld_foreach_end;
 }
@@ -758,20 +758,17 @@ calce_nl1_c(struct ggcm_mhd_step *step, struct mrc_fld *E,
 static void
 calce_const_c(struct ggcm_mhd_step *step, struct mrc_fld *E,
 	      mrc_fld_data_t dt, struct mrc_fld *x, int m_curr,
-	      struct mrc_fld *curr, int m_CURR, struct mrc_fld *resis, int m_resis)
+	      struct mrc_fld *curr, struct mrc_fld *resis)
 {
-  bcthy3z_const(step, 0,1,2, 0,1,1, 0,1,0, 0,0,1, E, dt, x, m_curr,
-		curr, m_CURR, resis, m_resis);
-  bcthy3z_const(step, 1,2,0, 1,0,1, 0,0,1, 1,0,0, E, dt, x, m_curr,
-		curr, m_CURR, resis, m_resis);
-  bcthy3z_const(step, 2,0,1, 1,1,0, 1,0,0, 0,1,0, E, dt, x, m_curr,
-		curr, m_CURR, resis, m_resis);
+  bcthy3z_const(step, 0,1,2, 0,1,1, 0,1,0, 0,0,1, E, dt, x, m_curr, curr, resis);
+  bcthy3z_const(step, 1,2,0, 1,0,1, 0,0,1, 1,0,0, E, dt, x, m_curr, curr, resis);
+  bcthy3z_const(step, 2,0,1, 1,1,0, 1,0,0, 0,1,0, E, dt, x, m_curr, curr, resis);
 }
 
 static void
 calce_c(struct ggcm_mhd_step *step, struct mrc_fld *E,
 	mrc_fld_data_t dt, struct mrc_fld *x, int m_curr,
-	struct mrc_fld *curr, int m_CURR, struct mrc_fld *resis, int m_resis)
+	struct mrc_fld *curr, struct mrc_fld *resis)
 {
   struct ggcm_mhd *mhd = step->mhd;
 
@@ -779,7 +776,7 @@ calce_c(struct ggcm_mhd_step *step, struct mrc_fld *E,
   case MAGDIFFU_NL1:
     return calce_nl1_c(step, E, dt, x, m_curr);
   case MAGDIFFU_CONST:
-    return calce_const_c(step, E, dt, x, m_curr, curr, m_CURR, resis, m_resis);
+    return calce_const_c(step, E, dt, x, m_curr, curr, resis);
   default:
     assert(0);
   }
@@ -815,8 +812,8 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
-  struct mrc_fld *curr = sub->curr; int m_CURR = _CURRX;
-  struct mrc_fld *resis = sub->resis; int m_resis = _RESIS;
+  struct mrc_fld *curr = sub->curr;
+  struct mrc_fld *resis = sub->resis;
   struct mrc_fld *E = sub->E;
   rmaskn_c(step);
 
@@ -841,14 +838,14 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
     calc_resis_nl1_c(mhd, m_curr);
     break;
   case MAGDIFFU_CONST:
-    calc_resis_const_c(step, curr, m_CURR, resis, m_resis, x_curr, m_curr);
+    calc_resis_const_c(step, curr, resis, x_curr, m_curr);
     break;
   default:
     assert(0);
   }
 
   push_ej_c(step, dt, x_curr, m_curr, x_next, m_next);
-  calce_c(step, E, dt, x_curr, m_curr, curr, m_CURR, resis, m_resis);
+  calce_c(step, E, dt, x_curr, m_curr, curr, resis);
   bpush_c(mhd, x_next, m_next, dt, E);
 }
 
@@ -876,8 +873,8 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step,
 #else
   int limit = LIMIT_NONE;
   struct ggcm_mhd *mhd = step->mhd;
-  struct mrc_fld *curr = sub->curr; int m_CURR = _CURRX;
-  struct mrc_fld *resis = sub->resis; int m_resis = _RESIS;
+  struct mrc_fld *curr = sub->curr;
+  struct mrc_fld *resis = sub->resis;
   struct mrc_fld *E = sub->E;
   struct mrc_fld *x_curr = x, *x_next = x_half;
   int m_curr = _RR1, m_next = _RR1;
@@ -911,14 +908,14 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step,
     calc_resis_nl1_c(mhd, m_curr);
     break;
   case MAGDIFFU_CONST:
-    calc_resis_const_c(step, curr, m_CURR, resis, m_resis, x_curr, m_curr);
+    calc_resis_const_c(step, curr, resis, x_curr, m_curr);
     break;
   default:
     assert(0);
   }
 
   push_ej_c(step, dt, x_curr, m_curr, x_next, m_next);
-  calce_c(step, E, dt, x_curr, m_curr, curr, m_CURR, resis, m_resis);
+  calce_c(step, E, dt, x_curr, m_curr, curr, resis);
   bpush_c(mhd, x_next, m_next, dt, E);
 #endif
 
@@ -997,6 +994,8 @@ static struct param ggcm_mhd_step_c_descr[] = {
   { "b"               , VAR(b)               , MRC_VAR_OBJ(mrc_fld)           },
   { "c"               , VAR(c)               , MRC_VAR_OBJ(mrc_fld)           },
   { "E"               , VAR(E)               , MRC_VAR_OBJ(mrc_fld)           },
+  { "curr"            , VAR(curr)            , MRC_VAR_OBJ(mrc_fld)           },
+  { "resis"           , VAR(resis)           , MRC_VAR_OBJ(mrc_fld)           },
 
   {},
 };
