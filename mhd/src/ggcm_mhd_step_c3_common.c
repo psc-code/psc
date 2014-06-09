@@ -145,21 +145,10 @@ ggcm_mhd_step_c_primvar(struct ggcm_mhd_step *step, struct mrc_fld *prim,
 // fluxes_rusanov
 
 static void
-fluxes_rusanov(struct mrc_fld *F, struct mrc_fld *U_cc, struct mrc_fld *W_cc,
-	       int i, int dim)
+fluxes_rusanov(mrc_fld_data_t F[5], mrc_fld_data_t Ul[5], mrc_fld_data_t Ur[5],
+	       mrc_fld_data_t Wl[6], mrc_fld_data_t Wr[6], int dim)
 {
   mrc_fld_data_t Fl[5], Fr[5];
-  mrc_fld_data_t Ul[5], Ur[5];
-  mrc_fld_data_t Wl[5], Wr[5];
-  
-  for (int m = 0; m < 5; m++) {
-    Ul[m] = F1(U_cc, m, i);
-    Ur[m] = F1(U_cc, m, i+1);
-  }
-  for (int m = 0; m < 6; m++) {
-    Wl[m] = F1(W_cc, m, i);
-    Wr[m] = F1(W_cc, m, i+1);
-  }
   
   Fl[RR] = Wl[RR] * Wl[VX + dim];
   Fr[RR] = Wr[RR] * Wr[VX + dim];
@@ -178,7 +167,7 @@ fluxes_rusanov(struct mrc_fld *F, struct mrc_fld *U_cc, struct mrc_fld *W_cc,
   
   mrc_fld_data_t lambda = .5f * (Wr[CMSV] + Wl[CMSV]);
   for (int m = 0; m < 5; m++) {
-    F1(F, m, i) = .5f * ((Fr[m] + Fl[m]) - lambda * (Ur[m] - Ul[m]));
+    F[m] = .5f * ((Fr[m] + Fl[m]) - lambda * (Ur[m] - Ul[m]));
   }
 }
 
@@ -190,7 +179,22 @@ mhd_riemann_rusanov_run(struct mrc_fld *F, struct mrc_fld *U_cc, struct mrc_fld 
 			int ib, int ie, int dim)
 {
   for (int i = ib; i < ie; i++) {
-    fluxes_rusanov(F, U_cc, W_cc, i, dim);
+    mrc_fld_data_t flux[5], Ul[5], Ur[5], Wl[6], Wr[6];
+
+    for (int m = 0; m < 5; m++) {
+      Ul[m] = F1(U_cc, m, i);
+      Ur[m] = F1(U_cc, m, i+1);
+    }
+    for (int m = 0; m < 6; m++) {
+      Wl[m] = F1(W_cc, m, i);
+      Wr[m] = F1(W_cc, m, i+1);
+    }
+  
+    fluxes_rusanov(flux, Ul, Ur, Wl, Wr, dim);
+
+    for (int m = 0; m < 5; m++) {
+      F1(F, m, i) = flux[m];
+    }
   }
 }
   
