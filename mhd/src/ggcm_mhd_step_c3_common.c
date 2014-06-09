@@ -345,16 +345,13 @@ limit1_c(struct mrc_fld *x, int m, mrc_fld_data_t time, mrc_fld_data_t timelo,
 }
 
 static void
-vgfl_c(struct ggcm_mhd *mhd, int m, struct mrc_fld **fl_cc, struct mrc_fld *prim)
+vgfl_c(struct ggcm_mhd *mhd, struct mrc_fld **fl_cc, struct mrc_fld *prim)
 {
-  switch (m) {
-  case _RR1:  return vgflrr_c(mhd, fl_cc, prim);
-  case _RV1X: return vgflrvx_c(mhd, fl_cc, prim);
-  case _RV1Y: return vgflrvy_c(mhd, fl_cc, prim);
-  case _RV1Z: return vgflrvz_c(mhd, fl_cc, prim);
-  case _UU1:  return vgfluu_c(mhd, fl_cc, prim);
-  default: assert(0);
-  }
+  vgflrr_c(mhd, fl_cc, prim);
+  vgflrvx_c(mhd, fl_cc, prim);
+  vgflrvy_c(mhd, fl_cc, prim);
+  vgflrvz_c(mhd, fl_cc, prim);
+  vgfluu_c(mhd, fl_cc, prim);
 }
 
 static void
@@ -367,9 +364,7 @@ pushfv_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
 			       ggcm_mhd_step_get_3d_fld(step, 5),
 			       ggcm_mhd_step_get_3d_fld(step, 5), };
 
-  for (int m = 0; m < 5; m++) {
-    vgfl_c(mhd, m, fl_cc, prim);
-  }
+  vgfl_c(mhd, fl_cc, prim);
   
   if (limit == LIMIT_NONE) {
     for (int m = 0; m < 5; m++) {
