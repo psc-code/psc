@@ -279,7 +279,7 @@ fluxb_c(struct ggcm_mhd *mhd, struct mrc_fld **fluxes, struct mrc_fld *tmp,
 }
 
 static void
-pushn_c(struct ggcm_mhd_step *step, struct mrc_fld *x, int m,
+pushn_c(struct ggcm_mhd_step *step, struct mrc_fld *x,
 	struct mrc_fld **fluxes, mrc_fld_data_t dt)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
@@ -291,10 +291,12 @@ pushn_c(struct ggcm_mhd_step *step, struct mrc_fld *x, int m,
 
   mrc_fld_foreach(x, i,j,k, 0, 0) {
     mrc_fld_data_t s = dt * F3(masks, _YMASK, i,j,k);
-    F3(x, m, i,j,k) +=
-      - s * (fd1x[i] * (F3(fluxes[0], m, i,j,k) - F3(fluxes[0], m, i-1,j,k)) +
-	     fd1y[j] * (F3(fluxes[1], m, i,j,k) - F3(fluxes[1], m, i,j-1,k)) +
-	     fd1z[k] * (F3(fluxes[2], m, i,j,k) - F3(fluxes[2], m, i,j,k-1)));
+    for (int m = 0; m < 5; m++) {
+      F3(x, m, i,j,k) +=
+	- s * (fd1x[i] * (F3(fluxes[0], m, i,j,k) - F3(fluxes[0], m, i-1,j,k)) +
+	       fd1y[j] * (F3(fluxes[1], m, i,j,k) - F3(fluxes[1], m, i,j-1,k)) +
+	       fd1z[k] * (F3(fluxes[2], m, i,j,k) - F3(fluxes[2], m, i,j,k-1)));
+    }
   } mrc_fld_foreach_end;
 }
 
@@ -825,12 +827,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
   pushfv_c(step, fluxes, _RV1Z, dt, x_curr, x_next, limit);
   pushfv_c(step, fluxes, _UU1 , dt, x_curr, x_next, limit);
 
-  pushn_c(step, x_next, _RR1 , fluxes, dt);
-  pushn_c(step, x_next, _RV1X, fluxes, dt);
-  pushn_c(step, x_next, _RV1Y, fluxes, dt);
-  pushn_c(step, x_next, _RV1Z, fluxes, dt);
-  pushn_c(step, x_next, _UU1 , fluxes, dt);
-
+  pushn_c(step, x_next, fluxes, dt);
   pushpp_c(step, dt, x_next, prim);
 
   switch (mhd->par.magdiffu) {
