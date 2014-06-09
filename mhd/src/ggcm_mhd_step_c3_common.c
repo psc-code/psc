@@ -279,8 +279,8 @@ fluxb_c(struct ggcm_mhd *mhd, struct mrc_fld **fluxes, struct mrc_fld *tmp,
 }
 
 static void
-pushn_c(struct ggcm_mhd_step *step, struct mrc_fld *x,
-	struct mrc_fld **fluxes, mrc_fld_data_t dt)
+update_fv(struct ggcm_mhd_step *step, struct mrc_fld *x,
+	  struct mrc_fld **fluxes, mrc_fld_data_t dt)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
@@ -827,7 +827,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
   pushfv_c(step, fluxes, _RV1Z, dt, x_curr, x_next, limit);
   pushfv_c(step, fluxes, _UU1 , dt, x_curr, x_next, limit);
 
-  pushn_c(step, x_next, fluxes, dt);
+  update_fv(step, x_next, fluxes, dt);
   pushpp_c(step, dt, x_next, prim);
 
   switch (mhd->par.magdiffu) {
