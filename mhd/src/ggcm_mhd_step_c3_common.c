@@ -195,32 +195,47 @@ fluxl_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes, struct mrc_fld **fl
 {
   struct mrc_fld *fl1_cc = ggcm_mhd_step_get_1d_fld(step, 5);
 
-  mrc_fld_foreach(fluxes[0], i,j,k, 1, 0) {
-    for (int m = 0; m < 5; m++) {
-      F3(fluxes[0], m, i,j,k) =
-	.5f * ((F3(fl_cc[0], m, i  ,j,k) + F3(fl_cc[0], m, i+1,j,k)) -
-	       .5f * (F3(prim, CMSV, i+1,j,k) + F3(prim, CMSV, i,j,k)) *
-	       (F3(x, m, i+1,j,k) - F3(x, m, i,j,k)));
-    }
-  } mrc_fld_foreach_end;
+  const int *ldims = mrc_fld_dims(x) + x->_is_aos;
 
-  mrc_fld_foreach(fluxes[1], i,j,k, 1, 0) {
-    for (int m = 0; m < 5; m++) {
-      F3(fluxes[1], m, i,j,k) =
-	.5f * ((F3(fl_cc[1], m, i,j  ,k) + F3(fl_cc[1], m, i,j+1,k)) -
-	       .5f * (F3(prim, CMSV, i,j+1,k) + F3(prim, CMSV, i,j,k)) *
-	       (F3(x, m, i,j+1,k) - F3(x, m, i,j,k)));
+  // FIXME, flux indexing should be shifted by 1
+  for (int k = 0; k < ldims[2]; k++) {
+    for (int j = 0; j < ldims[1]; j++) {
+      for (int i = -1; i < ldims[0]; i++) {
+	for (int m = 0; m < 5; m++) {
+	  F3(fluxes[0], m, i,j,k) =
+	    .5f * ((F3(fl_cc[0], m, i  ,j,k) + F3(fl_cc[0], m, i+1,j,k)) -
+		   .5f * (F3(prim, CMSV, i+1,j,k) + F3(prim, CMSV, i,j,k)) *
+		   (F3(x, m, i+1,j,k) - F3(x, m, i,j,k)));
+	}
+      }
     }
-  } mrc_fld_foreach_end;
+  }
 
-  mrc_fld_foreach(fluxes[2], i,j,k, 1, 0) {
-    for (int m = 0; m < 5; m++) {
-      F3(fluxes[2], m, i,j,k) =
-	.5f * ((F3(fl_cc[2], m, i,j,k  ) + F3(fl_cc[2], m, i,j,k+1)) -
-	       .5f * (F3(prim, CMSV, i,j,k+1) + F3(prim, CMSV, i,j,k)) *
-	       (F3(x, m, i,j,k+1) - F3(x, m, i,j,k)));
+  for (int k = 0; k < ldims[2]; k++) {
+    for (int i = 0; i < ldims[0]; i++) {
+      for (int j = -1; j < ldims[1]; j++) {
+	for (int m = 0; m < 5; m++) {
+	  F3(fluxes[1], m, i,j,k) =
+	    .5f * ((F3(fl_cc[1], m, i,j  ,k) + F3(fl_cc[1], m, i,j+1,k)) -
+		   .5f * (F3(prim, CMSV, i,j+1,k) + F3(prim, CMSV, i,j,k)) *
+		   (F3(x, m, i,j+1,k) - F3(x, m, i,j,k)));
+	}
+      }
     }
-  } mrc_fld_foreach_end;
+  }
+
+  for (int i = 0; i < ldims[0]; i++) {
+    for (int j = 0; j < ldims[1]; j++) {
+      for (int k = -1; k < ldims[2]; k++) {
+	for (int m = 0; m < 5; m++) {
+	  F3(fluxes[2], m, i,j,k) =
+	    .5f * ((F3(fl_cc[2], m, i,j,k  ) + F3(fl_cc[2], m, i,j,k+1)) -
+		   .5f * (F3(prim, CMSV, i,j,k+1) + F3(prim, CMSV, i,j,k)) *
+		   (F3(x, m, i,j,k+1) - F3(x, m, i,j,k)));
+	}
+      }
+    }
+  }
 
   ggcm_mhd_step_put_1d_fld(step, fl1_cc);
 }
