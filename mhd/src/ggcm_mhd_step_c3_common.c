@@ -403,11 +403,14 @@ pushfv_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
   struct ggcm_mhd *mhd = step->mhd;
   struct mrc_fld *prim = sub->prim, *b = sub->b, *c = sub->c, *tmp = sub->tmp;
 
-  for (int m = 0; m < 5; m++) {
-    vgfl_c(mhd, m, tmp, prim);
-    if (limit == LIMIT_NONE) {
+  if (limit == LIMIT_NONE) {
+    for (int m = 0; m < 5; m++) {
+      vgfl_c(mhd, m, tmp, prim);
       fluxl_c(mhd, fluxes, tmp, x_curr, m, prim);
-    } else {
+    }
+  } else {
+    for (int m = 0; m < 5; m++) {
+      vgfl_c(mhd, m, tmp, prim);
       mrc_fld_foreach(c, i,j,k, 2,2) {
 	F3(c, 0, i,j,k) = F3(b, 0, i,j,k);
 	F3(c, 1, i,j,k) = F3(b, 1, i,j,k);
