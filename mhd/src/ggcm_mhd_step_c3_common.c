@@ -420,23 +420,23 @@ pushfv_c(struct ggcm_mhd_step *step, int m, mrc_fld_data_t dt, struct mrc_fld *x
 // edge centered current density
 
 static void
-curr_c(struct ggcm_mhd *mhd, int m_j, int m_curr)
+curr_c(struct ggcm_mhd *mhd, struct mrc_fld *j, int m_j,
+       struct mrc_fld *x, int m_curr)
 {
-  struct mrc_fld *f = mhd->fld;
   float *bd4x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD4) - 1;
   float *bd4y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD4) - 1;
   float *bd4z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD4) - 1;
 
-  mrc_fld_foreach(f, ix,iy,iz, 1, 2) {
-    F3(f, m_j + 0, ix,iy,iz) =
-      (F3(f, m_curr + _B1Z, ix,iy,iz) - F3(f, m_curr + _B1Z, ix,iy-1,iz)) * bd4y[iy] -
-      (F3(f, m_curr + _B1Y, ix,iy,iz) - F3(f, m_curr + _B1Y, ix,iy,iz-1)) * bd4z[iz];
-    F3(f, m_j + 1, ix,iy,iz) =
-      (F3(f, m_curr + _B1X, ix,iy,iz) - F3(f, m_curr + _B1X, ix,iy,iz-1)) * bd4z[iz] -
-      (F3(f, m_curr + _B1Z, ix,iy,iz) - F3(f, m_curr + _B1Z, ix-1,iy,iz)) * bd4x[ix];
-    F3(f, m_j + 2, ix,iy,iz) =
-      (F3(f, m_curr + _B1Y, ix,iy,iz) - F3(f, m_curr + _B1Y, ix-1,iy,iz)) * bd4x[ix] -
-      (F3(f, m_curr + _B1X, ix,iy,iz) - F3(f, m_curr + _B1X, ix,iy-1,iz)) * bd4y[iy];
+  mrc_fld_foreach(j, ix,iy,iz, 1, 2) {
+    F3(j, m_j + 0, ix,iy,iz) =
+      (F3(x, m_curr + _B1Z, ix,iy,iz) - F3(x, m_curr + _B1Z, ix,iy-1,iz)) * bd4y[iy] -
+      (F3(x, m_curr + _B1Y, ix,iy,iz) - F3(x, m_curr + _B1Y, ix,iy,iz-1)) * bd4z[iz];
+    F3(j, m_j + 1, ix,iy,iz) =
+      (F3(x, m_curr + _B1X, ix,iy,iz) - F3(x, m_curr + _B1X, ix,iy,iz-1)) * bd4z[iz] -
+      (F3(x, m_curr + _B1Z, ix,iy,iz) - F3(x, m_curr + _B1Z, ix-1,iy,iz)) * bd4x[ix];
+    F3(j, m_j + 2, ix,iy,iz) =
+      (F3(x, m_curr + _B1Y, ix,iy,iz) - F3(x, m_curr + _B1Y, ix-1,iy,iz)) * bd4x[ix] -
+      (F3(x, m_curr + _B1X, ix,iy,iz) - F3(x, m_curr + _B1X, ix,iy-1,iz)) * bd4y[iy];
   } mrc_fld_foreach_end;
 }
 
@@ -470,19 +470,20 @@ curbc_c(struct ggcm_mhd *mhd, int m_curr)
 { 
   enum { _TX = _TMP1, _TY = _TMP2, _TZ = _TMP3 };
 
-  curr_c(mhd, _TX, m_curr);
+  struct mrc_fld *x = mhd->fld;
+  struct mrc_fld *j = mhd->fld;
+  curr_c(mhd, j, _TX, x, m_curr);
 
   struct mrc_fld *f = mhd->fld;
-
   // j averaged to cell-centered
   mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
     mrc_fld_data_t s = .25f * F3(f, _ZMASK, ix, iy, iz);
-    F3(f, _CURRX, ix,iy,iz) = s * (F3(f, _TX, ix,iy+1,iz+1) + F3(f, _TX, ix,iy,iz+1) +
-				   F3(f, _TX, ix,iy+1,iz  ) + F3(f, _TX, ix,iy,iz  ));
-    F3(f, _CURRY, ix,iy,iz) = s * (F3(f, _TY, ix+1,iy,iz+1) + F3(f, _TY, ix,iy,iz+1) +
-				   F3(f, _TY, ix+1,iy,iz  ) + F3(f, _TY, ix,iy,iz  ));
-    F3(f, _CURRZ, ix,iy,iz) = s * (F3(f, _TZ, ix+1,iy+1,iz) + F3(f, _TZ, ix,iy+1,iz) +
-				   F3(f, _TZ, ix+1,iy  ,iz) + F3(f, _TZ, ix,iy  ,iz));
+    F3(f, _CURRX, ix,iy,iz) = s * (F3(j, _TX, ix,iy+1,iz+1) + F3(j, _TX, ix,iy,iz+1) +
+				   F3(j, _TX, ix,iy+1,iz  ) + F3(j, _TX, ix,iy,iz  ));
+    F3(f, _CURRY, ix,iy,iz) = s * (F3(j, _TY, ix+1,iy,iz+1) + F3(j, _TY, ix,iy,iz+1) +
+				   F3(j, _TY, ix+1,iy,iz  ) + F3(j, _TY, ix,iy,iz  ));
+    F3(f, _CURRZ, ix,iy,iz) = s * (F3(j, _TZ, ix+1,iy+1,iz) + F3(j, _TZ, ix,iy+1,iz) +
+				   F3(j, _TZ, ix+1,iy  ,iz) + F3(j, _TZ, ix,iy  ,iz));
   } mrc_fld_foreach_end;
 }
 
@@ -496,7 +497,10 @@ push_ej_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, int m_curr, int m_next)
   enum { XJX = _BX, XJY = _BY, XJZ = _BZ };
   enum { BX = _TMP1, BY = _TMP2, BZ = _TMP3 };
 
-  curr_c(mhd, XJX, m_curr);
+  struct mrc_fld *j = mhd->fld;
+  struct mrc_fld *x = mhd->fld;
+
+  curr_c(mhd, j, XJX, x, m_curr);
   currbb_c(mhd, BX, m_curr);
 	
   struct mrc_fld *f = mhd->fld;
@@ -505,24 +509,15 @@ push_ej_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, int m_curr, int m_next)
   mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
     mrc_fld_data_t z = F3(f,_ZMASK, ix,iy,iz);
     mrc_fld_data_t s2 = s1 * z;
-    mrc_fld_data_t cx = (F3(f, XJX, ix  ,iy+1,iz+1) +
-		F3(f, XJX, ix  ,iy  ,iz+1) +
-		F3(f, XJX, ix  ,iy+1,iz  ) +
-		F3(f, XJX, ix  ,iy  ,iz  ));
-    mrc_fld_data_t cy = (F3(f, XJY, ix+1,iy  ,iz+1) +
-		F3(f, XJY, ix  ,iy  ,iz+1) +
-		F3(f, XJY, ix+1,iy  ,iz  ) +
-		F3(f, XJY, ix  ,iy  ,iz  ));
-    mrc_fld_data_t cz = (F3(f, XJZ, ix+1,iy+1,iz  ) +
-		F3(f, XJZ, ix  ,iy+1,iz  ) +
-		F3(f, XJZ, ix+1,iy  ,iz  ) +
-		F3(f, XJZ, ix  ,iy  ,iz  ));
-    mrc_fld_data_t ffx = s2 * (cy * F3(f, BZ, ix,iy,iz) -
-			       cz * F3(f, BY, ix,iy,iz));
-    mrc_fld_data_t ffy = s2 * (cz * F3(f, BX, ix,iy,iz) -
-			       cx * F3(f, BZ, ix,iy,iz));
-    mrc_fld_data_t ffz = s2 * (cx * F3(f, BY, ix,iy,iz) -
-			       cy * F3(f, BX, ix,iy,iz));
+    mrc_fld_data_t cx = (F3(j, XJX, ix  ,iy+1,iz+1) + F3(j, XJX, ix  ,iy  ,iz+1) +
+			 F3(j, XJX, ix  ,iy+1,iz  ) + F3(j, XJX, ix  ,iy  ,iz  ));
+    mrc_fld_data_t cy = (F3(f, XJY, ix+1,iy  ,iz+1) + F3(f, XJY, ix  ,iy  ,iz+1) +
+			 F3(f, XJY, ix+1,iy  ,iz  ) + F3(f, XJY, ix  ,iy  ,iz  ));
+    mrc_fld_data_t cz = (F3(f, XJZ, ix+1,iy+1,iz  ) + F3(f, XJZ, ix  ,iy+1,iz  ) +
+			 F3(f, XJZ, ix+1,iy  ,iz  ) + F3(f, XJZ, ix  ,iy  ,iz  ));
+    mrc_fld_data_t ffx = s2 * (cy * F3(f, BZ, ix,iy,iz) - cz * F3(f, BY, ix,iy,iz));
+    mrc_fld_data_t ffy = s2 * (cz * F3(f, BX, ix,iy,iz) - cx * F3(f, BZ, ix,iy,iz));
+    mrc_fld_data_t ffz = s2 * (cx * F3(f, BY, ix,iy,iz) - cy * F3(f, BX, ix,iy,iz));
     mrc_fld_data_t duu = (ffx * F3(prim, _VX, ix,iy,iz) +
 			  ffy * F3(prim, _VY, ix,iy,iz) +
 			  ffz * F3(prim, _VZ, ix,iy,iz));
