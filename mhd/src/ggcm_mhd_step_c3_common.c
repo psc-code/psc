@@ -467,24 +467,24 @@ currbb_c(struct ggcm_mhd *mhd, struct mrc_fld *b_cc, int m_b_cc,
 // cell-centered j
 
 static void
-curbc_c(struct ggcm_mhd *mhd, int m_curr)
+curbc_c(struct ggcm_mhd_step *step, struct mrc_fld *x, int m_curr)
 { 
-  enum { _TX = _TMP1, _TY = _TMP2, _TZ = _TMP3 };
+  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
+  struct ggcm_mhd *mhd = step->mhd;
 
-  struct mrc_fld *x = mhd->fld;
-  struct mrc_fld *j = mhd->fld;
-  curr_c(mhd, j, _TX, x, m_curr);
+  struct mrc_fld *j = sub->tmp;
+  curr_c(mhd, j, 0, x, m_curr);
 
   struct mrc_fld *f = mhd->fld;
   // j averaged to cell-centered
   mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
     mrc_fld_data_t s = .25f * F3(f, _ZMASK, ix, iy, iz);
-    F3(f, _CURRX, ix,iy,iz) = s * (F3(j, _TX, ix,iy+1,iz+1) + F3(j, _TX, ix,iy,iz+1) +
-				   F3(j, _TX, ix,iy+1,iz  ) + F3(j, _TX, ix,iy,iz  ));
-    F3(f, _CURRY, ix,iy,iz) = s * (F3(j, _TY, ix+1,iy,iz+1) + F3(j, _TY, ix,iy,iz+1) +
-				   F3(j, _TY, ix+1,iy,iz  ) + F3(j, _TY, ix,iy,iz  ));
-    F3(f, _CURRZ, ix,iy,iz) = s * (F3(j, _TZ, ix+1,iy+1,iz) + F3(j, _TZ, ix,iy+1,iz) +
-				   F3(j, _TZ, ix+1,iy  ,iz) + F3(j, _TZ, ix,iy  ,iz));
+    F3(f, _CURRX, ix,iy,iz) = s * (F3(j, 0, ix,iy+1,iz+1) + F3(j, 0, ix,iy,iz+1) +
+				   F3(j, 0, ix,iy+1,iz  ) + F3(j, 0, ix,iy,iz  ));
+    F3(f, _CURRY, ix,iy,iz) = s * (F3(j, 1, ix+1,iy,iz+1) + F3(j, 1, ix,iy,iz+1) +
+				   F3(j, 1, ix+1,iy,iz  ) + F3(j, 1, ix,iy,iz  ));
+    F3(f, _CURRZ, ix,iy,iz) = s * (F3(j, 2, ix+1,iy+1,iz) + F3(j, 2, ix,iy+1,iz) +
+				   F3(j, 2, ix+1,iy  ,iz) + F3(j, 2, ix,iy  ,iz));
   } mrc_fld_foreach_end;
 }
 
@@ -571,9 +571,11 @@ res1_const_c(struct ggcm_mhd *mhd)
 }
 
 static void
-calc_resis_const_c(struct ggcm_mhd *mhd, int m_curr)
+calc_resis_const_c(struct ggcm_mhd_step *step, struct mrc_fld *x, int m_curr)
 {
-  curbc_c(mhd, m_curr);
+  struct ggcm_mhd *mhd = step->mhd;
+
+  curbc_c(step, x, m_curr);
   res1_const_c(mhd);
 }
 
@@ -826,7 +828,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
     calc_resis_nl1_c(mhd, m_curr);
     break;
   case MAGDIFFU_CONST:
-    calc_resis_const_c(mhd, m_curr);
+    calc_resis_const_c(step, x_curr, m_curr);
     break;
   default:
     assert(0);
@@ -893,7 +895,7 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step,
     calc_resis_nl1_c(mhd, m_curr);
     break;
   case MAGDIFFU_CONST:
-    calc_resis_const_c(mhd, m_curr);
+    calc_resis_const_c(step, x_curr, m_curr);
     break;
   default:
     assert(0);
