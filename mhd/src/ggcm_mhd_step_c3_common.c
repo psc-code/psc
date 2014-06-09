@@ -35,8 +35,6 @@ struct ggcm_mhd_step_c3 {
   struct mrc_fld *b;
   struct mrc_fld *c;
   struct mrc_fld *tmp;
-  struct mrc_fld *curr;
-  struct mrc_fld *resis;
 };
 
 #define ggcm_mhd_step_c3(step) mrc_to_subobj(step, struct ggcm_mhd_step_c3)
@@ -83,8 +81,6 @@ ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
   setup_mrc_fld_3d(sub->tmp , mhd->fld, 4);
   setup_mrc_fld_3d(sub->b   , mhd->fld, 3);
   setup_mrc_fld_3d(sub->c   , mhd->fld, 3);
-  setup_mrc_fld_3d(sub->curr, mhd->fld, 3);
-  setup_mrc_fld_3d(sub->resis,mhd->fld, 1);
 
   sub->masks = mhd->fld;
 
@@ -770,7 +766,6 @@ static void
 calce_c(struct ggcm_mhd_step *step, struct mrc_fld *E,
 	struct mrc_fld *x, struct mrc_fld *prim, mrc_fld_data_t dt)
 {
-  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
 
   switch (mhd->par.magdiffu) {
@@ -779,10 +774,14 @@ calce_c(struct ggcm_mhd_step *step, struct mrc_fld *E,
     calce_nl1_c(step, E, dt, x, prim);
     break;
   case MAGDIFFU_CONST: {
-    struct mrc_fld *curr = sub->curr;
-    struct mrc_fld *resis = sub->resis;
+    struct mrc_fld *curr = ggcm_mhd_step_get_3d_fld(step, 3);
+    struct mrc_fld *resis = ggcm_mhd_step_get_3d_fld(step, 1);
+
     calc_resis_const_c(step, curr, resis, x);
     calce_const_c(step, E, dt, x, prim, curr, resis);
+
+    ggcm_mhd_step_put_3d_fld(step, curr);
+    ggcm_mhd_step_put_3d_fld(step, resis);
     break;
   }
   default:
@@ -893,8 +892,6 @@ static struct param ggcm_mhd_step_c_descr[] = {
   { "fluxes[2]"       , VAR(fluxes[2])       , MRC_VAR_OBJ(mrc_fld)           },
   { "b"               , VAR(b)               , MRC_VAR_OBJ(mrc_fld)           },
   { "c"               , VAR(c)               , MRC_VAR_OBJ(mrc_fld)           },
-  { "curr"            , VAR(curr)            , MRC_VAR_OBJ(mrc_fld)           },
-  { "resis"           , VAR(resis)           , MRC_VAR_OBJ(mrc_fld)           },
 
   {},
 };
