@@ -859,19 +859,13 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step,
   // set x_half = x^n, then advance to n+1/2
   mrc_fld_copy_range(x_half, x, 0, 8);
 
-  mrc_fld_foreach(x, ix,iy,iz, 2, 2) {
-    for (int m = 0; m < 8; m++) {
-      F3(x, _RR2 + m, ix,iy,iz) = F3(x_half, m, ix,iy,iz);
-    }
-  } mrc_fld_foreach_end;
-
 #if 0
   pushstage_c(step, dt, x, _RR1, x, _RR2, LIMIT_NONE);
 #else
   int limit = LIMIT_NONE;
   struct ggcm_mhd *mhd = step->mhd;
-  struct mrc_fld *x_curr = x, *x_next = x;
-  int m_curr = _RR1, m_next = _RR2;
+  struct mrc_fld *x_curr = x, *x_next = x_half;
+  int m_curr = _RR1, m_next = _RR1;
   rmaskn_c(step);
 
   if (limit != LIMIT_NONE) {
@@ -889,6 +883,13 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step,
   pushfv_c(step, _UU1 , dt, x_curr, m_curr, x_next, m_next, limit);
 
   pushpp_c(step, dt, x_next, m_next, prim);
+
+  mrc_fld_foreach(x, ix,iy,iz, 2, 2) {
+    for (int m = 0; m < 8; m++) {
+      F3(x, _RR2 + m, ix,iy,iz) = F3(x_half, m, ix,iy,iz);
+    }
+  } mrc_fld_foreach_end;
+  x_next = x; m_next = _RR2;
 
   switch (mhd->par.magdiffu) {
   case MAGDIFFU_NL1:
