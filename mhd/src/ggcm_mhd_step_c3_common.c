@@ -190,7 +190,7 @@ vgfluu_c(struct ggcm_mhd *mhd, struct mrc_fld **fl_cc, struct mrc_fld *prim)
 }
 
 static void
-fluxl_c(struct ggcm_mhd *mhd, struct mrc_fld **fluxes, struct mrc_fld **fl_cc,
+fluxl_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes, struct mrc_fld **fl_cc,
 	struct mrc_fld *x, struct mrc_fld *prim)
 {
   mrc_fld_foreach(fluxes[0], i,j,k, 1, 0) {
@@ -269,10 +269,16 @@ limit1_c(struct mrc_fld *x, int m, mrc_fld_data_t time, mrc_fld_data_t timelo,
 }
 
 static void
-fluxb_c(struct ggcm_mhd *mhd, struct mrc_fld **fluxes, struct mrc_fld **fl_cc,
-	struct mrc_fld *x, struct mrc_fld *prim, struct mrc_fld *b,
-	struct mrc_fld *c)
+fluxb_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes, struct mrc_fld **fl_cc,
+	struct mrc_fld *x, struct mrc_fld *prim)
 {
+  struct ggcm_mhd *mhd = step->mhd;
+  struct mrc_fld *b = ggcm_mhd_step_get_3d_fld(step, 3);
+  struct mrc_fld *c = ggcm_mhd_step_get_3d_fld(step, 3);
+  vgrs(b, 0, 0.f); vgrs(b, 1, 0.f); vgrs(b, 2, 0.f);
+  limit1_c(prim, PP, mhd->time, mhd->par.timelo, b, 0);
+  // limit2, 3
+
   for (int m = 0; m < 5; m++) {
     mrc_fld_foreach(c, i,j,k, 2,2) {
       F3(c, 0, i,j,k) = F3(b, 0, i,j,k);
@@ -313,6 +319,9 @@ fluxb_c(struct ggcm_mhd *mhd, struct mrc_fld **fluxes, struct mrc_fld **fl_cc,
       F3(fluxes[2], m, i,j,k) = cz * flz + (1.f - cz) * fhz;
     } mrc_fld_foreach_end;
   }
+
+  ggcm_mhd_step_put_3d_fld(step, b);
+  ggcm_mhd_step_put_3d_fld(step, c);
 }
 
 static void
@@ -380,18 +389,9 @@ pushfv_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
   vgfl_c(mhd, fl_cc, prim);
   
   if (limit == LIMIT_NONE) {
-    fluxl_c(mhd, fluxes, fl_cc, x_curr, prim);
+    fluxl_c(step, fluxes, fl_cc, x_curr, prim);
   } else {
-    struct mrc_fld *b = ggcm_mhd_step_get_3d_fld(step, 3);
-    struct mrc_fld *c = ggcm_mhd_step_get_3d_fld(step, 3);
-    vgrs(b, 0, 0.f); vgrs(b, 1, 0.f); vgrs(b, 2, 0.f);
-    limit1_c(prim, PP, mhd->time, mhd->par.timelo, b, 0);
-    // limit2, 3
-
-    fluxb_c(mhd, fluxes, fl_cc, x_curr, prim, b, c);
-    
-    ggcm_mhd_step_put_3d_fld(step, b);
-    ggcm_mhd_step_put_3d_fld(step, c);
+    fluxb_c(step, fluxes, fl_cc, x_curr, prim);
   }
 
   ggcm_mhd_step_put_3d_fld(step, fl_cc[0]);
