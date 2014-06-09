@@ -32,7 +32,6 @@ struct ggcm_mhd_step_c3 {
   struct mrc_fld *fluxes[3];
 
   struct mrc_fld *masks;
-  struct mrc_fld *tmp;
 };
 
 #define ggcm_mhd_step_c3(step) mrc_to_subobj(step, struct ggcm_mhd_step_c3)
@@ -76,7 +75,6 @@ ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
   for (int d = 0; d < 3; d++) {
     setup_mrc_fld_3d(sub->fluxes[d], mhd->fld, 5);
   }
-  setup_mrc_fld_3d(sub->tmp , mhd->fld, 4);
 
   sub->masks = mhd->fld;
 
@@ -386,9 +384,8 @@ pushfv_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
 	 mrc_fld_data_t dt, struct mrc_fld *x_curr, struct mrc_fld *prim,
 	 int limit)
 {
-  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
-  struct mrc_fld *tmp = sub->tmp;
+  struct mrc_fld *tmp = ggcm_mhd_step_get_3d_fld(step, 3);
 
   if (limit == LIMIT_NONE) {
     for (int m = 0; m < 5; m++) {
@@ -417,6 +414,8 @@ pushfv_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
     ggcm_mhd_step_put_3d_fld(step, b);
     ggcm_mhd_step_put_3d_fld(step, c);
   }
+
+  ggcm_mhd_step_put_3d_fld(step, tmp);
 }
 
 // ----------------------------------------------------------------------
@@ -476,7 +475,7 @@ curbc_c(struct ggcm_mhd_step *step, struct mrc_fld *j_cc,
   struct mrc_fld *masks = sub->masks;
 
   // get j on edges
-  struct mrc_fld *j_ec = sub->tmp;
+  struct mrc_fld *j_ec = ggcm_mhd_step_get_3d_fld(step, 3);
   curr_c(mhd, j_ec, x);
 
   // then average to cell centers
@@ -489,6 +488,8 @@ curbc_c(struct ggcm_mhd_step *step, struct mrc_fld *j_cc,
     F3(j_cc, 2, i,j,k) = s * (F3(j_ec, 2, i+1,j+1,k) + F3(j_ec, 2, i,j+1,k) +
 			      F3(j_ec, 2, i+1,j  ,k) + F3(j_ec, 2, i,j  ,k));
   } mrc_fld_foreach_end;
+
+  ggcm_mhd_step_put_3d_fld(step, j_ec);
 }
 
 static void
@@ -601,12 +602,11 @@ bcthy3f(mrc_fld_data_t s1, mrc_fld_data_t s2)
 }
 
 static inline void
-calc_avg_dz_By(struct ggcm_mhd_step *step, struct mrc_fld *x, int XX, int YY, int ZZ,
+calc_avg_dz_By(struct ggcm_mhd_step *step, struct mrc_fld *tmp,
+	       struct mrc_fld *x, int XX, int YY, int ZZ,
 	       int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2)
 {
-  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
-  struct mrc_fld *tmp = sub->tmp;
 
   float *bd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD1);
   float *bd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD1);
@@ -685,15 +685,16 @@ bcthy3z_NL1(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int I, int J, in
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
-  struct mrc_fld *tmp = sub->tmp, *masks = sub->masks;
+  struct mrc_fld *masks = sub->masks;
+  struct mrc_fld *tmp = ggcm_mhd_step_get_3d_fld(step, 4);
 
   float *bd2x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD2);
   float *bd2y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD2);
   float *bd2z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD2);
 
-  calc_avg_dz_By(step, x, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2);
+  calc_avg_dz_By(step, tmp, x, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2);
 
-  mrc_fld_data_t diffmul=1.0;
+  mrc_fld_data_t diffmul = 1.f;
   if (mhd->time < mhd->par.diff_timelo) { // no anomalous res at startup
     diffmul = 0.f;
   }
@@ -719,6 +720,8 @@ bcthy3z_NL1(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int I, int J, in
     //    F3(f, _RESIS, i,j,k) += fabsf(d1+d2) * F3(masks, _ZMASK, i,j,k);
     F3(E, XX, i,j,k) = - (ttmp[0] - ttmp[1]);
   } mrc_fld_foreach_end;
+
+  ggcm_mhd_step_put_3d_fld(step, tmp);
 }
 
 static void
@@ -727,15 +730,14 @@ bcthy3z_const(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int I, int J, 
 	      struct mrc_fld *E, mrc_fld_data_t dt, struct mrc_fld *x,
 	      struct mrc_fld *prim, struct mrc_fld *curr, struct mrc_fld *resis)
 {
-  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
-  struct mrc_fld *tmp = sub->tmp;
+  struct mrc_fld *tmp = ggcm_mhd_step_get_3d_fld(step, 4);
 
   float *bd2x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD2);
   float *bd2y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD2);
   float *bd2z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD2);
 
-  calc_avg_dz_By(step, x, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2);
+  calc_avg_dz_By(step, tmp, x, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2);
 
   // edge centered E = - v x B (+ dissipation)
   mrc_fld_foreach(E, i,j,k, 0, 1) {
@@ -747,6 +749,8 @@ bcthy3z_const(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int I, int J, 
     mrc_fld_data_t vresis = CC_TO_EC(resis, 0, i,j,k, I,J,K);
     F3(E, XX, i,j,k) = - (ttmp[0] - ttmp[1]) + vresis * vcurrXX;
   } mrc_fld_foreach_end;
+
+  ggcm_mhd_step_put_3d_fld(step, tmp);
 }
 
 static void
@@ -892,7 +896,6 @@ ggcm_mhd_step_c_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 static struct param ggcm_mhd_step_c_descr[] = {
   { "x_half"          , VAR(x_half)          , MRC_VAR_OBJ(mrc_fld)           },
   { "prim"            , VAR(prim)            , MRC_VAR_OBJ(mrc_fld)           },
-  { "tmp"             , VAR(tmp)             , MRC_VAR_OBJ(mrc_fld)           },
   { "fluxes[0]"       , VAR(fluxes[0])       , MRC_VAR_OBJ(mrc_fld)           },
   { "fluxes[1]"       , VAR(fluxes[1])       , MRC_VAR_OBJ(mrc_fld)           },
   { "fluxes[2]"       , VAR(fluxes[2])       , MRC_VAR_OBJ(mrc_fld)           },
