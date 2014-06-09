@@ -488,8 +488,12 @@ curbc_c(struct ggcm_mhd *mhd, int m_curr)
 }
 
 static void
-push_ej_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_curr, int m_next)
+push_ej_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, int m_curr, int m_next)
 {
+  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
+  struct ggcm_mhd *mhd = step->mhd;
+  struct mrc_fld *prim = sub->prim;
+
   enum { XJX = _BX, XJY = _BY, XJZ = _BZ };
   enum { BX = _TMP1, BY = _TMP2, BZ = _TMP3 };
 
@@ -515,14 +519,14 @@ push_ej_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_curr, int m_next)
 		F3(f, XJZ, ix+1,iy  ,iz  ) +
 		F3(f, XJZ, ix  ,iy  ,iz  ));
     mrc_fld_data_t ffx = s2 * (cy * F3(f, BZ, ix,iy,iz) -
-		      cz * F3(f, BY, ix,iy,iz));
+			       cz * F3(f, BY, ix,iy,iz));
     mrc_fld_data_t ffy = s2 * (cz * F3(f, BX, ix,iy,iz) -
-		      cx * F3(f, BZ, ix,iy,iz));
+			       cx * F3(f, BZ, ix,iy,iz));
     mrc_fld_data_t ffz = s2 * (cx * F3(f, BY, ix,iy,iz) -
-		      cy * F3(f, BX, ix,iy,iz));
-    mrc_fld_data_t duu = (ffx * F3(f, _VX, ix,iy,iz) +
-		 ffy * F3(f, _VY, ix,iy,iz) +
-		 ffz * F3(f, _VZ, ix,iy,iz));
+			       cy * F3(f, BX, ix,iy,iz));
+    mrc_fld_data_t duu = (ffx * F3(prim, _VX, ix,iy,iz) +
+			  ffy * F3(prim, _VY, ix,iy,iz) +
+			  ffz * F3(prim, _VZ, ix,iy,iz));
 
     F3(f, m_next + _RV1X, ix,iy,iz) += ffx;
     F3(f, m_next + _RV1Y, ix,iy,iz) += ffy;
@@ -637,7 +641,8 @@ calc_avg_dz_By(struct ggcm_mhd *mhd, struct mrc_fld *f, int m_curr, int XX, int 
 	   F3(f, m, ix   ,iy   ,iz-IZ)))
 
 static inline void
-calc_v_x_B(mrc_fld_data_t ttmp[2], struct mrc_fld *f, int m_curr, int ix, int iy, int iz,
+calc_v_x_B(mrc_fld_data_t ttmp[2], struct mrc_fld *f, int m_curr, struct mrc_fld *prim,
+	   int ix, int iy, int iz,
 	   int XX, int YY, int ZZ, int IX, int IY, int IZ,
 	   int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2,
 	   float *bd2x, float *bd2y, float *bd2z, mrc_fld_data_t dt)
@@ -646,7 +651,7 @@ calc_v_x_B(mrc_fld_data_t ttmp[2], struct mrc_fld *f, int m_curr, int ix, int iy
     mrc_fld_data_t bd2[3] = { bd2x[ix], bd2y[iy], bd2z[iz] };
     mrc_fld_data_t vbZZ;
     // edge centered velocity
-    mrc_fld_data_t vvYY = CC_TO_EC(f, _VX + YY, ix,iy,iz, IX,IY,IZ) /* - d_i * vcurrYY */;
+    mrc_fld_data_t vvYY = CC_TO_EC(prim, _VX + YY, ix,iy,iz, IX,IY,IZ) /* - d_i * vcurrYY */;
     if (vvYY > 0.f) {
       vbZZ = F3(f, m_curr + _B1X + ZZ, ix-JX1,iy-JY1,iz-JZ1) +
 	F3(f, _TMP4, ix-JX1,iy-JY1,iz-JZ1) * (bd2m[YY] - dt*vvYY);
@@ -658,7 +663,7 @@ calc_v_x_B(mrc_fld_data_t ttmp[2], struct mrc_fld *f, int m_curr, int ix, int iy
 
     mrc_fld_data_t vbYY;
     // edge centered velocity
-    mrc_fld_data_t vvZZ = CC_TO_EC(f, _VX + ZZ, ix,iy,iz, IX,IY,IZ) /* - d_i * vcurrZZ */;
+    mrc_fld_data_t vvZZ = CC_TO_EC(prim, _VX + ZZ, ix,iy,iz, IX,IY,IZ) /* - d_i * vcurrZZ */;
     if (vvZZ > 0.f) {
       vbYY = F3(f, m_curr + _B1X + YY, ix-JX2,iy-JY2,iz-JZ2) +
 	F3(f, _TMP3, ix-JX2,iy-JY2,iz-JZ2) * (bd2m[ZZ] - dt*vvZZ);
@@ -671,10 +676,13 @@ calc_v_x_B(mrc_fld_data_t ttmp[2], struct mrc_fld *f, int m_curr, int ix, int iy
 }
 
 static void
-bcthy3z_NL1(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int IZ,
+bcthy3z_NL1(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int IX, int IY, int IZ,
 	    int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2,
 	    mrc_fld_data_t dt, int m_curr)
 {
+  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
+  struct ggcm_mhd *mhd = step->mhd;
+  struct mrc_fld *prim = sub->prim;
   struct mrc_fld *f = mhd->fld;
 
   float *bd2x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD2);
@@ -691,7 +699,7 @@ bcthy3z_NL1(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int IZ
   // edge centered E = - v x B (+ dissipation)
   mrc_fld_foreach(f, ix,iy,iz, 1, 0) {
     mrc_fld_data_t ttmp[2];
-    calc_v_x_B(ttmp, f, m_curr, ix, iy, iz, XX, YY, ZZ, IX, IY, IZ,
+    calc_v_x_B(ttmp, f, m_curr, prim, ix, iy, iz, XX, YY, ZZ, IX, IY, IZ,
 	       JX1, JY1, JZ1, JX2, JY2, JZ2, bd2x, bd2y, bd2z, dt);
     
     mrc_fld_data_t t1m = F3(f, m_curr + _B1X + ZZ, ix+JX1,iy+JY1,iz+JZ1) - F3(f, m_curr + _B1X + ZZ, ix,iy,iz);
@@ -712,9 +720,12 @@ bcthy3z_NL1(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int IZ
 }
 
 static void
-bcthy3z_const(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int IZ,
+bcthy3z_const(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int IX, int IY, int IZ,
 	      int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2, mrc_fld_data_t dt, int m_curr)
 {
+  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
+  struct ggcm_mhd *mhd = step->mhd;
+  struct mrc_fld *prim = sub->prim;
   struct mrc_fld *f = mhd->fld;
 
   float *bd2x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD2);
@@ -726,7 +737,7 @@ bcthy3z_const(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int 
   // edge centered E = - v x B (+ dissipation)
   mrc_fld_foreach(f, ix,iy,iz, 0, 1) {
     mrc_fld_data_t ttmp[2];
-    calc_v_x_B(ttmp, f, m_curr, ix, iy, iz, XX, YY, ZZ, IX, IY, IZ,
+    calc_v_x_B(ttmp, f, m_curr, prim, ix, iy, iz, XX, YY, ZZ, IX, IY, IZ,
 	       JX1, JY1, JZ1, JX2, JY2, JZ2, bd2x, bd2y, bd2z, dt);
 
     mrc_fld_data_t vcurrXX = CC_TO_EC(f, _CURRX + XX, ix,iy,iz, IX,IY,IZ);
@@ -736,29 +747,31 @@ bcthy3z_const(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int 
 }
 
 static void
-calce_nl1_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_curr)
+calce_nl1_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, int m_curr)
 {
-  bcthy3z_NL1(mhd, 0,1,2, 0,1,1, 0,1,0, 0,0,1, dt, m_curr);
-  bcthy3z_NL1(mhd, 1,2,0, 1,0,1, 0,0,1, 1,0,0, dt, m_curr);
-  bcthy3z_NL1(mhd, 2,0,1, 1,1,0, 1,0,0, 0,1,0, dt, m_curr);
+  bcthy3z_NL1(step, 0,1,2, 0,1,1, 0,1,0, 0,0,1, dt, m_curr);
+  bcthy3z_NL1(step, 1,2,0, 1,0,1, 0,0,1, 1,0,0, dt, m_curr);
+  bcthy3z_NL1(step, 2,0,1, 1,1,0, 1,0,0, 0,1,0, dt, m_curr);
 }
 
 static void
-calce_const_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_curr)
+calce_const_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, int m_curr)
 {
-  bcthy3z_const(mhd, 0,1,2, 0,1,1, 0,1,0, 0,0,1, dt, m_curr);
-  bcthy3z_const(mhd, 1,2,0, 1,0,1, 0,0,1, 1,0,0, dt, m_curr);
-  bcthy3z_const(mhd, 2,0,1, 1,1,0, 1,0,0, 0,1,0, dt, m_curr);
+  bcthy3z_const(step, 0,1,2, 0,1,1, 0,1,0, 0,0,1, dt, m_curr);
+  bcthy3z_const(step, 1,2,0, 1,0,1, 0,0,1, 1,0,0, dt, m_curr);
+  bcthy3z_const(step, 2,0,1, 1,1,0, 1,0,0, 0,1,0, dt, m_curr);
 }
 
 static void
-calce_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_curr)
+calce_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, int m_curr)
 {
+  struct ggcm_mhd *mhd = step->mhd;
+
   switch (mhd->par.magdiffu) {
   case MAGDIFFU_NL1:
-    return calce_nl1_c(mhd, dt, m_curr);
+    return calce_nl1_c(step, dt, m_curr);
   case MAGDIFFU_CONST:
-    return calce_const_c(mhd, dt, m_curr);
+    return calce_const_c(step, dt, m_curr);
   default:
     assert(0);
   }
@@ -823,8 +836,8 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
     assert(0);
   }
 
-  push_ej_c(mhd, dt, m_curr, m_next);
-  calce_c(mhd, dt, m_curr);
+  push_ej_c(step, dt, m_curr, m_next);
+  calce_c(step, dt, m_curr);
   bpush_c(mhd, dt, m_next);
 }
 
@@ -839,7 +852,6 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step,
   struct mrc_fld *prim = sub->prim;
 
   ggcm_mhd_step_c_primvar(step, prim, x);
-  primvar_c(step->mhd, _RR1); // FIXME, for zmaskn() and E-field
   primbb_c2_c(step->mhd, _RR1);
   zmaskn_c(step->mhd);
 
@@ -890,8 +902,8 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step,
     assert(0);
   }
 
-  push_ej_c(mhd, dt, m_curr, m_next);
-  calce_c(mhd, dt, m_curr);
+  push_ej_c(step, dt, m_curr, m_next);
+  calce_c(step, dt, m_curr);
   bpush_c(mhd, dt, m_next);
 #endif
 
@@ -920,7 +932,6 @@ ggcm_mhd_step_c_corr(struct ggcm_mhd_step *step,
     }
   } mrc_fld_foreach_end;
 
-  primvar_c(step->mhd, _RR2); // FIXME, for zmaskn() and E-field
   //  primbb_c2_c(step->mhd, _RR2);
   //  zmaskn_c(step->mhd);
 
