@@ -270,8 +270,17 @@ limit1_c(struct mrc_fld *x, int m, mrc_fld_data_t time, mrc_fld_data_t timelo,
 
 static void
 fluxb_c(struct ggcm_mhd *mhd, struct mrc_fld **fluxes, struct mrc_fld **fl_cc,
-	struct mrc_fld *x, int m, struct mrc_fld *prim, struct mrc_fld *c)
+	struct mrc_fld *x, int m, struct mrc_fld *prim, struct mrc_fld *b,
+	struct mrc_fld *c)
 {
+  mrc_fld_foreach(c, i,j,k, 2,2) {
+    F3(c, 0, i,j,k) = F3(b, 0, i,j,k);
+    F3(c, 1, i,j,k) = F3(b, 1, i,j,k);
+    F3(c, 2, i,j,k) = F3(b, 2, i,j,k);
+  } mrc_fld_foreach_end;
+  
+  limit1_c(x, m, mhd->time, mhd->par.timelo, c, 0);
+
   mrc_fld_data_t s1 = 1.f/12.f;
   mrc_fld_data_t s7 = 7.f * s1;
 
@@ -378,14 +387,7 @@ pushfv_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
     // limit2, 3
 
     for (int m = 0; m < 5; m++) {
-      mrc_fld_foreach(c, i,j,k, 2,2) {
-	F3(c, 0, i,j,k) = F3(b, 0, i,j,k);
-	F3(c, 1, i,j,k) = F3(b, 1, i,j,k);
-	F3(c, 2, i,j,k) = F3(b, 2, i,j,k);
-      } mrc_fld_foreach_end;
-      
-      limit1_c(x_curr, m, mhd->time, mhd->par.timelo, c, 0);
-      fluxb_c(mhd, fluxes, fl_cc, x_curr, m, prim, c);
+      fluxb_c(mhd, fluxes, fl_cc, x_curr, m, prim, b, c);
     }
     
     ggcm_mhd_step_put_3d_fld(step, b);
