@@ -146,44 +146,54 @@ ggcm_mhd_step_c_primvar(struct ggcm_mhd_step *step, struct mrc_fld *prim,
 
 static void
 fluxes_rusanov(struct mrc_fld *F, struct mrc_fld *U_cc, struct mrc_fld *W_cc,
-	       int ib, int ie, int dim)
+	       int i, int dim)
 {
-  for (int i = ib; i < ie; i++) {
-    mrc_fld_data_t Fl[5], Fr[5];
-    mrc_fld_data_t Ul[5], Ur[5];
-    mrc_fld_data_t Wl[5], Wr[5];
-
-    for (int m = 0; m < 5; m++) {
-      Ul[m] = F1(U_cc, m, i);
-      Ur[m] = F1(U_cc, m, i+1);
-    }
-    for (int m = 0; m < 6; m++) {
-      Wl[m] = F1(W_cc, m, i);
-      Wr[m] = F1(W_cc, m, i+1);
-    }
-    
-    Fl[RR] = Wl[RR] * Wl[VX + dim];
-    Fr[RR] = Wr[RR] * Wr[VX + dim];
-      
-    Fl[RVX] = Wl[RR] * Wl[VX] * Wl[VX + dim];
-    Fr[RVX] = Wr[RR] * Wr[VX] * Wr[VX + dim];
-      
-    Fl[RVY] = Wl[RR] * Wl[VY] * Wl[VX + dim];
-    Fr[RVY] = Wr[RR] * Wr[VY] * Wr[VX + dim];
-    
-    Fl[RVZ] = Wl[RR] * Wl[VZ] * Wl[VX + dim];
-    Fr[RVZ] = Wr[RR] * Wr[VZ] * Wr[VX + dim];
-    
-    Fl[UU] = (Ul[UU] + Wl[PP]) * Wl[VX + dim];
-    Fr[UU] = (Ur[UU] + Wr[PP]) * Wr[VX + dim];
-
-    mrc_fld_data_t lambda = .5f * (Wr[CMSV] + Wl[CMSV]);
-    for (int m = 0; m < 5; m++) {
-      F1(F, m, i) = .5f * ((Fr[m] + Fl[m]) - lambda * (Ur[m] - Ul[m]));
-    }
+  mrc_fld_data_t Fl[5], Fr[5];
+  mrc_fld_data_t Ul[5], Ur[5];
+  mrc_fld_data_t Wl[5], Wr[5];
+  
+  for (int m = 0; m < 5; m++) {
+    Ul[m] = F1(U_cc, m, i);
+    Ur[m] = F1(U_cc, m, i+1);
+  }
+  for (int m = 0; m < 6; m++) {
+    Wl[m] = F1(W_cc, m, i);
+    Wr[m] = F1(W_cc, m, i+1);
+  }
+  
+  Fl[RR] = Wl[RR] * Wl[VX + dim];
+  Fr[RR] = Wr[RR] * Wr[VX + dim];
+  
+  Fl[RVX] = Wl[RR] * Wl[VX] * Wl[VX + dim];
+  Fr[RVX] = Wr[RR] * Wr[VX] * Wr[VX + dim];
+  
+  Fl[RVY] = Wl[RR] * Wl[VY] * Wl[VX + dim];
+  Fr[RVY] = Wr[RR] * Wr[VY] * Wr[VX + dim];
+  
+  Fl[RVZ] = Wl[RR] * Wl[VZ] * Wl[VX + dim];
+  Fr[RVZ] = Wr[RR] * Wr[VZ] * Wr[VX + dim];
+  
+  Fl[UU] = (Ul[UU] + Wl[PP]) * Wl[VX + dim];
+  Fr[UU] = (Ur[UU] + Wr[PP]) * Wr[VX + dim];
+  
+  mrc_fld_data_t lambda = .5f * (Wr[CMSV] + Wl[CMSV]);
+  for (int m = 0; m < 5; m++) {
+    F1(F, m, i) = .5f * ((Fr[m] + Fl[m]) - lambda * (Ur[m] - Ul[m]));
   }
 }
 
+// ----------------------------------------------------------------------
+// mhd_riemann_rusanov_run
+
+static void
+mhd_riemann_rusanov_run(struct mrc_fld *F, struct mrc_fld *U_cc, struct mrc_fld *W_cc,
+			int ib, int ie, int dim)
+{
+  for (int i = ib; i < ie; i++) {
+    fluxes_rusanov(F, U_cc, W_cc, i, dim);
+  }
+}
+  
 // ----------------------------------------------------------------------
 // fluxl_c
 
@@ -202,7 +212,7 @@ fluxl_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
     for (int j = 0; j < ldims[1]; j++) {
       pick_line(U_cc  , U       , 5, -1, ldims[0] + 1, j, k, 0);
       pick_line(W_cc  , W       , 6, -1, ldims[0] + 1, j, k, 0);
-      fluxes_rusanov(F, U_cc, W_cc, -1, ldims[0], 0);
+      mhd_riemann_rusanov_run(F, U_cc, W_cc, -1, ldims[0], 0);
       put_line(fluxes[0], F, j, k, -1, ldims[0], 0);
     }
   }
@@ -211,7 +221,7 @@ fluxl_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
     for (int i = 0; i < ldims[0]; i++) {
       pick_line(U_cc  , U       , 5, -1, ldims[1] + 1, k, i, 1);
       pick_line(W_cc  , W       , 6, -1, ldims[1] + 1, k, i, 1);
-      fluxes_rusanov(F, U_cc, W_cc, -1, ldims[1], 1);
+      mhd_riemann_rusanov_run(F, U_cc, W_cc, -1, ldims[1], 1);
       put_line(fluxes[1], F, k, i, -1, ldims[1], 1);
     }
   }
@@ -220,7 +230,7 @@ fluxl_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
     for (int j = 0; j < ldims[1]; j++) {
       pick_line(U_cc  , U       , 5, -1, ldims[2] + 1, i, j, 2);
       pick_line(W_cc  , W       , 6, -1, ldims[2] + 1, i, j, 2);
-      fluxes_rusanov(F, U_cc, W_cc, -1, ldims[2], 2);
+      mhd_riemann_rusanov_run(F, U_cc, W_cc, -1, ldims[2], 2);
       put_line(fluxes[2], F, i, j, -1, ldims[2], 2);
     }
   }
