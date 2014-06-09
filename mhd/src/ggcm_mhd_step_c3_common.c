@@ -32,8 +32,6 @@ struct ggcm_mhd_step_c3 {
   struct mrc_fld *fluxes[3];
 
   struct mrc_fld *masks;
-  struct mrc_fld *b;
-  struct mrc_fld *c;
   struct mrc_fld *tmp;
 };
 
@@ -79,8 +77,6 @@ ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
     setup_mrc_fld_3d(sub->fluxes[d], mhd->fld, 5);
   }
   setup_mrc_fld_3d(sub->tmp , mhd->fld, 4);
-  setup_mrc_fld_3d(sub->b   , mhd->fld, 3);
-  setup_mrc_fld_3d(sub->c   , mhd->fld, 3);
 
   sub->masks = mhd->fld;
 
@@ -392,7 +388,7 @@ pushfv_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
-  struct mrc_fld *b = sub->b, *c = sub->c, *tmp = sub->tmp;
+  struct mrc_fld *tmp = sub->tmp;
 
   if (limit == LIMIT_NONE) {
     for (int m = 0; m < 5; m++) {
@@ -400,6 +396,8 @@ pushfv_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
       fluxl_c(mhd, fluxes, tmp, x_curr, m, prim);
     }
   } else {
+    struct mrc_fld *b = ggcm_mhd_step_get_3d_fld(step, 3);
+    struct mrc_fld *c = ggcm_mhd_step_get_3d_fld(step, 3);
     vgrs(b, 0, 0.f); vgrs(b, 1, 0.f); vgrs(b, 2, 0.f);
     limit1_c(prim, _PP, mhd->time, mhd->par.timelo, b, 0);
     // limit2, 3
@@ -415,6 +413,9 @@ pushfv_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
       limit1_c(x_curr, m, mhd->time, mhd->par.timelo, c, 0);
       fluxb_c(mhd, fluxes, tmp, x_curr, m, prim, c);
     }
+    
+    ggcm_mhd_step_put_3d_fld(step, b);
+    ggcm_mhd_step_put_3d_fld(step, c);
   }
 }
 
@@ -496,7 +497,9 @@ push_ej_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, struct mrc_fld *x_curr,
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
-  struct mrc_fld *j_ec = sub->c, *b_cc = sub->b, *masks = sub->masks;
+  struct mrc_fld *masks = sub->masks;
+  struct mrc_fld *j_ec = ggcm_mhd_step_get_3d_fld(step, 3);
+  struct mrc_fld *b_cc = ggcm_mhd_step_get_3d_fld(step, 3);
 
   curr_c(mhd, j_ec, x_curr);
   compute_B_cc(mhd, b_cc, x_curr);
@@ -523,6 +526,9 @@ push_ej_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, struct mrc_fld *x_curr,
     F3(x_next, _RV1Z, i,j,k) += ffz;
     F3(x_next, _UU1 , i,j,k) += duu;
   } mrc_fld_foreach_end;
+
+  ggcm_mhd_step_put_3d_fld(step, j_ec);
+  ggcm_mhd_step_put_3d_fld(step, b_cc);
 }
 
 static void
@@ -890,8 +896,6 @@ static struct param ggcm_mhd_step_c_descr[] = {
   { "fluxes[0]"       , VAR(fluxes[0])       , MRC_VAR_OBJ(mrc_fld)           },
   { "fluxes[1]"       , VAR(fluxes[1])       , MRC_VAR_OBJ(mrc_fld)           },
   { "fluxes[2]"       , VAR(fluxes[2])       , MRC_VAR_OBJ(mrc_fld)           },
-  { "b"               , VAR(b)               , MRC_VAR_OBJ(mrc_fld)           },
-  { "c"               , VAR(c)               , MRC_VAR_OBJ(mrc_fld)           },
 
   {},
 };
