@@ -211,6 +211,64 @@ fluxl_c(struct ggcm_mhd *mhd, struct mrc_fld **fluxes, struct mrc_fld **fl_cc,
 }
 
 static void
+vgrs(struct mrc_fld *f, int m, mrc_fld_data_t s)
+{
+  mrc_fld_foreach(f, i,j,k, 2, 2) {
+    F3(f, m, i,j,k) = s;
+  } mrc_fld_foreach_end;
+}
+
+static inline void
+limit1a(struct mrc_fld *x, int m, int i, int j, int k, int I, int J, int K,
+	struct mrc_fld *c, int m_c)
+{
+  const mrc_fld_data_t reps = 0.003;
+  const mrc_fld_data_t seps = -0.001;
+  const mrc_fld_data_t teps = 1.e-25;
+
+  // Harten/Zwas type switch
+  mrc_fld_data_t aa = F3(x, m, i,j,k);
+  mrc_fld_data_t a1 = F3(x, m, i+I,j+J,k+K);
+  mrc_fld_data_t a2 = F3(x, m, i-I,j-J,k-K);
+  mrc_fld_data_t d1 = aa - a2;
+  mrc_fld_data_t d2 = a1 - aa;
+  mrc_fld_data_t s1 = fabsf(d1);
+  mrc_fld_data_t s2 = fabsf(d2);
+  mrc_fld_data_t f1 = fabsf(a1) + fabsf(a2) + fabsf(aa);
+  mrc_fld_data_t s5 = s1 + s2 + reps*f1 + teps;
+  mrc_fld_data_t r3 = fabsf(s1 - s2) / s5; // edge condition
+  mrc_fld_data_t f2 = seps * f1 * f1;
+  if (d1 * d2 < f2) {
+    r3 = 1.f;
+  }
+  r3 = r3 * r3;
+  r3 = r3 * r3;
+  r3 = fminf(2.f * r3, 1.);
+  F3(c, m_c, i   ,j   ,k   ) = fmaxf(F3(c, m_c, i   ,j   ,k   ), r3);
+  F3(c, m_c, i-I,j-J,k-K) = fmaxf(F3(c, m_c, i-I,j-J,k-K), r3);
+}
+
+static void
+limit1_c(struct mrc_fld *x, int m, mrc_fld_data_t time, mrc_fld_data_t timelo,
+	 struct mrc_fld *c, int m_c)
+{
+  if (time < timelo) {
+    vgrs(c, m_c + 0, 1.f);
+    vgrs(c, m_c + 1, 1.f);
+    vgrs(c, m_c + 2, 1.f);
+    return;
+  }
+
+  mrc_fld_foreach(c, i,j,k, 1, 1) {
+/* .if (limit_aspect_low) then */
+/* .call lowmask(0,0,0,tl1) */
+    limit1a(x, m, i,j,k, 1,0,0, c, m_c + 0);
+    limit1a(x, m, i,j,k, 0,1,0, c, m_c + 1);
+    limit1a(x, m, i,j,k, 0,0,1, c, m_c + 2);
+  } mrc_fld_foreach_end;
+}
+
+static void
 fluxb_c(struct ggcm_mhd *mhd, struct mrc_fld **fluxes, struct mrc_fld **fl_cc,
 	struct mrc_fld *x, int m, struct mrc_fld *prim, struct mrc_fld *c)
 {
@@ -285,64 +343,6 @@ pushpp_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, struct mrc_fld *x,
     F3(x, _RV1X, i,j,k) += z * fpx;
     F3(x, _RV1Y, i,j,k) += z * fpy;
     F3(x, _RV1Z, i,j,k) += z * fpz;
-  } mrc_fld_foreach_end;
-}
-
-static void
-vgrs(struct mrc_fld *f, int m, mrc_fld_data_t s)
-{
-  mrc_fld_foreach(f, i,j,k, 2, 2) {
-    F3(f, m, i,j,k) = s;
-  } mrc_fld_foreach_end;
-}
-
-static inline void
-limit1a(struct mrc_fld *x, int m, int i, int j, int k, int I, int J, int K,
-	struct mrc_fld *c, int m_c)
-{
-  const mrc_fld_data_t reps = 0.003;
-  const mrc_fld_data_t seps = -0.001;
-  const mrc_fld_data_t teps = 1.e-25;
-
-  // Harten/Zwas type switch
-  mrc_fld_data_t aa = F3(x, m, i,j,k);
-  mrc_fld_data_t a1 = F3(x, m, i+I,j+J,k+K);
-  mrc_fld_data_t a2 = F3(x, m, i-I,j-J,k-K);
-  mrc_fld_data_t d1 = aa - a2;
-  mrc_fld_data_t d2 = a1 - aa;
-  mrc_fld_data_t s1 = fabsf(d1);
-  mrc_fld_data_t s2 = fabsf(d2);
-  mrc_fld_data_t f1 = fabsf(a1) + fabsf(a2) + fabsf(aa);
-  mrc_fld_data_t s5 = s1 + s2 + reps*f1 + teps;
-  mrc_fld_data_t r3 = fabsf(s1 - s2) / s5; // edge condition
-  mrc_fld_data_t f2 = seps * f1 * f1;
-  if (d1 * d2 < f2) {
-    r3 = 1.f;
-  }
-  r3 = r3 * r3;
-  r3 = r3 * r3;
-  r3 = fminf(2.f * r3, 1.);
-  F3(c, m_c, i   ,j   ,k   ) = fmaxf(F3(c, m_c, i   ,j   ,k   ), r3);
-  F3(c, m_c, i-I,j-J,k-K) = fmaxf(F3(c, m_c, i-I,j-J,k-K), r3);
-}
-
-static void
-limit1_c(struct mrc_fld *x, int m, mrc_fld_data_t time, mrc_fld_data_t timelo,
-	 struct mrc_fld *c, int m_c)
-{
-  if (time < timelo) {
-    vgrs(c, m_c + 0, 1.f);
-    vgrs(c, m_c + 1, 1.f);
-    vgrs(c, m_c + 2, 1.f);
-    return;
-  }
-
-  mrc_fld_foreach(c, i,j,k, 1, 1) {
-/* .if (limit_aspect_low) then */
-/* .call lowmask(0,0,0,tl1) */
-    limit1a(x, m, i,j,k, 1,0,0, c, m_c + 0);
-    limit1a(x, m, i,j,k, 0,1,0, c, m_c + 1);
-    limit1a(x, m, i,j,k, 0,0,1, c, m_c + 2);
   } mrc_fld_foreach_end;
 }
 
