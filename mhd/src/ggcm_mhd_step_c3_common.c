@@ -194,18 +194,29 @@ fluxl_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes, struct mrc_fld **fl
 	struct mrc_fld *x, struct mrc_fld *prim)
 {
   mrc_fld_foreach(fluxes[0], i,j,k, 1, 0) {
-    mrc_fld_data_t cmsv = F3(prim, CMSV, i,j,k);
     for (int m = 0; m < 5; m++) {
-      mrc_fld_data_t aa = F3(x, m, i,j,k);
       F3(fluxes[0], m, i,j,k) =
 	.5f * ((F3(fl_cc[0], m, i  ,j,k) + F3(fl_cc[0], m, i+1,j,k)) -
-	       .5f * (F3(prim, CMSV, i+1,j,k) + cmsv) * (F3(x, m, i+1,j,k) - aa));
+	       .5f * (F3(prim, CMSV, i+1,j,k) + F3(prim, CMSV, i,j,k)) *
+	       (F3(x, m, i+1,j,k) - F3(x, m, i,j,k)));
+    }
+  } mrc_fld_foreach_end;
+
+  mrc_fld_foreach(fluxes[1], i,j,k, 1, 0) {
+    for (int m = 0; m < 5; m++) {
       F3(fluxes[1], m, i,j,k) =
 	.5f * ((F3(fl_cc[1], m, i,j  ,k) + F3(fl_cc[1], m, i,j+1,k)) -
-	       .5f * (F3(prim, CMSV, i,j+1,k) + cmsv) * (F3(x, m, i,j+1,k) - aa));
+	       .5f * (F3(prim, CMSV, i,j+1,k) + F3(prim, CMSV, i,j,k)) *
+	       (F3(x, m, i,j+1,k) - F3(x, m, i,j,k)));
+    }
+  } mrc_fld_foreach_end;
+
+  mrc_fld_foreach(fluxes[2], i,j,k, 1, 0) {
+    for (int m = 0; m < 5; m++) {
       F3(fluxes[2], m, i,j,k) =
 	.5f * ((F3(fl_cc[2], m, i,j,k  ) + F3(fl_cc[2], m, i,j,k+1)) -
-	       .5f * (F3(prim, CMSV, i,j,k+1) + cmsv) * (F3(x, m, i,j,k+1) - aa));
+	       .5f * (F3(prim, CMSV, i,j,k+1) + F3(prim, CMSV, i,j,k)) *
+	       (F3(x, m, i,j,k+1) - F3(x, m, i,j,k)));
     }
   } mrc_fld_foreach_end;
 }
