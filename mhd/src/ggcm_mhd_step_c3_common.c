@@ -836,45 +836,6 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_step_c_pred
-
-static void
-ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step,
-		     struct mrc_fld *x_half, struct mrc_fld *x)
-{
-  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
-  struct mrc_fld *prim = sub->prim;
-
-  ggcm_mhd_step_c_primvar(step, prim, x);
-  primbb_c2_c(step->mhd, _RR1);
-  zmaskn_c(step->mhd);
-
-  mrc_fld_data_t dt = .5f * step->mhd->dt;
-
-  // set x_half = x^n, then advance to n+1/2
-  mrc_fld_copy_range(x_half, x, 0, 8);
-
-  pushstage_c(step, dt, x, x_half, prim, LIMIT_NONE);
-}
-
-// ----------------------------------------------------------------------
-// ggcm_mhd_step_c_corr
-
-static void
-ggcm_mhd_step_c_corr(struct ggcm_mhd_step *step,
-		     struct mrc_fld *x, struct mrc_fld *x_half)
-{
-  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
-  struct mrc_fld *prim = sub->prim;
-
-  ggcm_mhd_step_c_primvar(step, prim, x_half);
-  //  primbb_c2_c(step->mhd, _RR2);
-  //  zmaskn_c(step->mhd);
-
-  pushstage_c(step, step->mhd->dt, x_half, x, prim, LIMIT_1);
-}
-
-// ----------------------------------------------------------------------
 // ggcm_mhd_step_c_run
 
 static void
@@ -883,18 +844,31 @@ ggcm_mhd_step_c_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   struct ggcm_mhd *mhd = step->mhd;
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct mrc_fld *x_half = sub->x_half;
+  struct mrc_fld *prim = sub->prim;
 
   float dtn;
   if (step->do_nwst) {
     newstep(mhd, &dtn);
   }
 
+  // --- PREDICTOR
   ggcm_mhd_fill_ghosts(mhd, x, _RR1, mhd->time);
-  ggcm_mhd_step_c_pred(step, x_half, x);
+  ggcm_mhd_step_c_primvar(step, prim, x);
+  primbb_c2_c(step->mhd, _RR1);
+  zmaskn_c(step->mhd);
 
+  // set x_half = x^n, then advance to n+1/2
+  mrc_fld_copy_range(x_half, x, 0, 8);
+  pushstage_c(step, .5f * mhd->dt, x, x_half, prim, LIMIT_NONE);
+
+  // --- CORRECTOR
   ggcm_mhd_fill_ghosts(mhd, x_half, 0, mhd->time + mhd->bndt);
-  ggcm_mhd_step_c_corr(step, x, x_half);
+  ggcm_mhd_step_c_primvar(step, prim, x_half);
+  //  primbb_c2_c(step->mhd, _RR2);
+  //  zmaskn_c(step->mhd);
+  pushstage_c(step, mhd->dt, x_half, x, prim, LIMIT_1);
 
+  // --- update timestep
   if (step->do_nwst) {
     dtn = fminf(1., dtn); // FIXME, only kept for compatibility
 
