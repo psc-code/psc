@@ -299,7 +299,7 @@ pushn_c(struct ggcm_mhd_step *step, struct mrc_fld *x, int m,
 }
 
 static void
-pushpp_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, struct mrc_fld *x, int m,
+pushpp_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, struct mrc_fld *x,
 	 struct mrc_fld *prim)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
@@ -315,9 +315,9 @@ pushpp_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, struct mrc_fld *x, int m
     mrc_fld_data_t fpy = fd1y[iy] * (F3(prim, _PP, ix,iy+1,iz) - F3(prim, _PP, ix,iy-1,iz));
     mrc_fld_data_t fpz = fd1z[iz] * (F3(prim, _PP, ix,iy,iz+1) - F3(prim, _PP, ix,iy,iz-1));
     mrc_fld_data_t z = dth * F3(masks, _ZMASK, ix,iy,iz);
-    F3(x, m + _RV1X, ix,iy,iz) += z * fpx;
-    F3(x, m + _RV1Y, ix,iy,iz) += z * fpy;
-    F3(x, m + _RV1Z, ix,iy,iz) += z * fpz;
+    F3(x, _RV1X, ix,iy,iz) += z * fpx;
+    F3(x, _RV1Y, ix,iy,iz) += z * fpy;
+    F3(x, _RV1Z, ix,iy,iz) += z * fpz;
   } mrc_fld_foreach_end;
 }
 
@@ -394,9 +394,8 @@ vgfl_c(struct ggcm_mhd *mhd, int m, struct mrc_fld *tmp, int m_tmp,
 }
 
 static void
-pushfv_c(struct ggcm_mhd_step *step, int m, mrc_fld_data_t dt, struct mrc_fld *x_curr, int m_curr,
-	 struct mrc_fld *x_next, int m_next,
-	 int limit)
+pushfv_c(struct ggcm_mhd_step *step, int m, mrc_fld_data_t dt, struct mrc_fld *x_curr,
+	 struct mrc_fld *x_next, int limit)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
@@ -405,7 +404,7 @@ pushfv_c(struct ggcm_mhd_step *step, int m, mrc_fld_data_t dt, struct mrc_fld *x
 
   vgfl_c(mhd, m, tmp, m_tmp, prim);
   if (limit == LIMIT_NONE) {
-    fluxl_c(mhd, flux, m_flux, tmp, m_tmp, x_curr, m_curr + m, prim);
+    fluxl_c(mhd, flux, m_flux, tmp, m_tmp, x_curr, m, prim);
   } else {
     mrc_fld_foreach(c, ix,iy,iz, 2,2) {
       F3(c, 0, ix,iy,iz) = F3(b, 0, ix,iy,iz);
@@ -413,11 +412,11 @@ pushfv_c(struct ggcm_mhd_step *step, int m, mrc_fld_data_t dt, struct mrc_fld *x
       F3(c, 2, ix,iy,iz) = F3(b, 2, ix,iy,iz);
     } mrc_fld_foreach_end;
 
-    limit1_c(x_curr, m_curr + m, mhd->time, mhd->par.timelo, c, 0);
-    fluxb_c(mhd, flux, m_flux, tmp, m_tmp, x_curr, m_curr + m, prim, c);
+    limit1_c(x_curr, m, mhd->time, mhd->par.timelo, c, 0);
+    fluxb_c(mhd, flux, m_flux, tmp, m_tmp, x_curr, m, prim, c);
   }
 
-  pushn_c(step, x_next, m_next + m, flux, m_flux, dt);
+  pushn_c(step, x_next, m, flux, m_flux, dt);
 }
 
 // ----------------------------------------------------------------------
@@ -426,7 +425,7 @@ pushfv_c(struct ggcm_mhd_step *step, int m, mrc_fld_data_t dt, struct mrc_fld *x
 // edge centered current density
 
 static void
-curr_c(struct ggcm_mhd *mhd, struct mrc_fld *j, struct mrc_fld *x, int m_curr)
+curr_c(struct ggcm_mhd *mhd, struct mrc_fld *j, struct mrc_fld *x)
 {
   float *bd4x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD4) - 1;
   float *bd4y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD4) - 1;
@@ -434,14 +433,14 @@ curr_c(struct ggcm_mhd *mhd, struct mrc_fld *j, struct mrc_fld *x, int m_curr)
 
   mrc_fld_foreach(j, ix,iy,iz, 1, 2) {
     F3(j, 0, ix,iy,iz) =
-      (F3(x, m_curr + _B1Z, ix,iy,iz) - F3(x, m_curr + _B1Z, ix,iy-1,iz)) * bd4y[iy] -
-      (F3(x, m_curr + _B1Y, ix,iy,iz) - F3(x, m_curr + _B1Y, ix,iy,iz-1)) * bd4z[iz];
+      (F3(x, _B1Z, ix,iy,iz) - F3(x, _B1Z, ix,iy-1,iz)) * bd4y[iy] -
+      (F3(x, _B1Y, ix,iy,iz) - F3(x, _B1Y, ix,iy,iz-1)) * bd4z[iz];
     F3(j, 1, ix,iy,iz) =
-      (F3(x, m_curr + _B1X, ix,iy,iz) - F3(x, m_curr + _B1X, ix,iy,iz-1)) * bd4z[iz] -
-      (F3(x, m_curr + _B1Z, ix,iy,iz) - F3(x, m_curr + _B1Z, ix-1,iy,iz)) * bd4x[ix];
+      (F3(x, _B1X, ix,iy,iz) - F3(x, _B1X, ix,iy,iz-1)) * bd4z[iz] -
+      (F3(x, _B1Z, ix,iy,iz) - F3(x, _B1Z, ix-1,iy,iz)) * bd4x[ix];
     F3(j, 2, ix,iy,iz) =
-      (F3(x, m_curr + _B1Y, ix,iy,iz) - F3(x, m_curr + _B1Y, ix-1,iy,iz)) * bd4x[ix] -
-      (F3(x, m_curr + _B1X, ix,iy,iz) - F3(x, m_curr + _B1X, ix,iy-1,iz)) * bd4y[iy];
+      (F3(x, _B1Y, ix,iy,iz) - F3(x, _B1Y, ix-1,iy,iz)) * bd4x[ix] -
+      (F3(x, _B1X, ix,iy,iz) - F3(x, _B1X, ix,iy-1,iz)) * bd4y[iy];
   } mrc_fld_foreach_end;
 }
 
@@ -451,16 +450,15 @@ curr_c(struct ggcm_mhd *mhd, struct mrc_fld *j, struct mrc_fld *x, int m_curr)
 // cell-averaged B
 
 static void
-currbb_c(struct ggcm_mhd *mhd, struct mrc_fld *b_cc, int m_b_cc,
-	 struct mrc_fld *x, int m_curr)
+currbb_c(struct ggcm_mhd *mhd, struct mrc_fld *b_cc, struct mrc_fld *x)
 {
   mrc_fld_foreach(b_cc, ix,iy,iz, 1, 1) {
-    F3(b_cc, m_b_cc + 0, ix,iy,iz) = .5f * (F3(x, m_curr + _B1X, ix  ,iy,iz) +
-					    F3(x, m_curr + _B1X, ix+1,iy,iz));
-    F3(b_cc, m_b_cc + 1, ix,iy,iz) = .5f * (F3(x, m_curr + _B1Y, ix,iy  ,iz) +
-					    F3(x, m_curr + _B1Y, ix,iy+1,iz));
-    F3(b_cc, m_b_cc + 2, ix,iy,iz) = .5f * (F3(x, m_curr + _B1Z, ix,iy,iz  ) +
-					    F3(x, m_curr + _B1Z, ix,iy,iz+1));
+    F3(b_cc, 0, ix,iy,iz) = .5f * (F3(x, _B1X, ix  ,iy,iz) +
+				   F3(x, _B1X, ix+1,iy,iz));
+    F3(b_cc, 1, ix,iy,iz) = .5f * (F3(x, _B1Y, ix,iy  ,iz) +
+				   F3(x, _B1Y, ix,iy+1,iz));
+    F3(b_cc, 2, ix,iy,iz) = .5f * (F3(x, _B1Z, ix,iy,iz  ) +
+				   F3(x, _B1Z, ix,iy,iz+1));
   } mrc_fld_foreach_end;
 }
 
@@ -471,7 +469,7 @@ currbb_c(struct ggcm_mhd *mhd, struct mrc_fld *b_cc, int m_b_cc,
 
 static void
 curbc_c(struct ggcm_mhd_step *step, struct mrc_fld *j_cc,
-	struct mrc_fld *x, int m_curr)
+	struct mrc_fld *x)
 { 
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
@@ -479,7 +477,7 @@ curbc_c(struct ggcm_mhd_step *step, struct mrc_fld *j_cc,
 
   // get j on edges
   struct mrc_fld *j = sub->tmp;
-  curr_c(mhd, j, x, m_curr);
+  curr_c(mhd, j, x);
 
   // then average to cell centers
   mrc_fld_foreach(j_cc, ix,iy,iz, 1, 1) {
@@ -494,16 +492,16 @@ curbc_c(struct ggcm_mhd_step *step, struct mrc_fld *j_cc,
 }
 
 static void
-push_ej_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, struct mrc_fld *x_curr, int m_curr,
-	  struct mrc_fld *x_next, int m_next)
+push_ej_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, struct mrc_fld *x_curr,
+	  struct mrc_fld *x_next)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
   struct mrc_fld *prim = sub->prim;
   struct mrc_fld *j_ec = sub->c, *b_cc = sub->b, *masks = sub->masks;
 
-  curr_c(mhd, j_ec, x_curr, m_curr);
-  currbb_c(mhd, b_cc, 0, x_curr, m_curr);
+  curr_c(mhd, j_ec, x_curr);
+  currbb_c(mhd, b_cc, x_curr);
 	
   mrc_fld_data_t s1 = .25f * dt;
   mrc_fld_foreach(x_next, ix,iy,iz, 0, 0) {
@@ -522,10 +520,10 @@ push_ej_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, struct mrc_fld *x_curr,
 			  ffy * F3(prim, _VY, ix,iy,iz) +
 			  ffz * F3(prim, _VZ, ix,iy,iz));
 
-    F3(x_next, m_next + _RV1X, ix,iy,iz) += ffx;
-    F3(x_next, m_next + _RV1Y, ix,iy,iz) += ffy;
-    F3(x_next, m_next + _RV1Z, ix,iy,iz) += ffz;
-    F3(x_next, m_next + _UU1 , ix,iy,iz) += duu;
+    F3(x_next, _RV1X, ix,iy,iz) += ffx;
+    F3(x_next, _RV1Y, ix,iy,iz) += ffy;
+    F3(x_next, _RV1Z, ix,iy,iz) += ffz;
+    F3(x_next, _UU1 , ix,iy,iz) += duu;
   } mrc_fld_foreach_end;
 }
 
@@ -569,16 +567,16 @@ res1_const_c(struct ggcm_mhd *mhd, struct mrc_fld *resis)
 
 static void
 calc_resis_const_c(struct ggcm_mhd_step *step, struct mrc_fld *curr,
-		   struct mrc_fld *resis, struct mrc_fld *x, int m_curr)
+		   struct mrc_fld *resis, struct mrc_fld *x)
 {
   struct ggcm_mhd *mhd = step->mhd;
 
-  curbc_c(step, curr, x, m_curr);
+  curbc_c(step, curr, x);
   res1_const_c(mhd, resis);
 }
 
 static void
-calc_resis_nl1_c(struct ggcm_mhd *mhd, int m_curr)
+calc_resis_nl1_c(struct ggcm_mhd *mhd)
 {
   // used to zero _RESIS field, but that's not needed.
 }
@@ -599,7 +597,7 @@ bcthy3f(mrc_fld_data_t s1, mrc_fld_data_t s2)
 }
 
 static inline void
-calc_avg_dz_By(struct ggcm_mhd_step *step, struct mrc_fld *x, int m_curr, int XX, int YY, int ZZ,
+calc_avg_dz_By(struct ggcm_mhd_step *step, struct mrc_fld *x, int XX, int YY, int ZZ,
 	       int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
@@ -615,9 +613,9 @@ calc_avg_dz_By(struct ggcm_mhd_step *step, struct mrc_fld *x, int m_curr, int XX
     mrc_fld_data_t bd1[3] = { bd1x[ix-1], bd1y[iy-1], bd1z[iz-1] };
 
     F3(tmp, 0, ix,iy,iz) = bd1[ZZ] * 
-      (F3(x, m_curr + _B1X + YY, ix,iy,iz) - F3(x, m_curr + _B1X + YY, ix-JX2,iy-JY2,iz-JZ2));
+      (F3(x, _B1X + YY, ix,iy,iz) - F3(x, _B1X + YY, ix-JX2,iy-JY2,iz-JZ2));
     F3(tmp, 1, ix,iy,iz) = bd1[YY] * 
-      (F3(x, m_curr + _B1X + ZZ, ix,iy,iz) - F3(x, m_curr + _B1X + ZZ, ix-JX1,iy-JY1,iz-JZ1));
+      (F3(x, _B1X + ZZ, ix,iy,iz) - F3(x, _B1X + ZZ, ix-JX1,iy-JY1,iz-JZ1));
   } mrc_fld_foreach_end;
 
   // .5 * harmonic average if same sign
@@ -641,7 +639,7 @@ calc_avg_dz_By(struct ggcm_mhd_step *step, struct mrc_fld *x, int m_curr, int XX
 	   F3(f, m, ix   ,iy   ,iz-IZ)))
 
 static inline void
-calc_v_x_B(mrc_fld_data_t ttmp[2], struct mrc_fld *x, int m_curr,
+calc_v_x_B(mrc_fld_data_t ttmp[2], struct mrc_fld *x,
 	   struct mrc_fld *prim, struct mrc_fld *tmp,
 	   int ix, int iy, int iz,
 	   int XX, int YY, int ZZ, int IX, int IY, int IZ,
@@ -654,10 +652,10 @@ calc_v_x_B(mrc_fld_data_t ttmp[2], struct mrc_fld *x, int m_curr,
     // edge centered velocity
     mrc_fld_data_t vvYY = CC_TO_EC(prim, _VX + YY, ix,iy,iz, IX,IY,IZ) /* - d_i * vcurrYY */;
     if (vvYY > 0.f) {
-      vbZZ = F3(x, m_curr + _B1X + ZZ, ix-JX1,iy-JY1,iz-JZ1) +
+      vbZZ = F3(x, _B1X + ZZ, ix-JX1,iy-JY1,iz-JZ1) +
 	F3(tmp, 3, ix-JX1,iy-JY1,iz-JZ1) * (bd2m[YY] - dt*vvYY);
     } else {
-      vbZZ = F3(x, m_curr + _B1X + ZZ, ix,iy,iz) -
+      vbZZ = F3(x, _B1X + ZZ, ix,iy,iz) -
 	F3(tmp, 3, ix,iy,iz) * (bd2[YY] + dt*vvYY);
     }
     ttmp[0] = vbZZ * vvYY;
@@ -666,10 +664,10 @@ calc_v_x_B(mrc_fld_data_t ttmp[2], struct mrc_fld *x, int m_curr,
     // edge centered velocity
     mrc_fld_data_t vvZZ = CC_TO_EC(prim, _VX + ZZ, ix,iy,iz, IX,IY,IZ) /* - d_i * vcurrZZ */;
     if (vvZZ > 0.f) {
-      vbYY = F3(x, m_curr + _B1X + YY, ix-JX2,iy-JY2,iz-JZ2) +
+      vbYY = F3(x, _B1X + YY, ix-JX2,iy-JY2,iz-JZ2) +
 	F3(tmp, 2, ix-JX2,iy-JY2,iz-JZ2) * (bd2m[ZZ] - dt*vvZZ);
     } else {
-      vbYY = F3(x, m_curr + _B1X + YY, ix,iy,iz) -
+      vbYY = F3(x, _B1X + YY, ix,iy,iz) -
 	F3(tmp, 2, ix,iy,iz) * (bd2[ZZ] + dt*vvZZ);
     }
     ttmp[1] = vbYY * vvZZ;
@@ -678,7 +676,7 @@ calc_v_x_B(mrc_fld_data_t ttmp[2], struct mrc_fld *x, int m_curr,
 static void
 bcthy3z_NL1(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int IX, int IY, int IZ,
 	    int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2,
-	    struct mrc_fld *E, mrc_fld_data_t dt, struct mrc_fld *x, int m_curr)
+	    struct mrc_fld *E, mrc_fld_data_t dt, struct mrc_fld *x)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
@@ -688,7 +686,7 @@ bcthy3z_NL1(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int IX, int IY, 
   float *bd2y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD2);
   float *bd2z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD2);
 
-  calc_avg_dz_By(step, x, m_curr, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2);
+  calc_avg_dz_By(step, x, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2);
 
   mrc_fld_data_t diffmul=1.0;
   if (mhd->time < mhd->par.diff_timelo) { // no anomalous res at startup
@@ -698,13 +696,13 @@ bcthy3z_NL1(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int IX, int IY, 
   // edge centered E = - v x B (+ dissipation)
   mrc_fld_foreach(E, ix,iy,iz, 1, 0) {
     mrc_fld_data_t ttmp[2];
-    calc_v_x_B(ttmp, x, m_curr, prim, tmp, ix, iy, iz, XX, YY, ZZ, IX, IY, IZ,
+    calc_v_x_B(ttmp, x, prim, tmp, ix, iy, iz, XX, YY, ZZ, IX, IY, IZ,
 	       JX1, JY1, JZ1, JX2, JY2, JZ2, bd2x, bd2y, bd2z, dt);
     
-    mrc_fld_data_t t1m = F3(x, m_curr + _B1X + ZZ, ix+JX1,iy+JY1,iz+JZ1) - F3(x, m_curr + _B1X + ZZ, ix,iy,iz);
-    mrc_fld_data_t t1p = fabsf(F3(x, m_curr + _B1X + ZZ, ix+JX1,iy+JY1,iz+JZ1)) + fabsf(F3(x, m_curr + _B1X + ZZ, ix,iy,iz));
-    mrc_fld_data_t t2m = F3(x, m_curr + _B1X + YY, ix+JX2,iy+JY2,iz+JZ2) - F3(x, m_curr + _B1X + YY, ix,iy,iz);
-    mrc_fld_data_t t2p = fabsf(F3(x, m_curr + _B1X + YY, ix+JX2,iy+JY2,iz+JZ2)) + fabsf(F3(x, m_curr + _B1X + YY, ix,iy,iz));
+    mrc_fld_data_t t1m = F3(x, _B1X + ZZ, ix+JX1,iy+JY1,iz+JZ1) - F3(x, _B1X + ZZ, ix,iy,iz);
+    mrc_fld_data_t t1p = fabsf(F3(x, _B1X + ZZ, ix+JX1,iy+JY1,iz+JZ1)) + fabsf(F3(x, _B1X + ZZ, ix,iy,iz));
+    mrc_fld_data_t t2m = F3(x, _B1X + YY, ix+JX2,iy+JY2,iz+JZ2) - F3(x, _B1X + YY, ix,iy,iz);
+    mrc_fld_data_t t2p = fabsf(F3(x, _B1X + YY, ix+JX2,iy+JY2,iz+JZ2)) + fabsf(F3(x, _B1X + YY, ix,iy,iz));
     mrc_fld_data_t tp = t1p + t2p + REPS;
     mrc_fld_data_t tpi = diffmul / tp;
     mrc_fld_data_t d1 = sqr(t1m * tpi);
@@ -721,7 +719,7 @@ bcthy3z_NL1(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int IX, int IY, 
 static void
 bcthy3z_const(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int IX, int IY, int IZ,
 	      int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2,
-	      struct mrc_fld *E, mrc_fld_data_t dt, struct mrc_fld *x, int m_curr,
+	      struct mrc_fld *E, mrc_fld_data_t dt, struct mrc_fld *x,
 	      struct mrc_fld *curr, struct mrc_fld *resis)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
@@ -732,12 +730,12 @@ bcthy3z_const(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int IX, int IY
   float *bd2y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD2);
   float *bd2z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD2);
 
-  calc_avg_dz_By(step, x, m_curr, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2);
+  calc_avg_dz_By(step, x, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2);
 
   // edge centered E = - v x B (+ dissipation)
   mrc_fld_foreach(E, ix,iy,iz, 0, 1) {
     mrc_fld_data_t ttmp[2];
-    calc_v_x_B(ttmp, x, m_curr, prim, tmp, ix, iy, iz, XX, YY, ZZ, IX, IY, IZ,
+    calc_v_x_B(ttmp, x, prim, tmp, ix, iy, iz, XX, YY, ZZ, IX, IY, IZ,
 	       JX1, JY1, JZ1, JX2, JY2, JZ2, bd2x, bd2y, bd2z, dt);
 
     mrc_fld_data_t vcurrXX = CC_TO_EC(curr, XX, ix,iy,iz, IX,IY,IZ);
@@ -748,42 +746,42 @@ bcthy3z_const(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int IX, int IY
 
 static void
 calce_nl1_c(struct ggcm_mhd_step *step, struct mrc_fld *E,
-	    mrc_fld_data_t dt, struct mrc_fld *x, int m_curr)
+	    mrc_fld_data_t dt, struct mrc_fld *x)
 {
-  bcthy3z_NL1(step, 0,1,2, 0,1,1, 0,1,0, 0,0,1, E, dt, x, m_curr);
-  bcthy3z_NL1(step, 1,2,0, 1,0,1, 0,0,1, 1,0,0, E, dt, x, m_curr);
-  bcthy3z_NL1(step, 2,0,1, 1,1,0, 1,0,0, 0,1,0, E, dt, x, m_curr);
+  bcthy3z_NL1(step, 0,1,2, 0,1,1, 0,1,0, 0,0,1, E, dt, x);
+  bcthy3z_NL1(step, 1,2,0, 1,0,1, 0,0,1, 1,0,0, E, dt, x);
+  bcthy3z_NL1(step, 2,0,1, 1,1,0, 1,0,0, 0,1,0, E, dt, x);
 }
 
 static void
 calce_const_c(struct ggcm_mhd_step *step, struct mrc_fld *E,
-	      mrc_fld_data_t dt, struct mrc_fld *x, int m_curr,
+	      mrc_fld_data_t dt, struct mrc_fld *x,
 	      struct mrc_fld *curr, struct mrc_fld *resis)
 {
-  bcthy3z_const(step, 0,1,2, 0,1,1, 0,1,0, 0,0,1, E, dt, x, m_curr, curr, resis);
-  bcthy3z_const(step, 1,2,0, 1,0,1, 0,0,1, 1,0,0, E, dt, x, m_curr, curr, resis);
-  bcthy3z_const(step, 2,0,1, 1,1,0, 1,0,0, 0,1,0, E, dt, x, m_curr, curr, resis);
+  bcthy3z_const(step, 0,1,2, 0,1,1, 0,1,0, 0,0,1, E, dt, x, curr, resis);
+  bcthy3z_const(step, 1,2,0, 1,0,1, 0,0,1, 1,0,0, E, dt, x, curr, resis);
+  bcthy3z_const(step, 2,0,1, 1,1,0, 1,0,0, 0,1,0, E, dt, x, curr, resis);
 }
 
 static void
 calce_c(struct ggcm_mhd_step *step, struct mrc_fld *E,
-	mrc_fld_data_t dt, struct mrc_fld *x, int m_curr,
+	mrc_fld_data_t dt, struct mrc_fld *x,
 	struct mrc_fld *curr, struct mrc_fld *resis)
 {
   struct ggcm_mhd *mhd = step->mhd;
 
   switch (mhd->par.magdiffu) {
   case MAGDIFFU_NL1:
-    return calce_nl1_c(step, E, dt, x, m_curr);
+    return calce_nl1_c(step, E, dt, x);
   case MAGDIFFU_CONST:
-    return calce_const_c(step, E, dt, x, m_curr, curr, resis);
+    return calce_const_c(step, E, dt, x, curr, resis);
   default:
     assert(0);
   }
 }
 
 static void
-bpush_c(struct ggcm_mhd *mhd, struct mrc_fld *x_next, int m_next, mrc_fld_data_t dt,
+bpush_c(struct ggcm_mhd *mhd, struct mrc_fld *x_next, mrc_fld_data_t dt,
 	struct mrc_fld *E)
 {
   float *bd3x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD3);
@@ -791,13 +789,13 @@ bpush_c(struct ggcm_mhd *mhd, struct mrc_fld *x_next, int m_next, mrc_fld_data_t
   float *bd3z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD3);
 
   mrc_fld_foreach(x_next, ix,iy,iz, 0, 0) {
-    F3(x_next, m_next + _B1X, ix,iy,iz) +=
+    F3(x_next, _B1X, ix,iy,iz) +=
       dt * (bd3y[iy] * (F3(E, 2, ix,iy+1,iz) - F3(E, 2, ix,iy,iz)) -
 	    bd3z[iz] * (F3(E, 1, ix,iy,iz+1) - F3(E, 1, ix,iy,iz)));
-    F3(x_next, m_next + _B1Y, ix,iy,iz) +=
+    F3(x_next, _B1Y, ix,iy,iz) +=
       dt * (bd3z[iz] * (F3(E, 0, ix,iy,iz+1) - F3(E, 0, ix,iy,iz)) -
 	    bd3x[ix] * (F3(E, 2, ix+1,iy,iz) - F3(E, 2, ix,iy,iz)));
-    F3(x_next, m_next + _B1Z, ix,iy,iz) +=
+    F3(x_next, _B1Z, ix,iy,iz) +=
       dt * (bd3x[ix] * (F3(E, 1, ix+1,iy,iz) - F3(E, 1, ix,iy,iz)) -
 	    bd3y[iy] * (F3(E, 0, ix,iy+1,iz) - F3(E, 0, ix,iy,iz)));
   } mrc_fld_foreach_end;
@@ -805,10 +803,8 @@ bpush_c(struct ggcm_mhd *mhd, struct mrc_fld *x_next, int m_next, mrc_fld_data_t
 
 static void
 pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
-	    struct mrc_fld *x_curr, int m_curr,
-	    struct mrc_fld *x_next, int m_next,
-	    struct mrc_fld *prim,
-	    int limit)
+	    struct mrc_fld *x_curr, struct mrc_fld *x_next,
+	    struct mrc_fld *prim, int limit)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
@@ -825,28 +821,28 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
     // limit2, 3
   }
 
-  pushfv_c(step, _RR1 , dt, x_curr, m_curr, x_next, m_next, limit);
-  pushfv_c(step, _RV1X, dt, x_curr, m_curr, x_next, m_next, limit);
-  pushfv_c(step, _RV1Y, dt, x_curr, m_curr, x_next, m_next, limit);
-  pushfv_c(step, _RV1Z, dt, x_curr, m_curr, x_next, m_next, limit);
-  pushfv_c(step, _UU1 , dt, x_curr, m_curr, x_next, m_next, limit);
+  pushfv_c(step, _RR1 , dt, x_curr, x_next, limit);
+  pushfv_c(step, _RV1X, dt, x_curr, x_next, limit);
+  pushfv_c(step, _RV1Y, dt, x_curr, x_next, limit);
+  pushfv_c(step, _RV1Z, dt, x_curr, x_next, limit);
+  pushfv_c(step, _UU1 , dt, x_curr, x_next, limit);
 
-  pushpp_c(step, dt, x_next, m_next, prim);
+  pushpp_c(step, dt, x_next, prim);
 
   switch (mhd->par.magdiffu) {
   case MAGDIFFU_NL1:
-    calc_resis_nl1_c(mhd, m_curr);
+    calc_resis_nl1_c(mhd);
     break;
   case MAGDIFFU_CONST:
-    calc_resis_const_c(step, curr, resis, x_curr, m_curr);
+    calc_resis_const_c(step, curr, resis, x_curr);
     break;
   default:
     assert(0);
   }
 
-  push_ej_c(step, dt, x_curr, m_curr, x_next, m_next);
-  calce_c(step, E, dt, x_curr, m_curr, curr, resis);
-  bpush_c(mhd, x_next, m_next, dt, E);
+  push_ej_c(step, dt, x_curr, x_next);
+  calce_c(step, E, dt, x_curr, curr, resis);
+  bpush_c(mhd, x_next, dt, E);
 }
 
 // ----------------------------------------------------------------------
@@ -868,7 +864,7 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step,
   // set x_half = x^n, then advance to n+1/2
   mrc_fld_copy_range(x_half, x, 0, 8);
 
-  pushstage_c(step, dt, x, _RR1, x_half, _RR1, prim, LIMIT_NONE);
+  pushstage_c(step, dt, x, x_half, prim, LIMIT_NONE);
 }
 
 // ----------------------------------------------------------------------
@@ -885,7 +881,7 @@ ggcm_mhd_step_c_corr(struct ggcm_mhd_step *step,
   //  primbb_c2_c(step->mhd, _RR2);
   //  zmaskn_c(step->mhd);
 
-  pushstage_c(step, step->mhd->dt, x_half, _RR1, x, _RR1, prim, LIMIT_1);
+  pushstage_c(step, step->mhd->dt, x_half, x, prim, LIMIT_1);
 }
 
 // ----------------------------------------------------------------------
