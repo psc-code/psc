@@ -28,7 +28,6 @@ mrc_fld_copy_range(struct mrc_fld *to, struct mrc_fld *from, int mb, int me)
 
 struct ggcm_mhd_step_c3 {
   struct mrc_fld *x_half;
-  struct mrc_fld *prim;
   struct mrc_fld *fluxes[3];
 
   struct mrc_fld *masks;
@@ -71,7 +70,6 @@ ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
 
   setup_mrc_fld_3d(sub->x_half, mhd->fld, 8);
   mrc_fld_dict_add_int(sub->x_half, "mhd_type", ggcm_mhd_step_mhd_type(step));
-  setup_mrc_fld_3d(sub->prim, mhd->fld, _VZ + 1);
   for (int d = 0; d < 3; d++) {
     setup_mrc_fld_3d(sub->fluxes[d], mhd->fld, 5);
   }
@@ -853,7 +851,7 @@ ggcm_mhd_step_c_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   struct ggcm_mhd *mhd = step->mhd;
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct mrc_fld *x_half = sub->x_half;
-  struct mrc_fld *prim = sub->prim;
+  struct mrc_fld *prim = ggcm_mhd_step_get_3d_fld(step, _VZ + 1);
 
   float dtn;
   if (step->do_nwst) {
@@ -887,6 +885,8 @@ ggcm_mhd_step_c_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
       mhd->dt = dtn;
     }
   }
+
+  ggcm_mhd_step_put_3d_fld(step, prim);
 }
 
 // ----------------------------------------------------------------------
@@ -895,7 +895,6 @@ ggcm_mhd_step_c_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_step_c3, x)
 static struct param ggcm_mhd_step_c_descr[] = {
   { "x_half"          , VAR(x_half)          , MRC_VAR_OBJ(mrc_fld)           },
-  { "prim"            , VAR(prim)            , MRC_VAR_OBJ(mrc_fld)           },
   { "fluxes[0]"       , VAR(fluxes[0])       , MRC_VAR_OBJ(mrc_fld)           },
   { "fluxes[1]"       , VAR(fluxes[1])       , MRC_VAR_OBJ(mrc_fld)           },
   { "fluxes[2]"       , VAR(fluxes[2])       , MRC_VAR_OBJ(mrc_fld)           },
