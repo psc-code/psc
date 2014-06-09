@@ -678,7 +678,7 @@ calc_v_x_B(mrc_fld_data_t ttmp[2], struct mrc_fld *x, int m_curr,
 static void
 bcthy3z_NL1(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int IX, int IY, int IZ,
 	    int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2,
-	    struct mrc_fld *E, int m_E, mrc_fld_data_t dt, struct mrc_fld *x, int m_curr)
+	    struct mrc_fld *E, mrc_fld_data_t dt, struct mrc_fld *x, int m_curr)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
@@ -714,14 +714,14 @@ bcthy3z_NL1(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int IX, int IY, 
     ttmp[0] -= d1 * t1m * F3(masks, _RMASK, ix,iy,iz);
     ttmp[1] -= d2 * t2m * F3(masks, _RMASK, ix,iy,iz);
     //    F3(f, _RESIS, ix,iy,iz) += fabsf(d1+d2) * F3(masks, _ZMASK, ix,iy,iz);
-    F3(E, m_E + XX, ix,iy,iz) = ttmp[0] - ttmp[1];
+    F3(E, XX, ix,iy,iz) = ttmp[0] - ttmp[1];
   } mrc_fld_foreach_end;
 }
 
 static void
 bcthy3z_const(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int IX, int IY, int IZ,
 	      int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2,
-	      struct mrc_fld *E, int m_E, mrc_fld_data_t dt, struct mrc_fld *x, int m_curr,
+	      struct mrc_fld *E, mrc_fld_data_t dt, struct mrc_fld *x, int m_curr,
 	      struct mrc_fld *curr, int m_CURR, struct mrc_fld *resis, int m_resis)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
@@ -742,34 +742,34 @@ bcthy3z_const(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int IX, int IY
 
     mrc_fld_data_t vcurrXX = CC_TO_EC(curr, m_CURR + XX, ix,iy,iz, IX,IY,IZ);
     mrc_fld_data_t vresis = CC_TO_EC(resis, m_resis, ix,iy,iz, IX,IY,IZ);
-    F3(E, m_E + XX, ix,iy,iz) = ttmp[0] - ttmp[1] - vresis * vcurrXX;
+    F3(E, XX, ix,iy,iz) = ttmp[0] - ttmp[1] - vresis * vcurrXX;
   } mrc_fld_foreach_end;
 }
 
 static void
-calce_nl1_c(struct ggcm_mhd_step *step, struct mrc_fld *E, int m_E,
+calce_nl1_c(struct ggcm_mhd_step *step, struct mrc_fld *E,
 	    mrc_fld_data_t dt, struct mrc_fld *x, int m_curr)
 {
-  bcthy3z_NL1(step, 0,1,2, 0,1,1, 0,1,0, 0,0,1, E, m_E, dt, x, m_curr);
-  bcthy3z_NL1(step, 1,2,0, 1,0,1, 0,0,1, 1,0,0, E, m_E, dt, x, m_curr);
-  bcthy3z_NL1(step, 2,0,1, 1,1,0, 1,0,0, 0,1,0, E, m_E, dt, x, m_curr);
+  bcthy3z_NL1(step, 0,1,2, 0,1,1, 0,1,0, 0,0,1, E, dt, x, m_curr);
+  bcthy3z_NL1(step, 1,2,0, 1,0,1, 0,0,1, 1,0,0, E, dt, x, m_curr);
+  bcthy3z_NL1(step, 2,0,1, 1,1,0, 1,0,0, 0,1,0, E, dt, x, m_curr);
 }
 
 static void
-calce_const_c(struct ggcm_mhd_step *step, struct mrc_fld *E, int m_E,
+calce_const_c(struct ggcm_mhd_step *step, struct mrc_fld *E,
 	      mrc_fld_data_t dt, struct mrc_fld *x, int m_curr,
 	      struct mrc_fld *curr, int m_CURR, struct mrc_fld *resis, int m_resis)
 {
-  bcthy3z_const(step, 0,1,2, 0,1,1, 0,1,0, 0,0,1, E, m_E, dt, x, m_curr,
+  bcthy3z_const(step, 0,1,2, 0,1,1, 0,1,0, 0,0,1, E, dt, x, m_curr,
 		curr, m_CURR, resis, m_resis);
-  bcthy3z_const(step, 1,2,0, 1,0,1, 0,0,1, 1,0,0, E, m_E, dt, x, m_curr,
+  bcthy3z_const(step, 1,2,0, 1,0,1, 0,0,1, 1,0,0, E, dt, x, m_curr,
 		curr, m_CURR, resis, m_resis);
-  bcthy3z_const(step, 2,0,1, 1,1,0, 1,0,0, 0,1,0, E, m_E, dt, x, m_curr,
+  bcthy3z_const(step, 2,0,1, 1,1,0, 1,0,0, 0,1,0, E, dt, x, m_curr,
 		curr, m_CURR, resis, m_resis);
 }
 
 static void
-calce_c(struct ggcm_mhd_step *step, struct mrc_fld *E, int m_E,
+calce_c(struct ggcm_mhd_step *step, struct mrc_fld *E,
 	mrc_fld_data_t dt, struct mrc_fld *x, int m_curr,
 	struct mrc_fld *curr, int m_CURR, struct mrc_fld *resis, int m_resis)
 {
@@ -777,9 +777,9 @@ calce_c(struct ggcm_mhd_step *step, struct mrc_fld *E, int m_E,
 
   switch (mhd->par.magdiffu) {
   case MAGDIFFU_NL1:
-    return calce_nl1_c(step, E, m_E, dt, x, m_curr);
+    return calce_nl1_c(step, E, dt, x, m_curr);
   case MAGDIFFU_CONST:
-    return calce_const_c(step, E, m_E, dt, x, m_curr, curr, m_CURR, resis, m_resis);
+    return calce_const_c(step, E, dt, x, m_curr, curr, m_CURR, resis, m_resis);
   default:
     assert(0);
   }
@@ -787,7 +787,7 @@ calce_c(struct ggcm_mhd_step *step, struct mrc_fld *E, int m_E,
 
 static void
 bpush_c(struct ggcm_mhd *mhd, struct mrc_fld *x_next, int m_next, mrc_fld_data_t dt,
-	struct mrc_fld *E, int m_E)
+	struct mrc_fld *E)
 {
   float *bd3x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD3);
   float *bd3y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD3);
@@ -795,14 +795,14 @@ bpush_c(struct ggcm_mhd *mhd, struct mrc_fld *x_next, int m_next, mrc_fld_data_t
 
   mrc_fld_foreach(x_next, ix,iy,iz, 0, 0) {
     F3(x_next, m_next + _B1X, ix,iy,iz) +=
-      dt * (bd3y[iy] * (F3(E, m_E + 2, ix,iy+1,iz) - F3(E, m_E + 2, ix,iy,iz)) -
-	    bd3z[iz] * (F3(E, m_E + 1, ix,iy,iz+1) - F3(E, m_E + 1, ix,iy,iz)));
+      dt * (bd3y[iy] * (F3(E, 2, ix,iy+1,iz) - F3(E, 2, ix,iy,iz)) -
+	    bd3z[iz] * (F3(E, 1, ix,iy,iz+1) - F3(E, 1, ix,iy,iz)));
     F3(x_next, m_next + _B1Y, ix,iy,iz) +=
-      dt * (bd3z[iz] * (F3(E, m_E + 0, ix,iy,iz+1) - F3(E, m_E + 0, ix,iy,iz)) -
-	    bd3x[ix] * (F3(E, m_E + 2, ix+1,iy,iz) - F3(E, m_E + 2, ix,iy,iz)));
+      dt * (bd3z[iz] * (F3(E, 0, ix,iy,iz+1) - F3(E, 0, ix,iy,iz)) -
+	    bd3x[ix] * (F3(E, 2, ix+1,iy,iz) - F3(E, 2, ix,iy,iz)));
     F3(x_next, m_next + _B1Z, ix,iy,iz) +=
-      dt * (bd3x[ix] * (F3(E, m_E + 1, ix+1,iy,iz) - F3(E, m_E + 1, ix,iy,iz)) -
-	    bd3y[iy] * (F3(E, m_E + 0, ix,iy+1,iz) - F3(E, m_E + 0, ix,iy,iz)));
+      dt * (bd3x[ix] * (F3(E, 1, ix+1,iy,iz) - F3(E, 1, ix,iy,iz)) -
+	    bd3y[iy] * (F3(E, 0, ix,iy+1,iz) - F3(E, 0, ix,iy,iz)));
   } mrc_fld_foreach_end;
 }
 
@@ -817,7 +817,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
   struct ggcm_mhd *mhd = step->mhd;
   struct mrc_fld *curr = sub->curr; int m_CURR = _CURRX;
   struct mrc_fld *resis = sub->resis; int m_resis = _RESIS;
-  struct mrc_fld *E = sub->E; int m_E = _FLX;
+  struct mrc_fld *E = sub->E;
   rmaskn_c(step);
 
   if (limit != LIMIT_NONE) {
@@ -848,8 +848,8 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
   }
 
   push_ej_c(step, dt, x_curr, m_curr, x_next, m_next);
-  calce_c(step, E, m_E, dt, x_curr, m_curr, curr, m_CURR, resis, m_resis);
-  bpush_c(mhd, x_next, m_next, dt, E, m_E);
+  calce_c(step, E, dt, x_curr, m_curr, curr, m_CURR, resis, m_resis);
+  bpush_c(mhd, x_next, m_next, dt, E);
 }
 
 // ----------------------------------------------------------------------
@@ -878,7 +878,7 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step,
   struct ggcm_mhd *mhd = step->mhd;
   struct mrc_fld *curr = sub->curr; int m_CURR = _CURRX;
   struct mrc_fld *resis = sub->resis; int m_resis = _RESIS;
-  struct mrc_fld *E = sub->E; int m_E = _FLX;
+  struct mrc_fld *E = sub->E;
   struct mrc_fld *x_curr = x, *x_next = x_half;
   int m_curr = _RR1, m_next = _RR1;
   rmaskn_c(step);
@@ -918,8 +918,8 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step,
   }
 
   push_ej_c(step, dt, x_curr, m_curr, x_next, m_next);
-  calce_c(step, E, m_E, dt, x_curr, m_curr, curr, m_CURR, resis, m_resis);
-  bpush_c(mhd, x_next, m_next, dt, E, m_E);
+  calce_c(step, E, dt, x_curr, m_curr, curr, m_CURR, resis, m_resis);
+  bpush_c(mhd, x_next, m_next, dt, E);
 #endif
 
   mrc_fld_foreach(x_half, ix,iy,iz, 2, 2) {
