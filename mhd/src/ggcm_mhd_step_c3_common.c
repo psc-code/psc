@@ -393,13 +393,13 @@ vgfl_c(struct ggcm_mhd *mhd, int m, struct mrc_fld *tmp, struct mrc_fld *prim)
 }
 
 static void
-pushfv_c(struct ggcm_mhd_step *step, int m, mrc_fld_data_t dt, struct mrc_fld *x_curr,
+pushfv_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes, int m,
+	 mrc_fld_data_t dt, struct mrc_fld *x_curr,
 	 struct mrc_fld *x_next, int limit)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
   struct mrc_fld *prim = sub->prim, *b = sub->b, *c = sub->c, *tmp = sub->tmp;
-  struct mrc_fld **fluxes = sub->fluxes;
 
   vgfl_c(mhd, m, tmp, prim);
   if (limit == LIMIT_NONE) {
@@ -414,8 +414,6 @@ pushfv_c(struct ggcm_mhd_step *step, int m, mrc_fld_data_t dt, struct mrc_fld *x
     limit1_c(x_curr, m, mhd->time, mhd->par.timelo, c, 0);
     fluxb_c(mhd, fluxes, tmp, x_curr, m, prim, c);
   }
-
-  pushn_c(step, x_next, m, fluxes, dt);
 }
 
 // ----------------------------------------------------------------------
@@ -807,6 +805,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
+  struct mrc_fld **fluxes = sub->fluxes;
   struct mrc_fld *curr = sub->curr;
   struct mrc_fld *resis = sub->resis;
   struct mrc_fld *E = sub->E;
@@ -820,11 +819,17 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
     // limit2, 3
   }
 
-  pushfv_c(step, _RR1 , dt, x_curr, x_next, limit);
-  pushfv_c(step, _RV1X, dt, x_curr, x_next, limit);
-  pushfv_c(step, _RV1Y, dt, x_curr, x_next, limit);
-  pushfv_c(step, _RV1Z, dt, x_curr, x_next, limit);
-  pushfv_c(step, _UU1 , dt, x_curr, x_next, limit);
+  pushfv_c(step, fluxes, _RR1 , dt, x_curr, x_next, limit);
+  pushfv_c(step, fluxes, _RV1X, dt, x_curr, x_next, limit);
+  pushfv_c(step, fluxes, _RV1Y, dt, x_curr, x_next, limit);
+  pushfv_c(step, fluxes, _RV1Z, dt, x_curr, x_next, limit);
+  pushfv_c(step, fluxes, _UU1 , dt, x_curr, x_next, limit);
+
+  pushn_c(step, x_next, _RR1 , fluxes, dt);
+  pushn_c(step, x_next, _RV1X, fluxes, dt);
+  pushn_c(step, x_next, _RV1Y, fluxes, dt);
+  pushn_c(step, x_next, _RV1Z, fluxes, dt);
+  pushn_c(step, x_next, _UU1 , fluxes, dt);
 
   pushpp_c(step, dt, x_next, prim);
 
