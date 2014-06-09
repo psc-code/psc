@@ -489,21 +489,21 @@ curbc_c(struct ggcm_mhd_step *step, struct mrc_fld *x, int m_curr)
 }
 
 static void
-push_ej_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, int m_curr, int m_next)
+push_ej_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, int m_curr,
+	  struct mrc_fld *x_next, int m_next)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
   struct mrc_fld *prim = sub->prim;
 
   enum { XJX = _BX, XJY = _BY, XJZ = _BZ };
-  enum { BX = _TMP1, BY = _TMP2, BZ = _TMP3 };
 
   struct mrc_fld *j = mhd->fld;
-  struct mrc_fld *b_cc = mhd->fld;
+  struct mrc_fld *b_cc = sub->tmp;
   struct mrc_fld *x = mhd->fld;
 
   curr_c(mhd, j, XJX, x, m_curr);
-  currbb_c(mhd, b_cc, BX, x, m_curr);
+  currbb_c(mhd, b_cc, 0, x, m_curr);
 	
   struct mrc_fld *f = mhd->fld;
 
@@ -517,17 +517,17 @@ push_ej_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, int m_curr, int m_next)
 			 F3(f, XJY, ix+1,iy  ,iz  ) + F3(f, XJY, ix  ,iy  ,iz  ));
     mrc_fld_data_t cz = (F3(f, XJZ, ix+1,iy+1,iz  ) + F3(f, XJZ, ix  ,iy+1,iz  ) +
 			 F3(f, XJZ, ix+1,iy  ,iz  ) + F3(f, XJZ, ix  ,iy  ,iz  ));
-    mrc_fld_data_t ffx = s2 * (cy * F3(f, BZ, ix,iy,iz) - cz * F3(f, BY, ix,iy,iz));
-    mrc_fld_data_t ffy = s2 * (cz * F3(f, BX, ix,iy,iz) - cx * F3(f, BZ, ix,iy,iz));
-    mrc_fld_data_t ffz = s2 * (cx * F3(f, BY, ix,iy,iz) - cy * F3(f, BX, ix,iy,iz));
+    mrc_fld_data_t ffx = s2 * (cy * F3(b_cc, 2, ix,iy,iz) - cz * F3(b_cc, 1, ix,iy,iz));
+    mrc_fld_data_t ffy = s2 * (cz * F3(b_cc, 0, ix,iy,iz) - cx * F3(b_cc, 2, ix,iy,iz));
+    mrc_fld_data_t ffz = s2 * (cx * F3(b_cc, 1, ix,iy,iz) - cy * F3(b_cc, 0, ix,iy,iz));
     mrc_fld_data_t duu = (ffx * F3(prim, _VX, ix,iy,iz) +
 			  ffy * F3(prim, _VY, ix,iy,iz) +
 			  ffz * F3(prim, _VZ, ix,iy,iz));
 
-    F3(f, m_next + _RV1X, ix,iy,iz) += ffx;
-    F3(f, m_next + _RV1Y, ix,iy,iz) += ffy;
-    F3(f, m_next + _RV1Z, ix,iy,iz) += ffz;
-    F3(f, m_next + _UU1 , ix,iy,iz) += duu;
+    F3(x_next, m_next + _RV1X, ix,iy,iz) += ffx;
+    F3(x_next, m_next + _RV1Y, ix,iy,iz) += ffy;
+    F3(x_next, m_next + _RV1Z, ix,iy,iz) += ffz;
+    F3(x_next, m_next + _UU1 , ix,iy,iz) += duu;
   } mrc_fld_foreach_end;
 }
 
@@ -834,7 +834,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
     assert(0);
   }
 
-  push_ej_c(step, dt, m_curr, m_next);
+  push_ej_c(step, dt, m_curr, x_next, m_next);
   calce_c(step, dt, m_curr);
   bpush_c(mhd, dt, m_next);
 }
@@ -901,7 +901,7 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step,
     assert(0);
   }
 
-  push_ej_c(step, dt, m_curr, m_next);
+  push_ej_c(step, dt, m_curr, x_next, m_next);
   calce_c(step, dt, m_curr);
   bpush_c(mhd, dt, m_next);
 #endif
