@@ -75,10 +75,10 @@ ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
   mrc_fld_dict_add_int(sub->x_half, "mhd_type", ggcm_mhd_step_mhd_type(step));
   setup_mrc_fld_3d(sub->prim, mhd->fld, _VZ + 1);
   setup_mrc_fld_3d(sub->tmp , mhd->fld, 3);
+  setup_mrc_fld_3d(sub->flux, mhd->fld, 3);
 
   sub->masks = mhd->fld;
   sub->bc    = mhd->fld;
-  sub->flux  = mhd->fld;
 
   ggcm_mhd_step_setup_member_objs_sub(step);
   ggcm_mhd_step_setup_super(step);
@@ -400,7 +400,7 @@ pushfv_c(struct ggcm_mhd_step *step, int m, mrc_fld_data_t dt, struct mrc_fld *x
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
-  int m_flux = _FLX, m_tmp = 0;
+  int m_flux = 0, m_tmp = 0;
   struct mrc_fld *prim = sub->prim, *bc = sub->bc, *flux = sub->flux, *tmp = sub->tmp;
 
   vgfl_c(mhd, m, tmp, m_tmp, prim);
@@ -978,6 +978,7 @@ static struct param ggcm_mhd_step_c_descr[] = {
   { "x_half"          , VAR(x_half)          , MRC_VAR_OBJ(mrc_fld)           },
   { "prim"            , VAR(prim)            , MRC_VAR_OBJ(mrc_fld)           },
   { "tmp"             , VAR(tmp)             , MRC_VAR_OBJ(mrc_fld)           },
+  { "flux"            , VAR(flux)            , MRC_VAR_OBJ(mrc_fld)           },
 
   {},
 };
