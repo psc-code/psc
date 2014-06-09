@@ -24,6 +24,14 @@ mrc_fld_copy_range(struct mrc_fld *to, struct mrc_fld *from, int mb, int me)
 }
 
 // ----------------------------------------------------------------------
+// static globals
+//
+// don't really like it, but it simplifies things
+
+static mrc_fld_data_t _gamma;
+static mrc_fld_data_t _gamma_minus_1;
+
+// ----------------------------------------------------------------------
 // pick_line
 
 static void
@@ -99,27 +107,47 @@ enum {
   W_NR,
 };
 
-static void
-mhd_reconstruct_copy_U_to_1d(struct mrc_fld *U_1d, struct mrc_fld *U_cc, int ib, int ie, int dim)
-{
-#define COPY_TO_1D(X,Y,Z) do {			\
-    for (int i = ib; i < ie; i++) {		\
-      F1(U_1d, U_RR , i) = F1(U_cc, RR   , i);	\
-      F1(U_1d, U_RVX, i) = F1(U_cc, RVX+X, i);	\
-      F1(U_1d, U_RVY, i) = F1(U_cc, RVX+Y, i);	\
-      F1(U_1d, U_RVZ, i) = F1(U_cc, RVX+Z, i);	\
-      F1(U_1d, U_UU , i) = F1(U_cc, UU   , i);	\
-    }						\
-  } while (0)
+// ----------------------------------------------------------------------
+// sc_from_prim_1d
 
-  if (dim == 0) {
-    COPY_TO_1D(0,1,2);
-  } else if (dim == 1) {
-    COPY_TO_1D(1,2,0);
-  } else if (dim == 2) {
-    COPY_TO_1D(2,0,1);
+static inline void
+sc_from_prim_1d(mrc_fld_data_t U[], mrc_fld_data_t W[])
+{
+  mrc_fld_data_t rr = W[W_RR];
+
+  U[U_RR ] = rr;
+  U[U_RVX] = rr * W[W_VX];
+  U[U_RVY] = rr * W[W_VY];
+  U[U_RVZ] = rr * W[W_VZ];
+  U[U_UU ] = W[W_PP] / _gamma_minus_1 +
+    + .5 * (sqr(W[W_VX]) + sqr(W[W_VY]) + sqr(W[W_VZ])) * rr;
+}
+
+// ----------------------------------------------------------------------
+// prim_from_sc
+
+static inline void
+prim_from_sc(mrc_fld_data_t W[], mrc_fld_data_t U[])
+{
+  mrc_fld_data_t rri = 1.f / U[RR];
+
+  W[RR] = U[RR];
+  W[VX] = rri * U[RVX];
+  W[VY] = rri * U[RVY];
+  W[VZ] = rri * U[RVZ];
+  mrc_fld_data_t rvv = (sqr(U[RVX]) + sqr(U[RVY]) + sqr(U[RVZ])) * rri;
+  W[PP] = _gamma_minus_1 * (U[UU] - .5 * rvv);
+  mrc_fld_data_t cs2 = _gamma * W[PP] * rri;
+  W[CMSV] = sqrtf(rvv * rri) + sqrtf(cs2);
+}
+
+static void
+mhd_reconstruct_prim_from_sc(struct mrc_fld *W_cc, struct mrc_fld *U_cc,
+			     int ib, int ie)
+{
+  for (int i = ib; i < ie; i++) {
+    prim_from_sc(&F1(W_cc, 0, i), &F1(U_cc, 0, i));
   }
-#undef COPY_TO_1D
 }
 
 static void
@@ -150,12 +178,14 @@ static void
 mhd_reconstruct_pcm_run(struct ggcm_mhd_step *step,
 			struct mrc_fld *U_l, struct mrc_fld *U_r,
 			struct mrc_fld *W_l, struct mrc_fld *W_r,
-			struct mrc_fld *U_cc, struct mrc_fld *W_cc,
+			struct mrc_fld *U_cc,
 			int ib, int ie, int dim)
 {
+  struct mrc_fld *W_cc = ggcm_mhd_step_get_1d_fld(step, 6);
   struct mrc_fld *W_1d = ggcm_mhd_step_get_1d_fld(step, 6);
   struct mrc_fld *U_1d = ggcm_mhd_step_get_1d_fld(step, 5);
 
+  mhd_reconstruct_prim_from_sc(W_cc, U_cc, ib, ie);
   mhd_reconstruct_copy_W_to_1d(W_1d, W_cc, ib, ie, dim);
 
   for (int i = ib; i < ie + 1; i++) {
@@ -165,15 +195,12 @@ mhd_reconstruct_pcm_run(struct ggcm_mhd_step *step,
     }
   }
 
-  mhd_reconstruct_copy_U_to_1d(U_1d, U_cc, ib, ie, dim);
-
   for (int i = ib; i < ie + 1; i++) {
-    for (int m = 0; m < 5; m++) {
-      F1(U_l, m, i) = F1(U_1d, m, i-1);
-      F1(U_r, m, i) = F1(U_1d, m, i  );
-    }
+    sc_from_prim_1d(&F1(U_l, 0, i), &F1(W_l, 0, i));
+    sc_from_prim_1d(&F1(U_r, 0, i), &F1(W_r, 0, i));
   }
 
+  ggcm_mhd_step_put_1d_fld(step, W_cc);
   ggcm_mhd_step_put_1d_fld(step, W_1d);
   ggcm_mhd_step_put_1d_fld(step, U_1d);
 }
@@ -211,6 +238,9 @@ ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
   assert(mhd);
 
   sub->masks = mhd->fld;
+
+  _gamma         = mhd->par.gamm;
+  _gamma_minus_1 = mhd->par.gamm - 1.;
 
   ggcm_mhd_step_setup_member_objs_sub(step);
   ggcm_mhd_step_setup_super(step);
@@ -314,7 +344,6 @@ fluxl_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
 	struct mrc_fld *U, struct mrc_fld *W)
 {
   struct mrc_fld *U_cc = ggcm_mhd_step_get_1d_fld(step, 5);
-  struct mrc_fld *W_cc = ggcm_mhd_step_get_1d_fld(step, 6);
   struct mrc_fld *U_l = ggcm_mhd_step_get_1d_fld(step, 5);
   struct mrc_fld *U_r = ggcm_mhd_step_get_1d_fld(step, 5);
   struct mrc_fld *W_l = ggcm_mhd_step_get_1d_fld(step, 6);
@@ -327,8 +356,7 @@ fluxl_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
   for (int k = 0; k < ldims[2]; k++) {
     for (int j = 0; j < ldims[1]; j++) {
       pick_line(U_cc  , U       , 5, -1, ldims[0] + 1, j, k, 0);
-      pick_line(W_cc  , W       , 6, -1, ldims[0] + 1, j, k, 0);
-      mhd_reconstruct_pcm_run(step, U_l, U_r, W_l, W_r, U_cc, W_cc, -1, ldims[0] + 1, 0);
+      mhd_reconstruct_pcm_run(step, U_l, U_r, W_l, W_r, U_cc, -1, ldims[0] + 1, 0);
       mhd_riemann_rusanov_run(F, U_l, U_r, W_l, W_r, -1, ldims[0], 0);
       put_line(fluxes[0], F, j, k, -1, ldims[0], 0);
     }
@@ -337,8 +365,7 @@ fluxl_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
   for (int k = 0; k < ldims[2]; k++) {
     for (int i = 0; i < ldims[0]; i++) {
       pick_line(U_cc  , U       , 5, -1, ldims[1] + 1, k, i, 1);
-      pick_line(W_cc  , W       , 6, -1, ldims[1] + 1, k, i, 1);
-      mhd_reconstruct_pcm_run(step, U_l, U_r, W_l, W_r, U_cc, W_cc, -1, ldims[1] + 1, 1);
+      mhd_reconstruct_pcm_run(step, U_l, U_r, W_l, W_r, U_cc, -1, ldims[1] + 1, 1);
       mhd_riemann_rusanov_run(F, U_l, U_r, W_l, W_r, -1, ldims[1], 1);
       put_line(fluxes[1], F, k, i, -1, ldims[1], 1);
     }
@@ -347,15 +374,13 @@ fluxl_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
   for (int i = 0; i < ldims[0]; i++) {
     for (int j = 0; j < ldims[1]; j++) {
       pick_line(U_cc  , U       , 5, -1, ldims[2] + 1, i, j, 2);
-      pick_line(W_cc  , W       , 6, -1, ldims[2] + 1, i, j, 2);
-      mhd_reconstruct_pcm_run(step, U_l, U_r, W_l, W_r, U_cc, W_cc, -1, ldims[2] + 1, 2);
+      mhd_reconstruct_pcm_run(step, U_l, U_r, W_l, W_r, U_cc, -1, ldims[2] + 1, 2);
       mhd_riemann_rusanov_run(F, U_l, U_r, W_l, W_r, -1, ldims[2], 2);
       put_line(fluxes[2], F, i, j, -1, ldims[2], 2);
     }
   }
 
   ggcm_mhd_step_put_1d_fld(step, U_cc);
-  ggcm_mhd_step_put_1d_fld(step, W_cc);
   ggcm_mhd_step_put_1d_fld(step, U_l);
   ggcm_mhd_step_put_1d_fld(step, U_r);
   ggcm_mhd_step_put_1d_fld(step, W_l);
