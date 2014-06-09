@@ -394,7 +394,7 @@ vgfl_c(struct ggcm_mhd *mhd, int m, struct mrc_fld *tmp, struct mrc_fld *prim)
 static void
 pushfv_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
 	 mrc_fld_data_t dt, struct mrc_fld *x_curr,
-	 struct mrc_fld *x_next, int limit)
+	 int limit)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
@@ -826,7 +826,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
 
   rmaskn_c(step);
 
-  pushfv_c(step, fluxes, dt, x_curr, x_next, limit);
+  pushfv_c(step, fluxes, dt, x_curr, limit);
   update_finite_volume(mhd, x_next, fluxes, masks, dt);
   pushpp_c(step, dt, x_next, prim);
 
