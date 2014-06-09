@@ -75,6 +75,28 @@ enum {
   _PP1 = _UU1,
 };
 
+// for the state vector
+
+enum {
+  RR,
+  RVX,
+  RVY,
+  RVZ,
+  UU,
+  BX,
+  BY,
+  BZ,
+};
+
+// for primitive fields
+
+enum {
+  VX = 1,
+  VY = 2,
+  VZ = 3,
+  PP = 4,
+};
+
 // ----------------------------------------------------------------------
 // macros to ease field access
 
