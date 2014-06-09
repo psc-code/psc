@@ -406,6 +406,10 @@ pushfv_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
       fluxl_c(mhd, fluxes, tmp, x_curr, m, prim);
     }
   } else {
+    vgrs(b, 0, 0.f); vgrs(b, 1, 0.f); vgrs(b, 2, 0.f);
+    limit1_c(prim, _PP, mhd->time, mhd->par.timelo, b, 0);
+    // limit2, 3
+
     for (int m = 0; m < 5; m++) {
       vgfl_c(mhd, m, tmp, prim);
       mrc_fld_foreach(c, i,j,k, 2,2) {
@@ -814,15 +818,8 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
   struct mrc_fld *resis = sub->resis;
   struct mrc_fld *E = sub->E;
   struct mrc_fld *masks = sub->masks;
+
   rmaskn_c(step);
-
-  if (limit != LIMIT_NONE) {
-    struct mrc_fld *prim = sub->prim, *b = sub->b;
-
-    vgrs(b, 0, 0.f); vgrs(b, 1, 0.f); vgrs(b, 2, 0.f);
-    limit1_c(prim, _PP, mhd->time, mhd->par.timelo, b, 0);
-    // limit2, 3
-  }
 
   pushfv_c(step, fluxes, dt, x_curr, x_next, limit);
   update_finite_volume(mhd, x_next, fluxes, masks, dt);
