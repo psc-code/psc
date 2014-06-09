@@ -770,9 +770,9 @@ calce_const_c(struct ggcm_mhd_step *step, struct mrc_fld *E,
 
 static void
 calce_c(struct ggcm_mhd_step *step, struct mrc_fld *E,
-	mrc_fld_data_t dt, struct mrc_fld *x,
-	struct mrc_fld *curr, struct mrc_fld *resis)
+	struct mrc_fld *x, mrc_fld_data_t dt)
 {
+  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
 
   switch (mhd->par.magdiffu) {
@@ -780,10 +780,13 @@ calce_c(struct ggcm_mhd_step *step, struct mrc_fld *E,
     calc_resis_nl1_c(mhd);
     calce_nl1_c(step, E, dt, x);
     break;
-  case MAGDIFFU_CONST:
+  case MAGDIFFU_CONST: {
+    struct mrc_fld *curr = sub->curr;
+    struct mrc_fld *resis = sub->resis;
     calc_resis_const_c(step, curr, resis, x);
     calce_const_c(step, E, dt, x, curr, resis);
     break;
+  }
   default:
     assert(0);
   }
@@ -818,8 +821,6 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
   struct mrc_fld **fluxes = sub->fluxes;
-  struct mrc_fld *curr = sub->curr;
-  struct mrc_fld *resis = sub->resis;
   struct mrc_fld *E = sub->E;
   struct mrc_fld *masks = sub->masks;
 
@@ -830,7 +831,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
   pushpp_c(step, dt, x_next, prim);
 
   push_ej_c(step, dt, x_curr, x_next);
-  calce_c(step, E, dt, x_curr, curr, resis);
+  calce_c(step, E, x_curr, dt);
   update_ct(mhd, x_next, E, dt);
 }
 
