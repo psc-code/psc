@@ -137,8 +137,6 @@ prim_from_sc(mrc_fld_data_t W[], mrc_fld_data_t U[])
   W[VZ] = rri * U[RVZ];
   mrc_fld_data_t rvv = (sqr(U[RVX]) + sqr(U[RVY]) + sqr(U[RVZ])) * rri;
   W[PP] = _gamma_minus_1 * (U[UU] - .5 * rvv);
-  mrc_fld_data_t cs2 = _gamma * W[PP] * rri;
-  W[CMSV] = sqrtf(rvv * rri) + sqrtf(cs2);
 }
 
 static void
@@ -160,7 +158,6 @@ mhd_reconstruct_copy_W_to_1d(struct mrc_fld *W_1d, struct mrc_fld *W_cc, int ib,
       F1(W_1d, W_VY, i) = F1(W_cc, VX+Y, i);	\
       F1(W_1d, W_VZ, i) = F1(W_cc, VX+Z, i);	\
       F1(W_1d, W_PP, i) = F1(W_cc, PP  , i);	\
-      F1(W_1d, CMSV, i) = F1(W_cc, CMSV, i);	\
     }						\
   } while (0)
 
@@ -181,15 +178,15 @@ mhd_reconstruct_pcm_run(struct ggcm_mhd_step *step,
 			struct mrc_fld *U_cc,
 			int ib, int ie, int dim)
 {
-  struct mrc_fld *W_cc = ggcm_mhd_step_get_1d_fld(step, 6);
-  struct mrc_fld *W_1d = ggcm_mhd_step_get_1d_fld(step, 6);
+  struct mrc_fld *W_cc = ggcm_mhd_step_get_1d_fld(step, 5);
+  struct mrc_fld *W_1d = ggcm_mhd_step_get_1d_fld(step, 5);
   struct mrc_fld *U_1d = ggcm_mhd_step_get_1d_fld(step, 5);
 
   mhd_reconstruct_prim_from_sc(W_cc, U_cc, ib, ie);
   mhd_reconstruct_copy_W_to_1d(W_1d, W_cc, ib, ie, dim);
 
   for (int i = ib; i < ie + 1; i++) {
-    for (int m = 0; m < 6; m++) {
+    for (int m = 0; m < 5; m++) {
       F1(W_l, m, i) = F1(W_1d, m, i-1);
       F1(W_r, m, i) = F1(W_1d, m, i  );
     }
@@ -277,7 +274,7 @@ ggcm_mhd_step_c_primvar(struct ggcm_mhd_step *step, struct mrc_fld *prim,
 
 static void
 fluxes_rusanov(mrc_fld_data_t F[5], mrc_fld_data_t Ul[5], mrc_fld_data_t Ur[5],
-	       mrc_fld_data_t Wl[6], mrc_fld_data_t Wr[6])
+	       mrc_fld_data_t Wl[5], mrc_fld_data_t Wr[5])
 {
   mrc_fld_data_t Fl[5], Fr[5];
   
@@ -295,8 +292,18 @@ fluxes_rusanov(mrc_fld_data_t F[5], mrc_fld_data_t Ul[5], mrc_fld_data_t Ur[5],
   
   Fl[UU] = (Ul[UU] + Wl[PP]) * Wl[VX];
   Fr[UU] = (Ur[UU] + Wr[PP]) * Wr[VX];
+
+  mrc_fld_data_t vv, cs2;
+  vv = sqr(Wl[VX]) + sqr(Wl[VY]) + sqr(Wl[VZ]);
+  cs2 = _gamma * Wl[PP] / Wl[RR];
+  mrc_fld_data_t cmsv_l = sqrtf(vv) + sqrtf(cs2);
+
+  vv = sqr(Wr[VX]) + sqr(Wr[VY]) + sqr(Wr[VZ]);
+  cs2 = _gamma * Wr[PP] / Wr[RR];
+  mrc_fld_data_t cmsv_r = sqrtf(vv) + sqrtf(cs2);
+
+  mrc_fld_data_t lambda = .5 * (cmsv_l + cmsv_r);
   
-  mrc_fld_data_t lambda = .5f * (Wr[CMSV] + Wl[CMSV]);
   for (int m = 0; m < 5; m++) {
     F[m] = .5f * ((Fr[m] + Fl[m]) - lambda * (Ur[m] - Ul[m]));
   }
@@ -346,8 +353,8 @@ fluxl_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
   struct mrc_fld *U_cc = ggcm_mhd_step_get_1d_fld(step, 5);
   struct mrc_fld *U_l = ggcm_mhd_step_get_1d_fld(step, 5);
   struct mrc_fld *U_r = ggcm_mhd_step_get_1d_fld(step, 5);
-  struct mrc_fld *W_l = ggcm_mhd_step_get_1d_fld(step, 6);
-  struct mrc_fld *W_r = ggcm_mhd_step_get_1d_fld(step, 6);
+  struct mrc_fld *W_l = ggcm_mhd_step_get_1d_fld(step, 5);
+  struct mrc_fld *W_r = ggcm_mhd_step_get_1d_fld(step, 5);
   struct mrc_fld *F = ggcm_mhd_step_get_1d_fld(step, 5);
 
   const int *ldims = mrc_fld_dims(U) + U->_is_aos;
