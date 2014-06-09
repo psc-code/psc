@@ -868,62 +868,7 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step,
   // set x_half = x^n, then advance to n+1/2
   mrc_fld_copy_range(x_half, x, 0, 8);
 
-#if 0
-  pushstage_c(step, dt, x, _RR1, x, _RR2, LIMIT_NONE);
-#else
-  int limit = LIMIT_NONE;
-  struct ggcm_mhd *mhd = step->mhd;
-  struct mrc_fld *curr = sub->curr;
-  struct mrc_fld *resis = sub->resis;
-  struct mrc_fld *E = sub->E;
-  struct mrc_fld *x_curr = x, *x_next = x_half;
-  int m_curr = _RR1, m_next = _RR1;
-  rmaskn_c(step);
-
-  if (limit != LIMIT_NONE) {
-    struct mrc_fld *prim = sub->prim, *b = sub->b;
-
-    vgrs(b, 0, 0.f); vgrs(b, 1, 0.f); vgrs(b, 2, 0.f);
-    limit1_c(prim, _PP, mhd->time, mhd->par.timelo, b, 0);
-    // limit2, 3
-  }
-
-  pushfv_c(step, _RR1 , dt, x_curr, m_curr, x_next, m_next, limit);
-  pushfv_c(step, _RV1X, dt, x_curr, m_curr, x_next, m_next, limit);
-  pushfv_c(step, _RV1Y, dt, x_curr, m_curr, x_next, m_next, limit);
-  pushfv_c(step, _RV1Z, dt, x_curr, m_curr, x_next, m_next, limit);
-  pushfv_c(step, _UU1 , dt, x_curr, m_curr, x_next, m_next, limit);
-
-  pushpp_c(step, dt, x_next, m_next, prim);
-
-  mrc_fld_foreach(x, ix,iy,iz, 2, 2) {
-    for (int m = 0; m < 8; m++) {
-      F3(x, _RR2 + m, ix,iy,iz) = F3(x_half, m, ix,iy,iz);
-    }
-  } mrc_fld_foreach_end;
-  x_next = x; m_next = _RR2;
-
-  switch (mhd->par.magdiffu) {
-  case MAGDIFFU_NL1:
-    calc_resis_nl1_c(mhd, m_curr);
-    break;
-  case MAGDIFFU_CONST:
-    calc_resis_const_c(step, curr, resis, x_curr, m_curr);
-    break;
-  default:
-    assert(0);
-  }
-
-  push_ej_c(step, dt, x_curr, m_curr, x_next, m_next);
-  calce_c(step, E, dt, x_curr, m_curr, curr, resis);
-  bpush_c(mhd, x_next, m_next, dt, E);
-#endif
-
-  mrc_fld_foreach(x_half, ix,iy,iz, 2, 2) {
-    for (int m = 0; m < 8; m++) {
-      F3(x_half, m, ix,iy,iz) = F3(x, m + 8, ix,iy,iz);
-    }
-  } mrc_fld_foreach_end;
+  pushstage_c(step, dt, x, _RR1, x_half, _RR1, prim, LIMIT_NONE);
 }
 
 // ----------------------------------------------------------------------
@@ -937,17 +882,10 @@ ggcm_mhd_step_c_corr(struct ggcm_mhd_step *step,
   struct mrc_fld *prim = sub->prim;
 
   ggcm_mhd_step_c_primvar(step, prim, x_half);
-
-  mrc_fld_foreach(x_half, ix,iy,iz, 2, 2) {
-    for (int m = 0; m < 8; m++) {
-      F3(x, m + 8, ix,iy,iz) = F3(x_half, m, ix,iy,iz);
-    }
-  } mrc_fld_foreach_end;
-
   //  primbb_c2_c(step->mhd, _RR2);
   //  zmaskn_c(step->mhd);
 
-  pushstage_c(step, step->mhd->dt, x, _RR2, x, _RR1, prim, LIMIT_1);
+  pushstage_c(step, step->mhd->dt, x_half, _RR1, x, _RR1, prim, LIMIT_1);
 }
 
 // ----------------------------------------------------------------------
