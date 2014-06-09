@@ -279,12 +279,9 @@ fluxb_c(struct ggcm_mhd *mhd, struct mrc_fld **fluxes, struct mrc_fld *tmp,
 }
 
 static void
-update_fv(struct ggcm_mhd_step *step, struct mrc_fld *x,
-	  struct mrc_fld **fluxes, mrc_fld_data_t dt)
+update_finite_volume(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld **fluxes,
+		     struct mrc_fld *masks, mrc_fld_data_t dt)
 {
-  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
-  struct ggcm_mhd *mhd = step->mhd;
-  struct mrc_fld *masks = sub->masks;
   float *fd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FD1);
   float *fd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FD1);
   float *fd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FD1);
@@ -816,6 +813,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
   struct mrc_fld *curr = sub->curr;
   struct mrc_fld *resis = sub->resis;
   struct mrc_fld *E = sub->E;
+  struct mrc_fld *masks = sub->masks;
   rmaskn_c(step);
 
   if (limit != LIMIT_NONE) {
@@ -827,7 +825,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
   }
 
   pushfv_c(step, fluxes, dt, x_curr, x_next, limit);
-  update_fv(step, x_next, fluxes, dt);
+  update_finite_volume(mhd, x_next, fluxes, masks, dt);
   pushpp_c(step, dt, x_next, prim);
 
   switch (mhd->par.magdiffu) {
