@@ -777,9 +777,13 @@ calce_c(struct ggcm_mhd_step *step, struct mrc_fld *E,
 
   switch (mhd->par.magdiffu) {
   case MAGDIFFU_NL1:
-    return calce_nl1_c(step, E, dt, x);
+    calc_resis_nl1_c(mhd);
+    calce_nl1_c(step, E, dt, x);
+    break;
   case MAGDIFFU_CONST:
-    return calce_const_c(step, E, dt, x, curr, resis);
+    calc_resis_const_c(step, curr, resis, x);
+    calce_const_c(step, E, dt, x, curr, resis);
+    break;
   default:
     assert(0);
   }
@@ -824,17 +828,6 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
   pushfv_c(step, fluxes, dt, x_curr, x_next, limit);
   update_finite_volume(mhd, x_next, fluxes, masks, dt);
   pushpp_c(step, dt, x_next, prim);
-
-  switch (mhd->par.magdiffu) {
-  case MAGDIFFU_NL1:
-    calc_resis_nl1_c(mhd);
-    break;
-  case MAGDIFFU_CONST:
-    calc_resis_const_c(step, curr, resis, x_curr);
-    break;
-  default:
-    assert(0);
-  }
 
   push_ej_c(step, dt, x_curr, x_next);
   calce_c(step, E, dt, x_curr, curr, resis);
