@@ -27,8 +27,6 @@ mrc_fld_copy_range(struct mrc_fld *to, struct mrc_fld *from, int mb, int me)
 // ggcm_mhd_step subclass "c3"
 
 struct ggcm_mhd_step_c3 {
-  struct mrc_fld *x_half;
-
   struct mrc_fld *masks;
 };
 
@@ -46,16 +44,6 @@ enum {
   LIMIT_1,
 };
 
-static void
-setup_mrc_fld_3d(struct mrc_fld *x, struct mrc_fld *tmpl, int nr_comps)
-{
-  mrc_fld_set_type(x, FLD_TYPE);
-  mrc_fld_set_param_obj(x, "domain", tmpl->_domain);
-  mrc_fld_set_param_int(x, "nr_spatial_dims", 3);
-  mrc_fld_set_param_int(x, "nr_comps", nr_comps);
-  mrc_fld_set_param_int(x, "nr_ghosts", tmpl->_nr_ghosts);
-}
-
 // ----------------------------------------------------------------------
 // ggcm_mhd_step_c_setup
 
@@ -66,9 +54,6 @@ ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
   struct ggcm_mhd *mhd = step->mhd;
 
   assert(mhd);
-
-  setup_mrc_fld_3d(sub->x_half, mhd->fld, 8);
-  mrc_fld_dict_add_int(sub->x_half, "mhd_type", ggcm_mhd_step_mhd_type(step));
 
   sub->masks = mhd->fld;
 
@@ -851,8 +836,7 @@ static void
 ggcm_mhd_step_c_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 {
   struct ggcm_mhd *mhd = step->mhd;
-  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
-  struct mrc_fld *x_half = sub->x_half;
+  struct mrc_fld *x_half = ggcm_mhd_step_get_3d_fld(step, 8);
   struct mrc_fld *prim = ggcm_mhd_step_get_3d_fld(step, _VZ + 1);
 
   float dtn;
@@ -888,6 +872,7 @@ ggcm_mhd_step_c_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
     }
   }
 
+  ggcm_mhd_step_put_3d_fld(step, x_half);
   ggcm_mhd_step_put_3d_fld(step, prim);
 }
 
@@ -896,8 +881,6 @@ ggcm_mhd_step_c_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_step_c3, x)
 static struct param ggcm_mhd_step_c_descr[] = {
-  { "x_half"          , VAR(x_half)          , MRC_VAR_OBJ(mrc_fld)           },
-
   {},
 };
 #undef VAR
