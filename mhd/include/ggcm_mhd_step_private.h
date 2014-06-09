@@ -45,5 +45,9 @@ extern struct ggcm_mhd_step_ops ggcm_mhd_step_c2_double_ops;
 extern struct ggcm_mhd_step_ops ggcm_mhd_step_c3_float_ops;
 extern struct ggcm_mhd_step_ops ggcm_mhd_step_c3_double_ops;
 
+// helpers for subclasses to use
+
+struct mrc_fld *ggcm_mhd_step_get_3d_fld(struct ggcm_mhd_step *step, int nr_comps);
+void ggcm_mhd_step_put_3d_fld(struct ggcm_mhd_step *step, struct mrc_fld *f);
 
 #endif
