@@ -28,12 +28,12 @@ mrc_fld_copy_range(struct mrc_fld *to, struct mrc_fld *from, int mb, int me)
 
 struct ggcm_mhd_step_c3 {
   struct mrc_fld *x_half;
+  struct mrc_fld *prim;
 
   struct mrc_fld *masks;
   struct mrc_fld *bc;
   struct mrc_fld *flux;
   struct mrc_fld *tmp;
-  struct mrc_fld *prim;
 };
 
 #define ggcm_mhd_step_c3(step) mrc_to_subobj(step, struct ggcm_mhd_step_c3)
@@ -73,12 +73,12 @@ ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
 
   setup_mrc_fld_3d(sub->x_half, mhd->fld, 8);
   mrc_fld_dict_add_int(sub->x_half, "mhd_type", ggcm_mhd_step_mhd_type(step));
+  setup_mrc_fld_3d(sub->prim, mhd->fld, _VZ + 1);
 
   sub->masks = mhd->fld;
   sub->bc    = mhd->fld;
   sub->flux  = mhd->fld;
   sub->tmp   = mhd->fld;
-  sub->prim  = mhd->fld;
 
   ggcm_mhd_step_setup_member_objs_sub(step);
   ggcm_mhd_step_setup_super(step);
@@ -839,6 +839,7 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step,
   struct mrc_fld *prim = sub->prim;
 
   ggcm_mhd_step_c_primvar(step, prim, x);
+  primvar_c(step->mhd, _RR1); // FIXME, for zmaskn() and E-field
   primbb_c2_c(step->mhd, _RR1);
   zmaskn_c(step->mhd);
 
@@ -919,6 +920,7 @@ ggcm_mhd_step_c_corr(struct ggcm_mhd_step *step,
     }
   } mrc_fld_foreach_end;
 
+  primvar_c(step->mhd, _RR2); // FIXME, for zmaskn() and E-field
   //  primbb_c2_c(step->mhd, _RR2);
   //  zmaskn_c(step->mhd);
 
@@ -963,6 +965,7 @@ ggcm_mhd_step_c_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_step_c3, x)
 static struct param ggcm_mhd_step_c_descr[] = {
   { "x_half"          , VAR(x_half)          , MRC_VAR_OBJ(mrc_fld)           },
+  { "prim"            , VAR(prim)            , MRC_VAR_OBJ(mrc_fld)           },
 
   {},
 };
