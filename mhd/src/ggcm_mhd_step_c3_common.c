@@ -189,6 +189,30 @@ vgfluu_c(struct ggcm_mhd *mhd, struct mrc_fld **fl_cc, struct mrc_fld *prim)
   } mrc_fld_foreach_end;
 }
 
+// ----------------------------------------------------------------------
+// pick_line
+
+static void
+pick_line(struct mrc_fld *x1, struct mrc_fld *x,
+	     int ib, int ie, int j, int k, int dim)
+{
+#define PICK_LINE(X,I,J,K) do {			\
+    for (int i = ib; i < ie; i++) {		\
+      for (int m = 0; m < 5; m++) {		\
+	F1(x1, m, i) = F3(x, m, I,J,K);		\
+      }						\
+    }						\
+  } while (0)
+
+  if (dim == 0) {
+    PICK_LINE(0,i,j,k);
+  } else if (dim == 1) {
+    PICK_LINE(1,k,i,j);
+  } else if (dim == 2) {
+    PICK_LINE(2,j,k,i);
+  }
+}
+
 static void
 fluxl_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes, struct mrc_fld **fl_cc,
 	struct mrc_fld *x, struct mrc_fld *prim)
@@ -200,10 +224,11 @@ fluxl_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes, struct mrc_fld **fl
   // FIXME, flux indexing should be shifted by 1
   for (int k = 0; k < ldims[2]; k++) {
     for (int j = 0; j < ldims[1]; j++) {
+      pick_line(fl1_cc, fl_cc[0], -1, ldims[0] + 1, j, k, 0);
       for (int i = -1; i < ldims[0]; i++) {
 	for (int m = 0; m < 5; m++) {
 	  F3(fluxes[0], m, i,j,k) =
-	    .5f * ((F3(fl_cc[0], m, i  ,j,k) + F3(fl_cc[0], m, i+1,j,k)) -
+	    .5f * ((F1(fl1_cc, m, i) + F1(fl1_cc, m, i+1)) -
 		   .5f * (F3(prim, CMSV, i+1,j,k) + F3(prim, CMSV, i,j,k)) *
 		   (F3(x, m, i+1,j,k) - F3(x, m, i,j,k)));
 	}
@@ -213,10 +238,11 @@ fluxl_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes, struct mrc_fld **fl
 
   for (int k = 0; k < ldims[2]; k++) {
     for (int i = 0; i < ldims[0]; i++) {
+      pick_line(fl1_cc, fl_cc[1], -1, ldims[1] + 1, k, i, 1);
       for (int j = -1; j < ldims[1]; j++) {
 	for (int m = 0; m < 5; m++) {
 	  F3(fluxes[1], m, i,j,k) =
-	    .5f * ((F3(fl_cc[1], m, i,j  ,k) + F3(fl_cc[1], m, i,j+1,k)) -
+	    .5f * ((F1(fl1_cc, m, j) + F1(fl1_cc, m, j+1)) -
 		   .5f * (F3(prim, CMSV, i,j+1,k) + F3(prim, CMSV, i,j,k)) *
 		   (F3(x, m, i,j+1,k) - F3(x, m, i,j,k)));
 	}
@@ -226,10 +252,11 @@ fluxl_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes, struct mrc_fld **fl
 
   for (int i = 0; i < ldims[0]; i++) {
     for (int j = 0; j < ldims[1]; j++) {
+      pick_line(fl1_cc, fl_cc[2], -1, ldims[2] + 1, i, j, 2);
       for (int k = -1; k < ldims[2]; k++) {
 	for (int m = 0; m < 5; m++) {
 	  F3(fluxes[2], m, i,j,k) =
-	    .5f * ((F3(fl_cc[2], m, i,j,k  ) + F3(fl_cc[2], m, i,j,k+1)) -
+	    .5f * ((F1(fl1_cc, m, k) + F1(fl1_cc, m, k+1)) -
 		   .5f * (F3(prim, CMSV, i,j,k+1) + F3(prim, CMSV, i,j,k)) *
 		   (F3(x, m, i,j,k+1) - F3(x, m, i,j,k)));
 	}
