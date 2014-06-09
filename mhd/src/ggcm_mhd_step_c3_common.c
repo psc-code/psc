@@ -777,23 +777,23 @@ calce_c(struct ggcm_mhd_step *step, struct mrc_fld *E,
 }
 
 static void
-bpush_c(struct ggcm_mhd *mhd, struct mrc_fld *x_next, mrc_fld_data_t dt,
-	struct mrc_fld *E)
+update_ct(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *E_ec,
+	  mrc_fld_data_t dt)
 {
   float *bd3x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD3);
   float *bd3y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD3);
   float *bd3z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD3);
 
-  mrc_fld_foreach(x_next, ix,iy,iz, 0, 0) {
-    F3(x_next, _B1X, ix,iy,iz) +=
-      dt * (bd3y[iy] * (F3(E, 2, ix,iy+1,iz) - F3(E, 2, ix,iy,iz)) -
-	    bd3z[iz] * (F3(E, 1, ix,iy,iz+1) - F3(E, 1, ix,iy,iz)));
-    F3(x_next, _B1Y, ix,iy,iz) +=
-      dt * (bd3z[iz] * (F3(E, 0, ix,iy,iz+1) - F3(E, 0, ix,iy,iz)) -
-	    bd3x[ix] * (F3(E, 2, ix+1,iy,iz) - F3(E, 2, ix,iy,iz)));
-    F3(x_next, _B1Z, ix,iy,iz) +=
-      dt * (bd3x[ix] * (F3(E, 1, ix+1,iy,iz) - F3(E, 1, ix,iy,iz)) -
-	    bd3y[iy] * (F3(E, 0, ix,iy+1,iz) - F3(E, 0, ix,iy,iz)));
+  mrc_fld_foreach(x, ix,iy,iz, 0, 0) {
+    F3(x, _B1X, ix,iy,iz) +=
+      dt * (bd3y[iy] * (F3(E_ec, 2, ix,iy+1,iz) - F3(E_ec, 2, ix,iy,iz)) -
+	    bd3z[iz] * (F3(E_ec, 1, ix,iy,iz+1) - F3(E_ec, 1, ix,iy,iz)));
+    F3(x, _B1Y, ix,iy,iz) +=
+      dt * (bd3z[iz] * (F3(E_ec, 0, ix,iy,iz+1) - F3(E_ec, 0, ix,iy,iz)) -
+	    bd3x[ix] * (F3(E_ec, 2, ix+1,iy,iz) - F3(E_ec, 2, ix,iy,iz)));
+    F3(x, _B1Z, ix,iy,iz) +=
+      dt * (bd3x[ix] * (F3(E_ec, 1, ix+1,iy,iz) - F3(E_ec, 1, ix,iy,iz)) -
+	    bd3y[iy] * (F3(E_ec, 0, ix,iy+1,iz) - F3(E_ec, 0, ix,iy,iz)));
   } mrc_fld_foreach_end;
 }
 
@@ -838,7 +838,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
 
   push_ej_c(step, dt, x_curr, x_next);
   calce_c(step, E, dt, x_curr, curr, resis);
-  bpush_c(mhd, x_next, dt, E);
+  update_ct(mhd, x_next, E, dt);
 }
 
 // ----------------------------------------------------------------------
