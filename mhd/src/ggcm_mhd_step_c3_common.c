@@ -82,11 +82,11 @@ ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
   setup_mrc_fld_3d(sub->flux, mhd->fld, 3);
   setup_mrc_fld_3d(sub->b   , mhd->fld, 3);
   setup_mrc_fld_3d(sub->c   , mhd->fld, 3);
+  setup_mrc_fld_3d(sub->E   , mhd->fld, 3);
 
   sub->masks = mhd->fld;
   sub->curr  = mhd->fld;
   sub->resis = mhd->fld;
-  sub->E     = mhd->fld;
 
   ggcm_mhd_step_setup_member_objs_sub(step);
   ggcm_mhd_step_setup_super(step);
@@ -994,6 +994,7 @@ static struct param ggcm_mhd_step_c_descr[] = {
   { "flux"            , VAR(flux)            , MRC_VAR_OBJ(mrc_fld)           },
   { "b"               , VAR(b)               , MRC_VAR_OBJ(mrc_fld)           },
   { "c"               , VAR(c)               , MRC_VAR_OBJ(mrc_fld)           },
+  { "E"               , VAR(E)               , MRC_VAR_OBJ(mrc_fld)           },
 
   {},
 };
