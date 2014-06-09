@@ -367,9 +367,12 @@ pushfv_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
 			       ggcm_mhd_step_get_3d_fld(step, 5),
 			       ggcm_mhd_step_get_3d_fld(step, 5), };
 
+  for (int m = 0; m < 5; m++) {
+    vgfl_c(mhd, m, fl_cc, prim);
+  }
+  
   if (limit == LIMIT_NONE) {
     for (int m = 0; m < 5; m++) {
-      vgfl_c(mhd, m, fl_cc, prim);
       fluxl_c(mhd, fluxes, fl_cc, x_curr, m, prim);
     }
   } else {
@@ -380,7 +383,6 @@ pushfv_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
     // limit2, 3
 
     for (int m = 0; m < 5; m++) {
-      vgfl_c(mhd, m, fl_cc, prim);
       mrc_fld_foreach(c, i,j,k, 2,2) {
 	F3(c, 0, i,j,k) = F3(b, 0, i,j,k);
 	F3(c, 1, i,j,k) = F3(b, 1, i,j,k);
