@@ -708,7 +708,7 @@ bcthy3z_NL1(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int IX, int IY, 
     ttmp[0] -= d1 * t1m * F3(masks, _RMASK, ix,iy,iz);
     ttmp[1] -= d2 * t2m * F3(masks, _RMASK, ix,iy,iz);
     //    F3(f, _RESIS, ix,iy,iz) += fabsf(d1+d2) * F3(masks, _ZMASK, ix,iy,iz);
-    F3(E, XX, ix,iy,iz) = ttmp[0] - ttmp[1];
+    F3(E, XX, ix,iy,iz) = - (ttmp[0] - ttmp[1]);
   } mrc_fld_foreach_end;
 }
 
@@ -736,7 +736,7 @@ bcthy3z_const(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int IX, int IY
 
     mrc_fld_data_t vcurrXX = CC_TO_EC(curr, XX, ix,iy,iz, IX,IY,IZ);
     mrc_fld_data_t vresis = CC_TO_EC(resis, 0, ix,iy,iz, IX,IY,IZ);
-    F3(E, XX, ix,iy,iz) = ttmp[0] - ttmp[1] - vresis * vcurrXX;
+    F3(E, XX, ix,iy,iz) = - (ttmp[0] - ttmp[1]) + vresis * vcurrXX;
   } mrc_fld_foreach_end;
 }
 
@@ -785,13 +785,13 @@ update_ct(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *E_ec,
   float *bd3z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD3);
 
   mrc_fld_foreach(x, ix,iy,iz, 0, 0) {
-    F3(x, _B1X, ix,iy,iz) +=
+    F3(x, _B1X, ix,iy,iz) -=
       dt * (bd3y[iy] * (F3(E_ec, 2, ix,iy+1,iz) - F3(E_ec, 2, ix,iy,iz)) -
 	    bd3z[iz] * (F3(E_ec, 1, ix,iy,iz+1) - F3(E_ec, 1, ix,iy,iz)));
-    F3(x, _B1Y, ix,iy,iz) +=
+    F3(x, _B1Y, ix,iy,iz) -=
       dt * (bd3z[iz] * (F3(E_ec, 0, ix,iy,iz+1) - F3(E_ec, 0, ix,iy,iz)) -
 	    bd3x[ix] * (F3(E_ec, 2, ix+1,iy,iz) - F3(E_ec, 2, ix,iy,iz)));
-    F3(x, _B1Z, ix,iy,iz) +=
+    F3(x, _B1Z, ix,iy,iz) -=
       dt * (bd3x[ix] * (F3(E_ec, 1, ix+1,iy,iz) - F3(E_ec, 1, ix,iy,iz)) -
 	    bd3y[iy] * (F3(E_ec, 0, ix,iy+1,iz) - F3(E_ec, 0, ix,iy,iz)));
   } mrc_fld_foreach_end;
