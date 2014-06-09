@@ -241,21 +241,21 @@ put_line(struct mrc_fld *flux, struct mrc_fld *F, int j, int k,
 
 static void
 fluxl_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes, struct mrc_fld **fl_cc,
-	struct mrc_fld *x, struct mrc_fld *prim)
+	struct mrc_fld *U, struct mrc_fld *W)
 {
   struct mrc_fld *fl1_cc = ggcm_mhd_step_get_1d_fld(step, 5);
   struct mrc_fld *U_cc = ggcm_mhd_step_get_1d_fld(step, 5);
   struct mrc_fld *W_cc = ggcm_mhd_step_get_1d_fld(step, 6);
   struct mrc_fld *F = ggcm_mhd_step_get_1d_fld(step, 5);
 
-  const int *ldims = mrc_fld_dims(x) + x->_is_aos;
+  const int *ldims = mrc_fld_dims(U) + U->_is_aos;
 
   // FIXME, flux indexing should be shifted by 1
   for (int k = 0; k < ldims[2]; k++) {
     for (int j = 0; j < ldims[1]; j++) {
       pick_line(fl1_cc, fl_cc[0], 5, -1, ldims[0] + 1, j, k, 0);
-      pick_line(U_cc  , x       , 5, -1, ldims[0] + 1, j, k, 0);
-      pick_line(W_cc  , prim    , 6, -1, ldims[0] + 1, j, k, 0);
+      pick_line(U_cc  , U       , 5, -1, ldims[0] + 1, j, k, 0);
+      pick_line(W_cc  , W       , 6, -1, ldims[0] + 1, j, k, 0);
       for (int i = -1; i < ldims[0]; i++) {
 	for (int m = 0; m < 5; m++) {
 	  F1(F, m, i) =
@@ -271,8 +271,8 @@ fluxl_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes, struct mrc_fld **fl
   for (int k = 0; k < ldims[2]; k++) {
     for (int i = 0; i < ldims[0]; i++) {
       pick_line(fl1_cc, fl_cc[1], 5, -1, ldims[1] + 1, k, i, 1);
-      pick_line(U_cc  , x       , 5, -1, ldims[1] + 1, k, i, 1);
-      pick_line(W_cc  , prim    , 6, -1, ldims[1] + 1, k, i, 1);
+      pick_line(U_cc  , U       , 5, -1, ldims[1] + 1, k, i, 1);
+      pick_line(W_cc  , W       , 6, -1, ldims[1] + 1, k, i, 1);
       for (int j = -1; j < ldims[1]; j++) {
 	for (int m = 0; m < 5; m++) {
 	  F1(F, m, j) = 
@@ -288,8 +288,8 @@ fluxl_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes, struct mrc_fld **fl
   for (int i = 0; i < ldims[0]; i++) {
     for (int j = 0; j < ldims[1]; j++) {
       pick_line(fl1_cc, fl_cc[2], 5, -1, ldims[2] + 1, i, j, 2);
-      pick_line(U_cc  , x       , 5, -1, ldims[2] + 1, i, j, 2);
-      pick_line(W_cc  , prim    , 6, -1, ldims[2] + 1, i, j, 2);
+      pick_line(U_cc  , U       , 5, -1, ldims[2] + 1, i, j, 2);
+      pick_line(W_cc  , W       , 6, -1, ldims[2] + 1, i, j, 2);
       for (int k = -1; k < ldims[2]; k++) {
 	for (int m = 0; m < 5; m++) {
 	  F1(F, m, k) =
