@@ -31,7 +31,8 @@ struct ggcm_mhd_step_c3 {
   struct mrc_fld *prim;
 
   struct mrc_fld *masks;
-  struct mrc_fld *bc;
+  struct mrc_fld *b;
+  struct mrc_fld *c;
   struct mrc_fld *flux;
   struct mrc_fld *tmp;
 };
@@ -78,7 +79,8 @@ ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
   setup_mrc_fld_3d(sub->flux, mhd->fld, 3);
 
   sub->masks = mhd->fld;
-  sub->bc    = mhd->fld;
+  sub->b     = mhd->fld;
+  sub->c     = mhd->fld;
 
   ggcm_mhd_step_setup_member_objs_sub(step);
   ggcm_mhd_step_setup_super(step);
@@ -321,14 +323,6 @@ vgrs(struct mrc_fld *f, int m, mrc_fld_data_t s)
   } mrc_fld_foreach_end;
 }
 
-static void
-vgrv(struct mrc_fld *f, int m_to, int m_from)
-{
-  mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
-    F3(f, m_to, ix,iy,iz) = F3(f, m_from, ix,iy,iz);
-  } mrc_fld_foreach_end;
-}
-
 static inline void
 limit1a(struct mrc_fld *x, int m, int ix, int iy, int iz, int IX, int IY, int IZ,
 	struct mrc_fld *c, int m_c)
@@ -361,21 +355,21 @@ limit1a(struct mrc_fld *x, int m, int ix, int iy, int iz, int IX, int IY, int IZ
 
 static void
 limit1_c(struct mrc_fld *x, int m, mrc_fld_data_t time, mrc_fld_data_t timelo,
-	 struct mrc_fld *bc, int m_c)
+	 struct mrc_fld *c, int m_c)
 {
   if (time < timelo) {
-    vgrs(bc, m_c + 0, 1.f);
-    vgrs(bc, m_c + 1, 1.f);
-    vgrs(bc, m_c + 2, 1.f);
+    vgrs(c, m_c + 0, 1.f);
+    vgrs(c, m_c + 1, 1.f);
+    vgrs(c, m_c + 2, 1.f);
     return;
   }
 
-  mrc_fld_foreach(bc, ix,iy,iz, 1, 1) {
+  mrc_fld_foreach(c, ix,iy,iz, 1, 1) {
 /* .if (limit_aspect_low) then */
 /* .call lowmask(0,0,0,tl1) */
-    limit1a(x, m, ix,iy,iz, 1,0,0, bc, m_c + 0);
-    limit1a(x, m, ix,iy,iz, 0,1,0, bc, m_c + 1);
-    limit1a(x, m, ix,iy,iz, 0,0,1, bc, m_c + 2);
+    limit1a(x, m, ix,iy,iz, 1,0,0, c, m_c + 0);
+    limit1a(x, m, ix,iy,iz, 0,1,0, c, m_c + 1);
+    limit1a(x, m, ix,iy,iz, 0,0,1, c, m_c + 2);
   } mrc_fld_foreach_end;
 }
 
@@ -401,15 +395,20 @@ pushfv_c(struct ggcm_mhd_step *step, int m, mrc_fld_data_t dt, struct mrc_fld *x
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
   int m_flux = 0, m_tmp = 0;
-  struct mrc_fld *prim = sub->prim, *bc = sub->bc, *flux = sub->flux, *tmp = sub->tmp;
+  struct mrc_fld *prim = sub->prim, *b = sub->b, *c = sub->c, *flux = sub->flux, *tmp = sub->tmp;
 
   vgfl_c(mhd, m, tmp, m_tmp, prim);
   if (limit == LIMIT_NONE) {
     fluxl_c(mhd, flux, m_flux, tmp, m_tmp, x_curr, m_curr + m, prim);
   } else {
-    vgrv(bc, _CX, _BX); vgrv(bc, _CY, _BY); vgrv(bc, _CY, _BY);
-    limit1_c(x_curr, m_curr + m, mhd->time, mhd->par.timelo, bc, _CX);
-    fluxb_c(mhd, flux, m_flux, tmp, m_tmp, x_curr, m_curr + m, prim, bc);
+    mrc_fld_foreach(c, ix,iy,iz, 2,2) {
+      F3(c, _CX, ix,iy,iz) = F3(b, _BX, ix,iy,iz);
+      F3(c, _CY, ix,iy,iz) = F3(b, _BY, ix,iy,iz);
+      F3(c, _CZ, ix,iy,iz) = F3(b, _BZ, ix,iy,iz);
+    } mrc_fld_foreach_end;
+
+    limit1_c(x_curr, m_curr + m, mhd->time, mhd->par.timelo, c, _CX);
+    fluxb_c(mhd, flux, m_flux, tmp, m_tmp, x_curr, m_curr + m, prim, c);
   }
 
   pushn_c(step, x_next, m_next + m, flux, m_flux, dt);
@@ -810,10 +809,10 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
   rmaskn_c(step);
 
   if (limit != LIMIT_NONE) {
-    struct mrc_fld *prim = sub->prim, *bc = sub->bc;
+    struct mrc_fld *prim = sub->prim, *b = sub->b;
 
-    vgrs(bc, _BX, 0.f); vgrs(bc, _BY, 0.f); vgrs(bc, _BZ, 0.f);
-    limit1_c(prim, _PP, mhd->time, mhd->par.timelo, bc, _BX);
+    vgrs(b, _BX, 0.f); vgrs(b, _BY, 0.f); vgrs(b, _BZ, 0.f);
+    limit1_c(prim, _PP, mhd->time, mhd->par.timelo, b, _BX);
     // limit2, 3
   }
 
@@ -876,10 +875,10 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step,
   rmaskn_c(step);
 
   if (limit != LIMIT_NONE) {
-    struct mrc_fld *prim = sub->prim, *bc = sub->bc;
+    struct mrc_fld *prim = sub->prim, *b = sub->b;
 
-    vgrs(bc, _BX, 0.f); vgrs(bc, _BY, 0.f); vgrs(bc, _BZ, 0.f);
-    limit1_c(prim, _PP, mhd->time, mhd->par.timelo, bc, _BX);
+    vgrs(b, _BX, 0.f); vgrs(b, _BY, 0.f); vgrs(b, _BZ, 0.f);
+    limit1_c(prim, _PP, mhd->time, mhd->par.timelo, b, _BX);
     // limit2, 3
   }
 
