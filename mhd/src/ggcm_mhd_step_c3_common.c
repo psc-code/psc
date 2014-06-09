@@ -191,20 +191,22 @@ vgfluu_c(struct ggcm_mhd *mhd, struct mrc_fld **fl_cc, struct mrc_fld *prim)
 
 static void
 fluxl_c(struct ggcm_mhd *mhd, struct mrc_fld **fluxes, struct mrc_fld **fl_cc,
-	struct mrc_fld *x, int m, struct mrc_fld *prim)
+	struct mrc_fld *x, struct mrc_fld *prim)
 {
   mrc_fld_foreach(fluxes[0], i,j,k, 1, 0) {
-    mrc_fld_data_t aa = F3(x, m, i,j,k);
     mrc_fld_data_t cmsv = F3(prim, CMSV, i,j,k);
-    F3(fluxes[0], m, i,j,k) =
-      .5f * ((F3(fl_cc[0], m, i  ,j,k) + F3(fl_cc[0], m, i+1,j,k)) -
-	     .5f * (F3(prim, CMSV, i+1,j,k) + cmsv) * (F3(x, m, i+1,j,k) - aa));
-    F3(fluxes[1], m, i,j,k) =
-      .5f * ((F3(fl_cc[1], m, i,j  ,k) + F3(fl_cc[1], m, i,j+1,k)) -
-	     .5f * (F3(prim, CMSV, i,j+1,k) + cmsv) * (F3(x, m, i,j+1,k) - aa));
-    F3(fluxes[2], m, i,j,k) =
-      .5f * ((F3(fl_cc[2], m, i,j,k  ) + F3(fl_cc[2], m, i,j,k+1)) -
-	     .5f * (F3(prim, CMSV, i,j,k+1) + cmsv) * (F3(x, m, i,j,k+1) - aa));
+    for (int m = 0; m < 5; m++) {
+      mrc_fld_data_t aa = F3(x, m, i,j,k);
+      F3(fluxes[0], m, i,j,k) =
+	.5f * ((F3(fl_cc[0], m, i  ,j,k) + F3(fl_cc[0], m, i+1,j,k)) -
+	       .5f * (F3(prim, CMSV, i+1,j,k) + cmsv) * (F3(x, m, i+1,j,k) - aa));
+      F3(fluxes[1], m, i,j,k) =
+	.5f * ((F3(fl_cc[1], m, i,j  ,k) + F3(fl_cc[1], m, i,j+1,k)) -
+	       .5f * (F3(prim, CMSV, i,j+1,k) + cmsv) * (F3(x, m, i,j+1,k) - aa));
+      F3(fluxes[2], m, i,j,k) =
+	.5f * ((F3(fl_cc[2], m, i,j,k  ) + F3(fl_cc[2], m, i,j,k+1)) -
+	       .5f * (F3(prim, CMSV, i,j,k+1) + cmsv) * (F3(x, m, i,j,k+1) - aa));
+    }
   } mrc_fld_foreach_end;
 }
 
@@ -367,9 +369,7 @@ pushfv_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
   vgfl_c(mhd, fl_cc, prim);
   
   if (limit == LIMIT_NONE) {
-    for (int m = 0; m < 5; m++) {
-      fluxl_c(mhd, fluxes, fl_cc, x_curr, m, prim);
-    }
+    fluxl_c(mhd, fluxes, fl_cc, x_curr, prim);
   } else {
     struct mrc_fld *b = ggcm_mhd_step_get_3d_fld(step, 3);
     struct mrc_fld *c = ggcm_mhd_step_get_3d_fld(step, 3);
