@@ -37,7 +37,6 @@ struct ggcm_mhd_step_c3 {
   struct mrc_fld *tmp;
   struct mrc_fld *curr;
   struct mrc_fld *resis;
-  struct mrc_fld *E;
 };
 
 #define ggcm_mhd_step_c3(step) mrc_to_subobj(step, struct ggcm_mhd_step_c3)
@@ -84,7 +83,6 @@ ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
   setup_mrc_fld_3d(sub->tmp , mhd->fld, 4);
   setup_mrc_fld_3d(sub->b   , mhd->fld, 3);
   setup_mrc_fld_3d(sub->c   , mhd->fld, 3);
-  setup_mrc_fld_3d(sub->E   , mhd->fld, 3);
   setup_mrc_fld_3d(sub->curr, mhd->fld, 3);
   setup_mrc_fld_3d(sub->resis,mhd->fld, 1);
 
@@ -821,7 +819,6 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
   struct mrc_fld **fluxes = sub->fluxes;
-  struct mrc_fld *E = sub->E;
   struct mrc_fld *masks = sub->masks;
 
   rmaskn_c(step);
@@ -831,8 +828,11 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
   pushpp_c(step, dt, x_next, prim);
 
   push_ej_c(step, dt, x_curr, prim, x_next);
+
+  struct mrc_fld *E = ggcm_mhd_step_get_3d_fld(step, 3);
   calce_c(step, E, x_curr, prim, dt);
   update_ct(mhd, x_next, E, dt);
+  ggcm_mhd_step_put_3d_fld(step, E);
 }
 
 // ----------------------------------------------------------------------
@@ -893,7 +893,6 @@ static struct param ggcm_mhd_step_c_descr[] = {
   { "fluxes[2]"       , VAR(fluxes[2])       , MRC_VAR_OBJ(mrc_fld)           },
   { "b"               , VAR(b)               , MRC_VAR_OBJ(mrc_fld)           },
   { "c"               , VAR(c)               , MRC_VAR_OBJ(mrc_fld)           },
-  { "E"               , VAR(E)               , MRC_VAR_OBJ(mrc_fld)           },
   { "curr"            , VAR(curr)            , MRC_VAR_OBJ(mrc_fld)           },
   { "resis"           , VAR(resis)           , MRC_VAR_OBJ(mrc_fld)           },
 
