@@ -244,10 +244,24 @@ fluxes_rusanov(struct mrc_fld *F, struct mrc_fld *U_cc, struct mrc_fld *W_cc,
 	       struct mrc_fld *fl1_cc, int ib, int ie)
 {
   for (int i = ib; i < ie; i++) {
-    mrc_fld_data_t lambda = .5f * (F1(W_cc, CMSV, i+1) + F1(W_cc, CMSV, i));
+    mrc_fld_data_t Fl[5], Fr[5];
+    mrc_fld_data_t Ul[5], Ur[5];
+    mrc_fld_data_t Wl[5], Wr[5];
+
     for (int m = 0; m < 5; m++) {
-      F1(F, m, i) = .5f * ((F1(fl1_cc, m, i) + F1(fl1_cc, m, i+1)) -
-			   lambda * (F1(U_cc, m, i+1) - F1(U_cc, m, i)));
+      Fl[m] = F1(fl1_cc, m, i);
+      Fr[m] = F1(fl1_cc, m, i+1);
+      Ul[m] = F1(U_cc, m, i);
+      Ur[m] = F1(U_cc, m, i+1);
+    }
+    for (int m = 0; m < 6; m++) {
+      Wl[m] = F1(W_cc, m, i);
+      Wr[m] = F1(W_cc, m, i+1);
+    }
+
+    mrc_fld_data_t lambda = .5f * (Wr[CMSV] + Wl[CMSV]);
+    for (int m = 0; m < 5; m++) {
+      F1(F, m, i) = .5f * ((Fr[m] + Fl[m]) - lambda * (Ur[m] - Ul[m]));
     }
   }
 }
