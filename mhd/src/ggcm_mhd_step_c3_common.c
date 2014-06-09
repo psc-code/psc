@@ -420,21 +420,20 @@ pushfv_c(struct ggcm_mhd_step *step, int m, mrc_fld_data_t dt, struct mrc_fld *x
 // edge centered current density
 
 static void
-curr_c(struct ggcm_mhd *mhd, struct mrc_fld *j, int m_j,
-       struct mrc_fld *x, int m_curr)
+curr_c(struct ggcm_mhd *mhd, struct mrc_fld *j, struct mrc_fld *x, int m_curr)
 {
   float *bd4x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD4) - 1;
   float *bd4y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD4) - 1;
   float *bd4z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD4) - 1;
 
   mrc_fld_foreach(j, ix,iy,iz, 1, 2) {
-    F3(j, m_j + 0, ix,iy,iz) =
+    F3(j, 0, ix,iy,iz) =
       (F3(x, m_curr + _B1Z, ix,iy,iz) - F3(x, m_curr + _B1Z, ix,iy-1,iz)) * bd4y[iy] -
       (F3(x, m_curr + _B1Y, ix,iy,iz) - F3(x, m_curr + _B1Y, ix,iy,iz-1)) * bd4z[iz];
-    F3(j, m_j + 1, ix,iy,iz) =
+    F3(j, 1, ix,iy,iz) =
       (F3(x, m_curr + _B1X, ix,iy,iz) - F3(x, m_curr + _B1X, ix,iy,iz-1)) * bd4z[iz] -
       (F3(x, m_curr + _B1Z, ix,iy,iz) - F3(x, m_curr + _B1Z, ix-1,iy,iz)) * bd4x[ix];
-    F3(j, m_j + 2, ix,iy,iz) =
+    F3(j, 2, ix,iy,iz) =
       (F3(x, m_curr + _B1Y, ix,iy,iz) - F3(x, m_curr + _B1Y, ix-1,iy,iz)) * bd4x[ix] -
       (F3(x, m_curr + _B1X, ix,iy,iz) - F3(x, m_curr + _B1X, ix,iy-1,iz)) * bd4y[iy];
   } mrc_fld_foreach_end;
@@ -467,56 +466,51 @@ currbb_c(struct ggcm_mhd *mhd, struct mrc_fld *b_cc, int m_b_cc,
 // cell-centered j
 
 static void
-curbc_c(struct ggcm_mhd_step *step, struct mrc_fld *x, int m_curr)
+curbc_c(struct ggcm_mhd_step *step, struct mrc_fld *j_cc, int m_j_cc,
+	struct mrc_fld *x, int m_curr)
 { 
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
+  struct mrc_fld *masks = sub->masks;
 
+  // get j on edges
   struct mrc_fld *j = sub->tmp;
-  curr_c(mhd, j, 0, x, m_curr);
+  curr_c(mhd, j, x, m_curr);
 
-  struct mrc_fld *f = mhd->fld;
-  // j averaged to cell-centered
-  mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
-    mrc_fld_data_t s = .25f * F3(f, _ZMASK, ix, iy, iz);
-    F3(f, _CURRX, ix,iy,iz) = s * (F3(j, 0, ix,iy+1,iz+1) + F3(j, 0, ix,iy,iz+1) +
-				   F3(j, 0, ix,iy+1,iz  ) + F3(j, 0, ix,iy,iz  ));
-    F3(f, _CURRY, ix,iy,iz) = s * (F3(j, 1, ix+1,iy,iz+1) + F3(j, 1, ix,iy,iz+1) +
-				   F3(j, 1, ix+1,iy,iz  ) + F3(j, 1, ix,iy,iz  ));
-    F3(f, _CURRZ, ix,iy,iz) = s * (F3(j, 2, ix+1,iy+1,iz) + F3(j, 2, ix,iy+1,iz) +
-				   F3(j, 2, ix+1,iy  ,iz) + F3(j, 2, ix,iy  ,iz));
+  // then average to cell centers
+  mrc_fld_foreach(j_cc, ix,iy,iz, 1, 1) {
+    mrc_fld_data_t s = .25f * F3(masks, _ZMASK, ix, iy, iz);
+    F3(j_cc, m_j_cc + 0, ix,iy,iz) = s * (F3(j, 0, ix,iy+1,iz+1) + F3(j, 0, ix,iy,iz+1) +
+					  F3(j, 0, ix,iy+1,iz  ) + F3(j, 0, ix,iy,iz  ));
+    F3(j_cc, m_j_cc + 1, ix,iy,iz) = s * (F3(j, 1, ix+1,iy,iz+1) + F3(j, 1, ix,iy,iz+1) +
+					  F3(j, 1, ix+1,iy,iz  ) + F3(j, 1, ix,iy,iz  ));
+    F3(j_cc, m_j_cc + 2, ix,iy,iz) = s * (F3(j, 2, ix+1,iy+1,iz) + F3(j, 2, ix,iy+1,iz) +
+					  F3(j, 2, ix+1,iy  ,iz) + F3(j, 2, ix,iy  ,iz));
   } mrc_fld_foreach_end;
 }
 
 static void
-push_ej_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, int m_curr,
+push_ej_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, struct mrc_fld *x_curr, int m_curr,
 	  struct mrc_fld *x_next, int m_next)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
   struct mrc_fld *prim = sub->prim;
+  struct mrc_fld *j_ec = sub->c, *b_cc = sub->b, *masks = sub->masks;
 
-  enum { XJX = _BX, XJY = _BY, XJZ = _BZ };
-
-  struct mrc_fld *j = mhd->fld;
-  struct mrc_fld *b_cc = sub->tmp;
-  struct mrc_fld *x = mhd->fld;
-
-  curr_c(mhd, j, XJX, x, m_curr);
-  currbb_c(mhd, b_cc, 0, x, m_curr);
+  curr_c(mhd, j_ec, x_curr, m_curr);
+  currbb_c(mhd, b_cc, 0, x_curr, m_curr);
 	
-  struct mrc_fld *f = mhd->fld;
-
   mrc_fld_data_t s1 = .25f * dt;
-  mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
-    mrc_fld_data_t z = F3(f,_ZMASK, ix,iy,iz);
+  mrc_fld_foreach(x_next, ix,iy,iz, 0, 0) {
+    mrc_fld_data_t z = F3(masks, _ZMASK, ix,iy,iz);
     mrc_fld_data_t s2 = s1 * z;
-    mrc_fld_data_t cx = (F3(j, XJX, ix  ,iy+1,iz+1) + F3(j, XJX, ix  ,iy  ,iz+1) +
-			 F3(j, XJX, ix  ,iy+1,iz  ) + F3(j, XJX, ix  ,iy  ,iz  ));
-    mrc_fld_data_t cy = (F3(f, XJY, ix+1,iy  ,iz+1) + F3(f, XJY, ix  ,iy  ,iz+1) +
-			 F3(f, XJY, ix+1,iy  ,iz  ) + F3(f, XJY, ix  ,iy  ,iz  ));
-    mrc_fld_data_t cz = (F3(f, XJZ, ix+1,iy+1,iz  ) + F3(f, XJZ, ix  ,iy+1,iz  ) +
-			 F3(f, XJZ, ix+1,iy  ,iz  ) + F3(f, XJZ, ix  ,iy  ,iz  ));
+    mrc_fld_data_t cx = (F3(j_ec, 0, ix  ,iy+1,iz+1) + F3(j_ec, 0, ix  ,iy  ,iz+1) +
+			 F3(j_ec, 0, ix  ,iy+1,iz  ) + F3(j_ec, 0, ix  ,iy  ,iz  ));
+    mrc_fld_data_t cy = (F3(j_ec, 1, ix+1,iy  ,iz+1) + F3(j_ec, 1, ix  ,iy  ,iz+1) +
+			 F3(j_ec, 1, ix+1,iy  ,iz  ) + F3(j_ec, 1, ix  ,iy  ,iz  ));
+    mrc_fld_data_t cz = (F3(j_ec, 2, ix+1,iy+1,iz  ) + F3(j_ec, 2, ix  ,iy+1,iz  ) +
+			 F3(j_ec, 2, ix+1,iy  ,iz  ) + F3(j_ec, 2, ix  ,iy  ,iz  ));
     mrc_fld_data_t ffx = s2 * (cy * F3(b_cc, 2, ix,iy,iz) - cz * F3(b_cc, 1, ix,iy,iz));
     mrc_fld_data_t ffy = s2 * (cz * F3(b_cc, 0, ix,iy,iz) - cx * F3(b_cc, 2, ix,iy,iz));
     mrc_fld_data_t ffz = s2 * (cx * F3(b_cc, 1, ix,iy,iz) - cy * F3(b_cc, 0, ix,iy,iz));
@@ -574,8 +568,9 @@ static void
 calc_resis_const_c(struct ggcm_mhd_step *step, struct mrc_fld *x, int m_curr)
 {
   struct ggcm_mhd *mhd = step->mhd;
+  struct mrc_fld *f = mhd->fld;
 
-  curbc_c(step, x, m_curr);
+  curbc_c(step, f, _CURRX, x, m_curr);
   res1_const_c(mhd);
 }
 
@@ -834,7 +829,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
     assert(0);
   }
 
-  push_ej_c(step, dt, m_curr, x_next, m_next);
+  push_ej_c(step, dt, x_curr, m_curr, x_next, m_next);
   calce_c(step, dt, m_curr);
   bpush_c(mhd, dt, m_next);
 }
@@ -901,7 +896,7 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step,
     assert(0);
   }
 
-  push_ej_c(step, dt, m_curr, x_next, m_next);
+  push_ej_c(step, dt, x_curr, m_curr, x_next, m_next);
   calce_c(step, dt, m_curr);
   bpush_c(mhd, dt, m_next);
 #endif
