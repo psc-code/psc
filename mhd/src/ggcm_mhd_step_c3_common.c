@@ -283,18 +283,10 @@ mhd_riemann_rusanov_run(struct mrc_fld *F,
 {
 #define FLUXES_1D(X, Y, Z) do {						\
     for (int i = ib; i < ie; i++) {					\
-      mrc_fld_data_t flux[5], Ul[5], Ur[5], Wl[6], Wr[6];		\
+      mrc_fld_data_t flux[5];						\
       									\
-      for (int m = 0; m < 5; m++) {					\
-	Ul[m] = F1(U_l, m, i+1);					\
-	Ur[m] = F1(U_r, m, i+1);					\
-      }									\
-      for (int m = 0; m < 6; m++) {					\
-	Wl[m] = F1(W_l, m, i+1);					\
-	Wr[m] = F1(W_r, m, i+1);					\
-      }									\
-									\
-      fluxes_rusanov(flux, Ul, Ur, Wl, Wr);				\
+      fluxes_rusanov(flux, &F1(U_l, 0, i+1), &F1(U_r, 0, i+1),		\
+		     &F1(W_l, 0, i+1), &F1(W_r, 0, i+1));		\
 									\
       F1(F, RR   , i) = flux[RR];					\
       F1(F, RVX+X, i) = flux[RVX];					\
