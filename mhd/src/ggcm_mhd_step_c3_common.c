@@ -194,7 +194,7 @@ vgfluu_c(struct ggcm_mhd *mhd, struct mrc_fld **fl_cc, struct mrc_fld *prim)
 
 static void
 pick_line(struct mrc_fld *x1, struct mrc_fld *x,
-	     int ib, int ie, int j, int k, int dim)
+	  int ib, int ie, int j, int k, int dim)
 {
 #define PICK_LINE(X,I,J,K) do {			\
     for (int i = ib; i < ie; i++) {		\
@@ -211,6 +211,27 @@ pick_line(struct mrc_fld *x1, struct mrc_fld *x,
   } else if (dim == 2) {
     PICK_LINE(2,j,k,i);
   }
+#undef PICK_LINE
+}
+
+static void
+pick_line_cmsv(struct mrc_fld *x1, struct mrc_fld *x,
+	       int ib, int ie, int j, int k, int dim)
+{
+#define PICK_LINE(X,I,J,K) do {			\
+    for (int i = ib; i < ie; i++) {		\
+      F1(x1, 0, i) = F3(x, CMSV, I,J,K);	\
+    }						\
+  } while (0)
+
+  if (dim == 0) {
+    PICK_LINE(0,i,j,k);
+  } else if (dim == 1) {
+    PICK_LINE(1,k,i,j);
+  } else if (dim == 2) {
+    PICK_LINE(2,j,k,i);
+  }
+#undef PICK_LINE
 }
 
 static void
@@ -219,6 +240,7 @@ fluxl_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes, struct mrc_fld **fl
 {
   struct mrc_fld *fl1_cc = ggcm_mhd_step_get_1d_fld(step, 5);
   struct mrc_fld *x1_cc = ggcm_mhd_step_get_1d_fld(step, 5);
+  struct mrc_fld *cmsv1 = ggcm_mhd_step_get_1d_fld(step, 1);
 
   const int *ldims = mrc_fld_dims(x) + x->_is_aos;
 
@@ -226,12 +248,13 @@ fluxl_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes, struct mrc_fld **fl
   for (int k = 0; k < ldims[2]; k++) {
     for (int j = 0; j < ldims[1]; j++) {
       pick_line(fl1_cc, fl_cc[0], -1, ldims[0] + 1, j, k, 0);
-      pick_line(x1_cc, x, -1, ldims[0] + 1, j, k, 0);
+      pick_line(x1_cc , x       , -1, ldims[0] + 1, j, k, 0);
+      pick_line_cmsv(cmsv1, prim, -1, ldims[0] + 1, j, k, 0);
       for (int i = -1; i < ldims[0]; i++) {
 	for (int m = 0; m < 5; m++) {
 	  F3(fluxes[0], m, i,j,k) =
 	    .5f * ((F1(fl1_cc, m, i) + F1(fl1_cc, m, i+1)) -
-		   .5f * (F3(prim, CMSV, i+1,j,k) + F3(prim, CMSV, i,j,k)) *
+		   .5f * (F1(cmsv1, 0, i+1) + F1(cmsv1, 0, i)) *
 		   (F1(x1_cc, m, i+1) - F1(x1_cc, m, i)));
 	}
       }
@@ -241,12 +264,13 @@ fluxl_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes, struct mrc_fld **fl
   for (int k = 0; k < ldims[2]; k++) {
     for (int i = 0; i < ldims[0]; i++) {
       pick_line(fl1_cc, fl_cc[1], -1, ldims[1] + 1, k, i, 1);
-      pick_line(x1_cc, x, -1, ldims[1] + 1, k, i, 1);
+      pick_line(x1_cc , x       , -1, ldims[1] + 1, k, i, 1);
+      pick_line_cmsv(cmsv1, prim, -1, ldims[1] + 1, k, i, 1);
       for (int j = -1; j < ldims[1]; j++) {
 	for (int m = 0; m < 5; m++) {
 	  F3(fluxes[1], m, i,j,k) =
 	    .5f * ((F1(fl1_cc, m, j) + F1(fl1_cc, m, j+1)) -
-		   .5f * (F3(prim, CMSV, i,j+1,k) + F3(prim, CMSV, i,j,k)) *
+		   .5f * (F1(cmsv1, 0, j+1) + F1(cmsv1, 0, j)) *
 		   (F1(x1_cc, m, j+1) - F1(x1_cc, m, j)));
 	}
       }
@@ -256,12 +280,13 @@ fluxl_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes, struct mrc_fld **fl
   for (int i = 0; i < ldims[0]; i++) {
     for (int j = 0; j < ldims[1]; j++) {
       pick_line(fl1_cc, fl_cc[2], -1, ldims[2] + 1, i, j, 2);
-      pick_line(x1_cc, x, -1, ldims[2] + 1, i, j, 2);
+      pick_line(x1_cc , x       , -1, ldims[2] + 1, i, j, 2);
+      pick_line_cmsv(cmsv1, prim, -1, ldims[2] + 1, i, j, 2);
       for (int k = -1; k < ldims[2]; k++) {
 	for (int m = 0; m < 5; m++) {
 	  F3(fluxes[2], m, i,j,k) =
 	    .5f * ((F1(fl1_cc, m, k) + F1(fl1_cc, m, k+1)) -
-		   .5f * (F3(prim, CMSV, i,j,k+1) + F3(prim, CMSV, i,j,k)) *
+		   .5f * (F1(cmsv1, 0, k+1) + F1(cmsv1, 0, k)) *
 		   (F1(x1_cc, m, k+1) - F1(x1_cc, m, k)));
 	}
       }
@@ -270,6 +295,7 @@ fluxl_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes, struct mrc_fld **fl
 
   ggcm_mhd_step_put_1d_fld(step, fl1_cc);
   ggcm_mhd_step_put_1d_fld(step, x1_cc);
+  ggcm_mhd_step_put_1d_fld(step, cmsv1);
 }
 
 static void
