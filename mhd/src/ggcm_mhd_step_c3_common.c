@@ -78,9 +78,9 @@ ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
   setup_mrc_fld_3d(sub->tmp , mhd->fld, 3);
   setup_mrc_fld_3d(sub->flux, mhd->fld, 3);
   setup_mrc_fld_3d(sub->b   , mhd->fld, 3);
+  setup_mrc_fld_3d(sub->c   , mhd->fld, 3);
 
   sub->masks = mhd->fld;
-  sub->c     = mhd->fld;
 
   ggcm_mhd_step_setup_member_objs_sub(step);
   ggcm_mhd_step_setup_super(step);
@@ -263,11 +263,11 @@ fluxb_c(struct ggcm_mhd *mhd, struct mrc_fld *flux, int m_flux,
       .5f * ((F3(tmp, m_tmp + 2, ix,iy,iz  ) + F3(tmp, m_tmp + 2, ix,iy,iz+1)) -
 	     .5f * (F3(prim, _CMSV, ix,iy,iz+1) + cmsv) * (F3(x, m, ix,iy,iz+1) - aa));
 
-    mrc_fld_data_t cx = F3(c, _CX, ix,iy,iz);
+    mrc_fld_data_t cx = F3(c, 0, ix,iy,iz);
     F3(flux, m_flux + 0, ix,iy,iz) = cx * flx + (1.f - cx) * fhx;
-    mrc_fld_data_t cy = F3(c, _CY, ix,iy,iz);
+    mrc_fld_data_t cy = F3(c, 1, ix,iy,iz);
     F3(flux, m_flux + 1, ix,iy,iz) = cy * fly + (1.f - cy) * fhy;
-    mrc_fld_data_t cz = F3(c, _CZ, ix,iy,iz);
+    mrc_fld_data_t cz = F3(c, 2, ix,iy,iz);
     F3(flux, m_flux + 2, ix,iy,iz) = cz * flz + (1.f - cz) * fhz;
   } mrc_fld_foreach_end;
 }
@@ -402,12 +402,12 @@ pushfv_c(struct ggcm_mhd_step *step, int m, mrc_fld_data_t dt, struct mrc_fld *x
     fluxl_c(mhd, flux, m_flux, tmp, m_tmp, x_curr, m_curr + m, prim);
   } else {
     mrc_fld_foreach(c, ix,iy,iz, 2,2) {
-      F3(c, _CX, ix,iy,iz) = F3(b, 0, ix,iy,iz);
-      F3(c, _CY, ix,iy,iz) = F3(b, 1, ix,iy,iz);
-      F3(c, _CZ, ix,iy,iz) = F3(b, 2, ix,iy,iz);
+      F3(c, 0, ix,iy,iz) = F3(b, 0, ix,iy,iz);
+      F3(c, 1, ix,iy,iz) = F3(b, 1, ix,iy,iz);
+      F3(c, 2, ix,iy,iz) = F3(b, 2, ix,iy,iz);
     } mrc_fld_foreach_end;
 
-    limit1_c(x_curr, m_curr + m, mhd->time, mhd->par.timelo, c, _CX);
+    limit1_c(x_curr, m_curr + m, mhd->time, mhd->par.timelo, c, 0);
     fluxb_c(mhd, flux, m_flux, tmp, m_tmp, x_curr, m_curr + m, prim, c);
   }
 
@@ -979,6 +979,7 @@ static struct param ggcm_mhd_step_c_descr[] = {
   { "tmp"             , VAR(tmp)             , MRC_VAR_OBJ(mrc_fld)           },
   { "flux"            , VAR(flux)            , MRC_VAR_OBJ(mrc_fld)           },
   { "b"               , VAR(b)               , MRC_VAR_OBJ(mrc_fld)           },
+  { "c"               , VAR(c)               , MRC_VAR_OBJ(mrc_fld)           },
 
   {},
 };
