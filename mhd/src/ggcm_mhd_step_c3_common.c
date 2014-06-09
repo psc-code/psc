@@ -446,17 +446,18 @@ curr_c(struct ggcm_mhd *mhd, struct mrc_fld *j, int m_j,
 // cell-averaged B
 
 static void
-currbb_c(struct ggcm_mhd *mhd, int m, int m_curr)
+currbb_c(struct ggcm_mhd *mhd, struct mrc_fld *b_cc, int m_b_cc,
+	 struct mrc_fld *x, int m_curr)
 {
   struct mrc_fld *f = mhd->fld;
 
   mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
-    F3(f, m + 0, ix,iy,iz) = .5f * (F3(f, m_curr + _B1X, ix  ,iy,iz) +
-				    F3(f, m_curr + _B1X, ix+1,iy,iz));
-    F3(f, m + 1, ix,iy,iz) = .5f * (F3(f, m_curr + _B1Y, ix,iy  ,iz) +
-				    F3(f, m_curr + _B1Y, ix,iy+1,iz));
-    F3(f, m + 2, ix,iy,iz) = .5f * (F3(f, m_curr + _B1Z, ix,iy,iz  ) +
-				    F3(f, m_curr + _B1Z, ix,iy,iz+1));
+    F3(b_cc, m_b_cc + 0, ix,iy,iz) = .5f * (F3(x, m_curr + _B1X, ix  ,iy,iz) +
+					    F3(x, m_curr + _B1X, ix+1,iy,iz));
+    F3(b_cc, m_b_cc + 1, ix,iy,iz) = .5f * (F3(x, m_curr + _B1Y, ix,iy  ,iz) +
+					    F3(x, m_curr + _B1Y, ix,iy+1,iz));
+    F3(b_cc, m_b_cc + 2, ix,iy,iz) = .5f * (F3(x, m_curr + _B1Z, ix,iy,iz  ) +
+					    F3(x, m_curr + _B1Z, ix,iy,iz+1));
   } mrc_fld_foreach_end;
 }
 
@@ -498,10 +499,11 @@ push_ej_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, int m_curr, int m_next)
   enum { BX = _TMP1, BY = _TMP2, BZ = _TMP3 };
 
   struct mrc_fld *j = mhd->fld;
+  struct mrc_fld *b_cc = mhd->fld;
   struct mrc_fld *x = mhd->fld;
 
   curr_c(mhd, j, XJX, x, m_curr);
-  currbb_c(mhd, BX, m_curr);
+  currbb_c(mhd, b_cc, BX, x, m_curr);
 	
   struct mrc_fld *f = mhd->fld;
 
