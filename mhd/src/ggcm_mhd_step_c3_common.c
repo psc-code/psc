@@ -193,6 +193,8 @@ static void
 fluxl_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes, struct mrc_fld **fl_cc,
 	struct mrc_fld *x, struct mrc_fld *prim)
 {
+  struct mrc_fld *fl1_cc = ggcm_mhd_step_get_1d_fld(step, 5);
+
   mrc_fld_foreach(fluxes[0], i,j,k, 1, 0) {
     for (int m = 0; m < 5; m++) {
       F3(fluxes[0], m, i,j,k) =
@@ -219,6 +221,8 @@ fluxl_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes, struct mrc_fld **fl
 	       (F3(x, m, i,j,k+1) - F3(x, m, i,j,k)));
     }
   } mrc_fld_foreach_end;
+
+  ggcm_mhd_step_put_1d_fld(step, fl1_cc);
 }
 
 static void
