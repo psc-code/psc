@@ -586,7 +586,7 @@ calc_resis_nl1_c(struct ggcm_mhd *mhd)
   // used to zero _RESIS field, but that's not needed.
 }
 
-static inline float
+static inline mrc_fld_data_t
 bcthy3f(mrc_fld_data_t s1, mrc_fld_data_t s2)
 {
   if (s1 > 0.f && fabsf(s2) > REPS) {
