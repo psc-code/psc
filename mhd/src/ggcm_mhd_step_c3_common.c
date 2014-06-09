@@ -441,12 +441,12 @@ curr_c(struct ggcm_mhd *mhd, struct mrc_fld *j, struct mrc_fld *x)
 }
 
 // ----------------------------------------------------------------------
-// currbb_c
+// compute_B_cc
 //
 // cell-averaged B
 
 static void
-currbb_c(struct ggcm_mhd *mhd, struct mrc_fld *b_cc, struct mrc_fld *x)
+compute_B_cc(struct ggcm_mhd *mhd, struct mrc_fld *b_cc, struct mrc_fld *x)
 {
   mrc_fld_foreach(b_cc, ix,iy,iz, 1, 1) {
     F3(b_cc, 0, ix,iy,iz) = .5f * (F3(x, _B1X, ix  ,iy,iz) +
@@ -497,7 +497,7 @@ push_ej_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, struct mrc_fld *x_curr,
   struct mrc_fld *j_ec = sub->c, *b_cc = sub->b, *masks = sub->masks;
 
   curr_c(mhd, j_ec, x_curr);
-  currbb_c(mhd, b_cc, x_curr);
+  compute_B_cc(mhd, b_cc, x_curr);
 	
   mrc_fld_data_t s1 = .25f * dt;
   mrc_fld_foreach(x_next, ix,iy,iz, 0, 0) {
