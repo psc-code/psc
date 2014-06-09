@@ -35,6 +35,8 @@ struct ggcm_mhd_step_c3 {
   struct mrc_fld *c;
   struct mrc_fld *flux;
   struct mrc_fld *tmp;
+  struct mrc_fld *curr;
+  struct mrc_fld *resis;
 };
 
 #define ggcm_mhd_step_c3(step) mrc_to_subobj(step, struct ggcm_mhd_step_c3)
@@ -81,6 +83,8 @@ ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
   setup_mrc_fld_3d(sub->c   , mhd->fld, 3);
 
   sub->masks = mhd->fld;
+  sub->curr  = mhd->fld;
+  sub->resis = mhd->fld;
 
   ggcm_mhd_step_setup_member_objs_sub(step);
   ggcm_mhd_step_setup_super(step);
@@ -526,7 +530,7 @@ push_ej_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, struct mrc_fld *x_curr,
 }
 
 static void
-res1_const_c(struct ggcm_mhd *mhd)
+res1_const_c(struct ggcm_mhd *mhd, struct mrc_fld *resis, int m_resis)
 {
   // resistivity comes in ohm*m
   int diff_obnd = mhd->par.diff_obnd;
@@ -539,13 +543,12 @@ res1_const_c(struct ggcm_mhd *mhd)
   struct mrc_patch_info info;
   mrc_domain_get_local_patch_info(mhd->domain, 0, &info);
 
-  struct mrc_fld *f = mhd->fld;
   float *fx2x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FX2);
   float *fx2y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FX2);
   float *fx2z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FX2);
 
-  mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
-    F3(f, _RESIS, ix,iy,iz) = 0.f;
+  mrc_fld_foreach(resis, ix,iy,iz, 1, 1) {
+    F3(resis, m_resis, ix,iy,iz) = 0.f;
     mrc_fld_data_t r2 = fx2x[ix] + fx2y[iy] + fx2z[iz];
     if (r2 < diffsphere2)
       continue;
@@ -560,18 +563,18 @@ res1_const_c(struct ggcm_mhd *mhd)
     if (iz + info.off[2] >= gdims[2] - diff_obnd)
       continue;
 
-    F3(f, _RESIS, ix,iy,iz) = diff;
+    F3(resis, m_resis, ix,iy,iz) = diff;
   } mrc_fld_foreach_end;
 }
 
 static void
-calc_resis_const_c(struct ggcm_mhd_step *step, struct mrc_fld *x, int m_curr)
+calc_resis_const_c(struct ggcm_mhd_step *step, struct mrc_fld *CURR, int m_CURR,
+		   struct mrc_fld *resis, int m_resis, struct mrc_fld *x, int m_curr)
 {
   struct ggcm_mhd *mhd = step->mhd;
-  struct mrc_fld *f = mhd->fld;
 
-  curbc_c(step, f, _CURRX, x, m_curr);
-  res1_const_c(mhd);
+  curbc_c(step, CURR, m_CURR, x, m_curr);
+  res1_const_c(mhd, resis, m_resis);
 }
 
 static void
@@ -800,6 +803,8 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
+  struct mrc_fld *curr = sub->curr; int m_CURR = _CURRX;
+  struct mrc_fld *resis = sub->resis; int m_resis = _RESIS;
   rmaskn_c(step);
 
   if (limit != LIMIT_NONE) {
@@ -823,7 +828,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
     calc_resis_nl1_c(mhd, m_curr);
     break;
   case MAGDIFFU_CONST:
-    calc_resis_const_c(step, x_curr, m_curr);
+    calc_resis_const_c(step, curr, m_CURR, resis, m_resis, x_curr, m_curr);
     break;
   default:
     assert(0);
@@ -858,6 +863,8 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step,
 #else
   int limit = LIMIT_NONE;
   struct ggcm_mhd *mhd = step->mhd;
+  struct mrc_fld *curr = sub->curr; int m_CURR = _CURRX;
+  struct mrc_fld *resis = sub->resis; int m_resis = _RESIS;
   struct mrc_fld *x_curr = x, *x_next = x_half;
   int m_curr = _RR1, m_next = _RR1;
   rmaskn_c(step);
@@ -890,7 +897,7 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step,
     calc_resis_nl1_c(mhd, m_curr);
     break;
   case MAGDIFFU_CONST:
-    calc_resis_const_c(step, x_curr, m_curr);
+    calc_resis_const_c(step, curr, m_CURR, resis, m_resis, x_curr, m_curr);
     break;
   default:
     assert(0);
