@@ -469,6 +469,35 @@ limit1a(struct mrc_fld *x, int m, int i, int j, int k, int I, int J, int K,
   F3(c, m_c, i-I,j-J,k-K) = fmaxf(F3(c, m_c, i-I,j-J,k-K), r3);
 }
 
+static inline void
+limit1b(struct mrc_fld *x, int m, int i, int j, int k, int I, int J, int K,
+	struct mrc_fld *c, int m_c)
+{
+  const mrc_fld_data_t reps = 0.003;
+  const mrc_fld_data_t seps = -0.001;
+  const mrc_fld_data_t teps = 1.e-25;
+
+  // Harten/Zwas type switch
+  mrc_fld_data_t aa = F3(x, m, i,j,k);
+  mrc_fld_data_t a1 = F3(x, m, i+I,j+J,k+K);
+  mrc_fld_data_t a2 = F3(x, m, i-I,j-J,k-K);
+  mrc_fld_data_t d1 = aa - a2;
+  mrc_fld_data_t d2 = a1 - aa;
+  mrc_fld_data_t s1 = fabsf(d1);
+  mrc_fld_data_t s2 = fabsf(d2);
+  mrc_fld_data_t f1 = fabsf(a1) + fabsf(a2) + fabsf(aa);
+  mrc_fld_data_t s5 = s1 + s2 + reps*f1 + teps;
+  mrc_fld_data_t r3 = fabsf(s1 - s2) / s5; // edge condition
+  mrc_fld_data_t f2 = seps * f1 * f1;
+  if (d1 * d2 < f2) {
+    r3 = 1.f;
+  }
+  r3 = r3 * r3;
+  r3 = r3 * r3;
+  r3 = fminf(2.f * r3, 1.);
+  F3(c, m_c, i  ,j  ,k  ) = fmaxf(F3(c, m_c, i  ,j  ,k  ), r3);
+}
+
 static void
 limit1_c(struct mrc_fld *x, int m, mrc_fld_data_t time, mrc_fld_data_t timelo,
 	 struct mrc_fld *c[3], int m_c)
@@ -490,11 +519,37 @@ limit1_c(struct mrc_fld *x, int m, mrc_fld_data_t time, mrc_fld_data_t timelo,
 }
 
 static void
+limit1(struct mrc_fld *x, int m, mrc_fld_data_t time, mrc_fld_data_t timelo,
+       struct mrc_fld *c[3], int m_c)
+{
+  if (time < timelo) {
+    vgrs(c[0], m_c, 1.f);
+    vgrs(c[1], m_c, 1.f);
+    vgrs(c[2], m_c, 1.f);
+    return;
+  }
+
+  mrc_fld_foreach(c[0], i,j,k, 1, 1) {
+/* .if (limit_aspect_low) then */
+/* .call lowmask(0,0,0,tl1) */
+    limit1b(x, m, i,j,k, 1,0,0, c[0], m_c);
+    limit1b(x, m, i,j,k, 0,1,0, c[1], m_c);
+    limit1b(x, m, i,j,k, 0,0,1, c[2], m_c);
+  } mrc_fld_foreach_end;
+}
+
+static void
 fluxb_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
 	struct mrc_fld *x, struct mrc_fld *prim)
 {
   struct ggcm_mhd *mhd = step->mhd;
 
+  struct mrc_fld *lim_pp[3] = { ggcm_mhd_step_get_3d_fld(step, 1),
+				ggcm_mhd_step_get_3d_fld(step, 1),
+				ggcm_mhd_step_get_3d_fld(step, 1), };
+  struct mrc_fld *lim[3] = { ggcm_mhd_step_get_3d_fld(step, 5),
+			     ggcm_mhd_step_get_3d_fld(step, 5),
+			     ggcm_mhd_step_get_3d_fld(step, 5), };
   struct mrc_fld *b[3] = { ggcm_mhd_step_get_3d_fld(step, 1),
 			   ggcm_mhd_step_get_3d_fld(step, 1),
 			   ggcm_mhd_step_get_3d_fld(step, 1), };
@@ -516,16 +571,27 @@ fluxb_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
 
   vgrs(b[0], 0, 0.f); vgrs(b[1], 0, 0.f); vgrs(b[2], 0, 0.f);
   limit1_c(prim, PP, mhd->time, mhd->par.timelo, b, 0);
+
+  vgrs(lim_pp[0], 0, 0.f); vgrs(lim_pp[1], 0, 0.f); vgrs(lim_pp[2], 0, 0.f);
+  limit1(prim, PP, mhd->time, mhd->par.timelo, lim_pp, 0);
   // limit2, 3
 
   for (int m = 0; m < 5; m++) {
-    mrc_fld_foreach(c[0], i,j,k, 2,2) {
-      F3(c[0], m, i,j,k) = F3(b[0], 0, i,j,k);
-      F3(c[1], m, i,j,k) = F3(b[1], 0, i,j,k);
-      F3(c[2], m, i,j,k) = F3(b[2], 0, i,j,k);
+    mrc_fld_foreach(c[0], i,j,k, 1, 1) {
+      F3(c[0], m, i,j,k) = fmaxf(F3(lim_pp[0], 0, i,j,k), F3(lim_pp[0], 0, i+1,j,k));
+      F3(c[1], m, i,j,k) = fmaxf(F3(lim_pp[1], 0, i,j,k), F3(lim_pp[1], 0, i,j+1,k));
+      F3(c[2], m, i,j,k) = fmaxf(F3(lim_pp[2], 0, i,j,k), F3(lim_pp[2], 0, i,j,k+1));
     } mrc_fld_foreach_end;
     
     limit1_c(x, m, mhd->time, mhd->par.timelo, c, m);
+
+    mrc_fld_foreach(c[0], i,j,k, 1, 1) {
+      F3(lim[0], m, i,j,k) = F3(lim_pp[0], 0, i,j,k);
+      F3(lim[1], m, i,j,k) = F3(lim_pp[1], 0, i,j,k);
+      F3(lim[2], m, i,j,k) = F3(lim_pp[2], 0, i,j,k);
+    } mrc_fld_foreach_end;
+    
+    limit1(x, m, mhd->time, mhd->par.timelo, lim, m);
   }
     
   mrc_fld_data_t s1 = 1. / 12.;
@@ -588,6 +654,12 @@ fluxb_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
     }
   }
 
+  ggcm_mhd_step_put_3d_fld(step, lim_pp[0]);
+  ggcm_mhd_step_put_3d_fld(step, lim_pp[1]);
+  ggcm_mhd_step_put_3d_fld(step, lim_pp[2]);
+  ggcm_mhd_step_put_3d_fld(step, lim[0]);
+  ggcm_mhd_step_put_3d_fld(step, lim[1]);
+  ggcm_mhd_step_put_3d_fld(step, lim[2]);
   ggcm_mhd_step_put_3d_fld(step, b[0]);
   ggcm_mhd_step_put_3d_fld(step, b[1]);
   ggcm_mhd_step_put_3d_fld(step, b[2]);
