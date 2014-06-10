@@ -422,8 +422,8 @@ fluxl_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
     }
   }
 
-  for (int i = 0; i < ldims[0]; i++) {
-    for (int j = 0; j < ldims[1]; j++) {
+  for (int j = 0; j < ldims[1]; j++) {
+    for (int i = 0; i < ldims[0]; i++) {
       mhd_fluxl(step, F, U_cc, U_l, U_r, W_l, W_r, fluxes[2], U, ldims[2], i, j, 2);
     }
   }
@@ -543,8 +543,8 @@ fluxb_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
     }
   }
 	
-  for (int i = 0; i < ldims[0]; i++) {
-    for (int j = 0; j < ldims[1]; j++) {
+  for (int j = 0; j < ldims[1]; j++) {
+    for (int i = 0; i < ldims[0]; i++) {
       mhd_fluxb(step, F, Fl, U_cc, W_cc, U_l, U_r, W_l, W_r, fl1_cc, lim1,
 		fluxes[2], U, ldims[2], i, j, 2);
     }
