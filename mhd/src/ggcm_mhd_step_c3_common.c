@@ -362,16 +362,28 @@ mhd_cc_fluxes(struct ggcm_mhd_step *step, struct mrc_fld *fl_cc, struct mrc_fld 
   mhd_reconstruct_prim_from_sc(W_cc, U_cc, ib, ie);
   mhd_reconstruct_copy_W_to_1d(W_1d, W_cc, ib, ie, dim);
   
-  for (int i = ib; i < ie; i++) {
-    mrc_fld_data_t F[5];
-    fluxes_cc(F, &F1(U_cc, 0, i), &F1(W_1d, 0, i));
+#define FLUXES_1D(X, Y, Z) do {						\
+    for (int i = ib; i < ie; i++) {					\
+      mrc_fld_data_t flux[5];						\
+      									\
+      fluxes_cc(flux, &F1(U_cc, 0, i), &F1(W_1d, 0, i));		\
+									\
+      F1(fl_cc, RR   , i) = flux[RR ];					\
+      F1(fl_cc, RVX+X, i) = flux[RVX];					\
+      F1(fl_cc, RVX+Y, i) = flux[RVY];					\
+      F1(fl_cc, RVX+Z, i) = flux[RVZ];					\
+      F1(fl_cc, UU   , i) = flux[UU ];					\
+    }									\
+  } while (0)
 
-    F1(fl_cc, RR , i) = F[RR ];
-    F1(fl_cc, RVX, i) = F[RVX];
-    F1(fl_cc, RVY, i) = F[RVY];
-    F1(fl_cc, RVZ, i) = F[RVZ];
-    F1(fl_cc, UU , i) = F[UU ];
+  if (dim == 0) {
+    FLUXES_1D(0,1,2);
+  } else if (dim == 1) {
+    FLUXES_1D(1,2,0);
+  } else if (dim == 2) {
+    FLUXES_1D(2,0,1);
   }
+#undef FLUXES_1D
 
   ggcm_mhd_step_put_1d_fld(step, W_1d);
 }
@@ -625,10 +637,11 @@ fluxb_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
 
   for (int k = 0; k < ldims[2]; k++) {
     for (int i = 0; i < ldims[0]; i++) {
-      pick_line(U_cc  , x       , 5, -1, ldims[1] + 1, k, i, 1);
+      pick_line(U_cc  , x       , 5, -2, ldims[1] + 2, k, i, 1);
       mhd_reconstruct_pcm_run(step, U_l, U_r, W_l, W_r, U_cc, -1, ldims[1] + 1, 1);
       mhd_riemann_rusanov_run(Fl, U_l, U_r, W_l, W_r, -1, ldims[1], 1);
       pick_line(fl1_cc, fl_cc[1], 5, -2, ldims[1] + 2, k, i, 1);
+      mhd_cc_fluxes(step, fl1_cc, U_cc, W_cc, -2, ldims[1] + 2, 1);
       pick_line(c1    , c[1]    , 5, -1, ldims[1] + 0, k, i, 1);
       for (int j = -1; j < ldims[1]; j++) {
 	for (int m = 0; m < 5; m++) {
@@ -644,10 +657,11 @@ fluxb_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
 	
   for (int i = 0; i < ldims[0]; i++) {
     for (int j = 0; j < ldims[1]; j++) {
-      pick_line(U_cc  , x       , 5, -1, ldims[2] + 1, i, j, 2);
+      pick_line(U_cc  , x       , 5, -2, ldims[2] + 2, i, j, 2);
       mhd_reconstruct_pcm_run(step, U_l, U_r, W_l, W_r, U_cc, -1, ldims[1] + 1, 1);
       mhd_riemann_rusanov_run(Fl, U_l, U_r, W_l, W_r, -1, ldims[2], 2);
       pick_line(fl1_cc, fl_cc[2], 5, -2, ldims[2] + 2, i, j, 2);
+      mhd_cc_fluxes(step, fl1_cc, U_cc, W_cc, -2, ldims[2] + 2, 2);
       pick_line(c1    , c[2]    , 5, -1, ldims[2] + 0, i, j, 2);
       for (int k = -1; k < ldims[2]; k++) {
 	for (int m = 0; m < 5; m++) {
