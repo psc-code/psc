@@ -472,11 +472,11 @@ mhd_limit1(struct mrc_fld *lim1, struct mrc_fld *U_cc, struct mrc_fld *W_cc,
 
 static void
 mhd_fluxb(struct ggcm_mhd_step *step,
-	  struct mrc_fld *Fl,
+	  struct mrc_fld *F, struct mrc_fld *Fl,
 	  struct mrc_fld *U_cc, struct mrc_fld *W_cc,
 	  struct mrc_fld *U_l, struct mrc_fld *U_r,
 	  struct mrc_fld *W_l, struct mrc_fld *W_r, struct mrc_fld *F_cc, struct mrc_fld *lim1,
-	  struct mrc_fld *x, struct mrc_fld *prim,
+	  struct mrc_fld *fluxes, struct mrc_fld *x, struct mrc_fld *prim,
 	  int ldims, int j, int k, int dim)
 {
   pick_line(U_cc, x, 5, -2, ldims + 2, j, k, dim);
@@ -485,6 +485,20 @@ mhd_fluxb(struct ggcm_mhd_step *step,
   mhd_cc_fluxes(step, F_cc, U_cc, W_cc, -2, ldims + 2, dim);
   pick_line(W_cc, prim, 5, -2, ldims + 2, j, k, dim);
   mhd_limit1(lim1, U_cc, W_cc, -1, ldims + 1, dim);
+
+  mrc_fld_data_t s1 = 1. / 12.;
+  mrc_fld_data_t s7 = 7. * s1;
+
+  for (int i = -1; i < ldims; i++) {
+    for (int m = 0; m < 5; m++) {
+      mrc_fld_data_t fhx = (s7 * (F1(F_cc, m, i  ) + F1(F_cc, m, i+1)) -
+			    s1 * (F1(F_cc, m, i-1) + F1(F_cc, m, i+2)));
+      mrc_fld_data_t cx = fmaxf(F1(lim1, m, i), F1(lim1, m, i+1));
+      F1(F, m, i) = cx * F1(Fl, m, i) + (1.f - cx) * fhx;
+    }
+  }
+
+  put_line(fluxes, F, j, k, -1, ldims, dim);
 }
 
 static void
@@ -510,51 +524,24 @@ fluxb_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
 
   const int *ldims = mrc_fld_dims(x) + x->_is_aos;
 
-  mrc_fld_data_t s1 = 1. / 12.;
-  mrc_fld_data_t s7 = 7. * s1;
-
   for (int k = 0; k < ldims[2]; k++) {
     for (int j = 0; j < ldims[1]; j++) {
-      mhd_fluxb(step, Fl, U_cc, W_cc, U_l, U_r, W_l, W_r, fl1_cc, lim1, x, prim, ldims[0], j, k, 0);
-      for (int i = -1; i < ldims[0]; i++) {
-	for (int m = 0; m < 5; m++) {
-	  mrc_fld_data_t fhx = (s7 * (F1(fl1_cc, m, i  ) + F1(fl1_cc, m, i+1)) -
-				s1 * (F1(fl1_cc, m, i-1) + F1(fl1_cc, m, i+2)));
-	  mrc_fld_data_t cx = fmaxf(F1(lim1, m, i), F1(lim1, m, i+1));
-	  F1(F, m, i) = cx * F1(Fl, m, i) + (1.f - cx) * fhx;
-	}
-      }
-      put_line(fluxes[0], F, j, k, -1, ldims[0], 0);
+      mhd_fluxb(step, F, Fl, U_cc, W_cc, U_l, U_r, W_l, W_r, fl1_cc, lim1,
+		fluxes[0], x, prim, ldims[0], j, k, 0);
     }
   }
 
   for (int k = 0; k < ldims[2]; k++) {
     for (int i = 0; i < ldims[0]; i++) {
-      mhd_fluxb(step, Fl, U_cc, W_cc, U_l, U_r, W_l, W_r, fl1_cc, lim1, x, prim, ldims[1], k, i, 1);
-      for (int j = -1; j < ldims[1]; j++) {
-	for (int m = 0; m < 5; m++) {
-	  mrc_fld_data_t fhx = (s7 * (F1(fl1_cc, m, j  ) + F1(fl1_cc, m, j+1)) -
-				s1 * (F1(fl1_cc, m, j-1) + F1(fl1_cc, m, j+2)));
-	  mrc_fld_data_t cx = fmaxf(F1(lim1, m, j), F1(lim1, m, j+1));
-	  F1(F, m, j) = cx * F1(Fl, m, j) + (1.f - cx) * fhx;
-	}
-      }
-      put_line(fluxes[1], F, k, i, -1, ldims[1], 1);
+      mhd_fluxb(step, F, Fl, U_cc, W_cc, U_l, U_r, W_l, W_r, fl1_cc, lim1,
+		fluxes[1], x, prim, ldims[1], k, i, 1);
     }
   }
 	
   for (int i = 0; i < ldims[0]; i++) {
     for (int j = 0; j < ldims[1]; j++) {
-      mhd_fluxb(step, Fl, U_cc, W_cc, U_l, U_r, W_l, W_r, fl1_cc, lim1, x, prim, ldims[2], i, j, 2);
-      for (int k = -1; k < ldims[2]; k++) {
-	for (int m = 0; m < 5; m++) {
-	  mrc_fld_data_t fhx = (s7 * (F1(fl1_cc, m, k  ) + F1(fl1_cc, m, k+1)) -
-				s1 * (F1(fl1_cc, m, k-1) + F1(fl1_cc, m, k+2)));
-	  mrc_fld_data_t cx = fmaxf(F1(lim1, m, k), F1(lim1, m, k+1));
-	  F1(F, m, k) = cx * F1(Fl, m, k) + (1.f - cx) * fhx;
-	}
-      }
-      put_line(fluxes[2], F, i, j, -1, ldims[2], 2);
+      mhd_fluxb(step, F, Fl, U_cc, W_cc, U_l, U_r, W_l, W_r, fl1_cc, lim1,
+		fluxes[2], x, prim, ldims[2], i, j, 2);
     }
   }
 
