@@ -82,10 +82,6 @@ put_line(struct mrc_fld *flux, struct mrc_fld *F, int j, int k,
 }
 
 enum {
-  CMSV = 5,
-};
-
-enum {
   U_RR,
   U_RVX,
   U_RVY,
@@ -256,8 +252,6 @@ ggcm_mhd_step_c_primvar(struct ggcm_mhd_step *step, struct mrc_fld *prim,
       F3(prim, VY, i,j,k) * RV1Y(x, i,j,k) +
       F3(prim, VZ, i,j,k) * RV1Z(x, i,j,k);
     F3(prim, PP, i,j,k) = s * (UU1(x, i,j,k) - .5f * rvv);
-    mrc_fld_data_t cs2 = mrc_fld_max(gamm * F3(prim, PP, i,j,k) * rri, 0.f);
-    F3(prim, CMSV, i,j,k) = sqrtf(rvv * rri) + sqrtf(cs2);
   } mrc_fld_foreach_end;
 }
 
@@ -1105,7 +1099,7 @@ ggcm_mhd_step_c_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 {
   struct ggcm_mhd *mhd = step->mhd;
   struct mrc_fld *x_half = ggcm_mhd_step_get_3d_fld(step, 8);
-  struct mrc_fld *prim = ggcm_mhd_step_get_3d_fld(step, CMSV + 1);
+  struct mrc_fld *prim = ggcm_mhd_step_get_3d_fld(step, 5);
 
   static int pr_A, pr_B;
   if (!pr_A) {
