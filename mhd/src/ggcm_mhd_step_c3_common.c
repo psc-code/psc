@@ -179,7 +179,6 @@ mhd_reconstruct_pcm_run(struct ggcm_mhd_step *step,
 			struct mrc_fld *U_1d, struct mrc_fld *W_1d,
 			int ib, int ie, int dim)
 {
-  mhd_reconstruct_prim_from_sc(W_cc, U_cc, ib, ie);
   mhd_reconstruct_copy_W_to_1d(W_1d, W_cc, ib, ie, dim);
 
   for (int i = ib; i < ie + 1; i++) {
@@ -384,6 +383,7 @@ mhd_fluxl(struct ggcm_mhd_step *step,
 
   prof_start(pr);
   pick_line(U_cc, U, 5, -1, ldims + 1, j, k, dim);
+  mhd_reconstruct_prim_from_sc(W_cc, U_cc, -1, ldims + 1);
   mhd_reconstruct_pcm_run(step, U_l, U_r, W_l, W_r, U_cc, W_cc, U_1d, W_1d,
 			  -1, ldims + 1, dim);
   mhd_riemann_rusanov_run(F, U_l, U_r, W_l, W_r, 0, ldims + 1, dim);
@@ -496,10 +496,10 @@ mhd_fluxb(struct ggcm_mhd_step *step,
 
   prof_start(pr);
   pick_line(U_cc, U, 5, -2, ldims + 2, j, k, dim);
+  mhd_reconstruct_prim_from_sc(W_cc, U_cc, -2, ldims + 2);
   mhd_reconstruct_pcm_run(step, U_l, U_r, W_l, W_r, U_cc, W_cc, U_1d, W_1d,
 			  -1, ldims + 1, dim);
   mhd_riemann_rusanov_run(Fl, U_l, U_r, W_l, W_r, 0, ldims + 1, dim);
-  mhd_reconstruct_prim_from_sc(W_cc, U_cc, -2, ldims + 2);
   mhd_cc_fluxes(step, F_cc, U_cc, W_cc, W_1d, -2, ldims + 2, dim);
   mhd_limit1(lim1, U_cc, W_cc, -1, ldims + 1, dim);
 
