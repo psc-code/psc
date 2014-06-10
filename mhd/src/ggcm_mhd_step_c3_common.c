@@ -458,18 +458,14 @@ limit_hz(mrc_fld_data_t a2, mrc_fld_data_t aa, mrc_fld_data_t a1)
 }
 
 static void
-mhd_limit1(struct mrc_fld *lim1_pp, struct mrc_fld *lim1,
-	   struct mrc_fld *U_cc, struct mrc_fld *W_cc,
+mhd_limit1(struct mrc_fld *lim1, struct mrc_fld *U_cc, struct mrc_fld *W_cc,
 	   int ib, int ie, int dim)
 {
   for (int i = ib; i < ie; i++) {
-    F1(lim1_pp, 0, i) = limit_hz(F1(W_cc, PP, i-1), F1(W_cc, PP, i), F1(W_cc, PP, i+1));
-  }
-
-  for (int i = ib; i < ie; i++) {
+    mrc_fld_data_t lim1_pp = limit_hz(F1(W_cc, PP, i-1), F1(W_cc, PP, i), F1(W_cc, PP, i+1));
     for (int m = 0; m < 5; m++) {
       F1(lim1, m, i) = fmaxf(limit_hz(F1(U_cc, m, i-1), F1(U_cc, m, i), F1(U_cc, m, i+1)), 
-			     F1(lim1_pp, 0, i));
+			     lim1_pp);
     }
   }
 }
@@ -492,7 +488,6 @@ fluxb_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
   struct mrc_fld *W_r  = ggcm_mhd_step_get_1d_fld(step, 5);
   struct mrc_fld *fl1_cc = ggcm_mhd_step_get_1d_fld(step, 5);
   struct mrc_fld *lim1 = ggcm_mhd_step_get_1d_fld(step, 5);
-  struct mrc_fld *lim1_pp = ggcm_mhd_step_get_1d_fld(step, 1);
   struct mrc_fld *F    = ggcm_mhd_step_get_1d_fld(step, 5);
   struct mrc_fld *Fl   = ggcm_mhd_step_get_1d_fld(step, 5);
 
@@ -508,7 +503,7 @@ fluxb_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
       mhd_riemann_rusanov_run(Fl, U_l, U_r, W_l, W_r, -1, ldims[0], 0);
       mhd_cc_fluxes(step, fl1_cc, U_cc, W_cc, -2, ldims[0] + 2, 0);
       pick_line(W_cc, prim, 5, -2, ldims[0] + 2, j, k, 0);
-      mhd_limit1(lim1_pp, lim1, U_cc, W_cc, -1, ldims[0] + 1, 0);
+      mhd_limit1(lim1, U_cc, W_cc, -1, ldims[0] + 1, 0);
       for (int i = -1; i < ldims[0]; i++) {
 	for (int m = 0; m < 5; m++) {
 	  mrc_fld_data_t fhx = (s7 * (F1(fl1_cc, m, i  ) + F1(fl1_cc, m, i+1)) -
@@ -528,7 +523,7 @@ fluxb_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
       mhd_riemann_rusanov_run(Fl, U_l, U_r, W_l, W_r, -1, ldims[1], 1);
       mhd_cc_fluxes(step, fl1_cc, U_cc, W_cc, -2, ldims[1] + 2, 1);
       pick_line(W_cc, prim, 5, -2, ldims[1] + 2, k, i, 1);
-      mhd_limit1(lim1_pp, lim1, U_cc, W_cc, -1, ldims[1] + 1, 1);
+      mhd_limit1(lim1, U_cc, W_cc, -1, ldims[1] + 1, 1);
       for (int j = -1; j < ldims[1]; j++) {
 	for (int m = 0; m < 5; m++) {
 	  mrc_fld_data_t fhx = (s7 * (F1(fl1_cc, m, j  ) + F1(fl1_cc, m, j+1)) -
@@ -548,7 +543,7 @@ fluxb_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
       mhd_riemann_rusanov_run(Fl, U_l, U_r, W_l, W_r, -1, ldims[2], 2);
       mhd_cc_fluxes(step, fl1_cc, U_cc, W_cc, -2, ldims[2] + 2, 2);
       pick_line(W_cc, prim, 5, -2, ldims[2] + 2, i, j, 2);
-      mhd_limit1(lim1_pp, lim1, U_cc, W_cc, -1, ldims[2] + 1, 2);
+      mhd_limit1(lim1, U_cc, W_cc, -1, ldims[2] + 1, 2);
       for (int k = -1; k < ldims[2]; k++) {
 	for (int m = 0; m < 5; m++) {
 	  mrc_fld_data_t fhx = (s7 * (F1(fl1_cc, m, k  ) + F1(fl1_cc, m, k+1)) -
@@ -569,7 +564,6 @@ fluxb_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
   ggcm_mhd_step_put_1d_fld(step, W_r);
   ggcm_mhd_step_put_1d_fld(step, fl1_cc);
   ggcm_mhd_step_put_1d_fld(step, lim1);
-  ggcm_mhd_step_put_1d_fld(step, lim1_pp);
   ggcm_mhd_step_put_1d_fld(step, F);
   ggcm_mhd_step_put_1d_fld(step, Fl);
 }
