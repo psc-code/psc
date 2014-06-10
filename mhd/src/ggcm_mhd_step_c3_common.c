@@ -494,6 +494,10 @@ fluxb_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
 {
   struct ggcm_mhd *mhd = step->mhd;
 
+  const mrc_fld_data_t reps = 0.003;
+  const mrc_fld_data_t seps = -0.001;
+  const mrc_fld_data_t teps = 1.e-25;
+
   struct mrc_fld *lim_pp[3] = { ggcm_mhd_step_get_3d_fld(step, 1),
 				ggcm_mhd_step_get_3d_fld(step, 1),
 				ggcm_mhd_step_get_3d_fld(step, 1), };
@@ -508,6 +512,7 @@ fluxb_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
   struct mrc_fld *W_r  = ggcm_mhd_step_get_1d_fld(step, 5);
   struct mrc_fld *fl1_cc = ggcm_mhd_step_get_1d_fld(step, 5);
   struct mrc_fld *lim1 = ggcm_mhd_step_get_1d_fld(step, 5);
+  struct mrc_fld *lim1_pp = ggcm_mhd_step_get_1d_fld(step, 1);
   struct mrc_fld *F    = ggcm_mhd_step_get_1d_fld(step, 5);
   struct mrc_fld *Fl   = ggcm_mhd_step_get_1d_fld(step, 5);
 
@@ -536,7 +541,51 @@ fluxb_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
       mhd_reconstruct_pcm_run(step, U_l, U_r, W_l, W_r, U_cc, -1, ldims[0] + 1, 0);
       mhd_riemann_rusanov_run(Fl, U_l, U_r, W_l, W_r, -1, ldims[0], 0);
       mhd_cc_fluxes(step, fl1_cc, U_cc, W_cc, -2, ldims[0] + 2, 0);
-      pick_line(lim1  , lim[0]  , 5, -1, ldims[0] + 1, j, k, 0);
+      pick_line(W_cc, prim, 5, -2, ldims[0] + 2, j, k, 0);
+      for (int i = -1; i < ldims[0] + 1; i++) {
+	// Harten/Zwas type switch
+	mrc_fld_data_t aa = F1(W_cc, PP, i);
+	mrc_fld_data_t a1 = F1(W_cc, PP, i+1);
+	mrc_fld_data_t a2 = F1(W_cc, PP, i-1);
+	mrc_fld_data_t d1 = aa - a2;
+	mrc_fld_data_t d2 = a1 - aa;
+	mrc_fld_data_t s1 = fabsf(d1);
+	mrc_fld_data_t s2 = fabsf(d2);
+	mrc_fld_data_t f1 = fabsf(a1) + fabsf(a2) + fabsf(aa);
+	mrc_fld_data_t s5 = s1 + s2 + reps*f1 + teps;
+	mrc_fld_data_t r3 = fabsf(s1 - s2) / s5; // edge condition
+	mrc_fld_data_t f2 = seps * f1 * f1;
+	if (d1 * d2 < f2) {
+	  r3 = 1.f;
+	}
+	r3 = r3 * r3;
+	r3 = r3 * r3;
+	r3 = fminf(2.f * r3, 1.);
+	F1(lim1_pp, 0, i) = r3;
+      }
+      for (int i = -1; i < ldims[0] + 1; i++) {
+	for (int m = 0; m < 5; m++) {
+	  // Harten/Zwas type switch
+	  mrc_fld_data_t aa = F1(U_cc, m, i);
+	  mrc_fld_data_t a1 = F1(U_cc, m, i+1);
+	  mrc_fld_data_t a2 = F1(U_cc, m, i-1);
+	  mrc_fld_data_t d1 = aa - a2;
+	  mrc_fld_data_t d2 = a1 - aa;
+	  mrc_fld_data_t s1 = fabsf(d1);
+	  mrc_fld_data_t s2 = fabsf(d2);
+	  mrc_fld_data_t f1 = fabsf(a1) + fabsf(a2) + fabsf(aa);
+	  mrc_fld_data_t s5 = s1 + s2 + reps*f1 + teps;
+	  mrc_fld_data_t r3 = fabsf(s1 - s2) / s5; // edge condition
+	  mrc_fld_data_t f2 = seps * f1 * f1;
+	  if (d1 * d2 < f2) {
+	    r3 = 1.f;
+	  }
+	  r3 = r3 * r3;
+	  r3 = r3 * r3;
+	  r3 = fminf(2.f * r3, 1.);
+	  F1(lim1, m, i) = fmaxf(F1(lim1_pp, 0, i), r3);
+	}
+      }
       for (int i = -1; i < ldims[0]; i++) {
 	for (int m = 0; m < 5; m++) {
 	  mrc_fld_data_t fhx = (s7 * (F1(fl1_cc, m, i  ) + F1(fl1_cc, m, i+1)) -
@@ -602,6 +651,7 @@ fluxb_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
   ggcm_mhd_step_put_1d_fld(step, W_r);
   ggcm_mhd_step_put_1d_fld(step, fl1_cc);
   ggcm_mhd_step_put_1d_fld(step, lim1);
+  ggcm_mhd_step_put_1d_fld(step, lim1_pp);
   ggcm_mhd_step_put_1d_fld(step, F);
   ggcm_mhd_step_put_1d_fld(step, Fl);
 }
