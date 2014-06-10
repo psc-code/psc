@@ -270,6 +270,19 @@ ggcm_mhd_step_c_primvar(struct ggcm_mhd_step *step, struct mrc_fld *prim,
 }
 
 // ----------------------------------------------------------------------
+// fluxes_cc
+
+static void
+fluxes_cc(mrc_fld_data_t F[5], mrc_fld_data_t U[5], mrc_fld_data_t W[5])
+{
+  F[RR]  = W[RR] * W[VX];
+  F[RVX] = W[RR] * W[VX] * W[VX];
+  F[RVY] = W[RR] * W[VY] * W[VX];
+  F[RVZ] = W[RR] * W[VZ] * W[VX];
+  F[UU]  = (U[UU] + W[PP]) * W[VX];
+}
+
+// ----------------------------------------------------------------------
 // fluxes_rusanov
 
 static void
@@ -278,20 +291,8 @@ fluxes_rusanov(mrc_fld_data_t F[5], mrc_fld_data_t Ul[5], mrc_fld_data_t Ur[5],
 {
   mrc_fld_data_t Fl[5], Fr[5];
   
-  Fl[RR] = Wl[RR] * Wl[VX];
-  Fr[RR] = Wr[RR] * Wr[VX];
-  
-  Fl[RVX] = Wl[RR] * Wl[VX] * Wl[VX];
-  Fr[RVX] = Wr[RR] * Wr[VX] * Wr[VX];
-  
-  Fl[RVY] = Wl[RR] * Wl[VY] * Wl[VX];
-  Fr[RVY] = Wr[RR] * Wr[VY] * Wr[VX];
-  
-  Fl[RVZ] = Wl[RR] * Wl[VZ] * Wl[VX];
-  Fr[RVZ] = Wr[RR] * Wr[VZ] * Wr[VX];
-  
-  Fl[UU] = (Ul[UU] + Wl[PP]) * Wl[VX];
-  Fr[UU] = (Ur[UU] + Wr[PP]) * Wr[VX];
+  fluxes_cc(Fl, Ul, Wl);
+  fluxes_cc(Fr, Ur, Wr);
 
   mrc_fld_data_t vv, cs2;
   vv = sqr(Wl[VX]) + sqr(Wl[VY]) + sqr(Wl[VZ]);
@@ -307,50 +308,6 @@ fluxes_rusanov(mrc_fld_data_t F[5], mrc_fld_data_t Ul[5], mrc_fld_data_t Ur[5],
   for (int m = 0; m < 5; m++) {
     F[m] = .5f * ((Fr[m] + Fl[m]) - lambda * (Ur[m] - Ul[m]));
   }
-}
-
-// ----------------------------------------------------------------------
-// mhd_riemann_rusanov_run
-
-static void
-mhd_riemann_rusanov_run(struct mrc_fld *F,
-			struct mrc_fld *U_l, struct mrc_fld *U_r,
-			struct mrc_fld *W_l, struct mrc_fld *W_r,
-			int ib, int ie, int dim)
-{
-#define FLUXES_1D(X, Y, Z) do {						\
-    for (int i = ib; i < ie; i++) {					\
-      mrc_fld_data_t flux[5];						\
-      									\
-      fluxes_rusanov(flux, &F1(U_l, 0, i+1), &F1(U_r, 0, i+1),		\
-		     &F1(W_l, 0, i+1), &F1(W_r, 0, i+1));		\
-									\
-      F1(F, RR   , i) = flux[RR];					\
-      F1(F, RVX+X, i) = flux[RVX];					\
-      F1(F, RVX+Y, i) = flux[RVY];					\
-      F1(F, RVX+Z, i) = flux[RVZ];					\
-      F1(F, UU   , i) = flux[UU];					\
-    }									\
-  } while (0)
-
-  if (dim == 0) {
-    FLUXES_1D(0,1,2);
-  } else if (dim == 1) {
-    FLUXES_1D(1,2,0);
-  } else if (dim == 2) {
-    FLUXES_1D(2,0,1);
-  }
-#undef FLUXES_1D
-}
-
-static void
-fluxes_cc(mrc_fld_data_t F[5], mrc_fld_data_t U[5], mrc_fld_data_t W[5])
-{
-  F[RR]  = W[RR] * W[VX];
-  F[RVX] = W[RR] * W[VX] * W[VX];
-  F[RVY] = W[RR] * W[VY] * W[VX];
-  F[RVZ] = W[RR] * W[VZ] * W[VX];
-  F[UU]  = (U[UU] + W[PP]) * W[VX];
 }
 
 static void  
@@ -386,6 +343,40 @@ mhd_cc_fluxes(struct ggcm_mhd_step *step, struct mrc_fld *fl_cc, struct mrc_fld 
 #undef FLUXES_1D
 
   ggcm_mhd_step_put_1d_fld(step, W_1d);
+}
+
+// ----------------------------------------------------------------------
+// mhd_riemann_rusanov_run
+
+static void
+mhd_riemann_rusanov_run(struct mrc_fld *F,
+			struct mrc_fld *U_l, struct mrc_fld *U_r,
+			struct mrc_fld *W_l, struct mrc_fld *W_r,
+			int ib, int ie, int dim)
+{
+#define FLUXES_1D(X, Y, Z) do {						\
+    for (int i = ib; i < ie; i++) {					\
+      mrc_fld_data_t flux[5];						\
+      									\
+      fluxes_rusanov(flux, &F1(U_l, 0, i+1), &F1(U_r, 0, i+1),		\
+		     &F1(W_l, 0, i+1), &F1(W_r, 0, i+1));		\
+									\
+      F1(F, RR   , i) = flux[RR];					\
+      F1(F, RVX+X, i) = flux[RVX];					\
+      F1(F, RVX+Y, i) = flux[RVY];					\
+      F1(F, RVX+Z, i) = flux[RVZ];					\
+      F1(F, UU   , i) = flux[UU];					\
+    }									\
+  } while (0)
+
+  if (dim == 0) {
+    FLUXES_1D(0,1,2);
+  } else if (dim == 1) {
+    FLUXES_1D(1,2,0);
+  } else if (dim == 2) {
+    FLUXES_1D(2,0,1);
+  }
+#undef FLUXES_1D
 }
 
 // ----------------------------------------------------------------------
