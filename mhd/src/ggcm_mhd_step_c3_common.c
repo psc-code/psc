@@ -357,14 +357,14 @@ mhd_riemann_rusanov_run(struct mrc_fld *F,
     for (int i = ib; i < ie; i++) {					\
       mrc_fld_data_t flux[5];						\
       									\
-      fluxes_rusanov(flux, &F1(U_l, 0, i+1), &F1(U_r, 0, i+1),		\
-		     &F1(W_l, 0, i+1), &F1(W_r, 0, i+1));		\
+      fluxes_rusanov(flux, &F1(U_l, 0, i), &F1(U_r, 0, i),		\
+		     &F1(W_l, 0, i), &F1(W_r, 0, i));		\
 									\
-      F1(F, RR   , i+1) = flux[RR];					\
-      F1(F, RVX+X, i+1) = flux[RVX];					\
-      F1(F, RVX+Y, i+1) = flux[RVY];					\
-      F1(F, RVX+Z, i+1) = flux[RVZ];					\
-      F1(F, UU   , i+1) = flux[UU];					\
+      F1(F, RR   , i) = flux[RR];					\
+      F1(F, RVX+X, i) = flux[RVX];					\
+      F1(F, RVX+Y, i) = flux[RVY];					\
+      F1(F, RVX+Z, i) = flux[RVZ];					\
+      F1(F, UU   , i) = flux[UU];					\
     }									\
   } while (0)
 
@@ -389,7 +389,7 @@ mhd_fluxl(struct ggcm_mhd_step *step,
 {
   pick_line(U_cc, U, 5, -1, ldims + 1, j, k, dim);
   mhd_reconstruct_pcm_run(step, U_l, U_r, W_l, W_r, U_cc, -1, ldims + 1, dim);
-  mhd_riemann_rusanov_run(F, U_l, U_r, W_l, W_r, -1, ldims, dim);
+  mhd_riemann_rusanov_run(F, U_l, U_r, W_l, W_r, 0, ldims + 1, dim);
   put_line(fluxes, F, j, k, 0, ldims + 1, dim);
 }
 
@@ -486,7 +486,7 @@ mhd_fluxb(struct ggcm_mhd_step *step,
 {
   pick_line(U_cc, U, 5, -2, ldims + 2, j, k, dim);
   mhd_reconstruct_pcm_run(step, U_l, U_r, W_l, W_r, U_cc, -1, ldims + 1, dim);
-  mhd_riemann_rusanov_run(Fl, U_l, U_r, W_l, W_r, -1, ldims, dim);
+  mhd_riemann_rusanov_run(Fl, U_l, U_r, W_l, W_r, 0, ldims + 1, dim);
   mhd_reconstruct_prim_from_sc(W_cc, U_cc, -2, ldims + 2);
   mhd_cc_fluxes(step, F_cc, U_cc, W_cc, -2, ldims + 2, dim);
   mhd_limit1(lim1, U_cc, W_cc, -1, ldims + 1, dim);
@@ -494,12 +494,12 @@ mhd_fluxb(struct ggcm_mhd_step *step,
   mrc_fld_data_t s1 = 1. / 12.;
   mrc_fld_data_t s7 = 7. * s1;
 
-  for (int i = -1; i < ldims; i++) {
+  for (int i = 0; i < ldims + 1; i++) {
     for (int m = 0; m < 5; m++) {
-      mrc_fld_data_t fhx = (s7 * (F1(F_cc, m, i  ) + F1(F_cc, m, i+1)) -
-			    s1 * (F1(F_cc, m, i-1) + F1(F_cc, m, i+2)));
-      mrc_fld_data_t cx = fmaxf(F1(lim1, m, i), F1(lim1, m, i+1));
-      F1(F, m, i+1) = cx * F1(Fl, m, i+1) + (1.f - cx) * fhx;
+      mrc_fld_data_t fhx = (s7 * (F1(F_cc, m, i-1) + F1(F_cc, m, i  )) -
+			    s1 * (F1(F_cc, m, i-2) + F1(F_cc, m, i+1)));
+      mrc_fld_data_t cx = fmaxf(F1(lim1, m, i-1), F1(lim1, m, i));
+      F1(F, m, i) = cx * F1(Fl, m, i) + (1.f - cx) * fhx;
     }
   }
 
