@@ -360,11 +360,11 @@ mhd_riemann_rusanov_run(struct mrc_fld *F,
       fluxes_rusanov(flux, &F1(U_l, 0, i+1), &F1(U_r, 0, i+1),		\
 		     &F1(W_l, 0, i+1), &F1(W_r, 0, i+1));		\
 									\
-      F1(F, RR   , i) = flux[RR];					\
-      F1(F, RVX+X, i) = flux[RVX];					\
-      F1(F, RVX+Y, i) = flux[RVY];					\
-      F1(F, RVX+Z, i) = flux[RVZ];					\
-      F1(F, UU   , i) = flux[UU];					\
+      F1(F, RR   , i+1) = flux[RR];					\
+      F1(F, RVX+X, i+1) = flux[RVX];					\
+      F1(F, RVX+Y, i+1) = flux[RVY];					\
+      F1(F, RVX+Z, i+1) = flux[RVZ];					\
+      F1(F, UU   , i+1) = flux[UU];					\
     }									\
   } while (0)
 
@@ -390,7 +390,7 @@ mhd_fluxl(struct ggcm_mhd_step *step,
   pick_line(U_cc, U, 5, -1, ldims + 1, j, k, dim);
   mhd_reconstruct_pcm_run(step, U_l, U_r, W_l, W_r, U_cc, -1, ldims + 1, dim);
   mhd_riemann_rusanov_run(F, U_l, U_r, W_l, W_r, -1, ldims, dim);
-  put_line(fluxes, F, j, k, -1, ldims, dim);
+  put_line(fluxes, F, j, k, 0, ldims + 1, dim);
 }
 
 // ----------------------------------------------------------------------
@@ -499,11 +499,11 @@ mhd_fluxb(struct ggcm_mhd_step *step,
       mrc_fld_data_t fhx = (s7 * (F1(F_cc, m, i  ) + F1(F_cc, m, i+1)) -
 			    s1 * (F1(F_cc, m, i-1) + F1(F_cc, m, i+2)));
       mrc_fld_data_t cx = fmaxf(F1(lim1, m, i), F1(lim1, m, i+1));
-      F1(F, m, i) = cx * F1(Fl, m, i) + (1.f - cx) * fhx;
+      F1(F, m, i+1) = cx * F1(Fl, m, i+1) + (1.f - cx) * fhx;
     }
   }
 
-  put_line(fluxes, F, j, k, -1, ldims, dim);
+  put_line(fluxes, F, j, k, 0, ldims + 1, dim);
 }
 
 static void
@@ -574,9 +574,9 @@ update_finite_volume(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld **f
     mrc_fld_data_t s = dt * F3(masks, _YMASK, i,j,k);
     for (int m = 0; m < 5; m++) {
       F3(x, m, i,j,k) +=
-	- s * (fd1x[i] * (F3(fluxes[0], m, i,j,k) - F3(fluxes[0], m, i-1,j,k)) +
-	       fd1y[j] * (F3(fluxes[1], m, i,j,k) - F3(fluxes[1], m, i,j-1,k)) +
-	       fd1z[k] * (F3(fluxes[2], m, i,j,k) - F3(fluxes[2], m, i,j,k-1)));
+	- s * (fd1x[i] * (F3(fluxes[0], m, i+1,j,k) - F3(fluxes[0], m, i,j,k)) +
+	       fd1y[j] * (F3(fluxes[1], m, i,j+1,k) - F3(fluxes[1], m, i,j,k)) +
+	       fd1z[k] * (F3(fluxes[2], m, i,j,k+1) - F3(fluxes[2], m, i,j,k)));
     }
   } mrc_fld_foreach_end;
 }
