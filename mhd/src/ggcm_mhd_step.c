@@ -152,23 +152,27 @@ ggcm_mhd_step_put_3d_fld(struct ggcm_mhd_step *step, struct mrc_fld *f)
 // ----------------------------------------------------------------------
 // ggcm_mhd_step_get_1d_fld
 //
-// FIXME, this should cache the fields, rather than creating/destroying
-// all the time, should precalc size
 
 struct mrc_fld *
 ggcm_mhd_step_get_1d_fld(struct ggcm_mhd_step *step, int nr_comps)
 {
+  int c = nr_comps - 1;
+  struct mrc_fld_cache *cache = &step->cache_1d[c];
+  if (cache->n > 0) {
+    return cache->flds[--cache->n];
+  }
+
   struct mrc_fld *fld = step->mhd->fld;
 
   struct mrc_fld *f = mrc_fld_create(ggcm_mhd_step_comm(step));
   int size = 0;
   for (int d = 0; d < 3; d++) {
-    size = MAX(size, mrc_fld_ghost_dims(fld)[d + 1]);
+    size = MAX(size, mrc_fld_dims(fld)[d + 1]); // FIXME assumes aos
   }
 
   mrc_fld_set_type(f, mrc_fld_type(fld));
   mrc_fld_set_param_int_array(f, "dims", 2, (int []) { nr_comps, size });
-  mrc_fld_set_param_int_array(f, "offs", 2, (int []) { 0, -fld->_nr_ghosts });
+  mrc_fld_set_param_int_array(f, "sw"  , 2, (int []) { 0, fld->_nr_ghosts });
   mrc_fld_setup(f);
 
   return f;
@@ -180,7 +184,24 @@ ggcm_mhd_step_get_1d_fld(struct ggcm_mhd_step *step, int nr_comps)
 void
 ggcm_mhd_step_put_1d_fld(struct ggcm_mhd_step *step, struct mrc_fld *f)
 {
-  mrc_fld_destroy(f);
+  int c = mrc_fld_dims(f)[0] - 1;
+  struct mrc_fld_cache *cache = &step->cache_1d[c];
+  assert(cache->n < MRC_FLD_CACHE_SIZE);
+  cache->flds[cache->n++] = f;
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_step_destroy
+
+static void
+_ggcm_mhd_step_destroy(struct ggcm_mhd_step *step)
+{
+  for (int c = 0; c < MRC_FLD_CACHE_COMPS; c++) {
+    struct mrc_fld_cache *cache = &step->cache_1d[c];
+    while (cache->n > 0) {
+      mrc_fld_destroy(cache->flds[--cache->n]);
+    }
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -221,5 +242,6 @@ struct mrc_class_ggcm_mhd_step mrc_class_ggcm_mhd_step = {
   .size             = sizeof(struct ggcm_mhd_step),
   .param_descr      = ggcm_mhd_step_descr,
   .init             = ggcm_mhd_step_init,
+  .destroy          = _ggcm_mhd_step_destroy,
 };
 

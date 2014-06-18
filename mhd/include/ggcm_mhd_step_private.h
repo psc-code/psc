@@ -4,6 +4,14 @@
 
 #include "ggcm_mhd_step.h"
 
+#define MRC_FLD_CACHE_SIZE (20)
+#define MRC_FLD_CACHE_COMPS (8)
+
+struct mrc_fld_cache {
+  int n;
+  struct mrc_fld *flds[MRC_FLD_CACHE_SIZE];
+};
+
 struct ggcm_mhd_step {
   struct mrc_obj obj;
 
@@ -11,6 +19,8 @@ struct ggcm_mhd_step {
 
   bool do_nwst; // calculate new dt next timestep?
   int profile_every; // print out profiling info every so many steps
+
+  struct mrc_fld_cache cache_1d[MRC_FLD_CACHE_COMPS];
 };
 
 struct ggcm_mhd_step_ops {
