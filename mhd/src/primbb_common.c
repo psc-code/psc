@@ -59,7 +59,7 @@ primbb_c2_c(struct ggcm_mhd *mhd, int m_curr)
 
   struct mrc_fld *f = mrc_fld_get_as(mhd->fld, FLD_TYPE);
 
-  mrc_fld_foreach(f, ix,iy,iz, 1, 2) {
+  mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
     F3(f,_BX, ix,iy,iz) = .5f * (F3(f, m_curr + _B1X, ix,iy,iz) +
 				 F3(f, m_curr + _B1X, ix+1,iy,iz));
     F3(f,_BY, ix,iy,iz) = .5f * (F3(f, m_curr + _B1Y, ix,iy,iz) +
