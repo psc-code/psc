@@ -1,4 +1,4 @@
-#define BOUNDS_CHECK
+
 #include <mrc_fld_as_float.h>
 #define F1(f, m, i) MRC_S2(f, m, i)
 

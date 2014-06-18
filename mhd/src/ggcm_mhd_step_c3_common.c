@@ -695,6 +695,70 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
 }
 
 // ----------------------------------------------------------------------
+// newstep
+
+static mrc_fld_data_t
+newstep_c(struct ggcm_mhd *mhd, struct mrc_fld *x)
+{
+  float *fd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FD1);
+  float *fd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FD1);
+  float *fd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FD1);
+
+  mrc_fld_data_t splim2 = sqr(mhd->par.speedlimit / mhd->par.vvnorm);
+  mrc_fld_data_t gamm   = mhd->par.gamm;
+  mrc_fld_data_t thx    = mhd->par.thx;
+  mrc_fld_data_t eps    = 1e-9f;
+  mrc_fld_data_t dt     = 1e10f;
+
+  mrc_fld_foreach(x, ix, iy, iz, 0, 0) {
+    mrc_fld_data_t hh = fmaxf(fmaxf(fd1x[ix], fd1y[iy]), fd1z[iz]);
+    mrc_fld_data_t rri = 1.f / fabsf(F3(x,_RR, ix,iy,iz)); // FIXME abs necessary?
+    mrc_fld_data_t bb = 
+      sqr(.5f*(F3(x,_B1X, ix,iy,iz)+F3(x,_B1X, ix-1,iy,iz))) + 
+      sqr(.5f*(F3(x,_B1Y, ix,iy,iz)+F3(x,_B1Y, ix,iy-1,iz))) +
+      sqr(.5f*(F3(x,_B1Z, ix,iy,iz)+F3(x,_B1Z, ix,iy,iz-1)));
+    // FIXME, sqrtf() is not nec, we square the result again
+    mrc_fld_data_t vv1 = (sqr(F3(x,_BX, ix,iy,iz)) +
+		sqr(F3(x,_BY, ix,iy,iz)) +
+		sqr(F3(x,_BZ, ix,iy,iz))) * rri;
+    vv1 = bb * rri;
+    vv1 = fminf(vv1, splim2);
+    mrc_fld_data_t vv2 = gamm * fmaxf(0.f, F3(x,_PP, ix,iy,iz)) * rri; // FIXME fmaxf nec?
+    mrc_fld_data_t vv3 = sqrtf(sqr(F3(x,_VX, ix,iy,iz)) + 
+		     sqr(F3(x,_VY, ix,iy,iz)) +
+		     sqr(F3(x,_VZ, ix,iy,iz)));
+    mrc_fld_data_t vv = sqrtf(vv1 + vv2) + vv3;
+    vv = fmaxf(eps, vv);
+
+    mrc_fld_data_t tt = thx / fmaxf(eps, hh*vv*F3(x, _ZMASK, ix,iy,iz));
+
+    dt = fminf(dt, tt);
+  } mrc_fld_foreach_end;
+
+  struct mrc_fld *f = mrc_fld_get_as(mhd->fld, "float");
+  mrc_fld_put_as(f, mhd->fld);
+
+  mrc_fld_data_t dtn;
+  MPI_Allreduce(&dt, &dtn, 1, MPI_MRC_FLD_DATA_T, MPI_MIN, ggcm_mhd_comm(mhd));
+
+  return dtn;
+}
+
+// ----------------------------------------------------------------------
+// newstep_sc
+
+static mrc_fld_data_t
+newstep_sc(struct ggcm_mhd *mhd, struct mrc_fld *x)
+{
+  ggcm_mhd_fill_ghosts(mhd, x, RR, mhd->time);
+
+  primvar_c(mhd, _RR1);
+  primbb_c2_c(mhd, _RR1);
+  zmaskn_c(mhd);
+  return newstep_c(mhd, x);
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_step_c_run
 
 static void
@@ -712,7 +776,7 @@ ggcm_mhd_step_c_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
   float dtn;
   if (step->do_nwst) {
-    newstep(mhd, &dtn);
+    dtn = newstep_sc(mhd, x);
   }
 
   // --- PREDICTOR
