@@ -67,12 +67,6 @@ enum {
   _BDIPY, 
   _BDIPZ,
   _NR_FLDS,
-
-  // for (mhd_pr_float) primitive fields, reuse indices from 0 to 7
-  _V1X = _RV1X,
-  _V1Y = _RV1Y,
-  _V1Z = _RV1Z,
-  _PP1 = _UU1,
 };
 
 // for the state vector
@@ -86,6 +80,7 @@ enum {
   BX,
   BY,
   BZ,
+  EE = UU,
 };
 
 // for primitive fields
@@ -95,6 +90,7 @@ enum {
   VY = 2,
   VZ = 3,
   PP = 4,
+  CMSV = 5,
 };
 
 // ----------------------------------------------------------------------
@@ -102,19 +98,20 @@ enum {
 
 #define B1XYZ(f,m, ix,iy,iz) F3(f, _B1X+(m), ix,iy,iz)
 
-#define RR1(f, ix,iy,iz)  F3(f, _RR1, ix,iy,iz)
-#define RV1X(f, ix,iy,iz) F3(f, _RV1X, ix,iy,iz)
-#define RV1Y(f, ix,iy,iz) F3(f, _RV1Y, ix,iy,iz)
-#define RV1Z(f, ix,iy,iz) F3(f, _RV1Z, ix,iy,iz)
-#define UU1(f, ix,iy,iz)  F3(f, _UU1, ix,iy,iz)
-#define B1X(f, ix,iy,iz)  F3(f, _B1X, ix,iy,iz)
-#define B1Y(f, ix,iy,iz)  F3(f, _B1Y, ix,iy,iz)
-#define B1Z(f, ix,iy,iz)  F3(f, _B1Z, ix,iy,iz)
+#define RR(U, i,j,k)   F3(U, RR , i,j,k)
+#define RVX(U, i,j,k)  F3(U, RVX, i,j,k)
+#define RVY(U, i,j,k)  F3(U, RVY, i,j,k)
+#define RVZ(U, i,j,k)  F3(U, RVZ, i,j,k)
+#define EE(U, i,j,k)   F3(U, EE , i,j,k)
+#define BX(U, i,j,k)   F3(U, BX , i,j,k)
+#define BY(U, i,j,k)   F3(U, BY , i,j,k)
+#define BZ(U, i,j,k)   F3(U, BZ , i,j,k)
+#define UU(U, i,j,k)   F3(U, UU , i,j,k)
 
-#define V1X(f, ix,iy,iz) F3(f, _V1X, ix,iy,iz)
-#define V1Y(f, ix,iy,iz) F3(f, _V1Y, ix,iy,iz)
-#define V1Z(f, ix,iy,iz) F3(f, _V1Z, ix,iy,iz)
-#define PP1(f, ix,iy,iz) F3(f, _PP1, ix,iy,iz)
+#define VX(f, ix,iy,iz) F3(f, VX, ix,iy,iz)
+#define VY(f, ix,iy,iz) F3(f, VY, ix,iy,iz)
+#define VZ(f, ix,iy,iz) F3(f, VZ, ix,iy,iz)
+#define PP(f, ix,iy,iz) F3(f, PP, ix,iy,iz)
 
 // ----------------------------------------------------------------------
 // coordinates

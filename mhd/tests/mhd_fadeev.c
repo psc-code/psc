@@ -74,17 +74,17 @@ ggcm_mhd_ic_fadeev_run(struct ggcm_mhd_ic *ic)
     r[0] = MRC_CRD(crds, 0, ix);
     r[1] = MRC_CRD(crds, 1, iy);
 
-    RR1(fld, ix,iy,iz)  = 0.5*sqr(Bo) * (1.0-sqr(eps)) * 
+    RR(fld, ix,iy,iz)  = 0.5*sqr(Bo) * (1.0-sqr(eps)) * 
       exp(2.0*kk* F3(fld_psi, 0, ix,iy,iz)/(Bo)) + 0.5*sqr(Boz) + sub->dens0;
-    PP1(fld, ix,iy,iz) = RR1(fld, ix,iy,iz);
-    V1X(fld, ix,iy,iz) = (pert) * (1.-kk*kk*r[0]*r[0]) *
+    PP(fld, ix,iy,iz) = RR(fld, ix,iy,iz);
+    VX(fld, ix,iy,iz) = (pert) * (1.-kk*kk*r[0]*r[0]) *
       exp(-kk*kk*r[1]*r[1])*sin(kk*r[0]*0.5);	
-    V1Y(fld, ix,iy,iz) = -(pert) * ( 0.5*kk*r[1] ) *
+    VY(fld, ix,iy,iz) = -(pert) * ( 0.5*kk*r[1] ) *
       exp(-kk*kk*r[1]*r[1])*cos(kk*r[0]*0.5);            
-    V1Z(fld, ix,iy,iz) = 0.;
-    B1X(fld, ix,iy,iz) =  (F3(fld_psi, 0, ix,iy+1,iz) - F3(fld_psi, 0, ix,iy,iz)) / bd2y[iy];
-    B1Y(fld, ix,iy,iz) = -(F3(fld_psi, 0, ix+1,iy,iz) - F3(fld_psi, 0, ix,iy,iz)) / bd2x[ix]; 
-    B1Z(fld, ix,iy,iz) = 0.;
+    VZ(fld, ix,iy,iz) = 0.;
+    BX(fld, ix,iy,iz) =  (F3(fld_psi, 0, ix,iy+1,iz) - F3(fld_psi, 0, ix,iy,iz)) / bd2y[iy];
+    BY(fld, ix,iy,iz) = -(F3(fld_psi, 0, ix+1,iy,iz) - F3(fld_psi, 0, ix,iy,iz)) / bd2x[ix]; 
+    BZ(fld, ix,iy,iz) = 0.;
   } mrc_fld_foreach_end;
 
   mrc_fld_put_as(psi, fld_psi);

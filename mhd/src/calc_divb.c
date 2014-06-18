@@ -43,9 +43,9 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
   if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM) {
     mrc_fld_foreach(divb, ix,iy,iz, 0, 0) {
       F3(d,0, ix,iy,iz) = 
-	(B1X(f, ix,iy,iz) - B1X(f, ix-1,iy,iz)) / bd2x[ix] +
-	(B1Y(f, ix,iy,iz) - B1Y(f, ix,iy-1,iz)) / bd2y[iy] +
-	(B1Z(f, ix,iy,iz) - B1Z(f, ix,iy,iz-1)) / bd2z[iz];
+	(BX(f, ix,iy,iz) - BX(f, ix-1,iy,iz)) / bd2x[ix] +
+	(BY(f, ix,iy,iz) - BY(f, ix,iy-1,iz)) / bd2y[iy] +
+	(BZ(f, ix,iy,iz) - BZ(f, ix,iy,iz-1)) / bd2z[iz];
       F3(d,0, ix,iy,iz) *= F3(f,_YMASK, ix,iy,iz);
 
       // the incoming solar wind won't match and hence divb != 0 here
@@ -57,9 +57,9 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
 	     mhd_type == MT_FULLY_CONSERVATIVE) {
     mrc_fld_foreach(divb, ix,iy,iz, 0, 0) {
       F3(d,0, ix,iy,iz) = 
-	(B1X(f, ix+1,iy,iz) - B1X(f, ix,iy,iz)) * hx / bd2x[ix] +
-	(B1Y(f, ix,iy+1,iz) - B1Y(f, ix,iy,iz)) * hy / bd2y[iy] +
-	(B1Z(f, ix,iy,iz+1) - B1Z(f, ix,iy,iz)) * hz / bd2z[iz];
+	(BX(f, ix+1,iy,iz) - BX(f, ix,iy,iz)) * hx / bd2x[ix] +
+	(BY(f, ix,iy+1,iz) - BY(f, ix,iy,iz)) * hy / bd2y[iy] +
+	(BZ(f, ix,iy,iz+1) - BZ(f, ix,iy,iz)) * hz / bd2z[iz];
       F3(d,0, ix,iy,iz) *= F3(f,_YMASK, ix,iy,iz);
 
       max = mrc_fld_max(max, mrc_fld_abs(F3(d,0, ix,iy,iz)));

@@ -46,19 +46,19 @@ calc_ct_rhs(struct ggcm_mhd *mhd, struct mrc_fld *rhs, struct mrc_fld *flux[3])
   
 
   mrc_fld_foreach(rhs, ix, iy,  iz, 2, 2) {
-    B1X(rhs, ix, iy, iz) =  
+    BX(rhs, ix, iy, iz) =
       (-((MRC_F3(E_ec, 2, ix, iy+1, iz) - MRC_F3(E_ec, 2, ix, iy, iz)) /
 	 (.5f*( MRC_CRDY(crds, iy+1) - MRC_CRDY(crds, iy-1)))) 
        +((MRC_F3(E_ec, 1, ix, iy, iz+1) - MRC_F3(E_ec, 1, ix, iy, iz)) /
 	 (.5f*( MRC_CRDZ(crds, iz+1) - MRC_CRDZ(crds, iz-1))))); 
     
-    B1Y(rhs, ix, iy, iz) = 
+    BY(rhs, ix, iy, iz) =
       (-((MRC_F3(E_ec, 0, ix, iy, iz+1) - MRC_F3(E_ec, 0, ix, iy, iz)) /
 	 (.5f*( MRC_CRD(crds, 2, iz+1) - MRC_CRD(crds, 2, iz-1))))
        +((MRC_F3(E_ec, 2, ix+1, iy, iz) - MRC_F3(E_ec, 2, ix, iy, iz)) /
 	 (.5f*(MRC_CRD(crds, 0, ix+1) - MRC_CRD(crds, 0, ix-1))))); 
     
-    B1Z(rhs, ix, iy, iz) = 
+    BZ(rhs, ix, iy, iz) =
       (-((MRC_F3( E_ec, 1, ix+1, iy, iz) - MRC_F3(E_ec, 1, ix, iy, iz)) /
 	 (.5f*( MRC_CRD(crds, 0, ix+1) - MRC_CRD(crds, 0, ix-1))))  
        +((MRC_F3( E_ec, 0, ix, iy+1, iz) - MRC_F3(E_ec, 0, ix, iy, iz)) /

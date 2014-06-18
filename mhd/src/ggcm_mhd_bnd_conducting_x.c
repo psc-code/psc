@@ -96,9 +96,9 @@ ggcm_mhd_bnd_conducting_x_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int iy = -sw; iy < ny + sw; iy++) {
 	// bd1y and bd2y indices offset by one 
-	B1Y(f3, -1,iy,iz) = B1Y(f3, 0,iy,iz) -
+	BY(f3, -1,iy,iz) = BY(f3, 0,iy,iz) -
 	  (1./bd1x[-1])*OSDx2l(f3,_B1Y, 0,iy,iz,2.*bd2x[0] );
-        B1Z(f3, -1,iy,iz) =  B1Z(f3, 0,iy,iz) -
+        BZ(f3, -1,iy,iz) = BZ(f3, 0,iy,iz) -
 	  (1./bd1x[-1])*OSDx2l(f3,_B1Z, 0,iy,iz,2.*bd2x[0] );
       }
     }
@@ -106,27 +106,27 @@ ggcm_mhd_bnd_conducting_x_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *
     // set normal magnetic field component for divB=0
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int iy = -sw; iy < ny + sw; iy++) {
-	B1X(f3, -1,iy,iz) = B1X(f3, 0,iy,iz) + bd2x[0] *  
-	  ((B1Y(f3, 0,iy,iz) - B1Y(f3, 0,iy-1,iz) ) / bd2y[iy] + 
-	   (B1Z(f3, 0,iy,iz) - B1Z(f3, 0,iy,iz-1) ) / bd2z[iz]);
+	BX(f3, -1,iy,iz) = BX(f3, 0,iy,iz) + bd2x[0] *
+	  ((BY(f3, 0,iy,iz) - BY(f3, 0,iy-1,iz) ) / bd2y[iy] +
+	   (BZ(f3, 0,iy,iz) - BZ(f3, 0,iy,iz-1) ) / bd2z[iz]);
       }
     }	
     // transverse magnetic field extrapolated 
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int iy = -sw; iy < ny + sw; iy++) {       
 	// bd1x and bd2y indices offset by one 
-	B1Y(f3, -2,iy,iz) = B1Y(f3, -1,iy,iz) -
+	BY(f3, -2,iy,iz) = BY(f3, -1,iy,iz) -
 	  (1./bd1x[-2])*OSDx2l(f3,_B1Y, -1,iy,iz,2.*bd2x[-1] );
-	B1Z(f3, -2,iy,iz) = B1Z(f3, -1,iy,iz) -
+	BZ(f3, -2,iy,iz) = BZ(f3, -1,iy,iz) -
 	  (1./bd1x[-2])*OSDx2l(f3,_B1Z, -1,iy,iz,2.*bd2x[-1] );
       }
     }
     // set normal magnetic field component for divB=0
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int iy = -sw; iy < ny + sw; iy++) {
-	B1X(f3, -2,iy,iz) = B1X(f3, -1,iy,iz) + bd2x[-1] * 
-	  ((B1Y(f3, -1,iy,iz) - B1Y(f3, -1,iy-1,iz) ) / bd2y[iy] + 
-           (B1Z(f3, -1,iy,iz) - B1Z(f3, -1,iy,iz-1) ) / bd2z[iz]);      
+	BX(f3, -2,iy,iz) = BX(f3, -1,iy,iz) + bd2x[-1] *
+	  ((BY(f3, -1,iy,iz) - BY(f3, -1,iy-1,iz) ) / bd2y[iy] +
+           (BZ(f3, -1,iy,iz) - BZ(f3, -1,iy,iz-1) ) / bd2z[iz]);
       }
     }	
     for (int iz = -sw; iz < nz + sw; iz++) {
@@ -156,10 +156,10 @@ ggcm_mhd_bnd_conducting_x_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *
     //  transverse magnetic field extrapolated
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int iy = -sw; iy < ny + sw; iy++) {
-	B1Y(f3, nx,iy,iz) = B1Y(f3, nx-1,iy,iz) + 
-	  (1./bd1x[nx])*OSDx2h(f3,_B1Y, nx-1,iy,iz,2.*bd2x[nx+1]); 
-	B1Z(f3, nx,iy,iz) = B1Z(f3, nx-1,iy,iz) +
-	  (1./bd1x[nx])*OSDx2h(f3,_B1Z, nx-1,iy,iz,2.*bd2x[nx+1]); 
+	BY(f3, nx,iy,iz) = BY(f3, nx-1,iy,iz) +
+	  (1./bd1x[nx])*OSDx2h(f3,_B1Y, nx-1,iy,iz,2.*bd2x[nx+1]);
+	BZ(f3, nx,iy,iz) = BZ(f3, nx-1,iy,iz) +
+	  (1./bd1x[nx])*OSDx2h(f3,_B1Z, nx-1,iy,iz,2.*bd2x[nx+1]);
 
 
 
@@ -170,26 +170,26 @@ ggcm_mhd_bnd_conducting_x_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *
     // set normal magnetic field component for divB=0
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int iy = -sw; iy < ny + sw; iy++) {
-	B1X(f3, nx-1,iy,iz) = B1X(f3, nx-2,iy,iz) - bd2x[nx-1] *
-	  ((B1Y(f3, nx-1,iy,iz) - B1Y(f3, nx-1,iy-1,iz) ) / bd2y[iy] +
-	   (B1Z(f3, nx-1,iy,iz) - B1Z(f3, nx-1,iy,iz-1) ) / bd2z[iz]);
+	BX(f3, nx-1,iy,iz) = BX(f3, nx-2,iy,iz) - bd2x[nx-1] *
+	  ((BY(f3, nx-1,iy,iz) - BY(f3, nx-1,iy-1,iz) ) / bd2y[iy] +
+	   (BZ(f3, nx-1,iy,iz) - BZ(f3, nx-1,iy,iz-1) ) / bd2z[iz]);
       }
     }	
     //  transverse magnetic field extrapolated
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int iy = -sw; iy < ny + sw; iy++) {
-	B1Y(f3, nx+1,iy,iz) = B1Y(f3, nx,iy,iz) + 
-	  (1./bd1x[nx])* OSDx2h(f3,_B1Y, nx+1,iy,iz,2.*bd2x[nx+1] );
-        B1Z(f3, nx+1,iy,iz) = B1Z(f3, nx,iy,iz) + 
+	BY(f3, nx+1,iy,iz) = BY(f3, nx,iy,iz) +
+	  (1./bd1x[nx])* OSDx2h(f3,_B1Y, nx+1,iy,iz,2.*bd2x[nx+1]);
+        BZ(f3, nx+1,iy,iz) = BZ(f3, nx,iy,iz) +
 	  (1./bd1x[nx])*OSDx2h(f3,_B1Z, nx+1,iy,iz,2.*bd2x[nx+1]);
       }
     }
     // set normal magnetic field component for divB=0
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int iy = -sw; iy < ny + sw; iy++) {
-	B1X(f3, nx,iy,iz) = B1X(f3, nx-1,iy,iz) - bd2x[nx] *  
-	  ((B1Y(f3, nx,iy,iz) - B1Y(f3, nx,iy-1,iz) ) / bd2y[iy] + 
-	   (B1Z(f3, nx,iy,iz) - B1Z(f3, nx,iy,iz-1) ) / bd2z[iz]);
+	BX(f3, nx,iy,iz) = BX(f3, nx-1,iy,iz) - bd2x[nx] *
+	  ((BY(f3, nx,iy,iz) - BY(f3, nx,iy-1,iz) ) / bd2y[iy] +
+	   (BZ(f3, nx,iy,iz) - BZ(f3, nx,iy,iz-1) ) / bd2z[iz]);
       }
     }	
     for (int iz = -sw; iz < nz + sw; iz++) {

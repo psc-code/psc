@@ -50,17 +50,17 @@ ggcm_mhd_ic_bw_run(struct ggcm_mhd_ic *ic)
       MHERE;
       if(fabs(r[0]) < 0.5*L[0]){
 	// Left                         
-	RR1(fld, ix,iy,iz) = 1.0;
-	PP1(fld, ix,iy,iz) = RR1(fld, ix,iy,iz);
-	B1X(fld, ix,iy,iz) = 0.75; 
-	B1Y(fld, ix,iy,iz) = 1.0;
+	RR(fld, ix,iy,iz) = 1.0;
+	PP(fld, ix,iy,iz) = RR(fld, ix,iy,iz);
+	BX(fld, ix,iy,iz) = 0.75;
+	BY(fld, ix,iy,iz) = 1.0;
       } else {
 	// Right
-	RR1(fld, ix,iy,iz) = 0.125;	 
-	PP1(fld, ix,iy,iz) = RR1(fld, ix,iy,iz);
-	B1X(fld, ix,iy,iz) = 0.75;
-	B1Y(fld, ix,iy,iz) = -1.0;
-	B1Z(fld, ix,iy,iz) = 0.0;
+	RR(fld, ix,iy,iz) = 0.125;
+	PP(fld, ix,iy,iz) = RR(fld, ix,iy,iz);
+	BX(fld, ix,iy,iz) = 0.75;
+	BY(fld, ix,iy,iz) = -1.0;
+	BZ(fld, ix,iy,iz) = 0.0;
       }
 
       /*

@@ -42,31 +42,31 @@ ggcm_mhd_ic_mhdblast_run(struct ggcm_mhd_ic *ic)
     r[2] = MRC_CRD(crds, 2, iz);
   
     if((strcmp(sub->pdim, "xy") || (strcmp(sub->pdim,"yx"))) == 0){
-      RR1(fld, ix, iy, iz) = sub->n0;
-      B1X(fld, ix, iy, iz) = sub->B0/sqrt(2.0);
-      B1Y(fld, ix, iy, iz) = sub->B0/sqrt(2.0);
+      RR(fld, ix, iy, iz) = sub->n0;
+      BX(fld, ix, iy, iz) = sub->B0/sqrt(2.0);
+      BY(fld, ix, iy, iz) = sub->B0/sqrt(2.0);
       if( sqrt((r[0]*r[0]) + (r[1]*r[1])) <= sub->initrad ){	
-	PP1(fld, ix, iy, iz) = sub->pin;
+	PP(fld, ix, iy, iz) = sub->pin;
       } else{
-	PP1(fld, ix, iy, iz) = sub->pout;
+	PP(fld, ix, iy, iz) = sub->pout;
       }
     } else if((strcmp(sub->pdim, "yz") || (strcmp(sub->pdim,"zy"))) == 0){
-      RR1(fld, ix, iy, iz) = sub->n0;
-      B1X(fld, ix, iy, iz) = sub->B0/sqrt(2.0);
-      B1Y(fld, ix, iy, iz) = sub->B0/sqrt(2.0);
+      RR(fld, ix, iy, iz) = sub->n0;
+      BX(fld, ix, iy, iz) = sub->B0/sqrt(2.0);
+      BY(fld, ix, iy, iz) = sub->B0/sqrt(2.0);
       if( sqrt((r[0]*r[0]) + (r[1]*r[1])) <= sub->initrad ){	
-	PP1(fld, ix, iy, iz) = sub->pin;
+	PP(fld, ix, iy, iz) = sub->pin;
       } else{
-	PP1(fld, ix, iy, iz) = sub->pout;
+	PP(fld, ix, iy, iz) = sub->pout;
       }
     } else if((strcmp(sub->pdim, "xz") || (strcmp(sub->pdim,"zx"))) == 0){
-      RR1(fld, ix, iy, iz) = sub->n0;
-      B1X(fld, ix, iy, iz) = sub->B0/sqrt(2.0);
-      B1Y(fld, ix, iy, iz) = sub->B0/sqrt(2.0);
+      RR(fld, ix, iy, iz) = sub->n0;
+      BX(fld, ix, iy, iz) = sub->B0/sqrt(2.0);
+      BY(fld, ix, iy, iz) = sub->B0/sqrt(2.0);
       if( sqrt((r[0]*r[0]) + (r[1]*r[1])) <= sub->initrad ){	
-	PP1(fld, ix, iy, iz) = sub->pin;
+	PP(fld, ix, iy, iz) = sub->pin;
       } else{
-	PP1(fld, ix, iy, iz) = sub->pout;
+	PP(fld, ix, iy, iz) = sub->pout;
       }
     } else {           
 	assert(0); /* unknown initial condition */

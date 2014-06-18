@@ -83,13 +83,13 @@ ggcm_mhd_ic_cosine_run(struct ggcm_mhd_ic *ic)
     r[1] = MRC_CRD(crds, 1, iy);
     r[2] = MRC_CRD(crds, 2, iz); 
     
-    B1Y(f3, ix,iy,iz) = by0 * cos(kx*r[0]) - 
-      (F3(fld_psi, 0, ix+1,iy,iz) - F3(fld_psi, 0, ix,iy,iz)) / bd2x[ix];    
-    B1X(f3, ix,iy,iz) =  0.0;
+    BY(f3, ix,iy,iz) = by0 * cos(kx*r[0]) -
+      (F3(fld_psi, 0, ix+1,iy,iz) - F3(fld_psi, 0, ix,iy,iz)) / bd2x[ix];
+    BX(f3, ix,iy,iz) =  0.0;
     //(F3(fld_psi, 0, ix,iy+1,iz) - F3(fld_psi, 0, ix,iy,iz)) / bd2y[iy];
-    B1Z(f3, ix,iy,iz) = sqrt( sqr(bz0) - sqr(B1Y(f3,ix,iy,iz)) ); 
-    RR1(f3, ix,iy,iz) = rho0;
-    PP1(f3, ix,iy,iz) = RR1(f3, ix,iy,iz);
+    BZ(f3, ix,iy,iz) = sqrt( sqr(bz0) - sqr(BY(f3,ix,iy,iz)) );
+    RR(f3, ix,iy,iz) = rho0;
+    PP(f3, ix,iy,iz) = RR(f3, ix,iy,iz);
   } mrc_fld_foreach_end;
 
   mrc_fld_put_as(f3, mhd->fld);

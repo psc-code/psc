@@ -48,13 +48,13 @@ ggcm_mhd_ic_whistler_run(struct ggcm_mhd_ic *ic)
     const int *dims = mrc_fld_dims(f3);
     int nz = dims[2];
     float vp= 2.*M_PI*sub->Boz*nz/((sub->n0)*L[2]); 
-    RR1(f3, ix,iy,iz) = sub->n0 ;       
-    V1X(f3, ix,iy,iz) = (sub->pert) * sin( kk*r[2] ) ;      
-    V1Y(f3, ix,iy,iz) = -(sub->pert) * cos( kk*r[2] ) ;
-    PP1(f3, ix,iy,iz) = RR1(f3, ix,iy, iz);
-    B1X(f3, ix+1,iy,iz) = (sub->pert) * vp * sin( kk*r[2] ) ;       
-    B1Y(f3, ix,iy+1,iz) = -(sub->pert) * vp * cos( kk*r[2] ) ;   
-    B1Z(f3, ix,iy,iz+1) = sub->Boz ; 
+    RR(f3, ix,iy,iz) = sub->n0 ;       
+    VX(f3, ix,iy,iz) = (sub->pert) * sin( kk*r[2] ) ;      
+    VY(f3, ix,iy,iz) = -(sub->pert) * cos( kk*r[2] ) ;
+    PP(f3, ix,iy,iz) = RR(f3, ix,iy, iz);
+    BX(f3, ix+1,iy,iz) = (sub->pert) * vp * sin( kk*r[2] ) ;       
+    BY(f3, ix,iy+1,iz) = -(sub->pert) * vp * cos( kk*r[2] ) ;   
+    BZ(f3, ix,iy,iz+1) = sub->Boz ; 
   } mrc_fld_foreach_end;
 
   mrc_fld_put_as(f3, mhd->fld);

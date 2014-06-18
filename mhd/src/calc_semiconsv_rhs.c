@@ -78,19 +78,19 @@ calc_semiconsv_rhs(struct ggcm_mhd *mhd, struct mrc_fld *rhs, struct mrc_fld *fl
   mrc_fld_foreach(rhs, ix, iy, iz, 0, 0) {    
     MRC_F3(rhs, _RV1X, ix, iy, iz) +=  
       MRC_F3(J_cc, 1, ix, iy, iz) * 0.5 * RFACT *
-      (B1Z(fld, ix,iy,iz) + B1Z(fld, ix,iy,iz+1)) -   
+      (BZ(fld, ix,iy,iz) + BZ(fld, ix,iy,iz+1)) -
       MRC_F3(J_cc, 2, ix, iy, iz) * 0.5 * RFACT *
-      (B1Y(fld, ix,iy,iz) + B1Y(fld, ix,iy+1,iz));
+      (BY(fld, ix,iy,iz) + BY(fld, ix,iy+1,iz));
     MRC_F3(rhs, _RV1Y, ix, iy, iz) -= 
       MRC_F3(J_cc, 0, ix, iy, iz) * 0.5 * RFACT *
-      (B1Z(fld, ix,iy,iz)+ B1Z(fld, ix,iy,iz+1)) -   
+      (BZ(fld, ix,iy,iz)+ BZ(fld, ix,iy,iz+1)) -
       MRC_F3(J_cc, 2, ix, iy, iz) * 0.5 * RFACT *
-      (B1X(fld, ix,iy,iz)+ B1X(fld, ix+1,iy,iz))    ;
+      (BX(fld, ix,iy,iz)+ BX(fld, ix+1,iy,iz))    ;
     MRC_F3(rhs, _RV1Z, ix, iy, iz) +=  
       MRC_F3(J_cc, 0, ix, iy, iz) * 0.5 * RFACT *
-      (B1Y(fld, ix,iy,iz)+ B1Y(fld, ix,iy+1,iz)) - 
+      (BY(fld, ix,iy,iz)+ BY(fld, ix,iy+1,iz)) -
       MRC_F3(J_cc, 1, ix, iy, iz) * 0.5 * RFACT *
-      (B1X(fld, ix,iy,iz)+ B1X(fld, ix+1,iy,iz));
+      (BX(fld, ix,iy,iz)+ BX(fld, ix+1,iy,iz));
   } mrc_fld_foreach_end; 
 
   mrc_fld_destroy(J_cc);

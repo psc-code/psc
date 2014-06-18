@@ -39,25 +39,25 @@ ggcm_mhd_ic_hydroblast_run(struct ggcm_mhd_ic *ic)
     r[2] = MRC_CRD(crds, 2, iz);
   
     if((strcmp(sub->pdim, "xy") || (strcmp(sub->pdim,"yx")))== 1){
-      RR1(fld, ix, iy, iz) = sub->n0;
+      RR(fld, ix, iy, iz) = sub->n0;
       if( sqrt((r[0]*r[0]) + (r[1]*r[1])) <= sub->initrad ){
-	PP1(fld, ix, iy, iz) = sub->pin;
+	PP(fld, ix, iy, iz) = sub->pin;
 	} else{	
-	PP1(fld, ix, iy, iz) = sub->pout;
+	PP(fld, ix, iy, iz) = sub->pout;
       }
     } else if((strcmp(sub->pdim, "yz") || (strcmp(sub->pdim,"zy"))) == 1){
-      RR1(fld, ix, iy, iz) = sub->n0;
+      RR(fld, ix, iy, iz) = sub->n0;
       if( sqrt((r[1]*r[1]) + (r[2]*r[2])) <= sub->initrad ){	
-	PP1(fld, ix, iy, iz) = sub->pin;
+	PP(fld, ix, iy, iz) = sub->pin;
       } else{	
-	PP1(fld, ix, iy, iz) = sub->pout;
+	PP(fld, ix, iy, iz) = sub->pout;
       }
     } else if((strcmp(sub->pdim, "xz") || (strcmp(sub->pdim,"zx"))) == 1){
-      RR1(fld, ix, iy, iz) = sub->n0;
+      RR(fld, ix, iy, iz) = sub->n0;
       if( sqrt((r[0]*r[0]) + (r[2]*r[2])) <= sub->initrad ){	
-	PP1(fld, ix, iy, iz) = sub->pin;
+	PP(fld, ix, iy, iz) = sub->pin;
       } else {	
-	PP1(fld, ix, iy, iz) = sub->pout;
+	PP(fld, ix, iy, iz) = sub->pout;
       }
     } else {           
       assert(0); /* unknown initial condition */

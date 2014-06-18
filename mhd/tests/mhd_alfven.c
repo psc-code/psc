@@ -48,36 +48,36 @@ ggcm_mhd_ic_alfven_run(struct ggcm_mhd_ic *ic)
     
     if(strcmp(sub->pdim, "x") == 0){
       float k = 2. * M_PI / (xh[0] - xl[0]);
-      RR1(fld, ix,iy,iz) = sub->n0;
-      PP1(fld, ix,iy,iz) = RR1(fld, ix,iy,iz);
-      V1X(fld, ix,iy,iz) = 0.0;
-      V1Y(fld, ix,iy,iz) = sub->pert*sin(k*r[0]);
-      V1Z(fld, ix,iy,iz) = 0.0;
-      B1X(fld, ix,iy,iz) = sub->B0; 
-      B1Y(fld, ix,iy,iz) = sub->pert*sin(k*r[0]); 
-      B1Z(fld, ix,iy,iz) = 0.0;
+      RR(fld, ix,iy,iz) = sub->n0;
+      PP(fld, ix,iy,iz) = RR(fld, ix,iy,iz);
+      VX(fld, ix,iy,iz) = 0.0;
+      VY(fld, ix,iy,iz) = sub->pert*sin(k*r[0]);
+      VZ(fld, ix,iy,iz) = 0.0;
+      BX(fld, ix,iy,iz) = sub->B0;
+      BY(fld, ix,iy,iz) = sub->pert*sin(k*r[0]);
+      BZ(fld, ix,iy,iz) = 0.0;
 
     } else if(strcmp(sub->pdim, "y") == 0){
       float k = 2. * M_PI / (xh[1] - xl[1]);
-      RR1(fld, ix,iy,iz) = sub->n0;
-      PP1(fld, ix,iy,iz) = RR1(fld, ix,iy,iz);
-      V1Y(fld, ix,iy,iz) = 0.0;
-      V1X(fld, ix,iy,iz) = sub->pert*sin(k*r[1]);
-      V1Z(fld, ix,iy,iz) = 0.0;
-      B1Y(fld, ix,iy,iz) = sub->B0; 
-      B1X(fld, ix,iy,iz) = sub->pert*sin(k*r[1]); 
-      B1Z(fld, ix,iy,iz) = 0.0;
+      RR(fld, ix,iy,iz) = sub->n0;
+      PP(fld, ix,iy,iz) = RR(fld, ix,iy,iz);
+      VY(fld, ix,iy,iz) = 0.0;
+      VX(fld, ix,iy,iz) = sub->pert*sin(k*r[1]);
+      VZ(fld, ix,iy,iz) = 0.0;
+      BY(fld, ix,iy,iz) = sub->B0;
+      BX(fld, ix,iy,iz) = sub->pert*sin(k*r[1]);
+      BZ(fld, ix,iy,iz) = 0.0;
 
     } else if(strcmp(sub->pdim, "z") == 0){
       float k = 2. * M_PI / (xh[2] - xl[2]);
-      RR1(fld, ix,iy,iz) = sub->n0;
-      PP1(fld, ix,iy,iz) = RR1(fld, ix,iy,iz);
-      V1Y(fld, ix,iy,iz) = 0.0;
-      V1X(fld, ix,iy,iz) = sub->pert*sin(k*r[2]);
-      V1Z(fld, ix,iy,iz) = 0.0;
-      B1Z(fld, ix,iy,iz) = sub->B0; 
-      B1X(fld, ix,iy,iz) = sub->pert*sin(k*r[2]); 
-      B1Y(fld, ix,iy,iz) = 0.0;
+      RR(fld, ix,iy,iz) = sub->n0;
+      PP(fld, ix,iy,iz) = RR(fld, ix,iy,iz);
+      VY(fld, ix,iy,iz) = 0.0;
+      VX(fld, ix,iy,iz) = sub->pert*sin(k*r[2]);
+      VZ(fld, ix,iy,iz) = 0.0;
+      BZ(fld, ix,iy,iz) = sub->B0;
+      BX(fld, ix,iy,iz) = sub->pert*sin(k*r[2]);
+      BY(fld, ix,iy,iz) = 0.0;
     } else {           
       assert(0); /* unknown initial condition */
     }

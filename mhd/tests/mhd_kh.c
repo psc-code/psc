@@ -62,19 +62,19 @@ ggcm_mhd_ic_kh_run(struct ggcm_mhd_ic *ic)
     float wave1 = sin(2.* sub->lambda * M_PI * (r[0] - xmid[0]) / L[0]); 
 
     if(fabs(r[1]) < 0.25*L[1]){
-      RR1(fld, ix,iy,iz) = sub->r0;
-      PP1(fld, ix,iy,iz) = sub->p0;
-      V1X(fld, ix,iy,iz) = sub->v0;
-      V1Y(fld, ix,iy,iz) = sub->pert*wave1; 
+      RR(fld, ix,iy,iz) = sub->r0;
+      PP(fld, ix,iy,iz) = sub->p0;
+      VX(fld, ix,iy,iz) = sub->v0;
+      VY(fld, ix,iy,iz) = sub->pert*wave1; 
     }else{
-      RR1(fld, ix,iy,iz) = sub->r1;
-      PP1(fld, ix,iy,iz) = sub->p0;
-      V1X(fld, ix,iy,iz) = sub->v1;
-      V1Y(fld, ix,iy,iz) = sub->pert*wave1; 
+      RR(fld, ix,iy,iz) = sub->r1;
+      PP(fld, ix,iy,iz) = sub->p0;
+      VX(fld, ix,iy,iz) = sub->v1;
+      VY(fld, ix,iy,iz) = sub->pert*wave1; 
     }   
-    B1X(fld, ix,iy,iz) = sub->B0; 
-    B1Y(fld, ix,iy,iz) = 0.0; 
-    V1Z(fld, ix,iy,iz) = 0.0;
+    BX(fld, ix,iy,iz) = sub->B0; 
+    BY(fld, ix,iy,iz) = 0.0; 
+    VZ(fld, ix,iy,iz) = 0.0;
   } mrc_fld_foreach_end;
 
   mrc_fld_put_as(fld, mhd->fld);

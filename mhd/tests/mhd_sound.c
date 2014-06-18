@@ -38,9 +38,9 @@ ggcm_mhd_ic_sound_run(struct ggcm_mhd_ic *ic)
     float rr = 1 + pert / cs * sin(k * xx);
     float vx = pert * sin(k * xx);
     float pp = 1 + pert * gamma / cs * sin(k * xx);
-    RR1(fld, ix,iy,iz) = rr;
-    PP1(fld, ix,iy,iz) = pp;
-    V1X(fld, ix,iy,iz) = vx;
+    RR(fld, ix,iy,iz) = rr;
+    PP(fld, ix,iy,iz) = pp;
+    VX(fld, ix,iy,iz) = vx;
   } mrc_fld_foreach_end;
 
   mrc_fld_put_as(fld, mhd->fld);
