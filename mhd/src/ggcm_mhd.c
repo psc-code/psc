@@ -259,7 +259,7 @@ static struct param ggcm_mhd_descr[] = {
   { "ppnorm"          , VAR(par.ppnorm)      , PARAM_FLOAT(7.43866e8)},
   { "ccnorm"          , VAR(par.ccnorm)      , PARAM_FLOAT(3.81885)  },
   { "eenorm"          , VAR(par.eenorm)      , PARAM_FLOAT(204631.f) },
-  { "resnorm"         , VAR(par.resnorm)     , PARAM_FLOAT(5.35845e7)},
+  { "resnorm"         , VAR(par.resnorm)     , PARAM_FLOAT(53.5848e6)},
   { "tnorm"           , VAR(par.tnorm)       , PARAM_FLOAT(.95189935)},
   { "diffconstant"    , VAR(par.diffco)      , PARAM_FLOAT(.03f)     },
   { "diffthreshold"   , VAR(par.diffth)      , PARAM_FLOAT(.75f)     },
