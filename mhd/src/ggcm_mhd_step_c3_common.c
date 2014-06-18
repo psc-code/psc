@@ -711,27 +711,22 @@ newstep_c(struct ggcm_mhd *mhd, struct mrc_fld *x)
   mrc_fld_data_t dt     = 1e10f;
 
   mrc_fld_foreach(x, ix, iy, iz, 0, 0) {
-    mrc_fld_data_t hh = fmaxf(fmaxf(fd1x[ix], fd1y[iy]), fd1z[iz]);
-    mrc_fld_data_t rri = 1.f / fabsf(F3(x,_RR, ix,iy,iz)); // FIXME abs necessary?
-    mrc_fld_data_t bb = (sqr(.5f*(F3(x,_B1X, ix,iy,iz)+F3(x,_B1X, ix-1,iy,iz))) + 
-			 sqr(.5f*(F3(x,_B1Y, ix,iy,iz)+F3(x,_B1Y, ix,iy-1,iz))) +
-			 sqr(.5f*(F3(x,_B1Z, ix,iy,iz)+F3(x,_B1Z, ix,iy,iz-1))));
-    // FIXME, sqrtf() is not nec, we square the result again
-    mrc_fld_data_t vv1 = (sqr(F3(x,_BX, ix,iy,iz)) +
-			  sqr(F3(x,_BY, ix,iy,iz)) +
-			  sqr(F3(x,_BZ, ix,iy,iz))) * rri;
-    vv1 = bb * rri;
-    vv1 = fminf(vv1, splim2);
-    mrc_fld_data_t vv2 = gamm * fmaxf(0.f, F3(x,_PP, ix,iy,iz)) * rri; // FIXME fmaxf nec?
-    mrc_fld_data_t vv3 = sqrtf(sqr(F3(x,_VX, ix,iy,iz)) + 
-			       sqr(F3(x,_VY, ix,iy,iz)) +
-			       sqr(F3(x,_VZ, ix,iy,iz)));
-    mrc_fld_data_t vv = sqrtf(vv1 + vv2) + vv3;
-    vv = fmaxf(eps, vv);
+    mrc_fld_data_t hh = mrc_fld_max(mrc_fld_max(fd1x[ix], fd1y[iy]), fd1z[iz]);
+    mrc_fld_data_t rri = 1.f / mrc_fld_abs(RR(x, ix,iy,iz)); // FIXME abs necessary?
+    mrc_fld_data_t bb = (sqr(.5f * (BX(x, ix,iy,iz) + BX(x, ix-1,iy,iz))) + 
+			 sqr(.5f * (BY(x, ix,iy,iz) + BY(x, ix,iy-1,iz))) +
+			 sqr(.5f * (BZ(x, ix,iy,iz) + BZ(x, ix,iy,iz-1))));
+    mrc_fld_data_t vv1 = mrc_fld_min(bb * rri, splim2);
+    mrc_fld_data_t rrvv = (sqr(RVX(x, ix,iy,iz)) + 
+			   sqr(RVY(x, ix,iy,iz)) +
+			   sqr(RVZ(x, ix,iy,iz)));
+    mrc_fld_data_t pp = (gamm - 1.f) * (UU(x, ix,iy,iz) - .5f * rrvv * rri);
+    mrc_fld_data_t vv2 = gamm * pp * rri;
+    mrc_fld_data_t vv = mrc_fld_sqrt(vv1 + vv2) + mrc_fld_sqrt(rrvv) * rri;
+    vv = mrc_fld_max(eps, vv);
 
-    mrc_fld_data_t tt = thx / fmaxf(eps, hh*vv*F3(x, _ZMASK, ix,iy,iz));
-
-    dt = fminf(dt, tt);
+    mrc_fld_data_t tt = thx / mrc_fld_max(eps, hh*vv*F3(x, _ZMASK, ix,iy,iz));
+    dt = mrc_fld_min(dt, tt);
   } mrc_fld_foreach_end;
 
   mrc_fld_data_t dtn;
@@ -770,7 +765,7 @@ ggcm_mhd_step_c_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
     pr_B = prof_register("c3_corr", 0, 0, 0);
   }
 
-  float dtn;
+  mrc_fld_data_t dtn;
   if (step->do_nwst) {
     dtn = newstep_sc(mhd, x);
   }
@@ -798,7 +793,7 @@ ggcm_mhd_step_c_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
   // --- update timestep
   if (step->do_nwst) {
-    dtn = fminf(1., dtn); // FIXME, only kept for compatibility
+    dtn = mrc_fld_min(1., dtn); // FIXME, only kept for compatibility
 
     if (dtn > 1.02 * mhd->dt || dtn < mhd->dt / 1.01) {
       mpi_printf(ggcm_mhd_comm(mhd), "switched dt %g <- %g\n",
