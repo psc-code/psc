@@ -9,6 +9,8 @@
 
 #include <math.h>
 
+#include "mhd_sc.c"
+
 // TODO:
 // - handle various resistivity models
 // - handle limit2, limit3
@@ -735,8 +737,7 @@ static void
 ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step)
 {
   primvar_c(step->mhd, _RR1);
-  primbb_c2_c(step->mhd, _RR1);
-  zmaskn_c(step->mhd);
+  zmaskn(step->mhd, step->mhd->fld);
 
   mrc_fld_data_t dth = .5f * step->mhd->dt;
   static int PR;
@@ -755,9 +756,6 @@ static void
 ggcm_mhd_step_c_corr(struct ggcm_mhd_step *step)
 {
   primvar_c(step->mhd, _RR2);
-  primbb_c2_c(step->mhd, _RR2);
-  //  zmaskn_c(step->mhd);
-
   pushstage_c(step->mhd, step->mhd->dt, _RR1, _RR2, _RR1, LIMIT_1);
 }
 
