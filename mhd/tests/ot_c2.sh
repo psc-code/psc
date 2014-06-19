@@ -10,6 +10,7 @@ openmpirun -n 4 mhd_ot \
     --ggcm_mhd_diag_fields rr:pp:v:b:rr1:rv1:uu1:b1:divb \
     --ggcm_mhd_diag_run ot_c2 \
     --diff_obnd -2 \
+    --resnorm 53.5848e6 \
     --diffconstant 1e4 \
     --diffsphere 0. \
     --do_nwst 1 \

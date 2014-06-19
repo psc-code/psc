@@ -9,59 +9,9 @@
 #include <math.h>
 #include <assert.h>
 
-// ----------------------------------------------------------------------
-// newstep_c
+#include <mrc_fld_as_float.h>
 
-void
-newstep_c(struct ggcm_mhd *mhd, float *dtn)
-{
-  static int PR;
-  if (!PR) {
-    PR = prof_register("newstep_c", 1., 0, 0);
-  }
-  prof_start(PR);
-
-  struct mrc_fld *f = mrc_fld_get_as(mhd->fld, "float");
-  float *fd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FD1);
-  float *fd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FD1);
-  float *fd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FD1);
-
-  float splim2 = sqr(mhd->par.speedlimit / mhd->par.vvnorm);
-  float gamm   = mhd->par.gamm;
-  float thx    = mhd->par.thx;
-  float eps    = 1e-9f;
-  float dt     = 1e10f;
-
-  mrc_fld_foreach(f, ix, iy, iz, 0, 0) {
-    float hh = fmaxf(fmaxf(fd1x[ix], fd1y[iy]), fd1z[iz]);
-    float rri = 1.f / fabsf(MRC_F3(f,_RR, ix,iy,iz)); // FIXME abs necessary?
-    float bb = 
-      sqr(.5f*(MRC_F3(f,_B1X, ix,iy,iz)+MRC_F3(f,_B1X, ix-1,iy,iz))) + 
-      sqr(.5f*(MRC_F3(f,_B1Y, ix,iy,iz)+MRC_F3(f,_B1Y, ix,iy-1,iz))) +
-      sqr(.5f*(MRC_F3(f,_B1Z, ix,iy,iz)+MRC_F3(f,_B1Z, ix,iy,iz-1)));
-    // FIXME, sqrtf() is not nec, we square the result again
-    float vv1 = (sqr(MRC_F3(f,_BX, ix,iy,iz)) +
-		sqr(MRC_F3(f,_BY, ix,iy,iz)) +
-		sqr(MRC_F3(f,_BZ, ix,iy,iz))) * rri;
-    vv1 = bb * rri;
-    vv1 = fminf(vv1, splim2);
-    float vv2 = gamm * fmaxf(0.f, MRC_F3(f,_PP, ix,iy,iz)) * rri; // FIXME fmaxf nec?
-    float vv3 = sqrtf(sqr(MRC_F3(f,_VX, ix,iy,iz)) + 
-		     sqr(MRC_F3(f,_VY, ix,iy,iz)) +
-		     sqr(MRC_F3(f,_VZ, ix,iy,iz)));
-    float vv = sqrtf(vv1 + vv2) + vv3;
-    vv = fmaxf(eps, vv);
-
-    float tt = thx / fmaxf(eps, hh*vv*MRC_F3(f, _ZMASK, ix,iy,iz));
-
-    dt = fminf(dt, tt);
-  } mrc_fld_foreach_end;
-
-  mrc_fld_put_as(f, mhd->fld);
-  MPI_Allreduce(&dt, dtn, 1, MPI_FLOAT, MPI_MIN, mhd->obj.comm);
-
-  prof_stop(PR);
-}
+#include "mhd_sc.c"
 
 // ----------------------------------------------------------------------
 // newstep_c2
@@ -148,19 +98,10 @@ newstep(struct ggcm_mhd *mhd, float *dtn)
   int mhd_type;
   mrc_fld_get_param_int(mhd->fld, "mhd_type", &mhd_type);
   if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM) {
-#if 0
-    primvar_c(mhd, _RR1);
-    primbb_c(mhd, _RR1);
-    zmaskn_c(mhd);
-    newstep_c(mhd, dtn);
-#else
     newstep_c2(mhd, dtn);
-#endif
   } else if (mhd_type == MT_SEMI_CONSERVATIVE) {
-    primvar_c(mhd, _RR1);
-    primbb_c2_c(mhd, _RR1);
-    zmaskn_c(mhd);
-    newstep_c(mhd, dtn);
+    zmaskn(mhd, mhd->fld);
+    *dtn = newstep_sc(mhd, mhd->fld);
   } else {
     assert(0);
   }
