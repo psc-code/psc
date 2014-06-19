@@ -695,10 +695,10 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
 }
 
 // ----------------------------------------------------------------------
-// newstep
+// newstep_sc
 
 static mrc_fld_data_t
-newstep_c(struct ggcm_mhd *mhd, struct mrc_fld *x)
+newstep_sc(struct ggcm_mhd *mhd, struct mrc_fld *x)
 {
   float *fd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FD1);
   float *fd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FD1);
@@ -755,17 +755,6 @@ zmaskn(struct ggcm_mhd *mhd, struct mrc_fld *x)
 }
 
 // ----------------------------------------------------------------------
-// newstep_sc
-
-static mrc_fld_data_t
-newstep_sc(struct ggcm_mhd *mhd, struct mrc_fld *x)
-{
-  ggcm_mhd_fill_ghosts(mhd, x, RR, mhd->time);
-  zmaskn(mhd, x);
-  return newstep_c(mhd, x);
-}
-
-// ----------------------------------------------------------------------
 // ggcm_mhd_step_c_run
 
 static void
@@ -783,16 +772,16 @@ ggcm_mhd_step_c_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
   mrc_fld_data_t dtn;
   if (step->do_nwst) {
+    ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
+    zmaskn(mhd, x);
     dtn = newstep_sc(mhd, x);
-    primvar_c(mhd, _RR1);
   }
 
   // --- PREDICTOR
   prof_start(pr_A);
-  ggcm_mhd_fill_ghosts(mhd, x, _RR1, mhd->time);
+  ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
   ggcm_mhd_step_c_primvar(step, prim, x);
-  primbb_c2_c(step->mhd, _RR1);
-  zmaskn_c(step->mhd);
+  zmaskn(step->mhd, x);
 
   // set x_half = x^n, then advance to n+1/2
   mrc_fld_copy_range(x_half, x, 0, 8);
@@ -803,8 +792,6 @@ ggcm_mhd_step_c_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   prof_start(pr_B);
   ggcm_mhd_fill_ghosts(mhd, x_half, 0, mhd->time + mhd->bndt);
   ggcm_mhd_step_c_primvar(step, prim, x_half);
-  //  primbb_c2_c(step->mhd, _RR2);
-  //  zmaskn_c(step->mhd);
   pushstage_c(step, mhd->dt, x_half, x, prim, LIMIT_1);
   prof_stop(pr_B);
 
