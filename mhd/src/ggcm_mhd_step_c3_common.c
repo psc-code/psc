@@ -736,16 +736,32 @@ newstep_c(struct ggcm_mhd *mhd, struct mrc_fld *x)
 }
 
 // ----------------------------------------------------------------------
+// zmaskn
+
+static void
+zmaskn(struct ggcm_mhd *mhd, struct mrc_fld *x)
+{
+  float va02i = 1.f / sqr(mhd->par.speedlimit / mhd->par.vvnorm);
+  float eps   = 1e-15f;
+
+  mrc_fld_foreach(x, ix,iy,iz, 1, 1) {
+    mrc_fld_data_t bb = (sqr(.5f * (BX(x, ix,iy,iz) + BX(x, ix-1,iy,iz))) +
+			 sqr(.5f * (BY(x, ix,iy,iz) + BY(x, ix,iy-1,iz))) +
+			 sqr(.5f * (BZ(x, ix,iy,iz) + BZ(x, ix,iy,iz-1))));
+    float rrm = fmaxf(eps, bb * va02i);
+    F3(x, _ZMASK, ix,iy,iz) = F3(x, _YMASK, ix,iy,iz) *
+      fminf(1.f, RR(x, ix,iy,iz) / rrm);
+  } mrc_fld_foreach_end;
+}
+
+// ----------------------------------------------------------------------
 // newstep_sc
 
 static mrc_fld_data_t
 newstep_sc(struct ggcm_mhd *mhd, struct mrc_fld *x)
 {
   ggcm_mhd_fill_ghosts(mhd, x, RR, mhd->time);
-
-  primvar_c(mhd, _RR1);
-  primbb_c2_c(mhd, _RR1);
-  zmaskn_c(mhd);
+  zmaskn(mhd, x);
   return newstep_c(mhd, x);
 }
 
@@ -768,6 +784,7 @@ ggcm_mhd_step_c_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   mrc_fld_data_t dtn;
   if (step->do_nwst) {
     dtn = newstep_sc(mhd, x);
+    primvar_c(mhd, _RR1);
   }
 
   // --- PREDICTOR
