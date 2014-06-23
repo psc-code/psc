@@ -278,7 +278,7 @@ mrc_crds_amr_uniform_setup(struct mrc_crds *crds)
 
       mrc_m1_foreach_bnd(mcrd, i) {
 	MRC_D3(dcrd,i, 0, p) = xl[d] + (xb + (i + .5) * dx) / gdims[d] * (xh[d] - xl[d]);
-	MRC_M1(mcrd,0, i, p) = (float)MRC_D3(mcrd,i, 0, p);
+	MRC_M1(mcrd,0, i, p) = (float)MRC_D3(dcrd,i, 0, p);
       } mrc_m1_foreach_end;
     }
   }
