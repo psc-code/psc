@@ -16,17 +16,3 @@ primbb_c(struct ggcm_mhd *mhd, int m)
     assert(0);
   }
 }
-
-void
-primbb_c2_c(struct ggcm_mhd *mhd, int m)
-{
-  const char *type = mrc_fld_type(mhd->fld);
-
-  if (strcmp(type, "float") == 0) {
-    return primbb_c2_float(mhd, m);
-  } else if (strcmp(type, "double") == 0) {
-    return primbb_c2_double(mhd, m);
-  } else {
-    assert(0);
-  }
-}
