@@ -239,10 +239,10 @@ step_fdtd(struct mrc_fld *fld, struct mrc_ddc *ddc_E, struct mrc_ddc *ddc_H)
     mrc_m3_foreach(fldp, ix,iy,iz, 0, 1) {
       F3(fldp, EX, ix,iy,iz) +=
       	cny * (F3(fldp, HZ, ix,iy,iz) - F3(fldp, HZ, ix,iy-1,iz)) -
-      	cnz * (F3(fldp, HY, ix,iy,iz) - F3(fldp, HY, ix,iy,iz-1));
+      	0;//cnz * (F3(fldp, HY, ix,iy,iz) - F3(fldp, HY, ix,iy,iz-1));
 
       F3(fldp, EY, ix,iy,iz) +=
-	cnz * (F3(fldp, HX, ix,iy,iz) - F3(fldp, HX, ix,iy,iz-1)) -
+	0-//cnz * (F3(fldp, HX, ix,iy,iz) - F3(fldp, HX, ix,iy,iz-1)) -
 	cnx * (F3(fldp, HZ, ix,iy,iz) - F3(fldp, HZ, ix-1,iy,iz));
 
       F3(fldp, EZ, ix,iy,iz) +=
@@ -264,10 +264,10 @@ step_fdtd(struct mrc_fld *fld, struct mrc_ddc *ddc_E, struct mrc_ddc *ddc_H)
     mrc_m3_foreach(fldp, ix,iy,iz, 0, 1) {
       F3(fldp, HX, ix,iy,iz) -=
 	cny * (F3(fldp, EZ, ix,iy+1,iz) - F3(fldp, EZ, ix,iy,iz)) -
-	cnz * (F3(fldp, EY, ix,iy,iz+1) - F3(fldp, EY, ix,iy,iz));
+	0;//cnz * (F3(fldp, EY, ix,iy,iz+1) - F3(fldp, EY, ix,iy,iz));
       
       F3(fldp, HY, ix,iy,iz) -=
-	cnz * (F3(fldp, EX, ix,iy,iz+1) - F3(fldp, EX, ix,iy,iz)) -
+	0-//cnz * (F3(fldp, EX, ix,iy,iz+1) - F3(fldp, EX, ix,iy,iz)) -
 	cnx * (F3(fldp, EZ, ix+1,iy,iz) - F3(fldp, EZ, ix,iy,iz));
       
       F3(fldp, HZ, ix,iy,iz) -=
@@ -287,10 +287,10 @@ step_fdtd(struct mrc_fld *fld, struct mrc_ddc *ddc_E, struct mrc_ddc *ddc_H)
     mrc_m3_foreach(fldp, ix,iy,iz, 0, 1) {
       F3(fldp, HX, ix,iy,iz) -=
 	cny * (F3(fldp, EZ, ix,iy+1,iz) - F3(fldp, EZ, ix,iy,iz)) -
-	cnz * (F3(fldp, EY, ix,iy,iz+1) - F3(fldp, EY, ix,iy,iz));
+	0;//cnz * (F3(fldp, EY, ix,iy,iz+1) - F3(fldp, EY, ix,iy,iz));
       
       F3(fldp, HY, ix,iy,iz) -=
-	cnz * (F3(fldp, EX, ix,iy,iz+1) - F3(fldp, EX, ix,iy,iz)) -
+	0-//cnz * (F3(fldp, EX, ix,iy,iz+1) - F3(fldp, EX, ix,iy,iz)) -
 	cnx * (F3(fldp, EZ, ix+1,iy,iz) - F3(fldp, EZ, ix,iy,iz));
       
       F3(fldp, HZ, ix,iy,iz) -=
@@ -312,10 +312,10 @@ step_fdtd(struct mrc_fld *fld, struct mrc_ddc *ddc_E, struct mrc_ddc *ddc_H)
     mrc_m3_foreach(fldp, ix,iy,iz, 0, 1) {
       F3(fldp, EX, ix,iy,iz) +=
 	cny * (F3(fldp, HZ, ix,iy,iz) - F3(fldp, HZ, ix,iy-1,iz)) -
-	cnz * (F3(fldp, HY, ix,iy,iz) - F3(fldp, HY, ix,iy,iz-1));
+	0;//cnz * (F3(fldp, HY, ix,iy,iz) - F3(fldp, HY, ix,iy,iz-1));
       
       F3(fldp, EY, ix,iy,iz) +=
-	cnz * (F3(fldp, HX, ix,iy,iz) - F3(fldp, HX, ix,iy,iz-1)) -
+	0-//cnz * (F3(fldp, HX, ix,iy,iz) - F3(fldp, HX, ix,iy,iz-1)) -
 	cnx * (F3(fldp, HZ, ix,iy,iz) - F3(fldp, HZ, ix-1,iy,iz));
       
       F3(fldp, EZ, ix,iy,iz) +=
@@ -324,7 +324,6 @@ step_fdtd(struct mrc_fld *fld, struct mrc_ddc *ddc_E, struct mrc_ddc *ddc_H)
     } mrc_m3_foreach_end;
     mrc_fld_patch_put(fld);
   }
-
 }
 
 float
@@ -458,7 +457,7 @@ main(int argc, char **argv)
 
   struct mrc_io *io = mrc_io_create(mrc_domain_comm(domain));
   mrc_io_set_type(io, "xdmf2");
-  mrc_io_set_param_int(io, "sw", 3);
+  mrc_io_set_param_int(io, "sw", 0);
   mrc_io_set_from_options(io);
   mrc_io_setup(io);
 
