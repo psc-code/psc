@@ -402,7 +402,7 @@ fluxl_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
   struct mrc_fld *W_1d = ggcm_mhd_step_get_1d_fld(step, 5);
   struct mrc_fld *F = ggcm_mhd_step_get_1d_fld(step, 5);
 
-  const int *ldims = mrc_fld_dims(U) + U->_is_aos;
+  const int *ldims = mrc_fld_spatial_dims(U);
 
   // FIXME, flux indexing should be shifted by 1
   for (int k = 0; k < ldims[2]; k++) {
@@ -536,7 +536,7 @@ fluxb_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
   struct mrc_fld *F    = ggcm_mhd_step_get_1d_fld(step, 5);
   struct mrc_fld *Fl   = ggcm_mhd_step_get_1d_fld(step, 5);
 
-  const int *ldims = mrc_fld_dims(U) + U->_is_aos;
+  const int *ldims = mrc_fld_spatial_dims(U);
 
   for (int k = 0; k < ldims[2]; k++) {
     for (int j = 0; j < ldims[1]; j++) {

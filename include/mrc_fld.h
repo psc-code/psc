@@ -107,6 +107,18 @@ mrc_fld_same_shape(struct mrc_fld *fld_1, struct mrc_fld *fld_2)
   return true;
 }
 
+static inline const int *
+mrc_fld_spatial_dims(struct mrc_fld *x)
+{
+  return mrc_fld_dims(x) + x->_is_aos;
+}
+
+static inline const int *
+mrc_fld_spatial_offs(struct mrc_fld *x)
+{
+  return mrc_fld_offs(x) + x->_is_aos;
+}
+
 #ifdef BOUNDS_CHECK
 
 #include <string.h>
@@ -157,8 +169,8 @@ mrc_fld_same_shape(struct mrc_fld *fld_1, struct mrc_fld *fld_2)
 #define MRC_D5(fld, i0,i1,i2,i3,i4) MRC_FLD(fld, double, i0,i1,i2,i3,i4)
 
 #define mrc_fld_foreach(fld, ix,iy,iz, l,r) do {			\
-  int *_offs = (fld)->_offs.vals + (fld)->_is_aos;			\
-  int *_dims = (fld)->_dims.vals + (fld)->_is_aos;			\
+  const int *_offs = mrc_fld_spatial_offs(fld);				\
+  const int *_dims = mrc_fld_spatial_dims(fld);				\
   int _l[3] = { _offs[0]            - (_dims[0] > 1 ? (l) : 0),		\
 		_offs[1]            - (_dims[1] > 1 ? (l) : 0),		\
 		_offs[2]            - (_dims[2] > 1 ? (l) : 0) };	\
