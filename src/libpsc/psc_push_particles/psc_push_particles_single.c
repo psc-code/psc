@@ -26,3 +26,11 @@ struct psc_push_particles_ops psc_push_particles_1vbec_single_ops = {
   .push_a_yz             = psc_push_particles_1vbec_single_push_a_yz,
 };
 
+// ======================================================================
+// psc_push_particles: subclass "1vbec3d_single"
+
+struct psc_push_particles_ops psc_push_particles_1vbec3d_single_ops = {
+  .name                  = "1vbec3d_single",
+  .push_a_yz             = psc_push_particles_1vbec3d_single_push_a_yz,
+};
+

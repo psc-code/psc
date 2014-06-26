@@ -16,5 +16,8 @@ void psc_push_particles_1vb2_single_push_a_yz(struct psc_push_particles *push,
 void psc_push_particles_1vbec_single_push_a_yz(struct psc_push_particles *push,
 					       struct psc_particles *particles_base,
 					       struct psc_fields *flds_base);
+void psc_push_particles_1vbec3d_single_push_a_yz(struct psc_push_particles *push,
+						 struct psc_particles *particles_base,
+						 struct psc_fields *flds_base);
 
 #endif
