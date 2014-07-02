@@ -13,6 +13,8 @@ extern struct mrc_ts_monitor_ops mrc_ts_monitor_ggcm_ops;
 
 extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_conducting_ops;
 extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_conducting_x_ops;
+extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_conducting_y_c2_ops;
+extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_conducting_y_ath_ops;
 extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_open_x_ops;
 
 
@@ -26,6 +28,8 @@ ggcm_mhd_register()
 
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_bnd, &ggcm_mhd_bnd_conducting_ops);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_bnd, &ggcm_mhd_bnd_conducting_x_ops);
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_bnd, &ggcm_mhd_bnd_conducting_y_c2_ops);  
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_bnd, &ggcm_mhd_bnd_conducting_y_ath_ops);  
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_bnd, &ggcm_mhd_bnd_open_x_ops);
 
   // force regular subclasses to be registered first
