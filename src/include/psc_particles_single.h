@@ -112,13 +112,13 @@ particle_single_get_relative_pos(particle_single_t *p, double xb[3],
 static inline int
 particle_single_real_nint(particle_single_real_t x)
 {
-  return (int)(x + 10.5f) - 10;
+  return floorf(x + .5f); // FIXME use roundf()?
 }
 
 static inline int
 particle_single_real_fint(particle_single_real_t x)
 {
-  return (int)(x + 10.f) - 10;
+  return floorf(x);
 }
 
 static inline particle_single_real_t

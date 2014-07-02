@@ -99,13 +99,13 @@ particle_double_get_relative_pos(particle_double_t *p, double xb[3],
 static inline int
 particle_double_real_nint(particle_double_real_t x)
 {
-  return (int)(x + 10.5f) - 10;
+  return floor(x + .5);
 }
 
 static inline int
 particle_double_real_fint(particle_double_real_t x)
 {
-  return (int)(x + 10.f) - 10;
+  return floor(x);
 }
 
 static inline particle_double_real_t
