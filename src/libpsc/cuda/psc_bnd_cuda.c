@@ -170,7 +170,7 @@ psc_bnd_fld_cuda_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int
 
     EXTERN_C void __fields_cuda_from_device_inside_only(struct psc_mfields *mflds, int mb, int me);
     prof_start(pr1);
-    __fields_cuda_from_device_inside_only(flds_cuda, mb, me);
+    __fields_cuda_from_device_inside(flds_cuda, mb, me); // FIXME _only
     prof_stop(pr1);
 
     prof_start(pr2);
