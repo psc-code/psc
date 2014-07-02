@@ -1045,6 +1045,8 @@ psc_setup_fields(struct psc *psc)
 static void
 _psc_view(struct psc *psc)
 {
+  mrc_domain_view(psc->mrc_domain);
+
   MPI_Comm comm = psc_comm(psc);
   mpi_printf(comm, "%20s|\n", "particle kinds");
   for (int k = 0; k < psc->nr_kinds; k++) {
