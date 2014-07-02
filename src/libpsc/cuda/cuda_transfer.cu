@@ -302,7 +302,7 @@ __psc_mfields_cuda_setup(struct psc_mfields *mflds)
       }
       sz *= cf->im[d];
     }
-    cf->arr = new float [MAX_BND_COMPONENTS * sz * sizeof(*cf->arr)];
+    cf->arr = new float [MAX_BND_COMPONENTS * sz];
     cf->arr_off = cf->arr 
       - ((cf->ib[2] * cf->im[1] + cf->ib[1]) * cf->im[0] + cf->ib[0]);
   }
@@ -327,7 +327,7 @@ __psc_mfields_cuda_destroy(struct psc_mfields *mflds)
     struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
     struct psc_fields_cuda *flds_cuda = psc_fields_cuda(flds);
     struct psc_fields_cuda_bnd *cf = &flds_cuda->bnd;
-    free(cf->arr);
+    delete[] cf->arr;
   }
 }
 
