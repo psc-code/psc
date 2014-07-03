@@ -113,10 +113,23 @@ struct mrc_ts_petsc {
   Vec xg_vec;
   struct mrc_fld *xlocal; // temp X local for use in the calc_rhs wrapper.
   Mat J; // Jacobian Matrix.
+  Mat Pre; // Optional matrix from which to calculate the preconditioner
   int debug_rhs;
   int (*calc_jac)(Mat J, Vec x, float t, void *ctx);
   int (*get_jac_mat)(void *ctx, Mat *M);
+  int (*calc_pre_mat)(Mat J, Vec x, float t, void *ctx);
+  int (*get_pre_mat)(void *ctx, Mat *M);
   void *jacf_ctx;
+  
+  // whether or not the preconditioner is calculated from a different matrix
+  bool sep_pre;
+
+  // pointer to a petsc MatStructure flag (allocated in *setup*) which gives the structure
+  // of the preconditioner matrix compared to the jacobian matrix. The value of the pointer targer 
+  // **must* be set by the user when the structure of the preconditioner matric structure is known.
+  // FIXME: we really ought to the give the calc jacobian functions access to the mrc_ts...
+  // options are DIFFERENT_NONZERO_PATTERN, SUBSET_NONZERO_PATTERN, SAME_NONZERO_PATTERN
+  void *pre_mat_structure;
 };
 
 extern struct mrc_ts_ops mrc_ts_petsc_ops;
