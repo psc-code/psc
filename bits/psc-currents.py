@@ -4,6 +4,7 @@ from pylab import *
 
 mx = 7
 my = 7
+mz = 7
 
 def nint(x):
     return int(x + .5 + 10) - 10
@@ -51,10 +52,40 @@ def check_curr_2d(x, v, jx, jy, rho_func):
         print "err"
         print err.T
         raise Exception("continuity not satisfied")
-    for  j in xrange(my-1):
-        for i in xrange(mx-1):
-            pass
-    
+
+def check_curr_3d(x, v, jx, jy, jz, rho_func):
+    S0x = rho_func(x[0] - .5 * v[0])
+    S1x = rho_func(x[0] + .5 * v[0])
+    S0y = rho_func(x[1] - .5 * v[1])
+    S1y = rho_func(x[1] + .5 * v[1])
+    S0z = rho_func(x[2] - .5 * v[2])
+    S1z = rho_func(x[2] + .5 * v[2])
+    print "S0", S0x, S0y, S0z
+
+    rho0, rho1 = zeros((mx, my, mz)), zeros((mx, my, mz))
+    for k in xrange(mz):
+        for j in xrange(my):
+            for i in xrange(mx):
+                rho0[i,j,k] = S0x[i] * S0y[j] * S0z[k]
+                rho1[i,j,k] = S1x[i] * S1y[j] * S1z[k]
+
+    drho = rho1 - rho0
+    div_j = ((jx[1:  ,1:-1,1:-1] - jx[ :-1,1:-1,1:-1]) +
+             (jy[1:-1,1:  ,1:-1] - jy[1:-1, :-1,1:-1]) + 
+             (jz[1:-1,1:-1,1:  ] - jz[1:-1,1:-1, :-1]))
+    err = drho[1:-1,1:-1,1:-1] + div_j
+    if norm(err) > 1e-10:
+        print "rho0"
+        print rho0[1:-1,1:-1,1:-1].T
+        print "rho1"
+        print rho1[1:-1,1:-1,1:-1].T
+        print "drho"
+        print drho[1:-1,1:-1,1:-1].T
+        print "div_j"
+        print div_j.T
+        print "err"
+        print err.T
+        raise Exception("continuity not satisfied")
 
 def curr_2d_psc(x, v, rho_func):
     S0x = rho_func(x[0] - .5 * v[0])
@@ -152,6 +183,103 @@ def curr_2d_bv(x, v, rho_func):
         
     return jx, jy
 
+def curr_2d_vb_split(jx, jy, i, xm, xp, dim=0):
+    im = np.round(xm)
+    i = i + im
+    xm -= im
+    xp -= im
+    
+    if dim == 2:
+        dx = xp - xm
+        print 'cell: i', i, 'xm', xm, 'xp', xp, 'dx', dx
+        jx[i[0]  ,i[1]  ] += dx[0] * (.5 - xm[1] - .5 * dx[1])
+        jx[i[0]  ,i[1]+1] += dx[0] * (.5 + xm[1] + .5 * dx[1])
+        jy[i[0]  ,i[1]  ] += dx[1] * (.5 - xm[0] - .5 * dx[0])
+        jy[i[0]+1,i[1]  ] += dx[1] * (.5 + xm[0] + .5 * dx[0])
+        return
+        
+    if xp[dim] >= -.5 and xp[dim] <= .5:
+        curr_2d_vb_split(jx, jy, i, xm, xp, dim + 1)
+    else:
+        idiff = zeros(2)
+        idiff[dim] = sign(xp[dim])
+        r = (.5 * idiff[dim] - xm[dim]) / (xp[dim] - xm[dim])
+        xs = (1 - r) * xm + r * xp
+        print 'splitting', xm, xs, xp
+        curr_2d_vb_split(jx, jy, i, xm, xs, dim + 1)
+        curr_2d_vb_split(jx, jy, i + idiff, xs - idiff, xp - idiff, dim + 1)
+        
+
+def curr_2d_vb(x, v, rho_func):
+    x, v = array(x), array(v)
+    jx = np.zeros((mx-1, my))
+    jy = np.zeros((mx, my-1))
+
+    xm = x - .5 * v
+    xp = x + .5 * v
+
+    xm -= .5
+    xp -= .5
+
+    im = zeros(2)
+    curr_2d_vb_split(jx, jy, im, xm, xp)
+
+    return jx, jy
+
+def curr_3d_vb_split(jx, jy, jz, i, xm, xp, dim=0):
+    im = np.round(xm)
+    i = i + im
+    xm -= im
+    xp -= im
+    
+    if dim == 3:
+        dx = xp - xm
+        xa = .5 * (xm + xp)
+        print 'cell: i', i, 'xm', xm, 'xp', xp, 'dx', dx
+        h = dx[0] * dx[1] * dx[2] / 12.
+        jx[i[0]  ,i[1]  ,i[2]  ] += dx[0] * (.5 - xa[1]) * (.5 - xa[2]) + h
+        jx[i[0]  ,i[1]  ,i[2]+1] += dx[0] * (.5 - xa[1]) * (.5 + xa[2]) - h
+        jx[i[0]  ,i[1]+1,i[2]  ] += dx[0] * (.5 + xa[1]) * (.5 - xa[2]) - h 
+        jx[i[0]  ,i[1]+1,i[2]+1] += dx[0] * (.5 + xa[1]) * (.5 + xa[2]) + h
+        jy[i[0]  ,i[1]  ,i[2]  ] += dx[1] * (.5 - xa[0]) * (.5 - xa[2]) + h
+        jy[i[0]  ,i[1]  ,i[2]+1] += dx[1] * (.5 - xa[0]) * (.5 + xa[2]) - h
+        jy[i[0]+1,i[1]  ,i[2]  ] += dx[1] * (.5 + xa[0]) * (.5 - xa[2]) - h
+        jy[i[0]+1,i[1]  ,i[2]+1] += dx[1] * (.5 + xa[0]) * (.5 + xa[2]) + h
+        jz[i[0]  ,i[1]  ,i[2]  ] += dx[2] * (.5 - xa[0]) * (.5 - xa[1]) + h
+        jz[i[0]  ,i[1]+1,i[2]  ] += dx[2] * (.5 - xa[0]) * (.5 + xa[1]) - h
+        jz[i[0]+1,i[1]  ,i[2]  ] += dx[2] * (.5 + xa[0]) * (.5 - xa[1]) - h
+        jz[i[0]+1,i[1]+1,i[2]  ] += dx[2] * (.5 + xa[0]) * (.5 + xa[1]) + h
+        return
+        
+    if xp[dim] >= -.5 and xp[dim] <= .5:
+        curr_3d_vb_split(jx, jy, jz, i, xm, xp, dim + 1)
+    else:
+        idiff = zeros(3)
+        idiff[dim] = sign(xp[dim])
+        r = (.5 * idiff[dim] - xm[dim]) / (xp[dim] - xm[dim])
+        xs = (1 - r) * xm + r * xp
+        print 'splitting', xm, xs, xp
+        curr_3d_vb_split(jx, jy, jz, i, xm, xs, dim + 1)
+        curr_3d_vb_split(jx, jy, jz, i + idiff, xs - idiff, xp - idiff, dim + 1)
+        
+
+def curr_3d_vb(x, v, rho_func):
+    x, v = array(x), array(v)
+    jx = np.zeros((mx-1, my, mz))
+    jy = np.zeros((mx, my-1, mz))
+    jz = np.zeros((mx, my, mz-1))
+
+    xm = x - .5 * v
+    xp = x + .5 * v
+
+    xm -= .5
+    xp -= .5
+
+    im = zeros(3)
+    curr_3d_vb_split(jx, jy, jz, im, xm, xp)
+
+    return jx, jy, jz
+
 def plot_cloud(x, **kwargs):
     xp = x + .5
     xm = x - .5
@@ -224,7 +352,29 @@ def test_2d(curr_2d, x, v):
     plot_rho(x, v)
     plot_j(jx, jy)
     savefig("vb1.pdf")
-    show()
+
+def test_3d(curr_3d, x, v):
+    print 'x =', x, "v =", v
+    jx, jy, jz = curr_3d(x, v, rho_1st)
+    check_curr_3d(x, v, jx, jy, jz, rho_1st)
+    for k in xrange(mz):
+        for j in xrange(my):
+            for i in xrange(mx-1):
+                if abs(jx[i,j,k]) > 1e-15:
+                    print '(%g,%d,%g) jx %g' % (i+.5, j, k, jx[i,j,k])
+    for k in xrange(mz):
+        for j in xrange(my-1):
+            for i in xrange(mx):
+                if abs(jy[i,j,k]) > 1e-15:
+                    print '(%d,%g,%g) jy %g' % (i, j+.5, k, jy[i,j,k])
+    for k in xrange(mz-1):
+        for j in xrange(my):
+            for i in xrange(mx):
+                if abs(jz[i,j,k]) > 1e-15:
+                    print '(%d,%g,%g) jz %g' % (i, j, k+.5, jz[i,j,k])
+    # plot_rho(x, v)
+    # plot_j(jx, jy)
+    # savefig("vb1.pdf")
 
 def test_2d_all(curr_2d):
     fig = 0
@@ -244,5 +394,7 @@ def test_2d_all(curr_2d):
                         raise
 
 # test_1d()
-test_2d(curr_2d_bv, (2.1, 2.3), (.3,-.9))
+#test_2d(curr_2d_bv, (2.1, 2.3), (.3,-.9))
+#test_2d(curr_2d_vb, (1.8, 2.0), (.8, .8))
+test_3d(curr_3d_vb, (2.2, 2.4, 1.2), (.8, .8, .8))
 #test_2d_all(curr_2d_bv)
