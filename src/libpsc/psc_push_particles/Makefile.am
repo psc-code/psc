@@ -41,8 +41,10 @@ libsubdir_la_SOURCES = \
 	psc_push_particles_single.h
 
 if USE_CUDA
+if USE_SSE2
 libsubdir_la_SOURCES += \
 	push_part_1vb_mix.c
+endif USE_SSE2
 endif USE_CUDA
 
 EXTRA_libsubdir_la_SOURCES = \
