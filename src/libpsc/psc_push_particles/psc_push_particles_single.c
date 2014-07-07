@@ -8,7 +8,6 @@
 struct psc_push_particles_ops psc_push_particles_1vb_single_ops = {
   .name                  = "1vb_single",
   .push_a_yz             = psc_push_particles_1vb_single_push_a_yz,
-  .calc_j_yz             = psc_push_particles_1vb_single_calc_j_yz,
 };
 
 // ======================================================================
@@ -17,7 +16,6 @@ struct psc_push_particles_ops psc_push_particles_1vb_single_ops = {
 struct psc_push_particles_ops psc_push_particles_1vb2_single_ops = {
   .name                  = "1vb2_single2",
   .push_a_yz             = psc_push_particles_1vb2_single_push_a_yz,
-  .calc_j_yz             = psc_push_particles_1vb_single_calc_j_yz,
 };
 
 // ======================================================================
@@ -26,6 +24,5 @@ struct psc_push_particles_ops psc_push_particles_1vb2_single_ops = {
 struct psc_push_particles_ops psc_push_particles_1vbec_single_ops = {
   .name                  = "1vbec_single",
   .push_a_yz             = psc_push_particles_1vbec_single_push_a_yz,
-  .calc_j_yz             = psc_push_particles_1vb_single_calc_j_yz,
 };
 

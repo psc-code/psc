@@ -597,10 +597,6 @@ _psc_setup(struct psc *psc)
   psc_setup_fortran(psc);
 
   psc_setup_member_objs(psc);
-
-  // this is in some sense part of setup_fields(), but can't be done until the member objs
-  // are set up, for finding ghosts
-  psc_push_particles_calc_j(psc->push_particles, psc->particles, psc->flds);
 }
 
 // ----------------------------------------------------------------------

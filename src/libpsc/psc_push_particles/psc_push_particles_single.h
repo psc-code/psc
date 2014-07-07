@@ -10,9 +10,6 @@
 void psc_push_particles_1vb_single_push_a_yz(struct psc_push_particles *push,
 					     struct psc_particles *particles_base,
 					     struct psc_fields *flds_base);
-void psc_push_particles_1vb_single_calc_j_yz(struct psc_push_particles *push,
-					     struct psc_particles *particles_base,
-					     struct psc_fields *flds_base);
 void psc_push_particles_1vb2_single_push_a_yz(struct psc_push_particles *push,
 					      struct psc_particles *particles_base,
 					      struct psc_fields *flds_base);
