@@ -15,7 +15,7 @@
 #include "psc_output_photons.h"
 #include "psc_event_generator.h"
 #include "psc_balance.h"
-#include "psc_particles_as_c.h"
+#include "psc_particles_as_double.h"
 #include "psc_fields_as_c.h"
 
 #include <mrc_common.h>
@@ -842,8 +842,8 @@ psc_setup_particle(struct psc *psc, particle_t *prt, struct psc_particle_npt *np
   prt->kind = npt->kind;
   assert(npt->q == psc->kinds[prt->kind].q);
   assert(npt->m == psc->kinds[prt->kind].m);
-  prt->qni = psc->kinds[prt->kind].q;
-  prt->mni = psc->kinds[prt->kind].m;
+  /* prt->qni = psc->kinds[prt->kind].q; */
+  /* prt->mni = psc->kinds[prt->kind].m; */
   prt->xi = xx[0] - psc->patch[p].xb[0];
   prt->yi = xx[1] - psc->patch[p].xb[1];
   prt->zi = xx[2] - psc->patch[p].xb[2];
@@ -870,7 +870,7 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
   // FIXME, why does this do anything to the random seed?
-  struct psc_mparticles *mprts = psc_mparticles_get_as(psc->particles, "c", MP_DONT_COPY);
+  struct psc_mparticles *mprts = psc_mparticles_get_as(psc->particles, PARTICLE_TYPE, MP_DONT_COPY);
 
   if (psc->prm.seed_by_time) {
     srandom(10*rank + time(NULL));
@@ -917,9 +917,9 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 	      psc_setup_particle(psc, prt, &npt, p, xx);
 	      //p->lni = particle_label_offset + 1;
 	      if (psc->prm.fortran_particle_weight_hack) {
-		prt->wni = npt.n;
+		prt->qni_wni = psc->kinds[prt->kind].q * npt.n;
 	      } else {
-		prt->wni = npt.n / (n_in_cell * psc->coeff.cori);
+		prt->qni_wni = psc->kinds[prt->kind].q * npt.n / (n_in_cell * psc->coeff.cori);
 	      }
 	    }
 	  }
