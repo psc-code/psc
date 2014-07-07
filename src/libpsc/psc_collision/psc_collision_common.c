@@ -145,7 +145,7 @@ bc(struct psc_particles *prts, particle_real_t nudt1, int n1, int n2)
   particle_real_t nudt;
     
   particle_real_t pn1,pn2,pn3,pn4;
-  particle_real_t p01,p02,p03,p04,pc01,pc02,pc03,pc04;
+  particle_real_t p01,p02,pc01,pc02,pc03,pc04;//p03,p04
   particle_real_t px1,py1,pz1,pcx1,pcy1,pcz1;
   particle_real_t px2,py2,pz2,pcx2,pcy2,pcz2;
   particle_real_t px3,py3,pz3,pcx3,pcy3,pcz3;
@@ -153,7 +153,7 @@ bc(struct psc_particles *prts, particle_real_t nudt1, int n1, int n2)
   particle_real_t h1,h2,h3,h4,ppc,qqc,ss;
   
   particle_real_t m1,m2,m3,m4;
-  particle_real_t q1,q2,q3,q4;
+  particle_real_t q1,q2;//,q3,q4;
 //  particle_real_t w1,w2,w3,w4,ww;
   particle_real_t vcx,vcy,vcz;
   particle_real_t bet,gam;
@@ -303,8 +303,8 @@ bc(struct psc_particles *prts, particle_real_t nudt1, int n1, int n2)
   
   m3=m1;
   m4=m2;
-  q3=q1;
-  q4=q2;
+  /* q3=q1; */
+  /* q4=q2; */
 //  c      w3=w1
 //  c      w4=w2
           
@@ -366,11 +366,11 @@ bc(struct psc_particles *prts, particle_real_t nudt1, int n1, int n2)
   
   pn3=pcx3*nx+pcy3*ny+pcz3*nz;
   pn4=pcx4*nx+pcy4*ny+pcz4*nz;
-  p03=gam*(pc03+bet*pn3);
+  /* p03=gam*(pc03+bet*pn3); */
   px3=pcx3+(gam-1.0)*pn3*nx+gam*vcx*pc03;
   py3=pcy3+(gam-1.0)*pn3*ny+gam*vcy*pc03;
   pz3=pcz3+(gam-1.0)*pn3*nz+gam*vcz*pc03;
-  p04=gam*(pc04+bet*pn4);
+  /* p04=gam*(pc04+bet*pn4); */
   px4=pcx4+(gam-1.0)*pn4*nx+gam*vcx*pc04;
   py4=pcy4+(gam-1.0)*pn4*ny+gam*vcy*pc04;
   pz4=pcz4+(gam-1.0)*pn4*nz+gam*vcz*pc04;
