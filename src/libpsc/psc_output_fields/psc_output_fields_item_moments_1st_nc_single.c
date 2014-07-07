@@ -23,3 +23,14 @@ struct psc_output_fields_item_ops psc_output_fields_item_n_1st_nc_single_ops = {
   .flags              = POFI_ADD_GHOSTS | POFI_BY_KIND,
 };
 
+// ======================================================================
+// psc_output_fields_item: subclass "rho_1st_nc_single"
+
+struct psc_output_fields_item_ops psc_output_fields_item_rho_1st_nc_single_ops = {
+  .name               = "rho_1st_nc_single",
+  .nr_comp            = 1,
+  .fld_names          = { "rho_nc" },
+  .run                = rho_run,
+  .flags              = POFI_ADD_GHOSTS,
+};
+
