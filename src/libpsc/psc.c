@@ -129,6 +129,11 @@ static struct param psc_descr[] = {
   // yet another hackish thing for compatibility
   // adjust dt so that the laser period is an integer multiple of dt
   // only useful when actually doing lasers.
+  { "initial_momentum_gamma_correction"
+                    , VAR(prm.initial_momentum_gamma_correction), PARAM_BOOL(0),
+    .help = "if set, interpret momenta as velocities and multiply by gamma to get "
+    "relativistic momenta." },
+  
   { "adjust_dt_to_cycles"
                     , VAR(prm.adjust_dt_to_cycles), PARAM_BOOL(0)  },
   { "gdims_in_terms_of_cells"
@@ -836,6 +841,17 @@ psc_setup_particle(struct psc *psc, particle_t *prt, struct psc_particle_npt *np
     sqrtf(-2.f*npt->T[1]/npt->m*sqr(beta)*logf(1.0-ran3)) * cosf(2.f*M_PI*ran4);
   double pzi = npt->p[2] +
     sqrtf(-2.f*npt->T[2]/npt->m*sqr(beta)*logf(1.0-ran5)) * cosf(2.f*M_PI*ran6);
+
+  if (psc->prm.initial_momentum_gamma_correction) {
+    double gam;
+    if (sqr(pxi) + sqr(pyi) + sqr(pzi) < 1.) {
+      gam = 1. / sqrt(1. - sqr(pxi) - sqr(pyi) - sqr(pzi));
+      pxi *= gam;
+      pyi *= gam;
+      pzi *= gam;
+    }
+  }
+  
   assert(npt->kind >= 0 && npt->kind < psc->nr_kinds);
   prt->kind = npt->kind;
   assert(npt->q == psc->kinds[prt->kind].q);

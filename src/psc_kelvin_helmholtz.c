@@ -71,6 +71,7 @@ psc_kh_create(struct psc *psc)
   psc->prm.nicell = 50;
   psc->prm.gdims_in_terms_of_cells = true;
   psc->prm.cfl = 0.98;
+  psc->prm.initial_momentum_gamma_correction = true;
 
   struct psc_kind kinds[NR_KH_KINDS] = {
     [KH_ELECTRON1] = { .name = "e1", .q = -1., .m = 1, },
