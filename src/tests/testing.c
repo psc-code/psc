@@ -16,6 +16,7 @@
 #include <limits.h>
 #include <stdlib.h>
 
+bool opt_checks_verbose = false;
 bool opt_testing_dump = false;
 bool opt_testing_check_currents = true;
 bool opt_testing_check_particles = true;

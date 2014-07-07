@@ -13,6 +13,7 @@
 #include "psc_output_photons.h"
 #include "psc_event_generator.h"
 #include "psc_balance.h"
+#include "psc_checks.h"
 
 #include <mrc_common.h>
 #include <mrc_profile.h>
@@ -112,8 +113,11 @@ psc_step(struct psc *psc)
   
   // field propagation n*dt -> (n+0.5)*dt
   psc_push_fields_step_a(psc->push_fields, psc->flds);
-  
+
+  psc_checks_gauss(psc->checks, psc);
+
   // particle propagation n*dt -> (n+1.0)*dt
+  psc_checks_continuity_before_particle_push(psc->checks, psc);
   psc_push_particles_run(psc->push_particles, psc->particles, psc->flds);
     
   // field propagation (n+0.5)*dt -> (n+1.0)*dt
@@ -121,6 +125,7 @@ psc_step(struct psc *psc)
 
   psc_bnd_particles_exchange(psc->bnd_particles, psc->particles);
   psc_push_particles_run_b(psc->push_particles, psc->particles, psc->flds);
+  psc_checks_continuity_after_particle_push(psc->checks, psc);
   
   psc_push_photons_run(psc->mphotons);
   psc_bnd_photons_exchange(psc->bnd_photons, psc->mphotons);

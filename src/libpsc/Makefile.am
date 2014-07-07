@@ -21,6 +21,7 @@ SUBDIRS = \
 	psc_push_photons \
 	psc_randomize \
 	psc_sort \
+	psc_checks \
 	fortran \
 	sse2 \
 	cuda
@@ -47,6 +48,7 @@ libpsc_la_LIBADD = \
 	psc_push_photons/libsubdir.la \
 	psc_randomize/libsubdir.la \
 	psc_sort/libsubdir.la \
+	psc_checks/libsubdir.la \
 	fortran/libsubdir.la
 
 if USE_SSE2
@@ -88,6 +90,5 @@ libpsc_la_SOURCES = \
 	integrate.c \
 	psc_stats.c \
 	psc_dump.c \
-	checks_continuity.c \
 	psc_checkpoint.c \
 	psc_main.c

@@ -15,6 +15,7 @@
 #include "psc_output_photons.h"
 #include "psc_event_generator.h"
 #include "psc_balance.h"
+#include "psc_checks.h"
 #include "psc_particles_as_double.h"
 #include "psc_fields_as_c.h"
 
@@ -170,6 +171,7 @@ static struct param psc_descr[] = {
   { "output_photons"          , VAR(output_photons)          , MRC_VAR_OBJ(psc_output_photons) },
   { "event_generator"         , VAR(event_generator)         , MRC_VAR_OBJ(psc_event_generator) },
   { "balance"                 , VAR(balance)                 , MRC_VAR_OBJ(psc_balance) },
+  { "checks"                  , VAR(checks)                  , MRC_VAR_OBJ(psc_checks) },
 
   {},
 };

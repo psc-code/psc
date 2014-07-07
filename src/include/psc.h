@@ -242,6 +242,7 @@ struct psc {
   struct psc_output_photons *output_photons;    ///< particle output
   struct psc_event_generator *event_generator;	///< event generator
   struct psc_balance *balance;                  ///< rebalancer
+  struct psc_checks *checks;                    ///< run-time checks
   ///@}
 
   ///@defgroup config-params user-configurable parameters @{
@@ -437,11 +438,6 @@ void psc_output_default(struct psc *psc);
 
 void psc_dump_particles(mparticles_base_t *particles, const char *fname);
 void psc_dump_field(mfields_base_t *flds, int m, const char *fname);
-
-extern bool opt_checks_verbose;
-
-void psc_check_continuity(struct psc *psc, mparticles_base_t *particles,
-			  mfields_base_t *flds, double eps);
 
 struct psc *psc_read_checkpoint(MPI_Comm comm, int n);
 void psc_write_checkpoint(struct psc *psc);
