@@ -125,8 +125,8 @@ psc_push_fields_step_b2_default(struct psc_push_fields *push, mfields_base_t *fl
 static void
 psc_push_fields_step_a_opt(struct psc_push_fields *push, struct psc_mfields *mflds)
 {
-  psc_push_fields_push_E(push, mflds);
-  psc_bnd_fields_fill_ghosts_a_E(push->bnd_fields, mflds);
+  //  psc_push_fields_push_E(push, mflds);
+  //  psc_bnd_fields_fill_ghosts_a_E(push->bnd_fields, mflds);
 
   psc_push_fields_push_H(push, mflds);
   psc_bnd_fields_fill_ghosts_a_H(push->bnd_fields, mflds);
@@ -150,7 +150,9 @@ psc_push_fields_step_b2_opt(struct psc_push_fields *push, struct psc_mfields *mf
   psc_bnd_add_ghosts(ppsc->bnd, mflds, JXI, JXI + 3);
   psc_bnd_fill_ghosts(ppsc->bnd, mflds, JXI, JXI + 3);
 
+  ppsc->dt *= 2.;
   psc_push_fields_push_E(push, mflds);
+  ppsc->dt /= 2.;
   psc_bnd_fields_fill_ghosts_b_E(push->bnd_fields, mflds);
 }
 
