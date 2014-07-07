@@ -36,14 +36,14 @@
     									\
     particle_real_t fnq = particle_wni(part) * fnqs;			\
 									\
-    F3(pf, m, jx    ,jy  ,jz  ) += fnq*g0x*g0y*g0z * (val);		\
-    F3(pf, m, jx+jxd,jy  ,jz  ) += fnq*g1x*g0y*g0z * (val);		\
-    F3(pf, m, jx    ,jy+1,jz  ) += fnq*g0x*g1y*g0z * (val);		\
-    F3(pf, m, jx+jxd,jy+1,jz  ) += fnq*g1x*g1y*g0z * (val);		\
-    F3(pf, m, jx    ,jy  ,jz+1) += fnq*g0x*g0y*g1z * (val);		\
-    F3(pf, m, jx+jxd,jy  ,jz+1) += fnq*g1x*g0y*g1z * (val);		\
-    F3(pf, m, jx    ,jy+1,jz+1) += fnq*g0x*g1y*g1z * (val);		\
-    F3(pf, m, jx+jxd,jy+1,jz+1) += fnq*g1x*g1y*g1z * (val);		\
+    F3(pf, m, jx    ,jy    ,jz    ) += fnq*g0x*g0y*g0z * (val);		\
+    F3(pf, m, jx+jxd,jy    ,jz    ) += fnq*g1x*g0y*g0z * (val);		\
+    F3(pf, m, jx    ,jy+jyd,jz    ) += fnq*g0x*g1y*g0z * (val);		\
+    F3(pf, m, jx+jxd,jy+jyd,jz    ) += fnq*g1x*g1y*g0z * (val);		\
+    F3(pf, m, jx    ,jy    ,jz+jzd) += fnq*g0x*g0y*g1z * (val);		\
+    F3(pf, m, jx+jxd,jy    ,jz+jzd) += fnq*g1x*g0y*g1z * (val);		\
+    F3(pf, m, jx    ,jy+jyd,jz+jzd) += fnq*g0x*g1y*g1z * (val);		\
+    F3(pf, m, jx+jxd,jy+jyd,jz+jzd) += fnq*g1x*g1y*g1z * (val);		\
   } while (0)
 
 #define DEPOSIT_TO_GRID_1ST_NC(part, pf, m, val) do {			\
