@@ -16,8 +16,10 @@ libmhd_la_SOURCES = \
 	ggcm_mhd_bnd_none.c \
 	ggcm_mhd_bnd_conducting.c \
 	ggcm_mhd_bnd_conducting_x.c \
-	ggcm_mhd_bnd_conducting_y_c2.c \
-	ggcm_mhd_bnd_conducting_y_ath.c \
+	ggcm_mhd_bnd_conducting_y.c \
+	ggcm_mhd_bnd_conducting_y_float.c \
+	ggcm_mhd_bnd_conducting_y_double.c \
+	ggcm_mhd_bnd_conducting_y_double_aos.c \
 	ggcm_mhd_bnd_open_x.c \
 	\
 	ggcm_mhd_crds.c \

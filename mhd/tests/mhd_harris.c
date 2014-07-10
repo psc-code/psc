@@ -258,13 +258,13 @@ ggcm_mhd_harris_create(struct ggcm_mhd *mhd)
   mrc_crds_set_param_double3(crds, "h", (double[3]) {   12.8,  6.4, 0.1 });
   ggcm_mhd_set_param_float(mhd, "diffconstant", 0.005);
 
-  ggcm_mhd_bnd_set_type(mhd->bnd, "conducting_y_c2");
+  ggcm_mhd_bnd_set_type(mhd->bnd, "conducting_y");
   mrc_domain_set_param_int(mhd->domain, "bcx", BC_PERIODIC);
   mrc_domain_set_param_int(mhd->domain, "bcy", BC_NONE);
   mrc_domain_set_param_int(mhd->domain, "bcz", BC_PERIODIC);
 
   ggcm_mhd_ic_set_type(mhd->ic, "harris");
-  ggcm_mhd_step_set_type(mhd->step, "c2_float");
+  ggcm_mhd_step_set_type(mhd->step, "c2_double");
 }
 
 // ----------------------------------------------------------------------

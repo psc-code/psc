@@ -1,5 +1,3 @@
-#ifndef __GGCM_MHD_BND_CONDUCTING_Y2_C
-#define __GGCM_MHD_BND_CONDUCTING_Y2_C
 
 #include "ggcm_mhd_bnd_private.h"
 
@@ -10,27 +8,16 @@
 #include <mrc_domain.h>
 #include <assert.h>
 
-// #undef F3
-// #define F3 MRC_F3 // FIXME
 
-// ======================================================================
-// ggcm_mhd_bnd subclass "conducting_y2"
-
-// These are just the athena conducting boundaries implemented in C
-// needs ath / c2 staggering
-
-// ----------------------------------------------------------------------
-// ggcm_mhd_bnd_conducting_y2_fill_ghosts
-
-static void
-CONDUCTING_Y2_FILL_GHOSTS(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld_base,
+void
+GGCM_MHD_BND_CONDUCTING_Y_FILL_GHOST(struct ggcm_mhd_bnd *bnd,
+                          struct mrc_fld *fld_base,
                           int m, float bntim)
 {
-
   struct ggcm_mhd *mhd = bnd->mhd;
 
   struct mrc_fld *x = mrc_fld_get_as(fld_base, FLD_TYPE);
-
+  
   const int *dims = mrc_fld_spatial_dims(x);
   int nx = dims[0], ny = dims[1], nz = dims[2];
   int sw = x->_nr_ghosts;
@@ -68,17 +55,18 @@ CONDUCTING_Y2_FILL_GHOSTS(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld_base,
           F3(x, m+_B1X , ix, -1 - ig, iz) =   F3(x, m+_B1X,  ix, ig, iz);
           F3(x, m+_B1Z , ix, -1 - ig, iz) =   F3(x, m+_B1Z,  ix, ig, iz);
 
-          // nothing special, B != 0, but Bz stays 0
-          F3(x, m+_B1Y , ix, -1 - ig, iz) =   F3(x, m+_B1Y,  ix, ig, iz);
-          // // to make div B = 0, but bz != 0 and it creeps in over time
-          // if (ix + 1 == nx + sw || iz + 1 == nz + sw) {
-          //   // F3(x, m+_B1Y, ix, iy + 1, iz) = 1.0 / bd2x[ix] + 1.0 / bd2z[iz];
-          //   continue;
-          // }
-          // int iy = - ig;
-          // F3(x, m+_B1Y, ix, iy, iz) = F3(x, m+_B1Y, ix, iy + 1, iz) +
-          //     ((F3(x, m+_B1X, ix+1, iy, iz    ) - F3(x, m+_B1X, ix, iy, iz)) / bd2x[ix] +
-          //      (F3(x, m+_B1Z, ix  , iy, iz + 1) - F3(x, m+_B1Z, ix, iy, iz)) / bd2z[iz]) * bd2y[iy];
+          // // nothing special, B != 0, but Bz stays 0
+          // F3(x, m+_B1Y , ix, -1 - ig, iz) =   F3(x, m+_B1Y,  ix, ig, iz);
+
+          // to make div B = 0, but bz != 0 and it creeps in over time
+          if (ix + 1 == nx + sw || iz + 1 == nz + sw) {
+            // F3(x, m+_B1Y, ix, iy + 1, iz) = 1.0 / bd2x[ix] + 1.0 / bd2z[iz];
+            continue;
+          }
+          int iy = - ig;
+          F3(x, m+_B1Y, ix, iy, iz) = F3(x, m+_B1Y, ix, iy + 1, iz) +
+              ((F3(x, m+_B1X, ix+1, iy, iz    ) - F3(x, m+_B1X, ix, iy, iz)) / dx[0] +
+               (F3(x, m+_B1Z, ix  , iy, iz + 1) - F3(x, m+_B1Z, ix, iy, iz)) / dx[2]) * dx[1];
         }
       }
     }
@@ -98,7 +86,8 @@ CONDUCTING_Y2_FILL_GHOSTS(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld_base,
           F3(x, m+_B1Z , ix, ny + ig, iz) =   F3(x, m+_B1Z , ix, ny - 1 - ig, iz);
 
           // nothing special, B != 0, but Bz stays 0
-	  //          F3(x, m+_B1Y , ix, ny + ig, iz) =   F3(x, m+_B1Y , ix, ny - 1 - ig, iz);
+          // F3(x, m+_B1Y , ix, ny + ig, iz) =   F3(x, m+_B1Y , ix, ny - 1 - ig, iz);
+
           // to make div B = 0, but bz != 0 and it creeps in over time
           if (ix + 1 == nx + sw || iz + 1 == nz + sw) {
             // F3(x, m+_B1Y, ix, iy + 1, iz) = 1.0 / bd2x[ix] + 1.0 / bd2z[iz];
@@ -118,14 +107,3 @@ CONDUCTING_Y2_FILL_GHOSTS(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld_base,
 
   mrc_fld_put_as(x, fld_base);
 }
-
-
-// ----------------------------------------------------------------------
-// ggcm_mhd_bnd_conducting_y2_ops
-
-struct ggcm_mhd_bnd_ops CONDUCTING_Y2_OPS = {
-  .name        = CONDUCTING_Y2_STR,
-  .fill_ghosts = CONDUCTING_Y2_FILL_GHOSTS,
-};
-
-#endif // __GGCM_MHD_BND_CONDUCTING_Y2
