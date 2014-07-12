@@ -32,6 +32,7 @@ libmrc_la_SOURCES = \
 	mrc_io_util.c \
 	mrc_io_srv.c \
 	mrc_io_asc.c \
+	mrc_io_vpic.c \
 	mrc_obj.c \
 	mrc_nr_tridag.c \
 	mrc_erfi.c \
