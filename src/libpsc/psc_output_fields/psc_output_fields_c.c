@@ -63,6 +63,7 @@ write_fields(struct psc_output_fields_c *out, struct psc_fields_list *list,
   mrc_obj_dict_add_int(obj, "timestep", ppsc->timestep);
   mrc_obj_dict_add_float(obj, "time", ppsc->timestep * ppsc->dt);
   mrc_obj_dict_add_float(obj, "cc", ppsc->prm.cc);
+  mrc_obj_dict_add_float(obj, "dt", ppsc->dt);
   mrc_obj_write(obj, io);
   mrc_obj_destroy(obj);
 
