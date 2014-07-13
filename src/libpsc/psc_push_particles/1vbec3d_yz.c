@@ -10,58 +10,6 @@
 
 #include "c_common_push.c"
 
-static inline void
-calc_3d_dx1(particle_real_t dx1[3], particle_real_t x[3], particle_real_t dx[3], int off[3])
-{
-  if (off[2] == 0) {
-    dx1[1] = .5f * off[1] - x[1];
-   if (dx[1] == 0.f) {
-     dx1[0] = 0.f;
-     dx1[2] = 0.f;
-   } else {
-     dx1[0] = dx[0] / dx[1] * dx1[1];
-     dx1[2] = dx[2] / dx[1] * dx1[1];
-   }
-  } else {
-    dx1[2] = .5f * off[2] - x[2];
-   if (dx[2] == 0.f) {
-     dx1[0] = 0.f;
-     dx1[1] = 0.f;
-   } else {
-     dx1[0] = dx[0] / dx[2] * dx1[2];
-     dx1[1] = dx[1] / dx[2] * dx1[2];
-   }
-  }
-}
-
-static inline void
-curr_3d_vb_cell(struct psc_fields *pf, int i[3], particle_real_t x[3], particle_real_t dx[3],
-		particle_real_t fnq[3], particle_real_t dxt[3], int off[3])
-{
-  particle_real_t h = (1.f/12.f) * dx[0] * dx[1] * dx[2];
-  particle_real_t xa[3] = { 0.,
-			    x[1] + .5f * dx[1],
-			    x[2] + .5f * dx[2], };
-  F3_CURR(pf, JXI, 0,i[1]  ,i[2]  ) += fnq[0] * (dx[0] * (.5f - xa[1]) * (.5f - xa[2]) + h);
-  F3_CURR(pf, JXI, 0,i[1]+1,i[2]  ) += fnq[0] * (dx[0] * (.5f + xa[1]) * (.5f - xa[2]) - h);
-  F3_CURR(pf, JXI, 0,i[1]  ,i[2]+1) += fnq[0] * (dx[0] * (.5f - xa[1]) * (.5f + xa[2]) + h);
-  F3_CURR(pf, JXI, 0,i[1]+1,i[2]+1) += fnq[0] * (dx[0] * (.5f + xa[1]) * (.5f + xa[2]) - h);
-
-  F3_CURR(pf, JYI, 0,i[1]  ,i[2]  ) += fnq[1] * dx[1] * (.5f - xa[2]);
-  F3_CURR(pf, JYI, 0,i[1]  ,i[2]+1) += fnq[1] * dx[1] * (.5f + xa[2]);
-  F3_CURR(pf, JZI, 0,i[1]  ,i[2]  ) += fnq[2] * dx[2] * (.5f - xa[1]);
-  F3_CURR(pf, JZI, 0,i[1]+1,i[2]  ) += fnq[2] * dx[2] * (.5f + xa[1]);
-  if (dxt) {
-    dxt[0] -= dx[0];
-    dxt[1] -= dx[1];
-    dxt[2] -= dx[2];
-    x[1] += dx[1] - off[1];
-    x[2] += dx[2] - off[2];
-    i[1] += off[1];
-    i[2] += off[2];
-  }
-}
-
 static void
 do_push_part_1vb_yz(struct psc_fields *pf, struct psc_particles *pp)
 {
