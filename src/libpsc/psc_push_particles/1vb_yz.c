@@ -12,6 +12,11 @@ do_push_part_1vb_yz(struct psc_fields *pf, struct psc_particles *pp)
 {
   particle_real_t dt = ppsc->dt;
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+#ifdef VB_2D
+  particle_real_t fnqxs = fnqs;
+#else
+  particle_real_t fnqxs = ppsc->patch[pf->p].dx[0] * fnqs / dt;
+#endif
   particle_real_t fnqys = ppsc->patch[pf->p].dx[1] * fnqs / dt;
   particle_real_t fnqzs = ppsc->patch[pf->p].dx[2] * fnqs / dt;
   particle_real_t dxi[3] = { 1.f / ppsc->patch[pf->p].dx[0], 1.f / ppsc->patch[pf->p].dx[1], 1.f / ppsc->patch[pf->p].dx[2] };
@@ -21,7 +26,7 @@ do_push_part_1vb_yz(struct psc_fields *pf, struct psc_particles *pp)
   particle_real_t fnqz_kind[ppsc->nr_kinds];
   for (int k = 0; k < ppsc->nr_kinds; k++) {
     dq_kind[k] = .5f * ppsc->coeff.eta * dt * ppsc->kinds[k].q / ppsc->kinds[k].m;
-    fnqx_kind[k] = fnqs * ppsc->kinds[k].q;
+    fnqx_kind[k] = fnqxs * ppsc->kinds[k].q;
     fnqy_kind[k] = fnqys * ppsc->kinds[k].q;
     fnqz_kind[k] = fnqzs * ppsc->kinds[k].q;
   }
@@ -44,9 +49,10 @@ do_push_part_1vb_yz(struct psc_fields *pf, struct psc_particles *pp)
     particle_real_t dq = dq_kind[part->kind];
     push_pxi(part, exq, eyq, ezq, hxq, hyq, hzq, dq);
 
-    // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0)
     particle_real_t vxi[3];
     calc_vxi(vxi, part);
+#ifdef VB_2D
+    // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0)
     push_xi(part, vxi, .5f * dt);
 
     // OUT OF PLANE CURRENT DENSITY AT (n+1.0)*dt
@@ -54,13 +60,22 @@ do_push_part_1vb_yz(struct psc_fields *pf, struct psc_particles *pp)
 
     // x^(n+1), p^(n+1) -> x^(n+1.5f), p^(n+1)
     push_xi(part, vxi, .5f * dt);
+#else
+    // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0)
+    push_xi(part, vxi, dt);
+#endif
 
     int lf[3];
     particle_real_t of[3], xp[3];
     find_idx_off_pos_1st_rel(&part->xi, lf, of, xp, 0.f, dxi);
 
+#ifdef VB_2D
     // IN PLANE CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
     CALC_JYZ_2D(pf, xm, xp);
+#else
+    // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
+    CALC_JXYZ_3D(pf, xm, xp);
+#endif
   }
 }
 

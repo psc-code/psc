@@ -10,5 +10,6 @@
 
 #define PUSHER_TYPE "1vbec"
 #define INTERPOLATE_1ST INTERPOLATE_1ST_EC
+#define VB_2D
 
 #include "1vb_yz.c"
