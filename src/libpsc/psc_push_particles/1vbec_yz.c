@@ -1,5 +1,4 @@
 
-#include "psc_debug.h"
 #include <mrc_profile.h>
 
 #include <math.h>
@@ -40,35 +39,8 @@ do_push_part_1vb_yz(struct psc_fields *pf, struct psc_particles *pp)
     find_idx_off_1st_rel(&part->xi, lh, oh, -.5f, dxi);
 
     // FIELD INTERPOLATION
-
-    INTERPOLATE_SETUP_1ST_EC;
-
-    particle_real_t exq = 
-      (g0z*(g0y*F3_CACHE(pf, EX, 0,lg[1]  ,lg[2]  ) +
-	    g1y*F3_CACHE(pf, EX, 0,lg[1]+1,lg[2]  )) +
-       g1z*(g0y*F3_CACHE(pf, EX, 0,lg[1]  ,lg[2]+1) +
-	    g1y*F3_CACHE(pf, EX, 0,lg[1]+1,lg[2]+1)));
-    particle_real_t eyq =
-      (g0z*F3_CACHE(pf, EY, 0,lg[1]  ,lg[2]  ) +
-       g1z*F3_CACHE(pf, EY, 0,lg[1]  ,lg[2]+1));
-    particle_real_t ezq =
-      (g0y*F3_CACHE(pf, EZ, 0,lg[1]  ,lg[2]  ) +
-       g1y*F3_CACHE(pf, EZ, 0,lg[1]+1,lg[2]  ));
-
-    particle_real_t hxq =
-      F3_CACHE(pf, HX, 0,lg[1]  ,lg[2]  );
-    particle_real_t hyq =
-      (g0y*F3_CACHE(pf, HY, 0,lg[1]  ,lg[2]  ) +
-       g1y*F3_CACHE(pf, HY, 0,lg[1]+1,lg[2]  ));
-    particle_real_t hzq =
-      (g0z*F3_CACHE(pf, HZ, 0,lg[1]  ,lg[2]  ) +
-       g1z*F3_CACHE(pf, HZ, 0,lg[1]  ,lg[2]+1));
-    assert_finite(exq);
-    assert_finite(eyq);
-    assert_finite(ezq);
-    assert_finite(hxq);
-    assert_finite(hyq);
-    assert_finite(hzq);
+    particle_real_t exq, eyq, ezq, hxq, hyq, hzq;
+    INTERPOLATE_1ST_EC(exq, eyq, ezq, hxq, hyq, hzq);
 
     // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
     particle_real_t dq = dq_kind[part->kind];

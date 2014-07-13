@@ -111,6 +111,29 @@ find_idx_off_pos_1st_rel(particle_real_t xi[3], int lg[3], particle_real_t og[3]
     assert_finite(hxq); assert_finite(hyq); assert_finite(hzq);		\
   } while (0)
 
+#define INTERPOLATE_1ST_EC(exq, eyq, ezq, hxq, hyq, hzq)        	\
+  do {									\
+    INTERPOLATE_SETUP_1ST_EC;						\
+    									\
+    exq = (g0z*(g0y*F3_CACHE(pf, EX, 0,lg[1]  ,lg[2]  ) +		\
+		g1y*F3_CACHE(pf, EX, 0,lg[1]+1,lg[2]  )) +		\
+	   g1z*(g0y*F3_CACHE(pf, EX, 0,lg[1]  ,lg[2]+1) +		\
+		g1y*F3_CACHE(pf, EX, 0,lg[1]+1,lg[2]+1)));		\
+    eyq = (g0z*F3_CACHE(pf, EY, 0,lg[1]  ,lg[2]  ) +			\
+	   g1z*F3_CACHE(pf, EY, 0,lg[1]  ,lg[2]+1));			\
+    ezq = (g0y*F3_CACHE(pf, EZ, 0,lg[1]  ,lg[2]  ) +			\
+	   g1y*F3_CACHE(pf, EZ, 0,lg[1]+1,lg[2]  ));			\
+									\
+    hxq = F3_CACHE(pf, HX, 0,lg[1]  ,lg[2]  );				\
+    hyq = (g0y*F3_CACHE(pf, HY, 0,lg[1]  ,lg[2]  ) +			\
+	   g1y*F3_CACHE(pf, HY, 0,lg[1]+1,lg[2]  ));			\
+    hzq = (g0z*F3_CACHE(pf, HZ, 0,lg[1]  ,lg[2]  ) +			\
+	   g1z*F3_CACHE(pf, HZ, 0,lg[1]  ,lg[2]+1));			\
+    									\
+    assert_finite(exq); assert_finite(eyq); assert_finite(ezq);		\
+    assert_finite(hxq); assert_finite(hyq); assert_finite(hzq);		\
+  } while (0)
+
 #ifdef F3_CURR
 
 // ======================================================================
