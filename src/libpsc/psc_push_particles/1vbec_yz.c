@@ -6,10 +6,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define PUSHER_TYPE "1vbec"
+
 #include "c_common_push.c"
 
 static void
-do_push_part_1vbec_yz(struct psc_fields *pf, struct psc_particles *pp)
+do_push_part_1vb_yz(struct psc_fields *pf, struct psc_particles *pp)
 {
   particle_real_t dt = ppsc->dt;
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
@@ -150,13 +152,13 @@ do_push_part_1vbec_yz(struct psc_fields *pf, struct psc_particles *pp)
 }
 
 void
-psc_push_particles_1vbec_push_a_yz(struct psc_push_particles *push,
-				   struct psc_particles *prts_base,
-				   struct psc_fields *flds_base)
+psc_push_particles_push_yz(struct psc_push_particles *push,
+			   struct psc_particles *prts_base,
+			   struct psc_fields *flds_base)
 {
   static int pr;
   if (!pr) {
-    pr = prof_register(PARTICLE_TYPE "_1vbec_push_yz", 1., 0, 0);
+    pr = prof_register(PARTICLE_TYPE "_" PUSHER_TYPE "_push_yz", 1., 0, 0);
   }
 
   struct psc_particles *prts = psc_particles_get_as(prts_base, PARTICLE_TYPE, 0);
@@ -165,7 +167,7 @@ psc_push_particles_1vbec_push_a_yz(struct psc_push_particles *push,
   prof_start(pr);
   psc_fields_zero_range(flds, JXI, JXI + 3);
   struct psc_fields *flds_cache = cache_fields_from_em(flds);
-  do_push_part_1vbec_yz(flds_cache, prts);
+  do_push_part_1vb_yz(flds_cache, prts);
   cache_fields_to_j(flds_cache, flds);
   psc_fields_destroy(flds_cache);
   prof_stop(pr);
@@ -173,3 +175,4 @@ psc_push_particles_1vbec_push_a_yz(struct psc_push_particles *push,
   psc_particles_put_as(prts, prts_base, 0);
   psc_fields_put_as(flds, flds_base, JXI, JXI + 3);
 }
+

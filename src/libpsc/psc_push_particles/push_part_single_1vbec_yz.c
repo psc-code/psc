@@ -6,6 +6,6 @@
 #define F3_CURR F3_S
 #define F3_CACHE F3_S
 #define F3_CACHE_TYPE "single"
-#define psc_push_particles_1vbec_push_a_yz psc_push_particles_1vbec_single_push_a_yz
+#define psc_push_particles_push_yz psc_push_particles_1vbec_single_push_a_yz
 
 #include "1vbec_yz.c"
