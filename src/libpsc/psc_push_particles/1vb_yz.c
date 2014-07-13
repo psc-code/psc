@@ -62,55 +62,7 @@ do_push_part_1vb_yz(struct psc_fields *pf, struct psc_particles *pp)
     find_idx_off_pos_1st_rel(&part->xi, lf, of, xp, 0.f, dxi);
 
     // IN PLANE CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
-
-    int i[2] = { lg[1], lg[2] };
-    int idiff[2] = { lf[1] - lg[1], lf[2] - lg[2] };
-    particle_real_t dx[2] = { xp[1] - xm[1], xp[2] - xm[2] };
-    particle_real_t x[2] = { xm[1] - (i[0] + .5f), xm[2] - (i[1] + .5f) };
-
-    particle_real_t dx1[2];
-    int off[2];
-    int first_dir, second_dir = -1;
-    // FIXME, make sure we never div-by-zero?
-    if (idiff[0] == 0 && idiff[1] == 0) {
-      first_dir = -1;
-    } else if (idiff[0] == 0) {
-      first_dir = 1;
-    } else if (idiff[1] == 0) {
-      first_dir = 0;
-    } else {
-      dx1[0] = .5f * idiff[0] - x[0];
-     if (dx[0] == 0.f) {
-      dx1[1] = 0.f;
-     } else {
-      dx1[1] = dx[1] / dx[0] * dx1[0];
-     }
-      if (particle_real_abs(x[1] + dx1[1]) > .5f) {
-	first_dir = 1;
-      } else {
-	first_dir = 0;
-      }
-      second_dir = 1 - first_dir;
-    }
-
-    particle_real_t fnq[2] = { particle_wni(part) * fnqy_kind[part->kind],
-			       particle_wni(part) * fnqz_kind[part->kind] };
-
-    if (first_dir >= 0) {
-      off[1-first_dir] = 0;
-      off[first_dir] = idiff[first_dir];
-      calc_dx1(dx1, x, dx, off);
-      curr_2d_vb_cell(pf, i, x, dx1, fnq, dx, off);
-    }
-
-    if (second_dir >= 0) {
-      off[first_dir] = 0;
-      off[second_dir] = idiff[second_dir];
-      calc_dx1(dx1, x, dx, off);
-      curr_2d_vb_cell(pf, i, x, dx1, fnq, dx, off);
-    }
-    
-    curr_2d_vb_cell(pf, i, x, dx, fnq, NULL, NULL);
+    CALC_JYZ_2D(pf, xm, xp);
   }
 }
 
