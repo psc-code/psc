@@ -57,6 +57,12 @@ psc_output_fields_item_run(struct psc_output_fields_item *item,
 			   mfields_c_t *res)
 {
   struct psc_output_fields_item_ops *ops = psc_output_fields_item_ops(item);
+#ifdef USE_CUDA
+  if (strcmp(psc_mparticles_type(particles), "cuda") == 0) {
+      extern void psc_mparticles_cuda_reorder(struct psc_mparticles *);
+      psc_mparticles_cuda_reorder(particles);
+  }
+#endif
   for (int p = 0; p < res->nr_patches; p++) {
     ops->run(item, psc_mfields_get_patch(flds, p),
 	     psc_mparticles_get_patch(particles, p),
