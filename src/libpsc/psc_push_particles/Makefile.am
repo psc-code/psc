@@ -30,12 +30,10 @@ libsubdir_la_SOURCES = \
 	push_part_1vb.c \
 	push_part_1vb_c_yz.c \
 	push_part_1sff_xz.c \
-	psc_push_particles_single.c \
 	push_part_single_1vb_yz.c \
 	push_part_single2_1vb_yz.c \
 	push_part_single_1vbec_yz.c \
 	push_part_single_1vbec3d_yz.c \
-	psc_push_particles_double.c \
 	push_part_double_1vb_yz.c \
 	push_part_double_1vbec_yz.c \
 	push_part_double_1vbec3d_yz.c \

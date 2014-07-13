@@ -1,7 +1,8 @@
 
-#include "psc_push_particles_single.h"
+#include "psc_push_particles_private.h"
 
-#include "psc_fields_single.h"
+#include "psc_particles_as_single.h"
+#include "psc_fields_as_single.h"
 
 #define F3_CURR F3_S
 #define F3_CACHE F3_S
@@ -13,3 +14,12 @@
 #define VB_2D
 
 #include "1vb_yz.c"
+
+// ======================================================================
+// psc_push_particles: subclass "1vbec_single"
+
+struct psc_push_particles_ops psc_push_particles_1vbec_single_ops = {
+  .name                  = "1vbec_single",
+  .push_a_yz             = psc_push_particles_1vbec_single_push_a_yz,
+};
+
