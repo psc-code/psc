@@ -1,4 +1,5 @@
 
+#include "psc_debug.h"
 #include <mrc_profile.h>
 
 #include <math.h>
@@ -60,6 +61,12 @@ do_push_part_1vbec_yz(struct psc_fields *pf, struct psc_particles *pp)
     particle_real_t hzq =
       (g0z*F3_CACHE(pf, HZ, 0,lg[1]  ,lg[2]  ) +
        g1z*F3_CACHE(pf, HZ, 0,lg[1]  ,lg[2]+1));
+    assert_finite(exq);
+    assert_finite(eyq);
+    assert_finite(ezq);
+    assert_finite(hxq);
+    assert_finite(hyq);
+    assert_finite(hzq);
 
     // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
     particle_real_t dq = dq_kind[part->kind];
