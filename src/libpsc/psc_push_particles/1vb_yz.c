@@ -79,10 +79,10 @@ do_push_part_1vb_yz(struct psc_fields *pf, struct psc_particles *pp)
   }
 }
 
-void
-psc_push_particles_push_yz(struct psc_push_particles *push,
-			   struct psc_particles *prts_base,
-			   struct psc_fields *flds_base)
+static void
+psc_push_particles_push_a_yz(struct psc_push_particles *push,
+			     struct psc_particles *prts_base,
+			     struct psc_fields *flds_base)
 {
   static int pr;
   if (!pr) {

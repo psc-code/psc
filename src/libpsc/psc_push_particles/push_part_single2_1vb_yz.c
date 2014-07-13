@@ -9,7 +9,6 @@
 #define F3_CURR F3_S
 #define F3_CACHE F3_S
 #define F3_CACHE_TYPE "single"
-#define psc_push_particles_1vb_push_a_yz psc_push_particles_1vb2_single_push_a_yz
 
 #include "1vb_yz_2.c"
 
@@ -18,6 +17,6 @@
 
 struct psc_push_particles_ops psc_push_particles_1vb2_single_ops = {
   .name                  = "1vb2_single2",
-  .push_a_yz             = psc_push_particles_1vb2_single_push_a_yz,
+  .push_a_yz             = psc_push_particles_push_a_yz,
 };
 

@@ -7,7 +7,6 @@
 #define F3_CURR F3_C
 #define F3_CACHE F3_C
 #define F3_CACHE_TYPE "c"
-#define psc_push_particles_push_yz psc_push_particles_1vbec_double_push_a_yz
 
 #define PUSHER_TYPE "1vbec"
 #define INTERPOLATE_1ST INTERPOLATE_1ST_EC
@@ -20,6 +19,6 @@
 
 struct psc_push_particles_ops psc_push_particles_1vbec_double_ops = {
   .name                  = "1vbec_double",
-  .push_a_yz             = psc_push_particles_1vbec_double_push_a_yz,
+  .push_a_yz             = psc_push_particles_push_a_yz,
 };
 
