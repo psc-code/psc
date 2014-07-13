@@ -89,33 +89,11 @@ find_idx_off_pos_1st_rel(particle_real_t xi[3], int lg[3], particle_real_t og[3]
   particle_real_t g1z = og[2]
 
 
-#define INTERPOLATE_FIELD_1ST(m, gy, gz)				\
-  (gz##0z*(gy##0y*F3(pf, m, 0,l##gy[1]  ,l##gz[2]  ) +			\
-	   gy##1y*F3(pf, m, 0,l##gy[1]+1,l##gz[2]  )) +			\
-   gz##1z*(gy##0y*F3(pf, m, 0,l##gy[1]  ,l##gz[2]+1) +			\
-	   gy##1y*F3(pf, m, 0,l##gy[1]+1,l##gz[2]+1)))
-
 #define INTERPOLATE_FIELD_1ST_CACHE(m, gy, gz)				\
-    (gz##0z*(gy##0y*F3_CACHE(pf, m, 0,l##gy[1]  ,l##gz[2]  ) +		\
-	     gy##1y*F3_CACHE(pf, m, 0,l##gy[1]+1,l##gz[2]  )) +		\
-     gz##1z*(gy##0y*F3_CACHE(pf, m, 0,l##gy[1]  ,l##gz[2]+1) +		\
-	     gy##1y*F3_CACHE(pf, m, 0,l##gy[1]+1,l##gz[2]+1)))
-
-#define INTERPOLATE_1ST_STD(exq, eyq, ezq, hxq, hyq, hzq)		\
-  do {									\
-    INTERPOLATE_SETUP_1ST_STD;						\
-									\
-    exq = INTERPOLATE_FIELD_1ST(EX, g, g);				\
-    eyq = INTERPOLATE_FIELD_1ST(EY, h, g);				\
-    ezq = INTERPOLATE_FIELD_1ST(EZ, g, h);				\
-    									\
-    hxq = INTERPOLATE_FIELD_1ST(HX, h, h);				\
-    hyq = INTERPOLATE_FIELD_1ST(HY, g, h);				\
-    hzq = INTERPOLATE_FIELD_1ST(HZ, h, g);				\
-									\
-    assert_finite(exq); assert_finite(eyq); assert_finite(ezq);		\
-    assert_finite(hxq); assert_finite(hyq); assert_finite(hzq);		\
-  } while (0)
+  (gz##0z*(gy##0y*F3_CACHE(pf, m, 0,l##gy[1]  ,l##gz[2]  ) +		\
+	   gy##1y*F3_CACHE(pf, m, 0,l##gy[1]+1,l##gz[2]  )) +		\
+   gz##1z*(gy##0y*F3_CACHE(pf, m, 0,l##gy[1]  ,l##gz[2]+1) +		\
+	   gy##1y*F3_CACHE(pf, m, 0,l##gy[1]+1,l##gz[2]+1)))
 
 #define INTERPOLATE_1ST_STD_CACHE(exq, eyq, ezq, hxq, hyq, hzq)		\
   do {									\
