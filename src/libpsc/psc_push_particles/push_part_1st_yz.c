@@ -48,16 +48,8 @@ do_push_part_1st_yz(int p, fields_t *pf, struct psc_particles *pp)
     S0Z(+1) = og[2];
 
     // FIELD INTERPOLATION
-
-    INTERPOLATE_SETUP_1ST_STD;
-
-    particle_real_t exq = INTERPOLATE_FIELD_1ST(EX, g, g);
-    particle_real_t eyq = INTERPOLATE_FIELD_1ST(EY, h, g);
-    particle_real_t ezq = INTERPOLATE_FIELD_1ST(EZ, g, h);
-
-    particle_real_t hxq = INTERPOLATE_FIELD_1ST(HX, h, h);
-    particle_real_t hyq = INTERPOLATE_FIELD_1ST(HY, g, h);
-    particle_real_t hzq = INTERPOLATE_FIELD_1ST(HZ, h, g);
+    particle_real_t exq, eyq, ezq, hxq, hyq, hzq;
+    INTERPOLATE_1ST_STD(exq, eyq, ezq, hxq, hyq, hzq);
 
     // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
     particle_real_t dq = dqs * particle_qni_div_mni(part);
