@@ -282,11 +282,11 @@ psc_bnd_particles_sub_exchange_mprts_post(struct psc_bnd_particles *bnd,
   cuda_mprts_reorder(mprts);
   mprts_cuda->need_reorder = false;
   prof_stop(pr_E);
+  //  cuda_mprts_check_ordered_total(mprts);
 #else
   mprts_cuda->need_reorder = true;
 #endif
   
-  //  cuda_mprts_check_ordered_total(mprts);
 }
 
 // ----------------------------------------------------------------------

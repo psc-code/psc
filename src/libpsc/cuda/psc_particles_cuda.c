@@ -221,9 +221,10 @@ psc_particles_cuda_copy_from_c(struct psc_particles *prts_cuda,
     for (int d = 0; d < 3; d++) {
       int bi = particle_c_real_fint(xi[d] * cuda->b_dxi[d]);
       if (bi < 0 || bi >= cuda->b_mx[d]) {
-	printf("XXX p %d xi %g %g %g\n", p, xi[0], xi[1], xi[2]);
-	printf("XXX p %d n %d d %d xi4[n] %g biy %d // %d\n",
-	       p, n, d, xi[d], bi, cuda->b_mx[d]);
+	MHERE;
+	mprintf("XXX p %d xi %g %g %g\n", p, xi[0], xi[1], xi[2]);
+	mprintf("XXX p %d n %d d %d xi4[n] %g biy %d // %d\n",
+		p, n, d, xi[d], bi, cuda->b_mx[d]);
 	if (bi < 0) {
 	  xi[d] = 0.f;
 	} else {
@@ -331,9 +332,10 @@ psc_particles_cuda_copy_from_single(struct psc_particles *prts_cuda,
     for (int d = 0; d < 3; d++) {
       int bi = particle_single_real_fint(xi[d] * cuda->b_dxi[d]);
       if (bi < 0 || bi >= cuda->b_mx[d]) {
-	printf("XXX p %d xi %g %g %g\n", p, xi[0], xi[1], xi[2]);
-	printf("XXX p %d n %d d %d xi4[n] %g biy %d // %d\n",
-	       p, n, d, xi[d], bi, cuda->b_mx[d]);
+	MHERE;
+	mprintf("XXX p %d xi %g %g %g\n", p, xi[0], xi[1], xi[2]);
+	mprintf("XXX p %d n %d d %d xi4[n] %g biy %d // %d\n",
+		p, n, d, xi[d], bi, cuda->b_mx[d]);
 	if (bi < 0) {
 	  xi[d] = 0.f;
 	} else {
@@ -358,6 +360,8 @@ static void
 psc_particles_cuda_copy_to_single(struct psc_particles *prts_cuda,
 				  struct psc_particles *prts, unsigned int flags)
 {
+  int p = prts_cuda->p;
+  struct psc_particles_cuda *cuda = psc_particles_cuda(prts_cuda);
   struct psc_particles_single *sngl = psc_particles_single(prts);
   prts->n_part = prts_cuda->n_part;
   assert(prts->n_part <= sngl->n_alloced);
@@ -378,6 +382,17 @@ psc_particles_cuda_copy_to_single(struct psc_particles *prts_cuda,
     part_base->pyi = pxi4[n].y;
     part_base->pzi = pxi4[n].z;
     part_base->qni_wni = pxi4[n].w;
+
+    for (int d = 0; d < 3; d++) {
+      int bi = particle_single_real_fint((&part_base->xi)[d] * cuda->b_dxi[d]);
+      if (bi < 0 || bi >= cuda->b_mx[d]) {
+	MHERE;
+	mprintf("XXX p %d xi %.10g %.10g %.10g\n", p, part_base->xi, part_base->yi, part_base->zi);
+	mprintf("XXX p %d n %d d %d xi %.10g b_dxi %.10g bi %d // %d\n",
+		p, n, d, (&part_base->xi)[d] * cuda->b_dxi[d], cuda->b_dxi[d], bi, cuda->b_mx[d]);
+      }
+    }
+
   }
 
   free(xi4);
@@ -414,9 +429,10 @@ psc_particles_cuda_copy_from_double(struct psc_particles *prts_cuda,
     for (int d = 0; d < 3; d++) {
       int bi = particle_double_real_fint(xi[d] * cuda->b_dxi[d]);
       if (bi < 0 || bi >= cuda->b_mx[d]) {
-	printf("XXX p %d xi %g %g %g\n", p, xi[0], xi[1], xi[2]);
-	printf("XXX p %d n %d d %d xi4[n] %g biy %d // %d\n",
-	       p, n, d, xi[d], bi, cuda->b_mx[d]);
+	MHERE;
+	mprintf("XXX p %d xi %g %g %g\n", p, xi[0], xi[1], xi[2]);
+	mprintf("XXX p %d n %d d %d xi4[n] %g biy %d // %d\n",
+		p, n, d, xi[d], bi, cuda->b_mx[d]);
 	if (bi < 0) {
 	  xi[d] = 0.f;
 	} else {
