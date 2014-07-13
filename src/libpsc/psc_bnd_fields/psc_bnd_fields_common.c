@@ -1,5 +1,6 @@
 
 #include "psc.h"
+#include "psc_debug.h"
 
 #include <mrc_bits.h>
 
@@ -14,12 +15,12 @@ conducting_wall_E_lo(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
 #ifdef DEBUG
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
       for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
-	*(long int *)&F3(pf, EX, ix, -1,iz) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, EY, ix, -1,iz) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, EZ, ix, -1,iz) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, EX, ix, -2,iz) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, EY, ix, -2,iz) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, EZ, ix, -2,iz) = 0x7ff8000000000000;
+	fields_t_set_nan(&F3(pf, EX, ix, -1,iz));
+	fields_t_set_nan(&F3(pf, EX, ix, -2,iz));
+	fields_t_set_nan(&F3(pf, EY, ix, -1,iz));
+	fields_t_set_nan(&F3(pf, EY, ix, -2,iz));
+	fields_t_set_nan(&F3(pf, EZ, ix, -1,iz));
+	fields_t_set_nan(&F3(pf, EZ, ix, -2,iz));
       }
     }
 #endif
@@ -42,12 +43,12 @@ conducting_wall_E_lo(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
 #ifdef DEBUG
     for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
       for (int ix = -2; ix < patch->ldims[0] + 2; ix++) {
-	*(long int *)&F3(pf, EX, ix, iy, -1) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, EY, ix, iy, -1) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, EZ, ix, iy, -1) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, EX, ix, iy, -2) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, EY, ix, iy, -2) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, EZ, ix, iy, -2) = 0x7ff8000000000000;
+	fields_t_set_nan(&F3(pf, EX, ix, iy, -1));
+	fields_t_set_nan(&F3(pf, EX, ix, iy, -2));
+	fields_t_set_nan(&F3(pf, EY, ix, iy, -1));
+	fields_t_set_nan(&F3(pf, EY, ix, iy, -2));
+	fields_t_set_nan(&F3(pf, EZ, ix, iy, -1));
+	fields_t_set_nan(&F3(pf, EZ, ix, iy, -2));
       }
     }
 #endif
@@ -81,12 +82,12 @@ conducting_wall_E_hi(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
 #ifdef DEBUG
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
       for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
-	*(long int *)&F3(pf, EX, ix, my  ,iz) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, EX, ix, my+1,iz) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, EY, ix, my  ,iz) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, EY, ix, my+1,iz) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, EZ, ix, my  ,iz) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, EZ, ix, my+1,iz) = 0x7ff8000000000000;
+ 	fields_t_set_nan(&F3(pf, EX, ix, my  , iz));
+	fields_t_set_nan(&F3(pf, EX, ix, my+1, iz));
+	fields_t_set_nan(&F3(pf, EY, ix, my  , iz));
+	fields_t_set_nan(&F3(pf, EY, ix, my+1, iz));
+	fields_t_set_nan(&F3(pf, EZ, ix, my  , iz));
+	fields_t_set_nan(&F3(pf, EZ, ix, my+1, iz));
       }
     }
 #endif
@@ -109,12 +110,12 @@ conducting_wall_E_hi(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
 #ifdef DEBUG
     for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
       for (int ix = -2; ix < patch->ldims[0] + 2; ix++) {
-	*(long int *)&F3(pf, EX, ix, iy, mz) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, EX, ix, iy, mz+1) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, EY, ix, iy, mz) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, EY, ix, iy, mz+1) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, EZ, ix, iy, mz) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, EZ, ix, iy, mz+1) = 0x7ff8000000000000;
+	fields_t_set_nan(&F3(pf, EX, ix, iy, mz));
+	fields_t_set_nan(&F3(pf, EX, ix, iy, mz+1));
+	fields_t_set_nan(&F3(pf, EY, ix, iy, mz));
+	fields_t_set_nan(&F3(pf, EY, ix, iy, mz+1));
+	fields_t_set_nan(&F3(pf, EZ, ix, iy, mz));
+	fields_t_set_nan(&F3(pf, EZ, ix, iy, mz+1));
       }
     }
 #endif
@@ -147,12 +148,12 @@ conducting_wall_H_lo(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
 #ifdef DEBUG
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
       for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
-	*(long int *)&F3(pf, HX, ix, -1,iz) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, HX, ix, -2,iz) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, HY, ix, -1,iz) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, HY, ix, -2,iz) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, HZ, ix, -1,iz) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, HZ, ix, -2,iz) = 0x7ff8000000000000;
+	fields_t_set_nan(&F3(pf, HX, ix, -1,iz));
+	fields_t_set_nan(&F3(pf, HX, ix, -2,iz));
+	fields_t_set_nan(&F3(pf, HY, ix, -1,iz));
+	fields_t_set_nan(&F3(pf, HY, ix, -2,iz));
+	fields_t_set_nan(&F3(pf, HZ, ix, -1,iz));
+	fields_t_set_nan(&F3(pf, HZ, ix, -2,iz));
       }
     }
 #endif
@@ -171,12 +172,12 @@ conducting_wall_H_lo(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
 #ifdef DEBUG
     for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
       for (int ix = -2; ix < patch->ldims[0] + 2; ix++) {
-	*(long int *)&F3(pf, HX, ix, iy, -1) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, HX, ix, iy, -2) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, HY, ix, iy, -1) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, HY, ix, iy, -2) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, HZ, ix, iy, -1) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, HZ, ix, iy, -2) = 0x7ff8000000000000;
+	fields_t_set_nan(&F3(pf, HX, ix, iy, -1));
+	fields_t_set_nan(&F3(pf, HX, ix, iy, -2));
+	fields_t_set_nan(&F3(pf, HY, ix, iy, -1));
+	fields_t_set_nan(&F3(pf, HY, ix, iy, -2));
+	fields_t_set_nan(&F3(pf, HZ, ix, iy, -1));
+	fields_t_set_nan(&F3(pf, HZ, ix, iy, -2));
       }
     }
 #endif
@@ -208,11 +209,11 @@ conducting_wall_H_hi(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
 #ifdef DEBUG
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
       for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
-	*(long int *)&F3(pf, HX, ix,my  ,iz) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, HX, ix,my+1,iz) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, HY, ix,my+1,iz) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, HZ, ix,my  ,iz) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, HZ, ix,my+1,iz) = 0x7ff8000000000000;
+	fields_t_set_nan(&F3(pf, HX, ix, my  , iz));
+	fields_t_set_nan(&F3(pf, HX, ix, my+1, iz));
+	fields_t_set_nan(&F3(pf, HY, ix, my+1, iz));
+	fields_t_set_nan(&F3(pf, HZ, ix, my  , iz));
+	fields_t_set_nan(&F3(pf, HZ, ix, my+1, iz));
       }
     }
 #endif
@@ -232,11 +233,11 @@ conducting_wall_H_hi(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
 #ifdef DEBUG
     for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
       for (int ix = -2; ix < patch->ldims[0] + 2; ix++) {
-	*(long int *)&F3(pf, HX, ix, iy, mz) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, HX, ix, iy, mz+1) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, HY, ix, iy, mz+1) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, HZ, ix, iy, mz+1) = 0x7ff8000000000000;
-	*(long int *)&F3(pf, HZ, ix, iy, mz+1) = 0x7ff8000000000000;
+	fields_t_set_nan(&F3(pf, HX, ix, iy, mz  ));
+	fields_t_set_nan(&F3(pf, HX, ix, iy, mz+1));
+	fields_t_set_nan(&F3(pf, HY, ix, iy, mz  ));
+	fields_t_set_nan(&F3(pf, HY, ix, iy, mz+1));
+	fields_t_set_nan(&F3(pf, HZ, ix, iy, mz+1));
       }
     }
 #endif

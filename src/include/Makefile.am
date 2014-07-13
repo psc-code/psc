@@ -74,5 +74,6 @@ include_HEADERS = \
 	psc_sort.h \
 	psc_sort_private.h \
 	psc_testing.h \
+	psc_debug.h \
 	simd_cbe.h \
 	simd_sse2.h
