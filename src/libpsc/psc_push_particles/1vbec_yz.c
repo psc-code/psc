@@ -52,21 +52,13 @@ do_push_part_1vb_yz(struct psc_fields *pf, struct psc_particles *pp)
     push_xi(part, vxi, .5f * dt);
 
     // OUT OF PLANE CURRENT DENSITY AT (n+1.0)*dt
-
-    int lf[3];
-    particle_real_t of[3];
-    find_idx_off_1st_rel(&part->xi, lf, of, 0.f, dxi);
-
-    particle_real_t fnqx = vxi[0] * particle_wni(part) * fnqx_kind[part->kind];
-    F3_CURR(pf, JXI, 0,lf[1]  ,lf[2]  ) += (1.f - of[1]) * (1.f - of[2]) * fnqx;
-    F3_CURR(pf, JXI, 0,lf[1]+1,lf[2]  ) += (      of[1]) * (1.f - of[2]) * fnqx;
-    F3_CURR(pf, JXI, 0,lf[1]  ,lf[2]+1) += (1.f - of[1]) * (      of[2]) * fnqx;
-    F3_CURR(pf, JXI, 0,lf[1]+1,lf[2]+1) += (      of[1]) * (      of[2]) * fnqx;
+    CALC_JX_2D(pf, part, vxi);
 
     // x^(n+1), p^(n+1) -> x^(n+1.5f), p^(n+1)
     push_xi(part, vxi, .5f * dt);
 
-    particle_real_t xp[3];
+    int lf[3];
+    particle_real_t of[3], xp[3];
     find_idx_off_pos_1st_rel(&part->xi, lf, of, xp, 0.f, dxi);
 
     // IN PLANE CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt

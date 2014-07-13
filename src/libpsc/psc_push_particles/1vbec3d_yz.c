@@ -53,9 +53,8 @@ do_push_part_1vb_yz(struct psc_fields *pf, struct psc_particles *pp)
     calc_vxi(vxi, part);
     push_xi(part, vxi, dt);
 
-    particle_real_t xp[3];
     int lf[3];
-    particle_real_t of[3];
+    particle_real_t of[3], xp[3];
     find_idx_off_pos_1st_rel(&part->xi, lf, of, xp, 0.f, dxi);
 
     // IN PLANE CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt

@@ -229,6 +229,19 @@ curr_3d_vb_cell(struct psc_fields *pf, int i[3], particle_real_t x[3], particle_
   }
 }
 
+#define CALC_JX_2D(pf, part, vxi)					\
+  do {									\
+    int lf[3];								\
+    particle_real_t of[3];						\
+    find_idx_off_1st_rel(&part->xi, lf, of, 0.f, dxi);			\
+    									\
+    particle_real_t fnqx = vxi[0] * particle_wni(part) * fnqx_kind[part->kind]; \
+    F3_CURR(pf, JXI, 0,lf[1]  ,lf[2]  ) += (1.f - of[1]) * (1.f - of[2]) * fnqx; \
+    F3_CURR(pf, JXI, 0,lf[1]+1,lf[2]  ) += (      of[1]) * (1.f - of[2]) * fnqx; \
+    F3_CURR(pf, JXI, 0,lf[1]  ,lf[2]+1) += (1.f - of[1]) * (      of[2]) * fnqx; \
+    F3_CURR(pf, JXI, 0,lf[1]+1,lf[2]+1) += (      of[1]) * (      of[2]) * fnqx; \
+  } while (0)
+
 #endif
 
 #ifdef F3_CACHE
