@@ -68,7 +68,7 @@ find_idx_off_pos_1st_rel(particle_real_t xi[3], int lg[3], particle_real_t og[3]
   }
 }
 
-#define INTERPOLATE_SETUP_1ST				\
+#define INTERPOLATE_SETUP_1ST_STD			\
   particle_real_t g0y = 1.f - og[1];			\
   particle_real_t g0z = 1.f - og[2];			\
   particle_real_t g1y = og[1];				\

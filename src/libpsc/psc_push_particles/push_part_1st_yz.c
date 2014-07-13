@@ -49,7 +49,7 @@ do_push_part_1st_yz(int p, fields_t *pf, struct psc_particles *pp)
 
     // FIELD INTERPOLATION
 
-    INTERPOLATE_SETUP_1ST;
+    INTERPOLATE_SETUP_1ST_STD;
 
     particle_real_t exq = INTERPOLATE_FIELD_1ST(EX, g, g);
     particle_real_t eyq = INTERPOLATE_FIELD_1ST(EY, h, g);
