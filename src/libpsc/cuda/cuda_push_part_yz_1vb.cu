@@ -324,6 +324,7 @@ __device__ static void
 push_part_one(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4, real *fld_cache, int ci0[3],
 	      struct cuda_params prm)
 {
+  LOAD_PARTICLE_POS_(*prt, d_xi4, n);
   // here we have x^{n+.5}, p^n
   
   // field interpolation
@@ -363,6 +364,7 @@ __device__ static void
 push_part_one_ec(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4, real *fld_cache, int ci0[3],
 		 struct cuda_params prm)
 {
+  LOAD_PARTICLE_POS_(*prt, d_xi4, n);
   // here we have x^{n+.5}, p^n
   
   // field interpolation
@@ -1143,48 +1145,13 @@ push_mprts_b(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_p
   SCURR_ADD_TO_FLD;
 }
 
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, int WHAT>
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER, int WHAT>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
 push_mprts_ab(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
 	      float4 *d_alt_xi4, float4 *d_alt_pxi4,
 	      unsigned int *d_off, int nr_total_blocks, unsigned int *d_ids, unsigned int *d_bidx,
 	      float *d_flds0, unsigned int size)
-{
-  FIND_BLOCK_RANGE_QS;
-  DECLARE_AND_CACHE_FIELDS;
-  DECLARE_AND_ZERO_SCURR;
-  
-  __syncthreads();
-  for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
-    if (n < block_begin) {
-      continue;
-    }
-    struct d_particle prt;
-    LOAD_PARTICLE_POS_(prt, d_xi4, n);
-    if (WHAT == 0) {
-      push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
-	(&prt, n, d_xi4, d_pxi4, fld_cache, ci0, prm);
-      yz_calc_j(&prt, n, d_xi4, d_pxi4, scurr_x, scurr_y, scurr_z, prm,
-		nr_total_blocks, p, d_bidx, bid, ci0);
-    } else {
-      push_part_one_ec<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
-	(&prt, n, d_xi4, d_pxi4, fld_cache, ci0, prm);
-      yz_calc_3d_j(&prt, n, d_xi4, d_pxi4, scurr_x, scurr_y, scurr_z, prm,
-		   nr_total_blocks, p, d_bidx, bid, ci0);
-    }
-  }
-  
-  SCURR_ADD_TO_FLD;
-}
-
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, int WHAT>
-__global__ static void
-__launch_bounds__(THREADS_PER_BLOCK, 3)
-push_mprts_ab_reorder(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
-		      float4 *d_alt_xi4, float4 *d_alt_pxi4,
-		      unsigned int *d_off, int nr_total_blocks, unsigned int *d_ids, unsigned int *d_bidx,
-		      float *d_flds0, unsigned int size)
 {
   FIND_BLOCK_RANGE_Q;
   DECLARE_AND_CACHE_FIELDS;
@@ -1196,19 +1163,33 @@ push_mprts_ab_reorder(int block_start, struct cuda_params prm, float4 *d_xi4, fl
       continue;
     }
     struct d_particle prt;
-    if (WHAT == 0) {
-      push_part_one_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
-	(&prt, n, d_ids, d_xi4, d_pxi4, d_alt_xi4, d_alt_pxi4, fld_cache, ci0, prm, true);
-      
-      yz_calc_j(&prt, n, d_alt_xi4, d_alt_pxi4, scurr_x, scurr_y, scurr_z, prm, nr_total_blocks, p, d_bidx, bid, ci0);
+    if (REORDER) {
+      if (WHAT == 0) {
+	push_part_one_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+	  (&prt, n, d_ids, d_xi4, d_pxi4, d_alt_xi4, d_alt_pxi4, fld_cache, ci0, prm, true);
+	
+	yz_calc_j(&prt, n, d_alt_xi4, d_alt_pxi4, scurr_x, scurr_y, scurr_z, prm, nr_total_blocks, p, d_bidx, bid, ci0);
+      } else {
+	push_part_one_ec_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+	  (&prt, n, d_ids, d_xi4, d_pxi4, d_alt_xi4, d_alt_pxi4, fld_cache, ci0, prm, true);
+	
+	yz_calc_3d_j(&prt, n, d_alt_xi4, d_alt_pxi4, scurr_x, scurr_y, scurr_z, prm, nr_total_blocks, p, d_bidx, bid, ci0);
+      }
     } else {
-      push_part_one_ec_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
-	(&prt, n, d_ids, d_xi4, d_pxi4, d_alt_xi4, d_alt_pxi4, fld_cache, ci0, prm, true);
-      
-      yz_calc_3d_j(&prt, n, d_alt_xi4, d_alt_pxi4, scurr_x, scurr_y, scurr_z, prm, nr_total_blocks, p, d_bidx, bid, ci0);
+      if (WHAT == 0) {
+	push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+	  (&prt, n, d_xi4, d_pxi4, fld_cache, ci0, prm);
+	yz_calc_j(&prt, n, d_xi4, d_pxi4, scurr_x, scurr_y, scurr_z, prm,
+		  nr_total_blocks, p, d_bidx, bid, ci0);
+      } else {
+	push_part_one_ec<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+	  (&prt, n, d_xi4, d_pxi4, fld_cache, ci0, prm);
+	yz_calc_3d_j(&prt, n, d_xi4, d_pxi4, scurr_x, scurr_y, scurr_z, prm,
+		     nr_total_blocks, p, d_bidx, bid, ci0);
+      }
     }
   }
-    
+  
   SCURR_ADD_TO_FLD;
 }
 
@@ -1381,21 +1362,12 @@ cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
   CUDA_PUSH_MPRTS_TOP;
 
   for (int block_start = 0; block_start < 4; block_start++) {
-    if (REORDER) {
-      push_mprts_ab_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, WHAT>
-	  <<<dimGrid, THREADS_PER_BLOCK>>>
-	  (block_start, prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
-	   mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4, mprts_cuda->d_off,
-	   mprts_cuda->nr_total_blocks, mprts_cuda->d_ids, mprts_cuda->d_bidx,
-	   mflds_cuda->d_flds, fld_size);
-    } else {
-      push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, WHAT>
-	<<<dimGrid, THREADS_PER_BLOCK>>>
-	(block_start, prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
-	 mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4, mprts_cuda->d_off,
-	 mprts_cuda->nr_total_blocks, mprts_cuda->d_ids, mprts_cuda->d_bidx,
-	 mflds_cuda->d_flds, fld_size);
-    }
+    push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER, WHAT>
+      <<<dimGrid, THREADS_PER_BLOCK>>>
+      (block_start, prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
+       mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4, mprts_cuda->d_off,
+       mprts_cuda->nr_total_blocks, mprts_cuda->d_ids, mprts_cuda->d_bidx,
+       mflds_cuda->d_flds, fld_size);
     cuda_sync_if_enabled();
   }
 
