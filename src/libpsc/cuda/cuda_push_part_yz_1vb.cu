@@ -119,6 +119,7 @@ set_params(struct cuda_params *prm, struct psc *psc,
 
   prm->dqs    = .5f * psc->coeff.eta * psc->dt;
   prm->fnqs   = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
+  prm->fnqxs  = psc->patch[0].dx[0] * prm->fnqs / psc->dt;
   prm->fnqys  = psc->patch[0].dx[1] * prm->fnqs / psc->dt;
   prm->fnqzs  = psc->patch[0].dx[2] * prm->fnqs / psc->dt;
   assert(psc->nr_kinds <= MAX_KINDS);

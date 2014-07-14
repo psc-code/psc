@@ -14,7 +14,7 @@ struct cuda_params {
   real b_dxi[3];
   real dqs;
   real fnqs;
-  real fnqys, fnqzs;
+  real fnqxs, fnqys, fnqzs;
   int mx[3];
   int ilg[3];
   int b_mx[3];
