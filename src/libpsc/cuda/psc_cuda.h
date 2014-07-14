@@ -29,34 +29,8 @@ cuda_float_as_int(float f)
 
 // ======================================================================
 
-#define DECLARE_CUDA(pfx)                                               \
-  EXTERN_C void pfx##_set_constants(struct psc_particles *prts,		\
-				    struct psc_fields *pf);		\
-  EXTERN_C void pfx##_cuda_push_part_p1(struct psc_particles *prts,	\
-                                        struct psc_fields *pf,		\
-                                        real **d_scratch);              \
-  EXTERN_C void pfx##_cuda_push_part_p2(struct psc_particles *prts,	\
-                                        struct psc_fields *pf);		\
-  EXTERN_C void pfx##_cuda_push_part_p3(struct psc_particles *prts,	\
-                                        struct psc_fields *pf,		\
-                                        real *d_scratch,		\
-					int block_stride);		\
-  EXTERN_C void pfx##_cuda_push_part_p4(struct psc_particles *prts,	\
-                                        struct psc_fields *pf,		\
-                                        real *d_scratch);               \
-  EXTERN_C void pfx##_cuda_push_part_p5(struct psc_particles *prts,	\
-                                        struct psc_fields *pf,		\
-                                        real *d_scratch);               \
-
-DECLARE_CUDA(z);
-DECLARE_CUDA(z2);
-DECLARE_CUDA(z3);
-DECLARE_CUDA(yz);
-DECLARE_CUDA(yz2);
-DECLARE_CUDA(yz3);
-DECLARE_CUDA(yz4);
-DECLARE_CUDA(yz5);
-DECLARE_CUDA(yz6);
+EXTERN_C void yz4x4_1vb_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds);
+EXTERN_C void yz4x4_1vbec3d_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds);
 
 EXTERN_C void yz_a_set_constants(struct psc_particles *prts, struct psc_fields *pf);
 EXTERN_C void yz_b_set_constants(struct psc_particles *prts, struct psc_fields *pf);

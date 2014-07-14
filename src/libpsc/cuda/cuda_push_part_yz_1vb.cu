@@ -1860,38 +1860,6 @@ cuda_push_mprts_1vbec3d_ab_reorder(struct psc_mparticles *mprts, struct psc_mfie
   free_params(&prm);
 }
 
-// ======================================================================
-
-EXTERN_C void
-yz2x2_1vb_cuda_push_part_p2(struct psc_particles *prts, struct psc_fields *pf)
-{
-  assert(0);
-  //  cuda_push_part_p2<1, 2, 2>(prts, pf);
-}
-
-EXTERN_C void
-yz2x2_1vb_cuda_push_part_p3(struct psc_particles *prts, struct psc_fields *pf, real *dummy,
-			    int block_stride)
-{
-  assert(0);
-  //  cuda_push_part_p3<1, 2, 2>(prts, pf);
-}
-
-EXTERN_C void
-yz8x8_1vb_cuda_push_part_p2(struct psc_particles *prts, struct psc_fields *pf)
-{
-  assert(0);
-  //  cuda_push_part_p2<1, 8, 8>(prts, pf);
-}
-
-EXTERN_C void
-yz8x8_1vb_cuda_push_part_p3(struct psc_particles *prts, struct psc_fields *pf, real *dummy,
-			    int block_stride)
-{
-  assert(0);
-  //  cuda_push_part_p3<1, 8, 8>(prts, pf);
-}
-
 static void
 yz4x4_1vb_cuda_push_mprts_a(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
