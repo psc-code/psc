@@ -316,82 +316,55 @@ ip1_to_grid_p(real h)
 
 // ----------------------------------------------------------------------
 // push_part_one
-//
-// push one particle
 
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, int WHAT>
 __device__ static void
 push_part_one(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4, real *fld_cache, int ci0[3],
 	      struct cuda_params prm)
 {
   LOAD_PARTICLE_POS_(*prt, d_xi4, n);
   // here we have x^{n+.5}, p^n
-  
+
   // field interpolation
-
-  int lh[3], lg[3];
-  real oh[3], og[3];
-
   real exq, eyq, ezq, hxq, hyq, hzq;
-
-  find_idx_off_1st(prt->xi, lh, oh, real(-.5), prm);
-  find_idx_off_1st(prt->xi, lg, og, real(0.), prm);
-  lg[1] -= ci0[1];
-  lh[1] -= ci0[1];
-  lg[2] -= ci0[2];
-  lh[2] -= ci0[2];
-  
-  INTERP_FIELD_1ST(cached_flds, exq, EX, g, g);
-  INTERP_FIELD_1ST(cached_flds, eyq, EY, h, g);
-  INTERP_FIELD_1ST(cached_flds, ezq, EZ, g, h);
-  INTERP_FIELD_1ST(cached_flds, hxq, HX, h, h);
-  INTERP_FIELD_1ST(cached_flds, hyq, HY, g, h);
-  INTERP_FIELD_1ST(cached_flds, hzq, HZ, h, g);
-
-  // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
-  LOAD_PARTICLE_MOM_(*prt, d_pxi4, n);
-  push_pxi_dt(prt, exq, eyq, ezq, hxq, hyq, hzq);
-  STORE_PARTICLE_MOM_(*prt, d_pxi4, n);
-}
-
-// ----------------------------------------------------------------------
-// push_part_one_ec
-//
-// push one particle
-
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
-__device__ static void
-push_part_one_ec(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4, real *fld_cache, int ci0[3],
-		 struct cuda_params prm)
-{
-  LOAD_PARTICLE_POS_(*prt, d_xi4, n);
-  // here we have x^{n+.5}, p^n
-  
-  // field interpolation
-
+    
   int lg[3];
   real og[3];
-
-  real exq, eyq, ezq, hxq, hyq, hzq;
-
   find_idx_off_1st(prt->xi, lg, og, real(0.), prm);
   lg[1] -= ci0[1];
   lg[2] -= ci0[2];
-  
-  exq = ((1.f - og[1]) * (1.f - og[2]) * F3_CACHE(fld_cache, EX, lg[1]+0, lg[2]+0) +
-	 (      og[1]) * (1.f - og[2]) * F3_CACHE(fld_cache, EX, lg[1]+1, lg[2]+0) +
-	 (1.f - og[1]) * (      og[2]) * F3_CACHE(fld_cache, EX, lg[1]+0, lg[2]+1) +
-	 (      og[1]) * (      og[2]) * F3_CACHE(fld_cache, EX, lg[1]+1, lg[2]+1));
-  eyq = ((1.f - og[2]) * F3_CACHE(fld_cache, EY, lg[1]  , lg[2]+0) +
-	 (      og[2]) * F3_CACHE(fld_cache, EY, lg[1]  , lg[2]+1));
-  ezq = ((1.f - og[1]) * F3_CACHE(fld_cache, EZ, lg[1]+0, lg[2]  ) +
-	 (      og[1]) * F3_CACHE(fld_cache, EZ, lg[1]+1, lg[2]  ));
-  hxq = (F3_CACHE(fld_cache, HX, lg[1]  , lg[2]  ));
-  hyq = ((1.f - og[1]) * F3_CACHE(fld_cache, HY, lg[1]+0, lg[2]  ) +
-	 (      og[1]) * F3_CACHE(fld_cache, HY, lg[1]+1, lg[2]  ));
-  hzq = ((1.f - og[2]) * F3_CACHE(fld_cache, HZ, lg[1]  , lg[2]+0) +
-	 (      og[2]) * F3_CACHE(fld_cache, HZ, lg[1]  , lg[2]+1));
-
+    
+  if (WHAT == 0) { // 1st order interpolation
+    int lh[3];
+    real oh[3];
+    
+    find_idx_off_1st(prt->xi, lh, oh, real(-.5), prm);
+    lh[1] -= ci0[1];
+    lh[2] -= ci0[2];
+    
+    INTERP_FIELD_1ST(cached_flds, exq, EX, g, g);
+    INTERP_FIELD_1ST(cached_flds, eyq, EY, h, g);
+    INTERP_FIELD_1ST(cached_flds, ezq, EZ, g, h);
+    INTERP_FIELD_1ST(cached_flds, hxq, HX, h, h);
+    INTERP_FIELD_1ST(cached_flds, hyq, HY, g, h);
+    INTERP_FIELD_1ST(cached_flds, hzq, HZ, h, g);
+  } else { // .5 order interpolation
+    // FIXME, mv somewhere?
+    exq = ((1.f - og[1]) * (1.f - og[2]) * F3_CACHE(fld_cache, EX, lg[1]+0, lg[2]+0) +
+	   (      og[1]) * (1.f - og[2]) * F3_CACHE(fld_cache, EX, lg[1]+1, lg[2]+0) +
+	   (1.f - og[1]) * (      og[2]) * F3_CACHE(fld_cache, EX, lg[1]+0, lg[2]+1) +
+	   (      og[1]) * (      og[2]) * F3_CACHE(fld_cache, EX, lg[1]+1, lg[2]+1));
+    eyq = ((1.f - og[2]) * F3_CACHE(fld_cache, EY, lg[1]  , lg[2]+0) +
+	   (      og[2]) * F3_CACHE(fld_cache, EY, lg[1]  , lg[2]+1));
+    ezq = ((1.f - og[1]) * F3_CACHE(fld_cache, EZ, lg[1]+0, lg[2]  ) +
+	   (      og[1]) * F3_CACHE(fld_cache, EZ, lg[1]+1, lg[2]  ));
+    hxq = (F3_CACHE(fld_cache, HX, lg[1]  , lg[2]  ));
+    hyq = ((1.f - og[1]) * F3_CACHE(fld_cache, HY, lg[1]+0, lg[2]  ) +
+	   (      og[1]) * F3_CACHE(fld_cache, HY, lg[1]+1, lg[2]  ));
+    hzq = ((1.f - og[2]) * F3_CACHE(fld_cache, HZ, lg[1]  , lg[2]+0) +
+	   (      og[2]) * F3_CACHE(fld_cache, HZ, lg[1]  , lg[2]+1));
+  }
+    
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
   LOAD_PARTICLE_MOM_(*prt, d_pxi4, n);
   push_pxi_dt(prt, exq, eyq, ezq, hxq, hyq, hzq);
@@ -1033,7 +1006,7 @@ push_mprts_a(struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
     if (xi4 >= xi4_begin) {
       struct d_particle prt;
       LOAD_PARTICLE_POS_(prt, xi4, 0);
-      push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+      push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, 0>
 	(&prt, 0, xi4, pxi4, fld_cache, ci0, prm);
     }
   }
@@ -1063,7 +1036,7 @@ push_mprts_aq(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_
     if (xi4 >= xi4_begin) {
       struct d_particle prt;
       LOAD_PARTICLE_POS_(prt, xi4, 0);
-      push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+      push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, 0>
 	(&prt, 0, xi4, pxi4, fld_cache, ci0, prm);
     }
   }
@@ -1177,12 +1150,12 @@ push_mprts_ab(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_
       }
     } else {
       if (WHAT == 0) {
-	push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+	push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, WHAT>
 	  (&prt, n, d_xi4, d_pxi4, fld_cache, ci0, prm);
 	yz_calc_j(&prt, n, d_xi4, d_pxi4, scurr_x, scurr_y, scurr_z, prm,
 		  nr_total_blocks, p, d_bidx, bid, ci0);
       } else {
-	push_part_one_ec<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+	push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, WHAT>
 	  (&prt, n, d_xi4, d_pxi4, fld_cache, ci0, prm);
 	yz_calc_3d_j(&prt, n, d_xi4, d_pxi4, scurr_x, scurr_y, scurr_z, prm,
 		     nr_total_blocks, p, d_bidx, bid, ci0);
