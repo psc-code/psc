@@ -1147,7 +1147,8 @@ template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, int WHAT>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
 push_mprts_ab(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
-	      unsigned int *d_off, int nr_total_blocks, unsigned int *d_bidx,
+	      float4 *d_alt_xi4, float4 *d_alt_pxi4,
+	      unsigned int *d_off, int nr_total_blocks, unsigned int *d_ids, unsigned int *d_bidx,
 	      float *d_flds0, unsigned int size)
 {
   FIND_BLOCK_RANGE_QS;
@@ -1390,8 +1391,9 @@ cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
     } else {
       push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, WHAT>
 	<<<dimGrid, THREADS_PER_BLOCK>>>
-	(block_start, prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4, mprts_cuda->d_off,
-	 mprts_cuda->nr_total_blocks, mprts_cuda->d_bidx,
+	(block_start, prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
+	 mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4, mprts_cuda->d_off,
+	 mprts_cuda->nr_total_blocks, mprts_cuda->d_ids, mprts_cuda->d_bidx,
 	 mflds_cuda->d_flds, fld_size);
     }
     cuda_sync_if_enabled();
