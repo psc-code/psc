@@ -1096,24 +1096,20 @@ push_mprts_ab(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_
       continue;
     }
     struct d_particle prt;
+    push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER, WHAT>
+      (&prt, n, d_ids, d_xi4, d_pxi4, d_alt_xi4, d_alt_pxi4, fld_cache, ci0, prm, true);
+    float4 *xi4, *pxi4;
     if (REORDER) {
-      push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER, WHAT>
-	(&prt, n, d_ids, d_xi4, d_pxi4, d_alt_xi4, d_alt_pxi4, fld_cache, ci0, prm, true);
-      if (WHAT == 0) {
-	yz_calc_j(&prt, n, d_alt_xi4, d_alt_pxi4, scurr_x, scurr_y, scurr_z, prm, nr_total_blocks, p, d_bidx, bid, ci0);
-      } else {
-	yz_calc_3d_j(&prt, n, d_alt_xi4, d_alt_pxi4, scurr_x, scurr_y, scurr_z, prm, nr_total_blocks, p, d_bidx, bid, ci0);
-      }
+      xi4 = d_alt_xi4; pxi4 = d_alt_pxi4;
     } else {
-      push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER, WHAT>
-	(&prt, n, d_ids, d_xi4, d_pxi4, d_alt_xi4, d_alt_pxi4, fld_cache, ci0, prm, true);
-      if (WHAT == 0) {
-	yz_calc_j(&prt, n, d_xi4, d_pxi4, scurr_x, scurr_y, scurr_z, prm,
-		  nr_total_blocks, p, d_bidx, bid, ci0);
-      } else {
-	yz_calc_3d_j(&prt, n, d_xi4, d_pxi4, scurr_x, scurr_y, scurr_z, prm,
-		     nr_total_blocks, p, d_bidx, bid, ci0);
-      }
+      xi4 = d_xi4; pxi4 = d_pxi4;
+    }
+    if (WHAT == 0) {
+      yz_calc_j(&prt, n, xi4, pxi4, scurr_x, scurr_y, scurr_z, prm,
+		nr_total_blocks, p, d_bidx, bid, ci0);
+    } else {
+      yz_calc_3d_j(&prt, n, xi4, pxi4, scurr_x, scurr_y, scurr_z, prm,
+		   nr_total_blocks, p, d_bidx, bid, ci0);
     }
   }
   
