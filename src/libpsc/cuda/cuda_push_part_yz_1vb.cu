@@ -979,6 +979,14 @@ yz_calc_3d_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 
 #define FIND_BLOCK_RANGE						\
   int block_pos[3], ci0[3];						\
+  int p = find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>	\
+    (prm, block_pos, ci0);						\
+  int bid = find_bid(prm);						\
+  int block_begin = d_off[bid];						\
+  int block_end = d_off[bid + 1]
+
+#define FIND_BLOCK_RANGE_Q						\
+  int block_pos[3], ci0[3];						\
   int p = find_block_pos_patch_q<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>	\
     (prm, block_pos, ci0, block_start);					\
   if (p < 0)								\
@@ -988,7 +996,7 @@ yz_calc_3d_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
   int block_begin = d_off[bid];						\
   int block_end = d_off[bid + 1]					\
 
-#define FIND_BLOCK_RANGE_S						\
+#define FIND_BLOCK_RANGE_QS						\
   int block_pos[3], ci0[3];						\
   int p = find_block_pos_patch_q<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>	\
     (prm, block_pos, ci0, block_start);					\
@@ -1010,16 +1018,10 @@ __launch_bounds__(THREADS_PER_BLOCK, 3)
 push_mprts_a(struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
 	     unsigned int *d_off, float *d_flds0, unsigned int size)
 {
-  int block_pos[3], ci0[3];
-  int p = find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(prm, block_pos, ci0);
-  int bid = find_bid(prm);
-  int block_begin = d_off[bid];
-  int block_end = d_off[bid + 1];
+  FIND_BLOCK_RANGE;
+  DECLARE_AND_CACHE_FIELDS;
 
-  __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
-  cache_fields<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(prm, fld_cache, d_flds0, size, ci0, p);
   __syncthreads();
-
   float4 *xi4_begin = d_xi4 + block_begin;
   float4 *xi4 = d_xi4 + (block_begin & ~31) + threadIdx.x;
   float4 *pxi4 = d_pxi4 + (block_begin & ~31) + threadIdx.x;
@@ -1046,19 +1048,10 @@ __launch_bounds__(THREADS_PER_BLOCK, 3)
 push_mprts_aq(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
 	      unsigned int *d_off, float *d_flds0, unsigned int size)
 {
-  int block_pos[3], ci0[3];
-  int p = find_block_pos_patch_q<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
-    (prm, block_pos, ci0, block_start);
-  if (p < 0)
-    return;
-  int bid = find_bid_q(prm, p, block_pos);
-  int block_begin = d_off[bid];
-  int block_end = d_off[bid + 1];
+  FIND_BLOCK_RANGE_Q;
+  DECLARE_AND_CACHE_FIELDS;
 
-  __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
-  cache_fields<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(prm, fld_cache, d_flds0, size, ci0, p);
   __syncthreads();
-
   float4 *xi4_begin = d_xi4 + block_begin;
   float4 *xi4 = d_xi4 + (block_begin & ~31) + threadIdx.x;
   float4 *pxi4 = d_pxi4 + (block_begin & ~31) + threadIdx.x;
@@ -1086,17 +1079,10 @@ push_mprts_a_reorder(struct cuda_params prm, unsigned int *d_ids, float4 *d_xi4,
 		     float4 *d_alt_xi4, float4 *d_alt_pxi4,
 		     unsigned int *d_off, float *d_flds0, unsigned int size)
 {
-  int block_pos[3], ci0[3];
-  int p = find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
-    (prm, block_pos, ci0);
-  int bid = find_bid(prm);
-  int block_begin = d_off[bid];
-  int block_end = d_off[bid + 1];
+  FIND_BLOCK_RANGE;
+  DECLARE_AND_CACHE_FIELDS;
 
-  __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
-  cache_fields<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(prm, fld_cache, d_flds0, size, ci0, p);
   __syncthreads();
-
   for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
     if (n < block_begin) {
       continue;
@@ -1109,8 +1095,6 @@ push_mprts_a_reorder(struct cuda_params prm, unsigned int *d_ids, float4 *d_xi4,
 
 // ----------------------------------------------------------------------
 // push_mprts_aq_reorder
-//
-// push particles
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __global__ static void
@@ -1120,19 +1104,10 @@ push_mprts_aq_reorder(int block_start,
 		      float4 *d_alt_xi4, float4 *d_alt_pxi4,
 		      unsigned int *d_off, float *d_flds0, unsigned int size)
 {
-  int block_pos[3], ci0[3];
-  int p = find_block_pos_patch_q<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
-    (prm, block_pos, ci0, block_start);
-  if (p < 0)
-    return;
-  int bid = find_bid_q(prm, p, block_pos);
-  int block_begin = d_off[bid];
-  int block_end = d_off[bid + 1];
+  FIND_BLOCK_RANGE_Q;
+  DECLARE_AND_CACHE_FIELDS;
 
-  __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
-  cache_fields<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(prm, fld_cache, d_flds0, size, ci0, p);
   __syncthreads();
-
   for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
     if (n < block_begin) {
       continue;
@@ -1152,7 +1127,7 @@ push_mprts_b(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_p
 	     unsigned int *d_off, int nr_total_blocks, unsigned int *d_bidx,
 	     float *d_flds0, unsigned int size)
 {
-  FIND_BLOCK_RANGE;
+  FIND_BLOCK_RANGE_Q;
   DECLARE_AND_ZERO_SCURR;
 
   __syncthreads();
@@ -1175,7 +1150,7 @@ push_mprts_ab(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_
 	      unsigned int *d_off, int nr_total_blocks, unsigned int *d_bidx,
 	      float *d_flds0, unsigned int size)
 {
-  FIND_BLOCK_RANGE_S;
+  FIND_BLOCK_RANGE_QS;
   DECLARE_AND_CACHE_FIELDS;
   DECLARE_AND_ZERO_SCURR;
 
@@ -1201,7 +1176,7 @@ push_mprts_1vbec3d_ab(int block_start, struct cuda_params prm, float4 *d_xi4, fl
 		      unsigned int *d_off, int nr_total_blocks, unsigned int *d_bidx,
 		      float *d_flds0, unsigned int size)
 {
-  FIND_BLOCK_RANGE_S;
+  FIND_BLOCK_RANGE_QS;
   DECLARE_AND_CACHE_FIELDS;
   DECLARE_AND_ZERO_SCURR;
 
@@ -1228,7 +1203,7 @@ push_mprts_ab_reorder(int block_start, struct cuda_params prm, float4 *d_xi4, fl
 		      unsigned int *d_off, int nr_total_blocks, unsigned int *d_ids, unsigned int *d_bidx,
 		      float *d_flds0, unsigned int size)
 {
-  FIND_BLOCK_RANGE;
+  FIND_BLOCK_RANGE_Q;
   DECLARE_AND_CACHE_FIELDS;
   DECLARE_AND_ZERO_SCURR;
 
@@ -1255,7 +1230,7 @@ push_mprts_1vbec3d_ab_reorder(int block_start, struct cuda_params prm, float4 *d
 			      unsigned int *d_off, int nr_total_blocks, unsigned int *d_ids, unsigned int *d_bidx,
 			       float *d_flds0, unsigned int size)
 {
-  FIND_BLOCK_RANGE;
+  FIND_BLOCK_RANGE_Q;
   DECLARE_AND_CACHE_FIELDS;
   DECLARE_AND_ZERO_SCURR;
 
