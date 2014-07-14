@@ -489,6 +489,7 @@ public:
 };
 
 // ======================================================================
+// depositing current
 
 // ----------------------------------------------------------------------
 // current_add
@@ -502,7 +503,7 @@ current_add(SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr, int jy, int jz,
 }
 
 // ----------------------------------------------------------------------
-// yz_calc_jy
+// calc_dx1
 
 __device__ static void
 calc_dx1(real dx1[2], real x[2], real dx[2], int off[2])
@@ -645,15 +646,16 @@ curr_3d_vb_cell_upd(int i[3], real x[3], real dx1[3], real dx[3], int off[3])
   i[2] += off[2];
 }
 
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
+template<enum DEPOSIT DEPOSIT, int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static void
-yz_calc_2d_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
-	     SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_x,
-	     SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_y,
-	     SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_z,
-	     struct cuda_params prm, int nr_total_blocks, int p_nr,
-	     unsigned int *d_bidx, int bid, int *ci0)
+yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
+	  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_x,
+	  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_y,
+	  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_z,
+	  struct cuda_params prm, int nr_total_blocks, int p_nr,
+	  unsigned int *d_bidx, int bid, int *ci0)
 {
+  if (DEPOSIT == DEPOSIT_VB_2D) {
   real vxi[3];
   calc_vxi(vxi, *prt);
 
@@ -731,17 +733,7 @@ yz_calc_2d_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
   curr_2d_vb_cell_upd(i, x, dx1, dx, off);
   
   curr_2d_vb_cell(i, x, dx, prt->qni_wni, scurr_y, scurr_z, prm);
-}
-
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
-__device__ static void
-yz_calc_3d_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
-	     SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_x,
-	     SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_y,
-	     SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_z,
-	     struct cuda_params prm, int nr_total_blocks, int p_nr,
-	     unsigned int *d_bidx, int bid, int *ci0)
-{
+  } else if (DEPOSIT == DEPOSIT_VB_3D) {
   real vxi[3];
   calc_vxi(vxi, *prt);
 
@@ -803,23 +795,6 @@ yz_calc_3d_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
   curr_3d_vb_cell_upd(i, x, dx1, dx, off);
   
   curr_3d_vb_cell(i, x, dx, prt->qni_wni, scurr_x, scurr_y, scurr_z, prm);
-}
-
-template<enum DEPOSIT DEPOSIT, int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
-__device__ static void
-yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
-	  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_x,
-	  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_y,
-	  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_z,
-	  struct cuda_params prm, int nr_total_blocks, int p_nr,
-	  unsigned int *d_bidx, int bid, int *ci0)
-{
-  if (DEPOSIT == DEPOSIT_VB_2D) {
-    yz_calc_2d_j(prt, n, d_xi4, d_pxi4, scurr_x, scurr_y, scurr_z,
-		 prm, nr_total_blocks, p_nr, d_bidx, bid, ci0);
-  } else if (DEPOSIT == DEPOSIT_VB_3D) {
-    yz_calc_3d_j(prt, n, d_xi4, d_pxi4, scurr_x, scurr_y, scurr_z,
-		 prm, nr_total_blocks, p_nr, d_bidx, bid, ci0);
   } else {
     assert(0);
   }
