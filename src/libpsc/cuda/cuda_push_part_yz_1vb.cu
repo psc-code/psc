@@ -2,8 +2,6 @@
 #include "psc_cuda.h"
 #include "particles_cuda.h"
 
-#include <mrc_profile.h>
-
 // OPT: precalc offsets into fld_cache (including ci[])
 // OPT: use more shmem?
 
@@ -1863,16 +1861,10 @@ cuda_push_mprts_1vbec3d_ab_reorder(struct psc_mparticles *mprts, struct psc_mfie
 static void
 yz4x4_1vb_cuda_push_mprts_a(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
-  static int pr;
-  if (!pr) {
-    pr = prof_register("push_mprts_a", 1., 0, 0);
-  }
-
   if (mprts->nr_patches == 0) {
     return;
   }
 
-  prof_start(pr);
   psc_mparticles_cuda_copy_to_dev(mprts);
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
 
@@ -1883,31 +1875,17 @@ yz4x4_1vb_cuda_push_mprts_a(struct psc_mparticles *mprts, struct psc_mfields *mf
     cuda_push_mprts_a_reorder<1, 4, 4>(mprts, mflds);
     mprts_cuda->need_reorder = false;
   }
-  prof_stop(pr);
 }
 
 static void
 yz4x4_1vb_cuda_push_mprts_b(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
-  static int pr;
-  if (!pr) {
-    pr = prof_register("push_mprts_b", 1., 0, 0);
-  }
-
-  prof_start(pr);
   cuda_push_mprts_b<1, 4, 4>(mprts, mflds);
-  prof_stop(pr);
 }
 
 EXTERN_C void
 yz4x4_1vb_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
-  static int pr;
-  if (!pr) {
-    pr = prof_register("push_mprts", 1., 0, 0);
-  }
-
-  prof_start(pr);
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
     
   if (0) {
@@ -1924,19 +1902,11 @@ yz4x4_1vb_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mfld
       mprts_cuda->need_reorder = false;
     }
   }
-
-  prof_stop(pr);
 }
 
 EXTERN_C void
 yz4x4_1vbec3d_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
-  static int pr;
-  if (!pr) {
-    pr = prof_register("push_mprts_1vbec3d", 1., 0, 0);
-  }
-
-  prof_start(pr);
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
     
   psc_mparticles_cuda_copy_to_dev(mprts);
@@ -1948,6 +1918,4 @@ yz4x4_1vbec3d_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *
     cuda_push_mprts_1vbec3d_ab_reorder<1, 4, 4>(mprts, mflds);
     mprts_cuda->need_reorder = false;
   }
-
-  prof_stop(pr);
 }
