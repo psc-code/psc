@@ -96,7 +96,7 @@ find_idx_off_pos_1st(const real xi[3], int j[3], real h[3], real pos[3], real sh
 
 #include "cuda_common.h"
 
-static __constant__ __device__ float c_dqs[4];
+static __constant__ __device__ float c_dqs[4]; // FIXME hardcoded
 
 static void
 set_consts(struct cuda_params *prm)
@@ -165,56 +165,6 @@ psc_mparticles_cuda_copy_to_dev(struct psc_mparticles *mprts)
 
 // ======================================================================
 // field caching
-
-#if 0
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
-class F3cache {
-  real *fld_cache;
-
-public:
-  __device__ F3cache(real *_fld_cache, real *d_flds, int l[3],
-		     struct cuda_params prm) :
-    fld_cache(_fld_cache)
-  {
-    int ti = threadIdx.x;
-    int n = BLOCKSIZE_X * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4);
-    while (ti < n) {
-      int tmp = ti;
-      int jx = tmp % BLOCKSIZE_X;
-      tmp /= BLOCKSIZE_X;
-      int jy = tmp % (BLOCKSIZE_Y + 4) - 2;
-      tmp /= BLOCKSIZE_Y + 4;
-      int jz = tmp % (BLOCKSIZE_Z + 4) - 2;
-      //    tmp /= BLOCKSIZE_Z + 4;
-      //    int m = tmp + EX;
-      //    printf("n %d ti %d m %d, jx %d,%d,%d\n", n, ti, m, jx, jy, jz);
-      // currently it seems faster to do the loop rather than do m by threadidx
-      for (int m = EX; m <= HZ; m++) {
-	(*this)(m, jx,jy,jz) = F3_DEV_YZ(m, jy+l[1],jz+l[2]);
-      }
-      ti += blockDim.x;
-    }
-    __syncthreads();
-  }
-
-  __host__ __device__ real operator()(int fldnr, int jx, int jy, int jz) const
-  {
-    int off = ((((fldnr-EX)
-		 *(BLOCKSIZE_Z + 4) + ((jz)-(-2)))
-		*(BLOCKSIZE_Y + 4) + ((jy)-(-2)))
-	       *1 + ((jx)));
-    return fld_cache[off];
-  }
-  __host__ __device__ real& operator()(int fldnr, int jx, int jy, int jz)
-  {
-    int off = ((((fldnr-EX)
-		 *(BLOCKSIZE_Z + 4) + ((jz)-(-2)))
-		*(BLOCKSIZE_Y + 4) + ((jy)-(-2)))
-	       *1 + ((jx)));
-    return fld_cache[off];
-  }
-};
-#endif
 
 #define F3_CACHE(fld_cache, m, jy, jz)					\
   ((fld_cache)[(((m-EX)							\
@@ -1117,14 +1067,13 @@ push_mprts_ab(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_
     push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER, WHAT>
       (&prt, n, d_ids, d_xi4, d_pxi4, d_alt_xi4, d_alt_pxi4, fld_cache, ci0, prm, true);
 
-    float4 *xi4, *pxi4;
     if (REORDER) {
-      xi4 = d_alt_xi4; pxi4 = d_alt_pxi4;
+      yz_calc_j<WHAT>(&prt, n, d_alt_xi4, d_alt_pxi4, scurr_x, scurr_y, scurr_z, prm, 
+		      nr_total_blocks, p, d_bidx, bid, ci0);
     } else {
-      xi4 = d_xi4; pxi4 = d_pxi4;
+      yz_calc_j<WHAT>(&prt, n, d_xi4, d_pxi4, scurr_x, scurr_y, scurr_z, prm, 
+		      nr_total_blocks, p, d_bidx, bid, ci0);
     }
-    yz_calc_j<WHAT>(&prt, n, xi4, pxi4, scurr_x, scurr_y, scurr_z, prm, 
-		    nr_total_blocks, p, d_bidx, bid, ci0);
   }
   
   SCURR_ADD_TO_FLD;
