@@ -8,6 +8,7 @@
 #include <mrc_profile.h>
 #include <math.h>
 
+// FIXME
 EXTERN_C void yz4x4_1vb_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds);
 
 static void
@@ -296,8 +297,6 @@ struct psc_push_particles_ops psc_push_particles_cuda_1st_ops = {
 };
 
 // ======================================================================
-
-DECLARE_CUDA(yz4x4_1vb);
 
 static void
 psc_push_particles_1vb_4x4_cuda_push_mprts_yz(struct psc_push_particles *push,
