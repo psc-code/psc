@@ -183,6 +183,8 @@ mrc_io_write_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
     }
   } else if (fld->_dims.nr_vals == 5) {
     mrc_io_write_m3(io, path, fld);
+  } else if (fld->_dims.nr_vals == 1) {
+    MHERE;
   } else {
     assert(0);
   }
