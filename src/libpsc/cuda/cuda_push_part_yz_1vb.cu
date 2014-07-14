@@ -377,6 +377,57 @@ push_part_one(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4, real
 }
 
 // ----------------------------------------------------------------------
+// push_part_one_ec
+//
+// push one particle
+
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
+__device__ static void
+push_part_one_ec(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4, real *fld_cache, int ci0[3],
+		 struct cuda_params prm, bool do_read, bool do_write, bool do_push_pxi)
+{
+  // here we have x^{n+.5}, p^n
+  
+  // field interpolation
+
+  int lg[3];
+  real og[3];
+
+  real exq, eyq, ezq, hxq, hyq, hzq;
+
+  if (do_push_pxi) {
+    find_idx_off_1st(prt->xi, lg, og, real(0.), prm);
+    lg[1] -= ci0[1];
+    lg[2] -= ci0[2];
+
+    exq = ((1.f - og[1]) * (1.f - og[2]) * F3_CACHE(fld_cache, EX, lg[1]+0, lg[2]+0) +
+	   (      og[1]) * (1.f - og[2]) * F3_CACHE(fld_cache, EX, lg[1]+1, lg[2]+0) +
+	   (1.f - og[1]) * (      og[2]) * F3_CACHE(fld_cache, EX, lg[1]+0, lg[2]+1) +
+	   (      og[1]) * (      og[2]) * F3_CACHE(fld_cache, EX, lg[1]+1, lg[2]+1));
+    eyq = ((1.f - og[2]) * F3_CACHE(fld_cache, EY, lg[1]  , lg[2]+0) +
+	   (      og[2]) * F3_CACHE(fld_cache, EY, lg[1]  , lg[2]+1));
+    ezq = ((1.f - og[1]) * F3_CACHE(fld_cache, EZ, lg[1]+0, lg[2]  ) +
+	   (      og[1]) * F3_CACHE(fld_cache, EZ, lg[1]+1, lg[2]  ));
+    hxq = (F3_CACHE(fld_cache, HX, lg[1]  , lg[2]  ));
+    hyq = ((1.f - og[1]) * F3_CACHE(fld_cache, HY, lg[1]+0, lg[2]  ) +
+	   (      og[1]) * F3_CACHE(fld_cache, HY, lg[1]+1, lg[2]  ));
+    hzq = ((1.f - og[2]) * F3_CACHE(fld_cache, HZ, lg[1]  , lg[2]+0) +
+	   (      og[2]) * F3_CACHE(fld_cache, HZ, lg[1]  , lg[2]+1));
+  }
+
+  // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
+  if (do_read) {
+    LOAD_PARTICLE_MOM_(*prt, d_pxi4, n);
+  }
+  if (do_push_pxi) {
+    push_pxi_dt(prt, exq, eyq, ezq, hxq, hyq, hzq);
+  }
+  if (do_write) {
+    STORE_PARTICLE_MOM_(*prt, d_pxi4, n);
+  }
+}
+
+// ----------------------------------------------------------------------
 // push_part_one_reorder
 //
 // push one particle
@@ -419,6 +470,68 @@ push_part_one_reorder(struct d_particle *prt, int n, unsigned int *d_ids, float4
     INTERP_FIELD_1ST(cached_flds, hxq, HX, h, h);
     INTERP_FIELD_1ST(cached_flds, hyq, HY, g, h);
     INTERP_FIELD_1ST(cached_flds, hzq, HZ, h, g);
+  }
+
+  // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
+  if (do_read) {
+    LOAD_PARTICLE_MOM_(*prt, d_pxi4, id);
+  }
+  if (do_push_pxi) {
+    push_pxi_dt(prt, exq, eyq, ezq, hxq, hyq, hzq);
+  }
+  if (do_read) {
+    STORE_PARTICLE_MOM_(*prt, d_alt_pxi4, n);
+  }
+}
+
+// ----------------------------------------------------------------------
+// push_part_one_ec_reorder
+//
+// push one particle
+
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
+__device__ static void
+push_part_one_ec_reorder(struct d_particle *prt, int n, unsigned int *d_ids, float4 *d_xi4, float4 *d_pxi4,
+			 float4 *d_alt_xi4, float4 *d_alt_pxi4,
+			 real *fld_cache, int ci0[3], struct cuda_params prm, bool write_later,
+			 bool do_read, bool do_write, bool do_push_pxi)
+{
+  unsigned int id = d_ids[n];
+  if (do_read) {
+    LOAD_PARTICLE_POS_(*prt, d_xi4, id);
+  }
+  if (!write_later) {
+    if (do_write) {
+      STORE_PARTICLE_POS_(*prt, d_alt_xi4, n);
+    }
+  }
+
+  // here we have x^{n+.5}, p^n
+  
+  // field interpolation
+
+  int lg[3];
+  real og[3];
+  real exq, eyq, ezq, hxq, hyq, hzq;
+
+  if (do_push_pxi) {
+    find_idx_off_1st(prt->xi, lg, og, real(0.), prm);
+    lg[1] -= ci0[1];
+    lg[2] -= ci0[2];
+
+    exq = ((1.f - og[1]) * (1.f - og[2]) * F3_CACHE(fld_cache, EX, lg[1]+0, lg[2]+0) +
+	   (      og[1]) * (1.f - og[2]) * F3_CACHE(fld_cache, EX, lg[1]+1, lg[2]+0) +
+	   (1.f - og[1]) * (      og[2]) * F3_CACHE(fld_cache, EX, lg[1]+0, lg[2]+1) +
+	   (      og[1]) * (      og[2]) * F3_CACHE(fld_cache, EX, lg[1]+1, lg[2]+1));
+    eyq = ((1.f - og[2]) * F3_CACHE(fld_cache, EY, lg[1]  , lg[2]+0) +
+	   (      og[2]) * F3_CACHE(fld_cache, EY, lg[1]  , lg[2]+1));
+    ezq = ((1.f - og[1]) * F3_CACHE(fld_cache, EZ, lg[1]+0, lg[2]  ) +
+	   (      og[1]) * F3_CACHE(fld_cache, EZ, lg[1]+1, lg[2]  ));
+    hxq = (F3_CACHE(fld_cache, HX, lg[1]  , lg[2]  ));
+    hyq = ((1.f - og[1]) * F3_CACHE(fld_cache, HY, lg[1]+0, lg[2]  ) +
+	   (      og[1]) * F3_CACHE(fld_cache, HY, lg[1]+1, lg[2]  ));
+    hzq = ((1.f - og[2]) * F3_CACHE(fld_cache, HZ, lg[1]  , lg[2]+0) +
+	   (      og[2]) * F3_CACHE(fld_cache, HZ, lg[1]  , lg[2]+1));
   }
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
