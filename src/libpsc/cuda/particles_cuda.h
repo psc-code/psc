@@ -18,7 +18,6 @@ struct cuda_params {
   int mx[3];
   int ilg[3];
   int b_mx[3];
-  int *d_error_count;
   real dq[MAX_KINDS];
 };
 

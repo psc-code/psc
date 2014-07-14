@@ -96,8 +96,6 @@ find_idx_off_pos_1st(const real xi[3], int j[3], real h[3], real pos[3], real sh
 
 #include "cuda_common.h"
 
-__device__ int *__d_error_count;
-
 static __constant__ __device__ float c_dqs[4];
 
 static void
@@ -146,22 +144,11 @@ set_params(struct cuda_params *prm, struct psc *psc,
       }
     }
   }
-
-  //  check(cudaMalloc(&prm->d_error_count, 1 * sizeof(int)));
-  //  check(cudaMemset(prm->d_error_count, 0, 1 * sizeof(int)));
 }
 
 void
 free_params(struct cuda_params *prm)
 {
-  //  int h_error_count[1];
-  //  check(cudaMemcpy(h_error_count, prm->d_error_count, 1 * sizeof(int),
-  //		   cudaMemcpyDeviceToHost));
-  //  check(cudaFree(prm->d_error_count));
-  //  if (h_error_count[0] != 0) {
-  //    printf("err cnt %d\n", h_error_count[0]);
-  //  }
-  //  assert(h_error_count[0] == 0);
 }
 
 // ======================================================================
@@ -877,25 +864,11 @@ public:
   __device__ real operator()(int wid, int jy, int jz) const
   {
     unsigned int off = CBLOCK_OFF(jy, jz, wid);
- #ifdef DEBUG
-    if (off >= NR_CBLOCKS * BLOCK_STRIDE) {
-      (*__d_error_count)++;
-      off = 0;
-    }
-#endif
-
     return scurr[off];
   }
   __device__ real& operator()(int wid, int jy, int jz)
   {
     unsigned int off = CBLOCK_OFF(jy, jz, wid);
-#ifdef DEBUG
-    if (off >= NR_CBLOCKS * CBLOCK_STRIDE) {
-      (*__d_error_count)++;
-      off = 0;
-    }
-#endif
-
     return scurr[off];
   }
 
@@ -1236,8 +1209,6 @@ push_mprts_p3(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_
 	      unsigned int *d_off, int nr_total_blocks, unsigned int *d_bidx,
 	      float *d_flds0, unsigned int size)
 {
-  __d_error_count = prm.d_error_count;
-
   __shared__ real _scurrx[CBLOCK_SIZE];
   __shared__ real _scurry[CBLOCK_SIZE];
   __shared__ real _scurrz[CBLOCK_SIZE];
