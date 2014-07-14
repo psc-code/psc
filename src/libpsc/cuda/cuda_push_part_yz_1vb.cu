@@ -1751,8 +1751,6 @@ cuda_push_mprts_ab_reorder(struct psc_mparticles *mprts, struct psc_mfields *mfl
 {
   CUDA_PUSH_MPRTS_TOP;
 
-  psc_mparticles_cuda_copy_to_dev(mprts);
-
   dim3 dimGrid((prm.b_mx[1] + 1) / 2, ((prm.b_mx[2] + 1) / 2) * mprts->nr_patches);
 
   for (int block_start = 0; block_start < 4; block_start++) {
@@ -1779,8 +1777,6 @@ static void
 cuda_push_mprts_1vbec3d_ab_reorder(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
   CUDA_PUSH_MPRTS_TOP;
-
-  psc_mparticles_cuda_copy_to_dev(mprts);
 
   dim3 dimGrid((prm.b_mx[1] + 1) / 2, ((prm.b_mx[2] + 1) / 2) * mprts->nr_patches);
 
