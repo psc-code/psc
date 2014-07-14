@@ -1522,10 +1522,12 @@ yz4x4_1vb_cuda_push_mprts_separate(struct psc_mparticles *mprts, struct psc_mfie
 }
 
 // ----------------------------------------------------------------------
-// yz4x4_1vb_cuda_push_mprts
+// yz4x4_cuda_push_mprts
 
-EXTERN_C void
-yz4x4_1vb_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds)
+template<typename F>
+static void
+yz_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds,
+		   F push_mprts, F push_mprts_reorder)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
     
@@ -1533,11 +1535,22 @@ yz4x4_1vb_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mfld
   
   if (!mprts_cuda->need_reorder) {
     MHERE;
-    cuda_push_mprts_ab<1, 4, 4>(mprts, mflds);
+    push_mprts(mprts, mflds);
   } else {
-    cuda_push_mprts_ab_reorder<1, 4, 4>(mprts, mflds);
+    push_mprts_reorder(mprts, mflds);
     mprts_cuda->need_reorder = false;
   }
+}
+
+// ----------------------------------------------------------------------
+// yz4x4_1vb_cuda_push_mprts
+
+EXTERN_C void
+yz4x4_1vb_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds)
+{
+  yz_cuda_push_mprts(mprts, mflds,
+		     cuda_push_mprts_ab<1, 4, 4>,
+		     cuda_push_mprts_ab_reorder<1, 4, 4>);
 }
 
 // ----------------------------------------------------------------------
@@ -1546,15 +1559,7 @@ yz4x4_1vb_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mfld
 EXTERN_C void
 yz4x4_1vbec3d_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-    
-  psc_mparticles_cuda_copy_to_dev(mprts);
-  
-  if (!mprts_cuda->need_reorder) {
-    MHERE;
-    cuda_push_mprts_1vbec3d_ab<1, 4, 4>(mprts, mflds);
-  } else {
-    cuda_push_mprts_1vbec3d_ab_reorder<1, 4, 4>(mprts, mflds);
-    mprts_cuda->need_reorder = false;
-  }
+  yz_cuda_push_mprts(mprts, mflds,
+		     cuda_push_mprts_1vbec3d_ab<1, 4, 4>,
+		     cuda_push_mprts_1vbec3d_ab_reorder<1, 4, 4>);
 }
