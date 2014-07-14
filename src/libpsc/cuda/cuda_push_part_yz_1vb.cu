@@ -1029,6 +1029,43 @@ calc_dx1(real dx1[2], real x[2], real dx[2], int off[2])
   }
 }
 
+__device__ static void
+calc_3d_dx1(real dx1[3], real x[3], real dx[3], int off[3])
+{
+  real o1, x1, dx_0, dx_1, dx_2, v0, v1, v2;
+  if (off[1] == 0) {
+    o1 = off[2];
+    x1 = x[2];
+    dx_0 = dx[0];
+    dx_1 = dx[2];
+    dx_2 = dx[1];
+  } else {
+    o1 = off[1];
+    x1 = x[1];
+    dx_0 = dx[0];
+    dx_1 = dx[1];
+    dx_2 = dx[2];
+  }
+  if ((off[1] == 0 && off[2] == 0) || dx_1 == 0.f) {
+    v0 = 0.f;
+    v1 = 0.f;
+    v2 = 0.f;
+  } else {
+    v1 = .5f * o1 - x1;
+    v2 = dx_2 / dx_1 * v1;
+    v0 = dx_0 / dx_1 * v1;
+  }
+  if (off[1] == 0) {
+    dx1[0] = v0;
+    dx1[1] = v2;
+    dx1[2] = v1;
+  } else {
+    dx1[0] = v0;
+    dx1[1] = v1;
+    dx1[2] = v2;
+  }
+}
+
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static void
 curr_2d_vb_cell(int i[2], real x[2], real dx[2], real qni_wni,
@@ -1048,6 +1085,37 @@ curr_2d_vb_cell(int i[2], real x[2], real dx[2], real qni_wni,
   }
 }
 
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
+__device__ static void
+curr_3d_vb_cell(int i[3], real x[3], real dx[3], real qni_wni,
+		SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_x,
+		SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_y,
+		SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_z,
+		struct cuda_params prm, bool do_reduce)
+{
+  real xa[3] = { 0.,
+		 x[1] + .5f * dx[1],
+		 x[2] + .5f * dx[2], };
+  if (dx[0] != 0.f) {
+    real fnqx = qni_wni * prm.fnqxs;
+    real h = (1.f / 12.f) * dx[0] * dx[1] * dx[2];
+    current_add(scurr_x, i[1]  , i[2]  , fnqx * (dx[0] * (.5f - xa[1]) * (.5f - xa[2]) + h), do_reduce);
+    current_add(scurr_x, i[1]+1, i[2]  , fnqx * (dx[0] * (.5f + xa[1]) * (.5f - xa[2]) - h), do_reduce);
+    current_add(scurr_x, i[1]  , i[2]+1, fnqx * (dx[0] * (.5f - xa[1]) * (.5f + xa[2]) + h), do_reduce);
+    current_add(scurr_x, i[1]+1, i[2]+1, fnqx * (dx[0] * (.5f + xa[1]) * (.5f + xa[2]) - h), do_reduce);
+  }
+  if (dx[1] != 0.f) {
+    real fnqy = qni_wni * prm.fnqys;
+    current_add(scurr_y, i[1],i[2]  , fnqy * dx[1] * (.5f - xa[2]), do_reduce);
+    current_add(scurr_y, i[1],i[2]+1, fnqy * dx[1] * (.5f + xa[2]), do_reduce);
+  }
+  if (dx[2] != 0.f) {
+    real fnqz = qni_wni * prm.fnqzs;
+    current_add(scurr_z, i[1]  ,i[2], fnqz * dx[2] * (.5f - xa[1]), do_reduce);
+    current_add(scurr_z, i[1]+1,i[2], fnqz * dx[2] * (.5f + xa[1]), do_reduce);
+  }
+}
+
 __device__ static void
 curr_2d_vb_cell_upd(int i[2], real x[2], real dx1[2], real dx[2], int off[2])
 {
@@ -1057,6 +1125,18 @@ curr_2d_vb_cell_upd(int i[2], real x[2], real dx1[2], real dx[2], int off[2])
   x[1] += dx1[1] - off[1];
   i[0] += off[0];
   i[1] += off[1];
+}
+
+__device__ static void
+curr_3d_vb_cell_upd(int i[3], real x[3], real dx1[3], real dx[3], int off[3])
+{
+  dx[0] -= dx1[0];
+  dx[1] -= dx1[1];
+  dx[2] -= dx1[2];
+  x[1] += dx1[1] - off[1];
+  x[2] += dx1[2] - off[2];
+  i[1] += off[1];
+  i[2] += off[2];
 }
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
@@ -1158,6 +1238,86 @@ yz_calc_j(struct d_particle *prt, int i, float4 *d_xi4, float4 *d_pxi4,
     curr_2d_vb_cell_upd(i, x, dx1, dx, off);
     
     curr_2d_vb_cell(i, x, dx, prt->qni_wni, scurr_y, scurr_z, prm, do_reduce);
+  }
+}
+
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
+__device__ static void
+yz_calc_3d_j(struct d_particle *prt, int i, float4 *d_xi4, float4 *d_pxi4,
+	     SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_x,
+	     SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_y,
+	     SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_z,
+	     struct cuda_params prm, int nr_total_blocks, int p_nr,
+	     unsigned int *d_bidx, int bid, int *ci0,
+	     bool do_read, bool do_write, bool do_reduce,
+	     bool do_calc_jx, bool do_calc_jyjz)
+{
+  real vxi[3];
+  calc_vxi(vxi, *prt);
+
+  real h0[3], h1[3];
+  real xm[3], xp[3];
+  int j[3], k[3];
+
+  if (do_calc_jyjz) {
+    find_idx_off_pos_1st(prt->xi, j, h0, xm, real(0.), prm);
+  }
+
+  // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
+  push_xi(prt, vxi, prm.dt);
+  
+  if (do_write) {
+    STORE_PARTICLE_POS_(*prt, d_xi4, i);
+
+    unsigned int block_pos_y = __float2int_rd(prt->xi[1] * prm.b_dxi[1]);
+    unsigned int block_pos_z = __float2int_rd(prt->xi[2] * prm.b_dxi[2]);
+    int nr_blocks = prm.b_mx[1] * prm.b_mx[2];
+    
+    int block_idx;
+    if (block_pos_y >= prm.b_mx[1] || block_pos_z >= prm.b_mx[2]) {
+      block_idx = CUDA_BND_S_OOB;
+    } else {
+      int bidx = block_pos_z * prm.b_mx[1] + block_pos_y + p_nr * nr_blocks;
+      int b_diff = bid - bidx + prm.b_mx[1] + 1;
+      int d1 = b_diff % prm.b_mx[1];
+      int d2 = b_diff / prm.b_mx[1];
+      block_idx = d2 * 3 + d1;
+    }
+    d_bidx[i] = block_idx;
+  }
+
+  if (do_calc_jx || do_calc_jyjz) {
+    find_idx_off_pos_1st(prt->xi, k, h1, xp, real(0.), prm);
+    
+    int idiff[3] = { 0, k[1] - j[1], k[2] - j[2] };
+    real dx[3] = { vxi[0] * prm.dt * prm.dxi[0], xp[1] - xm[1], xp[2] - xm[2] };
+    real x[3] = { 0.f, xm[1] - j[1] - real(.5), xm[2] - j[2] - real(.5) };
+    int i[3] = { 0, j[1] - ci0[1], j[2] - ci0[2] };
+
+    real x1 = x[1] * idiff[1];
+    real x2 = x[2] * idiff[2];
+    int d_first = (abs(dx[2]) * (.5f - x1) >= abs(dx[1]) * (.5f - x2));
+
+    int off[3];
+    if (d_first == 0) {
+      off[1] = idiff[1];
+      off[2] = 0;
+    } else {
+      off[1] = 0;
+      off[2] = idiff[2];
+    }
+    real dx1[3];
+    calc_3d_dx1(dx1, x, dx, off);
+    curr_3d_vb_cell(i, x, dx1, prt->qni_wni, scurr_x, scurr_y, scurr_z, prm, do_reduce);
+    curr_3d_vb_cell_upd(i, x, dx1, dx, off);
+    
+    off[1] = idiff[1] - off[1];
+    off[2] = idiff[2] - off[2];
+    calc_3d_dx1(dx1, x, dx, off);
+    curr_3d_vb_cell(i, x, dx1, prt->qni_wni, scurr_x, scurr_y, scurr_z, prm, do_reduce);
+    curr_3d_vb_cell_upd(i, x, dx1, dx, off);
+    
+    curr_3d_vb_cell(i, x, dx, prt->qni_wni, scurr_x, scurr_y, scurr_z, prm, do_reduce);
   }
 }
 
