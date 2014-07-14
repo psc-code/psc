@@ -727,12 +727,12 @@ curr_3d_vb_cell_upd(int i[3], real x[3], real dx1[3], real dx[3], int off[3])
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static void
-yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
-	  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_x,
-	  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_y,
-	  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_z,
-	  struct cuda_params prm, int nr_total_blocks, int p_nr,
-	  unsigned int *d_bidx, int bid, int *ci0)
+yz_calc_2d_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
+	     SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_x,
+	     SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_y,
+	     SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_z,
+	     struct cuda_params prm, int nr_total_blocks, int p_nr,
+	     unsigned int *d_bidx, int bid, int *ci0)
 {
   real vxi[3];
   calc_vxi(vxi, *prt);
@@ -883,6 +883,24 @@ yz_calc_3d_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
   curr_3d_vb_cell_upd(i, x, dx1, dx, off);
   
   curr_3d_vb_cell(i, x, dx, prt->qni_wni, scurr_x, scurr_y, scurr_z, prm);
+}
+
+template<int WHAT, int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
+__device__ static void
+yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
+	  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_x,
+	  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_y,
+	  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_z,
+	  struct cuda_params prm, int nr_total_blocks, int p_nr,
+	  unsigned int *d_bidx, int bid, int *ci0)
+{
+  if (WHAT == 0) {
+    yz_calc_2d_j(prt, n, d_xi4, d_pxi4, scurr_x, scurr_y, scurr_z,
+		 prm, nr_total_blocks, p_nr, d_bidx, bid, ci0);
+  } else {
+    yz_calc_3d_j(prt, n, d_xi4, d_pxi4, scurr_x, scurr_y, scurr_z,
+		 prm, nr_total_blocks, p_nr, d_bidx, bid, ci0);
+  }
 }
 
 // ======================================================================
@@ -1072,7 +1090,7 @@ push_mprts_b(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_p
     }
     struct d_particle prt;
     LOAD_PARTICLE_(prt, d_xi4, d_pxi4, n);
-    yz_calc_j(&prt, n, d_xi4, d_pxi4, scurr_x, scurr_y, scurr_z, prm, nr_total_blocks, p, d_bidx, bid, ci0);
+    yz_calc_j<0>(&prt, n, d_xi4, d_pxi4, scurr_x, scurr_y, scurr_z, prm, nr_total_blocks, p, d_bidx, bid, ci0);
   }
   
   SCURR_ADD_TO_FLD;
@@ -1098,19 +1116,15 @@ push_mprts_ab(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_
     struct d_particle prt;
     push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER, WHAT>
       (&prt, n, d_ids, d_xi4, d_pxi4, d_alt_xi4, d_alt_pxi4, fld_cache, ci0, prm, true);
+
     float4 *xi4, *pxi4;
     if (REORDER) {
       xi4 = d_alt_xi4; pxi4 = d_alt_pxi4;
     } else {
       xi4 = d_xi4; pxi4 = d_pxi4;
     }
-    if (WHAT == 0) {
-      yz_calc_j(&prt, n, xi4, pxi4, scurr_x, scurr_y, scurr_z, prm,
-		nr_total_blocks, p, d_bidx, bid, ci0);
-    } else {
-      yz_calc_3d_j(&prt, n, xi4, pxi4, scurr_x, scurr_y, scurr_z, prm,
-		   nr_total_blocks, p, d_bidx, bid, ci0);
-    }
+    yz_calc_j<WHAT>(&prt, n, xi4, pxi4, scurr_x, scurr_y, scurr_z, prm, 
+		    nr_total_blocks, p, d_bidx, bid, ci0);
   }
   
   SCURR_ADD_TO_FLD;
