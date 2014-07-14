@@ -503,36 +503,36 @@ current_add(SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr, int jy, int jz,
 }
 
 // ----------------------------------------------------------------------
-// calc_dx1
+// calc_2d_dx1
 
 __device__ static void
-calc_dx1(real dx1[2], real x[2], real dx[2], int off[2])
+calc_2d_dx1(real dx1[3], real x[3], real dx[3], int off[3])
 {
   real o0, x0, dx_0, dx_1, v0, v1;
-  if (off[0] == 0) {
+  if (off[1] == 0) {
+    o0 = off[2];
+    x0 = x[2];
+    dx_0 = dx[2];
+    dx_1 = dx[1];
+  } else {
     o0 = off[1];
     x0 = x[1];
     dx_0 = dx[1];
-    dx_1 = dx[0];
-  } else {
-    o0 = off[0];
-    x0 = x[0];
-    dx_0 = dx[0];
-    dx_1 = dx[1];
+    dx_1 = dx[2];
   }
-  if ((off[0] == 0 && off[1] == 0) || dx_0 == 0.f) {
+  if ((off[1] == 0 && off[2] == 0) || dx_0 == 0.f) {
     v0 = 0.f;
     v1 = 0.f;
   } else {
     v0 = .5f * o0 - x0;
     v1 = dx_1 / dx_0 * v0;
   }
-  if (off[0] == 0) {
-    dx1[0] = v1;
-    dx1[1] = v0;
-  } else {
-    dx1[0] = v0;
+  if (off[1] == 0) {
     dx1[1] = v1;
+    dx1[2] = v0;
+  } else {
+    dx1[1] = v0;
+    dx1[2] = v1;
   }
 }
 
@@ -575,20 +575,20 @@ calc_3d_dx1(real dx1[3], real x[3], real dx[3], int off[3])
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static void
-curr_2d_vb_cell(int i[2], real x[2], real dx[2], real qni_wni,
+curr_2d_vb_cell(int i[3], real x[3], real dx[3], real qni_wni,
 		SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_y,
 		SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_z,
 		struct cuda_params prm)
 {
-  if (dx[0] != 0.f) {
-    real fnqy = qni_wni * prm.fnqys;
-    current_add(scurr_y, i[0],i[1]  , fnqy * dx[0] * (.5f - x[1] - .5f * dx[1]));
-    current_add(scurr_y, i[0],i[1]+1, fnqy * dx[0] * (.5f + x[1] + .5f * dx[1]));
-  }
   if (dx[1] != 0.f) {
+    real fnqy = qni_wni * prm.fnqys;
+    current_add(scurr_y, i[1],i[2]  , fnqy * dx[1] * (.5f - x[2] - .5f * dx[2]));
+    current_add(scurr_y, i[1],i[2]+1, fnqy * dx[1] * (.5f + x[2] + .5f * dx[2]));
+  }
+  if (dx[2] != 0.f) {
     real fnqz = qni_wni * prm.fnqzs;
-    current_add(scurr_z, i[0],i[1]  , fnqz * dx[1] * (.5f - x[0] - .5f * dx[0]));
-    current_add(scurr_z, i[0]+1,i[1], fnqz * dx[1] * (.5f + x[0] + .5f * dx[0]));
+    current_add(scurr_z, i[1]  ,i[2], fnqz * dx[2] * (.5f - x[1] - .5f * dx[1]));
+    current_add(scurr_z, i[1]+1,i[2], fnqz * dx[2] * (.5f + x[1] + .5f * dx[1]));
   }
 }
 
@@ -624,14 +624,14 @@ curr_3d_vb_cell(int i[3], real x[3], real dx[3], real qni_wni,
 }
 
 __device__ static void
-curr_2d_vb_cell_upd(int i[2], real x[2], real dx1[2], real dx[2], int off[2])
+curr_2d_vb_cell_upd(int i[3], real x[3], real dx1[3], real dx[3], int off[3])
 {
-  dx[0] -= dx1[0];
   dx[1] -= dx1[1];
-  x[0] += dx1[0] - off[0];
+  dx[2] -= dx1[2];
   x[1] += dx1[1] - off[1];
-  i[0] += off[0];
+  x[2] += dx1[2] - off[2];
   i[1] += off[1];
+  i[2] += off[2];
 }
 
 __device__ static void
@@ -704,31 +704,31 @@ yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 
   find_idx_off_pos_1st(prt->xi, k, h1, xp, real(0.), prm);
   
-  int idiff[2] = { k[1] - j[1], k[2] - j[2] };
-  real dx[2] = { xp[1] - xm[1], xp[2] - xm[2] };
-  real x[2] = { xm[1] - j[1] - real(.5), xm[2] - j[2] - real(.5) };
-  int i[2] = { j[1] - ci0[1], j[2] - ci0[2] };
+  int idiff[3] = { 0, k[1] - j[1], k[2] - j[2] };
+  real dx[3] = { 0.f, xp[1] - xm[1], xp[2] - xm[2] };
+  real x[3] = { 0.f, xm[1] - j[1] - real(.5), xm[2] - j[2] - real(.5) };
+  int i[3] = { 0, j[1] - ci0[1], j[2] - ci0[2] };
   
-  real x0 = x[0] * idiff[0];
   real x1 = x[1] * idiff[1];
-  int d_first = (abs(dx[1]) * (.5f - x0) >= abs(dx[0]) * (.5f - x1));
+  real x2 = x[2] * idiff[2];
+  int d_first = (abs(dx[2]) * (.5f - x1) >= abs(dx[1]) * (.5f - x2));
   
-  int off[2];
+  int off[3];
   if (d_first == 0) {
-    off[0] = idiff[0];
-    off[1] = 0;
-  } else {
-    off[0] = 0;
     off[1] = idiff[1];
+    off[2] = 0;
+  } else {
+    off[1] = 0;
+    off[2] = idiff[2];
   }
-  real dx1[2];
-  calc_dx1(dx1, x, dx, off);
+  real dx1[3];
+  calc_2d_dx1(dx1, x, dx, off);
   curr_2d_vb_cell(i, x, dx1, prt->qni_wni, scurr_y, scurr_z, prm);
   curr_2d_vb_cell_upd(i, x, dx1, dx, off);
   
-  off[0] = idiff[0] - off[0];
   off[1] = idiff[1] - off[1];
-  calc_dx1(dx1, x, dx, off);
+  off[2] = idiff[2] - off[2];
+  calc_2d_dx1(dx1, x, dx, off);
   curr_2d_vb_cell(i, x, dx1, prt->qni_wni, scurr_y, scurr_z, prm);
   curr_2d_vb_cell_upd(i, x, dx1, dx, off);
   
