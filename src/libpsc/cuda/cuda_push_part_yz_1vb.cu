@@ -1677,27 +1677,31 @@ cuda_push_mprts_b(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 // ----------------------------------------------------------------------
 // cuda_push_mprts_ab
 
+#define CUDA_PUSH_MPRTS_TOP						\
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);	\
+  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);	\
+									\
+  struct cuda_params prm;						\
+  set_params(&prm, ppsc, mprts, mflds);					\
+  set_consts(&prm);							\
+									\
+  unsigned int fld_size = mflds->nr_fields *				\
+    mflds_cuda->im[0] * mflds_cuda->im[1] * mflds_cuda->im[2];		\
+									\
+  zero_currents(mflds);							\
+									\
+  bool do_reduce = !(ppsc->timestep == -100);				\
+  bool do_calc_jx = !(ppsc->timestep == -100);				\
+  bool do_calc_jyjz = !(ppsc->timestep == -100);			\
+  bool do_write = !(ppsc->timestep == -100);				\
+  bool do_read = !(ppsc->timestep == -100);				\
+
+
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 static void
 cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
-
-  struct cuda_params prm;
-  set_params(&prm, ppsc, mprts, mflds);
-  set_consts(&prm);
-
-  unsigned int fld_size = mflds->nr_fields *
-    mflds_cuda->im[0] * mflds_cuda->im[1] * mflds_cuda->im[2];
-
-  zero_currents(mflds);
-  
-  bool do_reduce = !(ppsc->timestep == -100);
-  bool do_calc_jx = !(ppsc->timestep == -100);
-  bool do_calc_jyjz = !(ppsc->timestep == -100);
-  bool do_write = !(ppsc->timestep == -100);
-  bool do_read = !(ppsc->timestep == -100);
+  CUDA_PUSH_MPRTS_TOP;
 
   dim3 dimGrid((prm.b_mx[1] + 1) / 2, ((prm.b_mx[2] + 1) / 2) * mprts->nr_patches);
   
@@ -1721,23 +1725,7 @@ template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 static void
 cuda_push_mprts_1vbec3d_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
-
-  struct cuda_params prm;
-  set_params(&prm, ppsc, mprts, mflds);
-  set_consts(&prm);
-
-  unsigned int fld_size = mflds->nr_fields *
-    mflds_cuda->im[0] * mflds_cuda->im[1] * mflds_cuda->im[2];
-
-  zero_currents(mflds);
-  
-  bool do_reduce = !(ppsc->timestep == -100);
-  bool do_calc_jx = !(ppsc->timestep == -100);
-  bool do_calc_jyjz = !(ppsc->timestep == -100);
-  bool do_write = !(ppsc->timestep == -100);
-  bool do_read = !(ppsc->timestep == -100);
+  CUDA_PUSH_MPRTS_TOP;
 
   dim3 dimGrid((prm.b_mx[1] + 1) / 2, ((prm.b_mx[2] + 1) / 2) * mprts->nr_patches);
   
@@ -1761,26 +1749,10 @@ template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 static void
 cuda_push_mprts_ab_reorder(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
-
-  struct cuda_params prm;
-  set_params(&prm, ppsc, mprts, mflds);
-  set_consts(&prm);
+  CUDA_PUSH_MPRTS_TOP;
 
   psc_mparticles_cuda_copy_to_dev(mprts);
 
-  zero_currents(mflds);
-  
-  unsigned int fld_size = mflds->nr_fields *
-    mflds_cuda->im[0] * mflds_cuda->im[1] * mflds_cuda->im[2];
-  
-  bool do_reduce = !(ppsc->timestep == -100);
-  bool do_calc_jx = !(ppsc->timestep == -100);
-  bool do_calc_jyjz = !(ppsc->timestep == -100);
-  bool do_write = !(ppsc->timestep == -100);
-  bool do_read = !(ppsc->timestep == -100);
-    
   dim3 dimGrid((prm.b_mx[1] + 1) / 2, ((prm.b_mx[2] + 1) / 2) * mprts->nr_patches);
 
   for (int block_start = 0; block_start < 4; block_start++) {
@@ -1806,26 +1778,10 @@ template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 static void
 cuda_push_mprts_1vbec3d_ab_reorder(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
-
-  struct cuda_params prm;
-  set_params(&prm, ppsc, mprts, mflds);
-  set_consts(&prm);
+  CUDA_PUSH_MPRTS_TOP;
 
   psc_mparticles_cuda_copy_to_dev(mprts);
 
-  zero_currents(mflds);
-  
-  unsigned int fld_size = mflds->nr_fields *
-    mflds_cuda->im[0] * mflds_cuda->im[1] * mflds_cuda->im[2];
-  
-  bool do_reduce = !(ppsc->timestep == -100);
-  bool do_calc_jx = !(ppsc->timestep == -100);
-  bool do_calc_jyjz = !(ppsc->timestep == -100);
-  bool do_write = !(ppsc->timestep == -100);
-  bool do_read = !(ppsc->timestep == -100);
-    
   dim3 dimGrid((prm.b_mx[1] + 1) / 2, ((prm.b_mx[2] + 1) / 2) * mprts->nr_patches);
 
   for (int block_start = 0; block_start < 4; block_start++) {
