@@ -1201,6 +1201,20 @@ yz_calc_3d_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 
 // ======================================================================
 
+#define DECLARE_AND_ZERO_SCURR						\
+  __shared__ real _scurrx[CBLOCK_SIZE];					\
+  __shared__ real _scurry[CBLOCK_SIZE];					\
+  __shared__ real _scurrz[CBLOCK_SIZE];					\
+									\
+  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_x(_scurrx);	\
+  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_y(_scurry);	\
+  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_z(_scurrz);	\
+									\
+  scurr_x.zero();							\
+  scurr_y.zero();							\
+  scurr_z.zero()
+
+
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
@@ -1208,17 +1222,7 @@ push_mprts_b(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_p
 	     unsigned int *d_off, int nr_total_blocks, unsigned int *d_bidx,
 	     float *d_flds0, unsigned int size)
 {
-  __shared__ real _scurrx[CBLOCK_SIZE];
-  __shared__ real _scurry[CBLOCK_SIZE];
-  __shared__ real _scurrz[CBLOCK_SIZE];
-
-  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_x(_scurrx);
-  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_y(_scurry);
-  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_z(_scurrz);
-
-  scurr_x.zero();
-  scurr_y.zero();
-  scurr_z.zero();
+  DECLARE_AND_ZERO_SCURR;
 
   int block_pos[3], ci0[3];
   int p = find_block_pos_patch_q<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
@@ -1266,17 +1270,7 @@ push_mprts_ab(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_
   __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
   cache_fields<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(prm, fld_cache, d_flds0, size, ci0, p);
 
-  __shared__ real _scurrx[CBLOCK_SIZE];
-  __shared__ real _scurry[CBLOCK_SIZE];
-  __shared__ real _scurrz[CBLOCK_SIZE];
-
-  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_x(_scurrx);
-  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_y(_scurry);
-  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_z(_scurrz);
-
-  scurr_x.zero();
-  scurr_y.zero();
-  scurr_z.zero();
+  DECLARE_AND_ZERO_SCURR;
 
   __syncthreads();
 
@@ -1319,17 +1313,7 @@ push_mprts_1vbec3d_ab(int block_start, struct cuda_params prm, float4 *d_xi4, fl
   __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
   cache_fields<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(prm, fld_cache, d_flds0, size, ci0, p);
 
-  __shared__ real _scurrx[CBLOCK_SIZE];
-  __shared__ real _scurry[CBLOCK_SIZE];
-  __shared__ real _scurrz[CBLOCK_SIZE];
-
-  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_x(_scurrx);
-  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_y(_scurry);
-  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_z(_scurrz);
-
-  scurr_x.zero();
-  scurr_y.zero();
-  scurr_z.zero();
+  DECLARE_AND_ZERO_SCURR;
 
   __syncthreads();
 
@@ -1371,17 +1355,8 @@ push_mprts_ab_reorder(int block_start, struct cuda_params prm, float4 *d_xi4, fl
   __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
   cache_fields<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(prm, fld_cache, d_flds0, size, ci0, p);
 
-  __shared__ real _scurrx[CBLOCK_SIZE];
-  __shared__ real _scurry[CBLOCK_SIZE];
-  __shared__ real _scurrz[CBLOCK_SIZE];
+  DECLARE_AND_ZERO_SCURR;
 
-  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_x(_scurrx);
-  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_y(_scurry);
-  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_z(_scurrz);
-
-  scurr_x.zero();
-  scurr_y.zero();
-  scurr_z.zero();
   __syncthreads();
 
   for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
@@ -1422,17 +1397,8 @@ push_mprts_1vbec3d_ab_reorder(int block_start, struct cuda_params prm, float4 *d
   __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
   cache_fields<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(prm, fld_cache, d_flds0, size, ci0, p);
 
-  __shared__ real _scurrx[CBLOCK_SIZE];
-  __shared__ real _scurry[CBLOCK_SIZE];
-  __shared__ real _scurrz[CBLOCK_SIZE];
+  DECLARE_AND_ZERO_SCURR;
 
-  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_x(_scurrx);
-  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_y(_scurry);
-  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_z(_scurrz);
-
-  scurr_x.zero();
-  scurr_y.zero();
-  scurr_z.zero();
   __syncthreads();
 
   for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
@@ -1467,41 +1433,6 @@ zero_currents(struct psc_mfields *mflds)
   }
 }
 
-// ----------------------------------------------------------------------
-// cuda_push_mprts_b
-
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
-static void
-cuda_push_mprts_b(struct psc_mparticles *mprts, struct psc_mfields *mflds)
-{
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
-
-  if (mprts->nr_patches == 0)
-    return;
-
-  struct cuda_params prm;
-  set_params(&prm, ppsc, mprts, mflds);
-
-  unsigned int fld_size = mflds->nr_fields *
-    mflds_cuda->im[0] * mflds_cuda->im[1] * mflds_cuda->im[2];
-
-  zero_currents(mflds);
-  
-  dim3 dimGrid((prm.b_mx[1] + 1) / 2, ((prm.b_mx[2] + 1) / 2) * mprts->nr_patches);
-  
-  for (int block_start = 0; block_start < 4; block_start++) {
-    push_mprts_b<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
-      <<<dimGrid, THREADS_PER_BLOCK>>>
-      (block_start, prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4, mprts_cuda->d_off,
-       mprts_cuda->nr_total_blocks, mprts_cuda->d_bidx,
-       mflds_cuda->d_flds, fld_size);
-    cuda_sync_if_enabled();
-  }
-  
-  free_params(&prm);
-}
-
 #define CUDA_PUSH_MPRTS_TOP						\
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);	\
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);	\
@@ -1514,7 +1445,30 @@ cuda_push_mprts_b(struct psc_mparticles *mprts, struct psc_mfields *mflds)
     mflds_cuda->im[0] * mflds_cuda->im[1] * mflds_cuda->im[2];		\
 									\
   zero_currents(mflds);							\
+									\
+  dim3 dimGrid((prm.b_mx[1] + 1) / 2, ((prm.b_mx[2] + 1) / 2) * mprts->nr_patches) \
 
+
+// ----------------------------------------------------------------------
+// cuda_push_mprts_b
+
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
+static void
+cuda_push_mprts_b(struct psc_mparticles *mprts, struct psc_mfields *mflds)
+{
+  CUDA_PUSH_MPRTS_TOP;
+
+  for (int block_start = 0; block_start < 4; block_start++) {
+    push_mprts_b<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+      <<<dimGrid, THREADS_PER_BLOCK>>>
+      (block_start, prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4, mprts_cuda->d_off,
+       mprts_cuda->nr_total_blocks, mprts_cuda->d_bidx,
+       mflds_cuda->d_flds, fld_size);
+    cuda_sync_if_enabled();
+  }
+  
+  free_params(&prm);
+}
 
 // ----------------------------------------------------------------------
 // cuda_push_mprts_ab
@@ -1525,8 +1479,6 @@ cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
   CUDA_PUSH_MPRTS_TOP;
 
-  dim3 dimGrid((prm.b_mx[1] + 1) / 2, ((prm.b_mx[2] + 1) / 2) * mprts->nr_patches);
-  
   for (int block_start = 0; block_start < 4; block_start++) {
     push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
       <<<dimGrid, THREADS_PER_BLOCK>>>
@@ -1548,8 +1500,6 @@ cuda_push_mprts_1vbec3d_ab(struct psc_mparticles *mprts, struct psc_mfields *mfl
 {
   CUDA_PUSH_MPRTS_TOP;
 
-  dim3 dimGrid((prm.b_mx[1] + 1) / 2, ((prm.b_mx[2] + 1) / 2) * mprts->nr_patches);
-  
   for (int block_start = 0; block_start < 4; block_start++) {
     push_mprts_1vbec3d_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
       <<<dimGrid, THREADS_PER_BLOCK>>>
@@ -1570,8 +1520,6 @@ static void
 cuda_push_mprts_ab_reorder(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
   CUDA_PUSH_MPRTS_TOP;
-
-  dim3 dimGrid((prm.b_mx[1] + 1) / 2, ((prm.b_mx[2] + 1) / 2) * mprts->nr_patches);
 
   for (int block_start = 0; block_start < 4; block_start++) {
     push_mprts_ab_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
@@ -1596,8 +1544,6 @@ static void
 cuda_push_mprts_1vbec3d_ab_reorder(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
   CUDA_PUSH_MPRTS_TOP;
-
-  dim3 dimGrid((prm.b_mx[1] + 1) / 2, ((prm.b_mx[2] + 1) / 2) * mprts->nr_patches);
 
   for (int block_start = 0; block_start < 4; block_start++) {
     push_mprts_1vbec3d_ab_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
