@@ -1410,91 +1410,69 @@ cuda_push_mprts_b(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 }
 
 // ----------------------------------------------------------------------
-// cuda_push_mprts_ab
-
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
-static void
-cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
-{
-  CUDA_PUSH_MPRTS_TOP;
-
-  for (int block_start = 0; block_start < 4; block_start++) {
-    push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
-      <<<dimGrid, THREADS_PER_BLOCK>>>
-      (block_start, prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4, mprts_cuda->d_off,
-       mprts_cuda->nr_total_blocks, mprts_cuda->d_bidx,
-       mflds_cuda->d_flds, fld_size);
-    cuda_sync_if_enabled();
-  }
-
-  free_params(&prm);
-}
-
-// ----------------------------------------------------------------------
 // cuda_push_mprts_1vbec3d_ab
 
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER>
 static void
 cuda_push_mprts_1vbec3d_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
   CUDA_PUSH_MPRTS_TOP;
 
   for (int block_start = 0; block_start < 4; block_start++) {
-    push_mprts_1vbec3d_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
-      <<<dimGrid, THREADS_PER_BLOCK>>>
-      (block_start, prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4, mprts_cuda->d_off,
-       mprts_cuda->nr_total_blocks, mprts_cuda->d_bidx,
-       mflds_cuda->d_flds, fld_size);
+    if (REORDER) {
+      push_mprts_1vbec3d_ab_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+	<<<dimGrid, THREADS_PER_BLOCK>>>
+	(block_start, prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
+	 mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4, mprts_cuda->d_off,
+	 mprts_cuda->nr_total_blocks, mprts_cuda->d_ids, mprts_cuda->d_bidx,
+	 mflds_cuda->d_flds, fld_size);
+   } else {
+      push_mprts_1vbec3d_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+	<<<dimGrid, THREADS_PER_BLOCK>>>
+	(block_start, prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4, mprts_cuda->d_off,
+	 mprts_cuda->nr_total_blocks, mprts_cuda->d_bidx,
+	 mflds_cuda->d_flds, fld_size);
+    }
     cuda_sync_if_enabled();
+  }
+
+  if (REORDER) {
+    psc_mparticles_cuda_swap_alt(mprts);
   }
 
   free_params(&prm);
 }
 
 // ----------------------------------------------------------------------
-// cuda_push_mprts_ab_reorder
+// cuda_push_mprts_1vb_ab
 
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER>
 static void
-cuda_push_mprts_ab_reorder(struct psc_mparticles *mprts, struct psc_mfields *mflds)
+cuda_push_mprts_1vb_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
   CUDA_PUSH_MPRTS_TOP;
 
   for (int block_start = 0; block_start < 4; block_start++) {
-    push_mprts_ab_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
-      <<<dimGrid, THREADS_PER_BLOCK>>>
-      (block_start, prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
-       mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4, mprts_cuda->d_off,
-       mprts_cuda->nr_total_blocks, mprts_cuda->d_ids, mprts_cuda->d_bidx,
-       mflds_cuda->d_flds, fld_size);
+    if (REORDER) {
+      push_mprts_ab_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+	<<<dimGrid, THREADS_PER_BLOCK>>>
+	(block_start, prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
+	 mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4, mprts_cuda->d_off,
+	 mprts_cuda->nr_total_blocks, mprts_cuda->d_ids, mprts_cuda->d_bidx,
+	 mflds_cuda->d_flds, fld_size);
+    } else {
+      push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+	<<<dimGrid, THREADS_PER_BLOCK>>>
+	(block_start, prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4, mprts_cuda->d_off,
+	 mprts_cuda->nr_total_blocks, mprts_cuda->d_bidx,
+	 mflds_cuda->d_flds, fld_size);
+    }
     cuda_sync_if_enabled();
   }
-    
-  psc_mparticles_cuda_swap_alt(mprts);
 
-  free_params(&prm);
-}
-
-// ----------------------------------------------------------------------
-// cuda_push_mprts_1vbec3d_ab_reorder
-
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
-static void
-cuda_push_mprts_1vbec3d_ab_reorder(struct psc_mparticles *mprts, struct psc_mfields *mflds)
-{
-  CUDA_PUSH_MPRTS_TOP;
-
-  for (int block_start = 0; block_start < 4; block_start++) {
-    push_mprts_1vbec3d_ab_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
-      <<<dimGrid, THREADS_PER_BLOCK>>>
-      (block_start, prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
-       mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4, mprts_cuda->d_off,
-       mprts_cuda->nr_total_blocks, mprts_cuda->d_ids, mprts_cuda->d_bidx,
-       mflds_cuda->d_flds, fld_size);
-    cuda_sync_if_enabled();
+  if (REORDER) {
+    psc_mparticles_cuda_swap_alt(mprts);
   }
-    
-  psc_mparticles_cuda_swap_alt(mprts);
 
   free_params(&prm);
 }
@@ -1549,8 +1527,8 @@ EXTERN_C void
 yz4x4_1vb_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
   yz_cuda_push_mprts(mprts, mflds,
-		     cuda_push_mprts_ab<1, 4, 4>,
-		     cuda_push_mprts_ab_reorder<1, 4, 4>);
+		     cuda_push_mprts_1vb_ab<1, 4, 4, false>,
+		     cuda_push_mprts_1vb_ab<1, 4, 4, true>);
 }
 
 // ----------------------------------------------------------------------
@@ -1560,6 +1538,6 @@ EXTERN_C void
 yz4x4_1vbec3d_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
   yz_cuda_push_mprts(mprts, mflds,
-		     cuda_push_mprts_1vbec3d_ab<1, 4, 4>,
-		     cuda_push_mprts_1vbec3d_ab_reorder<1, 4, 4>);
+		     cuda_push_mprts_1vbec3d_ab<1, 4, 4, false>,
+		     cuda_push_mprts_1vbec3d_ab<1, 4, 4, true>);
 }
