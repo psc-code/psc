@@ -11,8 +11,7 @@
 // mrc_ddc_amr
 
 struct mrc_ddc_amr_row {
-  int patch;
-  int idx;
+  int pidx;
   int first_entry;
 };
 
@@ -118,9 +117,11 @@ mrc_ddc_amr_add_value(struct mrc_ddc *ddc,
   assert(row_patch >= 0);
   assert(col_patch >= 0);
 
-  int row_idx = (((rowm * sub->im[2] + row[2] - sub->ib[2]) *
-		  sub->im[1] + row[1] - sub->ib[1]) *
-		 sub->im[0] + row[0] - sub->ib[0]);
+  int row_pidx = ((((row_patch *
+  		     sub->im[3] + rowm) *
+  		    sub->im[2] + row[2] - sub->ib[2]) *
+  		   sub->im[1] + row[1] - sub->ib[1]) *
+  		  sub->im[0] + row[0] - sub->ib[0]);
   int col_pidx = ((((col_patch *
   		     sub->im[3] + colm) *
   		    sub->im[2] + col[2] - sub->ib[2]) *
@@ -128,15 +129,13 @@ mrc_ddc_amr_add_value(struct mrc_ddc *ddc,
   		  sub->im[0] + col[0] - sub->ib[0]);
   
   if (mcsr->nr_rows == 0 ||
-      mcsr->rows[mcsr->nr_rows - 1].idx != row_idx ||
-      mcsr->rows[mcsr->nr_rows - 1].patch != row_patch) {
+      mcsr->rows[mcsr->nr_rows - 1].pidx != row_pidx) {
     // start new row
     if (mcsr->nr_rows >= mcsr->nr_rows_alloced - 1) {
       mcsr->nr_rows_alloced *= 2;
       mcsr->rows = realloc(mcsr->rows, mcsr->nr_rows_alloced * sizeof(*mcsr->rows));
     }
-    mcsr->rows[mcsr->nr_rows].patch = row_patch;
-    mcsr->rows[mcsr->nr_rows].idx = row_idx;
+    mcsr->rows[mcsr->nr_rows].pidx = row_pidx;
     mcsr->rows[mcsr->nr_rows].first_entry = mcsr->nr_entries;
     mcsr->nr_rows++;
   }
@@ -181,14 +180,11 @@ mrc_ddc_amr_fill_ghosts(struct mrc_ddc *ddc, struct mrc_fld *fld)
   struct mrc_ddc_amr *sub = mrc_ddc_amr(ddc);
   struct mrc_mat_mcsr *mcsr = &sub->mat;
 
-  unsigned int size_of_patch = mrc_fld_ghost_dims(fld)[0] * mrc_fld_ghost_dims(fld)[1] * mrc_fld_ghost_dims(fld)[2] * mrc_fld_ghost_dims(fld)[3];
-
   if (ddc->size_of_type == sizeof(float)) {
     float *arr = fld->_arr;
     
     for (int row = 0; row < mcsr->nr_rows; row++) {
-      int row_patch = mcsr->rows[row].patch;
-      int row_idx = mcsr->rows[row].idx;
+      int row_pidx = mcsr->rows[row].pidx;
       float sum = 0.;
       for (int entry = mcsr->rows[row].first_entry;
 	   entry < mcsr->rows[row + 1].first_entry; entry++) {
@@ -196,7 +192,7 @@ mrc_ddc_amr_fill_ghosts(struct mrc_ddc *ddc, struct mrc_fld *fld)
 	float val = mcsr->entries[entry].val;
 	sum += val * arr[col_pidx];
       }
-      arr[row_patch * size_of_patch + row_idx] = sum;
+      arr[row_pidx] = sum;
     }
   } else {
     assert(0);
