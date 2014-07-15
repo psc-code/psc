@@ -383,7 +383,7 @@ main(int argc, char **argv)
   mrc_domain_get_param_int3(fld->_domain, "m", ldims);
 
   mrc_fld_foreach_patch(fld, p) {
-#if 1
+#if 0
     mrc_fld_foreach(fld, ix,iy,iz, 2, 2) {
       M3(fld, EX, ix,iy,iz, p) = 1.f / 0.f;
       M3(fld, EY, ix,iy,iz, p) = 1.f / 0.f;
