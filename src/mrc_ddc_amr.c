@@ -8,7 +8,7 @@
 #include <stdio.h>
 
 // ======================================================================
-// mrc_ddc_amr
+// mrc_mat "mcsr"
 
 struct mrc_ddc_amr_row {
   int idx;
@@ -28,6 +28,66 @@ struct mrc_mat_mcsr {
   int nr_rows_alloced;
   int nr_entries_alloced;
 };
+
+// ----------------------------------------------------------------------
+// mrc_mat_add_value
+
+static void
+mrc_mat_add_value(struct mrc_mat_mcsr *sub, int row_idx, int col_idx, float val)
+{
+  if (sub->nr_rows == 0 ||
+      sub->rows[sub->nr_rows - 1].idx != row_idx) {
+    // start new row
+    if (sub->nr_rows >= sub->nr_rows_alloced - 1) {
+      sub->nr_rows_alloced *= 2;
+      sub->rows = realloc(sub->rows, sub->nr_rows_alloced * sizeof(*sub->rows));
+    }
+    sub->rows[sub->nr_rows].idx = row_idx;
+    sub->rows[sub->nr_rows].first_entry = sub->nr_entries;
+    sub->nr_rows++;
+  }
+
+  // if we already have an entry for this column in the current row, just add to it
+  for (int i = sub->rows[sub->nr_rows - 1].first_entry; i < sub->nr_entries; i++) {
+    if (sub->entries[i].idx == col_idx) {
+      sub->entries[i].val += val;
+      return;
+    }
+  }
+
+  // otherwise, need to append a new entry
+  if (sub->nr_entries >= sub->nr_entries_alloced) {
+    sub->nr_entries_alloced *= 2;
+    sub->entries = realloc(sub->entries, sub->nr_entries_alloced * sizeof(*sub->entries));
+  }
+  sub->entries[sub->nr_entries].idx = col_idx;
+  sub->entries[sub->nr_entries].val = val;
+  sub->nr_entries++;
+}
+
+// ----------------------------------------------------------------------
+// mrc_mat_apply
+
+static void
+mrc_mat_apply(struct mrc_mat_mcsr *sub, struct mrc_fld *fld)
+{
+  float *arr = fld->_arr;
+    
+  for (int row = 0; row < sub->nr_rows; row++) {
+    int row_idx = sub->rows[row].idx;
+    float sum = 0.;
+    for (int entry = sub->rows[row].first_entry;
+	 entry < sub->rows[row + 1].first_entry; entry++) {
+      int col_idx = sub->entries[entry].idx;
+      float val = sub->entries[entry].val;
+      sum += val * arr[col_idx];
+    }
+    arr[row_idx] = sum;
+  }
+}
+
+// ======================================================================
+// mrc_ddc_amr
 
 struct mrc_ddc_amr {
   struct mrc_mat_mcsr mat;
@@ -127,35 +187,8 @@ mrc_ddc_amr_add_value(struct mrc_ddc *ddc,
 		   sub->im[2] + col[2] - sub->ib[2]) *
 		  sub->im[1] + col[1] - sub->ib[1]) *
 		 sub->im[0] + col[0] - sub->ib[0]);
-  
-  if (mcsr->nr_rows == 0 ||
-      mcsr->rows[mcsr->nr_rows - 1].idx != row_idx) {
-    // start new row
-    if (mcsr->nr_rows >= mcsr->nr_rows_alloced - 1) {
-      mcsr->nr_rows_alloced *= 2;
-      mcsr->rows = realloc(mcsr->rows, mcsr->nr_rows_alloced * sizeof(*mcsr->rows));
-    }
-    mcsr->rows[mcsr->nr_rows].idx = row_idx;
-    mcsr->rows[mcsr->nr_rows].first_entry = mcsr->nr_entries;
-    mcsr->nr_rows++;
-  }
 
-  // if we already have an entry for this column in the current row, just add to it
-  for (int i = mcsr->rows[mcsr->nr_rows - 1].first_entry; i < mcsr->nr_entries; i++) {
-    if (mcsr->entries[i].idx == col_idx) {
-      mcsr->entries[i].val += val;
-      return;
-    }
-  }
-
-  // otherwise, need to append a new entry
-  if (mcsr->nr_entries >= mcsr->nr_entries_alloced) {
-    mcsr->nr_entries_alloced *= 2;
-    mcsr->entries = realloc(mcsr->entries, mcsr->nr_entries_alloced * sizeof(*mcsr->entries));
-  }
-  mcsr->entries[mcsr->nr_entries].idx = col_idx;
-  mcsr->entries[mcsr->nr_entries].val = val;
-  mcsr->nr_entries++;
+  mrc_mat_add_value(mcsr, row_idx, col_idx, val);
 }
 
 // ----------------------------------------------------------------------
@@ -172,50 +205,15 @@ mrc_ddc_amr_assemble(struct mrc_ddc *ddc)
 }
 
 // ----------------------------------------------------------------------
-// mrc_ddc_amr_fill_ghosts
-
-static void
-mrc_ddc_amr_fill_ghosts(struct mrc_ddc *ddc, struct mrc_fld *fld)
-{
-  struct mrc_ddc_amr *sub = mrc_ddc_amr(ddc);
-  struct mrc_mat_mcsr *mcsr = &sub->mat;
-
-  if (ddc->size_of_type == sizeof(float)) {
-    float *arr = fld->_arr;
-    
-    for (int row = 0; row < mcsr->nr_rows; row++) {
-      int row_idx = mcsr->rows[row].idx;
-      float sum = 0.;
-      for (int entry = mcsr->rows[row].first_entry;
-	   entry < mcsr->rows[row + 1].first_entry; entry++) {
-	int col_idx = mcsr->entries[entry].idx;
-	float val = mcsr->entries[entry].val;
-	sum += val * arr[col_idx];
-      }
-      arr[row_idx] = sum;
-    }
-  } else {
-    assert(0);
-  }
-}
-
-// ----------------------------------------------------------------------
-// mrc_ddc_amr_add_ghosts
-
-static void
-mrc_ddc_amr_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
-{
-  // mb, me is meaningless here, make sure the caller knows
-  assert(mb < 0 && me < 0);
-}
-
-// ----------------------------------------------------------------------
 // mrc_ddc_amr_apply
 
 void
 mrc_ddc_amr_apply(struct mrc_ddc *ddc, struct mrc_fld *fld)
 {
-  mrc_ddc_amr_fill_ghosts(ddc, fld);
+  struct mrc_ddc_amr *sub = mrc_ddc_amr(ddc);
+
+  assert(ddc->size_of_type == sizeof(float));
+  mrc_mat_apply(&sub->mat, fld);
 }
 
 // ----------------------------------------------------------------------
@@ -239,7 +237,5 @@ struct mrc_ddc_ops mrc_ddc_amr_ops = {
   .destroy               = mrc_ddc_amr_destroy,
   .set_domain            = mrc_ddc_amr_set_domain,
   .get_domain            = mrc_ddc_amr_get_domain,
-  //  .fill_ghosts           = mrc_ddc_amr_fill_ghosts,
-  .add_ghosts            = mrc_ddc_amr_add_ghosts,
 };
 
