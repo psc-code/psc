@@ -32,6 +32,7 @@ libmrc_la_SOURCES = \
 	mrc_crds_gen_gaussian.c \
 	mrc_vec.c \
 	mrc_mat.c \
+	mrc_mat_mcsr.c \
 	mrc_fld.c \
 	mrc_fld_float.c \
 	mrc_fld_double.c \
