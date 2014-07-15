@@ -176,16 +176,15 @@ mrc_ddc_amr_assemble(struct mrc_ddc *ddc)
 // mrc_ddc_amr_fill_ghosts
 
 static void
-mrc_ddc_amr_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
+mrc_ddc_amr_fill_ghosts(struct mrc_ddc *ddc, struct mrc_fld *fld)
 {
-  // mb, me is meaningless here, make sure the caller knows
-  assert(mb < 0 && me < 0);
-
   struct mrc_ddc_amr *sub = mrc_ddc_amr(ddc);
   struct mrc_mat_mcsr *mcsr = &sub->mat;
 
+  unsigned int size_of_patch = mrc_fld_ghost_dims(fld)[0] * mrc_fld_ghost_dims(fld)[1] * mrc_fld_ghost_dims(fld)[2] * mrc_fld_ghost_dims(fld)[3];
+
   if (ddc->size_of_type == sizeof(float)) {
-    float **fldp = ctx;
+    float *arr = fld->_arr;
     
     for (int row = 0; row < mcsr->nr_rows; row++) {
       int row_patch = mcsr->rows[row].patch;
@@ -196,27 +195,9 @@ mrc_ddc_amr_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 	int col_patch = mcsr->entries[entry].patch;
 	int col_idx = mcsr->entries[entry].idx;
 	float val = mcsr->entries[entry].val;
-	sum += val * fldp[col_patch][col_idx];
+	sum += val * arr[col_patch * size_of_patch + col_idx];
       }
-      fldp[row_patch][row_idx] = sum;
-    }
-  } else if (ddc->size_of_type == sizeof(double)) {
-    // FIXME, should have the coefficient ("val") as double, too, to avoid
-    // conversions
-    double **fldp = ctx;
-
-    for (int row = 0; row < mcsr->nr_rows; row++) {
-      int row_patch = mcsr->rows[row].patch;
-      int row_idx = mcsr->rows[row].idx;
-      float sum = 0.;
-      for (int entry = mcsr->rows[row].first_entry;
-	   entry < mcsr->rows[row + 1].first_entry; entry++) {
-	int col_patch = mcsr->entries[entry].patch;
-	int col_idx = mcsr->entries[entry].idx;
-	double val = mcsr->entries[entry].val;
-	sum += val * fldp[col_patch][col_idx];
-      }
-      fldp[row_patch][row_idx] = sum;
+      arr[row_patch * size_of_patch + row_idx] = sum;
     }
   } else {
     assert(0);
@@ -239,16 +220,7 @@ mrc_ddc_amr_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 void
 mrc_ddc_amr_apply(struct mrc_ddc *ddc, struct mrc_fld *fld)
 {
-  assert(ddc->size_of_type == sizeof(float));
-
-  float **fldp = malloc(mrc_fld_nr_patches(fld) * sizeof(*fldp));
-  for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
-    struct mrc_fld_patch *m3p = mrc_fld_patch_get(fld, p);
-    fldp[p] = &MRC_M3(m3p, 0, fld->_ghost_offs[0], fld->_ghost_offs[1], fld->_ghost_offs[2]);
-  }
-  mrc_ddc_amr_fill_ghosts(ddc, -1, -1, fldp);
-
-  free(fldp);
+  mrc_ddc_amr_fill_ghosts(ddc, fld);
 }
 
 // ----------------------------------------------------------------------
@@ -271,7 +243,7 @@ struct mrc_ddc_ops mrc_ddc_amr_ops = {
   .destroy               = mrc_ddc_amr_destroy,
   .set_domain            = mrc_ddc_amr_set_domain,
   .get_domain            = mrc_ddc_amr_get_domain,
-  .fill_ghosts           = mrc_ddc_amr_fill_ghosts,
+  //  .fill_ghosts           = mrc_ddc_amr_fill_ghosts,
   .add_ghosts            = mrc_ddc_amr_add_ghosts,
 };
 
