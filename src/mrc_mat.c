@@ -1,5 +1,99 @@
 
 #include <mrc_mat.h>
+
+#include <stdlib.h>
+
+// ======================================================================
+// mrc_mat "mcsr"
+
+// ----------------------------------------------------------------------
+// mrc_mat_setup
+
+void
+mrc_mat_setup(struct mrc_mat_mcsr *sub)
+{
+  sub->nr_rows_alloced = 1000;
+  sub->nr_entries_alloced = 2000;
+
+  sub->rows = calloc(sub->nr_rows_alloced, sizeof(*sub->rows));
+  sub->entries = calloc(sub->nr_entries_alloced, sizeof(*sub->entries));
+
+  sub->nr_entries = 0;
+  sub->nr_rows = 0;
+}
+
+// ----------------------------------------------------------------------
+// mrc_mat_add_value
+
+void
+mrc_mat_add_value(struct mrc_mat_mcsr *sub, int row_idx, int col_idx, float val)
+{
+  if (sub->nr_rows == 0 ||
+      sub->rows[sub->nr_rows - 1].idx != row_idx) {
+    // start new row
+    if (sub->nr_rows >= sub->nr_rows_alloced - 1) {
+      sub->nr_rows_alloced *= 2;
+      sub->rows = realloc(sub->rows, sub->nr_rows_alloced * sizeof(*sub->rows));
+    }
+    sub->rows[sub->nr_rows].idx = row_idx;
+    sub->rows[sub->nr_rows].first_entry = sub->nr_entries;
+    sub->nr_rows++;
+  }
+
+  // if we already have an entry for this column in the current row, just add to it
+  for (int i = sub->rows[sub->nr_rows - 1].first_entry; i < sub->nr_entries; i++) {
+    if (sub->entries[i].idx == col_idx) {
+      sub->entries[i].val += val;
+      return;
+    }
+  }
+
+  // otherwise, need to append a new entry
+  if (sub->nr_entries >= sub->nr_entries_alloced) {
+    sub->nr_entries_alloced *= 2;
+    sub->entries = realloc(sub->entries, sub->nr_entries_alloced * sizeof(*sub->entries));
+  }
+  sub->entries[sub->nr_entries].idx = col_idx;
+  sub->entries[sub->nr_entries].val = val;
+  sub->nr_entries++;
+}
+
+// ----------------------------------------------------------------------
+// mrc_mat_assemble
+
+void
+mrc_mat_assemble(struct mrc_mat_mcsr *sub)
+{
+  sub->rows[sub->nr_rows].first_entry = sub->nr_entries;
+  mprintf("nr_rows %d nr_entries %d\n", sub->nr_rows, sub->nr_entries);
+}
+
+// ----------------------------------------------------------------------
+// mrc_mat_apply
+
+void
+mrc_mat_apply(struct mrc_mat_mcsr *sub, struct mrc_fld *fld)
+{
+  float *arr = fld->_arr;
+    
+  for (int row = 0; row < sub->nr_rows; row++) {
+    int row_idx = sub->rows[row].idx;
+    float sum = 0.;
+    for (int entry = sub->rows[row].first_entry;
+	 entry < sub->rows[row + 1].first_entry; entry++) {
+      int col_idx = sub->entries[entry].idx;
+      float val = sub->entries[entry].val;
+      sum += val * arr[col_idx];
+    }
+    arr[row_idx] = sum;
+  }
+}
+
+// ======================================================================
+// petsc-specific function that should be revisited eventually FIXME
+
+#ifdef HAVE_PETSC
+
 #define CE assert(ierr == 0)
 
 int
@@ -72,3 +166,5 @@ __MatInsertValue(Mat M, int im, int in, PetscScalar v,
 {
   return __MatSetValue(M, im, in, v, INSERT_VALUES, ctx);  
 }
+
+#endif

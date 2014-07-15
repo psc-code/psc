@@ -31,6 +31,7 @@ libmrc_la_SOURCES = \
 	mrc_crds_gen_ggcm_yz.c \
 	mrc_crds_gen_gaussian.c \
 	mrc_vec.c \
+	mrc_mat.c \
 	mrc_fld.c \
 	mrc_fld_float.c \
 	mrc_fld_double.c \
@@ -78,8 +79,7 @@ libmrc_la_SOURCES += \
 	mrc_block_factory.c \
 	mrc_block_factory_simple.c \
 	mrc_block_factory_cylindrical.c \
-	mrc_ddc_mb.c \
-	mrc_mat.c
+	mrc_ddc_mb.c
 endif HAVE_PETSC
 
 libmrctest_la_SOURCES = \
