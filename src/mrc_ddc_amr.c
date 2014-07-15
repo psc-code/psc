@@ -11,12 +11,12 @@
 // mrc_ddc_amr
 
 struct mrc_ddc_amr_row {
-  int pidx;
+  int idx;
   int first_entry;
 };
 
 struct mrc_ddc_amr_entry {
-  int pidx;
+  int idx;
   float val;
 };
 
@@ -117,32 +117,32 @@ mrc_ddc_amr_add_value(struct mrc_ddc *ddc,
   assert(row_patch >= 0);
   assert(col_patch >= 0);
 
-  int row_pidx = ((((row_patch *
-  		     sub->im[3] + rowm) *
-  		    sub->im[2] + row[2] - sub->ib[2]) *
-  		   sub->im[1] + row[1] - sub->ib[1]) *
-  		  sub->im[0] + row[0] - sub->ib[0]);
-  int col_pidx = ((((col_patch *
-  		     sub->im[3] + colm) *
-  		    sub->im[2] + col[2] - sub->ib[2]) *
-  		   sub->im[1] + col[1] - sub->ib[1]) *
-  		  sub->im[0] + col[0] - sub->ib[0]);
+  int row_idx = ((((row_patch *
+		    sub->im[3] + rowm) *
+		   sub->im[2] + row[2] - sub->ib[2]) *
+		  sub->im[1] + row[1] - sub->ib[1]) *
+		 sub->im[0] + row[0] - sub->ib[0]);
+  int col_idx = ((((col_patch *
+		    sub->im[3] + colm) *
+		   sub->im[2] + col[2] - sub->ib[2]) *
+		  sub->im[1] + col[1] - sub->ib[1]) *
+		 sub->im[0] + col[0] - sub->ib[0]);
   
   if (mcsr->nr_rows == 0 ||
-      mcsr->rows[mcsr->nr_rows - 1].pidx != row_pidx) {
+      mcsr->rows[mcsr->nr_rows - 1].idx != row_idx) {
     // start new row
     if (mcsr->nr_rows >= mcsr->nr_rows_alloced - 1) {
       mcsr->nr_rows_alloced *= 2;
       mcsr->rows = realloc(mcsr->rows, mcsr->nr_rows_alloced * sizeof(*mcsr->rows));
     }
-    mcsr->rows[mcsr->nr_rows].pidx = row_pidx;
+    mcsr->rows[mcsr->nr_rows].idx = row_idx;
     mcsr->rows[mcsr->nr_rows].first_entry = mcsr->nr_entries;
     mcsr->nr_rows++;
   }
 
   // if we already have an entry for this column in the current row, just add to it
   for (int i = mcsr->rows[mcsr->nr_rows - 1].first_entry; i < mcsr->nr_entries; i++) {
-    if (mcsr->entries[i].pidx == col_pidx) {
+    if (mcsr->entries[i].idx == col_idx) {
       mcsr->entries[i].val += val;
       return;
     }
@@ -153,7 +153,7 @@ mrc_ddc_amr_add_value(struct mrc_ddc *ddc,
     mcsr->nr_entries_alloced *= 2;
     mcsr->entries = realloc(mcsr->entries, mcsr->nr_entries_alloced * sizeof(*mcsr->entries));
   }
-  mcsr->entries[mcsr->nr_entries].pidx = col_pidx;
+  mcsr->entries[mcsr->nr_entries].idx = col_idx;
   mcsr->entries[mcsr->nr_entries].val = val;
   mcsr->nr_entries++;
 }
@@ -184,15 +184,15 @@ mrc_ddc_amr_fill_ghosts(struct mrc_ddc *ddc, struct mrc_fld *fld)
     float *arr = fld->_arr;
     
     for (int row = 0; row < mcsr->nr_rows; row++) {
-      int row_pidx = mcsr->rows[row].pidx;
+      int row_idx = mcsr->rows[row].idx;
       float sum = 0.;
       for (int entry = mcsr->rows[row].first_entry;
 	   entry < mcsr->rows[row + 1].first_entry; entry++) {
-	int col_pidx = mcsr->entries[entry].pidx;
+	int col_idx = mcsr->entries[entry].idx;
 	float val = mcsr->entries[entry].val;
-	sum += val * arr[col_pidx];
+	sum += val * arr[col_idx];
       }
-      arr[row_pidx] = sum;
+      arr[row_idx] = sum;
     }
   } else {
     assert(0);
