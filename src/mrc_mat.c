@@ -10,8 +10,10 @@
 // mrc_mat_setup
 
 void
-mrc_mat_setup(struct mrc_mat_mcsr *sub)
+_mrc_mat_setup(struct mrc_mat *mat)
 {
+  struct mrc_mat_mcsr *sub = &mat->sub;
+
   sub->nr_rows_alloced = 1000;
   sub->nr_entries_alloced = 2000;
 
@@ -23,11 +25,25 @@ mrc_mat_setup(struct mrc_mat_mcsr *sub)
 }
 
 // ----------------------------------------------------------------------
+// mrc_mat_destroy
+
+void
+_mrc_mat_destroy(struct mrc_mat *mat)
+{
+  struct mrc_mat_mcsr *sub = &mat->sub;
+
+  free(sub->rows);
+  free(sub->entries);
+}
+
+// ----------------------------------------------------------------------
 // mrc_mat_add_value
 
 void
-mrc_mat_add_value(struct mrc_mat_mcsr *sub, int row_idx, int col_idx, float val)
+mrc_mat_add_value(struct mrc_mat *mat, int row_idx, int col_idx, float val)
 {
+  struct mrc_mat_mcsr *sub = &mat->sub;
+
   if (sub->nr_rows == 0 ||
       sub->rows[sub->nr_rows - 1].idx != row_idx) {
     // start new row
@@ -62,8 +78,10 @@ mrc_mat_add_value(struct mrc_mat_mcsr *sub, int row_idx, int col_idx, float val)
 // mrc_mat_assemble
 
 void
-mrc_mat_assemble(struct mrc_mat_mcsr *sub)
+mrc_mat_assemble(struct mrc_mat *mat)
 {
+  struct mrc_mat_mcsr *sub = &mat->sub;
+
   sub->rows[sub->nr_rows].first_entry = sub->nr_entries;
   mprintf("nr_rows %d nr_entries %d\n", sub->nr_rows, sub->nr_entries);
 }
@@ -72,8 +90,10 @@ mrc_mat_assemble(struct mrc_mat_mcsr *sub)
 // mrc_mat_apply
 
 void
-mrc_mat_apply(struct mrc_mat_mcsr *sub, struct mrc_fld *fld)
+mrc_mat_apply(struct mrc_mat *mat, struct mrc_fld *fld)
 {
+  struct mrc_mat_mcsr *sub = &mat->sub;
+
   float *arr = fld->_arr;
     
   for (int row = 0; row < sub->nr_rows; row++) {
@@ -88,6 +108,16 @@ mrc_mat_apply(struct mrc_mat_mcsr *sub, struct mrc_fld *fld)
     arr[row_idx] = sum;
   }
 }
+
+// ----------------------------------------------------------------------
+// mrc_mat class description
+
+struct mrc_class_mrc_mat mrc_class_mrc_mat = {
+  .name         = "mrc_mat",
+  .size         = sizeof(struct mrc_mat),
+  .setup        = _mrc_mat_setup,
+  .destroy      = _mrc_mat_destroy,
+};
 
 // ======================================================================
 // petsc-specific function that should be revisited eventually FIXME

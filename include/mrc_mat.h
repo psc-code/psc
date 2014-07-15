@@ -5,6 +5,11 @@
 #include <mrc.h>
 #include <mrc_domain.h>
 
+// ======================================================================
+// mrc_mat
+
+MRC_CLASS_DECLARE(mrc_mat, struct mrc_mat);
+
 struct mrc_mat_mcsr_row {
   int idx;
   int first_entry;
@@ -24,10 +29,14 @@ struct mrc_mat_mcsr {
   int nr_entries_alloced;
 };
 
-void mrc_mat_setup(struct mrc_mat_mcsr *sub);
-void mrc_mat_assemble(struct mrc_mat_mcsr *sub);
-void mrc_mat_add_value(struct mrc_mat_mcsr *sub, int row_idx, int col_idx, float val);
-void mrc_mat_apply(struct mrc_mat_mcsr *sub, struct mrc_fld *fld);
+struct mrc_mat {
+  struct mrc_obj obj;
+  struct mrc_mat_mcsr sub;
+};
+
+void mrc_mat_assemble(struct mrc_mat *mat);
+void mrc_mat_add_value(struct mrc_mat *mat, int row_idx, int col_idx, float val);
+void mrc_mat_apply(struct mrc_mat *mat, struct mrc_fld *fld);
 
 //======================================================================
 // THE STORY OF THE FOLLOWING PART OF THIS FILE

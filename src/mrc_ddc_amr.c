@@ -12,7 +12,7 @@
 // mrc_ddc_amr
 
 struct mrc_ddc_amr {
-  struct mrc_mat_mcsr mat;
+  struct mrc_mat *mat;
 
   struct mrc_domain *domain;
   int sw[3];
@@ -58,7 +58,8 @@ mrc_ddc_amr_setup(struct mrc_ddc *ddc)
     sub->im[d] = ldims[d] + 2 * sub->sw[d];
   }
 
-  mrc_mat_setup(&sub->mat);
+  sub->mat = mrc_mat_create(mrc_ddc_comm(ddc));
+  mrc_mat_setup(sub->mat);
 }
 
 // ----------------------------------------------------------------------
@@ -68,10 +69,7 @@ static void
 mrc_ddc_amr_destroy(struct mrc_ddc *ddc)
 {
   struct mrc_ddc_amr *sub = mrc_ddc_amr(ddc);
-  struct mrc_mat_mcsr *mcsr = &sub->mat;
-
-  free(mcsr->rows);
-  free(mcsr->entries);
+  mrc_mat_destroy(sub->mat);
 }
 
 // ----------------------------------------------------------------------
@@ -84,7 +82,6 @@ mrc_ddc_amr_add_value(struct mrc_ddc *ddc,
 		      float val)
 {
   struct mrc_ddc_amr *sub = mrc_ddc_amr(ddc);
-  struct mrc_mat_mcsr *mcsr = &sub->mat;
 
   // WARNING, all elements for any given row must be added contiguously!
 
@@ -102,7 +99,7 @@ mrc_ddc_amr_add_value(struct mrc_ddc *ddc,
 		  sub->im[1] + col[1] - sub->ib[1]) *
 		 sub->im[0] + col[0] - sub->ib[0]);
 
-  mrc_mat_add_value(mcsr, row_idx, col_idx, val);
+  mrc_mat_add_value(sub->mat, row_idx, col_idx, val);
 }
 
 // ----------------------------------------------------------------------
@@ -113,7 +110,7 @@ mrc_ddc_amr_assemble(struct mrc_ddc *ddc)
 {
   struct mrc_ddc_amr *sub = mrc_ddc_amr(ddc);
 
-  mrc_mat_assemble(&sub->mat);
+  mrc_mat_assemble(sub->mat);
 }
 
 // ----------------------------------------------------------------------
@@ -125,7 +122,7 @@ mrc_ddc_amr_apply(struct mrc_ddc *ddc, struct mrc_fld *fld)
   struct mrc_ddc_amr *sub = mrc_ddc_amr(ddc);
 
   assert(ddc->size_of_type == sizeof(float));
-  mrc_mat_apply(&sub->mat, fld);
+  mrc_mat_apply(sub->mat, fld);
 }
 
 // ----------------------------------------------------------------------
