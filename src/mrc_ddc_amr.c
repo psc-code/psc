@@ -17,8 +17,7 @@ struct mrc_ddc_amr_row {
 };
 
 struct mrc_ddc_amr_entry {
-  int patch;
-  int idx;
+  int pidx;
   float val;
 };
 
@@ -36,7 +35,7 @@ struct mrc_ddc_amr {
 
   struct mrc_domain *domain;
   int sw[3];
-  int ib[3], im[3];
+  int ib[3], im[4];
 };
 
 #define mrc_ddc_amr(ddc) mrc_to_subobj(ddc, struct mrc_ddc_amr)
@@ -122,9 +121,11 @@ mrc_ddc_amr_add_value(struct mrc_ddc *ddc,
   int row_idx = (((rowm * sub->im[2] + row[2] - sub->ib[2]) *
 		  sub->im[1] + row[1] - sub->ib[1]) *
 		 sub->im[0] + row[0] - sub->ib[0]);
-  int col_idx = (((colm * sub->im[2] + col[2] - sub->ib[2]) *
-		  sub->im[1] + col[1] - sub->ib[1]) *
-		 sub->im[0] + col[0] - sub->ib[0]);
+  int col_pidx = ((((col_patch *
+  		     sub->im[3] + colm) *
+  		    sub->im[2] + col[2] - sub->ib[2]) *
+  		   sub->im[1] + col[1] - sub->ib[1]) *
+  		  sub->im[0] + col[0] - sub->ib[0]);
   
   if (mcsr->nr_rows == 0 ||
       mcsr->rows[mcsr->nr_rows - 1].idx != row_idx ||
@@ -142,7 +143,7 @@ mrc_ddc_amr_add_value(struct mrc_ddc *ddc,
 
   // if we already have an entry for this column in the current row, just add to it
   for (int i = mcsr->rows[mcsr->nr_rows - 1].first_entry; i < mcsr->nr_entries; i++) {
-    if (mcsr->entries[i].patch == col_patch && mcsr->entries[i].idx == col_idx) {
+    if (mcsr->entries[i].pidx == col_pidx) {
       mcsr->entries[i].val += val;
       return;
     }
@@ -153,8 +154,7 @@ mrc_ddc_amr_add_value(struct mrc_ddc *ddc,
     mcsr->nr_entries_alloced *= 2;
     mcsr->entries = realloc(mcsr->entries, mcsr->nr_entries_alloced * sizeof(*mcsr->entries));
   }
-  mcsr->entries[mcsr->nr_entries].patch = col_patch;
-  mcsr->entries[mcsr->nr_entries].idx = col_idx;
+  mcsr->entries[mcsr->nr_entries].pidx = col_pidx;
   mcsr->entries[mcsr->nr_entries].val = val;
   mcsr->nr_entries++;
 }
@@ -192,10 +192,9 @@ mrc_ddc_amr_fill_ghosts(struct mrc_ddc *ddc, struct mrc_fld *fld)
       float sum = 0.;
       for (int entry = mcsr->rows[row].first_entry;
 	   entry < mcsr->rows[row + 1].first_entry; entry++) {
-	int col_patch = mcsr->entries[entry].patch;
-	int col_idx = mcsr->entries[entry].idx;
+	int col_pidx = mcsr->entries[entry].pidx;
 	float val = mcsr->entries[entry].val;
-	sum += val * arr[col_patch * size_of_patch + col_idx];
+	sum += val * arr[col_pidx];
       }
       arr[row_patch * size_of_patch + row_idx] = sum;
     }
@@ -228,6 +227,7 @@ mrc_ddc_amr_apply(struct mrc_ddc *ddc, struct mrc_fld *fld)
 #define VAR(x) (void *)offsetof(struct mrc_ddc_amr, x)
 static struct param mrc_ddc_amr_descr[] = {
   { "sw"                     , VAR(sw)                      , PARAM_INT3(0, 0, 0)    },
+  { "n_comp"                 , VAR(im[3])                   , PARAM_INT(0)           },
   {},
 };
 #undef VAR
