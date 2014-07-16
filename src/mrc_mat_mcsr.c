@@ -108,6 +108,30 @@ mrc_mat_mcsr_assemble(struct mrc_mat *mat)
 }
 
 // ----------------------------------------------------------------------
+// mrc_mat_mcsr_apply
+
+static void
+mrc_mat_mcsr_apply(struct mrc_fld *y, struct mrc_mat *mat, struct mrc_fld *x)
+{
+  struct mrc_mat_mcsr *sub = mrc_mat_mcsr(mat);
+
+  float *x_arr = x->_arr;
+  float *y_arr = y->_arr;
+    
+  for (int row = 0; row < sub->nr_rows; row++) {
+    int row_idx = sub->rows[row].idx;
+    float sum = 0.;
+    for (int entry = sub->rows[row].first_entry;
+	 entry < sub->rows[row + 1].first_entry; entry++) {
+      int col_idx = sub->entries[entry].idx;
+      float val = sub->entries[entry].val;
+      sum += val * x_arr[col_idx];
+    }
+    y_arr[row_idx] = sum;
+  }
+}
+
+// ----------------------------------------------------------------------
 // mrc_mat_mcsr_apply_in_place
 
 static void
@@ -140,6 +164,7 @@ struct mrc_mat_ops mrc_mat_mcsr_ops = {
   .destroy               = mrc_mat_mcsr_destroy,
   .add_value             = mrc_mat_mcsr_add_value,
   .assemble              = mrc_mat_mcsr_assemble,
+  .apply                 = mrc_mat_mcsr_apply,
   .apply_in_place        = mrc_mat_mcsr_apply_in_place,
 };
 

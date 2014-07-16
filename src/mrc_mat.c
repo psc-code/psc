@@ -28,6 +28,17 @@ mrc_mat_assemble(struct mrc_mat *mat)
 }
 
 // ----------------------------------------------------------------------
+// mrc_mat_apply
+
+void
+mrc_mat_apply(struct mrc_fld *y, struct mrc_mat *mat, struct mrc_fld *x)
+{
+  struct mrc_mat_ops *ops = mrc_mat_ops(mat);
+  assert(ops->apply);
+  ops->apply(y, mat, x);
+}
+
+// ----------------------------------------------------------------------
 // mrc_mat_apply_in_place
 
 void
