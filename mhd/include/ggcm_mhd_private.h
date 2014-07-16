@@ -76,6 +76,7 @@ void primbb_c2_float(struct ggcm_mhd *mhd, int m_curr);
 void primbb_c2_double(struct ggcm_mhd *mhd, int m_curr);
 void ymaskn_c(struct ggcm_mhd *mhd);
 void zmaskn_c(struct ggcm_mhd *mhd);
+void zmaskn_float(struct ggcm_mhd *mhd);
 void newstep(struct ggcm_mhd *mhd, float *dtn);
 
 #endif
