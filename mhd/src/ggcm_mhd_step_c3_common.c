@@ -3,197 +3,36 @@
 #include "ggcm_mhd_private.h"
 #include "ggcm_mhd_defs.h"
 #include "ggcm_mhd_crds.h"
+#include "mhd_reconstruct.h"
+#include "mhd_riemann.h"
+#include "mhd_util.h"
 
 #include <mrc_domain.h>
 #include <mrc_profile.h>
 
 #include <math.h>
 
-// FIXME, mv to right place
-static void
-mrc_fld_copy_range(struct mrc_fld *to, struct mrc_fld *from, int mb, int me)
-{
-  assert(to->_nr_ghosts == from->_nr_ghosts);
-  int bnd = to->_nr_ghosts;
-
-   mrc_fld_foreach(to, i,j,k, bnd, bnd) {
-    for (int m = mb; m < me; m++) {
-      F3(to, m, i,j,k) = F3(from, m, i,j,k);
-    }
-  } mrc_fld_foreach_end;
-}
-
-// ----------------------------------------------------------------------
-// static globals
-//
-// don't really like it, but it simplifies things
-
-static mrc_fld_data_t _gamma;
-static mrc_fld_data_t _gamma_minus_1;
-
-// ----------------------------------------------------------------------
-// pick_line
-
-static void
-pick_line(struct mrc_fld *x1, struct mrc_fld *x,
-	  int mm, int ib, int ie, int j, int k, int dim)
-{
-#define PICK_LINE(X,I,J,K) do {			\
-    for (int i = ib; i < ie; i++) {		\
-      for (int m = 0; m < mm; m++) {		\
-	F1(x1, m, i) = F3(x, m, I,J,K);		\
-      }						\
-    }						\
-  } while (0)
-
-  if (dim == 0) {
-    PICK_LINE(0,i,j,k);
-  } else if (dim == 1) {
-    PICK_LINE(1,k,i,j);
-  } else if (dim == 2) {
-    PICK_LINE(2,j,k,i);
-  }
-#undef PICK_LINE
-}
-
-// ----------------------------------------------------------------------
-// put_line
-
-static void
-put_line(struct mrc_fld *flux, struct mrc_fld *F, int j, int k,
-	 int ib, int ie, int dim)
-{
-#define PUT_LINE(I,J,K) do {			\
-    for (int i = ib; i < ie; i++) {		\
-      for (int m = 0; m < 5; m++) {		\
-	F3(flux, m, I,J,K) = F1(F, m, i);	\
-      }						\
-    }						\
-  } while (0)
-
-  if (dim == 0) {
-    PUT_LINE(i,j,k);
-  } else if (dim == 1) {
-    PUT_LINE(k,i,j);
-  } else if (dim == 2) {
-    PUT_LINE(j,k,i);
-  }
-#undef PUT_LINE
-}
-
-enum {
-  U_RR,
-  U_RVX,
-  U_RVY,
-  U_RVZ,
-  U_UU,
-  U_BY,
-  U_BZ,
-  U_NR,
-};
-
-enum {
-  W_RR,
-  W_VX,
-  W_VY,
-  W_VZ,
-  W_PP,
-  W_BY,
-  W_BZ,
-  W_NR,
-};
-
-// ----------------------------------------------------------------------
-// sc_from_prim_1d
-
-static inline void
-sc_from_prim_1d(mrc_fld_data_t U[], mrc_fld_data_t W[])
-{
-  mrc_fld_data_t rr = W[W_RR];
-
-  U[U_RR ] = rr;
-  U[U_RVX] = rr * W[W_VX];
-  U[U_RVY] = rr * W[W_VY];
-  U[U_RVZ] = rr * W[W_VZ];
-  U[U_UU ] = W[W_PP] / _gamma_minus_1 +
-    + .5 * (sqr(W[W_VX]) + sqr(W[W_VY]) + sqr(W[W_VZ])) * rr;
-}
-
-// ----------------------------------------------------------------------
-// prim_from_sc
-
-static inline void
-prim_from_sc(mrc_fld_data_t W[], mrc_fld_data_t U[])
-{
-  mrc_fld_data_t rri = 1.f / U[RR];
-
-  W[RR] = U[RR];
-  W[VX] = rri * U[RVX];
-  W[VY] = rri * U[RVY];
-  W[VZ] = rri * U[RVZ];
-  mrc_fld_data_t rvv = (sqr(U[RVX]) + sqr(U[RVY]) + sqr(U[RVZ])) * rri;
-  W[PP] = _gamma_minus_1 * (U[UU] - .5 * rvv);
-}
-
-static void
-mhd_reconstruct_prim_from_sc(struct mrc_fld *W_cc, struct mrc_fld *U_cc,
-			     int ib, int ie)
-{
-  for (int i = ib; i < ie; i++) {
-    prim_from_sc(&F1(W_cc, 0, i), &F1(U_cc, 0, i));
-  }
-}
-
-static void
-mhd_reconstruct_copy_W_to_1d(struct mrc_fld *W_1d, struct mrc_fld *W_cc, int ib, int ie, int dim)
-{
-#define COPY_TO_1D(X,Y,Z) do {			\
-    for (int i = ib; i < ie; i++) {		\
-      F1(W_1d, W_RR, i) = F1(W_cc, RR  , i);	\
-      F1(W_1d, W_VX, i) = F1(W_cc, VX+X, i);	\
-      F1(W_1d, W_VY, i) = F1(W_cc, VX+Y, i);	\
-      F1(W_1d, W_VZ, i) = F1(W_cc, VX+Z, i);	\
-      F1(W_1d, W_PP, i) = F1(W_cc, PP  , i);	\
-    }						\
-  } while (0)
-
-  if (dim == 0) {
-    COPY_TO_1D(0,1,2);
-  } else if (dim == 1) {
-    COPY_TO_1D(1,2,0);
-  } else if (dim == 2) {
-    COPY_TO_1D(2,0,1);
-  }
-#undef COPY_TO_1D
-}
-
-static void
-mhd_reconstruct_pcm_run(struct ggcm_mhd_step *step,
-			struct mrc_fld *U_l, struct mrc_fld *U_r,
-			struct mrc_fld *W_l, struct mrc_fld *W_r,
-			struct mrc_fld *U_cc, struct mrc_fld *W_cc,
-			struct mrc_fld *U_1d, struct mrc_fld *W_1d,
-			int ib, int ie, int dim)
-{
-  mhd_reconstruct_copy_W_to_1d(W_1d, W_cc, ib, ie, dim);
-
-  for (int i = ib; i < ie + 1; i++) {
-    for (int m = 0; m < 5; m++) {
-      F1(W_l, m, i) = F1(W_1d, m, i-1);
-      F1(W_r, m, i) = F1(W_1d, m, i  );
-    }
-  }
-
-  for (int i = ib; i < ie + 1; i++) {
-    sc_from_prim_1d(&F1(U_l, 0, i), &F1(W_l, 0, i));
-    sc_from_prim_1d(&F1(U_r, 0, i), &F1(W_r, 0, i));
-  }
-}
+#include "mhd_1d.c"
+#include "mhd_3d.c"
 
 // ======================================================================
 // ggcm_mhd_step subclass "c3"
 
 struct ggcm_mhd_step_c3 {
+  struct mhd_reconstruct *reconstruct;
+  struct mhd_riemann *riemann;
+
+  struct mrc_fld *U_1d;
+  struct mrc_fld *U_l;
+  struct mrc_fld *U_r;
+  struct mrc_fld *W_1d;
+  struct mrc_fld *W_l;
+  struct mrc_fld *W_r;
+  struct mrc_fld *F_1d;
+  struct mrc_fld *F_cc;
+  struct mrc_fld *Fl;
+  struct mrc_fld *lim1;
+
   struct mrc_fld *masks;
 };
 
@@ -212,6 +51,18 @@ enum {
 };
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_step_c_create
+
+static void
+ggcm_mhd_step_c_create(struct ggcm_mhd_step *step)
+{
+  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
+
+  mhd_reconstruct_set_type(sub->reconstruct, "pcm_" FLD_TYPE);
+  mhd_riemann_set_type(sub->riemann, "rusanov_" FLD_TYPE);
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_step_c_setup
 
 static void
@@ -222,10 +73,21 @@ ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
 
   assert(mhd);
 
-  sub->masks = mhd->fld;
+  mhd_reconstruct_set_param_obj(sub->reconstruct, "mhd", mhd);
+  mhd_riemann_set_param_obj(sub->riemann, "mhd", mhd);
 
-  _gamma         = mhd->par.gamm;
-  _gamma_minus_1 = mhd->par.gamm - 1.;
+  setup_mrc_fld_1d(sub->U_1d, mhd->fld, 5);
+  setup_mrc_fld_1d(sub->U_l , mhd->fld, 5);
+  setup_mrc_fld_1d(sub->U_r , mhd->fld, 5);
+  setup_mrc_fld_1d(sub->W_1d, mhd->fld, 5);
+  setup_mrc_fld_1d(sub->W_l , mhd->fld, 5);
+  setup_mrc_fld_1d(sub->W_r , mhd->fld, 5);
+  setup_mrc_fld_1d(sub->F_1d, mhd->fld, 5);
+  setup_mrc_fld_1d(sub->F_cc, mhd->fld, 5);
+  setup_mrc_fld_1d(sub->Fl  , mhd->fld, 5);
+  setup_mrc_fld_1d(sub->lim1, mhd->fld, 5);
+
+  sub->masks = mhd->fld;
 
   ggcm_mhd_step_setup_member_objs_sub(step);
   ggcm_mhd_step_setup_super(step);
@@ -269,169 +131,34 @@ fluxes_cc(mrc_fld_data_t F[5], mrc_fld_data_t U[5], mrc_fld_data_t W[5])
 }
 
 // ----------------------------------------------------------------------
-// fluxes_rusanov
-
-static void
-fluxes_rusanov(mrc_fld_data_t F[5], mrc_fld_data_t Ul[5], mrc_fld_data_t Ur[5],
-	       mrc_fld_data_t Wl[5], mrc_fld_data_t Wr[5])
-{
-  mrc_fld_data_t Fl[5], Fr[5];
-  
-  fluxes_cc(Fl, Ul, Wl);
-  fluxes_cc(Fr, Ur, Wr);
-
-  mrc_fld_data_t vv, cs2;
-  vv = sqr(Wl[VX]) + sqr(Wl[VY]) + sqr(Wl[VZ]);
-  cs2 = _gamma * Wl[PP] / Wl[RR];
-  mrc_fld_data_t cmsv_l = sqrtf(vv) + sqrtf(cs2);
-
-  vv = sqr(Wr[VX]) + sqr(Wr[VY]) + sqr(Wr[VZ]);
-  cs2 = _gamma * Wr[PP] / Wr[RR];
-  mrc_fld_data_t cmsv_r = sqrtf(vv) + sqrtf(cs2);
-
-  mrc_fld_data_t lambda = .5 * (cmsv_l + cmsv_r);
-  
-  for (int m = 0; m < 5; m++) {
-    F[m] = .5f * ((Fr[m] + Fl[m]) - lambda * (Ur[m] - Ul[m]));
-  }
-}
+// mhd_cc_fluxes
 
 static void  
-mhd_cc_fluxes(struct ggcm_mhd_step *step, struct mrc_fld *fl_cc, struct mrc_fld *U_cc,
-	      struct mrc_fld *W_cc, struct mrc_fld *W_1d, int ib, int ie, int dim)
+mhd_cc_fluxes(struct ggcm_mhd_step *step, struct mrc_fld *F_1d,
+	      struct mrc_fld *U_1d, struct mrc_fld *W_1d,
+	      int ldim, int l, int r, int dim)
 {
-  mhd_reconstruct_copy_W_to_1d(W_1d, W_cc, ib, ie, dim);
-  
-#define FLUXES_1D(X, Y, Z) do {						\
-    for (int i = ib; i < ie; i++) {					\
-      mrc_fld_data_t flux[5];						\
-      									\
-      fluxes_cc(flux, &F1(U_cc, 0, i), &F1(W_1d, 0, i));		\
-									\
-      F1(fl_cc, RR   , i) = flux[RR ];					\
-      F1(fl_cc, RVX+X, i) = flux[RVX];					\
-      F1(fl_cc, RVX+Y, i) = flux[RVY];					\
-      F1(fl_cc, RVX+Z, i) = flux[RVZ];					\
-      F1(fl_cc, UU   , i) = flux[UU ];					\
-    }									\
-  } while (0)
-
-  if (dim == 0) {
-    FLUXES_1D(0,1,2);
-  } else if (dim == 1) {
-    FLUXES_1D(1,2,0);
-  } else if (dim == 2) {
-    FLUXES_1D(2,0,1);
-  }
-#undef FLUXES_1D
-}
-
-// ----------------------------------------------------------------------
-// mhd_riemann_rusanov_run
-
-static void
-mhd_riemann_rusanov_run(struct mrc_fld *F,
-			struct mrc_fld *U_l, struct mrc_fld *U_r,
-			struct mrc_fld *W_l, struct mrc_fld *W_r,
-			int ib, int ie, int dim)
-{
-#define FLUXES_1D(X, Y, Z) do {						\
-    for (int i = ib; i < ie; i++) {					\
-      mrc_fld_data_t flux[5];						\
-      									\
-      fluxes_rusanov(flux, &F1(U_l, 0, i), &F1(U_r, 0, i),		\
-		     &F1(W_l, 0, i), &F1(W_r, 0, i));		\
-									\
-      F1(F, RR   , i) = flux[RR];					\
-      F1(F, RVX+X, i) = flux[RVX];					\
-      F1(F, RVX+Y, i) = flux[RVY];					\
-      F1(F, RVX+Z, i) = flux[RVZ];					\
-      F1(F, UU   , i) = flux[UU];					\
-    }									\
-  } while (0)
-
-  if (dim == 0) {
-    FLUXES_1D(0,1,2);
-  } else if (dim == 1) {
-    FLUXES_1D(1,2,0);
-  } else if (dim == 2) {
-    FLUXES_1D(2,0,1);
-  }
-#undef FLUXES_1D
+  for (int i = -l; i < ldim + r; i++) {					\
+    fluxes_cc(&F1(F_1d, 0, i), &F1(U_1d, 0, i), &F1(W_1d, 0, i));	\
+  }									\
 }
 
 static void
-mhd_fluxl(struct ggcm_mhd_step *step,
-	  struct mrc_fld *F,
-	  struct mrc_fld *U_cc, struct mrc_fld *W_cc,
-	  struct mrc_fld *U_l, struct mrc_fld *U_r,
-	  struct mrc_fld *W_l, struct mrc_fld *W_r,
-	  struct mrc_fld *U_1d, struct mrc_fld *W_1d,
-	  struct mrc_fld *fluxes, struct mrc_fld *U,
-	  int ldims, int j, int k, int dim)
+flux_pred(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3], struct mrc_fld *x, struct mrc_fld *B_cc,
+	  int ldim, int bnd, int j, int k, int dir)
 {
-  static int pr;
-  if (!pr) {
-    pr = prof_register("mhd_fluxl", 0, 0, 0);
-  }
+  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
 
-  prof_start(pr);
-  pick_line(U_cc, U, 5, -1, ldims + 1, j, k, dim);
-  mhd_reconstruct_prim_from_sc(W_cc, U_cc, -1, ldims + 1);
-  mhd_reconstruct_pcm_run(step, U_l, U_r, W_l, W_r, U_cc, W_cc, U_1d, W_1d,
-			  -1, ldims + 1, dim);
-  mhd_riemann_rusanov_run(F, U_l, U_r, W_l, W_r, 0, ldims + 1, dim);
-  put_line(fluxes, F, j, k, 0, ldims + 1, dim);
-  prof_stop(pr);
-}
+  struct mrc_fld *U_1d = sub->U_1d, *U_l = sub->U_l, *U_r = sub->U_r;
+  struct mrc_fld *W_1d = sub->W_1d, *W_l = sub->W_l, *W_r = sub->W_r;
+  struct mrc_fld *F_1d = sub->F_1d;
 
-// ----------------------------------------------------------------------
-// fluxl_c
-
-static void
-fluxl_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
-	struct mrc_fld *U)
-{
-  struct mrc_fld *U_cc = ggcm_mhd_step_get_1d_fld(step, 5);
-  struct mrc_fld *W_cc = ggcm_mhd_step_get_1d_fld(step, 5);
-  struct mrc_fld *U_l = ggcm_mhd_step_get_1d_fld(step, 5);
-  struct mrc_fld *U_r = ggcm_mhd_step_get_1d_fld(step, 5);
-  struct mrc_fld *W_l = ggcm_mhd_step_get_1d_fld(step, 5);
-  struct mrc_fld *W_r = ggcm_mhd_step_get_1d_fld(step, 5);
-  struct mrc_fld *U_1d = ggcm_mhd_step_get_1d_fld(step, 5);
-  struct mrc_fld *W_1d = ggcm_mhd_step_get_1d_fld(step, 5);
-  struct mrc_fld *F = ggcm_mhd_step_get_1d_fld(step, 5);
-
-  const int *ldims = mrc_fld_spatial_dims(U);
-
-  // FIXME, flux indexing should be shifted by 1
-  for (int k = 0; k < ldims[2]; k++) {
-    for (int j = 0; j < ldims[1]; j++) {
-      mhd_fluxl(step, F, U_cc, W_cc, U_l, U_r, W_l, W_r, U_1d, W_1d,
-		fluxes[0], U, ldims[0], j, k, 0);
-    }
-  }
-
-  for (int k = 0; k < ldims[2]; k++) {
-    for (int i = 0; i < ldims[0]; i++) {
-      mhd_fluxl(step, F, U_cc, W_cc, U_l, U_r, W_l, W_r, U_1d, W_1d,
-		fluxes[1], U, ldims[1], k, i, 1);
-    }
-  }
-
-  for (int j = 0; j < ldims[1]; j++) {
-    for (int i = 0; i < ldims[0]; i++) {
-      mhd_fluxl(step, F, U_cc, W_cc, U_l, U_r, W_l, W_r, U_1d, W_1d,
-		fluxes[2], U, ldims[2], i, j, 2);
-    }
-  }
-
-  ggcm_mhd_step_put_1d_fld(step, U_cc);
-  ggcm_mhd_step_put_1d_fld(step, U_l);
-  ggcm_mhd_step_put_1d_fld(step, U_r);
-  ggcm_mhd_step_put_1d_fld(step, W_l);
-  ggcm_mhd_step_put_1d_fld(step, W_r);
-  ggcm_mhd_step_put_1d_fld(step, F);
+  pick_line_sc(U_1d, x, ldim, 1, 1, j, k, dir);
+  mhd_prim_from_sc(step->mhd, W_1d, U_1d, ldim, 1, 1);
+  mhd_reconstruct_run(sub->reconstruct, U_l, U_r, W_l, W_r, W_1d, NULL,
+		      ldim, 1, 1, dir);
+  mhd_riemann_run(sub->riemann, F_1d, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
+  put_line_sc(fluxes[dir], F_1d, j, k, ldim, 0, 1, dir);
 }
 
 static inline mrc_fld_data_t
@@ -461,135 +188,50 @@ limit_hz(mrc_fld_data_t a2, mrc_fld_data_t aa, mrc_fld_data_t a1)
 }
 
 static void
-mhd_limit1(struct mrc_fld *lim1, struct mrc_fld *U_cc, struct mrc_fld *W_cc,
-	   int ib, int ie, int dim)
+mhd_limit1(struct mrc_fld *lim1, struct mrc_fld *U_1d, struct mrc_fld *W_1d,
+	   int ldim, int l, int r, int dim)
 {
-  for (int i = ib; i < ie; i++) {
-    mrc_fld_data_t lim1_pp = limit_hz(F1(W_cc, PP, i-1), F1(W_cc, PP, i), F1(W_cc, PP, i+1));
+  for (int i = -l; i < ldim + r; i++) {
+    mrc_fld_data_t lim1_pp = limit_hz(F1(W_1d, PP, i-1), F1(W_1d, PP, i), F1(W_1d, PP, i+1));
     for (int m = 0; m < 5; m++) {
-      F1(lim1, m, i) = fmaxf(limit_hz(F1(U_cc, m, i-1), F1(U_cc, m, i), F1(U_cc, m, i+1)), 
+      F1(lim1, m, i) = fmaxf(limit_hz(F1(U_1d, m, i-1), F1(U_1d, m, i), F1(U_1d, m, i+1)), 
 			     lim1_pp);
     }
   }
 }
 
 static void
-mhd_fluxb(struct ggcm_mhd_step *step,
-	  struct mrc_fld *F, struct mrc_fld *Fl,
-	  struct mrc_fld *U_cc, struct mrc_fld *W_cc,
-	  struct mrc_fld *U_l, struct mrc_fld *U_r,
-	  struct mrc_fld *W_l, struct mrc_fld *W_r, struct mrc_fld *F_cc, struct mrc_fld *lim1,
-	  struct mrc_fld *U_1d, struct mrc_fld *W_1d,
-	  struct mrc_fld *fluxes, struct mrc_fld *U,
-	  int ldims, int j, int k, int dim)
+flux_corr(struct ggcm_mhd_step *step,
+	  struct mrc_fld *fluxes[3], struct mrc_fld *x, struct mrc_fld *B_cc,
+	  int ldim, int bnd, int j, int k, int dir)
 {
-  static int pr;
-  if (!pr) {
-    pr = prof_register("mhd_fluxb", 0, 0, 0);
-  }
+  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
 
-  prof_start(pr);
-  pick_line(U_cc, U, 5, -2, ldims + 2, j, k, dim);
-  mhd_reconstruct_prim_from_sc(W_cc, U_cc, -2, ldims + 2);
-  mhd_reconstruct_pcm_run(step, U_l, U_r, W_l, W_r, U_cc, W_cc, U_1d, W_1d,
-			  -1, ldims + 1, dim);
-  mhd_riemann_rusanov_run(Fl, U_l, U_r, W_l, W_r, 0, ldims + 1, dim);
-  mhd_cc_fluxes(step, F_cc, U_cc, W_cc, W_1d, -2, ldims + 2, dim);
-  mhd_limit1(lim1, U_cc, W_cc, -1, ldims + 1, dim);
+  struct mrc_fld *U_1d = sub->U_1d, *U_l = sub->U_l, *U_r = sub->U_r;
+  struct mrc_fld *W_1d = sub->W_1d, *W_l = sub->W_l, *W_r = sub->W_r;
+  struct mrc_fld *F_1d = sub->F_1d;
+  struct mrc_fld *F_cc = sub->F_cc, *Fl = sub->Fl, *lim1 = sub->lim1;
+
+  pick_line_sc(U_1d, x, ldim, 2, 2, j, k, dir);
+  mhd_prim_from_sc(step->mhd, W_1d, U_1d, ldim, 2, 2);
+  mhd_reconstruct_run(sub->reconstruct, U_l, U_r, W_l, W_r, W_1d, NULL,
+		      ldim, 1, 1, dir);
+  mhd_riemann_run(sub->riemann, Fl, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
+  mhd_cc_fluxes(step, F_cc, U_1d, W_1d, ldim, 2, 2, dir);
+  mhd_limit1(lim1, U_1d, W_1d, ldim, 1, 1, dir);
 
   mrc_fld_data_t s1 = 1. / 12.;
   mrc_fld_data_t s7 = 7. * s1;
 
-  for (int i = 0; i < ldims + 1; i++) {
+  for (int i = 0; i < ldim + 1; i++) {
     for (int m = 0; m < 5; m++) {
       mrc_fld_data_t fhx = (s7 * (F1(F_cc, m, i-1) + F1(F_cc, m, i  )) -
 			    s1 * (F1(F_cc, m, i-2) + F1(F_cc, m, i+1)));
       mrc_fld_data_t cx = fmaxf(F1(lim1, m, i-1), F1(lim1, m, i));
-      F1(F, m, i) = cx * F1(Fl, m, i) + (1.f - cx) * fhx;
+      F1(F_1d, m, i) = cx * F1(Fl, m, i) + (1.f - cx) * fhx;
     }
   }
-
-  put_line(fluxes, F, j, k, 0, ldims + 1, dim);
-  prof_stop(pr);
-}
-
-static void
-fluxb_c(struct ggcm_mhd_step *step, struct mrc_fld **fluxes,
-	struct mrc_fld *U)
-{
-  struct ggcm_mhd *mhd = step->mhd;
-
-  if (mhd->time < mhd->par.timelo) {
-    return fluxl_c(step, fluxes, U);
-  }
-
-  struct mrc_fld *U_cc = ggcm_mhd_step_get_1d_fld(step, 5);
-  struct mrc_fld *U_l  = ggcm_mhd_step_get_1d_fld(step, 5);
-  struct mrc_fld *U_r  = ggcm_mhd_step_get_1d_fld(step, 5);
-  struct mrc_fld *W_cc = ggcm_mhd_step_get_1d_fld(step, 6);
-  struct mrc_fld *W_l  = ggcm_mhd_step_get_1d_fld(step, 5);
-  struct mrc_fld *W_r  = ggcm_mhd_step_get_1d_fld(step, 5);
-  struct mrc_fld *fl1_cc = ggcm_mhd_step_get_1d_fld(step, 5);
-  struct mrc_fld *lim1 = ggcm_mhd_step_get_1d_fld(step, 5);
-  struct mrc_fld *U_1d = ggcm_mhd_step_get_1d_fld(step, 5);
-  struct mrc_fld *W_1d = ggcm_mhd_step_get_1d_fld(step, 5);
-  struct mrc_fld *F    = ggcm_mhd_step_get_1d_fld(step, 5);
-  struct mrc_fld *Fl   = ggcm_mhd_step_get_1d_fld(step, 5);
-
-  const int *ldims = mrc_fld_spatial_dims(U);
-
-  for (int k = 0; k < ldims[2]; k++) {
-    for (int j = 0; j < ldims[1]; j++) {
-      mhd_fluxb(step, F, Fl, U_cc, W_cc, U_l, U_r, W_l, W_r, fl1_cc, lim1, U_1d, W_1d,
-		fluxes[0], U, ldims[0], j, k, 0);
-    }
-  }
-
-  for (int k = 0; k < ldims[2]; k++) {
-    for (int i = 0; i < ldims[0]; i++) {
-      mhd_fluxb(step, F, Fl, U_cc, W_cc, U_l, U_r, W_l, W_r, fl1_cc, lim1, U_1d, W_1d,
-		fluxes[1], U, ldims[1], k, i, 1);
-    }
-  }
-	
-  for (int j = 0; j < ldims[1]; j++) {
-    for (int i = 0; i < ldims[0]; i++) {
-      mhd_fluxb(step, F, Fl, U_cc, W_cc, U_l, U_r, W_l, W_r, fl1_cc, lim1, U_1d, W_1d,
-		fluxes[2], U, ldims[2], i, j, 2);
-    }
-  }
-
-  ggcm_mhd_step_put_1d_fld(step, U_cc);
-  ggcm_mhd_step_put_1d_fld(step, U_l);
-  ggcm_mhd_step_put_1d_fld(step, U_r);
-  ggcm_mhd_step_put_1d_fld(step, W_cc);
-  ggcm_mhd_step_put_1d_fld(step, W_l);
-  ggcm_mhd_step_put_1d_fld(step, W_r);
-  ggcm_mhd_step_put_1d_fld(step, U_1d);
-  ggcm_mhd_step_put_1d_fld(step, W_1d);
-  ggcm_mhd_step_put_1d_fld(step, fl1_cc);
-  ggcm_mhd_step_put_1d_fld(step, lim1);
-  ggcm_mhd_step_put_1d_fld(step, F);
-  ggcm_mhd_step_put_1d_fld(step, Fl);
-}
-
-static void
-update_finite_volume(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld **fluxes,
-		     struct mrc_fld *masks, mrc_fld_data_t dt)
-{
-  float *fd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FD1);
-  float *fd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FD1);
-  float *fd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FD1);
-
-  mrc_fld_foreach(x, i,j,k, 0, 0) {
-    mrc_fld_data_t s = dt * F3(masks, _YMASK, i,j,k);
-    for (int m = 0; m < 5; m++) {
-      F3(x, m, i,j,k) +=
-	- s * (fd1x[i] * (F3(fluxes[0], m, i+1,j,k) - F3(fluxes[0], m, i,j,k)) +
-	       fd1y[j] * (F3(fluxes[1], m, i,j+1,k) - F3(fluxes[1], m, i,j,k)) +
-	       fd1z[k] * (F3(fluxes[2], m, i,j,k+1) - F3(fluxes[2], m, i,j,k)));
-    }
-  } mrc_fld_foreach_end;
+  put_line_sc(fluxes[dir], F_1d, j, k, ldim, 0, 1, dir);
 }
 
 static void
@@ -641,24 +283,6 @@ curr_c(struct ggcm_mhd *mhd, struct mrc_fld *j_ec, struct mrc_fld *x)
 }
 
 // ----------------------------------------------------------------------
-// compute_B_cc
-//
-// cell-averaged B
-
-static void
-compute_B_cc(struct ggcm_mhd *mhd, struct mrc_fld *b_cc, struct mrc_fld *x)
-{
-  mrc_fld_foreach(b_cc, i,j,k, 1, 1) {
-    F3(b_cc, 0, i,j,k) = .5f * (F3(x, _B1X, i  ,j,k) +
-				   F3(x, _B1X, i+1,j,k));
-    F3(b_cc, 1, i,j,k) = .5f * (F3(x, _B1Y, i,j  ,k) +
-				   F3(x, _B1Y, i,j+1,k));
-    F3(b_cc, 2, i,j,k) = .5f * (F3(x, _B1Z, i,j,k  ) +
-				   F3(x, _B1Z, i,j,k+1));
-  } mrc_fld_foreach_end;
-}
-
-// ----------------------------------------------------------------------
 // curbc_c
 //
 // cell-centered j
@@ -700,7 +324,7 @@ push_ej_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, struct mrc_fld *x_curr,
   struct mrc_fld *b_cc = ggcm_mhd_step_get_3d_fld(step, 3);
 
   curr_c(mhd, j_ec, x_curr);
-  compute_B_cc(mhd, b_cc, x_curr);
+  compute_B_cc(b_cc, x_curr, 1, 1);
 	
   mrc_fld_data_t s1 = .25f * dt;
   mrc_fld_foreach(x_next, i,j,k, 0, 0) {
@@ -1036,27 +660,6 @@ calce_c(struct ggcm_mhd_step *step, struct mrc_fld *E,
 }
 
 static void
-update_ct(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *E_ec,
-	  mrc_fld_data_t dt)
-{
-  float *bd3x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD3);
-  float *bd3y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD3);
-  float *bd3z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD3);
-
-  mrc_fld_foreach(x, i,j,k, 0, 0) {
-    F3(x, _B1X, i,j,k) -=
-      dt * (bd3y[j] * (F3(E_ec, 2, i,j+1,k) - F3(E_ec, 2, i,j,k)) -
-	    bd3z[k] * (F3(E_ec, 1, i,j,k+1) - F3(E_ec, 1, i,j,k)));
-    F3(x, _B1Y, i,j,k) -=
-      dt * (bd3z[k] * (F3(E_ec, 0, i,j,k+1) - F3(E_ec, 0, i,j,k)) -
-	    bd3x[i] * (F3(E_ec, 2, i+1,j,k) - F3(E_ec, 2, i,j,k)));
-    F3(x, _B1Z, i,j,k) -=
-      dt * (bd3x[i] * (F3(E_ec, 1, i+1,j,k) - F3(E_ec, 1, i,j,k)) -
-	    bd3y[j] * (F3(E_ec, 0, i,j+1,k) - F3(E_ec, 0, i,j,k)));
-  } mrc_fld_foreach_end;
-}
-
-static void
 pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
 	    struct mrc_fld *x_curr, struct mrc_fld *x_next,
 	    struct mrc_fld *prim, int limit)
@@ -1066,14 +669,15 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
   struct mrc_fld *fluxes[3] = { ggcm_mhd_step_get_3d_fld(step, 5),
 				ggcm_mhd_step_get_3d_fld(step, 5),
 				ggcm_mhd_step_get_3d_fld(step, 5), };
+  struct mrc_fld *E = ggcm_mhd_step_get_3d_fld(step, 3);
   struct mrc_fld *masks = sub->masks;
 
   rmaskn_c(step);
 
-  if (limit == LIMIT_NONE) {
-    fluxl_c(step, fluxes, x_curr);
+  if (limit == LIMIT_NONE || mhd->time < mhd->par.timelo) {
+    mhd_fluxes(step, fluxes, x_curr, NULL, 0, 0, flux_pred);
   } else {
-    fluxb_c(step, fluxes, x_curr);
+    mhd_fluxes(step, fluxes, x_curr, NULL, 0, 0, flux_corr);
   }
 
   update_finite_volume(mhd, x_next, fluxes, masks, dt);
@@ -1081,11 +685,10 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
 
   push_ej_c(step, dt, x_curr, prim, x_next);
 
-  struct mrc_fld *E = ggcm_mhd_step_get_3d_fld(step, 3);
   calce_c(step, E, x_curr, prim, dt);
   update_ct(mhd, x_next, E, dt);
-  ggcm_mhd_step_put_3d_fld(step, E);
 
+  ggcm_mhd_step_put_3d_fld(step, E);
   ggcm_mhd_step_put_3d_fld(step, fluxes[0]);
   ggcm_mhd_step_put_3d_fld(step, fluxes[1]);
   ggcm_mhd_step_put_3d_fld(step, fluxes[2]);
@@ -1153,6 +756,19 @@ ggcm_mhd_step_c_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_step_c3, x)
 static struct param ggcm_mhd_step_c_descr[] = {
+  { "reconstruct"     , VAR(reconstruct)     , MRC_VAR_OBJ(mhd_reconstruct) },
+  { "riemann"         , VAR(riemann)         , MRC_VAR_OBJ(mhd_riemann)     },
+
+  { "U_1d"            , VAR(U_1d)            , MRC_VAR_OBJ(mrc_fld)         },
+  { "U_l"             , VAR(U_l)             , MRC_VAR_OBJ(mrc_fld)         },
+  { "U_r"             , VAR(U_r)             , MRC_VAR_OBJ(mrc_fld)         },
+  { "W_1d"            , VAR(W_1d)            , MRC_VAR_OBJ(mrc_fld)         },
+  { "W_l"             , VAR(W_l)             , MRC_VAR_OBJ(mrc_fld)         },
+  { "W_r"             , VAR(W_r)             , MRC_VAR_OBJ(mrc_fld)         },
+  { "F_1d"            , VAR(F_1d)            , MRC_VAR_OBJ(mrc_fld)         },
+  { "F_cc"            , VAR(F_cc)            , MRC_VAR_OBJ(mrc_fld)         },
+  { "Fl"              , VAR(Fl)              , MRC_VAR_OBJ(mrc_fld)         },
+  { "lim1"            , VAR(lim1)            , MRC_VAR_OBJ(mrc_fld)         },
   {},
 };
 #undef VAR
