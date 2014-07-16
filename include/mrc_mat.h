@@ -12,7 +12,7 @@ MRC_CLASS_DECLARE(mrc_mat, struct mrc_mat);
 
 void mrc_mat_assemble(struct mrc_mat *mat);
 void mrc_mat_add_value(struct mrc_mat *mat, int row_idx, int col_idx, float val);
-void mrc_mat_apply(struct mrc_mat *mat, struct mrc_fld *fld);
+void mrc_mat_apply_in_place(struct mrc_mat *mat, struct mrc_fld *x);
 
 //======================================================================
 // THE STORY OF THE FOLLOWING PART OF THIS FILE

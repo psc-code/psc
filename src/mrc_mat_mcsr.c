@@ -108,10 +108,10 @@ mrc_mat_mcsr_assemble(struct mrc_mat *mat)
 }
 
 // ----------------------------------------------------------------------
-// mrc_mat_mcsr_apply
+// mrc_mat_mcsr_apply_in_place
 
 static void
-mrc_mat_mcsr_apply(struct mrc_mat *mat, struct mrc_fld *fld)
+mrc_mat_mcsr_apply_in_place(struct mrc_mat *mat, struct mrc_fld *fld)
 {
   struct mrc_mat_mcsr *sub = mrc_mat_mcsr(mat);
 
@@ -140,6 +140,6 @@ struct mrc_mat_ops mrc_mat_mcsr_ops = {
   .destroy               = mrc_mat_mcsr_destroy,
   .add_value             = mrc_mat_mcsr_add_value,
   .assemble              = mrc_mat_mcsr_assemble,
-  .apply                 = mrc_mat_mcsr_apply,
+  .apply_in_place        = mrc_mat_mcsr_apply_in_place,
 };
 
