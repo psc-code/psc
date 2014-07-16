@@ -355,6 +355,12 @@ mrc_ddc_amr_stencil_fine(struct mrc_ddc *ddc, int ext[3],
 
 // ================================================================================
 
+static void
+mrc_ddc_amr_add_diagonal_one(struct mrc_ddc *ddc, int p, int m, int i[3])
+{
+  mrc_ddc_amr_add_value(ddc, p, m, i, p, m, i, 1.f);
+}
+
 void
 mrc_ddc_amr_set_by_stencil(struct mrc_ddc *ddc, int m, int bnd, int ext[3],
 			   struct mrc_ddc_amr_stencil *stencil_coarse,
@@ -376,9 +382,11 @@ mrc_ddc_amr_set_by_stencil(struct mrc_ddc *ddc, int m, int bnd, int ext[3],
 	      i[1] >= ext[1] && i[1] < ldims[1] &&
 	      i[2] >= ext[2] && i[2] < ldims[2]) {
 	    assert(!mrc_domain_is_ghost(domain, ext, p, i));
+	    mrc_ddc_amr_add_diagonal_one(ddc, p, m, i);
 	    continue;
 	  }
 	  if (!mrc_domain_is_ghost(domain, ext, p, i)) {
+	    mrc_ddc_amr_add_diagonal_one(ddc, p, m, i);
 	    continue;
 	  }
 
