@@ -30,9 +30,14 @@ newstep_sc(struct ggcm_mhd *mhd, struct mrc_fld *x)
 
   mrc_fld_data_t splim2 = sqr(mhd->par.speedlimit / mhd->par.vvnorm);
   mrc_fld_data_t gamm   = mhd->par.gamm;
+  mrc_fld_data_t d_i    = mhd->par.d_i;
+
   mrc_fld_data_t thx    = mhd->par.thx;
   mrc_fld_data_t eps    = 1e-9f;
   mrc_fld_data_t dt     = 1e10f;
+
+  mrc_fld_data_t two_pi_d_i = 2. * M_PI * d_i;
+  bool have_hall = d_i > 0.f;
 
   mrc_fld_foreach(x, ix, iy, iz, 0, 0) {
     mrc_fld_data_t hh = mrc_fld_max(mrc_fld_max(fd1x[ix], fd1y[iy]), fd1z[iz]);
@@ -40,6 +45,10 @@ newstep_sc(struct ggcm_mhd *mhd, struct mrc_fld *x)
     mrc_fld_data_t bb = (sqr(.5f * (BX(x, ix,iy,iz) + BX(x, ix-1,iy,iz))) + 
 			 sqr(.5f * (BY(x, ix,iy,iz) + BY(x, ix,iy-1,iz))) +
 			 sqr(.5f * (BZ(x, ix,iy,iz) + BZ(x, ix,iy,iz-1))));
+    if (have_hall) {
+      bb *= 1 + sqr(two_pi_d_i * hh);
+    }      
+
     mrc_fld_data_t vv1 = mrc_fld_min(bb * rri, splim2);
     mrc_fld_data_t rrvv = (sqr(RVX(x, ix,iy,iz)) + 
 			   sqr(RVY(x, ix,iy,iz)) +
