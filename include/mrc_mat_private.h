@@ -6,6 +6,10 @@
 
 struct mrc_mat {
   struct mrc_obj obj;
+
+  // parameters
+  int m; // number of local rows
+  int n; // number of local columns
 };
 
 struct mrc_mat_ops {

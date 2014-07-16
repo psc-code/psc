@@ -52,13 +52,22 @@ mrc_ddc_amr_setup(struct mrc_ddc *ddc)
 
   int ldims[3];
   mrc_domain_get_param_int3(sub->domain, "m", ldims);
+  int size = 1;
   // needs to be compatible with how mrc_fld indexes its fields
   for (int d = 0; d < 3; d++) {
     sub->ib[d] = -sub->sw[d];
     sub->im[d] = ldims[d] + 2 * sub->sw[d];
+    size *= sub->im[d];
   }
 
+  int nr_patches;
+  mrc_domain_get_param_int(sub->domain, "nr_patches", &nr_patches);
+  size *= sub->im[3]; // # components
+  size *= nr_patches;
+
   sub->mat = mrc_mat_create(mrc_ddc_comm(ddc));
+  mrc_mat_set_param_int(sub->mat, "m", size);
+  mrc_mat_set_param_int(sub->mat, "n", size);
   mrc_mat_setup(sub->mat);
 }
 

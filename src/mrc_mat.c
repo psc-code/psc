@@ -59,11 +59,23 @@ mrc_mat_init()
 }
 
 // ----------------------------------------------------------------------
-// mrc_mat class description
+// mrc_mat description
+
+#define VAR(x) (void *)offsetof(struct mrc_mat, x)
+static struct param mrc_mat_descr[] = {
+  { "m"                 , VAR(m)                 , PARAM_INT(0) },
+  { "n"                 , VAR(n)                 , PARAM_INT(0) },
+  {},
+};
+#undef VAR
+
+// ----------------------------------------------------------------------
+// mrc_mat class
 
 struct mrc_class_mrc_mat mrc_class_mrc_mat = {
   .name         = "mrc_mat",
   .size         = sizeof(struct mrc_mat),
+  .param_descr  = mrc_mat_descr,
   .init         = mrc_mat_init,
 };
 
