@@ -127,7 +127,7 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 }
 
 void
-mrc_crds_get_dx(struct mrc_crds *crds, float dx[3])
+mrc_crds_get_dx(struct mrc_crds *crds, double dx[3])
 {
   int gdims[3];
   mrc_domain_get_global_dims(crds->domain, gdims);

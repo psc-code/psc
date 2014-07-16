@@ -47,7 +47,7 @@ struct mrc_crds {
 
 MRC_CLASS_DECLARE(mrc_crds, struct mrc_crds);
 
-void mrc_crds_get_dx(struct mrc_crds *crds, float dx[3]);
+void mrc_crds_get_dx(struct mrc_crds *crds, double dx[3]);
 
 struct mrc_crds_ops {
   MRC_SUBCLASS_OPS(struct mrc_crds);

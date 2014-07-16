@@ -230,7 +230,7 @@ xdmf_spatial_create_m3(list_t *xdmf_spatial_list, const char *name,
 
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   double xl[3];
-  float dx[3];
+  double dx[3];
   if (strcmp(mrc_crds_type(crds), "amr_uniform") == 0 ||
       strcmp(mrc_crds_type(crds), "uniform") == 0) {
     xs->uniform = true;
@@ -285,7 +285,7 @@ xdmf_spatial_create_m3_parallel(list_t *xdmf_spatial_list, const char *name,
       strcmp(mrc_crds_type(crds), "uniform") == 0) {
     xs->uniform = true;
     double xl[3];
-    float dx[3];
+    double dx[3];
     mrc_crds_get_param_double3(crds, "l", xl);
     mrc_crds_get_dx(crds, dx);
     for (int d = 0; d < 3; d++) {
