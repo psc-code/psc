@@ -62,6 +62,8 @@ libmhd_la_SOURCES = \
 	ggcm_mhd_step_c_double.c \
 	ggcm_mhd_step_c2_float.c \
 	ggcm_mhd_step_c2_double.c \
+	ggcm_mhd_step_c3_float.c \
+	ggcm_mhd_step_c3_double.c \
 	\
 	mrc_ts_monitor_ggcm.c
 
