@@ -7,6 +7,7 @@
 #include <mrc_io.h>
 
 #include <math.h>
+#include <string.h>
 #include <assert.h>
 
 #include <mrc_fld_as_float.h>
@@ -101,6 +102,9 @@ newstep(struct ggcm_mhd *mhd, float *dtn)
     newstep_c2(mhd, dtn);
   } else if (mhd_type == MT_SEMI_CONSERVATIVE) {
     zmaskn(mhd, mhd->fld);
+    if (strcmp(mrc_fld_type(mhd->fld), "double") == 0) {
+      assert(0);  // USE step_c3_double instead
+    }
     *dtn = newstep_sc(mhd, mhd->fld);
   } else {
     assert(0);
