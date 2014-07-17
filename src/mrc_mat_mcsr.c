@@ -1,6 +1,8 @@
 
 #include "mrc_mat_private.h"
 
+#include "mrc_fld_as_float.h"
+
 #include <stdlib.h>
 
 // ======================================================================
@@ -13,7 +15,7 @@ struct mrc_mat_mcsr_row {
 
 struct mrc_mat_mcsr_entry {
   int idx;
-  float val;
+  mrc_fld_data_t val;
 };
 
 struct mrc_mat_mcsr {
@@ -107,6 +109,9 @@ mrc_mat_mcsr_assemble(struct mrc_mat *mat)
   mprintf("nr_rows %d nr_entries %d\n", sub->nr_rows, sub->nr_entries);
 }
 
+// FIXME: semantics are different (wrong!) if empty rows are present:
+// In mcsr, output vector values at empty rows are left unchanged, rather than zeroed
+
 // ----------------------------------------------------------------------
 // mrc_mat_mcsr_apply
 
@@ -115,17 +120,17 @@ mrc_mat_mcsr_apply(struct mrc_fld *y, struct mrc_mat *mat, struct mrc_fld *x)
 {
   struct mrc_mat_mcsr *sub = mrc_mat_mcsr(mat);
 
-  assert(x->_size_of_type == sizeof(float));
-  float *x_arr = x->_arr;
-  float *y_arr = y->_arr;
+  assert(x->_size_of_type == sizeof(mrc_fld_data_t));
+  mrc_fld_data_t *x_arr = x->_arr;
+  mrc_fld_data_t *y_arr = y->_arr;
     
   for (int row = 0; row < sub->nr_rows; row++) {
     int row_idx = sub->rows[row].idx;
-    float sum = 0.;
+    mrc_fld_data_t sum = 0.;
     for (int entry = sub->rows[row].first_entry;
 	 entry < sub->rows[row + 1].first_entry; entry++) {
       int col_idx = sub->entries[entry].idx;
-      float val = sub->entries[entry].val;
+      mrc_fld_data_t val = sub->entries[entry].val;
       sum += val * x_arr[col_idx];
     }
     y_arr[row_idx] = sum;
@@ -140,16 +145,16 @@ mrc_mat_mcsr_apply_in_place(struct mrc_mat *mat, struct mrc_fld *x)
 {
   struct mrc_mat_mcsr *sub = mrc_mat_mcsr(mat);
 
-  assert(x->_size_of_type == sizeof(float));
-  float *arr = x->_arr;
+  assert(x->_size_of_type == sizeof(mrc_fld_data_t));
+  mrc_fld_data_t *arr = x->_arr;
     
   for (int row = 0; row < sub->nr_rows; row++) {
     int row_idx = sub->rows[row].idx;
-    float sum = 0.;
+    mrc_fld_data_t sum = 0.;
     for (int entry = sub->rows[row].first_entry;
 	 entry < sub->rows[row + 1].first_entry; entry++) {
       int col_idx = sub->entries[entry].idx;
-      float val = sub->entries[entry].val;
+      mrc_fld_data_t val = sub->entries[entry].val;
       sum += val * arr[col_idx];
     }
     arr[row_idx] = sum;
