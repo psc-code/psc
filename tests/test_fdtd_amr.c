@@ -461,6 +461,9 @@ main(int argc, char **argv)
   mrc_ddc_amr_set_by_stencil(ddc_E, EX, 1, (int[]) { 0, 1, 1 }, &stencils_coarse[EX], &stencils_fine[EX]);
   mrc_ddc_amr_set_by_stencil(ddc_E, EY, 1, (int[]) { 1, 0, 1 }, &stencils_coarse[EY], &stencils_fine[EY]);
   mrc_ddc_amr_set_by_stencil(ddc_E, EZ, 1, (int[]) { 1, 1, 0 }, &stencils_coarse[EZ], &stencils_fine[EZ]);
+  mrc_ddc_amr_set_by_stencil(ddc_E, HX, 1, (int[]) { 1, 0, 0 }, &stencils_coarse[HX], &stencils_fine[HX]);
+  mrc_ddc_amr_set_by_stencil(ddc_E, HY, 1, (int[]) { 0, 1, 0 }, &stencils_coarse[HY], &stencils_fine[HY]);
+  mrc_ddc_amr_set_by_stencil(ddc_E, HZ, 1, (int[]) { 0, 0, 1 }, &stencils_coarse[HZ], &stencils_fine[HZ]);
   mrc_ddc_amr_assemble(ddc_E);
 
   struct mrc_ddc *ddc_H = mrc_ddc_create(mrc_domain_comm(domain));
@@ -470,6 +473,9 @@ main(int argc, char **argv)
   mrc_ddc_set_param_int3(ddc_H, "sw", fld->_sw.vals);
   mrc_ddc_set_param_int(ddc_H, "n_comp", 6);
   mrc_ddc_setup(ddc_H);
+  mrc_ddc_amr_set_by_stencil(ddc_H, EX, 1, (int[]) { 0, 1, 1 }, &stencils_coarse[EX], &stencils_fine[EX]);
+  mrc_ddc_amr_set_by_stencil(ddc_H, EY, 1, (int[]) { 1, 0, 1 }, &stencils_coarse[EY], &stencils_fine[EY]);
+  mrc_ddc_amr_set_by_stencil(ddc_H, EZ, 1, (int[]) { 1, 1, 0 }, &stencils_coarse[EZ], &stencils_fine[EZ]);
   mrc_ddc_amr_set_by_stencil(ddc_H, HX, 1, (int[]) { 1, 0, 0 }, &stencils_coarse[HX], &stencils_fine[HX]);
   mrc_ddc_amr_set_by_stencil(ddc_H, HY, 1, (int[]) { 0, 1, 0 }, &stencils_coarse[HY], &stencils_fine[HY]);
   mrc_ddc_amr_set_by_stencil(ddc_H, HZ, 1, (int[]) { 0, 0, 1 }, &stencils_coarse[HZ], &stencils_fine[HZ]);
