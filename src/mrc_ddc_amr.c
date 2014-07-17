@@ -68,6 +68,7 @@ mrc_ddc_amr_setup(struct mrc_ddc *ddc)
   sub->mat = mrc_mat_create(mrc_ddc_comm(ddc));
   mrc_mat_set_param_int(sub->mat, "m", size);
   mrc_mat_set_param_int(sub->mat, "n", size);
+  mrc_mat_set_from_options(sub->mat); // to allow changing matrix type
   mrc_mat_setup(sub->mat);
 }
 

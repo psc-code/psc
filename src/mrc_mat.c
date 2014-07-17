@@ -56,6 +56,9 @@ static void
 mrc_mat_init()
 {
   mrc_class_register_subclass(&mrc_class_mrc_mat, &mrc_mat_mcsr_ops);
+#ifdef HAVE_PETSC
+  mrc_class_register_subclass(&mrc_class_mrc_mat, &mrc_mat_petsc_ops);
+#endif
 }
 
 // ----------------------------------------------------------------------

@@ -21,5 +21,6 @@ struct mrc_mat_ops {
 };
 
 extern struct mrc_mat_ops mrc_mat_mcsr_ops;
+extern struct mrc_mat_ops mrc_mat_petsc_ops;
 
 #endif

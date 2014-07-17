@@ -75,6 +75,7 @@ endif HAVE_HDF5
 if HAVE_PETSC
 libmrc_la_SOURCES += \
 	mrc_vec_petsc.c \
+	mrc_mat_petsc.c \
 	mrc_ts_petsc.c \
 	mrc_domain_mb.c \
 	mrc_block_factory.c \
