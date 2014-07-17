@@ -92,8 +92,6 @@ mrc_ddc_amr_add_value(struct mrc_ddc *ddc,
 {
   struct mrc_ddc_amr *sub = mrc_ddc_amr(ddc);
 
-  // WARNING, all elements for any given row must be added contiguously!
-
   assert(row_patch >= 0);
   assert(row[0] >= sub->ib[0] && row[0] < sub->ib[0] + sub->im[0]);
   assert(row[1] >= sub->ib[1] && row[1] < sub->ib[1] + sub->im[1]);

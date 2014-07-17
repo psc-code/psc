@@ -61,6 +61,8 @@ mrc_mat_mcsr_destroy(struct mrc_mat *mat)
 
 // ----------------------------------------------------------------------
 // mrc_mat_mcsr_add_value
+//
+// WARNING, all elements for any given row must be added contiguously!
 
 static void
 mrc_mat_mcsr_add_value(struct mrc_mat *mat, int row_idx, int col_idx, double val)
