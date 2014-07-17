@@ -9,11 +9,11 @@
 // mrc_domain_get_neighbor_patch_same
 
 void
-mrc_domain_get_neighbor_patch_same(struct mrc_domain *domain, int p,
-				   int dx[3], int *p_nei)
+mrc_domain_get_neighbor_patch_same(struct mrc_domain *domain, int gp,
+				   int dx[3], int *gp_nei)
 {
   struct mrc_patch_info pi, pi_nei;
-  mrc_domain_get_local_patch_info(domain, p, &pi);
+  mrc_domain_get_global_patch_info(domain, gp, &pi);
   // FIXME: how about if we only refine in selected directions?
   int mx[3] = { 1 << pi.level, 1 << pi.level, 1 << pi.level };
   int idx3[3];
@@ -27,18 +27,18 @@ mrc_domain_get_neighbor_patch_same(struct mrc_domain *domain, int p,
     }
   }
   mrc_domain_get_level_idx3_patch_info(domain, pi.level, idx3, &pi_nei);
-  *p_nei = pi_nei.patch;
+  *gp_nei = pi_nei.global_patch;
 }
 
 // ----------------------------------------------------------------------
 // mrc_domain_get_neighbor_patch_coarse
 
 static void
-mrc_domain_get_neighbor_patch_coarse(struct mrc_domain *domain, int p,
-				     int dx[3], int *p_nei)
+mrc_domain_get_neighbor_patch_coarse(struct mrc_domain *domain, int gp,
+				     int dx[3], int *gp_nei)
 {
   struct mrc_patch_info pi, pi_nei;
-  mrc_domain_get_local_patch_info(domain, p, &pi);
+  mrc_domain_get_global_patch_info(domain, gp, &pi);
   // FIXME: how about if we only refine in selected directions?
   int mx[3] = { 1 << (pi.level - 1), 1 << (pi.level - 1), 1 << (pi.level - 1) };
   int idx3[3];
@@ -52,18 +52,18 @@ mrc_domain_get_neighbor_patch_coarse(struct mrc_domain *domain, int p,
     }
   }
   mrc_domain_get_level_idx3_patch_info(domain, pi.level - 1, idx3, &pi_nei);
-  *p_nei = pi_nei.patch;
+  *gp_nei = pi_nei.global_patch;
 }
 
 // ----------------------------------------------------------------------
 // mrc_domain_get_neighbor_patch_fine
 
 static void
-mrc_domain_get_neighbor_patch_fine(struct mrc_domain *domain, int p,
-				   int dir[3], int off[3], int *p_nei)
+mrc_domain_get_neighbor_patch_fine(struct mrc_domain *domain, int gp,
+				   int dir[3], int off[3], int *gp_nei)
 {
   struct mrc_patch_info pi, pi_nei;
-  mrc_domain_get_local_patch_info(domain, p, &pi);
+  mrc_domain_get_global_patch_info(domain, gp, &pi);
   // FIXME: how about if we only refine in selected directions?
   int mx[3] = { 1 << pi.level, 1 << pi.level, 1 << pi.level };
   int idx3[3];
@@ -78,7 +78,7 @@ mrc_domain_get_neighbor_patch_fine(struct mrc_domain *domain, int p,
     idx3[d] = 2 * idx3[d] + off[d];
   }
   mrc_domain_get_level_idx3_patch_info(domain, pi.level + 1, idx3, &pi_nei);
-  *p_nei = pi_nei.patch;
+  *gp_nei = pi_nei.global_patch;
 }
 
 // ======================================================================
@@ -89,7 +89,7 @@ mrc_domain_get_neighbor_patch_fine(struct mrc_domain *domain, int p,
 // fine level.
 
 bool
-mrc_domain_is_ghost(struct mrc_domain *domain, int ext[3], int p, int i[3])
+mrc_domain_is_ghost(struct mrc_domain *domain, int ext[3], int gp, int i[3])
 {
   int ldims[3];
   mrc_domain_get_param_int3(domain, "m", ldims);
@@ -127,9 +127,9 @@ mrc_domain_is_ghost(struct mrc_domain *domain, int ext[3], int p, int i[3])
 	if (dd[0] == 0 && dd[1] == 0 && dd[2] == 0) {
 	  continue;
 	}
-	int p_nei;
-	mrc_domain_get_neighbor_patch_coarse(domain, p, dd, &p_nei);
-	if (p_nei >= 0) {
+	int gp_nei;
+	mrc_domain_get_neighbor_patch_coarse(domain, gp, dd, &gp_nei);
+	if (gp_nei >= 0) {
 	  return true;
 	}
       }
@@ -141,10 +141,10 @@ mrc_domain_is_ghost(struct mrc_domain *domain, int ext[3], int p, int i[3])
   for (dd[2] = 0; dd[2] >= 0; dd[2]--) {
     for (dd[1] = dir[1]; dd[1] >= dir[1] - dirx[1]; dd[1]--) {
       for (dd[0] = dir[0]; dd[0] >= dir[0] - dirx[0]; dd[0]--) {
-	int p_nei;
-	mrc_domain_get_neighbor_patch_same(domain, p, dd, &p_nei);
-	if (p_nei >= 0) {
-	  return p != p_nei;
+	int gp_nei;
+	mrc_domain_get_neighbor_patch_same(domain, gp, dd, &gp_nei);
+	if (gp_nei >= 0) {
+	  return gp != gp_nei;
 	}
       }
     }
@@ -152,9 +152,17 @@ mrc_domain_is_ghost(struct mrc_domain *domain, int ext[3], int p, int i[3])
   return true;
 }
 
+bool
+mrc_domain_is_local_ghost(struct mrc_domain *domain, int ext[3], int lp, int i[3])
+{
+  struct mrc_patch_info pi;
+  mrc_domain_get_local_patch_info(domain, lp, &pi);
+  return mrc_domain_is_ghost(domain, ext, pi.global_patch,i);
+}
+
 static void
-mrc_domain_find_valid_point_same(struct mrc_domain *domain, int ext[3], int p, int i[3],
-				 int *p_nei, int j[3])
+mrc_domain_find_valid_point_same(struct mrc_domain *domain, int ext[3], int gp, int i[3],
+				 int *gp_nei, int j[3])
 {
   int ldims[3];
   mrc_domain_get_param_int3(domain, "m", ldims);
@@ -183,45 +191,45 @@ mrc_domain_find_valid_point_same(struct mrc_domain *domain, int ext[3], int p, i
 	if (dd[0] == 0 && dd[1] == 0 && dd[2] == 0) {
 	  continue;
 	}
-	mrc_domain_get_neighbor_patch_same(domain, p, dd, p_nei);
-	if (*p_nei >= 0) {
+	mrc_domain_get_neighbor_patch_same(domain, gp, dd, gp_nei);
+	if (*gp_nei >= 0) {
 	  for (int d = 0; d < 3; d++) {
 	    j[d] = i[d] - dd[d] * ldims[d];
 	  }
 	  // need to double check whether we actually picked an interior point
-	  if (!mrc_domain_is_ghost(domain, ext, *p_nei, j)) {
+	  if (!mrc_domain_is_ghost(domain, ext, *gp_nei, j)) {
 	    return;
 	  }
 	}
       }
     }
   }
-  *p_nei = -1;
+  *gp_nei = -1;
 }
 
 static void
-mrc_domain_to_valid_point_same(struct mrc_domain *domain, int ext[3], int p, int i[3],
-			       int *p_nei, int j[3])
+mrc_domain_to_valid_point_same(struct mrc_domain *domain, int ext[3], int gp, int i[3],
+			       int *gp_nei, int j[3])
 {
-  if (!mrc_domain_is_ghost(domain, ext, p, i)) {
+  if (!mrc_domain_is_ghost(domain, ext, gp, i)) {
     for (int d = 0; d < 3; d++) {
       j[d] = i[d];
     }
-    *p_nei = p;
+    *gp_nei = gp;
     return;
   }
 
-  mrc_domain_find_valid_point_same(domain, ext, p, i, p_nei, j);
+  mrc_domain_find_valid_point_same(domain, ext, gp, i, gp_nei, j);
 }
 
 static void
 mrc_domain_find_valid_point_coarse(struct mrc_domain *domain, int ext[3],
-				   int p, int i[3], int *p_nei, int j[3])
+				   int gp, int i[3], int *gp_nei, int j[3])
 {
   int ldims[3];
   mrc_domain_get_param_int3(domain, "m", ldims);
   struct mrc_patch_info pi;
-  mrc_domain_get_local_patch_info(domain, p, &pi);
+  mrc_domain_get_global_patch_info(domain, gp, &pi);
     
   int ii[3], dir[3], dirx[3] = {};
   for (int d = 0; d < 3; d++) {
@@ -249,8 +257,8 @@ mrc_domain_find_valid_point_coarse(struct mrc_domain *domain, int ext[3],
 	if (dd[0] == 0 && dd[1] == 0 && dd[2] == 0) {
 	  continue;
 	}
-	mrc_domain_get_neighbor_patch_coarse(domain, p, dd, p_nei);
-	if (*p_nei >= 0) {
+	mrc_domain_get_neighbor_patch_coarse(domain, gp, dd, gp_nei);
+	if (*gp_nei >= 0) {
 	  for (int d = 0; d < 3; d++) {
 	    j[d] = ii[d] - dd[d] * ldims[d];
 	  }
@@ -259,17 +267,17 @@ mrc_domain_find_valid_point_coarse(struct mrc_domain *domain, int ext[3],
       }
     }
   }
-  *p_nei = -1;
+  *gp_nei = -1;
 }
 
 static void
-mrc_domain_find_valid_point_fine(struct mrc_domain *domain, int ext[3], int p, int i[3],
-				 int *p_nei, int j[3])
+mrc_domain_find_valid_point_fine(struct mrc_domain *domain, int ext[3], int gp, int i[3],
+				 int *gp_nei, int j[3])
 {
   int ldims[3];
   mrc_domain_get_param_int3(domain, "m", ldims);
   struct mrc_patch_info pi;
-  mrc_domain_get_local_patch_info(domain, p, &pi);
+  mrc_domain_get_global_patch_info(domain, gp, &pi);
     
   int off[3], dir[3];
   for (int d = 0; d < 3; d++) {
@@ -288,10 +296,7 @@ mrc_domain_find_valid_point_fine(struct mrc_domain *domain, int ext[3], int p, i
     }
   }
 
-  mrc_domain_get_neighbor_patch_fine(domain, p, dir, off, p_nei);
-  if (*p_nei < 0) {
-    return;
-  }
+  mrc_domain_get_neighbor_patch_fine(domain, gp, dir, off, gp_nei);
 }
 
 static inline int
@@ -304,26 +309,26 @@ div_2(int i)
 static bool
 mrc_ddc_amr_stencil_coarse(struct mrc_ddc *ddc, int ext[3],
 			   struct mrc_ddc_amr_stencil *stencil,
-			   int m, int p, int i[3])
+			   int m, int gp, int i[3])
 {
   struct mrc_domain *domain = mrc_ddc_get_domain(ddc);
 
-  int p_nei, j[3];
-  mrc_domain_find_valid_point_coarse(domain, ext, p,
+  int gp_nei, j[3];
+  mrc_domain_find_valid_point_coarse(domain, ext, gp,
 				     (int[]) { div_2(i[0]), div_2(i[1]), div_2(i[2]) },
-				     &p_nei, j);
-  if (p_nei < 0) {
+				     &gp_nei, j);
+  if (gp_nei < 0) {
     return false;
   }
 
   for (struct mrc_ddc_amr_stencil_entry *s = stencil->s; s < stencil->s + stencil->nr_entries; s++) {
-    int jd[3], p_dnei, j_dnei[3];
+    int jd[3], gp_dnei, j_dnei[3];
     for (int d = 0; d < 3; d++) {
       jd[d] = j[d] + s->dx[d] * (i[d] & 1 && d < 2); // FIXME 3D
     }
-    mrc_domain_to_valid_point_same(domain, ext, p_nei, jd, &p_dnei, j_dnei);
-    assert(!mrc_domain_is_ghost(domain, ext, p_dnei, j_dnei));
-    mrc_ddc_amr_add_value(ddc, p, m, i, p_dnei, m, j_dnei, s->val);
+    mrc_domain_to_valid_point_same(domain, ext, gp_nei, jd, &gp_dnei, j_dnei);
+    assert(!mrc_domain_is_ghost(domain, ext, gp_dnei, j_dnei));
+    mrc_ddc_amr_add_value(ddc, gp, m, i, gp_dnei, m, j_dnei, s->val);
   }
   return true;
 }
@@ -331,13 +336,13 @@ mrc_ddc_amr_stencil_coarse(struct mrc_ddc *ddc, int ext[3],
 static bool
 mrc_ddc_amr_stencil_fine(struct mrc_ddc *ddc, int ext[3],
 			 struct mrc_ddc_amr_stencil *stencil,
-			 int m, int p, int i[3])
+			 int m, int gp, int i[3])
 {
   struct mrc_domain *domain = mrc_ddc_get_domain(ddc);
 
-  int p_nei, j[3];
-  mrc_domain_find_valid_point_fine(domain, ext, p, (int[]) { 2*i[0], 2*i[1], 2*i[2] }, &p_nei, j);
-  if (p_nei < 0) {
+  int gp_nei, j[3];
+  mrc_domain_find_valid_point_fine(domain, ext, gp, (int[]) { 2*i[0], 2*i[1], 2*i[2] }, &gp_nei, j);
+  if (gp_nei < 0) {
     return false;
   }
 
@@ -346,9 +351,9 @@ mrc_ddc_amr_stencil_fine(struct mrc_ddc *ddc, int ext[3],
     for (int d = 0; d < 3; d++) {
       id[d] = 2*i[d] + s->dx[d];
     }
-    mrc_domain_find_valid_point_fine(domain, ext, p, id, &p_nei, j);
-    assert(!mrc_domain_is_ghost(domain, ext, p_nei, j));
-    mrc_ddc_amr_add_value(ddc, p, m, i, p_nei, m, j, s->val);
+    mrc_domain_find_valid_point_fine(domain, ext, gp, id, &gp_nei, j);
+    assert(!mrc_domain_is_ghost(domain, ext, gp_nei, j));
+    mrc_ddc_amr_add_value(ddc, gp, m, i, gp_nei, m, j, s->val);
   }
   return true;
 }
@@ -356,9 +361,9 @@ mrc_ddc_amr_stencil_fine(struct mrc_ddc *ddc, int ext[3],
 // ================================================================================
 
 static void
-mrc_ddc_amr_add_diagonal_one(struct mrc_ddc *ddc, int p, int m, int i[3])
+mrc_ddc_amr_add_diagonal_one(struct mrc_ddc *ddc, int gp, int m, int i[3])
 {
-  mrc_ddc_amr_add_value(ddc, p, m, i, p, m, i, 1.f);
+  mrc_ddc_amr_add_value(ddc, gp, m, i, gp, m, i, 1.f);
 }
 
 void
@@ -373,7 +378,10 @@ mrc_ddc_amr_set_by_stencil(struct mrc_ddc *ddc, int m, int bnd, int ext[3],
   int nr_patches;
   mrc_domain_get_patches(domain, &nr_patches);
 
-  for (int p = 0; p < nr_patches; p++) {
+  for (int lp = 0; lp < nr_patches; lp++) {
+    struct mrc_patch_info info;
+    mrc_domain_get_local_patch_info(domain, lp, &info);
+    int gp = info.global_patch;
     int i[3];
     for (i[2] = 0; i[2] < ldims[2] + 0; i[2]++) { // FIXME 3D
       for (i[1] = -bnd; i[1] < ldims[1] + ext[1] + bnd; i[1]++) {
@@ -381,33 +389,33 @@ mrc_ddc_amr_set_by_stencil(struct mrc_ddc *ddc, int m, int bnd, int ext[3],
 	  if (i[0] >= ext[0] && i[0] < ldims[0] &&
 	      i[1] >= ext[1] && i[1] < ldims[1] &&
 	      i[2] >= ext[2] && i[2] < ldims[2]) {
-	    assert(!mrc_domain_is_ghost(domain, ext, p, i));
-	    mrc_ddc_amr_add_diagonal_one(ddc, p, m, i);
+	    assert(!mrc_domain_is_ghost(domain, ext, gp, i));
+	    mrc_ddc_amr_add_diagonal_one(ddc, gp, m, i);
 	    continue;
 	  }
-	  if (!mrc_domain_is_ghost(domain, ext, p, i)) {
-	    mrc_ddc_amr_add_diagonal_one(ddc, p, m, i);
+	  if (!mrc_domain_is_ghost(domain, ext, gp, i)) {
+	    mrc_ddc_amr_add_diagonal_one(ddc, gp, m, i);
 	    continue;
 	  }
 
 	  // at this point, we skipped all interior points, so only ghostpoints are left
 
 	  // try to find an interior point corresponding to the current ghostpoint
-	  int j[3], p_nei;
-	  mrc_domain_find_valid_point_same(domain, ext, p, i, &p_nei, j);
-	  if (p_nei >= 0) {
-	    assert(!mrc_domain_is_ghost(domain, ext, p_nei, j));
-	    mrc_ddc_amr_add_value(ddc, p, m, i, p_nei, m, j, 1.f);
+	  int j[3], gp_nei;
+	  mrc_domain_find_valid_point_same(domain, ext, gp, i, &gp_nei, j);
+	  if (gp_nei >= 0) {
+	    assert(!mrc_domain_is_ghost(domain, ext, gp_nei, j));
+	    mrc_ddc_amr_add_value(ddc, gp, m, i, gp_nei, m, j, 1.f);
 	    continue;
 	  }
 
 	  // try to interpolate from coarse
-	  if (mrc_ddc_amr_stencil_coarse(ddc, ext, stencil_coarse, m, p, i)) {
+	  if (mrc_ddc_amr_stencil_coarse(ddc, ext, stencil_coarse, m, gp, i)) {
 	    continue;
 	  }
 	      
 	  // try to restrict from fine
-	  if (mrc_ddc_amr_stencil_fine(ddc, ext, stencil_fine, m, p, i)) {
+	  if (mrc_ddc_amr_stencil_fine(ddc, ext, stencil_fine, m, gp, i)) {
 	    continue;
 	  }
 

@@ -57,7 +57,8 @@ struct mrc_ddc_amr_stencil {
   int nr_entries;
 };
   
-bool mrc_domain_is_ghost(struct mrc_domain *domain, int ext[3], int p, int i[3]);
+bool mrc_domain_is_local_ghost(struct mrc_domain *domain, int ext[3], int lp, int i[3]);
+bool mrc_domain_is_ghost(struct mrc_domain *domain, int ext[3], int pp, int i[3]);
 void mrc_ddc_amr_set_by_stencil(struct mrc_ddc *ddc, int m, int bnd, int ext[3],
 				struct mrc_ddc_amr_stencil *stencil_coarse,
 				struct mrc_ddc_amr_stencil *stencil_fine);
