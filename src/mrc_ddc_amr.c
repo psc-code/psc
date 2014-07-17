@@ -95,7 +95,14 @@ mrc_ddc_amr_add_value(struct mrc_ddc *ddc,
   // WARNING, all elements for any given row must be added contiguously!
 
   assert(row_patch >= 0);
+  assert(row[0] >= sub->ib[0] && row[0] < sub->ib[0] + sub->im[0]);
+  assert(row[1] >= sub->ib[1] && row[1] < sub->ib[1] + sub->im[1]);
+  assert(row[2] >= sub->ib[2] && row[2] < sub->ib[2] + sub->im[2]);
+
   assert(col_patch >= 0);
+  assert(col[0] >= sub->ib[0] && col[0] < sub->ib[0] + sub->im[0]);
+  assert(col[1] >= sub->ib[1] && col[1] < sub->ib[1] + sub->im[1]);
+  assert(col[2] >= sub->ib[2] && col[2] < sub->ib[2] + sub->im[2]);
 
   int row_idx = ((((row_patch *
 		    sub->im[3] + rowm) *
