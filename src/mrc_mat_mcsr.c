@@ -1,7 +1,7 @@
 
 #include "mrc_mat_private.h"
 
-#include "mrc_fld_as_float.h"
+#include "mrc_fld_as_double.h"
 
 #include <stdlib.h>
 

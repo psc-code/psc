@@ -5,7 +5,7 @@
 #include <mrc_ddc.h>
 #include <mrc_io.h>
 #include <mrctest.h>
-#include <mrc_fld_as_float.h>
+#include <mrc_fld_as_double.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -317,6 +317,37 @@ step_fdtd(struct mrc_fld *fld, struct mrc_ddc *ddc_E, struct mrc_ddc *ddc_H)
   }
 }
 
+// FIXME hacky workaround
+
+static void
+mrc_fld_write_as_float(struct mrc_fld *g, struct mrc_io *io)
+{
+  struct mrc_fld *fld = mrc_domain_m3_create(g->_domain);
+  mrc_fld_set_type(fld, "float");
+  mrc_fld_set_name(fld, "fld");
+  mrc_fld_set_param_int(fld, "nr_comps", NR_COMPS);
+  mrc_fld_set_param_int(fld, "nr_ghosts", 2);
+  mrc_fld_set_from_options(fld);
+  mrc_fld_setup(fld);
+  mrc_fld_set_comp_name(fld, EX, "EX");
+  mrc_fld_set_comp_name(fld, EY, "EY");
+  mrc_fld_set_comp_name(fld, EZ, "EZ");
+  mrc_fld_set_comp_name(fld, HX, "HX");
+  mrc_fld_set_comp_name(fld, HY, "HY");
+  mrc_fld_set_comp_name(fld, HZ, "HZ");
+
+  mrc_fld_foreach_patch(fld, p) {
+    for (int m = 0; m < 6; m++) {
+      mrc_fld_foreach(fld, ix,iy,iz, 0, 1) {
+	MRC_S5(fld, ix,iy,iz, m, p) = M3(g, m, ix,iy,iz, p);
+      } mrc_fld_foreach_end;
+    }
+  }
+
+  mrc_fld_write(fld, io);
+  mrc_fld_destroy(fld);
+}
+
 float
 func1(float x, float y, int m)
 {
@@ -453,7 +484,7 @@ main(int argc, char **argv)
   mrc_io_setup(io);
 
   mrc_io_open(io, "w", 0, 0);
-  mrc_fld_write(fld, io);
+  mrc_fld_write_as_float(fld, io);
   mrc_io_close(io);
 
   mrc_ddc_amr_apply(ddc_E, fld);
@@ -464,12 +495,12 @@ main(int argc, char **argv)
 #endif
 
   mrc_io_open(io, "w", 1, 1);
-  mrc_fld_write(fld, io);
+  mrc_fld_write_as_float(fld, io);
   mrc_io_close(io);
 
   for (int n = 0; n <= 100; n++) {
     mrc_io_open(io, "w", n+2, n+2);
-    mrc_fld_write(fld, io);
+    mrc_fld_write_as_float(fld, io);
     mrc_io_close(io);
 
     step_fdtd(fld, ddc_E, ddc_H);
