@@ -14,6 +14,8 @@
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
+#define M3(f, m, ix,iy,iz, p) MRC_S5(f, ix, iy, iz, m, p)
+
 // ----------------------------------------------------------------------
 // x-y plane, Xx: interior point, Oo: ghost point
 
@@ -58,8 +60,6 @@
 // o   o   x---x---x
 // |       |   |   |
 // X---o---X---x---O
-
-#define F3 MRC_M3
 
 // ======================================================================
 
@@ -196,15 +196,14 @@ find_ghosts(struct mrc_domain *domain, struct mrc_fld *fld, int m,
   mrc_domain_get_patches(domain, &nr_patches);
 
   for (int p = 0; p < nr_patches; p++) {
-    struct mrc_fld_patch *fldp = mrc_fld_patch_get(fld, p);
     for (int iz = 0; iz < ldims[2] + 0; iz++) {
       for (int iy = -bnd; iy < ldims[1] + ext[1] + bnd; iy++) {
 	for (int ix = -bnd; ix < ldims[0] + ext[0] + bnd; ix++) {
 	  bool is_ghost = mrc_domain_is_ghost(domain, ext, p, (int[]) { ix, iy, iz });
 	  if (!is_ghost) {
-	    MRC_M3(fldp, m, ix,iy,iz) = 1.;
+	    M3(fld, m, ix,iy,iz, p) = 1.;
 	  } else {
-	    MRC_M3(fldp, m, ix,iy,iz) = 1./0.;
+	    M3(fld, m, ix,iy,iz, p) = 1./0.;
 	  }
 	}
       }
@@ -230,99 +229,91 @@ step_fdtd(struct mrc_fld *fld, struct mrc_ddc *ddc_E, struct mrc_ddc *ddc_H)
   mrc_ddc_amr_apply(ddc_H, fld);
 
   mrc_fld_foreach_patch(fld, p) {
-    struct mrc_fld_patch *fldp = mrc_fld_patch_get(fld, p);
     float dx = MRC_MCRDX(crds, 1, p) - MRC_MCRDX(crds, 0, p); // FIXME
     float dy = MRC_MCRDY(crds, 1, p) - MRC_MCRDY(crds, 0, p);
     float cnx = .5 * dt / dx;
     float cny = .5 * dt / dy;
     float cnz = 0.;
-    mrc_m3_foreach(fldp, ix,iy,iz, 0, 1) {
-      F3(fldp, EX, ix,iy,iz) +=
-      	cny * (F3(fldp, HZ, ix,iy,iz) - F3(fldp, HZ, ix,iy-1,iz)) -
-      	0;//cnz * (F3(fldp, HY, ix,iy,iz) - F3(fldp, HY, ix,iy,iz-1));
+    mrc_fld_foreach(fld, ix,iy,iz, 0, 1) {
+      M3(fld, EX, ix,iy,iz, p) +=
+      	cny * (M3(fld, HZ, ix,iy,iz, p) - M3(fld, HZ, ix,iy-1,iz, p)) -
+      	0;//cnz * (M3(fld, HY, ix,iy,iz, p) - M3(fld, HY, ix,iy,iz-1, p));
 
-      F3(fldp, EY, ix,iy,iz) +=
-	0-//cnz * (F3(fldp, HX, ix,iy,iz) - F3(fldp, HX, ix,iy,iz-1)) -
-	cnx * (F3(fldp, HZ, ix,iy,iz) - F3(fldp, HZ, ix-1,iy,iz));
+      M3(fld, EY, ix,iy,iz, p) +=
+	0-//cnz * (M3(fld, HX, ix,iy,iz, p) - M3(fld, HX, ix,iy,iz-1, p)) -
+	cnx * (M3(fld, HZ, ix,iy,iz, p) - M3(fld, HZ, ix-1,iy,iz, p));
 
-      F3(fldp, EZ, ix,iy,iz) +=
-      	cnx * (F3(fldp, HY, ix,iy,iz) - F3(fldp, HY, ix-1,iy,iz)) -
-      	cny * (F3(fldp, HX, ix,iy,iz) - F3(fldp, HX, ix,iy-1,iz));
-    } mrc_m3_foreach_end;
-    mrc_fld_patch_put(fld);
+      M3(fld, EZ, ix,iy,iz, p) +=
+      	cnx * (M3(fld, HY, ix,iy,iz, p) - M3(fld, HY, ix-1,iy,iz, p)) -
+      	cny * (M3(fld, HX, ix,iy,iz, p) - M3(fld, HX, ix,iy-1,iz, p));
+    } mrc_fld_foreach_end;
   }
 
   mrc_ddc_amr_apply(ddc_E, fld);
 
   mrc_fld_foreach_patch(fld, p) {
-    struct mrc_fld_patch *fldp = mrc_fld_patch_get(fld, p);
     float dx = MRC_MCRDX(crds, 1, p) - MRC_MCRDX(crds, 0, p); // FIXME
     float dy = MRC_MCRDY(crds, 1, p) - MRC_MCRDY(crds, 0, p);
     float cnx = .5 * dt / dx;
     float cny = .5 * dt / dy;
     float cnz = 0.;
-    mrc_m3_foreach(fldp, ix,iy,iz, 0, 1) {
-      F3(fldp, HX, ix,iy,iz) -=
-	cny * (F3(fldp, EZ, ix,iy+1,iz) - F3(fldp, EZ, ix,iy,iz)) -
-	0;//cnz * (F3(fldp, EY, ix,iy,iz+1) - F3(fldp, EY, ix,iy,iz));
+    mrc_fld_foreach(fld, ix,iy,iz, 0, 1) {
+      M3(fld, HX, ix,iy,iz, p) -=
+	cny * (M3(fld, EZ, ix,iy+1,iz, p) - M3(fld, EZ, ix,iy,iz, p)) -
+	0;//cnz * (M3(fld, EY, ix,iy,iz+1, p) - M3(fld, EY, ix,iy,iz, p));
       
-      F3(fldp, HY, ix,iy,iz) -=
-	0-//cnz * (F3(fldp, EX, ix,iy,iz+1) - F3(fldp, EX, ix,iy,iz)) -
-	cnx * (F3(fldp, EZ, ix+1,iy,iz) - F3(fldp, EZ, ix,iy,iz));
+      M3(fld, HY, ix,iy,iz, p) -=
+	0-//cnz * (M3(fld, EX, ix,iy,iz+1, p) - M3(fld, EX, ix,iy,iz, p)) -
+	cnx * (M3(fld, EZ, ix+1,iy,iz, p) - M3(fld, EZ, ix,iy,iz, p));
       
-      F3(fldp, HZ, ix,iy,iz) -=
-	cnx * (F3(fldp, EY, ix+1,iy,iz) - F3(fldp, EY, ix,iy,iz)) -
-	cny * (F3(fldp, EX, ix,iy+1,iz) - F3(fldp, EX, ix,iy,iz));
-    } mrc_m3_foreach_end;
-    mrc_fld_patch_put(fld);
+      M3(fld, HZ, ix,iy,iz, p) -=
+	cnx * (M3(fld, EY, ix+1,iy,iz, p) - M3(fld, EY, ix,iy,iz, p)) -
+	cny * (M3(fld, EX, ix,iy+1,iz, p) - M3(fld, EX, ix,iy,iz, p));
+    } mrc_fld_foreach_end;
   }
 
   mrc_fld_foreach_patch(fld, p) {
-    struct mrc_fld_patch *fldp = mrc_fld_patch_get(fld, p);
     float dx = MRC_MCRDX(crds, 1, p) - MRC_MCRDX(crds, 0, p); // FIXME
     float dy = MRC_MCRDY(crds, 1, p) - MRC_MCRDY(crds, 0, p);
     float cnx = .5 * dt / dx;
     float cny = .5 * dt / dy;
     float cnz = 0.;
-    mrc_m3_foreach(fldp, ix,iy,iz, 0, 1) {
-      F3(fldp, HX, ix,iy,iz) -=
-	cny * (F3(fldp, EZ, ix,iy+1,iz) - F3(fldp, EZ, ix,iy,iz)) -
-	0;//cnz * (F3(fldp, EY, ix,iy,iz+1) - F3(fldp, EY, ix,iy,iz));
+    mrc_fld_foreach(fld, ix,iy,iz, 0, 1) {
+      M3(fld, HX, ix,iy,iz, p) -=
+	cny * (M3(fld, EZ, ix,iy+1,iz, p) - M3(fld, EZ, ix,iy,iz, p)) -
+	0;//cnz * (M3(fld, EY, ix,iy,iz+1, p) - M3(fld, EY, ix,iy,iz, p));
       
-      F3(fldp, HY, ix,iy,iz) -=
-	0-//cnz * (F3(fldp, EX, ix,iy,iz+1) - F3(fldp, EX, ix,iy,iz)) -
-	cnx * (F3(fldp, EZ, ix+1,iy,iz) - F3(fldp, EZ, ix,iy,iz));
+      M3(fld, HY, ix,iy,iz, p) -=
+	0-//cnz * (M3(fld, EX, ix,iy,iz+1, p) - M3(fld, EX, ix,iy,iz, p)) -
+	cnx * (M3(fld, EZ, ix+1,iy,iz, p) - M3(fld, EZ, ix,iy,iz, p));
       
-      F3(fldp, HZ, ix,iy,iz) -=
-	cnx * (F3(fldp, EY, ix+1,iy,iz) - F3(fldp, EY, ix,iy,iz)) -
-	cny * (F3(fldp, EX, ix,iy+1,iz) - F3(fldp, EX, ix,iy,iz));
-    } mrc_m3_foreach_end;
-    mrc_fld_patch_put(fld);
+      M3(fld, HZ, ix,iy,iz, p) -=
+	cnx * (M3(fld, EY, ix+1,iy,iz, p) - M3(fld, EY, ix,iy,iz, p)) -
+	cny * (M3(fld, EX, ix,iy+1,iz, p) - M3(fld, EX, ix,iy,iz, p));
+    } mrc_fld_foreach_end;
   }
 
   mrc_ddc_amr_apply(ddc_H, fld);
 
   mrc_fld_foreach_patch(fld, p) {
-    struct mrc_fld_patch *fldp = mrc_fld_patch_get(fld, p);
     float dx = MRC_MCRDX(crds, 1, p) - MRC_MCRDX(crds, 0, p); // FIXME
     float dy = MRC_MCRDY(crds, 1, p) - MRC_MCRDY(crds, 0, p);
     float cnx = .5 * dt / dx;
     float cny = .5 * dt / dy;
     float cnz = 0.;
-    mrc_m3_foreach(fldp, ix,iy,iz, 0, 1) {
-      F3(fldp, EX, ix,iy,iz) +=
-	cny * (F3(fldp, HZ, ix,iy,iz) - F3(fldp, HZ, ix,iy-1,iz)) -
-	0;//cnz * (F3(fldp, HY, ix,iy,iz) - F3(fldp, HY, ix,iy,iz-1));
+    mrc_fld_foreach(fld, ix,iy,iz, 0, 1) {
+      M3(fld, EX, ix,iy,iz, p) +=
+	cny * (M3(fld, HZ, ix,iy,iz, p) - M3(fld, HZ, ix,iy-1,iz, p)) -
+	0;//cnz * (M3(fld, HY, ix,iy,iz, p) - M3(fld, HY, ix,iy,iz-1, p));
       
-      F3(fldp, EY, ix,iy,iz) +=
-	0-//cnz * (F3(fldp, HX, ix,iy,iz) - F3(fldp, HX, ix,iy,iz-1)) -
-	cnx * (F3(fldp, HZ, ix,iy,iz) - F3(fldp, HZ, ix-1,iy,iz));
+      M3(fld, EY, ix,iy,iz, p) +=
+	0-//cnz * (M3(fld, HX, ix,iy,iz, p) - M3(fld, HX, ix,iy,iz-1, p)) -
+	cnx * (M3(fld, HZ, ix,iy,iz, p) - M3(fld, HZ, ix-1,iy,iz, p));
       
-      F3(fldp, EZ, ix,iy,iz) +=
-	cnx * (F3(fldp, HY, ix,iy,iz) - F3(fldp, HY, ix-1,iy,iz)) -
-	cny * (F3(fldp, HX, ix,iy,iz) - F3(fldp, HX, ix,iy-1,iz));
-    } mrc_m3_foreach_end;
-    mrc_fld_patch_put(fld);
+      M3(fld, EZ, ix,iy,iz, p) +=
+	cnx * (M3(fld, HY, ix,iy,iz, p) - M3(fld, HY, ix-1,iy,iz, p)) -
+	cny * (M3(fld, HX, ix,iy,iz, p) - M3(fld, HX, ix,iy-1,iz, p));
+    } mrc_fld_foreach_end;
   }
 }
 
@@ -392,43 +383,40 @@ main(int argc, char **argv)
   mrc_domain_get_param_int3(fld->_domain, "m", ldims);
 
   mrc_fld_foreach_patch(fld, p) {
-    struct mrc_fld_patch *fldp = mrc_fld_patch_get(fld, p);
-
 #if 1
-    mrc_m3_foreach(fldp, ix,iy,iz, 3, 3) {
-      MRC_M3(fldp, EX, ix,iy,iz) = 1.f / 0.f;
-      MRC_M3(fldp, EY, ix,iy,iz) = 1.f / 0.f;
-      MRC_M3(fldp, EZ, ix,iy,iz) = 1.f / 0.f;
-      MRC_M3(fldp, HX, ix,iy,iz) = 1.f / 0.f;
-      MRC_M3(fldp, HY, ix,iy,iz) = 1.f / 0.f;
-      MRC_M3(fldp, HZ, ix,iy,iz) = 1.f / 0.f;
-    } mrc_m3_foreach_end;
+    mrc_fld_foreach(fld, ix,iy,iz, 2, 2) {
+      M3(fld, EX, ix,iy,iz, p) = 1.f / 0.f;
+      M3(fld, EY, ix,iy,iz, p) = 1.f / 0.f;
+      M3(fld, EZ, ix,iy,iz, p) = 1.f / 0.f;
+      M3(fld, HX, ix,iy,iz, p) = 1.f / 0.f;
+      M3(fld, HY, ix,iy,iz, p) = 1.f / 0.f;
+      M3(fld, HZ, ix,iy,iz, p) = 1.f / 0.f;
+    } mrc_fld_foreach_end;
 #endif
-    mrc_m3_foreach(fldp, ix,iy,iz, 0, 1) {
+    mrc_fld_foreach(fld, ix,iy,iz, 0, 1) {
       float x_cc = MRC_MCRDX(crds, ix, p);
       float y_cc = MRC_MCRDY(crds, iy, p);
       float x_nc = .5f * (MRC_MCRDX(crds, ix-1, p) + MRC_MCRDX(crds, ix, p));
       float y_nc = .5f * (MRC_MCRDY(crds, iy-1, p) + MRC_MCRDY(crds, iy, p));
       if (!mrc_domain_is_ghost(domain, (int[]) { 0, 1, 1 }, p, (int[]) { ix, iy, iz })) {
-	MRC_M3(fldp, EX, ix,iy,iz) = func(x_cc, y_nc, EX);
+	M3(fld, EX, ix,iy,iz, p) = func(x_cc, y_nc, EX);
       }
       if (!mrc_domain_is_ghost(domain, (int[]) { 1, 0, 1 }, p, (int[]) { ix, iy, iz })) {
-	MRC_M3(fldp, EY, ix,iy,iz) = func(x_nc, y_cc, EY);
+	M3(fld, EY, ix,iy,iz, p) = func(x_nc, y_cc, EY);
       }
       if (!mrc_domain_is_ghost(domain, (int[]) { 1, 1, 0 }, p, (int[]) { ix, iy, iz })) {
-	MRC_M3(fldp, EZ, ix,iy,iz) = func(x_nc, y_nc, EZ);
+	M3(fld, EZ, ix,iy,iz, p) = func(x_nc, y_nc, EZ);
       }
       if (!mrc_domain_is_ghost(domain, (int[]) { 1, 0, 0 }, p, (int[]) { ix, iy, iz })) {
-	MRC_M3(fldp, HX, ix,iy,iz) = func(x_nc, y_cc, HX);
+	M3(fld, HX, ix,iy,iz, p) = func(x_nc, y_cc, HX);
       }
       if (!mrc_domain_is_ghost(domain, (int[]) { 0, 1, 0 }, p, (int[]) { ix, iy, iz })) {
-	MRC_M3(fldp, HY, ix,iy,iz) = func(x_cc, y_nc, HY);
+	M3(fld, HY, ix,iy,iz, p) = func(x_cc, y_nc, HY);
       }
       if (!mrc_domain_is_ghost(domain, (int[]) { 0, 0, 1 }, p, (int[]) { ix, iy, iz })) {
-	MRC_M3(fldp, HZ, ix,iy,iz) = func(x_cc, y_cc, HZ);
+	M3(fld, HZ, ix,iy,iz, p) = func(x_cc, y_cc, HZ);
       }
-    } mrc_m3_foreach_end;
-    mrc_fld_patch_put(fld);
+    } mrc_fld_foreach_end;
   }
 
   struct mrc_ddc *ddc_E = mrc_ddc_create(mrc_domain_comm(domain));
