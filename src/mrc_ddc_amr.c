@@ -88,7 +88,7 @@ void
 mrc_ddc_amr_add_value(struct mrc_ddc *ddc,
 		      int row_patch, int rowm, int row[3],
 		      int col_patch, int colm, int col[3],
-		      float val)
+		      double val)
 {
   struct mrc_ddc_amr *sub = mrc_ddc_amr(ddc);
 

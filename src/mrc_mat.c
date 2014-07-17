@@ -9,7 +9,7 @@
 // mrc_mat_add_value
 
 void
-mrc_mat_add_value(struct mrc_mat *mat, int row_idx, int col_idx, float val)
+mrc_mat_add_value(struct mrc_mat *mat, int row_idx, int col_idx, double val)
 {
   struct mrc_mat_ops *ops = mrc_mat_ops(mat);
   assert(ops->add_value);

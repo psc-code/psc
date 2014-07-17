@@ -41,7 +41,7 @@ void mrc_ddc_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx);
 void mrc_ddc_amr_add_value(struct mrc_ddc *ddc,
 			   int row_patch, int rowm, int row[3],
 			   int col_patch, int colm, int col[3],
-			   float val);
+			   double val);
 void mrc_ddc_amr_assemble(struct mrc_ddc *ddc);
 void mrc_ddc_amr_apply(struct mrc_ddc *ddc, struct mrc_m3 *fld);
 
