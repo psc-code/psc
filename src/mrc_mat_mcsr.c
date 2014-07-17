@@ -115,6 +115,7 @@ mrc_mat_mcsr_apply(struct mrc_fld *y, struct mrc_mat *mat, struct mrc_fld *x)
 {
   struct mrc_mat_mcsr *sub = mrc_mat_mcsr(mat);
 
+  assert(x->_size_of_type == sizeof(float));
   float *x_arr = x->_arr;
   float *y_arr = y->_arr;
     
@@ -135,11 +136,12 @@ mrc_mat_mcsr_apply(struct mrc_fld *y, struct mrc_mat *mat, struct mrc_fld *x)
 // mrc_mat_mcsr_apply_in_place
 
 static void
-mrc_mat_mcsr_apply_in_place(struct mrc_mat *mat, struct mrc_fld *fld)
+mrc_mat_mcsr_apply_in_place(struct mrc_mat *mat, struct mrc_fld *x)
 {
   struct mrc_mat_mcsr *sub = mrc_mat_mcsr(mat);
 
-  float *arr = fld->_arr;
+  assert(x->_size_of_type == sizeof(float));
+  float *arr = x->_arr;
     
   for (int row = 0; row < sub->nr_rows; row++) {
     int row_idx = sub->rows[row].idx;
