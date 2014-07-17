@@ -199,7 +199,7 @@ find_ghosts(struct mrc_domain *domain, struct mrc_fld *fld, int m,
     for (int iz = 0; iz < ldims[2] + 0; iz++) {
       for (int iy = -bnd; iy < ldims[1] + ext[1] + bnd; iy++) {
 	for (int ix = -bnd; ix < ldims[0] + ext[0] + bnd; ix++) {
-	  bool is_ghost = mrc_domain_is_ghost(domain, ext, p, (int[]) { ix, iy, iz });
+	  bool is_ghost = mrc_domain_is_local_ghost(domain, ext, p, (int[]) { ix, iy, iz });
 	  if (!is_ghost) {
 	    M3(fld, m, ix,iy,iz, p) = 1.;
 	  } else {
@@ -430,22 +430,22 @@ main(int argc, char **argv)
       float y_cc = MRC_MCRDY(crds, iy, p);
       float x_nc = .5f * (MRC_MCRDX(crds, ix-1, p) + MRC_MCRDX(crds, ix, p));
       float y_nc = .5f * (MRC_MCRDY(crds, iy-1, p) + MRC_MCRDY(crds, iy, p));
-      if (!mrc_domain_is_ghost(domain, (int[]) { 0, 1, 1 }, p, (int[]) { ix, iy, iz })) {
+      if (!mrc_domain_is_local_ghost(domain, (int[]) { 0, 1, 1 }, p, (int[]) { ix, iy, iz })) {
 	M3(fld, EX, ix,iy,iz, p) = func(x_cc, y_nc, EX);
       }
-      if (!mrc_domain_is_ghost(domain, (int[]) { 1, 0, 1 }, p, (int[]) { ix, iy, iz })) {
+      if (!mrc_domain_is_local_ghost(domain, (int[]) { 1, 0, 1 }, p, (int[]) { ix, iy, iz })) {
 	M3(fld, EY, ix,iy,iz, p) = func(x_nc, y_cc, EY);
       }
-      if (!mrc_domain_is_ghost(domain, (int[]) { 1, 1, 0 }, p, (int[]) { ix, iy, iz })) {
+      if (!mrc_domain_is_local_ghost(domain, (int[]) { 1, 1, 0 }, p, (int[]) { ix, iy, iz })) {
 	M3(fld, EZ, ix,iy,iz, p) = func(x_nc, y_nc, EZ);
       }
-      if (!mrc_domain_is_ghost(domain, (int[]) { 1, 0, 0 }, p, (int[]) { ix, iy, iz })) {
+      if (!mrc_domain_is_local_ghost(domain, (int[]) { 1, 0, 0 }, p, (int[]) { ix, iy, iz })) {
 	M3(fld, HX, ix,iy,iz, p) = func(x_nc, y_cc, HX);
       }
-      if (!mrc_domain_is_ghost(domain, (int[]) { 0, 1, 0 }, p, (int[]) { ix, iy, iz })) {
+      if (!mrc_domain_is_local_ghost(domain, (int[]) { 0, 1, 0 }, p, (int[]) { ix, iy, iz })) {
 	M3(fld, HY, ix,iy,iz, p) = func(x_cc, y_nc, HY);
       }
-      if (!mrc_domain_is_ghost(domain, (int[]) { 0, 0, 1 }, p, (int[]) { ix, iy, iz })) {
+      if (!mrc_domain_is_local_ghost(domain, (int[]) { 0, 0, 1 }, p, (int[]) { ix, iy, iz })) {
 	M3(fld, HZ, ix,iy,iz, p) = func(x_cc, y_cc, HZ);
       }
     } mrc_fld_foreach_end;
