@@ -387,7 +387,7 @@ main(int argc, char **argv)
   mrc_domain_set_type(domain, "amr");
   mrc_domain_set_param_int3(domain, "m", (int [3]) { 8, 8, 1});
   mrc_crds_set_type(crds, "amr_uniform");
-  mrc_crds_set_param_int(crds, "sw", 3);
+  mrc_crds_set_param_int(crds, "sw", 2);
   
   mrc_domain_set_from_options(domain);
   mrctest_set_amr_domain_4(domain);
@@ -401,7 +401,7 @@ main(int argc, char **argv)
   mrc_fld_set_type(fld, FLD_TYPE);
   mrc_fld_set_name(fld, "fld");
   mrc_fld_set_param_int(fld, "nr_comps", NR_COMPS);
-  mrc_fld_set_param_int(fld, "nr_ghosts", 3);
+  mrc_fld_set_param_int(fld, "nr_ghosts", 2);
   mrc_fld_set_from_options(fld);
   mrc_fld_setup(fld);
   mrc_fld_set_comp_name(fld, EX, "EX");
@@ -458,9 +458,9 @@ main(int argc, char **argv)
   mrc_ddc_set_param_int3(ddc_E, "sw", fld->_sw.vals);
   mrc_ddc_set_param_int(ddc_E, "n_comp", 6);
   mrc_ddc_setup(ddc_E);
-  mrc_ddc_amr_set_by_stencil(ddc_E, EX, 2, (int[]) { 0, 1, 1 }, &stencils_coarse[EX], &stencils_fine[EX]);
-  mrc_ddc_amr_set_by_stencil(ddc_E, EY, 2, (int[]) { 1, 0, 1 }, &stencils_coarse[EY], &stencils_fine[EY]);
-  mrc_ddc_amr_set_by_stencil(ddc_E, EZ, 2, (int[]) { 1, 1, 0 }, &stencils_coarse[EZ], &stencils_fine[EZ]);
+  mrc_ddc_amr_set_by_stencil(ddc_E, EX, 1, (int[]) { 0, 1, 1 }, &stencils_coarse[EX], &stencils_fine[EX]);
+  mrc_ddc_amr_set_by_stencil(ddc_E, EY, 1, (int[]) { 1, 0, 1 }, &stencils_coarse[EY], &stencils_fine[EY]);
+  mrc_ddc_amr_set_by_stencil(ddc_E, EZ, 1, (int[]) { 1, 1, 0 }, &stencils_coarse[EZ], &stencils_fine[EZ]);
   mrc_ddc_amr_assemble(ddc_E);
 
   struct mrc_ddc *ddc_H = mrc_ddc_create(mrc_domain_comm(domain));
@@ -470,9 +470,9 @@ main(int argc, char **argv)
   mrc_ddc_set_param_int3(ddc_H, "sw", fld->_sw.vals);
   mrc_ddc_set_param_int(ddc_H, "n_comp", 6);
   mrc_ddc_setup(ddc_H);
-  mrc_ddc_amr_set_by_stencil(ddc_H, HX, 2, (int[]) { 1, 0, 0 }, &stencils_coarse[HX], &stencils_fine[HX]);
-  mrc_ddc_amr_set_by_stencil(ddc_H, HY, 2, (int[]) { 0, 1, 0 }, &stencils_coarse[HY], &stencils_fine[HY]);
-  mrc_ddc_amr_set_by_stencil(ddc_H, HZ, 2, (int[]) { 0, 0, 1 }, &stencils_coarse[HZ], &stencils_fine[HZ]);
+  mrc_ddc_amr_set_by_stencil(ddc_H, HX, 1, (int[]) { 1, 0, 0 }, &stencils_coarse[HX], &stencils_fine[HX]);
+  mrc_ddc_amr_set_by_stencil(ddc_H, HY, 1, (int[]) { 0, 1, 0 }, &stencils_coarse[HY], &stencils_fine[HY]);
+  mrc_ddc_amr_set_by_stencil(ddc_H, HZ, 1, (int[]) { 0, 0, 1 }, &stencils_coarse[HZ], &stencils_fine[HZ]);
   mrc_ddc_amr_assemble(ddc_H);
 
   // write field to disk
