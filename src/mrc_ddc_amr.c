@@ -32,7 +32,7 @@ struct mrc_ddc_amr {
   int nr_entries_alloced;
 
   struct mrc_domain *domain;
-  int sw;
+  int sw[3];
   int ib[3], im[3];
 };
 
@@ -71,8 +71,8 @@ mrc_ddc_amr_setup(struct mrc_ddc *ddc)
   mrc_domain_get_param_int3(sub->domain, "m", ldims);
   // needs to be compatible with how mrc_fld indexes its fields
   for (int d = 0; d < 3; d++) {
-    sub->ib[d] = -sub->sw;
-    sub->im[d] = ldims[d] + 2 * sub->sw;
+    sub->ib[d] = -sub->sw[d];
+    sub->im[d] = ldims[d] + 2 * sub->sw[d];
   }
 
   sub->nr_rows_alloced = 1000;
@@ -247,7 +247,7 @@ mrc_ddc_amr_apply(struct mrc_ddc *ddc, struct mrc_fld *fld)
 
 #define VAR(x) (void *)offsetof(struct mrc_ddc_amr, x)
 static struct param mrc_ddc_amr_descr[] = {
-  { "sw"                     , VAR(sw)                      , PARAM_INT(0)           },
+  { "sw"                     , VAR(sw)                      , PARAM_INT3(0, 0, 0)    },
   {},
 };
 #undef VAR
