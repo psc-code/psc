@@ -5,6 +5,7 @@
 #include <mrc_ddc.h>
 #include <mrc_io.h>
 #include <mrctest.h>
+#include <mrc_fld_as_float.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,7 +15,6 @@
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
-#define M3(f, m, ix,iy,iz, p) MRC_S5(f, ix, iy, iz, m, p)
 
 // ----------------------------------------------------------------------
 // x-y plane, Xx: interior point, Oo: ghost point
@@ -367,6 +367,7 @@ main(int argc, char **argv)
   // create and fill a field
 
   struct mrc_fld *fld = mrc_domain_m3_create(domain);
+  mrc_fld_set_type(fld, FLD_TYPE);
   mrc_fld_set_name(fld, "fld");
   mrc_fld_set_param_int(fld, "nr_comps", NR_COMPS);
   mrc_fld_set_param_int(fld, "nr_ghosts", 3);
@@ -422,7 +423,7 @@ main(int argc, char **argv)
   struct mrc_ddc *ddc_E = mrc_ddc_create(mrc_domain_comm(domain));
   mrc_ddc_set_type(ddc_E, "amr");
   mrc_ddc_set_domain(ddc_E, domain);
-  mrc_ddc_set_param_int(ddc_E, "size_of_type", sizeof(float));
+  mrc_ddc_set_param_int(ddc_E, "size_of_type", sizeof(mrc_fld_data_t));
   mrc_ddc_set_param_int3(ddc_E, "sw", fld->_sw.vals);
   mrc_ddc_set_param_int(ddc_E, "n_comp", 6);
   mrc_ddc_setup(ddc_E);
@@ -434,7 +435,7 @@ main(int argc, char **argv)
   struct mrc_ddc *ddc_H = mrc_ddc_create(mrc_domain_comm(domain));
   mrc_ddc_set_type(ddc_H, "amr");
   mrc_ddc_set_domain(ddc_H, domain);
-  mrc_ddc_set_param_int(ddc_H, "size_of_type", sizeof(float));
+  mrc_ddc_set_param_int(ddc_H, "size_of_type", sizeof(mrc_fld_data_t));
   mrc_ddc_set_param_int3(ddc_H, "sw", fld->_sw.vals);
   mrc_ddc_set_param_int(ddc_H, "n_comp", 6);
   mrc_ddc_setup(ddc_H);
