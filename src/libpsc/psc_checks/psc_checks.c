@@ -5,6 +5,8 @@
 #include "psc_output_fields_item.h"
 #include "psc_fields_as_c.h"
 
+#include <mrc_io.h>
+
 // ----------------------------------------------------------------------
 // FIXME, should be consolidated?
 
@@ -82,16 +84,17 @@ psc_checks_continuity(struct psc_checks *checks, struct psc *psc,
 		      struct psc_mfields *rho_m, struct psc_mfields *rho_p)
 {
   struct psc_mfields *div_j = fld_create(psc, 1);
+  psc_mfields_set_name(div_j, "div_j");
+  psc_mfields_set_comp_name(div_j, 0, "div_j");
   struct psc_mfields *d_rho = fld_create(psc, 1);
+  psc_mfields_set_name(d_rho, "d_rho");
+  psc_mfields_set_comp_name(d_rho, 0, "d_rho");
 
   psc_mfields_axpy(d_rho,  1., rho_p);
   psc_mfields_axpy(d_rho, -1., rho_m);
 
   psc_calc_div_j(psc, psc->flds, div_j);
   psc_mfields_scale(div_j, psc->dt);
-
-  /* psc_dump_field(div_j, 0, "div_j"); */
-  /* psc_dump_field(rho_p, 0, "dt_rho"); */
 
   double eps = checks->continuity_threshold;
   double max_err = 0.;
@@ -114,15 +117,27 @@ psc_checks_continuity(struct psc_checks *checks, struct psc *psc,
     } psc_foreach_3d_end;
   }
 
+  if (max_err >= eps) {
+    static struct mrc_io *io;
+    if (!io) {
+      io = mrc_io_create(psc_comm(psc));
+      mrc_io_set_name(io, "mrc_io_continuity");
+      mrc_io_set_param_string(io, "basename", "continuity");
+      mrc_io_set_from_options(io);
+      mrc_io_setup(io);
+      mrc_io_view(io);
+    }
+    mrc_io_open(io, "w", psc->timestep, psc->timestep);
+    psc_mfields_write_as_mrc_fld(div_j, io);
+    psc_mfields_write_as_mrc_fld(d_rho, io);
+    mrc_io_close(io);
+  }
+
   if (checks->continuity_verbose || max_err >= eps) {
     mprintf("continuity: max_err = %g (thres %g)\n", max_err, eps);
   }
 
   assert(max_err < eps);
-
-  /* psc_mfields_axpy(rho_p, +1., div_j); */
-  /* psc_dump_field(rho_p, 0, "cont_diff"); */
-  /* abort(); */
 
   psc_mfields_destroy(div_j);
   psc_mfields_destroy(d_rho);
