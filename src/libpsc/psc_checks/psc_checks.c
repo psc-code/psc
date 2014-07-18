@@ -202,7 +202,12 @@ psc_checks_gauss(struct psc_checks *checks, struct psc *psc)
   }
 
   struct psc_mfields *dive = fld_create(psc, 1);
+  psc_mfields_set_name(dive, "div_E");
+  psc_mfields_set_comp_name(dive, 0, "div_E");
   struct psc_mfields *rho = fld_create(psc, 1);
+  psc_mfields_set_name(rho, "rho");
+  psc_mfields_set_comp_name(rho, 0, "rho");
+
   psc_calc_rho(psc, psc->particles, rho);
   psc_calc_dive(psc, psc->flds, dive);
 
@@ -233,13 +238,23 @@ psc_checks_gauss(struct psc_checks *checks, struct psc *psc)
     mprintf("gauss: max_err = %g (thres %g)\n", max_err, eps);
   }
 
-  if (max_err >= eps) {
-    psc_dump_field(rho, 0, "rho");
-    psc_dump_field(dive, 0, "dive");
-    psc_mfields_axpy(rho, -1., dive);
-    psc_dump_field(rho, 0, "gauss_diff");
-    assert(max_err < eps);
+  if (checks->gauss_dump_always || max_err >= eps) {
+    static struct mrc_io *io;
+    if (!io) {
+      io = mrc_io_create(psc_comm(psc));
+      mrc_io_set_name(io, "mrc_io_gauss");
+      mrc_io_set_param_string(io, "basename", "gauss");
+      mrc_io_set_from_options(io);
+      mrc_io_setup(io);
+      mrc_io_view(io);
+    }
+    mrc_io_open(io, "w", psc->timestep, psc->timestep);
+    psc_mfields_write_as_mrc_fld(rho, io);
+    psc_mfields_write_as_mrc_fld(dive, io);
+    mrc_io_close(io);
   }
+
+  assert(max_err < eps);
 
   psc_mfields_destroy(rho);
   psc_mfields_destroy(dive);
@@ -259,6 +274,7 @@ static struct param psc_checks_descr[] = {
   { "gauss_every_step"      , VAR(gauss_every_step)      , PARAM_INT(-1)       },
   { "gauss_threshold"       , VAR(gauss_threshold)       , PARAM_DOUBLE(1e-14) },
   { "gauss_verbose"         , VAR(gauss_verbose)         , PARAM_BOOL(false)   },
+  { "gauss_dump_always"     , VAR(gauss_dump_always)     , PARAM_BOOL(false)   },
 
   {},
 };

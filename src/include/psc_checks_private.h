@@ -16,6 +16,7 @@ struct psc_checks {
   int gauss_every_step;   // check Gauss's Law every so many steps
   double gauss_threshold; // acceptable error in Gauss's Law
   bool gauss_verbose;     // always print Gauss's Law error, even if acceptable
+  bool gauss_dump_always; // always dump E, div_rho, even if acceptable
 };
 
 #endif
