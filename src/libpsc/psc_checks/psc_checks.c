@@ -117,7 +117,7 @@ psc_checks_continuity(struct psc_checks *checks, struct psc *psc,
     } psc_foreach_3d_end;
   }
 
-  if (max_err >= eps) {
+  if (checks->continuity_dump_always || max_err >= eps) {
     static struct mrc_io *io;
     if (!io) {
       io = mrc_io_create(psc_comm(psc));
@@ -259,6 +259,7 @@ static struct param psc_checks_descr[] = {
   { "continuity_every_step" , VAR(continuity_every_step) , PARAM_INT(-1)       },
   { "continuity_threshold"  , VAR(continuity_threshold)  , PARAM_DOUBLE(1e-14) },
   { "continuity_verbose"    , VAR(continuity_verbose)    , PARAM_BOOL(false)   },
+  { "continuity_dump_always", VAR(continuity_dump_always), PARAM_BOOL(false)   },
 
   { "gauss_every_step"      , VAR(gauss_every_step)      , PARAM_INT(-1)       },
   { "gauss_threshold"       , VAR(gauss_threshold)       , PARAM_DOUBLE(1e-14) },
