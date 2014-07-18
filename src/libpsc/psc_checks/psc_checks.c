@@ -102,11 +102,6 @@ psc_checks_continuity(struct psc_checks *checks, struct psc *psc,
     struct psc_fields *p_d_rho = psc_mfields_get_patch(d_rho, p);
     struct psc_fields *p_div_j = psc_mfields_get_patch(div_j, p);
     psc_foreach_3d(psc, p, jx, jy, jz, 0, 0) {
-      if (jy < 2 || jz < 2 || // FIXME
-	  jy >= psc->patch[p].ldims[1] - 1 ||
-	  jz >= psc->patch[p].ldims[2] - 1) {
-	continue;
-      }
       double d_rho = F3(p_d_rho,0, jx,jy,jz);
       double div_j = F3(p_div_j,0, jx,jy,jz);
       max_err = fmax(max_err, fabs(d_rho + div_j));
