@@ -1,5 +1,6 @@
 
 #include "psc.h"
+#include "psc_fields_as_c.h"
 
 #include <mrc_params.h>
 #include <mrc_profile.h>
@@ -183,6 +184,41 @@ psc_mfields_axpy(struct psc_mfields *yf, double alpha,
   for (int m = yf->first_comp; m < yf->first_comp + yf->nr_fields; m++) {
     psc_mfields_axpy_comp(yf, m, alpha, xf, m);
   }
+}
+
+static void
+copy_to_mrc_fld(struct mrc_fld *m3, struct psc_mfields *mflds_base)
+{
+  struct psc_mfields *mflds = 
+    psc_mfields_get_as(mflds_base, FIELDS_TYPE, 0, mflds_base->nr_fields);
+  psc_foreach_patch(ppsc, p) {
+    struct psc_fields *pf = psc_mfields_get_patch(mflds, p);
+    struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, p);
+    mrc_fld_foreach(m3, ix,iy,iz, 0,0) {
+      for (int m = 0; m < mflds->nr_fields; m++) {
+	MRC_M3(m3p,m, ix,iy,iz) = F3(pf,m, ix,iy,iz);
+      }
+    } mrc_fld_foreach_end;
+    mrc_fld_patch_put(m3);
+  }
+
+  psc_mfields_put_as(mflds, mflds_base, 0, 0);
+}
+
+void
+psc_mfields_write_as_mrc_fld(struct psc_mfields *mflds, struct mrc_io *io)
+{
+  struct mrc_fld *fld = mrc_domain_m3_create(ppsc->mrc_domain);
+  mrc_fld_set_name(fld, psc_mfields_name(mflds));
+  mrc_fld_set_sw(fld, 2);
+  mrc_fld_set_nr_comps(fld, mflds->nr_fields);
+  mrc_fld_setup(fld);
+  for (int m = 0; m < mrc_fld_nr_comps(fld); m++) {
+      mrc_fld_set_comp_name(fld, m, psc_mfields_comp_name(mflds, m));
+  }
+  copy_to_mrc_fld(fld, mflds);
+  mrc_fld_write(fld, io);
+  mrc_fld_destroy(fld);
 }
 
 struct psc_mfields *

@@ -62,6 +62,8 @@ struct psc_mfields *psc_mfields_get_as(struct psc_mfields *mflds_base,
 void psc_mfields_put_as(struct psc_mfields *mflds,
 			struct psc_mfields *mflds_base, int mb, int me);
 
+void psc_mfields_write_as_mrc_fld(struct psc_mfields *mflds, struct mrc_io *io);
+
 static inline struct psc_fields *
 psc_mfields_get_patch(struct psc_mfields *flds, int p)
 {

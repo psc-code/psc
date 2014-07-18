@@ -72,25 +72,12 @@ write_fields(struct psc_output_fields_c *out, struct psc_fields_list *list,
     struct psc_fields *fld = psc_mfields_get_patch(flds, 0);
     //    assert(fld->nr_comp == 1);
 
-    // FIXME, what if !(ibn[0] == ibn[1] == ibn[2])
-    // FIXME, 3 doesn't work -- how about 0?
-    struct mrc_fld *mrc_fld = mrc_domain_m3_create(ppsc->mrc_domain);
-    mrc_fld_set_name(mrc_fld, psc_mfields_name(flds));
-    mrc_fld_set_sw(mrc_fld, 2);
-    mrc_fld_set_nr_comps(mrc_fld, fld->nr_comp);
-    mrc_fld_setup(mrc_fld);
-    for (int m = 0; m < fld->nr_comp; m++) {
-      mrc_fld_set_comp_name(mrc_fld, m, psc_mfields_comp_name(flds, m));
-    }
-    copy_to_mrc_fld(mrc_fld, flds);
-
     if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) {
       mrc_io_set_param_int3(io, "slab_off", slab_off);
       mrc_io_set_param_int3(io, "slab_dims", slab_dims);
     }
-    mrc_fld_write(mrc_fld, io);
 
-    mrc_fld_destroy(mrc_fld);
+    psc_mfields_write_as_mrc_fld(flds, io);
   }
   mrc_io_close(io);
 }
