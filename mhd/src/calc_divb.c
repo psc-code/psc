@@ -21,9 +21,9 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
   struct mrc_patch_info info;
   mrc_domain_get_local_patch_info(fld->_domain, 0, &info);
 
-  float *bd2x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD2);
-  float *bd2y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD2);
-  float *bd2z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD2);
+  float *bd3x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD3);
+  float *bd3y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD3);
+  float *bd3z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD3);
 
   mrc_fld_data_t hx = 1., hy = 1., hz = 1.;
   int gdims[3];
@@ -42,10 +42,10 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
 
   if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM) {
     mrc_fld_foreach(divb, ix,iy,iz, 0, 0) {
-      F3(d,0, ix,iy,iz) = 
-	(BX(f, ix,iy,iz) - BX(f, ix-1,iy,iz)) / bd2x[ix] +
-	(BY(f, ix,iy,iz) - BY(f, ix,iy-1,iz)) / bd2y[iy] +
-	(BZ(f, ix,iy,iz) - BZ(f, ix,iy,iz-1)) / bd2z[iz];
+      F3(d,0, ix,iy,iz) =
+	(BX(f, ix,iy,iz) - BX(f, ix-1,iy,iz)) * bd3x[ix] +
+	(BY(f, ix,iy,iz) - BY(f, ix,iy-1,iz)) * bd3y[iy] +
+	(BZ(f, ix,iy,iz) - BZ(f, ix,iy,iz-1)) * bd3z[iz];
       F3(d,0, ix,iy,iz) *= F3(f,_YMASK, ix,iy,iz);
 
       // the incoming solar wind won't match and hence divb != 0 here
@@ -56,10 +56,10 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
   } else if (mhd_type == MT_SEMI_CONSERVATIVE ||
 	     mhd_type == MT_FULLY_CONSERVATIVE) {
     mrc_fld_foreach(divb, ix,iy,iz, 0, 0) {
-      F3(d,0, ix,iy,iz) = 
-	(BX(f, ix+1,iy,iz) - BX(f, ix,iy,iz)) * hx / bd2x[ix] +
-	(BY(f, ix,iy+1,iz) - BY(f, ix,iy,iz)) * hy / bd2y[iy] +
-	(BZ(f, ix,iy,iz+1) - BZ(f, ix,iy,iz)) * hz / bd2z[iz];
+      F3(d,0, ix,iy,iz) =
+	(BX(f, ix+1,iy,iz) - BX(f, ix,iy,iz)) * hx * bd3x[ix] +
+	(BY(f, ix,iy+1,iz) - BY(f, ix,iy,iz)) * hy * bd3y[iy] +
+	(BZ(f, ix,iy,iz+1) - BZ(f, ix,iy,iz)) * hz * bd3z[iz];
       F3(d,0, ix,iy,iz) *= F3(f,_YMASK, ix,iy,iz);
 
       max = mrc_fld_max(max, mrc_fld_abs(F3(d,0, ix,iy,iz)));
