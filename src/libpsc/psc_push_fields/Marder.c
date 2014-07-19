@@ -236,7 +236,7 @@ marder_correction(struct psc_push_fields *push,
    return;
 
   mfields_t *res = marder_create_aid_fields(push, ppsc);
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 1; i++) {
     marder_calc_aid_fields(push, flds, particles, res);
     marder_correction_run(push, flds, res);
   }
