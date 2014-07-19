@@ -122,7 +122,7 @@ psc_checks_continuity(struct psc_checks *checks, struct psc *psc,
       mrc_io_setup(io);
       mrc_io_view(io);
     }
-    mrc_io_open(io, "w", psc->timestep, psc->timestep);
+    mrc_io_open(io, "w", psc->timestep, psc->timestep * psc->dt);
     psc_mfields_write_as_mrc_fld(div_j, io);
     psc_mfields_write_as_mrc_fld(d_rho, io);
     mrc_io_close(io);
@@ -248,7 +248,7 @@ psc_checks_gauss(struct psc_checks *checks, struct psc *psc)
       mrc_io_setup(io);
       mrc_io_view(io);
     }
-    mrc_io_open(io, "w", psc->timestep, psc->timestep);
+    mrc_io_open(io, "w", psc->timestep, psc->timestep * psc->dt);
     psc_mfields_write_as_mrc_fld(rho, io);
     psc_mfields_write_as_mrc_fld(dive, io);
     mrc_io_close(io);
