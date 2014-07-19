@@ -1,5 +1,5 @@
 
-#include "psc.h"
+#include "psc_marder_private.h"
 #include "psc_bnd.h"
 #include "psc_push_fields_private.h"
 #include "psc_fields_as_single.h"
@@ -187,9 +187,10 @@ marder_correction_run(struct psc_push_fields *push, struct psc_mfields *flds,
 // expected to be set on return (though we do that, anyway.)
 
 void
-marder_correction(struct psc_push_fields *push, 
-		  struct psc_mfields *flds, struct psc_mparticles *particles)
+psc_marder_run(struct psc_marder *marder, 
+	       struct psc_mfields *flds, struct psc_mparticles *particles)
 {
+  struct psc_push_fields *push = ppsc->push_fields;
   if (push->marder_step < 0 || ppsc->timestep % push->marder_step != 0) 
    return;
 
@@ -209,6 +210,14 @@ marder_correction(struct psc_push_fields *push,
   psc_mfields_destroy(div_e);
   psc_mfields_destroy(rho);
 }
+
+// ======================================================================
+// psc_marder class
+
+struct mrc_class_psc_marder mrc_class_psc_marder = {
+  .name             = "psc_marder",
+  .size             = sizeof(struct psc_marder),
+};
 
 #undef psc_foreach_3d_more
 #undef psc_foreach_3d_more_end

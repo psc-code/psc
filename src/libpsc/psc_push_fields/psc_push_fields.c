@@ -3,9 +3,9 @@
 
 #include "psc_bnd.h"
 #include "psc_bnd_fields.h"
+#include "psc_marder.h"
 #include <mrc_profile.h>
 #include <mrc_params.h>
-#include <Marder.h>
 
 extern int pr_time_step_no_comm;
 extern double *psc_balance_comp_time_by_patch;
@@ -86,7 +86,7 @@ psc_push_fields_step_a_default(struct psc_push_fields *push, mfields_base_t *fld
   psc_push_fields_push_E(push, flds);
 
   // E at t^n+.5, particles at t^n, but the "double" particles would be at t^n+.5
-  marder_correction(push, flds, ppsc->particles);
+  psc_marder_run(ppsc->marder, flds, ppsc->particles);
 
   psc_bnd_fields_fill_ghosts_a_E(push->bnd_fields, flds);
   psc_bnd_fill_ghosts(ppsc->bnd, flds, EX, EX + 3);
@@ -130,7 +130,7 @@ psc_push_fields_step_a_opt(struct psc_push_fields *push, struct psc_mfields *mfl
   //  psc_bnd_fields_fill_ghosts_a_E(push->bnd_fields, mflds);
 
   // E at t^n+.5, particles at t^n, but the "double" particles would be at t^n+.5
-  marder_correction(push, mflds, ppsc->particles);
+  psc_marder_run(ppsc->marder, mflds, ppsc->particles);
 
   psc_push_fields_push_H(push, mflds);
   psc_bnd_fields_fill_ghosts_a_H(push->bnd_fields, mflds);

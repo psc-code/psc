@@ -9,6 +9,7 @@
 #include "psc_collision.h"
 #include "psc_randomize.h"
 #include "psc_sort.h"
+#include "psc_marder.h"
 #include "psc_diag.h"
 #include "psc_output_fields_collection.h"
 #include "psc_output_particles.h"
@@ -169,6 +170,7 @@ static struct param psc_descr[] = {
   { "bnd_photons"             , VAR(bnd_photons)             , MRC_VAR_OBJ(psc_bnd_photons) },
   { "collision"               , VAR(collision)               , MRC_VAR_OBJ(psc_collision) },
   { "randomize"               , VAR(randomize)               , MRC_VAR_OBJ(psc_randomize) },
+  { "marder"                  , VAR(marder)                  , MRC_VAR_OBJ(psc_marder) },
   { "sort"                    , VAR(sort)                    , MRC_VAR_OBJ(psc_sort) },
   { "diag"                    , VAR(diag)                    , MRC_VAR_OBJ(psc_diag) },
   { "output_fields_collection", VAR(output_fields_collection), MRC_VAR_OBJ(psc_output_fields_collection) },
