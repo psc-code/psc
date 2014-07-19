@@ -216,10 +216,18 @@ psc_checks_gauss(struct psc_checks *checks, struct psc *psc)
   psc_foreach_patch(psc, p) {
     struct psc_fields *p_rho = psc_mfields_get_patch(rho, p);
     struct psc_fields *p_dive = psc_mfields_get_patch(dive, p);
+
+    int l[3] = {0, 0, 0}, r[3] = {0, 0, 0};
+    for (int d = 0; d < 3; d++) {
+      if (ppsc->domain.bnd_fld_lo[d] == BND_FLD_CONDUCTING_WALL && ppsc->patch[p].off[d] == 0) {
+	l[d] = 1;
+      }
+    }
+
     psc_foreach_3d(psc, p, jx, jy, jz, 0, 0) {
-      if (jy < 2 || jz < 2 ||
-	  jy >= psc->patch[p].ldims[1] - 1 ||
-	  jz >= psc->patch[p].ldims[2] - 1) {
+      if (jy < l[1] || jz < l[2] ||
+	  jy >= psc->patch[p].ldims[1] - r[1] ||
+	  jz >= psc->patch[p].ldims[2] - r[2]) {
 	continue;
       }
       double v_rho = F3(p_rho,0, jx,jy,jz);
