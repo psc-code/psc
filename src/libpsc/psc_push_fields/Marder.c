@@ -15,27 +15,22 @@ enum {
   NR_MARDER
 };
 
-// ======================================================================
-// Create/Destroy space for "aid" fields, i.e., divE and n
+// ----------------------------------------------------------------------
+// fld_create
+//
+// FIXME, should be consolidated with psc_checks.c, and probably other places
 
-mfields_t *
-marder_create_aid_fields(struct psc_push_fields *push, struct psc *psc)
+static struct psc_mfields *
+fld_create(struct psc *psc, int nr_fields)
 {
-  mfields_base_t *f = psc_mfields_create(psc_comm(psc));
-  psc_mfields_set_type(f, FIELDS_TYPE);
-  psc_mfields_set_domain(f, psc->mrc_domain);
-  psc_mfields_set_param_int(f, "nr_fields", NR_MARDER);
-  psc_mfields_set_param_int3(f, "ibn", psc->ibn);
-  psc_mfields_setup(f);
-  psc_mfields_set_comp_name(f, DIVE_MARDER, "div_E");
-  psc_mfields_set_comp_name(f, N_MARDER, "rho");
-  return f;
-}
+  struct psc_mfields *fld = psc_mfields_create(psc_comm(psc));
+  psc_mfields_set_type(fld, FIELDS_TYPE);
+  psc_mfields_set_domain(fld, psc->mrc_domain);
+  psc_mfields_set_param_int3(fld, "ibn", psc->ibn);
+  psc_mfields_set_param_int(fld, "nr_fields", nr_fields);
+  psc_mfields_setup(fld);
 
-static void
-marder_destroy_aid_fields(struct psc_push_fields *push, mfields_t *f)
-{
-  psc_mfields_destroy(f);
+  return fld;
 }
 
 // ======================================================================
@@ -243,12 +238,16 @@ marder_correction(struct psc_push_fields *push,
   if (push->marder_step < 0 || ppsc->timestep % push->marder_step != 0) 
    return;
 
-  mfields_t *res = marder_create_aid_fields(push, ppsc);
+  struct psc_mfields *res = fld_create(ppsc, 2);
+  psc_mfields_set_comp_name(res, DIVE_MARDER, "div_E");
+  psc_mfields_set_comp_name(res, N_MARDER, "rho");
+
   for (int i = 0; i < 1; i++) {
     marder_calc_aid_fields(push, flds, particles, res);
     marder_correction_run(push, flds, res);
   }
-  marder_destroy_aid_fields(push, res);
+
+  psc_mfields_destroy(res);
 }
 
 #undef psc_foreach_3d_more
