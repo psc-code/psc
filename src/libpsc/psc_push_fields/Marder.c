@@ -5,9 +5,11 @@
 #include "psc_fields_as_single.h"
 #include "psc_particles_as_single.h"
 #include <math.h>
-#include "../psc_output_fields/common_moments.c"
 
 #include <mrc_io.h>
+
+// FIXME, should be in a header, and not in psc_checks.c
+void psc_calc_rho(struct psc *psc, struct psc_mparticles *mprts, struct psc_mfields *rho);
 
 // ----------------------------------------------------------------------
 // fld_create
@@ -54,33 +56,6 @@ calc_dive_nc(struct psc_fields *flds_base,
 }
 
 // ======================================================================
-// Calculate total n_nc, copied from psc_gauss_correction_moments_1st_nc.c
-
-static void
-do_n_run(int p, fields_t *pf, int m, struct psc_particles *prts)
-{
-  struct psc_patch *patch = &ppsc->patch[p];
-  particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
-
-  for (int n = 0; n < prts->n_part; n++) {
-    particle_t *part = particles_get_one(prts, n);
-    DEPOSIT_TO_GRID_1ST_NC(part, pf, m,  
-      ppsc->kinds[particle_kind(part)].q);
-  }
-}
-
-static void
-n_run(struct psc_fields *flds,
-      struct psc_particles *prts_base, struct psc_fields *res, int m)
-{
-  struct psc_particles *prts = psc_particles_get_as(prts_base, PARTICLE_TYPE, 0);
-  psc_fields_zero_range(res, m, m + 1);
-  do_n_run(res->p, res, m, prts);
-  psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
-}
-
-// ======================================================================
 
 static void
 marder_calc_aid_fields(struct psc_push_fields *push, 
@@ -93,12 +68,9 @@ marder_calc_aid_fields(struct psc_push_fields *push,
 		 psc_mfields_get_patch(div_e, p));
   }
 
-  for (int p = 0; p < rho->nr_patches; p++) {
-    n_run(psc_mfields_get_patch(flds, p),
-	  psc_mparticles_get_patch(particles, p),
-	  psc_mfields_get_patch(rho, p), 0);
-  }
-  psc_bnd_add_ghosts(ppsc->bnd, rho, 0, 1);
+  struct psc_mfields *rho_c = psc_mfields_get_as(rho, "c", 0, 0);
+  psc_calc_rho(ppsc, particles, rho_c);
+  psc_mfields_put_as(rho_c, rho, 0, 1);
   
   static struct mrc_io *io;
   if (!io) {

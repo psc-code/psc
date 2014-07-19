@@ -26,7 +26,7 @@ fld_create(struct psc *psc, int nr_fields)
 // ----------------------------------------------------------------------
 // psc_calc_rho
 
-static void
+void
 psc_calc_rho(struct psc *psc, struct psc_mparticles *mprts, struct psc_mfields *rho)
 {
   struct psc_output_fields_item *item = psc_output_fields_item_create(psc_comm(psc));
