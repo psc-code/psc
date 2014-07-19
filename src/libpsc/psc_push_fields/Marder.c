@@ -133,7 +133,7 @@ do_marder_correction(struct psc_push_fields *push,
   define_dxdydz(dx, dy, dz);
 
   // FIXME: how to choose diffusion parameter properly?
-  double deltax = ppsc->patch[f->p].dx[0];
+  //double deltax = ppsc->patch[f->p].dx[0];
   double deltay = ppsc->patch[f->p].dx[1];
   double deltaz = ppsc->patch[f->p].dx[2];
   double inv_sum = 0.;
@@ -155,10 +155,11 @@ do_marder_correction(struct psc_push_fields *push,
     l[d] = -1;
    }
    if (ppsc->domain.bnd_fld_hi[d] == BND_FLD_CONDUCTING_WALL && ppsc->patch[flds->p].off[d] + ppsc->patch[flds->p].ldims[d] == ppsc->domain.gdims[d]) {
-    r[d] = 0;
+    r[d] = -1;
    }
   }
 
+#if 0
   psc_foreach_3d_more(ppsc, f->p, ix, iy, iz, l, r) {
     // FIXME: F3 correct?
     F3(flds, EX, ix,iy,iz) += 
@@ -174,7 +175,29 @@ do_marder_correction(struct psc_push_fields *push,
        - F3(f, N_MARDER,    ix,iy,iz+dz) + F3(f, N_MARDER,    ix,iy,iz)
        ) * .5 * ppsc->dt * diffusion / deltaz;
   } psc_foreach_3d_more_end;
-  psc_fields_put_as(flds, flds_base, JXI, EX + 3);
+#endif
+
+  assert(ppsc->domain.gdims[0] == 1);
+
+  //  l[1] = -1;
+  //  r[1] = -1;
+  psc_foreach_3d_more(ppsc, f->p, ix, iy, iz, l, r) {
+    F3(flds, EY, ix,iy,iz) += 
+      (  F3(f, DIVE_MARDER, ix,iy+dy,iz) - F3(f, DIVE_MARDER, ix,iy,iz)
+       - F3(f, N_MARDER,    ix,iy+dy,iz) + F3(f, N_MARDER,    ix,iy,iz)
+       ) * .5 * ppsc->dt * diffusion / deltay;
+  } psc_foreach_3d_more_end;
+
+  //l[1] = -1;
+  r[1] = 0;
+  psc_foreach_3d_more(ppsc, f->p, ix, iy, iz, l, r) {
+    F3(flds, EZ, ix,iy,iz) += 
+      (  F3(f, DIVE_MARDER, ix,iy,iz+dz) - F3(f, DIVE_MARDER, ix,iy,iz)
+       - F3(f, N_MARDER,    ix,iy,iz+dz) + F3(f, N_MARDER,    ix,iy,iz)
+       ) * .5 * ppsc->dt * diffusion / deltaz;
+  } psc_foreach_3d_more_end;
+
+  psc_fields_put_as(flds, flds_base, EX, EX + 3);
 }
 
 void
