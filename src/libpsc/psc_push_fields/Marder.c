@@ -171,13 +171,16 @@ do_marder_correction(struct psc_push_fields *push,
 
   struct psc_fields *flds = psc_fields_get_as(flds_base, FIELDS_TYPE, EX, EX + 3);
 
-  int l[3] = {0, 0, 0}, r[3] = {0, 0, 0};
+  int l_cc[3] = {0, 0, 0}, r_cc[3] = {0, 0, 0};
+  int l_nc[3] = {0, 0, 0}, r_nc[3] = {0, 0, 0};
   for (int d = 0; d < 3; d++) {
    if (ppsc->domain.bnd_fld_lo[d] == BND_FLD_CONDUCTING_WALL && ppsc->patch[flds->p].off[d] == 0) {
-    l[d] = -1;
+    l_cc[d] = -1;
+    l_nc[d] = -1;
    }
    if (ppsc->domain.bnd_fld_hi[d] == BND_FLD_CONDUCTING_WALL && ppsc->patch[flds->p].off[d] + ppsc->patch[flds->p].ldims[d] == ppsc->domain.gdims[d]) {
-    r[d] = -1;
+    r_cc[d] = -1;
+    r_nc[d] = 0;
    }
   }
 
@@ -198,21 +201,26 @@ do_marder_correction(struct psc_push_fields *push,
 
   assert(ppsc->domain.gdims[0] == 1);
 
-  //  l[1] = -1;
-  //  r[1] = -1;
-  psc_foreach_3d_more(ppsc, f->p, ix, iy, iz, l, r) {
-    F3(flds, EY, ix,iy,iz) += 
-      (F3(f, DIVE_MARDER, ix,iy+dy,iz) - F3(f, DIVE_MARDER, ix,iy,iz))
-      * .5 * ppsc->dt * diffusion / deltay;
-  } psc_foreach_3d_more_end;
+  {
+    int l[3] = { l_nc[0], l_cc[1], l_nc[2] };
+    int r[3] = { r_nc[0], r_cc[1], r_nc[2] };
+    psc_foreach_3d_more(ppsc, f->p, ix, iy, iz, l, r) {
+      F3(flds, EY, ix,iy,iz) += 
+	(F3(f, DIVE_MARDER, ix,iy+dy,iz) - F3(f, DIVE_MARDER, ix,iy,iz))
+	* .5 * ppsc->dt * diffusion / deltay;
+    } psc_foreach_3d_more_end;
+  }
 
-  //l[1] = -1;
-  r[1] = 0;
-  psc_foreach_3d_more(ppsc, f->p, ix, iy, iz, l, r) {
-    F3(flds, EZ, ix,iy,iz) += 
-      (F3(f, DIVE_MARDER, ix,iy,iz+dz) - F3(f, DIVE_MARDER, ix,iy,iz))
-      * .5 * ppsc->dt * diffusion / deltaz;
-  } psc_foreach_3d_more_end;
+  {
+    int l[3] = { l_nc[0], l_nc[1], l_cc[2] };
+    int r[3] = { r_nc[0], r_nc[1], r_cc[2] };
+    mprintf("EZ l %d r %d\n", l[1], r[1]);
+    psc_foreach_3d_more(ppsc, f->p, ix, iy, iz, l, r) {
+      F3(flds, EZ, ix,iy,iz) += 
+	(F3(f, DIVE_MARDER, ix,iy,iz+dz) - F3(f, DIVE_MARDER, ix,iy,iz))
+	* .5 * ppsc->dt * diffusion / deltaz;
+    } psc_foreach_3d_more_end;
+  }
 
   psc_fields_put_as(flds, flds_base, EX, EX + 3);
 }
