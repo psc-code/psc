@@ -1,6 +1,6 @@
 
-#ifndef PSC_BND_PRIVATE_H
-#define PSC_BND_PRIVATE_H
+#ifndef PSC_PUSH_FIELDS_PRIVATE_H
+#define PSC_PUSH_FIELDS_PRIVATE_H
 
 #include <psc_push_fields.h>
 
