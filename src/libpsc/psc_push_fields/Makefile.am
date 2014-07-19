@@ -11,7 +11,7 @@ libsubdir_la_SOURCES = \
 	psc_push_fields_auto.c \
 	psc_push_fields_none.c \
 	psc_push_fields_fortran.c \
-	Marder.c
+	psc_marder.c
 
 EXTRA_libsubdir_la_SOURCES = \
 	psc_push_fields_common.c
