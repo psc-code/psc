@@ -44,24 +44,24 @@ marder_calc_aid_fields(struct psc_marder *marder,
   psc_calc_rho(ppsc, particles, rho_c);
   psc_mfields_put_as(rho_c, rho, 0, 1);
   
-  static struct mrc_io *io;
-  if (!io) {
-    io = mrc_io_create(psc_comm(ppsc));
-    mrc_io_set_type(io, "xdmf_collective");
-    mrc_io_set_name(io, "mrc_io_marder");
-    mrc_io_set_param_string(io, "basename", "marder");
-    mrc_io_set_from_options(io);
-    mrc_io_setup(io);
-  }
+  if (marder->dump) {
+    static struct mrc_io *io;
+    if (!io) {
+      io = mrc_io_create(psc_comm(ppsc));
+      mrc_io_set_type(io, "xdmf_collective");
+      mrc_io_set_name(io, "mrc_io_marder");
+      mrc_io_set_param_string(io, "basename", "marder");
+      mrc_io_set_from_options(io);
+      mrc_io_setup(io);
+    }
 
-  if (ppsc->timestep % 10 == 0) {
     mrc_io_open(io, "w", ppsc->timestep, ppsc->timestep * ppsc->dt);
     psc_mfields_write_as_mrc_fld(rho, io);
     psc_mfields_write_as_mrc_fld(div_e, io);
     mrc_io_close(io);
-  }
 
-  //  mrc_io_destroy(io);
+    //  mrc_io_destroy(io); FIXME, leaked
+  }
 
   psc_mfields_axpy_comp(div_e, 0, -1., rho, 0);
   psc_bnd_fill_ghosts(ppsc->bnd, div_e, 0, 1);
@@ -200,7 +200,7 @@ psc_marder_run(struct psc_marder *marder,
   struct psc_mfields *rho = fld_create(ppsc, 1);
   psc_mfields_set_comp_name(rho, 0, "rho");
 
-  for (int i = 0; i < 1; i++) {
+  for (int i = 0; i < marder->loop; i++) {
     marder_calc_aid_fields(marder, flds, particles, div_e, rho);
     marder_correction_run(marder, flds, div_e);
   }
@@ -216,6 +216,8 @@ psc_marder_run(struct psc_marder *marder,
 static struct param psc_marder_descr[] = {
   { "every_step"       , VAR(every_step)       , PARAM_INT(-1),     },
   { "diffusion"        , VAR(diffusion)        , PARAM_DOUBLE(0.9), },
+  { "loop"             , VAR(loop)             , PARAM_INT(1),      },
+  { "dump"             , VAR(dump)             , PARAM_BOOL(false), },
 
   {},
 };
