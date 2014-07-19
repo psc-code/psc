@@ -7,6 +7,8 @@
 struct psc_marder {
   struct mrc_obj obj;
   // parameters
+  int every_step; //< do Marder correction every so many steps
+  double diffusion; //< diffusion coefficient for Marder correction
 };
 
 #endif

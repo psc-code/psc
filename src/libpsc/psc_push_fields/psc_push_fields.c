@@ -246,8 +246,6 @@ static struct param psc_push_fields_descr[] = {
   "particle shape only" },
 
   { "bnd_fields"       , VAR(bnd_fields)       , MRC_VAR_OBJ(psc_bnd_fields), },
-  { "marder_step"      , VAR(marder_step)      , PARAM_INT(-1), },
-  { "marder_diffusion" , VAR(marder_diffusion) , PARAM_DOUBLE(0.9), },
 
   {},
 };
