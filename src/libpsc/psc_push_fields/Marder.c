@@ -10,6 +10,7 @@
 
 // FIXME, should be in a header, and not in psc_checks.c
 void psc_calc_rho(struct psc *psc, struct psc_mparticles *mprts, struct psc_mfields *rho);
+void psc_calc_dive(struct psc *psc, struct psc_mfields *mflds, struct psc_mfields *dive);
 
 // ----------------------------------------------------------------------
 // fld_create
@@ -30,43 +31,15 @@ fld_create(struct psc *psc, int nr_fields)
 }
 
 // ======================================================================
-// Calculate divE at node centers, copied from psc_gauss_correction_item_jeh.c
-
-#define define_dxdydz(dx, dy, dz)					\
-  int dx _mrc_unused = (ppsc->domain.gdims[0] == 1) ? 0 : 1;		\
-  int dy _mrc_unused = (ppsc->domain.gdims[1] == 1) ? 0 : 1;		\
-  int dz _mrc_unused = (ppsc->domain.gdims[2] == 1) ? 0 : 1
-
-static void
-calc_dive_nc(struct psc_fields *flds_base, 
-  struct psc_particles *prts, struct psc_fields *f)
-{
-  define_dxdydz(dx, dy, dz);
-  struct psc_fields *flds = psc_fields_get_as(flds_base, FIELDS_TYPE, JXI, HX + 3);
-
-  // when we get called, the E fields have been advanced to (n+.5) dt
-  psc_foreach_3d(ppsc, f->p, ix, iy, iz, 0, 0) {
-    F3(f, 0, ix,iy,iz) = 
-      ((F3(flds, EX, ix,iy,iz) - F3(flds, EX, ix-dx,iy,iz)) / ppsc->patch[f->p].dx[0] +
-       (F3(flds, EY, ix,iy,iz) - F3(flds, EY, ix,iy-dy,iz)) / ppsc->patch[f->p].dx[1] +
-       (F3(flds, EZ, ix,iy,iz) - F3(flds, EZ, ix,iy,iz-dz)) / ppsc->patch[f->p].dx[2]);
-  } foreach_3d_end;
-
-  psc_fields_put_as(flds, flds_base, 0, 0);
-}
-
-// ======================================================================
 
 static void
 marder_calc_aid_fields(struct psc_push_fields *push, 
 		       struct psc_mfields *flds, struct psc_mparticles *particles,
 		       struct psc_mfields *div_e, struct psc_mfields *rho)
 {
-  for (int p = 0; p < div_e->nr_patches; p++) {
-    calc_dive_nc(psc_mfields_get_patch(flds, p),
-		 psc_mparticles_get_patch(particles, p),
-		 psc_mfields_get_patch(div_e, p));
-  }
+  struct psc_mfields *div_e_c = psc_mfields_get_as(div_e, "c", 0, 0);
+  psc_calc_dive(ppsc, flds, div_e_c);
+  psc_mfields_put_as(div_e_c, div_e, 0, 1);
 
   struct psc_mfields *rho_c = psc_mfields_get_as(rho, "c", 0, 0);
   psc_calc_rho(ppsc, particles, rho_c);
@@ -107,6 +80,11 @@ marder_calc_aid_fields(struct psc_push_fields *push,
 
 #define psc_foreach_3d_more_end				\
   } } }
+
+#define define_dxdydz(dx, dy, dz)					\
+  int dx _mrc_unused = (ppsc->domain.gdims[0] == 1) ? 0 : 1;		\
+  int dy _mrc_unused = (ppsc->domain.gdims[1] == 1) ? 0 : 1;		\
+  int dz _mrc_unused = (ppsc->domain.gdims[2] == 1) ? 0 : 1
 
 // ======================================================================
 // Do the modified marder correction (See eq.(5, 7, 9, 10) in Mardahl and Verboncoeur, CPC, 1997)
