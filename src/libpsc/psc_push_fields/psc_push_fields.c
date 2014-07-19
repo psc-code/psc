@@ -84,12 +84,13 @@ static void
 psc_push_fields_step_a_default(struct psc_push_fields *push, mfields_base_t *flds)
 {
   psc_push_fields_push_E(push, flds);
-  psc_bnd_fields_fill_ghosts_a_E(push->bnd_fields, flds);
-  psc_bnd_fill_ghosts(ppsc->bnd, flds, EX, EX + 3);
-  
+
   // E at t^n+.5, particles at t^n, but the "double" particles would be at t^n+.5
   marder_correction(push, flds, ppsc->particles);
 
+  psc_bnd_fields_fill_ghosts_a_E(push->bnd_fields, flds);
+  psc_bnd_fill_ghosts(ppsc->bnd, flds, EX, EX + 3);
+  
   psc_push_fields_push_H(push, flds);
   psc_bnd_fields_fill_ghosts_a_H(push->bnd_fields, flds);
   psc_bnd_fill_ghosts(ppsc->bnd, flds, HX, HX + 3);

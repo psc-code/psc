@@ -176,12 +176,25 @@ marder_correction_run(struct psc_push_fields *push, struct psc_mfields *flds,
   psc_bnd_fill_ghosts(ppsc->bnd, flds, EX, EX+3);
 }
 
+// ----------------------------------------------------------------------
+// marder_correction
+//
+// On ghost cells:
+// It is possible (variant = 1) that ghost cells are set before this is called
+// and the subsequent code expects ghost cells to still be set on return.
+// We're calling fill_ghosts at the end of each iteration, so that's fine.
+// However, for variant = 0, ghost cells aren't set on entry, and they're not
+// expected to be set on return (though we do that, anyway.)
+
 void
 marder_correction(struct psc_push_fields *push, 
-  mfields_base_t *flds, mparticles_base_t *particles)
+		  struct psc_mfields *flds, struct psc_mparticles *particles)
 {
   if (push->marder_step < 0 || ppsc->timestep % push->marder_step != 0) 
    return;
+
+  // need to fill ghost cells first (should be unnecessary with only variant 1) FIXME
+  psc_bnd_fill_ghosts(ppsc->bnd, flds, EX, EX+3);
 
   struct psc_mfields *div_e = fld_create(ppsc, 1);
   psc_mfields_set_comp_name(div_e, 0, "div_E");
