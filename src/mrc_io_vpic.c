@@ -510,11 +510,15 @@ mrc_io_vpic_open_files(struct mrc_io *io, const char *directory,
     mrc_domain_get_local_patch_info(fld->_domain, p, &info);
     char filename[strlen(io->par.outdir) + strlen(directory)
 		  + strlen(base_filename) + 30];
-    
+
+    int np[3];
+    mrc_domain_get_param_int3(fld->_domain, "np", np);
+    int global_patch_by_dim =
+      ((info.idx3[2]) * np[1] + info.idx3[1]) * np[0] + info.idx3[0];
     sprintf(filename, "%s/%s/T.%d/%s.%0*d.%0*d", io->par.outdir,
 	    directory, io->step, base_filename,
 	    sub->time_field_len, io->step,
-	    sub->proc_field_len, info.global_patch);
+	    sub->proc_field_len, global_patch_by_dim);
     files[p] = fopen(filename, "w");
     assert(files[p]);
     mrc_io_vpic_write_header(io, files[p], fld, p, vpic_type);
