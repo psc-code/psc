@@ -230,6 +230,7 @@ put_line_fc(struct mrc_fld *flux, struct mrc_fld *F_1d,
 // ----------------------------------------------------------------------
 // put_line_sc
 
+// FIXME, make arg order consistent with put_line_fc
 static void __unused
 put_line_sc(struct mrc_fld *flux, struct mrc_fld *F, int j, int k,
 	    int ldim, int l, int r, int dim)

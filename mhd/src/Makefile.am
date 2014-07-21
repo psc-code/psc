@@ -65,6 +65,7 @@ libmhd_la_SOURCES = \
 	ggcm_mhd_step_c2_double.c \
 	ggcm_mhd_step_c3_float.c \
 	ggcm_mhd_step_c3_double.c \
+	ggcm_mhd_step_vl.c \
 	mhd_reconstruct.c \
 	mhd_reconstruct_pcm_float.c \
 	mhd_reconstruct_pcm_double.c \
