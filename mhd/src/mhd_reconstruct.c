@@ -36,6 +36,8 @@ mhd_reconstruct_init()
 {
   mrc_class_register_subclass(&mrc_class_mhd_reconstruct, &mhd_reconstruct_pcm_double_ops);
   mrc_class_register_subclass(&mrc_class_mhd_reconstruct, &mhd_reconstruct_pcm_float_ops);
+  mrc_class_register_subclass(&mrc_class_mhd_reconstruct, &mhd_reconstruct_plm_double_ops);
+  mrc_class_register_subclass(&mrc_class_mhd_reconstruct, &mhd_reconstruct_plm_float_ops);
 }
 
 // ----------------------------------------------------------------------

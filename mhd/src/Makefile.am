@@ -68,6 +68,8 @@ libmhd_la_SOURCES = \
 	mhd_reconstruct.c \
 	mhd_reconstruct_pcm_float.c \
 	mhd_reconstruct_pcm_double.c \
+	mhd_reconstruct_plm_float.c \
+	mhd_reconstruct_plm_double.c \
 	mhd_riemann.c \
 	mhd_riemann_rusanov_float.c \
 	mhd_riemann_rusanov_double.c \

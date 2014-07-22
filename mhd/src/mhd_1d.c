@@ -110,6 +110,29 @@ mhd_prim_from_sc(struct ggcm_mhd *mhd, struct mrc_fld *W_cc, struct mrc_fld *U_c
   }
 }
 
+// ----------------------------------------------------------------------
+// mhd_sc_from_prim
+
+static void __unused
+mhd_sc_from_prim(struct ggcm_mhd *mhd, struct mrc_fld *U_cc, struct mrc_fld *W_cc,
+		 int ldim, int l, int r)
+{
+  mrc_fld_data_t gamma_minus_1 = mhd->par.gamm - 1.;
+
+  for (int i = -l; i < ldim + r; i++) {
+    mrc_fld_data_t *U = &F1(U_cc, 0, i), *W = &F1(W_cc, 0, i);
+
+    mrc_fld_data_t rr = W[RR];
+    U[RR ] = rr;
+    U[RVX] = rr * W[VX];
+    U[RVY] = rr * W[VY];
+    U[RVZ] = rr * W[VZ];
+    U[EE ] = 
+      W[PP] / gamma_minus_1 +
+      + .5 * (sqr(W[VX]) + sqr(W[VY]) + sqr(W[VZ])) * rr;
+  }
+}
+
 // ======================================================================
 
 // ----------------------------------------------------------------------
