@@ -107,14 +107,17 @@ psc_island_coalescence_setup(struct psc *psc)
 
   sub->B0 = B0;
   sub->lambda = psc->domain.length[2] / (4. * M_PI);
-  mpi_printf(MPI_COMM_WORLD, "island coalescence: lambda = %g d_e = %g d_i\n", sub->lambda, sub->lambda / di);
+  MPI_Comm comm = psc_comm(psc);
+  mpi_printf(comm, "island coalescence: lambda = %g d_e = %g d_i\n", sub->lambda, sub->lambda / di);
   double Li = 1.2 * sub->lambda; // FIXME
-  mpi_printf(MPI_COMM_WORLD, "island coalescence: Li = %g d_i\n", Li / di);
+  mpi_printf(comm, "island coalescence: Li = %g d_i\n", Li / di);
   double vth_e = sqrt(2 * Te / me);
-  mpi_printf(MPI_COMM_WORLD, "island coalescence: Te %g vth_e %g\n", Te, vth_e);
+  mpi_printf(comm, "island coalescence: Te %g vth_e %g\n", Te, vth_e);
   double vth_i = sqrt(2 * Ti / mi);
-  mpi_printf(MPI_COMM_WORLD, "island coalescence: Ti %g vth_i %g\n", Ti, vth_i);
-  mpi_printf(MPI_COMM_WORLD, "island coalescence: lambda_De %g\n", sqrt(Te));
+  mpi_printf(comm, "island coalescence: Ti %g vth_i %g\n", Ti, vth_i);
+  mpi_printf(comm, "island coalescence: lambda_De %g\n", sqrt(Te));
+  double v_A = B0 / sqrt(mi), tau_A = psc->domain.length[2] / v_A;
+  mpi_printf(comm, "island_coalescence: v_A %g t_A %g\n", v_A, tau_A);
 
   psc->kinds[KIND_ELECTRON].m = me;
   psc->kinds[KIND_ELECTRON].T = Te;
