@@ -728,7 +728,7 @@ ggcm_mhd_step_c_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
     pr_B = prof_register("c3_corr", 0, 0, 0);
   }
 
-  mrc_fld_data_t dtn;
+  mrc_fld_data_t dtn = 0.0;
   if (step->do_nwst) {
     ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
     zmaskn(mhd, x);
