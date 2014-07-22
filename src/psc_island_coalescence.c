@@ -138,7 +138,7 @@ psi(struct psc *psc, double x[3])
   double *length = psc->domain.length;
 
   double val = -lambda * B0 * log(cosh(x[1] / lambda) + eps * cos(x[2] / lambda));
-  val += pert * cos(M_PI * x[1] / length[1]) * cos(2. * M_PI * x[2] / length[2]);
+  val += pert * length[2] / (2. * M_PI) * cos(M_PI * x[1] / length[1]) * cos(2. * M_PI * x[2] / length[2]);
   return val;
 }
 
