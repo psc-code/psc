@@ -33,8 +33,15 @@ void
 ggcm_mhd_step_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 {
   struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
+  static int pr;
+  if (!pr) {
+    pr = prof_register("ggcm_mhd_step_run", 0, 0, 0.);
+  }
+
+  prof_start(pr);
   assert(ops && ops->run);
   ops->run(step, x);
+  prof_stop(pr);
 
   // FIXME, this should be done by mrc_ts
   struct ggcm_mhd *mhd = step->mhd;
@@ -222,6 +229,7 @@ ggcm_mhd_step_init()
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_step, &ggcm_mhd_step_c2_double_ops);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_step, &ggcm_mhd_step_c3_float_ops);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_step, &ggcm_mhd_step_c3_double_ops);
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_step, &ggcm_mhd_step_vlct_ops);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_step, &ggcm_mhd_step_vl_ops);
 }
 

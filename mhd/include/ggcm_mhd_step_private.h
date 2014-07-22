@@ -55,6 +55,7 @@ extern struct ggcm_mhd_step_ops ggcm_mhd_step_c2_float_ops;
 extern struct ggcm_mhd_step_ops ggcm_mhd_step_c2_double_ops;
 extern struct ggcm_mhd_step_ops ggcm_mhd_step_c3_float_ops;
 extern struct ggcm_mhd_step_ops ggcm_mhd_step_c3_double_ops;
+extern struct ggcm_mhd_step_ops ggcm_mhd_step_vlct_ops;
 extern struct ggcm_mhd_step_ops ggcm_mhd_step_vl_ops;
 
 // helpers for subclasses to use
