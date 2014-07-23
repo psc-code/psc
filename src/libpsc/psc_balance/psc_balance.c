@@ -570,6 +570,8 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
   // ----------------------------------------------------------------------
   // fields
 
+  struct psc_balance_ops *ops = psc_balance_ops(bal);
+
   struct psc_mfields_list_entry *p;
   __list_for_each_entry(p, &psc_mfields_base_list, entry, struct psc_mfields_list_entry) {
     mfields_base_t *flds_base_old = *p->flds_p;
@@ -595,19 +597,24 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
       }
     }
 
-    struct psc_balance_ops *ops = psc_balance_ops(bal);
-
+    // FIXME, need to move up to avoid keeping two copies of CUDA fields on GPU
     struct psc_mfields *flds_old =
       psc_mfields_get_as(flds_base_old, ops->mflds_type, flds_base_old->first_comp,
 			 flds_base_old->first_comp + flds_base_old->nr_fields);
+    if (flds_old != flds_base_old) { 
+      psc_mfields_destroy(flds_base_old);
+    }
+
     struct psc_mfields *flds_new =
       psc_mfields_get_as(flds_base_new, ops->mflds_type, 0, 0);
     psc_balance_communicate_fields(bal, ctx, flds_old, flds_new);
-    psc_mfields_put_as(flds_old, flds_base_old, 0, 0);
     psc_mfields_put_as(flds_new, flds_base_new, flds_base_new->first_comp,
 		       flds_base_new->first_comp + flds_base_new->nr_fields);
 
-    psc_mfields_destroy(*p->flds_p);
+    if (flds_old == flds_base_old) {
+      psc_mfields_put_as(flds_old, flds_base_old, 0, 0);
+      psc_mfields_destroy(flds_base_old);
+    }
     *p->flds_p = flds_base_new;
   }
 
@@ -731,6 +738,8 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
 
   prof_start(pr_bal_prts_B);
   // alloc new particles
+  struct psc_balance_ops *ops = psc_balance_ops(bal);
+
   mparticles_base_t *mprts_base_new = 
     psc_mparticles_create(mrc_domain_comm(domain_new));
   psc_mparticles_set_type(mprts_base_new, psc->prm.particles_base);
@@ -739,14 +748,17 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   unsigned int mp_flags;
   psc_mparticles_get_param_int(psc->particles, "flags", (int *) &mp_flags);
   psc_mparticles_set_param_int(mprts_base_new, "flags", mp_flags);
+
+  struct psc_mparticles *mprts_old = psc_mparticles_get_as(psc->particles, ops->mprts_type, 0);
+  if (mprts_old != psc->particles) { // FIXME hacky: destroy old particles early if we just got a copy
+    psc_mparticles_destroy(psc->particles);
+  }
+
   prof_start(pr_bal_prts_B1);
   psc_mparticles_setup(mprts_base_new);
   prof_stop(pr_bal_prts_B1);
 
-  struct psc_balance_ops *ops = psc_balance_ops(bal);
-
   struct psc_mparticles *mprts_new = psc_mparticles_get_as(mprts_base_new, ops->mprts_type, MP_DONT_COPY);
-  struct psc_mparticles *mprts_old = psc_mparticles_get_as(psc->particles, ops->mprts_type, 0);
   prof_stop(pr_bal_prts_B);
     
   // communicate particles
@@ -755,11 +767,13 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   prof_start(pr_bal_prts_C);
   free(nr_particles_by_patch);
 
-  psc_mparticles_put_as(mprts_old, psc->particles, MP_DONT_COPY);
   psc_mparticles_put_as(mprts_new, mprts_base_new, 0);
+  psc_mparticles_put_as(mprts_old, psc->particles, MP_DONT_COPY);
 
+  if (mprts_old == psc->particles) {
+    psc_mparticles_destroy(psc->particles);
+  }
   // replace particles by redistributed ones
-  psc_mparticles_destroy(psc->particles);
   psc->particles = mprts_base_new;
   prof_stop(pr_bal_prts_C);
 
@@ -867,6 +881,15 @@ _psc_balance_read(struct psc_balance *bal, struct mrc_io *io)
 }
 
 // ----------------------------------------------------------------------
+// _psc_balance_destroy
+
+static void
+_psc_balance_destroy(struct psc_balance *bal)
+{
+  free(psc_balance_comp_time_by_patch);
+}
+
+// ----------------------------------------------------------------------
 // psc_balance_init
 
 static void
@@ -895,6 +918,7 @@ struct mrc_class_psc_balance mrc_class_psc_balance = {
   .size             = sizeof(struct psc_balance),
   .param_descr      = psc_balance_descr,
   .init             = psc_balance_init,
+  .destroy          = _psc_balance_destroy,
   .read             = _psc_balance_read,
 };
 
