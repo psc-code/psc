@@ -23,7 +23,7 @@ setup_mrc_fld_1d(struct mrc_fld *f, struct mrc_fld *f_tmpl, int nr_comps)
 {
   int size = 0;
   for (int d = 0; d < 3; d++) {
-    size = MAX(size, mrc_fld_ghost_dims(f_tmpl)[d + 1]);
+    size = MAX(size, mrc_fld_spatial_dims(f_tmpl)[d] + 2 * f_tmpl->_nr_ghosts);
   }
 
   mrc_fld_set_type(f, mrc_fld_type(f_tmpl));
