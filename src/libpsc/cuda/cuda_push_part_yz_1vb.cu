@@ -2,6 +2,9 @@
 #include "psc_cuda.h"
 #include "particles_cuda.h"
 
+#undef THREADS_PER_BLOCK
+#define THREADS_PER_BLOCK (512)
+
 enum IP {
   IP_STD, // standard interpolation
   IP_EC,  // energy-conserving interpolation
