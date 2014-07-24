@@ -29,12 +29,21 @@ fld_create(struct psc *psc, int nr_fields)
 void
 psc_calc_rho(struct psc *psc, struct psc_mparticles *mprts, struct psc_mfields *rho)
 {
+  // FIXME, output_fields should be taking care of this?
+  struct psc_bnd *bnd = psc_bnd_create(psc_comm(psc));
+  psc_bnd_set_name(bnd, "psc_output_fields_bnd_calc_rho");
+  psc_bnd_set_type(bnd, "c");
+  psc_bnd_set_psc(bnd, psc);
+  psc_bnd_setup(bnd);
+
   struct psc_output_fields_item *item = psc_output_fields_item_create(psc_comm(psc));
   psc_output_fields_item_set_type(item, "rho_1st_nc_double");
-  psc_output_fields_item_set_psc_bnd(item, psc->bnd);
+  psc_output_fields_item_set_psc_bnd(item, bnd);
   psc_output_fields_item_setup(item);
   psc_output_fields_item_run(item, psc->flds, mprts, rho);
   psc_output_fields_item_destroy(item);
+
+  psc_bnd_destroy(bnd);
 }
 
 // ======================================================================
