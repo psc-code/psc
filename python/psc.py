@@ -78,6 +78,10 @@ class PscFields:
         hx, hy, hz = self["hx"], self["hy"], self["hz"]
         ex, ey, ez = self["ex"], self["ey"], self["ez"]
         return (ex * hx + ey * hy + ez * hz) * (hx**2 + hy**2 + hz**2)**-.5
+
+    def _get_h_tot(self):
+        hx, hy, hz = self["hx"], self["hy"], self["hz"]
+        return (hx**2 + hy**2 + hz**2) ** .5
         
     def _get_psi(flds):
         hz, hy = flds["hz"], flds["hy"]
