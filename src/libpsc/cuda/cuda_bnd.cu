@@ -265,13 +265,20 @@ conducting_wall_J_y(real *d_flds)
   if (lo) {
     F3_DEV(JYI, 0, 0,iz) -= F3_DEV(JYI, 0,-1,iz);
     F3_DEV(JYI, 0,-1,iz) = 0.;
+    F3_DEV(JXI, 0, 1,iz) += F3_DEV(JXI, 0,-1,iz);
+    F3_DEV(JXI, 0,-1,iz) = 0.;
+    F3_DEV(JZI, 0, 1,iz) += F3_DEV(JZI, 0,-1,iz);
+    F3_DEV(JZI, 0,-1,iz) = 0.;
   }
 
   if (hi) {
     F3_DEV(JYI, 0,my-1,iz) -= F3_DEV(JYI, 0,my,iz);
     F3_DEV(JYI, 0,my  ,iz) = 0.;
+    F3_DEV(JXI, 0,my-1,iz) += F3_DEV(JXI, 0,my+1,iz);
+    F3_DEV(JXI, 0,my+1,iz) = 0.;
+    F3_DEV(JZI, 0,my-1,iz) += F3_DEV(JZI, 0,my+1,iz);
+    F3_DEV(JZI, 0,my+1,iz) = 0.;
   }
-  // FIXME, JXI/JZI?
 }
 
 template<bool lo, bool hi>
