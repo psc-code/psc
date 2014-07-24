@@ -105,8 +105,6 @@ find_idx_off_pos_1st(const real xi[3], int j[3], real h[3], real pos[3], real sh
 #define NO_CHECKERBOARD
 //#define DEBUG
 
-#define SW (2)
-
 #include "cuda_common.h"
 
 static __constant__ __device__ float c_dqs[4]; // FIXME hardcoded
@@ -421,13 +419,16 @@ cache_fields(struct cuda_params prm, float *fld_cache, float *d_flds0, int size,
 
 // OPT: don't need as many ghost points for current and EM fields (?)
 
+#define BND_CURR_L (1)
+#define BND_CURR_R (2)
+
 #define NR_CBLOCKS 16
 #define CBLOCK_ID (threadIdx.x & (NR_CBLOCKS - 1))
-#define CBLOCK_SIZE_Y (BLOCKSIZE_Y + 2*SW)
-#define CBLOCK_SIZE_Z (BLOCKSIZE_Z + 2*SW)
+#define CBLOCK_SIZE_Y (BLOCKSIZE_Y + BND_CURR_L + BND_CURR_R)
+#define CBLOCK_SIZE_Z (BLOCKSIZE_Z + BND_CURR_L + BND_CURR_R)
 #define CBLOCK_SIZE (CBLOCK_SIZE_Y * CBLOCK_SIZE_Z * (NR_CBLOCKS))
 
-#define CBLOCK_OFF(jy, jz, wid) ((((jz) + SW) * CBLOCK_SIZE_Y + ((jy) + SW)) * (NR_CBLOCKS) + wid)
+#define CBLOCK_OFF(jy, jz, wid) ((((jz) + BND_CURR_L) * CBLOCK_SIZE_Y + ((jy) + BND_CURR_L)) * (NR_CBLOCKS) + wid)
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 class SCurr {
@@ -451,14 +452,14 @@ public:
   __device__ void add_to_fld(real *d_flds, int m, struct cuda_params prm, int *ci0)
   {
     int i = threadIdx.x;
-    int stride = (BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Z + 2*SW);
+    int stride = (BLOCKSIZE_Y + BND_CURR_L + BND_CURR_R) * (BLOCKSIZE_Z + BND_CURR_L + BND_CURR_R);
     while (i < stride) {
       int rem = i;
-      int jz = rem / (BLOCKSIZE_Y + 2*SW);
-      rem -= jz * (BLOCKSIZE_Y + 2*SW);
+      int jz = rem / (BLOCKSIZE_Y + BND_CURR_L + BND_CURR_R);
+      rem -= jz * (BLOCKSIZE_Y + BND_CURR_L + BND_CURR_R);
       int jy = rem;
-      jz -= SW;
-      jy -= SW;
+      jz -= BND_CURR_L;
+      jy -= BND_CURR_L;
       real val = real(0.);
       // FIXME, OPT
       for (int wid = 0; wid < NR_CBLOCKS; wid++) {
