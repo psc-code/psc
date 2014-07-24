@@ -7,6 +7,13 @@
 
 #include <mrc_io.h>
 
+// FIXME, duplicated
+
+#define define_dxdydz(dx, dy, dz)					\
+  int dx _mrc_unused = (ppsc->domain.gdims[0] == 1) ? 0 : 1;		\
+  int dy _mrc_unused = (ppsc->domain.gdims[1] == 1) ? 0 : 1;		\
+  int dz _mrc_unused = (ppsc->domain.gdims[2] == 1) ? 0 : 1
+
 // ----------------------------------------------------------------------
 // FIXME, should be consolidated?
 
@@ -57,6 +64,7 @@ psc_calc_rho(struct psc *psc, struct psc_mparticles *mprts, struct psc_mfields *
 static void
 do_calc_div_j(struct psc *psc, int p, struct psc_fields *flds_base, struct psc_fields *div_j)
 {
+  define_dxdydz(dx, dy, dz);
   fields_real_t h[3];
   for (int d = 0; d < 3; d++) {
     if (psc->domain.gdims[d] == 1) {
@@ -67,12 +75,12 @@ do_calc_div_j(struct psc *psc, int p, struct psc_fields *flds_base, struct psc_f
   }
 
   struct psc_fields *flds = psc_fields_get_as(flds_base, FIELDS_TYPE, JXI, JXI + 3);
-  psc_foreach_3d_g(psc, p, jx, jy, jz) {
+  psc_foreach_3d(psc, p, jx, jy, jz, 0, 0) {
     F3(div_j,0, jx,jy,jz) =
-      (F3(flds,JXI, jx,jy,jz) - F3(flds,JXI, jx-1,jy,jz)) * h[0] +
-      (F3(flds,JYI, jx,jy,jz) - F3(flds,JYI, jx,jy-1,jz)) * h[1] +
-      (F3(flds,JZI, jx,jy,jz) - F3(flds,JZI, jx,jy,jz-1)) * h[2];
-  } psc_foreach_3d_g_end;
+      (F3(flds,JXI, jx,jy,jz) - F3(flds,JXI, jx-dx,jy,jz)) * h[0] +
+      (F3(flds,JYI, jx,jy,jz) - F3(flds,JYI, jx,jy-dy,jz)) * h[1] +
+      (F3(flds,JZI, jx,jy,jz) - F3(flds,JZI, jx,jy,jz-dz)) * h[2];
+  } psc_foreach_3d_end;
   psc_fields_put_as(flds, flds_base, 0, 0);
 }
 
