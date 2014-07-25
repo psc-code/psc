@@ -138,7 +138,7 @@ psi(struct psc *psc, double x[3])
   double *length = psc->domain.length;
 
   double val = -lambda * B0 * log(cosh(x[1] / lambda) + eps * cos(x[2] / lambda));
-  val += pert * length[2] / (2. * M_PI) * cos(M_PI * x[1] / length[1]) * cos(2. * M_PI * x[2] / length[2]);
+  val += pert * B0 * length[2] / (2. * M_PI) * cos(M_PI * x[1] / length[1]) * cos(2. * M_PI * x[2] / length[2]);
   return val;
 }
 
@@ -148,13 +148,13 @@ psi(struct psc *psc, double x[3])
 static double
 psc_island_coalescence_init_field(struct psc *psc, double x[3], int m)
 {
-  double dy = 1e-7, dz = 1e-7;
+  double dy = psc->patch[0].dx[1], dz = psc->patch[0].dx[2];
 
   switch (m) {
-  case HY: return - (psi(psc, (double[3]) { x[0], x[1], x[2] + dz }) - 
-		     psi(psc, (double[3]) { x[0], x[1], x[2] - dz })) / (2.*dz);
-  case HZ: return   (psi(psc, (double[3]) { x[0], x[1] + dy, x[2] }) - 
-		     psi(psc, (double[3]) { x[0], x[1] - dy, x[2] })) / (2.*dy);
+  case HY: return - (psi(psc, (double[3]) { x[0], x[1], x[2] + .5 * dz }) - 
+		     psi(psc, (double[3]) { x[0], x[1], x[2] - .5 * dz })) / dz;
+  case HZ: return   (psi(psc, (double[3]) { x[0], x[1] + .5 * dy, x[2] }) - 
+		     psi(psc, (double[3]) { x[0], x[1] - .5 * dy, x[2] })) / dy;
   default: return 0.;
   }
 }
