@@ -17,6 +17,9 @@ struct psc_checks {
   double gauss_threshold; // acceptable error in Gauss's Law
   bool gauss_verbose;     // always print Gauss's Law error, even if acceptable
   bool gauss_dump_always; // always dump E, div_rho, even if acceptable
+
+  // state
+  struct psc_mfields *rho_m, *rho_p;
 };
 
 #endif

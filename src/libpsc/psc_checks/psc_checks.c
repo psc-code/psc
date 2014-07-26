@@ -155,8 +155,6 @@ psc_checks_continuity(struct psc_checks *checks, struct psc *psc,
   psc_mfields_destroy(d_rho);
 }
 
-static struct psc_mfields *rho_m, *rho_p;
-
 // ----------------------------------------------------------------------
 // psc_checks_continuity_before_particle_push
 
@@ -168,11 +166,7 @@ psc_checks_continuity_before_particle_push(struct psc_checks *checks, struct psc
     return;
   }
 
-  if (!rho_m) {
-    rho_m = fld_create(psc, 1);
-    rho_p = fld_create(psc, 1);
-  }
-  psc_calc_rho(psc, psc->particles, rho_m);
+  psc_calc_rho(psc, psc->particles, checks->rho_m);
 }
 
 // ----------------------------------------------------------------------
@@ -186,8 +180,8 @@ psc_checks_continuity_after_particle_push(struct psc_checks *checks, struct psc 
     return;
   }
 
-  psc_calc_rho(psc, psc->particles, rho_p);
-  psc_checks_continuity(checks, psc, rho_m, rho_p);
+  psc_calc_rho(psc, psc->particles, checks->rho_p);
+  psc_checks_continuity(checks, psc, checks->rho_m, checks->rho_p);
 }
 
 // ======================================================================
@@ -286,6 +280,27 @@ psc_checks_gauss(struct psc_checks *checks, struct psc *psc)
 }
 
 // ----------------------------------------------------------------------
+// psc_checks_setup
+
+static void
+_psc_checks_setup(struct psc_checks *checks)
+{
+  psc_mfields_set_type(checks->rho_m, FIELDS_TYPE);
+  psc_mfields_set_domain(checks->rho_m, ppsc->mrc_domain);
+  psc_mfields_set_param_int3(checks->rho_m, "ibn", ppsc->ibn);
+  psc_mfields_set_param_int(checks->rho_m, "nr_fields", 1);
+  psc_mfields_list_add(&psc_mfields_base_list, &checks->rho_m);
+
+  psc_mfields_set_type(checks->rho_p, FIELDS_TYPE);
+  psc_mfields_set_domain(checks->rho_p, ppsc->mrc_domain);
+  psc_mfields_set_param_int3(checks->rho_p, "ibn", ppsc->ibn);
+  psc_mfields_set_param_int(checks->rho_p, "nr_fields", 1);
+  psc_mfields_list_add(&psc_mfields_base_list, &checks->rho_p);
+
+  psc_checks_setup_member_objs(checks);
+}
+
+// ----------------------------------------------------------------------
 // psc_checks_descr
 
 #define VAR(x) (void *)offsetof(struct psc_checks, x)
@@ -301,6 +316,8 @@ static struct param psc_checks_descr[] = {
   { "gauss_verbose"         , VAR(gauss_verbose)         , PARAM_BOOL(false)   },
   { "gauss_dump_always"     , VAR(gauss_dump_always)     , PARAM_BOOL(false)   },
 
+  { "rho_m"                 , VAR(rho_m)                 , MRC_VAR_OBJ(psc_mfields) },
+  { "rho_p"                 , VAR(rho_p)                 , MRC_VAR_OBJ(psc_mfields) },
   {},
 };
 
@@ -313,5 +330,6 @@ struct mrc_class_psc_checks mrc_class_psc_checks = {
   .name             = "psc_checks",
   .size             = sizeof(struct psc_checks),
   .param_descr      = psc_checks_descr,
+  .setup            = _psc_checks_setup,
 };
 
