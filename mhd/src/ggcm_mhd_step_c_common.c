@@ -9,6 +9,8 @@
 
 #include <math.h>
 
+#include "mhd_sc.c"
+
 // TODO:
 // - handle various resistivity models
 // - handle limit2, limit3
@@ -734,7 +736,10 @@ pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_prev, int m_curr, int
 static void
 ggcm_mhd_step_c_newstep(struct ggcm_mhd_step *step, float *dtn)
 {
-  newstep(step->mhd, dtn);
+  struct ggcm_mhd *mhd = step->mhd;
+
+  ggcm_mhd_fill_ghosts(mhd, mhd->fld, _RR1, mhd->time);
+  newstep_c2(mhd, dtn);
 }
 
 // ----------------------------------------------------------------------

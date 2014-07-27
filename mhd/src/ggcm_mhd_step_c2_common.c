@@ -8,6 +8,7 @@
 #include <mrc_profile.h>
 
 #include <math.h>
+#include <string.h>
 
 #include "mhd_sc.c"
 
@@ -736,7 +737,12 @@ pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_prev, int m_curr, int
 static void
 ggcm_mhd_step_c_newstep(struct ggcm_mhd_step *step, float *dtn)
 {
-  newstep(step->mhd, dtn);
+  struct ggcm_mhd *mhd = step->mhd;
+
+  ggcm_mhd_fill_ghosts(mhd, mhd->fld, _RR1, mhd->time);
+  zmaskn(mhd, mhd->fld);
+  assert(strcmp(mrc_fld_type(mhd->fld), "float") == 0);
+  *dtn = newstep_sc(mhd, mhd->fld);
 }
 
 // ----------------------------------------------------------------------
