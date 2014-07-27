@@ -41,6 +41,5 @@ ggcm_mhd_box_create(struct ggcm_mhd *mhd)
 struct ggcm_mhd_ops ggcm_mhd_ops_box = {
   .name      = "box",
   .create    = ggcm_mhd_box_create,
-  //  .newstep   = ggcm_mhd_fortran_newstep,
 };
 

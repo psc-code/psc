@@ -38,7 +38,6 @@ libmhd_la_SOURCES = \
 	zmaskn.c \
 	zmaskn_float.c \
 	zmaskn_double.c \
-	ggcm_mhd_newstep.c \
 	ggcm_mhd_diag_item_divb.c \
 	ggcm_mhd_diag_item_j.c \
 	calc_currcc.c \
