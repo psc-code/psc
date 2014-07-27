@@ -124,65 +124,11 @@ ggcm_mhd_convert_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_base)
 
 // ======================================================================
 
-static void
-copy_sc_ggcm_to_sc_float(struct mrc_fld *_ff, struct mrc_fld *_f)
-{
-  struct mrc_fld *f = mrc_fld_get_as(_f, "float");
-  struct mrc_fld *ff = mrc_fld_get_as(_ff, "float");
+void copy_sc_ggcm_to_sc_float(struct mrc_fld *_ff, struct mrc_fld *_f);
+void copy_sc_to_sc_ggcm_float(struct mrc_fld *_ff, struct mrc_fld *_f);
 
-  for (int m = 0; m < _NR_FLDS; m++) {
-    if (m == _B1X || m == _B2X) {
-      mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
-	MRC_F3(f, m, ix,iy,iz) = MRC_F3(ff, m, ix-1,iy,iz);
-      } mrc_fld_foreach_end;
-    } else if (m == _B1Y || m == _B2Y) {
-      mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
-	MRC_F3(f, m, ix,iy,iz) = MRC_F3(ff, m, ix,iy-1,iz);
-      } mrc_fld_foreach_end;
-    } else if (m == _B1Z || m == _B2Z) {
-      mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
-	MRC_F3(f, m, ix,iy,iz) = MRC_F3(ff, m, ix,iy,iz-1);
-      } mrc_fld_foreach_end;
-    } else {
-      mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
-	MRC_F3(f, m, ix,iy,iz) = MRC_F3(ff, m, ix,iy,iz);
-      } mrc_fld_foreach_end;
-    }
-  }
-
-  mrc_fld_put_as(f, _f);
-  mrc_fld_put_as(ff, _ff);
-}
-
-static void
-copy_sc_to_sc_ggcm_float(struct mrc_fld *_f, struct mrc_fld *_ff)
-{
-  struct mrc_fld *f = mrc_fld_get_as(_f, "float");
-  struct mrc_fld *ff = mrc_fld_get_as(_ff, "float");
-
-  for (int m = 0; m < _NR_FLDS; m++) {
-    if (m == _B1X || m == _B2X) {
-      mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
-	MRC_F3(ff, m, ix,iy,iz) = MRC_F3(f, m, ix+1,iy,iz);
-      } mrc_fld_foreach_end;
-    } else if (m == _B1Y || m == _B2Y) {
-      mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
-	MRC_F3(ff, m, ix,iy,iz) = MRC_F3(f, m, ix,iy+1,iz);
-      } mrc_fld_foreach_end;
-    } else if (m == _B1Z || m == _B2Z) {
-      mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
-	MRC_F3(ff, m, ix,iy,iz) = MRC_F3(f, m, ix,iy,iz+1);
-      } mrc_fld_foreach_end;
-    } else {
-      mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
-	MRC_F3(ff, m, ix,iy,iz) = MRC_F3(f, m, ix,iy,iz);
-      } mrc_fld_foreach_end;
-    }
-  }
-
-  mrc_fld_put_as(f, _f);
-  mrc_fld_put_as(ff, _ff);
-}
+void copy_sc_ggcm_to_sc_double(struct mrc_fld *_ff, struct mrc_fld *_f);
+void copy_sc_to_sc_ggcm_double(struct mrc_fld *_ff, struct mrc_fld *_f);
 
 // ----------------------------------------------------------------------
 // ggcm_mhd_fld_get_as
@@ -225,6 +171,8 @@ ggcm_mhd_fld_get_as(struct mrc_fld *fld_base, const char *type,
   } else if (mhd_type_base == MT_SEMI_CONSERVATIVE && mhd_type == MT_SEMI_CONSERVATIVE_GGCM) {
     if (strcmp(type, "float") == 0) {
       copy_sc_to_sc_ggcm_float(fld, fld2);
+    } else if (strcmp(type, "double") == 0) {
+      copy_sc_to_sc_ggcm_double(fld, fld2);
     } else {
       assert(0);
     }
@@ -258,6 +206,8 @@ ggcm_mhd_fld_put_as(struct mrc_fld *fld, struct mrc_fld *fld_base)
   if (mhd_type_base == MT_SEMI_CONSERVATIVE && mhd_type == MT_SEMI_CONSERVATIVE_GGCM) {
     if (strcmp(mrc_fld_type(fld), "float") == 0) {
       copy_sc_ggcm_to_sc_float(fld, fld_base);
+    } else if (strcmp(mrc_fld_type(fld), "double") == 0) {
+      copy_sc_ggcm_to_sc_double(fld, fld_base);
     } else {
       assert(0);
     }
