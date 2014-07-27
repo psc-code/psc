@@ -128,11 +128,15 @@ void copy_sc_ggcm_to_sc_float(struct mrc_fld *_ff, struct mrc_fld *_f);
 void copy_sc_ggcm_to_fc_float(struct mrc_fld *_ff, struct mrc_fld *_f);
 void copy_sc_to_sc_ggcm_float(struct mrc_fld *_ff, struct mrc_fld *_f);
 void copy_fc_to_sc_ggcm_float(struct mrc_fld *_ff, struct mrc_fld *_f);
+void copy_fc_to_sc_float(struct mrc_fld *_ff, struct mrc_fld *_f);
+void copy_sc_to_fc_float(struct mrc_fld *_ff, struct mrc_fld *_f);
 
 void copy_sc_ggcm_to_sc_double(struct mrc_fld *_ff, struct mrc_fld *_f);
 void copy_sc_ggcm_to_fc_double(struct mrc_fld *_ff, struct mrc_fld *_f);
 void copy_sc_to_sc_ggcm_double(struct mrc_fld *_ff, struct mrc_fld *_f);
 void copy_fc_to_sc_ggcm_double(struct mrc_fld *_ff, struct mrc_fld *_f);
+void copy_fc_to_sc_double(struct mrc_fld *_ff, struct mrc_fld *_f);
+void copy_sc_to_fc_double(struct mrc_fld *_ff, struct mrc_fld *_f);
 
 // ----------------------------------------------------------------------
 // ggcm_mhd_fld_get_as
@@ -192,6 +196,16 @@ ggcm_mhd_fld_get_as(struct mrc_fld *fld_base, const char *type,
     }
     mrc_fld_put_as(fld, fld_base);
     return fld2;
+  } else if (mhd_type_base == MT_FULLY_CONSERVATIVE && mhd_type == MT_SEMI_CONSERVATIVE) {
+    if (strcmp(type, "float") == 0) {
+      copy_fc_to_sc_float(fld, fld2);
+    } else if (strcmp(type, "double") == 0) {
+      copy_fc_to_sc_double(fld, fld2);
+    } else {
+      assert(0);
+    }
+    mrc_fld_put_as(fld, fld_base);
+    return fld2;
   } else {
     mprintf("ggcm_mhd_fld_get_as %d -> %d\n", mhd_type_base, mhd_type);
     assert(0);
@@ -231,6 +245,15 @@ ggcm_mhd_fld_put_as(struct mrc_fld *fld, struct mrc_fld *fld_base)
       copy_sc_ggcm_to_fc_float(fld, fld_base);
     } else if (strcmp(mrc_fld_type(fld), "double") == 0) {
       copy_sc_ggcm_to_fc_double(fld, fld_base);
+    } else {
+      assert(0);
+    }
+    mrc_fld_destroy(fld);
+  } else if (mhd_type_base == MT_FULLY_CONSERVATIVE && mhd_type == MT_SEMI_CONSERVATIVE) {
+    if (strcmp(mrc_fld_type(fld), "float") == 0) {
+      copy_sc_to_fc_float(fld, fld_base);
+    } else if (strcmp(mrc_fld_type(fld), "double") == 0) {
+      copy_sc_to_fc_double(fld, fld_base);
     } else {
       assert(0);
     }
