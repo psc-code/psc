@@ -64,7 +64,8 @@ ggcm_mhd_step_run_predcorr(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
   float dtn;
   if (step->do_nwst) {
-    newstep(mhd, &dtn);
+    assert(ops && ops->newstep);
+    ops->newstep(step, &dtn);
   }
 
   ggcm_mhd_fill_ghosts(mhd, x, _RR1, mhd->time);

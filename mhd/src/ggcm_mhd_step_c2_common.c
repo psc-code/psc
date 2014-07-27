@@ -731,6 +731,15 @@ pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_prev, int m_curr, int
 // ie., including primvar() etc.
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_step_c_newstep
+
+static void
+ggcm_mhd_step_c_newstep(struct ggcm_mhd_step *step, float *dtn)
+{
+  newstep(step->mhd, dtn);
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_step_c_pred
 
 static void
