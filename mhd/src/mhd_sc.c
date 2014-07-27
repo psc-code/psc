@@ -74,7 +74,7 @@ newstep_c2(struct ggcm_mhd *mhd, float *dtn)
   }
   prof_start(PR);
 
-  struct mrc_fld *f = mrc_fld_get_as(mhd->fld, "float");
+  struct mrc_fld *f = mhd->fld;
   float *fd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FD1);
   float *fd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FD1);
   float *fd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FD1);
@@ -97,22 +97,22 @@ newstep_c2(struct ggcm_mhd *mhd, float *dtn)
   bool have_hall = d_i > 0.f;
   mrc_fld_foreach(f, ix, iy, iz, 0, 0) {
     float hh = fmaxf(fmaxf(fd1x[ix], fd1y[iy]), fd1z[iz]);
-    float rri = 1.f / fabsf(MRC_F3(f,_RR1, ix,iy,iz)); // FIXME abs necessary?
+    float rri = 1.f / fabsf(F3(f,_RR1, ix,iy,iz)); // FIXME abs necessary?
     float bb = 
-      sqr(.5f*(MRC_F3(f,_B1X, ix,iy,iz)+MRC_F3(f,_B1X, ix-1,iy,iz))) + 
-      sqr(.5f*(MRC_F3(f,_B1Y, ix,iy,iz)+MRC_F3(f,_B1Y, ix,iy-1,iz))) +
-      sqr(.5f*(MRC_F3(f,_B1Z, ix,iy,iz)+MRC_F3(f,_B1Z, ix,iy,iz-1)));
+      sqr(.5f*(F3(f,_B1X, ix,iy,iz)+F3(f,_B1X, ix-1,iy,iz))) + 
+      sqr(.5f*(F3(f,_B1Y, ix,iy,iz)+F3(f,_B1Y, ix,iy-1,iz))) +
+      sqr(.5f*(F3(f,_B1Z, ix,iy,iz)+F3(f,_B1Z, ix,iy,iz-1)));
     if (have_hall) {
       bb *= 1 + sqr(two_pi_d_i * hh);
     }
     float vv1 = fminf(bb * rri, splim2);
     
     float rv2 = 
-      sqr(MRC_F3(f,_RV1X, ix,iy,iz)) +
-      sqr(MRC_F3(f,_RV1Y, ix,iy,iz)) +
-      sqr(MRC_F3(f,_RV1Z, ix,iy,iz));
+      sqr(F3(f,_RV1X, ix,iy,iz)) +
+      sqr(F3(f,_RV1Y, ix,iy,iz)) +
+      sqr(F3(f,_RV1Z, ix,iy,iz));
     float rvv = rri * rv2;
-    float pp = s * (MRC_F3(f,_UU1, ix,iy,iz) - .5f * rvv);
+    float pp = s * (F3(f,_UU1, ix,iy,iz) - .5f * rvv);
     float vv2 = gamm * fmaxf(0.f, pp) * rri;
     float vv3 = rri * sqrtf(rv2);
     float vv = sqrtf(vv1 + vv2) + vv3;
@@ -123,7 +123,7 @@ newstep_c2(struct ggcm_mhd *mhd, float *dtn)
       ymask = 0.f;
     
     float rrm = fmaxf(epsz, bb * va02i);
-    float zmask = ymask * fminf(1.f, MRC_F3(f, _RR1, ix,iy,iz) / rrm);
+    float zmask = ymask * fminf(1.f, F3(f, _RR1, ix,iy,iz) / rrm);
     
     float tt = thx / fmaxf(eps, hh*vv*zmask);
     dt = fminf(dt, tt);
