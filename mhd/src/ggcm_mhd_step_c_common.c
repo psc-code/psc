@@ -739,7 +739,7 @@ ggcm_mhd_step_c_newstep(struct ggcm_mhd_step *step, float *dtn)
   struct ggcm_mhd *mhd = step->mhd;
 
   ggcm_mhd_fill_ghosts(mhd, mhd->fld, _RR1, mhd->time);
-  newstep_c2(mhd, dtn);
+  *dtn = newstep_sc_ggcm(mhd, mhd->fld);
 }
 
 // ----------------------------------------------------------------------
