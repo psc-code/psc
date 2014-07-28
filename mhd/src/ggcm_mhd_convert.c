@@ -227,7 +227,7 @@ ggcm_mhd_fld_put_as(struct mrc_fld *fld, struct mrc_fld *fld_base)
   mrc_fld_get_param_int(fld, "mhd_type", &mhd_type);
 
   if (mhd_type == mhd_type_base) {
-    mrc_fld_put_as(fld_base, fld);
+    mrc_fld_put_as(fld, fld_base);
     return;
   }
 
