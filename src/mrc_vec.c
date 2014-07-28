@@ -53,6 +53,10 @@ _mrc_vec_setup(struct mrc_vec *vec)
 {
   if (!vec->with_array) {
     vec->arr = calloc(vec->len, vec->size_of_type);
+
+#ifdef MRC_VEC_INIT_NAN
+    memset(vec->arr, 0xff, vec->len * vec->size_of_type);
+#endif
   }
 }
 
