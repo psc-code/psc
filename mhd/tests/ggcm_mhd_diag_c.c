@@ -199,7 +199,8 @@ ggcm_mhd_diag_c_write_one_field(struct mrc_io *io, struct mrc_fld *_f, int m,
   mrc_fld_set_name(fld, s);
   mrc_fld_setup(fld);
 
-  mrc_fld_foreach(fld, ix,iy,iz, 2, 2) {
+  // ghosts may not be set
+  mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
     F3(fld,0, ix,iy,iz) = scale * F3(f,m, ix,iy,iz);
   } mrc_fld_foreach_end;
 
