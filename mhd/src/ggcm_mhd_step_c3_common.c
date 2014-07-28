@@ -374,7 +374,8 @@ rmaskn_c(struct ggcm_mhd_step *step)
 
   float *fx1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FX1);
 
-  mrc_fld_foreach(masks, i,j,k, 2, 2) {
+  // _ZMASK not set at -2 ghost
+  mrc_fld_foreach(masks, i,j,k, 1, 2) {
     F3(masks, _RMASK, i,j,k) = 0.f;
     mrc_fld_data_t xxx = fx1x[i];
     if (xxx < diff_swbnd)
