@@ -43,6 +43,7 @@ mhd_riemann_init()
   mrc_class_register_subclass(&mrc_class_mhd_riemann, &mhd_riemann_rusanov_float_ops);
   mrc_class_register_subclass(&mrc_class_mhd_riemann, &mhd_riemann_hydro_rusanov_ops);
   mrc_class_register_subclass(&mrc_class_mhd_riemann, &mhd_riemann_hydro_hll_ops); 
+  mrc_class_register_subclass(&mrc_class_mhd_riemann, &mhd_riemann_hydro_hllc_ops);
 }
 
 // ----------------------------------------------------------------------

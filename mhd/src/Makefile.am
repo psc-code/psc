@@ -76,6 +76,7 @@ libmhd_la_SOURCES = \
 	mhd_riemann_rusanov_double.c \
 	mhd_riemann_hydro_rusanov.c \
 	mhd_riemann_hydro_hll.c \
+	mhd_riemann_hydro_hllc.c \
 	mhd_util.c \
 	\
 	mrc_ts_monitor_ggcm.c
