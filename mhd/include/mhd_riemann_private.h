@@ -24,5 +24,6 @@ extern struct mhd_riemann_ops mhd_riemann_rusanov_double_ops;
 extern struct mhd_riemann_ops mhd_riemann_rusanov_float_ops;
 extern struct mhd_riemann_ops mhd_riemann_hlle_ops;
 extern struct mhd_riemann_ops mhd_riemann_hydro_rusanov_ops;
+extern struct mhd_riemann_ops mhd_riemann_hydro_hll_ops;
 
 #endif
