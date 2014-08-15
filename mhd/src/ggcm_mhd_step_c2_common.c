@@ -309,7 +309,7 @@ pushfv_c(struct ggcm_mhd *mhd, int m, mrc_fld_data_t dt, int m_prev, int m_curr,
   if (limit == LIMIT_NONE) {
     fluxl_c(mhd, m_curr + m);
   } else {
-    vgrv(f, _CX, _BX); vgrv(f, _CY, _BY); vgrv(f, _CY, _BY);
+    vgrv(f, _CX, _BX); vgrv(f, _CY, _BY); vgrv(f, _CZ, _BZ);
     limit1_c(f, m_curr + m, mhd->time, mhd->par.timelo, _CX);
     fluxb_c(mhd, m_curr + m);
   }
