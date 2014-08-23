@@ -500,9 +500,9 @@ public:
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static void
-current_add(SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr, int jy, int jz, real val)
+current_add(SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr[3], int m, int jy, int jz, real val)
 {
-  float *addr = &scurr(jy, jz);
+  float *addr = &scurr[m](jy, jz);
   atomicAdd(addr, val);
 }
 
@@ -562,21 +562,21 @@ curr_vb_cell(int i[3], real x[3], real dx[3], real qni_wni,
     if (dx[0] != 0.f) {
       real fnqx = qni_wni * prm.fnqxs;
       real h = (1.f / 12.f) * dx[0] * dx[1] * dx[2];
-      current_add(scurr[0], i[1]  , i[2]  , fnqx * (dx[0] * (.5f - xa[1]) * (.5f - xa[2]) + h));
-      current_add(scurr[0], i[1]+1, i[2]  , fnqx * (dx[0] * (.5f + xa[1]) * (.5f - xa[2]) - h));
-      current_add(scurr[0], i[1]  , i[2]+1, fnqx * (dx[0] * (.5f - xa[1]) * (.5f + xa[2]) + h));
-      current_add(scurr[0], i[1]+1, i[2]+1, fnqx * (dx[0] * (.5f + xa[1]) * (.5f + xa[2]) - h));
+      current_add(scurr, 0, i[1]  , i[2]  , fnqx * (dx[0] * (.5f - xa[1]) * (.5f - xa[2]) + h));
+      current_add(scurr, 0, i[1]+1, i[2]  , fnqx * (dx[0] * (.5f + xa[1]) * (.5f - xa[2]) - h));
+      current_add(scurr, 0, i[1]  , i[2]+1, fnqx * (dx[0] * (.5f - xa[1]) * (.5f + xa[2]) + h));
+      current_add(scurr, 0, i[1]+1, i[2]+1, fnqx * (dx[0] * (.5f + xa[1]) * (.5f + xa[2]) - h));
     }
   }
   if (dx[1] != 0.f) {
     real fnqy = qni_wni * prm.fnqys;
-    current_add(scurr[1], i[1],i[2]  , fnqy * dx[1] * (.5f - xa[2]));
-    current_add(scurr[1], i[1],i[2]+1, fnqy * dx[1] * (.5f + xa[2]));
+    current_add(scurr, 1, i[1],i[2]  , fnqy * dx[1] * (.5f - xa[2]));
+    current_add(scurr, 1, i[1],i[2]+1, fnqy * dx[1] * (.5f + xa[2]));
   }
   if (dx[2] != 0.f) {
     real fnqz = qni_wni * prm.fnqzs;
-    current_add(scurr[2], i[1]  ,i[2], fnqz * dx[2] * (.5f - xa[1]));
-    current_add(scurr[2], i[1]+1,i[2], fnqz * dx[2] * (.5f + xa[1]));
+    current_add(scurr, 2, i[1]  ,i[2], fnqz * dx[2] * (.5f - xa[1]));
+    current_add(scurr, 2, i[1]+1,i[2], fnqz * dx[2] * (.5f + xa[1]));
   }
 }
 
@@ -628,10 +628,10 @@ yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
     lf[1] -= ci0[1];
     lf[2] -= ci0[2];
 
-    current_add(scurr[0], lf[1]  , lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnqx);
-    current_add(scurr[0], lf[1]+1, lf[2]  , (      of[1]) * (1.f - of[2]) * fnqx);
-    current_add(scurr[0], lf[1]  , lf[2]+1, (1.f - of[1]) * (      of[2]) * fnqx);
-    current_add(scurr[0], lf[1]+1, lf[2]+1, (      of[1]) * (      of[2]) * fnqx);
+    current_add(scurr, 0, lf[1]  , lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnqx);
+    current_add(scurr, 0, lf[1]+1, lf[2]  , (      of[1]) * (1.f - of[2]) * fnqx);
+    current_add(scurr, 0, lf[1]  , lf[2]+1, (1.f - of[1]) * (      of[2]) * fnqx);
+    current_add(scurr, 0, lf[1]+1, lf[2]+1, (      of[1]) * (      of[2]) * fnqx);
 
     // x^(n+1.0), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
     push_xi(prt, vxi, .5f * prm.dt);
