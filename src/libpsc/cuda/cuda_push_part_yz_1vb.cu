@@ -428,7 +428,7 @@ cache_fields(struct cuda_params prm, float *fld_cache, float *d_flds0, int size,
 #define CBLOCK_SIZE_Z (BLOCKSIZE_Z + BND_CURR_L + BND_CURR_R)
 #define CBLOCK_SIZE (CBLOCK_SIZE_Y * CBLOCK_SIZE_Z * (NR_CBLOCKS))
 
-#define CBLOCK_OFF(jy, jz, wid) ((((jz) + BND_CURR_L) * CBLOCK_SIZE_Y + ((jy) + BND_CURR_L)) * (NR_CBLOCKS) + wid)
+#define CBLOCK_OFF(jy, jz, m, wid) ((((m) * CBLOCK_SIZE_Z + ((jz) + BND_CURR_L)) * CBLOCK_SIZE_Y + ((jy) + BND_CURR_L)) * (NR_CBLOCKS) + wid)
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 class SCurr {
@@ -443,7 +443,7 @@ public:
   __device__ void zero()
   {
     int i = threadIdx.x;
-    while (i < CBLOCK_SIZE) {
+    while (i < 3 * CBLOCK_SIZE) {
       scurr[i] = real(0.);
       i += THREADS_PER_BLOCK;
     }
@@ -463,32 +463,32 @@ public:
       real val = real(0.);
       // FIXME, OPT
       for (int wid = 0; wid < NR_CBLOCKS; wid++) {
-	val += (*this)(wid, jy, jz);
+	val += (*this)(wid, jy, jz, m);
       }
       F3_DEV_YZ(JXI+m, jy+ci0[1],jz+ci0[2]) += val;
       i += THREADS_PER_BLOCK;
     }
   }
 
-  __device__ real operator()(int wid, int jy, int jz) const
+  __device__ real operator()(int wid, int jy, int jz, int m) const
   {
-    unsigned int off = CBLOCK_OFF(jy, jz, wid);
+    unsigned int off = CBLOCK_OFF(jy, jz, m, wid);
     return scurr[off];
   }
-  __device__ real& operator()(int wid, int jy, int jz)
+  __device__ real& operator()(int wid, int jy, int jz, int m)
   {
-    unsigned int off = CBLOCK_OFF(jy, jz, wid);
+    unsigned int off = CBLOCK_OFF(jy, jz, m, wid);
     return scurr[off];
   }
 
-  __device__ real operator()(int jy, int jz) const
+  __device__ real operator()(int jy, int jz, int m) const
   {
-    return (*this)(CBLOCK_ID, jy, jz);
+    return (*this)(CBLOCK_ID, jy, jz, m);
   }
 
-  __device__ real& operator()(int jy, int jz)
+  __device__ real& operator()(int jy, int jz, int m)
   {
-    return (*this)(CBLOCK_ID, jy, jz);
+    return (*this)(CBLOCK_ID, jy, jz, m);
   }
 };
 
@@ -500,9 +500,9 @@ public:
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static void
-current_add(SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr[3], int m, int jy, int jz, real val)
+current_add(SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr, int m, int jy, int jz, real val)
 {
-  float *addr = &scurr[m](jy, jz);
+  float *addr = &scurr(jy, jz, m);
   atomicAdd(addr, val);
 }
 
@@ -552,7 +552,7 @@ calc_dx1(real dx1[3], real x[3], real dx[3], int off[3])
 template<enum DEPOSIT DEPOSIT, int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static void
 curr_vb_cell(int i[3], real x[3], real dx[3], real qni_wni,
-	     SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr[3],
+	     SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr,
 	     struct cuda_params prm)
 {
   real xa[3] = { 0.,
@@ -601,7 +601,7 @@ curr_vb_cell_upd(int i[3], real x[3], real dx1[3], real dx[3], int off[3])
 template<enum DEPOSIT DEPOSIT, int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static void
 yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
-	  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr[3],
+	  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr,
 	  struct cuda_params prm, int nr_total_blocks, int p_nr,
 	  unsigned int *d_bidx, int bid, int *ci0)
 {
@@ -699,23 +699,18 @@ yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 // ======================================================================
 
 #define DECLARE_AND_ZERO_SCURR						\
-  __shared__ real _scurr[3][CBLOCK_SIZE];				\
+  __shared__ real _scurr[CBLOCK_SIZE*3];				\
 									\
-  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr[3];		\
-  scurr[0].set_shared(_scurr[0]);					\
-  scurr[1].set_shared(_scurr[1]);					\
-  scurr[2].set_shared(_scurr[2]);					\
-									\
-  scurr[0].zero();							\
-  scurr[1].zero();							\
-  scurr[2].zero()
+  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr;			\
+  scurr.set_shared(_scurr);						\
+  scurr.zero();								\
 
 #define SCURR_ADD_TO_FLD						\
   __syncthreads();							\
   real *d_flds = d_flds0 + p * size;					\
-  scurr[0].add_to_fld(d_flds, 0, prm, ci0);				\
-  scurr[1].add_to_fld(d_flds, 1, prm, ci0);	                        \
-  scurr[2].add_to_fld(d_flds, 2, prm, ci0)
+  scurr.add_to_fld(d_flds, 0, prm, ci0);				\
+  scurr.add_to_fld(d_flds, 1, prm, ci0);	                        \
+  scurr.add_to_fld(d_flds, 2, prm, ci0)
 
 #define DECLARE_AND_CACHE_FIELDS					\
   __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)]; \
