@@ -451,8 +451,9 @@ public:
     }
   }
 
-  __device__ void add_to_fld(real *d_flds, int m, struct cuda_params prm, int *ci0)
+  __device__ void add_to_fld(struct cuda_params prm, int *ci0)
   {
+    __syncthreads();				\
     int i = threadIdx.x;
     int stride = (BLOCKSIZE_Y + BND_CURR_L + BND_CURR_R) * (BLOCKSIZE_Z + BND_CURR_L + BND_CURR_R);
     while (i < stride) {
@@ -462,13 +463,15 @@ public:
       int jy = rem;
       jz -= BND_CURR_L;
       jy -= BND_CURR_L;
-      real val = real(0.);
-      // FIXME, OPT
-      for (int wid = 0; wid < NR_CBLOCKS; wid++) {
-	val += (*this)(wid, jy, jz, m);
+      for (int m = 0; m < 3; m++) {
+	real val = real(0.);
+	// FIXME, OPT
+	for (int wid = 0; wid < NR_CBLOCKS; wid++) {
+	  val += (*this)(wid, jy, jz, m);
+	}
+	F3_DEV_YZ(JXI+m, jy+ci0[1],jz+ci0[2]) += val;
+	i += THREADS_PER_BLOCK;
       }
-      F3_DEV_YZ(JXI+m, jy+ci0[1],jz+ci0[2]) += val;
-      i += THREADS_PER_BLOCK;
     }
   }
 
@@ -719,13 +722,6 @@ yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
   scurr.init(_scurr, d_flds0 + p * size);				\
   scurr.zero();								\
 
-#define SCURR_ADD_TO_FLD						\
-  __syncthreads();							\
-  real *d_flds = d_flds0 + p * size;					\
-  scurr.add_to_fld(d_flds, 0, prm, ci0);				\
-  scurr.add_to_fld(d_flds, 1, prm, ci0);	                        \
-  scurr.add_to_fld(d_flds, 2, prm, ci0)
-
 #define DECLARE_AND_CACHE_FIELDS					\
   __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)]; \
   cache_fields<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>			\
@@ -897,7 +893,7 @@ push_mprts_b(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_p
     yz_calc_j<DEPOSIT_VB_2D>(&prt, n, d_xi4, d_pxi4, scurr, prm, nr_total_blocks, p, d_bidx, bid, ci0);
   }
   
-  SCURR_ADD_TO_FLD;
+  scurr.add_to_fld(prm, ci0);
 }
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER, enum IP IP, enum DEPOSIT DEPOSIT>
@@ -930,7 +926,7 @@ push_mprts_ab(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_
     }
   }
   
-  SCURR_ADD_TO_FLD;
+  scurr.add_to_fld(prm, ci0);
 }
 
 // ----------------------------------------------------------------------
