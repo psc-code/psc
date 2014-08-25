@@ -486,19 +486,9 @@ public:
     return scurr[off];
   }
 
-  __device__ real operator()(int jy, int jz, int m) const
-  {
-    return (*this)(CBLOCK_ID, jy, jz, m);
-  }
-
-  __device__ real& operator()(int jy, int jz, int m)
-  {
-    return (*this)(CBLOCK_ID, jy, jz, m);
-  }
-
   __device__ void add(int m, int jy, int jz, float val, struct cuda_params prm, int *ci0)
   {
-    float *addr = &(*this)(jy, jz, m);
+    float *addr = &(*this)(CBLOCK_ID, jy, jz, m);
     atomicAdd(addr, val);
 #if 0
     float *d_flds = scurr.d_flds;
