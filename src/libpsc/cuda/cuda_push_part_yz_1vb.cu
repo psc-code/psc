@@ -433,6 +433,8 @@ cache_fields(struct cuda_params prm, float *fld_cache, float *d_flds0, int size,
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 class SCurr {
 public:
+  static const int shared_size = 3 * CBLOCK_SIZE;
+
   real *scurr;
   real *d_flds;
 
@@ -440,7 +442,7 @@ public:
     scurr(_scurr), d_flds(_d_flds)
   {
     int i = threadIdx.x;
-    while (i < 3 * CBLOCK_SIZE) {
+    while (i < shared_size) {
       scurr[i] = real(0.);
       i += THREADS_PER_BLOCK;
     }
@@ -689,7 +691,7 @@ yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 // ======================================================================
 
 #define DECLARE_AND_ZERO_SCURR						\
-  __shared__ real _scurr[CBLOCK_SIZE*3];				\
+  __shared__ real _scurr[SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>::shared_size]; \
   SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>				\
   scurr(_scurr, d_flds0 + p * size)					\
 
