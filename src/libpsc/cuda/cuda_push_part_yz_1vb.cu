@@ -492,6 +492,12 @@ public:
   {
     return (*this)(CBLOCK_ID, jy, jz, m);
   }
+
+  __device__ void add(int jy, int jz, int m, float val)
+  {
+    float *addr = &(*this)(jy, jz, m);
+    atomicAdd(addr, val);
+  }
 };
 
 // ======================================================================
@@ -505,13 +511,13 @@ __device__ static void
 current_add(SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr,
 	    int m, int jy, int jz, real val, struct cuda_params prm, int *ci0)
 {
-#if 0
-  float *addr = &scurr(jy, jz, m);
+#if 1
+  scurr.add(jy, jz, m, val);
 #else
   float *d_flds = scurr.d_flds;
   float *addr = &F3_DEV_YZ(JXI+m, jy+ci0[1],jz+ci0[2]);
-#endif
   atomicAdd(addr, val);
+#endif
 }
 
 // ----------------------------------------------------------------------
@@ -714,11 +720,11 @@ yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
   scurr.zero();								\
 
 #define SCURR_ADD_TO_FLD						\
-  /*__syncthreads();							\
+  __syncthreads();							\
   real *d_flds = d_flds0 + p * size;					\
   scurr.add_to_fld(d_flds, 0, prm, ci0);				\
   scurr.add_to_fld(d_flds, 1, prm, ci0);	                        \
-  scurr.add_to_fld(d_flds, 2, prm, ci0)*/
+  scurr.add_to_fld(d_flds, 2, prm, ci0)
 
 #define DECLARE_AND_CACHE_FIELDS					\
   __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)]; \
