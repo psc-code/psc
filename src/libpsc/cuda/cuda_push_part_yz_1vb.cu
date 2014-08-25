@@ -419,6 +419,8 @@ cache_fields(struct cuda_params prm, float *fld_cache, float *d_flds0, int size,
 
 // OPT: don't need as many ghost points for current and EM fields (?)
 
+#if 0
+
 #define BND_CURR_L (1)
 #define BND_CURR_R (2)
 
@@ -494,6 +496,34 @@ public:
 #endif
   }
 };
+
+#else
+
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
+class SCurr {
+public:
+  static const int shared_size = 1;
+
+  real *scurr;
+  real *d_flds;
+
+  __device__ SCurr(real *_scurr, real *_d_flds) :
+    scurr(_scurr), d_flds(_d_flds)
+  {
+  }
+
+  __device__ void add_to_fld(struct cuda_params prm, int *ci0)
+  {
+  }
+
+  __device__ void add(int m, int jy, int jz, float val, struct cuda_params prm, int *ci0)
+  {
+    float *addr = &F3_DEV_YZ(JXI+m, jy+ci0[1],jz+ci0[2]);
+    atomicAdd(addr, val);
+  }
+};
+
+#endif
 
 // ======================================================================
 // depositing current
