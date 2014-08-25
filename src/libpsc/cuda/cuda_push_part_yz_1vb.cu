@@ -436,13 +436,8 @@ public:
   real *scurr;
   real *d_flds;
 
-  __device__ void init(real *_scurr, real *_d_flds)
-  {
-    scurr = _scurr;
-    d_flds = _d_flds;
-  }
-
-  __device__ void zero()
+  __device__ SCurr(real *_scurr, real *_d_flds) :
+    scurr(_scurr), d_flds(_d_flds)
   {
     int i = threadIdx.x;
     while (i < 3 * CBLOCK_SIZE) {
@@ -695,10 +690,8 @@ yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 
 #define DECLARE_AND_ZERO_SCURR						\
   __shared__ real _scurr[CBLOCK_SIZE*3];				\
-									\
-  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr;			\
-  scurr.init(_scurr, d_flds0 + p * size);				\
-  scurr.zero();								\
+  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>				\
+  scurr(_scurr, d_flds0 + p * size)					\
 
 #define DECLARE_AND_CACHE_FIELDS					\
   __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)]; \
