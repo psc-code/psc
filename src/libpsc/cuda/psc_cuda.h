@@ -33,6 +33,9 @@ EXTERN_C void yz4x4_1vb_cuda_push_mprts(struct psc_mparticles *mprts, struct psc
 EXTERN_C void yz2x2_1vbec3d_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds);
 EXTERN_C void yz4x4_1vbec3d_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds);
 EXTERN_C void yz8x8_1vbec3d_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds);
+EXTERN_C void yz2x2_1vbec3d_gmem_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds);
+EXTERN_C void yz4x4_1vbec3d_gmem_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds);
+EXTERN_C void yz8x8_1vbec3d_gmem_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds);
 
 EXTERN_C void yz_a_set_constants(struct psc_particles *prts, struct psc_fields *pf);
 EXTERN_C void yz_b_set_constants(struct psc_particles *prts, struct psc_fields *pf);

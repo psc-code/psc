@@ -15,6 +15,11 @@ enum DEPOSIT {
   DEPOSIT_VB_3D,
 };
 
+enum CURRMEM {
+  CURRMEM_SHARED,
+  CURRMEM_GLOBAL,
+};
+
 // OPT: precalc offsets into fld_cache (including ci[])
 // OPT: use more shmem?
 
@@ -419,8 +424,6 @@ cache_fields(struct cuda_params prm, float *fld_cache, float *d_flds0, int size,
 
 // OPT: don't need as many ghost points for current and EM fields (?)
 
-#if 0
-
 #define BND_CURR_L (1)
 #define BND_CURR_R (2)
 
@@ -489,25 +492,18 @@ public:
   {
     float *addr = &(*this)(CBLOCK_ID, jy, jz, m);
     atomicAdd(addr, val);
-#if 0
-    float *d_flds = scurr.d_flds;
-    float *addr = &F3_DEV_YZ(JXI+m, jy+ci0[1],jz+ci0[2]);
-    atomicAdd(addr, val);
-#endif
   }
 };
 
-#else
-
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
-class SCurr {
+class GCurr {
 public:
   static const int shared_size = 1;
 
   real *scurr;
   real *d_flds;
 
-  __device__ SCurr(real *_scurr, real *_d_flds) :
+  __device__ GCurr(real *_scurr, real *_d_flds) :
     scurr(_scurr), d_flds(_d_flds)
   {
   }
@@ -522,8 +518,6 @@ public:
     atomicAdd(addr, val);
   }
 };
-
-#endif
 
 // ======================================================================
 // depositing current
@@ -571,11 +565,10 @@ calc_dx1(real dx1[3], real x[3], real dx[3], int off[3])
 // ----------------------------------------------------------------------
 // curr_vb_cell
 
-template<enum DEPOSIT DEPOSIT, int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
+template<enum DEPOSIT DEPOSIT, class CURR>
 __device__ static void
 curr_vb_cell(int i[3], real x[3], real dx[3], real qni_wni,
-	     SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr,
-	     struct cuda_params prm, int *ci0)
+	     CURR &scurr, struct cuda_params prm, int *ci0)
 {
   real xa[3] = { 0.,
 		 x[1] + .5f * dx[1],
@@ -620,10 +613,10 @@ curr_vb_cell_upd(int i[3], real x[3], real dx1[3], real dx[3], int off[3])
 // ----------------------------------------------------------------------
 // yz_calc_j
 
-template<enum DEPOSIT DEPOSIT, int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
+template<enum DEPOSIT DEPOSIT, class CURR>
 __device__ static void
 yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
-	  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr,
+	  CURR &scurr,
 	  struct cuda_params prm, int nr_total_blocks, int p_nr,
 	  unsigned int *d_bidx, int bid, int *ci0)
 {
@@ -706,24 +699,23 @@ yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 
   real dx1[3];
   calc_dx1(dx1, x, dx, off);
-  curr_vb_cell<DEPOSIT>(i, x, dx1, prt->qni_wni, scurr, prm, ci0);
+  curr_vb_cell<DEPOSIT, CURR>(i, x, dx1, prt->qni_wni, scurr, prm, ci0);
   curr_vb_cell_upd(i, x, dx1, dx, off);
   
   off[1] = idiff[1] - off[1];
   off[2] = idiff[2] - off[2];
   calc_dx1(dx1, x, dx, off);
-  curr_vb_cell<DEPOSIT>(i, x, dx1, prt->qni_wni, scurr, prm, ci0);
+  curr_vb_cell<DEPOSIT, CURR>(i, x, dx1, prt->qni_wni, scurr, prm, ci0);
   curr_vb_cell_upd(i, x, dx1, dx, off);
     
-  curr_vb_cell<DEPOSIT>(i, x, dx, prt->qni_wni, scurr, prm, ci0);
+  curr_vb_cell<DEPOSIT, CURR>(i, x, dx, prt->qni_wni, scurr, prm, ci0);
 }
 
 // ======================================================================
 
 #define DECLARE_AND_ZERO_SCURR						\
-  __shared__ real _scurr[SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>::shared_size]; \
-  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>				\
-  scurr(_scurr, d_flds0 + p * size)					\
+  __shared__ real _scurr[CURR::shared_size];				\
+  CURR scurr(_scurr, d_flds0 + p * size)				\
 
 #define DECLARE_AND_CACHE_FIELDS					\
   __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)]; \
@@ -876,7 +868,7 @@ push_mprts_aq_reorder(int block_start,
 // ----------------------------------------------------------------------
 // push_mprts_b
 
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, class CURR>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
 push_mprts_b(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
@@ -893,13 +885,15 @@ push_mprts_b(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_p
     }
     struct d_particle prt;
     LOAD_PARTICLE_(prt, d_xi4, d_pxi4, n);
-    yz_calc_j<DEPOSIT_VB_2D>(&prt, n, d_xi4, d_pxi4, scurr, prm, nr_total_blocks, p, d_bidx, bid, ci0);
+    yz_calc_j<DEPOSIT_VB_2D, CURR>
+      (&prt, n, d_xi4, d_pxi4, scurr, prm, nr_total_blocks, p, d_bidx, bid, ci0);
   }
   
   scurr.add_to_fld(prm, ci0);
 }
 
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER, enum IP IP, enum DEPOSIT DEPOSIT>
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER, enum IP IP, enum DEPOSIT DEPOSIT,
+	 class CURR>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
 push_mprts_ab(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
@@ -921,11 +915,11 @@ push_mprts_ab(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_
       (&prt, n, d_ids, d_xi4, d_pxi4, d_alt_xi4, d_alt_pxi4, fld_cache, ci0, prm);
 
     if (REORDER) {
-      yz_calc_j<DEPOSIT>(&prt, n, d_alt_xi4, d_alt_pxi4, scurr, prm, 
-			 nr_total_blocks, p, d_bidx, bid, ci0);
+      yz_calc_j<DEPOSIT_VB_2D, CURR>
+	(&prt, n, d_alt_xi4, d_alt_pxi4, scurr, prm, nr_total_blocks, p, d_bidx, bid, ci0);
     } else {
-      yz_calc_j<DEPOSIT>(&prt, n, d_xi4, d_pxi4, scurr, prm, 
-			 nr_total_blocks, p, d_bidx, bid, ci0);
+      yz_calc_j<DEPOSIT_VB_2D, CURR>
+	(&prt, n, d_xi4, d_pxi4, scurr, prm, nr_total_blocks, p, d_bidx, bid, ci0);
     }
   }
   
@@ -1080,7 +1074,7 @@ cuda_push_mprts_b(struct psc_mparticles *mprts, struct psc_mfields *mflds)
   CUDA_PUSH_MPRTS_TOP;
 
   for (int block_start = 0; block_start < 4; block_start++) {
-    push_mprts_b<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+    push_mprts_b<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> >
       <<<dimGrid, THREADS_PER_BLOCK>>>
       (block_start, prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4, mprts_cuda->d_off,
        mprts_cuda->nr_total_blocks, mprts_cuda->d_bidx,
@@ -1094,19 +1088,33 @@ cuda_push_mprts_b(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 // ----------------------------------------------------------------------
 // cuda_push_mprts_ab
 
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER, enum IP IP, enum DEPOSIT DEPOSIT>
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER,
+	 enum IP IP, enum DEPOSIT DEPOSIT, enum CURRMEM CURRMEM>
 static void
 cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
   CUDA_PUSH_MPRTS_TOP;
 
   for (int block_start = 0; block_start < 4; block_start++) {
-    push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER, IP, DEPOSIT>
+    if (CURRMEM == CURRMEM_SHARED) {
+      push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER, IP, DEPOSIT,
+		    SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> >
       <<<dimGrid, THREADS_PER_BLOCK>>>
       (block_start, prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
        mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4, mprts_cuda->d_off,
        mprts_cuda->nr_total_blocks, mprts_cuda->d_ids, mprts_cuda->d_bidx,
        mflds_cuda->d_flds, fld_size);
+    } else if (CURRMEM == CURRMEM_GLOBAL) {
+      push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER, IP, DEPOSIT,
+		    GCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> >
+      <<<dimGrid, THREADS_PER_BLOCK>>>
+      (block_start, prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
+       mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4, mprts_cuda->d_off,
+       mprts_cuda->nr_total_blocks, mprts_cuda->d_ids, mprts_cuda->d_bidx,
+       mflds_cuda->d_flds, fld_size);
+    } else {
+      assert(0);
+    }
     cuda_sync_if_enabled();
   }
 
@@ -1142,7 +1150,8 @@ yz4x4_1vb_cuda_push_mprts_separate(struct psc_mparticles *mprts, struct psc_mfie
 // ----------------------------------------------------------------------
 // yz_cuda_push_mprts
 
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, enum IP IP, enum DEPOSIT DEPOSIT>
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, enum IP IP, enum DEPOSIT DEPOSIT,
+	 enum CURRMEM CURRMEM>
 static void
 yz_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
@@ -1152,9 +1161,9 @@ yz_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds)
   
   if (!mprts_cuda->need_reorder) {
     MHERE;
-    cuda_push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, false, IP, DEPOSIT>(mprts, mflds);
+    cuda_push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, false, IP, DEPOSIT, CURRMEM>(mprts, mflds);
   } else {
-    cuda_push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, true, IP, DEPOSIT>(mprts, mflds);
+    cuda_push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, true, IP, DEPOSIT, CURRMEM>(mprts, mflds);
     mprts_cuda->need_reorder = false;
   }
 }
@@ -1165,7 +1174,7 @@ yz_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 EXTERN_C void
 yz4x4_1vb_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
-  yz_cuda_push_mprts<1, 4, 4, IP_STD, DEPOSIT_VB_2D>(mprts, mflds);
+  yz_cuda_push_mprts<1, 4, 4, IP_STD, DEPOSIT_VB_2D, CURRMEM_SHARED>(mprts, mflds);
 }
 
 // ----------------------------------------------------------------------
@@ -1174,7 +1183,7 @@ yz4x4_1vb_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mfld
 EXTERN_C void
 yz2x2_1vbec3d_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
-  yz_cuda_push_mprts<1, 2, 2, IP_EC, DEPOSIT_VB_3D>(mprts, mflds);
+  yz_cuda_push_mprts<1, 2, 2, IP_EC, DEPOSIT_VB_3D, CURRMEM_SHARED>(mprts, mflds);
 }
 
 // ----------------------------------------------------------------------
@@ -1183,7 +1192,7 @@ yz2x2_1vbec3d_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *
 EXTERN_C void
 yz4x4_1vbec3d_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
-  yz_cuda_push_mprts<1, 4, 4, IP_EC, DEPOSIT_VB_3D>(mprts, mflds);
+  yz_cuda_push_mprts<1, 4, 4, IP_EC, DEPOSIT_VB_3D, CURRMEM_SHARED>(mprts, mflds);
 }
 
 // ----------------------------------------------------------------------
@@ -1192,6 +1201,34 @@ yz4x4_1vbec3d_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *
 EXTERN_C void
 yz8x8_1vbec3d_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
-  yz_cuda_push_mprts<1, 8, 8, IP_EC, DEPOSIT_VB_3D>(mprts, mflds);
+  yz_cuda_push_mprts<1, 8, 8, IP_EC, DEPOSIT_VB_3D, CURRMEM_SHARED>(mprts, mflds);
+}
+
+
+// ----------------------------------------------------------------------
+// yz2x2_1vbec3d_gmem_cuda_push_mprts
+
+EXTERN_C void
+yz2x2_1vbec3d_gmem_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds)
+{
+  yz_cuda_push_mprts<1, 2, 2, IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL>(mprts, mflds);
+}
+
+// ----------------------------------------------------------------------
+// yz4x4_1vbec3d_gmem_cuda_push_mprts
+
+EXTERN_C void
+yz4x4_1vbec3d_gmem_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds)
+{
+  yz_cuda_push_mprts<1, 4, 4, IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL>(mprts, mflds);
+}
+
+// ----------------------------------------------------------------------
+// yz8x8_1vbec3d_gmem_cuda_push_mprts
+
+EXTERN_C void
+yz8x8_1vbec3d_gmem_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds)
+{
+  yz_cuda_push_mprts<1, 8, 8, IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL>(mprts, mflds);
 }
 
