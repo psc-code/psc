@@ -33,7 +33,7 @@ fld_create(struct psc *psc, int nr_fields)
 // ----------------------------------------------------------------------
 // psc_calc_rho
 
-void
+static void
 psc_calc_rho(struct psc *psc, struct psc_mparticles *mprts, struct psc_mfields *rho)
 {
   // FIXME, output_fields should be taking care of this?
@@ -190,7 +190,7 @@ psc_checks_continuity_after_particle_push(struct psc_checks *checks, struct psc 
 // ----------------------------------------------------------------------
 // psc_calc_dive
 
-void
+static void
 psc_calc_dive(struct psc *psc, struct psc_mfields *mflds, struct psc_mfields *dive)
 {
   struct psc_output_fields_item *item = psc_output_fields_item_create(psc_comm(psc));

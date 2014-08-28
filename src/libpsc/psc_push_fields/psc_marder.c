@@ -1,17 +1,15 @@
 
 #include "psc_marder_private.h"
 #include "psc_bnd.h"
+#include "psc_output_fields_item.h"
 #include "psc_fields_as_single.h"
 #include "psc_particles_as_single.h"
-#include <math.h>
 
 #include <mrc_io.h>
 
-// FIXME: checkpointing won't properly restore state
+#include <math.h>
 
-// FIXME, should be in a header, and not in psc_checks.c
-void psc_calc_rho(struct psc *psc, struct psc_mparticles *mprts, struct psc_mfields *rho);
-void psc_calc_dive(struct psc *psc, struct psc_mfields *mflds, struct psc_mfields *dive);
+// FIXME: checkpointing won't properly restore state
 
 // ----------------------------------------------------------------------
 // fld_create
@@ -74,7 +72,45 @@ _psc_marder_destroy(struct psc_marder *marder)
   }
 }
 
-// ======================================================================
+// ----------------------------------------------------------------------
+// psc_calc_rho
+
+static void
+psc_calc_rho(struct psc *psc, struct psc_mparticles *mprts, struct psc_mfields *rho)
+{
+  // FIXME, output_fields should be taking care of this?
+  struct psc_bnd *bnd = psc_bnd_create(psc_comm(psc));
+  psc_bnd_set_name(bnd, "psc_output_fields_bnd_calc_rho");
+  psc_bnd_set_type(bnd, "c");
+  psc_bnd_set_psc(bnd, psc);
+  psc_bnd_setup(bnd);
+
+  struct psc_output_fields_item *item = psc_output_fields_item_create(psc_comm(psc));
+  psc_output_fields_item_set_type(item, "rho_1st_nc_double");
+  psc_output_fields_item_set_psc_bnd(item, bnd);
+  psc_output_fields_item_setup(item);
+  psc_output_fields_item_run(item, psc->flds, mprts, rho);
+  psc_output_fields_item_destroy(item);
+
+  psc_bnd_destroy(bnd);
+}
+
+// ----------------------------------------------------------------------
+// psc_calc_dive
+
+static void
+psc_calc_dive(struct psc *psc, struct psc_mfields *mflds, struct psc_mfields *dive)
+{
+  struct psc_output_fields_item *item = psc_output_fields_item_create(psc_comm(psc));
+  psc_output_fields_item_set_type(item, "dive");
+  psc_output_fields_item_set_psc_bnd(item, psc->bnd);
+  psc_output_fields_item_setup(item);
+  psc_output_fields_item_run(item, mflds, psc->particles, dive); // FIXME, should accept NULL for mprts
+  psc_output_fields_item_destroy(item);
+}
+
+// ----------------------------------------------------------------------
+// marder_calc_aid_fields
 
 static void
 marder_calc_aid_fields(struct psc_marder *marder, 
