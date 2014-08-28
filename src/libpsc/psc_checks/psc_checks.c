@@ -194,7 +194,7 @@ static void
 psc_calc_dive(struct psc *psc, struct psc_mfields *mflds, struct psc_mfields *dive)
 {
   struct psc_output_fields_item *item = psc_output_fields_item_create(psc_comm(psc));
-  psc_output_fields_item_set_type(item, "dive");
+  psc_output_fields_item_set_type(item, "dive_c");
   psc_output_fields_item_set_psc_bnd(item, psc->bnd);
   psc_output_fields_item_setup(item);
   psc_output_fields_item_run(item, mflds, psc->particles, dive); // FIXME, should accept NULL for mprts

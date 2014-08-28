@@ -47,7 +47,7 @@ _psc_marder_setup(struct psc_marder *marder)
 
   // FIXME, output_fields should be taking care of their own psc_bnd?
   marder->item_div_e = psc_output_fields_item_create(psc_comm(ppsc));
-  psc_output_fields_item_set_type(marder->item_div_e, "dive");
+  psc_output_fields_item_set_type(marder->item_div_e, "dive_" FIELDS_TYPE);
   psc_output_fields_item_set_psc_bnd(marder->item_div_e, marder->bnd);
   psc_output_fields_item_setup(marder->item_div_e);
 
