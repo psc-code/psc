@@ -92,7 +92,7 @@ marder_calc_aid_fields(struct psc_marder *marder,
   psc_mfields_axpy_comp(div_e, 0, -1., rho, 0);
 
   struct psc_bnd *bnd = psc_bnd_create(psc_marder_comm(marder));
-  psc_bnd_set_type(bnd, "c");
+  psc_bnd_set_type(bnd, FIELDS_TYPE);
   psc_bnd_set_psc(bnd, ppsc);
   psc_bnd_setup(bnd);
 
