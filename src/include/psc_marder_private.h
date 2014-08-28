@@ -15,8 +15,7 @@ struct psc_marder {
   // state
   struct psc_mfields *div_e;
   struct psc_mfields *rho;
-  struct psc_bnd *bnd; //< for filling ghosts on div_e
-  struct psc_bnd *bnd_rho;
+  struct psc_bnd *bnd; //< for filling ghosts on rho, div_e
   struct psc_output_fields_item *item_div_e;
   struct psc_output_fields_item *item_rho;
   struct mrc_io *io; //< for debug dumping

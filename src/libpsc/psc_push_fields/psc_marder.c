@@ -45,21 +45,15 @@ _psc_marder_setup(struct psc_marder *marder)
   psc_bnd_set_psc(marder->bnd, ppsc);
   psc_bnd_setup(marder->bnd);
 
-  // FIXME, output_fields should be taking care of this?
-  marder->bnd_rho = psc_bnd_create(psc_comm(ppsc));
-  psc_bnd_set_name(marder->bnd_rho, "psc_output_fields_bnd_calc_rho");
-  psc_bnd_set_type(marder->bnd_rho, "c");
-  psc_bnd_set_psc(marder->bnd_rho, ppsc);
-  psc_bnd_setup(marder->bnd_rho);
-
+  // FIXME, output_fields should be taking care of their own psc_bnd?
   marder->item_div_e = psc_output_fields_item_create(psc_comm(ppsc));
   psc_output_fields_item_set_type(marder->item_div_e, "dive");
-  psc_output_fields_item_set_psc_bnd(marder->item_div_e, ppsc->bnd);
+  psc_output_fields_item_set_psc_bnd(marder->item_div_e, marder->bnd);
   psc_output_fields_item_setup(marder->item_div_e);
 
   marder->item_rho = psc_output_fields_item_create(psc_comm(ppsc));
   psc_output_fields_item_set_type(marder->item_rho, "rho_1st_nc_double");
-  psc_output_fields_item_set_psc_bnd(marder->item_rho, marder->bnd_rho);
+  psc_output_fields_item_set_psc_bnd(marder->item_rho, marder->bnd);
   psc_output_fields_item_setup(marder->item_rho);
 
   if (marder->dump) {
@@ -83,7 +77,6 @@ _psc_marder_destroy(struct psc_marder *marder)
   psc_mfields_destroy(marder->div_e);
   psc_mfields_destroy(marder->rho);
 
-  psc_bnd_destroy(marder->bnd_rho);
   psc_output_fields_item_destroy(marder->item_div_e);
   psc_output_fields_item_destroy(marder->item_rho);
 
@@ -118,6 +111,7 @@ marder_calc_aid_fields(struct psc_marder *marder,
   }
 
   psc_mfields_axpy_comp(div_e, 0, -1., rho, 0);
+  // FIXME, why is this necessary?
   psc_bnd_fill_ghosts(marder->bnd, div_e, 0, 1);
 }
 
