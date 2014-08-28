@@ -41,6 +41,11 @@ _psc_marder_setup(struct psc_marder *marder)
   marder->div_e = fld_create(ppsc, "div_E");
   marder->rho = fld_create(ppsc, "rho");
 
+  marder->bnd = psc_bnd_create(psc_marder_comm(marder));
+  psc_bnd_set_type(marder->bnd, FIELDS_TYPE);
+  psc_bnd_set_psc(marder->bnd, ppsc);
+  psc_bnd_setup(marder->bnd);
+
   if (marder->dump) {
     struct mrc_io *io = mrc_io_create(psc_comm(ppsc));
     mrc_io_set_type(io, "xdmf_collective");
@@ -61,6 +66,8 @@ _psc_marder_destroy(struct psc_marder *marder)
 {
   psc_mfields_destroy(marder->div_e);
   psc_mfields_destroy(marder->rho);
+
+  psc_bnd_destroy(marder->bnd);
 
   if (marder->dump) {
     mrc_io_destroy(marder->io);
@@ -90,15 +97,7 @@ marder_calc_aid_fields(struct psc_marder *marder,
   }
 
   psc_mfields_axpy_comp(div_e, 0, -1., rho, 0);
-
-  struct psc_bnd *bnd = psc_bnd_create(psc_marder_comm(marder));
-  psc_bnd_set_type(bnd, FIELDS_TYPE);
-  psc_bnd_set_psc(bnd, ppsc);
-  psc_bnd_setup(bnd);
-
-  psc_bnd_fill_ghosts(bnd, div_e, 0, 1);
-
-  psc_bnd_destroy(bnd);
+  psc_bnd_fill_ghosts(marder->bnd, div_e, 0, 1);
 }
 
 
