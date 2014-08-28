@@ -52,7 +52,7 @@ _psc_marder_setup(struct psc_marder *marder)
   psc_output_fields_item_setup(marder->item_div_e);
 
   marder->item_rho = psc_output_fields_item_create(psc_comm(ppsc));
-  psc_output_fields_item_set_type(marder->item_rho, "rho_1st_nc_" FIELDS_TYPE);
+  psc_output_fields_item_set_type(marder->item_rho, "rho_1st_nc_" PARTICLE_TYPE);
   psc_output_fields_item_set_psc_bnd(marder->item_rho, marder->bnd);
   psc_output_fields_item_setup(marder->item_rho);
 
