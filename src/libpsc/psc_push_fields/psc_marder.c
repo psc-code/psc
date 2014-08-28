@@ -29,6 +29,35 @@ fld_create(struct psc *psc, int nr_fields)
   return fld;
 }
 
+// ----------------------------------------------------------------------
+// psc_marder_setup
+
+static void
+_psc_marder_setup(struct psc_marder *marder)
+{
+  if (marder->dump) {
+    struct mrc_io *io = mrc_io_create(psc_comm(ppsc));
+    mrc_io_set_type(io, "xdmf_collective");
+    mrc_io_set_name(io, "mrc_io_marder");
+    mrc_io_set_param_string(io, "basename", "marder");
+    mrc_io_set_from_options(io);
+    mrc_io_setup(io);
+
+    marder->io = io;
+  }
+}
+
+// ----------------------------------------------------------------------
+// psc_marder_destroy
+
+static void
+_psc_marder_destroy(struct psc_marder *marder)
+{
+  if (marder->dump) {
+    mrc_io_destroy(marder->io);
+  }
+}
+
 // ======================================================================
 
 static void
@@ -45,22 +74,10 @@ marder_calc_aid_fields(struct psc_marder *marder,
   psc_mfields_put_as(rho_c, rho, 0, 1);
   
   if (marder->dump) {
-    static struct mrc_io *io;
-    if (!io) {
-      io = mrc_io_create(psc_comm(ppsc));
-      mrc_io_set_type(io, "xdmf_collective");
-      mrc_io_set_name(io, "mrc_io_marder");
-      mrc_io_set_param_string(io, "basename", "marder");
-      mrc_io_set_from_options(io);
-      mrc_io_setup(io);
-    }
-
-    mrc_io_open(io, "w", ppsc->timestep, ppsc->timestep * ppsc->dt);
-    psc_mfields_write_as_mrc_fld(rho, io);
-    psc_mfields_write_as_mrc_fld(div_e, io);
-    mrc_io_close(io);
-
-    //  mrc_io_destroy(io); FIXME, leaked
+    mrc_io_open(marder->io, "w", ppsc->timestep, ppsc->timestep * ppsc->dt);
+    psc_mfields_write_as_mrc_fld(rho, marder->io);
+    psc_mfields_write_as_mrc_fld(div_e, marder->io);
+    mrc_io_close(marder->io);
   }
 
   psc_mfields_axpy_comp(div_e, 0, -1., rho, 0);
@@ -184,7 +201,7 @@ marder_correction_run(struct psc_marder *marder, struct psc_mfields *flds,
 }
 
 // ----------------------------------------------------------------------
-// marder_correction
+// psc_marder_run
 //
 // On ghost cells:
 // It is possible (variant = 1) that ghost cells are set before this is called
@@ -238,6 +255,8 @@ struct mrc_class_psc_marder mrc_class_psc_marder = {
   .name             = "psc_marder",
   .size             = sizeof(struct psc_marder),
   .param_descr      = psc_marder_descr,
+  .setup            = _psc_marder_setup,
+  .destroy          = _psc_marder_destroy,
 };
 
 #undef psc_foreach_3d_more
