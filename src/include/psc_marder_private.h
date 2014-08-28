@@ -23,7 +23,10 @@ struct psc_marder {
 
 struct psc_marder_ops {
   MRC_SUBCLASS_OPS(struct psc_marder);
+  void (*correct)(struct psc_marder *marder, struct psc_mfields *mflds, struct psc_mfields *f);
 };
+
+#define psc_marder_ops(marder) ((struct psc_marder_ops *)(marder->obj.ops))
 
 extern struct psc_marder_ops psc_marder_single_ops;
 
