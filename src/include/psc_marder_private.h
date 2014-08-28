@@ -13,7 +13,9 @@ struct psc_marder {
   bool dump; //< dump div_E, rho
 
   // state
-  struct mrc_io *io;
+  struct psc_mfields *div_e;
+  struct psc_mfields *rho;
+  struct mrc_io *io; //< for debug dumping
 };
 
 #endif

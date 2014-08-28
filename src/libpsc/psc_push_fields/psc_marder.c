@@ -7,6 +7,8 @@
 
 #include <mrc_io.h>
 
+// FIXME: checkpointing won't properly restore state
+
 // FIXME, should be in a header, and not in psc_checks.c
 void psc_calc_rho(struct psc *psc, struct psc_mparticles *mprts, struct psc_mfields *rho);
 void psc_calc_dive(struct psc *psc, struct psc_mfields *mflds, struct psc_mfields *dive);
@@ -17,14 +19,15 @@ void psc_calc_dive(struct psc *psc, struct psc_mfields *mflds, struct psc_mfield
 // FIXME, should be consolidated with psc_checks.c, and probably other places
 
 static struct psc_mfields *
-fld_create(struct psc *psc, int nr_fields)
+fld_create(struct psc *psc, const char *name)
 {
   struct psc_mfields *fld = psc_mfields_create(psc_comm(psc));
   psc_mfields_set_type(fld, FIELDS_TYPE);
   psc_mfields_set_domain(fld, psc->mrc_domain);
   psc_mfields_set_param_int3(fld, "ibn", psc->ibn);
-  psc_mfields_set_param_int(fld, "nr_fields", nr_fields);
+  psc_mfields_set_param_int(fld, "nr_fields", 1);
   psc_mfields_setup(fld);
+  psc_mfields_set_comp_name(fld, 0, name);
 
   return fld;
 }
@@ -35,6 +38,9 @@ fld_create(struct psc *psc, int nr_fields)
 static void
 _psc_marder_setup(struct psc_marder *marder)
 {
+  marder->div_e = fld_create(ppsc, "div_E");
+  marder->rho = fld_create(ppsc, "rho");
+
   if (marder->dump) {
     struct mrc_io *io = mrc_io_create(psc_comm(ppsc));
     mrc_io_set_type(io, "xdmf_collective");
@@ -53,6 +59,9 @@ _psc_marder_setup(struct psc_marder *marder)
 static void
 _psc_marder_destroy(struct psc_marder *marder)
 {
+  psc_mfields_destroy(marder->div_e);
+  psc_mfields_destroy(marder->rho);
+
   if (marder->dump) {
     mrc_io_destroy(marder->io);
   }
@@ -220,18 +229,10 @@ psc_marder_run(struct psc_marder *marder,
   // need to fill ghost cells first (should be unnecessary with only variant 1) FIXME
   psc_bnd_fill_ghosts(ppsc->bnd, flds, EX, EX+3);
 
-  struct psc_mfields *div_e = fld_create(ppsc, 1);
-  psc_mfields_set_comp_name(div_e, 0, "div_E");
-  struct psc_mfields *rho = fld_create(ppsc, 1);
-  psc_mfields_set_comp_name(rho, 0, "rho");
-
   for (int i = 0; i < marder->loop; i++) {
-    marder_calc_aid_fields(marder, flds, particles, div_e, rho);
-    marder_correction_run(marder, flds, div_e);
+    marder_calc_aid_fields(marder, flds, particles, marder->div_e, marder->rho);
+    marder_correction_run(marder, flds, marder->div_e);
   }
-
-  psc_mfields_destroy(div_e);
-  psc_mfields_destroy(rho);
 }
 
 // ----------------------------------------------------------------------
