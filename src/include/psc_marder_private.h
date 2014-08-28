@@ -21,4 +21,10 @@ struct psc_marder {
   struct mrc_io *io; //< for debug dumping
 };
 
+struct psc_marder_ops {
+  MRC_SUBCLASS_OPS(struct psc_marder);
+};
+
+extern struct psc_marder_ops psc_marder_single_ops;
+
 #endif
