@@ -96,10 +96,7 @@ marder_calc_aid_fields(struct psc_marder *marder,
 		       struct psc_mfields *div_e, struct psc_mfields *rho)
 {
   psc_output_fields_item_run(marder->item_div_e, flds, particles, div_e); // FIXME, should accept NULL for particles
-
-  struct psc_mfields *rho_c = psc_mfields_get_as(rho, "c", 0, 0);
-  psc_output_fields_item_run(marder->item_rho, flds, particles, rho_c);
-  psc_mfields_put_as(rho_c, rho, 0, 1);
+  psc_output_fields_item_run(marder->item_rho, flds, particles, rho);
   
   if (marder->dump) {
     mrc_io_open(marder->io, "w", ppsc->timestep, ppsc->timestep * ppsc->dt);
