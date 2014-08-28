@@ -73,43 +73,6 @@ _psc_marder_destroy(struct psc_marder *marder)
 }
 
 // ----------------------------------------------------------------------
-// psc_calc_rho
-
-static void
-psc_calc_rho(struct psc *psc, struct psc_mparticles *mprts, struct psc_mfields *rho)
-{
-  // FIXME, output_fields should be taking care of this?
-  struct psc_bnd *bnd = psc_bnd_create(psc_comm(psc));
-  psc_bnd_set_name(bnd, "psc_output_fields_bnd_calc_rho");
-  psc_bnd_set_type(bnd, "c");
-  psc_bnd_set_psc(bnd, psc);
-  psc_bnd_setup(bnd);
-
-  struct psc_output_fields_item *item = psc_output_fields_item_create(psc_comm(psc));
-  psc_output_fields_item_set_type(item, "rho_1st_nc_double");
-  psc_output_fields_item_set_psc_bnd(item, bnd);
-  psc_output_fields_item_setup(item);
-  psc_output_fields_item_run(item, psc->flds, mprts, rho);
-  psc_output_fields_item_destroy(item);
-
-  psc_bnd_destroy(bnd);
-}
-
-// ----------------------------------------------------------------------
-// psc_calc_dive
-
-static void
-psc_calc_dive(struct psc *psc, struct psc_mfields *mflds, struct psc_mfields *dive)
-{
-  struct psc_output_fields_item *item = psc_output_fields_item_create(psc_comm(psc));
-  psc_output_fields_item_set_type(item, "dive");
-  psc_output_fields_item_set_psc_bnd(item, psc->bnd);
-  psc_output_fields_item_setup(item);
-  psc_output_fields_item_run(item, mflds, psc->particles, dive); // FIXME, should accept NULL for mprts
-  psc_output_fields_item_destroy(item);
-}
-
-// ----------------------------------------------------------------------
 // marder_calc_aid_fields
 
 static void
@@ -118,11 +81,34 @@ marder_calc_aid_fields(struct psc_marder *marder,
 		       struct psc_mfields *div_e, struct psc_mfields *rho)
 {
   struct psc_mfields *div_e_c = psc_mfields_get_as(div_e, "c", 0, 0);
-  psc_calc_dive(ppsc, flds, div_e_c);
+
+  struct psc_output_fields_item *item_div_e = psc_output_fields_item_create(psc_comm(ppsc));
+  psc_output_fields_item_set_type(item_div_e, "dive");
+  psc_output_fields_item_set_psc_bnd(item_div_e, ppsc->bnd);
+  psc_output_fields_item_setup(item_div_e);
+  psc_output_fields_item_run(item_div_e, flds, particles, div_e_c); // FIXME, should accept NULL for particles
+  psc_output_fields_item_destroy(item_div_e);
+
   psc_mfields_put_as(div_e_c, div_e, 0, 1);
 
   struct psc_mfields *rho_c = psc_mfields_get_as(rho, "c", 0, 0);
-  psc_calc_rho(ppsc, particles, rho_c);
+
+  // FIXME, output_fields should be taking care of this?
+  struct psc_bnd *bnd_rho = psc_bnd_create(psc_comm(ppsc));
+  psc_bnd_set_name(bnd_rho, "psc_output_fields_bnd_calc_rho");
+  psc_bnd_set_type(bnd_rho, "c");
+  psc_bnd_set_psc(bnd_rho, ppsc);
+  psc_bnd_setup(bnd_rho);
+
+  struct psc_output_fields_item *item_rho = psc_output_fields_item_create(psc_comm(ppsc));
+  psc_output_fields_item_set_type(item_rho, "rho_1st_nc_double");
+  psc_output_fields_item_set_psc_bnd(item_rho, bnd_rho);
+  psc_output_fields_item_setup(item_rho);
+  psc_output_fields_item_run(item_rho, flds, particles, rho_c);
+  psc_output_fields_item_destroy(item_rho);
+
+  psc_bnd_destroy(bnd_rho);
+
   psc_mfields_put_as(rho_c, rho, 0, 1);
   
   if (marder->dump) {
