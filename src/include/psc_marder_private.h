@@ -28,6 +28,7 @@ struct psc_marder_ops {
 
 #define psc_marder_ops(marder) ((struct psc_marder_ops *)(marder->obj.ops))
 
+extern struct psc_marder_ops psc_marder_c_ops;
 extern struct psc_marder_ops psc_marder_single_ops;
 
 #endif

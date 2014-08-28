@@ -66,6 +66,7 @@ psc_marder_run(struct psc_marder *marder,
 static void
 psc_marder_init()
 {
+  mrc_class_register_subclass(&mrc_class_psc_marder, &psc_marder_c_ops);
   mrc_class_register_subclass(&mrc_class_psc_marder, &psc_marder_single_ops);
 }
 

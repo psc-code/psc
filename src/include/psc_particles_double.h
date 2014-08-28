@@ -24,6 +24,9 @@ struct psc_particles_double {
 
 void particles_double_realloc(struct psc_particles *prts, int new_n_part);
 
+#include <math.h>
+#include "psc.h"
+
 static inline particle_double_t *
 particles_double_get_one(struct psc_particles *prts, int n)
 {
@@ -72,7 +75,7 @@ static inline void
 particle_double_calc_vxi(particle_double_real_t vxi[3], particle_double_t *part)
 {
   particle_double_real_t root =
-    1.f / sqrtf(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
+    1.f / sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
   vxi[0] = part->pxi * root;
   vxi[1] = part->pyi * root;
   vxi[2] = part->pzi * root;
