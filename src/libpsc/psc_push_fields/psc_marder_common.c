@@ -115,7 +115,7 @@ psc_marder_sub_correct_patch(struct psc_marder *marder,
 
   // FIXME: how to choose diffusion parameter properly?
   //double deltax = ppsc->patch[f->p].dx[0];
-  double deltay = ppsc->patch[f->p].dx[1];
+  double deltay = ppsc->patch[f->p].dx[1]; // FIXME double/float
   double deltaz = ppsc->patch[f->p].dx[2];
   double inv_sum = 0.;
   int nr_levels;

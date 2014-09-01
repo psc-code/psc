@@ -42,7 +42,7 @@ psc_marder_cuda_setup(struct psc_marder *marder)
 
   marder->bnd = psc_bnd_create(psc_marder_comm(marder));
   psc_bnd_set_name(marder->bnd, "marder_bnd");
-  psc_bnd_set_type(marder->bnd, "single");
+  psc_bnd_set_type(marder->bnd, "cuda");
   psc_bnd_set_psc(marder->bnd, ppsc);
   psc_bnd_setup(marder->bnd);
 
