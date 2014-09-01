@@ -88,100 +88,79 @@ psc_marder_cuda_destroy(struct psc_marder *marder)
 }
 
 // ----------------------------------------------------------------------
-// psc_marder_cuda_correct_patch
+// psc_marder_cuda_correct
 //
 // Do the modified marder correction (See eq.(5, 7, 9, 10) in Mardahl and Verboncoeur, CPC, 1997)
 
-#define psc_foreach_3d_more(psc, p, ix, iy, iz, l, r) {			\
-  int __ilo[3] = { -l[0], -l[1], -l[2] };					\
-  int __ihi[3] = { psc->patch[p].ldims[0] + r[0],				\
-		   psc->patch[p].ldims[1] + r[1],				\
-		   psc->patch[p].ldims[2] + r[2] };				\
-  for (int iz = __ilo[2]; iz < __ihi[2]; iz++) {			\
-    for (int iy = __ilo[1]; iy < __ihi[1]; iy++) {			\
-      for (int ix = __ilo[0]; ix < __ihi[0]; ix++)
-
-#define psc_foreach_3d_more_end				\
-  } } }
-
 static void
-psc_marder_cuda_correct_patch(struct psc_marder *marder,
-			      struct psc_fields *flds_base, struct psc_fields *f)
+psc_marder_cuda_correct(struct psc_marder *marder,
+			struct psc_mfields *mflds_base, struct psc_mfields *mf_base)
 {
-  int p = f->p;
-
   // FIXME: how to choose diffusion parameter properly?
-  float dx[3] = { ppsc->patch[p].dx[0], ppsc->patch[p].dx[1], ppsc->patch[p].dx[2] };
+  float dx[3] = { ppsc->patch[0].dx[0], ppsc->patch[0].dx[1], ppsc->patch[0].dx[2] };
   float inv_sum = 0.;
   int nr_levels;
   mrc_domain_get_nr_levels(ppsc->mrc_domain, &nr_levels);
   for (int d = 0; d < 3; d++) {
-    if (ppsc->domain.gdims[d] > 1) {
-      inv_sum += 1. / sqr(ppsc->patch[f->p].dx[d] / (1 << (nr_levels - 1)));
+      if (ppsc->domain.gdims[d] > 1) {
+	inv_sum += 1. / sqr(ppsc->patch[0].dx[d] / (1 << (nr_levels - 1)));
+      }
     }
-  }
   float diffusion_max = 1. / 2. / (.5 * ppsc->dt) / inv_sum;
   float diffusion     = diffusion_max * marder->diffusion;
+    
+  float fac[3] = { 0.f,
+		   .5 * ppsc->dt * diffusion / dx[1],
+		   .5 * ppsc->dt * diffusion / dx[2] };
 
-  int l_cc[3] = {0, 0, 0}, r_cc[3] = {0, 0, 0};
-  int l_nc[3] = {0, 0, 0}, r_nc[3] = {0, 0, 0};
-  for (int d = 0; d < 3; d++) {
-   if (ppsc->domain.bnd_fld_lo[d] == BND_FLD_CONDUCTING_WALL && ppsc->patch[p].off[d] == 0) {
-    l_cc[d] = -1;
-    l_nc[d] = -1;
-   }
-   if (ppsc->domain.bnd_fld_hi[d] == BND_FLD_CONDUCTING_WALL && ppsc->patch[p].off[d] + ppsc->patch[p].ldims[d] == ppsc->domain.gdims[d]) {
-    r_cc[d] = -1;
-    r_nc[d] = 0;
-   }
-  }
-
-  assert(ppsc->domain.gdims[0] == 1);
-
-  int *ldims = ppsc->patch[p].ldims;
-
-  int ly[3] = { l_nc[0], l_cc[1], l_nc[2] };
-  int ry[3] = { r_nc[0] + ldims[0], r_cc[1] + ldims[1], r_nc[2] + ldims[2] };
-  
-  int lz[3] = { l_nc[0], l_nc[1], l_cc[2] };
-  int rz[3] = { r_nc[0] + ldims[0], r_nc[1] + ldims[1], r_cc[2] + ldims[2] };
-
-  struct psc_fields *flds = psc_fields_get_as(flds_base, FIELDS_TYPE, EX, EX + 3);
-
-  for (int iz = -1; iz < ldims[2]; iz++) {
-    for (int iy = -1; iy < ldims[1]; iy++) {
-      if (iy >= -ly[1] && iy < ry[1] &&
-	  iz >= -ly[2] && iz < ry[2]) {
-	F3(flds, EY, 0,iy,iz) += 
-	  (F3(f, 0, 0,iy+1,iz) - F3(f, 0, 0,iy,iz))
-	  * .5 * ppsc->dt * diffusion / dx[1];
+  for (int p = 0; p < mf_base->nr_patches; p++) {
+    struct psc_fields *flds_base = psc_mfields_get_patch(mflds_base, p);
+    struct psc_fields *f_base = psc_mfields_get_patch(mf_base, p);
+    
+    int l_cc[3] = {0, 0, 0}, r_cc[3] = {0, 0, 0};
+    int l_nc[3] = {0, 0, 0}, r_nc[3] = {0, 0, 0};
+    for (int d = 0; d < 3; d++) {
+      if (ppsc->domain.bnd_fld_lo[d] == BND_FLD_CONDUCTING_WALL && ppsc->patch[p].off[d] == 0) {
+	l_cc[d] = -1;
+	l_nc[d] = -1;
       }
-
-      if (iy >= -lz[1] && iy < rz[1] &&
-	  iz >= -lz[2] && iz < rz[2]) {
-	F3(flds, EZ, 0,iy,iz) += 
-	  (F3(f, 0, 0,iy,iz+1) - F3(f, 0, 0,iy,iz))
-	  * .5 * ppsc->dt * diffusion / dx[2];
+      if (ppsc->domain.bnd_fld_hi[d] == BND_FLD_CONDUCTING_WALL && ppsc->patch[p].off[d] + ppsc->patch[p].ldims[d] == ppsc->domain.gdims[d]) {
+	r_cc[d] = -1;
+	r_nc[d] = 0;
       }
     }
-  }
-
-  psc_fields_put_as(flds, flds_base, EX, EX + 3);
-}
-
-#undef psc_foreach_3d_more
-#undef psc_foreach_3d_more_end
-
-// ----------------------------------------------------------------------
-// psc_marder_cuda_correct
-
-static void
-psc_marder_cuda_correct(struct psc_marder *marder, struct psc_mfields *mflds,
-		       struct psc_mfields *div_e)
-{
-  for (int p = 0; p < div_e->nr_patches; p++) {
-    psc_marder_cuda_correct_patch(marder, psc_mfields_get_patch(mflds, p),
-				  psc_mfields_get_patch(div_e, p));
+    
+    assert(ppsc->domain.gdims[0] == 1);
+    
+    int *ldims = ppsc->patch[p].ldims;
+    
+    int ly[3] = { l_nc[0], l_cc[1], l_nc[2] };
+    int ry[3] = { r_nc[0] + ldims[0], r_cc[1] + ldims[1], r_nc[2] + ldims[2] };
+    
+    int lz[3] = { l_nc[0], l_nc[1], l_cc[2] };
+    int rz[3] = { r_nc[0] + ldims[0], r_nc[1] + ldims[1], r_cc[2] + ldims[2] };
+    
+    struct psc_fields *flds = psc_fields_get_as(flds_base, FIELDS_TYPE, EX, EX + 3);
+    struct psc_fields *f = psc_fields_get_as(f_base, FIELDS_TYPE, 0, 1);
+    
+    for (int iz = -1; iz < ldims[2]; iz++) {
+      for (int iy = -1; iy < ldims[1]; iy++) {
+	if (iy >= -ly[1] && iy < ry[1] &&
+	    iz >= -ly[2] && iz < ry[2]) {
+	  F3(flds, EY, 0,iy,iz) += 
+	    fac[1] * (F3(f, 0, 0,iy+1,iz) - F3(f, 0, 0,iy,iz));
+	}
+	
+	if (iy >= -lz[1] && iy < rz[1] &&
+	    iz >= -lz[2] && iz < rz[2]) {
+	  F3(flds, EZ, 0,iy,iz) += 
+	    fac[2] * (F3(f, 0, 0,iy,iz+1) - F3(f, 0, 0,iy,iz));
+	}
+      }
+    }
+    
+    psc_fields_put_as(flds, flds_base, EX, EX + 3);
+    psc_fields_put_as(f, f_base, 0, 0);
   }
 }
 
