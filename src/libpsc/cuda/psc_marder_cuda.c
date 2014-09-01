@@ -10,34 +10,6 @@
 
 #include <stdlib.h>
 
-// FIXME, duplicated
-// ----------------------------------------------------------------------
-// macros to access C (host) versions of the fields
-
-#define F3_OFF_CUDA(pf, fldnr, jx,jy,jz)				\
-  ((((((fldnr)								\
-       * (pf)->im[2] + ((jz)-(pf)->ib[2]))				\
-      * (pf)->im[1] + ((jy)-(pf)->ib[1]))				\
-     * (pf)->im[0] + ((jx)-(pf)->ib[0]))))
-
-#ifndef BOUNDS_CHECK
-
-#define F3_CUDA(h_flds, pf, fldnr, jx,jy,jz)	\
-  (h_flds[F3_OFF_CUDA(pf, fldnr, jx,jy,jz)])
-
-#else
-
-#define F3_CUDA(pf, fldnr, jx,jy,jz)				\
-  (*({int off = F3_OFF_CUDA(pf, fldnr, jx,jy,jz);			\
-      assert(fldnr >= 0 && fldnr < (pf)->nr_comp);			\
-      assert(jx >= (pf)->ib[0] && jx < (pf)->ib[0] + (pf)->im[0]);	\
-      assert(jy >= (pf)->ib[1] && jy < (pf)->ib[1] + (pf)->im[1]);	\
-      assert(jz >= (pf)->ib[2] && jz < (pf)->ib[2] + (pf)->im[2]);	\
-      &(h_flds[off]);						\
-    }))
-
-#endif
-
 // FIXME: checkpointing won't properly restore state
 // FIXME: if they subclass creates objects, it'd be cleaner to have them
 // be part of the subclass
@@ -149,6 +121,7 @@ psc_marder_cuda_correct(struct psc_marder *marder,
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "cuda", EX, EX + 3);
   struct psc_mfields *mf = psc_mfields_get_as(mf_base, "cuda", 0, 1);
 
+  // OPT, do all patches in one kernel
   for (int p = 0; p < mf_base->nr_patches; p++) {
     int l_cc[3] = {0, 0, 0}, r_cc[3] = {0, 0, 0};
     int l_nc[3] = {0, 0, 0}, r_nc[3] = {0, 0, 0};
@@ -171,35 +144,7 @@ psc_marder_cuda_correct(struct psc_marder *marder,
     int lz[3] = { l_nc[0], l_nc[1], l_cc[2] };
     int rz[3] = { r_nc[0] + ldims[0], r_nc[1] + ldims[1], r_cc[2] + ldims[2] };
     
-    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-    struct psc_fields *f = psc_mfields_get_patch(mf, p);
-
-   float *hflds = malloc(flds->nr_comp * psc_fields_size(flds) * sizeof(*hflds));
-   float *hf = malloc(f->nr_comp * psc_fields_size(f) * sizeof(*hf));
-
-   __fields_cuda_from_device(flds, hflds, EX, EX + 3);
-   __fields_cuda_from_device(f, hf, 0, 1);
-  
-    for (int iz = -1; iz < ldims[2]; iz++) {
-      for (int iy = -1; iy < ldims[1]; iy++) {
-	if (iy >= -ly[1] && iy < ry[1] &&
-	    iz >= -ly[2] && iz < ry[2]) {
-	  F3_CUDA(hflds, flds, EY, 0,iy,iz) += 
-	    fac[1] * (F3_CUDA(hf, f, 0, 0,iy+1,iz) - F3_CUDA(hf, f, 0, 0,iy,iz));
-	}
-	
-	if (iy >= -lz[1] && iy < rz[1] &&
-	    iz >= -lz[2] && iz < rz[2]) {
-	  F3_CUDA(hflds, flds, EZ, 0,iy,iz) += 
-	    fac[2] * (F3_CUDA(hf, f, 0, 0,iy,iz+1) - F3_CUDA(hf, f, 0, 0,iy,iz));
-	}
-      }
-    }
-
-   __fields_cuda_to_device(flds, hflds, EX, EX + 3);
-
-    free(hflds);
-    free(hf);
+    cuda_marder_correct_yz(mflds, mf, p, ldims, fac, ly, ry, lz, rz);
   }
 
   psc_mfields_put_as(mflds, mflds_base, EX, EX + 3);
