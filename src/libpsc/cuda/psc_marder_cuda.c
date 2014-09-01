@@ -3,8 +3,6 @@
 #include "psc_bnd.h"
 #include "psc_output_fields_item.h"
 #include "psc_cuda.h"
-#include "psc_fields_as_single.h"
-#include "psc_particles_as_single.h"
 
 #include <mrc_io.h>
 
@@ -20,10 +18,10 @@
 // FIXME, should be consolidated with psc_checks.c, and probably other places
 
 static struct psc_mfields *
-fld_create(struct psc *psc, const char *name)
+fld_create(struct psc *psc, const char *name, const char *type)
 {
   struct psc_mfields *fld = psc_mfields_create(psc_comm(psc));
-  psc_mfields_set_type(fld, FIELDS_TYPE);
+  psc_mfields_set_type(fld, type);
   psc_mfields_set_domain(fld, psc->mrc_domain);
   psc_mfields_set_param_int3(fld, "ibn", psc->ibn);
   psc_mfields_set_param_int(fld, "nr_fields", 1);
@@ -39,23 +37,23 @@ fld_create(struct psc *psc, const char *name)
 static void
 psc_marder_cuda_setup(struct psc_marder *marder)
 {
-  marder->div_e = fld_create(ppsc, "div_E");
-  marder->rho = fld_create(ppsc, "rho");
+  marder->div_e = fld_create(ppsc, "div_E", "single");
+  marder->rho = fld_create(ppsc, "rho", "single");
 
   marder->bnd = psc_bnd_create(psc_marder_comm(marder));
   psc_bnd_set_name(marder->bnd, "marder_bnd");
-  psc_bnd_set_type(marder->bnd, FIELDS_TYPE);
+  psc_bnd_set_type(marder->bnd, "single");
   psc_bnd_set_psc(marder->bnd, ppsc);
   psc_bnd_setup(marder->bnd);
 
   // FIXME, output_fields should be taking care of their own psc_bnd?
   marder->item_div_e = psc_output_fields_item_create(psc_comm(ppsc));
-  psc_output_fields_item_set_type(marder->item_div_e, "dive_" FIELDS_TYPE);
+  psc_output_fields_item_set_type(marder->item_div_e, "dive_single");
   psc_output_fields_item_set_psc_bnd(marder->item_div_e, marder->bnd);
   psc_output_fields_item_setup(marder->item_div_e);
 
   marder->item_rho = psc_output_fields_item_create(psc_comm(ppsc));
-  psc_output_fields_item_set_type(marder->item_rho, "rho_1st_nc_" PARTICLE_TYPE);
+  psc_output_fields_item_set_type(marder->item_rho, "rho_1st_nc_single");
   psc_output_fields_item_set_psc_bnd(marder->item_rho, marder->bnd);
   psc_output_fields_item_setup(marder->item_rho);
 
