@@ -270,3 +270,41 @@ cuda_marder_correct_yz(struct psc_mfields *mflds, struct psc_mfields *mf,
 				 ly[1], ly[2], ry[1], ry[2],
 				 lz[1], lz[2], rz[1], rz[2], my, mz));
 }
+
+// ======================================================================
+
+__global__ static void
+axpy_comp_yz(real *y_flds, int ym, float a, real *x_flds, int xm,
+	     int my, int mz)
+{
+  int iy = blockIdx.x * blockDim.x + threadIdx.x;
+  int iz = blockIdx.y * blockDim.y + threadIdx.y;
+
+  if (iy >= my || iz >= mz) {
+    return;
+  }
+
+  iy -= BND;
+  iz -= BND;
+
+  F3_DDEV(y_flds, ym, 0,iy,iz) += a * F3_DDEV(x_flds, xm, 0,iy,iz);
+}
+
+void
+cuda_axpy_comp_yz(struct psc_fields *y, int ym, float a, struct psc_fields *x, int xm)
+{
+  struct psc_fields_cuda *y_cuda = psc_fields_cuda(y);
+  struct psc_fields_cuda *x_cuda = psc_fields_cuda(x);
+  struct psc_patch *patch = &ppsc->patch[0];
+
+  int my = y->im[1];
+  int mz = y->im[2];
+
+  int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
+  int grid[2]  = { (patch->ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
+		   (patch->ldims[2] + 2*BND + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
+  int dimGrid[2] = { grid[0], grid[1] };
+
+  RUN_KERNEL(dimGrid, dimBlock,
+	     axpy_comp_yz, (y_cuda->d_flds, ym, a, x_cuda->d_flds, xm, my, mz));
+}

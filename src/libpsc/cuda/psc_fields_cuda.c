@@ -38,6 +38,16 @@
 
 // ======================================================================
 
+// ----------------------------------------------------------------------
+// psc_fields_cuda_axpy_comp
+
+static void
+psc_fields_cuda_axpy_comp(struct psc_fields *y, int ym, double a, struct psc_fields *x, int xm)
+{
+  assert(ppsc->domain.gdims[0] == 1);
+  cuda_axpy_comp_yz(y, ym, a, x, xm);
+}
+
 #ifdef HAVE_LIBHDF5_HL
 
 #include <mrc_io.h>
@@ -184,6 +194,7 @@ struct psc_fields_ops psc_fields_cuda_ops = {
 #ifdef HAVE_LIBHDF5_HL
   .write                 = psc_fields_cuda_write,
 #endif
+  .axpy_comp             = psc_fields_cuda_axpy_comp,
 };
 
 // ======================================================================

@@ -18,10 +18,10 @@
 // FIXME, should be consolidated with psc_checks.c, and probably other places
 
 static struct psc_mfields *
-fld_create(struct psc *psc, const char *name, const char *type)
+fld_create(struct psc *psc, const char *name)
 {
   struct psc_mfields *fld = psc_mfields_create(psc_comm(psc));
-  psc_mfields_set_type(fld, type);
+  psc_mfields_set_type(fld, "cuda");
   psc_mfields_set_domain(fld, psc->mrc_domain);
   psc_mfields_set_param_int3(fld, "ibn", psc->ibn);
   psc_mfields_set_param_int(fld, "nr_fields", 1);
@@ -37,8 +37,8 @@ fld_create(struct psc *psc, const char *name, const char *type)
 static void
 psc_marder_cuda_setup(struct psc_marder *marder)
 {
-  marder->div_e = fld_create(ppsc, "div_E", "single");
-  marder->rho = fld_create(ppsc, "rho", "single");
+  marder->div_e = fld_create(ppsc, "div_E");
+  marder->rho = fld_create(ppsc, "rho");
 
   marder->bnd = psc_bnd_create(psc_marder_comm(marder));
   psc_bnd_set_name(marder->bnd, "marder_bnd");

@@ -29,6 +29,8 @@ cuda_float_as_int(float f)
 
 // ======================================================================
 
+EXTERN_C void cuda_axpy_comp_yz(struct psc_fields *y, int ym, float a, struct psc_fields *x, int xm);
+
 EXTERN_C void cuda_marder_correct_yz(struct psc_mfields *mflds, struct psc_mfields *mf,
 				     int p, int ldims[3], float fac[3],
 				     int ly[3], int ry[3],
