@@ -14,6 +14,7 @@ libsubdir_la_SOURCES = \
 	psc_bnd_cuda.c \
 	psc_bnd_particles_cuda.c \
 	psc_bnd_fields_cuda.c \
+	psc_output_fields_item_flds_cuda.c \
 	b40c/kernel_utils.h \
 	b40c/radixsort_kernel_common.h \
 	b40c/radixsort_key_conversion.h \
