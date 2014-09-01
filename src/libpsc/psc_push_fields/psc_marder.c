@@ -68,6 +68,9 @@ psc_marder_init()
 {
   mrc_class_register_subclass(&mrc_class_psc_marder, &psc_marder_c_ops);
   mrc_class_register_subclass(&mrc_class_psc_marder, &psc_marder_single_ops);
+#ifdef USE_CUDA
+  mrc_class_register_subclass(&mrc_class_psc_marder, &psc_marder_cuda_ops);
+#endif
 }
 
 // ----------------------------------------------------------------------

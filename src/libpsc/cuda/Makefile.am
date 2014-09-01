@@ -10,6 +10,7 @@ libsubdir_la_SOURCES = \
 	psc_particles_cuda.c \
 	psc_push_particles_cuda.c \
 	psc_push_fields_cuda.c \
+	psc_marder_cuda.c \
 	psc_bnd_cuda.c \
 	psc_bnd_particles_cuda.c \
 	psc_bnd_fields_cuda.c \
