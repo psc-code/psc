@@ -96,6 +96,8 @@ static void
 psc_marder_cuda_correct(struct psc_marder *marder,
 			struct psc_mfields *mflds_base, struct psc_mfields *mf_base)
 {
+  assert(ppsc->domain.gdims[0] == 1);
+    
   // FIXME: how to choose diffusion parameter properly?
   float dx[3] = { ppsc->patch[0].dx[0], ppsc->patch[0].dx[1], ppsc->patch[0].dx[2] };
   float inv_sum = 0.;
@@ -113,10 +115,10 @@ psc_marder_cuda_correct(struct psc_marder *marder,
 		   .5 * ppsc->dt * diffusion / dx[1],
 		   .5 * ppsc->dt * diffusion / dx[2] };
 
+  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, FIELDS_TYPE, EX, EX + 3);
+  struct psc_mfields *mf = psc_mfields_get_as(mf_base, FIELDS_TYPE, 0, 1);
+
   for (int p = 0; p < mf_base->nr_patches; p++) {
-    struct psc_fields *flds_base = psc_mfields_get_patch(mflds_base, p);
-    struct psc_fields *f_base = psc_mfields_get_patch(mf_base, p);
-    
     int l_cc[3] = {0, 0, 0}, r_cc[3] = {0, 0, 0};
     int l_nc[3] = {0, 0, 0}, r_nc[3] = {0, 0, 0};
     for (int d = 0; d < 3; d++) {
@@ -130,8 +132,6 @@ psc_marder_cuda_correct(struct psc_marder *marder,
       }
     }
     
-    assert(ppsc->domain.gdims[0] == 1);
-    
     int *ldims = ppsc->patch[p].ldims;
     
     int ly[3] = { l_nc[0], l_cc[1], l_nc[2] };
@@ -140,8 +140,8 @@ psc_marder_cuda_correct(struct psc_marder *marder,
     int lz[3] = { l_nc[0], l_nc[1], l_cc[2] };
     int rz[3] = { r_nc[0] + ldims[0], r_nc[1] + ldims[1], r_cc[2] + ldims[2] };
     
-    struct psc_fields *flds = psc_fields_get_as(flds_base, FIELDS_TYPE, EX, EX + 3);
-    struct psc_fields *f = psc_fields_get_as(f_base, FIELDS_TYPE, 0, 1);
+    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+    struct psc_fields *f = psc_mfields_get_patch(mf, p);
     
     for (int iz = -1; iz < ldims[2]; iz++) {
       for (int iy = -1; iy < ldims[1]; iy++) {
@@ -158,10 +158,10 @@ psc_marder_cuda_correct(struct psc_marder *marder,
 	}
       }
     }
-    
-    psc_fields_put_as(flds, flds_base, EX, EX + 3);
-    psc_fields_put_as(f, f_base, 0, 0);
   }
+
+  psc_mfields_put_as(mflds, mflds_base, EX, EX + 3);
+  psc_mfields_put_as(mf, mf_base, 0, 0);
 }
 
 // ======================================================================
