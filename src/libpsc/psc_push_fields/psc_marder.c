@@ -18,7 +18,9 @@ marder_calc_aid_fields(struct psc_marder *marder,
   psc_output_fields_item_run(marder->item_div_e, flds, particles, div_e); // FIXME, should accept NULL for particles
   
   if (marder->dump) {
-    mrc_io_open(marder->io, "w", ppsc->timestep, ppsc->timestep * ppsc->dt);
+    static int cnt;
+    mrc_io_open(marder->io, "w", cnt, cnt);//ppsc->timestep, ppsc->timestep * ppsc->dt);
+    cnt++;
     psc_mfields_write_as_mrc_fld(rho, marder->io);
     psc_mfields_write_as_mrc_fld(div_e, marder->io);
     mrc_io_close(marder->io);
