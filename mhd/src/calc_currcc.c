@@ -4,7 +4,7 @@
 #include "ggcm_mhd_crds.h"
 
 #include <mrc_domain.h>
-#include <mrc_fld_as_float.h>
+#include <mrc_fld_as_double.h>
 
 #include <math.h>
 #include <string.h>
@@ -32,13 +32,13 @@ ggcm_mhd_calc_currcc(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
   
   mrc_fld_foreach(tmp,ix,iy,iz, 1, 1) {
     // compute current on edge first    
-    F3(tmp,0,ix,iy,iz) = 
+    F3(t,0,ix,iy,iz) = 
       (F3(f, m+2, ix,iy+1,iz) - F3(f, m+2, ix,iy,iz)) * bd4y[iy] - 
       (F3(f, m+1, ix,iy,iz+1) - F3(f, m+1, ix,iy,iz)) * bd4z[iz] ;     
-    F3(tmp,1,ix,iy,iz) = 
+    F3(t,1,ix,iy,iz) = 
       (F3(f, m  , ix,iy,iz+1) - F3(f, m  , ix,iy,iz)) * bd4z[iz] -
       (F3(f, m+2, ix+1,iy,iz) - F3(f, m+2, ix,iy,iz)) * bd4x[ix];         
-    F3(tmp,2, ix,iy,iz) = 
+    F3(t,2, ix,iy,iz) = 
       (F3(f,m+1 , ix+1,iy,iz) - F3(f, m+1, ix,iy,iz)) * bd4x[ix] - 
       (F3(f,m   , ix,iy+1,iz) - F3(f, m  , ix,iy,iz)) * bd4y[iy]; 
   } mrc_fld_foreach_end;
@@ -46,15 +46,15 @@ ggcm_mhd_calc_currcc(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
   mrc_fld_foreach(currcc, ix,iy,iz, 1, 1) {
     // average to the center 
     // FIXME: note, this originally used zmask, not ymask
-    F3(currcc, 0, ix,iy,iz) = 0.25 *  
-      (F3(tmp, 0, ix,iy,iz  ) + F3(tmp, 0, ix,iy-1,iz  ) + 
-       F3(tmp, 0, ix,iy,iz-1) + F3(tmp, 0, ix,iy-1,iz-1));
-    F3(currcc, 1, ix,iy,iz) = 0.25 *
-      (F3(tmp, 1, ix,iy,iz  ) + F3(tmp, 1, ix-1,iy,iz  ) + 
-       F3(tmp, 1, ix,iy,iz-1) + F3(tmp, 1, ix-1,iy,iz-1));
-    F3(currcc, 2, ix,iy,iz) = 0.25 *
-      (F3(tmp, 2, ix,iy  ,iz) + F3(tmp, 2, ix-1,iy,iz  ) + 
-       F3(tmp, 2, ix,iy-1,iz) + F3(tmp, 2, ix-1,iy-1,iz));
+    F3(c, 0, ix,iy,iz) = 0.25f *  
+      (F3(t, 0, ix,iy,iz  ) + F3(t, 0, ix,iy-1,iz  ) + 
+       F3(t, 0, ix,iy,iz-1) + F3(t, 0, ix,iy-1,iz-1));
+    F3(c, 1, ix,iy,iz) = 0.25f *
+      (F3(t, 1, ix,iy,iz  ) + F3(t, 1, ix-1,iy,iz  ) + 
+       F3(t, 1, ix,iy,iz-1) + F3(t, 1, ix-1,iy,iz-1));
+    F3(c, 2, ix,iy,iz) = 0.25f *
+      (F3(t, 2, ix,iy  ,iz) + F3(t, 2, ix-1,iy,iz  ) + 
+       F3(t, 2, ix,iy-1,iz) + F3(t, 2, ix-1,iy-1,iz));
   } mrc_fld_foreach_end;     
 
   mrc_fld_put_as(c, currcc);
