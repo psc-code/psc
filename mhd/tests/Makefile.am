@@ -7,6 +7,7 @@ bin_PROGRAMS = \
 	mhd_cosine \
 	mhd_bw \
 	mhd_ot \
+	mhd_harris \
 	mhd_kh \
 	mhd_ici \
 	mhd_hydroblast \

@@ -14,5 +14,6 @@ mhd_kh
 mhd_ici
 mhd_hydroblast
 mhd_mhdblast
+mhd_harris
 *.log
 *.trs
