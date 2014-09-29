@@ -301,14 +301,14 @@ compute_Ediffu_const(struct ggcm_mhd_step *step, struct mrc_fld *E_ec,
   // calc cell-centered J
   mrc_fld_foreach(j_ec, i,j,k, 1, 1) {
     F3(j_cc, 0, i,j,k) =
-      0.25 * (F3(j_ec, 1, i  ,j+1,k+1) + F3(j_ec, 1, i  ,j  ,k+1) +
-              F3(j_ec, 1, i  ,j+1,k  ) + F3(j_ec, 1, i  ,j  ,k  ));
+      0.25 * (F3(j_ec, 0, i  ,j+1,k+1) + F3(j_ec, 0, i  ,j  ,k+1) +
+              F3(j_ec, 0, i  ,j+1,k  ) + F3(j_ec, 0, i  ,j  ,k  ));
     F3(j_cc, 1, i,j,k) =
       0.25 * (F3(j_ec, 1, i+1,j  ,k+1) + F3(j_ec, 1, i+1,j  ,k  ) +
               F3(j_ec, 1, i  ,j  ,k+1) + F3(j_ec, 1, i  ,j  ,k  ));
     F3(j_cc, 2, i,j,k) =
-      0.25 * (F3(j_ec, 1, i+1,j+1,k  ) + F3(j_ec, 1, i+1,j  ,k  ) +
-              F3(j_ec, 1, i  ,j+1,k  ) + F3(j_ec, 1, i  ,j  ,k  ));
+      0.25 * (F3(j_ec, 2, i+1,j+1,k  ) + F3(j_ec, 2, i+1,j  ,k  ) +
+              F3(j_ec, 2, i  ,j+1,k  ) + F3(j_ec, 2, i  ,j  ,k  ));
   } mrc_fld_foreach_end;
 
   mrc_fld_data_t eta = mhd->par.diffco / mhd->par.resnorm;
