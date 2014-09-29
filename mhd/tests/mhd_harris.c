@@ -15,7 +15,7 @@
 
 #include <string.h>
 #include <stdio.h>
-#include <stdlib.h> 
+#include <stdlib.h>
 #include <assert.h>
 
 
@@ -68,23 +68,25 @@ ggcm_mhd_ic_harris_run(struct ggcm_mhd_ic *ic)
                                    cos(ky*(y - y0 - ly/2.0)) * cos(kx*(x - x0 - lx/2.0));
   } mrc_fld_foreach_end;
 
-  mrc_fld_foreach(fld, ix,iy,iz, 1, 1) {
+  mrc_fld_foreach(fld, ix,iy,iz, 2, 1) {
     double y = MRC_DCRDY(crds, iy);
-    // eq
+    // eqilibrium
     RR(fld, ix,iy,iz) = ic_harris->n_inf + \
                         ic_harris->n_0 / (sqr(cosh((y - y0 - ly/2.0) / cs_width)));
     PP(fld, ix,iy,iz) = u_th * RR(fld, ix,iy,iz);
     BX(fld, ix,iy,iz) = ic_harris->B_0 * tanh((y - y0 - ly/2.0) / cs_width);
-  } mrc_fld_foreach_end;
+    BY(fld, ix,iy,iz) = 0.0;
+    BZ(fld, ix,iy,iz) = 0.0;
+    VX(fld, ix,iy,iz) = 0.0;
+    VY(fld, ix,iy,iz) = 0.0;
+    VZ(fld, ix,iy,iz) = 0.0;
 
-  // FIXME for nonuniform
-  mrc_fld_foreach(fld, ix,iy,iz, 1, 1) {
-    // perturbation from psi
+    // perturbation, B = -z_hat cross grad psi
     BX(fld, ix,iy,iz) +=
-      (F3(fld_psi,0, ix,iy+1,iz) - F3(fld_psi,0, ix,iy,iz)) /
+      (F3(fld_psi, 0, ix,iy+1,iz) - F3(fld_psi, 0, ix,iy,iz)) /
       (MRC_DCRDY(crds,iy+1) - MRC_DCRDY(crds, iy));
-    BY(fld, ix,iy,iz) = -
-      (F3(fld_psi,0, ix+1,iy,iz) - F3(fld_psi,0, ix,iy,iz)) /
+    BY(fld, ix,iy,iz) -=
+      (F3(fld_psi, 0, ix+1,iy,iz) - F3(fld_psi, 0, ix,iy,iz)) /
       (MRC_DCRDX(crds,ix+1) - MRC_DCRDX(crds, ix));
   } mrc_fld_foreach_end;
 
@@ -157,8 +159,6 @@ ggcm_mhd_ic_asymharris_run(struct ggcm_mhd_ic *ic)
   double n01 = ic_asymharris->n01;
   double n02 = ic_asymharris->n02;
 
-  // mprintf("c = %f\n", c);
-
   struct mrc_fld *fld_psi = mrc_domain_fld_create(fld->_domain, SW_2, "psi");
   mrc_fld_setup(fld_psi);
   mrc_fld_foreach(fld, ix,iy,iz, 2, 2) {
@@ -172,7 +172,7 @@ ggcm_mhd_ic_asymharris_run(struct ggcm_mhd_ic *ic)
                                    cos(ky*(y - y0 - ly/2.0)) * cos(kx*(x - x0 - lx/2.0));
   } mrc_fld_foreach_end;
 
-  mrc_fld_foreach(fld, ix,iy,iz, 1, 1) {
+  mrc_fld_foreach(fld, ix,iy,iz, 1, 2) {
     double y = MRC_DCRDY(crds, iy);
     double yprime = y - y0 - ly/2.0;  // y shifted to center of box
     double B0;
@@ -183,27 +183,24 @@ ggcm_mhd_ic_asymharris_run(struct ggcm_mhd_ic *ic)
       B0 = ic_asymharris->B02;
     }
 
+    // equilibrium
     BX(fld, ix,iy,iz) = B0 * tanh(yprime / cs_width);
-
+    BY(fld, ix,iy,iz) = 0.0;
+    BZ(fld, ix,iy,iz) = 0.0;
     RR(fld, ix,iy,iz) = (0.5 * (n01 + n02) +
-			 0.5 * (n01 - n02) * tanh(yprime / cs_width));
+       0.5 * (n01 - n02) * tanh(yprime / cs_width));
     PP(fld, ix,iy,iz) = c - (0.5 * sqr(BX(fld, ix,iy,iz)));
+    VX(fld, ix,iy,iz) = 0.0;
+    VY(fld, ix,iy,iz) = 0.0;
+    VZ(fld, ix,iy,iz) = 0.0;
 
-    // RR(fld, ix,iy,iz) = 0.2 +
-    //                     n01 / (sqr(cosh(yprime / cs_width)));
-    // PP(fld, ix,iy,iz) = u_th * RR(fld, ix,iy,iz);
-
-  } mrc_fld_foreach_end;
-
-  // FIXME for nonuniform
-  mrc_fld_foreach(fld, ix,iy,iz, 1, 1) {
-    // perturbation from psi
+    // perturbation, B = -z_hat cross grad psi
     BX(fld, ix,iy,iz) +=
-      (F3(fld_psi,0, ix,iy+1,iz) - F3(fld_psi,0, ix,iy,iz)) /
-      (MRC_DCRDY(crds,iy+1) - MRC_DCRDY(crds, iy));
-    BY(fld, ix,iy,iz) = -
-      (F3(fld_psi,0, ix+1,iy,iz) - F3(fld_psi,0, ix,iy,iz)) /
-      (MRC_DCRDX(crds,ix+1) - MRC_DCRDX(crds, ix));
+      (F3(fld_psi, 0, ix,iy-1,iz) - F3(fld_psi, 0, ix,iy,iz)) /
+      (MRC_DCRDY(crds,iy-1) - MRC_DCRDY(crds, iy));
+    BY(fld, ix,iy,iz) -=
+      (F3(fld_psi, 0, ix-1,iy,iz) - F3(fld_psi, 0, ix,iy,iz)) /
+      (MRC_DCRDX(crds,ix-1) - MRC_DCRDX(crds, ix));
   } mrc_fld_foreach_end;
 
   mrc_fld_destroy(fld_psi);
@@ -253,7 +250,7 @@ ggcm_mhd_harris_create(struct ggcm_mhd *mhd)
   /* set defaults for coord arrays */
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
   mrc_crds_set_type(crds, "uniform");
-  mrc_crds_set_param_int(crds, "sw", SW_2);   // 'stencil width' 
+  mrc_crds_set_param_int(crds, "sw", SW_2);   // 'stencil width'
   mrc_crds_set_param_double3(crds, "l", (double[3]) {  -12.8, -6.4, 0.0 });
   mrc_crds_set_param_double3(crds, "h", (double[3]) {   12.8,  6.4, 0.1 });
   ggcm_mhd_set_param_float(mhd, "diffconstant", 0.005);
@@ -283,7 +280,7 @@ extern struct ggcm_mhd_diag_ops ggcm_mhd_diag_c_ops;
 int
 main(int argc, char **argv)
 {
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd, &ggcm_mhd_harris_ops);  
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd, &ggcm_mhd_harris_ops);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_diag, &ggcm_mhd_diag_c_ops);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_harris_ops);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_asymharris_ops);

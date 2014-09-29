@@ -7,8 +7,8 @@
 // in 3D by "mode number" (number of full cycles in the box). Background
 // B field is given by b_par, parallel to k, and background parallel flow
 // is v_par. The perturbation strength is specified with b_perp. The
-// polarization parameter is for right (+1.0) and left (-1.0) polarized
-// waves.
+// polarization parameter is for right handed whistlers (+1.0) and left
+// handed (-1.0) ion cyclotron waves.
 //
 // Sound Initial condition:
 // Similar to whistler setup, except the background fields are rho0,
@@ -39,7 +39,7 @@
 // B: background B
 // rho: background density
 // d_i: hall parameter (length)
-// polarization == 1: right handed, polarization == -1: left handed
+// polarization == 1: right handed whistlers, -1: left handed ion cyclotron
 static double
 whistler_omega(double ksq, double k_par, double B, double rho,
                double d_i, double polarization)
@@ -57,7 +57,7 @@ whistler_omega(double ksq, double k_par, double B, double rho,
 // B: background B
 // rho: background density
 // d_i: hall parameter (length)
-// polarization == 1: right handed, polarization == -1: left handed
+// polarization == 1: right handed whistlers, -1: left handed ion cyclotron
 static double __unused
 whistler_omega_3d(double k[3], double B[3], double rho, double d_i,
                   double polarization)
