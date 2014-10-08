@@ -16,6 +16,8 @@ struct psc_bubble {
   double MMach;
   double LLn;
   double LLB;
+  double LLz;
+  double LLy;
 };
 
 #define to_psc_bubble(psc) mrc_to_subobj(psc, struct psc_bubble)
@@ -28,6 +30,8 @@ static struct param psc_bubble_descr[] = {
   { "MMach"         , VAR(MMach)           , PARAM_DOUBLE(3.)     },
   { "LLn"           , VAR(LLn)             , PARAM_DOUBLE(200.)   },
   { "LLB"           , VAR(LLB)             , PARAM_DOUBLE(200./6.)},
+  { "LLz"           , VAR(LLz)             , PARAM_DOUBLE(0.)     },
+  { "LLy"           , VAR(LLy)             , PARAM_DOUBLE(0.)     },
   {},
 };
 #undef VAR
@@ -70,20 +74,33 @@ psc_bubble_create(struct psc *psc)
 }
 
 // ----------------------------------------------------------------------
-// psc_bubble_set_from_options
+// psc_bubble_setup
 
 static void
-psc_bubble_set_from_options(struct psc *psc)
+psc_bubble_setup(struct psc *psc)
 {
   struct psc_bubble *bubble = to_psc_bubble(psc);
+  
+  if (bubble->LLy == 0.) {
+    bubble->LLy = 2. * bubble->LLn;
+  }
+  if (bubble->LLz == 0.) {
+    bubble->LLz = 3. * bubble->LLn;
+  }
+  psc->domain.length[0] = bubble->LLn; // no x-dependence
+  psc->domain.length[1] = bubble->LLy;
+  psc->domain.length[2] = bubble->LLz;
 
-  psc->domain.length[0] = 10.  * bubble->LLn;
-  psc->domain.length[1] = 2.   * bubble->LLn; // no y dependence 
-  psc->domain.length[2] = 3.   * bubble->LLn;
+  // center around origin
+  for (int d = 0; d < 3; d++) {
+    psc->domain.corner[d] = -.5 * psc->domain.length[d];
+  }
 
-  psc->domain.corner[0] = -5   * bubble->LLn;
-  psc->domain.corner[1] = -1.  * bubble->LLn;
-  psc->domain.corner[2] = -1.5 * bubble->LLn;
+  psc_setup_super(psc);
+
+  MPI_Comm comm = psc_comm(psc);
+  double TTe = psc->kinds[KIND_ELECTRON].T;
+  mpi_printf(comm, "lambda_D = %g\n", sqrt(TTe));
 }
 
 // ----------------------------------------------------------------------
@@ -105,16 +122,17 @@ psc_bubble_init_field(struct psc *psc, double x[3], int m)
 
   double BB = bubble->BB;
   double LLn = bubble->LLn;
+  double LLy = bubble->LLy;
   double LLB = bubble->LLB;
   double MMi = psc->kinds[KIND_ION].m;
   double MMach = bubble->MMach;
   double TTe = psc->kinds[KIND_ELECTRON].T;
 
   double z1 = x[2];
-  double y1 = x[1] + LLn;
+  double y1 = x[1] + .5 * LLy;
   double r1 = sqrt(sqr(z1) + sqr(y1));
   double z2 = x[2];
-  double y2 = x[1] - LLn;
+  double y2 = x[1] - .5 * LLy;
   double r2 = sqrt(sqr(z2) + sqr(y2));
 
   double rv = 0.;
@@ -172,6 +190,7 @@ psc_bubble_init_npt(struct psc *psc, int kind, double x[3],
   struct psc_bubble *bubble = to_psc_bubble(psc);
 
   double BB = bubble->BB;
+  double LLy = bubble->LLy;
   double LLn = bubble->LLn;
   double LLB = bubble->LLB;
   double V0 = bubble->MMach * sqrt(psc->kinds[KIND_ELECTRON].T / psc->kinds[KIND_ION].m);
@@ -179,22 +198,22 @@ psc_bubble_init_npt(struct psc *psc, int kind, double x[3],
   double nnb = bubble->nnb;
   double nn0 = bubble->nn0;
 
-  double r1 = sqrt(sqr(x[2]) + sqr(x[1] + LLn));
-  double r2 = sqrt(sqr(x[2]) + sqr(x[1] - LLn));
+  double r1 = sqrt(sqr(x[2]) + sqr(x[1] + .5 * LLy));
+  double r2 = sqrt(sqr(x[2]) + sqr(x[1] - .5 * LLy));
 
   npt->n = nnb;
   if (r1 < LLn) {
     npt->n += (nn0 - nnb) * sqr(cos(M_PI / 2. * r1 / LLn));
     if (r1 > 0.0) {
       npt->p[2] += V0 * sin(M_PI * r1 / LLn) * x[2] / r1;
-      npt->p[1] += V0 * sin(M_PI * r1 / LLn) * (x[1] + 1.*LLn) / r1;
+      npt->p[1] += V0 * sin(M_PI * r1 / LLn) * (x[1] + .5 * LLy) / r1;
     }
   }
   if (r2 < LLn) {
     npt->n += (nn0 - nnb) * sqr(cos(M_PI / 2. * r2 / LLn));
     if (r2 > 0.0) {
       npt->p[2] += V0 * sin(M_PI * r2 / LLn) * x[2] / r2;
-      npt->p[1] += V0 * sin(M_PI * r2 / LLn) * (x[1] - 1.*LLn) / r2;
+      npt->p[1] += V0 * sin(M_PI * r2 / LLn) * (x[1] - .5 * LLy) / r2;
     }
   }
 
@@ -224,7 +243,7 @@ struct psc_ops psc_bubble_ops = {
   .size             = sizeof(struct psc_bubble),
   .param_descr      = psc_bubble_descr,
   .create           = psc_bubble_create,
-  .set_from_options = psc_bubble_set_from_options,
+  .setup            = psc_bubble_setup,
   .read             = psc_bubble_read,
   .init_field       = psc_bubble_init_field,
   .init_npt         = psc_bubble_init_npt,
