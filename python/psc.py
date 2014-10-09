@@ -37,7 +37,7 @@ class PscFields:
 
         return crd
 
-    def _read_f3(self, field, comp, downscale=downscale):
+    def _read_f3(self, field, comp):
         field = _find_path(self._h5file, field)
         dset = self._h5file["%s/%s/p0/3d" % (field, comp)]
         fld = dset[:]
