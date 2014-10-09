@@ -768,9 +768,12 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   free(nr_particles_by_patch);
 
   psc_mparticles_put_as(mprts_new, mprts_base_new, 0);
-  psc_mparticles_put_as(mprts_old, psc->particles, MP_DONT_COPY);
 
-  if (mprts_old == psc->particles) {
+  if (mprts_old != psc->particles) {
+    // can't do this because psc->particles is gone
+    // psc_mparticles_put_as(mprts_old, psc->particles, MP_DONT_COPY);
+    psc_mparticles_destroy(mprts_old);
+  } else {
     psc_mparticles_destroy(psc->particles);
   }
   // replace particles by redistributed ones
