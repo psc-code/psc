@@ -111,9 +111,9 @@ c x^n, p^n -> x^(n+0.5), p^n
             s1y=0.0
             s1z=0.0
 
-            u=xi*dxi
-            v=yi*dyi
-            w=zi*dzi
+            u=(xi-cornerx)*dxi
+            v=(yi-cornery)*dyi
+            w=(zi-cornerz)*dzi
             j1=nint(u)
             j2=nint(v)
             j3=nint(w)
@@ -134,9 +134,9 @@ c x^n, p^n -> x^(n+0.5), p^n
             s0z(+0)=0.75-abs(h3)*abs(h3)
             s0z(+1)=0.5*(1.5-abs(h3+1.0))*(1.5-abs(h3+1.0))
 
-            u=xi*dxi
-            v=yi*dyi-0.5
-            w=zi*dzi-0.5
+            u=(xi-cornerx)*dxi
+            v=(yi-cornery)*dyi-0.5
+            w=(zi-cornerz)*dzi-0.5
             l1=nint(u)
             l2=nint(v)
             l3=nint(w)
@@ -259,9 +259,9 @@ c x^(n+0.5), p^n -> x^(n+1.0), p^(n+1.0)
 
 c DETERMINE THE DENSITIES AT t=(n+1.0)*dt
 
-            u=xi*dxi
-            v=yi*dyi
-            w=zi*dzi
+            u=(xi-cornerx)*dxi
+            v=(yi-cornery)*dyi
+            w=(zi-cornerz)*dzi
             l1=nint(u)
             l2=nint(v)
             l3=nint(w)
@@ -281,8 +281,8 @@ c x^(n+1), p^(n+1) -> x^(n+1.5), p^(n+1)
             yi=yi+vyi*yl
             zi=zi+vzi*zl
 
-            v=yi*dyi
-            w=zi*dzi
+            v=(yi-cornery)*dyi
+            w=(zi-cornerz)*dzi
             k2=nint(v)
             k3=nint(w)
             h2=k2-v
