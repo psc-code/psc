@@ -115,9 +115,9 @@ c x^n, p^n -> x^(n+0.5), p^n
             s0z=0.0
             s1z=0.0
 
-            u = (xi - cornerx ) * dxi
-            v = (yi - cornery ) * dyi
-            w = (zi - cornerz ) * dzi
+            u = xi * dxi
+            v = yi * dyi
+            w = zi * dzi
 			
 			
             j1=nint(u)
@@ -132,9 +132,9 @@ c x^n, p^n -> x^(n+0.5), p^n
             s0z(+0)=0.75-abs(h3)*abs(h3)
             s0z(+1)=0.5*(1.5-abs(h3+1.0))*(1.5-abs(h3+1.0))
 
-            u=(xi-cornerx)*dxi
-            v=(yi-cornery)*dyi
-            w=(zi-cornerz)*dzi-0.5
+            u=xi*dxi
+            v=yi*dyi
+            w=zi*dzi-0.5
             l1=nint(u)
             l2=nint(v)
             l3=nint(w)
@@ -238,7 +238,7 @@ c x^(n+1), p^(n+1) -> x^(n+1.5), p^(n+1)
 
             zi=zi+vzi*zl
 
-            w=(zi-cornerz)*dzi
+            w=zi*dzi
             k3=nint(w)
             h3=k3-w
 
