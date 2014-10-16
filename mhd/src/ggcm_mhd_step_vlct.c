@@ -396,10 +396,12 @@ ggcm_mhd_step_vlct_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   if (step->do_nwst) {
     double old_dt = mhd->dt;
     mhd->dt = newstep_fc(mhd, x, B_cc);
-    mpi_printf(ggcm_mhd_comm(mhd), "switched dt %g <- %g\n", mhd->dt, old_dt);
-    if (mhd->dt < mhd->par.dtmin) {  
-      mpi_printf(ggcm_mhd_comm(mhd), "!!! dt < dtmin, aborting now!\n");
-      MPI_Abort(MPI_COMM_WORLD, 1);
+    if (mhd->dt != old_dt) {
+      mpi_printf(ggcm_mhd_comm(mhd), "switched dt %g <- %g\n", mhd->dt, old_dt);
+      if (mhd->dt < mhd->par.dtmin) {
+        mpi_printf(ggcm_mhd_comm(mhd), "!!! dt < dtmin, aborting now!\n");
+        MPI_Abort(MPI_COMM_WORLD, 1);
+      }
     }
   }
 
