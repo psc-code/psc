@@ -10,7 +10,8 @@ libsubdir_la_SOURCES = \
 	psc_bnd_particles_single.c \
 	psc_bnd_particles_double.c \
 	psc_bnd_particles_double_omp.c \
-	psc_bnd_particles_single2.c
+	psc_bnd_particles_single2.c \
+	psc_bnd_particles_fortran.c
 
 if USE_CUDA
 libsubdir_la_SOURCES += \
