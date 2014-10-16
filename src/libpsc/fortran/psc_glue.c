@@ -6,6 +6,7 @@
 #include "psc_push_fields.h"
 #include "psc_bnd_fields_private.h"
 #include "psc_pulse.h"
+#include "psc_fields_c.h"
 
 #include <assert.h>
 
@@ -229,11 +230,25 @@ PIC_push_part_yz(struct psc *psc, int p, struct psc_particles *prts, struct psc_
 {
   PSC_set_timestep(psc);
   PSC_set_patch(psc, p);
+#if 0
   fields_fortran_real_t **flds = pf->data;
   PIC_push_part_yz_F77(&prts->n_part, &psc_particles_fortran(prts)->particles[-1], &psc->p2A, &psc->p2B,
 		       flds[JXI], flds[JYI], flds[JZI],
 		       flds[EX], flds[EY], flds[EZ],
 		       flds[HX], flds[HY], flds[HZ]);
+#else
+  int *ib = pf->ib;
+  PIC_push_part_yz_F77(&prts->n_part, &psc_particles_fortran(prts)->particles[-1], &psc->p2A, &psc->p2B,
+		       &F3_C(pf, JXI, ib[0], ib[1], ib[2]),
+		       &F3_C(pf, JYI, ib[0], ib[1], ib[2]),
+		       &F3_C(pf, JZI, ib[0], ib[1], ib[2]),
+		       &F3_C(pf, EX , ib[0], ib[1], ib[2]),
+		       &F3_C(pf, EY , ib[0], ib[1], ib[2]),
+		       &F3_C(pf, EZ , ib[0], ib[1], ib[2]),
+		       &F3_C(pf, HX , ib[0], ib[1], ib[2]),
+		       &F3_C(pf, HY , ib[0], ib[1], ib[2]),
+		       &F3_C(pf, HZ , ib[0], ib[1], ib[2]));
+#endif
 }
 
 void

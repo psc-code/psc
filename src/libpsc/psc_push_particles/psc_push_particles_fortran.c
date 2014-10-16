@@ -72,7 +72,7 @@ psc_push_particles_fortran_push_a_yz(struct psc_push_particles *push,
   }
 
   struct psc_particles *prts = psc_particles_get_as(prts_base, "fortran", 0);
-  struct psc_fields *flds = psc_fields_get_as(flds_base, "fortran", EX, EX + 6);
+  struct psc_fields *flds = psc_fields_get_as(flds_base, "c", EX, EX + 6);
   
   prof_start(pr);
   psc_fields_zero_range(flds, JXI, JXI + 3);
