@@ -66,8 +66,6 @@ psc_push_particles_fortran_push_a_yz(struct psc_push_particles *push,
 				     struct psc_particles *prts_base,
 				     struct psc_fields *flds_base)
 {
-  assert(ppsc->nr_patches == 1);
-  
   static int pr;
   if (!pr) {
     pr = prof_register("fort_part_yz", 1., 0, 0);
