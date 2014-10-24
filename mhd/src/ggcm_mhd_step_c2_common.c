@@ -591,7 +591,7 @@ bcthy3z_NL1(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int IZ
   }
 
   // edge centered E = - v x B (+ dissipation)
-  mrc_fld_foreach(f, ix,iy,iz, 1, 0) {
+  mrc_fld_foreach(f, ix,iy,iz, 0, 1) {
     mrc_fld_data_t ttmp[2];
     calc_v_x_B(ttmp, f, m_curr, ix, iy, iz, XX, YY, ZZ, IX, IY, IZ,
 	       JX1, JY1, JZ1, JX2, JY2, JZ2, bd2x, bd2y, bd2z, dt);
@@ -741,7 +741,7 @@ ggcm_mhd_step_c_newstep(struct ggcm_mhd_step *step, float *dtn)
 
   ggcm_mhd_fill_ghosts(mhd, mhd->fld, _RR1, mhd->time);
   zmaskn(mhd, mhd->fld);
-  assert(strcmp(mrc_fld_type(mhd->fld), "float") == 0);
+  // assert(strcmp(mrc_fld_type(mhd->fld), "float") == 0);
   *dtn = newstep_sc(mhd, mhd->fld);
 }
 
@@ -773,4 +773,29 @@ ggcm_mhd_step_c_corr(struct ggcm_mhd_step *step)
   primvar_c(step->mhd, _RR2);
   pushstage_c(step->mhd, step->mhd->dt, _RR1, _RR2, _RR1, LIMIT_1);
 }
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_step_c2_get_e_ec
+
+static void
+ggcm_mhd_step_c2_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
+                          struct mrc_fld *state_vec)
+{
+  // the state vector should already be FLD_TYPE, but Eout is the data type
+  // of the output
+  struct mrc_fld *E = mrc_fld_get_as(Eout, FLD_TYPE);
+  struct mrc_fld *x = mrc_fld_get_as(state_vec, FLD_TYPE);
+
+  mrc_fld_foreach(x, ix, iy, iz, 0, 1) {
+    F3(E, 0, ix, iy, iz) = F3(x, _FLX, ix, iy, iz);
+    F3(E, 1, ix, iy, iz) = F3(x, _FLY, ix, iy, iz);
+    F3(E, 2, ix, iy, iz) = F3(x, _FLZ, ix, iy, iz);
+  } mrc_fld_foreach_end;
+
+  mrc_fld_put_as(E, Eout);
+  // FIXME, should use _put_as, but don't want copy-back
+  if (strcmp(mrc_fld_type(state_vec), FLD_TYPE) != 0) {
+    mrc_fld_destroy(x);
+  }
+} 
 

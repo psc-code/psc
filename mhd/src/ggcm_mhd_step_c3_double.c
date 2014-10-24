@@ -17,4 +17,5 @@ struct ggcm_mhd_step_ops ggcm_mhd_step_c3_double_ops = {
   .create      = ggcm_mhd_step_c_create,
   .setup       = ggcm_mhd_step_c_setup,
   .run         = ggcm_mhd_step_c_run,
+  .get_e_ec   = ggcm_mhd_step_c3_get_e_ec,
 };

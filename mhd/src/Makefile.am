@@ -44,6 +44,7 @@ libmhd_la_SOURCES = \
 	zmaskn_double.c \
 	ggcm_mhd_diag_item_divb.c \
 	ggcm_mhd_diag_item_j.c \
+	ggcm_mhd_diag_item_e.c \
 	calc_currcc.c \
 	calc_divb.c \
 	\

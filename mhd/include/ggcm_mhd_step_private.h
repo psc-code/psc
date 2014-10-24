@@ -30,6 +30,8 @@ struct ggcm_mhd_step_ops {
   void (*corr)(struct ggcm_mhd_step *);
   void (*calc_rhs)(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
 		   struct mrc_fld *x);
+  void (*get_e_ec)(struct ggcm_mhd_step *step, struct mrc_fld *E,
+                   struct mrc_fld *x);
   void (*run)(struct ggcm_mhd_step *step, struct mrc_fld *x);
 
   int task_pred_nl1;

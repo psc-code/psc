@@ -11,6 +11,7 @@
 #include <mrc_profile.h>
 
 #include <math.h>
+#include <string.h>
 
 #include "mhd_1d.c"
 #include "mhd_3d.c"
@@ -774,6 +775,33 @@ ggcm_mhd_step_c_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   ggcm_mhd_step_put_3d_fld(step, x_half);
   ggcm_mhd_step_put_3d_fld(step, prim);
 }
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_step_c3_get_e_ec
+
+static void
+ggcm_mhd_step_c3_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
+                          struct mrc_fld *state_vec)
+{
+  // the state vector should already be FLD_TYPE, but Eout is the data type
+  // of the output
+  struct mrc_fld *E = mrc_fld_get_as(Eout, FLD_TYPE);
+  struct mrc_fld *x = mrc_fld_get_as(state_vec, FLD_TYPE);
+  struct mrc_fld *prim = ggcm_mhd_step_get_3d_fld(step, 5);
+  struct ggcm_mhd *mhd = step->mhd;
+
+  ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
+  ggcm_mhd_step_c_primvar(step, prim, x);
+  zmaskn(step->mhd, x);
+  calce_c(step, E, x, prim, mhd->dt);
+  
+  ggcm_mhd_step_put_3d_fld(step, prim);
+  mrc_fld_put_as(E, Eout);
+  // FIXME, should use _put_as, but don't want copy-back
+  if (strcmp(mrc_fld_type(state_vec), FLD_TYPE) != 0) {
+    mrc_fld_destroy(x);
+  }
+} 
 
 // ----------------------------------------------------------------------
 // subclass description

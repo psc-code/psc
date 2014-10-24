@@ -15,4 +15,5 @@ struct ggcm_mhd_step_ops ggcm_mhd_step_c2_float_ops = {
   .pred        = ggcm_mhd_step_c_pred,
   .corr        = ggcm_mhd_step_c_corr,
   .run         = ggcm_mhd_step_run_predcorr,
+  .get_e_ec   = ggcm_mhd_step_c2_get_e_ec,
 };

@@ -27,6 +27,18 @@ ggcm_mhd_step_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_step_get_e_ec
+
+void
+ggcm_mhd_step_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *E,
+                        struct mrc_fld *x)
+{
+  struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
+  assert(ops && ops->get_e_ec);
+  ops->get_e_ec(step, E, x);
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_step_run
 
 void

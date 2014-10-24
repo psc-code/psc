@@ -8,6 +8,7 @@
 #include <mrc_profile.h>
 
 #include <math.h>
+#include <string.h>
 
 #include "mhd_sc.c"
 
@@ -775,4 +776,27 @@ ggcm_mhd_step_c_corr(struct ggcm_mhd_step *step)
   pushstage_c(step->mhd, step->mhd->dt, _RR1, _RR2, _RR1, LIMIT_1);
 }
 
- 
+// ----------------------------------------------------------------------
+// ggcm_mhd_step_c_get_e_ec
+
+static void
+ggcm_mhd_step_c_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
+                         struct mrc_fld *state_vec)
+{
+  // the state vector should already be FLD_TYPE, but Eout is the data type
+  // of the output
+  struct mrc_fld *E = mrc_fld_get_as(Eout, FLD_TYPE);
+  struct mrc_fld *x = mrc_fld_get_as(state_vec, FLD_TYPE);
+
+  mrc_fld_foreach(x, ix, iy, iz, 1, 0) {
+    F3(E, 0, ix, iy, iz) = F3(x, _FLX, ix, iy, iz);
+    F3(E, 1, ix, iy, iz) = F3(x, _FLY, ix, iy, iz);
+    F3(E, 2, ix, iy, iz) = F3(x, _FLZ, ix, iy, iz);
+  } mrc_fld_foreach_end;
+
+  mrc_fld_put_as(E, Eout);
+  // FIXME, should use _put_as, but don't want copy-back
+  if (strcmp(mrc_fld_type(state_vec), FLD_TYPE) != 0) {
+    mrc_fld_destroy(x);
+  }
+} 
