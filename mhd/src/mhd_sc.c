@@ -9,9 +9,9 @@ zmaskn(struct ggcm_mhd *mhd, struct mrc_fld *x)
   float eps   = 1e-15f;
 
   mrc_fld_foreach(x, ix,iy,iz, 1, 1) {
-    mrc_fld_data_t bb = (sqr(.5f * (BX(x, ix,iy,iz) + BX(x, ix-1,iy,iz))) +
-			 sqr(.5f * (BY(x, ix,iy,iz) + BY(x, ix,iy-1,iz))) +
-			 sqr(.5f * (BZ(x, ix,iy,iz) + BZ(x, ix,iy,iz-1))));
+    mrc_fld_data_t bb = (sqr(.5f * (BX(x, ix,iy,iz) + BX(x, ix+1,iy,iz))) +
+			 sqr(.5f * (BY(x, ix,iy,iz) + BY(x, ix,iy+1,iz))) +
+			 sqr(.5f * (BZ(x, ix,iy,iz) + BZ(x, ix,iy,iz+1))));
     float rrm = fmaxf(eps, bb * va02i);
     F3(x, _ZMASK, ix,iy,iz) = F3(x, _YMASK, ix,iy,iz) *
       fminf(1.f, RR(x, ix,iy,iz) / rrm);
