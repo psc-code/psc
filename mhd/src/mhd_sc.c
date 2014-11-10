@@ -42,9 +42,9 @@ newstep_sc(struct ggcm_mhd *mhd, struct mrc_fld *x)
   mrc_fld_foreach(x, ix, iy, iz, 0, 0) {
     mrc_fld_data_t hh = mrc_fld_max(mrc_fld_max(fd1x[ix], fd1y[iy]), fd1z[iz]);
     mrc_fld_data_t rri = 1.f / mrc_fld_abs(RR(x, ix,iy,iz)); // FIXME abs necessary?
-    mrc_fld_data_t bb = (sqr(.5f * (BX(x, ix,iy,iz) + BX(x, ix-1,iy,iz))) + 
-			 sqr(.5f * (BY(x, ix,iy,iz) + BY(x, ix,iy-1,iz))) +
-			 sqr(.5f * (BZ(x, ix,iy,iz) + BZ(x, ix,iy,iz-1))));
+    mrc_fld_data_t bb = (sqr(.5f * (BX(x, ix,iy,iz) + BX(x, ix+1,iy,iz))) + 
+			 sqr(.5f * (BY(x, ix,iy,iz) + BY(x, ix,iy+1,iz))) +
+			 sqr(.5f * (BZ(x, ix,iy,iz) + BZ(x, ix,iy,iz+1))));
     if (have_hall) {
       bb *= 1 + sqr(two_pi_d_i * hh);
     }      
