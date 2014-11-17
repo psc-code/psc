@@ -170,9 +170,9 @@ ggcm_mhd_diag_item_b_run(struct ggcm_mhd_diag_item *item,
   struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
   if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM) {
     mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
-      F3(fld_r, 0, ix,iy,iz) = .5f * (BX(f, ix,iy,iz) + BX(f, ix-1,iy,iz));
-      F3(fld_r, 1, ix,iy,iz) = .5f * (BY(f, ix,iy,iz) + BY(f, ix,iy-1,iz));
-      F3(fld_r, 2, ix,iy,iz) = .5f * (BZ(f, ix,iy,iz) + BZ(f, ix,iy,iz-1));
+      F3(r, 0, ix,iy,iz) = .5f * (BX(f, ix,iy,iz) + BX(f, ix-1,iy,iz));
+      F3(r, 1, ix,iy,iz) = .5f * (BY(f, ix,iy,iz) + BY(f, ix,iy-1,iz));
+      F3(r, 2, ix,iy,iz) = .5f * (BZ(f, ix,iy,iz) + BZ(f, ix,iy,iz-1));
     } mrc_fld_foreach_end;
   } else if (mhd_type == MT_SEMI_CONSERVATIVE ||
 	     mhd_type == MT_FULLY_CONSERVATIVE) {
