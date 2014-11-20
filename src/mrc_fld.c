@@ -555,6 +555,33 @@ mrc_fld_dump(struct mrc_fld *x, const char *basename, int n)
 }
 
 // ----------------------------------------------------------------------
+// mrc_fld_make_view
+
+struct mrc_fld *
+mrc_fld_make_view(struct mrc_fld *fld, int mb, int me)
+{
+  struct mrc_fld *fld_new = mrc_fld_create(mrc_fld_comm(fld));
+  mrc_fld_set_type(fld_new, mrc_fld_type(fld));
+  if (!fld->_domain) {
+    assert(0); // could be done later, with a more general interface
+  } 
+  // if we're based on a domain, dims/offs/sw will be set by setup()
+  mrc_fld_set_param_obj(fld_new, "domain", fld->_domain);
+  mrc_fld_set_param_int(fld_new, "nr_spatial_dims", fld->_nr_spatial_dims);
+  mrc_fld_set_param_int(fld_new, "nr_comps", me - mb);
+  mrc_fld_set_param_int(fld_new, "nr_ghosts", fld->_nr_ghosts);
+  mrc_fld_set_param_int(fld_new, "dim", fld->_dim);
+  assert(!fld->_is_aos);
+  int size = fld->_ghost_dims[0] * fld->_ghost_dims[1] * fld->_ghost_dims[2];
+  assert(fld->_ghost_dims[4] == 1); // only works with "simple" domain
+  mrc_fld_set_array(fld_new, (char *) fld->_arr + mb * size * fld->_size_of_type);
+  mrc_fld_setup(fld_new);
+  // FIXME, we should link back to the original mrc_fld to make sure
+  // that doesn't get destroyed while we still have this view
+  return fld_new;
+}
+
+// ----------------------------------------------------------------------
 // mrc_fld_get_as
 //
 // convert fld_base to mrc_fld of type "type"
