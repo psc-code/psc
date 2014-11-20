@@ -722,6 +722,7 @@ ggcm_mhd_step_c_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 {
   struct ggcm_mhd *mhd = step->mhd;
   struct mrc_fld *x_half = ggcm_mhd_step_get_3d_fld(step, 8);
+  mrc_fld_dict_add_int(x_half, "mhd_type", MT_SEMI_CONSERVATIVE);
   struct mrc_fld *prim = ggcm_mhd_step_get_3d_fld(step, 5);
 
   static int pr_A, pr_B;
