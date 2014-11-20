@@ -3,17 +3,18 @@
 // zmaskn
 
 static void __unused
-zmaskn(struct ggcm_mhd *mhd, struct mrc_fld *x)
+zmaskn(struct ggcm_mhd *mhd, struct mrc_fld *zmask, int m_zmask,
+       struct mrc_fld *ymask, int m_ymask, struct mrc_fld *x)
 {
   float va02i = 1.f / sqr(mhd->par.speedlimit / mhd->par.vvnorm);
   float eps   = 1e-15f;
 
-  mrc_fld_foreach(x, ix,iy,iz, 1, 1) {
+  mrc_fld_foreach(zmask, ix,iy,iz, 1, 1) {
     mrc_fld_data_t bb = (sqr(.5f * (BX(x, ix,iy,iz) + BX(x, ix+1,iy,iz))) +
 			 sqr(.5f * (BY(x, ix,iy,iz) + BY(x, ix,iy+1,iz))) +
 			 sqr(.5f * (BZ(x, ix,iy,iz) + BZ(x, ix,iy,iz+1))));
     float rrm = fmaxf(eps, bb * va02i);
-    F3(x, _ZMASK, ix,iy,iz) = F3(x, _YMASK, ix,iy,iz) *
+    F3(zmask, m_zmask, ix,iy,iz) = F3(ymask, m_ymask, ix,iy,iz) *
       fminf(1.f, RR(x, ix,iy,iz) / rrm);
   } mrc_fld_foreach_end;
 }

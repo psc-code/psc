@@ -740,7 +740,7 @@ ggcm_mhd_step_c_newstep(struct ggcm_mhd_step *step, float *dtn)
   struct ggcm_mhd *mhd = step->mhd;
 
   ggcm_mhd_fill_ghosts(mhd, mhd->fld, _RR1, mhd->time);
-  zmaskn(mhd, mhd->fld);
+  zmaskn(mhd, mhd->fld, _ZMASK, mhd->fld, _YMASK, mhd->fld);
   // assert(strcmp(mrc_fld_type(mhd->fld), "float") == 0);
   *dtn = newstep_sc(mhd, mhd->fld);
 }
@@ -751,8 +751,10 @@ ggcm_mhd_step_c_newstep(struct ggcm_mhd_step *step, float *dtn)
 static void
 ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step)
 {
-  primvar_c(step->mhd, _RR1);
-  zmaskn(step->mhd, step->mhd->fld);
+  struct ggcm_mhd *mhd = step->mhd;
+
+  primvar_c(mhd, _RR1);
+  zmaskn(mhd, mhd->fld, _ZMASK, mhd->fld, _YMASK, mhd->fld);
 
   mrc_fld_data_t dth = .5f * step->mhd->dt;
   static int PR;

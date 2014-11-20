@@ -17,6 +17,9 @@
 #include "mhd_3d.c"
 #include "mhd_sc.c"
 
+#define ZMASK(f, i,j,k) F3(f, 0, i,j,k)
+#define RMASK(f, i,j,k) F3(f, 0, i,j,k)
+
 // ======================================================================
 // ggcm_mhd_step subclass "c3"
 
@@ -35,7 +38,9 @@ struct ggcm_mhd_step_c3 {
   struct mrc_fld *Fl;
   struct mrc_fld *lim1;
 
-  struct mrc_fld *masks;
+  struct mrc_fld *ymask;
+  struct mrc_fld *zmask;
+  struct mrc_fld *rmask;
 };
 
 #define ggcm_mhd_step_c3(step) mrc_to_subobj(step, struct ggcm_mhd_step_c3)
@@ -89,10 +94,25 @@ ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
   setup_mrc_fld_1d(sub->Fl  , mhd->fld, 5);
   setup_mrc_fld_1d(sub->lim1, mhd->fld, 5);
 
-  sub->masks = mhd->fld;
+  sub->ymask = mrc_fld_make_view(mhd->fld, _YMASK, _YMASK + 1);
+  sub->zmask = mrc_fld_make_view(mhd->fld, _ZMASK, _ZMASK + 1);
+  sub->rmask = mrc_fld_make_view(mhd->fld, _RMASK, _RMASK + 1);
 
   ggcm_mhd_step_setup_member_objs_sub(step);
   ggcm_mhd_step_setup_super(step);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_step_c_destroy
+
+static void
+ggcm_mhd_step_c_destroy(struct ggcm_mhd_step *step)
+{
+  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
+
+  mrc_fld_destroy(sub->ymask);
+  mrc_fld_destroy(sub->zmask);
+  mrc_fld_destroy(sub->rmask);
 }
 
 // ----------------------------------------------------------------------
@@ -242,7 +262,7 @@ pushpp_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, struct mrc_fld *x,
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
-  struct mrc_fld *masks = sub->masks;
+  struct mrc_fld *zmask = sub->zmask;
   float *fd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FD1);
   float *fd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FD1);
   float *fd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FD1);
@@ -252,7 +272,7 @@ pushpp_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, struct mrc_fld *x,
     mrc_fld_data_t fpx = fd1x[i] * (F3(prim, PP, i+1,j,k) - F3(prim, PP, i-1,j,k));
     mrc_fld_data_t fpy = fd1y[j] * (F3(prim, PP, i,j+1,k) - F3(prim, PP, i,j-1,k));
     mrc_fld_data_t fpz = fd1z[k] * (F3(prim, PP, i,j,k+1) - F3(prim, PP, i,j,k-1));
-    mrc_fld_data_t z = dth * F3(masks, _ZMASK, i,j,k);
+    mrc_fld_data_t z = dth * ZMASK(zmask, i,j,k);
     F3(x, _RV1X, i,j,k) += z * fpx;
     F3(x, _RV1Y, i,j,k) += z * fpy;
     F3(x, _RV1Z, i,j,k) += z * fpz;
@@ -295,7 +315,7 @@ curbc_c(struct ggcm_mhd_step *step, struct mrc_fld *j_cc,
 { 
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
-  struct mrc_fld *masks = sub->masks;
+  struct mrc_fld *zmask = sub->zmask;
 
   // get j on edges
   struct mrc_fld *j_ec = ggcm_mhd_step_get_3d_fld(step, 3);
@@ -303,7 +323,7 @@ curbc_c(struct ggcm_mhd_step *step, struct mrc_fld *j_cc,
 
   // then average to cell centers
   mrc_fld_foreach(j_cc, i,j,k, 1, 1) {
-    mrc_fld_data_t s = .25f * F3(masks, _ZMASK, i, j, k);
+    mrc_fld_data_t s = .25f * ZMASK(zmask, i, j, k);
     F3(j_cc, 0, i,j,k) = s * (F3(j_ec, 0, i,j+1,k+1) + F3(j_ec, 0, i,j,k+1) +
 			      F3(j_ec, 0, i,j+1,k  ) + F3(j_ec, 0, i,j,k  ));
     F3(j_cc, 1, i,j,k) = s * (F3(j_ec, 1, i+1,j,k+1) + F3(j_ec, 1, i,j,k+1) +
@@ -321,7 +341,7 @@ push_ej_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, struct mrc_fld *x_curr,
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
-  struct mrc_fld *masks = sub->masks;
+  struct mrc_fld *zmask = sub->zmask;
   struct mrc_fld *j_ec = ggcm_mhd_step_get_3d_fld(step, 3);
   struct mrc_fld *b_cc = ggcm_mhd_step_get_3d_fld(step, 3);
 
@@ -330,7 +350,7 @@ push_ej_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, struct mrc_fld *x_curr,
 	
   mrc_fld_data_t s1 = .25f * dt;
   mrc_fld_foreach(x_next, i,j,k, 0, 0) {
-    mrc_fld_data_t z = F3(masks, _ZMASK, i,j,k);
+    mrc_fld_data_t z = ZMASK(zmask, i,j,k);
     mrc_fld_data_t s2 = s1 * z;
     mrc_fld_data_t cx = (F3(j_ec, 0, i  ,j+1,k+1) + F3(j_ec, 0, i  ,j  ,k+1) +
 			 F3(j_ec, 0, i  ,j+1,k  ) + F3(j_ec, 0, i  ,j  ,k  ));
@@ -363,7 +383,7 @@ rmaskn_c(struct ggcm_mhd_step *step)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
-  struct mrc_fld *masks = sub->masks;
+  struct mrc_fld *rmask = sub->rmask, *zmask = sub->zmask;
 
   mrc_fld_data_t diffco = mhd->par.diffco;
   mrc_fld_data_t diff_swbnd = mhd->par.diff_swbnd;
@@ -376,8 +396,8 @@ rmaskn_c(struct ggcm_mhd_step *step)
   float *fx1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FX1);
 
   // _ZMASK not set at -2 ghost
-  mrc_fld_foreach(masks, i,j,k, 1, 2) {
-    F3(masks, _RMASK, i,j,k) = 0.f;
+  mrc_fld_foreach(rmask, i,j,k, 1, 2) {
+    RMASK(rmask, i,j,k) = 0.f;
     mrc_fld_data_t xxx = fx1x[i];
     if (xxx < diff_swbnd)
       continue;
@@ -391,7 +411,7 @@ rmaskn_c(struct ggcm_mhd_step *step)
       continue;
     if (k + info.off[2] >= gdims[2] - diff_obnd)
       continue;
-    F3(masks, _RMASK, i,j,k) = diffco * F3(masks, _ZMASK, i,j,k);
+    RMASK(rmask, i,j,k) = diffco * ZMASK(zmask, i,j,k);
   } mrc_fld_foreach_end;
 }
 
@@ -559,7 +579,7 @@ bcthy3z_NL1(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int I, int J, in
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
-  struct mrc_fld *masks = sub->masks;
+  struct mrc_fld *rmask = sub->rmask;
   struct mrc_fld *tmp = ggcm_mhd_step_get_3d_fld(step, 4);
 
   float *bd2x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD2);
@@ -589,9 +609,9 @@ bcthy3z_NL1(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int I, int J, in
     mrc_fld_data_t d2 = sqr(t2m * tpi);
     if (d1 < mhd->par.diffth) d1 = 0.;
     if (d2 < mhd->par.diffth) d2 = 0.;
-    ttmp[0] -= d1 * t1m * F3(masks, _RMASK, i,j,k);
-    ttmp[1] -= d2 * t2m * F3(masks, _RMASK, i,j,k);
-    //    F3(f, _RESIS, i,j,k) += fabsf(d1+d2) * F3(masks, _ZMASK, i,j,k);
+    ttmp[0] -= d1 * t1m * RMASK(rmask, i,j,k);
+    ttmp[1] -= d2 * t2m * RMASK(rmask, i,j,k);
+    //    F3(f, _RESIS, i,j,k) += fabsf(d1+d2) * ZMASK(zmask, i,j,k);
     F3(E, XX, i,j,k) = - (ttmp[0] - ttmp[1]);
   } mrc_fld_foreach_end;
 
@@ -690,7 +710,6 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
 				ggcm_mhd_step_get_3d_fld(step, 5),
 				ggcm_mhd_step_get_3d_fld(step, 5), };
   struct mrc_fld *E = ggcm_mhd_step_get_3d_fld(step, 3);
-  struct mrc_fld *masks = sub->masks;
 
   rmaskn_c(step);
 
@@ -700,7 +719,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
     mhd_fluxes(step, fluxes, x_curr, NULL, 0, 0, flux_corr);
   }
 
-  update_finite_volume(mhd, x_next, fluxes, masks, dt);
+  update_finite_volume(mhd, x_next, fluxes, sub->ymask, dt);
   pushpp_c(step, dt, x_next, prim);
 
   push_ej_c(step, dt, x_curr, prim, x_next);
@@ -720,6 +739,9 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
 static void
 ggcm_mhd_step_c_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 {
+  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
+  struct mrc_fld *ymask = sub->ymask, *zmask = sub->zmask;
+
   struct ggcm_mhd *mhd = step->mhd;
   struct mrc_fld *x_half = ggcm_mhd_step_get_3d_fld(step, 8);
   mrc_fld_dict_add_int(x_half, "mhd_type", MT_SEMI_CONSERVATIVE);
@@ -734,7 +756,7 @@ ggcm_mhd_step_c_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   mrc_fld_data_t dtn = 0.0;
   if (step->do_nwst) {
     ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
-    zmaskn(mhd, x);
+    zmaskn(mhd, zmask, 0, ymask, 0, x);
     dtn = newstep_sc(mhd, x);
   }
 
@@ -742,7 +764,7 @@ ggcm_mhd_step_c_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   prof_start(pr_A);
   ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
   ggcm_mhd_step_c_primvar(step, prim, x);
-  zmaskn(step->mhd, x);
+  zmaskn(step->mhd, zmask, 0, ymask, 0, x);
 
   // set x_half = x^n, then advance to n+1/2
   mrc_fld_copy_range(x_half, x, 0, 8);
@@ -784,6 +806,8 @@ static void
 ggcm_mhd_step_c3_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
                           struct mrc_fld *state_vec)
 {
+  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
+  struct mrc_fld *ymask = sub->ymask, *zmask = sub->zmask;
   // the state vector should already be FLD_TYPE, but Eout is the data type
   // of the output
   struct mrc_fld *E = mrc_fld_get_as(Eout, FLD_TYPE);
@@ -793,7 +817,7 @@ ggcm_mhd_step_c3_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
 
   ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
   ggcm_mhd_step_c_primvar(step, prim, x);
-  zmaskn(step->mhd, x);
+  zmaskn(step->mhd, zmask, 0, ymask, 0, x);
   calce_c(step, E, x, prim, mhd->dt);
   
   ggcm_mhd_step_put_3d_fld(step, prim);

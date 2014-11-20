@@ -138,14 +138,14 @@ update_finite_volume_uniform(struct ggcm_mhd *mhd,
 static void __unused
 update_finite_volume(struct ggcm_mhd *mhd,
 		     struct mrc_fld *x, struct mrc_fld *fluxes[3],
-		     struct mrc_fld *masks, mrc_fld_data_t dt)
+		     struct mrc_fld *ymask, mrc_fld_data_t dt)
 {
   float *fd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FD1);
   float *fd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FD1);
   float *fd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FD1);
 
   mrc_fld_foreach(x, i,j,k, 0, 0) {
-    mrc_fld_data_t s = dt * F3(masks, _YMASK, i,j,k);
+    mrc_fld_data_t s = dt * F3(ymask, 0, i,j,k);
     for (int m = 0; m < 5; m++) {
       F3(x, m, i,j,k) -=
 	s * (fd1x[i] * (F3(fluxes[0], m, i+1,j,k) - F3(fluxes[0], m, i,j,k)) +

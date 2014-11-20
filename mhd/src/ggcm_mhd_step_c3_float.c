@@ -17,5 +17,6 @@ struct ggcm_mhd_step_ops ggcm_mhd_step_c3_float_ops = {
   .create      = ggcm_mhd_step_c_create,
   .setup       = ggcm_mhd_step_c_setup,
   .run         = ggcm_mhd_step_c_run,
+  .destroy     = ggcm_mhd_step_c_destroy,
   .get_e_ec   = ggcm_mhd_step_c3_get_e_ec,
 };
