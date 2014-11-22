@@ -62,10 +62,10 @@ enum {
   _CURRX, // 40
   _CURRY,
   _CURRZ,
-  _RMASK,
-  _BDIPX,
-  _BDIPY, 
-  _BDIPZ,
+  _RMASK, // 43
+  __BDIPX,
+  __BDIPY, 
+  __BDIPZ,
   _NR_FLDS,
 };
 
