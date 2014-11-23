@@ -779,6 +779,19 @@ ggcm_mhd_step_c_corr(struct ggcm_mhd_step *step)
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_step_c2_setup_flds
+
+static void
+ggcm_mhd_step_c2_setup_flds(struct ggcm_mhd_step *step)
+{
+  struct ggcm_mhd *mhd = step->mhd;
+
+  mrc_fld_set_type(mhd->fld, FLD_TYPE);
+  mrc_fld_set_param_int(mhd->fld, "nr_ghosts", 2);
+  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_SEMI_CONSERVATIVE);
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_step_c2_get_e_ec
 
 static void
@@ -827,19 +840,16 @@ ggcm_mhd_step_c_diag_item_rmask_run(struct ggcm_mhd_step *step,
   ggcm_mhd_diag_c_write_one_field(io, f, _RMASK, "rmask", 1., diag_type, plane);
 }
 
-#include "ggcm_mhd_step_legacy.c"
-
 // ----------------------------------------------------------------------
 // ggcm_mhd_step subclass "c2_*"
 
 struct ggcm_mhd_step_ops ggcm_mhd_step_c2_ops = {
   .name                = ggcm_mhd_step_c2_name,
-  .mhd_type            = MT_SEMI_CONSERVATIVE,
   .newstep             = ggcm_mhd_step_c_newstep,
   .pred                = ggcm_mhd_step_c_pred,
   .corr                = ggcm_mhd_step_c_corr,
   .run                 = ggcm_mhd_step_run_predcorr,
-  .setup_flds          = ggcm_mhd_step_legacy_setup_flds,
+  .setup_flds          = ggcm_mhd_step_c2_setup_flds,
   .get_e_ec            = ggcm_mhd_step_c2_get_e_ec,
   .diag_item_zmask_run = ggcm_mhd_step_c_diag_item_zmask_run,
   .diag_item_rmask_run = ggcm_mhd_step_c_diag_item_rmask_run,

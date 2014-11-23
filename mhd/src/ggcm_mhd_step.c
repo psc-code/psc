@@ -115,16 +115,6 @@ ggcm_mhd_step_run_predcorr(struct ggcm_mhd_step *step, struct mrc_fld *x)
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_step_mhd_type
-
-int
-ggcm_mhd_step_mhd_type(struct ggcm_mhd_step *step)
-{
-  struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
-  return ops->mhd_type;
-}
-
-// ----------------------------------------------------------------------
 // ggcm_mhd_step_setup_flds
 
 void

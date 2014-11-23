@@ -97,21 +97,28 @@ ggcm_mhd_step_cweno_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
 
 }
 
-#include "mrc_fld_as_float.h"
+// ----------------------------------------------------------------------
+// ggcm_mhd_step_cweno_setup_flds
 
-#include "ggcm_mhd_step_legacy.c"
+static void
+ggcm_mhd_step_cweno_setup_flds(struct ggcm_mhd_step *step)
+{
+  struct ggcm_mhd *mhd = step->mhd;
 
+  mrc_fld_set_type(mhd->fld, "float");
+  mrc_fld_set_param_int(mhd->fld, "nr_ghosts", 2);
+#if SEMICONSV
+  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_SEMI_CONSERVATIVE);
+#else
+  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_FULLY_CONSERVATIVE);
+#endif
+}
 // ----------------------------------------------------------------------
 // ggcm_mhd_step subclass "cweno"
 
 struct ggcm_mhd_step_ops ggcm_mhd_step_cweno_ops = {
   .name        = "cweno",
-#if SEMICONSV
-  .mhd_type    = MT_SEMI_CONSERVATIVE,
-#else
-  .mhd_type    = MT_FULLY_CONSERVATIVE,
-#endif
-  .setup_flds  = ggcm_mhd_step_legacy_setup_flds,
+  .setup_flds  = ggcm_mhd_step_cweno_setup_flds,
   .calc_rhs    = ggcm_mhd_step_cweno_calc_rhs,
 };
 

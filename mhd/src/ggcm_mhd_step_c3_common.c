@@ -127,6 +127,7 @@ ggcm_mhd_step_c_setup_flds(struct ggcm_mhd_step *step)
 
   mrc_fld_set_type(mhd->fld, FLD_TYPE);
   mrc_fld_set_param_int(mhd->fld, "nr_ghosts", 2);
+  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_SEMI_CONSERVATIVE);
 }
 
 // ----------------------------------------------------------------------
@@ -897,7 +898,6 @@ struct ggcm_mhd_step_ops ggcm_mhd_step_c3_ops = {
   .name                = ggcm_mhd_step_c3_name,
   .size                = sizeof(struct ggcm_mhd_step_c3),
   .param_descr         = ggcm_mhd_step_c_descr,
-  .mhd_type            = MT_SEMI_CONSERVATIVE,
   .create              = ggcm_mhd_step_c_create,
   .setup               = ggcm_mhd_step_c_setup,
   .run                 = ggcm_mhd_step_c_run,

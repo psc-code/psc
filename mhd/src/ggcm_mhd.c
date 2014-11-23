@@ -161,7 +161,6 @@ _ggcm_mhd_read(struct ggcm_mhd *mhd, struct mrc_io *io)
 static void
 _ggcm_mhd_setup(struct ggcm_mhd *mhd)
 {
-  mrc_fld_dict_add_int(mhd->fld, "mhd_type", ggcm_mhd_step_mhd_type(mhd->step));
   ggcm_mhd_step_setup_flds(mhd->step);
 
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
