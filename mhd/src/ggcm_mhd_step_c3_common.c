@@ -118,6 +118,17 @@ ggcm_mhd_step_c_destroy(struct ggcm_mhd_step *step)
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_step_c_setup_flds
+
+static void
+ggcm_mhd_step_c_setup_flds(struct ggcm_mhd_step *step)
+{
+  struct ggcm_mhd *mhd = step->mhd;
+
+  MHERE;
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_step_c_primvar
 
 static void
@@ -892,6 +903,7 @@ struct ggcm_mhd_step_ops ggcm_mhd_step_c3_ops = {
   .setup               = ggcm_mhd_step_c_setup,
   .run                 = ggcm_mhd_step_c_run,
   .destroy             = ggcm_mhd_step_c_destroy,
+  .setup_flds          = ggcm_mhd_step_c_setup_flds,
   .get_e_ec            = ggcm_mhd_step_c3_get_e_ec,
   .diag_item_zmask_run = ggcm_mhd_step_c_diag_item_zmask_run,
   .diag_item_rmask_run = ggcm_mhd_step_c_diag_item_rmask_run,

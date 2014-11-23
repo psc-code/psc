@@ -146,6 +146,17 @@ ggcm_mhd_step_nr_ghosts(struct ggcm_mhd_step *step)
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_step_setup_flds
+
+void
+ggcm_mhd_step_setup_flds(struct ggcm_mhd_step *step)
+{
+  struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
+  assert(ops && ops->setup_flds);
+  return ops->setup_flds(step);
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_step_get_3d_fld
 //
 // FIXME, this should cache the fields, rather than creating/destroying

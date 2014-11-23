@@ -827,6 +827,8 @@ ggcm_mhd_step_c_diag_item_rmask_run(struct ggcm_mhd_step *step,
   ggcm_mhd_diag_c_write_one_field(io, f, _RMASK, "rmask", 1., diag_type, plane);
 }
 
+#include "ggcm_mhd_step_legacy.c"
+
 // ----------------------------------------------------------------------
 // ggcm_mhd_step subclass "c2_*"
 
@@ -839,6 +841,7 @@ struct ggcm_mhd_step_ops ggcm_mhd_step_c2_ops = {
   .pred                = ggcm_mhd_step_c_pred,
   .corr                = ggcm_mhd_step_c_corr,
   .run                 = ggcm_mhd_step_run_predcorr,
+  .setup_flds          = ggcm_mhd_step_legacy_setup_flds,
   .get_e_ec            = ggcm_mhd_step_c2_get_e_ec,
   .diag_item_zmask_run = ggcm_mhd_step_c_diag_item_zmask_run,
   .diag_item_rmask_run = ggcm_mhd_step_c_diag_item_rmask_run,

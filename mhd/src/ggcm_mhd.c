@@ -167,6 +167,7 @@ _ggcm_mhd_setup(struct ggcm_mhd *mhd)
   mrc_fld_set_type(mhd->fld, fld_type);
   mrc_fld_set_param_int(mhd->fld, "nr_ghosts", nr_ghosts);
   mrc_fld_dict_add_int(mhd->fld, "mhd_type", ggcm_mhd_step_mhd_type(mhd->step));
+  ggcm_mhd_step_setup_flds(mhd->step);
 
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
   // only set the sw on the domain's crds if they're not already set

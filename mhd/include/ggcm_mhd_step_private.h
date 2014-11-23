@@ -35,6 +35,7 @@ struct ggcm_mhd_step_ops {
   void (*get_e_ec)(struct ggcm_mhd_step *step, struct mrc_fld *E,
                    struct mrc_fld *x);
   void (*run)(struct ggcm_mhd_step *step, struct mrc_fld *x);
+  void (*setup_flds)(struct ggcm_mhd_step *step);
   void (*diag_item_zmask_run)(struct ggcm_mhd_step *step,
 			      struct ggcm_mhd_diag_item *item,
 			      struct mrc_io *io, struct mrc_fld *f,
