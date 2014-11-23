@@ -49,15 +49,15 @@ enum {
   _TMP3,
   _TMP4,
 
-  _FLX, // 31
-  _FLY,
-  _FLZ,
+  __FLX, // 31
+  __FLY,
+  __FLZ,
 
-  _CX, // 34
-  _CY,
-  _CZ,
-  _XTRA1, // 37
-  _XTRA2,
+  __CX, // 34
+  __CY,
+  __CZ,
+  __XTRA1, // 37
+  __XTRA2,
   __RESIS,
   __CURRX, // 40
   __CURRY,
