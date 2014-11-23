@@ -23,7 +23,8 @@ zmaskn(struct ggcm_mhd *mhd, struct mrc_fld *zmask, int m_zmask,
 // newstep_sc
 
 static mrc_fld_data_t __unused
-newstep_sc(struct ggcm_mhd *mhd, struct mrc_fld *x)
+newstep_sc(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zmask, 
+	   int m_zmask)
 {
   float *fd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FD1);
   float *fd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FD1);
@@ -59,7 +60,7 @@ newstep_sc(struct ggcm_mhd *mhd, struct mrc_fld *x)
     mrc_fld_data_t vv = mrc_fld_sqrt(vv1 + vv2) + mrc_fld_sqrt(rrvv) * rri;
     vv = mrc_fld_max(eps, vv);
 
-    mrc_fld_data_t tt = thx / mrc_fld_max(eps, hh*vv*F3(x, _ZMASK, ix,iy,iz));
+    mrc_fld_data_t tt = thx / mrc_fld_max(eps, hh*vv*F3(zmask, m_zmask, ix,iy,iz));
     dt = mrc_fld_min(dt, tt);
   } mrc_fld_foreach_end;
 
@@ -86,13 +87,13 @@ newstep_sc(struct ggcm_mhd *mhd, struct mrc_fld *x)
 	      fabsf(RR(x, ix,iy,iz))) +
 	mrc_fld_sqrt(sqr(VX(x, ix,iy,iz)) + sqr(VY(x, ix,iy,iz)) + sqr(VZ(x, ix,iy,iz)));
       vv = fmaxf(eps, vv);
-      mrc_fld_data_t tt = thx / fmaxf(eps, hh*vv*F3(x, _ZMASK, ix,iy,iz));
+      mrc_fld_data_t tt = thx / fmaxf(eps, hh*vv*F3(zmask, m_zmask, ix,iy,iz));
       if (tt <= dtmin) {
         fprintf(file,"%s %7d %7d %7d\n"," dtmin at ", ix, iy, ix);
         fprintf(file,"%s %12.5g %12.5g %12.5g\n"," hh,vv,tt ", hh, vv, tt);
         fprintf(file,"%s %12.5g %12.5g %12.5g\n"," bx,y,z   ", BX(x, ix,iy,iz)*mhd->par.bbnorm, BY(x, ix,iy,iz)*mhd->par.bbnorm, BZ(x, ix,iy,iz)*mhd->par.bbnorm);
         fprintf(file,"%s %12.5g %12.5g %12.5g\n"," vx,y,z   ", VX(x, ix,iy,iz)*mhd->par.vvnorm, VY(x, ix,iy,iz)*mhd->par.vvnorm, VZ(x, ix,iy,iz)*mhd->par.vvnorm);
-        fprintf(file,"%s %12.5g %12.5g %12.5g\n"," rr,pp,zm ", RR(x, ix,iy,iz)*mhd->par.rrnorm, PP(x, ix,iy,iz)*mhd->par.ppnorm, F3(x, _ZMASK, ix,iy,iz));
+        fprintf(file,"%s %12.5g %12.5g %12.5g\n"," rr,pp,zm ", RR(x, ix,iy,iz)*mhd->par.rrnorm, PP(x, ix,iy,iz)*mhd->par.ppnorm, F3(zmask, m_zmask, ix,iy,iz));
         float *fx1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FX1);
         float *fx1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FX1);
         float *fx1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FX1);

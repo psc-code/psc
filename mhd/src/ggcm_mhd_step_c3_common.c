@@ -96,7 +96,7 @@ ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
   setup_mrc_fld_1d(sub->lim1, mhd->fld, 5);
 
   sub->ymask = mrc_fld_make_view(mhd->fld, _YMASK, _YMASK + 1);
-  sub->zmask = mrc_fld_make_view(mhd->fld, _ZMASK, _ZMASK + 1);
+  sub->zmask = ggcm_mhd_step_get_3d_fld(step, 1);
   sub->rmask = ggcm_mhd_step_get_3d_fld(step, 1);
 
   ggcm_mhd_step_setup_member_objs_sub(step);
@@ -112,7 +112,7 @@ ggcm_mhd_step_c_destroy(struct ggcm_mhd_step *step)
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
 
   mrc_fld_destroy(sub->ymask);
-  mrc_fld_destroy(sub->zmask);
+  ggcm_mhd_step_put_3d_fld(step, sub->zmask);
   ggcm_mhd_step_put_3d_fld(step, sub->rmask);
 }
 
@@ -758,7 +758,7 @@ ggcm_mhd_step_c_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   if (step->do_nwst) {
     ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
     zmaskn(mhd, zmask, 0, ymask, 0, x);
-    dtn = newstep_sc(mhd, x);
+    dtn = newstep_sc(mhd, x, zmask, 0);
   }
 
   // --- PREDICTOR
@@ -828,6 +828,19 @@ ggcm_mhd_step_c3_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
     mrc_fld_destroy(x);
   }
 } 
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_step_c_diag_item_zmask_run
+
+static void
+ggcm_mhd_step_c_diag_item_zmask_run(struct ggcm_mhd_step *step,
+				    struct ggcm_mhd_diag_item *item,
+				    struct mrc_io *io, struct mrc_fld *f,
+				    int diag_type, float plane)
+{
+  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
+  ggcm_mhd_diag_c_write_one_field(io, sub->zmask, 0, "zmask", 1., diag_type, plane);
+}
 
 // ----------------------------------------------------------------------
 // ggcm_mhd_step_c_diag_item_rmask_run

@@ -3,6 +3,9 @@
 #define GGCM_MHD_DEFS_EXTRA_H
 
 enum {
+  _ZMASK = 17,
+  _CMSV = 18,
+
   _RR = 19,
   _PP,
   _VX,

@@ -32,8 +32,8 @@ enum {
   _B2Z,
 
   _YMASK, // 16
-  _ZMASK,
-  _CMSV,
+  __ZMASK,
+  __CMSV,
   
   __RR, // 19
   __PP,

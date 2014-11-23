@@ -744,7 +744,7 @@ ggcm_mhd_step_c_newstep(struct ggcm_mhd_step *step, float *dtn)
   ggcm_mhd_fill_ghosts(mhd, mhd->fld, _RR1, mhd->time);
   zmaskn(mhd, mhd->fld, _ZMASK, mhd->fld, _YMASK, mhd->fld);
   // assert(strcmp(mrc_fld_type(mhd->fld), "float") == 0);
-  *dtn = newstep_sc(mhd, mhd->fld);
+  *dtn = newstep_sc(mhd, mhd->fld, mhd->fld, _ZMASK);
 }
 
 // ----------------------------------------------------------------------
@@ -802,6 +802,18 @@ ggcm_mhd_step_c2_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
     mrc_fld_destroy(x);
   }
 } 
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_step_c_diag_item_zmask_run
+
+static void
+ggcm_mhd_step_c_diag_item_zmask_run(struct ggcm_mhd_step *step,
+				    struct ggcm_mhd_diag_item *item,
+				    struct mrc_io *io, struct mrc_fld *f,
+				    int diag_type, float plane)
+{
+  ggcm_mhd_diag_c_write_one_field(io, f, _ZMASK, "zmask", 1., diag_type, plane);
+}
 
 // ----------------------------------------------------------------------
 // ggcm_mhd_step_c_diag_item_rmask_run

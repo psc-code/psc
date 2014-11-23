@@ -19,5 +19,6 @@ struct ggcm_mhd_step_ops ggcm_mhd_step_c3_double_ops = {
   .destroy     = ggcm_mhd_step_c_destroy,
   .run         = ggcm_mhd_step_c_run,
   .get_e_ec    = ggcm_mhd_step_c3_get_e_ec,
+  .diag_item_zmask_run = ggcm_mhd_step_c_diag_item_zmask_run,
   .diag_item_rmask_run = ggcm_mhd_step_c_diag_item_rmask_run,
 };

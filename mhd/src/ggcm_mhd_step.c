@@ -231,6 +231,20 @@ _ggcm_mhd_step_destroy(struct ggcm_mhd_step *step)
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_step_diag_item_zmask_run
+
+static void
+ggcm_mhd_step_diag_item_zmask_run(struct ggcm_mhd_step *step,
+				  struct ggcm_mhd_diag_item *item,
+				  struct mrc_io *io, struct mrc_fld *f,
+				  int diag_type, float plane)
+{
+  struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
+  assert(ops && ops->diag_item_zmask_run);
+  ops->diag_item_zmask_run(step, item, io, f, diag_type, plane);
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_step_diag_item_rmask_run
 
 static void
@@ -289,6 +303,29 @@ struct mrc_class_ggcm_mhd_step mrc_class_ggcm_mhd_step = {
 
 /////////////////////////////////////////////////////////////////////////
 // diag items to go with specific ggcm_mhd_step subclasses
+
+// ======================================================================
+// ggcm_mhd_diag_item subclass "zmask"
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_diag_item_zmask_run
+
+static void
+ggcm_mhd_diag_item_zmask_run(struct ggcm_mhd_diag_item *item,
+			   struct mrc_io *io, struct mrc_fld *f,
+			   int diag_type, float plane)
+{
+  struct ggcm_mhd_step *step = item->diag->mhd->step;
+  ggcm_mhd_step_diag_item_zmask_run(step, item, io, f, diag_type, plane);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_diag_item subclass "zmask"
+
+struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_zmask = {
+  .name             = "zmask",
+  .run              = ggcm_mhd_diag_item_zmask_run,
+};
 
 // ======================================================================
 // ggcm_mhd_diag_item subclass "rmask"
