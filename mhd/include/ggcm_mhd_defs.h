@@ -22,14 +22,14 @@ enum {
   _B1Y,
   _B1Z,
 
-  _RR2,
-  _RV2X,
-  _RV2Y,
-  _RV2Z,
-  _UU2,
-  _B2X,
-  _B2Y,
-  _B2Z,
+  __RR2,
+  __RV2X,
+  __RV2Y,
+  __RV2Z,
+  __UU2,
+  __B2X,
+  __B2Y,
+  __B2Z,
 
   __YMASK, // 16
   __ZMASK,

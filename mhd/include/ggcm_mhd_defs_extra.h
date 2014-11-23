@@ -3,6 +3,15 @@
 #define GGCM_MHD_DEFS_EXTRA_H
 
 enum {
+  _RR2 = 8,
+  _RV2X,
+  _RV2Y,
+  _RV2Z,
+  _UU2,
+  _B2X,
+  _B2Y,
+  _B2Z,
+
   _YMASK = 16,
   _ZMASK = 17,
   _CMSV = 18,

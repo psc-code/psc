@@ -1,5 +1,6 @@
 
 #include <ggcm_mhd_defs.h>
+#include <ggcm_mhd_defs_extra.h>
 
 #include <mrc_fld.h>
 
