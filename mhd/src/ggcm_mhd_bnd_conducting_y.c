@@ -36,7 +36,7 @@ ggcm_mhd_bnd_conducting_y_setup(struct ggcm_mhd_bnd *bnd)
 {
   struct ggcm_mhd_bnd_conducting_y *sub = ggcm_mhd_bnd_conducting_y(bnd);
   
-  const char * step_fld_type = ggcm_mhd_step_fld_type(bnd->mhd->step);
+  const char * step_fld_type = mrc_fld_type(bnd->mhd->fld);
   
   // setup the fld_type dispatch
   if (strcmp(step_fld_type, "float") == 0) {

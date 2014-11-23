@@ -161,9 +161,6 @@ _ggcm_mhd_read(struct ggcm_mhd *mhd, struct mrc_io *io)
 static void
 _ggcm_mhd_setup(struct ggcm_mhd *mhd)
 {
-  const char *fld_type = ggcm_mhd_step_fld_type(mhd->step);
-  assert(fld_type);
-  mrc_fld_set_type(mhd->fld, fld_type);
   mrc_fld_dict_add_int(mhd->fld, "mhd_type", ggcm_mhd_step_mhd_type(mhd->step));
   ggcm_mhd_step_setup_flds(mhd->step);
 

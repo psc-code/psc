@@ -125,16 +125,6 @@ ggcm_mhd_step_mhd_type(struct ggcm_mhd_step *step)
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_step_fld_type
-
-const char *
-ggcm_mhd_step_fld_type(struct ggcm_mhd_step *step)
-{
-  struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
-  return ops->fld_type;
-}
-
-// ----------------------------------------------------------------------
 // ggcm_mhd_step_setup_flds
 
 void

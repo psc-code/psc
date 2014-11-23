@@ -31,6 +31,5 @@ void ggcm_mhd_step_run(struct ggcm_mhd_step *step, struct mrc_fld *x);
 void ggcm_mhd_step_setup_flds(struct ggcm_mhd_step *step);
 
 int ggcm_mhd_step_mhd_type(struct ggcm_mhd_step *step);
-const char *ggcm_mhd_step_fld_type(struct ggcm_mhd_step *step);
 
 #endif

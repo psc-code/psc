@@ -419,6 +419,7 @@ ggcm_mhd_step_vlct_setup_flds(struct ggcm_mhd_step *step)
 {
   struct ggcm_mhd *mhd = step->mhd;
 
+  mrc_fld_set_type(mhd->fld, FLD_TYPE);
   mrc_fld_set_param_int(mhd->fld, "nr_ghosts", 4);
 }
 
@@ -451,7 +452,6 @@ struct ggcm_mhd_step_ops ggcm_mhd_step_vlct_ops = {
   .size             = sizeof(struct ggcm_mhd_step_vlct),
   .param_descr      = ggcm_mhd_step_vlct_descr,
   .mhd_type         = MT_FULLY_CONSERVATIVE,
-  .fld_type         = FLD_TYPE,
   .create           = ggcm_mhd_step_vlct_create,
   .setup            = ggcm_mhd_step_vlct_setup,
   .destroy          = ggcm_mhd_step_vlct_destroy,
