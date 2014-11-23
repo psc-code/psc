@@ -3,6 +3,15 @@
 #define GGCM_MHD_DEFS_EXTRA_H
 
 enum {
+  _RR = 19,
+  _PP,
+  _VX,
+  _VY,
+  _VZ,
+  _BX,
+  _BY,
+  _BZ,
+
   _TMP1 = 27,
   _TMP2,
   _TMP3,

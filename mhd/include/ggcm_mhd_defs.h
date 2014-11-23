@@ -35,14 +35,14 @@ enum {
   _ZMASK,
   _CMSV,
   
-  _RR, // 19
-  _PP,
-  _VX,
-  _VY,
-  _VZ,
-  _BX,
-  _BY,
-  _BZ,
+  __RR, // 19
+  __PP,
+  __VX,
+  __VY,
+  __VZ,
+  __BX,
+  __BY,
+  __BZ,
 
   __TMP1, // 27
   __TMP2,
