@@ -58,10 +58,10 @@ enum {
   _CZ,
   _XTRA1, // 37
   _XTRA2,
-  _RESIS,
-  _CURRX, // 40
-  _CURRY,
-  _CURRZ,
+  __RESIS,
+  __CURRX, // 40
+  __CURRY,
+  __CURRZ,
   __RMASK, // 43
   _NR_FLDS,
 };
