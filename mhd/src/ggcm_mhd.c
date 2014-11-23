@@ -2,7 +2,6 @@
 #include "ggcm_mhd_private.h"
 
 #include "ggcm_mhd_defs.h"
-#include "ggcm_mhd_defs_extra.h"
 #include "ggcm_mhd_crds.h"
 #include "ggcm_mhd_crds_private.h"
 #include "ggcm_mhd_crds_gen.h"
@@ -77,10 +76,6 @@ static const char *fldname[_NR_FLDS] = {
   [_CURRZ] = "currz",
 
   [_RMASK] = "rmask",
-
-  [_BDIPX] = "bdipx",
-  [_BDIPY] = "bdipy",
-  [_BDIPZ] = "bdipz",
 };
 
 // ----------------------------------------------------------------------
