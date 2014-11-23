@@ -728,16 +728,16 @@ pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_prev, int m_curr, int
 }
 
 // ======================================================================
-// ggcm_mhd_step subclass "c"
+// ggcm_mhd_step subclass "c2"
 //
 // this class will do full predictor / corrector steps,
 // ie., including primvar() etc.
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_step_c_newstep
+// ggcm_mhd_step_c2_newstep
 
 static void
-ggcm_mhd_step_c_newstep(struct ggcm_mhd_step *step, float *dtn)
+ggcm_mhd_step_c2_newstep(struct ggcm_mhd_step *step, float *dtn)
 {
   struct ggcm_mhd *mhd = step->mhd;
 
@@ -748,10 +748,10 @@ ggcm_mhd_step_c_newstep(struct ggcm_mhd_step *step, float *dtn)
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_step_c_pred
+// ggcm_mhd_step_c2_pred
 
 static void
-ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step)
+ggcm_mhd_step_c2_pred(struct ggcm_mhd_step *step)
 {
   struct ggcm_mhd *mhd = step->mhd;
 
@@ -769,10 +769,10 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step)
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_step_c_corr
+// ggcm_mhd_step_c2_corr
 
 static void
-ggcm_mhd_step_c_corr(struct ggcm_mhd_step *step)
+ggcm_mhd_step_c2_corr(struct ggcm_mhd_step *step)
 {
   primvar_c(step->mhd, _RR2);
   pushstage_c(step->mhd, step->mhd->dt, _RR1, _RR2, _RR1, LIMIT_1);
@@ -817,10 +817,10 @@ ggcm_mhd_step_c2_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
 } 
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_step_c_diag_item_zmask_run
+// ggcm_mhd_step_c2_diag_item_zmask_run
 
 static void
-ggcm_mhd_step_c_diag_item_zmask_run(struct ggcm_mhd_step *step,
+ggcm_mhd_step_c2_diag_item_zmask_run(struct ggcm_mhd_step *step,
 				    struct ggcm_mhd_diag_item *item,
 				    struct mrc_io *io, struct mrc_fld *f,
 				    int diag_type, float plane)
@@ -829,10 +829,10 @@ ggcm_mhd_step_c_diag_item_zmask_run(struct ggcm_mhd_step *step,
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_step_c_diag_item_rmask_run
+// ggcm_mhd_step_c2_diag_item_rmask_run
 
 static void
-ggcm_mhd_step_c_diag_item_rmask_run(struct ggcm_mhd_step *step,
+ggcm_mhd_step_c2_diag_item_rmask_run(struct ggcm_mhd_step *step,
 				    struct ggcm_mhd_diag_item *item,
 				    struct mrc_io *io, struct mrc_fld *f,
 				    int diag_type, float plane)
@@ -845,12 +845,12 @@ ggcm_mhd_step_c_diag_item_rmask_run(struct ggcm_mhd_step *step,
 
 struct ggcm_mhd_step_ops ggcm_mhd_step_c2_ops = {
   .name                = ggcm_mhd_step_c2_name,
-  .newstep             = ggcm_mhd_step_c_newstep,
-  .pred                = ggcm_mhd_step_c_pred,
-  .corr                = ggcm_mhd_step_c_corr,
+  .newstep             = ggcm_mhd_step_c2_newstep,
+  .pred                = ggcm_mhd_step_c2_pred,
+  .corr                = ggcm_mhd_step_c2_corr,
   .run                 = ggcm_mhd_step_run_predcorr,
   .setup_flds          = ggcm_mhd_step_c2_setup_flds,
   .get_e_ec            = ggcm_mhd_step_c2_get_e_ec,
-  .diag_item_zmask_run = ggcm_mhd_step_c_diag_item_zmask_run,
-  .diag_item_rmask_run = ggcm_mhd_step_c_diag_item_rmask_run,
+  .diag_item_zmask_run = ggcm_mhd_step_c2_diag_item_zmask_run,
+  .diag_item_rmask_run = ggcm_mhd_step_c2_diag_item_rmask_run,
 };

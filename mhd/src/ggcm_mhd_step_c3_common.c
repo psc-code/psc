@@ -60,10 +60,10 @@ enum {
 };
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_step_c_create
+// ggcm_mhd_step_c3_create
 
 static void
-ggcm_mhd_step_c_create(struct ggcm_mhd_step *step)
+ggcm_mhd_step_c3_create(struct ggcm_mhd_step *step)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
 
@@ -72,10 +72,10 @@ ggcm_mhd_step_c_create(struct ggcm_mhd_step *step)
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_step_c_setup
+// ggcm_mhd_step_c3_setup
 
 static void
-ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
+ggcm_mhd_step_c3_setup(struct ggcm_mhd_step *step)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
@@ -105,10 +105,10 @@ ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_step_c_destroy
+// ggcm_mhd_step_c3_destroy
 
 static void
-ggcm_mhd_step_c_destroy(struct ggcm_mhd_step *step)
+ggcm_mhd_step_c3_destroy(struct ggcm_mhd_step *step)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
 
@@ -118,10 +118,10 @@ ggcm_mhd_step_c_destroy(struct ggcm_mhd_step *step)
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_step_c_setup_flds
+// ggcm_mhd_step_c3_setup_flds
 
 static void
-ggcm_mhd_step_c_setup_flds(struct ggcm_mhd_step *step)
+ggcm_mhd_step_c3_setup_flds(struct ggcm_mhd_step *step)
 {
   struct ggcm_mhd *mhd = step->mhd;
 
@@ -131,10 +131,10 @@ ggcm_mhd_step_c_setup_flds(struct ggcm_mhd_step *step)
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_step_c_primvar
+// ggcm_mhd_step_c3_primvar
 
 static void
-ggcm_mhd_step_c_primvar(struct ggcm_mhd_step *step, struct mrc_fld *prim,
+ggcm_mhd_step_c3_primvar(struct ggcm_mhd_step *step, struct mrc_fld *prim,
 			struct mrc_fld *x)
 {
   mrc_fld_data_t gamm = step->mhd->par.gamm;
@@ -749,10 +749,10 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_step_c_run
+// ggcm_mhd_step_c3_run
 
 static void
-ggcm_mhd_step_c_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
+ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct mrc_fld *ymask = sub->ymask, *zmask = sub->zmask;
@@ -778,7 +778,7 @@ ggcm_mhd_step_c_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   // --- PREDICTOR
   prof_start(pr_A);
   ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
-  ggcm_mhd_step_c_primvar(step, prim, x);
+  ggcm_mhd_step_c3_primvar(step, prim, x);
   zmaskn(step->mhd, zmask, 0, ymask, 0, x);
 
   // set x_half = x^n, then advance to n+1/2
@@ -789,7 +789,7 @@ ggcm_mhd_step_c_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   // --- CORRECTOR
   prof_start(pr_B);
   ggcm_mhd_fill_ghosts(mhd, x_half, 0, mhd->time + mhd->bndt);
-  ggcm_mhd_step_c_primvar(step, prim, x_half);
+  ggcm_mhd_step_c3_primvar(step, prim, x_half);
   pushstage_c(step, mhd->dt, x_half, x, prim, LIMIT_1);
   prof_stop(pr_B);
 
@@ -831,7 +831,7 @@ ggcm_mhd_step_c3_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
   struct ggcm_mhd *mhd = step->mhd;
 
   ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
-  ggcm_mhd_step_c_primvar(step, prim, x);
+  ggcm_mhd_step_c3_primvar(step, prim, x);
   zmaskn(step->mhd, zmask, 0, ymask, 0, x);
   calce_c(step, E, x, prim, mhd->dt);
   
@@ -844,10 +844,10 @@ ggcm_mhd_step_c3_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
 } 
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_step_c_diag_item_zmask_run
+// ggcm_mhd_step_c3_diag_item_zmask_run
 
 static void
-ggcm_mhd_step_c_diag_item_zmask_run(struct ggcm_mhd_step *step,
+ggcm_mhd_step_c3_diag_item_zmask_run(struct ggcm_mhd_step *step,
 				    struct ggcm_mhd_diag_item *item,
 				    struct mrc_io *io, struct mrc_fld *f,
 				    int diag_type, float plane)
@@ -857,10 +857,10 @@ ggcm_mhd_step_c_diag_item_zmask_run(struct ggcm_mhd_step *step,
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_step_c_diag_item_rmask_run
+// ggcm_mhd_step_c3_diag_item_rmask_run
 
 static void
-ggcm_mhd_step_c_diag_item_rmask_run(struct ggcm_mhd_step *step,
+ggcm_mhd_step_c3_diag_item_rmask_run(struct ggcm_mhd_step *step,
 				    struct ggcm_mhd_diag_item *item,
 				    struct mrc_io *io, struct mrc_fld *f,
 				    int diag_type, float plane)
@@ -873,7 +873,7 @@ ggcm_mhd_step_c_diag_item_rmask_run(struct ggcm_mhd_step *step,
 // subclass description
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_step_c3, x)
-static struct param ggcm_mhd_step_c_descr[] = {
+static struct param ggcm_mhd_step_c3_descr[] = {
   { "reconstruct"     , VAR(reconstruct)     , MRC_VAR_OBJ(mhd_reconstruct) },
   { "riemann"         , VAR(riemann)         , MRC_VAR_OBJ(mhd_riemann)     },
 
@@ -897,13 +897,13 @@ static struct param ggcm_mhd_step_c_descr[] = {
 struct ggcm_mhd_step_ops ggcm_mhd_step_c3_ops = {
   .name                = ggcm_mhd_step_c3_name,
   .size                = sizeof(struct ggcm_mhd_step_c3),
-  .param_descr         = ggcm_mhd_step_c_descr,
-  .create              = ggcm_mhd_step_c_create,
-  .setup               = ggcm_mhd_step_c_setup,
-  .run                 = ggcm_mhd_step_c_run,
-  .destroy             = ggcm_mhd_step_c_destroy,
-  .setup_flds          = ggcm_mhd_step_c_setup_flds,
+  .param_descr         = ggcm_mhd_step_c3_descr,
+  .create              = ggcm_mhd_step_c3_create,
+  .setup               = ggcm_mhd_step_c3_setup,
+  .run                 = ggcm_mhd_step_c3_run,
+  .destroy             = ggcm_mhd_step_c3_destroy,
+  .setup_flds          = ggcm_mhd_step_c3_setup_flds,
   .get_e_ec            = ggcm_mhd_step_c3_get_e_ec,
-  .diag_item_zmask_run = ggcm_mhd_step_c_diag_item_zmask_run,
-  .diag_item_rmask_run = ggcm_mhd_step_c_diag_item_rmask_run,
+  .diag_item_zmask_run = ggcm_mhd_step_c3_diag_item_zmask_run,
+  .diag_item_rmask_run = ggcm_mhd_step_c3_diag_item_rmask_run,
 };
