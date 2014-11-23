@@ -878,3 +878,21 @@ static struct param ggcm_mhd_step_c_descr[] = {
 };
 #undef VAR
 
+// ----------------------------------------------------------------------
+// ggcm_mhd_step subclass "c3_*"
+
+struct ggcm_mhd_step_ops ggcm_mhd_step_c3_ops = {
+  .name                = ggcm_mhd_step_c3_name,
+  .size                = sizeof(struct ggcm_mhd_step_c3),
+  .param_descr         = ggcm_mhd_step_c_descr,
+  .mhd_type            = MT_SEMI_CONSERVATIVE,
+  .fld_type            = FLD_TYPE,
+  .nr_ghosts           = 2,
+  .create              = ggcm_mhd_step_c_create,
+  .setup               = ggcm_mhd_step_c_setup,
+  .run                 = ggcm_mhd_step_c_run,
+  .destroy             = ggcm_mhd_step_c_destroy,
+  .get_e_ec            = ggcm_mhd_step_c3_get_e_ec,
+  .diag_item_zmask_run = ggcm_mhd_step_c_diag_item_zmask_run,
+  .diag_item_rmask_run = ggcm_mhd_step_c_diag_item_rmask_run,
+};
