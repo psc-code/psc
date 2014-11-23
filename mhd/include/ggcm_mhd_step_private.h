@@ -54,7 +54,6 @@ struct ggcm_mhd_step_ops {
 
   int mhd_type; // works on fully vs semi-conservative state vector?
   const char *fld_type; // works on this kind of mrc_fld
-  int nr_ghosts; // this is how many ghost points we need
 };
 
 void ggcm_mhd_step_run_predcorr(struct ggcm_mhd_step *step, struct mrc_fld *x);

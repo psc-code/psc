@@ -836,7 +836,6 @@ struct ggcm_mhd_step_ops ggcm_mhd_step_c_ops = {
   .name                = ggcm_mhd_step_c_name,
   .mhd_type            = MT_SEMI_CONSERVATIVE_GGCM,
   .fld_type            = FLD_TYPE,
-  .nr_ghosts           = 2,
   .newstep             = ggcm_mhd_step_c_newstep,
   .pred                = ggcm_mhd_step_c_pred,
   .corr                = ggcm_mhd_step_c_corr,

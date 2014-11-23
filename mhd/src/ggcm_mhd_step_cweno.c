@@ -97,6 +97,8 @@ ggcm_mhd_step_cweno_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
 
 }
 
+#include "ggcm_mhd_step_legacy.c"
+
 // ----------------------------------------------------------------------
 // ggcm_mhd_step subclass "cweno"
 
@@ -108,7 +110,7 @@ struct ggcm_mhd_step_ops ggcm_mhd_step_cweno_ops = {
   .mhd_type    = MT_FULLY_CONSERVATIVE,
 #endif
   .fld_type    = "float",
-  .nr_ghosts   = 2,
+  .setup_flds  = ggcm_mhd_step_legacy_setup_flds,
   .calc_rhs    = ggcm_mhd_step_cweno_calc_rhs,
 };
 

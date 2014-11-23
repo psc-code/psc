@@ -190,6 +190,17 @@ ggcm_mhd_step_vl_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_step_vl_setup_flds
+
+static void
+ggcm_mhd_step_vl_setup_flds(struct ggcm_mhd_step *step)
+{
+  struct ggcm_mhd *mhd = step->mhd;
+
+  mrc_fld_set_param_int(mhd->fld, "nr_ghosts", 2);
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_step_vl subclass description
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_step_vl, x)
@@ -221,9 +232,9 @@ struct ggcm_mhd_step_ops ggcm_mhd_step_vl_ops = {
   .param_descr      = ggcm_mhd_step_vl_descr,
   .mhd_type         = MT_FULLY_CONSERVATIVE,
   .fld_type         = FLD_TYPE,
-  .nr_ghosts        = 2,
   .create           = ggcm_mhd_step_vl_create,
   .setup            = ggcm_mhd_step_vl_setup,
   .run              = ggcm_mhd_step_vl_run,
+  .setup_flds       = ggcm_mhd_step_vl_setup_flds,
 };
 

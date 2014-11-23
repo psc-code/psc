@@ -162,17 +162,15 @@ static void
 _ggcm_mhd_setup(struct ggcm_mhd *mhd)
 {
   const char *fld_type = ggcm_mhd_step_fld_type(mhd->step);
-  int nr_ghosts = ggcm_mhd_step_nr_ghosts(mhd->step);
   assert(fld_type);
   mrc_fld_set_type(mhd->fld, fld_type);
-  mrc_fld_set_param_int(mhd->fld, "nr_ghosts", nr_ghosts);
   mrc_fld_dict_add_int(mhd->fld, "mhd_type", ggcm_mhd_step_mhd_type(mhd->step));
   ggcm_mhd_step_setup_flds(mhd->step);
 
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
   // only set the sw on the domain's crds if they're not already set
   if (crds->sw == 0) {
-    mrc_crds_set_param_int(crds, "sw", nr_ghosts);
+    mrc_crds_set_param_int(crds, "sw", mhd->fld->_nr_ghosts);
   }
 
   ggcm_mhd_setup_member_objs(mhd);

@@ -135,17 +135,6 @@ ggcm_mhd_step_fld_type(struct ggcm_mhd_step *step)
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_step_nr_ghosts
-
-int
-ggcm_mhd_step_nr_ghosts(struct ggcm_mhd_step *step)
-{
-  struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
-  assert(ops->nr_ghosts > 0);
-  return ops->nr_ghosts;
-}
-
-// ----------------------------------------------------------------------
 // ggcm_mhd_step_setup_flds
 
 void
