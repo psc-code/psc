@@ -3,6 +3,11 @@
 #define GGCM_MHD_DEFS_EXTRA_H
 
 enum {
+  _TMP1 = 27,
+  _TMP2,
+  _TMP3,
+  _TMP4,
+
   _FLX = 31,
   _FLY,
   _FLZ,

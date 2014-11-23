@@ -44,10 +44,10 @@ enum {
   _BY,
   _BZ,
 
-  _TMP1, // 27
-  _TMP2,
-  _TMP3,
-  _TMP4,
+  __TMP1, // 27
+  __TMP2,
+  __TMP3,
+  __TMP4,
 
   __FLX, // 31
   __FLY,
