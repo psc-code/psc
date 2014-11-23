@@ -1,5 +1,6 @@
 #include "ggcm_mhd_step_cweno_private.h"
 
+#include "ggcm_mhd_defs_extra.h"
 #include "ggcm_mhd_private.h"
 #include "ggcm_mhd_crds.h"
 #include "ggcm_mhd_diag.h"

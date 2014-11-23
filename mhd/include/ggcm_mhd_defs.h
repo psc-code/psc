@@ -31,7 +31,7 @@ enum {
   _B2Y,
   _B2Z,
 
-  _YMASK, // 16
+  __YMASK, // 16
   __ZMASK,
   __CMSV,
   
