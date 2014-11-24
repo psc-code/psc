@@ -272,37 +272,7 @@ ggcm_mhd_fld_put_as(struct mrc_fld *fld, struct mrc_fld *fld_base)
 struct mrc_fld *
 ggcm_mhd_get_fld_as_fortran(struct mrc_fld *fld_base)
 {
-  int mhd_type;
-  mrc_fld_get_param_int(fld_base, "mhd_type", &mhd_type);
-
-  if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM) {
-    int nr_ghosts;
-    mrc_fld_get_param_int(fld_base, "nr_ghosts", &nr_ghosts);
-    assert(nr_ghosts == 2);
-    struct mrc_fld *f = mrc_fld_get_as(fld_base, "float");
-    if (f != fld_base) {
-      mrc_fld_dict_add_int(f, "mhd_type", mhd_type);
-    }
-    return f;
-  }
-
-  struct mrc_fld *fld = mrc_fld_create(mrc_fld_comm(fld_base));
-  mrc_fld_set_type(fld, "float");
-  mrc_fld_set_param_obj(fld, "domain", fld_base->_domain);
-  mrc_fld_set_param_int(fld, "nr_spatial_dims", 3);
-  mrc_fld_set_param_int(fld, "nr_comps", _NR_FLDS);
-  mrc_fld_set_param_int(fld, "nr_ghosts", 2);
-  mrc_fld_setup(fld);
-
-  if (mhd_type == MT_SEMI_CONSERVATIVE) {
-    copy_sc_to_sc_ggcm_float(fld_base, fld);
-  } else if (mhd_type == MT_FULLY_CONSERVATIVE) {
-    copy_fc_to_sc_ggcm_float(fld_base, fld);
-  } else {
-    assert(0);
-  }
-
-  return fld;
+  return ggcm_mhd_fld_get_as(fld_base, "float", MT_SEMI_CONSERVATIVE_GGCM);
 }
 
 // ----------------------------------------------------------------------
@@ -311,22 +281,6 @@ ggcm_mhd_get_fld_as_fortran(struct mrc_fld *fld_base)
 void
 ggcm_mhd_put_fld_as_fortran(struct mrc_fld *fld, struct mrc_fld *fld_base)
 {
-  int mhd_type;
-  mrc_fld_get_param_int(fld_base, "mhd_type", &mhd_type);
-
-  if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM) {
-    mrc_fld_put_as(fld, fld_base);
-    return;
-  }
-
-  if (mhd_type == MT_SEMI_CONSERVATIVE) {
-    copy_sc_ggcm_to_sc_float(fld, fld_base);
-  } else if (mhd_type == MT_FULLY_CONSERVATIVE) {
-    copy_sc_ggcm_to_fc_float(fld, fld_base);
-  } else {
-    assert(0);
-  }
-
-  mrc_fld_destroy(fld);
+  return ggcm_mhd_fld_put_as(fld, fld_base);
 }
 
