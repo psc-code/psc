@@ -31,8 +31,9 @@ void ggcm_mhd_convert_from_primitive(struct ggcm_mhd *mhd,
 				     struct mrc_fld *fld_base);
 
 struct mrc_fld *ggcm_mhd_fld_get_as(struct mrc_fld *fld_base, const char *type,
-				    int mhd_type);
-void ggcm_mhd_fld_put_as(struct mrc_fld *fld, struct mrc_fld *fld_base);
+				    int mhd_type, int mb, int me);
+void ggcm_mhd_fld_put_as(struct mrc_fld *fld, struct mrc_fld *fld_base,
+			 int mb, int me);
 
 struct mrc_fld *ggcm_mhd_get_fld_as_fortran(struct mrc_fld *fld_base);
 void ggcm_mhd_put_fld_as_fortran(struct mrc_fld *fld, struct mrc_fld *fld_base);

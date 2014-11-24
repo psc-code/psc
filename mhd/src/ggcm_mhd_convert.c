@@ -145,7 +145,7 @@ void copy_sc_to_fc_double(struct mrc_fld *_ff, struct mrc_fld *_f);
 
 struct mrc_fld *
 ggcm_mhd_fld_get_as(struct mrc_fld *fld_base, const char *type,
-		    int mhd_type)
+		    int mhd_type, int mb, int me)
 {
   int mhd_type_base;
   mrc_fld_get_param_int(fld_base, "mhd_type", &mhd_type_base);
@@ -218,7 +218,7 @@ ggcm_mhd_fld_get_as(struct mrc_fld *fld_base, const char *type,
 // called when one is done with the field from _get_as()
 
 void
-ggcm_mhd_fld_put_as(struct mrc_fld *fld, struct mrc_fld *fld_base)
+ggcm_mhd_fld_put_as(struct mrc_fld *fld, struct mrc_fld *fld_base, int mb, int me)
 {
   int mhd_type_base;
   mrc_fld_get_param_int(fld_base, "mhd_type", &mhd_type_base);
@@ -272,7 +272,7 @@ ggcm_mhd_fld_put_as(struct mrc_fld *fld, struct mrc_fld *fld_base)
 struct mrc_fld *
 ggcm_mhd_get_fld_as_fortran(struct mrc_fld *fld_base)
 {
-  return ggcm_mhd_fld_get_as(fld_base, "float", MT_SEMI_CONSERVATIVE_GGCM);
+  return ggcm_mhd_fld_get_as(fld_base, "float", MT_SEMI_CONSERVATIVE_GGCM, 0, _NR_FLDS);
 }
 
 // ----------------------------------------------------------------------
@@ -281,6 +281,6 @@ ggcm_mhd_get_fld_as_fortran(struct mrc_fld *fld_base)
 void
 ggcm_mhd_put_fld_as_fortran(struct mrc_fld *fld, struct mrc_fld *fld_base)
 {
-  return ggcm_mhd_fld_put_as(fld, fld_base);
+  return ggcm_mhd_fld_put_as(fld, fld_base, 0, _NR_FLDS);
 }
 
