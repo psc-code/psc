@@ -18,19 +18,19 @@
 
 #if SEMICONSV 
 
-#define P_M(ndx) (gamma - 1.f) * ( U_M( UU, ndx) - ((.5f / U_M( _RR1, ndx) ) * \
-		 (sqr(U_M( _RV1X, ndx)) + sqr(U_M( _RV1Y, ndx)) + sqr(U_M( _RV1Z, ndx)) )))
+#define P_M(ndx) (gamma - 1.f) * ( U_M( UU, ndx) - ((.5f / U_M( RR, ndx) ) * \
+		 (sqr(U_M( RVX, ndx)) + sqr(U_M( RVY, ndx)) + sqr(U_M( RVZ, ndx)) )))
 
-#define P_P(ndx) (gamma - 1.f) * ( U_P( UU, ndx) - ((.5f / U_P( _RR1, ndx) ) * \
-		 (sqr(U_P( _RV1X, ndx)) + sqr(U_P( _RV1Y, ndx)) + sqr(U_P( _RV1Z, ndx)) )))
+#define P_P(ndx) (gamma - 1.f) * ( U_P( UU, ndx) - ((.5f / U_P( RR, ndx) ) * \
+		 (sqr(U_P( RVX, ndx)) + sqr(U_P( RVY, ndx)) + sqr(U_P( RVZ, ndx)) )))
 #else 
 
-#define P_M(ndx) (gamma - 1.f) * ( U_M( UU, ndx) - ((.5f / U_M( _RR1, ndx) ) * \
-		   (sqr(U_M( _RV1X, ndx)) + sqr(U_M( _RV1Y, ndx)) + sqr(U_M( _RV1Z, ndx)) )) - \
+#define P_M(ndx) (gamma - 1.f) * ( U_M( UU, ndx) - ((.5f / U_M( RR, ndx) ) * \
+		   (sqr(U_M( RVX, ndx)) + sqr(U_M( RVY, ndx)) + sqr(U_M( RVZ, ndx)) )) - \
 	    (.5f * (sqr(U_M( BX, ndx)) + sqr(U_M(BY, ndx)) + sqr(U_M(BZ, ndx)))))
 
-#define P_P(ndx) (gamma - 1.f) * ( U_P( UU, ndx) - ((.5f / U_P( _RR1, ndx) ) * \
-		   (sqr(U_P( _RV1X, ndx)) + sqr(U_P( _RV1Y, ndx)) + sqr(U_P( _RV1Z, ndx)) )) - \
+#define P_P(ndx) (gamma - 1.f) * ( U_P( UU, ndx) - ((.5f / U_P( RR, ndx) ) * \
+		   (sqr(U_P( RVX, ndx)) + sqr(U_P( RVY, ndx)) + sqr(U_P( RVZ, ndx)) )) - \
 	    (.5f * (sqr(U_P( BX, ndx))  + sqr(U_P( BY, ndx))  + sqr(U_P(BZ, ndx)))))
 #endif 
 
@@ -75,32 +75,32 @@ calc_KNP_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *flux[3],
     
    // Coeffiecents ap and am   
  
-    float rhoip = 1.f / MRC_F3(u_p[0], _RR1, ix-1,iy,iz);	
-    float rhoim = 1.f / MRC_F3(u_m[0], _RR1, ix,iy,iz);	
+    float rhoip = 1.f / MRC_F3(u_p[0], RR, ix-1,iy,iz);	
+    float rhoim = 1.f / MRC_F3(u_m[0], RR, ix,iy,iz);	
     
     float ppp = P_P(0);
     float ppm = P_M(0);
       
-    float csp = sqrtf((gamma * ppp) / (MRC_F3(u_p[0], _RR1, ix-1,iy,iz)));
-    float csm = sqrtf((gamma * ppm) / (MRC_F3(u_m[0], _RR1, ix,iy,iz)));   
+    float csp = sqrtf((gamma * ppp) / (MRC_F3(u_p[0], RR, ix-1,iy,iz)));
+    float csm = sqrtf((gamma * ppm) / (MRC_F3(u_m[0], RR, ix,iy,iz)));   
        
     float cAp = CAP(0); float cAm = CAM(0);         
     float cfp = CFP(0); float cfm = CFM(0);
 
 
-    float cwp = d_i * cAp * sqrtf(1./MRC_F3(u_p[0], _RR1, ix-1,iy,iz)) * bdx1[ix+2]  ;
-    float cwm = d_i * cAm * sqrtf(1./MRC_F3(u_m[0], _RR1, ix,iy,iz)) * bdx1[ix+2]  ; 
+    float cwp = d_i * cAp * sqrtf(1./MRC_F3(u_p[0], RR, ix-1,iy,iz)) * bdx1[ix+2]  ;
+    float cwm = d_i * cAm * sqrtf(1./MRC_F3(u_m[0], RR, ix,iy,iz)) * bdx1[ix+2]  ; 
 
 #if incws == 0
     cwp = 0;
     cwm = 0;
 #endif
  
-    float ap = fmaxf(fmaxf((MRC_F3(u_p[0], _RV1X, ix-1,iy,iz) / MRC_F3(u_p[0], _RR1, ix-1,iy,iz)) + cfp + cwp,
-			   (MRC_F3(u_m[0], _RV1X, ix,iy,iz) / MRC_F3(u_m[0], _RR1, ix,iy,iz)) + cfm + cwm ), 0.f);
+    float ap = fmaxf(fmaxf((MRC_F3(u_p[0], RVX, ix-1,iy,iz) / MRC_F3(u_p[0], RR, ix-1,iy,iz)) + cfp + cwp,
+			   (MRC_F3(u_m[0], RVX, ix,iy,iz) / MRC_F3(u_m[0], RR, ix,iy,iz)) + cfm + cwm ), 0.f);
 
-    float am = fminf(fminf( (MRC_F3(u_p[0], _RV1X, ix-1,iy,iz) / MRC_F3(u_p[0], _RR1, ix-1,iy,iz)) - cfp - cwp,
-			    (MRC_F3(u_m[0], _RV1X, ix,iy,iz) / MRC_F3(u_m[0], _RR1,ix,iy,iz)) - cfm - cwm), 0.f);
+    float am = fminf(fminf( (MRC_F3(u_p[0], RVX, ix-1,iy,iz) / MRC_F3(u_p[0], RR, ix-1,iy,iz)) - cfp - cwp,
+			    (MRC_F3(u_m[0], RVX, ix,iy,iz) / MRC_F3(u_m[0], RR,ix,iy,iz)) - cfm - cwm), 0.f);
 
 #if KT == 1
     ap = fmaxf(ap,-am);
@@ -108,30 +108,30 @@ calc_KNP_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *flux[3],
 #endif    
 
     // Coeffiecents bp and bm 
-    rhoip = 1.f / MRC_F3(u_p[1], _RR1, ix,iy-1,iz);
-    rhoim = 1.f / MRC_F3(u_m[1], _RR1, ix,iy,iz); 
+    rhoip = 1.f / MRC_F3(u_p[1], RR, ix,iy-1,iz);
+    rhoim = 1.f / MRC_F3(u_m[1], RR, ix,iy,iz); 
   
     ppp = P_P(1); 
     ppm = P_M(1); 
 
-    csp = sqrtf((gamma * ppp) / (MRC_F3(u_p[1], _RR1, ix,iy-1,iz)));
-    csm = sqrtf((gamma * ppm) / (MRC_F3(u_m[1], _RR1, ix,iy,iz)));
+    csp = sqrtf((gamma * ppp) / (MRC_F3(u_p[1], RR, ix,iy-1,iz)));
+    csm = sqrtf((gamma * ppm) / (MRC_F3(u_m[1], RR, ix,iy,iz)));
 
     cAp = CAP(1); cAm = CAM(1);         
     cfp = CFP(1); cfm =  CFM(1);
 
-    cwp =  d_i * cAp * sqrtf(1./MRC_F3(u_p[1], _RR1, ix,iy-1,iz)) * bdy1[iy+2];
-    cwm =  d_i * cAm * sqrtf(1./MRC_F3(u_m[1], _RR1, ix,iy,iz)) * bdy1[iy+2]; 
+    cwp =  d_i * cAp * sqrtf(1./MRC_F3(u_p[1], RR, ix,iy-1,iz)) * bdy1[iy+2];
+    cwm =  d_i * cAm * sqrtf(1./MRC_F3(u_m[1], RR, ix,iy,iz)) * bdy1[iy+2]; 
     
 #if incws == 0
     cwp = 0;
     cwm = 0;
 #endif
     
-    float bp = fmaxf(fmaxf( (MRC_F3(u_p[1], _RV1Y, ix,iy-1,iz) / MRC_F3(u_p[1], _RR1, ix,iy-1,iz)) + cfp + cwp,
-			    (MRC_F3(u_m[1], _RV1Y, ix,iy,iz) / MRC_F3(u_m[1], _RR1, ix,iy,iz)) + cfm + cwm), 0.f);
-    float bm = fminf(fminf( (MRC_F3(u_p[1], _RV1Y, ix,iy-1,iz) / MRC_F3(u_p[1], _RR1, ix,iy-1,iz)) - cfp - cwp,
-			    (MRC_F3(u_m[1], _RV1Y, ix,iy,iz) / MRC_F3(u_m[1], _RR1, ix,iy,iz)) - cfm - cwm), 0.f);
+    float bp = fmaxf(fmaxf( (MRC_F3(u_p[1], RVY, ix,iy-1,iz) / MRC_F3(u_p[1], RR, ix,iy-1,iz)) + cfp + cwp,
+			    (MRC_F3(u_m[1], RVY, ix,iy,iz) / MRC_F3(u_m[1], RR, ix,iy,iz)) + cfm + cwm), 0.f);
+    float bm = fminf(fminf( (MRC_F3(u_p[1], RVY, ix,iy-1,iz) / MRC_F3(u_p[1], RR, ix,iy-1,iz)) - cfp - cwp,
+			    (MRC_F3(u_m[1], RVY, ix,iy,iz) / MRC_F3(u_m[1], RR, ix,iy,iz)) - cfm - cwm), 0.f);
     
 #if KT == 1
     bp = fmaxf(bp,-bm);
@@ -139,8 +139,8 @@ calc_KNP_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *flux[3],
 #endif    
 
    // Coeffiecents cp and cm 
-    rhoip = 1.f / MRC_F3(u_p[2], _RR1, ix,iy,iz-1);
-    rhoim = 1.f / MRC_F3(u_m[2], _RR1, ix,iy,iz); 
+    rhoip = 1.f / MRC_F3(u_p[2], RR, ix,iy,iz-1);
+    rhoim = 1.f / MRC_F3(u_m[2], RR, ix,iy,iz); 
 
     ppp = P_P(2); 
     ppm = P_M(2);
@@ -159,10 +159,10 @@ calc_KNP_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *flux[3],
     cwm = 0;
 #endif
 
-    float cp = fmaxf(fmaxf( (MRC_F3(u_p[2], _RV1Z, ix,iy,iz-1) / MRC_F3(u_p[2], _RR1, ix,iy,iz-1)) + cfp + cwp,
-			    (MRC_F3(u_m[2], _RV1Z, ix,iy,iz) / MRC_F3(u_m[2], _RR1, ix,iy,iz)) + cfm + cwm), 0.f);
-    float cm = fminf(fminf( (MRC_F3(u_p[2], _RV1Z, ix,iy,iz-1) / MRC_F3(u_p[2], _RR1, ix,iy,iz-1)) - cfp - cwp,
-			    (MRC_F3(u_m[2], _RV1Z, ix,iy,iz) / MRC_F3(u_m[2], _RR1, ix,iy,iz)) - cfm - cwm), 0.f);
+    float cp = fmaxf(fmaxf( (MRC_F3(u_p[2], RVZ, ix,iy,iz-1) / MRC_F3(u_p[2], RR, ix,iy,iz-1)) + cfp + cwp,
+			    (MRC_F3(u_m[2], RVZ, ix,iy,iz) / MRC_F3(u_m[2], RR, ix,iy,iz)) + cfm + cwm), 0.f);
+    float cm = fminf(fminf( (MRC_F3(u_p[2], RVZ, ix,iy,iz-1) / MRC_F3(u_p[2], RR, ix,iy,iz-1)) - cfp - cwp,
+			    (MRC_F3(u_m[2], RVZ, ix,iy,iz) / MRC_F3(u_m[2], RR, ix,iy,iz)) - cfm - cwm), 0.f);
   
 
 #if KT == 1

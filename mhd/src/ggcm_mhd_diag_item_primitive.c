@@ -72,7 +72,7 @@ ggcm_mhd_diag_item_rr_run(struct ggcm_mhd_diag_item *item,
   struct ggcm_mhd *mhd = item->diag->mhd;
 
   float scale_rr = mhd->par.rrnorm;
-  ggcm_mhd_diag_c_write_one_field(io, fld, _RR1, "rr", scale_rr, diag_type, plane);
+  ggcm_mhd_diag_c_write_one_field(io, fld, RR, "rr", scale_rr, diag_type, plane);
 }
 
 // ----------------------------------------------------------------------

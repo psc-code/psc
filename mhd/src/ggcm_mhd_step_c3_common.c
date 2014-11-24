@@ -287,9 +287,9 @@ pushpp_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, struct mrc_fld *x,
     mrc_fld_data_t fpy = fd1y[j] * (F3(prim, PP, i,j+1,k) - F3(prim, PP, i,j-1,k));
     mrc_fld_data_t fpz = fd1z[k] * (F3(prim, PP, i,j,k+1) - F3(prim, PP, i,j,k-1));
     mrc_fld_data_t z = dth * ZMASK(zmask, i,j,k);
-    F3(x, _RV1X, i,j,k) += z * fpx;
-    F3(x, _RV1Y, i,j,k) += z * fpy;
-    F3(x, _RV1Z, i,j,k) += z * fpz;
+    F3(x, RVX, i,j,k) += z * fpx;
+    F3(x, RVY, i,j,k) += z * fpy;
+    F3(x, RVZ, i,j,k) += z * fpz;
   } mrc_fld_foreach_end;
 }
 
@@ -379,9 +379,9 @@ push_ej_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, struct mrc_fld *x_curr,
 			  ffy * F3(prim, VY, i,j,k) +
 			  ffz * F3(prim, VZ, i,j,k));
 
-    F3(x_next, _RV1X, i,j,k) += ffx;
-    F3(x_next, _RV1Y, i,j,k) += ffy;
-    F3(x_next, _RV1Z, i,j,k) += ffz;
+    F3(x_next, RVX, i,j,k) += ffx;
+    F3(x_next, RVY, i,j,k) += ffy;
+    F3(x_next, RVZ, i,j,k) += ffz;
     F3(x_next, UU , i,j,k) += duu;
   } mrc_fld_foreach_end;
 

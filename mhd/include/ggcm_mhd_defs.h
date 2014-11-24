@@ -13,10 +13,10 @@
 // indices based on mhd-corea.for
 
 enum {
-  _RR1,
-  _RV1X,
-  _RV1Y,
-  _RV1Z,
+  __RR1,
+  __RV1X,
+  __RV1Y,
+  __RV1Z,
   __UU1,
   __B1X,
   __B1Y,

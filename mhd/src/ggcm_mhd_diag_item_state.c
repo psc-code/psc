@@ -23,7 +23,7 @@ ggcm_mhd_diag_item_rr1_run(struct ggcm_mhd_diag_item *item,
 			   int diag_type, float plane)
 {
   float scale_rr = 1.;
-  ggcm_mhd_diag_c_write_one_field(io, fld, _RR1, "rr1", scale_rr, diag_type, plane);
+  ggcm_mhd_diag_c_write_one_field(io, fld, RR, "rr1", scale_rr, diag_type, plane);
 }
 
 // ----------------------------------------------------------------------
@@ -108,9 +108,9 @@ ggcm_mhd_diag_item_rv1_run(struct ggcm_mhd_diag_item *item,
 			   int diag_type, float plane)
 {
   float scale_rv = 1.;
-  ggcm_mhd_diag_c_write_one_field(io, fld, _RV1X, "rv1x", scale_rv, diag_type, plane);
-  ggcm_mhd_diag_c_write_one_field(io, fld, _RV1Y, "rv1y", scale_rv, diag_type, plane);
-  ggcm_mhd_diag_c_write_one_field(io, fld, _RV1Z, "rv1z", scale_rv, diag_type, plane);
+  ggcm_mhd_diag_c_write_one_field(io, fld, RVX, "rv1x", scale_rv, diag_type, plane);
+  ggcm_mhd_diag_c_write_one_field(io, fld, RVY, "rv1y", scale_rv, diag_type, plane);
+  ggcm_mhd_diag_c_write_one_field(io, fld, RVZ, "rv1z", scale_rv, diag_type, plane);
 }
 
 // ----------------------------------------------------------------------

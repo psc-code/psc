@@ -118,17 +118,17 @@ ggcm_mhd_bnd_open_x_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld,
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int iy = -sw; iy < ny + sw; iy++) {	
 
-	F3(f3,_RV1X, -1,iy,iz) = F3(f3,_RV1X, 0,iy,iz);
-	F3(f3,_RV1X, -2,iy,iz) = F3(f3,_RV1X, 1,iy,iz);	
+	F3(f3,RVX, -1,iy,iz) = F3(f3,RVX, 0,iy,iz);
+	F3(f3,RVX, -2,iy,iz) = F3(f3,RVX, 1,iy,iz);	
 
-	F3(f3,_RR1, -1,iy,iz) = F3(f3,_RR1, 0,iy,iz);
-	F3(f3,_RR1, -2,iy,iz) = F3(f3,_RR1, 1,iy,iz);
+	F3(f3,RR, -1,iy,iz) = F3(f3,RR, 0,iy,iz);
+	F3(f3,RR, -2,iy,iz) = F3(f3,RR, 1,iy,iz);
 
-	F3(f3,_RV1Y, -1,iy,iz) = F3(f3,_RV1Y, 0,iy,iz); 
-	F3(f3,_RV1Y, -2,iy,iz) = F3(f3,_RV1Y, 1,iy,iz);
+	F3(f3,RVY, -1,iy,iz) = F3(f3,RVY, 0,iy,iz); 
+	F3(f3,RVY, -2,iy,iz) = F3(f3,RVY, 1,iy,iz);
 	
-	F3(f3,_RV1Z, -1,iy,iz) = F3(f3,_RV1Z, 0,iy,iz);
-	F3(f3,_RV1Z, -2,iy,iz) = F3(f3,_RV1Z, 1,iy,iz);
+	F3(f3,RVZ, -1,iy,iz) = F3(f3,RVZ, 0,iy,iz);
+	F3(f3,RVZ, -2,iy,iz) = F3(f3,RVZ, 1,iy,iz);
 	
 	F3(f3,UU, -1,iy,iz) = F3(f3,UU, 0,iy,iz);
 	F3(f3,UU, -2,iy,iz) = F3(f3,UU, 1,iy,iz);
@@ -173,17 +173,17 @@ ggcm_mhd_bnd_open_x_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld,
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int iy = -sw; iy < ny + sw; iy++) {
 
-	F3(f3,_RV1X, nx+1,iy,iz) = F3(f3,_RV1X, nx-2,iy,iz);	
-	F3(f3,_RV1X, nx,iy,iz) = F3(f3,_RV1X, nx-1,iy,iz);
+	F3(f3,RVX, nx+1,iy,iz) = F3(f3,RVX, nx-2,iy,iz);	
+	F3(f3,RVX, nx,iy,iz) = F3(f3,RVX, nx-1,iy,iz);
 
-	F3(f3,_RR1, nx+1,iy,iz) = F3(f3,_RR1, nx-2,iy,iz);	
-	F3(f3,_RR1, nx,iy,iz) = F3(f3,_RR1, nx-1,iy,iz);
+	F3(f3,RR, nx+1,iy,iz) = F3(f3,RR, nx-2,iy,iz);	
+	F3(f3,RR, nx,iy,iz) = F3(f3,RR, nx-1,iy,iz);
 
-	F3(f3,_RV1Y, nx+1,iy,iz) = F3(f3,_RV1Y, nx-2,iy,iz); 
-	F3(f3,_RV1Y, nx,iy,iz) = F3(f3,_RV1Y, nx-1,iy,iz);
+	F3(f3,RVY, nx+1,iy,iz) = F3(f3,RVY, nx-2,iy,iz); 
+	F3(f3,RVY, nx,iy,iz) = F3(f3,RVY, nx-1,iy,iz);
 
-	F3(f3,_RV1Z, nx+1,iy,iz) = F3(f3,_RV1Z, nx-2,iy,iz);
-	F3(f3,_RV1Z, nx,iy,iz) = F3(f3,_RV1Z, nx-1,iy,iz);
+	F3(f3,RVZ, nx+1,iy,iz) = F3(f3,RVZ, nx-2,iy,iz);
+	F3(f3,RVZ, nx,iy,iz) = F3(f3,RVZ, nx-1,iy,iz);
 
 	F3(f3,UU, nx+1,iy,iz) = F3(f3,UU, nx-2,iy,iz);
 	F3(f3,UU, nx,iy,iz) = F3(f3,UU, nx-1,iy,iz); 

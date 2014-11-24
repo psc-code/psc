@@ -47,13 +47,13 @@ GGCM_MHD_BND_CONDUCTING_Y_FILL_GHOST(struct ggcm_mhd_bnd *bnd,
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int ix = -sw; ix < nx + sw; ix++) {
         for (int ig = 0; ig < sw; ig++) {      
-          F3(x, m+_RR1 , ix, -1 - ig, iz) =   F3(x, m+_RR1,  ix, ig, iz);
-          F3(x, m+_RV1X, ix, -1 - ig, iz) =   F3(x, m+_RV1X, ix, ig, iz);
-          F3(x, m+_RV1Y, ix, -1 - ig, iz) = - F3(x, m+_RV1Y, ix, ig, iz);
-          F3(x, m+_RV1Z, ix, -1 - ig, iz) =   F3(x, m+_RV1Z, ix, ig, iz);
-          F3(x, m+UU   , ix, -1 - ig, iz) =   F3(x, m+UU  ,  ix, ig, iz);
-          F3(x, m+BX   , ix, -1 - ig, iz) =   F3(x, m+BX  ,  ix, ig, iz);
-          F3(x, m+BZ   , ix, -1 - ig, iz) =   F3(x, m+BZ  ,  ix, ig, iz);
+          F3(x, m+RR , ix, -1 - ig, iz) =   F3(x, m+RR,  ix, ig, iz);
+          F3(x, m+RVX, ix, -1 - ig, iz) =   F3(x, m+RVX, ix, ig, iz);
+          F3(x, m+RVY, ix, -1 - ig, iz) = - F3(x, m+RVY, ix, ig, iz);
+          F3(x, m+RVZ, ix, -1 - ig, iz) =   F3(x, m+RVZ, ix, ig, iz);
+          F3(x, m+UU , ix, -1 - ig, iz) =   F3(x, m+UU,  ix, ig, iz);
+          F3(x, m+BX , ix, -1 - ig, iz) =   F3(x, m+BX,  ix, ig, iz);
+          F3(x, m+BZ , ix, -1 - ig, iz) =   F3(x, m+BZ,  ix, ig, iz);
 
           // // nothing special, B != 0, but Bz stays 0
           // F3(x, m+BY , ix, -1 - ig, iz) =   F3(x, m+BY,  ix, ig, iz);
@@ -77,13 +77,13 @@ GGCM_MHD_BND_CONDUCTING_Y_FILL_GHOST(struct ggcm_mhd_bnd *bnd,
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int ix = -sw; ix < nx + sw; ix++) {
         for (int ig = 0; ig < sw; ig++) {      
-          F3(x, m+_RR1 , ix, ny + ig, iz) =   F3(x, m+_RR1 , ix, ny - 1 - ig, iz);
-          F3(x, m+_RV1X, ix, ny + ig, iz) =   F3(x, m+_RV1X, ix, ny - 1 - ig, iz);
-          F3(x, m+_RV1Y, ix, ny + ig, iz) = - F3(x, m+_RV1Y, ix, ny - 1 - ig, iz);
-          F3(x, m+_RV1Z, ix, ny + ig, iz) =   F3(x, m+_RV1Z, ix, ny - 1 - ig, iz);
-          F3(x, m+UU   , ix, ny + ig, iz) =   F3(x, m+UU   , ix, ny - 1 - ig, iz);
-          F3(x, m+BX   , ix, ny + ig, iz) =   F3(x, m+BX   , ix, ny - 1 - ig, iz);
-          F3(x, m+BZ   , ix, ny + ig, iz) =   F3(x, m+BZ   , ix, ny - 1 - ig, iz);
+          F3(x, m+RR , ix, ny + ig, iz) =   F3(x, m+RR , ix, ny - 1 - ig, iz);
+          F3(x, m+RVX, ix, ny + ig, iz) =   F3(x, m+RVX, ix, ny - 1 - ig, iz);
+          F3(x, m+RVY, ix, ny + ig, iz) = - F3(x, m+RVY, ix, ny - 1 - ig, iz);
+          F3(x, m+RVZ, ix, ny + ig, iz) =   F3(x, m+RVZ, ix, ny - 1 - ig, iz);
+          F3(x, m+UU , ix, ny + ig, iz) =   F3(x, m+UU , ix, ny - 1 - ig, iz);
+          F3(x, m+BX , ix, ny + ig, iz) =   F3(x, m+BX , ix, ny - 1 - ig, iz);
+          F3(x, m+BZ , ix, ny + ig, iz) =   F3(x, m+BZ , ix, ny - 1 - ig, iz);
 
           // nothing special, B != 0, but Bz stays 0
           // F3(x, m+BY , ix, ny + ig, iz) =   F3(x, m+BY , ix, ny - 1 - ig, iz);

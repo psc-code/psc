@@ -76,17 +76,17 @@ calc_semiconsv_rhs(struct ggcm_mhd *mhd, struct mrc_fld *rhs, struct mrc_fld *fl
 
   // add JxB source term
   mrc_fld_foreach(rhs, ix, iy, iz, 0, 0) {    
-    MRC_F3(rhs, _RV1X, ix, iy, iz) +=  
+    MRC_F3(rhs, RVX, ix, iy, iz) +=  
       MRC_F3(J_cc, 1, ix, iy, iz) * 0.5 * RFACT *
       (BZ(fld, ix,iy,iz) + BZ(fld, ix,iy,iz+1)) -
       MRC_F3(J_cc, 2, ix, iy, iz) * 0.5 * RFACT *
       (BY(fld, ix,iy,iz) + BY(fld, ix,iy+1,iz));
-    MRC_F3(rhs, _RV1Y, ix, iy, iz) -= 
+    MRC_F3(rhs, RVY, ix, iy, iz) -= 
       MRC_F3(J_cc, 0, ix, iy, iz) * 0.5 * RFACT *
       (BZ(fld, ix,iy,iz)+ BZ(fld, ix,iy,iz+1)) -
       MRC_F3(J_cc, 2, ix, iy, iz) * 0.5 * RFACT *
       (BX(fld, ix,iy,iz)+ BX(fld, ix+1,iy,iz))    ;
-    MRC_F3(rhs, _RV1Z, ix, iy, iz) +=  
+    MRC_F3(rhs, RVZ, ix, iy, iz) +=  
       MRC_F3(J_cc, 0, ix, iy, iz) * 0.5 * RFACT *
       (BY(fld, ix,iy,iz)+ BY(fld, ix,iy+1,iz)) -
       MRC_F3(J_cc, 1, ix, iy, iz) * 0.5 * RFACT *

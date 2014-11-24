@@ -38,23 +38,23 @@ calc_u_pm(struct ggcm_mhd *mhd, struct mrc_fld *u_p[3], struct mrc_fld *u_m[3],
 
   
      mrc_fld_foreach(u, ix,iy,iz, 2, 1) {
-    if  (MRC_F3(u_p[0], _RR1, ix,iy,iz) <= 0.f) {
-      MRC_F3(u_p[0], _RR1, ix,iy,iz) = RMIN;
+    if  (MRC_F3(u_p[0], RR, ix,iy,iz) <= 0.f) {
+      MRC_F3(u_p[0], RR, ix,iy,iz) = RMIN;
     }
-    if  (MRC_F3(u_p[1], _RR1, ix,iy,iz) <= 0.f) {
-      MRC_F3(u_p[1], _RR1, ix,iy,iz) = RMIN;
+    if  (MRC_F3(u_p[1], RR, ix,iy,iz) <= 0.f) {
+      MRC_F3(u_p[1], RR, ix,iy,iz) = RMIN;
     }
-    if  (MRC_F3(u_p[2], _RR1, ix,iy,iz) <= 0.f) {
-      MRC_F3(u_p[2], _RR1, ix,iy,iz) = RMIN;
+    if  (MRC_F3(u_p[2], RR, ix,iy,iz) <= 0.f) {
+      MRC_F3(u_p[2], RR, ix,iy,iz) = RMIN;
     }    
-    if (MRC_F3(u_m[0], _RR1, ix,iy,iz) <= 0.f) { 
-      MRC_F3(u_m[0], _RR1, ix,iy,iz) = RMIN;
+    if (MRC_F3(u_m[0], RR, ix,iy,iz) <= 0.f) { 
+      MRC_F3(u_m[0], RR, ix,iy,iz) = RMIN;
     }
-    if  (MRC_F3(u_m[1], _RR1, ix,iy,iz) <= 0.f) {
-      MRC_F3(u_m[1], _RR1, ix,iy,iz) = RMIN;
+    if  (MRC_F3(u_m[1], RR, ix,iy,iz) <= 0.f) {
+      MRC_F3(u_m[1], RR, ix,iy,iz) = RMIN;
     }    
-    if (MRC_F3(u_m[2], _RR1, ix,iy,iz) <= 0.f) { 
-      MRC_F3(u_m[2], _RR1, ix,iy,iz) = RMIN;
+    if (MRC_F3(u_m[2], RR, ix,iy,iz) <= 0.f) { 
+      MRC_F3(u_m[2], RR, ix,iy,iz) = RMIN;
     }
    
   } mrc_fld_foreach_end;
@@ -148,48 +148,48 @@ calc_u_pm(struct ggcm_mhd *mhd, struct mrc_fld *u_p[3], struct mrc_fld *u_m[3],
     for (int i = 0; i < 3; i++) {     
       // _p 
       MRC_F3(E_p[i], 0, ix,iy,iz) = 
-	-((MRC_F3(u_p[i], _RV1Y, ix,iy,iz) * MRC_F3(u_p[i], BZ, ix,iy,iz) / MRC_F3(u_p[i], _RR1, ix,iy,iz))- 	
-	  (MRC_F3(u_p[i], BY, ix,iy,iz) * MRC_F3(u_p[i], _RV1Z, ix,iy,iz) / MRC_F3(u_p[i], _RR1, ix,iy,iz)))+
+	-((MRC_F3(u_p[i], RVY, ix,iy,iz) * MRC_F3(u_p[i], BZ, ix,iy,iz) / MRC_F3(u_p[i], RR, ix,iy,iz))- 	
+	  (MRC_F3(u_p[i], BY, ix,iy,iz) * MRC_F3(u_p[i], RVZ, ix,iy,iz) / MRC_F3(u_p[i], RR, ix,iy,iz)))+
 	  eta *  MRC_F3(u_p[i],_JX, ix,iy,iz)
-	+ d_i * ((MRC_F3(u_p[i], _JY, ix,iy,iz) * MRC_F3(u_p[i], BZ, ix,iy,iz) / MRC_F3(u_p[i], _RR1, ix,iy,iz))- 	
-		 (MRC_F3(u_p[i], BY, ix,iy,iz) * MRC_F3(u_p[i], _JZ, ix,iy,iz) / MRC_F3(u_p[i], _RR1, ix,iy,iz)));  
+	+ d_i * ((MRC_F3(u_p[i], _JY, ix,iy,iz) * MRC_F3(u_p[i], BZ, ix,iy,iz) / MRC_F3(u_p[i], RR, ix,iy,iz))- 	
+		 (MRC_F3(u_p[i], BY, ix,iy,iz) * MRC_F3(u_p[i], _JZ, ix,iy,iz) / MRC_F3(u_p[i], RR, ix,iy,iz)));  
   
       MRC_F3(E_p[i], 1, ix,iy,iz) = 
-	((MRC_F3(u_p[i], _RV1X, ix,iy,iz) * MRC_F3(u_p[i], BZ, ix,iy,iz) / MRC_F3(u_p[i], _RR1, ix,iy,iz))- 	
-	 (MRC_F3(u_p[i], BX, ix,iy,iz) * MRC_F3(u_p[i], _RV1Z, ix,iy,iz) / MRC_F3(u_p[i], _RR1, ix,iy,iz)))+
+	((MRC_F3(u_p[i], RVX, ix,iy,iz) * MRC_F3(u_p[i], BZ, ix,iy,iz) / MRC_F3(u_p[i], RR, ix,iy,iz))- 	
+	 (MRC_F3(u_p[i], BX, ix,iy,iz) * MRC_F3(u_p[i], RVZ, ix,iy,iz) / MRC_F3(u_p[i], RR, ix,iy,iz)))+
 	 eta * MRC_F3(u_p[i],_JY, ix,iy,iz)
-	- d_i * ((MRC_F3(u_p[i], _JX, ix,iy,iz) * MRC_F3(u_p[i], BZ, ix,iy,iz) / MRC_F3(u_p[i], _RR1, ix,iy,iz))- 	
-		 (MRC_F3(u_p[i], BX, ix,iy,iz) * MRC_F3(u_p[i], _JZ, ix,iy,iz) / MRC_F3(u_p[i], _RR1, ix,iy,iz)));
+	- d_i * ((MRC_F3(u_p[i], _JX, ix,iy,iz) * MRC_F3(u_p[i], BZ, ix,iy,iz) / MRC_F3(u_p[i], RR, ix,iy,iz))- 	
+		 (MRC_F3(u_p[i], BX, ix,iy,iz) * MRC_F3(u_p[i], _JZ, ix,iy,iz) / MRC_F3(u_p[i], RR, ix,iy,iz)));
       
       MRC_F3(E_p[i], 2, ix,iy,iz) = 
-	-((MRC_F3(u_p[i], _RV1X, ix,iy,iz) * MRC_F3(u_p[i], BY, ix,iy,iz) / MRC_F3(u_p[i], _RR1, ix,iy,iz))- 	
-	  (MRC_F3(u_p[i], BX, ix,iy,iz) * MRC_F3(u_p[i], _RV1Y, ix,iy,iz) / MRC_F3(u_p[i], _RR1, ix,iy,iz)))+
+	-((MRC_F3(u_p[i], RVX, ix,iy,iz) * MRC_F3(u_p[i], BY, ix,iy,iz) / MRC_F3(u_p[i], RR, ix,iy,iz))- 	
+	  (MRC_F3(u_p[i], BX, ix,iy,iz) * MRC_F3(u_p[i], RVY, ix,iy,iz) / MRC_F3(u_p[i], RR, ix,iy,iz)))+
 	  eta * MRC_F3(u_p[i],_JZ, ix,iy,iz)
-        + d_i * ((MRC_F3(u_p[i], _JX, ix,iy,iz) * MRC_F3(u_p[i], BY, ix,iy,iz) / MRC_F3(u_p[i], _RR1, ix,iy,iz))- 	
-		     (MRC_F3(u_p[i], BX, ix,iy,iz) * MRC_F3(u_p[i], _JY, ix,iy,iz) / MRC_F3(u_p[i], _RR1, ix,iy,iz)));
+        + d_i * ((MRC_F3(u_p[i], _JX, ix,iy,iz) * MRC_F3(u_p[i], BY, ix,iy,iz) / MRC_F3(u_p[i], RR, ix,iy,iz))- 	
+		     (MRC_F3(u_p[i], BX, ix,iy,iz) * MRC_F3(u_p[i], _JY, ix,iy,iz) / MRC_F3(u_p[i], RR, ix,iy,iz)));
 
 	
       // _m 
       MRC_F3(E_m[i], 0, ix,iy,iz) =  
-	-((MRC_F3(u_m[i], _RV1Y, ix,iy,iz) * MRC_F3(u_m[i], BZ, ix,iy,iz) / MRC_F3(u_m[i], _RR1, ix,iy,iz))- 	
-	  (MRC_F3(u_m[i], BY, ix,iy,iz) * MRC_F3(u_m[i], _RV1Z, ix,iy,iz) / MRC_F3(u_m[i], _RR1, ix,iy,iz)))+
+	-((MRC_F3(u_m[i], RVY, ix,iy,iz) * MRC_F3(u_m[i], BZ, ix,iy,iz) / MRC_F3(u_m[i], RR, ix,iy,iz))- 	
+	  (MRC_F3(u_m[i], BY, ix,iy,iz) * MRC_F3(u_m[i], RVZ, ix,iy,iz) / MRC_F3(u_m[i], RR, ix,iy,iz)))+
    	  eta * MRC_F3(u_m[i],_JX, ix,iy,iz)
-	+ d_i * ((MRC_F3(u_m[i], _JY, ix,iy,iz) * MRC_F3(u_m[i], BZ, ix,iy,iz) / MRC_F3(u_m[i], _RR1, ix,iy,iz))- 	
-		 (MRC_F3(u_m[i], BY, ix,iy,iz) * MRC_F3(u_m[i], _JZ, ix,iy,iz) / MRC_F3(u_m[i], _RR1, ix,iy,iz)));
+	+ d_i * ((MRC_F3(u_m[i], _JY, ix,iy,iz) * MRC_F3(u_m[i], BZ, ix,iy,iz) / MRC_F3(u_m[i], RR, ix,iy,iz))- 	
+		 (MRC_F3(u_m[i], BY, ix,iy,iz) * MRC_F3(u_m[i], _JZ, ix,iy,iz) / MRC_F3(u_m[i], RR, ix,iy,iz)));
       
       MRC_F3(E_m[i], 1, ix,iy,iz) = 
-	((MRC_F3(u_m[i], _RV1X, ix,iy,iz) * MRC_F3(u_m[i], BZ, ix,iy,iz) / MRC_F3(u_m[i], _RR1, ix,iy,iz))- 	
-	 (MRC_F3(u_m[i], BX, ix,iy,iz) * MRC_F3(u_m[i], _RV1Z, ix,iy,iz) / MRC_F3(u_m[i], _RR1, ix,iy,iz)))+
+	((MRC_F3(u_m[i], RVX, ix,iy,iz) * MRC_F3(u_m[i], BZ, ix,iy,iz) / MRC_F3(u_m[i], RR, ix,iy,iz))- 	
+	 (MRC_F3(u_m[i], BX, ix,iy,iz) * MRC_F3(u_m[i], RVZ, ix,iy,iz) / MRC_F3(u_m[i], RR, ix,iy,iz)))+
 	 eta * MRC_F3(u_m[i],_JY, ix,iy,iz)
-	- d_i * ((MRC_F3(u_m[i], _JX, ix,iy,iz) * MRC_F3(u_m[i], BZ, ix,iy,iz) / MRC_F3(u_m[i], _RR1, ix,iy,iz))- 	
-		 (MRC_F3(u_m[i], BX, ix,iy,iz) * MRC_F3(u_m[i], _JZ, ix,iy,iz) / MRC_F3(u_m[i], _RR1, ix,iy,iz)));
+	- d_i * ((MRC_F3(u_m[i], _JX, ix,iy,iz) * MRC_F3(u_m[i], BZ, ix,iy,iz) / MRC_F3(u_m[i], RR, ix,iy,iz))- 	
+		 (MRC_F3(u_m[i], BX, ix,iy,iz) * MRC_F3(u_m[i], _JZ, ix,iy,iz) / MRC_F3(u_m[i], RR, ix,iy,iz)));
       
       MRC_F3(E_m[i], 2, ix,iy,iz) =  
-	-((MRC_F3(u_m[i], _RV1X, ix,iy,iz) * MRC_F3(u_m[i], BY, ix,iy,iz) / MRC_F3(u_m[i], _RR1, ix,iy,iz))- 	
-	  (MRC_F3(u_m[i], BX, ix,iy,iz) * MRC_F3(u_m[i], _RV1Y, ix,iy,iz) / MRC_F3(u_m[i], _RR1, ix,iy,iz)))+
+	-((MRC_F3(u_m[i], RVX, ix,iy,iz) * MRC_F3(u_m[i], BY, ix,iy,iz) / MRC_F3(u_m[i], RR, ix,iy,iz))- 	
+	  (MRC_F3(u_m[i], BX, ix,iy,iz) * MRC_F3(u_m[i], RVY, ix,iy,iz) / MRC_F3(u_m[i], RR, ix,iy,iz)))+
 	  eta * MRC_F3(u_m[i],_JZ, ix,iy,iz) 
-        + d_i * ((MRC_F3(u_m[i], _JX, ix,iy,iz) * MRC_F3(u_m[i], BY, ix,iy,iz) / MRC_F3(u_m[i], _RR1, ix,iy,iz))- 	
-		 (MRC_F3(u_m[i], BX, ix,iy,iz) * MRC_F3(u_m[i], _JY, ix,iy,iz) / MRC_F3(u_m[i], _RR1, ix,iy,iz)));   
+        + d_i * ((MRC_F3(u_m[i], _JX, ix,iy,iz) * MRC_F3(u_m[i], BY, ix,iy,iz) / MRC_F3(u_m[i], RR, ix,iy,iz))- 	
+		 (MRC_F3(u_m[i], BX, ix,iy,iz) * MRC_F3(u_m[i], _JY, ix,iy,iz) / MRC_F3(u_m[i], RR, ix,iy,iz)));   
     }    
   } mrc_fld_foreach_end;
 

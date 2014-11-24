@@ -3,7 +3,11 @@
 #define GGCM_MHD_DEFS_EXTRA_H
 
 enum {
-  _UU1 = 4,
+  _RR1,
+  _RV1X,
+  _RV1Y,
+  _RV1Z,
+  _UU1,
   _B1X,
   _B1Y,
   _B1Z,

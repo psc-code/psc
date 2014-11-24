@@ -129,17 +129,17 @@ ggcm_mhd_bnd_conducting_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fl
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int ix = -sw; ix < nx + sw; ix++) {	
 	// impenetrable wall 
-	F3(fld,_RV1Y, ix,-2,iz) = -F3(fld,_RV1Y, ix,1,iz);	
-	F3(fld,_RV1Y, ix,-1,iz) = -F3(fld,_RV1Y, ix,0,iz);
-	F3(fld,_RR1, ix,-1,iz) = F3(fld,_RR1, ix,0,iz);
-	F3(fld,_RR1, ix,-2,iz) = F3(fld,_RR1, ix,1,iz);
+	F3(fld,RVY, ix,-2,iz) = -F3(fld,RVY, ix,1,iz);	
+	F3(fld,RVY, ix,-1,iz) = -F3(fld,RVY, ix,0,iz);
+	F3(fld,RR, ix,-1,iz) = F3(fld,RR, ix,0,iz);
+	F3(fld,RR, ix,-2,iz) = F3(fld,RR, ix,1,iz);
 	
 	// the rest are extrapolations 
-	F3(fld,_RV1X, ix,-1,iz) = 2.*F3(fld,_RV1X, ix,0,iz)-F3(fld,_RV1X, ix,1,iz);	
-	F3(fld,_RV1X, ix,-2,iz) = 2.*F3(fld,_RV1X, ix,-1,iz)-F3(fld,_RV1X, ix,0,iz);
+	F3(fld,RVX, ix,-1,iz) = 2.*F3(fld,RVX, ix,0,iz)-F3(fld,RVX, ix,1,iz);	
+	F3(fld,RVX, ix,-2,iz) = 2.*F3(fld,RVX, ix,-1,iz)-F3(fld,RVX, ix,0,iz);
 	
-	F3(fld,_RV1Z, ix,-1,iz) = 2.*F3(fld,_RV1Z, ix,0,iz)-F3(fld,_RV1Z, ix,1,iz);	
-	F3(fld,_RV1Z, ix,-2,iz) = 2.*F3(fld,_RV1Z, ix,-1,iz)-F3(fld,_RV1Z, ix,0,iz);
+	F3(fld,RVZ, ix,-1,iz) = 2.*F3(fld,RVZ, ix,0,iz)-F3(fld,RVZ, ix,1,iz);	
+	F3(fld,RVZ, ix,-2,iz) = 2.*F3(fld,RVZ, ix,-1,iz)-F3(fld,RVZ, ix,0,iz);
 	
 	F3(fld,UU, ix,-1,iz) = 2.*F3(fld,UU, ix,0,iz)-F3(fld,UU, ix,1,iz);	
 	F3(fld,UU, ix,-2,iz) = 2.*F3(fld,UU, ix,-1,iz)-F3(fld,UU, ix,0,iz);	
@@ -188,21 +188,21 @@ ggcm_mhd_bnd_conducting_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fl
       for (int ix = -sw; ix < nx + sw; ix++) {
 
 	// impenetrable wall 	
-	F3(fld,_RV1Y, ix,ny+1,iz) = -F3(fld,_RV1Y, ix,ny-2,iz);	
-	F3(fld,_RV1Y, ix,ny,iz) = -F3(fld,_RV1Y, ix,ny-1,iz);
-	F3(fld,_RR1, ix,ny+1,iz) = F3(fld,_RR1, ix,ny-2,iz);	
-	F3(fld,_RR1, ix,ny,iz) = F3(fld,_RR1, ix,ny-1,iz);
+	F3(fld,RVY, ix,ny+1,iz) = -F3(fld,RVY, ix,ny-2,iz);	
+	F3(fld,RVY, ix,ny,iz) = -F3(fld,RVY, ix,ny-1,iz);
+	F3(fld,RR, ix,ny+1,iz) = F3(fld,RR, ix,ny-2,iz);	
+	F3(fld,RR, ix,ny,iz) = F3(fld,RR, ix,ny-1,iz);
 
 	// the rest are extrapolations 
-	F3(fld,_RV1X, ix,ny,iz) = F3(fld,_RV1X, ix,ny-1,iz) + 
-	  (1./bd1y[ny-1]) * OSDy2h(fld, _RV1X, ix,ny-1,iz,2.*bd2y[ny-1]);  	
-	F3(fld,_RV1X, ix,ny+1,iz) = F3(fld,_RV1X, ix,ny,iz) + 
-	  (1./bd1y[ny]) * OSDy2h(fld, _RV1X, ix,ny,iz,2.*bd2y[ny]);  	
+	F3(fld,RVX, ix,ny,iz) = F3(fld,RVX, ix,ny-1,iz) + 
+	  (1./bd1y[ny-1]) * OSDy2h(fld, RVX, ix,ny-1,iz,2.*bd2y[ny-1]);  	
+	F3(fld,RVX, ix,ny+1,iz) = F3(fld,RVX, ix,ny,iz) + 
+	  (1./bd1y[ny]) * OSDy2h(fld, RVX, ix,ny,iz,2.*bd2y[ny]);  	
 	
-	F3(fld,_RV1Z, ix,ny,iz) = F3(fld,_RV1Z, ix,ny-1,iz) + 
-	  (1./bd1y[ny-1]) * OSDy2h(fld, _RV1Z, ix,ny-1,iz,2.*bd2y[ny-1]);  	
-	F3(fld,_RV1Z, ix,ny+1,iz) = F3(fld,_RV1Z, ix,ny,iz) +
-	  (1./bd1y[ny]) * OSDy2h(fld, _RV1Z, ix,ny,iz,2.*bd2y[ny]);  	
+	F3(fld,RVZ, ix,ny,iz) = F3(fld,RVZ, ix,ny-1,iz) + 
+	  (1./bd1y[ny-1]) * OSDy2h(fld, RVZ, ix,ny-1,iz,2.*bd2y[ny-1]);  	
+	F3(fld,RVZ, ix,ny+1,iz) = F3(fld,RVZ, ix,ny,iz) +
+	  (1./bd1y[ny]) * OSDy2h(fld, RVZ, ix,ny,iz,2.*bd2y[ny]);  	
 
 	F3(fld,UU, ix,ny,iz) = F3(fld,UU, ix,ny-1,iz) + 
 	  (1./bd1y[ny-1]) * OSDy2h(fld, UU, ix,ny-1,iz,2.*bd2y[ny-1]);  	
