@@ -2,6 +2,11 @@
 #ifndef GGCM_MHD_DEFS_EXTRA_H
 #define GGCM_MHD_DEFS_EXTRA_H
 
+// ----------------------------------------------------------------------
+// openggcm fields
+// These are dependent on what openggcm does in its Fortran code
+// indices based on mhd-cliches.for
+
 enum {
   _RR1,
   _RV1X,
@@ -53,6 +58,8 @@ enum {
   _CURRY,
   _CURRZ,
   _RMASK = 43,
+
+  _NR_FLDS,
 };
 
 #endif

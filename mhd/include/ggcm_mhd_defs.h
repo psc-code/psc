@@ -7,65 +7,6 @@
 
 #define BND (2)
 
-// ----------------------------------------------------------------------
-// fields
-// FIXME, these are dependent on what openggcm does
-// indices based on mhd-corea.for
-
-enum {
-  __RR1,
-  __RV1X,
-  __RV1Y,
-  __RV1Z,
-  __UU1,
-  __B1X,
-  __B1Y,
-  __B1Z,
-
-  __RR2,
-  __RV2X,
-  __RV2Y,
-  __RV2Z,
-  __UU2,
-  __B2X,
-  __B2Y,
-  __B2Z,
-
-  __YMASK, // 16
-  __ZMASK,
-  __CMSV,
-  
-  __RR, // 19
-  __PP,
-  __VX,
-  __VY,
-  __VZ,
-  __BX,
-  __BY,
-  __BZ,
-
-  __TMP1, // 27
-  __TMP2,
-  __TMP3,
-  __TMP4,
-
-  __FLX, // 31
-  __FLY,
-  __FLZ,
-
-  __CX, // 34
-  __CY,
-  __CZ,
-  __XTRA1, // 37
-  __XTRA2,
-  __RESIS,
-  __CURRX, // 40
-  __CURRY,
-  __CURRZ,
-  __RMASK, // 43
-  _NR_FLDS,
-};
-
 // for the state vector
 
 enum {

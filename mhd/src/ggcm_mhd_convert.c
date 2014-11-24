@@ -1,6 +1,7 @@
 
 #include "ggcm_mhd_private.h"
 #include "ggcm_mhd_defs.h"
+#include "ggcm_mhd_defs_extra.h"
 
 #include <mrc_domain.h>
 #include <mrc_fld_as_double.h>
