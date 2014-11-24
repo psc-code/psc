@@ -95,7 +95,7 @@ ggcm_mhd_step_c3_setup(struct ggcm_mhd_step *step)
   setup_mrc_fld_1d(sub->Fl  , mhd->fld, 5);
   setup_mrc_fld_1d(sub->lim1, mhd->fld, 5);
 
-  mhd->ymask = mrc_fld_make_view(mhd->fld, _YMASK, _YMASK + 1);
+  mhd->ymask = ggcm_mhd_step_get_3d_fld(step, 1);
   sub->zmask = ggcm_mhd_step_get_3d_fld(step, 1);
   sub->rmask = ggcm_mhd_step_get_3d_fld(step, 1);
 
@@ -111,7 +111,7 @@ ggcm_mhd_step_c3_destroy(struct ggcm_mhd_step *step)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
 
-  mrc_fld_destroy(step->mhd->ymask);
+  ggcm_mhd_step_put_3d_fld(step, step->mhd->ymask);
   ggcm_mhd_step_put_3d_fld(step, sub->zmask);
   ggcm_mhd_step_put_3d_fld(step, sub->rmask);
 }

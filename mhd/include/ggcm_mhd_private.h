@@ -72,7 +72,7 @@ void primvar1_c(struct ggcm_mhd *mhd);
 void primbb_c(struct ggcm_mhd *mhd, int m_curr);
 void primbb_float(struct ggcm_mhd *mhd, int m_curr);
 void primbb_double(struct ggcm_mhd *mhd, int m_curr);
-void ymaskn_c(struct ggcm_mhd *mhd);
+void ymaskn_c(struct ggcm_mhd *mhd, struct mrc_fld *ymask);
 void zmaskn_c(struct ggcm_mhd *mhd);
 void zmaskn_float(struct ggcm_mhd *mhd);
 void zmaskn_double(struct ggcm_mhd *mhd);

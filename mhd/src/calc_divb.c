@@ -1,6 +1,5 @@
 
 #include "ggcm_mhd_defs.h"
-#include "ggcm_mhd_defs_extra.h"
 #include "ggcm_mhd_private.h"
 #include "ggcm_mhd_crds.h"
 
@@ -35,6 +34,7 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
 
   struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
   struct mrc_fld *d = mrc_fld_get_as(divb, FLD_TYPE);
+  struct mrc_fld *ymask = mrc_fld_get_as(mhd->ymask, FLD_TYPE);
 
   mrc_fld_data_t max = 0.;
 
@@ -47,7 +47,7 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
 	(BX(f, ix,iy,iz) - BX(f, ix-1,iy,iz)) * bd3x[ix] +
 	(BY(f, ix,iy,iz) - BY(f, ix,iy-1,iz)) * bd3y[iy] +
 	(BZ(f, ix,iy,iz) - BZ(f, ix,iy,iz-1)) * bd3z[iz];
-      F3(d,0, ix,iy,iz) *= F3(f,_YMASK, ix,iy,iz);
+      F3(d,0, ix,iy,iz) *= F3(ymask, 0, ix,iy,iz);
 
       // the incoming solar wind won't match and hence divb != 0 here
       if (info.off[0] == 0 && ix <= 0)
@@ -61,7 +61,7 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
 	(BX(f, ix+1,iy,iz) - BX(f, ix,iy,iz)) * hx * bd3x[ix] +
 	(BY(f, ix,iy+1,iz) - BY(f, ix,iy,iz)) * hy * bd3y[iy] +
 	(BZ(f, ix,iy,iz+1) - BZ(f, ix,iy,iz)) * hz * bd3z[iz];
-      F3(d,0, ix,iy,iz) *= F3(f,_YMASK, ix,iy,iz);
+      F3(d,0, ix,iy,iz) *= F3(ymask, 0, ix,iy,iz);
 
       max = mrc_fld_max(max, mrc_fld_abs(F3(d,0, ix,iy,iz)));
     } mrc_fld_foreach_end;
@@ -71,6 +71,7 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
 
   mrc_fld_put_as(f, fld);
   mrc_fld_put_as(d, divb);
+  mrc_fld_put_as(ymask, mhd->ymask);
 
   mprintf("max divb = %g\n", max);
 }
