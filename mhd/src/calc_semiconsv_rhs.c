@@ -43,7 +43,7 @@ calc_semiconsv_rhs(struct ggcm_mhd *mhd, struct mrc_fld *rhs, struct mrc_fld *fl
   } mrc_fld_foreach_end;
  
   // calculate cell centered J
-  ggcm_mhd_calc_currcc( mhd, mhd->fld, _B1X, J_cc );
+  ggcm_mhd_calc_currcc( mhd, mhd->fld, BX, J_cc );
  
 
   // calculate neg divg 

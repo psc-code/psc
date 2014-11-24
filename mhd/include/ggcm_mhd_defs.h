@@ -18,9 +18,9 @@ enum {
   _RV1Y,
   _RV1Z,
   _UU1,
-  _B1X,
-  _B1Y,
-  _B1Z,
+  __B1X,
+  __B1Y,
+  __B1Z,
 
   __RR2,
   __RV2X,
@@ -93,7 +93,7 @@ enum {
 // ----------------------------------------------------------------------
 // macros to ease field access
 
-#define B1XYZ(f,m, ix,iy,iz) F3(f, _B1X+(m), ix,iy,iz)
+#define BXYZ(f,m, ix,iy,iz) F3(f, BX+(m), ix,iy,iz)
 
 #define RR(U, i,j,k)   F3(U, RR , i,j,k)
 #define RVX(U, i,j,k)  F3(U, RVX, i,j,k)

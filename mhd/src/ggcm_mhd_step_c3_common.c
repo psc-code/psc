@@ -307,14 +307,14 @@ curr_c(struct ggcm_mhd *mhd, struct mrc_fld *j_ec, struct mrc_fld *x)
 
   mrc_fld_foreach(j_ec, i,j,k, 1, 2) {
     F3(j_ec, 0, i,j,k) =
-      (F3(x, _B1Z, i,j,k) - F3(x, _B1Z, i,j-1,k)) * bd4y[j] -
-      (F3(x, _B1Y, i,j,k) - F3(x, _B1Y, i,j,k-1)) * bd4z[k];
+      (F3(x, BZ, i,j,k) - F3(x, BZ, i,j-1,k)) * bd4y[j] -
+      (F3(x, BY, i,j,k) - F3(x, BY, i,j,k-1)) * bd4z[k];
     F3(j_ec, 1, i,j,k) =
-      (F3(x, _B1X, i,j,k) - F3(x, _B1X, i,j,k-1)) * bd4z[k] -
-      (F3(x, _B1Z, i,j,k) - F3(x, _B1Z, i-1,j,k)) * bd4x[i];
+      (F3(x, BX, i,j,k) - F3(x, BX, i,j,k-1)) * bd4z[k] -
+      (F3(x, BZ, i,j,k) - F3(x, BZ, i-1,j,k)) * bd4x[i];
     F3(j_ec, 2, i,j,k) =
-      (F3(x, _B1Y, i,j,k) - F3(x, _B1Y, i-1,j,k)) * bd4x[i] -
-      (F3(x, _B1X, i,j,k) - F3(x, _B1X, i,j-1,k)) * bd4y[j];
+      (F3(x, BY, i,j,k) - F3(x, BY, i-1,j,k)) * bd4x[i] -
+      (F3(x, BX, i,j,k) - F3(x, BX, i,j-1,k)) * bd4y[j];
   } mrc_fld_foreach_end;
 }
 
@@ -516,9 +516,9 @@ calc_avg_dz_By(struct ggcm_mhd_step *step, struct mrc_fld *tmp,
     mrc_fld_data_t bd1[3] = { bd1x[i-1], bd1y[j-1], bd1z[k-1] };
 
     F3(tmp, 0, i,j,k) = bd1[ZZ] * 
-      (F3(x, _B1X + YY, i,j,k) - F3(x, _B1X + YY, i-JX2,j-JY2,k-JZ2));
+      (F3(x, BX + YY, i,j,k) - F3(x, BX + YY, i-JX2,j-JY2,k-JZ2));
     F3(tmp, 1, i,j,k) = bd1[YY] * 
-      (F3(x, _B1X + ZZ, i,j,k) - F3(x, _B1X + ZZ, i-JX1,j-JY1,k-JZ1));
+      (F3(x, BX + ZZ, i,j,k) - F3(x, BX + ZZ, i-JX1,j-JY1,k-JZ1));
   } mrc_fld_foreach_end;
 
   // .5 * harmonic average if same sign
@@ -564,10 +564,10 @@ calc_ve_x_B(struct ggcm_mhd_step *step,
     // edge centered velocity
     mrc_fld_data_t vvYY = CC_TO_EC(prim, VX + YY, i,j,k, I,J,K) - d_i * vcurrYY;
     if (vvYY > 0.f) {
-      vbZZ = F3(x, _B1X + ZZ, i-JX1,j-JY1,k-JZ1) +
+      vbZZ = F3(x, BX + ZZ, i-JX1,j-JY1,k-JZ1) +
 	F3(tmp, 3, i-JX1,j-JY1,k-JZ1) * (bd2m[YY] - dt*vvYY);
     } else {
-      vbZZ = F3(x, _B1X + ZZ, i,j,k) -
+      vbZZ = F3(x, BX + ZZ, i,j,k) -
 	F3(tmp, 3, i,j,k) * (bd2[YY] + dt*vvYY);
     }
     ttmp[0] = vbZZ * vvYY;
@@ -576,10 +576,10 @@ calc_ve_x_B(struct ggcm_mhd_step *step,
     // edge centered velocity
     mrc_fld_data_t vvZZ = CC_TO_EC(prim, VX + ZZ, i,j,k, I,J,K) - d_i * vcurrZZ;
     if (vvZZ > 0.f) {
-      vbYY = F3(x, _B1X + YY, i-JX2,j-JY2,k-JZ2) +
+      vbYY = F3(x, BX + YY, i-JX2,j-JY2,k-JZ2) +
 	F3(tmp, 2, i-JX2,j-JY2,k-JZ2) * (bd2m[ZZ] - dt*vvZZ);
     } else {
-      vbYY = F3(x, _B1X + YY, i,j,k) -
+      vbYY = F3(x, BX + YY, i,j,k) -
 	F3(tmp, 2, i,j,k) * (bd2[ZZ] + dt*vvZZ);
     }
     ttmp[1] = vbYY * vvZZ;
@@ -613,10 +613,10 @@ bcthy3z_NL1(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int I, int J, in
     calc_ve_x_B(step, ttmp, x, prim, curr, tmp, i, j, k, XX, YY, ZZ, I, J, K,
 	       JX1, JY1, JZ1, JX2, JY2, JZ2, bd2x, bd2y, bd2z, dt);
     
-    mrc_fld_data_t t1m = F3(x, _B1X + ZZ, i+JX1,j+JY1,k+JZ1) - F3(x, _B1X + ZZ, i,j,k);
-    mrc_fld_data_t t1p = fabsf(F3(x, _B1X + ZZ, i+JX1,j+JY1,k+JZ1)) + fabsf(F3(x, _B1X + ZZ, i,j,k));
-    mrc_fld_data_t t2m = F3(x, _B1X + YY, i+JX2,j+JY2,k+JZ2) - F3(x, _B1X + YY, i,j,k);
-    mrc_fld_data_t t2p = fabsf(F3(x, _B1X + YY, i+JX2,j+JY2,k+JZ2)) + fabsf(F3(x, _B1X + YY, i,j,k));
+    mrc_fld_data_t t1m = F3(x, BX + ZZ, i+JX1,j+JY1,k+JZ1) - F3(x, BX + ZZ, i,j,k);
+    mrc_fld_data_t t1p = fabsf(F3(x, BX + ZZ, i+JX1,j+JY1,k+JZ1)) + fabsf(F3(x, BX + ZZ, i,j,k));
+    mrc_fld_data_t t2m = F3(x, BX + YY, i+JX2,j+JY2,k+JZ2) - F3(x, BX + YY, i,j,k);
+    mrc_fld_data_t t2p = fabsf(F3(x, BX + YY, i+JX2,j+JY2,k+JZ2)) + fabsf(F3(x, BX + YY, i,j,k));
     mrc_fld_data_t tp = t1p + t2p + REPS;
     mrc_fld_data_t tpi = diffmul / tp;
     mrc_fld_data_t d1 = sqr(t1m * tpi);

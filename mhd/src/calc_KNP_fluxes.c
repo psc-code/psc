@@ -27,27 +27,27 @@
 
 #define P_M(ndx) (gamma - 1.f) * ( U_M( _UU1, ndx) - ((.5f / U_M( _RR1, ndx) ) * \
 		   (sqr(U_M( _RV1X, ndx)) + sqr(U_M( _RV1Y, ndx)) + sqr(U_M( _RV1Z, ndx)) )) - \
-	    (.5f * (sqr(U_M( _B1X, ndx)) + sqr(U_M(_B1Y, ndx)) + sqr(U_M(_B1Z, ndx)))))
+	    (.5f * (sqr(U_M( BX, ndx)) + sqr(U_M(BY, ndx)) + sqr(U_M(BZ, ndx)))))
 
 #define P_P(ndx) (gamma - 1.f) * ( U_P( _UU1, ndx) - ((.5f / U_P( _RR1, ndx) ) * \
 		   (sqr(U_P( _RV1X, ndx)) + sqr(U_P( _RV1Y, ndx)) + sqr(U_P( _RV1Z, ndx)) )) - \
-	    (.5f * (sqr(U_P( _B1X, ndx))  + sqr(U_P( _B1Y, ndx))  + sqr(U_P(_B1Z, ndx)))))
+	    (.5f * (sqr(U_P( BX, ndx))  + sqr(U_P( BY, ndx))  + sqr(U_P(BZ, ndx)))))
 #endif 
 
 #define CAP(m)  sqrtf( ( \
-	     sqr(MRC_F3(u_p[m], _B1X,  (ix) - ((m) == 0), (iy) - ((m) == 1), (iz) - ((m) == 2))) + \
-	     sqr(MRC_F3(u_p[m], _B1Y,  (ix) - ((m) == 0), (iy) - ((m) == 1), (iz) - ((m) == 2))) + \
-	     sqr(MRC_F3(u_p[m], _B1Z,  (ix) - ((m) == 0), (iy) - ((m) == 1), (iz) - ((m) == 2)))) * rhoip)
+	     sqr(MRC_F3(u_p[m], BX,  (ix) - ((m) == 0), (iy) - ((m) == 1), (iz) - ((m) == 2))) + \
+	     sqr(MRC_F3(u_p[m], BY,  (ix) - ((m) == 0), (iy) - ((m) == 1), (iz) - ((m) == 2))) + \
+	     sqr(MRC_F3(u_p[m], BZ,  (ix) - ((m) == 0), (iy) - ((m) == 1), (iz) - ((m) == 2)))) * rhoip)
 
-#define CAM(m) sqrtf( (  sqr(MRC_F3(u_m[m], _B1X, ix,iy,iz))+ \
-	     sqr(MRC_F3(u_m[m], _B1Y, ix,iy,iz)) + sqr(MRC_F3(u_m[m], _B1Z, ix,iy,iz)))* rhoim)
+#define CAM(m) sqrtf( (  sqr(MRC_F3(u_m[m], BX, ix,iy,iz))+ \
+	     sqr(MRC_F3(u_m[m], BY, ix,iy,iz)) + sqr(MRC_F3(u_m[m], BZ, ix,iy,iz)))* rhoim)
 
 #define CFP(m)  sqrtf( .5f * ( sqr(csp) + sqr(cAp) + sqrtf( sqr( sqr(cAp) + sqr(csp) ) - \
-              (4.f * sqr(csp * MRC_F3(u_p[m], _B1X+m, \
+              (4.f * sqr(csp * MRC_F3(u_p[m], BX+m, \
               (ix) - ((m) == 0), (iy) - ((m) == 1), (iz) - ((m) == 2))) * rhoip))));
 
 #define CFM(m)  sqrtf( .5f * ( sqr(csm) + sqr(cAm) + sqrtf( sqr( sqr(cAm) + sqr(csm) ) - \
-	      (4.f * sqr(csm * MRC_F3(u_m[m], _B1X+m, ix,iy,iz)) * rhoim))));
+	      (4.f * sqr(csm * MRC_F3(u_m[m], BX+m, ix,iy,iz)) * rhoim))));
 
 
 // ----------------------------------------------------------------------
@@ -177,13 +177,13 @@ calc_KNP_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *flux[3],
     //    ap = 1e-3; am = -1e-3;
     // Flux of _EX,_EY,_EZ through the x faces
     FLUX(flux, 0, _EX, ix,iy,iz) = 
-      (1.f/(ap - am)) * ( (ap*am) * ( MRC_F3(u_m[0], _B1X, ix,iy,iz) - MRC_F3(u_p[0], _B1X, ix-1,iy,iz)));
+      (1.f/(ap - am)) * ( (ap*am) * ( MRC_F3(u_m[0], BX, ix,iy,iz) - MRC_F3(u_p[0], BX, ix-1,iy,iz)));
     FLUX(flux, 0, _EY, ix,iy,iz) = 
       (1.f/(ap - am)) * (   - ap * MRC_F3(E_p[0], 2, ix-1, iy,iz) + am *  MRC_F3(E_m[0], 2, ix,iy,iz) + 
-			 (ap*am)*   ( MRC_F3(u_m[0], _B1Y, ix,iy,iz) -  MRC_F3(u_p[0], _B1Y, ix-1,iy,iz) ));
+			 (ap*am)*   ( MRC_F3(u_m[0], BY, ix,iy,iz) -  MRC_F3(u_p[0], BY, ix-1,iy,iz) ));
     FLUX(flux, 0, _EZ, ix,iy,iz) = 
       (1.f/(ap - am)) * (     ap * MRC_F3(E_p[0], 1, ix-1,iy,iz) - am *  MRC_F3(E_m[0], 1, ix,iy,iz) + 
-			 (ap*am) * ( MRC_F3(u_m[0], _B1Z, ix,iy,iz) - MRC_F3(u_p[0], _B1Z, ix-1,iy,iz) ));  
+			 (ap*am) * ( MRC_F3(u_m[0], BZ, ix,iy,iz) - MRC_F3(u_p[0], BZ, ix-1,iy,iz) ));  
     
     assert(isfinite(bp));
     assert(isfinite(bm));
@@ -191,12 +191,12 @@ calc_KNP_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *flux[3],
     // flux of _EX,_EY,_EZ through the y faces    
     FLUX(flux, 1, _EX, ix,iy,iz) =
        (1.f/(bp - bm)) * (     bp  *  MRC_F3(E_p[1], 2, ix,iy-1,iz) - bm * MRC_F3(E_m[1], 2, ix,iy,iz) + 
-		         (bp * bm) *  ( MRC_F3(u_m[1], _B1X, ix,iy,iz) -    MRC_F3(u_p[1], _B1X, ix,iy-1,iz) ));
+		         (bp * bm) *  ( MRC_F3(u_m[1], BX, ix,iy,iz) -    MRC_F3(u_p[1], BX, ix,iy-1,iz) ));
     FLUX(flux, 1, _EY, ix,iy,iz) =
-       (1.f/(bp - bm)) * ( (bp * bm)* ( MRC_F3(u_m[1], _B1Y, ix,iy,iz) - MRC_F3(u_p[1], _B1Y, ix,iy-1,iz) ));    
+       (1.f/(bp - bm)) * ( (bp * bm)* ( MRC_F3(u_m[1], BY, ix,iy,iz) - MRC_F3(u_p[1], BY, ix,iy-1,iz) ));    
     FLUX(flux, 1, _EZ, ix,iy,iz) =
        (1.f/(bp - bm)) * (    - bp * MRC_F3(E_p[1], 0, ix,iy-1,iz) + bm *  MRC_F3(E_m[1], 0, ix,iy,iz) + 
-		         (bp * bm) *  ( MRC_F3(u_m[1], _B1Z, ix,iy,iz) -     MRC_F3(u_p[1], _B1Z, ix,iy-1,iz) ));  
+		         (bp * bm) *  ( MRC_F3(u_m[1], BZ, ix,iy,iz) -     MRC_F3(u_p[1], BZ, ix,iy-1,iz) ));  
     
     assert(isfinite(cp));
     assert(isfinite(cm));
@@ -204,12 +204,12 @@ calc_KNP_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *flux[3],
     // flux of _EX,_EY,_EZ through the z faces
     FLUX(flux, 2, _EX, ix,iy,iz) = 
       (1.f/(cp - cm))*( - cp * MRC_F3(E_p[2], 1, ix,iy,iz-1) + cm * MRC_F3(E_m[2], 1, ix,iy,iz) + 
-			 (cp * cm) * ( MRC_F3(u_m[2], _B1X, ix,iy,iz) - MRC_F3(u_p[2], _B1X, ix,iy,iz-1) ));
+			 (cp * cm) * ( MRC_F3(u_m[2], BX, ix,iy,iz) - MRC_F3(u_p[2], BX, ix,iy,iz-1) ));
     FLUX(flux, 2, _EY, ix,iy,iz) =
       (1.f/(cp - cm)) *(  cp * MRC_F3(E_p[2], 0, ix,iy,iz-1) - cm * MRC_F3(E_m[2], 0, ix,iy,iz) +
-		         (cp * cm) * ( MRC_F3(u_m[2], _B1Y, ix,iy,iz) -    MRC_F3(u_p[2], _B1Y, ix,iy,iz-1) ));
+		         (cp * cm) * ( MRC_F3(u_m[2], BY, ix,iy,iz) -    MRC_F3(u_p[2], BY, ix,iy,iz-1) ));
     FLUX(flux, 2, _EZ, ix,iy,iz) = 
-      (1.f/(cp - cm))*(  (cp * cm) * ( MRC_F3(u_m[2], _B1Z, ix,iy,iz) - MRC_F3(u_p[2], _B1Z, ix,iy,iz-1) ));    
+      (1.f/(cp - cm))*(  (cp * cm) * ( MRC_F3(u_m[2], BZ, ix,iy,iz) - MRC_F3(u_p[2], BZ, ix,iy,iz-1) ));    
 
     for (int m = 0; m <= _UU1; m++) {
       FLUX(flux, 0, m, ix,iy,iz) =

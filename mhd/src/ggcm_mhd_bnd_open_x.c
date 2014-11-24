@@ -17,7 +17,7 @@
 // ggcm_mhd_bnd_open_x_fill_ghosts
 
 enum {
-  _EX = _B1Z + 1,
+  _EX = BZ + 1,
   _EY,
   _EZ,
   _JX,
@@ -86,33 +86,33 @@ ggcm_mhd_bnd_open_x_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld,
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int iy = -sw; iy < ny + sw; iy++) {
 	// bd1y and bd2y indices offset by one 
-	F3(f3,_B1Y, -1,iy,iz) = F3(f3,_B1Y, 0,iy,iz); 
-        F3(f3,_B1Z, -1,iy,iz) = F3(f3,_B1Z, 0,iy,iz);
+	F3(f3,BY, -1,iy,iz) = F3(f3,BY, 0,iy,iz); 
+        F3(f3,BZ, -1,iy,iz) = F3(f3,BZ, 0,iy,iz);
       }
     }
 
     // set normal magnetic field component for divB=0
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int iy = -sw; iy < ny + sw; iy++) {
-	F3(f3,_B1X, -1,iy,iz) = F3(f3,_B1X, 0,iy,iz) + bd2x[0] *  
-	  ((F3(f3,_B1Y, 0,iy,iz) - F3(f3,_B1Y, 0,iy-1,iz) ) / bd2y[iy] + 
-	   (F3(f3,_B1Z, 0,iy,iz) - F3(f3,_B1Z, 0,iy,iz-1) ) / bd2z[iz]);
+	F3(f3,BX, -1,iy,iz) = F3(f3,BX, 0,iy,iz) + bd2x[0] *  
+	  ((F3(f3,BY, 0,iy,iz) - F3(f3,BY, 0,iy-1,iz) ) / bd2y[iy] + 
+	   (F3(f3,BZ, 0,iy,iz) - F3(f3,BZ, 0,iy,iz-1) ) / bd2z[iz]);
       }
     }	
     // transverse magnetic field extrapolated 
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int iy = -sw; iy < ny + sw; iy++) {       
 	// bd1x and bd2y indices offset by one 
-	F3(f3,_B1Y, -2,iy,iz) = F3(f3,_B1Y, 1,iy,iz);
-	F3(f3,_B1Z, -2,iy,iz) = F3(f3,_B1Z, 1,iy,iz);
+	F3(f3,BY, -2,iy,iz) = F3(f3,BY, 1,iy,iz);
+	F3(f3,BZ, -2,iy,iz) = F3(f3,BZ, 1,iy,iz);
       }
     }
     // set normal magnetic field component for divB=0
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int iy = -sw; iy < ny + sw; iy++) {
-	F3(f3,_B1X, -2,iy,iz) = F3(f3,_B1X, -1,iy,iz) + bd2x[-1] * 
-	  ((F3(f3,_B1Y, -1,iy,iz) - F3(f3,_B1Y, -1,iy-1,iz) ) / bd2y[iy] + 
-           (F3(f3,_B1Z, -1,iy,iz) - F3(f3,_B1Z, -1,iy,iz-1) ) / bd2z[iz]);      
+	F3(f3,BX, -2,iy,iz) = F3(f3,BX, -1,iy,iz) + bd2x[-1] * 
+	  ((F3(f3,BY, -1,iy,iz) - F3(f3,BY, -1,iy-1,iz) ) / bd2y[iy] + 
+           (F3(f3,BZ, -1,iy,iz) - F3(f3,BZ, -1,iy,iz-1) ) / bd2z[iz]);      
       }
     }	
     for (int iz = -sw; iz < nz + sw; iz++) {
@@ -143,31 +143,31 @@ ggcm_mhd_bnd_open_x_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld,
     //  transverse magnetic field extrapolated
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int iy = -sw; iy < ny + sw; iy++) {
-	F3(f3,_B1Y, nx,iy,iz) = F3(f3, _B1Y, nx-1,iy,iz);
-	F3(f3,_B1Z, nx,iy,iz) = F3(f3, _B1Z, nx-1,iy,iz);
+	F3(f3,BY, nx,iy,iz) = F3(f3, BY, nx-1,iy,iz);
+	F3(f3,BZ, nx,iy,iz) = F3(f3, BZ, nx-1,iy,iz);
       }
     }
     // set normal magnetic field component for divB=0
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int iy = -sw; iy < ny + sw; iy++) {
-	F3(f3,_B1X, nx-1,iy,iz) = F3(f3,_B1X, nx-2,iy,iz) - bd2x[nx-1] *
-	  ((F3(f3,_B1Y, nx-1,iy,iz) - F3(f3,_B1Y, nx-1,iy-1,iz) ) / bd2y[iy] +
-	   (F3(f3,_B1Z, nx-1,iy,iz) - F3(f3,_B1Z, nx-1,iy,iz-1) ) / bd2z[iz]);
+	F3(f3,BX, nx-1,iy,iz) = F3(f3,BX, nx-2,iy,iz) - bd2x[nx-1] *
+	  ((F3(f3,BY, nx-1,iy,iz) - F3(f3,BY, nx-1,iy-1,iz) ) / bd2y[iy] +
+	   (F3(f3,BZ, nx-1,iy,iz) - F3(f3,BZ, nx-1,iy,iz-1) ) / bd2z[iz]);
       }
     }	
     //  transverse magnetic field extrapolated
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int iy = -sw; iy < ny + sw; iy++) {
-	F3(f3,_B1Y, nx+1,iy,iz) = F3(f3, _B1Y, nx-2,iy,iz);
-        F3(f3,_B1Z, nx+1,iy,iz) = F3(f3, _B1Z, nx-2,iy,iz); 
+	F3(f3,BY, nx+1,iy,iz) = F3(f3, BY, nx-2,iy,iz);
+        F3(f3,BZ, nx+1,iy,iz) = F3(f3, BZ, nx-2,iy,iz); 
       }
     }
     // set normal magnetic field component for divB=0
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int iy = -sw; iy < ny + sw; iy++) {
-	F3(f3,_B1X, nx,iy,iz) = F3(f3,_B1X, nx-1,iy,iz) - bd2x[nx] *  
-	  ((F3(f3,_B1Y, nx,iy,iz) - F3(f3,_B1Y, nx,iy-1,iz) ) / bd2y[iy] + 
-	   (F3(f3,_B1Z, nx,iy,iz) - F3(f3,_B1Z, nx,iy,iz-1) ) / bd2z[iz]);
+	F3(f3,BX, nx,iy,iz) = F3(f3,BX, nx-1,iy,iz) - bd2x[nx] *  
+	  ((F3(f3,BY, nx,iy,iz) - F3(f3,BY, nx,iy-1,iz) ) / bd2y[iy] + 
+	   (F3(f3,BZ, nx,iy,iz) - F3(f3,BZ, nx,iy,iz-1) ) / bd2z[iz]);
       }
     }	
     for (int iz = -sw; iz < nz + sw; iz++) {

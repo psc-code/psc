@@ -52,21 +52,21 @@ GGCM_MHD_BND_CONDUCTING_Y_FILL_GHOST(struct ggcm_mhd_bnd *bnd,
           F3(x, m+_RV1Y, ix, -1 - ig, iz) = - F3(x, m+_RV1Y, ix, ig, iz);
           F3(x, m+_RV1Z, ix, -1 - ig, iz) =   F3(x, m+_RV1Z, ix, ig, iz);
           F3(x, m+_UU1 , ix, -1 - ig, iz) =   F3(x, m+_UU1,  ix, ig, iz);
-          F3(x, m+_B1X , ix, -1 - ig, iz) =   F3(x, m+_B1X,  ix, ig, iz);
-          F3(x, m+_B1Z , ix, -1 - ig, iz) =   F3(x, m+_B1Z,  ix, ig, iz);
+          F3(x, m+BX   , ix, -1 - ig, iz) =   F3(x, m+BX  ,  ix, ig, iz);
+          F3(x, m+BZ   , ix, -1 - ig, iz) =   F3(x, m+BZ  ,  ix, ig, iz);
 
           // // nothing special, B != 0, but Bz stays 0
-          // F3(x, m+_B1Y , ix, -1 - ig, iz) =   F3(x, m+_B1Y,  ix, ig, iz);
+          // F3(x, m+BY , ix, -1 - ig, iz) =   F3(x, m+BY,  ix, ig, iz);
 
           // to make div B = 0, but bz != 0 and it creeps in over time
           if (ix + 1 == nx + sw || iz + 1 == nz + sw) {
-            // F3(x, m+_B1Y, ix, iy + 1, iz) = 1.0 / bd2x[ix] + 1.0 / bd2z[iz];
+            // F3(x, m+BY, ix, iy + 1, iz) = 1.0 / bd2x[ix] + 1.0 / bd2z[iz];
             continue;
           }
           int iy = - ig;
-          F3(x, m+_B1Y, ix, iy, iz) = F3(x, m+_B1Y, ix, iy + 1, iz) +
-              ((F3(x, m+_B1X, ix+1, iy, iz    ) - F3(x, m+_B1X, ix, iy, iz)) / dx[0] +
-               (F3(x, m+_B1Z, ix  , iy, iz + 1) - F3(x, m+_B1Z, ix, iy, iz)) / dx[2]) * dx[1];
+          F3(x, m+BY, ix, iy, iz) = F3(x, m+BY, ix, iy + 1, iz) +
+              ((F3(x, m+BX, ix+1, iy, iz    ) - F3(x, m+BX, ix, iy, iz)) / dx[0] +
+               (F3(x, m+BZ, ix  , iy, iz + 1) - F3(x, m+BZ, ix, iy, iz)) / dx[2]) * dx[1];
         }
       }
     }
@@ -82,24 +82,24 @@ GGCM_MHD_BND_CONDUCTING_Y_FILL_GHOST(struct ggcm_mhd_bnd *bnd,
           F3(x, m+_RV1Y, ix, ny + ig, iz) = - F3(x, m+_RV1Y, ix, ny - 1 - ig, iz);
           F3(x, m+_RV1Z, ix, ny + ig, iz) =   F3(x, m+_RV1Z, ix, ny - 1 - ig, iz);
           F3(x, m+_UU1 , ix, ny + ig, iz) =   F3(x, m+_UU1 , ix, ny - 1 - ig, iz);
-          F3(x, m+_B1X , ix, ny + ig, iz) =   F3(x, m+_B1X , ix, ny - 1 - ig, iz);
-          F3(x, m+_B1Z , ix, ny + ig, iz) =   F3(x, m+_B1Z , ix, ny - 1 - ig, iz);
+          F3(x, m+BX   , ix, ny + ig, iz) =   F3(x, m+BX   , ix, ny - 1 - ig, iz);
+          F3(x, m+BZ   , ix, ny + ig, iz) =   F3(x, m+BZ   , ix, ny - 1 - ig, iz);
 
           // nothing special, B != 0, but Bz stays 0
-          // F3(x, m+_B1Y , ix, ny + ig, iz) =   F3(x, m+_B1Y , ix, ny - 1 - ig, iz);
+          // F3(x, m+BY , ix, ny + ig, iz) =   F3(x, m+BY , ix, ny - 1 - ig, iz);
 
           // to make div B = 0, but bz != 0 and it creeps in over time
           if (ix + 1 == nx + sw || iz + 1 == nz + sw) {
-            // F3(x, m+_B1Y, ix, iy + 1, iz) = 1.0 / bd2x[ix] + 1.0 / bd2z[iz];
+            // F3(x, m+BY, ix, iy + 1, iz) = 1.0 / bd2x[ix] + 1.0 / bd2z[iz];
             continue;
           }
           int iy = ny - 1 + ig;
-          /* F3(x, m+_B1Y, ix, iy + 1, iz) = F3(x, m+_B1Y, ix, iy, iz) - */
-          /*     ((F3(x, m+_B1X, ix+1, iy, iz    ) - F3(x, m+_B1X, ix, iy, iz)) / bd2x[ix] + */
-          /*      (F3(x, m+_B1Z, ix  , iy, iz + 1) - F3(x, m+_B1Z, ix, iy, iz)) / bd2z[iz]) * bd2y[iy]; */
-          F3(x, m+_B1Y, ix, iy + 1, iz) = F3(x, m+_B1Y, ix, iy, iz) -
-              ((F3(x, m+_B1X, ix+1, iy, iz    ) - F3(x, m+_B1X, ix, iy, iz)) / dx[0] +
-               (F3(x, m+_B1Z, ix  , iy, iz + 1) - F3(x, m+_B1Z, ix, iy, iz)) / dx[2]) * dx[1];
+          /* F3(x, m+BY, ix, iy + 1, iz) = F3(x, m+BY, ix, iy, iz) - */
+          /*     ((F3(x, m+BX, ix+1, iy, iz    ) - F3(x, m+BX, ix, iy, iz)) / bd2x[ix] + */
+          /*      (F3(x, m+BZ, ix  , iy, iz + 1) - F3(x, m+BZ, ix, iy, iz)) / bd2z[iz]) * bd2y[iy]; */
+          F3(x, m+BY, ix, iy + 1, iz) = F3(x, m+BY, ix, iy, iz) -
+              ((F3(x, m+BX, ix+1, iy, iz    ) - F3(x, m+BX, ix, iy, iz)) / dx[0] +
+               (F3(x, m+BZ, ix  , iy, iz + 1) - F3(x, m+BZ, ix, iy, iz)) / dx[2]) * dx[1];
         }
       }
     }

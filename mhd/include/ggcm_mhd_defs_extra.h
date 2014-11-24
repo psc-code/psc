@@ -3,6 +3,10 @@
 #define GGCM_MHD_DEFS_EXTRA_H
 
 enum {
+  _B1X = 5,
+  _B1Y,
+  _B1Z,
+
   _RR2 = 8,
   _RV2X,
   _RV2Y,

@@ -27,7 +27,7 @@ ggcm_mhd_diag_item_j_run(struct ggcm_mhd_diag_item *item,
   mrc_fld_set_name(fld_J, "j");
   mrc_fld_setup(fld_J); 
   //currcc_f(mhd);
-  ggcm_mhd_calc_currcc(mhd, mhd->fld, _B1X, fld_J);
+  ggcm_mhd_calc_currcc(mhd, mhd->fld, BX, fld_J);
   float scale_cc = mhd->par.ccnorm;
   ggcm_mhd_diag_c_write_one_field(io, fld_J, 0, "jx", scale_cc, diag_type, plane);
   ggcm_mhd_diag_c_write_one_field(io, fld_J, 1, "jy", scale_cc, diag_type, plane);

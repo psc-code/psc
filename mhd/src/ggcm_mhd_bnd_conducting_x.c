@@ -20,7 +20,7 @@
 // ggcm_mhd_bnd_conducting_x_fill_ghosts
 
 enum {
-  _EX = _B1Z + 1,
+  _EX = BZ + 1,
   _EY,
   _EZ,
   _JX,
@@ -97,9 +97,9 @@ ggcm_mhd_bnd_conducting_x_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *
       for (int iy = -sw; iy < ny + sw; iy++) {
 	// bd1y and bd2y indices offset by one 
 	BY(f3, -1,iy,iz) = BY(f3, 0,iy,iz) -
-	  (1./bd1x[-1])*OSDx2l(f3,_B1Y, 0,iy,iz,2.*bd2x[0] );
+	  (1./bd1x[-1])*OSDx2l(f3, BY, 0,iy,iz,2.*bd2x[0] );
         BZ(f3, -1,iy,iz) = BZ(f3, 0,iy,iz) -
-	  (1./bd1x[-1])*OSDx2l(f3,_B1Z, 0,iy,iz,2.*bd2x[0] );
+	  (1./bd1x[-1])*OSDx2l(f3, BZ, 0,iy,iz,2.*bd2x[0] );
       }
     }
 
@@ -116,9 +116,9 @@ ggcm_mhd_bnd_conducting_x_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *
       for (int iy = -sw; iy < ny + sw; iy++) {       
 	// bd1x and bd2y indices offset by one 
 	BY(f3, -2,iy,iz) = BY(f3, -1,iy,iz) -
-	  (1./bd1x[-2])*OSDx2l(f3,_B1Y, -1,iy,iz,2.*bd2x[-1] );
+	  (1./bd1x[-2])*OSDx2l(f3, BY, -1,iy,iz,2.*bd2x[-1] );
 	BZ(f3, -2,iy,iz) = BZ(f3, -1,iy,iz) -
-	  (1./bd1x[-2])*OSDx2l(f3,_B1Z, -1,iy,iz,2.*bd2x[-1] );
+	  (1./bd1x[-2])*OSDx2l(f3, BZ, -1,iy,iz,2.*bd2x[-1] );
       }
     }
     // set normal magnetic field component for divB=0
@@ -157,9 +157,9 @@ ggcm_mhd_bnd_conducting_x_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int iy = -sw; iy < ny + sw; iy++) {
 	BY(f3, nx,iy,iz) = BY(f3, nx-1,iy,iz) +
-	  (1./bd1x[nx])*OSDx2h(f3,_B1Y, nx-1,iy,iz,2.*bd2x[nx+1]);
+	  (1./bd1x[nx])*OSDx2h(f3, BY, nx-1,iy,iz,2.*bd2x[nx+1]);
 	BZ(f3, nx,iy,iz) = BZ(f3, nx-1,iy,iz) +
-	  (1./bd1x[nx])*OSDx2h(f3,_B1Z, nx-1,iy,iz,2.*bd2x[nx+1]);
+	  (1./bd1x[nx])*OSDx2h(f3, BZ, nx-1,iy,iz,2.*bd2x[nx+1]);
 
 
 
@@ -179,9 +179,9 @@ ggcm_mhd_bnd_conducting_x_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int iy = -sw; iy < ny + sw; iy++) {
 	BY(f3, nx+1,iy,iz) = BY(f3, nx,iy,iz) +
-	  (1./bd1x[nx])* OSDx2h(f3,_B1Y, nx+1,iy,iz,2.*bd2x[nx+1]);
+	  (1./bd1x[nx])*OSDx2h(f3, BY, nx+1,iy,iz,2.*bd2x[nx+1]);
         BZ(f3, nx+1,iy,iz) = BZ(f3, nx,iy,iz) +
-	  (1./bd1x[nx])*OSDx2h(f3,_B1Z, nx+1,iy,iz,2.*bd2x[nx+1]);
+	  (1./bd1x[nx])*OSDx2h(f3, BZ, nx+1,iy,iz,2.*bd2x[nx+1]);
       }
     }
     // set normal magnetic field component for divB=0

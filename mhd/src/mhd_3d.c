@@ -72,12 +72,12 @@ update_ct(struct ggcm_mhd *mhd,
   float *bd3z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD3);
 
   mrc_fld_foreach(x, i,j,k, 0, 0) {
-    F3(x, _B1X, i,j,k) -= dt * (bd3y[j] * (F3(E, 2, i,j+1,k) - F3(E, 2, i,j,k)) -
-				bd3z[k] * (F3(E, 1, i,j,k+1) - F3(E, 1, i,j,k)));
-    F3(x, _B1Y, i,j,k) -= dt * (bd3z[k] * (F3(E, 0, i,j,k+1) - F3(E, 0, i,j,k)) -
-				bd3x[i] * (F3(E, 2, i+1,j,k) - F3(E, 2, i,j,k)));
-    F3(x, _B1Z, i,j,k) -= dt * (bd3x[i] * (F3(E, 1, i+1,j,k) - F3(E, 1, i,j,k)) -
-				bd3y[j] * (F3(E, 0, i,j+1,k) - F3(E, 0, i,j,k)));
+    F3(x, BX, i,j,k) -= dt * (bd3y[j] * (F3(E, 2, i,j+1,k) - F3(E, 2, i,j,k)) -
+			      bd3z[k] * (F3(E, 1, i,j,k+1) - F3(E, 1, i,j,k)));
+    F3(x, BY, i,j,k) -= dt * (bd3z[k] * (F3(E, 0, i,j,k+1) - F3(E, 0, i,j,k)) -
+			      bd3x[i] * (F3(E, 2, i+1,j,k) - F3(E, 2, i,j,k)));
+    F3(x, BZ, i,j,k) -= dt * (bd3x[i] * (F3(E, 1, i+1,j,k) - F3(E, 1, i,j,k)) -
+			      bd3y[j] * (F3(E, 0, i,j+1,k) - F3(E, 0, i,j,k)));
   } mrc_fld_foreach_end;
 }
 
