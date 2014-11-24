@@ -775,7 +775,13 @@ static void
 ggcm_mhd_step_c2_corr(struct ggcm_mhd_step *step)
 {
   primvar_c(step->mhd, _RR2);
+  static int PR;
+  if (!PR) {
+    PR = prof_register("corr_c", 1., 0, 0);
+  }
+  prof_start(PR);
   pushstage_c(step->mhd, step->mhd->dt, _RR1, _RR2, _RR1, LIMIT_1);
+  prof_stop(PR);
 }
 
 // ----------------------------------------------------------------------
