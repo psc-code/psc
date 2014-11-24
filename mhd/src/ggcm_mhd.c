@@ -96,10 +96,6 @@ _ggcm_mhd_create(struct ggcm_mhd *mhd)
   mrc_fld_set_name(mhd->fld, "ggcm_mhd_fld");
   mrc_fld_set_param_obj(mhd->fld, "domain", mhd->domain);
   mrc_fld_set_param_int(mhd->fld, "nr_spatial_dims", 3);
-  mrc_fld_set_param_int(mhd->fld, "nr_comps", _NR_FLDS);
-  for (int m = 0; m < _NR_FLDS; m++) {
-    mrc_fld_set_comp_name(mhd->fld, m, fldname[m]);
-  }
   mrc_fld_dict_add_obj(mhd->fld, "mhd", mhd);
 }
 
@@ -162,6 +158,9 @@ static void
 _ggcm_mhd_setup(struct ggcm_mhd *mhd)
 {
   ggcm_mhd_step_setup_flds(mhd->step);
+  for (int m = 0; m < mrc_fld_nr_comps(mhd->fld); m++) {
+    mrc_fld_set_comp_name(mhd->fld, m, fldname[m]);
+  }
 
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
   // only set the sw on the domain's crds if they're not already set

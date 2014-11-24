@@ -124,6 +124,7 @@ ggcm_mhd_step_cweno_setup_flds(struct ggcm_mhd_step *step)
 #else
   mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_FULLY_CONSERVATIVE);
 #endif
+  mrc_fld_set_param_int(mhd->fld, "nr_comps", _NR_FLDS);
 }
 // ----------------------------------------------------------------------
 // ggcm_mhd_step subclass "cweno"
