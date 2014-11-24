@@ -25,7 +25,7 @@ calc_u_pm(struct ggcm_mhd *mhd, struct mrc_fld *u_p[3], struct mrc_fld *u_m[3],
  
   // Reconstruction    UijkE  = u_ijk + (dxu_)ijk    UijkW = u_ijk - (dxu_)ijk
   mrc_fld_foreach(u, ix,iy,iz, 2, 1) {
-    for (int m = 0; m <= _UU1; m++) {
+    for (int m = 0; m <= UU; m++) {
       // defined like this, both u_p and u_m are coplaner when indices are the same    
       MRC_F3(u_p[0], m, ix,iy,iz) = MRC_F3(u, m, ix,iy,iz) + MRC_F3(u_delta[0], m, ix,iy,iz);
       MRC_F3(u_p[1], m, ix,iy,iz) = MRC_F3(u, m, ix,iy,iz) + MRC_F3(u_delta[1], m, ix,iy,iz);

@@ -382,7 +382,7 @@ push_ej_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, struct mrc_fld *x_curr,
     F3(x_next, _RV1X, i,j,k) += ffx;
     F3(x_next, _RV1Y, i,j,k) += ffy;
     F3(x_next, _RV1Z, i,j,k) += ffz;
-    F3(x_next, _UU1 , i,j,k) += duu;
+    F3(x_next, UU , i,j,k) += duu;
   } mrc_fld_foreach_end;
 
   ggcm_mhd_step_put_3d_fld(step, j_ec);

@@ -144,8 +144,8 @@ ggcm_mhd_bnd_conducting_x_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *
 	F3(f3,_RV1Z, -1,iy,iz) = 2.*F3(f3,_RV1Z, 0,iy,iz)-F3(f3,_RV1Z, 1,iy,iz);	
 	F3(f3,_RV1Z, -2,iy,iz) = 2.*F3(f3,_RV1Z, -1,iy,iz)-F3(f3,_RV1Z, 0,iy,iz);
 	
-	F3(f3,_UU1, -1,iy,iz) = 2.*F3(f3,_UU1, 0,iy,iz)-F3(f3,_UU1, 1,iy,iz);	
-	F3(f3,_UU1, -2,iy,iz) = 2.*F3(f3,_UU1, -1,iy,iz)-F3(f3,_UU1, 0,iy,iz);	
+	F3(f3,UU, -1,iy,iz) = 2.*F3(f3,UU, 0,iy,iz)-F3(f3,UU, 1,iy,iz);	
+	F3(f3,UU, -2,iy,iz) = 2.*F3(f3,UU, -1,iy,iz)-F3(f3,UU, 0,iy,iz);	
       }
     }
   }
@@ -212,10 +212,10 @@ ggcm_mhd_bnd_conducting_x_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *
 	F3(f3,_RV1Z, nx+1,iy,iz) = F3(f3,_RV1Z, nx,iy,iz) +
 	  (1./bd1x[nx]) * OSDx2h(f3, _RV1Z, nx,iy,iz,2.*bd2x[nx]);  	
 
-	F3(f3,_UU1, nx,iy,iz) = F3(f3,_UU1, nx-1,iy,iz) + 
-	  (1./bd1x[nx-1]) * OSDx2h(f3, _UU1, nx-1,iy,iz,2.*bd2x[nx-1]);  	
-	F3(f3,_UU1, nx+1,iy,iz) = F3(f3,_UU1, nx,iy,iz) +
-	  (1./bd1x[nx]) * OSDx2h(f3, _UU1, nx,iy,iz,2.*bd2x[nx]);  	
+	F3(f3,UU, nx,iy,iz) = F3(f3,UU, nx-1,iy,iz) + 
+	  (1./bd1x[nx-1]) * OSDx2h(f3, UU, nx-1,iy,iz,2.*bd2x[nx-1]);  	
+	F3(f3,UU, nx+1,iy,iz) = F3(f3,UU, nx,iy,iz) +
+	  (1./bd1x[nx]) * OSDx2h(f3, UU, nx,iy,iz,2.*bd2x[nx]);  	
       }
     }
   }

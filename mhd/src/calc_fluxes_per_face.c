@@ -28,7 +28,7 @@ calc_fluxes_per_face(struct mrc_fld **flux, struct ggcm_mhd *mhd, struct mrc_fld
 #if SEMICONSV
     float rhoi = 1.f / MRC_F3(fld, _RR1, ix,iy,iz);
     float pp = (gamma - 1.f) *
-      (MRC_F3(fld, _UU1, ix,iy,iz) - .5f * rhoi * (sqr(MRC_F3(fld, _RV1X, ix,iy,iz)) +
+      (MRC_F3(fld, UU, ix,iy,iz) - .5f * rhoi * (sqr(MRC_F3(fld, _RV1X, ix,iy,iz)) +
 						   sqr(MRC_F3(fld, _RV1Y, ix,iy,iz)) +
 						   sqr(MRC_F3(fld, _RV1Z, ix,iy,iz))));
 
@@ -43,8 +43,8 @@ calc_fluxes_per_face(struct mrc_fld **flux, struct ggcm_mhd *mhd, struct mrc_fld
     }
 
     // energy eq.
-    FLUX(flux, i, _UU1, ix,iy,iz) =
-      ((MRC_F3(fld, _UU1, ix,iy,iz) + pp) * MRC_F3(fld, _RV1X+i, ix,iy,iz)) * rhoi;
+    FLUX(flux, i, UU, ix,iy,iz) =
+      ((MRC_F3(fld, UU, ix,iy,iz) + pp) * MRC_F3(fld, _RV1X+i, ix,iy,iz)) * rhoi;
 
 #else
 
@@ -59,7 +59,7 @@ calc_fluxes_per_face(struct mrc_fld **flux, struct ggcm_mhd *mhd, struct mrc_fld
       -(MRC_F3(fld, _B1Y, ix,iy,iz) * MRC_F3(fld, _JY, ix,iy,iz))
       -(MRC_F3(fld, _B1Z, ix,iy,iz) * MRC_F3(fld, _JZ, ix,iy,iz)) ;
     float pp = (gamma - 1.f) *
-      (MRC_F3(fld, _UU1, ix,iy,iz) - .5f * rhoi * (sqr(MRC_F3(fld, _RV1X, ix,iy,iz)) +
+      (MRC_F3(fld, UU, ix,iy,iz) - .5f * rhoi * (sqr(MRC_F3(fld, _RV1X, ix,iy,iz)) +
 						 sqr(MRC_F3(fld, _RV1Y, ix,iy,iz)) +
 						 sqr(MRC_F3(fld, _RV1Z, ix,iy,iz)))-
        (.5f * (sqr(MRC_F3(fld, _B1X, ix,iy,iz)) +
@@ -78,8 +78,8 @@ calc_fluxes_per_face(struct mrc_fld **flux, struct ggcm_mhd *mhd, struct mrc_fld
     }
 
     // energy eq.
-    FLUX(flux, i, _UU1, ix,iy,iz) =
-      ( ((MRC_F3(fld, _UU1, ix,iy,iz) + pp + BB)*MRC_F3(fld, _RV1X+i, ix,iy,iz))-
+    FLUX(flux, i, UU, ix,iy,iz) =
+      ( ((MRC_F3(fld, UU, ix,iy,iz) + pp + BB)*MRC_F3(fld, _RV1X+i, ix,iy,iz))-
 	( mB * MRC_F3(fld, _B1X+i, ix,iy,iz)) +
 	(d_i * ( -0.5*MRC_F3(fld, _JX+i, ix,iy,iz)*BB - MRC_F3(fld, _B1X+i, ix,iy,iz)*JB)) ) * rhoi;
 #endif

@@ -44,7 +44,7 @@ calc_u_cweno(struct ggcm_mhd *mhd, struct mrc_fld *u_p[3], struct mrc_fld *u_m[3
   
   
   mrc_fld_foreach(u, ix,iy,iz, 2, 1) {    
-    for (int m = 0; m <= _UU1; m++){ 
+    for (int m = 0; m <= UU; m++){ 
 
       //reuse u_j+1-u_j/dx  for adjacent Pm and Pp to half the cost of computation. 	
       //Pj(x) = wl Pl + wr Pr + wc  Pc 

@@ -51,7 +51,7 @@ GGCM_MHD_BND_CONDUCTING_Y_FILL_GHOST(struct ggcm_mhd_bnd *bnd,
           F3(x, m+_RV1X, ix, -1 - ig, iz) =   F3(x, m+_RV1X, ix, ig, iz);
           F3(x, m+_RV1Y, ix, -1 - ig, iz) = - F3(x, m+_RV1Y, ix, ig, iz);
           F3(x, m+_RV1Z, ix, -1 - ig, iz) =   F3(x, m+_RV1Z, ix, ig, iz);
-          F3(x, m+_UU1 , ix, -1 - ig, iz) =   F3(x, m+_UU1,  ix, ig, iz);
+          F3(x, m+UU   , ix, -1 - ig, iz) =   F3(x, m+UU  ,  ix, ig, iz);
           F3(x, m+BX   , ix, -1 - ig, iz) =   F3(x, m+BX  ,  ix, ig, iz);
           F3(x, m+BZ   , ix, -1 - ig, iz) =   F3(x, m+BZ  ,  ix, ig, iz);
 
@@ -81,7 +81,7 @@ GGCM_MHD_BND_CONDUCTING_Y_FILL_GHOST(struct ggcm_mhd_bnd *bnd,
           F3(x, m+_RV1X, ix, ny + ig, iz) =   F3(x, m+_RV1X, ix, ny - 1 - ig, iz);
           F3(x, m+_RV1Y, ix, ny + ig, iz) = - F3(x, m+_RV1Y, ix, ny - 1 - ig, iz);
           F3(x, m+_RV1Z, ix, ny + ig, iz) =   F3(x, m+_RV1Z, ix, ny - 1 - ig, iz);
-          F3(x, m+_UU1 , ix, ny + ig, iz) =   F3(x, m+_UU1 , ix, ny - 1 - ig, iz);
+          F3(x, m+UU   , ix, ny + ig, iz) =   F3(x, m+UU   , ix, ny - 1 - ig, iz);
           F3(x, m+BX   , ix, ny + ig, iz) =   F3(x, m+BX   , ix, ny - 1 - ig, iz);
           F3(x, m+BZ   , ix, ny + ig, iz) =   F3(x, m+BZ   , ix, ny - 1 - ig, iz);
 

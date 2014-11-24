@@ -17,7 +17,7 @@ enum {
   _RV1X,
   _RV1Y,
   _RV1Z,
-  _UU1,
+  __UU1,
   __B1X,
   __B1Y,
   __B1Z,

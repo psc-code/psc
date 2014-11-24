@@ -18,18 +18,18 @@
 
 #if SEMICONSV 
 
-#define P_M(ndx) (gamma - 1.f) * ( U_M( _UU1, ndx) - ((.5f / U_M( _RR1, ndx) ) * \
+#define P_M(ndx) (gamma - 1.f) * ( U_M( UU, ndx) - ((.5f / U_M( _RR1, ndx) ) * \
 		 (sqr(U_M( _RV1X, ndx)) + sqr(U_M( _RV1Y, ndx)) + sqr(U_M( _RV1Z, ndx)) )))
 
-#define P_P(ndx) (gamma - 1.f) * ( U_P( _UU1, ndx) - ((.5f / U_P( _RR1, ndx) ) * \
+#define P_P(ndx) (gamma - 1.f) * ( U_P( UU, ndx) - ((.5f / U_P( _RR1, ndx) ) * \
 		 (sqr(U_P( _RV1X, ndx)) + sqr(U_P( _RV1Y, ndx)) + sqr(U_P( _RV1Z, ndx)) )))
 #else 
 
-#define P_M(ndx) (gamma - 1.f) * ( U_M( _UU1, ndx) - ((.5f / U_M( _RR1, ndx) ) * \
+#define P_M(ndx) (gamma - 1.f) * ( U_M( UU, ndx) - ((.5f / U_M( _RR1, ndx) ) * \
 		   (sqr(U_M( _RV1X, ndx)) + sqr(U_M( _RV1Y, ndx)) + sqr(U_M( _RV1Z, ndx)) )) - \
 	    (.5f * (sqr(U_M( BX, ndx)) + sqr(U_M(BY, ndx)) + sqr(U_M(BZ, ndx)))))
 
-#define P_P(ndx) (gamma - 1.f) * ( U_P( _UU1, ndx) - ((.5f / U_P( _RR1, ndx) ) * \
+#define P_P(ndx) (gamma - 1.f) * ( U_P( UU, ndx) - ((.5f / U_P( _RR1, ndx) ) * \
 		   (sqr(U_P( _RV1X, ndx)) + sqr(U_P( _RV1Y, ndx)) + sqr(U_P( _RV1Z, ndx)) )) - \
 	    (.5f * (sqr(U_P( BX, ndx))  + sqr(U_P( BY, ndx))  + sqr(U_P(BZ, ndx)))))
 #endif 
@@ -211,7 +211,7 @@ calc_KNP_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *flux[3],
     FLUX(flux, 2, _EZ, ix,iy,iz) = 
       (1.f/(cp - cm))*(  (cp * cm) * ( MRC_F3(u_m[2], BZ, ix,iy,iz) - MRC_F3(u_p[2], BZ, ix,iy,iz-1) ));    
 
-    for (int m = 0; m <= _UU1; m++) {
+    for (int m = 0; m <= UU; m++) {
       FLUX(flux, 0, m, ix,iy,iz) =
 	(ap * FLUX(flux_p, 0, m, ix-1,iy,iz) - am * FLUX(flux_m, 0, m, ix,iy,iz)) / (ap - am) +
 	(ap * am) / (ap - am) * (MRC_F3(u_m[0], m, ix ,iy,iz) - MRC_F3(u_p[0], m, ix-1,iy,iz));

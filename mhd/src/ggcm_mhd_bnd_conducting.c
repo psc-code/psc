@@ -141,8 +141,8 @@ ggcm_mhd_bnd_conducting_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fl
 	F3(fld,_RV1Z, ix,-1,iz) = 2.*F3(fld,_RV1Z, ix,0,iz)-F3(fld,_RV1Z, ix,1,iz);	
 	F3(fld,_RV1Z, ix,-2,iz) = 2.*F3(fld,_RV1Z, ix,-1,iz)-F3(fld,_RV1Z, ix,0,iz);
 	
-	F3(fld,_UU1, ix,-1,iz) = 2.*F3(fld,_UU1, ix,0,iz)-F3(fld,_UU1, ix,1,iz);	
-	F3(fld,_UU1, ix,-2,iz) = 2.*F3(fld,_UU1, ix,-1,iz)-F3(fld,_UU1, ix,0,iz);	
+	F3(fld,UU, ix,-1,iz) = 2.*F3(fld,UU, ix,0,iz)-F3(fld,UU, ix,1,iz);	
+	F3(fld,UU, ix,-2,iz) = 2.*F3(fld,UU, ix,-1,iz)-F3(fld,UU, ix,0,iz);	
       }
     }
   }
@@ -204,10 +204,10 @@ ggcm_mhd_bnd_conducting_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fl
 	F3(fld,_RV1Z, ix,ny+1,iz) = F3(fld,_RV1Z, ix,ny,iz) +
 	  (1./bd1y[ny]) * OSDy2h(fld, _RV1Z, ix,ny,iz,2.*bd2y[ny]);  	
 
-	F3(fld,_UU1, ix,ny,iz) = F3(fld,_UU1, ix,ny-1,iz) + 
-	  (1./bd1y[ny-1]) * OSDy2h(fld, _UU1, ix,ny-1,iz,2.*bd2y[ny-1]);  	
-	F3(fld,_UU1, ix,ny+1,iz) = F3(fld,_UU1, ix,ny,iz) +
-	  (1./bd1y[ny]) * OSDy2h(fld, _UU1, ix,ny,iz,2.*bd2y[ny]);  	
+	F3(fld,UU, ix,ny,iz) = F3(fld,UU, ix,ny-1,iz) + 
+	  (1./bd1y[ny-1]) * OSDy2h(fld, UU, ix,ny-1,iz,2.*bd2y[ny-1]);  	
+	F3(fld,UU, ix,ny+1,iz) = F3(fld,UU, ix,ny,iz) +
+	  (1./bd1y[ny]) * OSDy2h(fld, UU, ix,ny,iz,2.*bd2y[ny]);  	
       }
     }
   }

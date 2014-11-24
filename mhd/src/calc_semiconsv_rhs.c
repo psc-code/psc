@@ -47,7 +47,7 @@ calc_semiconsv_rhs(struct ggcm_mhd *mhd, struct mrc_fld *rhs, struct mrc_fld *fl
  
 
   // calculate neg divg 
-  for (int m = 0; m <= _UU1; m++) {
+  for (int m = 0; m <= UU; m++) {
     mrc_fld_foreach(rhs, ix, iy, iz, 0, 0) {
       int ind[3] = { ix, iy, iz };
       
@@ -68,7 +68,7 @@ calc_semiconsv_rhs(struct ggcm_mhd *mhd, struct mrc_fld *rhs, struct mrc_fld *fl
   
   // add JdotE source term  
  mrc_fld_foreach(rhs, ix, iy, iz, 0, 0) {
-    MRC_F3(rhs, _UU1, ix, iy, iz) += 
+    MRC_F3(rhs, UU, ix, iy, iz) += 
       MRC_F3(E_cc, 0, ix, iy, iz) * MRC_F3(J_cc, 0, ix, iy, iz) + 
       MRC_F3(E_cc, 1, ix, iy, iz) * MRC_F3(J_cc, 1, ix, iy, iz) + 
       MRC_F3(E_cc, 2, ix, iy, iz) * MRC_F3(J_cc, 2, ix, iy, iz) ;   

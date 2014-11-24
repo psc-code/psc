@@ -15,7 +15,7 @@ void
 calc_neg_divg(struct ggcm_mhd *mhd, struct mrc_fld *rhs, struct mrc_fld *flux[3])
 {
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain); 
-  for (int m = 0; m <= _UU1; m++) {
+  for (int m = 0; m <= UU; m++) {
     mrc_fld_foreach(rhs, ix, iy, iz, 0, 0) {
       int ind[3] = { ix, iy, iz };
       
