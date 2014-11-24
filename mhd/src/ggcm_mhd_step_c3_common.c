@@ -127,7 +127,7 @@ ggcm_mhd_step_c3_setup_flds(struct ggcm_mhd_step *step)
   mrc_fld_set_type(mhd->fld, FLD_TYPE);
   mrc_fld_set_param_int(mhd->fld, "nr_ghosts", 2);
   mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_SEMI_CONSERVATIVE);
-  mrc_fld_set_param_int(mhd->fld, "nr_comps", _NR_FLDS);
+  mrc_fld_set_param_int(mhd->fld, "nr_comps", 8);
 }
 
 // ----------------------------------------------------------------------
