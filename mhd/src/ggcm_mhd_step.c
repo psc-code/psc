@@ -3,6 +3,8 @@
 
 #include "ggcm_mhd_defs.h"
 #include "ggcm_mhd_private.h"
+#include "ggcm_mhd_diag_private.h"
+#include "ggcm_mhd_diag_item_private.h"
 
 #include <mrc_io.h>
 #include <mrc_profile.h>
@@ -229,6 +231,20 @@ _ggcm_mhd_step_destroy(struct ggcm_mhd_step *step)
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_step_diag_item_rmask_run
+
+static void
+ggcm_mhd_step_diag_item_rmask_run(struct ggcm_mhd_step *step,
+				  struct ggcm_mhd_diag_item *item,
+				  struct mrc_io *io, struct mrc_fld *f,
+				  int diag_type, float plane)
+{
+  struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
+  assert(ops && ops->diag_item_rmask_run);
+  ops->diag_item_rmask_run(step, item, io, f, diag_type, plane);
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_step_init
 
 static void
@@ -269,5 +285,31 @@ struct mrc_class_ggcm_mhd_step mrc_class_ggcm_mhd_step = {
   .param_descr      = ggcm_mhd_step_descr,
   .init             = ggcm_mhd_step_init,
   .destroy          = _ggcm_mhd_step_destroy,
+};
+
+/////////////////////////////////////////////////////////////////////////
+// diag items to go with specific ggcm_mhd_step subclasses
+
+// ======================================================================
+// ggcm_mhd_diag_item subclass "rmask"
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_diag_item_rmask_run
+
+static void
+ggcm_mhd_diag_item_rmask_run(struct ggcm_mhd_diag_item *item,
+			     struct mrc_io *io, struct mrc_fld *f,
+			     int diag_type, float plane)
+{
+  struct ggcm_mhd_step *step = item->diag->mhd->step;
+  ggcm_mhd_step_diag_item_rmask_run(step, item, io, f, diag_type, plane);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_diag_item subclass "rmask"
+
+struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_rmask = {
+  .name             = "rmask",
+  .run              = ggcm_mhd_diag_item_rmask_run,
 };
 

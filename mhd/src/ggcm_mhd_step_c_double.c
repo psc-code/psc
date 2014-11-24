@@ -16,4 +16,5 @@ struct ggcm_mhd_step_ops ggcm_mhd_step_c_double_ops = {
   .corr        = ggcm_mhd_step_c_corr,
   .run         = ggcm_mhd_step_run_predcorr,
   .get_e_ec   = ggcm_mhd_step_c_get_e_ec,  
+  .diag_item_rmask_run = ggcm_mhd_step_c_diag_item_rmask_run,
 };

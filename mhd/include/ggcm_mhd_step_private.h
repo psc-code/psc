@@ -7,6 +7,8 @@
 #define MRC_FLD_CACHE_SIZE (20)
 #define MRC_FLD_CACHE_COMPS (8)
 
+#include "ggcm_mhd_diag_item.h"
+
 struct mrc_fld_cache {
   int n;
   struct mrc_fld *flds[MRC_FLD_CACHE_SIZE];
@@ -33,6 +35,10 @@ struct ggcm_mhd_step_ops {
   void (*get_e_ec)(struct ggcm_mhd_step *step, struct mrc_fld *E,
                    struct mrc_fld *x);
   void (*run)(struct ggcm_mhd_step *step, struct mrc_fld *x);
+  void (*diag_item_rmask_run)(struct ggcm_mhd_step *step,
+			      struct ggcm_mhd_diag_item *item,
+			      struct mrc_io *io, struct mrc_fld *f,
+			      int diag_type, float plane);
 
   int task_pred_nl1;
   int task_corr_nl1;

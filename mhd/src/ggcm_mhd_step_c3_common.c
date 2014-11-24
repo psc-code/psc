@@ -2,8 +2,8 @@
 #include "ggcm_mhd_step_private.h"
 #include "ggcm_mhd_private.h"
 #include "ggcm_mhd_defs.h"
-#include "ggcm_mhd_defs_extra.h"
 #include "ggcm_mhd_crds.h"
+#include "ggcm_mhd_diag_private.h"
 #include "mhd_reconstruct.h"
 #include "mhd_riemann.h"
 #include "mhd_util.h"
@@ -97,7 +97,7 @@ ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
 
   sub->ymask = mrc_fld_make_view(mhd->fld, _YMASK, _YMASK + 1);
   sub->zmask = mrc_fld_make_view(mhd->fld, _ZMASK, _ZMASK + 1);
-  sub->rmask = mrc_fld_make_view(mhd->fld, _RMASK, _RMASK + 1);
+  sub->rmask = ggcm_mhd_step_get_3d_fld(step, 1);
 
   ggcm_mhd_step_setup_member_objs_sub(step);
   ggcm_mhd_step_setup_super(step);
@@ -113,7 +113,7 @@ ggcm_mhd_step_c_destroy(struct ggcm_mhd_step *step)
 
   mrc_fld_destroy(sub->ymask);
   mrc_fld_destroy(sub->zmask);
-  mrc_fld_destroy(sub->rmask);
+  ggcm_mhd_step_put_3d_fld(step, sub->rmask);
 }
 
 // ----------------------------------------------------------------------
@@ -828,6 +828,19 @@ ggcm_mhd_step_c3_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
     mrc_fld_destroy(x);
   }
 } 
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_step_c_diag_item_rmask_run
+
+static void
+ggcm_mhd_step_c_diag_item_rmask_run(struct ggcm_mhd_step *step,
+				    struct ggcm_mhd_diag_item *item,
+				    struct mrc_io *io, struct mrc_fld *f,
+				    int diag_type, float plane)
+{
+  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
+  ggcm_mhd_diag_c_write_one_field(io, sub->rmask, 0, "rmask", 1., diag_type, plane);
+}
 
 // ----------------------------------------------------------------------
 // subclass description
