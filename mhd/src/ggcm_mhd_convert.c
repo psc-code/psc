@@ -147,6 +147,8 @@ struct mrc_fld *
 ggcm_mhd_fld_get_as(struct mrc_fld *fld_base, const char *type,
 		    int mhd_type, int mb, int me)
 {
+  assert(me <= mrc_fld_nr_comps(fld_base));
+
   int mhd_type_base;
   mrc_fld_get_param_int(fld_base, "mhd_type", &mhd_type_base);
 
@@ -163,7 +165,7 @@ ggcm_mhd_fld_get_as(struct mrc_fld *fld_base, const char *type,
   mrc_fld_set_type(fld2, type);
   mrc_fld_set_param_obj(fld2, "domain", fld->_domain);
   mrc_fld_set_param_int(fld2, "nr_spatial_dims", 3);
-  mrc_fld_set_param_int(fld2, "nr_comps", _NR_FLDS);
+  mrc_fld_set_param_int(fld2, "nr_comps", me);
   mrc_fld_set_param_int(fld2, "nr_ghosts", 2);
   mrc_fld_dict_add_int(fld2, "mhd_type", mhd_type);
   mrc_fld_setup(fld2);
