@@ -67,7 +67,7 @@ ggcm_mhd_step_cweno_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
 
   mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
     for (int m = 0; m < 8; m++) {
-      MRC_F3(r, m, ix,iy,iz) *= MRC_F3(f, _YMASK, ix,iy,iz);
+      MRC_F3(r, m, ix,iy,iz) *= MRC_F3(mhd->ymask, 0, ix,iy,iz);
     }
   } mrc_fld_foreach_end;
 

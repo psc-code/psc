@@ -2,7 +2,6 @@
 #include "ggcm_mhd_ic_private.h"
 
 #include "ggcm_mhd_defs.h"
-#include "ggcm_mhd_defs_extra.h"
 #include "ggcm_mhd_private.h"
 
 #include <mrc_io.h>
