@@ -38,11 +38,13 @@ ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic)
   assert(ops && ops->run);
   ops->run(ic);
 
-  assert(ic->mhd->ymask);
   if (ops->init_ymask) {
+    assert(ic->mhd->ymask);
     ops->init_ymask(ic, ic->mhd->ymask);
   } else {
-    ggcm_mhd_ic_init_ymask_default(ic, ic->mhd->ymask);
+    if (ic->mhd->ymask) {
+      ggcm_mhd_ic_init_ymask_default(ic, ic->mhd->ymask);
+    }
   }
 }
 
