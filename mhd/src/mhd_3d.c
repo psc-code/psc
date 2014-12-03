@@ -89,23 +89,25 @@ mhd_fluxes(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3], struct mrc_fld
 	   struct mrc_fld *B_cc, int bnd, int nghost,
 	   void (*flux_func)(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3],
 			     struct mrc_fld *x, struct mrc_fld *B_cc,
-			     int ldim, int bnd, int j, int k, int dir))
+			     int ldim, int bnd, int j, int k, int dir, int p))
 {
   const int *ldims = mrc_fld_spatial_dims(x);
 
-  for (int k = -bnd; k < ldims[2] + bnd; k++) {
+  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+    for (int k = -bnd; k < ldims[2] + bnd; k++) {
+      for (int j = -bnd; j < ldims[1] + bnd; j++) {
+	flux_func(step, fluxes, x, B_cc, ldims[0], nghost, j, k, 0, p);
+      }
+    }
+    for (int k = -bnd; k < ldims[2] + bnd; k++) {
+      for (int i = -bnd; i < ldims[0] + bnd; i++) {
+	flux_func(step, fluxes, x, B_cc, ldims[1], nghost, k, i, 1, p);
+      }
+    }
     for (int j = -bnd; j < ldims[1] + bnd; j++) {
-      flux_func(step, fluxes, x, B_cc, ldims[0], nghost, j, k, 0);
-    }
-  }
-  for (int k = -bnd; k < ldims[2] + bnd; k++) {
-    for (int i = -bnd; i < ldims[0] + bnd; i++) {
-      flux_func(step, fluxes, x, B_cc, ldims[1], nghost, k, i, 1);
-    }
-  }
-  for (int j = -bnd; j < ldims[1] + bnd; j++) {
-    for (int i = -bnd; i < ldims[0] + bnd; i++) {
-      flux_func(step, fluxes, x, B_cc, ldims[2], nghost, i, j, 2);
+      for (int i = -bnd; i < ldims[0] + bnd; i++) {
+	flux_func(step, fluxes, x, B_cc, ldims[2], nghost, i, j, 2, p);
+      }
     }
   }
 }
@@ -122,14 +124,16 @@ update_finite_volume_uniform(struct ggcm_mhd *mhd,
   double dx[3]; mrc_crds_get_dx(crds, dx);
   mrc_fld_data_t dt_on_dx[3] = { dt / dx[0], dt / dx[1], dt / dx[2] };
 
-  mrc_fld_foreach(x, i,j,k, l, r) {
-    for (int m = 0; m < 5; m++) {
-      F3(x, m, i,j,k) -= 
-	(dt_on_dx[0] * (F3(fluxes[0], m, i+1,j,k) - F3(fluxes[0], m, i,j,k)) +
-	 dt_on_dx[1] * (F3(fluxes[1], m, i,j+1,k) - F3(fluxes[1], m, i,j,k)) + 
-	 dt_on_dx[2] * (F3(fluxes[2], m, i,j,k+1) - F3(fluxes[2], m, i,j,k)));
-    }
-  } mrc_fld_foreach_end;
+  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+    mrc_fld_foreach(x, i,j,k, l, r) {
+      for (int m = 0; m < 5; m++) {
+	M3(x, m, i,j,k, p) -= 
+	  (dt_on_dx[0] * (M3(fluxes[0], m, i+1,j,k, p) - M3(fluxes[0], m, i,j,k, p)) +
+	   dt_on_dx[1] * (M3(fluxes[1], m, i,j+1,k, p) - M3(fluxes[1], m, i,j,k, p)) + 
+	   dt_on_dx[2] * (M3(fluxes[2], m, i,j,k+1, p) - M3(fluxes[2], m, i,j,k, p)));
+      }
+    } mrc_fld_foreach_end;
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -165,10 +169,12 @@ mrc_fld_copy_range(struct mrc_fld *to, struct mrc_fld *from, int mb, int me)
   assert(to->_nr_ghosts == from->_nr_ghosts);
   int bnd = to->_nr_ghosts;
 
-   mrc_fld_foreach(to, ix,iy,iz, bnd, bnd) {
-    for (int m = mb; m < me; m++) {
-      F3(to, m, ix,iy,iz) = F3(from, m, ix,iy,iz);
-    }
-  } mrc_fld_foreach_end;
+  for (int p = 0; p < mrc_fld_nr_patches(to); p++) {
+    mrc_fld_foreach(to, ix,iy,iz, bnd, bnd) {
+      for (int m = mb; m < me; m++) {
+	M3(to, m, ix,iy,iz, p) = M3(from, m, ix,iy,iz, p);
+      }
+    } mrc_fld_foreach_end;
+  }
 }
 

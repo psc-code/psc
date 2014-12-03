@@ -154,36 +154,36 @@ compute_E(struct ggcm_mhd_step *step, struct mrc_fld *E,
 
 static void
 flux_pred(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld *x, struct mrc_fld *B_cc,
-	  int ldim, int nghost, int j, int k, int dir)
+	  int ldim, int nghost, int j, int k, int dir, int p)
 {
   struct ggcm_mhd_step_vlct *sub = ggcm_mhd_step_vlct(step);
   struct mrc_fld *U_1d = sub->U_1d, *U_l = sub->U_l, *U_r = sub->U_r;
   struct mrc_fld *W_1d = sub->W_1d, *W_l = sub->W_l, *W_r = sub->W_r;
   struct mrc_fld *F_1d = sub->F_1d, *Bxi = sub->Bxi;
 
-  pick_line_fc(U_1d, Bxi, x, B_cc, ldim, nghost, nghost, j, k, dir);
+  pick_line_fc(U_1d, Bxi, x, B_cc, ldim, nghost, nghost, j, k, dir, p);
   mhd_prim_from_fc(step->mhd, W_1d, U_1d, ldim, nghost, nghost);
   mhd_reconstruct_run(sub->reconstruct_pred, U_l, U_r, W_l, W_r, W_1d, Bxi,
 		      ldim, nghost - 1, nghost, dir);
   mhd_riemann_run(sub->riemann, F_1d, U_l, U_r, W_l, W_r, ldim, nghost - 1, nghost, dir);
-  put_line_fc(flux[dir], F_1d, ldim, nghost - 1, nghost, j, k, dir);
+  put_line_fc(flux[dir], F_1d, ldim, nghost - 1, nghost, j, k, dir, p);
 }
 
 static void
 flux_corr(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld *x, struct mrc_fld *B_cc,
-	  int ldim, int nghost, int j, int k, int dir)
+	  int ldim, int nghost, int j, int k, int dir, int p)
 {
   struct ggcm_mhd_step_vlct *sub = ggcm_mhd_step_vlct(step);
   struct mrc_fld *U_1d = sub->U_1d, *U_l = sub->U_l, *U_r = sub->U_r;
   struct mrc_fld *W_1d = sub->W_1d, *W_l = sub->W_l, *W_r = sub->W_r;
   struct mrc_fld *F_1d = sub->F_1d, *Bxi = sub->Bxi;
 
-  pick_line_fc(U_1d, Bxi, x, B_cc, ldim, nghost - 1, nghost - 1, j, k, dir);
+  pick_line_fc(U_1d, Bxi, x, B_cc, ldim, nghost - 1, nghost - 1, j, k, dir, p);
   mhd_prim_from_fc(step->mhd, W_1d, U_1d, ldim, nghost - 1, nghost - 1);
   mhd_reconstruct_run(sub->reconstruct_corr, U_l, U_r, W_l, W_r, W_1d, Bxi,
 		      ldim, 99, 99, dir);
   mhd_riemann_run(sub->riemann, F_1d, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
-  put_line_fc(flux[dir], F_1d, ldim, 0, 1, j, k, dir);
+  put_line_fc(flux[dir], F_1d, ldim, 0, 1, j, k, dir, p);
 }
 
 // ----------------------------------------------------------------------

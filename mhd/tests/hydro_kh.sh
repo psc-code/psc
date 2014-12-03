@@ -14,3 +14,4 @@ openmpirun -n 1 ./mhd_kh \
     --ggcm_mhd_step_type vl \
     --magdiffu const \
     --do_nwst \
+    2>&1 | tee log

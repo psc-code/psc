@@ -40,36 +40,36 @@ struct ggcm_mhd_step_vl {
 
 static void
 flux_pred(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld *x, struct mrc_fld *B_cc,
-	  int ldim, int nghost, int j, int k, int dir)
+	  int ldim, int nghost, int j, int k, int dir, int p)
 {
   struct ggcm_mhd_step_vl *sub = ggcm_mhd_step_vl(step);
   struct mrc_fld *U_1d = sub->U_1d, *U_l = sub->U_l, *U_r = sub->U_r;
   struct mrc_fld *W_1d = sub->W_1d, *W_l = sub->W_l, *W_r = sub->W_r;
   struct mrc_fld *F_1d = sub->F_1d;
 
-  pick_line_sc(U_1d, x, ldim, 2, 2, j, k, dir);
+  pick_line_sc(U_1d, x, ldim, 2, 2, j, k, dir, p);
   mhd_prim_from_sc(step->mhd, W_1d, U_1d, ldim, 2, 2); // for up to plm reconstruction
   mhd_reconstruct_run(sub->reconstruct_pred, U_l, U_r, W_l, W_r, W_1d, NULL,
 		      ldim, 1, 1, dir);
   mhd_riemann_run(sub->riemann, F_1d, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
-  put_line_sc(flux[dir], F_1d, j, k, ldim, 0, 1, dir);
+  put_line_sc(flux[dir], F_1d, ldim, 0, 1, j, k, dir, p);
 }
 
 static void
 flux_corr(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld *x, struct mrc_fld *B_cc,
-	  int ldim, int nghost, int j, int k, int dir)
+	  int ldim, int nghost, int j, int k, int dir, int p)
 {
   struct ggcm_mhd_step_vl *sub = ggcm_mhd_step_vl(step);
   struct mrc_fld *U_1d = sub->U_1d, *U_l = sub->U_l, *U_r = sub->U_r;
   struct mrc_fld *W_1d = sub->W_1d, *W_l = sub->W_l, *W_r = sub->W_r;
   struct mrc_fld *F_1d = sub->F_1d;
 
-  pick_line_sc(U_1d, x, ldim, 2, 2, j, k, dir);
+  pick_line_sc(U_1d, x, ldim, 2, 2, j, k, dir, p);
   mhd_prim_from_sc(step->mhd, W_1d, U_1d, ldim, 2, 2); // for up to plm reconstruction
   mhd_reconstruct_run(sub->reconstruct_corr, U_l, U_r, W_l, W_r, W_1d, NULL,
 		      ldim, 1, 1, dir);
   mhd_riemann_run(sub->riemann, F_1d, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
-  put_line_sc(flux[dir], F_1d, j, k, ldim, 0, 1, dir);
+  put_line_sc(flux[dir], F_1d, ldim, 0, 1, j, k, dir, p);
 }
 
 // ----------------------------------------------------------------------
