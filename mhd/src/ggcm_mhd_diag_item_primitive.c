@@ -32,12 +32,14 @@ ggcm_mhd_diag_item_v_run(struct ggcm_mhd_diag_item *item,
   struct mrc_fld *r = mrc_fld_get_as(fld_r, FLD_TYPE);
   struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
 
-  mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
-    float rri = 1.f / RR(f, ix,iy,iz);
-    F3(r, 0, ix,iy,iz) = rri * RVX(f, ix,iy,iz);
-    F3(r, 1, ix,iy,iz) = rri * RVY(f, ix,iy,iz);
-    F3(r, 2, ix,iy,iz) = rri * RVZ(f, ix,iy,iz);
-  } mrc_fld_foreach_end;
+  for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
+    mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
+      float rri = 1.f / RR_(f, ix,iy,iz, p);
+      M3(r, 0, ix,iy,iz, p) = rri * RVX_(f, ix,iy,iz, p);
+      M3(r, 1, ix,iy,iz, p) = rri * RVY_(f, ix,iy,iz, p);
+      M3(r, 2, ix,iy,iz, p) = rri * RVZ_(f, ix,iy,iz, p);
+    } mrc_fld_foreach_end;
+  }
 
   mrc_fld_put_as(r, fld_r);
   mrc_fld_put_as(f, fld);
@@ -110,22 +112,26 @@ ggcm_mhd_diag_item_pp_run(struct ggcm_mhd_diag_item *item,
 
   if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM ||
       mhd_type == MT_SEMI_CONSERVATIVE) {
-    mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
-      float rvv = (sqr(RVX(f, ix,iy,iz)) +
-		   sqr(RVY(f, ix,iy,iz)) +
-		   sqr(RVZ(f, ix,iy,iz))) / RR(f, ix,iy,iz);
-      F3(r,0, ix,iy,iz) = (gamm - 1.f) * (UU(f, ix,iy,iz) - .5f * rvv);
-    } mrc_fld_foreach_end;
+    for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
+      mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
+	float rvv = (sqr(RVX_(f, ix,iy,iz, p)) +
+		     sqr(RVY_(f, ix,iy,iz, p)) +
+		     sqr(RVZ_(f, ix,iy,iz, p))) / RR_(f, ix,iy,iz, p);
+	M3(r,0, ix,iy,iz, p) = (gamm - 1.f) * (UU_(f, ix,iy,iz, p) - .5f * rvv);
+      } mrc_fld_foreach_end;
+    }
   } else if (mhd_type == MT_FULLY_CONSERVATIVE) {
-    mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
-      float rvv = (sqr(RVX(f, ix,iy,iz)) +
-		   sqr(RVY(f, ix,iy,iz)) +
-		   sqr(RVZ(f, ix,iy,iz))) / RR(f, ix,iy,iz);
-      float b2  = (sqr(.5f * (BX(f, ix,iy,iz) + BX(f, ix+1,iy  ,iz  ))) +
-		   sqr(.5f * (BY(f, ix,iy,iz) + BY(f, ix  ,iy+1,iz  ))) +
-		   sqr(.5f * (BZ(f, ix,iy,iz) + BZ(f, ix  ,iy  ,iz+1))));
-      F3(r,0, ix,iy,iz) = (gamm - 1.f) * (EE(f, ix,iy,iz) - .5f * rvv - .5f * b2);
-    } mrc_fld_foreach_end;
+    for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
+      mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
+	float rvv = (sqr(RVX_(f, ix,iy,iz, p)) +
+		     sqr(RVY_(f, ix,iy,iz, p)) +
+		     sqr(RVZ_(f, ix,iy,iz, p))) / RR_(f, ix,iy,iz, p);
+	float b2  = (sqr(.5f * (BX_(f, ix,iy,iz, p) + BX_(f, ix+1,iy  ,iz  , p))) +
+		     sqr(.5f * (BY_(f, ix,iy,iz, p) + BY_(f, ix  ,iy+1,iz  , p))) +
+		     sqr(.5f * (BZ_(f, ix,iy,iz, p) + BZ_(f, ix  ,iy  ,iz+1, p))));
+	M3(r,0, ix,iy,iz, p) = (gamm - 1.f) * (EE_(f, ix,iy,iz, p) - .5f * rvv - .5f * b2);
+      } mrc_fld_foreach_end;
+    }
   } else {
     assert(0);
   }
@@ -169,11 +175,13 @@ ggcm_mhd_diag_item_b_run(struct ggcm_mhd_diag_item *item,
   struct mrc_fld *r = mrc_fld_get_as(fld_r, FLD_TYPE);
   struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
   if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM) {
-    mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
-      F3(r, 0, ix,iy,iz) = .5f * (BX(f, ix,iy,iz) + BX(f, ix-1,iy,iz));
-      F3(r, 1, ix,iy,iz) = .5f * (BY(f, ix,iy,iz) + BY(f, ix,iy-1,iz));
-      F3(r, 2, ix,iy,iz) = .5f * (BZ(f, ix,iy,iz) + BZ(f, ix,iy,iz-1));
-    } mrc_fld_foreach_end;
+    for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
+      mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
+	M3(r, 0, ix,iy,iz, p) = .5f * (BX_(f, ix,iy,iz, p) + BX_(f, ix-1,iy,iz, p));
+	M3(r, 1, ix,iy,iz, p) = .5f * (BY_(f, ix,iy,iz, p) + BY_(f, ix,iy-1,iz, p));
+	M3(r, 2, ix,iy,iz, p) = .5f * (BZ_(f, ix,iy,iz, p) + BZ_(f, ix,iy,iz-1, p));
+      } mrc_fld_foreach_end;
+    }
   } else if (mhd_type == MT_SEMI_CONSERVATIVE ||
 	     mhd_type == MT_FULLY_CONSERVATIVE) {
     compute_B_cc(fld_r, f, 0, 0);

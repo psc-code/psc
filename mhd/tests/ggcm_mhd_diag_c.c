@@ -200,9 +200,11 @@ ggcm_mhd_diag_c_write_one_field(struct mrc_io *io, struct mrc_fld *_f, int m,
   mrc_fld_setup(fld);
 
   // ghosts may not be set
-  mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
-    F3(fld,0, ix,iy,iz) = scale * F3(f,m, ix,iy,iz);
-  } mrc_fld_foreach_end;
+  for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
+    mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
+      M3(fld,0, ix,iy,iz, p) = scale * M3(f,m, ix,iy,iz, p);
+    } mrc_fld_foreach_end;
+  }
 
   ggcm_mhd_diag_c_write_one_fld(io, fld, outtype, plane);
 

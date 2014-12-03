@@ -46,10 +46,25 @@ enum {
 #define BZ(U, i,j,k)   F3(U, BZ , i,j,k)
 #define UU(U, i,j,k)   F3(U, UU , i,j,k)
 
-#define VX(f, ix,iy,iz) F3(f, VX, ix,iy,iz)
-#define VY(f, ix,iy,iz) F3(f, VY, ix,iy,iz)
-#define VZ(f, ix,iy,iz) F3(f, VZ, ix,iy,iz)
-#define PP(f, ix,iy,iz) F3(f, PP, ix,iy,iz)
+#define VX(f, i,j,k)   F3(f, VX, i,j,k)
+#define VY(f, i,j,k)   F3(f, VY, i,j,k)
+#define VZ(f, i,j,k)   F3(f, VZ, i,j,k)
+#define PP(f, i,j,k)   F3(f, PP, i,j,k)
+
+#define RR_(U, i,j,k, p)   M3(U, RR , i,j,k, p)
+#define RVX_(U, i,j,k, p)  M3(U, RVX, i,j,k, p)
+#define RVY_(U, i,j,k, p)  M3(U, RVY, i,j,k, p)
+#define RVZ_(U, i,j,k, p)  M3(U, RVZ, i,j,k, p)
+#define EE_(U, i,j,k, p)   M3(U, EE , i,j,k, p)
+#define BX_(U, i,j,k, p)   M3(U, BX , i,j,k, p)
+#define BY_(U, i,j,k, p)   M3(U, BY , i,j,k, p)
+#define BZ_(U, i,j,k, p)   M3(U, BZ , i,j,k, p)
+#define UU_(U, i,j,k, p)   M3(U, UU , i,j,k, p)
+
+#define VX_(f, i,j,k, p)   M3(f, VX , i,j,k, p)
+#define VY_(f, i,j,k, p)   M3(f, VY , i,j,k, p)
+#define VZ_(f, i,j,k, p)   M3(f, VZ , i,j,k, p)
+#define PP_(f, i,j,k, p)   M3(f, PP , i,j,k, p)
 
 // ----------------------------------------------------------------------
 // coordinates

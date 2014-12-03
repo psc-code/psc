@@ -48,34 +48,34 @@ ggcm_mhd_ic_kh_run(struct ggcm_mhd_ic *ic)
   float xmid[3], L[3], r[3];
   mrc_crds_get_param_double3(crds, "l", xl);
   mrc_crds_get_param_double3(crds, "h", xh);
-  for(int i=0; i<3; i++){
-    L[i] = xh[i] - xl[i];
-    xmid[i] = 0.5 * (xh[i] + xl[i]);
+  for(int d = 0; d < 3; d++){
+    L[d] = xh[d] - xl[d];
+    xmid[d] = .5 * (xh[d] + xl[d]);
   }
-  //float wave1; 
 
-  //float tmp = sub-> lambda; 
-  mrc_fld_foreach(fld, ix,iy,iz, 1, 1) {
-    r[0] = MRC_CRD(crds, 0, ix); 
-    r[1] = MRC_CRD(crds, 1, iy);
+  for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
+    mrc_fld_foreach(fld, ix,iy,iz, 1, 1) {
+      r[0] = MRC_MCRDX(crds, ix, p); 
+      r[1] = MRC_MCRDY(crds, iy, p);
 
-    float wave1 = sin(2.* sub->lambda * M_PI * (r[0] - xmid[0]) / L[0]); 
-
-    if(fabs(r[1]) < 0.25*L[1]){
-      RR(fld, ix,iy,iz) = sub->r0;
-      PP(fld, ix,iy,iz) = sub->p0;
-      VX(fld, ix,iy,iz) = sub->v0;
-      VY(fld, ix,iy,iz) = sub->pert*wave1; 
-    }else{
-      RR(fld, ix,iy,iz) = sub->r1;
-      PP(fld, ix,iy,iz) = sub->p0;
-      VX(fld, ix,iy,iz) = sub->v1;
-      VY(fld, ix,iy,iz) = sub->pert*wave1; 
-    }   
-    BX(fld, ix,iy,iz) = sub->B0; 
-    BY(fld, ix,iy,iz) = 0.0; 
-    VZ(fld, ix,iy,iz) = 0.0;
-  } mrc_fld_foreach_end;
+      float wave1 = sin(2.* sub->lambda * M_PI * (r[0] - xmid[0]) / L[0]); 
+      
+      if (fabs(r[1]) < .25 * L[1]) {
+	RR_(fld, ix,iy,iz, p) = sub->r0;
+	PP_(fld, ix,iy,iz, p) = sub->p0;
+	VX_(fld, ix,iy,iz, p) = sub->v0;
+	VY_(fld, ix,iy,iz, p) = sub->pert*wave1; 
+      } else {
+	RR_(fld, ix,iy,iz, p) = sub->r1;
+	PP_(fld, ix,iy,iz, p) = sub->p0;
+	VX_(fld, ix,iy,iz, p) = sub->v1;
+	VY_(fld, ix,iy,iz, p) = sub->pert*wave1; 
+      }   
+      BX_(fld, ix,iy,iz, p) = sub->B0; 
+      BY_(fld, ix,iy,iz, p) = 0.0; 
+      VZ_(fld, ix,iy,iz, p) = 0.0;
+    } mrc_fld_foreach_end;
+  }
 
   mrc_fld_put_as(fld, mhd->fld);
 
