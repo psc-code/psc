@@ -22,6 +22,34 @@ struct mrc_io;
 // ======================================================================
 // mrc_fld
 
+// mrc_fld is a rather complicated beast. Let's try to break it down:
+//
+// It is used both as generic multi-d array (up to MRC_FLD_MAXDIMS), as well as a
+// 3-d dimensional field living on a given domain (in parallel) (plus 1-d, too), with
+// potentially a number of components, and multiple patches per MPI process.
+// The local (per process) view of the latter is just a multi-d array, so it uses to
+// generic infrastructure -- but the setup happens based on a
+// mrc_domain, rather than specifying bounds manually.
+//
+// In its generic view, the field has up to MRC_FLD_MAXDIMS, each of
+// which has a lower and an upper bound. I'll use python notation,
+// e.g. bounds 2:5 means 2,3,4 (excl. of 5)
+// These bounds are stored as ghost_offs, ghost_dims (where the upper
+// bound is hence ghost_offs[d] + ghost_dims[d], FIXME?). To add to
+// the confusion, there's also offs and dims -- which are identical to
+// the ghost_* values if there are no ghost points guard cells / halos
+// / whatever you like to call them. However, the _ghost_* values are really
+// the more fundamental ones as far as the field is concerned, though
+// in an application, it may be more convenient to think in terms of
+// the "real" interior dimensions.
+//
+// In addition, there is now also _start and _stride, which kinda mirror
+// _ghost_offs and _ghost_dims in a regularly allocated contiguous field.
+// However, _start and _stride allow to create views of a given field,
+// where the points contained inside the view are then not necessarily
+// contiguous anymore, but rather just a view into an originally allocated
+// contiguous field.
+
 enum {
   MRC_NT_FLOAT,
   MRC_NT_DOUBLE,
@@ -52,6 +80,8 @@ struct mrc_fld {
   int _nr_ghosts; //< number of ghostpoints in non-invariant (dim > 1) directions
 
   // state
+  int _stride[MRC_FLD_MAXDIMS];
+  int _start[MRC_FLD_MAXDIMS];
   int _ghost_offs[MRC_FLD_MAXDIMS];
   int _ghost_dims[MRC_FLD_MAXDIMS];
   int _data_type;
@@ -121,11 +151,11 @@ mrc_fld_spatial_offs(struct mrc_fld *x)
 }
 
 #define __MRC_FLD(fld, type, i0,i1,i2,i3,i4)				\
-  (((type *) (fld)->_arr)[(((((i4) - (fld)->_ghost_offs[4]) *		\
-			     (fld)->_ghost_dims[3] + (i3) - (fld)->_ghost_offs[3]) * \
-			    (fld)->_ghost_dims[2] + (i2) - (fld)->_ghost_offs[2]) * \
-			   (fld)->_ghost_dims[1] + (i1) - (fld)->_ghost_offs[1]) * \
-			  (fld)->_ghost_dims[0] + (i0) - (fld)->_ghost_offs[0]])
+  (((type *) (fld)->_arr)[((i4) - (fld)->_start[4]) * (fld)->_stride[4] + \
+			  ((i3) - (fld)->_start[3]) * (fld)->_stride[3] + \
+			  ((i2) - (fld)->_start[2]) * (fld)->_stride[2] + \
+			  ((i1) - (fld)->_start[1]) * (fld)->_stride[1] + \
+			  ((i0) - (fld)->_start[0]) * (fld)->_stride[0]])
 
 #ifdef BOUNDS_CHECK
 
