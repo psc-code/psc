@@ -120,6 +120,13 @@ mrc_fld_spatial_offs(struct mrc_fld *x)
   return mrc_fld_offs(x) + x->_is_aos;
 }
 
+#define __MRC_FLD(fld, type, i0,i1,i2,i3,i4)				\
+  (((type *) (fld)->_arr)[(((((i4) - (fld)->_ghost_offs[4]) *		\
+			     (fld)->_ghost_dims[3] + (i3) - (fld)->_ghost_offs[3]) * \
+			    (fld)->_ghost_dims[2] + (i2) - (fld)->_ghost_offs[2]) * \
+			   (fld)->_ghost_dims[1] + (i1) - (fld)->_ghost_offs[1]) * \
+			  (fld)->_ghost_dims[0] + (i0) - (fld)->_ghost_offs[0]])
+
 #ifdef BOUNDS_CHECK
 
 #include <string.h>
@@ -135,22 +142,12 @@ mrc_fld_spatial_offs(struct mrc_fld *x)
       assert(i3 >= (fld)->_ghost_offs[3] && i3 < (fld)->_ghost_offs[3] + (fld)->_ghost_dims[3]); \
       assert(i4 >= (fld)->_ghost_offs[4] && i4 < (fld)->_ghost_offs[4] + (fld)->_ghost_dims[4]); \
       assert((fld)->_arr);						\
-      type *_p  =							\
-	&(((type *) (fld)->_arr)[(((((i4) - (fld)->_ghost_offs[4]) *	\
-				    (fld)->_ghost_dims[3] + (i3) - (fld)->_ghost_offs[3]) * \
-				   (fld)->_ghost_dims[2] + (i2) - (fld)->_ghost_offs[2]) * \
-				  (fld)->_ghost_dims[1] + (i1) - (fld)->_ghost_offs[1]) * \
-				 (fld)->_ghost_dims[0] + (i0) - (fld)->_ghost_offs[0]]); \
+      type *_p = &__MRC_FLD(fld, type, i0,i1,i2,i3,i4);			\
       _p; }))
 
 #else
 
-#define MRC_FLD(fld, type, i0,i1,i2,i3,i4)				\
-  (((type *) (fld)->_arr)[(((((i4) - (fld)->_ghost_offs[4]) *		\
-			     (fld)->_ghost_dims[3] + (i3) - (fld)->_ghost_offs[3]) * \
-			    (fld)->_ghost_dims[2] + (i2) - (fld)->_ghost_offs[2]) * \
-			   (fld)->_ghost_dims[1] + (i1) - (fld)->_ghost_offs[1]) * \
-			  (fld)->_ghost_dims[0] + (i0) - (fld)->_ghost_offs[0]])
+#define MRC_FLD(fld, type, i0,i1,i2,i3,i4) __MRC_FLD(fld, type, i0,i1,i2,i3,i4)
 
 #endif
 
