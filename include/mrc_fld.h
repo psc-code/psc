@@ -184,6 +184,21 @@ mrc_fld_spatial_offs(struct mrc_fld *x)
   }						\
   } while (0)				\
 
+// FIXME? should use something like mrc_fld_spatial_ghost_offs/dims?
+#define mrc_fld_foreach_bnd(fld, ix,iy,iz) do {				\
+  int *_offs = mrc_fld_ghost_offs(fld);					\
+  int *_dims = mrc_fld_ghost_dims(fld);					\
+  int _l[3] = { _offs[0], _offs[1], _offs[2] };				\
+  int _r[3] = { _offs[0] + _dims[0], _offs[1] + _dims[1], _offs[2] + _dims[2] }; \
+  for (int iz = _l[2]; iz < _r[2]; iz++) {				\
+  for (int iy = _l[1]; iy < _r[1]; iy++) {				\
+  for (int ix = _l[0]; ix < _r[0]; ix++)				\
+
+#define mrc_fld_foreach_bnd_end			\
+  }						\
+  }						\
+  } while (0)				\
+
 // ----------------------------------------------------------------------
 // mrc_f1
 

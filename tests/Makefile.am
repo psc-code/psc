@@ -15,6 +15,7 @@ check_PROGRAMS = \
 	test_mrc_domain_mb \
 	test_mrc_fld \
 	test_mrc_fld_io \
+	test_mrc_fld_view \
 	test_mrc_f3 \
 	test_mrc_m1 \
 	test_mrc_m3 \
