@@ -594,6 +594,74 @@ mrc_fld_make_view(struct mrc_fld *fld, int mb, int me)
 }
 
 // ----------------------------------------------------------------------
+// mrc_fld_create_view_ext
+//
+// This is the most flexible and hence rather complex version of
+// creating a view.
+// The parameters dims and offs will define the subset of the original field that
+// will comprise the view -- extended by 'sw'.
+// By default, the view will have all index bounds now start 0 (extended by 'sw'),
+// though if that's not desired, they can be shifted by passing new_offs.
+// dims has to be present, NULL is accepted for offs, sw, new_offs, in which case
+// they'll be assumed to be all zeros.
+
+struct mrc_fld *
+mrc_fld_create_view_ext(struct mrc_fld *fld, int nr_dims, int *dims, int *offs, int *sw,
+			int *new_offs)
+{
+  assert(mrc_fld_is_setup(fld));
+  struct mrc_fld *fld_new = mrc_fld_create(mrc_fld_comm(fld));
+  mrc_fld_set_type(fld_new, mrc_fld_type(fld));
+  if (!offs) {
+    offs = (int [MRC_FLD_MAXDIMS]) {};
+  }
+  if (!sw) {
+    sw = (int [MRC_FLD_MAXDIMS]) {};
+  }
+  if (!new_offs) {
+    new_offs = (int [MRC_FLD_MAXDIMS]) {};
+  }
+  if (fld->_domain) {
+    // FIXME, to be revisited
+    assert(0);
+  } else {
+    mrc_fld_set_param_int_array(fld_new, "dims", nr_dims, dims);
+    mrc_fld_set_param_int_array(fld_new, "offs", nr_dims, new_offs);
+    mrc_fld_set_param_int_array(fld_new, "sw"  , nr_dims, sw);
+    mrc_fld_set_array(fld_new, fld->_arr);
+    // setup() will set this up as if the array we set was contiguous
+    mrc_fld_setup(fld_new);
+    // so now we need to fix things up accordingly
+    int off = 0;
+    for (int d = 0; d < nr_dims; d++) {
+      assert(offs[d] - sw[d] >= fld->_ghost_offs[d]);
+      assert(offs[d] + dims[d] + sw[d] <=
+	     fld->_ghost_offs[d] + fld->_ghost_dims[d]);
+      fld_new->_stride[d] = fld->_stride[d];
+      fld_new->_start[d] = fld->_start[d] - offs[d] + new_offs[d];
+      off += fld_new->_start[d] * fld_new->_stride[d];
+    }
+    fld_new->_arr_off = fld_new->_arr - off * fld_new->_size_of_type;
+  }
+  // FIXME, we should link back to the original mrc_fld to make sure
+  // that doesn't get destroyed while we still have this view
+  return fld_new;
+}
+
+// ----------------------------------------------------------------------
+// mrc_fld_create_view
+//
+// This function provides a simpler interface to creating a view, where only
+// dims and offs are needed. The view will have the same sw as the original
+// field, and indices will start at 0 in the view.
+
+struct mrc_fld *
+mrc_fld_create_view(struct mrc_fld *fld, int nr_dims, int *dims, int *offs)
+{
+  return mrc_fld_create_view_ext(fld, nr_dims, dims, offs, fld->_sw.vals, NULL);
+}
+
+// ----------------------------------------------------------------------
 // mrc_fld_get_as
 //
 // convert fld_base to mrc_fld of type "type"

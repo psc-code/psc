@@ -41,8 +41,8 @@ test_1(int sw)
 {
   struct mrc_fld *fld = mrc_fld_create(MPI_COMM_WORLD);
   mrc_fld_set_name(fld, "test_fld");
-  mrc_fld_set_param_int3(fld, "offs", (int [3]) { 1, 2, 0 });
   mrc_fld_set_param_int3(fld, "dims", (int [3]) { 3, 4, 1 });
+  mrc_fld_set_param_int3(fld, "offs", (int [3]) { 1, 2, 0 });
   mrc_fld_set_param_int3(fld, "sw", (int [3]) { sw, sw, sw });
   mrc_fld_set_from_options(fld);
   mrc_fld_setup(fld);
@@ -57,6 +57,38 @@ test_1(int sw)
   } mrc_fld_foreach_bnd_end;
 
   mrc_fld_print_2d(fld);
+
+  printf("VIEW 1:4,2:6,0:1 (identical, though shifted)\n");
+  struct mrc_fld *fld2 =
+    mrc_fld_create_view(fld, 3, (int [3]) { 3, 4, 1 }, (int [3]) { 1, 2, 0 });
+  mrc_fld_print_2d(fld2);
+  mrc_fld_destroy(fld2);
+
+  printf("VIEW 1:3,2:5,0:1\n");
+  struct mrc_fld *fld3 =
+    mrc_fld_create_view(fld, 3, (int [3]) { 2, 3, 1 }, (int [3]) { 1, 2, 0 });
+  mrc_fld_print_2d(fld3);
+  mrc_fld_destroy(fld3);
+
+  printf("VIEW 2:4,3:6,0:1\n");
+  struct mrc_fld *fld4 =
+    mrc_fld_create_view(fld, 3, (int [3]) { 2, 3, 1 }, (int [3]) { 2, 3, 0 });
+  mrc_fld_print_2d(fld4);
+  mrc_fld_destroy(fld4);
+
+  printf("VIEW 2:4,3:6,0:1, set sw = 0,0,0\n");
+  struct mrc_fld *fld5 =
+    mrc_fld_create_view_ext(fld, 3, (int [3]) { 2, 3, 1 }, (int [3]) { 2, 3, 0},
+			    NULL, NULL);
+  mrc_fld_print_2d(fld5);
+  mrc_fld_destroy(fld5);
+
+  printf("VIEW 2:4,3:6,0:1 -> set sw = 0,0,0, shift by 2,3,0\n");
+  struct mrc_fld *fld6 =
+    mrc_fld_create_view_ext(fld, 3, (int [3]) { 2, 3, 1 }, (int [3]) { 2, 3, 0},
+			    NULL, (int [3]) { 2, 3, 0 });
+  mrc_fld_print_2d(fld6);
+  mrc_fld_destroy(fld6);
 
   mrc_fld_destroy(fld);
 }

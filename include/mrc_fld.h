@@ -110,6 +110,9 @@ const int *mrc_fld_dims(struct mrc_fld *x);
 const int *mrc_fld_ghost_offs(struct mrc_fld *x);
 const int *mrc_fld_ghost_dims(struct mrc_fld *x);
 struct mrc_fld *mrc_fld_duplicate(struct mrc_fld *fld);
+struct mrc_fld *mrc_fld_create_view(struct mrc_fld *fld, int nr_dims, int *dims, int *offs);
+struct mrc_fld *mrc_fld_create_view_ext(struct mrc_fld *fld, int nr_dims, int *dims, int *offs, int *sw,
+					int *new_offs);
 struct mrc_fld *mrc_fld_make_view(struct mrc_fld *fld, int mb, int me);
 void mrc_fld_copy(struct mrc_fld *fld_to, struct mrc_fld *fld_from);
 void mrc_fld_write_comps(struct mrc_fld *fld, struct mrc_io *io, int mm[]);
@@ -232,8 +235,8 @@ mrc_fld_spatial_offs(struct mrc_fld *x)
 
 // FIXME? should use something like mrc_fld_spatial_ghost_offs/dims?
 #define mrc_fld_foreach_bnd(fld, ix,iy,iz) do {				\
-  int *_offs = mrc_fld_ghost_offs(fld);					\
-  int *_dims = mrc_fld_ghost_dims(fld);					\
+  const int *_offs = mrc_fld_ghost_offs(fld);				\
+  const int *_dims = mrc_fld_ghost_dims(fld);				\
   int _l[3] = { _offs[0], _offs[1], _offs[2] };				\
   int _r[3] = { _offs[0] + _dims[0], _offs[1] + _dims[1], _offs[2] + _dims[2] }; \
   for (int iz = _l[2]; iz < _r[2]; iz++) {				\
