@@ -10,11 +10,13 @@
 static void __unused
 compute_B_cc(struct mrc_fld *B_cc, struct mrc_fld *x, int l, int r)
 {
-  mrc_fld_foreach(x, i,j,k, l, r) {
-    F3(B_cc, 0, i,j,k) = .5f * (F3(x, BX, i,j,k) + F3(x, BX, i+1,j,k));
-    F3(B_cc, 1, i,j,k) = .5f * (F3(x, BY, i,j,k) + F3(x, BY, i,j+1,k));
-    F3(B_cc, 2, i,j,k) = .5f * (F3(x, BZ, i,j,k) + F3(x, BZ, i,j,k+1));
-  } mrc_fld_foreach_end;
+  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+    mrc_fld_foreach(x, i,j,k, l, r) {
+      M3(B_cc, 0, i,j,k, p) = .5f * (BX_(x, i,j,k, p) + BX_(x, i+1,j,k, p));
+      M3(B_cc, 1, i,j,k, p) = .5f * (BY_(x, i,j,k, p) + BY_(x, i,j+1,k, p));
+      M3(B_cc, 2, i,j,k, p) = .5f * (BZ_(x, i,j,k, p) + BZ_(x, i,j,k+1, p));
+    } mrc_fld_foreach_end;
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -31,31 +33,33 @@ update_ct_uniform(struct ggcm_mhd *mhd,
   const int *ldims = mrc_fld_spatial_dims(x);
   int ie = ldims[0], je = ldims[1], ke = ldims[2];
 
-  for (int k = -l; k < ke + r; k++) {
+  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+    for (int k = -l; k < ke + r; k++) {
+      for (int j = -l; j < je + r; j++) {
+	for (int i = -l; i < ie + r; i++) {
+	  M3(x, BX, i,j,k, p) += (dt_on_dx[2] * (M3(E, 1, i  ,j  ,k+1, p) - M3(E, 1, i  ,j  ,k  , p)) -
+				  dt_on_dx[1] * (M3(E, 2, i  ,j+1,k  , p) - M3(E, 2, i  ,j  ,k  , p)));
+	  M3(x, BY, i,j,k, p) += (dt_on_dx[0] * (M3(E, 2, i+1,j  ,k  , p) - M3(E, 2, i  ,j  ,k  , p)) -
+				  dt_on_dx[2] * (M3(E, 0, i  ,j  ,k+1, p) - M3(E, 0, i  ,j  ,k  , p)));
+	  M3(x, BZ, i,j,k, p) += (dt_on_dx[1] * (M3(E, 0, i  ,j+1,k  , p) - M3(E, 0, i  ,j  ,k  , p)) -
+				  dt_on_dx[0] * (M3(E, 1, i+1,j  ,k  , p) - M3(E, 1, i  ,j  ,k  , p)));
+	}
+	int i = ie + r;
+	M3(x, BX, i,j,k, p) += (dt_on_dx[2] * (M3(E, 1, i  ,j  ,k+1, p) - M3(E, 1, i  ,j  ,k  , p)) -
+				dt_on_dx[1] * (M3(E, 2, i  ,j+1,k  , p) - M3(E, 2, i  ,j  ,k  , p)));
+      }
+      for (int i = -l; i < ie + r; i++) {
+	int j = je + r;
+	M3(x, BY, i,j,k, p) += (dt_on_dx[0] * (M3(E, 2, i+1,j  ,k  , p) - M3(E, 2, i  ,j  ,k  , p)) -
+				dt_on_dx[2] * (M3(E, 0, i  ,j  ,k+1, p) - M3(E, 0, i  ,j  ,k  , p)));
+      }
+    }
     for (int j = -l; j < je + r; j++) {
       for (int i = -l; i < ie + r; i++) {
-        F3(x, BX, i,j,k) += (dt_on_dx[2] * (F3(E, 1, i  ,j  ,k+1) - F3(E, 1, i  ,j  ,k  )) -
-			     dt_on_dx[1] * (F3(E, 2, i  ,j+1,k  ) - F3(E, 2, i  ,j  ,k  )));
-        F3(x, BY, i,j,k) += (dt_on_dx[0] * (F3(E, 2, i+1,j  ,k  ) - F3(E, 2, i  ,j  ,k  )) -
-			     dt_on_dx[2] * (F3(E, 0, i  ,j  ,k+1) - F3(E, 0, i  ,j  ,k  )));
-        F3(x, BZ, i,j,k) += (dt_on_dx[1] * (F3(E, 0, i  ,j+1,k  ) - F3(E, 0, i  ,j  ,k  )) -
-			     dt_on_dx[0] * (F3(E, 1, i+1,j  ,k  ) - F3(E, 1, i  ,j  ,k  )));
+	int k = ke + r;
+	M3(x, BZ, i,j,k, p) += (dt_on_dx[1] * (M3(E, 0, i  ,j+1,k  , p) - M3(E, 0, i  ,j  ,k  , p)) -
+				dt_on_dx[0] * (M3(E, 1, i+1,j  ,k  , p) - M3(E, 1, i  ,j  ,k  , p)));
       }
-      int i = ie + r;
-      F3(x, BX, i,j,k) += (dt_on_dx[2] * (F3(E, 1, i  ,j  ,k+1) - F3(E, 1, i  ,j  ,k  )) -
-			   dt_on_dx[1] * (F3(E, 2, i  ,j+1,k  ) - F3(E, 2, i  ,j  ,k  )));
-    }
-    for (int i = -l; i < ie + r; i++) {
-      int j = je + r;
-      F3(x, BY, i,j,k) += (dt_on_dx[0] * (F3(E, 2, i+1,j  ,k  ) - F3(E, 2, i  ,j  ,k  )) -
-			   dt_on_dx[2] * (F3(E, 0, i  ,j  ,k+1) - F3(E, 0, i  ,j  ,k  )));
-    }
-  }
-  for (int j = -l; j < je + r; j++) {
-    for (int i = -l; i < ie + r; i++) {
-      int k = ke + r;
-      F3(x, BZ, i,j,k) += (dt_on_dx[1] * (F3(E, 0, i  ,j+1,k  ) - F3(E, 0, i  ,j  ,k  )) -
-			   dt_on_dx[0] * (F3(E, 1, i+1,j  ,k  ) - F3(E, 1, i  ,j  ,k  )));
     }
   }
 }

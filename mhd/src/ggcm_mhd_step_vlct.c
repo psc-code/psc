@@ -62,30 +62,32 @@ compute_E##X##_edge(struct mrc_fld *E, struct mrc_fld *Ecc,		\
 {									\
   int BY = BX + Y, BZ = BX + Z;						\
 									\
-  mrc_fld_foreach(E, i,j,k, bnd, bnd+1) {				\
-    mrc_fld_data_t de1_l2, de1_r2, de1_l3, de1_r3;			\
-									\
-    de1_l3 = l_r_avg(F3(fluxes[Y], RR, i-IK,j-JK,k-KK),			\
-		     F3(fluxes[Z], BY, i   ,j   ,k   ) - F3(Ecc, X, i   -IK,j   -JK,k   -KK), \
-		     F3(fluxes[Z], BY, i-IJ,j-JJ,k-KJ) - F3(Ecc, X, i-IJ-IK,j-JJ-JK,k-KJ-KK)); \
-    									\
-    de1_r3 = l_r_avg(F3(fluxes[Y], RR, i,j,k),				\
-		     F3(fluxes[Z], BY, i   ,j   ,k   ) - F3(Ecc, X, i   ,j   ,k   ), \
-		     F3(fluxes[Z], BY, i-IJ,j-JJ,k-KJ) - F3(Ecc, X, i-IJ,j-JJ,k-KJ)); \
-    									\
-    de1_l2 = l_r_avg( F3(fluxes[Z], RR, i-IJ,j-JJ,k-KJ),			\
-		     -F3(fluxes[Y], BZ, i   ,j   ,k   ) - F3(Ecc, X, i-IJ   ,j-JJ   ,k-KJ   ), \
-		     -F3(fluxes[Y], BZ, i-IK,j-JK,k-KK) - F3(Ecc, X, i-IJ-IK,j-JJ-JK,k-KJ-KK)); \
-    									\
-    de1_r2 = l_r_avg( F3(fluxes[Z], RR, i,j,k),				\
-		     -F3(fluxes[Y], BZ, i   ,j   ,k   ) - F3(Ecc, X, i   ,j   ,k   ), \
-		     -F3(fluxes[Y], BZ, i-IK,j-JK,k-KK) - F3(Ecc, X, i-IK,j-JK,k-KK)); \
-    									\
-    F3(E, X, i,j,k) =						\
-      .25 * (  F3(fluxes[Z], BY, i,j,k) + F3(fluxes[Z], BY, i-IJ,j-JJ,k-KJ) \
-	     - F3(fluxes[Y], BZ, i,j,k) - F3(fluxes[Y], BZ, i-IK,j-JK,k-KK) \
-	     + de1_l2 + de1_r2 + de1_l3 + de1_r3);		        \
-  } mrc_fld_foreach_end;						\
+  for (int p = 0; p < mrc_fld_nr_patches(E); p++) {			\
+    mrc_fld_foreach(E, i,j,k, bnd, bnd+1) {				\
+      mrc_fld_data_t de1_l2, de1_r2, de1_l3, de1_r3;			\
+      									\
+      de1_l3 = l_r_avg(M3(fluxes[Y], RR, i-IK,j-JK,k-KK, p),		\
+		       M3(fluxes[Z], BY, i   ,j   ,k   , p) - M3(Ecc, X, i   -IK,j   -JK,k   -KK, p), \
+		       M3(fluxes[Z], BY, i-IJ,j-JJ,k-KJ, p) - M3(Ecc, X, i-IJ-IK,j-JJ-JK,k-KJ-KK, p)); \
+      									\
+      de1_r3 = l_r_avg(M3(fluxes[Y], RR, i,j,k, p),			\
+		       M3(fluxes[Z], BY, i   ,j   ,k   , p) - M3(Ecc, X, i   ,j   ,k   , p), \
+		       M3(fluxes[Z], BY, i-IJ,j-JJ,k-KJ, p) - M3(Ecc, X, i-IJ,j-JJ,k-KJ, p)); \
+      									\
+      de1_l2 = l_r_avg( M3(fluxes[Z], RR, i-IJ,j-JJ,k-KJ, p),		\
+		       -M3(fluxes[Y], BZ, i   ,j   ,k   , p) - M3(Ecc, X, i-IJ   ,j-JJ   ,k-KJ   , p), \
+		       -M3(fluxes[Y], BZ, i-IK,j-JK,k-KK, p) - M3(Ecc, X, i-IJ-IK,j-JJ-JK,k-KJ-KK, p)); \
+      									\
+      de1_r2 = l_r_avg( M3(fluxes[Z], RR, i,j,k, p),			\
+		       -M3(fluxes[Y], BZ, i   ,j   ,k   , p) - M3(Ecc, X, i   ,j   ,k   , p), \
+		       -M3(fluxes[Y], BZ, i-IK,j-JK,k-KK, p) - M3(Ecc, X, i-IK,j-JK,k-KK, p)); \
+      									\
+      M3(E, X, i,j,k, p) =						\
+	.25 * (  M3(fluxes[Z], BY, i,j,k, p) + M3(fluxes[Z], BY, i-IJ,j-JJ,k-KJ, p) \
+	       - M3(fluxes[Y], BZ, i,j,k, p) - M3(fluxes[Y], BZ, i-IK,j-JK,k-KK, p) \
+	       + de1_l2 + de1_r2 + de1_l3 + de1_r3);		        \
+    } mrc_fld_foreach_end;						\
+  }									\
 }
 
 #define MAKE_COMPUTE_E_EDGE_(X,Y,Z,IJ,JJ,KJ,IK,JK,KK)			\
@@ -96,30 +98,32 @@ compute_E##X##_edge(struct mrc_fld *E, struct mrc_fld *Ecc,		\
 {									\
   int BY = BX + Y, BZ = BX + Z;						\
 									\
-  mrc_fld_foreach(E, i,j,k, bnd, bnd+1) {				\
-    mrc_fld_data_t de1_l2, de1_r2, de1_l3, de1_r3;			\
-									\
-    de1_l3 = l_r_avg(F3(fluxes[Y], RR, i-IK,j-JK,k-KK),			\
-		     F3(fluxes[Z], BY, i-IJ,j-JJ,k-KJ) - F3(Ecc, X, i-IJ-IK,j-JJ-JK,k-KJ-KK), \
-		     F3(fluxes[Z], BY, i   ,j   ,k   ) - F3(Ecc, X, i   -IK,j   -JK,k   -KK)); \
+  for (int p = 0; p < mrc_fld_nr_patches(E); p++) {			\
+    mrc_fld_foreach(E, i,j,k, bnd, bnd+1) {				\
+      mrc_fld_data_t de1_l2, de1_r2, de1_l3, de1_r3;			\
+      									\
+      de1_l3 = l_r_avg(M3(fluxes[Y], RR, i-IK,j-JK,k-KK, p),		\
+		       M3(fluxes[Z], BY, i-IJ,j-JJ,k-KJ, p) - M3(Ecc, X, i-IJ-IK,j-JJ-JK,k-KJ-KK, p), \
+		       M3(fluxes[Z], BY, i   ,j   ,k   , p) - M3(Ecc, X, i   -IK,j   -JK,k   -KK, p)); \
+      									\
+      de1_r3 = l_r_avg(M3(fluxes[Y], RR, i,j,k, p),			\
+		       M3(fluxes[Z], BY, i-IJ,j-JJ,k-KJ, p) - M3(Ecc, X, i-IJ,j-JJ,k-KJ, p), \
+		       M3(fluxes[Z], BY, i   ,j   ,k   , p) - M3(Ecc, X, i   ,j   ,k   , p)); \
+      									\
+      de1_l2 = l_r_avg( M3(fluxes[Z], RR, i-IJ,j-JJ,k-KJ, p),		\
+		       -M3(fluxes[Y], BZ, i-IK,j-JK,k-KK, p) - M3(Ecc, X, i-IJ-IK,j-JJ-JK,k-KJ-KK, p), \
+		       -M3(fluxes[Y], BZ, i   ,j   ,k   , p) - M3(Ecc, X, i-IJ   ,j-JJ   ,k-KJ   , p)); \
+      									\
+      de1_r2 = l_r_avg( M3(fluxes[Z], RR, i,j,k, p),			\
+		       -M3(fluxes[Y], BZ, i-IK,j-JK,k-KK, p) - M3(Ecc, X, i-IK,j-JK,k-KK, p), \
+		       -M3(fluxes[Y], BZ, i   ,j   ,k   , p) - M3(Ecc, X, i   ,j   ,k   , p)); \
     									\
-    de1_r3 = l_r_avg(F3(fluxes[Y], RR, i,j,k),				\
-		     F3(fluxes[Z], BY, i-IJ,j-JJ,k-KJ) - F3(Ecc, X, i-IJ,j-JJ,k-KJ), \
-		     F3(fluxes[Z], BY, i   ,j   ,k   ) - F3(Ecc, X, i   ,j   ,k   )); \
-    									\
-    de1_l2 = l_r_avg( F3(fluxes[Z], RR, i-IJ,j-JJ,k-KJ),			\
-		     -F3(fluxes[Y], BZ, i-IK,j-JK,k-KK) - F3(Ecc, X, i-IJ-IK,j-JJ-JK,k-KJ-KK), \
-		     -F3(fluxes[Y], BZ, i   ,j   ,k   ) - F3(Ecc, X, i-IJ   ,j-JJ   ,k-KJ   )); \
-    									\
-    de1_r2 = l_r_avg( F3(fluxes[Z], RR, i,j,k),				\
-		     -F3(fluxes[Y], BZ, i-IK,j-JK,k-KK) - F3(Ecc, X, i-IK,j-JK,k-KK), \
-		     -F3(fluxes[Y], BZ, i   ,j   ,k   ) - F3(Ecc, X, i   ,j   ,k   )); \
-    									\
-    F3(E, X, i,j,k) =						\
-      .25 * (  F3(fluxes[Z], BY, i,j,k) + F3(fluxes[Z], BY, i-IJ,j-JJ,k-KJ) \
-	     - F3(fluxes[Y], BZ, i,j,k) - F3(fluxes[Y], BZ, i-IK,j-JK,k-KK) \
-	     + de1_l2 + de1_r2 + de1_l3 + de1_r3);		        \
-  } mrc_fld_foreach_end;						\
+      M3(E, X, i,j,k, p) =						\
+	.25 * (  M3(fluxes[Z], BY, i,j,k, p) + M3(fluxes[Z], BY, i-IJ,j-JJ,k-KJ, p) \
+	       - M3(fluxes[Y], BZ, i,j,k, p) - M3(fluxes[Y], BZ, i-IK,j-JK,k-KK, p) \
+	       + de1_l2 + de1_r2 + de1_l3 + de1_r3);		        \
+    } mrc_fld_foreach_end;						\
+  }									\
 }
 
 MAKE_COMPUTE_E_EDGE_(0,1,2, 0,1,0, 0,0,1)
@@ -134,14 +138,16 @@ compute_E(struct ggcm_mhd_step *step, struct mrc_fld *E,
   struct mrc_fld *Ecc = ggcm_mhd_step_get_3d_fld(step, 3);
 
   // calculate cell-centered E first
-  mrc_fld_foreach(Ecc, i,j,k, bnd, bnd) {
-    mrc_fld_data_t rri = 1. / F3(x, RR, i,j,k);
-    mrc_fld_data_t B[3] = { F3(B_cc, 0, i,j,k), F3(B_cc, 1, i,j,k), F3(B_cc, 2, i,j,k) };
-    mrc_fld_data_t v[3] = { rri * F3(x, RVX, i,j,k), rri * F3(x, RVY, i,j,k), rri * F3(x, RVZ, i,j,k) };
-    F3(Ecc, 0, i,j,k) = B[1] * v[2] - B[2] * v[1];
-    F3(Ecc, 1, i,j,k) = B[2] * v[0] - B[0] * v[2];
-    F3(Ecc, 2, i,j,k) = B[0] * v[1] - B[1] * v[0];
-  } mrc_fld_foreach_end;
+  for (int p = 0; p < mrc_fld_nr_patches(Ecc); p++) {
+    mrc_fld_foreach(Ecc, i,j,k, bnd, bnd) {
+      mrc_fld_data_t rri = 1. / RR_(x, i,j,k, p);
+      mrc_fld_data_t B[3] = { M3(B_cc, 0, i,j,k, p), M3(B_cc, 1, i,j,k, p), M3(B_cc, 2, i,j,k, p) };
+      mrc_fld_data_t v[3] = { rri * RVX_(x, i,j,k, p), rri * RVY_(x, i,j,k, p), rri * RVZ_(x, i,j,k, p) };
+      M3(Ecc, 0, i,j,k, p) = B[1] * v[2] - B[2] * v[1];
+      M3(Ecc, 1, i,j,k, p) = B[2] * v[0] - B[0] * v[2];
+      M3(Ecc, 2, i,j,k, p) = B[0] * v[1] - B[1] * v[0];
+    } mrc_fld_foreach_end;
+  }
 
   // then calculate edge-centered E based on the cell-centered one and
   // the fluxes
@@ -250,25 +256,29 @@ magdiffu_const(struct ggcm_mhd_step *step, struct mrc_fld *x, struct mrc_fld *B_
   mrc_fld_data_t dxi[3] = { 1. / dx[0], 1. / dx[1], 1. / dx[2] };
 
   // calc edge-centered J
-  mrc_fld_foreach(j_ec, i,j,k, 0, 1) {
-    F3(j_ec, 0, i,j,k) =
-      (BZ(x, i,j,k) - BZ(x, i,j-1,k)) * dxi[1] -
-      (BY(x, i,j,k) - BY(x, i,j,k-1)) * dxi[2];
-    F3(j_ec, 1, i,j,k) =
-      (BX(x, i,j,k) - BX(x, i,j,k-1)) * dxi[2] -
-      (BZ(x, i,j,k) - BZ(x, i-1,j,k)) * dxi[0];
-    F3(j_ec, 2, i,j,k) =
-      (BY(x, i,j,k) - BY(x, i-1,j,k)) * dxi[0] -
-      (BX(x, i,j,k) - BX(x, i,j-1,k)) * dxi[1];
-  } mrc_fld_foreach_end;
+  for (int p = 0; p < mrc_fld_nr_patches(j_ec); p++) {
+    mrc_fld_foreach(j_ec, i,j,k, 0, 1) {
+      M3(j_ec, 0, i,j,k, p) =
+	(BZ_(x, i,j,k, p) - BZ_(x, i,j-1,k, p)) * dxi[1] -
+	(BY_(x, i,j,k, p) - BY_(x, i,j,k-1, p)) * dxi[2];
+      M3(j_ec, 1, i,j,k, p) =
+	(BX_(x, i,j,k, p) - BX_(x, i,j,k-1, p)) * dxi[2] -
+	(BZ_(x, i,j,k, p) - BZ_(x, i-1,j,k, p)) * dxi[0];
+      M3(j_ec, 2, i,j,k, p) =
+	(BY_(x, i,j,k, p) - BY_(x, i-1,j,k, p)) * dxi[0] -
+	(BX_(x, i,j,k, p) - BX_(x, i,j-1,k, p)) * dxi[1];
+    } mrc_fld_foreach_end;
+  }
 
   mrc_fld_data_t eta = mhd->par.diffco / mhd->par.resnorm;
 
-  mrc_fld_foreach(j_ec, i,j,k, 0, 1) {
-    F3(E_ec, 0, i,j,k) = eta * F3(j_ec, 0, i,j,k);
-    F3(E_ec, 1, i,j,k) = eta * F3(j_ec, 1, i,j,k);
-    F3(E_ec, 2, i,j,k) = eta * F3(j_ec, 2, i,j,k);
-  } mrc_fld_foreach_end;
+  for (int p = 0; p < mrc_fld_nr_patches(E_ec); p++) {
+    mrc_fld_foreach(E_ec, i,j,k, 0, 1) {
+      M3(E_ec, 0, i,j,k, p) = eta * M3(j_ec, 0, i,j,k, p);
+      M3(E_ec, 1, i,j,k, p) = eta * M3(j_ec, 1, i,j,k, p);
+      M3(E_ec, 2, i,j,k, p) = eta * M3(j_ec, 2, i,j,k, p);
+    } mrc_fld_foreach_end;
+  }
 
   // FIXME!!! energy flux
 
@@ -282,12 +292,12 @@ magdiffu_const(struct ggcm_mhd_step *step, struct mrc_fld *x, struct mrc_fld *B_
 // newstep_fc
 
 // FIXME, take into account resistivity
+// FIXME, rework
 
 static mrc_fld_data_t
 newstep_fc(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *Bcc)
 {
-  mrc_fld_data_t di,v1,v2,v3,qsq,asq,cf1sq,cf2sq,cf3sq;
-  mrc_fld_data_t p;
+  mrc_fld_data_t qsq,asq,cf1sq,cf2sq,cf3sq;
   mrc_fld_data_t b1,b2,b3,bsq,tsum,tdif;
   mrc_fld_data_t max_v1=0.0,max_v2=0.0,max_v3=0.0,max_dti = 0.0;
 
@@ -296,36 +306,37 @@ newstep_fc(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *Bcc)
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
   double dx[3]; mrc_crds_get_dx(crds, dx);
 
-  mrc_fld_foreach(x, i,j,k, 0, 0) {
-    di = 1.0/RR(x, i,j,k);
-    v1 = RVX(x, i,j,k)*di;
-    v2 = RVY(x, i,j,k)*di;
-    v3 = RVZ(x, i,j,k)*di;
-    qsq = v1*v1 + v2*v2 + v3*v3;
-    
-    /* Use maximum of face-centered fields (always larger than cell-centered B) */
-    b1 = F3(Bcc, 0, i,j,k) + fabs(BX(x, i,j,k) - F3(Bcc, 0, i,j,k));
-    b2 = F3(Bcc, 1, i,j,k) + fabs(BY(x, i,j,k) - F3(Bcc, 1, i,j,k));
-    b3 = F3(Bcc, 2, i,j,k) + fabs(BZ(x, i,j,k) - F3(Bcc, 2, i,j,k));
-    bsq = sqr(b1) + sqr(b2) + sqr(b3);
-    /* compute sound speed squared */
-    p = fmax(gamma_minus_1*(EE(x, i,j,k) - 0.5*RR(x, i,j,k)*qsq
-		      - 0.5*bsq), TINY_NUMBER);
-    asq = gamma*p*di;
-    
-    /* compute fast magnetosonic speed squared in each direction */
-    tsum = bsq*di + asq;
-    tdif = bsq*di - asq;
-    cf1sq = 0.5*(tsum + sqrt(tdif*tdif + 4.0*asq*(b2*b2+b3*b3)*di));
-    cf2sq = 0.5*(tsum + sqrt(tdif*tdif + 4.0*asq*(b1*b1+b3*b3)*di));
-    cf3sq = 0.5*(tsum + sqrt(tdif*tdif + 4.0*asq*(b1*b1+b2*b2)*di));
-    
-    /* compute maximum cfl velocity (corresponding to minimum dt) */
-    max_v1 = fmax(max_v1, fabs(v1) + sqrt(cf1sq));
-    max_v2 = fmax(max_v2, fabs(v2) + sqrt(cf2sq));
-    max_v3 = fmax(max_v3, fabs(v3) + sqrt(cf3sq));
-    
-  } mrc_fld_foreach_end;
+  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+    mrc_fld_foreach(x, i,j,k, 0, 0) {
+      mrc_fld_data_t rri = 1.f / RR_(x, i,j,k, p);
+      mrc_fld_data_t vx = RVX_(x, i,j,k, p) * rri;
+      mrc_fld_data_t vy = RVY_(x, i,j,k, p) * rri;
+      mrc_fld_data_t vz = RVZ_(x, i,j,k, p) * rri;
+      qsq = sqr(vx) + sqr(vy) + sqr(vz);
+      
+      /* Use maximum of face-centered fields (always larger than cell-centered B) */
+      b1 = M3(Bcc, 0, i,j,k, p) + fabs(BX_(x, i,j,k, p) - M3(Bcc, 0, i,j,k, p));
+      b2 = M3(Bcc, 1, i,j,k, p) + fabs(BY_(x, i,j,k, p) - M3(Bcc, 1, i,j,k, p));
+      b3 = M3(Bcc, 2, i,j,k, p) + fabs(BZ_(x, i,j,k, p) - M3(Bcc, 2, i,j,k, p));
+      bsq = sqr(b1) + sqr(b2) + sqr(b3);
+      /* compute sound speed squared */
+      mrc_fld_data_t pp = fmax(gamma_minus_1*(EE_(x, i,j,k, p) - .5f*RR_(x, i,j,k, p)*qsq
+					      - .5f*bsq), TINY_NUMBER);
+      asq = gamma * pp * rri;
+      
+      /* compute fast magnetosonic speed squared in each direction */
+      tsum = bsq * rri + asq;
+      tdif = bsq * rri - asq;
+      cf1sq = 0.5*(tsum + sqrt(tdif*tdif + 4.0*asq*(b2*b2+b3*b3) * rri));
+      cf2sq = 0.5*(tsum + sqrt(tdif*tdif + 4.0*asq*(b1*b1+b3*b3) * rri));
+      cf3sq = 0.5*(tsum + sqrt(tdif*tdif + 4.0*asq*(b1*b1+b2*b2) * rri));
+      
+      /* compute maximum cfl velocity (corresponding to minimum dt) */
+      max_v1 = fmax(max_v1, fabs(vx) + sqrt(cf1sq));
+      max_v2 = fmax(max_v2, fabs(vy) + sqrt(cf2sq));
+      max_v3 = fmax(max_v3, fabs(vz) + sqrt(cf3sq));
+    } mrc_fld_foreach_end;
+  }
   
   max_dti = fmax(max_dti, max_v1/dx[0]);
   max_dti = fmax(max_dti, max_v2/dx[1]);
