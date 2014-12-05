@@ -87,14 +87,16 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
     fld->_len *= fld->_ghost_dims[d];
   }
 
-  const char *vec_type = mrc_fld_ops(fld)->vec_type;
-  if (vec_type) {
-    dispatch_vec_type(fld);
-    mrc_vec_set_param_int(fld->_vec, "len", fld->_len);
-    mrc_fld_setup_member_objs(fld); // sets up our .vec member
-    
-    fld->_arr = mrc_vec_get_array(fld->_vec);
+  if (fld->_view_base) {
+    mrc_fld_set_array(fld, fld->_view_base->_arr);
   }
+
+  const char *vec_type = mrc_fld_ops(fld)->vec_type;
+  assert(vec_type);
+  dispatch_vec_type(fld);
+  mrc_vec_set_param_int(fld->_vec, "len", fld->_len);
+  mrc_fld_setup_member_objs(fld); // sets up our .vec member
+  fld->_arr = mrc_vec_get_array(fld->_vec);
   assert(fld->_arr);
 
   if (!fld->_view_base) {
@@ -110,15 +112,15 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
     // In this case, this field is just a view and has not
     // allocated its own storage
     int nr_dims = fld->_dims.nr_vals;
-    struct mrc_fld *fld_base = fld->_view_base;
+    struct mrc_fld *view_base = fld->_view_base;
     int *view_offs = fld->_view_offs, *sw = fld->_sw.vals;
     int *dims = fld->_dims.vals, *offs = fld->_offs.vals;
     for (int d = 0; d < nr_dims; d++) {
-      assert(view_offs[d] - sw[d] >= fld_base->_ghost_offs[d]);
+      assert(view_offs[d] - sw[d] >= view_base->_ghost_offs[d]);
       assert(view_offs[d] + dims[d] + sw[d] <=
-	     fld_base->_ghost_offs[d] + fld_base->_ghost_dims[d]);
-      fld->_stride[d] = fld_base->_stride[d];
-      fld->_start[d] = fld_base->_start[d] - view_offs[d] + offs[d];
+	     view_base->_ghost_offs[d] + view_base->_ghost_dims[d]);
+      fld->_stride[d] = view_base->_stride[d];
+      fld->_start[d] = view_base->_start[d] - view_offs[d] + offs[d];
     }
   }
 
@@ -590,29 +592,33 @@ mrc_fld_dump(struct mrc_fld *x, const char *basename, int n)
 
 // ----------------------------------------------------------------------
 // mrc_fld_make_view
+//
+// FIXME having two different versions of making views in the case of
+// domain / no-domain is rather confusing, and this one's not very flexible,
+// either...
 
 struct mrc_fld *
 mrc_fld_make_view(struct mrc_fld *fld, int mb, int me)
 {
   assert(mrc_fld_is_setup(fld));
+  assert(fld->_domain);
+  assert(fld->_dim == -1);
+
   struct mrc_fld *fld_new = mrc_fld_create(mrc_fld_comm(fld));
   mrc_fld_set_type(fld_new, mrc_fld_type(fld));
-  if (!fld->_domain) {
-    assert(0); // could be done later, with a more general interface
-  } 
-  // if we're based on a domain, dims/offs/sw will be set by setup()
   mrc_fld_set_param_obj(fld_new, "domain", fld->_domain);
   mrc_fld_set_param_int(fld_new, "nr_spatial_dims", fld->_nr_spatial_dims);
   mrc_fld_set_param_int(fld_new, "nr_comps", me - mb);
   mrc_fld_set_param_int(fld_new, "nr_ghosts", fld->_nr_ghosts);
   mrc_fld_set_param_int(fld_new, "dim", fld->_dim);
-  assert(!fld->_is_aos);
-  int size = fld->_ghost_dims[0] * fld->_ghost_dims[1] * fld->_ghost_dims[2];
-  assert(fld->_ghost_dims[4] == 1); // only works with "simple" domain
-  mrc_fld_set_array(fld_new, (char *) fld->_arr + mb * size * fld->_size_of_type);
+
+  fld_new->_view_base = fld;
+  int offs[MRC_FLD_MAXDIMS] = {};
+  offs[fld->_is_aos ? 0 : 3] = mb;
+  fld_new->_view_offs = offs;
   mrc_fld_setup(fld_new);
-  // FIXME, we should link back to the original mrc_fld to make sure
-  // that doesn't get destroyed while we still have this view
+  fld_new->_view_offs = NULL; // so we don't keep a dangling pointer around
+
   return fld_new;
 }
 
@@ -653,7 +659,6 @@ mrc_fld_create_view_ext(struct mrc_fld *fld, int nr_dims, int *dims, int *offs, 
     mrc_fld_set_param_int_array(fld_new, "sw"  , nr_dims, sw);
     fld_new->_view_base = fld;
     fld_new->_view_offs = offs;
-    mrc_fld_set_array(fld_new, fld->_arr);
     mrc_fld_setup(fld_new);
     fld_new->_view_offs = NULL; // so we don't keep a dangling pointer around
   }
