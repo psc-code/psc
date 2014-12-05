@@ -95,13 +95,16 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
     fld->_arr = mrc_vec_get_array(fld->_vec);
   }
   assert(fld->_arr);
+  int off = 0;
   for (int d = 0; d < MRC_FLD_MAXDIMS; d++) {
     fld->_start[d]  = fld->_ghost_offs[d];
     fld->_stride[d] = 1;
     for (int dd = 0; dd < d; dd++) {
       fld->_stride[d] *= fld->_ghost_dims[dd];
     }
+    off += fld->_start[d] * fld->_stride[d];
   }
+  fld->_arr_off = fld->_arr - off * fld->_size_of_type;
 }
 
 

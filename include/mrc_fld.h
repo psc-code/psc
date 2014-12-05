@@ -87,6 +87,7 @@ struct mrc_fld {
   int _data_type;
   int _size_of_type;
   void *_arr;
+  void *_arr_off; //< same as _arr, but contains precalculated offset for faster/simpler access
   int _len;
   struct mrc_vec *_vec; //< underlying mrc_vec that manages memory alloc/free (could be petsc)
   int _nr_allocated_comp_name;
@@ -150,12 +151,27 @@ mrc_fld_spatial_offs(struct mrc_fld *x)
   return mrc_fld_offs(x) + x->_is_aos;
 }
 
+#if 0 // slower, not using _arr_off
+
 #define __MRC_FLD(fld, type, i0,i1,i2,i3,i4)				\
   (((type *) (fld)->_arr)[((i4) - (fld)->_start[4]) * (fld)->_stride[4] + \
 			  ((i3) - (fld)->_start[3]) * (fld)->_stride[3] + \
 			  ((i2) - (fld)->_start[2]) * (fld)->_stride[2] + \
 			  ((i1) - (fld)->_start[1]) * (fld)->_stride[1] + \
 			  ((i0) - (fld)->_start[0]) * (fld)->_stride[0]])
+
+#else // same, but faster because of precalc offset
+
+#define __MRC_FLD(fld, type, i0,i1,i2,i3,i4)				\
+  (((type *) (fld)->_arr_off)[(i4) * (fld)->_stride[4] +		\
+			      (i3) * (fld)->_stride[3] +		\
+			      (i2) * (fld)->_stride[2] +		\
+			      (i1) * (fld)->_stride[1] +		\
+			      (i0) * (fld)->_stride[0]])
+
+
+#endif
+
 
 #ifdef BOUNDS_CHECK
 
@@ -171,7 +187,7 @@ mrc_fld_spatial_offs(struct mrc_fld *x)
       assert(i2 >= (fld)->_ghost_offs[2] && i2 < (fld)->_ghost_offs[2] + (fld)->_ghost_dims[2]); \
       assert(i3 >= (fld)->_ghost_offs[3] && i3 < (fld)->_ghost_offs[3] + (fld)->_ghost_dims[3]); \
       assert(i4 >= (fld)->_ghost_offs[4] && i4 < (fld)->_ghost_offs[4] + (fld)->_ghost_dims[4]); \
-      assert((fld)->_arr);						\
+      assert((fld)->_arr_off);						\
       type *_p = &__MRC_FLD(fld, type, i0,i1,i2,i3,i4);			\
       _p; }))
 
