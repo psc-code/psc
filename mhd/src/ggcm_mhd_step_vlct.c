@@ -122,8 +122,8 @@ compute_E##X##_edge(struct mrc_fld *E, struct mrc_fld *Ecc,		\
   } mrc_fld_foreach_end;						\
 }
 
-MAKE_COMPUTE_E_EDGE(0,1,2, 0,1,0, 0,0,1)
-MAKE_COMPUTE_E_EDGE(1,2,0, 0,0,1, 1,0,0)
+MAKE_COMPUTE_E_EDGE_(0,1,2, 0,1,0, 0,0,1)
+MAKE_COMPUTE_E_EDGE_(1,2,0, 0,0,1, 1,0,0)
 MAKE_COMPUTE_E_EDGE_(2,0,1, 1,0,0, 0,1,0)
 
 static void
