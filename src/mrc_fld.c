@@ -65,6 +65,7 @@ dispatch_vec_type(struct mrc_fld *fld)
     mrc_vec_set_param_int(fld->_vec, "block_size", fld->_nr_comps);
   }  
 }
+
 // ----------------------------------------------------------------------
 // mrc_fld_setup_vec
 
@@ -95,13 +96,35 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
     fld->_arr = mrc_vec_get_array(fld->_vec);
   }
   assert(fld->_arr);
+
+  if (!fld->_view_base) {
+    // This is a field with its own storage
+    for (int d = 0; d < MRC_FLD_MAXDIMS; d++) {
+      fld->_start[d]  = fld->_ghost_offs[d];
+      fld->_stride[d] = 1;
+      for (int dd = 0; dd < d; dd++) {
+	fld->_stride[d] *= fld->_ghost_dims[dd];
+      }
+    }
+  } else {
+    // In this case, this field is just a view and has not
+    // allocated its own storage
+    int nr_dims = fld->_dims.nr_vals;
+    struct mrc_fld *fld_base = fld->_view_base;
+    int *view_offs = fld->_view_offs, *sw = fld->_sw.vals;
+    int *dims = fld->_dims.vals, *offs = fld->_offs.vals;
+    for (int d = 0; d < nr_dims; d++) {
+      assert(view_offs[d] - sw[d] >= fld_base->_ghost_offs[d]);
+      assert(view_offs[d] + dims[d] + sw[d] <=
+	     fld_base->_ghost_offs[d] + fld_base->_ghost_dims[d]);
+      fld->_stride[d] = fld_base->_stride[d];
+      fld->_start[d] = fld_base->_start[d] - view_offs[d] + offs[d];
+    }
+  }
+
+  // set up _arr_off
   int off = 0;
   for (int d = 0; d < MRC_FLD_MAXDIMS; d++) {
-    fld->_start[d]  = fld->_ghost_offs[d];
-    fld->_stride[d] = 1;
-    for (int dd = 0; dd < d; dd++) {
-      fld->_stride[d] *= fld->_ghost_dims[dd];
-    }
     off += fld->_start[d] * fld->_stride[d];
   }
   fld->_arr_off = fld->_arr - off * fld->_size_of_type;
@@ -628,20 +651,11 @@ mrc_fld_create_view_ext(struct mrc_fld *fld, int nr_dims, int *dims, int *offs, 
     mrc_fld_set_param_int_array(fld_new, "dims", nr_dims, dims);
     mrc_fld_set_param_int_array(fld_new, "offs", nr_dims, new_offs);
     mrc_fld_set_param_int_array(fld_new, "sw"  , nr_dims, sw);
+    fld_new->_view_base = fld;
+    fld_new->_view_offs = offs;
     mrc_fld_set_array(fld_new, fld->_arr);
-    // setup() will set this up as if the array we set was contiguous
     mrc_fld_setup(fld_new);
-    // so now we need to fix things up accordingly
-    int off = 0;
-    for (int d = 0; d < nr_dims; d++) {
-      assert(offs[d] - sw[d] >= fld->_ghost_offs[d]);
-      assert(offs[d] + dims[d] + sw[d] <=
-	     fld->_ghost_offs[d] + fld->_ghost_dims[d]);
-      fld_new->_stride[d] = fld->_stride[d];
-      fld_new->_start[d] = fld->_start[d] - offs[d] + new_offs[d];
-      off += fld_new->_start[d] * fld_new->_stride[d];
-    }
-    fld_new->_arr_off = fld_new->_arr - off * fld_new->_size_of_type;
+    fld_new->_view_offs = NULL; // so we don't keep a dangling pointer around
   }
   // FIXME, we should link back to the original mrc_fld to make sure
   // that doesn't get destroyed while we still have this view

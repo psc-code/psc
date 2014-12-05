@@ -90,6 +90,8 @@ struct mrc_fld {
   void *_arr_off; //< same as _arr, but contains precalculated offset for faster/simpler access
   int _len;
   struct mrc_vec *_vec; //< underlying mrc_vec that manages memory alloc/free (could be petsc)
+  struct mrc_fld *_view_base; //< if this mrc_fld is a view, this is the field it's derived from
+  int *_view_offs;
   int _nr_allocated_comp_name;
   char **_comp_name;
   bool _is_aos; //< indicates whether the layout (w.r.t to domain) is array-of-struct
