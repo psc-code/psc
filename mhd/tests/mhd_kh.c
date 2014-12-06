@@ -16,11 +16,20 @@
 #include <stdlib.h> 
 #include <assert.h>
 
+// ----------------------------------------------------------------------
+
+static double
+random_double()
+{
+  return (double) random() / RAND_MAX;
+}
+
 // ======================================================================
 // ggcm_mhd_ic subclass "kh"
 
 struct ggcm_mhd_ic_kh {
   float pert; // initial pertubation amplitude
+  float pert_random; // initial random pertubation amplitude
   float r0; // initial density 0 
   float r1; // initial density 1  
   float v0; // velocity 0 
@@ -70,10 +79,14 @@ ggcm_mhd_ic_kh_run(struct ggcm_mhd_ic *ic)
 	PP_(fld, ix,iy,iz, p) = sub->p0;
 	VX_(fld, ix,iy,iz, p) = sub->v1;
 	VY_(fld, ix,iy,iz, p) = sub->pert*wave1; 
-      }   
+      }
+      if (sub->pert_random > 0.) {
+	VX_(fld, ix,iy,iz, p) += sub->pert_random * (random_double() - .5f);
+	VY_(fld, ix,iy,iz, p) += sub->pert_random * (random_double() - .5f);
+      }
       BX_(fld, ix,iy,iz, p) = sub->B0; 
-      BY_(fld, ix,iy,iz, p) = 0.0; 
-      VZ_(fld, ix,iy,iz, p) = 0.0;
+      BY_(fld, ix,iy,iz, p) = 0.f; 
+      VZ_(fld, ix,iy,iz, p) = 0.f;
     } mrc_fld_foreach_end;
   }
 
@@ -89,6 +102,7 @@ ggcm_mhd_ic_kh_run(struct ggcm_mhd_ic *ic)
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_ic_kh, x)
 static struct param ggcm_mhd_ic_kh_descr[] = {
   {"pert", VAR(pert), PARAM_FLOAT(1e-2)},  
+  {"pert_random", VAR(pert_random), PARAM_FLOAT(0.f)},
   {"r0", VAR(r0), PARAM_FLOAT(2.0)},
   {"r1", VAR(r1), PARAM_FLOAT(1.0)},
   {"v0", VAR(v0), PARAM_FLOAT(0.5)},
@@ -130,6 +144,9 @@ ggcm_mhd_kh_create(struct ggcm_mhd *mhd)
   mrc_crds_set_param_double3(crds, "l", (double[3]) {  0.0, 0.0, 0.0 });
   mrc_crds_set_param_double3(crds, "h", (double[3]) {  1.0, 1.0, 0.1 });
 }
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_kh_ops 
 
 static struct ggcm_mhd_ops ggcm_mhd_kh_ops = {
   .name             = "kh",
