@@ -185,7 +185,7 @@ mrc_domain_find_valid_point_same(struct mrc_domain *domain, int ext[3], int gp, 
   }
 
   int dd[3];
-  for (dd[2] = 0; dd[2] >= 0; dd[2]--) {
+  for (dd[2] = dir[2]; dd[2] >= dir[2] - dirx[2]; dd[2]--) {
     for (dd[1] = dir[1]; dd[1] >= dir[1] - dirx[1]; dd[1]--) {
       for (dd[0] = dir[0]; dd[0] >= dir[0] - dirx[0]; dd[0]--) {
 	if (dd[0] == 0 && dd[1] == 0 && dd[2] == 0) {
@@ -373,19 +373,24 @@ mrc_ddc_amr_set_by_stencil(struct mrc_ddc *ddc, int m, int bnd, int ext[3],
 {
   struct mrc_domain *domain = mrc_ddc_get_domain(ddc);
 
-  int ldims[3];
+  int ldims[3], gdims[3];
   mrc_domain_get_param_int3(domain, "m", ldims);
+  mrc_domain_get_global_dims(domain, gdims);
   int nr_patches;
   mrc_domain_get_patches(domain, &nr_patches);
 
+  int sw[3];
+  for (int d = 0; d < 3; d++) {
+    sw[d] = (gdims[d] == 1) ? 0 : bnd;
+  }
   for (int lp = 0; lp < nr_patches; lp++) {
     struct mrc_patch_info info;
     mrc_domain_get_local_patch_info(domain, lp, &info);
     int gp = info.global_patch;
     int i[3];
-    for (i[2] = 0; i[2] < ldims[2] + 0; i[2]++) { // FIXME 3D
-      for (i[1] = -bnd; i[1] < ldims[1] + ext[1] + bnd; i[1]++) {
-	for (i[0] = -bnd; i[0] < ldims[0] + ext[0] + bnd; i[0]++) {
+    for (i[2] = -sw[2]; i[2] < ldims[2] + ext[2] + sw[2]; i[2]++) {
+      for (i[1] = -sw[1]; i[1] < ldims[1] + ext[1] + sw[1]; i[1]++) {
+	for (i[0] = -sw[0]; i[0] < ldims[0] + ext[0] + sw[0]; i[0]++) {
 	  if (i[0] >= ext[0] && i[0] < ldims[0] &&
 	      i[1] >= ext[1] && i[1] < ldims[1] &&
 	      i[2] >= ext[2] && i[2] < ldims[2]) {
