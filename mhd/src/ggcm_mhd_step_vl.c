@@ -118,27 +118,31 @@ newstep_hydro(struct ggcm_mhd *mhd, struct mrc_fld *x)
   mrc_fld_data_t gamma = mhd->par.gamm;
   mrc_fld_data_t gamma_minus_1 = gamma - 1.;
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-  double dx[3]; mrc_crds_get_dx_base(crds, dx);
 
-  mrc_fld_data_t max_vx = 0., max_vy = 0., max_vz = 0.;
-  mrc_fld_foreach(x, i,j,k, 0, 0) {
-    mrc_fld_data_t rri = 1. / RR(x, i,j,k);
-    mrc_fld_data_t vx = RVX(x, i,j,k) * rri;
-    mrc_fld_data_t vy = RVY(x, i,j,k) * rri;
-    mrc_fld_data_t vz = RVZ(x, i,j,k) * rri;
-    
-    /* compute sound speed */
-    mrc_fld_data_t pp = mrc_fld_max(gamma_minus_1*(EE(x, i,j,k) - .5*RR(x, i,j,k) * (sqr(vx) + sqr(vy) + sqr(vz))), 1e-15);
-    mrc_fld_data_t cs = mrc_fld_sqrt(gamma * pp * rri);
-    
-    /* compute maximum cfl velocity (corresponding to minimum dt) */
-    max_vx = mrc_fld_max(max_vx, fabs(vx) + cs);
-    max_vy = mrc_fld_max(max_vy, fabs(vy) + cs);
-    max_vz = mrc_fld_max(max_vz, fabs(vz) + cs);
-  } mrc_fld_foreach_end;
-  
+  mrc_fld_data_t min_dt = 1e10;
+  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+    double dx[3]; mrc_crds_get_dx(crds, p, dx);
+
+    mrc_fld_foreach(x, i,j,k, 0, 0) {
+      mrc_fld_data_t rri = 1.f / RR(x, i,j,k);
+      mrc_fld_data_t vx = RVX(x, i,j,k) * rri;
+      mrc_fld_data_t vy = RVY(x, i,j,k) * rri;
+      mrc_fld_data_t vz = RVZ(x, i,j,k) * rri;
+      
+      /* compute sound speed */
+      mrc_fld_data_t pp = mrc_fld_max(gamma_minus_1*(EE(x, i,j,k) - .5f*RR(x, i,j,k) * (sqr(vx) + sqr(vy) + sqr(vz))), 1e-15);
+      mrc_fld_data_t cs = mrc_fld_sqrt(gamma * pp * rri);
+      
+      /* compute min dt based on maximum wave velocity */
+      min_dt = mrc_fld_min(mrc_fld_min(min_dt,
+				       dx[0] / (mrc_fld_abs(vx) + cs)),
+			   mrc_fld_min(dx[1] / (mrc_fld_abs(vy) + cs),
+				       dx[2] / (mrc_fld_abs(vz) + cs)));
+    } mrc_fld_foreach_end;
+  }
+
   mrc_fld_data_t cfl = mhd->par.thx;
-  mrc_fld_data_t local_dt = cfl * mrc_fld_min(dx[0] / max_vx, mrc_fld_min(dx[1] / max_vy, dx[2] / max_vz));
+  mrc_fld_data_t local_dt = cfl * min_dt;
   mrc_fld_data_t global_dt;
   MPI_Allreduce(&local_dt, &global_dt, 1, MPI_MRC_FLD_DATA_T, MPI_MIN, ggcm_mhd_comm(mhd));
   return global_dt;
