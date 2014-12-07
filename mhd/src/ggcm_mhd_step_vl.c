@@ -115,6 +115,9 @@ ggcm_mhd_step_vl_setup(struct ggcm_mhd_step *step)
 static mrc_fld_data_t
 newstep_hydro(struct ggcm_mhd *mhd, struct mrc_fld *x)
 {
+  int gdims[3];
+  mrc_domain_get_global_dims(x->_domain, gdims);
+
   mrc_fld_data_t gamma = mhd->par.gamm;
   mrc_fld_data_t gamma_minus_1 = gamma - 1.;
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
@@ -134,10 +137,9 @@ newstep_hydro(struct ggcm_mhd *mhd, struct mrc_fld *x)
       mrc_fld_data_t cs = mrc_fld_sqrt(gamma * pp * rri);
       
       /* compute min dt based on maximum wave velocity */
-      min_dt = mrc_fld_min(mrc_fld_min(min_dt,
-				       dx[0] / (mrc_fld_abs(vx) + cs)),
-			   mrc_fld_min(dx[1] / (mrc_fld_abs(vy) + cs),
-				       dx[2] / (mrc_fld_abs(vz) + cs)));
+      if (gdims[0] > 1) { min_dt = mrc_fld_min(min_dt, dx[0] / (mrc_fld_abs(vx) + cs)); }
+      if (gdims[1] > 1) { min_dt = mrc_fld_min(min_dt, dx[1] / (mrc_fld_abs(vy) + cs)); }
+      if (gdims[2] > 1) { min_dt = mrc_fld_min(min_dt, dx[2] / (mrc_fld_abs(vz) + cs)); }
     } mrc_fld_foreach_end;
   }
 
