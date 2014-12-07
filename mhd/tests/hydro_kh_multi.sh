@@ -8,8 +8,8 @@ openmpirun -n 2 ./mhd_kh \
     --ggcm_mhd_diag_fields rr1:uu1:rv1:j:b1:divb:rr:pp:v:b \
     --ggcm_mhd_diag_run kh \
     --mrc_domain_type multi \
-    --mrc_domain_bcx periodic --mrc_domain_bcy periodic --mrc_domain_bcz periodic \
-    --mx 64 --my 64 --mz 2 --npx 4 --npy 1 \
+    --mrc_domain_bcx periodic --mrc_domain_bcy periodic --mrc_domain_bcz none \
+    --mx 64 --my 64 --mz 1 --npx 4 --npy 1 \
     --mrc_ts_output_every_time 0.01 --gamma 1.4 \
     --mrc_ts_max_time 5.0 \
     --mrc_ts_type step \

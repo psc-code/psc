@@ -10,11 +10,15 @@
 static void __unused
 compute_B_cc(struct mrc_fld *B_cc, struct mrc_fld *x, int l, int r)
 {
+  int gdims[3];
+  mrc_domain_get_global_dims(x->_domain, gdims);
+  int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
+
   for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
     mrc_fld_foreach(x, i,j,k, l, r) {
-      M3(B_cc, 0, i,j,k, p) = .5f * (BX_(x, i,j,k, p) + BX_(x, i+1,j,k, p));
-      M3(B_cc, 1, i,j,k, p) = .5f * (BY_(x, i,j,k, p) + BY_(x, i,j+1,k, p));
-      M3(B_cc, 2, i,j,k, p) = .5f * (BZ_(x, i,j,k, p) + BZ_(x, i,j,k+1, p));
+      M3(B_cc, 0, i,j,k, p) = .5f * (BX_(x, i,j,k, p) + BX_(x, i+dx,j,k, p));
+      M3(B_cc, 1, i,j,k, p) = .5f * (BY_(x, i,j,k, p) + BY_(x, i,j+dy,k, p));
+      M3(B_cc, 2, i,j,k, p) = .5f * (BZ_(x, i,j,k, p) + BZ_(x, i,j,k+dz, p));
     } mrc_fld_foreach_end;
   }
 }
@@ -95,22 +99,33 @@ mhd_fluxes(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3], struct mrc_fld
 			     struct mrc_fld *x, struct mrc_fld *B_cc,
 			     int ldim, int bnd, int j, int k, int dir, int p))
 {
+  int gdims[3];
+  mrc_domain_get_global_dims(x->_domain, gdims);
+
   const int *ldims = mrc_fld_spatial_dims(x);
 
   for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
-    for (int k = -bnd; k < ldims[2] + bnd; k++) {
+    if (gdims[0] > 1) {
+      for (int k = -bnd; k < ldims[2] + bnd; k++) {
+	for (int j = -bnd; j < ldims[1] + bnd; j++) {
+	  flux_func(step, fluxes, x, B_cc, ldims[0], nghost, j, k, 0, p);
+	}
+      }
+    }
+
+    if (gdims[1] > 1) {
+      for (int k = -bnd; k < ldims[2] + bnd; k++) {
+	for (int i = -bnd; i < ldims[0] + bnd; i++) {
+	  flux_func(step, fluxes, x, B_cc, ldims[1], nghost, k, i, 1, p);
+	}
+      }
+    }
+
+    if (gdims[2] > 1) {
       for (int j = -bnd; j < ldims[1] + bnd; j++) {
-	flux_func(step, fluxes, x, B_cc, ldims[0], nghost, j, k, 0, p);
-      }
-    }
-    for (int k = -bnd; k < ldims[2] + bnd; k++) {
-      for (int i = -bnd; i < ldims[0] + bnd; i++) {
-	flux_func(step, fluxes, x, B_cc, ldims[1], nghost, k, i, 1, p);
-      }
-    }
-    for (int j = -bnd; j < ldims[1] + bnd; j++) {
-      for (int i = -bnd; i < ldims[0] + bnd; i++) {
-	flux_func(step, fluxes, x, B_cc, ldims[2], nghost, i, j, 2, p);
+	for (int i = -bnd; i < ldims[0] + bnd; i++) {
+	  flux_func(step, fluxes, x, B_cc, ldims[2], nghost, i, j, 2, p);
+	}
       }
     }
   }
@@ -124,18 +139,28 @@ update_finite_volume_uniform(struct ggcm_mhd *mhd,
 			     struct mrc_fld *x, struct mrc_fld *fluxes[3],
 			     mrc_fld_data_t dt, int l, int r)
 {
+  int gdims[3];
+  mrc_domain_get_global_dims(x->_domain, gdims);
+  int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
+
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
 
   for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
-    double dx[3]; mrc_crds_get_dx(crds, p, dx);
-    mrc_fld_data_t dt_on_dx[3] = { dt / dx[0], dt / dx[1], dt / dx[2] };
+    double ddx[3]; mrc_crds_get_dx(crds, p, ddx);
+    mrc_fld_data_t dt_on_dx[3] = { dt / ddx[0], dt / ddx[1], dt / ddx[2] };
+    // FIXME, potential for accelerating the 2-d/1-d versions
+    for (int d = 0; d < 3; d++) {
+      if (gdims[d] == 1) {
+	dt_on_dx[d] = 0.f;
+      }
+    }
 
     mrc_fld_foreach(x, i,j,k, l, r) {
       for (int m = 0; m < 5; m++) {
 	M3(x, m, i,j,k, p) -= 
-	  (dt_on_dx[0] * (M3(fluxes[0], m, i+1,j,k, p) - M3(fluxes[0], m, i,j,k, p)) +
-	   dt_on_dx[1] * (M3(fluxes[1], m, i,j+1,k, p) - M3(fluxes[1], m, i,j,k, p)) + 
-	   dt_on_dx[2] * (M3(fluxes[2], m, i,j,k+1, p) - M3(fluxes[2], m, i,j,k, p)));
+	  (dt_on_dx[0] * (M3(fluxes[0], m, i+dx,j,k, p) - M3(fluxes[0], m, i,j,k, p)) +
+	   dt_on_dx[1] * (M3(fluxes[1], m, i,j+dy,k, p) - M3(fluxes[1], m, i,j,k, p)) + 
+	   dt_on_dx[2] * (M3(fluxes[2], m, i,j,k+dz, p) - M3(fluxes[2], m, i,j,k, p)));
       }
     } mrc_fld_foreach_end;
   }

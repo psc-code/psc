@@ -47,6 +47,10 @@ ggcm_mhd_diag_item_uu1_run(struct ggcm_mhd_diag_item *item,
 {
   struct ggcm_mhd *mhd = item->diag->mhd;
 
+  int gdims[3];
+  mrc_domain_get_global_dims(fld->_domain, gdims);
+  int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
+
   int mhd_type;
   mrc_fld_get_param_int(fld, "mhd_type", &mhd_type);
 
@@ -64,9 +68,9 @@ ggcm_mhd_diag_item_uu1_run(struct ggcm_mhd_diag_item *item,
     } mrc_fld_foreach_end;
   } else if (mhd_type == MT_FULLY_CONSERVATIVE) {
     mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
-      float b2  = (sqr(.5f * (BX(f, ix,iy,iz) + BX(f, ix+1,iy  ,iz  ))) +
-		   sqr(.5f * (BY(f, ix,iy,iz) + BY(f, ix  ,iy+1,iz  ))) +
-		   sqr(.5f * (BZ(f, ix,iy,iz) + BZ(f, ix  ,iy  ,iz+1))));
+      float b2  = (sqr(.5f * (BX(f, ix,iy,iz) + BX(f, ix+dx,iy   ,iz   ))) +
+		   sqr(.5f * (BY(f, ix,iy,iz) + BY(f, ix   ,iy+dy,iz   ))) +
+		   sqr(.5f * (BZ(f, ix,iy,iz) + BZ(f, ix   ,iy   ,iz+dz))));
       F3(r, 0, ix,iy,iz) = EE(f, ix,iy,iz) -.5f * b2;
     } mrc_fld_foreach_end;
   } else {

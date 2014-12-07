@@ -31,6 +31,8 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
   if (gdims[0] == 1) hx = 0.;
   if (gdims[1] == 1) hy = 0.;
   if (gdims[2] == 1) hz = 0.;
+  int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
+
 
   struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
   struct mrc_fld *d = mrc_fld_get_as(divb, FLD_TYPE);
@@ -47,9 +49,9 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
   if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM) {
     mrc_fld_foreach(divb, ix,iy,iz, 0, 0) {
       F3(d,0, ix,iy,iz) =
-	(BX(f, ix,iy,iz) - BX(f, ix-1,iy,iz)) * bd3x[ix] +
-	(BY(f, ix,iy,iz) - BY(f, ix,iy-1,iz)) * bd3y[iy] +
-	(BZ(f, ix,iy,iz) - BZ(f, ix,iy,iz-1)) * bd3z[iz];
+	(BX(f, ix,iy,iz) - BX(f, ix-dx,iy,iz)) * bd3x[ix] +
+	(BY(f, ix,iy,iz) - BY(f, ix,iy-dy,iz)) * bd3y[iy] +
+	(BZ(f, ix,iy,iz) - BZ(f, ix,iy,iz-dz)) * bd3z[iz];
       if (ymask) {
 	F3(d,0, ix,iy,iz) *= F3(ymask, 0, ix,iy,iz);
       }
@@ -63,9 +65,9 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
 	     mhd_type == MT_FULLY_CONSERVATIVE) {
     mrc_fld_foreach(divb, ix,iy,iz, 0, 0) {
       F3(d,0, ix,iy,iz) =
-	(BX(f, ix+1,iy,iz) - BX(f, ix,iy,iz)) * hx * bd3x[ix] +
-	(BY(f, ix,iy+1,iz) - BY(f, ix,iy,iz)) * hy * bd3y[iy] +
-	(BZ(f, ix,iy,iz+1) - BZ(f, ix,iy,iz)) * hz * bd3z[iz];
+	(BX(f, ix+dx,iy,iz) - BX(f, ix,iy,iz)) * hx * bd3x[ix] +
+	(BY(f, ix,iy+dy,iz) - BY(f, ix,iy,iz)) * hy * bd3y[iy] +
+	(BZ(f, ix,iy,iz+dz) - BZ(f, ix,iy,iz)) * hz * bd3z[iz];
       if (ymask) {
 	F3(d,0, ix,iy,iz) *= F3(ymask, 0, ix,iy,iz);
       }

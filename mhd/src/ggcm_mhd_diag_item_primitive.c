@@ -98,6 +98,10 @@ ggcm_mhd_diag_item_pp_run(struct ggcm_mhd_diag_item *item,
 {
   struct ggcm_mhd *mhd = item->diag->mhd;
 
+  int gdims[3];
+  mrc_domain_get_global_dims(fld->_domain, gdims);
+  int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
+
   int mhd_type;
   mrc_fld_get_param_int(fld, "mhd_type", &mhd_type);
 
@@ -126,9 +130,9 @@ ggcm_mhd_diag_item_pp_run(struct ggcm_mhd_diag_item *item,
 	float rvv = (sqr(RVX_(f, ix,iy,iz, p)) +
 		     sqr(RVY_(f, ix,iy,iz, p)) +
 		     sqr(RVZ_(f, ix,iy,iz, p))) / RR_(f, ix,iy,iz, p);
-	float b2  = (sqr(.5f * (BX_(f, ix,iy,iz, p) + BX_(f, ix+1,iy  ,iz  , p))) +
-		     sqr(.5f * (BY_(f, ix,iy,iz, p) + BY_(f, ix  ,iy+1,iz  , p))) +
-		     sqr(.5f * (BZ_(f, ix,iy,iz, p) + BZ_(f, ix  ,iy  ,iz+1, p))));
+	float b2  = (sqr(.5f * (BX_(f, ix,iy,iz, p) + BX_(f, ix+dx,iy   ,iz   , p))) +
+		     sqr(.5f * (BY_(f, ix,iy,iz, p) + BY_(f, ix   ,iy+dy,iz   , p))) +
+		     sqr(.5f * (BZ_(f, ix,iy,iz, p) + BZ_(f, ix   ,iy   ,iz+dz, p))));
 	M3(r,0, ix,iy,iz, p) = (gamm - 1.f) * (EE_(f, ix,iy,iz, p) - .5f * rvv - .5f * b2);
       } mrc_fld_foreach_end;
     }
