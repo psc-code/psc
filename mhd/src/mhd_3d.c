@@ -159,6 +159,121 @@ mhd_fluxes(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3], struct mrc_fld
 }
 
 // ----------------------------------------------------------------------
+// correct_fluxes
+
+// FIXME
+void mrc_domain_get_neighbor_patch_same(struct mrc_domain *domain, int p,
+					int dx[3], int *p_nei);
+void mrc_domain_get_neighbor_patch_fine(struct mrc_domain *domain, int gp,
+					int dir[3], int off[3], int *gp_nei);
+
+static void
+correct_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *fluxes[3])
+{
+  int gdims[3];
+  mrc_domain_get_global_dims(mhd->domain, gdims);
+
+  int nr_patches = mrc_fld_nr_patches(fluxes[0]);
+  for (int p = 0; p < nr_patches; p++) {
+    for (int d = 0; d < 3; d++) {
+      if (gdims[d] == 1) {
+	continue;
+      }
+
+      struct mrc_patch_info info;
+      mrc_domain_get_local_patch_info(mhd->domain, p, &info);
+      int gp = info.global_patch, *ldims = info.ldims;
+
+      // low side
+      int gp_nei;
+      int dir[3] = {}, off[3] = {};
+      dir[d] = -1;
+#if 0
+      // if there's a neighbor patch at the same refinement level,
+      // the fluxes better be equal already, this for debugging / making sure
+      mrc_domain_get_neighbor_patch_same(mhd->domain, gp, dir, &gp_nei);
+
+      if (gp_nei >= 0) {
+	mprintf("gp %d d %d gp_nei %d\n", gp, d, gp_nei);
+      int p_nei = gp_nei; // FIXME, serial only
+	if (d == 1) {
+	  for (int iz = 0; iz < ldims[2]; iz++) {
+	    for (int ix = 0; ix < ldims[0]; ix++) {
+	      mprintf("flux[1][%d,0,%d] = %g // %g\n", ix, iz,
+		      M3(fluxes[d], 0, ix,0,iz, p),
+		      M3(fluxes[d], 0, ix,ldims[1],iz, p_nei));
+	    }
+	  }
+	}
+      }
+#endif
+
+      off[d] = 1; // for low side
+      mrc_domain_get_neighbor_patch_fine(mhd->domain, gp, dir, off, &gp_nei);
+
+      if (gp_nei >= 0) {
+	if (d == 1) {
+	  //	  mprintf("low gp %d d %d gp_nei %d\n", gp, d, gp_nei);
+	  int offx = (gdims[0] > 1), offz = (gdims[2] > 1);
+	  for (off[2] = 0; off[2] <= offz; off[2]++) {
+	    for (off[0] = 0; off[0] <= offx; off[0]++) {
+	      mrc_domain_get_neighbor_patch_fine(mhd->domain, gp, dir, off, &gp_nei);
+	      for (int iz = 0; iz < 1; iz++) {
+		for (int ix = 0; ix < ldims[0] / 2; ix++) {
+		  int iy = 0, iy_nei = ldims[1];
+		  int p_nei = gp_nei; // FIXME, serial
+		  for (int m = 0; m < 5; m++) {
+		    mrc_fld_data_t val =
+		      .5f * (M3(fluxes[d], m, ix*2  ,iy_nei,iz*2, p_nei) +
+			     M3(fluxes[d], m, ix*2+1,iy_nei,iz*2, p_nei));
+		    /* mprintf("flux[1][%d,%d,%d] = %g // %g\n", ix, iy, iz, */
+		    /* 	M3(fluxes[d], m, ix + ldims[0]/2 * off[0],iy,iz + ldims[2]/2 * off[2], p), */
+		    /* 	val); */
+		    M3(fluxes[d], m, ix + ldims[0]/2 * off[0],iy,iz + ldims[2]/2 * off[2], p) = val;
+		  }
+		}
+	      }
+	    }
+	  }
+	}
+      }
+
+      // high side
+      dir[d] = 1;
+      off[d] = 0; // for high side
+      mrc_domain_get_neighbor_patch_fine(mhd->domain, gp, dir, off, &gp_nei);
+
+      if (gp_nei >= 0) {
+	if (d == 1) {
+	  //	  mprintf("high gp %d d %d gp_nei %d\n", gp, d, gp_nei);
+	  int offx = (gdims[0] > 1), offz = (gdims[2] > 1);
+	  for (off[2] = 0; off[2] <= offz; off[2]++) {
+	    for (off[0] = 0; off[0] <= offx; off[0]++) {
+	      mrc_domain_get_neighbor_patch_fine(mhd->domain, gp, dir, off, &gp_nei);
+	      for (int iz = 0; iz < 1; iz++) {
+		for (int ix = 0; ix < ldims[0] / 2; ix++) {
+		  int iy = ldims[1], iy_nei = 0;
+		  int p_nei = gp_nei; // FIXME, serial
+		  for (int m = 0; m < 5; m++) {
+		    mrc_fld_data_t val =
+		      .5f * (M3(fluxes[d], m, ix*2  ,iy_nei,iz*2, p_nei) +
+			     M3(fluxes[d], m, ix*2+1,iy_nei,iz*2, p_nei));
+		    /* mprintf("flux[1][%d,%d,%d] = %g // %g\n", ix, iy, iz, */
+		    /* 	M3(fluxes[d], m, ix + ldims[0]/2 * off[0],iy,iz + ldims[2]/2 * off[2], p), */
+		    /* 	val); */
+		    M3(fluxes[d], m, ix + ldims[0]/2 * off[0],iy,iz + ldims[2]/2 * off[2], p) = val;
+		  }
+		}
+	      }
+	    }
+	  }
+	}
+      }
+    }
+  }  
+}
+
+// ----------------------------------------------------------------------
 // update_finite_volume_uniform
 
 static void __unused
@@ -171,6 +286,10 @@ update_finite_volume_uniform(struct ggcm_mhd *mhd,
   int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
 
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
+
+  if (mhd->amr > 0) {
+    correct_fluxes(mhd, fluxes);
+  }
 
   for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
     double ddx[3]; mrc_crds_get_dx(crds, p, ddx);

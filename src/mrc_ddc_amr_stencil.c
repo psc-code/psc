@@ -58,7 +58,7 @@ mrc_domain_get_neighbor_patch_coarse(struct mrc_domain *domain, int gp,
 // ----------------------------------------------------------------------
 // mrc_domain_get_neighbor_patch_fine
 
-static void
+void
 mrc_domain_get_neighbor_patch_fine(struct mrc_domain *domain, int gp,
 				   int dir[3], int off[3], int *gp_nei)
 {
@@ -160,7 +160,7 @@ mrc_domain_is_local_ghost(struct mrc_domain *domain, int ext[3], int lp, int i[3
   return mrc_domain_is_ghost(domain, ext, pi.global_patch,i);
 }
 
-static void
+void 
 mrc_domain_find_valid_point_same(struct mrc_domain *domain, int ext[3], int gp, int i[3],
 				 int *gp_nei, int j[3])
 {
