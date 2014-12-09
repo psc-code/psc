@@ -34,32 +34,35 @@ ggcm_mhd_calc_currcc(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
   struct mrc_fld *t = mrc_fld_get_as(tmp, FLD_TYPE);
   struct mrc_fld *c = mrc_fld_get_as(currcc, FLD_TYPE);
   
-  mrc_fld_foreach(tmp,ix,iy,iz, 1, 1) {
-    // compute current on edge first    
-    F3(t,0,ix,iy,iz) = 
-      (F3(f, m+2, ix,iy+dy,iz) - F3(f, m+2, ix,iy,iz)) * bd4y[iy] - 
-      (F3(f, m+1, ix,iy,iz+dz) - F3(f, m+1, ix,iy,iz)) * bd4z[iz] ;     
-    F3(t,1,ix,iy,iz) = 
-      (F3(f, m  , ix,iy,iz+dz) - F3(f, m  , ix,iy,iz)) * bd4z[iz] -
-      (F3(f, m+2, ix+dx,iy,iz) - F3(f, m+2, ix,iy,iz)) * bd4x[ix];         
-    F3(t,2, ix,iy,iz) = 
-      (F3(f,m+1 , ix+dx,iy,iz) - F3(f, m+1, ix,iy,iz)) * bd4x[ix] - 
-      (F3(f,m   , ix,iy+dy,iz) - F3(f, m  , ix,iy,iz)) * bd4y[iy]; 
-  } mrc_fld_foreach_end;
-    
-  mrc_fld_foreach(currcc, ix,iy,iz, 1, 1) {
-    // average to the center 
-    // FIXME: note, this originally used zmask, not ymask
-    F3(c, 0, ix,iy,iz) = 0.25f *  
-      (F3(t, 0, ix,iy,iz   ) + F3(t, 0, ix,iy-dy,iz   ) + 
-       F3(t, 0, ix,iy,iz-dz) + F3(t, 0, ix,iy-dy,iz-dz));
-    F3(c, 1, ix,iy,iz) = 0.25f *
-      (F3(t, 1, ix,iy,iz   ) + F3(t, 1, ix-dx,iy,iz   ) + 
-       F3(t, 1, ix,iy,iz-dz) + F3(t, 1, ix-dx,iy,iz-dz));
-    F3(c, 2, ix,iy,iz) = 0.25f *
-      (F3(t, 2, ix,iy   ,iz) + F3(t, 2, ix-dx,iy   ,iz) + 
-       F3(t, 2, ix,iy-dy,iz) + F3(t, 2, ix-dx,iy-dy,iz));
-  } mrc_fld_foreach_end;     
+  for (int p = 0; p < mrc_fld_nr_patches(t); p++) {
+    mrc_fld_foreach(t,ix,iy,iz, 1, 1) {
+      // compute current on edge first
+      M3(t,0,ix,iy,iz, p) =
+	(M3(f, m+2, ix,iy+dy,iz, p) - M3(f, m+2, ix,iy,iz, p)) * bd4y[iy] -
+	(M3(f, m+1, ix,iy,iz+dz, p) - M3(f, m+1, ix,iy,iz, p)) * bd4z[iz];
+      M3(t,1,ix,iy,iz, p) =
+	(M3(f, m  , ix,iy,iz+dz, p) - M3(f, m  , ix,iy,iz, p)) * bd4z[iz] -
+	(M3(f, m+2, ix+dx,iy,iz, p) - M3(f, m+2, ix,iy,iz, p)) * bd4x[ix];
+      M3(t,2, ix,iy,iz, p) =
+	(M3(f,m+1 , ix+dx,iy,iz, p) - M3(f, m+1, ix,iy,iz, p)) * bd4x[ix] -
+	(M3(f,m   , ix,iy+dy,iz, p) - M3(f, m  , ix,iy,iz, p)) * bd4y[iy];
+    } mrc_fld_foreach_end;
+  }
+
+  for (int p = 0; p < mrc_fld_nr_patches(c); p++) {
+    mrc_fld_foreach(c, ix,iy,iz, 1, 1) {
+      // average to the center
+      M3(c, 0, ix,iy,iz, p) = 0.25f *
+	(M3(t, 0, ix,iy,iz   , p) + M3(t, 0, ix,iy-dy,iz   , p) +
+	 M3(t, 0, ix,iy,iz-dz, p) + M3(t, 0, ix,iy-dy,iz-dz, p));
+      M3(c, 1, ix,iy,iz, p) = 0.25f *
+	(M3(t, 1, ix,iy,iz   , p) + M3(t, 1, ix-dx,iy,iz   , p) +
+	 M3(t, 1, ix,iy,iz-dz, p) + M3(t, 1, ix-dx,iy,iz-dz, p));
+      M3(c, 2, ix,iy,iz, p) = 0.25f *
+	(M3(t, 2, ix,iy   ,iz, p) + M3(t, 2, ix-dx,iy   ,iz, p) +
+	 M3(t, 2, ix,iy-dy,iz, p) + M3(t, 2, ix-dx,iy-dy,iz, p));
+    } mrc_fld_foreach_end;
+  }
 
   mrc_fld_put_as(c, currcc);
   mrc_fld_put_as(t, tmp);
