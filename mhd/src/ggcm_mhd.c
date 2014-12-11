@@ -528,7 +528,6 @@ fill_ghosts_b_one(struct mrc_domain *domain, struct mrc_fld *fld,
   if (gp_nei >= 0) {
     mrc_fld_data_t fact = (m != 0 ? .5f : 1.f) * (m != 1 ? .5f : 1.f);
     mrc_fld_data_t val = 0.f;
-    mprintf("j %d %d %d i %d %d %d\n", j[0], j[1], j[2], i[0], i[1], i[2]);
     for (int dy = 0; dy <= (m != 1); dy++) {
       for (int dx = 0; dx <= (m != 0); dx++) {
 	val += fact * M3(fld, BX+m, j[0]+dx,j[1]+dy,j[2], gp_nei);
@@ -537,7 +536,28 @@ fill_ghosts_b_one(struct mrc_domain *domain, struct mrc_fld *fld,
     return val;
   }
 
-  return 99.;
+  // is there a corresponding coarse level underneath?
+  mrc_domain_find_valid_point_coarse(domain, ext, gp,
+				     (int[]) { div_2(i[0]), div_2(i[1]), div_2(i[2]) },
+				     &gp_nei, j);
+  if (gp_nei >= 0) {
+    if (i[m] % 2 == 0) {
+      return M3(fld, BX+m, j[0],j[1],j[2], gp_nei);
+    } else {
+      if (m == 0) {
+	return .5f * (fill_ghosts_b_one(domain, fld, m, (int [3]) { i[0] - 1, i[1], i[2] }, gp) +
+		      fill_ghosts_b_one(domain, fld, m, (int [3]) { i[0] + 1, i[1], i[2] }, gp));
+      } else if (m == 1) {
+	return .5f * (fill_ghosts_b_one(domain, fld, m, (int [3]) { i[0], i[1] - 1, i[2] }, gp) +
+		      fill_ghosts_b_one(domain, fld, m, (int [3]) { i[0], i[1] + 1, i[2] }, gp));
+      } else {
+	assert(0);
+      }
+      return 1.f;
+    }
+  }
+
+  assert(0);
 }
 
 static void
@@ -577,34 +597,12 @@ fill_ghosts_b(struct ggcm_mhd *mhd, struct mrc_fld *fld)
 
 	    // FIXME, should be unnecessary in the end
 	    if (!is_ghost_b(domain, ext, gp, i)) {
-	      goto next;
+	      continue;
 	    }
 
 	    // at this point, we skipped all interior points, so only ghostpoints are left
 	    mrc_fld_data_t val = fill_ghosts_b_one(domain, fld, m, i, gp);
-	    if (val != 99.) {
-	      M3(fld, BX+m, i[0],i[1],i[2], gp) = val;
-	      goto next;
-	    }
-
-	    int j[3], gp_nei;
-
-	    // is there a corresponding coarse level underneath?
-	    mrc_domain_find_valid_point_coarse(domain, ext, gp,
-					       (int[]) { div_2(i[0]), div_2(i[1]), div_2(i[2]) },
-					       &gp_nei, j);
-	    if (gp_nei >= 0) {
-	      if (i[m] % 2 == 0) {
-		M3(fld, BX+m, i[0],i[1],i[2], p) = M3(fld, BX+m, j[0],j[1],j[2], gp_nei);
-		goto next;
-	      } else {
-		M3(fld, BX+m, i[0],i[1],i[2], p) = 1.;
-		goto next;
-	      }
-	    }
-
-	    M3(fld, BX+m, i[0],i[1],i[2], p) = 2.;
-	  next: ;
+	    M3(fld, BX+m, i[0],i[1],i[2], gp) = val;
 	  }
 	}
       }
