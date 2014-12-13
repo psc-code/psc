@@ -84,6 +84,9 @@ struct mrc_ddc *ggcm_mhd_create_amr_ddc_flux_x(struct ggcm_mhd *mhd);
 struct mrc_ddc *ggcm_mhd_create_amr_ddc_flux_y(struct ggcm_mhd *mhd);
 struct mrc_ddc *ggcm_mhd_create_amr_ddc_E(struct ggcm_mhd *mhd);
 
+// reference implementation only
+void ggcm_mhd_amr_fill_ghosts_b(struct ggcm_mhd *mhd, struct mrc_fld *fld);
+
 // direct access to coords for a given cell
 // (ideally avoided for performance critical parts, because it's slower)
 //
