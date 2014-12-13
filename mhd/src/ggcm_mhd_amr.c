@@ -94,7 +94,7 @@ ggcm_mhd_create_amr_ddc_flux(struct ggcm_mhd *mhd, int d)
   int ext[3] = {};
   ext[d] = 1;
   for (int m = 0; m < 5; m++) {
-    mrc_ddc_amr_set_by_stencil(ddc, m, 2, ext, NULL, &stencils_fine_flux[d]);
+    mrc_ddc_amr_set_by_stencil(ddc, m, 0, ext, NULL, &stencils_fine_flux[d]);
   }
   mrc_ddc_amr_assemble(ddc);
 
