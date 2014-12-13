@@ -1,8 +1,35 @@
 
 #include "ggcm_mhd_step.h" // FIXME
 
+// ======================================================================
+//
+// Overall, we maintain three ddc's for AMR operation:
+//
+// ddc_amr_cc: (FIXME, name)
+//   This is for fill_ghosts(), and is responsible for communicating
+//   boundary points on the same level (e.g., filling ghost points from
+//   a neighboring patch's interior point, but also filling a value on the
+//   boundary from a neighboring patch which is the "real" owner of that
+//   point.) For AMR, it also takes care of restricting/prolongating the
+//   solution to fill ghost points / boundary points.
+//
+// ddc_amr_flux_*:
+//   This is for flux correction right on the boundary between coarse and
+//   fine: coarse fluxes are corrected to the aggregated fine values on
+//   the same face.
+//
+// ddc_amr_E:
+//   This is for correcting the E field on edges that are on a boundary 
+//   between coarse and fine: coarse E fields are to the aggregated fine
+//   values on the same edge
+
+
 // FIXME, storing these ddc's in ggcm_mhd is kinda ugly, and they
 // still don't get cleaned up, anyway
+
+// ======================================================================
+// correct E field
+// ======================================================================
 
 // ----------------------------------------------------------------------
 // correct_E
