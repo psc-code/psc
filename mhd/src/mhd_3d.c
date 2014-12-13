@@ -25,7 +25,6 @@ compute_B_cc(struct mrc_fld *B_cc, struct mrc_fld *x, int l, int r)
   }
 }
 
-#include "mhd_3d_amr.c"
 // ----------------------------------------------------------------------
 // update_ct_uniform
 
@@ -35,7 +34,7 @@ update_ct_uniform(struct ggcm_mhd *mhd,
 		  bool do_correct)
 {
   if (mhd->amr > 0 && do_correct) {
-    correct_E(mhd, E, _l, _r);
+    mrc_ddc_amr_apply(mhd->ddc_amr_E, E);
   }
 
   int gdims[3]; mrc_domain_get_global_dims(x->_domain, gdims);
@@ -179,7 +178,8 @@ update_finite_volume_uniform(struct ggcm_mhd *mhd,
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
 
   if (mhd->amr > 0 && do_correct) {
-    correct_fluxes(mhd, fluxes);
+    mrc_ddc_amr_apply(mhd->ddc_amr_flux_x, fluxes[0]);
+    mrc_ddc_amr_apply(mhd->ddc_amr_flux_y, fluxes[1]);
   }
 
   for (int p = 0; p < mrc_fld_nr_patches(x); p++) {

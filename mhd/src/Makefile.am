@@ -7,6 +7,7 @@ libmhd_la_SOURCES = \
 	ggcm_mhd_register.c \
 	\
 	ggcm_mhd.c \
+	ggcm_mhd_amr.c \
 	ggcm_mhd_box.c \
 	ggcm_mhd_convert.c \
 	ggcm_mhd_convert_float.c \

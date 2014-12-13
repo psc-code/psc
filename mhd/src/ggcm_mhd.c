@@ -263,58 +263,6 @@ ggcm_mhd_setup_amr_domain(struct ggcm_mhd *mhd)
   }
 }
 
-#define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
-
-static struct mrc_ddc_amr_stencil_entry stencil_coarse_cc[2] = {
-  // FIXME, needs some interpolation
-  { .dx = { 0, 0, 0 }, .val = 1.f },
-};
-
-static struct mrc_ddc_amr_stencil stencils_coarse_cc = {
-  stencil_coarse_cc, ARRAY_SIZE(stencil_coarse_cc)
-};
-
-static struct mrc_ddc_amr_stencil_entry stencil_fine_cc[] = {
-  // FIXME, 3D
-  { .dx = {  0,  0,  0 }, .val = .25f },
-  { .dx = { +1,  0,  0 }, .val = .25f },
-  { .dx = {  0, +1,  0 }, .val = .25f },
-  { .dx = { +1, +1,  0 }, .val = .25f },
-};
-
-static struct mrc_ddc_amr_stencil stencils_fine_cc = {
-  stencil_fine_cc, ARRAY_SIZE(stencil_fine_cc)
-};
-
-static void
-ggcm_mhd_setup_amr_ddc(struct ggcm_mhd *mhd)
-{
-  {
-    struct mrc_ddc *ddc = mrc_ddc_create(mrc_domain_comm(mhd->domain));
-    mrc_ddc_set_type(ddc, "amr");
-    mrc_ddc_set_domain(ddc, mhd->domain);
-    mrc_ddc_set_param_int(ddc, "size_of_type", mhd->fld->_size_of_type);
-    mrc_ddc_set_param_int3(ddc, "sw", mrc_fld_spatial_sw(mhd->fld));
-    mrc_ddc_set_param_int(ddc, "n_comp", mhd->fld->_nr_comps);
-    mrc_ddc_setup(ddc);
-    int bnd = mrc_fld_spatial_sw(mhd->fld)[0];
-    for (int m = 0; m < 5; m++) {
-      mrc_ddc_amr_set_by_stencil(ddc, m, bnd, (int[]) { 0, 0, 0 },
-				 &stencils_coarse_cc, &stencils_fine_cc);
-    }
-    // FIXME: do not restrict on bnd -- or does it even matter, after doing EMF right?
-    /* mrc_ddc_amr_set_by_stencil(ddc, BX, bnd - 1, (int[]) { 1, 0, 0 }, */
-    /* 			       NULL, &stencils_fine_flux_x); */
-    /* mrc_ddc_amr_set_by_stencil(ddc, BY, bnd - 1, (int[]) { 0, 1, 0 }, */
-    /* 			       NULL, &stencils_fine_flux_y); */
-    mrc_ddc_amr_set_by_stencil(ddc, BZ, bnd - 1, (int[]) { 0, 0, 0 },
-			       &stencils_coarse_cc, &stencils_fine_cc);
-    mrc_ddc_amr_assemble(ddc);
-    // FIXME, leaked
-    mhd->ddc_amr_cc = ddc;
-  }
-}
-
 static void
 _ggcm_mhd_setup(struct ggcm_mhd *mhd)
 {
@@ -337,7 +285,11 @@ _ggcm_mhd_setup(struct ggcm_mhd *mhd)
   ggcm_mhd_setup_internal(mhd);
 
   if (mhd->amr > 0) {
-    ggcm_mhd_setup_amr_ddc(mhd);
+    // FIXME, all leaked
+    mhd->ddc_amr_cc = ggcm_mhd_create_amr_ddc(mhd);
+    mhd->ddc_amr_E  = ggcm_mhd_create_amr_ddc_E(mhd);
+    mhd->ddc_amr_flux_x = ggcm_mhd_create_amr_ddc_flux_x(mhd);
+    mhd->ddc_amr_flux_y = ggcm_mhd_create_amr_ddc_flux_y(mhd);
   }
 }
 

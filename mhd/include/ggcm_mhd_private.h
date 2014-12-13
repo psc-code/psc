@@ -79,6 +79,10 @@ extern struct ggcm_mhd_ops ggcm_mhd_ops_box;
 struct mrc_fld *ggcm_mhd_get_3d_fld(struct ggcm_mhd *mhd, int nr_comps);
 void ggcm_mhd_put_3d_fld(struct ggcm_mhd *mhd, struct mrc_fld *f);
 
+struct mrc_ddc *ggcm_mhd_create_amr_ddc(struct ggcm_mhd *mhd);
+struct mrc_ddc *ggcm_mhd_create_amr_ddc_flux_x(struct ggcm_mhd *mhd);
+struct mrc_ddc *ggcm_mhd_create_amr_ddc_flux_y(struct ggcm_mhd *mhd);
+struct mrc_ddc *ggcm_mhd_create_amr_ddc_E(struct ggcm_mhd *mhd);
 
 // direct access to coords for a given cell
 // (ideally avoided for performance critical parts, because it's slower)
