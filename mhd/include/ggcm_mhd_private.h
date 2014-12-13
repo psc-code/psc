@@ -36,9 +36,7 @@ struct ggcm_mhd {
   struct ggcm_mhd_params par;
   int amr; //< turn on if > 0, value selects initial domain refinement
   struct mrc_ddc *ddc_amr_cc;
-  struct mrc_ddc *ddc_amr_flux_x;
-  struct mrc_ddc *ddc_amr_flux_y;
-  struct mrc_ddc *ddc_amr_flux_z;
+  struct mrc_ddc *ddc_amr_flux[3];
   struct mrc_ddc *ddc_amr_E;
 
   struct mrc_domain *domain;
@@ -80,8 +78,7 @@ struct mrc_fld *ggcm_mhd_get_3d_fld(struct ggcm_mhd *mhd, int nr_comps);
 void ggcm_mhd_put_3d_fld(struct ggcm_mhd *mhd, struct mrc_fld *f);
 
 struct mrc_ddc *ggcm_mhd_create_amr_ddc(struct ggcm_mhd *mhd);
-struct mrc_ddc *ggcm_mhd_create_amr_ddc_flux_x(struct ggcm_mhd *mhd);
-struct mrc_ddc *ggcm_mhd_create_amr_ddc_flux_y(struct ggcm_mhd *mhd);
+struct mrc_ddc *ggcm_mhd_create_amr_ddc_flux(struct ggcm_mhd *mhd, int d);
 struct mrc_ddc *ggcm_mhd_create_amr_ddc_E(struct ggcm_mhd *mhd);
 
 // reference implementation only

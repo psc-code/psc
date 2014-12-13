@@ -53,30 +53,29 @@ void mrc_ddc_amr_add_diagonal_one(struct mrc_ddc *ddc, int gp, int m, int i[3]);
 // ======================================================================
 
 static struct mrc_ddc_amr_stencil_entry stencil_fine_flux_x[] = {
-  // FIXME, 3D
-  { .dx = {  0,  0,  0 }, .val = .5f },
-  { .dx = {  0, +1,  0 }, .val = .5f },
-};
-
-static struct mrc_ddc_amr_stencil stencils_fine_flux_x = {
-  stencil_fine_flux_x, ARRAY_SIZE(stencil_fine_flux_x)
+  { .dx = {  0,  0,  0 }, .val = .25f },
+  { .dx = {  0, +1,  0 }, .val = .25f },
+  { .dx = {  0,  0, +1 }, .val = .25f },
+  { .dx = {  0, +1, +1 }, .val = .25f },
 };
 
 static struct mrc_ddc_amr_stencil_entry stencil_fine_flux_y[] = {
-  // FIXME, 3D
-  { .dx = {  0,  0,  0 }, .val = .5f },
-  { .dx = { +1,  0,  0 }, .val = .5f },
+  { .dx = {  0,  0,  0 }, .val = .25f },
+  { .dx = { +1,  0,  0 }, .val = .25f },
+  { .dx = {  0,  0, +1 }, .val = .25f },
+  { .dx = { +1,  0, +1 }, .val = .25f },
 };
 
-static struct mrc_ddc_amr_stencil stencils_fine_flux_y = {
-  stencil_fine_flux_y, ARRAY_SIZE(stencil_fine_flux_y)
+static struct mrc_ddc_amr_stencil stencils_fine_flux[3] = {
+  { stencil_fine_flux_x, ARRAY_SIZE(stencil_fine_flux_x) },
+  { stencil_fine_flux_y, ARRAY_SIZE(stencil_fine_flux_y) },
 };
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_create_amr_ddc_flux_x
+// ggcm_mhd_create_amr_ddc_flux
 
 struct mrc_ddc *
-ggcm_mhd_create_amr_ddc_flux_x(struct ggcm_mhd *mhd)
+ggcm_mhd_create_amr_ddc_flux(struct ggcm_mhd *mhd, int d)
 {
   struct mrc_ddc *ddc = mrc_ddc_create(mrc_domain_comm(mhd->domain));
   mrc_ddc_set_type(ddc, "amr");
@@ -92,9 +91,10 @@ ggcm_mhd_create_amr_ddc_flux_x(struct ggcm_mhd *mhd)
     assert(0);
   }
   mrc_ddc_setup(ddc);
+  int ext[3] = {};
+  ext[d] = 1;
   for (int m = 0; m < 5; m++) {
-    mrc_ddc_amr_set_by_stencil(ddc, m, 2, (int[]) { 1, 0, 0 },
-			       NULL, &stencils_fine_flux_x);
+    mrc_ddc_amr_set_by_stencil(ddc, m, 2, ext, NULL, &stencils_fine_flux[d]);
   }
   mrc_ddc_amr_assemble(ddc);
 
@@ -122,7 +122,7 @@ ggcm_mhd_create_amr_ddc_flux_y(struct ggcm_mhd *mhd)
   mrc_ddc_setup(ddc);
   for (int m = 0; m < 5; m++) {
     mrc_ddc_amr_set_by_stencil(ddc, m, 2, (int[]) { 0, 1, 0 },
-			       NULL, &stencils_fine_flux_y);
+			       NULL, &stencils_fine_flux[1]);
   }
   mrc_ddc_amr_assemble(ddc);
 
