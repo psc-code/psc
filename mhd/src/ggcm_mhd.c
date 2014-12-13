@@ -378,25 +378,6 @@ ggcm_mhd_setup_amr_ddc(struct ggcm_mhd *mhd)
     // FIXME, leaked
     mhd->ddc_amr_cc = ddc;
   }
-  {
-    struct mrc_ddc *ddc = mrc_ddc_create(mrc_domain_comm(mhd->domain));
-    mrc_ddc_set_type(ddc, "amr");
-    mrc_ddc_set_domain(ddc, mhd->domain);
-    mrc_ddc_set_param_int(ddc, "size_of_type", mhd->fld->_size_of_type);
-    mrc_ddc_set_param_int3(ddc, "sw", mrc_fld_spatial_sw(mhd->fld));
-    mrc_ddc_set_param_int(ddc, "n_comp", 3);
-    mrc_ddc_setup(ddc);
-    // FIXME: do not restrict on bnd -- or does it even matter, after doing EMF right?
-    mrc_ddc_amr_set_by_stencil(ddc, 0, 0, (int[]) { 1, 1, 0 },
-			       NULL, NULL);
-    mrc_ddc_amr_set_by_stencil(ddc, 1, 0, (int[]) { 1, 1, 0 },
-			       NULL, NULL);
-    mrc_ddc_amr_set_by_stencil(ddc, 2, 0, (int[]) { 1, 1, 0 },
-			       NULL, NULL);
-    mrc_ddc_amr_assemble(ddc);
-    // FIXME, leaked
-    mhd->ddc_amr_E = ddc;
-  }
 }
 
 static void
@@ -444,6 +425,7 @@ static inline int
 div_2(int i)
 {
   // divide by 2, but always round down
+  return i >> 1;
   return (i + 10) / 2 - 5;
 }
 

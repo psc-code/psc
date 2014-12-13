@@ -446,7 +446,7 @@ mrc_ddc_amr_stencil_fine(struct mrc_ddc *ddc, int ext[3],
 
 // ================================================================================
 
-static void
+void
 mrc_ddc_amr_add_diagonal_one(struct mrc_ddc *ddc, int gp, int m, int i[3])
 {
   mrc_ddc_amr_add_value(ddc, gp, m, i, gp, m, i, 1.f);
