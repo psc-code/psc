@@ -9,10 +9,14 @@ zmaskn(struct ggcm_mhd *mhd, struct mrc_fld *zmask, int m_zmask,
   float va02i = 1.f / sqr(mhd->par.speedlimit / mhd->par.vvnorm);
   float eps   = 1e-15f;
 
+  int gdims[3];
+  mrc_domain_get_global_dims(mhd->domain, gdims);
+  int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
+
   mrc_fld_foreach(zmask, ix,iy,iz, 1, 1) {
-    mrc_fld_data_t bb = (sqr(.5f * (BX(x, ix,iy,iz) + BX(x, ix+1,iy,iz))) +
-			 sqr(.5f * (BY(x, ix,iy,iz) + BY(x, ix,iy+1,iz))) +
-			 sqr(.5f * (BZ(x, ix,iy,iz) + BZ(x, ix,iy,iz+1))));
+    mrc_fld_data_t bb = (sqr(.5f * (BX(x, ix,iy,iz) + BX(x, ix+dx,iy,iz))) +
+			 sqr(.5f * (BY(x, ix,iy,iz) + BY(x, ix,iy+dy,iz))) +
+			 sqr(.5f * (BZ(x, ix,iy,iz) + BZ(x, ix,iy,iz+dz))));
     float rrm = fmaxf(eps, bb * va02i);
     F3(zmask, m_zmask, ix,iy,iz) = F3(ymask, m_ymask, ix,iy,iz) *
       fminf(1.f, RR(x, ix,iy,iz) / rrm);
@@ -26,6 +30,10 @@ static mrc_fld_data_t __unused
 newstep_sc(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zmask, 
 	   int m_zmask)
 {
+  int gdims[3];
+  mrc_domain_get_global_dims(mhd->domain, gdims);
+  int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
+
   float *fd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FD1);
   float *fd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FD1);
   float *fd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FD1);
@@ -44,9 +52,9 @@ newstep_sc(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zmask,
   mrc_fld_foreach(x, ix, iy, iz, 0, 0) {
     mrc_fld_data_t hh = mrc_fld_max(mrc_fld_max(fd1x[ix], fd1y[iy]), fd1z[iz]);
     mrc_fld_data_t rri = 1.f / mrc_fld_abs(RR(x, ix,iy,iz)); // FIXME abs necessary?
-    mrc_fld_data_t bb = (sqr(.5f * (BX(x, ix,iy,iz) + BX(x, ix+1,iy,iz))) + 
-			 sqr(.5f * (BY(x, ix,iy,iz) + BY(x, ix,iy+1,iz))) +
-			 sqr(.5f * (BZ(x, ix,iy,iz) + BZ(x, ix,iy,iz+1))));
+    mrc_fld_data_t bb = (sqr(.5f * (BX(x, ix,iy,iz) + BX(x, ix+dx,iy,iz))) + 
+			 sqr(.5f * (BY(x, ix,iy,iz) + BY(x, ix,iy+dy,iz))) +
+			 sqr(.5f * (BZ(x, ix,iy,iz) + BZ(x, ix,iy,iz+dz))));
     if (have_hall) {
       bb *= 1 + sqr(two_pi_d_i * hh);
     }      
