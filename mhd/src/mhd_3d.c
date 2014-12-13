@@ -178,8 +178,10 @@ update_finite_volume_uniform(struct ggcm_mhd *mhd,
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
 
   if (mhd->amr > 0 && do_correct) {
-    for (int d = 0; d < 2; d++) {
-    mrc_ddc_amr_apply(mhd->ddc_amr_flux[d], fluxes[d]);
+    for (int d = 0; d < 3; d++) {
+      if (gdims[d] > 1) {
+	mrc_ddc_amr_apply(mhd->ddc_amr_flux[d], fluxes[d]);
+      }
     }
   }
 

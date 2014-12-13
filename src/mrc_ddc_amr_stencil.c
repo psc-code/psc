@@ -453,7 +453,7 @@ mrc_ddc_amr_add_diagonal_one(struct mrc_ddc *ddc, int gp, int m, int i[3])
 }
 
 void
-mrc_ddc_amr_set_by_stencil(struct mrc_ddc *ddc, int m, int bnd, int ext[3],
+mrc_ddc_amr_set_by_stencil(struct mrc_ddc *ddc, int m, int bnd, int _ext[3],
 			   struct mrc_ddc_amr_stencil *stencil_coarse,
 			   struct mrc_ddc_amr_stencil *stencil_fine)
 {
@@ -465,9 +465,10 @@ mrc_ddc_amr_set_by_stencil(struct mrc_ddc *ddc, int m, int bnd, int ext[3],
   int nr_patches;
   mrc_domain_get_patches(domain, &nr_patches);
 
-  int sw[3];
+  int sw[3], ext[3];
   for (int d = 0; d < 3; d++) {
     sw[d] = (gdims[d] == 1) ? 0 : bnd;
+    ext[d] = (gdims[d] == 1) ? 0 : _ext[d];
   }
   for (int lp = 0; lp < nr_patches; lp++) {
     struct mrc_patch_info info;

@@ -288,7 +288,7 @@ _ggcm_mhd_setup(struct ggcm_mhd *mhd)
     // FIXME, all leaked
     mhd->ddc_amr_cc = ggcm_mhd_create_amr_ddc(mhd);
     mhd->ddc_amr_E  = ggcm_mhd_create_amr_ddc_E(mhd);
-    for (int d = 0; d < 2; d++) {
+    for (int d = 0; d < 3; d++) {
       mhd->ddc_amr_flux[d] = ggcm_mhd_create_amr_ddc_flux(mhd, d);
     }
   }

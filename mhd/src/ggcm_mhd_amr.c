@@ -143,11 +143,14 @@ static struct mrc_ddc_amr_stencil stencils_coarse_cc = {
 };
 
 static struct mrc_ddc_amr_stencil_entry stencil_fine_cc[] = {
-  // FIXME, 3D
-  { .dx = {  0,  0,  0 }, .val = .25f },
-  { .dx = { +1,  0,  0 }, .val = .25f },
-  { .dx = {  0, +1,  0 }, .val = .25f },
-  { .dx = { +1, +1,  0 }, .val = .25f },
+  { .dx = {  0,  0,  0 }, .val = .125f },
+  { .dx = { +1,  0,  0 }, .val = .125f },
+  { .dx = {  0, +1,  0 }, .val = .125f },
+  { .dx = { +1, +1,  0 }, .val = .125f },
+  { .dx = {  0,  0, +1 }, .val = .125f },
+  { .dx = { +1,  0, +1 }, .val = .125f },
+  { .dx = {  0, +1, +1 }, .val = .125f },
+  { .dx = { +1, +1, +1 }, .val = .125f },
 };
 
 static struct mrc_ddc_amr_stencil stencils_fine_cc = {
