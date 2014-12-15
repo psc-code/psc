@@ -336,21 +336,7 @@ ggcm_mhd_setup_amr_domain(struct ggcm_mhd *mhd)
       }
     }
   } else if (mhd->amr == 14) { // 3D
-    for (int k = 0; k < 1; k++) {
-      for (int j = 0; j < 1; j++) {
-    	for (int i = 0; i < 2; i++) {
-    	  mrc_domain_add_patch(mhd->domain, 2, (int [3]) { i, j, k });
-    	}
-      }
-    }
-    for (int k = 1; k < 3; k++) {
-      for (int j = 0; j < 1; j++) {
-    	for (int i = 0; i < 2; i++) {
-    	  mrc_domain_add_patch(mhd->domain, 2, (int [3]) { i, j, k });
-    	}
-      }
-    }
-    for (int k = 3; k < 4; k++) {
+    for (int k = 0; k < 4; k++) {
       for (int j = 0; j < 1; j++) {
     	for (int i = 0; i < 2; i++) {
     	  mrc_domain_add_patch(mhd->domain, 2, (int [3]) { i, j, k });
@@ -380,21 +366,129 @@ ggcm_mhd_setup_amr_domain(struct ggcm_mhd *mhd)
       }
     }
 
-    for (int k = 0; k < 1; k++) {
+    for (int k = 0; k < 4; k++) {
       for (int j = 3; j < 4; j++) {
     	for (int i = 0; i < 2; i++) {
     	  mrc_domain_add_patch(mhd->domain, 2, (int [3]) { i, j, k });
     	}
       }
     }
-    for (int k = 1; k < 3; k++) {
-      for (int j = 3; j < 4; j++) {
+
+    //
+    for (int k = 0; k < 4; k++) {
+      for (int j = 0; j < 4; j++) {
+	for (int i = 2; i < 4; i++) {
+	  mrc_domain_add_patch(mhd->domain, 2, (int [3]) { i, j, k });
+	}
+      }
+    }
+  } else if (mhd->amr == 15) { // 3D
+    for (int k = 0; k < 4; k++) {
+      for (int j = 0; j < 1; j++) {
     	for (int i = 0; i < 2; i++) {
     	  mrc_domain_add_patch(mhd->domain, 2, (int [3]) { i, j, k });
+    	}
+      }
+    }
+
+    for (int k = 0; k < 1; k++) {
+      for (int j = 1; j < 3; j++) {
+    	for (int i = 0; i < 2; i++) {
+    	  mrc_domain_add_patch(mhd->domain, 2, (int [3]) { i, j, k });
+    	}
+      }
+    }
+    for (int k = 2; k < 6; k++) {
+      for (int j = 2; j < 6; j++) {
+    	for (int i = 0; i < 1; i++) {
+    	  mrc_domain_add_patch(mhd->domain, 3, (int [3]) { i, j, k });
+    	}
+      }
+    }
+
+    //
+    for (int k = 2; k < 3; k++) {
+      for (int j = 2; j < 3; j++) {
+    	for (int i = 1; i < 3; i++) {
+    	  mrc_domain_add_patch(mhd->domain, 3, (int [3]) { i, j, k });
+    	}
+      }
+    }
+    for (int k = 2; k < 3; k++) {
+      for (int j = 3; j < 5; j++) {
+    	for (int i = 1; i < 3; i++) {
+    	  mrc_domain_add_patch(mhd->domain, 3, (int [3]) { i, j, k });
+    	}
+      }
+    }
+    for (int k = 2; k < 3; k++) {
+      for (int j = 5; j < 6; j++) {
+    	for (int i = 1; i < 3; i++) {
+    	  mrc_domain_add_patch(mhd->domain, 3, (int [3]) { i, j, k });
+    	}
+      }
+    }
+    //
+    for (int k = 3; k < 5; k++) {
+      for (int j = 2; j < 3; j++) {
+    	for (int i = 1; i < 3; i++) {
+    	  mrc_domain_add_patch(mhd->domain, 3, (int [3]) { i, j, k });
+    	}
+      }
+    }
+    for (int k = 6; k < 10; k++) {
+      for (int j = 6; j < 10; j++) {
+    	for (int i = 2; i < 6; i++) {
+    	  mrc_domain_add_patch(mhd->domain, 4, (int [3]) { i, j, k });
+    	}
+      }
+    }
+    for (int k = 3; k < 5; k++) {
+      for (int j = 5; j < 6; j++) {
+    	for (int i = 1; i < 3; i++) {
+    	  mrc_domain_add_patch(mhd->domain, 3, (int [3]) { i, j, k });
+    	}
+      }
+    }
+    //
+    for (int k = 5; k < 6; k++) {
+      for (int j = 2; j < 3; j++) {
+    	for (int i = 1; i < 3; i++) {
+    	  mrc_domain_add_patch(mhd->domain, 3, (int [3]) { i, j, k });
+    	}
+      }
+    }
+    for (int k = 5; k < 6; k++) {
+      for (int j = 3; j < 5; j++) {
+    	for (int i = 1; i < 3; i++) {
+    	  mrc_domain_add_patch(mhd->domain, 3, (int [3]) { i, j, k });
+    	}
+      }
+    }
+    for (int k = 5; k < 6; k++) {
+      for (int j = 5; j < 6; j++) {
+    	for (int i = 1; i < 3; i++) {
+    	  mrc_domain_add_patch(mhd->domain, 3, (int [3]) { i, j, k });
+    	}
+      }
+    }
+    //
+    for (int k = 2; k < 6; k++) {
+      for (int j = 2; j < 6; j++) {
+    	for (int i = 3; i < 4; i++) {
+    	  mrc_domain_add_patch(mhd->domain, 3, (int [3]) { i, j, k });
     	}
       }
     }
     for (int k = 3; k < 4; k++) {
+      for (int j = 1; j < 3; j++) {
+    	for (int i = 0; i < 2; i++) {
+    	  mrc_domain_add_patch(mhd->domain, 2, (int [3]) { i, j, k });
+    	}
+      }
+    }
+
+    for (int k = 0; k < 4; k++) {
       for (int j = 3; j < 4; j++) {
     	for (int i = 0; i < 2; i++) {
     	  mrc_domain_add_patch(mhd->domain, 2, (int [3]) { i, j, k });
