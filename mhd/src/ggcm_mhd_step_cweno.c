@@ -98,6 +98,18 @@ ggcm_mhd_step_cweno_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_step_cweno_setup
+
+static void
+ggcm_mhd_step_cweno_setup(struct ggcm_mhd_step *step)
+{
+  step->mhd->ymask = mrc_fld_make_view(step->mhd->fld, _YMASK, _YMASK + 1);
+
+  ggcm_mhd_step_setup_member_objs_sub(step);
+  ggcm_mhd_step_setup_super(step);
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_step_cweno_setup_flds
 
 static void
@@ -118,6 +130,7 @@ ggcm_mhd_step_cweno_setup_flds(struct ggcm_mhd_step *step)
 
 struct ggcm_mhd_step_ops ggcm_mhd_step_cweno_ops = {
   .name        = "cweno",
+  .setup       = ggcm_mhd_step_cweno_setup,
   .setup_flds  = ggcm_mhd_step_cweno_setup_flds,
   .calc_rhs    = ggcm_mhd_step_cweno_calc_rhs,
 };

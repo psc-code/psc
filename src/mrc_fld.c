@@ -560,6 +560,7 @@ mrc_fld_dump(struct mrc_fld *x, const char *basename, int n)
 struct mrc_fld *
 mrc_fld_make_view(struct mrc_fld *fld, int mb, int me)
 {
+  assert(mrc_fld_is_setup(fld));
   struct mrc_fld *fld_new = mrc_fld_create(mrc_fld_comm(fld));
   mrc_fld_set_type(fld_new, mrc_fld_type(fld));
   if (!fld->_domain) {

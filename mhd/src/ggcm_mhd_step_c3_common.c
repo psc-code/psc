@@ -40,7 +40,6 @@ struct ggcm_mhd_step_c3 {
   struct mrc_fld *Fl;
   struct mrc_fld *lim1;
 
-  struct mrc_fld *ymask;
   struct mrc_fld *zmask;
   struct mrc_fld *rmask;
 };
@@ -96,7 +95,7 @@ ggcm_mhd_step_c3_setup(struct ggcm_mhd_step *step)
   setup_mrc_fld_1d(sub->Fl  , mhd->fld, 5);
   setup_mrc_fld_1d(sub->lim1, mhd->fld, 5);
 
-  sub->ymask = mrc_fld_make_view(mhd->fld, _YMASK, _YMASK + 1);
+  mhd->ymask = mrc_fld_make_view(mhd->fld, _YMASK, _YMASK + 1);
   sub->zmask = ggcm_mhd_step_get_3d_fld(step, 1);
   sub->rmask = ggcm_mhd_step_get_3d_fld(step, 1);
 
@@ -112,7 +111,7 @@ ggcm_mhd_step_c3_destroy(struct ggcm_mhd_step *step)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
 
-  mrc_fld_destroy(sub->ymask);
+  mrc_fld_destroy(step->mhd->ymask);
   ggcm_mhd_step_put_3d_fld(step, sub->zmask);
   ggcm_mhd_step_put_3d_fld(step, sub->rmask);
 }
@@ -719,7 +718,6 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
 	    struct mrc_fld *x_curr, struct mrc_fld *x_next,
 	    struct mrc_fld *prim, int limit)
 {
-  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
   struct mrc_fld *fluxes[3] = { ggcm_mhd_step_get_3d_fld(step, 5),
 				ggcm_mhd_step_get_3d_fld(step, 5),
@@ -734,7 +732,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
     mhd_fluxes(step, fluxes, x_curr, NULL, 0, 0, flux_corr);
   }
 
-  update_finite_volume(mhd, x_next, fluxes, sub->ymask, dt);
+  update_finite_volume(mhd, x_next, fluxes, mhd->ymask, dt);
   pushpp_c(step, dt, x_next, prim);
 
   push_ej_c(step, dt, x_curr, prim, x_next);
@@ -755,7 +753,7 @@ static void
 ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
-  struct mrc_fld *ymask = sub->ymask, *zmask = sub->zmask;
+  struct mrc_fld *ymask = step->mhd->ymask, *zmask = sub->zmask;
 
   struct ggcm_mhd *mhd = step->mhd;
   struct mrc_fld *x_half = ggcm_mhd_step_get_3d_fld(step, 8);
@@ -822,7 +820,7 @@ ggcm_mhd_step_c3_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
                           struct mrc_fld *state_vec)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
-  struct mrc_fld *ymask = sub->ymask, *zmask = sub->zmask;
+  struct mrc_fld *ymask = step->mhd->ymask, *zmask = sub->zmask;
   // the state vector should already be FLD_TYPE, but Eout is the data type
   // of the output
   struct mrc_fld *E = mrc_fld_get_as(Eout, FLD_TYPE);

@@ -34,6 +34,7 @@ struct ggcm_mhd {
   struct ggcm_mhd_params par;
   struct mrc_domain *domain;
   struct mrc_fld *fld;
+  struct mrc_fld *ymask;
   struct ggcm_mhd_crds *crds;
   struct ggcm_mhd_step *step;
   struct ggcm_mhd_bnd *bnd;

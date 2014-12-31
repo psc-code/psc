@@ -779,6 +779,18 @@ ggcm_mhd_step_c2_corr(struct ggcm_mhd_step *step)
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_step_c2_setup
+
+static void
+ggcm_mhd_step_c2_setup(struct ggcm_mhd_step *step)
+{
+  step->mhd->ymask = mrc_fld_make_view(step->mhd->fld, _YMASK, _YMASK + 1);
+
+  ggcm_mhd_step_setup_member_objs_sub(step);
+  ggcm_mhd_step_setup_super(step);
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_step_c2_setup_flds
 
 static void
@@ -849,6 +861,7 @@ struct ggcm_mhd_step_ops ggcm_mhd_step_c2_ops = {
   .pred                = ggcm_mhd_step_c2_pred,
   .corr                = ggcm_mhd_step_c2_corr,
   .run                 = ggcm_mhd_step_run_predcorr,
+  .setup               = ggcm_mhd_step_c2_setup,
   .setup_flds          = ggcm_mhd_step_c2_setup_flds,
   .get_e_ec            = ggcm_mhd_step_c2_get_e_ec,
   .diag_item_zmask_run = ggcm_mhd_step_c2_diag_item_zmask_run,
