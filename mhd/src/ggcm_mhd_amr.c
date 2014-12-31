@@ -85,10 +85,10 @@ ggcm_mhd_create_amr_ddc_flux(struct ggcm_mhd *mhd, int d)
   mrc_ddc_set_param_int(ddc, "size_of_type", mhd->fld->_size_of_type);
   mrc_ddc_set_param_int3(ddc, "sw", mrc_fld_spatial_sw(mhd->fld));
   // FIXME!!!
-  if (strcmp(ggcm_mhd_step_type(mhd->step), "vl") == 0) {
+  if (strcmp(ggcm_mhd_step_type(mhd->step), "vl") == 0 ||
+      strcmp(ggcm_mhd_step_type(mhd->step), "c3_double") == 0) {
     mrc_ddc_set_param_int(ddc, "n_comp", 5);
-  } else if (strcmp(ggcm_mhd_step_type(mhd->step), "vlct") == 0 ||
-	     strcmp(ggcm_mhd_step_type(mhd->step), "c3_double") == 0) {
+  } else if (strcmp(ggcm_mhd_step_type(mhd->step), "vlct") == 0) {
     mrc_ddc_set_param_int(ddc, "n_comp", 8);
   } else {
     assert(0);

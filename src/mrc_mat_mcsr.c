@@ -147,15 +147,18 @@ mrc_mat_mcsr_apply_in_place(struct mrc_mat *mat, struct mrc_fld *x)
   struct mrc_domain *domain = x->_domain; 
   struct mrc_ddc *ddc = mrc_domain_get_ddc(domain);
 
+  int len = x->_len;
   if ( ddc->size == 1) {
       assert(x->_size_of_type == sizeof(mrc_fld_data_t));
       mrc_fld_data_t *arr = x->_arr;
       for (int row = 0; row < sub->nr_rows; row++) {
 	int row_idx = sub->rows[row].idx;
+	assert(row_idx < len);
 	mrc_fld_data_t sum = 0.;
 	for (int entry = sub->rows[row].first_entry;
 	     entry < sub->rows[row + 1].first_entry; entry++) {
 	  int col_idx = sub->entries[entry].idx;
+	  assert(col_idx < len);
 	  mrc_fld_data_t val = sub->entries[entry].val;
 	  sum += val * arr[col_idx];
 	}

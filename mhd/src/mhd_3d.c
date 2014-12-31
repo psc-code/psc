@@ -204,8 +204,9 @@ update_finite_volume_uniform(struct ggcm_mhd *mhd,
     }
 
     mrc_fld_foreach(x, i,j,k, l, r) {
+      mrc_fld_data_t ym = ymask ? M3(ymask, 0, i,j,k, p) : 1.f;
       for (int m = 0; m < 5; m++) {
-	M3(x, m, i,j,k, p) -= 
+	M3(x, m, i,j,k, p) -= ym *
 	  (dt_on_dx[0] * (M3(fluxes[0], m, i+dx,j,k, p) - M3(fluxes[0], m, i,j,k, p)) +
 	   dt_on_dx[1] * (M3(fluxes[1], m, i,j+dy,k, p) - M3(fluxes[1], m, i,j,k, p)) + 
 	   dt_on_dx[2] * (M3(fluxes[2], m, i,j,k+dz, p) - M3(fluxes[2], m, i,j,k, p)));
