@@ -214,10 +214,11 @@ mrc_domain_simple_get_global_patch_info(struct mrc_domain *domain, int patch,
     assert(simple->gdims[d] % simple->nr_procs[d] == 0);
     info->ldims[d] = simple->gdims[d] / simple->nr_procs[d];
     info->off[d] = info->idx3[d] * info->ldims[d];
-    info->rank = patch;
-    info->patch = 0;
-    info->global_patch = patch;
   }
+  info->rank = patch;
+  info->patch = 0;
+  info->global_patch = patch;
+  info->level = 0;
 }
 
 static void
