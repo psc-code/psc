@@ -33,7 +33,7 @@ mrc_domain_get_neighbor_patch_same(struct mrc_domain *domain, int gp,
 // ----------------------------------------------------------------------
 // mrc_domain_get_neighbor_patch_coarse
 
-static void
+void
 mrc_domain_get_neighbor_patch_coarse(struct mrc_domain *domain, int gp,
 				     int dx[3], int *gp_nei)
 {
@@ -280,7 +280,7 @@ mrc_domain_to_valid_point_same(struct mrc_domain *domain, int ext[3], int gp, in
   mrc_domain_find_valid_point_same(domain, ext, gp, i, gp_nei, j);
 }
 
-static void
+void
 mrc_domain_find_valid_point_coarse(struct mrc_domain *domain, int ext[3],
 				   int gp, int i[3], int *gp_nei, int j[3])
 {
@@ -328,7 +328,7 @@ mrc_domain_find_valid_point_coarse(struct mrc_domain *domain, int ext[3],
   *gp_nei = -1;
 }
 
-static void
+void
 mrc_domain_find_valid_point_fine(struct mrc_domain *domain, int ext[3], int gp, int i[3],
 				 int *gp_nei, int j[3])
 {
@@ -483,8 +483,10 @@ mrc_ddc_amr_set_by_stencil(struct mrc_ddc *ddc, int m, int bnd, int ext[3],
 	  }
 	      
 	  // try to restrict from fine
-	  if (mrc_ddc_amr_stencil_fine(ddc, ext, stencil_fine, m, gp, i)) {
-	    continue;
+	  if (stencil_fine) {
+	    if (mrc_ddc_amr_stencil_fine(ddc, ext, stencil_fine, m, gp, i)) {
+	      continue;
+	    }
 	  }
 
 	  // oops, no way to fill this point?

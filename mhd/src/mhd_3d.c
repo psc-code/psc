@@ -26,12 +26,153 @@ compute_B_cc(struct mrc_fld *B_cc, struct mrc_fld *x, int l, int r)
 }
 
 // ----------------------------------------------------------------------
+// correct_E
+
+// FIXME
+void mrc_domain_get_neighbor_patch_same(struct mrc_domain *domain, int p,
+					int dx[3], int *p_nei);
+void mrc_domain_get_neighbor_patch_fine(struct mrc_domain *domain, int gp,
+					int dir[3], int off[3], int *gp_nei);
+
+static void
+correct_E(struct ggcm_mhd *mhd, struct mrc_fld *E, int l, int r)
+{
+  mrc_ddc_amr_apply(mhd->ddc_amr_E, E);
+
+  int gdims[3];
+  mrc_domain_get_global_dims(mhd->domain, gdims);
+
+#if 1
+  for (int p = 0; p < mrc_fld_nr_patches(E); p++) {
+    for (int d = 0; d < 3; d++) {
+      if (gdims[d] == 1) {
+	continue;
+      }
+
+      struct mrc_patch_info info;
+      mrc_domain_get_local_patch_info(mhd->domain, p, &info);
+      int gp = info.global_patch, *ldims = info.ldims;
+
+      // low side
+      int gp_nei;
+      int dir[3] = {};
+      dir[d] = -1;
+      // if there's a neighbor patch at the same refinement level,
+      // the E fields better be equal already, this is for debugging / making sure
+      mrc_domain_get_neighbor_patch_same(mhd->domain, gp, dir, &gp_nei);
+
+      if (gp_nei >= 0) {
+	//	mprintf("gp %d d %d gp_nei %d\n", gp, d, gp_nei);
+	int p_nei = gp_nei; // FIXME, serial only
+	if (d == 0) {
+	  for (int iz = 0; iz < 1; iz++) {
+	    for (int iy = 0; iy <= ldims[1]; iy++) {
+	      if (M3(E, 2, 0,iy,iz, p) != M3(E, 2, ldims[0],iy,iz, p_nei)) {
+		mprintf("!!! gp %d EZ[0,%d,%d] = %g // gp_nei %d [%d:%d:%d] %g\n",
+			gp, iy, iz, M3(E, 2, 0,iy,iz, p),
+			p_nei, ldims[0],iy,iz, M3(E, 2, ldims[0],iy,iz, p_nei));
+	      }
+	    }
+	  }
+	}
+      }
+    }
+  }
+#endif
+
+  for (int p = 0; p < mrc_fld_nr_patches(E); p++) {
+    for (int d = 0; d < 3; d++) {
+      if (gdims[d] == 1) {
+	continue;
+      }
+
+      struct mrc_patch_info info;
+      mrc_domain_get_local_patch_info(mhd->domain, p, &info);
+      int gp = info.global_patch, *ldims = info.ldims;
+
+      // low side
+      int gp_nei;
+      int dir[3] = {}, off[3] = {};
+
+#if 1
+      dir[d] = -1;
+      off[d] = 1; // for low side
+      mrc_domain_get_neighbor_patch_fine(mhd->domain, gp, dir, off, &gp_nei);
+
+      if (gp_nei >= 0) {
+	if (d == 1) {
+	  mprintf("low gp %d d %d gp_nei %d\n", gp, d, gp_nei);
+	  int offx = (gdims[0] > 1), offz = (gdims[2] > 1);
+	  for (off[2] = 0; off[2] <= offz; off[2]++) {
+	    for (off[0] = 0; off[0] <= offx; off[0]++) {
+	      mrc_domain_get_neighbor_patch_fine(mhd->domain, gp, dir, off, &gp_nei);
+	      for (int iz = 0; iz < 1; iz++) {
+		for (int ix = 0; ix <= ldims[0] / 2; ix++) {
+		  int iy = 0, iy_nei = ldims[1];
+		  int p_nei = gp_nei; // FIXME, serial
+		  mrc_fld_data_t val = M3(E, 2, ix*2,iy_nei,iz*2, p_nei);
+		  mprintf("EZ[%d,%d,%d] = %g // gp_nei %d, EZ[%d,%d,%d] = %g\n", ix + ldims[0]/2 * off[0], iy, iz,
+			  M3(E, 2, ix + ldims[0]/2 * off[0],iy,iz + ldims[2]/2 * off[2], p),
+			  p_nei, ix*2, iy_nei, iz*2, val);
+		  M3(E, 2, ix + ldims[0]/2 * off[0],iy,iz + ldims[2]/2 * off[2], p) = val;
+		}
+	      }
+	    }
+	  }
+	}
+      }
+#endif
+
+#if 0
+      // high side
+      dir[d] = 1;
+      off[d] = 0; // for high side
+      mrc_domain_get_neighbor_patch_fine(mhd->domain, gp, dir, off, &gp_nei);
+
+      if (gp_nei >= 0) {
+	if (d == 1) {
+	  //	  mprintf("high gp %d d %d gp_nei %d\n", gp, d, gp_nei);
+	  int offx = (gdims[0] > 1), offz = (gdims[2] > 1);
+	  for (off[2] = 0; off[2] <= offz; off[2]++) {
+	    for (off[0] = 0; off[0] <= offx; off[0]++) {
+	      mrc_domain_get_neighbor_patch_fine(mhd->domain, gp, dir, off, &gp_nei);
+	      for (int iz = 0; iz < 1; iz++) {
+		for (int ix = 0; ix < ldims[0] / 2; ix++) {
+		  int iy = ldims[1], iy_nei = 0;
+		  int p_nei = gp_nei; // FIXME, serial
+		  for (int m = 0; m < 5; m++) {
+		    mrc_fld_data_t val =
+		      .5f * (M3(fluxes[d], m, ix*2  ,iy_nei,iz*2, p_nei) +
+			     M3(fluxes[d], m, ix*2+1,iy_nei,iz*2, p_nei));
+		    if (m == 0) {
+		      mprintf("flux[1] gp %d [%d,%d,%d] = %g // %g\n", gp, ix, iy, iz,
+			      M3(fluxes[d], m, ix + ldims[0]/2 * off[0],iy,iz + ldims[2]/2 * off[2], p),
+			      val);
+		    }
+		    M3(fluxes[d], m, ix + ldims[0]/2 * off[0],iy,iz + ldims[2]/2 * off[2], p) = val;
+		  }
+		}
+	      }
+	    }
+	  }
+	}
+      }
+#endif
+    }
+  }  
+}
+
+// ----------------------------------------------------------------------
 // update_ct_uniform
 
 static void __unused
 update_ct_uniform(struct ggcm_mhd *mhd,
 		  struct mrc_fld *x, struct mrc_fld *E, mrc_fld_data_t dt, int _l, int _r)
 {
+  if (mhd->amr > 0) {
+    correct_E(mhd, E, _l, _r);
+  }
+
   int gdims[3]; mrc_domain_get_global_dims(x->_domain, gdims);
   int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
   int l[3], r[3];
@@ -74,10 +215,24 @@ update_ct_uniform(struct ggcm_mhd *mhd,
 	for (int i = -l[0]; i < ldims[0] + r[0]; i++) {
 	  int k = ldims[2] + r[2];
 	  M3(x, BZ, i,j,k, p) += (dt_on_dx[1] * (M3(E, 0, i   ,j+dy,k   , p) - M3(E, 0, i,j,k, p)) -
-				dt_on_dx[0] * (M3(E, 1, i+dx,j   ,k   , p) - M3(E, 1, i,j,k, p)));
+				  dt_on_dx[0] * (M3(E, 1, i+dx,j   ,k   , p) - M3(E, 1, i,j,k, p)));
 	}
       }
     }
+  }
+  mprintf("ct BY gp 0 0:0:0 = %g // gp 3 8:0:0 = %g\n",
+	  M3(x, BY, 0,0,0, 0), M3(x, BY, 8,0,0, 3));
+  {
+    int i = 0, j = 0, k = 0, p = 0; 
+    mprintf("ct a %g %g %g %g\n",
+	    M3(E, 2, i+dx,j   ,k   , p), M3(E, 2, i,j,k, p),
+	    M3(E, 0, i   ,j   ,k+dz, p), M3(E, 0, i,j,k, p));
+  }
+  {
+    int i = 8, j = 0, k = 0, p = 3;
+    mprintf("ct b %g %g %g %g\n",
+	    M3(E, 2, i+dx,j   ,k   , p), M3(E, 2, i,j,k, p),
+	    M3(E, 0, i   ,j   ,k+dz, p), M3(E, 0, i,j,k, p));
   }
 }
 

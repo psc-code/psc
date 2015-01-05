@@ -39,6 +39,7 @@ struct ggcm_mhd {
   struct mrc_ddc *ddc_amr_flux_x;
   struct mrc_ddc *ddc_amr_flux_y;
   struct mrc_ddc *ddc_amr_flux_z;
+  struct mrc_ddc *ddc_amr_E;
 
   struct mrc_domain *domain;
   struct mrc_fld *fld;

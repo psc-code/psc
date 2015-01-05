@@ -241,12 +241,8 @@ static struct mrc_ddc_amr_stencil_entry stencil_coarse_cc[2] = {
   { .dx = { 0, 0, 0 }, .val = 1.f },
 };
 
-static struct mrc_ddc_amr_stencil stencils_coarse_cc[] = {
-  [RR ] = { stencil_coarse_cc, ARRAY_SIZE(stencil_coarse_cc) },
-  [RVX] = { stencil_coarse_cc, ARRAY_SIZE(stencil_coarse_cc) },
-  [RVY] = { stencil_coarse_cc, ARRAY_SIZE(stencil_coarse_cc) },
-  [RVZ] = { stencil_coarse_cc, ARRAY_SIZE(stencil_coarse_cc) },
-  [UU ] = { stencil_coarse_cc, ARRAY_SIZE(stencil_coarse_cc) },
+static struct mrc_ddc_amr_stencil stencils_coarse_cc = {
+  stencil_coarse_cc, ARRAY_SIZE(stencil_coarse_cc)
 };
 
 static struct mrc_ddc_amr_stencil_entry stencil_fine_cc[] = {
@@ -257,12 +253,8 @@ static struct mrc_ddc_amr_stencil_entry stencil_fine_cc[] = {
   { .dx = { +1, +1,  0 }, .val = .25f },
 };
 
-static struct mrc_ddc_amr_stencil stencils_fine_cc[] = {
-  [RR ] = { stencil_fine_cc, ARRAY_SIZE(stencil_fine_cc) },
-  [RVX] = { stencil_fine_cc, ARRAY_SIZE(stencil_fine_cc) },
-  [RVY] = { stencil_fine_cc, ARRAY_SIZE(stencil_fine_cc) },
-  [RVZ] = { stencil_fine_cc, ARRAY_SIZE(stencil_fine_cc) },
-  [UU ] = { stencil_fine_cc, ARRAY_SIZE(stencil_fine_cc) },
+static struct mrc_ddc_amr_stencil stencils_fine_cc = {
+  stencil_fine_cc, ARRAY_SIZE(stencil_fine_cc)
 };
 
 static struct mrc_ddc_amr_stencil_entry stencil_fine_flux_x[] = {
@@ -272,8 +264,7 @@ static struct mrc_ddc_amr_stencil_entry stencil_fine_flux_x[] = {
 };
 
 static struct mrc_ddc_amr_stencil stencils_fine_flux_x = {
-  stencil_fine_flux_x,
-  ARRAY_SIZE(stencil_fine_flux_x)
+  stencil_fine_flux_x, ARRAY_SIZE(stencil_fine_flux_x)
 };
 
 static struct mrc_ddc_amr_stencil_entry stencil_fine_flux_y[] = {
@@ -283,8 +274,7 @@ static struct mrc_ddc_amr_stencil_entry stencil_fine_flux_y[] = {
 };
 
 static struct mrc_ddc_amr_stencil stencils_fine_flux_y = {
-  stencil_fine_flux_y,
-  ARRAY_SIZE(stencil_fine_flux_y)
+  stencil_fine_flux_y, ARRAY_SIZE(stencil_fine_flux_y)
 };
 
 static void
@@ -306,7 +296,7 @@ ggcm_mhd_setup_amr_ddc(struct ggcm_mhd *mhd)
     }
     mrc_ddc_setup(ddc);
     for (int m = 0; m < 5; m++) {
-      mrc_ddc_amr_set_by_stencil(ddc, m, 0, (int[]) { 1, 0, 0 },
+      mrc_ddc_amr_set_by_stencil(ddc, m, 2, (int[]) { 1, 0, 0 },
 				 NULL, &stencils_fine_flux_x);
     }
     mrc_ddc_amr_assemble(ddc);
@@ -328,7 +318,7 @@ ggcm_mhd_setup_amr_ddc(struct ggcm_mhd *mhd)
     }
     mrc_ddc_setup(ddc);
     for (int m = 0; m < 5; m++) {
-      mrc_ddc_amr_set_by_stencil(ddc, m, 0, (int[]) { 0, 1, 0 },
+      mrc_ddc_amr_set_by_stencil(ddc, m, 2, (int[]) { 0, 1, 0 },
 				 NULL, &stencils_fine_flux_y);
     }
     mrc_ddc_amr_assemble(ddc);
@@ -346,17 +336,37 @@ ggcm_mhd_setup_amr_ddc(struct ggcm_mhd *mhd)
     int bnd = mrc_fld_spatial_sw(mhd->fld)[0];
     for (int m = 0; m < 5; m++) {
       mrc_ddc_amr_set_by_stencil(ddc, m, bnd, (int[]) { 0, 0, 0 },
-				 &stencils_coarse_cc[m], &stencils_fine_cc[m]);
+				 &stencils_coarse_cc, &stencils_fine_cc);
     }
-    mrc_ddc_amr_set_by_stencil(ddc, BX, bnd - 1, (int[]) { 0, 0, 0 },
-			       &stencils_coarse_cc[0], &stencils_fine_cc[0]);
-    mrc_ddc_amr_set_by_stencil(ddc, BY, bnd - 1, (int[]) { 0, 0, 0 },
-			       &stencils_coarse_cc[0], &stencils_fine_cc[0]);
+    // FIXME: do not restrict on bnd -- or does it even matter, after doing EMF right?
+    /* mrc_ddc_amr_set_by_stencil(ddc, BX, bnd - 1, (int[]) { 1, 0, 0 }, */
+    /* 			       NULL, &stencils_fine_flux_x); */
+    /* mrc_ddc_amr_set_by_stencil(ddc, BY, bnd - 1, (int[]) { 0, 1, 0 }, */
+    /* 			       NULL, &stencils_fine_flux_y); */
     mrc_ddc_amr_set_by_stencil(ddc, BZ, bnd - 1, (int[]) { 0, 0, 0 },
-			       &stencils_coarse_cc[0], &stencils_fine_cc[0]);
+			       &stencils_coarse_cc, &stencils_fine_cc);
     mrc_ddc_amr_assemble(ddc);
     // FIXME, leaked
     mhd->ddc_amr_cc = ddc;
+  }
+  {
+    struct mrc_ddc *ddc = mrc_ddc_create(mrc_domain_comm(mhd->domain));
+    mrc_ddc_set_type(ddc, "amr");
+    mrc_ddc_set_domain(ddc, mhd->domain);
+    mrc_ddc_set_param_int(ddc, "size_of_type", mhd->fld->_size_of_type);
+    mrc_ddc_set_param_int3(ddc, "sw", mrc_fld_spatial_sw(mhd->fld));
+    mrc_ddc_set_param_int(ddc, "n_comp", 3);
+    mrc_ddc_setup(ddc);
+    // FIXME: do not restrict on bnd -- or does it even matter, after doing EMF right?
+    mrc_ddc_amr_set_by_stencil(ddc, 0, 3, (int[]) { 1, 0, 0 },
+			       NULL, NULL);
+    mrc_ddc_amr_set_by_stencil(ddc, 1, 3, (int[]) { 1, 0, 0 },
+			       NULL, NULL);
+    mrc_ddc_amr_set_by_stencil(ddc, 2, 3, (int[]) { 1, 0, 0 },
+			       NULL, NULL);
+    mrc_ddc_amr_assemble(ddc);
+    // FIXME, leaked
+    mhd->ddc_amr_E = ddc;
   }
 }
 
@@ -370,7 +380,7 @@ _ggcm_mhd_setup(struct ggcm_mhd *mhd)
 
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
   // only set the sw on the domain's crds if they're not already set
-  if (crds->sw == 0) {
+  if (1||crds->sw == 0) {
     mrc_crds_set_param_int(crds, "sw", mhd->fld->_nr_ghosts);
   }
 
@@ -386,6 +396,486 @@ _ggcm_mhd_setup(struct ggcm_mhd *mhd)
   }
 }
 
+// FIXME
+#include <mrc_fld_as_double.h>
+void mrc_domain_get_neighbor_patch_same(struct mrc_domain *domain, int p,
+					int dx[3], int *p_nei);
+void mrc_domain_get_neighbor_patch_fine(struct mrc_domain *domain, int gp,
+					int dir[3], int off[3], int *gp_nei);
+void mrc_domain_get_neighbor_patch_coarse(struct mrc_domain *domain, int gp,
+					  int dx[3], int *gp_nei);
+void mrc_domain_find_valid_point_coarse(struct mrc_domain *domain, int ext[3],
+					int gp, int i[3], int *gp_nei, int j[3]);
+void mrc_domain_find_valid_point_same(struct mrc_domain *domain, int ext[3], int gp, int i[3],
+				      int *gp_nei, int j[3]);
+void mrc_domain_find_valid_point_fine(struct mrc_domain *domain, int ext[3], int gp, int i[3],
+				      int *gp_nei, int j[3]);
+
+static inline int
+div_2(int i)
+{
+  // divide by 2, but always round down
+  return (i + 10) / 2 - 5;
+}
+
+static bool
+is_ghost_b(struct mrc_domain *domain, int ext[3], int gp, int i[3])
+{
+  int ldims[3];
+  mrc_domain_get_param_int3(domain, "m", ldims);
+
+  // FIXME simplify: dirx[d] == ext[d]
+  int dir[3], dirx[3] = {};
+  for (int d = 0; d < 3; d++) {
+    if (i[d] < 0) {
+      return true;
+    } else if (ext[d] == 1 && i[d] == 0) {
+      dir[d] = 0;
+      dirx[d] = 1;
+    } else if (i[d] < ldims[d]) {
+      dir[d] = 0;
+    } else if (ext[d] == 1 && i[d] == ldims[d]) {
+      dir[d] = 1;
+      dirx[d] = 1;
+    } else {
+      return true;
+    }
+  }
+  // if outside, we've already returned true
+
+  // inside, not on the boundary
+  if (dir[0] == 0 && dirx[0] == 0 &&
+      dir[1] == 0 && dirx[1] == 0) {
+    return false;
+  }
+
+  // on the boundary...
+  int dd[3];
+  // do we border a coarse domain? (then it's not a ghost point)
+  for (dd[2] = 0; dd[2] >= 0; dd[2]--) {
+    for (dd[1] = dir[1]; dd[1] >= dir[1] - dirx[1]; dd[1]--) {
+      for (dd[0] = dir[0]; dd[0] >= dir[0] - dirx[0]; dd[0]--) {
+	if (dd[0] == 0 && dd[1] == 0 && dd[2] == 0) {
+	  continue;
+	}
+	int gp_nei;
+	mrc_domain_get_neighbor_patch_coarse(domain, gp, dd, &gp_nei);
+	if (gp_nei >= 0) {
+	  return false;
+	}
+      }
+    }
+  }
+
+  // do we border a fine domain? (then it's a ghost point here on the coarse)
+  for (dd[2] = 0; dd[2] >= 0; dd[2]--) {
+    for (dd[1] = dir[1]; dd[1] >= dir[1] - dirx[1]; dd[1]--) {
+      for (dd[0] = dir[0]; dd[0] >= dir[0] - dirx[0]; dd[0]--) {
+	if (dd[0] == 0 && dd[1] == 0 && dd[2] == 0) {
+	  continue;
+	}
+	int gp_nei;
+	mrc_domain_get_neighbor_patch_fine(domain, gp, dd, (int[3]) { 0,0,0 }, &gp_nei);
+	if (gp_nei >= 0) {
+	  return true;
+	}
+      }
+    }
+  }
+
+  // is another same level patch in line before us, then it's his, and we have
+  // a ghost point
+  for (dd[2] = 0; dd[2] >= 0; dd[2]--) {
+    for (dd[1] = dir[1]; dd[1] >= dir[1] - dirx[1]; dd[1]--) {
+      for (dd[0] = dir[0]; dd[0] >= dir[0] - dirx[0]; dd[0]--) {
+	int gp_nei;
+	mrc_domain_get_neighbor_patch_same(domain, gp, dd, &gp_nei);
+	if (gp == 2) {
+	  mprintf("gp %d i %d:%d:%d dd %d:%d:%d gp_nei %d\n", gp, i[0],i[1],i[2], dd[0], dd[1], dd[2], gp_nei);
+	}
+	if (gp_nei >= 0) {
+	  return gp != gp_nei;
+	}
+      }
+    }
+  }
+  return true;
+}
+
+static mrc_fld_data_t
+fill_ghosts_b_one(struct mrc_domain *domain, struct mrc_fld *fld,
+		  int m, int i[3], int gp)
+{
+  int gdims[3];
+  mrc_domain_get_global_dims(domain, gdims);
+  int ext[3] = {};
+  ext[m] = (gdims[m] > 1);
+
+  // try to find an interior point on the same level corresponding to the current ghostpoint
+  int j[3], gp_nei;
+  mrc_domain_find_valid_point_same(domain, ext, gp, i, &gp_nei, j);
+  if (gp_nei >= 0 && gp_nei != gp) {
+    /* mprintf("AAA gp %d i %d:%d:%d gp_nei %d j %d:%d:%d (%g)\n", */
+    /* 	      gp, i[0], i[1], i[2], gp_nei, j[0], j[1], j[2], */
+    /* 	      M3(fld, m, j[0],j[1],j[2], gp_nei)); */
+    //mrc_ddc_amr_add_value(ddc, gp, m, i, gp_nei, m, j, 1.f);
+    return M3(fld, BX+m, j[0],j[1],j[2], gp_nei);
+  }
+  
+  // is there a corresponding point in a fine domain (also on this face)?
+  // then restrict this face to get replace coarse value
+  mrc_domain_find_valid_point_fine(domain, ext, gp, (int[]) { 2*i[0], 2*i[1], 2*i[2] }, &gp_nei, j);
+  if (gp_nei >= 0) {
+    mrc_fld_data_t fact = (m != 0 ? .5f : 1.f) * (m != 1 ? .5f : 1.f);
+    mrc_fld_data_t val = 0.f;
+    mprintf("j %d %d %d i %d %d %d\n", j[0], j[1], j[2], i[0], i[1], i[2]);
+    for (int dy = 0; dy <= (m != 1); dy++) {
+      for (int dx = 0; dx <= (m != 0); dx++) {
+	val += fact * M3(fld, BX+m, j[0]+dx,j[1]+dy,j[2], gp_nei);
+      }
+    }
+    return val;
+  }
+
+  return 99.;
+}
+
+static void
+fill_ghosts_b(struct ggcm_mhd *mhd, struct mrc_fld *fld)
+{
+  int bnd = 3;
+  struct mrc_domain *domain = fld->_domain;
+
+  int ldims[3], gdims[3];
+  mrc_domain_get_param_int3(domain, "m", ldims);
+  mrc_domain_get_global_dims(domain, gdims);
+
+  int sw[3];
+  for (int d = 0; d < 3; d++) {
+    sw[d] = (gdims[d] == 1) ? 0 : bnd;
+  }
+
+  for (int m = 0; m < 3; m++) {
+    int ext[3] = { 0, 0, 0 };
+    ext[m] = (gdims[m] > 1);
+
+    for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
+      struct mrc_patch_info info;
+      mrc_domain_get_local_patch_info(domain, p, &info);
+      int gp = info.global_patch;
+      int i[3];
+      for (i[2] = -sw[2]; i[2] < ldims[2] + ext[2] + sw[2]; i[2]++) {
+	for (i[1] = -sw[1]; i[1] < ldims[1] + ext[1] + sw[1]; i[1]++) {
+	  for (i[0] = -sw[0]; i[0] < ldims[0] + ext[0] + sw[0]; i[0]++) {
+	    // skip points which are definitely in the interior
+	    if (i[0] >= ext[0] && i[0] < ldims[0] &&
+		i[1] >= ext[1] && i[1] < ldims[1] &&
+		i[2] >= ext[2] && i[2] < ldims[2]) {
+	      assert(!is_ghost_b(domain, ext, gp, i));
+	      continue;
+	    }
+
+	    // FIXME, should be unnecessary in the end
+	    if (!is_ghost_b(domain, ext, gp, i)) {
+	      goto next;
+	    }
+
+	    // at this point, we skipped all interior points, so only ghostpoints are left
+	    mrc_fld_data_t val = fill_ghosts_b_one(domain, fld, m, i, gp);
+	    if (val != 99.) {
+	      M3(fld, BX+m, i[0],i[1],i[2], gp) = val;
+	      goto next;
+	    }
+
+	    int j[3], gp_nei;
+
+	    // is there a corresponding coarse level underneath?
+	    mrc_domain_find_valid_point_coarse(domain, ext, gp,
+					       (int[]) { div_2(i[0]), div_2(i[1]), div_2(i[2]) },
+					       &gp_nei, j);
+	    if (gp_nei >= 0) {
+	      if (i[m] % 2 == 0) {
+		M3(fld, BX+m, i[0],i[1],i[2], p) = M3(fld, BX+m, j[0],j[1],j[2], gp_nei);
+		goto next;
+	      } else {
+		M3(fld, BX+m, i[0],i[1],i[2], p) = 1.;
+		goto next;
+	      }
+	    }
+
+	    M3(fld, BX+m, i[0],i[1],i[2], p) = 2.;
+	  next: ;
+	  }
+	}
+      }
+    }
+  }
+
+
+
+
+
+  return;
+#if 0
+  int gdims[3];
+  mrc_domain_get_global_dims(mhd->domain, gdims);
+
+  for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
+    for (int d = 0; d < 3; d++) {
+      if (gdims[d] == 1) {
+	continue;
+      }
+
+      struct mrc_patch_info info;
+      mrc_domain_get_local_patch_info(mhd->domain, p, &info);
+      int gp = info.global_patch, *ldims = info.ldims;
+
+      // low side
+      int gp_nei;
+      int dir[3] = {}, off[3] = {};
+      dir[d] = -1;
+#if 0
+      // if there's a neighbor patch at the same refinement level,
+      // the fluxes better be equal already, this for debugging / making sure
+      mrc_domain_get_neighbor_patch_same(mhd->domain, gp, dir, &gp_nei);
+
+      if (gp_nei >= 0) {
+	mprintf("gp %d d %d gp_nei %d\n", gp, d, gp_nei);
+      int p_nei = gp_nei; // FIXME, serial only
+	if (d == 1) {
+	  for (int iz = 0; iz < ldims[2]; iz++) {
+	    for (int ix = 0; ix < ldims[0]; ix++) {
+	      mprintf("BY[%d,0,%d] = %g // %g\n", ix, iz,
+		      M3(fld, BX + d, ix,0,iz, p),
+		      M3(fld, BX + d, ix,ldims[1],iz, p_nei));
+	    }
+	  }
+	}
+      }
+#endif
+
+#if 0
+      off[d] = 1; // for low side
+      mrc_domain_get_neighbor_patch_fine(mhd->domain, gp, dir, off, &gp_nei);
+
+      if (gp_nei >= 0) {
+	if (d == 1) {
+	  //	  mprintf("low gp %d d %d gp_nei %d\n", gp, d, gp_nei);
+	  int offx = (gdims[0] > 1), offz = (gdims[2] > 1);
+	  for (off[2] = 0; off[2] <= offz; off[2]++) {
+	    for (off[0] = 0; off[0] <= offx; off[0]++) {
+	      mrc_domain_get_neighbor_patch_fine(mhd->domain, gp, dir, off, &gp_nei);
+	      for (int iz = 0; iz < 1; iz++) {
+		for (int ix = 0; ix < ldims[0] / 2; ix++) {
+		  int iy = 0, iy_nei = ldims[1];
+		  int p_nei = gp_nei; // FIXME, serial
+		  mrc_fld_data_t val =
+		    .5f * (M3(fld, BX + d, ix*2  ,iy_nei,iz*2, p_nei) +
+			   M3(fld, BX + d, ix*2+1,iy_nei,iz*2, p_nei));
+		  mprintf("BYl gp %d [%d,%d,%d] = %g // %g\n", gp, ix, iy, iz,
+			  M3(fld, BX + d, ix + ldims[0]/2 * off[0],iy,iz + ldims[2]/2 * off[2], p),
+			  val);
+		  /* M3(fld, BX + d, ix + ldims[0]/2 * off[0],iy,iz + ldims[2]/2 * off[2], p) = val; */
+		}
+	      }
+	    }
+	  }
+	}
+      }
+#endif
+
+#if 0
+      // high side
+      dir[d] = 1;
+      off[d] = 0; // for high side
+      mrc_domain_get_neighbor_patch_fine(mhd->domain, gp, dir, off, &gp_nei);
+
+      if (gp_nei >= 0) {
+	if (d == 1) {
+	  //	  mprintf("high gp %d d %d gp_nei %d\n", gp, d, gp_nei);
+	  int offx = (gdims[0] > 1), offz = (gdims[2] > 1);
+	  for (off[2] = 0; off[2] <= offz; off[2]++) {
+	    for (off[0] = 0; off[0] <= offx; off[0]++) {
+	      mrc_domain_get_neighbor_patch_fine(mhd->domain, gp, dir, off, &gp_nei);
+	      for (int iz = 0; iz < 1; iz++) {
+		for (int ix = 0; ix < ldims[0] / 2; ix++) {
+		  int iy = ldims[1], iy_nei = 0;
+		  int p_nei = gp_nei; // FIXME, serial
+		  mrc_fld_data_t val =
+		    .5f * (M3(fld, BX + d, ix*2  ,iy_nei,iz*2, p_nei) +
+			   M3(fld, BX + d, ix*2+1,iy_nei,iz*2, p_nei));
+		  mprintf("BYh gp %d [%d,%d,%d] = %g // %g\n", gp, ix, iy, iz,
+			  M3(fld, BX + d, ix + ldims[0]/2 * off[0],iy,iz + ldims[2]/2 * off[2], p),
+			  val);
+		  /* M3(fld, BX + d, ix + ldims[0]/2 * off[0],iy,iz + ldims[2]/2 * off[2], p) = val; */
+		}
+	      }
+	    }
+	  }
+	}
+      }
+#endif
+
+      // low side
+      dir[d] = -1;
+      mrc_domain_get_neighbor_patch_coarse(mhd->domain, gp, dir, &gp_nei);
+
+      if (gp_nei >= 0) {
+	for (int iy = -4; iy < 0; iy++) {
+	  for (int ix = -4; ix < ldims[0] + 4; ix++) {
+	    M3(fld, BX, ix,iy,0, gp) = 1e20;
+	    M3(fld, BY, ix,iy,0, gp) = 1e20;
+	    M3(fld, BZ, ix,iy,0, gp) = 1e20;
+	  }
+	}
+      }
+
+      // high side
+      dir[d] = 1;
+      mrc_domain_get_neighbor_patch_coarse(mhd->domain, gp, dir, &gp_nei);
+
+      if (gp_nei >= 0) {
+	for (int iy = ldims[1]; iy < ldims[1] + 4; iy++) {
+	  for (int ix = -4; ix < ldims[0] + 4; ix++) {
+	    M3(fld, BX, ix,iy,0, gp) = 1e20;
+	    if (iy > ldims[1]) {
+	      M3(fld, BY, ix,iy,0, gp) = 1e20;
+	    }
+	    M3(fld, BZ, ix,iy,0, gp) = 1e20;
+	  }
+	}
+      }
+
+#if 1
+      // low side
+      dir[d] = -1;
+      mrc_domain_get_neighbor_patch_coarse(mhd->domain, gp, dir, &gp_nei);
+
+      if (gp_nei >= 0) {
+	if (d == 1) {
+	  int ext[3] = { 0, 1, 0 };
+	  //mprintf("low gp %d d %d gp_nei %d\n", gp, d, gp_nei);
+	  int iz = 0; {
+	    for (int iy = -2; iy < 0; iy += 2) {
+	      // FIXME, in the double ghosts, there may be fine values
+	      for (int ix = -2; ix < ldims[0] + 2; ix += 2) {
+		int i[3] = { ix, iy, iz };
+		int gp_nei, j[3];
+		mrc_domain_find_valid_point_coarse(mhd->domain, ext, gp,
+						   (int[]) { div_2(i[0]), div_2(i[1]), div_2(i[2]) },
+						   &gp_nei, j);
+		/* mprintf("gp %d i [%d,%d,%d] gp_nei %d j [%d,%d,%d]\n", */
+		/* 	gp, i[0], i[1], i[2], gp_nei, j[0], j[1], j[2]); */
+
+		assert(gp_nei >= 0);
+
+		// FIXME, this overwrites values on the boundary, too
+		// left BX
+		M3(fld, BX, i[0]  ,i[1]  ,i[2], gp) = M3(fld, BX, j[0]  ,j[1],j[2], gp_nei);
+		M3(fld, BX, i[0]  ,i[1]+1,i[2], gp) = M3(fld, BX, j[0]  ,j[1],j[2], gp_nei);
+
+		// right BX
+		M3(fld, BX, i[0]+2,i[1]  ,i[2], gp) = M3(fld, BX, j[0]+1,j[1],j[2], gp_nei);
+		M3(fld, BX, i[0]+2,i[1]+1,i[2], gp) = M3(fld, BX, j[0]+1,j[1],j[2], gp_nei);
+
+		// bottom BY
+		M3(fld, BY, i[0]  ,i[1]  ,i[2], gp) = M3(fld, BY, j[0],j[1]  ,j[2], gp_nei);
+		M3(fld, BY, i[0]+1,i[1]  ,i[2], gp) = M3(fld, BY, j[0],j[1]  ,j[2], gp_nei);
+
+		// top BY
+		/* M3(fld, BY, i[0]  ,i[1]+2,i[2], gp) = M3(fld, BY, j[0],j[1]+1,j[2], gp_nei); */
+		/* M3(fld, BY, i[0]+1,i[1]+2,i[2], gp) = M3(fld, BY, j[0],j[1]+1,j[2], gp_nei); */
+
+		// all BZ
+		M3(fld, BZ, i[0]  ,i[1]  ,i[2], gp) = M3(fld, BZ, j[0],j[1],j[2], gp_nei);
+		M3(fld, BZ, i[0]+1,i[1]  ,i[2], gp) = M3(fld, BZ, j[0],j[1],j[2], gp_nei);
+		M3(fld, BZ, i[0]  ,i[1]+1,i[2], gp) = M3(fld, BZ, j[0],j[1],j[2], gp_nei);
+		M3(fld, BZ, i[0]+1,i[1]+1,i[2], gp) = M3(fld, BZ, j[0],j[1],j[2], gp_nei);
+
+		// center BX
+		for (int dy = 0; dy <= 1; dy++) {
+		  M3(fld, BX, i[0]+1,i[1]+dy,i[2], gp) =
+		    .5f * (M3(fld, BX, i[0],i[1]+dy,i[2], gp) + M3(fld, BX, i[0]+2,i[1]+dy,i[2], gp));
+		}
+
+		// center BY
+		for (int dx = 0; dx <= 1; dx++) {
+		  M3(fld, BY, i[0]+dx,i[1]+1,i[2], gp) =
+		    .5f * (M3(fld, BY, i[0]+dx,i[1],i[2], gp) + M3(fld, BY, i[0]+dx,i[1]+2,i[2], gp));
+		}
+	      }
+	    }
+	  }
+	}
+      }
+
+      // high side
+      dir[d] = 1;
+      mrc_domain_get_neighbor_patch_coarse(mhd->domain, gp, dir, &gp_nei);
+
+      if (gp_nei >= 0) {
+	if (d == 1) {
+	  int ext[3] = { 0, 1, 0 };
+	  //mprintf("high gp %d d %d gp_nei %d\n", gp, d, gp_nei);
+	  int iz = 0; {
+	    for (int iy = ldims[1]; iy < ldims[1] + 2; iy += 2) {
+	      // FIXME, in the double ghosts, there may be fine values
+	      for (int ix = -2; ix < ldims[0] + 2; ix += 2) {
+		int i[3] = { ix, iy, iz };
+		int gp_nei, j[3];
+		mrc_domain_find_valid_point_coarse(mhd->domain, ext, gp,
+						   (int[]) { div_2(i[0]), div_2(i[1]), div_2(i[2]) },
+						   &gp_nei, j);
+		/* mprintf("gp %d i [%d,%d,%d] gp_nei %d j [%d,%d,%d]\n", */
+		/* 	gp, i[0], i[1], i[2], gp_nei, j[0], j[1], j[2]); */
+
+		assert(gp_nei >= 0);
+
+		// FIXME, this overwrites values on the boundary, too
+		// left BX
+		M3(fld, BX, i[0]  ,i[1]  ,i[2], gp) = M3(fld, BX, j[0]  ,j[1],j[2], gp_nei);
+		M3(fld, BX, i[0]  ,i[1]+1,i[2], gp) = M3(fld, BX, j[0]  ,j[1],j[2], gp_nei);
+
+		// right BX
+		M3(fld, BX, i[0]+2,i[1]  ,i[2], gp) = M3(fld, BX, j[0]+1,j[1],j[2], gp_nei);
+		M3(fld, BX, i[0]+2,i[1]+1,i[2], gp) = M3(fld, BX, j[0]+1,j[1],j[2], gp_nei);
+
+		// bottom BY
+		/* M3(fld, BY, i[0]  ,i[1]  ,i[2], gp) = M3(fld, BY, j[0],j[1]  ,j[2], gp_nei); */
+		/* M3(fld, BY, i[0]+1,i[1]  ,i[2], gp) = M3(fld, BY, j[0],j[1]  ,j[2], gp_nei); */
+
+		// top BY
+		M3(fld, BY, i[0]  ,i[1]+2,i[2], gp) = M3(fld, BY, j[0],j[1]+1,j[2], gp_nei);
+		M3(fld, BY, i[0]+1,i[1]+2,i[2], gp) = M3(fld, BY, j[0],j[1]+1,j[2], gp_nei);
+
+		// all BZ
+		M3(fld, BZ, i[0]  ,i[1]  ,i[2], gp) = M3(fld, BZ, j[0],j[1],j[2], gp_nei);
+		M3(fld, BZ, i[0]+1,i[1]  ,i[2], gp) = M3(fld, BZ, j[0],j[1],j[2], gp_nei);
+		M3(fld, BZ, i[0]  ,i[1]+1,i[2], gp) = M3(fld, BZ, j[0],j[1],j[2], gp_nei);
+		M3(fld, BZ, i[0]+1,i[1]+1,i[2], gp) = M3(fld, BZ, j[0],j[1],j[2], gp_nei);
+
+		// center BX
+		for (int dy = 0; dy <= 1; dy++) {
+		  M3(fld, BX, i[0]+1,i[1]+dy,i[2], gp) =
+		    .5f * (M3(fld, BX, i[0],i[1]+dy,i[2], gp) + M3(fld, BX, i[0]+2,i[1]+dy,i[2], gp));
+		}
+
+		// center BY
+		for (int dx = 0; dx <= 1; dx++) {
+		  M3(fld, BY, i[0]+dx,i[1]+1,i[2], gp) =
+		    .5f * (M3(fld, BY, i[0]+dx,i[1],i[2], gp) + M3(fld, BY, i[0]+dx,i[1]+2,i[2], gp));
+		}
+	      }
+	    }
+	  }
+	}
+      }
+#endif
+    }
+  }
+#endif
+}
+
 void
 ggcm_mhd_fill_ghosts(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m, float bntim)
 {
@@ -394,6 +884,7 @@ ggcm_mhd_fill_ghosts(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m, float bnt
   } else {
     assert(m == 0);
     mrc_ddc_amr_apply(mhd->ddc_amr_cc, fld);
+    fill_ghosts_b(mhd, fld);
   }
   ggcm_mhd_bnd_fill_ghosts(mhd->bnd, fld, m, bntim);
 }
