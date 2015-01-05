@@ -192,7 +192,8 @@ ggcm_mhd_diag_c_write_one_field(struct mrc_io *io, struct mrc_fld *_f, int m,
 {
   struct mrc_fld *f = mrc_fld_get_as(_f, FLD_TYPE);
 
-  struct mrc_fld *fld = mrc_domain_fld_create(f->_domain, SW_2, name);
+  int bnd = f->_nr_ghosts;
+  struct mrc_fld *fld = mrc_domain_fld_create(f->_domain, bnd, name);
   mrc_fld_set_type(fld, FLD_TYPE);
   char s[strlen(name) + 10];
   sprintf(s, "mrc_fld_%s", name);
@@ -201,7 +202,7 @@ ggcm_mhd_diag_c_write_one_field(struct mrc_io *io, struct mrc_fld *_f, int m,
 
   // ghosts may not be set
   for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
-    mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
+    mrc_fld_foreach(fld, ix,iy,iz, bnd, bnd) {
       M3(fld,0, ix,iy,iz, p) = scale * M3(f,m, ix,iy,iz, p);
     } mrc_fld_foreach_end;
   }
@@ -223,11 +224,9 @@ static void
 write_fields(struct ggcm_mhd_diag *diag, struct mrc_fld *fld,
 	     struct mrc_io *io, int diag_type, float plane)
 {
-  struct ggcm_mhd *mhd = diag->mhd;
-
   struct ggcm_mhd_diag_item *item;
   list_for_each_entry(item, &diag->obj.children_list, obj.child_entry) {
-    ggcm_mhd_diag_item_run(item, io, mhd->fld, diag_type, plane);
+    ggcm_mhd_diag_item_run(item, io, fld, diag_type, plane);
   }
 
 #if 0
