@@ -25,7 +25,9 @@ ggcm_mhd_diag_item_v_run(struct ggcm_mhd_diag_item *item,
 {
   struct ggcm_mhd *mhd = item->diag->mhd;
 
-  struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, SW_2, "vx:vy:vz");
+  int bnd = fld->_nr_ghosts;
+
+  struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, bnd, "vx:vy:vz");
   mrc_fld_set_type(fld_r, FLD_TYPE);
   mrc_fld_setup(fld_r);
 
@@ -33,7 +35,7 @@ ggcm_mhd_diag_item_v_run(struct ggcm_mhd_diag_item *item,
   struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
 
   for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
-    mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
+    mrc_fld_foreach(f, ix,iy,iz, bnd, bnd) {
       float rri = 1.f / RR_(f, ix,iy,iz, p);
       M3(r, 0, ix,iy,iz, p) = rri * RVX_(f, ix,iy,iz, p);
       M3(r, 1, ix,iy,iz, p) = rri * RVY_(f, ix,iy,iz, p);
@@ -105,7 +107,9 @@ ggcm_mhd_diag_item_pp_run(struct ggcm_mhd_diag_item *item,
   int mhd_type;
   mrc_fld_get_param_int(fld, "mhd_type", &mhd_type);
 
-  struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, SW_2, "pp");
+  int bnd = fld->_nr_ghosts - 1;
+
+  struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, bnd + 1, "pp");
   mrc_fld_set_type(fld_r, FLD_TYPE);
   mrc_fld_setup(fld_r);
 
@@ -117,7 +121,7 @@ ggcm_mhd_diag_item_pp_run(struct ggcm_mhd_diag_item *item,
   if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM ||
       mhd_type == MT_SEMI_CONSERVATIVE) {
     for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
-      mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
+      mrc_fld_foreach(f, ix,iy,iz, bnd, bnd) {
 	float rvv = (sqr(RVX_(f, ix,iy,iz, p)) +
 		     sqr(RVY_(f, ix,iy,iz, p)) +
 		     sqr(RVZ_(f, ix,iy,iz, p))) / RR_(f, ix,iy,iz, p);
@@ -126,7 +130,7 @@ ggcm_mhd_diag_item_pp_run(struct ggcm_mhd_diag_item *item,
     }
   } else if (mhd_type == MT_FULLY_CONSERVATIVE) {
     for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
-      mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
+      mrc_fld_foreach(f, ix,iy,iz, bnd, bnd) {
 	float rvv = (sqr(RVX_(f, ix,iy,iz, p)) +
 		     sqr(RVY_(f, ix,iy,iz, p)) +
 		     sqr(RVZ_(f, ix,iy,iz, p))) / RR_(f, ix,iy,iz, p);
@@ -172,8 +176,11 @@ ggcm_mhd_diag_item_b_run(struct ggcm_mhd_diag_item *item,
   int mhd_type;
   mrc_fld_get_param_int(fld, "mhd_type", &mhd_type);
 
+  int bnd = fld->_nr_ghosts - 1;
+
   struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, SW_2, "bx:by:bz");
   mrc_fld_set_type(fld_r, FLD_TYPE);
+  mrc_fld_set_param_int(fld_r, "nr_ghosts", bnd + 1);
   mrc_fld_setup(fld_r);
 
   struct mrc_fld *r = mrc_fld_get_as(fld_r, FLD_TYPE);
@@ -188,7 +195,7 @@ ggcm_mhd_diag_item_b_run(struct ggcm_mhd_diag_item *item,
     }
   } else if (mhd_type == MT_SEMI_CONSERVATIVE ||
 	     mhd_type == MT_FULLY_CONSERVATIVE) {
-    compute_B_cc(fld_r, f, 0, 0);
+    compute_B_cc(fld_r, f, bnd, bnd);
   } else {
     assert(0);
   }

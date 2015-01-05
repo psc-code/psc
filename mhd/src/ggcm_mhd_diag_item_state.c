@@ -54,8 +54,11 @@ ggcm_mhd_diag_item_uu1_run(struct ggcm_mhd_diag_item *item,
   int mhd_type;
   mrc_fld_get_param_int(fld, "mhd_type", &mhd_type);
 
+  int bnd = fld->_nr_ghosts;
+
   struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, SW_2, "uu1");
   mrc_fld_set_type(fld_r, FLD_TYPE);
+  mrc_fld_set_param_int(fld_r, "nr_ghosts", bnd);
   mrc_fld_setup(fld_r);
 
   struct mrc_fld *r = mrc_fld_get_as(fld_r, FLD_TYPE);
@@ -63,11 +66,11 @@ ggcm_mhd_diag_item_uu1_run(struct ggcm_mhd_diag_item *item,
 
   if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM ||
       mhd_type == MT_SEMI_CONSERVATIVE) {
-    mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
+    mrc_fld_foreach(f, ix,iy,iz, bnd, bnd) {
       F3(r, 0, ix,iy,iz) = UU(f, ix,iy,iz);
     } mrc_fld_foreach_end;
   } else if (mhd_type == MT_FULLY_CONSERVATIVE) {
-    mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
+    mrc_fld_foreach(f, ix,iy,iz, bnd - 1, bnd - 1) {
       float b2  = (sqr(.5f * (BX(f, ix,iy,iz) + BX(f, ix+dx,iy   ,iz   ))) +
 		   sqr(.5f * (BY(f, ix,iy,iz) + BY(f, ix   ,iy+dy,iz   ))) +
 		   sqr(.5f * (BZ(f, ix,iy,iz) + BZ(f, ix   ,iy   ,iz+dz))));
