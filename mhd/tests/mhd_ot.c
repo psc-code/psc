@@ -30,7 +30,7 @@ ggcm_mhd_ic_ot_run(struct ggcm_mhd_ic *ic)
 
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
   double dx[3];
-  mrc_crds_get_dx(crds, dx);
+  mrc_crds_get_dx_base(crds, dx);
 
   struct mrc_fld *Az = mrc_domain_fld_create(mhd->domain, 2, "Az");
   mrc_fld_set_type(Az, FLD_TYPE);

@@ -118,7 +118,7 @@ newstep_hydro(struct ggcm_mhd *mhd, struct mrc_fld *x)
   mrc_fld_data_t gamma = mhd->par.gamm;
   mrc_fld_data_t gamma_minus_1 = gamma - 1.;
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-  double dx[3]; mrc_crds_get_dx(crds, dx);
+  double dx[3]; mrc_crds_get_dx_base(crds, dx);
 
   mrc_fld_data_t max_vx = 0., max_vy = 0., max_vz = 0.;
   mrc_fld_foreach(x, i,j,k, 0, 0) {

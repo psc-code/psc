@@ -235,7 +235,7 @@ xdmf_spatial_create_m3(list_t *xdmf_spatial_list, const char *name,
       strcmp(mrc_crds_type(crds), "uniform") == 0) {
     xs->uniform = true;
     mrc_crds_get_param_double3(crds, "l", xl);
-    mrc_crds_get_dx(crds, dx);
+    mrc_crds_get_dx_base(crds, dx);
   } else {
     for (int d = 0; d < 3; d++) {
       xs->crd_nc_path[d] = mrc_io_obj_path(io, crds->crd_nc[d]);
@@ -287,7 +287,7 @@ xdmf_spatial_create_m3_parallel(list_t *xdmf_spatial_list, const char *name,
     double xl[3];
     double dx[3];
     mrc_crds_get_param_double3(crds, "l", xl);
-    mrc_crds_get_dx(crds, dx);
+    mrc_crds_get_dx_base(crds, dx);
     for (int d = 0; d < 3; d++) {
       xs->xl[d][0] = xl[d] + slab_off[d] * dx[d];
       xs->dx[d][0] = dx[d];

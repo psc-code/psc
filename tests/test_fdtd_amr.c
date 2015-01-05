@@ -229,10 +229,10 @@ step_fdtd(struct mrc_fld *fld, struct mrc_ddc *ddc_E, struct mrc_ddc *ddc_H)
   mrc_ddc_amr_apply(ddc_H, fld);
 
   mrc_fld_foreach_patch(fld, p) {
-    float dx = MRC_MCRDX(crds, 1, p) - MRC_MCRDX(crds, 0, p); // FIXME
-    float dy = MRC_MCRDY(crds, 1, p) - MRC_MCRDY(crds, 0, p);
-    float cnx = .5 * dt / dx;
-    float cny = .5 * dt / dy;
+    float dx[3];
+    mrc_crds_get_dx(crds, dx);
+    float cnx = .5 * dt / dx[0];
+    float cny = .5 * dt / dx[1];
     float cnz = 0.;
     mrc_fld_foreach(fld, ix,iy,iz, 0, 1) {
       M3(fld, EX, ix,iy,iz, p) +=
@@ -252,10 +252,10 @@ step_fdtd(struct mrc_fld *fld, struct mrc_ddc *ddc_E, struct mrc_ddc *ddc_H)
   mrc_ddc_amr_apply(ddc_E, fld);
 
   mrc_fld_foreach_patch(fld, p) {
-    float dx = MRC_MCRDX(crds, 1, p) - MRC_MCRDX(crds, 0, p); // FIXME
-    float dy = MRC_MCRDY(crds, 1, p) - MRC_MCRDY(crds, 0, p);
-    float cnx = .5 * dt / dx;
-    float cny = .5 * dt / dy;
+    float dx[3];
+    mrc_crds_get_dx(crds, dx);
+    float cnx = .5 * dt / dx[0];
+    float cny = .5 * dt / dx[1];
     float cnz = 0.;
     mrc_fld_foreach(fld, ix,iy,iz, 0, 1) {
       M3(fld, HX, ix,iy,iz, p) -=

@@ -126,8 +126,9 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
   }
 }
 
+// FIXME, should go away / superseded by mrc_crds_get_dx()
 void
-mrc_crds_get_dx(struct mrc_crds *crds, double dx[3])
+mrc_crds_get_dx_base(struct mrc_crds *crds, double dx[3])
 {
   int gdims[3];
   mrc_domain_get_global_dims(crds->domain, gdims);
@@ -135,6 +136,15 @@ mrc_crds_get_dx(struct mrc_crds *crds, double dx[3])
   for (int d = 0; d < 3; d++) {
     dx[d] = (crds->xh[d] - crds->xl[d]) / gdims[d];
   }
+}
+
+void
+mrc_crds_get_dx(struct mrc_crds *crds, int p, double dx[3])
+{
+  // FIXME, only for uniform crds, should be dispatched!
+  dx[0] = MRC_MCRDX(crds, 1, p) - MRC_MCRDX(crds, 0, p);
+  dx[1] = MRC_MCRDY(crds, 1, p) - MRC_MCRDY(crds, 0, p);
+  dx[2] = MRC_MCRDZ(crds, 1, p) - MRC_MCRDZ(crds, 0, p);
 }
 
 // allocate the coordinate fields common to all crds types.

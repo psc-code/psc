@@ -27,7 +27,7 @@ update_ct_uniform(struct ggcm_mhd *mhd,
 		  struct mrc_fld *x, struct mrc_fld *E, mrc_fld_data_t dt, int l, int r)
 {
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-  double dx[3]; mrc_crds_get_dx(crds, dx);
+  double dx[3]; mrc_crds_get_dx_base(crds, dx);
   mrc_fld_data_t dt_on_dx[3] = { dt / dx[0], dt / dx[1], dt / dx[2] };
 
   const int *ldims = mrc_fld_spatial_dims(x);
@@ -125,7 +125,7 @@ update_finite_volume_uniform(struct ggcm_mhd *mhd,
 			     mrc_fld_data_t dt, int l, int r)
 {
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-  double dx[3]; mrc_crds_get_dx(crds, dx);
+  double dx[3]; mrc_crds_get_dx_base(crds, dx);
   mrc_fld_data_t dt_on_dx[3] = { dt / dx[0], dt / dx[1], dt / dx[2] };
 
   for (int p = 0; p < mrc_fld_nr_patches(x); p++) {

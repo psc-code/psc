@@ -40,7 +40,7 @@ GGCM_MHD_BND_CONDUCTING_Y_FILL_GHOST(struct ggcm_mhd_bnd *bnd,
    /* float *bd2z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD2); */
 
   double dx[3];
-  mrc_crds_get_dx(mrc_domain_get_crds(mhd->domain), dx);
+  mrc_crds_get_dx_base(mrc_domain_get_crds(mhd->domain), dx);
 
   // lower boundary
   if (bc[1] != BC_PERIODIC && info.off[1] == 0) { // x lo

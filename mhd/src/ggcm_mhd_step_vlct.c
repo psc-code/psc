@@ -252,7 +252,7 @@ magdiffu_const(struct ggcm_mhd_step *step, struct mrc_fld *x, struct mrc_fld *B_
   struct mrc_fld *E_ec = ggcm_mhd_step_get_3d_fld(step, 3);
 
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-  double dx[3]; mrc_crds_get_dx(crds, dx);
+  double dx[3]; mrc_crds_get_dx_base(crds, dx);
   mrc_fld_data_t dxi[3] = { 1. / dx[0], 1. / dx[1], 1. / dx[2] };
 
   // calc edge-centered J
@@ -304,7 +304,7 @@ newstep_fc(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *Bcc)
   mrc_fld_data_t gamma = mhd->par.gamm;
   mrc_fld_data_t gamma_minus_1 = gamma - 1.;
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-  double dx[3]; mrc_crds_get_dx(crds, dx);
+  double dx[3]; mrc_crds_get_dx_base(crds, dx);
 
   for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
     mrc_fld_foreach(x, i,j,k, 0, 0) {
