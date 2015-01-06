@@ -13,6 +13,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <stdlib.h>
+#include <execinfo.h>
 
 static const char *crdname[NR_CRDS] = {
   [FX1] = "FX1",
@@ -139,7 +141,33 @@ _ggcm_mhd_crds_write(struct ggcm_mhd_crds *crds, struct mrc_io *io)
 float *
 ggcm_mhd_crds_get_crd(struct ggcm_mhd_crds *crds, int d, int m)
 {
+#if 1
+  int rank; MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  if (rank == 0) {
+    mprintf("XXXXXXX ggcm_mhd_crds_get_crd m %d\n", m);
+    void* callstack[128];
+    int frames = backtrace(callstack, 128);
+    char** strs = backtrace_symbols(callstack, frames);
+    for (int i = 0; i < frames; i++) {
+      mprintf("%s\n", strs[i]);
+    }
+    free(strs);
+  }
+#endif
   return &MRC_F1(crds->f1[d], m, 0);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_crds_get_crd_p
+
+float *
+ggcm_mhd_crds_get_crd_p(struct ggcm_mhd_crds *crds, int d, int m, int p)
+{
+  int nr_global_patches, size;
+  mrc_domain_get_nr_global_patches(crds->domain, &nr_global_patches);
+  MPI_Comm_size(mrc_domain_comm(crds->domain), &size);
+
+  return &MRC_S3(crds->f1[d], 0, m, p);
 }
 
 // ----------------------------------------------------------------------
