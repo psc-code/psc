@@ -20,9 +20,11 @@ ggcm_mhd_ic_init_ymask_default(struct ggcm_mhd_ic *ic, struct mrc_fld *ymask_bas
 {
   struct mrc_fld *ymask = mrc_fld_get_as(ymask_base, FLD_TYPE);
 
-  mrc_fld_foreach(ymask, ix, iy, iz, 2, 2) {
-    F3(ymask, 0, ix,iy,iz) = 1.;
-  } mrc_fld_foreach_end;
+  for (int p = 0; p < mrc_fld_nr_patches(ymask); p++) {
+    mrc_fld_foreach(ymask, ix, iy, iz, 2, 2) {
+      M3(ymask, 0, ix,iy,iz, p) = 1.;
+    } mrc_fld_foreach_end;
+  }
     
   mrc_fld_put_as(ymask, ymask_base);
 }

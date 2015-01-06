@@ -66,25 +66,31 @@ ggcm_mhd_diag_item_uu1_run(struct ggcm_mhd_diag_item *item,
 
   if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM ||
       mhd_type == MT_SEMI_CONSERVATIVE) {
-    mrc_fld_foreach(f, ix,iy,iz, bnd, bnd) {
-      F3(r, 0, ix,iy,iz) = UU(f, ix,iy,iz);
-    } mrc_fld_foreach_end;
+    for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
+      mrc_fld_foreach(f, ix,iy,iz, bnd, bnd) {
+	M3(r, 0, ix,iy,iz, p) = UU_(f, ix,iy,iz, p);
+      } mrc_fld_foreach_end;
+    }
   } else if (mhd_type == MT_FULLY_CONSERVATIVE) {
-    mrc_fld_foreach(f, ix,iy,iz, bnd - 1, bnd - 1) {
-      float b2  = (sqr(.5f * (BX(f, ix,iy,iz) + BX(f, ix+dx,iy   ,iz   ))) +
-		   sqr(.5f * (BY(f, ix,iy,iz) + BY(f, ix   ,iy+dy,iz   ))) +
-		   sqr(.5f * (BZ(f, ix,iy,iz) + BZ(f, ix   ,iy   ,iz+dz))));
-      F3(r, 0, ix,iy,iz) = EE(f, ix,iy,iz) -.5f * b2;
-    } mrc_fld_foreach_end;
+    for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
+      mrc_fld_foreach(f, ix,iy,iz, bnd - 1, bnd - 1) {
+	float b2  = (sqr(.5f * (BX_(f, ix,iy,iz, p) + BX_(f, ix+dx,iy   ,iz   , p))) +
+		     sqr(.5f * (BY_(f, ix,iy,iz, p) + BY_(f, ix   ,iy+dy,iz   , p))) +
+		     sqr(.5f * (BZ_(f, ix,iy,iz, p) + BZ_(f, ix   ,iy   ,iz+dz, p))));
+	M3(r, 0, ix,iy,iz, p) = EE_(f, ix,iy,iz, p) -.5f * b2;
+      } mrc_fld_foreach_end;
+    }
   } else {
     assert(0);
   }
 
   float max = 0.;
-  mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
-    max = mrc_fld_max(max, mrc_fld_abs(F3(r, 0, ix,iy,iz)));
-    if (!isfinite(UU(f, ix,iy,iz))) max = 9999.;
-  } mrc_fld_foreach_end;
+  for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
+    mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
+      max = mrc_fld_max(max, mrc_fld_abs(M3(r, 0, ix,iy,iz, p)));
+      if (!isfinite(UU_(f, ix,iy,iz, p))) max = 9999.;
+    } mrc_fld_foreach_end;
+  }
   mprintf("max uu1 = %g\n", max);
 
   mrc_fld_put_as(r, fld_r);

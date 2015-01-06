@@ -95,14 +95,16 @@ update_ct(struct ggcm_mhd *mhd,
   float *bd3y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD3);
   float *bd3z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD3);
 
-  mrc_fld_foreach(x, i,j,k, 0, 0) {
-    F3(x, BX, i,j,k) -= dt * (bd3y[j] * (F3(E, 2, i,j+dy,k) - F3(E, 2, i,j,k)) -
-			      bd3z[k] * (F3(E, 1, i,j,k+dz) - F3(E, 1, i,j,k)));
-    F3(x, BY, i,j,k) -= dt * (bd3z[k] * (F3(E, 0, i,j,k+dz) - F3(E, 0, i,j,k)) -
-			      bd3x[i] * (F3(E, 2, i+dx,j,k) - F3(E, 2, i,j,k)));
-    F3(x, BZ, i,j,k) -= dt * (bd3x[i] * (F3(E, 1, i+dx,j,k) - F3(E, 1, i,j,k)) -
-			      bd3y[j] * (F3(E, 0, i,j+dy,k) - F3(E, 0, i,j,k)));
-  } mrc_fld_foreach_end;
+  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+    mrc_fld_foreach(x, i,j,k, 0, 0) {
+      M3(x, BX, i,j,k, p) -= dt * (bd3y[j] * (M3(E, 2, i,j+dy,k, p) - M3(E, 2, i,j,k, p)) -
+				   bd3z[k] * (M3(E, 1, i,j,k+dz, p) - M3(E, 1, i,j,k, p)));
+      M3(x, BY, i,j,k, p) -= dt * (bd3z[k] * (M3(E, 0, i,j,k+dz, p) - M3(E, 0, i,j,k, p)) -
+				   bd3x[i] * (M3(E, 2, i+dx,j,k, p) - M3(E, 2, i,j,k, p)));
+      M3(x, BZ, i,j,k, p) -= dt * (bd3x[i] * (M3(E, 1, i+dx,j,k, p) - M3(E, 1, i,j,k, p)) -
+				   bd3y[j] * (M3(E, 0, i,j+dy,k, p) - M3(E, 0, i,j,k, p)));
+    } mrc_fld_foreach_end;
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -207,15 +209,17 @@ update_finite_volume(struct ggcm_mhd *mhd,
   float *fd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FD1);
   float *fd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FD1);
 
-  mrc_fld_foreach(x, i,j,k, 0, 0) {
-    mrc_fld_data_t s = dt * F3(ymask, 0, i,j,k);
-    for (int m = 0; m < 5; m++) {
-      F3(x, m, i,j,k) -=
-	s * (fd1x[i] * (F3(fluxes[0], m, i+dx,j,k) - F3(fluxes[0], m, i,j,k)) +
-	     fd1y[j] * (F3(fluxes[1], m, i,j+dy,k) - F3(fluxes[1], m, i,j,k)) +
-	     fd1z[k] * (F3(fluxes[2], m, i,j,k+dz) - F3(fluxes[2], m, i,j,k)));
-    }
-  } mrc_fld_foreach_end;
+  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+    mrc_fld_foreach(x, i,j,k, 0, 0) {
+      mrc_fld_data_t s = dt * M3(ymask, 0, i,j,k, p);
+      for (int m = 0; m < 5; m++) {
+	M3(x, m, i,j,k, p) -=
+	  s * (fd1x[i] * (M3(fluxes[0], m, i+dx,j,k, p) - M3(fluxes[0], m, i,j,k, p)) +
+	       fd1y[j] * (M3(fluxes[1], m, i,j+dy,k, p) - M3(fluxes[1], m, i,j,k, p)) +
+	       fd1z[k] * (M3(fluxes[2], m, i,j,k+dz, p) - M3(fluxes[2], m, i,j,k, p)));
+      }
+    } mrc_fld_foreach_end;
+  }
 }
 
 // ----------------------------------------------------------------------
