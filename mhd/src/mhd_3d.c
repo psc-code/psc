@@ -91,8 +91,14 @@ update_ct_uniform(struct ggcm_mhd *mhd,
 
 static void __unused
 update_ct(struct ggcm_mhd *mhd,
-	  struct mrc_fld *x, struct mrc_fld *E, mrc_fld_data_t dt)
+	  struct mrc_fld *x, struct mrc_fld *E, mrc_fld_data_t dt,
+	  bool do_correct)
 {
+  if (mhd->amr > 0 && do_correct) {
+    mrc_ddc_amr_apply(mhd->ddc_amr_E, E);
+    //    correct_E(mhd, E);
+  }
+
   int gdims[3]; mrc_domain_get_global_dims(x->_domain, gdims);
   int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
 
@@ -169,11 +175,13 @@ mhd_fluxes(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3], struct mrc_fld
 static void __unused
 update_finite_volume_uniform(struct ggcm_mhd *mhd,
 			     struct mrc_fld *x, struct mrc_fld *fluxes[3],
-			     mrc_fld_data_t dt, int l, int r, int do_correct)
+			     struct mrc_fld *ymask,
+			     mrc_fld_data_t dt, int l, int r, bool do_correct)
 {
   int gdims[3];
   mrc_domain_get_global_dims(x->_domain, gdims);
   int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
+  // FIXME ymask!!!
 
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
 
@@ -212,12 +220,19 @@ update_finite_volume_uniform(struct ggcm_mhd *mhd,
 static void __unused
 update_finite_volume(struct ggcm_mhd *mhd,
 		     struct mrc_fld *x, struct mrc_fld *fluxes[3],
-		     struct mrc_fld *ymask, mrc_fld_data_t dt)
+		     struct mrc_fld *ymask, mrc_fld_data_t dt, bool do_correct)
 {
   int gdims[3];
   mrc_domain_get_global_dims(x->_domain, gdims);
   int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
 
+  if (mhd->amr > 0 && do_correct) {
+    for (int d = 0; d < 3; d++) {
+      if (gdims[d] > 1) {
+	mrc_ddc_amr_apply(mhd->ddc_amr_flux[d], fluxes[d]);
+      }
+    }
+  }
 
   for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
     float *fd1x = ggcm_mhd_crds_get_crd_p(mhd->crds, 0, FD1, p);
@@ -225,12 +240,12 @@ update_finite_volume(struct ggcm_mhd *mhd,
     float *fd1z = ggcm_mhd_crds_get_crd_p(mhd->crds, 2, FD1, p);
 
     mrc_fld_foreach(x, i,j,k, 0, 0) {
-      mrc_fld_data_t s = dt * M3(ymask, 0, i,j,k, p);
+      mrc_fld_data_t ym = ymask ? M3(ymask, 0, i,j,k, p) : 1.f;
       for (int m = 0; m < 5; m++) {
-	M3(x, m, i,j,k, p) -=
-	  s * (fd1x[i] * (M3(fluxes[0], m, i+dx,j,k, p) - M3(fluxes[0], m, i,j,k, p)) +
-	       fd1y[j] * (M3(fluxes[1], m, i,j+dy,k, p) - M3(fluxes[1], m, i,j,k, p)) +
-	       fd1z[k] * (M3(fluxes[2], m, i,j,k+dz, p) - M3(fluxes[2], m, i,j,k, p)));
+	M3(x, m, i,j,k, p) -= dt * ym *
+	  (fd1x[i] * (M3(fluxes[0], m, i+dx,j,k, p) - M3(fluxes[0], m, i,j,k, p)) +
+	   fd1y[j] * (M3(fluxes[1], m, i,j+dy,k, p) - M3(fluxes[1], m, i,j,k, p)) +
+	   fd1z[k] * (M3(fluxes[2], m, i,j,k+dz, p) - M3(fluxes[2], m, i,j,k, p)));
       }
     } mrc_fld_foreach_end;
   }

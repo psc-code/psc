@@ -793,13 +793,13 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
     mhd_fluxes(step, fluxes, x_curr, NULL, 0, 0, flux_corr);
   }
 
-  update_finite_volume(mhd, x_next, fluxes, mhd->ymask, dt);
+  update_finite_volume(mhd, x_next, fluxes, mhd->ymask, dt, true);
   pushpp_c(step, dt, x_next, prim);
 
   push_ej_c(step, dt, x_curr, prim, x_next);
 
   calce_c(step, E, x_curr, prim, dt);
-  update_ct(mhd, x_next, E, dt);
+  update_ct(mhd, x_next, E, dt, true);
 
   ggcm_mhd_put_3d_fld(mhd, E);
   ggcm_mhd_put_3d_fld(mhd, fluxes[0]);
