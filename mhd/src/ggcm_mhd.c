@@ -155,7 +155,7 @@ _ggcm_mhd_read(struct ggcm_mhd *mhd, struct mrc_io *io)
 }
 
 static void
-ggcm_mhd_setup_amr(struct ggcm_mhd *mhd)
+ggcm_mhd_setup_amr_domain(struct ggcm_mhd *mhd)
 {
   if (mhd->amr == 1) {
     mrc_domain_add_patch(mhd->domain, 0, (int [3]) { 0, 0, 0 });
@@ -164,9 +164,82 @@ ggcm_mhd_setup_amr(struct ggcm_mhd *mhd)
     mrc_domain_add_patch(mhd->domain, 1, (int [3]) { 0, 1, 0 });
     mrc_domain_add_patch(mhd->domain, 1, (int [3]) { 1, 0, 0 });
     mrc_domain_add_patch(mhd->domain, 1, (int [3]) { 1, 1, 0 });
+  } else if (mhd->amr == 3) {
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 0, 0, 0 });
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 0, 1, 0 });
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 0, 2, 0 });
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 0, 3, 0 });
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 1, 0, 0 });
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 1, 1, 0 });
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 1, 2, 0 });
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 1, 3, 0 });
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 2, 0, 0 });
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 2, 1, 0 });
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 2, 2, 0 });
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 2, 3, 0 });
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 3, 0, 0 });
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 3, 1, 0 });
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 3, 2, 0 });
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 3, 3, 0 });
   } else {
     assert(0);
   }
+}
+
+#define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
+
+static struct mrc_ddc_amr_stencil_entry stencil_coarse_cc[2] = {
+  // FIXME, 3D
+  { .dx = { 0, 0, 0 }, .val = .5f },
+  { .dx = { 0, 1, 0 }, .val = .5f },
+};
+
+static struct mrc_ddc_amr_stencil stencils_coarse[] = {
+  [RR ] = { stencil_coarse_cc, ARRAY_SIZE(stencil_coarse_cc) },
+  [RVX] = { stencil_coarse_cc, ARRAY_SIZE(stencil_coarse_cc) },
+  [RVY] = { stencil_coarse_cc, ARRAY_SIZE(stencil_coarse_cc) },
+  [RVZ] = { stencil_coarse_cc, ARRAY_SIZE(stencil_coarse_cc) },
+  [UU ] = { stencil_coarse_cc, ARRAY_SIZE(stencil_coarse_cc) },
+};
+
+static struct mrc_ddc_amr_stencil_entry stencil_fine_cc[6] = {
+  // FIXME, 3D
+  { .dx = {  0, -1,  0 }, .val = (1.f/8.f) * 1.f },
+  { .dx = { +1, -1,  0 }, .val = (1.f/8.f) * 1.f },
+  { .dx = {  0,  0,  0 }, .val = (1.f/8.f) * 2.f },
+  { .dx = { +1,  0,  0 }, .val = (1.f/8.f) * 2.f },
+  { .dx = {  0, +1,  0 }, .val = (1.f/8.f) * 1.f },
+  { .dx = { +1, +1,  0 }, .val = (1.f/8.f) * 1.f },
+};
+
+static struct mrc_ddc_amr_stencil stencils_fine[] = {
+  [RR ] = { stencil_fine_cc, ARRAY_SIZE(stencil_fine_cc) },
+  [RVX] = { stencil_fine_cc, ARRAY_SIZE(stencil_fine_cc) },
+  [RVY] = { stencil_fine_cc, ARRAY_SIZE(stencil_fine_cc) },
+  [RVZ] = { stencil_fine_cc, ARRAY_SIZE(stencil_fine_cc) },
+  [UU ] = { stencil_fine_cc, ARRAY_SIZE(stencil_fine_cc) },
+};
+
+static void
+ggcm_mhd_setup_amr_ddc(struct ggcm_mhd *mhd)
+{
+  struct mrc_ddc *ddc = mrc_ddc_create(mrc_domain_comm(mhd->domain));
+  mrc_ddc_set_type(ddc, "amr");
+  mrc_ddc_set_domain(ddc, mhd->domain);
+  mrc_ddc_set_param_int(ddc, "size_of_type", mhd->fld->_size_of_type);
+  mrc_ddc_set_param_int3(ddc, "sw", mrc_fld_spatial_sw(mhd->fld));
+  int *sw = mhd->fld->_sw.vals;
+  mprintf("sw %d %d %d\n", sw[0], sw[1], sw[2]);
+  mrc_ddc_set_param_int(ddc, "n_comp", mhd->fld->_nr_comps);
+  mrc_ddc_setup(ddc);
+  mrc_ddc_amr_set_by_stencil(ddc, RR , 2, (int[]) { 0, 0, 0 }, &stencils_coarse[RR ], &stencils_fine[RR ]);
+  mrc_ddc_amr_set_by_stencil(ddc, RVX, 2, (int[]) { 0, 0, 0 }, &stencils_coarse[RVX], &stencils_fine[RVX]);
+  mrc_ddc_amr_set_by_stencil(ddc, RVY, 2, (int[]) { 0, 0, 0 }, &stencils_coarse[RVY], &stencils_fine[RVY]);
+  mrc_ddc_amr_set_by_stencil(ddc, RVZ, 2, (int[]) { 0, 0, 0 }, &stencils_coarse[RVZ], &stencils_fine[RVZ]);
+  mrc_ddc_amr_set_by_stencil(ddc, UU , 2, (int[]) { 0, 0, 0 }, &stencils_coarse[UU ], &stencils_fine[UU ]);
+  mrc_ddc_amr_assemble(ddc);
+  mhd->ddc_amr = ddc;
+  // FIXME, leaked
 }
 
 static void
@@ -184,11 +257,15 @@ _ggcm_mhd_setup(struct ggcm_mhd *mhd)
   }
 
   if (mhd->amr > 0) {
-    ggcm_mhd_setup_amr(mhd);
+    ggcm_mhd_setup_amr_domain(mhd);
   }
 
   ggcm_mhd_setup_member_objs(mhd);
   ggcm_mhd_setup_internal(mhd);
+
+  if (mhd->amr > 0) {
+    ggcm_mhd_setup_amr_ddc(mhd);
+  }
 }
 
 void
@@ -196,6 +273,9 @@ ggcm_mhd_fill_ghosts(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m, float bnt
 {
   if (mhd->amr == 0) {
     mrc_ddc_fill_ghosts_fld(mrc_domain_get_ddc(mhd->domain), m, m + 8, fld);
+  } else {
+    assert(m == 0);
+    mrc_ddc_amr_apply(mhd->ddc_amr, fld);
   }
   ggcm_mhd_bnd_fill_ghosts(mhd->bnd, fld, m, bntim);
 }
