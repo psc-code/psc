@@ -36,10 +36,6 @@ newstep_sc(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zmask,
   mrc_domain_get_global_dims(mhd->domain, gdims);
   int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
 
-  float *fd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FD1);
-  float *fd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FD1);
-  float *fd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FD1);
-
   mrc_fld_data_t splim2 = sqr(mhd->par.speedlimit / mhd->par.vvnorm);
   mrc_fld_data_t gamm   = mhd->par.gamm;
   mrc_fld_data_t d_i    = mhd->par.d_i;
@@ -52,6 +48,10 @@ newstep_sc(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zmask,
   bool have_hall = d_i > 0.f;
 
   for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+    float *fd1x = ggcm_mhd_crds_get_crd_p(mhd->crds, 0, FD1, p);
+    float *fd1y = ggcm_mhd_crds_get_crd_p(mhd->crds, 1, FD1, p);
+    float *fd1z = ggcm_mhd_crds_get_crd_p(mhd->crds, 2, FD1, p);
+
     mrc_fld_foreach(x, ix, iy, iz, 0, 0) {
       mrc_fld_data_t hh = mrc_fld_max(mrc_fld_max(fd1x[ix], fd1y[iy]), fd1z[iz]);
       mrc_fld_data_t rri = 1.f / mrc_fld_abs(RR_(x, ix,iy,iz, p)); // FIXME abs necessary?

@@ -91,11 +91,11 @@ update_ct(struct ggcm_mhd *mhd,
   int gdims[3]; mrc_domain_get_global_dims(x->_domain, gdims);
   int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
 
-  float *bd3x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD3);
-  float *bd3y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD3);
-  float *bd3z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD3);
-
   for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+    float *bd3x = ggcm_mhd_crds_get_crd_p(mhd->crds, 0, BD3, p);
+    float *bd3y = ggcm_mhd_crds_get_crd_p(mhd->crds, 1, BD3, p);
+    float *bd3z = ggcm_mhd_crds_get_crd_p(mhd->crds, 2, BD3, p);
+
     mrc_fld_foreach(x, i,j,k, 0, 0) {
       M3(x, BX, i,j,k, p) -= dt * (bd3y[j] * (M3(E, 2, i,j+dy,k, p) - M3(E, 2, i,j,k, p)) -
 				   bd3z[k] * (M3(E, 1, i,j,k+dz, p) - M3(E, 1, i,j,k, p)));
@@ -205,11 +205,12 @@ update_finite_volume(struct ggcm_mhd *mhd,
   mrc_domain_get_global_dims(x->_domain, gdims);
   int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
 
-  float *fd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FD1);
-  float *fd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FD1);
-  float *fd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FD1);
 
   for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+    float *fd1x = ggcm_mhd_crds_get_crd_p(mhd->crds, 0, FD1, p);
+    float *fd1y = ggcm_mhd_crds_get_crd_p(mhd->crds, 1, FD1, p);
+    float *fd1z = ggcm_mhd_crds_get_crd_p(mhd->crds, 2, FD1, p);
+
     mrc_fld_foreach(x, i,j,k, 0, 0) {
       mrc_fld_data_t s = dt * M3(ymask, 0, i,j,k, p);
       for (int m = 0; m < 5; m++) {

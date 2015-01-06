@@ -24,17 +24,17 @@ ggcm_mhd_calc_currcc(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
 
   struct mrc_patch_info info;
   mrc_domain_get_local_patch_info(mhd->domain, 0, &info);
-  //const char *dptype = ggcm_dipole_type(mhd->dipole);
   struct mrc_fld *tmp = mrc_fld_duplicate(currcc);
-  float *bd4x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD4);
-  float *bd4y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD4);
-  float *bd4z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD4);
 
   struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
   struct mrc_fld *t = mrc_fld_get_as(tmp, FLD_TYPE);
   struct mrc_fld *c = mrc_fld_get_as(currcc, FLD_TYPE);
   
   for (int p = 0; p < mrc_fld_nr_patches(t); p++) {
+    float *bd4x = ggcm_mhd_crds_get_crd_p(mhd->crds, 0, BD4, p);
+    float *bd4y = ggcm_mhd_crds_get_crd_p(mhd->crds, 1, BD4, p);
+    float *bd4z = ggcm_mhd_crds_get_crd_p(mhd->crds, 2, BD4, p);
+
     mrc_fld_foreach(t,ix,iy,iz, 1, 1) {
       // compute current on edge first
       M3(t,0,ix,iy,iz, p) =
