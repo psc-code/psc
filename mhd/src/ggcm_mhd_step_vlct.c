@@ -9,7 +9,7 @@
 #include <mrc_domain.h>
 #include <mrc_ddc.h>
 #include <mrc_ts.h>
-#include <mrc_fld_as_double_aos.h>
+#include <mrc_fld_as_double.h>
 #define F1(f, m, i) MRC_D2(f, m, i)
 
 #include "mhd_1d.c"
