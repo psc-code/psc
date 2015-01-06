@@ -63,17 +63,19 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
     } mrc_fld_foreach_end;
   } else if (mhd_type == MT_SEMI_CONSERVATIVE ||
 	     mhd_type == MT_FULLY_CONSERVATIVE) {
-    mrc_fld_foreach(divb, ix,iy,iz, 0, 0) {
-      F3(d,0, ix,iy,iz) =
-	(BX(f, ix+dx,iy,iz) - BX(f, ix,iy,iz)) * hx * bd3x[ix] +
-	(BY(f, ix,iy+dy,iz) - BY(f, ix,iy,iz)) * hy * bd3y[iy] +
-	(BZ(f, ix,iy,iz+dz) - BZ(f, ix,iy,iz)) * hz * bd3z[iz];
-      if (ymask) {
-	F3(d,0, ix,iy,iz) *= F3(ymask, 0, ix,iy,iz);
-      }
-
-      max = mrc_fld_max(max, mrc_fld_abs(F3(d,0, ix,iy,iz)));
-    } mrc_fld_foreach_end;
+    for (int p = 0; p < mrc_fld_nr_patches(divb); p++) {
+      mrc_fld_foreach(divb, ix,iy,iz, 0, 0) {
+	M3(d,0, ix,iy,iz, p) =
+	  (BX_(f, ix+dx,iy,iz, p) - BX_(f, ix,iy,iz, p)) * hx * bd3x[ix] +
+	  (BY_(f, ix,iy+dy,iz, p) - BY_(f, ix,iy,iz, p)) * hy * bd3y[iy] +
+	  (BZ_(f, ix,iy,iz+dz, p) - BZ_(f, ix,iy,iz, p)) * hz * bd3z[iz];
+	if (ymask) {
+	  M3(d,0, ix,iy,iz, p) *= M3(ymask, 0, ix,iy,iz, p);
+	}
+	
+	max = mrc_fld_max(max, mrc_fld_abs(M3(d,0, ix,iy,iz, p)));
+      } mrc_fld_foreach_end;
+    }
   } else {
     assert(0);
   }
