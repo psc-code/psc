@@ -281,6 +281,15 @@ ggcm_mhd_setup_amr_domain(struct ggcm_mhd *mhd)
 	}
       }
     }
+  } else if (mhd->amr == 10) {
+    mrc_domain_add_patch(mhd->domain, 1, (int [3]) { 0, 0, 0 });
+    mrc_domain_add_patch(mhd->domain, 1, (int [3]) { 0, 1, 0 });
+    mrc_domain_add_patch(mhd->domain, 1, (int [3]) { 1, 0, 0 });
+    mrc_domain_add_patch(mhd->domain, 1, (int [3]) { 1, 1, 0 });
+    mrc_domain_add_patch(mhd->domain, 1, (int [3]) { 0, 0, 1 });
+    mrc_domain_add_patch(mhd->domain, 1, (int [3]) { 0, 1, 1 });
+    mrc_domain_add_patch(mhd->domain, 1, (int [3]) { 1, 0, 1 });
+    mrc_domain_add_patch(mhd->domain, 1, (int [3]) { 1, 1, 1 });
   } else {
     assert(0);
   }
