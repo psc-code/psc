@@ -28,6 +28,8 @@ compute_B_cc(struct mrc_fld *B_cc, struct mrc_fld *x, int l, int r)
 // ----------------------------------------------------------------------
 // update_ct_uniform
 
+void correct_E(struct ggcm_mhd *mhd, struct mrc_fld *E);
+
 static void __unused
 update_ct_uniform(struct ggcm_mhd *mhd,
 		  struct mrc_fld *x, struct mrc_fld *E, mrc_fld_data_t dt, int _l, int _r,
@@ -35,6 +37,7 @@ update_ct_uniform(struct ggcm_mhd *mhd,
 {
   if (mhd->amr > 0 && do_correct) {
     mrc_ddc_amr_apply(mhd->ddc_amr_E, E);
+    //    correct_E(mhd, E);
   }
 
   int gdims[3]; mrc_domain_get_global_dims(x->_domain, gdims);

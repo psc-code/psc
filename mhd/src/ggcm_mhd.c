@@ -504,6 +504,21 @@ ggcm_mhd_setup_amr_domain(struct ggcm_mhd *mhd)
 	}
       }
     }
+  } else if (mhd->amr == 16) { // 3D
+    for (int k = 0; k < 8; k++) {
+      for (int j = 0; j < 8; j++) {
+	for (int i = 0; i < 2; i++) {
+	  mrc_domain_add_patch(mhd->domain, 3, (int [3]) { i, j, k });
+	}
+      }
+    }
+    for (int k = 0; k < 4; k++) {
+      for (int j = 0; j < 4; j++) {
+	for (int i = 1; i < 4; i++) {
+	  mrc_domain_add_patch(mhd->domain, 2, (int [3]) { i, j, k });
+	}
+      }
+    }
   } else {
     assert(0);
   }

@@ -202,11 +202,20 @@ mrc_domain_is_ghost(struct mrc_domain *domain, int ext[3], int gp, int i[3])
     }
   }
 
-  // FIXME? if we're bordering a same-level patch, the current point may be a ghost point
-  // if we want to be unique, and in this case it should be filled by the "real" value from
-  // the neighboring patch. However, the fluxes should be automatically the same anyway, so
-  // there's not really any point in doing so, except for debugging (some of which has been
-  // done, and the fluxes were in fact equal.)
+  // is another same level patch in line before us, then it's its, and we have
+  // a ghost point
+  for (dd[2] = dir[2]; dd[2] >= dir[2] - dirx[2]; dd[2]--) {
+    for (dd[1] = dir[1]; dd[1] >= dir[1] - dirx[1]; dd[1]--) {
+      for (dd[0] = dir[0]; dd[0] >= dir[0] - dirx[0]; dd[0]--) {
+	int gp_nei;
+	mrc_domain_get_neighbor_patch_same(domain, gp, dd, &gp_nei);
+	if (gp_nei >= 0) {
+	  return gp != gp_nei;
+	}
+      }
+    }
+  }
+
   return false;
 #endif
 }
@@ -362,7 +371,7 @@ mrc_domain_find_valid_point_fine(struct mrc_domain *domain, int ext[3], int gp, 
     }
   }
 
-  *gp_nei = -1;
+  bool found_somewhere = false;
   int dir[3];
   for (dir[2] = dirl[2]; dir[2] <= dirh[2]; dir[2]++) {
     for (dir[1] = dirl[1]; dir[1] <= dirh[1]; dir[1]++) {
@@ -380,11 +389,17 @@ mrc_domain_find_valid_point_fine(struct mrc_domain *domain, int ext[3], int gp, 
 	
 	mrc_domain_get_neighbor_patch_fine(domain, gp, dir, off, gp_nei);
 	if (*gp_nei >= 0) {
+	  if (mrc_domain_is_ghost(domain, ext, *gp_nei, j)) {
+	    found_somewhere = true;
+	    continue;
+	  }
 	  return;
 	}
       }
     }
   }
+  assert(!found_somewhere);
+  *gp_nei = -1;
 }
 
 static inline int
@@ -432,11 +447,11 @@ mrc_ddc_amr_stencil_fine(struct mrc_ddc *ddc, int ext[3],
   struct mrc_patch_info info;
   mrc_domain_get_global_patch_info(domain, gp, &info);
   mrc_domain_find_valid_point_fine(domain, ext, gp, (int[]) { 2*i[0], 2*i[1], 2*i[2] }, &gp_nei, j);
-  if (info.off[0] == 24 && gp_nei >= 0) {
-    mprintf("gp %d off %d:%d:%d i %d:%d:%d gp_nei %d\n", gp, info.off[0], info.off[1], info.off[2], i[0], i[1], i[2], gp_nei);
-    mrc_domain_get_global_patch_info(domain, gp_nei, &info);
-    mprintf("off %d:%d:%d\n", info.off[0], info.off[1], info.off[2]);
-  }
+  /* if (info.off[0] == 24 && gp_nei >= 0) { */
+  /*   mprintf("gp %d off %d:%d:%d i %d:%d:%d gp_nei %d\n", gp, info.off[0], info.off[1], info.off[2], i[0], i[1], i[2], gp_nei); */
+  /*   mrc_domain_get_global_patch_info(domain, gp_nei, &info); */
+  /*   mprintf("off %d:%d:%d\n", info.off[0], info.off[1], info.off[2]); */
+  /* } */
   if (gp_nei < 0) {
     return false;
   }

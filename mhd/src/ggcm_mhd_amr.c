@@ -7,6 +7,7 @@
 #include <mrc_domain.h>
 
 #include <string.h>
+#include <math.h>
 
 // FIXME -> header
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
@@ -614,3 +615,93 @@ ggcm_mhd_amr_fill_ghosts_b(struct ggcm_mhd *mhd, struct mrc_fld *fld)
 }
 
 
+void
+correct_E(struct ggcm_mhd *mhd, struct mrc_fld *E)
+{
+  int bnd = 0;
+  struct mrc_domain *domain = mhd->domain;
+
+  int ldims[3], gdims[3];
+  mrc_domain_get_param_int3(domain, "m", ldims);
+  mrc_domain_get_global_dims(domain, gdims);
+
+  int sw[3];
+  for (int d = 0; d < 3; d++) {
+    sw[d] = (gdims[d] == 1) ? 0 : bnd;
+  }
+
+  for (int m = 0; m < 3; m++) {
+    int ext[3];
+    for (int d = 0; d < 3; d++) {
+      ext[d] = m != d;
+    }
+    
+    for (int p = 0; p < mrc_fld_nr_patches(E); p++) {
+      struct mrc_patch_info info;
+      mrc_domain_get_local_patch_info(mhd->domain, p, &info);
+      int gp = info.global_patch, *ldims = info.ldims;
+      
+      int i[3];
+      for (i[2] = -sw[2]; i[2] < ldims[2] + ext[2] + sw[2]; i[2]++) {
+	for (i[1] = -sw[1]; i[1] < ldims[1] + ext[1] + sw[1]; i[1]++) {
+	  for (i[0] = -sw[0]; i[0] < ldims[0] + ext[0] + sw[0]; i[0]++) {
+	    if (i[0] >= ext[0] && i[0] < ldims[0] &&
+		i[1] >= ext[1] && i[1] < ldims[1] &&
+		i[2] >= ext[2] && i[2] < ldims[2]) {
+	      // truly interior point "x", ie., not on boundary
+	      // X---X---X---X 
+	      // |   |   |   |
+	      // X---x---x---X
+	      // |   |   |   |
+	      // X---x---x---X
+	      // |   |   |   |
+	      // X---X---X---X 
+	      continue;
+	    }
+
+	    // now we're only looking at E field values that are on edges on the boundary of
+	    // this patch
+	    // FIXME, with "c3" double this is really needed though it shouldn't be!!!
+	    // to maintain div B = 0
+	    
+	    int j[3], gp_nei;
+	    mrc_domain_find_valid_point_same(mhd->domain, ext, gp, i, &gp_nei, j);
+	    if (gp_nei >= 0) {
+	      assert(M3(E, m, i[0],i[1],i[2], gp) == M3(E, m, j[0],j[1],j[2], gp_nei));
+	      continue;
+	    }
+	    
+	    // If we're bordering a fine patch so that this E value is also on the fine grid,
+	    // replace this coarse grid value by the one from the fine grid in the same place
+	    
+	    mrc_domain_find_valid_point_fine(mhd->domain, ext, gp,
+					     (int[]) { 2*i[0], 2*i[1], 2*i[2] }, &gp_nei, j);
+	    if (gp_nei >= 0) {
+ 	      mrc_fld_data_t val1 = .5f * M3(E, m, j[0],j[1],j[2], gp_nei);
+	      int j2[3], gp_nei2;
+	      mrc_domain_find_valid_point_fine(mhd->domain, ext, gp,
+					       (int[]) { 2*i[0] + (m == 0),
+						         2*i[1] + (m == 1),
+						         2*i[2] + (m == 2) },
+					       &gp_nei2, j2);
+	      assert(gp_nei >= 0);
+	      mrc_fld_data_t val2 = .5f * M3(E, m, j2[0],j2[1],j2[2], gp_nei2);
+	      if (fabs(M3(E, m, i[0],i[1],i[2], gp) - (val1 + val2)) >= 1e-9) {
+		mprintf("gp_nei %d j %d:%d:%d is_ghost %d\n", gp_nei, j[0], j[1], j[2],
+			mrc_domain_is_ghost(domain, ext, gp_nei, j));
+		mprintf("gp %d i %d:%d:%d E %g val %g %g %g j %d %d:%d:%d j2 %d %d:%d:%d\n",
+			gp, i[0], i[1], i[2],
+			M3(E, m, i[0],i[1],i[2], gp), 2*(val1 + val2), 2*val1, 2*val2,
+			gp_nei, j[0], j[1], j[2], gp_nei2, j2[0], j2[1], j2[2]);
+		assert(0);
+	      }
+	      continue;
+	    }
+	    // FIXME not handled -- should be fixed, though (see FIXME above) not strictly necessary
+	    MHERE;
+	  }
+	}
+      }
+    }
+  }
+}
