@@ -248,16 +248,20 @@ ggcm_mhd_create_amr_ddc(struct ggcm_mhd *mhd)
   mrc_domain_get_patches(mhd->domain, &nr_patches);
   mrc_domain_get_global_dims(mhd->domain, gdims);
 
-  // when we have bnd = 4 cell-centered ghost cells, we
-  // can fill, eg., Bx up to 3 points beyond boundary
-  int sw[3];
-  for (int d = 0; d < 3; d++) {
-    sw[d] = (gdims[d] == 1) ? 0 : bnd - 1;
-  }
-
   for (int m = 0; m < 3; m++) {
     int ext[3] = { 0, 0, 0 };
     ext[m] = (gdims[m] > 1);
+
+    // when we have bnd = 4 cell-centered ghost cells, we
+    // can fill, eg., Bx up to 3 points beyond boundary, but By, Bz up to 4 points
+    int sw[3];
+    for (int d = 0; d < 3; d++) {
+      sw[d] = (ext[d] == 1) ? bnd - 1 : bnd;
+      if (gdims[d] == 1) {
+	sw[d] = 0;
+      }
+    }
+
 
     for (int p = 0; p < nr_patches; p++) {
       struct mrc_patch_info info;
