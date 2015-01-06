@@ -252,11 +252,12 @@ magdiffu_const(struct ggcm_mhd_step *step, struct mrc_fld *x, struct mrc_fld *B_
   struct mrc_fld *E_ec = ggcm_mhd_step_get_3d_fld(step, 3);
 
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-  double dx[3]; mrc_crds_get_dx_base(crds, dx);
-  mrc_fld_data_t dxi[3] = { 1. / dx[0], 1. / dx[1], 1. / dx[2] };
 
   // calc edge-centered J
   for (int p = 0; p < mrc_fld_nr_patches(j_ec); p++) {
+    double dx[3]; mrc_crds_get_dx(crds, p, dx);
+    mrc_fld_data_t dxi[3] = { 1. / dx[0], 1. / dx[1], 1. / dx[2] };
+
     mrc_fld_foreach(j_ec, i,j,k, 0, 1) {
       M3(j_ec, 0, i,j,k, p) =
 	(BZ_(x, i,j,k, p) - BZ_(x, i,j-1,k, p)) * dxi[1] -
@@ -304,9 +305,10 @@ newstep_fc(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *Bcc)
   mrc_fld_data_t gamma = mhd->par.gamm;
   mrc_fld_data_t gamma_minus_1 = gamma - 1.;
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-  double dx[3]; mrc_crds_get_dx_base(crds, dx);
 
   for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+    double dx[3]; mrc_crds_get_dx(crds, p, dx);
+
     mrc_fld_foreach(x, i,j,k, 0, 0) {
       mrc_fld_data_t rri = 1.f / RR_(x, i,j,k, p);
       mrc_fld_data_t vx = RVX_(x, i,j,k, p) * rri;
@@ -331,16 +333,16 @@ newstep_fc(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *Bcc)
       cf2sq = 0.5*(tsum + sqrt(tdif*tdif + 4.0*asq*(b1*b1+b3*b3) * rri));
       cf3sq = 0.5*(tsum + sqrt(tdif*tdif + 4.0*asq*(b1*b1+b2*b2) * rri));
       
-      /* compute maximum cfl velocity (corresponding to minimum dt) */
-      max_v1 = fmax(max_v1, fabs(vx) + sqrt(cf1sq));
-      max_v2 = fmax(max_v2, fabs(vy) + sqrt(cf2sq));
-      max_v3 = fmax(max_v3, fabs(vz) + sqrt(cf3sq));
+      /* compute maximum inverse dt (corresponding to minimum dt) */
+      max_v1 = fmax(max_v1, (fabs(vx) + sqrt(cf1sq)) / dx[0]);
+      max_v2 = fmax(max_v2, (fabs(vy) + sqrt(cf2sq)) / dx[1]);
+      max_v3 = fmax(max_v3, (fabs(vz) + sqrt(cf3sq)) / dx[2]);
     } mrc_fld_foreach_end;
   }
   
-  max_dti = fmax(max_dti, max_v1/dx[0]);
-  max_dti = fmax(max_dti, max_v2/dx[1]);
-  max_dti = fmax(max_dti, max_v3/dx[2]);
+  max_dti = fmax(max_dti, max_v1);
+  max_dti = fmax(max_dti, max_v2);
+  max_dti = fmax(max_dti, max_v3);
 
   mrc_fld_data_t cfl = mhd->par.thx;
   mrc_fld_data_t local_dt = cfl / max_dti;
