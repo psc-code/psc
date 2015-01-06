@@ -109,6 +109,7 @@ void mrc_fld_set(struct mrc_fld *x, float val);
 int mrc_fld_nr_comps(struct mrc_fld *fld);
 const int *mrc_fld_offs(struct mrc_fld *x);
 const int *mrc_fld_dims(struct mrc_fld *x);
+const int *mrc_fld_sw(struct mrc_fld *x);
 const int *mrc_fld_ghost_offs(struct mrc_fld *x);
 const int *mrc_fld_ghost_dims(struct mrc_fld *x);
 struct mrc_fld *mrc_fld_duplicate(struct mrc_fld *fld);
@@ -154,6 +155,12 @@ static inline const int *
 mrc_fld_spatial_offs(struct mrc_fld *x)
 {
   return mrc_fld_offs(x) + x->_is_aos;
+}
+
+static inline const int *
+mrc_fld_spatial_sw(struct mrc_fld *x)
+{
+  return mrc_fld_sw(x) + x->_is_aos;
 }
 
 #if 0 // slower, not using _arr_off

@@ -394,6 +394,15 @@ mrc_fld_dims(struct mrc_fld *fld)
 }
 
 // ----------------------------------------------------------------------
+// mrc_fld_sw
+
+const int *
+mrc_fld_sw(struct mrc_fld *fld)
+{
+  return fld->_sw.vals;
+}
+
+// ----------------------------------------------------------------------
 // mrc_fld_ghost_offs
 
 const int *
