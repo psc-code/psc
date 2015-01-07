@@ -296,7 +296,14 @@ ggcm_mhd_setup_amr_ddc(struct ggcm_mhd *mhd)
     mrc_ddc_set_domain(ddc, mhd->domain);
     mrc_ddc_set_param_int(ddc, "size_of_type", mhd->fld->_size_of_type);
     mrc_ddc_set_param_int3(ddc, "sw", mrc_fld_spatial_sw(mhd->fld));
-    mrc_ddc_set_param_int(ddc, "n_comp", 5);//FIXMEmhd->fld->_nr_comps);
+    // FIXME!!!
+    if (strcmp(ggcm_mhd_step_type(mhd->step), "vl") == 0) {
+      mrc_ddc_set_param_int(ddc, "n_comp", 5);
+    } else if (strcmp(ggcm_mhd_step_type(mhd->step), "vlct") == 0) {
+      mrc_ddc_set_param_int(ddc, "n_comp", 8);
+    } else {
+      assert(0);
+    }
     mrc_ddc_setup(ddc);
     for (int m = 0; m < 5; m++) {
       mrc_ddc_amr_set_by_stencil(ddc, m, 0, (int[]) { 1, 0, 0 },
@@ -312,7 +319,13 @@ ggcm_mhd_setup_amr_ddc(struct ggcm_mhd *mhd)
     mrc_ddc_set_domain(ddc, mhd->domain);
     mrc_ddc_set_param_int(ddc, "size_of_type", mhd->fld->_size_of_type);
     mrc_ddc_set_param_int3(ddc, "sw", mrc_fld_spatial_sw(mhd->fld));
-    mrc_ddc_set_param_int(ddc, "n_comp", 5);//FIXMEmhd->fld->_nr_comps);
+    if (strcmp(ggcm_mhd_step_type(mhd->step), "vl") == 0) {
+      mrc_ddc_set_param_int(ddc, "n_comp", 5);
+    } else if (strcmp(ggcm_mhd_step_type(mhd->step), "vlct") == 0) {
+      mrc_ddc_set_param_int(ddc, "n_comp", 8);
+    } else {
+      assert(0);
+    }
     mrc_ddc_setup(ddc);
     for (int m = 0; m < 5; m++) {
       mrc_ddc_amr_set_by_stencil(ddc, m, 0, (int[]) { 0, 1, 0 },
