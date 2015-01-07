@@ -65,6 +65,16 @@ extern struct ggcm_mhd_ops ggcm_mhd_ops_box;
 
 // ----------------------------------------------------------------------
 
+
+void ggcm_mhd_get_crds_cc(struct ggcm_mhd *mhd, int ix, int iy, int iz, int p,
+			  float crd[3]);
+void ggcm_mhd_get_crds_nc(struct ggcm_mhd *mhd, int ix, int iy, int iz, int p,
+			  float crd[3]);
+void ggcm_mhd_get_crds_fc(struct ggcm_mhd *mhd, int ix, int iy, int iz, int p,
+			  int d, float crd[3]);
+void ggcm_mhd_get_crds_ec(struct ggcm_mhd *mhd, int ix, int iy, int iz, int p,
+			  int d, float crd[3]);
+
 void primvar_c(struct ggcm_mhd *mhd, int m_curr);
 void primvar_float(struct ggcm_mhd *mhd, int m_curr);
 void primvar_double(struct ggcm_mhd *mhd, int m_curr);
