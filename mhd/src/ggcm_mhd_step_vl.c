@@ -3,12 +3,15 @@
 
 #include <ggcm_mhd_private.h>
 #include <ggcm_mhd_defs.h>
+#include <ggcm_mhd_diag.h>
 #include <mhd_riemann.h>
 #include <mhd_reconstruct.h>
 
 #include <mrc_domain.h>
 #include <mrc_ddc.h>
 #include <mrc_ts.h>
+#include <mrc_io.h>
+
 #include <mrc_fld_as_double.h>
 #define F1(f, m, i) MRC_D2(f, m, i)
 
@@ -21,6 +24,8 @@ static int ldims[3];
 // ggcm_mhd_step subclass "vl"
 
 struct ggcm_mhd_step_vl {
+  bool debug_dump;
+
   struct mhd_reconstruct *reconstruct_pred;
   struct mhd_reconstruct *reconstruct_corr;
   struct mhd_riemann *riemann;
@@ -156,6 +161,7 @@ newstep_hydro(struct ggcm_mhd *mhd, struct mrc_fld *x)
 static void
 ggcm_mhd_step_vl_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 {
+  struct ggcm_mhd_step_vl *sub = ggcm_mhd_step_vl(step);
   struct ggcm_mhd *mhd = step->mhd;
 
   ldims[0] = mrc_fld_spatial_dims(x)[0];
@@ -175,6 +181,22 @@ ggcm_mhd_step_vl_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   mrc_fld_data_t dt = mhd->dt;
 
   // PREDICTOR
+
+  if (sub->debug_dump) {
+    static struct ggcm_mhd_diag *diag;
+    static int cnt;
+    if (!diag) {
+      diag = ggcm_mhd_diag_create(ggcm_mhd_comm(mhd));
+      ggcm_mhd_diag_set_type(diag, "c");
+      ggcm_mhd_diag_set_param_obj(diag, "mhd", mhd);
+      ggcm_mhd_diag_set_param_string(diag, "run", "dbg");
+      ggcm_mhd_diag_set_param_string(diag, "fields", "rr1:rv1:uu1:b1:rr:v:pp:b:divb");
+      ggcm_mhd_diag_setup(diag);
+      ggcm_mhd_diag_view(diag);
+    }
+    ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
+    ggcm_mhd_diag_run_now(diag, x, DIAG_TYPE_3D, cnt++);
+  }
 
   // ghosts have already been set
   mrc_fld_copy_range(x_half, x, 0, 5);
@@ -214,6 +236,8 @@ ggcm_mhd_step_vl_setup_flds(struct ggcm_mhd_step *step)
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_step_vl, x)
 static struct param ggcm_mhd_step_vl_descr[] = {
+  { "debug_dump"      , VAR(debug_dump)      , PARAM_BOOL(false)            },
+
   { "reconstruct_pred", VAR(reconstruct_pred), MRC_VAR_OBJ(mhd_reconstruct) },
   { "reconstruct_corr", VAR(reconstruct_corr), MRC_VAR_OBJ(mhd_reconstruct) },
   { "riemann"         , VAR(riemann)         , MRC_VAR_OBJ(mhd_riemann)     },
