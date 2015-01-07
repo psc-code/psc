@@ -77,6 +77,7 @@ int
 mrc_domain_get_neighbor_rank(struct mrc_domain *domain, int shift[3])
 {
   assert(mrc_domain_is_setup(domain));
+  assert(mrc_domain_ops(domain)->get_neighbor_rank);
   return mrc_domain_ops(domain)->get_neighbor_rank(domain, shift);
 }
 
