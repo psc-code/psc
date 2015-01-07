@@ -27,6 +27,8 @@ struct ggcm_mhd_params {
   double dbasetime;
   int modnewstep;
   int magdiffu;
+
+  bool monitor_conservation;
 };
 
 struct ggcm_mhd {

@@ -362,6 +362,8 @@ static struct param ggcm_mhd_descr[] = {
   { "diff_swbnd"      , VAR(par.diff_swbnd)  , PARAM_FLOAT(-1e30)    },
   { "diff_obnd"       , VAR(par.diff_obnd)   , PARAM_INT(0)          },
 
+  { "monitor_conservation", VAR(par.monitor_conservation), PARAM_BOOL(false)  },
+
   { "time"            , VAR(time)            , MRC_VAR_FLOAT         },
   { "dt"              , VAR(dt)              , MRC_VAR_FLOAT         },
   { "istep"           , VAR(istep)           , MRC_VAR_INT           },
@@ -467,6 +469,14 @@ ggcm_mhd_main(int *argc, char ***argv)
   mrc_ts_monitor_set_type(mon_output, "ggcm");
   mrc_ts_monitor_set_name(mon_output, "mrc_ts_output");
   mrc_ts_add_monitor(ts, mon_output);
+
+  if (mhd->par.monitor_conservation) {
+    struct mrc_ts_monitor *mon_conservation =
+      mrc_ts_monitor_create(mrc_ts_comm(ts));
+    mrc_ts_monitor_set_type(mon_conservation, "conservation");
+    mrc_ts_monitor_set_name(mon_conservation, "mrc_ts_conservation");
+    mrc_ts_add_monitor(ts, mon_conservation);
+  }
 
   mrc_ts_set_dt(ts, 1e-6);
   mrc_ts_set_solution(ts, mrc_fld_to_mrc_obj(mhd->fld));

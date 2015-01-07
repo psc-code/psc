@@ -14,6 +14,7 @@ mrc_ts_monitor_run(struct mrc_ts_monitor *mon, struct mrc_ts *ts)
 {
   assert(mrc_ts_monitor_ops(mon)->run);
 
+  // FIXME, make into while loop...
   if ((mon->every_steps > 0 && ts->n >= mon->next_step) ||
       (mon->every_time > 0. && ts->time >= mon->next_time)) {
     mrc_ts_monitor_ops(mon)->run(mon, ts);
