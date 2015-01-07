@@ -258,6 +258,29 @@ ggcm_mhd_setup_amr_domain(struct ggcm_mhd *mhd)
     mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 1, 3, 0 });
     mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 2, 3, 0 });
     mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 3, 3, 0 });
+  } else if (mhd->amr == 8) { // 3D
+    for (int k = 0; k < 4; k++) {
+      for (int i = 0; i < 4; i++) {
+	for (int j = 0; j < 4; j++) {
+	  mrc_domain_add_patch(mhd->domain, 2, (int [3]) { i, j, k });
+	}
+      }
+    }
+  } else if (mhd->amr == 9) { // 3D
+    for (int k = 0; k < 4; k++) {
+      for (int i = 0; i < 4; i++) {
+	for (int j = 0; j < 2; j++) {
+	  mrc_domain_add_patch(mhd->domain, 2, (int [3]) { i, j, k });
+	}
+      }
+    }
+    for (int k = 0; k < 8; k++) {
+      for (int i = 0; i < 8; i++) {
+	for (int j = 4; j < 8; j++) {
+	  mrc_domain_add_patch(mhd->domain, 3, (int [3]) { i, j, k });
+	}
+      }
+    }
   } else {
     assert(0);
   }

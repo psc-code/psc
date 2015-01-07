@@ -360,24 +360,27 @@ mrc_domain_find_valid_point_fine(struct mrc_domain *domain, int ext[3], int gp, 
       dirl[d] = 1; dirh[d] = 1;
     }
   }
-  
-  int dir[3] = {};
-  for (dir[1] = dirl[1]; dir[1] <= dirh[1]; dir[1]++) {
-    for (dir[0] = dirl[0]; dir[0] <= dirh[0]; dir[0]++) {
-      for (int d = 0; d < 3; d++) {
-	if (dir[d] == -1) {
-	  off[d] = 1;
-	} else if (dir[d] == 0) {
-	  off[d] = (i[d] >= ldims[d]) ? 1 : 0;
-	} else { // dir[d] == 1
-	  off[d] = 0;
-	}
-	j[d] = i[d] - 2 * ldims[d] * dir[d] - off[d] * ldims[d];
-      }
 
-      mrc_domain_get_neighbor_patch_fine(domain, gp, dir, off, gp_nei);
-      if (*gp_nei >= 0) {
-	return;
+  *gp_nei = -1;
+  int dir[3];
+  for (dir[2] = dirl[2]; dir[2] <= dirh[2]; dir[2]++) {
+    for (dir[1] = dirl[1]; dir[1] <= dirh[1]; dir[1]++) {
+      for (dir[0] = dirl[0]; dir[0] <= dirh[0]; dir[0]++) {
+	for (int d = 0; d < 3; d++) {
+	  if (dir[d] == -1) {
+	    off[d] = 1;
+	  } else if (dir[d] == 0) {
+	    off[d] = (i[d] >= ldims[d]) ? 1 : 0;
+	  } else { // dir[d] == 1
+	    off[d] = 0;
+	  }
+	  j[d] = i[d] - 2 * ldims[d] * dir[d] - off[d] * ldims[d];
+	}
+	
+	mrc_domain_get_neighbor_patch_fine(domain, gp, dir, off, gp_nei);
+	if (*gp_nei >= 0) {
+	  return;
+	}
       }
     }
   }
@@ -436,8 +439,7 @@ mrc_ddc_amr_stencil_fine(struct mrc_ddc *ddc, int ext[3],
       id[d] = 2*i[d] + s->dx[d];
     }
     mrc_domain_find_valid_point_fine(domain, ext, gp, id, &gp_nei, j);
-    /* mprintf("gp %d i %d:%d:%d gp_nei %d j %d:%d:%d val %g\n", gp, i[0], i[1], i[2], */
-    /* 	    gp_nei, j[0], j[1], j[2], s->val); */
+
     assert(!mrc_domain_is_ghost(domain, ext, gp_nei, j));
     mrc_ddc_amr_add_value(ddc, gp, m, i, gp_nei, m, j, s->val);
   }
@@ -498,6 +500,8 @@ mrc_ddc_amr_set_by_stencil(struct mrc_ddc *ddc, int m, int bnd, int _ext[3],
 	  mrc_domain_find_valid_point_same(domain, ext, gp, i, &gp_nei, j);
 	  if (gp_nei >= 0) {
 	    assert(!mrc_domain_is_ghost(domain, ext, gp_nei, j));
+	    /* mprintf("gp %d i %d:%d:%d gp_nei %d j %d:%d:%d\n", */
+	    /* 	    gp, i[0], i[1], i[2], gp_nei, j[0], j[1], j[2]); */
 	    mrc_ddc_amr_add_value(ddc, gp, m, i, gp_nei, m, j, 1.f);
 	    continue;
 	  }
