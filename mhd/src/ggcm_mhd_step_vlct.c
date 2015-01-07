@@ -90,13 +90,22 @@ compute_E##X##_edge(struct mrc_fld *E, struct mrc_fld *Ecc,		\
   }									\
 }
 
-#define MAKE_COMPUTE_E_EDGE_(X,Y,Z,IJ,JJ,KJ,IK,JK,KK)			\
+#define MAKE_COMPUTE_E_EDGE_(X,Y,Z, _IJ,_JJ,_KJ, _IK,_JK,_KK)		\
 									\
 static void								\
 compute_E##X##_edge(struct mrc_fld *E, struct mrc_fld *Ecc,		\
 		   struct mrc_fld **fluxes, int bnd)			\
 {									\
+  int gdims[3];								\
+  mrc_domain_get_global_dims(E->_domain, gdims);			\
+									\
   int BY = BX + Y, BZ = BX + Z;						\
+  int IJ = gdims[0] > 1 ? _IJ : 0;					\
+  int JJ = gdims[1] > 1 ? _JJ : 0;					\
+  int KJ = gdims[2] > 1 ? _KJ : 0;					\
+  int IK = gdims[0] > 1 ? _IK : 0;					\
+  int JK = gdims[1] > 1 ? _JK : 0;					\
+  int KK = gdims[2] > 1 ? _KK : 0;					\
 									\
   for (int p = 0; p < mrc_fld_nr_patches(E); p++) {			\
     mrc_fld_foreach(E, i,j,k, bnd, bnd+1) {				\
@@ -339,10 +348,13 @@ newstep_fc(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *Bcc)
       max_v3 = fmax(max_v3, (fabs(vz) + sqrt(cf3sq)) / dx[2]);
     } mrc_fld_foreach_end;
   }
-  
-  max_dti = fmax(max_dti, max_v1);
-  max_dti = fmax(max_dti, max_v2);
-  max_dti = fmax(max_dti, max_v3);
+
+  int gdims[3];
+  mrc_domain_get_global_dims(x->_domain, gdims);
+
+  if (gdims[0] > 1) max_dti = fmax(max_dti, max_v1);
+  if (gdims[1] > 1) max_dti = fmax(max_dti, max_v2);
+  if (gdims[2] > 1) max_dti = fmax(max_dti, max_v3);
 
   mrc_fld_data_t cfl = mhd->par.thx;
   mrc_fld_data_t local_dt = cfl / max_dti;
@@ -390,9 +402,11 @@ ggcm_mhd_step_vlct_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   // resistivity
 
   if (mhd->par.magdiffu == MAGDIFFU_CONST) {
-    magdiffu_const(step, x, B_cc, dt);
-    ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
-    compute_B_cc(B_cc, x, 3, 3);
+    if (mhd->par.diffco > 0.) {
+      magdiffu_const(step, x, B_cc, dt);
+      ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
+      compute_B_cc(B_cc, x, 3, 3);
+    }
   } else {
     mpi_printf(ggcm_mhd_comm(mhd), "WARNING: magdiffu '%d' not handled!\n",
 	       mhd->par.magdiffu);

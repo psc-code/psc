@@ -2,6 +2,8 @@
 #include "ggcm_mhd_crds.h"
 #include "mhd_util.h"
 
+#include <mrc_ddc.h>
+
 // ----------------------------------------------------------------------
 // compute_B_cc
 //
@@ -28,41 +30,52 @@ compute_B_cc(struct mrc_fld *B_cc, struct mrc_fld *x, int l, int r)
 
 static void __unused
 update_ct_uniform(struct ggcm_mhd *mhd,
-		  struct mrc_fld *x, struct mrc_fld *E, mrc_fld_data_t dt, int l, int r)
+		  struct mrc_fld *x, struct mrc_fld *E, mrc_fld_data_t dt, int _l, int _r)
 {
+  int gdims[3]; mrc_domain_get_global_dims(x->_domain, gdims);
+  int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
+  int l[3], r[3];
+  for (int d = 0; d < 3; d++) {
+    l[d] = (gdims[d] > 1) ? _l : 0;
+    r[d] = (gdims[d] > 1) ? _r : 0;
+  }
+
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
   const int *ldims = mrc_fld_spatial_dims(x);
-  int ie = ldims[0], je = ldims[1], ke = ldims[2];
+
+  // FIXME, works with gdims[2] == 1, but not with other invar directions
 
   for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
-    double dx[3]; mrc_crds_get_dx(crds, p, dx);
-    mrc_fld_data_t dt_on_dx[3] = { dt / dx[0], dt / dx[1], dt / dx[2] };
+    double ddx[3]; mrc_crds_get_dx(crds, p, ddx);
+    mrc_fld_data_t dt_on_dx[3] = { dt / ddx[0], dt / ddx[1], dt / ddx[2] };
 
-    for (int k = -l; k < ke + r; k++) {
-      for (int j = -l; j < je + r; j++) {
-	for (int i = -l; i < ie + r; i++) {
-	  M3(x, BX, i,j,k, p) += (dt_on_dx[2] * (M3(E, 1, i  ,j  ,k+1, p) - M3(E, 1, i  ,j  ,k  , p)) -
-				  dt_on_dx[1] * (M3(E, 2, i  ,j+1,k  , p) - M3(E, 2, i  ,j  ,k  , p)));
-	  M3(x, BY, i,j,k, p) += (dt_on_dx[0] * (M3(E, 2, i+1,j  ,k  , p) - M3(E, 2, i  ,j  ,k  , p)) -
-				  dt_on_dx[2] * (M3(E, 0, i  ,j  ,k+1, p) - M3(E, 0, i  ,j  ,k  , p)));
-	  M3(x, BZ, i,j,k, p) += (dt_on_dx[1] * (M3(E, 0, i  ,j+1,k  , p) - M3(E, 0, i  ,j  ,k  , p)) -
-				  dt_on_dx[0] * (M3(E, 1, i+1,j  ,k  , p) - M3(E, 1, i  ,j  ,k  , p)));
+    for (int k = -l[2]; k < ldims[2] + r[2]; k++) {
+      for (int j = -l[1]; j < ldims[1] + r[1]; j++) {
+	for (int i = -l[0]; i < ldims[0] + r[0]; i++) {
+	  M3(x, BX, i,j,k, p) += (dt_on_dx[2] * (M3(E, 1, i   ,j   ,k+dz, p) - M3(E, 1, i,j,k, p)) -
+				  dt_on_dx[1] * (M3(E, 2, i   ,j+dy,k   , p) - M3(E, 2, i,j,k, p)));
+	  M3(x, BY, i,j,k, p) += (dt_on_dx[0] * (M3(E, 2, i+dx,j   ,k   , p) - M3(E, 2, i,j,k, p)) -
+				  dt_on_dx[2] * (M3(E, 0, i   ,j   ,k+dz, p) - M3(E, 0, i,j,k, p)));
+	  M3(x, BZ, i,j,k, p) += (dt_on_dx[1] * (M3(E, 0, i   ,j+dy,k   , p) - M3(E, 0, i,j,k, p)) -
+				  dt_on_dx[0] * (M3(E, 1, i+dx,j   ,k   , p) - M3(E, 1, i,j,k, p)));
 	}
-	int i = ie + r;
-	M3(x, BX, i,j,k, p) += (dt_on_dx[2] * (M3(E, 1, i  ,j  ,k+1, p) - M3(E, 1, i  ,j  ,k  , p)) -
-				dt_on_dx[1] * (M3(E, 2, i  ,j+1,k  , p) - M3(E, 2, i  ,j  ,k  , p)));
+	int i = ldims[0] + r[0];
+	M3(x, BX, i,j,k, p) += (dt_on_dx[2] * (M3(E, 1, i   ,j   ,k+dz, p) - M3(E, 1, i,j,k, p)) -
+				dt_on_dx[1] * (M3(E, 2, i   ,j+dy,k   , p) - M3(E, 2, i,j,k, p)));
       }
-      for (int i = -l; i < ie + r; i++) {
-	int j = je + r;
-	M3(x, BY, i,j,k, p) += (dt_on_dx[0] * (M3(E, 2, i+1,j  ,k  , p) - M3(E, 2, i  ,j  ,k  , p)) -
-				dt_on_dx[2] * (M3(E, 0, i  ,j  ,k+1, p) - M3(E, 0, i  ,j  ,k  , p)));
+      for (int i = -l[0]; i < ldims[0] + r[0]; i++) {
+	int j = ldims[1] + r[1];
+	M3(x, BY, i,j,k, p) += (dt_on_dx[0] * (M3(E, 2, i+dx,j   ,k   , p) - M3(E, 2, i,j,k, p)) -
+				dt_on_dx[2] * (M3(E, 0, i   ,j   ,k+dz, p) - M3(E, 0, i,j,k, p)));
       }
     }
-    for (int j = -l; j < je + r; j++) {
-      for (int i = -l; i < ie + r; i++) {
-	int k = ke + r;
-	M3(x, BZ, i,j,k, p) += (dt_on_dx[1] * (M3(E, 0, i  ,j+1,k  , p) - M3(E, 0, i  ,j  ,k  , p)) -
-				dt_on_dx[0] * (M3(E, 1, i+1,j  ,k  , p) - M3(E, 1, i  ,j  ,k  , p)));
+    if (gdims[2] > 1) {
+      for (int j = -l[1]; j < ldims[1] + r[1]; j++) {
+	for (int i = -l[0]; i < ldims[0] + r[0]; i++) {
+	  int k = ldims[2] + r[2];
+	  M3(x, BZ, i,j,k, p) += (dt_on_dx[1] * (M3(E, 0, i   ,j+dy,k   , p) - M3(E, 0, i,j,k, p)) -
+				dt_on_dx[0] * (M3(E, 1, i+dx,j   ,k   , p) - M3(E, 1, i,j,k, p)));
+	}
       }
     }
   }
@@ -94,7 +107,7 @@ update_ct(struct ggcm_mhd *mhd,
 
 static void __unused
 mhd_fluxes(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3], struct mrc_fld *x,
-	   struct mrc_fld *B_cc, int bnd, int nghost,
+	   struct mrc_fld *B_cc, int bn, int nghost,
 	   void (*flux_func)(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3],
 			     struct mrc_fld *x, struct mrc_fld *B_cc,
 			     int ldim, int bnd, int j, int k, int dir, int p))
@@ -102,28 +115,37 @@ mhd_fluxes(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3], struct mrc_fld
   int gdims[3];
   mrc_domain_get_global_dims(x->_domain, gdims);
 
+  int bnd[3];
+  for (int d = 0; d < 3; d++) {
+    if (gdims[d] == 1) {
+      bnd[d] = 0;
+    } else {
+      bnd[d] = bn;
+    }
+  }
+
   const int *ldims = mrc_fld_spatial_dims(x);
 
   for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
     if (gdims[0] > 1) {
-      for (int k = -bnd; k < ldims[2] + bnd; k++) {
-	for (int j = -bnd; j < ldims[1] + bnd; j++) {
+      for (int k = -bnd[2]; k < ldims[2] + bnd[2]; k++) {
+	for (int j = -bnd[1]; j < ldims[1] + bnd[1]; j++) {
 	  flux_func(step, fluxes, x, B_cc, ldims[0], nghost, j, k, 0, p);
 	}
       }
     }
 
     if (gdims[1] > 1) {
-      for (int k = -bnd; k < ldims[2] + bnd; k++) {
-	for (int i = -bnd; i < ldims[0] + bnd; i++) {
+      for (int k = -bnd[2]; k < ldims[2] + bnd[2]; k++) {
+	for (int i = -bnd[0]; i < ldims[0] + bnd[0]; i++) {
 	  flux_func(step, fluxes, x, B_cc, ldims[1], nghost, k, i, 1, p);
 	}
       }
     }
 
     if (gdims[2] > 1) {
-      for (int j = -bnd; j < ldims[1] + bnd; j++) {
-	for (int i = -bnd; i < ldims[0] + bnd; i++) {
+      for (int j = -bnd[1]; j < ldims[1] + bnd[1]; j++) {
+	for (int i = -bnd[0]; i < ldims[0] + bnd[0]; i++) {
 	  flux_func(step, fluxes, x, B_cc, ldims[2], nghost, i, j, 2, p);
 	}
       }
