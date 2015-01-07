@@ -229,6 +229,35 @@ ggcm_mhd_setup_amr_domain(struct ggcm_mhd *mhd)
 	mrc_domain_add_patch(mhd->domain, 3, (int [3]) { i, j, 0 });
       }
     }
+  } else if (mhd->amr == 7) {
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 0, 0, 0 });
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 1, 0, 0 });
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 2, 0, 0 });
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 3, 0, 0 });
+    
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 0, 1, 0 });
+    mrc_domain_add_patch(mhd->domain, 3, (int [3]) { 2, 2, 0 });
+    mrc_domain_add_patch(mhd->domain, 3, (int [3]) { 3, 2, 0 });
+    mrc_domain_add_patch(mhd->domain, 3, (int [3]) { 2, 3, 0 });
+    mrc_domain_add_patch(mhd->domain, 3, (int [3]) { 3, 3, 0 });
+    mrc_domain_add_patch(mhd->domain, 3, (int [3]) { 4, 2, 0 });
+    mrc_domain_add_patch(mhd->domain, 3, (int [3]) { 5, 2, 0 });
+    mrc_domain_add_patch(mhd->domain, 3, (int [3]) { 4, 3, 0 });
+    mrc_domain_add_patch(mhd->domain, 3, (int [3]) { 5, 3, 0 });
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 3, 1, 0 });
+    
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 0, 2, 0 });
+    mrc_domain_add_patch(mhd->domain, 3, (int [3]) { 2, 4, 0 });
+    mrc_domain_add_patch(mhd->domain, 3, (int [3]) { 3, 4, 0 });
+    mrc_domain_add_patch(mhd->domain, 3, (int [3]) { 2, 5, 0 });
+    mrc_domain_add_patch(mhd->domain, 3, (int [3]) { 3, 5, 0 });
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 2, 2, 0 });
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 3, 2, 0 });
+    
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 0, 3, 0 });
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 1, 3, 0 });
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 2, 3, 0 });
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 3, 3, 0 });
   } else {
     assert(0);
   }
@@ -358,11 +387,11 @@ ggcm_mhd_setup_amr_ddc(struct ggcm_mhd *mhd)
     mrc_ddc_set_param_int(ddc, "n_comp", 3);
     mrc_ddc_setup(ddc);
     // FIXME: do not restrict on bnd -- or does it even matter, after doing EMF right?
-    mrc_ddc_amr_set_by_stencil(ddc, 0, 3, (int[]) { 1, 0, 0 },
+    mrc_ddc_amr_set_by_stencil(ddc, 0, 0, (int[]) { 1, 1, 0 },
 			       NULL, NULL);
-    mrc_ddc_amr_set_by_stencil(ddc, 1, 3, (int[]) { 1, 0, 0 },
+    mrc_ddc_amr_set_by_stencil(ddc, 1, 0, (int[]) { 1, 1, 0 },
 			       NULL, NULL);
-    mrc_ddc_amr_set_by_stencil(ddc, 2, 3, (int[]) { 1, 0, 0 },
+    mrc_ddc_amr_set_by_stencil(ddc, 2, 0, (int[]) { 1, 1, 0 },
 			       NULL, NULL);
     mrc_ddc_amr_assemble(ddc);
     // FIXME, leaked
@@ -490,9 +519,9 @@ is_ghost_b(struct mrc_domain *domain, int ext[3], int gp, int i[3])
       for (dd[0] = dir[0]; dd[0] >= dir[0] - dirx[0]; dd[0]--) {
 	int gp_nei;
 	mrc_domain_get_neighbor_patch_same(domain, gp, dd, &gp_nei);
-	if (gp == 2) {
-	  mprintf("gp %d i %d:%d:%d dd %d:%d:%d gp_nei %d\n", gp, i[0],i[1],i[2], dd[0], dd[1], dd[2], gp_nei);
-	}
+	/* if (gp == 2) { */
+	/*   mprintf("gp %d i %d:%d:%d dd %d:%d:%d gp_nei %d\n", gp, i[0],i[1],i[2], dd[0], dd[1], dd[2], gp_nei); */
+	/* } */
 	if (gp_nei >= 0) {
 	  return gp != gp_nei;
 	}
@@ -514,12 +543,13 @@ fill_ghosts_b_one(struct mrc_domain *domain, struct mrc_fld *fld,
   // try to find an interior point on the same level corresponding to the current ghostpoint
   int j[3], gp_nei;
   mrc_domain_find_valid_point_same(domain, ext, gp, i, &gp_nei, j);
-  if (gp_nei >= 0 && gp_nei != gp) {
+
+  if (gp_nei >= 0) { // && gp_nei != gp) {
     /* mprintf("AAA gp %d i %d:%d:%d gp_nei %d j %d:%d:%d (%g)\n", */
     /* 	      gp, i[0], i[1], i[2], gp_nei, j[0], j[1], j[2], */
     /* 	      M3(fld, m, j[0],j[1],j[2], gp_nei)); */
     //mrc_ddc_amr_add_value(ddc, gp, m, i, gp_nei, m, j, 1.f);
-    return M3(fld, BX+m, j[0],j[1],j[2], gp_nei);
+  return M3(fld, BX+m, j[0],j[1],j[2], gp_nei);
   }
   
   // is there a corresponding point in a fine domain (also on this face)?
@@ -553,10 +583,12 @@ fill_ghosts_b_one(struct mrc_domain *domain, struct mrc_fld *fld,
       } else {
 	assert(0);
       }
-      return 1.f;
     }
   }
 
+  mprintf("XXX gp %d i %d %d %d\n", gp, i[0], i[1], i[2]);
+
+  // return 2.f;
   assert(0);
 }
 
@@ -638,8 +670,8 @@ fill_ghosts_b(struct ggcm_mhd *mhd, struct mrc_fld *fld)
       mrc_domain_get_neighbor_patch_same(mhd->domain, gp, dir, &gp_nei);
 
       if (gp_nei >= 0) {
-	mprintf("gp %d d %d gp_nei %d\n", gp, d, gp_nei);
-      int p_nei = gp_nei; // FIXME, serial only
+	/* mprintf("gp %d d %d gp_nei %d\n", gp, d, gp_nei); */
+	int p_nei = gp_nei; // FIXME, serial only
 	if (d == 1) {
 	  for (int iz = 0; iz < ldims[2]; iz++) {
 	    for (int ix = 0; ix < ldims[0]; ix++) {

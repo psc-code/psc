@@ -419,7 +419,7 @@ ggcm_mhd_step_vlct_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   if (mhd->par.magdiffu == MAGDIFFU_CONST) {
     if (mhd->par.diffco > 0.) {
       compute_Ediffu_const(step, E_ec, x, B_cc);
-      update_ct_uniform(mhd, x, E_ec, dt, 0, 0);
+      update_ct_uniform(mhd, x, E_ec, dt, 0, 0, false);
       ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
       compute_B_cc(B_cc, x, 3, 3);
     }
@@ -448,17 +448,17 @@ ggcm_mhd_step_vlct_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
   mrc_fld_copy_range(x_half, x, 0, 8);
   mhd_fluxes(step, flux, x, B_cc, nghost, nghost, flux_pred);
-  update_finite_volume_uniform(mhd, x_half, flux, .5 * dt, nghost - 1, nghost - 1);
+  update_finite_volume_uniform(mhd, x_half, flux, .5 * dt, nghost - 1, nghost - 1, false);
   compute_E(step, E_ec, x, B_cc, flux, 4);
-  update_ct_uniform(mhd, x_half, E_ec, .5 * dt, nghost - 1, nghost - 1);
+  update_ct_uniform(mhd, x_half, E_ec, .5 * dt, nghost - 1, nghost - 1, false);
 
   // CORRECTOR
 
   compute_B_cc(B_cc, x_half, nghost - 1, nghost - 1);
   mhd_fluxes(step, flux, x_half, B_cc, 1, nghost, flux_corr);
-  update_finite_volume_uniform(mhd, x, flux, dt, 0, 0);
+  update_finite_volume_uniform(mhd, x, flux, dt, 0, 0, true);
   compute_E(step, E_ec, x_half, B_cc, flux, 4);
-  update_ct_uniform(mhd, x, E_ec, dt, 0, 0);
+  update_ct_uniform(mhd, x, E_ec, dt, 0, 0, true);
 
   // clean up
 

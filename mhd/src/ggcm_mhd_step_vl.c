@@ -201,13 +201,13 @@ ggcm_mhd_step_vl_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   // ghosts have already been set
   mrc_fld_copy_range(x_half, x, 0, 5);
   mhd_fluxes(step, flux, x, NULL, 0, 99, flux_pred);
-  update_finite_volume_uniform(mhd, x_half, flux, .5 * dt, 0, 0);
+  update_finite_volume_uniform(mhd, x_half, flux, .5 * dt, 0, 0, false);
 
   // CORRECTOR
 
   ggcm_mhd_fill_ghosts(mhd, x_half, 0, mhd->time);
   mhd_fluxes(step, flux, x_half, NULL, 0, 99, flux_corr);
-  update_finite_volume_uniform(mhd, x, flux, dt, 0, 0);
+  update_finite_volume_uniform(mhd, x, flux, dt, 0, 0, true);
 
   // clean up
 

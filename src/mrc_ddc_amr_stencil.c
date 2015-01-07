@@ -247,7 +247,7 @@ mrc_domain_find_valid_point_same(struct mrc_domain *domain, int ext[3], int gp, 
     for (dd[1] = dir[1]; dd[1] >= dir[1] - dirx[1]; dd[1]--) {
       for (dd[0] = dir[0]; dd[0] >= dir[0] - dirx[0]; dd[0]--) {
 	if (dd[0] == 0 && dd[1] == 0 && dd[2] == 0) {
-	  continue;
+	  //	  continue;
 	}
 	mrc_domain_get_neighbor_patch_same(domain, gp, dd, gp_nei);
 	if (*gp_nei >= 0) {
@@ -255,6 +255,7 @@ mrc_domain_find_valid_point_same(struct mrc_domain *domain, int ext[3], int gp, 
 	    j[d] = i[d] - dd[d] * ldims[d];
 	  }
 	  // need to double check whether we actually picked an interior point
+	  // FIXME!!! needs to use consistent _is_ghost()
 	  if (!mrc_domain_is_ghost(domain, ext, *gp_nei, j)) {
 	    return;
 	  }
@@ -337,24 +338,49 @@ mrc_domain_find_valid_point_fine(struct mrc_domain *domain, int ext[3], int gp, 
   struct mrc_patch_info pi;
   mrc_domain_get_global_patch_info(domain, gp, &pi);
     
-  int off[3], dir[3];
+  int off[3], dirl[3], dirh[3];
   for (int d = 0; d < 3; d++) {
-    if ((ext[d] == 0 && i[d] < 0) || (ext[d] == 1 && i[d] <= 0)) {
-      off[d] = 1;
-      j[d] = i[d] + ldims[d];
-      dir[d] = -1;
+    if (i[d] < 0) {
+      dirl[d] = -1; dirh[d] = -1;
+    } else if (i[d] == 0) {
+      if (ext[d] == 1) { // on boundary
+	dirl[d] = -1; dirh[d] = 0;
+      } else {
+	dirl[d] = 0; dirh[d] = 0;
+      }
     } else if (i[d] < 2 * ldims[d]) {
-      off[d] = i[d] / ldims[d];
-      j[d] = i[d] - off[d] * ldims[d];
-      dir[d] = 0;
-    } else { // >= 2 * ldims[d]
-      off[d] = 0;
-      j[d] = i[d] - 2 * ldims[d];
-      dir[d] = 1;
+        dirl[d] = 0; dirh[d] = 0;
+    } else if (i[d] == 2 * ldims[d]) {
+      if (ext[d] == 1) { // on boundary
+	dirl[d] = 0; dirh[d] = 1;
+      } else {
+	dirl[d] = 1; dirh[d] = 1;
+      }
+    } else { // > 2 * ldims[d]
+      dirl[d] = 1; dirh[d] = 1;
     }
   }
+  
+  int dir[3] = {};
+  for (dir[1] = dirl[1]; dir[1] <= dirh[1]; dir[1]++) {
+    for (dir[0] = dirl[0]; dir[0] <= dirh[0]; dir[0]++) {
+      for (int d = 0; d < 3; d++) {
+	if (dir[d] == -1) {
+	  off[d] = 1;
+	} else if (dir[d] == 0) {
+	  off[d] = (i[d] >= ldims[d]) ? 1 : 0;
+	} else { // dir[d] == 1
+	  off[d] = 0;
+	}
+	j[d] = i[d] - 2 * ldims[d] * dir[d] - off[d] * ldims[d];
+      }
 
-  mrc_domain_get_neighbor_patch_fine(domain, gp, dir, off, gp_nei);
+      mrc_domain_get_neighbor_patch_fine(domain, gp, dir, off, gp_nei);
+      if (*gp_nei >= 0) {
+	return;
+      }
+    }
+  }
 }
 
 static inline int
