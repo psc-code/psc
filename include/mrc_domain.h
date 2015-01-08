@@ -103,6 +103,7 @@ void mrc_domain_get_neighbor_rank_patch(struct mrc_domain *domain, int p, int di
 					int *nei_rank, int *nei_patch);
 void mrc_domain_add_patch(struct mrc_domain *domain, int l, int idx3[3]);
 
+int mrc_domain_nr_patches(struct mrc_domain *domain);
 struct mrc_patch *mrc_domain_get_patches(struct mrc_domain *domain, int *nr_patches);
 struct mrc_crds *mrc_domain_get_crds(struct mrc_domain *domain);
 struct mrc_ddc *mrc_domain_get_ddc(struct mrc_domain *domain);

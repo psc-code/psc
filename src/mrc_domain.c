@@ -53,6 +53,17 @@ _mrc_domain_write(struct mrc_domain *domain, struct mrc_io *io)
   mrc_io_write_int(io, domain, "mpi_size", domain->size);
 }
 
+int
+mrc_domain_nr_patches(struct mrc_domain *domain)
+{
+  int nr_patches;
+  assert(mrc_domain_is_setup(domain));
+  assert(mrc_domain_ops(domain)->get_patches);
+  mrc_domain_ops(domain)->get_patches(domain, &nr_patches);
+  
+  return nr_patches;
+}
+
 struct mrc_patch *
 mrc_domain_get_patches(struct mrc_domain *domain, int *nr_patches)
 {
