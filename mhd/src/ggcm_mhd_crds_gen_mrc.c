@@ -44,7 +44,7 @@ ggcm_mhd_crds_gen_mrc_run(struct ggcm_mhd_crds_gen *gen, struct ggcm_mhd_crds *c
       }
     }
 
-    mrc_f1_foreach(global_x, i, 0, 0) {
+    mrc_f1_foreach(global_x, i, 1, 1) {
       MRC_F1(global_x, 0, i) = MRC_D2(mrc_crds->global_crd[d], i, 0);
     } mrc_f1_foreach_end;
   }
