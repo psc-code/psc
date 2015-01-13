@@ -155,6 +155,21 @@ _ggcm_mhd_read(struct ggcm_mhd *mhd, struct mrc_io *io)
 }
 
 static void
+ggcm_mhd_setup_amr(struct ggcm_mhd *mhd)
+{
+  if (mhd->amr == 1) {
+    mrc_domain_add_patch(mhd->domain, 0, (int [3]) { 0, 0, 0 });
+  } else if (mhd->amr == 2) {
+    mrc_domain_add_patch(mhd->domain, 1, (int [3]) { 0, 0, 0 });
+    mrc_domain_add_patch(mhd->domain, 1, (int [3]) { 0, 1, 0 });
+    mrc_domain_add_patch(mhd->domain, 1, (int [3]) { 1, 0, 0 });
+    mrc_domain_add_patch(mhd->domain, 1, (int [3]) { 1, 1, 0 });
+  } else {
+    assert(0);
+  }
+}
+
+static void
 _ggcm_mhd_setup(struct ggcm_mhd *mhd)
 {
   ggcm_mhd_step_setup_flds(mhd->step);
@@ -168,6 +183,10 @@ _ggcm_mhd_setup(struct ggcm_mhd *mhd)
     mrc_crds_set_param_int(crds, "sw", mhd->fld->_nr_ghosts);
   }
 
+  if (mhd->amr > 0) {
+    ggcm_mhd_setup_amr(mhd);
+  }
+
   ggcm_mhd_setup_member_objs(mhd);
   ggcm_mhd_setup_internal(mhd);
 }
@@ -175,7 +194,9 @@ _ggcm_mhd_setup(struct ggcm_mhd *mhd)
 void
 ggcm_mhd_fill_ghosts(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m, float bntim)
 {
-  mrc_ddc_fill_ghosts_fld(mrc_domain_get_ddc(mhd->domain), m, m + 8, fld);
+  if (mhd->amr == 0) {
+    mrc_ddc_fill_ghosts_fld(mrc_domain_get_ddc(mhd->domain), m, m + 8, fld);
+  }
   ggcm_mhd_bnd_fill_ghosts(mhd->bnd, fld, m, bntim);
 }
 
@@ -388,6 +409,7 @@ static struct param ggcm_mhd_descr[] = {
   { "diff_obnd"       , VAR(par.diff_obnd)   , PARAM_INT(0)          },
 
   { "monitor_conservation", VAR(par.monitor_conservation), PARAM_BOOL(false)  },
+  { "amr"             , VAR(amr)             , PARAM_INT(0)          },
 
   { "time"            , VAR(time)            , MRC_VAR_FLOAT         },
   { "dt"              , VAR(dt)              , MRC_VAR_FLOAT         },
