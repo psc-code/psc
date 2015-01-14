@@ -431,13 +431,14 @@ rmaskn_c(struct ggcm_mhd_step *step)
   int diff_obnd = mhd->par.diff_obnd;
   int gdims[3];
   mrc_domain_get_global_dims(mhd->domain, gdims);
-  struct mrc_patch_info info;
-  mrc_domain_get_local_patch_info(mhd->domain, 0, &info);
 
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
 
   // _ZMASK not set at -2 ghost
   for (int p = 0; p < mrc_fld_nr_patches(rmask); p++) {
+    struct mrc_patch_info info;
+    mrc_domain_get_local_patch_info(mhd->domain, p, &info);
+
     mrc_fld_foreach(rmask, i,j,k, 1, 2) {
       RMASK(rmask, i,j,k, p) = 0.f;
       mrc_fld_data_t xxx = MRC_MCRDX(crds, i, p);
@@ -469,11 +470,12 @@ res1_const_c(struct ggcm_mhd *mhd, struct mrc_fld *resis)
 
   int gdims[3];
   mrc_domain_get_global_dims(mhd->domain, gdims);
-  struct mrc_patch_info info;
-  mrc_domain_get_local_patch_info(mhd->domain, 0, &info);
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
 
   for (int p = 0; p < mrc_fld_nr_patches(resis); p++) {
+    struct mrc_patch_info info;
+    mrc_domain_get_local_patch_info(mhd->domain, p, &info);
+
     mrc_fld_foreach(resis, i,j,k, 1, 1) {
       M3(resis, 0, i,j,k, p) = 0.f;
       mrc_fld_data_t r2 = (sqr(MRC_MCRDX(crds, i, p)) +
