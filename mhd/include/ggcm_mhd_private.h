@@ -66,6 +66,14 @@ extern struct ggcm_mhd_ops ggcm_mhd_ops_box;
 // ----------------------------------------------------------------------
 
 
+// direct access to coords for a given cell
+// (ideally avoided for performance critical parts, because it's slower)
+//
+// FIXME, this should maybe become a feature of mrc_crds, or go away entirely
+// because it duplicates already existing functionality to access coordinates via
+// MRC_MCRD macros, though the latter only support cell-centered coords at this
+// time
+
 void ggcm_mhd_get_crds_cc(struct ggcm_mhd *mhd, int ix, int iy, int iz, int p,
 			  float crd[3]);
 void ggcm_mhd_get_crds_nc(struct ggcm_mhd *mhd, int ix, int iy, int iz, int p,
