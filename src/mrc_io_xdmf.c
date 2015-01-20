@@ -787,40 +787,44 @@ ds_xdmf_write_attr(struct mrc_io *io, const char *path, int type,
   case PT_SELECT:
   case PT_INT:
   case MRC_VAR_INT:
-    H5LTset_attribute_int(group, ".", name, &pv->u_int, 1);
+    ierr = H5LTset_attribute_int(group, ".", name, &pv->u_int, 1); CE;
     break;
   case PT_BOOL:
   case MRC_VAR_BOOL: {
     int val = pv->u_bool;
-    H5LTset_attribute_int(group, ".", name, &val, 1);
+    ierr = H5LTset_attribute_int(group, ".", name, &val, 1); CE;
     break;
   }
   case PT_FLOAT:
   case MRC_VAR_FLOAT:
-    H5LTset_attribute_float(group, ".", name, &pv->u_float, 1);
+    ierr = H5LTset_attribute_float(group, ".", name, &pv->u_float, 1); CE;
     break;
   case PT_DOUBLE:
   case MRC_VAR_DOUBLE:
-    H5LTset_attribute_double(group, ".", name, &pv->u_double, 1);
+    ierr = H5LTset_attribute_double(group, ".", name, &pv->u_double, 1); CE;
     break;
   case PT_STRING:
     if (pv->u_string) {
-      H5LTset_attribute_string(group, ".", name, pv->u_string);
+      ierr = H5LTset_attribute_string(group, ".", name, pv->u_string); CE;
     } else {
-      H5LTset_attribute_string(group, ".", name, "(NULL)");
+      ierr = H5LTset_attribute_string(group, ".", name, "(NULL)"); CE;
     }
     break;
   case PT_INT3:
-    H5LTset_attribute_int(group, ".", name, pv->u_int3, 3);
+    ierr = H5LTset_attribute_int(group, ".", name, pv->u_int3, 3); CE;
     break;
   case PT_FLOAT3:
-    H5LTset_attribute_float(group, ".", name, pv->u_float3, 3);
+    ierr = H5LTset_attribute_float(group, ".", name, pv->u_float3, 3); CE;
     break;
   case PT_DOUBLE3:
-    H5LTset_attribute_double(group, ".", name, pv->u_double3, 3);
+    ierr = H5LTset_attribute_double(group, ".", name, pv->u_double3, 3); CE;
     break;
   case PT_INT_ARRAY:
-    H5LTset_attribute_int(group, ".", name, pv->u_int_array.vals, pv->u_int_array.nr_vals);
+    if (pv->u_int_array.nr_vals == 0) {
+      mprintf("WARNING: not writing int_array of length 0\n");
+      break;
+    }
+    ierr = H5LTset_attribute_int(group, ".", name, pv->u_int_array.vals, pv->u_int_array.nr_vals); CE;
     break;
   }
   ierr = H5Gclose(group); CE;
@@ -1181,16 +1185,21 @@ ds_xdmf_write_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
   int ierr;
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
 
+  if (fld->_dims.nr_vals == 0) {
+    mprintf("WARNING: not writing mrc_fld with 0 dims!\n");
+    return;
+  }
+
   hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT); H5_CHK(group0);
 
   hsize_t hdims[fld->_dims.nr_vals];
   for (int d = 0; d < fld->_dims.nr_vals; d++) {
     hdims[d] = mrc_fld_ghost_dims(fld)[fld->_dims.nr_vals - 1 - d];
   }
-  hid_t filespace = H5Screate_simple(fld->_dims.nr_vals, hdims, NULL);
-  hid_t datatype = get_h5_datatype(fld);
+  hid_t filespace = H5Screate_simple(fld->_dims.nr_vals, hdims, NULL); H5_CHK(filespace);
+  hid_t datatype = get_h5_datatype(fld); H5_CHK(datatype);
   hid_t dset = H5Dcreate(group0, "fld", datatype, filespace, H5P_DEFAULT,
-			 H5P_DEFAULT, H5P_DEFAULT);
+			 H5P_DEFAULT, H5P_DEFAULT); H5_CHK(dset);
   ierr = H5Dwrite(dset, datatype, H5S_ALL, filespace, H5P_DEFAULT, fld->_arr); CE;
   ierr = H5Dclose(dset); CE;
   ierr = H5Sclose(filespace); CE;

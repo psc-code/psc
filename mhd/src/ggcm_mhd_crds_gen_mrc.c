@@ -28,7 +28,6 @@ ggcm_mhd_crds_gen_mrc_run(struct ggcm_mhd_crds_gen *gen, struct ggcm_mhd_crds *c
       float *fxx1 = ggcm_mhd_crds_get_crd_p(crds, d, FX1, p);
       float *fdx1 = ggcm_mhd_crds_get_crd_p(crds, d, FD1, p);
       int sw = mrc_crds->sw;
-      struct mrc_fld *global_x = crds->global_f1[d];
       
       // FIXME: this is not bounds checked at all since sw is set from mrc_crds,
       //        NOT ggcm_mhd_crds, which is on the left hand side here
@@ -46,6 +45,12 @@ ggcm_mhd_crds_gen_mrc_run(struct ggcm_mhd_crds_gen *gen, struct ggcm_mhd_crds *c
 	}
       }
       
+    }
+  }
+
+  if (strcmp(mrc_crds_type(mrc_crds), "amr_uniform") != 0) {
+    for (int d = 0; d < 3; d++) {
+      struct mrc_fld *global_x = crds->global_f1[d];
       mrc_f1_foreach(global_x, i, 1, 1) {
 	MRC_F1(global_x, 0, i) = MRC_D2(mrc_crds->global_crd[d], i, 0);
       } mrc_f1_foreach_end;
