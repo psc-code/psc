@@ -80,6 +80,7 @@ void ggcm_mhd_put_3d_fld(struct ggcm_mhd *mhd, struct mrc_fld *f);
 struct mrc_ddc *ggcm_mhd_create_amr_ddc(struct ggcm_mhd *mhd);
 struct mrc_ddc *ggcm_mhd_create_amr_ddc_flux(struct ggcm_mhd *mhd, int d);
 struct mrc_ddc *ggcm_mhd_create_amr_ddc_E(struct ggcm_mhd *mhd);
+void ggcm_mhd_setup_amr_domain(struct ggcm_mhd *mhd);
 
 // reference implementation only
 void ggcm_mhd_amr_fill_ghosts_b(struct ggcm_mhd *mhd, struct mrc_fld *fld);
