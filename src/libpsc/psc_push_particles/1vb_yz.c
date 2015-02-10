@@ -7,29 +7,49 @@
 
 #include "c_common_push.c"
 
+#define MAX_NR_KINDS (10)
+
+struct params_1vb {
+  particle_real_t dt;
+  particle_real_t fnqs, fnqxs, fnqys, fnqzs;
+  particle_real_t dxi[3];
+  particle_real_t dq_kind[MAX_NR_KINDS];
+  particle_real_t fnqx_kind[MAX_NR_KINDS];
+  particle_real_t fnqy_kind[MAX_NR_KINDS];
+  particle_real_t fnqz_kind[MAX_NR_KINDS];
+};
+
+static struct params_1vb prm;
+
+static void
+params_1vb_set(struct psc *psc, int p)
+{
+  prm.dt = ppsc->dt;
+  prm.fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+#ifdef VB_2D
+  prm.fnqxs = prm.fnqs;
+#else
+  prm.fnqxs = ppsc->patch[p].dx[0] * prm.fnqs / prm.dt;
+#endif
+  prm.fnqys = ppsc->patch[p].dx[1] * prm.fnqs / prm.dt;
+  prm.fnqzs = ppsc->patch[p].dx[2] * prm.fnqs / prm.dt;
+  for (int d = 0; d < 3; d++) {
+    prm.dxi[d] = 1.f / ppsc->patch[p].dx[d];
+  }
+
+  assert(ppsc->nr_kinds <= MAX_NR_KINDS);
+  for (int k = 0; k < ppsc->nr_kinds; k++) {
+    prm.dq_kind[k] = .5f * ppsc->coeff.eta * prm.dt * ppsc->kinds[k].q / ppsc->kinds[k].m;
+    prm.fnqx_kind[k] = prm.fnqxs * ppsc->kinds[k].q;
+    prm.fnqy_kind[k] = prm.fnqys * ppsc->kinds[k].q;
+    prm.fnqz_kind[k] = prm.fnqzs * ppsc->kinds[k].q;
+  }
+}
+
 static void
 do_push_part_1vb_yz(struct psc_fields *pf, struct psc_particles *pp)
 {
-  particle_real_t dt = ppsc->dt;
-  particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-#ifdef VB_2D
-  particle_real_t fnqxs = fnqs;
-#else
-  particle_real_t fnqxs = ppsc->patch[pf->p].dx[0] * fnqs / dt;
-#endif
-  particle_real_t fnqys = ppsc->patch[pf->p].dx[1] * fnqs / dt;
-  particle_real_t fnqzs = ppsc->patch[pf->p].dx[2] * fnqs / dt;
-  particle_real_t dxi[3] = { 1.f / ppsc->patch[pf->p].dx[0], 1.f / ppsc->patch[pf->p].dx[1], 1.f / ppsc->patch[pf->p].dx[2] };
-  particle_real_t dq_kind[ppsc->nr_kinds];
-  particle_real_t fnqx_kind[ppsc->nr_kinds];
-  particle_real_t fnqy_kind[ppsc->nr_kinds];
-  particle_real_t fnqz_kind[ppsc->nr_kinds];
-  for (int k = 0; k < ppsc->nr_kinds; k++) {
-    dq_kind[k] = .5f * ppsc->coeff.eta * dt * ppsc->kinds[k].q / ppsc->kinds[k].m;
-    fnqx_kind[k] = fnqxs * ppsc->kinds[k].q;
-    fnqy_kind[k] = fnqys * ppsc->kinds[k].q;
-    fnqz_kind[k] = fnqzs * ppsc->kinds[k].q;
-  }
+  params_1vb_set(ppsc, pf->p);
 
   for (int n = 0; n < pp->n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
@@ -38,36 +58,36 @@ do_push_part_1vb_yz(struct psc_fields *pf, struct psc_particles *pp)
 
     int lg[3], lh[3];
     particle_real_t og[3], oh[3], xm[3];
-    find_idx_off_pos_1st_rel(&part->xi, lg, og, xm, 0.f, dxi); // FIXME passing xi hack
-    find_idx_off_1st_rel(&part->xi, lh, oh, -.5f, dxi);
+    find_idx_off_pos_1st_rel(&part->xi, lg, og, xm, 0.f, prm.dxi); // FIXME passing xi hack
+    find_idx_off_1st_rel(&part->xi, lh, oh, -.5f, prm.dxi);
 
     // FIELD INTERPOLATION
     particle_real_t exq, eyq, ezq, hxq, hyq, hzq;
     INTERPOLATE_1ST(exq, eyq, ezq, hxq, hyq, hzq);
 
     // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0)
-    particle_real_t dq = dq_kind[part->kind];
+    particle_real_t dq = prm.dq_kind[part->kind];
     push_pxi(part, exq, eyq, ezq, hxq, hyq, hzq, dq);
 
     particle_real_t vxi[3];
     calc_vxi(vxi, part);
 #ifdef VB_2D
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0)
-    push_xi(part, vxi, .5f * dt);
+    push_xi(part, vxi, .5f * prm.dt);
 
     // OUT OF PLANE CURRENT DENSITY AT (n+1.0)*dt
     CALC_JX_2D(pf, part, vxi);
 
     // x^(n+1), p^(n+1) -> x^(n+1.5f), p^(n+1)
-    push_xi(part, vxi, .5f * dt);
+    push_xi(part, vxi, .5f * prm.dt);
 #else
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0)
-    push_xi(part, vxi, dt);
+    push_xi(part, vxi, prm.dt);
 #endif
 
     int lf[3];
     particle_real_t of[3], xp[3];
-    find_idx_off_pos_1st_rel(&part->xi, lf, of, xp, 0.f, dxi);
+    find_idx_off_pos_1st_rel(&part->xi, lf, of, xp, 0.f, prm.dxi);
 
 #ifdef VB_2D
     // IN PLANE CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt

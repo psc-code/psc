@@ -233,9 +233,9 @@ curr_3d_vb_cell(struct psc_fields *pf, int i[3], particle_real_t x[3], particle_
   do {									\
     int lf[3];								\
     particle_real_t of[3];						\
-    find_idx_off_1st_rel(&part->xi, lf, of, 0.f, dxi);			\
+    find_idx_off_1st_rel(&part->xi, lf, of, 0.f, prm.dxi);		\
     									\
-    particle_real_t fnqx = vxi[0] * particle_wni(part) * fnqx_kind[part->kind]; \
+    particle_real_t fnqx = vxi[0] * particle_wni(part) * prm.fnqx_kind[part->kind]; \
     F3_CURR(pf, JXI, 0,lf[1]  ,lf[2]  ) += (1.f - of[1]) * (1.f - of[2]) * fnqx; \
     F3_CURR(pf, JXI, 0,lf[1]+1,lf[2]  ) += (      of[1]) * (1.f - of[2]) * fnqx; \
     F3_CURR(pf, JXI, 0,lf[1]  ,lf[2]+1) += (1.f - of[1]) * (      of[2]) * fnqx; \
@@ -274,8 +274,8 @@ curr_3d_vb_cell(struct psc_fields *pf, int i[3], particle_real_t x[3], particle_
       second_dir = 1 - first_dir;					\
     }									\
     									\
-    particle_real_t fnq[2] = { particle_wni(part) * fnqy_kind[part->kind], \
-			       particle_wni(part) * fnqz_kind[part->kind] }; \
+    particle_real_t fnq[2] = { particle_wni(part) * prm.fnqy_kind[part->kind], \
+			       particle_wni(part) * prm.fnqz_kind[part->kind] }; \
     									\
     if (first_dir >= 0) {						\
       off[1-first_dir] = 0;						\
@@ -326,10 +326,10 @@ curr_3d_vb_cell(struct psc_fields *pf, int i[3], particle_real_t x[3], particle_
       second_dir = 3 - first_dir;					\
     }									\
 									\
-    particle_real_t fnq[3] = { particle_wni(part) * fnqx_kind[part->kind], \
-			       particle_wni(part) * fnqy_kind[part->kind], \
-			       particle_wni(part) * fnqz_kind[part->kind] }; \
-    dx[0] = vxi[0] * dt * dxi[0];					\
+    particle_real_t fnq[3] = { particle_wni(part) * prm.fnqx_kind[part->kind], \
+			       particle_wni(part) * prm.fnqy_kind[part->kind], \
+			       particle_wni(part) * prm.fnqz_kind[part->kind] }; \
+    dx[0] = vxi[0] * prm.dt * prm.dxi[0];				\
     									\
     if (first_dir >= 0) {						\
       off[3 - first_dir] = 0;						\
