@@ -37,6 +37,9 @@ libsubdir_la_SOURCES = \
 	push_part_double_1vb_yz.c \
 	push_part_double_1vbec_yz.c \
 	push_part_double_1vbec3d_yz.c \
+	\
+	by_block/psc_push_particles_1vbec3d_single_by_block.c \
+	\
 	psc_push_particles_1st.h \
 	psc_push_particles_double.h \
 	psc_push_particles_single.h
