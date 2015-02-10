@@ -27,6 +27,7 @@ struct psc_particles_single_by_block {
   unsigned int *b_idx;
   unsigned int *b_ids;
   unsigned int *b_cnt;
+  unsigned int *b_off;
   unsigned int n_send;
   unsigned int n_part_save;
   bool need_reorder;

@@ -1,5 +1,6 @@
 
 #include "psc_particles_single_by_block.h"
+#include "psc_particles_as_single_by_block.h"
 
 #include "psc.h"
 #include "psc_particles_single.h"
@@ -29,6 +30,7 @@ psc_particles_single_by_block_setup(struct psc_particles *prts)
   }
   sub->nr_blocks = sub->b_mx[0] * sub->b_mx[1] * sub->b_mx[2];
   sub->b_cnt = calloc(sub->nr_blocks + 1, sizeof(*sub->b_cnt));
+  sub->b_off = calloc(sub->nr_blocks + 2, sizeof(*sub->b_off));
 }
 
 static void
@@ -41,6 +43,7 @@ psc_particles_single_by_block_destroy(struct psc_particles *prts)
   free(sub->b_idx);
   free(sub->b_ids);
   free(sub->b_cnt);
+  free(sub->b_off);
 }
 
 static void
@@ -77,6 +80,132 @@ particles_single_by_block_realloc(struct psc_particles *prts, int new_n_part)
   sub->b_ids = realloc(sub->b_ids, sub->n_alloced * sizeof(*sub->b_ids));
   free(sub->particles_alt);
   sub->particles_alt = malloc(sub->n_alloced * sizeof(*sub->particles_alt));
+}
+
+// ----------------------------------------------------------------------
+// find_idx_off_1st_rel
+//
+// FIXME, duplicated and only need fixed shift, no og here
+
+static inline void
+find_idx_off_1st_rel(particle_real_t xi[3], int lg[3], particle_real_t og[3], particle_real_t shift,
+		     particle_real_t dxi[3])
+{
+  for (int d = 0; d < 3; d++) {
+    particle_real_t pos = xi[d] * dxi[d] + shift;
+    lg[d] = particle_real_fint(pos);
+    og[d] = pos - lg[d];
+  }
+}
+
+// ----------------------------------------------------------------------
+// psc_particles_single_by_block_get_b_idx
+
+static unsigned int
+psc_particles_single_by_block_get_b_idx(struct psc_particles *prts, int n)
+{
+  struct psc_particles_single_by_block *sub = psc_particles_single_by_block(prts);
+
+  particle_single_by_block_t *prt = particles_single_by_block_get_one(prts, n);
+  particle_real_t of[3];
+  int b_pos[3], *b_mx = sub->b_mx;
+  find_idx_off_1st_rel(&prt->xi, b_pos, of, 0.f, sub->b_dxi);
+
+  // FIXME, only if blocksize == 1, 3D!!!
+  if (b_pos[0] >= 0 && b_pos[0] < b_mx[0] &&
+      b_pos[1] >= 0 && b_pos[1] < b_mx[1] &&
+      b_pos[2] >= 0 && b_pos[2] < b_mx[2]) {
+    unsigned int b_idx = (b_pos[2] * b_mx[1] + b_pos[1]) * b_mx[0] + b_pos[0];
+    assert(b_idx < sub->nr_blocks);
+    return b_idx;
+  } else { // out of bounds
+    return sub->nr_blocks;
+  }
+}
+
+// ----------------------------------------------------------------------
+// psc_particles_single_by_block_check
+//
+// make sure that all particles are within the local patch (ie.,
+// they have a valid block idx, and that they are sorted by
+// block_idx, and that that b_off properly contains the range of
+// particles in each block.
+
+static void
+psc_particles_single_by_block_check(struct psc_particles *prts)
+{
+  struct psc_particles_single_by_block *sub = psc_particles_single_by_block(prts);
+
+  assert(prts->n_part <= sub->n_alloced);
+
+  int block = 0;
+  for (int n = 0; n < prts->n_part; n++) {
+    while (n >= sub->b_off[block + 1]) {
+      block++;
+      assert(block < sub->nr_blocks);
+    }
+    assert(n >= sub->b_off[block] && n < sub->b_off[block + 1]);
+    assert(block < sub->nr_blocks);
+    unsigned int b_idx = psc_particles_single_by_block_get_b_idx(prts, n);
+    assert(b_idx < sub->nr_blocks);
+    assert(b_idx == block);
+  }
+}
+
+// ----------------------------------------------------------------------
+// psc_particles_single_by_block_sort
+//
+// This function will take an unsorted list of particles and
+// sort it by block index, and set up the b_off array that
+// describes the particle index range for each block.
+//
+// b_idx, b_ids and b_cnt are not valid after returning
+// (they shouldn't be needed for anything, either)
+
+static void
+psc_particles_single_by_block_sort(struct psc_particles *prts)
+{
+  struct psc_particles_single_by_block *sub = psc_particles_single_by_block(prts);
+
+  for (int b = 0; b < sub->nr_blocks; b++) {
+    sub->b_cnt[b] = 0;
+  }
+
+  // calculate block indices for each particle and count
+  for (int n = 0; n < prts->n_part; n++) {
+    unsigned int b_idx = psc_particles_single_by_block_get_b_idx(prts, n);
+    assert(b_idx < sub->nr_blocks);
+    sub->b_idx[n] = b_idx;
+    sub->b_cnt[b_idx]++;
+  }
+  
+  // b_off = prefix sum(b_cnt), zero b_cnt
+  int sum = 0;
+  for (int b = 0; b <= sub->nr_blocks; b++) {
+    sub->b_off[b] = sum;
+    sum += sub->b_cnt[b];
+    // temporarily abuse b_cnt for next step
+    // (the array will be altered, so we use b_cnt rather than
+    // b_off, which we'd like to preserve)
+    sub->b_cnt[b] = sub->b_off[b];
+  }
+
+  // find target position for each particle
+  for (int n = 0; n < prts->n_part; n++) {
+    unsigned int b_idx = sub->b_idx[n];
+    sub->b_ids[n] = sub->b_cnt[b_idx]++;
+  }
+
+  // reorder into alt particle array
+  // WARNING: This is reversed to what reorder() does!
+  for (int n = 0; n < prts->n_part; n++) {
+    sub->particles_alt[sub->b_ids[n]] = sub->particles[n];
+  }
+  
+  // swap in alt array
+  particle_single_by_block_t *tmp = sub->particles;
+  sub->particles = sub->particles_alt;
+  sub->particles_alt = tmp;
 }
 
 // ======================================================================
@@ -187,6 +316,9 @@ psc_particles_single_by_block_copy_from_single(struct psc_particles *prts,
     prt->qni_wni = prt_single->qni_wni;
     prt->kind    = prt_single->kind;
   }
+
+  psc_particles_single_by_block_sort(prts);
+  psc_particles_single_by_block_check(prts);
 }
 
 // ======================================================================
