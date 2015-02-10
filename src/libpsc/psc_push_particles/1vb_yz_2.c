@@ -41,7 +41,7 @@ do_push_part_1vb_yz(struct psc_fields *pf, struct psc_particles *pp)
 
     // FIELD INTERPOLATION
     particle_real_t exq, eyq, ezq, hxq, hyq, hzq;
-    INTERPOLATE_1ST_STD(exq, eyq, ezq, hxq, hyq, hzq);
+    INTERPOLATE_1ST_STD(pf, exq, eyq, ezq, hxq, hyq, hzq);
 
     // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
     particle_real_t dq = dq_kind[part->kind];

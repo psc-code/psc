@@ -47,55 +47,61 @@ params_1vb_set(struct psc *psc, int p)
 }
 
 static void
-do_push_part_1vb_yz(struct psc_fields *pf, struct psc_particles *pp)
+push_one(struct psc_fields *flds, struct psc_particles *prts, int n)
 {
-  params_1vb_set(ppsc, pf->p);
+  particle_t *prt = particles_get_one(prts, n);
+  
+  // field interpolation
+  
+  int lg[3], lh[3];
+  particle_real_t og[3], oh[3], xm[3];
+  find_idx_off_pos_1st_rel(&prt->xi, lg, og, xm, 0.f, prm.dxi); // FIXME passing xi hack
+  find_idx_off_1st_rel(&prt->xi, lh, oh, -.5f, prm.dxi);
+  
+  // FIELD INTERPOLATION
+  particle_real_t exq, eyq, ezq, hxq, hyq, hzq;
+  INTERPOLATE_1ST(flds, exq, eyq, ezq, hxq, hyq, hzq);
+  
+  // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0)
+  particle_real_t dq = prm.dq_kind[prt->kind];
+  push_pxi(prt, exq, eyq, ezq, hxq, hyq, hzq, dq);
+  
+  particle_real_t vxi[3];
+  calc_vxi(vxi, prt);
+#ifdef VB_2D
+  // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0)
+  push_xi(prt, vxi, .5f * prm.dt);
+  
+  // OUT OF PLANE CURRENT DENSITY AT (n+1.0)*dt
+  CALC_JX_2D(flds, prt, vxi);
+  
+  // x^(n+1), p^(n+1) -> x^(n+1.5f), p^(n+1)
+  push_xi(prt, vxi, .5f * prm.dt);
+#else
+  // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0)
+  push_xi(prt, vxi, prm.dt);
+#endif
+  
+  int lf[3];
+  particle_real_t of[3], xp[3];
+  find_idx_off_pos_1st_rel(&prt->xi, lf, of, xp, 0.f, prm.dxi);
+  
+#ifdef VB_2D
+  // IN PLANE CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
+  CALC_JYZ_2D(flds, xm, xp);
+#else
+  // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
+  CALC_JXYZ_3D(flds, xm, xp);
+#endif
+}
+
+static void
+do_push_part_1vb_yz(struct psc_fields *flds, struct psc_particles *pp)
+{
+  params_1vb_set(ppsc, flds->p);
 
   for (int n = 0; n < pp->n_part; n++) {
-    particle_t *part = particles_get_one(pp, n);
-
-    // field interpolation
-
-    int lg[3], lh[3];
-    particle_real_t og[3], oh[3], xm[3];
-    find_idx_off_pos_1st_rel(&part->xi, lg, og, xm, 0.f, prm.dxi); // FIXME passing xi hack
-    find_idx_off_1st_rel(&part->xi, lh, oh, -.5f, prm.dxi);
-
-    // FIELD INTERPOLATION
-    particle_real_t exq, eyq, ezq, hxq, hyq, hzq;
-    INTERPOLATE_1ST(exq, eyq, ezq, hxq, hyq, hzq);
-
-    // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0)
-    particle_real_t dq = prm.dq_kind[part->kind];
-    push_pxi(part, exq, eyq, ezq, hxq, hyq, hzq, dq);
-
-    particle_real_t vxi[3];
-    calc_vxi(vxi, part);
-#ifdef VB_2D
-    // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0)
-    push_xi(part, vxi, .5f * prm.dt);
-
-    // OUT OF PLANE CURRENT DENSITY AT (n+1.0)*dt
-    CALC_JX_2D(pf, part, vxi);
-
-    // x^(n+1), p^(n+1) -> x^(n+1.5f), p^(n+1)
-    push_xi(part, vxi, .5f * prm.dt);
-#else
-    // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0)
-    push_xi(part, vxi, prm.dt);
-#endif
-
-    int lf[3];
-    particle_real_t of[3], xp[3];
-    find_idx_off_pos_1st_rel(&part->xi, lf, of, xp, 0.f, prm.dxi);
-
-#ifdef VB_2D
-    // IN PLANE CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
-    CALC_JYZ_2D(pf, xm, xp);
-#else
-    // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
-    CALC_JXYZ_3D(pf, xm, xp);
-#endif
+    push_one(flds, pp, n);
   }
 }
 
