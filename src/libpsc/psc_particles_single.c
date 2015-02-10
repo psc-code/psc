@@ -15,68 +15,68 @@
 static void
 psc_particles_single_setup(struct psc_particles *prts)
 {
-  struct psc_particles_single *sngl = psc_particles_single(prts);
+  struct psc_particles_single *sub = psc_particles_single(prts);
 
-  sngl->n_alloced = prts->n_part * 1.2;
-  sngl->particles = calloc(sngl->n_alloced, sizeof(*sngl->particles));
-  sngl->particles_alt = calloc(sngl->n_alloced, sizeof(*sngl->particles_alt));
-  sngl->b_idx = calloc(sngl->n_alloced, sizeof(*sngl->b_idx));
-  sngl->b_ids = calloc(sngl->n_alloced, sizeof(*sngl->b_ids));
+  sub->n_alloced = prts->n_part * 1.2;
+  sub->particles = calloc(sub->n_alloced, sizeof(*sub->particles));
+  sub->particles_alt = calloc(sub->n_alloced, sizeof(*sub->particles_alt));
+  sub->b_idx = calloc(sub->n_alloced, sizeof(*sub->b_idx));
+  sub->b_ids = calloc(sub->n_alloced, sizeof(*sub->b_ids));
 
   for (int d = 0; d < 3; d++) {
-    sngl->b_mx[d] = ppsc->patch[prts->p].ldims[d];
-    sngl->b_dxi[d] = 1.f / ppsc->patch[prts->p].dx[d];
+    sub->b_mx[d] = ppsc->patch[prts->p].ldims[d];
+    sub->b_dxi[d] = 1.f / ppsc->patch[prts->p].dx[d];
   }
-  sngl->nr_blocks = sngl->b_mx[0] * sngl->b_mx[1] * sngl->b_mx[2];
-  sngl->b_cnt = calloc(sngl->nr_blocks + 1, sizeof(*sngl->b_cnt));
+  sub->nr_blocks = sub->b_mx[0] * sub->b_mx[1] * sub->b_mx[2];
+  sub->b_cnt = calloc(sub->nr_blocks + 1, sizeof(*sub->b_cnt));
 }
 
 static void
 psc_particles_single_destroy(struct psc_particles *prts)
 {
-  struct psc_particles_single *sngl = psc_particles_single(prts);
+  struct psc_particles_single *sub = psc_particles_single(prts);
 
-  free(sngl->particles);
-  free(sngl->particles_alt);
-  free(sngl->b_idx);
-  free(sngl->b_ids);
-  free(sngl->b_cnt);
+  free(sub->particles);
+  free(sub->particles_alt);
+  free(sub->b_idx);
+  free(sub->b_ids);
+  free(sub->b_cnt);
 }
 
 static void
 psc_particles_single_reorder(struct psc_particles *prts)
 {
-  struct psc_particles_single *sngl = psc_particles_single(prts);
+  struct psc_particles_single *sub = psc_particles_single(prts);
 
-  if (!sngl->need_reorder) {
+  if (!sub->need_reorder) {
     return;
   }
 
   for (int n = 0; n < prts->n_part; n++) {
-    sngl->particles_alt[n] = sngl->particles[sngl->b_ids[n]];
+    sub->particles_alt[n] = sub->particles[sub->b_ids[n]];
   }
   
   // swap in alt array
-  particle_single_t *tmp = sngl->particles;
-  sngl->particles = sngl->particles_alt;
-  sngl->particles_alt = tmp;
-  sngl->need_reorder = false;
+  particle_single_t *tmp = sub->particles;
+  sub->particles = sub->particles_alt;
+  sub->particles_alt = tmp;
+  sub->need_reorder = false;
 }
 
 void
 particles_single_realloc(struct psc_particles *prts, int new_n_part)
 {
-  struct psc_particles_single *sngl = psc_particles_single(prts);
+  struct psc_particles_single *sub = psc_particles_single(prts);
 
-  if (new_n_part <= sngl->n_alloced)
+  if (new_n_part <= sub->n_alloced)
     return;
 
-  sngl->n_alloced = new_n_part * 1.2;
-  sngl->particles = realloc(sngl->particles, sngl->n_alloced * sizeof(*sngl->particles));
-  sngl->b_idx = realloc(sngl->b_idx, sngl->n_alloced * sizeof(*sngl->b_idx));
-  sngl->b_ids = realloc(sngl->b_ids, sngl->n_alloced * sizeof(*sngl->b_ids));
-  free(sngl->particles_alt);
-  sngl->particles_alt = malloc(sngl->n_alloced * sizeof(*sngl->particles_alt));
+  sub->n_alloced = new_n_part * 1.2;
+  sub->particles = realloc(sub->particles, sub->n_alloced * sizeof(*sub->particles));
+  sub->b_idx = realloc(sub->b_idx, sub->n_alloced * sizeof(*sub->b_idx));
+  sub->b_ids = realloc(sub->b_ids, sub->n_alloced * sizeof(*sub->b_ids));
+  free(sub->particles_alt);
+  sub->particles_alt = malloc(sub->n_alloced * sizeof(*sub->particles_alt));
 }
 
 // ======================================================================
@@ -204,9 +204,9 @@ psc_particles_single_copy_from_c(struct psc_particles *prts_base,
     }
   }
 
-  struct psc_particles_single *sngl = psc_particles_single(prts_base);
+  struct psc_particles_single *sub = psc_particles_single(prts_base);
   prts_base->n_part = prts_c->n_part;
-  assert(prts_base->n_part <= sngl->n_alloced);
+  assert(prts_base->n_part <= sub->n_alloced);
   for (int n = 0; n < prts_base->n_part; n++) {
     particle_single_t *part_base = particles_single_get_one(prts_base, n);
     particle_c_t *part = particles_c_get_one(prts_c, n);
@@ -266,9 +266,9 @@ static void
 psc_particles_single_copy_from_double(struct psc_particles *prts_base,
 				      struct psc_particles *prts, unsigned int flags)
 {
-  struct psc_particles_single *sngl = psc_particles_single(prts_base);
+  struct psc_particles_single *sub = psc_particles_single(prts_base);
   prts_base->n_part = prts->n_part;
-  assert(prts_base->n_part <= sngl->n_alloced);
+  assert(prts_base->n_part <= sub->n_alloced);
   for (int n = 0; n < prts_base->n_part; n++) {
     particle_single_t *part_base = particles_single_get_one(prts_base, n);
     particle_double_t *part = particles_double_get_one(prts, n);
