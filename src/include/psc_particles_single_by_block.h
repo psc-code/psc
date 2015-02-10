@@ -82,7 +82,8 @@ particle_single_by_block_kind(particle_single_by_block_t *prt)
 }
 
 static inline void
-__calc_vxi(particle_single_by_block_real_t vxi[3], particle_single_by_block_t *part)
+particle_single_by_block_calc_vxi(particle_single_by_block_real_t vxi[3],
+				  particle_single_by_block_t *part)
 {
   particle_single_by_block_real_t root =
     1.f / sqrtf(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
@@ -96,7 +97,7 @@ particle_single_by_block_get_relative_pos(particle_single_by_block_t *p, double 
 				 particle_single_by_block_real_t xi[3])
 {
   particle_single_by_block_real_t vxi[3];
-  __calc_vxi(vxi, p);
+  particle_single_by_block_calc_vxi(vxi, p);
   particle_single_by_block_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
   // don't shift in invariant directions
   for (int d = 0; d < 3; d++) {

@@ -1,7 +1,7 @@
 
 #include "psc_push_particles_private.h"
 
-#include "psc_particles_as_single.h"
+#include "psc_particles_as_single_by_block.h"
 #include "psc_fields_as_single.h"
 
 #define F3_CURR F3_S
