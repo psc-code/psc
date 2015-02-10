@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "inc_interpolate.c"
 #include "c_common_push.c"
 
 #define F3_CACHE F3
