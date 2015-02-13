@@ -115,6 +115,17 @@ ggcm_mhd_step_run_predcorr(struct ggcm_mhd_step *step, struct mrc_fld *x)
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_step_has_calc_rhs
+
+bool
+ggcm_mhd_step_has_calc_rhs(struct ggcm_mhd_step *step)
+{
+  struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
+  assert(ops);
+  return ops->calc_rhs;
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_step_setup_flds
 
 void

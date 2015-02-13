@@ -461,7 +461,11 @@ ggcm_mhd_main(int *argc, char ***argv)
   double time_start = MPI_Wtime();
 
   struct mrc_ts *ts = mrc_ts_create(mrc_domain_comm(mhd->domain));
-  mrc_ts_set_type(ts, "rk2");
+  if (ggcm_mhd_step_has_calc_rhs(mhd->step)) {
+    mrc_ts_set_type(ts, "rk2");
+  } else {
+    mrc_ts_set_type(ts, "step");
+  }
   mrc_ts_set_context(ts, ggcm_mhd_to_mrc_obj(mhd));
 
   struct mrc_ts_monitor *mon_output =
