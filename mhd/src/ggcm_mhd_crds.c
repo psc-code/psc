@@ -146,7 +146,7 @@ _ggcm_mhd_crds_write(struct ggcm_mhd_crds *crds, struct mrc_io *io)
 float *
 ggcm_mhd_crds_get_crd(struct ggcm_mhd_crds *crds, int d, int m)
 {
-#if 1
+#if 0
   int rank; MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   if (rank == 0) {
     mprintf("XXXXXXX ggcm_mhd_crds_get_crd m %d\n", m);
