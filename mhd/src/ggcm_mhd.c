@@ -312,9 +312,6 @@ ggcm_mhd_default_box(struct ggcm_mhd *mhd)
 
   // generate MHD solver grid from mrc_crds
   ggcm_mhd_crds_gen_set_type(mhd->crds->crds_gen, "mrc");
-
-  // default time stepping to CWENO
-  ggcm_mhd_step_set_type(mhd->step, "cweno");
 }
 
 // ======================================================================
