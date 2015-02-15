@@ -662,7 +662,7 @@ bcthy3z_NL1(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int I, int J, in
     float *bd2y = ggcm_mhd_crds_get_crd_p(mhd->crds, 1, BD2, p);
     float *bd2z = ggcm_mhd_crds_get_crd_p(mhd->crds, 2, BD2, p);
 
-    mrc_fld_foreach(E, i,j,k, 1, 0) {
+    mrc_fld_foreach(E, i,j,k, 0, 1) {
       mrc_fld_data_t ttmp[2];
       calc_ve_x_B(step, ttmp, x, prim, curr, tmp, i, j, k, XX, YY, ZZ, I, J, K, p,
 		  JX1, JY1, JZ1, JX2, JY2, JZ2, bd2x, bd2y, bd2z, dt);
