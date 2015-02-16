@@ -710,10 +710,144 @@ correct_E(struct ggcm_mhd *mhd, struct mrc_fld *E)
   }
 }
 
+static void
+skip_comments(FILE *f) {
+  fpos_t preread_pos;
+  const int bufflen = 128;
+  char line[bufflen];
+  int armed = 999;
+  int arm_next = 1;
+
+  while (!feof(f)) {
+    armed = arm_next;
+    fgetpos(f, &preread_pos);
+    fgets(line, bufflen, f);
+
+    if (strlen(line) == 0 || line[0] == '\n') {
+      continue;
+    }
+    if (line[strlen(line) - 1] == '\n') {
+      arm_next = 1;
+    } else {
+      arm_next = 0;
+    }
+
+    if (armed) {
+      if (line[0] != '#') {
+        break;
+      }
+    } else {
+      continue;
+    }
+  }
+
+  if (armed != 999) {
+    fsetpos(f, &preread_pos);
+  }
+}
+
 void
 ggcm_mhd_setup_amr_domain(struct ggcm_mhd *mhd)
 {
-  if (mhd->amr == 1) {
+  MPI_Comm mhd_comm = mhd->obj.comm;
+  int mhd_rank;  
+  MPI_Comm_rank(mhd_comm, &mhd_rank);
+
+  if (mhd->amr == 999) {
+    FILE *f = NULL;
+    int ret, mx, my, mz, npatches;
+    int level, ix, iy, iz;
+    int buf[4];
+    double tmp[3];
+    int i;
+    
+    // open the grid file and read the header info
+    if (mhd_rank == 0) {
+      f = fopen("amr_grid.txt", "r");
+      
+      if (f == NULL) {
+        mprintf("ERROR: mhd->amr == 999, but no file named 'amr_grid.txt'\n");
+        MPI_Abort(mhd_comm, 1);
+      }
+    
+      skip_comments(f);
+      
+      ret = fscanf(f, "Level 0 xl: %lg, %lg, %lg\n", &tmp[0], &tmp[1], &tmp[2]);
+      // mprintf(">> Level 0 xl: %lg %lg %lg\n", tmp[0], tmp[1], tmp[2]);
+      if (ret != 3) {MPI_Abort(mhd_comm, 2);}  // malformed file      
+      // if (tmp[0] != mhd->domain->crds->xl[0] ||
+      //     tmp[1] != mhd->domain->crds->xl[1] || 
+      //     tmp[2] != mhd->domain->crds->xl[2]) {
+      //   mprintf("WARNING: AMR grid in file expects level 0 to have xl = "
+      //           "(%lg, %lg, %lg), but it is actually (%lg, %lg, %lg)\n",
+      //           tmp[0], tmp[1], tmp[2],
+      //           mhd->domain->crds->xl[0],
+      //           mhd->domain->crds->xl[1],
+      //           mhd->domain->crds->xl[2]);
+      // }
+      ret = fscanf(f, "Level 0 xh: %lg, %lg, %lg\n", &tmp[0], &tmp[1], &tmp[2]);
+      // mprintf(">> Level 0 xh: %lg %lg %lg\n", tmp[0], tmp[1], tmp[2]);
+      if (ret != 3) {MPI_Abort(mhd_comm, 2);}  // malformed file      
+      // if (tmp[0] != mhd->domain->crds->xh[0] ||
+      //     tmp[1] != mhd->domain->crds->xh[1] ||
+      //     tmp[2] != mhd->domain->crds->xh[2]) {
+      //   mprintf("WARNING: AMR grid in file expects level 0 to have xh = "
+      //           "(%lg, %lg, %lg), but it is actually (%lg, %lg, %lg)\n",
+      //           tmp[0], tmp[1], tmp[2],
+      //           mhd->domain->crds->xh[0],
+      //           mhd->domain->crds->xh[1],
+      //           mhd->domain->crds->xh[2]);
+      // }    
+    
+      ret = fscanf(f, "resolution: %d, %d, %d\n", &mx, &my, &mz);
+      // mprintf(">> resolution: %d %d %d\n", mx, my, mz);
+      if (ret != 3) {MPI_Abort(mhd_comm, 2);}  // malformed file
+      // if (mx != mhd->domain->m[0] ||
+      //     my != mhd->domain->m[1] ||
+      //     mz != mhd->domain->m[2]) {
+      //   mprintf("WARNING: AMR grid in file expects patches to have resolution "
+      //           "(%d, %d, %d), but it is actually (%d, %d, %d)\n",
+      //           mx, my, mz,
+      //           mhd->domain->m[0], mhd->domain->m[1], mhd->domain->m[2]);
+      // }
+      
+      ret = fscanf(f, "npatches: %d\n", &npatches);
+      // mprintf(">> npatches: %d\n", npatches);
+      if (ret != 1) {MPI_Abort(mhd_comm, 3);}  // malformed file
+      
+      skip_comments(f);
+    }
+    MPI_Bcast(&npatches, 1, MPI_INT, 0, mhd_comm);
+    
+    // now add the patches in the file
+    for (i = 0; i < npatches + 1; i++) {
+      if (mhd_rank == 0) {
+        // buf is an array of [level, ix, iy, iz]
+        ret = fscanf(f, "%d; %d, %d, %d\n", &buf[0], &buf[1], &buf[2], &buf[3]);
+        // mprintf(">> patch: %d; %d %d %d\n", buf[0], buf[1], buf[2], buf[3]);
+        if (ret != 4) {
+          buf[0] = -1;  // either the file is malformed, or we're at the end
+        }
+      }
+      MPI_Bcast(buf, 4, MPI_INT, 0, mhd_comm);
+      level = buf[0];
+      ix = buf[1];
+      iy = buf[2];
+      iz = buf[3];
+      if (level == -1) {
+        break;
+      }
+      mrc_domain_add_patch(mhd->domain, level, (int [3]) {ix, iy, iz}); 
+    }
+    
+    if (mhd_rank == 0) {
+      fclose(f);
+      if (i != npatches){
+        printf("ERROR: amr grid file lied about number of patches\n");
+        MPI_Abort(mhd_comm, 4);
+      }
+    }
+  } else if (mhd->amr == 1) {
     mrc_domain_add_patch(mhd->domain, 0, (int [3]) { 0, 0, 0 });
   } else if (mhd->amr == 2) {
     mrc_domain_add_patch(mhd->domain, 1, (int [3]) { 0, 0, 0 });
