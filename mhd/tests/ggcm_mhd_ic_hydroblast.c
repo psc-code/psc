@@ -33,11 +33,7 @@ ggcm_mhd_ic_hydroblast_run(struct ggcm_mhd_ic *ic)
   struct ggcm_mhd *gmhd = ic->mhd;  
   struct mrc_fld *fld = gmhd->fld;
   struct mrc_crds *crds = mrc_domain_get_crds(gmhd->domain);  
-  float xl[3], xh[3], L[3], r[3];
-  mrc_crds_get_xl_xh(crds, xl, xh);
-  for(int i=0; i<3; i++){
-    L[i] = xh[i] - xl[i];
-  }
+  float r[3];
   float gamma = gmhd->par.gamm;
   mrc_fld_foreach(fld, ix, iy, iz, 1, 1) {
     r[0] = MRC_CRD(crds, 0, ix);
