@@ -76,7 +76,7 @@ push_one(struct psc_fields *flds, struct psc_particles *prts, int n)
   // OUT OF PLANE CURRENT DENSITY AT (n+1.0)*dt
   CALC_JX_2D(flds, prt, vxi);
   
-  // x^(n+1), p^(n+1) -> x^(n+1.5f), p^(n+1)
+  // x^(n+1), p^(n+1) -> x^(n+1.5), p^(n+1)
   push_xi(prt, vxi, .5f * prm.dt);
 #else
   // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0)

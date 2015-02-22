@@ -22,6 +22,11 @@ struct params_1vb {
 
 static struct params_1vb prm;
 
+#ifdef PSC_PARTICLES_AS_SINGLE
+static struct psc_particles_single *prts_sub;
+#pragma omp threadprivate(prts_sub)
+#endif
+
 static void
 params_1vb_set(struct psc *psc, int p)
 {
@@ -48,8 +53,7 @@ params_1vb_set(struct psc *psc, int p)
 }
 
 static void
-push_one(struct psc_fields *flds, struct psc_particles *prts, int n,
-	 struct psc_particles_single *sngl)
+push_one(struct psc_fields *flds, struct psc_particles *prts, int n)
 {
   particle_t *prt = particles_get_one(prts, n);
   
@@ -70,88 +74,45 @@ push_one(struct psc_fields *flds, struct psc_particles *prts, int n,
   
   particle_real_t vxi[3];
   calc_vxi(vxi, prt);
+#ifdef VB_2D
   // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0)
   push_xi(prt, vxi, .5f * prm.dt);
   
   // OUT OF PLANE CURRENT DENSITY AT (n+1.0)*dt
+  CALC_JX_2D(flds, prt, vxi);
+  
+  // x^(n+1), p^(n+1) -> x^(n+1.5), p^(n+1)
+  push_xi(prt, vxi, .5f * prm.dt);
+#else
+  // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0)
+  push_xi(prt, vxi, prm.dt);
+#endif
   
   int lf[3];
-  particle_real_t of[3];
-  find_idx_off_1st_rel(&prt->xi, lf, of, 0.f, prm.dxi);
-  
-  particle_real_t fnqx = vxi[0] * particle_wni(prt) * prm.fnqx_kind[prt->kind];
-  F3_CURR(flds, JXI, 0,lf[1]  ,lf[2]  ) += (1.f - of[1]) * (1.f - of[2]) * fnqx;
-  F3_CURR(flds, JXI, 0,lf[1]+1,lf[2]  ) += (      of[1]) * (1.f - of[2]) * fnqx;
-  F3_CURR(flds, JXI, 0,lf[1]  ,lf[2]+1) += (1.f - of[1]) * (      of[2]) * fnqx;
-  F3_CURR(flds, JXI, 0,lf[1]+1,lf[2]+1) += (      of[1]) * (      of[2]) * fnqx;
-  
-  // x^(n+1), p^(n+1) -> x^(n+1.5f), p^(n+1)
-  calc_vxi(vxi, prt);
-  push_xi(prt, vxi, .5f * prm.dt);
-  
-  particle_real_t xp[3];
+  particle_real_t of[3], xp[3];
   find_idx_off_pos_1st_rel(&prt->xi, lf, of, xp, 0.f, prm.dxi);
   
   // FIXME, only if blocksize == 1!
   int *b_pos = lf;
-  int *b_mx = sngl->b_mx;
+  int *b_mx = prts_sub->b_mx;
   if (b_pos[1] >= 0 && b_pos[1] < b_mx[1] &&
       b_pos[2] >= 0 && b_pos[2] < b_mx[2]) {
-    sngl->b_idx[n] = b_pos[2] * b_mx[1] + b_pos[1];
+    prts_sub->b_idx[n] = b_pos[2] * b_mx[1] + b_pos[1];
   } else { // out of bounds
-    sngl->b_idx[n] = sngl->nr_blocks;
-    assert(sngl->b_cnt[sngl->nr_blocks] < sngl->n_alloced);
+    prts_sub->b_idx[n] = prts_sub->nr_blocks;
+    assert(prts_sub->b_cnt[prts_sub->nr_blocks] < prts_sub->n_alloced);
     // append to back
-    *particles_get_one(prts, prts->n_part + sngl->b_cnt[sngl->nr_blocks]) = *prt;
+    *particles_get_one(prts, prts->n_part + prts_sub->b_cnt[prts_sub->nr_blocks]) = *prt;
   }
-  sngl->b_cnt[sngl->b_idx[n]]++;
+  prts_sub->b_cnt[prts_sub->b_idx[n]]++;
   
-  // OUT OF PLANE CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
-  
-  int i[2] = { lg[1], lg[2] };
-  int idiff[2] = { lf[1] - lg[1], lf[2] - lg[2] };
-  particle_real_t dx[2] = { xp[1] - xm[1], xp[2] - xm[2] };
-  particle_real_t x[2] = { xm[1] - (i[0] + .5f), xm[2] - (i[1] + .5f) };
-  
-  particle_real_t dx1[2];
-  int off[2];
-  int first_dir, second_dir = -1;
-  // FIXME, make sure we never div-by-zero?
-  if (idiff[0] == 0 && idiff[1] == 0) {
-    first_dir = -1;
-  } else if (idiff[0] == 0) {
-    first_dir = 1;
-  } else if (idiff[1] == 0) {
-      first_dir = 0;
-  } else {
-    dx1[0] = .5f * idiff[0] - x[0];
-    dx1[1] = dx[1] / dx[0] * dx1[0];
-    if (particle_real_abs(x[1] + dx1[1]) > .5f) {
-      first_dir = 1;
-    } else {
-      first_dir = 0;
-    }
-    second_dir = 1 - first_dir;
-  }
-  
-  particle_real_t fnq[2] = { particle_wni(prt) * prm.fnqy_kind[prt->kind],
-			     particle_wni(prt) * prm.fnqz_kind[prt->kind] };
-  
-  if (first_dir >= 0) {
-    off[1-first_dir] = 0;
-    off[first_dir] = idiff[first_dir];
-    calc_dx1(dx1, x, dx, off);
-    curr_2d_vb_cell(flds, i, x, dx1, fnq, dx, off);
-  }
-  
-  if (second_dir >= 0) {
-    off[first_dir] = 0;
-    off[second_dir] = idiff[second_dir];
-    calc_dx1(dx1, x, dx, off);
-    curr_2d_vb_cell(flds, i, x, dx1, fnq, dx, off);
-  }
-  
-  curr_2d_vb_cell(flds, i, x, dx, fnq, NULL, NULL);
+#ifdef VB_2D
+  // IN PLANE CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
+  CALC_JYZ_2D(flds, xm, xp);
+#else
+  // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
+  CALC_JXYZ_3D(flds, xm, xp);
+#endif
 }
 
 static void
@@ -159,11 +120,11 @@ do_push_part_1vb_yz(struct psc_fields *flds, struct psc_particles *prts)
 {
   params_1vb_set(ppsc, flds->p);
 
-  struct psc_particles_single *sngl = psc_particles_single(prts);
-  memset(sngl->b_cnt, 0, (sngl->nr_blocks + 1) * sizeof(*sngl->b_cnt));
+  prts_sub = psc_particles_single(prts);
+  memset(prts_sub->b_cnt, 0, (prts_sub->nr_blocks + 1) * sizeof(*prts_sub->b_cnt));
 
   for (int n = 0; n < prts->n_part; n++) {
-    push_one(flds, prts, n, sngl);
+    push_one(flds, prts, n);
   }
 }
 

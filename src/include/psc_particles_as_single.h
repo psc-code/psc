@@ -27,5 +27,7 @@ typedef mparticles_single_t mparticles_t;
 #define MPI_PARTICLES_REAL          MPI_PARTICLES_SINGLE_REAL
 #define PARTICLE_TYPE               "single"
 
+#define PSC_PARTICLES_AS_SINGLE 1
+
 #endif
 
