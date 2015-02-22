@@ -11,3 +11,4 @@ test_part_yz_a
 test_part_yz_b
 test_part_z
 test_sort
+*.trs
