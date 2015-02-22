@@ -14,20 +14,20 @@
 // ----------------------------------------------------------------------
 // copy_to_mrc_fld
 
-static void
-copy_to_mrc_fld(struct mrc_fld *m3, mfields_c_t *flds)
-{
-  psc_foreach_patch(ppsc, p) {
-    struct psc_fields *pf = psc_mfields_get_patch(flds, p);
-    struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, p);
-    mrc_fld_foreach(m3, ix,iy,iz, 0,0) {
-      for (int m = 0; m < flds->nr_fields; m++) {
-	MRC_M3(m3p,m, ix,iy,iz) = F3_C(pf,m, ix,iy,iz);
-      }
-    } mrc_fld_foreach_end;
-    mrc_fld_patch_put(m3);
-  }
-}
+/* static void */
+/* copy_to_mrc_fld(struct mrc_fld *m3, mfields_c_t *flds) */
+/* { */
+/*   psc_foreach_patch(ppsc, p) { */
+/*     struct psc_fields *pf = psc_mfields_get_patch(flds, p); */
+/*     struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, p); */
+/*     mrc_fld_foreach(m3, ix,iy,iz, 0,0) { */
+/*       for (int m = 0; m < flds->nr_fields; m++) { */
+/* 	MRC_M3(m3p,m, ix,iy,iz) = F3_C(pf,m, ix,iy,iz); */
+/*       } */
+/*     } mrc_fld_foreach_end; */
+/*     mrc_fld_patch_put(m3); */
+/*   } */
+/* } */
 
 void
 write_fields(struct psc_output_fields_c *out, struct psc_fields_list *list,
@@ -69,7 +69,7 @@ write_fields(struct psc_output_fields_c *out, struct psc_fields_list *list,
 
   for (int m = 0; m < list->nr_flds; m++) {
     mfields_c_t *flds = list->flds[m];
-    struct psc_fields *fld = psc_mfields_get_patch(flds, 0);
+    /* struct psc_fields *fld = psc_mfields_get_patch(flds, 0); */
     //    assert(fld->nr_comp == 1);
 
     if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) {

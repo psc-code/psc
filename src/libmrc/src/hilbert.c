@@ -864,10 +864,10 @@ mrc_hilbert_nextinbox(unsigned nDims, unsigned nBytes, unsigned nBits,
   bitmask_t index = 0;
   bitmask_t fold1 = 0, fold2 = 0;
   bitmask_t valu1 = 0, valu2 = 0;
-  unsigned p_y;
-  bitmask_t p_separator = 0, p_firstSeparator;
-  bitmask_t p_cornerdiff, p_reflection;
-  bitmask_t p_fold1, p_fold2, p_valu1, p_valu2;
+  unsigned p_y = 0;
+  bitmask_t p_separator = 0, p_firstSeparator = 0;
+  bitmask_t p_cornerdiff = 0, p_reflection = 0;
+  bitmask_t p_fold1 = 0, p_fold2 = 0, p_valu1 = 0, p_valu2 = 0;
 
   char* c1 = (char*)c1V;
   char* c2 = (char*)c2V;
