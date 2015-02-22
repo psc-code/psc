@@ -1,14 +1,16 @@
 
 #include "psc_push_particles_private.h"
 
-#include "psc_fields_single.h"
-
 #include "psc_particles_as_single.h"
 #include "psc_fields_as_single.h"
 
 #define F3_CURR F3_S
 #define F3_CACHE F3_S
 #define F3_CACHE_TYPE "single"
+
+#define PUSHER_TYPE "1vb2"
+#define INTERPOLATE_1ST INTERPOLATE_1ST_STD
+#define VB_2D
 
 #include "1vb_yz_2.c"
 

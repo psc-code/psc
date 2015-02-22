@@ -97,12 +97,12 @@ push_one(struct psc_fields *flds, struct psc_particles *prts, int n)
 }
 
 static void
-do_push_part_1vb_yz(struct psc_fields *flds, struct psc_particles *pp)
+do_push_part_1vb_yz(struct psc_fields *flds, struct psc_particles *prts)
 {
   params_1vb_set(ppsc, flds->p);
 
-  for (int n = 0; n < pp->n_part; n++) {
-    push_one(flds, pp, n);
+  for (int n = 0; n < prts->n_part; n++) {
+    push_one(flds, prts, n);
   }
 }
 
