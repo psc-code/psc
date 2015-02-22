@@ -11,8 +11,9 @@
 #define PUSHER_TYPE "1vb2"
 #define INTERPOLATE_1ST INTERPOLATE_1ST_STD
 #define VB_2D
+#define EXT_PREPARE_SORT
 
-#include "1vb_yz_2.c"
+#include "1vb_yz.c"
 
 // ======================================================================
 // psc_push_particles: subclass "1vb2_single"
