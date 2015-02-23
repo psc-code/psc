@@ -26,5 +26,7 @@ typedef particle_single_by_block_t particle_t;
 #define MPI_PARTICLES_REAL          MPI_PARTICLES_SINGLE_BY_BLOCK_REAL
 #define PARTICLE_TYPE               "single_by_block"
 
+#define PSC_PARTICLES_AS_SINGLE_BY_BLOCK 1
+
 #endif
 

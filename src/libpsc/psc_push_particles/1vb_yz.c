@@ -155,6 +155,24 @@ push_one(struct psc_fields *flds, struct psc_particles *prts, int n)
 #endif
 }
 
+#ifdef PUSHER_BY_BLOCK
+
+static void
+do_push_part_1vb_yz(struct psc_fields *flds, struct psc_particles *prts)
+{
+#ifdef PSC_PARTICLES_AS_SINGLE_BY_BLOCK
+  struct psc_particles_single_by_block *sub = psc_particles_single_by_block(prts);
+#endif
+
+  for (int b = 0; b < sub->nr_blocks; b++) {
+    for (int n = sub->b_off[b]; n < sub->b_off[b+1]; n++) {
+      push_one(flds, prts, n);
+    }
+  }
+}
+
+#else
+
 static void
 do_push_part_1vb_yz(struct psc_fields *flds, struct psc_particles *prts)
 {
@@ -162,6 +180,8 @@ do_push_part_1vb_yz(struct psc_fields *flds, struct psc_particles *prts)
     push_one(flds, prts, n);
   }
 }
+
+#endif
 
 static void
 psc_push_particles_push_a_yz(struct psc_push_particles *push,
