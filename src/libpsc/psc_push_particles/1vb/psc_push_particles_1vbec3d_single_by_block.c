@@ -8,7 +8,6 @@
 #define F3_CACHE F3_S
 #define F3_CACHE_TYPE "single"
 
-#define PUSHER_TYPE "1vbec3d"
 #define INTERPOLATE_1ST INTERPOLATE_1ST_EC
 #define PUSHER_BY_BLOCK
 

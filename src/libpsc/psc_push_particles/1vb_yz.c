@@ -188,12 +188,6 @@ psc_push_particles_push_a_yz(struct psc_push_particles *push,
 			     struct psc_particles *prts,
 			     struct psc_fields *flds)
 {
-  static int pr;
-  if (!pr) {
-    pr = prof_register(PARTICLE_TYPE "_" PUSHER_TYPE "_push_yz", 1., 0, 0);
-  }
-
-  prof_start(pr);
   psc_fields_zero_range(flds, JXI, JXI + 3);
   struct psc_fields *flds_cache = cache_fields_from_em(flds);
 
@@ -203,6 +197,5 @@ psc_push_particles_push_a_yz(struct psc_push_particles *push,
 
   cache_fields_to_j(flds_cache, flds);
   psc_fields_destroy(flds_cache);
-  prof_stop(pr);
 }
 

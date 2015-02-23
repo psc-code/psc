@@ -8,7 +8,6 @@
 #define F3_CACHE F3_S
 #define F3_CACHE_TYPE "single"
 
-#define PUSHER_TYPE "1vb2"
 #define INTERPOLATE_1ST INTERPOLATE_1ST_STD
 #define VB_2D
 #define EXT_PREPARE_SORT
