@@ -30,6 +30,8 @@ struct psc_push_particles_ops {
 			struct psc_mparticles *mprts, struct psc_mfields *mflds);
   
   unsigned int mp_flags; //< flags for _get_cuda(), alloc
+  const char *particles_type;
+  const char *fields_type;
 };
 
 // ======================================================================

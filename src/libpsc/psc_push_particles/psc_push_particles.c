@@ -14,23 +14,56 @@ extern int pr_time_step_no_comm;
 extern double *psc_balance_comp_time_by_patch;
 
 static void
-push_a_yz(struct psc_push_particles *push, struct psc_mparticles *mprts,
-	  struct psc_mfields *mflds)
+psc_push_particles_run_patch_yz(struct psc_push_particles *push,
+				struct psc_particles *prts_base,
+				struct psc_fields *flds_base)
+{
+  struct psc_push_particles_ops *ops = psc_push_particles_ops(push);
+  assert(ops->push_a_yz);
+
+  psc_balance_comp_time_by_patch[prts_base->p] -= MPI_Wtime();
+
+  struct psc_particles *prts;
+  if (ops->particles_type) {
+    prts = psc_particles_get_as(prts_base, ops->particles_type, 0);
+  } else {
+    prts = prts_base;
+  }
+  struct psc_fields *flds;
+  if (ops->fields_type) {
+    flds = psc_fields_get_as(flds_base, ops->fields_type, EX, EX + 6);
+  } else {
+    flds = flds_base;
+  }
+
+  ops->push_a_yz(push, prts, flds);
+
+  if (ops->particles_type) {
+    psc_particles_put_as(prts, prts_base, 0);
+  }
+  if (ops->fields_type) {
+    psc_fields_put_as(flds, flds_base, JXI, JXI + 3);
+  }
+
+  psc_balance_comp_time_by_patch[prts_base->p] += MPI_Wtime();
+}
+
+
+static void
+psc_push_particles_run_yz(struct psc_push_particles *push, struct psc_mparticles *mprts,
+			  struct psc_mfields *mflds)
 {
   struct psc_push_particles_ops *ops = psc_push_particles_ops(push);
 
   prof_restart(pr_time_step_no_comm);
-  if (ops->push_a_yz) {
+  if (ops->push_mprts_yz) {
+    ops->push_mprts_yz(push, mprts, mflds);
+  } else {
 #pragma omp parallel for
     for (int p = 0; p < mprts->nr_patches; p++) {
-      psc_balance_comp_time_by_patch[p] -= MPI_Wtime();
-      ops->push_a_yz(push, psc_mparticles_get_patch(mprts, p),
-		     psc_mfields_get_patch(mflds, p));
-      psc_balance_comp_time_by_patch[p] += MPI_Wtime();
+      psc_push_particles_run_patch_yz(push, psc_mparticles_get_patch(mprts, p),
+				      psc_mfields_get_patch(mflds, p));
     }
-  } else {
-    assert(ops->push_mprts_yz);
-    ops->push_mprts_yz(push, mprts, mflds);
   }
   prof_stop(pr_time_step_no_comm);
 }
@@ -50,7 +83,7 @@ psc_push_particles_run(struct psc_push_particles *push,
   int *im = ppsc->domain.gdims;
 
   if (im[0] == 1 && im[1] > 1 && im[2] > 1) { // yz
-    push_a_yz(push, mprts, mflds);
+    psc_push_particles_run_yz(push, mprts, mflds);
   } else {
 #pragma omp parallel for
     for (int p = 0; p < mprts->nr_patches; p++) {

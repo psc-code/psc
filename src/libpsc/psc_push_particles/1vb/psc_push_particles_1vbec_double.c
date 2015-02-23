@@ -20,5 +20,7 @@
 struct psc_push_particles_ops psc_push_particles_1vbec_double_ops = {
   .name                  = "1vbec_double",
   .push_a_yz             = psc_push_particles_push_a_yz,
+  .particles_type        = PARTICLE_TYPE,
+  .fields_type           = FIELDS_TYPE,
 };
 
