@@ -158,10 +158,6 @@ push_one(struct psc_fields *flds, struct psc_particles *prts, int n)
 static void
 do_push_part_1vb_yz(struct psc_fields *flds, struct psc_particles *prts)
 {
-  params_1vb_set(ppsc, flds->p);
-
-  ext_prepare_sort_before(prts);
-
   for (int n = 0; n < prts->n_part; n++) {
     push_one(flds, prts, n);
   }
@@ -183,7 +179,11 @@ psc_push_particles_push_a_yz(struct psc_push_particles *push,
   prof_start(pr);
   psc_fields_zero_range(flds, JXI, JXI + 3);
   struct psc_fields *flds_cache = cache_fields_from_em(flds);
+
+  params_1vb_set(ppsc, flds->p);
+  ext_prepare_sort_before(prts);
   do_push_part_1vb_yz(flds_cache, prts);
+
   cache_fields_to_j(flds_cache, flds);
   psc_fields_destroy(flds_cache);
   prof_stop(pr);
