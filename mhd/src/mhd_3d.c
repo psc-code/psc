@@ -110,7 +110,7 @@ update_ct(struct ggcm_mhd *mhd,
     float *bd3y = ggcm_mhd_crds_get_crd_p(mhd->crds, 1, BD3, p);
     float *bd3z = ggcm_mhd_crds_get_crd_p(mhd->crds, 2, BD3, p);
 
-    mrc_fld_foreach(x, i,j,k, 0, 0) {
+    mrc_fld_foreach(x, i,j,k, 0, 1) {
       M3(x, BX, i,j,k, p) -= dt * (bd3y[j] * (M3(E, 2, i,j+dy,k, p) - M3(E, 2, i,j,k, p)) -
 				   bd3z[k] * (M3(E, 1, i,j,k+dz, p) - M3(E, 1, i,j,k, p)));
       M3(x, BY, i,j,k, p) -= dt * (bd3z[k] * (M3(E, 0, i,j,k+dz, p) - M3(E, 0, i,j,k, p)) -
