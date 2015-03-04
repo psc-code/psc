@@ -22,7 +22,10 @@ mrc_mat_mcsr_mpi_create(struct mrc_mat *mat)
 {
   struct mrc_mat_mcsr_mpi *sub = mrc_mat_mcsr_mpi(mat);
 
+  sub->A = mrc_mat_create(MPI_COMM_SELF);
   mrc_mat_set_type(sub->A, "mcsr");
+
+  sub->B = mrc_mat_create(MPI_COMM_SELF);
   mrc_mat_set_type(sub->B, "mcsr");
 }
 
@@ -32,8 +35,24 @@ mrc_mat_mcsr_mpi_create(struct mrc_mat *mat)
 static void
 mrc_mat_mcsr_mpi_setup(struct mrc_mat *mat)
 {
-  mrc_mat_setup_member_objs_sub(mat);
+  struct mrc_mat_mcsr_mpi *sub = mrc_mat_mcsr_mpi(mat);
+
+  mrc_mat_setup(sub->A);
+  mrc_mat_setup(sub->B);
+
   mrc_mat_setup_super(mat);
+}
+
+// ----------------------------------------------------------------------
+// mrc_mat_mcsr_mpi_destroy
+
+static void
+mrc_mat_mcsr_mpi_destroy(struct mrc_mat *mat)
+{
+  struct mrc_mat_mcsr_mpi *sub = mrc_mat_mcsr_mpi(mat);
+
+  mrc_mat_destroy(sub->A);
+  mrc_mat_destroy(sub->B);
 }
 
 // ----------------------------------------------------------------------
@@ -83,6 +102,7 @@ mrc_mat_mcsr_mpi_print(struct mrc_mat *mat)
   mprintf("mcsr_mpi sub-matrix A:\n");
   mrc_mat_print(sub->A);
   mprintf("\n");
+
   mprintf("mcsr_mpi sub-matrix B:\n");
   mrc_mat_print(sub->B);
   mprintf("\n");
@@ -93,8 +113,6 @@ mrc_mat_mcsr_mpi_print(struct mrc_mat *mat)
 
 #define VAR(x) (void *)offsetof(struct mrc_mat_mcsr_mpi, x)
 static struct param mrc_mat_mcsr_mpi_descr[] = {
-  { "A"                 , VAR(A)                 , MRC_VAR_OBJ(mrc_mat) },
-  { "B"                 , VAR(B)                 , MRC_VAR_OBJ(mrc_mat) },
   {},
 };
 #undef VAR
@@ -108,7 +126,7 @@ struct mrc_mat_ops mrc_mat_mcsr_mpi_ops = {
   .param_descr           = mrc_mat_mcsr_mpi_descr,
   .create                = mrc_mat_mcsr_mpi_create,
   .setup                 = mrc_mat_mcsr_mpi_setup,
-  /* .destroy               = mrc_mat_mcsr_mpi_destroy, */
+  .destroy               = mrc_mat_mcsr_mpi_destroy,
   .add_value             = mrc_mat_mcsr_mpi_add_value,
   .assemble              = mrc_mat_mcsr_mpi_assemble,
   .apply                 = mrc_mat_mcsr_mpi_apply,
