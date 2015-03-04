@@ -18,9 +18,11 @@ struct mrc_mat_ops {
   void (*assemble)(struct mrc_mat *mat);
   void (*apply)(struct mrc_fld *y, struct mrc_mat *mat, struct mrc_fld *x);
   void (*apply_in_place)(struct mrc_mat *mat, struct mrc_fld *x);
+  void (*print)(struct mrc_mat *mat);
 };
 
 extern struct mrc_mat_ops mrc_mat_mcsr_ops;
+extern struct mrc_mat_ops mrc_mat_mcsr_mpi_ops;
 extern struct mrc_mat_ops mrc_mat_petsc_ops;
 
 #endif

@@ -50,12 +50,24 @@ mrc_mat_apply_in_place(struct mrc_mat *mat, struct mrc_fld *x)
 }
 
 // ----------------------------------------------------------------------
+// mrc_mat_print
+
+void
+mrc_mat_print(struct mrc_mat *mat)
+{
+  struct mrc_mat_ops *ops = mrc_mat_ops(mat);
+  assert(ops->print);
+  ops->print(mat);
+}
+
+// ----------------------------------------------------------------------
 // mrc_mat_init
 
 static void
 mrc_mat_init()
 {
   mrc_class_register_subclass(&mrc_class_mrc_mat, &mrc_mat_mcsr_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_mat, &mrc_mat_mcsr_mpi_ops);
 #ifdef HAVE_PETSC
   mrc_class_register_subclass(&mrc_class_mrc_mat, &mrc_mat_petsc_ops);
 #endif

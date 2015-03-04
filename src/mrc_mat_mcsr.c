@@ -35,6 +35,12 @@ mrc_mat_mcsr_setup(struct mrc_mat *mat)
 {
   struct mrc_mat_mcsr *sub = mrc_mat_mcsr(mat);
 
+  MHERE;
+  // mrc_mat "mcsr" works on a single proc only
+  int size;
+  MPI_Comm_size(mrc_mat_comm(mat), &size);
+  assert(size == 1);
+
   sub->nr_rows_alloced = 1000;
   sub->nr_entries_alloced = 2000;
 
@@ -63,6 +69,18 @@ mrc_mat_mcsr_destroy(struct mrc_mat *mat)
 // WARNING, all elements for any given row must be added contiguously!
 
 static void
+mrc_mat_mcsr_realloc_rows_if_needed(struct mrc_mat *mat, int new_row)
+{
+  struct mrc_mat_mcsr *sub = mrc_mat_mcsr(mat);
+
+  // need one final row for the final index into the entries array
+  if (new_row >= sub->nr_rows_alloced - 1) {
+    sub->nr_rows_alloced *= 2;
+    sub->rows = realloc(sub->rows, sub->nr_rows_alloced * sizeof(*sub->rows));
+  }
+}
+
+static void
 mrc_mat_mcsr_add_value(struct mrc_mat *mat, int row_idx, int col_idx, double val)
 {
   struct mrc_mat_mcsr *sub = mrc_mat_mcsr(mat);
@@ -70,10 +88,7 @@ mrc_mat_mcsr_add_value(struct mrc_mat *mat, int row_idx, int col_idx, double val
   if (sub->nr_rows == 0 ||
       sub->rows[sub->nr_rows - 1].idx != row_idx) {
     // start new row
-    if (sub->nr_rows >= sub->nr_rows_alloced - 1) {
-      sub->nr_rows_alloced *= 2;
-      sub->rows = realloc(sub->rows, sub->nr_rows_alloced * sizeof(*sub->rows));
-    }
+    mrc_mat_mcsr_realloc_rows_if_needed(mat, sub->nr_rows);
     sub->rows[sub->nr_rows].idx = row_idx;
     sub->rows[sub->nr_rows].first_entry = sub->nr_entries;
     sub->nr_rows++;
@@ -104,11 +119,33 @@ static void
 mrc_mat_mcsr_assemble(struct mrc_mat *mat)
 {
   struct mrc_mat_mcsr *sub = mrc_mat_mcsr(mat);
+  mrc_mat_mcsr_realloc_rows_if_needed(mat, 0);
   sub->rows[sub->nr_rows].first_entry = sub->nr_entries;
 }
 
 // FIXME: semantics are different (wrong!) if empty rows are present:
 // In mcsr, output vector values at empty rows are left unchanged, rather than zeroed
+
+// ----------------------------------------------------------------------
+// mrc_mat_mcsr_print
+
+static void
+mrc_mat_mcsr_print(struct mrc_mat *mat)
+{
+  struct mrc_mat_mcsr *sub = mrc_mat_mcsr(mat);
+
+  //  mprintf("nr_rows = %d\n", sub->nr_rows);
+  for (int row = 0; row < sub->nr_rows; row++) {
+    int row_idx = sub->rows[row].idx;
+    //    mprintf("row_idx = %d first_entry %d \n", row_idx, sub->rows[row].first_entry);
+    for (int entry = sub->rows[row].first_entry;
+	 entry < sub->rows[row + 1].first_entry; entry++) {
+      int col_idx = sub->entries[entry].idx;
+      mrc_fld_data_t val = sub->entries[entry].val;
+      mprintf("row %d col %d val %g\n", row_idx, col_idx, val);
+    }
+  }
+}
 
 // ----------------------------------------------------------------------
 // mrc_mat_mcsr_apply
@@ -227,5 +264,6 @@ struct mrc_mat_ops mrc_mat_mcsr_ops = {
   .assemble              = mrc_mat_mcsr_assemble,
   .apply                 = mrc_mat_mcsr_apply,
   .apply_in_place        = mrc_mat_mcsr_apply_in_place,
+  .print                 = mrc_mat_mcsr_print,
 };
 

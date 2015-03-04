@@ -14,6 +14,7 @@ void mrc_mat_assemble(struct mrc_mat *mat);
 void mrc_mat_add_value(struct mrc_mat *mat, int row_idx, int col_idx, double val);
 void mrc_mat_apply(struct mrc_fld *y, struct mrc_mat *mat, struct mrc_fld *x);
 void mrc_mat_apply_in_place(struct mrc_mat *mat, struct mrc_fld *x);
+void mrc_mat_print(struct mrc_mat *mat);
 
 //======================================================================
 // THE STORY OF THE FOLLOWING PART OF THIS FILE
