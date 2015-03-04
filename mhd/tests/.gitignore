@@ -15,5 +15,11 @@ mhd_ici
 mhd_hydroblast
 mhd_mhdblast
 mhd_harris
+bak
+mhdblast001
+bowshock001
+ref_hydro
+ref_hydro_amr
+ref
 *.log
 *.trs

@@ -20,6 +20,7 @@ check_PROGRAMS = \
 	test_mrc_m1 \
 	test_mrc_m3 \
 	test_mrc_ddc \
+	test_mrc_mat \
 	test_rlc \
 	test_rmhd \
 	test_kdv \

@@ -31,6 +31,7 @@ test_io_read
 test_mrc_obj
 test_spherical_harmonics
 test_fdtd_amr
+test_mrc_mat
 *.asc
 run*.xdmf
 run*.h5
