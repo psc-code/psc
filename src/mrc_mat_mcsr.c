@@ -114,8 +114,7 @@ mrc_mat_mcsr_assemble(struct mrc_mat *mat)
 // mrc_mat_mcsr_apply
 
 static void
-mrc_mat_mcsr_apply(struct mrc_fld *y, struct mrc_mat *mat, struct mrc_fld *x, 
-		   struct mrc_ddc *ddc)
+mrc_mat_mcsr_apply(struct mrc_fld *y, struct mrc_mat *mat, struct mrc_fld *x)
 {
   struct mrc_mat_mcsr *sub = mrc_mat_mcsr(mat);
 
