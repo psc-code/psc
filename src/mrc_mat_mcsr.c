@@ -1,30 +1,6 @@
 #include "mrc_mat_private.h"
-#include "mrc_fld_as_double.h"
+#include "mrc_fld_as_double.h" // FIXME, has to remain double, otherwise won't match mrc_mat_private.h
 #include <stdlib.h>
-
-// ======================================================================
-// mrc_mat "mcsr"
-
-struct mrc_mat_mcsr_row {
-  int idx;
-  int first_entry;
-};
-
-struct mrc_mat_mcsr_entry {
-  int idx;
-  mrc_fld_data_t val;
-};
-
-struct mrc_mat_mcsr {
-  struct mrc_mat_mcsr_row *rows;
-  struct mrc_mat_mcsr_entry *entries;
-  int nr_rows;
-  int nr_entries;
-  int nr_rows_alloced;
-  int nr_entries_alloced;
-};
-
-#define mrc_mat_mcsr(mat) mrc_to_subobj(mat, struct mrc_mat_mcsr)
 
 // ----------------------------------------------------------------------
 // mrc_mat_mcsr_setup

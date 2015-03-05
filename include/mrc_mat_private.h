@@ -26,4 +26,31 @@ extern struct mrc_mat_ops mrc_mat_mcsr_ops;
 extern struct mrc_mat_ops mrc_mat_mcsr_mpi_ops;
 extern struct mrc_mat_ops mrc_mat_petsc_ops;
 
+// ======================================================================
+// mrc_mat "mcsr"
+//
+// This should be private to mrc_mat_mcsr.c, but mrc_mat_mcsr_mpi.c breaks
+// proper separation of layers and needs to look into it.
+
+struct mrc_mat_mcsr_row {
+  int idx;
+  int first_entry;
+};
+
+struct mrc_mat_mcsr_entry {
+  int idx;
+  double val; // FIXME should be mrc_fld_data_t
+};
+
+struct mrc_mat_mcsr {
+  struct mrc_mat_mcsr_row *rows;
+  struct mrc_mat_mcsr_entry *entries;
+  int nr_rows;
+  int nr_entries;
+  int nr_rows_alloced;
+  int nr_entries_alloced;
+};
+
+#define mrc_mat_mcsr(mat) mrc_to_subobj(mat, struct mrc_mat_mcsr)
+
 #endif

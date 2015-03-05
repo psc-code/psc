@@ -77,9 +77,16 @@ main(int argc, char **argv)
       mrc_mat_add_value(A, row_idx, col_idx, -2.);
       if (col_idx > 0) {
 	mrc_mat_add_value(A, row_idx, col_idx - 1,  1.);
+      } else {
+	mrc_mat_add_value(A, row_idx, N - 1,  1.);
       }
       if (col_idx < N - 1) {
 	mrc_mat_add_value(A, row_idx, col_idx + 1,  1.);
+      } else {
+	mrc_mat_add_value(A, row_idx, 0,  1.);
+      }
+      if (i == 0 && row_off == 0) {
+	mrc_mat_add_value(A, row_idx, 4, 100.);
       }
     }
   }
