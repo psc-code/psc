@@ -15,6 +15,12 @@ struct mrc_mat_mcsr_mpi {
   int N; // global number of columns
   int m_off; // gobal index of first (0th) row that lives on this proc
   int n_off; // gobal index of first (0th) column that lives on this proc
+
+  int *col_map;
+  int col_map_cnt;
+  int *rev_col_map;
+
+  struct mrc_fld *xc;
 };
 
 #define mrc_mat_mcsr_mpi(mat) mrc_to_subobj(mat, struct mrc_mat_mcsr_mpi)
@@ -76,6 +82,11 @@ mrc_mat_mcsr_mpi_destroy(struct mrc_mat *mat)
 
   mrc_mat_destroy(sub->A);
   mrc_mat_destroy(sub->B);
+
+  free(sub->col_map);
+  free(sub->rev_col_map);
+
+  mrc_fld_destroy(sub->xc);
 }
 
 // ----------------------------------------------------------------------
@@ -109,22 +120,18 @@ mrc_mat_mcsr_mpi_assemble(struct mrc_mat *mat)
 
   mrc_mat_assemble(sub->A);
   mrc_mat_assemble(sub->B);
-}
 
-// ----------------------------------------------------------------------
-// mrc_mat_mcsr_mpi_apply
-
-static void
-mrc_mat_mcsr_mpi_apply(struct mrc_fld *y, struct mrc_mat *mat, struct mrc_fld *x)
-{
-  struct mrc_mat_mcsr_mpi *sub = mrc_mat_mcsr_mpi(mat);
+  // set up map that maps non-zero column indices in B to a compacted index
   struct mrc_mat_mcsr *sub_B = mrc_mat_mcsr(sub->B);
 
-  int *col_map = malloc(sub->N * sizeof(*col_map));
+  sub->col_map = malloc(sub->N * sizeof(*sub->col_map));
+  int *col_map = sub->col_map;
+
   for (int col = 0; col < sub->N; col++) {
     col_map[col] = -1;
   }
   int col_map_cnt = 0;
+
   for (int row = 0; row < sub_B->nr_rows; row++) {
     for (int entry = sub_B->rows[row].first_entry;
 	 entry < sub_B->rows[row + 1].first_entry; entry++) {
@@ -134,17 +141,46 @@ mrc_mat_mcsr_mpi_apply(struct mrc_fld *y, struct mrc_mat *mat, struct mrc_fld *x
       }
     }
   }
+  sub->col_map_cnt = col_map_cnt;
+
   for (int col = 0; col < sub->N; col++) {
     mprintf("map %d -> %d\n", col, col_map[col]);
   }
-  int *rev_col_map = malloc(col_map_cnt * sizeof(*rev_col_map));
+
+  // set up reverse map, mapping compacted indices back to original
+  // global column indices
+  sub->rev_col_map = malloc(sub->col_map_cnt * sizeof(*sub->rev_col_map));
+  int *rev_col_map = sub->rev_col_map;
+
   for (int col = 0; col < sub->N; col++) {
-    rev_col_map[col_map[col]] = col;
+    rev_col_map[sub->col_map[col]] = col;
   }
-  for (int i = 0; i < col_map_cnt; i++) {
+  for (int i = 0; i < sub->col_map_cnt; i++) {
     mprintf("rev map %d -> %d\n", i, rev_col_map[i]);
   }
 
+  // update column indices in B to refer to compacted indices
+  for (int row = 0; row < sub_B->nr_rows; row++) {
+    for (int entry = sub_B->rows[row].first_entry;
+	 entry < sub_B->rows[row + 1].first_entry; entry++) {
+      int col_idx = sub_B->entries[entry].idx;
+      sub_B->entries[entry].idx = sub->col_map[col_idx];
+    }
+  }
+
+  // xc field compacted non-local part of right hand side vector x
+  sub->xc = mrc_fld_create(mrc_mat_comm(mat));
+  mrc_fld_set_type(sub->xc, FLD_TYPE);
+  mrc_fld_set_param_int_array(sub->xc, "dims", 1, (int[1]) { sub->col_map_cnt });
+  mrc_fld_setup(sub->xc);
+}
+
+static void
+mrc_mat_mcsr_mpi_gather_xc(struct mrc_mat *mat, struct mrc_fld *x, struct mrc_fld *xc)
+{
+  struct mrc_mat_mcsr_mpi *sub = mrc_mat_mcsr_mpi(mat);
+
+  // xg field -- FIXME, will be unneeded when we do proper communication
   struct mrc_fld *xg = mrc_fld_create(mrc_mat_comm(mat));
   mrc_fld_set_type(xg, FLD_TYPE);
   mrc_fld_set_param_int_array(xg, "dims", 1, (int[1]) { sub->M });
@@ -153,28 +189,25 @@ mrc_mat_mcsr_mpi_apply(struct mrc_fld *y, struct mrc_mat *mat, struct mrc_fld *x
   MPI_Allgather(x->_arr, x->_len, MPI_MRC_FLD_DATA_T,
 		xg->_arr, x->_len, MPI_MRC_FLD_DATA_T, mrc_mat_comm(mat));
 
-  struct mrc_fld *xc = mrc_fld_create(mrc_mat_comm(mat));
-  mrc_fld_set_type(xc, FLD_TYPE);
-  mrc_fld_set_param_int_array(xc, "dims", 1, (int[1]) { col_map_cnt });
-  mrc_fld_setup(xc);
-
-  for (int i = 0; i < col_map_cnt; i++) {
-    MRC_D1(xc, i) = MRC_D1(xg, rev_col_map[i]);
+  for (int i = 0; i < sub->col_map_cnt; i++) {
+    MRC_D1(xc, i) = MRC_D1(xg, sub->rev_col_map[i]);
     mprintf("xc[%d] = %g\n", i, MRC_D1(xc, i));
   }
 
-  for (int row = 0; row < sub_B->nr_rows; row++) {
-    for (int entry = sub_B->rows[row].first_entry;
-	 entry < sub_B->rows[row + 1].first_entry; entry++) {
-      int col_idx = sub_B->entries[entry].idx;
-      sub_B->entries[entry].idx = col_map[col_idx];
-    }
-  }
+  mrc_fld_destroy(xg);
+}
+
+// ----------------------------------------------------------------------
+// mrc_mat_mcsr_mpi_apply
+
+static void
+mrc_mat_mcsr_mpi_apply(struct mrc_fld *y, struct mrc_mat *mat, struct mrc_fld *x)
+{
+  struct mrc_mat_mcsr_mpi *sub = mrc_mat_mcsr_mpi(mat);
 
   mrc_mat_apply(y, sub->A, x);
-  mrc_mat_apply_add(y, sub->B, xc);
-
-  mrc_fld_destroy(xg);
+  mrc_mat_mcsr_mpi_gather_xc(mat, x, sub->xc);
+  mrc_mat_apply_add(y, sub->B, sub->xc);
 }
 
 // ----------------------------------------------------------------------
