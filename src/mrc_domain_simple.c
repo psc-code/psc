@@ -204,20 +204,20 @@ mrc_domain_simple_get_bc(struct mrc_domain *domain, int *bc)
 }
 
 static void
-mrc_domain_simple_get_global_patch_info(struct mrc_domain *domain, int patch,
+mrc_domain_simple_get_global_patch_info(struct mrc_domain *domain, int gpatch,
 					struct mrc_patch_info *info)
 {
   struct mrc_domain_simple *simple = mrc_domain_simple(domain);
 
-  mrc_domain_simple_rank2proc(domain, patch, info->idx3);
+  mrc_domain_simple_rank2proc(domain, gpatch, info->idx3);
   for (int d = 0; d < 3; d++) {
     assert(simple->gdims[d] % simple->nr_procs[d] == 0);
     info->ldims[d] = simple->gdims[d] / simple->nr_procs[d];
     info->off[d] = info->idx3[d] * info->ldims[d];
   }
-  info->rank = patch;
+  info->rank = gpatch;
   info->patch = 0;
-  info->global_patch = patch;
+  info->global_patch = gpatch;
   info->level = 0;
 }
 

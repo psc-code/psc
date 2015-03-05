@@ -35,7 +35,6 @@ mrc_mat_mcsr_setup(struct mrc_mat *mat)
 {
   struct mrc_mat_mcsr *sub = mrc_mat_mcsr(mat);
 
-  MHERE;
   // mrc_mat "mcsr" works on a single proc only
   int size;
   MPI_Comm_size(mrc_mat_comm(mat), &size);
@@ -84,6 +83,9 @@ static void
 mrc_mat_mcsr_add_value(struct mrc_mat *mat, int row_idx, int col_idx, double val)
 {
   struct mrc_mat_mcsr *sub = mrc_mat_mcsr(mat);
+
+  assert(row_idx >= 0 && row_idx < mat->m);
+  assert(col_idx >= 0 && col_idx < mat->n);
 
   if (sub->nr_rows == 0 ||
       sub->rows[sub->nr_rows - 1].idx != row_idx) {
@@ -172,6 +174,31 @@ mrc_mat_mcsr_apply(struct mrc_fld *y, struct mrc_mat *mat, struct mrc_fld *x)
   }
 }
 
+// ----------------------------------------------------------------------
+// mrc_mat_mcsr_apply_add
+
+static void
+mrc_mat_mcsr_apply_add(struct mrc_fld *y, struct mrc_mat *mat, struct mrc_fld *x)
+{
+  struct mrc_mat_mcsr *sub = mrc_mat_mcsr(mat);
+
+  assert(x->_size_of_type == sizeof(mrc_fld_data_t));
+  mrc_fld_data_t *x_arr = x->_arr;
+  mrc_fld_data_t *y_arr = y->_arr;
+    
+  for (int row = 0; row < sub->nr_rows; row++) {
+    int row_idx = sub->rows[row].idx;
+    mrc_fld_data_t sum = 0.;
+    for (int entry = sub->rows[row].first_entry;
+	 entry < sub->rows[row + 1].first_entry; entry++) {
+      int col_idx = sub->entries[entry].idx;
+      mrc_fld_data_t val = sub->entries[entry].val;
+      sum += val * x_arr[col_idx];
+    }
+    // FIXME, the only difference to apply() is the "+" in "+=", should be consolidated
+    y_arr[row_idx] += sum;
+  }
+}
 
 // ----------------------------------------------------------------------
 // mrc_mat_mcsr_apply_in_place
@@ -263,6 +290,7 @@ struct mrc_mat_ops mrc_mat_mcsr_ops = {
   .add_value             = mrc_mat_mcsr_add_value,
   .assemble              = mrc_mat_mcsr_assemble,
   .apply                 = mrc_mat_mcsr_apply,
+  .apply_add             = mrc_mat_mcsr_apply_add,
   .apply_in_place        = mrc_mat_mcsr_apply_in_place,
   .print                 = mrc_mat_mcsr_print,
 };

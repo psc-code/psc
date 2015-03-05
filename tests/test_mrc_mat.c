@@ -52,14 +52,36 @@ main(int argc, char **argv)
 
   struct mrc_mat *A = mrc_mat_create(comm);
   mrc_mat_set_name(A, "A");
-  mrc_mat_set_param_int(A, "m", N);
-  mrc_mat_set_param_int(A, "n", N);
+  mrc_mat_set_param_int(A, "m", y->_len);
+  mrc_mat_set_param_int(A, "n", x->_len);
   mrc_mat_set_from_options(A);
   mrc_mat_setup(A);
   mrc_mat_view(A);
 
-  for (int i = 0; i < N; i++) {
-    mrc_mat_add_value(A, i, i, -2.);
+  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+    // FIXME, this really should be on offsets in mrc_vec,
+    // not making assumptions about an underlying domain, equal
+    // patches, etc.
+    struct mrc_patch_info info;
+    mrc_domain_get_local_patch_info(domain, p, &info);
+    int row_off = x->_len * info.global_patch;
+    int col_off = x->_len * info.global_patch;
+
+    for (int i = 0; i < x->_len; i++) {
+      F3(x, 0, i,0,0) = i + row_off;
+    }
+
+    for (int i = 0; i < x->_len; i++) {
+      int row_idx = i + row_off;
+      int col_idx = i + col_off;
+      mrc_mat_add_value(A, row_idx, col_idx, -2.);
+      if (col_idx > 0) {
+	mrc_mat_add_value(A, row_idx, col_idx - 1,  1.);
+      }
+      if (col_idx < N - 1) {
+	mrc_mat_add_value(A, row_idx, col_idx + 1,  1.);
+      }
+    }
   }
   mrc_mat_assemble(A);
   mrc_mat_print(A);

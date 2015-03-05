@@ -210,6 +210,8 @@ mrc_fld_spatial_sw(struct mrc_fld *x)
 #endif
 
 #define MRC_S1(fld, i0) MRC_FLD(fld, float, i0,0,0,0,0)
+#define MRC_D1(fld, i0) MRC_FLD(fld, double, i0,0,0,0,0)
+#define MRC_I1(fld, i0) MRC_FLD(fld, int, i0,0,0,0,0)
 
 #define MRC_S2(fld, i0,i1) MRC_FLD(fld, float, i0,i1,0,0,0)
 #define MRC_D2(fld, i0,i1) MRC_FLD(fld, double, i0,i1,0,0,0)

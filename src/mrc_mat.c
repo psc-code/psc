@@ -39,6 +39,17 @@ mrc_mat_apply(struct mrc_fld *y, struct mrc_mat *mat, struct mrc_fld *x)
 }
 
 // ----------------------------------------------------------------------
+// mrc_mat_apply_add
+
+void
+mrc_mat_apply_add(struct mrc_fld *y, struct mrc_mat *mat, struct mrc_fld *x)
+{
+  struct mrc_mat_ops *ops = mrc_mat_ops(mat);
+  assert(ops->apply_add);
+  ops->apply_add(y, mat, x);
+}
+
+// ----------------------------------------------------------------------
 // mrc_mat_apply_in_place
 
 void
