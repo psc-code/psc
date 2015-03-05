@@ -1,6 +1,5 @@
 #include "mrc_mat_private.h"
 #include "mrc_fld_as_double.h"
-#include "mrc_ddc_private.h" 
 #include <stdlib.h>
 
 // ======================================================================
@@ -208,75 +207,23 @@ mrc_mat_mcsr_apply_in_place(struct mrc_mat *mat, struct mrc_fld *x)
 {
   
   struct mrc_mat_mcsr *sub = mrc_mat_mcsr(mat);
-  struct mrc_domain *domain = x->_domain; 
-  struct mrc_ddc *ddc = mrc_domain_get_ddc(domain);
 
   int len = x->_len;
-  if ( ddc->size == 1) {
-      assert(x->_size_of_type == sizeof(mrc_fld_data_t));
-      mrc_fld_data_t *arr = x->_arr;
-      for (int row = 0; row < sub->nr_rows; row++) {
-	int row_idx = sub->rows[row].idx;
-	assert(row_idx < len);
-	mrc_fld_data_t sum = 0.;
-	for (int entry = sub->rows[row].first_entry;
-	     entry < sub->rows[row + 1].first_entry; entry++) {
-	  int col_idx = sub->entries[entry].idx;
-	  assert(col_idx < len);
-	  mrc_fld_data_t val = sub->entries[entry].val;
-	  sum += val * arr[col_idx];
-	}
-	arr[row_idx] = sum;
-      } 
- 
-  } else {    
-    MPI_Comm comm = mrc_domain_comm(domain);   
-    int rn[ddc->size]; 
-    int ds[ddc->size]; 
-    MPI_Allgather( &mat->n, 1, MPI_INT, rn, 1, MPI_INT, comm);
-    int sz=0;
-    for (int jj=0; jj < ddc->size; jj++) 
-      {ds[jj]=sz; sz+=rn[jj];} 
-
-    int nlpatches = mrc_fld_nr_patches(x); 
-    int ngpatches; 
-    mrc_domain_get_nr_global_patches(domain, &ngpatches); 
-    int nppatch = mat->n/nlpatches;
-    struct mrc_patch_info info; 
-    // loop through all patches to find the first one 
-    // assigned to this rank
-    for (int pp=0; pp<ngpatches-1; pp++) { 
-      mrc_domain_get_global_patch_info( domain, pp, &info); 
-      if (info.rank == ddc->rank) {	
-	break;
-      }     
+  assert(x->_size_of_type == sizeof(mrc_fld_data_t));
+  mrc_fld_data_t *arr = x->_arr;
+  for (int row = 0; row < sub->nr_rows; row++) {
+    int row_idx = sub->rows[row].idx;
+    assert(row_idx < len);
+    mrc_fld_data_t sum = 0.;
+    for (int entry = sub->rows[row].first_entry;
+	 entry < sub->rows[row + 1].first_entry; entry++) {
+      int col_idx = sub->entries[entry].idx;
+      assert(col_idx < len);
+      mrc_fld_data_t val = sub->entries[entry].val;
+      sum += val * arr[col_idx];
     }
-    // allocate memory for gather vector 
-    // each rank will recieve full x->_arr
-    // this might not scale well but is easy to implement 
-    mrc_fld_data_t *arr1= x->_arr; 
-    mrc_fld_data_t *loc_x = (mrc_fld_data_t*) calloc(sz,sizeof(mrc_fld_data_t));   
-    // FIXME: MPI_DOUBLE hardcoded here. 
-    MPI_Allgatherv( &(arr1[0]), mat->n, MPI_DOUBLE, &(loc_x[0]), 
-		    rn, ds, MPI_DOUBLE, comm);   
-    mrc_fld_data_t *arr = loc_x;
-    for (int row = 0; row < sub->nr_rows; row++) {
-	int row_idx = sub->rows[row].idx;
-	mrc_fld_data_t sum = 0.;
-	for (int entry = sub->rows[row].first_entry;
-	     entry < sub->rows[row + 1].first_entry; entry++) {
-	  int col_idx = sub->entries[entry].idx;
-	  mrc_fld_data_t val = sub->entries[entry].val;
-	  sum += val * arr[col_idx];
-	  } 
-	if (ddc->rank !=0 ) {		  
-	  arr1[row_idx - (nppatch*(info.global_patch))]=sum;
-	} else {
-	  arr1[row_idx]=sum;
-	}
-    }  
-    free(loc_x);    
-  }
+    arr[row_idx] = sum;
+  } 
 }
 
 // ----------------------------------------------------------------------
