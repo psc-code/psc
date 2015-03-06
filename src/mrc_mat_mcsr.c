@@ -132,10 +132,8 @@ mrc_mat_mcsr_print(struct mrc_mat *mat)
 // mrc_mat_mcsr_apply
 
 static void
-mrc_mat_mcsr_apply(struct mrc_fld *_y, struct mrc_mat *mat, struct mrc_fld *_x)
+mrc_mat_mcsr_apply(struct mrc_vec *y, struct mrc_mat *mat, struct mrc_vec *x)
 {
-  struct mrc_vec *x = _x->_vec;
-  struct mrc_vec *y = _y->_vec;
   struct mrc_mat_mcsr *sub = mrc_mat_mcsr(mat);
 
   assert(x->size_of_type == sizeof(mrc_fld_data_t));
@@ -159,10 +157,8 @@ mrc_mat_mcsr_apply(struct mrc_fld *_y, struct mrc_mat *mat, struct mrc_fld *_x)
 // mrc_mat_mcsr_apply_add
 
 static void
-mrc_mat_mcsr_apply_add(struct mrc_fld *_y, struct mrc_mat *mat, struct mrc_fld *_x)
+mrc_mat_mcsr_apply_add(struct mrc_vec *y, struct mrc_mat *mat, struct mrc_vec *x)
 {
-  struct mrc_vec *x = _x->_vec;
-  struct mrc_vec *y = _y->_vec;
   struct mrc_mat_mcsr *sub = mrc_mat_mcsr(mat);
 
   assert(x->size_of_type == sizeof(mrc_fld_data_t));
@@ -187,9 +183,8 @@ mrc_mat_mcsr_apply_add(struct mrc_fld *_y, struct mrc_mat *mat, struct mrc_fld *
 // mrc_mat_mcsr_apply_in_place
 
 static void
-mrc_mat_mcsr_apply_in_place(struct mrc_mat *mat, struct mrc_fld *_x)
+mrc_mat_mcsr_apply_in_place(struct mrc_mat *mat, struct mrc_vec *x)
 {
-  struct mrc_vec *x = _x->_vec;
   struct mrc_mat_mcsr *sub = mrc_mat_mcsr(mat);
 
   int len = x->len;

@@ -395,15 +395,13 @@ mrc_mat_mcsr_mpi_gather_xc(struct mrc_mat *mat, struct mrc_vec *x, struct mrc_fl
 // mrc_mat_mcsr_mpi_apply
 
 static void
-mrc_mat_mcsr_mpi_apply(struct mrc_fld *_y, struct mrc_mat *mat, struct mrc_fld *_x)
+mrc_mat_mcsr_mpi_apply(struct mrc_vec *y, struct mrc_mat *mat, struct mrc_vec *x)
 {
-  struct mrc_vec *x = _x->_vec;
-  struct mrc_vec *y = _y->_vec;
   struct mrc_mat_mcsr_mpi *sub = mrc_mat_mcsr_mpi(mat);
 
-  mrc_mat_apply(_y, sub->A, _x);
+  mrc_mat_apply(y, sub->A, x);
   mrc_mat_mcsr_mpi_gather_xc(mat, x, sub->xc);
-  mrc_mat_apply_add(_y, sub->B, sub->xc);
+  mrc_mat_apply_add(y, sub->B, sub->xc->_vec);
 }
 
 // ----------------------------------------------------------------------

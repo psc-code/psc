@@ -31,7 +31,7 @@ mrc_mat_assemble(struct mrc_mat *mat)
 // mrc_mat_apply
 
 void
-mrc_mat_apply(struct mrc_fld *y, struct mrc_mat *mat, struct mrc_fld *x)
+mrc_mat_apply(struct mrc_vec *y, struct mrc_mat *mat, struct mrc_vec *x)
 {
   struct mrc_mat_ops *ops = mrc_mat_ops(mat);
   assert(ops->apply);
@@ -42,7 +42,7 @@ mrc_mat_apply(struct mrc_fld *y, struct mrc_mat *mat, struct mrc_fld *x)
 // mrc_mat_apply_add
 
 void
-mrc_mat_apply_add(struct mrc_fld *y, struct mrc_mat *mat, struct mrc_fld *x)
+mrc_mat_apply_add(struct mrc_vec *y, struct mrc_mat *mat, struct mrc_vec *x)
 {
   struct mrc_mat_ops *ops = mrc_mat_ops(mat);
   assert(ops->apply_add);
@@ -53,7 +53,7 @@ mrc_mat_apply_add(struct mrc_fld *y, struct mrc_mat *mat, struct mrc_fld *x)
 // mrc_mat_apply_in_place
 
 void
-mrc_mat_apply_in_place(struct mrc_mat *mat, struct mrc_fld *x)
+mrc_mat_apply_in_place(struct mrc_mat *mat, struct mrc_vec *x)
 {
   struct mrc_mat_ops *ops = mrc_mat_ops(mat);
   assert(ops->apply_in_place);

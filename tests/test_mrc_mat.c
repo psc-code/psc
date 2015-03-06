@@ -132,7 +132,7 @@ main(int argc, char **argv)
 
   mrc_fld_print(x, "x");
 
-  mrc_mat_apply(y, A, x);
+  mrc_mat_apply(y->_vec, A, x->_vec);
 
   MPI_Barrier(comm);
   mrc_fld_print(y, "y");
