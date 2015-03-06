@@ -30,7 +30,6 @@ struct mrc_mat_mcsr_mpi {
   mrc_fld_data_t *send_buf;
 
   MPI_Request *req;
-
 };
 
 #define mrc_mat_mcsr_mpi(mat) mrc_to_subobj(mat, struct mrc_mat_mcsr_mpi)
@@ -63,8 +62,8 @@ mrc_mat_mcsr_mpi_setup(struct mrc_mat *mat)
   MPI_Exscan(&mat->m, &sub->m_off, 1, MPI_INT, MPI_SUM, mrc_mat_comm(mat));
   MPI_Exscan(&mat->n, &sub->n_off, 1, MPI_INT, MPI_SUM, mrc_mat_comm(mat));
 
-  mprintf("M = %d N = %d\n", sub->M, sub->N);
-  mprintf("m_off = %d n_off = %d\n", sub->m_off, sub->n_off);
+  /* mprintf("M = %d N = %d\n", sub->M, sub->N); */
+  /* mprintf("m_off = %d n_off = %d\n", sub->m_off, sub->n_off); */
 
   // A is the diagonal block, so use local sizes
   mrc_mat_set_param_int(sub->A, "m", mat->m);
@@ -93,7 +92,14 @@ mrc_mat_mcsr_mpi_destroy(struct mrc_mat *mat)
   mrc_mat_destroy(sub->A);
   mrc_mat_destroy(sub->B);
 
+  free(sub->recv_len);
+  free(sub->recv_src);
   mrc_fld_destroy(sub->xc);
+
+  free(sub->send_len);
+  free(sub->send_dst);
+  free(sub->send_map);
+  free(sub->send_buf);
 }
 
 // ----------------------------------------------------------------------
@@ -197,7 +203,6 @@ mrc_mat_mcsr_mpi_assemble(struct mrc_mat *mat)
     if (col_map[col] >= 0) {
       int r = find_rank_from_global_idx(col, col_offs_by_rank, size);
       if (r > 0) {
-	mprintf("col %d before %d + %d\n", col, col_map[col], col_map_cnt_by_rank[r-1]);
 	col_map[col] += col_map_cnt_by_rank[r-1];
       }
     }
@@ -205,23 +210,22 @@ mrc_mat_mcsr_mpi_assemble(struct mrc_mat *mat)
 
   free(col_map_cnt_by_rank);
 
-  for (int col = 0; col < sub->N; col++) {
-    if (col_map[col] >= 0) {
-      mprintf("col_map %d -> %d\n", col, col_map[col]);
-    }
-  }
+  /* for (int col = 0; col < sub->N; col++) { */
+  /*   if (col_map[col] >= 0) { */
+  /*     mprintf("col_map %d -> %d\n", col, col_map[col]); */
+  /*   } */
+  /* } */
 
   // set up reverse map, mapping compacted indices back to original
   // global column indices
   sub->rev_col_map = malloc(col_map_cnt * sizeof(*sub->rev_col_map));
-  int *rev_col_map = sub->rev_col_map;
 
   for (int col = 0; col < sub->N; col++) {
-    rev_col_map[col_map[col]] = col;
+    sub->rev_col_map[col_map[col]] = col;
   }
-  for (int i = 0; i < col_map_cnt; i++) {
-    mprintf("rev map %d -> %d\n", i, rev_col_map[i]);
-  }
+  /* for (int i = 0; i < col_map_cnt; i++) { */
+  /*   mprintf("rev map %d -> %d\n", i, sub->rev_col_map[i]); */
+  /* } */
 
   // update column indices in B to refer to compacted indices
   for (int row = 0; row < sub_B->nr_rows; row++) {
@@ -238,7 +242,7 @@ mrc_mat_mcsr_mpi_assemble(struct mrc_mat *mat)
   sub->n_recvs = 0;
   int *recv_cnt_by_rank = calloc(size, sizeof(*recv_cnt_by_rank));
   for (int i = 0; i < col_map_cnt; i++) {
-    int col_idx = rev_col_map[i];
+    int col_idx = sub->rev_col_map[i];
     int r = find_rank_from_global_idx(col_idx, col_offs_by_rank, size);
     if (recv_cnt_by_rank[r]++ == 0) {
       sub->n_recvs++;
@@ -303,12 +307,12 @@ mrc_mat_mcsr_mpi_assemble(struct mrc_mat *mat)
   }
   free(status);
 
-  for (int n = 0; n < sub->n_recvs; n++) {
-    mprintf("recv_len[%d] = %d src = %d\n", n, sub->recv_len[n], sub->recv_src[n]);
-  }
-  for (int n = 0; n < sub->n_sends; n++) {
-    mprintf("send_len[%d] = %d dst = %d\n", n, sub->send_len[n], sub->send_dst[n]);
-  }
+  /* for (int n = 0; n < sub->n_recvs; n++) { */
+  /*   mprintf("recv_len[%d] = %d src = %d\n", n, sub->recv_len[n], sub->recv_src[n]); */
+  /* } */
+  /* for (int n = 0; n < sub->n_sends; n++) { */
+  /*   mprintf("send_len[%d] = %d dst = %d\n", n, sub->send_len[n], sub->send_dst[n]); */
+  /* } */
 
   // prepare actual send / recv buffers
   int send_buf_size = 0;
@@ -340,7 +344,7 @@ mrc_mat_mcsr_mpi_assemble(struct mrc_mat *mat)
 	p[i] -= sub->n_off;
       }
       assert(p[i] >= 0 && p[i] < mat->n);
-      mprintf("map send %d: [%d] <- %d\n", n, i, p[i]);
+      /* mprintf("map send %d: [%d] <- %d\n", n, i, p[i]); */
     }
     p += sub->send_len[n];
   }
@@ -392,7 +396,7 @@ mrc_mat_mcsr_mpi_gather_xc(struct mrc_mat *mat, struct mrc_fld *x, struct mrc_fl
   for (int i = 0; i < xc->_len; i++) {
     //mprintf("!!! %g %g\n", MRC_D1(xc, i), MRC_D1(xg, sub->rev_col_map[i]));
     assert(MRC_D1(xc, i) == MRC_D1(xg, sub->rev_col_map[i]));
-    mprintf("xc[%d] = %g\n", i, MRC_D1(xc, i));
+    //mprintf("xc[%d] = %g\n", i, MRC_D1(xc, i));
   }
 
   mrc_fld_destroy(xg);

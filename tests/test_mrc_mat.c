@@ -47,9 +47,9 @@ static const struct entry *mat_0[8] = {
 
 const int N_1 = 12;
 static const struct entry *mat_1[12] = {
-  [ 0] = (struct entry[]) { {  0, 1. },             { 9, 1. }, { -1, } },
-  [ 1] = (struct entry[]) { {  1, 1. },             { 8, 1. }, { -1, } },
-  [ 2] = (struct entry[]) { {  2, 1. }, {  6, 1. },            { -1, } },
+  [ 0] = (struct entry[]) { {  0, 1. },                        { 9, 9. }, { -1, } },
+  [ 1] = (struct entry[]) { {  1, 1. },             { 8, 8. },            { -1, } },
+  [ 2] = (struct entry[]) { {  2, 1. }, {  6, 6. },                       { -1, } },
   [ 3] = (struct entry[]) { {  3, 1. }, { -1, } },
   [ 4] = (struct entry[]) { {  4, 1. }, { -1, } },
   [ 5] = (struct entry[]) { {  5, 1. }, { -1, } },
@@ -123,7 +123,7 @@ main(int argc, char **argv)
     int row_idx = i + row_off;
     
     for (const struct entry *e = mat[row_idx]; e && e->col >= 0; e++) {
-      mprintf("row %d col %d val %g\n", row_idx, e->col, e->val);
+      /* mprintf("row %d col %d val %g\n", row_idx, e->col, e->val); */
       mrc_mat_add_value(A, row_idx, e->col, e->val);
     }
   }
