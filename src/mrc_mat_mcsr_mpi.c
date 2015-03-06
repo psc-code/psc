@@ -1,6 +1,7 @@
 
 #include "mrc_mat_private.h"
 #include "mrc_fld_as_double.h"
+#include "mrc_vec_private.h"
 
 #include "mrc_decomposition_private.h"
 
@@ -22,6 +23,7 @@ struct mrc_mat_mcsr_mpi {
   int *recv_len;
   int *recv_src;
   struct mrc_fld *xc;
+  struct mrc_vec *x_nl; // non-local compacted part of x that we need on the local proc
 
   int n_sends;
   int *send_len;
@@ -99,6 +101,7 @@ mrc_mat_mcsr_mpi_destroy(struct mrc_mat *mat)
   free(sub->recv_len);
   free(sub->recv_src);
   mrc_fld_destroy(sub->xc);
+  mrc_vec_destroy(sub->x_nl);
 
   free(sub->send_len);
   free(sub->send_dst);
@@ -334,19 +337,26 @@ mrc_mat_mcsr_mpi_assemble(struct mrc_mat *mat)
   mrc_fld_set_param_int_array(sub->xc, "dims", 1, (int[1]) { col_map_cnt });
   mrc_fld_setup(sub->xc);
 
+  sub->x_nl = mrc_vec_create(mrc_mat_comm(mat));
+  mrc_vec_set_type(sub->x_nl, FLD_TYPE);
+  mrc_vec_set_param_int(sub->x_nl, "len", col_map_cnt);
+  mrc_vec_setup(sub->x_nl);
+
   sub->send_buf = calloc(send_buf_size, sizeof(*sub->send_buf));
 }
 
 static void
-mrc_mat_mcsr_mpi_gather_xc(struct mrc_mat *mat, struct mrc_fld *x, struct mrc_fld *xc)
+mrc_mat_mcsr_mpi_gather_xc(struct mrc_mat *mat, struct mrc_vec *x, struct mrc_fld *xc)
 {
   struct mrc_mat_mcsr_mpi *sub = mrc_mat_mcsr_mpi(mat);
+
+  mrc_fld_data_t *x_arr = x->arr;
 
   // actual communication
   mrc_fld_data_t *pp = sub->send_buf;
   for (int n = 0; n < sub->n_sends; n++) {
     for (int i = 0; i < sub->send_len[n]; i++) {
-      pp[i] = MRC_D1(x, sub->send_map[i]);
+      pp[i] = x_arr[sub->send_map[i]];
     }
     MPI_Isend(pp, sub->send_len[n], MPI_MRC_FLD_DATA_T, sub->send_dst[n], 2,
 	      mrc_mat_comm(mat), &sub->req[n]);
@@ -369,8 +379,8 @@ mrc_mat_mcsr_mpi_gather_xc(struct mrc_mat *mat, struct mrc_fld *x, struct mrc_fl
   mrc_fld_set_param_int_array(xg, "dims", 1, (int[1]) { sub->dc_row->N });
   mrc_fld_setup(xg);
 
-  MPI_Allgather(x->_arr, x->_len, MPI_MRC_FLD_DATA_T,
-		xg->_arr, x->_len, MPI_MRC_FLD_DATA_T, mrc_mat_comm(mat));
+  MPI_Allgather(x->arr, x->len, MPI_MRC_FLD_DATA_T,
+		xg->_arr, x->len, MPI_MRC_FLD_DATA_T, mrc_mat_comm(mat));
 
   for (int i = 0; i < xc->_len; i++) {
     //mprintf("!!! %g %g\n", MRC_D1(xc, i), MRC_D1(xg, sub->rev_col_map[i]));
@@ -385,13 +395,15 @@ mrc_mat_mcsr_mpi_gather_xc(struct mrc_mat *mat, struct mrc_fld *x, struct mrc_fl
 // mrc_mat_mcsr_mpi_apply
 
 static void
-mrc_mat_mcsr_mpi_apply(struct mrc_fld *y, struct mrc_mat *mat, struct mrc_fld *x)
+mrc_mat_mcsr_mpi_apply(struct mrc_fld *_y, struct mrc_mat *mat, struct mrc_fld *_x)
 {
+  struct mrc_vec *x = _x->_vec;
+  struct mrc_vec *y = _y->_vec;
   struct mrc_mat_mcsr_mpi *sub = mrc_mat_mcsr_mpi(mat);
 
-  mrc_mat_apply(y, sub->A, x);
+  mrc_mat_apply(_y, sub->A, _x);
   mrc_mat_mcsr_mpi_gather_xc(mat, x, sub->xc);
-  mrc_mat_apply_add(y, sub->B, sub->xc);
+  mrc_mat_apply_add(_y, sub->B, sub->xc);
 }
 
 // ----------------------------------------------------------------------

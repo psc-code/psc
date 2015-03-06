@@ -1,5 +1,9 @@
+
 #include "mrc_mat_private.h"
+
 #include "mrc_fld_as_double.h" // FIXME, has to remain double, otherwise won't match mrc_mat_private.h
+#include "mrc_vec_private.h"
+
 #include <stdlib.h>
 
 // ----------------------------------------------------------------------
@@ -128,13 +132,15 @@ mrc_mat_mcsr_print(struct mrc_mat *mat)
 // mrc_mat_mcsr_apply
 
 static void
-mrc_mat_mcsr_apply(struct mrc_fld *y, struct mrc_mat *mat, struct mrc_fld *x)
+mrc_mat_mcsr_apply(struct mrc_fld *_y, struct mrc_mat *mat, struct mrc_fld *_x)
 {
+  struct mrc_vec *x = _x->_vec;
+  struct mrc_vec *y = _y->_vec;
   struct mrc_mat_mcsr *sub = mrc_mat_mcsr(mat);
 
-  assert(x->_size_of_type == sizeof(mrc_fld_data_t));
-  mrc_fld_data_t *x_arr = x->_arr;
-  mrc_fld_data_t *y_arr = y->_arr;
+  assert(x->size_of_type == sizeof(mrc_fld_data_t));
+  mrc_fld_data_t *x_arr = x->arr;
+  mrc_fld_data_t *y_arr = y->arr;
     
   for (int row = 0; row < sub->nr_rows; row++) {
     int row_idx = sub->rows[row].idx;
@@ -153,13 +159,15 @@ mrc_mat_mcsr_apply(struct mrc_fld *y, struct mrc_mat *mat, struct mrc_fld *x)
 // mrc_mat_mcsr_apply_add
 
 static void
-mrc_mat_mcsr_apply_add(struct mrc_fld *y, struct mrc_mat *mat, struct mrc_fld *x)
+mrc_mat_mcsr_apply_add(struct mrc_fld *_y, struct mrc_mat *mat, struct mrc_fld *_x)
 {
+  struct mrc_vec *x = _x->_vec;
+  struct mrc_vec *y = _y->_vec;
   struct mrc_mat_mcsr *sub = mrc_mat_mcsr(mat);
 
-  assert(x->_size_of_type == sizeof(mrc_fld_data_t));
-  mrc_fld_data_t *x_arr = x->_arr;
-  mrc_fld_data_t *y_arr = y->_arr;
+  assert(x->size_of_type == sizeof(mrc_fld_data_t));
+  mrc_fld_data_t *x_arr = x->arr;
+  mrc_fld_data_t *y_arr = y->arr;
     
   for (int row = 0; row < sub->nr_rows; row++) {
     int row_idx = sub->rows[row].idx;
@@ -179,14 +187,14 @@ mrc_mat_mcsr_apply_add(struct mrc_fld *y, struct mrc_mat *mat, struct mrc_fld *x
 // mrc_mat_mcsr_apply_in_place
 
 static void
-mrc_mat_mcsr_apply_in_place(struct mrc_mat *mat, struct mrc_fld *x)
+mrc_mat_mcsr_apply_in_place(struct mrc_mat *mat, struct mrc_fld *_x)
 {
-  
+  struct mrc_vec *x = _x->_vec;
   struct mrc_mat_mcsr *sub = mrc_mat_mcsr(mat);
 
-  int len = x->_len;
-  assert(x->_size_of_type == sizeof(mrc_fld_data_t));
-  mrc_fld_data_t *arr = x->_arr;
+  int len = x->len;
+  assert(x->size_of_type == sizeof(mrc_fld_data_t));
+  mrc_fld_data_t *arr = x->arr;
   for (int row = 0; row < sub->nr_rows; row++) {
     int row_idx = sub->rows[row].idx;
     assert(row_idx < len);
