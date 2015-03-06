@@ -148,6 +148,24 @@ mrc_vec_sub_put_array(struct mrc_vec *vec, void *arr)
   assert(arr == vec->arr);
 }
 
+// ----------------------------------------------------------------------
+// mrc_vec_len
+
+int
+mrc_vec_len(struct mrc_vec *x)
+{
+  return x->len;
+}
+
+// ----------------------------------------------------------------------
+// mrc_vec_size_of_type
+
+int
+mrc_vec_size_of_type(struct mrc_vec *x)
+{
+  return x->size_of_type;
+}
+
 // ======================================================================
 // mrc_vec subclasses
 

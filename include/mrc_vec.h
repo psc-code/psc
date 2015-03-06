@@ -32,4 +32,7 @@ void mrc_vec_waxpy(struct mrc_vec *w, double alpha, struct mrc_vec *x, struct mr
 void mrc_vec_set(struct mrc_vec *x, double alpha);
 void mrc_vec_copy(struct mrc_vec *vec_to, struct mrc_vec *vec_from);
 
+int mrc_vec_len(struct mrc_vec *x);
+int mrc_vec_size_of_type(struct mrc_vec *x);
+
 #endif

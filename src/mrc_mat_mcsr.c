@@ -2,7 +2,7 @@
 #include "mrc_mat_private.h"
 
 #include "mrc_fld_as_double.h" // FIXME, has to remain double, otherwise won't match mrc_mat_private.h
-#include "mrc_vec_private.h"
+#include "mrc_vec.h"
 
 #include <stdlib.h>
 
@@ -136,9 +136,9 @@ mrc_mat_mcsr_apply(struct mrc_vec *y, struct mrc_mat *mat, struct mrc_vec *x)
 {
   struct mrc_mat_mcsr *sub = mrc_mat_mcsr(mat);
 
-  assert(x->size_of_type == sizeof(mrc_fld_data_t));
-  mrc_fld_data_t *x_arr = x->arr;
-  mrc_fld_data_t *y_arr = y->arr;
+  assert(mrc_vec_size_of_type(x) == sizeof(mrc_fld_data_t));
+  mrc_fld_data_t *x_arr = mrc_vec_get_array(x);
+  mrc_fld_data_t *y_arr = mrc_vec_get_array(y);
     
   for (int row = 0; row < sub->nr_rows; row++) {
     int row_idx = sub->rows[row].idx;
@@ -151,6 +151,9 @@ mrc_mat_mcsr_apply(struct mrc_vec *y, struct mrc_mat *mat, struct mrc_vec *x)
     }
     y_arr[row_idx] = sum;
   }
+
+  mrc_vec_put_array(x, x_arr);
+  mrc_vec_put_array(y, y_arr);
 }
 
 // ----------------------------------------------------------------------
@@ -161,9 +164,9 @@ mrc_mat_mcsr_apply_add(struct mrc_vec *y, struct mrc_mat *mat, struct mrc_vec *x
 {
   struct mrc_mat_mcsr *sub = mrc_mat_mcsr(mat);
 
-  assert(x->size_of_type == sizeof(mrc_fld_data_t));
-  mrc_fld_data_t *x_arr = x->arr;
-  mrc_fld_data_t *y_arr = y->arr;
+  assert(mrc_vec_size_of_type(x) == sizeof(mrc_fld_data_t));
+  mrc_fld_data_t *x_arr = mrc_vec_get_array(x);
+  mrc_fld_data_t *y_arr = mrc_vec_get_array(y);
     
   for (int row = 0; row < sub->nr_rows; row++) {
     int row_idx = sub->rows[row].idx;
@@ -187,9 +190,9 @@ mrc_mat_mcsr_apply_in_place(struct mrc_mat *mat, struct mrc_vec *x)
 {
   struct mrc_mat_mcsr *sub = mrc_mat_mcsr(mat);
 
-  int len = x->len;
-  assert(x->size_of_type == sizeof(mrc_fld_data_t));
-  mrc_fld_data_t *arr = x->arr;
+  int len = mrc_vec_len(x);
+  assert(mrc_vec_size_of_type(x) == sizeof(mrc_fld_data_t));
+  mrc_fld_data_t *arr = mrc_vec_get_array(x);
   for (int row = 0; row < sub->nr_rows; row++) {
     int row_idx = sub->rows[row].idx;
     assert(row_idx < len);
