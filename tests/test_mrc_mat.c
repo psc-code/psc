@@ -47,8 +47,8 @@ static const struct entry *mat_0[8] = {
 
 const int N_1 = 12;
 static const struct entry *mat_1[12] = {
-  [ 0] = (struct entry[]) { {  0, 1. },             { 8, 1. }, { -1, } },
-  [ 1] = (struct entry[]) { {  1, 1. },             { 9, 1. }, { -1, } },
+  [ 0] = (struct entry[]) { {  0, 1. },             { 9, 1. }, { -1, } },
+  [ 1] = (struct entry[]) { {  1, 1. },             { 8, 1. }, { -1, } },
   [ 2] = (struct entry[]) { {  2, 1. }, {  6, 1. },            { -1, } },
   [ 3] = (struct entry[]) { {  3, 1. }, { -1, } },
   [ 4] = (struct entry[]) { {  4, 1. }, { -1, } },
