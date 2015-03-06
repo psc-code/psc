@@ -30,6 +30,7 @@ libmrc_la_SOURCES = \
 	mrc_crds_gen_ggcm_x_cubic.c \
 	mrc_crds_gen_ggcm_yz.c \
 	mrc_crds_gen_gaussian.c \
+	mrc_decomposition.c \
 	mrc_vec.c \
 	mrc_mat.c \
 	mrc_mat_mcsr.c \

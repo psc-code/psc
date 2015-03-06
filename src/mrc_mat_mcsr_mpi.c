@@ -1,7 +1,9 @@
 
 #include "mrc_mat_private.h"
 #include "mrc_fld_as_double.h"
-#include "mrc_ddc_private.h" 
+
+#include "mrc_decomposition_private.h"
+
 #include <stdlib.h>
 
 // ======================================================================
@@ -11,10 +13,8 @@ struct mrc_mat_mcsr_mpi {
   struct mrc_mat *A;
   struct mrc_mat *B;
 
-  int M; // global number of rows
-  int N; // global number of columns
-  int m_off; // gobal index of first (0th) row that lives on this proc
-  int n_off; // gobal index of first (0th) column that lives on this proc
+  struct mrc_decomposition *dc_row;
+  struct mrc_decomposition *dc_col;
 
   int *rev_col_map; // FIXME, should go away, but still used for testing
   
@@ -42,6 +42,9 @@ mrc_mat_mcsr_mpi_create(struct mrc_mat *mat)
 {
   struct mrc_mat_mcsr_mpi *sub = mrc_mat_mcsr_mpi(mat);
 
+  sub->dc_row = mrc_decomposition_create(mrc_mat_comm(mat));
+  sub->dc_col = mrc_decomposition_create(mrc_mat_comm(mat));
+
   sub->A = mrc_mat_create(MPI_COMM_SELF);
   mrc_mat_set_type(sub->A, "mcsr");
 
@@ -57,25 +60,23 @@ mrc_mat_mcsr_mpi_setup(struct mrc_mat *mat)
 {
   struct mrc_mat_mcsr_mpi *sub = mrc_mat_mcsr_mpi(mat);
 
-  MPI_Allreduce(&mat->m, &sub->M, 1, MPI_INT, MPI_SUM, mrc_mat_comm(mat));
-  MPI_Allreduce(&mat->n, &sub->N, 1, MPI_INT, MPI_SUM, mrc_mat_comm(mat));
-  MPI_Exscan(&mat->m, &sub->m_off, 1, MPI_INT, MPI_SUM, mrc_mat_comm(mat));
-  MPI_Exscan(&mat->n, &sub->n_off, 1, MPI_INT, MPI_SUM, mrc_mat_comm(mat));
+  sub->dc_row->n = mat->m;
+  sub->dc_col->n = mat->n;
 
-  /* mprintf("M = %d N = %d\n", sub->M, sub->N); */
-  /* mprintf("m_off = %d n_off = %d\n", sub->m_off, sub->n_off); */
+  mrc_decomposition_setup(sub->dc_row);
+  mrc_decomposition_setup(sub->dc_col);
 
   // A is the diagonal block, so use local sizes
-  mrc_mat_set_param_int(sub->A, "m", mat->m);
-  mrc_mat_set_param_int(sub->A, "n", mat->n);
+  mrc_mat_set_param_int(sub->A, "m", sub->dc_row->n);
+  mrc_mat_set_param_int(sub->A, "n", sub->dc_col->n);
   mrc_mat_setup(sub->A);
 
   // B is the off diagonal block, so # of rows = local # of rows,
   // but number of columns for now we set to the global number of columns
   // (even though local columns will never be inserted here, but
   // rather into A
-  mrc_mat_set_param_int(sub->B, "m", mat->m);
-  mrc_mat_set_param_int(sub->B, "n", sub->N);
+  mrc_mat_set_param_int(sub->B, "m", sub->dc_row->n);
+  mrc_mat_set_param_int(sub->B, "n", sub->dc_col->N);
   mrc_mat_setup(sub->B);
 
   mrc_mat_setup_super(mat);
@@ -91,6 +92,9 @@ mrc_mat_mcsr_mpi_destroy(struct mrc_mat *mat)
 
   mrc_mat_destroy(sub->A);
   mrc_mat_destroy(sub->B);
+
+  mrc_decomposition_destroy(sub->dc_row);
+  mrc_decomposition_destroy(sub->dc_col);
 
   free(sub->recv_len);
   free(sub->recv_src);
@@ -112,11 +116,10 @@ mrc_mat_mcsr_mpi_add_value(struct mrc_mat *mat, int row_idx, int col_idx, double
 {
   struct mrc_mat_mcsr_mpi *sub = mrc_mat_mcsr_mpi(mat);
 
-  row_idx -= sub->m_off;
-  assert(row_idx >= 0 && row_idx < mat->m);
+  row_idx = mrc_decomposition_global_to_local(sub->dc_row, row_idx);
   
-  if (col_idx >= sub->n_off && col_idx < sub->n_off + mat->n) {
-    col_idx -= sub->n_off;
+  if (mrc_decomposition_is_local(sub->dc_col, col_idx)) {
+    col_idx = mrc_decomposition_global_to_local(sub->dc_col, col_idx);
     mrc_mat_add_value(sub->A, row_idx, col_idx, val);
   } else {
     mrc_mat_add_value(sub->B, row_idx, col_idx, val);
@@ -172,8 +175,9 @@ mrc_mat_mcsr_mpi_assemble(struct mrc_mat *mat)
   // set up map that maps non-zero column indices in B to a compacted index
   struct mrc_mat_mcsr *sub_B = mrc_mat_mcsr(sub->B);
 
-  int *col_map = malloc(sub->N * sizeof(*col_map));
-  for (int col = 0; col < sub->N; col++) {
+  int N_cols = sub->dc_col->N;
+  int *col_map = malloc(N_cols * sizeof(*col_map));
+  for (int col = 0; col < N_cols; col++) {
     col_map[col] = -1;
   }
 
@@ -199,7 +203,7 @@ mrc_mat_mcsr_mpi_assemble(struct mrc_mat *mat)
     col_map_cnt_by_rank[r] += col_map_cnt_by_rank[r-1];
   }
 
-  for (int col = 0; col < sub->N; col++) {
+  for (int col = 0; col < N_cols; col++) {
     if (col_map[col] >= 0) {
       int r = find_rank_from_global_idx(col, col_offs_by_rank, size);
       if (r > 0) {
@@ -220,7 +224,7 @@ mrc_mat_mcsr_mpi_assemble(struct mrc_mat *mat)
   // global column indices
   sub->rev_col_map = malloc(col_map_cnt * sizeof(*sub->rev_col_map));
 
-  for (int col = 0; col < sub->N; col++) {
+  for (int col = 0; col < N_cols; col++) {
     sub->rev_col_map[col_map[col]] = col;
   }
   /* for (int i = 0; i < col_map_cnt; i++) { */
@@ -340,10 +344,8 @@ mrc_mat_mcsr_mpi_assemble(struct mrc_mat *mat)
   p = sub->send_map;
   for (int n = 0; n < sub->n_sends; n++) {
     for (int i = 0; i < sub->send_len[n]; i++) {
-      if (rank > 0) {
-	p[i] -= sub->n_off;
-      }
-      assert(p[i] >= 0 && p[i] < mat->n);
+      p[i] = mrc_decomposition_global_to_local(sub->dc_col, p[i]);
+      assert(p[i] >= 0 && p[i] < sub->dc_col->n);
       /* mprintf("map send %d: [%d] <- %d\n", n, i, p[i]); */
     }
     p += sub->send_len[n];
@@ -387,7 +389,7 @@ mrc_mat_mcsr_mpi_gather_xc(struct mrc_mat *mat, struct mrc_fld *x, struct mrc_fl
   // xg field -- FIXME, will be unneeded when we do proper communication
   struct mrc_fld *xg = mrc_fld_create(mrc_mat_comm(mat));
   mrc_fld_set_type(xg, FLD_TYPE);
-  mrc_fld_set_param_int_array(xg, "dims", 1, (int[1]) { sub->M });
+  mrc_fld_set_param_int_array(xg, "dims", 1, (int[1]) { sub->dc_row->N });
   mrc_fld_setup(xg);
 
   MPI_Allgather(x->_arr, x->_len, MPI_MRC_FLD_DATA_T,
