@@ -186,10 +186,181 @@ mrc_mat_mcsr_mpi_gather_xc(struct mrc_mat *mat, struct mrc_fld *x, struct mrc_fl
   mrc_fld_set_param_int_array(xg, "dims", 1, (int[1]) { sub->M });
   mrc_fld_setup(xg);
 
+  int rank, size;
+  MPI_Comm_rank(mrc_mat_comm(mat), &rank);
+  MPI_Comm_size(mrc_mat_comm(mat), &size);
+
+  // create full ownership info on each proc
+  int *col_offs_by_rank = calloc(size, sizeof(*col_offs_by_rank));
+  MPI_Allgather(&mat->n, 1, MPI_INT, col_offs_by_rank, 1, MPI_INT,
+		mrc_mat_comm(mat));
+  for (int r = 1; r < size; r++) {
+    col_offs_by_rank[r] += col_offs_by_rank[r-1];
+  }
+  /* for (int r = 0; r < size; r++) { */
+  /*   mprintf("col_offs_by_rank[%d] = %d\n", r, col_offs_by_rank[r]); */
+  /* } */
+
+  // for each rank, find how many columns we need to receive from that rank
+  int n_recvs = 0;
+  int *recv_cnt_by_rank = calloc(size, sizeof(*recv_cnt_by_rank));
+  int r = 0;
+  for (int i = 0; i < sub->col_map_cnt; i++) {
+    int col_idx = sub->rev_col_map[i];
+    // if this col_idx isn't in the same proc's range as last time,
+    // start search over
+    if (r > 0 && col_idx < col_offs_by_rank[r-1]) {
+      r = 0;
+    }
+    for (; r < size; r++) {
+      if (col_idx < col_offs_by_rank[r]) {
+	if (recv_cnt_by_rank[r]++ == 0) {
+	  n_recvs++;
+	} 
+	break;
+      }
+    }
+    assert(r < size);
+  }
+  /* mprintf("n_recvs = %d\n", n_recvs); */
+  /* for (int r = 0; r < size; r++) { */
+  /*   mprintf("recv_cnt_by_rank[%d] = %d\n", r, recv_cnt_by_rank[r]); */
+  /* } */
+
+  // we shouldn't have any columns to be received from our own rank,
+  // because those are put into sub->A in the first place
+  assert(recv_cnt_by_rank[rank] == 0);
+
+  // compact recv_cnt_by_rank[]
+  int *recv_len = calloc(n_recvs, sizeof(*recv_len));
+  int *recv_src = calloc(n_recvs, sizeof(*recv_src));
+  n_recvs = 0;
+  for (int r = 0; r < size; r++) {
+    if (recv_cnt_by_rank[r] > 0) {
+      recv_len[n_recvs] = recv_cnt_by_rank[r];
+      recv_src[n_recvs] = r;
+      n_recvs++;
+    }
+  }
+  free(recv_cnt_by_rank);
+
+  // find out how many procs this proc needs to send messages to
+  // (by finding this info for all procs first, then picking the
+  // current rank's value)
+  int *recv_flg_by_rank = calloc(size, sizeof(*recv_flg_by_rank));
+  for (int n = 0; n < n_recvs; n++) {
+    recv_flg_by_rank[recv_src[n]] = 1;
+  }
+  
+  int *send_flg_by_rank = calloc(size, sizeof(*send_flg_by_rank));
+  MPI_Allreduce(recv_flg_by_rank, send_flg_by_rank, size, MPI_INT, MPI_SUM,
+		mrc_mat_comm(mat));
+  int n_sends = send_flg_by_rank[rank];
+  
+  free(recv_flg_by_rank);
+  free(send_flg_by_rank);
+
+  // find compacted info on sends from the local proc,
+  // by communication from those procs that expect to receive
+  // those sends
+  int *send_len = calloc(n_sends, sizeof(*send_len));
+  int *send_dst = calloc(n_sends, sizeof(*send_dst));
+  MPI_Request *req = calloc(n_sends + n_recvs, sizeof(*req));
+  MPI_Status *status = calloc(n_sends + n_recvs, sizeof(*status));
+  for (int n = 0; n < n_sends; n++) {
+    MPI_Irecv(&send_len[n], 1, MPI_INT, MPI_ANY_SOURCE, 0, mrc_mat_comm(mat),
+	      &req[n]);
+  }
+
+  for (int n = 0; n < n_recvs; n++) {
+    MPI_Isend(&recv_len[n], 1, MPI_INT, recv_src[n], 0, mrc_mat_comm(mat),
+	      &req[n_sends + n]);
+  }
+
+  MPI_Waitall(n_sends + n_recvs, req, status);
+  for (int n = 0; n < n_sends; n++) {
+    send_dst[n] = status[n].MPI_SOURCE;
+  }
+
+  for (int n = 0; n < n_recvs; n++) {
+    mprintf("recv_len[%d] = %d src = %d\n", n, recv_len[n], recv_src[n]);
+  }
+  for (int n = 0; n < n_sends; n++) {
+    mprintf("send_len[%d] = %d dst = %d\n", n, send_len[n], send_dst[n]);
+  }
+
+  // prepare actual send / recv buffers
+  int send_buf_size = 0;
+  for (int n = 0; n < n_sends; n++) {
+    send_buf_size += send_len[n];
+  }
+
+  int recv_buf_size = 0;
+  for (int n = 0; n < n_recvs; n++) {
+    recv_buf_size += recv_len[n];
+  }
+  assert(recv_buf_size == sub->col_map_cnt);
+
+  // now create a map on how to fill the send buffers
+  int *send_map = calloc(send_buf_size, sizeof(*send_map));
+  int *p = send_map;
+  for (int n = 0; n < n_sends; n++) {
+    MPI_Irecv(p, send_len[n], MPI_INT, send_dst[n], 1, mrc_mat_comm(mat),
+	      &req[n]);
+    p += send_len[n];
+  }
+  p = sub->rev_col_map;
+  for (int n = 0; n < n_recvs; n++) {
+    MPI_Isend(p, recv_len[n], MPI_INT, recv_src[n], 1, mrc_mat_comm(mat),
+	      &req[n_sends + n]);
+    p += recv_len[n];
+  }
+
+  MPI_Waitall(n_sends + n_recvs, req, MPI_STATUSES_IGNORE);
+
+  p = send_map;
+  for (int n = 0; n < n_sends; n++) {
+    for (int i = 0; i < send_len[n]; i++) {
+      if (rank > 0) {
+	p[i] -= col_offs_by_rank[rank - 1];
+      }
+      assert(p[i] >= 0 && p[i] < mat->n);
+      mprintf("map send %d: [%d] <- %d\n", n, i, p[i]);
+    }
+    p += send_len[n];
+  }
+  free(col_offs_by_rank);
+
+  // actual communication
+  mrc_fld_data_t *send_buf = calloc(send_buf_size, sizeof(*send_buf));
+  mrc_fld_data_t *recv_buf = xc->_arr;
+
+  mrc_fld_data_t *pp = send_buf;
+  for (int n = 0; n < n_sends; n++) {
+    for (int i = 0; i < send_len[n]; i++) {
+      pp[i] = MRC_D1(x, send_map[i]);
+    }
+    MPI_Isend(pp, send_len[n], MPI_MRC_FLD_DATA_T, send_dst[n], 2, mrc_mat_comm(mat),
+	      &req[n]);
+    pp += send_len[n];
+  }
+  pp = recv_buf;
+  for (int n = 0; n < n_recvs; n++) {
+    MPI_Irecv(pp, recv_len[n], MPI_MRC_FLD_DATA_T, recv_src[n], 2, mrc_mat_comm(mat),
+	      &req[n]);
+    pp += recv_len[n];
+  }
+  MPI_Waitall(n_sends + n_recvs, req, MPI_STATUSES_IGNORE);
+
+  free(req);
+  free(status);
+
+  // old
   MPI_Allgather(x->_arr, x->_len, MPI_MRC_FLD_DATA_T,
 		xg->_arr, x->_len, MPI_MRC_FLD_DATA_T, mrc_mat_comm(mat));
 
   for (int i = 0; i < sub->col_map_cnt; i++) {
+    mprintf("!!! %g %g\n", MRC_D1(xc, i), MRC_D1(xg, sub->rev_col_map[i]));
     MRC_D1(xc, i) = MRC_D1(xg, sub->rev_col_map[i]);
     mprintf("xc[%d] = %g\n", i, MRC_D1(xc, i));
   }
