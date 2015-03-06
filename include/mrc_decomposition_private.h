@@ -9,7 +9,12 @@ struct mrc_decomposition {
 
   int n; // local vector size
   int N; // global vector size
-  int off; // offset between local and global offsets (gidx = lidx + off)
+  int off; // offset between local and global indices (gidx = lidx + off)
+
+  int *offs_by_rank; // offs between local and global on each MPI proc
+
+  int mpi_rank;
+  int mpi_size;
 };
 
 #endif

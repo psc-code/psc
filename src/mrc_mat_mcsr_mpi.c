@@ -127,29 +127,6 @@ mrc_mat_mcsr_mpi_add_value(struct mrc_mat *mat, int row_idx, int col_idx, double
 }
 
 // ----------------------------------------------------------------------
-// find_rank_from_global_idx
-
-static int
-find_rank_from_global_idx(int idx, int *offs_by_rank, int size)
-{
-  static int r = 0;
-
-  // see whether we can start from last rank
-  if (r > 0 && idx < offs_by_rank[r-1]) {
-    // no, need to start over
-    r = 0;
-  }
-
-  for (; r < size; r++) {
-    if (idx < offs_by_rank[r]) {
-      return r;
-    }
-  }
-  assert(0);
-}
-
-
-// ----------------------------------------------------------------------
 // mrc_mat_mcsr_mpi_assemble
 
 static void
@@ -189,7 +166,7 @@ mrc_mat_mcsr_mpi_assemble(struct mrc_mat *mat)
     for (int entry = sub_B->rows[row].first_entry;
 	 entry < sub_B->rows[row + 1].first_entry; entry++) {
       int col = sub_B->entries[entry].idx;
-      int r = find_rank_from_global_idx(col, col_offs_by_rank, size);
+      int r = mrc_decomposition_find_rank(sub->dc_col, col);
       if (col_map[col] == -1) {
 	col_map[col] = col_map_cnt_by_rank[r]++;
 	col_map_cnt++;
@@ -205,7 +182,7 @@ mrc_mat_mcsr_mpi_assemble(struct mrc_mat *mat)
 
   for (int col = 0; col < N_cols; col++) {
     if (col_map[col] >= 0) {
-      int r = find_rank_from_global_idx(col, col_offs_by_rank, size);
+      int r = mrc_decomposition_find_rank(sub->dc_col, col);
       if (r > 0) {
 	col_map[col] += col_map_cnt_by_rank[r-1];
       }
@@ -246,8 +223,8 @@ mrc_mat_mcsr_mpi_assemble(struct mrc_mat *mat)
   sub->n_recvs = 0;
   int *recv_cnt_by_rank = calloc(size, sizeof(*recv_cnt_by_rank));
   for (int i = 0; i < col_map_cnt; i++) {
-    int col_idx = sub->rev_col_map[i];
-    int r = find_rank_from_global_idx(col_idx, col_offs_by_rank, size);
+    int col = sub->rev_col_map[i];
+    int r = mrc_decomposition_find_rank(sub->dc_col, col);
     if (recv_cnt_by_rank[r]++ == 0) {
       sub->n_recvs++;
     } 
