@@ -229,34 +229,34 @@ step_fdtd(struct mrc_fld *fld, struct mrc_ddc *ddc_E, struct mrc_ddc *ddc_H)
   mrc_ddc_amr_apply(ddc_H, fld);
 
   mrc_fld_foreach_patch(fld, p) {
-    float dx[3];
-    mrc_crds_get_dx(crds, dx);
+    double dx[3];
+    mrc_crds_get_dx(crds, p, dx);
     float cnx = .5 * dt / dx[0];
     float cny = .5 * dt / dx[1];
-    float cnz = 0.;
+    // float cnz = 0.;
     mrc_fld_foreach(fld, ix,iy,iz, 0, 1) {
       M3(fld, EX, ix,iy,iz, p) +=
-      	cny * (M3(fld, HZ, ix,iy,iz, p) - M3(fld, HZ, ix,iy-1,iz, p)) -
-      	0;//cnz * (M3(fld, HY, ix,iy,iz, p) - M3(fld, HY, ix,iy,iz-1, p));
+	      cny * (M3(fld, HZ, ix,iy,iz, p) - M3(fld, HZ, ix,iy-1,iz, p)) -
+	      0;//cnz * (M3(fld, HY, ix,iy,iz, p) - M3(fld, HY, ix,iy,iz-1, p));
 
       M3(fld, EY, ix,iy,iz, p) +=
 	0-//cnz * (M3(fld, HX, ix,iy,iz, p) - M3(fld, HX, ix,iy,iz-1, p)) -
 	cnx * (M3(fld, HZ, ix,iy,iz, p) - M3(fld, HZ, ix-1,iy,iz, p));
 
       M3(fld, EZ, ix,iy,iz, p) +=
-      	cnx * (M3(fld, HY, ix,iy,iz, p) - M3(fld, HY, ix-1,iy,iz, p)) -
-      	cny * (M3(fld, HX, ix,iy,iz, p) - M3(fld, HX, ix,iy-1,iz, p));
+	      cnx * (M3(fld, HY, ix,iy,iz, p) - M3(fld, HY, ix-1,iy,iz, p)) -
+	      cny * (M3(fld, HX, ix,iy,iz, p) - M3(fld, HX, ix,iy-1,iz, p));
     } mrc_fld_foreach_end;
   }
 
   mrc_ddc_amr_apply(ddc_E, fld);
 
   mrc_fld_foreach_patch(fld, p) {
-    float dx[3];
-    mrc_crds_get_dx(crds, dx);
+    double dx[3];
+    mrc_crds_get_dx(crds, p, dx);
     float cnx = .5 * dt / dx[0];
     float cny = .5 * dt / dx[1];
-    float cnz = 0.;
+    // // float cnz = 0.;
     mrc_fld_foreach(fld, ix,iy,iz, 0, 1) {
       M3(fld, HX, ix,iy,iz, p) -=
 	cny * (M3(fld, EZ, ix,iy+1,iz, p) - M3(fld, EZ, ix,iy,iz, p)) -
@@ -277,7 +277,7 @@ step_fdtd(struct mrc_fld *fld, struct mrc_ddc *ddc_E, struct mrc_ddc *ddc_H)
     float dy = MRC_MCRDY(crds, 1, p) - MRC_MCRDY(crds, 0, p);
     float cnx = .5 * dt / dx;
     float cny = .5 * dt / dy;
-    float cnz = 0.;
+    // float cnz = 0.;
     mrc_fld_foreach(fld, ix,iy,iz, 0, 1) {
       M3(fld, HX, ix,iy,iz, p) -=
 	cny * (M3(fld, EZ, ix,iy+1,iz, p) - M3(fld, EZ, ix,iy,iz, p)) -
@@ -300,7 +300,7 @@ step_fdtd(struct mrc_fld *fld, struct mrc_ddc *ddc_E, struct mrc_ddc *ddc_H)
     float dy = MRC_MCRDY(crds, 1, p) - MRC_MCRDY(crds, 0, p);
     float cnx = .5 * dt / dx;
     float cny = .5 * dt / dy;
-    float cnz = 0.;
+    // float cnz = 0.;
     mrc_fld_foreach(fld, ix,iy,iz, 0, 1) {
       M3(fld, EX, ix,iy,iz, p) +=
 	cny * (M3(fld, HZ, ix,iy,iz, p) - M3(fld, HZ, ix,iy-1,iz, p)) -
