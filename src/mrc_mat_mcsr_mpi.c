@@ -408,9 +408,18 @@ mrc_mat_mcsr_mpi_apply(struct mrc_vec *y, struct mrc_mat *mat, struct mrc_vec *x
 {
   struct mrc_mat_mcsr_mpi *sub = mrc_mat_mcsr_mpi(mat);
 
-  mrc_mat_apply(y, sub->A, x);
+  struct mrc_vec *tmp = mrc_vec_create(mrc_mat_comm(mat));
+  mrc_vec_set_type(tmp, FLD_TYPE);
+  mrc_vec_set_param_int(tmp, "len", mrc_vec_len(x));  
+  mrc_vec_setup(tmp);
+  mrc_vec_set(tmp, 0.0);
+
+  mrc_mat_apply(tmp, sub->A, x);
   mrc_mat_mcsr_mpi_gather_xc(mat, x, sub->x_nl);
-  mrc_mat_apply_add(y, sub->B, sub->x_nl);
+  mrc_mat_apply_add(tmp, sub->B, sub->x_nl);
+
+  mrc_vec_copy(y, tmp);
+  mrc_vec_destroy(tmp);  
 }
 
 // ----------------------------------------------------------------------
@@ -421,9 +430,18 @@ mrc_mat_mcsr_mpi_apply_in_place(struct mrc_mat *mat, struct mrc_vec *x)
 {
   struct mrc_mat_mcsr_mpi *sub = mrc_mat_mcsr_mpi(mat);
 
-  mrc_mat_apply(x, sub->A, x);
+  struct mrc_vec *tmp = mrc_vec_create(mrc_mat_comm(mat));
+  mrc_vec_set_type(tmp, FLD_TYPE);
+  mrc_vec_set_param_int(tmp, "len", mrc_vec_len(x));  
+  mrc_vec_setup(tmp);
+  mrc_vec_set(tmp, 0.0);
+
+  mrc_mat_apply(tmp, sub->A, x);
   mrc_mat_mcsr_mpi_gather_xc(mat, x, sub->x_nl);
-  mrc_mat_apply_add(x, sub->B, sub->x_nl);
+  mrc_mat_apply_add(tmp, sub->B, sub->x_nl);
+  
+  mrc_vec_copy(x, tmp);
+  mrc_vec_destroy(tmp);
 }
 
 // ----------------------------------------------------------------------
