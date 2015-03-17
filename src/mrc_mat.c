@@ -61,6 +61,18 @@ mrc_mat_apply_in_place(struct mrc_mat *mat, struct mrc_vec *x)
 }
 
 // ----------------------------------------------------------------------
+// mrc_mat_apply_general
+
+void mrc_mat_apply_general(struct mrc_vec *z, double alpha,
+			   struct mrc_mat *mat, struct mrc_vec *x,
+			   double beta, struct mrc_vec *y)
+{
+  struct mrc_mat_ops *ops = mrc_mat_ops(mat);
+  assert(ops->apply_general);
+  ops->apply_general(z, alpha, mat, x, beta, y);
+}
+
+// ----------------------------------------------------------------------
 // mrc_mat_print
 
 void
@@ -77,6 +89,8 @@ mrc_mat_print(struct mrc_mat *mat)
 static void
 mrc_mat_init()
 {
+  mrc_class_register_subclass(&mrc_class_mrc_mat, &mrc_mat_csr_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_mat, &mrc_mat_csr_mpi_ops);
   mrc_class_register_subclass(&mrc_class_mrc_mat, &mrc_mat_mcsr_ops);
   mrc_class_register_subclass(&mrc_class_mrc_mat, &mrc_mat_mcsr_mpi_ops);
 #ifdef HAVE_PETSC

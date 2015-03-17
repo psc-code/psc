@@ -33,6 +33,8 @@ libmrc_la_SOURCES = \
 	mrc_decomposition.c \
 	mrc_vec.c \
 	mrc_mat.c \
+	mrc_mat_csr.c \
+	mrc_mat_csr_mpi.c \
 	mrc_mat_mcsr.c \
 	mrc_mat_mcsr_mpi.c \
 	mrc_fld.c \

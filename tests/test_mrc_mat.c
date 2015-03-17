@@ -101,7 +101,7 @@ main(int argc, char **argv)
   mrc_fld_setup(y);
 
   struct mrc_mat *A = mrc_mat_create(comm);
-  mrc_mat_set_type(A, "mcsr_mpi");
+  mrc_mat_set_type(A, "csr_mpi");
   mrc_mat_set_param_int(A, "m", y->_len);
   mrc_mat_set_param_int(A, "n", x->_len);
   mrc_mat_set_from_options(A);
@@ -127,6 +127,36 @@ main(int argc, char **argv)
       mrc_mat_add_value(A, row_idx, e->col, e->val);
     }
   }
+  
+  //////
+  int rank;
+  MPI_Comm_rank(mrc_fld_comm(x), &rank);
+  if (testcase == 0 && rank == 0) {
+    // test adding to rows/cols out of order
+    // mprintf("> test adding values out of order\n");
+    mrc_mat_add_value(A, 2, 0, 10.0);
+    mrc_mat_add_value(A, 2, 1, 11.0);
+    mrc_mat_add_value(A, 2, 2, 12.0);
+    mrc_mat_add_value(A, 2, 3, 13.0);
+    mrc_mat_add_value(A, 2, 4, 14.0);
+    mrc_mat_add_value(A, 2, 5, 15.0);
+    mrc_mat_add_value(A, 2, 6, 16.0);
+    mrc_mat_add_value(A, 2, 7, 17.0);
+    // mrc_mat_print(A);
+    // test removing values
+    // mprintf("> test removing values\n");
+    mrc_mat_add_value(A, 2, 1, -11.0);
+    mrc_mat_add_value(A, 2, 3, -13.0);
+    mrc_mat_add_value(A, 2, 5, -15.0);
+    mrc_mat_add_value(A, 2, 7, -17.0);
+    // mrc_mat_print(A);
+    mrc_mat_add_value(A, 2, 0, -10.0);
+    mrc_mat_add_value(A, 2, 2, -12.0);
+    mrc_mat_add_value(A, 2, 4, -14.0);
+    mrc_mat_add_value(A, 2, 6, -16.0);
+  }
+  //////
+  
   mrc_mat_assemble(A);
   mrc_mat_print(A);
 
@@ -138,6 +168,7 @@ main(int argc, char **argv)
   mrc_fld_print(y, "y");
 
   mrc_fld_destroy(x);
+  mrc_fld_destroy(y);
   mrc_mat_destroy(A);
 
   MPI_Finalize();

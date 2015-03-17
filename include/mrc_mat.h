@@ -15,6 +15,9 @@ void mrc_mat_add_value(struct mrc_mat *mat, int row_idx, int col_idx, double val
 void mrc_mat_apply(struct mrc_vec *y, struct mrc_mat *mat, struct mrc_vec *x);
 void mrc_mat_apply_add(struct mrc_vec *y, struct mrc_mat *mat, struct mrc_vec *x);
 void mrc_mat_apply_in_place(struct mrc_mat *mat, struct mrc_vec *x);
+void mrc_mat_apply_general(struct mrc_vec *z, double alpha,
+			   struct mrc_mat *mat, struct mrc_vec *x,
+			   double beta, struct mrc_vec *y);
 void mrc_mat_print(struct mrc_mat *mat);
 
 //======================================================================
