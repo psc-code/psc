@@ -7,6 +7,7 @@
 
 #include <mrc_domain.h>
 #include <assert.h>
+#include <string.h>
 
 // ----------------------------------------------------------------------
 // ggcm_mhd_crds_gen_mrc_run
