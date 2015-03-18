@@ -203,7 +203,10 @@ mrc_mat_mcsr_mpi_assemble(struct mrc_mat *mat)
   sub->rev_col_map = malloc(col_map_cnt * sizeof(*sub->rev_col_map));
 
   for (int col = 0; col < N_cols; col++) {
-    sub->rev_col_map[col_map[col]] = col;
+    assert(col_map[col] < col_map_cnt);
+    if (col_map[col] >= 0) {
+      sub->rev_col_map[col_map[col]] = col;
+    }
   }
   /* for (int i = 0; i < col_map_cnt; i++) { */
   /*   mprintf("rev map %d -> %d\n", i, sub->rev_col_map[i]); */
