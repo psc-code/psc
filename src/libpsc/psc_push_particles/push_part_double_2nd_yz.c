@@ -276,10 +276,12 @@ cache_fields_from_em(fields_t *pf)
 {
   struct psc_fields *fld = psc_fields_create(MPI_COMM_NULL);
   psc_fields_set_type(fld, F3_CACHE_TYPE);
-  // FIXME, can do -1 .. 1?
-  psc_fields_set_param_int3(fld, "ib", (int[3]) { 0, -2, -2 });
-  psc_fields_set_param_int3(fld, "im", (int[3]) { 1,
-	pf->im[1] + 2 * pf->ib[1] + 4, pf->im[2] + 2 * pf->ib[2] + 4});
+  // FIXME, can do -1 .. 2? NO!, except maybe for 1st order
+  // Has to be at least -2 .. +3 because of staggering
+  // FIXME, get rid of caching since it's no different from the actual
+  // fields...
+  psc_fields_set_param_int3(fld, "ib", pf->ib);
+  psc_fields_set_param_int3(fld, "im", pf->im);
   psc_fields_set_param_int(fld, "nr_comp", 9); // JX .. HZ
   psc_fields_set_param_int(fld, "p", pf->p);
   psc_fields_setup(fld);

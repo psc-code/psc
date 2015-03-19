@@ -267,17 +267,24 @@ conducting_wall_J_lo(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
   if (d == 1) {
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
       for (int ix = MAX(-1, pf->ib[0]); ix < MIN(patch->ldims[0] + 1, pf->ib[0] + pf->im[0]) ; ix++) {
+	F3(pf, JYI, ix, 1,iz) -= F3(pf, JYI, ix,-2,iz);
 	F3(pf, JYI, ix, 0,iz) -= F3(pf, JYI, ix,-1,iz);
 	F3(pf, JYI, ix,-1,iz) = 0.;
+	F3(pf, JYI, ix,-2,iz) = 0.;
+	F3(pf, JXI, ix, 2,iz) += F3(pf, JXI, ix,-2,iz);
 	F3(pf, JXI, ix, 1,iz) += F3(pf, JXI, ix,-1,iz);
 	F3(pf, JXI, ix,-1,iz) = 0.;
+	F3(pf, JXI, ix,-2,iz) = 0.;
+	F3(pf, JZI, ix, 2,iz) += F3(pf, JZI, ix,-2,iz);
 	F3(pf, JZI, ix, 1,iz) += F3(pf, JZI, ix,-1,iz);
 	F3(pf, JZI, ix,-1,iz) = 0.;
+	F3(pf, JZI, ix,-2,iz) = 0.;
       }
     }
-  } else  if (d == 2) {
+  } else if (d == 2) {
     for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
       for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
+	F3(pf, JZI, ix, iy, 0) -= F3(pf, JZI, ix, iy,-1);
 	F3(pf, JZI, ix, iy, 0) -= F3(pf, JZI, ix, iy,-1);
 	F3(pf, JZI, ix, iy,-1) = 0.;
 	F3(pf, JXI, ix, iy, 1) += F3(pf, JXI, ix, iy,-1);
@@ -300,12 +307,18 @@ conducting_wall_J_hi(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
     int my = patch->ldims[1];
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
       for (int ix = MAX(-1, pf->ib[0]); ix < MIN(patch->ldims[0] + 1, pf->ib[0] + pf->im[0]) ; ix++) {
-	F3(pf, JYI, ix,my-1,iz) -= F3(pf, JYI, ix,my,iz);
+	F3(pf, JYI, ix,my-2,iz) -= F3(pf, JYI, ix,my+1,iz);
+	F3(pf, JYI, ix,my-1,iz) -= F3(pf, JYI, ix,my  ,iz);
 	F3(pf, JYI, ix,my  ,iz) = 0.;
+	F3(pf, JYI, ix,my+1,iz) = 0.;
+	F3(pf, JXI, ix,my-2,iz) += F3(pf, JXI, ix,my+2,iz);
 	F3(pf, JXI, ix,my-1,iz) += F3(pf, JXI, ix,my+1,iz);
 	F3(pf, JXI, ix,my+1,iz) = 0.;
+	F3(pf, JXI, ix,my+2,iz) = 0.;
+	F3(pf, JZI, ix,my-2,iz) += F3(pf, JZI, ix,my+2,iz);
 	F3(pf, JZI, ix,my-1,iz) += F3(pf, JZI, ix,my+1,iz);
 	F3(pf, JZI, ix,my+1,iz) = 0.;
+	F3(pf, JZI, ix,my+2,iz) = 0.;
       }
     }
   } else if (d == 2) {
