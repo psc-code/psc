@@ -284,7 +284,7 @@ compute_Ediffu_const(struct ggcm_mhd_step *step, struct mrc_fld *E_ec,
     double dx[3]; mrc_crds_get_dx(crds, p, dx);
     mrc_fld_data_t dxi[3] = { 1. / dx[0], 1. / dx[1], 1. / dx[2] };
 
-    mrc_fld_foreach(j_ec, i,j,k, 1, 1) {
+    mrc_fld_foreach(j_ec, i,j,k, 1, 2) {
       M3(j_ec, 0, i,j,k, p) =
 	(BZ_(x, i,j,k, p) - BZ_(x, i,j-1,k, p)) * dxi[1] -
 	(BY_(x, i,j,k, p) - BY_(x, i,j,k-1, p)) * dxi[2];
@@ -312,18 +312,18 @@ compute_Ediffu_const(struct ggcm_mhd_step *step, struct mrc_fld *E_ec,
 	// average edge centered J to the edges needed for JxB
 	// the ec_[xyz] says which edge J is on, aka the component of E that
 	// the value is used to calculate
-	Jy_ecx = 0.25 * (M3(j_ec, 1, i-1,j-1,k  , p) + M3(j_ec, 1, i-1,j  ,k  , p) +
+	Jy_ecx = 0.25 * (M3(j_ec, 1, i+1,j-1,k  , p) + M3(j_ec, 1, i+1,j  ,k  , p) +
 			 M3(j_ec, 1, i  ,j-1,k  , p) + M3(j_ec, 1, i  ,j  ,k  , p));
-	Jz_ecx = 0.25 * (M3(j_ec, 2, i-1,j  ,k-1, p) + M3(j_ec, 2, i-1,j  ,k  , p) +
+	Jz_ecx = 0.25 * (M3(j_ec, 2, i+1,j  ,k-1, p) + M3(j_ec, 2, i+1,j  ,k  , p) +
 			 M3(j_ec, 2, i  ,j  ,k-1, p) + M3(j_ec, 2, i  ,j  ,k  , p));
-	Jx_ecy = 0.25 * (M3(j_ec, 0, i-1,j-1,k  , p) + M3(j_ec, 0, i-1,j,  k  , p) +
-			 M3(j_ec, 0, i  ,j-1,k  , p) + M3(j_ec, 0, i  ,j  ,k  , p));
-	Jz_ecy = 0.25 * (M3(j_ec, 2, i  ,j-1,k-1, p) + M3(j_ec, 2, i  ,j-1,k  , p) +
+	Jx_ecy = 0.25 * (M3(j_ec, 0, i-1,j+1,k  , p) + M3(j_ec, 0, i-1,j,  k  , p) +
+			 M3(j_ec, 0, i  ,j+1,k  , p) + M3(j_ec, 0, i  ,j  ,k  , p));
+	Jz_ecy = 0.25 * (M3(j_ec, 2, i  ,j+1,k-1, p) + M3(j_ec, 2, i  ,j+1,k  , p) +
 			 M3(j_ec, 2, i  ,j  ,k-1, p) + M3(j_ec, 2, i,  j,  k  , p));
-	Jx_ecz = 0.25 * (M3(j_ec, 0, i-1,j  ,k-1, p) + M3(j_ec, 0, i-1,j  ,k  , p) +
-			 M3(j_ec, 0, i  ,j  ,k-1, p) + M3(j_ec, 0, i,  j  ,k  , p));
-	Jy_ecz = 0.25 * (M3(j_ec, 1, i  ,j-1,k-1, p) + M3(j_ec, 1, i  ,j-1,k  , p) +
-			 M3(j_ec, 1, i  ,j  ,k-1, p) + M3(j_ec, 1, i  ,j,  k  , p));
+	Jx_ecz = 0.25 * (M3(j_ec, 0, i-1,j  ,k+1, p) + M3(j_ec, 0, i-1,j  ,k  , p) +
+			 M3(j_ec, 0, i  ,j  ,k+1, p) + M3(j_ec, 0, i,  j  ,k  , p));
+	Jy_ecz = 0.25 * (M3(j_ec, 1, i  ,j-1,k+1, p) + M3(j_ec, 1, i  ,j-1,k  , p) +
+			 M3(j_ec, 1, i  ,j  ,k+1, p) + M3(j_ec, 1, i  ,j,  k  , p));
 	// average face centered B to edge centers
 	By_ecx = 0.5 * (BY_(x, i, j, k-1, p) + BY_(x, i, j, k, p));
 	Bz_ecx = 0.5 * (BZ_(x, i, j-1, k, p) + BZ_(x, i, j, k, p));
