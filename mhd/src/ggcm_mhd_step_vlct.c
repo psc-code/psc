@@ -299,17 +299,19 @@ compute_Ediffu_const(struct ggcm_mhd_step *step, struct mrc_fld *E_ec,
   }
 
   // calc cell-centered J
-  mrc_fld_foreach(j_ec, i,j,k, 1, 1) {
-    F3(j_cc, 0, i,j,k) =
-      0.25 * (F3(j_ec, 0, i  ,j+1,k+1) + F3(j_ec, 0, i  ,j  ,k+1) +
-              F3(j_ec, 0, i  ,j+1,k  ) + F3(j_ec, 0, i  ,j  ,k  ));
-    F3(j_cc, 1, i,j,k) =
-      0.25 * (F3(j_ec, 1, i+1,j  ,k+1) + F3(j_ec, 1, i+1,j  ,k  ) +
-              F3(j_ec, 1, i  ,j  ,k+1) + F3(j_ec, 1, i  ,j  ,k  ));
-    F3(j_cc, 2, i,j,k) =
-      0.25 * (F3(j_ec, 2, i+1,j+1,k  ) + F3(j_ec, 2, i+1,j  ,k  ) +
-              F3(j_ec, 2, i  ,j+1,k  ) + F3(j_ec, 2, i  ,j  ,k  ));
-  } mrc_fld_foreach_end;
+  for (int p = 0; p < mrc_fld_nr_patches(E_ec); p++) {
+    mrc_fld_foreach(j_ec, i,j,k, 1, 1) {
+      M3(j_cc, 0, i,j,k, p) =
+	0.25 * (M3(j_ec, 0, i  ,j+1,k+1, p) + M3(j_ec, 0, i  ,j  ,k+1, p) +
+		M3(j_ec, 0, i  ,j+1,k  , p) + M3(j_ec, 0, i  ,j  ,k  , p));
+      M3(j_cc, 1, i,j,k, p) =
+	0.25 * (M3(j_ec, 1, i+1,j  ,k+1, p) + M3(j_ec, 1, i+1,j  ,k  , p) +
+		M3(j_ec, 1, i  ,j  ,k+1, p) + M3(j_ec, 1, i  ,j  ,k  , p));
+      M3(j_cc, 2, i,j,k, p) =
+	0.25 * (M3(j_ec, 2, i+1,j+1,k  , p) + M3(j_ec, 2, i+1,j  ,k  , p) +
+		M3(j_ec, 2, i  ,j+1,k  , p) + M3(j_ec, 2, i  ,j  ,k  , p));
+    } mrc_fld_foreach_end;
+  }
 
   mrc_fld_data_t eta = mhd->par.diffco / mhd->par.resnorm;
   mrc_fld_data_t d_i = mhd->par.d_i;
@@ -612,13 +614,15 @@ ggcm_mhd_step_vlct_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
   if (mhd->par.magdiffu == MAGDIFFU_CONST) {
     compute_Ediffu_const(step, Ediff, x, B_cc);
   } else {
-    mrc_fld_foreach(Ediff, i,j,k, 2, 2) {
-    for (int d=0; d < 3; d++) {
-        F3(Ediff, d, i,j,k) = 0.0;
-      }
-    }  mrc_fld_foreach_end;
+    for (int p = 0; p < mrc_fld_nr_patches(Ediff); p++) {
+      mrc_fld_foreach(Ediff, i,j,k, 2, 2) {
+	for (int d=0; d < 3; d++) {
+	  M3(Ediff, d, i,j,k, p) = 0.0;
+	}
+      }  mrc_fld_foreach_end;
+    }
     mpi_printf(ggcm_mhd_comm(mhd), "WARNING: magdiffu '%d' not handled for diags!\n",
-               mhd->par.magdiffu);
+	       mhd->par.magdiffu);
   }
 
   // Do convective term using the apprepriate fluxes to go cc -> ec
@@ -626,11 +630,13 @@ ggcm_mhd_step_vlct_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
   compute_E(step, Econv, x, B_cc, flux, 2);
 
   // add both electric fields together (glue the operators together)
-  mrc_fld_foreach(E, i,j,k, 2, 2) {
-    for (int d=0; d < 3; d++) {
-      F3(E, d, i,j,k) = F3(Ediff, d, i,j,k) + F3(Econv, d, i,j,k);
-    }
-  }  mrc_fld_foreach_end;
+  for (int p = 0; p < mrc_fld_nr_patches(E); p++) {
+    mrc_fld_foreach(E, i,j,k, 2, 2) {
+      for (int d=0; d < 3; d++) {
+	M3(E, d, i,j,k, p) = M3(Ediff, d, i,j,k, p) + M3(Econv, d, i,j,k, p);
+      }
+    }  mrc_fld_foreach_end;
+  }
 
   ggcm_mhd_put_3d_fld(mhd, B_cc);
   ggcm_mhd_put_3d_fld(mhd, Ediff);
