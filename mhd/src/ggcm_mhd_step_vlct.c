@@ -274,6 +274,8 @@ compute_Ediffu_const(struct ggcm_mhd_step *step, struct mrc_fld *E_ec,
 {
   struct ggcm_mhd *mhd = step->mhd;
   struct mrc_fld *j_ec = ggcm_mhd_get_3d_fld(mhd, 3);
+  mrc_fld_data_t Jx_ecy, Jx_ecz, Jy_ecx, Jy_ecz, Jz_ecx, Jz_ecy;
+  mrc_fld_data_t Bx_ecy, Bx_ecz, By_ecx, By_ecz, Bz_ecx, Bz_ecy;
 
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
 
@@ -282,7 +284,7 @@ compute_Ediffu_const(struct ggcm_mhd_step *step, struct mrc_fld *E_ec,
     double dx[3]; mrc_crds_get_dx(crds, p, dx);
     mrc_fld_data_t dxi[3] = { 1. / dx[0], 1. / dx[1], 1. / dx[2] };
 
-    mrc_fld_foreach(j_ec, i,j,k, 0, 1) {
+    mrc_fld_foreach(j_ec, i,j,k, 1, 1) {
       M3(j_ec, 0, i,j,k, p) =
 	(BZ_(x, i,j,k, p) - BZ_(x, i,j-1,k, p)) * dxi[1] -
 	(BY_(x, i,j,k, p) - BY_(x, i,j,k-1, p)) * dxi[2];
@@ -296,12 +298,44 @@ compute_Ediffu_const(struct ggcm_mhd_step *step, struct mrc_fld *E_ec,
   }
 
   mrc_fld_data_t eta = mhd->par.diffco / mhd->par.resnorm;
+  mrc_fld_data_t d_i = mhd->par.d_i;
 
   for (int p = 0; p < mrc_fld_nr_patches(E_ec); p++) {
-    mrc_fld_foreach(E_ec, i,j,k, 0, 1) {
+    mrc_fld_foreach(j_ec, i,j,k, 0, 1) {
+      // eta J
       M3(E_ec, 0, i,j,k, p) = eta * M3(j_ec, 0, i,j,k, p);
       M3(E_ec, 1, i,j,k, p) = eta * M3(j_ec, 1, i,j,k, p);
       M3(E_ec, 2, i,j,k, p) = eta * M3(j_ec, 2, i,j,k, p);
+
+      // d_i J x B
+      if (d_i > 0.0) {
+	// average edge centered J to the edges needed for JxB
+	// the ec_[xyz] says which edge J is on, aka the component of E that
+	// the value is used to calculate
+	Jy_ecx = 0.25 * (M3(j_ec, 1, i-1,j-1,k  , p) + M3(j_ec, 1, i-1,j  ,k  , p) +
+			 M3(j_ec, 1, i  ,j-1,k  , p) + M3(j_ec, 1, i  ,j  ,k  , p));
+	Jz_ecx = 0.25 * (M3(j_ec, 2, i-1,j  ,k-1, p) + M3(j_ec, 2, i-1,j  ,k  , p) +
+			 M3(j_ec, 2, i  ,j  ,k-1, p) + M3(j_ec, 2, i  ,j  ,k  , p));
+	Jx_ecy = 0.25 * (M3(j_ec, 0, i-1,j-1,k  , p) + M3(j_ec, 0, i-1,j,  k  , p) +
+			 M3(j_ec, 0, i  ,j-1,k  , p) + M3(j_ec, 0, i  ,j  ,k  , p));
+	Jz_ecy = 0.25 * (M3(j_ec, 2, i  ,j-1,k-1, p) + M3(j_ec, 2, i  ,j-1,k  , p) +
+			 M3(j_ec, 2, i  ,j  ,k-1, p) + M3(j_ec, 2, i,  j,  k  , p));
+	Jx_ecz = 0.25 * (M3(j_ec, 0, i-1,j  ,k-1, p) + M3(j_ec, 0, i-1,j  ,k  , p) +
+			 M3(j_ec, 0, i  ,j  ,k-1, p) + M3(j_ec, 0, i,  j  ,k  , p));
+	Jy_ecz = 0.25 * (M3(j_ec, 1, i  ,j-1,k-1, p) + M3(j_ec, 1, i  ,j-1,k  , p) +
+			 M3(j_ec, 1, i  ,j  ,k-1, p) + M3(j_ec, 1, i  ,j,  k  , p));
+	// average face centered B to edge centers
+	By_ecx = 0.5 * (BY_(x, i, j, k-1, p) + BY_(x, i, j, k, p));
+	Bz_ecx = 0.5 * (BZ_(x, i, j-1, k, p) + BZ_(x, i, j, k, p));
+	Bx_ecy = 0.5 * (BX_(x, i, j, k-1, p) + BX_(x, i, j, k, p));
+	Bz_ecy = 0.5 * (BZ_(x, i-1, j, k, p) + BZ_(x, i, j, k, p));
+	Bx_ecz = 0.5 * (BX_(x, i, j-1, k, p) + BX_(x, i, j, k, p));
+	By_ecz = 0.5 * (BY_(x, i-1, j, k, p) + BY_(x, i, j, k, p));
+	
+	M3(E_ec, 0, i,j,k, p) += d_i * ( Jy_ecx * Bz_ecx - Jz_ecx * By_ecx);
+	M3(E_ec, 1, i,j,k, p) += d_i * (-Jx_ecy * Bz_ecy + Jz_ecy * Bx_ecy);
+	M3(E_ec, 2, i,j,k, p) += d_i * ( Jx_ecz * By_ecz - Jy_ecz * Bx_ecz);
+      }
     } mrc_fld_foreach_end;
   }
 
@@ -325,6 +359,9 @@ newstep_fc(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *Bcc)
 
   mrc_fld_data_t gamma = mhd->par.gamm;
   mrc_fld_data_t gamma_minus_1 = gamma - 1.;
+  
+  mrc_fld_data_t d_i = mhd->par.d_i;
+
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
 
   for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
@@ -372,6 +409,38 @@ newstep_fc(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *Bcc)
   mrc_fld_data_t local_dt = cfl / max_dti;
   mrc_fld_data_t global_dt;
   MPI_Allreduce(&local_dt, &global_dt, 1, MPI_MRC_FLD_DATA_T, MPI_MIN, ggcm_mhd_comm(mhd));
+
+  // FOR diffusive portion of everything
+  if (d_i > 0.0) {
+    mrc_fld_data_t local_diff_dt, global_diff_dt;
+    mrc_fld_data_t max_dti_diff = 0.0;
+
+    for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+      double dx[3]; mrc_crds_get_dx(crds, p, dx);
+
+      mrc_fld_foreach(x, i,j,k, 0, 0) {
+	mrc_fld_data_t dxmin, dti_hall;
+
+	dxmin = mrc_fld_min(dx[0], mrc_fld_min(dx[1], dx[2]));
+	
+	// FIXME: this could be streamlined by using the loop above, but
+	//        keeping them separate is exactly analogous to athena
+	/* Use maximum of face-centered fields (always larger than cell-centered B) */
+	b1 = M3(Bcc, 0, i,j,k, p) + fabs(BX_(x, i,j,k, p) - M3(Bcc, 0, i,j,k, p));
+	b2 = M3(Bcc, 1, i,j,k, p) + fabs(BY_(x, i,j,k, p) - M3(Bcc, 1, i,j,k, p));
+	b3 = M3(Bcc, 2, i,j,k, p) + fabs(BZ_(x, i,j,k, p) - M3(Bcc, 2, i,j,k, p));
+	bsq = sqr(b1) + sqr(b2) + sqr(b3);
+	
+	// FIXME? in athena it was (dxmin**2 / 6), but i don't think that's right?
+	dti_hall = (d_i * bsq / RR_(x, i,j,k, p)) / (sqr(dxmin) / 16.0);
+	max_dti_diff = mrc_fld_max(max_dti_diff, dti_hall);
+      } mrc_fld_foreach_end;
+    }
+    local_diff_dt = cfl / max_dti_diff;
+    MPI_Allreduce(&local_diff_dt, &global_diff_dt, 1, MPI_MRC_FLD_DATA_T, MPI_MIN, ggcm_mhd_comm(mhd));
+    global_dt = mrc_fld_min(global_dt, global_diff_dt);
+  }
+
   return global_dt;
 }
 
