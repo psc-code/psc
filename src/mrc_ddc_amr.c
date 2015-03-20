@@ -66,6 +66,8 @@ mrc_ddc_amr_setup(struct mrc_ddc *ddc)
   size *= nr_patches;
 
   sub->mat = mrc_mat_create(mrc_ddc_comm(ddc));
+  mrc_mat_set_type(sub->mat, "mcsr_mpi");
+  mprintf("size = %d %d im %d\n", size, nr_patches, sub->im[3]);
   mrc_mat_set_param_int(sub->mat, "m", size);
   mrc_mat_set_param_int(sub->mat, "n", size);
   mrc_mat_set_from_options(sub->mat); // to allow changing matrix type

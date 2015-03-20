@@ -20,7 +20,8 @@ _mrc_decomposition_setup(struct mrc_decomposition *dc)
   if (dc->n != 0 && dc->N == 0) {
     MPI_Allreduce(&dc->n, &dc->N, 1, MPI_INT, MPI_SUM, comm);
   } else {
-    assert(0);
+    mprintf("FIXME n %d N %d\n", dc->n, dc->N);
+    //    assert(0);
   }
 
   MPI_Comm_rank(comm, &dc->mpi_rank);
