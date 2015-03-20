@@ -70,7 +70,7 @@ static void
 psc_particles_double_write(struct psc_particles *prts, struct mrc_io *io)
 {
   int ierr;
-  assert(sizeof(particle_double_t) / sizeof(particle_double_real_t) == 10);
+  assert(sizeof(particle_double_t) / sizeof(particle_double_real_t) == 8);
   assert(sizeof(particle_double_real_t) == sizeof(double));
 
   long h5_file;
@@ -83,7 +83,7 @@ psc_particles_double_write(struct psc_particles *prts, struct mrc_io *io)
   ierr = H5LTset_attribute_uint(group, ".", "flags", &prts->flags, 1); CE;
   if (prts->n_part > 0) {
     // in a rather ugly way, we write the int "kind/tag" members together as double
-    hsize_t hdims[2] = { prts->n_part, 10 };
+    hsize_t hdims[2] = { prts->n_part, 8 };
     ierr = H5LTmake_dataset_double(group, "particles_double", 2, hdims,
 				  (double *) particles_double_get_one(prts, 0)); CE;
   }
