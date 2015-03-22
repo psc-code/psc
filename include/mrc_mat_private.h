@@ -27,6 +27,8 @@ struct mrc_mat_ops {
 
 extern struct mrc_mat_ops mrc_mat_csr_ops;
 extern struct mrc_mat_ops mrc_mat_csr_mpi_ops;
+extern struct mrc_mat_ops mrc_mat_csr_slow_ops;
+extern struct mrc_mat_ops mrc_mat_csr_slow_mpi_ops;
 extern struct mrc_mat_ops mrc_mat_mcsr_ops;
 extern struct mrc_mat_ops mrc_mat_mcsr_mpi_ops;
 extern struct mrc_mat_ops mrc_mat_petsc_ops;
@@ -38,6 +40,38 @@ extern struct mrc_mat_ops mrc_mat_petsc_ops;
 // proper separation of layers and needs to look into it.
 
 struct mrc_mat_csr {
+  bool is_assembled;
+  int nr_rows;
+  int nr_vals;
+  
+  // these are only valid after calling assemble
+  struct mrc_vec *vals;  // type == double, length == nr_vals
+  struct mrc_vec *cols;  // type == int, length == nr_vals
+  struct mrc_vec *rows;  // type == int, length == nr_rows + 1
+  // double *vals;  // length == _nr_vals_alloced (== nr_vals after assemble)
+  // int *cols;  // length == _nr_vals_alloced (== nr_vals after assemble)
+  // int *rows;  // length == nr_rows + 1
+  
+  // these are only valid before calling assemble
+  double **_init_vals; // length == nr_rows
+  int **_init_cols; // length == nr_rows
+  int *_nr_cols; // length == nr_rows
+  int *_nr_cols_alloced; // length == nr_rows
+  int _nr_rows_alloced;  // probably used for asserts
+  int _nr_vals_alloced;  // probably used for asserts
+
+  int nr_initial_cols;  // how much initial space to allocate for each new row
+};
+
+#define mrc_mat_csr(mat) mrc_to_subobj(mat, struct mrc_mat_csr)
+
+// ======================================================================
+// mrc_mat "csr_slow"
+//
+// This should be private to mrc_mat_csr_slow.c, but mrc_mat_csr_slow_mpi.c breaks
+// proper separation of layers and needs to look into it.
+
+struct mrc_mat_csr_slow {
   // in principle, these could be mrc_vecs, but there's a lot of
   // resizing that happens while the matrix is being filled
   double *vals;  // length == _nr_vals_alloced (== nr_vals after assemble)
@@ -60,8 +94,7 @@ struct mrc_mat_csr {
   int _nr_current_rows;  // after assemble this == nr_rows
 };
 
-#define mrc_mat_csr(mat) mrc_to_subobj(mat, struct mrc_mat_csr)
-
+#define mrc_mat_csr_slow(mat) mrc_to_subobj(mat, struct mrc_mat_csr_slow)
 
 // ======================================================================
 // mrc_mat "mcsr"

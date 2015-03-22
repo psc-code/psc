@@ -8,9 +8,9 @@
 #include <stdlib.h>
 
 // ======================================================================
-// mrc_mat "csr_mpi"
+// mrc_mat "csr_slow_mpi"
 
-struct mrc_mat_csr_mpi {
+struct mrc_mat_csr_slow_mpi {
   struct mrc_mat *A;
   struct mrc_mat *B;
 
@@ -34,35 +34,35 @@ struct mrc_mat_csr_mpi {
   bool is_assembled;
 };
 
-#define mrc_mat_csr_mpi(mat) mrc_to_subobj(mat, struct mrc_mat_csr_mpi)
+#define mrc_mat_csr_slow_mpi(mat) mrc_to_subobj(mat, struct mrc_mat_csr_slow_mpi)
 
 // ----------------------------------------------------------------------
-// mrc_mat_csr_mpi_create
+// mrc_mat_csr_slow_mpi_create
 
 static void
-mrc_mat_csr_mpi_create(struct mrc_mat *mat)
+mrc_mat_csr_slow_mpi_create(struct mrc_mat *mat)
 {
-  struct mrc_mat_csr_mpi *sub = mrc_mat_csr_mpi(mat);
+  struct mrc_mat_csr_slow_mpi *sub = mrc_mat_csr_slow_mpi(mat);
 
   sub->dc_row = mrc_decomposition_create(mrc_mat_comm(mat));
   sub->dc_col = mrc_decomposition_create(mrc_mat_comm(mat));
 
   sub->A = mrc_mat_create(MPI_COMM_SELF);
-  mrc_mat_set_type(sub->A, "csr");
+  mrc_mat_set_type(sub->A, "csr_slow");
 
   sub->B = mrc_mat_create(MPI_COMM_SELF);
-  mrc_mat_set_type(sub->B, "csr");
+  mrc_mat_set_type(sub->B, "csr_slow");
   
   sub->is_assembled = false;
 }
 
 // ----------------------------------------------------------------------
-// mrc_mat_csr_mpi_setup
+// mrc_mat_csr_slow_mpi_setup
 
 static void
-mrc_mat_csr_mpi_setup(struct mrc_mat *mat)
+mrc_mat_csr_slow_mpi_setup(struct mrc_mat *mat)
 {
-  struct mrc_mat_csr_mpi *sub = mrc_mat_csr_mpi(mat);
+  struct mrc_mat_csr_slow_mpi *sub = mrc_mat_csr_slow_mpi(mat);
 
   sub->dc_row->n = mat->m;
   sub->dc_col->n = mat->n;
@@ -87,12 +87,12 @@ mrc_mat_csr_mpi_setup(struct mrc_mat *mat)
 }
 
 // ----------------------------------------------------------------------
-// mrc_mat_csr_mpi_destroy
+// mrc_mat_csr_slow_mpi_destroy
 
 static void
-mrc_mat_csr_mpi_destroy(struct mrc_mat *mat)
+mrc_mat_csr_slow_mpi_destroy(struct mrc_mat *mat)
 {
-  struct mrc_mat_csr_mpi *sub = mrc_mat_csr_mpi(mat);
+  struct mrc_mat_csr_slow_mpi *sub = mrc_mat_csr_slow_mpi(mat);
 
   mrc_mat_destroy(sub->A);
   mrc_mat_destroy(sub->B);
@@ -111,14 +111,14 @@ mrc_mat_csr_mpi_destroy(struct mrc_mat *mat)
 }
 
 // ----------------------------------------------------------------------
-// mrc_mat_csr_mpi_add_value
+// mrc_mat_csr_slow_mpi_add_value
 //
 // WARNING, all elements for any given row must be added contiguously!
 
 static void
-mrc_mat_csr_mpi_add_value(struct mrc_mat *mat, int row_idx, int col_idx, double val)
+mrc_mat_csr_slow_mpi_add_value(struct mrc_mat *mat, int row_idx, int col_idx, double val)
 {
-  struct mrc_mat_csr_mpi *sub = mrc_mat_csr_mpi(mat);
+  struct mrc_mat_csr_slow_mpi *sub = mrc_mat_csr_slow_mpi(mat);
 
   assert(!sub->is_assembled);
 
@@ -133,12 +133,12 @@ mrc_mat_csr_mpi_add_value(struct mrc_mat *mat, int row_idx, int col_idx, double 
 }
 
 // ----------------------------------------------------------------------
-// mrc_mat_csr_mpi_assemble
+// mrc_mat_csr_slow_mpi_assemble
 
 static void
-mrc_mat_csr_mpi_assemble(struct mrc_mat *mat)
+mrc_mat_csr_slow_mpi_assemble(struct mrc_mat *mat)
 {
-  struct mrc_mat_csr_mpi *sub = mrc_mat_csr_mpi(mat);
+  struct mrc_mat_csr_slow_mpi *sub = mrc_mat_csr_slow_mpi(mat);
 
   assert(!sub->is_assembled);
   
@@ -158,6 +158,8 @@ mrc_mat_csr_mpi_assemble(struct mrc_mat *mat)
   }
 
   // set up map that maps non-zero column indices in B to a compacted index
+  struct mrc_mat_csr_slow *sub_B = mrc_mat_csr_slow(sub->B);
+
   int N_cols = sub->dc_col->N;
   int *col_map = malloc(N_cols * sizeof(*col_map));
   for (int col = 0; col < N_cols; col++) {
@@ -169,13 +171,10 @@ mrc_mat_csr_mpi_assemble(struct mrc_mat *mat)
   int *col_map_cnt_by_rank = calloc(size, sizeof(*col_map_cnt_by_rank));
   int col_map_cnt = 0;
   
-  // FIXME: csr specific
-  struct mrc_mat_csr *sub_B = mrc_mat_csr(sub->B);
-  int *b_rows = mrc_vec_get_array(sub_B->rows);
-  int *b_cols = mrc_vec_get_array(sub_B->cols);
+  // FIXME: csr_slow specific
   for (int row=0; row < sub_B->nr_rows; row++) {
-    for (int i=b_rows[row]; i < b_rows[row + 1]; i++) {
-      int col = b_cols[i];
+    for (int i=sub_B->rows[row]; i < sub_B->rows[row + 1]; i++) {
+      int col = sub_B->cols[i];
       int r = mrc_decomposition_find_rank(sub->dc_col, col);
       if (col_map[col] == -1) {
         col_map[col] = col_map_cnt_by_rank[r]++;
@@ -222,21 +221,15 @@ mrc_mat_csr_mpi_assemble(struct mrc_mat *mat)
   /* } */
 
   // update column indices in B to refer to compacted indices
-  // FIXME: csr specific
+  // FIXME: csr_slow specific
   for (int row=0; row < sub_B->nr_rows; row++) {
-    for (int i=b_rows[row]; i < b_rows[row + 1]; i++) {
-      int col_idx = b_cols[i];
-      // mprintf("> resetting B column: row %d  col %d -> %d\n",
-      //         row, b_cols[i], col_map[col_idx]);
-      b_cols[i] = col_map[col_idx];
+    for (int i=sub_B->rows[row]; i < sub_B->rows[row + 1]; i++) {
+      int col_idx = sub_B->cols[i];
+      sub_B->cols[i] = col_map[col_idx];
     }
   }  
   sub->B->n = col_map_cnt;  // FIXME: this seems hacky, but doesn't break anything?
   free(col_map);
-  mrc_vec_put_array(sub_B->rows, b_rows);
-  mrc_vec_put_array(sub_B->cols, b_cols);
-  b_rows = NULL;
-  b_cols = NULL;  
 
   // for each rank, find how many columns we need to receive from that rank
   sub->n_recvs = 0;
@@ -290,8 +283,7 @@ mrc_mat_csr_mpi_assemble(struct mrc_mat *mat)
   sub->send_len = calloc(sub->n_sends, sizeof(*sub->send_len));
   sub->send_dst = calloc(sub->n_sends, sizeof(*sub->send_dst));
   sub->req = calloc(sub->n_sends + sub->n_recvs, sizeof(*sub->req));
-  // mprintf("%p alloc sub->req %p %d %d\n",
-  //         mat, sub->req, sub->n_sends, sub->n_recvs);
+  mprintf("%p alloc sub->req %p %d %d\n", mat, sub->req, sub->n_sends, sub->n_recvs);
   for (int n = 0; n < sub->n_sends; n++) {
     MPI_Irecv(&sub->send_len[n], 1, MPI_INT, MPI_ANY_SOURCE, 0, mrc_mat_comm(mat),
               &sub->req[n]);
@@ -365,9 +357,9 @@ mrc_mat_csr_mpi_assemble(struct mrc_mat *mat)
 }
 
 static void
-mrc_mat_csr_mpi_gather_xc(struct mrc_mat *mat, struct mrc_vec *x, struct mrc_vec *x_nl)
+mrc_mat_csr_slow_mpi_gather_xc(struct mrc_mat *mat, struct mrc_vec *x, struct mrc_vec *x_nl)
 {
-  struct mrc_mat_csr_mpi *sub = mrc_mat_csr_mpi(mat);
+  struct mrc_mat_csr_slow_mpi *sub = mrc_mat_csr_slow_mpi(mat);
 
   assert(sub->is_assembled);
 
@@ -424,105 +416,105 @@ mrc_mat_csr_mpi_gather_xc(struct mrc_mat *mat, struct mrc_vec *x, struct mrc_vec
 }
 
 // ----------------------------------------------------------------------
-// mrc_mat_csr_mpi_apply
+// mrc_mat_csr_slow_mpi_apply
 // y = mat * x
 
 static void
-mrc_mat_csr_mpi_apply(struct mrc_vec *y, struct mrc_mat *mat, struct mrc_vec *x)
+mrc_mat_csr_slow_mpi_apply(struct mrc_vec *y, struct mrc_mat *mat, struct mrc_vec *x)
 {
-  struct mrc_mat_csr_mpi *sub = mrc_mat_csr_mpi(mat);
+  struct mrc_mat_csr_slow_mpi *sub = mrc_mat_csr_slow_mpi(mat);
 
   mrc_mat_apply(y, sub->A, x);
-  mrc_mat_csr_mpi_gather_xc(mat, x, sub->x_nl);
+  mrc_mat_csr_slow_mpi_gather_xc(mat, x, sub->x_nl);
   mrc_mat_apply_add(y, sub->B, sub->x_nl);
 }
 
 // ----------------------------------------------------------------------
-// mrc_mat_csr_mpi_apply_in_place
+// mrc_mat_csr_slow_mpi_apply_in_place
 // x = mat * x
 
 static void
-mrc_mat_csr_mpi_apply_in_place(struct mrc_mat *mat, struct mrc_vec *x)
+mrc_mat_csr_slow_mpi_apply_in_place(struct mrc_mat *mat, struct mrc_vec *x)
 {
-  struct mrc_mat_csr_mpi *sub = mrc_mat_csr_mpi(mat);
+  struct mrc_mat_csr_slow_mpi *sub = mrc_mat_csr_slow_mpi(mat);
 
   mrc_mat_apply(x, sub->A, x);
-  mrc_mat_csr_mpi_gather_xc(mat, x, sub->x_nl);
+  mrc_mat_csr_slow_mpi_gather_xc(mat, x, sub->x_nl);
   mrc_mat_apply_add(x, sub->B, sub->x_nl);
 }
 
 // ----------------------------------------------------------------------
-// mrc_mat_csr_mpi_apply_add
+// mrc_mat_csr_slow_mpi_apply_add
 // y = mat * x + y
 
 static void
-mrc_mat_csr_mpi_apply_add(struct mrc_vec *y, struct mrc_mat *mat, struct mrc_vec *x)
+mrc_mat_csr_slow_mpi_apply_add(struct mrc_vec *y, struct mrc_mat *mat, struct mrc_vec *x)
 {
-  struct mrc_mat_csr_mpi *sub = mrc_mat_csr_mpi(mat);
+  struct mrc_mat_csr_slow_mpi *sub = mrc_mat_csr_slow_mpi(mat);
 
   mrc_mat_apply_add(y, sub->A, x);
-  mrc_mat_csr_mpi_gather_xc(mat, x, sub->x_nl);
+  mrc_mat_csr_slow_mpi_gather_xc(mat, x, sub->x_nl);
   mrc_mat_apply_add(y, sub->B, sub->x_nl);
 }
 
 // ----------------------------------------------------------------------
-// mrc_mat_csr_mpi_apply_general
+// mrc_mat_csr_slow_mpi_apply_general
 // z = alpha * mat * x + beta * y
 
 static void
-mrc_mat_csr_mpi_apply_general(struct mrc_vec *z, double alpha,
-                              struct mrc_mat *mat, struct mrc_vec *x,
-                              double beta, struct mrc_vec *y)
+mrc_mat_csr_slow_mpi_apply_general(struct mrc_vec *z, double alpha,
+                                   struct mrc_mat *mat, struct mrc_vec *x,
+                                   double beta, struct mrc_vec *y)
 {
-  struct mrc_mat_csr_mpi *sub = mrc_mat_csr_mpi(mat);
+  struct mrc_mat_csr_slow_mpi *sub = mrc_mat_csr_slow_mpi(mat);
 
   mrc_mat_apply_general(z, alpha, sub->A, x, beta, y);
-  mrc_mat_csr_mpi_gather_xc(mat, x, sub->x_nl);
+  mrc_mat_csr_slow_mpi_gather_xc(mat, x, sub->x_nl);
   mrc_mat_apply_general(z, alpha, sub->B, sub->x_nl, 1.0, z);
 }
 
 
 // ----------------------------------------------------------------------
-// mrc_mat_csr_mpi_print
+// mrc_mat_csr_slow_mpi_print
 
 static void
-mrc_mat_csr_mpi_print(struct mrc_mat *mat)
+mrc_mat_csr_slow_mpi_print(struct mrc_mat *mat)
 {
-  struct mrc_mat_csr_mpi *sub = mrc_mat_csr_mpi(mat);
+  struct mrc_mat_csr_slow_mpi *sub = mrc_mat_csr_slow_mpi(mat);
 
-  mprintf("csr_mpi sub-matrix A:\n");
+  mprintf("csr_slow_mpi sub-matrix A:\n");
   mrc_mat_print(sub->A);
   mprintf("\n");
 
-  mprintf("csr_mpi sub-matrix B:\n");
+  mprintf("csr_slow_mpi sub-matrix B:\n");
   mrc_mat_print(sub->B);
   mprintf("\n");
 }
 
 // ----------------------------------------------------------------------
-// mrc_mat_csr_mpi description
+// mrc_mat_csr_slow_mpi description
 
-#define VAR(x) (void *)offsetof(struct mrc_mat_csr_mpi, x)
-static struct param mrc_mat_csr_mpi_descr[] = {
+#define VAR(x) (void *)offsetof(struct mrc_mat_csr_slow_mpi, x)
+static struct param mrc_mat_csr_slow_mpi_descr[] = {
   {},
 };
 #undef VAR
 
 // ----------------------------------------------------------------------
-// mrc_mat subclass "csr_mpi"
+// mrc_mat subclass "csr_slow_mpi"
 
-struct mrc_mat_ops mrc_mat_csr_mpi_ops = {
-  .name                  = "csr_mpi",
-  .size                  = sizeof(struct mrc_mat_csr_mpi),
-  .param_descr           = mrc_mat_csr_mpi_descr,
-  .create                = mrc_mat_csr_mpi_create,
-  .setup                 = mrc_mat_csr_mpi_setup,
-  .destroy               = mrc_mat_csr_mpi_destroy,
-  .add_value             = mrc_mat_csr_mpi_add_value,
-  .assemble              = mrc_mat_csr_mpi_assemble,
-  .apply                 = mrc_mat_csr_mpi_apply,
-  .apply_in_place        = mrc_mat_csr_mpi_apply_in_place,
-  .apply_add             = mrc_mat_csr_mpi_apply_add,
-  .apply_general         = mrc_mat_csr_mpi_apply_general,
-  .print                 = mrc_mat_csr_mpi_print,
+struct mrc_mat_ops mrc_mat_csr_slow_mpi_ops = {
+  .name                  = "csr_slow_mpi",
+  .size                  = sizeof(struct mrc_mat_csr_slow_mpi),
+  .param_descr           = mrc_mat_csr_slow_mpi_descr,
+  .create                = mrc_mat_csr_slow_mpi_create,
+  .setup                 = mrc_mat_csr_slow_mpi_setup,
+  .destroy               = mrc_mat_csr_slow_mpi_destroy,
+  .add_value             = mrc_mat_csr_slow_mpi_add_value,
+  .assemble              = mrc_mat_csr_slow_mpi_assemble,
+  .apply                 = mrc_mat_csr_slow_mpi_apply,
+  .apply_in_place        = mrc_mat_csr_slow_mpi_apply_in_place,
+  .apply_add             = mrc_mat_csr_slow_mpi_apply_add,
+  .apply_general         = mrc_mat_csr_slow_mpi_apply_general,
+  .print                 = mrc_mat_csr_slow_mpi_print,
 };
