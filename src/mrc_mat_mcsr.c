@@ -17,7 +17,7 @@ mrc_mat_mcsr_setup(struct mrc_mat *mat)
   // mrc_mat "mcsr" works on a single proc only
   int size;
   MPI_Comm_size(mrc_mat_comm(mat), &size);
-  //  assert(size == 1);
+  assert(size == 1);
 
   sub->nr_rows_alloced = 1000;
   sub->nr_entries_alloced = 2000;
@@ -63,8 +63,8 @@ mrc_mat_mcsr_add_value(struct mrc_mat *mat, int row_idx, int col_idx, double val
 {
   struct mrc_mat_mcsr *sub = mrc_mat_mcsr(mat);
 
-  //  assert(row_idx >= 0 && row_idx < mat->m);
-  //  assert(col_idx >= 0 && col_idx < mat->n);
+  assert(row_idx >= 0 && row_idx < mat->m);
+  assert(col_idx >= 0 && col_idx < mat->n);
 
   if (sub->nr_rows == 0 ||
       sub->rows[sub->nr_rows - 1].idx != row_idx) {
@@ -148,9 +148,6 @@ mrc_mat_mcsr_apply(struct mrc_vec *y, struct mrc_mat *mat, struct mrc_vec *x)
       int col_idx = sub->entries[entry].idx;
       mrc_fld_data_t val = sub->entries[entry].val;
       sum += val * x_arr[col_idx];
-      if (row_idx == 391242) {
-	mprintf("apply sum %g val %g col_idx %d\n", sum, val, col_idx);
-      }
     }
     y_arr[row_idx] = sum;
   }
@@ -179,9 +176,6 @@ mrc_mat_mcsr_apply_add(struct mrc_vec *y, struct mrc_mat *mat, struct mrc_vec *x
       int col_idx = sub->entries[entry].idx;
       mrc_fld_data_t val = sub->entries[entry].val;
       sum += val * x_arr[col_idx];
-      if (row_idx == 391242) {
-	mprintf("apply_add sum %g val %g col_idx %d\n", sum, val, col_idx);
-      }
     }
     // FIXME, the only difference to apply() is the "+" in "+=", should be consolidated
     y_arr[row_idx] += sum;
@@ -195,76 +189,23 @@ static void
 mrc_mat_mcsr_apply_in_place(struct mrc_mat *mat, struct mrc_vec *x)
 {
   struct mrc_mat_mcsr *sub = mrc_mat_mcsr(mat);
-  //  struct mrc_domain *domain = x->_domain;
-  int rank, size;
-  MPI_Comm_rank(mrc_mat_comm(mat), &rank);
-  MPI_Comm_size(mrc_mat_comm(mat), &size);
 
   int len = mrc_vec_len(x);
   assert(mrc_vec_size_of_type(x) == sizeof(mrc_fld_data_t));
   mrc_fld_data_t *arr = mrc_vec_get_array(x);
-  if (size == 1) {
-    for (int row = 0; row < sub->nr_rows; row++) {
-      int row_idx = sub->rows[row].idx;
-      assert(row_idx < len);
-      mrc_fld_data_t sum = 0.;
-      for (int entry = sub->rows[row].first_entry;
-	   entry < sub->rows[row + 1].first_entry; entry++) {
-	int col_idx = sub->entries[entry].idx;
-	assert(col_idx < len);
-	mrc_fld_data_t val = sub->entries[entry].val;
-	sum += val * arr[col_idx];
-      }
-      arr[row_idx] = sum;
-    } 
-  } else {
-    MPI_Comm comm = mrc_mat_comm(mat);
-    int rn[size];
-    int ds[size];
-    MPI_Allgather( &mat->n, 1, MPI_INT, rn, 1, MPI_INT, comm);
-    int sz=0;
-    for (int jj=0; jj < size; jj++) {
-      ds[jj]=sz; sz+=rn[jj];
-      mprintf("jj %d ds = %d rn = %d\n", jj, ds[jj] ,rn[jj]);
+  for (int row = 0; row < sub->nr_rows; row++) {
+    int row_idx = sub->rows[row].idx;
+    assert(row_idx < len);
+    mrc_fld_data_t sum = 0.;
+    for (int entry = sub->rows[row].first_entry;
+	 entry < sub->rows[row + 1].first_entry; entry++) {
+      int col_idx = sub->entries[entry].idx;
+      assert(col_idx < len);
+      mrc_fld_data_t val = sub->entries[entry].val;
+      sum += val * arr[col_idx];
     }
-
-    int *offs_by_rank = calloc(size + 1, sizeof(offs_by_rank));
-    int len = mrc_vec_len(x);
-    assert(mat->n == len);
-    MPI_Allgather(&len, 1, MPI_INT, offs_by_rank, 1, MPI_INT, comm);
-    int off = 0;
-    for (int r = 0; r <= size; r++) {
-      int cnt = offs_by_rank[r];
-      offs_by_rank[r] = off;
-      off += cnt;
-    }
-
-    int row_off = offs_by_rank[rank];
-    // allocate memory for gather vector
-    // each rank will recieve full x->_arr
-    // this might not scale well but is easy to implement
-    mrc_fld_data_t *loc_x = (mrc_fld_data_t*) calloc(sz,sizeof(mrc_fld_data_t));
-    // FIXME: MPI_DOUBLE hardcoded here.
-    MPI_Allgatherv(arr, mat->n, MPI_DOUBLE, loc_x,
-		   rn, ds, MPI_DOUBLE, comm);
-    for (int row = 0; row < sub->nr_rows; row++) {
-      int row_idx = sub->rows[row].idx;
-      mrc_fld_data_t sum = 0.;
-      for (int entry = sub->rows[row].first_entry;
-	   entry < sub->rows[row + 1].first_entry; entry++) {
-	int col_idx = sub->entries[entry].idx;
-	mrc_fld_data_t val = sub->entries[entry].val;
-	sum += val * loc_x[col_idx];
-      }
-      if (arr[row_idx - row_off] != sum) {
-	mprintf("row_idx %d row_off %d val %g // %g\n", row_idx, row_off,
-		arr[row_idx - row_off], sum);
-      }
-      arr[row_idx - row_off]=sum;
-    }
-    free(loc_x);
-  }
-  mrc_vec_put_array(x, arr);
+    arr[row_idx] = sum;
+  } 
 }
 
 // ----------------------------------------------------------------------

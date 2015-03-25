@@ -13,7 +13,6 @@
 struct mrc_mat_mcsr_mpi {
   struct mrc_mat *A;
   struct mrc_mat *B;
-  struct mrc_mat *C;
 
   struct mrc_decomposition *dc_row;
   struct mrc_decomposition *dc_col;
@@ -52,9 +51,6 @@ mrc_mat_mcsr_mpi_create(struct mrc_mat *mat)
 
   sub->B = mrc_mat_create(MPI_COMM_SELF);
   mrc_mat_set_type(sub->B, "mcsr");
-
-  sub->C = mrc_mat_create(mrc_mat_comm(mat));
-  mrc_mat_set_type(sub->C, "mcsr");
 }
 
 // ----------------------------------------------------------------------
@@ -83,10 +79,6 @@ mrc_mat_mcsr_mpi_setup(struct mrc_mat *mat)
   mrc_mat_set_param_int(sub->B, "m", sub->dc_row->n);
   mrc_mat_set_param_int(sub->B, "n", sub->dc_col->N);
   mrc_mat_setup(sub->B);
-
-  mrc_mat_set_param_int(sub->C, "m", mat->m);
-  mrc_mat_set_param_int(sub->C, "n", mat->n);
-  mrc_mat_setup(sub->C);
 
   mrc_mat_setup_super(mat);
 }
@@ -125,12 +117,6 @@ mrc_mat_mcsr_mpi_add_value(struct mrc_mat *mat, int row_idx, int col_idx, double
 {
   struct mrc_mat_mcsr_mpi *sub = mrc_mat_mcsr_mpi(mat);
 
-  mrc_mat_add_value(sub->C, row_idx, col_idx, val);
-  int i = 391242;
-  if (row_idx == i) {
-    mprintf("add value %p: %d %d : %g\n", mat, row_idx, col_idx, val);
-  }
-
   row_idx = mrc_decomposition_global_to_local(sub->dc_row, row_idx);
   
   if (mrc_decomposition_is_local(sub->dc_col, col_idx)) {
@@ -151,7 +137,6 @@ mrc_mat_mcsr_mpi_assemble(struct mrc_mat *mat)
 
   mrc_mat_assemble(sub->A);
   mrc_mat_assemble(sub->B);
-  mrc_mat_assemble(sub->C);
 
   int rank, size;
   MPI_Comm_rank(mrc_mat_comm(mat), &rank);
@@ -400,27 +385,12 @@ mrc_mat_mcsr_mpi_gather_xc(struct mrc_mat *mat, struct mrc_vec *x, struct mrc_ve
 
   int len = mrc_vec_len(x);
   mrc_fld_data_t *xg_arr = mrc_vec_get_array(xg);
-  /* MPI_Allgather(x_arr, len, MPI_MRC_FLD_DATA_T, */
-  /* 		xg_arr, len, MPI_MRC_FLD_DATA_T, mrc_mat_comm(mat)); */
-
-  int rank, size;
-  MPI_Comm_rank(mrc_mat_comm(mat), &rank);
-  MPI_Comm_size(mrc_mat_comm(mat), &size);
-  int rn[size];
-  int ds[size];
-  MPI_Allgather( &mat->n, 1, MPI_INT, rn, 1, MPI_INT, mrc_mat_comm(mat));
-  int sz=0;
-  for (int jj=0; jj < size; jj++) {
-    ds[jj]=sz; sz+=rn[jj];
-    mprintf("jj %d ds = %d rn = %d\n", jj, ds[jj] ,rn[jj]);
-  }
-
-  MPI_Allgatherv(x_arr, mat->n, MPI_MRC_FLD_DATA_T,
-		 xg_arr, rn, ds, MPI_MRC_FLD_DATA_T, mrc_mat_comm(mat));
+  MPI_Allgather(x_arr, len, MPI_MRC_FLD_DATA_T,
+		xg_arr, len, MPI_MRC_FLD_DATA_T, mrc_mat_comm(mat));
 
   for (int i = 0; i < mrc_vec_len(x_nl); i++) {
     x_nl_arr[i] = xg_arr[sub->rev_col_map[i]];
-    assert(x_nl_arr[i] == xg_arr[sub->rev_col_map[i]]);
+    //    assert(x_nl_arr[i] == xg_arr[sub->rev_col_map[i]]);
   }
   mrc_vec_put_array(xg, xg_arr);
 
@@ -446,24 +416,14 @@ mrc_mat_mcsr_mpi_apply(struct mrc_vec *y, struct mrc_mat *mat, struct mrc_vec *x
 // ----------------------------------------------------------------------
 // mrc_mat_mcsr_mpi_apply_in_place
 
-#include <mrc_vec_private.h>
-
 static void
 mrc_mat_mcsr_mpi_apply_in_place(struct mrc_mat *mat, struct mrc_vec *x)
 {
   struct mrc_mat_mcsr_mpi *sub = mrc_mat_mcsr_mpi(mat);
 
-  int i = 391242;
-  mprintf("mat %p\n", mat);
-  mprintf("A x[i] = %g\n", ((mrc_fld_data_t *) x->arr)[i]);
   mrc_mat_apply(x, sub->A, x);
-  mprintf("B x[i] = %g\n", ((mrc_fld_data_t *) x->arr)[i]);
   mrc_mat_mcsr_mpi_gather_xc(mat, x, sub->x_nl);
   mrc_mat_apply_add(x, sub->B, sub->x_nl);
-  mprintf("C x[i] = %g\n", ((mrc_fld_data_t *) x->arr)[i]);
-
-  mrc_mat_apply_in_place(sub->C, x);
-  mprintf("D x[i] = %g\n", ((mrc_fld_data_t *) x->arr)[i]);
 }
 
 // ----------------------------------------------------------------------
