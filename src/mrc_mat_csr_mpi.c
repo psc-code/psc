@@ -2,6 +2,7 @@
 #include "mrc_mat_private.h"
 #include "mrc_fld_as_double.h"
 #include "mrc_vec.h"
+#include "mrc_profile.h"
 
 #include "mrc_decomposition_private.h"
 
@@ -504,9 +505,62 @@ mrc_mat_csr_mpi_apply_in_place(struct mrc_mat *mat, struct mrc_vec *x)
 {
   struct mrc_mat_csr_mpi *sub = mrc_mat_csr_mpi(mat);
 
+  // make a profiler for each unique matrix
+#ifndef _NR_PROFS
+#define _NR_PROFS (10)
+#endif
+  static void *mats[_NR_PROFS] = { NULL };
+  static int apply_profs[_NR_PROFS] = { 0 };
+  static int commu_profs[_NR_PROFS] = { 0 };
+  static char name_apply[_NR_PROFS][20];
+  static char name_commu[_NR_PROFS][20];
+  static int pr_apply = 0;
+  static int pr_commu = 0;
+  static int pr_all = 0;
+  static int pr_all_commu = 0;
+  
+  if (!pr_all) {
+    pr_all = prof_register("csr_apply_in_place", 0, 0, 0);
+    pr_all_commu = prof_register("csr_apply_in_place_commu", 0, 0, 0);
+  }
+  
+  for(int i=0; i < _NR_PROFS; i++) {
+    if (mats[i] == NULL) {
+      // make new profilers
+      snprintf(name_apply[i], 20, "csr_aip%d", i);
+      snprintf(name_commu[i], 20, "csr_aip_commu%d", i);
+      mprintf("creating profiler: %s\n", name_apply[i]);
+      mprintf("creating profiler: %s\n", name_commu[i]);
+      pr_apply = prof_register(name_apply[i], 0, 0, 0);
+      pr_commu = prof_register(name_commu[i], 0, 0, 0);
+      mats[i] = (void*)mat;
+      apply_profs[i] = pr_apply;
+      commu_profs[i] = pr_commu;
+      break;
+    } else if ((void*)mat == mats[i]) {
+      // use existing profiler
+      pr_apply = apply_profs[i];
+      pr_commu = commu_profs[i];
+      break;
+    }
+  }
+  if (pr_apply == 0) mprintf("Note: Already profiling %d matrix apply_in_place's; "
+                             "not profiling this one.\n", _NR_PROFS);
+  
+  prof_start(pr_all);
+  if (pr_apply > 0) prof_start(pr_apply);
   mrc_mat_apply(x, sub->A, x);
+  
+  prof_start(pr_all_commu);
+  if (pr_commu > 0) prof_start(pr_commu);
   mrc_mat_csr_mpi_gather_xc(mat, x, sub->x_nl);
+  if (pr_commu > 0) prof_stop(pr_commu);
+  prof_stop(pr_all_commu);
+  
   mrc_mat_apply_add(x, sub->B, sub->x_nl);
+  
+  if (pr_apply > 0) prof_stop(pr_apply);
+  prof_stop(pr_all);
 }
 
 // ----------------------------------------------------------------------
