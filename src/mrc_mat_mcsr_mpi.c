@@ -128,6 +128,44 @@ mrc_mat_mcsr_mpi_add_value(struct mrc_mat *mat, int row_idx, int col_idx, double
 }
 
 // ----------------------------------------------------------------------
+// _mcsr_mpi_dump_mat
+
+static void __unused
+_mcsr_mpi_dump_mat(FILE *f, struct mrc_mat *mat_mpi, int which, bool ignore_identity)
+{
+  struct mrc_mat_mcsr_mpi *sub_mpi = mrc_mat_mcsr_mpi(mat_mpi);
+  struct mrc_mat_mcsr *sub = NULL;
+  int col_idx_off = 0;
+  int m_off = sub_mpi->dc_col->off;
+  
+  if (which == 0) {
+    sub = mrc_mat_mcsr(sub_mpi->A);
+    col_idx_off = m_off;
+  } else if (which == 1) {
+    sub = mrc_mat_mcsr(sub_mpi->B);
+  } else {
+    assert(0);
+  }
+  
+  for (int row = 0; row < sub->nr_rows; row++) {
+    int row_idx = sub->rows[row].idx;
+    for (int entry = sub->rows[row].first_entry;
+	 entry < sub->rows[row + 1].first_entry;
+	 entry++) {
+      int grow_idx = row_idx + m_off;
+      int gcol_idx = sub->entries[entry].idx + col_idx_off;
+      mrc_fld_data_t val = sub->entries[entry].val;
+
+      // don't print identity portion
+      if (ignore_identity && grow_idx == gcol_idx && val == 1.0){
+	continue;
+      }
+      fprintf(f, "%d\t\t%d\t\t%g\n", grow_idx, gcol_idx, val);
+    }
+  }  
+}
+
+// ----------------------------------------------------------------------
 // mrc_mat_mcsr_mpi_assemble
 
 static void
@@ -141,6 +179,25 @@ mrc_mat_mcsr_mpi_assemble(struct mrc_mat *mat)
   int rank, size;
   MPI_Comm_rank(mrc_mat_comm(mat), &rank);
   MPI_Comm_size(mrc_mat_comm(mat), &size);
+
+  // ////// DEBUGGING PRINT MATRICES TO FILE //////
+  // static int assemble_count = 0;
+  // char fname[80];
+  // FILE *f;
+  // 
+  // sprintf(fname, "MAT_%s%d_A_%02d.txt", mat->obj.name, assemble_count, rank);
+  // f = fopen(fname, "w");
+  // mprintf(">> printing matrix %s @ assembly\n", fname);
+  // _mcsr_mpi_dump_mat(f, mat, 0, false);
+  // fclose(f);
+  //  
+  // sprintf(fname, "MAT_%s%d_B_%02d.txt", mat->obj.name, assemble_count, rank);
+  // f = fopen(fname, "w");
+  // mprintf(">> printing matrix %s @ assembly\n", fname);
+  // _mcsr_mpi_dump_mat(f, mat, 1, false);
+  // fclose(f);
+  // assemble_count++;
+  // ////// DEBUGGING PRINT MATRICES TO FILE //////
 
   // create full ownership info on each proc
   int *col_offs_by_rank = calloc(size, sizeof(col_offs_by_rank));
