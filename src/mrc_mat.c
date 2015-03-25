@@ -91,8 +91,6 @@ mrc_mat_init()
 {
   mrc_class_register_subclass(&mrc_class_mrc_mat, &mrc_mat_csr_ops);
   mrc_class_register_subclass(&mrc_class_mrc_mat, &mrc_mat_csr_mpi_ops);
-  mrc_class_register_subclass(&mrc_class_mrc_mat, &mrc_mat_csr_slow_ops);
-  mrc_class_register_subclass(&mrc_class_mrc_mat, &mrc_mat_csr_slow_mpi_ops);
   mrc_class_register_subclass(&mrc_class_mrc_mat, &mrc_mat_mcsr_ops);
   mrc_class_register_subclass(&mrc_class_mrc_mat, &mrc_mat_mcsr_mpi_ops);
 #ifdef HAVE_PETSC
