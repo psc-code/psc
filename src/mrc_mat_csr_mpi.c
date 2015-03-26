@@ -23,13 +23,20 @@ struct mrc_mat_csr_mpi {
   int n_recvs;
   int *recv_len;
   int *recv_src;
-  struct mrc_vec *x_nl; // non-local compacted part of x that we need on the local proc
+  
+  // non-local compacted part of x that we need on the local proc
+  // during communication, this is set to NULL to indicate that it's
+  // off limits
+  struct mrc_vec *x_nl;
 
   int n_sends;
   int *send_len;
   int *send_dst;
   int *send_map;
+  
   mrc_fld_data_t *send_buf;
+  mrc_fld_data_t *_recv_buf;
+  struct mrc_vec *_recv_vec;
 
   MPI_Request *req;
   bool is_assembled;
@@ -423,63 +430,64 @@ mrc_mat_csr_mpi_assemble(struct mrc_mat *mat)
   sub->is_assembled = true;
 }
 
+// ----------------------------------------------------------------------
+// mrc_mat_csr_mpi_gather_xc_start
+//
+// x can change before gather_xc_finish
+
 static void
-mrc_mat_csr_mpi_gather_xc(struct mrc_mat *mat, struct mrc_vec *x, struct mrc_vec *x_nl)
+mrc_mat_csr_mpi_gather_xc_start(struct mrc_mat *mat, struct mrc_vec *x)
 {
   struct mrc_mat_csr_mpi *sub = mrc_mat_csr_mpi(mat);
 
   assert(sub->is_assembled);
-
+  assert(sub->_recv_vec == NULL && sub->_recv_buf == NULL);
+  
+  mrc_fld_data_t *pp;
   mrc_fld_data_t *x_arr = mrc_vec_get_array(x);
-  mrc_fld_data_t *x_nl_arr = mrc_vec_get_array(x_nl);
-
-#if 0
+  
+  sub->_recv_vec = sub->x_nl;
+  sub->x_nl = NULL;  // you shouldn't touch x_nl... for real ;-)
+  sub->_recv_buf = mrc_vec_get_array(sub->_recv_vec);
+  
   // actual communication
-  mrc_fld_data_t *pp = sub->send_buf;
-  for (int n = 0; n < sub->n_sends; n++) {
-    for (int i = 0; i < sub->send_len[n]; i++) {
-      pp[i] = x_arr[sub->send_map[i]];
-    }
-    MPI_Isend(pp, sub->send_len[n], MPI_MRC_FLD_DATA_T, sub->send_dst[n], 2,
-              mrc_mat_comm(mat), &sub->req[n]);
-    pp += sub->send_len[n];
-  }
-
-  pp = x_nl_arr;
+  pp = sub->_recv_buf;
   for (int n = 0; n < sub->n_recvs; n++) {
     MPI_Irecv(pp, sub->recv_len[n], MPI_MRC_FLD_DATA_T, sub->recv_src[n], 2,
               mrc_mat_comm(mat), &sub->req[n]);
     pp += sub->recv_len[n];
   }
+  assert(pp - sub->_recv_buf == mrc_vec_len(sub->_recv_vec));
 
-  MHERE;
-  mprintf("%p sub->req %p %d %d\n", mat, sub->req, sub->n_sends, sub->n_recvs);
-  MPI_Waitall(sub->n_sends + sub->n_recvs, sub->req, MPI_STATUSES_IGNORE);
-  MHERE;
-#endif
-
-  // old
-  // xg field -- FIXME, will be unneeded when we do proper communication
-  struct mrc_vec *xg = mrc_vec_create(MPI_COMM_SELF);
-  mrc_vec_set_type(xg, FLD_TYPE);
-  mrc_vec_set_param_int(xg, "len", sub->dc_row->N);
-  mrc_vec_setup(xg);
-
-  int len = mrc_vec_len(x);
-  mrc_fld_data_t *xg_arr = mrc_vec_get_array(xg);
-  MPI_Allgather(x_arr, len, MPI_MRC_FLD_DATA_T,
-                xg_arr, len, MPI_MRC_FLD_DATA_T, mrc_mat_comm(mat));
-
-  for (int i = 0; i < mrc_vec_len(x_nl); i++) {
-    x_nl_arr[i] = xg_arr[sub->rev_col_map[i]];
-    //    assert(x_nl_arr[i] == xg_arr[sub->rev_col_map[i]]);
+  pp = sub->send_buf;
+  for (int n = 0; n < sub->n_sends; n++) {
+    for (int i = 0; i < sub->send_len[n]; i++) {
+      pp[i] = x_arr[sub->send_map[i]];
+    }
+    MPI_Isend(pp, sub->send_len[n], MPI_MRC_FLD_DATA_T, sub->send_dst[n], 2,
+              mrc_mat_comm(mat), &sub->req[sub->n_recvs + n]);
+    pp += sub->send_len[n];
   }
-  mrc_vec_put_array(xg, xg_arr);
-
-  mrc_vec_destroy(xg);
 
   mrc_vec_put_array(x, x_arr);
-  mrc_vec_put_array(x_nl, x_nl_arr);
+  // sub->_recv_buf is put on gather_xc_finish
+}
+
+// ----------------------------------------------------------------------
+// mrc_mat_csr_mpi_gather_xc_finish
+
+static void
+mrc_mat_csr_mpi_gather_xc_finish(struct mrc_mat *mat)
+{
+  struct mrc_mat_csr_mpi *sub = mrc_mat_csr_mpi(mat);
+  assert(sub->_recv_vec != NULL && sub->_recv_buf != NULL);
+  
+  MPI_Waitall(sub->n_sends + sub->n_recvs, sub->req, MPI_STATUSES_IGNORE);
+  
+  mrc_vec_put_array(sub->_recv_vec, sub->_recv_buf);
+  sub->_recv_buf = NULL;
+  sub->x_nl = sub->_recv_vec;
+  sub->_recv_vec = NULL;  
 }
 
 // ----------------------------------------------------------------------
@@ -491,8 +499,14 @@ mrc_mat_csr_mpi_apply(struct mrc_vec *y, struct mrc_mat *mat, struct mrc_vec *x)
 {
   struct mrc_mat_csr_mpi *sub = mrc_mat_csr_mpi(mat);
 
+  mrc_mat_csr_mpi_gather_xc_start(mat, x);
   mrc_mat_apply(y, sub->A, x);
-  mrc_mat_csr_mpi_gather_xc(mat, x, sub->x_nl);
+  mrc_mat_csr_mpi_gather_xc_finish(mat);
+  mrc_fld_data_t *xnlarr = mrc_vec_get_array(sub->x_nl);
+  for (int i=0; i < mrc_vec_len(sub->x_nl); i++) {
+    mprintf("!x_nl[%d] @ %p = %lg\n", i, &xnlarr[i], xnlarr[i]);
+  }
+  mrc_vec_put_array(sub->x_nl, xnlarr);
   mrc_mat_apply_add(y, sub->B, sub->x_nl);
 }
 
@@ -549,11 +563,12 @@ mrc_mat_csr_mpi_apply_in_place(struct mrc_mat *mat, struct mrc_vec *x)
   
   prof_start(pr_all);
   if (pr_apply > 0) prof_start(pr_apply);
+  mrc_mat_csr_mpi_gather_xc_start(mat, x);
   mrc_mat_apply(x, sub->A, x);
   
   prof_start(pr_all_commu);
   if (pr_commu > 0) prof_start(pr_commu);
-  mrc_mat_csr_mpi_gather_xc(mat, x, sub->x_nl);
+  mrc_mat_csr_mpi_gather_xc_finish(mat);
   if (pr_commu > 0) prof_stop(pr_commu);
   prof_stop(pr_all_commu);
   
@@ -572,8 +587,9 @@ mrc_mat_csr_mpi_apply_add(struct mrc_vec *y, struct mrc_mat *mat, struct mrc_vec
 {
   struct mrc_mat_csr_mpi *sub = mrc_mat_csr_mpi(mat);
 
+  mrc_mat_csr_mpi_gather_xc_start(mat, x);
   mrc_mat_apply_add(y, sub->A, x);
-  mrc_mat_csr_mpi_gather_xc(mat, x, sub->x_nl);
+  mrc_mat_csr_mpi_gather_xc_finish(mat);
   mrc_mat_apply_add(y, sub->B, sub->x_nl);
 }
 
@@ -588,8 +604,9 @@ mrc_mat_csr_mpi_apply_general(struct mrc_vec *z, double alpha,
 {
   struct mrc_mat_csr_mpi *sub = mrc_mat_csr_mpi(mat);
 
+  mrc_mat_csr_mpi_gather_xc_start(mat, x);
   mrc_mat_apply_general(z, alpha, sub->A, x, beta, y);
-  mrc_mat_csr_mpi_gather_xc(mat, x, sub->x_nl);
+  mrc_mat_csr_mpi_gather_xc_finish(mat);
   mrc_mat_apply_general(z, alpha, sub->B, sub->x_nl, 1.0, z);
 }
 
