@@ -126,25 +126,22 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
   }
 }
 
-// FIXME, should go away / superseded by mrc_crds_get_dx()
-void
-mrc_crds_get_dx_base(struct mrc_crds *crds, double dx[3])
-{
-  int gdims[3];
-  mrc_domain_get_global_dims(crds->domain, gdims);
-  // FIXME, only makes sense for uniform coords, should be dispatched!!!
-  for (int d = 0; d < 3; d++) {
-    dx[d] = (crds->xh[d] - crds->xl[d]) / gdims[d];
-  }
-}
-
 void
 mrc_crds_get_dx(struct mrc_crds *crds, int p, double dx[3])
 {
   // FIXME, only for uniform crds, should be dispatched!
-  dx[0] = MRC_MCRDX(crds, 1, p) - MRC_MCRDX(crds, 0, p);
-  dx[1] = MRC_MCRDY(crds, 1, p) - MRC_MCRDY(crds, 0, p);
-  dx[2] = MRC_MCRDZ(crds, 1, p) - MRC_MCRDZ(crds, 0, p);
+  dx[0] = MRC_DMCRDX(crds, 1, p) - MRC_DMCRDX(crds, 0, p);
+  dx[1] = MRC_DMCRDY(crds, 1, p) - MRC_DMCRDY(crds, 0, p);
+  dx[2] = MRC_DMCRDZ(crds, 1, p) - MRC_DMCRDZ(crds, 0, p);
+}
+
+// FIXME, should go away / superseded by mrc_crds_get_dx()
+void
+mrc_crds_get_dx_base(struct mrc_crds *crds, double dx[3])
+{
+  assert(mrc_domain_nr_patches(crds->domain) == 1);
+  // the only place where this makes sense is if we have one patch / proc, no AMR, anyway
+  mrc_crds_get_dx(crds, 0, dx); // the only 
 }
 
 // allocate the coordinate fields common to all crds types.
