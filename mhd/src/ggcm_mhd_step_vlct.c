@@ -61,13 +61,22 @@ l_r_avg(mrc_fld_data_t u, mrc_fld_data_t l, mrc_fld_data_t r)
   }
 }
 
-#define MAKE_COMPUTE_E_EDGE(X,Y,Z,IJ,JJ,KJ,IK,JK,KK)			\
+#define MAKE_COMPUTE_E_EDGE(X,Y,Z, _IJ,_JJ,_KJ, _IK,_JK,_KK)		\
 									\
 static void								\
 compute_E##X##_edge(struct mrc_fld *E, struct mrc_fld *Ecc,		\
 		    struct mrc_fld **fluxes, int bnd)			\
 {									\
+  int gdims[3];								\
+  mrc_domain_get_global_dims(E->_domain, gdims);			\
+									\
   int BY = BX + Y, BZ = BX + Z;						\
+  int IJ = gdims[0] > 1 ? _IJ : 0;					\
+  int JJ = gdims[1] > 1 ? _JJ : 0;					\
+  int KJ = gdims[2] > 1 ? _KJ : 0;					\
+  int IK = gdims[0] > 1 ? _IK : 0;					\
+  int JK = gdims[1] > 1 ? _JK : 0;					\
+  int KK = gdims[2] > 1 ? _KK : 0;					\
 									\
   for (int p = 0; p < mrc_fld_nr_patches(E); p++) {			\
     mrc_fld_foreach(E, i,j,k, bnd, bnd+1) {				\
