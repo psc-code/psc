@@ -407,7 +407,8 @@ static struct param ggcm_mhd_descr[] = {
   { "diff_obnd"       , VAR(par.diff_obnd)   , PARAM_INT(0)          },
 
   { "monitor_conservation", VAR(par.monitor_conservation), PARAM_BOOL(false)  },
-  { "amr"             , VAR(amr)             , PARAM_INT(0)          },
+  { "amr_grid_file"   , VAR(amr_grid_file)   , PARAM_STRING("amr_grid.txt")   },
+  { "amr"             , VAR(amr)             , PARAM_INT(0)                   },
 
   { "time"            , VAR(time)            , MRC_VAR_FLOAT         },
   { "dt"              , VAR(dt)              , MRC_VAR_FLOAT         },

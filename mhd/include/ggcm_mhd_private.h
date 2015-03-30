@@ -35,6 +35,7 @@ struct ggcm_mhd {
   struct mrc_obj obj;
   struct ggcm_mhd_params par;
   int amr; //< turn on if > 0, value selects initial domain refinement
+  char *amr_grid_file;  // used if mhd->amr == 999  
   struct mrc_ddc *ddc_amr_cc;
   struct mrc_ddc *ddc_amr_flux[3];
   struct mrc_ddc *ddc_amr_E;

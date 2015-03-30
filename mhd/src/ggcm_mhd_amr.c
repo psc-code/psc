@@ -754,6 +754,11 @@ ggcm_mhd_setup_amr_domain(struct ggcm_mhd *mhd)
   MPI_Comm_rank(mhd_comm, &mhd_rank);
 
   if (mhd->amr == 999) {
+    // // FIXME: there should be some feedback if the grid resolution / global
+    // // domain size are not the same as the grid file expects
+    // struct mrc_patch_info l_info;
+    // mrc_domain_get_local_patch_info(mhd->domain, 0, &l_info);
+
     FILE *f = NULL;
     int ret, mx, my, mz, npatches;
     int level, ix, iy, iz;
@@ -763,52 +768,46 @@ ggcm_mhd_setup_amr_domain(struct ggcm_mhd *mhd)
     
     // open the grid file and read the header info
     if (mhd_rank == 0) {
-      f = fopen("amr_grid.txt", "r");
+      f = fopen(mhd->amr_grid_file, "r");
       
       if (f == NULL) {
-        mprintf("ERROR: mhd->amr == 999, but no file named 'amr_grid.txt'\n");
+	mprintf("ERROR: tried to make amr grid from '%s', but file DNE.\n",
+		mhd->amr_grid_file);
         MPI_Abort(mhd_comm, 1);
       }
     
       skip_comments(f);
       
       ret = fscanf(f, "Level 0 xl: %lg, %lg, %lg\n", &tmp[0], &tmp[1], &tmp[2]);
-      // mprintf(">> Level 0 xl: %lg %lg %lg\n", tmp[0], tmp[1], tmp[2]);
       if (ret != 3) {MPI_Abort(mhd_comm, 2);}  // malformed file      
-      // if (tmp[0] != mhd->domain->crds->xl[0] ||
-      //     tmp[1] != mhd->domain->crds->xl[1] || 
-      //     tmp[2] != mhd->domain->crds->xl[2]) {
+      // if (tmp[0] != g_info.xl[0] ||
+      //     tmp[1] != g_info.xl[1] || 
+      //     tmp[2] != g_info.xl[2]) {
       //   mprintf("WARNING: AMR grid in file expects level 0 to have xl = "
       //           "(%lg, %lg, %lg), but it is actually (%lg, %lg, %lg)\n",
       //           tmp[0], tmp[1], tmp[2],
-      //           mhd->domain->crds->xl[0],
-      //           mhd->domain->crds->xl[1],
-      //           mhd->domain->crds->xl[2]);
+      //           g_info.xl[0], g_info.xl[1], g_info.xl[2]);
       // }
       ret = fscanf(f, "Level 0 xh: %lg, %lg, %lg\n", &tmp[0], &tmp[1], &tmp[2]);
-      // mprintf(">> Level 0 xh: %lg %lg %lg\n", tmp[0], tmp[1], tmp[2]);
       if (ret != 3) {MPI_Abort(mhd_comm, 2);}  // malformed file      
-      // if (tmp[0] != mhd->domain->crds->xh[0] ||
-      //     tmp[1] != mhd->domain->crds->xh[1] ||
-      //     tmp[2] != mhd->domain->crds->xh[2]) {
+      // if (tmp[0] != g_info.xh[0] ||
+      //     tmp[1] != g_info.xh[1] ||
+      //     tmp[2] != g_info.xh[2]) {
       //   mprintf("WARNING: AMR grid in file expects level 0 to have xh = "
       //           "(%lg, %lg, %lg), but it is actually (%lg, %lg, %lg)\n",
-      //           tmp[0], tmp[1], tmp[2],
-      //           mhd->domain->crds->xh[0],
-      //           mhd->domain->crds->xh[1],
-      //           mhd->domain->crds->xh[2]);
+      //           tmp[0], tmp[1], tmp[2], g_info.xh[0], g_info.xh[1], g_info.xh[2]);
       // }    
     
       ret = fscanf(f, "resolution: %d, %d, %d\n", &mx, &my, &mz);
       // mprintf(">> resolution: %d %d %d\n", mx, my, mz);
       if (ret != 3) {MPI_Abort(mhd_comm, 2);}  // malformed file
-      // if (mx != mhd->domain->m[0] ||
-      //     my != mhd->domain->m[1] ||
-      //     mz != mhd->domain->m[2]) {
+      // if (mx != l_info.ldims[0] ||
+      //     my != l_info.ldims[1] ||
+      //     mz != l_info.ldims[2]) {
       //   mprintf("WARNING: AMR grid in file expects patches to have resolution "
       //           "(%d, %d, %d), but it is actually (%d, %d, %d)\n",
       //           mx, my, mz,
-      //           mhd->domain->m[0], mhd->domain->m[1], mhd->domain->m[2]);
+      //           l_info.ldims[0], l_info.ldims[1], l_info.ldims[2]);
       // }
       
       ret = fscanf(f, "npatches: %d\n", &npatches);
