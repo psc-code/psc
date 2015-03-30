@@ -443,6 +443,7 @@ mrc_mat_csr_mpi_gather_xc_start(struct mrc_mat *mat, struct mrc_vec *x)
   assert(sub->is_assembled);
   assert(sub->_recv_vec == NULL && sub->_recv_buf == NULL);
   
+  int *send_map_p;
   mrc_fld_data_t *pp;
   mrc_fld_data_t *x_arr = mrc_vec_get_array(x);
   
@@ -459,13 +460,15 @@ mrc_mat_csr_mpi_gather_xc_start(struct mrc_mat *mat, struct mrc_vec *x)
   }
   assert(pp - sub->_recv_buf == mrc_vec_len(sub->_recv_vec));
 
+  send_map_p = sub->send_map;
   pp = sub->send_buf;
   for (int n = 0; n < sub->n_sends; n++) {
     for (int i = 0; i < sub->send_len[n]; i++) {
-      pp[i] = x_arr[sub->send_map[i]];
+      pp[i] = x_arr[send_map_p[i]];
     }
     MPI_Isend(pp, sub->send_len[n], MPI_MRC_FLD_DATA_T, sub->send_dst[n], 2,
               mrc_mat_comm(mat), &sub->req[sub->n_recvs + n]);
+    send_map_p += sub->send_len[n];
     pp += sub->send_len[n];
   }
 

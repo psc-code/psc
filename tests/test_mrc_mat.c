@@ -129,31 +129,34 @@ main(int argc, char **argv)
   }
   
   //////
-  int rank;
+  int rank, size;
   MPI_Comm_rank(mrc_fld_comm(x), &rank);
-  if (testcase == 0 && rank == 0) {
+  int _r = 2;
+  // this test to see if _r is local only works if y is evenly
+  // divided among procs
+  if (testcase == 0 && rank * y->_len <= _r && _r < (rank + 1) * y->_len) {
     // test adding to rows/cols out of order
     // mprintf("> test adding values out of order\n");
-    mrc_mat_add_value(A, 2, 0, 10.0);
-    mrc_mat_add_value(A, 2, 1, 11.0);
-    mrc_mat_add_value(A, 2, 2, 12.0);
-    mrc_mat_add_value(A, 2, 3, 13.0);
-    mrc_mat_add_value(A, 2, 4, 14.0);
-    mrc_mat_add_value(A, 2, 5, 15.0);
-    mrc_mat_add_value(A, 2, 6, 16.0);
-    mrc_mat_add_value(A, 2, 7, 17.0);
+    mrc_mat_add_value(A, _r, 0, 10.0);
+    mrc_mat_add_value(A, _r, 1, 11.0);
+    mrc_mat_add_value(A, _r, 2, 12.0);
+    mrc_mat_add_value(A, _r, 3, 13.0);
+    mrc_mat_add_value(A, _r, 4, 14.0);
+    mrc_mat_add_value(A, _r, 5, 15.0);
+    mrc_mat_add_value(A, _r, 6, 16.0);
+    mrc_mat_add_value(A, _r, 7, 17.0);
     // mrc_mat_print(A);
     // test removing values
     // mprintf("> test removing values\n");
-    mrc_mat_add_value(A, 2, 1, -11.0);
-    mrc_mat_add_value(A, 2, 3, -13.0);
-    mrc_mat_add_value(A, 2, 5, -15.0);
-    mrc_mat_add_value(A, 2, 7, -17.0);
+    mrc_mat_add_value(A, _r, 1, -11.0);
+    mrc_mat_add_value(A, _r, 3, -13.0);
+    mrc_mat_add_value(A, _r, 5, -15.0);
+    mrc_mat_add_value(A, _r, 7, -17.0);
     // mrc_mat_print(A);
-    mrc_mat_add_value(A, 2, 0, -10.0);
-    mrc_mat_add_value(A, 2, 2, -12.0);
-    mrc_mat_add_value(A, 2, 4, -14.0);
-    mrc_mat_add_value(A, 2, 6, -16.0);
+    mrc_mat_add_value(A, _r, 0, -10.0);
+    mrc_mat_add_value(A, _r, 2, -12.0);
+    mrc_mat_add_value(A, _r, 4, -14.0);
+    mrc_mat_add_value(A, _r, 6, -16.0);
   }
   //////
   
