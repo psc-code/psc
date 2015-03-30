@@ -548,9 +548,6 @@ mrc_mat_csr_mpi_apply(struct mrc_vec *y, struct mrc_mat *mat, struct mrc_vec *x)
   mrc_mat_apply(y, sub->A, x);
   mrc_mat_csr_mpi_gather_xc_finish(mat);
   mrc_fld_data_t *xnlarr = mrc_vec_get_array(sub->x_nl);
-  for (int i=0; i < mrc_vec_len(sub->x_nl); i++) {
-    mprintf("!x_nl[%d] @ %p = %lg\n", i, &xnlarr[i], xnlarr[i]);
-  }
   mrc_vec_put_array(sub->x_nl, xnlarr);
   mrc_mat_apply_add(y, sub->B, sub->x_nl);
 }
@@ -589,8 +586,8 @@ mrc_mat_csr_mpi_apply_in_place(struct mrc_mat *mat, struct mrc_vec *x)
         // make new profilers
         snprintf(name_apply[i], 20, "csr_aip%d", i);
         snprintf(name_commu[i], 20, "csr_aip_commu%d", i);
-        mprintf("creating profiler: %s\n", name_apply[i]);
-        mprintf("creating profiler: %s\n", name_commu[i]);
+        // mprintf("creating profiler: %s\n", name_apply[i]);
+        // mprintf("creating profiler: %s\n", name_commu[i]);
         pr_apply = prof_register(name_apply[i], 0, 0, 0);
         pr_commu = prof_register(name_commu[i], 0, 0, 0);
         mats[i] = (void*)mat;
