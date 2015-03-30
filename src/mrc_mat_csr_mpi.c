@@ -40,6 +40,8 @@ struct mrc_mat_csr_mpi {
 
   MPI_Request *req;
   bool is_assembled;
+  
+  bool verbose;
 };
 
 #define mrc_mat_csr_mpi(mat) mrc_to_subobj(mat, struct mrc_mat_csr_mpi)
@@ -186,6 +188,7 @@ static void
 mrc_mat_csr_mpi_assemble(struct mrc_mat *mat)
 {
   struct mrc_mat_csr_mpi *sub = mrc_mat_csr_mpi(mat);
+  int recv_len_max = 0;
 
   assert(!sub->is_assembled);
   
@@ -328,6 +331,9 @@ mrc_mat_csr_mpi_assemble(struct mrc_mat *mat)
     if (recv_cnt_by_rank[r] > 0) {
       sub->recv_len[n] = recv_cnt_by_rank[r];
       sub->recv_src[n] = r;
+      if(sub->recv_len[n] > recv_len_max) {
+        recv_len_max = sub->recv_len[n];
+      }
       n++;
     }
   }
@@ -369,9 +375,7 @@ mrc_mat_csr_mpi_assemble(struct mrc_mat *mat)
   }
 
   MPI_Status *status = calloc(sub->n_sends + sub->n_recvs, sizeof(*status));
-  MHERE;
   MPI_Waitall(sub->n_sends + sub->n_recvs, sub->req, status);
-  MHERE;
   for (int n = 0; n < sub->n_sends; n++) {
     sub->send_dst[n] = status[n].MPI_SOURCE;
   }
@@ -404,10 +408,7 @@ mrc_mat_csr_mpi_assemble(struct mrc_mat *mat)
               &sub->req[sub->n_sends + n]);
     p += sub->recv_len[n];
   }
-
-  MHERE;
   MPI_Waitall(sub->n_sends + sub->n_recvs, sub->req, MPI_STATUSES_IGNORE);
-  MHERE;
 
   p = sub->send_map;
   for (int n = 0; n < sub->n_sends; n++) {
@@ -426,6 +427,46 @@ mrc_mat_csr_mpi_assemble(struct mrc_mat *mat)
   mrc_vec_setup(sub->x_nl);
 
   sub->send_buf = calloc(send_buf_size, sizeof(*sub->send_buf));
+  
+  // compile some rudimentary stats on what the matrix looks like
+  if (sub->verbose) {
+    int size;
+    MPI_Comm_size(mrc_mat_comm(mat), &size);
+    int commu_size_max = 0, recv_len_avg = 0;
+    
+    if (sub->n_recvs > 0) {
+      recv_len_avg = col_map_cnt / sub->n_recvs;
+    } else {
+      recv_len_avg = 0;
+    }
+    mprintf("Sparse Mat Apply needs msgs from %d procs of size: %d (max),"
+            " %d (avg), %d (total)\n", sub->n_recvs, recv_len_max,
+            recv_len_avg, col_map_cnt);
+    MPI_Reduce(&recv_len_max, &commu_size_max, 1, MPI_INT, MPI_MAX, 0,
+               mrc_mat_comm(mat));
+    mpi_printf(mrc_mat_comm(mat),
+               "Sparse Mat max proc->proc communication: %d values\n",
+               commu_size_max);
+
+    // now print some stats on % of values that are non-local
+    double pct_non_local = 0.0;  // % of matrix that's non-local
+    double pct_non_local_max = 0.0, pct_non_local_sum = 0.0;
+    double total_vals = (mrc_mat_csr(sub->A)->nr_vals +
+                         mrc_mat_csr(sub->B)->nr_vals);
+    if (total_vals > 0.0) {
+      pct_non_local = ((double)mrc_mat_csr(sub->B)->nr_vals / total_vals);
+    } else {
+      pct_non_local = 0.0;
+    }
+    // mprintf("percent non-local:: %lg\n", 100.0 * pct_non_local);
+    MPI_Reduce(&pct_non_local, &pct_non_local_max, 1, MPI_DOUBLE, MPI_MAX, 0,
+               mrc_mat_comm(mat));
+    MPI_Reduce(&pct_non_local, &pct_non_local_sum, 1, MPI_DOUBLE, MPI_SUM, 0,
+               mrc_mat_comm(mat));
+    mpi_printf(mrc_mat_comm(mat),
+               "Sparse Mat percent non-local: %lg (max)  %lg (avg)\n",
+               100.0 * pct_non_local_max, 100.0 * pct_non_local_sum / size);
+  }
   
   sub->is_assembled = true;
 }
@@ -636,6 +677,7 @@ mrc_mat_csr_mpi_print(struct mrc_mat *mat)
 
 #define VAR(x) (void *)offsetof(struct mrc_mat_csr_mpi, x)
 static struct param mrc_mat_csr_mpi_descr[] = {
+  { "verbose"           , VAR(verbose)           , PARAM_BOOL(false)    },
   {},
 };
 #undef VAR
