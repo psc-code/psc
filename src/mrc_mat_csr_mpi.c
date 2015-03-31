@@ -43,6 +43,7 @@ struct mrc_mat_csr_mpi {
   
   bool verbose;
   bool do_profiling;
+  int nr_initial_cols;
 };
 
 #define mrc_mat_csr_mpi(mat) mrc_to_subobj(mat, struct mrc_mat_csr_mpi)
@@ -84,6 +85,7 @@ mrc_mat_csr_mpi_setup(struct mrc_mat *mat)
   // A is the diagonal block, so use local sizes
   mrc_mat_set_param_int(sub->A, "m", sub->dc_row->n);
   mrc_mat_set_param_int(sub->A, "n", sub->dc_col->n);
+  mrc_mat_set_param_int(sub->A, "nr_initial_cols", sub->nr_initial_cols);
   mrc_mat_setup(sub->A);
 
   // B is the off diagonal block, so # of rows = local # of rows,
@@ -92,6 +94,7 @@ mrc_mat_csr_mpi_setup(struct mrc_mat *mat)
   // rather into A
   mrc_mat_set_param_int(sub->B, "m", sub->dc_row->n);
   mrc_mat_set_param_int(sub->B, "n", sub->dc_col->N);
+  mrc_mat_set_param_int(sub->B, "nr_initial_cols", sub->nr_initial_cols);
   mrc_mat_setup(sub->B);
 
   mrc_mat_setup_super(mat);
@@ -676,6 +679,7 @@ mrc_mat_csr_mpi_print(struct mrc_mat *mat)
 static struct param mrc_mat_csr_mpi_descr[] = {
   { "verbose"           , VAR(verbose)           , PARAM_BOOL(false)    },
   { "do_profiling"      , VAR(do_profiling)      , PARAM_BOOL(false)    },
+  { "nr_initial_cols"   , VAR(nr_initial_cols)   , PARAM_INT(1)         },
   {},
 };
 #undef VAR
