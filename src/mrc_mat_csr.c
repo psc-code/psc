@@ -212,6 +212,12 @@ mrc_mat_csr_assemble(struct mrc_mat *mat)
   int *cols = mrc_vec_get_array(sub->cols);
   int *rows = mrc_vec_get_array(sub->rows);
 
+  if (sub->nr_vals < 0.9 * sub->_nr_vals_alloced) {
+    mprintf("NOTE: decreasing sparse matrix size by > 10%% on assemble: "
+            "%d -> %d (-%d%%)\n", sub->_nr_vals_alloced, sub->nr_vals,
+            (int)(100 * (1 - (1.0 * sub->nr_vals) / sub->_nr_vals_alloced)));
+  }
+
   int i = 0;
   for (int row=0; row < sub->nr_rows; row++) {
     int nr_cols = sub->_nr_cols[row];
