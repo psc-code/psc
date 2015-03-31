@@ -2,6 +2,7 @@
 #include "mrc_mat_private.h"
 #include "mrc_fld_as_double.h"
 #include "mrc_vec.h"
+#include "mrc_profile.h"
 
 #include "mrc_decomposition_private.h"
 
@@ -22,15 +23,26 @@ struct mrc_mat_mcsr_mpi {
   int n_recvs;
   int *recv_len;
   int *recv_src;
+  
+  // non-local compacted part of x that we need on the local proc
+  // during communication, this is set to NULL to indicate that it's
+  // off limits  
   struct mrc_vec *x_nl; // non-local compacted part of x that we need on the local proc
 
   int n_sends;
   int *send_len;
   int *send_dst;
   int *send_map;
+  
   mrc_fld_data_t *send_buf;
+  mrc_fld_data_t *_recv_buf;
+  struct mrc_vec *_recv_vec;  
 
   MPI_Request *req;
+  bool is_assembled;
+  
+  bool verbose;
+  bool do_profiling;  
 };
 
 #define mrc_mat_mcsr_mpi(mat) mrc_to_subobj(mat, struct mrc_mat_mcsr_mpi)
@@ -51,6 +63,8 @@ mrc_mat_mcsr_mpi_create(struct mrc_mat *mat)
 
   sub->B = mrc_mat_create(MPI_COMM_SELF);
   mrc_mat_set_type(sub->B, "mcsr");
+  
+  sub->is_assembled = false;
 }
 
 // ----------------------------------------------------------------------
@@ -117,6 +131,8 @@ mrc_mat_mcsr_mpi_add_value(struct mrc_mat *mat, int row_idx, int col_idx, double
 {
   struct mrc_mat_mcsr_mpi *sub = mrc_mat_mcsr_mpi(mat);
 
+  assert(!sub->is_assembled);
+
   row_idx = mrc_decomposition_global_to_local(sub->dc_row, row_idx);
   
   if (mrc_decomposition_is_local(sub->dc_col, col_idx)) {
@@ -172,7 +188,10 @@ static void
 mrc_mat_mcsr_mpi_assemble(struct mrc_mat *mat)
 {
   struct mrc_mat_mcsr_mpi *sub = mrc_mat_mcsr_mpi(mat);
+  int recv_len_max = 0;
 
+  assert(!sub->is_assembled);
+  
   mrc_mat_assemble(sub->A);
   mrc_mat_assemble(sub->B);
 
@@ -304,6 +323,9 @@ mrc_mat_mcsr_mpi_assemble(struct mrc_mat *mat)
     if (recv_cnt_by_rank[r] > 0) {
       sub->recv_len[n] = recv_cnt_by_rank[r];
       sub->recv_src[n] = r;
+      if(sub->recv_len[n] > recv_len_max) {
+	recv_len_max = sub->recv_len[n];
+      }      
       n++;
     }
   }
@@ -401,64 +423,113 @@ mrc_mat_mcsr_mpi_assemble(struct mrc_mat *mat)
   mrc_vec_setup(sub->x_nl);
 
   sub->send_buf = calloc(send_buf_size, sizeof(*sub->send_buf));
+  
+  // compile some rudimentary stats on what the matrix looks like
+  if (sub->verbose) {
+    int size;
+    MPI_Comm_size(mrc_mat_comm(mat), &size);
+    int commu_size_max = 0, recv_len_avg = 0;
+    
+    if (sub->n_recvs > 0) {
+      recv_len_avg = col_map_cnt / sub->n_recvs;
+    } else {
+      recv_len_avg = 0;
+    }
+    mprintf("Sparse Mat Apply needs msgs from %d procs of size: %d (max),"
+	    " %d (avg), %d (total)\n", sub->n_recvs, recv_len_max,
+	    recv_len_avg, col_map_cnt);
+    MPI_Reduce(&recv_len_max, &commu_size_max, 1, MPI_INT, MPI_MAX, 0,
+	       mrc_mat_comm(mat));
+    mpi_printf(mrc_mat_comm(mat),
+	       "Sparse Mat max proc->proc communication: %d values\n",
+	       commu_size_max);
+
+    // now print some stats on % of values that are non-local
+    double pct_non_local = 0.0;  // % of matrix that's non-local
+    double pct_non_local_max = 0.0, pct_non_local_sum = 0.0;
+    double total_vals = (mrc_mat_mcsr(sub->A)->nr_entries +
+			 mrc_mat_mcsr(sub->B)->nr_entries);
+    if (total_vals > 0.0) {
+      pct_non_local = ((double)mrc_mat_mcsr(sub->B)->nr_entries / total_vals);
+    } else {
+      pct_non_local = 0.0;
+    }
+    // mprintf("percent non-local:: %lg\n", 100.0 * pct_non_local);
+    MPI_Reduce(&pct_non_local, &pct_non_local_max, 1, MPI_DOUBLE, MPI_MAX, 0,
+	       mrc_mat_comm(mat));
+    MPI_Reduce(&pct_non_local, &pct_non_local_sum, 1, MPI_DOUBLE, MPI_SUM, 0,
+	       mrc_mat_comm(mat));
+    mpi_printf(mrc_mat_comm(mat),
+	       "Sparse Mat percent non-local: %lg (max)  %lg (avg)\n",
+	       100.0 * pct_non_local_max, 100.0 * pct_non_local_sum / size);
+  }
+  
+  sub->is_assembled = true;  
 }
 
+// ----------------------------------------------------------------------
+// mrc_mat_mcsr_mpi_gather_xc_start
+//
+// x can change before gather_xc_finish
+
 static void
-mrc_mat_mcsr_mpi_gather_xc(struct mrc_mat *mat, struct mrc_vec *x, struct mrc_vec *x_nl)
+mrc_mat_mcsr_mpi_gather_xc_start(struct mrc_mat *mat, struct mrc_vec *x)
 {
   struct mrc_mat_mcsr_mpi *sub = mrc_mat_mcsr_mpi(mat);
 
+  assert(sub->is_assembled);
+  assert(sub->_recv_vec == NULL && sub->_recv_buf == NULL);
+  
+  int *send_map_p;
+  mrc_fld_data_t *pp;
   mrc_fld_data_t *x_arr = mrc_vec_get_array(x);
-  mrc_fld_data_t *x_nl_arr = mrc_vec_get_array(x_nl);
-
-#if 0
+  
+  sub->_recv_vec = sub->x_nl;
+  sub->x_nl = NULL;  // you shouldn't touch x_nl... for real ;-)
+  sub->_recv_buf = mrc_vec_get_array(sub->_recv_vec);
+  
   // actual communication
-  mrc_fld_data_t *pp = sub->send_buf;
-  for (int n = 0; n < sub->n_sends; n++) {
-    for (int i = 0; i < sub->send_len[n]; i++) {
-      pp[i] = x_arr[sub->send_map[i]];
-    }
-    MPI_Isend(pp, sub->send_len[n], MPI_MRC_FLD_DATA_T, sub->send_dst[n], 2,
-	      mrc_mat_comm(mat), &sub->req[n]);
-    pp += sub->send_len[n];
-  }
-
-  pp = x_nl_arr;
+  pp = sub->_recv_buf;
   for (int n = 0; n < sub->n_recvs; n++) {
     MPI_Irecv(pp, sub->recv_len[n], MPI_MRC_FLD_DATA_T, sub->recv_src[n], 2,
 	      mrc_mat_comm(mat), &sub->req[n]);
     pp += sub->recv_len[n];
   }
+  assert(pp - sub->_recv_buf == mrc_vec_len(sub->_recv_vec));
 
-  MHERE;
-  mprintf("%p sub->req %p %d %d\n", mat, sub->req, sub->n_sends, sub->n_recvs);
-  MPI_Waitall(sub->n_sends + sub->n_recvs, sub->req, MPI_STATUSES_IGNORE);
-  MHERE;
-#endif
-
-  // old
-  // xg field -- FIXME, will be unneeded when we do proper communication
-  struct mrc_vec *xg = mrc_vec_create(MPI_COMM_SELF);
-  mrc_vec_set_type(xg, FLD_TYPE);
-  mrc_vec_set_param_int(xg, "len", sub->dc_row->N);
-  mrc_vec_setup(xg);
-
-  int len = mrc_vec_len(x);
-  mrc_fld_data_t *xg_arr = mrc_vec_get_array(xg);
-  MPI_Allgather(x_arr, len, MPI_MRC_FLD_DATA_T,
-		xg_arr, len, MPI_MRC_FLD_DATA_T, mrc_mat_comm(mat));
-
-  for (int i = 0; i < mrc_vec_len(x_nl); i++) {
-    x_nl_arr[i] = xg_arr[sub->rev_col_map[i]];
-    //    assert(x_nl_arr[i] == xg_arr[sub->rev_col_map[i]]);
+  send_map_p = sub->send_map;
+  pp = sub->send_buf;
+  for (int n = 0; n < sub->n_sends; n++) {
+    for (int i = 0; i < sub->send_len[n]; i++) {
+      pp[i] = x_arr[send_map_p[i]];
+    }
+    MPI_Isend(pp, sub->send_len[n], MPI_MRC_FLD_DATA_T, sub->send_dst[n], 2,
+	      mrc_mat_comm(mat), &sub->req[sub->n_recvs + n]);
+    send_map_p += sub->send_len[n];
+    pp += sub->send_len[n];
   }
-  mrc_vec_put_array(xg, xg_arr);
-
-  mrc_vec_destroy(xg);
 
   mrc_vec_put_array(x, x_arr);
-  mrc_vec_put_array(x_nl, x_nl_arr);
+  // sub->_recv_buf is put on gather_xc_finish
 }
+
+// ----------------------------------------------------------------------
+// mrc_mat_mcsr_mpi_gather_xc_finish
+
+static void
+mrc_mat_mcsr_mpi_gather_xc_finish(struct mrc_mat *mat)
+{
+  struct mrc_mat_mcsr_mpi *sub = mrc_mat_mcsr_mpi(mat);
+  assert(sub->_recv_vec != NULL && sub->_recv_buf != NULL);
+  
+  MPI_Waitall(sub->n_sends + sub->n_recvs, sub->req, MPI_STATUSES_IGNORE);
+  
+  mrc_vec_put_array(sub->_recv_vec, sub->_recv_buf);
+  sub->_recv_buf = NULL;
+  sub->x_nl = sub->_recv_vec;
+  sub->_recv_vec = NULL;
+}
+
 
 // ----------------------------------------------------------------------
 // mrc_mat_mcsr_mpi_apply
@@ -474,8 +545,9 @@ mrc_mat_mcsr_mpi_apply(struct mrc_vec *y, struct mrc_mat *mat, struct mrc_vec *x
   mrc_vec_setup(tmp);
   mrc_vec_set(tmp, 0.0);
 
+  mrc_mat_mcsr_mpi_gather_xc_start(mat, x);
   mrc_mat_apply(tmp, sub->A, x);
-  mrc_mat_mcsr_mpi_gather_xc(mat, x, sub->x_nl);
+  mrc_mat_mcsr_mpi_gather_xc_finish(mat);
   mrc_mat_apply_add(tmp, sub->B, sub->x_nl);
 
   mrc_vec_copy(y, tmp);
@@ -490,18 +562,73 @@ mrc_mat_mcsr_mpi_apply_in_place(struct mrc_mat *mat, struct mrc_vec *x)
 {
   struct mrc_mat_mcsr_mpi *sub = mrc_mat_mcsr_mpi(mat);
 
+  // make a profiler for each unique matrix
+#ifndef _NR_MCSR_MPI_AIP_PROFS
+#define _NR_MCSR_MPI_AIP_PROFS (10)
+#endif
+  static void *mats[_NR_MCSR_MPI_AIP_PROFS] = { NULL };
+  static int apply_profs[_NR_MCSR_MPI_AIP_PROFS] = { 0 };
+  static int commu_profs[_NR_MCSR_MPI_AIP_PROFS] = { 0 };
+  static char name_apply[_NR_MCSR_MPI_AIP_PROFS][20];
+  static char name_commu[_NR_MCSR_MPI_AIP_PROFS][20];
+  static int pr_apply = 0;
+  static int pr_commu = 0;
+  static int pr_all = 0;
+  static int pr_all_commu = 0;
+
+  if (sub->do_profiling) {
+    if (!pr_all) {
+      pr_all = prof_register("mcsr_apply_in_place", 0, 0, 0);
+      pr_all_commu = prof_register("mcsr_apply_in_place_commu", 0, 0, 0);
+    }
+    
+    for(int i=0; i < _NR_MCSR_MPI_AIP_PROFS; i++) {
+      if (mats[i] == NULL) {
+	// make new profilers
+	snprintf(name_apply[i], 20, "mcsr_aip%d", i);
+	snprintf(name_commu[i], 20, "mcsr_aip_commu%d", i);
+	// mprintf("creating profiler: %s\n", name_apply[i]);
+	// mprintf("creating profiler: %s\n", name_commu[i]);
+	pr_apply = prof_register(name_apply[i], 0, 0, 0);
+	pr_commu = prof_register(name_commu[i], 0, 0, 0);
+	mats[i] = (void*)mat;
+	apply_profs[i] = pr_apply;
+	commu_profs[i] = pr_commu;
+	break;
+      } else if ((void*)mat == mats[i]) {
+	// use existing profiler
+	pr_apply = apply_profs[i];
+	pr_commu = commu_profs[i];
+	break;
+      }
+    }
+    if (pr_apply == 0) mprintf("Note: Already profiling %d matrix apply_in_place's; "
+			       "not profiling this one.\n", _NR_MCSR_MPI_AIP_PROFS);
+  }
+  
+  if (pr_all > 0) prof_start(pr_all);
+  if (pr_apply > 0) prof_start(pr_apply);    
   struct mrc_vec *tmp = mrc_vec_create(mrc_mat_comm(mat));
   mrc_vec_set_type(tmp, FLD_TYPE);
   mrc_vec_set_param_int(tmp, "len", mrc_vec_len(x));  
   mrc_vec_setup(tmp);
   mrc_vec_set(tmp, 0.0);
 
+  mrc_mat_mcsr_mpi_gather_xc_start(mat, x);
   mrc_mat_apply(tmp, sub->A, x);
-  mrc_mat_mcsr_mpi_gather_xc(mat, x, sub->x_nl);
+  
+  if (pr_all_commu > 0) prof_start(pr_all_commu);
+  if (pr_commu > 0) prof_start(pr_commu);
+  mrc_mat_mcsr_mpi_gather_xc_finish(mat);
+  if (pr_commu > 0) prof_stop(pr_commu);
+  if (pr_all_commu > 0) prof_stop(pr_all_commu);
+
   mrc_mat_apply_add(tmp, sub->B, sub->x_nl);
   
   mrc_vec_copy(x, tmp);
   mrc_vec_destroy(tmp);
+  if (pr_apply > 0) prof_stop(pr_apply);
+  if (pr_all > 0) prof_stop(pr_all);
 }
 
 // ----------------------------------------------------------------------
@@ -526,6 +653,8 @@ mrc_mat_mcsr_mpi_print(struct mrc_mat *mat)
 
 #define VAR(x) (void *)offsetof(struct mrc_mat_mcsr_mpi, x)
 static struct param mrc_mat_mcsr_mpi_descr[] = {
+  { "verbose"           , VAR(verbose)           , PARAM_BOOL(false)    },
+  { "do_profiling"      , VAR(do_profiling)      , PARAM_BOOL(false)    },  
   {},
 };
 #undef VAR
