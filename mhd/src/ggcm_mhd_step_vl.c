@@ -168,10 +168,10 @@ ggcm_mhd_step_vl_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   ldims[1] = mrc_fld_spatial_dims(x)[1];
   ldims[2] = mrc_fld_spatial_dims(x)[2];
 
-  struct mrc_fld *x_half = ggcm_mhd_step_get_3d_fld(step, 8);
-  struct mrc_fld *flux[3] = { ggcm_mhd_step_get_3d_fld(step, 5),
-			      ggcm_mhd_step_get_3d_fld(step, 5),
-			      ggcm_mhd_step_get_3d_fld(step, 5), };
+  struct mrc_fld *x_half = ggcm_mhd_get_3d_fld(mhd, 8);
+  struct mrc_fld *flux[3] = { ggcm_mhd_get_3d_fld(mhd, 5),
+			      ggcm_mhd_get_3d_fld(mhd, 5),
+			      ggcm_mhd_get_3d_fld(mhd, 5), };
 
   // CFL CONDITION
 
@@ -211,10 +211,10 @@ ggcm_mhd_step_vl_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
   // clean up
 
-  ggcm_mhd_step_put_3d_fld(step, x_half);
-  ggcm_mhd_step_put_3d_fld(step, flux[0]);
-  ggcm_mhd_step_put_3d_fld(step, flux[1]);
-  ggcm_mhd_step_put_3d_fld(step, flux[2]);
+  ggcm_mhd_put_3d_fld(mhd, x_half);
+  ggcm_mhd_put_3d_fld(mhd, flux[0]);
+  ggcm_mhd_put_3d_fld(mhd, flux[1]);
+  ggcm_mhd_put_3d_fld(mhd, flux[2]);
 }
 
 // ----------------------------------------------------------------------

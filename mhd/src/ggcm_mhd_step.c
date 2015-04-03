@@ -137,37 +137,6 @@ ggcm_mhd_step_setup_flds(struct ggcm_mhd_step *step)
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_step_get_3d_fld
-//
-// FIXME, this should cache the fields, rather than creating/destroying
-// all the time
-
-struct mrc_fld *
-ggcm_mhd_step_get_3d_fld(struct ggcm_mhd_step *step, int nr_comps)
-{
-  struct mrc_fld *fld = step->mhd->fld;
-
-  struct mrc_fld *f = mrc_fld_create(ggcm_mhd_step_comm(step));
-  mrc_fld_set_type(f , mrc_fld_type(fld));
-  mrc_fld_set_param_obj(f, "domain", fld->_domain);
-  mrc_fld_set_param_int(f, "nr_spatial_dims", 3);
-  mrc_fld_set_param_int(f, "nr_comps", nr_comps);
-  mrc_fld_set_param_int(f, "nr_ghosts", fld->_nr_ghosts);
-  mrc_fld_setup(f);
-
-  return f;
-}
-
-// ----------------------------------------------------------------------
-// ggcm_mhd_step_put_3d_fld
-
-void
-ggcm_mhd_step_put_3d_fld(struct ggcm_mhd_step *step, struct mrc_fld *f)
-{
-  mrc_fld_destroy(f);
-}
-
-// ----------------------------------------------------------------------
 // ggcm_mhd_step_get_1d_fld
 //
 

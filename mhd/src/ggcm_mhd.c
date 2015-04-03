@@ -278,6 +278,34 @@ ggcm_mhd_get_crds_ec(struct ggcm_mhd *mhd, int ix, int iy, int iz, int p,
   }
 }
 
+// ----------------------------------------------------------------------
+// ggcm_mhd_get_3d_fld
+//
+// FIXME, this should cache the fields, rather than creating/destroying
+// all the time
+
+struct mrc_fld *
+ggcm_mhd_get_3d_fld(struct ggcm_mhd *mhd, int nr_comps)
+{
+  struct mrc_fld *f = mrc_fld_create(ggcm_mhd_comm(mhd));
+  mrc_fld_set_type(f , mrc_fld_type(mhd->fld));
+  mrc_fld_set_param_obj(f, "domain", mhd->fld->_domain);
+  mrc_fld_set_param_int(f, "nr_spatial_dims", 3);
+  mrc_fld_set_param_int(f, "nr_comps", nr_comps);
+  mrc_fld_set_param_int(f, "nr_ghosts", mhd->fld->_nr_ghosts);
+  mrc_fld_setup(f);
+
+  return f;
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_put_3d_fld
+
+void
+ggcm_mhd_put_3d_fld(struct ggcm_mhd *mhd, struct mrc_fld *f)
+{
+  mrc_fld_destroy(f);
+}
 
 // ----------------------------------------------------------------------
 // ggcm_mhd_default_box

@@ -160,7 +160,7 @@ compute_E(struct ggcm_mhd_step *step, struct mrc_fld *E,
 	  struct mrc_fld *x, struct mrc_fld *B_cc, struct mrc_fld *fluxes[3],
 	  int bnd)
 {
-  struct mrc_fld *Ecc = ggcm_mhd_step_get_3d_fld(step, 3);
+  struct mrc_fld *Ecc = ggcm_mhd_get_3d_fld(step->mhd, 3);
 
   // calculate cell-centered E first
   for (int p = 0; p < mrc_fld_nr_patches(Ecc); p++) {
@@ -180,7 +180,7 @@ compute_E(struct ggcm_mhd_step *step, struct mrc_fld *E,
   compute_E1_edge(E, Ecc, fluxes, bnd - 1);
   compute_E2_edge(E, Ecc, fluxes, bnd - 1);
 
-  ggcm_mhd_step_put_3d_fld(step, Ecc);
+  ggcm_mhd_put_3d_fld(step->mhd, Ecc);
 }
 
 static void
@@ -273,7 +273,7 @@ compute_Ediffu_const(struct ggcm_mhd_step *step, struct mrc_fld *E_ec,
                      struct mrc_fld *x, struct mrc_fld *B_cc)
 {
   struct ggcm_mhd *mhd = step->mhd;
-  struct mrc_fld *j_ec = ggcm_mhd_step_get_3d_fld(step, 3);
+  struct mrc_fld *j_ec = ggcm_mhd_get_3d_fld(mhd, 3);
 
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
 
@@ -307,7 +307,7 @@ compute_Ediffu_const(struct ggcm_mhd_step *step, struct mrc_fld *E_ec,
 
   // FIXME!!! energy flux
 
-  ggcm_mhd_step_put_3d_fld(step, j_ec);
+  ggcm_mhd_put_3d_fld(mhd, j_ec);
 }
 
 // ----------------------------------------------------------------------
@@ -383,17 +383,17 @@ ggcm_mhd_step_vlct_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 {
   struct ggcm_mhd_step_vlct *sub = ggcm_mhd_step_vlct(step);
   struct ggcm_mhd *mhd = step->mhd;
-  struct mrc_fld *B_cc = ggcm_mhd_step_get_3d_fld(step, 3);
+  struct mrc_fld *B_cc = ggcm_mhd_get_3d_fld(mhd, 3);
 
   ldims[0] = mrc_fld_spatial_dims(x)[0];
   ldims[1] = mrc_fld_spatial_dims(x)[1];
   ldims[2] = mrc_fld_spatial_dims(x)[2];
 
-  struct mrc_fld *x_half = ggcm_mhd_step_get_3d_fld(step, 8);
-  struct mrc_fld *E_ec = ggcm_mhd_step_get_3d_fld(step, 3);
-  struct mrc_fld *flux[3] = { ggcm_mhd_step_get_3d_fld(step, 8),
-			      ggcm_mhd_step_get_3d_fld(step, 8),
-			      ggcm_mhd_step_get_3d_fld(step, 8), };
+  struct mrc_fld *x_half = ggcm_mhd_get_3d_fld(mhd, 8);
+  struct mrc_fld *E_ec = ggcm_mhd_get_3d_fld(mhd, 3);
+  struct mrc_fld *flux[3] = { ggcm_mhd_get_3d_fld(mhd, 8),
+			      ggcm_mhd_get_3d_fld(mhd, 8),
+			      ggcm_mhd_get_3d_fld(mhd, 8), };
 
   // CFL CONDITION
 
@@ -462,12 +462,12 @@ ggcm_mhd_step_vlct_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
   // clean up
 
-  ggcm_mhd_step_put_3d_fld(step, B_cc);
-  ggcm_mhd_step_put_3d_fld(step, x_half);
-  ggcm_mhd_step_put_3d_fld(step, E_ec);
-  ggcm_mhd_step_put_3d_fld(step, flux[0]);
-  ggcm_mhd_step_put_3d_fld(step, flux[1]);
-  ggcm_mhd_step_put_3d_fld(step, flux[2]);
+  ggcm_mhd_put_3d_fld(mhd, B_cc);
+  ggcm_mhd_put_3d_fld(mhd, x_half);
+  ggcm_mhd_put_3d_fld(mhd, E_ec);
+  ggcm_mhd_put_3d_fld(mhd, flux[0]);
+  ggcm_mhd_put_3d_fld(mhd, flux[1]);
+  ggcm_mhd_put_3d_fld(mhd, flux[2]);
 }
 
 // ----------------------------------------------------------------------
@@ -501,12 +501,12 @@ ggcm_mhd_step_vlct_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
   struct mrc_fld *E = mrc_fld_get_as(Eout, FLD_TYPE);
   struct mrc_fld *x = mrc_fld_get_as(state_vec, FLD_TYPE);
 
-  struct mrc_fld *B_cc = ggcm_mhd_step_get_3d_fld(step, 3);
-  struct mrc_fld *Ediff = ggcm_mhd_step_get_3d_fld(step, 3);
-  struct mrc_fld *Econv = ggcm_mhd_step_get_3d_fld(step, 3);
-  struct mrc_fld *flux[3] = { ggcm_mhd_step_get_3d_fld(step, 8),
-                              ggcm_mhd_step_get_3d_fld(step, 8),
-                              ggcm_mhd_step_get_3d_fld(step, 8), };
+  struct mrc_fld *B_cc = ggcm_mhd_get_3d_fld(mhd, 3);
+  struct mrc_fld *Ediff = ggcm_mhd_get_3d_fld(mhd, 3);
+  struct mrc_fld *Econv = ggcm_mhd_get_3d_fld(mhd, 3);
+  struct mrc_fld *flux[3] = { ggcm_mhd_get_3d_fld(mhd, 8),
+                              ggcm_mhd_get_3d_fld(mhd, 8),
+                              ggcm_mhd_get_3d_fld(mhd, 8), };
 
   // Do diffusive terms first
   compute_B_cc(B_cc, x, 3, 3);
@@ -533,12 +533,12 @@ ggcm_mhd_step_vlct_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
     }
   }  mrc_fld_foreach_end;
 
-  ggcm_mhd_step_put_3d_fld(step, B_cc);
-  ggcm_mhd_step_put_3d_fld(step, Ediff);
-  ggcm_mhd_step_put_3d_fld(step, Econv);
-  ggcm_mhd_step_put_3d_fld(step, flux[0]);
-  ggcm_mhd_step_put_3d_fld(step, flux[1]);
-  ggcm_mhd_step_put_3d_fld(step, flux[2]);
+  ggcm_mhd_put_3d_fld(mhd, B_cc);
+  ggcm_mhd_put_3d_fld(mhd, Ediff);
+  ggcm_mhd_put_3d_fld(mhd, Econv);
+  ggcm_mhd_put_3d_fld(mhd, flux[0]);
+  ggcm_mhd_put_3d_fld(mhd, flux[1]);
+  ggcm_mhd_put_3d_fld(mhd, flux[2]);
   mrc_fld_put_as(E, Eout);
   // FIXME, should use _put_as, but don't want copy-back
   if (strcmp(mrc_fld_type(state_vec), FLD_TYPE) != 0) {

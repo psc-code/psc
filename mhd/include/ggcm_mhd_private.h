@@ -67,6 +67,11 @@ extern struct ggcm_mhd_ops ggcm_mhd_ops_box;
 
 // ----------------------------------------------------------------------
 
+// helpers for subclasses to use
+
+struct mrc_fld *ggcm_mhd_get_3d_fld(struct ggcm_mhd *mhd, int nr_comps);
+void ggcm_mhd_put_3d_fld(struct ggcm_mhd *mhd, struct mrc_fld *f);
+
 
 // direct access to coords for a given cell
 // (ideally avoided for performance critical parts, because it's slower)
