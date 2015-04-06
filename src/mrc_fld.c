@@ -241,6 +241,15 @@ mrc_fld_set_array(struct mrc_fld *fld, void *arr)
 }
 
 // ----------------------------------------------------------------------
+// mrc_fld_replace_array
+
+void
+mrc_fld_replace_array(struct mrc_fld *fld, void *arr)
+{
+  mrc_vec_replace_array(fld->_vec, arr);
+}
+
+// ----------------------------------------------------------------------
 // mrc_fld_write
 
 static void
