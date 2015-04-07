@@ -15,6 +15,7 @@
 #include <mrc_ddc.h>
 #include <mrc_ts.h>
 #include <mrc_ts_monitor.h>
+#include <mrc_io.h>
 #include <mrc_profile.h>
 
 #include <assert.h>
@@ -437,6 +438,37 @@ struct mrc_class_ggcm_mhd mrc_class_ggcm_mhd = {
   .setup            = _ggcm_mhd_setup,
   .read             = _ggcm_mhd_read,
 };
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_wrongful_death
+//
+// Dump state and MPI_Abort, used for dtmin type crashes. This must be
+// called from all mhd processes.
+
+void
+ggcm_mhd_wrongful_death(struct ggcm_mhd *mhd, int errcode)
+{
+  struct ggcm_mhd_diag *diag = ggcm_mhd_diag_create(ggcm_mhd_comm(mhd));
+  // this extra diag will deadlock if using the fortran diag server...
+  // FIXME: this is not a reliable way to fix the problem, but it works at the moment
+  assert(strcmp(ggcm_mhd_diag_type(mhd->diag), "s2") != 0 &&
+         strcmp(ggcm_mhd_diag_type(mhd->diag), "f2") != 0);
+  ggcm_mhd_diag_set_type(diag, "c");
+  ggcm_mhd_diag_set_param_obj(diag, "mhd", mhd);
+  ggcm_mhd_diag_set_param_string(diag, "run", "wrongful_death");
+  ggcm_mhd_diag_set_param_string(diag, "fields", "rr1:rv1:uu1:b1:rr:v:pp:b:divb:ymask");
+  ggcm_mhd_diag_setup(diag);
+  // ggcm_mhd_diag_view(diag);
+  
+  mpi_printf(ggcm_mhd_comm(mhd), "Something bad happened. Dumping state then "
+             "keeling over.\n");
+  // ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);  // is this needed?
+  ggcm_mhd_diag_run_now(diag, mhd->fld, DIAG_TYPE_3D, 0);
+  ggcm_mhd_diag_shutdown(diag);
+  
+  MPI_Barrier(ggcm_mhd_comm(mhd));
+  MPI_Abort(MPI_COMM_WORLD, errcode);
+}
 
 // ----------------------------------------------------------------------
 // ts_ggcm_mhd_step_calc_rhs
