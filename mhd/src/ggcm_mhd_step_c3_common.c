@@ -895,7 +895,7 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
 static void
 ggcm_mhd_step_c3_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
-                          struct mrc_fld *state_vec)
+                          struct mrc_fld *x)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
@@ -903,7 +903,6 @@ ggcm_mhd_step_c3_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
   // the state vector should already be FLD_TYPE, but Eout is the data type
   // of the output
   struct mrc_fld *E = mrc_fld_get_as(Eout, FLD_TYPE);
-  struct mrc_fld *x = mrc_fld_get_as(state_vec, FLD_TYPE);
   struct mrc_fld *prim = ggcm_mhd_get_3d_fld(mhd, 5);
 
   ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
@@ -913,10 +912,6 @@ ggcm_mhd_step_c3_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
   
   ggcm_mhd_put_3d_fld(mhd, prim);
   mrc_fld_put_as(E, Eout);
-  // FIXME, should use _put_as, but don't want copy-back
-  if (strcmp(mrc_fld_type(state_vec), FLD_TYPE) != 0) {
-    mrc_fld_destroy(x);
-  }
 } 
 
 // ----------------------------------------------------------------------
