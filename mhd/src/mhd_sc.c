@@ -1,3 +1,5 @@
+#include <mrc_profile.h>
+#include <mrc_bits.h>
 
 // ----------------------------------------------------------------------
 // zmaskn
@@ -221,3 +223,82 @@ newstep_sc_ggcm(struct ggcm_mhd *mhd, struct mrc_fld *x)
   return dtn;
 }
 
+// ----------------------------------------------------------------------
+// ggcm_mhd_badval_checks
+// 
+// Check for bad values and call wrongful death if we see any,
+// abort with values:
+//  Err Code       Reason
+//     3           NaNs in first 8 components of x
+//     4           density smaller than 0.0
+//     5           pressure smaller than 0.0
+
+static void __unused
+ggcm_mhd_badval_checks(struct ggcm_mhd *mhd, struct mrc_fld *x,
+                       struct mrc_fld *prim)
+{
+  static int pr = 0;
+  int local_has_badval = 0;
+  int global_has_badval = 0;
+  
+  int max_comp = MIN(mrc_fld_nr_comps(x), 8);
+
+  mrc_fld_data_t ppmin = 0.0;
+  mrc_fld_data_t rrmin = 0.0;
+
+  if (mhd->do_badval_checks) {
+    if (!pr) {
+      pr = prof_register("badval_checks", 0.0, 0, 0);
+    }
+    
+    prof_start(pr);
+
+    // Check for negative pressure if we have a valid prim
+    if (prim) {
+      for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+        mrc_fld_foreach(prim, i,j,k, 0, 0) {
+          if (PP_(prim, i,j,k, p) < ppmin) {
+            local_has_badval = 5;
+            mprintf("pressure @ (%d %d %d p=%d) = %lg < %lg\n",
+                    i, j, k, p, PP_(prim, i,j,k, p), ppmin);
+          }
+        } mrc_fld_foreach_end;
+        if (local_has_badval) {
+          break;
+        }
+      }
+    }
+  
+    // check for NaNs and negative density
+    if (!local_has_badval && x) {
+      for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+        mrc_fld_foreach(x, i,j,k, 0, 0) {
+          // Check for negative density
+          if (RR_(x, i,j,k, p) < rrmin) {
+            local_has_badval = 4;
+            mprintf("density @ (%d %d %d p=%d) = %lg < %lg\n",
+                    i, j, k, p, RR_(prim, i,j,k, p), rrmin);
+          }
+          
+          // Check for NaN
+          for (int comp=0; comp < max_comp; comp++) {
+            if isnan(M3(x, comp, i,j,k, p)) {
+              local_has_badval = 3;
+              mprintf("NaN in field %d @ (%d %d %d p=%d)\n", comp, i, j, k, p);
+            }
+          }
+        } mrc_fld_foreach_end;
+        if (local_has_badval) {
+          break;
+        }
+      }
+    }
+    MPI_Allreduce(&local_has_badval, &global_has_badval, 1, MPI_INT, MPI_MAX,
+                  ggcm_mhd_comm(mhd));
+    if (global_has_badval) {
+      ggcm_mhd_wrongful_death(mhd, global_has_badval);
+    }
+    
+    prof_stop(pr);
+  }
+}

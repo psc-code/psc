@@ -425,6 +425,7 @@ static struct param ggcm_mhd_descr[] = {
   { "bnd"             , VAR(bnd)             , MRC_VAR_OBJ(ggcm_mhd_bnd)      },
   { "ic"              , VAR(ic)              , MRC_VAR_OBJ(ggcm_mhd_ic)       },
 
+  { "do_badval_checks", VAR(do_badval_checks), PARAM_BOOL(true)             },
   {},
 };
 #undef VAR

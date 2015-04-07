@@ -871,6 +871,10 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   pushstage_c(step, mhd->dt, x_half, x, prim, LIMIT_1);
   prof_stop(pr_B);
 
+  // --- check for NaNs and negative pressures
+  // (still controlled by do_badval_checks)
+  ggcm_mhd_badval_checks(mhd, x, prim);
+  
   // --- update timestep
   if (step->do_nwst) {
     dtn = mrc_fld_min(1., dtn); // FIXME, only kept for compatibility

@@ -782,6 +782,10 @@ ggcm_mhd_step_c2_corr(struct ggcm_mhd_step *step)
   prof_start(PR);
   pushstage_c(step->mhd, step->mhd->dt, _RR1, _RR2, _RR1, LIMIT_1);
   prof_stop(PR);
+  
+  // --- check for NaNs and small density
+  // (still controlled by do_badval_checks)
+  ggcm_mhd_badval_checks(step->mhd, step->mhd->fld, step->mhd->fld);
 }
 
 // ----------------------------------------------------------------------

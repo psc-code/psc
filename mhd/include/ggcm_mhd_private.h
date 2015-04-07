@@ -58,6 +58,9 @@ struct ggcm_mhd {
 
   float bndt; // .5 * current timestep in sec, not alfven times
 
+  // for debugging
+  bool do_badval_checks; // check for NaN or negative density / pressure
+  
   // for easy access, cached from ::domain
   int im[3];  // local domain excl ghost points
   int img[3]; // local domain incl ghost points
