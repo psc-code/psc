@@ -88,6 +88,8 @@ ggcm_mhd_step_run_predcorr(struct ggcm_mhd_step *step, struct mrc_fld *x)
   if (step->do_nwst) {
     assert(ops && ops->newstep);
     ops->newstep(step, &dtn);
+    // yes, dtn isn't set to mhd->dt until the end of the step... this
+    // is what the fortran code did
   }
 
   ggcm_mhd_fill_ghosts(mhd, x, _RR1, mhd->time);
@@ -105,11 +107,14 @@ ggcm_mhd_step_run_predcorr(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
     if (dtn > 1.02 * mhd->dt || dtn < mhd->dt / 1.01) {
       mpi_printf(ggcm_mhd_comm(mhd), "switched dt %g <- %g\n", dtn, mhd->dt);
-      mhd->dt = dtn;
-      if (mhd->dt < mhd->par.dtmin) {
-        mpi_printf(ggcm_mhd_comm(mhd), "!!! dt < dtmin, aborting now!\n");
-        MPI_Abort(MPI_COMM_WORLD, 1);
+      
+      if (mhd->istep > 1 && (dtn < 0.5 * mhd->dt || dtn > 2.0 * mhd->dt)) {
+        mpi_printf(ggcm_mhd_comm(mhd), "!!! dt changed by > a factor of 2. "
+                   "Dying now!\n");
+        ggcm_mhd_wrongful_death(mhd, 2);
       }
+      
+      mhd->dt = dtn;
     }
   }
 

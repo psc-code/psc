@@ -506,9 +506,18 @@ ggcm_mhd_step_vlct_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
     mhd->dt = newstep_fc(mhd, x, B_cc);
     if (mhd->dt != old_dt) {
       mpi_printf(ggcm_mhd_comm(mhd), "switched dt %g <- %g\n", mhd->dt, old_dt);
+
       if (mhd->dt < mhd->par.dtmin) {
-        mpi_printf(ggcm_mhd_comm(mhd), "!!! dt < dtmin, aborting now!\n");
-        MPI_Abort(MPI_COMM_WORLD, 1);
+        mpi_printf(ggcm_mhd_comm(mhd), "!!! dt < dtmin. Dying now!\n");
+        mpi_printf(ggcm_mhd_comm(mhd), "!!! dt %g -> %g, dtmin = %g\n",
+                   old_dt, mhd->dt, mhd->par.dtmin);
+        ggcm_mhd_wrongful_death(mhd, -1);
+      }
+
+      if (mhd->istep > 1 && (mhd->dt < 0.5 * old_dt || mhd->dt > 2.0 * old_dt)) {
+        mpi_printf(ggcm_mhd_comm(mhd), "!!! dt changed by > a factor of 2. "
+                   "Dying now!\n");
+        ggcm_mhd_wrongful_death(mhd, 2);
       }
     }
   }
