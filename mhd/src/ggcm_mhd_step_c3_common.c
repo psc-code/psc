@@ -42,6 +42,8 @@ struct ggcm_mhd_step_c3 {
 
   struct mrc_fld *zmask;
   struct mrc_fld *rmask;
+  
+  bool enforce_rrmin;
 };
 
 #define ggcm_mhd_step_c3(step) mrc_to_subobj(step, struct ggcm_mhd_step_c3)
@@ -857,6 +859,9 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   // set x_half = x^n, then advance to n+1/2
   mrc_fld_copy_range(x_half, x, 0, 8);
   pushstage_c(step, .5f * mhd->dt, x, x_half, prim, LIMIT_NONE);
+  if (sub->enforce_rrmin) {
+    enforce_rrmin_sc(mhd, x_half);
+  }
   prof_stop(pr_A);
 
 #if 0
@@ -880,6 +885,9 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   ggcm_mhd_fill_ghosts(mhd, x_half, 0, mhd->time + mhd->bndt);
   ggcm_mhd_step_c3_primvar(step, prim, x_half);
   pushstage_c(step, mhd->dt, x_half, x, prim, LIMIT_1);
+  if (sub->enforce_rrmin) {
+    enforce_rrmin_sc(mhd, x_half);
+  }
   prof_stop(pr_B);
 
   // --- check for NaNs and negative pressures
@@ -963,6 +971,8 @@ ggcm_mhd_step_c3_diag_item_rmask_run(struct ggcm_mhd_step *step,
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_step_c3, x)
 static struct param ggcm_mhd_step_c3_descr[] = {
+  { "enforce_rrmin"   , VAR(enforce_rrmin)   , PARAM_BOOL(true)             },
+  
   { "reconstruct"     , VAR(reconstruct)     , MRC_VAR_OBJ(mhd_reconstruct) },
   { "riemann"         , VAR(riemann)         , MRC_VAR_OBJ(mhd_riemann)     },
 

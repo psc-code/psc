@@ -307,3 +307,54 @@ badval_checks_sc(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *prim)
     prof_stop(pr);
   }
 }
+
+// ----------------------------------------------------------------------
+// enforce_rrmin_sc
+//
+// nudge rr and uu such that rr >= rrmin if needed
+
+static void __unused
+enforce_rrmin_sc(struct ggcm_mhd *mhd, struct mrc_fld *x)
+{
+  static int pr = 0;
+  mrc_fld_data_t rrmin, s;
+  mrc_fld_data_t rr, rrvv, pp, uu, new_rr, new_uu;
+  float *crdx, *crdy, *crdz;
+  
+  if (!pr) {
+    pr = prof_register("enforce_rrmin", 0, 0, 0);
+  }
+  
+  prof_start(pr);
+  crdx = ggcm_mhd_crds_get_crd(mhd->crds, 0, FX1);
+  crdy = ggcm_mhd_crds_get_crd(mhd->crds, 1, FX1);
+  crdz = ggcm_mhd_crds_get_crd(mhd->crds, 2, FX1);
+  
+  rrmin = mhd->par.rrmin / mhd->par.rrnorm;
+  s = mhd->par.gamm - 1.0;
+  
+  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+    mrc_fld_foreach(x, ix,iy,iz, 0, 0) {
+      rr = RR_(x, ix, iy, iz, p);
+      if (rr < rrmin) {
+        // get pressure
+        rrvv = (sqr(RVX_(x, ix, iy, iz, p)) +
+                sqr(RVY_(x, ix, iy, iz, p)) +
+                sqr(RVZ_(x, ix, iy, iz, p)));
+        uu = UU_(x, ix, iy, iz, p);
+        pp = s * (uu - 0.5 * rrvv / rr);
+        
+        // set new values using rrmin
+        new_rr = rrmin;
+        new_uu = (pp / s) + (0.5 * rrvv / rrmin);
+        RR_(x, ix, iy, iz, p) = new_rr;
+        UU_(x, ix, iy, iz, p) = new_uu;
+        
+        mprintf("!! Note: enforcing min density at (x=%g y=%g z=%g): "
+                "rr %lg -> %lg, uu %lg -> %lg\n",
+                crdx[ix], crdy[iy], crdz[iz], rr, new_rr, uu, new_uu);
+      }
+    } mrc_fld_foreach_end;
+  }
+  prof_stop(pr);
+}
