@@ -457,7 +457,7 @@ ggcm_mhd_wrongful_death(struct ggcm_mhd *mhd, int errcode)
   ggcm_mhd_diag_set_type(diag, "c");
   ggcm_mhd_diag_set_param_obj(diag, "mhd", mhd);
   ggcm_mhd_diag_set_param_string(diag, "run", "wrongful_death");
-  ggcm_mhd_diag_set_param_string(diag, "fields", "rr1:rv1:uu1:b1:rr:v:pp:b:divb:ymask");
+  ggcm_mhd_diag_set_param_string(diag, "fields", "rr1:rv1:uu1:b1:rr:pp:v:b:j:e_cc:divb");
   ggcm_mhd_diag_setup(diag);
   // ggcm_mhd_diag_view(diag);
   
