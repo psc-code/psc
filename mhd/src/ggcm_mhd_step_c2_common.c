@@ -785,7 +785,7 @@ ggcm_mhd_step_c2_corr(struct ggcm_mhd_step *step)
   
   // --- check for NaNs and small density
   // (still controlled by do_badval_checks)
-  ggcm_mhd_badval_checks(step->mhd, step->mhd->fld, step->mhd->fld);
+  badval_checks_sc(step->mhd, step->mhd->fld, step->mhd->fld);
 }
 
 // ----------------------------------------------------------------------

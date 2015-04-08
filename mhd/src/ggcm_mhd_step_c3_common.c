@@ -884,7 +884,7 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
   // --- check for NaNs and negative pressures
   // (still controlled by do_badval_checks)
-  ggcm_mhd_badval_checks(mhd, x, prim);
+  badval_checks_sc(mhd, x, prim);
   
   // --- update timestep
   if (step->do_nwst) {

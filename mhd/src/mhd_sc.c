@@ -224,7 +224,7 @@ newstep_sc_ggcm(struct ggcm_mhd *mhd, struct mrc_fld *x)
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_badval_checks
+// badval_checks_sc
 // 
 // Check for bad values and call wrongful death if we see any,
 // abort with values:
@@ -234,17 +234,17 @@ newstep_sc_ggcm(struct ggcm_mhd *mhd, struct mrc_fld *x)
 //     5           pressure smaller than 0.0
 
 static void __unused
-ggcm_mhd_badval_checks(struct ggcm_mhd *mhd, struct mrc_fld *x,
-                       struct mrc_fld *prim)
+badval_checks_sc(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *prim)
 {
   static int pr = 0;
+  float *crdx, *crdy, *crdz;
   int local_has_badval = 0;
   int global_has_badval = 0;
   
   int max_comp = MIN(mrc_fld_nr_comps(x), 8);
 
   mrc_fld_data_t ppmin = 0.0;
-  mrc_fld_data_t rrmin = 0.0;
+  mrc_fld_data_t rrmin = 0.0;  // mhd->par.rrmin / mhd->par.rrnorm
 
   if (mhd->do_badval_checks) {
     if (!pr) {
@@ -253,14 +253,18 @@ ggcm_mhd_badval_checks(struct ggcm_mhd *mhd, struct mrc_fld *x,
     
     prof_start(pr);
 
+    crdx = ggcm_mhd_crds_get_crd(mhd->crds, 0, FX1);
+    crdy = ggcm_mhd_crds_get_crd(mhd->crds, 1, FX1);
+    crdz = ggcm_mhd_crds_get_crd(mhd->crds, 2, FX1);
+
     // Check for negative pressure if we have a valid prim
     if (prim) {
-      for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+      for (int p = 0; p < mrc_fld_nr_patches(prim); p++) {
         mrc_fld_foreach(prim, i,j,k, 0, 0) {
           if (PP_(prim, i,j,k, p) < ppmin) {
             local_has_badval = 5;
-            mprintf("pressure @ (%d %d %d p=%d) = %lg < %lg\n",
-                    i, j, k, p, PP_(prim, i,j,k, p), ppmin);
+            mprintf("pressure @ (x=%g y=%g z=%g) = %lg < %lg\n",
+                    crdx[i], crdy[j], crdz[k], PP_(prim, i,j,k, p), ppmin);
           }
         } mrc_fld_foreach_end;
         if (local_has_badval) {
@@ -276,15 +280,16 @@ ggcm_mhd_badval_checks(struct ggcm_mhd *mhd, struct mrc_fld *x,
           // Check for negative density
           if (RR_(x, i,j,k, p) < rrmin) {
             local_has_badval = 4;
-            mprintf("density @ (%d %d %d p=%d) = %lg < %lg\n",
-                    i, j, k, p, RR_(prim, i,j,k, p), rrmin);
+            mprintf("density @ (x=%g y=%g z=%g) = %lg < %lg\n",
+                    crdx[i], crdy[j], crdz[k], RR_(prim, i,j,k, p), rrmin);
           }
           
           // Check for NaN
           for (int comp=0; comp < max_comp; comp++) {
             if isnan(M3(x, comp, i,j,k, p)) {
               local_has_badval = 3;
-              mprintf("NaN in field %d @ (%d %d %d p=%d)\n", comp, i, j, k, p);
+              mprintf("NaN in field %d @ (x=%g y=%g z=%g)\n",
+                      comp, crdx[i], crdy[j], crdz[k]);
             }
           }
         } mrc_fld_foreach_end;
