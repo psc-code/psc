@@ -26,7 +26,8 @@ ggcm_mhd_calc_currcc(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
   mrc_domain_get_local_patch_info(mhd->domain, 0, &info);
   struct mrc_fld *tmp = mrc_fld_duplicate(currcc);
 
-  struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
+  struct mrc_fld *f = ggcm_mhd_fld_get_as(fld, FLD_TYPE, MT_SEMI_CONSERVATIVE_GGCM,
+					  BX, BX + 3);
   struct mrc_fld *t = mrc_fld_get_as(tmp, FLD_TYPE);
   struct mrc_fld *c = mrc_fld_get_as(currcc, FLD_TYPE);
   
@@ -66,7 +67,7 @@ ggcm_mhd_calc_currcc(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
 
   mrc_fld_put_as(c, currcc);
   mrc_fld_put_as(t, tmp);
-  mrc_fld_put_as(f, fld);
+  ggcm_mhd_fld_put_as(f, fld, 0, 0);
   mrc_fld_destroy(tmp); 
 }
 
