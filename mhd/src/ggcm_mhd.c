@@ -199,6 +199,17 @@ ggcm_mhd_fill_ghosts(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m, float bnt
   ggcm_mhd_bnd_fill_ghosts(mhd->bnd, fld, m, bntim);
 }
 
+void
+ggcm_mhd_fill_ghosts_E(struct ggcm_mhd *mhd, struct mrc_fld *E)
+{
+  struct ggcm_mhd_ops *ops = ggcm_mhd_ops(mhd);
+  // FIXME, should this be done via ggcm_mhd_bnd instead through ggcm_mhd itself?
+  // FIXME, also could do patch boundary ghost points / the AMR correction
+  if (ops->fill_ghosts_E) {
+    ops->fill_ghosts_E(mhd, E);
+  }
+}
+
 int
 ggcm_mhd_ntot(struct ggcm_mhd *mhd)
 {
