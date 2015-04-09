@@ -358,6 +358,7 @@ ggcm_mhd_default_box(struct ggcm_mhd *mhd)
   mhd->par.resnorm = 1.f;
   mhd->par.tnorm = 1.f;
   mhd->par.diffco = 0.f;
+  mhd->par.r_db_dt = 0.f;
 
   ggcm_mhd_set_param_float(mhd, "isphere", 0.);
   ggcm_mhd_set_param_float(mhd, "diffsphere", 0.);
@@ -407,6 +408,7 @@ static struct param ggcm_mhd_descr[] = {
   { "speedlimit"      , VAR(par.speedlimit)  , PARAM_FLOAT(1500.f)   },
   { "thx"             , VAR(par.thx)         , PARAM_FLOAT(.40f)     },
   { "isphere"         , VAR(par.isphere)     , PARAM_FLOAT(3.0f)     },
+  { "r_db_dt"         , VAR(par.r_db_dt)     , PARAM_FLOAT(1.4f)     },
   { "timelo"          , VAR(par.timelo)      , PARAM_FLOAT(0.f)      },
   { "d_i"             , VAR(par.d_i)         , PARAM_FLOAT(0.f)      },
   { "dtmin"           , VAR(par.dtmin)       , PARAM_FLOAT(.0002f)   },

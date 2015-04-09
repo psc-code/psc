@@ -40,6 +40,7 @@ update_ct_uniform(struct ggcm_mhd *mhd,
     //    correct_E(mhd, E);
   }
 
+  const float r_db_dt_sq = sqr(mhd->par.r_db_dt);
   int gdims[3]; mrc_domain_get_global_dims(x->_domain, gdims);
   int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
   int l[3], r[3];
@@ -60,30 +61,52 @@ update_ct_uniform(struct ggcm_mhd *mhd,
     for (int k = -l[2]; k < ldims[2] + r[2]; k++) {
       for (int j = -l[1]; j < ldims[1] + r[1]; j++) {
 	for (int i = -l[0]; i < ldims[0] + r[0]; i++) {
-	  M3(x, BX, i,j,k, p) += (dt_on_dx[2] * (M3(E, 1, i   ,j   ,k+dz, p) - M3(E, 1, i,j,k, p)) -
-				  dt_on_dx[1] * (M3(E, 2, i   ,j+dy,k   , p) - M3(E, 2, i,j,k, p)));
-	  M3(x, BY, i,j,k, p) += (dt_on_dx[0] * (M3(E, 2, i+dx,j   ,k   , p) - M3(E, 2, i,j,k, p)) -
-				  dt_on_dx[2] * (M3(E, 0, i   ,j   ,k+dz, p) - M3(E, 0, i,j,k, p)));
-	  M3(x, BZ, i,j,k, p) += (dt_on_dx[1] * (M3(E, 0, i   ,j+dy,k   , p) - M3(E, 0, i,j,k, p)) -
-				  dt_on_dx[0] * (M3(E, 1, i+dx,j   ,k   , p) - M3(E, 1, i,j,k, p)));
+	  float crd_fc[3];
+	  ggcm_mhd_get_crds_fc(mhd, i,j,k, p, 0, crd_fc);
+	  if (sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]) >= r_db_dt_sq) {
+	    M3(x, BX, i,j,k, p) += (dt_on_dx[2] * (M3(E, 1, i   ,j   ,k+dz, p) - M3(E, 1, i,j,k, p)) -
+				    dt_on_dx[1] * (M3(E, 2, i   ,j+dy,k   , p) - M3(E, 2, i,j,k, p)));
+	  }
+	  ggcm_mhd_get_crds_fc(mhd, i,j,k, p, 1, crd_fc);
+	  if (sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]) >= r_db_dt_sq) {
+	    M3(x, BY, i,j,k, p) += (dt_on_dx[0] * (M3(E, 2, i+dx,j   ,k   , p) - M3(E, 2, i,j,k, p)) -
+				    dt_on_dx[2] * (M3(E, 0, i   ,j   ,k+dz, p) - M3(E, 0, i,j,k, p)));
+	  }
+	  ggcm_mhd_get_crds_fc(mhd, i,j,k, p, 2, crd_fc);
+	  if (sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]) >= r_db_dt_sq) {
+	    M3(x, BZ, i,j,k, p) += (dt_on_dx[1] * (M3(E, 0, i   ,j+dy,k   , p) - M3(E, 0, i,j,k, p)) -
+				    dt_on_dx[0] * (M3(E, 1, i+dx,j   ,k   , p) - M3(E, 1, i,j,k, p)));
+	  }
 	}
 	int i = ldims[0] + r[0];
-	M3(x, BX, i,j,k, p) += (dt_on_dx[2] * (M3(E, 1, i   ,j   ,k+dz, p) - M3(E, 1, i,j,k, p)) -
-				dt_on_dx[1] * (M3(E, 2, i   ,j+dy,k   , p) - M3(E, 2, i,j,k, p)));
+	float crd_fc[3];
+	ggcm_mhd_get_crds_fc(mhd, i,j,k, p, 0, crd_fc);
+	if (sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]) > r_db_dt_sq) {
+	  M3(x, BX, i,j,k, p) += (dt_on_dx[2] * (M3(E, 1, i   ,j   ,k+dz, p) - M3(E, 1, i,j,k, p)) -
+				  dt_on_dx[1] * (M3(E, 2, i   ,j+dy,k   , p) - M3(E, 2, i,j,k, p)));
+	}
       }
       for (int i = -l[0]; i < ldims[0] + r[0]; i++) {
-	int j = ldims[1] + r[1];
-	M3(x, BY, i,j,k, p) += (dt_on_dx[0] * (M3(E, 2, i+dx,j   ,k   , p) - M3(E, 2, i,j,k, p)) -
-				dt_on_dx[2] * (M3(E, 0, i   ,j   ,k+dz, p) - M3(E, 0, i,j,k, p)));
+      	int j = ldims[1] + r[1];
+	float crd_fc[3];
+	ggcm_mhd_get_crds_fc(mhd, i,j,k, p, 1, crd_fc);
+	if (sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]) > r_db_dt_sq) {
+	  M3(x, BY, i,j,k, p) += (dt_on_dx[0] * (M3(E, 2, i+dx,j   ,k   , p) - M3(E, 2, i,j,k, p)) -
+				  dt_on_dx[2] * (M3(E, 0, i   ,j   ,k+dz, p) - M3(E, 0, i,j,k, p)));
+	}
       }
     }
     if (gdims[2] > 1) {
       for (int j = -l[1]; j < ldims[1] + r[1]; j++) {
-	for (int i = -l[0]; i < ldims[0] + r[0]; i++) {
-	  int k = ldims[2] + r[2];
-	  M3(x, BZ, i,j,k, p) += (dt_on_dx[1] * (M3(E, 0, i   ,j+dy,k   , p) - M3(E, 0, i,j,k, p)) -
-				  dt_on_dx[0] * (M3(E, 1, i+dx,j   ,k   , p) - M3(E, 1, i,j,k, p)));
-	}
+    	for (int i = -l[0]; i < ldims[0] + r[0]; i++) {
+    	  int k = ldims[2] + r[2];
+	  float crd_fc[3];
+	  ggcm_mhd_get_crds_fc(mhd, i,j,k, p, 2, crd_fc);
+	  if (sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]) > r_db_dt_sq) {
+	    M3(x, BZ, i,j,k, p) += (dt_on_dx[1] * (M3(E, 0, i   ,j+dy,k   , p) - M3(E, 0, i,j,k, p)) -
+				    dt_on_dx[0] * (M3(E, 1, i+dx,j   ,k   , p) - M3(E, 1, i,j,k, p)));
+	  }
+    	}
       }
     }
   }
@@ -102,6 +125,7 @@ update_ct(struct ggcm_mhd *mhd,
     //    correct_E(mhd, E);
   }
 
+  const float r_db_dt_sq = sqr(mhd->par.r_db_dt);
   int gdims[3]; mrc_domain_get_global_dims(x->_domain, gdims);
   int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
 
@@ -111,12 +135,22 @@ update_ct(struct ggcm_mhd *mhd,
     float *bd3z = ggcm_mhd_crds_get_crd_p(mhd->crds, 2, BD3, p);
 
     mrc_fld_foreach(x, i,j,k, 0, 1) {
-      M3(x, BX, i,j,k, p) -= dt * (bd3y[j] * (M3(E, 2, i,j+dy,k, p) - M3(E, 2, i,j,k, p)) -
-				   bd3z[k] * (M3(E, 1, i,j,k+dz, p) - M3(E, 1, i,j,k, p)));
-      M3(x, BY, i,j,k, p) -= dt * (bd3z[k] * (M3(E, 0, i,j,k+dz, p) - M3(E, 0, i,j,k, p)) -
-				   bd3x[i] * (M3(E, 2, i+dx,j,k, p) - M3(E, 2, i,j,k, p)));
-      M3(x, BZ, i,j,k, p) -= dt * (bd3x[i] * (M3(E, 1, i+dx,j,k, p) - M3(E, 1, i,j,k, p)) -
-				   bd3y[j] * (M3(E, 0, i,j+dy,k, p) - M3(E, 0, i,j,k, p)));
+      float crd_fc[3];
+      ggcm_mhd_get_crds_fc(mhd, i,j,k, p, 0, crd_fc);
+      if (sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]) >= r_db_dt_sq) {
+	M3(x, BX, i,j,k, p) -= dt * (bd3y[j] * (M3(E, 2, i,j+dy,k, p) - M3(E, 2, i,j,k, p)) -
+				     bd3z[k] * (M3(E, 1, i,j,k+dz, p) - M3(E, 1, i,j,k, p)));
+      }
+      ggcm_mhd_get_crds_fc(mhd, i,j,k, p, 1, crd_fc);
+      if (sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]) >= r_db_dt_sq) {
+	M3(x, BY, i,j,k, p) -= dt * (bd3z[k] * (M3(E, 0, i,j,k+dz, p) - M3(E, 0, i,j,k, p)) -
+				     bd3x[i] * (M3(E, 2, i+dx,j,k, p) - M3(E, 2, i,j,k, p)));
+      }
+      ggcm_mhd_get_crds_fc(mhd, i,j,k, p, 2, crd_fc);
+      if (sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]) >= r_db_dt_sq) {
+	M3(x, BZ, i,j,k, p) -= dt * (bd3x[i] * (M3(E, 1, i+dx,j,k, p) - M3(E, 1, i,j,k, p)) -
+				     bd3y[j] * (M3(E, 0, i,j+dy,k, p) - M3(E, 0, i,j,k, p)));
+      }
     } mrc_fld_foreach_end;
   }
 }
@@ -188,7 +222,7 @@ update_finite_volume_uniform(struct ggcm_mhd *mhd,
 
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
 
-  if (mhd->amr > 0 && do_correct) {
+  if (0&&mhd->amr > 0 && do_correct) {
     for (int d = 0; d < 3; d++) {
       if (gdims[d] > 1) {
 	mrc_ddc_amr_apply(mhd->ddc_amr_flux[d], fluxes[d]);
@@ -230,7 +264,7 @@ update_finite_volume(struct ggcm_mhd *mhd,
   mrc_domain_get_global_dims(x->_domain, gdims);
   int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
 
-  if (mhd->amr > 0 && do_correct) {
+  if (0&&mhd->amr > 0 && do_correct) {
     for (int d = 0; d < 3; d++) {
       if (gdims[d] > 1) {
 	mrc_ddc_amr_apply(mhd->ddc_amr_flux[d], fluxes[d]);
