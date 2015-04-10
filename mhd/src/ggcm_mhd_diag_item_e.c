@@ -72,30 +72,34 @@ ggcm_mhd_diag_item_e_cc_run(struct ggcm_mhd_diag_item *item,
 
   // average ec -> cc
   if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM) {
-    mrc_fld_foreach(Eec, ix,iy,iz, SW_2 - 1, SW_2) {
-      F3(Ecc, 0, ix, iy, iz) =
-        0.25f * (F3(Eec, 0, ix  , iy  , iz  ) + F3(Eec, 0, ix  , iy-1, iz  ) +
-                 F3(Eec, 0, ix  , iy  , iz-1) + F3(Eec, 0, ix  , iy-1, iz-1));
-      F3(Ecc, 1, ix, iy, iz) =
-        0.25f * (F3(Eec, 1, ix  , iy  , iz  ) + F3(Eec, 1, ix-1, iy  , iz  ) +
-                 F3(Eec, 1, ix  , iy  , iz-1) + F3(Eec, 1, ix-1, iy  , iz-1));
-      F3(Ecc, 2, ix, iy, iz) =
-        0.25f * (F3(Eec, 2, ix  , iy  , iz  ) + F3(Eec, 2, ix-1, iy  , iz  ) +
-                 F3(Eec, 2, ix  , iy-1, iz  ) + F3(Eec, 2, ix-1, iy-1, iz  ));
-    } mrc_fld_foreach_end;
+    for (int p = 0; p < mrc_fld_nr_patches(Ecc); p++) {
+      mrc_fld_foreach(Eec, ix,iy,iz, SW_2 - 1, SW_2) {
+	M3(Ecc, 0, ix, iy, iz, p) =
+	  0.25f * (M3(Eec, 0, ix  , iy  , iz  , p) + M3(Eec, 0, ix  , iy-1, iz  , p) +
+		   M3(Eec, 0, ix  , iy  , iz-1, p) + M3(Eec, 0, ix  , iy-1, iz-1, p));
+	M3(Ecc, 1, ix, iy, iz, p) =
+	  0.25f * (M3(Eec, 1, ix  , iy  , iz  , p) + M3(Eec, 1, ix-1, iy  , iz  , p) +
+		   M3(Eec, 1, ix  , iy  , iz-1, p) + M3(Eec, 1, ix-1, iy  , iz-1, p));
+	M3(Ecc, 2, ix, iy, iz, p) =
+	  0.25f * (M3(Eec, 2, ix  , iy  , iz  , p) + M3(Eec, 2, ix-1, iy  , iz  , p) +
+		   M3(Eec, 2, ix  , iy-1, iz  , p) + M3(Eec, 2, ix-1, iy-1, iz  , p));
+      } mrc_fld_foreach_end;
+    }
   } else if (mhd_type == MT_SEMI_CONSERVATIVE ||
              mhd_type == MT_FULLY_CONSERVATIVE) {
-    mrc_fld_foreach(Eec, ix,iy,iz, SW_2, SW_2 - 1) {
-      F3(Ecc, 0, ix, iy, iz) =
-        0.25f * (F3(Eec, 0, ix  , iy  , iz  ) + F3(Eec, 0, ix  , iy+1, iz  ) +
-                 F3(Eec, 0, ix  , iy  , iz+1) + F3(Eec, 0, ix  , iy+1, iz+1));
-      F3(Ecc, 1, ix, iy, iz) =
-        0.25f * (F3(Eec, 1, ix  , iy  , iz  ) + F3(Eec, 1, ix+1, iy  , iz  ) +
-                 F3(Eec, 1, ix  , iy  , iz+1) + F3(Eec, 1, ix+1, iy  , iz+1));
-      F3(Ecc, 2, ix, iy, iz) =
-        0.25f * (F3(Eec, 2, ix  , iy  , iz  ) + F3(Eec, 2, ix+1, iy  , iz  ) +
-                 F3(Eec, 2, ix  , iy+1, iz  ) + F3(Eec, 2, ix+1, iy+1, iz  ));
-    } mrc_fld_foreach_end;
+    for (int p = 0; p < mrc_fld_nr_patches(Ecc); p++) {
+      mrc_fld_foreach(Eec, ix,iy,iz, SW_2, SW_2 - 1) {
+	M3(Ecc, 0, ix, iy, iz, p) =
+	  0.25f * (M3(Eec, 0, ix  , iy  , iz  , p) + M3(Eec, 0, ix  , iy+1, iz  , p) +
+		   M3(Eec, 0, ix  , iy  , iz+1, p) + M3(Eec, 0, ix  , iy+1, iz+1, p));
+	M3(Ecc, 1, ix, iy, iz, p) =
+	  0.25f * (M3(Eec, 1, ix  , iy  , iz  , p) + M3(Eec, 1, ix+1, iy  , iz  , p) +
+		   M3(Eec, 1, ix  , iy  , iz+1, p) + M3(Eec, 1, ix+1, iy  , iz+1, p));
+	M3(Ecc, 2, ix, iy, iz, p) =
+	  0.25f * (M3(Eec, 2, ix  , iy  , iz  , p) + M3(Eec, 2, ix+1, iy  , iz  , p) +
+		   M3(Eec, 2, ix  , iy+1, iz  , p) + M3(Eec, 2, ix+1, iy+1, iz  , p));
+      } mrc_fld_foreach_end;
+    }
   }
 
   ggcm_mhd_diag_c_write_one_field(io, Ecc, 0, "ex_cc", scale_ee, diag_type, plane);
