@@ -20,6 +20,7 @@ struct ggcm_mhd_step {
   struct ggcm_mhd *mhd;
 
   bool do_nwst; // calculate new dt next timestep?
+  bool debug_dump;
   int profile_every; // print out profiling info every so many steps
   bool legacy_dt_handling; // handle timestep update as in legacy Fortran code
 

@@ -58,6 +58,25 @@ ggcm_mhd_step_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   ops->run(step, x);
   prof_stop(pr);
 
+  if (step->debug_dump) {
+    struct ggcm_mhd *mhd = step->mhd;
+    static struct ggcm_mhd_diag *diag;
+    static int cnt;
+    if (!diag) {
+      diag = ggcm_mhd_diag_create(ggcm_mhd_comm(mhd));
+      ggcm_mhd_diag_set_type(diag, "c");
+      ggcm_mhd_diag_set_name(diag, "ggcm_mhd_debug");
+      ggcm_mhd_diag_set_param_obj(diag, "mhd", mhd);
+      ggcm_mhd_diag_set_param_string(diag, "fields", "rr1:rv1:uu1:b1:rr:v:pp:b:divb");
+      ggcm_mhd_diag_set_from_options(diag);
+      ggcm_mhd_diag_set_param_string(diag, "run", "dbg");
+      ggcm_mhd_diag_setup(diag);
+      ggcm_mhd_diag_view(diag);
+    }
+    ggcm_mhd_fill_ghosts(mhd, mhd->fld, 0, mhd->time);
+    ggcm_mhd_diag_run_now(diag, mhd->fld, DIAG_TYPE_3D, cnt++);
+  }
+
   // FIXME, this should be done by mrc_ts
   struct ggcm_mhd *mhd = step->mhd;
   if ((mhd->istep % step->profile_every) == 0) {
@@ -253,6 +272,7 @@ static struct param ggcm_mhd_step_descr[] = {
   // to determine whether to run newstep() the next timestep or not,
   // but this allows to set it to "always on" easily for test runs
   { "do_nwst"           , VAR(do_nwst)           , PARAM_BOOL(false)       },
+  { "debug_dump"        , VAR(debug_dump)        , PARAM_BOOL(false)       },
   { "profile_every"     , VAR(profile_every)     , PARAM_INT(10)           },
   // FIXME, is there really a need to keep this around?
   // It limits the (normalized) to stay <= 1, and it should also wrap the
