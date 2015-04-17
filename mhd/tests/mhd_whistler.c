@@ -63,12 +63,12 @@ whistler_omega_3d(double k[3], double B[3], double rho, double d_i,
                   double polarization)
 {
   double k_par = 0.0;  // = k \cdot B / |B| = |k| \cos \theta
-  double Bsq, Bmag, ksq, kmag;
+  double Bsq, Bmag, ksq;//, kmag;
 
   Bsq = sqr(B[0]) + sqr(B[1]) + sqr(B[2]);
   ksq = sqr(k[0]) + sqr(k[1]) + sqr(k[2]);
   Bmag = sqrt(Bsq);
-  kmag = sqrt(ksq);
+  //  kmag = sqrt(ksq);
   for (int i = 0; i < 3; i++) {
     k_par += B[i] * k[i] / Bmag;
   }
