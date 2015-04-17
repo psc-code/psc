@@ -21,6 +21,8 @@
 
 static const int nghost = 4; // FIXME
 
+#include <string.h>
+
 static int ldims[3];
 
 // ======================================================================
@@ -255,15 +257,14 @@ ggcm_mhd_step_vlct_destroy(struct ggcm_mhd_step *step)
 }
 
 // ----------------------------------------------------------------------
-// magdiffu_const
+// compute_Ediffu_const
 
 static void
-magdiffu_const(struct ggcm_mhd_step *step, struct mrc_fld *x, struct mrc_fld *B_cc,
-	       mrc_fld_data_t dt)
+compute_Ediffu_const(struct ggcm_mhd_step *step, struct mrc_fld *E_ec,
+                     struct mrc_fld *x, struct mrc_fld *B_cc)
 {
   struct ggcm_mhd *mhd = step->mhd;
   struct mrc_fld *j_ec = ggcm_mhd_step_get_3d_fld(step, 3);
-  struct mrc_fld *E_ec = ggcm_mhd_step_get_3d_fld(step, 3);
 
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
 
@@ -297,10 +298,7 @@ magdiffu_const(struct ggcm_mhd_step *step, struct mrc_fld *x, struct mrc_fld *B_
 
   // FIXME!!! energy flux
 
-  update_ct_uniform(mhd, x, E_ec, dt, 0, 0);
-
   ggcm_mhd_step_put_3d_fld(step, j_ec);
-  ggcm_mhd_step_put_3d_fld(step, E_ec);
 }
 
 // ----------------------------------------------------------------------
@@ -383,7 +381,7 @@ ggcm_mhd_step_vlct_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   ldims[2] = mrc_fld_spatial_dims(x)[2];
 
   struct mrc_fld *x_half = ggcm_mhd_step_get_3d_fld(step, 8);
-  struct mrc_fld *E = ggcm_mhd_step_get_3d_fld(step, 3);
+  struct mrc_fld *E_ec = ggcm_mhd_step_get_3d_fld(step, 3);
   struct mrc_fld *flux[3] = { ggcm_mhd_step_get_3d_fld(step, 8),
 			      ggcm_mhd_step_get_3d_fld(step, 8),
 			      ggcm_mhd_step_get_3d_fld(step, 8), };
@@ -411,7 +409,8 @@ ggcm_mhd_step_vlct_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
   if (mhd->par.magdiffu == MAGDIFFU_CONST) {
     if (mhd->par.diffco > 0.) {
-      magdiffu_const(step, x, B_cc, dt);
+      compute_Ediffu_const(step, E_ec, x, B_cc);
+      update_ct_uniform(mhd, x, E_ec, dt, 0, 0);
       ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
       compute_B_cc(B_cc, x, 3, 3);
     }
@@ -441,22 +440,22 @@ ggcm_mhd_step_vlct_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   mrc_fld_copy_range(x_half, x, 0, 8);
   mhd_fluxes(step, flux, x, B_cc, nghost, nghost, flux_pred);
   update_finite_volume_uniform(mhd, x_half, flux, .5 * dt, nghost - 1, nghost - 1);
-  compute_E(step, E, x, B_cc, flux, 4);
-  update_ct_uniform(mhd, x_half, E, .5 * dt, nghost - 1, nghost - 1);
+  compute_E(step, E_ec, x, B_cc, flux, 4);
+  update_ct_uniform(mhd, x_half, E_ec, .5 * dt, nghost - 1, nghost - 1);
 
   // CORRECTOR
 
   compute_B_cc(B_cc, x_half, nghost - 1, nghost - 1);
   mhd_fluxes(step, flux, x_half, B_cc, 1, nghost, flux_corr);
   update_finite_volume_uniform(mhd, x, flux, dt, 0, 0);
-  compute_E(step, E, x_half, B_cc, flux, 4);
-  update_ct_uniform(mhd, x, E, dt, 0, 0);
+  compute_E(step, E_ec, x_half, B_cc, flux, 4);
+  update_ct_uniform(mhd, x, E_ec, dt, 0, 0);
 
   // clean up
 
   ggcm_mhd_step_put_3d_fld(step, B_cc);
   ggcm_mhd_step_put_3d_fld(step, x_half);
-  ggcm_mhd_step_put_3d_fld(step, E);
+  ggcm_mhd_step_put_3d_fld(step, E_ec);
   ggcm_mhd_step_put_3d_fld(step, flux[0]);
   ggcm_mhd_step_put_3d_fld(step, flux[1]);
   ggcm_mhd_step_put_3d_fld(step, flux[2]);
@@ -474,6 +473,68 @@ ggcm_mhd_step_vlct_setup_flds(struct ggcm_mhd_step *step)
   mrc_fld_set_param_int(mhd->fld, "nr_ghosts", 4);
   mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_FULLY_CONSERVATIVE);
   mrc_fld_set_param_int(mhd->fld, "nr_comps", 8);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_step_vlct_get_e_ec
+//
+// This is very heavy for for just calculating E, and it's not strictly
+// speaking the same E as used in the time step due to the operator
+// splitting.
+
+static void
+ggcm_mhd_step_vlct_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
+                            struct mrc_fld *state_vec)
+{
+  // the state vector should already be FLD_TYPE, but Eout is the data type
+  // of the output
+  struct ggcm_mhd *mhd = step->mhd;
+  struct mrc_fld *E = mrc_fld_get_as(Eout, FLD_TYPE);
+  struct mrc_fld *x = mrc_fld_get_as(state_vec, FLD_TYPE);
+
+  struct mrc_fld *B_cc = ggcm_mhd_step_get_3d_fld(step, 3);
+  struct mrc_fld *Ediff = ggcm_mhd_step_get_3d_fld(step, 3);
+  struct mrc_fld *Econv = ggcm_mhd_step_get_3d_fld(step, 3);
+  struct mrc_fld *flux[3] = { ggcm_mhd_step_get_3d_fld(step, 8),
+                              ggcm_mhd_step_get_3d_fld(step, 8),
+                              ggcm_mhd_step_get_3d_fld(step, 8), };
+
+  // Do diffusive terms first
+  compute_B_cc(B_cc, x, 3, 3);
+  if (mhd->par.magdiffu == MAGDIFFU_CONST) {
+    compute_Ediffu_const(step, Ediff, x, B_cc);
+  } else {
+    mrc_fld_foreach(Ediff, i,j,k, 2, 2) {
+    for (int d=0; d < 3; d++) {
+        F3(Ediff, d, i,j,k) = 0.0;
+      }
+    }  mrc_fld_foreach_end;
+    mpi_printf(ggcm_mhd_comm(mhd), "WARNING: magdiffu '%d' not handled for diags!\n",
+               mhd->par.magdiffu);
+  }
+
+  // Do convective term using the apprepriate fluxes to go cc -> ec
+  mhd_fluxes(step, flux, x, B_cc, nghost, nghost, flux_pred);
+  compute_E(step, Econv, x, B_cc, flux, 2);
+
+  // add both electric fields together (glue the operators together)
+  mrc_fld_foreach(E, i,j,k, 2, 2) {
+    for (int d=0; d < 3; d++) {
+      F3(E, d, i,j,k) = F3(Ediff, d, i,j,k) + F3(Econv, d, i,j,k);
+    }
+  }  mrc_fld_foreach_end;
+
+  ggcm_mhd_step_put_3d_fld(step, B_cc);
+  ggcm_mhd_step_put_3d_fld(step, Ediff);
+  ggcm_mhd_step_put_3d_fld(step, Econv);
+  ggcm_mhd_step_put_3d_fld(step, flux[0]);
+  ggcm_mhd_step_put_3d_fld(step, flux[1]);
+  ggcm_mhd_step_put_3d_fld(step, flux[2]);
+  mrc_fld_put_as(E, Eout);
+  // FIXME, should use _put_as, but don't want copy-back
+  if (strcmp(mrc_fld_type(state_vec), FLD_TYPE) != 0) {
+    mrc_fld_destroy(x);
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -511,5 +572,6 @@ struct ggcm_mhd_step_ops ggcm_mhd_step_vlct_ops = {
   .destroy          = ggcm_mhd_step_vlct_destroy,
   .run              = ggcm_mhd_step_vlct_run,
   .setup_flds       = ggcm_mhd_step_vlct_setup_flds,
+  .get_e_ec         = ggcm_mhd_step_vlct_get_e_ec,
 };
 
