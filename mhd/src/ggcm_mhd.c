@@ -462,6 +462,7 @@ struct mrc_class_ggcm_mhd mrc_class_ggcm_mhd = {
 void
 ggcm_mhd_wrongful_death(struct ggcm_mhd *mhd, int errcode)
 {
+  static int cnt = 0;
   struct ggcm_mhd_diag *diag = ggcm_mhd_diag_create(ggcm_mhd_comm(mhd));
   // this extra diag will deadlock if using the fortran diag server...
   // FIXME: this is not a reliable way to fix the problem, but it works at the moment
@@ -477,7 +478,7 @@ ggcm_mhd_wrongful_death(struct ggcm_mhd *mhd, int errcode)
   mpi_printf(ggcm_mhd_comm(mhd), "Something bad happened. Dumping state then "
              "keeling over.\n");
   // ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);  // is this needed?
-  ggcm_mhd_diag_run_now(diag, mhd->fld, DIAG_TYPE_3D, 0);
+  ggcm_mhd_diag_run_now(diag, mhd->fld, DIAG_TYPE_3D, cnt++);
   ggcm_mhd_diag_shutdown(diag);
   
   MPI_Barrier(ggcm_mhd_comm(mhd));
