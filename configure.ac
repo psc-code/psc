@@ -78,6 +78,20 @@ AS_IF([test "$have_hdf5" != "no"],
       [AC_DEFINE([HAVE_HDF5], [], [we have HDF5 library + headers])])
 AM_CONDITIONAL([HAVE_HDF5], [test "$have_hdf5" != "no"])
 
+# check for gkeyll
+
+AC_ARG_WITH([gkeyll],AS_HELP_STRING([--with-gkeyll=dir], [Build with GKEYLL coupling]),
+[], [with_gkeyll=no])
+
+have_gkeyll=no
+AS_IF([test "x$with_gkeyll" != "xno"],
+  [GKSOFTWARE="$with_gkeyll/.."
+   AC_SUBST(GKSOFTWARE)
+   have_gkeyll=yes
+   AC_DEFINE([HAVE_GKEYLL], [], [we have GKEYLL library + headers])
+  ])
+AM_CONDITIONAL([HAVE_GKEYLL], [test "$have_gkeyll" != "no"])
+
 # check for PAPI
 AC_ARG_WITH([papi],AS_HELP_STRING([--without-papi], [Disable PAPI]))
 

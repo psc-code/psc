@@ -31,3 +31,22 @@ TESTS = \
 
 XFAIL_TESTS = \
 	test_ggcm_mhd_crds
+
+if HAVE_GKEYLL
+
+bin_PROGRAMS += mhd_gkeyll
+ 
+mhd_gkeyll_CPPFLAGS = $(AM_CPPFLAGS) \
+	-I$(GKSOFTWARE)/gkeyll-par/include \
+	-I$(GKSOFTWARE)/txbase-par/include \
+	-I$(GKSOFTWARE)/lua-5.1-ser/include \
+	-I$(GKSOFTWARE)/eigen-3.1-ser/include/eigen3
+
+mhd_gkeyll_LDADD = \
+	-L$(GKSOFTWARE)/lua-5.1-ser/lib -llua \
+	-lstdc++ \
+	$(LDADD)
+
+endif
+
+AM_LDFLAGS = -framework Accelerate
