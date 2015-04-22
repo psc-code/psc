@@ -56,6 +56,9 @@ ggcm_diag_lib_create_mrc_io(MPI_Comm comm, const char *run, const char *outputmo
     mrc_io_set_param_int(io, "rank_diagsrv", rank_diagsrv);
   }
   mrc_io_set_from_options(io);
+  if (outtype == DIAG_TYPE_2D_IONO) {
+    mrc_io_set_type(io, "xdmf_serial");
+  }
   mrc_io_setup(io);
   mrc_io_view(io);
   return io;
@@ -78,23 +81,5 @@ ggcm_diag_lib_write_openggcm_attrs(struct mrc_io *io, const char *time_str)
   mrc_obj_destroy(obj);
 }
 
-// ----------------------------------------------------------------------
-// ggcm_diag_lib_make_time_string
-
-#if 0
-void
-ggcm_diag_lib_make_time_string(char s[80], float time, double dacttime)
-{
-  struct ggcm_date_time t;
-  ggcm_epoch1966_get_ggcm_date_time(dacttime, &t);
-  if (t.year < 200) {
-    t.year += 1900;
-  }
-  snprintf(s, 79, "time= %.5g %.15E %4d:%02d:%02d:%02d:%02d:%02d.%03d %s",
-	   time, dacttime, t.year, t.month, t.day, t.hour,
-	   t.minute, (int) t.second, ((int) (t.second * 1000)) % 1000,
-	   "c300");
-}
-#endif
 
 
