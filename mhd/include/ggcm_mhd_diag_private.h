@@ -32,7 +32,4 @@ struct mrc_io * ggcm_diag_lib_create_mrc_io(MPI_Comm comm, const char *run, cons
 void ggcm_diag_lib_write_openggcm_attrs(struct mrc_io *io, const char *time_str);
 void ggcm_diag_lib_make_time_string(char s[80], float time, double dacttime);
 
-// FIXME, should go into libmrc in a more generic form
-int parse_float_array(const char *str, float *arr, int n);
-
 #endif

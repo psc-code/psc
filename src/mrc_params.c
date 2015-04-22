@@ -1223,3 +1223,27 @@ mrc_params_print(void *p, struct param *params, const char *title, MPI_Comm comm
   }
 }
 
+// FIXME!!!
+// This function should go away and just use proper mrc_params infrastructure
+
+// ======================================================================
+
+// ----------------------------------------------------------------------
+// parse_float_array
+//
+// parse colon-separated array of floats, up to n elements
+// returns the actual number of elements found in the string
+
+int
+parse_float_array(const char *str, float *arr, int n)
+{
+  //  return 0;
+  char *s1, *s = strdup(str), *orig_s = s;
+  int i;
+  for (i = 0; (s1 = strsep(&s, ":")) && i < n; i++) {
+    arr[i] = atof(s1);
+  }
+  free(orig_s);
+  return i;
+}
+
