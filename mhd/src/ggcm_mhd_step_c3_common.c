@@ -44,6 +44,7 @@ struct ggcm_mhd_step_c3 {
   struct mrc_fld *rmask;
   
   bool enforce_rrmin;
+  bool debug_dump;
 };
 
 #define ggcm_mhd_step_c3(step) mrc_to_subobj(step, struct ggcm_mhd_step_c3)
@@ -841,6 +842,24 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
     pr_B = prof_register("c3_corr", 0, 0, 0);
   }
 
+  if (sub->debug_dump) {
+    static struct ggcm_mhd_diag *diag;
+    static int cnt;
+    if (!diag) {
+      diag = ggcm_mhd_diag_create(ggcm_mhd_comm(mhd));
+      ggcm_mhd_diag_set_type(diag, "c");
+      ggcm_mhd_diag_set_name(diag, "ggcm_mhd_debug");
+      ggcm_mhd_diag_set_param_obj(diag, "mhd", mhd);
+      ggcm_mhd_diag_set_param_string(diag, "fields", "rr1:rv1:uu1:b1:rr:v:pp:b:divb");
+      ggcm_mhd_diag_set_from_options(diag);
+      ggcm_mhd_diag_set_param_string(diag, "run", "dbg");
+      ggcm_mhd_diag_setup(diag);
+      ggcm_mhd_diag_view(diag);
+    }
+    ggcm_mhd_fill_ghosts(mhd, mhd->fld, 0, mhd->time);
+    ggcm_mhd_diag_run_now(diag, mhd->fld, DIAG_TYPE_3D, cnt++);
+  }
+
   mrc_fld_data_t dtn = 0.0;
   if (step->do_nwst) {
     ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
@@ -972,6 +991,7 @@ ggcm_mhd_step_c3_diag_item_rmask_run(struct ggcm_mhd_step *step,
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_step_c3, x)
 static struct param ggcm_mhd_step_c3_descr[] = {
   { "enforce_rrmin"   , VAR(enforce_rrmin)   , PARAM_BOOL(true)             },
+  { "debug_dump"      , VAR(debug_dump)      , PARAM_BOOL(false)            },
   
   { "reconstruct"     , VAR(reconstruct)     , MRC_VAR_OBJ(mhd_reconstruct) },
   { "riemann"         , VAR(riemann)         , MRC_VAR_OBJ(mhd_riemann)     },
