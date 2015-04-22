@@ -57,38 +57,43 @@ ggcm_mhd_ic_harris_run(struct ggcm_mhd_ic *ic)
   struct mrc_fld *fld_psi = mrc_domain_fld_create(fld->_domain, SW_2, "psi");
   mrc_fld_set_type(fld_psi, FLD_TYPE);
   mrc_fld_setup(fld_psi);
-  mrc_fld_foreach(fld, ix,iy,iz, 2, 2) {
-    double x = MRC_DCRDX(crds, ix);
-    double y = MRC_DCRDY(crds, iy);
+  
+  for (int p = 0; p < mrc_fld_nr_patches(fld_psi); p++) {
+    mrc_fld_foreach(fld_psi, ix,iy,iz, 2, 2) {
+      mrc_fld_data_t x = MRC_MCRDX(crds, ix, p);
+      mrc_fld_data_t y = MRC_MCRDY(crds, iy, p);
 
-    //    A[2] = lx / (4*pi) * (1 - cos(2*kx*X)) * cos(ky*Y)
-    // F3(fld_psi, 0, ix,iy,iz) = ic_harris->pert * ly / (4. * M_PI) * (1. - cos(2*ky*(y - y0))) * cos(kx*(x - x0));
-    // taken from Birn et. al. 2001
-    F3(fld_psi, 0, ix,iy,iz) = ic_harris->pert * \
-                                   cos(ky*(y - y0 - ly/2.0)) * cos(kx*(x - x0 - lx/2.0));
-  } mrc_fld_foreach_end;
+      //    A[2] = lx / (4*pi) * (1 - cos(2*kx*X)) * cos(ky*Y)
+      // F3(fld_psi, 0, ix,iy,iz) = ic_harris->pert * ly / (4. * M_PI) * (1. - cos(2*ky*(y - y0))) * cos(kx*(x - x0));
+      // taken from Birn et. al. 2001
+      M3(fld_psi, 0, ix,iy,iz, p) = (ic_harris->pert *
+                                     cos(ky*(y - y0 - ly/2.0)) * cos(kx*(x - x0 - lx/2.0)));
+    } mrc_fld_foreach_end;
+  }
 
-  mrc_fld_foreach(fld, ix,iy,iz, 2, 1) {
-    double y = MRC_DCRDY(crds, iy);
-    // eqilibrium
-    RR(fld, ix,iy,iz) = ic_harris->n_inf + \
-                        ic_harris->n_0 / (sqr(cosh((y - y0 - ly/2.0) / cs_width)));
-    PP(fld, ix,iy,iz) = u_th * RR(fld, ix,iy,iz);
-    BX(fld, ix,iy,iz) = ic_harris->B_0 * tanh((y - y0 - ly/2.0) / cs_width);
-    BY(fld, ix,iy,iz) = 0.0;
-    BZ(fld, ix,iy,iz) = 0.0;
-    VX(fld, ix,iy,iz) = 0.0;
-    VY(fld, ix,iy,iz) = 0.0;
-    VZ(fld, ix,iy,iz) = 0.0;
+  for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
+    mrc_fld_foreach(fld, ix,iy,iz, 2, 1) {
+      mrc_fld_data_t y = MRC_MCRDY(crds, iy, p);
+      // eqilibrium
+      RR_(fld, ix,iy,iz, p) = ic_harris->n_inf + \
+                              ic_harris->n_0 / (sqr(cosh((y - y0 - ly/2.0) / cs_width)));
+      PP_(fld, ix,iy,iz, p) = u_th * RR(fld, ix,iy,iz);
+      BX_(fld, ix,iy,iz, p) = ic_harris->B_0 * tanh((y - y0 - ly/2.0) / cs_width);
+      BY_(fld, ix,iy,iz, p) = 0.0;
+      BZ_(fld, ix,iy,iz, p) = 0.0;
+      VX_(fld, ix,iy,iz, p) = 0.0;
+      VY_(fld, ix,iy,iz, p) = 0.0;
+      VZ_(fld, ix,iy,iz, p) = 0.0;
 
-    // perturbation, B = -z_hat cross grad psi
-    BX(fld, ix,iy,iz) +=
-      (F3(fld_psi, 0, ix,iy+1,iz) - F3(fld_psi, 0, ix,iy,iz)) /
-      (MRC_DCRDY(crds,iy+1) - MRC_DCRDY(crds, iy));
-    BY(fld, ix,iy,iz) -=
-      (F3(fld_psi, 0, ix+1,iy,iz) - F3(fld_psi, 0, ix,iy,iz)) /
-      (MRC_DCRDX(crds,ix+1) - MRC_DCRDX(crds, ix));
-  } mrc_fld_foreach_end;
+      // perturbation, B = -z_hat cross grad psi
+      BX_(fld, ix,iy,iz, p) +=
+        (M3(fld_psi, 0, ix,iy+1,iz, p) - M3(fld_psi, 0, ix,iy,iz, p)) /
+        (MRC_MCRDY(crds,iy+1, p) - MRC_MCRDY(crds, iy, p));
+      BY_(fld, ix,iy,iz, p) -=
+        (M3(fld_psi, 0, ix+1,iy,iz, p) - M3(fld_psi, 0, ix,iy,iz, p)) /
+        (MRC_MCRDX(crds,ix+1, p) - MRC_MCRDX(crds, ix, p));
+    } mrc_fld_foreach_end;
+  }
 
   mrc_fld_destroy(fld_psi);
   mrc_fld_put_as(fld, mhd->fld);
@@ -161,47 +166,52 @@ ggcm_mhd_ic_asymharris_run(struct ggcm_mhd_ic *ic)
 
   struct mrc_fld *fld_psi = mrc_domain_fld_create(fld->_domain, SW_2, "psi");
   mrc_fld_setup(fld_psi);
-  mrc_fld_foreach(fld, ix,iy,iz, 2, 2) {
-    double x = MRC_DCRDX(crds, ix);
-    double y = MRC_DCRDY(crds, iy);
+  
+  for (int p = 0; p < mrc_fld_nr_patches(fld_psi); p++) {
+    mrc_fld_foreach(fld_psi, ix,iy,iz, 2, 2) {
+      double x = MRC_MCRDX(crds, ix, p);
+      double y = MRC_MCRDY(crds, iy, p);
 
-    //    A[2] = lx / (4*pi) * (1 - cos(2*kx*X)) * cos(ky*Y)
-    // F3(fld_psi, 0, ix,iy,iz) = ic_harris->pert * ly / (4. * M_PI) * (1. - cos(2*ky*(y - y0))) * cos(kx*(x - x0));
-    // taken from Birn et. al. 2001
-    F3(fld_psi, 0, ix,iy,iz) = ic_asymharris->pert * \
-                                   cos(ky*(y - y0 - ly/2.0)) * cos(kx*(x - x0 - lx/2.0));
-  } mrc_fld_foreach_end;
+      //    A[2] = lx / (4*pi) * (1 - cos(2*kx*X)) * cos(ky*Y)
+      // F3(fld_psi, 0, ix,iy,iz) = ic_harris->pert * ly / (4. * M_PI) * (1. - cos(2*ky*(y - y0))) * cos(kx*(x - x0));
+      // taken from Birn et. al. 2001
+      M3(fld_psi, 0, ix,iy,iz, p) = ic_asymharris->pert * \
+                                     cos(ky*(y - y0 - ly/2.0)) * cos(kx*(x - x0 - lx/2.0));
+    } mrc_fld_foreach_end;
+  }
 
-  mrc_fld_foreach(fld, ix,iy,iz, 1, 2) {
-    double y = MRC_DCRDY(crds, iy);
-    double yprime = y - y0 - ly/2.0;  // y shifted to center of box
-    double B0;
+  for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
+    mrc_fld_foreach(fld, ix,iy,iz, 1, 2) {
+      double y = MRC_MCRDY(crds, iy, p);
+      double yprime = y - y0 - ly/2.0;  // y shifted to center of box
+      double B0;
 
-    if (yprime > 0.0) {
-      B0 = ic_asymharris->B01;
-    } else {
-      B0 = ic_asymharris->B02;
-    }
+      if (yprime > 0.0) {
+        B0 = ic_asymharris->B01;
+      } else {
+        B0 = ic_asymharris->B02;
+      }
 
-    // equilibrium
-    BX(fld, ix,iy,iz) = B0 * tanh(yprime / cs_width);
-    BY(fld, ix,iy,iz) = 0.0;
-    BZ(fld, ix,iy,iz) = 0.0;
-    RR(fld, ix,iy,iz) = (0.5 * (n01 + n02) +
-       0.5 * (n01 - n02) * tanh(yprime / cs_width));
-    PP(fld, ix,iy,iz) = c - (0.5 * sqr(BX(fld, ix,iy,iz)));
-    VX(fld, ix,iy,iz) = 0.0;
-    VY(fld, ix,iy,iz) = 0.0;
-    VZ(fld, ix,iy,iz) = 0.0;
+      // equilibrium
+      BX_(fld, ix,iy,iz, p) = B0 * tanh(yprime / cs_width);
+      BY_(fld, ix,iy,iz, p) = 0.0;
+      BZ_(fld, ix,iy,iz, p) = 0.0;
+      RR_(fld, ix,iy,iz, p) = (0.5 * (n01 + n02) +
+                               0.5 * (n01 - n02) * tanh(yprime / cs_width));
+      PP_(fld, ix,iy,iz, p) = c - (0.5 * sqr(BX(fld, ix,iy,iz)));
+      VX_(fld, ix,iy,iz, p) = 0.0;
+      VY_(fld, ix,iy,iz, p) = 0.0;
+      VZ_(fld, ix,iy,iz, p) = 0.0;
 
-    // perturbation, B = -z_hat cross grad psi
-    BX(fld, ix,iy,iz) +=
-      (F3(fld_psi, 0, ix,iy-1,iz) - F3(fld_psi, 0, ix,iy,iz)) /
-      (MRC_DCRDY(crds,iy-1) - MRC_DCRDY(crds, iy));
-    BY(fld, ix,iy,iz) -=
-      (F3(fld_psi, 0, ix-1,iy,iz) - F3(fld_psi, 0, ix,iy,iz)) /
-      (MRC_DCRDX(crds,ix-1) - MRC_DCRDX(crds, ix));
-  } mrc_fld_foreach_end;
+      // perturbation, B = -z_hat cross grad psi
+      BX_(fld, ix,iy,iz, p) +=
+        (M3(fld_psi, 0, ix,iy-1,iz, p) - M3(fld_psi, 0, ix,iy,iz, p)) /
+        (MRC_MCRDY(crds,iy-1, p) - MRC_MCRDY(crds, iy, p));
+      BY_(fld, ix,iy,iz, p) -=
+        (M3(fld_psi, 0, ix-1,iy,iz, p) - M3(fld_psi, 0, ix,iy,iz, p)) /
+        (MRC_MCRDX(crds,ix-1, p) - MRC_MCRDX(crds, ix, p));
+    } mrc_fld_foreach_end;
+  }
 
   mrc_fld_destroy(fld_psi);
   mrc_fld_put_as(fld, mhd->fld);
