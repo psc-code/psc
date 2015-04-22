@@ -6,7 +6,6 @@
 #include "ggcm_mhd.h"
 
 #include <mrc_io.h>
-#include <mrc_mod.h>
 #include <mrc_fld_as_float.h>
 
 #include <assert.h>
@@ -16,27 +15,6 @@
 
 // ======================================================================
 // ggcm_mhd_diag_c
-
-#define MAX_PLANES (10)
-
-struct ggcm_mhd_diag_c {
-  // parameters
-  char *run;
-  char *fields;
-  char *outplanex;
-  char *outplaney;
-  char *outplanez;
-  float planes[3][MAX_PLANES];
-  float nr_planes[3];
-
-  // state
-  int rank_diagsrv;
-  list_t mrc_io_list;
-};
-
-#define ggcm_mhd_diag_c(diag) mrc_to_subobj(diag, struct ggcm_mhd_diag_c)
-
-// ----------------------------------------------------------------------
 
 struct mrc_io_entry {
   struct mrc_io *io;
@@ -115,13 +93,10 @@ ggcm_mhd_diag_c_setup(struct ggcm_mhd_diag *diag)
 {
   struct ggcm_mhd_diag_c *sub = ggcm_mhd_diag_c(diag);
 
-  int size;
-  MPI_Comm_size(ggcm_mhd_diag_comm(diag), &size);
-  //  if (size == 1 || !_ggcm) {
-  if (true) {
-    sub->rank_diagsrv = -1;
+  if (sub->find_diagsrv) {
+    sub->rank_diagsrv = sub->find_diagsrv(diag);
   } else {
-    //    sub->rank_diagsrv = mrc_mod_get_first_node(_ggcm->mod, "DIAGSC");
+    sub->rank_diagsrv = -1;
   }
 
   sub->nr_planes[0] = 
@@ -165,16 +140,14 @@ ggcm_mhd_diag_c_write_one_fld(struct mrc_io *io, struct mrc_fld *_fld,
   struct mrc_fld *fld = mrc_fld_get_as(_fld, FLD_TYPE);
 
   switch (outtype) {
-  case DIAG_TYPE_3D: {
+  case DIAG_TYPE_3D:
     mrc_fld_write(fld, io);
     break;
-  }
   case DIAG_TYPE_2D_X:
   case DIAG_TYPE_2D_Y:
-  case DIAG_TYPE_2D_Z: {
+  case DIAG_TYPE_2D_Z:
     mrc_io_write_field_slice(io, 1., fld, outtype, plane);
     break;
-  }
   default:
     assert(0);
   }
@@ -191,6 +164,8 @@ ggcm_mhd_diag_c_write_one_field(struct mrc_io *io, struct mrc_fld *_f, int m,
 				float plane)
 {
   struct mrc_fld *f = mrc_fld_get_as(_f, FLD_TYPE);
+
+  assert(m < f->_nr_comps);
 
   int bnd = f->_nr_ghosts;
   struct mrc_fld *fld = mrc_domain_fld_create(f->_domain, bnd, name);
@@ -293,8 +268,13 @@ static void
 ggcm_mhd_diag_c_run_now(struct ggcm_mhd_diag *diag, struct mrc_fld *fld,
 			int diag_type, int itdia)
 {
+  struct ggcm_mhd_diag_c *sub = ggcm_mhd_diag_c(diag);
+  struct ggcm_mhd *mhd = diag->mhd;
+
   char time_str[80] = "TIME";
-  //  ggcm_diag_lib_make_time_string(time_str, mhd->time, mhd->dacttime);
+  if (sub->make_time_string) {
+    sub->make_time_string(time_str, mhd->time, mhd->dacttime);
+  }
 
   switch (diag_type) {
   case DIAG_TYPE_2D_X:
@@ -323,13 +303,24 @@ ggcm_mhd_diag_c_run_now(struct ggcm_mhd_diag *diag, struct mrc_fld *fld,
 static void
 ggcm_mhd_diag_c_run(struct ggcm_mhd_diag *diag)
 {
+  struct ggcm_mhd_diag_c *sub = ggcm_mhd_diag_c(diag);
   struct ggcm_mhd *mhd = diag->mhd;
+  bool output3d, output2d;
   int itdia3d, itdia2d;
 
-  bool output3d = true;
-  bool output2d = false;
-  itdia3d = mhd->istep;
-  itdia2d = mhd->istep;
+  // FIXME, ggcm_mhd_diag_run() is an entirely OpenGGCM-specific interface only
+  // which really should be more generic...
+  if (sub->run_hack) {
+    sub->run_hack(diag, &output3d, &output2d, &itdia3d, &itdia2d);
+  } else {
+    output3d = true;
+    output2d = false;
+    itdia3d = mhd->istep;
+    itdia2d = mhd->istep;
+  }
+
+  if (!(output2d || output3d))
+    return;
 
   ggcm_mhd_fill_ghosts(mhd, mhd->fld, 0, mhd->time);
 
