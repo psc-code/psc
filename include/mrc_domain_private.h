@@ -139,6 +139,8 @@ struct mrc_domain_amr {
   } *map_gpatch_to_sfc;	//Maps [0..nr_gpatches] -> l, sfc_idx
 };
 
+#define mrc_domain_amr(domain) mrc_to_subobj(domain, struct mrc_domain_amr)
+
 extern struct mrc_domain_ops mrc_domain_amr_ops;
 
 // ======================================================================
