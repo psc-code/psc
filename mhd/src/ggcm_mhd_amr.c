@@ -332,7 +332,7 @@ ggcm_mhd_create_amr_ddc_E(struct ggcm_mhd *mhd)
   for (int m = 0; m < 3; m++) {
     int ext[3];
     for (int d = 0; d < 3; d++) {
-      ext[d] = m != d;
+      ext[d] = (gdims[d] > 1) ? (m != d) : 0;
     }
     
     for (int p = 0; p < nr_patches; p++) {
