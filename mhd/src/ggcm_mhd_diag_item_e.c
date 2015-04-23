@@ -56,6 +56,10 @@ ggcm_mhd_diag_item_e_cc_run(struct ggcm_mhd_diag_item *item,
                             struct mrc_io *io, struct mrc_fld *f,
                             int diag_type, float plane)
 {
+  int gdims[3];
+  mrc_domain_get_global_dims(f->_domain, gdims);
+  int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
+
   int mhd_type;
   mrc_fld_get_param_int(f, "mhd_type", &mhd_type);
 
@@ -75,14 +79,14 @@ ggcm_mhd_diag_item_e_cc_run(struct ggcm_mhd_diag_item *item,
     for (int p = 0; p < mrc_fld_nr_patches(Ecc); p++) {
       mrc_fld_foreach(Eec, ix,iy,iz, SW_2 - 1, SW_2) {
 	M3(Ecc, 0, ix, iy, iz, p) =
-	  0.25f * (M3(Eec, 0, ix  , iy  , iz  , p) + M3(Eec, 0, ix  , iy-1, iz  , p) +
-		   M3(Eec, 0, ix  , iy  , iz-1, p) + M3(Eec, 0, ix  , iy-1, iz-1, p));
+	  0.25f * (M3(Eec, 0, ix  , iy   , iz   , p) + M3(Eec, 0, ix   , iy-dy, iz   , p) +
+		   M3(Eec, 0, ix  , iy   , iz-dz, p) + M3(Eec, 0, ix   , iy-dy, iz-dz, p));
 	M3(Ecc, 1, ix, iy, iz, p) =
-	  0.25f * (M3(Eec, 1, ix  , iy  , iz  , p) + M3(Eec, 1, ix-1, iy  , iz  , p) +
-		   M3(Eec, 1, ix  , iy  , iz-1, p) + M3(Eec, 1, ix-1, iy  , iz-1, p));
+	  0.25f * (M3(Eec, 1, ix  , iy   , iz   , p) + M3(Eec, 1, ix-dx, iy   , iz   , p) +
+		   M3(Eec, 1, ix  , iy   , iz-dz, p) + M3(Eec, 1, ix-dx, iy   , iz-dz, p));
 	M3(Ecc, 2, ix, iy, iz, p) =
-	  0.25f * (M3(Eec, 2, ix  , iy  , iz  , p) + M3(Eec, 2, ix-1, iy  , iz  , p) +
-		   M3(Eec, 2, ix  , iy-1, iz  , p) + M3(Eec, 2, ix-1, iy-1, iz  , p));
+	  0.25f * (M3(Eec, 2, ix  , iy   , iz   , p) + M3(Eec, 2, ix-dx, iy   , iz   , p) +
+		   M3(Eec, 2, ix  , iy-dy, iz   , p) + M3(Eec, 2, ix-dx, iy-dy, iz   , p));
       } mrc_fld_foreach_end;
     }
   } else if (mhd_type == MT_SEMI_CONSERVATIVE ||
@@ -90,14 +94,14 @@ ggcm_mhd_diag_item_e_cc_run(struct ggcm_mhd_diag_item *item,
     for (int p = 0; p < mrc_fld_nr_patches(Ecc); p++) {
       mrc_fld_foreach(Eec, ix,iy,iz, SW_2, SW_2 - 1) {
 	M3(Ecc, 0, ix, iy, iz, p) =
-	  0.25f * (M3(Eec, 0, ix  , iy  , iz  , p) + M3(Eec, 0, ix  , iy+1, iz  , p) +
-		   M3(Eec, 0, ix  , iy  , iz+1, p) + M3(Eec, 0, ix  , iy+1, iz+1, p));
+	  0.25f * (M3(Eec, 0, ix  , iy   , iz   , p) + M3(Eec, 0, ix   , iy+dy, iz   , p) +
+		   M3(Eec, 0, ix  , iy   , iz+dz, p) + M3(Eec, 0, ix   , iy+dy, iz+dz, p));
 	M3(Ecc, 1, ix, iy, iz, p) =
-	  0.25f * (M3(Eec, 1, ix  , iy  , iz  , p) + M3(Eec, 1, ix+1, iy  , iz  , p) +
-		   M3(Eec, 1, ix  , iy  , iz+1, p) + M3(Eec, 1, ix+1, iy  , iz+1, p));
+	  0.25f * (M3(Eec, 1, ix  , iy   , iz   , p) + M3(Eec, 1, ix+dx, iy   , iz   , p) +
+		   M3(Eec, 1, ix  , iy   , iz+dz, p) + M3(Eec, 1, ix+dx, iy   , iz+dz, p));
 	M3(Ecc, 2, ix, iy, iz, p) =
-	  0.25f * (M3(Eec, 2, ix  , iy  , iz  , p) + M3(Eec, 2, ix+1, iy  , iz  , p) +
-		   M3(Eec, 2, ix  , iy+1, iz  , p) + M3(Eec, 2, ix+1, iy+1, iz  , p));
+	  0.25f * (M3(Eec, 2, ix  , iy   , iz   , p) + M3(Eec, 2, ix+dx, iy   , iz   , p) +
+		   M3(Eec, 2, ix  , iy+dy, iz   , p) + M3(Eec, 2, ix+dx, iy+dy, iz   , p));
       } mrc_fld_foreach_end;
     }
   }
