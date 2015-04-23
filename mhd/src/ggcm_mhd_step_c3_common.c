@@ -642,7 +642,7 @@ calc_ve_x_B(struct ggcm_mhd_step *step,
 
 static void
 bcthy3z_NL1(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int I, int J, int K,
-	    int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2,
+	    int _JX1, int _JY1, int _JZ1, int _JX2, int _JY2, int _JZ2,
 	    struct mrc_fld *E, mrc_fld_data_t dt, struct mrc_fld *x,
 	    struct mrc_fld *prim, struct mrc_fld *curr)
 {
@@ -650,6 +650,16 @@ bcthy3z_NL1(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int I, int J, in
   struct ggcm_mhd *mhd = step->mhd;
   struct mrc_fld *rmask = sub->rmask;
   struct mrc_fld *tmp = ggcm_mhd_get_3d_fld(mhd, 4);
+
+  int gdims[3];
+  mrc_domain_get_global_dims(x->_domain, gdims);
+
+  int JX1 = (gdims[0] > 1 ) ? _JX1 : 0;
+  int JY1 = (gdims[1] > 1 ) ? _JY1 : 0;
+  int JZ1 = (gdims[2] > 1 ) ? _JZ1 : 0;
+  int JX2 = (gdims[0] > 1 ) ? _JX2 : 0;
+  int JY2 = (gdims[1] > 1 ) ? _JY2 : 0;
+  int JZ2 = (gdims[2] > 1 ) ? _JZ2 : 0;
 
   calc_avg_dz_By(step, tmp, x, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2);
 
