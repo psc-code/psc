@@ -175,10 +175,13 @@ fill_ghosts_b_add_one(struct mrc_ddc *ddc, struct mrc_domain *domain, int m,
   // then restrict this face to get replacement coarse value
   mrc_domain_find_valid_point_fine(domain, ext, gp, (int[]) { 2*i[0], 2*i[1], 2*i[2] }, &gp_nei, j);
   if (gp_nei >= 0) {
-    double fact = (m != 0 ? .5 : 1.) * (m != 1 ? .5 : 1.) * (m != 2 ? .5 : 1.);
-    for (int dz = 0; dz <= (m != 2); dz++) {
-      for (int dy = 0; dy <= (m != 1); dy++) {
-	for (int dx = 0; dx <= (m != 0); dx++) {
+    int nx = (gdims[0] > 1) ? (m != 0) : 0;
+    int ny = (gdims[1] > 1) ? (m != 1) : 0;
+    int nz = (gdims[2] > 1) ? (m != 2) : 0;
+    double fact = (nx ? .5 : 1.) * (ny ? .5 : 1.) * (nz ? .5 : 1.);
+    for (int dz = 0; dz <= nz; dz++) {
+      for (int dy = 0; dy <= ny; dy++) {
+	for (int dx = 0; dx <= nx; dx++) {
 	  mrc_ddc_amr_add_value(ddc, gp0, BX+m, i0, gp_nei, BX+m,
 				(int[3]) { j[0]+dx,j[1]+dy,j[2]+dz }, fact * scale);
 	}
