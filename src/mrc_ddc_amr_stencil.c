@@ -1,7 +1,7 @@
 
 #include "mrc_ddc.h"
 
-#include <mrc_domain.h>
+#include <mrc_domain_private.h>
 #include <assert.h>
 #include <stdio.h>
 
@@ -12,6 +12,8 @@ void
 mrc_domain_get_neighbor_patch_same(struct mrc_domain *domain, int gp,
 				   int dx[3], int *gp_nei)
 {
+  struct mrc_domain_amr *sub = mrc_domain_amr(domain);
+
   struct mrc_patch_info pi, pi_nei;
   mrc_domain_get_global_patch_info(domain, gp, &pi);
   // FIXME: how about if we only refine in selected directions?
@@ -19,10 +21,10 @@ mrc_domain_get_neighbor_patch_same(struct mrc_domain *domain, int gp,
   int idx3[3];
   for (int d = 0; d < 3; d++) {
     idx3[d] = pi.idx3[d] + dx[d];
-    if (0&&idx3[d] < 0) {
+    if (sub->bc[d] == BC_PERIODIC && idx3[d] < 0) {
       idx3[d] += mx[d];
     }
-    if (0&&idx3[d] >= mx[d]) {
+    if (sub->bc[d] == BC_PERIODIC && idx3[d] >= mx[d]) {
       idx3[d] -= mx[d];
     }
   }
