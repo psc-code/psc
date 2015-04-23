@@ -58,7 +58,9 @@ struct mrc_mat_csr {
   int _nr_rows_alloced;  // probably used for asserts
   int _nr_vals_alloced;  // probably used for asserts
 
+  bool verbose;
   int nr_initial_cols;  // how much initial space to allocate for each new row
+  float growth_factor;  // fraction of current # of cols to add when a row needs to grow
 };
 
 #define mrc_mat_csr(mat) mrc_to_subobj(mat, struct mrc_mat_csr)

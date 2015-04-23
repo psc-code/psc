@@ -3,6 +3,7 @@
 
 #include "mrc_fld_as_double.h" // FIXME, has to remain double, otherwise won't match mrc_mat_private.h
 #include "mrc_vec.h"
+#include "mrc_bits.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -101,19 +102,24 @@ _mrc_mat_csr_expand_row_if_needed(struct mrc_mat *mat, int row_idx)
     sub->_init_vals[row_idx] = calloc(sub->nr_initial_cols, sizeof(*sub->_init_vals));
     sub->_init_cols[row_idx] = calloc(sub->nr_initial_cols, sizeof(*sub->_init_cols));
     sub->_nr_vals_alloced += sub->nr_initial_cols;
-    sub->_nr_cols_alloced[row_idx] += sub->nr_initial_cols;
+    sub->_nr_cols_alloced[row_idx] = sub->nr_initial_cols;
     sub->_nr_rows_alloced += 1;
   } else if (sub->_nr_cols[row_idx] + 1 >= sub->_nr_cols_alloced[row_idx]) {
     // if there is not more room for another value in a given row, then
     // double the memory allocation for that row
-    int new_size = 2 * sub->_nr_cols_alloced[row_idx];
+    int new_size;
+    int additional_cols = sub->growth_factor * sub->_nr_cols_alloced[row_idx];
+    if (additional_cols == 0) {
+      additional_cols = 1;
+    }
+    new_size = sub->_nr_cols_alloced[row_idx] + additional_cols;
     // mprintf("* expand_row realloc: row %d  %d -> %d\n",
     //         row_idx, sub->_nr_cols_alloced[row_idx], new_size);
     sub->_init_vals[row_idx] = realloc(sub->_init_vals[row_idx],
                                        new_size * sizeof(*sub->_init_vals[row_idx]));
     sub->_init_cols[row_idx] = realloc(sub->_init_cols[row_idx],
                                        new_size * sizeof(*sub->_init_cols[row_idx]));
-    sub->_nr_vals_alloced += new_size - sub->_nr_cols_alloced[row_idx];
+    sub->_nr_vals_alloced += additional_cols;
     sub->_nr_cols_alloced[row_idx] = new_size;
   }
   // make sure my logic was correct
@@ -212,10 +218,17 @@ mrc_mat_csr_assemble(struct mrc_mat *mat)
   int *cols = mrc_vec_get_array(sub->cols);
   int *rows = mrc_vec_get_array(sub->rows);
 
-  if (sub->nr_vals < 0.9 * sub->_nr_vals_alloced) {
+  // if (sub->verbose) {
+  // mprintf("!MAT_ASSEMBLE: %d -> %d  (-%d%%), %g MB -> %g MB\n",
+  //         sub->_nr_vals_alloced, sub->nr_vals,
+  //         (int)(100 * (1 - (1.0 * sub->nr_vals) / MAX(sub->_nr_vals_alloced, 1))),
+  //         sizeof(mrc_fld_data_t) * sub->_nr_vals_alloced / 1e6,
+  //         sizeof(mrc_fld_data_t) * sub->nr_vals / 1e6);
+  // }
+  if (sub->verbose && sub->nr_vals < 0.9 * sub->_nr_vals_alloced) {
     mprintf("NOTE: decreasing sparse matrix size by > 10%% on assemble: "
             "%d -> %d (-%d%%)\n", sub->_nr_vals_alloced, sub->nr_vals,
-            (int)(100 * (1 - (1.0 * sub->nr_vals) / sub->_nr_vals_alloced)));
+            (int)(100 * (1 - (1.0 * sub->nr_vals) / MAX(sub->_nr_vals_alloced, 1))));
   }
 
   int i = 0;
@@ -387,8 +400,11 @@ static struct param mrc_mat_csr_descr[] = {
   { "vals"             , VAR(vals)             , PARAM_OBJ(mrc_vec) },
   { "cols"             , VAR(cols)             , PARAM_OBJ(mrc_vec) },
   { "rows"             , VAR(rows)             , PARAM_OBJ(mrc_vec) },
+  { "verbose"          , VAR(verbose)          , PARAM_BOOL(false)  },
   { "nr_initial_cols"  , VAR(nr_initial_cols)  , PARAM_INT(1),
   .help = "How many empty columnts to use for each new row" },
+  { "growth_factor"    , VAR(growth_factor)    , PARAM_FLOAT(0.5),
+  .help = "Fraction of current nr_cols to add to rows" },
   {},
 };
 #undef VAR

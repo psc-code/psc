@@ -28,6 +28,8 @@ struct ggcm_mhd_ic_harris {
   double B_0; //< B field strength
   double cs_width; // current sheet width
   double pert; // strength of \psi perturbation (flux function)
+  double pert_halfwidth; // half width of perturbation; if 0.0, set
+                         // to 0.5 * (xh[1] - xl[1])
 };
 
 // ----------------------------------------------------------------------
@@ -53,6 +55,10 @@ ggcm_mhd_ic_harris_run(struct ggcm_mhd_ic *ic)
   double ky = M_PI / ly;
   // u_th = constant thermal energy density (p / n)
   double u_th = sqr(ic_harris->B_0) / (2.0 * ic_harris->n_0);
+  
+  if (ic_harris->pert_halfwidth == 0.0) {
+    ic_harris->pert_halfwidth = 0.5 * (xh[1] - xl[1]);
+  }
 
   struct mrc_fld *fld_psi = mrc_domain_fld_create(fld->_domain, SW_2, "psi");
   mrc_fld_set_type(fld_psi, FLD_TYPE);
@@ -66,8 +72,13 @@ ggcm_mhd_ic_harris_run(struct ggcm_mhd_ic *ic)
       //    A[2] = lx / (4*pi) * (1 - cos(2*kx*X)) * cos(ky*Y)
       // F3(fld_psi, 0, ix,iy,iz) = ic_harris->pert * ly / (4. * M_PI) * (1. - cos(2*ky*(y - y0))) * cos(kx*(x - x0));
       // taken from Birn et. al. 2001
-      M3(fld_psi, 0, ix,iy,iz, p) = (ic_harris->pert *
-                                     cos(ky*(y - y0 - ly/2.0)) * cos(kx*(x - x0 - lx/2.0)));
+      if (fabs(y) < ic_harris->pert_halfwidth) {
+        M3(fld_psi, 0, ix,iy,iz, p) = (ic_harris->pert *
+                                       cos(ky*(y - y0 - ic_harris->pert_halfwidth)) *
+                                       cos(kx*(x - x0 - lx/2.0)));
+      } else {
+        M3(fld_psi, 0, ix,iy,iz, p) = 0.0;
+      }
     } mrc_fld_foreach_end;
   }
 
@@ -111,6 +122,7 @@ static struct param ggcm_mhd_ic_harris_descr[] = {
   { "B_0"             , VAR(B_0)             , PARAM_DOUBLE(1.0)         },
   { "cs_width"        , VAR(cs_width)        , PARAM_DOUBLE(0.5)         },
   { "pert"            , VAR(pert)            , PARAM_DOUBLE(0.1)         },
+  { "pert_width"      , VAR(pert)            , PARAM_DOUBLE(6.4)         },
   {},
 };
 #undef VAR
@@ -136,6 +148,8 @@ struct ggcm_mhd_ic_asymharris {
   double B02; //< B field strength
   double cs_width; // current sheet width
   double pert; // strength of \psi perturbation (flux function)
+  double pert_halfwidth; // half width of perturbation; if 0.0, set
+                         // to 0.5 * (xh[1] - xl[1])
 };
 
 // ----------------------------------------------------------------------
@@ -164,6 +178,10 @@ ggcm_mhd_ic_asymharris_run(struct ggcm_mhd_ic *ic)
   double n01 = ic_asymharris->n01;
   double n02 = ic_asymharris->n02;
 
+  if (ic_asymharris->pert_halfwidth == 0.0) {
+    ic_asymharris->pert_halfwidth = 0.5 * (xh[1] - xl[1]);
+  }
+  
   struct mrc_fld *fld_psi = mrc_domain_fld_create(fld->_domain, SW_2, "psi");
   mrc_fld_setup(fld_psi);
   
@@ -175,8 +193,13 @@ ggcm_mhd_ic_asymharris_run(struct ggcm_mhd_ic *ic)
       //    A[2] = lx / (4*pi) * (1 - cos(2*kx*X)) * cos(ky*Y)
       // F3(fld_psi, 0, ix,iy,iz) = ic_harris->pert * ly / (4. * M_PI) * (1. - cos(2*ky*(y - y0))) * cos(kx*(x - x0));
       // taken from Birn et. al. 2001
-      M3(fld_psi, 0, ix,iy,iz, p) = ic_asymharris->pert * \
-                                     cos(ky*(y - y0 - ly/2.0)) * cos(kx*(x - x0 - lx/2.0));
+      if (fabs(y) < ic_asymharris->pert_halfwidth) {
+        M3(fld_psi, 0, ix,iy,iz, p) = (ic_asymharris->pert *
+                                       cos(ky*(y - y0 - ic_asymharris->pert_halfwidth)) *
+                                       cos(kx*(x - x0 - lx/2.0)));
+      } else {
+        M3(fld_psi, 0, ix,iy,iz, p) = 0.0;
+      }
     } mrc_fld_foreach_end;
   }
 
@@ -231,6 +254,7 @@ static struct param ggcm_mhd_ic_asymharris_descr[] = {
   { "B02"             , VAR(B02)             , PARAM_DOUBLE(1.0)         },
   { "cs_width"        , VAR(cs_width)        , PARAM_DOUBLE(0.5)         },
   { "pert"            , VAR(pert)            , PARAM_DOUBLE(0.1)         },
+  { "pert_width"      , VAR(pert)            , PARAM_DOUBLE(6.4)         },
   {},
 };
 #undef VAR
