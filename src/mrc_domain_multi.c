@@ -326,16 +326,6 @@ mrc_domain_multi_get_nr_procs(struct mrc_domain *domain, int *nr_procs)
 }
 
 static void
-mrc_domain_multi_get_bc(struct mrc_domain *domain, int *bc)
-{
-  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
-
-  for (int d = 0; d < 3; d++) {
-    bc[d] = multi->bc[d];
-  }
-}
-
-static void
 mrc_domain_multi_get_nr_levels(struct mrc_domain *domain, int *p_nr_levels)
 {
   *p_nr_levels = 1;
@@ -501,7 +491,7 @@ mrc_domain_multi_get_neighbor_rank_patch(struct mrc_domain *domain, int p, int d
   int patch_idx_nei[3];
   for (int d = 0; d < 3; d++) {
     patch_idx_nei[d] = info.idx3[d] + dir[d];
-    if (multi->bc[d] == BC_PERIODIC) {
+    if (domain->bc[d] == BC_PERIODIC) {
       if (patch_idx_nei[d] < 0) {
 	patch_idx_nei[d] += multi->np[d];
       }
@@ -529,12 +519,6 @@ mrc_domain_multi_create_ddc(struct mrc_domain *domain)
   return ddc;
 }
 
-static struct mrc_param_select bc_descr[] = {
-  { .val = BC_NONE       , .str = "none"     },
-  { .val = BC_PERIODIC   , .str = "periodic" },
-  {},
-};
-
 static struct mrc_param_select curve_descr[] = {
   { .val = CURVE_BYDIM   , .str = "bydim"    },
   { .val = CURVE_MORTON  , .str = "morton"   },
@@ -548,15 +532,6 @@ static struct param mrc_domain_multi_params_descr[] = {
     .help = "Global dimensions of the domain (as number of cells per direction)." },
   { "np"              , VAR(np)              , PARAM_INT3(1, 1, 1),
     .help = "Number of patches to divide global domain into (per direction)" },
-  { "bcx"             , VAR(bc[0])           , PARAM_SELECT(BC_NONE,
-							    bc_descr),
-    .help = "Boundary condition in x direction" },
-  { "bcy"             , VAR(bc[1])           , PARAM_SELECT(BC_NONE,
-							    bc_descr),
-    .help = "Boundary condition in y direction" },
-  { "bcz"             , VAR(bc[2])           , PARAM_SELECT(BC_NONE,
-							    bc_descr),
-    .help = "Boundary condition in z direction" },
   { "curve_type"      , VAR(sfc.curve_type)  , PARAM_SELECT(CURVE_BYDIM,
 							    curve_descr),
     .help = "Type of spacing filling curve to use for distributing patches." },
@@ -578,7 +553,6 @@ struct mrc_domain_ops mrc_domain_multi_ops = {
   .get_patches               = mrc_domain_multi_get_patches,
   .get_global_dims           = mrc_domain_multi_get_global_dims,
   .get_nr_procs              = mrc_domain_multi_get_nr_procs,
-  .get_bc                    = mrc_domain_multi_get_bc,
   .get_nr_levels             = mrc_domain_multi_get_nr_levels,
   .get_nr_global_patches     = mrc_domain_multi_get_nr_global_patches,
   .get_global_patch_info     = mrc_domain_multi_get_global_patch_info,

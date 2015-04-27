@@ -356,28 +356,11 @@ mrc_domain_mb_read(struct mrc_domain *domain, struct mrc_io *io)
 }
 
 
-static struct mrc_param_select bc_descr[] = {
-  { .val = BC_NONE       , .str = "none"     },
-  { .val = BC_PERIODIC   , .str = "periodic" },
-  {},
-};
-
-
 #define VAR(x) (void *)offsetof(struct mrc_domain_mb, x)
 static struct param mrc_domain_mb_params_descr[] = {
   { "block_factory"   , VAR(_block_factory)   , PARAM_OBJ(mrc_block_factory) },
   { "ppb"             , VAR(ppb)             , PARAM_INT3(1,1,1),
     .help = " number of patches per block in x, y, z direction" },
-  // FIXME: These don't make sense either!!!
-  { "bcx"             , VAR(bc[0])           , PARAM_SELECT(BC_NONE,
-							    bc_descr),
-    .help = "Boundary condition in x direction" },
-  { "bcy"             , VAR(bc[1])           , PARAM_SELECT(BC_NONE,
-							    bc_descr),
-    .help = "Boundary condition in y direction" },
-  { "bcz"             , VAR(bc[2])           , PARAM_SELECT(BC_NONE,
-							    bc_descr),
-    .help = "Boundary condition in z direction" },
   {},
 };
 #undef VAR

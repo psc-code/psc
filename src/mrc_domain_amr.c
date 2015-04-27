@@ -373,19 +373,6 @@ mrc_domain_amr_get_global_dims(struct mrc_domain *domain, int *dims)
 }
 
 // ----------------------------------------------------------------------
-// mrc_domain_amr_get_bc
-
-static void
-mrc_domain_amr_get_bc(struct mrc_domain *domain, int *bc)
-{
-  struct mrc_domain_amr *amr = mrc_domain_amr(domain);
-
-  for (int d = 0; d < 3; d++) {
-    bc[d] = amr->bc[d];
-  }
-}
-
-// ----------------------------------------------------------------------
 // mrc_domain_amr_get_nr_global_patches
 
 static void
@@ -535,12 +522,6 @@ mrc_domain_amr_create_ddc(struct mrc_domain *domain)
   return ddc;
 }
 
-static struct mrc_param_select bc_descr[] = {
-  { .val = BC_NONE       , .str = "none"     },
-  { .val = BC_PERIODIC   , .str = "periodic" },
-  {},
-};
-
 static struct mrc_param_select curve_descr[] = {
   { .val = CURVE_BYDIM   , .str = "bydim"    },
   { .val = CURVE_MORTON  , .str = "morton"   },
@@ -551,12 +532,6 @@ static struct mrc_param_select curve_descr[] = {
 #define VAR(x) (void *)offsetof(struct mrc_domain_amr, x)
 static struct param mrc_domain_amr_params_descr[] = {
   { "m"               , VAR(gdims)           , PARAM_INT3(32, 32, 32) },
-  { "bcx"             , VAR(bc[0])           , PARAM_SELECT(BC_NONE,
-							    bc_descr) },
-  { "bcy"             , VAR(bc[1])           , PARAM_SELECT(BC_NONE,
-							    bc_descr) },
-  { "bcz"             , VAR(bc[2])           , PARAM_SELECT(BC_NONE,
-							    bc_descr) },
   { "curve_type"      , VAR(sfc.curve_type)  , PARAM_SELECT(CURVE_BYDIM,
 							    curve_descr) },
   { "nr_patches"      , VAR(nr_patches)      , PARAM_INT(-1) },
@@ -575,7 +550,6 @@ struct mrc_domain_ops mrc_domain_amr_ops = {
   .destroy                   = mrc_domain_amr_destroy,
   .add_patch                 = mrc_domain_amr_add_patch,
   .get_patches               = mrc_domain_amr_get_patches,
-  .get_bc                    = mrc_domain_amr_get_bc,
   .get_nr_global_patches     = mrc_domain_amr_get_nr_global_patches,
   .get_global_dims           = mrc_domain_amr_get_global_dims,
   .get_global_patch_info     = mrc_domain_amr_get_global_patch_info,
