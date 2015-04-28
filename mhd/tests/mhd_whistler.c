@@ -128,6 +128,7 @@ ggcm_mhd_ic_whistler_run(struct ggcm_mhd_ic *ic)
   double alpha1, c1, s1;
   double alpha2, c2, s2;
   double dx, dy, dz;
+  int gdims[3], p1x, p1y, p1z;
 
   struct mrc_fld *A = mrc_domain_fld_create(f->_domain, 2, "Ax:Ay:Az");
   mrc_fld_set_type(A, FLD_TYPE);
@@ -165,26 +166,32 @@ ggcm_mhd_ic_whistler_run(struct ggcm_mhd_ic *ic)
   s2 = sin(alpha2);
   c2 = cos(alpha2);
   
+  // used for invariant directions
+  mrc_domain_get_global_dims(mhd->domain, gdims);
+  p1x = (gdims[0] > 1);
+  p1y = (gdims[1] > 1);
+  p1z = (gdims[2] > 1);
+  
   // Construct a circularly polarized vector potential
   for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
     mrc_fld_foreach(f, ix,iy,iz, 1, 2) {
       // calc Ax
       r[0] = MRC_MCRDX(crds, ix, p);
-      r[1] = 0.5 * (MRC_MCRDY(crds, iy - 1, p) + MRC_MCRDY(crds, iy, p));
-      r[2] = 0.5 * (MRC_MCRDZ(crds, iz - 1, p) + MRC_MCRDZ(crds, iz, p));
+      r[1] = 0.5 * (MRC_MCRDY(crds, iy - p1y, p) + MRC_MCRDY(crds, iy, p));
+      r[2] = 0.5 * (MRC_MCRDZ(crds, iz - p1z, p) + MRC_MCRDZ(crds, iz, p));
       calc_Arot(kmag, r, s1, c1, s2, c2, &Aroty, &Arotz, sub->polarization);
       M3(A, 0, ix, iy, iz, p) = -s1 * Aroty + c1 * s2 * Arotz;
 
       // calc Ay
-      r[0] = 0.5 * (MRC_MCRDX(crds, ix - 1, p) + MRC_MCRDX(crds, ix, p));
+      r[0] = 0.5 * (MRC_MCRDX(crds, ix - p1x, p) + MRC_MCRDX(crds, ix, p));
       r[1] = MRC_MCRDY(crds, iy, p);
-      r[2] = 0.5 * (MRC_MCRDZ(crds, iz - 1, p) + MRC_MCRDZ(crds, iz, p));
+      r[2] = 0.5 * (MRC_MCRDZ(crds, iz - p1z, p) + MRC_MCRDZ(crds, iz, p));
       calc_Arot(kmag, r, s1, c1, s2, c2, &Aroty, &Arotz, sub->polarization);
       M3(A, 1, ix, iy, iz, p) = c1 * Aroty + s1 * s2 * Arotz;
 
       // calc Az
-      r[0] = 0.5 * (MRC_MCRDX(crds, ix - 1, p) + MRC_MCRDX(crds, ix, p));
-      r[1] = 0.5 * (MRC_MCRDY(crds, iy - 1, p) + MRC_MCRDY(crds, iy, p));
+      r[0] = 0.5 * (MRC_MCRDX(crds, ix - p1x, p) + MRC_MCRDX(crds, ix, p));
+      r[1] = 0.5 * (MRC_MCRDY(crds, iy - p1y, p) + MRC_MCRDY(crds, iy, p));
       r[2] = MRC_MCRDZ(crds, iz, p);
       calc_Arot(kmag, r, s1, c1, s2, c2, &Aroty, &Arotz, sub->polarization);
       M3(A, 2, ix, iy, iz, p) = c2 * Arotz;
@@ -193,18 +200,24 @@ ggcm_mhd_ic_whistler_run(struct ggcm_mhd_ic *ic)
     // set face centered variables
     mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
       // pert_fc = curl A
-      dx = 0.5 * (MRC_MCRDX(crds, ix + 1, p) - MRC_MCRDX(crds, ix - 1, p));
-      dy = 0.5 * (MRC_MCRDY(crds, iy + 1, p) - MRC_MCRDY(crds, iy - 1, p));
-      dz = 0.5 * (MRC_MCRDZ(crds, iz + 1, p) - MRC_MCRDZ(crds, iz - 1, p));
+      dx = 0.5 * (MRC_MCRDX(crds, ix + p1x, p) - MRC_MCRDX(crds, ix - p1x, p));
+      dy = 0.5 * (MRC_MCRDY(crds, iy + p1y, p) - MRC_MCRDY(crds, iy - p1y, p));
+      dz = 0.5 * (MRC_MCRDZ(crds, iz + p1z, p) - MRC_MCRDZ(crds, iz - p1z, p));
+      
+      // don't divide by 0 in invariant directions
+      if (p1x == 0) { dx = 1.0; }
+      if (p1y == 0) { dy = 1.0; }
+      if (p1z == 0) { dz = 1.0; }
+      
       M3(pert_fc, 0, ix, iy, iz, p) =
-         (M3(A, 2, ix  , iy+1, iz  , p) - M3(A, 2, ix, iy, iz, p)) / dy -
-         (M3(A, 1, ix  , iy  , iz+1, p) - M3(A, 1, ix, iy, iz, p)) / dz;
+         (M3(A, 2, ix    , iy+p1y, iz    , p) - M3(A, 2, ix, iy, iz, p)) / dy -
+         (M3(A, 1, ix    , iy    , iz+p1z, p) - M3(A, 1, ix, iy, iz, p)) / dz;
       M3(pert_fc, 1, ix, iy, iz, p) = 
-        -(M3(A, 2, ix+1, iy  , iz  , p) - M3(A, 2, ix, iy, iz, p)) / dx +
-         (M3(A, 0, ix  , iy  , iz+1, p) - M3(A, 0, ix, iy, iz, p)) / dz;
+         (M3(A, 0, ix    , iy    , iz+p1z, p) - M3(A, 0, ix, iy, iz, p)) / dz -
+         (M3(A, 2, ix+p1x, iy    , iz    , p) - M3(A, 2, ix, iy, iz, p)) / dx;
       M3(pert_fc, 2, ix, iy, iz, p) = 
-         (M3(A, 1, ix+1, iy  , iz  , p) - M3(A, 1, ix, iy, iz, p)) / dx -
-         (M3(A, 0, ix  , iy+1, iz  , p) - M3(A, 0, ix, iy, iz, p)) / dy;
+         (M3(A, 1, ix+p1x, iy    , iz    , p) - M3(A, 1, ix, iy, iz, p)) / dx -
+         (M3(A, 0, ix    , iy+p1y, iz    , p) - M3(A, 0, ix, iy, iz, p)) / dy;
       BX_(f, ix,iy,iz, p) = sub->b_par * kunit[0] + sub->b_perp * M3(pert_fc, 0, ix, iy, iz, p);
       BY_(f, ix,iy,iz, p) = sub->b_par * kunit[1] + sub->b_perp * M3(pert_fc, 1, ix, iy, iz, p);
       BZ_(f, ix,iy,iz, p) = sub->b_par * kunit[2] + sub->b_perp * M3(pert_fc, 2, ix, iy, iz, p);
@@ -212,13 +225,20 @@ ggcm_mhd_ic_whistler_run(struct ggcm_mhd_ic *ic)
 
     // set cell centered variables
     mrc_fld_foreach(f, ix,iy,iz, 1, 0) {
-      pert_cc[0] = 0.5 * (M3(pert_fc, 0, ix, iy, iz, p) + M3(pert_fc, 0, ix+1, iy, iz, p));
-      pert_cc[1] = 0.5 * (M3(pert_fc, 1, ix, iy, iz, p) + M3(pert_fc, 1, ix, iy+1, iz, p));
-      pert_cc[2] = 0.5 * (M3(pert_fc, 2, ix, iy, iz, p) + M3(pert_fc, 2, ix, iy, iz+1, p));
+      pert_cc[0] = 0.5 * (M3(pert_fc, 0, ix    , iy    , iz    , p) +
+                          M3(pert_fc, 0, ix+p1x, iy    , iz    , p));
+      pert_cc[1] = 0.5 * (M3(pert_fc, 1, ix    , iy    , iz    , p) +
+                          M3(pert_fc, 1, ix    , iy+p1y, iz    , p));
+      pert_cc[2] = 0.5 * (M3(pert_fc, 2, ix    , iy    , iz    , p) +
+                          M3(pert_fc, 2, ix    , iy    , iz+p1z, p));
 
-      // pert_cc[0] = 0.5 * (M3(pert_fc, 0, ix, iy, iz, p) + M3(pert_fc, 0, ix-1, iy, iz, p));
-      // pert_cc[1] = 0.5 * (M3(pert_fc, 1, ix, iy, iz, p) + M3(pert_fc, 1, ix, iy-1, iz, p));
-      // pert_cc[2] = 0.5 * (M3(pert_fc, 2, ix, iy, iz, p) + M3(pert_fc, 2, ix, iy, iz-1, p));
+      // this version shouldn't be needed?
+      // pert_cc[0] = 0.5 * (M3(pert_fc, 0, ix    , iy    , iz    , p) +
+      //                     M3(pert_fc, 0, ix-p1x, iy    , iz    , p));
+      // pert_cc[1] = 0.5 * (M3(pert_fc, 1, ix    , iy    , iz    , p) +
+      //                     M3(pert_fc, 1, ix    , iy-p1y, iz    , p));
+      // pert_cc[2] = 0.5 * (M3(pert_fc, 2, ix    , iy    , iz    , p) +
+      //                     M3(pert_fc, 2, ix    , iy    , iz-p1z, p));
 
       RR_(f, ix,iy,iz, p) = sub->rho0;
       PP_(f, ix,iy,iz, p) = sub->rho0;
