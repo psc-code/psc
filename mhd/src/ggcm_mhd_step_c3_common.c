@@ -997,7 +997,7 @@ ggcm_mhd_step_c3_diag_item_rmask_run(struct ggcm_mhd_step *step,
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_step_c3, x)
 static struct param ggcm_mhd_step_c3_descr[] = {
-  { "enforce_rrmin"   , VAR(enforce_rrmin)   , PARAM_BOOL(true)             },
+  { "enforce_rrmin"   , VAR(enforce_rrmin)   , PARAM_BOOL(false)             },
   { "debug_dump"      , VAR(debug_dump)      , PARAM_BOOL(false)            },
   
   { "reconstruct"     , VAR(reconstruct)     , MRC_VAR_OBJ(mhd_reconstruct) },
