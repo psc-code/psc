@@ -94,18 +94,20 @@ ggcm_mhd_create_amr_ddc_flux(struct ggcm_mhd *mhd, int d)
   mrc_ddc_set_param_int(ddc, "size_of_type", mhd->fld->_size_of_type);
   mrc_ddc_set_param_int3(ddc, "sw", mrc_fld_spatial_sw(mhd->fld));
   // FIXME!!!
+  int n_comp;
   if (strcmp(ggcm_mhd_step_type(mhd->step), "vl") == 0 ||
       strcmp(ggcm_mhd_step_type(mhd->step), "c3_double") == 0) {
-    mrc_ddc_set_param_int(ddc, "n_comp", 5);
+    n_comp = 5;
   } else if (strcmp(ggcm_mhd_step_type(mhd->step), "vlct") == 0) {
-    mrc_ddc_set_param_int(ddc, "n_comp", 8);
+    n_comp = 8;
   } else {
     assert(0);
   }
+  mrc_ddc_set_param_int(ddc, "n_comp", n_comp);
   mrc_ddc_setup(ddc);
   int ext[3] = {};
   ext[d] = 1;
-  for (int m = 0; m < 5; m++) {
+  for (int m = 0; m < n_comp; m++) {
     mrc_ddc_amr_set_by_stencil(ddc, m, 0, ext, NULL, &stencils_fine_flux[d]);
   }
   mrc_ddc_amr_assemble(ddc);
