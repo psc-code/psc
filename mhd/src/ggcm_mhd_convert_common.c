@@ -191,12 +191,12 @@ copy_sc_to_fc(struct mrc_fld *_f, struct mrc_fld *_ff, int mb, int me)
   for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
     for (int m = mb; m < me; m++) {
       if (m == _UU1) {
-	mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
+	mrc_fld_foreach(f, ix,iy,iz, 2, 1) {
 	  float b2  = (sqr(.5f * (M3(f, _B1X, ix,iy,iz, p) + M3(f, _B1X, ix+1,iy  ,iz  , p))) +
 		       sqr(.5f * (M3(f, _B1Y, ix,iy,iz, p) + M3(f, _B1Y, ix  ,iy+1,iz  , p))) +
 		       sqr(.5f * (M3(f, _B1Z, ix,iy,iz, p) + M3(f, _B1Z, ix  ,iy  ,iz+1, p))));
 	  M3(ff, _UU1, ix,iy,iz, p) = M3(f, _UU1, ix,iy,iz, p) + .5 * b2;
-      } mrc_fld_foreach_end;
+	} mrc_fld_foreach_end;
       } else {
 	mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
 	  M3(ff, m, ix,iy,iz, p) = M3(f, m, ix,iy,iz, p);
