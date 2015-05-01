@@ -494,8 +494,12 @@ mrc_ddc_amr_set_by_stencil(struct mrc_ddc *ddc, int m, int bnd, int _ext[3],
 
   int sw[3], ext[3];
   for (int d = 0; d < 3; d++) {
-    sw[d] = (gdims[d] == 1) ? 0 : bnd;
-    ext[d] = (gdims[d] == 1) ? 0 : _ext[d];
+    sw[d] = (_ext[d] == 0) ? bnd : 0;
+    ext[d] = _ext[d];
+    if (gdims[d] == 1) {
+      sw[d] = 0;
+      ext[d] = 0;
+    }
   }
   for (int lp = 0; lp < nr_patches; lp++) {
     struct mrc_patch_info info;
@@ -547,7 +551,8 @@ mrc_ddc_amr_set_by_stencil(struct mrc_ddc *ddc, int m, int bnd, int _ext[3],
 
 	  // oops, no way to fill this point?
 	  // (This may be okay if the domain has holes or other physical boundaries)
-	  //	  MHERE;
+	  //MHERE;
+	  mrc_ddc_amr_add_diagonal_one(ddc, gp, m, i);
 	}
       }
     }
