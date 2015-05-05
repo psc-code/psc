@@ -283,21 +283,28 @@ compute_Ediffu_const(struct ggcm_mhd_step *step, struct mrc_fld *E_ec,
 
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
 
+  int gdims[3];
+  mrc_domain_get_global_dims(mhd->domain, gdims);
+  int II = gdims[0] > 1 ? 1 : 0;
+  int JJ = gdims[1] > 1 ? 1 : 0;
+  int KK = gdims[2] > 1 ? 1 : 0;
+
   // calc edge-centered J
   for (int p = 0; p < mrc_fld_nr_patches(j_ec); p++) {
     double dx[3]; mrc_crds_get_dx(crds, p, dx);
     mrc_fld_data_t dxi[3] = { 1. / dx[0], 1. / dx[1], 1. / dx[2] };
+    // don't divide by 0 in invariant dimensions
 
     mrc_fld_foreach(j_ec, i,j,k, 1, 2) {
       M3(j_ec, 0, i,j,k, p) =
-	(BZ_(x, i,j,k, p) - BZ_(x, i,j-1,k, p)) * dxi[1] -
-	(BY_(x, i,j,k, p) - BY_(x, i,j,k-1, p)) * dxi[2];
+	(BZ_(x, i,j,k, p) - BZ_(x, i   , j-JJ, k   , p)) * dxi[1] -
+	(BY_(x, i,j,k, p) - BY_(x, i   , j   , k-KK, p)) * dxi[2];
       M3(j_ec, 1, i,j,k, p) =
-	(BX_(x, i,j,k, p) - BX_(x, i,j,k-1, p)) * dxi[2] -
-	(BZ_(x, i,j,k, p) - BZ_(x, i-1,j,k, p)) * dxi[0];
+	(BX_(x, i,j,k, p) - BX_(x, i   , j   , k-KK, p)) * dxi[2] -
+	(BZ_(x, i,j,k, p) - BZ_(x, i-II, j   , k   , p)) * dxi[0];
       M3(j_ec, 2, i,j,k, p) =
-	(BY_(x, i,j,k, p) - BY_(x, i-1,j,k, p)) * dxi[0] -
-	(BX_(x, i,j,k, p) - BX_(x, i,j-1,k, p)) * dxi[1];
+	(BY_(x, i,j,k, p) - BY_(x, i-II, j   , k   , p)) * dxi[0] -
+	(BX_(x, i,j,k, p) - BX_(x, i   , j-JJ, k   , p)) * dxi[1];
     } mrc_fld_foreach_end;
   }
 
@@ -305,14 +312,14 @@ compute_Ediffu_const(struct ggcm_mhd_step *step, struct mrc_fld *E_ec,
   for (int p = 0; p < mrc_fld_nr_patches(E_ec); p++) {
     mrc_fld_foreach(j_ec, i,j,k, 1, 1) {
       M3(j_cc, 0, i,j,k, p) =
-	0.25 * (M3(j_ec, 0, i  ,j+1,k+1, p) + M3(j_ec, 0, i  ,j  ,k+1, p) +
-		M3(j_ec, 0, i  ,j+1,k  , p) + M3(j_ec, 0, i  ,j  ,k  , p));
+	0.25 * (M3(j_ec, 0, i   , j+JJ, k+KK, p) + M3(j_ec, 0, i   , j   , k+KK, p) +
+		M3(j_ec, 0, i   , j+JJ, k   , p) + M3(j_ec, 0, i   , j   , k   , p));
       M3(j_cc, 1, i,j,k, p) =
-	0.25 * (M3(j_ec, 1, i+1,j  ,k+1, p) + M3(j_ec, 1, i+1,j  ,k  , p) +
-		M3(j_ec, 1, i  ,j  ,k+1, p) + M3(j_ec, 1, i  ,j  ,k  , p));
+	0.25 * (M3(j_ec, 1, i+II, j   , k+KK, p) + M3(j_ec, 1, i+II, j   , k   , p) +
+		M3(j_ec, 1, i   , j   , k+KK, p) + M3(j_ec, 1, i   , j   , k   , p));
       M3(j_cc, 2, i,j,k, p) =
-	0.25 * (M3(j_ec, 2, i+1,j+1,k  , p) + M3(j_ec, 2, i+1,j  ,k  , p) +
-		M3(j_ec, 2, i  ,j+1,k  , p) + M3(j_ec, 2, i  ,j  ,k  , p));
+	0.25 * (M3(j_ec, 2, i+II, j+JJ, k   , p) + M3(j_ec, 2, i+II, j   , k   , p) +
+		M3(j_ec, 2, i   , j+JJ, k   , p) + M3(j_ec, 2, i   , j   , k   , p));
     } mrc_fld_foreach_end;
   }
 
@@ -331,40 +338,40 @@ compute_Ediffu_const(struct ggcm_mhd_step *step, struct mrc_fld *E_ec,
 	// average edge centered J to the edges needed for JxB
 	// the ec_[xyz] says which edge J is on, aka the component of E that
 	// the value is used to calculate
-	/* Jy_ecx = 0.25 * (M3(j_ec, 1, i+1,j-1,k  , p) + M3(j_ec, 1, i+1,j  ,k  , p) + */
-	/* 		 M3(j_ec, 1, i  ,j-1,k  , p) + M3(j_ec, 1, i  ,j  ,k  , p)); */
-	/* Jz_ecx = 0.25 * (M3(j_ec, 2, i+1,j  ,k-1, p) + M3(j_ec, 2, i+1,j  ,k  , p) + */
-	/* 		 M3(j_ec, 2, i  ,j  ,k-1, p) + M3(j_ec, 2, i  ,j  ,k  , p)); */
-	/* Jx_ecy = 0.25 * (M3(j_ec, 0, i-1,j+1,k  , p) + M3(j_ec, 0, i-1,j,  k  , p) + */
-	/* 		 M3(j_ec, 0, i  ,j+1,k  , p) + M3(j_ec, 0, i  ,j  ,k  , p)); */
-	/* Jz_ecy = 0.25 * (M3(j_ec, 2, i  ,j+1,k-1, p) + M3(j_ec, 2, i  ,j+1,k  , p) + */
-	/* 		 M3(j_ec, 2, i  ,j  ,k-1, p) + M3(j_ec, 2, i,  j,  k  , p)); */
-	/* Jx_ecz = 0.25 * (M3(j_ec, 0, i-1,j  ,k+1, p) + M3(j_ec, 0, i-1,j  ,k  , p) + */
-	/* 		 M3(j_ec, 0, i  ,j  ,k+1, p) + M3(j_ec, 0, i,  j  ,k  , p)); */
-	/* Jy_ecz = 0.25 * (M3(j_ec, 1, i  ,j-1,k+1, p) + M3(j_ec, 1, i  ,j-1,k  , p) + */
-	/* 		 M3(j_ec, 1, i  ,j  ,k+1, p) + M3(j_ec, 1, i  ,j,  k  , p)); */
+	// Jy_ecx = 0.25 * (M3(j_ec, 1, i+II, j-JJ, k   , p) + M3(j_ec, 1, i+II, j   , k  , p) +
+	// 		    M3(j_ec, 1, i   , j-JJ, k   , p) + M3(j_ec, 1, i   , j   , k  , p));
+	// Jz_ecx = 0.25 * (M3(j_ec, 2, i+II, j   , k-KK, p) + M3(j_ec, 2, i+II, j   , k  , p) +
+	// 		    M3(j_ec, 2, i   , j   , k-KK, p) + M3(j_ec, 2, i   , j   , k  , p));
+	// Jx_ecy = 0.25 * (M3(j_ec, 0, i-II, j+JJ, k   , p) + M3(j_ec, 0, i-II, j   , k  , p) +
+	// 		    M3(j_ec, 0, i   , j+JJ, k   , p) + M3(j_ec, 0, i   , j   , k  , p));
+	// Jz_ecy = 0.25 * (M3(j_ec, 2, i   , j+JJ, k-KK, p) + M3(j_ec, 2, i   , j+JJ, k  , p) +
+	// 		    M3(j_ec, 2, i   , j   , k-KK, p) + M3(j_ec, 2, i   , j   , k  , p));
+	// Jx_ecz = 0.25 * (M3(j_ec, 0, i-II, j   , k+KK, p) + M3(j_ec, 0, i-II, j   , k  , p) +
+	// 		    M3(j_ec, 0, i   , j   , k+KK, p) + M3(j_ec, 0, i   , j   , k  , p));
+	// Jy_ecz = 0.25 * (M3(j_ec, 1, i   , j-JJ, k+KK, p) + M3(j_ec, 1, i   , j-JJ, k  , p) +
+	// 		    M3(j_ec, 1, i   , j   , k+KK, p) + M3(j_ec, 1, i   , j   , k  , p));
 
 	// use j_cc to get J used for j x b
-	Jy_ecx = 0.25 * (M3(j_cc, 1, i  ,j-1,k-1, p) + M3(j_cc, 1, i  ,j-1,k  , p) +
-			 M3(j_cc, 1, i  ,j  ,k-1, p) + M3(j_cc, 1, i  ,j  ,k  , p));
-	Jz_ecx = 0.25 * (M3(j_cc, 2, i  ,j-1,k-1, p) + M3(j_cc, 2, i  ,j-1,k  , p) +
-			 M3(j_cc, 2, i  ,j  ,k-1, p) + M3(j_cc, 2, i  ,j  ,k  , p));
-	Jx_ecy = 0.25 * (M3(j_cc, 0, i-1,j  ,k-1, p) + M3(j_cc, 0, i-1,j  ,k  , p) +
-			 M3(j_cc, 0, i-1,j  ,k  , p) + M3(j_cc, 0, i  ,j  ,k  , p));
-	Jz_ecy = 0.25 * (M3(j_cc, 2, i-1,j  ,k-1, p) + M3(j_cc, 2, i-1,j  ,k  , p) +
-			 M3(j_cc, 2, i-1,j  ,k  , p) + M3(j_cc, 2, i  ,j  ,k  , p));
-	Jx_ecz = 0.25 * (M3(j_cc, 0, i-1,j-1,k  , p) + M3(j_cc, 0, i-1,j  ,k  , p) +
-			 M3(j_cc, 0, i-1,j  ,k  , p) + M3(j_cc, 0, i  ,j  ,k  , p));
-	Jy_ecz = 0.25 * (M3(j_cc, 1, i-1,j-1,k  , p) + M3(j_cc, 1, i-1,j  ,k  , p) +
-			 M3(j_cc, 1, i-1,j  ,k  , p) + M3(j_cc, 1, i  ,j  ,k  , p));
+	Jy_ecx = 0.25 * (M3(j_cc, 1, i   , j-JJ, k-KK, p) + M3(j_cc, 1, i   , j-JJ, k   , p) +
+			 M3(j_cc, 1, i   , j   , k-KK, p) + M3(j_cc, 1, i   , j   , k   , p));
+	Jz_ecx = 0.25 * (M3(j_cc, 2, i   , j-JJ, k-KK, p) + M3(j_cc, 2, i   , j-JJ, k   , p) +
+			 M3(j_cc, 2, i   , j   , k-KK, p) + M3(j_cc, 2, i   , j   , k   , p));
+	Jx_ecy = 0.25 * (M3(j_cc, 0, i-II, j   , k-KK, p) + M3(j_cc, 0, i-II, j   , k   , p) +
+			 M3(j_cc, 0, i-II, j   , k   , p) + M3(j_cc, 0, i   , j   , k   , p));
+	Jz_ecy = 0.25 * (M3(j_cc, 2, i-II, j   , k-KK, p) + M3(j_cc, 2, i-II, j   , k   , p) +
+			 M3(j_cc, 2, i-II, j   , k   , p) + M3(j_cc, 2, i   , j   , k   , p));
+	Jx_ecz = 0.25 * (M3(j_cc, 0, i-II, j-JJ, k   , p) + M3(j_cc, 0, i-II, j   , k   , p) +
+			 M3(j_cc, 0, i-II, j   , k   , p) + M3(j_cc, 0, i   , j   , k   , p));
+	Jy_ecz = 0.25 * (M3(j_cc, 1, i-II, j-JJ, k   , p) + M3(j_cc, 1, i-II, j   , k   , p) +
+			 M3(j_cc, 1, i-II, j   , k   , p) + M3(j_cc, 1, i   , j   , k   , p));
 
 	// average face centered B to edge centers
-	By_ecx = 0.5 * (BY_(x, i, j, k-1, p) + BY_(x, i, j, k, p));
-	Bz_ecx = 0.5 * (BZ_(x, i, j-1, k, p) + BZ_(x, i, j, k, p));
-	Bx_ecy = 0.5 * (BX_(x, i, j, k-1, p) + BX_(x, i, j, k, p));
-	Bz_ecy = 0.5 * (BZ_(x, i-1, j, k, p) + BZ_(x, i, j, k, p));
-	Bx_ecz = 0.5 * (BX_(x, i, j-1, k, p) + BX_(x, i, j, k, p));
-	By_ecz = 0.5 * (BY_(x, i-1, j, k, p) + BY_(x, i, j, k, p));
+	By_ecx = 0.5 * (BY_(x, i   , j   , k-KK, p) + BY_(x, i, j, k, p));
+	Bz_ecx = 0.5 * (BZ_(x, i   , j-JJ, k   , p) + BZ_(x, i, j, k, p));
+	Bx_ecy = 0.5 * (BX_(x, i   , j   , k-KK, p) + BX_(x, i, j, k, p));
+	Bz_ecy = 0.5 * (BZ_(x, i-II, j   , k   , p) + BZ_(x, i, j, k, p));
+	Bx_ecz = 0.5 * (BX_(x, i   , j-JJ, k   , p) + BX_(x, i, j, k, p));
+	By_ecz = 0.5 * (BY_(x, i-II, j   , k   , p) + BY_(x, i, j, k, p));
 	
 	M3(E_ec, 0, i,j,k, p) += d_i * ( Jy_ecx * Bz_ecx - Jz_ecx * By_ecx);
 	M3(E_ec, 1, i,j,k, p) += d_i * (-Jx_ecy * Bz_ecy + Jz_ecy * Bx_ecy);

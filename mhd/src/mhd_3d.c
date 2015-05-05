@@ -52,8 +52,6 @@ update_ct_uniform(struct ggcm_mhd *mhd,
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
   const int *ldims = mrc_fld_spatial_dims(x);
 
-  // FIXME, works with gdims[2] == 1, but not with other invar directions
-
   for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
     double ddx[3]; mrc_crds_get_dx(crds, p, ddx);
     mrc_fld_data_t dt_on_dx[3] = { dt / ddx[0], dt / ddx[1], dt / ddx[2] };
@@ -78,21 +76,25 @@ update_ct_uniform(struct ggcm_mhd *mhd,
 				    dt_on_dx[0] * (M3(E, 1, i+dx,j   ,k   , p) - M3(E, 1, i,j,k, p)));
 	  }
 	}
-	int i = ldims[0] + r[0];
-	float crd_fc[3];
-	ggcm_mhd_get_crds_fc(mhd, i,j,k, p, 0, crd_fc);
-	if (sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]) > r_db_dt_sq) {
-	  M3(x, BX, i,j,k, p) += (dt_on_dx[2] * (M3(E, 1, i   ,j   ,k+dz, p) - M3(E, 1, i,j,k, p)) -
-				  dt_on_dx[1] * (M3(E, 2, i   ,j+dy,k   , p) - M3(E, 2, i,j,k, p)));
+        if (gdims[0] > 1) {  
+	  int i = ldims[0] + r[0];
+	  float crd_fc[3];
+	  ggcm_mhd_get_crds_fc(mhd, i,j,k, p, 0, crd_fc);
+	  if (sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]) >= r_db_dt_sq) {
+	    M3(x, BX, i,j,k, p) += (dt_on_dx[2] * (M3(E, 1, i   ,j   ,k+dz, p) - M3(E, 1, i,j,k, p)) -
+				    dt_on_dx[1] * (M3(E, 2, i   ,j+dy,k   , p) - M3(E, 2, i,j,k, p)));
+	  }
 	}
       }
-      for (int i = -l[0]; i < ldims[0] + r[0]; i++) {
-      	int j = ldims[1] + r[1];
-	float crd_fc[3];
-	ggcm_mhd_get_crds_fc(mhd, i,j,k, p, 1, crd_fc);
-	if (sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]) > r_db_dt_sq) {
-	  M3(x, BY, i,j,k, p) += (dt_on_dx[0] * (M3(E, 2, i+dx,j   ,k   , p) - M3(E, 2, i,j,k, p)) -
-				  dt_on_dx[2] * (M3(E, 0, i   ,j   ,k+dz, p) - M3(E, 0, i,j,k, p)));
+      if (gdims[1] > 1) {
+	for (int i = -l[0]; i < ldims[0] + r[0]; i++) {
+	  int j = ldims[1] + r[1];
+	  float crd_fc[3];
+	  ggcm_mhd_get_crds_fc(mhd, i,j,k, p, 1, crd_fc);
+	  if (sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]) >= r_db_dt_sq) {
+	    M3(x, BY, i,j,k, p) += (dt_on_dx[0] * (M3(E, 2, i+dx,j   ,k   , p) - M3(E, 2, i,j,k, p)) -
+				    dt_on_dx[2] * (M3(E, 0, i   ,j   ,k+dz, p) - M3(E, 0, i,j,k, p)));
+	  }
 	}
       }
     }
@@ -102,7 +104,7 @@ update_ct_uniform(struct ggcm_mhd *mhd,
     	  int k = ldims[2] + r[2];
 	  float crd_fc[3];
 	  ggcm_mhd_get_crds_fc(mhd, i,j,k, p, 2, crd_fc);
-	  if (sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]) > r_db_dt_sq) {
+	  if (sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]) >= r_db_dt_sq) {
 	    M3(x, BZ, i,j,k, p) += (dt_on_dx[1] * (M3(E, 0, i   ,j+dy,k   , p) - M3(E, 0, i,j,k, p)) -
 				    dt_on_dx[0] * (M3(E, 1, i+dx,j   ,k   , p) - M3(E, 1, i,j,k, p)));
 	  }
