@@ -33,6 +33,12 @@ ggcm_mhd_ic_ot_run(struct ggcm_mhd_ic *ic)
   double dx0[3], dx[3];
   mrc_crds_get_dx_base(crds, dx0);
 
+  int gdims[3], p1x, p1y, p1z;
+  mrc_domain_get_global_dims(mhd->domain, gdims);
+  p1x = (gdims[0] > 1);
+  p1y = (gdims[1] > 1);
+  p1z = (gdims[2] > 1);
+
   struct mrc_fld *Az = mrc_domain_fld_create(mhd->domain, 2, "Az");
   mrc_fld_set_type(Az, FLD_TYPE);
   mrc_fld_setup(Az);
@@ -67,8 +73,8 @@ ggcm_mhd_ic_ot_run(struct ggcm_mhd_ic *ic)
     
     /* Initialize face-centered fields */
     mrc_fld_foreach(fld, ix,iy,iz, 1, 1) {
-      BX_(fld, ix,iy,iz, p) =  (M3(Az, 0, ix,iy+1,iz, p) - M3(Az, 0, ix,iy,iz, p)) / dx[1];
-      BY_(fld, ix,iy,iz, p) = -(M3(Az, 0, ix+1,iy,iz, p) - M3(Az, 0, ix,iy,iz, p)) / dx[0];
+      BX_(fld, ix,iy,iz, p) =  (M3(Az, 0, ix    , iy+p1y, iz, p) - M3(Az, 0, ix,iy,iz, p)) / dx[1];
+      BY_(fld, ix,iy,iz, p) = -(M3(Az, 0, ix+p1x, iy    , iz, p) - M3(Az, 0, ix,iy,iz, p)) / dx[0];
     } mrc_fld_foreach_end;
 
     /* Initialize density, momentum, total energy */
@@ -84,8 +90,8 @@ ggcm_mhd_ic_ot_run(struct ggcm_mhd_ic *ic)
     /* calc max divb */    
     mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
       double val =
-        (BX(fld, ix+1,iy,iz) - BX(fld, ix,iy,iz)) / dx[0] +
-        (BY(fld, ix,iy+1,iz) - BY(fld, ix,iy,iz)) / dx[1];
+        (BX(fld, ix+p1x, iy    , iz) - BX(fld, ix,iy,iz)) / dx[0] +
+        (BY(fld, ix    , iy+p1y, iz) - BY(fld, ix,iy,iz)) / dx[1];
 
       max_divb = fmax(max_divb, fabs(val));
     } mrc_fld_foreach_end;
