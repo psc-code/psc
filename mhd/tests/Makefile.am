@@ -24,6 +24,7 @@ TESTS = \
 	test_ggcm_mhd_crds \
 	test_ggcm_mhd \
 	test_mhd_wave_cpaw.sh \
+	mhd_wave_cpaw_amr.sh \
 	mhd_ot.sh \
 	mhd_bw.sh \
 	mhd_double_tearing_x.sh

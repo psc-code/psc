@@ -66,7 +66,7 @@ ${cmd}                                                                       \
   --ggcm_mhd_step_do_nwst      1                                             \
   --ggcm_mhd_thx               0.4                                           \
   --dtmin                      5e-5                                          \
-  --mrc_ts_max_time            1.04                                          \
+  --mrc_ts_max_time            0.1                                           \
   --cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc \
   --ccccccccccccccccccccc  "SIM PARAMETERS"                                  \
   --ggcm_mhd_d_i               0.0                                           \
