@@ -1,0 +1,48 @@
+#!/usr/bin/env python
+"""Check evolution of circularly polarized alfven wave with exact sol'n
+
+Note:
+    Assumes output is dimensionless
+"""
+# pylint: disable=trailing-whitespace
+
+from __future__ import division, print_function
+import sys
+import argparse
+
+import numpy as np
+
+import viscid
+
+def main():
+    descr = "Check circularly polarized alfven wave with exact sol'n"
+    parser = argparse.ArgumentParser(description=descr)    
+    parser.add_argument('-m', type=int, default=1, help='mode number')
+    parser.add_argument('file', nargs=1, help='input file')
+    args = parser.parse_args()
+    
+    f = viscid.load_file(args.file)
+    
+    # get first and last time steps
+    grid0 = f.get_grid(0)
+    grid1 = f.get_grid(-1)
+    
+    if grid0.time == grid1.time:
+        print("No output past the first timestep", file=sys.stderr)
+        return 2
+    
+    deltaUsq = 0.0
+    for fld_name in ['vx', 'vy', 'vz', 'b1x', 'b1y', 'b1z']:
+        initial = grid0[fld_name].astype('f8')
+        final = grid1[fld_name].astype('f8')
+        deltaUsq += (np.sum(final - initial))**2
+    L1error = np.abs(np.sqrt(deltaUsq))
+    
+    return int(L1error != 0.0)
+
+if __name__ == "__main__":
+    sys.exit(main())
+
+##
+## EOF
+##

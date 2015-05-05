@@ -23,9 +23,10 @@ LDADD = ../src/libmhd.la ../../src/libmrc.la
 TESTS = \
 	test_ggcm_mhd_crds \
 	test_ggcm_mhd \
-        mhd_ot.sh \
+	test_mhd_wave_cpaw.sh \
+	mhd_ot.sh \
 	mhd_bw.sh \
-        mhd_double_tearing_x.sh
+	mhd_double_tearing_x.sh
 
 XFAIL_TESTS = \
 	test_ggcm_mhd_crds
