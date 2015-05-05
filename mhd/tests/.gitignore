@@ -23,3 +23,7 @@ ref
 *.trs
 *.xdmf
 *.h5
+*.png
+*.mp4
+*.log
+log.txt
