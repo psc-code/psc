@@ -186,8 +186,8 @@ find_subclass_ops(struct mrc_class *cls, const char *subclass)
 
   if (list_empty(&cls->subclasses)) {
     mpi_printf(MPI_COMM_WORLD,
-	       "ERROR: requested subclass '%s', but class '%s' has no subclasses!\n",
-	       subclass, cls->name);
+               "ERROR: requested subclass '%s', but class '%s' has no subclasses!\n",
+               subclass, cls->name);
   }
 
   struct mrc_obj_ops *ops;
@@ -199,7 +199,7 @@ find_subclass_ops(struct mrc_class *cls, const char *subclass)
   }
 
   mpi_printf(MPI_COMM_WORLD, "ERROR: unknown subclass '%s' of class '%s'\n", subclass,
-	  cls->name);
+          cls->name);
   mpi_printf(MPI_COMM_WORLD, "valid choices are:\n");
   __list_for_each_entry(ops, &cls->subclasses, list, struct mrc_obj_ops) {
     mpi_printf(MPI_COMM_WORLD, "- %s\n", ops->name);
@@ -277,7 +277,7 @@ mrc_obj_put(struct mrc_obj *obj)
 
   while (!list_empty(&obj->children_list)) {
     struct mrc_obj *child = list_entry(obj->children_list.next, struct mrc_obj,
-				       child_entry);
+                                       child_entry);
     list_del(&child->child_entry);
     mrc_obj_destroy(child);
   }
@@ -374,8 +374,8 @@ mrc_obj_set_name(struct mrc_obj *obj, const char *name)
     struct mrc_obj *p;
     list_for_each_entry(p, &obj->cls->instances, instance_entry) {
       if (p->name && strcmp(p->name, new_name) == 0) {
-	unique = false;
-	break;
+        unique = false;
+        break;
       }
     }
 
@@ -506,7 +506,7 @@ mrc_obj_set_from_options(struct mrc_obj *obj)
 
 void
 mrc_obj_set_param_type(struct mrc_obj *obj, const char *name,
-		       int type, union param_u *uval)
+                       int type, union param_u *uval)
 {
   struct mrc_class *cls = obj->cls;
   if (cls->param_descr) {
@@ -536,7 +536,7 @@ mrc_obj_set_param_type(struct mrc_obj *obj, const char *name,
 
 int
 mrc_obj_get_param_type(struct mrc_obj *obj, const char *name,
-		       int type, union param_u *uval)
+                       int type, union param_u *uval)
 {
   struct mrc_class *cls = obj->cls;
   if (cls->param_descr) {
@@ -629,7 +629,7 @@ mrc_obj_set_param_double3(struct mrc_obj *obj, const char *name, const double va
 
 void
 mrc_obj_set_param_int_array(struct mrc_obj *obj, const char *name,
-			    int nr_vals, const int val[])
+                            int nr_vals, const int val[])
 {
   union param_u uval = { .u_int_array = { nr_vals, (int *) val } };
   mrc_obj_set_param_type(obj, name, PT_INT_ARRAY, &uval);
@@ -649,74 +649,82 @@ mrc_obj_set_param_obj(struct mrc_obj *obj, const char *name, void* val)
   mrc_obj_set_param_type(obj, name, PT_OBJ, &uval);
 }
 
-void
+int
 mrc_obj_get_param_bool(struct mrc_obj *obj, const char *name, bool *pval)
 {
   union param_u uval;
-  mrc_obj_get_param_type(obj, name, PT_BOOL, &uval);
+  int err = mrc_obj_get_param_type(obj, name, PT_BOOL, &uval);
   *pval = uval.u_bool;
+  return err;
 }
 
-void
+int
 mrc_obj_get_param_int(struct mrc_obj *obj, const char *name, int *pval)
 {
   union param_u uval;
-  mrc_obj_get_param_type(obj, name, PT_INT, &uval);
+  int err = mrc_obj_get_param_type(obj, name, PT_INT, &uval);
   *pval = uval.u_int;
+  return err;
 }
 
-void
+int
 mrc_obj_get_param_float(struct mrc_obj *obj, const char *name, float *pval)
 {
   union param_u uval;
-  mrc_obj_get_param_type(obj, name, PT_FLOAT, &uval);
+  int err = mrc_obj_get_param_type(obj, name, PT_FLOAT, &uval);
   *pval = uval.u_float;
+  return err;
 }
 
-void
+int
 mrc_obj_get_param_double(struct mrc_obj *obj, const char *name, double *pval)
 {
   union param_u uval;
-  mrc_obj_get_param_type(obj, name, PT_DOUBLE, &uval);
+  int err = mrc_obj_get_param_type(obj, name, PT_DOUBLE, &uval);
   *pval = uval.u_double;
+  return err;
 }
 
-void
+int
 mrc_obj_get_param_string(struct mrc_obj *obj, const char *name, const char **val)
 {
   union param_u uval;
-  mrc_obj_get_param_type(obj, name, PT_STRING, &uval);
+  int err = mrc_obj_get_param_type(obj, name, PT_STRING, &uval);
   *val = uval.u_string;
+  return err;
 }
 
-void
+int
 mrc_obj_get_param_int3(struct mrc_obj *obj, const char *name, int *pval)
 {
   union param_u uval;
-  mrc_obj_get_param_type(obj, name, PT_INT3, &uval);
+  int err = mrc_obj_get_param_type(obj, name, PT_INT3, &uval);
   for (int d = 0; d < 3; d++) {
     pval[d] = uval.u_int3[d];
   }
+  return err;
 }
 
-void
+int
 mrc_obj_get_param_float3(struct mrc_obj *obj, const char *name, float *pval)
 {
   union param_u uval;
-  mrc_obj_get_param_type(obj, name, PT_FLOAT3, &uval);
+  int err = mrc_obj_get_param_type(obj, name, PT_FLOAT3, &uval);
   for (int d = 0; d < 3; d++) {
     pval[d] = uval.u_float3[d];
   }
+  return err;
 }
 
-void
+int
 mrc_obj_get_param_double3(struct mrc_obj *obj, const char *name, double *pval)
 {
   union param_u uval;
-  mrc_obj_get_param_type(obj, name, PT_DOUBLE3, &uval);
+  int err = mrc_obj_get_param_type(obj, name, PT_DOUBLE3, &uval);
   for (int d = 0; d < 3; d++) {
     pval[d] = uval.u_double3[d];
   }
+  return err;
 }
 
 int
@@ -739,7 +747,7 @@ mrc_obj_view_this(struct mrc_obj *obj)
   MPI_Comm comm = obj->comm;
 
   mrc_view_printf(comm, "==================================================== class == %s\n",
-		  mrc_obj_name(obj));
+                  mrc_obj_name(obj));
 
   if (cls->param_descr || !list_empty(&obj->dict_list) || 
       (obj->ops && obj->ops->param_descr)) {
@@ -761,11 +769,11 @@ mrc_obj_view_this(struct mrc_obj *obj)
 
   if (obj->ops) {
     mrc_view_printf(comm, "--------------------+-------------------------------- type -- %s\n",
-	       obj->ops->name);
+               obj->ops->name);
     if (obj->ops->param_descr) {
       char *p = (char *) obj->subctx + obj->ops->param_offset;
       for (int i = 0; obj->ops->param_descr[i].name; i++) {
-	mrc_params_print_one(p, &obj->ops->param_descr[i], comm);
+        mrc_params_print_one(p, &obj->ops->param_descr[i], comm);
       }
     } 
   }
@@ -932,7 +940,7 @@ mrc_obj_read_super(struct mrc_obj *obj, struct mrc_io *io)
       obj->ops->setup(obj);
     } else {
       if (cls->setup) {
-	cls->setup(obj);
+        cls->setup(obj);
       }
     }
   }
@@ -940,7 +948,7 @@ mrc_obj_read_super(struct mrc_obj *obj, struct mrc_io *io)
 
 static void
 mrc_obj_read_params(struct mrc_obj *obj, void *p, struct param *params,
-		    const char *path, struct mrc_io *io)
+                    const char *path, struct mrc_io *io)
 {
   for (int i = 0; params[i].name; i++) {
     struct param *prm = &params[i];
@@ -973,8 +981,8 @@ mrc_obj_read_dict(struct mrc_obj *obj, const char *path, struct mrc_io *io)
     union param_u pv;
     if (type == PT_OBJ || type == MRC_VAR_OBJ) {
       mpi_printf(mrc_io_comm(io),
-		 "!!! WARNING: cannot read back dictionary object %s (type %d) in %s!!!\n",
-		 name, type, mrc_obj_name(obj));
+                 "!!! WARNING: cannot read back dictionary object %s (type %d) in %s!!!\n",
+                 name, type, mrc_obj_name(obj));
       //pv->u_obj = __mrc_io_read_ref(io, obj, name, descr[i].u.mrc_obj.cls);
     } else {
       mrc_io_read_attr(io, path, type, name, &pv);
@@ -1059,13 +1067,13 @@ mrc_obj_read(struct mrc_io *io, const char *path, struct mrc_class *cls)
 
 static void
 mrc_obj_write_params(struct mrc_obj *obj, void *p, struct param *params,
-		     const char *path, struct mrc_io *io)
+                     const char *path, struct mrc_io *io)
 {
   for (int i = 0; params[i].name; i++) {
     struct param *prm = &params[i];
     union param_u *pv = (union param_u *) (p + (unsigned long) prm->var);
     if (prm->type == PT_OBJ ||
-	prm->type == MRC_VAR_OBJ) {
+        prm->type == MRC_VAR_OBJ) {
       mrc_io_write_ref(io, obj, prm->name, pv->u_obj);
     } else {
       mrc_io_write_attr(io, path, prm->type, prm->name, pv);
@@ -1092,7 +1100,7 @@ mrc_obj_write_dict(struct mrc_obj *obj, const char *path, struct mrc_io *io)
 
   __list_for_each_entry(e, &obj->dict_list, entry, struct mrc_dict_entry) {
     if (e->prm.type == PT_OBJ ||
-	e->prm.type == MRC_VAR_OBJ) {
+        e->prm.type == MRC_VAR_OBJ) {
       mrc_io_write_ref(io, obj, e->prm.name, e->val.u_obj);
     } else {
       mrc_io_write_attr(io, path, e->prm.type, e->prm.name, &e->val);
@@ -1160,7 +1168,7 @@ __mrc_class_register_subclass(struct mrc_class *cls, struct mrc_obj_ops *ops)
 
 void
 mrc_obj_dict_add(struct mrc_obj *obj, int type, const char *name,
-		 union param_u *pv)
+                 union param_u *pv)
 {
   struct mrc_dict_entry *p = calloc(1, sizeof(*p));
   p->prm.type = type;
@@ -1236,7 +1244,7 @@ get_var(void *p, struct param *descr, const char *name, int type, union param_u 
 
 static void
 mrc_obj_get_var_type(struct mrc_obj *obj, const char *name, int type,
-		     union param_u **pv)
+                     union param_u **pv)
 {
   // try to find variable 'name' in the class
   if (obj->cls->param_descr) {
@@ -1290,7 +1298,7 @@ mrc_obj_get_method(struct mrc_obj *obj, const char *name)
     struct mrc_obj_method *methods = obj->ops->methods;
     for (int i = 0; methods[i].name; i++) {
       if (strcmp(name, methods[i].name) == 0) {
-	return methods[i].func;
+        return methods[i].func;
       }
     }
   }
@@ -1299,7 +1307,7 @@ mrc_obj_get_method(struct mrc_obj *obj, const char *name)
     struct mrc_obj_method *methods = obj->cls->methods;
     for (int i = 0; methods[i].name; i++) {
       if (strcmp(name, methods[i].name) == 0) {
-	return methods[i].func;
+        return methods[i].func;
       }
     }
   }
