@@ -12,9 +12,7 @@ bin_PROGRAMS = \
 	mhd_ici \
 	mhd_hydroblast \
 	mhd_mhdblast \
-	mhd_alfven \
-	mhd_sound \
-	mhd_whistler
+	mhd_wave
 
 check_PROGRAMS = \
 	test_ggcm_mhd_crds \

@@ -1,8 +1,11 @@
+// Wave Tests
+// ==========
 // MHD wave tests for waves propogating in an arbitrary direction with
 // respect to the grid. The k vectors are specified by mode number in
 // each direction.
 //
-// Whistler Initial condition (Alfven wave if d_i=0):
+// "cpaw": Circularly Polarized Alfven Wave (whistler/IC waves if d_i > 0)
+// -----------------------------------------------------------------------
 // The initial condition is a circularly polarized wave with k specified
 // in 3D by "mode number" (number of full cycles in the box). Background
 // B field is given by b_par, parallel to k, and background parallel flow
@@ -10,10 +13,13 @@
 // polarization parameter is for right handed whistlers (+1.0) and left
 // handed (-1.0) ion cyclotron waves.
 //
-// Sound Initial condition:
-// Similar to whistler setup, except the background fields are rho0,
+//
+// "sound": Sound Wave
+// -------------------
+// Similar to cpaw setup, except the background fields are rho0,
 // p0, and v_par. The velocity perturbation strength is specified with
 // pert.
+//
 
 // #define BOUNDS_CHECK
 #include "ggcm_mhd_defs.h"
@@ -32,8 +38,11 @@
 #include <assert.h>
 
 // ----------------------------------------------------------------------
-// return  whistler_omega
-// Whistler wave dispersion relation (both branches (polarizations))
+// cpaw_omega
+//
+// Circularly polarized alfven wave dispersion relation (includes 
+// whistler/ioncyclotron branches)
+//
 // ksq: k dot k
 // k_par: k dot B / |B|
 // B: background B
@@ -41,8 +50,8 @@
 // d_i: hall parameter (length)
 // polarization == 1: right handed whistlers, -1: left handed ion cyclotron
 static double
-whistler_omega(double ksq, double k_par, double B, double rho,
-               double d_i, double polarization)
+cpaw_omega(double ksq, double k_par, double B, double rho,
+           double d_i, double polarization)
 {
   double vA = sqrt(sqr(B) / rho);
   double p = sqr(vA) * (-2 * sqr(k_par) - sqr(d_i) * sqr(k_par) * ksq);
@@ -51,16 +60,19 @@ whistler_omega(double ksq, double k_par, double B, double rho,
 }
 
 // ----------------------------------------------------------------------
-// whistler_omega_3d
-// Whistler wave dispersion relation (both branches (polarizations))
+// cpaw_omega_3d
+//
+// Circularly polarized alfven wave dispersion relation (includes 
+// whistler/ioncyclotron branches)
+//
 // k: wave vector
 // B: background B
 // rho: background density
 // d_i: hall parameter (length)
 // polarization == 1: right handed whistlers, -1: left handed ion cyclotron
 static double __unused
-whistler_omega_3d(double k[3], double B[3], double rho, double d_i,
-                  double polarization)
+cpaw_omega_3d(double k[3], double B[3], double rho, double d_i,
+              double polarization)
 {
   double k_par = 0.0;  // = k \cdot B / |B| = |k| \cos \theta
   double Bsq, Bmag, ksq;//, kmag;
@@ -73,31 +85,29 @@ whistler_omega_3d(double k[3], double B[3], double rho, double d_i,
     k_par += B[i] * k[i] / Bmag;
   }
 
-  return whistler_omega(ksq, k_par, sqrt(Bsq), rho, d_i, polarization);
+  return cpaw_omega(ksq, k_par, sqrt(Bsq), rho, d_i, polarization);
 }
 
 // ======================================================================
-// ======================================================================
-// ======================================================================
-// ======================================================================
-// ggcm_mhd_ic "whistler"
+// ggcm_mhd_ic "cpaw"
 
-struct ggcm_mhd_ic_whistler {
+struct ggcm_mhd_ic_cpaw {
   double rho0;  // background density / pressure
   double b_par; // background field
   double v_par; // background parallel flow
   double b_perp; // strength of B perturbation
   int m[3];  // mode number in all 3 dimensions, number of full cycles
-  double polarization;  // +1.0 for right hand, -1.0 for left hand
+  double polarization;  // {+1.0: right hand, -1.0: left hand, 0: linear}
 };
 
 // ----------------------------------------------------------------------
 // calc_Arot
+//
 // Claculate vector potential for a circularly polarized wave rotated
 // by the euler angles alpha1 and alpha2 where s1 = sin(alpha1) and
 // c1 = cos(alpha1), and similarly for alpha2, s2, c2. Here, k is a
 // scalar wave number in the rotated frame. Polarization is +1 for
-// right handed, -1 for left handed.
+// right handed, -1 for left handed, 0 for linear
 
 static void
 calc_Arot(double k, double r[3], double s1, double c1, double s2, double c2,
@@ -109,18 +119,40 @@ calc_Arot(double k, double r[3], double s1, double c1, double s2, double c2,
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_ic_whistler_run
+// calc_Brot
+//
+// Note: This is the curl of Arot, but only analytically
+//
+// Claculate B field for a circularly polarized wave rotated
+// by the euler angles alpha1 and alpha2 where s1 = sin(alpha1) and
+// c1 = cos(alpha1), and similarly for alpha2, s2, c2. Here, k is a
+// scalar wave number in the rotated frame. Polarization is +1 for
+// right handed, -1 for left handed, 0 for linear
 
 static void
-ggcm_mhd_ic_whistler_run(struct ggcm_mhd_ic *ic)
+calc_Brot(double k, double r[3], double s1, double c1, double s2, double c2,
+          double *Byrot, double *Bzrot, double polarization)
 {
-  struct ggcm_mhd_ic_whistler *sub = mrc_to_subobj(ic, struct ggcm_mhd_ic_whistler);
+  double xrot = c1 * c2 * r[0] + c2 * s1 * r[1] - s2 * r[2];
+  *Byrot = sin(k * xrot);
+  *Bzrot = polarization * cos(k * xrot);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_ic_cpaw_run
+
+static void
+ggcm_mhd_ic_cpaw_run(struct ggcm_mhd_ic *ic)
+{
+  struct ggcm_mhd_ic_cpaw *sub = mrc_to_subobj(ic, struct ggcm_mhd_ic_cpaw);
   struct ggcm_mhd *mhd = ic->mhd;  
 
   struct mrc_fld *f = mrc_fld_get_as(mhd->fld, FLD_TYPE);
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);  
   double xl[3], xh[3], L[3], r[3];
   double Aroty, Arotz;
+  double Broty, Brotz;
+  double pert_fc[3];
   double pert_cc[3];
   double k[3], kunit[3];
   double ksq = 0;
@@ -133,9 +165,9 @@ ggcm_mhd_ic_whistler_run(struct ggcm_mhd_ic *ic)
   struct mrc_fld *A = mrc_domain_fld_create(f->_domain, 2, "Ax:Ay:Az");
   mrc_fld_set_type(A, FLD_TYPE);
   mrc_fld_setup(A); 
-  struct mrc_fld *pert_fc = mrc_domain_fld_create(f->_domain, 2, "Bx:By:Bz");
-  mrc_fld_set_type(pert_fc, FLD_TYPE);
-  mrc_fld_setup(pert_fc);   
+  // struct mrc_fld *pert_fc = mrc_domain_fld_create(f->_domain, 2, "Bx:By:Bz");
+  // mrc_fld_set_type(pert_fc, FLD_TYPE);
+  // mrc_fld_setup(pert_fc);   
 
   mrc_crds_get_param_double3(crds, "l", xl);
   mrc_crds_get_param_double3(crds, "h", xh);
@@ -148,8 +180,8 @@ ggcm_mhd_ic_whistler_run(struct ggcm_mhd_ic *ic)
   for (int i = 0; i < 3; i++) {
     kunit[i] = k[i] / kmag;
   }
-  om = whistler_omega(ksq, kmag, sub->b_par, sub->rho0, mhd->par.d_i,
-                      sub->polarization);
+  om = cpaw_omega(ksq, kmag, sub->b_par, sub->rho0, mhd->par.d_i,
+                  sub->polarization);
   // from Biscamp 2000, eq 6.32
   v_perp = -kmag * sub->b_par * sub->b_perp / om;
 
@@ -175,21 +207,21 @@ ggcm_mhd_ic_whistler_run(struct ggcm_mhd_ic *ic)
   // Construct a circularly polarized vector potential
   for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
     mrc_fld_foreach(f, ix,iy,iz, 1, 2) {
-      // calc Ax
+      // calc edge centered Ax
       r[0] = MRC_MCRDX(crds, ix, p);
       r[1] = 0.5 * (MRC_MCRDY(crds, iy - p1y, p) + MRC_MCRDY(crds, iy, p));
       r[2] = 0.5 * (MRC_MCRDZ(crds, iz - p1z, p) + MRC_MCRDZ(crds, iz, p));
       calc_Arot(kmag, r, s1, c1, s2, c2, &Aroty, &Arotz, sub->polarization);
       M3(A, 0, ix, iy, iz, p) = -s1 * Aroty + c1 * s2 * Arotz;
 
-      // calc Ay
+      // calc edge centered Ay
       r[0] = 0.5 * (MRC_MCRDX(crds, ix - p1x, p) + MRC_MCRDX(crds, ix, p));
       r[1] = MRC_MCRDY(crds, iy, p);
       r[2] = 0.5 * (MRC_MCRDZ(crds, iz - p1z, p) + MRC_MCRDZ(crds, iz, p));
       calc_Arot(kmag, r, s1, c1, s2, c2, &Aroty, &Arotz, sub->polarization);
       M3(A, 1, ix, iy, iz, p) = c1 * Aroty + s1 * s2 * Arotz;
 
-      // calc Az
+      // calc edge centered Az
       r[0] = 0.5 * (MRC_MCRDX(crds, ix - p1x, p) + MRC_MCRDX(crds, ix, p));
       r[1] = 0.5 * (MRC_MCRDY(crds, iy - p1y, p) + MRC_MCRDY(crds, iy, p));
       r[2] = MRC_MCRDZ(crds, iz, p);
@@ -199,7 +231,6 @@ ggcm_mhd_ic_whistler_run(struct ggcm_mhd_ic *ic)
 
     // set face centered variables
     mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
-      // pert_fc = curl A
       dx = 0.5 * (MRC_MCRDX(crds, ix + p1x, p) - MRC_MCRDX(crds, ix - p1x, p));
       dy = 0.5 * (MRC_MCRDY(crds, iy + p1y, p) - MRC_MCRDY(crds, iy - p1y, p));
       dz = 0.5 * (MRC_MCRDZ(crds, iz + p1z, p) - MRC_MCRDZ(crds, iz - p1z, p));
@@ -209,37 +240,31 @@ ggcm_mhd_ic_whistler_run(struct ggcm_mhd_ic *ic)
       if (p1y == 0) { dy = 1.0; }
       if (p1z == 0) { dz = 1.0; }
       
-      M3(pert_fc, 0, ix, iy, iz, p) =
-         (M3(A, 2, ix    , iy+p1y, iz    , p) - M3(A, 2, ix, iy, iz, p)) / dy -
-         (M3(A, 1, ix    , iy    , iz+p1z, p) - M3(A, 1, ix, iy, iz, p)) / dz;
-      M3(pert_fc, 1, ix, iy, iz, p) = 
-         (M3(A, 0, ix    , iy    , iz+p1z, p) - M3(A, 0, ix, iy, iz, p)) / dz -
-         (M3(A, 2, ix+p1x, iy    , iz    , p) - M3(A, 2, ix, iy, iz, p)) / dx;
-      M3(pert_fc, 2, ix, iy, iz, p) = 
-         (M3(A, 1, ix+p1x, iy    , iz    , p) - M3(A, 1, ix, iy, iz, p)) / dx -
-         (M3(A, 0, ix    , iy+p1y, iz    , p) - M3(A, 0, ix, iy, iz, p)) / dy;
-      BX_(f, ix,iy,iz, p) = sub->b_par * kunit[0] + sub->b_perp * M3(pert_fc, 0, ix, iy, iz, p);
-      BY_(f, ix,iy,iz, p) = sub->b_par * kunit[1] + sub->b_perp * M3(pert_fc, 1, ix, iy, iz, p);
-      BZ_(f, ix,iy,iz, p) = sub->b_par * kunit[2] + sub->b_perp * M3(pert_fc, 2, ix, iy, iz, p);
+      // pert_fc = curl A
+      pert_fc[0] = (
+        (M3(A, 2, ix    , iy+p1y, iz    , p) - M3(A, 2, ix, iy, iz, p)) / dy -
+        (M3(A, 1, ix    , iy    , iz+p1z, p) - M3(A, 1, ix, iy, iz, p)) / dz);
+      pert_fc[1] = (
+        (M3(A, 0, ix    , iy    , iz+p1z, p) - M3(A, 0, ix, iy, iz, p)) / dz -
+        (M3(A, 2, ix+p1x, iy    , iz    , p) - M3(A, 2, ix, iy, iz, p)) / dx);
+      pert_fc[2] = (
+        (M3(A, 1, ix+p1x, iy    , iz    , p) - M3(A, 1, ix, iy, iz, p)) / dx -
+        (M3(A, 0, ix    , iy+p1y, iz    , p) - M3(A, 0, ix, iy, iz, p)) / dy);
+      BX_(f, ix,iy,iz, p) = sub->b_par * kunit[0] + sub->b_perp * pert_fc[0];
+      BY_(f, ix,iy,iz, p) = sub->b_par * kunit[1] + sub->b_perp * pert_fc[1];
+      BZ_(f, ix,iy,iz, p) = sub->b_par * kunit[2] + sub->b_perp * pert_fc[2];
     } mrc_fld_foreach_end;
 
     // set cell centered variables
-    mrc_fld_foreach(f, ix,iy,iz, 1, 0) {
-      pert_cc[0] = 0.5 * (M3(pert_fc, 0, ix    , iy    , iz    , p) +
-                          M3(pert_fc, 0, ix+p1x, iy    , iz    , p));
-      pert_cc[1] = 0.5 * (M3(pert_fc, 1, ix    , iy    , iz    , p) +
-                          M3(pert_fc, 1, ix    , iy+p1y, iz    , p));
-      pert_cc[2] = 0.5 * (M3(pert_fc, 2, ix    , iy    , iz    , p) +
-                          M3(pert_fc, 2, ix    , iy    , iz+p1z, p));
-
-      // this version shouldn't be needed?
-      // pert_cc[0] = 0.5 * (M3(pert_fc, 0, ix    , iy    , iz    , p) +
-      //                     M3(pert_fc, 0, ix-p1x, iy    , iz    , p));
-      // pert_cc[1] = 0.5 * (M3(pert_fc, 1, ix    , iy    , iz    , p) +
-      //                     M3(pert_fc, 1, ix    , iy-p1y, iz    , p));
-      // pert_cc[2] = 0.5 * (M3(pert_fc, 2, ix    , iy    , iz    , p) +
-      //                     M3(pert_fc, 2, ix    , iy    , iz-p1z, p));
-
+    mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
+      r[0] = MRC_MCRDX(crds, ix, p);
+      r[1] = MRC_MCRDY(crds, iy, p);
+      r[2] = MRC_MCRDZ(crds, iz, p);
+      calc_Brot(kmag, r, s1, c1, s2, c2, &Broty, &Brotz, sub->polarization);
+      pert_cc[0] = -s1 * Broty + c1 * s2 * Brotz;
+      pert_cc[1] = c1 * Broty + s1 * s2 * Brotz;
+      pert_cc[2] = c2 * Brotz;
+      
       RR_(f, ix,iy,iz, p) = sub->rho0;
       PP_(f, ix,iy,iz, p) = sub->rho0;
 
@@ -250,20 +275,20 @@ ggcm_mhd_ic_whistler_run(struct ggcm_mhd_ic *ic)
   }
 
   mrc_fld_destroy(A);
-  mrc_fld_destroy(pert_fc);
+  // mrc_fld_destroy(pert_fc);
   mrc_fld_put_as(f, mhd->fld);
 
   ggcm_mhd_convert_from_primitive(mhd, mhd->fld);
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_ic_whistler_descr
+// ggcm_mhd_ic_cpaw_descr
 
-#define VAR(x) (void *)offsetof(struct ggcm_mhd_ic_whistler, x)
-static struct param ggcm_mhd_ic_whistler_descr[] = {
+#define VAR(x) (void *)offsetof(struct ggcm_mhd_ic_cpaw, x)
+static struct param ggcm_mhd_ic_cpaw_descr[] = {
   { "rho0"        , VAR(rho0)        , PARAM_DOUBLE(1.0)            },
   { "b_par"       , VAR(b_par)       , PARAM_DOUBLE(1.0)            },
-  { "v_par"       , VAR(v_par)       , PARAM_DOUBLE(1.0)            },
+  { "v_par"       , VAR(v_par)       , PARAM_DOUBLE(0.0)            },
   { "b_perp"      , VAR(b_perp)      , PARAM_DOUBLE(1e-3)           },
   { "m"           , VAR(m)           , PARAM_INT3(1, 0, 0)          },
   { "polarization", VAR(polarization), PARAM_DOUBLE(1.0)            },
@@ -272,20 +297,16 @@ static struct param ggcm_mhd_ic_whistler_descr[] = {
 #undef VAR
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_ic_whistler_ops
+// ggcm_mhd_ic_cpaw_ops
 
-struct ggcm_mhd_ic_ops ggcm_mhd_ic_whistler_ops = {
-  .name        = "whistler",
-  .size        = sizeof(struct ggcm_mhd_ic_whistler),
-  .param_descr = ggcm_mhd_ic_whistler_descr,
-  .run         = ggcm_mhd_ic_whistler_run,
+struct ggcm_mhd_ic_ops ggcm_mhd_ic_cpaw_ops = {
+  .name        = "cpaw",
+  .size        = sizeof(struct ggcm_mhd_ic_cpaw),
+  .param_descr = ggcm_mhd_ic_cpaw_descr,
+  .run         = ggcm_mhd_ic_cpaw_run,
 };
 
 
-
-// ======================================================================
-// ======================================================================
-// ======================================================================
 // ======================================================================
 // ggcm_mhd_ic "sound"
 
@@ -381,7 +402,7 @@ ggcm_mhd_ic_sound_run(struct ggcm_mhd_ic *ic)
 static struct param ggcm_mhd_ic_sound_descr[] = {
   { "rho0"        , VAR(rho0)        , PARAM_DOUBLE(1.0)            },
   { "p0"          , VAR(p0)          , PARAM_DOUBLE(1.0)            },
-  { "v_par"       , VAR(v_par)       , PARAM_DOUBLE(1.0)            },
+  { "v_par"       , VAR(v_par)       , PARAM_DOUBLE(0.0)            },
   { "pert"        , VAR(pert)        , PARAM_DOUBLE(1e-3)           },
   { "m"           , VAR(m)           , PARAM_INT3(1, 0, 0)          },
   {},
@@ -403,7 +424,7 @@ struct ggcm_mhd_ic_ops ggcm_mhd_ic_sound_ops = {
 // ggcm_mhd class "wave"
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_whistler_create
+// ggcm_mhd_wave_create
 
 static void
 ggcm_mhd_wave_create(struct ggcm_mhd *mhd)
@@ -435,7 +456,7 @@ main(int argc, char **argv)
 {
   mrc_class_register_subclass(&mrc_class_ggcm_mhd, &ggcm_mhd_wave_ops);  
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_diag, &ggcm_mhd_diag_c_ops);
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_whistler_ops);  
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_cpaw_ops);  
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_sound_ops);  
  
   return ggcm_mhd_main(&argc, &argv);
