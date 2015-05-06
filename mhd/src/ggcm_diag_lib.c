@@ -47,6 +47,11 @@ ggcm_diag_lib_create_mrc_io(MPI_Comm comm, const char *run, const char *outputmo
 {
   struct mrc_io *io = mrc_io_create(comm);
   mrc_io_set_type(io, outputmode);
+  // FIXME, this is a hack to allow us to set "--mrc_io_type xdmf2" for AMR,
+  // but then "--mrc_io_iono_type xdmf_serial" to keep ionosphere output working
+  if (outtype == DIAG_TYPE_2D_IONO) {
+    mrc_io_set_name(io, "mrc_io_iono");
+  }
 
   const char *outdir = ".";
   mrc_params_get_option_string("outdir", &outdir);
@@ -56,9 +61,6 @@ ggcm_diag_lib_create_mrc_io(MPI_Comm comm, const char *run, const char *outputmo
     mrc_io_set_param_int(io, "rank_diagsrv", rank_diagsrv);
   }
   mrc_io_set_from_options(io);
-  if (outtype == DIAG_TYPE_2D_IONO) {
-    mrc_io_set_type(io, "xdmf_serial");
-  }
   mrc_io_setup(io);
   mrc_io_view(io);
   return io;

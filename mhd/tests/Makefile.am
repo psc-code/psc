@@ -20,12 +20,7 @@ check_PROGRAMS = \
 	test_ggcm_mhd_crds \
 	test_ggcm_mhd
 
-noinst_LTLIBRARIES = libmhdtbd.la
-
-libmhdtbd_la_SOURCES = \
-	ggcm_diag_lib.c
-
-LDADD = libmhdtbd.la ../src/libmhd.la ../../src/libmrc.la
+LDADD = ../src/libmhd.la ../../src/libmrc.la
 
 TESTS = \
 	test_ggcm_mhd_crds \

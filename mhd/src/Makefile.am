@@ -31,6 +31,7 @@ libmhd_la_SOURCES = \
 	\
 	ggcm_mhd_diag.c \
 	ggcm_mhd_diag_c.c \
+	ggcm_diag_lib.c \
 	\
 	ggcm_mhd_diag_item.c \
 	ggcm_mhd_diag_item_state.c \
