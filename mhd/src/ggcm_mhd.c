@@ -181,6 +181,54 @@ ggcm_mhd_setup_amr_domain(struct ggcm_mhd *mhd)
     mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 3, 1, 0 });
     mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 3, 2, 0 });
     mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 3, 3, 0 });
+  } else if (mhd->amr == 4) {
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 0, 0, 0 });
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 1, 0, 0 });
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 2, 0, 0 });
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 3, 0, 0 });
+    
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 0, 1, 0 });
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 1, 1, 0 });
+    mrc_domain_add_patch(mhd->domain, 3, (int [3]) { 4, 2, 0 });
+    mrc_domain_add_patch(mhd->domain, 3, (int [3]) { 5, 2, 0 });
+    mrc_domain_add_patch(mhd->domain, 3, (int [3]) { 4, 3, 0 });
+    mrc_domain_add_patch(mhd->domain, 3, (int [3]) { 5, 3, 0 });
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 3, 1, 0 });
+    
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 0, 2, 0 });
+    mrc_domain_add_patch(mhd->domain, 3, (int [3]) { 2, 4, 0 });
+    mrc_domain_add_patch(mhd->domain, 3, (int [3]) { 3, 4, 0 });
+    mrc_domain_add_patch(mhd->domain, 3, (int [3]) { 2, 5, 0 });
+    mrc_domain_add_patch(mhd->domain, 3, (int [3]) { 3, 5, 0 });
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 2, 2, 0 });
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 3, 2, 0 });
+    
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 0, 3, 0 });
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 1, 3, 0 });
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 2, 3, 0 });
+    mrc_domain_add_patch(mhd->domain, 2, (int [3]) { 3, 3, 0 });
+  } else if (mhd->amr == 5) {
+    for (int i = 0; i < 4; i++) {
+      for (int j = 0; j < 2; j++) {
+	mrc_domain_add_patch(mhd->domain, 2, (int [3]) { i, j, 0 });
+      }
+    }
+    for (int i = 0; i < 8; i++) {
+      for (int j = 4; j < 8; j++) {
+	mrc_domain_add_patch(mhd->domain, 3, (int [3]) { i, j, 0 });
+      }
+    }
+  } else if (mhd->amr == 6) {
+    for (int i = 0; i < 4; i++) {
+      for (int j = 0; j < 3; j++) {
+	mrc_domain_add_patch(mhd->domain, 2, (int [3]) { i, j, 0 });
+      }
+    }
+    for (int i = 0; i < 8; i++) {
+      for (int j = 6; j < 8; j++) {
+	mrc_domain_add_patch(mhd->domain, 3, (int [3]) { i, j, 0 });
+      }
+    }
   } else {
     assert(0);
   }
@@ -189,9 +237,8 @@ ggcm_mhd_setup_amr_domain(struct ggcm_mhd *mhd)
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
 static struct mrc_ddc_amr_stencil_entry stencil_coarse_cc[2] = {
-  // FIXME, 3D
-  { .dx = { 0, 0, 0 }, .val = .5f },
-  { .dx = { 0, 1, 0 }, .val = .5f },
+  // FIXME, needs some interpolation
+  { .dx = { 0, 0, 0 }, .val = 1.f },
 };
 
 static struct mrc_ddc_amr_stencil stencils_coarse[] = {
@@ -204,12 +251,10 @@ static struct mrc_ddc_amr_stencil stencils_coarse[] = {
 
 static struct mrc_ddc_amr_stencil_entry stencil_fine_cc[6] = {
   // FIXME, 3D
-  { .dx = {  0, -1,  0 }, .val = (1.f/8.f) * 1.f },
-  { .dx = { +1, -1,  0 }, .val = (1.f/8.f) * 1.f },
-  { .dx = {  0,  0,  0 }, .val = (1.f/8.f) * 2.f },
-  { .dx = { +1,  0,  0 }, .val = (1.f/8.f) * 2.f },
-  { .dx = {  0, +1,  0 }, .val = (1.f/8.f) * 1.f },
-  { .dx = { +1, +1,  0 }, .val = (1.f/8.f) * 1.f },
+  { .dx = {  0,  0,  0 }, .val = .25f },
+  { .dx = { +1,  0,  0 }, .val = .25f },
+  { .dx = {  0, +1,  0 }, .val = .25f },
+  { .dx = { +1, +1,  0 }, .val = .25f },
 };
 
 static struct mrc_ddc_amr_stencil stencils_fine[] = {
