@@ -7,6 +7,8 @@
 #include <mrc_fld_as_double.h>
 
 #include <string.h>
+#include <stdlib.h>
+#include <execinfo.h>
 
 // ----------------------------------------------------------------------
 // ggcm_mhd_convert_sc_ggcm_from_primitive
@@ -166,6 +168,20 @@ ggcm_mhd_fld_get_as(struct mrc_fld *fld_base, const char *type,
     return fld;
   }
 
+#if 0
+    int rank; MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    if (rank == 0) {
+      mprintf("XXXXXX ggcm_mhd_fld_get_as\n");
+      void* callstack[128];
+      int frames = backtrace(callstack, 128);
+      char** strs = backtrace_symbols(callstack, frames);
+      for (int i = 0; i < frames; i++) {
+	mprintf("%s\n", strs[i]);
+      }
+      free(strs);
+    }
+#endif
+
   struct mrc_fld *fld2 = mrc_fld_create(mrc_fld_comm(fld_base));
   mrc_fld_set_type(fld2, type);
   mrc_fld_set_param_obj(fld2, "domain", fld->_domain);
@@ -279,6 +295,20 @@ ggcm_mhd_fld_put_as(struct mrc_fld *fld, struct mrc_fld *fld_base, int mb, int m
 struct mrc_fld *
 ggcm_mhd_get_fld_as_fortran(struct mrc_fld *fld_base)
 {
+#if 0
+  MHERE;
+  int rank; MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  if (rank == 0) {
+    mprintf("XXXXXXX get_fld_as_fortran\n");
+    void* callstack[128];
+    int frames = backtrace(callstack, 128);
+    char** strs = backtrace_symbols(callstack, frames);
+    for (int i = 0; i < frames; i++) {
+      mprintf("%s\n", strs[i]);
+    }
+    free(strs);
+  }
+#endif
   return ggcm_mhd_fld_get_as(fld_base, "float", MT_SEMI_CONSERVATIVE_GGCM, 0, _NR_FLDS);
 }
 
