@@ -6,6 +6,8 @@
 #include <mrc_ddc.h>
 #include <mrc_domain.h>
 
+#include <string.h>
+
 // FIXME -> header
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
@@ -85,7 +87,8 @@ ggcm_mhd_create_amr_ddc_flux(struct ggcm_mhd *mhd, int d)
   // FIXME!!!
   if (strcmp(ggcm_mhd_step_type(mhd->step), "vl") == 0) {
     mrc_ddc_set_param_int(ddc, "n_comp", 5);
-  } else if (strcmp(ggcm_mhd_step_type(mhd->step), "vlct") == 0) {
+  } else if (strcmp(ggcm_mhd_step_type(mhd->step), "vlct") == 0 ||
+	     strcmp(ggcm_mhd_step_type(mhd->step), "c3_double") == 0) {
     mrc_ddc_set_param_int(ddc, "n_comp", 8);
   } else {
     assert(0);
