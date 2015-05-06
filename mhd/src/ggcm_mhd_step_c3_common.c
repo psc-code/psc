@@ -10,6 +10,7 @@
 
 #include <mrc_domain.h>
 #include <mrc_profile.h>
+#include <mrc_io.h>
 
 #include <math.h>
 #include <string.h>
@@ -844,6 +845,22 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   mrc_fld_copy_range(x_half, x, 0, 8);
   pushstage_c(step, .5f * mhd->dt, x, x_half, prim, LIMIT_NONE);
   prof_stop(pr_A);
+
+#if 0
+  static struct ggcm_mhd_diag *diag;
+  static int cnt;
+  if (!diag) {
+    diag = ggcm_mhd_diag_create(ggcm_mhd_comm(mhd));
+    ggcm_mhd_diag_set_type(diag, "c");
+    ggcm_mhd_diag_set_param_obj(diag, "mhd", mhd);
+    ggcm_mhd_diag_set_param_string(diag, "run", "dbg1");
+    ggcm_mhd_diag_set_param_string(diag, "fields", "rr1:rv1:uu1:b1:rr:v:pp:b:divb:ymask");
+    ggcm_mhd_diag_setup(diag);
+    ggcm_mhd_diag_view(diag);
+  }
+  ggcm_mhd_fill_ghosts(mhd, x_half, 0, mhd->time);
+  ggcm_mhd_diag_run_now(diag, x_half, DIAG_TYPE_3D, cnt++);
+#endif
 
   // --- CORRECTOR
   prof_start(pr_B);
