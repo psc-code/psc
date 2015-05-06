@@ -429,7 +429,8 @@ static struct param ggcm_mhd_descr[] = {
   { "istep"           , VAR(istep)           , MRC_VAR_INT           },
   { "timla"           , VAR(timla)           , MRC_VAR_FLOAT         },
   { "dacttime"        , VAR(dacttime)        , MRC_VAR_DOUBLE        },
-
+  { "max_time"        , VAR(max_time)        , PARAM_FLOAT(0.0)      },
+  
   { "domain"          , VAR(domain)          , MRC_VAR_OBJ(mrc_domain)        },
   { "fld"             , VAR(fld)             , MRC_VAR_OBJ(mrc_fld)           },
   { "crds"            , VAR(crds)            , MRC_VAR_OBJ(ggcm_mhd_crds)     },

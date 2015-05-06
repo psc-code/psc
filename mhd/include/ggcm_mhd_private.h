@@ -55,6 +55,7 @@ struct ggcm_mhd {
   int istep;
   float timla;
   double dacttime;
+  float max_time;  // set from mrc_ts->max_time at the start of the run
 
   float bndt; // .5 * current timestep in sec, not alfven times
 

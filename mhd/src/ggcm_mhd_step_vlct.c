@@ -516,21 +516,25 @@ ggcm_mhd_step_vlct_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
     mhd->dt = newstep_fc(mhd, x, B_cc);
     if (mhd->dt != old_dt) {
       mpi_printf(ggcm_mhd_comm(mhd), "switched dt %g <- %g\n", mhd->dt, old_dt);
-
-      if (mhd->dt < mhd->par.dtmin) {
+      
+      // FIXME: determining when to die on a bad dt should be generalized, since
+      //        there's another hiccup if refining dt for actual AMR
+      bool first_step = mhd->istep <= 1;
+      bool last_step = mhd->time + mhd->dt > (1.0 - 1e-5) * mhd->max_time;
+      
+      if (!first_step && !last_step && mhd->dt < mhd->par.dtmin) {
         mpi_printf(ggcm_mhd_comm(mhd), "!!! dt < dtmin. Dying now!\n");
         mpi_printf(ggcm_mhd_comm(mhd), "!!! dt %g -> %g, dtmin = %g\n",
                    old_dt, mhd->dt, mhd->par.dtmin);
         ggcm_mhd_wrongful_death(mhd, -1);
       }
 
-#if 0
-      if (mhd->istep > 1 && (mhd->dt < 0.5 * old_dt || mhd->dt > 2.0 * old_dt)) {
+      if (!first_step && !last_step &&
+          (mhd->dt < 0.5 * old_dt || mhd->dt > 2.0 * old_dt)) {
         mpi_printf(ggcm_mhd_comm(mhd), "!!! dt changed by > a factor of 2. "
                    "Dying now!\n");
         ggcm_mhd_wrongful_death(mhd, 2);
       }
-#endif
     }
   }
 

@@ -153,6 +153,13 @@ mrc_ts_step(struct mrc_ts *ts)
 void
 mrc_ts_solve(struct mrc_ts *ts)
 {
+  float _dummyflt = 0.0;
+  if (ts->ctx_obj) {
+    if (mrc_obj_get_param_float(ts->ctx_obj, "max_time", &_dummyflt) == 0) {
+      mrc_obj_set_param_float(ts->ctx_obj, "max_time", ts->max_time);
+    }
+  }
+  
   if (mrc_ts_ops(ts)->solve) {
     mrc_ts_ops(ts)->solve(ts);
     return;
