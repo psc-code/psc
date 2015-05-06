@@ -99,7 +99,9 @@ ggcm_mhd_step_run_predcorr(struct ggcm_mhd_step *step, struct mrc_fld *x)
   ops->corr(step);
 
   if (step->do_nwst) {
-    dtn = fminf(1., dtn); // FIXME, only kept for compatibility
+    if (step->legacy_dt_handling) {
+      dtn = fminf(1., dtn); // FIXME, only kept for compatibility
+    }
 
     if (dtn > 1.02 * mhd->dt || dtn < mhd->dt / 1.01) {
       mpi_printf(ggcm_mhd_comm(mhd), "switched dt %g <- %g\n", dtn, mhd->dt);
@@ -241,12 +243,17 @@ ggcm_mhd_step_init()
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_step, x)
 static struct param ggcm_mhd_step_descr[] = {
-  { "mhd"             , VAR(mhd)             , PARAM_OBJ(ggcm_mhd)       },
+  { "mhd"               , VAR(mhd)               , PARAM_OBJ(ggcm_mhd)     },
   // This is a bit hacky, do_nwst may normally be set in the timeloop
   // to determine whether to run newstep() the next timestep or not,
   // but this allows to set it to "always on" easily for test runs
-  { "do_nwst"         , VAR(do_nwst)         , PARAM_BOOL(false)         },
-  { "profile_every"   , VAR(profile_every)   , PARAM_INT(10)             },
+  { "do_nwst"           , VAR(do_nwst)           , PARAM_BOOL(false)       },
+  { "profile_every"     , VAR(profile_every)     , PARAM_INT(10)           },
+  // FIXME, is there really a need to keep this around?
+  // It limits the (normalized) to stay <= 1, and it should also wrap the
+  // "find new dt first -- but do this timestep still with old dt"
+  // weirdness
+  { "legacy_dt_handling", VAR(legacy_dt_handling), PARAM_BOOL(true)        },
   {},
 };
 #undef VAR
