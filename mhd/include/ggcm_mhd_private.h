@@ -35,7 +35,10 @@ struct ggcm_mhd {
   struct mrc_obj obj;
   struct ggcm_mhd_params par;
   int amr; //< turn on if > 0, value selects initial domain refinement
-  struct mrc_ddc *ddc_amr;
+  struct mrc_ddc *ddc_amr_cc;
+  struct mrc_ddc *ddc_amr_flux_x;
+  struct mrc_ddc *ddc_amr_flux_y;
+  struct mrc_ddc *ddc_amr_flux_z;
 
   struct mrc_domain *domain;
   struct mrc_fld *fld;

@@ -91,9 +91,11 @@ mrc_domain_get_neighbor_patch_fine(struct mrc_domain *domain, int gp,
 bool
 mrc_domain_is_ghost(struct mrc_domain *domain, int ext[3], int gp, int i[3])
 {
+#if 0 // FIXME, FDTD AMR relies on this definition of what's a ghost point
   int ldims[3];
   mrc_domain_get_param_int3(domain, "m", ldims);
 
+  // FIXME simplify: dirx[d] == ext[d]
   int dir[3], dirx[3] = {};
   for (int d = 0; d < 3; d++) {
     if (i[d] < 0) {
@@ -150,6 +152,62 @@ mrc_domain_is_ghost(struct mrc_domain *domain, int ext[3], int gp, int i[3])
     }
   }
   return true;
+#else
+
+  // flux correction
+  int ldims[3];
+  mrc_domain_get_param_int3(domain, "m", ldims);
+
+  int dir[3], dirx[3] = {};
+  for (int d = 0; d < 3; d++) {
+    if (i[d] < 0) {
+      return true;
+    } else if (ext[d] == 1 && i[d] == 0) {
+      dir[d] = 0;
+      dirx[d] = 1;
+    } else if (i[d] < ldims[d]) {
+      dir[d] = 0;
+    } else if (ext[d] == 1 && i[d] == ldims[d]) {
+      dir[d] = 1;
+      dirx[d] = 1;
+    } else {
+      return true;
+    }
+  }
+  //  mprintf("dir %d:%d dirx %d:%d\n", dir[0], dir[1], dirx[0], dirx[1]);
+  // if outside, we've already returned true
+
+  // inside, not on the boundary
+  if (dir[0] == 0 && dirx[0] == 0 &&
+      dir[1] == 0 && dirx[1] == 0) {
+    return false;
+  }
+
+  // on the boundary...
+  int dd[3];
+  // do we border a fine domain? (then it's a ghost point)
+  for (dd[2] = 0; dd[2] >= 0; dd[2]--) {
+    for (dd[1] = dir[1]; dd[1] >= dir[1] - dirx[1]; dd[1]--) {
+      for (dd[0] = dir[0]; dd[0] >= dir[0] - dirx[0]; dd[0]--) {
+	if (dd[0] == 0 && dd[1] == 0 && dd[2] == 0) {
+	  continue;
+	}
+	int gp_nei;
+	mrc_domain_get_neighbor_patch_fine(domain, gp, dd, (int [3]) { 0, 0, 0 }, &gp_nei);
+	if (gp_nei >= 0) {
+	  return true;
+	}
+      }
+    }
+  }
+
+  // FIXME? if we're bordering a same-level patch, the current point may be a ghost point
+  // if we want to be unique, and in this case it should be filled by the "real" value from
+  // the neighboring patch. However, the fluxes should be automatically the same anyway, so
+  // there's not really any point in doing so, except for debugging (some of which has been
+  // done, and the fluxes were in fact equal.)
+  return false;
+#endif
 }
 
 bool
@@ -281,7 +339,7 @@ mrc_domain_find_valid_point_fine(struct mrc_domain *domain, int ext[3], int gp, 
     
   int off[3], dir[3];
   for (int d = 0; d < 3; d++) {
-    if (i[d] < 0) {
+    if ((ext[d] == 0 && i[d] < 0) || (ext[d] == 1 && i[d] <= 0)) {
       off[d] = 1;
       j[d] = i[d] + ldims[d];
       dir[d] = -1;
@@ -352,6 +410,8 @@ mrc_ddc_amr_stencil_fine(struct mrc_ddc *ddc, int ext[3],
       id[d] = 2*i[d] + s->dx[d];
     }
     mrc_domain_find_valid_point_fine(domain, ext, gp, id, &gp_nei, j);
+    /* mprintf("gp %d i %d:%d:%d gp_nei %d j %d:%d:%d val %g\n", gp, i[0], i[1], i[2], */
+    /* 	    gp_nei, j[0], j[1], j[2], s->val); */
     assert(!mrc_domain_is_ghost(domain, ext, gp_nei, j));
     mrc_ddc_amr_add_value(ddc, gp, m, i, gp_nei, m, j, s->val);
   }
@@ -398,6 +458,7 @@ mrc_ddc_amr_set_by_stencil(struct mrc_ddc *ddc, int m, int bnd, int ext[3],
 	    mrc_ddc_amr_add_diagonal_one(ddc, gp, m, i);
 	    continue;
 	  }
+
 	  if (!mrc_domain_is_ghost(domain, ext, gp, i)) {
 	    mrc_ddc_amr_add_diagonal_one(ddc, gp, m, i);
 	    continue;
@@ -415,8 +476,10 @@ mrc_ddc_amr_set_by_stencil(struct mrc_ddc *ddc, int m, int bnd, int ext[3],
 	  }
 
 	  // try to interpolate from coarse
-	  if (mrc_ddc_amr_stencil_coarse(ddc, ext, stencil_coarse, m, gp, i)) {
-	    continue;
+	  if (stencil_coarse) {
+	    if (mrc_ddc_amr_stencil_coarse(ddc, ext, stencil_coarse, m, gp, i)) {
+	      continue;
+	    }
 	  }
 	      
 	  // try to restrict from fine

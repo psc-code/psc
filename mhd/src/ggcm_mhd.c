@@ -241,7 +241,7 @@ static struct mrc_ddc_amr_stencil_entry stencil_coarse_cc[2] = {
   { .dx = { 0, 0, 0 }, .val = 1.f },
 };
 
-static struct mrc_ddc_amr_stencil stencils_coarse[] = {
+static struct mrc_ddc_amr_stencil stencils_coarse_cc[] = {
   [RR ] = { stencil_coarse_cc, ARRAY_SIZE(stencil_coarse_cc) },
   [RVX] = { stencil_coarse_cc, ARRAY_SIZE(stencil_coarse_cc) },
   [RVY] = { stencil_coarse_cc, ARRAY_SIZE(stencil_coarse_cc) },
@@ -249,7 +249,7 @@ static struct mrc_ddc_amr_stencil stencils_coarse[] = {
   [UU ] = { stencil_coarse_cc, ARRAY_SIZE(stencil_coarse_cc) },
 };
 
-static struct mrc_ddc_amr_stencil_entry stencil_fine_cc[6] = {
+static struct mrc_ddc_amr_stencil_entry stencil_fine_cc[] = {
   // FIXME, 3D
   { .dx = {  0,  0,  0 }, .val = .25f },
   { .dx = { +1,  0,  0 }, .val = .25f },
@@ -257,7 +257,7 @@ static struct mrc_ddc_amr_stencil_entry stencil_fine_cc[6] = {
   { .dx = { +1, +1,  0 }, .val = .25f },
 };
 
-static struct mrc_ddc_amr_stencil stencils_fine[] = {
+static struct mrc_ddc_amr_stencil stencils_fine_cc[] = {
   [RR ] = { stencil_fine_cc, ARRAY_SIZE(stencil_fine_cc) },
   [RVX] = { stencil_fine_cc, ARRAY_SIZE(stencil_fine_cc) },
   [RVY] = { stencil_fine_cc, ARRAY_SIZE(stencil_fine_cc) },
@@ -265,26 +265,79 @@ static struct mrc_ddc_amr_stencil stencils_fine[] = {
   [UU ] = { stencil_fine_cc, ARRAY_SIZE(stencil_fine_cc) },
 };
 
+static struct mrc_ddc_amr_stencil_entry stencil_fine_flux_x[] = {
+  // FIXME, 3D
+  { .dx = {  0,  0,  0 }, .val = .5f },
+  { .dx = {  0, +1,  0 }, .val = .5f },
+};
+
+static struct mrc_ddc_amr_stencil stencils_fine_flux_x = {
+  stencil_fine_flux_x,
+  ARRAY_SIZE(stencil_fine_flux_x)
+};
+
+static struct mrc_ddc_amr_stencil_entry stencil_fine_flux_y[] = {
+  // FIXME, 3D
+  { .dx = {  0,  0,  0 }, .val = .5f },
+  { .dx = { +1,  0,  0 }, .val = .5f },
+};
+
+static struct mrc_ddc_amr_stencil stencils_fine_flux_y = {
+  stencil_fine_flux_y,
+  ARRAY_SIZE(stencil_fine_flux_y)
+};
+
 static void
 ggcm_mhd_setup_amr_ddc(struct ggcm_mhd *mhd)
 {
-  struct mrc_ddc *ddc = mrc_ddc_create(mrc_domain_comm(mhd->domain));
-  mrc_ddc_set_type(ddc, "amr");
-  mrc_ddc_set_domain(ddc, mhd->domain);
-  mrc_ddc_set_param_int(ddc, "size_of_type", mhd->fld->_size_of_type);
-  mrc_ddc_set_param_int3(ddc, "sw", mrc_fld_spatial_sw(mhd->fld));
-  int *sw = mhd->fld->_sw.vals;
-  mprintf("sw %d %d %d\n", sw[0], sw[1], sw[2]);
-  mrc_ddc_set_param_int(ddc, "n_comp", mhd->fld->_nr_comps);
-  mrc_ddc_setup(ddc);
-  mrc_ddc_amr_set_by_stencil(ddc, RR , 2, (int[]) { 0, 0, 0 }, &stencils_coarse[RR ], &stencils_fine[RR ]);
-  mrc_ddc_amr_set_by_stencil(ddc, RVX, 2, (int[]) { 0, 0, 0 }, &stencils_coarse[RVX], &stencils_fine[RVX]);
-  mrc_ddc_amr_set_by_stencil(ddc, RVY, 2, (int[]) { 0, 0, 0 }, &stencils_coarse[RVY], &stencils_fine[RVY]);
-  mrc_ddc_amr_set_by_stencil(ddc, RVZ, 2, (int[]) { 0, 0, 0 }, &stencils_coarse[RVZ], &stencils_fine[RVZ]);
-  mrc_ddc_amr_set_by_stencil(ddc, UU , 2, (int[]) { 0, 0, 0 }, &stencils_coarse[UU ], &stencils_fine[UU ]);
-  mrc_ddc_amr_assemble(ddc);
-  mhd->ddc_amr = ddc;
-  // FIXME, leaked
+  {
+    struct mrc_ddc *ddc = mrc_ddc_create(mrc_domain_comm(mhd->domain));
+    mrc_ddc_set_type(ddc, "amr");
+    mrc_ddc_set_domain(ddc, mhd->domain);
+    mrc_ddc_set_param_int(ddc, "size_of_type", mhd->fld->_size_of_type);
+    mrc_ddc_set_param_int3(ddc, "sw", mrc_fld_spatial_sw(mhd->fld));
+    mrc_ddc_set_param_int(ddc, "n_comp", 5);//FIXMEmhd->fld->_nr_comps);
+    mrc_ddc_setup(ddc);
+    for (int m = 0; m < 5; m++) {
+      mrc_ddc_amr_set_by_stencil(ddc, m, 0, (int[]) { 1, 0, 0 },
+				 NULL, &stencils_fine_flux_x);
+    }
+    mrc_ddc_amr_assemble(ddc);
+    // FIXME, leaked
+    mhd->ddc_amr_flux_x = ddc;
+  }
+  {
+    struct mrc_ddc *ddc = mrc_ddc_create(mrc_domain_comm(mhd->domain));
+    mrc_ddc_set_type(ddc, "amr");
+    mrc_ddc_set_domain(ddc, mhd->domain);
+    mrc_ddc_set_param_int(ddc, "size_of_type", mhd->fld->_size_of_type);
+    mrc_ddc_set_param_int3(ddc, "sw", mrc_fld_spatial_sw(mhd->fld));
+    mrc_ddc_set_param_int(ddc, "n_comp", 5);//FIXMEmhd->fld->_nr_comps);
+    mrc_ddc_setup(ddc);
+    for (int m = 0; m < 5; m++) {
+      mrc_ddc_amr_set_by_stencil(ddc, m, 0, (int[]) { 0, 1, 0 },
+				 NULL, &stencils_fine_flux_y);
+    }
+    mrc_ddc_amr_assemble(ddc);
+    // FIXME, leaked
+    mhd->ddc_amr_flux_y = ddc;
+  }
+  {
+    struct mrc_ddc *ddc = mrc_ddc_create(mrc_domain_comm(mhd->domain));
+    mrc_ddc_set_type(ddc, "amr");
+    mrc_ddc_set_domain(ddc, mhd->domain);
+    mrc_ddc_set_param_int(ddc, "size_of_type", mhd->fld->_size_of_type);
+    mrc_ddc_set_param_int3(ddc, "sw", mrc_fld_spatial_sw(mhd->fld));
+    mrc_ddc_set_param_int(ddc, "n_comp", mhd->fld->_nr_comps);
+    mrc_ddc_setup(ddc);
+    for (int m = 0; m < 5; m++) {
+      mrc_ddc_amr_set_by_stencil(ddc, m, 2, (int[]) { 0, 0, 0 },
+				 &stencils_coarse_cc[m], &stencils_fine_cc[m]);
+    }
+    mrc_ddc_amr_assemble(ddc);
+    // FIXME, leaked
+    mhd->ddc_amr_cc = ddc;
+  }
 }
 
 static void
@@ -320,7 +373,7 @@ ggcm_mhd_fill_ghosts(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m, float bnt
     mrc_ddc_fill_ghosts_fld(mrc_domain_get_ddc(mhd->domain), m, m + 8, fld);
   } else {
     assert(m == 0);
-    mrc_ddc_amr_apply(mhd->ddc_amr, fld);
+    mrc_ddc_amr_apply(mhd->ddc_amr_cc, fld);
   }
   ggcm_mhd_bnd_fill_ghosts(mhd->bnd, fld, m, bntim);
 }

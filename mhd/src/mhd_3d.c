@@ -170,6 +170,10 @@ void mrc_domain_get_neighbor_patch_fine(struct mrc_domain *domain, int gp,
 static void
 correct_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *fluxes[3])
 {
+  mrc_ddc_amr_apply(mhd->ddc_amr_flux_x, fluxes[0]);
+  mrc_ddc_amr_apply(mhd->ddc_amr_flux_y, fluxes[1]);
+  return;
+
   int gdims[3];
   mrc_domain_get_global_dims(mhd->domain, gdims);
 
@@ -258,9 +262,11 @@ correct_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *fluxes[3])
 		    mrc_fld_data_t val =
 		      .5f * (M3(fluxes[d], m, ix*2  ,iy_nei,iz*2, p_nei) +
 			     M3(fluxes[d], m, ix*2+1,iy_nei,iz*2, p_nei));
-		    /* mprintf("flux[1][%d,%d,%d] = %g // %g\n", ix, iy, iz, */
-		    /* 	M3(fluxes[d], m, ix + ldims[0]/2 * off[0],iy,iz + ldims[2]/2 * off[2], p), */
-		    /* 	val); */
+		    if (m == 0) {
+		      mprintf("flux[1] gp %d [%d,%d,%d] = %g // %g\n", gp, ix, iy, iz,
+			      M3(fluxes[d], m, ix + ldims[0]/2 * off[0],iy,iz + ldims[2]/2 * off[2], p),
+			      val);
+		    }
 		    M3(fluxes[d], m, ix + ldims[0]/2 * off[0],iy,iz + ldims[2]/2 * off[2], p) = val;
 		  }
 		}
