@@ -343,10 +343,17 @@ ggcm_mhd_setup_amr_ddc(struct ggcm_mhd *mhd)
     mrc_ddc_set_param_int3(ddc, "sw", mrc_fld_spatial_sw(mhd->fld));
     mrc_ddc_set_param_int(ddc, "n_comp", mhd->fld->_nr_comps);
     mrc_ddc_setup(ddc);
+    int bnd = mrc_fld_spatial_sw(mhd->fld)[0];
     for (int m = 0; m < 5; m++) {
-      mrc_ddc_amr_set_by_stencil(ddc, m, 2, (int[]) { 0, 0, 0 },
+      mrc_ddc_amr_set_by_stencil(ddc, m, bnd, (int[]) { 0, 0, 0 },
 				 &stencils_coarse_cc[m], &stencils_fine_cc[m]);
     }
+    mrc_ddc_amr_set_by_stencil(ddc, BX, bnd - 1, (int[]) { 0, 0, 0 },
+			       &stencils_coarse_cc[0], &stencils_fine_cc[0]);
+    mrc_ddc_amr_set_by_stencil(ddc, BY, bnd - 1, (int[]) { 0, 0, 0 },
+			       &stencils_coarse_cc[0], &stencils_fine_cc[0]);
+    mrc_ddc_amr_set_by_stencil(ddc, BZ, bnd - 1, (int[]) { 0, 0, 0 },
+			       &stencils_coarse_cc[0], &stencils_fine_cc[0]);
     mrc_ddc_amr_assemble(ddc);
     // FIXME, leaked
     mhd->ddc_amr_cc = ddc;
