@@ -702,6 +702,20 @@ mrc_fld_get_as(struct mrc_fld *fld_base, const char *type)
   if (strcmp(type_base, type) == 0)
     return fld_base;
 
+#if 0
+  int rank; MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  if (rank == 0) {
+    mprintf("XXXXXXX mrc_fld_get_as %s -> %s\n", type_base, type);
+    void* callstack[128];
+    int frames = backtrace(callstack, 128);
+    char** strs = backtrace_symbols(callstack, frames);
+    for (int i = 0; i < frames; i++) {
+      mprintf("%s\n", strs[i]);
+    }
+    free(strs);
+  }
+#endif
+
   static int pr;
   if (!pr) {
     pr = prof_register("mrc_fld_get_as", 1., 0, 0);
@@ -768,7 +782,7 @@ mrc_fld_put_as(struct mrc_fld *fld, struct mrc_fld *fld_base)
 #if 0
   int rank; MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   if (rank == 0 && strcmp(type, "float") == 0) {
-    mprintf("XXXXXXX put_as %s <- %s\n", type_base, type);
+    mprintf("XXXXXXX mrc_fld_put_as %s <- %s\n", type_base, type);
     void* callstack[128];
     int frames = backtrace(callstack, 128);
     char** strs = backtrace_symbols(callstack, frames);
