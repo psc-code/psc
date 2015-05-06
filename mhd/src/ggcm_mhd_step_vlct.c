@@ -252,7 +252,7 @@ ggcm_mhd_step_vlct_setup(struct ggcm_mhd_step *step)
   setup_mrc_fld_1d(sub->F_1d, mhd->fld, 8);
   setup_mrc_fld_1d(sub->Bxi, mhd->fld, 1);
 
-  assert(mhd->fld->_nr_ghosts >= 4);
+  mhd->ymask = ggcm_mhd_get_3d_fld(mhd, 1);
 
   ggcm_mhd_step_setup_member_objs_sub(step);
 }
@@ -263,6 +263,9 @@ ggcm_mhd_step_vlct_setup(struct ggcm_mhd_step *step)
 static void
 ggcm_mhd_step_vlct_destroy(struct ggcm_mhd_step *step)
 {
+  struct ggcm_mhd *mhd = step->mhd;
+
+  ggcm_mhd_put_3d_fld(mhd, mhd->ymask);
 }
 
 // ----------------------------------------------------------------------
@@ -560,7 +563,7 @@ ggcm_mhd_step_vlct_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
   mrc_fld_copy_range(x_half, x, 0, 8);
   mhd_fluxes(step, flux, x, B_cc, nghost, nghost, flux_pred);
-  update_finite_volume_uniform(mhd, x_half, flux, NULL, .5 * dt, nghost - 1, nghost - 1, false);
+  update_finite_volume_uniform(mhd, x_half, flux, mhd->ymask, .5 * dt, nghost - 1, nghost - 1, false);
   compute_E(step, E_ec, x, B_cc, flux, 4);
   update_ct_uniform(mhd, x_half, E_ec, .5 * dt, nghost - 1, nghost - 1, false);
 
@@ -568,7 +571,7 @@ ggcm_mhd_step_vlct_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
   compute_B_cc(B_cc, x_half, nghost - 1, nghost - 1);
   mhd_fluxes(step, flux, x_half, B_cc, 1, nghost, flux_corr);
-  update_finite_volume_uniform(mhd, x, flux, NULL, dt, 0, 0, true);
+  update_finite_volume_uniform(mhd, x, flux, mhd->ymask, dt, 0, 0, true);
   compute_E(step, E_ec, x_half, B_cc, flux, 4);
   update_ct_uniform(mhd, x, E_ec, dt, 0, 0, true);
 
