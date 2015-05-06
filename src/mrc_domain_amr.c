@@ -407,13 +407,17 @@ mrc_domain_amr_get_level_idx3_patch_info(struct mrc_domain *domain, int level,
 {
   struct mrc_domain_amr *amr = to_mrc_domain_amr(domain);
 
-
+  info->rank = -1;
+  info->patch = -1;
+  info->global_patch = -1;
+  for (int d = 0; d < 3; d++) {
+    if (idx3[d] < 0 || idx3[d] >= (1 << level))
+      return;
+  }
+  
   int sfc_idx = sfc_level_idx3_to_idx(amr, level, idx3);
   int gpatch = map_sfc_idx_to_gpatch(domain, level, sfc_idx);
   if (gpatch < 0) {
-    info->rank = -1;
-    info->patch = -1;
-    info->global_patch = -1;
     return;
   }
   mrc_domain_amr_get_global_patch_info(domain, gpatch, info);

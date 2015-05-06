@@ -68,9 +68,17 @@ static struct mrc_ddc_amr_stencil_entry stencil_fine_flux_y[] = {
   { .dx = { +1,  0, +1 }, .val = .25f },
 };
 
+static struct mrc_ddc_amr_stencil_entry stencil_fine_flux_z[] = {
+  { .dx = {  0,  0,  0 }, .val = .25f },
+  { .dx = { +1,  0,  0 }, .val = .25f },
+  { .dx = {  0, +1,  0 }, .val = .25f },
+  { .dx = { +1, +1,  0 }, .val = .25f },
+};
+
 static struct mrc_ddc_amr_stencil stencils_fine_flux[3] = {
   { stencil_fine_flux_x, ARRAY_SIZE(stencil_fine_flux_x) },
   { stencil_fine_flux_y, ARRAY_SIZE(stencil_fine_flux_y) },
+  { stencil_fine_flux_z, ARRAY_SIZE(stencil_fine_flux_z) },
 };
 
 // ----------------------------------------------------------------------
@@ -98,34 +106,6 @@ ggcm_mhd_create_amr_ddc_flux(struct ggcm_mhd *mhd, int d)
   ext[d] = 1;
   for (int m = 0; m < 5; m++) {
     mrc_ddc_amr_set_by_stencil(ddc, m, 0, ext, NULL, &stencils_fine_flux[d]);
-  }
-  mrc_ddc_amr_assemble(ddc);
-
-  return ddc;
-}
-
-// ----------------------------------------------------------------------
-// ggcm_mhd_create_amr_ddc_flux_y
-
-struct mrc_ddc *
-ggcm_mhd_create_amr_ddc_flux_y(struct ggcm_mhd *mhd)
-{
-  struct mrc_ddc *ddc = mrc_ddc_create(mrc_domain_comm(mhd->domain));
-  mrc_ddc_set_type(ddc, "amr");
-  mrc_ddc_set_domain(ddc, mhd->domain);
-  mrc_ddc_set_param_int(ddc, "size_of_type", mhd->fld->_size_of_type);
-  mrc_ddc_set_param_int3(ddc, "sw", mrc_fld_spatial_sw(mhd->fld));
-  if (strcmp(ggcm_mhd_step_type(mhd->step), "vl") == 0) {
-    mrc_ddc_set_param_int(ddc, "n_comp", 5);
-  } else if (strcmp(ggcm_mhd_step_type(mhd->step), "vlct") == 0) {
-    mrc_ddc_set_param_int(ddc, "n_comp", 8);
-  } else {
-    assert(0);
-  }
-  mrc_ddc_setup(ddc);
-  for (int m = 0; m < 5; m++) {
-    mrc_ddc_amr_set_by_stencil(ddc, m, 2, (int[]) { 0, 1, 0 },
-			       NULL, &stencils_fine_flux[1]);
   }
   mrc_ddc_amr_assemble(ddc);
 
@@ -194,11 +174,13 @@ fill_ghosts_b_add_one(struct mrc_ddc *ddc, struct mrc_domain *domain, int m,
   // then restrict this face to get replacement coarse value
   mrc_domain_find_valid_point_fine(domain, ext, gp, (int[]) { 2*i[0], 2*i[1], 2*i[2] }, &gp_nei, j);
   if (gp_nei >= 0) {
-    double fact = (m != 0 ? .5 : 1.) * (m != 1 ? .5 : 1.);
-    for (int dy = 0; dy <= (m != 1); dy++) {
-      for (int dx = 0; dx <= (m != 0); dx++) {
-	mrc_ddc_amr_add_value(ddc, gp0, BX+m, i0, gp_nei, BX+m,
-			      (int[3]) { j[0]+dx,j[1]+dy,j[2] }, fact * scale);
+    double fact = (m != 0 ? .5 : 1.) * (m != 1 ? .5 : 1.) * (m != 2 ? .5 : 1.);
+    for (int dz = 0; dz <= (m != 2); dz++) {
+      for (int dy = 0; dy <= (m != 1); dy++) {
+	for (int dx = 0; dx <= (m != 0); dx++) {
+	  mrc_ddc_amr_add_value(ddc, gp0, BX+m, i0, gp_nei, BX+m,
+				(int[3]) { j[0]+dx,j[1]+dy,j[2]+dz }, fact * scale);
+	}
       }
     }
     return;
@@ -233,8 +215,8 @@ fill_ghosts_b_add_one(struct mrc_ddc *ddc, struct mrc_domain *domain, int m,
     return;
   }
 
-  mprintf("XXX gp %d i %d %d %d\n", gp, i[0], i[1], i[2]);
-  assert(0);
+  //mprintf("XXX gp %d i %d %d %d\n", gp, i[0], i[1], i[2]);
+  //  assert(0);
 }
 
 // ----------------------------------------------------------------------
@@ -338,54 +320,72 @@ ggcm_mhd_create_amr_ddc_E(struct ggcm_mhd *mhd)
   int gdims[3];
   mrc_domain_get_global_dims(mhd->domain, gdims);
   int sw[3] = {};
-  int ext[3] = { 1, 1, 0 }; // EZ
 
   int nr_patches;
   mrc_domain_get_patches(mhd->domain, &nr_patches);
-  for (int p = 0; p < nr_patches; p++) {
-    struct mrc_patch_info info;
-    mrc_domain_get_local_patch_info(mhd->domain, p, &info);
-    int gp = info.global_patch, *ldims = info.ldims;
 
-    int i[3];
-    for (i[2] = -sw[2]; i[2] < ldims[2] + ext[2] + sw[2]; i[2]++) {
-      for (i[1] = -sw[1]; i[1] < ldims[1] + ext[1] + sw[1]; i[1]++) {
-	for (i[0] = -sw[0]; i[0] < ldims[0] + ext[0] + sw[0]; i[0]++) {
-	  // 2D EZ only
-	  if (i[0] > 0 && i[0] < ldims[0] &&
-	      i[1] > 0 && i[1] < ldims[1]) {
-	    // truly interior point "x", ie., not on boundary
-	    // X---X---X---X 
-	    // |   |   |   |
-	    // X---x---x---X
-	    // |   |   |   |
-	    // X---x---x---X
-	    // |   |   |   |
-	    // X---X---X---X 
-	    mrc_ddc_amr_add_diagonal_one(ddc, gp, 2, i);
-	    continue;
+  for (int m = 0; m < 3; m++) {
+    int ext[3];
+    for (int d = 0; d < 3; d++) {
+      ext[d] = m != d;
+    }
+    
+    for (int p = 0; p < nr_patches; p++) {
+      struct mrc_patch_info info;
+      mrc_domain_get_local_patch_info(mhd->domain, p, &info);
+      int gp = info.global_patch, *ldims = info.ldims;
+      
+      int i[3];
+      for (i[2] = -sw[2]; i[2] < ldims[2] + ext[2] + sw[2]; i[2]++) {
+	for (i[1] = -sw[1]; i[1] < ldims[1] + ext[1] + sw[1]; i[1]++) {
+	  for (i[0] = -sw[0]; i[0] < ldims[0] + ext[0] + sw[0]; i[0]++) {
+	    if (i[0] >= ext[0] && i[0] < ldims[0] &&
+		i[1] >= ext[1] && i[1] < ldims[1] &&
+		i[2] >= ext[2] && i[2] < ldims[2]) {
+	      // truly interior point "x", ie., not on boundary
+	      // X---X---X---X 
+	      // |   |   |   |
+	      // X---x---x---X
+	      // |   |   |   |
+	      // X---x---x---X
+	      // |   |   |   |
+	      // X---X---X---X 
+	      mrc_ddc_amr_add_diagonal_one(ddc, gp, m, i);
+	      continue;
+	    }
+
+	    // now we're only looking at E field values that are on edges on the boundary of
+	    // this patch
+	    // FIXME, with "c3" double this is really needed though it shouldn't be!!!
+	    // to maintain div B = 0
+	    
+	    int j[3], gp_nei;
+	    mrc_domain_find_valid_point_same(mhd->domain, ext, gp, i, &gp_nei, j);
+	    if (gp_nei >= 0) {
+	      mrc_ddc_amr_add_value(ddc, gp, m, i, gp_nei, m, j, 1.f);
+	      continue;
+	    }
+	    
+	    // If we're bordering a fine patch so that this E value is also on the fine grid,
+	    // replace this coarse grid value by the one from the fine grid in the same place
+	    
+	    mrc_domain_find_valid_point_fine(mhd->domain, ext, gp,
+					     (int[]) { 2*i[0], 2*i[1], 2*i[2] }, &gp_nei, j);
+	    if (gp_nei >= 0) {
+	      mrc_ddc_amr_add_value(ddc, gp, m, i, gp_nei, m, j, .5f);
+	      mrc_domain_find_valid_point_fine(mhd->domain, ext, gp,
+					       (int[]) { 2*i[0] + (m == 0),
+						         2*i[1] + (m == 1),
+						         2*i[2] + (m == 2) },
+					       &gp_nei, j);
+	      assert(gp_nei >= 0);
+	      mrc_ddc_amr_add_value(ddc, gp, m, i, gp_nei, m, j, .5f);
+	      continue;
+	    }
+	    
+	    // FIXME not handled -- should be fixed, though (see FIXME above) not strictly necessary
+	    MHERE;
 	  }
-
-	  // now we're only looking at EZ field values that are on edges on the boundary of
-	  // this patch
-
-	  // FIXME, if there's another patch that really owns the value, it should be
-	  // overwritten from there (though it gets calculated redundantly, so that's why
-	  // we get away without doing it)
-
-	  // If we're bordering a fine patch so that this EZ value is also on the fine grid,
-	  // replace this coarse grid value by the one from the fine grid in the same place
-
-	  int gp_nei, j[3];
-	  mrc_domain_find_valid_point_fine(mhd->domain, ext, gp,
-					   (int[]) { 2*i[0], 2*i[1], 2*i[2] }, &gp_nei, j);
-	  if (gp_nei >= 0) {
-	    mrc_ddc_amr_add_value(ddc, gp, 2, i, gp_nei, 2, j, 1.f);
-	    continue;
-	  }
-
-	  // FIXME not handled -- should be fixed, though (see FIXME above) not strictly necessary
-	  // MHERE;
 	}
       }
     }
@@ -429,11 +429,13 @@ fill_ghosts_b_one(struct mrc_domain *domain, struct mrc_fld *fld,
   // then restrict this face to get replace coarse value
   mrc_domain_find_valid_point_fine(domain, ext, gp, (int[]) { 2*i[0], 2*i[1], 2*i[2] }, &gp_nei, j);
   if (gp_nei >= 0) {
-    mrc_fld_data_t fact = (m != 0 ? .5f : 1.f) * (m != 1 ? .5f : 1.f);
+    mrc_fld_data_t fact = (m != 0 ? .5f : 1.f) * (m != 1 ? .5f : 1.f) * (m != 2 ? .5f : 1.f);
     mrc_fld_data_t val = 0.f;
-    for (int dy = 0; dy <= (m != 1); dy++) {
-      for (int dx = 0; dx <= (m != 0); dx++) {
-	val += fact * M3(fld, BX+m, j[0]+dx,j[1]+dy,j[2], gp_nei);
+    for (int dz = 0; dz <= (m != 2); dz++) {
+      for (int dy = 0; dy <= (m != 1); dy++) {
+	for (int dx = 0; dx <= (m != 0); dx++) {
+	  val += fact * M3(fld, BX+m, j[0]+dx,j[1]+dy,j[2]+dz, gp_nei);
+	}
       }
     }
     return val;
@@ -459,7 +461,7 @@ fill_ghosts_b_one(struct mrc_domain *domain, struct mrc_fld *fld,
     }
   }
 
-  mprintf("XXX gp %d i %d %d %d\n", gp, i[0], i[1], i[2]);
+  mprintf("XXX m%d gp %d i %d %d %d\n", m, gp, i[0], i[1], i[2]);
 
   // return 2.f;
   assert(0);
@@ -499,14 +501,15 @@ is_ghost_b(struct mrc_domain *domain, int ext[3], int gp, int i[3])
 
   // inside, not on the boundary
   if (dir[0] == 0 && dirx[0] == 0 &&
-      dir[1] == 0 && dirx[1] == 0) {
+      dir[1] == 0 && dirx[1] == 0 &&
+      dir[2] == 0 && dirx[2] == 0) {
     return false;
   }
 
   // on the boundary...
   int dd[3];
   // do we border a coarse domain? (then it's not a ghost point)
-  for (dd[2] = 0; dd[2] >= 0; dd[2]--) {
+  for (dd[2] = dir[2]; dd[2] >= dir[2] - dirx[2]; dd[2]--) {
     for (dd[1] = dir[1]; dd[1] >= dir[1] - dirx[1]; dd[1]--) {
       for (dd[0] = dir[0]; dd[0] >= dir[0] - dirx[0]; dd[0]--) {
 	if (dd[0] == 0 && dd[1] == 0 && dd[2] == 0) {
@@ -522,7 +525,7 @@ is_ghost_b(struct mrc_domain *domain, int ext[3], int gp, int i[3])
   }
 
   // do we border a fine domain? (then it's a ghost point here on the coarse)
-  for (dd[2] = 0; dd[2] >= 0; dd[2]--) {
+  for (dd[2] = dir[2]; dd[2] >= dir[2] - dirx[2]; dd[2]--) {
     for (dd[1] = dir[1]; dd[1] >= dir[1] - dirx[1]; dd[1]--) {
       for (dd[0] = dir[0]; dd[0] >= dir[0] - dirx[0]; dd[0]--) {
 	if (dd[0] == 0 && dd[1] == 0 && dd[2] == 0) {
@@ -539,7 +542,7 @@ is_ghost_b(struct mrc_domain *domain, int ext[3], int gp, int i[3])
 
   // is another same level patch in line before us, then it's theirs, and we have
   // a ghost point
-  for (dd[2] = 0; dd[2] >= 0; dd[2]--) {
+  for (dd[2] = dir[2]; dd[2] >= dir[2] - dirx[2]; dd[2]--) {
     for (dd[1] = dir[1]; dd[1] >= dir[1] - dirx[1]; dd[1]--) {
       for (dd[0] = dir[0]; dd[0] >= dir[0] - dirx[0]; dd[0]--) {
 	int gp_nei;

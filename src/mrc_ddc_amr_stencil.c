@@ -19,10 +19,10 @@ mrc_domain_get_neighbor_patch_same(struct mrc_domain *domain, int gp,
   int idx3[3];
   for (int d = 0; d < 3; d++) {
     idx3[d] = pi.idx3[d] + dx[d];
-    if (idx3[d] < 0) {
+    if (0&&idx3[d] < 0) {
       idx3[d] += mx[d];
     }
-    if (idx3[d] >= mx[d]) {
+    if (0&&idx3[d] >= mx[d]) {
       idx3[d] -= mx[d];
     }
   }
@@ -44,10 +44,10 @@ mrc_domain_get_neighbor_patch_coarse(struct mrc_domain *domain, int gp,
   int idx3[3];
   for (int d = 0; d < 3; d++) {
     idx3[d] = (pi.idx3[d] + dx[d] + 2) / 2 - 1;
-    if (idx3[d] < 0) {
+    if (0&&idx3[d] < 0) {
       idx3[d] += mx[d];
     }
-    if (idx3[d] >= mx[d]) {
+    if (0&&idx3[d] >= mx[d]) {
       idx3[d] -= mx[d];
     }
   }
@@ -69,10 +69,10 @@ mrc_domain_get_neighbor_patch_fine(struct mrc_domain *domain, int gp,
   int idx3[3];
   for (int d = 0; d < 3; d++) {
     idx3[d] = pi.idx3[d] + dir[d];
-    if (idx3[d] < 0) {
+    if (0&&idx3[d] < 0) {
       idx3[d] += mx[d];
     }
-    if (idx3[d] >= mx[d]) {
+    if (0&&idx3[d] >= mx[d]) {
       idx3[d] -= mx[d];
     }
     idx3[d] = 2 * idx3[d] + off[d];
@@ -179,14 +179,15 @@ mrc_domain_is_ghost(struct mrc_domain *domain, int ext[3], int gp, int i[3])
 
   // inside, not on the boundary
   if (dir[0] == 0 && dirx[0] == 0 &&
-      dir[1] == 0 && dirx[1] == 0) {
+      dir[1] == 0 && dirx[1] == 0 &&
+      dir[2] == 0 && dirx[2] == 0) {
     return false;
   }
 
   // on the boundary...
   int dd[3];
   // do we border a fine domain? (then it's a ghost point)
-  for (dd[2] = 0; dd[2] >= 0; dd[2]--) {
+  for (dd[2] = dir[2]; dd[2] >= dir[2] - dirx[2]; dd[2]--) {
     for (dd[1] = dir[1]; dd[1] >= dir[1] - dirx[1]; dd[1]--) {
       for (dd[0] = dir[0]; dd[0] >= dir[0] - dirx[0]; dd[0]--) {
 	if (dd[0] == 0 && dd[1] == 0 && dd[2] == 0) {
@@ -428,7 +429,14 @@ mrc_ddc_amr_stencil_fine(struct mrc_ddc *ddc, int ext[3],
   struct mrc_domain *domain = mrc_ddc_get_domain(ddc);
 
   int gp_nei, j[3];
+  struct mrc_patch_info info;
+  mrc_domain_get_global_patch_info(domain, gp, &info);
   mrc_domain_find_valid_point_fine(domain, ext, gp, (int[]) { 2*i[0], 2*i[1], 2*i[2] }, &gp_nei, j);
+  if (info.off[0] == 24 && gp_nei >= 0) {
+    mprintf("gp %d off %d:%d:%d i %d:%d:%d gp_nei %d\n", gp, info.off[0], info.off[1], info.off[2], i[0], i[1], i[2], gp_nei);
+    mrc_domain_get_global_patch_info(domain, gp_nei, &info);
+    mprintf("off %d:%d:%d\n", info.off[0], info.off[1], info.off[2]);
+  }
   if (gp_nei < 0) {
     return false;
   }
@@ -522,7 +530,7 @@ mrc_ddc_amr_set_by_stencil(struct mrc_ddc *ddc, int m, int bnd, int _ext[3],
 
 	  // oops, no way to fill this point?
 	  // (This may be okay if the domain has holes or other physical boundaries)
-	  MHERE;
+	  //	  MHERE;
 	}
       }
     }
