@@ -173,7 +173,7 @@ diagc_combined_destroy(struct mrc_io *io)
   icmd[1] = wait_for_response;
   MPI_Send(icmd, 2, MPI_INT, par->rank_diagsrv, ID_DIAGS_CMD, MPI_COMM_WORLD);
 
-  if (wait_for_response) {
+  if (0&&wait_for_response) {
     int response = 0;
     if (pr_diag_shutdown == 0) {
       pr_diag_shutdown = prof_register("diagc_combined_shutdown", 0, 0, 0);
