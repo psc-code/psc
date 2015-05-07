@@ -86,18 +86,15 @@ ggcm_mhd_diag_c_create(struct ggcm_mhd_diag *diag)
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_diag_c_setup
+// ggcm_mhd_diag_c_setup_common
+//
+// shared between setup() and read(), though really, we should 
+// restore from checkpoint for read(), rather than parsing stuff again
 
 static void
-ggcm_mhd_diag_c_setup(struct ggcm_mhd_diag *diag)
+ggcm_mhd_diag_c_setup_common(struct ggcm_mhd_diag *diag)
 {
   struct ggcm_mhd_diag_c *sub = ggcm_mhd_diag_c(diag);
-
-  if (sub->find_diagsrv) {
-    sub->rank_diagsrv = sub->find_diagsrv(diag);
-  } else {
-    sub->rank_diagsrv = -1;
-  }
 
   sub->nr_planes[0] = 
     parse_float_array(sub->outplanex, sub->planes[0], MAX_PLANES);
@@ -120,13 +117,30 @@ ggcm_mhd_diag_c_setup(struct ggcm_mhd_diag *diag)
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_diag_c_setup
+
+static void
+ggcm_mhd_diag_c_setup(struct ggcm_mhd_diag *diag)
+{
+  struct ggcm_mhd_diag_c *sub = ggcm_mhd_diag_c(diag);
+
+  if (sub->find_diagsrv) {
+    sub->rank_diagsrv = sub->find_diagsrv(diag);
+  } else {
+    sub->rank_diagsrv = -1;
+  }
+
+  ggcm_mhd_diag_c_setup_common(diag);
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_diag_c_read
 
 static void
 ggcm_mhd_diag_c_read(struct ggcm_mhd_diag *diag, struct mrc_io *io)
 {
   ggcm_mhd_diag_c_create(diag);
-  ggcm_mhd_diag_c_setup(diag);
+  ggcm_mhd_diag_c_setup_common(diag);
 }
 
 // ----------------------------------------------------------------------
@@ -362,6 +376,8 @@ static struct param ggcm_mhd_diag_c_descr[] = {
   { "outplanex"       , VAR(outplanex)       , PARAM_STRING("")           },
   { "outplaney"       , VAR(outplaney)       , PARAM_STRING("")           },
   { "outplanez"       , VAR(outplanez)       , PARAM_STRING("")           },
+
+  { "rank_diagsrv"    , VAR(rank_diagsrv)    , MRC_VAR_INT                },
   {},
 };
 #undef VAR
