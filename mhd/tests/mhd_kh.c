@@ -37,6 +37,7 @@ struct ggcm_mhd_ic_kh {
   double B0x; // initial Bx
   double B0y; // initial By
   double B0z; // initial Bz
+  double B0z_harris; // initial Bz harris
   double pert; // initial pertubation amplitude
   double pert_random; // random pertubation amplitude
   double lambda; // shear layer width
@@ -60,7 +61,7 @@ ggcm_mhd_ic_kh_run(struct ggcm_mhd_ic *ic)
   if (sub->variant == 0) { // single mode and random perturbation, finite width shear
     for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
       mrc_fld_foreach(fld, ix,iy,iz, 1, 1) {
-	double xx = MRC_MCRDX(crds, iy, p);
+	double xx = MRC_MCRDX(crds, ix, p);
 	double yy = MRC_MCRDY(crds, iy, p);
 
 	double s = 1. + .5 * (tanh((yy - .25) / sub->lambda) - tanh((yy + .25) / sub->lambda));
@@ -74,10 +75,12 @@ ggcm_mhd_ic_kh_run(struct ggcm_mhd_ic *ic)
 	VX_(fld, ix,iy,iz, p) += sub->pert_random * (random_double() - .5);
 	VY_(fld, ix,iy,iz, p) += sub->pert_random * (random_double() - .5);
 
-	PP_(fld, ix,iy,iz, p) = sub->p0;
+	PP_(fld, ix,iy,iz, p) = sub->p0 
+	  + .5 * sqr(sub->B0z_harris) / sqr(cosh((yy - .25) / sub->lambda))
+	  + .5 * sqr(sub->B0z_harris) / sqr(cosh((yy + .25) / sub->lambda));
 	BX_(fld, ix,iy,iz, p) = sub->B0x; 
 	BY_(fld, ix,iy,iz, p) = sub->B0y;
-	BZ_(fld, ix,iy,iz, p) = sub->B0z;
+	BZ_(fld, ix,iy,iz, p) = sub->B0z + sub->B0z_harris * s - sub->B0z_harris * (1. - s);
       } mrc_fld_foreach_end;
     }
  } else if (sub->variant == 1) { // athena: random perturbations
@@ -126,6 +129,7 @@ static struct param ggcm_mhd_ic_kh_descr[] = {
   { "B0x"           , VAR(B0x)           , PARAM_DOUBLE(0.)      },
   { "B0y"           , VAR(B0y)           , PARAM_DOUBLE(0.)      },
   { "B0z"           , VAR(B0z)           , PARAM_DOUBLE(0.)      },
+  { "B0z_harris"    , VAR(B0z_harris)    , PARAM_DOUBLE(0.)      },
   { "p0"            , VAR(p0)            , PARAM_DOUBLE(2.5)     },
   { "pert"          , VAR(pert)          , PARAM_DOUBLE(1e-2)    },
   { "pert_random"   , VAR(pert_random)   , PARAM_DOUBLE(0.)      },
