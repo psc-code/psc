@@ -442,7 +442,7 @@ psc_setup_domain(struct psc *psc)
 
   for (int d = 0; d < 3; d++) {
     // FIXME, old-style particle pushers need 3 ghost points still
-    psc->ibn[d] = 3;
+    psc->ibn[d] = 2;
   }
   bool need_pml = false;
   for (int d = 0; d < 3; d++) {

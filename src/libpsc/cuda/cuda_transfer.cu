@@ -186,7 +186,7 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
     prts_cuda->mprts = mprts;
   }
   mprts_cuda->h_bnd_cnt = new unsigned int[mprts_cuda->nr_total_blocks];
-  unsigned int nr_alloced = mprts_cuda->nr_prts * 1.2;
+  unsigned int nr_alloced = mprts_cuda->nr_prts * 1.4;
   mprts_cuda->nr_alloced = nr_alloced;
 
   check(cudaMalloc((void **) &mprts_cuda->d_xi4, nr_alloced * sizeof(float4)));
