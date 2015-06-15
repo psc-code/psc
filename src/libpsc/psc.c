@@ -704,6 +704,8 @@ _psc_read(struct psc *psc, struct mrc_io *io)
   psc->mphotons = mrc_io_read_ref(io, psc, "mphotons", psc_mphotons);
 
   psc_read_member_objs(psc, io);
+
+  psc->time_start = MPI_Wtime();
 }
 
 // ----------------------------------------------------------------------
