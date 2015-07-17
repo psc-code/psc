@@ -190,6 +190,11 @@ void
 ggcm_mhd_fill_ghosts(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m, float bntim)
 {
   if (mhd->amr == 0) {
+    // FIXME, this really should be done in a cleaner way (pass mb, me, probably)
+   int nr_comps = mrc_fld_nr_comps(fld);
+   if (nr_comps == 18 || nr_comps == 28)  
+    mrc_ddc_fill_ghosts_fld(mrc_domain_get_ddc(mhd->domain), m, m + nr_comps, fld);
+   else
     mrc_ddc_fill_ghosts_fld(mrc_domain_get_ddc(mhd->domain), m, m + 8, fld);
   } else {
     assert(m == 0);
