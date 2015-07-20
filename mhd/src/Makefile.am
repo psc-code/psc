@@ -23,6 +23,9 @@ libmhd_la_SOURCES = \
 	ggcm_mhd_bnd_conducting_y_double_aos.c \
 	ggcm_mhd_bnd_open_x.c \
 	\
+	ggcm_mhd_bndsw.c \
+	ggcm_mhd_bndsw_none.c \
+	\
 	ggcm_mhd_crds.c \
 	ggcm_mhd_crds_c.c \
 	\
