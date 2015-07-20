@@ -139,31 +139,18 @@ mrc_domain_at_boundary_hi(struct mrc_domain *domain, int d, int p)
 // bnd_sw
 
 static void
-bnd_sw(struct ggcm_mhd *mhd, int ix, int iy, int iz, int p, double vals[8], float bntim)
+bnd_sw(struct ggcm_mhd *mhd, int ix, int iy, int iz, int p, float bn[SW_NR], float bntim)
 {
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
   float xx[3] = { MRC_MCRDX(crds, ix, p),
 		  MRC_MCRDY(crds, iy, p),
 		  MRC_MCRDZ(crds, iz, p), };
-  float bn[SW_NR];
 
   static struct ggcm_mhd_bndsw *bndsw;
   if (!bndsw) {
     bndsw = ggcm_mhd_get_var_obj(mhd, "bndsw");
   }
   ggcm_mhd_bndsw_at(bndsw, bntim, xx, bn);
-
-  float vvbn  = sqr(bn[SW_VX]) + sqr(bn[SW_VY]) + sqr(bn[SW_VZ]);
-  float uubn  = .5f * (bn[SW_RR]*vvbn) + bn[SW_PP] / (mhd->par.gamm - 1.f);
-
-  vals[RR ] = bn[SW_RR];
-  vals[RVX] = bn[SW_RR] * bn[SW_VX];
-  vals[RVY] = bn[SW_RR] * bn[SW_VY];
-  vals[RVZ] = bn[SW_RR] * bn[SW_VZ];
-  vals[UU ] = uubn;
-  vals[BX ] = bn[SW_BX];
-  vals[BY ] = bn[SW_BY];
-  vals[BZ ] = bn[SW_BZ];
 }
 
 // ----------------------------------------------------------------------	
@@ -187,15 +174,28 @@ obndra(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm, float bntim)
       for (int iz = -sw; iz < mz + sw; iz++) {
 	for (int iy = -sw; iy < my + sw; iy++) {
 	  for (int ix = -sw; ix < 0; ix++) {
-	    double vals[8];
-	    bnd_sw(mhd, ix, iy, iz, p, vals, bntim);
-	    if (MT == MT_FULLY_CONSERVATIVE) {
-	      mrc_fld_data_t b2  = sqr(vals[BX]) + sqr(vals[BY]) + sqr(vals[BZ]);
- 	      vals[EE] += .5 * b2;
+	    float bn[SW_NR];
+	    bnd_sw(mhd, ix, iy, iz, p, bn, bntim);
+
+	    float vvbn  = sqr(bn[SW_VX]) + sqr(bn[SW_VY]) + sqr(bn[SW_VZ]);
+	    float uubn  = .5f * (bn[SW_RR]*vvbn) + bn[SW_PP] / (mhd->par.gamm - 1.f);
+	    float b2bn  = sqr(bn[SW_BX]) + sqr(bn[SW_BY]) + sqr(bn[SW_BZ]);
+	    
+	    M3(f, mm + RR , ix,iy,iz, p) = bn[SW_RR];
+	    M3(f, mm + RVX, ix,iy,iz, p) = bn[SW_RR] * bn[SW_VX];
+	    M3(f, mm + RVY, ix,iy,iz, p) = bn[SW_RR] * bn[SW_VY];
+	    M3(f, mm + RVZ, ix,iy,iz, p) = bn[SW_RR] * bn[SW_VZ];
+	    if (MT == MT_SEMI_CONSERVATIVE ||
+		MT == MT_SEMI_CONSERVATIVE_GGCM) {
+	      M3(f, mm + UU , ix,iy,iz, p) = uubn;
+	    } else if (MT == MT_FULLY_CONSERVATIVE) {
+	      M3(f, mm + EE , ix,iy,iz, p) = uubn + .5 * b2bn;
+	    } else {
+	      assert(0);
 	    }
-	    for (int m = 0; m < 8; m++) {
-	      M3(f, mm + m, ix,iy,iz, p) = vals[m];
-	    }
+	    M3(f, mm + BX , ix,iy,iz, p) = bn[SW_BX];
+	    M3(f, mm + BY , ix,iy,iz, p) = bn[SW_BY];
+	    M3(f, mm + BZ , ix,iy,iz, p) = bn[SW_BZ];
 	  }
 	}
       }
