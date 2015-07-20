@@ -12,13 +12,7 @@
 #define MT MT_SEMI_CONSERVATIVE_GGCM
 #define SHIFT -1
 
+#define ggcm_mhd_bnd_ops_inoutflow ggcm_mhd_bnd_ops_inoutflow_sc_ggcm_double
+#define ggcm_mhd_bnd_sub_name "inoutflow_sc_ggcm_double"
+
 #include "ggcm_mhd_bnd_inoutflow_common.c"
-
-// ======================================================================
-// ggcm_mhd_bnd subclass "inoutflow_sc_ggcm_double"
-
-struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_inoutflow_sc_ggcm_double = {
-  .name             = "inoutflow_sc_ggcm_double",
-  .fill_ghosts      = ggcm_mhd_bnd_sub_fill_ghosts,
-};
-

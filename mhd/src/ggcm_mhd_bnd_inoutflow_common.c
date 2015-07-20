@@ -358,3 +358,11 @@ ggcm_mhd_bnd_sub_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld,
   mrc_fld_put_as(f, fld);
 }
 
+// ======================================================================
+// ggcm_mhd_bnd subclass "inoutflow"
+
+struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_inoutflow = {
+  .name             = ggcm_mhd_bnd_sub_name,
+  .fill_ghosts      = ggcm_mhd_bnd_sub_fill_ghosts,
+};
+

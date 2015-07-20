@@ -12,13 +12,7 @@
 #define MT MT_FULLY_CONSERVATIVE
 #define SHIFT 0
 
+#define ggcm_mhd_bnd_ops_inoutflow ggcm_mhd_bnd_ops_inoutflow_fc_double
+#define ggcm_mhd_bnd_sub_name "inoutflow_fc_double"
+
 #include "ggcm_mhd_bnd_inoutflow_common.c"
-
-// ======================================================================
-// ggcm_mhd_bnd subclass "inoutflow_fc_double"
-
-struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_inoutflow_fc_double = {
-  .name             = "inoutflow_fc_double",
-  .fill_ghosts      = ggcm_mhd_bnd_sub_fill_ghosts,
-};
-
