@@ -3,6 +3,10 @@
 #include "ggcm_mhd_crds.h"
 #include "mrc_domain.h"
 
+struct ggcm_mhd_bnd_sub {
+  double bnvals[SW_NR];
+};
+
 // FIXME
 // The B boundary conditions have numerous issues:
 //
@@ -146,11 +150,18 @@ bnd_sw(struct ggcm_mhd *mhd, int ix, int iy, int iz, int p, float bn[SW_NR], flo
 		  MRC_MCRDY(crds, iy, p),
 		  MRC_MCRDZ(crds, iz, p), };
 
+  static bool first_time = true;
   static struct ggcm_mhd_bndsw *bndsw;
-  if (!bndsw) {
+  if (first_time) {
     bndsw = ggcm_mhd_get_var_obj(mhd, "bndsw");
   }
-  ggcm_mhd_bndsw_at(bndsw, bntim, xx, bn);
+  first_time = false;
+
+  if (bndsw) {
+    ggcm_mhd_bndsw_at(bndsw, bntim, xx, bn);
+  } else {
+    bn[SW_RR] = 1.;
+  }
 }
 
 // ----------------------------------------------------------------------	
@@ -358,11 +369,31 @@ ggcm_mhd_bnd_sub_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld,
   mrc_fld_put_as(f, fld);
 }
 
+// ----------------------------------------------------------------------
+// ggcm_mhd_bnd inflow description
+
+#define VAR(x) (void *)offsetof(struct ggcm_mhd_bnd_sub, x)
+static struct param ggcm_mhd_bnd_sub_descr[] = {
+  { "rr"           , VAR(bnvals[SW_RR])           , PARAM_DOUBLE(1.) },
+  { "pp"           , VAR(bnvals[SW_PP])           , PARAM_DOUBLE(1.) },
+  { "vx"           , VAR(bnvals[SW_VX])           , PARAM_DOUBLE(0.) },
+  { "vy"           , VAR(bnvals[SW_VY])           , PARAM_DOUBLE(0.) },
+  { "vz"           , VAR(bnvals[SW_VZ])           , PARAM_DOUBLE(0.) },
+  { "bx"           , VAR(bnvals[SW_BX])           , PARAM_DOUBLE(0.) },
+  { "by"           , VAR(bnvals[SW_BY])           , PARAM_DOUBLE(0.) },
+  { "bz"           , VAR(bnvals[SW_BZ])           , PARAM_DOUBLE(0.) },
+
+  {},
+};
+#undef VAR
+
 // ======================================================================
 // ggcm_mhd_bnd subclass "inoutflow"
 
 struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_inoutflow = {
   .name             = ggcm_mhd_bnd_sub_name,
+  .size             = sizeof(struct ggcm_mhd_bnd_sub),
+  .param_descr      = ggcm_mhd_bnd_sub_descr,
   .fill_ghosts      = ggcm_mhd_bnd_sub_fill_ghosts,
 };
 
