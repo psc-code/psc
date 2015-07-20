@@ -3,13 +3,6 @@
 
 #include <assert.h>
 
-// ----------------------------------------------------------------------
-// Fortran glue
-
-#define ggcm_mhd_bndsw_new_step_F77 F77_FUNC_(ggcm_mhd_bndsw_new_step,GGCM_MHD_BNDSW_NEW_STEP)
-
-void ggcm_mhd_bndsw_new_step_F77(void);
-
 // ======================================================================
 // ggcm_mhd_bndsw class
 
@@ -21,7 +14,11 @@ void ggcm_mhd_bndsw_new_step_F77(void);
 void
 ggcm_mhd_bndsw_new_step(struct ggcm_mhd_bndsw *bndsw)
 {
-  ggcm_mhd_bndsw_new_step_F77();
+  struct ggcm_mhd_bndsw_ops *ops = ggcm_mhd_bndsw_ops(bndsw);
+  assert(ops);
+  if (ops->new_step) {
+    ops->new_step(bndsw);
+  }
 }
 
 // ----------------------------------------------------------------------

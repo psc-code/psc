@@ -15,6 +15,7 @@ struct ggcm_mhd_bndsw_ops {
   void (*at)(struct ggcm_mhd_bndsw *bndsw, float bntim, float xx[3],
 	     float vals[SW_NR]);
   void (*get_initial)(struct ggcm_mhd_bndsw *bndsw, float vals[SW_NR]);
+  void (*new_step)(struct ggcm_mhd_bndsw *bndsw);
 };
 
 extern struct ggcm_mhd_bndsw_ops ggcm_mhd_bndsw_none_ops;
