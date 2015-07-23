@@ -1,20 +1,16 @@
 
 #include "psc.h"
-#include "psc_particles_as_single.h"
-#include "psc_fields_as_single.h"
 
 #include "psc_output_fields_item_private.h"
 
 #include <math.h>
 
-#define DEPOSIT_TO_GRID_1ST_NC(part, pf, m, val) do {			\
-  } while (0)
-
 // ======================================================================
 // rho
 
+#if 0
 static void
-do_rho_run(int p, fields_t *pf, struct psc_particles *prts)
+do_rho_run(int p, struct psc_fields *pf, struct psc_particles *prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
@@ -47,17 +43,21 @@ do_rho_run(int p, fields_t *pf, struct psc_particles *prts)
     F3(pf, 0, 0,jy+1,jz+1) += fnq*g1y*g1z * val;
   }
 }
+#endif
 
 static void
 rho_run_patches(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 		struct psc_mparticles *mprts_base, struct psc_mfields *mres_base)
 {
-  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
-  struct psc_mfields *mres = psc_mfields_get_as(mres_base, FIELDS_TYPE, 0, 0);
+  // FIXME, make sure is reordered -- or handle if not
+  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, "cuda", 0);
+  struct psc_mfields *mres = psc_mfields_get_as(mres_base, "cuda", 0, 0);
   psc_mfields_zero_range(mres, 0, mres->nr_fields);
+#if 0
   for (int p = 0; p < mres->nr_patches; p++) {
     do_rho_run(p, psc_mfields_get_patch(mres, p), psc_mparticles_get_patch(mprts, p));
   }
+#endif
   psc_mparticles_put_as(mprts, mprts_base, MP_DONT_COPY);
   psc_mfields_put_as(mres, mres_base, 0, 1);
 }
