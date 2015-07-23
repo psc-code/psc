@@ -77,6 +77,8 @@ extern struct psc_output_fields_item_ops psc_output_fields_item_coll_stats_singl
 
 extern struct psc_output_fields_item_ops psc_output_fields_item_dive_c_ops;
 extern struct psc_output_fields_item_ops psc_output_fields_item_dive_single_ops;
+
 extern struct psc_output_fields_item_ops psc_output_fields_item_dive_cuda_ops;
+extern struct psc_output_fields_item_ops psc_output_fields_item_rho_1st_nc_cuda_ops;
 
 #endif
