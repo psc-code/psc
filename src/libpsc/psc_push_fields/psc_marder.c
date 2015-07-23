@@ -4,6 +4,7 @@
 #include "psc_output_fields_item.h"
 
 #include <mrc_io.h>
+#include <mrc_profile.h>
 
 #include <math.h>
 
@@ -45,8 +46,18 @@ void
 psc_marder_run(struct psc_marder *marder, 
 	       struct psc_mfields *flds, struct psc_mparticles *particles)
 {
+  static int pr, pr_A, pr_B;
+  if (!pr) {
+    pr   = prof_register("psc_marder_run", 1., 0, 0);
+    pr_A = prof_register("psc_marder rho", 1., 0, 0);
+    pr_B = prof_register("psc_marder iter", 1., 0, 0);
+  }
+
   if (marder->every_step < 0 || ppsc->timestep % marder->every_step != 0) 
-   return;
+    return;
+
+  prof_start(pr);
+  prof_start(pr_A);
 
   struct psc_marder_ops *ops = psc_marder_ops(marder);
   assert(ops);
@@ -56,11 +67,17 @@ psc_marder_run(struct psc_marder *marder,
   // need to fill ghost cells first (should be unnecessary with only variant 1) FIXME
   psc_bnd_fill_ghosts(ppsc->bnd, flds, EX, EX+3);
 
+  prof_stop(pr_A);
+
+  prof_start(pr_B);
   for (int i = 0; i < marder->loop; i++) {
     marder_calc_aid_fields(marder, flds, particles, marder->div_e, marder->rho);
     ops->correct(marder, flds, marder->div_e);
     psc_bnd_fill_ghosts(ppsc->bnd, flds, EX, EX+3);
   }
+  prof_stop(pr_B);
+
+  prof_stop(pr);
 }
 
 // ----------------------------------------------------------------------
