@@ -8,49 +8,6 @@
 #include <math.h>
 
 #define DEPOSIT_TO_GRID_1ST_NC(part, pf, m, val) do {			\
-    particle_real_t *xi = &part->xi; /* don't shift back in time */	\
-    particle_real_t u = xi[0] * dxi;					\
-    particle_real_t v = xi[1] * dyi;					\
-    particle_real_t w = xi[2] * dzi;					\
-    int jx = particle_real_fint(u);					\
-    int jy = particle_real_fint(v);					\
-    int jz = particle_real_fint(w);					\
-    particle_real_t h1 = u - jx;					\
-    particle_real_t h2 = v - jy;					\
-    particle_real_t h3 = w - jz;					\
-    									\
-    particle_real_t g0x = 1.f - h1;					\
-    particle_real_t g0y = 1.f - h2;					\
-    particle_real_t g0z = 1.f - h3;					\
-    particle_real_t g1x = h1;						\
-    particle_real_t g1y = h2;						\
-    particle_real_t g1z = h3;						\
-    									\
-    int jxd = 1, jyd = 1, jzd = 1;					\
-    if (ppsc->domain.gdims[0] == 1) {					\
-      jx = 0; g0x = 1.; g1x = 0.; jxd = 0;				\
-    }									\
-    if (ppsc->domain.gdims[1] == 1) {					\
-      jy = 0; g0y = 1.; g1y = 0.; jyd = 0;				\
-    }									\
-    if (ppsc->domain.gdims[2] == 1) {					\
-      jz = 0; g0z = 1.; g1z = 0.; jzd = 0;				\
-    }									\
-    									\
-    assert(jx >= -1 && jx < patch->ldims[0]);				\
-    assert(jy >= -1 && jy < patch->ldims[1]);				\
-    assert(jz >= -1 && jz < patch->ldims[2]);				\
-    									\
-    particle_real_t fnq = particle_wni(part) * fnqs;			\
-									\
-    F3(pf, m, jx    ,jy    ,jz    ) += fnq*g0x*g0y*g0z * (val);		\
-    F3(pf, m, jx+jxd,jy    ,jz    ) += fnq*g1x*g0y*g0z * (val);		\
-    F3(pf, m, jx    ,jy+jyd,jz    ) += fnq*g0x*g1y*g0z * (val);		\
-    F3(pf, m, jx+jxd,jy+jyd,jz    ) += fnq*g1x*g1y*g0z * (val);		\
-    F3(pf, m, jx    ,jy    ,jz+jzd) += fnq*g0x*g0y*g1z * (val);		\
-    F3(pf, m, jx+jxd,jy    ,jz+jzd) += fnq*g1x*g0y*g1z * (val);		\
-    F3(pf, m, jx    ,jy+jyd,jz+jzd) += fnq*g0x*g1y*g1z * (val);		\
-    F3(pf, m, jx+jxd,jy+jyd,jz+jzd) += fnq*g1x*g1y*g1z * (val);		\
   } while (0)
 
 // ======================================================================
@@ -61,12 +18,33 @@ do_rho_run(int p, fields_t *pf, struct psc_particles *prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
+  particle_real_t dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
   for (int n = 0; n < prts->n_part; n++) {
     particle_t *part = particles_get_one(prts, n);
     int m = particle_kind(part);
-    DEPOSIT_TO_GRID_1ST_NC(part, pf, 0, ppsc->kinds[m].q);
+    particle_real_t *xi = &part->xi;
+    particle_real_t v = xi[1] * dyi;
+    particle_real_t w = xi[2] * dzi;
+    int jy = particle_real_fint(v);
+    int jz = particle_real_fint(w);
+    particle_real_t h2 = v - jy;
+    particle_real_t h3 = w - jz;
+
+    particle_real_t g0y = 1.f - h2;
+    particle_real_t g0z = 1.f - h3;
+    particle_real_t g1y = h2;
+    particle_real_t g1z = h3;
+
+    assert(jy >= -1 && jy < patch->ldims[1]);
+    assert(jz >= -1 && jz < patch->ldims[2]);
+
+    particle_real_t fnq = particle_wni(part) * fnqs;
+    particle_real_t val = ppsc->kinds[m].q;
+    F3(pf, 0, 0,jy  ,jz  ) += fnq*g0y*g0z * val;
+    F3(pf, 0, 0,jy+1,jz  ) += fnq*g1y*g0z * val;
+    F3(pf, 0, 0,jy  ,jz+1) += fnq*g0y*g1z * val;
+    F3(pf, 0, 0,jy+1,jz+1) += fnq*g1y*g1z * val;
   }
 }
 
