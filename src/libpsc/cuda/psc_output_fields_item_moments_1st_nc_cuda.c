@@ -2,6 +2,7 @@
 #include "psc.h"
 
 #include "psc_output_fields_item_private.h"
+#include "psc_cuda.h"
 
 #include <math.h>
 
@@ -49,15 +50,12 @@ static void
 rho_run_patches(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 		struct psc_mparticles *mprts_base, struct psc_mfields *mres_base)
 {
-  // FIXME, make sure is reordered -- or handle if not
   struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, "cuda", 0);
   struct psc_mfields *mres = psc_mfields_get_as(mres_base, "cuda", 0, 0);
   psc_mfields_zero_range(mres, 0, mres->nr_fields);
-#if 0
-  for (int p = 0; p < mres->nr_patches; p++) {
-    do_rho_run(p, psc_mfields_get_patch(mres, p), psc_mparticles_get_patch(mprts, p));
-  }
-#endif
+
+  yz_moments_rho_1st_nc_cuda_run_patches(mprts, mres);
+
   psc_mparticles_put_as(mprts, mprts_base, MP_DONT_COPY);
   psc_mfields_put_as(mres, mres_base, 0, 1);
 }
