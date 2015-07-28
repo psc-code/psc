@@ -41,4 +41,6 @@ extern struct psc_fields_ops psc_fields_fortran_ops;
 extern struct psc_fields_ops psc_fields_cuda_ops;
 extern struct psc_fields_ops psc_fields_cuda2_ops;
 
+extern struct psc_mfields_ops psc_mfields_cuda2_ops;
+
 #endif
