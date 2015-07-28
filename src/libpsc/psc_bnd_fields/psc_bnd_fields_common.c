@@ -4,7 +4,7 @@
 
 #include <mrc_bits.h>
 
-#define DEBUG
+//#define DEBUG
 
 static void
 conducting_wall_E_lo(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
