@@ -126,6 +126,29 @@ AC_ARG_ENABLE(
 )
 AM_CONDITIONAL([USE_CUDA], [test "$enable_cuda" = "yes"])
 
+AH_TEMPLATE([USE_CUDA2], [use nvcc to create CUDA code])
+AC_ARG_ENABLE(
+  [cuda2],
+  [AS_HELP_STRING([--enable-cuda2], [use nvcc to create CUDA code])],
+  [AS_IF([test "$enable_cuda2" = "yes"],
+    [AC_DEFINE([USE_CUDA2])
+    AS_IF([test -z "$CUDACC"],
+          [CUDACC=/usr/local/cuda/bin/nvcc])
+    AS_IF([test -z "$CUDALIBS"],
+          [CUDALIBS="-L/usr/local/cuda/lib -lcudart"])
+    AC_SUBST([CUDACC])
+    CUDACFLAGS="$CUDACFLAGS -m64"
+    AC_SUBST([CUDACFLAGS])
+    CUDAMPIFLAGS=""
+    for dir in `$CC -showme:incdirs`; do
+      CUDAMPIFLAGS="$CUDAMPIFLAGS -I$dir"
+    done
+    AC_SUBST([CUDAMPIFLAGS])
+    LIBS="$LIBS $CUDALIBS"])
+  ]
+)
+AM_CONDITIONAL([USE_CUDA2], [test "$enable_cuda2" = "yes"])
+
 AH_TEMPLATE([USE_SSE2], [use streaming SIMD extension 2])
 AC_ARG_ENABLE(
   [sse2],
@@ -222,6 +245,7 @@ AC_CONFIG_FILES([Makefile
                  src/libpsc/fortran/Makefile
                  src/libpsc/sse2/Makefile
                  src/libpsc/cuda/Makefile
+                 src/libpsc/cuda2/Makefile
                  src/libpsc/cell_be/Makefile
 ])
 AC_CONFIG_SUBDIRS([src/libmrc])
