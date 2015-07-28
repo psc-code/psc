@@ -5,6 +5,7 @@
 #include "psc_fields_single.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 // ======================================================================
 // psc_fields "cuda2"
@@ -29,6 +30,16 @@ static void
 psc_fields_cuda2_destroy(struct psc_fields *pf)
 {
   free(pf->data);
+}
+
+// ----------------------------------------------------------------------
+// psc_fields_cuda2_zero_comp
+
+static void
+psc_fields_cuda2_zero_comp(struct psc_fields *pf, int m)
+{
+  memset(&F3_CUDA2(pf, m, pf->ib[0], pf->ib[1], pf->ib[2]), 0,
+	 pf->im[0] * pf->im[1] * pf->im[2] * sizeof(fields_cuda2_real_t));
 }
 
 // ----------------------------------------------------------------------
@@ -88,8 +99,8 @@ struct psc_fields_ops psc_fields_cuda2_ops = {
   .write                 = psc_fields_cuda2_write,
 #endif
   .axpy_comp             = psc_fields_cuda2_axpy_comp,
-  .zero_comp             = psc_fields_cuda2_zero_comp,
 #endif
+  .zero_comp             = psc_fields_cuda2_zero_comp,
 };
 
 // ======================================================================

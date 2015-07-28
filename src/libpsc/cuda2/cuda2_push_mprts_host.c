@@ -2,26 +2,20 @@
 #include "psc_cuda2.h"
 #include "psc_debug.h"
 
-#include "psc_particles_single.h"
+#include "psc_particles_cuda2.h"
 
 #include "psc_fields_cuda2.h"
-
-static inline int
-fint(particle_single_real_t x)
-{
-  return floorf(x);
-}
 
 #define MAX_NR_KINDS (10)
 
 struct params_1vb {
-  float dt;
-  float fnqs, fnqxs, fnqys, fnqzs;
-  float dxi[3];
-  float dq_kind[MAX_NR_KINDS];
-  float fnqx_kind[MAX_NR_KINDS];
-  float fnqy_kind[MAX_NR_KINDS];
-  float fnqz_kind[MAX_NR_KINDS];
+  particle_cuda2_real_t dt;
+  particle_cuda2_real_t fnqs, fnqxs, fnqys, fnqzs;
+  particle_cuda2_real_t dxi[3];
+  particle_cuda2_real_t dq_kind[MAX_NR_KINDS];
+  particle_cuda2_real_t fnqx_kind[MAX_NR_KINDS];
+  particle_cuda2_real_t fnqy_kind[MAX_NR_KINDS];
+  particle_cuda2_real_t fnqz_kind[MAX_NR_KINDS];
 };
 
 static struct params_1vb prm;
@@ -49,10 +43,10 @@ params_1vb_set(struct psc *psc, int p)
 
 #define INTERPOLATE_1ST_EC(pf, exq, eyq, ezq, hxq, hyq, hzq)        	\
   do {									\
-    float g0y = 1.f - og[1];					\
-    float g0z = 1.f - og[2];					\
-    float g1y = og[1];					\
-    float g1z = og[2];					\
+    particle_cuda2_real_t g0y = 1.f - og[1];				\
+    particle_cuda2_real_t g0z = 1.f - og[2];				\
+    particle_cuda2_real_t g1y = og[1];					\
+    particle_cuda2_real_t g1z = og[2];					\
     									\
     exq = (g0z*(g0y*F3_CUDA2(pf, EX, 0,lg[1]  ,lg[2]  ) +		\
 		g1y*F3_CUDA2(pf, EX, 0,lg[1]+1,lg[2]  )) +		\
@@ -75,43 +69,43 @@ params_1vb_set(struct psc *psc, int p)
 
 
 static inline void
-calc_vxi(float vxi[3], particle_single_t *part)
+calc_vxi(particle_cuda2_real_t vxi[3], particle_cuda2_t *part)
 {
-  float root = 1.f 
-    / sqrtf(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
+  particle_cuda2_real_t root = 1.f 
+    / particle_cuda2_real_sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
   vxi[0] = part->pxi * root;
   vxi[1] = part->pyi * root;
   vxi[2] = part->pzi * root;
 }
 
 static inline void
-push_xi(particle_single_t *part, float vxi[3], float dt)
+push_xi(particle_cuda2_t *part, particle_cuda2_real_t vxi[3], particle_cuda2_real_t dt)
 {
   part->yi += vxi[1] * dt;
   part->zi += vxi[2] * dt;
 }
 
 static inline void
-push_pxi(particle_single_t *part, float exq, float eyq, float ezq,
-	 float hxq, float hyq, float hzq, float dq)
+push_pxi(particle_cuda2_t *part, particle_cuda2_real_t exq, particle_cuda2_real_t eyq, particle_cuda2_real_t ezq,
+	 particle_cuda2_real_t hxq, particle_cuda2_real_t hyq, particle_cuda2_real_t hzq, particle_cuda2_real_t dq)
 {
-  float pxm = part->pxi + dq*exq;
-  float pym = part->pyi + dq*eyq;
-  float pzm = part->pzi + dq*ezq;
+  particle_cuda2_real_t pxm = part->pxi + dq*exq;
+  particle_cuda2_real_t pym = part->pyi + dq*eyq;
+  particle_cuda2_real_t pzm = part->pzi + dq*ezq;
   
-  float root = dq / sqrtf(1.f + pxm*pxm + pym*pym + pzm*pzm);
-  float taux = hxq*root;
-  float tauy = hyq*root;
-  float tauz = hzq*root;
+  particle_cuda2_real_t root = dq / particle_cuda2_real_sqrt(1.f + pxm*pxm + pym*pym + pzm*pzm);
+  particle_cuda2_real_t taux = hxq*root;
+  particle_cuda2_real_t tauy = hyq*root;
+  particle_cuda2_real_t tauz = hzq*root;
   
-  float tau = 1.f / (1.f + taux*taux + tauy*tauy + tauz*tauz);
-  float pxp = ((1.f+taux*taux-tauy*tauy-tauz*tauz)*pxm + 
+  particle_cuda2_real_t tau = 1.f / (1.f + taux*taux + tauy*tauy + tauz*tauz);
+  particle_cuda2_real_t pxp = ((1.f+taux*taux-tauy*tauy-tauz*tauz)*pxm + 
 	       (2.f*taux*tauy+2.f*tauz)*pym + 
 	       (2.f*taux*tauz-2.f*tauy)*pzm)*tau;
-  float pyp = ((2.f*taux*tauy-2.f*tauz)*pxm +
+  particle_cuda2_real_t pyp = ((2.f*taux*tauy-2.f*tauz)*pxm +
 	       (1.f-taux*taux+tauy*tauy-tauz*tauz)*pym +
 	       (2.f*tauy*tauz+2.f*taux)*pzm)*tau;
-  float pzp = ((2.f*taux*tauz+2.f*tauy)*pxm +
+  particle_cuda2_real_t pzp = ((2.f*taux*tauz+2.f*tauy)*pxm +
 	       (2.f*tauy*tauz-2.f*taux)*pym +
 	       (1.f-taux*taux-tauy*tauy+tauz*tauz)*pzm)*tau;
   
@@ -121,24 +115,24 @@ push_pxi(particle_single_t *part, float exq, float eyq, float ezq,
 }
 
 static inline void
-find_idx_off_1st_rel(float xi[3], int lg[3], float og[3], float shift,
-		     float dxi[3])
+find_idx_off_1st_rel(particle_cuda2_real_t xi[3], int lg[3], particle_cuda2_real_t og[3], particle_cuda2_real_t shift,
+		     particle_cuda2_real_t dxi[3])
 {
   for (int d = 0; d < 3; d++) {
-    float pos = xi[d] * dxi[d] + shift;
-    lg[d] = fint(pos);
+    particle_cuda2_real_t pos = xi[d] * dxi[d] + shift;
+    lg[d] = particle_cuda2_real_fint(pos);
     og[d] = pos - lg[d];
   }
 }
 
 static inline void
-find_idx_off_pos_1st_rel(float xi[3], int lg[3], float og[3],
-			 float pos[3], float shift,
-			 float dxi[3])
+find_idx_off_pos_1st_rel(particle_cuda2_real_t xi[3], int lg[3], particle_cuda2_real_t og[3],
+			 particle_cuda2_real_t pos[3], particle_cuda2_real_t shift,
+			 particle_cuda2_real_t dxi[3])
 {
   for (int d = 0; d < 3; d++) {
     pos[d] = xi[d] * dxi[d] + shift;
-    lg[d] = fint(pos[d]);
+    lg[d] = particle_cuda2_real_fint(pos[d]);
     og[d] = pos[d] - lg[d];
   }
 }
@@ -147,7 +141,7 @@ find_idx_off_pos_1st_rel(float xi[3], int lg[3], float og[3],
 // current 1vb (yz)
 
 static inline void
-calc_3d_dx1(float dx1[3], float x[3], float dx[3], int off[3])
+calc_3d_dx1(particle_cuda2_real_t dx1[3], particle_cuda2_real_t x[3], particle_cuda2_real_t dx[3], int off[3])
 {
   if (off[2] == 0) {
     dx1[1] = .5f * off[1] - x[1];
@@ -171,11 +165,11 @@ calc_3d_dx1(float dx1[3], float x[3], float dx[3], int off[3])
 }
 
 static inline void
-curr_3d_vb_cell(struct psc_fields *pf, int i[3], float x[3], float dx[3],
-		float fnq[3], float dxt[3], int off[3])
+curr_3d_vb_cell(struct psc_fields *pf, int i[3], particle_cuda2_real_t x[3], particle_cuda2_real_t dx[3],
+		particle_cuda2_real_t fnq[3], particle_cuda2_real_t dxt[3], int off[3])
 {
-  float h = (1.f/12.f) * dx[0] * dx[1] * dx[2];
-  float xa[3] = { 0.,
+  particle_cuda2_real_t h = (1.f/12.f) * dx[0] * dx[1] * dx[2];
+  particle_cuda2_real_t xa[3] = { 0.,
 			    x[1] + .5f * dx[1],
 			    x[2] + .5f * dx[2], };
   F3_CUDA2(pf, JXI, 0,i[1]  ,i[2]  ) += fnq[0] * (dx[0] * (.5f - xa[1]) * (.5f - xa[2]) + h);
@@ -199,15 +193,15 @@ curr_3d_vb_cell(struct psc_fields *pf, int i[3], float x[3], float dx[3],
 }
 
 static inline void
-calc_jxyz_3d(struct psc_fields *flds, float *xm, float *xp,
-	     int *lf, int *lg, particle_single_t *prt, float *vxi)
+calc_jxyz_3d(struct psc_fields *flds, particle_cuda2_real_t *xm, particle_cuda2_real_t *xp,
+	     int *lf, int *lg, particle_cuda2_t *prt, particle_cuda2_real_t *vxi)
 {
   int i[3] = { 0, lg[1], lg[2] };					
   int idiff[3] = { 0, lf[1] - lg[1], lf[2] - lg[2] };			
-  float dx[3] = { 0., xp[1] - xm[1], xp[2] - xm[2] };		
-  float x[3] = { 0., xm[1] - (i[1] + .5f), xm[2] - (i[2] + .5f) }; 
+  particle_cuda2_real_t dx[3] = { 0., xp[1] - xm[1], xp[2] - xm[2] };		
+  particle_cuda2_real_t x[3] = { 0., xm[1] - (i[1] + .5f), xm[2] - (i[2] + .5f) }; 
   									
-  float dx1[3];
+  particle_cuda2_real_t dx1[3];
   int off[3];
   int first_dir, second_dir = -1;
   /* FIXME, make sure we never div-by-zero? */
@@ -224,7 +218,7 @@ calc_jxyz_3d(struct psc_fields *flds, float *xm, float *xp,
     } else {
       dx1[2] = dx[2] / dx[1] * dx1[1];
     }
-    if (fabsf(x[2] + dx1[2]) > .5f) {
+    if (particle_cuda2_real_abs(x[2] + dx1[2]) > .5f) {
       first_dir = 2;
     } else {
       first_dir = 1;
@@ -232,9 +226,9 @@ calc_jxyz_3d(struct psc_fields *flds, float *xm, float *xp,
     second_dir = 3 - first_dir;
   }
 
-  float fnq[3] = { particle_single_wni(prt) * prm.fnqx_kind[prt->kind],
-		   particle_single_wni(prt) * prm.fnqy_kind[prt->kind],
-		   particle_single_wni(prt) * prm.fnqz_kind[prt->kind] };
+  particle_cuda2_real_t fnq[3] = { particle_cuda2_wni(prt) * prm.fnqx_kind[prt->kind],
+				   particle_cuda2_wni(prt) * prm.fnqy_kind[prt->kind],
+				   particle_cuda2_wni(prt) * prm.fnqz_kind[prt->kind] };
   dx[0] = vxi[0] * prm.dt * prm.dxi[0];
 
   if (first_dir >= 0) {
@@ -259,30 +253,30 @@ calc_jxyz_3d(struct psc_fields *flds, float *xm, float *xp,
 static void
 push_one(struct psc_fields *flds, struct psc_particles *prts, int n)
 {
-  particle_single_t *prt = particles_single_get_one(prts, n);
+  particle_cuda2_t *prt = particles_cuda2_get_one(prts, n);
   
   // field interpolation
   
   int lg[3], lh[3];
-  float og[3], oh[3], xm[3];
+  particle_cuda2_real_t og[3], oh[3], xm[3];
   find_idx_off_pos_1st_rel(&prt->xi, lg, og, xm, 0.f, prm.dxi); // FIXME passing xi hack
   find_idx_off_1st_rel(&prt->xi, lh, oh, -.5f, prm.dxi);
   
   // FIELD INTERPOLATION
-  float exq, eyq, ezq, hxq, hyq, hzq;
+  particle_cuda2_real_t exq, eyq, ezq, hxq, hyq, hzq;
   INTERPOLATE_1ST_EC(flds, exq, eyq, ezq, hxq, hyq, hzq);
   
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0)
-  float dq = prm.dq_kind[prt->kind];
+  particle_cuda2_real_t dq = prm.dq_kind[prt->kind];
   push_pxi(prt, exq, eyq, ezq, hxq, hyq, hzq, dq);
   
-  float vxi[3];
+  particle_cuda2_real_t vxi[3];
   calc_vxi(vxi, prt);
   // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0)
   push_xi(prt, vxi, prm.dt);
   
   int lf[3];
-  float of[3], xp[3];
+  particle_cuda2_real_t of[3], xp[3];
   find_idx_off_pos_1st_rel(&prt->xi, lf, of, xp, 0.f, prm.dxi);
 
   // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt

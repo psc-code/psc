@@ -15,7 +15,7 @@ psc_push_particles_1vbec_push_mprts_yz(struct psc_push_particles *push,
 {									
   // FIXME
   struct psc_mparticles *mprts =
-    psc_mparticles_get_as(mprts_base, "single", 0);
+    psc_mparticles_get_as(mprts_base, "cuda2", 0);
   struct psc_mfields *mflds =
     psc_mfields_get_as(mflds_base, "cuda2", EX, EX + 6);
 
