@@ -603,7 +603,9 @@ _psc_setup(struct psc *psc)
   psc_setup_partition_and_particles(psc);
   psc_setup_fields(psc);
   psc_setup_photons(psc);
+#ifdef USE_FORTRAN
   psc_setup_fortran(psc);
+#endif
 
   psc_setup_member_objs(psc);
 }
@@ -696,7 +698,9 @@ _psc_read(struct psc *psc, struct mrc_io *io)
 
   psc->mrc_domain = mrc_io_read_ref(io, psc, "mrc_domain", mrc_domain);
   psc_setup_domain(psc);
+#ifdef USE_FORTRAN
   psc_setup_fortran(psc);
+#endif
 
   psc->particles = mrc_io_read_ref(io, psc, "mparticles", psc_mparticles);
   psc->flds = mrc_io_read_ref(io, psc, "mfields", psc_mfields);

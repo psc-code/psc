@@ -159,6 +159,14 @@ AS_IF(
 )
 AM_CONDITIONAL([USE_CBE], [test "$enable_cbe" = "yes"])
 
+AH_TEMPLATE([USE_FORTRAN], [include the legacy Fortran code])
+AC_ARG_ENABLE(
+  [fortran],
+  [AS_HELP_STRING([--enable-fortran], [include the legacy Fortran code])],
+  [AC_DEFINE([USE_FORTRAN])]
+)
+AM_CONDITIONAL([USE_FORTRAN], [test "$enable_fortran" = "yes"])
+
 
 AH_TEMPLATE([FIELDS_BASE], [base data structure for storing fields])
 AC_ARG_VAR([FIELDS_BASE], [base data structure for storing fields])

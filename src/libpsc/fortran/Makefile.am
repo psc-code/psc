@@ -1,6 +1,8 @@
 
 AM_CFLAGS = -I$(top_srcdir)/src/include -I$(top_srcdir)/src/libmrc/include
 
+if USE_FORTRAN
+
 noinst_LTLIBRARIES = libsubdir.la
 
 libsubdir_la_SOURCES = \
@@ -19,5 +21,7 @@ libsubdir_la_SOURCES = \
 	INIT_field.F \
 	PIC_bin_coll.F \
 	psc_glue.c
+
+endif USE_FORTRAN
 
 CLEANFILES = *.mod

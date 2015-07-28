@@ -5,8 +5,6 @@ noinst_LTLIBRARIES = libsubdir.la
 
 libsubdir_la_SOURCES = \
 	psc_push_particles.c \
-	psc_push_particles_fortran.c \
-	psc_push_particles_vay.c \
 	psc_generic_c.h \
 	psc_push_particles_generic_c.c \
 	push_part_xyz.c \
@@ -44,6 +42,12 @@ libsubdir_la_SOURCES = \
 	psc_push_particles_1st.h \
 	psc_push_particles_double.h \
 	psc_push_particles_single.h
+
+if USE_FORTRAN
+libsubdir_la_SOURCES += \
+	psc_push_particles_fortran.c \
+	psc_push_particles_vay.c
+endif USE_FORTRAN
 
 if USE_CUDA
 if USE_SSE2

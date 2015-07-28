@@ -6,5 +6,9 @@ noinst_LTLIBRARIES = libsubdir.la
 libsubdir_la_SOURCES = \
 	psc_randomize.c \
 	psc_randomize_none.c \
-	psc_randomize_c.c \
+	psc_randomize_c.c
+
+if USE_FORTRAN
+libsubdir_la_SOURCES += \
 	psc_randomize_fortran.c
+endif USE_FORTRAN

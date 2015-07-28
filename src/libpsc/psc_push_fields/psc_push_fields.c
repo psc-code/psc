@@ -224,8 +224,10 @@ psc_push_fields_init()
   mrc_class_register_subclass(&mrc_class_psc_push_fields, &psc_push_fields_auto_ops);
   mrc_class_register_subclass(&mrc_class_psc_push_fields, &psc_push_fields_c_ops);
   mrc_class_register_subclass(&mrc_class_psc_push_fields, &psc_push_fields_single_ops);
-  mrc_class_register_subclass(&mrc_class_psc_push_fields, &psc_push_fields_fortran_ops);
   mrc_class_register_subclass(&mrc_class_psc_push_fields, &psc_push_fields_none_ops);
+#ifdef USE_FORTRAN
+  mrc_class_register_subclass(&mrc_class_psc_push_fields, &psc_push_fields_fortran_ops);
+#endif
 #ifdef USE_CBE
   mrc_class_register_subclass(&mrc_class_psc_push_fields, &psc_push_fields_cbe_ops);
 #endif

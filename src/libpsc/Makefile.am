@@ -48,8 +48,7 @@ libpsc_la_LIBADD = \
 	psc_push_photons/libsubdir.la \
 	psc_randomize/libsubdir.la \
 	psc_sort/libsubdir.la \
-	psc_checks/libsubdir.la \
-	fortran/libsubdir.la
+	psc_checks/libsubdir.la
 
 if USE_SSE2
 libpsc_la_LIBADD += \
@@ -69,6 +68,11 @@ libpsc_la_LIBADD += \
 	cell_be/libsubdir.la
 
 endif USE_CBE
+
+if USE_FORTRAN
+libpsc_la_LIBADD += \
+	fortran/libsubdir.la
+endif
 
 libpsc_la_SOURCES = \
 	mfields.c \
