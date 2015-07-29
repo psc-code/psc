@@ -93,12 +93,6 @@ find_idx_off_pos_1st(const real xi[3], int j[3], real h[3], real pos[3], real sh
   }
 }
 
-
-#define NO_CHECKERBOARD
-//#define DEBUG
-
-#include "../cuda/cuda_common.h"
-
 static __constant__ __device__ float c_dqs[4]; // FIXME hardcoded
 
 static void
@@ -281,26 +275,6 @@ find_block_pos_patch(struct cuda_params prm, int *block_pos, int *ci0)
   return blockIdx.y / prm.b_mx[2];
 }
 
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
-__device__ static int
-find_block_pos_patch_q(struct cuda_params prm, int *block_pos, int *ci0, int block_start)
-{
-  int grid_dim_y = (prm.b_mx[2] + 1) / 2;
-  block_pos[1] = blockIdx.x * 2;
-  block_pos[2] = (blockIdx.y % grid_dim_y) * 2;
-  block_pos[1] += block_start & 1;
-  block_pos[2] += block_start >> 1;
-  if (block_pos[1] >= prm.b_mx[1] ||
-      block_pos[2] >= prm.b_mx[2])
-    return -1;
-
-  ci0[0] = 0;
-  ci0[1] = block_pos[1] * BLOCKSIZE_Y;
-  ci0[2] = block_pos[2] * BLOCKSIZE_Z;
-
-  return blockIdx.y / grid_dim_y;
-}
-
 __device__ static int
 find_bid(struct cuda_params prm)
 {
@@ -328,97 +302,12 @@ cache_fields(struct cuda_params prm, float *fld_cache, float *d_flds0, int size,
   }
 }
 
-// OPT: take i < cell_end condition out of load
-// OPT: reduce two at a time
-// OPT: try splitting current calc / measuring by itself
-
-// OPT: don't need as many ghost points for current and EM fields (?)
-
-#define BND_CURR_L (1)
-#define BND_CURR_R (2)
-
-#define NR_CBLOCKS 16
-#define CBLOCK_ID (threadIdx.x & (NR_CBLOCKS - 1))
-#define CBLOCK_SIZE_Y (BLOCKSIZE_Y + BND_CURR_L + BND_CURR_R)
-#define CBLOCK_SIZE_Z (BLOCKSIZE_Z + BND_CURR_L + BND_CURR_R)
-#define CBLOCK_SIZE (CBLOCK_SIZE_Y * CBLOCK_SIZE_Z * (NR_CBLOCKS))
-
-#define CBLOCK_OFF(jy, jz, m, wid) ((((m) * CBLOCK_SIZE_Z + ((jz) + BND_CURR_L)) * CBLOCK_SIZE_Y + ((jy) + BND_CURR_L)) * (NR_CBLOCKS) + wid)
-
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
-class SCurr {
-public:
-  static const int shared_size = 3 * CBLOCK_SIZE;
-
-  real *scurr;
-  real *d_flds;
-
-  __device__ SCurr(real *_scurr, real *_d_flds) :
-    scurr(_scurr), d_flds(_d_flds)
-  {
-    int i = threadIdx.x;
-    while (i < shared_size) {
-      scurr[i] = real(0.);
-      i += THREADS_PER_BLOCK;
-    }
-  }
-
-  __device__ void add_to_fld(struct cuda_params prm, int *ci0)
-  {
-    __syncthreads();				\
-    int i = threadIdx.x;
-    int stride = (BLOCKSIZE_Y + BND_CURR_L + BND_CURR_R) * (BLOCKSIZE_Z + BND_CURR_L + BND_CURR_R);
-    while (i < stride) {
-      int rem = i;
-      int jz = rem / (BLOCKSIZE_Y + BND_CURR_L + BND_CURR_R);
-      rem -= jz * (BLOCKSIZE_Y + BND_CURR_L + BND_CURR_R);
-      int jy = rem;
-      jz -= BND_CURR_L;
-      jy -= BND_CURR_L;
-      for (int m = 0; m < 3; m++) {
-	real val = real(0.);
-	// FIXME, OPT
-	for (int wid = 0; wid < NR_CBLOCKS; wid++) {
-	  val += (*this)(wid, jy, jz, m);
-	}
-	F3_DEV_YZ(JXI+m, jy+ci0[1],jz+ci0[2]) += val;
-	i += THREADS_PER_BLOCK;
-      }
-    }
-  }
-
-  __device__ real operator()(int wid, int jy, int jz, int m) const
-  {
-    unsigned int off = CBLOCK_OFF(jy, jz, m, wid);
-    return scurr[off];
-  }
-  __device__ real& operator()(int wid, int jy, int jz, int m)
-  {
-    unsigned int off = CBLOCK_OFF(jy, jz, m, wid);
-    return scurr[off];
-  }
-
-  __device__ void add(int m, int jy, int jz, float val, struct cuda_params prm, int *ci0)
-  {
-    float *addr = &(*this)(CBLOCK_ID, jy, jz, m);
-    atomicAdd(addr, val);
-  }
-};
-
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 class GCurr {
 public:
-  static const int shared_size = 1;
-
-  real *scurr;
   real *d_flds;
 
-  __device__ GCurr(real *_scurr, real *_d_flds) :
-    scurr(_scurr), d_flds(_d_flds)
-  {
-  }
-
-  __device__ void add_to_fld(struct cuda_params prm, int *ci0)
+  __device__ GCurr(real *_d_flds) :
+    d_flds(_d_flds)
   {
   }
 
@@ -475,10 +364,9 @@ calc_dx1(real dx1[3], real x[3], real dx[3], int off[3])
 // ----------------------------------------------------------------------
 // curr_vb_cell
 
-template<class CURR>
 __device__ static void
 curr_vb_cell(int i[3], real x[3], real dx[3], real qni_wni,
-	     CURR &scurr, struct cuda_params prm, int *ci0)
+	     GCurr &scurr, struct cuda_params prm, int *ci0)
 {
   real xa[3] = { 0.,
 		 x[1] + .5f * dx[1],
@@ -521,10 +409,9 @@ curr_vb_cell_upd(int i[3], real x[3], real dx1[3], real dx[3], int off[3])
 // ----------------------------------------------------------------------
 // yz_calc_j
 
-template<class CURR>
 __device__ static void
 yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
-	  CURR &scurr,
+	  GCurr &scurr,
 	  struct cuda_params prm, int nr_total_blocks, int p_nr,
 	  unsigned int *d_bidx, int bid, int *ci0)
 {
@@ -542,6 +429,7 @@ yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
   push_xi(prt, vxi, prm.dt);
   STORE_PARTICLE_POS_(*prt, d_xi4, n);
 
+#if 0
   // save block_idx for new particle position at x^(n+1.5)
   unsigned int block_pos_y = __float2int_rd(prt->xi[1] * prm.b_dxi[1]);
   unsigned int block_pos_z = __float2int_rd(prt->xi[2] * prm.b_dxi[2]);
@@ -558,6 +446,7 @@ yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
     block_idx = d2 * 3 + d1;
   }
   d_bidx[n] = block_idx;
+#endif
 
   // position xm at x^(n+.5)
   find_idx_off_pos_1st(prt->xi, k, h1, xp, real(0.), prm);
@@ -584,49 +473,21 @@ yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 
   real dx1[3];
   calc_dx1(dx1, x, dx, off);
-  curr_vb_cell<CURR>(i, x, dx1, prt->qni_wni, scurr, prm, ci0);
+  curr_vb_cell(i, x, dx1, prt->qni_wni, scurr, prm, ci0);
   curr_vb_cell_upd(i, x, dx1, dx, off);
   
   off[1] = idiff[1] - off[1];
   off[2] = idiff[2] - off[2];
   calc_dx1(dx1, x, dx, off);
-  curr_vb_cell<CURR>(i, x, dx1, prt->qni_wni, scurr, prm, ci0);
+  curr_vb_cell(i, x, dx1, prt->qni_wni, scurr, prm, ci0);
   curr_vb_cell_upd(i, x, dx1, dx, off);
     
-  curr_vb_cell<CURR>(i, x, dx, prt->qni_wni, scurr, prm, ci0);
+  curr_vb_cell(i, x, dx, prt->qni_wni, scurr, prm, ci0);
 }
 
 // ======================================================================
 
-#define DECLARE_AND_ZERO_SCURR						\
-  __shared__ real _scurr[CURR::shared_size];				\
-  CURR scurr(_scurr, d_flds0 + p * size)				\
-
-#define DECLARE_AND_CACHE_FIELDS					\
-  __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)]; \
-  cache_fields<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>			\
-  (prm, fld_cache, d_flds0, size, ci0, p)
-
-#define FIND_BLOCK_RANGE						\
-  int block_pos[3], ci0[3];						\
-  int p = find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>	\
-    (prm, block_pos, ci0);						\
-  int bid = find_bid(prm);						\
-  int block_begin = d_off[bid];						\
-  int block_end = d_off[bid + 1]
-
-#define FIND_BLOCK_RANGE_CURRMEM					\
-  int block_pos[3], ci0[3];						\
-  int p, bid;								\
-  p = find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>	\
-    (prm, block_pos, ci0);						\
-  bid = find_bid(prm);							\
-									\
-  int block_begin = d_off[bid];						\
-  int block_end = d_off[bid + 1]					\
-    
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z,
-         class CURR>
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
 push_mprts_ab(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
@@ -634,9 +495,20 @@ push_mprts_ab(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_
 	      unsigned int *d_off, int nr_total_blocks, unsigned int *d_ids, unsigned int *d_bidx,
 	      float *d_flds0, unsigned int size)
 {
-  FIND_BLOCK_RANGE_CURRMEM;
-  DECLARE_AND_CACHE_FIELDS;
-  DECLARE_AND_ZERO_SCURR;
+  int block_pos[3], ci0[3];
+  int p, bid;
+  p = find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+    (prm, block_pos, ci0);
+  bid = find_bid(prm);
+
+  int block_begin = d_off[bid];
+  int block_end = d_off[bid + 1];
+
+  __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
+  cache_fields<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+    (prm, fld_cache, d_flds0, size, ci0, p);
+
+  GCurr scurr(d_flds0 + p * size);
   
   __syncthreads();
   for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
@@ -647,11 +519,9 @@ push_mprts_ab(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_
     push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
       (&prt, n, d_ids, d_xi4, d_pxi4, d_alt_xi4, d_alt_pxi4, fld_cache, ci0, prm);
 
-    yz_calc_j<CURR>
+    yz_calc_j
       (&prt, n, d_xi4, d_pxi4, scurr, prm, nr_total_blocks, p, d_bidx, bid, ci0);
   }
-  
-  scurr.add_to_fld(prm, ci0);
 }
 
 // ----------------------------------------------------------------------
@@ -670,25 +540,6 @@ zero_currents(struct psc_mfields *mflds)
   }
 }
 
-#define CUDA_PUSH_MPRTS_TOP					\
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);	\
-  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);	\
-									\
-  struct cuda_params prm;						\
-  _set_params(&prm, ppsc, mprts, mflds);				\
-  set_consts(&prm);							\
-									\
-  unsigned int fld_size = mflds->nr_fields *				\
-    mflds_cuda->im[0] * mflds_cuda->im[1] * mflds_cuda->im[2];		\
-									\
-  zero_currents(mflds);							\
-  									\
-  int gx, gy;								\
-  gx = prm.b_mx[1];							\
-  gy = prm.b_mx[2] * mprts->nr_patches;					\
-									\
-  dim3 dimGrid(gx, gy);							\
-
 // ----------------------------------------------------------------------
 // cuda_push_mprts_ab
 
@@ -696,10 +547,25 @@ template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 static void
 cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
-  CUDA_PUSH_MPRTS_TOP;
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
 
-  push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z,
-    GCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> >
+  struct cuda_params prm;
+  _set_params(&prm, ppsc, mprts, mflds);
+  set_consts(&prm);
+
+  unsigned int fld_size = mflds->nr_fields *
+    mflds_cuda->im[0] * mflds_cuda->im[1] * mflds_cuda->im[2];
+
+  zero_currents(mflds);
+
+  int gx, gy;
+  gx = prm.b_mx[1];
+  gy = prm.b_mx[2] * mprts->nr_patches;
+
+  dim3 dimGrid(gx, gy);
+
+  push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
     <<<dimGrid, THREADS_PER_BLOCK>>>
     (0, prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
      mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4, mprts_cuda->d_off,
