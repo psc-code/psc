@@ -1,5 +1,6 @@
 
 #include "psc_fields_cuda2.h"
+#include "psc_cuda2.h"
 
 // for conversions
 #include "psc_fields_single.h"
@@ -58,12 +59,89 @@ psc_fields_cuda2_copy_to_single(struct psc_fields *flds_cuda2, struct psc_fields
   }
 }
 
+// ----------------------------------------------------------------------
+// convert from/to "cuda"
+
+// ----------------------------------------------------------------------
+// macros to access C (host) versions of the fields
+
+#define F3_OFF_CUDA(pf, fldnr, jx,jy,jz)				\
+  ((((((fldnr)								\
+       * (pf)->im[2] + ((jz)-(pf)->ib[2]))				\
+      * (pf)->im[1] + ((jy)-(pf)->ib[1]))				\
+     * (pf)->im[0] + ((jx)-(pf)->ib[0]))))
+
+#ifndef BOUNDS_CHECK
+
+#define F3_CUDA(pf, fldnr, jx,jy,jz)		\
+  (h_flds[F3_OFF_CUDA(pf, fldnr, jx,jy,jz)])
+
+#else
+
+#define F3_CUDA(pf, fldnr, jx,jy,jz)				\
+  (*({int off = F3_OFF_CUDA(pf, fldnr, jx,jy,jz);			\
+      assert(fldnr >= 0 && fldnr < (pf)->nr_comp);			\
+      assert(jx >= (pf)->ib[0] && jx < (pf)->ib[0] + (pf)->im[0]);	\
+      assert(jy >= (pf)->ib[1] && jy < (pf)->ib[1] + (pf)->im[1]);	\
+      assert(jz >= (pf)->ib[2] && jz < (pf)->ib[2] + (pf)->im[2]);	\
+      &(h_flds[off]);						\
+    }))
+
+#endif
+
+EXTERN_C void __fields_cuda_to_device(struct psc_fields *pf, real *h_flds, int mb, int me);
+EXTERN_C void __fields_cuda_from_device(struct psc_fields *pf, real *h_flds, int mb, int me);
+
+static void
+psc_fields_cuda2_copy_from_cuda(struct psc_fields *flds_cuda2, struct psc_fields *flds_cuda,
+				int mb, int me)
+{
+  float *h_flds = malloc(flds_cuda->nr_comp * psc_fields_size(flds_cuda) * sizeof(*h_flds));
+
+  __fields_cuda_from_device(flds_cuda, h_flds, mb, me);
+  
+  for (int m = mb; m < me; m++) {
+    for (int jz = flds_cuda->ib[2]; jz < flds_cuda->ib[2] + flds_cuda->im[2]; jz++) {
+      for (int jy = flds_cuda->ib[1]; jy < flds_cuda->ib[1] + flds_cuda->im[1]; jy++) {
+	for (int jx = flds_cuda->ib[0]; jx < flds_cuda->ib[0] + flds_cuda->im[0]; jx++) {
+	  F3_CUDA2(flds_cuda2, m, jx,jy,jz) = F3_CUDA(flds_cuda, m, jx,jy,jz);
+	}
+      }
+    }
+  }
+
+  free(h_flds);
+}
+
+static void
+psc_fields_cuda2_copy_to_cuda(struct psc_fields *flds_cuda2, struct psc_fields *flds_cuda,
+			      int mb, int me)
+{
+  float *h_flds = malloc(flds_cuda->nr_comp * psc_fields_size(flds_cuda) * sizeof(*h_flds));
+
+  for (int m = mb; m < me; m++) {
+    for (int jz = flds_cuda->ib[2]; jz < flds_cuda->ib[2] + flds_cuda->im[2]; jz++) {
+      for (int jy = flds_cuda->ib[1]; jy < flds_cuda->ib[1] + flds_cuda->im[1]; jy++) {
+	for (int jx = flds_cuda->ib[0]; jx < flds_cuda->ib[0] + flds_cuda->im[0]; jx++) {
+	  F3_CUDA(flds_cuda, m, jx,jy,jz) = F3_CUDA2(flds_cuda2, m, jx,jy,jz);
+	}
+      }
+    }
+  }
+
+  __fields_cuda_to_device(flds_cuda, h_flds, mb, me);
+
+  free(h_flds);
+}
+
 // ======================================================================
 // psc_fields: subclass "cuda2"
   
 static struct mrc_obj_method psc_fields_cuda2_methods[] = {
   MRC_OBJ_METHOD("copy_to_single"  , psc_fields_cuda2_copy_to_single),
   MRC_OBJ_METHOD("copy_from_single", psc_fields_cuda2_copy_from_single),
+  MRC_OBJ_METHOD("copy_to_cuda"    , psc_fields_cuda2_copy_to_cuda),
+  MRC_OBJ_METHOD("copy_from_cuda"  , psc_fields_cuda2_copy_from_cuda),
   {}
 };
 
