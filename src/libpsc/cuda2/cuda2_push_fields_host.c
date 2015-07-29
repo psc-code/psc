@@ -14,8 +14,8 @@ cuda2_push_flds_E_yz(struct psc_fields *flds)
   fields_cuda2_real_t cnz = .5 * ppsc->dt / patch->dx[2];
 
   int *ldims = patch->ldims;
-  for (int iz = -2; iz < ldims[2] + 2; iz++) { // FIXME was -1
-    for (int iy = -2; iy < ldims[1] + 2; iy++) { // FIXME was -1
+  for (int iz = -1; iz < ldims[2] + 2; iz++) { // FIXME was -1
+    for (int iy = -1; iy < ldims[1] + 2; iy++) { // FIXME was -1
       F3_CUDA2(flds, EX, 0,iy,iz) +=
 	cny * (F3_CUDA2(flds, HZ, 0,iy,iz) - F3_CUDA2(flds, HZ, 0,iy-1,iz))
 	- cnz * (F3_CUDA2(flds, HY, 0,iy,iz) - F3_CUDA2(flds, HY, 0,iy,iz-1))
@@ -30,7 +30,7 @@ cuda2_push_flds_E_yz(struct psc_fields *flds)
   }
       
   for (int iz = -2; iz < ldims[2] + 2; iz++) {
-    for (int iy = -2; iy < ldims[1] + 2; iy++) { // FIXME was -1
+    for (int iy = -1; iy < ldims[1] + 2; iy++) { // FIXME was -1
       F3_CUDA2(flds, EZ, 0,iy,iz) +=
 	- cny * (F3_CUDA2(flds, HX, 0,iy,iz) - F3_CUDA2(flds, HX, 0,iy-1,iz))
 	- .5 * ppsc->dt * F3_CUDA2(flds, JZI, 0,iy,iz);
@@ -60,21 +60,21 @@ cuda2_push_flds_H_yz(struct psc_fields *flds)
   fields_cuda2_real_t cnz = .5 * ppsc->dt / patch->dx[2];
 
   int *ldims = patch->ldims;
-  for (int iz = -2; iz < ldims[2] + 2; iz++) { // FIXME was -/+ 1
-    for (int iy = -2; iy < ldims[1] + 2; iy++) { // FIXME was -/+ 1
+  for (int iz = -1; iz < ldims[2] + 1; iz++) { // FIXME was -/+ 1
+    for (int iy = -1; iy < ldims[1] + 1; iy++) { // FIXME was -/+ 1
       F3_CUDA2(flds, HX, 0,iy,iz) -=
 	  cny * (F3_CUDA2(flds, EZ, 0,iy+1,iz) - F3_CUDA2(flds, EZ, 0,iy,iz))
 	- cnz * (F3_CUDA2(flds, EY, 0,iy,iz+1) - F3_CUDA2(flds, EY, 0,iy,iz));
     }
 
-    for (int iy = -2; iy < ldims[1] + 2; iy++) { // FIXME was -1 / +2
+    for (int iy = -1; iy < ldims[1] + 2; iy++) { // FIXME was -1 / +2
       F3_CUDA2(flds, HY, 0,iy,iz) -=
 	  cnz * (F3_CUDA2(flds, EX, 0,iy,iz+1) - F3_CUDA2(flds, EX, 0,iy,iz));
     }
   }
       
-  for (int iz = -2; iz < ldims[2] + 2; iz++) { // FIXME was -1 / + 2
-    for (int iy = -2; iy < ldims[1] + 2; iy++) { // FIXME was -/+ 1
+  for (int iz = -1; iz < ldims[2] + 2; iz++) { // FIXME was -1 / + 2
+    for (int iy = -1; iy < ldims[1] + 1; iy++) { // FIXME was -/+ 1
       F3_CUDA2(flds, HZ, 0,iy,iz) -=
 	- cny * (F3_CUDA2(flds, EX, 0,iy+1,iz) - F3_CUDA2(flds, EX, 0,iy,iz));
     }
