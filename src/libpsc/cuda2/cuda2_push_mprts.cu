@@ -1,8 +1,33 @@
 
 #include "psc_cuda2.h"
 
-#include "../cuda/psc_cuda.h"
-#include "../cuda/particles_cuda.h"
+struct d_particle {
+  real xi[3];
+  real kind_as_float;
+  real pxi[3];
+  real qni_wni;
+};
+
+#define MAX_KINDS (4)
+
+EXTERN_C void psc_mparticles_cuda_copy_to_dev(struct psc_mparticles *mprts);
+
+struct cuda_params {
+  real dt;
+  real dxi[3];
+  real b_dxi[3];
+  real dqs;
+  real fnqs;
+  real fnqxs, fnqys, fnqzs;
+  int mx[3];
+  int ilg[3];
+  int b_mx[3];
+  real dq[MAX_KINDS];
+};
+
+#include "psc_particles_cuda.h"
+#include "psc_fields_cuda.h"
+//#include "../cuda/particles_cuda.h"
 
 #undef THREADS_PER_BLOCK
 #define THREADS_PER_BLOCK (512)
