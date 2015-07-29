@@ -100,9 +100,6 @@ cuda2_push_mflds_E_yz(struct psc_mfields *mflds)
     return;
   }
 
-  size_t total_size = sub->im[0] * sub->im[1] * sub->im[2] * mflds->nr_patches * mflds->nr_fields;
-  cuda_memcpy_device_from_host(sub->d_flds, sub->h_flds, total_size * sizeof(*sub->d_flds));
-
   struct psc_patch *patch = &ppsc->patch[0];
 
   real dt = ppsc->dt;
@@ -123,8 +120,6 @@ cuda2_push_mflds_E_yz(struct psc_mfields *mflds)
   RUN_KERNEL(dimGrid, dimBlock,
 	     push_fields_E_yz, (sub->d_flds, dt, cny, cnz, my, mz,
 				size, grid[1]));
-
-  cuda_memcpy_host_from_device(sub->h_flds, sub->d_flds, total_size * sizeof(*sub->h_flds));
 }
 
 // ----------------------------------------------------------------------
@@ -138,9 +133,6 @@ cuda2_push_mflds_H_yz(struct psc_mfields *mflds)
   if (mflds->nr_patches == 0) {
     return;
   }
-
-  size_t total_size = sub->im[0] * sub->im[1] * sub->im[2] * mflds->nr_patches * mflds->nr_fields;
-  cuda_memcpy_device_from_host(sub->d_flds, sub->h_flds, total_size * sizeof(*sub->d_flds));
 
   struct psc_patch *patch = &ppsc->patch[0];
 
@@ -161,7 +153,5 @@ cuda2_push_mflds_H_yz(struct psc_mfields *mflds)
   RUN_KERNEL(dimGrid, dimBlock,
 	     push_fields_H_yz, (sub->d_flds, cny, cnz, my, mz,
 				size, grid[1]));
-
-  cuda_memcpy_host_from_device(sub->h_flds, sub->d_flds, total_size * sizeof(*sub->h_flds));
 }
 

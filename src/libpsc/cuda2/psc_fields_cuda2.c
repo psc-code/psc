@@ -221,6 +221,30 @@ psc_mfields_cuda2_destroy(struct psc_mfields *mflds)
   cuda_free(sub->d_flds);
 }
 
+// ----------------------------------------------------------------------
+// psc_mfields_cuda2_copy_to_device
+
+void
+psc_mfields_cuda2_copy_to_device(struct psc_mfields *mflds)
+{
+  struct psc_mfields_cuda2 *sub = psc_mfields_cuda2(mflds);
+
+  size_t total_size = sub->im[0] * sub->im[1] * sub->im[2] * mflds->nr_patches * mflds->nr_fields;
+  cuda_memcpy_device_from_host(sub->d_flds, sub->h_flds, total_size * sizeof(*sub->d_flds));
+}
+
+// ----------------------------------------------------------------------
+// psc_mfields_cuda2_copy_to_host
+
+void
+psc_mfields_cuda2_copy_to_host(struct psc_mfields *mflds)
+{
+  struct psc_mfields_cuda2 *sub = psc_mfields_cuda2(mflds);
+
+  size_t total_size = sub->im[0] * sub->im[1] * sub->im[2] * mflds->nr_patches * mflds->nr_fields;
+  cuda_memcpy_host_from_device(sub->h_flds, sub->d_flds, total_size * sizeof(*sub->d_flds));
+}
+
 // ======================================================================
 // psc_mfields: subclass "cuda2"
   
