@@ -17,6 +17,7 @@ libsubdir_la_SOURCES = \
 #FIXME, this is just really too hacky...
 
 libsubdir_la_LIBADD = \
+	cuda2_util.lo \
 	cuda2_push_fields.lo
 
 CUDACC_FLAGS = -g --ptxas-options=-v --maxrregcount=32 --use_fast_math $(filter-out -fopenmp -msse2 -msse4.1 -Wall -ffast-math,$(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) $(CFLAGS) $(AM_CFLAGS)) $(CUDAMPIFLAGS) $(CUDACFLAGS)

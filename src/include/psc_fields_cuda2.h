@@ -44,6 +44,7 @@ struct psc_fields_cuda2 {
 
 struct psc_mfields_cuda2 {
   fields_cuda2_real_t *h_flds;
+  fields_cuda2_real_t *d_flds;
   int ib[3], im[3];
 };
 

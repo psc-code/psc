@@ -7,7 +7,9 @@
 
 #include "psc_fields_cuda2.h"
 
-#include "psc_fields_cuda.h"
+// ----------------------------------------------------------------------
+// FIXME
+#include "cuda_wrap.h"
 
 #define BND (2)
 
@@ -26,6 +28,8 @@
   (d_flds)[X3_DEV_OFF_YZ(fldnr, jy,jz)]
 
 EXTERN_C void cuda_push_fields_H_yz(struct psc_mfields *mflds);
+// FIXME end
+// ----------------------------------------------------------------------
 
 __global__ static void
 push_fields_E_yz(real *d_flds0, real dt, real cny, real cnz, int my, int mz,
@@ -59,14 +63,20 @@ push_fields_E_yz(real *d_flds0, real dt, real cny, real cnz, int my, int mz,
     .5f * dt * F3_DEV(JZI, 0,iy,iz);
 }
 
-static void
-cuda_push_fields_E_yz(struct psc_mfields *mflds, struct psc_mfields *mflds_cuda)
+// ----------------------------------------------------------------------
+// cuda2_push_mflds_E_yz
+
+void
+cuda2_push_mflds_E_yz(struct psc_mfields *mflds)
 {
   struct psc_mfields_cuda2 *sub = psc_mfields_cuda2(mflds);
 
   if (mflds->nr_patches == 0) {
     return;
   }
+
+  size_t total_size = sub->im[0] * sub->im[1] * sub->im[2] * mflds->nr_patches * mflds->nr_fields;
+  cuda_memcpy_device_from_host(sub->d_flds, sub->h_flds, total_size * sizeof(*sub->d_flds));
 
   struct psc_patch *patch = &ppsc->patch[0];
 
@@ -85,18 +95,10 @@ cuda_push_fields_E_yz(struct psc_mfields *mflds, struct psc_mfields *mflds_cuda)
 		   (patch->ldims[2] + 2*BND + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
   int dimGrid[2] = { grid[0], grid[1] * mflds->nr_patches };
 
-  struct psc_mfields_cuda *sub_cuda = psc_mfields_cuda(mflds_cuda);
   RUN_KERNEL(dimGrid, dimBlock,
-	     push_fields_E_yz, (sub_cuda->d_flds, dt, cny, cnz, my, mz,
+	     push_fields_E_yz, (sub->d_flds, dt, cny, cnz, my, mz,
 				size, grid[1]));
-}
 
-// ----------------------------------------------------------------------
-// cuda2_push_mflds_E_yz
-
-void
-cuda2_push_mflds_E_yz(struct psc_mfields *mflds, struct psc_mfields *mflds_cuda)
-{
-  cuda_push_fields_E_yz(mflds, mflds_cuda);
+  cuda_memcpy_host_from_device(sub->h_flds, sub->d_flds, total_size * sizeof(*sub->h_flds));
 }
 

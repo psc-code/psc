@@ -190,7 +190,7 @@ psc_mfields_cuda2_setup(struct psc_mfields *mflds)
     total_size += size;
   }
 
-  sub->h_flds = calloc(mflds->nr_fields * total_size, sizeof(fields_cuda2_real_t));
+  sub->h_flds = calloc(mflds->nr_fields * total_size, sizeof(*sub->h_flds));
 
   fields_cuda2_real_t *h_flds = sub->h_flds;
   for (int p = 0; p < mflds->nr_patches; p++) {
@@ -199,6 +199,8 @@ psc_mfields_cuda2_setup(struct psc_mfields *mflds)
     flds->data = h_flds;
     h_flds += mflds->nr_fields * size;
   }
+
+  sub->d_flds = cuda_calloc(mflds->nr_fields * total_size, sizeof(*sub->d_flds));
 }
 
 // ----------------------------------------------------------------------
@@ -216,6 +218,7 @@ psc_mfields_cuda2_destroy(struct psc_mfields *mflds)
   }
 
   free(sub->h_flds);
+  cuda_free(sub->d_flds);
 }
 
 // ======================================================================
