@@ -521,7 +521,7 @@ __launch_bounds__(THREADS_PER_BLOCK, 3)
 push_mprts_ab(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
 	      float4 *d_alt_xi4, float4 *d_alt_pxi4,
 	      unsigned int *d_off, int nr_total_blocks, unsigned int *d_ids, unsigned int *d_bidx,
-	      float *d_flds0, unsigned int size)
+	      float *d_flds0_cuda, float *d_flds0, unsigned int size)
 {
   int block_pos[3], ci0[3];
   int p, bid;
@@ -534,9 +534,9 @@ push_mprts_ab(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_
 
   __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
   cache_fields<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
-    (prm, fld_cache, d_flds0, size, ci0, p);
+    (prm, fld_cache, d_flds0_cuda, size, ci0, p);
 
-  GCurr scurr(d_flds0 + p * size);
+  GCurr scurr(d_flds0_cuda + p * size);
   
   __syncthreads();
   for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
@@ -601,7 +601,7 @@ cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds,
     (0, prm, mprts_cuda_sub->d_xi4, mprts_cuda_sub->d_pxi4,
      mprts_cuda_sub->d_alt_xi4, mprts_cuda_sub->d_alt_pxi4, mprts_cuda_sub->d_off,
      mprts_cuda_sub->nr_total_blocks, mprts_cuda_sub->d_ids, mprts_cuda_sub->d_bidx,
-     mflds_cuda_sub->d_flds, fld_size);
+     mflds_cuda_sub->d_flds, mflds_sub->d_flds, fld_size);
   cuda_sync_if_enabled();
 
   _free_params(&prm);
