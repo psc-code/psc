@@ -8,9 +8,9 @@ struct d_particle {
   real qni_wni;
 };
 
-#define MAX_KINDS (4)
-
 EXTERN_C void psc_mparticles_cuda_copy_to_dev(struct psc_mparticles *mprts);
+
+#define MAX_KINDS (4)
 
 struct cuda_params {
   real dt;
@@ -27,7 +27,6 @@ struct cuda_params {
 
 #include "psc_particles_cuda.h"
 #include "psc_fields_cuda.h"
-//#include "../cuda/particles_cuda.h"
 
 #undef THREADS_PER_BLOCK
 #define THREADS_PER_BLOCK (512)
@@ -128,7 +127,7 @@ set_consts(struct cuda_params *prm)
 
 static void
 _set_params(struct cuda_params *prm, struct psc *psc,
-	    struct psc_mparticles *mprts, struct psc_mfields *mflds)
+	    struct psc_mparticles *mprts, struct psc_mfields *mflds_cuda)
 {
   prm->dt = psc->dt;
   for (int d = 0; d < 3; d++) {
@@ -154,15 +153,15 @@ _set_params(struct cuda_params *prm, struct psc *psc,
     }
   }
 
-  if (mflds) {
-    struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
+  if (mflds_cuda) {
+    struct psc_mfields_cuda *mflds_cuda_sub = psc_mfields_cuda(mflds_cuda);
     for (int d = 0; d < 3; d++) {
-      prm->mx[d] = mflds_cuda->im[d];
-      prm->ilg[d] = mflds_cuda->ib[d];
+      prm->mx[d] = mflds_cuda_sub->im[d];
+      prm->ilg[d] = mflds_cuda_sub->ib[d];
       if (d > 0) {
-	assert(mflds_cuda->ib[d] == -BND);
+	assert(mflds_cuda_sub->ib[d] == -BND);
       } else {
-	assert(mflds_cuda->im[d] == 1);// + 2*BND);
+	assert(mflds_cuda_sub->im[d] == 1);// + 2*BND);
       }
     }
   }
@@ -570,32 +569,33 @@ zero_currents(struct psc_mfields *mflds)
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 static void
-cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
+cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds,
+		   struct psc_mparticles *mprts_cuda, struct psc_mfields *mflds_cuda)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
+  struct psc_mparticles_cuda *mprts_cuda_sub = psc_mparticles_cuda(mprts_cuda);
+  struct psc_mfields_cuda *mflds_cuda_sub = psc_mfields_cuda(mflds_cuda);
 
   struct cuda_params prm;
-  _set_params(&prm, ppsc, mprts, mflds);
+  _set_params(&prm, ppsc, mprts_cuda, mflds_cuda);
   set_consts(&prm);
 
-  unsigned int fld_size = mflds->nr_fields *
-    mflds_cuda->im[0] * mflds_cuda->im[1] * mflds_cuda->im[2];
+  unsigned int fld_size = mflds_cuda->nr_fields *
+    mflds_cuda_sub->im[0] * mflds_cuda_sub->im[1] * mflds_cuda_sub->im[2];
 
-  zero_currents(mflds);
+  zero_currents(mflds_cuda);
 
   int gx, gy;
   gx = prm.b_mx[1];
-  gy = prm.b_mx[2] * mprts->nr_patches;
+  gy = prm.b_mx[2] * mprts_cuda->nr_patches;
 
   dim3 dimGrid(gx, gy);
 
   push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
     <<<dimGrid, THREADS_PER_BLOCK>>>
-    (0, prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
-     mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4, mprts_cuda->d_off,
-     mprts_cuda->nr_total_blocks, mprts_cuda->d_ids, mprts_cuda->d_bidx,
-     mflds_cuda->d_flds, fld_size);
+    (0, prm, mprts_cuda_sub->d_xi4, mprts_cuda_sub->d_pxi4,
+     mprts_cuda_sub->d_alt_xi4, mprts_cuda_sub->d_alt_pxi4, mprts_cuda_sub->d_off,
+     mprts_cuda_sub->nr_total_blocks, mprts_cuda_sub->d_ids, mprts_cuda_sub->d_bidx,
+     mflds_cuda_sub->d_flds, fld_size);
   cuda_sync_if_enabled();
 
   _free_params(&prm);
@@ -606,17 +606,15 @@ cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 static void
-yz_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds)
+yz_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds,
+		   struct psc_mparticles *mprts_cuda, struct psc_mfields *mflds_cuda)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct psc_mparticles_cuda *mprts_cuda_sub = psc_mparticles_cuda(mprts_cuda);
     
-  psc_mparticles_cuda_copy_to_dev(mprts);
+  psc_mparticles_cuda_copy_to_dev(mprts_cuda);
   
-  if (!mprts_cuda->need_reorder) {
-    cuda_push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(mprts, mflds);
-  } else {
-    assert(0);
-  }
+  assert(!mprts_cuda_sub->need_reorder);
+  cuda_push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(mprts, mflds, mprts_cuda, mflds_cuda);
 }
 
 // ----------------------------------------------------------------------
@@ -626,6 +624,6 @@ void
 cuda2_1vbec_push_mprts_yz(struct psc_mparticles *mprts, struct psc_mfields *mflds,
 			  struct psc_mparticles *mprts_cuda, struct psc_mfields *mflds_cuda)
 {
-  yz_cuda_push_mprts<1, 4, 4>(mprts_cuda, mflds_cuda);
+  yz_cuda_push_mprts<1, 4, 4>(mprts, mflds, mprts_cuda, mflds_cuda);
 }
 
