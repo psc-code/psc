@@ -43,6 +43,8 @@ struct psc_fields_cuda2 {
 // ----------------------------------------------------------------------
 
 struct psc_mfields_cuda2 {
+  fields_cuda2_real_t *h_flds;
+  int ib[3], im[3];
 };
 
 #define psc_mfields_cuda2(mflds) mrc_to_subobj(mflds, struct psc_mfields_cuda2)

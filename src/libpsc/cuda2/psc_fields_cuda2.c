@@ -6,6 +6,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 // ======================================================================
 // psc_fields "cuda2"
@@ -88,19 +89,38 @@ struct psc_fields_ops psc_fields_cuda2_ops = {
 static void
 psc_mfields_cuda2_setup(struct psc_mfields *mflds)
 {
+  struct psc_mfields_cuda2 *sub = psc_mfields_cuda2(mflds);
+
   psc_mfields_setup_super(mflds);
 
+  unsigned int total_size = 0;
   for (int p = 0; p < mflds->nr_patches; p++) {
     struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-
-    unsigned int size = 1;
-    for (int d = 0; d < 3; d++) {
-      size *= flds->im[d];
+    if (p == 0) {
+      for (int d = 0; d < 3; d++) {
+	sub->im[d] = flds->im[d];
+	sub->ib[d] = flds->ib[d];
+      }
+    } else {
+      for (int d = 0; d < 3; d++) {
+	assert(sub->im[d] == flds->im[d]);
+	assert(sub->ib[d] == flds->ib[d]);
+      }
     }
 
-    flds->data = calloc(flds->nr_comp * size, sizeof(fields_cuda2_real_t));
+    unsigned int size = flds->im[0] * flds->im[1] * flds->im[2];
+    total_size += size;
   }
 
+  sub->h_flds = calloc(mflds->nr_fields * total_size, sizeof(fields_cuda2_real_t));
+
+  fields_cuda2_real_t *h_flds = sub->h_flds;
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+    unsigned int size = flds->im[0] * flds->im[1] * flds->im[2];
+    flds->data = h_flds;
+    h_flds += mflds->nr_fields * size;
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -109,11 +129,15 @@ psc_mfields_cuda2_setup(struct psc_mfields *mflds)
 static void
 psc_mfields_cuda2_destroy(struct psc_mfields *mflds)
 {
+  struct psc_mfields_cuda2 *sub = psc_mfields_cuda2(mflds);
+
   for (int p = 0; p < mflds->nr_patches; p++) {
     struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
 
-    free(flds->data);
+    flds->data = NULL;
   }
+
+  free(sub->h_flds);
 }
 
 // ======================================================================
