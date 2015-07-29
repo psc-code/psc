@@ -11,28 +11,6 @@
 // psc_fields "cuda2"
 
 // ----------------------------------------------------------------------
-// psc_fields_cuda2_setup
-
-static void
-psc_fields_cuda2_setup(struct psc_fields *pf)
-{
-  unsigned int size = 1;
-  for (int d = 0; d < 3; d++) {
-    size *= pf->im[d];
-  }
-  pf->data = calloc(pf->nr_comp * size, sizeof(fields_cuda2_real_t));
-}
-
-// ----------------------------------------------------------------------
-// psc_fields_cuda2_destroy
-
-static void
-psc_fields_cuda2_destroy(struct psc_fields *pf)
-{
-  free(pf->data);
-}
-
-// ----------------------------------------------------------------------
 // psc_fields_cuda2_zero_comp
 
 static void
@@ -92,8 +70,6 @@ struct psc_fields_ops psc_fields_cuda2_ops = {
   .name                  = "cuda2",
   .size                  = sizeof(struct psc_fields_cuda2),
   .methods               = psc_fields_cuda2_methods,
-  .setup                 = psc_fields_cuda2_setup,
-  .destroy               = psc_fields_cuda2_destroy,
 #if 0
 #ifdef HAVE_LIBHDF5_HL
   .write                 = psc_fields_cuda2_write,
@@ -106,12 +82,48 @@ struct psc_fields_ops psc_fields_cuda2_ops = {
 // ======================================================================
 // psc_mfields "cuda2"
 
+// ----------------------------------------------------------------------
+// psc_mfields_cuda2_setup
+
+static void
+psc_mfields_cuda2_setup(struct psc_mfields *mflds)
+{
+  psc_mfields_setup_super(mflds);
+
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+
+    unsigned int size = 1;
+    for (int d = 0; d < 3; d++) {
+      size *= flds->im[d];
+    }
+
+    flds->data = calloc(flds->nr_comp * size, sizeof(fields_cuda2_real_t));
+  }
+
+}
+
+// ----------------------------------------------------------------------
+// psc_mfields_cuda2_destroy
+
+static void
+psc_mfields_cuda2_destroy(struct psc_mfields *mflds)
+{
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+
+    free(flds->data);
+  }
+}
+
 // ======================================================================
 // psc_mfields: subclass "cuda2"
   
 struct psc_mfields_ops psc_mfields_cuda2_ops = {
   .name                  = "cuda2",
   .size                  = sizeof(struct psc_mfields_cuda2),
+  .setup                 = psc_mfields_cuda2_setup,
+  .destroy               = psc_mfields_cuda2_destroy,
 #if 0
 #ifdef HAVE_LIBHDF5_HL
   .read                  = psc_mfields_cuda2_read,
