@@ -7,11 +7,6 @@
 #undef THREADS_PER_BLOCK
 #define THREADS_PER_BLOCK (512)
 
-enum DEPOSIT {
-  DEPOSIT_VB_2D,
-  DEPOSIT_VB_3D,
-};
-
 enum CURRMEM {
   CURRMEM_SHARED,
   CURRMEM_GLOBAL,
@@ -509,7 +504,7 @@ calc_dx1(real dx1[3], real x[3], real dx[3], int off[3])
 // ----------------------------------------------------------------------
 // curr_vb_cell
 
-template<enum DEPOSIT DEPOSIT, class CURR>
+template<class CURR>
 __device__ static void
 curr_vb_cell(int i[3], real x[3], real dx[3], real qni_wni,
 	     CURR &scurr, struct cuda_params prm, int *ci0)
@@ -517,15 +512,13 @@ curr_vb_cell(int i[3], real x[3], real dx[3], real qni_wni,
   real xa[3] = { 0.,
 		 x[1] + .5f * dx[1],
 		 x[2] + .5f * dx[2], };
-  if (DEPOSIT == DEPOSIT_VB_3D) {
-    if (dx[0] != 0.f) {
-      real fnqx = qni_wni * prm.fnqxs;
-      real h = (1.f / 12.f) * dx[0] * dx[1] * dx[2];
-      scurr.add(0, i[1]  , i[2]  , fnqx * (dx[0] * (.5f - xa[1]) * (.5f - xa[2]) + h), prm, ci0);
-      scurr.add(0, i[1]+1, i[2]  , fnqx * (dx[0] * (.5f + xa[1]) * (.5f - xa[2]) - h), prm, ci0);
-      scurr.add(0, i[1]  , i[2]+1, fnqx * (dx[0] * (.5f - xa[1]) * (.5f + xa[2]) + h), prm, ci0);
-      scurr.add(0, i[1]+1, i[2]+1, fnqx * (dx[0] * (.5f + xa[1]) * (.5f + xa[2]) - h), prm, ci0);
-    }
+  if (dx[0] != 0.f) {
+    real fnqx = qni_wni * prm.fnqxs;
+    real h = (1.f / 12.f) * dx[0] * dx[1] * dx[2];
+    scurr.add(0, i[1]  , i[2]  , fnqx * (dx[0] * (.5f - xa[1]) * (.5f - xa[2]) + h), prm, ci0);
+    scurr.add(0, i[1]+1, i[2]  , fnqx * (dx[0] * (.5f + xa[1]) * (.5f - xa[2]) - h), prm, ci0);
+    scurr.add(0, i[1]  , i[2]+1, fnqx * (dx[0] * (.5f - xa[1]) * (.5f + xa[2]) + h), prm, ci0);
+    scurr.add(0, i[1]+1, i[2]+1, fnqx * (dx[0] * (.5f + xa[1]) * (.5f + xa[2]) - h), prm, ci0);
   }
   if (dx[1] != 0.f) {
     real fnqy = qni_wni * prm.fnqys;
@@ -557,7 +550,7 @@ curr_vb_cell_upd(int i[3], real x[3], real dx1[3], real dx[3], int off[3])
 // ----------------------------------------------------------------------
 // yz_calc_j
 
-template<enum DEPOSIT DEPOSIT, class CURR>
+template<class CURR>
 __device__ static void
 yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 	  CURR &scurr,
@@ -574,32 +567,9 @@ yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
   
   find_idx_off_pos_1st(prt->xi, j, h0, xm, real(0.), prm);
 
-  if (DEPOSIT == DEPOSIT_VB_2D) {
-    // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0) 
-    push_xi(prt, vxi, .5f * prm.dt);
-
-    real fnqx = vxi[0] * prt->qni_wni * prm.fnqs;
-
-    // out-of-plane currents at intermediate time
-    int lf[3];
-    real of[3];
-    find_idx_off_1st(prt->xi, lf, of, real(0.), prm);
-    lf[1] -= ci0[1];
-    lf[2] -= ci0[2];
-
-    scurr.add(0, lf[1]  , lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnqx, prm, ci0);
-    scurr.add(0, lf[1]+1, lf[2]  , (      of[1]) * (1.f - of[2]) * fnqx, prm, ci0);
-    scurr.add(0, lf[1]  , lf[2]+1, (1.f - of[1]) * (      of[2]) * fnqx, prm, ci0);
-    scurr.add(0, lf[1]+1, lf[2]+1, (      of[1]) * (      of[2]) * fnqx, prm, ci0);
-
-    // x^(n+1.0), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
-    push_xi(prt, vxi, .5f * prm.dt);
-    STORE_PARTICLE_POS_(*prt, d_xi4, n);
-  } else if (DEPOSIT == DEPOSIT_VB_3D) {
-    // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
-    push_xi(prt, vxi, prm.dt);
-    STORE_PARTICLE_POS_(*prt, d_xi4, n);
-  }
+  // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
+  push_xi(prt, vxi, prm.dt);
+  STORE_PARTICLE_POS_(*prt, d_xi4, n);
 
   // save block_idx for new particle position at x^(n+1.5)
   unsigned int block_pos_y = __float2int_rd(prt->xi[1] * prm.b_dxi[1]);
@@ -643,16 +613,16 @@ yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 
   real dx1[3];
   calc_dx1(dx1, x, dx, off);
-  curr_vb_cell<DEPOSIT, CURR>(i, x, dx1, prt->qni_wni, scurr, prm, ci0);
+  curr_vb_cell<CURR>(i, x, dx1, prt->qni_wni, scurr, prm, ci0);
   curr_vb_cell_upd(i, x, dx1, dx, off);
   
   off[1] = idiff[1] - off[1];
   off[2] = idiff[2] - off[2];
   calc_dx1(dx1, x, dx, off);
-  curr_vb_cell<DEPOSIT, CURR>(i, x, dx1, prt->qni_wni, scurr, prm, ci0);
+  curr_vb_cell<CURR>(i, x, dx1, prt->qni_wni, scurr, prm, ci0);
   curr_vb_cell_upd(i, x, dx1, dx, off);
     
-  curr_vb_cell<DEPOSIT, CURR>(i, x, dx, prt->qni_wni, scurr, prm, ci0);
+  curr_vb_cell<CURR>(i, x, dx, prt->qni_wni, scurr, prm, ci0);
 }
 
 // ======================================================================
@@ -794,7 +764,7 @@ push_mprts_b(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_p
     }
     struct d_particle prt;
     LOAD_PARTICLE_(prt, d_xi4, d_pxi4, n);
-    yz_calc_j<DEPOSIT_VB_2D, CURR>
+    yz_calc_j<CURR>
       (&prt, n, d_xi4, d_pxi4, scurr, prm, nr_total_blocks, p, d_bidx, bid, ci0);
   }
   
@@ -802,7 +772,7 @@ push_mprts_b(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_p
 }
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z,
-	 enum DEPOSIT DEPOSIT, enum CURRMEM CURRMEM, class CURR>
+         enum CURRMEM CURRMEM, class CURR>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
 push_mprts_ab(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
@@ -823,7 +793,7 @@ push_mprts_ab(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_
     push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
       (&prt, n, d_ids, d_xi4, d_pxi4, d_alt_xi4, d_alt_pxi4, fld_cache, ci0, prm);
 
-    yz_calc_j<DEPOSIT_VB_2D, CURR>
+    yz_calc_j<CURR>
       (&prt, n, d_xi4, d_pxi4, scurr, prm, nr_total_blocks, p, d_bidx, bid, ci0);
   }
   
@@ -951,7 +921,7 @@ cuda_push_mprts_b(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 // cuda_push_mprts_ab
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z,
-	 enum DEPOSIT DEPOSIT, enum CURRMEM CURRMEM>
+	 enum CURRMEM CURRMEM>
 static void
 cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
@@ -959,7 +929,7 @@ cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 
   if (CURRMEM == CURRMEM_SHARED) {
     for (int block_start = 0; block_start < 4; block_start++) {
-      push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, DEPOSIT, CURRMEM,
+      push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, CURRMEM,
 		    SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> >
 	<<<dimGrid, THREADS_PER_BLOCK>>>
       (block_start, prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
@@ -969,7 +939,7 @@ cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
       cuda_sync_if_enabled();
     }
   } else if (CURRMEM == CURRMEM_GLOBAL) {
-    push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, DEPOSIT, CURRMEM,
+    push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, CURRMEM,
     		  GCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> >
       <<<dimGrid, THREADS_PER_BLOCK>>>
       (0, prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
@@ -987,7 +957,7 @@ cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 // ----------------------------------------------------------------------
 // yz_cuda_push_mprts
 
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, enum DEPOSIT DEPOSIT,
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z,
 	 enum CURRMEM CURRMEM>
 static void
 yz_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds)
@@ -997,7 +967,7 @@ yz_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds)
   psc_mparticles_cuda_copy_to_dev(mprts);
   
   if (!mprts_cuda->need_reorder) {
-    cuda_push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, DEPOSIT, CURRMEM>(mprts, mflds);
+    cuda_push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, CURRMEM>(mprts, mflds);
   } else {
     assert(0);
   }
@@ -1010,6 +980,6 @@ void
 cuda2_1vbec_push_mprts_yz(struct psc_mparticles *mprts, struct psc_mfields *mflds,
 			  struct psc_mparticles *mprts_cuda, struct psc_mfields *mflds_cuda)
 {
-  yz_cuda_push_mprts<1, 4, 4, DEPOSIT_VB_3D, CURRMEM_GLOBAL>(mprts_cuda, mflds_cuda);
+  yz_cuda_push_mprts<1, 4, 4, CURRMEM_GLOBAL>(mprts_cuda, mflds_cuda);
 }
 
