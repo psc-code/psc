@@ -287,11 +287,14 @@ static void
 psc_push_particles_push_a_yz(struct psc_particles *prts,
 			     struct psc_fields *flds)
 {
+  struct psc_particles_cuda2 *prts_sub = psc_particles_cuda2(prts);
   params_1vb_set(ppsc, flds->p);
 
   psc_fields_zero_range(flds, JXI, JXI + 3);
-  for (int n = 0; n < prts->n_part; n++) {
-    push_one(flds, prts, n);
+  for (int b = 0; b < prts_sub->nr_blocks; b++) {
+    for (int n = prts_sub->b_off[b]; n < prts_sub->b_off[b+1]; n++) {
+      push_one(flds, prts, n);
+    }
   }
 }
 
