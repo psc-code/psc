@@ -14,4 +14,24 @@ libsubdir_la_SOURCES = \
 	cuda2_push_fields_host.c \
 	cuda2_push_mprts_host.c
 
+#FIXME, this is just really too hacky...
+
+libsubdir_la_LIBADD = \
+	cuda2_push_fields.lo
+
+CUDACC_FLAGS = -g --ptxas-options=-v --maxrregcount=32 --use_fast_math $(filter-out -fopenmp -msse2 -msse4.1 -Wall -ffast-math,$(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) $(CFLAGS) $(AM_CFLAGS)) $(CUDAMPIFLAGS) $(CUDACFLAGS)
+
+CUDA_DEPS = \
+        psc_cuda2.h
+
+%.lo: %.cu $(CUDA_DEPS)
+	@echo "Tricking libtool"
+	echo "void lotrickdummy() {}" > dummy.c
+	$(LTCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ dummy.c
+	rm ${@:.lo=.o}
+	rm dummy.c
+	$(CUDACC) $(CUDACC_FLAGS) -c $< -o ${@:.lo=.o} || rm -f $@
+
+CLEANFILES = *.fatbin.c *.cudafe1.c *.cudafe2.c *.stub.c *.cubin *.i *.ii *.ptx *.hash *.fatbin *.cudafe1.cpp *.cudafe1.gpu *.cudafe2.gpu *.cu.cpp
+
 endif USE_CUDA2

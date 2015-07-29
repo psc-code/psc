@@ -39,20 +39,14 @@ cuda2_push_flds_E_yz(struct psc_fields *flds)
 }
 
 // ----------------------------------------------------------------------
-// cuda2_push_mflds_E_yz
+// cuda2_push_mflds_E_yz_gold
 
 void
-cuda2_push_mflds_E_yz(struct psc_mfields *mflds)
+cuda2_push_mflds_E_yz_gold(struct psc_mfields *mflds)
 {
-  struct psc_mfields *mflds_cuda = psc_mfields_get_as(mflds, "cuda", JXI, HX + 3);
-  cuda_push_fields_E_yz(mflds_cuda);
-  psc_mfields_put_as(mflds_cuda, mflds, EX, EX + 3);
-
-#if 0
   for (int p = 0; p < mflds->nr_patches; p++) {
     cuda2_push_flds_E_yz(psc_mfields_get_patch(mflds, p));
   }
-#endif
 }
 
 // ----------------------------------------------------------------------

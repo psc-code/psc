@@ -11,7 +11,10 @@ psc_push_fields_cuda2_push_mflds_E(struct psc_push_fields *push, struct psc_mfie
 {
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "cuda2", JXI, HX + 3);
   if (ppsc->domain.gdims[0] == 1) {
-    cuda2_push_mflds_E_yz(mflds);
+    //    cuda2_push_mflds_E_yz_gold(mflds_cuda);
+    struct psc_mfields *mflds_cuda = psc_mfields_get_as(mflds, "cuda", JXI, HX + 3);
+    cuda2_push_mflds_E_yz(mflds, mflds_cuda);
+    psc_mfields_put_as(mflds_cuda, mflds, EX, EX + 3);
   } else {
     assert(0);
   }
