@@ -17,7 +17,15 @@ typedef struct psc_particle_cuda2 {
 
 struct psc_particles_cuda2 {
   particle_cuda2_t *particles;
+  particle_cuda2_t *particles_alt;
   int n_alloced;
+  particle_cuda2_real_t dxi[3];
+  int b_mx[3];
+  int nr_blocks;
+  unsigned int *b_idx;
+  unsigned int *b_ids;
+  unsigned int *b_cnt;
+  unsigned int *b_off;
 };
 
 #define psc_particles_cuda2(prts) mrc_to_subobj(prts, struct psc_particles_cuda2)

@@ -22,6 +22,8 @@ EXTERN_C void cuda2_1vbec_push_mprts_yz(struct psc_mparticles *mprts,
 					struct psc_mfields *mflds);
 
 
+static const int psc_particles_cuda2_bs[3] = { 1, 2, 2 };
+
 #endif
 
 
