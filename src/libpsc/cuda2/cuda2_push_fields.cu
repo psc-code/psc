@@ -5,6 +5,8 @@
 #define BLOCKSIZE_Y 16
 #define BLOCKSIZE_Z 16
 
+#include "psc_fields_cuda2.h"
+
 #include "psc_fields_cuda.h"
 
 #define BND (2)
@@ -58,13 +60,14 @@ push_fields_E_yz(real *d_flds0, real dt, real cny, real cnz, int my, int mz,
 }
 
 static void
-cuda_push_fields_E_yz(struct psc_mfields *mflds)
+cuda_push_fields_E_yz(struct psc_mfields *mflds, struct psc_mfields *mflds_cuda)
 {
+  struct psc_mfields_cuda2 *sub = psc_mfields_cuda2(mflds);
+
   if (mflds->nr_patches == 0) {
     return;
   }
 
-  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
   struct psc_patch *patch = &ppsc->patch[0];
 
   real dt = ppsc->dt;
@@ -73,17 +76,18 @@ cuda_push_fields_E_yz(struct psc_mfields *mflds)
   assert(patch->ldims[0] == 1);
 
   unsigned int size = mflds->nr_fields *
-    mflds_cuda->im[0] * mflds_cuda->im[1] * mflds_cuda->im[2];
-  int my = mflds_cuda->im[1];
-  int mz = mflds_cuda->im[2];
+    sub->im[0] * sub->im[1] * sub->im[2];
+  int my = sub->im[1];
+  int mz = sub->im[2];
 
   int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
   int grid[2]  = { (patch->ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
 		   (patch->ldims[2] + 2*BND + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
   int dimGrid[2] = { grid[0], grid[1] * mflds->nr_patches };
 
+  struct psc_mfields_cuda *sub_cuda = psc_mfields_cuda(mflds_cuda);
   RUN_KERNEL(dimGrid, dimBlock,
-	     push_fields_E_yz, (mflds_cuda->d_flds, dt, cny, cnz, my, mz,
+	     push_fields_E_yz, (sub_cuda->d_flds, dt, cny, cnz, my, mz,
 				size, grid[1]));
 }
 
@@ -93,6 +97,6 @@ cuda_push_fields_E_yz(struct psc_mfields *mflds)
 void
 cuda2_push_mflds_E_yz(struct psc_mfields *mflds, struct psc_mfields *mflds_cuda)
 {
-  cuda_push_fields_E_yz(mflds_cuda);
+  cuda_push_fields_E_yz(mflds, mflds_cuda);
 }
 
