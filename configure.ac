@@ -137,7 +137,7 @@ AC_ARG_ENABLE(
     AS_IF([test -z "$CUDALIBS"],
           [CUDALIBS="-L/usr/local/cuda/lib -lcudart"])
     AC_SUBST([CUDACC])
-    CUDACFLAGS="$CUDACFLAGS -m64"
+    dnl    CUDACFLAGS="$CUDACFLAGS -m64"
     AC_SUBST([CUDACFLAGS])
     CUDAMPIFLAGS=""
     for dir in `$CC -showme:incdirs`; do
