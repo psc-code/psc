@@ -19,6 +19,14 @@ psc_push_particles_1vbec_push_mprts_yz(struct psc_push_particles *push,
   struct psc_mfields *mflds =
     psc_mfields_get_as(mflds_base, "cuda2", EX, EX + 6);
 
+  struct psc_mparticles *mprts_cuda =
+    psc_mparticles_get_as(mprts, "cuda", 0);
+  struct psc_mfields *mflds_cuda =
+    psc_mfields_get_as(mflds, "cuda", EX, EX + 6);
+
+  psc_mparticles_put_as(mprts_cuda, mprts, 0);
+  psc_mfields_put_as(mflds_cuda, mflds, JXI, JXI + 3);
+
   cuda2_1vbec_push_mprts_yz(mprts, mflds);
 
   psc_mparticles_put_as(mprts, mprts_base, 0);

@@ -5,6 +5,8 @@
 
 // for conversions
 #include "psc_particles_single.h"
+#include "psc_particles_cuda.h"
+#include "../cuda/psc_cuda.h"
 
 #include <stdlib.h>
 
@@ -237,12 +239,75 @@ psc_particles_cuda2_copy_from_single(struct psc_particles *prts_base,
   psc_particles_cuda2_check(prts_base);
 }
 
+// ----------------------------------------------------------------------
+// psc_particles_cuda2_copy_to_cuda
+
+static void
+psc_particles_cuda2_copy_to_cuda(struct psc_particles *prts,
+				 struct psc_particles *prts_cuda, unsigned int flags)
+{
+  assert(prts_cuda->n_part == prts->n_part);
+  
+  float4 *xi4  = calloc(prts->n_part, sizeof(float4));
+  float4 *pxi4 = calloc(prts->n_part, sizeof(float4));
+  
+  for (int n = 0; n < prts->n_part; n++) {
+    particle_cuda2_t *prt = particles_cuda2_get_one(prts, n);
+    
+    xi4[n].x  = prt->xi;
+    xi4[n].y  = prt->yi;
+    xi4[n].z  = prt->zi;
+    xi4[n].w  = cuda_int_as_float(prt->kind);
+    pxi4[n].x = prt->pxi;
+    pxi4[n].y = prt->pyi;
+    pxi4[n].z = prt->pzi;
+    pxi4[n].w = prt->qni_wni;
+  }
+  
+  __particles_cuda_to_device(prts_cuda, xi4, pxi4);
+  
+  free(xi4);
+  free(pxi4);
+}
+
+static void
+psc_particles_cuda2_copy_from_cuda(struct psc_particles *prts,
+				   struct psc_particles *prts_cuda, unsigned int flags)
+{
+  struct psc_particles_cuda2 *sub = psc_particles_cuda2(prts);
+  prts->n_part = prts_cuda->n_part;
+  assert(prts->n_part <= sub->n_alloced);
+  
+  float4 *xi4  = calloc(prts_cuda->n_part, sizeof(float4));
+  float4 *pxi4 = calloc(prts_cuda->n_part, sizeof(float4));
+  
+  __particles_cuda_from_device(prts_cuda, xi4, pxi4);
+  
+  for (int n = 0; n < prts->n_part; n++) {
+    particle_cuda2_t *prt = particles_cuda2_get_one(prts, n);
+
+    prt->xi      = xi4[n].x;
+    prt->yi      = xi4[n].y;
+    prt->zi      = xi4[n].z;
+    prt->kind    = cuda_float_as_int(xi4[n].w);
+    prt->pxi     = pxi4[n].x;
+    prt->pyi     = pxi4[n].y;
+    prt->pzi     = pxi4[n].z;
+    prt->qni_wni = pxi4[n].w;
+  }
+
+  free(xi4);
+  free(pxi4);
+}
+
 // ======================================================================
 // psc_particles: subclass "cuda2"
 
 static struct mrc_obj_method psc_particles_cuda2_methods[] = {
   MRC_OBJ_METHOD("copy_to_single"  , psc_particles_cuda2_copy_to_single),
   MRC_OBJ_METHOD("copy_from_single", psc_particles_cuda2_copy_from_single),
+  MRC_OBJ_METHOD("copy_to_cuda"    , psc_particles_cuda2_copy_to_cuda),
+  MRC_OBJ_METHOD("copy_from_cuda"  , psc_particles_cuda2_copy_from_cuda),
   {}
 };
 
