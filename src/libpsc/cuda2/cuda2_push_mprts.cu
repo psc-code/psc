@@ -1,6 +1,9 @@
 
 #include "psc_cuda2.h"
 
+#include "psc_fields_cuda2.h"
+#include "psc_particles_cuda2.h"
+
 struct d_particle {
   real xi[3];
   real kind_as_float;
@@ -127,7 +130,8 @@ set_consts(struct cuda_params *prm)
 
 static void
 _set_params(struct cuda_params *prm, struct psc *psc,
-	    struct psc_mparticles *mprts, struct psc_mfields *mflds_cuda)
+	    struct psc_mfields *mflds,
+	    struct psc_mparticles *mprts_cuda)
 {
   prm->dt = psc->dt;
   for (int d = 0; d < 3; d++) {
@@ -144,8 +148,8 @@ _set_params(struct cuda_params *prm, struct psc *psc,
     prm->dq[k] = prm->dqs * psc->kinds[k].q / psc->kinds[k].m;
   }
 
-  if (mprts && mprts->nr_patches > 0) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, 0);
+  if (mprts_cuda && mprts_cuda->nr_patches > 0) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts_cuda, 0);
     struct psc_particles_cuda *prts_cuda = psc_particles_cuda(prts);
     for (int d = 0; d < 3; d++) {
       prm->b_mx[d] = prts_cuda->b_mx[d];
@@ -153,15 +157,15 @@ _set_params(struct cuda_params *prm, struct psc *psc,
     }
   }
 
-  if (mflds_cuda) {
-    struct psc_mfields_cuda *mflds_cuda_sub = psc_mfields_cuda(mflds_cuda);
+  if (mflds) {
+    struct psc_mfields_cuda2 * mflds_sub = psc_mfields_cuda2(mflds);
     for (int d = 0; d < 3; d++) {
-      prm->mx[d] = mflds_cuda_sub->im[d];
-      prm->ilg[d] = mflds_cuda_sub->ib[d];
+      prm->mx[d] = mflds_sub->im[d];
+      prm->ilg[d] = mflds_sub->ib[d];
       if (d > 0) {
-	assert(mflds_cuda_sub->ib[d] == -BND);
+	assert(mflds_sub->ib[d] == -BND);
       } else {
-	assert(mflds_cuda_sub->im[d] == 1);// + 2*BND);
+	assert(mflds_sub->im[d] == 1);
       }
     }
   }
@@ -552,15 +556,16 @@ push_mprts_ab(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_
 // zero_currents
 
 static void
-zero_currents(struct psc_mfields *mflds)
+zero_currents(struct psc_mfields *mflds, struct psc_mfields *mflds_cuda)
 {
-  // FIXME, one memset should do OPT
+  struct psc_mfields_cuda2 *mflds_sub = psc_mfields_cuda2(mflds);
+  struct psc_mfields_cuda *mflds_cuda_sub = psc_mfields_cuda(mflds_cuda);
+
+  unsigned int size = mflds_sub->im[0] * mflds_sub->im[1] * mflds_sub->im[2];
+
   for (int p = 0; p < mflds->nr_patches; p++) {
-    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-    struct psc_fields_cuda *flds_cuda = psc_fields_cuda(flds);
-    unsigned int size = flds->im[0] * flds->im[1] * flds->im[2];
-    check(cudaMemset(flds_cuda->d_flds + JXI * size, 0,
-		     3 * size * sizeof(*flds_cuda->d_flds)));
+    fields_cuda_real_t *d_flds = mflds_cuda_sub->d_flds + p * size * mflds->nr_fields;
+    check(cudaMemset(d_flds + JXI * size, 0, 3 * size * sizeof(*d_flds)));
   }
 }
 
@@ -573,16 +578,17 @@ cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds,
 		   struct psc_mparticles *mprts_cuda, struct psc_mfields *mflds_cuda)
 {
   struct psc_mparticles_cuda *mprts_cuda_sub = psc_mparticles_cuda(mprts_cuda);
-  struct psc_mfields_cuda *mflds_cuda_sub = psc_mfields_cuda(mflds_cuda);
+  struct psc_mfields_cuda *mflds_cuda_sub = psc_mfields_cuda(mflds_cuda);//
+  struct psc_mfields_cuda2 *mflds_sub = psc_mfields_cuda2(mflds);
 
   struct cuda_params prm;
-  _set_params(&prm, ppsc, mprts_cuda, mflds_cuda);
+  _set_params(&prm, ppsc, mflds, mprts_cuda);
   set_consts(&prm);
 
-  unsigned int fld_size = mflds_cuda->nr_fields *
-    mflds_cuda_sub->im[0] * mflds_cuda_sub->im[1] * mflds_cuda_sub->im[2];
+  unsigned int fld_size = mflds->nr_fields *
+    mflds_sub->im[0] * mflds_sub->im[1] * mflds_sub->im[2];
 
-  zero_currents(mflds_cuda);
+  zero_currents(mflds, mflds_cuda);
 
   int gx, gy;
   gx = prm.b_mx[1];
