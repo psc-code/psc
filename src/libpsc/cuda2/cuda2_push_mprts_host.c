@@ -299,7 +299,7 @@ psc_push_particles_push_a_yz(struct psc_particles *prts,
 }
 
 void
-cuda2_1vbec_push_mprts_yz(struct psc_mparticles *mprts, struct psc_mfields *mflds)
+cuda2_1vbec_push_mprts_yz_gold(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
   for (int p = 0; p < mprts->nr_patches; p++) {
     psc_push_particles_push_a_yz(psc_mparticles_get_patch(mprts, p),
