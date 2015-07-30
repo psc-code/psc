@@ -33,6 +33,7 @@ struct psc_mparticles_cuda2 {
 
   particle_cuda2_real_t dxi[3];
   int b_mx[3];
+  int bs[3];
   int nr_blocks;
   int nr_blocks_total;
 

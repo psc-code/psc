@@ -4,6 +4,8 @@
 #include "psc_fields_cuda2.h"
 #include "psc_particles_cuda2.h"
 
+#define NO_CACHE
+
 struct d_particle {
   real xi[3];
   real kind_as_float;
@@ -183,10 +185,19 @@ _free_params(struct cuda_params *prm)
 // ======================================================================
 // field caching
 
+#ifdef NO_CACHE
+
+#define F3_CACHE(fld_cache, m, jy, jz)					\
+  (F3_DEV_YZ(m, jy+ci0[1],jz+ci0[2]))
+
+#else
+
 #define F3_CACHE(fld_cache, m, jy, jz)					\
   ((fld_cache)[(((m-EX)							\
 		 *(BLOCKSIZE_Z + 4) + ((jz)-(-2)))			\
 		*(BLOCKSIZE_Y + 4) + ((jy)-(-2)))])
+
+#endif
 
 // ----------------------------------------------------------------------
 // push_xi
@@ -258,7 +269,7 @@ push_pxi_dt(struct d_particle *p,
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static void
 push_part_one(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
-	      real *fld_cache, int ci0[3], struct cuda_params prm)
+	      real *d_flds, real *fld_cache, int ci0[3], struct cuda_params prm)
 {
   LOAD_PARTICLE_POS_(*prt, d_xi4, n);
 
@@ -521,9 +532,9 @@ yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
-push_mprts_ab(struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
-	      unsigned int *d_off,
-	      float *d_flds0, unsigned int size)
+push_mprts_ab_yz(struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
+		 unsigned int *d_off,
+		 float *d_flds0, unsigned int size)
 {
   int block_pos[3], ci0[3];
   int p, bid;
@@ -534,9 +545,13 @@ push_mprts_ab(struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
   int block_begin = d_off[bid];
   int block_end = d_off[bid + 1];
 
+#ifdef NO_CACHE
+  real *fld_cache = NULL;
+#else
   __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
   cache_fields<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
     (prm, fld_cache, d_flds0, size, ci0, p);
+#endif
 
   GCurr scurr(d_flds0 + p * size);
   
@@ -547,7 +562,7 @@ push_mprts_ab(struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
     }
     struct d_particle prt;
     push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
-      (&prt, n, d_xi4, d_pxi4, fld_cache, ci0, prm);
+      (&prt, n, d_xi4, d_pxi4, d_flds0 + p * size, fld_cache, ci0, prm);
 
     yz_calc_j
       (&prt, n, d_xi4, d_pxi4, scurr, prm, p, bid, ci0);
@@ -571,11 +586,11 @@ zero_currents(struct psc_mfields *mflds)
 }
 
 // ----------------------------------------------------------------------
-// cuda_push_mprts_ab
+// cuda_push_mprts_ab_yz
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 static void
-cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
+cuda_push_mprts_ab_yz(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
   struct psc_mparticles_cuda2 *mprts_sub = psc_mparticles_cuda2(mprts);
   struct psc_mfields_cuda2 *mflds_sub = psc_mfields_cuda2(mflds);
@@ -595,7 +610,7 @@ cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 
   dim3 dimGrid(gx, gy);
 
-  push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+  push_mprts_ab_yz<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
     <<<dimGrid, THREADS_PER_BLOCK>>>
     (prm,
      mprts_sub->d_xi4, mprts_sub->d_pxi4, mprts_sub->d_b_off,
@@ -606,11 +621,72 @@ cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 }
 
 // ----------------------------------------------------------------------
+// cuda_push_mprts_ab_xyz
+
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
+static void
+cuda_push_mprts_ab_xyz(struct psc_mparticles *mprts, struct psc_mfields *mflds)
+{
+  struct psc_mparticles_cuda2 *mprts_sub = psc_mparticles_cuda2(mprts);
+  struct psc_mfields_cuda2 *mflds_sub = psc_mfields_cuda2(mflds);
+
+  struct cuda_params prm;
+  _set_params(&prm, ppsc, mprts, mflds);
+  set_consts(&prm);
+
+  unsigned int fld_size = mflds->nr_fields *
+    mflds_sub->im[0] * mflds_sub->im[1] * mflds_sub->im[2];
+
+  zero_currents(mflds);
+
+  int gx, gy;
+  gx = prm.b_mx[1];
+  gy = prm.b_mx[2] * mprts->nr_patches;
+
+  dim3 dimGrid(gx, gy);
+
+#if 0
+  push_mprts_ab_xyz<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+    <<<dimGrid, THREADS_PER_BLOCK>>>
+    (prm,
+     mprts_sub->d_xi4, mprts_sub->d_pxi4, mprts_sub->d_b_off,
+     mflds_sub->d_flds, fld_size);
+  cuda_sync_if_enabled();
+#endif
+
+  _free_params(&prm);
+}
+
+// ----------------------------------------------------------------------
 // cuda2_1vbec_push_mprts_yz
 
 void
 cuda2_1vbec_push_mprts_yz(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
-  cuda_push_mprts_ab<1, 4, 4>(mprts, mflds);
+  struct psc_mparticles_cuda2 *mprts_sub = psc_mparticles_cuda2(mprts);
+
+  int *bs = mprts_sub->bs;
+  if (bs[0] == 1 && bs[1] == 4 && bs[2] == 4) {
+    cuda_push_mprts_ab_yz<1, 4, 4>(mprts, mflds);
+  } else {
+    mprintf("unknown bs %d %d %d\n", bs[0], bs[1], bs[2]);
+  }
 }
+
+// ----------------------------------------------------------------------
+// cuda2_1vbec_push_mprts_xyz
+
+void
+cuda2_1vbec_push_mprts_xyz(struct psc_mparticles *mprts, struct psc_mfields *mflds)
+{
+  struct psc_mparticles_cuda2 *mprts_sub = psc_mparticles_cuda2(mprts);
+
+  int *bs = mprts_sub->bs;
+  if (bs[0] == 4 && bs[1] == 4 && bs[2] == 4) {
+    cuda_push_mprts_ab_xyz<4, 4, 4>(mprts, mflds);
+  } else {
+    mprintf("unknown bs %d %d %d\n", bs[0], bs[1], bs[2]);
+  }
+}
+
 

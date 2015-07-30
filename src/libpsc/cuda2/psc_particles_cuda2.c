@@ -344,10 +344,15 @@ psc_mparticles_cuda2_setup(struct psc_mparticles *mprts)
     return;
   }
   
+  int *gdims = ppsc->domain.gdims;
   for (int d = 0; d < 3; d++) {
+    sub->bs[d] = psc_particles_cuda2_bs[d];
+    if (gdims[d] == 1) {
+      sub->bs[d] = 1;
+    }
     sub->dxi[d] = 1.f / ppsc->patch[0].dx[d];
-    assert(ppsc->patch[0].ldims[d] % psc_particles_cuda2_bs[d] == 0);
-    sub->b_mx[d] = ppsc->patch[0].ldims[d] / psc_particles_cuda2_bs[d];
+    assert(ppsc->patch[0].ldims[d] % sub->bs[d] == 0);
+    sub->b_mx[d] = ppsc->patch[0].ldims[d] / sub->bs[d];
   }
   sub->nr_blocks = sub->b_mx[0] * sub->b_mx[1] * sub->b_mx[2];
   sub->nr_blocks_total = sub->nr_blocks * mprts->nr_patches;
