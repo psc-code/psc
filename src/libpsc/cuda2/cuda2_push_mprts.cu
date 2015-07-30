@@ -4,7 +4,7 @@
 #include "psc_fields_cuda2.h"
 #include "psc_particles_cuda2.h"
 
-#define NO_CACHE
+//#define NO_CACHE
 
 struct d_particle {
   real xi[3];
@@ -198,6 +198,12 @@ _free_params(struct cuda_params *prm)
   ((fld_cache)[(((m-EX)							\
 		 *(BLOCKSIZE_Z + 4) + ((jz)-(-2)))			\
 		*(BLOCKSIZE_Y + 4) + ((jy)-(-2)))])
+
+#define F3_CACHE_XYZ(fld_cache, m, jx, jy, jz)				\
+  ((fld_cache)[((((m-EX)						\
+		  *(BLOCKSIZE_Z + 4) + ((jz)-(-2)))			\
+		 *(BLOCKSIZE_Y + 4) + ((jy)-(-2)))			\
+		*(BLOCKSIZE_Z + 4) + ((jx)-(-2)))])
 
 #endif
 
@@ -403,12 +409,12 @@ find_bid_xyz(struct cuda_params prm)
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static void
-cache_fields(struct cuda_params prm, float *fld_cache, float *d_flds0, int size, int *ci0, int p)
+cache_fields_yz(struct cuda_params prm, float *fld_cache, float *d_flds0, int size, int *ci0, int p)
 {
   real *d_flds = d_flds0 + p * size;
 
+  int n = (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4);
   int ti = threadIdx.x;
-  int n = BLOCKSIZE_X * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4);
   while (ti < n) {
     int tmp = ti;
     int jy = tmp % (BLOCKSIZE_Y + 4) - 2;
@@ -417,6 +423,29 @@ cache_fields(struct cuda_params prm, float *fld_cache, float *d_flds0, int size,
     // OPT? currently it seems faster to do the loop rather than do m by threadidx
     for (int m = EX; m <= HZ; m++) {
       F3_CACHE_YZ(fld_cache, m, jy, jz) = F3_DEV_YZ(m, jy+ci0[1],jz+ci0[2]);
+    }
+    ti += THREADS_PER_BLOCK;
+  }
+}
+
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
+__device__ static void
+cache_fields_xyz(struct cuda_params prm, float *fld_cache, float *d_flds0, int size, int *ci0, int p)
+{
+  real *d_flds = d_flds0 + p * size;
+
+  int n = (BLOCKSIZE_X + 4) * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4);
+  int ti = threadIdx.x;
+  while (ti < n) {
+    int tmp = ti;
+    int jx = tmp % (BLOCKSIZE_X + 4) - 2;
+    tmp /= BLOCKSIZE_X + 4;
+    int jy = tmp % (BLOCKSIZE_Y + 4) - 2;
+    tmp /= BLOCKSIZE_Y + 4;
+    int jz = tmp % (BLOCKSIZE_Z + 4) - 2;
+    // OPT? currently it seems faster to do the loop rather than do m by threadidx
+    for (int m = EX; m <= HZ; m++) {
+      F3_CACHE_XYZ(fld_cache, m, jx, jy, jz) = F3_DEV_XYZ(m, jx+ci0[0],jy+ci0[1],jz+ci0[2]);
     }
     ti += THREADS_PER_BLOCK;
   }
@@ -707,7 +736,7 @@ push_mprts_ab_yz(struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
   real *fld_cache = NULL;
 #else
   __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
-  cache_fields<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+  cache_fields_yz<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
     (prm, fld_cache, d_flds0, size, ci0, p);
 #endif
 
@@ -746,8 +775,8 @@ push_mprts_ab_xyz(struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
 #ifdef NO_CACHE
   real *fld_cache = NULL;
 #else
-  __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
-  cache_fields<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+  __shared__ real fld_cache[6 * (BLOCKSIZE_X + 4) * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
+  cache_fields_xyz<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
     (prm, fld_cache, d_flds0, size, ci0, p);
 #endif
 
