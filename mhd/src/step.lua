@@ -9,7 +9,7 @@
 ------------------------------------------
 -- LOAD LOCAL DOMAIN PARAMS FROM LIBMRC --
 ------------------------------------------
-mx, my, mz, lx, ly, lz, hx, hy, hz = ...
+mx, my, mz, lx, ly, lz, hx, hy, hz, lxg, lyg, lzg, hxg, hyg, hzg = ...
 
 -----------------------------------------------
 -- LOAD PARAMS SHARED WITH INIT              --
