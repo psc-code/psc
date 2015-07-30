@@ -385,9 +385,9 @@ push_one_xyz(struct psc_mparticles *mprts, struct psc_mfields *mflds, int n, int
 
   // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
 #warning should be xyz
-  calc_jxyz_3d_yz(flds, xm, xp, lf, lg, &prt, vxi);
+  //  calc_jxyz_3d_yz(flds, xm, xp, lf, lg, &prt, vxi);
 
-  _STORE_PARTICLE_POS(prt, mprts_sub->h_xi4, n);
+  //  _STORE_PARTICLE_POS(prt, mprts_sub->h_xi4, n);
   _STORE_PARTICLE_MOM(prt, mprts_sub->h_pxi4, n);
 }
 
