@@ -11,8 +11,6 @@ struct d_particle {
   real qni_wni;
 };
 
-EXTERN_C void psc_mparticles_cuda_copy_to_dev(struct psc_mparticles *mprts);
-
 #define MAX_KINDS (4)
 
 struct cuda_params {
@@ -28,8 +26,16 @@ struct cuda_params {
   real dq[MAX_KINDS];
 };
 
-#include "psc_particles_cuda.h"
-#include "psc_fields_cuda.h"
+#define BND (2)
+
+#define F3_DEV_OFF_YZ(fldnr, jy,jz)					\
+  ((((fldnr)								\
+     *prm.mx[2] + ((jz)-prm.ilg[2]))					\
+    *prm.mx[1] + ((jy)-prm.ilg[1]))					\
+   *prm.mx[0] + (0-prm.ilg[0]))
+
+#define F3_DEV_YZ(fldnr,jy,jz) \
+  (d_flds)[F3_DEV_OFF_YZ(fldnr, jy,jz)]
 
 #undef THREADS_PER_BLOCK
 #define THREADS_PER_BLOCK (512)
@@ -559,7 +565,7 @@ zero_currents(struct psc_mfields *mflds)
   unsigned int size = mflds_sub->im[0] * mflds_sub->im[1] * mflds_sub->im[2];
 
   for (int p = 0; p < mflds->nr_patches; p++) {
-    fields_cuda_real_t *d_flds = mflds_sub->d_flds + p * size * mflds->nr_fields;
+    fields_cuda2_real_t *d_flds = mflds_sub->d_flds + p * size * mflds->nr_fields;
     check(cudaMemset(d_flds + JXI * size, 0, 3 * size * sizeof(*d_flds)));
   }
 }
