@@ -5,15 +5,15 @@
 
 #include <string.h>
 
-//#define GOLD
+#define GOLD
 
 // ======================================================================
 // psc_push_particles: subclass "1vb_cuda2"
 
 static void
 psc_push_particles_1vbec_push_mprts_yz(struct psc_push_particles *push,
-				     struct psc_mparticles *mprts_base,	
-				     struct psc_mfields *mflds_base)					
+				       struct psc_mparticles *mprts_base,	
+				       struct psc_mfields *mflds_base)					
 {									
   struct psc_mparticles *mprts =
     psc_mparticles_get_as(mprts_base, "cuda2", 0);
@@ -24,6 +24,8 @@ psc_push_particles_1vbec_push_mprts_yz(struct psc_push_particles *push,
   cuda2_1vbec_push_mprts_yz_gold(mprts, mflds);
 #else
   psc_mfields_cuda2_copy_to_device(mflds);
+  psc_mparticles_cuda2_copy_to_device(mprts);
+  psc_mparticles_cuda2_copy_to_host(mprts);
 
   struct psc_mparticles *mprts_cuda =
     psc_mparticles_get_as(mprts, "cuda", 0);

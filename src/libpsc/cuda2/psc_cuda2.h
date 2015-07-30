@@ -24,6 +24,9 @@ EXTERN_C void cuda_memcpy_device_from_host(void *d_ptr, void *h_ptr, size_t n);
 EXTERN_C void psc_mfields_cuda2_copy_to_device(struct psc_mfields *mflds);
 EXTERN_C void psc_mfields_cuda2_copy_to_host(struct psc_mfields *mflds);
 
+EXTERN_C void psc_mparticles_cuda2_copy_to_device(struct psc_mparticles *mprts);
+EXTERN_C void psc_mparticles_cuda2_copy_to_host(struct psc_mparticles *mprts);
+
 EXTERN_C void cuda2_push_mflds_E_yz_gold(struct psc_mfields *mflds);
 EXTERN_C void cuda2_push_mflds_H_yz_gold(struct psc_mfields *mflds);
 EXTERN_C void cuda2_push_mflds_E_yz(struct psc_mfields *mflds);

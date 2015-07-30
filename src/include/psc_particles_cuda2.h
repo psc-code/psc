@@ -11,16 +11,22 @@ typedef float particle_cuda2_real_t;
 #define MPI_PARTICLES_CUDA2_REAL MPI_FLOAT
 
 struct psc_particles_cuda2 {
+  // on host
   float4 *h_xi4, *h_pxi4;
   float4 *h_xi4_alt, *h_pxi4_alt;
-  int n_alloced;
-  particle_cuda2_real_t dxi[3];
-  int b_mx[3];
-  int nr_blocks;
   unsigned int *b_idx;
   unsigned int *b_ids;
   unsigned int *b_cnt;
   unsigned int *b_off;
+
+  // on device
+  float4 *d_xi4, *d_pxi4;
+  unsigned int *d_b_off;
+
+  int n_alloced;
+  particle_cuda2_real_t dxi[3];
+  int b_mx[3];
+  int nr_blocks;
 };
 
 #define psc_particles_cuda2(prts) mrc_to_subobj(prts, struct psc_particles_cuda2)

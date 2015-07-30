@@ -22,12 +22,6 @@ psc_particles_cuda2_setup(struct psc_particles *prts)
   struct psc_particles_cuda2 *sub = psc_particles_cuda2(prts);
 
   sub->n_alloced = prts->n_part * 1.2;
-  sub->h_xi4 = calloc(sub->n_alloced, sizeof(*sub->h_xi4));
-  sub->h_pxi4 = calloc(sub->n_alloced, sizeof(*sub->h_pxi4));
-  sub->h_xi4_alt = calloc(sub->n_alloced, sizeof(*sub->h_xi4_alt));
-  sub->h_pxi4_alt = calloc(sub->n_alloced, sizeof(*sub->h_pxi4_alt));
-  sub->b_idx = calloc(sub->n_alloced, sizeof(*sub->b_idx));
-  sub->b_ids = calloc(sub->n_alloced, sizeof(*sub->b_ids));
 
   for (int d = 0; d < 3; d++) {
     sub->dxi[d] = 1.f / ppsc->patch[prts->p].dx[d];
@@ -35,8 +29,21 @@ psc_particles_cuda2_setup(struct psc_particles *prts)
     sub->b_mx[d] = ppsc->patch[prts->p].ldims[d] / psc_particles_cuda2_bs[d];
   }
   sub->nr_blocks = sub->b_mx[0] * sub->b_mx[1] * sub->b_mx[2];
+
+  // on host
+  sub->h_xi4 = calloc(sub->n_alloced, sizeof(*sub->h_xi4));
+  sub->h_pxi4 = calloc(sub->n_alloced, sizeof(*sub->h_pxi4));
+  sub->h_xi4_alt = calloc(sub->n_alloced, sizeof(*sub->h_xi4_alt));
+  sub->h_pxi4_alt = calloc(sub->n_alloced, sizeof(*sub->h_pxi4_alt));
+  sub->b_idx = calloc(sub->n_alloced, sizeof(*sub->b_idx));
+  sub->b_ids = calloc(sub->n_alloced, sizeof(*sub->b_ids));
   sub->b_cnt = calloc(sub->nr_blocks + 1, sizeof(*sub->b_cnt));
   sub->b_off = calloc(sub->nr_blocks + 2, sizeof(*sub->b_off));
+
+  // on device
+  sub->d_xi4 = cuda_calloc(sub->n_alloced, sizeof(*sub->d_xi4));
+  sub->d_pxi4 = cuda_calloc(sub->n_alloced, sizeof(*sub->d_pxi4));
+  sub->d_b_off = cuda_calloc(sub->nr_blocks + 2, sizeof(*sub->b_off));
 }
 
 // ----------------------------------------------------------------------
@@ -55,6 +62,31 @@ psc_particles_cuda2_destroy(struct psc_particles *prts)
   free(sub->b_ids);
   free(sub->b_cnt);
   free(sub->b_off);
+
+  cuda_free(sub->d_xi4);
+  cuda_free(sub->d_pxi4);
+  cuda_free(sub->d_b_off);
+}
+
+// ----------------------------------------------------------------------
+// psc_mparticles_cuda2_copy_to_device
+
+void
+psc_mparticles_cuda2_copy_to_device(struct psc_mparticles *mprts)
+{
+#if 0
+  struct psc_mparticles_cuda2 *sub = psc_mparticles_cuda2(mflds);
+
+  cuda_memcpy_device_from_host(sub->d_xi4, sub->h_xi4, mflds->n_parts * sizeof(*sub->d_xi4));
+#endif
+}
+
+// ----------------------------------------------------------------------
+// psc_mparticles_cuda2_copy_to_host
+
+void
+psc_mparticles_cuda2_copy_to_host(struct psc_mparticles *mprts)
+{
 }
 
 // ----------------------------------------------------------------------
