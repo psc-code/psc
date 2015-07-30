@@ -240,7 +240,7 @@ curr_3d_vb_cell_yz(struct psc_fields *pf, int i[3], particle_cuda2_real_t x[3], 
 }
 
 static inline void
-calc_jxyz_3d_yz(struct psc_fields *flds, particle_cuda2_real_t *xm, particle_cuda2_real_t *xp,
+calc_j_3d_yz(struct psc_fields *flds, particle_cuda2_real_t *xm, particle_cuda2_real_t *xp,
 		int *lf, int *lg, particle_cuda2_t *prt, particle_cuda2_real_t *vxi)
 {
   int i[3] = { 0, lg[1], lg[2] };					
@@ -338,7 +338,7 @@ push_one_yz(struct psc_mparticles *mprts, struct psc_mfields *mflds, int n, int 
   find_idx_off_pos_1st_rel(&prt.xi4.x, lf, of, xp, 0.f, prm.dxi);
 
   // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
-  calc_jxyz_3d_yz(flds, xm, xp, lf, lg, &prt, vxi);
+  calc_j_3d_yz(flds, xm, xp, lf, lg, &prt, vxi);
 
   _STORE_PARTICLE_POS(prt, mprts_sub->h_xi4, n);
   _STORE_PARTICLE_MOM(prt, mprts_sub->h_pxi4, n);
@@ -385,7 +385,7 @@ push_one_xyz(struct psc_mparticles *mprts, struct psc_mfields *mflds, int n, int
 
   // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
 #warning should be xyz
-  //  calc_jxyz_3d_yz(flds, xm, xp, lf, lg, &prt, vxi);
+  //  calc_j_3d_yz(flds, xm, xp, lf, lg, &prt, vxi);
 
   _STORE_PARTICLE_POS(prt, mprts_sub->h_xi4, n);
   _STORE_PARTICLE_MOM(prt, mprts_sub->h_pxi4, n);

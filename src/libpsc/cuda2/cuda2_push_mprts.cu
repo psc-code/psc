@@ -4,7 +4,7 @@
 #include "psc_fields_cuda2.h"
 #include "psc_particles_cuda2.h"
 
-//#define NO_CACHE
+#define NO_CACHE
 
 struct d_particle {
   real xi[3];

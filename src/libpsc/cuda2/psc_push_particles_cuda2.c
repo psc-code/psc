@@ -8,7 +8,7 @@
 
 #include <string.h>
 
-//#define GOLD
+#define GOLD
 
 // ======================================================================
 // psc_push_particles: subclass "1vb_cuda2"
