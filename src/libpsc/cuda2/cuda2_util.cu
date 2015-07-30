@@ -6,6 +6,7 @@
 EXTERN_C void *
 cuda_calloc(size_t nmemb, size_t size)
 {
+  // FIXME, doesn't zero the memory
   void *ptr;
   check(cudaMalloc(&ptr, nmemb * size));
   return ptr;

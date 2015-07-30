@@ -20,7 +20,6 @@ struct psc_particles_cuda2 {
   unsigned int *b_off;
 
   // on device
-  float4 *d_xi4, *d_pxi4;
   unsigned int *d_b_off;
 
   int n_alloced;
@@ -32,6 +31,19 @@ struct psc_particles_cuda2 {
 #define psc_particles_cuda2(prts) mrc_to_subobj(prts, struct psc_particles_cuda2)
 
 struct psc_mparticles_cuda2 {
+  int n_part_total; // total in all patches
+  int n_alloced_total;
+
+  particle_cuda2_real_t dxi[3];
+  int b_mx[3];
+  int nr_blocks;
+
+  // on host
+  float4 *h_xi4, *h_pxi4;
+  float4 *h_xi4_alt, *h_pxi4_alt;
+
+  // on device
+  float4 *d_xi4, *d_pxi4;
 };
 
 #define psc_mparticles_cuda2(prts) mrc_to_subobj(prts, struct psc_mparticles_cuda2)

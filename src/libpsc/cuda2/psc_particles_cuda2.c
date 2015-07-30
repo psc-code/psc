@@ -344,32 +344,61 @@ psc_mparticles_cuda2_setup(struct psc_mparticles *mprts)
     return;
   }
   
+  for (int d = 0; d < 3; d++) {
+    sub->dxi[d] = 1.f / ppsc->patch[0].dx[d];
+    assert(ppsc->patch[0].ldims[d] % psc_particles_cuda2_bs[d] == 0);
+    sub->b_mx[d] = ppsc->patch[0].ldims[d] / psc_particles_cuda2_bs[d];
+  }
+  sub->nr_blocks = sub->b_mx[0] * sub->b_mx[1] * sub->b_mx[2];
+
+  sub->n_part_total = 0;
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+
+    sub->n_part_total += prts->n_part;
+  }
+  sub->n_alloced_total = sub->n_part_total * 1.2;
+
+  sub->h_xi4 = calloc(sub->n_alloced_total, sizeof(*sub->h_xi4));
+  sub->h_pxi4 = calloc(sub->n_alloced_total, sizeof(*sub->h_pxi4));
+  sub->h_xi4_alt = calloc(sub->n_alloced_total, sizeof(*sub->h_xi4_alt));
+  sub->h_pxi4_alt = calloc(sub->n_alloced_total, sizeof(*sub->h_pxi4_alt));
+  float4 *h_xi4 = sub->h_xi4;
+  float4 *h_pxi4 = sub->h_pxi4;
+  float4 *h_xi4_alt = sub->h_xi4_alt;
+  float4 *h_pxi4_alt = sub->h_pxi4_alt;
+
+  sub->d_xi4 = cuda_calloc(sub->n_alloced_total, sizeof(*sub->d_xi4));
+  sub->d_pxi4 = cuda_calloc(sub->n_alloced_total, sizeof(*sub->d_pxi4));
+
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda2 *prts_sub = psc_particles_cuda2(prts);
 
-    prts_sub->n_alloced = prts->n_part * 1.2;
+    prts_sub->n_alloced = prts->n_part;
 
     for (int d = 0; d < 3; d++) {
-      prts_sub->dxi[d] = 1.f / ppsc->patch[prts->p].dx[d];
-      assert(ppsc->patch[prts->p].ldims[d] % psc_particles_cuda2_bs[d] == 0);
-      prts_sub->b_mx[d] = ppsc->patch[prts->p].ldims[d] / psc_particles_cuda2_bs[d];
+      prts_sub->dxi[d] = sub->dxi[d];
+      prts_sub->b_mx[d] = sub->b_mx[d];
     }
-    prts_sub->nr_blocks = prts_sub->b_mx[0] * prts_sub->b_mx[1] * prts_sub->b_mx[2];
+    prts_sub->nr_blocks = sub->nr_blocks;
 
     // on host
-    prts_sub->h_xi4 = calloc(prts_sub->n_alloced, sizeof(*prts_sub->h_xi4));
-    prts_sub->h_pxi4 = calloc(prts_sub->n_alloced, sizeof(*prts_sub->h_pxi4));
-    prts_sub->h_xi4_alt = calloc(prts_sub->n_alloced, sizeof(*prts_sub->h_xi4_alt));
-    prts_sub->h_pxi4_alt = calloc(prts_sub->n_alloced, sizeof(*prts_sub->h_pxi4_alt));
+    prts_sub->h_xi4 = h_xi4;
+    prts_sub->h_pxi4 = h_pxi4;
+    prts_sub->h_xi4_alt = h_xi4_alt;
+    prts_sub->h_pxi4_alt = h_pxi4_alt;
+    h_xi4 += prts->n_part;
+    h_pxi4 += prts->n_part;
+    h_xi4_alt += prts->n_part;
+    h_pxi4_alt += prts->n_part;
+
     prts_sub->b_idx = calloc(prts_sub->n_alloced, sizeof(*prts_sub->b_idx));
     prts_sub->b_ids = calloc(prts_sub->n_alloced, sizeof(*prts_sub->b_ids));
     prts_sub->b_cnt = calloc(prts_sub->nr_blocks + 1, sizeof(*prts_sub->b_cnt));
     prts_sub->b_off = calloc(prts_sub->nr_blocks + 2, sizeof(*prts_sub->b_off));
   
     // on device
-    prts_sub->d_xi4 = cuda_calloc(prts_sub->n_alloced, sizeof(*prts_sub->d_xi4));
-    prts_sub->d_pxi4 = cuda_calloc(prts_sub->n_alloced, sizeof(*prts_sub->d_pxi4));
     prts_sub->d_b_off = cuda_calloc(prts_sub->nr_blocks + 2, sizeof(*prts_sub->b_off));
   }
 }
@@ -386,19 +415,21 @@ psc_mparticles_cuda2_destroy(struct psc_mparticles *mprts)
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda2 *prts_sub = psc_particles_cuda2(prts);
 
-    free(prts_sub->h_xi4);
-    free(prts_sub->h_pxi4);
-    free(prts_sub->h_xi4_alt);
-    free(prts_sub->h_pxi4_alt);
     free(prts_sub->b_idx);
     free(prts_sub->b_ids);
     free(prts_sub->b_cnt);
     free(prts_sub->b_off);
     
-    cuda_free(prts_sub->d_xi4);
-    cuda_free(prts_sub->d_pxi4);
     cuda_free(prts_sub->d_b_off);
   }
+
+  free(sub->h_xi4);
+  free(sub->h_pxi4);
+  free(sub->h_xi4_alt);
+  free(sub->h_pxi4_alt);
+
+  cuda_free(sub->d_xi4);
+  cuda_free(sub->d_pxi4);
 }
 
 // ----------------------------------------------------------------------
