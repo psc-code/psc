@@ -94,14 +94,14 @@ params_1vb_set(struct psc *psc, int p)
 		g1x*F3_CUDA2(pf, EZ, lg[0]+1,lg[1]+1,lg[2]  )));	\
 									\
     hxq = (g0x*F3_CUDA2(pf, HX, lg[0]  ,lg[1]  ,lg[2]  ) +		\
-	   g1x*F3_CUDA2(pf, HX, lg[0]+1,lg[1]  ,lg[2]));		\
+	   g1x*F3_CUDA2(pf, HX, lg[0]+1,lg[1]  ,lg[2]  ));		\
 									\
     hyq = (g0y*F3_CUDA2(pf, HY, lg[0]  ,lg[1]  ,lg[2]  ) +		\
 	   g1y*F3_CUDA2(pf, HY, lg[0]  ,lg[1]+1,lg[2]  ));		\
 									\
     hzq = (g0z*F3_CUDA2(pf, HZ, lg[0]  ,lg[1]  ,lg[2]  ) +		\
 	   g1z*F3_CUDA2(pf, HZ, lg[0]  ,lg[1]  ,lg[2]+1));		\
-    									\
+									\
     assert_finite(exq); assert_finite(eyq); assert_finite(ezq);		\
     assert_finite(hxq); assert_finite(hyq); assert_finite(hzq);		\
   } while (0)
@@ -372,7 +372,7 @@ push_one_xyz(struct psc_mparticles *mprts, struct psc_mfields *mflds, int n, int
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0)
   int kind = cuda_float_as_int(prt.xi4.w);
   particle_cuda2_real_t dq = prm.dq_kind[kind];
-  //  push_pxi(&prt, exq, eyq, ezq, hxq, hyq, hzq, dq);
+  push_pxi(&prt, exq, eyq, ezq, hxq, hyq, hzq, dq);
   
   particle_cuda2_real_t vxi[3];
   calc_vxi(vxi, &prt);

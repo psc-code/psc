@@ -37,7 +37,7 @@ struct cuda_params {
    *prm.mx[0] + ((jx)-prm.ilg[0]))
 
 #define F3_DEV_XYZ(fldnr,jx,jy,jz)		\
-  (d_flds)[F3_DEV_OFF_XYZ(fldnr, jx,jy,jz)]
+  ((d_flds)[F3_DEV_OFF_XYZ(fldnr, jx,jy,jz)])
 
 #define F3_DEV_YZ(fldnr,jy,jz) F3_DEV_XYZ(fldnr, 0,jy,jz)
 
@@ -356,7 +356,7 @@ push_part_one_xyz(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
   LOAD_PARTICLE_MOM_(*prt, d_pxi4, n);
-  //  push_pxi_dt(prt, exq, eyq, ezq, hxq, hyq, hzq);
+  push_pxi_dt(prt, exq, eyq, ezq, hxq, hyq, hzq);
   STORE_PARTICLE_MOM_(*prt, d_pxi4, n);
 }
 
@@ -382,7 +382,7 @@ find_block_pos_patch_xyz(struct cuda_params prm, int *block_pos, int *ci0)
   block_pos[1] = blockIdx.y;
   block_pos[2] = blockIdx.z % prm.b_mx[2];
 
-  ci0[1] = block_pos[0] * BLOCKSIZE_X;
+  ci0[0] = block_pos[0] * BLOCKSIZE_X;
   ci0[1] = block_pos[1] * BLOCKSIZE_Y;
   ci0[2] = block_pos[2] * BLOCKSIZE_Z;
 
@@ -548,7 +548,6 @@ calc_j_yz(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
   // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
   push_xi_yz(prt, vxi, prm.dt);
   STORE_PARTICLE_POS_(*prt, d_xi4, n);
-  return;
   
 #if 0
   // save block_idx for new particle position at x^(n+1.5)
@@ -628,6 +627,7 @@ calc_j_xyz(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
   // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
   push_xi_xyz(prt, vxi, prm.dt);
   STORE_PARTICLE_POS_(*prt, d_xi4, n);
+  return;
 
 #if 0
   // save block_idx for new particle position at x^(n+1.5)
