@@ -227,11 +227,6 @@ psc_particles_cuda2_copy_from_single(struct psc_particles *prts_base,
     _STORE_PARTICLE_POS(prt_base, sub->h_xi4, n);
     _STORE_PARTICLE_MOM(prt_base, sub->h_pxi4, n);
   }
-
-  psc_particles_cuda2_sort(prts_base);
-  // make sure there are no oob particles
-  assert(sub->b_off[sub->nr_blocks] == sub->b_off[sub->nr_blocks+1]);
-  psc_particles_cuda2_check(prts_base);
 }
 
 // ----------------------------------------------------------------------
@@ -350,6 +345,7 @@ psc_mparticles_cuda2_setup(struct psc_mparticles *mprts)
     sub->b_mx[d] = ppsc->patch[0].ldims[d] / psc_particles_cuda2_bs[d];
   }
   sub->nr_blocks = sub->b_mx[0] * sub->b_mx[1] * sub->b_mx[2];
+  sub->nr_blocks_total = sub->nr_blocks * mprts->nr_patches;
 
   sub->n_part_total = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
@@ -363,14 +359,15 @@ psc_mparticles_cuda2_setup(struct psc_mparticles *mprts)
   sub->h_pxi4 = calloc(sub->n_alloced_total, sizeof(*sub->h_pxi4));
   sub->h_xi4_alt = calloc(sub->n_alloced_total, sizeof(*sub->h_xi4_alt));
   sub->h_pxi4_alt = calloc(sub->n_alloced_total, sizeof(*sub->h_pxi4_alt));
+  sub->h_b_off = calloc(sub->nr_blocks_total + 2, sizeof(*sub->h_b_off));
+
+  sub->d_xi4 = cuda_calloc(sub->n_alloced_total, sizeof(*sub->d_xi4));
+  sub->d_pxi4 = cuda_calloc(sub->n_alloced_total, sizeof(*sub->d_pxi4));
+  
   float4 *h_xi4 = sub->h_xi4;
   float4 *h_pxi4 = sub->h_pxi4;
   float4 *h_xi4_alt = sub->h_xi4_alt;
   float4 *h_pxi4_alt = sub->h_pxi4_alt;
-
-  sub->d_xi4 = cuda_calloc(sub->n_alloced_total, sizeof(*sub->d_xi4));
-  sub->d_pxi4 = cuda_calloc(sub->n_alloced_total, sizeof(*sub->d_pxi4));
-
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda2 *prts_sub = psc_particles_cuda2(prts);
@@ -427,9 +424,74 @@ psc_mparticles_cuda2_destroy(struct psc_mparticles *mprts)
   free(sub->h_pxi4);
   free(sub->h_xi4_alt);
   free(sub->h_pxi4_alt);
+  free(sub->h_b_off);
 
   cuda_free(sub->d_xi4);
   cuda_free(sub->d_pxi4);
+}
+
+// ----------------------------------------------------------------------
+// psc_mparticles_cuda2_check
+//
+// make sure that h_b_off[] is set up properly
+
+static void
+psc_mparticles_cuda2_check(struct psc_mparticles *mprts)
+{
+  struct psc_mparticles_cuda2 *sub = psc_mparticles_cuda2(mprts);
+
+  assert(sub->n_part_total <= sub->n_alloced_total);
+
+  int block = 0;
+  for (int n = 0; n < sub->n_part_total; n++) {
+    while (n >= sub->h_b_off[block + 1]) {
+      block++;
+      assert(block < sub->nr_blocks_total);
+    }
+    assert(n >= sub->h_b_off[block] && n < sub->h_b_off[block + 1]);
+    assert(block < sub->nr_blocks_total);
+#if 0
+    unsigned int b_idx = psc_particles_cuda2_get_b_idx(prts, n);
+    assert(b_idx < sub->nr_blocks);
+    assert(b_idx == block);
+#endif
+  }
+}
+
+// ----------------------------------------------------------------------
+// psc_mparticles_cuda2_setup_internals
+
+static void
+psc_mparticles_cuda2_setup_internals(struct psc_mparticles *mprts)
+{
+  struct psc_mparticles_cuda2 *sub = psc_mparticles_cuda2(mprts);
+
+  int nr_blocks = sub->nr_blocks;
+  // FIXME, should just do the sorting all-in-one
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles_cuda2 *prts_sub = psc_particles_cuda2(prts);
+
+    psc_particles_cuda2_sort(prts);
+    // make sure there are no oob particles
+    assert(prts_sub->b_off[nr_blocks] == prts_sub->b_off[nr_blocks+1]);
+    psc_particles_cuda2_check(prts);
+  }
+
+  unsigned int n_part = 0;
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles_cuda2 *prts_sub = psc_particles_cuda2(prts);
+
+    for (int b = 0; b < nr_blocks; b++) {
+      sub->h_b_off[p * nr_blocks + b] = prts_sub->b_off[b] + n_part;
+    }
+    n_part += prts->n_part;
+  }
+  sub->h_b_off[sub->nr_blocks_total] = sub->n_part_total;
+  sub->h_b_off[sub->nr_blocks_total + 1] = sub->n_part_total;
+
+  psc_mparticles_cuda2_check(mprts);
 }
 
 // ----------------------------------------------------------------------
@@ -440,5 +502,6 @@ struct psc_mparticles_ops psc_mparticles_cuda2_ops = {
   .size                    = sizeof(struct psc_mparticles_cuda2),
   .setup                   = psc_mparticles_cuda2_setup,
   .destroy                 = psc_mparticles_cuda2_destroy,
+  .setup_internals         = psc_mparticles_cuda2_setup_internals,
 };
 

@@ -37,10 +37,12 @@ struct psc_mparticles_cuda2 {
   particle_cuda2_real_t dxi[3];
   int b_mx[3];
   int nr_blocks;
+  int nr_blocks_total;
 
   // on host
   float4 *h_xi4, *h_pxi4;
   float4 *h_xi4_alt, *h_pxi4_alt;
+  unsigned int *h_b_off;
 
   // on device
   float4 *d_xi4, *d_pxi4;
