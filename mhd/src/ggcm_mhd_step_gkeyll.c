@@ -13,6 +13,7 @@
 
 struct ggcm_mhd_step_gkeyll {
   const char *script;
+  const char *script_common;
 };
 
 #define ggcm_mhd_step_gkeyll(step) mrc_to_subobj(step, struct ggcm_mhd_step_gkeyll)
@@ -23,14 +24,17 @@ struct ggcm_mhd_step_gkeyll {
 static void
 ggcm_mhd_step_gkeyll_setup_flds(struct ggcm_mhd_step *step)
 {
+  struct ggcm_mhd_step_gkeyll *sub = ggcm_mhd_step_gkeyll(step);
   struct ggcm_mhd *mhd = step->mhd;
 
   mrc_fld_set_type(mhd->fld, FLD_TYPE);
-  // FIXME, not nice to hardcode 2 here, should be gotten from the script
-  mrc_fld_set_param_int(mhd->fld, "nr_ghosts", 2);
+
+  int nr_comps = 18, nr_ghosts = -2;
+ ggcm_mhd_step_gkeyll_setup_flds_lua(sub->script_common, &nr_comps, &nr_ghosts);
+
+  mrc_fld_set_param_int(mhd->fld, "nr_ghosts", nr_ghosts);
   mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_FULLY_CONSERVATIVE);
-  // FIXME, not nice to hardcode 18 here, should be gotten from the script
-  mrc_fld_set_param_int(mhd->fld, "nr_comps", 18);
+  mrc_fld_set_param_int(mhd->fld, "nr_comps", nr_comps);
 }
 
 // ----------------------------------------------------------------------
@@ -73,6 +77,7 @@ ggcm_mhd_step_gkeyll_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_step_gkeyll, x)
 static struct param ggcm_mhd_step_gkeyll_descr[] = {
   { "script"           , VAR(script)           , PARAM_STRING("step.lua")   },
+  { "script_common"    , VAR(script_common)    , PARAM_STRING("common.lua") },
   {},
 };
 #undef VAR

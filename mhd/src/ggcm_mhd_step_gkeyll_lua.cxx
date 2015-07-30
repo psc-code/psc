@@ -57,6 +57,29 @@ static int ggcm_mhd_fill_ghosts_lua (lua_State *L) {
 }
 
 void
+ggcm_mhd_step_gkeyll_setup_flds_lua(const char*script_common, int *nr_comps, int *nr_ghosts)
+{
+  std::string inpFile = script_common;
+
+  Lucee::LuaState L_temp;
+  Lucee::registerModules(L_temp);
+
+  if (luaL_loadfile(L_temp, inpFile.c_str()) 
+   || lua_pcall(L_temp, 0, 0, 0)) {
+    std::cerr << "Error parsing file: " << inpFile << std::endl;
+    std::string err(lua_tostring(L_temp, -1));
+    lua_pop(L_temp, 1);
+    std::cerr << err << std::endl;
+    exit(1);
+  }
+
+  lua_getglobal(L_temp, "nr_comps");
+  lua_getglobal(L_temp, "nr_ghosts");
+  *nr_ghosts = (int)lua_tonumber(L_temp, -1);
+  *nr_comps = (int)lua_tonumber(L_temp, -2);
+}
+
+void
 ggcm_mhd_step_gkeyll_lua_setup(const char *script, struct ggcm_mhd *mhd,
 			       struct mrc_fld *fld)
 {
@@ -128,12 +151,6 @@ ggcm_mhd_step_gkeyll_lua_setup(const char *script, struct ggcm_mhd *mhd,
   }
 
   int nargs = 0;
-
-  lua_pushinteger(L, fld->_nr_ghosts);
-  nargs++;
-
-  lua_pushinteger(L, fld->_nr_comps);
-  nargs++;
 
   int gdims[3];
   mrc_domain_get_global_dims(mhd->domain, gdims);

@@ -92,12 +92,6 @@ ggcm_mhd_ic_gkeyll_lua_run(const char *script, struct ggcm_mhd *mhd,
 
   int nargs = 0;
 
-  lua_pushinteger(L, fld->_nr_ghosts);
-  nargs++;
-
-  lua_pushinteger(L, fld->_nr_comps);
-  nargs++;
-
   int gdims[3];
   mrc_domain_get_global_dims(mhd->domain, gdims);
   const int *ldims = mrc_fld_spatial_dims(fld);
@@ -106,9 +100,6 @@ ggcm_mhd_ic_gkeyll_lua_run(const char *script, struct ggcm_mhd *mhd,
   lua_pushinteger(L, ldims[2]);
   nargs += 3;
 
-  double l[3], h[3];
-  mrc_crds_get_param_double3(mrc_domain_get_crds(mhd->domain), "l", l);
-  mrc_crds_get_param_double3(mrc_domain_get_crds(mhd->domain), "h", h);
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
   double dx[3];
   mrc_crds_get_dx_base(crds, dx);
@@ -126,6 +117,18 @@ ggcm_mhd_ic_gkeyll_lua_run(const char *script, struct ggcm_mhd *mhd,
   lua_pushnumber(L, lh[0]);
   lua_pushnumber(L, lh[1]);
   lua_pushnumber(L, lh[2]);
+  nargs += 3;
+
+  double l[3], h[3];
+  mrc_crds_get_param_double3(mrc_domain_get_crds(mhd->domain), "l", l);
+  mrc_crds_get_param_double3(mrc_domain_get_crds(mhd->domain), "h", h);
+  lua_pushnumber(L, l[0]);
+  lua_pushnumber(L, l[1]);
+  lua_pushnumber(L, l[2]);
+  nargs += 3;
+  lua_pushnumber(L, h[0]);
+  lua_pushnumber(L, h[1]);
+  lua_pushnumber(L, h[2]);
   nargs += 3;
 
   lua_pushlightuserdata(L, fld->_arr);
