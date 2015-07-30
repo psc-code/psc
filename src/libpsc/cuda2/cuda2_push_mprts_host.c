@@ -294,27 +294,21 @@ push_one(struct psc_fields *flds, struct psc_particles *prts, int n)
   _STORE_PARTICLE_MOM(prt, sub->h_pxi4, n);
 }
 
-static void
-psc_push_particles_push_a_yz(struct psc_particles *prts,
-			     struct psc_fields *flds)
-{
-  struct psc_particles_cuda2 *prts_sub = psc_particles_cuda2(prts);
-  params_1vb_set(ppsc, flds->p);
-
-  psc_fields_zero_range(flds, JXI, JXI + 3);
-  for (int b = 0; b < prts_sub->nr_blocks; b++) {
-    for (int n = prts_sub->b_off[b]; n < prts_sub->b_off[b+1]; n++) {
-      push_one(flds, prts, n);
-    }
-  }
-}
-
 void
 cuda2_1vbec_push_mprts_yz_gold(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    psc_push_particles_push_a_yz(psc_mparticles_get_patch(mprts, p),
-				 psc_mfields_get_patch(mflds, p));
+  struct psc_mparticles_cuda2 *mprts_sub = psc_mparticles_cuda2(mprts);
+
+  params_1vb_set(ppsc, 0);
+
+  psc_mfields_zero_range(mflds, JXI, JXI + 3);
+
+  for (int b = 0; b < mprts_sub->nr_blocks_total; b++) {
+    int p = b / mprts_sub->nr_blocks;
+    for (int n = mprts_sub->h_b_off[b]; n < mprts_sub->h_b_off[b+1]; n++) {
+      push_one(psc_mfields_get_patch(mflds, p),
+	       psc_mparticles_get_patch(mprts, p), n);
+    }
   }
 }
 
