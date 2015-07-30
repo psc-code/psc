@@ -332,63 +332,63 @@ calc_j2_3d_yz(struct psc_fields *flds, particle_cuda2_real_t *xm, particle_cuda2
 {
   int i[3] = { 0, lg[1], lg[2] };					
   int idiff[3] = { 0, lf[1] - lg[1], lf[2] - lg[2] };			
-  particle_cuda2_real_t dx[3] = { 0., xp[1] - xm[1], xp[2] - xm[2] };		
+  particle_cuda2_real_t dxt[3] = { 0., xp[1] - xm[1], xp[2] - xm[2] };		
   particle_cuda2_real_t x[3] = { 0., xm[1] - (i[1] + .5f), xm[2] - (i[2] + .5f) }; 
   									
   int kind = cuda_float_as_int(prt->xi4.w);
   particle_cuda2_real_t fnq[3] = { particle_cuda2_wni(prt) * prm.fnqx_kind[kind],
 				   particle_cuda2_wni(prt) * prm.fnqy_kind[kind],
 				   particle_cuda2_wni(prt) * prm.fnqz_kind[kind] };
-  dx[0] = vxi[0] * prm.dt * prm.dxi[0];
+  dxt[0] = vxi[0] * prm.dt * prm.dxi[0];
 
-  particle_cuda2_real_t dx1[3];
+  particle_cuda2_real_t dx[3];
   int off[3];
   int first_dir, second_dir = -1;
 
   if (idiff[2] == 0) { // not intersecting z
     if (idiff[1] == 0) { // not intersecting y
-      curr_3d_vb_one_yz(flds, i, x, dx, fnq, NULL, NULL);
+      curr_3d_vb_one_yz(flds, i, x, dxt, fnq, NULL, NULL);
     } else { // intersecting y
       //first_dir = 1;
       off[2] = 0;
       off[1] = idiff[1];
-      calc_3d_dx1_yz(dx1, x, dx, off);
-      curr_3d_vb_one_yz(flds, i, x, dx1, fnq, dx, off);
-      curr_3d_vb_one_yz(flds, i, x, dx, fnq, NULL, NULL);
+      calc_3d_dx1_yz(dx, x, dxt, off);
+      curr_3d_vb_one_yz(flds, i, x, dx, fnq, dxt, off);
+      curr_3d_vb_one_yz(flds, i, x, dxt, fnq, NULL, NULL);
     }
   } else { // intersecting z
     if (idiff[1] == 0) { // not intersecting y
       off[1] = 0;
       off[2] = idiff[2];
-      calc_3d_dx1_yz(dx1, x, dx, off);
-      curr_3d_vb_one_yz(flds, i, x, dx1, fnq, dx, off);
-      curr_3d_vb_one_yz(flds, i, x, dx, fnq, NULL, NULL);
+      calc_3d_dx1_yz(dx, x, dxt, off);
+      curr_3d_vb_one_yz(flds, i, x, dx, fnq, dxt, off);
+      curr_3d_vb_one_yz(flds, i, x, dxt, fnq, NULL, NULL);
     } else { // intersecting y
-      dx1[1] = .5f * idiff[1] - x[1];
-      if (dx[1] == 0.f) {
-	dx1[2] = 0.f;
+      dx[1] = .5f * idiff[1] - x[1];
+      if (dxt[1] == 0.f) {
+	dx[2] = 0.f;
       } else {
-	dx1[2] = dx[2] / dx[1] * dx1[1];
+	dx[2] = dxt[2] / dxt[1] * dx[1];
       }
-      if (particle_cuda2_real_abs(x[2] + dx1[2]) > .5f) {
+      if (particle_cuda2_real_abs(x[2] + dx[2]) > .5f) {
 	first_dir = 2;
 	off[1] = 0;
 	off[2] = idiff[2];
-	calc_3d_dx1_yz(dx1, x, dx, off);
-	curr_3d_vb_one_yz(flds, i, x, dx1, fnq, dx, off);
+	calc_3d_dx1_yz(dx, x, dxt, off);
+	curr_3d_vb_one_yz(flds, i, x, dx, fnq, dxt, off);
       } else {
 	first_dir = 1;
 	off[2] = 0;
 	off[1] = idiff[1];
-	calc_3d_dx1_yz(dx1, x, dx, off);
-	curr_3d_vb_one_yz(flds, i, x, dx1, fnq, dx, off);
+	calc_3d_dx1_yz(dx, x, dxt, off);
+	curr_3d_vb_one_yz(flds, i, x, dx, fnq, dxt, off);
       }
       second_dir = 3 - first_dir;
       off[first_dir] = 0;
       off[second_dir] = idiff[second_dir];
-      calc_3d_dx1_yz(dx1, x, dx, off);
-      curr_3d_vb_one_yz(flds, i, x, dx1, fnq, dx, off);
-      curr_3d_vb_one_yz(flds, i, x, dx, fnq, NULL, NULL);
+      calc_3d_dx1_yz(dx, x, dxt, off);
+      curr_3d_vb_one_yz(flds, i, x, dx, fnq, dxt, off);
+      curr_3d_vb_one_yz(flds, i, x, dxt, fnq, NULL, NULL);
     }
   }
 }
