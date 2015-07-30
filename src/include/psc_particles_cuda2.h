@@ -10,14 +10,9 @@ typedef float particle_cuda2_real_t;
 
 #define MPI_PARTICLES_CUDA2_REAL MPI_FLOAT
 
-typedef struct psc_particle_cuda2 {
-  float4 xi4;
-  float4 pxi4;
-} particle_cuda2_t;
-
 struct psc_particles_cuda2 {
-  particle_cuda2_t *particles;
-  particle_cuda2_t *particles_alt;
+  float4 *h_xi4, *h_pxi4;
+  float4 *h_xi4_alt, *h_pxi4_alt;
   int n_alloced;
   particle_cuda2_real_t dxi[3];
   int b_mx[3];
@@ -29,13 +24,6 @@ struct psc_particles_cuda2 {
 };
 
 #define psc_particles_cuda2(prts) mrc_to_subobj(prts, struct psc_particles_cuda2)
-
-static inline particle_cuda2_t *
-particles_cuda2_get_one(struct psc_particles *prts, int n)
-{
-  assert(psc_particles_ops(prts) == &psc_particles_cuda2_ops);
-  return &psc_particles_cuda2(prts)->particles[n];
-}
 
 #define particle_cuda2_wni(p) ({				\
       particle_cuda2_real_t rv;					\
@@ -61,6 +49,45 @@ particle_cuda2_real_abs(particle_cuda2_real_t x)
 {
   return fabsf(x);
 }
+
+#define _LOAD_PARTICLE_POS(prt, d_xi4, n) do {				\
+    float4 xi4 = d_xi4[n];						\
+    (prt).xi4.x = xi4.x;						\
+    (prt).xi4.y = xi4.y;						\
+    (prt).xi4.z = xi4.z;						\
+    (prt).xi4.w = xi4.w;						\
+  } while (0)
+
+#define _LOAD_PARTICLE_MOM(prt, d_pxi4, n) do {				\
+    float4 pxi4 = d_pxi4[n];						\
+    (prt).pxi4.x = pxi4.x;						\
+    (prt).pxi4.y = pxi4.y;						\
+    (prt).pxi4.z = pxi4.z;						\
+    (prt).pxi4.w = pxi4.w;						\
+  } while (0)
+
+#define _STORE_PARTICLE_POS(prt, d_xi4, n) do {				\
+    float4 xi4;								\
+    xi4.x = (prt).xi4.x;						\
+    xi4.y = (prt).xi4.y;						\
+    xi4.z = (prt).xi4.z;						\
+    xi4.w = (prt).xi4.w;						\
+    d_xi4[n] = xi4;							\
+  } while (0)
+
+#define _STORE_PARTICLE_MOM(prt, d_pxi4, n) do {			\
+    float4 pxi4;							\
+    pxi4.x = (prt).pxi4.x;						\
+    pxi4.y = (prt).pxi4.y;						\
+    pxi4.z = (prt).pxi4.z;						\
+    pxi4.w = (prt).pxi4.w;						\
+    d_pxi4[n] = pxi4;							\
+  } while (0)
+
+typedef struct psc_particle_cuda2 {
+  float4 xi4;
+  float4 pxi4;
+} particle_cuda2_t;
 
 #endif
 

@@ -22,8 +22,10 @@ psc_particles_cuda2_setup(struct psc_particles *prts)
   struct psc_particles_cuda2 *sub = psc_particles_cuda2(prts);
 
   sub->n_alloced = prts->n_part * 1.2;
-  sub->particles = calloc(sub->n_alloced, sizeof(*sub->particles));
-  sub->particles_alt = calloc(sub->n_alloced, sizeof(*sub->particles_alt));
+  sub->h_xi4 = calloc(sub->n_alloced, sizeof(*sub->h_xi4));
+  sub->h_pxi4 = calloc(sub->n_alloced, sizeof(*sub->h_pxi4));
+  sub->h_xi4_alt = calloc(sub->n_alloced, sizeof(*sub->h_xi4_alt));
+  sub->h_pxi4_alt = calloc(sub->n_alloced, sizeof(*sub->h_pxi4_alt));
   sub->b_idx = calloc(sub->n_alloced, sizeof(*sub->b_idx));
   sub->b_ids = calloc(sub->n_alloced, sizeof(*sub->b_ids));
 
@@ -45,8 +47,10 @@ psc_particles_cuda2_destroy(struct psc_particles *prts)
 {
   struct psc_particles_cuda2 *sub = psc_particles_cuda2(prts);
 
-  free(sub->particles);
-  free(sub->particles_alt);
+  free(sub->h_xi4);
+  free(sub->h_pxi4);
+  free(sub->h_xi4_alt);
+  free(sub->h_pxi4_alt);
   free(sub->b_idx);
   free(sub->b_ids);
   free(sub->b_cnt);
@@ -80,10 +84,12 @@ psc_particles_cuda2_get_b_idx(struct psc_particles *prts, int n)
   // but at least for certain b.c.s it's legal
   struct psc_particles_cuda2 *sub = psc_particles_cuda2(prts);
 
-  particle_cuda2_t *prt = particles_cuda2_get_one(prts, n);
+  particle_cuda2_t prt;
+  _LOAD_PARTICLE_POS(prt, sub->h_xi4, n);
+  _LOAD_PARTICLE_MOM(prt, sub->h_pxi4, n);
   particle_cuda2_real_t of[3];
   int b_pos[3], *b_mx = sub->b_mx;
-  find_idx_off_1st_rel(&prt->xi4.x, b_pos, of, 0.f, sub->dxi);
+  find_idx_off_1st_rel(&prt.xi4.x, b_pos, of, 0.f, sub->dxi);
   for (int d = 0; d < 3; d++) {
     b_pos[d] /= psc_particles_cuda2_bs[d];
   }
@@ -147,13 +153,17 @@ psc_particles_cuda2_sort(struct psc_particles *prts)
   // reorder into alt particle array
   // WARNING: This is reversed to what reorder() does!
   for (int n = 0; n < prts->n_part; n++) {
-    sub->particles_alt[sub->b_ids[n]] = sub->particles[n];
+    sub->h_xi4_alt [sub->b_ids[n]] = sub->h_xi4 [n];
+    sub->h_pxi4_alt[sub->b_ids[n]] = sub->h_pxi4[n];
   }
   
   // swap in alt array
-  particle_cuda2_t *tmp = sub->particles;
-  sub->particles = sub->particles_alt;
-  sub->particles_alt = tmp;
+  float4 *tmp_xi4 = sub->h_xi4;
+  float4 *tmp_pxi4 = sub->h_pxi4;
+  sub->h_xi4 = sub->h_xi4_alt;
+  sub->h_pxi4 = sub->h_pxi4_alt;
+  sub->h_xi4_alt = tmp_xi4;
+  sub->h_pxi4_alt = tmp_pxi4;
 }
 
 // ----------------------------------------------------------------------
@@ -192,20 +202,24 @@ static void
 psc_particles_cuda2_copy_to_single(struct psc_particles *prts_base,
 				   struct psc_particles *prts, unsigned int flags)
 {
+  struct psc_particles_cuda2 *sub = psc_particles_cuda2(prts_base);
+
   prts->n_part = prts_base->n_part;
   assert(prts->n_part <= psc_particles_single(prts)->n_alloced);
   for (int n = 0; n < prts_base->n_part; n++) {
-    particle_cuda2_t *part_base = particles_cuda2_get_one(prts_base, n);
+    particle_cuda2_t prt_base;
+    _LOAD_PARTICLE_POS(prt_base, sub->h_xi4, n);
+    _LOAD_PARTICLE_MOM(prt_base, sub->h_pxi4, n);
     particle_single_t *part = particles_single_get_one(prts, n);
     
-    part->xi      = part_base->xi4.x;
-    part->yi      = part_base->xi4.y;
-    part->zi      = part_base->xi4.z;
-    part->kind    = cuda_float_as_int(part_base->xi4.w);
-    part->pxi     = part_base->pxi4.x;
-    part->pyi     = part_base->pxi4.y;
-    part->pzi     = part_base->pxi4.z;
-    part->qni_wni = part_base->pxi4.w;
+    part->xi      = prt_base.xi4.x;
+    part->yi      = prt_base.xi4.y;
+    part->zi      = prt_base.xi4.z;
+    part->kind    = cuda_float_as_int(prt_base.xi4.w);
+    part->pxi     = prt_base.pxi4.x;
+    part->pyi     = prt_base.pxi4.y;
+    part->pzi     = prt_base.pxi4.z;
+    part->qni_wni = prt_base.pxi4.w;
   }
 }
 
@@ -217,20 +231,24 @@ psc_particles_cuda2_copy_from_single(struct psc_particles *prts_base,
 				     struct psc_particles *prts, unsigned int flags)
 {
   struct psc_particles_cuda2 *sub = psc_particles_cuda2(prts_base);
+
   prts_base->n_part = prts->n_part;
   assert(prts_base->n_part <= sub->n_alloced);
   for (int n = 0; n < prts_base->n_part; n++) {
-    particle_cuda2_t *part_base = particles_cuda2_get_one(prts_base, n);
+    particle_cuda2_t prt_base;
     particle_single_t *part = particles_single_get_one(prts, n);
 
-    part_base->xi4.x   = part->xi;
-    part_base->xi4.y   = part->yi;
-    part_base->xi4.z   = part->zi;
-    part_base->xi4.w   = cuda_int_as_float(part->kind);
-    part_base->pxi4.x  = part->pxi;
-    part_base->pxi4.y  = part->pyi;
-    part_base->pxi4.z  = part->pzi;
-    part_base->pxi4.w  = part->qni_wni;
+    prt_base.xi4.x   = part->xi;
+    prt_base.xi4.y   = part->yi;
+    prt_base.xi4.z   = part->zi;
+    prt_base.xi4.w   = cuda_int_as_float(part->kind);
+    prt_base.pxi4.x  = part->pxi;
+    prt_base.pxi4.y  = part->pyi;
+    prt_base.pxi4.z  = part->pzi;
+    prt_base.pxi4.w  = part->qni_wni;
+
+    _STORE_PARTICLE_POS(prt_base, sub->h_xi4, n);
+    _STORE_PARTICLE_MOM(prt_base, sub->h_pxi4, n);
   }
 
   psc_particles_cuda2_sort(prts_base);
@@ -246,22 +264,26 @@ static void
 psc_particles_cuda2_copy_to_cuda(struct psc_particles *prts,
 				 struct psc_particles *prts_cuda, unsigned int flags)
 {
+  struct psc_particles_cuda2 *sub = psc_particles_cuda2(prts);
+
   assert(prts_cuda->n_part == prts->n_part);
   
   float4 *xi4  = calloc(prts->n_part, sizeof(float4));
   float4 *pxi4 = calloc(prts->n_part, sizeof(float4));
   
   for (int n = 0; n < prts->n_part; n++) {
-    particle_cuda2_t *prt = particles_cuda2_get_one(prts, n);
+    particle_cuda2_t prt;
+    _LOAD_PARTICLE_POS(prt, sub->h_xi4, n);
+    _LOAD_PARTICLE_MOM(prt, sub->h_pxi4, n);
     
-    xi4[n].x  = prt->xi4.x;
-    xi4[n].y  = prt->xi4.y;
-    xi4[n].z  = prt->xi4.z;
-    xi4[n].w  = prt->xi4.w;
-    pxi4[n].x = prt->pxi4.x;
-    pxi4[n].y = prt->pxi4.y;
-    pxi4[n].z = prt->pxi4.z;
-    pxi4[n].w = prt->pxi4.w;
+    xi4[n].x  = prt.xi4.x;
+    xi4[n].y  = prt.xi4.y;
+    xi4[n].z  = prt.xi4.z;
+    xi4[n].w  = prt.xi4.w;
+    pxi4[n].x = prt.pxi4.x;
+    pxi4[n].y = prt.pxi4.y;
+    pxi4[n].z = prt.pxi4.z;
+    pxi4[n].w = prt.pxi4.w;
   }
   
   __particles_cuda_to_device(prts_cuda, xi4, pxi4);
@@ -275,6 +297,7 @@ psc_particles_cuda2_copy_from_cuda(struct psc_particles *prts,
 				   struct psc_particles *prts_cuda, unsigned int flags)
 {
   struct psc_particles_cuda2 *sub = psc_particles_cuda2(prts);
+
   prts->n_part = prts_cuda->n_part;
   assert(prts->n_part <= sub->n_alloced);
   
@@ -284,16 +307,19 @@ psc_particles_cuda2_copy_from_cuda(struct psc_particles *prts,
   __particles_cuda_from_device(prts_cuda, xi4, pxi4);
   
   for (int n = 0; n < prts->n_part; n++) {
-    particle_cuda2_t *prt = particles_cuda2_get_one(prts, n);
+    particle_cuda2_t prt;
 
-    prt->xi4.x   = xi4[n].x;
-    prt->xi4.y   = xi4[n].y;
-    prt->xi4.z   = xi4[n].z;
-    prt->xi4.w   = xi4[n].w;
-    prt->pxi4.x  = pxi4[n].x;
-    prt->pxi4.y  = pxi4[n].y;
-    prt->pxi4.z  = pxi4[n].z;
-    prt->pxi4.w  = pxi4[n].w;
+    prt.xi4.x   = xi4[n].x;
+    prt.xi4.y   = xi4[n].y;
+    prt.xi4.z   = xi4[n].z;
+    prt.xi4.w   = xi4[n].w;
+    prt.pxi4.x  = pxi4[n].x;
+    prt.pxi4.y  = pxi4[n].y;
+    prt.pxi4.z  = pxi4[n].z;
+    prt.pxi4.w  = pxi4[n].w;
+
+    _STORE_PARTICLE_POS(prt, sub->h_xi4, n);
+    _STORE_PARTICLE_MOM(prt, sub->h_pxi4, n);
   }
 
   free(xi4);

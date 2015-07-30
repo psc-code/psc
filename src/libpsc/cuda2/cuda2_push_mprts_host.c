@@ -256,35 +256,42 @@ calc_jxyz_3d(struct psc_fields *flds, particle_cuda2_real_t *xm, particle_cuda2_
 static void
 push_one(struct psc_fields *flds, struct psc_particles *prts, int n)
 {
-  particle_cuda2_t *prt = particles_cuda2_get_one(prts, n);
+  struct psc_particles_cuda2 *sub = psc_particles_cuda2(prts);
+
+  particle_cuda2_t prt;
+  _LOAD_PARTICLE_POS(prt, sub->h_xi4, n);
+  _LOAD_PARTICLE_MOM(prt, sub->h_pxi4, n);
   
   // field interpolation
   
   int lg[3], lh[3];
   particle_cuda2_real_t og[3], oh[3], xm[3];
-  find_idx_off_pos_1st_rel(&prt->xi4.x, lg, og, xm, 0.f, prm.dxi); // FIXME passing xi hack
-  find_idx_off_1st_rel(&prt->xi4.x, lh, oh, -.5f, prm.dxi);
+  find_idx_off_pos_1st_rel(&prt.xi4.x, lg, og, xm, 0.f, prm.dxi); // FIXME passing xi hack
+  find_idx_off_1st_rel(&prt.xi4.x, lh, oh, -.5f, prm.dxi);
   
   // FIELD INTERPOLATION
   particle_cuda2_real_t exq, eyq, ezq, hxq, hyq, hzq;
   INTERPOLATE_1ST_EC(flds, exq, eyq, ezq, hxq, hyq, hzq);
   
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0)
-  int kind = cuda_float_as_int(prt->xi4.w);
+  int kind = cuda_float_as_int(prt.xi4.w);
   particle_cuda2_real_t dq = prm.dq_kind[kind];
-  push_pxi(prt, exq, eyq, ezq, hxq, hyq, hzq, dq);
+  push_pxi(&prt, exq, eyq, ezq, hxq, hyq, hzq, dq);
   
   particle_cuda2_real_t vxi[3];
-  calc_vxi(vxi, prt);
+  calc_vxi(vxi, &prt);
   // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0)
-  push_xi(prt, vxi, prm.dt);
+  push_xi(&prt, vxi, prm.dt);
   
   int lf[3];
   particle_cuda2_real_t of[3], xp[3];
-  find_idx_off_pos_1st_rel(&prt->xi4.x, lf, of, xp, 0.f, prm.dxi);
+  find_idx_off_pos_1st_rel(&prt.xi4.x, lf, of, xp, 0.f, prm.dxi);
 
   // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
-  calc_jxyz_3d(flds, xm, xp, lf, lg, prt, vxi);
+  calc_jxyz_3d(flds, xm, xp, lf, lg, &prt, vxi);
+
+  _STORE_PARTICLE_POS(prt, sub->h_xi4, n);
+  _STORE_PARTICLE_MOM(prt, sub->h_pxi4, n);
 }
 
 static void
