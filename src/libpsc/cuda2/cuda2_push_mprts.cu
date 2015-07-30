@@ -130,8 +130,7 @@ set_consts(struct cuda_params *prm)
 
 static void
 _set_params(struct cuda_params *prm, struct psc *psc,
-	    struct psc_mfields *mflds,
-	    struct psc_mparticles *mprts_cuda)
+	    struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
   prm->dt = psc->dt;
   for (int d = 0; d < 3; d++) {
@@ -148,12 +147,11 @@ _set_params(struct cuda_params *prm, struct psc *psc,
     prm->dq[k] = prm->dqs * psc->kinds[k].q / psc->kinds[k].m;
   }
 
-  if (mprts_cuda && mprts_cuda->nr_patches > 0) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts_cuda, 0);
-    struct psc_particles_cuda *prts_cuda = psc_particles_cuda(prts);
+  if (mprts && mprts->nr_patches > 0) {
+    struct psc_mparticles_cuda2 *mprts_sub = psc_mparticles_cuda2(mprts);
     for (int d = 0; d < 3; d++) {
-      prm->b_mx[d] = prts_cuda->b_mx[d];
-      prm->b_dxi[d] = prts_cuda->b_dxi[d];
+      prm->b_mx[d] = mprts_sub->b_mx[d];
+      //      prm->b_dxi[d] = prts_cuda->b_dxi[d];
     }
   }
 
@@ -571,14 +569,13 @@ zero_currents(struct psc_mfields *mflds)
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 static void
-cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds,
-		   struct psc_mparticles *mprts_cuda)
+cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
   struct psc_mparticles_cuda2 *mprts_sub = psc_mparticles_cuda2(mprts);
   struct psc_mfields_cuda2 *mflds_sub = psc_mfields_cuda2(mflds);
 
   struct cuda_params prm;
-  _set_params(&prm, ppsc, mflds, mprts_cuda);
+  _set_params(&prm, ppsc, mprts, mflds);
   set_consts(&prm);
 
   unsigned int fld_size = mflds->nr_fields *
@@ -588,7 +585,7 @@ cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds,
 
   int gx, gy;
   gx = prm.b_mx[1];
-  gy = prm.b_mx[2] * mprts_cuda->nr_patches;
+  gy = prm.b_mx[2] * mprts->nr_patches;
 
   dim3 dimGrid(gx, gy);
 
@@ -603,28 +600,11 @@ cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds,
 }
 
 // ----------------------------------------------------------------------
-// yz_cuda_push_mprts
-
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
-static void
-yz_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds,
-		   struct psc_mparticles *mprts_cuda)
-{
-  struct psc_mparticles_cuda *mprts_cuda_sub = psc_mparticles_cuda(mprts_cuda);
-    
-  psc_mparticles_cuda_copy_to_dev(mprts_cuda);
-  
-  assert(!mprts_cuda_sub->need_reorder);
-  cuda_push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(mprts, mflds, mprts_cuda);
-}
-
-// ----------------------------------------------------------------------
 // cuda2_1vbec_push_mprts_yz
 
 void
-cuda2_1vbec_push_mprts_yz(struct psc_mparticles *mprts, struct psc_mfields *mflds,
-			  struct psc_mparticles *mprts_cuda)
+cuda2_1vbec_push_mprts_yz(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
-  yz_cuda_push_mprts<1, 4, 4>(mprts, mflds, mprts_cuda);
+  cuda_push_mprts_ab<1, 4, 4>(mprts, mflds);
 }
 
