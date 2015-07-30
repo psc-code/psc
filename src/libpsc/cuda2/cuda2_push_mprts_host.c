@@ -372,7 +372,7 @@ push_one_xyz(struct psc_mparticles *mprts, struct psc_mfields *mflds, int n, int
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0)
   int kind = cuda_float_as_int(prt.xi4.w);
   particle_cuda2_real_t dq = prm.dq_kind[kind];
-  push_pxi(&prt, exq, eyq, ezq, hxq, hyq, hzq, dq);
+  //  push_pxi(&prt, exq, eyq, ezq, hxq, hyq, hzq, dq);
   
   particle_cuda2_real_t vxi[3];
   calc_vxi(vxi, &prt);
@@ -387,7 +387,7 @@ push_one_xyz(struct psc_mparticles *mprts, struct psc_mfields *mflds, int n, int
 #warning should be xyz
   //  calc_jxyz_3d_yz(flds, xm, xp, lf, lg, &prt, vxi);
 
-  //  _STORE_PARTICLE_POS(prt, mprts_sub->h_xi4, n);
+  _STORE_PARTICLE_POS(prt, mprts_sub->h_xi4, n);
   _STORE_PARTICLE_MOM(prt, mprts_sub->h_pxi4, n);
 }
 

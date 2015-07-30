@@ -219,7 +219,7 @@ __device__ static void
 push_xi_xyz(struct d_particle *p, const real vxi[3], real dt)
 {
   int d;
-  for (d = 1; d < 3; d++) {
+  for (d = 0; d < 3; d++) {
     p->xi[d] += dt * vxi[d];
   }
 }
@@ -356,7 +356,7 @@ push_part_one_xyz(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
   LOAD_PARTICLE_MOM_(*prt, d_pxi4, n);
-  push_pxi_dt(prt, exq, eyq, ezq, hxq, hyq, hzq);
+  //  push_pxi_dt(prt, exq, eyq, ezq, hxq, hyq, hzq);
   STORE_PARTICLE_MOM_(*prt, d_pxi4, n);
 }
 
@@ -627,7 +627,7 @@ calc_j_xyz(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 
   // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
   push_xi_xyz(prt, vxi, prm.dt);
-  //  STORE_PARTICLE_POS_(*prt, d_xi4, n);
+  STORE_PARTICLE_POS_(*prt, d_xi4, n);
 
 #if 0
   // save block_idx for new particle position at x^(n+1.5)

@@ -2,10 +2,11 @@
 #include "psc_push_particles_private.h"
 
 #include "psc_cuda2.h"
+#include "psc_particles_cuda2.h"
 
 #include <string.h>
 
-#define GOLD
+//#define GOLD
 
 // ======================================================================
 // psc_push_particles: subclass "1vb_cuda2"
@@ -52,6 +53,15 @@ psc_push_particles_1vbec_push_mprts_xyz(struct psc_push_particles *push,
   struct psc_mfields *mflds =
     psc_mfields_get_as(mflds_base, "cuda2", EX, EX + 6);
 
+  struct psc_mparticles_cuda2 *mprts_sub = psc_mparticles_cuda2(mprts);
+  mprintf("A xi4 %g %g %g pxi4 %g %g %g\n",
+	  mprts_sub->h_xi4[10].x,
+	  mprts_sub->h_xi4[10].y,
+	  mprts_sub->h_xi4[10].z,
+	  mprts_sub->h_pxi4[10].x,
+	  mprts_sub->h_pxi4[10].y,
+	  mprts_sub->h_pxi4[10].z);
+
 #ifdef GOLD
   cuda2_1vbec_push_mprts_xyz_gold(mprts, mflds);
 #else
@@ -63,6 +73,14 @@ psc_push_particles_1vbec_push_mprts_xyz(struct psc_push_particles *push,
   psc_mparticles_cuda2_copy_to_host(mprts);
   psc_mfields_cuda2_copy_to_host(mflds);
 #endif
+
+  mprintf("B xi4 %g %g %g pxi4 %g %g %g\n",
+	  mprts_sub->h_xi4[10].x,
+	  mprts_sub->h_xi4[10].y,
+	  mprts_sub->h_xi4[10].z,
+	  mprts_sub->h_pxi4[10].x,
+	  mprts_sub->h_pxi4[10].y,
+	  mprts_sub->h_pxi4[10].z);
 
   psc_mparticles_put_as(mprts, mprts_base, 0);
   psc_mfields_put_as(mflds, mflds_base, JXI, JXI + 3);	
