@@ -307,12 +307,12 @@ curr_3d_vb_one_yz(struct psc_fields *pf, particle_cuda2_real_t x0[3],
   particle_cuda2_real_t x[3] = {};
   for (int d = 1; d < 3; d++) {
     i[d] = particle_cuda2_real_fint(x0[d]);
+    if (x0[d] == i[d] && dx[d] < 0) {
+      i[d]--;
+    }
     x[d] = x0[d] - (i[d] + .5f);
     if (i[d] != i_[d]) {
-      mprintf("d %d i %d i_ %d x %g x_ %g\n", d, i[d], i_[d], x[d], x_[d]);
-      assert(fabsf((x[d] + i[d]) - (x_[d] + i_[d])) < 1e-5);
-      i[d] = i_[d];
-      x[d] = x_[d];
+      mprintf("d %d i %d i_ %d x %g x_ %g x0 %g dx %g\n", d, i[d], i_[d], x[d], x_[d], x0[d], dx[d]);
     } else {
       if (fabsf(x[d] - x_[d]) >= 1e-5) {
 	mprintf("d %d x %g x_ %g\n", d, x[d], x_[d]);
@@ -403,20 +403,33 @@ calc_j2_3d_yz(struct psc_fields *flds, particle_cuda2_real_t *xm, particle_cuda2
 	off[1] = 0;
 	off[2] = idiff[2];
 	calc_3d_dx1_yz(dx, x, dxt, off);
-	curr_3d_vb_cell_yz(flds, i, x, dx, fnq, dxt, off);
+	curr_3d_vb_one_yz(flds, xm, i, x, dx, fnq);
+	dxt[0] -= dx[0]; dxt[1] -= dx[1]; dxt[2] -= dx[2];
+	x[1] += dx[1] - off[1]; x[2] += dx[2] - off[2];
+	i[1] += off[1]; i[2] += off[2];
       } else {
 	first_dir = 1;
 	off[2] = 0;
 	off[1] = idiff[1];
 	calc_3d_dx1_yz(dx, x, dxt, off);
-	curr_3d_vb_cell_yz(flds, i, x, dx, fnq, dxt, off);
+	curr_3d_vb_one_yz(flds, xm, i, x, dx, fnq);
+	dxt[0] -= dx[0]; dxt[1] -= dx[1]; dxt[2] -= dx[2];
+	x[1] += dx[1] - off[1]; x[2] += dx[2] - off[2];
+	i[1] += off[1]; i[2] += off[2];
       }
       second_dir = 3 - first_dir;
       off[first_dir] = 0;
       off[second_dir] = idiff[second_dir];
       calc_3d_dx1_yz(dx, x, dxt, off);
-      curr_3d_vb_cell_yz(flds, i, x, dx, fnq, dxt, off);
-      curr_3d_vb_cell_yz(flds, i, x, dxt, fnq, NULL, NULL);
+      particle_cuda2_real_t x0[3] = { 0., x[1] + (i[1] + .5f), x[2] + (i[2] + .5f) };
+      curr_3d_vb_one_yz(flds, x0, i, x, dx, fnq);
+      dxt[0] -= dx[0]; dxt[1] -= dx[1]; dxt[2] -= dx[2];
+      x[1] += dx[1] - off[1]; x[2] += dx[2] - off[2];
+      i[1] += off[1]; i[2] += off[2];
+      {
+      particle_cuda2_real_t x0[3] = { 0., x[1] + (i[1] + .5f), x[2] + (i[2] + .5f) };
+      curr_3d_vb_one_yz(flds, x0, i, x, dxt, fnq);
+      }
     }
   }
 }
