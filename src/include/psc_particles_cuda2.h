@@ -31,6 +31,11 @@ struct psc_particles_cuda2 {
 
 #define psc_particles_cuda2(prts) mrc_to_subobj(prts, struct psc_particles_cuda2)
 
+struct psc_mparticles_cuda2 {
+};
+
+#define psc_mparticles_cuda2(prts) mrc_to_subobj(prts, struct psc_mparticles_cuda2)
+
 #define particle_cuda2_wni(p) ({				\
       particle_cuda2_real_t rv;					\
       int kind = cuda_float_as_int(p->xi4.w);			\

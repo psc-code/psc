@@ -14,61 +14,6 @@
 // psc_particles "cuda2"
 
 // ----------------------------------------------------------------------
-// psc_particles_cuda2_setup
-
-static void
-psc_particles_cuda2_setup(struct psc_particles *prts)
-{
-  struct psc_particles_cuda2 *sub = psc_particles_cuda2(prts);
-
-  sub->n_alloced = prts->n_part * 1.2;
-
-  for (int d = 0; d < 3; d++) {
-    sub->dxi[d] = 1.f / ppsc->patch[prts->p].dx[d];
-    assert(ppsc->patch[prts->p].ldims[d] % psc_particles_cuda2_bs[d] == 0);
-    sub->b_mx[d] = ppsc->patch[prts->p].ldims[d] / psc_particles_cuda2_bs[d];
-  }
-  sub->nr_blocks = sub->b_mx[0] * sub->b_mx[1] * sub->b_mx[2];
-
-  // on host
-  sub->h_xi4 = calloc(sub->n_alloced, sizeof(*sub->h_xi4));
-  sub->h_pxi4 = calloc(sub->n_alloced, sizeof(*sub->h_pxi4));
-  sub->h_xi4_alt = calloc(sub->n_alloced, sizeof(*sub->h_xi4_alt));
-  sub->h_pxi4_alt = calloc(sub->n_alloced, sizeof(*sub->h_pxi4_alt));
-  sub->b_idx = calloc(sub->n_alloced, sizeof(*sub->b_idx));
-  sub->b_ids = calloc(sub->n_alloced, sizeof(*sub->b_ids));
-  sub->b_cnt = calloc(sub->nr_blocks + 1, sizeof(*sub->b_cnt));
-  sub->b_off = calloc(sub->nr_blocks + 2, sizeof(*sub->b_off));
-
-  // on device
-  sub->d_xi4 = cuda_calloc(sub->n_alloced, sizeof(*sub->d_xi4));
-  sub->d_pxi4 = cuda_calloc(sub->n_alloced, sizeof(*sub->d_pxi4));
-  sub->d_b_off = cuda_calloc(sub->nr_blocks + 2, sizeof(*sub->b_off));
-}
-
-// ----------------------------------------------------------------------
-// psc_particles_cuda2_destroy
-
-static void
-psc_particles_cuda2_destroy(struct psc_particles *prts)
-{
-  struct psc_particles_cuda2 *sub = psc_particles_cuda2(prts);
-
-  free(sub->h_xi4);
-  free(sub->h_pxi4);
-  free(sub->h_xi4_alt);
-  free(sub->h_pxi4_alt);
-  free(sub->b_idx);
-  free(sub->b_ids);
-  free(sub->b_cnt);
-  free(sub->b_off);
-
-  cuda_free(sub->d_xi4);
-  cuda_free(sub->d_pxi4);
-  cuda_free(sub->d_b_off);
-}
-
-// ----------------------------------------------------------------------
 // psc_mparticles_cuda2_copy_to_device
 
 void
@@ -358,7 +303,7 @@ psc_particles_cuda2_copy_from_cuda(struct psc_particles *prts,
   free(pxi4);
 }
 
-// ======================================================================
+// ----------------------------------------------------------------------
 // psc_particles: subclass "cuda2"
 
 static struct mrc_obj_method psc_particles_cuda2_methods[] = {
@@ -373,8 +318,6 @@ struct psc_particles_ops psc_particles_cuda2_ops = {
   .name                    = "cuda2",
   .size                    = sizeof(struct psc_particles_cuda2),
   .methods                 = psc_particles_cuda2_methods,
-  .setup                   = psc_particles_cuda2_setup,
-  .destroy                 = psc_particles_cuda2_destroy,
 #if 0
 #ifdef HAVE_LIBHDF5_HL
   .read                    = psc_particles_cuda2_read,
@@ -387,7 +330,84 @@ struct psc_particles_ops psc_particles_cuda2_ops = {
 // ======================================================================
 // psc_mparticles: subclass "cuda2"
   
+// ----------------------------------------------------------------------
+// psc_mparticles_cuda2_setup
+
+static void
+psc_mparticles_cuda2_setup(struct psc_mparticles *mprts)
+{
+  struct psc_mparticles_cuda2 *sub = psc_mparticles_cuda2(mprts);
+
+  psc_mparticles_setup_super(mprts);
+
+  if (mprts->nr_patches == 0) {
+    return;
+  }
+  
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles_cuda2 *prts_sub = psc_particles_cuda2(prts);
+
+    prts_sub->n_alloced = prts->n_part * 1.2;
+
+    for (int d = 0; d < 3; d++) {
+      prts_sub->dxi[d] = 1.f / ppsc->patch[prts->p].dx[d];
+      assert(ppsc->patch[prts->p].ldims[d] % psc_particles_cuda2_bs[d] == 0);
+      prts_sub->b_mx[d] = ppsc->patch[prts->p].ldims[d] / psc_particles_cuda2_bs[d];
+    }
+    prts_sub->nr_blocks = prts_sub->b_mx[0] * prts_sub->b_mx[1] * prts_sub->b_mx[2];
+
+    // on host
+    prts_sub->h_xi4 = calloc(prts_sub->n_alloced, sizeof(*prts_sub->h_xi4));
+    prts_sub->h_pxi4 = calloc(prts_sub->n_alloced, sizeof(*prts_sub->h_pxi4));
+    prts_sub->h_xi4_alt = calloc(prts_sub->n_alloced, sizeof(*prts_sub->h_xi4_alt));
+    prts_sub->h_pxi4_alt = calloc(prts_sub->n_alloced, sizeof(*prts_sub->h_pxi4_alt));
+    prts_sub->b_idx = calloc(prts_sub->n_alloced, sizeof(*prts_sub->b_idx));
+    prts_sub->b_ids = calloc(prts_sub->n_alloced, sizeof(*prts_sub->b_ids));
+    prts_sub->b_cnt = calloc(prts_sub->nr_blocks + 1, sizeof(*prts_sub->b_cnt));
+    prts_sub->b_off = calloc(prts_sub->nr_blocks + 2, sizeof(*prts_sub->b_off));
+  
+    // on device
+    prts_sub->d_xi4 = cuda_calloc(prts_sub->n_alloced, sizeof(*prts_sub->d_xi4));
+    prts_sub->d_pxi4 = cuda_calloc(prts_sub->n_alloced, sizeof(*prts_sub->d_pxi4));
+    prts_sub->d_b_off = cuda_calloc(prts_sub->nr_blocks + 2, sizeof(*prts_sub->b_off));
+  }
+}
+
+// ----------------------------------------------------------------------
+// psc_mparticles_cuda2_destroy
+
+static void
+psc_mparticles_cuda2_destroy(struct psc_mparticles *mprts)
+{
+  struct psc_mparticles_cuda2 *sub = psc_mparticles_cuda2(mprts);
+
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles_cuda2 *prts_sub = psc_particles_cuda2(prts);
+
+    free(prts_sub->h_xi4);
+    free(prts_sub->h_pxi4);
+    free(prts_sub->h_xi4_alt);
+    free(prts_sub->h_pxi4_alt);
+    free(prts_sub->b_idx);
+    free(prts_sub->b_ids);
+    free(prts_sub->b_cnt);
+    free(prts_sub->b_off);
+    
+    cuda_free(prts_sub->d_xi4);
+    cuda_free(prts_sub->d_pxi4);
+    cuda_free(prts_sub->d_b_off);
+  }
+}
+
+// ----------------------------------------------------------------------
+// psc_mparticles: subclass "cuda2"
+
 struct psc_mparticles_ops psc_mparticles_cuda2_ops = {
   .name                    = "cuda2",
+  .size                    = sizeof(struct psc_mparticles_cuda2),
+  .setup                   = psc_mparticles_cuda2_setup,
+  .destroy                 = psc_mparticles_cuda2_destroy,
 };
 
