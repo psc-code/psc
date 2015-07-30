@@ -477,6 +477,14 @@ psc_mparticles_cuda2_setup_internals(struct psc_mparticles *mprts)
     assert(prts_sub->b_off[nr_blocks] == prts_sub->b_off[nr_blocks+1]);
     psc_particles_cuda2_check(prts);
   }
+  // FIXME, to keep consistency with per-patch
+  // swap in alt array
+  float4 *tmp_xi4 = sub->h_xi4;
+  float4 *tmp_pxi4 = sub->h_pxi4;
+  sub->h_xi4 = sub->h_xi4_alt;
+  sub->h_pxi4 = sub->h_pxi4_alt;
+  sub->h_xi4_alt = tmp_xi4;
+  sub->h_pxi4_alt = tmp_pxi4;
 
   unsigned int n_part = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {

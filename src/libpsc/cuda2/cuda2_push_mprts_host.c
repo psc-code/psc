@@ -254,13 +254,15 @@ calc_jxyz_3d(struct psc_fields *flds, particle_cuda2_real_t *xm, particle_cuda2_
 // ======================================================================
 
 static void
-push_one(struct psc_fields *flds, struct psc_particles *prts, int n)
+push_one(struct psc_mparticles *mprts, struct psc_mfields *mflds, int n, int p)
 {
-  struct psc_particles_cuda2 *sub = psc_particles_cuda2(prts);
+  struct psc_mparticles_cuda2 *mprts_sub = psc_mparticles_cuda2(mprts);
+
+  struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
 
   particle_cuda2_t prt;
-  _LOAD_PARTICLE_POS(prt, sub->h_xi4, n);
-  _LOAD_PARTICLE_MOM(prt, sub->h_pxi4, n);
+  _LOAD_PARTICLE_POS(prt, mprts_sub->h_xi4, n);
+  _LOAD_PARTICLE_MOM(prt, mprts_sub->h_pxi4, n);
   
   // field interpolation
   
@@ -290,8 +292,8 @@ push_one(struct psc_fields *flds, struct psc_particles *prts, int n)
   // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
   calc_jxyz_3d(flds, xm, xp, lf, lg, &prt, vxi);
 
-  _STORE_PARTICLE_POS(prt, sub->h_xi4, n);
-  _STORE_PARTICLE_MOM(prt, sub->h_pxi4, n);
+  _STORE_PARTICLE_POS(prt, mprts_sub->h_xi4, n);
+  _STORE_PARTICLE_MOM(prt, mprts_sub->h_pxi4, n);
 }
 
 void
@@ -306,8 +308,7 @@ cuda2_1vbec_push_mprts_yz_gold(struct psc_mparticles *mprts, struct psc_mfields 
   for (int b = 0; b < mprts_sub->nr_blocks_total; b++) {
     int p = b / mprts_sub->nr_blocks;
     for (int n = mprts_sub->h_b_off[b]; n < mprts_sub->h_b_off[b+1]; n++) {
-      push_one(psc_mfields_get_patch(mflds, p),
-	       psc_mparticles_get_patch(mprts, p), n);
+      push_one(mprts, mflds, n, p);
     }
   }
 }
