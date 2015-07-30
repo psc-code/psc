@@ -83,7 +83,7 @@ psc_particles_cuda2_get_b_idx(struct psc_particles *prts, int n)
   particle_cuda2_t *prt = particles_cuda2_get_one(prts, n);
   particle_cuda2_real_t of[3];
   int b_pos[3], *b_mx = sub->b_mx;
-  find_idx_off_1st_rel(&prt->xi, b_pos, of, 0.f, sub->dxi);
+  find_idx_off_1st_rel(&prt->xi4.x, b_pos, of, 0.f, sub->dxi);
   for (int d = 0; d < 3; d++) {
     b_pos[d] /= psc_particles_cuda2_bs[d];
   }
@@ -190,7 +190,7 @@ psc_particles_cuda2_check(struct psc_particles *prts)
 
 static void
 psc_particles_cuda2_copy_to_single(struct psc_particles *prts_base,
-				    struct psc_particles *prts, unsigned int flags)
+				   struct psc_particles *prts, unsigned int flags)
 {
   prts->n_part = prts_base->n_part;
   assert(prts->n_part <= psc_particles_single(prts)->n_alloced);
@@ -198,14 +198,14 @@ psc_particles_cuda2_copy_to_single(struct psc_particles *prts_base,
     particle_cuda2_t *part_base = particles_cuda2_get_one(prts_base, n);
     particle_single_t *part = particles_single_get_one(prts, n);
     
-    part->xi      = part_base->xi;
-    part->yi      = part_base->yi;
-    part->zi      = part_base->zi;
-    part->pxi     = part_base->pxi;
-    part->pyi     = part_base->pyi;
-    part->pzi     = part_base->pzi;
-    part->qni_wni = part_base->qni_wni;
-    part->kind    = part_base->kind;
+    part->xi      = part_base->xi4.x;
+    part->yi      = part_base->xi4.y;
+    part->zi      = part_base->xi4.z;
+    part->kind    = cuda_float_as_int(part_base->xi4.w);
+    part->pxi     = part_base->pxi4.x;
+    part->pyi     = part_base->pxi4.y;
+    part->pzi     = part_base->pxi4.z;
+    part->qni_wni = part_base->pxi4.w;
   }
 }
 
@@ -223,14 +223,14 @@ psc_particles_cuda2_copy_from_single(struct psc_particles *prts_base,
     particle_cuda2_t *part_base = particles_cuda2_get_one(prts_base, n);
     particle_single_t *part = particles_single_get_one(prts, n);
 
-    part_base->xi      = part->xi;
-    part_base->yi      = part->yi;
-    part_base->zi      = part->zi;
-    part_base->pxi     = part->pxi;
-    part_base->pyi     = part->pyi;
-    part_base->pzi     = part->pzi;
-    part_base->qni_wni = part->qni_wni;
-    part_base->kind    = part->kind;
+    part_base->xi4.x   = part->xi;
+    part_base->xi4.y   = part->yi;
+    part_base->xi4.z   = part->zi;
+    part_base->xi4.w   = cuda_int_as_float(part->kind);
+    part_base->pxi4.x  = part->pxi;
+    part_base->pxi4.y  = part->pyi;
+    part_base->pxi4.z  = part->pzi;
+    part_base->pxi4.w  = part->qni_wni;
   }
 
   psc_particles_cuda2_sort(prts_base);
@@ -254,14 +254,14 @@ psc_particles_cuda2_copy_to_cuda(struct psc_particles *prts,
   for (int n = 0; n < prts->n_part; n++) {
     particle_cuda2_t *prt = particles_cuda2_get_one(prts, n);
     
-    xi4[n].x  = prt->xi;
-    xi4[n].y  = prt->yi;
-    xi4[n].z  = prt->zi;
-    xi4[n].w  = cuda_int_as_float(prt->kind);
-    pxi4[n].x = prt->pxi;
-    pxi4[n].y = prt->pyi;
-    pxi4[n].z = prt->pzi;
-    pxi4[n].w = prt->qni_wni;
+    xi4[n].x  = prt->xi4.x;
+    xi4[n].y  = prt->xi4.y;
+    xi4[n].z  = prt->xi4.z;
+    xi4[n].w  = prt->xi4.w;
+    pxi4[n].x = prt->pxi4.x;
+    pxi4[n].y = prt->pxi4.y;
+    pxi4[n].z = prt->pxi4.z;
+    pxi4[n].w = prt->pxi4.w;
   }
   
   __particles_cuda_to_device(prts_cuda, xi4, pxi4);
@@ -286,14 +286,14 @@ psc_particles_cuda2_copy_from_cuda(struct psc_particles *prts,
   for (int n = 0; n < prts->n_part; n++) {
     particle_cuda2_t *prt = particles_cuda2_get_one(prts, n);
 
-    prt->xi      = xi4[n].x;
-    prt->yi      = xi4[n].y;
-    prt->zi      = xi4[n].z;
-    prt->kind    = cuda_float_as_int(xi4[n].w);
-    prt->pxi     = pxi4[n].x;
-    prt->pyi     = pxi4[n].y;
-    prt->pzi     = pxi4[n].z;
-    prt->qni_wni = pxi4[n].w;
+    prt->xi4.x   = xi4[n].x;
+    prt->xi4.y   = xi4[n].y;
+    prt->xi4.z   = xi4[n].z;
+    prt->xi4.w   = xi4[n].w;
+    prt->pxi4.x  = pxi4[n].x;
+    prt->pxi4.y  = pxi4[n].y;
+    prt->pxi4.z  = pxi4[n].z;
+    prt->pxi4.w  = pxi4[n].w;
   }
 
   free(xi4);

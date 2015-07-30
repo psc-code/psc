@@ -6,6 +6,8 @@
 
 #include "psc_fields_cuda2.h"
 
+#include "../cuda/psc_cuda.h"
+
 #define MAX_NR_KINDS (10)
 
 struct params_1vb {
@@ -72,26 +74,26 @@ static inline void
 calc_vxi(particle_cuda2_real_t vxi[3], particle_cuda2_t *part)
 {
   particle_cuda2_real_t root = 1.f 
-    / particle_cuda2_real_sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
-  vxi[0] = part->pxi * root;
-  vxi[1] = part->pyi * root;
-  vxi[2] = part->pzi * root;
+    / particle_cuda2_real_sqrt(1.f + sqr(part->pxi4.x) + sqr(part->pxi4.y) + sqr(part->pxi4.z));
+  vxi[0] = part->pxi4.x * root;
+  vxi[1] = part->pxi4.y * root;
+  vxi[2] = part->pxi4.z * root;
 }
 
 static inline void
 push_xi(particle_cuda2_t *part, particle_cuda2_real_t vxi[3], particle_cuda2_real_t dt)
 {
-  part->yi += vxi[1] * dt;
-  part->zi += vxi[2] * dt;
+  part->xi4.y += vxi[1] * dt;
+  part->xi4.z += vxi[2] * dt;
 }
 
 static inline void
 push_pxi(particle_cuda2_t *part, particle_cuda2_real_t exq, particle_cuda2_real_t eyq, particle_cuda2_real_t ezq,
 	 particle_cuda2_real_t hxq, particle_cuda2_real_t hyq, particle_cuda2_real_t hzq, particle_cuda2_real_t dq)
 {
-  particle_cuda2_real_t pxm = part->pxi + dq*exq;
-  particle_cuda2_real_t pym = part->pyi + dq*eyq;
-  particle_cuda2_real_t pzm = part->pzi + dq*ezq;
+  particle_cuda2_real_t pxm = part->pxi4.x + dq*exq;
+  particle_cuda2_real_t pym = part->pxi4.y + dq*eyq;
+  particle_cuda2_real_t pzm = part->pxi4.z + dq*ezq;
   
   particle_cuda2_real_t root = dq / particle_cuda2_real_sqrt(1.f + pxm*pxm + pym*pym + pzm*pzm);
   particle_cuda2_real_t taux = hxq*root;
@@ -109,9 +111,9 @@ push_pxi(particle_cuda2_t *part, particle_cuda2_real_t exq, particle_cuda2_real_
 	       (2.f*tauy*tauz-2.f*taux)*pym +
 	       (1.f-taux*taux-tauy*tauy+tauz*tauz)*pzm)*tau;
   
-  part->pxi = pxp + dq * exq;
-  part->pyi = pyp + dq * eyq;
-  part->pzi = pzp + dq * ezq;
+  part->pxi4.x = pxp + dq * exq;
+  part->pxi4.y = pyp + dq * eyq;
+  part->pxi4.z = pzp + dq * ezq;
 }
 
 static inline void
@@ -226,9 +228,10 @@ calc_jxyz_3d(struct psc_fields *flds, particle_cuda2_real_t *xm, particle_cuda2_
     second_dir = 3 - first_dir;
   }
 
-  particle_cuda2_real_t fnq[3] = { particle_cuda2_wni(prt) * prm.fnqx_kind[prt->kind],
-				   particle_cuda2_wni(prt) * prm.fnqy_kind[prt->kind],
-				   particle_cuda2_wni(prt) * prm.fnqz_kind[prt->kind] };
+  int kind = cuda_float_as_int(prt->xi4.w);
+  particle_cuda2_real_t fnq[3] = { particle_cuda2_wni(prt) * prm.fnqx_kind[kind],
+				   particle_cuda2_wni(prt) * prm.fnqy_kind[kind],
+				   particle_cuda2_wni(prt) * prm.fnqz_kind[kind] };
   dx[0] = vxi[0] * prm.dt * prm.dxi[0];
 
   if (first_dir >= 0) {
@@ -259,15 +262,16 @@ push_one(struct psc_fields *flds, struct psc_particles *prts, int n)
   
   int lg[3], lh[3];
   particle_cuda2_real_t og[3], oh[3], xm[3];
-  find_idx_off_pos_1st_rel(&prt->xi, lg, og, xm, 0.f, prm.dxi); // FIXME passing xi hack
-  find_idx_off_1st_rel(&prt->xi, lh, oh, -.5f, prm.dxi);
+  find_idx_off_pos_1st_rel(&prt->xi4.x, lg, og, xm, 0.f, prm.dxi); // FIXME passing xi hack
+  find_idx_off_1st_rel(&prt->xi4.x, lh, oh, -.5f, prm.dxi);
   
   // FIELD INTERPOLATION
   particle_cuda2_real_t exq, eyq, ezq, hxq, hyq, hzq;
   INTERPOLATE_1ST_EC(flds, exq, eyq, ezq, hxq, hyq, hzq);
   
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0)
-  particle_cuda2_real_t dq = prm.dq_kind[prt->kind];
+  int kind = cuda_float_as_int(prt->xi4.w);
+  particle_cuda2_real_t dq = prm.dq_kind[kind];
   push_pxi(prt, exq, eyq, ezq, hxq, hyq, hzq, dq);
   
   particle_cuda2_real_t vxi[3];
@@ -277,7 +281,7 @@ push_one(struct psc_fields *flds, struct psc_particles *prts, int n)
   
   int lf[3];
   particle_cuda2_real_t of[3], xp[3];
-  find_idx_off_pos_1st_rel(&prt->xi, lf, of, xp, 0.f, prm.dxi);
+  find_idx_off_pos_1st_rel(&prt->xi4.x, lf, of, xp, 0.f, prm.dxi);
 
   // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
   calc_jxyz_3d(flds, xm, xp, lf, lg, prt, vxi);

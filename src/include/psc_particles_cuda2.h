@@ -4,15 +4,15 @@
 
 #include "psc_particles_private.h"
 
+#include "cuda_wrap.h"
+
 typedef float particle_cuda2_real_t;
 
 #define MPI_PARTICLES_CUDA2_REAL MPI_FLOAT
 
 typedef struct psc_particle_cuda2 {
-  particle_cuda2_real_t xi, yi, zi;
-  particle_cuda2_real_t qni_wni;
-  particle_cuda2_real_t pxi, pyi, pzi;
-  int kind;
+  float4 xi4;
+  float4 pxi4;
 } particle_cuda2_t;
 
 struct psc_particles_cuda2 {
@@ -39,7 +39,8 @@ particles_cuda2_get_one(struct psc_particles *prts, int n)
 
 #define particle_cuda2_wni(p) ({				\
       particle_cuda2_real_t rv;					\
-      rv = p->qni_wni / ppsc->kinds[p->kind].q;			\
+      int kind = cuda_float_as_int(p->xi4.w);			\
+      rv = p->pxi4.w / ppsc->kinds[kind].q;			\
       rv;							\
     })
 
