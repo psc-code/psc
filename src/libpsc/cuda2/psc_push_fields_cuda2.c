@@ -12,13 +12,20 @@ static void
 psc_push_fields_cuda2_push_mflds_E(struct psc_push_fields *push, struct psc_mfields *mflds_base)
 {
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "cuda2", JXI, HX + 3);
-  if (ppsc->domain.gdims[0] == 1) {
+  int *gdims = ppsc->domain.gdims;
+  if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) {
 #ifdef GOLD
     cuda2_push_mflds_E_yz_gold(mflds);
 #else
     psc_mfields_cuda2_copy_to_device(mflds);
     cuda2_push_mflds_E_yz(mflds);
     psc_mfields_cuda2_copy_to_host(mflds);
+#endif
+  } else if (gdims[0] > 1 && gdims[1] > 1 && gdims[2] > 1) {
+#ifdef GOLD
+    cuda2_push_mflds_E_xyz_gold(mflds);
+#else
+    assert(0);
 #endif
   } else {
     assert(0);
@@ -33,13 +40,20 @@ static void
 psc_push_fields_cuda2_push_mflds_H(struct psc_push_fields *push, struct psc_mfields *mflds_base)
 {
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "cuda2", EX, HX + 3);
-  if (ppsc->domain.gdims[0] == 1) {
+  int *gdims = ppsc->domain.gdims;
+  if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) {
 #ifdef GOLD
     cuda2_push_mflds_H_yz_gold(mflds);
 #else
     psc_mfields_cuda2_copy_to_device(mflds);
     cuda2_push_mflds_H_yz(mflds);
     psc_mfields_cuda2_copy_to_host(mflds);
+#endif
+  } else if (gdims[0] > 1 && gdims[1] > 1 && gdims[2] > 1) {
+#ifdef GOLD
+    cuda2_push_mflds_H_xyz_gold(mflds);
+#else
+    assert(0);
 #endif
   } else {
     assert(0);

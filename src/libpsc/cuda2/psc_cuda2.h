@@ -32,6 +32,9 @@ EXTERN_C void cuda2_push_mflds_H_yz_gold(struct psc_mfields *mflds);
 EXTERN_C void cuda2_push_mflds_E_yz(struct psc_mfields *mflds);
 EXTERN_C void cuda2_push_mflds_H_yz(struct psc_mfields *mflds);
 
+EXTERN_C void cuda2_push_mflds_E_xyz_gold(struct psc_mfields *mflds);
+EXTERN_C void cuda2_push_mflds_H_xyz_gold(struct psc_mfields *mflds);
+
 EXTERN_C void cuda2_1vbec_push_mprts_yz_gold(struct psc_mparticles *mprts,
 					     struct psc_mfields *mflds);
 EXTERN_C void cuda2_1vbec_push_mprts_yz(struct psc_mparticles *mprts,
