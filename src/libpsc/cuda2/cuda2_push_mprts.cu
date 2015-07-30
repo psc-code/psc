@@ -574,7 +574,7 @@ static void
 cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds,
 		   struct psc_mparticles *mprts_cuda)
 {
-  struct psc_mparticles_cuda *mprts_cuda_sub = psc_mparticles_cuda(mprts_cuda);
+  struct psc_mparticles_cuda2 *mprts_sub = psc_mparticles_cuda2(mprts);
   struct psc_mfields_cuda2 *mflds_sub = psc_mfields_cuda2(mflds);
 
   struct cuda_params prm;
@@ -595,7 +595,7 @@ cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds,
   push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
     <<<dimGrid, THREADS_PER_BLOCK>>>
     (prm,
-     mprts_cuda_sub->d_xi4, mprts_cuda_sub->d_pxi4, mprts_cuda_sub->d_off,
+     mprts_sub->d_xi4, mprts_sub->d_pxi4, mprts_sub->d_b_off,
      mflds_sub->d_flds, fld_size);
   cuda_sync_if_enabled();
 

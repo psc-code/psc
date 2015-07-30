@@ -19,9 +19,6 @@ struct psc_particles_cuda2 {
   unsigned int *b_cnt;
   unsigned int *b_off;
 
-  // on device
-  unsigned int *d_b_off;
-
   int n_alloced;
   particle_cuda2_real_t dxi[3];
   int b_mx[3];
@@ -46,6 +43,7 @@ struct psc_mparticles_cuda2 {
 
   // on device
   float4 *d_xi4, *d_pxi4;
+  unsigned int *d_b_off;
 };
 
 #define psc_mparticles_cuda2(prts) mrc_to_subobj(prts, struct psc_mparticles_cuda2)

@@ -19,11 +19,11 @@
 void
 psc_mparticles_cuda2_copy_to_device(struct psc_mparticles *mprts)
 {
-#if 0
-  struct psc_mparticles_cuda2 *sub = psc_mparticles_cuda2(mflds);
+  struct psc_mparticles_cuda2 *sub = psc_mparticles_cuda2(mprts);
 
-  cuda_memcpy_device_from_host(sub->d_xi4, sub->h_xi4, mflds->n_parts * sizeof(*sub->d_xi4));
-#endif
+  cuda_memcpy_device_from_host(sub->d_xi4, sub->h_xi4, sub->n_part_total * sizeof(*sub->d_xi4));
+  cuda_memcpy_device_from_host(sub->d_pxi4, sub->h_pxi4, sub->n_part_total * sizeof(*sub->d_pxi4));
+  cuda_memcpy_device_from_host(sub->d_b_off, sub->h_b_off, (sub->nr_blocks_total + 2) * sizeof(*sub->d_b_off));
 }
 
 // ----------------------------------------------------------------------
@@ -32,6 +32,11 @@ psc_mparticles_cuda2_copy_to_device(struct psc_mparticles *mprts)
 void
 psc_mparticles_cuda2_copy_to_host(struct psc_mparticles *mprts)
 {
+  struct psc_mparticles_cuda2 *sub = psc_mparticles_cuda2(mprts);
+
+  cuda_memcpy_host_from_device(sub->h_xi4, sub->d_xi4, sub->n_part_total * sizeof(*sub->h_xi4));
+  cuda_memcpy_host_from_device(sub->h_pxi4, sub->d_pxi4, sub->n_part_total * sizeof(*sub->h_pxi4));
+  cuda_memcpy_host_from_device(sub->h_b_off, sub->d_b_off, (sub->nr_blocks_total + 2) * sizeof(*sub->h_b_off));
 }
 
 // ----------------------------------------------------------------------
@@ -363,6 +368,7 @@ psc_mparticles_cuda2_setup(struct psc_mparticles *mprts)
 
   sub->d_xi4 = cuda_calloc(sub->n_alloced_total, sizeof(*sub->d_xi4));
   sub->d_pxi4 = cuda_calloc(sub->n_alloced_total, sizeof(*sub->d_pxi4));
+  sub->d_b_off = cuda_calloc(sub->nr_blocks_total + 2, sizeof(*sub->d_b_off));
   
   float4 *h_xi4 = sub->h_xi4;
   float4 *h_pxi4 = sub->h_pxi4;
@@ -394,9 +400,6 @@ psc_mparticles_cuda2_setup(struct psc_mparticles *mprts)
     prts_sub->b_ids = calloc(prts_sub->n_alloced, sizeof(*prts_sub->b_ids));
     prts_sub->b_cnt = calloc(prts_sub->nr_blocks + 1, sizeof(*prts_sub->b_cnt));
     prts_sub->b_off = calloc(prts_sub->nr_blocks + 2, sizeof(*prts_sub->b_off));
-  
-    // on device
-    prts_sub->d_b_off = cuda_calloc(prts_sub->nr_blocks + 2, sizeof(*prts_sub->b_off));
   }
 }
 
@@ -416,8 +419,6 @@ psc_mparticles_cuda2_destroy(struct psc_mparticles *mprts)
     free(prts_sub->b_ids);
     free(prts_sub->b_cnt);
     free(prts_sub->b_off);
-    
-    cuda_free(prts_sub->d_b_off);
   }
 
   free(sub->h_xi4);
@@ -428,6 +429,7 @@ psc_mparticles_cuda2_destroy(struct psc_mparticles *mprts)
 
   cuda_free(sub->d_xi4);
   cuda_free(sub->d_pxi4);
+  cuda_free(sub->d_b_off);
 }
 
 // ----------------------------------------------------------------------
