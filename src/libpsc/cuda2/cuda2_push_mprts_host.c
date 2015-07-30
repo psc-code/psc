@@ -464,14 +464,14 @@ calc_j2_3d_yz(struct psc_fields *flds, particle_cuda2_real_t *xm, particle_cuda2
       calc_3d_dx1_yz(dx, x, dxt, off);
       particle_cuda2_real_t x0[3] = { 0., x[1] + (i[1] + .5f), x[2] + (i[2] + .5f) };
       particle_cuda2_real_t x1[3] = { x0[0] + dx[0], x0[1] + dx[1], x0[2] + dx[2] };
-      curr_3d_vb_one_yz(flds, x0, x1, dx, fnq);
+      curr_3d_vb_one_yz_(flds, x0, x1, fnq);
       dxt[0] -= dx[0]; dxt[1] -= dx[1]; dxt[2] -= dx[2];
       x[1] += dx[1] - off[1]; x[2] += dx[2] - off[2];
       i[1] += off[1]; i[2] += off[2];
       {
 	particle_cuda2_real_t x0[3] = { 0., x[1] + (i[1] + .5f), x[2] + (i[2] + .5f) };
 	particle_cuda2_real_t x1[3] = { x0[0] + dxt[0], x0[1] + dxt[1], x0[2] + dxt[2] };
-	curr_3d_vb_one_yz(flds, x0, x1, dxt, fnq);
+	curr_3d_vb_one_yz_(flds, x0, x1, fnq);
       }
     }
   }
