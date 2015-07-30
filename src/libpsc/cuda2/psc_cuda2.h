@@ -14,7 +14,7 @@
 
 #endif
 
-static const int psc_particles_cuda2_bs[3] = { 1, 2, 2 };
+static const int psc_particles_cuda2_bs[3] = { 1, 4, 4 };
 
 EXTERN_C void *cuda_calloc(size_t nmemb, size_t size);
 EXTERN_C void cuda_free(void *ptr);
