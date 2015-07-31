@@ -52,7 +52,7 @@ static int ggcm_mhd_get_3d_fld_lua(lua_State *L) {
   int nr_comps = lua_tointeger(L, -1);
   struct ggcm_mhd *mhd = (struct ggcm_mhd *) lua_touserdata(L, -2);
   struct mrc_fld *fld = ggcm_mhd_get_3d_fld(mhd, nr_comps);
-  mrc_fld_dict_add_int(fld, "mhd_type", MT_FULLY_CONSERVATIVE);
+  mrc_fld_dict_add_int(fld, "mhd_type", MT_GKEYLL);
   lua_pushlightuserdata(L, fld);
   return 1;
 }

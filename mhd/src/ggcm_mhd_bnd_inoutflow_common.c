@@ -498,8 +498,7 @@ ggcm_mhd_bnd_sub_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld,
   assert(m == 0 || m == 8);
 
   struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
-  int nr_comps = mrc_fld_nr_comps(f);
-  if (nr_comps == 18 || nr_comps == 28) {
+  if (MT == MT_GKEYLL) {
     obndra_gkeyll(bnd, f, m, bntim);
   } else {
     obndra_mhd(bnd, f, m, bntim);
