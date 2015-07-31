@@ -136,11 +136,14 @@ ggcm_mhd_setup_internal(struct ggcm_mhd *mhd)
 {
   const int *ghost_dims = mrc_fld_ghost_dims(mhd->fld);
   const int *dims = mrc_fld_dims(mhd->fld);
+  int shift = 0;
+  if (mhd->fld->_nr_spatial_dims == 3 
+   && mhd->fld->_is_aos) shift = 1;
   for (int d = 0; d < 3; d++) {
     // local domain size
-    mhd->im[d] = dims[d];
+    mhd->im[d] = dims[d+shift];
     // local domain size incl ghost points
-    mhd->img[d] = ghost_dims[d];
+    mhd->img[d] = ghost_dims[d+shift];
   }
 }
 
