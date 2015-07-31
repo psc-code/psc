@@ -413,29 +413,10 @@ obndra_gkeyll(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim)
   }
 }
 
-// ----------------------------------------------------------------------	
-// obndra
-//
-// set fluid boundary conditions at inflow boundary
-
-static void
-obndra(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim)
-{
-  int nr_comps = mrc_fld_nr_comps(f);
-  if (nr_comps == 18 || nr_comps == 28) {
-    obndra_gkeyll(bnd, f, mm, bntim);
-  } else {
-    obndra_mhd(bnd, f, mm, bntim);
-  }
-}
-
 static void
 obndrb(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm)
 {
   struct ggcm_mhd *mhd = bnd->mhd;
-
-  int nr_comps = mrc_fld_nr_comps(f);
-  if (nr_comps == 18 || nr_comps == 28) return;
 
   const int *sw = mrc_fld_spatial_sw(f), *dims = mrc_fld_spatial_dims(f);
   int swx = sw[0], swy = sw[1], swz = sw[2];
@@ -505,7 +486,6 @@ ggcm_mhd_bnd_sub_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld,
   struct ggcm_mhd *mhd = bnd->mhd;
   assert(mhd);
 
-
   static int PR;
   if (!PR) {
     PR = prof_register(__FUNCTION__, 1., 0, 0);
@@ -515,11 +495,16 @@ ggcm_mhd_bnd_sub_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld,
   int mhd_type;
   mrc_fld_get_param_int(fld, "mhd_type", &mhd_type);
   assert(mhd_type == MT);
+  assert(m == 0 || m == 8);
 
   struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
-  assert(m == 0 || m == 8);
-  obndra(bnd, f, m, bntim);
-  obndrb(bnd, f, m + BX);
+  int nr_comps = mrc_fld_nr_comps(f);
+  if (nr_comps == 18 || nr_comps == 28) {
+    obndra_gkeyll(bnd, f, m, bntim);
+  } else {
+    obndra_mhd(bnd, f, m, bntim);
+    obndrb(bnd, f, m + BX);
+  }
   mrc_fld_put_as(f, fld);
 
   prof_stop(PR);
