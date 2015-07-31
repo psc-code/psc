@@ -1,6 +1,6 @@
 #!/bin/sh 
 
-mpirun -n 1  ~/src/openggcm/target-build/csrc/libmrc/mhd/tests/mhd_gkeyll \
+mpirun -n 1  ../mhd_gkeyll \
     --mrc_crds_lx 0.  --mrc_crds_hx 6.28318530718 \
     --mrc_crds_ly 0.  --mrc_crds_hy 6.28318530718 \
     --mrc_crds_lz 0.  --mrc_crds_hz 1. \
