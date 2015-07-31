@@ -2,10 +2,15 @@
 #include "ggcm_mhd_bndsw.h"
 #include "ggcm_mhd_crds.h"
 #include "mrc_domain.h"
+#include "ggcm_mhd_bndsw_constant_5m.h"
+#include "ggcm_mhd_gkeyll.h"
 
 struct ggcm_mhd_bnd_sub {
   double bnvals[SW_NR];
+  bool apply_bndsw;
 };
+
+#define ggcm_mhd_bnd_sub(bnd) mrc_to_subobj(bnd, struct ggcm_mhd_bnd_sub);
 
 // FIXME
 // The B boundary conditions have numerous issues:
@@ -164,26 +169,22 @@ bnd_sw(struct ggcm_mhd *mhd, int ix, int iy, int iz, int p, float bn[SW_NR], flo
   }
 }
 
-// ----------------------------------------------------------------------	
-// obndra
+// ----------------------------------------------------------------------
+// obndra_mhd
 //
-// set fluid boundary conditions at inflow boundary
+// set fluid boundary conditions at inflow boundary for MHD fields
 
 static void
-obndra(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim)
+obndra_mhd(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim)
 {
   struct ggcm_mhd *mhd = bnd->mhd;
 
-  static int PR;
-  if (!PR) {
-    PR = prof_register(__FUNCTION__, 1., 0, 0);
-  }
-  prof_start(PR);
-  const int *sw = mrc_fld_spatial_sw(f);
+  const int *sw = mrc_fld_spatial_sw(f), *dims = mrc_fld_spatial_dims(f);
   int swx = sw[0], swy = sw[1], swz = sw[2];
-  int mx = mhd->im[0], my = mhd->im[1], mz = mhd->im[2];
+  int mx = dims[0], my = dims[1], mz = dims[2];
 
   for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
+
     if (mrc_domain_at_boundary_lo(mhd->domain, 0, p)) {
       for (int iz = -swz; iz < mz + swz; iz++) {
 	for (int iy = -swy; iy < my + swy; iy++) {
@@ -212,7 +213,7 @@ obndra(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim)
 	    M3(f, mm + BZ , ix,iy,iz, p) = bn[SW_BZ];
 	  }
 	}
-      }
+   }
     }
     if (mrc_domain_at_boundary_lo(mhd->domain, 1, p)) {
       for (int iz = -swz; iz < mz + swz; iz++) {
@@ -281,6 +282,158 @@ obndra(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim)
       }
     }
   }
+}
+
+// ----------------------------------------------------------------------	
+// obndra_gkeyll
+//
+// set fluid boundary conditions at inflow boundary for 5/10 moment fields
+
+static void
+obndra_gkeyll(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim)
+{
+  struct ggcm_mhd_bnd_sub *sub = ggcm_mhd_bnd_sub(bnd);
+  struct ggcm_mhd *mhd = bnd->mhd;
+
+  int nr_comps = mrc_fld_nr_comps(f);
+  const int *sw = mrc_fld_spatial_sw(f), *dims = mrc_fld_spatial_dims(f);
+  int swx = sw[0], swy = sw[1], swz = sw[2];
+  int mx = dims[0], my = dims[1], mz = dims[2];
+
+  for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
+
+    if (mrc_domain_at_boundary_lo(mhd->domain, 0, p)) {
+      if (sub->apply_bndsw) { // bndsw
+	// TODO: confirm bndsw is constant_5m or 10m
+	for (int iz = -swz; iz < mz + swz; iz++) {
+	  for (int iy = -swy; iy < my + swy; iy++) {
+	    for (int ix = -swx; ix < 0; ix++) {
+	      float bn[SW5_NR];
+	      bnd_sw(mhd, ix, iy, iz, p, bn, bntim);
+
+	      float vvbn  = sqr(bn[SW5_VXE]) + sqr(bn[SW5_VYE]) + sqr(bn[SW5_VZE]);
+	      float uubn  = .5f * (bn[SW5_RRE]*vvbn) + bn[SW5_PPE] / (mhd->par.gamm - 1.f);
+	      M3(f, mm + G5M_RRE , ix,iy,iz, p) = bn[SW5_RRE];
+	      M3(f, mm + G5M_RVXE, ix,iy,iz, p) = bn[SW5_RRE] * bn[SW5_VXE];
+	      M3(f, mm + G5M_RVYE, ix,iy,iz, p) = bn[SW5_RRE] * bn[SW5_VYE];
+	      M3(f, mm + G5M_RVZE, ix,iy,iz, p) = bn[SW5_RRE] * bn[SW5_VZE];
+	      M3(f, mm + G5M_UUE , ix,iy,iz, p) = uubn;
+
+	      vvbn  = sqr(bn[SW5_VXI]) + sqr(bn[SW5_VYI]) + sqr(bn[SW5_VZI]);
+	      uubn  = .5f * (bn[SW5_RRI]*vvbn) + bn[SW5_PPI] / (mhd->par.gamm - 1.f);
+	      M3(f, mm + G5M_RRI , ix,iy,iz, p) = bn[SW5_RRI];
+	      M3(f, mm + G5M_RVXI, ix,iy,iz, p) = bn[SW5_RRI] * bn[SW5_VXI];
+	      M3(f, mm + G5M_RVYI, ix,iy,iz, p) = bn[SW5_RRI] * bn[SW5_VYI];
+	      M3(f, mm + G5M_RVZI, ix,iy,iz, p) = bn[SW5_RRI] * bn[SW5_VZI];
+	      M3(f, mm + G5M_UUI , ix,iy,iz, p) = uubn;
+
+	      M3(f, mm + G5M_EX , ix,iy,iz, p) = bn[SW5_EX];
+	      M3(f, mm + G5M_EY , ix,iy,iz, p) = bn[SW5_EY];
+	      M3(f, mm + G5M_EZ , ix,iy,iz, p) = bn[SW5_EZ];
+
+	      M3(f, mm + G5M_BX , ix,iy,iz, p) = bn[SW5_BX];
+	      M3(f, mm + G5M_BY , ix,iy,iz, p) = bn[SW5_BY];
+	      M3(f, mm + G5M_BZ , ix,iy,iz, p) = bn[SW5_BZ];
+
+	      // copy b.c. for correction potentials
+	      M3(f, mm + G5M_PHI, ix,iy,iz, p) = M3(f, mm + G5M_PHI, ix+1,iy,iz, p);
+	      M3(f, mm + G5M_PSI, ix,iy,iz, p) = M3(f, mm + G5M_PSI, ix+1,iy,iz, p);
+	    }
+	  }
+	}
+	
+      } else { // no bndsw, open
+	for (int iz = -swz; iz < mz + swz; iz++) {
+	  for (int iy = -swy; iy < my + swy; iy++) {
+	    for (int ix = 0; ix > -swx; ix--) {
+	      for (int m = mm; m < mm + nr_comps; m++) {
+		M3(f,m, ix-1,iy,iz, p) = M3(f,m, ix,iy,iz, p);
+	      }
+	    }
+	  }
+	}
+      }
+    }
+    if (mrc_domain_at_boundary_lo(mhd->domain, 1, p)) {
+      for (int iz = -swz; iz < mz + swz; iz++) {
+	for (int ix = -swx; ix < mx + swx; ix++) {
+	  for (int iy = 0; iy > -swy; iy--) {
+	    for (int m = mm; m < mm + nr_comps; m++) {
+	      M3(f,m, ix,iy-1,iz, p) = M3(f,m, ix,iy,iz, p);
+	    }
+	  }
+	}
+      }
+    }
+    if (mrc_domain_at_boundary_lo(mhd->domain, 2, p)) {
+      for (int iy = -swy; iy < my + swy; iy++) {
+	for (int ix = -swx; ix < mx + swx; ix++) {
+	  for (int iz = 0; iz > -swz; iz--) {
+	    for (int m = mm; m < mm + nr_comps; m++) {
+	      M3(f,m, ix,iy,iz-1, p) = M3(f,m, ix,iy,iz, p);
+	    }
+	  }
+	}
+      }
+    }
+    
+    if (mrc_domain_at_boundary_hi(mhd->domain, 0, p)) {
+      for (int iz = -swz; iz < mz + swz; iz++) {
+	for (int iy = -swy; iy < my + swy; iy++) {
+	  for (int ix = mx; ix < mx + swx; ix++) {
+	    for (int m = mm; m < mm + nr_comps; m++) {
+	      M3(f,m, ix,iy,iz, p) = M3(f,m, ix-1,iy,iz, p);
+	    }
+	  }
+	}
+      }
+    }
+    if (mrc_domain_at_boundary_hi(mhd->domain, 1, p)) {
+      for (int iz = -swz; iz < mz + swz; iz++) {
+	for (int ix = -swx; ix < mx + swx; ix++) {
+	  for (int iy = my; iy < my + swy; iy++) {
+	    for (int m = mm; m < mm + nr_comps; m++) {
+	      M3(f,m, ix,iy,iz, p) = M3(f,m, ix,iy-1,iz, p);
+	    }
+	  }
+	}
+      }
+    }
+    if (mrc_domain_at_boundary_hi(mhd->domain, 2, p)) {
+      for (int iy = -swy; iy < my + swy; iy++) {
+	for (int ix = -swx; ix < mx + swx; ix++) {
+	  for (int iz = mz; iz < mz + swz; iz++) {
+	    for (int m = mm; m < mm + nr_comps; m++) {
+	      M3(f,m, ix,iy,iz, p) = M3(f,m, ix,iy,iz-1, p);
+	    }
+	  }
+	}
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------	
+// obndra
+//
+// set fluid boundary conditions at inflow boundary
+
+static void
+obndra(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim)
+{
+  static int PR;
+  if (!PR) {
+    PR = prof_register(__FUNCTION__, 1., 0, 0);
+  }
+  prof_start(PR);
+
+  int nr_comps = mrc_fld_nr_comps(f);
+  if (nr_comps == 18 || nr_comps == 28) {
+    obndra_gkeyll(bnd, f, mm, bntim);
+  } else {
+    obndra_mhd(bnd, f, mm, bntim);
+  }
+
   prof_stop(PR);
 }
 
@@ -289,15 +442,18 @@ obndrb(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm)
 {
   struct ggcm_mhd *mhd = bnd->mhd;
 
+  int nr_comps = mrc_fld_nr_comps(f);
+  if (nr_comps == 18 || nr_comps == 28) return;
+
   static int PR;
   if (!PR) {
     PR = prof_register(__FUNCTION__, 1., 0, 0);
   }
   prof_start(PR);
 
-  const int *sw = mrc_fld_spatial_sw(f);
+  const int *sw = mrc_fld_spatial_sw(f), *dims = mrc_fld_spatial_dims(f);
   int swx = sw[0], swy = sw[1], swz = sw[2];
-  int mx = mhd->im[0], my = mhd->im[1], mz = mhd->im[2];
+  int mx = dims[0], my = dims[1], mz = dims[2];
 
   for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
     float *bdx3 = ggcm_mhd_crds_get_crd_p(mhd->crds, 0, BD3, p);
@@ -388,6 +544,7 @@ static struct param ggcm_mhd_bnd_sub_descr[] = {
   { "bx"           , VAR(bnvals[SW_BX])           , PARAM_DOUBLE(0.) },
   { "by"           , VAR(bnvals[SW_BY])           , PARAM_DOUBLE(0.) },
   { "bz"           , VAR(bnvals[SW_BZ])           , PARAM_DOUBLE(0.) },
+  { "apply_bndsw"  , VAR(apply_bndsw)             , PARAM_BOOL(true) },
 
   {},
 };
