@@ -12,7 +12,7 @@
 #define MT MT_GKEYLL
 #define SHIFT 0
 
-#define ggcm_mhd_bnd_ops_inoutflow ggcm_mhd_bnd_ops_inoutflow_5m
-#define ggcm_mhd_bnd_sub_name "inoutflow_5m"
+#define ggcm_mhd_bnd_ops_inoutflow ggcm_mhd_bnd_ops_inoutflow_gkeyll
+#define ggcm_mhd_bnd_sub_name "inoutflow_gkeyll"
 
 #include "ggcm_mhd_bnd_inoutflow_common.c"
