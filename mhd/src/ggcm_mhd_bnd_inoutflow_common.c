@@ -177,14 +177,15 @@ obndra(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm, float bntim)
     PR = prof_register(__FUNCTION__, 1., 0, 0);
   }
   prof_start(PR);
-  int sw = f->_nr_ghosts;
+  const int *sw = mrc_fld_spatial_sw(f);
+  int swx = sw[0], swy = sw[1], swz = sw[2];
   int mx = mhd->im[0], my = mhd->im[1], mz = mhd->im[2];
 
   for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
     if (mrc_domain_at_boundary_lo(mhd->domain, 0, p)) {
-      for (int iz = -sw; iz < mz + sw; iz++) {
-	for (int iy = -sw; iy < my + sw; iy++) {
-	  for (int ix = -sw; ix < 0; ix++) {
+      for (int iz = -swz; iz < mz + swz; iz++) {
+	for (int iy = -swy; iy < my + swy; iy++) {
+	  for (int ix = -swx; ix < 0; ix++) {
 	    float bn[SW_NR];
 	    bnd_sw(mhd, ix, iy, iz, p, bn, bntim);
 
@@ -212,9 +213,9 @@ obndra(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm, float bntim)
       }
     }
     if (mrc_domain_at_boundary_lo(mhd->domain, 1, p)) {
-      for (int iz = -sw; iz < mz + sw; iz++) {
-	for (int ix = -sw; ix < mx + sw; ix++) {
-	  for (int iy = 0; iy > -sw; iy--) {
+      for (int iz = -swz; iz < mz + swz; iz++) {
+	for (int ix = -swx; ix < mx + swx; ix++) {
+	  for (int iy = 0; iy > -swy; iy--) {
 	    for (int m = mm; m < mm + 5; m++) {
 	      M3(f,m, ix,iy-1,iz, p) = M3(f,m, ix,iy,iz, p);
 	    }
@@ -225,9 +226,9 @@ obndra(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm, float bntim)
       }
     }
     if (mrc_domain_at_boundary_lo(mhd->domain, 2, p)) {
-      for (int iy = -sw; iy < my + sw; iy++) {
-	for (int ix = -sw; ix < mx + sw; ix++) {
-	  for (int iz = 0; iz > -sw; iz--) {
+      for (int iy = -swy; iy < my + swy; iy++) {
+	for (int ix = -swx; ix < mx + swx; ix++) {
+	  for (int iz = 0; iz > -swz; iz--) {
 	    for (int m = mm; m < mm + 5; m++) {
 	      M3(f,m, ix,iy,iz-1, p) = M3(f,m, ix,iy,iz, p);
 	    }
@@ -239,9 +240,9 @@ obndra(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm, float bntim)
     }
     
     if (mrc_domain_at_boundary_hi(mhd->domain, 0, p)) {
-      for (int iz = -sw; iz < mz + sw; iz++) {
-	for (int iy = -sw; iy < my + sw; iy++) {
-	  for (int ix = mx; ix < mx + sw; ix++) {
+      for (int iz = -swz; iz < mz + swz; iz++) {
+	for (int iy = -swy; iy < my + swy; iy++) {
+	  for (int ix = mx; ix < mx + swx; ix++) {
 	    for (int m = mm; m < mm + 5; m++) {
 	      M3(f,m, ix,iy,iz, p) = M3(f,m, ix-1,iy,iz, p);
 	    }
@@ -252,9 +253,9 @@ obndra(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm, float bntim)
       }
     }
     if (mrc_domain_at_boundary_hi(mhd->domain, 1, p)) {
-      for (int iz = -sw; iz < mz + sw; iz++) {
-	for (int ix = -sw; ix < mx + sw; ix++) {
-	  for (int iy = my; iy < my + sw; iy++) {
+      for (int iz = -swz; iz < mz + swz; iz++) {
+	for (int ix = -swx; ix < mx + swx; ix++) {
+	  for (int iy = my; iy < my + swy; iy++) {
 	    for (int m = mm; m < mm + 5; m++) {
 	      M3(f,m, ix,iy,iz, p) = M3(f,m, ix,iy-1,iz, p);
 	    }
@@ -265,9 +266,9 @@ obndra(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm, float bntim)
       }
     }
     if (mrc_domain_at_boundary_hi(mhd->domain, 2, p)) {
-      for (int iy = -sw; iy < my + sw; iy++) {
-	for (int ix = -sw; ix < mx + sw; ix++) {
-	  for (int iz = mz; iz < mz + sw; iz++) {
+      for (int iy = -swy; iy < my + swy; iy++) {
+	for (int ix = -swx; ix < mx + swx; ix++) {
+	  for (int iz = mz; iz < mz + swz; iz++) {
 	    for (int m = mm; m < mm + 5; m++) {
 	      M3(f,m, ix,iy,iz, p) = M3(f,m, ix,iy,iz-1, p);
 	    }
@@ -290,7 +291,8 @@ obndrb(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm)
   }
   prof_start(PR);
 
-  int sw = f->_nr_ghosts;
+  const int *sw = mrc_fld_spatial_sw(f);
+  int swx = sw[0], swy = sw[1], swz = sw[2];
   int mx = mhd->im[0], my = mhd->im[1], mz = mhd->im[2];
 
   for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
@@ -300,45 +302,45 @@ obndrb(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm)
 
     // assumes x1 bnd = fix, others = open
     if (mrc_domain_at_boundary_lo(mhd->domain, 1, p)) {
-      for (int iz = -sw - SHIFT; iz < mz + sw - 1 - SHIFT; iz++) {
-	for (int ix = -sw - SHIFT; ix < mx + sw - 1 - SHIFT; ix++) {
-	  for (int iy = 0; iy > -sw; iy--) {
+      for (int iz = -swz - SHIFT; iz < mz + swz - 1 - SHIFT; iz++) {
+	for (int ix = -swx - SHIFT; ix < mx + swx - 1 - SHIFT; ix++) {
+	  for (int iy = 0; iy > -swy; iy--) {
 	    M3(f, mm+1, ix,SHIFT + iy,iz, p) = BNDDIV_BY_L(ix,SHIFT + iy,iz, p);
 	  }
 	}
       }
     }
     if (mrc_domain_at_boundary_lo(mhd->domain, 2, p)) {
-      for (int iy = -sw - SHIFT; iy < my + sw - 1 - SHIFT; iy++) {
-	for (int ix = -sw - SHIFT; ix < mx + sw - 1 - SHIFT; ix++) {
-	  for (int iz = 0; iz > -sw; iz--) {
+      for (int iy = -swy - SHIFT; iy < my + swy - 1 - SHIFT; iy++) {
+	for (int ix = -swx - SHIFT; ix < mx + swx - 1 - SHIFT; ix++) {
+	  for (int iz = 0; iz > -swz; iz--) {
 	    M3(f, mm+2, ix,iy,SHIFT + iz, p) = BNDDIV_BZ_L(ix,iy,SHIFT + iz, p);
 	  }
 	}
       }
     }
     if (mrc_domain_at_boundary_hi(mhd->domain, 0, p)) {
-      for (int iz = -sw - SHIFT; iz < mz + sw - 1 - SHIFT; iz++) {
-	for (int iy = -sw - SHIFT; iy < my + sw - 1 - SHIFT; iy++) {
-	  for (int ix = mx; ix < mx + sw; ix++) {
+      for (int iz = -swz - SHIFT; iz < mz + swz - 1 - SHIFT; iz++) {
+	for (int iy = -swy - SHIFT; iy < my + swy - 1 - SHIFT; iy++) {
+	  for (int ix = mx; ix < mx + swx; ix++) {
 	    M3(f, mm+0, SHIFT + ix,iy,iz, p) = BNDDIV_BX_H(SHIFT + ix,iy,iz, p);
 	  }
 	}
       }
     }
     if (mrc_domain_at_boundary_hi(mhd->domain, 1, p)) {
-      for (int iz = -sw - SHIFT; iz < mz + sw - 1 - SHIFT; iz++) {
-	for (int ix = -sw - SHIFT; ix < mx + sw - 1 - SHIFT; ix++) {
-	  for (int iy = my; iy < my + sw; iy++) {
+      for (int iz = -swz - SHIFT; iz < mz + swz - 1 - SHIFT; iz++) {
+	for (int ix = -swx - SHIFT; ix < mx + swx - 1 - SHIFT; ix++) {
+	  for (int iy = my; iy < my + swy; iy++) {
 	    M3(f, mm+1, ix,SHIFT + iy,iz, p) = BNDDIV_BY_H(ix,SHIFT + iy,iz, p);
 	  }
 	}
       }
     }
     if (mrc_domain_at_boundary_hi(mhd->domain, 2, p)) {
-      for (int iy = -sw - SHIFT; iy < my + sw - 1 - SHIFT; iy++) {
-	for (int ix = -sw - SHIFT; ix < mx + sw - 1 - SHIFT; ix++) {
-	  for (int iz = mz; iz < mz + sw; iz++) {
+      for (int iy = -swy - SHIFT; iy < my + swy - 1 - SHIFT; iy++) {
+	for (int ix = -swx - SHIFT; ix < mx + swx - 1 - SHIFT; ix++) {
+	  for (int iz = mz; iz < mz + swz; iz++) {
 	    M3(f, mm+2, ix,iy,SHIFT + iz, p) = BNDDIV_BZ_H(ix,iy,SHIFT + iz, p);
 	  }
 	}
