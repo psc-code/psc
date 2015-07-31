@@ -107,8 +107,8 @@ libmhd_la_LIBADD =
 if HAVE_GKEYLL
 
 AM_CPPFLAGS += \
-	-I$(GKSOFTWARE)/gkeyll-par/include \
-	-I$(GKSOFTWARE)/txbase-par/include \
+	-I$(GKSOFTWARE)/gkeyll/include \
+	-I$(GKSOFTWARE)/txbase-exported-ser/include \
 	-I$(GKSOFTWARE)/lua-5.1-ser/include \
 	-I$(GKSOFTWARE)/eigen-3.1-ser/include/eigen3
 
@@ -121,10 +121,10 @@ libmhd_la_SOURCES += \
 	LcRegisterModules.cpp
 
 libmhd_la_LIBADD += \
-	-L$(GKSOFTWARE)/gkeyll-par/lib -llcrte -llcproto -llcslvrs \
+	-L$(GKSOFTWARE)/gkeyll/lib -llcrte -llcproto -llcslvrs \
 		-llcdatastructs -llcgrids -llclib -llcquadrule -llcloki \
 	-L$(GKSOFTWARE)/gsl-1.15-ser/lib -lgsl -lgslcblas \
-	-L$(GKSOFTWARE)/txbase-par/lib -ltxbase \
+	-L$(GKSOFTWARE)/txbase-exported-ser/lib -ltxbase \
 	-L$(GKSOFTWARE)/lua-5.1-ser/lib -llua \
 	-lfftw3 \
 	-llapack -lblas
