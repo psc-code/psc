@@ -170,9 +170,53 @@ bnd_sw(struct ggcm_mhd *mhd, int ix, int iy, int iz, int p, float bn[SW_NR], flo
 }
 
 // ----------------------------------------------------------------------
-// obndra_mhd
+// obndra_mhd_bndsw
 //
 // set fluid boundary conditions at inflow boundary for MHD fields
+
+static void
+obndra_mhd_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim, int p)
+{
+  struct ggcm_mhd *mhd = bnd->mhd;
+
+  const int *sw = mrc_fld_spatial_sw(f), *dims = mrc_fld_spatial_dims(f);
+  int swx = sw[0], swy = sw[1], swz = sw[2];
+  int my = dims[1], mz = dims[2];
+
+  for (int iz = -swz; iz < mz + swz; iz++) {
+    for (int iy = -swy; iy < my + swy; iy++) {
+      for (int ix = -swx; ix < 0; ix++) {
+	float bn[SW_NR];
+	bnd_sw(mhd, ix, iy, iz, p, bn, bntim);
+	
+	float vvbn  = sqr(bn[SW_VX]) + sqr(bn[SW_VY]) + sqr(bn[SW_VZ]);
+	float uubn  = .5f * (bn[SW_RR]*vvbn) + bn[SW_PP] / (mhd->par.gamm - 1.f);
+	float b2bn  = sqr(bn[SW_BX]) + sqr(bn[SW_BY]) + sqr(bn[SW_BZ]);
+	
+	M3(f, mm + RR , ix,iy,iz, p) = bn[SW_RR];
+	M3(f, mm + RVX, ix,iy,iz, p) = bn[SW_RR] * bn[SW_VX];
+	M3(f, mm + RVY, ix,iy,iz, p) = bn[SW_RR] * bn[SW_VY];
+	M3(f, mm + RVZ, ix,iy,iz, p) = bn[SW_RR] * bn[SW_VZ];
+	if (MT == MT_SEMI_CONSERVATIVE ||
+	    MT == MT_SEMI_CONSERVATIVE_GGCM) {
+	  M3(f, mm + UU , ix,iy,iz, p) = uubn;
+	} else if (MT == MT_FULLY_CONSERVATIVE) {
+	  M3(f, mm + EE , ix,iy,iz, p) = uubn + .5 * b2bn;
+	} else {
+	  assert(0);
+	}
+	M3(f, mm + BX , ix,iy,iz, p) = bn[SW_BX];
+	M3(f, mm + BY , ix,iy,iz, p) = bn[SW_BY];
+	M3(f, mm + BZ , ix,iy,iz, p) = bn[SW_BZ];
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
+// obndra_mhd
+//
+// set open fluid boundary conditions for MHD fields
 
 static void
 obndra_mhd(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim)
@@ -184,36 +228,8 @@ obndra_mhd(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim)
   int mx = dims[0], my = dims[1], mz = dims[2];
 
   for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
-
     if (mrc_domain_at_boundary_lo(mhd->domain, 0, p)) {
-      for (int iz = -swz; iz < mz + swz; iz++) {
-	for (int iy = -swy; iy < my + swy; iy++) {
-	  for (int ix = -swx; ix < 0; ix++) {
-	    float bn[SW_NR];
-	    bnd_sw(mhd, ix, iy, iz, p, bn, bntim);
-
-	    float vvbn  = sqr(bn[SW_VX]) + sqr(bn[SW_VY]) + sqr(bn[SW_VZ]);
-	    float uubn  = .5f * (bn[SW_RR]*vvbn) + bn[SW_PP] / (mhd->par.gamm - 1.f);
-	    float b2bn  = sqr(bn[SW_BX]) + sqr(bn[SW_BY]) + sqr(bn[SW_BZ]);
-	    
-	    M3(f, mm + RR , ix,iy,iz, p) = bn[SW_RR];
-	    M3(f, mm + RVX, ix,iy,iz, p) = bn[SW_RR] * bn[SW_VX];
-	    M3(f, mm + RVY, ix,iy,iz, p) = bn[SW_RR] * bn[SW_VY];
-	    M3(f, mm + RVZ, ix,iy,iz, p) = bn[SW_RR] * bn[SW_VZ];
-	    if (MT == MT_SEMI_CONSERVATIVE ||
-		MT == MT_SEMI_CONSERVATIVE_GGCM) {
-	      M3(f, mm + UU , ix,iy,iz, p) = uubn;
-	    } else if (MT == MT_FULLY_CONSERVATIVE) {
-	      M3(f, mm + EE , ix,iy,iz, p) = uubn + .5 * b2bn;
-	    } else {
-	      assert(0);
-	    }
-	    M3(f, mm + BX , ix,iy,iz, p) = bn[SW_BX];
-	    M3(f, mm + BY , ix,iy,iz, p) = bn[SW_BY];
-	    M3(f, mm + BZ , ix,iy,iz, p) = bn[SW_BZ];
-	  }
-	}
-   }
+      obndra_mhd_bndsw(bnd, f, mm, bntim, p);
     }
     if (mrc_domain_at_boundary_lo(mhd->domain, 1, p)) {
       for (int iz = -swz; iz < mz + swz; iz++) {
