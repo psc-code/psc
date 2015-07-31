@@ -9,16 +9,17 @@
 ------------------------------------------
 -- LOAD LOCAL DOMAIN PARAMS FROM LIBMRC --
 ------------------------------------------
-mx, my, mz, lx, ly, lz, hx, hy, hz, lxg, lyg, lzg, hxg, hyg, hzg = ...
+rank, mx, my, mz, lx, ly, lz, hx, hy, hz, lxg, lyg, lzg, hxg, hyg, hzg = ...
 
 -----------------------------------------------
 -- LOAD PARAMS SHARED WITH INIT              --
+-----------------------------------------------
 -- Time-stepping needs gasGamma, lightSpeed, --
 --   epsilon0, elc/mgnErrorSpeedFactor,      --
 --   elcCharge/Mass, ionCharge/Mass, cfl     --
 -----------------------------------------------
 showlog = true
-showlocallog = true
+showlocallog = false
 dofile("common.lua")
 
 -------------------------------------
@@ -56,7 +57,7 @@ function applyBc(fld, tCurr, myDt, ggcm_mhd)
  fld:copy_to_cptr(temp_cptr)
  ggcm_fill_ghosts(ggcm_mhd, temp_mrc_fld, tCurr)
  fld:copy_from_cptr(temp_cptr)
- ggcm_put_3d_fld(ggcm, temp_mrc_fld)
+ ggcm_put_3d_fld(ggcm_mhd, temp_mrc_fld)
 end
 
 ----------------------
@@ -222,11 +223,14 @@ function updateFluidsAndField(tCurr, t, ggcm_mhd)
       myStatus = status and myStatus
       myDtSuggested = math.min(myDtSuggested, dtSuggested)
    end
+   myStatus = ggcm_mhd_reduce_boolean(ggcm_mhd, myStatus, true)
+   myDtSuggested = ggcm_mhd_reduce_double_min(ggcm_mhd, myDtSuggested)
 
    if ((elcEulerEqn:checkInvariantDomain(elcFluidX) == false)
     or (ionEulerEqn:checkInvariantDomain(ionFluidX) == false)) then
       useLaxSolver = true
    end
+   useLaxSolver = ggcm_mhd_reduce_boolean(ggcm_mhd, useLaxSolver, false)
 
    if ((myStatus == false) or (useLaxSolver == true)) then
       return myStatus, myDtSuggested, useLaxSolver
@@ -242,11 +246,14 @@ function updateFluidsAndField(tCurr, t, ggcm_mhd)
       myStatus = status and myStatus
       myDtSuggested = math.min(myDtSuggested, dtSuggested)
    end
+   myStatus = ggcm_mhd_reduce_boolean(ggcm_mhd, myStatus, true)
+   myDtSuggested = ggcm_mhd_reduce_double_min(ggcm_mhd, myDtSuggested)
 
    if ((elcEulerEqn:checkInvariantDomain(elcFluidNew) == false)
     or (ionEulerEqn:checkInvariantDomain(ionFluidNew) == false)) then
        useLaxSolver = true
    end
+   useLaxSolver = ggcm_mhd_reduce_boolean(ggcm_mhd, useLaxSolver, false)
 
    return myStatus, myDtSuggested, useLaxSolver
 end
@@ -279,6 +286,8 @@ function updateFluidsAndFieldLax(tCurr, t, ggcm_mhd)
       myStatus = status and myStatus
       myDtSuggested = math.min(myDtSuggested, dtSuggested)
    end
+   myStatus = ggcm_mhd_reduce_boolean(ggcm_mhd, myStatus, true)
+   myDtSuggested = ggcm_mhd_reduce_double_min(ggcm_mhd, myDtSuggested)
 
    applyBc(qX, tCurr, t-tCurr, ggcm_mhd)
 
@@ -289,6 +298,8 @@ function updateFluidsAndFieldLax(tCurr, t, ggcm_mhd)
       myStatus = status and myStatus
       myDtSuggested = math.min(myDtSuggested, dtSuggested)
    end
+   myStatus = ggcm_mhd_reduce_boolean(ggcm_mhd, myStatus, true)
+   myDtSuggested = ggcm_mhd_reduce_double_min(ggcm_mhd, myDtSuggested)
 
    return myStatus, myDtSuggested
 end

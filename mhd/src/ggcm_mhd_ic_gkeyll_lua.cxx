@@ -92,6 +92,11 @@ ggcm_mhd_ic_gkeyll_lua_run(const char *script, struct ggcm_mhd *mhd,
 
   int nargs = 0;
 
+  int rank;
+  MPI_Comm_rank(mrc_domain_comm(mhd->domain), &rank);
+  lua_pushinteger(L, rank);
+  nargs += 1;
+
   int gdims[3];
   mrc_domain_get_global_dims(mhd->domain, gdims);
   const int *ldims = mrc_fld_spatial_dims(fld);

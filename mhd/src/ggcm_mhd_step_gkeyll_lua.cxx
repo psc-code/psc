@@ -26,6 +26,28 @@ extern "C" {
 
 static Lucee::LuaState L;
 
+static int ggcm_mhd_reduce_double_min_lua(lua_State *L) {
+  double var = lua_tonumber(L, -1);
+  struct ggcm_mhd *mhd = (struct ggcm_mhd *) lua_touserdata(L, -2);
+  double temp_var = var;
+  MPI_Allreduce(&temp_var, &var, 1, MPI_DOUBLE, MPI_MIN, mrc_domain_comm(mhd->domain));
+  lua_pushnumber(L, var);
+  return 1; 
+}
+
+static int ggcm_mhd_reduce_boolean_lua(lua_State *L) {
+  bool val_wanted = lua_toboolean(L, -1);
+  bool var = lua_toboolean(L, -2);
+  struct ggcm_mhd *mhd = (struct ggcm_mhd *) lua_touserdata(L, -3);
+  bool temp_var = var;
+ if (val_wanted)
+  MPI_Allreduce(&temp_var, &var, 1, MPI_C_BOOL, MPI_LAND, mrc_domain_comm(mhd->domain));
+ else
+  MPI_Allreduce(&temp_var, &var, 1, MPI_C_BOOL, MPI_LOR, mrc_domain_comm(mhd->domain));
+  lua_pushboolean(L, var);
+  return 1; 
+}
+
 static int ggcm_mhd_get_3d_fld_lua(lua_State *L) {
   int nr_comps = lua_tointeger(L, -1);
   struct ggcm_mhd *mhd = (struct ggcm_mhd *) lua_touserdata(L, -2);
@@ -130,6 +152,12 @@ ggcm_mhd_step_gkeyll_lua_setup(const char *script, struct ggcm_mhd *mhd,
 
   lua_pop(L, 1); // done adding command line stuff
 
+  lua_pushcfunction(L, ggcm_mhd_reduce_double_min_lua);
+  lua_setglobal(L, "ggcm_mhd_reduce_double_min");
+
+  lua_pushcfunction(L, ggcm_mhd_reduce_boolean_lua);
+  lua_setglobal(L, "ggcm_mhd_reduce_boolean");
+
   lua_pushcfunction(L, ggcm_mhd_get_3d_fld_lua);
   lua_setglobal(L, "ggcm_get_3d_fld");
 
@@ -151,6 +179,11 @@ ggcm_mhd_step_gkeyll_lua_setup(const char *script, struct ggcm_mhd *mhd,
   }
 
   int nargs = 0;
+
+  int rank;
+  MPI_Comm_rank(mrc_domain_comm(mhd->domain), &rank);
+  lua_pushinteger(L, rank);
+  nargs += 1;
 
   int gdims[3];
   mrc_domain_get_global_dims(mhd->domain, gdims);

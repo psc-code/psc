@@ -1,6 +1,11 @@
+-- PROBLEM: 2D FIVE-MOMENT, ORSZAG-TANG --
+
 -----------------------------------------------
 -- PARAMETERS AND FUNCTIONS COMMONLY USED BY --
 -- INITIALIZATION AND TIME-STEPPING          --
+-----------------------------------------------
+-- Assumes knowledge of global domain sizes  --
+-- i.e., lyg, lzg, hxg, hyg, hzg             --
 -----------------------------------------------
 
 --------------------------
@@ -8,15 +13,16 @@
 --------------------------
 nr_comps = 18
 nr_ghosts = 2
+-- TODO: skip the remaining codes if not needed
 
-Pi = Lucee.Pi
+pi = math.pi
 sqrt = math.sqrt
 cos = math.cos
 sin = math.sin
 tan = math.tan
-
 -----------------------------------------------
 -- PHYSICAL PARAMETERS                       --
+-----------------------------------------------
 -- Time-stepping needs gasGamma, lightSpeed, --
 --   epsilon0, elc/mgnErrorSpeedFactor,      --
 --   elcCharge/Mass, ionCharge/Mass, cfl     --
@@ -53,12 +59,11 @@ cfl = 0.9
 -- INITIAL CONDITION --
 -----------------------
 function init(x,y,z)
-   -- FIXME: hxg, etc. are available through init.lua only
    local Lx = hxg - lxg
    local Ly = hyg - lyg
    
-   local vx = -v0*sin(2.*Pi*y/Ly)
-   local vy = v0*sin(2.*Pi*x/Lx)
+   local vx = -v0*sin(2.*pi*y/Ly)
+   local vy = v0*sin(2.*pi*x/Lx)
 
    local momxe = rhoe0*vx
    local momye = rhoe0*vy
@@ -68,8 +73,8 @@ function init(x,y,z)
    local momyi = rhoi0*vy
    local eri = pri0/(gasGamma-1.) + 0.5*(momxi^2+momyi^2)/rhoi0
 
-   local Bx = -B0*sin(2.*Pi*y/Ly) 
-   local By = B0*sin(4.*Pi*x/Lx)
+   local Bx = -B0*sin(2.*pi*y/Ly) 
+   local By = B0*sin(4.*pi*x/Lx)
    local Bz = 0.0
 
    return rhoe0, momxe, momye, 0.0, ere, rhoi0, momxi, momyi, 0.0, eri, 0.0, 0.0, 0.0, Bx, By, Bz, 0.0, 0.0
@@ -78,23 +83,19 @@ end
 ------------------------------------
 -- LOGS TO BE DISPLAYED ON SCREEN --
 ------------------------------------
-if (showlog) then
-   Lucee.logInfo(string.format("====================================="))
-   Lucee.logInfo(string.format("lightSpeed = %g  mu0 = %g  epsilon0 = %g", lightSpeed, mu0, epsilon0))
-   Lucee.logInfo(string.format("elcErrorSpeedFactor = %g  mgnErrorSpeedFactor = %g", elcErrorSpeedFactor, mgnErrorSpeedFactor))
-   Lucee.logInfo(string.format("ionMass = %g  elcMass = ionMass/%g",ionMass, ionMass/elcMass))
-   Lucee.logInfo(string.format("ionCharge = %g  elcCharge = %g",ionCharge, elcCharge))
-   Lucee.logInfo(string.format("di0 = %g", ionInertiaLength0))
-   Lucee.logInfo(string.format("cfl = %g", cfl))
-   Lucee.logInfo(string.format("====================================="))
+if (showlog and rank==0) then
+   print(string.format("===================================================="))
+   print(string.format("nr_comps = %g  nr_ghosts = %g", nr_comps, nr_ghosts))
+   print(string.format("lightSpeed = %g  mu0 = %g  epsilon0 = %g", lightSpeed, mu0, epsilon0))
+   print(string.format("elcErrorSpeedFactor = %g  mgnErrorSpeedFactor = %g", elcErrorSpeedFactor, mgnErrorSpeedFactor))
+   print(string.format("ionMass = %g  elcMass = ionMass/%g",ionMass, ionMass/elcMass))
+   print(string.format("ionCharge = %g  elcCharge = %g",ionCharge, elcCharge))
+   print(string.format("cfl = %g", cfl))
+   print(string.format("===================================================="))
 end
 
 if (showlocallog) then
-   print("nr_ghosts = ", nr_ghosts)
-   print("nr_comps  = ", nr_comps)
-   print("    dims  = ", mx, my, mz)
-   print("       l  = ", lx, ly, lz)
-   print("       h  = ", hx, hy, hz)
+   print(string.format("[%03d] dims = [%d,%d,%d] l = [%g,%g,%g] h = [%g,%g,%g]", rank,mx,my,mz,lx,ly,lz,hx,hy,hz))
 end
 
 ------------------
