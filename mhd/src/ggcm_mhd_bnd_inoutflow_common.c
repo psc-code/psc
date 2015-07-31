@@ -170,8 +170,10 @@ bnd_sw(struct ggcm_mhd *mhd, int ix, int iy, int iz, int p, float bn[SW_NR], flo
 // set fluid boundary conditions at inflow boundary
 
 static void
-obndra(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm, float bntim)
+obndra(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim)
 {
+  struct ggcm_mhd *mhd = bnd->mhd;
+
   static int PR;
   if (!PR) {
     PR = prof_register(__FUNCTION__, 1., 0, 0);
@@ -283,8 +285,10 @@ obndra(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm, float bntim)
 }
 
 static void
-obndrb(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm)
+obndrb(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm)
 {
+  struct ggcm_mhd *mhd = bnd->mhd;
+
   static int PR;
   if (!PR) {
     PR = prof_register(__FUNCTION__, 1., 0, 0);
@@ -366,8 +370,8 @@ ggcm_mhd_bnd_sub_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld,
 
   struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
   assert(m == 0 || m == 8);
-  obndra(mhd, f, m, bntim);
-  obndrb(mhd, f, m + BX);
+  obndra(bnd, f, m, bntim);
+  obndrb(bnd, f, m + BX);
   mrc_fld_put_as(f, fld);
 }
 
