@@ -305,7 +305,7 @@ sgn(particle_cuda2_real_t val)
 }
 
 static inline void
-calc_3d_dx1_yz_(particle_cuda2_real_t xm[3], particle_cuda2_real_t dx1[3],
+calc_3d_dx1_yz_(particle_cuda2_real_t xm[3], 
 		particle_cuda2_real_t x0[3], particle_cuda2_real_t x1[3],
 		int dim)
 {
@@ -323,30 +323,12 @@ calc_3d_dx1_yz_(particle_cuda2_real_t xm[3], particle_cuda2_real_t dx1[3],
     x[d] = x0[d] - (i[d] + .5f);
   }
 
-  if (dim == 1) {
-    dx1[1] = .5f * sgn(dx[1]) - x[1];
-    if (dx[1] == 0.f) {
-      dx1[0] = 0.f;
-      dx1[2] = 0.f;
-    } else {
-      dx1[0] = dx[0] / dx[1] * dx1[1];
-      dx1[2] = dx[2] / dx[1] * dx1[1];
-    }
-  } else if (dim == 2) {
-    dx1[2] = .5f * sgn(dx[2]) - x[2];
-    if (dx[2] == 0.f) {
-      dx1[0] = 0.f;
-      dx1[1] = 0.f;
-    } else {
-      dx1[0] = dx[0] / dx[2] * dx1[2];
-      dx1[1] = dx[1] / dx[2] * dx1[2];
-    }
-  } else {
-    assert(0);
-  }
+  assert(dx[dim] != 0.);
+  particle_cuda_real_t frac = (.5f * sgn(dx[dim]) - x[dim]) / dx[dim];
 
+  // FIXME, set d == dim value to exact boundary?
   for (int d = 0; d < 3; d++) {
-    xm[d] = x0[d] + dx1[d];
+    xm[d] = x0[d] + frac * dx[d];
   }
 }
 
@@ -385,6 +367,41 @@ curr_3d_vb_one_yz(struct psc_fields *pf,
 }
 
 static inline void
+calc_j2_split_x(struct psc_fields *flds, particle_cuda2_real_t fnq[3],
+		particle_cuda2_real_t *xm, particle_cuda2_real_t *xp)
+{
+  curr_3d_vb_one_yz(flds, xm, xp, fnq);
+}
+
+static inline void
+calc_j2_split_y(struct psc_fields *flds, particle_cuda2_real_t fnq[3],
+		particle_cuda2_real_t *xm, particle_cuda2_real_t *xp)
+{
+  int dim = 1;
+
+  int im = particle_cuda2_real_fint(xm[dim]);
+  if (xp[dim] > im + 1 || xp[dim] < im) {
+    particle_cuda_real_t frac;
+    if (xp[dim] > im + 1) { // crossed boundary to right
+      frac = im + 1;
+    } else if (xp[dim] < im) { // crosses boundary to left
+      frac = im;
+    }
+    frac = (frac - xm[dim]) / (xp[dim] - xm[dim]);
+    particle_cuda_real_t x1[3];
+    // FIXME, set d == dim value to exact boundary?
+    for (int d = 0; d < 3; d++) {
+      x1[d] = xm[d] + frac * (xp[d] - xm[d]);
+    }
+    calc_j2_split_x(flds, fnq, xm, x1);
+    calc_j2_split_x(flds, fnq, x1, xp);
+  } else {
+    calc_j2_split_x(flds, fnq, xm, xp);
+  }
+}
+		
+
+static inline void
 calc_j2_3d_yz(struct psc_fields *flds, particle_cuda2_real_t *xm, particle_cuda2_real_t *xp,
 	      int *lf, int *lg, particle_cuda2_t *prt, particle_cuda2_real_t *vxi)
 {
@@ -405,23 +422,28 @@ calc_j2_3d_yz(struct psc_fields *flds, particle_cuda2_real_t *xm, particle_cuda2
   int idiff[3] = { 0, lf[1] - lg[1], lf[2] - lg[2] };			
   particle_cuda2_real_t dxt[3] = { xp[0] - xm[0], xp[1] - xm[1], xp[2] - xm[2] };		
 
-  particle_cuda2_real_t dx[3];
 
   particle_cuda2_real_t x1[3], x2[3];
+
   if (idiff[2] == 0) { // not intersecting z
+#if 1
+    calc_j2_split_y(flds, fnq, xm, xp);
+#else
     if (idiff[1] == 0) { // not intersecting y
       curr_3d_vb_one_yz(flds, xm, xp, fnq);
     } else { // intersecting y
-      calc_3d_dx1_yz_(x1, dx, xm, xp, 1);
+      calc_3d_dx1_yz_(x1, xm, xp, 1);
       curr_3d_vb_one_yz(flds, xm, x1, fnq);
       curr_3d_vb_one_yz(flds, x1, xp, fnq);
     }
+#endif
   } else { // intersecting z
     if (idiff[1] == 0) { // not intersecting y
-      calc_3d_dx1_yz_(x1, dx, xm, xp, 2);
+      calc_3d_dx1_yz_(x1, xm, xp, 2);
       curr_3d_vb_one_yz(flds, xm, x1, fnq);
       curr_3d_vb_one_yz(flds, x1, xp, fnq);
     } else { // intersecting y
+      particle_cuda2_real_t dx[3];
       particle_cuda2_real_t x[3] = { 0., xm[1] - (i[1] + .5f), xm[2] - (i[2] + .5f) }; 
       dx[1] = .5f * idiff[1] - x[1];
       if (dxt[1] == 0.f) {
@@ -430,11 +452,11 @@ calc_j2_3d_yz(struct psc_fields *flds, particle_cuda2_real_t *xm, particle_cuda2
 	dx[2] = dxt[2] / dxt[1] * dx[1];
       }
       if (particle_cuda2_real_abs(x[2] + dx[2]) > .5f) {
-	calc_3d_dx1_yz_(x1, dx, xm, xp, 2);
-	calc_3d_dx1_yz_(x2, dx, x1, xp, 1);
+	calc_3d_dx1_yz_(x1, xm, xp, 2);
+	calc_3d_dx1_yz_(x2, x1, xp, 1);
       } else {
-	calc_3d_dx1_yz_(x1, dx, xm, xp, 1);
-	calc_3d_dx1_yz_(x2, dx, x1, xp, 2);
+	calc_3d_dx1_yz_(x1, xm, xp, 1);
+	calc_3d_dx1_yz_(x2, x1, xp, 2);
       }
       curr_3d_vb_one_yz(flds, xm, x1, fnq);
       curr_3d_vb_one_yz(flds, x1, x2, fnq);
