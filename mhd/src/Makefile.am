@@ -30,6 +30,7 @@ libmhd_la_SOURCES = \
 	\
 	ggcm_mhd_bndsw.c \
 	ggcm_mhd_bndsw_none.c \
+	ggcm_mhd_bndsw_constant.c \
 	ggcm_mhd_bndsw_constant_5m.c \
 	\
 	ggcm_mhd_crds.c \
