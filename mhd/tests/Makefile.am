@@ -35,6 +35,8 @@ XFAIL_TESTS = \
 if HAVE_GKEYLL
 
 bin_PROGRAMS += mhd_gkeyll
+
+nodist_EXTRA_mhd_gkeyll_SOURCES = dummy.cxx
  
 mhd_gkeyll_CPPFLAGS = $(AM_CPPFLAGS) \
 	-I$(GKSOFTWARE)/gkeyll-par/include \
