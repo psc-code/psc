@@ -148,12 +148,10 @@ mrc_domain_at_boundary_hi(struct mrc_domain *domain, int d, int p)
 // bnd_sw
 
 static void
-bnd_sw(struct ggcm_mhd *mhd, int ix, int iy, int iz, int p, float bn[SW_NR], float bntim)
+bnd_sw(struct ggcm_mhd_bnd *bnd, int ix, int iy, int iz, int p, float bn[SW_NR], float bntim)
 {
-  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-  float xx[3] = { MRC_MCRDX(crds, ix, p),
-		  MRC_MCRDY(crds, iy, p),
-		  MRC_MCRDZ(crds, iz, p), };
+  struct ggcm_mhd_bnd_sub *sub = ggcm_mhd_bnd_sub(bnd);
+  struct ggcm_mhd *mhd = bnd->mhd;
 
   static bool first_time = true;
   static struct ggcm_mhd_bndsw *bndsw;
@@ -163,9 +161,17 @@ bnd_sw(struct ggcm_mhd *mhd, int ix, int iy, int iz, int p, float bn[SW_NR], flo
   first_time = false;
 
   if (bndsw) {
+    struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
+    float xx[3] = { MRC_MCRDX(crds, ix, p),
+		    MRC_MCRDY(crds, iy, p),
+		    MRC_MCRDZ(crds, iz, p), };
+
     ggcm_mhd_bndsw_at(bndsw, bntim, xx, bn);
   } else {
-    bn[SW_RR] = 1.;
+    assert(MT != MT_GKEYLL);
+    for (int m = 0; m < SW_NR; m++) {
+      bn[m] = sub->bnvals[m];
+    }
   }
 }
 
@@ -187,7 +193,7 @@ obndra_mhd_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float b
     for (int iy = -swy; iy < my + swy; iy++) {
       for (int ix = -swx; ix < 0; ix++) {
 	float bn[SW_NR];
-	bnd_sw(mhd, ix, iy, iz, p, bn, bntim);
+	bnd_sw(bnd, ix, iy, iz, p, bn, bntim);
 	
 	float vvbn  = sqr(bn[SW_VX]) + sqr(bn[SW_VY]) + sqr(bn[SW_VZ]);
 	float uubn  = .5f * (bn[SW_RR]*vvbn) + bn[SW_PP] / (mhd->par.gamm - 1.f);
@@ -325,7 +331,7 @@ obndra_gkeyll_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, floa
     for (int iy = -swy; iy < my + swy; iy++) {
       for (int ix = -swx; ix < 0; ix++) {
 	float bn[SW5_NR];
-	bnd_sw(mhd, ix, iy, iz, p, bn, bntim);
+	bnd_sw(bnd, ix, iy, iz, p, bn, bntim);
 	
 	float vvbn  = sqr(bn[SW5_VXE]) + sqr(bn[SW5_VYE]) + sqr(bn[SW5_VZE]);
 	float uubn  = .5f * (bn[SW5_RRE]*vvbn) + bn[SW5_PPE] / (mhd->par.gamm - 1.f);
