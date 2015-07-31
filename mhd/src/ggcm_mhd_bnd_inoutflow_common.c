@@ -421,20 +421,12 @@ obndra_gkeyll(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim)
 static void
 obndra(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim)
 {
-  static int PR;
-  if (!PR) {
-    PR = prof_register(__FUNCTION__, 1., 0, 0);
-  }
-  prof_start(PR);
-
   int nr_comps = mrc_fld_nr_comps(f);
   if (nr_comps == 18 || nr_comps == 28) {
     obndra_gkeyll(bnd, f, mm, bntim);
   } else {
     obndra_mhd(bnd, f, mm, bntim);
   }
-
-  prof_stop(PR);
 }
 
 static void
@@ -444,12 +436,6 @@ obndrb(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm)
 
   int nr_comps = mrc_fld_nr_comps(f);
   if (nr_comps == 18 || nr_comps == 28) return;
-
-  static int PR;
-  if (!PR) {
-    PR = prof_register(__FUNCTION__, 1., 0, 0);
-  }
-  prof_start(PR);
 
   const int *sw = mrc_fld_spatial_sw(f), *dims = mrc_fld_spatial_dims(f);
   int swx = sw[0], swy = sw[1], swz = sw[2];
@@ -507,7 +493,6 @@ obndrb(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm)
       }
     }
   }
-  prof_stop(PR);
 }
 
 // ----------------------------------------------------------------------
@@ -520,6 +505,13 @@ ggcm_mhd_bnd_sub_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld,
   struct ggcm_mhd *mhd = bnd->mhd;
   assert(mhd);
 
+
+  static int PR;
+  if (!PR) {
+    PR = prof_register(__FUNCTION__, 1., 0, 0);
+  }
+  prof_start(PR);
+
   int mhd_type;
   mrc_fld_get_param_int(fld, "mhd_type", &mhd_type);
   assert(mhd_type == MT);
@@ -529,6 +521,8 @@ ggcm_mhd_bnd_sub_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld,
   obndra(bnd, f, m, bntim);
   obndrb(bnd, f, m + BX);
   mrc_fld_put_as(f, fld);
+
+  prof_stop(PR);
 }
 
 // ----------------------------------------------------------------------
