@@ -3,7 +3,7 @@
 
 #include "psc_bnd.h"
 #include "psc_output_fields_item.h"
-#include "psc_fields_as_c.h"
+#include "psc_fields_as_single.h"
 #include "psc_particles_as_double.h"
 
 #include <mrc_io.h>
@@ -45,7 +45,7 @@ psc_calc_rho(struct psc *psc, struct psc_mparticles *mprts, struct psc_mfields *
   psc_bnd_setup(bnd);
 
   struct psc_output_fields_item *item = psc_output_fields_item_create(psc_comm(psc));
-  psc_output_fields_item_set_type(item, "rho_2nd_nc_" PARTICLE_TYPE);
+  psc_output_fields_item_set_type(item, "rho_1st_nc_" PARTICLE_TYPE);
   psc_output_fields_item_set_psc_bnd(item, bnd);
   psc_output_fields_item_setup(item);
   psc_output_fields_item_run(item, psc->flds, mprts, rho);
