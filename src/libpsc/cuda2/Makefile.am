@@ -12,7 +12,8 @@ libsubdir_la_SOURCES = \
 	psc_push_particles_cuda2.c \
 	\
 	cuda2_push_fields_host.c \
-	cuda2_push_mprts_host.c
+	cuda2_push_mprts_host_yz.c \
+	cuda2_push_mprts_host_xyz.c
 
 #FIXME, this is just really too hacky...
 

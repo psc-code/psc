@@ -32,7 +32,7 @@ psc_push_particles_1vbec_push_mprts_yz(struct psc_push_particles *push,
     psc_mfields_get_as(mflds_base, "cuda2", EX, EX + 6);
 
 #ifdef GOLD
-  cuda2_1vbec_push_mprts_yz_gold(mprts, mflds);
+  cuda2_1vbec_push_mprts_gold_yz(mprts, mflds);
 #else
   psc_mparticles_cuda2_copy_to_device(mprts);
   psc_mfields_cuda2_copy_to_device(mflds);
@@ -68,7 +68,7 @@ psc_push_particles_1vbec_push_mprts_xyz(struct psc_push_particles *push,
     psc_mfields_get_as(mflds_base, "cuda2", EX, EX + 6);
 
 #ifdef GOLD
-  cuda2_1vbec_push_mprts_xyz_gold(mprts, mflds);
+  cuda2_1vbec_push_mprts_gold_xyz(mprts, mflds);
 #else
   psc_mparticles_cuda2_copy_to_device(mprts);
   psc_mfields_cuda2_copy_to_device(mflds);
