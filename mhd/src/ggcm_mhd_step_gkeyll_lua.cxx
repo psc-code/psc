@@ -8,6 +8,7 @@ extern "C" {
 #include <ggcm_mhd_private.h>
 #include <mrc_fld.h>
 #include <mrc_domain.h>
+#include <ggcm_mhd_gkeyll.h>
 
 }
 
@@ -53,6 +54,11 @@ static int ggcm_mhd_get_3d_fld_lua(lua_State *L) {
   struct ggcm_mhd *mhd = (struct ggcm_mhd *) lua_touserdata(L, -2);
   struct mrc_fld *fld = ggcm_mhd_get_3d_fld(mhd, nr_comps);
   mrc_fld_dict_add_int(fld, "mhd_type", MT_GKEYLL);
+  int nr_moments = 0, nr_fluids = 0;
+  mrc_fld_get_param_int(mhd->fld, "nr_moments", &nr_moments);
+  mrc_fld_get_param_int(mhd->fld, "nr_fluids", &nr_fluids);
+  mrc_fld_dict_add_int(fld, "nr_moments", nr_moments);
+  mrc_fld_dict_add_int(fld, "nr_fluids", nr_fluids);
   lua_pushlightuserdata(L, fld);
   return 1;
 }
@@ -79,7 +85,8 @@ static int ggcm_mhd_fill_ghosts_lua (lua_State *L) {
 }
 
 void
-ggcm_mhd_step_gkeyll_setup_flds_lua(const char*script_common, int *nr_comps, int *nr_ghosts)
+ggcm_mhd_step_gkeyll_setup_flds_lua(const char*script_common, 
+    int *nr_comps, int *nr_ghosts, int *nr_moments, int *nr_fluids)
 {
   std::string inpFile = script_common;
 
@@ -97,8 +104,12 @@ ggcm_mhd_step_gkeyll_setup_flds_lua(const char*script_common, int *nr_comps, int
 
   lua_getglobal(L_temp, "nr_comps");
   lua_getglobal(L_temp, "nr_ghosts");
-  *nr_ghosts = (int)lua_tonumber(L_temp, -1);
-  *nr_comps = (int)lua_tonumber(L_temp, -2);
+  lua_getglobal(L_temp, "nr_moments");
+  lua_getglobal(L_temp, "nr_fluids");
+  *nr_fluids = (int)lua_tonumber(L_temp, -1);
+  *nr_moments = (int)lua_tonumber(L_temp, -2);
+  *nr_ghosts = (int)lua_tonumber(L_temp, -3);
+  *nr_comps = (int)lua_tonumber(L_temp, -4);
 }
 
 void

@@ -21,3 +21,20 @@ enum {
   G5M_NR,
 };
 
+int
+mrc_fld_gkeyll_nr_moments(struct mrc_fld *f);
+
+int
+mrc_fld_gkeyll_nr_fluids(struct mrc_fld *f);
+
+int
+mrc_fld_gkeyll_electron_index_two_fluids(struct mrc_fld *f, int m_beg);
+
+int
+mrc_fld_gkeyll_ion_index_two_fluids(struct mrc_fld *f, int m_beg);
+
+int
+mrc_fld_gkeyll_species_index(struct mrc_fld *f, int m_beg, int species);
+
+int
+mrc_fld_gkeyll_em_index(struct mrc_fld *f, int m_beg);

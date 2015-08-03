@@ -101,6 +101,8 @@ libmhd_la_SOURCES = \
 	mhd_riemann_hydro_hllc.c \
 	mhd_util.c \
 	\
+	ggcm_mhd_gkeyll.c \
+	\
 	mrc_ts_monitor_ggcm.c \
 	mrc_ts_monitor_conservation.c
 

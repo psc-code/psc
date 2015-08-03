@@ -6,7 +6,9 @@
 --------------------------
 -- PARAMETERS TO LIBMRC --
 --------------------------
-nr_comps = 18
+nr_moments = 5
+nr_fluids = 2
+nr_comps = nr_moments*nr_fluids + 8
 nr_ghosts = 2
 
 Pi = Lucee.Pi
