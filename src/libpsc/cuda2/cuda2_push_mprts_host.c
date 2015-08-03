@@ -307,34 +307,6 @@ sgn(particle_cuda2_real_t val)
 }
 
 static inline void
-calc_3d_dx1_yz_(particle_cuda2_real_t xm[3], 
-		particle_cuda2_real_t x0[3], particle_cuda2_real_t x1[3],
-		int dim)
-{
-  particle_cuda2_real_t dx[3];
-  for (int d = 0; d < 3; d++) {
-    dx[d] = x1[d] - x0[d];
-  }
-  int i[3] = {};
-  particle_cuda2_real_t x[3] = {};
-  for (int d = 1; d < 3; d++) {
-    i[d] = particle_cuda2_real_fint(x0[d]);
-    if (x0[d] == i[d] && dx[d] < 0) {
-      i[d]--;
-    }
-    x[d] = x0[d] - (i[d] + .5f);
-  }
-
-  assert(dx[dim] != 0.);
-  particle_cuda_real_t frac = (.5f * sgn(dx[dim]) - x[dim]) / dx[dim];
-
-  // FIXME, set d == dim value to exact boundary?
-  for (int d = 0; d < 3; d++) {
-    xm[d] = x0[d] + frac * dx[d];
-  }
-}
-
-static inline void
 calc_j2_one_cell(struct psc_fields *flds, particle_cuda2_real_t fnq[3],
 		 particle_cuda2_real_t xm[3], particle_cuda2_real_t xp[3])
 {
