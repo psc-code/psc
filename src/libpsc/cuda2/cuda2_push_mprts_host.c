@@ -346,21 +346,25 @@ calc_j2_one_cell(struct psc_fields *flds, particle_cuda2_real_t fnq[3],
   particle_cuda2_real_t h = (1.f/12.f) * dx[0] * dx[1] * dx[2];
 
   int i[3] = {};
-  for (int d = 1; d < 3; d++) {
+  for (int d = 0; d < 3; d++) {
     i[d] = particle_cuda2_real_fint(xa[d]);
     xa[d] -= i[d];
   }
 
-  F3_CUDA2(flds, JXI, 0,i[1]  ,i[2]  ) += fnq[0] * (dx[0] * (1.f - xa[1]) * (1.f - xa[2]) + h);
-  F3_CUDA2(flds, JXI, 0,i[1]+1,i[2]  ) += fnq[0] * (dx[0] * (      xa[1]) * (1.f - xa[2]) - h);
-  F3_CUDA2(flds, JXI, 0,i[1]  ,i[2]+1) += fnq[0] * (dx[0] * (1.f - xa[1]) * (      xa[2]) + h);
-  F3_CUDA2(flds, JXI, 0,i[1]+1,i[2]+1) += fnq[0] * (dx[0] * (      xa[1]) * (      xa[2]) - h);
+  F3_CUDA2(flds, JXI, i[0]  ,i[1]  ,i[2]  ) += fnq[0] * (dx[0] * (1.f - xa[1]) * (1.f - xa[2]) + h);
+  F3_CUDA2(flds, JXI, i[0]  ,i[1]+1,i[2]  ) += fnq[0] * (dx[0] * (      xa[1]) * (1.f - xa[2]) - h);
+  F3_CUDA2(flds, JXI, i[0]  ,i[1]  ,i[2]+1) += fnq[0] * (dx[0] * (1.f - xa[1]) * (      xa[2]) + h);
+  F3_CUDA2(flds, JXI, i[0]  ,i[1]+1,i[2]+1) += fnq[0] * (dx[0] * (      xa[1]) * (      xa[2]) - h);
 
-  F3_CUDA2(flds, JYI, 0,i[1]  ,i[2]  ) += fnq[1] * dx[1] * (1.f - xa[2]);
-  F3_CUDA2(flds, JYI, 0,i[1]  ,i[2]+1) += fnq[1] * dx[1] * (      xa[2]);
+  F3_CUDA2(flds, JYI, i[0]  ,i[1]  ,i[2]  ) += fnq[1] * (dx[1] * (1.f - xa[0]) * (1.f - xa[2]) + h);
+  F3_CUDA2(flds, JYI, i[0]+0,i[1]  ,i[2]  ) += fnq[1] * (dx[1] * (      xa[0]) * (1.f - xa[2]) - h);
+  F3_CUDA2(flds, JYI, i[0]  ,i[1]  ,i[2]+1) += fnq[1] * (dx[1] * (1.f - xa[0]) * (      xa[2]) + h);
+  F3_CUDA2(flds, JYI, i[0]+0,i[1]  ,i[2]+1) += fnq[1] * (dx[1] * (      xa[0]) * (      xa[2]) - h);
 
-  F3_CUDA2(flds, JZI, 0,i[1]  ,i[2]  ) += fnq[2] * dx[2] * (1.f - xa[1]);
-  F3_CUDA2(flds, JZI, 0,i[1]+1,i[2]  ) += fnq[2] * dx[2] * (      xa[1]);
+  F3_CUDA2(flds, JZI, i[0]  ,i[1]  ,i[2]  ) += fnq[2] * (dx[2] * (1.f - xa[0]) * (1.f - xa[1]) + h);
+  F3_CUDA2(flds, JZI, i[0]+0,i[1]  ,i[2]  ) += fnq[2] * (dx[2] * (      xa[0]) * (1.f - xa[1]) - h);
+  F3_CUDA2(flds, JZI, i[0]  ,i[1]+1,i[2]  ) += fnq[2] * (dx[2] * (1.f - xa[0]) * (      xa[1]) + h);
+  F3_CUDA2(flds, JZI, i[0]+0,i[1]+1,i[2]  ) += fnq[2] * (dx[2] * (      xa[0]) * (      xa[1]) - h);
 }
 
 static inline void
@@ -413,8 +417,8 @@ calc_j2_3d_yz(struct psc_fields *flds, particle_cuda2_real_t *xm, particle_cuda2
 				   particle_cuda2_wni(prt) * prm.fnqz_kind[kind] };
 
   // 2d yz
-  xm[0] = 0.;
-  xp[0] = vxi[0] * prm.dt * prm.dxi[0];
+  xm[0] = .5f; // this way, we guarantee that the average position will remain in the 0th cell
+  xp[0] = xm[0] + vxi[0] * prm.dt * prm.dxi[0];
   
   calc_j2_split_dim(flds, fnq, xm, xp, 2);
 }
