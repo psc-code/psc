@@ -35,30 +35,24 @@ calc_3d_dx1(particle_real_t dx1[3], particle_real_t x[3], particle_real_t dx[3],
   }
 }
 
-#endif // DIM
-
-#if DIM == DIM_YZ
-
-#ifdef PSC_PARTICLES_AS_CUDA2
-
 static inline void
-curr_3d_vb_cell_yz(struct psc_fields *pf, int i[3], particle_cuda2_real_t x[3], particle_cuda2_real_t dx[3],
-		   particle_cuda2_real_t fnq[3], particle_cuda2_real_t dxt[3], int off[3])
+curr_3d_vb_cell(struct psc_fields *flds, int i[3], particle_real_t x[3], particle_real_t dx[3],
+		particle_real_t fnq[3], particle_real_t dxt[3], int off[3])
 {
-  particle_cuda2_real_t h = (1.f/12.f) * dx[0] * dx[1] * dx[2];
-  particle_cuda2_real_t xa[3] = { 0.,
+  particle_real_t h = (1.f/12.f) * dx[0] * dx[1] * dx[2];
+  particle_real_t xa[3] = { 0.,
 			    x[1] + .5f * dx[1],
 			    x[2] + .5f * dx[2], };
-  F3_CUDA2(pf, JXI, 0,i[1]  ,i[2]  ) += fnq[0] * (dx[0] * (.5f - xa[1]) * (.5f - xa[2]) + h);
-  F3_CUDA2(pf, JXI, 0,i[1]+1,i[2]  ) += fnq[0] * (dx[0] * (.5f + xa[1]) * (.5f - xa[2]) - h);
-  F3_CUDA2(pf, JXI, 0,i[1]  ,i[2]+1) += fnq[0] * (dx[0] * (.5f - xa[1]) * (.5f + xa[2]) + h);
-  F3_CUDA2(pf, JXI, 0,i[1]+1,i[2]+1) += fnq[0] * (dx[0] * (.5f + xa[1]) * (.5f + xa[2]) - h);
+  F3_CURR(flds, JXI, 0,i[1]  ,i[2]  ) += fnq[0] * (dx[0] * (.5f - xa[1]) * (.5f - xa[2]) + h);
+  F3_CURR(flds, JXI, 0,i[1]+1,i[2]  ) += fnq[0] * (dx[0] * (.5f + xa[1]) * (.5f - xa[2]) - h);
+  F3_CURR(flds, JXI, 0,i[1]  ,i[2]+1) += fnq[0] * (dx[0] * (.5f - xa[1]) * (.5f + xa[2]) + h);
+  F3_CURR(flds, JXI, 0,i[1]+1,i[2]+1) += fnq[0] * (dx[0] * (.5f + xa[1]) * (.5f + xa[2]) - h);
 
-  F3_CUDA2(pf, JYI, 0,i[1]  ,i[2]  ) += fnq[1] * dx[1] * (.5f - xa[2]);
-  F3_CUDA2(pf, JYI, 0,i[1]  ,i[2]+1) += fnq[1] * dx[1] * (.5f + xa[2]);
+  F3_CURR(flds, JYI, 0,i[1]  ,i[2]  ) += fnq[1] * dx[1] * (.5f - xa[2]);
+  F3_CURR(flds, JYI, 0,i[1]  ,i[2]+1) += fnq[1] * dx[1] * (.5f + xa[2]);
 
-  F3_CUDA2(pf, JZI, 0,i[1]  ,i[2]  ) += fnq[2] * dx[2] * (.5f - xa[1]);
-  F3_CUDA2(pf, JZI, 0,i[1]+1,i[2]  ) += fnq[2] * dx[2] * (.5f + xa[1]);
+  F3_CURR(flds, JZI, 0,i[1]  ,i[2]  ) += fnq[2] * dx[2] * (.5f - xa[1]);
+  F3_CURR(flds, JZI, 0,i[1]+1,i[2]  ) += fnq[2] * dx[2] * (.5f + xa[1]);
 
   if (dxt) {
     dxt[0] -= dx[0];
@@ -70,10 +64,6 @@ curr_3d_vb_cell_yz(struct psc_fields *pf, int i[3], particle_cuda2_real_t x[3], 
     i[2] += off[2];
   }
 }
-
-#else
-
-#endif
 
 #ifdef PSC_PARTICLES_AS_CUDA2
 
@@ -121,17 +111,17 @@ calc_j(struct psc_fields *flds, particle_cuda2_real_t *xm, particle_cuda2_real_t
     off[3 - first_dir] = 0;
     off[first_dir] = idiff[first_dir];
     calc_3d_dx1(dx1, x, dx, off);
-    curr_3d_vb_cell_yz(flds, i, x, dx1, fnq, dx, off);
+    curr_3d_vb_cell(flds, i, x, dx1, fnq, dx, off);
   }
 
   if (second_dir >= 0) {
     off[first_dir] = 0;
     off[second_dir] = idiff[second_dir];
     calc_3d_dx1(dx1, x, dx, off);
-    curr_3d_vb_cell_yz(flds, i, x, dx1, fnq, dx, off);
+    curr_3d_vb_cell(flds, i, x, dx1, fnq, dx, off);
   }
 
-  curr_3d_vb_cell_yz(flds, i, x, dx, fnq, NULL, NULL);
+  curr_3d_vb_cell(flds, i, x, dx, fnq, NULL, NULL);
 }
 
 #endif // PSC_PARTICLES_AS_CUDA2

@@ -24,34 +24,6 @@ curr_2d_vb_cell(struct psc_fields *pf, int i[2], particle_real_t x[2], particle_
   }
 }
 
-static inline void
-curr_3d_vb_cell(struct psc_fields *pf, int i[3], particle_real_t x[3], particle_real_t dx[3],
-		particle_real_t fnq[3], particle_real_t dxt[3], int off[3])
-{
-  particle_real_t h = (1.f/12.f) * dx[0] * dx[1] * dx[2];
-  particle_real_t xa[3] = { 0.,
-			    x[1] + .5f * dx[1],
-			    x[2] + .5f * dx[2], };
-  F3_CURR(pf, JXI, 0,i[1]  ,i[2]  ) += fnq[0] * (dx[0] * (.5f - xa[1]) * (.5f - xa[2]) + h);
-  F3_CURR(pf, JXI, 0,i[1]+1,i[2]  ) += fnq[0] * (dx[0] * (.5f + xa[1]) * (.5f - xa[2]) - h);
-  F3_CURR(pf, JXI, 0,i[1]  ,i[2]+1) += fnq[0] * (dx[0] * (.5f - xa[1]) * (.5f + xa[2]) + h);
-  F3_CURR(pf, JXI, 0,i[1]+1,i[2]+1) += fnq[0] * (dx[0] * (.5f + xa[1]) * (.5f + xa[2]) - h);
-
-  F3_CURR(pf, JYI, 0,i[1]  ,i[2]  ) += fnq[1] * dx[1] * (.5f - xa[2]);
-  F3_CURR(pf, JYI, 0,i[1]  ,i[2]+1) += fnq[1] * dx[1] * (.5f + xa[2]);
-  F3_CURR(pf, JZI, 0,i[1]  ,i[2]  ) += fnq[2] * dx[2] * (.5f - xa[1]);
-  F3_CURR(pf, JZI, 0,i[1]+1,i[2]  ) += fnq[2] * dx[2] * (.5f + xa[1]);
-  if (dxt) {
-    dxt[0] -= dx[0];
-    dxt[1] -= dx[1];
-    dxt[2] -= dx[2];
-    x[1] += dx[1] - off[1];
-    x[2] += dx[2] - off[2];
-    i[1] += off[1];
-    i[2] += off[2];
-  }
-}
-
 #define CALC_JX_2D(pf, part, vxi)					\
   do {									\
     int lf[3];								\

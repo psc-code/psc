@@ -3,6 +3,8 @@
 
 #define DIM DIM_XYZ
 #define CALC_J CALC_J_1VB_SPLIT
+#define F3_CURR F3_CUDA2
+
 #define SFX(s) s ## _xyz
 
 #include "cuda2_push_mprts_host.c"
