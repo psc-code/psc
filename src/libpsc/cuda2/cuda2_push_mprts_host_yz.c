@@ -2,7 +2,7 @@
 #include "psc_cuda2.h"
 
 #define DIM DIM_YZ
-#define CALC_J CALC_J_1VB_SPLIT
+#define CALC_J CALC_J_1VB_VAR1
 #define SFX(s) s ## _yz
 
 #include "cuda2_push_mprts_host.c"
