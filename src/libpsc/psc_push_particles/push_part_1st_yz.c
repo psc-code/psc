@@ -6,7 +6,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "inc_defs.h"
+
+#define DIM DIM_YZ
+
 #include "inc_interpolate.c"
+#include "inc_push.c"
 #include "c_common_push.c"
 
 #define F3_CACHE F3

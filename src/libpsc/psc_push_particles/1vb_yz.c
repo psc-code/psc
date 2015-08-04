@@ -5,9 +5,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "inc_interpolate.c"
-#include "c_common_push.c"
 #include "inc_params.c"
+#include "inc_interpolate.c"
+#include "inc_push.c"
+#include "c_common_push.c"
 
 // ======================================================================
 // EXT_PREPARE_SORT

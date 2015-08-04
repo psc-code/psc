@@ -14,6 +14,7 @@
 #define F3_CACHE_TYPE "c"
 
 #include "inc_interpolate.c"
+#include "inc_push.c"
 #include "c_common_push.c"
 
 static void
