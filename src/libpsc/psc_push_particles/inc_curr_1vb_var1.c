@@ -68,8 +68,6 @@ curr_3d_vb_cell(struct psc_fields *flds, int i[3], particle_real_t x[3], particl
 // ----------------------------------------------------------------------
 // calc_j / CALC_JXYZ_3D
 
-#if PSC_PARTICLES_AS_CUDA2
-
 static inline void
 calc_j(struct psc_fields *flds, particle_real_t *xm, particle_real_t *xp,
        int *lf, int *lg, particle_t *prt, particle_real_t *vxi)
@@ -96,65 +94,6 @@ calc_j(struct psc_fields *flds, particle_real_t *xm, particle_real_t *xp,
     } else {
       dx1[2] = dx[2] / dx[1] * dx1[1];
     }
-    if (particle_cuda2_real_abs(x[2] + dx1[2]) > .5f) {
-      first_dir = 2;
-    } else {
-      first_dir = 1;
-    }
-    second_dir = 3 - first_dir;
-  }
-
-  int kind = cuda_float_as_int(prt->xi4.w);
-  particle_real_t fnq[3] = { particle_cuda2_wni(prt) * prm.fnqx_kind[kind],
-				   particle_cuda2_wni(prt) * prm.fnqy_kind[kind],
-				   particle_cuda2_wni(prt) * prm.fnqz_kind[kind] };
-  dx[0] = vxi[0] * prm.dt * prm.dxi[0];
-
-  if (first_dir >= 0) {
-    off[3 - first_dir] = 0;
-    off[first_dir] = idiff[first_dir];
-    calc_3d_dx1(dx1, x, dx, off);
-    curr_3d_vb_cell(flds, i, x, dx1, fnq, dx, off);
-  }
-
-  if (second_dir >= 0) {
-    off[first_dir] = 0;
-    off[second_dir] = idiff[second_dir];
-    calc_3d_dx1(dx1, x, dx, off);
-    curr_3d_vb_cell(flds, i, x, dx1, fnq, dx, off);
-  }
-
-  curr_3d_vb_cell(flds, i, x, dx, fnq, NULL, NULL);
-}
-
-#else
-
-static inline void
-calc_j(struct psc_fields *flds, particle_real_t *xm, particle_real_t *xp,
-       int *lf, int *lg, particle_t *prt, particle_real_t *vxi)
-{
-  int i[3] = { 0, lg[1], lg[2] };
-  int idiff[3] = { 0, lf[1] - lg[1], lf[2] - lg[2] };
-  particle_real_t dx[3] = { 0., xp[1] - xm[1], xp[2] - xm[2] };
-  particle_real_t x[3] = { 0., xm[1] - (i[1] + .5f), xm[2] - (i[2] + .5f) };
-
-  particle_real_t dx1[3];
-  int off[3];
-  int first_dir, second_dir = -1;
-  /* FIXME, make sure we never div-by-zero? */
-  if (idiff[1] == 0 && idiff[2] == 0) {
-    first_dir = -1;
-  } else if (idiff[1] == 0) {
-    first_dir = 2;
-  } else if (idiff[2] == 0) {
-    first_dir = 1;
-  } else {
-    dx1[1] = .5f * idiff[1] - x[1];
-    if (dx[1] == 0.f) {
-      dx1[2] = 0.f;
-    } else {
-      dx1[2] = dx[2] / dx[1] * dx1[1];
-    }
     if (particle_real_abs(x[2] + dx1[2]) > .5f) {
       first_dir = 2;
     } else {
@@ -162,12 +101,15 @@ calc_j(struct psc_fields *flds, particle_real_t *xm, particle_real_t *xp,
     }
     second_dir = 3 - first_dir;
   }
-
-  particle_real_t fnq[3] = { particle_wni(prt) * prm.fnqx_kind[prt->kind],
-			     particle_wni(prt) * prm.fnqy_kind[prt->kind],
-			     particle_wni(prt) * prm.fnqz_kind[prt->kind] };
+#if PSC_PARTICLES_AS_CUDA2
+  int kind = cuda_float_as_int(prt->xi4.w);
+#else
+  int kind = prt->kind;
+#endif
+  particle_real_t fnq[3] = { particle_wni(prt) * prm.fnqx_kind[kind],
+			     particle_wni(prt) * prm.fnqy_kind[kind],
+			     particle_wni(prt) * prm.fnqz_kind[kind] };
   dx[0] = vxi[0] * prm.dt * prm.dxi[0];
-
   if (first_dir >= 0) {
     off[3 - first_dir] = 0;
     off[first_dir] = idiff[first_dir];
@@ -184,8 +126,6 @@ calc_j(struct psc_fields *flds, particle_real_t *xm, particle_real_t *xp,
 
   curr_3d_vb_cell(flds, i, x, dx, fnq, NULL, NULL);
 }
-
-#endif
 
 #endif // DIM
 
