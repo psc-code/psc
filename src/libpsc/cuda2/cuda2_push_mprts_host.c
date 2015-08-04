@@ -7,79 +7,10 @@
 
 #include "../cuda/psc_cuda.h"
 
+#define F3_CACHE F3_CUDA2
+
 #include "../psc_push_particles/inc_params.c"
-
-#if DIM == DIM_YZ
-
-#define INTERPOLATE_1ST_EC(pf, exq, eyq, ezq, hxq, hyq, hzq)        	\
-  do {									\
-    particle_cuda2_real_t g0y = 1.f - og[1];				\
-    particle_cuda2_real_t g0z = 1.f - og[2];				\
-    particle_cuda2_real_t g1y = og[1];					\
-    particle_cuda2_real_t g1z = og[2];					\
-    									\
-    exq = (g0z*(g0y*F3_CUDA2(pf, EX, 0,lg[1]  ,lg[2]  ) +		\
-		g1y*F3_CUDA2(pf, EX, 0,lg[1]+1,lg[2]  )) +		\
-	   g1z*(g0y*F3_CUDA2(pf, EX, 0,lg[1]  ,lg[2]+1) +		\
-		g1y*F3_CUDA2(pf, EX, 0,lg[1]+1,lg[2]+1)));		\
-    eyq = (g0z*F3_CUDA2(pf, EY, 0,lg[1]  ,lg[2]  ) +			\
-	   g1z*F3_CUDA2(pf, EY, 0,lg[1]  ,lg[2]+1));			\
-    ezq = (g0y*F3_CUDA2(pf, EZ, 0,lg[1]  ,lg[2]  ) +			\
-	   g1y*F3_CUDA2(pf, EZ, 0,lg[1]+1,lg[2]  ));			\
-									\
-    hxq = F3_CUDA2(pf, HX, 0,lg[1]  ,lg[2]  );				\
-    hyq = (g0y*F3_CUDA2(pf, HY, 0,lg[1]  ,lg[2]  ) +			\
-	   g1y*F3_CUDA2(pf, HY, 0,lg[1]+1,lg[2]  ));			\
-    hzq = (g0z*F3_CUDA2(pf, HZ, 0,lg[1]  ,lg[2]  ) +			\
-	   g1z*F3_CUDA2(pf, HZ, 0,lg[1]  ,lg[2]+1));			\
-    									\
-    assert_finite(exq); assert_finite(eyq); assert_finite(ezq);		\
-    assert_finite(hxq); assert_finite(hyq); assert_finite(hzq);		\
-  } while (0)
-
-#endif
-
-#if DIM == DIM_XYZ
-
-#define INTERPOLATE_1ST_EC(pf, exq, eyq, ezq, hxq, hyq, hzq)		\
-  do {									\
-    particle_cuda2_real_t g0x = 1.f - og[0];				\
-    particle_cuda2_real_t g0y = 1.f - og[1];				\
-    particle_cuda2_real_t g0z = 1.f - og[2];				\
-    particle_cuda2_real_t g1x = og[0];					\
-    particle_cuda2_real_t g1y = og[1];					\
-    particle_cuda2_real_t g1z = og[2];					\
-    									\
-    exq = (g0z*(g0y*F3_CUDA2(pf, EX, lg[0]  ,lg[1]  ,lg[2]  ) +		\
-		g1y*F3_CUDA2(pf, EX, lg[0]  ,lg[1]+1,lg[2]  )) +	\
-	   g1z*(g0y*F3_CUDA2(pf, EX, lg[0]  ,lg[1]  ,lg[2]+1) +		\
-		g1y*F3_CUDA2(pf, EX, lg[0]  ,lg[1]+1,lg[2]+1)));	\
-									\
-    eyq = (g0x*(g0z*F3_CUDA2(pf, EY, lg[0]  ,lg[1]  ,lg[2]  ) +		\
-		g1z*F3_CUDA2(pf, EY, lg[0]  ,lg[1]  ,lg[2]+1)) +	\
-	   g1x*(g0z*F3_CUDA2(pf, EY, lg[0]+1,lg[1]  ,lg[2]  ) +		\
-		g1z*F3_CUDA2(pf, EY, lg[0]+1,lg[1]  ,lg[2]+1)));	\
-									\
-    ezq = (g0y*(g0x*F3_CUDA2(pf, EZ, lg[0]  ,lg[1]  ,lg[2]  ) +		\
-		g1x*F3_CUDA2(pf, EZ, lg[0]+1,lg[1]  ,lg[2]  )) +	\
-	   g1y*(g0x*F3_CUDA2(pf, EZ, lg[0]  ,lg[1]+1,lg[2]  ) +		\
-		g1x*F3_CUDA2(pf, EZ, lg[0]+1,lg[1]+1,lg[2]  )));	\
-									\
-    hxq = (g0x*F3_CUDA2(pf, HX, lg[0]  ,lg[1]  ,lg[2]  ) +		\
-	   g1x*F3_CUDA2(pf, HX, lg[0]+1,lg[1]  ,lg[2]  ));		\
-									\
-    hyq = (g0y*F3_CUDA2(pf, HY, lg[0]  ,lg[1]  ,lg[2]  ) +		\
-	   g1y*F3_CUDA2(pf, HY, lg[0]  ,lg[1]+1,lg[2]  ));		\
-									\
-    hzq = (g0z*F3_CUDA2(pf, HZ, lg[0]  ,lg[1]  ,lg[2]  ) +		\
-	   g1z*F3_CUDA2(pf, HZ, lg[0]  ,lg[1]  ,lg[2]+1));		\
-									\
-    assert_finite(exq); assert_finite(eyq); assert_finite(ezq);		\
-    assert_finite(hxq); assert_finite(hyq); assert_finite(hzq);		\
-  } while (0)
-
-#endif
-
+#include "../psc_push_particles/inc_interpolate.c"
 
 static inline void
 calc_vxi(particle_cuda2_real_t vxi[3], particle_cuda2_t *part)

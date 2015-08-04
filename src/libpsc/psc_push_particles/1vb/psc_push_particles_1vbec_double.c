@@ -4,6 +4,10 @@
 #include "psc_particles_as_double.h"
 #include "psc_fields_as_c.h"
 
+#include "../inc_defs.h"
+
+#define DIM DIM_YZ
+
 #define F3_CURR F3_C
 #define F3_CACHE F3_C
 #define F3_CACHE_TYPE "c"

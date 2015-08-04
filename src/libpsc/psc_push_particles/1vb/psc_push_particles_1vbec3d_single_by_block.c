@@ -4,6 +4,10 @@
 #include "psc_particles_as_single_by_block.h"
 #include "psc_fields_as_single.h"
 
+#include "../inc_defs.h"
+
+#define DIM DIM_YZ
+
 #define F3_CURR F3_S
 #define F3_CACHE F3_S
 #define F3_CACHE_TYPE "single"
