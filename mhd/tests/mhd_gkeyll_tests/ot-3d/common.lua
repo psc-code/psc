@@ -8,20 +8,40 @@
 -- i.e., lyg, lzg, hxg, hyg, hzg             --
 -----------------------------------------------
 
+skip_execute = ...
+
 --------------------------
 -- PARAMETERS TO LIBMRC --
 --------------------------
 nr_moments = 5
 nr_fluids = 2
-nr_comps = nr_moments*nr_fluids + 8
+nr_em_comps = 8
+nr_comps = nr_moments*nr_fluids + nr_em_comps
 nr_ghosts = 2
--- TODO: skip the remaining codes if not needed
+nr_dims = 3
 
+-- if we only need the parameters above and want
+-- to skip executing the remaining codes, do not
+-- specify skip_execute (nil) or set it false
+if (skip_execute) then
+   return
+end
+
+----------------------
+-- HELPER FUNCTIONS --
+----------------------
 pi = math.pi
 sqrt = math.sqrt
 cos = math.cos
 sin = math.sin
 tan = math.tan
+
+function mprint(s)
+   if (rank == 0) then
+      print(s)
+   end
+end
+
 -----------------------------------------------
 -- PHYSICAL PARAMETERS                       --
 -----------------------------------------------
@@ -77,45 +97,66 @@ function init(x,y,z)
 
    local Bx = -B0*sin(2.*pi*y/Ly) 
    local By = B0*sin(4.*pi*x/Lx)
-   local Bz = 0.0
+   local Ez = -vx*By + vy*Bx
 
-   return rhoe0, momxe, momye, 0.0, ere, rhoi0, momxi, momyi, 0.0, eri, 0.0, 0.0, 0.0, Bx, By, Bz, 0.0, 0.0
+   return rhoe0, momxe, momye, 0.0, ere, rhoi0, momxi, momyi, 0.0, eri, 0.0, 0.0, Ez, Bx, By, 0.0, 0.0, 0.0
 end
 
 ------------------------------------
 -- LOGS TO BE DISPLAYED ON SCREEN --
 ------------------------------------
-if (showlog and rank==0) then
-   print(string.format("===================================================="))
-   print(string.format("nr_comps = %g  nr_ghosts = %g", nr_comps, nr_ghosts))
-   print(string.format("lightSpeed = %g  mu0 = %g  epsilon0 = %g", lightSpeed, mu0, epsilon0))
-   print(string.format("elcErrorSpeedFactor = %g  mgnErrorSpeedFactor = %g", elcErrorSpeedFactor, mgnErrorSpeedFactor))
-   print(string.format("ionMass = %g  elcMass = ionMass/%g",ionMass, ionMass/elcMass))
-   print(string.format("ionCharge = %g  elcCharge = %g",ionCharge, elcCharge))
-   print(string.format("cfl = %g", cfl))
-   print(string.format("===================================================="))
+if (showlog) then
+   mprint(string.format("===================================================="))
+   mprint(string.format("nr_fluids = %d  nr_moments = %d", nr_fluids, nr_moments))
+   mprint(string.format("nr_comps = %d  nr_ghosts = %d nr_dims = %d", nr_comps, nr_ghosts, nr_dims))
+   mprint(string.format("lightSpeed = %g  mu0 = %g  epsilon0 = %g", lightSpeed, mu0, epsilon0))
+   mprint(string.format("elcErrorSpeedFactor = %g  mgnErrorSpeedFactor = %g", elcErrorSpeedFactor, mgnErrorSpeedFactor))
+   mprint(string.format("ionMass = %g  elcMass = ionMass/%g",ionMass, ionMass/elcMass))
+   mprint(string.format("ionCharge = %g  elcCharge = %g",ionCharge, elcCharge))
+   mprint(string.format("cfl = %g", cfl))
+   mprint(string.format("===================================================="))
 end
 
 if (showlocallog) then
    print(string.format("[%03d] dims = [%d,%d,%d] l = [%g,%g,%g] h = [%g,%g,%g]", rank,mx,my,mz,lx,ly,lz,hx,hy,hz))
 end
 
-------------------
--- COMMON CODES --
-------------------
+------------------------
+-- COMMON CODES       --
+------------------------
+-- 1,2,3-D COMPATIBLE --
+if (nr_dims == 1) then
+   myGrid = Grid.RectCart1D
+   lower = {lx}
+   upper = {hx}
+   cells = {mx}
+   myDataStruct = DataStruct.Field1D
+elseif (nr_dims == 2) then
+   myGrid = Grid.RectCart2D
+   lower = {lx, ly}
+   upper = {hx, hy}
+   cells = {mx, my}
+   myDataStruct = DataStruct.Field2D
+elseif (nr_dims == 3) then
+   myGrid = Grid.RectCart3D
+   lower = {lx, ly, lz}
+   upper = {hx, hy, hz}
+   cells = {mx, my, mz}
+   myDataStruct = DataStruct.Field3D
+end
+
 function createGrid()
-   return Grid.RectCart2D {
-      lower = {lx, ly},
-      upper = {hx, hy},
-      cells = {mx, my},
+   return myGrid {
+      lower = lower,
+      upper = upper,
+      cells = cells,
    }
 end
 
-function createFields(grid)
-   return DataStruct.Field2D {
+function createData(grid)
+   return myDataStruct {
       onGrid = grid,
       numComponents = nr_comps,
       ghost = {nr_ghosts, nr_ghosts},
    }
 end
-

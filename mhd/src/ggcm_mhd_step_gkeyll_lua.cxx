@@ -93,9 +93,17 @@ ggcm_mhd_step_gkeyll_setup_flds_lua(const char*script_common,
   Lucee::LuaState L_temp;
   Lucee::registerModules(L_temp);
 
-  if (luaL_loadfile(L_temp, inpFile.c_str()) 
-   || lua_pcall(L_temp, 0, 0, 0)) {
-    std::cerr << "Error parsing file: " << inpFile << std::endl;
+  if (luaL_loadfile(L_temp, inpFile.c_str())) {
+    std::cerr << "Error loading file: " << inpFile << std::endl;
+    std::string err(lua_tostring(L_temp, -1));
+    lua_pop(L_temp, 1);
+    std::cerr << err << std::endl;
+    exit(1);
+  }
+
+  lua_pushboolean(L_temp, true);
+  if (lua_pcall(L_temp, 1, 0, 0)) {
+    std::cerr << "Error executing file: " << inpFile << std::endl;
     std::string err(lua_tostring(L_temp, -1));
     lua_pop(L_temp, 1);
     std::cerr << err << std::endl;
@@ -113,8 +121,8 @@ ggcm_mhd_step_gkeyll_setup_flds_lua(const char*script_common,
 }
 
 void
-ggcm_mhd_step_gkeyll_lua_setup(const char *script, struct ggcm_mhd *mhd,
-			       struct mrc_fld *fld)
+ggcm_mhd_step_gkeyll_lua_setup(const char *script, const char *script_common,
+    struct ggcm_mhd *mhd, struct mrc_fld *fld)
 {
   // determine input file
   std::string inpFile = script;
@@ -234,6 +242,9 @@ ggcm_mhd_step_gkeyll_lua_setup(const char *script, struct ggcm_mhd *mhd,
   lua_pushnumber(L, h[1]);
   lua_pushnumber(L, h[2]);
   nargs += 3;
+
+  lua_pushstring(L, script_common);
+  nargs += 1;
 
   if (lua_pcall(L, nargs, 0, 0)) {
     std::cerr << "Error in input file: " << inpFile << std::endl;

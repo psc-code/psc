@@ -50,7 +50,7 @@ ggcm_mhd_step_gkeyll_setup(struct ggcm_mhd_step *step)
   struct ggcm_mhd *mhd = step->mhd;
 
   assert(strcmp(mrc_fld_type(mhd->fld), FLD_TYPE) == 0);
-  ggcm_mhd_step_gkeyll_lua_setup(sub->script, mhd, mhd->fld);
+  ggcm_mhd_step_gkeyll_lua_setup(sub->script, sub->script_common, mhd, mhd->fld);
 }
 
 // ----------------------------------------------------------------------

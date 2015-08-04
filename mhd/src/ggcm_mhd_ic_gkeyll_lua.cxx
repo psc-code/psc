@@ -23,8 +23,8 @@ extern "C" {
 #include <iostream>
 
 void
-ggcm_mhd_ic_gkeyll_lua_run(const char *script, struct ggcm_mhd *mhd,
-			   struct mrc_fld *fld)
+ggcm_mhd_ic_gkeyll_lua_run(const char *script, const char *script_common,
+    struct ggcm_mhd *mhd, struct mrc_fld *fld)
 {
   // determine input file
   std::string inpFile = script;
@@ -135,6 +135,9 @@ ggcm_mhd_ic_gkeyll_lua_run(const char *script, struct ggcm_mhd *mhd,
   lua_pushnumber(L, h[1]);
   lua_pushnumber(L, h[2]);
   nargs += 3;
+
+  lua_pushstring(L, script_common);
+  nargs++;
 
   lua_pushlightuserdata(L, fld->_arr);
   nargs++;

@@ -15,6 +15,7 @@
 
 struct ggcm_mhd_ic_gkeyll {
   const char *script;
+  const char *script_common;
 };
 
 #define ggcm_mhd_ic_gkeyll(ic) mrc_to_subobj(ic, struct ggcm_mhd_ic_gkeyll)
@@ -29,7 +30,7 @@ ggcm_mhd_ic_gkeyll_run(struct ggcm_mhd_ic *ic)
   struct ggcm_mhd *mhd = ic->mhd;
 
   struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
-  ggcm_mhd_ic_gkeyll_lua_run(sub->script, mhd, fld);
+  ggcm_mhd_ic_gkeyll_lua_run(sub->script, sub->script_common, mhd, fld);
   mrc_fld_put_as(fld, mhd->fld);
 }
 
@@ -39,6 +40,7 @@ ggcm_mhd_ic_gkeyll_run(struct ggcm_mhd_ic *ic)
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_ic_gkeyll, x)
 static struct param ggcm_mhd_ic_gkeyll_descr[] = {
   { "script"           , VAR(script)           , PARAM_STRING("init.lua")   },
+  { "script_common"    , VAR(script_common)    , PARAM_STRING("common.lua") },
   {},
 };
 #undef VAR

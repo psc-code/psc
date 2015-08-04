@@ -1,24 +1,50 @@
+-- PROBLEM: 2D FIVE-MOMENT, BOWSHOCK FORMATION --
+
 -----------------------------------------------
 -- PARAMETERS AND FUNCTIONS COMMONLY USED BY --
 -- INITIALIZATION AND TIME-STEPPING          --
 -----------------------------------------------
+-- Assumes knowledge of global domain sizes  --
+-- i.e., lyg, lzg, hxg, hyg, hzg             --
+-----------------------------------------------
+
+skip_execute = ...
 
 --------------------------
 -- PARAMETERS TO LIBMRC --
 --------------------------
 nr_moments = 5
 nr_fluids = 2
-nr_comps = nr_moments*nr_fluids + 8
+nr_em_comps = 8
+nr_comps = nr_moments*nr_fluids + nr_em_comps
 nr_ghosts = 2
+nr_dims = 2
 
-Pi = Lucee.Pi
+-- if we only need the parameters above and want
+-- to skip executing the remaining codes, do not
+-- specify skip_execute (nil) or set it false
+if (skip_execute) then
+   return
+end
+
+----------------------
+-- HELPER FUNCTIONS --
+----------------------
+pi = math.pi
 sqrt = math.sqrt
 cos = math.cos
 sin = math.sin
 tan = math.tan
 
+function mprint(s)
+   if (rank == 0) then
+      print(s)
+   end
+end
+
 -----------------------------------------------
 -- PHYSICAL PARAMETERS                       --
+-----------------------------------------------
 -- Time-stepping needs gasGamma, lightSpeed, --
 --   epsilon0, elc/mgnErrorSpeedFactor,      --
 --   elcCharge/Mass, ionCharge/Mass, cfl     --
@@ -151,64 +177,81 @@ end
 -- LOGS TO BE DISPLAYED ON SCREEN --
 ------------------------------------
 if (showlog) then
+   mprint(string.format("===================================================="))
+   mprint(string.format("nr_fluids = %d  nr_moments = %d", nr_fluids, nr_moments))
+   mprint(string.format("nr_comps = %d  nr_ghosts = %d nr_dims = %d", nr_comps, nr_ghosts, nr_dims))
+   mprint(string.format("lightSpeed = %g  mu0 = %g  epsilon0 = %g", lightSpeed, mu0, epsilon0))
+   mprint(string.format("elcErrorSpeedFactor = %g  mgnErrorSpeedFactor = %g", elcErrorSpeedFactor, mgnErrorSpeedFactor))
+   mprint(string.format("ionMass = %g  elcMass = ionMass/%g",ionMass, ionMass/elcMass))
+   mprint(string.format("ionCharge = %g  elcCharge = %g",ionCharge, elcCharge))
+   mprint(string.format("cfl = %g", cfl))
+   mprint(string.format("===================================================="))
+
    Lx = hxg - lxg
    Ly = hyg - lyg
-   Lucee.logInfo(string.format("====================================="))
-   Lucee.logInfo(string.format("lightSpeed = %g  mu0 = %g  epsilon0 = %g", lightSpeed, mu0, epsilon0))
-   Lucee.logInfo(string.format("elcErrorSpeedFactor = %g  mgnErrorSpeedFactor = %g", elcErrorSpeedFactor, mgnErrorSpeedFactor))
-   Lucee.logInfo(string.format("ionMass = %g  elcMass = ionMass/%g",ionMass, ionMass/elcMass))
-   Lucee.logInfo(string.format("ionCharge = %g  elcCharge = %g",ionCharge, elcCharge))
-   Lucee.logInfo(string.format("cfl = %g", cfl))
-
-Lucee.logInfo(string.format("Lx=%gdi0=%gdiCore", Lx/ionInertiaLength0, Lx/ionInertiaLengthCore))
-Lucee.logInfo(string.format("Ly=%gdi0=%gdiCore", Ly/ionInertiaLength0, Ly/ionInertiaLengthCore))
-   Lucee.logInfo(string.format("                                "))
-   
-   Lucee.logInfo(string.format("Background, |(x,y) - (%g,%g)| < %g:", xCore, yCore, radCore))
-   Lucee.logInfo(string.format("  rho=%g  di=%g", rho0, ionInertiaLength0))
-   Lucee.logInfo(string.format("  cs=%g=%gc  vA=%g=%gc", cs0, cs0/lightSpeed, vA0, vA0/lightSpeed))
-   Lucee.logInfo(string.format("  vx=%g=%gc=%gcs=%gvA", vx0, vx0/lightSpeed, vx0/cs0, vx0/vA0))
-   Lucee.logInfo(string.format("  plasmaBeta=%g", plasmaBeta0))
-   Lucee.logInfo(string.format("  pr=%g", pr0))
-   Lucee.logInfo(string.format("                                "))
-   Lucee.logInfo(string.format("Core, |(x,y) - (%g,%g)| > %g:", xCore, yCore, radCore))
-   Lucee.logInfo(string.format("  rho=%g  di=%g", rhoCore, ionInertiaLengthCore))
-   Lucee.logInfo(string.format("  cs=%g=%gc", csCore, csCore/lightSpeed))
-   Lucee.logInfo(string.format("  vx=%g=%gc=%gcs", vxCore, vxCore/lightSpeed, vxCore/csCore))
-   Lucee.logInfo(string.format("  pr=%g", prCore))
-   Lucee.logInfo(string.format("                                "))
-   Lucee.logInfo(string.format("Inflow"))
-   Lucee.logInfo(string.format("  rhoeIn=%g  momxeIn=%g ereIn=%g", rhoeIn, momxeIn, ereIn))
-   Lucee.logInfo(string.format("  rhoiIn=%g  momxiIn=%g eriIn=%g", rhoiIn, momxiIn, eriIn))
-   Lucee.logInfo(string.format("  BxIn=%g ByIn=%g, BzIn=%g", BxIn, ByIn, BzIn))
-   Lucee.logInfo(string.format("====================================="))
+   mprint(string.format("Lx=%gdi0=%gdiCore", Lx/ionInertiaLength0, Lx/ionInertiaLengthCore))
+   mprint(string.format("Ly=%gdi0=%gdiCore", Ly/ionInertiaLength0, Ly/ionInertiaLengthCore))
+   mprint(string.format("                                "))
+   mprint(string.format("Background, |(x,y) - (%g,%g)| < %g:", xCore, yCore, radCore))
+   mprint(string.format("  rho=%g  di=%g", rho0, ionInertiaLength0))
+   mprint(string.format("  cs=%g=%gc  vA=%g=%gc", cs0, cs0/lightSpeed, vA0, vA0/lightSpeed))
+   mprint(string.format("  vx=%g=%gc=%gcs=%gvA", vx0, vx0/lightSpeed, vx0/cs0, vx0/vA0))
+   mprint(string.format("  plasmaBeta=%g", plasmaBeta0))
+   mprint(string.format("  pr=%g", pr0))
+   mprint(string.format("                                "))
+   mprint(string.format("Core, |(x,y) - (%g,%g)| > %g:", xCore, yCore, radCore))
+   mprint(string.format("  rho=%g  di=%g", rhoCore, ionInertiaLengthCore))
+   mprint(string.format("  cs=%g=%gc", csCore, csCore/lightSpeed))
+   mprint(string.format("  vx=%g=%gc=%gcs", vxCore, vxCore/lightSpeed, vxCore/csCore))
+   mprint(string.format("  pr=%g", prCore))
+   mprint(string.format("                                "))
+   mprint(string.format("Inflow"))
+   mprint(string.format("  rhoeIn=%g  momxeIn=%g ereIn=%g", rhoeIn, momxeIn, ereIn))
+   mprint(string.format("  rhoiIn=%g  momxiIn=%g eriIn=%g", rhoiIn, momxiIn, eriIn))
+   mprint(string.format("  BxIn=%g ByIn=%g, BzIn=%g", BxIn, ByIn, BzIn))
+   mprint(string.format("===================================================="))
 end
 
 if (showlocallog) then
-   print("     rank = ", rank)
-   print("nr_ghosts = ", nr_ghosts)
-   print("nr_comps  = ", nr_comps)
-   print("    dims  = ", mx, my, mz)
-   print("       l  = ", lx, ly, lz)
-   print("       h  = ", hx, hy, hz)
+   print(string.format("[%03d] dims = [%d,%d,%d] l = [%g,%g,%g] h = [%g,%g,%g]", rank,mx,my,mz,lx,ly,lz,hx,hy,hz))
 end
 
-------------------
--- COMMON CODES --
-------------------
+------------------------
+-- COMMON CODES       --
+------------------------
+-- 1,2,3-D COMPATIBLE --
+if (nr_dims == 1) then
+   myGrid = Grid.RectCart1D
+   lower = {lx}
+   upper = {hx}
+   cells = {mx}
+   myDataStruct = DataStruct.Field1D
+elseif (nr_dims == 2) then
+   myGrid = Grid.RectCart2D
+   lower = {lx, ly}
+   upper = {hx, hy}
+   cells = {mx, my}
+   myDataStruct = DataStruct.Field2D
+elseif (nr_dims == 3) then
+   myGrid = Grid.RectCart3D
+   lower = {lx, ly, lz}
+   upper = {hx, hy, hz}
+   cells = {mx, my, mz}
+   myDataStruct = DataStruct.Field3D
+end
+
 function createGrid()
-   return Grid.RectCart2D {
-      lower = {lx, ly},
-      upper = {hx, hy},
-      cells = {mx, my},
+   return myGrid {
+      lower = lower,
+      upper = upper,
+      cells = cells,
    }
 end
 
-function createFields(grid)
-   return DataStruct.Field2D {
+function createData(grid)
+   return myDataStruct {
       onGrid = grid,
       numComponents = nr_comps,
       ghost = {nr_ghosts, nr_ghosts},
    }
 end
-

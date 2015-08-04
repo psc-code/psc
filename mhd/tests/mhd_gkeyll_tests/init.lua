@@ -5,20 +5,20 @@
 ------------------------------------------
 -- LOAD LOCAL DOMAIN PARAMS FROM LIBMRC --
 ------------------------------------------
-rank, mx, my, mz, lx, ly, lz, hx, hy, hz, lxg, lyg, lzg, hxg, hyg, hzg, cptr = ...
+rank, mx, my, mz, lx, ly, lz, hx, hy, hz, lxg, lyg, lzg, hxg, hyg, hzg, common_script, cptr = ...
 
 ----------------------------------------
 -- LOAD COMMON CODES SHARED WITH STEP --
 ----------------------------------------
 showlog = false
-showlocallog = true
-dofile("common.lua")
+showlocallog = false
+dofile(common_script)
 
 ----------------------------
 -- I.C. FOR LIBMRC-GKEYLL --
 ----------------------------
 grid = createGrid()
-q = createFields(grid)
+q = createData(grid)
 q:set(init)
 q:copy_to_cptr(cptr)
 
