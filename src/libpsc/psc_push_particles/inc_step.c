@@ -73,28 +73,17 @@ push_one_(particle_t *prt, struct psc_fields *flds, struct psc_particles *prts, 
   find_idx_off_1st_rel(&prt->xi, lh, oh, -.5f, prm.dxi);
 #endif
 
-#if PSC_PARTICLES_AS_CUDA2
-  particle_real_t exq, eyq, ezq, hxq, hyq, hzq;
-  INTERPOLATE_1ST_EC(flds, exq, eyq, ezq, hxq, hyq, hzq);
-  
-  // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0)
-  int kind = cuda_float_as_int(prt->xi4.w);
-  particle_real_t dq = prm.dq_kind[kind];
-  push_pxi(prt, exq, eyq, ezq, hxq, hyq, hzq, dq);
-  
-  particle_real_t vxi[3];
-  calc_vxi(vxi, prt);
-  // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0)
-  push_xi(prt, vxi, prm.dt);
-  
-#else
   particle_real_t exq, eyq, ezq, hxq, hyq, hzq;
   INTERPOLATE_1ST(flds, exq, eyq, ezq, hxq, hyq, hzq);
-  
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0)
-  particle_real_t dq = prm.dq_kind[prt->kind];
+#if PSC_PARTICLES_AS_CUDA2
+  int kind = cuda_float_as_int(prt->xi4.w);
+#else
+  int kind = prt->kind;
+#endif
+  particle_real_t dq = prm.dq_kind[kind];
   push_pxi(prt, exq, eyq, ezq, hxq, hyq, hzq, dq);
-  
+
   particle_real_t vxi[3];
   calc_vxi(vxi, prt);
 #if CALC_J == CALC_J_1VB_2D
@@ -111,7 +100,6 @@ push_one_(particle_t *prt, struct psc_fields *flds, struct psc_particles *prts, 
   push_xi(prt, vxi, prm.dt);
 #endif
   
-#endif
   int lf[3];
   particle_real_t of[3], xp[3];
 #if PSC_PARTICLES_AS_CUDA2
@@ -124,7 +112,6 @@ push_one_(particle_t *prt, struct psc_fields *flds, struct psc_particles *prts, 
   // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
   calc_j(flds, xm, xp, lf, lg, prt, vxi);
 }
-
 
 // ----------------------------------------------------------------------
 // push_one
