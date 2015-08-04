@@ -17,6 +17,7 @@
 #define F3_CACHE F3_C
 #define F3_CACHE_TYPE "c"
 
+#include "inc_params.c"
 #include "inc_interpolate.c"
 #include "inc_push.c"
 #include "inc_curr.c"
@@ -145,6 +146,7 @@ psc_push_particles_1vb_c_push_a_yz(struct psc_push_particles *push,
   struct psc_fields *flds = psc_fields_get_as(flds_base, FIELDS_TYPE, EX, EX + 6);
   
   prof_start(pr);
+  params_1vb_set(ppsc, flds->p);
   psc_fields_zero_range(flds, JXI, JXI + 3);
   struct psc_fields *flds_cache = cache_fields_from_em(flds);
   do_push_part_1vb_yz(flds_cache, prts);

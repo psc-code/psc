@@ -115,7 +115,7 @@ push_one(struct psc_fields *flds, struct psc_particles *prts, int n)
   CALC_JYZ_2D(flds, xm, xp);
 #else
   // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
-  CALC_JXYZ_3D(flds, xm, xp);
+  calc_j(flds, xm, xp, lf, lg, prt, vxi);
 #endif
 }
 
