@@ -14,8 +14,6 @@
 
 #endif
 
-#include "../psc_push_particles/inc_defs.h"
-
 // ----------------------------------------------------------------------
 
 static const int psc_particles_cuda2_bs[3] = { 4, 4, 4 };
