@@ -12,12 +12,7 @@
 #include "../psc_push_particles/inc_params.c"
 #include "../psc_push_particles/inc_interpolate.c"
 #include "../psc_push_particles/inc_push.c"
-
-#if CALC_J == CALC_J_1VB_SPLIT
-#include "cuda2_calc_j_split_inc.c"
-#elif CALC_J == CALC_J_1VB_VAR1
-#include "cuda2_calc_j_var1_inc.c"
-#endif
+#include "../psc_push_particles/inc_curr.c"
 
 // ----------------------------------------------------------------------
 // push_one
