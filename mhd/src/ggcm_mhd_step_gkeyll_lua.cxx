@@ -266,9 +266,8 @@ ggcm_mhd_step_gkeyll_lua_run(struct ggcm_mhd *mhd, struct mrc_fld *fld)
   lua_pushnumber(L, mhd->time);
   lua_pushinteger(L, mhd->istep);
   lua_pushlightuserdata(L, fld->_arr);
-  lua_pushlightuserdata(L, mhd);
 
-  if (lua_pcall(L, 5, 1, 0)) {
+  if (lua_pcall(L, 4, 1, 0)) {
     std::cerr << "LUA Error:" << std::endl;
     std::string err(lua_tostring(L, -1));
     lua_pop(L, 1);

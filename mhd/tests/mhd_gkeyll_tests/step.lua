@@ -97,11 +97,10 @@ emfNew = qNew:alias(emIdx, emIdx + nr_em_comps)
 ------------------------
 -- Boundary Condition --
 ------------------------
--- TODO: reuse temp_mrc_fld
 temp_mrc_fld = ggcm_get_3d_fld(ggcm_mhd, 18)
 temp_cptr = mrc_fld_get_arr(temp_mrc_fld)
 
-function applyBc(fld, tCurr, myDt, ggcm_mhd)
+function applyBc(fld, tCurr, myDt)
  fld:copy_to_cptr(temp_cptr)
  ggcm_fill_ghosts(ggcm_mhd, temp_mrc_fld, tCurr)
  fld:copy_from_cptr(temp_cptr)
@@ -253,7 +252,7 @@ maxSlvr = {maxSlvrDir0, maxSlvrDir1, maxSlvrDir2}
 elcOut = {elcX, elcY, elcZ}
 ionOut = {ionX, ionY, ionZ}
 qOut = {qX, qY, qZ}
-function updateFluidsAndField(tCurr, t, ggcm_mhd)
+function updateFluidsAndField(tCurr, t)
    local myStatus = true
    local myDtSuggested = 1e3*math.abs(t-tCurr)
    local useLaxSolver = False
@@ -278,7 +277,7 @@ function updateFluidsAndField(tCurr, t, ggcm_mhd)
          return myStatus, myDtSuggested, useLaxSolver
       end
  
-      applyBc(qOut[dir], tCurr, t-tCurr, ggcm_mhd)
+      applyBc(qOut[dir], tCurr, t-tCurr)
    end
 
    return myStatus, myDtSuggested, useLaxSolver
@@ -287,7 +286,7 @@ end
 elcLaxSlvr = {elcLaxSlvrDir0, elcLaxSlvrDir1, elcLaxSlvrDir2}
 ionLaxSlvr = {ionLaxSlvrDir0, ionLaxSlvrDir1, ionLaxSlvrDir2}
 maxLaxSlvr = {maxLaxSlvrDir0, maxLaxSlvrDir1, maxLaxSlvrDir2}
-function updateFluidsAndFieldLax(tCurr, t, ggcm_mhd)
+function updateFluidsAndFieldLax(tCurr, t)
    local myStatus = true
    local myDtSuggested = 1e3*math.abs(t-tCurr)
 
@@ -305,7 +304,7 @@ function updateFluidsAndFieldLax(tCurr, t, ggcm_mhd)
          return myStatus, myDtSuggested
       end
 
-      applyBc(qOut[dir], tCurr, t-tCurr, ggcm_mhd)
+      applyBc(qOut[dir], tCurr, t-tCurr)
    end
 
    return myStatus, myDtSuggested
@@ -315,37 +314,37 @@ end
 -- COMPLETE TIMESTEP --
 -----------------------
 -- timestepping with regular fluxes
-function solveTwoFluidSystem(tCurr, t, ggcm_mhd)
+function solveTwoFluidSystem(tCurr, t)
    local dthalf = 0.5*(t-tCurr)
 
    -- update source terms
    updateSource(elc, ion, emf, tCurr, tCurr+dthalf)
-   applyBc(q, tCurr, t-tCurr, ggcm_mhd)
+   applyBc(q, tCurr, t-tCurr)
 
    -- update fluids and fields
-   local status, dtSuggested, useLaxSolver = updateFluidsAndField(tCurr, t, ggcm_mhd)
+   local status, dtSuggested, useLaxSolver = updateFluidsAndField(tCurr, t)
 
    -- update source terms
    updateSource(elcNew, ionNew, emfNew, tCurr, tCurr+dthalf)
-   applyBc(qNew, tCurr, t-tCurr, ggcm_mhd)
+   applyBc(qNew, tCurr, t-tCurr)
 
    return status, dtSuggested,useLaxSolver
 end
 
 -- timestepping with positivity-preserving fluxes
-function solveTwoFluidLaxSystem(tCurr, t, ggcm_mhd)
+function solveTwoFluidLaxSystem(tCurr, t)
    local dthalf = 0.5*(t-tCurr)
 
    -- update source terms
    updateSource(elc, ion, emf, tCurr, tCurr+dthalf)
-   applyBc(q, tCurr, t-tCurr, ggcm_mhd)
+   applyBc(q, tCurr, t-tCurr)
 
    -- update fluids and fields
-   local status, dtSuggested = updateFluidsAndFieldLax(tCurr, t, ggcm_mhd)
+   local status, dtSuggested = updateFluidsAndFieldLax(tCurr, t)
 
    -- update source terms
    updateSource(elcNew, ionNew, emfNew, tCurr, tCurr+dthalf)
-   applyBc(qNew, tCurr, t-tCurr, ggcm_mhd)
+   applyBc(qNew, tCurr, t-tCurr)
 
    return status, dtSuggested
 end
@@ -353,7 +352,7 @@ end
 ----------------------------------
 -- GRAND TIME-STEPPING FUNCTION --
 ----------------------------------
-function runTimeStep(myDt, tCurr, step, cptr, ggcm_mhd)
+function runTimeStep(myDt, tCurr, step, cptr)
    q:copy_from_cptr(cptr)
    useLaxSolver = false
 
@@ -365,10 +364,10 @@ function runTimeStep(myDt, tCurr, step, cptr, ggcm_mhd)
 
       -- advance fluids and fields
       if (useLaxSolver) then
-         status, dtSuggested = solveTwoFluidLaxSystem(tCurr, tCurr+myDt, ggcm_mhd)
+         status, dtSuggested = solveTwoFluidLaxSystem(tCurr, tCurr+myDt)
          useLaxSolver = false
       else
-         status, dtSuggested, useLaxSolver = solveTwoFluidSystem(tCurr, tCurr+myDt, ggcm_mhd)
+         status, dtSuggested, useLaxSolver = solveTwoFluidSystem(tCurr, tCurr+myDt)
       end
 
       if (useLaxSolver == true) then
