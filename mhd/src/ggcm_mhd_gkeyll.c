@@ -28,6 +28,25 @@ mrc_fld_gkeyll_nr_fluids(struct mrc_fld *f)
 }
 
 // ----------------------------------------------------------------------
+// mrc_fld_gkeyll_set_nr_moments
+
+void
+mrc_fld_gkeyll_set_nr_moments(struct mrc_fld *f, int nr_moments)
+{
+  // TODO: overwrite existing value
+  mrc_fld_dict_add_int(f, "nr_moments", nr_moments);
+}
+
+// ----------------------------------------------------------------------
+// mrc_fld_gkeyll_set_nr_moments
+
+void
+mrc_fld_gkeyll_set_nr_fluids(struct mrc_fld *f, int nr_fluids)
+{
+  mrc_fld_dict_add_int(f, "nr_fluids", nr_fluids);
+}
+
+// ----------------------------------------------------------------------
 // mrc_fld_gkeyll_electron_index_two_fluids
 //
 // first index of the electron moments for a two-fluid case

@@ -27,6 +27,12 @@ mrc_fld_gkeyll_nr_moments(struct mrc_fld *f);
 int
 mrc_fld_gkeyll_nr_fluids(struct mrc_fld *f);
 
+void
+mrc_fld_gkeyll_set_nr_moments(struct mrc_fld *f, int nr_moments);
+
+void
+mrc_fld_gkeyll_get_nr_fluids(struct mrc_fld *f, int nr_fluids);
+
 int
 mrc_fld_gkeyll_electron_index_two_fluids(struct mrc_fld *f, int m_beg);
 
