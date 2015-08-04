@@ -95,7 +95,7 @@ push_one(struct psc_fields *flds, struct psc_particles *prts, int n)
   push_xi(prt, vxi, .5f * prm.dt);
   
   // OUT OF PLANE CURRENT DENSITY AT (n+1.0)*dt
-  CALC_JX_2D(flds, prt, vxi);
+  calc_j_oop(flds, prt, vxi);
   
   // x^(n+1), p^(n+1) -> x^(n+1.5), p^(n+1)
   push_xi(prt, vxi, .5f * prm.dt);
@@ -110,13 +110,8 @@ push_one(struct psc_fields *flds, struct psc_particles *prts, int n)
 
   ext_prepare_sort(prts, n, prt, lf);
   
-#if CALC_J == CALC_J_1VB_2D
-  // IN PLANE CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
-  CALC_JYZ_2D(flds, xm, xp);
-#else
   // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
   calc_j(flds, xm, xp, lf, lg, prt, vxi);
-#endif
 }
 
 #ifdef PUSHER_BY_BLOCK

@@ -66,7 +66,7 @@ curr_3d_vb_cell(struct psc_fields *flds, int i[3], particle_real_t x[3], particl
 }
 
 // ----------------------------------------------------------------------
-// calc_j / CALC_JXYZ_3D
+// calc_j
 
 static inline void
 calc_j(struct psc_fields *flds, particle_real_t *xm, particle_real_t *xp,
