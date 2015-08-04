@@ -25,7 +25,7 @@ SFX(cuda2_1vbec_push_mprts_gold)(struct psc_mparticles *mprts, struct psc_mfield
   for (int b = 0; b < mprts_sub->nr_blocks_total; b++) {
     int p = b / mprts_sub->nr_blocks;
     for (int n = mprts_sub->h_b_off[b]; n < mprts_sub->h_b_off[b+1]; n++) {
-      push_one(mprts, mflds, n, p);
+      push_one_mprts(mprts, mflds, n, p);
     }
   }
 }

@@ -57,10 +57,10 @@ ext_prepare_sort(struct psc_particles *prts, int n, particle_t *prt,
 // ======================================================================
 
 // ----------------------------------------------------------------------
-// push_one_
+// push_one
 
 static inline void
-push_one_(particle_t *prt, struct psc_fields *flds, struct psc_particles *prts, int n)
+push_one(particle_t *prt, struct psc_fields *flds, struct psc_particles *prts, int n)
 {
   // field interpolation
   int lg[3], lh[3];
@@ -114,12 +114,12 @@ push_one_(particle_t *prt, struct psc_fields *flds, struct psc_particles *prts, 
 }
 
 // ----------------------------------------------------------------------
-// push_one
+// push_one_mprts
 
 #if PSC_PARTICLES_AS_CUDA2
 
 static inline void
-push_one(struct psc_mparticles *mprts, struct psc_mfields *mflds, int n, int p)
+push_one_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds, int n, int p)
 {
   struct psc_mparticles_cuda2 *mprts_sub = psc_mparticles_cuda2(mprts);
 
@@ -129,7 +129,7 @@ push_one(struct psc_mparticles *mprts, struct psc_mfields *mflds, int n, int p)
   _LOAD_PARTICLE_POS(prt, mprts_sub->h_xi4, n);
   _LOAD_PARTICLE_MOM(prt, mprts_sub->h_pxi4, n);
   
-  push_one_(&prt, flds, NULL, n);
+  push_one(&prt, flds, NULL, n);
 
   _STORE_PARTICLE_POS(prt, mprts_sub->h_xi4, n);
   _STORE_PARTICLE_MOM(prt, mprts_sub->h_pxi4, n);
@@ -138,11 +138,11 @@ push_one(struct psc_mparticles *mprts, struct psc_mfields *mflds, int n, int p)
 #else
 
 static void
-push_one(struct psc_fields *flds, struct psc_particles *prts, int n)
+push_one_prts(struct psc_particles *prts, struct psc_fields *flds, int n)
 {
   particle_t *prt = particles_get_one(prts, n);
 
-  push_one_(prt, flds, prts, n);
+  push_one(prt, flds, prts, n);
 }
 
 #endif
