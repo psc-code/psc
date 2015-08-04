@@ -90,7 +90,7 @@ push_one(struct psc_fields *flds, struct psc_particles *prts, int n)
   
   particle_real_t vxi[3];
   calc_vxi(vxi, prt);
-#ifdef VB_2D
+#if CALC_J == CALC_J_1VB_2D
   // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0)
   push_xi(prt, vxi, .5f * prm.dt);
   
@@ -110,7 +110,7 @@ push_one(struct psc_fields *flds, struct psc_particles *prts, int n)
 
   ext_prepare_sort(prts, n, prt, lf);
   
-#ifdef VB_2D
+#if CALC_J == CALC_J_1VB_2D
   // IN PLANE CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
   CALC_JYZ_2D(flds, xm, xp);
 #else

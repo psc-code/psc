@@ -12,7 +12,7 @@
 #include "inc_defs.h"
 
 #define DIM DIM_YZ
-#define CALC_J CALC_J_1VB_VAR1
+#define CALC_J CALC_J_1VB_2D
 #define F3_CURR F3_C
 #define F3_CACHE F3_C
 #define F3_CACHE_TYPE "c"

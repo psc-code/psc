@@ -18,9 +18,9 @@ params_1vb_set(struct psc *psc, int p)
 {
   prm.dt = ppsc->dt;
   prm.fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-#ifdef VB_2D
+#if CALC_J == CALC_J_1VB_2D
 #if !(DIM == DIM_YZ)
-#error inc_params.c: VB_2D only works for DIM_YZ
+#error inc_params.c: CALC_J_1VB_2D only works for DIM_YZ
 #endif
   prm.fnqxs = prm.fnqs;
 #else
