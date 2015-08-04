@@ -9,7 +9,7 @@
 ------------------------------------------
 -- LOAD LOCAL DOMAIN PARAMS FROM LIBMRC --
 ------------------------------------------
-rank, mx, my, mz, lx, ly, lz, hx, hy, hz, lxg, lyg, lzg, hxg, hyg, hzg, common_script = ...
+ggcm_mhd, rank, mx, my, mz, lx, ly, lz, hx, hy, hz, lxg, lyg, lzg, hxg, hyg, hzg, common_script = ...
 
 -----------------------------------------------
 -- LOAD PARAMS SHARED WITH INIT              --
@@ -98,12 +98,16 @@ emfNew = qNew:alias(emIdx, emIdx + nr_em_comps)
 -- Boundary Condition --
 ------------------------
 -- TODO: reuse temp_mrc_fld
+temp_mrc_fld = ggcm_get_3d_fld(ggcm_mhd, 18)
+temp_cptr = mrc_fld_get_arr(temp_mrc_fld)
+
 function applyBc(fld, tCurr, myDt, ggcm_mhd)
- local temp_mrc_fld = ggcm_get_3d_fld(ggcm_mhd, 18)
- local temp_cptr = mrc_fld_get_arr(temp_mrc_fld)
  fld:copy_to_cptr(temp_cptr)
  ggcm_fill_ghosts(ggcm_mhd, temp_mrc_fld, tCurr)
  fld:copy_from_cptr(temp_cptr)
+end
+
+function finalize()
  ggcm_put_3d_fld(ggcm_mhd, temp_mrc_fld)
 end
 
@@ -396,4 +400,3 @@ function runTimeStep(myDt, tCurr, step, cptr, ggcm_mhd)
 
    return myDt
 end
-

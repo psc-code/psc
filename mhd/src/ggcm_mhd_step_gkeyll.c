@@ -59,7 +59,8 @@ ggcm_mhd_step_gkeyll_setup(struct ggcm_mhd_step *step)
 static void
 ggcm_mhd_step_gkeyll_destroy(struct ggcm_mhd_step *step)
 {
-  MHERE; // TBD
+  struct ggcm_mhd *mhd = step->mhd;
+  ggcm_mhd_step_gkeyll_lua_destroy(mhd);
 }
 
 // ----------------------------------------------------------------------

@@ -199,6 +199,9 @@ ggcm_mhd_step_gkeyll_lua_setup(const char *script, const char *script_common,
 
   int nargs = 0;
 
+  lua_pushlightuserdata(L, mhd);
+  nargs += 1;
+
   int rank;
   MPI_Comm_rank(mrc_domain_comm(mhd->domain), &rank);
   lua_pushinteger(L, rank);
@@ -278,5 +281,18 @@ ggcm_mhd_step_gkeyll_lua_run(struct ggcm_mhd *mhd, struct mrc_fld *fld)
   MPI_Allreduce(&myDt, &mhd->dt, 1, MPI_FLOAT, MPI_MIN, mrc_domain_comm(mhd->domain));
 
   lua_pop(L,1);
+}
+
+void
+ggcm_mhd_step_gkeyll_lua_destroy(struct ggcm_mhd *mhd)
+{
+  lua_getglobal(L, "finalize");
+  if (lua_pcall(L, 0, 0, 0)) {
+    std::cerr << "LUA Error:" << std::endl;
+    std::string err(lua_tostring(L, -1));
+    lua_pop(L, 1);
+    std::cerr << err << std::endl;
+    exit(1);
+  }
 }
 
