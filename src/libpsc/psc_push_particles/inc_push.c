@@ -5,19 +5,12 @@
 static inline void
 calc_vxi(particle_real_t vxi[3], particle_t *prt)
 {
-#ifdef PSC_PARTICLES_AS_CUDA2
+  particle_real_t *px = &particle_px(prt);
   particle_real_t root = 1.f 
-    / particle_real_sqrt(1.f + sqr(prt->pxi4.x) + sqr(prt->pxi4.y) + sqr(prt->pxi4.z));
-  vxi[0] = prt->pxi4.x * root;
-  vxi[1] = prt->pxi4.y * root;
-  vxi[2] = prt->pxi4.z * root;
-#else
-  particle_real_t root = 1.f 
-    / particle_real_sqrt(1.f + sqr(prt->pxi) + sqr(prt->pyi) + sqr(prt->pzi));
-  vxi[0] = prt->pxi * root;
-  vxi[1] = prt->pyi * root;
-  vxi[2] = prt->pzi * root;
-#endif
+    / particle_real_sqrt(1.f + sqr(px[0]) + sqr(px[1]) + sqr(px[2]));
+  vxi[0] = px[0] * root;
+  vxi[1] = px[1] * root;
+  vxi[2] = px[2] * root;
 }
 
 // ----------------------------------------------------------------------

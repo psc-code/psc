@@ -68,12 +68,8 @@ particles_single_get_one(struct psc_particles *prts, int n)
       rv;							\
     })
 
-
-static inline particle_single_real_t
-particle_single_qni_wni(particle_single_t *p)
-{
-  return p->qni_wni;
-}
+#define particle_single_x(prt) ((prt)->xi)
+#define particle_single_px(prt) ((prt)->pxi)
 
 static inline int
 particle_single_kind(particle_single_t *prt)

@@ -18,6 +18,8 @@ typedef mparticles_double_t mparticles_t;
 #define particle_mni                particle_double_mni
 #define particle_wni                particle_double_wni
 #define particle_kind               particle_double_kind
+#define particle_x                  particle_double_x
+#define particle_px                 particle_double_px
 #define particle_get_relative_pos   particle_double_get_relative_pos
 #define particle_real_nint          particle_double_real_nint
 #define particle_real_fint          particle_double_real_fint

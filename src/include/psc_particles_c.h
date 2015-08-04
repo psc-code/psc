@@ -71,6 +71,9 @@ particle_c_kind(particle_c_t *p)
   return p->kind;
 }
 
+#define particle_c_x(prt) ((prt)->x)
+#define particle_c_px(prt) ((prt)->pxi)
+
 static inline void
 particle_c_get_relative_pos(particle_c_t *p, double xb[3],
 			    particle_c_real_t xi[3])

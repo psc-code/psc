@@ -1,6 +1,4 @@
 
-#include "psc_debug.h"
-
 #include "psc_particles_as_cuda2.h"
 
 #include "psc_fields_cuda2.h"

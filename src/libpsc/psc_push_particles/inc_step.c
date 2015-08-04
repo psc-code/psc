@@ -1,4 +1,6 @@
 
+#include "psc_debug.h"
+
 // ======================================================================
 // EXT_PREPARE_SORT
 //
@@ -65,22 +67,13 @@ push_one(particle_t *prt, struct psc_fields *flds, struct psc_particles *prts, i
   // field interpolation
   int lg[3], lh[3];
   particle_real_t og[3], oh[3], xm[3];
-#if PSC_PARTICLES_AS_CUDA2
-  find_idx_off_pos_1st_rel(&prt->xi4.x, lg, og, xm, 0.f, prm.dxi); // FIXME passing xi hack
-  find_idx_off_1st_rel(&prt->xi4.x, lh, oh, -.5f, prm.dxi);
-#else  
-  find_idx_off_pos_1st_rel(&prt->xi, lg, og, xm, 0.f, prm.dxi); // FIXME passing xi hack
-  find_idx_off_1st_rel(&prt->xi, lh, oh, -.5f, prm.dxi);
-#endif
+  find_idx_off_pos_1st_rel(&particle_x(prt), lg, og, xm, 0.f, prm.dxi); // FIXME passing xi hack
+  find_idx_off_1st_rel(&particle_x(prt), lh, oh, -.5f, prm.dxi);
 
   particle_real_t exq, eyq, ezq, hxq, hyq, hzq;
   INTERPOLATE_1ST(flds, exq, eyq, ezq, hxq, hyq, hzq);
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0)
-#if PSC_PARTICLES_AS_CUDA2
-  int kind = cuda_float_as_int(prt->xi4.w);
-#else
-  int kind = prt->kind;
-#endif
+  int kind = particle_kind(prt);
   particle_real_t dq = prm.dq_kind[kind];
   push_pxi(prt, exq, eyq, ezq, hxq, hyq, hzq, dq);
 
@@ -102,11 +95,7 @@ push_one(particle_t *prt, struct psc_fields *flds, struct psc_particles *prts, i
   
   int lf[3];
   particle_real_t of[3], xp[3];
-#if PSC_PARTICLES_AS_CUDA2
-  find_idx_off_pos_1st_rel(&prt->xi4.x, lf, of, xp, 0.f, prm.dxi);
-#else
-  find_idx_off_pos_1st_rel(&prt->xi, lf, of, xp, 0.f, prm.dxi);
-#endif
+  find_idx_off_pos_1st_rel(&particle_x(prt), lf, of, xp, 0.f, prm.dxi);
   ext_prepare_sort(prts, n, prt, lf);
 
   // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt

@@ -69,6 +69,8 @@ particles_single_by_block_get_one(struct psc_particles *prts, int n)
       rv;								\
     })
 
+#define particle_single_by_block_x(prt) ((prt)->xi)
+#define particle_single_by_block_px(prt) ((prt)->pxi)
 
 static inline particle_single_by_block_real_t
 particle_single_by_block_qni_wni(particle_single_by_block_t *p)

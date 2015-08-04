@@ -10,6 +10,11 @@ typedef float particle_cuda2_real_t;
 
 #define MPI_PARTICLES_CUDA2_REAL MPI_FLOAT
 
+typedef struct psc_particle_cuda2 {
+  float4 xi4;
+  float4 pxi4;
+} particle_cuda2_t;
+
 struct psc_particles_cuda2 {
   // on host
   float4 *h_xi4, *h_pxi4;
@@ -55,6 +60,15 @@ struct psc_mparticles_cuda2 {
       rv = p->pxi4.w / ppsc->kinds[kind].q;			\
       rv;							\
     })
+
+static inline int
+particle_cuda2_kind(particle_cuda2_t *prt)
+{
+  return cuda_float_as_int(prt->xi4.w);
+}
+
+#define particle_cuda2_x(prt) ((prt)->xi4.x)
+#define particle_cuda2_px(prt) ((prt)->pxi4.x)
 
 static inline int
 particle_cuda2_real_fint(particle_cuda2_real_t x)
@@ -107,11 +121,6 @@ particle_cuda2_real_abs(particle_cuda2_real_t x)
     pxi4.w = (prt).pxi4.w;						\
     d_pxi4[n] = pxi4;							\
   } while (0)
-
-typedef struct psc_particle_cuda2 {
-  float4 xi4;
-  float4 pxi4;
-} particle_cuda2_t;
 
 #endif
 
