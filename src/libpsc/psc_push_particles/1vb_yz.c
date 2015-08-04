@@ -8,6 +8,7 @@
 #include "inc_params.c"
 #include "inc_interpolate.c"
 #include "inc_push.c"
+#include "inc_curr.c"
 #include "c_common_push.c"
 
 // ======================================================================

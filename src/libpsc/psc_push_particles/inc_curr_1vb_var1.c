@@ -6,31 +6,40 @@
 // in theory less divergent, in particular for CUDA,
 // but also definitely more complex
 
+// ----------------------------------------------------------------------
+// calc_3d_dx1
+
 #if DIM == DIM_YZ
 
 static inline void
-calc_3d_dx1_yz(particle_cuda2_real_t dx1[3], particle_cuda2_real_t x[3], particle_cuda2_real_t dx[3], int off[3])
+calc_3d_dx1(particle_real_t dx1[3], particle_real_t x[3], particle_real_t dx[3], int off[3])
 {
   if (off[2] == 0) {
     dx1[1] = .5f * off[1] - x[1];
-   if (dx[1] == 0.f) {
-     dx1[0] = 0.f;
-     dx1[2] = 0.f;
-   } else {
-     dx1[0] = dx[0] / dx[1] * dx1[1];
-     dx1[2] = dx[2] / dx[1] * dx1[1];
-   }
+    if (dx[1] == 0.f) {
+      dx1[0] = 0.f;
+      dx1[2] = 0.f;
+    } else {
+      dx1[0] = dx[0] / dx[1] * dx1[1];
+      dx1[2] = dx[2] / dx[1] * dx1[1];
+    }
   } else {
     dx1[2] = .5f * off[2] - x[2];
-   if (dx[2] == 0.f) {
-     dx1[0] = 0.f;
-     dx1[1] = 0.f;
-   } else {
-     dx1[0] = dx[0] / dx[2] * dx1[2];
-     dx1[1] = dx[1] / dx[2] * dx1[2];
-   }
+    if (dx[2] == 0.f) {
+      dx1[0] = 0.f;
+      dx1[1] = 0.f;
+    } else {
+      dx1[0] = dx[0] / dx[2] * dx1[2];
+      dx1[1] = dx[1] / dx[2] * dx1[2];
+    }
   }
 }
+
+#endif // DIM
+
+#if DIM == DIM_YZ
+
+#ifdef PSC_PARTICLES_AS_CUDA2
 
 static inline void
 curr_3d_vb_cell_yz(struct psc_fields *pf, int i[3], particle_cuda2_real_t x[3], particle_cuda2_real_t dx[3],
@@ -61,6 +70,12 @@ curr_3d_vb_cell_yz(struct psc_fields *pf, int i[3], particle_cuda2_real_t x[3], 
     i[2] += off[2];
   }
 }
+
+#else
+
+#endif
+
+#ifdef PSC_PARTICLES_AS_CUDA2
 
 static inline void
 calc_j(struct psc_fields *flds, particle_cuda2_real_t *xm, particle_cuda2_real_t *xp,
@@ -105,18 +120,50 @@ calc_j(struct psc_fields *flds, particle_cuda2_real_t *xm, particle_cuda2_real_t
   if (first_dir >= 0) {
     off[3 - first_dir] = 0;
     off[first_dir] = idiff[first_dir];
-    calc_3d_dx1_yz(dx1, x, dx, off);
+    calc_3d_dx1(dx1, x, dx, off);
     curr_3d_vb_cell_yz(flds, i, x, dx1, fnq, dx, off);
   }
 
   if (second_dir >= 0) {
     off[first_dir] = 0;
     off[second_dir] = idiff[second_dir];
-    calc_3d_dx1_yz(dx1, x, dx, off);
+    calc_3d_dx1(dx1, x, dx, off);
     curr_3d_vb_cell_yz(flds, i, x, dx1, fnq, dx, off);
   }
 
   curr_3d_vb_cell_yz(flds, i, x, dx, fnq, NULL, NULL);
+}
+
+#endif // PSC_PARTICLES_AS_CUDA2
+
+#endif // DIM
+
+// ======================================================================
+// TBD (FIXME)
+
+#if DIM == DIM_YZ
+
+// ----------------------------------------------------------------------
+// calc_dx1
+
+static inline void
+calc_dx1(particle_real_t dx1[2], particle_real_t x[2], particle_real_t dx[2], int off[2])
+{
+  if (off[1] == 0) {
+    dx1[0] = .5f * off[0] - x[0];
+   if (dx[0] == 0.f) {
+    dx1[1] = 0.f;
+   } else {
+    dx1[1] = dx[1] / dx[0] * dx1[0];
+   }
+  } else {
+    dx1[1] = .5f * off[1] - x[1];
+   if (dx[1] == 0.f) {
+    dx1[0] = 0.f;
+   } else {
+    dx1[0] = dx[0] / dx[1] * dx1[1];
+   }
+  }
 }
 
 #endif

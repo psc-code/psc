@@ -9,12 +9,17 @@
 
 #define PARTICLE_TYPE "c"
 
+#include "inc_defs.h"
+
+#define DIM DIM_YZ
+#define CALC_J CALC_J_1VB_VAR1
 #define F3_CURR F3_C
 #define F3_CACHE F3_C
 #define F3_CACHE_TYPE "c"
 
 #include "inc_interpolate.c"
 #include "inc_push.c"
+#include "inc_curr.c"
 #include "c_common_push.c"
 
 static void

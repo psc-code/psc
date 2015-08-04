@@ -7,50 +7,6 @@
 // current 1vb (yz)
 
 static inline void
-calc_dx1(particle_real_t dx1[2], particle_real_t x[2], particle_real_t dx[2], int off[2])
-{
-  if (off[1] == 0) {
-    dx1[0] = .5f * off[0] - x[0];
-   if (dx[0] == 0.f) {
-    dx1[1] = 0.f;
-   } else {
-    dx1[1] = dx[1] / dx[0] * dx1[0];
-   }
-  } else {
-    dx1[1] = .5f * off[1] - x[1];
-   if (dx[1] == 0.f) {
-    dx1[0] = 0.f;
-   } else {
-    dx1[0] = dx[0] / dx[1] * dx1[1];
-   }
-  }
-}
-
-static inline void
-calc_3d_dx1(particle_real_t dx1[3], particle_real_t x[3], particle_real_t dx[3], int off[3])
-{
-  if (off[2] == 0) {
-    dx1[1] = .5f * off[1] - x[1];
-   if (dx[1] == 0.f) {
-     dx1[0] = 0.f;
-     dx1[2] = 0.f;
-   } else {
-     dx1[0] = dx[0] / dx[1] * dx1[1];
-     dx1[2] = dx[2] / dx[1] * dx1[1];
-   }
-  } else {
-    dx1[2] = .5f * off[2] - x[2];
-   if (dx[2] == 0.f) {
-     dx1[0] = 0.f;
-     dx1[1] = 0.f;
-   } else {
-     dx1[0] = dx[0] / dx[2] * dx1[2];
-     dx1[1] = dx[1] / dx[2] * dx1[2];
-   }
-  }
-}
-
-static inline void
 curr_2d_vb_cell(struct psc_fields *pf, int i[2], particle_real_t x[2], particle_real_t dx[2],
 		particle_real_t fnq[2], particle_real_t dxt[2], int off[2])
 {
