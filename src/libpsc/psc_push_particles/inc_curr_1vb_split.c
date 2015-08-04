@@ -84,7 +84,7 @@ static inline void
 calc_j(struct psc_fields *flds, particle_cuda2_real_t *xm, particle_cuda2_real_t *xp,
        int *lf, int *lg, particle_cuda2_t *prt, particle_cuda2_real_t *vxi)
 {
-  int kind = cuda_float_as_int(prt->xi4.w);
+  int kind = particle_cuda2_kind(prt);
   particle_cuda2_real_t fnq[3] = { particle_cuda2_wni(prt) * prm.fnqx_kind[kind],
 				   particle_cuda2_wni(prt) * prm.fnqy_kind[kind],
 				   particle_cuda2_wni(prt) * prm.fnqz_kind[kind] };

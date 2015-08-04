@@ -71,7 +71,7 @@ psc_particles_cuda2_get_b_idx(struct psc_particles *prts, int n)
   _LOAD_PARTICLE_MOM(prt, sub->h_pxi4, n);
   particle_cuda2_real_t of[3];
   int b_pos[3], *b_mx = sub->b_mx;
-  find_idx_off_1st_rel(&prt.xi4.x, b_pos, of, 0.f, sub->dxi);
+  find_idx_off_1st_rel(&particle_cuda2_x(&prt), b_pos, of, 0.f, sub->dxi);
   for (int d = 0; d < 3; d++) {
     b_pos[d] /= psc_particles_cuda2_bs[d];
   }
@@ -194,14 +194,14 @@ psc_particles_cuda2_copy_to_single(struct psc_particles *prts_base,
     _LOAD_PARTICLE_MOM(prt_base, sub->h_pxi4, n);
     particle_single_t *part = particles_single_get_one(prts, n);
     
-    part->xi      = prt_base.xi4.x;
-    part->yi      = prt_base.xi4.y;
-    part->zi      = prt_base.xi4.z;
-    part->kind    = cuda_float_as_int(prt_base.xi4.w);
-    part->pxi     = prt_base.pxi4.x;
-    part->pyi     = prt_base.pxi4.y;
-    part->pzi     = prt_base.pxi4.z;
-    part->qni_wni = prt_base.pxi4.w;
+    part->xi      = prt_base.xi[0];
+    part->yi      = prt_base.xi[1];
+    part->zi      = prt_base.xi[2];
+    part->kind    = particle_cuda2_kind(&prt_base);
+    part->pxi     = prt_base.pxi[0];
+    part->pyi     = prt_base.pxi[1];
+    part->pzi     = prt_base.pxi[2];
+    part->qni_wni = prt_base.qni_wni;
   }
 }
 
@@ -220,14 +220,14 @@ psc_particles_cuda2_copy_from_single(struct psc_particles *prts_base,
     particle_cuda2_t prt_base;
     particle_single_t *part = particles_single_get_one(prts, n);
 
-    prt_base.xi4.x   = part->xi;
-    prt_base.xi4.y   = part->yi;
-    prt_base.xi4.z   = part->zi;
-    prt_base.xi4.w   = cuda_int_as_float(part->kind);
-    prt_base.pxi4.x  = part->pxi;
-    prt_base.pxi4.y  = part->pyi;
-    prt_base.pxi4.z  = part->pzi;
-    prt_base.pxi4.w  = part->qni_wni;
+    prt_base.xi[0]         = part->xi;
+    prt_base.xi[1]         = part->yi;
+    prt_base.xi[2]         = part->zi;
+    prt_base.kind_as_float = cuda_int_as_float(part->kind);
+    prt_base.pxi[0]        = part->pxi;
+    prt_base.pxi[1]        = part->pyi;
+    prt_base.pxi[2]        = part->pzi;
+    prt_base.qni_wni       = part->qni_wni;
 
     _STORE_PARTICLE_POS(prt_base, sub->h_xi4, n);
     _STORE_PARTICLE_MOM(prt_base, sub->h_pxi4, n);
@@ -253,14 +253,14 @@ psc_particles_cuda2_copy_to_cuda(struct psc_particles *prts,
     _LOAD_PARTICLE_POS(prt, sub->h_xi4, n);
     _LOAD_PARTICLE_MOM(prt, sub->h_pxi4, n);
     
-    xi4[n].x  = prt.xi4.x;
-    xi4[n].y  = prt.xi4.y;
-    xi4[n].z  = prt.xi4.z;
-    xi4[n].w  = prt.xi4.w;
-    pxi4[n].x = prt.pxi4.x;
-    pxi4[n].y = prt.pxi4.y;
-    pxi4[n].z = prt.pxi4.z;
-    pxi4[n].w = prt.pxi4.w;
+    xi4[n].x  = prt.xi[0];
+    xi4[n].y  = prt.xi[1];
+    xi4[n].z  = prt.xi[2];
+    xi4[n].w  = prt.kind_as_float;
+    pxi4[n].x = prt.pxi[0];
+    pxi4[n].y = prt.pxi[1];
+    pxi4[n].z = prt.pxi[2];
+    pxi4[n].w = prt.qni_wni;
   }
   
   __particles_cuda_to_device(prts_cuda, xi4, pxi4);
@@ -286,14 +286,14 @@ psc_particles_cuda2_copy_from_cuda(struct psc_particles *prts,
   for (int n = 0; n < prts->n_part; n++) {
     particle_cuda2_t prt;
 
-    prt.xi4.x   = xi4[n].x;
-    prt.xi4.y   = xi4[n].y;
-    prt.xi4.z   = xi4[n].z;
-    prt.xi4.w   = xi4[n].w;
-    prt.pxi4.x  = pxi4[n].x;
-    prt.pxi4.y  = pxi4[n].y;
-    prt.pxi4.z  = pxi4[n].z;
-    prt.pxi4.w  = pxi4[n].w;
+    prt.xi[0]         = xi4[n].x;
+    prt.xi[1]         = xi4[n].y;
+    prt.xi[2]         = xi4[n].z;
+    prt.kind_as_float = xi4[n].w;
+    prt.pxi[0]        = pxi4[n].x;
+    prt.pxi[1]        = pxi4[n].y;
+    prt.pxi[2]        = pxi4[n].z;
+    prt.qni_wni       = pxi4[n].w;
 
     _STORE_PARTICLE_POS(prt, sub->h_xi4, n);
     _STORE_PARTICLE_MOM(prt, sub->h_pxi4, n);

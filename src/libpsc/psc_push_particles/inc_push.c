@@ -22,12 +22,12 @@ static inline void
 push_xi(particle_cuda2_t *part, particle_cuda2_real_t vxi[3], particle_cuda2_real_t dt)
 {
 #if DIM == DIM_YZ
-  part->xi4.y += vxi[1] * dt;
-  part->xi4.z += vxi[2] * dt;
+  part->xi[1] += vxi[1] * dt;
+  part->xi[2] += vxi[2] * dt;
 #elif DIM == DIM_XYZ
-  part->xi4.x += vxi[0] * dt;
-  part->xi4.y += vxi[1] * dt;
-  part->xi4.z += vxi[2] * dt;
+  part->xi[0] += vxi[0] * dt;
+  part->xi[1] += vxi[1] * dt;
+  part->xi[2] += vxi[2] * dt;
 #endif
 }
 
@@ -54,9 +54,9 @@ push_pxi(particle_t *prt, particle_real_t exq, particle_real_t eyq, particle_rea
 	 particle_real_t hxq, particle_real_t hyq, particle_real_t hzq, particle_real_t dq)
 {
 #ifdef PSC_PARTICLES_AS_CUDA2
-  particle_real_t pxm = prt->pxi4.x + dq*exq;
-  particle_real_t pym = prt->pxi4.y + dq*eyq;
-  particle_real_t pzm = prt->pxi4.z + dq*ezq;
+  particle_real_t pxm = prt->pxi[0] + dq*exq;
+  particle_real_t pym = prt->pxi[1] + dq*eyq;
+  particle_real_t pzm = prt->pxi[2] + dq*ezq;
 #else
   particle_real_t pxm = prt->pxi + dq*exq;
   particle_real_t pym = prt->pyi + dq*eyq;
@@ -80,9 +80,9 @@ push_pxi(particle_t *prt, particle_real_t exq, particle_real_t eyq, particle_rea
 	       (1.f-taux*taux-tauy*tauy+tauz*tauz)*pzm)*tau;
   
 #ifdef PSC_PARTICLES_AS_CUDA2
-  prt->pxi4.x = pxp + dq * exq;
-  prt->pxi4.y = pyp + dq * eyq;
-  prt->pxi4.z = pzp + dq * ezq;
+  prt->pxi[0] = pxp + dq * exq;
+  prt->pxi[1] = pyp + dq * eyq;
+  prt->pxi[2] = pzp + dq * ezq;
 #else
   prt->pxi = pxp + dq * exq;
   prt->pyi = pyp + dq * eyq;

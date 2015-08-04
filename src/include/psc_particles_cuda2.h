@@ -11,8 +11,10 @@ typedef float particle_cuda2_real_t;
 #define MPI_PARTICLES_CUDA2_REAL MPI_FLOAT
 
 typedef struct psc_particle_cuda2 {
-  float4 xi4;
-  float4 pxi4;
+  particle_cuda2_real_t xi[3];
+  particle_cuda2_real_t kind_as_float;
+  particle_cuda2_real_t pxi[3];
+  particle_cuda2_real_t qni_wni;
 } particle_cuda2_t;
 
 struct psc_particles_cuda2 {
@@ -56,19 +58,19 @@ struct psc_mparticles_cuda2 {
 
 #define particle_cuda2_wni(p) ({				\
       particle_cuda2_real_t rv;					\
-      int kind = cuda_float_as_int(p->xi4.w);			\
-      rv = p->pxi4.w / ppsc->kinds[kind].q;			\
+      int kind = particle_cuda2_kind(p);			\
+      rv = p->qni_wni / ppsc->kinds[kind].q;			\
       rv;							\
     })
 
 static inline int
 particle_cuda2_kind(particle_cuda2_t *prt)
 {
-  return cuda_float_as_int(prt->xi4.w);
+  return cuda_float_as_int(prt->kind_as_float);
 }
 
-#define particle_cuda2_x(prt) ((prt)->xi4.x)
-#define particle_cuda2_px(prt) ((prt)->pxi4.x)
+#define particle_cuda2_x(prt) ((prt)->xi[0])
+#define particle_cuda2_px(prt) ((prt)->pxi[0])
 
 static inline int
 particle_cuda2_real_fint(particle_cuda2_real_t x)
@@ -90,35 +92,35 @@ particle_cuda2_real_abs(particle_cuda2_real_t x)
 
 #define _LOAD_PARTICLE_POS(prt, d_xi4, n) do {				\
     float4 xi4 = d_xi4[n];						\
-    (prt).xi4.x = xi4.x;						\
-    (prt).xi4.y = xi4.y;						\
-    (prt).xi4.z = xi4.z;						\
-    (prt).xi4.w = xi4.w;						\
+    (prt).xi[0] = xi4.x;						\
+    (prt).xi[1] = xi4.y;						\
+    (prt).xi[2] = xi4.z;						\
+    (prt).kind_as_float = xi4.w;					\
   } while (0)
 
 #define _LOAD_PARTICLE_MOM(prt, d_pxi4, n) do {				\
     float4 pxi4 = d_pxi4[n];						\
-    (prt).pxi4.x = pxi4.x;						\
-    (prt).pxi4.y = pxi4.y;						\
-    (prt).pxi4.z = pxi4.z;						\
-    (prt).pxi4.w = pxi4.w;						\
+    (prt).pxi[0]  = pxi4.x;						\
+    (prt).pxi[1]  = pxi4.y;						\
+    (prt).pxi[2]  = pxi4.z;						\
+    (prt).qni_wni = pxi4.w;						\
   } while (0)
 
 #define _STORE_PARTICLE_POS(prt, d_xi4, n) do {				\
     float4 xi4;								\
-    xi4.x = (prt).xi4.x;						\
-    xi4.y = (prt).xi4.y;						\
-    xi4.z = (prt).xi4.z;						\
-    xi4.w = (prt).xi4.w;						\
+    xi4.x = (prt).xi[0];						\
+    xi4.y = (prt).xi[1];						\
+    xi4.z = (prt).xi[2];						\
+    xi4.w = (prt).kind_as_float;					\
     d_xi4[n] = xi4;							\
   } while (0)
 
 #define _STORE_PARTICLE_MOM(prt, d_pxi4, n) do {			\
     float4 pxi4;							\
-    pxi4.x = (prt).pxi4.x;						\
-    pxi4.y = (prt).pxi4.y;						\
-    pxi4.z = (prt).pxi4.z;						\
-    pxi4.w = (prt).pxi4.w;						\
+    pxi4.x = (prt).pxi[0];						\
+    pxi4.y = (prt).pxi[1];						\
+    pxi4.z = (prt).pxi[2];						\
+    pxi4.w = (prt).qni_wni;						\
     d_pxi4[n] = pxi4;							\
   } while (0)
 
