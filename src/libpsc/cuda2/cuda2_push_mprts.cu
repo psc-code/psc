@@ -205,6 +205,8 @@ _free_params(struct cuda_params *prm)
 //
 // advance position using velocity
 
+#if DIM == DIM_YZ
+
 __device__ static void
 push_xi_yz(particle_t *p, const real vxi[3], real dt)
 {
@@ -214,6 +216,8 @@ push_xi_yz(particle_t *p, const real vxi[3], real dt)
   }
 }
 
+#elif DIM == DIM_XYZ
+
 __device__ static void
 push_xi_xyz(particle_t *p, const real vxi[3], real dt)
 {
@@ -222,6 +226,8 @@ push_xi_xyz(particle_t *p, const real vxi[3], real dt)
     p->xi[d] += dt * vxi[d];
   }
 }
+
+#endif
 
 // ----------------------------------------------------------------------
 // calc_vxi
@@ -273,6 +279,8 @@ push_pxi_dt(particle_t *p,
   p->pxi[2] = pzp + dq * ezq;
 }
 
+#if DIM == DIM_YZ
+
 // ----------------------------------------------------------------------
 // push_part_one_yz
 
@@ -312,6 +320,8 @@ push_part_one_yz(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
   push_pxi_dt(prt, exq, eyq, ezq, hxq, hyq, hzq);
   STORE_PARTICLE_MOM_(*prt, d_pxi4, n);
 }
+
+#elif DIM == DIM_XYZ
 
 // ----------------------------------------------------------------------
 // push_part_one_xyz
@@ -359,6 +369,10 @@ push_part_one_xyz(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
   STORE_PARTICLE_MOM_(*prt, d_pxi4, n);
 }
 
+#endif
+
+#if DIM == DIM_YZ
+
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static int
 find_block_pos_patch_yz(struct cuda_params prm, int *block_pos, int *ci0)
@@ -372,6 +386,8 @@ find_block_pos_patch_yz(struct cuda_params prm, int *block_pos, int *ci0)
 
   return blockIdx.y / prm.b_mx[2];
 }
+
+#elif DIM == DIM_XYZ
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static int
@@ -388,17 +404,27 @@ find_block_pos_patch_xyz(struct cuda_params prm, int *block_pos, int *ci0)
   return blockIdx.z / prm.b_mx[2];
 }
 
+#endif
+
+#if DIM == DIM_YZ
+
 __device__ static int
 find_bid_yz(struct cuda_params prm)
 {
   return blockIdx.y * prm.b_mx[1] + blockIdx.x;
 }
 
+#elif DIM == DIM_XYZ
+
 __device__ static int
 find_bid_xyz(struct cuda_params prm)
 {
   return (blockIdx.z * prm.b_mx[1] + blockIdx.y) * prm.b_mx[0] + blockIdx.x;
 }
+
+#endif
+
+#if DIM == DIM_YZ
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static void
@@ -420,6 +446,8 @@ cache_fields_yz(struct cuda_params prm, float *fld_cache, float *d_flds0, int si
     ti += THREADS_PER_BLOCK;
   }
 }
+
+#elif DIM == DIM_XYZ
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static void
@@ -443,6 +471,8 @@ cache_fields_xyz(struct cuda_params prm, float *fld_cache, float *d_flds0, int s
     ti += THREADS_PER_BLOCK;
   }
 }
+
+#endif
 
 class GCurr {
 public:
@@ -548,6 +578,8 @@ curr_vb_cell_upd(int i[3], real x[3], real dx1[3], real dx[3], int off[3])
   i[2] += off[2];
 }
 
+#if DIM == DIM_YZ
+
 // ----------------------------------------------------------------------
 // calc_j_yz
 
@@ -626,6 +658,8 @@ calc_j_yz(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
     
   curr_vb_cell(i, x, dx, prt->qni_wni, scurr, prm, ci0);
 }
+
+#elif DIM == DIM_XYZ
 
 // ----------------------------------------------------------------------
 // calc_j_xyz
@@ -707,7 +741,11 @@ calc_j_xyz(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
   curr_vb_cell(i, x, dx, prt->qni_wni, scurr, prm, ci0);
 }
 
+#endif
+
 // ======================================================================
+
+#if DIM == DIM_YZ
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __global__ static void
@@ -749,6 +787,8 @@ push_mprts_ab_yz(struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
   }
 }
 
+#elif DIM == DIM_XYZ
+
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
@@ -789,6 +829,8 @@ push_mprts_ab_xyz(struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
   }
 }
 
+#endif
+
 // ----------------------------------------------------------------------
 // zero_currents
 
@@ -804,6 +846,8 @@ zero_currents(struct psc_mfields *mflds)
     check(cudaMemset(d_flds + JXI * size, 0, 3 * size * sizeof(*d_flds)));
   }
 }
+
+#if DIM == DIM_YZ
 
 // ----------------------------------------------------------------------
 // cuda_push_mprts_ab_yz
@@ -839,6 +883,8 @@ cuda_push_mprts_ab_yz(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 
   _free_params(&prm);
 }
+
+#elif DIM == DIM_XYZ
 
 // ----------------------------------------------------------------------
 // cuda_push_mprts_ab_xyz
@@ -876,36 +922,4 @@ cuda_push_mprts_ab_xyz(struct psc_mparticles *mprts, struct psc_mfields *mflds)
   _free_params(&prm);
 }
 
-// ----------------------------------------------------------------------
-// cuda2_1vbec_push_mprts_yz
-
-void
-cuda2_1vbec_push_mprts_yz(struct psc_mparticles *mprts, struct psc_mfields *mflds)
-{
-  struct psc_mparticles_cuda2 *mprts_sub = psc_mparticles_cuda2(mprts);
-
-  int *bs = mprts_sub->bs;
-  if (bs[0] == 1 && bs[1] == 4 && bs[2] == 4) {
-    cuda_push_mprts_ab_yz<1, 4, 4>(mprts, mflds);
-  } else {
-    mprintf("unknown bs %d %d %d\n", bs[0], bs[1], bs[2]);
-  }
-}
-
-// ----------------------------------------------------------------------
-// cuda2_1vbec_push_mprts_xyz
-
-void
-cuda2_1vbec_push_mprts_xyz(struct psc_mparticles *mprts, struct psc_mfields *mflds)
-{
-  struct psc_mparticles_cuda2 *mprts_sub = psc_mparticles_cuda2(mprts);
-
-  int *bs = mprts_sub->bs;
-  if (bs[0] == 4 && bs[1] == 4 && bs[2] == 4) {
-    cuda_push_mprts_ab_xyz<4, 4, 4>(mprts, mflds);
-  } else {
-    mprintf("unknown bs %d %d %d\n", bs[0], bs[1], bs[2]);
-  }
-}
-
-
+#endif
