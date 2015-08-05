@@ -7,24 +7,12 @@
 #undef CUDA_DEVICE
 #define CUDA_DEVICE __device__
 
+#include "../psc_push_particles/inc_params.c"
 #include "../psc_push_particles/inc_push.c"
 
 #define NO_CACHE
 
 #define MAX_KINDS (4)
-
-struct cuda_params {
-  real dt;
-  real dxi[3];
-  real b_dxi[3];
-  real dqs;
-  real fnqs;
-  real fnqxs, fnqys, fnqzs;
-  int mx[3];
-  int ilg[3];
-  int b_mx[3];
-  real dq[MAX_KINDS];
-};
 
 #define BND (2)
 
@@ -75,10 +63,11 @@ struct cuda_params {
 // ======================================================================
 
 // FIXME -> common.c
+#ifdef __CUDACC__
 
-__device__ static void
+CUDA_DEVICE static void
 find_idx_off_1st(const real xi[3], int j[3], real h[3], real shift,
-		 struct cuda_params prm)
+		 struct params_1vb prm)
 {
   for (int d = 0; d < 3; d++) {
     real pos = xi[d] * prm.dxi[d] + shift;
@@ -87,9 +76,9 @@ find_idx_off_1st(const real xi[3], int j[3], real h[3], real shift,
   }
 }
 
-__device__ static void
+CUDA_DEVICE static void
 find_idx_off_pos_1st(const real xi[3], int j[3], real h[3], real pos[3], real shift,
-		     struct cuda_params prm)
+		     struct params_1vb prm)
 {
   for (int d = 0; d < 3; d++) {
     pos[d] = xi[d] * prm.dxi[d] + shift;
@@ -98,16 +87,19 @@ find_idx_off_pos_1st(const real xi[3], int j[3], real h[3], real pos[3], real sh
   }
 }
 
+#endif
+
+
 static __constant__ __device__ float c_dqs[4]; // FIXME hardcoded
 
 static void
-set_consts(struct cuda_params *prm)
+set_consts(struct params_1vb *prm)
 {
-  check(cudaMemcpyToSymbol(c_dqs, prm->dq, sizeof(c_dqs)));
+  check(cudaMemcpyToSymbol(c_dqs, prm->dq_kind, sizeof(c_dqs)));
 }
 
 static void
-_set_params(struct cuda_params *prm, struct psc *psc,
+_set_params(struct params_1vb *prm, struct psc *psc,
 	    struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
   prm->dt = psc->dt;
@@ -122,7 +114,7 @@ _set_params(struct cuda_params *prm, struct psc *psc,
   prm->fnqzs  = psc->patch[0].dx[2] * prm->fnqs / psc->dt;
   assert(psc->nr_kinds <= MAX_KINDS);
   for (int k = 0; k < psc->nr_kinds; k++) {
-    prm->dq[k] = prm->dqs * psc->kinds[k].q / psc->kinds[k].m;
+    prm->dq_kind[k] = prm->dqs * psc->kinds[k].q / psc->kinds[k].m;
   }
 
   if (mprts && mprts->nr_patches > 0) {
@@ -144,7 +136,7 @@ _set_params(struct cuda_params *prm, struct psc *psc,
 }
 
 static void
-_free_params(struct cuda_params *prm)
+_free_params(struct params_1vb *prm)
 {
 }
 
@@ -173,6 +165,22 @@ _free_params(struct cuda_params *prm)
 		*(BLOCKSIZE_Z + 4) + ((jx)-(-2)))])
 
 #endif
+
+// ----------------------------------------------------------------------
+// calc_vxi
+//
+// calculate velocity from momentum
+
+__device__ static void
+calc_vxi(real vxi[3], particle_t p)
+{
+  real root = rsqrtr(real(1.) + sqr(p.pxi[0]) + sqr(p.pxi[1]) + sqr(p.pxi[2]));
+
+  int d;
+  for (d = 0; d < 3; d++) {
+    vxi[d] = p.pxi[d] * root;
+  }
+}
 
 // ----------------------------------------------------------------------
 // push_pxi_dt
@@ -214,7 +222,7 @@ push_pxi_dt(particle_t *p,
 
 __device__ static void
 push_part_one(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
-	      real *d_flds, real *fld_cache, int ci0[3], struct cuda_params prm)
+	      real *d_flds, real *fld_cache, int ci0[3], struct params_1vb prm)
 {
   LOAD_PARTICLE_POS_(*prt, d_xi4, n);
 
@@ -275,7 +283,7 @@ push_part_one(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 }
 
 __device__ static int
-find_block_pos_patch(struct cuda_params prm, int *block_pos, int *ci0)
+find_block_pos_patch(struct params_1vb prm, int *block_pos, int *ci0)
 {
 #if DIM == DIM_YZ
   block_pos[1] = blockIdx.x;
@@ -301,7 +309,7 @@ find_block_pos_patch(struct cuda_params prm, int *block_pos, int *ci0)
 }
 
 __device__ static int
-find_bid(struct cuda_params prm)
+find_bid(struct params_1vb prm)
 {
 #if DIM == DIM_YZ
   return blockIdx.y * prm.b_mx[1] + blockIdx.x;
@@ -311,7 +319,7 @@ find_bid(struct cuda_params prm)
 }
 
 __device__ static void
-cache_fields(struct cuda_params prm, float *fld_cache, float *d_flds0, int size, int *ci0, int p)
+cache_fields(struct params_1vb prm, float *fld_cache, float *d_flds0, int size, int *ci0, int p)
 {
   real *d_flds = d_flds0 + p * size;
 
@@ -357,7 +365,7 @@ public:
   {
   }
 
-  __device__ void add(int m, int jy, int jz, float val, struct cuda_params prm, int *ci0)
+  __device__ void add(int m, int jy, int jz, float val, struct params_1vb prm, int *ci0)
   {
     float *addr = &F3_DEV_YZ(JXI+m, jy+ci0[1],jz+ci0[2]);
     atomicAdd(addr, val);
@@ -412,7 +420,7 @@ calc_dx1(real dx1[3], real x[3], real dx[3], int off[3])
 
 __device__ static void
 curr_vb_cell(int i[3], real x[3], real dx[3], real qni_wni,
-	     GCurr &scurr, struct cuda_params prm, int *ci0)
+	     GCurr &scurr, struct params_1vb prm, int *ci0)
 {
   real xa[3] = { 0.,
 		 x[1] + .5f * dx[1],
@@ -458,7 +466,7 @@ curr_vb_cell_upd(int i[3], real x[3], real dx1[3], real dx[3], int off[3])
 __device__ static void
 calc_j(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
        GCurr &scurr,
-       struct cuda_params prm, int p_nr, int bid, int *ci0)
+       struct params_1vb prm, int p_nr, int bid, int *ci0)
 {
   real vxi[3];
   calc_vxi(vxi, *prt);
@@ -538,7 +546,7 @@ calc_j(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
-push_mprts_ab(struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
+push_mprts_ab(struct params_1vb prm, float4 *d_xi4, float4 *d_pxi4,
 	      unsigned int *d_off,
 	      float *d_flds0, unsigned int size)
 {
@@ -603,7 +611,7 @@ cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
   struct psc_mparticles_cuda2 *mprts_sub = psc_mparticles_cuda2(mprts);
   struct psc_mfields_cuda2 *mflds_sub = psc_mfields_cuda2(mflds);
 
-  struct cuda_params prm;
+  struct params_1vb prm;
   _set_params(&prm, ppsc, mprts, mflds);
   set_consts(&prm);
 

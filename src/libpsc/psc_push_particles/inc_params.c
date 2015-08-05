@@ -9,6 +9,13 @@ struct params_1vb {
   particle_real_t fnqx_kind[MAX_NR_KINDS];
   particle_real_t fnqy_kind[MAX_NR_KINDS];
   particle_real_t fnqz_kind[MAX_NR_KINDS];
+#ifdef __CUDACC__
+  particle_real_t b_dxi[3];
+  particle_real_t dqs;
+  int mx[3];
+  int ilg[3];
+  int b_mx[3];
+#endif
 };
 
 static struct params_1vb prm;
