@@ -287,6 +287,10 @@ mrc_obj_put(struct mrc_obj *obj)
       list_entry(obj->dict_list.next, struct mrc_dict_entry, entry);
     if (p->prm.type == PT_STRING) {
       free((char *)p->val.u_string);
+    } else if (p->prm.type == PT_FLOAT_ARRAY) {
+      if (p->val.u_float_array.vals) {
+        free((float *)p->val.u_float_array.vals);
+      }
     }
     list_del(&p->entry);
     free(p);
@@ -1227,6 +1231,23 @@ mrc_obj_dict_add_obj(struct mrc_obj *obj, const char *name, struct mrc_obj *val)
   union param_u uval;
   uval.u_obj = val;
   mrc_obj_dict_add(obj, PT_OBJ, name, &uval);
+}
+
+void
+mrc_obj_dict_add_float_array(struct mrc_obj *obj, const char *name, 
+    float *vals, int nr_vals)
+{
+  union param_u uval;
+  uval.u_float_array.nr_vals = nr_vals;
+  if (nr_vals == 0) {
+    uval.u_float_array.vals = NULL;
+  } else {
+    uval.u_float_array.vals = calloc(nr_vals, sizeof(float));
+  }
+  for (int i = 0; i < nr_vals; i++) {
+    uval.u_float_array.vals[i] = vals[i];
+  }
+  mrc_obj_dict_add(obj, PT_FLOAT_ARRAY, name, &uval);
 }
 
 static void
