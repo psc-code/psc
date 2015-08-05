@@ -2,16 +2,9 @@
 #include "psc_cuda2.h"
 
 #include "psc_fields_cuda2.h"
-#include "psc_particles_cuda2.h"
+#include "psc_particles_as_cuda2.h"
 
 #define NO_CACHE
-
-struct d_particle {
-  real xi[3];
-  real kind_as_float;
-  real pxi[3];
-  real qni_wni;
-};
 
 #define MAX_KINDS (4)
 
@@ -213,7 +206,7 @@ _free_params(struct cuda_params *prm)
 // advance position using velocity
 
 __device__ static void
-push_xi_yz(struct d_particle *p, const real vxi[3], real dt)
+push_xi_yz(particle_t *p, const real vxi[3], real dt)
 {
   int d;
   for (d = 1; d < 3; d++) {
@@ -222,7 +215,7 @@ push_xi_yz(struct d_particle *p, const real vxi[3], real dt)
 }
 
 __device__ static void
-push_xi_xyz(struct d_particle *p, const real vxi[3], real dt)
+push_xi_xyz(particle_t *p, const real vxi[3], real dt)
 {
   int d;
   for (d = 0; d < 3; d++) {
@@ -236,7 +229,7 @@ push_xi_xyz(struct d_particle *p, const real vxi[3], real dt)
 // calculate velocity from momentum
 
 __device__ static void
-calc_vxi(real vxi[3], struct d_particle p)
+calc_vxi(real vxi[3], particle_t p)
 {
   real root = rsqrtr(real(1.) + sqr(p.pxi[0]) + sqr(p.pxi[1]) + sqr(p.pxi[2]));
 
@@ -252,7 +245,7 @@ calc_vxi(real vxi[3], struct d_particle p)
 // advance moments according to EM fields
 
 __device__ static void
-push_pxi_dt(struct d_particle *p,
+push_pxi_dt(particle_t *p,
 	    real exq, real eyq, real ezq, real hxq, real hyq, real hzq)
 {
   int kind = __float_as_int(p->kind_as_float);
@@ -285,7 +278,7 @@ push_pxi_dt(struct d_particle *p,
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static void
-push_part_one_yz(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
+push_part_one_yz(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 		 real *d_flds, real *fld_cache, int ci0[3], struct cuda_params prm)
 {
   LOAD_PARTICLE_POS_(*prt, d_xi4, n);
@@ -325,7 +318,7 @@ push_part_one_yz(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static void
-push_part_one_xyz(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
+push_part_one_xyz(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 		  real *d_flds, real *fld_cache, int ci0[3], struct cuda_params prm)
 {
   LOAD_PARTICLE_POS_(*prt, d_xi4, n);
@@ -559,7 +552,7 @@ curr_vb_cell_upd(int i[3], real x[3], real dx1[3], real dx[3], int off[3])
 // calc_j_yz
 
 __device__ static void
-calc_j_yz(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
+calc_j_yz(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 	  GCurr &scurr,
 	  struct cuda_params prm, int p_nr,
 	  int bid, int *ci0)
@@ -638,7 +631,7 @@ calc_j_yz(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 // calc_j_xyz
 
 __device__ static void
-calc_j_xyz(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
+calc_j_xyz(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 	  GCurr &scurr,
 	  struct cuda_params prm, int p_nr,
 	  int bid, int *ci0)
@@ -747,7 +740,7 @@ push_mprts_ab_yz(struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
     if (n < block_begin) {
       continue;
     }
-    struct d_particle prt;
+    particle_t prt;
     push_part_one_yz<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
       (&prt, n, d_xi4, d_pxi4, d_flds0 + p * size, fld_cache, ci0, prm);
 
@@ -787,7 +780,7 @@ push_mprts_ab_xyz(struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
     if (n < block_begin) {
       continue;
     }
-    struct d_particle prt;
+    particle_t prt;
     push_part_one_xyz<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
       (&prt, n, d_xi4, d_pxi4, d_flds0 + p * size, fld_cache, ci0, prm);
 
