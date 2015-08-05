@@ -17,3 +17,6 @@
 #define CALC_J_1VB_2D    3 // V-B deposition variant with simpler out-of-plane current deposit
 
 
+// ======================================================================
+
+#define CUDA_DEVICE

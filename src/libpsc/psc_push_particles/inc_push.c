@@ -2,7 +2,7 @@
 // ----------------------------------------------------------------------
 // calc_vxi
 
-static inline void
+CUDA_DEVICE static inline void
 calc_vxi(particle_real_t vxi[3], particle_t *prt)
 {
   particle_real_t *px = &particle_px(prt);
@@ -18,7 +18,7 @@ calc_vxi(particle_real_t vxi[3], particle_t *prt)
 
 #ifdef PSC_PARTICLES_AS_CUDA2
 
-static inline void
+CUDA_DEVICE static inline void
 push_xi(particle_cuda2_t *part, particle_cuda2_real_t vxi[3], particle_cuda2_real_t dt)
 {
 #if DIM == DIM_YZ
@@ -35,7 +35,7 @@ push_xi(particle_cuda2_t *part, particle_cuda2_real_t vxi[3], particle_cuda2_rea
 
 #if DIM == DIM_YZ
 
-static inline void
+CUDA_DEVICE static inline void
 push_xi(particle_t *part, particle_real_t vxi[3], particle_real_t dt)
 {
   part->yi += vxi[1] * dt;
@@ -93,7 +93,7 @@ push_pxi(particle_t *prt, particle_real_t exq, particle_real_t eyq, particle_rea
 // ----------------------------------------------------------------------
 // find_idx_off_1st_rel
 
-static inline void
+CUDA_DEVICE static inline void
 find_idx_off_1st_rel(particle_real_t xi[3], int lg[3], particle_real_t og[3], particle_real_t shift,
 		     particle_real_t dxi[3])
 {
@@ -107,7 +107,7 @@ find_idx_off_1st_rel(particle_real_t xi[3], int lg[3], particle_real_t og[3], pa
 // ----------------------------------------------------------------------
 // find_idx_off_pos_1st_rel
 
-static inline void
+CUDA_DEVICE static inline void
 find_idx_off_pos_1st_rel(particle_real_t xi[3], int lg[3], particle_real_t og[3],
 			 particle_real_t pos[3], particle_real_t shift,
 			 particle_real_t dxi[3])

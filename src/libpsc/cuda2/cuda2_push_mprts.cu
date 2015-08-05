@@ -4,6 +4,11 @@
 #include "psc_fields_cuda2.h"
 #include "psc_particles_as_cuda2.h"
 
+#undef CUDA_DEVICE
+#define CUDA_DEVICE __device__
+
+#include "../psc_push_particles/inc_push.c"
+
 #define NO_CACHE
 
 #define MAX_KINDS (4)
@@ -168,42 +173,6 @@ _free_params(struct cuda_params *prm)
 		*(BLOCKSIZE_Z + 4) + ((jx)-(-2)))])
 
 #endif
-
-// ----------------------------------------------------------------------
-// push_xi
-//
-// advance position using velocity
-
-
-__device__ static void
-push_xi(particle_t *p, const real vxi[3], real dt)
-{
-#if DIM == DIM_YZ
-  for (int d = 1; d < 3; d++) {
-    p->xi[d] += dt * vxi[d];
-  }
-#elif DIM == DIM_XYZ
-  for (int d = 0; d < 3; d++) {
-    p->xi[d] += dt * vxi[d];
-  }
-#endif
-}
-
-// ----------------------------------------------------------------------
-// calc_vxi
-//
-// calculate velocity from momentum
-
-__device__ static void
-calc_vxi(real vxi[3], particle_t p)
-{
-  real root = rsqrtr(real(1.) + sqr(p.pxi[0]) + sqr(p.pxi[1]) + sqr(p.pxi[2]));
-
-  int d;
-  for (d = 0; d < 3; d++) {
-    vxi[d] = p.pxi[d] * root;
-  }
-}
 
 // ----------------------------------------------------------------------
 // push_pxi_dt
