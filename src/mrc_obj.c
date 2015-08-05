@@ -744,6 +744,26 @@ mrc_obj_get_param_obj(struct mrc_obj *obj, const char *name, struct mrc_obj **pv
   return 0;
 }
 
+int
+mrc_obj_get_param_float_array_nr_vals(struct mrc_obj *obj, const char *name, int *nr_vals)
+{
+  union param_u uval;
+  int err = mrc_obj_get_param_type(obj, name, PT_FLOAT_ARRAY, &uval);
+  *nr_vals = uval.u_float_array.nr_vals;
+  return err;
+}
+
+int
+mrc_obj_get_param_float_array(struct mrc_obj *obj, const char *name, float *pval)
+{
+  union param_u uval;
+  int err = mrc_obj_get_param_type(obj, name, PT_FLOAT_ARRAY, &uval);
+  for (int d = 0; d < uval.u_float_array.nr_vals; d++) {
+    pval[d] = uval.u_float_array.vals[d];
+  }
+  return err;
+}
+
 static void
 mrc_obj_view_this(struct mrc_obj *obj)
 {
