@@ -28,6 +28,36 @@ mrc_fld_gkeyll_nr_fluids(struct mrc_fld *f)
 }
 
 // ----------------------------------------------------------------------
+// mrc_fld_gkeyll_mass_ratios
+// the input mass_ratio is an array of length nr_flds
+
+void
+mrc_fld_gkeyll_mass_ratios(struct mrc_fld *f, float mass_ratios[])
+{
+  mrc_fld_get_param_float_array(f, "mass_ratios", mass_ratios);
+}
+
+// ----------------------------------------------------------------------
+// mrc_fld_gkeyll_momentum_ratios
+// the input momentum_ratio is an array of length nr_flds
+
+void
+mrc_fld_gkeyll_momentum_ratios(struct mrc_fld *f, float momentum_ratios[])
+{
+  mrc_fld_get_param_float_array(f, "momentum_ratios", momentum_ratios);
+}
+
+// ----------------------------------------------------------------------
+// mrc_fld_gkeyll_temperature_ratios
+// the input temperature_ratio is an array of length nr_flds
+
+void
+mrc_fld_gkeyll_temperature_ratios(struct mrc_fld *f, float temperature_ratios[])
+{
+  mrc_fld_get_param_float_array(f, "temperature_ratios", temperature_ratios);
+}
+
+// ----------------------------------------------------------------------
 // mrc_fld_gkeyll_set_nr_moments
 
 void
