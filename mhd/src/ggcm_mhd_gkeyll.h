@@ -21,6 +21,29 @@ enum {
   G5M_NR,
 };
 
+// shifts for a species in a five-moment fluid
+enum {
+  G5M_RRS,
+  G5M_RVXS,
+  G5M_RVYS,
+  G5M_RVZS,
+  G5M_UUS,
+  G5M_NRS,
+};
+
+// shifts within the em fields
+enum {
+  GK_EX,
+  GK_EY,
+  GK_EZ,
+  GK_BX,
+  GK_BY,
+  GK_BZ,
+  GK_PHI, // correction potentials
+  GK_PSI,
+  GK_NR_EM,
+};
+
 int
 mrc_fld_gkeyll_nr_moments(struct mrc_fld *f);
 
