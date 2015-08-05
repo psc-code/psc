@@ -101,15 +101,29 @@ mrc_fld_gkeyll_ion_index_two_fluids(struct mrc_fld *f, int m_beg)
 }
 
 // ----------------------------------------------------------------------
-// mrc_fld_gkeyll_ion_index_two_fluids
+// mrc_fld_gkeyll_species_index
 //
-// first index of the electron moments for a two-fluid case
+// first index of a species
 
 int
 mrc_fld_gkeyll_species_index(struct mrc_fld *f, int m_beg, int species)
 {
+  // species starts from 0 to nr_fluids-1
   assert(species < mrc_fld_gkeyll_nr_fluids(f));
-  return m_beg + mrc_fld_gkeyll_nr_moments(f) * (species - 1);
+  return m_beg + mrc_fld_gkeyll_nr_moments(f) * species;
+}
+
+// ----------------------------------------------------------------------
+// mrc_fld_gkeyll_species_index_all
+//
+// first index of all species
+
+void
+mrc_fld_gkeyll_species_index_all(struct mrc_fld *f, int m_beg, int *indices)
+{
+  for ( int s = 0; s < mrc_fld_gkeyll_nr_fluids(f); s++) {
+    indices[s] = mrc_fld_gkeyll_species_index(f, m_beg, s);
+  }
 }
 
 // ----------------------------------------------------------------------

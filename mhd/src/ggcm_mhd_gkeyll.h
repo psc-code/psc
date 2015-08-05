@@ -74,5 +74,8 @@ mrc_fld_gkeyll_ion_index_two_fluids(struct mrc_fld *f, int m_beg);
 int
 mrc_fld_gkeyll_species_index(struct mrc_fld *f, int m_beg, int species);
 
+void
+mrc_fld_gkeyll_species_index_all(struct mrc_fld *f, int m_beg, int indices[]);
+
 int
 mrc_fld_gkeyll_em_index(struct mrc_fld *f, int m_beg);
