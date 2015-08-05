@@ -41,19 +41,6 @@ struct cuda_params {
 // OPT: precalc offsets into fld_cache (including ci[])
 // OPT: use more shmem?
 
-#define LOAD_PARTICLE_(pp, d_xi4, d_pxi4, n) do {			\
-    float4 xi4 = d_xi4[n];						\
-    (pp).xi[0]         = xi4.x;						\
-    (pp).xi[1]         = xi4.y;						\
-    (pp).xi[2]         = xi4.z;						\
-    (pp).kind_as_float = xi4.w;						\
-    float4 pxi4 = d_pxi4[n];						\
-    (pp).pxi[0]        = pxi4.x;					\
-    (pp).pxi[1]        = pxi4.y;					\
-    (pp).pxi[2]        = pxi4.z;					\
-    (pp).qni_wni       = pxi4.w;					\
-} while (0)
-
 #define LOAD_PARTICLE_POS_(pp, d_xi4, n) do {				\
     float4 _xi4 = d_xi4[n];						\
     (pp).xi[0]         = _xi4.x;					\
@@ -70,33 +57,15 @@ struct cuda_params {
     (pp).qni_wni       = _pxi4.w;					\
 } while (0)
 
-#if 0
-#define STORE_PARTICLE_POS_(pp, d_xi4, n) do {				\
-    d_xi4[n].x = (pp).xi[0];						\
-    d_xi4[n].y = (pp).xi[1];						\
-    d_xi4[n].z = (pp).xi[2];						\
-    d_xi4[n].w = (pp).kind_as_float;					\
-} while (0)
-#else
 #define STORE_PARTICLE_POS_(pp, d_xi4, n) do {				\
     float4 xi4 = { (pp).xi[0], (pp).xi[1], (pp).xi[2], (pp).kind_as_float }; \
     d_xi4[n] = xi4;							\
 } while (0)
-#endif
 
-#if 0
-#define STORE_PARTICLE_MOM_(pp, d_pxi4, n) do {				\
-    d_pxi4[n].x = (pp).pxi[0];						\
-    d_pxi4[n].y = (pp).pxi[1];						\
-    d_pxi4[n].z = (pp).pxi[2];						\
-    d_pxi4[n].w = (pp).qni_wni;						\
-} while (0)
-#else
 #define STORE_PARTICLE_MOM_(pp, d_pxi4, n) do {				\
     float4 pxi4 = { (pp).pxi[0], (pp).pxi[1], (pp).pxi[2], (pp).qni_wni }; \
     d_pxi4[n] = pxi4;							\
 } while (0)
-#endif
 
 // ======================================================================
 
