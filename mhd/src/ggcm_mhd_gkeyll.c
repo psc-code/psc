@@ -29,7 +29,7 @@ mrc_fld_gkeyll_nr_fluids(struct mrc_fld *f)
 
 // ----------------------------------------------------------------------
 // mrc_fld_gkeyll_mass_ratios
-// the input mass_ratio is an array of length nr_flds
+// the output mass_ratio is an array of length nr_flds
 
 void
 mrc_fld_gkeyll_mass_ratios(struct mrc_fld *f, float mass_ratios[])
@@ -39,7 +39,7 @@ mrc_fld_gkeyll_mass_ratios(struct mrc_fld *f, float mass_ratios[])
 
 // ----------------------------------------------------------------------
 // mrc_fld_gkeyll_momentum_ratios
-// the input momentum_ratio is an array of length nr_flds
+// the output momentum_ratio is an array of length nr_flds
 
 void
 mrc_fld_gkeyll_momentum_ratios(struct mrc_fld *f, float momentum_ratios[])
@@ -49,7 +49,7 @@ mrc_fld_gkeyll_momentum_ratios(struct mrc_fld *f, float momentum_ratios[])
 
 // ----------------------------------------------------------------------
 // mrc_fld_gkeyll_temperature_ratios
-// the input temperature_ratio is an array of length nr_flds
+// the output temperature_ratio is an array of length nr_flds
 
 void
 mrc_fld_gkeyll_temperature_ratios(struct mrc_fld *f, float temperature_ratios[])
@@ -74,6 +74,42 @@ void
 mrc_fld_gkeyll_set_nr_fluids(struct mrc_fld *f, int nr_fluids)
 {
   mrc_fld_dict_add_int(f, "nr_fluids", nr_fluids);
+}
+
+// ----------------------------------------------------------------------
+// mrc_fld_gkeyll_set_mass_ratios
+//
+// the input mass_ratio is an array of length nr_flds
+
+void
+mrc_fld_gkeyll_set_mass_ratios(struct mrc_fld *f, float mass_ratios[])
+{
+  mrc_fld_dict_add_float_array(f, "mass_ratios",
+      mass_ratios, mrc_fld_gkeyll_nr_fluids(f));
+}
+
+// ----------------------------------------------------------------------
+// mrc_fld_gkeyll_set_momentum_ratios
+//
+// the input momentum_ratio is an array of length nr_flds
+
+void
+mrc_fld_gkeyll_set_momentum_ratios(struct mrc_fld *f, float momentum_ratios[])
+{
+  mrc_fld_dict_add_float_array(f, "momentum_ratios",
+      momentum_ratios, mrc_fld_gkeyll_nr_fluids(f));
+}
+
+// ----------------------------------------------------------------------
+// mrc_fld_gkeyll_set_temperature_ratios
+//
+// the input temperature_ratio is an array of length nr_flds
+
+void
+mrc_fld_gkeyll_set_temperature_ratios(struct mrc_fld *f, float temperature_ratios[])
+{
+  mrc_fld_dict_add_float_array(f, "temperature_ratios",
+      temperature_ratios, mrc_fld_gkeyll_nr_fluids(f));
 }
 
 // ----------------------------------------------------------------------

@@ -65,6 +65,15 @@ mrc_fld_gkeyll_set_nr_moments(struct mrc_fld *f, int nr_moments);
 void
 mrc_fld_gkeyll_set_nr_fluids(struct mrc_fld *f, int nr_fluids);
 
+void
+mrc_fld_gkeyll_set_mass_ratios(struct mrc_fld *f, float mass_ratios[]);
+
+void
+mrc_fld_gkeyll_set_momentum_ratios(struct mrc_fld *f, float momentum_ratios[]);
+
+void
+mrc_fld_gkeyll_set_temperature_ratios(struct mrc_fld *f, float temperature_ratios[]);
+
 int
 mrc_fld_gkeyll_electron_index_two_fluids(struct mrc_fld *f, int m_beg);
 
