@@ -8,9 +8,6 @@ struct params_1vb {
   particle_real_t fnqs, fnqxs, fnqys, fnqzs;
   particle_real_t dxi[3];
   particle_real_t dq_kind[MAX_NR_KINDS];
-  particle_real_t fnqx_kind[MAX_NR_KINDS];
-  particle_real_t fnqy_kind[MAX_NR_KINDS];
-  particle_real_t fnqz_kind[MAX_NR_KINDS];
 #ifdef __CUDACC__
   int mx[3];
   int ilg[3];
@@ -46,9 +43,6 @@ params_1vb_set(struct psc *psc,
   assert(psc->nr_kinds <= MAX_NR_KINDS);
   for (int k = 0; k < ppsc->nr_kinds; k++) {
     params.dq_kind[k] = .5f * ppsc->coeff.eta * params.dt * ppsc->kinds[k].q / ppsc->kinds[k].m;
-    params.fnqx_kind[k] = params.fnqxs * ppsc->kinds[k].q;
-    params.fnqy_kind[k] = params.fnqys * ppsc->kinds[k].q;
-    params.fnqz_kind[k] = params.fnqzs * ppsc->kinds[k].q;
   }
 
 #ifdef __CUDACC__
