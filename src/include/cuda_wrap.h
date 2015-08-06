@@ -4,6 +4,16 @@
 
 #define check(a) do { int ierr = a; if (ierr != cudaSuccess) fprintf(stderr, "IERR = %d (%d)\n", ierr, cudaSuccess); assert(ierr == cudaSuccess); } while(0)
 
+// ======================================================================
+
+#ifdef __CUDACC__
+#define CUDA_DEVICE __device__
+#define CUDA_CONSTANT __constant__ __device__
+#else
+#define CUDA_DEVICE
+#define CUDA_CONSTANT
+#endif
+
 #ifndef __CUDACC__
 
 // ======================================================================

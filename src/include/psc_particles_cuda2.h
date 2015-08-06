@@ -63,22 +63,30 @@ struct psc_mparticles_cuda2 {
       rv;							\
     })
 
-static inline int
+CUDA_DEVICE static inline int
 particle_cuda2_kind(particle_cuda2_t *prt)
 {
+#ifdef __CUDACC__
+  return __float_as_int(prt->kind_as_float);
+#else
   return cuda_float_as_int(prt->kind_as_float);
+#endif
 }
 
 #define particle_cuda2_x(prt) ((prt)->xi[0])
 #define particle_cuda2_px(prt) ((prt)->pxi[0])
 
-static inline int
+CUDA_DEVICE static inline int
 particle_cuda2_real_fint(particle_cuda2_real_t x)
 {
+#ifdef __CUDACC__
+  return __float2int_rd(x);
+#else
   return floorf(x);
+#endif
 }
 
-static inline particle_cuda2_real_t
+CUDA_DEVICE static inline particle_cuda2_real_t
 particle_cuda2_real_sqrt(particle_cuda2_real_t x)
 {
   return sqrtf(x);

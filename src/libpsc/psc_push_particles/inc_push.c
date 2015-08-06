@@ -6,8 +6,12 @@ CUDA_DEVICE static inline void
 calc_vxi(particle_real_t vxi[3], particle_t *prt)
 {
   particle_real_t *px = &particle_px(prt);
+#ifdef __CUDACC__
+  particle_real_t root = rsqrt(1.f + sqr(px[0]) + sqr(px[1]) + sqr(px[2]));
+#else
   particle_real_t root = 1.f 
     / particle_real_sqrt(1.f + sqr(px[0]) + sqr(px[1]) + sqr(px[2]));
+#endif
   vxi[0] = px[0] * root;
   vxi[1] = px[1] * root;
   vxi[2] = px[2] * root;
@@ -49,7 +53,7 @@ push_xi(particle_t *part, particle_real_t vxi[3], particle_real_t dt)
 // ----------------------------------------------------------------------
 // push_pxi
 
-static inline void
+CUDA_DEVICE static inline void
 push_pxi(particle_t *prt, particle_real_t exq, particle_real_t eyq, particle_real_t ezq,
 	 particle_real_t hxq, particle_real_t hyq, particle_real_t hzq, particle_real_t dq)
 {
@@ -98,11 +102,7 @@ find_idx_off_1st_rel(particle_real_t xi[3], int lg[3], particle_real_t og[3], pa
 {
   for (int d = 0; d < 3; d++) {
     particle_real_t pos = xi[d] * prm.dxi[d] + shift;
-#ifdef __CUDACC__
-    lg[d] = __float2int_rd(pos);
-#else
     lg[d] = particle_real_fint(pos);
-#endif
     og[d] = pos - lg[d];
   }
 }
@@ -116,11 +116,7 @@ find_idx_off_pos_1st_rel(particle_real_t xi[3], int lg[3], particle_real_t og[3]
 {
   for (int d = 0; d < 3; d++) {
     pos[d] = xi[d] * prm.dxi[d] + shift;
-#ifdef __CUDACC__
-    lg[d] = __float2int_rd(pos[d]);
-#else
     lg[d] = particle_real_fint(pos[d]);
-#endif
     og[d] = pos[d] - lg[d];
   }
 }

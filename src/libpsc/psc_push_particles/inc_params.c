@@ -1,4 +1,6 @@
 
+#include "cuda_wrap.h"
+
 #define MAX_NR_KINDS (10)
 
 struct params_1vb {

@@ -84,58 +84,7 @@
 #endif
 
 // ----------------------------------------------------------------------
-// calc_vxi
-//
-// calculate velocity from momentum
-
-__device__ static void
-calc_vxi(real vxi[3], particle_t p)
-{
-  real root = rsqrtr(real(1.) + sqr(p.pxi[0]) + sqr(p.pxi[1]) + sqr(p.pxi[2]));
-
-  int d;
-  for (d = 0; d < 3; d++) {
-    vxi[d] = p.pxi[d] * root;
-  }
-}
-
-// ----------------------------------------------------------------------
-// push_pxi_dt
-//
-// advance moments according to EM fields
-
-__device__ static void
-push_pxi_dt(particle_t *p,
-	    real exq, real eyq, real ezq, real hxq, real hyq, real hzq)
-{
-  int kind = __float_as_int(p->kind_as_float);
-  real dq = prm.dq_kind[kind];
-  real pxm = p->pxi[0] + dq*exq;
-  real pym = p->pxi[1] + dq*eyq;
-  real pzm = p->pxi[2] + dq*ezq;
-  
-  real root = dq * rsqrtr(real(1.) + sqr(pxm) + sqr(pym) + sqr(pzm));
-  real taux = hxq * root, tauy = hyq * root, tauz = hzq * root;
-  
-  real tau = real(1.) / (real(1.) + sqr(taux) + sqr(tauy) + sqr(tauz));
-  real pxp = ( (real(1.) + sqr(taux) - sqr(tauy) - sqr(tauz)) * pxm
-	       +(real(2.)*taux*tauy + real(2.)*tauz)*pym
-	       +(real(2.)*taux*tauz - real(2.)*tauy)*pzm)*tau;
-  real pyp = ( (real(2.)*taux*tauy - real(2.)*tauz)*pxm
-	       +(real(1.) - sqr(taux) + sqr(tauy) - sqr(tauz)) * pym
-	       +(real(2.)*tauy*tauz + real(2.)*taux)*pzm)*tau;
-  real pzp = ( (real(2.)*taux*tauz + real(2.)*tauy)*pxm
-	       +(real(2.)*tauy*tauz - real(2.)*taux)*pym
-	       +(real(1.) - sqr(taux) - sqr(tauy) + sqr(tauz))*pzm)*tau;
-  
-  p->pxi[0] = pxp + dq * exq;
-  p->pxi[1] = pyp + dq * eyq;
-  p->pxi[2] = pzp + dq * ezq;
-}
-
-// ----------------------------------------------------------------------
 // push_part_one
-
 
 __device__ static void
 push_part_one(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
@@ -194,7 +143,9 @@ push_part_one(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
   LOAD_PARTICLE_MOM_(*prt, d_pxi4, n);
-  push_pxi_dt(prt, exq, eyq, ezq, hxq, hyq, hzq);
+  int kind = particle_kind(prt);
+  real dq = prm.dq_kind[kind];
+  push_pxi(prt, exq, eyq, ezq, hxq, hyq, hzq, dq);
   STORE_PARTICLE_MOM_(*prt, d_pxi4, n);
 }
 
@@ -384,7 +335,7 @@ calc_j(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
        GCurr &scurr, int p_nr, int bid, int *ci0)
 {
   real vxi[3];
-  calc_vxi(vxi, *prt);
+  calc_vxi(vxi, prt);
 
   // position xm at x^(n+.5)
   real h0[3], h1[3];
