@@ -48,13 +48,13 @@ mrc_fld_gkeyll_momentum_ratios(struct mrc_fld *f, float momentum_ratios[])
 }
 
 // ----------------------------------------------------------------------
-// mrc_fld_gkeyll_temperature_ratios
-// the output temperature_ratio is an array of length nr_flds
+// mrc_fld_gkeyll_pressure_ratios
+// the output pressure_ratio is an array of length nr_flds
 
 void
-mrc_fld_gkeyll_temperature_ratios(struct mrc_fld *f, float temperature_ratios[])
+mrc_fld_gkeyll_pressure_ratios(struct mrc_fld *f, float pressure_ratios[])
 {
-  mrc_fld_get_param_float_array(f, "temperature_ratios", temperature_ratios);
+  mrc_fld_get_param_float_array(f, "pressure_ratios", pressure_ratios);
 }
 
 // ----------------------------------------------------------------------
@@ -101,15 +101,15 @@ mrc_fld_gkeyll_set_momentum_ratios(struct mrc_fld *f, float momentum_ratios[])
 }
 
 // ----------------------------------------------------------------------
-// mrc_fld_gkeyll_set_temperature_ratios
+// mrc_fld_gkeyll_set_pressure_ratios
 //
-// the input temperature_ratio is an array of length nr_flds
+// the input pressure_ratio is an array of length nr_flds
 
 void
-mrc_fld_gkeyll_set_temperature_ratios(struct mrc_fld *f, float temperature_ratios[])
+mrc_fld_gkeyll_set_pressure_ratios(struct mrc_fld *f, float pressure_ratios[])
 {
-  mrc_fld_dict_add_float_array(f, "temperature_ratios",
-      temperature_ratios, mrc_fld_gkeyll_nr_fluids(f));
+  mrc_fld_dict_add_float_array(f, "pressure_ratios",
+      pressure_ratios, mrc_fld_gkeyll_nr_fluids(f));
 }
 
 // ----------------------------------------------------------------------
