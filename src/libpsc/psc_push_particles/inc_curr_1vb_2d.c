@@ -58,7 +58,7 @@ calc_j_oop(struct psc_fields *flds, particle_t *prt, particle_real_t *vxi)
 {
   int lf[3];
   particle_real_t of[3];
-  find_idx_off_1st_rel(&prt->xi, lf, of, 0.f, prm.dxi);
+  find_idx_off_1st_rel(&prt->xi, lf, of, 0.f);
 
   particle_real_t fnqx = vxi[0] * particle_wni(prt) * prm.fnqx_kind[prt->kind];
   F3_CURR(flds, JXI, 0,lf[1]  ,lf[2]  ) += (1.f - of[1]) * (1.f - of[2]) * fnqx;

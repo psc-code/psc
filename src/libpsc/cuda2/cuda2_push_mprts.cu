@@ -223,7 +223,6 @@ push_part_one(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
   LOAD_PARTICLE_MOM_(*prt, d_pxi4, n);
   push_pxi_dt(prt, exq, eyq, ezq, hxq, hyq, hzq);
   STORE_PARTICLE_MOM_(*prt, d_pxi4, n);
-
 }
 
 __device__ static int

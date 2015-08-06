@@ -94,11 +94,10 @@ push_pxi(particle_t *prt, particle_real_t exq, particle_real_t eyq, particle_rea
 // find_idx_off_1st_rel
 
 CUDA_DEVICE static inline void
-find_idx_off_1st_rel(particle_real_t xi[3], int lg[3], particle_real_t og[3], particle_real_t shift,
-		     particle_real_t dxi[3])
+find_idx_off_1st_rel(particle_real_t xi[3], int lg[3], particle_real_t og[3], particle_real_t shift)
 {
   for (int d = 0; d < 3; d++) {
-    particle_real_t pos = xi[d] * dxi[d] + shift;
+    particle_real_t pos = xi[d] * prm.dxi[d] + shift;
     lg[d] = particle_real_fint(pos);
     og[d] = pos - lg[d];
   }
@@ -109,11 +108,10 @@ find_idx_off_1st_rel(particle_real_t xi[3], int lg[3], particle_real_t og[3], pa
 
 CUDA_DEVICE static inline void
 find_idx_off_pos_1st_rel(particle_real_t xi[3], int lg[3], particle_real_t og[3],
-			 particle_real_t pos[3], particle_real_t shift,
-			 particle_real_t dxi[3])
+			 particle_real_t pos[3], particle_real_t shift)
 {
   for (int d = 0; d < 3; d++) {
-    pos[d] = xi[d] * dxi[d] + shift;
+    pos[d] = xi[d] * prm.dxi[d] + shift;
     lg[d] = particle_real_fint(pos[d]);
     og[d] = pos[d] - lg[d];
   }

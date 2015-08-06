@@ -67,8 +67,8 @@ push_one(particle_t *prt, struct psc_fields *flds, struct psc_particles *prts, i
   // field interpolation
   int lg[3], lh[3];
   particle_real_t og[3], oh[3], xm[3];
-  find_idx_off_pos_1st_rel(&particle_x(prt), lg, og, xm, 0.f, prm.dxi); // FIXME passing xi hack
-  find_idx_off_1st_rel(&particle_x(prt), lh, oh, -.5f, prm.dxi);
+  find_idx_off_pos_1st_rel(&particle_x(prt), lg, og, xm, 0.f); // FIXME passing xi hack
+  find_idx_off_1st_rel(&particle_x(prt), lh, oh, -.5f);
 
   particle_real_t exq, eyq, ezq, hxq, hyq, hzq;
   INTERPOLATE_1ST(flds, exq, eyq, ezq, hxq, hyq, hzq);
@@ -95,7 +95,7 @@ push_one(particle_t *prt, struct psc_fields *flds, struct psc_particles *prts, i
   
   int lf[3];
   particle_real_t of[3], xp[3];
-  find_idx_off_pos_1st_rel(&particle_x(prt), lf, of, xp, 0.f, prm.dxi);
+  find_idx_off_pos_1st_rel(&particle_x(prt), lf, of, xp, 0.f);
   ext_prepare_sort(prts, n, prt, lf);
 
   // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
