@@ -9,22 +9,6 @@
 
 #define NO_CACHE
 
-#define MAX_KINDS (4)
-
-#define BND (2)
-
-#define F3_DEV_OFF_XYZ(fldnr, jx,jy,jz)					\
-  ((((fldnr)								\
-     *prm.mx[2] + ((jz)-prm.ilg[2]))					\
-    *prm.mx[1] + ((jy)-prm.ilg[1]))					\
-   *prm.mx[0] + ((jx)-prm.ilg[0]))
-
-#define F3_DEV_XYZ(fldnr,jx,jy,jz)		\
-  ((d_flds)[F3_DEV_OFF_XYZ(fldnr, jx,jy,jz)])
-
-#define F3_DEV_YZ(fldnr,jy,jz) F3_DEV_XYZ(fldnr, 0,jy,jz)
-
-
 #undef THREADS_PER_BLOCK
 #define THREADS_PER_BLOCK (512)
 
@@ -58,28 +42,95 @@
 } while (0)
 
 // ======================================================================
+
+#if DIM == DIM_YZ
+
+#define F3_DEV_OFF(fldnr, jx,jy,jz)					\
+  ((((fldnr)								\
+     *prm.mx[2] + ((jz)-prm.ilg[2]))					\
+    *prm.mx[1] + ((jy)-prm.ilg[1])))
+
+#else
+
+#define F3_DEV_OFF(fldnr, jx,jy,jz)					\
+  ((((fldnr)								\
+     *prm.mx[2] + ((jz)-prm.ilg[2]))					\
+    *prm.mx[1] + ((jy)-prm.ilg[1]))					\
+   *prm.mx[0] + ((jx)-prm.ilg[0]))
+
+#endif
+
+#define F3_DEV(fldnr,jx,jy,jz)			\
+  ((d_flds)[F3_DEV_OFF(fldnr, jx,jy,jz)])
+
+
+// ======================================================================
 // field caching
 
 #ifdef NO_CACHE
 
-#define F3_CACHE_YZ(fld_cache, m, jy, jz)	\
-  (F3_DEV_YZ(m, jy+ci0[1],jz+ci0[2]))
-
-#define F3_CACHE_XYZ(fld_cache, m, jx, jy, jz)	\
-  (F3_DEV_XYZ(m, jx+ci0[0],jy+ci0[1],jz+ci0[2]))
+#define F3_CACHE(fld_cache, m, jx, jy, jz)	\
+  (F3_DEV(m, jx+ci0[0],jy+ci0[1],jz+ci0[2]))
 
 #else
 
-#define F3_CACHE_YZ(fld_cache, m, jy, jz)				\
+#if DIM == DIM_YZ
+#define F3_CACHE(fld_cache, m, jx, jy, jz)				\
   ((fld_cache)[(((m-EX)							\
 		 *(BLOCKSIZE_Z + 4) + ((jz)-(-2)))			\
 		*(BLOCKSIZE_Y + 4) + ((jy)-(-2)))])
-
-#define F3_CACHE_XYZ(fld_cache, m, jx, jy, jz)				\
+#elif DIM == DIM_XYZ
+#define F3_CACHE(fld_cache, m, jx, jy, jz)				\
   ((fld_cache)[((((m-EX)						\
 		  *(BLOCKSIZE_Z + 4) + ((jz)-(-2)))			\
 		 *(BLOCKSIZE_Y + 4) + ((jy)-(-2)))			\
 		*(BLOCKSIZE_Z + 4) + ((jx)-(-2)))])
+#endif
+
+#endif
+
+#if DIM == DIM_YZ
+
+#define INTERPOLATE_1ST_EC(flds, exq, eyq, ezq, hxq, hyq, hzq)        	\
+  do {									\
+    exq = ((1.f - og[1]) * (1.f - og[2]) * F3_CACHE(flds, EX, 0,lg[1]+0,lg[2]+0) + \
+	   (      og[1]) * (1.f - og[2]) * F3_CACHE(flds, EX, 0,lg[1]+1,lg[2]+0) + \
+	   (1.f - og[1]) * (      og[2]) * F3_CACHE(flds, EX, 0,lg[1]+0,lg[2]+1) + \
+	   (      og[1]) * (      og[2]) * F3_CACHE(flds, EX, 0,lg[1]+1,lg[2]+1)); \
+    eyq = ((1.f - og[2]) * F3_CACHE(flds, EY, 0,lg[1]  ,lg[2]+0) + \
+	   (      og[2]) * F3_CACHE(flds, EY, 0,lg[1]  ,lg[2]+1)); \
+    ezq = ((1.f - og[1]) * F3_CACHE(flds, EZ, 0,lg[1]+0,lg[2]  ) + \
+	   (      og[1]) * F3_CACHE(flds, EZ, 0,lg[1]+1,lg[2]  )); \
+    hxq = (F3_CACHE(flds, HX, 0,lg[1],lg[2]));			\
+    hyq = ((1.f - og[1]) * F3_CACHE(flds, HY, 0,lg[1]+0,lg[2]  ) +	\
+	   (      og[1]) * F3_CACHE(flds, HY, 0,lg[1]+1,lg[2]  ));	\
+    hzq = ((1.f - og[2]) * F3_CACHE(flds, HZ, 0,lg[1]  ,lg[2]+0) +	\
+	   (      og[2]) * F3_CACHE(flds, HZ, 0,lg[1]  ,lg[2]+1));	\
+  } while (0)
+
+#elif DIM == DIM_XYZ
+
+#define INTERPOLATE_1ST_EC(flds, exq, eyq, ezq, hxq, hyq, hzq)        	\
+  do {									\
+    exq = ((1.f - og[1]) * (1.f - og[2]) * F3_CACHE(fld_cache, EX, lg[0]  ,lg[1]  ,lg[2]  ) + \
+	   (      og[1]) * (1.f - og[2]) * F3_CACHE(fld_cache, EX, lg[0]  ,lg[1]+1,lg[2]  ) + \
+	   (1.f - og[1]) * (      og[2]) * F3_CACHE(fld_cache, EX, lg[0]  ,lg[1]  ,lg[2]+1) + \
+	   (      og[1]) * (      og[2]) * F3_CACHE(fld_cache, EX, lg[0]  ,lg[1]+1,lg[2]+1)); \
+    eyq = ((1.f - og[2]) * (1.f - og[0]) * F3_CACHE(fld_cache, EY, lg[0]  ,lg[1]  ,lg[2]  ) + \
+	   (      og[2]) * (1.f - og[0]) * F3_CACHE(fld_cache, EY, lg[0]  ,lg[1]  ,lg[2]+1) + \
+	   (1.f - og[2]) * (      og[0]) * F3_CACHE(fld_cache, EY, lg[0]+1,lg[1]  ,lg[2]  ) + \
+	   (      og[2]) * (      og[0]) * F3_CACHE(fld_cache, EY, lg[0]+1,lg[1]  ,lg[2]+1)); \
+    ezq = ((1.f - og[0]) * (1.f - og[1]) * F3_CACHE(fld_cache, EZ, lg[0]  ,lg[1]  ,lg[2]  ) + \
+	   (      og[0]) * (1.f - og[1]) * F3_CACHE(fld_cache, EZ, lg[0]+1,lg[1]  ,lg[2]  ) + \
+	   (1.f - og[0]) * (      og[1]) * F3_CACHE(fld_cache, EZ, lg[0]  ,lg[1]+1,lg[2]  ) + \
+	   (      og[0]) * (      og[1]) * F3_CACHE(fld_cache, EZ, lg[0]+1,lg[1]+1,lg[2]  )); \
+    hxq = ((1.f - og[0]) * F3_CACHE(fld_cache, HX, lg[0]  ,lg[1]  , lg[2]  ) + \
+	   (      og[0]) * F3_CACHE(fld_cache, HX, lg[0]+1,lg[1]  , lg[2]  )); \
+    hyq = ((1.f - og[1]) * F3_CACHE(fld_cache, HY, lg[0]  ,lg[1]  , lg[2]  ) + \
+	   (      og[1]) * F3_CACHE(fld_cache, HY, lg[0]  ,lg[1]+1, lg[2]  )); \
+    hzq = ((1.f - og[2]) * F3_CACHE(fld_cache, HZ, lg[0]  ,lg[1]  , lg[2]  ) + \
+	   (      og[2]) * F3_CACHE(fld_cache, HZ, lg[0]  ,lg[1]  , lg[2]+1)); \
+  } while (0)
 
 #endif
 
@@ -102,44 +153,12 @@ push_part_one(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 #if DIM == DIM_YZ
   lg[1] -= ci0[1];
   lg[2] -= ci0[2];
-  
-  exq = ((1.f - og[1]) * (1.f - og[2]) * F3_CACHE_YZ(fld_cache, EX, lg[1]+0, lg[2]+0) +
-	 (      og[1]) * (1.f - og[2]) * F3_CACHE_YZ(fld_cache, EX, lg[1]+1, lg[2]+0) +
-	 (1.f - og[1]) * (      og[2]) * F3_CACHE_YZ(fld_cache, EX, lg[1]+0, lg[2]+1) +
-	 (      og[1]) * (      og[2]) * F3_CACHE_YZ(fld_cache, EX, lg[1]+1, lg[2]+1));
-  eyq = ((1.f - og[2]) * F3_CACHE_YZ(fld_cache, EY, lg[1]  , lg[2]+0) +
-	 (      og[2]) * F3_CACHE_YZ(fld_cache, EY, lg[1]  , lg[2]+1));
-  ezq = ((1.f - og[1]) * F3_CACHE_YZ(fld_cache, EZ, lg[1]+0, lg[2]  ) +
-	 (      og[1]) * F3_CACHE_YZ(fld_cache, EZ, lg[1]+1, lg[2]  ));
-  hxq = (F3_CACHE_YZ(fld_cache, HX, lg[1]  , lg[2]  ));
-  hyq = ((1.f - og[1]) * F3_CACHE_YZ(fld_cache, HY, lg[1]+0, lg[2]  ) +
-	 (      og[1]) * F3_CACHE_YZ(fld_cache, HY, lg[1]+1, lg[2]  ));
-  hzq = ((1.f - og[2]) * F3_CACHE_YZ(fld_cache, HZ, lg[1]  , lg[2]+0) +
-	 (      og[2]) * F3_CACHE_YZ(fld_cache, HZ, lg[1]  , lg[2]+1));
 #elif DIM == DIM_XYZ
   lg[0] -= ci0[0];
   lg[1] -= ci0[1];
   lg[2] -= ci0[2];
-  
-  exq = ((1.f - og[1]) * (1.f - og[2]) * F3_CACHE_XYZ(fld_cache, EX, lg[0]  ,lg[1]  ,lg[2]  ) +
-	 (      og[1]) * (1.f - og[2]) * F3_CACHE_XYZ(fld_cache, EX, lg[0]  ,lg[1]+1,lg[2]  ) +
-	 (1.f - og[1]) * (      og[2]) * F3_CACHE_XYZ(fld_cache, EX, lg[0]  ,lg[1]  ,lg[2]+1) +
-	 (      og[1]) * (      og[2]) * F3_CACHE_XYZ(fld_cache, EX, lg[0]  ,lg[1]+1,lg[2]+1));
-  eyq = ((1.f - og[2]) * (1.f - og[0]) * F3_CACHE_XYZ(fld_cache, EY, lg[0]  ,lg[1]  ,lg[2]  ) +
-	 (      og[2]) * (1.f - og[0]) * F3_CACHE_XYZ(fld_cache, EY, lg[0]  ,lg[1]  ,lg[2]+1) +
-	 (1.f - og[2]) * (      og[0]) * F3_CACHE_XYZ(fld_cache, EY, lg[0]+1,lg[1]  ,lg[2]  ) +
-	 (      og[2]) * (      og[0]) * F3_CACHE_XYZ(fld_cache, EY, lg[0]+1,lg[1]  ,lg[2]+1));
-  ezq = ((1.f - og[0]) * (1.f - og[1]) * F3_CACHE_XYZ(fld_cache, EZ, lg[0]  ,lg[1]  ,lg[2]  ) +
-	 (      og[0]) * (1.f - og[1]) * F3_CACHE_XYZ(fld_cache, EZ, lg[0]+1,lg[1]  ,lg[2]  ) +
-	 (1.f - og[0]) * (      og[1]) * F3_CACHE_XYZ(fld_cache, EZ, lg[0]  ,lg[1]+1,lg[2]  ) +
-	 (      og[0]) * (      og[1]) * F3_CACHE_XYZ(fld_cache, EZ, lg[0]+1,lg[1]+1,lg[2]  ));
-  hxq = ((1.f - og[0]) * F3_CACHE_XYZ(fld_cache, HX, lg[0]  ,lg[1]  , lg[2]  ) +
-	 (      og[0]) * F3_CACHE_XYZ(fld_cache, HX, lg[0]+1,lg[1]  , lg[2]  ));
-  hyq = ((1.f - og[1]) * F3_CACHE_XYZ(fld_cache, HY, lg[0]  ,lg[1]  , lg[2]  ) +
-	 (      og[1]) * F3_CACHE_XYZ(fld_cache, HY, lg[0]  ,lg[1]+1, lg[2]  ));
-  hzq = ((1.f - og[2]) * F3_CACHE_XYZ(fld_cache, HZ, lg[0]  ,lg[1]  , lg[2]  ) +
-	 (      og[2]) * F3_CACHE_XYZ(fld_cache, HZ, lg[0]  ,lg[1]  , lg[2]+1));
 #endif
+  INTERPOLATE_1ST_EC(fld_cache, exq, eyq, ezq, hxq, hyq, hzq);
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
   LOAD_PARTICLE_MOM_(*prt, d_pxi4, n);
@@ -200,7 +219,7 @@ cache_fields(float *fld_cache, float *d_flds0, int size, int *ci0, int p)
     int jz = tmp % (BLOCKSIZE_Z + 4) - 2;
     // OPT? currently it seems faster to do the loop rather than do m by threadidx
     for (int m = EX; m <= HZ; m++) {
-      F3_CACHE_YZ(fld_cache, m, jy, jz) = F3_DEV_YZ(m, jy+ci0[1],jz+ci0[2]);
+      F3_CACHE(fld_cache, m, 0,jy,jz) = F3_DEV(m, 0,jy+ci0[1],jz+ci0[2]);
     }
     ti += THREADS_PER_BLOCK;
   }
@@ -216,7 +235,7 @@ cache_fields(float *fld_cache, float *d_flds0, int size, int *ci0, int p)
     int jz = tmp % (BLOCKSIZE_Z + 4) - 2;
     // OPT? currently it seems faster to do the loop rather than do m by threadidx
     for (int m = EX; m <= HZ; m++) {
-      F3_CACHE_XYZ(fld_cache, m, jx, jy, jz) = F3_DEV_XYZ(m, jx+ci0[0],jy+ci0[1],jz+ci0[2]);
+      F3_CACHE(fld_cache, m, jx, jy, jz) = F3_DEV(m, jx+ci0[0],jy+ci0[1],jz+ci0[2]);
     }
     ti += THREADS_PER_BLOCK;
   }
@@ -234,7 +253,7 @@ public:
 
   __device__ void add(int m, int jy, int jz, float val, int *ci0)
   {
-    float *addr = &F3_DEV_YZ(JXI+m, jy+ci0[1],jz+ci0[2]);
+    float *addr = &F3_DEV(JXI+m, 0,jy+ci0[1],jz+ci0[2]);
     atomicAdd(addr, val);
   }
 };
