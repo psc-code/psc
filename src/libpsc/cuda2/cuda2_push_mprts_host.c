@@ -13,7 +13,7 @@ SFX(cuda2_1vbec_push_mprts_gold)(struct psc_mparticles *mprts, struct psc_mfield
 {
   struct psc_mparticles_cuda2 *mprts_sub = psc_mparticles_cuda2(mprts);
 
-  params_1vb_set(ppsc);
+  params_1vb_set(ppsc, mprts, mflds);
 
   psc_mfields_zero_range(mflds, JXI, JXI + 3);
 
