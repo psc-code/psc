@@ -61,7 +61,7 @@
 
 #endif
 
-#define F3_DEV(fldnr,jx,jy,jz)			\
+#define F3_DEV(d_flds, fldnr, jx,jy,jz)		\
   ((d_flds)[F3_DEV_OFF(fldnr, jx,jy,jz)])
 
 
@@ -71,7 +71,7 @@
 #ifdef NO_CACHE
 
 #define F3_CACHE(fld_cache, m, jx, jy, jz)	\
-  (F3_DEV(m, jx+ci0[0],jy+ci0[1],jz+ci0[2]))
+  (F3_DEV(d_flds, m, jx+ci0[0],jy+ci0[1],jz+ci0[2]))
 
 #else
 
@@ -161,10 +161,8 @@ find_bid()
 }
 
 __device__ static void
-cache_fields(float *fld_cache, float *d_flds0, int size, int *ci0, int p)
+cache_fields(float *fld_cache, float *d_flds, int size, int *ci0)
 {
-  real *d_flds = d_flds0 + p * size;
-
 #if DIM == DIM_YZ
   int n = (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4);
   int ti = threadIdx.x;
@@ -175,7 +173,7 @@ cache_fields(float *fld_cache, float *d_flds0, int size, int *ci0, int p)
     int jz = tmp % (BLOCKSIZE_Z + 4) - 2;
     // OPT? currently it seems faster to do the loop rather than do m by threadidx
     for (int m = EX; m <= HZ; m++) {
-      F3_CACHE(fld_cache, m, 0,jy,jz) = F3_DEV(m, 0,jy+ci0[1],jz+ci0[2]);
+      F3_CACHE(fld_cache, m, 0,jy,jz) = F3_DEV(d_flds, m, 0,jy+ci0[1],jz+ci0[2]);
     }
     ti += THREADS_PER_BLOCK;
   }
@@ -191,28 +189,19 @@ cache_fields(float *fld_cache, float *d_flds0, int size, int *ci0, int p)
     int jz = tmp % (BLOCKSIZE_Z + 4) - 2;
     // OPT? currently it seems faster to do the loop rather than do m by threadidx
     for (int m = EX; m <= HZ; m++) {
-      F3_CACHE(fld_cache, m, jx, jy, jz) = F3_DEV(m, jx+ci0[0],jy+ci0[1],jz+ci0[2]);
+      F3_CACHE(fld_cache, m, jx, jy, jz) = F3_DEV(d_flds, m, jx+ci0[0],jy+ci0[1],jz+ci0[2]);
     }
     ti += THREADS_PER_BLOCK;
   }
 #endif
 }
 
-class GCurr {
-public:
-  real *d_flds;
-
-  __device__ GCurr(real *_d_flds) :
-    d_flds(_d_flds)
-  {
-  }
-
-  __device__ void add(int m, int jy, int jz, float val, int *ci0)
-  {
-    float *addr = &F3_DEV(JXI+m, 0,jy+ci0[1],jz+ci0[2]);
-    atomicAdd(addr, val);
-  }
-};
+__device__ static void
+curr_add(real *d_flds, int m, int jx, int jy, int jz, real val, int *ci0)
+{
+  float *addr = &F3_DEV(d_flds, JXI+m, jx+ci0[0],jy+ci0[1],jz+ci0[2]);
+  atomicAdd(addr, val);
+}
 
 // ======================================================================
 // depositing current
@@ -261,8 +250,8 @@ calc_dx1(real dx1[3], real x[3], real dx[3], int off[3])
 // curr_vb_cell
 
 __device__ static void
-curr_vb_cell(int i[3], real x[3], real dx[3], real qni_wni,
-	     GCurr &scurr, int *ci0)
+curr_vb_cell(real *d_flds, int i[3], real x[3], real dx[3], real qni_wni,
+	     int *ci0)
 {
   real xa[3] = { 0.,
 		 x[1] + .5f * dx[1],
@@ -270,20 +259,20 @@ curr_vb_cell(int i[3], real x[3], real dx[3], real qni_wni,
   if (dx[0] != 0.f) {
     real fnqx = qni_wni * prm.fnqxs;
     real h = (1.f / 12.f) * dx[0] * dx[1] * dx[2];
-    scurr.add(0, i[1]  , i[2]  , fnqx * (dx[0] * (.5f - xa[1]) * (.5f - xa[2]) + h), ci0);
-    scurr.add(0, i[1]+1, i[2]  , fnqx * (dx[0] * (.5f + xa[1]) * (.5f - xa[2]) - h), ci0);
-    scurr.add(0, i[1]  , i[2]+1, fnqx * (dx[0] * (.5f - xa[1]) * (.5f + xa[2]) + h), ci0);
-    scurr.add(0, i[1]+1, i[2]+1, fnqx * (dx[0] * (.5f + xa[1]) * (.5f + xa[2]) - h), ci0);
+    curr_add(d_flds, 0, 0,i[1]  ,i[2]  , fnqx * (dx[0] * (.5f - xa[1]) * (.5f - xa[2]) + h), ci0);
+    curr_add(d_flds, 0, 0,i[1]+1,i[2]  , fnqx * (dx[0] * (.5f + xa[1]) * (.5f - xa[2]) - h), ci0);
+    curr_add(d_flds, 0, 0,i[1]  ,i[2]+1, fnqx * (dx[0] * (.5f - xa[1]) * (.5f + xa[2]) + h), ci0);
+    curr_add(d_flds, 0, 0,i[1]+1,i[2]+1, fnqx * (dx[0] * (.5f + xa[1]) * (.5f + xa[2]) - h), ci0);
   }
   if (dx[1] != 0.f) {
     real fnqy = qni_wni * prm.fnqys;
-    scurr.add(1, i[1],i[2]  , fnqy * dx[1] * (.5f - xa[2]), ci0);
-    scurr.add(1, i[1],i[2]+1, fnqy * dx[1] * (.5f + xa[2]), ci0);
+    curr_add(d_flds, 1, 0,i[1],i[2]  , fnqy * dx[1] * (.5f - xa[2]), ci0);
+    curr_add(d_flds, 1, 0,i[1],i[2]+1, fnqy * dx[1] * (.5f + xa[2]), ci0);
   }
   if (dx[2] != 0.f) {
     real fnqz = qni_wni * prm.fnqzs;
-    scurr.add(2, i[1]  ,i[2], fnqz * dx[2] * (.5f - xa[1]), ci0);
-    scurr.add(2, i[1]+1,i[2], fnqz * dx[2] * (.5f + xa[1]), ci0);
+    curr_add(d_flds, 2, 0,i[1]  ,i[2], fnqz * dx[2] * (.5f - xa[1]), ci0);
+    curr_add(d_flds, 2, 0,i[1]+1,i[2], fnqz * dx[2] * (.5f + xa[1]), ci0);
   }
 }
 
@@ -307,7 +296,7 @@ curr_vb_cell_upd(int i[3], real x[3], real dx1[3], real dx[3], int off[3])
 
 __device__ static void
 calc_j(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
-       GCurr &scurr, int p_nr, int bid, int *ci0)
+       real *d_flds, int p_nr, int bid, int *ci0)
 {
   real vxi[3];
   calc_vxi(vxi, prt);
@@ -369,16 +358,16 @@ calc_j(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 
   real dx1[3];
   calc_dx1(dx1, x, dx, off);
-  curr_vb_cell(i, x, dx1, prt->qni_wni, scurr, ci0);
+  curr_vb_cell(d_flds, i, x, dx1, prt->qni_wni, ci0);
   curr_vb_cell_upd(i, x, dx1, dx, off);
   
   off[1] = idiff[1] - off[1];
   off[2] = idiff[2] - off[2];
   calc_dx1(dx1, x, dx, off);
-  curr_vb_cell(i, x, dx1, prt->qni_wni, scurr, ci0);
+  curr_vb_cell(d_flds, i, x, dx1, prt->qni_wni, ci0);
   curr_vb_cell_upd(i, x, dx1, dx, off);
     
-  curr_vb_cell(i, x, dx, prt->qni_wni, scurr, ci0);
+  curr_vb_cell(d_flds, i, x, dx, prt->qni_wni, ci0);
 #endif
 }
 
@@ -394,6 +383,7 @@ push_mprts_ab(float4 *d_xi4, float4 *d_pxi4,
   int block_pos[3], ci0[3];
   int p, bid;
   p = find_block_pos_patch(block_pos, ci0);
+  real *d_flds = d_flds0 + p * size;
   bid = find_bid();
 
   int block_begin = d_off[bid];
@@ -408,12 +398,10 @@ push_mprts_ab(float4 *d_xi4, float4 *d_pxi4,
 #elif DIM == DIM_XYZ
   __shared__ real fld_cache[6 * (BLOCKSIZE_X + 4) * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
 #endif
-  cache_fields(fld_cache, d_flds0, size, ci0, p);
+  cache_fields(fld_cache, d_flds, size, ci0);
 
 #endif
 
-  GCurr scurr(d_flds0 + p * size);
-  
   __syncthreads();
   for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
     if (n < block_begin) {
@@ -421,7 +409,7 @@ push_mprts_ab(float4 *d_xi4, float4 *d_pxi4,
     }
     particle_t prt;
     push_part_one(&prt, n, d_xi4, d_pxi4, d_flds0 + p * size, fld_cache, ci0);
-    calc_j(&prt, n, d_xi4, d_pxi4, scurr, p, bid, ci0);
+    calc_j(&prt, n, d_xi4, d_pxi4, d_flds, p, bid, ci0);
   }
 
 }
