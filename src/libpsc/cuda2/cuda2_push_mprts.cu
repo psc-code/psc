@@ -90,12 +90,12 @@ find_idx_off_pos_1st(const real xi[3], int j[3], real h[3], real pos[3], real sh
 #endif
 
 
-static __constant__ __device__ float c_dqs[4]; // FIXME hardcoded
+static __constant__ __device__ struct params_1vb c_prm;
 
 static void
 set_consts(struct params_1vb *prm)
 {
-  check(cudaMemcpyToSymbol(c_dqs, prm->dq_kind, sizeof(c_dqs)));
+  check(cudaMemcpyToSymbol(c_prm, prm, sizeof(c_prm)));
 }
 
 static void
@@ -192,7 +192,7 @@ push_pxi_dt(particle_t *p,
 	    real exq, real eyq, real ezq, real hxq, real hyq, real hzq)
 {
   int kind = __float_as_int(p->kind_as_float);
-  real dq = c_dqs[kind];
+  real dq = c_prm.dq_kind[kind];
   real pxm = p->pxi[0] + dq*exq;
   real pym = p->pxi[1] + dq*eyq;
   real pzm = p->pxi[2] + dq*ezq;
