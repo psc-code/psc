@@ -84,55 +84,6 @@ find_idx_off_pos_1st(const real xi[3], int j[3], real h[3], real pos[3], real sh
 
 #endif
 
-
-static void
-set_consts(struct params_1vb *prm)
-{
-  check(cudaMemcpyToSymbol(prm, prm, sizeof(prm)));
-}
-
-static void
-_set_params(struct params_1vb *prm, struct psc *psc,
-	    struct psc_mparticles *mprts, struct psc_mfields *mflds)
-{
-  prm->dt = psc->dt;
-  for (int d = 0; d < 3; d++) {
-    prm->dxi[d] = 1.f / ppsc->patch[0].dx[d];
-  }
-
-  prm->dqs    = .5f * psc->coeff.eta * psc->dt;
-  prm->fnqs   = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
-  prm->fnqxs  = psc->patch[0].dx[0] * prm->fnqs / psc->dt;
-  prm->fnqys  = psc->patch[0].dx[1] * prm->fnqs / psc->dt;
-  prm->fnqzs  = psc->patch[0].dx[2] * prm->fnqs / psc->dt;
-  assert(psc->nr_kinds <= MAX_KINDS);
-  for (int k = 0; k < psc->nr_kinds; k++) {
-    prm->dq_kind[k] = prm->dqs * psc->kinds[k].q / psc->kinds[k].m;
-  }
-
-  if (mprts && mprts->nr_patches > 0) {
-    struct psc_mparticles_cuda2 *mprts_sub = psc_mparticles_cuda2(mprts);
-    for (int d = 0; d < 3; d++) {
-      prm->b_mx[d] = mprts_sub->b_mx[d];
-      //      prm->b_dxi[d] = prts_cuda->b_dxi[d];
-    }
-  }
-
-  if (mflds) {
-    struct psc_mfields_cuda2 * mflds_sub = psc_mfields_cuda2(mflds);
-    for (int d = 0; d < 3; d++) {
-      prm->mx[d] = mflds_sub->im[d];
-      prm->ilg[d] = mflds_sub->ib[d];
-      assert(mflds_sub->ib[d] == -BND || mflds_sub->im[d] == 1);
-    }
-  }
-}
-
-static void
-_free_params(struct params_1vb *prm)
-{
-}
-
 // ======================================================================
 // field caching
 
@@ -603,9 +554,7 @@ cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
   struct psc_mparticles_cuda2 *mprts_sub = psc_mparticles_cuda2(mprts);
   struct psc_mfields_cuda2 *mflds_sub = psc_mfields_cuda2(mflds);
 
-  struct params_1vb prm;
-  _set_params(&prm, ppsc, mprts, mflds);
-  set_consts(&prm);
+  params_1vb_set(ppsc, mprts, mflds);
 
   unsigned int fld_size = mflds->nr_fields *
     mflds_sub->im[0] * mflds_sub->im[1] * mflds_sub->im[2];
@@ -614,14 +563,14 @@ cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 
 #if DIM == DIM_YZ
   int gx, gy;
-  gx = prm.b_mx[1];
-  gy = prm.b_mx[2] * mprts->nr_patches;
+  gx = mprts_sub->b_mx[1];
+  gy = mprts_sub->b_mx[2] * mprts->nr_patches;
   dim3 dimGrid(gx, gy);
 #elif DIM == DIM_XYZ
   int gx, gy, gz;
-  gx = prm.b_mx[0];
-  gy = prm.b_mx[1];
-  gz = prm.b_mx[2] * mprts->nr_patches;
+  gx = mprts_sub->b_mx[0];
+  gy = mprts_sub->b_mx[1];
+  gz = mprts_sub->b_mx[2] * mprts->nr_patches;
   dim3 dimGrid(gx, gy, gz);
 #endif
 
@@ -630,7 +579,5 @@ cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
      mflds_sub->d_flds, fld_size);
 
   cuda_sync_if_enabled();
-
-  _free_params(&prm);
 }
 
