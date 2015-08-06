@@ -84,9 +84,22 @@ static int ggcm_mhd_fill_ghosts_lua (lua_State *L) {
   return 0;
 }
 
+// fill arr[] with lua array named arr_name
+static void
+lua_getarray(lua_State *L_temp, const char *arr_name, int nr_fluids, float arr[])
+{
+  lua_getglobal(L_temp, arr_name);
+  for (int s = 0; s < nr_fluids; s++) {
+    lua_pushnumber(L_temp, s + 1);
+    lua_gettable(L_temp, -2);
+    arr[s] = lua_tonumber(L_temp, -1);
+    lua_pop(L_temp, 1);
+  }
+  lua_pop(L_temp, 1);
+}
+
 void
-ggcm_mhd_step_gkeyll_setup_flds_lua(const char*script_common, 
-    int *nr_comps, int *nr_ghosts, int *nr_moments, int *nr_fluids)
+ggcm_mhd_step_gkeyll_setup_flds_lua(struct mrc_fld *fld, const char *script_common) 
 {
   std::string inpFile = script_common;
 
@@ -114,10 +127,28 @@ ggcm_mhd_step_gkeyll_setup_flds_lua(const char*script_common,
   lua_getglobal(L_temp, "nr_ghosts");
   lua_getglobal(L_temp, "nr_moments");
   lua_getglobal(L_temp, "nr_fluids");
-  *nr_fluids = (int)lua_tonumber(L_temp, -1);
-  *nr_moments = (int)lua_tonumber(L_temp, -2);
-  *nr_ghosts = (int)lua_tonumber(L_temp, -3);
-  *nr_comps = (int)lua_tonumber(L_temp, -4);
+  int nr_fluids = (int)lua_tonumber(L_temp, -1);
+  int nr_moments = (int)lua_tonumber(L_temp, -2);
+  int nr_ghosts = (int)lua_tonumber(L_temp, -3);
+  int nr_comps = (int)lua_tonumber(L_temp, -4);
+  lua_pop(L_temp, 4);
+
+  mrc_fld_set_param_int(fld, "nr_ghosts", nr_ghosts);
+  mrc_fld_set_param_int(fld, "nr_comps", nr_comps);
+  mrc_fld_gkeyll_set_nr_moments(fld, nr_moments);
+  mrc_fld_gkeyll_set_nr_fluids(fld, nr_fluids);
+
+  float mass_ratios[nr_fluids];
+  float momentum_ratios[nr_fluids];
+  float pressure_ratios[nr_fluids];
+
+  lua_getarray(L_temp, "mass_ratios", nr_fluids, mass_ratios); 
+  lua_getarray(L_temp, "momentum_ratios", nr_fluids, momentum_ratios); 
+  lua_getarray(L_temp, "pressure_ratios", nr_fluids, pressure_ratios); 
+
+  mrc_fld_gkeyll_set_mass_ratios(fld, mass_ratios);
+  mrc_fld_gkeyll_set_momentum_ratios(fld, momentum_ratios);
+  mrc_fld_gkeyll_set_pressure_ratios(fld, pressure_ratios);
 }
 
 void

@@ -3,6 +3,7 @@
 
 #include <ggcm_mhd_step.h>
 #include "ggcm_mhd_step_gkeyll_lua.h"
+#include <ggcm_mhd_gkeyll.h>
 
 #include <ggcm_mhd_private.h>
 #include <mrc_fld_as_double_aos.h>
@@ -29,16 +30,9 @@ ggcm_mhd_step_gkeyll_setup_flds(struct ggcm_mhd_step *step)
   struct ggcm_mhd *mhd = step->mhd;
 
   mrc_fld_set_type(mhd->fld, FLD_TYPE);
-
-  int nr_comps = 18, nr_ghosts = -2, nr_moments = 0, nr_fluids = 0;
-  ggcm_mhd_step_gkeyll_setup_flds_lua(sub->script_common, 
-      &nr_comps, &nr_ghosts, &nr_moments, &nr_fluids);
-
-  mrc_fld_set_param_int(mhd->fld, "nr_ghosts", nr_ghosts);
   mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_GKEYLL);
-  mrc_fld_set_param_int(mhd->fld, "nr_comps", nr_comps);
-  mrc_fld_gkeyll_set_nr_moments(mhd->fld, nr_moments);
-  mrc_fld_gkeyll_set_nr_fluids(mhd->fld, nr_fluids);
+
+  ggcm_mhd_step_gkeyll_setup_flds_lua(mhd->fld, sub->script_common);
 }
 
 // ----------------------------------------------------------------------
