@@ -1,4 +1,6 @@
 
+#include "psc_debug.h"
+
 #if DIM == DIM_YZ
 
 #define INTERPOLATE_FIELD_1ST(pf, m, gy, gz)				\

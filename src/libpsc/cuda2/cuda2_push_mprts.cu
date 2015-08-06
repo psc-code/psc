@@ -6,6 +6,7 @@
 
 #include "../psc_push_particles/inc_params.c"
 #include "../psc_push_particles/inc_push.c"
+#include "../psc_push_particles/inc_interpolate.c"
 
 #define NO_CACHE
 
@@ -86,51 +87,6 @@
 		 *(BLOCKSIZE_Y + 4) + ((jy)-(-2)))			\
 		*(BLOCKSIZE_Z + 4) + ((jx)-(-2)))])
 #endif
-
-#endif
-
-#if DIM == DIM_YZ
-
-#define INTERPOLATE_1ST_EC(flds, exq, eyq, ezq, hxq, hyq, hzq)        	\
-  do {									\
-    exq = ((1.f - og[1]) * (1.f - og[2]) * F3_CACHE(flds, EX, 0,lg[1]+0,lg[2]+0) + \
-	   (      og[1]) * (1.f - og[2]) * F3_CACHE(flds, EX, 0,lg[1]+1,lg[2]+0) + \
-	   (1.f - og[1]) * (      og[2]) * F3_CACHE(flds, EX, 0,lg[1]+0,lg[2]+1) + \
-	   (      og[1]) * (      og[2]) * F3_CACHE(flds, EX, 0,lg[1]+1,lg[2]+1)); \
-    eyq = ((1.f - og[2]) * F3_CACHE(flds, EY, 0,lg[1]  ,lg[2]+0) + \
-	   (      og[2]) * F3_CACHE(flds, EY, 0,lg[1]  ,lg[2]+1)); \
-    ezq = ((1.f - og[1]) * F3_CACHE(flds, EZ, 0,lg[1]+0,lg[2]  ) + \
-	   (      og[1]) * F3_CACHE(flds, EZ, 0,lg[1]+1,lg[2]  )); \
-    hxq = (F3_CACHE(flds, HX, 0,lg[1],lg[2]));			\
-    hyq = ((1.f - og[1]) * F3_CACHE(flds, HY, 0,lg[1]+0,lg[2]  ) +	\
-	   (      og[1]) * F3_CACHE(flds, HY, 0,lg[1]+1,lg[2]  ));	\
-    hzq = ((1.f - og[2]) * F3_CACHE(flds, HZ, 0,lg[1]  ,lg[2]+0) +	\
-	   (      og[2]) * F3_CACHE(flds, HZ, 0,lg[1]  ,lg[2]+1));	\
-  } while (0)
-
-#elif DIM == DIM_XYZ
-
-#define INTERPOLATE_1ST_EC(flds, exq, eyq, ezq, hxq, hyq, hzq)        	\
-  do {									\
-    exq = ((1.f - og[1]) * (1.f - og[2]) * F3_CACHE(fld_cache, EX, lg[0]  ,lg[1]  ,lg[2]  ) + \
-	   (      og[1]) * (1.f - og[2]) * F3_CACHE(fld_cache, EX, lg[0]  ,lg[1]+1,lg[2]  ) + \
-	   (1.f - og[1]) * (      og[2]) * F3_CACHE(fld_cache, EX, lg[0]  ,lg[1]  ,lg[2]+1) + \
-	   (      og[1]) * (      og[2]) * F3_CACHE(fld_cache, EX, lg[0]  ,lg[1]+1,lg[2]+1)); \
-    eyq = ((1.f - og[2]) * (1.f - og[0]) * F3_CACHE(fld_cache, EY, lg[0]  ,lg[1]  ,lg[2]  ) + \
-	   (      og[2]) * (1.f - og[0]) * F3_CACHE(fld_cache, EY, lg[0]  ,lg[1]  ,lg[2]+1) + \
-	   (1.f - og[2]) * (      og[0]) * F3_CACHE(fld_cache, EY, lg[0]+1,lg[1]  ,lg[2]  ) + \
-	   (      og[2]) * (      og[0]) * F3_CACHE(fld_cache, EY, lg[0]+1,lg[1]  ,lg[2]+1)); \
-    ezq = ((1.f - og[0]) * (1.f - og[1]) * F3_CACHE(fld_cache, EZ, lg[0]  ,lg[1]  ,lg[2]  ) + \
-	   (      og[0]) * (1.f - og[1]) * F3_CACHE(fld_cache, EZ, lg[0]+1,lg[1]  ,lg[2]  ) + \
-	   (1.f - og[0]) * (      og[1]) * F3_CACHE(fld_cache, EZ, lg[0]  ,lg[1]+1,lg[2]  ) + \
-	   (      og[0]) * (      og[1]) * F3_CACHE(fld_cache, EZ, lg[0]+1,lg[1]+1,lg[2]  )); \
-    hxq = ((1.f - og[0]) * F3_CACHE(fld_cache, HX, lg[0]  ,lg[1]  , lg[2]  ) + \
-	   (      og[0]) * F3_CACHE(fld_cache, HX, lg[0]+1,lg[1]  , lg[2]  )); \
-    hyq = ((1.f - og[1]) * F3_CACHE(fld_cache, HY, lg[0]  ,lg[1]  , lg[2]  ) + \
-	   (      og[1]) * F3_CACHE(fld_cache, HY, lg[0]  ,lg[1]+1, lg[2]  )); \
-    hzq = ((1.f - og[2]) * F3_CACHE(fld_cache, HZ, lg[0]  ,lg[1]  , lg[2]  ) + \
-	   (      og[2]) * F3_CACHE(fld_cache, HZ, lg[0]  ,lg[1]  , lg[2]+1)); \
-  } while (0)
 
 #endif
 
