@@ -19,4 +19,10 @@
 
 // ======================================================================
 
+#ifdef __CUDACC__
+#define CUDA_DEVICE __device__
+#define CUDA_CONSTANT __constant__ __device__
+#else
 #define CUDA_DEVICE
+#define CUDA_CONSTANT
+#endif

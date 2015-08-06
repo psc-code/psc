@@ -18,7 +18,9 @@ struct params_1vb {
 #endif
 };
 
-static struct params_1vb prm;
+CUDA_CONSTANT static struct params_1vb prm;
+
+#ifndef __CUDACC__
 
 static void
 params_1vb_set(struct psc *psc, int p)
@@ -47,3 +49,5 @@ params_1vb_set(struct psc *psc, int p)
     prm.fnqz_kind[k] = prm.fnqzs * ppsc->kinds[k].q;
   }
 }
+
+#endif
