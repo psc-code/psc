@@ -16,4 +16,10 @@
 #define CALC_J_1VB_VAR1  2 // V-B deposition variant with less code path divergence
 #define CALC_J_1VB_2D    3 // V-B deposition variant with simpler out-of-plane current deposit
 
+// ----------------------------------------------------------------------
+// EM_CACHE
+
+#define EM_CACHE_NONE 1
+#define EM_CACHE_CUDA 2
+
 

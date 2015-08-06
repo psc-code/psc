@@ -4,11 +4,11 @@
 #include "psc_fields_cuda2.h"
 #include "psc_particles_as_cuda2.h"
 
+#define EM_CACHE EM_CACHE_NONE
+
 #include "../psc_push_particles/inc_params.c"
 #include "../psc_push_particles/inc_push.c"
 #include "../psc_push_particles/inc_interpolate.c"
-
-#define NO_CACHE
 
 #undef THREADS_PER_BLOCK
 #define THREADS_PER_BLOCK (512)
@@ -68,24 +68,73 @@
 // ======================================================================
 // field caching
 
-#ifdef NO_CACHE
+#if EM_CACHE == EM_CACHE_NONE
 
-#define F3_CACHE(fld_cache, m, jx, jy, jz)	\
-  (F3_DEV(d_flds, m, jx+ci0[0],jy+ci0[1],jz+ci0[2]))
+#define F3_CACHE(flds_em, m, jx, jy, jz)	\
+  (F3_DEV(flds_em, m, jx+ci0[0],jy+ci0[1],jz+ci0[2]))
 
-#else
+#define DECLARE_EM_CACHE(flds_em, d_flds, size, ci0)	\
+  real *flds_em = d_flds
+
+#elif EM_CACHE == EM_CACHE_CUDA
 
 #if DIM == DIM_YZ
-#define F3_CACHE(fld_cache, m, jx, jy, jz)				\
-  ((fld_cache)[(((m-EX)							\
+#define F3_CACHE(flds_em, m, jx, jy, jz)				\
+  ((flds_em)[(((m-EX)							\
 		 *(BLOCKSIZE_Z + 4) + ((jz)-(-2)))			\
 		*(BLOCKSIZE_Y + 4) + ((jy)-(-2)))])
 #elif DIM == DIM_XYZ
-#define F3_CACHE(fld_cache, m, jx, jy, jz)				\
-  ((fld_cache)[((((m-EX)						\
+#define F3_CACHE(flds_em, m, jx, jy, jz)				\
+  ((flds_em)[((((m-EX)							\
 		  *(BLOCKSIZE_Z + 4) + ((jz)-(-2)))			\
 		 *(BLOCKSIZE_Y + 4) + ((jy)-(-2)))			\
 		*(BLOCKSIZE_Z + 4) + ((jx)-(-2)))])
+#endif
+
+__device__ static void
+cache_fields(float *flds_em, float *d_flds, int size, int *ci0)
+{
+#if DIM == DIM_YZ
+  int n = (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4);
+  int ti = threadIdx.x;
+  while (ti < n) {
+    int tmp = ti;
+    int jy = tmp % (BLOCKSIZE_Y + 4) - 2;
+    tmp /= BLOCKSIZE_Y + 4;
+    int jz = tmp % (BLOCKSIZE_Z + 4) - 2;
+    // OPT? currently it seems faster to do the loop rather than do m by threadidx
+    for (int m = EX; m <= HZ; m++) {
+      F3_CACHE(flds_em, m, 0,jy,jz) = F3_DEV(d_flds, m, 0,jy+ci0[1],jz+ci0[2]);
+    }
+    ti += THREADS_PER_BLOCK;
+  }
+#elif DIM == DIM_XYZ
+  int n = (BLOCKSIZE_X + 4) * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4);
+  int ti = threadIdx.x;
+  while (ti < n) {
+    int tmp = ti;
+    int jx = tmp % (BLOCKSIZE_X + 4) - 2;
+    tmp /= BLOCKSIZE_X + 4;
+    int jy = tmp % (BLOCKSIZE_Y + 4) - 2;
+    tmp /= BLOCKSIZE_Y + 4;
+    int jz = tmp % (BLOCKSIZE_Z + 4) - 2;
+    // OPT? currently it seems faster to do the loop rather than do m by threadidx
+    for (int m = EX; m <= HZ; m++) {
+      F3_CACHE(flds_em, m, jx, jy, jz) = F3_DEV(d_flds, m, jx+ci0[0],jy+ci0[1],jz+ci0[2]);
+    }
+    ti += THREADS_PER_BLOCK;
+  }
+#endif
+}
+
+#if DIM == DIM_YZ
+#define DECLARE_EM_CACHE(flds_em, d_flds, size, ci0)	\
+  __shared__ real flds_em[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)]; \
+  cache_fields(flds_em, d_flds, size, ci0)
+#elif DIM == DIM_XYZ
+#define DECLARE_EM_CACHE(flds_em, d_flds, size, ci0)	\
+  __shared__ real flds_em[6 * (BLOCKSIZE_X + 4) * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)]; \
+  cache_fields(flds_em, d_flds, size, ci0)
 #endif
 
 #endif
@@ -95,7 +144,7 @@
 
 __device__ static void
 push_part_one(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
-	      real *d_flds, real *fld_cache, int ci0[3])
+	      real *d_flds, real *flds_em, int ci0[3])
 {
   LOAD_PARTICLE_POS_(*prt, d_xi4, n);
 
@@ -114,7 +163,7 @@ push_part_one(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
   lg[1] -= ci0[1];
   lg[2] -= ci0[2];
 #endif
-  INTERPOLATE_1ST_EC(fld_cache, exq, eyq, ezq, hxq, hyq, hzq);
+  INTERPOLATE_1ST_EC(flds_em, exq, eyq, ezq, hxq, hyq, hzq);
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
   LOAD_PARTICLE_MOM_(*prt, d_pxi4, n);
@@ -157,42 +206,6 @@ find_bid()
   return blockIdx.y * prm.b_mx[1] + blockIdx.x;
 #elif DIM == DIM_XYZ
   return (blockIdx.z * prm.b_mx[1] + blockIdx.y) * prm.b_mx[0] + blockIdx.x;
-#endif
-}
-
-__device__ static void
-cache_fields(float *fld_cache, float *d_flds, int size, int *ci0)
-{
-#if DIM == DIM_YZ
-  int n = (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4);
-  int ti = threadIdx.x;
-  while (ti < n) {
-    int tmp = ti;
-    int jy = tmp % (BLOCKSIZE_Y + 4) - 2;
-    tmp /= BLOCKSIZE_Y + 4;
-    int jz = tmp % (BLOCKSIZE_Z + 4) - 2;
-    // OPT? currently it seems faster to do the loop rather than do m by threadidx
-    for (int m = EX; m <= HZ; m++) {
-      F3_CACHE(fld_cache, m, 0,jy,jz) = F3_DEV(d_flds, m, 0,jy+ci0[1],jz+ci0[2]);
-    }
-    ti += THREADS_PER_BLOCK;
-  }
-#elif DIM == DIM_XYZ
-  int n = (BLOCKSIZE_X + 4) * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4);
-  int ti = threadIdx.x;
-  while (ti < n) {
-    int tmp = ti;
-    int jx = tmp % (BLOCKSIZE_X + 4) - 2;
-    tmp /= BLOCKSIZE_X + 4;
-    int jy = tmp % (BLOCKSIZE_Y + 4) - 2;
-    tmp /= BLOCKSIZE_Y + 4;
-    int jz = tmp % (BLOCKSIZE_Z + 4) - 2;
-    // OPT? currently it seems faster to do the loop rather than do m by threadidx
-    for (int m = EX; m <= HZ; m++) {
-      F3_CACHE(fld_cache, m, jx, jy, jz) = F3_DEV(d_flds, m, jx+ci0[0],jy+ci0[1],jz+ci0[2]);
-    }
-    ti += THREADS_PER_BLOCK;
-  }
 #endif
 }
 
@@ -374,8 +387,7 @@ calc_j(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 
 // ======================================================================
 
-__global__ static void
-__launch_bounds__(THREADS_PER_BLOCK, 3)
+__global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
 push_mprts_ab(float4 *d_xi4, float4 *d_pxi4,
 	      unsigned int *d_off,
 	      float *d_flds0, unsigned int size)
@@ -389,18 +401,7 @@ push_mprts_ab(float4 *d_xi4, float4 *d_pxi4,
   int block_begin = d_off[bid];
   int block_end = d_off[bid + 1];
 
-#ifdef NO_CACHE
-  real *fld_cache = NULL;
-#else
-
-#if DIM == DIM_YZ
-  __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
-#elif DIM == DIM_XYZ
-  __shared__ real fld_cache[6 * (BLOCKSIZE_X + 4) * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
-#endif
-  cache_fields(fld_cache, d_flds, size, ci0);
-
-#endif
+  DECLARE_EM_CACHE(flds_em, d_flds, size, ci0);
 
   __syncthreads();
   for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
@@ -408,7 +409,7 @@ push_mprts_ab(float4 *d_xi4, float4 *d_pxi4,
       continue;
     }
     particle_t prt;
-    push_part_one(&prt, n, d_xi4, d_pxi4, d_flds0 + p * size, fld_cache, ci0);
+    push_part_one(&prt, n, d_xi4, d_pxi4, d_flds0 + p * size, flds_em, ci0);
     calc_j(&prt, n, d_xi4, d_pxi4, d_flds, p, bid, ci0);
   }
 
