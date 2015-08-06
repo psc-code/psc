@@ -98,7 +98,11 @@ find_idx_off_1st_rel(particle_real_t xi[3], int lg[3], particle_real_t og[3], pa
 {
   for (int d = 0; d < 3; d++) {
     particle_real_t pos = xi[d] * prm.dxi[d] + shift;
+#ifdef __CUDACC__
+    lg[d] = __float2int_rd(pos);
+#else
     lg[d] = particle_real_fint(pos);
+#endif
     og[d] = pos - lg[d];
   }
 }
@@ -112,7 +116,11 @@ find_idx_off_pos_1st_rel(particle_real_t xi[3], int lg[3], particle_real_t og[3]
 {
   for (int d = 0; d < 3; d++) {
     pos[d] = xi[d] * prm.dxi[d] + shift;
+#ifdef __CUDACC__
+    lg[d] = __float2int_rd(pos[d]);
+#else
     lg[d] = particle_real_fint(pos[d]);
+#endif
     og[d] = pos[d] - lg[d];
   }
 }

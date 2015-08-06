@@ -58,33 +58,6 @@
 } while (0)
 
 // ======================================================================
-
-// FIXME -> common.c
-#ifdef __CUDACC__
-
-CUDA_DEVICE static void
-find_idx_off_1st(const real xi[3], int j[3], real h[3], real shift)
-{
-  for (int d = 0; d < 3; d++) {
-    real pos = xi[d] * prm.dxi[d] + shift;
-    j[d] = __float2int_rd(pos);
-    h[d] = pos - j[d];
-  }
-}
-
-CUDA_DEVICE static void
-find_idx_off_pos_1st(const real xi[3], int j[3], real h[3], real pos[3], real shift)
-{
-  for (int d = 0; d < 3; d++) {
-    pos[d] = xi[d] * prm.dxi[d] + shift;
-    j[d] = __float2int_rd(pos[d]);
-    h[d] = pos[d] - j[d];
-  }
-}
-
-#endif
-
-// ======================================================================
 // field caching
 
 #ifdef NO_CACHE
@@ -176,7 +149,7 @@ push_part_one(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
   real exq, eyq, ezq, hxq, hyq, hzq;
   int lg[3];
   real og[3];
-  find_idx_off_1st(prt->xi, lg, og, real(0.));
+  find_idx_off_1st_rel(prt->xi, lg, og, real(0.));
 #if DIM == DIM_YZ
   lg[1] -= ci0[1];
   lg[2] -= ci0[2];
@@ -418,7 +391,7 @@ calc_j(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
   real xm[3], xp[3];
   int j[3], k[3];
   
-  find_idx_off_pos_1st(prt->xi, j, h0, xm, real(0.));
+  find_idx_off_pos_1st_rel(prt->xi, j, h0, xm, real(0.));
 
   // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
   push_xi(prt, vxi, prm.dt);
@@ -444,7 +417,7 @@ calc_j(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 #endif
 
   // position xp at x^(n+.5)
-  find_idx_off_pos_1st(prt->xi, k, h1, xp, real(0.));
+  find_idx_off_pos_1st_rel(prt->xi, k, h1, xp, real(0.));
 
 #if DIM == DIM_YZ
 
