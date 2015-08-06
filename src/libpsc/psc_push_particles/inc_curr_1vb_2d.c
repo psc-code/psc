@@ -60,7 +60,7 @@ calc_j_oop(struct psc_fields *flds, particle_t *prt, particle_real_t *vxi)
   particle_real_t of[3];
   find_idx_off_1st_rel(&prt->xi, lf, of, 0.f);
 
-  particle_real_t fnqx = vxi[0] * particle_wni(prt) * prm.fnqx_kind[prt->kind];
+  particle_real_t fnqx = vxi[0] * particle_qni_wni(prt) * prm.fnqxs;
   F3_CURR(flds, JXI, 0,lf[1]  ,lf[2]  ) += (1.f - of[1]) * (1.f - of[2]) * fnqx;
   F3_CURR(flds, JXI, 0,lf[1]+1,lf[2]  ) += (      of[1]) * (1.f - of[2]) * fnqx;
   F3_CURR(flds, JXI, 0,lf[1]  ,lf[2]+1) += (1.f - of[1]) * (      of[2]) * fnqx;
@@ -104,8 +104,8 @@ calc_j(struct psc_fields *flds, particle_real_t *xm, particle_real_t *xp,
     second_dir = 1 - first_dir;
   }
 
-  particle_real_t fnq[2] = { particle_wni(prt) * prm.fnqy_kind[prt->kind],
-			     particle_wni(prt) * prm.fnqz_kind[prt->kind] };
+  particle_real_t fnq[2] = { particle_qni_wni(prt) * prm.fnqys,
+			     particle_qni_wni(prt) * prm.fnqzs };
 
   if (first_dir >= 0) {
     off[1-first_dir] = 0;

@@ -84,10 +84,9 @@ static inline void
 calc_j(struct psc_fields *flds, particle_cuda2_real_t *xm, particle_cuda2_real_t *xp,
        int *lf, int *lg, particle_cuda2_t *prt, particle_cuda2_real_t *vxi)
 {
-  int kind = particle_cuda2_kind(prt);
-  particle_cuda2_real_t fnq[3] = { particle_cuda2_wni(prt) * prm.fnqx_kind[kind],
-				   particle_cuda2_wni(prt) * prm.fnqy_kind[kind],
-				   particle_cuda2_wni(prt) * prm.fnqz_kind[kind] };
+  particle_cuda2_real_t fnq[3] = { particle_cuda2_qni_wni(prt) * prm.fnqxs,
+				   particle_cuda2_qni_wni(prt) * prm.fnqys,
+				   particle_cuda2_qni_wni(prt) * prm.fnqzs };
 
   // 2d yz
   xm[0] = .5f; // this way, we guarantee that the average position will remain in the 0th cell

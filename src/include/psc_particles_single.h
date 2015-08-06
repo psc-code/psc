@@ -68,6 +68,8 @@ particles_single_get_one(struct psc_particles *prts, int n)
       rv;							\
     })
 
+#define particle_single_qni_wni(prt) ((prt)->qni_wni)
+
 #define particle_single_x(prt) ((prt)->xi)
 #define particle_single_px(prt) ((prt)->pxi)
 

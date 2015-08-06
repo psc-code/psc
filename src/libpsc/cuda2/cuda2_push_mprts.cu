@@ -5,6 +5,8 @@
 #include "psc_particles_as_cuda2.h"
 
 #define EM_CACHE EM_CACHE_NONE
+#define CALC_J CALC_J_1VB_VAR1
+#define F3_CURR(flds, m, ix,iy,iz) ((float *) flds->data)[0]
 
 #if DIM == DIM_YZ
 #define BLOCKBND_X 0
@@ -23,6 +25,7 @@
 #include "../psc_push_particles/inc_params.c"
 #include "../psc_push_particles/inc_push.c"
 #include "../psc_push_particles/inc_interpolate.c"
+#include "../psc_push_particles/inc_curr.c"
 
 #undef THREADS_PER_BLOCK
 #define THREADS_PER_BLOCK (512)
@@ -164,9 +167,11 @@ find_block_pos_patch(int *block_pos, int *ci0)
   block_pos[1] = blockIdx.y;
   block_pos[2] = blockIdx.z % prm.b_mx[2];
 
+#if EM_CACHE == EM_CACHE_CUDA
   ci0[0] = block_pos[0] * BLOCKSIZE_X;
   ci0[1] = block_pos[1] * BLOCKSIZE_Y;
   ci0[2] = block_pos[2] * BLOCKSIZE_Z;
+#endif
 
   return blockIdx.z / prm.b_mx[2];
 }
@@ -174,17 +179,13 @@ find_block_pos_patch(int *block_pos, int *ci0)
 __device__ static int
 find_bid()
 {
-#if DIM == DIM_YZ
-  return blockIdx.z * prm.b_mx[1] + blockIdx.y;
-#elif DIM == DIM_XYZ
   return (blockIdx.z * prm.b_mx[1] + blockIdx.y) * prm.b_mx[0] + blockIdx.x;
-#endif
 }
 
 __device__ static void
 curr_add(real *d_flds, int m, int jx, int jy, int jz, real val, int *ci0)
 {
-  float *addr = &F3_DEV(d_flds, JXI+m, jx+ci0[0],jy+ci0[1],jz+ci0[2]);
+  float *addr = &F3_DEV(d_flds, JXI+m, jx,jy,jz);
   atomicAdd(addr, val);
 }
 
@@ -323,7 +324,7 @@ calc_j(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 
   // deposit xm -> xp
   int idiff[3] = { 0, k[1] - j[1], k[2] - j[2] };
-  int i[3] = { 0, j[1] - ci0[1], j[2] - ci0[2] };
+  int i[3] = { 0, j[1], j[2] };
   real x[3] = { 0.f, xm[1] - j[1] - real(.5), xm[2] - j[2] - real(.5) };
   //real dx[3] = { 0.f, xp[1] - xm[1], xp[2] - xm[2] };
   real dx[3] = { vxi[0] * prm.dt * prm.dxi[0], xp[1] - xm[1], xp[2] - xm[2] };

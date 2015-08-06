@@ -11,7 +11,7 @@
 
 #if DIM == DIM_YZ
 
-static inline void
+CUDA_DEVICE static inline void
 calc_3d_dx1(particle_real_t dx1[3], particle_real_t x[3], particle_real_t dx[3], int off[3])
 {
   if (off[2] == 0) {
@@ -35,7 +35,7 @@ calc_3d_dx1(particle_real_t dx1[3], particle_real_t x[3], particle_real_t dx[3],
   }
 }
 
-static inline void
+CUDA_DEVICE static inline void
 curr_3d_vb_cell(struct psc_fields *flds, int i[3], particle_real_t x[3], particle_real_t dx[3],
 		particle_real_t fnq[3], particle_real_t dxt[3], int off[3])
 {
@@ -68,7 +68,7 @@ curr_3d_vb_cell(struct psc_fields *flds, int i[3], particle_real_t x[3], particl
 // ----------------------------------------------------------------------
 // calc_j
 
-static inline void
+CUDA_DEVICE static inline void
 calc_j(struct psc_fields *flds, particle_real_t *xm, particle_real_t *xp,
        int *lf, int *lg, particle_t *prt, particle_real_t *vxi)
 {
@@ -101,14 +101,9 @@ calc_j(struct psc_fields *flds, particle_real_t *xm, particle_real_t *xp,
     }
     second_dir = 3 - first_dir;
   }
-#if PSC_PARTICLES_AS_CUDA2
-  int kind = cuda_float_as_int(prt->xi4.w);
-#else
-  int kind = prt->kind;
-#endif
-  particle_real_t fnq[3] = { particle_wni(prt) * prm.fnqx_kind[kind],
-			     particle_wni(prt) * prm.fnqy_kind[kind],
-			     particle_wni(prt) * prm.fnqz_kind[kind] };
+  particle_real_t fnq[3] = { particle_qni_wni(prt) * prm.fnqxs,
+			     particle_qni_wni(prt) * prm.fnqys,
+			     particle_qni_wni(prt) * prm.fnqzs };
   dx[0] = vxi[0] * prm.dt * prm.dxi[0];
   if (first_dir >= 0) {
     off[3 - first_dir] = 0;
