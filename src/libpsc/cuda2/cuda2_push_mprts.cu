@@ -85,7 +85,7 @@
 #if EM_CACHE == EM_CACHE_NONE
 
 #define F3_CACHE(flds_em, m, jx, jy, jz)	\
-  (F3_DEV(flds_em, m, jx+ci0[0],jy+ci0[1],jz+ci0[2]))
+  (F3_DEV(flds_em, m, jx,jy,jz))
 
 #define DECLARE_EM_CACHE(flds_em, d_flds, size, ci0)	\
   real *flds_em = d_flds
@@ -95,14 +95,14 @@
 #if DIM == DIM_YZ
 #define F3_CACHE(flds_em, m, jx, jy, jz)				\
   ((flds_em)[(((m-EX)							\
-	       *BLOCKGSIZE_Z + ((jz)-(-BLOCKBND_Z)))			\
-	      *BLOCKGSIZE_Y + ((jy)-(-BLOCKBND_Y)))])
+	       *BLOCKGSIZE_Z + ((jz-ci0[2])-(-BLOCKBND_Z)))		\
+	      *BLOCKGSIZE_Y + ((jy-ci0[1])-(-BLOCKBND_Y)))])
 #elif DIM == DIM_XYZ
 #define F3_CACHE(flds_em, m, jx, jy, jz)				\
   ((flds_em)[((((m-EX)							\
-		*BLOCKGSIZE_Z + ((jz)-(-BLOCKBND_Z)))			\
-	       *BLOCKGSIZE_Y + ((jy)-(-BLOCKBND_Y)))			\
-	      *BLOCKGSIZE_X + ((jx)-(-BLOCKBND_X)))])
+		*BLOCKGSIZE_Z + ((jz-ci0[2])-(-BLOCKBND_Z)))		\
+	       *BLOCKGSIZE_Y + ((jy-ci0[1])-(-BLOCKBND_Y)))		\
+	      *BLOCKGSIZE_X + ((jx-ci0[0])-(-BLOCKBND_X)))])
 #endif
 
 __device__ static void
@@ -118,7 +118,8 @@ cache_fields(float *flds_em, float *d_flds, int size, int *ci0)
     int jz = tmp % BLOCKGSIZE_Z - BLOCKBND_Z;
     // OPT? currently it seems faster to do the loop rather than do m by threadidx
     for (int m = EX; m <= HZ; m++) {
-      F3_CACHE(flds_em, m, jx, jy, jz) = F3_DEV(d_flds, m, jx+ci0[0],jy+ci0[1],jz+ci0[2]);
+      F3_CACHE(flds_em, m, jx+ci0[0],jy+ci0[1] jz+ci0[2]) = 
+	F3_DEV(d_flds, m, jx+ci0[0],jy+ci0[1],jz+ci0[2]);
     }
     ti += THREADS_PER_BLOCK;
   }
@@ -146,14 +147,6 @@ push_part_one(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
   int lg[3];
   real og[3];
   find_idx_off_1st_rel(prt->xi, lg, og, real(0.));
-#if DIM == DIM_YZ
-  lg[1] -= ci0[1];
-  lg[2] -= ci0[2];
-#elif DIM == DIM_XYZ
-  lg[0] -= ci0[0];
-  lg[1] -= ci0[1];
-  lg[2] -= ci0[2];
-#endif
   INTERPOLATE_1ST_EC(flds_em, exq, eyq, ezq, hxq, hyq, hzq);
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
