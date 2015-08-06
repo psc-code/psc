@@ -195,43 +195,6 @@ curr_add(real *d_flds, int m, int jx, int jy, int jz, real val, int *ci0)
 // ----------------------------------------------------------------------
 // calc_dx1
 
-__device__ static void
-calc_dx1(real dx1[3], real x[3], real dx[3], int off[3])
-{
-  real o1, x1, dx_0, dx_1, dx_2, v0, v1, v2;
-  if (off[1] == 0) {
-    o1 = off[2];
-    x1 = x[2];
-    dx_0 = dx[0];
-    dx_1 = dx[2];
-    dx_2 = dx[1];
-  } else {
-    o1 = off[1];
-    x1 = x[1];
-    dx_0 = dx[0];
-    dx_1 = dx[1];
-    dx_2 = dx[2];
-  }
-  if ((off[1] == 0 && off[2] == 0) || dx_1 == 0.f) {
-    v0 = 0.f;
-    v1 = 0.f;
-    v2 = 0.f;
-  } else {
-    v1 = .5f * o1 - x1;
-    v2 = dx_2 / dx_1 * v1;
-    v0 = dx_0 / dx_1 * v1;
-  }
-  if (off[1] == 0) {
-    dx1[0] = v0;
-    dx1[1] = v2;
-    dx1[2] = v1;
-  } else {
-    dx1[0] = v0;
-    dx1[1] = v1;
-    dx1[2] = v2;
-  }
-}
-
 // ----------------------------------------------------------------------
 // curr_vb_cell
 
@@ -343,13 +306,13 @@ calc_j(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
   }
 
   real dx1[3];
-  calc_dx1(dx1, x, dx, off);
+  calc_3d_dx1(dx1, x, dx, off);
   curr_vb_cell(d_flds, i, x, dx1, prt->qni_wni, ci0);
   curr_vb_cell_upd(i, x, dx1, dx, off);
   
   off[1] = idiff[1] - off[1];
   off[2] = idiff[2] - off[2];
-  calc_dx1(dx1, x, dx, off);
+  calc_3d_dx1(dx1, x, dx, off);
   curr_vb_cell(d_flds, i, x, dx1, prt->qni_wni, ci0);
   curr_vb_cell_upd(i, x, dx1, dx, off);
     

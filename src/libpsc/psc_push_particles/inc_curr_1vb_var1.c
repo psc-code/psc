@@ -14,6 +14,31 @@
 CUDA_DEVICE static inline void
 calc_3d_dx1(particle_real_t dx1[3], particle_real_t x[3], particle_real_t dx[3], int off[3])
 {
+#ifdef __CUDACC__
+  if (off[1] == 0) {
+    if (off[2] == 0 || dx[2] == 0.f) {
+      dx1[0] = 0.f;
+      dx1[1] = 0.f;
+      dx1[2] = 0.f;
+    } else {
+      dx1[2] = .5f * off[2] - x[2];
+      dx1[1] = dx[1] / dx[2] * dx1[2];
+      dx1[0] = dx[0] / dx[2] * dx1[2];
+    }
+  } else { // off[1] != 0
+    if (dx[1] == 0.f) {
+      dx1[0] = 0.f;
+      dx1[1] = 0.f;
+      dx1[2] = 0.f;
+    } else {
+      dx1[1] = .5f * off[1] - x[1];
+      dx1[2] = dx[2] / dx[1] * dx1[1];
+      dx1[0] = dx[0] / dx[1] * dx1[1];
+    }
+  }
+
+#else
+
   if (off[2] == 0) {
     dx1[1] = .5f * off[1] - x[1];
     if (dx[1] == 0.f) {
@@ -33,6 +58,7 @@ calc_3d_dx1(particle_real_t dx1[3], particle_real_t x[3], particle_real_t dx[3],
       dx1[1] = dx[1] / dx[2] * dx1[2];
     }
   }
+#endif
 }
 
 CUDA_DEVICE static inline void
@@ -67,6 +93,10 @@ curr_3d_vb_cell(struct psc_fields *flds, int i[3], particle_real_t x[3], particl
 
 // ----------------------------------------------------------------------
 // calc_j
+
+#ifdef __CUDACC__
+
+#else
 
 CUDA_DEVICE static inline void
 calc_j(struct psc_fields *flds, particle_real_t *xm, particle_real_t *xp,
@@ -124,6 +154,5 @@ calc_j(struct psc_fields *flds, particle_real_t *xm, particle_real_t *xp,
 
 #endif // DIM
 
-// ======================================================================
-// TBD (FIXME)
+#endif
 
