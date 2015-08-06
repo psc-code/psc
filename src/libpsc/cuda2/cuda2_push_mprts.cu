@@ -6,6 +6,20 @@
 
 #define EM_CACHE EM_CACHE_NONE
 
+#if DIM == DIM_YZ
+#define BLOCKBND_X 0
+#define BLOCKBND_Y 2
+#define BLOCKBND_Z 2
+#elif DIM == DIM_XYZ
+#define BLOCKBND_X 2
+#define BLOCKBND_Y 2
+#define BLOCKBND_Z 2
+#endif
+
+#define BLOCKGSIZE_X (BLOCKSIZE_X + 2 * BLOCKBND_X)
+#define BLOCKGSIZE_Y (BLOCKSIZE_Y + 2 * BLOCKBND_Y)
+#define BLOCKGSIZE_Z (BLOCKSIZE_Z + 2 * BLOCKBND_Z)
+
 #include "../psc_push_particles/inc_params.c"
 #include "../psc_push_particles/inc_push.c"
 #include "../psc_push_particles/inc_interpolate.c"
@@ -81,61 +95,38 @@
 #if DIM == DIM_YZ
 #define F3_CACHE(flds_em, m, jx, jy, jz)				\
   ((flds_em)[(((m-EX)							\
-		 *(BLOCKSIZE_Z + 4) + ((jz)-(-2)))			\
-		*(BLOCKSIZE_Y + 4) + ((jy)-(-2)))])
+	       *BLOCKGSIZE_Z + ((jz)-(-BLOCKBND_Z)))			\
+	      *BLOCKGSIZE_Y + ((jy)-(-BLOCKBND_Y)))])
 #elif DIM == DIM_XYZ
 #define F3_CACHE(flds_em, m, jx, jy, jz)				\
   ((flds_em)[((((m-EX)							\
-		  *(BLOCKSIZE_Z + 4) + ((jz)-(-2)))			\
-		 *(BLOCKSIZE_Y + 4) + ((jy)-(-2)))			\
-		*(BLOCKSIZE_Z + 4) + ((jx)-(-2)))])
+		*BLOCKGSIZE_Z + ((jz)-(-BLOCKBND_Z)))			\
+	       *BLOCKGSIZE_Y + ((jy)-(-BLOCKBND_Y)))			\
+	      *BLOCKGSIZE_X + ((jx)-(-BLOCKBND_X)))])
 #endif
 
 __device__ static void
 cache_fields(float *flds_em, float *d_flds, int size, int *ci0)
 {
-#if DIM == DIM_YZ
-  int n = (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4);
   int ti = threadIdx.x;
   while (ti < n) {
     int tmp = ti;
-    int jy = tmp % (BLOCKSIZE_Y + 4) - 2;
-    tmp /= BLOCKSIZE_Y + 4;
-    int jz = tmp % (BLOCKSIZE_Z + 4) - 2;
-    // OPT? currently it seems faster to do the loop rather than do m by threadidx
-    for (int m = EX; m <= HZ; m++) {
-      F3_CACHE(flds_em, m, 0,jy,jz) = F3_DEV(d_flds, m, 0,jy+ci0[1],jz+ci0[2]);
-    }
-    ti += THREADS_PER_BLOCK;
-  }
-#elif DIM == DIM_XYZ
-  int n = (BLOCKSIZE_X + 4) * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4);
-  int ti = threadIdx.x;
-  while (ti < n) {
-    int tmp = ti;
-    int jx = tmp % (BLOCKSIZE_X + 4) - 2;
-    tmp /= BLOCKSIZE_X + 4;
-    int jy = tmp % (BLOCKSIZE_Y + 4) - 2;
-    tmp /= BLOCKSIZE_Y + 4;
-    int jz = tmp % (BLOCKSIZE_Z + 4) - 2;
+    int jx = tmp % BLOCKGSIZE_X - BLOCKBND_X;
+    tmp /= dims[0];
+    int jy = tmp % BLOCKGSIZE_Y - BLOCKBND_Y;
+    tmp /= dims[1];
+    int jz = tmp % BLOCKGSIZE_Z - BLOCKBND_Z;
     // OPT? currently it seems faster to do the loop rather than do m by threadidx
     for (int m = EX; m <= HZ; m++) {
       F3_CACHE(flds_em, m, jx, jy, jz) = F3_DEV(d_flds, m, jx+ci0[0],jy+ci0[1],jz+ci0[2]);
     }
     ti += THREADS_PER_BLOCK;
   }
-#endif
 }
 
-#if DIM == DIM_YZ
 #define DECLARE_EM_CACHE(flds_em, d_flds, size, ci0)	\
-  __shared__ real flds_em[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)]; \
+  __shared__ real flds_em[6 * BLOCKGSIZE_X * BLOCKGSIZE_Y * BLOCKGSIZE_Z];\
   cache_fields(flds_em, d_flds, size, ci0)
-#elif DIM == DIM_XYZ
-#define DECLARE_EM_CACHE(flds_em, d_flds, size, ci0)	\
-  __shared__ real flds_em[6 * (BLOCKSIZE_X + 4) * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)]; \
-  cache_fields(flds_em, d_flds, size, ci0)
-#endif
 
 #endif
 
@@ -176,17 +167,6 @@ push_part_one(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 __device__ static int
 find_block_pos_patch(int *block_pos, int *ci0)
 {
-#if DIM == DIM_YZ
-  block_pos[1] = blockIdx.x;
-  block_pos[2] = blockIdx.y % prm.b_mx[2];
-
-  ci0[0] = 0;
-  ci0[1] = block_pos[1] * BLOCKSIZE_Y;
-  ci0[2] = block_pos[2] * BLOCKSIZE_Z;
-
-  return blockIdx.y / prm.b_mx[2];
-
-#elif DIM == DIM_XYZ
   block_pos[0] = blockIdx.x;
   block_pos[1] = blockIdx.y;
   block_pos[2] = blockIdx.z % prm.b_mx[2];
@@ -196,14 +176,13 @@ find_block_pos_patch(int *block_pos, int *ci0)
   ci0[2] = block_pos[2] * BLOCKSIZE_Z;
 
   return blockIdx.z / prm.b_mx[2];
-#endif
 }
 
 __device__ static int
 find_bid()
 {
 #if DIM == DIM_YZ
-  return blockIdx.y * prm.b_mx[1] + blockIdx.x;
+  return blockIdx.z * prm.b_mx[1] + blockIdx.y;
 #elif DIM == DIM_XYZ
   return (blockIdx.z * prm.b_mx[1] + blockIdx.y) * prm.b_mx[0] + blockIdx.x;
 #endif
@@ -396,12 +375,12 @@ push_mprts_ab(float4 *d_xi4, float4 *d_pxi4,
   int p, bid;
   p = find_block_pos_patch(block_pos, ci0);
   real *d_flds = d_flds0 + p * size;
-  bid = find_bid();
-
-  int block_begin = d_off[bid];
-  int block_end = d_off[bid + 1];
 
   DECLARE_EM_CACHE(flds_em, d_flds, size, ci0);
+
+  bid = find_bid();
+  int block_begin = d_off[bid];
+  int block_end = d_off[bid + 1];
 
   __syncthreads();
   for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
@@ -448,18 +427,14 @@ cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 
   zero_currents(mflds);
 
-#if DIM == DIM_YZ
-  int gx, gy;
-  gx = mprts_sub->b_mx[1];
-  gy = mprts_sub->b_mx[2] * mprts->nr_patches;
-  dim3 dimGrid(gx, gy);
-#elif DIM == DIM_XYZ
   int gx, gy, gz;
+#if DIM == DIM_YZ
+  assert(mprts_sub->b_mx[0] == 1);
+#endif
   gx = mprts_sub->b_mx[0];
   gy = mprts_sub->b_mx[1];
   gz = mprts_sub->b_mx[2] * mprts->nr_patches;
   dim3 dimGrid(gx, gy, gz);
-#endif
 
   push_mprts_ab<<<dimGrid, THREADS_PER_BLOCK>>>
     (mprts_sub->d_xi4, mprts_sub->d_pxi4, mprts_sub->d_b_off,
