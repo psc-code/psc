@@ -25,6 +25,37 @@
 #include "../psc_push_particles/inc_params.c"
 #include "../psc_push_particles/inc_push.c"
 #include "../psc_push_particles/inc_interpolate.c"
+
+// ======================================================================
+
+#if DIM == DIM_YZ
+
+#define F3_DEV_OFF(fldnr, jx,jy,jz)					\
+  ((((fldnr)								\
+     *prm.mx[2] + ((jz)-prm.ilg[2]))					\
+    *prm.mx[1] + ((jy)-prm.ilg[1])))
+
+#else
+
+#define F3_DEV_OFF(fldnr, jx,jy,jz)					\
+  ((((fldnr)								\
+     *prm.mx[2] + ((jz)-prm.ilg[2]))					\
+    *prm.mx[1] + ((jy)-prm.ilg[1]))					\
+   *prm.mx[0] + ((jx)-prm.ilg[0]))
+
+#endif
+
+#define F3_DEV(d_flds, fldnr, jx,jy,jz)		\
+  ((d_flds)[F3_DEV_OFF(fldnr, jx,jy,jz)])
+
+
+__device__ static void
+curr_add(real *d_flds, int m, int jx, int jy, int jz, real val, int *ci0)
+{
+  float *addr = &F3_DEV(d_flds, JXI+m, jx,jy,jz);
+  atomicAdd(addr, val);
+}
+
 #include "../psc_push_particles/inc_curr.c"
 
 #undef THREADS_PER_BLOCK
@@ -58,29 +89,6 @@
     float4 pxi4 = { (pp).pxi[0], (pp).pxi[1], (pp).pxi[2], (pp).qni_wni }; \
     d_pxi4[n] = pxi4;							\
 } while (0)
-
-// ======================================================================
-
-#if DIM == DIM_YZ
-
-#define F3_DEV_OFF(fldnr, jx,jy,jz)					\
-  ((((fldnr)								\
-     *prm.mx[2] + ((jz)-prm.ilg[2]))					\
-    *prm.mx[1] + ((jy)-prm.ilg[1])))
-
-#else
-
-#define F3_DEV_OFF(fldnr, jx,jy,jz)					\
-  ((((fldnr)								\
-     *prm.mx[2] + ((jz)-prm.ilg[2]))					\
-    *prm.mx[1] + ((jy)-prm.ilg[1]))					\
-   *prm.mx[0] + ((jx)-prm.ilg[0]))
-
-#endif
-
-#define F3_DEV(d_flds, fldnr, jx,jy,jz)		\
-  ((d_flds)[F3_DEV_OFF(fldnr, jx,jy,jz)])
-
 
 // ======================================================================
 // field caching
@@ -182,63 +190,8 @@ find_bid()
   return (blockIdx.z * prm.b_mx[1] + blockIdx.y) * prm.b_mx[0] + blockIdx.x;
 }
 
-__device__ static void
-curr_add(real *d_flds, int m, int jx, int jy, int jz, real val, int *ci0)
-{
-  float *addr = &F3_DEV(d_flds, JXI+m, jx,jy,jz);
-  atomicAdd(addr, val);
-}
-
 // ======================================================================
 // depositing current
-
-// ----------------------------------------------------------------------
-// calc_dx1
-
-// ----------------------------------------------------------------------
-// curr_vb_cell
-
-__device__ static void
-curr_vb_cell(real *d_flds, int i[3], real x[3], real dx[3], real qni_wni,
-	     int *ci0)
-{
-  real xa[3] = { 0.,
-		 x[1] + .5f * dx[1],
-		 x[2] + .5f * dx[2], };
-  if (dx[0] != 0.f) {
-    real fnqx = qni_wni * prm.fnqxs;
-    real h = (1.f / 12.f) * dx[0] * dx[1] * dx[2];
-    curr_add(d_flds, 0, 0,i[1]  ,i[2]  , fnqx * (dx[0] * (.5f - xa[1]) * (.5f - xa[2]) + h), ci0);
-    curr_add(d_flds, 0, 0,i[1]+1,i[2]  , fnqx * (dx[0] * (.5f + xa[1]) * (.5f - xa[2]) - h), ci0);
-    curr_add(d_flds, 0, 0,i[1]  ,i[2]+1, fnqx * (dx[0] * (.5f - xa[1]) * (.5f + xa[2]) + h), ci0);
-    curr_add(d_flds, 0, 0,i[1]+1,i[2]+1, fnqx * (dx[0] * (.5f + xa[1]) * (.5f + xa[2]) - h), ci0);
-  }
-  if (dx[1] != 0.f) {
-    real fnqy = qni_wni * prm.fnqys;
-    curr_add(d_flds, 1, 0,i[1],i[2]  , fnqy * dx[1] * (.5f - xa[2]), ci0);
-    curr_add(d_flds, 1, 0,i[1],i[2]+1, fnqy * dx[1] * (.5f + xa[2]), ci0);
-  }
-  if (dx[2] != 0.f) {
-    real fnqz = qni_wni * prm.fnqzs;
-    curr_add(d_flds, 2, 0,i[1]  ,i[2], fnqz * dx[2] * (.5f - xa[1]), ci0);
-    curr_add(d_flds, 2, 0,i[1]+1,i[2], fnqz * dx[2] * (.5f + xa[1]), ci0);
-  }
-}
-
-// ----------------------------------------------------------------------
-// curr_vb_cell_upd
-
-__device__ static void
-curr_vb_cell_upd(int i[3], real x[3], real dx1[3], real dx[3], int off[3])
-{
-  dx[0] -= dx1[0];
-  dx[1] -= dx1[1];
-  dx[2] -= dx1[2];
-  x[1] += dx1[1] - off[1];
-  x[2] += dx1[2] - off[2];
-  i[1] += off[1];
-  i[2] += off[2];
-}
 
 // ----------------------------------------------------------------------
 // calc_j
@@ -307,16 +260,16 @@ calc_j(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 
   real dx1[3];
   calc_3d_dx1(dx1, x, dx, off);
-  curr_vb_cell(d_flds, i, x, dx1, prt->qni_wni, ci0);
-  curr_vb_cell_upd(i, x, dx1, dx, off);
+  curr_3d_vb_cell(d_flds, i, x, dx1, prt->qni_wni, ci0);
+  curr_3d_vb_cell_upd(i, x, dx1, dx, off);
   
   off[1] = idiff[1] - off[1];
   off[2] = idiff[2] - off[2];
   calc_3d_dx1(dx1, x, dx, off);
-  curr_vb_cell(d_flds, i, x, dx1, prt->qni_wni, ci0);
-  curr_vb_cell_upd(i, x, dx1, dx, off);
+  curr_3d_vb_cell(d_flds, i, x, dx1, prt->qni_wni, ci0);
+  curr_3d_vb_cell_upd(i, x, dx1, dx, off);
     
-  curr_vb_cell(d_flds, i, x, dx, prt->qni_wni, ci0);
+  curr_3d_vb_cell(d_flds, i, x, dx, prt->qni_wni, ci0);
 #endif
 }
 
@@ -366,7 +319,6 @@ zero_currents(struct psc_mfields *mflds)
     check(cudaMemset(d_flds + JXI * size, 0, 3 * size * sizeof(*d_flds)));
   }
 }
-
 
 // ----------------------------------------------------------------------
 // cuda_push_mprts_ab
