@@ -41,6 +41,30 @@ struct psc_fields_cuda2 {
 #endif
 
 // ----------------------------------------------------------------------
+// macros to access device versions of the fields
+// (needs 'prm' to be around to provide dimensions etc)
+
+#if DIM == DIM_YZ
+
+#define F3_DEV_OFF(fldnr, jx,jy,jz)					\
+  ((((fldnr)								\
+     *prm.mx[2] + ((jz)-prm.ilg[2]))					\
+    *prm.mx[1] + ((jy)-prm.ilg[1])))
+
+#else
+
+#define F3_DEV_OFF(fldnr, jx,jy,jz)					\
+  ((((fldnr)								\
+     *prm.mx[2] + ((jz)-prm.ilg[2]))					\
+    *prm.mx[1] + ((jy)-prm.ilg[1]))					\
+   *prm.mx[0] + ((jx)-prm.ilg[0]))
+
+#endif
+
+#define F3_DEV(d_flds, fldnr, jx,jy,jz)		\
+  ((d_flds)[F3_DEV_OFF(fldnr, jx,jy,jz)])
+
+// ----------------------------------------------------------------------
 
 struct psc_mfields_cuda2 {
   fields_cuda2_real_t *h_flds;

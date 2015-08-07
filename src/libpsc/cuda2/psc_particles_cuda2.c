@@ -67,8 +67,8 @@ psc_particles_cuda2_get_b_idx(struct psc_particles *prts, int n)
   struct psc_particles_cuda2 *sub = psc_particles_cuda2(prts);
 
   particle_cuda2_t prt;
-  _LOAD_PARTICLE_POS(prt, sub->h_xi4, n);
-  _LOAD_PARTICLE_MOM(prt, sub->h_pxi4, n);
+  PARTICLE_CUDA2_LOAD_POS(prt, sub->h_xi4, n);
+  PARTICLE_CUDA2_LOAD_MOM(prt, sub->h_pxi4, n);
   particle_cuda2_real_t of[3];
   int b_pos[3], *b_mx = sub->b_mx;
   find_idx_off_1st_rel(&particle_cuda2_x(&prt), b_pos, of, 0.f, sub->dxi);
@@ -190,8 +190,8 @@ psc_particles_cuda2_copy_to_single(struct psc_particles *prts_base,
   assert(prts->n_part <= psc_particles_single(prts)->n_alloced);
   for (int n = 0; n < prts_base->n_part; n++) {
     particle_cuda2_t prt_base;
-    _LOAD_PARTICLE_POS(prt_base, sub->h_xi4, n);
-    _LOAD_PARTICLE_MOM(prt_base, sub->h_pxi4, n);
+    PARTICLE_CUDA2_LOAD_POS(prt_base, sub->h_xi4, n);
+    PARTICLE_CUDA2_LOAD_MOM(prt_base, sub->h_pxi4, n);
     particle_single_t *part = particles_single_get_one(prts, n);
     
     part->xi      = prt_base.xi[0];
@@ -229,8 +229,8 @@ psc_particles_cuda2_copy_from_single(struct psc_particles *prts_base,
     prt_base.pxi[2]        = part->pzi;
     prt_base.qni_wni       = part->qni_wni;
 
-    _STORE_PARTICLE_POS(prt_base, sub->h_xi4, n);
-    _STORE_PARTICLE_MOM(prt_base, sub->h_pxi4, n);
+    PARTICLE_CUDA2_STORE_POS(prt_base, sub->h_xi4, n);
+    PARTICLE_CUDA2_STORE_MOM(prt_base, sub->h_pxi4, n);
   }
 }
 
@@ -250,8 +250,8 @@ psc_particles_cuda2_copy_to_cuda(struct psc_particles *prts,
   
   for (int n = 0; n < prts->n_part; n++) {
     particle_cuda2_t prt;
-    _LOAD_PARTICLE_POS(prt, sub->h_xi4, n);
-    _LOAD_PARTICLE_MOM(prt, sub->h_pxi4, n);
+    PARTICLE_CUDA2_LOAD_POS(prt, sub->h_xi4, n);
+    PARTICLE_CUDA2_LOAD_MOM(prt, sub->h_pxi4, n);
     
     xi4[n].x  = prt.xi[0];
     xi4[n].y  = prt.xi[1];
@@ -295,8 +295,8 @@ psc_particles_cuda2_copy_from_cuda(struct psc_particles *prts,
     prt.pxi[2]        = pxi4[n].z;
     prt.qni_wni       = pxi4[n].w;
 
-    _STORE_PARTICLE_POS(prt, sub->h_xi4, n);
-    _STORE_PARTICLE_MOM(prt, sub->h_pxi4, n);
+    PARTICLE_CUDA2_STORE_POS(prt, sub->h_xi4, n);
+    PARTICLE_CUDA2_STORE_MOM(prt, sub->h_pxi4, n);
   }
 
   free(xi4);

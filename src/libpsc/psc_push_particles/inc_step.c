@@ -61,7 +61,52 @@ ext_prepare_sort(struct psc_particles *prts, int n, particle_t *prt,
 // ----------------------------------------------------------------------
 // push_one
 
-#ifndef __CUDACC__
+#ifdef __CUDACC__
+
+__device__ static void
+push_one(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
+	 real *flds_em, flds_curr_t flds_curr)
+{
+  PARTICLE_CUDA2_LOAD_POS(*prt, d_xi4, n);
+
+  // here we have x^{n+.5}, p^n
+
+  // field interpolation
+  real exq, eyq, ezq, hxq, hyq, hzq;
+  int lg[3];
+  real og[3];
+  find_idx_off_1st_rel(prt->xi, lg, og, real(0.));
+  INTERPOLATE_1ST_EC(flds_em, exq, eyq, ezq, hxq, hyq, hzq);
+
+  // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
+  PARTICLE_CUDA2_LOAD_MOM(*prt, d_pxi4, n);
+  int kind = particle_kind(prt);
+  real dq = prm.dq_kind[kind];
+  push_pxi(prt, exq, eyq, ezq, hxq, hyq, hzq, dq);
+  PARTICLE_CUDA2_STORE_MOM(*prt, d_pxi4, n);
+
+  real vxi[3];
+  calc_vxi(vxi, prt);
+
+  particle_real_t xm[3], xp[3];
+  int lf[3];
+
+  // position xm at x^(n+.5)
+  real h0[3];
+  find_idx_off_pos_1st_rel(prt->xi, lg, h0, xm, real(0.));
+
+  // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
+  push_xi(prt, vxi, prm.dt);
+  PARTICLE_CUDA2_STORE_POS(*prt, d_xi4, n);
+
+  // position xp at x^(n+.5)
+  real h1[3];
+  find_idx_off_pos_1st_rel(prt->xi, lf, h1, xp, real(0.));
+
+  calc_j(flds_curr, xm, xp, lf, lg, prt, vxi);
+}
+
+#else
 
 static inline void
 push_one(particle_t *prt, struct psc_fields *flds, struct psc_particles *prts, int n)
@@ -119,7 +164,7 @@ push_one_mprts(float4 *d_xi4, float4 *d_pxi4, int n,
 {
   particle_t prt;
 
-  push_one(&prt, n, d_xi4, d_pxi4, flds_em, flds_curr, ci0);
+  push_one(&prt, n, d_xi4, d_pxi4, flds_em, flds_curr);
 }
 
 #else
@@ -132,13 +177,13 @@ push_one_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds, int n, i
   struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
 
   particle_t prt;
-  _LOAD_PARTICLE_POS(prt, mprts_sub->h_xi4, n);
-  _LOAD_PARTICLE_MOM(prt, mprts_sub->h_pxi4, n);
+  PARTICLE_CUDA2_LOAD_POS(prt, mprts_sub->h_xi4, n);
+  PARTICLE_CUDA2_LOAD_MOM(prt, mprts_sub->h_pxi4, n);
   
   push_one(&prt, flds, NULL, n);
 
-  _STORE_PARTICLE_POS(prt, mprts_sub->h_xi4, n);
-  _STORE_PARTICLE_MOM(prt, mprts_sub->h_pxi4, n);
+  PARTICLE_CUDA2_STORE_POS(prt, mprts_sub->h_xi4, n);
+  PARTICLE_CUDA2_STORE_MOM(prt, mprts_sub->h_pxi4, n);
 }
 
 #endif

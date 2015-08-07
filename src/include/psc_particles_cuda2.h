@@ -100,7 +100,7 @@ particle_cuda2_real_abs(particle_cuda2_real_t x)
   return fabsf(x);
 }
 
-#define _LOAD_PARTICLE_POS(prt, d_xi4, n) do {				\
+#define PARTICLE_CUDA2_LOAD_POS(prt, d_xi4, n) do {			\
     float4 xi4 = d_xi4[n];						\
     (prt).xi[0] = xi4.x;						\
     (prt).xi[1] = xi4.y;						\
@@ -108,7 +108,7 @@ particle_cuda2_real_abs(particle_cuda2_real_t x)
     (prt).kind_as_float = xi4.w;					\
   } while (0)
 
-#define _LOAD_PARTICLE_MOM(prt, d_pxi4, n) do {				\
+#define PARTICLE_CUDA2_LOAD_MOM(prt, d_pxi4, n) do {			\
     float4 pxi4 = d_pxi4[n];						\
     (prt).pxi[0]  = pxi4.x;						\
     (prt).pxi[1]  = pxi4.y;						\
@@ -116,23 +116,16 @@ particle_cuda2_real_abs(particle_cuda2_real_t x)
     (prt).qni_wni = pxi4.w;						\
   } while (0)
 
-#define _STORE_PARTICLE_POS(prt, d_xi4, n) do {				\
-    float4 xi4;								\
-    xi4.x = (prt).xi[0];						\
-    xi4.y = (prt).xi[1];						\
-    xi4.z = (prt).xi[2];						\
-    xi4.w = (prt).kind_as_float;					\
+#define PARTICLE_CUDA2_STORE_POS(pp, d_xi4, n) do {			\
+    float4 xi4 = { (pp).xi[0], (pp).xi[1], (pp).xi[2], (pp).kind_as_float }; \
     d_xi4[n] = xi4;							\
-  } while (0)
+} while (0)
 
-#define _STORE_PARTICLE_MOM(prt, d_pxi4, n) do {			\
-    float4 pxi4;							\
-    pxi4.x = (prt).pxi[0];						\
-    pxi4.y = (prt).pxi[1];						\
-    pxi4.z = (prt).pxi[2];						\
-    pxi4.w = (prt).qni_wni;						\
+#define PARTICLE_CUDA2_STORE_MOM(pp, d_pxi4, n) do {			\
+    float4 pxi4 = { (pp).pxi[0], (pp).pxi[1], (pp).pxi[2], (pp).qni_wni }; \
     d_pxi4[n] = pxi4;							\
-  } while (0)
+} while (0)
+
 
 #endif
 

@@ -28,62 +28,6 @@
 #include "../psc_push_particles/inc_params.c"
 #include "../psc_push_particles/inc_push.c"
 #include "../psc_push_particles/inc_interpolate.c"
-
-// ======================================================================
-// field access
-
-#if DIM == DIM_YZ
-
-#define F3_DEV_OFF(fldnr, jx,jy,jz)					\
-  ((((fldnr)								\
-     *prm.mx[2] + ((jz)-prm.ilg[2]))					\
-    *prm.mx[1] + ((jy)-prm.ilg[1])))
-
-#else
-
-#define F3_DEV_OFF(fldnr, jx,jy,jz)					\
-  ((((fldnr)								\
-     *prm.mx[2] + ((jz)-prm.ilg[2]))					\
-    *prm.mx[1] + ((jy)-prm.ilg[1]))					\
-   *prm.mx[0] + ((jx)-prm.ilg[0]))
-
-#endif
-
-#define F3_DEV(d_flds, fldnr, jx,jy,jz)		\
-  ((d_flds)[F3_DEV_OFF(fldnr, jx,jy,jz)])
-
-// ======================================================================
-// particle access
-
-#define LOAD_PARTICLE_POS_(pp, d_xi4, n) do {				\
-    float4 _xi4 = d_xi4[n];						\
-    (pp).xi[0]         = _xi4.x;					\
-    (pp).xi[1]         = _xi4.y;					\
-    (pp).xi[2]         = _xi4.z;					\
-    (pp).kind_as_float = _xi4.w;					\
-} while (0)
-
-#define LOAD_PARTICLE_MOM_(pp, d_pxi4, n) do {				\
-    float4 _pxi4 = d_pxi4[n];						\
-    (pp).pxi[0]        = _pxi4.x;					\
-    (pp).pxi[1]        = _pxi4.y;					\
-    (pp).pxi[2]        = _pxi4.z;					\
-    (pp).qni_wni       = _pxi4.w;					\
-} while (0)
-
-#define STORE_PARTICLE_POS_(pp, d_xi4, n) do {				\
-    float4 xi4 = { (pp).xi[0], (pp).xi[1], (pp).xi[2], (pp).kind_as_float }; \
-    d_xi4[n] = xi4;							\
-} while (0)
-
-#define STORE_PARTICLE_MOM_(pp, d_pxi4, n) do {				\
-    float4 pxi4 = { (pp).pxi[0], (pp).pxi[1], (pp).pxi[2], (pp).qni_wni }; \
-    d_pxi4[n] = pxi4;							\
-} while (0)
-
-
-// ----------------------------------------------------------------------
-
 #include "../psc_push_particles/inc_curr.c"
 
 // ----------------------------------------------------------------------
@@ -143,52 +87,6 @@ cache_fields(float *flds_em, float *d_flds, int size, int *ci0)
 
 #endif
 
-// ----------------------------------------------------------------------
-// push_one
-
-__device__ static void
-push_one(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
-	 real *flds_em, flds_curr_t flds_curr, int ci0[3])
-{
-  LOAD_PARTICLE_POS_(*prt, d_xi4, n);
-
-  // here we have x^{n+.5}, p^n
-
-  // field interpolation
-  real exq, eyq, ezq, hxq, hyq, hzq;
-  int lg[3];
-  real og[3];
-  find_idx_off_1st_rel(prt->xi, lg, og, real(0.));
-  INTERPOLATE_1ST_EC(flds_em, exq, eyq, ezq, hxq, hyq, hzq);
-
-  // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
-  LOAD_PARTICLE_MOM_(*prt, d_pxi4, n);
-  int kind = particle_kind(prt);
-  real dq = prm.dq_kind[kind];
-  push_pxi(prt, exq, eyq, ezq, hxq, hyq, hzq, dq);
-  STORE_PARTICLE_MOM_(*prt, d_pxi4, n);
-
-  real vxi[3];
-  calc_vxi(vxi, prt);
-
-  particle_real_t xm[3], xp[3];
-  int lf[3];
-
-  // position xm at x^(n+.5)
-  real h0[3];
-  find_idx_off_pos_1st_rel(prt->xi, lg, h0, xm, real(0.));
-
-  // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
-  push_xi(prt, vxi, prm.dt);
-  STORE_PARTICLE_POS_(*prt, d_xi4, n);
-
-  // position xp at x^(n+.5)
-  real h1[3];
-  find_idx_off_pos_1st_rel(prt->xi, lf, h1, xp, real(0.));
-
-  calc_j(flds_curr, xm, xp, lf, lg, prt, vxi);
-}
-
 #include "../psc_push_particles/inc_step.c"
 
 // ----------------------------------------------------------------------
@@ -219,7 +117,8 @@ find_bid()
   return (blockIdx.z * prm.b_mx[1] + blockIdx.y) * prm.b_mx[0] + blockIdx.x;
 }
 
-// ======================================================================
+// ----------------------------------------------------------------------
+// push_mprts_ab
 
 __global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
 push_mprts_ab(float4 *d_xi4, float4 *d_pxi4,
@@ -245,7 +144,6 @@ push_mprts_ab(float4 *d_xi4, float4 *d_pxi4,
     }
     push_one_mprts(d_xi4, d_pxi4, n, flds_em, flds_curr, ci0);
   }
-
 }
 
 // ----------------------------------------------------------------------
@@ -281,9 +179,6 @@ cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
   zero_currents(mflds);
 
   int gx, gy, gz;
-#if DIM == DIM_YZ
-  assert(mprts_sub->b_mx[0] == 1);
-#endif
   gx = mprts_sub->b_mx[0];
   gy = mprts_sub->b_mx[1];
   gz = mprts_sub->b_mx[2] * mprts->nr_patches;
