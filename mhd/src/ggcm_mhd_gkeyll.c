@@ -142,6 +142,12 @@ mrc_fld_gkeyll_ion_index_two_fluids(struct mrc_fld *f, int m_beg)
 // first index of a species
 
 int
+gkeyll_species_index(int m_beg, int species, int nr_moments)
+{
+  return m_beg + nr_moments * species;
+}
+
+int
 mrc_fld_gkeyll_species_index(struct mrc_fld *f, int m_beg, int species)
 {
   // species starts from 0 to nr_fluids-1
@@ -155,6 +161,14 @@ mrc_fld_gkeyll_species_index(struct mrc_fld *f, int m_beg, int species)
 // first index of all species
 
 void
+gkeyll_species_index_all(int m_beg, int indices[], int nr_fluids, int nr_moments)
+{
+  for (int s = 0; s < nr_fluids; s++) {
+    indices[s] = m_beg + nr_moments * s;
+  }
+}
+
+void
 mrc_fld_gkeyll_species_index_all(struct mrc_fld *f, int m_beg, int *indices)
 {
   for ( int s = 0; s < mrc_fld_gkeyll_nr_fluids(f); s++) {
@@ -166,6 +180,12 @@ mrc_fld_gkeyll_species_index_all(struct mrc_fld *f, int m_beg, int *indices)
 // mrc_fld_gkeyll_em_index
 //
 // first index of the EM fields
+
+int
+gkeyll_em_index(int m_beg, int nr_fluids, int nr_moments)
+{
+  return m_beg +nr_moments * nr_fluids;
+}
 
 int
 mrc_fld_gkeyll_em_index(struct mrc_fld *f, int m_beg)
