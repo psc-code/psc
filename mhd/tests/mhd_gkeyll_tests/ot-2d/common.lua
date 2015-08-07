@@ -20,6 +20,13 @@ nr_comps = nr_moments*nr_fluids + nr_em_comps
 nr_ghosts = 2
 nr_dims = 2
 
+-- NOTE: lua array indices start from 1, not 0
+mass_ratios = {1./26., 25./26.} 
+momentum_ratios = {1./26, 25./26.}
+pressure_ratios = {0.5, 0.5}
+
+gasGamma = 5./3.
+
 -- if we only need the parameters above and want
 -- to skip executing the remaining codes, do not
 -- specify skip_execute (nil) or set it false
@@ -49,8 +56,6 @@ end
 --   epsilon0, elc/mgnErrorSpeedFactor,      --
 --   elcCharge/Mass, ionCharge/Mass, cfl     --
 -----------------------------------------------
-gasGamma = 5./3.
-
 lightSpeed = 20.0
 mu0 = 1.0
 epsilon0 =1.0/mu0/(lightSpeed^2)
@@ -64,8 +69,9 @@ B0 = 1.
 
 elcCharge = -1.0
 ionCharge = 1.0
-ionElcMassRatio = 25.
-ionElcPressRatio = 1.
+ionElcMassRatio = mass_ratios[2]/mass_ratios[1]
+ionElcPressRatio = pressure_ratios[2]/pressure_ratios[1] 
+ionElcMomentumRatio = momentum_ratios[2]/momentum_ratios[1]
 ionInertiaLength0 = 0.25
 
 rhoe0 = rho0 / (1.+ionElcMassRatio)
@@ -87,12 +93,15 @@ function init(x,y,z)
    local vx = -v0*sin(2.*pi*y/Ly)
    local vy = v0*sin(2.*pi*x/Lx)
 
-   local momxe = rhoe0*vx
-   local momye = rhoe0*vy
+   local momx = rho0*vx
+   local momy = rho0*vy
+
+   local momxe = momx / (1 + ionElcMomentumRatio)
+   local momye = momy / (1 + ionElcMomentumRatio)
    local ere = pre0/(gasGamma-1.) + 0.5*(momxe^2+momye^2)/rhoe0
    
-   local momxi = rhoi0*vx
-   local momyi = rhoi0*vy
+   local momxi = momx - momxe
+   local momyi = momy - momye
    local eri = pri0/(gasGamma-1.) + 0.5*(momxi^2+momyi^2)/rhoi0
 
    local Bx = -B0*sin(2.*pi*y/Ly) 
