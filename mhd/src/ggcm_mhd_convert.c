@@ -2,6 +2,7 @@
 #include "ggcm_mhd_private.h"
 #include "ggcm_mhd_defs.h"
 #include "ggcm_mhd_defs_extra.h"
+#include <ggcm_mhd_gkeyll.h>
 
 #include <mrc_domain.h>
 #include <mrc_fld_as_double.h>
@@ -107,6 +108,133 @@ ggcm_mhd_convert_fc_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_bas
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_convert_gkeyll_from_primitive
+//
+// converts from primitive MHD variables to multi-fluid moment variables
+// No ghost points are set.
+
+// pointwise conversion from primitive mhd quantities to 5m fluid quantities
+void
+primitive_to_gkeyll_5m_fluids_point(struct mrc_fld *fld, int nr_fluids, int idx[],
+    float mass_ratios[], float momentum_ratios[], float pressure_ratios[],
+    float gamma_m1, int ix, int iy, int iz, int p)
+{
+  float rr  = M3(fld, RR, ix,iy,iz, p);
+  float rvx = rr * M3(fld, VX, ix,iy,iz, p);
+  float rvy = rr * M3(fld, VY, ix,iy,iz, p);
+  float rvz = rr * M3(fld, VZ, ix,iy,iz, p);
+  float pp  = M3(fld, PP, ix,iy,iz, p);
+
+  // each species
+  for (int s = 0; s < nr_fluids; s++) {
+    M3(fld, idx[s] + G5M_RRS,  ix,iy,iz, p) = rr   * mass_ratios[s];
+    M3(fld, idx[s] + G5M_RVXS, ix,iy,iz, p) = rvx * momentum_ratios[s];
+    M3(fld, idx[s] + G5M_RVYS, ix,iy,iz, p) = rvy * momentum_ratios[s];
+    M3(fld, idx[s] + G5M_RVZS, ix,iy,iz, p) = rvz * momentum_ratios[s];
+    M3(fld, idx[s] + G5M_UUS,  ix,iy,iz, p) = 
+      pp * pressure_ratios[s] / gamma_m1
+      + .5 * (sqr(M3(fld, idx[s] + G5M_RVXS, ix,iy,iz, p))
+          +   sqr(M3(fld, idx[s] + G5M_RVYS, ix,iy,iz, p))
+          +   sqr(M3(fld, idx[s] + G5M_RVZS, ix,iy,iz, p)))
+             / M3(fld, idx[s] + G5M_RRS, ix,iy,iz,p);
+  }
+}
+
+// pointwise conversion from primitive mhd quantities to em fields
+void
+primitive_to_gkeyll_em_fields_point(struct mrc_fld *fld, int idx_em,
+    int dx, int dy, int dz, int ix, int iy, int iz, int p)
+{
+  float vx = M3(fld, VX, ix,iy,iz, p);
+  float vy = M3(fld, VY, ix,iy,iz, p);
+  float vz = M3(fld, VZ, ix,iy,iz, p);
+
+  // staggered to cell-center B fields
+  M3(fld, idx_em + GK_BX, ix,iy,iz, p) = 
+    .5 * (M3(fld, BX, ix,iy,iz, p) + M3(fld, BX, ix+dx,iy,iz, p));
+  M3(fld, idx_em + GK_BY, ix,iy,iz, p) = 
+    .5 * (M3(fld, BY, ix,iy,iz, p) + M3(fld, BY, ix,iy+dy,iz, p));
+  M3(fld, idx_em + GK_BZ, ix,iy,iz, p) = 
+    .5 * (M3(fld, BZ, ix,iy,iz, p) + M3(fld, BZ, ix,iy,iz+dz, p));
+
+  // E=-vxB, i.e., only convection E field
+  M3(fld, idx_em + GK_EX, ix,iy,iz, p) =
+    - vy * M3(fld, idx_em + GK_BZ, ix,iy,iz, p)
+    + vz * M3(fld, idx_em + GK_BY, ix,iy,iz, p);
+  M3(fld, idx_em + GK_EY, ix,iy,iz, p) =
+    - vz * M3(fld, idx_em + GK_BX, ix,iy,iz, p)
+    + vx * M3(fld, idx_em + GK_BZ, ix,iy,iz, p);
+  M3(fld, idx_em + GK_EX, ix,iy,iz, p) =
+    - vx * M3(fld, idx_em + GK_BY, ix,iy,iz, p)
+    + vy * M3(fld, idx_em + GK_BX, ix,iy,iz, p);
+
+  // FIXME sensible correction potentials?
+  // e.g., copy ghost vals for inoutflow bnd
+  M3(fld, idx_em + GK_PHI, ix,iy,iz, p) = .0;
+  M3(fld, idx_em + GK_PSI, ix,iy,iz, p) = .0;
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_convert_primitive_gkeyll_5m_point
+//
+// pointwise conversion from primitive mhd quantities to 5m-em quantities
+
+void
+ggcm_mhd_convert_primitive_gkeyll_5m_point(struct mrc_fld *fld, int nr_fluids,
+    int idx[], float mass_ratios[], float momentum_ratios[],
+    float pressure_ratios[], float gamma_m1, int idx_em, int dx, int dy, int dz,
+    int ix, int iy, int iz, int p)
+{
+  // em fields should be calculated before V used for E=-VxB are overwritten
+  primitive_to_gkeyll_em_fields_point(fld, idx_em, dx, dy, dz, ix, iy, iz, p);
+  primitive_to_gkeyll_5m_fluids_point(fld, nr_fluids, idx, mass_ratios,
+      momentum_ratios, pressure_ratios, gamma_m1, ix, iy, iz, p);
+}
+
+static void
+ggcm_mhd_convert_gkeyll_from_primitive(struct ggcm_mhd *mhd, 
+    struct mrc_fld *fld_base)
+{
+  struct mrc_fld *fld = mrc_fld_get_as(fld_base, FLD_TYPE);
+
+  int m_beg = 0;
+
+  int nr_moments = mrc_fld_gkeyll_nr_moments(fld_base);
+  int nr_fluids = mrc_fld_gkeyll_nr_fluids(fld_base);
+
+  int idx[nr_fluids];
+  mrc_fld_gkeyll_species_index_all(fld_base, m_beg, idx);
+  int idx_em = mrc_fld_gkeyll_em_index(fld_base, m_beg);
+
+  float mass_ratios[nr_fluids];
+  float momentum_ratios[nr_fluids];
+  float pressure_ratios[nr_fluids];
+  mrc_fld_gkeyll_mass_ratios(fld_base, mass_ratios);
+  mrc_fld_gkeyll_momentum_ratios(fld_base, momentum_ratios);
+  mrc_fld_gkeyll_pressure_ratios(fld_base, pressure_ratios);
+
+  int gdims[3];
+  mrc_domain_get_global_dims(mhd->domain, gdims);
+  int dx = (gdims[0] == 1) ? 0 : 1;
+  int dy = (gdims[1] == 1) ? 0 : 1;
+  int dz = (gdims[2] == 1) ? 0 : 1;
+
+  if (nr_moments == 5) {
+    float gamma_m1 = mhd->par.gamm - 1.;
+    for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
+      mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
+        ggcm_mhd_convert_primitive_gkeyll_5m_point(fld, nr_fluids, idx,
+            mass_ratios, momentum_ratios, pressure_ratios, gamma_m1, idx_em,
+            dx,dy,dz, ix,iy,iz, p);
+      } mrc_fld_foreach_end;
+    }
+  } else if (nr_moments == 10) {
+    // TODO
+  }
+  mrc_fld_put_as(fld, fld_base);
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_convert_from_primitive
 //
 // converts from primitive variables to the appropriate fully-conservative /
@@ -124,6 +252,8 @@ ggcm_mhd_convert_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_base)
     return ggcm_mhd_convert_fc_from_primitive(mhd, fld_base);
   } else if (mhd_type == MT_SEMI_CONSERVATIVE) {
     return ggcm_mhd_convert_sc_from_primitive(mhd, fld_base);
+  } else if (mhd_type == MT_GKEYLL) {
+    return ggcm_mhd_convert_gkeyll_from_primitive(mhd, fld_base);
   } else {
     assert(0);
   }

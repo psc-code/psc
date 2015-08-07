@@ -100,3 +100,9 @@ gkeyll_em_index(int m_beg, int nr_fluids, int nr_moments);
 
 int
 mrc_fld_gkeyll_em_index(struct mrc_fld *f, int m_beg);
+
+void
+ggcm_mhd_convert_primitive_gkeyll_5m_point(struct mrc_fld *fld, int nr_fluids,
+    int idx[], float mass_ratios[], float momentum_ratios[],
+    float pressure_ratios[], float gamma_m1, int idx_em, int dx, int dy, int dz,
+    int ix, int iy, int iz, int p);
