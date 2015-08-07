@@ -147,7 +147,7 @@ cache_fields(float *flds_em, float *d_flds, int size, int *ci0)
 
 __device__ static void
 push_part_one(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
-	      real *d_flds, real *flds_em, int ci0[3])
+	      real *flds_em, int ci0[3])
 {
   LOAD_PARTICLE_POS_(*prt, d_xi4, n);
 
@@ -207,6 +207,7 @@ push_mprts_ab(float4 *d_xi4, float4 *d_pxi4,
   real *d_flds = d_flds0 + p * size;
 
   DECLARE_EM_CACHE(flds_em, d_flds, size, ci0);
+  real *flds_curr = d_flds;
 
   bid = find_bid();
   int block_begin = d_off[bid];
@@ -218,8 +219,8 @@ push_mprts_ab(float4 *d_xi4, float4 *d_pxi4,
       continue;
     }
     particle_t prt;
-    push_part_one(&prt, n, d_xi4, d_pxi4, d_flds0 + p * size, flds_em, ci0);
-    calc_j(&prt, n, d_xi4, d_pxi4, d_flds, p, bid, ci0);
+    push_part_one(&prt, n, d_xi4, d_pxi4, flds_em, ci0);
+    calc_j(flds_curr, &prt, n, d_xi4, d_pxi4, p, bid, ci0);
   }
 
 }

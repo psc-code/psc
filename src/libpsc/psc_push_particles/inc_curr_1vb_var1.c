@@ -11,8 +11,10 @@
 
 #ifdef __CUDACC__
 
+typedef real * flds_curr_t;
+
 CUDA_DEVICE static void
-curr_add(real *flds_curr, int m, int jx, int jy, int jz, real val)
+curr_add(flds_curr_t flds_curr, int m, int jx, int jy, int jz, real val)
 {
   real *addr = &F3_DEV(flds_curr, JXI+m, jx,jy,jz);
   atomicAdd(addr, val);
@@ -20,8 +22,10 @@ curr_add(real *flds_curr, int m, int jx, int jy, int jz, real val)
 
 #else
 
+typedef struct psc_fields * flds_curr_t;
+
 CUDA_DEVICE static void
-curr_add(struct psc_fields *flds_curr, int m, int jx, int jy, int jz, real val)
+curr_add(flds_curr_t flds_curr, int m, int jx, int jy, int jz, real val)
 {
   F3_CURR(flds_curr, JXI+m, jx,jy,jz) += val;
 }
@@ -86,15 +90,9 @@ calc_3d_dx1(particle_real_t dx1[3], particle_real_t x[3], particle_real_t dx[3],
 // ----------------------------------------------------------------------
 // curr_3d_vb_cell
 
-#ifdef __CUDACC__
 CUDA_DEVICE static void
-curr_3d_vb_cell(real *flds_curr, int i[3], particle_real_t x[3], particle_real_t dx[3],
+curr_3d_vb_cell(flds_curr_t flds_curr, int i[3], particle_real_t x[3], particle_real_t dx[3],
 		particle_real_t qni_wni)
-#else
-CUDA_DEVICE static inline void
-curr_3d_vb_cell(struct psc_fields *flds_curr, int i[3], particle_real_t x[3], particle_real_t dx[3],
-		particle_real_t qni_wni)
-#endif
 {
   real xa[3] = { 0.,
 		 x[1] + .5f * dx[1],
@@ -150,12 +148,12 @@ curr_3d_vb_cell_upd(int i[3], particle_real_t x[3], particle_real_t dx1[3],
 #ifdef __CUDACC__
 
 CUDA_DEVICE static void
-calc_j(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
-       real *flds_curr, int p_nr, int bid, int *ci0)
+calc_j(flds_curr_t flds_curr, particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
+       int p_nr, int bid, int *ci0)
 
 #else
 CUDA_DEVICE static inline void
-calc_j(struct psc_fields *flds_curr, particle_real_t *xm, particle_real_t *xp,
+calc_j(flds_curr_t flds_curr, particle_real_t *xm, particle_real_t *xp,
        int *lf, int *lg, particle_t *prt, particle_real_t *vxi)
 #endif
 
@@ -264,8 +262,8 @@ calc_j(struct psc_fields *flds_curr, particle_real_t *xm, particle_real_t *xp,
 #ifdef __CUDACC__
 
 CUDA_DEVICE static void
-calc_j(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
-       real *d_flds, int p_nr, int bid, int *ci0)
+calc_j(flds_curr_t flds_curr, particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
+       int p_nr, int bid, int *ci0)
 {
   real vxi[3];
   calc_vxi(vxi, prt);
