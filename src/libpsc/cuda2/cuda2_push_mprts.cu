@@ -83,9 +83,10 @@
 
 
 // ----------------------------------------------------------------------
-// current deposition
 
 #include "../psc_push_particles/inc_curr.c"
+
+// ----------------------------------------------------------------------
 
 #undef THREADS_PER_BLOCK
 #define THREADS_PER_BLOCK (512)
@@ -143,11 +144,11 @@ cache_fields(float *flds_em, float *d_flds, int size, int *ci0)
 #endif
 
 // ----------------------------------------------------------------------
-// push_part_one
+// push_one
 
 __device__ static void
-push_part_one(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
-	      real *flds_em, int ci0[3])
+push_one(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
+	 real *flds_em, flds_curr_t flds_curr, int ci0[3])
 {
   LOAD_PARTICLE_POS_(*prt, d_xi4, n);
 
@@ -166,7 +167,17 @@ push_part_one(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
   real dq = prm.dq_kind[kind];
   push_pxi(prt, exq, eyq, ezq, hxq, hyq, hzq, dq);
   STORE_PARTICLE_MOM_(*prt, d_pxi4, n);
+
+  real vxi[3];
+  calc_vxi(vxi, prt);
+
+  calc_j(flds_curr, prt, n, d_xi4, d_pxi4, vxi);
 }
+
+#include "../psc_push_particles/inc_step.c"
+
+// ----------------------------------------------------------------------
+// find_block_pos_patch
 
 __device__ static int
 find_block_pos_patch(int *block_pos, int *ci0)
@@ -184,15 +195,14 @@ find_block_pos_patch(int *block_pos, int *ci0)
   return blockIdx.z / prm.b_mx[2];
 }
 
+// ----------------------------------------------------------------------
+// find_bid
+
 __device__ static int
 find_bid()
 {
   return (blockIdx.z * prm.b_mx[1] + blockIdx.y) * prm.b_mx[0] + blockIdx.x;
 }
-
-// ======================================================================
-// depositing current
-
 
 // ======================================================================
 
@@ -218,9 +228,7 @@ push_mprts_ab(float4 *d_xi4, float4 *d_pxi4,
     if (n < block_begin) {
       continue;
     }
-    particle_t prt;
-    push_part_one(&prt, n, d_xi4, d_pxi4, flds_em, ci0);
-    calc_j(flds_curr, &prt, n, d_xi4, d_pxi4, p, bid, ci0);
+    push_one_mprts(d_xi4, d_pxi4, n, flds_em, flds_curr, ci0);
   }
 
 }

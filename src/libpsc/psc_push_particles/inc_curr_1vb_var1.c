@@ -148,8 +148,8 @@ curr_3d_vb_cell_upd(int i[3], particle_real_t x[3], particle_real_t dx1[3],
 #ifdef __CUDACC__
 
 CUDA_DEVICE static void
-calc_j(flds_curr_t flds_curr, particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
-       int p_nr, int bid, int *ci0)
+calc_j(flds_curr_t flds_curr, particle_t *prt,
+       int n, float4 *d_xi4, float4 *d_pxi4, particle_real_t *vxi)
 
 #else
 CUDA_DEVICE static inline void
@@ -159,9 +159,6 @@ calc_j(flds_curr_t flds_curr, particle_real_t *xm, particle_real_t *xp,
 
 {
 #ifdef __CUDACC__
-  real vxi[3];
-  calc_vxi(vxi, prt);
-
   // position xm at x^(n+.5)
   real h0[3], h1[3];
   real xm[3], xp[3];
@@ -262,12 +259,9 @@ calc_j(flds_curr_t flds_curr, particle_real_t *xm, particle_real_t *xp,
 #ifdef __CUDACC__
 
 CUDA_DEVICE static void
-calc_j(flds_curr_t flds_curr, particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
-       int p_nr, int bid, int *ci0)
+calc_j(flds_curr_t flds_curr, particle_t *prt,
+       int n, float4 *d_xi4, float4 *d_pxi4, particle_real_t *vxi)
 {
-  real vxi[3];
-  calc_vxi(vxi, prt);
-
   // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
   push_xi(prt, vxi, prm.dt);
   STORE_PARTICLE_POS_(*prt, d_xi4, n);
