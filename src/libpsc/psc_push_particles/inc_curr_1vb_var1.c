@@ -87,63 +87,46 @@ calc_3d_dx1(particle_real_t dx1[3], particle_real_t x[3], particle_real_t dx[3],
 // curr_3d_vb_cell
 
 #ifdef __CUDACC__
-
-// ----------------------------------------------------------------------
-// curr_3d_vb_cell
-
 CUDA_DEVICE static void
 curr_3d_vb_cell(real *flds_curr, int i[3], particle_real_t x[3], particle_real_t dx[3],
 		particle_real_t qni_wni)
+#else
+CUDA_DEVICE static inline void
+curr_3d_vb_cell(struct psc_fields *flds_curr, int i[3], particle_real_t x[3], particle_real_t dx[3],
+		particle_real_t qni_wni)
+#endif
 {
   real xa[3] = { 0.,
 		 x[1] + .5f * dx[1],
 		 x[2] + .5f * dx[2], };
-  if (dx[0] != 0.f) {
-    real fnqx = qni_wni * prm.fnqxs;
-    real h = (1.f / 12.f) * dx[0] * dx[1] * dx[2];
-    curr_add(flds_curr, 0, 0,i[1]  ,i[2]  , fnqx * (dx[0] * (.5f - xa[1]) * (.5f - xa[2]) + h));
-    curr_add(flds_curr, 0, 0,i[1]+1,i[2]  , fnqx * (dx[0] * (.5f + xa[1]) * (.5f - xa[2]) - h));
-    curr_add(flds_curr, 0, 0,i[1]  ,i[2]+1, fnqx * (dx[0] * (.5f - xa[1]) * (.5f + xa[2]) + h));
-    curr_add(flds_curr, 0, 0,i[1]+1,i[2]+1, fnqx * (dx[0] * (.5f + xa[1]) * (.5f + xa[2]) - h));
-  }
-  if (dx[1] != 0.f) {
-    real fnqy = qni_wni * prm.fnqys;
-    curr_add(flds_curr, 1, 0,i[1],i[2]  , fnqy * dx[1] * (.5f - xa[2]));
-    curr_add(flds_curr, 1, 0,i[1],i[2]+1, fnqy * dx[1] * (.5f + xa[2]));
-  }
-  if (dx[2] != 0.f) {
-    real fnqz = qni_wni * prm.fnqzs;
-    curr_add(flds_curr, 2, 0,i[1]  ,i[2], fnqz * dx[2] * (.5f - xa[1]));
-    curr_add(flds_curr, 2, 0,i[1]+1,i[2], fnqz * dx[2] * (.5f + xa[1]));
-  }
-}
-
-#else
-
-CUDA_DEVICE static inline void
-curr_3d_vb_cell(struct psc_fields *flds_curr, int i[3], particle_real_t x[3], particle_real_t dx[3],
-		particle_real_t qni_wni)
-{
-  particle_real_t xa[3] = { 0.,
-			    x[1] + .5f * dx[1],
-			    x[2] + .5f * dx[2], };
-  real fnqx = qni_wni * prm.fnqxs;
-  particle_real_t h = (1.f/12.f) * dx[0] * dx[1] * dx[2];
-  curr_add(flds_curr, JXI, 0,i[1]  ,i[2]  , fnqx * (dx[0] * (.5f - xa[1]) * (.5f - xa[2]) + h));
-  curr_add(flds_curr, JXI, 0,i[1]+1,i[2]  , fnqx * (dx[0] * (.5f + xa[1]) * (.5f - xa[2]) - h));
-  curr_add(flds_curr, JXI, 0,i[1]  ,i[2]+1, fnqx * (dx[0] * (.5f - xa[1]) * (.5f + xa[2]) + h));
-  curr_add(flds_curr, JXI, 0,i[1]+1,i[2]+1, fnqx * (dx[0] * (.5f + xa[1]) * (.5f + xa[2]) - h));
-
-  real fnqy = qni_wni * prm.fnqys;
-  curr_add(flds_curr, JYI, 0,i[1]  ,i[2]  , fnqy * dx[1] * (.5f - xa[2]));
-  curr_add(flds_curr, JYI, 0,i[1]  ,i[2]+1, fnqy * dx[1] * (.5f + xa[2]));
-
-  real fnqz = qni_wni * prm.fnqzs;
-  curr_add(flds_curr, JZI, 0,i[1]  ,i[2]  , fnqz * dx[2] * (.5f - xa[1]));
-  curr_add(flds_curr, JZI, 0,i[1]+1,i[2]  , fnqz * dx[2] * (.5f + xa[1]));
-}
-
+#ifdef __CUDACC__
+  if (dx[0] != 0.f)
 #endif
+    {
+      real fnqx = qni_wni * prm.fnqxs;
+      real h = (1.f / 12.f) * dx[0] * dx[1] * dx[2];
+      curr_add(flds_curr, 0, 0,i[1]  ,i[2]  , fnqx * (dx[0] * (.5f - xa[1]) * (.5f - xa[2]) + h));
+      curr_add(flds_curr, 0, 0,i[1]+1,i[2]  , fnqx * (dx[0] * (.5f + xa[1]) * (.5f - xa[2]) - h));
+      curr_add(flds_curr, 0, 0,i[1]  ,i[2]+1, fnqx * (dx[0] * (.5f - xa[1]) * (.5f + xa[2]) + h));
+      curr_add(flds_curr, 0, 0,i[1]+1,i[2]+1, fnqx * (dx[0] * (.5f + xa[1]) * (.5f + xa[2]) - h));
+    }
+#ifdef __CUDACC__
+  if (dx[1] != 0.f)
+#endif
+    {
+      real fnqy = qni_wni * prm.fnqys;
+      curr_add(flds_curr, 1, 0,i[1],i[2]  , fnqy * dx[1] * (.5f - xa[2]));
+      curr_add(flds_curr, 1, 0,i[1],i[2]+1, fnqy * dx[1] * (.5f + xa[2]));
+    }
+#ifdef __CUDACC__
+  if (dx[2] != 0.f)
+#endif
+    {
+      real fnqz = qni_wni * prm.fnqzs;
+      curr_add(flds_curr, 2, 0,i[1]  ,i[2], fnqz * dx[2] * (.5f - xa[1]));
+      curr_add(flds_curr, 2, 0,i[1]+1,i[2], fnqz * dx[2] * (.5f + xa[1]));
+    }
+}
 
 // ----------------------------------------------------------------------
 // curr_3d_vb_cell_upd
