@@ -7,6 +7,28 @@
 // but also definitely more complex
 
 // ----------------------------------------------------------------------
+// curr_add
+
+#ifdef __CUDACC__
+
+CUDA_DEVICE static void
+curr_add(real *flds_curr, int m, int jx, int jy, int jz, real val)
+{
+  real *addr = &F3_DEV(flds_curr, JXI+m, jx,jy,jz);
+  atomicAdd(addr, val);
+}
+
+#else
+
+CUDA_DEVICE static void
+curr_add(struct psc_fields *flds_curr, int m, int jx, int jy, int jz, real val)
+{
+  F3_CURR(flds_curr, JXI+m, jx,jy,jz) += val;
+}
+
+#endif
+
+// ----------------------------------------------------------------------
 // calc_3d_dx1
 
 #if DIM == DIM_YZ
@@ -70,8 +92,8 @@ calc_3d_dx1(particle_real_t dx1[3], particle_real_t x[3], particle_real_t dx[3],
 // curr_3d_vb_cell
 
 CUDA_DEVICE static void
-curr_3d_vb_cell(real *d_flds, int i[3], real x[3], real dx[3], real qni_wni,
-		int *ci0)
+curr_3d_vb_cell(real *flds_curr, int i[3], particle_real_t x[3], particle_real_t dx[3],
+		particle_real_t qni_wni)
 {
   real xa[3] = { 0.,
 		 x[1] + .5f * dx[1],
@@ -79,43 +101,46 @@ curr_3d_vb_cell(real *d_flds, int i[3], real x[3], real dx[3], real qni_wni,
   if (dx[0] != 0.f) {
     real fnqx = qni_wni * prm.fnqxs;
     real h = (1.f / 12.f) * dx[0] * dx[1] * dx[2];
-    curr_add(d_flds, 0, 0,i[1]  ,i[2]  , fnqx * (dx[0] * (.5f - xa[1]) * (.5f - xa[2]) + h), ci0);
-    curr_add(d_flds, 0, 0,i[1]+1,i[2]  , fnqx * (dx[0] * (.5f + xa[1]) * (.5f - xa[2]) - h), ci0);
-    curr_add(d_flds, 0, 0,i[1]  ,i[2]+1, fnqx * (dx[0] * (.5f - xa[1]) * (.5f + xa[2]) + h), ci0);
-    curr_add(d_flds, 0, 0,i[1]+1,i[2]+1, fnqx * (dx[0] * (.5f + xa[1]) * (.5f + xa[2]) - h), ci0);
+    curr_add(flds_curr, 0, 0,i[1]  ,i[2]  , fnqx * (dx[0] * (.5f - xa[1]) * (.5f - xa[2]) + h));
+    curr_add(flds_curr, 0, 0,i[1]+1,i[2]  , fnqx * (dx[0] * (.5f + xa[1]) * (.5f - xa[2]) - h));
+    curr_add(flds_curr, 0, 0,i[1]  ,i[2]+1, fnqx * (dx[0] * (.5f - xa[1]) * (.5f + xa[2]) + h));
+    curr_add(flds_curr, 0, 0,i[1]+1,i[2]+1, fnqx * (dx[0] * (.5f + xa[1]) * (.5f + xa[2]) - h));
   }
   if (dx[1] != 0.f) {
     real fnqy = qni_wni * prm.fnqys;
-    curr_add(d_flds, 1, 0,i[1],i[2]  , fnqy * dx[1] * (.5f - xa[2]), ci0);
-    curr_add(d_flds, 1, 0,i[1],i[2]+1, fnqy * dx[1] * (.5f + xa[2]), ci0);
+    curr_add(flds_curr, 1, 0,i[1],i[2]  , fnqy * dx[1] * (.5f - xa[2]));
+    curr_add(flds_curr, 1, 0,i[1],i[2]+1, fnqy * dx[1] * (.5f + xa[2]));
   }
   if (dx[2] != 0.f) {
     real fnqz = qni_wni * prm.fnqzs;
-    curr_add(d_flds, 2, 0,i[1]  ,i[2], fnqz * dx[2] * (.5f - xa[1]), ci0);
-    curr_add(d_flds, 2, 0,i[1]+1,i[2], fnqz * dx[2] * (.5f + xa[1]), ci0);
+    curr_add(flds_curr, 2, 0,i[1]  ,i[2], fnqz * dx[2] * (.5f - xa[1]));
+    curr_add(flds_curr, 2, 0,i[1]+1,i[2], fnqz * dx[2] * (.5f + xa[1]));
   }
 }
 
 #else
 
 CUDA_DEVICE static inline void
-curr_3d_vb_cell(struct psc_fields *flds, int i[3], particle_real_t x[3], particle_real_t dx[3],
-		particle_real_t fnq[3])
+curr_3d_vb_cell(struct psc_fields *flds_curr, int i[3], particle_real_t x[3], particle_real_t dx[3],
+		particle_real_t qni_wni)
 {
-  particle_real_t h = (1.f/12.f) * dx[0] * dx[1] * dx[2];
   particle_real_t xa[3] = { 0.,
 			    x[1] + .5f * dx[1],
 			    x[2] + .5f * dx[2], };
-  F3_CURR(flds, JXI, 0,i[1]  ,i[2]  ) += fnq[0] * (dx[0] * (.5f - xa[1]) * (.5f - xa[2]) + h);
-  F3_CURR(flds, JXI, 0,i[1]+1,i[2]  ) += fnq[0] * (dx[0] * (.5f + xa[1]) * (.5f - xa[2]) - h);
-  F3_CURR(flds, JXI, 0,i[1]  ,i[2]+1) += fnq[0] * (dx[0] * (.5f - xa[1]) * (.5f + xa[2]) + h);
-  F3_CURR(flds, JXI, 0,i[1]+1,i[2]+1) += fnq[0] * (dx[0] * (.5f + xa[1]) * (.5f + xa[2]) - h);
+  real fnqx = qni_wni * prm.fnqxs;
+  particle_real_t h = (1.f/12.f) * dx[0] * dx[1] * dx[2];
+  curr_add(flds_curr, JXI, 0,i[1]  ,i[2]  , fnqx * (dx[0] * (.5f - xa[1]) * (.5f - xa[2]) + h));
+  curr_add(flds_curr, JXI, 0,i[1]+1,i[2]  , fnqx * (dx[0] * (.5f + xa[1]) * (.5f - xa[2]) - h));
+  curr_add(flds_curr, JXI, 0,i[1]  ,i[2]+1, fnqx * (dx[0] * (.5f - xa[1]) * (.5f + xa[2]) + h));
+  curr_add(flds_curr, JXI, 0,i[1]+1,i[2]+1, fnqx * (dx[0] * (.5f + xa[1]) * (.5f + xa[2]) - h));
 
-  F3_CURR(flds, JYI, 0,i[1]  ,i[2]  ) += fnq[1] * dx[1] * (.5f - xa[2]);
-  F3_CURR(flds, JYI, 0,i[1]  ,i[2]+1) += fnq[1] * dx[1] * (.5f + xa[2]);
+  real fnqy = qni_wni * prm.fnqys;
+  curr_add(flds_curr, JYI, 0,i[1]  ,i[2]  , fnqy * dx[1] * (.5f - xa[2]));
+  curr_add(flds_curr, JYI, 0,i[1]  ,i[2]+1, fnqy * dx[1] * (.5f + xa[2]));
 
-  F3_CURR(flds, JZI, 0,i[1]  ,i[2]  ) += fnq[2] * dx[2] * (.5f - xa[1]);
-  F3_CURR(flds, JZI, 0,i[1]+1,i[2]  ) += fnq[2] * dx[2] * (.5f + xa[1]);
+  real fnqz = qni_wni * prm.fnqzs;
+  curr_add(flds_curr, JZI, 0,i[1]  ,i[2]  , fnqz * dx[2] * (.5f - xa[1]));
+  curr_add(flds_curr, JZI, 0,i[1]+1,i[2]  , fnqz * dx[2] * (.5f + xa[1]));
 }
 
 #endif
@@ -143,56 +168,48 @@ curr_3d_vb_cell_upd(int i[3], particle_real_t x[3], particle_real_t dx1[3],
 
 CUDA_DEVICE static void
 calc_j(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
-       real *d_flds, int p_nr, int bid, int *ci0)
+       real *flds_curr, int p_nr, int bid, int *ci0)
+
+#else
+CUDA_DEVICE static inline void
+calc_j(struct psc_fields *flds_curr, particle_real_t *xm, particle_real_t *xp,
+       int *lf, int *lg, particle_t *prt, particle_real_t *vxi)
+#endif
+
 {
+#ifdef __CUDACC__
   real vxi[3];
   calc_vxi(vxi, prt);
 
   // position xm at x^(n+.5)
   real h0[3], h1[3];
   real xm[3], xp[3];
-  int j[3], k[3];
+  int lg[3], lf[3];
   
-  find_idx_off_pos_1st_rel(prt->xi, j, h0, xm, real(0.));
+  find_idx_off_pos_1st_rel(prt->xi, lg, h0, xm, real(0.));
 
   // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
   push_xi(prt, vxi, prm.dt);
   STORE_PARTICLE_POS_(*prt, d_xi4, n);
 
-#if 0
-  // save block_idx for new particle position at x^(n+1.5)
-  unsigned int block_pos_y = __float2int_rd(prt->xi[1] * prm.b_dxi[1]);
-  unsigned int block_pos_z = __float2int_rd(prt->xi[2] * prm.b_dxi[2]);
-  int nr_blocks = prm.b_mx[1] * prm.b_mx[2];
-
-  int block_idx;
-  if (block_pos_y >= prm.b_mx[1] || block_pos_z >= prm.b_mx[2]) {
-    block_idx = CUDA_BND_S_OOB;
-  } else {
-    int bidx = block_pos_z * prm.b_mx[1] + block_pos_y + p_nr * nr_blocks;
-    int b_diff = bid - bidx + prm.b_mx[1] + 1;
-    int d1 = b_diff % prm.b_mx[1];
-    int d2 = b_diff / prm.b_mx[1];
-    block_idx = d2 * 3 + d1;
-  }
-  d_bidx[n] = block_idx;
+  // position xp at x^(n+.5)
+  find_idx_off_pos_1st_rel(prt->xi, lf, h1, xp, real(0.));
 #endif
 
-  // position xp at x^(n+.5)
-  find_idx_off_pos_1st_rel(prt->xi, k, h1, xp, real(0.));
-
   // deposit xm -> xp
-  int idiff[3] = { 0, k[1] - j[1], k[2] - j[2] };
-  int i[3] = { 0, j[1], j[2] };
-  real x[3] = { 0.f, xm[1] - j[1] - real(.5), xm[2] - j[2] - real(.5) };
-  //real dx[3] = { 0.f, xp[1] - xm[1], xp[2] - xm[2] };
-  real dx[3] = { vxi[0] * prm.dt * prm.dxi[0], xp[1] - xm[1], xp[2] - xm[2] };
-  
+  int idiff[3] = { 0, lf[1] - lg[1], lf[2] - lg[2] };			
+  int i[3] = { 0, lg[1], lg[2] };					
+  particle_real_t dx[3] = { vxi[0] * prm.dt * prm.dxi[0], xp[1] - xm[1], xp[2] - xm[2] };
+  particle_real_t x[3] = { 0., xm[1] - (i[1] + .5f), xm[2] - (i[2] + .5f) }; 
+
+  particle_real_t dx1[3];
+  int off[3];
+#ifdef __CUDACC__
+
   real x1 = x[1] * idiff[1];
   real x2 = x[2] * idiff[2];
   int d_first = (abs(dx[2]) * (.5f - x1) >= abs(dx[1]) * (.5f - x2));
 
-  int off[3];
   if (d_first == 0) {
     off[1] = idiff[1];
     off[2] = 0;
@@ -201,33 +218,19 @@ calc_j(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
     off[2] = idiff[2];
   }
 
-  real dx1[3];
   calc_3d_dx1(dx1, x, dx, off);
-  curr_3d_vb_cell(d_flds, i, x, dx1, prt->qni_wni, ci0);
+  curr_3d_vb_cell(flds_curr, i, x, dx1, prt->qni_wni);
   curr_3d_vb_cell_upd(i, x, dx1, dx, off);
   
   off[1] = idiff[1] - off[1];
   off[2] = idiff[2] - off[2];
   calc_3d_dx1(dx1, x, dx, off);
-  curr_3d_vb_cell(d_flds, i, x, dx1, prt->qni_wni, ci0);
+  curr_3d_vb_cell(flds_curr, i, x, dx1, prt->qni_wni);
   curr_3d_vb_cell_upd(i, x, dx1, dx, off);
     
-  curr_3d_vb_cell(d_flds, i, x, dx, prt->qni_wni, ci0);
-}
+  curr_3d_vb_cell(flds_curr, i, x, dx, prt->qni_wni);
 
 #else
-
-CUDA_DEVICE static inline void
-calc_j(struct psc_fields *flds, particle_real_t *xm, particle_real_t *xp,
-       int *lf, int *lg, particle_t *prt, particle_real_t *vxi)
-{
-  int i[3] = { 0, lg[1], lg[2] };					
-  int idiff[3] = { 0, lf[1] - lg[1], lf[2] - lg[2] };			
-  particle_real_t dx[3] = { 0., xp[1] - xm[1], xp[2] - xm[2] };		
-  particle_real_t x[3] = { 0., xm[1] - (i[1] + .5f), xm[2] - (i[2] + .5f) }; 
-  									
-  particle_real_t dx1[3];
-  int off[3];
   int first_dir, second_dir = -1;
   /* FIXME, make sure we never div-by-zero? */
   if (idiff[1] == 0 && idiff[2] == 0) {
@@ -250,15 +253,13 @@ calc_j(struct psc_fields *flds, particle_real_t *xm, particle_real_t *xp,
     }
     second_dir = 3 - first_dir;
   }
-  particle_real_t fnq[3] = { particle_qni_wni(prt) * prm.fnqxs,
-			     particle_qni_wni(prt) * prm.fnqys,
-			     particle_qni_wni(prt) * prm.fnqzs };
-  dx[0] = vxi[0] * prm.dt * prm.dxi[0];
+  particle_real_t qni_wni = particle_qni_wni(prt);
+
   if (first_dir >= 0) {
     off[3 - first_dir] = 0;
     off[first_dir] = idiff[first_dir];
     calc_3d_dx1(dx1, x, dx, off);
-    curr_3d_vb_cell(flds, i, x, dx1, fnq);
+    curr_3d_vb_cell(flds_curr, i, x, dx1, qni_wni);
     curr_3d_vb_cell_upd(i, x, dx1, dx, off);
   }
 
@@ -266,14 +267,14 @@ calc_j(struct psc_fields *flds, particle_real_t *xm, particle_real_t *xp,
     off[first_dir] = 0;
     off[second_dir] = idiff[second_dir];
     calc_3d_dx1(dx1, x, dx, off);
-    curr_3d_vb_cell(flds, i, x, dx1, fnq);
+    curr_3d_vb_cell(flds_curr, i, x, dx1, qni_wni);
     curr_3d_vb_cell_upd(i, x, dx1, dx, off);
   }
 
-  curr_3d_vb_cell(flds, i, x, dx, fnq);
+  curr_3d_vb_cell(flds_curr, i, x, dx, qni_wni);
+#endif
 }
 
-#endif
 
 #elif DIM == DIM_XYZ
 
@@ -296,4 +297,26 @@ calc_j(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 #endif
 
 #endif // DIM
+
+// ======================================================================
+// TBD: piece to save block_idx as we go for following sort
+
+#if 0
+  // save block_idx for new particle position at x^(n+1.5)
+  unsigned int block_pos_y = __float2int_rd(prt->xi[1] * prm.b_dxi[1]);
+  unsigned int block_pos_z = __float2int_rd(prt->xi[2] * prm.b_dxi[2]);
+  int nr_blocks = prm.b_mx[1] * prm.b_mx[2];
+
+  int block_idx;
+  if (block_pos_y >= prm.b_mx[1] || block_pos_z >= prm.b_mx[2]) {
+    block_idx = CUDA_BND_S_OOB;
+  } else {
+    int bidx = block_pos_z * prm.b_mx[1] + block_pos_y + p_nr * nr_blocks;
+    int b_diff = bid - bidx + prm.b_mx[1] + 1;
+    int d1 = b_diff % prm.b_mx[1];
+    int d2 = b_diff / prm.b_mx[1];
+    block_idx = d2 * 3 + d1;
+  }
+  d_bidx[n] = block_idx;
+#endif
 

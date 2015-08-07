@@ -85,13 +85,6 @@
 // ----------------------------------------------------------------------
 // current deposition
 
-__device__ static void
-curr_add(real *d_flds, int m, int jx, int jy, int jz, real val, int *ci0)
-{
-  float *addr = &F3_DEV(d_flds, JXI+m, jx,jy,jz);
-  atomicAdd(addr, val);
-}
-
 #include "../psc_push_particles/inc_curr.c"
 
 #undef THREADS_PER_BLOCK
