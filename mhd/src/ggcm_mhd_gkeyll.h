@@ -74,6 +74,9 @@ mrc_fld_gkeyll_set_momentum_ratios(struct mrc_fld *f, float momentum_ratios[]);
 void
 mrc_fld_gkeyll_set_pressure_ratios(struct mrc_fld *f, float pressure_ratios[]);
 
+void
+mrc_fld_gkeyll_copy_properties(struct mrc_fld *f, struct mrc_fld *f_base);
+
 int
 mrc_fld_gkeyll_electron_index_two_fluids(struct mrc_fld *f, int m_beg);
 

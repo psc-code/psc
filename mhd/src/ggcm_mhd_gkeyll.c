@@ -113,6 +113,30 @@ mrc_fld_gkeyll_set_pressure_ratios(struct mrc_fld *f, float pressure_ratios[])
 }
 
 // ----------------------------------------------------------------------
+// mrc_fld_gkeyll_copy_properties
+
+void
+mrc_fld_gkeyll_copy_properties(struct mrc_fld *f, struct mrc_fld *f_base)
+{
+  int nr_fluids = mrc_fld_gkeyll_nr_fluids(f_base);
+  int nr_moments = mrc_fld_gkeyll_nr_moments(f_base);
+
+  mrc_fld_dict_add_int(f, "nr_fluids", nr_fluids);
+  mrc_fld_dict_add_int(f, "nr_moments", nr_moments);
+
+  float mass_ratios[nr_fluids];
+  float momentum_ratios[nr_fluids];
+  float pressure_ratios[nr_fluids];
+  mrc_fld_gkeyll_mass_ratios(f_base, mass_ratios);
+  mrc_fld_gkeyll_momentum_ratios(f_base, momentum_ratios);
+  mrc_fld_gkeyll_pressure_ratios(f_base, pressure_ratios);
+
+  mrc_fld_gkeyll_set_mass_ratios(f, mass_ratios);
+  mrc_fld_gkeyll_set_momentum_ratios(f, momentum_ratios);
+  mrc_fld_gkeyll_set_pressure_ratios(f, pressure_ratios);
+}
+
+// ----------------------------------------------------------------------
 // mrc_fld_gkeyll_electron_index_two_fluids
 //
 // first index of the electron moments for a two-fluid case
