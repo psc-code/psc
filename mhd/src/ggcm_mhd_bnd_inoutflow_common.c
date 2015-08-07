@@ -168,7 +168,6 @@ bnd_sw(struct ggcm_mhd_bnd *bnd, int ix, int iy, int iz, int p, float bn[SW_NR],
 
     ggcm_mhd_bndsw_at(bndsw, bntim, xx, bn);
   } else {
-    assert(MT != MT_GKEYLL);
     for (int m = 0; m < SW_NR; m++) {
       bn[m] = sub->bnvals[m];
     }
@@ -326,40 +325,55 @@ obndra_gkeyll_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, floa
   int swx = sw[0], swy = sw[1], swz = sw[2];
   int my = dims[1], mz = dims[2];
 
-  // TODO: confirm bndsw is constant_5m or 10m
+  int nr_moments = mrc_fld_gkeyll_nr_moments(f);
+  int nr_fluids = mrc_fld_gkeyll_nr_fluids(f);
+
+  int idx[nr_fluids];
+  mrc_fld_gkeyll_species_index_all(f, mm, idx);
+  int idx_em = mrc_fld_gkeyll_em_index(f, mm);
+
+  float mass_ratios[nr_fluids];
+  float momentum_ratios[nr_fluids];
+  float pressure_ratios[nr_fluids];
+  mrc_fld_gkeyll_mass_ratios(f, mass_ratios);
+  mrc_fld_gkeyll_momentum_ratios(f, momentum_ratios);
+  mrc_fld_gkeyll_pressure_ratios(f, pressure_ratios);
+
+  int gdims[3];
+  mrc_domain_get_global_dims(mhd->domain, gdims);
+  int dx = (gdims[0] == 1) ? 0 : 1;
+  int dy = (gdims[1] == 1) ? 0 : 1;
+  int dz = (gdims[2] == 1) ? 0 : 1;
+
   for (int iz = -swz; iz < mz + swz; iz++) {
     for (int iy = -swy; iy < my + swy; iy++) {
       for (int ix = -swx; ix < 0; ix++) {
-	float bn[SW5_NR];
+	float bn[SW_NR];
 	bnd_sw(bnd, ix, iy, iz, p, bn, bntim);
 	
-	float vvbn  = sqr(bn[SW5_VXE]) + sqr(bn[SW5_VYE]) + sqr(bn[SW5_VZE]);
-	float uubn  = .5f * (bn[SW5_RRE]*vvbn) + bn[SW5_PPE] / (mhd->par.gamm - 1.f);
-	M3(f, mm + G5M_RRE , ix,iy,iz, p) = bn[SW5_RRE];
-	M3(f, mm + G5M_RVXE, ix,iy,iz, p) = bn[SW5_RRE] * bn[SW5_VXE];
-	M3(f, mm + G5M_RVYE, ix,iy,iz, p) = bn[SW5_RRE] * bn[SW5_VYE];
-	M3(f, mm + G5M_RVZE, ix,iy,iz, p) = bn[SW5_RRE] * bn[SW5_VZE];
-	M3(f, mm + G5M_UUE , ix,iy,iz, p) = uubn;
+	float vvbn  = sqr(bn[SW_VX]) + sqr(bn[SW_VY]) + sqr(bn[SW_VZ]);
+	float uubn  = .5f * (bn[SW_RR]*vvbn) + bn[SW_PP] / (mhd->par.gamm - 1.f);
 	
-	vvbn  = sqr(bn[SW5_VXI]) + sqr(bn[SW5_VYI]) + sqr(bn[SW5_VZI]);
-	uubn  = .5f * (bn[SW5_RRI]*vvbn) + bn[SW5_PPI] / (mhd->par.gamm - 1.f);
-	M3(f, mm + G5M_RRI , ix,iy,iz, p) = bn[SW5_RRI];
-	M3(f, mm + G5M_RVXI, ix,iy,iz, p) = bn[SW5_RRI] * bn[SW5_VXI];
-	M3(f, mm + G5M_RVYI, ix,iy,iz, p) = bn[SW5_RRI] * bn[SW5_VYI];
-	M3(f, mm + G5M_RVZI, ix,iy,iz, p) = bn[SW5_RRI] * bn[SW5_VZI];
-	M3(f, mm + G5M_UUI , ix,iy,iz, p) = uubn;
-	
-	M3(f, mm + G5M_EX , ix,iy,iz, p) = bn[SW5_EX];
-	M3(f, mm + G5M_EY , ix,iy,iz, p) = bn[SW5_EY];
-	M3(f, mm + G5M_EZ , ix,iy,iz, p) = bn[SW5_EZ];
-	
-	M3(f, mm + G5M_BX , ix,iy,iz, p) = bn[SW5_BX];
-	M3(f, mm + G5M_BY , ix,iy,iz, p) = bn[SW5_BY];
-	M3(f, mm + G5M_BZ , ix,iy,iz, p) = bn[SW5_BZ];
-	
-	// copy b.c. for correction potentials
-	M3(f, mm + G5M_PHI, ix,iy,iz, p) = M3(f, mm + G5M_PHI, ix+1,iy,iz, p);
-	M3(f, mm + G5M_PSI, ix,iy,iz, p) = M3(f, mm + G5M_PSI, ix+1,iy,iz, p);
+	M3(f, mm + RR , ix,iy,iz, p) = bn[SW_RR];
+	M3(f, mm + RVX, ix,iy,iz, p) = bn[SW_RR] * bn[SW_VX];
+	M3(f, mm + RVY, ix,iy,iz, p) = bn[SW_RR] * bn[SW_VY];
+	M3(f, mm + RVZ, ix,iy,iz, p) = bn[SW_RR] * bn[SW_VZ];
+	M3(f, mm + UU , ix,iy,iz, p) = uubn;
+
+	M3(f, mm + BX , ix,iy,iz, p) = bn[SW_BX];
+	M3(f, mm + BY , ix,iy,iz, p) = bn[SW_BY];
+	M3(f, mm + BZ , ix,iy,iz, p) = bn[SW_BZ];
+
+        if (nr_moments == 5) {
+          float gamma_m1 = mhd->par.gamm - 1.;
+          ggcm_mhd_convert_primitive_gkeyll_5m_point(f, nr_fluids, idx,
+              mass_ratios, momentum_ratios, pressure_ratios, gamma_m1, idx_em,
+              dx,dy,dz, ix,iy,iz, p);
+        } else if (nr_moments == 10) {
+          // TODO
+        } else {
+          assert(false);
+        }
       }
     }
   }
@@ -558,6 +572,7 @@ ggcm_mhd_bnd_sub_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld,
 
   struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
   if (MT == MT_GKEYLL) {
+    mrc_fld_gkeyll_copy_properties(f, fld);
     obndra_gkeyll(bnd, f, m, bntim);
   } else {
     obndra_mhd(bnd, f, m, bntim);
