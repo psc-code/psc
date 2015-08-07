@@ -145,35 +145,11 @@ curr_3d_vb_cell_upd(int i[3], particle_real_t x[3], particle_real_t dx1[3],
 // ----------------------------------------------------------------------
 // calc_j
 
-#ifdef __CUDACC__
-
 CUDA_DEVICE static void
-calc_j(flds_curr_t flds_curr, particle_t *prt,
-       int n, float4 *d_xi4, float4 *d_pxi4, particle_real_t *vxi)
-
-#else
-CUDA_DEVICE static inline void
 calc_j(flds_curr_t flds_curr, particle_real_t *xm, particle_real_t *xp,
        int *lf, int *lg, particle_t *prt, particle_real_t *vxi)
-#endif
 
 {
-#ifdef __CUDACC__
-  // position xm at x^(n+.5)
-  real h0[3], h1[3];
-  real xm[3], xp[3];
-  int lg[3], lf[3];
-  
-  find_idx_off_pos_1st_rel(prt->xi, lg, h0, xm, real(0.));
-
-  // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
-  push_xi(prt, vxi, prm.dt);
-  STORE_PARTICLE_POS_(*prt, d_xi4, n);
-
-  // position xp at x^(n+.5)
-  find_idx_off_pos_1st_rel(prt->xi, lf, h1, xp, real(0.));
-#endif
-
   // deposit xm -> xp
   int idiff[3] = { 0, lf[1] - lg[1], lf[2] - lg[2] };			
   int i[3] = { 0, lg[1], lg[2] };					
@@ -259,13 +235,9 @@ calc_j(flds_curr_t flds_curr, particle_real_t *xm, particle_real_t *xp,
 #ifdef __CUDACC__
 
 CUDA_DEVICE static void
-calc_j(flds_curr_t flds_curr, particle_t *prt,
-       int n, float4 *d_xi4, float4 *d_pxi4, particle_real_t *vxi)
+calc_j(flds_curr_t flds_curr, particle_real_t *xm, particle_real_t *xp,
+       int *lf, int *lg, particle_t *prt, particle_real_t *vxi)
 {
-  // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
-  push_xi(prt, vxi, prm.dt);
-  STORE_PARTICLE_POS_(*prt, d_xi4, n);
-
   assert(0);
 }
 

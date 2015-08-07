@@ -171,7 +171,22 @@ push_one(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
   real vxi[3];
   calc_vxi(vxi, prt);
 
-  calc_j(flds_curr, prt, n, d_xi4, d_pxi4, vxi);
+  particle_real_t xm[3], xp[3];
+  int lf[3];
+
+  // position xm at x^(n+.5)
+  real h0[3];
+  find_idx_off_pos_1st_rel(prt->xi, lg, h0, xm, real(0.));
+
+  // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
+  push_xi(prt, vxi, prm.dt);
+  STORE_PARTICLE_POS_(*prt, d_xi4, n);
+
+  // position xp at x^(n+.5)
+  real h1[3];
+  find_idx_off_pos_1st_rel(prt->xi, lf, h1, xp, real(0.));
+
+  calc_j(flds_curr, xm, xp, lf, lg, prt, vxi);
 }
 
 #include "../psc_push_particles/inc_step.c"
