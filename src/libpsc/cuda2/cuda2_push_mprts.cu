@@ -1,10 +1,16 @@
 
+#include "psc_cuda2.h"
+#include "psc_particles_as_cuda2.h"
+#include "psc_fields_cuda2.h"
+
 #include "../psc_push_particles/inc_params.c"
 #include "../psc_push_particles/inc_cache.c"
 #include "../psc_push_particles/inc_interpolate.c"
 #include "../psc_push_particles/inc_push.c"
 #include "../psc_push_particles/inc_curr.c"
 #include "../psc_push_particles/inc_step.c"
+
+#ifdef __CUDACC__
 
 #define THREADS_PER_BLOCK (512)
 
@@ -81,33 +87,43 @@ zero_currents(struct psc_mfields *mflds)
   }
 }
 
+#endif
+
 // ----------------------------------------------------------------------
-// cuda_push_mprts_ab
+// push_mprts_loop
 
 static void
-cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
+push_mprts_loop(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
+#ifdef __CUDACC__
   struct psc_mparticles_cuda2 *mprts_sub = psc_mparticles_cuda2(mprts);
   struct psc_mfields_cuda2 *mflds_sub = psc_mfields_cuda2(mflds);
 
-  params_1vb_set(ppsc, mprts, mflds);
+  int *bs = mprts_sub->bs;
+  assert(bs[0] == BLOCKSIZE_X && bs[1] == BLOCKSIZE_Y && bs[2] == BLOCKSIZE_Z);
 
   unsigned int fld_size = mflds->nr_fields *
     mflds_sub->im[0] * mflds_sub->im[1] * mflds_sub->im[2];
 
-  zero_currents(mflds);
-
-  int gx, gy, gz;
-  gx = mprts_sub->b_mx[0];
-  gy = mprts_sub->b_mx[1];
-  gz = mprts_sub->b_mx[2] * mprts->nr_patches;
-  dim3 dimGrid(gx, gy, gz);
+  dim3 dimGrid(mprts_sub->b_mx[0],
+	       mprts_sub->b_mx[1],
+	       mprts_sub->b_mx[2] * mprts->nr_patches);
 
   push_mprts_ab<<<dimGrid, THREADS_PER_BLOCK>>>
     (mprts_sub->d_xi4, mprts_sub->d_pxi4, mprts_sub->d_b_off,
      mflds_sub->d_flds, fld_size);
 
   cuda_sync_if_enabled();
+#else
+  struct psc_mparticles_cuda2 *mprts_sub = psc_mparticles_cuda2(mprts);
+
+  for (int b = 0; b < mprts_sub->nr_blocks_total; b++) {
+    int p = b / mprts_sub->nr_blocks;
+    for (int n = mprts_sub->h_b_off[b]; n < mprts_sub->h_b_off[b+1]; n++) {
+      push_one_mprts(mprts, mflds, n, p);
+    }
+  }
+#endif
 }
 
 // ----------------------------------------------------------------------
@@ -116,10 +132,14 @@ cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 void
 SFX(cuda2_1vbec_push_mprts)(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
-  struct psc_mparticles_cuda2 *mprts_sub = psc_mparticles_cuda2(mprts);
+  params_1vb_set(ppsc, mprts, mflds);
 
-  int *bs = mprts_sub->bs;
-  assert(bs[0] == BLOCKSIZE_X && bs[1] == BLOCKSIZE_Y && bs[2] == BLOCKSIZE_Z);
-  cuda_push_mprts_ab(mprts, mflds);
+#ifdef __CUDACC__
+  zero_currents(mflds);
+#else
+  psc_mfields_zero_range(mflds, JXI, JXI + 3);
+#endif
+
+  push_mprts_loop(mprts, mflds);
 }
 

@@ -1,9 +1,4 @@
 
-#include "psc_cuda2.h"
-
-#include "psc_particles_as_cuda2.h"
-#include "psc_fields_cuda2.h"
-
 #include "../psc_push_particles/inc_defs.h"
 
 #define DIM DIM_XYZ
@@ -14,5 +9,5 @@
 
 #define SFX(s) s ## _gold_xyz
 
-#include "cuda2_push_mprts_host.c"
+#include "cuda2_push_mprts.cu"
 
