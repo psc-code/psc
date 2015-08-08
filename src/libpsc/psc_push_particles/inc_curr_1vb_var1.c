@@ -162,7 +162,7 @@ calc_j(flds_curr_t flds_curr, particle_real_t *xm, particle_real_t *xp,
 
   real x1 = x[1] * idiff[1];
   real x2 = x[2] * idiff[2];
-  int d_first = (abs(dx[2]) * (.5f - x1) >= abs(dx[1]) * (.5f - x2));
+  int d_first = (fabsf(dx[2]) * (.5f - x1) >= fabsf(dx[1]) * (.5f - x2));
 
   if (d_first == 0) {
     off[1] = idiff[1];
