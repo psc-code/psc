@@ -12,7 +12,7 @@
 #define F3_CACHE F3_CUDA2
 #define F3_CURR F3_CUDA2
 
-#define SFX(s) s ## _xyz
+#define SFX(s) s ## _gold_xyz
 
 #include "cuda2_push_mprts_host.c"
 
