@@ -94,7 +94,7 @@ particle_cuda2_real_sqrt(particle_cuda2_real_t x)
   return sqrtf(x);
 }
 
-static inline particle_cuda2_real_t
+CUDA_DEVICE static inline particle_cuda2_real_t
 particle_cuda2_real_abs(particle_cuda2_real_t x)
 {
   return fabsf(x);
