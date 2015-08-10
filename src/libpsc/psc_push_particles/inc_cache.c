@@ -46,16 +46,19 @@ __device__ static void
 cache_fields(float *flds_em, float *d_flds, int size, int *ci0)
 {
   int ti = threadIdx.x;
+  int n = BLOCKGSIZE_X * BLOCKGSIZE_Y * BLOCKGSIZE_Z;
   while (ti < n) {
     int tmp = ti;
+#if DIM == DIM_XYZ
     int jx = tmp % BLOCKGSIZE_X - BLOCKBND_X;
-    tmp /= dims[0];
+    tmp /= BLOCKGSIZE_X;
+#endif
     int jy = tmp % BLOCKGSIZE_Y - BLOCKBND_Y;
-    tmp /= dims[1];
+    tmp /= BLOCKGSIZE_Y;
     int jz = tmp % BLOCKGSIZE_Z - BLOCKBND_Z;
     // OPT? currently it seems faster to do the loop rather than do m by threadidx
     for (int m = EX; m <= HZ; m++) {
-      F3_CACHE(flds_em, m, jx+ci0[0],jy+ci0[1] jz+ci0[2]) = 
+      F3_CACHE(flds_em, m, jx+ci0[0],jy+ci0[1],jz+ci0[2]) = 
 	F3_DEV(d_flds, m, jx+ci0[0],jy+ci0[1],jz+ci0[2]);
     }
     ti += THREADS_PER_BLOCK;

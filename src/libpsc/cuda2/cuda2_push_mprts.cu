@@ -3,6 +3,10 @@
 #include "psc_particles_as_cuda2.h"
 #include "psc_fields_cuda2.h"
 
+#ifdef __CUDACC__
+#define THREADS_PER_BLOCK (512)
+#endif
+
 #include "../psc_push_particles/inc_params.c"
 #include "../psc_push_particles/inc_cache.c"
 #include "../psc_push_particles/inc_interpolate.c"
@@ -11,8 +15,6 @@
 #include "../psc_push_particles/inc_step.c"
 
 #ifdef __CUDACC__
-
-#define THREADS_PER_BLOCK (512)
 
 // ----------------------------------------------------------------------
 // find_block_pos_patch
