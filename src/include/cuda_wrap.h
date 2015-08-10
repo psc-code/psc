@@ -12,6 +12,7 @@
 #else
 #define CUDA_DEVICE
 #define CUDA_CONSTANT
+#define __forceinline__
 #endif
 
 #ifndef __CUDACC__
