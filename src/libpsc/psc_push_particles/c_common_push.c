@@ -5,7 +5,7 @@
 
 #include "psc_fields_single.h"
 
-static struct psc_fields *
+static struct psc_fields * _mrc_unused
 cache_fields_from_em(fields_t *pf)
 {
   struct psc_fields *fld = psc_fields_create(psc_fields_comm(pf));
@@ -40,7 +40,25 @@ cache_fields_to_j(struct psc_fields *fld, fields_t *pf)
       F3(pf, JZI, 0,iy,iz) += F3_CACHE(fld, JZI, 0,iy,iz);
     }
   }
+
+  psc_fields_destroy(fld);
 }
+
+#else
+
+static struct psc_fields * _mrc_unused
+cache_fields_from_em(struct psc_fields *flds)
+{
+  return flds;
+}
+
+static void _mrc_unused
+cache_fields_to_j(struct psc_fields *flds_cache, fields_t *flds)
+{
+}
+
+// FIXME, too ugly
+#define F3_CACHE F3
 
 #endif
 

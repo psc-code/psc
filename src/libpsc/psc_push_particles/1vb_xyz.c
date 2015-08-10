@@ -43,13 +43,8 @@ do_push_part_1vb_yz(struct psc_fields *flds, struct psc_particles *prts)
 
 #endif
 
-// FIXME!!!
-#ifdef NOT_STATIC
 void
-#else
-static void
-#endif
-psc_push_particles_push_a_yz(struct psc_push_particles *push,
+psc_push_particles_push_a_xyz(struct psc_push_particles *push,
 			     struct psc_particles *prts,
 			     struct psc_fields *flds)
 {
@@ -61,6 +56,5 @@ psc_push_particles_push_a_yz(struct psc_push_particles *push,
   do_push_part_1vb_yz(flds_cache, prts);
 
   cache_fields_to_j(flds_cache, flds);
-  psc_fields_destroy(flds_cache);
 }
 
