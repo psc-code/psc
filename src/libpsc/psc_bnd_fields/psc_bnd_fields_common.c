@@ -24,19 +24,22 @@ conducting_wall_E_lo(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
       }
     }
 #endif
-    for (int iz = -1; iz < patch->ldims[2] + 2; iz++) {
+    for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
       // FIXME, needs to be for other dir, too, and it's ugly
       for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
 	F3(pf, EX, ix, 0,iz) =  0.;
 	F3(pf, EX, ix,-1,iz) =  F3(pf, EX, ix, 1,iz);
+	F3(pf, EX, ix,-2,iz) =  F3(pf, EX, ix, 2,iz);
 	F3(pf, EY, ix,-1,iz) = -F3(pf, EY, ix, 0,iz);
+	F3(pf, EY, ix,-2,iz) = -F3(pf, EY, ix, 1,iz);
       }
     }
 
-    for (int iz = -1; iz < patch->ldims[2] + 1; iz++) {
+    for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
       for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
 	F3(pf, EZ, ix, 0,iz) =  0.;
 	F3(pf, EZ, ix,-1,iz) =  F3(pf, EZ, ix, 1,iz);
+	F3(pf, EZ, ix,-2,iz) =  F3(pf, EZ, ix, 2,iz);
       }
     }
   } else if (d == 2) {
@@ -221,11 +224,13 @@ conducting_wall_H_hi(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
       for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
 	F3(pf, HY, ix,my+1,iz) =  F3(pf, HY, ix, my-1,iz);
 	F3(pf, HX, ix,my  ,iz) = -F3(pf, HX, ix, my-1,iz);
+	F3(pf, HX, ix,my+1,iz) = -F3(pf, HX, ix, my-2,iz);
       }
     }
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
       for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
 	F3(pf, HZ, ix,my  ,iz) = -F3(pf, HZ, ix, my-1,iz);
+	F3(pf, HZ, ix,my+1,iz) = -F3(pf, HZ, ix, my-2,iz);
       }
     }
   } else if (d == 2) {
@@ -266,19 +271,15 @@ conducting_wall_J_lo(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
 
   if (d == 1) {
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
-      for (int ix = MAX(-1, pf->ib[0]); ix < MIN(patch->ldims[0] + 1, pf->ib[0] + pf->im[0]) ; ix++) {
+      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
 	F3(pf, JYI, ix, 1,iz) -= F3(pf, JYI, ix,-2,iz);
 	F3(pf, JYI, ix, 0,iz) -= F3(pf, JYI, ix,-1,iz);
 	F3(pf, JYI, ix,-1,iz) = 0.;
 	F3(pf, JYI, ix,-2,iz) = 0.;
-	F3(pf, JXI, ix, 2,iz) += F3(pf, JXI, ix,-2,iz);
 	F3(pf, JXI, ix, 1,iz) += F3(pf, JXI, ix,-1,iz);
 	F3(pf, JXI, ix,-1,iz) = 0.;
-	F3(pf, JXI, ix,-2,iz) = 0.;
-	F3(pf, JZI, ix, 2,iz) += F3(pf, JZI, ix,-2,iz);
 	F3(pf, JZI, ix, 1,iz) += F3(pf, JZI, ix,-1,iz);
 	F3(pf, JZI, ix,-1,iz) = 0.;
-	F3(pf, JZI, ix,-2,iz) = 0.;
       }
     }
   } else if (d == 2) {
@@ -306,19 +307,15 @@ conducting_wall_J_hi(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
   if (d == 1) {
     int my = patch->ldims[1];
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
-      for (int ix = MAX(-1, pf->ib[0]); ix < MIN(patch->ldims[0] + 1, pf->ib[0] + pf->im[0]) ; ix++) {
+      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
 	F3(pf, JYI, ix,my-2,iz) -= F3(pf, JYI, ix,my+1,iz);
 	F3(pf, JYI, ix,my-1,iz) -= F3(pf, JYI, ix,my  ,iz);
 	F3(pf, JYI, ix,my  ,iz) = 0.;
 	F3(pf, JYI, ix,my+1,iz) = 0.;
-	F3(pf, JXI, ix,my-2,iz) += F3(pf, JXI, ix,my+2,iz);
 	F3(pf, JXI, ix,my-1,iz) += F3(pf, JXI, ix,my+1,iz);
 	F3(pf, JXI, ix,my+1,iz) = 0.;
-	F3(pf, JXI, ix,my+2,iz) = 0.;
-	F3(pf, JZI, ix,my-2,iz) += F3(pf, JZI, ix,my+2,iz);
 	F3(pf, JZI, ix,my-1,iz) += F3(pf, JZI, ix,my+1,iz);
 	F3(pf, JZI, ix,my+1,iz) = 0.;
-	F3(pf, JZI, ix,my+2,iz) = 0.;
       }
     }
   } else if (d == 2) {
