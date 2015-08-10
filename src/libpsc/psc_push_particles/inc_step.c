@@ -119,6 +119,7 @@ push_one_a(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
   int lg[3];
   real og[3];
   find_idx_off_1st_rel(prt->xi, lg, og, real(0.));
+
   INTERPOLATE_1ST_EC(flds_em, exq, eyq, ezq, hxq, hyq, hzq);
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 

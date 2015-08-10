@@ -101,7 +101,7 @@ calc_j2_split_along_dim(int dim, int im, particle_real_t x1[3],
 
 #if DIM == DIM_YZ
 
-CUDA_DEVICE __forceinline__ static inline void 
+CUDA_DEVICE __forceinline__ static void 
 calc_j2_split_dim(flds_curr_t flds_curr, particle_real_t qni_wni,
 		  particle_real_t *xm, particle_real_t *xp, int dim)
 {

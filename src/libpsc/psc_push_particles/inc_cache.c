@@ -31,20 +31,24 @@
 
 #if DIM == DIM_YZ
 #define F3_CACHE(flds_em, m, jx, jy, jz)				\
-  ((flds_em)[(((m-EX)							\
-	       *BLOCKGSIZE_Z + ((jz-ci0[2])-(-BLOCKBND_Z)))		\
-	      *BLOCKGSIZE_Y + ((jy-ci0[1])-(-BLOCKBND_Y)))])
+  ((flds_em)[(((m)							\
+	       *BLOCKGSIZE_Z + ((jz)-ci0[2]))				\
+	      *BLOCKGSIZE_Y + ((jy)-ci0[1]))])
 #elif DIM == DIM_XYZ
 #define F3_CACHE(flds_em, m, jx, jy, jz)				\
-  ((flds_em)[((((m-EX)							\
-		*BLOCKGSIZE_Z + ((jz-ci0[2])-(-BLOCKBND_Z)))		\
-	       *BLOCKGSIZE_Y + ((jy-ci0[1])-(-BLOCKBND_Y)))		\
-	      *BLOCKGSIZE_X + ((jx-ci0[0])-(-BLOCKBND_X)))])
+  ((flds_em)[((((m)							\
+		*BLOCKGSIZE_Z + ((jz-ci0[2])))				\
+	       *BLOCKGSIZE_Y + ((jy-ci0[1])))				\
+	      *BLOCKGSIZE_X + ((jx-ci0[0])))])
 #endif
 
-__device__ static void
-cache_fields(float *flds_em, float *d_flds, int size, int *ci0)
+__device__ static float *
+cache_fields(float *flds_em_shared, float *d_flds, int size, int *ci0)
 {
+  float *flds_em = flds_em_shared + ((((-EX) * 
+				       BLOCKGSIZE_Z + BLOCKBND_Z) *
+				      BLOCKGSIZE_Y + BLOCKBND_Y) *
+				     BLOCKGSIZE_X + BLOCKBND_X);
   int ti = threadIdx.x;
   int n = BLOCKGSIZE_X * BLOCKGSIZE_Y * BLOCKGSIZE_Z;
   while (ti < n) {
@@ -63,11 +67,12 @@ cache_fields(float *flds_em, float *d_flds, int size, int *ci0)
     }
     ti += THREADS_PER_BLOCK;
   }
+  return flds_em;
 }
 
 #define DECLARE_EM_CACHE(flds_em, d_flds, size, ci0)	\
-  __shared__ real flds_em[6 * BLOCKGSIZE_X * BLOCKGSIZE_Y * BLOCKGSIZE_Z];\
-  cache_fields(flds_em, d_flds, size, ci0)
+  __shared__ real flds_em_shared[6 * BLOCKGSIZE_X * BLOCKGSIZE_Y * BLOCKGSIZE_Z]; \
+  float *flds_em = cache_fields(flds_em_shared, d_flds, size, ci0)
 
 #endif
 
