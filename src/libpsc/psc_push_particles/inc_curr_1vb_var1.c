@@ -79,8 +79,8 @@ curr_3d_vb_cell(flds_curr_t flds_curr, int i[3], particle_real_t x[3], particle_
       real h = (1.f / 12.f) * dx[0] * dx[1] * dx[2];
       curr_add(flds_curr, 0, 0,i[1]  ,i[2]  , fnqx * (dx[0] * (.5f - xa[1]) * (.5f - xa[2]) + h));
       curr_add(flds_curr, 0, 0,i[1]+1,i[2]  , fnqx * (dx[0] * (.5f + xa[1]) * (.5f - xa[2]) - h));
-      curr_add(flds_curr, 0, 0,i[1]  ,i[2]+1, fnqx * (dx[0] * (.5f - xa[1]) * (.5f + xa[2]) + h));
-      curr_add(flds_curr, 0, 0,i[1]+1,i[2]+1, fnqx * (dx[0] * (.5f + xa[1]) * (.5f + xa[2]) - h));
+      curr_add(flds_curr, 0, 0,i[1]  ,i[2]+1, fnqx * (dx[0] * (.5f - xa[1]) * (.5f + xa[2]) - h));
+      curr_add(flds_curr, 0, 0,i[1]+1,i[2]+1, fnqx * (dx[0] * (.5f + xa[1]) * (.5f + xa[2]) + h));
     }
 #ifdef __CUDACC__
   if (dx[1] != 0.f)
