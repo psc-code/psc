@@ -119,11 +119,11 @@ primitive_to_gkeyll_5m_fluids_point(struct mrc_fld *fld, int nr_fluids, int idx[
     double mass_ratios[], double momentum_ratios[], double pressure_ratios[],
     float gamma_m1, int ix, int iy, int iz, int p)
 {
-  float rr  = M3(fld, RR, ix,iy,iz, p);
-  float rvx = rr * M3(fld, VX, ix,iy,iz, p);
-  float rvy = rr * M3(fld, VY, ix,iy,iz, p);
-  float rvz = rr * M3(fld, VZ, ix,iy,iz, p);
-  float pp  = M3(fld, PP, ix,iy,iz, p);
+  mrc_fld_data_t rr  = M3(fld, RR, ix,iy,iz, p);
+  mrc_fld_data_t rvx = rr * M3(fld, VX, ix,iy,iz, p);
+  mrc_fld_data_t rvy = rr * M3(fld, VY, ix,iy,iz, p);
+  mrc_fld_data_t rvz = rr * M3(fld, VZ, ix,iy,iz, p);
+  mrc_fld_data_t pp  = M3(fld, PP, ix,iy,iz, p);
 
   // each species
   for (int s = 0; s < nr_fluids; s++) {
@@ -145,9 +145,9 @@ void
 primitive_to_gkeyll_em_fields_point(struct mrc_fld *fld, int idx_em,
     int dx, int dy, int dz, int ix, int iy, int iz, int p)
 {
-  float vx = M3(fld, VX, ix,iy,iz, p);
-  float vy = M3(fld, VY, ix,iy,iz, p);
-  float vz = M3(fld, VZ, ix,iy,iz, p);
+  mrc_fld_data_t vx = M3(fld, VX, ix,iy,iz, p);
+  mrc_fld_data_t vy = M3(fld, VY, ix,iy,iz, p);
+  mrc_fld_data_t vz = M3(fld, VZ, ix,iy,iz, p);
 
   // staggered to cell-center B fields
   M3(fld, idx_em + GK_BX, ix,iy,iz, p) = 
