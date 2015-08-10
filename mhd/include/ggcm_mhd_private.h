@@ -10,6 +10,8 @@ enum {
   MAGDIFFU_CONST,
 };
 
+#define GK_NR_FLUIDS_MAX (5)
+
 struct ggcm_mhd_params {
   float gamm;
   float rrmin;
@@ -27,6 +29,15 @@ struct ggcm_mhd_params {
   double dbasetime;
   int modnewstep;
   int magdiffu;
+
+  // params for multi-fluid moment runs
+  // to be obtained from gkeyll instead
+  // of from command line options
+  int nr_fluids;
+  int nr_moments;
+  double mass_ratios[GK_NR_FLUIDS_MAX];
+  double momentum_ratios[GK_NR_FLUIDS_MAX];
+  double pressure_ratios[GK_NR_FLUIDS_MAX];
 
   bool monitor_conservation;
 };

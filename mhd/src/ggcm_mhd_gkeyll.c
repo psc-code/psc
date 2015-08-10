@@ -1,219 +1,104 @@
-/* 
- * utility functions relevant to an mrc_fld with gkeyll data
- */
-
-#include <mrc_fld.h>
 #include <ggcm_mhd_gkeyll.h>
 
-// ----------------------------------------------------------------------
-// mrc_fld_gkeyll_nr_moments
+// parameter setters
+
+void
+ggcm_mhd_gkeyll_set_nr_moments(struct ggcm_mhd *mhd,
+    int nr_moments)
+{
+  assert(nr_moments == 5 || nr_moments == 10);
+  mhd->par.nr_moments = nr_moments;
+}
+
+void
+ggcm_mhd_gkeyll_set_nr_fluids(struct ggcm_mhd *mhd,
+    int nr_fluids)
+{
+  assert(nr_fluids > 0 && nr_fluids <= GK_NR_FLUIDS_MAX);
+  mhd->par.nr_fluids = nr_fluids;
+}
+
+void
+ggcm_mhd_gkeyll_set_mass_ratios(struct ggcm_mhd *mhd,
+    double mass_ratios_in[])
+{
+  for (int s = 0; s < ggcm_mhd_gkeyll_nr_fluids(mhd); s++)
+    mhd->par.mass_ratios[s] = mass_ratios_in[s];
+}
+
+void
+ggcm_mhd_gkeyll_set_momentum_ratios(struct ggcm_mhd *mhd,
+    double momentum_ratios_in[])
+{
+  for (int s = 0; s < ggcm_mhd_gkeyll_nr_fluids(mhd); s++)
+    mhd->par.momentum_ratios[s] = momentum_ratios_in[s];
+}
+
+void
+ggcm_mhd_gkeyll_set_pressure_ratios(struct ggcm_mhd *mhd,
+    double pressure_ratios_in[])
+{
+  for (int s = 0; s < ggcm_mhd_gkeyll_nr_fluids(mhd); s++)
+    mhd->par.pressure_ratios[s] = pressure_ratios_in[s];
+}
+
+// parameter getters
 
 int
-mrc_fld_gkeyll_nr_moments(struct mrc_fld *f)
+ggcm_mhd_gkeyll_nr_moments(struct ggcm_mhd *mhd)
 {
-  int nr_moments = 0;
-  mrc_fld_get_param_int(f, "nr_moments", &nr_moments);
+  int nr_moments = mhd->par.nr_moments;
+  assert(nr_moments == 5 || nr_moments == 10);
   return nr_moments;
 }
 
-// ----------------------------------------------------------------------
-// mrc_fld_gkeyll_nr_moments
-
 int
-mrc_fld_gkeyll_nr_fluids(struct mrc_fld *f)
+ggcm_mhd_gkeyll_nr_fluids(struct ggcm_mhd *mhd)
 {
-  int nr_fluids = 0;
-  mrc_fld_get_param_int(f, "nr_fluids", &nr_fluids);
+  int nr_fluids = mhd->par.nr_fluids;
+  assert(nr_fluids > 0 && nr_fluids <= GK_NR_FLUIDS_MAX);
   return nr_fluids;
 }
 
-// ----------------------------------------------------------------------
-// mrc_fld_gkeyll_mass_ratios
-// the output mass_ratio is an array of length nr_flds
-
-void
-mrc_fld_gkeyll_mass_ratios(struct mrc_fld *f, float mass_ratios[])
+double *
+ggcm_mhd_gkeyll_mass_ratios(struct ggcm_mhd *mhd)
 {
-  mrc_fld_get_param_float_array(f, "mass_ratios", mass_ratios);
+  return mhd->par.mass_ratios;
 }
 
-// ----------------------------------------------------------------------
-// mrc_fld_gkeyll_momentum_ratios
-// the output momentum_ratio is an array of length nr_flds
-
-void
-mrc_fld_gkeyll_momentum_ratios(struct mrc_fld *f, float momentum_ratios[])
+double *
+ggcm_mhd_gkeyll_momentum_ratios(struct ggcm_mhd *mhd)
 {
-  mrc_fld_get_param_float_array(f, "momentum_ratios", momentum_ratios);
+  return mhd->par.momentum_ratios;
 }
 
-// ----------------------------------------------------------------------
-// mrc_fld_gkeyll_pressure_ratios
-// the output pressure_ratio is an array of length nr_flds
-
-void
-mrc_fld_gkeyll_pressure_ratios(struct mrc_fld *f, float pressure_ratios[])
+double *
+ggcm_mhd_gkeyll_pressure_ratios(struct ggcm_mhd *mhd)
 {
-  mrc_fld_get_param_float_array(f, "pressure_ratios", pressure_ratios);
+  return mhd->par.pressure_ratios;
 }
 
-// ----------------------------------------------------------------------
-// mrc_fld_gkeyll_set_nr_moments
-
-void
-mrc_fld_gkeyll_set_nr_moments(struct mrc_fld *f, int nr_moments)
-{
-  // TODO: overwrite existing value
-  mrc_fld_dict_add_int(f, "nr_moments", nr_moments);
-}
-
-// ----------------------------------------------------------------------
-// mrc_fld_gkeyll_set_nr_moments
-
-void
-mrc_fld_gkeyll_set_nr_fluids(struct mrc_fld *f, int nr_fluids)
-{
-  mrc_fld_dict_add_int(f, "nr_fluids", nr_fluids);
-}
-
-// ----------------------------------------------------------------------
-// mrc_fld_gkeyll_set_mass_ratios
-//
-// the input mass_ratio is an array of length nr_flds
-
-void
-mrc_fld_gkeyll_set_mass_ratios(struct mrc_fld *f, float mass_ratios[])
-{
-  mrc_fld_dict_add_float_array(f, "mass_ratios",
-      mass_ratios, mrc_fld_gkeyll_nr_fluids(f));
-}
-
-// ----------------------------------------------------------------------
-// mrc_fld_gkeyll_set_momentum_ratios
-//
-// the input momentum_ratio is an array of length nr_flds
-
-void
-mrc_fld_gkeyll_set_momentum_ratios(struct mrc_fld *f, float momentum_ratios[])
-{
-  mrc_fld_dict_add_float_array(f, "momentum_ratios",
-      momentum_ratios, mrc_fld_gkeyll_nr_fluids(f));
-}
-
-// ----------------------------------------------------------------------
-// mrc_fld_gkeyll_set_pressure_ratios
-//
-// the input pressure_ratio is an array of length nr_flds
-
-void
-mrc_fld_gkeyll_set_pressure_ratios(struct mrc_fld *f, float pressure_ratios[])
-{
-  mrc_fld_dict_add_float_array(f, "pressure_ratios",
-      pressure_ratios, mrc_fld_gkeyll_nr_fluids(f));
-}
-
-// ----------------------------------------------------------------------
-// mrc_fld_gkeyll_copy_properties
-
-void
-mrc_fld_gkeyll_copy_properties(struct mrc_fld *f, struct mrc_fld *f_base)
-{
-  int nr_fluids = mrc_fld_gkeyll_nr_fluids(f_base);
-  int nr_moments = mrc_fld_gkeyll_nr_moments(f_base);
-
-  mrc_fld_dict_add_int(f, "nr_fluids", nr_fluids);
-  mrc_fld_dict_add_int(f, "nr_moments", nr_moments);
-
-  float mass_ratios[nr_fluids];
-  float momentum_ratios[nr_fluids];
-  float pressure_ratios[nr_fluids];
-  mrc_fld_gkeyll_mass_ratios(f_base, mass_ratios);
-  mrc_fld_gkeyll_momentum_ratios(f_base, momentum_ratios);
-  mrc_fld_gkeyll_pressure_ratios(f_base, pressure_ratios);
-
-  mrc_fld_gkeyll_set_mass_ratios(f, mass_ratios);
-  mrc_fld_gkeyll_set_momentum_ratios(f, momentum_ratios);
-  mrc_fld_gkeyll_set_pressure_ratios(f, pressure_ratios);
-}
-
-// ----------------------------------------------------------------------
-// mrc_fld_gkeyll_electron_index_two_fluids
-//
-// first index of the electron moments for a two-fluid case
+// index calculators
 
 int
-mrc_fld_gkeyll_electron_index_two_fluids(struct mrc_fld *f, int m_beg)
-{
-  assert(mrc_fld_gkeyll_nr_fluids(f) == 2);
-  return m_beg;
-}
-
-// ----------------------------------------------------------------------
-// mrc_fld_gkeyll_ion_index_two_fluids
-//
-// first index of the electron moments for a two-fluid case
-
-int
-mrc_fld_gkeyll_ion_index_two_fluids(struct mrc_fld *f, int m_beg)
-{
-  assert(mrc_fld_gkeyll_nr_fluids(f) == 2);
-  return m_beg + mrc_fld_gkeyll_nr_moments(f);
-}
-
-// ----------------------------------------------------------------------
-// mrc_fld_gkeyll_species_index
-//
-// first index of a species
-
-int
-gkeyll_species_index(int m_beg, int species, int nr_moments)
-{
-  return m_beg + nr_moments * species;
-}
-
-int
-mrc_fld_gkeyll_species_index(struct mrc_fld *f, int m_beg, int species)
+ggcm_mhd_gkeyll_fluid_species_index(struct ggcm_mhd *mhd, int species)
 {
   // species starts from 0 to nr_fluids-1
-  assert(species < mrc_fld_gkeyll_nr_fluids(f));
-  return m_beg + mrc_fld_gkeyll_nr_moments(f) * species;
-}
-
-// ----------------------------------------------------------------------
-// mrc_fld_gkeyll_species_index_all
-//
-// first index of all species
-
-void
-gkeyll_species_index_all(int m_beg, int indices[], int nr_fluids, int nr_moments)
-{
-  for (int s = 0; s < nr_fluids; s++) {
-    indices[s] = m_beg + nr_moments * s;
-  }
+  assert(species >=0 && species < ggcm_mhd_gkeyll_nr_fluids(mhd));
+  return ggcm_mhd_gkeyll_nr_moments(mhd) * species;
 }
 
 void
-mrc_fld_gkeyll_species_index_all(struct mrc_fld *f, int m_beg, int *indices)
+ggcm_mhd_gkeyll_fluid_species_index_all(struct ggcm_mhd *mhd, int indices[])
 {
-  for ( int s = 0; s < mrc_fld_gkeyll_nr_fluids(f); s++) {
-    indices[s] = mrc_fld_gkeyll_species_index(f, m_beg, s);
+  for ( int s = 0; s < ggcm_mhd_gkeyll_nr_fluids(mhd); s++) {
+    indices[s] = ggcm_mhd_gkeyll_fluid_species_index(mhd, s);
   }
 }
 
-// ----------------------------------------------------------------------
-// mrc_fld_gkeyll_em_index
-//
-// first index of the EM fields
-
 int
-gkeyll_em_index(int m_beg, int nr_fluids, int nr_moments)
+ggcm_mhd_gkeyll_em_fields_index(struct ggcm_mhd *mhd)
 {
-  return m_beg +nr_moments * nr_fluids;
-}
-
-int
-mrc_fld_gkeyll_em_index(struct mrc_fld *f, int m_beg)
-{
-  return m_beg + mrc_fld_gkeyll_nr_moments(f) * mrc_fld_gkeyll_nr_fluids(f);
+  return ggcm_mhd_gkeyll_nr_moments(mhd) * ggcm_mhd_gkeyll_nr_fluids(mhd);
 }
 

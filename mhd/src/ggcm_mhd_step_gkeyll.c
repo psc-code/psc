@@ -32,7 +32,7 @@ ggcm_mhd_step_gkeyll_setup_flds(struct ggcm_mhd_step *step)
   mrc_fld_set_type(mhd->fld, FLD_TYPE);
   mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_GKEYLL);
 
-  ggcm_mhd_step_gkeyll_setup_flds_lua(mhd->fld, sub->script_common);
+  ggcm_mhd_step_gkeyll_setup_flds_lua(mhd, sub->script_common);
 }
 
 // ----------------------------------------------------------------------

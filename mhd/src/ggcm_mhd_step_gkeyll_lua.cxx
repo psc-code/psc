@@ -54,11 +54,6 @@ static int ggcm_mhd_get_3d_fld_lua(lua_State *L) {
   struct ggcm_mhd *mhd = (struct ggcm_mhd *) lua_touserdata(L, -2);
   struct mrc_fld *fld = ggcm_mhd_get_3d_fld(mhd, nr_comps);
   mrc_fld_dict_add_int(fld, "mhd_type", MT_GKEYLL);
-  int nr_moments = 0, nr_fluids = 0;
-  mrc_fld_get_param_int(mhd->fld, "nr_moments", &nr_moments);
-  mrc_fld_get_param_int(mhd->fld, "nr_fluids", &nr_fluids);
-  mrc_fld_dict_add_int(fld, "nr_moments", nr_moments);
-  mrc_fld_dict_add_int(fld, "nr_fluids", nr_fluids);
   lua_pushlightuserdata(L, fld);
   return 1;
 }
@@ -86,20 +81,20 @@ static int ggcm_mhd_fill_ghosts_lua (lua_State *L) {
 
 // fill arr[] with lua array named arr_name
 static void
-lua_getarray(lua_State *L_temp, const char *arr_name, int nr_fluids, float arr[])
+lua_getarray(lua_State *L_temp, const char *arr_name, int nr_fluids, double arr[])
 {
   lua_getglobal(L_temp, arr_name);
   for (int s = 0; s < nr_fluids; s++) {
     lua_pushnumber(L_temp, s + 1);
     lua_gettable(L_temp, -2);
-    arr[s] = lua_tonumber(L_temp, -1);
+    arr[s] = (float)lua_tonumber(L_temp, -1);
     lua_pop(L_temp, 1);
   }
   lua_pop(L_temp, 1);
 }
 
 void
-ggcm_mhd_step_gkeyll_setup_flds_lua(struct mrc_fld *fld, const char *script_common) 
+ggcm_mhd_step_gkeyll_setup_flds_lua(struct ggcm_mhd *mhd, const char *script_common) 
 {
   std::string inpFile = script_common;
 
@@ -133,22 +128,21 @@ ggcm_mhd_step_gkeyll_setup_flds_lua(struct mrc_fld *fld, const char *script_comm
   int nr_comps = (int)lua_tonumber(L_temp, -4);
   lua_pop(L_temp, 4);
 
-  mrc_fld_set_param_int(fld, "nr_ghosts", nr_ghosts);
-  mrc_fld_set_param_int(fld, "nr_comps", nr_comps);
-  mrc_fld_gkeyll_set_nr_moments(fld, nr_moments);
-  mrc_fld_gkeyll_set_nr_fluids(fld, nr_fluids);
+  ggcm_mhd_gkeyll_set_nr_fluids(mhd, nr_fluids);
+  ggcm_mhd_gkeyll_set_nr_moments(mhd, nr_moments);
+  mrc_fld_set_param_int(mhd->fld, "nr_ghosts", nr_ghosts);
+  mrc_fld_set_param_int(mhd->fld, "nr_comps", nr_comps);
 
-  float mass_ratios[nr_fluids];
-  float momentum_ratios[nr_fluids];
-  float pressure_ratios[nr_fluids];
-
+  double mass_ratios[nr_fluids];
+  double momentum_ratios[nr_fluids];
+  double pressure_ratios[nr_fluids];
   lua_getarray(L_temp, "mass_ratios", nr_fluids, mass_ratios); 
   lua_getarray(L_temp, "momentum_ratios", nr_fluids, momentum_ratios); 
-  lua_getarray(L_temp, "pressure_ratios", nr_fluids, pressure_ratios); 
+  lua_getarray(L_temp, "pressure_ratios", nr_fluids, pressure_ratios);
 
-  mrc_fld_gkeyll_set_mass_ratios(fld, mass_ratios);
-  mrc_fld_gkeyll_set_momentum_ratios(fld, momentum_ratios);
-  mrc_fld_gkeyll_set_pressure_ratios(fld, pressure_ratios);
+  ggcm_mhd_gkeyll_set_mass_ratios(mhd, mass_ratios);
+  ggcm_mhd_gkeyll_set_momentum_ratios(mhd, momentum_ratios);
+  ggcm_mhd_gkeyll_set_pressure_ratios(mhd, pressure_ratios);
 }
 
 void
@@ -286,6 +280,18 @@ ggcm_mhd_step_gkeyll_lua_setup(const char *script, const char *script_common,
     lua_pop(L, 1);
     std::cerr << err << std::endl;
     exit(1);
+  }
+
+  int nr_fluids = ggcm_mhd_gkeyll_nr_fluids(mhd);
+  int nr_moments = ggcm_mhd_gkeyll_nr_moments(mhd);
+  double *mass_ratios = ggcm_mhd_gkeyll_mass_ratios(mhd);
+  double *momentum_ratios = ggcm_mhd_gkeyll_momentum_ratios(mhd);
+  double *pressure_ratios = ggcm_mhd_gkeyll_pressure_ratios(mhd);
+  mprintf("nr_fluids %d nr_moments %d\n", nr_fluids, nr_moments);
+  for (int s = 0; s < nr_fluids; s++)
+  {
+     mprintf("[%d] mass %g momentum %g pressure %g\n",
+           s, mass_ratios[s], momentum_ratios[s], pressure_ratios[s]);
   }
 }
 

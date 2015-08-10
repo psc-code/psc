@@ -116,7 +116,7 @@ ggcm_mhd_convert_fc_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_bas
 // pointwise conversion from primitive mhd quantities to 5m fluid quantities
 void
 primitive_to_gkeyll_5m_fluids_point(struct mrc_fld *fld, int nr_fluids, int idx[],
-    float mass_ratios[], float momentum_ratios[], float pressure_ratios[],
+    double mass_ratios[], double momentum_ratios[], double pressure_ratios[],
     float gamma_m1, int ix, int iy, int iz, int p)
 {
   float rr  = M3(fld, RR, ix,iy,iz, p);
@@ -181,8 +181,8 @@ primitive_to_gkeyll_em_fields_point(struct mrc_fld *fld, int idx_em,
 
 void
 ggcm_mhd_convert_primitive_gkeyll_5m_point(struct mrc_fld *fld, int nr_fluids,
-    int idx[], float mass_ratios[], float momentum_ratios[],
-    float pressure_ratios[], float gamma_m1, int idx_em, int dx, int dy, int dz,
+    int idx[], double mass_ratios[], double momentum_ratios[],
+    double pressure_ratios[], float gamma_m1, int idx_em, int dx, int dy, int dz,
     int ix, int iy, int iz, int p)
 {
   // em fields should be calculated before V used for E=-VxB are overwritten
@@ -197,21 +197,16 @@ ggcm_mhd_convert_gkeyll_from_primitive(struct ggcm_mhd *mhd,
 {
   struct mrc_fld *fld = mrc_fld_get_as(fld_base, FLD_TYPE);
 
-  int m_beg = 0;
-
-  int nr_moments = mrc_fld_gkeyll_nr_moments(fld_base);
-  int nr_fluids = mrc_fld_gkeyll_nr_fluids(fld_base);
+  int nr_moments = ggcm_mhd_gkeyll_nr_moments(mhd);
+  int nr_fluids = ggcm_mhd_gkeyll_nr_fluids(mhd);
 
   int idx[nr_fluids];
-  mrc_fld_gkeyll_species_index_all(fld_base, m_beg, idx);
-  int idx_em = mrc_fld_gkeyll_em_index(fld_base, m_beg);
+  ggcm_mhd_gkeyll_fluid_species_index_all(mhd, idx);
+  int idx_em = ggcm_mhd_gkeyll_em_fields_index(mhd);
 
-  float mass_ratios[nr_fluids];
-  float momentum_ratios[nr_fluids];
-  float pressure_ratios[nr_fluids];
-  mrc_fld_gkeyll_mass_ratios(fld_base, mass_ratios);
-  mrc_fld_gkeyll_momentum_ratios(fld_base, momentum_ratios);
-  mrc_fld_gkeyll_pressure_ratios(fld_base, pressure_ratios);
+  double *mass_ratios = ggcm_mhd_gkeyll_mass_ratios(mhd);
+  double *momentum_ratios = ggcm_mhd_gkeyll_momentum_ratios(mhd);
+  double *pressure_ratios = ggcm_mhd_gkeyll_pressure_ratios(mhd);
 
   int gdims[3];
   mrc_domain_get_global_dims(mhd->domain, gdims);

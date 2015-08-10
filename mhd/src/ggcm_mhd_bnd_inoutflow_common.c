@@ -325,19 +325,16 @@ obndra_gkeyll_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, floa
   int swx = sw[0], swy = sw[1], swz = sw[2];
   int my = dims[1], mz = dims[2];
 
-  int nr_moments = mrc_fld_gkeyll_nr_moments(f);
-  int nr_fluids = mrc_fld_gkeyll_nr_fluids(f);
+  int nr_moments = ggcm_mhd_gkeyll_nr_moments(mhd);
+  int nr_fluids = ggcm_mhd_gkeyll_nr_fluids(mhd);
 
   int idx[nr_fluids];
-  mrc_fld_gkeyll_species_index_all(f, mm, idx);
-  int idx_em = mrc_fld_gkeyll_em_index(f, mm);
+  ggcm_mhd_gkeyll_fluid_species_index_all(mhd, idx);
+  int idx_em = ggcm_mhd_gkeyll_em_fields_index(mhd);
 
-  float mass_ratios[nr_fluids];
-  float momentum_ratios[nr_fluids];
-  float pressure_ratios[nr_fluids];
-  mrc_fld_gkeyll_mass_ratios(f, mass_ratios);
-  mrc_fld_gkeyll_momentum_ratios(f, momentum_ratios);
-  mrc_fld_gkeyll_pressure_ratios(f, pressure_ratios);
+  double *mass_ratios = ggcm_mhd_gkeyll_mass_ratios(mhd);
+  double *momentum_ratios = ggcm_mhd_gkeyll_momentum_ratios(mhd);
+  double *pressure_ratios = ggcm_mhd_gkeyll_pressure_ratios(mhd);
 
   int gdims[3];
   mrc_domain_get_global_dims(mhd->domain, gdims);
@@ -354,15 +351,15 @@ obndra_gkeyll_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, floa
 	float vvbn  = sqr(bn[SW_VX]) + sqr(bn[SW_VY]) + sqr(bn[SW_VZ]);
 	float uubn  = .5f * (bn[SW_RR]*vvbn) + bn[SW_PP] / (mhd->par.gamm - 1.f);
 	
-	M3(f, mm + RR , ix,iy,iz, p) = bn[SW_RR];
-	M3(f, mm + RVX, ix,iy,iz, p) = bn[SW_RR] * bn[SW_VX];
-	M3(f, mm + RVY, ix,iy,iz, p) = bn[SW_RR] * bn[SW_VY];
-	M3(f, mm + RVZ, ix,iy,iz, p) = bn[SW_RR] * bn[SW_VZ];
-	M3(f, mm + UU , ix,iy,iz, p) = uubn;
+	M3(f, RR , ix,iy,iz, p) = bn[SW_RR];
+	M3(f, RVX, ix,iy,iz, p) = bn[SW_RR] * bn[SW_VX];
+	M3(f, RVY, ix,iy,iz, p) = bn[SW_RR] * bn[SW_VY];
+	M3(f, RVZ, ix,iy,iz, p) = bn[SW_RR] * bn[SW_VZ];
+	M3(f, UU , ix,iy,iz, p) = uubn;
 
-	M3(f, mm + BX , ix,iy,iz, p) = bn[SW_BX];
-	M3(f, mm + BY , ix,iy,iz, p) = bn[SW_BY];
-	M3(f, mm + BZ , ix,iy,iz, p) = bn[SW_BZ];
+	M3(f, BX , ix,iy,iz, p) = bn[SW_BX];
+	M3(f, BY , ix,iy,iz, p) = bn[SW_BY];
+	M3(f, BZ , ix,iy,iz, p) = bn[SW_BZ];
 
         if (nr_moments == 5) {
           float gamma_m1 = mhd->par.gamm - 1.;
@@ -572,7 +569,6 @@ ggcm_mhd_bnd_sub_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld,
 
   struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
   if (MT == MT_GKEYLL) {
-    mrc_fld_gkeyll_copy_properties(f, fld);
     obndra_gkeyll(bnd, f, m, bntim);
   } else {
     obndra_mhd(bnd, f, m, bntim);
