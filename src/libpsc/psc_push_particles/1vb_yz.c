@@ -61,6 +61,5 @@ psc_push_particles_push_a_yz(struct psc_push_particles *push,
   do_push_part_1vb_yz(flds_cache, prts);
 
   cache_fields_to_j(flds_cache, flds);
-  psc_fields_destroy(flds_cache);
 }
 
