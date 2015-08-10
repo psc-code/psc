@@ -20,35 +20,33 @@ calc_vxi(particle_real_t vxi[3], particle_t *prt)
 // ----------------------------------------------------------------------
 // push_xi
 
+CUDA_DEVICE static inline void
+push_xi(particle_t *prt, particle_real_t vxi[3], particle_real_t dt)
+{
+#if DIM == DIM_YZ
+
 #ifdef PSC_PARTICLES_AS_CUDA2
-
-CUDA_DEVICE static inline void
-push_xi(particle_cuda2_t *part, particle_cuda2_real_t vxi[3], particle_cuda2_real_t dt)
-{
-#if DIM == DIM_YZ
-  part->xi[1] += vxi[1] * dt;
-  part->xi[2] += vxi[2] * dt;
-#elif DIM == DIM_XYZ
-  part->xi[0] += vxi[0] * dt;
-  part->xi[1] += vxi[1] * dt;
-  part->xi[2] += vxi[2] * dt;
-#endif
-}
-
+  prt->xi[1] += vxi[1] * dt;
+  prt->xi[2] += vxi[2] * dt;
 #else
+  prt->yi += vxi[1] * dt;
+  prt->zi += vxi[2] * dt;
+#endif
 
-#if DIM == DIM_YZ
+#elif DIM == DIM_XYZ
 
-CUDA_DEVICE static inline void
-push_xi(particle_t *part, particle_real_t vxi[3], particle_real_t dt)
-{
-  part->yi += vxi[1] * dt;
-  part->zi += vxi[2] * dt;
+#ifdef PSC_PARTICLES_AS_CUDA2
+  prt->xi[0] += vxi[0] * dt;
+  prt->xi[1] += vxi[1] * dt;
+  prt->xi[2] += vxi[2] * dt;
+#else
+  prt->xi += vxi[0] * dt;
+  prt->yi += vxi[1] * dt;
+  prt->zi += vxi[2] * dt;
+#endif
+
+#endif
 }
-
-#endif
-
-#endif
 
 // ----------------------------------------------------------------------
 // push_pxi
