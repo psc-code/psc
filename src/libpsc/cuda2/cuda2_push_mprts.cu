@@ -69,7 +69,7 @@ push_mprts_ab(float4 *d_xi4, float4 *d_pxi4,
     if (n < block_begin) {
       continue;
     }
-    push_one_mprts(d_xi4, d_pxi4, n, flds_em, flds_curr, ci0);
+    push_one_mprts(d_xi4, d_pxi4, n, flds_em, flds_curr);
   }
 }
 
@@ -98,7 +98,7 @@ push_mprts_a(float4 *d_xi4, float4 *d_pxi4,
     if (n < block_begin) {
       continue;
     }
-    push_one_mprts_a(d_xi4, d_pxi4, n, flds_em, flds_curr, ci0);
+    push_one_mprts_a(d_xi4, d_pxi4, n, flds_em, flds_curr);
   }
 }
 
@@ -115,7 +115,6 @@ push_mprts_b(float4 *d_xi4, float4 *d_pxi4,
   p = find_block_pos_patch(block_pos, ci0);
   real *d_flds = d_flds0 + p * size;
 
-  DECLARE_EM_CACHE(flds_em, d_flds, size, ci0);
   real *flds_curr = d_flds;
 
   bid = find_bid();
@@ -127,7 +126,7 @@ push_mprts_b(float4 *d_xi4, float4 *d_pxi4,
     if (n < block_begin) {
       continue;
     }
-    push_one_mprts_b(d_xi4, d_pxi4, n, flds_em, flds_curr, ci0);
+    push_one_mprts_b(d_xi4, d_pxi4, n, flds_curr);
   }
 }
 

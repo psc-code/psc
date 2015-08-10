@@ -65,7 +65,7 @@ ext_prepare_sort(struct psc_particles *prts, int n, particle_t *prt,
 
 __device__ static void
 push_one(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
-	 real *flds_em, flds_curr_t flds_curr, int ci0[3])
+	 real *flds_em, flds_curr_t flds_curr)
 {
   PARTICLE_CUDA2_LOAD_POS(*prt, d_xi4, n);
 
@@ -108,7 +108,7 @@ push_one(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 
 __device__ static void
 push_one_a(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
-	   real *flds_em, flds_curr_t flds_curr, int ci0[3])
+	   real *flds_em, flds_curr_t flds_curr)
 {
   PARTICLE_CUDA2_LOAD_POS(*prt, d_xi4, n);
 
@@ -132,7 +132,7 @@ push_one_a(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 
 __device__ static void
 push_one_b(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
-	   real *flds_em, flds_curr_t flds_curr, int ci0[3])
+	   flds_curr_t flds_curr)
 {
   PARTICLE_CUDA2_LOAD_POS(*prt, d_xi4, n);
   PARTICLE_CUDA2_LOAD_MOM(*prt, d_pxi4, n);
@@ -212,29 +212,29 @@ push_one(particle_t *prt, struct psc_fields *flds, struct psc_particles *prts, i
 
 CUDA_DEVICE static void
 push_one_mprts(float4 *d_xi4, float4 *d_pxi4, int n,
-	       real *flds_em, flds_curr_t flds_curr, int ci0[3])
+	       real *flds_em, flds_curr_t flds_curr)
 {
   particle_t prt;
 
-  push_one(&prt, n, d_xi4, d_pxi4, flds_em, flds_curr, ci0);
+  push_one(&prt, n, d_xi4, d_pxi4, flds_em, flds_curr);
 }
 
 CUDA_DEVICE static void
 push_one_mprts_a(float4 *d_xi4, float4 *d_pxi4, int n,
-		 real *flds_em, flds_curr_t flds_curr, int ci0[3])
+		 real *flds_em, flds_curr_t flds_curr)
 {
   particle_t prt;
 
-  push_one_a(&prt, n, d_xi4, d_pxi4, flds_em, flds_curr, ci0);
+  push_one_a(&prt, n, d_xi4, d_pxi4, flds_em, flds_curr);
 }
 
 CUDA_DEVICE static void
 push_one_mprts_b(float4 *d_xi4, float4 *d_pxi4, int n,
-		 real *flds_em, flds_curr_t flds_curr, int ci0[3])
+		 flds_curr_t flds_curr)
 {
   particle_t prt;
 
-  push_one_b(&prt, n, d_xi4, d_pxi4, flds_em, flds_curr, ci0);
+  push_one_b(&prt, n, d_xi4, d_pxi4, flds_curr);
 }
 
 #else

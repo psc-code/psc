@@ -32,23 +32,24 @@
 #if DIM == DIM_YZ
 #define F3_CACHE(flds_em, m, jx, jy, jz)				\
   ((flds_em)[(((m)							\
-	       *BLOCKGSIZE_Z + ((jz)-ci0[2]))				\
-	      *BLOCKGSIZE_Y + ((jy)-ci0[1]))])
+	       *BLOCKGSIZE_Z + (jz))					\
+	      *BLOCKGSIZE_Y + (jy))])
 #elif DIM == DIM_XYZ
 #define F3_CACHE(flds_em, m, jx, jy, jz)				\
   ((flds_em)[((((m)							\
-		*BLOCKGSIZE_Z + ((jz-ci0[2])))				\
-	       *BLOCKGSIZE_Y + ((jy-ci0[1])))				\
-	      *BLOCKGSIZE_X + ((jx-ci0[0])))])
+		*BLOCKGSIZE_Z + (jz))					\
+	       *BLOCKGSIZE_Y + (jy))					\
+	      *BLOCKGSIZE_X + (jx))])
 #endif
 
 __device__ static float *
 cache_fields(float *flds_em_shared, float *d_flds, int size, int *ci0)
 {
   float *flds_em = flds_em_shared + ((((-EX) * 
-				       BLOCKGSIZE_Z + BLOCKBND_Z) *
-				      BLOCKGSIZE_Y + BLOCKBND_Y) *
-				     BLOCKGSIZE_X + BLOCKBND_X);
+				       BLOCKGSIZE_Z + -ci0[2] + BLOCKBND_Z) *
+				      BLOCKGSIZE_Y + -ci0[1] + BLOCKBND_Y) *
+				     BLOCKGSIZE_X + -ci0[0] + BLOCKBND_X);
+
   int ti = threadIdx.x;
   int n = BLOCKGSIZE_X * BLOCKGSIZE_Y * BLOCKGSIZE_Z;
   while (ti < n) {
