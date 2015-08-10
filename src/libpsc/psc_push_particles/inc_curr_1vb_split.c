@@ -141,6 +141,54 @@ calc_j2_split_dim(flds_curr_t flds_curr, particle_real_t qni_wni,
   }
 }
 
+CUDA_DEVICE __forceinline__ static void
+calc_j2_split_dim_x(flds_curr_t flds_curr, particle_real_t qni_wni,
+		    particle_real_t *xm, particle_real_t *xp)
+{
+  const int dim = 0;
+  int im = particle_real_fint(xm[dim]);
+  if (xp[dim] > im + 1 || xp[dim] < im) {
+    particle_real_t x1[3];
+    calc_j2_split_along_dim(dim, im, x1, xm, xp);
+    calc_j2_one_cell(flds_curr, qni_wni, xm, x1);
+    calc_j2_one_cell(flds_curr, qni_wni, x1, xp);
+  } else {
+    calc_j2_one_cell(flds_curr, qni_wni, xm, xp);
+  }
+}
+
+CUDA_DEVICE __forceinline__ static void
+calc_j2_split_dim_y(flds_curr_t flds_curr, particle_real_t qni_wni,
+		    particle_real_t *xm, particle_real_t *xp)
+{
+  const int dim = 1;
+  int im = particle_real_fint(xm[dim]);
+  if (xp[dim] > im + 1 || xp[dim] < im) {
+    particle_real_t x1[3];
+    calc_j2_split_along_dim(dim, im, x1, xm, xp);
+    calc_j2_split_dim_x(flds_curr, qni_wni, xm, x1);
+    calc_j2_split_dim_x(flds_curr, qni_wni, x1, xp);
+  } else {
+    calc_j2_split_dim_x(flds_curr, qni_wni, xm, xp);
+  }
+}
+
+CUDA_DEVICE __forceinline__ static void
+calc_j2_split_dim_z(flds_curr_t flds_curr, particle_real_t qni_wni,
+		    particle_real_t *xm, particle_real_t *xp)
+{
+  const int dim = 2;
+  int im = particle_real_fint(xm[dim]);
+  if (xp[dim] > im + 1 || xp[dim] < im) {
+    particle_real_t x1[3];
+    calc_j2_split_along_dim(dim, im, x1, xm, xp);
+    calc_j2_split_dim_y(flds_curr, qni_wni, xm, x1);
+    calc_j2_split_dim_y(flds_curr, qni_wni, x1, xp);
+  } else {
+    calc_j2_split_dim_y(flds_curr, qni_wni, xm, xp);
+  }
+}
+
 #endif
 
 // ----------------------------------------------------------------------
@@ -155,8 +203,9 @@ calc_j(flds_curr_t flds_curr, particle_real_t *xm, particle_real_t *xp,
 #if DIM == DIM_YZ
   xm[0] = .5f; // this way, we guarantee that the average position will remain in the 0th cell
   xp[0] = xm[0] + vxi[0] * prm.dt * prm.dxi[0];
-#endif
-
   calc_j2_split_dim(flds_curr, qni_wni, xm, xp, 2);
+#else
+  calc_j2_split_dim_z(flds_curr, qni_wni, xm, xp);
+#endif
 }
 

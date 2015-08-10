@@ -107,10 +107,11 @@ push_one(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 }
 
 __device__ static void
-push_one_a(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
+push_one_a(int n, float4 *d_xi4, float4 *d_pxi4,
 	   real *flds_em, flds_curr_t flds_curr)
 {
-  PARTICLE_CUDA2_LOAD_POS(*prt, d_xi4, n);
+  particle_t prt;
+  PARTICLE_CUDA2_LOAD_POS(prt, d_xi4, n);
 
   // here we have x^{n+.5}, p^n
 
@@ -118,44 +119,45 @@ push_one_a(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
   real exq, eyq, ezq, hxq, hyq, hzq;
   int lg[3];
   real og[3];
-  find_idx_off_1st_rel(prt->xi, lg, og, real(0.));
+  find_idx_off_1st_rel(prt.xi, lg, og, real(0.));
 
   INTERPOLATE_1ST_EC(flds_em, exq, eyq, ezq, hxq, hyq, hzq);
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
-  PARTICLE_CUDA2_LOAD_MOM(*prt, d_pxi4, n);
-  int kind = particle_kind(prt);
+  PARTICLE_CUDA2_LOAD_MOM(prt, d_pxi4, n);
+  int kind = particle_kind(&prt);
   real dq = prm.dq_kind[kind];
-  push_pxi(prt, exq, eyq, ezq, hxq, hyq, hzq, dq);
-  PARTICLE_CUDA2_STORE_MOM(*prt, d_pxi4, n);
+  push_pxi(&prt, exq, eyq, ezq, hxq, hyq, hzq, dq);
+  PARTICLE_CUDA2_STORE_MOM(prt, d_pxi4, n);
 }
 
 __device__ static void
-push_one_b(particle_t *prt, int n, float4 *d_xi4, float4 *d_pxi4,
-	   flds_curr_t flds_curr)
+push_one_b(int n, float4 *d_xi4, float4 *d_pxi4, flds_curr_t flds_curr)
 {
-  PARTICLE_CUDA2_LOAD_POS(*prt, d_xi4, n);
-  PARTICLE_CUDA2_LOAD_MOM(*prt, d_pxi4, n);
+  particle_t prt;
+
+  PARTICLE_CUDA2_LOAD_POS(prt, d_xi4, n);
+  PARTICLE_CUDA2_LOAD_MOM(prt, d_pxi4, n);
 
   real vxi[3];
-  calc_vxi(vxi, prt);
+  calc_vxi(vxi, &prt);
 
   particle_real_t xm[3], xp[3];
   int lg[3], lf[3];
 
   // position xm at x^(n+.5)
   real h0[3];
-  find_idx_off_pos_1st_rel(prt->xi, lg, h0, xm, real(0.));
+  find_idx_off_pos_1st_rel(prt.xi, lg, h0, xm, real(0.));
 
   // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
-  push_xi(prt, vxi, prm.dt);
-  PARTICLE_CUDA2_STORE_POS(*prt, d_xi4, n);
+  push_xi(&prt, vxi, prm.dt);
+  PARTICLE_CUDA2_STORE_POS(prt, d_xi4, n);
 
   // position xp at x^(n+.5)
   real h1[3];
-  find_idx_off_pos_1st_rel(prt->xi, lf, h1, xp, real(0.));
+  find_idx_off_pos_1st_rel(prt.xi, lf, h1, xp, real(0.));
 
-  calc_j(flds_curr, xm, xp, lf, lg, prt, vxi);
+  calc_j(flds_curr, xm, xp, lf, lg, &prt, vxi);
 }
 
 #else
@@ -223,18 +225,14 @@ CUDA_DEVICE static void
 push_one_mprts_a(float4 *d_xi4, float4 *d_pxi4, int n,
 		 real *flds_em, flds_curr_t flds_curr)
 {
-  particle_t prt;
-
-  push_one_a(&prt, n, d_xi4, d_pxi4, flds_em, flds_curr);
+  push_one_a(n, d_xi4, d_pxi4, flds_em, flds_curr);
 }
 
 CUDA_DEVICE static void
 push_one_mprts_b(float4 *d_xi4, float4 *d_pxi4, int n,
 		 flds_curr_t flds_curr)
 {
-  particle_t prt;
-
-  push_one_b(&prt, n, d_xi4, d_pxi4, flds_curr);
+  push_one_b(n, d_xi4, d_pxi4, flds_curr);
 }
 
 #else

@@ -61,8 +61,9 @@ push_mprts_ab(float4 *d_xi4, float4 *d_pxi4,
   real *flds_curr = d_flds;
 
   bid = find_bid();
-  int block_begin = d_off[bid];
-  int block_end = d_off[bid + 1];
+  __shared__ int block_begin, block_end;
+  block_begin = d_off[bid];
+  block_end = d_off[bid + 1];
 
   __syncthreads();
   for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
@@ -87,11 +88,13 @@ push_mprts_a(float4 *d_xi4, float4 *d_pxi4,
   real *d_flds = d_flds0 + p * size;
 
   DECLARE_EM_CACHE(flds_em, d_flds, size, ci0);
-  real *flds_curr = d_flds;
+  __shared__ real *flds_curr;
+  flds_curr = d_flds;
 
   bid = find_bid();
-  int block_begin = d_off[bid];
-  int block_end = d_off[bid + 1];
+  __shared__ int block_begin, block_end;
+  block_begin = d_off[bid];
+  block_end = d_off[bid + 1];
 
   __syncthreads();
   for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
@@ -118,8 +121,9 @@ push_mprts_b(float4 *d_xi4, float4 *d_pxi4,
   real *flds_curr = d_flds;
 
   bid = find_bid();
-  int block_begin = d_off[bid];
-  int block_end = d_off[bid + 1];
+  __shared__ int block_begin, block_end;
+  block_begin = d_off[bid];
+  block_end = d_off[bid + 1];
 
   __syncthreads();
   for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
