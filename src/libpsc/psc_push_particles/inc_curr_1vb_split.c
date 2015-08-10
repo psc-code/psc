@@ -41,7 +41,7 @@ calc_j2_one_cell(flds_curr_t flds_curr, particle_real_t qni_wni,
 
 #elif DIM == DIM_XYZ
 
-CUDA_DEVICE static void
+CUDA_DEVICE __forceinline__ static void
 calc_j2_one_cell(flds_curr_t flds_curr, particle_real_t qni_wni,
 		 particle_real_t xm[3], particle_real_t xp[3])
 {
@@ -122,7 +122,7 @@ calc_j2_split_dim(flds_curr_t flds_curr, particle_real_t qni_wni,
 
 #elif DIM == DIM_XYZ
 
-CUDA_DEVICE static inline void
+CUDA_DEVICE __forceinline__ static void
 calc_j2_split_dim(flds_curr_t flds_curr, particle_real_t qni_wni,
 		  particle_real_t *xm, particle_real_t *xp, int dim)
 {
@@ -146,7 +146,7 @@ calc_j2_split_dim(flds_curr_t flds_curr, particle_real_t qni_wni,
 // ----------------------------------------------------------------------
 // calc_j
 
-CUDA_DEVICE static inline void
+CUDA_DEVICE __forceinline__ static void
 calc_j(flds_curr_t flds_curr, particle_real_t *xm, particle_real_t *xp,
        int *lf, int *lg, particle_t *prt, particle_real_t *vxi)
 {

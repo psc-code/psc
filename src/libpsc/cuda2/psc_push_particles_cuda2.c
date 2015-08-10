@@ -63,6 +63,10 @@ psc_push_particles_1vbec_push_mprts_xyz(struct psc_push_particles *push,
   if (!pr) {
     pr = prof_register("1vbec_xyz", 1., 0, 0);
   }  
+  static int pr_2;
+  if (!pr_2) {
+    pr_2 = prof_register("1vbec_xyz 2", 1., 0, 0);
+  }  
 
   struct psc_mparticles *mprts =
     psc_mparticles_get_as(mprts_base, "cuda2", 0);
@@ -72,9 +76,13 @@ psc_push_particles_1vbec_push_mprts_xyz(struct psc_push_particles *push,
   psc_mparticles_cuda2_copy_to_device(mprts);
   psc_mfields_cuda2_copy_to_device(mflds);
 
+  cuda2_1vbec_push_mprts_a_xyz(mprts, mflds);
   prof_start(pr);
-  cuda2_1vbec_push_mprts_xyz(mprts, mflds);
+  cuda2_1vbec_push_mprts_b1_xyz(mprts, mflds);
   prof_stop(pr);
+  prof_start(pr_2);
+  cuda2_1vbec_push_mprts_b2_xyz(mprts, mflds);
+  prof_stop(pr_2);
 
   psc_mparticles_cuda2_copy_to_host(mprts);
   psc_mfields_cuda2_copy_to_host(mflds);
