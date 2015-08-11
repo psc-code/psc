@@ -27,16 +27,12 @@ calc_j2_one_cell(flds_curr_t flds_curr, particle_real_t qni_wni,
   curr_add(flds_curr, 0, i[0]  ,i[1]+1,i[2]+1, fnqx * (dx[0] * (      xa[1]) * (      xa[2]) + h));
 
   particle_real_t fnqy = qni_wni * prm.fnqys;
-  curr_add(flds_curr, 1, i[0]  ,i[1]  ,i[2]  , fnqy * (dx[1] * (1.f - xa[0]) * (1.f - xa[2]) + h));
-  curr_add(flds_curr, 1, i[0]+0,i[1]  ,i[2]  , fnqy * (dx[1] * (      xa[0]) * (1.f - xa[2]) - h));
-  curr_add(flds_curr, 1, i[0]  ,i[1]  ,i[2]+1, fnqy * (dx[1] * (1.f - xa[0]) * (      xa[2]) - h));
-  curr_add(flds_curr, 1, i[0]+0,i[1]  ,i[2]+1, fnqy * (dx[1] * (      xa[0]) * (      xa[2]) + h));
+  curr_add(flds_curr, 1, i[0]  ,i[1]  ,i[2]  , fnqy * (dx[1] * (1.f - xa[2])));
+  curr_add(flds_curr, 1, i[0]  ,i[1]  ,i[2]+1, fnqy * (dx[1] * (      xa[2])));
 
   particle_real_t fnqz = qni_wni * prm.fnqzs;
-  curr_add(flds_curr, 2, i[0]  ,i[1]  ,i[2]  , fnqz * (dx[2] * (1.f - xa[0]) * (1.f - xa[1]) + h));
-  curr_add(flds_curr, 2, i[0]+0,i[1]  ,i[2]  , fnqz * (dx[2] * (      xa[0]) * (1.f - xa[1]) - h));
-  curr_add(flds_curr, 2, i[0]  ,i[1]+1,i[2]  , fnqz * (dx[2] * (1.f - xa[0]) * (      xa[1]) - h));
-  curr_add(flds_curr, 2, i[0]+0,i[1]+1,i[2]  , fnqz * (dx[2] * (      xa[0]) * (      xa[1]) + h));
+  curr_add(flds_curr, 2, i[0]  ,i[1]  ,i[2]  , fnqz * (dx[2] * (1.f - xa[1])));
+  curr_add(flds_curr, 2, i[0]  ,i[1]+1,i[2]  , fnqz * (dx[2] * (      xa[1])));
 }
 
 #elif DIM == DIM_XYZ
@@ -101,6 +97,7 @@ calc_j2_split_along_dim(int dim, int im, particle_real_t x1[3],
 
 #if DIM == DIM_YZ
 
+#if 0
 CUDA_DEVICE __forceinline__ static void 
 calc_j2_split_dim(flds_curr_t flds_curr, particle_real_t qni_wni,
 		  particle_real_t *xm, particle_real_t *xp, int dim)
@@ -119,9 +116,43 @@ calc_j2_split_dim(flds_curr_t flds_curr, particle_real_t qni_wni,
     }
   }
 }
+#endif
+
+CUDA_DEVICE __forceinline__ static void
+calc_j2_split_dim_y(flds_curr_t flds_curr, particle_real_t qni_wni,
+		    particle_real_t *xm, particle_real_t *xp)
+{
+  const int dim = 1;
+  int im = particle_real_fint(xm[dim]);
+  if (xp[dim] > im + 1 || xp[dim] < im) {
+    particle_real_t x1[3];
+    calc_j2_split_along_dim(dim, im, x1, xm, xp);
+    calc_j2_one_cell(flds_curr, qni_wni, xm, x1);
+    calc_j2_one_cell(flds_curr, qni_wni, x1, xp);
+  } else {
+    calc_j2_one_cell(flds_curr, qni_wni, xm, xp);
+  }
+}
+
+CUDA_DEVICE __forceinline__ static void
+calc_j2_split_dim_z(flds_curr_t flds_curr, particle_real_t qni_wni,
+		    particle_real_t *xm, particle_real_t *xp)
+{
+  const int dim = 2;
+  int im = particle_real_fint(xm[dim]);
+  if (xp[dim] > im + 1 || xp[dim] < im) {
+    particle_real_t x1[3];
+    calc_j2_split_along_dim(dim, im, x1, xm, xp);
+    calc_j2_split_dim_y(flds_curr, qni_wni, xm, x1);
+    calc_j2_split_dim_y(flds_curr, qni_wni, x1, xp);
+  } else {
+    calc_j2_split_dim_y(flds_curr, qni_wni, xm, xp);
+  }
+}
 
 #elif DIM == DIM_XYZ
 
+#if 0
 CUDA_DEVICE __forceinline__ static void
 calc_j2_split_dim(flds_curr_t flds_curr, particle_real_t qni_wni,
 		  particle_real_t *xm, particle_real_t *xp, int dim)
@@ -140,6 +171,7 @@ calc_j2_split_dim(flds_curr_t flds_curr, particle_real_t qni_wni,
     }
   }
 }
+#endif
 
 CUDA_DEVICE __forceinline__ static void
 calc_j2_split_dim_x(flds_curr_t flds_curr, particle_real_t qni_wni,
@@ -203,7 +235,7 @@ calc_j(flds_curr_t flds_curr, particle_real_t *xm, particle_real_t *xp,
 #if DIM == DIM_YZ
   xm[0] = .5f; // this way, we guarantee that the average position will remain in the 0th cell
   xp[0] = xm[0] + vxi[0] * prm.dt * prm.dxi[0];
-  calc_j2_split_dim(flds_curr, qni_wni, xm, xp, 2);
+  calc_j2_split_dim_z(flds_curr, qni_wni, xm, xp);
 #else
   calc_j2_split_dim_z(flds_curr, qni_wni, xm, xp);
 #endif
