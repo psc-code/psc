@@ -76,28 +76,28 @@ qNewDup = createData(grid)
 -- aliases for i/o of solvers
 elc = q:alias(elcIdx, elcIdx + nr_moments)
 ion = q:alias(ionIdx, ionIdx + nr_moments)
-emf = q:alias(emIdx, emIdx + nr_em_comps)
+emf = q:alias(emIdx, emIdx + 8)
 elcX = qX:alias(elcIdx, elcIdx + nr_moments)
 ionX = qX:alias(ionIdx, ionIdx + nr_moments)
-emfX = qX:alias(emIdx, emIdx + nr_em_comps)
+emfX = qX:alias(emIdx, emIdx + 8)
 if (nr_dims == 2 or nr_dims == 3) then
    elcY = qY:alias(elcIdx, elcIdx + nr_moments)
    ionY = qY:alias(ionIdx, ionIdx + nr_moments)
-   emfY = qY:alias(emIdx, emIdx + nr_em_comps)
+   emfY = qY:alias(emIdx, emIdx + 8)
 end
 if (nr_dims == 3) then
    elcZ = qZ:alias(elcIdx, elcIdx + nr_moments)
    ionZ = qZ:alias(ionIdx, ionIdx + nr_moments)
-   emfZ = qZ:alias(emIdx, emIdx + nr_em_comps)
+   emfZ = qZ:alias(emIdx, emIdx + 8)
 end
 elcNew = qNew:alias(elcIdx, elcIdx + nr_moments)
 ionNew = qNew:alias(ionIdx, ionIdx + nr_moments)
-emfNew = qNew:alias(emIdx, emIdx + nr_em_comps)
+emfNew = qNew:alias(emIdx, emIdx + 8)
 
 ------------------------
 -- Boundary Condition --
 ------------------------
-temp_mrc_fld = ggcm_get_3d_fld(ggcm_mhd, 18)
+temp_mrc_fld = ggcm_get_3d_fld(ggcm_mhd, nr_moents * nr_fluids + 8)
 temp_cptr = mrc_fld_get_arr(temp_mrc_fld)
 
 function applyBc(fld, tCurr, myDt)
