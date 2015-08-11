@@ -271,6 +271,9 @@ ggcm_mhd_step_gkeyll_lua_setup(const char *script, const char *script_common,
   lua_pushnumber(L, h[2]);
   nargs += 3;
 
+  lua_pushnumber(L, mhd->par.gamm);
+  nargs += 1;
+
   lua_pushstring(L, script_common);
   nargs += 1;
 

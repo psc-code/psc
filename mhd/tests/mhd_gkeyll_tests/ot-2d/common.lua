@@ -25,8 +25,6 @@ mass_ratios = {1./26., 25./26.}
 momentum_ratios = {1./26, 25./26.}
 pressure_ratios = {0.5, 0.5}
 
-gasGamma = 5./3.
-
 -- if we only need the parameters above and want
 -- to skip executing the remaining codes, do not
 -- specify skip_execute (nil) or set it false
@@ -118,6 +116,7 @@ if (showlog) then
    mprint(string.format("===================================================="))
    mprint(string.format("nr_fluids = %d  nr_moments = %d", nr_fluids, nr_moments))
    mprint(string.format("nr_comps = %d  nr_ghosts = %d nr_dims = %d", nr_comps, nr_ghosts, nr_dims))
+   mprint(string.format("gasGamma = %g", gasGamma))
    mprint(string.format("lightSpeed = %g  mu0 = %g  epsilon0 = %g", lightSpeed, mu0, epsilon0))
    mprint(string.format("elcErrorSpeedFactor = %g  mgnErrorSpeedFactor = %g", elcErrorSpeedFactor, mgnErrorSpeedFactor))
    mprint(string.format("ionMass = %g  elcMass = ionMass/%g",ionMass, ionMass/elcMass))

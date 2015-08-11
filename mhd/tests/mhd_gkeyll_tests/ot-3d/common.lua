@@ -49,8 +49,6 @@ end
 --   epsilon0, elc/mgnErrorSpeedFactor,      --
 --   elcCharge/Mass, ionCharge/Mass, cfl     --
 -----------------------------------------------
-gasGamma = 5./3.
-
 lightSpeed = 20.0
 mu0 = 1.0
 epsilon0 =1.0/mu0/(lightSpeed^2)
