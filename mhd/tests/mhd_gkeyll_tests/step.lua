@@ -1,10 +1,7 @@
-----------------------------------------------------------
--- SCRIPT FOR 2D 5M TIME-STEPPING THROUGH runTimeStep   --
---                                                      --
--- ALL RELEVANT PARAMETERS ARE OBTAINED FROM THE SCRIPT -- 
---   FOR INITIALIZATION.                                --
--- THIS SCRIPT SHOULD BE UNIVERSAL FOR DIFFERENT RUNS.  --
-----------------------------------------------------------
+-------------------------------------------------
+-- SCRIPT FOR 1D/2D/3D MULTIPLE-SPECIES 5M/10M --
+-- TIME-STEPPING THROUGH runTimeStep           --
+-------------------------------------------------
 
 ------------------------------------------
 -- LOAD LOCAL DOMAIN PARAMS FROM LIBMRC --
@@ -21,10 +18,6 @@ ggcm_mhd, rank, mx, my, mz, lx, ly, lz, hx, hy, hz, lxg, lyg, lzg, hxg, hyg, hzg
 showlog = true
 showlocallog = false
 dofile(common_script)
-
-elcIdx = 0
-ionIdx = elcIdx + nr_moments
-emIdx = nr_fluids*nr_moments
 
 -----------------------------------------
 -- HANDLE 1,2,3-D 5M/10M AUTOMATICALLY --
@@ -52,9 +45,10 @@ elseif (nr_dims == 3) then
    end
 end
 
--------------------------------------
--- TIME-STEPPING FOR LIMBRC-GKEYLL --
--------------------------------------
+-------------------------
+-- SETUP GRID AND DATA --
+-------------------------
+-- create grid for local domain
 grid = createGrid()
 -- create sol. needed by dimensional-splitting algorithms
 -- e.g. qX is sol. after sweeping in x
@@ -71,41 +65,53 @@ if (nr_dims == 3) then qNew = qZ end
 -- duplicates in case that the 
 -- time step should be re-taken
 qDup = createData(grid)
-qNewDup = createData(grid)
+qNewDup = createData(grid) --FIXME needed?
+
+-- begining index of the sth species
+-- s ranges from 0 to nr_fluids-1!!!
+function fluidIdx(s)
+   return s * nr_moments
+end
+-- begining index of the EM field (and correction potentials)
+emfIdx = nr_fluids * nr_moments
 
 -- aliases for i/o of solvers
-elc = q:alias(elcIdx, elcIdx + nr_moments)
-ion = q:alias(ionIdx, ionIdx + nr_moments)
-emf = q:alias(emIdx, emIdx + 8)
-elcX = qX:alias(elcIdx, elcIdx + nr_moments)
-ionX = qX:alias(ionIdx, ionIdx + nr_moments)
-emfX = qX:alias(emIdx, emIdx + 8)
+function getAliases(myQ)
+   local myFluids = {}
+   for s=0,nr_fluids-1 do
+      myFluids[s] = myQ:alias(fluidIdx(s), fluidIdx(s) + nr_moments)
+   end
+   local myEmf = myQ:alias(emfIdx, emfIdx + 8)
+   return myFluids,myEmf
+end
+
+fluids,emf = getAliases(q)
+fluidsX,emfX = getAliases(qX)
 if (nr_dims == 2 or nr_dims == 3) then
-   elcY = qY:alias(elcIdx, elcIdx + nr_moments)
-   ionY = qY:alias(ionIdx, ionIdx + nr_moments)
-   emfY = qY:alias(emIdx, emIdx + 8)
+   fluidsY,emfY = getAliases(qY)
 end
 if (nr_dims == 3) then
-   elcZ = qZ:alias(elcIdx, elcIdx + nr_moments)
-   ionZ = qZ:alias(ionIdx, ionIdx + nr_moments)
-   emfZ = qZ:alias(emIdx, emIdx + 8)
+   fluidsZ,emfZ = getAliases(qZ)
 end
-elcNew = qNew:alias(elcIdx, elcIdx + nr_moments)
-ionNew = qNew:alias(ionIdx, ionIdx + nr_moments)
-emfNew = qNew:alias(emIdx, emIdx + 8)
+fluidsNew,emfNew = getAliases(qNew)
 
 ------------------------
 -- Boundary Condition --
 ------------------------
-temp_mrc_fld = ggcm_get_3d_fld(ggcm_mhd, nr_moents * nr_fluids + 8)
+-- create mrc_fld to be cached and reused
+temp_mrc_fld = ggcm_get_3d_fld(ggcm_mhd, nr_moments * nr_fluids + 8)
 temp_cptr = mrc_fld_get_arr(temp_mrc_fld)
 
-function applyBc(fld, tCurr, myDt)
- fld:copy_to_cptr(temp_cptr)
- ggcm_fill_ghosts(ggcm_mhd, temp_mrc_fld, tCurr)
- fld:copy_from_cptr(temp_cptr)
+function applyBc(myQ, tCurr, myDt)
+   -- copy current solution to the cache field
+   myQ:copy_to_cptr(temp_cptr)
+   -- call ggcm's boundary condition to work on the cache field
+   ggcm_fill_ghosts(ggcm_mhd, temp_mrc_fld, tCurr)
+   -- copy the updated cache field back
+   myQ:copy_from_cptr(temp_cptr)
 end
 
+-- free the space of the temporary field
 function finalize()
  ggcm_put_3d_fld(ggcm_mhd, temp_mrc_fld)
 end
@@ -113,24 +119,19 @@ end
 --------------------------
 -- HYPERBOLIC EQUATIONS --
 --------------------------
--- Euler equations with regular, high-
--- resolution fluxes
-elcEqn = HyperEquation.Euler {
-   gasGamma = gasGamma,
-}
-ionEqn = HyperEquation.Euler {
-   gasGamma = gasGamma,
-}
--- Euler equations with low-resolution, 
--- positivity-preserving fluxes
-elcLaxEqn = HyperEquation.Euler {
-   gasGamma = gasGamma,
-   numericalFlux = "lax",   
-}
-ionLaxEqn = HyperEquation.Euler {
-   gasGamma = gasGamma,
-   numericalFlux = "lax",
-}
+-- Euler equations with regular, high-resolution fluxes
+fluidEqns = {}
+-- Euler equations with low-resolution, positivity-preserving fluxes
+fluidLaxEqns = {}
+for s=0,nr_fluids-1 do
+   fluidEqns[s] = HyperEquation.Euler {
+      gasGamma = gasGamma,
+   }
+   fluidLaxEqns[s] = HyperEquation.Euler {
+      gasGamma = gasGamma,
+      numerialFlu = "lax",
+   }
+end
 -- Maxwell equations
 maxEqn = HyperEquation.PhMaxwell {
    lightSpeed = lightSpeed,
@@ -154,74 +155,56 @@ function createSlvr(equation, direction, limiter)
    }
 end
 
--- dimensional-splitting solvers for regular equations
-elcSlvrDir0 = createSlvr(elcEqn, 0, "van-leer")
-ionSlvrDir0 = createSlvr(ionEqn, 0, "van-leer")
-maxSlvrDir0 = createSlvr(maxEqn, 0, "van-leer")
-elcSlvrDir0:setIn( {elc} )
-elcSlvrDir0:setOut( {elcX} )
-ionSlvrDir0:setIn( {ion} )
-ionSlvrDir0:setOut( {ionX} )
-maxSlvrDir0:setIn( {emf} )
-maxSlvrDir0:setOut( {emfX} )
-
-if (nr_dims == 2 or nr_dims == 3) then
-   elcSlvrDir1 = createSlvr(elcEqn, 1, "van-leer")
-   ionSlvrDir1 = createSlvr(ionEqn, 1, "van-leer")
-   maxSlvrDir1 = createSlvr(maxEqn, 1, "van-leer")
-   elcSlvrDir1:setIn( {elcX} )
-   elcSlvrDir1:setOut( {elcY} )
-   ionSlvrDir1:setIn( {ionX} )
-   ionSlvrDir1:setOut( {ionY} )
-   maxSlvrDir1:setIn( {emfX} )
-   maxSlvrDir1:setOut( {emfY} )
+function createFluidEMSlvrs(eqnType, dir, limiter)
+   if (eqnType == "regular") then
+      myFluidEqns = fluidEqns
+   elseif (eqnType == "lax") then
+      myFluidEqns = fluidLaxEqns
+   end
+   if (dir == 0) then
+      myFluidsIn = fluids
+      myFluidsOut = fluidsX
+      myEmfIn = emf
+      myEmfOut = emfX
+   elseif (dir == 1) then
+      myFluidsIn = fluidsX
+      myFluidsOut = fluidsY
+      myEmfIn = emfX
+      myEmfOut = emfY
+   elseif (dir == 2) then
+      myFluidsIn = fluidsY
+      myFluidsOut = fluidsZ
+      myEmfIn = emfY
+      myEmfOut = emfZ
+   end
+   local myFluidSlvrsDir = {}
+   for s=0,nr_fluids-1 do
+      myFluidSlvrsDir[s] = createSlvr(myFluidEqns[s], dir, limiter)
+      myFluidSlvrsDir[s]:setIn({myFluidsIn[s]})
+      myFluidSlvrsDir[s]:setOut({myFluidsOut[s]})
+   end
+   local myMaxSlvrDir = createSlvr(maxEqn, dir, limiter)
+   myMaxSlvrDir:setIn( {myEmfIn} )
+   myMaxSlvrDir:setOut( {myEmfOut} )
+   return myFluidSlvrsDir,myMaxSlvrDir
 end
 
+-- dimensional-splitting solvers for regular equations
+fluidSlvrsDir0,maxSlvrDir0 = createFluidEMSlvrs("regular", 0, "van-leer")
+if (nr_dims == 2 or nr_dims == 3) then
+   fluidSlvrsDir1,maxSlvrDir1 = createFluidEMSlvrs("regular", 1, "van-leer")
+end
 if (nr_dims == 3) then
-   elcSlvrDir2 = createSlvr(elcEqn, 2, "van-leer")
-   ionSlvrDir2 = createSlvr(ionEqn, 2, "van-leer")
-   maxSlvrDir2 = createSlvr(maxEqn, 2, "van-leer")
-   elcSlvrDir2:setIn( {elcY} )
-   elcSlvrDir2:setOut( {elcZ} )
-   ionSlvrDir2:setIn( {ionY} )
-   ionSlvrDir2:setOut( {ionZ} )
-   maxSlvrDir2:setIn( {emfY} )
-   maxSlvrDir2:setOut( {emfZ} )
+   fluidSlvrsDir2,maxSlvrDir2 = createFluidEMSlvrs("regular", 2, "van-leer")
 end
 
 -- dimensional-splitting solvers for positivity-preserving equations
-elcLaxSlvrDir0 = createSlvr(elcEqn, 0, "zero")
-ionLaxSlvrDir0 = createSlvr(ionEqn, 0, "zero")
-maxLaxSlvrDir0 = createSlvr(maxEqn, 0, "zero")
-elcLaxSlvrDir0:setIn( {elc} )
-elcLaxSlvrDir0:setOut( {elcX} )
-ionLaxSlvrDir0:setIn( {ion} )
-ionLaxSlvrDir0:setOut( {ionX} )
-maxLaxSlvrDir0:setIn( {emf} )
-maxLaxSlvrDir0:setOut( {emfX} )
-
+fluidLaxSlvrsDir0,maxLaxSlvrDir0 = createFluidEMSlvrs("lax", 0, "zero")
 if (nr_dims == 2 or nr_dims == 3) then
-   elcLaxSlvrDir1 = createSlvr(elcEqn, 1, "zero")
-   ionLaxSlvrDir1 = createSlvr(ionEqn, 1, "zero")
-   maxLaxSlvrDir1 = createSlvr(maxEqn, 1, "zero")
-   elcLaxSlvrDir1:setIn( {elcX} )
-   elcLaxSlvrDir1:setOut( {elcY} )
-   ionLaxSlvrDir1:setIn( {ionX} )
-   ionLaxSlvrDir1:setOut( {ionY} )
-   maxLaxSlvrDir1:setIn( {emfX} )
-   maxLaxSlvrDir1:setOut( {emfY} )
+   fluidLaxSlvrsDir1,maxLaxSlvrDir1 = createFluidEMSlvrs("lax", 1, "zero")
 end
-
 if (nr_dims == 3) then
-   elcLaxSlvrDir2 = createSlvr(elcEqn, 2, "zero")
-   ionLaxSlvrDir2 = createSlvr(ionEqn, 2, "zero")
-   maxLaxSlvrDir2 = createSlvr(maxEqn, 2, "zero")
-   elcLaxSlvrDir2:setIn( {elcY} )
-   elcLaxSlvrDir2:setOut( {elcZ} )
-   ionLaxSlvrDir2:setIn( {ionY} )
-   ionLaxSlvrDir2:setOut( {ionZ} )
-   maxLaxSlvrDir2:setIn( {emfY} )
-   maxLaxSlvrDir2:setOut( {emfZ} )
+   fluidLaxSlvrsDir2,maxLaxSlvrDir2 = createFluidEMSlvrs("lax", 2, "zero")
 end
 
 ---------------------
@@ -237,8 +220,20 @@ sourceSlvr = mySourceUpdater {
    hasStaticField = false,
 }
 
-function updateSource(elcIn, ionIn, emIn, tCurr, t)
-   sourceSlvr:setOut( {elcIn, ionIn, emIn} )
+-- output of source updater using the initial sol.
+sourceOut = {}
+-- output of source updater using the updated sol.
+sourceOutNew = {}
+for s=0,nr_fluids-1 do
+   -- FIXME index matters?
+   sourceOut[s+1] = fluids[s]
+   sourceOutNew[s+1] = fluidsNew[s]
+end
+sourceOut[nr_fluids+1] =  emf
+sourceOutNew[nr_fluids+1] = emfNew
+
+function updateSource(mySourceOut, tCurr, t)
+   sourceSlvr:setOut(mySourceOut)
    sourceSlvr:setCurrTime(tCurr)
    sourceSlvr:advance(t)
 end
@@ -246,19 +241,64 @@ end
 -----------------------------------------------------
 -- COMPLETE EQUATION SOLUTION WITHOUT SOURCE TERMS --
 -----------------------------------------------------
-elcSlvr = {elcSlvrDir0, elcSlvrDir1, elcSlvrDir2}
-ionSlvr = {ionSlvrDir0, ionSlvrDir1, ionSlvrDir2}
-maxSlvr = {maxSlvrDir0, maxSlvrDir1, maxSlvrDir2}
-elcOut = {elcX, elcY, elcZ}
-ionOut = {ionX, ionY, ionZ}
-qOut = {qX, qY, qZ}
+-- output of fluid solvers in each direction
+-- for each species
+fluidsOut = {}
+fluidsOut[0] = fluidsX
+if (nr_dims ==2 or nr_dims == 3) then fluidsOut[1] = fluidsY end
+if (nr_dims == 3) then fluidsOut[2] = fluidsZ end
+-- output of all solvers in each direction
+qOut = {}; qOut[0] = qX; qOut[1] = qY; qOut[2] = qZ
+
+-- helper function to get slvrs in along a specific direction
+function getSlvrsDir(mySlvrs, slvrType, dir)
+   if (slvrType == "regular") then
+      if (dir == 0) then
+         fluidSlvrsDir = fluidSlvrsDir0
+         maxSlvrDir = maxSlvrDir0
+      elseif (dir == 1) then
+         fluidSlvrsDir = fluidSlvrsDir1
+         maxSlvrDir = maxSlvrDir1
+      elseif (dir == 2) then
+         fluidSlvrsDir = fluidSlvrsDir2
+         maxSlvrDir = maxSlvrDir2
+      end
+   elseif (slvrType == "lax") then
+      if (dir == 0) then
+         fluidSlvrsDir = fluidLaxSlvrsDir0
+         maxSlvrDir = maxLaxSlvrDir0
+      elseif (dir == 1) then
+         fluidSlvrsDir = fluidLaxSlvrsDir1
+         maxSlvrDir = maxLaxSlvrDir1
+      elseif (dir == 2) then
+         fluidSlvrsDir = fluidLaxSlvrsDir2
+         maxSlvrDir = maxLaxSlvrDir2
+      end
+   end
+   slvrsDir = {}
+   for s=0,nr_fluids-1 do
+      -- note that lua iterates from [1] even when
+      -- the table has value at [0]
+      slvrsDir[s+1] = fluidSlvrsDir[s]
+   end
+   slvrsDir[nr_fluids+1] = maxSlvrDir
+   mySlvrs[dir] = slvrsDir
+end
+
+-- regular solvers to be executed along each direction,
+-- including both fluid and Maxwell equations
+slvrs = {}
+getSlvrsDir(slvrs, "regular", 0)
+if (nr_dims == 2 or nr_dims == 3) then getSlvrsDir(slvrs, "regular", 1) end
+if (nr_dims == 3) then getSlvrsDir(slvrs, "regular", 2) end
+
 function updateFluidsAndField(tCurr, t)
    local myStatus = true
    local myDtSuggested = 1e3*math.abs(t-tCurr)
    local useLaxSolver = False
 
-   for dir = 1,nr_dims do
-      for i,slvr in ipairs({elcSlvr[dir], ionSlvr[dir], maxSlvr[dir]}) do
+   for dir = 0,nr_dims-1 do
+      for i,slvr in ipairs(slvrs[dir]) do
          slvr:setCurrTime(tCurr)
          local status, dtSuggested = slvr:advance(t)
          myStatus = status and myStatus
@@ -266,10 +306,11 @@ function updateFluidsAndField(tCurr, t)
       end
       myStatus = ggcm_mhd_reduce_boolean(ggcm_mhd, myStatus, true)
       myDtSuggested = ggcm_mhd_reduce_double_min(ggcm_mhd, myDtSuggested)
- 
-      if ((elcEqn:checkInvariantDomain(elcOut[dir]) == false)
-         or (ionEqn:checkInvariantDomain(ionOut[dir]) == false)) then
-         useLaxSolver = true
+
+      for s=0,nr_fluids-1 do
+         if (fluidEqns[s]:checkInvariantDomain((fluidsOut[dir])[s]) == false) then
+            uselaxSolver = true -- TODO breaka for loop
+         end
       end
       useLaxSolver = ggcm_mhd_reduce_boolean(ggcm_mhd, useLaxSolver, false)
  
@@ -283,15 +324,18 @@ function updateFluidsAndField(tCurr, t)
    return myStatus, myDtSuggested, useLaxSolver
 end
 
-elcLaxSlvr = {elcLaxSlvrDir0, elcLaxSlvrDir1, elcLaxSlvrDir2}
-ionLaxSlvr = {ionLaxSlvrDir0, ionLaxSlvrDir1, ionLaxSlvrDir2}
-maxLaxSlvr = {maxLaxSlvrDir0, maxLaxSlvrDir1, maxLaxSlvrDir2}
+-- positive-preserving solvers to be executed along each direction
+laxSlvrs = {}
+getSlvrsDir(laxSlvrs, "lax", 0)
+if (nr_dims == 2 or nr_dims == 3) then getSlvrsDir(laxSlvrs, "lax", 1) end
+if (nr_dims == 3) then getSlvrsDir(laxSlvrs, "lax", 2) end
+
 function updateFluidsAndFieldLax(tCurr, t)
    local myStatus = true
    local myDtSuggested = 1e3*math.abs(t-tCurr)
 
    for dir = 1,nr_dims do
-      for i,slvr in ipairs({elcLaxSlvr[dir], ionLaxSlvr[dir], maxLaxSlvr[dir]}) do
+      for i,slvr in ipairs(laxSlvrs) do
          slvr:setCurrTime(tCurr)
          local status, dtSuggested = slvr:advance(t)
          myStatus = status and myStatus
@@ -318,14 +362,14 @@ function solveTwoFluidSystem(tCurr, t)
    local dthalf = 0.5*(t-tCurr)
 
    -- update source terms
-   updateSource(elc, ion, emf, tCurr, tCurr+dthalf)
+   updateSource(sourceOut, tCurr, tCurr+dthalf)
    applyBc(q, tCurr, t-tCurr)
 
    -- update fluids and fields
    local status, dtSuggested, useLaxSolver = updateFluidsAndField(tCurr, t)
 
    -- update source terms
-   updateSource(elcNew, ionNew, emfNew, tCurr, tCurr+dthalf)
+   updateSource(sourceOutNew, tCurr, tCurr+dthalf)
    applyBc(qNew, tCurr, t-tCurr)
 
    return status, dtSuggested,useLaxSolver
@@ -336,14 +380,14 @@ function solveTwoFluidLaxSystem(tCurr, t)
    local dthalf = 0.5*(t-tCurr)
 
    -- update source terms
-   updateSource(elc, ion, emf, tCurr, tCurr+dthalf)
+   updateSource(sourceOut, tCurr, tCurr+dthalf)
    applyBc(q, tCurr, t-tCurr)
 
    -- update fluids and fields
    local status, dtSuggested = updateFluidsAndFieldLax(tCurr, t)
 
    -- update source terms
-   updateSource(elcNew, ionNew, emfNew, tCurr, tCurr+dthalf)
+   updateSource(sourceOutNew, tCurr, tCurr+dthalf)
    applyBc(qNew, tCurr, t-tCurr)
 
    return status, dtSuggested
@@ -356,7 +400,8 @@ function runTimeStep(myDt, tCurr, step, cptr)
    q:copy_from_cptr(cptr)
    useLaxSolver = false
 
-   local loop = 1
+   --FIXME qDup and qNewDup?
+
    while true do
       -- copy q and qNew in case we need to take this step again
       qDup:copy(q)
@@ -392,7 +437,6 @@ function runTimeStep(myDt, tCurr, step, cptr)
          myDt = dtSuggested
          break
       end 
-      mprint("loop", loop)
    end -- end of retry loop
 
    q:copy_to_cptr(cptr)
