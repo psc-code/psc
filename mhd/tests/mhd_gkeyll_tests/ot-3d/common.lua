@@ -62,6 +62,8 @@ B0 = 1.
 
 elcCharge = -1.0
 ionCharge = 1.0
+charge = {elcCharge, ionCharge}
+
 ionElcMassRatio = 25.
 ionElcPressRatio = 1.
 ionInertiaLength0 = 0.25
@@ -72,6 +74,7 @@ pre0 = pr0 / (1.+ionElcPressRatio)
 pri0 = pr0 - pre0
 ionMass = ionInertiaLength0 * sqrt(mu0*rhoi0*ionCharge*ionCharge)
 elcMass = ionMass / ionElcMassRatio
+mass = {elcMass, ionMass}
 
 cfl = 0.9
 

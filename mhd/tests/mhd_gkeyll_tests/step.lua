@@ -230,8 +230,8 @@ end
 sourceSlvr = mySourceUpdater {
    onGrid = grid,
    numFluids = nr_fluids,
-   charge = {elcCharge, ionCharge},
-   mass = {elcMass, ionMass},
+   charge = charge,
+   mass = mass,
    epsilon0 = epsilon0,
    linearSolver = "partialPivLu",
    hasStaticField = false,

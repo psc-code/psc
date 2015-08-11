@@ -70,6 +70,8 @@ radCore = 0.0625
 
 elcCharge = -1.0
 ionCharge = 1.0
+charge = {elcCharge, ionCharge}
+
 ionElcMassRatio = 25.
 ionElcPressRatio = 1.
 ionInertiaLength0 = 0.06
@@ -99,6 +101,7 @@ eriCore = priCore/(gasGamma-1.0) + 0.5*momxiCore^2/rhoiCore
 
 ionMass = ionInertiaLength0 * sqrt(mu0*rhoi0*ionCharge*ionCharge)
 elcMass = ionMass / ionElcMassRatio
+mass = {elcMass, ionMass}
 
 rhoeIn = rhoe0
 momxeIn = momxe0
