@@ -6,7 +6,6 @@
 // for conversions
 #include "psc_particles_single.h"
 #include "psc_particles_cuda.h"
-#include "../cuda/psc_cuda.h"
 
 #include <stdlib.h>
 
@@ -234,6 +233,10 @@ psc_particles_cuda2_copy_from_single(struct psc_particles *prts_base,
   }
 }
 
+#ifdef USE_CUDA
+
+#include "../cuda/psc_cuda.h"
+
 // ----------------------------------------------------------------------
 // psc_particles_cuda2_copy_to_cuda
 
@@ -303,14 +306,18 @@ psc_particles_cuda2_copy_from_cuda(struct psc_particles *prts,
   free(pxi4);
 }
 
+#endif
+
 // ----------------------------------------------------------------------
 // psc_particles: subclass "cuda2"
 
 static struct mrc_obj_method psc_particles_cuda2_methods[] = {
   MRC_OBJ_METHOD("copy_to_single"  , psc_particles_cuda2_copy_to_single),
   MRC_OBJ_METHOD("copy_from_single", psc_particles_cuda2_copy_from_single),
+#ifdef USE_CUDA
   MRC_OBJ_METHOD("copy_to_cuda"    , psc_particles_cuda2_copy_to_cuda),
   MRC_OBJ_METHOD("copy_from_cuda"  , psc_particles_cuda2_copy_from_cuda),
+#endif
   {}
 };
 

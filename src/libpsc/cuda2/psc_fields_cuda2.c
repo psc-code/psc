@@ -89,6 +89,8 @@ psc_fields_cuda2_copy_to_single(struct psc_fields *flds_cuda2, struct psc_fields
 
 #endif
 
+#ifdef USE_CUDA
+
 EXTERN_C void __fields_cuda_to_device(struct psc_fields *pf, real *h_flds, int mb, int me);
 EXTERN_C void __fields_cuda_from_device(struct psc_fields *pf, real *h_flds, int mb, int me);
 
@@ -134,14 +136,18 @@ psc_fields_cuda2_copy_to_cuda(struct psc_fields *flds_cuda2, struct psc_fields *
   free(h_flds);
 }
 
+#endif
+
 // ======================================================================
 // psc_fields: subclass "cuda2"
   
 static struct mrc_obj_method psc_fields_cuda2_methods[] = {
   MRC_OBJ_METHOD("copy_to_single"  , psc_fields_cuda2_copy_to_single),
   MRC_OBJ_METHOD("copy_from_single", psc_fields_cuda2_copy_from_single),
+#ifdef USE_CUDA
   MRC_OBJ_METHOD("copy_to_cuda"    , psc_fields_cuda2_copy_to_cuda),
   MRC_OBJ_METHOD("copy_from_cuda"  , psc_fields_cuda2_copy_from_cuda),
+#endif
   {}
 };
 
