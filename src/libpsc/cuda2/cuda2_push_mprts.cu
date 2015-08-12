@@ -3,10 +3,7 @@
 #include "psc_particles_as_cuda2.h"
 #include "psc_fields_cuda2.h"
 
-#ifdef __CUDACC__
 #define THREADS_PER_BLOCK (512)
-#else
-#endif
 
 #include "../psc_push_particles/inc_params.c"
 #include "../psc_push_particles/inc_cache.c"
@@ -19,16 +16,12 @@
 // find_block_pos_patch
 
 CUDA_DEVICE static int
-find_block_pos_patch(int *block_pos, int *ci0)
+find_block_pos_patch(int *ci0)
 {
-  block_pos[0] = blockIdx.x;
-  block_pos[1] = blockIdx.y;
-  block_pos[2] = blockIdx.z % prm.b_mx[2];
-
 #if EM_CACHE == EM_CACHE_CUDA
-  ci0[0] = block_pos[0] * BLOCKSIZE_X;
-  ci0[1] = block_pos[1] * BLOCKSIZE_Y;
-  ci0[2] = block_pos[2] * BLOCKSIZE_Z;
+  ci0[0] = block_Idx.x * BLOCKSIZE_X;
+  ci0[1] = block_Idx.y * BLOCKSIZE_Y;
+  ci0[2] = (blockIdx.z % prm.b_mx[2]) * BLOCKSIZE_Z;
 #endif
 
   return blockIdx.z / prm.b_mx[2];
@@ -53,9 +46,9 @@ push_mprts_ab(float4 *d_xi4, float4 *d_pxi4,
 	      unsigned int *d_off,
 	      float *d_flds0, unsigned int size)
 {
-  int block_pos[3], ci0[3];
+  int ci0[3];
   int p, bid;
-  p = find_block_pos_patch(block_pos, ci0);
+  p = find_block_pos_patch(ci0);
   real *d_flds = d_flds0 + p * size;
 
   DECLARE_EM_CACHE(flds_em, d_flds, size, ci0);
@@ -83,9 +76,9 @@ push_mprts_a(float4 *d_xi4, float4 *d_pxi4,
 	     unsigned int *d_off,
 	     float *d_flds0, unsigned int size)
 {
-  int block_pos[3], ci0[3];
+  int ci0[3];
   int p, bid;
-  p = find_block_pos_patch(block_pos, ci0);
+  p = find_block_pos_patch(ci0);
   real *d_flds = d_flds0 + p * size;
 
   DECLARE_EM_CACHE(flds_em, d_flds, size, ci0);
@@ -114,9 +107,9 @@ push_mprts_b(float4 *d_xi4, float4 *d_pxi4,
 	     unsigned int *d_off,
 	     float *d_flds0, unsigned int size)
 {
-  int block_pos[3], ci0[3];
+  int ci0[3];
   int p, bid;
-  p = find_block_pos_patch(block_pos, ci0);
+  p = find_block_pos_patch(ci0);
   real *d_flds = d_flds0 + p * size;
 
   real *flds_curr = d_flds;
@@ -186,24 +179,25 @@ push_mprts_loop(struct psc_mparticles *mprts, struct psc_mfields *mflds)
   for (blockIdx.z = 0; blockIdx.z < dimGrid[2]; blockIdx.z++) {
     for (blockIdx.y = 0; blockIdx.y < dimGrid[1]; blockIdx.y++) {
       for (blockIdx.x = 0; blockIdx.x < dimGrid[0]; blockIdx.x++) {
-	int block_pos[3], ci0[3];
-	int p = find_block_pos_patch(block_pos, ci0);
-	int b = find_bid();
-	for (int n = mprts_sub->h_b_off[b]; n < mprts_sub->h_b_off[b+1]; n++) {
-	  push_one_mprts(mprts, mflds, n, p);
+	for (threadIdx.x = 0; threadIdx.x < THREADS_PER_BLOCK; threadIdx.x++) {
+	  int ci0[3];
+	  int p = find_block_pos_patch(ci0);
+	  int bid = find_bid();
+	  int block_begin, block_end;
+	  unsigned int *b_off = mprts_sub->h_b_off;
+	  block_begin = b_off[bid];
+	  block_end = b_off[bid + 1];
+	  for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
+	    if (n < block_begin) {
+	      continue;
+	    }
+	    //	for (int n = block_begin; n < block_end; n++) {
+	    push_one_mprts(mprts, mflds, n, p);
+	  }
 	}
       }
     }
   }
-
-#if 0
-  for (int b = 0; b < mprts_sub->nr_blocks_total; b++) {
-    int p = b / mprts_sub->nr_blocks;
-    for (int n = mprts_sub->h_b_off[b]; n < mprts_sub->h_b_off[b+1]; n++) {
-      push_one_mprts(mprts, mflds, n, p);
-    }
-  }
-#endif
 #endif
 }
 
