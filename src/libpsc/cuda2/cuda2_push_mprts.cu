@@ -104,7 +104,7 @@ push_mprts_loop(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 	       mprts_sub->b_mx[1],
 	       mprts_sub->b_mx[2] * mprts->nr_patches);
 
-  particle_array_t mprts_arr = { .xi4 = mprts_sub->d_xi4, .pxi4 = mprts_sub->d_pxi4, };
+  mprts_array_t mprts_arr = { .xi4 = mprts_sub->d_xi4, .pxi4 = mprts_sub->d_pxi4, };
 
   push_mprts_ab<<<dimGrid, THREADS_PER_BLOCK>>>
     (mprts_arr, mprts_sub->d_b_off,
