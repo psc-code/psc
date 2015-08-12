@@ -58,6 +58,8 @@ push_mprts_ab(mprts_array_t mprts_arr,
 
   DECLARE_EM_CACHE(flds_em, d_flds, size, ci0);
   real *flds_curr = d_flds;
+#else
+  struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
 #endif
 
   bid = find_bid();
@@ -71,75 +73,14 @@ push_mprts_ab(mprts_array_t mprts_arr,
       continue;
     }
 #ifdef __CUDACC__
-    push_one_mprts(mprts_arr, n, flds_em, flds_curr);
+    push_one(mprts_arr, n, flds_em, flds_curr);
 #else
-    push_one_mprts(mprts_arr, mflds, n, p);
+    push_one(mprts_arr, n, flds);
 #endif
   }
 }
 
-
 #ifdef __CUDACC__
-
-// ----------------------------------------------------------------------
-// push_mprts_a
-
-__global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
-push_mprts_a(float4 *d_xi4, float4 *d_pxi4,
-	     unsigned int *d_off,
-	     float *d_flds0, unsigned int size)
-{
-  int ci0[3];
-  int p, bid;
-  p = find_block_pos_patch(ci0);
-  real *d_flds = d_flds0 + p * size;
-
-  DECLARE_EM_CACHE(flds_em, d_flds, size, ci0);
-  __shared__ real *flds_curr;
-  flds_curr = d_flds;
-
-  bid = find_bid();
-  __shared__ int block_begin, block_end;
-  block_begin = d_off[bid];
-  block_end = d_off[bid + 1];
-
-  __syncthreads();
-  for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
-    if (n < block_begin) {
-      continue;
-    }
-    push_one_mprts_a(d_xi4, d_pxi4, n, flds_em, flds_curr);
-  }
-}
-
-// ----------------------------------------------------------------------
-// push_mprts_b
-
-__global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
-push_mprts_b(float4 *d_xi4, float4 *d_pxi4,
-	     unsigned int *d_off,
-	     float *d_flds0, unsigned int size)
-{
-  int ci0[3];
-  int p, bid;
-  p = find_block_pos_patch(ci0);
-  real *d_flds = d_flds0 + p * size;
-
-  real *flds_curr = d_flds;
-
-  bid = find_bid();
-  __shared__ int block_begin, block_end;
-  block_begin = d_off[bid];
-  block_end = d_off[bid + 1];
-
-  __syncthreads();
-  for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
-    if (n < block_begin) {
-      continue;
-    }
-    push_one_mprts_b(d_xi4, d_pxi4, n, flds_curr);
-  }
-}
 
 // ----------------------------------------------------------------------
 // zero_currents
@@ -206,58 +147,6 @@ push_mprts_loop(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 #endif
 }
 
-#ifdef __CUDACC__
-// ----------------------------------------------------------------------
-// push_mprts_loop_b12
-
-static void
-push_mprts_loop_b1(struct psc_mparticles *mprts, struct psc_mfields *mflds)
-{
-  struct psc_mparticles_cuda2 *mprts_sub = psc_mparticles_cuda2(mprts);
-  struct psc_mfields_cuda2 *mflds_sub = psc_mfields_cuda2(mflds);
-
-  int *bs = mprts_sub->bs;
-  assert(bs[0] == BLOCKSIZE_X && bs[1] == BLOCKSIZE_Y && bs[2] == BLOCKSIZE_Z);
-
-  unsigned int fld_size = mflds->nr_fields *
-    mflds_sub->im[0] * mflds_sub->im[1] * mflds_sub->im[2];
-
-  dim3 dimGrid(mprts_sub->b_mx[0],
-	       mprts_sub->b_mx[1],
-	       mprts_sub->b_mx[2] * mprts->nr_patches);
-
-  push_mprts_a<<<dimGrid, THREADS_PER_BLOCK>>>
-    (mprts_sub->d_xi4, mprts_sub->d_pxi4, mprts_sub->d_b_off,
-     mflds_sub->d_flds, fld_size);
-
-  cuda_sync_if_enabled();
-}
-
-static void
-push_mprts_loop_b2(struct psc_mparticles *mprts, struct psc_mfields *mflds)
-{
-  struct psc_mparticles_cuda2 *mprts_sub = psc_mparticles_cuda2(mprts);
-  struct psc_mfields_cuda2 *mflds_sub = psc_mfields_cuda2(mflds);
-
-  int *bs = mprts_sub->bs;
-  assert(bs[0] == BLOCKSIZE_X && bs[1] == BLOCKSIZE_Y && bs[2] == BLOCKSIZE_Z);
-
-  unsigned int fld_size = mflds->nr_fields *
-    mflds_sub->im[0] * mflds_sub->im[1] * mflds_sub->im[2];
-
-  dim3 dimGrid(mprts_sub->b_mx[0],
-	       mprts_sub->b_mx[1],
-	       mprts_sub->b_mx[2] * mprts->nr_patches);
-
-  push_mprts_b<<<dimGrid, THREADS_PER_BLOCK>>>
-    (mprts_sub->d_xi4, mprts_sub->d_pxi4, mprts_sub->d_b_off,
-     mflds_sub->d_flds, fld_size);
-
-  cuda_sync_if_enabled();
-}
-
-#endif
-
 // ----------------------------------------------------------------------
 // cuda2_1vbec_push_mprts
 
@@ -275,33 +164,3 @@ SFX(cuda2_1vbec_push_mprts)(struct psc_mparticles *mprts, struct psc_mfields *mf
   push_mprts_loop(mprts, mflds);
 }
 
-#ifdef __CUDACC__
-
-void
-SFX(cuda2_1vbec_push_mprts_a)(struct psc_mparticles *mprts, struct psc_mfields *mflds)
-{
-  params_1vb_set(ppsc, mprts, mflds);
-
-  zero_currents(mflds);
-}
-
-void
-SFX(cuda2_1vbec_push_mprts_b)(struct psc_mparticles *mprts, struct psc_mfields *mflds)
-{
-  push_mprts_loop_b1(mprts, mflds);
-  push_mprts_loop_b2(mprts, mflds);
-}
-
-void
-SFX(cuda2_1vbec_push_mprts_b1)(struct psc_mparticles *mprts, struct psc_mfields *mflds)
-{
-  push_mprts_loop_b1(mprts, mflds);
-}
-
-void
-SFX(cuda2_1vbec_push_mprts_b2)(struct psc_mparticles *mprts, struct psc_mfields *mflds)
-{
-  push_mprts_loop_b2(mprts, mflds);
-}
-
-#endif

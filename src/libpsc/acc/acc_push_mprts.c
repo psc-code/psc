@@ -17,13 +17,13 @@ static void
 push_mprts_loop(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
   struct psc_mparticles_acc *mprts_sub = psc_mparticles_acc(mprts);
+  mprts_array_t mprts_arr = { .xi4 = mprts_sub->xi4, .pxi4 = mprts_sub->pxi4, };
 
   for (int b = 0; b < mprts_sub->nr_blocks_total; b++) {
     int p = b / mprts_sub->nr_blocks;
     for (int n = mprts_sub->b_off[b]; n < mprts_sub->b_off[b+1]; n++) {
-     struct psc_mparticles_acc *mprts_sub = psc_mparticles_acc(mprts);
-     mprts_array_t mprts_arr = { .xi4 = mprts_sub->xi4, .pxi4 = mprts_sub->pxi4, };
-     push_one_mprts(mprts_arr, mflds, n, p);
+     struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+     push_one(mprts_arr, n, flds);
     }
   }
 }

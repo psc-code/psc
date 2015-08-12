@@ -26,7 +26,7 @@ do_push_part_1vb_yz(struct psc_fields *flds, struct psc_particles *prts)
 
   for (int b = 0; b < sub->nr_blocks; b++) {
     for (int n = sub->b_off[b]; n < sub->b_off[b+1]; n++) {
-      push_one_prts(prts, flds, n);
+      push_one(prts, n, flds);
     }
   }
 }
@@ -37,7 +37,7 @@ static void
 do_push_part_1vb_yz(struct psc_fields *flds, struct psc_particles *prts)
 {
   for (int n = 0; n < prts->n_part; n++) {
-    push_one_prts(prts, flds, n);
+    push_one(prts, n, flds);
   }
 }
 

@@ -41,27 +41,11 @@ EXTERN_C void cuda2_1vbec_push_mprts_gold_yz(struct psc_mparticles *mprts,
 					     struct psc_mfields *mflds);
 EXTERN_C void cuda2_1vbec_push_mprts_yz(struct psc_mparticles *mprts,
 					struct psc_mfields *mflds);
-EXTERN_C void cuda2_1vbec_push_mprts_a_yz(struct psc_mparticles *mprts,
-					  struct psc_mfields *mflds);
-EXTERN_C void cuda2_1vbec_push_mprts_b_yz(struct psc_mparticles *mprts,
-					  struct psc_mfields *mflds);
-EXTERN_C void cuda2_1vbec_push_mprts_b1_yz(struct psc_mparticles *mprts,
-					   struct psc_mfields *mflds);
-EXTERN_C void cuda2_1vbec_push_mprts_b2_yz(struct psc_mparticles *mprts,
-					   struct psc_mfields *mflds);
 
 EXTERN_C void cuda2_1vbec_push_mprts_gold_xyz(struct psc_mparticles *mprts,
 					     struct psc_mfields *mflds);
 EXTERN_C void cuda2_1vbec_push_mprts_xyz(struct psc_mparticles *mprts,
 					 struct psc_mfields *mflds);
-EXTERN_C void cuda2_1vbec_push_mprts_a_xyz(struct psc_mparticles *mprts,
-					   struct psc_mfields *mflds);
-EXTERN_C void cuda2_1vbec_push_mprts_b_xyz(struct psc_mparticles *mprts,
-					   struct psc_mfields *mflds);
-EXTERN_C void cuda2_1vbec_push_mprts_b1_xyz(struct psc_mparticles *mprts,
-					    struct psc_mfields *mflds);
-EXTERN_C void cuda2_1vbec_push_mprts_b2_xyz(struct psc_mparticles *mprts,
-					    struct psc_mfields *mflds);
 
 #endif
 
