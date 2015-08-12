@@ -8,11 +8,19 @@
 
 #ifdef __CUDACC__
 #define CUDA_DEVICE __device__
+#define CUDA_GLOBAL __global__
 #define CUDA_CONSTANT __constant__ __device__
+#define CUDA_SHARED __shared__
+#define CUDA_SYNCTHREADS() __syncthreads()
+#define CUDA_LAUNCH_BOUNDS(t, n) __launch_bounds__(t, n)
 #else
 #define CUDA_DEVICE
+#define CUDA_GLOBAL
 #define CUDA_CONSTANT
 #define __forceinline__
+#define CUDA_SHARED
+#define CUDA_SYNCTHREADS() do {} while (0)
+#define CUDA_LAUNCH_BOUNDS(t, n)
 #endif
 
 #ifndef __CUDACC__

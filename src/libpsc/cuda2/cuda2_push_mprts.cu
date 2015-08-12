@@ -36,37 +36,50 @@ find_bid()
   return (blockIdx.z * prm.b_mx[1] + blockIdx.y) * prm.b_mx[0] + blockIdx.x;
 }
 
-#ifdef __CUDACC__
-
 // ----------------------------------------------------------------------
 // push_mprts_ab
 
-__global__ static void __launch_bounds__(THREADS_PER_BLOCK, 3)
-push_mprts_ab(float4 *d_xi4, float4 *d_pxi4,
-	      unsigned int *d_off,
+CUDA_GLOBAL static void CUDA_LAUNCH_BOUNDS(THREADS_PER_BLOCK, 3)
+#ifdef __CUDACC__
+push_mprts_ab(mprts_array_t mprts_arr,
+	      unsigned int *b_off,
 	      float *d_flds0, unsigned int size)
+#else
+push_mprts_ab(mprts_array_t mprts_arr,
+	      unsigned int *b_off,
+	      struct psc_mfields *mflds)
+#endif
 {
   int ci0[3];
   int p, bid;
   p = find_block_pos_patch(ci0);
+#ifdef __CUDACC__
   real *d_flds = d_flds0 + p * size;
 
   DECLARE_EM_CACHE(flds_em, d_flds, size, ci0);
   real *flds_curr = d_flds;
+#endif
 
   bid = find_bid();
-  __shared__ int block_begin, block_end;
-  block_begin = d_off[bid];
-  block_end = d_off[bid + 1];
+  CUDA_SHARED int block_begin, block_end;
+  block_begin = b_off[bid];
+  block_end = b_off[bid + 1];
 
-  __syncthreads();
+  CUDA_SYNCTHREADS();
   for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
     if (n < block_begin) {
       continue;
     }
-    push_one_mprts(d_xi4, d_pxi4, n, flds_em, flds_curr);
+#ifdef __CUDACC__
+    push_one_mprts(mprts_arr, n, flds_em, flds_curr);
+#else
+    push_one_mprts(mprts_arr, mflds, n, p);
+#endif
   }
 }
+
+
+#ifdef __CUDACC__
 
 // ----------------------------------------------------------------------
 // push_mprts_a
@@ -166,8 +179,10 @@ push_mprts_loop(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 	       mprts_sub->b_mx[1],
 	       mprts_sub->b_mx[2] * mprts->nr_patches);
 
+  particle_array_t mprts_arr = { .xi4 = mprts_sub->d_xi4, .pxi4 = mprts_sub->d_pxi4, };
+
   push_mprts_ab<<<dimGrid, THREADS_PER_BLOCK>>>
-    (mprts_sub->d_xi4, mprts_sub->d_pxi4, mprts_sub->d_b_off,
+    (mprts_arr, mprts_sub->d_b_off,
      mflds_sub->d_flds, fld_size);
 
   cuda_sync_if_enabled();
@@ -176,24 +191,14 @@ push_mprts_loop(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 		     mprts_sub->b_mx[1],
 		     mprts_sub->b_mx[2] * mprts->nr_patches };
 
+  mprts_array_t mprts_arr = { .xi4 = mprts_sub->h_xi4, .pxi4 = mprts_sub->h_pxi4, };
+
   for (blockIdx.z = 0; blockIdx.z < dimGrid[2]; blockIdx.z++) {
     for (blockIdx.y = 0; blockIdx.y < dimGrid[1]; blockIdx.y++) {
       for (blockIdx.x = 0; blockIdx.x < dimGrid[0]; blockIdx.x++) {
 	for (threadIdx.x = 0; threadIdx.x < THREADS_PER_BLOCK; threadIdx.x++) {
-	  int ci0[3];
-	  int p = find_block_pos_patch(ci0);
-	  int bid = find_bid();
-	  int block_begin, block_end;
-	  unsigned int *b_off = mprts_sub->h_b_off;
-	  block_begin = b_off[bid];
-	  block_end = b_off[bid + 1];
-	  for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
-	    if (n < block_begin) {
-	      continue;
-	    }
-	    //	for (int n = block_begin; n < block_end; n++) {
-	    push_one_mprts(mprts, mflds, n, p);
-	  }
+	  push_mprts_ab(mprts_arr, mprts_sub->h_b_off,
+			mflds);
 	}
       }
     }

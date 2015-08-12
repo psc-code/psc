@@ -78,7 +78,7 @@ CUDA_DEVICE __forceinline__ static void
 calc_j2_split_along_dim(int dim, int im, particle_real_t x1[3],
 			particle_real_t xm[3], particle_real_t xp[3])
 {
-  particle_real_t bnd;
+  particle_real_t bnd = 0.f; // quell warning
   if (xp[dim] > im + 1) { // crossed boundary to right
     bnd = im + 1;
   } else if (xp[dim] < im) { // crosses boundary to left
