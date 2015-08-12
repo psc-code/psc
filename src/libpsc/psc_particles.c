@@ -121,9 +121,7 @@ psc_particles_init()
 #ifdef USE_CUDA
   mrc_class_register_subclass(&mrc_class_psc_particles, &psc_particles_cuda_ops);
 #endif
-#ifdef USE_CUDA2
   mrc_class_register_subclass(&mrc_class_psc_particles, &psc_particles_cuda2_ops);
-#endif
 #ifdef USE_ACC
   mrc_class_register_subclass(&mrc_class_psc_particles, &psc_particles_acc_ops);
 #endif

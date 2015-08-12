@@ -50,7 +50,8 @@ libpsc_la_LIBADD = \
 	psc_push_photons/libsubdir.la \
 	psc_randomize/libsubdir.la \
 	psc_sort/libsubdir.la \
-	psc_checks/libsubdir.la
+	psc_checks/libsubdir.la \
+	cuda2/libsubdir.la
 
 if USE_SSE2
 libpsc_la_LIBADD += \
@@ -61,11 +62,6 @@ if USE_CUDA
 libpsc_la_LIBADD += \
 	cuda/libsubdir.la
 endif USE_CUDA
-
-if USE_CUDA2
-libpsc_la_LIBADD += \
-	cuda2/libsubdir.la
-endif USE_CUDA2
 
 if USE_ACC
 libpsc_la_LIBADD += \

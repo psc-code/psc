@@ -5,6 +5,7 @@
 
 #ifdef __CUDACC__
 #define THREADS_PER_BLOCK (512)
+#else
 #endif
 
 #include "../psc_push_particles/inc_params.c"
@@ -14,12 +15,10 @@
 #include "../psc_push_particles/inc_curr.c"
 #include "../psc_push_particles/inc_step.c"
 
-#ifdef __CUDACC__
-
 // ----------------------------------------------------------------------
 // find_block_pos_patch
 
-__device__ static int
+CUDA_DEVICE static int
 find_block_pos_patch(int *block_pos, int *ci0)
 {
   block_pos[0] = blockIdx.x;
@@ -38,11 +37,13 @@ find_block_pos_patch(int *block_pos, int *ci0)
 // ----------------------------------------------------------------------
 // find_bid
 
-__device__ static int
+CUDA_DEVICE static int
 find_bid()
 {
   return (blockIdx.z * prm.b_mx[1] + blockIdx.y) * prm.b_mx[0] + blockIdx.x;
 }
+
+#ifdef __CUDACC__
 
 // ----------------------------------------------------------------------
 // push_mprts_ab
@@ -158,8 +159,8 @@ zero_currents(struct psc_mfields *mflds)
 static void
 push_mprts_loop(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
-#ifdef __CUDACC__
   struct psc_mparticles_cuda2 *mprts_sub = psc_mparticles_cuda2(mprts);
+#ifdef __CUDACC__
   struct psc_mfields_cuda2 *mflds_sub = psc_mfields_cuda2(mflds);
 
   int *bs = mprts_sub->bs;
@@ -178,14 +179,31 @@ push_mprts_loop(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 
   cuda_sync_if_enabled();
 #else
-  struct psc_mparticles_cuda2 *mprts_sub = psc_mparticles_cuda2(mprts);
+  int dimGrid[3] = { mprts_sub->b_mx[0],
+		     mprts_sub->b_mx[1],
+		     mprts_sub->b_mx[2] * mprts->nr_patches };
 
+  for (int bz = 0; bz < dimGrid[2]; bz++) {
+    for (int by = 0; by < dimGrid[1]; by++) {
+      for (int bx = 0; bx < dimGrid[0]; bx++) {
+	int block_pos[3], ci0[3];
+	int p = find_block_pos_patch(block_pos, ci0);
+	int b = find_bid();
+	for (int n = mprts_sub->h_b_off[b]; n < mprts_sub->h_b_off[b+1]; n++) {
+	  push_one_mprts(mprts, mflds, n, p);
+	}
+      }
+    }
+  }
+
+#if 0
   for (int b = 0; b < mprts_sub->nr_blocks_total; b++) {
     int p = b / mprts_sub->nr_blocks;
     for (int n = mprts_sub->h_b_off[b]; n < mprts_sub->h_b_off[b+1]; n++) {
       push_one_mprts(mprts, mflds, n, p);
     }
   }
+#endif
 #endif
 }
 

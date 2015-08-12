@@ -1,15 +1,12 @@
 
 AM_CFLAGS = -I$(top_srcdir)/src/include -I$(top_srcdir)/src/libmrc/include
 
-if USE_CUDA2
-
 noinst_LTLIBRARIES = libsubdir.la
 
 libsubdir_la_SOURCES = \
 	psc_fields_cuda2.c \
 	psc_particles_cuda2.c \
 	psc_push_fields_cuda2.c \
-	psc_push_particles_cuda2.c \
 	psc_push_particles_cuda2_host.c \
 	\
 	cuda2_push_fields_host.c \
@@ -17,6 +14,11 @@ libsubdir_la_SOURCES = \
 	cuda2_push_mprts_host_xyz.c
 
 #FIXME, this is just really too hacky...
+
+if USE_CUDA2
+
+libsubdir_la_SOURCES += \
+	psc_push_particles_cuda2.c
 
 libsubdir_la_LIBADD = \
 	cuda2_util.lo \
@@ -42,4 +44,9 @@ CUDA_DEPS = \
 
 CLEANFILES = *.fatbin.c *.cudafe1.c *.cudafe2.c *.stub.c *.cubin *.i *.ii *.ptx *.hash *.fatbin *.cudafe1.cpp *.cudafe1.gpu *.cudafe2.gpu *.cu.cpp
 
-endif USE_CUDA2
+else !USE_CUDA2
+
+libsubdir_la_SOURCES += \
+	cuda2_util_host.c
+
+endif !USE_CUDA2
