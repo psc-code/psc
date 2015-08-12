@@ -48,7 +48,7 @@ push_mprts_ab(mprts_array_t mprts_arr,
   int p = find_block_pos_patch(ci0);
   fields_real_t *d_flds = d_flds0 + p * size;
   DECLARE_EM_CACHE(flds_em, d_flds, size, ci0);
-  flds_curr_t flds_curr = d_flds;
+  DECLARE_CURR_CACHE(flds_curr, d_flds, size, ci0);
 
   int bid = find_bid();
   CUDA_SHARED int block_begin, block_end;
@@ -62,6 +62,8 @@ push_mprts_ab(mprts_array_t mprts_arr,
     }
     push_one(mprts_arr, n, flds_em, flds_curr);
   }
+
+  curr_cache_add(flds_curr, d_flds, ci0);
 }
 
 #ifdef __CUDACC__
