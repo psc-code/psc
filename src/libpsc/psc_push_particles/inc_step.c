@@ -11,6 +11,12 @@ typedef struct psc_particles * mprts_array_t; // FIXME mprts vs prts
 
 #endif
 
+#ifdef __CUDACC_
+typedef fields_cuda2_real_t * flds_em_t;
+#else
+typedef struct psc_fields * flds_em_t;
+#endif
+
 // ======================================================================
 // EXT_PREPARE_SORT
 //
@@ -71,12 +77,11 @@ ext_prepare_sort(struct psc_particles *prts, int n, particle_t *prt,
 // ----------------------------------------------------------------------
 // push_one
 
-#ifdef __CUDACC__
-
-__device__ static void
+CUDA_DEVICE static void
 push_one(mprts_array_t mprts_arr, int n,
-	 real *flds_em, flds_curr_t flds_curr)
+	 flds_em_t flds_em, flds_curr_t flds_curr)
 {
+#ifdef __CUDACC__
   particle_t prt;
   PARTICLE_CUDA2_LOAD_POS(prt, mprts_arr.xi4, n);
 
@@ -115,14 +120,9 @@ push_one(mprts_array_t mprts_arr, int n,
   find_idx_off_pos_1st_rel(prt.xi, lf, h1, xp, real(0.));
 
   calc_j(flds_curr, xm, xp, lf, lg, &prt, vxi);
-}
 
 #else
 
-static inline void
-push_one(mprts_array_t mprts_arr, int n, struct psc_fields *flds_em,
-	 flds_curr_t flds_curr)
-{
 #if PSC_PARTICLES_AS_CUDA2
   particle_t _prt, *prt = &_prt;
   PARTICLE_CUDA2_LOAD_POS(*prt, mprts_arr.xi4, n);
@@ -179,6 +179,7 @@ push_one(mprts_array_t mprts_arr, int n, struct psc_fields *flds_em,
   PARTICLE_ACC_STORE_POS(*prt, mprts_arr.xi4, n);
   PARTICLE_ACC_STORE_MOM(*prt, mprts_arr.pxi4, n);
 #endif
-}
 
 #endif
+}
+
