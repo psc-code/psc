@@ -1,13 +1,52 @@
 
 #include "psc_debug.h"
 
+// ----------------------------------------------------------------------
+// the following macros are convoluted, as they handle two quite different
+// cases for now:
+// - cuda2/acc particles provide the mprts-based array, so n
+//   includes the patch offset
+// - otherwise, we provide psc_particles, so n is the patch-local
+//   particle number
+
 #if PSC_PARTICLES_AS_CUDA2 || PSC_PARTICLES_AS_ACC
 
 typedef struct { float4 *xi4; float4 *pxi4; } mprts_array_t;
 
+#if PSC_PARTICLES_AS_CUDA2
+
+#define PARTICLE_LOAD(prt, mprts_arr, n)		\
+  particle_t _prt;					\
+  prt = &_prt;						\
+  PARTICLE_CUDA2_LOAD_POS(*prt, mprts_arr.xi4, n);	\
+  PARTICLE_CUDA2_LOAD_MOM(*prt, mprts_arr.pxi4, n)
+
+#define PARTICLE_STORE(prt, mprts_arr, n)		\
+  PARTICLE_CUDA2_STORE_POS(*prt, mprts_arr.xi4, n);	\
+  PARTICLE_CUDA2_STORE_MOM(*prt, mprts_arr.pxi4, n)	\
+
+#elif PSC_PARTICLES_AS_ACC
+
+#define PARTICLE_LOAD(prt, mprts_arr, n)		\
+  particle_t _prt;					\
+  prt = &_prt;						\
+  PARTICLE_ACC_LOAD_POS(*prt, mprts_arr.xi4, n);	\
+  PARTICLE_ACC_LOAD_MOM(*prt, mprts_arr.pxi4, n)
+
+#define PARTICLE_STORE(prt, mprts_arr, n)		\
+  PARTICLE_ACC_STORE_POS(*prt, mprts_arr.xi4, n);	\
+  PARTICLE_ACC_STORE_MOM(*prt, mprts_arr.pxi4, n)
+
+#endif
+
 #else
 
-typedef struct psc_particles * mprts_array_t; // FIXME mprts vs prts
+typedef struct psc_particles * mprts_array_t;
+
+#define PARTICLE_LOAD(prt, mprts_arr, n)	\
+  prt = particles_get_one(mprts_arr, n)
+
+#define PARTICLE_STORE(prt, mprts_arr, n) do {} while (0)
 
 #endif
 
@@ -76,14 +115,22 @@ ext_prepare_sort(struct psc_particles *prts, int n, particle_t *prt,
 
 // ----------------------------------------------------------------------
 // push_one
+//
+// as opposed to what the name implies, mprts_arr may actually be the
+// per-patch psc_particles, in which case n needs to be the patch-local
+// patch number (see also above)
+//
+// the cuda2 version is very similar to the generic one, except
+// - it does spread the particles loads/stores as necessary
+// - it doesn't handle 1VB_2D
 
 CUDA_DEVICE static void
 push_one(mprts_array_t mprts_arr, int n,
 	 flds_em_t flds_em, flds_curr_t flds_curr)
 {
-#ifdef __CUDACC__
-  particle_t prt;
-  PARTICLE_CUDA2_LOAD_POS(prt, mprts_arr.xi4, n);
+#if PSC_PARTICLES_AS_CUDA2
+  particle_t _prt, *prt = &_prt;
+  PARTICLE_CUDA2_LOAD_POS(*prt, mprts_arr.xi4, n);
 
   // here we have x^{n+.5}, p^n
 
@@ -91,54 +138,45 @@ push_one(mprts_array_t mprts_arr, int n,
   real exq, eyq, ezq, hxq, hyq, hzq;
   int lg[3];
   real og[3];
-  find_idx_off_1st_rel(prt.xi, lg, og, real(0.));
+  find_idx_off_1st_rel(prt->xi, lg, og, real(0.));
   INTERPOLATE_1ST(flds_em, exq, eyq, ezq, hxq, hyq, hzq);
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
-  PARTICLE_CUDA2_LOAD_MOM(prt, mprts_arr.pxi4, n);
-  int kind = particle_kind(&prt);
+  PARTICLE_CUDA2_LOAD_MOM(*prt, mprts_arr.pxi4, n);
+  int kind = particle_kind(prt);
   real dq = prm.dq_kind[kind];
-  push_pxi(&prt, exq, eyq, ezq, hxq, hyq, hzq, dq);
-  PARTICLE_CUDA2_STORE_MOM(prt, mprts_arr.pxi4, n);
+  push_pxi(prt, exq, eyq, ezq, hxq, hyq, hzq, dq);
+  PARTICLE_CUDA2_STORE_MOM(*prt, mprts_arr.pxi4, n);
 
   real vxi[3];
-  calc_vxi(vxi, &prt);
+  calc_vxi(vxi, prt);
 
   particle_real_t xm[3], xp[3];
   int lf[3];
 
   // position xm at x^(n+.5)
   real h0[3];
-  find_idx_off_pos_1st_rel(prt.xi, lg, h0, xm, real(0.));
+  find_idx_off_pos_1st_rel(prt->xi, lg, h0, xm, real(0.));
 
   // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
-  push_xi(&prt, vxi, prm.dt);
-  PARTICLE_CUDA2_STORE_POS(prt, mprts_arr.xi4, n);
+  push_xi(prt, vxi, prm.dt);
+  PARTICLE_CUDA2_STORE_POS(*prt, mprts_arr.xi4, n);
 
   // position xp at x^(n+.5)
   real h1[3];
-  find_idx_off_pos_1st_rel(prt.xi, lf, h1, xp, real(0.));
+  find_idx_off_pos_1st_rel(prt->xi, lf, h1, xp, real(0.));
 
-  calc_j(flds_curr, xm, xp, lf, lg, &prt, vxi);
+  calc_j(flds_curr, xm, xp, lf, lg, prt, vxi);
 
 #else
 
-#if PSC_PARTICLES_AS_CUDA2
-  particle_t _prt, *prt = &_prt;
-  PARTICLE_CUDA2_LOAD_POS(*prt, mprts_arr.xi4, n);
-  PARTICLE_CUDA2_LOAD_MOM(*prt, mprts_arr.pxi4, n);
-#elif PSC_PARTICLES_AS_ACC
-  particle_t _prt, *prt = &_prt;
-  PARTICLE_ACC_LOAD_POS(*prt, mprts_arr.xi4, n);
-  PARTICLE_ACC_LOAD_MOM(*prt, mprts_arr.pxi4, n);
-#else
-  particle_t *prt = particles_get_one(mprts_arr, n);
-#endif
+  particle_t *prt;
+  PARTICLE_LOAD(prt, mprts_arr, n);
   
   // field interpolation
   int lg[3], lh[3];
   particle_real_t og[3], oh[3], xm[3];
-  find_idx_off_pos_1st_rel(&particle_x(prt), lg, og, xm, 0.f); // FIXME passing xi hack
+  find_idx_off_pos_1st_rel(&particle_x(prt), lg, og, xm, 0.f);
   find_idx_off_1st_rel(&particle_x(prt), lh, oh, -.5f);
 
   particle_real_t exq, eyq, ezq, hxq, hyq, hzq;
@@ -172,14 +210,7 @@ push_one(mprts_array_t mprts_arr, int n,
   // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
   calc_j(flds_curr, xm, xp, lf, lg, prt, vxi);
 
-#if PSC_PARTICLES_AS_CUDA2
-  PARTICLE_CUDA2_STORE_POS(*prt, mprts_arr.xi4, n);
-  PARTICLE_CUDA2_STORE_MOM(*prt, mprts_arr.pxi4, n);
-#elif PSC_PARTICLES_AS_ACC
-  PARTICLE_ACC_STORE_POS(*prt, mprts_arr.xi4, n);
-  PARTICLE_ACC_STORE_MOM(*prt, mprts_arr.pxi4, n);
-#endif
-
+  PARTICLE_STORE(prt, mprts_arr, n);
 #endif
 }
 

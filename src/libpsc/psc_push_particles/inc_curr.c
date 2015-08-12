@@ -2,15 +2,19 @@
 // ----------------------------------------------------------------------
 // curr_add
 
-#ifdef __CUDACC__
+#if PSC_FIELDS_AS_CUDA2
 
-typedef real * flds_curr_t;
+typedef fields_real_t * flds_curr_t;
 
 CUDA_DEVICE static inline void
 curr_add(flds_curr_t flds_curr, int m, int jx, int jy, int jz, real val)
 {
   real *addr = &F3_DEV(flds_curr, JXI+m, jx,jy,jz);
+#ifdef __CUDACC__
   atomicAdd(addr, val);
+#else
+  *addr += val;
+#endif
 }
 
 #else

@@ -56,11 +56,7 @@ push_mprts_ab(mprts_array_t mprts_arr,
   p = find_block_pos_patch(ci0);
   fields_real_t *d_flds = d_flds0 + p * size;
   DECLARE_EM_CACHE(flds_em, d_flds, size, ci0);
-#ifdef __CUDACC__
   flds_curr_t flds_curr = d_flds;
-#else
-  flds_curr_t flds_curr = psc_mfields_get_patch(mflds, p);
-#endif
 
   bid = find_bid();
   CUDA_SHARED int block_begin, block_end;

@@ -10,7 +10,7 @@
   (F3_DEV(flds_em, m, jx,jy,jz))
 
 #define DECLARE_EM_CACHE(flds_em, d_flds, size, ci0)	\
-  real *flds_em = d_flds
+  fields_real_t *flds_em = d_flds
 
 #elif EM_CACHE == EM_CACHE_CUDA
 
