@@ -246,6 +246,9 @@ psc_push_particles_init()
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vbec_cuda2_ops);
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vbec_cuda2_host_ops);
 #endif
+#ifdef USE_ACC
+  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vbec_acc_ops);
+#endif
 }
 
 // ======================================================================

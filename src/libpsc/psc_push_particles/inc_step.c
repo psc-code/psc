@@ -208,7 +208,7 @@ push_one(particle_t *prt, struct psc_fields *flds, struct psc_particles *prts, i
 // ----------------------------------------------------------------------
 // push_one_mprts
 
-#if PSC_PARTICLES_AS_CUDA2
+#if PSC_PARTICLES_AS_CUDA2 || PSC_PARTICLES_AS_ACC
 
 #ifdef __CUDACC__
 
@@ -240,6 +240,7 @@ push_one_mprts_b(float4 *d_xi4, float4 *d_pxi4, int n,
 static inline void
 push_one_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds, int n, int p)
 {
+#if PSC_PARTICLES_AS_CUDA2
   struct psc_mparticles_cuda2 *mprts_sub = psc_mparticles_cuda2(mprts);
 
   struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
@@ -252,6 +253,22 @@ push_one_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds, int n, i
 
   PARTICLE_CUDA2_STORE_POS(prt, mprts_sub->h_xi4, n);
   PARTICLE_CUDA2_STORE_MOM(prt, mprts_sub->h_pxi4, n);
+#elif PSC_PARTICLES_AS_ACC
+  struct psc_mparticles_acc *mprts_sub = psc_mparticles_acc(mprts);
+
+  struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+
+  particle_t prt;
+  PARTICLE_ACC_LOAD_POS(prt, mprts_sub->xi4, n);
+  PARTICLE_ACC_LOAD_MOM(prt, mprts_sub->pxi4, n);
+  
+  push_one(&prt, flds, NULL, n);
+
+  PARTICLE_ACC_STORE_POS(prt, mprts_sub->xi4, n);
+  PARTICLE_ACC_STORE_MOM(prt, mprts_sub->pxi4, n);
+#else
+#error no push_one_mprts
+#endif
 }
 
 #endif
