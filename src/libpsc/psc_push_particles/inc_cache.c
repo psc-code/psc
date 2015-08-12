@@ -49,9 +49,15 @@ cache_fields(float *flds_em_shared, float *d_flds, int size, int *ci0)
 				      BLOCKGSIZE_Y + -ci0[1] + BLOCKBND_Y) *
 				     BLOCKGSIZE_X + -ci0[0] + BLOCKBND_X);
 
-  int ti = threadIdx.x;
   int n = BLOCKGSIZE_X * BLOCKGSIZE_Y * BLOCKGSIZE_Z;
-  while (ti < n) {
+  // if we're not actually running on the GPU, we're not multi-threaded, so
+  // the caching wouldn't all be initialized first (and then __syncthreads()),
+  // so instead we have the first "thread" do all of the caching.
+#ifdef __CUDACC__
+  for (int ti = threadIdx.x; ti < n; ti += THREADS_PER_BLOCK) {
+#else
+  if (threadIdx.x == 0) for (int ti = 0; ti < n; ti ++) {
+#endif
     int tmp = ti;
 #if DIM == DIM_XYZ
     int jx = tmp % BLOCKGSIZE_X - BLOCKBND_X;
@@ -65,7 +71,6 @@ cache_fields(float *flds_em_shared, float *d_flds, int size, int *ci0)
       F3_CACHE(flds_em, m, jx+ci0[0],jy+ci0[1],jz+ci0[2]) = 
 	F3_DEV(d_flds, m, jx+ci0[0],jy+ci0[1],jz+ci0[2]);
     }
-    ti += THREADS_PER_BLOCK;
   }
   return flds_em;
 }

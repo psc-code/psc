@@ -19,8 +19,8 @@ CUDA_DEVICE static int
 find_block_pos_patch(int *ci0)
 {
 #if EM_CACHE == EM_CACHE_CUDA
-  ci0[0] = block_Idx.x * BLOCKSIZE_X;
-  ci0[1] = block_Idx.y * BLOCKSIZE_Y;
+  ci0[0] = blockIdx.x * BLOCKSIZE_X;
+  ci0[1] = blockIdx.y * BLOCKSIZE_Y;
   ci0[2] = (blockIdx.z % prm.b_mx[2]) * BLOCKSIZE_Z;
 #endif
 
@@ -40,25 +40,17 @@ find_bid()
 // push_mprts_ab
 
 CUDA_GLOBAL static void CUDA_LAUNCH_BOUNDS(THREADS_PER_BLOCK, 3)
-#ifdef __CUDACC__
 push_mprts_ab(mprts_array_t mprts_arr,
 	      unsigned int *b_off,
 	      float *d_flds0, unsigned int size)
-#else
-push_mprts_ab(mprts_array_t mprts_arr,
-	      unsigned int *b_off,
-	      struct psc_mfields *mflds,
-	      float *d_flds0, unsigned int size)
-#endif
 {
   int ci0[3];
-  int p, bid;
-  p = find_block_pos_patch(ci0);
+  int p = find_block_pos_patch(ci0);
   fields_real_t *d_flds = d_flds0 + p * size;
   DECLARE_EM_CACHE(flds_em, d_flds, size, ci0);
   flds_curr_t flds_curr = d_flds;
 
-  bid = find_bid();
+  int bid = find_bid();
   CUDA_SHARED int block_begin, block_end;
   block_begin = b_off[bid];
   block_end = b_off[bid + 1];
@@ -131,7 +123,6 @@ push_mprts_loop(struct psc_mparticles *mprts, struct psc_mfields *mflds)
       for (blockIdx.x = 0; blockIdx.x < dimGrid[0]; blockIdx.x++) {
 	for (threadIdx.x = 0; threadIdx.x < THREADS_PER_BLOCK; threadIdx.x++) {
 	  push_mprts_ab(mprts_arr, mprts_sub->h_b_off,
-			mflds,
 			mflds_sub->h_flds, fld_size);
 	}
       }

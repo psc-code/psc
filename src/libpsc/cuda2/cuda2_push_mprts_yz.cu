@@ -2,10 +2,10 @@
 #include "../psc_push_particles/inc_defs.h"
 
 #define DIM DIM_YZ
-#define INTERPOLATE_1ST INTERPOLATE_1ST_EC
 #define BLOCKSIZE_X 1
 #define BLOCKSIZE_Y 4
 #define BLOCKSIZE_Z 4
+#define INTERPOLATE_1ST INTERPOLATE_1ST_EC
 #define EM_CACHE EM_CACHE_CUDA
 #define CALC_J CALC_J_1VB_SPLIT
 
