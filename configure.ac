@@ -149,6 +149,16 @@ AC_ARG_ENABLE(
 )
 AM_CONDITIONAL([USE_CUDA2], [test "$enable_cuda2" = "yes"])
 
+AH_TEMPLATE([USE_ACC], [include openacc algorithms])
+AC_ARG_ENABLE(
+  [acc],
+  [AS_HELP_STRING([--enable-acc], [include openacc algorithms])],
+  [AS_IF([test "$enable_acc" = "yes"],
+    [AC_DEFINE([USE_ACC])])
+  ]
+)
+AM_CONDITIONAL([USE_ACC], [test "$enable_acc" = "yes"])
+
 AH_TEMPLATE([USE_SSE2], [use streaming SIMD extension 2])
 AC_ARG_ENABLE(
   [sse2],
@@ -246,6 +256,7 @@ AC_CONFIG_FILES([Makefile
                  src/libpsc/sse2/Makefile
                  src/libpsc/cuda/Makefile
                  src/libpsc/cuda2/Makefile
+                 src/libpsc/acc/Makefile
                  src/libpsc/cell_be/Makefile
 ])
 AC_CONFIG_SUBDIRS([src/libmrc])

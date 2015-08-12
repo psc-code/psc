@@ -35,7 +35,7 @@ struct psc_fields_cuda2 {
       assert(jx >= (flds)->ib[0] && jx < (flds)->ib[0] + (flds)->im[0]); \
       assert(jy >= (flds)->ib[1] && jy < (flds)->ib[1] + (flds)->im[1]); \
       assert(jz >= (flds)->ib[2] && jz < (flds)->ib[2] + (flds)->im[2]); \
-      &(((fields_single_real_t *) (flds)->data)[off]);			\
+      &(((fields_cuda2_real_t *) (flds)->data)[off]);			\
     }))
 
 #endif

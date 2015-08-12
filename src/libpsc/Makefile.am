@@ -25,7 +25,8 @@ SUBDIRS = \
 	fortran \
 	sse2 \
 	cuda \
-	cuda2
+	cuda2 \
+	acc
 
 noinst_LTLIBRARIES = libpsc.la
 
@@ -65,6 +66,11 @@ if USE_CUDA2
 libpsc_la_LIBADD += \
 	cuda2/libsubdir.la
 endif USE_CUDA2
+
+if USE_ACC
+libpsc_la_LIBADD += \
+	acc/libsubdir.la
+endif USE_ACC
 
 if USE_CBE
 
