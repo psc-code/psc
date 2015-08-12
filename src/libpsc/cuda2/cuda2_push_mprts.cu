@@ -59,7 +59,8 @@ push_mprts_ab(mprts_array_t mprts_arr,
   DECLARE_EM_CACHE(flds_em, d_flds, size, ci0);
   real *flds_curr = d_flds;
 #else
-  struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+  struct psc_fields *flds_em = psc_mfields_get_patch(mflds, p);
+  struct psc_fields *flds_curr = psc_mfields_get_patch(mflds, p);
 #endif
 
   bid = find_bid();
@@ -72,11 +73,7 @@ push_mprts_ab(mprts_array_t mprts_arr,
     if (n < block_begin) {
       continue;
     }
-#ifdef __CUDACC__
     push_one(mprts_arr, n, flds_em, flds_curr);
-#else
-    push_one(mprts_arr, n, flds);
-#endif
   }
 }
 

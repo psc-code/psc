@@ -37,7 +37,7 @@ static void
 do_push_part_1vb_yz(struct psc_fields *flds, struct psc_particles *prts)
 {
   for (int n = 0; n < prts->n_part; n++) {
-    push_one(prts, n, flds);
+    push_one(prts, n, flds, flds);
   }
 }
 

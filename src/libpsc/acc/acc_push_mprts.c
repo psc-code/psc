@@ -23,7 +23,7 @@ push_mprts_loop(struct psc_mparticles *mprts, struct psc_mfields *mflds)
     int p = b / mprts_sub->nr_blocks;
     for (int n = mprts_sub->b_off[b]; n < mprts_sub->b_off[b+1]; n++) {
      struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-     push_one(mprts_arr, n, flds);
+     push_one(mprts_arr, n, flds, flds);
     }
   }
 }

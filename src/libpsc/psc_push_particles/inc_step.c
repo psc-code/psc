@@ -120,7 +120,8 @@ push_one(mprts_array_t mprts_arr, int n,
 #else
 
 static inline void
-push_one(mprts_array_t mprts_arr, int n, struct psc_fields *flds)
+push_one(mprts_array_t mprts_arr, int n, struct psc_fields *flds_em,
+	 flds_curr_t flds_curr)
 {
 #if PSC_PARTICLES_AS_CUDA2
   particle_t _prt, *prt = &_prt;
@@ -141,7 +142,7 @@ push_one(mprts_array_t mprts_arr, int n, struct psc_fields *flds)
   find_idx_off_1st_rel(&particle_x(prt), lh, oh, -.5f);
 
   particle_real_t exq, eyq, ezq, hxq, hyq, hzq;
-  INTERPOLATE_1ST(flds, exq, eyq, ezq, hxq, hyq, hzq);
+  INTERPOLATE_1ST(flds_em, exq, eyq, ezq, hxq, hyq, hzq);
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0)
   int kind = particle_kind(prt);
   particle_real_t dq = prm.dq_kind[kind];
@@ -154,7 +155,7 @@ push_one(mprts_array_t mprts_arr, int n, struct psc_fields *flds)
   push_xi(prt, vxi, .5f * prm.dt);
   
   // OUT OF PLANE CURRENT DENSITY AT (n+1.0)*dt
-  calc_j_oop(flds, prt, vxi);
+  calc_j_oop(flds_curr, prt, vxi);
   
   // x^(n+1), p^(n+1) -> x^(n+1.5), p^(n+1)
   push_xi(prt, vxi, .5f * prm.dt);
@@ -169,7 +170,7 @@ push_one(mprts_array_t mprts_arr, int n, struct psc_fields *flds)
   //  ext_prepare_sort(prts, n, prt, lf);
 
   // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
-  calc_j(flds, xm, xp, lf, lg, prt, vxi);
+  calc_j(flds_curr, xm, xp, lf, lg, prt, vxi);
 
 #if PSC_PARTICLES_AS_CUDA2
   PARTICLE_CUDA2_STORE_POS(*prt, mprts_arr.xi4, n);
