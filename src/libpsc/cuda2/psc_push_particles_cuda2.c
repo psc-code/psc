@@ -36,9 +36,9 @@ psc_push_particles_1vbec_push_mprts_yz(struct psc_push_particles *push,
   psc_mparticles_cuda2_copy_to_device(mprts);
   psc_mfields_cuda2_copy_to_device(mflds);
 
-  cuda2_1vbec_push_mprts_a_yz(mprts, mflds);
+  //  cuda2_1vbec_push_mprts_a_yz(mprts, mflds);
   prof_start(pr);
-  cuda2_1vbec_push_mprts_b_yz(mprts, mflds);
+  cuda2_1vbec_push_mprts_yz(mprts, mflds);
   prof_stop(pr);
   prof_start(pr_2);
   //  cuda2_1vbec_push_mprts_b2_yz(mprts, mflds);
@@ -76,9 +76,9 @@ psc_push_particles_1vbec_push_mprts_xyz(struct psc_push_particles *push,
   psc_mparticles_cuda2_copy_to_device(mprts);
   psc_mfields_cuda2_copy_to_device(mflds);
 
-  cuda2_1vbec_push_mprts_a_xyz(mprts, mflds);
+  //  cuda2_1vbec_push_mprts_a_xyz(mprts, mflds);
   prof_start(pr);
-  cuda2_1vbec_push_mprts_b_xyz(mprts, mflds);
+  cuda2_1vbec_push_mprts_xyz(mprts, mflds);
   prof_stop(pr);
   prof_start(pr_2);
   //  cuda2_1vbec_push_mprts_b2_xyz(mprts, mflds);
