@@ -2,7 +2,6 @@
 // ======================================================================
 // field caching
 
-// OPT: precalc offsets into fld_cache (including ci[])
 // OPT: use more shmem?
 
 #if EM_CACHE == EM_CACHE_NONE

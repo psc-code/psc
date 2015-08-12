@@ -1,7 +1,7 @@
 
 #include "psc_cuda2.h"
 #include "psc_particles_as_cuda2.h"
-#include "psc_fields_cuda2.h"
+#include "psc_fields_as_cuda2.h"
 
 #define THREADS_PER_BLOCK (512)
 
@@ -47,20 +47,19 @@ push_mprts_ab(mprts_array_t mprts_arr,
 #else
 push_mprts_ab(mprts_array_t mprts_arr,
 	      unsigned int *b_off,
-	      struct psc_mfields *mflds)
+	      struct psc_mfields *mflds,
+	      float *d_flds0, unsigned int size)
 #endif
 {
   int ci0[3];
   int p, bid;
   p = find_block_pos_patch(ci0);
-#ifdef __CUDACC__
-  real *d_flds = d_flds0 + p * size;
-
+  fields_real_t *d_flds = d_flds0 + p * size;
   DECLARE_EM_CACHE(flds_em, d_flds, size, ci0);
-  real *flds_curr = d_flds;
+#ifdef __CUDACC__
+  flds_curr_t flds_curr = d_flds;
 #else
-  struct psc_fields *flds_em = psc_mfields_get_patch(mflds, p);
-  struct psc_fields *flds_curr = psc_mfields_get_patch(mflds, p);
+  flds_curr_t flds_curr = psc_mfields_get_patch(mflds, p);
 #endif
 
   bid = find_bid();
@@ -104,7 +103,6 @@ static void
 push_mprts_loop(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
   struct psc_mparticles_cuda2 *mprts_sub = psc_mparticles_cuda2(mprts);
-#ifdef __CUDACC__
   struct psc_mfields_cuda2 *mflds_sub = psc_mfields_cuda2(mflds);
 
   int *bs = mprts_sub->bs;
@@ -113,6 +111,7 @@ push_mprts_loop(struct psc_mparticles *mprts, struct psc_mfields *mflds)
   unsigned int fld_size = mflds->nr_fields *
     mflds_sub->im[0] * mflds_sub->im[1] * mflds_sub->im[2];
 
+#ifdef __CUDACC__
   dim3 dimGrid(mprts_sub->b_mx[0],
 	       mprts_sub->b_mx[1],
 	       mprts_sub->b_mx[2] * mprts->nr_patches);
@@ -136,7 +135,8 @@ push_mprts_loop(struct psc_mparticles *mprts, struct psc_mfields *mflds)
       for (blockIdx.x = 0; blockIdx.x < dimGrid[0]; blockIdx.x++) {
 	for (threadIdx.x = 0; threadIdx.x < THREADS_PER_BLOCK; threadIdx.x++) {
 	  push_mprts_ab(mprts_arr, mprts_sub->h_b_off,
-			mflds);
+			mflds,
+			mflds_sub->h_flds, fld_size);
 	}
       }
     }

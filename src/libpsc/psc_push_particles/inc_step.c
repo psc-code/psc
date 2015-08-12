@@ -11,8 +11,8 @@ typedef struct psc_particles * mprts_array_t; // FIXME mprts vs prts
 
 #endif
 
-#ifdef __CUDACC_
-typedef fields_cuda2_real_t * flds_em_t;
+#if PSC_FIELDS_AS_CUDA2
+typedef fields_real_t * flds_em_t;
 #else
 typedef struct psc_fields * flds_em_t;
 #endif
@@ -92,7 +92,7 @@ push_one(mprts_array_t mprts_arr, int n,
   int lg[3];
   real og[3];
   find_idx_off_1st_rel(prt.xi, lg, og, real(0.));
-  INTERPOLATE_1ST_EC(flds_em, exq, eyq, ezq, hxq, hyq, hzq);
+  INTERPOLATE_1ST(flds_em, exq, eyq, ezq, hxq, hyq, hzq);
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
   PARTICLE_CUDA2_LOAD_MOM(prt, mprts_arr.pxi4, n);

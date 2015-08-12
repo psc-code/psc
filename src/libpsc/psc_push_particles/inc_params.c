@@ -5,15 +5,16 @@
 #define MAX_NR_KINDS (10)
 
 struct params_1vb {
+  // particle-related
   particle_real_t dt;
   particle_real_t fnqs, fnqxs, fnqys, fnqzs;
   particle_real_t dxi[3];
   particle_real_t dq_kind[MAX_NR_KINDS];
-#ifdef __CUDACC__
+  int b_mx[3];
+
+  // field-related
   int mx[3];
   int ilg[3];
-#endif
-  int b_mx[3];
 };
 
 CUDA_CONSTANT static struct params_1vb prm;
@@ -46,25 +47,29 @@ params_1vb_set(struct psc *psc,
     params.dq_kind[k] = .5f * ppsc->coeff.eta * params.dt * ppsc->kinds[k].q / ppsc->kinds[k].m;
   }
 
-#ifdef PSC_PARTICLES_AS_CUDA2
   if (mprts && mprts->nr_patches > 0) {
+#if PSC_PARTICLES_AS_CUDA2
     struct psc_mparticles_cuda2 *mprts_sub = psc_mparticles_cuda2(mprts);
     for (int d = 0; d < 3; d++) {
       params.b_mx[d] = mprts_sub->b_mx[d];
     }
-  }
+#else
+    assert(0);
 #endif
+  }
 
-#ifdef __CUDACC__
   if (mflds) {
+#if PSC_FIELDS_AS_CUDA2
     struct psc_mfields_cuda2 * mflds_sub = psc_mfields_cuda2(mflds);
     for (int d = 0; d < 3; d++) {
       params.mx[d] = mflds_sub->im[d];
       params.ilg[d] = mflds_sub->ib[d];
       assert(mflds_sub->ib[d] == -2 || mflds_sub->im[d] == 1); // assumes BND == 2
     }
-  }
+#else
+    assert(0);
 #endif
+  }
 
 #ifndef __CUDACC__
   prm = params;
