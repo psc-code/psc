@@ -183,9 +183,9 @@ push_mprts_loop(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 		     mprts_sub->b_mx[1],
 		     mprts_sub->b_mx[2] * mprts->nr_patches };
 
-  for (int bz = 0; bz < dimGrid[2]; bz++) {
-    for (int by = 0; by < dimGrid[1]; by++) {
-      for (int bx = 0; bx < dimGrid[0]; bx++) {
+  for (blockIdx.z = 0; blockIdx.z < dimGrid[2]; blockIdx.z++) {
+    for (blockIdx.y = 0; blockIdx.y < dimGrid[1]; blockIdx.y++) {
+      for (blockIdx.x = 0; blockIdx.x < dimGrid[0]; blockIdx.x++) {
 	int block_pos[3], ci0[3];
 	int p = find_block_pos_patch(block_pos, ci0);
 	int b = find_bid();

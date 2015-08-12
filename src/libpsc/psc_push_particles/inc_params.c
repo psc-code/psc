@@ -12,8 +12,8 @@ struct params_1vb {
 #ifdef __CUDACC__
   int mx[3];
   int ilg[3];
-  int b_mx[3];
 #endif
+  int b_mx[3];
 };
 
 CUDA_CONSTANT static struct params_1vb prm;
@@ -46,14 +46,16 @@ params_1vb_set(struct psc *psc,
     params.dq_kind[k] = .5f * ppsc->coeff.eta * params.dt * ppsc->kinds[k].q / ppsc->kinds[k].m;
   }
 
-#ifdef __CUDACC__
+#ifdef PSC_PARTICLES_AS_CUDA2
   if (mprts && mprts->nr_patches > 0) {
     struct psc_mparticles_cuda2 *mprts_sub = psc_mparticles_cuda2(mprts);
     for (int d = 0; d < 3; d++) {
       params.b_mx[d] = mprts_sub->b_mx[d];
     }
   }
+#endif
 
+#ifdef __CUDACC__
   if (mflds) {
     struct psc_mfields_cuda2 * mflds_sub = psc_mfields_cuda2(mflds);
     for (int d = 0; d < 3; d++) {

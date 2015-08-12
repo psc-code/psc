@@ -29,7 +29,7 @@ static struct {
 } threadIdx _mrc_unused;
 
 static struct {
-  int x, y;
+  int x, y, z;
 } blockIdx _mrc_unused;
 
 static struct {
