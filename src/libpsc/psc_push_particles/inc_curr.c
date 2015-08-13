@@ -95,7 +95,9 @@ CUDA_DEVICE static fields_real_t *
 init_curr_cache(fields_real_t *flds_curr_shared, int ci0[3])
 {
 #ifdef __CUDACC__
-#warning TBD
+  for (int i = threadIdx.x; i < CURR_CACHE_SIZE; i += THREADS_PER_BLOCK) {
+    flds_curr_shared[i] = 0.f;
+  }
 #else
   if (threadIdx.x == 0) {
     for (int i = 0; i < CURR_CACHE_SIZE; i++) {
@@ -122,6 +124,19 @@ curr_cache_add(flds_curr_t flds_curr, fields_real_t *d_flds, int ci0[3])
 
 #ifdef __CUDACC__
 #warning TBD
+  if (threadIdx.x != THREADS_PER_BLOCK - 1) {
+    return;
+  }
+  for (int m = 0; m < 3; m++) {
+    for (int iz = -BLOCKBND_Z; iz < BLOCKSIZE_Z + BLOCKBND_Z; iz++) {
+      for (int iy = -BLOCKBND_Y; iy < BLOCKSIZE_Y + BLOCKBND_Y; iy++) {
+	for (int ix = -BLOCKBND_X; ix < BLOCKSIZE_X + BLOCKBND_X; ix++) {
+	  F3_DEV(d_flds, JXI + m, ix+ci0[0],iy+ci0[1],iz+ci0[2]) +=
+	    F3_DEV_SHIFT(flds_curr, JXI + m, ix+ci0[0],iy+ci0[1],iz+ci0[2]);
+	}
+      }
+    }
+  }
 #else
   if (threadIdx.x != THREADS_PER_BLOCK - 1) {
     return;
