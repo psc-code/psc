@@ -190,12 +190,12 @@ curr_cache_add(flds_curr_t flds_curr, fields_real_t *d_flds, int ci0[3])
 
 #define F3_DEV_SHIFT_OFF(fldnr, jx,jy,jz, wid)				\
   (((((fldnr)								\
-      *prm.mx[2] + (jz))						\
-     *prm.mx[1] + (jy))						\
-    *prm.mx[0] + (jx))						\
+      *BLOCKGSIZE_Z + (jz))						\
+     *BLOCKGSIZE_Y + (jy))						\
+    *BLOCKGSIZE_X + (jx))						\
    *CURR_CACHE_N_REDUNDANT + (wid))
 
-#define F3_DEV_SHIFT(d_flds, fldnr, jx,jy,jz, wid)		\
+#define F3_DEV_SHIFT(d_flds, fldnr, jx,jy,jz, wid)	\
   ((d_flds)[F3_DEV_SHIFT_OFF(fldnr, jx,jy,jz, wid)])
 
 typedef fields_real_t * flds_curr_t;
