@@ -40,13 +40,19 @@ curr_add(flds_curr_t flds_curr, int m, int jx, int jy, int jz, real val)
 #endif
 }
 
+CUDA_DEVICE static inline flds_curr_t
+flds_curr_shift(flds_curr_t flds_curr, int m, int dx, int dy, int dz)
+{
+  return (flds_curr_t) { .arr_shift = flds_curr.arr_shift
+      + ((((m)
+	   * prm.mx[2] + dz)
+	  * prm.mx[1] + dy)
+	 * prm.mx[0] + dx) };
+}
+
 #define DECLARE_CURR_CACHE(d_flds, ci0)					\
-  ({ (flds_curr_t) {							\
-    .arr_shift = d_flds + ((((0)					\
-			     * prm.mx[2] - prm.ilg[2])			\
-			    * prm.mx[1] - prm.ilg[1])			\
-			   * prm.mx[0] - prm.ilg[0]) };			\
-  })
+  flds_curr_shift((flds_curr_t) { .arr_shift = d_flds },		\
+		  0, -prm.ilg[0], -prm.ilg[1], -prm.ilg[2])
 
 CUDA_DEVICE static void
 curr_cache_add(flds_curr_t flds_curr, fields_real_t *d_flds, int ci0[3])
@@ -89,6 +95,15 @@ curr_add(flds_curr_t flds_curr, int m, int jx, int jy, int jz, real val)
 #endif
 }
 
+CUDA_DEVICE static inline flds_curr_t
+flds_curr_shift(flds_curr_t flds_curr, int m, int dx, int dy, int dz)
+{
+  return flds_curr + ((((m)
+			* BLOCKGSIZE_Z + dz)
+		       * BLOCKGSIZE_Y + dy)
+		      * BLOCKGSIZE_X + dx);
+}
+
 #define CURR_CACHE_SIZE (3 * BLOCKGSIZE_X * BLOCKGSIZE_Y * BLOCKGSIZE_Z)
 
 CUDA_DEVICE static fields_real_t *
@@ -105,10 +120,11 @@ init_curr_cache(fields_real_t *flds_curr_shared, int ci0[3])
     }
   }
 #endif
-  return flds_curr_shared + ((((-JXI)
-			       * BLOCKGSIZE_Z - ci0[2] + BLOCKBND_Z)
-			      * BLOCKGSIZE_Y - ci0[1] + BLOCKBND_Y)
-			     * BLOCKGSIZE_X - ci0[0] + BLOCKBND_X);
+			 
+  return flds_curr_shift(flds_curr_shared, -JXI,
+			 -ci0[0] + BLOCKBND_X,
+			 -ci0[1] + BLOCKBND_Y,
+			 -ci0[2] + BLOCKBND_Z);
 }
 
 #define DECLARE_CURR_CACHE(d_flds, ci0)					\
