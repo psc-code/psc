@@ -188,21 +188,41 @@ curr_cache_add(flds_curr_t flds_curr, fields_real_t *d_flds, int ci0[3])
 // ----------------------------------------------------------------------
 #elif CURR_CACHE == CURR_CACHE_CUDA2
 
-#define F3_DEV_SHIFT_OFF(fldnr, jx,jy,jz)				\
-  ((((fldnr)								\
-     *prm.mx[2] + (jz))							\
-    *prm.mx[1] + (jy))							\
-   *prm.mx[0] + (jx))
+#define F3_DEV_SHIFT_OFF(fldnr, jx,jy,jz, wid)				\
+  (((((fldnr)								\
+      *prm.mx[2] + (jz))						\
+     *prm.mx[1] + (jy))						\
+    *prm.mx[0] + (jx))						\
+   *CURR_CACHE_N_REDUNDANT + (wid))
 
-#define F3_DEV_SHIFT(d_flds, fldnr, jx,jy,jz)	\
-  ((d_flds)[F3_DEV_SHIFT_OFF(fldnr, jx,jy,jz)])
+#define F3_DEV_SHIFT(d_flds, fldnr, jx,jy,jz, wid)		\
+  ((d_flds)[F3_DEV_SHIFT_OFF(fldnr, jx,jy,jz, wid)])
 
-typedef struct { fields_real_t * arr_shift; } flds_curr_t;
+//#define CURR_CACHE_SIZE (3 * BLOCKGSIZE_X * BLOCKGSIZE_Y * BLOCKGSIZE_Z * CURR_CACHE_N_REDUNDANT)
+#define CURR_CACHE_SIZE (3 * 64 * 64 * 4 * CURR_CACHE_N_REDUNDANT)
+
+typedef fields_real_t * flds_curr_t;
+
+#if CURR_CACHE_GMEM
+#define NR_BLOCKS ((512/4) * (512/4))
+
+__device__ static fields_real_t flds_curr_blocks[CURR_CACHE_SIZE * NR_BLOCKS];
+
+#define DECLARE_CURR_CACHE(d_flds, ci0)					\
+  ({									\
+    assert(find_bid() < NR_BLOCKS);					\
+    /*init_curr_cache(flds_curr_blocks + find_bid() * CURR_CACHE_SIZE, ci0);*/ \
+    flds_curr_shift(d_flds, 0, -prm.ilg[0], -prm.ilg[1], -prm.ilg[2]);	\
+  })
+
+#else
+
+#endif
 
 CUDA_DEVICE static inline void
 curr_add(flds_curr_t flds_curr, int m, int jx, int jy, int jz, real val)
 {
-  real *addr = &F3_DEV_SHIFT(flds_curr.arr_shift, JXI+m, jx,jy,jz);
+  real *addr = &F3_DEV_SHIFT(flds_curr, JXI+m, jx,jy,jz, 0);
 #ifdef __CUDACC__
   atomicAdd(addr, val);
 #else
@@ -213,13 +233,8 @@ curr_add(flds_curr_t flds_curr, int m, int jx, int jy, int jz, real val)
 CUDA_DEVICE static inline flds_curr_t
 flds_curr_shift(flds_curr_t flds_curr, int m, int dx, int dy, int dz)
 {
-  return (flds_curr_t) { .arr_shift = flds_curr.arr_shift
-      + F3_DEV_SHIFT_OFF(m, dx, dy, dz) };
+  return flds_curr + F3_DEV_SHIFT_OFF(m, dx, dy, dz, 0);
 }
-
-#define DECLARE_CURR_CACHE(d_flds, ci0)					\
-  flds_curr_shift((flds_curr_t) { .arr_shift = d_flds },		\
-		  0, -prm.ilg[0], -prm.ilg[1], -prm.ilg[2])
 
 CUDA_DEVICE static void
 curr_cache_add(flds_curr_t flds_curr, fields_real_t *d_flds, int ci0[3])
