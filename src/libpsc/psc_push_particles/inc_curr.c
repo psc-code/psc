@@ -76,12 +76,36 @@ curr_cache_add(flds_curr_t flds_curr, fields_real_t *d_flds, int ci0[3])
 
 typedef fields_real_t * flds_curr_t;
 
+#if CURR_CACHE_GMEM
+#define NR_BLOCKS ((512/4) * (512/4))
+
+__device__ static fields_real_t flds_curr_blocks[CURR_CACHE_SIZE * NR_BLOCKS];
+
+#define DECLARE_CURR_CACHE(d_flds, ci0)					\
+  ({									\
+    assert(find_bid() < NR_BLOCKS);					\
+    init_curr_cache(flds_curr_blocks + find_bid() * CURR_CACHE_SIZE, ci0); \
+  })
+
+#else
+
+CUDA_SHARED fields_real_t flds_curr_block[CURR_CACHE_SIZE];
+
+#define DECLARE_CURR_CACHE(d_flds, ci0)					\
+  ({									\
+    init_curr_cache(flds_curr_block, ci0);				\
+  })
+
+#endif
+
 CUDA_DEVICE static inline void
 curr_add(flds_curr_t flds_curr, int m, int jx, int jy, int jz, real val)
 {
   real *addr = &F3_DEV_SHIFT(flds_curr, m, jx,jy,jz, threadIdx.x & (CURR_CACHE_N_REDUNDANT - 1));
 #ifdef __CUDACC__
-  atomicAdd(addr, val);
+  if (addr >= flds_curr_block && addr < flds_curr_block + CURR_CACHE_SIZE) {
+    atomicAdd(addr, val);
+  }
 #else
   *addr += val;
 #endif
@@ -113,28 +137,6 @@ init_curr_cache(fields_real_t *flds_curr_block, int ci0[3])
 			 -ci0[1] + BLOCKBND_Y,
 			 -ci0[2] + BLOCKBND_Z);
 }
-
-#if CURR_CACHE_GMEM
-#define NR_BLOCKS ((512/4) * (512/4))
-
-__device__ static fields_real_t flds_curr_blocks[CURR_CACHE_SIZE * NR_BLOCKS];
-
-#define DECLARE_CURR_CACHE(d_flds, ci0)					\
-  ({									\
-    assert(find_bid() < NR_BLOCKS);					\
-    init_curr_cache(flds_curr_blocks + find_bid() * CURR_CACHE_SIZE, ci0); \
-  })
-
-#else
-
-CUDA_SHARED fields_real_t flds_curr_block[CURR_CACHE_SIZE];
-
-#define DECLARE_CURR_CACHE(d_flds, ci0)					\
-  ({									\
-    init_curr_cache(flds_curr_block, ci0);				\
-  })
-
-#endif
 
 CUDA_DEVICE static void
 curr_cache_add(flds_curr_t flds_curr, fields_real_t *d_flds, int ci0[3])
