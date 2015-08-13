@@ -21,6 +21,7 @@
 
 #define EM_CACHE_NONE 1
 #define EM_CACHE_CUDA 2
+#define EM_CACHE_CUDA2 3
 
 // ----------------------------------------------------------------------
 // CURR_CACHE
