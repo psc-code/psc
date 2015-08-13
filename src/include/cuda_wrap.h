@@ -18,7 +18,7 @@
 #define CUDA_GLOBAL
 #define CUDA_CONSTANT
 #define __forceinline__
-#define CUDA_SHARED
+#define CUDA_SHARED static
 #define CUDA_SYNCTHREADS() do {} while (0)
 #define CUDA_LAUNCH_BOUNDS(t, n)
 #endif
