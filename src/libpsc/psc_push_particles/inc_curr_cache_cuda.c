@@ -6,12 +6,39 @@
     *BLOCKGSIZE_X + (jx))						\
    *CURR_CACHE_N_REDUNDANT + (wid))
 
-#define F3_DEV_SHIFT(d_flds, fldnr, jx,jy,jz, wid)		\
+#define F3_DEV_SHIFT(d_flds, fldnr, jx,jy,jz, wid)	\
   ((d_flds)[F3_DEV_SHIFT_OFF(fldnr, jx,jy,jz, wid)])
 
 #define CURR_CACHE_SIZE (3 * BLOCKGSIZE_X * BLOCKGSIZE_Y * BLOCKGSIZE_Z * CURR_CACHE_N_REDUNDANT)
 
 typedef fields_real_t * flds_curr_t;
+
+CUDA_DEVICE static inline flds_curr_t
+flds_curr_shift(flds_curr_t flds_curr, int m, int dx, int dy, int dz)
+{
+  return flds_curr + F3_DEV_SHIFT_OFF(m, dx,dy,dz, 0);
+}
+
+CUDA_DEVICE static fields_real_t *
+init_curr_cache(fields_real_t *flds_curr_block, int ci0[3])
+{
+#ifdef __CUDACC__
+  for (int i = threadIdx.x; i < CURR_CACHE_SIZE; i += THREADS_PER_BLOCK) {
+    flds_curr_block[i] = 0.f;
+  }
+#else
+  if (threadIdx.x == 0) {
+    for (int i = 0; i < CURR_CACHE_SIZE; i++) {
+      flds_curr_block[i] = 0.f;
+    }
+  }
+#endif
+			 
+  return flds_curr_shift(flds_curr_block, -JXI,
+			 -ci0[0] + BLOCKBND_X,
+			 -ci0[1] + BLOCKBND_Y,
+			 -ci0[2] + BLOCKBND_Z);
+}
 
 #if CURR_CACHE_GMEM
 #define NR_BLOCKS ((512/4) * (512/4))
@@ -44,33 +71,6 @@ curr_add(flds_curr_t flds_curr, int m, int jx, int jy, int jz, real val)
 #else
   *addr += val;
 #endif
-}
-
-CUDA_DEVICE static inline flds_curr_t
-flds_curr_shift(flds_curr_t flds_curr, int m, int dx, int dy, int dz)
-{
-  return flds_curr + F3_DEV_SHIFT_OFF(m, dx,dy,dz, 0);
-}
-
-CUDA_DEVICE static fields_real_t *
-init_curr_cache(fields_real_t *flds_curr_block, int ci0[3])
-{
-#ifdef __CUDACC__
-  for (int i = threadIdx.x; i < CURR_CACHE_SIZE; i += THREADS_PER_BLOCK) {
-    flds_curr_block[i] = 0.f;
-  }
-#else
-  if (threadIdx.x == 0) {
-    for (int i = 0; i < CURR_CACHE_SIZE; i++) {
-      flds_curr_block[i] = 0.f;
-    }
-  }
-#endif
-			 
-  return flds_curr_shift(flds_curr_block, -JXI,
-			 -ci0[0] + BLOCKBND_X,
-			 -ci0[1] + BLOCKBND_Y,
-			 -ci0[2] + BLOCKBND_Z);
 }
 
 CUDA_DEVICE static void
