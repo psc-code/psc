@@ -260,6 +260,50 @@ curr_add(flds_curr_t flds_curr, int m, int jx, int jy, int jz, real val)
 CUDA_DEVICE static void
 curr_cache_add(flds_curr_t flds_curr, fields_real_t *d_flds, int ci0[3])
 {
+  CUDA_SYNCTHREADS();
+
+#ifdef __CUDACC__
+  for (int i = threadIdx.x; i < BLOCKGSIZE_X * BLOCKGSIZE_Y * BLOCKGSIZE_Z; i += THREADS_PER_BLOCK) {
+    int rem = i;
+    int iz = rem / BLOCKGSIZE_Y;
+    rem -= iz * BLOCKGSIZE_Y;
+    int iy = rem / BLOCKGSIZE_X;
+    rem -= iy * BLOCKGSIZE_X;
+#if DIM == DIM_YZ
+    int ix = 0;
+#elif DIM == DIM_XYZ
+    int ix = rem;
+#endif
+    iz -= BLOCKBND_Z;
+    iy -= BLOCKBND_Y;
+    ix -= BLOCKBND_X;
+    for (int m = 0; m < 3; m++) {
+      fields_real_t val = 0.f;
+      for (int wid = 0; wid < CURR_CACHE_N_REDUNDANT; wid++) {
+	val += F3_DEV_SHIFT(flds_curr, JXI + m, ix+ci0[0],iy+ci0[1],iz+ci0[2], wid);
+      }
+      fields_real_t *addr = &F3_DEV(d_flds, JXI + m, ix+ci0[0],iy+ci0[1],iz+ci0[2]);
+      atomicAdd(addr, val);
+    }
+  }
+#else
+  if (threadIdx.x != THREADS_PER_BLOCK - 1) {
+    return;
+  }
+  for (int m = 0; m < 3; m++) {
+    for (int iz = -BLOCKBND_Z; iz < BLOCKSIZE_Z + BLOCKBND_Z; iz++) {
+      for (int iy = -BLOCKBND_Y; iy < BLOCKSIZE_Y + BLOCKBND_Y; iy++) {
+	for (int ix = -BLOCKBND_X; ix < BLOCKSIZE_X + BLOCKBND_X; ix++) {
+	  fields_real_t val = 0.f;
+	  for (int wid = 0; wid < CURR_CACHE_N_REDUNDANT; wid++) {
+	    val += F3_DEV_SHIFT(flds_curr, JXI + m, ix+ci0[0],iy+ci0[1],iz+ci0[2], wid);
+	  }
+	  F3_DEV(d_flds, JXI + m, ix+ci0[0],iy+ci0[1],iz+ci0[2]) += val;
+	}
+      }
+    }
+  }
+#endif
 }
 
 #endif
