@@ -73,18 +73,14 @@ curr_cache_add(flds_curr_t flds_curr, fields_real_t *d_flds, int ci0[3])
 {
   CUDA_SYNCTHREADS();
 
-#ifdef x__CUDACC__
+#ifdef __CUDACC__
   for (int i = threadIdx.x; i < BLOCKGSIZE_X * BLOCKGSIZE_Y * BLOCKGSIZE_Z; i += THREADS_PER_BLOCK) {
     int rem = i;
-    int iz = rem / BLOCKGSIZE_Y;
-    rem -= iz * BLOCKGSIZE_Y;
-    int iy = rem / BLOCKGSIZE_X;
-    rem -= iy * BLOCKGSIZE_X;
-#if DIM == DIM_YZ
-    int ix = 0;
-#elif DIM == DIM_XYZ
-    int ix = rem;
-#endif
+    int ix = rem % BLOCKGSIZE_X;
+    rem /= BLOCKGSIZE_X;
+    int iy = rem % BLOCKGSIZE_Y;
+    rem /= BLOCKGSIZE_Y;
+    int iz = rem;
     iz -= BLOCKBND_Z;
     iy -= BLOCKBND_Y;
     ix -= BLOCKBND_X;
