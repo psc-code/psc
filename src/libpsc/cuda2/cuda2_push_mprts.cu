@@ -46,7 +46,7 @@ find_bid()
 // ----------------------------------------------------------------------
 // push_mprts_ab
 
-CUDA_GLOBAL static void CUDA_LAUNCH_BOUNDS(THREADS_PER_BLOCK, 3)
+CUDA_GLOBAL static void //CUDA_LAUNCH_BOUNDS(THREADS_PER_BLOCK, 3)
 push_mprts_ab(mprts_array_t mprts_arr,
 	      unsigned int *b_off,
 	      float *d_flds0, unsigned int size)
