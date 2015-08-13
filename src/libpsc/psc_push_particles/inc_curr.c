@@ -48,7 +48,7 @@ curr_add(flds_curr_t flds_curr, int m, int jx, int jy, int jz, real val)
 			   * prm.mx[0] - prm.ilg[0]) };			\
   })
 
-static inline void
+CUDA_DEVICE static void
 curr_cache_add(flds_curr_t flds_curr, fields_real_t *d_flds, int ci0[3])
 {
 }
