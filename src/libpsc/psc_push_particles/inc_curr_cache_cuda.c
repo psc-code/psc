@@ -81,18 +81,14 @@ curr_cache_add(flds_curr_t flds_curr, fields_real_t *d_flds, int ci0[3])
 #ifdef __CUDACC__
   for (int i = threadIdx.x; i < BLOCKGSIZE_X * BLOCKGSIZE_Y * BLOCKGSIZE_Z; i += THREADS_PER_BLOCK) {
     int rem = i;
-    int iz = rem / BLOCKGSIZE_Y;
-    rem -= iz * BLOCKGSIZE_Y;
-    int iy = rem / BLOCKGSIZE_X;
-    rem -= iy * BLOCKGSIZE_X;
-#if DIM == DIM_YZ
-    int ix = 0;
-#elif DIM == DIM_XYZ
-    int ix = rem;
-#endif
-    iz -= BLOCKBND_Z;
-    iy -= BLOCKBND_Y;
+    int ix = rem % BLOCKGSIZE_X;
+    rem /= BLOCKGSIZE_X;
+    int iy = rem % BLOCKGSIZE_Y;
+    rem /= BLOCKGSIZE_Y;
+    int iz = rem;
     ix -= BLOCKBND_X;
+    iy -= BLOCKBND_Y;
+    iz -= BLOCKBND_Z;
     for (int m = 0; m < 3; m++) {
       fields_real_t val = 0.f;
       for (int wid = 0; wid < CURR_CACHE_N_REDUNDANT; wid++) {

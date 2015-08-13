@@ -81,9 +81,9 @@ curr_cache_add(flds_curr_t flds_curr, fields_real_t *d_flds, int ci0[3])
     int iy = rem % BLOCKGSIZE_Y;
     rem /= BLOCKGSIZE_Y;
     int iz = rem;
-    iz -= BLOCKBND_Z;
-    iy -= BLOCKBND_Y;
     ix -= BLOCKBND_X;
+    iy -= BLOCKBND_Y;
+    iz -= BLOCKBND_Z;
     for (int m = 0; m < 3; m++) {
       fields_real_t val = 0.f;
       for (int wid = 0; wid < CURR_CACHE_N_REDUNDANT; wid++) {
@@ -105,13 +105,7 @@ curr_cache_add(flds_curr_t flds_curr, fields_real_t *d_flds, int ci0[3])
 	  for (int wid = 0; wid < CURR_CACHE_N_REDUNDANT; wid++) {
 	    val += F3_DEV_SHIFT(flds_curr, JXI + m, ix+ci0[0],iy+ci0[1],iz+ci0[2], wid);
 	  }
-	  //	  F3_DEV(d_flds, JXI + m, ix+ci0[0],iy+ci0[1],iz+ci0[2]) += val;
-	  fields_real_t *addr = &F3_DEV(d_flds, JXI + m, ix+ci0[0],iy+ci0[1],iz+ci0[2]);
-#ifdef __CUDACC__
-	  atomicAdd(addr, val);
-#else
-	  *addr += val;
-#endif
+	  F3_DEV(d_flds, JXI + m, ix+ci0[0],iy+ci0[1],iz+ci0[2]) += val;
 	}
       }
     }
