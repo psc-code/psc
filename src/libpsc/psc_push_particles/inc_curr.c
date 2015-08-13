@@ -77,7 +77,7 @@ typedef fields_real_t * flds_curr_t;
 CUDA_DEVICE static inline void
 curr_add(flds_curr_t flds_curr, int m, int jx, int jy, int jz, real val)
 {
-  real *addr = &F3_DEV_SHIFT(flds_curr, m, jx,jy,jz, 0);
+  real *addr = &F3_DEV_SHIFT(flds_curr, m, jx,jy,jz, threadIdx.x & (CURR_CACHE_N_REDUNDANT - 1));
 #ifdef __CUDACC__
   atomicAdd(addr, val);
 #else
