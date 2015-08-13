@@ -230,9 +230,9 @@ init_curr_cache(fields_real_t *flds_curr_block, int ci0[3])
 #endif
 			 
   return flds_curr_shift(flds_curr_block, -JXI,
-			 -prm.ilg[0],
-			 -prm.ilg[1],
-			 -prm.ilg[2]);
+			 -ci0[0] - prm.ilg[0],
+			 -ci0[1] - prm.ilg[1],
+			 -ci0[2] - prm.ilg[2]);
 }
 
 #define DECLARE_CURR_CACHE(d_flds, ci0)					\
@@ -242,6 +242,8 @@ init_curr_cache(fields_real_t *flds_curr_block, int ci0[3])
   })
 
 #else
+
+// TBD
 
 #endif
 
