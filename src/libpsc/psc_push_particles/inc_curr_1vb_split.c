@@ -25,6 +25,7 @@ calc_j2_one_cell(flds_curr_t flds_curr, particle_real_t qni_wni,
 			      * BLOCKGSIZE_Y + i[1])
 			     * BLOCKGSIZE_X + i[0]);
 #endif
+
   for (int d = 0; d < 3; d++) {
     xa[d] -= i[d];
   }

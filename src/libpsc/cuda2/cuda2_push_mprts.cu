@@ -55,7 +55,7 @@ push_mprts_ab(mprts_array_t mprts_arr,
   CUDA_SHARED flds_curr_t flds_curr;
   {
     int ci0[3]; find_ci0(ci0);
-    int p = find_patch(ci0);
+    int p = find_patch();
     fields_real_t *d_flds = d_flds0 + p * size;
     flds_em = DECLARE_EM_CACHE(d_flds, ci0);
     flds_curr = DECLARE_CURR_CACHE(d_flds, ci0);
@@ -79,7 +79,7 @@ push_mprts_ab(mprts_array_t mprts_arr,
 
   {
     int ci0[3]; find_ci0(ci0);
-    int p = find_patch(ci0);
+    int p = find_patch();
     fields_real_t *d_flds = d_flds0 + p * size;
     curr_cache_add(flds_curr, d_flds, ci0);
   }
