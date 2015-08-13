@@ -206,8 +206,7 @@ flds_curr_shift(flds_curr_t flds_curr, int m, int dx, int dy, int dz)
   return flds_curr + F3_DEV_SHIFT_OFF(m, dx, dy, dz, 0);
 }
 
-//#define CURR_CACHE_SIZE (3 * BLOCKGSIZE_X * BLOCKGSIZE_Y * BLOCKGSIZE_Z * CURR_CACHE_N_REDUNDANT)
-#define CURR_CACHE_SIZE (3 * 68 * 68 * 8 * CURR_CACHE_N_REDUNDANT)
+#define CURR_CACHE_SIZE (3 * BLOCKGSIZE_X * BLOCKGSIZE_Y * BLOCKGSIZE_Z * CURR_CACHE_N_REDUNDANT)
 
 #if CURR_CACHE_GMEM
 #define NR_BLOCKS ((64/4) * (64/4))
