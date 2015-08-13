@@ -18,7 +18,7 @@
 CUDA_DEVICE static int
 find_block_pos_patch(int *ci0)
 {
-#if EM_CACHE == EM_CACHE_CUDA
+#if (EM_CACHE == EM_CACHE_CUDA) || (CURR_CACHE == CURR_CACHE_CUDA)
   ci0[0] = blockIdx.x * BLOCKSIZE_X;
   ci0[1] = blockIdx.y * BLOCKSIZE_Y;
   ci0[2] = (blockIdx.z % prm.b_mx[2]) * BLOCKSIZE_Z;
@@ -47,8 +47,8 @@ push_mprts_ab(mprts_array_t mprts_arr,
   int ci0[3];
   int p = find_block_pos_patch(ci0);
   fields_real_t *d_flds = d_flds0 + p * size;
-  DECLARE_EM_CACHE(flds_em, d_flds, size, ci0);
-  DECLARE_CURR_CACHE(flds_curr, d_flds, size, ci0);
+  DECLARE_EM_CACHE(flds_em, d_flds, ci0);
+  DECLARE_CURR_CACHE(flds_curr, d_flds, ci0);
 
   int bid = find_bid();
   CUDA_SHARED int block_begin, block_end;

@@ -42,7 +42,7 @@
 #endif
 
 __device__ static float *
-cache_fields(float *flds_em_shared, float *d_flds, int size, int *ci0)
+cache_fields(float *flds_em_shared, float *d_flds, int *ci0)
 {
   float *flds_em = flds_em_shared + ((((-EX) * 
 				       BLOCKGSIZE_Z + -ci0[2] + BLOCKBND_Z) *
@@ -75,9 +75,9 @@ cache_fields(float *flds_em_shared, float *d_flds, int size, int *ci0)
   return flds_em;
 }
 
-#define DECLARE_EM_CACHE(flds_em, d_flds, size, ci0)	\
+#define DECLARE_EM_CACHE(flds_em, d_flds, ci0)	\
   __shared__ real flds_em_shared[6 * BLOCKGSIZE_X * BLOCKGSIZE_Y * BLOCKGSIZE_Z]; \
-  float *flds_em = cache_fields(flds_em_shared, d_flds, size, ci0)
+  float *flds_em = cache_fields(flds_em_shared, d_flds, ci0)
 
 #endif
 
