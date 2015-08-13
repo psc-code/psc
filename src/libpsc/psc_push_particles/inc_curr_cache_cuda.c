@@ -65,7 +65,8 @@ CUDA_SHARED fields_real_t flds_curr_block[CURR_CACHE_SIZE];
 CUDA_DEVICE static inline void
 curr_add(flds_curr_t flds_curr, int m, int jx, int jy, int jz, real val)
 {
-  real *addr = &F3_DEV_SHIFT(flds_curr, m, jx,jy,jz, threadIdx.x % CURR_CACHE_N_REDUNDANT);
+  int wid = threadIdx.x % CURR_CACHE_N_REDUNDANT;
+  real *addr = &F3_DEV_SHIFT(flds_curr, m, jx,jy,jz, wid);
 #ifdef __CUDACC__
   atomicAdd(addr, val);
 #else
