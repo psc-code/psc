@@ -4,15 +4,7 @@
 
 // OPT: use more shmem?
 
-#if EM_CACHE == EM_CACHE_NONE
-
-#define F3_CACHE(flds_em, m, jx, jy, jz)	\
-  (F3_DEV(flds_em, m, jx,jy,jz))
-
-#define DECLARE_EM_CACHE(flds_em, d_flds, size, ci0)	\
-  fields_real_t *flds_em = d_flds
-
-#elif EM_CACHE == EM_CACHE_CUDA
+// FIXME, shared between em and curr cache currently
 
 // OPT, shouldn't we be able to do with less ghosts?
 #if DIM == DIM_YZ
@@ -28,6 +20,18 @@
 #define BLOCKGSIZE_X (BLOCKSIZE_X + 2 * BLOCKBND_X)
 #define BLOCKGSIZE_Y (BLOCKSIZE_Y + 2 * BLOCKBND_Y)
 #define BLOCKGSIZE_Z (BLOCKSIZE_Z + 2 * BLOCKBND_Z)
+
+
+
+#if EM_CACHE == EM_CACHE_NONE
+
+#define F3_CACHE(flds_em, m, jx, jy, jz)	\
+  (F3_DEV(flds_em, m, jx,jy,jz))
+
+#define DECLARE_EM_CACHE(d_flds, ci0)	\
+  ({ d_flds; })
+
+#elif EM_CACHE == EM_CACHE_CUDA
 
 #if DIM == DIM_YZ
 #define F3_CACHE(flds_em, m, jx, jy, jz)				\
