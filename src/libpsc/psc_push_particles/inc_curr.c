@@ -115,7 +115,7 @@ init_curr_cache(fields_real_t *flds_curr_shared, int ci0[3])
     init_curr_cache(flds_curr_shared, ci0);				\
   })
 
-static inline void
+CUDA_DEVICE static void
 curr_cache_add(flds_curr_t flds_curr, fields_real_t *d_flds, int ci0[3])
 {
   CUDA_SYNCTHREADS();
