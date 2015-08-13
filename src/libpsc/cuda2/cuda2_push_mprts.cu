@@ -13,18 +13,25 @@
 #include "../psc_push_particles/inc_step.c"
 
 // ----------------------------------------------------------------------
-// find_block_pos_patch
+// find_patch
 
 CUDA_DEVICE static int
-find_block_pos_patch(int *ci0)
+find_patch()
 {
-#if (EM_CACHE == EM_CACHE_CUDA) || (CURR_CACHE == CURR_CACHE_CUDA)
+  return blockIdx.z / prm.b_mx[2];
+}
+
+// ----------------------------------------------------------------------
+// find_ci0
+//
+// cell index of lower left cell of current block
+
+CUDA_DEVICE static void
+find_ci0(int *ci0)
+{
   ci0[0] = blockIdx.x * BLOCKSIZE_X;
   ci0[1] = blockIdx.y * BLOCKSIZE_Y;
   ci0[2] = (blockIdx.z % prm.b_mx[2]) * BLOCKSIZE_Z;
-#endif
-
-  return blockIdx.z / prm.b_mx[2];
 }
 
 // ----------------------------------------------------------------------
@@ -44,16 +51,23 @@ push_mprts_ab(mprts_array_t mprts_arr,
 	      unsigned int *b_off,
 	      float *d_flds0, unsigned int size)
 {
-  int ci0[3];
-  int p = find_block_pos_patch(ci0);
-  fields_real_t *d_flds = d_flds0 + p * size;
-  DECLARE_EM_CACHE(flds_em, d_flds, ci0);
-  DECLARE_CURR_CACHE(flds_curr, d_flds, ci0);
+  CUDA_SHARED fields_real_t *flds_em;
+  CUDA_SHARED flds_curr_t flds_curr;
+  {
+    int ci0[3]; find_ci0(ci0);
+    int p = find_patch(ci0);
+    fields_real_t *d_flds = d_flds0 + p * size;
+    flds_em = DECLARE_EM_CACHE(d_flds, ci0);
+    flds_curr = DECLARE_CURR_CACHE(d_flds, ci0);
+  }
 
-  int bid = find_bid();
-  CUDA_SHARED int block_begin, block_end;
-  block_begin = b_off[bid];
-  block_end = b_off[bid + 1];
+  int block_begin;
+  CUDA_SHARED int block_end;
+  {
+    int bid = find_bid();
+    block_begin = b_off[bid];
+    block_end = b_off[bid + 1];
+  }
 
   CUDA_SYNCTHREADS();
   for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
@@ -63,7 +77,12 @@ push_mprts_ab(mprts_array_t mprts_arr,
     push_one(mprts_arr, n, flds_em, flds_curr);
   }
 
-  curr_cache_add(flds_curr, d_flds, ci0);
+  {
+    int ci0[3]; find_ci0(ci0);
+    int p = find_patch(ci0);
+    fields_real_t *d_flds = d_flds0 + p * size;
+    curr_cache_add(flds_curr, d_flds, ci0);
+  }
 }
 
 #ifdef __CUDACC__

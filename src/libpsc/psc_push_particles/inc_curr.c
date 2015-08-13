@@ -40,12 +40,13 @@ curr_add(flds_curr_t flds_curr, int m, int jx, int jy, int jz, real val)
 #endif
 }
 
-#define DECLARE_CURR_CACHE(flds_curr, d_flds, ci0)			\
-  flds_curr_t flds_curr = {						\
+#define DECLARE_CURR_CACHE(d_flds, ci0)					\
+  ({ (flds_curr_t) {							\
     .arr_shift = d_flds + ((((0)					\
 			     * prm.mx[2] - prm.ilg[2])			\
 			    * prm.mx[1] - prm.ilg[1])			\
-			   * prm.mx[0] - prm.ilg[0]) }
+			   * prm.mx[0] - prm.ilg[0]) };			\
+  })
 
 static inline void
 curr_cache_add(flds_curr_t flds_curr, fields_real_t *d_flds, int ci0[3])
@@ -108,9 +109,11 @@ init_curr_cache(fields_real_t *flds_curr_shared, int ci0[3])
 			     * BLOCKGSIZE_X - ci0[0] + BLOCKBND_X);
 }
 
-#define DECLARE_CURR_CACHE(flds_curr, d_flds, ci0)			\
-  CUDA_SHARED fields_real_t flds_curr_shared[CURR_CACHE_SIZE];		\
-  flds_curr_t flds_curr = init_curr_cache(flds_curr_shared, ci0)
+#define DECLARE_CURR_CACHE(d_flds, ci0)					\
+  ({									\
+    CUDA_SHARED fields_real_t flds_curr_shared[CURR_CACHE_SIZE];	\
+    init_curr_cache(flds_curr_shared, ci0);				\
+  })
 
 static inline void
 curr_cache_add(flds_curr_t flds_curr, fields_real_t *d_flds, int ci0[3])
