@@ -209,7 +209,7 @@ flds_curr_shift(flds_curr_t flds_curr, int m, int dx, int dy, int dz)
 #define CURR_CACHE_SIZE (3 * BLOCKGSIZE_X * BLOCKGSIZE_Y * BLOCKGSIZE_Z * CURR_CACHE_N_REDUNDANT)
 
 #if CURR_CACHE_GMEM
-#define NR_BLOCKS ((64/4) * (64/4))
+#define NR_BLOCKS ((512/4) * (512/4))
 
 __device__ static fields_real_t flds_curr_blocks[CURR_CACHE_SIZE * NR_BLOCKS];
 
