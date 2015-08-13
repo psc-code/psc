@@ -14,25 +14,51 @@ calc_j2_one_cell(flds_curr_t flds_curr, particle_real_t qni_wni,
 			   .5f * (xm[2] + xp[2]) };
   particle_real_t h = (1.f/12.f) * dx[0] * dx[1] * dx[2];
 
-  int i[3] = {};
+  int i[3];
   for (int d = 0; d < 3; d++) {
     i[d] = particle_real_fint(xa[d]);
+  }
+
+#if CURR_CACHE == CURR_CACHE_CUDA
+  flds_curr_t flds_curr_shift = flds_curr + ((((0)
+			       * BLOCKGSIZE_Z + i[2])
+			      * BLOCKGSIZE_Y + i[1])
+			     * BLOCKGSIZE_X + i[0]);
+#endif
+  for (int d = 0; d < 3; d++) {
     xa[d] -= i[d];
   }
 
   particle_real_t fnqx = qni_wni * prm.fnqxs;
+#if CURR_CACHE == CURR_CACHE_CUDA
+  curr_add(flds_curr_shift, 0, 0,0,0, fnqx * (dx[0] * (1.f - xa[1]) * (1.f - xa[2]) + h));
+  curr_add(flds_curr_shift, 0, 0,1,0, fnqx * (dx[0] * (      xa[1]) * (1.f - xa[2]) - h));
+  curr_add(flds_curr_shift, 0, 0,0,1, fnqx * (dx[0] * (1.f - xa[1]) * (      xa[2]) - h));
+  curr_add(flds_curr_shift, 0, 0,1,1, fnqx * (dx[0] * (      xa[1]) * (      xa[2]) + h));
+#else
   curr_add(flds_curr, 0, i[0]  ,i[1]  ,i[2]  , fnqx * (dx[0] * (1.f - xa[1]) * (1.f - xa[2]) + h));
   curr_add(flds_curr, 0, i[0]  ,i[1]+1,i[2]  , fnqx * (dx[0] * (      xa[1]) * (1.f - xa[2]) - h));
   curr_add(flds_curr, 0, i[0]  ,i[1]  ,i[2]+1, fnqx * (dx[0] * (1.f - xa[1]) * (      xa[2]) - h));
   curr_add(flds_curr, 0, i[0]  ,i[1]+1,i[2]+1, fnqx * (dx[0] * (      xa[1]) * (      xa[2]) + h));
+#endif
 
   particle_real_t fnqy = qni_wni * prm.fnqys;
+#if CURR_CACHE == CURR_CACHE_CUDA
+  curr_add(flds_curr_shift, 1, 0,0,0, fnqy * (dx[1] * (1.f - xa[2])));
+  curr_add(flds_curr_shift, 1, 0,0,1, fnqy * (dx[1] * (      xa[2])));
+#else
   curr_add(flds_curr, 1, i[0]  ,i[1]  ,i[2]  , fnqy * (dx[1] * (1.f - xa[2])));
   curr_add(flds_curr, 1, i[0]  ,i[1]  ,i[2]+1, fnqy * (dx[1] * (      xa[2])));
+#endif
 
   particle_real_t fnqz = qni_wni * prm.fnqzs;
+#if CURR_CACHE == CURR_CACHE_CUDA
+  curr_add(flds_curr_shift, 2, 0,0,0, fnqz * (dx[2] * (1.f - xa[1])));
+  curr_add(flds_curr_shift, 2, 0,1,0, fnqz * (dx[2] * (      xa[1])));
+#else
   curr_add(flds_curr, 2, i[0]  ,i[1]  ,i[2]  , fnqz * (dx[2] * (1.f - xa[1])));
   curr_add(flds_curr, 2, i[0]  ,i[1]+1,i[2]  , fnqz * (dx[2] * (      xa[1])));
+#endif
 }
 
 #elif DIM == DIM_XYZ
