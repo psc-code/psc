@@ -14,6 +14,7 @@
 
 #elif EM_CACHE == EM_CACHE_CUDA
 
+// OPT, shouldn't we be able to do with less ghosts?
 #if DIM == DIM_YZ
 #define BLOCKBND_X 0
 #define BLOCKBND_Y 2
