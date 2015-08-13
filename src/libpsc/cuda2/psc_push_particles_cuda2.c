@@ -82,7 +82,7 @@ psc_push_particles_1vbec_push_mprts_xyz(struct psc_push_particles *push,
   psc_mparticles_cuda2_copy_to_device(mprts);
   psc_mfields_cuda2_copy_to_device(mflds);
 
-  if (ppsc->timestep % 10 == 0) {
+  if (1||ppsc->timestep % 10 == 0) {
     //  cuda2_1vbec_push_mprts_a_xyz(mprts, mflds);
     prof_start(pr);
     cuda2_1vbec_push_mprts_xyz(mprts, mflds);
@@ -92,7 +92,7 @@ psc_push_particles_1vbec_push_mprts_xyz(struct psc_push_particles *push,
     prof_stop(pr_2);
   }
 
-#if 0
+#if 1
   psc_mparticles_cuda2_copy_to_host(mprts);
   psc_mfields_cuda2_copy_to_host(mflds);
 #else
