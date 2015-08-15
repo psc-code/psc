@@ -8,7 +8,6 @@
 
 #define DIM DIM_YZ
 #define CALC_J CALC_J_1VB_2D
-#define F3_CURR F3_S
 #define F3_CACHE F3_S
 #define F3_CACHE_TYPE "single"
 #define INTERPOLATE_1ST INTERPOLATE_1ST_EC

@@ -1,7 +1,16 @@
 
+// ----------------------------------------------------------------------
+// defaults
+
 #ifndef CURR_CACHE
 #define CURR_CACHE CURR_CACHE_NONE
 #endif
+
+#ifndef F3_CURR
+#define F3_CURR F3
+#endif
+
+// ----------------------------------------------------------------------
 
 #define CURR_CACHE_GMEM 1
 #define CURR_CACHE_N_REDUNDANT 1
