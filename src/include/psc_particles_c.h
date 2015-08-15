@@ -71,7 +71,7 @@ particle_c_kind(particle_c_t *p)
   return p->kind;
 }
 
-#define particle_c_x(prt) ((prt)->x)
+#define particle_c_x(prt) ((prt)->xi)
 #define particle_c_px(prt) ((prt)->pxi)
 
 static inline void
