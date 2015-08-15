@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+typedef struct psc_fields *curr_cache_t;
 #include "inc_params.c"
 #include "inc_interpolate.c"
 #include "inc_push.c"

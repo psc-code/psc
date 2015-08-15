@@ -126,7 +126,7 @@ ext_prepare_sort(struct psc_particles *prts, int n, particle_t *prt,
 
 CUDA_DEVICE static void
 push_one(mprts_array_t mprts_arr, int n,
-	 flds_em_t flds_em, flds_curr_t flds_curr)
+	 flds_em_t flds_em, curr_cache_t curr_cache)
 {
 #if PSC_PARTICLES_AS_CUDA2
   particle_t _prt, *prt = &_prt;
@@ -166,7 +166,7 @@ push_one(mprts_array_t mprts_arr, int n,
   real h1[3];
   find_idx_off_pos_1st_rel(prt->xi, lf, h1, xp, real(0.));
 
-  calc_j(flds_curr, xm, xp, lf, lg, prt, vxi);
+  calc_j(curr_cache, xm, xp, lf, lg, prt, vxi);
 
 #else
 
@@ -193,7 +193,7 @@ push_one(mprts_array_t mprts_arr, int n,
   push_xi(prt, vxi, .5f * prm.dt);
   
   // OUT OF PLANE CURRENT DENSITY AT (n+1.0)*dt
-  calc_j_oop(flds_curr, prt, vxi);
+  calc_j_oop(curr_cache, prt, vxi);
   
   // x^(n+1), p^(n+1) -> x^(n+1.5), p^(n+1)
   push_xi(prt, vxi, .5f * prm.dt);
@@ -208,7 +208,7 @@ push_one(mprts_array_t mprts_arr, int n,
   //  ext_prepare_sort(prts, n, prt, lf);
 
   // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
-  calc_j(flds_curr, xm, xp, lf, lg, prt, vxi);
+  calc_j(curr_cache, xm, xp, lf, lg, prt, vxi);
 
   PARTICLE_STORE(prt, mprts_arr, n);
 #endif

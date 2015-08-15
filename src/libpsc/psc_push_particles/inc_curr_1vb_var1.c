@@ -65,7 +65,7 @@ calc_3d_dx1(particle_real_t dx1[3], particle_real_t x[3], particle_real_t dx[3],
 // curr_3d_vb_cell
 
 CUDA_DEVICE static void
-curr_3d_vb_cell(flds_curr_t flds_curr, int i[3], particle_real_t x[3], particle_real_t dx[3],
+curr_3d_vb_cell(curr_cache_t curr_cache, int i[3], particle_real_t x[3], particle_real_t dx[3],
 		particle_real_t qni_wni)
 {
   real xa[3] = { 0.,
@@ -77,26 +77,26 @@ curr_3d_vb_cell(flds_curr_t flds_curr, int i[3], particle_real_t x[3], particle_
     {
       real fnqx = qni_wni * prm.fnqxs;
       real h = (1.f / 12.f) * dx[0] * dx[1] * dx[2];
-      curr_add(flds_curr, 0, 0,i[1]  ,i[2]  , fnqx * (dx[0] * (.5f - xa[1]) * (.5f - xa[2]) + h));
-      curr_add(flds_curr, 0, 0,i[1]+1,i[2]  , fnqx * (dx[0] * (.5f + xa[1]) * (.5f - xa[2]) - h));
-      curr_add(flds_curr, 0, 0,i[1]  ,i[2]+1, fnqx * (dx[0] * (.5f - xa[1]) * (.5f + xa[2]) - h));
-      curr_add(flds_curr, 0, 0,i[1]+1,i[2]+1, fnqx * (dx[0] * (.5f + xa[1]) * (.5f + xa[2]) + h));
+      curr_add(curr_cache, 0, 0,i[1]  ,i[2]  , fnqx * (dx[0] * (.5f - xa[1]) * (.5f - xa[2]) + h));
+      curr_add(curr_cache, 0, 0,i[1]+1,i[2]  , fnqx * (dx[0] * (.5f + xa[1]) * (.5f - xa[2]) - h));
+      curr_add(curr_cache, 0, 0,i[1]  ,i[2]+1, fnqx * (dx[0] * (.5f - xa[1]) * (.5f + xa[2]) - h));
+      curr_add(curr_cache, 0, 0,i[1]+1,i[2]+1, fnqx * (dx[0] * (.5f + xa[1]) * (.5f + xa[2]) + h));
     }
 #ifdef __CUDACC__
   if (dx[1] != 0.f)
 #endif
     {
       real fnqy = qni_wni * prm.fnqys;
-      curr_add(flds_curr, 1, 0,i[1],i[2]  , fnqy * dx[1] * (.5f - xa[2]));
-      curr_add(flds_curr, 1, 0,i[1],i[2]+1, fnqy * dx[1] * (.5f + xa[2]));
+      curr_add(curr_cache, 1, 0,i[1],i[2]  , fnqy * dx[1] * (.5f - xa[2]));
+      curr_add(curr_cache, 1, 0,i[1],i[2]+1, fnqy * dx[1] * (.5f + xa[2]));
     }
 #ifdef __CUDACC__
   if (dx[2] != 0.f)
 #endif
     {
       real fnqz = qni_wni * prm.fnqzs;
-      curr_add(flds_curr, 2, 0,i[1]  ,i[2], fnqz * dx[2] * (.5f - xa[1]));
-      curr_add(flds_curr, 2, 0,i[1]+1,i[2], fnqz * dx[2] * (.5f + xa[1]));
+      curr_add(curr_cache, 2, 0,i[1]  ,i[2], fnqz * dx[2] * (.5f - xa[1]));
+      curr_add(curr_cache, 2, 0,i[1]+1,i[2], fnqz * dx[2] * (.5f + xa[1]));
     }
 }
 
@@ -120,7 +120,7 @@ curr_3d_vb_cell_upd(int i[3], particle_real_t x[3], particle_real_t dx1[3],
 // calc_j
 
 CUDA_DEVICE static void
-calc_j(flds_curr_t flds_curr, particle_real_t *xm, particle_real_t *xp,
+calc_j(curr_cache_t curr_cache, particle_real_t *xm, particle_real_t *xp,
        int *lf, int *lg, particle_t *prt, particle_real_t *vxi)
 
 {
@@ -147,16 +147,16 @@ calc_j(flds_curr_t flds_curr, particle_real_t *xm, particle_real_t *xp,
   }
 
   calc_3d_dx1(dx1, x, dx, off);
-  curr_3d_vb_cell(flds_curr, i, x, dx1, prt->qni_wni);
+  curr_3d_vb_cell(curr_cache, i, x, dx1, prt->qni_wni);
   curr_3d_vb_cell_upd(i, x, dx1, dx, off);
   
   off[1] = idiff[1] - off[1];
   off[2] = idiff[2] - off[2];
   calc_3d_dx1(dx1, x, dx, off);
-  curr_3d_vb_cell(flds_curr, i, x, dx1, prt->qni_wni);
+  curr_3d_vb_cell(curr_cache, i, x, dx1, prt->qni_wni);
   curr_3d_vb_cell_upd(i, x, dx1, dx, off);
     
-  curr_3d_vb_cell(flds_curr, i, x, dx, prt->qni_wni);
+  curr_3d_vb_cell(curr_cache, i, x, dx, prt->qni_wni);
 
 #else
   int first_dir, second_dir = -1;
@@ -187,7 +187,7 @@ calc_j(flds_curr_t flds_curr, particle_real_t *xm, particle_real_t *xp,
     off[3 - first_dir] = 0;
     off[first_dir] = idiff[first_dir];
     calc_3d_dx1(dx1, x, dx, off);
-    curr_3d_vb_cell(flds_curr, i, x, dx1, qni_wni);
+    curr_3d_vb_cell(curr_cache, i, x, dx1, qni_wni);
     curr_3d_vb_cell_upd(i, x, dx1, dx, off);
   }
 
@@ -195,11 +195,11 @@ calc_j(flds_curr_t flds_curr, particle_real_t *xm, particle_real_t *xp,
     off[first_dir] = 0;
     off[second_dir] = idiff[second_dir];
     calc_3d_dx1(dx1, x, dx, off);
-    curr_3d_vb_cell(flds_curr, i, x, dx1, qni_wni);
+    curr_3d_vb_cell(curr_cache, i, x, dx1, qni_wni);
     curr_3d_vb_cell_upd(i, x, dx1, dx, off);
   }
 
-  curr_3d_vb_cell(flds_curr, i, x, dx, qni_wni);
+  curr_3d_vb_cell(curr_cache, i, x, dx, qni_wni);
 #endif
 }
 
@@ -209,7 +209,7 @@ calc_j(flds_curr_t flds_curr, particle_real_t *xm, particle_real_t *xp,
 #ifdef __CUDACC__
 
 CUDA_DEVICE static void
-calc_j(flds_curr_t flds_curr, particle_real_t *xm, particle_real_t *xp,
+calc_j(curr_cache_t curr_cache, particle_real_t *xm, particle_real_t *xp,
        int *lf, int *lg, particle_t *prt, particle_real_t *vxi)
 {
   assert(0);
