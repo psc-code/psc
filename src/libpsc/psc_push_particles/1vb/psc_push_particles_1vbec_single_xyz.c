@@ -1,8 +1,8 @@
 
 #include "psc_push_particles_private.h"
 
-#include "psc_particles_as_double.h"
-#include "psc_fields_as_c.h"
+#include "psc_particles_as_single.h"
+#include "psc_fields_as_single.h"
 
 #include "../inc_defs.h"
 
@@ -10,7 +10,7 @@
 #define CALC_J CALC_J_1VB_SPLIT
 #define INTERPOLATE_1ST INTERPOLATE_1ST_EC
 
-#define psc_push_particles_push_a_xyz psc_push_particles_1vbec3d_double_push_a_xyz
+#define psc_push_particles_push_a_xyz psc_push_particles_1vbec_single_push_a_xyz
 
 #define NOT_STATIC
 

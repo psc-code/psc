@@ -6,11 +6,11 @@
 
 #include "../inc_defs.h"
 
-#define DIM DIM_XYZ
-#define CALC_J CALC_J_1VB_SPLIT
+#define DIM DIM_YZ
+#define CALC_J CALC_J_1VB_VAR1
 #define INTERPOLATE_1ST INTERPOLATE_1ST_EC
 
-#define psc_push_particles_push_a_xyz psc_push_particles_1vbec3d_single_push_a_xyz
+#define psc_push_particles_push_a_yz psc_push_particles_1vbec_single_push_a_yz
 
 #define NOT_STATIC
 

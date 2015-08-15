@@ -14,10 +14,10 @@
 #include "1vb.c"
 
 // ======================================================================
-// psc_push_particles: subclass "1vbec3d_single_by_block"
+// psc_push_particles: subclass "1vbec_single_by_block"
 
-struct psc_push_particles_ops psc_push_particles_1vbec3d_single_by_block_ops = {
-  .name                  = "1vbec3d_single_by_block",
+struct psc_push_particles_ops psc_push_particles_1vbec_single_by_block_ops = {
+  .name                  = "1vbec_single_by_block",
   .push_a_yz             = psc_push_particles_push_a_yz,
   .particles_type        = PARTICLE_TYPE,
   .fields_type           = FIELDS_TYPE,
