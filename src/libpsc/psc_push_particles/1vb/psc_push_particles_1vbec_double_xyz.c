@@ -12,7 +12,5 @@
 
 #define psc_push_particles_push_a_xyz psc_push_particles_1vbec_double_push_a_xyz
 
-#define NOT_STATIC
-
 #include "1vb.c"
 

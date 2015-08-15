@@ -42,12 +42,7 @@ do_push_part_1vb_yz(struct psc_fields *flds, struct psc_particles *prts)
 
 #endif
 
-// FIXME!!!
-#ifdef NOT_STATIC
 void
-#else
-static void
-#endif
 SFX(psc_push_particles_push_a)(struct psc_push_particles *push,
 			       struct psc_particles *prts,
 			       struct psc_fields *flds)
