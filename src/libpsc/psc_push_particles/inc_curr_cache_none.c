@@ -38,11 +38,7 @@ CUDA_DEVICE static inline void
 curr_cache_add(curr_cache_t curr_cache, int m, int jx, int jy, int jz,
 	       fields_real_t val)
 {
-#if PSC_FIELDS_AS_CUDA2
-  fields_real_t *addr = &F3_DEV(curr_cache, JXI+m, jx,jy,jz);
-#else
   fields_real_t *addr = &F3_CURR(curr_cache, JXI+m, jx,jy,jz);
-#endif
   atomicAdd(addr, val);
 }
 

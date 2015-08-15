@@ -5,6 +5,8 @@
 
 #define THREADS_PER_BLOCK (512)
 
+#define F3_CURR F3_DEV
+
 #include "../psc_push_particles/inc_params.c"
 #include "../psc_push_particles/inc_cache.c"
 #include "../psc_push_particles/inc_interpolate.c"
