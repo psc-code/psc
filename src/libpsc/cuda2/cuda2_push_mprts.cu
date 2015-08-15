@@ -58,7 +58,7 @@ push_mprts_ab(mprts_array_t mprts_arr,
     int p = find_patch();
     fields_real_t *d_flds = d_flds0 + p * size;
     flds_em = DECLARE_EM_CACHE(d_flds, ci0);
-    flds_curr = DECLARE_CURR_CACHE(d_flds, ci0);
+    flds_curr = curr_cache_create(d_flds, ci0);
   }
 
   int block_begin;

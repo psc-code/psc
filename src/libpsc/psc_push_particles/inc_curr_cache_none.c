@@ -36,9 +36,12 @@ flds_curr_shift(flds_curr_t flds_curr, int m, int dx, int dy, int dz)
       + F3_DEV_SHIFT_OFF(m, dx, dy, dz) };
 }
 
-#define DECLARE_CURR_CACHE(d_flds, ci0)					\
-  flds_curr_shift((flds_curr_t) { .arr_shift = d_flds },		\
-		  0, -prm.ilg[0], -prm.ilg[1], -prm.ilg[2])
+CUDA_DEVICE static inline flds_curr_t
+curr_cache_create(float *flds_curr, int ci0[3])
+{
+  return flds_curr_shift((flds_curr_t) { .arr_shift = flds_curr },
+			 0, -prm.ilg[0], -prm.ilg[1], -prm.ilg[2]);
+}
 
 CUDA_DEVICE static void
 curr_cache_add(flds_curr_t flds_curr, fields_real_t *d_flds, int ci0[3])

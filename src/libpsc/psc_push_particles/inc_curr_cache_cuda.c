@@ -45,20 +45,24 @@ init_curr_cache(fields_real_t *flds_curr_block, int ci0[3])
 
 __device__ static fields_real_t flds_curr_blocks[CURR_CACHE_SIZE * NR_BLOCKS];
 
-#define DECLARE_CURR_CACHE(d_flds, ci0)					\
-  ({									\
-    assert(find_bid() < NR_BLOCKS);					\
-    init_curr_cache(flds_curr_blocks + find_bid() * CURR_CACHE_SIZE, ci0); \
-  })
+CUDA_DEVICE static int find_bid();
+
+CUDA_DEVICE static inline flds_curr_t
+curr_cache_create(flds_curr_t flds_curr, int ci0[3])
+{
+  assert(find_bid() < NR_BLOCKS);
+  return init_curr_cache(flds_curr_blocks + find_bid() * CURR_CACHE_SIZE, ci0);
+}
 
 #else
 
 CUDA_SHARED fields_real_t flds_curr_block[CURR_CACHE_SIZE];
 
-#define DECLARE_CURR_CACHE(d_flds, ci0)					\
-  ({									\
-    init_curr_cache(flds_curr_block, ci0);				\
-  })
+CUDA_DEVICE static inline flds_curr_t
+curr_cache_create(flds_curr_t flds_curr, int ci0[3])
+{
+  return init_curr_cache(flds_curr_block, ci0);
+}
 
 #endif
 
