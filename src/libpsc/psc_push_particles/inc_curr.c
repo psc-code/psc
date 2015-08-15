@@ -4,6 +4,8 @@
 
 #if PSC_FIELDS_AS_CUDA2
 
+typedef fields_real_t *flds_curr_t;
+
 #if CURR_CACHE == CURR_CACHE_NONE
 #include "inc_curr_cache_none.c"
 #elif CURR_CACHE == CURR_CACHE_CUDA
@@ -14,7 +16,8 @@
 
 #else
 
-typedef struct psc_fields * curr_cache_t;
+typedef struct psc_fields *flds_curr_t;
+typedef flds_curr_t curr_cache_t;
 
 CUDA_DEVICE static inline void
 curr_cache_add(curr_cache_t curr_cache, int m, int jx, int jy, int jz, real val)
