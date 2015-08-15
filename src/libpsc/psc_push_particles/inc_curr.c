@@ -1,4 +1,8 @@
 
+#ifndef CURR_CACHE
+#define CURR_CACHE CURR_CACHE_NONE
+#endif
+
 #define CURR_CACHE_GMEM 1
 #define CURR_CACHE_N_REDUNDANT 1
 
@@ -8,8 +12,6 @@ typedef fields_real_t *flds_curr_t;
 typedef struct psc_fields *flds_curr_t;
 #endif
 
-#if PSC_FIELDS_AS_CUDA2
-
 #if CURR_CACHE == CURR_CACHE_NONE
 #include "inc_curr_cache_none.c"
 #elif CURR_CACHE == CURR_CACHE_SHIFT
@@ -18,12 +20,6 @@ typedef struct psc_fields *flds_curr_t;
 #include "inc_curr_cache_cuda.c"
 #elif CURR_CACHE == CURR_CACHE_CUDA2
 #include "inc_curr_cache_cuda2.c"
-#endif
-
-#else
-
-#include "inc_curr_cache_none.c"
-
 #endif
 
 // ----------------------------------------------------------------------
