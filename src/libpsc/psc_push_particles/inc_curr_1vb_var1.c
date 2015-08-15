@@ -77,26 +77,26 @@ curr_3d_vb_cell(curr_cache_t curr_cache, int i[3], particle_real_t x[3], particl
     {
       real fnqx = qni_wni * prm.fnqxs;
       real h = (1.f / 12.f) * dx[0] * dx[1] * dx[2];
-      curr_add(curr_cache, 0, 0,i[1]  ,i[2]  , fnqx * (dx[0] * (.5f - xa[1]) * (.5f - xa[2]) + h));
-      curr_add(curr_cache, 0, 0,i[1]+1,i[2]  , fnqx * (dx[0] * (.5f + xa[1]) * (.5f - xa[2]) - h));
-      curr_add(curr_cache, 0, 0,i[1]  ,i[2]+1, fnqx * (dx[0] * (.5f - xa[1]) * (.5f + xa[2]) - h));
-      curr_add(curr_cache, 0, 0,i[1]+1,i[2]+1, fnqx * (dx[0] * (.5f + xa[1]) * (.5f + xa[2]) + h));
+      curr_cache_add(curr_cache, 0, 0,i[1]  ,i[2]  , fnqx * (dx[0] * (.5f - xa[1]) * (.5f - xa[2]) + h));
+      curr_cache_add(curr_cache, 0, 0,i[1]+1,i[2]  , fnqx * (dx[0] * (.5f + xa[1]) * (.5f - xa[2]) - h));
+      curr_cache_add(curr_cache, 0, 0,i[1]  ,i[2]+1, fnqx * (dx[0] * (.5f - xa[1]) * (.5f + xa[2]) - h));
+      curr_cache_add(curr_cache, 0, 0,i[1]+1,i[2]+1, fnqx * (dx[0] * (.5f + xa[1]) * (.5f + xa[2]) + h));
     }
 #ifdef __CUDACC__
   if (dx[1] != 0.f)
 #endif
     {
       real fnqy = qni_wni * prm.fnqys;
-      curr_add(curr_cache, 1, 0,i[1],i[2]  , fnqy * dx[1] * (.5f - xa[2]));
-      curr_add(curr_cache, 1, 0,i[1],i[2]+1, fnqy * dx[1] * (.5f + xa[2]));
+      curr_cache_add(curr_cache, 1, 0,i[1],i[2]  , fnqy * dx[1] * (.5f - xa[2]));
+      curr_cache_add(curr_cache, 1, 0,i[1],i[2]+1, fnqy * dx[1] * (.5f + xa[2]));
     }
 #ifdef __CUDACC__
   if (dx[2] != 0.f)
 #endif
     {
       real fnqz = qni_wni * prm.fnqzs;
-      curr_add(curr_cache, 2, 0,i[1]  ,i[2], fnqz * dx[2] * (.5f - xa[1]));
-      curr_add(curr_cache, 2, 0,i[1]+1,i[2], fnqz * dx[2] * (.5f + xa[1]));
+      curr_cache_add(curr_cache, 2, 0,i[1]  ,i[2], fnqz * dx[2] * (.5f - xa[1]));
+      curr_cache_add(curr_cache, 2, 0,i[1]+1,i[2], fnqz * dx[2] * (.5f + xa[1]));
     }
 }
 

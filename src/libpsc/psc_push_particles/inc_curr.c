@@ -17,7 +17,7 @@
 typedef struct psc_fields * curr_cache_t;
 
 CUDA_DEVICE static inline void
-curr_add(curr_cache_t curr_cache, int m, int jx, int jy, int jz, real val)
+curr_cache_add(curr_cache_t curr_cache, int m, int jx, int jy, int jz, real val)
 {
   F3_CURR(curr_cache, JXI+m, jx,jy,jz) += val;
 }

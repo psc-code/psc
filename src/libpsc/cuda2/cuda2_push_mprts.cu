@@ -81,7 +81,7 @@ push_mprts_ab(mprts_array_t mprts_arr,
     int ci0[3]; find_ci0(ci0);
     int p = find_patch();
     fields_real_t *d_flds = d_flds0 + p * size;
-    curr_cache_add(curr_cache, d_flds, ci0);
+    curr_cache_destroy(curr_cache, d_flds, ci0);
   }
 }
 

@@ -61,14 +61,14 @@ curr_cache_create(curr_cache_t curr_cache, int ci0[3])
 #endif
 
 CUDA_DEVICE static inline void
-curr_add(curr_cache_t curr_cache, int m, int jx, int jy, int jz, real val)
+curr_cache_add(curr_cache_t curr_cache, int m, int jx, int jy, int jz, real val)
 {
   real *addr = &F3_DEV_SHIFT(curr_cache, m, jx,jy,jz, 0);
   atomicAdd(addr, val);
 }
 
 CUDA_DEVICE static void
-curr_cache_add(curr_cache_t curr_cache, fields_real_t *d_flds, int ci0[3])
+curr_cache_destroy(curr_cache_t curr_cache, fields_real_t *d_flds, int ci0[3])
 {
   CUDA_SYNCTHREADS();
 
