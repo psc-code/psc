@@ -11,11 +11,9 @@
 #define DIM DIM_YZ
 
 #include "inc_params.c"
+#include "inc_cache.c"
 #include "inc_interpolate.c"
 #include "inc_push.c"
-#include "c_common_push.c"
-
-#define F3_CACHE F3
 
 static void
 do_push_part_1st_yz(int p, fields_t *pf, struct psc_particles *pp)
