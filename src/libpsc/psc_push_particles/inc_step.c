@@ -1,6 +1,16 @@
 
 #include "psc_debug.h"
 
+#ifndef SFX
+
+#if DIM == DIM_YZ
+#define SFX(s) s ## _yz
+#elif DIM == DIM_XYZ
+#define SFX(s) s ## _xyz
+#endif
+
+#endif // !SFX
+
 // ----------------------------------------------------------------------
 // the following macros are convoluted, as they handle two quite different
 // cases for now:

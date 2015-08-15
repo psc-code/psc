@@ -5,17 +5,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct psc_fields *curr_cache_t;
 #include "inc_params.c"
 #include "inc_interpolate.c"
 #include "inc_cache.c"
 #include "inc_push.c"
 #include "inc_curr.c"
 #include "c_common_push.c"
+#include "inc_step.c"
 
 // ======================================================================
-
-#include "inc_step.c"
 
 #ifdef PUSHER_BY_BLOCK
 
@@ -28,7 +26,7 @@ do_push_part_1vb_yz(struct psc_fields *flds, struct psc_particles *prts)
 
   for (int b = 0; b < sub->nr_blocks; b++) {
     for (int n = sub->b_off[b]; n < sub->b_off[b+1]; n++) {
-      push_one(prts, n, flds);
+      push_one(prts, n, flds, flds);
     }
   }
 }
@@ -46,9 +44,9 @@ do_push_part_1vb_yz(struct psc_fields *flds, struct psc_particles *prts)
 #endif
 
 void
-psc_push_particles_push_a_xyz(struct psc_push_particles *push,
-			     struct psc_particles *prts,
-			     struct psc_fields *flds)
+SFX(psc_push_particles_push_a)(struct psc_push_particles *push,
+			       struct psc_particles *prts,
+			       struct psc_fields *flds)
 {
   psc_fields_zero_range(flds, JXI, JXI + 3);
   struct psc_fields *flds_cache = cache_fields_from_em(flds);
