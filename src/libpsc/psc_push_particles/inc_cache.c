@@ -2,8 +2,6 @@
 // ======================================================================
 // field caching
 
-// OPT: use more shmem?
-
 // FIXME, shared between em and curr cache currently
 
 // OPT, shouldn't we be able to do with less ghosts?
@@ -21,35 +19,40 @@
 #define BLOCKGSIZE_Y (BLOCKSIZE_Y + 2 * BLOCKBND_Y)
 #define BLOCKGSIZE_Z (BLOCKSIZE_Z + 2 * BLOCKBND_Z)
 
-
-
 #if EM_CACHE == EM_CACHE_NONE
 
-#define F3_CACHE(flds_em, m, jx, jy, jz)	\
-  (F3_DEV(flds_em, m, jx,jy,jz))
+typedef flds_em_t em_cache_t;
 
-#define DECLARE_EM_CACHE(d_flds, ci0)	\
-  ({ d_flds; })
+#define F3_CACHE(em_cache, m, jx, jy, jz)	\
+  (F3_EM(em_cache, m, jx,jy,jz))
+
+CUDA_DEVICE static inline em_cache_t
+em_cache_create(fields_real_t *flds_em, int ci0[3])
+{
+  return flds_em;
+}
 
 #elif EM_CACHE == EM_CACHE_CUDA
 
+typedef fields_real_t *em_cache_t;
+
 #if DIM == DIM_YZ
-#define F3_CACHE(flds_em, m, jx, jy, jz)				\
-  ((flds_em)[(((m)							\
+#define F3_CACHE(em_cache, m, jx, jy, jz)				\
+  ((em_cache)[(((m)							\
 	       *BLOCKGSIZE_Z + (jz))					\
 	      *BLOCKGSIZE_Y + (jy))])
 #elif DIM == DIM_XYZ
-#define F3_CACHE(flds_em, m, jx, jy, jz)				\
-  ((flds_em)[((((m)							\
+#define F3_CACHE(em_cache, m, jx, jy, jz)				\
+  ((em_cache)[((((m)							\
 		*BLOCKGSIZE_Z + (jz))					\
 	       *BLOCKGSIZE_Y + (jy))					\
 	      *BLOCKGSIZE_X + (jx))])
 #endif
 
-__device__ static float *
-cache_fields(float *flds_em_shared, float *d_flds, int *ci0)
+__device__ static em_cache_t
+cache_fields(em_cache_t flds_em_block, flds_em_t flds_em, int *ci0)
 {
-  float *flds_em = flds_em_shared + ((((-EX) * 
+  em_cache_t em_cache = flds_em_block + ((((-EX) * 
 				       BLOCKGSIZE_Z + -ci0[2] + BLOCKBND_Z) *
 				      BLOCKGSIZE_Y + -ci0[1] + BLOCKBND_Y) *
 				     BLOCKGSIZE_X + -ci0[0] + BLOCKBND_X);
@@ -73,16 +76,20 @@ cache_fields(float *flds_em_shared, float *d_flds, int *ci0)
     int jz = tmp % BLOCKGSIZE_Z - BLOCKBND_Z;
     // OPT? currently it seems faster to do the loop rather than do m by threadidx
     for (int m = EX; m <= HZ; m++) {
-      F3_CACHE(flds_em, m, jx+ci0[0],jy+ci0[1],jz+ci0[2]) = 
-	F3_DEV(d_flds, m, jx+ci0[0],jy+ci0[1],jz+ci0[2]);
+      F3_CACHE(em_cache, m, jx+ci0[0],jy+ci0[1],jz+ci0[2]) = 
+	F3_EM(flds_em, m, jx+ci0[0],jy+ci0[1],jz+ci0[2]);
     }
   }
-  return flds_em;
+  return em_cache;
 }
 
-#define DECLARE_EM_CACHE(d_flds, ci0)	\
-  ({ __shared__ real flds_em_shared[6 * BLOCKGSIZE_X * BLOCKGSIZE_Y * BLOCKGSIZE_Z]; \
-    cache_fields(flds_em_shared, d_flds, ci0);				\
-  })
+CUDA_SHARED fields_real_t flds_em_block[6 * BLOCKGSIZE_X * BLOCKGSIZE_Y * BLOCKGSIZE_Z];
+
+CUDA_DEVICE static inline em_cache_t
+em_cache_create(flds_em_t flds_em, int ci0[3])
+{
+  return cache_fields(flds_em_block, flds_em, ci0);
+}
+
 #endif
 
