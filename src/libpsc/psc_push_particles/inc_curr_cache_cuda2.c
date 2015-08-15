@@ -1,4 +1,6 @@
 
+#define CURR_CACHE_HAVE_SHIFT
+
 #define F3_DEV_SHIFT_OFF(fldnr, jx,jy,jz, wid)				\
   (((((fldnr)								\
       *BLOCKGSIZE_Z + (jz))						\

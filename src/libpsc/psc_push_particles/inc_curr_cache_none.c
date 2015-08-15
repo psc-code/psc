@@ -1,4 +1,9 @@
 
+typedef flds_curr_t curr_cache_t;
+
+#ifdef PSC_FIELDS_AS_CUDA2
+#define CURR_CACHE_HAVE_SHIFT
+#endif
 
 #if DIM == DIM_YZ
 
@@ -17,8 +22,6 @@
 
 #endif
 
-typedef flds_curr_t curr_cache_t;
-
 CUDA_DEVICE static inline curr_cache_t
 curr_cache_shift(curr_cache_t curr_cache, int m, int dx, int dy, int dz)
 {
@@ -32,13 +35,18 @@ curr_cache_create(flds_curr_t flds_curr, int ci0[3])
 }
 
 CUDA_DEVICE static inline void
-curr_cache_add(curr_cache_t curr_cache, int m, int jx, int jy, int jz, real val)
+curr_cache_add(curr_cache_t curr_cache, int m, int jx, int jy, int jz,
+	       fields_real_t val)
 {
-  real *addr = &F3_DEV(curr_cache, JXI+m, jx,jy,jz);
+#if PSC_FIELDS_AS_CUDA2
+  fields_real_t *addr = &F3_DEV(curr_cache, JXI+m, jx,jy,jz);
+#else
+  fields_real_t *addr = &F3_CURR(curr_cache, JXI+m, jx,jy,jz);
+#endif
   atomicAdd(addr, val);
 }
 
-CUDA_DEVICE static void
+CUDA_DEVICE static inline void
 curr_cache_destroy(curr_cache_t curr_cache, flds_curr_t flds_curr, int ci0[3])
 {
 }

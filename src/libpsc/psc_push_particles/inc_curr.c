@@ -3,8 +3,12 @@
 #define CURR_CACHE_N_REDUNDANT 1
 
 #if PSC_FIELDS_AS_CUDA2
-
 typedef fields_real_t *flds_curr_t;
+#else
+typedef struct psc_fields *flds_curr_t;
+#endif
+
+#if PSC_FIELDS_AS_CUDA2
 
 #if CURR_CACHE == CURR_CACHE_NONE
 #include "inc_curr_cache_none.c"
@@ -18,14 +22,7 @@ typedef fields_real_t *flds_curr_t;
 
 #else
 
-typedef struct psc_fields *flds_curr_t;
-typedef flds_curr_t curr_cache_t;
-
-CUDA_DEVICE static inline void
-curr_cache_add(curr_cache_t curr_cache, int m, int jx, int jy, int jz, real val)
-{
-  F3_CURR(curr_cache, JXI+m, jx,jy,jz) += val;
-}
+#include "inc_curr_cache_none.c"
 
 #endif
 

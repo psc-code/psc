@@ -1,7 +1,7 @@
 
 #include "psc_acc.h"
 #include "psc_particles_as_acc.h"
-#include "psc_fields_acc.h"
+#include "psc_fields_as_acc.h"
 
 typedef struct psc_fields *curr_cache_t;
 #include "../psc_push_particles/inc_params.c"

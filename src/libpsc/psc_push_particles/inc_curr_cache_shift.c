@@ -1,4 +1,5 @@
 
+#define CURR_CACHE_HAVE_SHIFT
 
 #if DIM == DIM_YZ
 

@@ -19,7 +19,7 @@ calc_j2_one_cell(curr_cache_t curr_cache, particle_real_t qni_wni,
     i[d] = particle_real_fint(xa[d]);
   }
 
-#if CURR_CACHE == CURR_CACHE_CUDA || CURR_CACHE == CURR_CACHE_NONE
+#ifdef CURR_CACHE_HAVE_SHIFT
   curr_cache = curr_cache_shift(curr_cache, 0, i[0], i[1], i[2]);
 #endif
 
@@ -28,7 +28,7 @@ calc_j2_one_cell(curr_cache_t curr_cache, particle_real_t qni_wni,
   }
 
   particle_real_t fnqx = qni_wni * prm.fnqxs;
-#if CURR_CACHE == CURR_CACHE_CUDA || CURR_CACHE == CURR_CACHE_NONE
+#ifdef CURR_CACHE_HAVE_SHIFT
   curr_cache_add(curr_cache, 0, 0,0,0, fnqx * (dx[0] * (1.f - xa[1]) * (1.f - xa[2]) + h));
   curr_cache_add(curr_cache, 0, 0,1,0, fnqx * (dx[0] * (      xa[1]) * (1.f - xa[2]) - h));
   curr_cache_add(curr_cache, 0, 0,0,1, fnqx * (dx[0] * (1.f - xa[1]) * (      xa[2]) - h));
@@ -41,7 +41,7 @@ calc_j2_one_cell(curr_cache_t curr_cache, particle_real_t qni_wni,
 #endif
 
   particle_real_t fnqy = qni_wni * prm.fnqys;
-#if CURR_CACHE == CURR_CACHE_CUDA || CURR_CACHE == CURR_CACHE_NONE
+#ifdef CURR_CACHE_HAVE_SHIFT
   curr_cache_add(curr_cache, 1, 0,0,0, fnqy * (dx[1] * (1.f - xa[2])));
   curr_cache_add(curr_cache, 1, 0,0,1, fnqy * (dx[1] * (      xa[2])));
 #else
@@ -50,7 +50,7 @@ calc_j2_one_cell(curr_cache_t curr_cache, particle_real_t qni_wni,
 #endif
 
   particle_real_t fnqz = qni_wni * prm.fnqzs;
-#if CURR_CACHE == CURR_CACHE_CUDA || CURR_CACHE == CURR_CACHE_NONE
+#ifdef CURR_CACHE_HAVE_SHIFT
   curr_cache_add(curr_cache, 2, 0,0,0, fnqz * (dx[2] * (1.f - xa[1])));
   curr_cache_add(curr_cache, 2, 0,1,0, fnqz * (dx[2] * (      xa[1])));
 #else

@@ -32,11 +32,8 @@
 #include <string.h>
 #include <math.h>
 
-static inline void
-atomicAdd(float *addr, float val)
-{
-  *addr += val;
-}
+#define atomicAdd(addr, val) \
+  do { *(addr) += (val); } while (0)
 
 static struct {
   int x, y;
