@@ -8,18 +8,13 @@
 
 #ifndef F3_CURR
 #define F3_CURR F3
+typedef struct psc_fields *flds_curr_t;
 #endif
 
 // ----------------------------------------------------------------------
 
 #define CURR_CACHE_GMEM 1
 #define CURR_CACHE_N_REDUNDANT 1
-
-#if PSC_FIELDS_AS_CUDA2
-typedef fields_real_t *flds_curr_t;
-#else
-typedef struct psc_fields *flds_curr_t;
-#endif
 
 #if CURR_CACHE == CURR_CACHE_NONE
 #include "inc_curr_cache_none.c"
