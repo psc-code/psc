@@ -9,7 +9,7 @@ static struct psc_fields * _mrc_unused
 cache_fields_from_em(fields_t *pf)
 {
   struct psc_fields *fld = psc_fields_create(psc_fields_comm(pf));
-  psc_fields_set_type(fld, F3_CACHE_TYPE);
+  psc_fields_set_type(fld, FIELDS_TYPE);
   // FIXME, can do -1 .. 1?
   psc_fields_set_param_int3(fld, "ib", (int[3]) { 0, -2, -2 });
   psc_fields_set_param_int3(fld, "im", (int[3]) { 1,

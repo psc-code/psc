@@ -2,6 +2,15 @@
 // ======================================================================
 // field caching
 
+#ifndef EM_CACHE
+#define EM_CACHE EM_CACHE_NONE
+#endif
+
+#ifndef F3_EM
+#define F3_EM F3
+typedef struct psc_fields *flds_em_t;
+#endif
+
 // FIXME, shared between em and curr cache currently
 
 // OPT, shouldn't we be able to do with less ghosts?
@@ -19,6 +28,7 @@
 #define BLOCKGSIZE_Y (BLOCKSIZE_Y + 2 * BLOCKBND_Y)
 #define BLOCKGSIZE_Z (BLOCKSIZE_Z + 2 * BLOCKBND_Z)
 
+// ----------------------------------------------------------------------
 #if EM_CACHE == EM_CACHE_NONE
 
 typedef flds_em_t em_cache_t;
@@ -27,11 +37,12 @@ typedef flds_em_t em_cache_t;
   (F3_EM(em_cache, m, jx,jy,jz))
 
 CUDA_DEVICE static inline em_cache_t
-em_cache_create(fields_real_t *flds_em, int ci0[3])
+em_cache_create(flds_em_t flds_em, int ci0[3])
 {
   return flds_em;
 }
 
+// ----------------------------------------------------------------------
 #elif EM_CACHE == EM_CACHE_CUDA
 
 typedef fields_real_t *em_cache_t;

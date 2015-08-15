@@ -8,8 +8,6 @@
 
 #define DIM DIM_YZ
 #define CALC_J CALC_J_1VB_VAR1
-#define F3_CACHE F3_C
-#define F3_CACHE_TYPE "c"
 #define INTERPOLATE_1ST INTERPOLATE_1ST_EC
 
 #define NOT_STATIC
