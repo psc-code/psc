@@ -10,7 +10,7 @@
 #define CALC_J CALC_J_1VB_2D
 #define INTERPOLATE_1ST INTERPOLATE_1ST_STD
 
-#include "1vb_yz.c"
+#include "1vb.c"
 
 // ======================================================================
 // psc_push_particles: subclass "1vb_single"

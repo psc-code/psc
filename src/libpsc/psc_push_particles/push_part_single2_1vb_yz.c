@@ -11,7 +11,7 @@
 #define INTERPOLATE_1ST INTERPOLATE_1ST_STD
 #define EXT_PREPARE_SORT
 
-#include "1vb_yz.c"
+#include "1vb.c"
 
 // ======================================================================
 // psc_push_particles: subclass "1vb2_single"

@@ -14,5 +14,5 @@
 
 #define psc_push_particles_push_a_yz psc_push_particles_1vbec3d_double_push_a_yz
 
-#include "1vb_yz.c"
+#include "1vb.c"
 

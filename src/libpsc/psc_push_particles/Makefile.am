@@ -61,7 +61,4 @@ endif USE_CUDA
 
 EXTRA_libsubdir_la_SOURCES = \
 	c_common_push.c \
-	1vb_yz.c \
-	1vb_yz_2.c \
-	1vbec_yz.c \
-	1vbec3d_yz.c
+	1vb.c

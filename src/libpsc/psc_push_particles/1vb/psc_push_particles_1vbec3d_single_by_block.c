@@ -11,7 +11,7 @@
 #define INTERPOLATE_1ST INTERPOLATE_1ST_EC
 #define PUSHER_BY_BLOCK
 
-#include "1vb_yz.c"
+#include "1vb.c"
 
 // ======================================================================
 // psc_push_particles: subclass "1vbec3d_single_by_block"
