@@ -8,6 +8,8 @@ typedef fields_real_t *flds_curr_t;
 
 #if CURR_CACHE == CURR_CACHE_NONE
 #include "inc_curr_cache_none.c"
+#elif CURR_CACHE == CURR_CACHE_SHIFT
+#include "inc_curr_cache_shift.c"
 #elif CURR_CACHE == CURR_CACHE_CUDA
 #include "inc_curr_cache_cuda.c"
 #elif CURR_CACHE == CURR_CACHE_CUDA2

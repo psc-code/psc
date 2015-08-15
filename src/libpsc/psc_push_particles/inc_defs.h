@@ -27,7 +27,9 @@
 // CURR_CACHE
 
 #define CURR_CACHE_NONE 1
-#define CURR_CACHE_CUDA 2
+#define CURR_CACHE_SHIFT 2
+#define CURR_CACHE_CUDA 3
+#define CURR_CACHE_CUDA2 4
 
 
 
