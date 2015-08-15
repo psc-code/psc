@@ -4,21 +4,21 @@
 #include "psc_particles_as_single_by_block.h"
 #include "psc_fields_as_single.h"
 
-#include "../inc_defs.h"
-
-#define DIM DIM_YZ
-#define CALC_J CALC_J_1VB_VAR1
-#define INTERPOLATE_1ST INTERPOLATE_1ST_EC
-#define PUSHER_BY_BLOCK
-
-#include "1vb.c"
+// FIXME -> some header
+void psc_push_particles_1vbec_single_by_block_push_a_yz(struct psc_push_particles *push,
+							struct psc_particles *prts,
+							struct psc_fields *flds);
+void psc_push_particles_1vbec_single_by_block_push_a_xyz(struct psc_push_particles *push,
+							 struct psc_particles *prts,
+							 struct psc_fields *flds);
 
 // ======================================================================
 // psc_push_particles: subclass "1vbec_single_by_block"
 
 struct psc_push_particles_ops psc_push_particles_1vbec_single_by_block_ops = {
   .name                  = "1vbec_single_by_block",
-  .push_a_yz             = psc_push_particles_push_a_yz,
+  .push_a_yz             = psc_push_particles_1vbec_single_by_block_push_a_yz,
+  .push_a_xyz            = psc_push_particles_1vbec_single_by_block_push_a_xyz,
   .particles_type        = PARTICLE_TYPE,
   .fields_type           = FIELDS_TYPE,
 };
