@@ -67,11 +67,7 @@ curr_add(flds_curr_t flds_curr, int m, int jx, int jy, int jz, real val)
 {
   int wid = threadIdx.x % CURR_CACHE_N_REDUNDANT;
   real *addr = &F3_DEV_SHIFT(flds_curr, m, jx,jy,jz, wid);
-#ifdef __CUDACC__
   atomicAdd(addr, val);
-#else
-  *addr += val;
-#endif
 }
 
 CUDA_DEVICE static void

@@ -26,11 +26,7 @@ CUDA_DEVICE static inline void
 curr_add(flds_curr_t flds_curr, int m, int jx, int jy, int jz, real val)
 {
   real *addr = &F3_DEV_SHIFT(flds_curr.arr_shift, JXI+m, jx,jy,jz);
-#ifdef __CUDACC__
   atomicAdd(addr, val);
-#else
-  *addr += val;
-#endif
 }
 
 CUDA_DEVICE static inline flds_curr_t

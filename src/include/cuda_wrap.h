@@ -32,6 +32,12 @@
 #include <string.h>
 #include <math.h>
 
+static inline void
+atomicAdd(float *addr, float val)
+{
+  *addr += val;
+}
+
 static struct {
   int x, y;
 } threadIdx _mrc_unused;
