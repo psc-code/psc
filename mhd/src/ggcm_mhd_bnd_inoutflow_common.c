@@ -338,9 +338,9 @@ obndra_gkeyll_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, floa
 
   int gdims[3];
   mrc_domain_get_global_dims(mhd->domain, gdims);
-  int dx = (gdims[0] == 1) ? 0 : 1;
-  int dy = (gdims[1] == 1) ? 0 : 1;
-  int dz = (gdims[2] == 1) ? 0 : 1;
+  // B fields from bndsw are cell-centered
+  // NOT staggered
+  int dx = 0, dy = 0, dz = 0;
 
   for (int iz = -swz; iz < mz + swz; iz++) {
     for (int iy = -swy; iy < my + swy; iy++) {
