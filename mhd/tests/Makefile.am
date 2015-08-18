@@ -34,6 +34,9 @@ XFAIL_TESTS = \
 
 if HAVE_GKEYLL
 
+AM_CFLAGS = -Bdynamic
+AM_CXXFLAGS = -Bdynamic
+
 bin_PROGRAMS += mhd_gkeyll
 
 nodist_EXTRA_mhd_gkeyll_SOURCES = dummy.cxx
