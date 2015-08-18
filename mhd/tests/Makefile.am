@@ -37,16 +37,8 @@ if HAVE_GKEYLL
 bin_PROGRAMS += mhd_gkeyll
 
 nodist_EXTRA_mhd_gkeyll_SOURCES = dummy.cxx
- 
-mhd_gkeyll_CPPFLAGS = $(AM_CPPFLAGS) \
-	-I$(GKSOFTWARE)/gkeyll/include \
-	-I$(GKSOFTWARE)/txbase-exported-ser/include \
-	-I$(GKSOFTWARE)/lua-5.1-ser/include \
-	-I$(GKSOFTWARE)/eigen-3.1-ser/include/eigen3
 
 mhd_gkeyll_LDADD = \
-	-L$(GKSOFTWARE)/lua-5.1-ser/lib -llua \
-	-L$(GKSOFTWARE)/txbase-exported-ser/lib -ltxbase \
 	-lstdc++ \
 	$(LDADD)
 
