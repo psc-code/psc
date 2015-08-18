@@ -112,9 +112,10 @@ if HAVE_GKEYLL
 
 AM_CPPFLAGS += \
 	-I$(GKSOFTWARE)/gkeyll/include \
-	-I$(GKSOFTWARE)/txbase-exported-ser/include \
-	-I$(GKSOFTWARE)/lua-5.1-ser/include \
-	-I$(GKSOFTWARE)/eigen-3.1-ser/include/eigen3
+	-I$(GKSOFTWARE)/txbase/include \
+	-I$(GKSOFTWARE)/lua/include \
+	-I$(GKSOFTWARE)/boost/include \
+	-I$(GKSOFTWARE)/eigen/include/eigen3
 
 libmhd_la_SOURCES += \
 	ggcm_mhd_diag_item_gkeyll_5m.c \
@@ -127,9 +128,9 @@ libmhd_la_SOURCES += \
 libmhd_la_LIBADD += \
 	-L$(GKSOFTWARE)/gkeyll/lib -llcrte -llcproto -llcslvrs \
 		-llcdatastructs -llcgrids -llclib -llcquadrule -llcloki \
-	-L$(GKSOFTWARE)/gsl-1.15-ser/lib -lgsl -lgslcblas \
-	-L$(GKSOFTWARE)/txbase-exported-ser/lib -ltxbase \
-	-L$(GKSOFTWARE)/lua-5.1-ser/lib -llua \
+	-L$(GKSOFTWARE)/gsl/lib -lgsl -lgslcblas \
+	-L$(GKSOFTWARE)/txbase/lib -ltxbase \
+	-L$(GKSOFTWARE)/lua/lib -llua \
 	-lfftw3 \
 	-llapack -lblas
 endif
