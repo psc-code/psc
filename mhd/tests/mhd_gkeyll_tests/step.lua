@@ -309,7 +309,7 @@ function updateFluidsAndField(tCurr, t)
 
       for s=0,nr_fluids-1 do
          if (fluidEqns[s]:checkInvariantDomain((fluidsOut[dir])[s]) == false) then
-            uselaxSolver = true -- TODO breaka for loop
+            useLaxSolver = true -- TODO breaka for loop
          end
       end
       useLaxSolver = ggcm_mhd_reduce_boolean(ggcm_mhd, useLaxSolver, false)
@@ -334,8 +334,8 @@ function updateFluidsAndFieldLax(tCurr, t)
    local myStatus = true
    local myDtSuggested = 1e3*math.abs(t-tCurr)
 
-   for dir = 1,nr_dims do
-      for i,slvr in ipairs(laxSlvrs) do
+   for dir = 0,nr_dims-1 do
+      for i,slvr in ipairs(laxSlvrs[dir]) do
          slvr:setCurrTime(tCurr)
          local status, dtSuggested = slvr:advance(t)
          myStatus = status and myStatus
