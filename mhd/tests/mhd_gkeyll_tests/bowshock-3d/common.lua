@@ -20,6 +20,11 @@ nr_comps = nr_moments*nr_fluids + nr_em_comps
 nr_ghosts = 2
 nr_dims = 3
 
+-- NOTE: lua array indices start from 1, not 0
+mass_ratios = {1./26., 25./26.} 
+momentum_ratios = {1./26, 25./26.}
+pressure_ratios = {0.5, 0.5}
+
 -- if we only need the parameters above and want
 -- to skip executing the remaining codes, do not
 -- specify skip_execute (nil) or set it false
@@ -55,7 +60,7 @@ epsilon0 =1.0/mu0/(lightSpeed^2)
 elcErrorSpeedFactor = 0.0
 mgnErrorSpeedFactor = 1.0
 
-scale = 10.0
+scale = 1.0
 -- background
 rho0 = 0.01*scale
 pr0 = 0.0015
@@ -73,8 +78,9 @@ elcCharge = -1.0
 ionCharge = 1.0
 charge = {elcCharge, ionCharge}
 
-ionElcMassRatio = 25.
-ionElcPressRatio = 1.
+ionElcMassRatio = mass_ratios[2]/mass_ratios[1]
+ionElcPressRatio = pressure_ratios[2]/pressure_ratios[1] 
+ionElcMomentumRatio = momentum_ratios[2]/momentum_ratios[1]
 ionInertiaLength0 = 0.06
 
 BxIn = 0.0
@@ -159,8 +165,9 @@ function init(x,y,z)
    if ((x > xCore) and sqrt((y-yCore)^2+(z-zCore)^2) < radCore) then
       vx = vxCore
    end
-   local momxe = rhoe*vx
-   local momxi = rhoi*vx
+   local momx = (rhoe + rhoi) * vx
+   local momxe = momx / (1 + ionElcMomentumRatio)
+   local momxi = momx - momxe
    local ere = pre/(gasGamma-1) + 0.5*momxe^2/rhoe
    local eri = pri/(gasGamma-1) + 0.5*momxi^2/rhoi
    local Bx = 0.0
@@ -194,14 +201,14 @@ if (showlog) then
    mprint(string.format("Lx=%gdi0=%gdiCore", Lx/ionInertiaLength0, Lx/ionInertiaLengthCore))
    mprint(string.format("Ly=%gdi0=%gdiCore", Ly/ionInertiaLength0, Ly/ionInertiaLengthCore))
    mprint(string.format("                                "))
-   mprint(string.format("Background, |(x,y) - (%g,%g)| < %g:", xCore, yCore, radCore))
+   mprint(string.format("Background, |(x,y,z) - (%g,%g,%g)| > %g:", xCore, yCore, zCore, radCore))
    mprint(string.format("  rho=%g  di=%g", rho0, ionInertiaLength0))
    mprint(string.format("  cs=%g=%gc  vA=%g=%gc", cs0, cs0/lightSpeed, vA0, vA0/lightSpeed))
    mprint(string.format("  vx=%g=%gc=%gcs=%gvA", vx0, vx0/lightSpeed, vx0/cs0, vx0/vA0))
    mprint(string.format("  plasmaBeta=%g", plasmaBeta0))
    mprint(string.format("  pr=%g", pr0))
    mprint(string.format("                                "))
-   mprint(string.format("Core, |(x,y) - (%g,%g)| > %g:", xCore, yCore, radCore))
+   mprint(string.format("Core, |(x,y,z) - (%g,%g,%g)| < %g:", xCore, yCore, zCore, radCore))
    mprint(string.format("  rho=%g  di=%g", rhoCore, ionInertiaLengthCore))
    mprint(string.format("  cs=%g=%gc", csCore, csCore/lightSpeed))
    mprint(string.format("  vx=%g=%gc=%gcs", vxCore, vxCore/lightSpeed, vxCore/csCore))

@@ -11,19 +11,15 @@ mpirun -n 4 ../../mhd_gkeyll \
     --mrc_domain_npx 2 --mrc_domain_npy 2 --mrc_domain_npz 1 \
     \
     --ggcm_mhd_bnd_type inoutflow_gkeyll \
-    --ggcm_mhd_bndsw_type constant_5m \
-    --ggcm_mhd_bndsw_rre 0.00038461538461538 \
-    --ggcm_mhd_bndsw_ppe 0.00075 \
-    --ggcm_mhd_bndsw_vxe 1.0 \
-    --ggcm_mhd_bndsw_rri 0.0096153846153846 \
-    --ggcm_mhd_bndsw_ppi 0.00075 \
-    --ggcm_mhd_bndsw_vxi  1.0 \
-    --ggcm_mhd_bndsw_ex 0 \
-    --ggcm_mhd_bndsw_ey 0 \
-    --ggcm_mhd_bndsw_ez 0 \
-    --ggcm_mhd_bndsw_bx 0 \
-    --ggcm_mhd_bndsw_by 0.001 \
-    --ggcm_mhd_bndsw_bz 0 \
+    --ggcm_mhd_bnd_rr 0.01 \
+    --ggcm_mhd_bnd_pp 0.0015 \
+    --ggcm_mhd_bnd_vx 1.0 \
+    --ggcm_mhd_bnd_ex 0 \
+    --ggcm_mhd_bnd_ey 0 \
+    --ggcm_mhd_bnd_ez 0 \
+    --ggcm_mhd_bnd_bx 0 \
+    --ggcm_mhd_bnd_by 0.001 \
+    --ggcm_mhd_bnd_bz 0 \
     \
     --ggcm_mhd_step_type gkeyll \
     --ggcm_mhd_step_script ../step.lua \
