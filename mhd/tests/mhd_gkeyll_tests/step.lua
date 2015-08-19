@@ -416,7 +416,7 @@ function runTimeStep(myDt, tCurr, step, cptr)
       end
 
       if (useLaxSolver == true) then
-         mprint (string.format(" ** Negative pressure or density at %8g! Will retake step with Lax fluxes", tCurr+myDt))
+         mprint (string.format(" ** Negative pressure or density at %8g! Will retake step with Lax fluxes", tCurr))
          q:copy(qDup)
          qNew:copy(qNewDup)
       elseif (status == false) then
