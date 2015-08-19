@@ -348,14 +348,11 @@ obndra_gkeyll_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, floa
 	float bn[SW_NR];
 	bnd_sw(bnd, ix, iy, iz, p, bn, bntim);
 	
-	float vvbn  = sqr(bn[SW_VX]) + sqr(bn[SW_VY]) + sqr(bn[SW_VZ]);
-	float uubn  = .5f * (bn[SW_RR]*vvbn) + bn[SW_PP] / (mhd->par.gamm - 1.f);
-	
 	M3(f, RR , ix,iy,iz, p) = bn[SW_RR];
-	M3(f, RVX, ix,iy,iz, p) = bn[SW_RR] * bn[SW_VX];
-	M3(f, RVY, ix,iy,iz, p) = bn[SW_RR] * bn[SW_VY];
-	M3(f, RVZ, ix,iy,iz, p) = bn[SW_RR] * bn[SW_VZ];
-	M3(f, UU , ix,iy,iz, p) = uubn;
+	M3(f, VX , ix,iy,iz, p) = bn[SW_VX];
+	M3(f, VY , ix,iy,iz, p) = bn[SW_VY];
+	M3(f, VZ , ix,iy,iz, p) = bn[SW_VZ];
+	M3(f, PP , ix,iy,iz, p) = bn[SW_PP];
 
 	M3(f, BX , ix,iy,iz, p) = bn[SW_BX];
 	M3(f, BY , ix,iy,iz, p) = bn[SW_BY];
