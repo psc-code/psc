@@ -22,6 +22,12 @@ dofile(common_script)
 -----------------------------------------
 -- HANDLE 1,2,3-D 5M/10M AUTOMATICALLY --
 -----------------------------------------
+if (nr_moments == 5) then
+   fluidEqnBase = HyperEquation.Euler
+elseif (nr_moments == 10) then
+   fluidEqnBase = HyperEquation.TenMoment
+end
+
 if (nr_dims == 1) then
    myFluidUpdater = Updater.WavePropagation1D
    if (nr_moments == 5) then
@@ -124,10 +130,10 @@ fluidEqns = {}
 -- Euler equations with low-resolution, positivity-preserving fluxes
 fluidLaxEqns = {}
 for s=0,nr_fluids-1 do
-   fluidEqns[s] = HyperEquation.Euler {
+   fluidEqns[s] = fluidEqnBase {
       gasGamma = gasGamma,
    }
-   fluidLaxEqns[s] = HyperEquation.Euler {
+   fluidLaxEqns[s] = fluidEqnBase {
       gasGamma = gasGamma,
       numericalFlux = "lax",
    }
