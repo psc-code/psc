@@ -129,7 +129,7 @@ for s=0,nr_fluids-1 do
    }
    fluidLaxEqns[s] = HyperEquation.Euler {
       gasGamma = gasGamma,
-      numerialFlu = "lax",
+      numericalFlux = "lax",
    }
 end
 -- Maxwell equations
