@@ -290,12 +290,6 @@ ggcm_mhd_step_gkeyll_lua_setup(const char *script, const char *script_common,
   double *mass_ratios = ggcm_mhd_gkeyll_mass_ratios(mhd);
   double *momentum_ratios = ggcm_mhd_gkeyll_momentum_ratios(mhd);
   double *pressure_ratios = ggcm_mhd_gkeyll_pressure_ratios(mhd);
-  mprintf("nr_fluids %d nr_moments %d\n", nr_fluids, nr_moments);
-  for (int s = 0; s < nr_fluids; s++)
-  {
-     mprintf("[%d] mass %g momentum %g pressure %g\n",
-           s, mass_ratios[s], momentum_ratios[s], pressure_ratios[s]);
-  }
 }
 
 void
