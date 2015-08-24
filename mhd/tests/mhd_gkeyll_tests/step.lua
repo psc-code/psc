@@ -416,18 +416,20 @@ function runTimeStep(myDt, tCurr, step, cptr)
       -- advance fluids and fields
       if (useLaxSolver) then
          status, dtSuggested = solveTwoFluidLaxSystem(tCurr, tCurr+myDt)
-         useLaxSolver = false
+         if (status == true) then
+            useLaxSolver = false
+         end
       else
          status, dtSuggested, useLaxSolver = solveTwoFluidSystem(tCurr, tCurr+myDt)
       end
 
-      if (useLaxSolver == true) then
-         mprint (string.format(" ** Negative pressure or density at %8g! Will retake step with Lax fluxes", tCurr))
+      if (status == false) then
+         mprint (string.format(" ** Time step %g too large! Will retake with dt %g; useLaxSolver = %s", myDt, dtSuggested, tostring(useLaxSolver)))
+         myDt = dtSuggested
          q:copy(qDup)
          qNew:copy(qNewDup)
-      elseif (status == false) then
-         mprint (string.format(" ** Time step %g too large! Will retake with dt %g", myDt, dtSuggested))
-         myDt = dtSuggested
+      elseif (useLaxSolver == true) then
+         mprint (string.format(" ** Negative pressure or density at %8g! Will retake step with Lax fluxes", tCurr))
          q:copy(qDup)
          qNew:copy(qNewDup)
       else
