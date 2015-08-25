@@ -41,23 +41,6 @@ ggcm_mhd_ic_gkeyll_lua_run(const char *script, const char *script_common,
   bool isRestarting = false;
   int rFrame = 0;
 
-  // FIXME, loggers have been created by ggcm_mhd_step "gkeyll" already, so
-  // just ignore exceptions here
-  try {
-    // create top-level logger
-    Lucee::Logger& logger = Lucee::Logger::create("lucee");
-    logger.setLevel("debug");
-    
-    // create console logger
-    Lucee::Logger& conLogger = Lucee::Logger::create("lucee.console");
-    conLogger.setLevel("info");
-    // create console stream
-    Lucee::StreamHandler conStrm(std::cout);
-    conStrm.attachToLogger("lucee.console");
-  } catch (...) {
-    std::cerr << "FIXME: unhandled exception" << std::endl;
-  }
-
   // load input file using Lua
   Lucee::LuaState L;
 
