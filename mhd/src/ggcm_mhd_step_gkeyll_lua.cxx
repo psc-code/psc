@@ -182,18 +182,6 @@ ggcm_mhd_step_gkeyll_lua_setup(const char *script, const char *script_common,
   static const luaL_Reg topFuncs[] = { {NULL, NULL} };
   luaL_register(L, "Lucee", topFuncs);
 
-  lua_pushstring(L, inpFile.c_str());
-  lua_setfield(L, -2, "InputFile");
-
-  lua_pushstring(L, outPrefix.c_str());
-  lua_setfield(L, -2, "OutPrefix");
-
-  lua_pushboolean(L, isRestarting);
-  lua_setfield(L, -2, "IsRestarting");
-
-  lua_pushnumber(L, rFrame);
-  lua_setfield(L, -2, "RestartFrame");
-
   lua_pop(L, 1); // done adding command line stuff
 
   lua_pushcfunction(L, ggcm_mhd_reduce_double_min_lua);
