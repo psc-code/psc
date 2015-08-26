@@ -46,6 +46,19 @@ struct ggcm_mhd_ic_bowshock3d {
 //
 // assuming domain [-1.5,-1.5]x[-1.5,1.5]x[-0.75,0.75]
 
+static mrc_fld_data_t linear_change(mrc_fld_data_t x,
+    mrc_fld_data_t x1, mrc_fld_data_t val1,
+    mrc_fld_data_t x2, mrc_fld_data_t val2)
+{
+  mrc_fld_data_t val = val1;
+  if (x > x2) {
+    val = val2;
+  } else if (x > x1) {
+    val = val1 + (val2 - val1) * (x - x1) / (x2 - x1);
+  }
+  return val;
+}
+
 static void
 ggcm_mhd_ic_bowshock3d_run(struct ggcm_mhd_ic *ic)
 {
@@ -70,6 +83,9 @@ ggcm_mhd_ic_bowshock3d_run(struct ggcm_mhd_ic *ic)
   mrc_fld_setup(A);
   mrc_fld_view(A);
 
+  double l[3];
+  mrc_crds_get_param_double3(mrc_domain_get_crds(mhd->domain), "l", l);
+
   for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
     /* get dx for this patch */
     mrc_domain_get_local_patch_info(mhd->domain, p, &pinfo);
@@ -85,8 +101,12 @@ ggcm_mhd_ic_bowshock3d_run(struct ggcm_mhd_ic *ic)
     mrc_fld_foreach(fld, ix,iy,iz, 1, 2) {
       mrc_fld_data_t xx = MRC_MCRDX(crds, ix, p) - .5 * dx[0];
       mrc_fld_data_t yy = MRC_MCRDY(crds, iy, p) - .5 * dx[1];
-      M3(A, 0, ix,iy,iz, p) = - sub->Bz0 * yy;
-      M3(A, 2, ix,iy,iz, p) = + sub->Bx0 * yy - sub->By0 * xx;
+      M3(A, 0, ix,iy,iz, p) = 
+        linear_change(xx, l[0], - sub->Bz0 * yy,
+            sub->x_obstacle - sub->r_obstacle, 0.);
+      M3(A, 2, ix,iy,iz, p) = 
+        linear_change(xx, l[0], + sub->Bx0 * yy - sub->By0 * xx,
+            sub->x_obstacle - sub->r_obstacle, 0.);
     } mrc_fld_foreach_end;
 
     /* Initialize face-centered fields B = curl(A) */
