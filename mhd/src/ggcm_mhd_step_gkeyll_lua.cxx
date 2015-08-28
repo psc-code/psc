@@ -23,10 +23,6 @@ extern "C" {
 #include <string>
 #include <iostream>
 
-// FIXME, should be part of the ggcm_mhd_step_gkeyll state
-
-static Lucee::LuaState L;
-
 static int ggcm_mhd_reduce_double_min_lua(lua_State *L) {
   double var = lua_tonumber(L, -1);
   struct ggcm_mhd *mhd = (struct ggcm_mhd *) lua_touserdata(L, -2);
@@ -146,9 +142,12 @@ ggcm_mhd_step_gkeyll_setup_flds_lua(struct ggcm_mhd *mhd, const char *script_com
 }
 
 void
-ggcm_mhd_step_gkeyll_lua_setup(const char *script, const char *script_common,
-    struct ggcm_mhd *mhd, struct mrc_fld *fld)
+ggcm_mhd_step_gkeyll_lua_setup(void **lua_state_ptr, const char *script,
+    const char *script_common, struct ggcm_mhd *mhd, struct mrc_fld *fld)
 {
+  *lua_state_ptr = (void *) new Lucee::LuaState;
+  Lucee::LuaState L = *((Lucee::LuaState *)(*lua_state_ptr));
+
   // determine input file
   std::string inpFile = script;
 
@@ -281,8 +280,11 @@ ggcm_mhd_step_gkeyll_lua_setup(const char *script, const char *script_common,
 }
 
 void
-ggcm_mhd_step_gkeyll_lua_run(struct ggcm_mhd *mhd, struct mrc_fld *fld)
+ggcm_mhd_step_gkeyll_lua_run(void *lua_state,
+    struct ggcm_mhd *mhd, struct mrc_fld *fld)
 {
+  if (!lua_state) return;
+  Lucee::LuaState L = *((Lucee::LuaState *)lua_state);
   lua_getglobal(L, "runTimeStep");
   lua_pushnumber(L, mhd->dt);
   lua_pushnumber(L, mhd->time);
@@ -305,8 +307,10 @@ ggcm_mhd_step_gkeyll_lua_run(struct ggcm_mhd *mhd, struct mrc_fld *fld)
 }
 
 void
-ggcm_mhd_step_gkeyll_lua_destroy(struct ggcm_mhd *mhd)
+ggcm_mhd_step_gkeyll_lua_destroy(void *lua_state, struct ggcm_mhd *mhd)
 {
+  if (!lua_state) return;
+  Lucee::LuaState L = *((Lucee::LuaState *)lua_state);
   lua_getglobal(L, "finalize");
   if (lua_pcall(L, 0, 0, 0)) {
     std::cerr << "LUA Error:" << std::endl;

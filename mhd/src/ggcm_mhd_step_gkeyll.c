@@ -16,6 +16,7 @@
 struct ggcm_mhd_step_gkeyll {
   const char *script;
   const char *script_common;
+  void *lua_state; // not using LuaState * b/c it is c++
 };
 
 #define ggcm_mhd_step_gkeyll(step) mrc_to_subobj(step, struct ggcm_mhd_step_gkeyll)
@@ -45,7 +46,8 @@ ggcm_mhd_step_gkeyll_setup(struct ggcm_mhd_step *step)
   struct ggcm_mhd *mhd = step->mhd;
 
   assert(strcmp(mrc_fld_type(mhd->fld), FLD_TYPE) == 0);
-  ggcm_mhd_step_gkeyll_lua_setup(sub->script, sub->script_common, mhd, mhd->fld);
+  ggcm_mhd_step_gkeyll_lua_setup(&(sub->lua_state), sub->script,
+      sub->script_common, mhd, mhd->fld);
 }
 
 // ----------------------------------------------------------------------
@@ -54,8 +56,9 @@ ggcm_mhd_step_gkeyll_setup(struct ggcm_mhd_step *step)
 static void
 ggcm_mhd_step_gkeyll_destroy(struct ggcm_mhd_step *step)
 {
+  struct ggcm_mhd_step_gkeyll *sub = ggcm_mhd_step_gkeyll(step);
   struct ggcm_mhd *mhd = step->mhd;
-  ggcm_mhd_step_gkeyll_lua_destroy(mhd);
+  ggcm_mhd_step_gkeyll_lua_destroy(sub->lua_state, mhd);
 }
 
 // ----------------------------------------------------------------------
@@ -64,10 +67,11 @@ ggcm_mhd_step_gkeyll_destroy(struct ggcm_mhd_step *step)
 static void
 ggcm_mhd_step_gkeyll_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 {
+  struct ggcm_mhd_step_gkeyll *sub = ggcm_mhd_step_gkeyll(step);
   struct ggcm_mhd *mhd = step->mhd;
 
   assert(strcmp(mrc_fld_type(x), "double_aos") == 0);
-  ggcm_mhd_step_gkeyll_lua_run(mhd, x);
+  ggcm_mhd_step_gkeyll_lua_run(sub->lua_state, mhd, x);
 }
 
 // ----------------------------------------------------------------------
