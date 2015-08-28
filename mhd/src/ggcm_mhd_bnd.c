@@ -34,6 +34,8 @@ ggcm_mhd_bnd_init()
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_bnd, &ggcm_mhd_bnd_ops_inoutflow_sc_float);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_bnd, &ggcm_mhd_bnd_ops_inoutflow_sc_double);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_bnd, &ggcm_mhd_bnd_ops_inoutflow_fc_double);
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_bnd, &ggcm_mhd_bnd_ops_inoutflow_sc_double_aos);
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_bnd, &ggcm_mhd_bnd_ops_inoutflow_fc_double_aos);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_bnd, &ggcm_mhd_bnd_ops_inoutflow_gkeyll);
 }
 

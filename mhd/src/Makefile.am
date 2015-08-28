@@ -27,6 +27,8 @@ libmhd_la_SOURCES = \
 	ggcm_mhd_bnd_inoutflow_sc_float.c \
 	ggcm_mhd_bnd_inoutflow_sc_double.c \
 	ggcm_mhd_bnd_inoutflow_fc_double.c \
+	ggcm_mhd_bnd_inoutflow_sc_double_aos.c \
+	ggcm_mhd_bnd_inoutflow_fc_double_aos.c \
 	ggcm_mhd_bnd_inoutflow_gkeyll.c \
 	\
 	ggcm_mhd_bndsw.c \
