@@ -67,12 +67,22 @@ class PscFields:
         return fld
 
     def __getitem__(self, what):
-        if what.startswith("n_"):
+        if what.startswith("rho_nc"):
+            try:
+                return self._read_f3("rho_1st_nc_double", what)
+            except:
+                return self._read_f3("rho_1st_nc_c", what)
+        elif what.startswith("n_nc_e"):
+            try:
+                return self._read_f3("n_1st_nc_double", what)
+            except:
+                return self._read_f3("n_1st_c", what)
+        elif what.startswith("n_"):
             try:
                 return self._read_f3("n_1st_single", what)
             except:
                 return self._read_f3("n_1st_c", what)
-        if what.startswith("vx_") or what.startswith("vy_") or what.startswith("vz_"):
+        elif what.startswith("vx_") or what.startswith("vy_") or what.startswith("vz_"):
             try:
                 return self._read_f3("v_1st_single", what)
             except:
