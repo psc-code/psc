@@ -336,13 +336,13 @@ Variables ix, iy, iz will be automatically declared.
 
 Always close this expression with foreach_3d_end
 */
-#define foreach_3d(p, ix, iy, iz, l, r) {				\
-  int __ilo[3] = { psc.patch[p].ldims[0] == 1 ? 0 : -l ,		\
-		   psc.patch[p].ldims[1] == 1 ? 0 : -l,			\
-		   psc.patch[p].ldims[2] == 1 ? 0 : -l };		\
-  int __ihi[3] = { psc.patch[p].ldims[0] + (psc.patch[p].ldims[0] == 1 ? 0 : r), \
-		   psc.patch[p].ldims[1] + (psc.patch[p].ldims[1] == 1 ? 0 : r), \
-		   psc.patch[p].ldims[2] + (psc.patch[p].ldims[2] == 1 ? 0 : r) }; \
+#define foreach_3d(psc, p, ix, iy, iz, l, r) {                         \
+  int __ilo[3] = { (psc)->domain.gdims[0] == 1 ? 0 : -l ,              \
+                  (psc)->domain.gdims[1] == 1 ? 0 : -l,                        \
+                  (psc)->domain.gdims[2] == 1 ? 0 : -l };              \
+  int __ihi[3] = { (psc)->patch[p].ldims[0] + ((psc)->domain.gdims[0] == 1 ? 0 : r), \
+                  (psc)->patch[p].ldims[1] + ((psc)->domain.gdims[1] == 1 ? 0 : r), \
+                  (psc)->patch[p].ldims[2] + ((psc)->domain.gdims[2] == 1 ? 0 : r) }; \
   for (int iz = __ilo[2]; iz < __ihi[2]; iz++) {			\
     for (int iy = __ilo[1]; iy < __ihi[1]; iy++) {			\
       for (int ix = __ilo[0]; ix < __ihi[0]; ix++)

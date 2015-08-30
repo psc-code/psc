@@ -520,7 +520,7 @@ nvp_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
 
     // fix up zero density cells
     for (int m = 0; m < ppsc->nr_kinds; m++) {
-      foreach_3d(res->p, ix, iy, iz, 1, 1) {
+      foreach_3d(ppsc, res->p, ix, iy, iz, 1, 1) {
 	if (F3(res, 10*m, ix,iy,iz) == 0.0) {
 	  F3(res, 10*m, ix,iy,iz) = 0.00001;
 	} foreach_3d_end;
@@ -530,7 +530,7 @@ nvp_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
     // normalize v moments
     for (int m = 0; m < ppsc->nr_kinds; m++) {
       for (int mm = 0; mm < 3; mm++) {
-	foreach_3d(res->p, ix, iy, iz, 1, 1) {
+	foreach_3d(ppsc, res->p, ix, iy, iz, 1, 1) {
 	  F3(res, 10*m + mm + 1, ix,iy,iz) /= F3(res, 10*m, ix,iy,iz);
 	} foreach_3d_end;
       }
@@ -540,7 +540,7 @@ nvp_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
     for (int m = 0; m < ppsc->nr_kinds; m++) {
       for (int mm = 0; mm < 6; mm++) {
 	int mx = mm2mx[mm], my = mm2my[mm];
-	foreach_3d(res->p, ix, iy, iz, 1, 1) {
+	foreach_3d(ppsc, res->p, ix, iy, iz, 1, 1) {
 	  F3(res, 10*m + 4 + mm, ix,iy,iz) =
 	    F3(res, 10*m + 4 + mm, ix,iy,iz) / F3(res, 10*m, ix,iy,iz) - 
 	    F3(res, 10*m + 1 + mx, ix,iy,iz) * F3(res, 10*m + 1 + my, ix,iy,iz);
