@@ -2,6 +2,9 @@
 #include "ggcm_mhd_bnd_private.h"
 
 #include <ggcm_mhd_private.h>
+#include <ggcm_mhd_defs.h>
+
+#include <mrc_fld_as_float.h>
 #include <mrc_domain.h>
 #include <mrc_bits.h>
 #include <math.h>
@@ -19,6 +22,11 @@ struct ggcm_mhd_bnd_sphere {
   double min_dr;
   double r1;
   double r2;
+
+  // maps
+  // for managing cell-centered ghost points
+  int cc_n_map;
+  struct mrc_fld *cc_mhd_imap;  // ghost cell # -> (ix,iy,iz,p)
 };
 
 #define ggcm_mhd_bnd_sphere(bnd) mrc_to_subobj(bnd, struct ggcm_mhd_bnd_sphere)
@@ -112,25 +120,157 @@ ggcm_mhd_bnd_map_find_r1_r2(struct ggcm_mhd_bnd *bnd,
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_bnd_map_find_cc_n_map
+
+static void
+ggcm_mhd_bnd_map_find_cc_n_map(struct ggcm_mhd_bnd *bnd)
+{
+  struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
+  struct ggcm_mhd *mhd = bnd->mhd;
+  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
+
+  double r1 = sub->r1, r2 = sub->r2;
+  assert(r1 > 0.);
+
+  int cc_n_map = 0;
+  for (int p = 0; p < mrc_fld_nr_patches(mhd->fld); p++) {
+    struct mrc_patch_info info;
+    mrc_domain_get_local_patch_info(mhd->domain, p, &info);
+    int gdims[3];
+    mrc_domain_get_global_dims(mhd->domain, gdims);
+    // cell-centered
+    int sw[3] = { 2, 2, 2 };
+    for (int d = 0; d < 3; d++) {
+      if (gdims[d] == 1) {
+	sw[d] = 0;
+      }
+    }
+    for (int jz = -sw[2]; jz < info.ldims[2] + sw[2]; jz++) {
+      for (int jy = -sw[1]; jy < info.ldims[1] + sw[1]; jy++) {
+	for (int jx = -sw[0]; jx < info.ldims[0] + sw[0]; jx++) {
+	  float xx = MRC_MCRDX(crds, jx, p);
+	  float yy = MRC_MCRDY(crds, jy, p);
+	  float zz = MRC_MCRDZ(crds, jz, p);
+	  float rr = sqrtf(sqr(xx) + sqr(yy) + sqr(zz));
+	  if (rr < r1 || rr > r2) continue;
+	  cc_n_map++;
+	}
+      }
+    }
+  }
+  sub->cc_n_map = cc_n_map;
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_bnd_map_cc
+
+static void
+ggcm_mhd_bnd_map_cc(struct ggcm_mhd_bnd *bnd)
+{
+  struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
+
+  struct ggcm_mhd *mhd = bnd->mhd;
+  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
+
+  double r1 = sub->r1, r2 = sub->r2;
+
+  // compute e-field mapping coefficients
+
+  int cc_n_map = 0;
+  for (int p = 0; p < mrc_fld_nr_patches(mhd->fld); p++) {
+    struct mrc_patch_info info;
+    mrc_domain_get_local_patch_info(mhd->domain, p, &info);
+    int gdims[3];
+    mrc_domain_get_global_dims(mhd->domain, gdims);
+    // cell-centered
+    int sw[3] = { 2, 2, 2 };
+    for (int d = 0; d < 3; d++) {
+      if (gdims[d] == 1) {
+	sw[d] = 0;
+      }
+    }
+    for (int jz = -sw[2]; jz < info.ldims[2] + sw[2]; jz++) {
+      for (int jy = -sw[1]; jy < info.ldims[1] + sw[1]; jy++) {
+	for (int jx = -sw[0]; jx < info.ldims[0] + sw[0]; jx++) {
+	  double xx = MRC_MCRDX(crds, jx, p);
+	  double yy = MRC_MCRDY(crds, jy, p);
+	  double zz = MRC_MCRDZ(crds, jz, p);
+	  double rr = sqrtf(sqr(xx) + sqr(yy) + sqr(zz));
+	  if (rr < r1 || rr > r2) continue;
+	  
+	  MRC_I2(sub->cc_mhd_imap, 0, cc_n_map) = jx;
+	  MRC_I2(sub->cc_mhd_imap, 1, cc_n_map) = jy;
+	  MRC_I2(sub->cc_mhd_imap, 2, cc_n_map) = jz;
+	  MRC_I2(sub->cc_mhd_imap, 3, cc_n_map) = p;
+
+	  cc_n_map++;
+	}
+      }
+    }
+  }
+
+  assert(cc_n_map == sub->cc_n_map);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_bnd_sphere_setup_flds
+
+static void
+ggcm_mhd_bnd_sphere_setup_flds(struct ggcm_mhd_bnd *bnd)
+{
+  struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
+
+  ggcm_mhd_bnd_map_find_cc_n_map(bnd);
+  mprintf("cc_n_map %d\n", sub->cc_n_map);
+
+  // cell-centered
+
+  mrc_fld_set_type(sub->cc_mhd_imap, "int");
+  mrc_fld_set_param_int_array(sub->cc_mhd_imap, "dims", 2, (int[2]) { 4, sub->cc_n_map });
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_bnd_sphere_setup
 
 static void
 ggcm_mhd_bnd_sphere_setup(struct ggcm_mhd_bnd *bnd)
 {
   struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
+
   ggcm_mhd_bnd_map_find_dr(bnd, &sub->min_dr);
   mprintf("min_dr %g\n", sub->min_dr);
   ggcm_mhd_bnd_map_find_r1_r2(bnd, &sub->r1, &sub->r2);
   mprintf("r1 %g r2 %g\n", sub->r1, sub->r2);
+  ggcm_mhd_bnd_sphere_setup_flds(bnd);
+  ggcm_mhd_bnd_setup_member_objs_sub(bnd);
+  ggcm_mhd_bnd_map_cc(bnd);
 }
 
 // ----------------------------------------------------------------------
 // ggcm_mhd_bnd_sphere_fill_ghosts
 
 static void
-ggcm_mhd_bnd_sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld,
+ggcm_mhd_bnd_sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld_base,
 			      int m, float bntim)
 {
+  struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
+
+  if (sub->cc_n_map == 0) {
+    return;
+  }
+
+  struct mrc_fld *fld = mrc_fld_get_as(fld_base, FLD_TYPE);
+
+  for (int i = 0; i < sub->cc_n_map; i++) {
+    int ix = MRC_I2(sub->cc_mhd_imap, 0, i);
+    int iy = MRC_I2(sub->cc_mhd_imap, 1, i);
+    int iz = MRC_I2(sub->cc_mhd_imap, 2, i);
+    int p  = MRC_I2(sub->cc_mhd_imap, 3, i);
+
+    RR_ (fld, ix,iy,iz, p) = 1.;
+  }
+
+  mrc_fld_put_as(fld, fld_base);
 }
 
 // ----------------------------------------------------------------------
@@ -143,6 +283,9 @@ static struct param ggcm_mhd_bnd_sphere_descr[] = {
   { "min_dr"          , VAR(min_dr)          , MRC_VAR_FLOAT             },
   { "r1"              , VAR(r1)              , MRC_VAR_FLOAT             },
   { "r2"              , VAR(r2)              , MRC_VAR_FLOAT             },
+  { "cc_n_map"        , VAR(cc_n_map)        , MRC_VAR_INT               },
+
+  { "cc_mhd_imap"     , VAR(cc_mhd_imap)     , MRC_VAR_OBJ(mrc_fld)      },
 
   {},
 };
