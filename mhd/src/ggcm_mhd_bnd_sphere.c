@@ -9,6 +9,21 @@
 #include <mrc_bits.h>
 #include <math.h>
 
+#define MT MT_FULLY_CONSERVATIVE
+
+enum {
+  FIXED_RR,
+  FIXED_PP,
+  FIXED_VX,
+  FIXED_VY,
+  FIXED_VZ,
+  FIXED_BX,
+  FIXED_BY,
+  FIXED_BZ,
+  FIXED_NR,
+};
+
+
 // FIXME, consolidate with ggcm_mhd_iono
 
 // ======================================================================
@@ -27,6 +42,9 @@ struct ggcm_mhd_bnd_sphere {
   // for managing cell-centered ghost points
   int cc_n_map;
   struct mrc_fld *cc_mhd_imap;  // ghost cell # -> (ix,iy,iz,p)
+
+  // constant values to set
+  double bnvals[FIXED_NR];
 };
 
 #define ggcm_mhd_bnd_sphere(bnd) mrc_to_subobj(bnd, struct ggcm_mhd_bnd_sphere)
@@ -247,6 +265,48 @@ ggcm_mhd_bnd_sphere_setup(struct ggcm_mhd_bnd *bnd)
 }
 
 // ----------------------------------------------------------------------
+// sphere_fill_ghosts_mhd_do
+
+static void
+sphere_fill_ghosts_mhd_do(struct mrc_fld *fld,
+    int cc_n_map, struct mrc_fld*cc_mhd_imap,
+    double bnvals[FIXED_NR], int m, float bntim, float gamm)
+{
+  double rvx = bnvals[FIXED_RR] * bnvals[FIXED_VX];
+  double rvy = bnvals[FIXED_RR] * bnvals[FIXED_VY];
+  double rvz = bnvals[FIXED_RR] * bnvals[FIXED_VZ];
+
+  double vvbn  = sqr(bnvals[FIXED_VX]) + sqr(bnvals[FIXED_VY]) + sqr(bnvals[FIXED_VZ]);
+  double uubn  = .5f * (bnvals[FIXED_RR]*vvbn) + bnvals[FIXED_PP] / (gamm - 1.f);
+  double b2bn  = sqr(bnvals[FIXED_BX]) + sqr(bnvals[FIXED_BY]) + sqr(bnvals[FIXED_BZ]);
+  double eebn = uubn + .5 * b2bn;
+
+  for (int i = 0; i < cc_n_map; i++) {
+    int ix = MRC_I2(cc_mhd_imap, 0, i);
+    int iy = MRC_I2(cc_mhd_imap, 1, i);
+    int iz = MRC_I2(cc_mhd_imap, 2, i);
+    int p  = MRC_I2(cc_mhd_imap, 3, i);
+
+    M3 (fld, m + RR,  ix,iy,iz, p) = bnvals[FIXED_RR];
+    M3 (fld, m + RVX, ix,iy,iz, p) = rvx;
+    M3 (fld, m + RVY, ix,iy,iz, p) = rvy;
+    M3 (fld, m + RVZ, ix,iy,iz, p) = rvz;
+    if (MT == MT_SEMI_CONSERVATIVE ||
+        MT == MT_SEMI_CONSERVATIVE_GGCM) {
+      M3(fld, m + UU , ix,iy,iz, p) = uubn;
+    } else if (MT == MT_FULLY_CONSERVATIVE) {
+      M3(fld, m + EE , ix,iy,iz, p) = eebn;
+    } else {
+      assert(0);
+    }
+    M3(fld, m + BX , ix,iy,iz, p) = bnvals[FIXED_BX];
+    M3(fld, m + BY , ix,iy,iz, p) = bnvals[FIXED_BY];
+    M3(fld, m + BZ , ix,iy,iz, p) = bnvals[FIXED_BZ];
+  }
+}
+
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_bnd_sphere_fill_ghosts
 
 static void
@@ -254,6 +314,7 @@ ggcm_mhd_bnd_sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld_ba
 			      int m, float bntim)
 {
   struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
+  struct ggcm_mhd *mhd = bnd->mhd;
 
   if (sub->cc_n_map == 0) {
     return;
@@ -261,14 +322,8 @@ ggcm_mhd_bnd_sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld_ba
 
   struct mrc_fld *fld = mrc_fld_get_as(fld_base, FLD_TYPE);
 
-  for (int i = 0; i < sub->cc_n_map; i++) {
-    int ix = MRC_I2(sub->cc_mhd_imap, 0, i);
-    int iy = MRC_I2(sub->cc_mhd_imap, 1, i);
-    int iz = MRC_I2(sub->cc_mhd_imap, 2, i);
-    int p  = MRC_I2(sub->cc_mhd_imap, 3, i);
-
-    RR_ (fld, ix,iy,iz, p) = 1.;
-  }
+  sphere_fill_ghosts_mhd_do(fld, sub->cc_n_map, sub->cc_mhd_imap,
+      sub->bnvals, m, bntim, mhd->par.gamm);
 
   mrc_fld_put_as(fld, fld_base);
 }
@@ -286,6 +341,15 @@ static struct param ggcm_mhd_bnd_sphere_descr[] = {
   { "cc_n_map"        , VAR(cc_n_map)        , MRC_VAR_INT               },
 
   { "cc_mhd_imap"     , VAR(cc_mhd_imap)     , MRC_VAR_OBJ(mrc_fld)      },
+
+  { "rr"              , VAR(bnvals[FIXED_RR]), PARAM_DOUBLE(1.) },
+  { "pp"              , VAR(bnvals[FIXED_PP]), PARAM_DOUBLE(1.) },
+  { "vx"              , VAR(bnvals[FIXED_VX]), PARAM_DOUBLE(0.) },
+  { "vy"              , VAR(bnvals[FIXED_VY]), PARAM_DOUBLE(0.) },
+  { "vz"              , VAR(bnvals[FIXED_VZ]), PARAM_DOUBLE(0.) },
+  { "bx"              , VAR(bnvals[FIXED_BX]), PARAM_DOUBLE(0.) },
+  { "by"              , VAR(bnvals[FIXED_BY]), PARAM_DOUBLE(0.) },
+  { "bz"              , VAR(bnvals[FIXED_BZ]), PARAM_DOUBLE(0.) },
 
   {},
 };
