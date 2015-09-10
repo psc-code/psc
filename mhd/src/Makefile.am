@@ -30,7 +30,7 @@ libmhd_la_SOURCES = \
 	ggcm_mhd_bnd_inoutflow_sc_double_aos.c \
 	ggcm_mhd_bnd_inoutflow_fc_double_aos.c \
 	ggcm_mhd_bnd_inoutflow_gkeyll.c \
-	ggcm_mhd_bnd_sphere.c \
+	ggcm_mhd_bnd_sphere_fc_float.c \
 	\
 	ggcm_mhd_bndsw.c \
 	ggcm_mhd_bndsw_none.c \

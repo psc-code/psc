@@ -4,12 +4,9 @@
 #include <ggcm_mhd_private.h>
 #include <ggcm_mhd_defs.h>
 
-#include <mrc_fld_as_float.h>
 #include <mrc_domain.h>
 #include <mrc_bits.h>
 #include <math.h>
-
-#define MT MT_FULLY_CONSERVATIVE
 
 enum {
   FIXED_RR,
@@ -359,7 +356,7 @@ static struct param ggcm_mhd_bnd_sphere_descr[] = {
 // ggcm_mhd_bnd subclass "sphere"
 
 struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_sphere = {
-  .name             = "sphere",
+  .name             = ggcm_mhd_bnd_sub_name,
   .size             = sizeof(struct ggcm_mhd_bnd_sphere),
   .param_descr      = ggcm_mhd_bnd_sphere_descr,
   .setup            = ggcm_mhd_bnd_sphere_setup,

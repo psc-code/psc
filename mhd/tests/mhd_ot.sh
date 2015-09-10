@@ -9,7 +9,7 @@ mpirun -n 1 mhd_ot \
     --mx 64 --my 64 --mz 1 --npx 1 --npy 1 \
     --mrc_ts_output_every_time 0.01  \
     --mrc_ts_max_time 1.0 \
-    --ggcm_mhd_bnd_type sphere \
+    --ggcm_mhd_bnd_type sphere_fc_float \
     --do_nwst \
     --radius .4 \
     2>&1 | tee log
