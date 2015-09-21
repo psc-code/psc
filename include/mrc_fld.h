@@ -161,12 +161,15 @@ mrc_fld_spatial_offs(struct mrc_fld *x)
 
 #define MRC_S3(fld, i0,i1,i2) MRC_FLD(fld, float, i0,i1,i2,0,0)
 #define MRC_D3(fld, i0,i1,i2) MRC_FLD(fld, double, i0,i1,i2,0,0)
+#define MRC_I3(fld, i0,i1,i2) MRC_FLD(fld, int, i0,i1,i2,0,0)
 
 #define MRC_S4(fld, i0,i1,i2,i3) MRC_FLD(fld, float, i0,i1,i2,i3,0)
 #define MRC_D4(fld, i0,i1,i2,i3) MRC_FLD(fld, double, i0,i1,i2,i3,0)
+#define MRC_I4(fld, i0,i1,i2,i3) MRC_FLD(fld, int, i0,i1,i2,i3,0)
 
 #define MRC_S5(fld, i0,i1,i2,i3,i4) MRC_FLD(fld, float, i0,i1,i2,i3,i4)
 #define MRC_D5(fld, i0,i1,i2,i3,i4) MRC_FLD(fld, double, i0,i1,i2,i3,i4)
+#define MRC_I5(fld, i0,i1,i2,i3,i4) MRC_FLD(fld, int, i0,i1,i2,i3,i4)
 
 #define mrc_fld_foreach(fld, ix,iy,iz, l,r) do {			\
   const int *_offs = mrc_fld_spatial_offs(fld);				\

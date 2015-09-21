@@ -810,6 +810,7 @@ mrc_fld_float_copy_to_double(struct mrc_fld *fld_float,
   }
 }
 
+
 // ----------------------------------------------------------------------
 // mrc_fld "float" methods
 
@@ -854,11 +855,49 @@ mrc_fld_float_aos_copy_to_double_aos(struct mrc_fld *fld_float,
 }
 
 // ----------------------------------------------------------------------
+// mrc_fld_float_aos_copy_from_float
+
+static void
+mrc_fld_float_aos_copy_from_float(struct mrc_fld *fld_float_aos,
+          struct mrc_fld *fld_float)
+{
+  assert(fld_float->_data_type == MRC_NT_FLOAT);
+  assert(fld_float_aos->_data_type == MRC_NT_FLOAT);
+  for (int p = 0; p < mrc_fld_nr_patches(fld_float); p++) {
+    mrc_fld_foreach(fld_float, ix,iy,iz, fld_float->_nr_ghosts, fld_float->_nr_ghosts) {
+      for (int m = 0; m < fld_float->_nr_comps; m++) {
+  MRC_S5(fld_float_aos, m, ix,iy,iz, p) = MRC_S5(fld_float, ix,iy,iz,m, p);
+      }
+    } mrc_fld_foreach_end;
+  }
+}
+
+// ----------------------------------------------------------------------
+// mrc_fld_float_aos_copy_to_float
+
+static void
+mrc_fld_float_aos_copy_to_float(struct mrc_fld *fld_float_aos,
+          struct mrc_fld *fld_float)
+{
+  assert(fld_float->_data_type == MRC_NT_FLOAT);
+  assert(fld_float_aos->_data_type == MRC_NT_FLOAT);
+  for (int p = 0; p < mrc_fld_nr_patches(fld_float); p++) {
+    mrc_fld_foreach(fld_float, ix,iy,iz, fld_float->_nr_ghosts, fld_float->_nr_ghosts) {
+      for (int m = 0; m < fld_float->_nr_comps; m++) {
+  MRC_S5(fld_float, ix,iy,iz, m, p) = MRC_S5(fld_float_aos, m, ix,iy,iz, p);
+      }
+    } mrc_fld_foreach_end;
+  }
+}
+
+// ----------------------------------------------------------------------
 // mrc_fld "float_aos" methods
 
 static struct mrc_obj_method mrc_fld_float_aos_methods[] = {
   MRC_OBJ_METHOD("copy_to_double_aos",   mrc_fld_float_aos_copy_to_double_aos),
   MRC_OBJ_METHOD("copy_from_double_aos", mrc_fld_float_aos_copy_from_double_aos),
+  MRC_OBJ_METHOD("copy_to_float", mrc_fld_float_aos_copy_to_float),
+  MRC_OBJ_METHOD("copy_from_float", mrc_fld_float_aos_copy_from_float),
   {}
 };
 
@@ -921,14 +960,14 @@ mrc_fld_double_aos_copy_to_float(struct mrc_fld *fld_double,
 
 static void
 mrc_fld_double_aos_copy_to_double(struct mrc_fld *fld_double_aos,
-				  struct mrc_fld *fld_double)
+          struct mrc_fld *fld_double)
 {
   assert(fld_double->_data_type == MRC_NT_DOUBLE);
   assert(fld_double_aos->_data_type == MRC_NT_DOUBLE);
   for (int p = 0; p < mrc_fld_nr_patches(fld_double); p++) {
     mrc_fld_foreach(fld_double, ix,iy,iz, fld_double->_nr_ghosts, fld_double->_nr_ghosts) {
       for (int m = 0; m < fld_double->_nr_comps; m++) {
-	MRC_D5(fld_double, ix,iy,iz, m, p) = MRC_D5(fld_double_aos, m, ix,iy,iz, p);
+  MRC_D5(fld_double, ix,iy,iz, m, p) = MRC_D5(fld_double_aos, m, ix,iy,iz, p);
       }
     } mrc_fld_foreach_end;
   }
