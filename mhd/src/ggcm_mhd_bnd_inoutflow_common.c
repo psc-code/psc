@@ -2,7 +2,6 @@
 #include "ggcm_mhd_bndsw.h"
 #include "ggcm_mhd_crds.h"
 #include "mrc_domain.h"
-#include "ggcm_mhd_bndsw_constant_5m.h"
 #include "ggcm_mhd_gkeyll.h"
 
 struct ggcm_mhd_bnd_sub {
