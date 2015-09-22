@@ -301,7 +301,7 @@ if (nr_dims == 3) then getSlvrsDir(slvrs, "regular", 2) end
 function updateFluidsAndField(tCurr, t)
    local myStatus = true
    local myDtSuggested = 1e3*math.abs(t-tCurr)
-   local useLaxSolver = False
+   local useLaxSolver = false
 
    for dir = 0,nr_dims-1 do
       for i,slvr in ipairs(slvrs[dir]) do
