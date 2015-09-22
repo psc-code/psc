@@ -732,6 +732,15 @@ mrc_obj_get_param_obj(struct mrc_obj *obj, const char *name, struct mrc_obj **pv
   return 0;
 }
 
+void
+mrc_obj_get_param_ptr(struct mrc_obj *obj, const char *name, void **val)
+{
+  union param_u uval;
+  mrc_obj_get_param_type(obj, name, PT_PTR, &uval);
+  *val = uval.u_ptr;
+}
+
+
 static void
 mrc_obj_view_this(struct mrc_obj *obj)
 {
