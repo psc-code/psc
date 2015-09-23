@@ -61,6 +61,7 @@ libmhd_la_SOURCES = \
 	ggcm_mhd_diag_item_rank.c \
 	ggcm_mhd_diag_item_j.c \
 	ggcm_mhd_diag_item_e.c \
+	ggcm_mhd_diag_item_gkeyll_5m.c \
 	calc_currcc.c \
 	calc_divb.c \
 	\
@@ -120,7 +121,6 @@ AM_CPPFLAGS += \
 	-I$(GKSOFTWARE)/eigen/include/eigen3
 
 libmhd_la_SOURCES += \
-	ggcm_mhd_diag_item_gkeyll_5m.c \
 	ggcm_mhd_ic_gkeyll.c \
 	ggcm_mhd_ic_gkeyll_lua.cxx \
 	ggcm_mhd_step_gkeyll.c \
