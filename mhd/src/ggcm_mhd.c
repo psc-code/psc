@@ -92,6 +92,7 @@ _ggcm_mhd_create(struct ggcm_mhd *mhd)
   ggcm_mhd_step_set_param_obj(mhd->step, "mhd", mhd);
   ggcm_mhd_diag_set_param_obj(mhd->diag, "mhd", mhd);
   ggcm_mhd_bnd_set_param_obj(mhd->bnd, "mhd", mhd);
+  ggcm_mhd_bnd_set_param_obj(mhd->bnd1, "mhd", mhd);
   ggcm_mhd_ic_set_param_obj(mhd->ic, "mhd", mhd);
 
   mrc_fld_set_name(mhd->fld, "ggcm_mhd_fld");
@@ -208,6 +209,7 @@ ggcm_mhd_fill_ghosts(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m, float bnt
     // ggcm_mhd_amr_fill_ghosts_b(mhd, fld); // has been taken over by ddc_amr_cc
   }
   ggcm_mhd_bnd_fill_ghosts(mhd->bnd, fld, m, bntim);
+  ggcm_mhd_bnd_fill_ghosts(mhd->bnd1, fld, m, bntim);
 }
 
 void
@@ -377,6 +379,7 @@ ggcm_mhd_default_box(struct ggcm_mhd *mhd)
 
   // default to periodic boundary conditions
   ggcm_mhd_bnd_set_type(mhd->bnd, "none");
+  ggcm_mhd_bnd_set_type(mhd->bnd1, "none");
   mrc_domain_set_param_int(mhd->domain, "bcx", BC_PERIODIC);
   mrc_domain_set_param_int(mhd->domain, "bcy", BC_PERIODIC);
   mrc_domain_set_param_int(mhd->domain, "bcz", BC_PERIODIC);
@@ -448,6 +451,7 @@ static struct param ggcm_mhd_descr[] = {
   { "step"            , VAR(step)            , MRC_VAR_OBJ(ggcm_mhd_step)     },
   { "diag"            , VAR(diag)            , MRC_VAR_OBJ(ggcm_mhd_diag)     },
   { "bnd"             , VAR(bnd)             , MRC_VAR_OBJ(ggcm_mhd_bnd)      },
+  { "bnd1"            , VAR(bnd1)            , MRC_VAR_OBJ(ggcm_mhd_bnd)      },
   { "ic"              , VAR(ic)              , MRC_VAR_OBJ(ggcm_mhd_ic)       },
 
   { "do_badval_checks", VAR(do_badval_checks), PARAM_BOOL(true)             },
