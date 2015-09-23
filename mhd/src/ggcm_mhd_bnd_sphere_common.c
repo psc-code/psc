@@ -317,6 +317,11 @@ ggcm_mhd_bnd_sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld_ba
     return;
   }
 
+  int mhd_type;
+  mrc_fld_get_param_int(fld_base, "mhd_type", &mhd_type);
+  assert(mhd_type == MT);
+  assert(m == 0 || m == 8);
+
   struct mrc_fld *fld = mrc_fld_get_as(fld_base, FLD_TYPE);
 
   sphere_fill_ghosts_mhd_do(fld, sub->cc_n_map, sub->cc_mhd_imap,
