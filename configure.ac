@@ -118,6 +118,12 @@ AS_IF([test "$have_petsc" != "no"],
       [AC_DEFINE([HAVE_PETSC], [], [we have petsc library + headers])])
 AM_CONDITIONAL([HAVE_PETSC], [test "$have_petsc" != "no"])
 
+# check for Viscid (analysis / plotting python package) so that we
+# can mark some tests XFAIL
+# Get Viscid at https://github.com/KristoforMaynard/Viscid
+AM_PATH_PYTHON(2.6)
+AX_PYTHON_MODULE(viscid)
+AM_CONDITIONAL([HAVE_VISCID], [test "$HAVE_PYMOD_VISCID" != "no"])
 
 # Checks for options
 
@@ -179,6 +185,8 @@ AC_CONFIG_FILES([Makefile
 		 tests/test_mrc_f3_0.sh
 		 tests/test_mrc_f3_1.sh
 		 tests/test_mrc_f3_2.sh
+		 mhd/tests/mhd_wave_cpaw.sh
+		 mhd/tests/check_wave_cpaw.py
 ])
 
 AC_OUTPUT

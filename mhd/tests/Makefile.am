@@ -32,6 +32,11 @@ TESTS = \
 XFAIL_TESTS = \
 	test_ggcm_mhd_crds
 
+if !HAVE_VISCID
+XFAIL_TESTS += \
+	test_mhd_wave_cpaw.sh
+endif
+
 if HAVE_GKEYLL
 
 AM_CFLAGS = -Bdynamic
