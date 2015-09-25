@@ -48,6 +48,10 @@ struct ggcm_mhd_bnd_sphere_map {
   // for managing cell-centered ghost points
   int cc_n_map;
   struct mrc_fld *cc_imap;  // ghost cell # -> (ix,iy,iz,p)
+
+  // for managing edge-centered ghost points
+  int ec_n_map[3];
+  struct mrc_fld *ec_imap[3];
 };
 
 void ggcm_mhd_bnd_sphere_map_setup(struct ggcm_mhd_bnd_sphere_map *map,
