@@ -21,6 +21,13 @@ enum {
 };
 
 
+struct ggcm_mhd_bnd_sphere_map {
+  struct ggcm_mhd *mhd;
+  double min_dr;
+  double r1;
+  double r2;
+};
+
 // FIXME, consolidate with ggcm_mhd_iono
 
 // ======================================================================
@@ -31,9 +38,7 @@ struct ggcm_mhd_bnd_sphere {
   double radius;
 
   // state
-  double min_dr;
-  double r1;
-  double r2;
+  struct ggcm_mhd_bnd_sphere_map map;
 
   // maps
   // for managing cell-centered ghost points
@@ -47,19 +52,19 @@ struct ggcm_mhd_bnd_sphere {
 #define ggcm_mhd_bnd_sphere(bnd) mrc_to_subobj(bnd, struct ggcm_mhd_bnd_sphere)
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_bnd_map_find_dr
+// ggcm_mhd_bnd_sphere_map_find_dr
 //
 // find minimum cell size (over all of the domain -- FIXME?)
 
 static void
-ggcm_mhd_bnd_map_find_dr(struct ggcm_mhd_bnd *bnd, double *dr)
+ggcm_mhd_bnd_sphere_map_find_dr(struct ggcm_mhd_bnd_sphere_map *map, double *dr)
 {
   // FIXME, it'd make sense to base this on the ionosphere boundary region
   // (e.g., box of +/- 7 RE in all directions, as later used in determining
   // r1, r2). It shouldn't really hurt if the dr determined here is too small,
   // though it'll slow down finding the proper r1, r2.
 
-  struct ggcm_mhd *mhd = bnd->mhd;
+  struct ggcm_mhd *mhd = map->mhd;
 
   double min_dr = 1.e30;
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
@@ -72,27 +77,25 @@ ggcm_mhd_bnd_map_find_dr(struct ggcm_mhd_bnd *bnd, double *dr)
       }
     }
   }
-  MPI_Allreduce(&min_dr, dr, 1, MPI_DOUBLE, MPI_MIN, ggcm_mhd_bnd_comm(bnd));
+  MPI_Allreduce(&min_dr, dr, 1, MPI_DOUBLE, MPI_MIN, ggcm_mhd_comm(mhd));
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_bnd_map_find_r1_r2
+// ggcm_mhd_bnd_sphere_map_find_r1_r2
 //
 // determines r1 to be small enough so that
 // +/- 2 grid points around each cell with center outside of r2
 // are outside (ie., their centers) the smaller r1 sphere
 
 static void
-ggcm_mhd_bnd_map_find_r1_r2(struct ggcm_mhd_bnd *bnd,
-			    double *p_r1, double *p_r2)
+ggcm_mhd_bnd_sphere_map_find_r1_r2(struct ggcm_mhd_bnd_sphere_map *map,
+				   double radius, double *p_r1, double *p_r2)
 {
-  struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
-
-  struct ggcm_mhd *mhd = bnd->mhd;
+  struct ggcm_mhd *mhd = map->mhd;
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
 
-  double dr = sub->min_dr;
-  double r2 = sub->radius;
+  double dr = map->min_dr;
+  double r2 = radius;
   double r1 = r2 - dr;
 
  loop2:
@@ -129,7 +132,7 @@ ggcm_mhd_bnd_map_find_r1_r2(struct ggcm_mhd_bnd *bnd,
     }
   }
 
-  MPI_Allreduce(&r1, p_r1, 1, MPI_DOUBLE, MPI_MIN, ggcm_mhd_bnd_comm(bnd));
+  MPI_Allreduce(&r1, p_r1, 1, MPI_DOUBLE, MPI_MIN, ggcm_mhd_comm(mhd));
 
   *p_r2 = r2;
 }
@@ -141,10 +144,11 @@ static void
 ggcm_mhd_bnd_map_find_cc_n_map(struct ggcm_mhd_bnd *bnd)
 {
   struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
+  struct ggcm_mhd_bnd_sphere_map *map = &sub->map;
   struct ggcm_mhd *mhd = bnd->mhd;
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
 
-  double r1 = sub->r1, r2 = sub->r2;
+  double r1 = map->r1, r2 = map->r2;
   assert(r1 > 0.);
 
   int cc_n_map = 0;
@@ -183,11 +187,12 @@ static void
 ggcm_mhd_bnd_map_cc(struct ggcm_mhd_bnd *bnd)
 {
   struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
+  struct ggcm_mhd_bnd_sphere_map *map = &sub->map;
 
   struct ggcm_mhd *mhd = bnd->mhd;
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
 
-  double r1 = sub->r1, r2 = sub->r2;
+  double r1 = map->r1, r2 = map->r2;
 
   // compute e-field mapping coefficients
 
@@ -251,11 +256,13 @@ static void
 ggcm_mhd_bnd_sphere_setup(struct ggcm_mhd_bnd *bnd)
 {
   struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
+  struct ggcm_mhd_bnd_sphere_map *map = &sub->map;
 
-  ggcm_mhd_bnd_map_find_dr(bnd, &sub->min_dr);
-  mprintf("min_dr %g\n", sub->min_dr);
-  ggcm_mhd_bnd_map_find_r1_r2(bnd, &sub->r1, &sub->r2);
-  mprintf("r1 %g r2 %g\n", sub->r1, sub->r2);
+  map->mhd = bnd->mhd;
+  ggcm_mhd_bnd_sphere_map_find_dr(map, &map->min_dr);
+  mprintf("min_dr %g\n", map->min_dr);
+  ggcm_mhd_bnd_sphere_map_find_r1_r2(map, sub->radius, &map->r1, &map->r2);
+  mprintf("r1 %g r2 %g\n", map->r1, map->r2);
   ggcm_mhd_bnd_sphere_setup_flds(bnd);
   ggcm_mhd_bnd_setup_member_objs_sub(bnd);
   ggcm_mhd_bnd_map_cc(bnd);
@@ -337,9 +344,9 @@ ggcm_mhd_bnd_sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld_ba
 static struct param ggcm_mhd_bnd_sphere_descr[] = {
   { "radius"          , VAR(radius)          , PARAM_DOUBLE(1.)          },
 
-  { "min_dr"          , VAR(min_dr)          , MRC_VAR_FLOAT             },
-  { "r1"              , VAR(r1)              , MRC_VAR_FLOAT             },
-  { "r2"              , VAR(r2)              , MRC_VAR_FLOAT             },
+  { "min_dr"          , VAR(map.min_dr)      , MRC_VAR_FLOAT             },
+  { "r1"              , VAR(map.r1)          , MRC_VAR_FLOAT             },
+  { "r2"              , VAR(map.r2)          , MRC_VAR_FLOAT             },
   { "cc_n_map"        , VAR(cc_n_map)        , MRC_VAR_INT               },
 
   { "cc_mhd_imap"     , VAR(cc_mhd_imap)     , MRC_VAR_OBJ(mrc_fld)      },
