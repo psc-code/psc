@@ -33,11 +33,6 @@ struct ggcm_mhd_bnd_sphere {
   // state
   struct ggcm_mhd_bnd_sphere_map map;
 
-  // maps
-  // for managing cell-centered ghost points
-  int cc_n_map;
-  struct mrc_fld *cc_mhd_imap;  // ghost cell # -> (ix,iy,iz,p)
-
   // constant values to set
   double bnvals[FIXED_NR];
 };
@@ -84,7 +79,7 @@ ggcm_mhd_bnd_map_find_cc_n_map(struct ggcm_mhd_bnd *bnd)
       }
     }
   }
-  sub->cc_n_map = cc_n_map;
+  map->cc_n_map = cc_n_map;
 }
 
 // ----------------------------------------------------------------------
@@ -125,10 +120,10 @@ ggcm_mhd_bnd_map_cc(struct ggcm_mhd_bnd *bnd)
 	  double rr = sqrtf(sqr(xx) + sqr(yy) + sqr(zz));
 	  if (rr < r1 || rr > r2) continue;
 	  
-	  MRC_I2(sub->cc_mhd_imap, 0, cc_n_map) = jx;
-	  MRC_I2(sub->cc_mhd_imap, 1, cc_n_map) = jy;
-	  MRC_I2(sub->cc_mhd_imap, 2, cc_n_map) = jz;
-	  MRC_I2(sub->cc_mhd_imap, 3, cc_n_map) = p;
+	  MRC_I2(map->cc_imap, 0, cc_n_map) = jx;
+	  MRC_I2(map->cc_imap, 1, cc_n_map) = jy;
+	  MRC_I2(map->cc_imap, 2, cc_n_map) = jz;
+	  MRC_I2(map->cc_imap, 3, cc_n_map) = p;
 
 	  cc_n_map++;
 	}
@@ -136,7 +131,7 @@ ggcm_mhd_bnd_map_cc(struct ggcm_mhd_bnd *bnd)
     }
   }
 
-  assert(cc_n_map == sub->cc_n_map);
+  assert(cc_n_map == map->cc_n_map);
 }
 
 // ----------------------------------------------------------------------
@@ -146,14 +141,15 @@ static void
 ggcm_mhd_bnd_sphere_setup_flds(struct ggcm_mhd_bnd *bnd)
 {
   struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
+  struct ggcm_mhd_bnd_sphere_map *map = &sub->map;
 
   ggcm_mhd_bnd_map_find_cc_n_map(bnd);
-  mprintf("cc_n_map %d\n", sub->cc_n_map);
+  mprintf("cc_n_map %d\n", map->cc_n_map);
 
   // cell-centered
 
-  mrc_fld_set_type(sub->cc_mhd_imap, "int");
-  mrc_fld_set_param_int_array(sub->cc_mhd_imap, "dims", 2, (int[2]) { 4, sub->cc_n_map });
+  mrc_fld_set_type(map->cc_imap, "int");
+  mrc_fld_set_param_int_array(map->cc_imap, "dims", 2, (int[2]) { 4, map->cc_n_map });
 }
 
 // ----------------------------------------------------------------------
@@ -221,9 +217,10 @@ ggcm_mhd_bnd_sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld_ba
 			      int m, float bntim)
 {
   struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
+  struct ggcm_mhd_bnd_sphere_map *map = &sub->map;
   struct ggcm_mhd *mhd = bnd->mhd;
 
-  if (sub->cc_n_map == 0) {
+  if (map->cc_n_map == 0) {
     return;
   }
 
@@ -234,7 +231,7 @@ ggcm_mhd_bnd_sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld_ba
 
   struct mrc_fld *fld = mrc_fld_get_as(fld_base, FLD_TYPE);
 
-  sphere_fill_ghosts_mhd_do(fld, sub->cc_n_map, sub->cc_mhd_imap,
+  sphere_fill_ghosts_mhd_do(fld, map->cc_n_map, map->cc_imap,
       sub->bnvals, m, bntim, mhd->par.gamm);
 
   mrc_fld_put_as(fld, fld_base);
@@ -250,9 +247,8 @@ static struct param ggcm_mhd_bnd_sphere_descr[] = {
   { "min_dr"          , VAR(map.min_dr)      , MRC_VAR_DOUBLE            },
   { "r1"              , VAR(map.r1)          , MRC_VAR_DOUBLE            },
   { "r2"              , VAR(map.r2)          , MRC_VAR_DOUBLE            },
-  { "cc_n_map"        , VAR(cc_n_map)        , MRC_VAR_INT               },
-
-  { "cc_mhd_imap"     , VAR(cc_mhd_imap)     , MRC_VAR_OBJ(mrc_fld)      },
+  { "cc_n_map"        , VAR(map.cc_n_map)    , MRC_VAR_INT               },
+  { "cc_mhd_imap"     , VAR(map.cc_imap)     , MRC_VAR_OBJ(mrc_fld)      },
 
   { "rr"              , VAR(bnvals[FIXED_RR]), PARAM_DOUBLE(1.) },
   { "pp"              , VAR(bnvals[FIXED_PP]), PARAM_DOUBLE(1.) },

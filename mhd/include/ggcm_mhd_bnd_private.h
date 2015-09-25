@@ -43,6 +43,11 @@ struct ggcm_mhd_bnd_sphere_map {
   double min_dr;
   double r1;
   double r2;
+
+  // maps
+  // for managing cell-centered ghost points
+  int cc_n_map;
+  struct mrc_fld *cc_imap;  // ghost cell # -> (ix,iy,iz,p)
 };
 
 void ggcm_mhd_bnd_sphere_map_setup(struct ggcm_mhd_bnd_sphere_map *map,
