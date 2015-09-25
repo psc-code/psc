@@ -55,14 +55,18 @@ ggcm_mhd_bnd_sphere_setup(struct ggcm_mhd_bnd *bnd)
 }
 
 // ----------------------------------------------------------------------
-// sphere_fill_ghosts_mhd_do
+// sphere_fill_ghosts
 
 static void
-sphere_fill_ghosts_mhd_do(struct mrc_fld *fld,
-			  int cc_n_map, struct mrc_fld *cc_imap,
-			  double bnvals[FIXED_NR], int m, float bntim,
-			  float gamm)
+sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld, int m)
 {
+  struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
+  struct ggcm_mhd_bnd_sphere_map *map = &sub->map;
+  struct ggcm_mhd *mhd = bnd->mhd;
+
+  double gamm = mhd->par.gamm;
+  double *bnvals = sub->bnvals;
+
   double rvx = bnvals[FIXED_RR] * bnvals[FIXED_VX];
   double rvy = bnvals[FIXED_RR] * bnvals[FIXED_VY];
   double rvz = bnvals[FIXED_RR] * bnvals[FIXED_VZ];
@@ -72,11 +76,11 @@ sphere_fill_ghosts_mhd_do(struct mrc_fld *fld,
   double b2bn  = sqr(bnvals[FIXED_BX]) + sqr(bnvals[FIXED_BY]) + sqr(bnvals[FIXED_BZ]);
   double eebn = uubn + .5 * b2bn;
 
-  for (int i = 0; i < cc_n_map; i++) {
-    int ix = MRC_I2(cc_imap, 0, i);
-    int iy = MRC_I2(cc_imap, 1, i);
-    int iz = MRC_I2(cc_imap, 2, i);
-    int p  = MRC_I2(cc_imap, 3, i);
+  for (int i = 0; i < map->cc_n_map; i++) {
+    int ix = MRC_I2(map->cc_imap, 0, i);
+    int iy = MRC_I2(map->cc_imap, 1, i);
+    int iz = MRC_I2(map->cc_imap, 2, i);
+    int p  = MRC_I2(map->cc_imap, 3, i);
 
     M3 (fld, m + RR,  ix,iy,iz, p) = bnvals[FIXED_RR];
     M3 (fld, m + RVX, ix,iy,iz, p) = rvx;
@@ -105,7 +109,6 @@ ggcm_mhd_bnd_sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld_ba
 {
   struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
   struct ggcm_mhd_bnd_sphere_map *map = &sub->map;
-  struct ggcm_mhd *mhd = bnd->mhd;
 
   if (map->cc_n_map == 0) {
     return;
@@ -117,10 +120,7 @@ ggcm_mhd_bnd_sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld_ba
   assert(m == 0 || m == 8);
 
   struct mrc_fld *fld = mrc_fld_get_as(fld_base, FLD_TYPE);
-
-  sphere_fill_ghosts_mhd_do(fld, map->cc_n_map, map->cc_imap,
-      sub->bnvals, m, bntim, mhd->par.gamm);
-
+  sphere_fill_ghosts(bnd, fld, m);
   mrc_fld_put_as(fld, fld_base);
 }
 
