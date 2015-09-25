@@ -108,7 +108,7 @@ ggcm_mhd_bnd_sphere_map_setup(struct ggcm_mhd_bnd_sphere_map *map, struct ggcm_m
 // ----------------------------------------------------------------------
 // ggcm_mhd_bnd_sphere_map_find_cc_n_map
 
-void
+static void
 ggcm_mhd_bnd_sphere_map_find_cc_n_map(struct ggcm_mhd_bnd_sphere_map *map)
 {
   struct ggcm_mhd *mhd = map->mhd;
@@ -144,6 +144,20 @@ ggcm_mhd_bnd_sphere_map_find_cc_n_map(struct ggcm_mhd_bnd_sphere_map *map)
     }
   }
   map->cc_n_map = cc_n_map;
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_bnd_sphere_map_setup_flds
+
+void
+ggcm_mhd_bnd_sphere_map_setup_flds(struct ggcm_mhd_bnd_sphere_map *map)
+{
+  ggcm_mhd_bnd_sphere_map_find_cc_n_map(map);
+
+  // cell-centered
+
+  mrc_fld_set_type(map->cc_imap, "int");
+  mrc_fld_set_param_int_array(map->cc_imap, "dims", 2, (int[2]) { 4, map->cc_n_map });
 }
 
 // ----------------------------------------------------------------------

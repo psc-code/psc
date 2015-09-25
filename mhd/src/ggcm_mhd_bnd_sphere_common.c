@@ -40,24 +40,6 @@ struct ggcm_mhd_bnd_sphere {
 #define ggcm_mhd_bnd_sphere(bnd) mrc_to_subobj(bnd, struct ggcm_mhd_bnd_sphere)
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_bnd_sphere_setup_flds
-
-static void
-ggcm_mhd_bnd_sphere_setup_flds(struct ggcm_mhd_bnd *bnd)
-{
-  struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
-  struct ggcm_mhd_bnd_sphere_map *map = &sub->map;
-
-  ggcm_mhd_bnd_sphere_map_find_cc_n_map(map);
-  mprintf("cc_n_map %d\n", map->cc_n_map);
-
-  // cell-centered
-
-  mrc_fld_set_type(map->cc_imap, "int");
-  mrc_fld_set_param_int_array(map->cc_imap, "dims", 2, (int[2]) { 4, map->cc_n_map });
-}
-
-// ----------------------------------------------------------------------
 // ggcm_mhd_bnd_sphere_setup
 
 static void
@@ -67,7 +49,7 @@ ggcm_mhd_bnd_sphere_setup(struct ggcm_mhd_bnd *bnd)
   struct ggcm_mhd_bnd_sphere_map *map = &sub->map;
 
   ggcm_mhd_bnd_sphere_map_setup(map, bnd->mhd, sub->radius);
-  ggcm_mhd_bnd_sphere_setup_flds(bnd);
+  ggcm_mhd_bnd_sphere_map_setup_flds(map);
   ggcm_mhd_bnd_setup_member_objs_sub(bnd);
   ggcm_mhd_bnd_sphere_map_setup_cc(map);
 }
