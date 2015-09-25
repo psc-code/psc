@@ -33,4 +33,21 @@ extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_sphere_fc_double_aos;
 
 #define ggcm_mhd_bnd_ops(bnd) ((struct ggcm_mhd_bnd_ops *)((bnd)->obj.ops))
 
+// ----------------------------------------------------------------------
+// ggcm_mhd_bnd_sphere_map
+//
+// infrastructure for internal spherical boundaries
+
+struct ggcm_mhd_bnd_sphere_map {
+  struct ggcm_mhd *mhd;
+  double min_dr;
+  double r1;
+  double r2;
+};
+
+void ggcm_mhd_bnd_sphere_map_find_dr(struct ggcm_mhd_bnd_sphere_map *map, double *dr);
+void ggcm_mhd_bnd_sphere_map_find_r1_r2(struct ggcm_mhd_bnd_sphere_map *map,
+					double radius, double *p_r1, double *p_r2);
+
+
 #endif
