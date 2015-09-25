@@ -12,7 +12,7 @@
 //
 // find minimum cell size (over all of the domain -- FIXME?)
 
-void
+static void
 ggcm_mhd_bnd_sphere_map_find_dr(struct ggcm_mhd_bnd_sphere_map *map, double *dr)
 {
   // FIXME, it'd make sense to base this on the ionosphere boundary region
@@ -43,7 +43,7 @@ ggcm_mhd_bnd_sphere_map_find_dr(struct ggcm_mhd_bnd_sphere_map *map, double *dr)
 // +/- 2 grid points around each cell with center outside of r2
 // are outside (ie., their centers) the smaller r1 sphere
 
-void
+static void
 ggcm_mhd_bnd_sphere_map_find_r1_r2(struct ggcm_mhd_bnd_sphere_map *map,
 				   double radius, double *p_r1, double *p_r2)
 {
@@ -93,3 +93,14 @@ ggcm_mhd_bnd_sphere_map_find_r1_r2(struct ggcm_mhd_bnd_sphere_map *map,
   *p_r2 = r2;
 }
 
+// ----------------------------------------------------------------------
+// ggcm_mhd_bnd_sphere_map_setup
+
+void
+ggcm_mhd_bnd_sphere_map_setup(struct ggcm_mhd_bnd_sphere_map *map, struct ggcm_mhd *mhd,
+			      double radius)
+{
+  map->mhd = mhd;
+  ggcm_mhd_bnd_sphere_map_find_dr(map, &map->min_dr);
+  ggcm_mhd_bnd_sphere_map_find_r1_r2(map, radius, &map->r1, &map->r2);
+}

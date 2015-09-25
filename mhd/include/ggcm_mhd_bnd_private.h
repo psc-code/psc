@@ -45,9 +45,8 @@ struct ggcm_mhd_bnd_sphere_map {
   double r2;
 };
 
-void ggcm_mhd_bnd_sphere_map_find_dr(struct ggcm_mhd_bnd_sphere_map *map, double *dr);
-void ggcm_mhd_bnd_sphere_map_find_r1_r2(struct ggcm_mhd_bnd_sphere_map *map,
-					double radius, double *p_r1, double *p_r2);
+void ggcm_mhd_bnd_sphere_map_setup(struct ggcm_mhd_bnd_sphere_map *map,
+				   struct ggcm_mhd *mhd, double radius);
 
 
 #endif

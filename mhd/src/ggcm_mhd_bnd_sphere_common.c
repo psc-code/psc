@@ -165,11 +165,7 @@ ggcm_mhd_bnd_sphere_setup(struct ggcm_mhd_bnd *bnd)
   struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
   struct ggcm_mhd_bnd_sphere_map *map = &sub->map;
 
-  map->mhd = bnd->mhd;
-  ggcm_mhd_bnd_sphere_map_find_dr(map, &map->min_dr);
-  mprintf("min_dr %g\n", map->min_dr);
-  ggcm_mhd_bnd_sphere_map_find_r1_r2(map, sub->radius, &map->r1, &map->r2);
-  mprintf("r1 %g r2 %g\n", map->r1, map->r2);
+  ggcm_mhd_bnd_sphere_map_setup(map, bnd->mhd, sub->radius);
   ggcm_mhd_bnd_sphere_setup_flds(bnd);
   ggcm_mhd_bnd_setup_member_objs_sub(bnd);
   ggcm_mhd_bnd_map_cc(bnd);
