@@ -40,58 +40,6 @@ struct ggcm_mhd_bnd_sphere {
 #define ggcm_mhd_bnd_sphere(bnd) mrc_to_subobj(bnd, struct ggcm_mhd_bnd_sphere)
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_bnd_map_cc
-
-static void
-ggcm_mhd_bnd_map_cc(struct ggcm_mhd_bnd *bnd)
-{
-  struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
-  struct ggcm_mhd_bnd_sphere_map *map = &sub->map;
-
-  struct ggcm_mhd *mhd = bnd->mhd;
-  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-
-  double r1 = map->r1, r2 = map->r2;
-
-  // compute e-field mapping coefficients
-
-  int cc_n_map = 0;
-  for (int p = 0; p < mrc_fld_nr_patches(mhd->fld); p++) {
-    struct mrc_patch_info info;
-    mrc_domain_get_local_patch_info(mhd->domain, p, &info);
-    int gdims[3];
-    mrc_domain_get_global_dims(mhd->domain, gdims);
-    // cell-centered
-    int sw[3] = { 2, 2, 2 };
-    for (int d = 0; d < 3; d++) {
-      if (gdims[d] == 1) {
-	sw[d] = 0;
-      }
-    }
-    for (int jz = -sw[2]; jz < info.ldims[2] + sw[2]; jz++) {
-      for (int jy = -sw[1]; jy < info.ldims[1] + sw[1]; jy++) {
-	for (int jx = -sw[0]; jx < info.ldims[0] + sw[0]; jx++) {
-	  double xx = MRC_MCRDX(crds, jx, p);
-	  double yy = MRC_MCRDY(crds, jy, p);
-	  double zz = MRC_MCRDZ(crds, jz, p);
-	  double rr = sqrtf(sqr(xx) + sqr(yy) + sqr(zz));
-	  if (rr < r1 || rr > r2) continue;
-	  
-	  MRC_I2(map->cc_imap, 0, cc_n_map) = jx;
-	  MRC_I2(map->cc_imap, 1, cc_n_map) = jy;
-	  MRC_I2(map->cc_imap, 2, cc_n_map) = jz;
-	  MRC_I2(map->cc_imap, 3, cc_n_map) = p;
-
-	  cc_n_map++;
-	}
-      }
-    }
-  }
-
-  assert(cc_n_map == map->cc_n_map);
-}
-
-// ----------------------------------------------------------------------
 // ggcm_mhd_bnd_sphere_setup_flds
 
 static void
@@ -121,7 +69,7 @@ ggcm_mhd_bnd_sphere_setup(struct ggcm_mhd_bnd *bnd)
   ggcm_mhd_bnd_sphere_map_setup(map, bnd->mhd, sub->radius);
   ggcm_mhd_bnd_sphere_setup_flds(bnd);
   ggcm_mhd_bnd_setup_member_objs_sub(bnd);
-  ggcm_mhd_bnd_map_cc(bnd);
+  ggcm_mhd_bnd_sphere_map_setup_cc(map);
 }
 
 // ----------------------------------------------------------------------
