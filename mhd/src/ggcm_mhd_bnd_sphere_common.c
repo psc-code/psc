@@ -40,49 +40,6 @@ struct ggcm_mhd_bnd_sphere {
 #define ggcm_mhd_bnd_sphere(bnd) mrc_to_subobj(bnd, struct ggcm_mhd_bnd_sphere)
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_bnd_map_find_cc_n_map
-
-static void
-ggcm_mhd_bnd_map_find_cc_n_map(struct ggcm_mhd_bnd *bnd)
-{
-  struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
-  struct ggcm_mhd_bnd_sphere_map *map = &sub->map;
-  struct ggcm_mhd *mhd = bnd->mhd;
-  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-
-  double r1 = map->r1, r2 = map->r2;
-  assert(r1 > 0.);
-
-  int cc_n_map = 0;
-  for (int p = 0; p < mrc_fld_nr_patches(mhd->fld); p++) {
-    struct mrc_patch_info info;
-    mrc_domain_get_local_patch_info(mhd->domain, p, &info);
-    int gdims[3];
-    mrc_domain_get_global_dims(mhd->domain, gdims);
-    // cell-centered
-    int sw[3] = { 2, 2, 2 };
-    for (int d = 0; d < 3; d++) {
-      if (gdims[d] == 1) {
-	sw[d] = 0;
-      }
-    }
-    for (int jz = -sw[2]; jz < info.ldims[2] + sw[2]; jz++) {
-      for (int jy = -sw[1]; jy < info.ldims[1] + sw[1]; jy++) {
-	for (int jx = -sw[0]; jx < info.ldims[0] + sw[0]; jx++) {
-	  float xx = MRC_MCRDX(crds, jx, p);
-	  float yy = MRC_MCRDY(crds, jy, p);
-	  float zz = MRC_MCRDZ(crds, jz, p);
-	  float rr = sqrtf(sqr(xx) + sqr(yy) + sqr(zz));
-	  if (rr < r1 || rr > r2) continue;
-	  cc_n_map++;
-	}
-      }
-    }
-  }
-  map->cc_n_map = cc_n_map;
-}
-
-// ----------------------------------------------------------------------
 // ggcm_mhd_bnd_map_cc
 
 static void
@@ -143,7 +100,7 @@ ggcm_mhd_bnd_sphere_setup_flds(struct ggcm_mhd_bnd *bnd)
   struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
   struct ggcm_mhd_bnd_sphere_map *map = &sub->map;
 
-  ggcm_mhd_bnd_map_find_cc_n_map(bnd);
+  ggcm_mhd_bnd_sphere_map_find_cc_n_map(map);
   mprintf("cc_n_map %d\n", map->cc_n_map);
 
   // cell-centered
