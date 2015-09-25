@@ -114,6 +114,9 @@ ggcm_mhd_bnd_sphere_map_find_cc_n_map(struct ggcm_mhd_bnd_sphere_map *map)
   struct ggcm_mhd *mhd = map->mhd;
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
 
+  int gdims[3];
+  mrc_domain_get_global_dims(mhd->domain, gdims);
+
   double r1 = map->r1, r2 = map->r2;
   assert(r1 > 0.);
 
@@ -121,8 +124,6 @@ ggcm_mhd_bnd_sphere_map_find_cc_n_map(struct ggcm_mhd_bnd_sphere_map *map)
   for (int p = 0; p < mrc_fld_nr_patches(mhd->fld); p++) {
     struct mrc_patch_info info;
     mrc_domain_get_local_patch_info(mhd->domain, p, &info);
-    int gdims[3];
-    mrc_domain_get_global_dims(mhd->domain, gdims);
     // cell-centered
     int sw[3] = { 2, 2, 2 };
     for (int d = 0; d < 3; d++) {
@@ -222,16 +223,14 @@ ggcm_mhd_bnd_sphere_map_setup_cc(struct ggcm_mhd_bnd_sphere_map *map)
   struct ggcm_mhd *mhd = map->mhd;
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
 
+  int gdims[3];
+  mrc_domain_get_global_dims(mhd->domain, gdims);
+
   double r1 = map->r1, r2 = map->r2;
-
-  // compute e-field mapping coefficients
-
   int cc_n_map = 0;
   for (int p = 0; p < mrc_fld_nr_patches(mhd->fld); p++) {
     struct mrc_patch_info info;
     mrc_domain_get_local_patch_info(mhd->domain, p, &info);
-    int gdims[3];
-    mrc_domain_get_global_dims(mhd->domain, gdims);
     // cell-centered
     int sw[3] = { 2, 2, 2 };
     for (int d = 0; d < 3; d++) {
@@ -262,4 +261,56 @@ ggcm_mhd_bnd_sphere_map_setup_cc(struct ggcm_mhd_bnd_sphere_map *map)
   assert(cc_n_map == map->cc_n_map);
 }
 
+// ----------------------------------------------------------------------
+// ggcm_mhd_bnd_sphere_map_setup_ec
+
+void
+ggcm_mhd_bnd_sphere_map_setup_ec(struct ggcm_mhd_bnd_sphere_map *map)
+{
+  struct ggcm_mhd *mhd = map->mhd;
+
+  int gdims[3];
+  mrc_domain_get_global_dims(mhd->domain, gdims);
+
+  float r1 = map->r1, r2 = map->r2;
+  int ec_n_map[3] = {};
+  for (int p = 0; p < mrc_fld_nr_patches(mhd->fld); p++) {
+    struct mrc_patch_info info;
+    mrc_domain_get_local_patch_info(mhd->domain, p, &info);
+
+    int l[3] = { 2, 2, 2 }, r[3] = { 1, 1, 1 };
+    for (int d = 0; d < 3; d++) {
+      if (gdims[d] == 1) {
+	l[d] = 0;
+	r[d] = 0;
+      }
+    }
+    for (int jz = -l[2]; jz < info.ldims[2] + r[2]; jz++) {
+      for (int jy = -l[1]; jy < info.ldims[1] + r[1]; jy++) {
+	for (int jx = -l[0]; jx < info.ldims[0] + r[0]; jx++) {
+	  for (int d = 0; d < 3; d++) {
+	    // find the correct edge centered coords for the locations of E
+	    float crd_ec[3];
+	    ggcm_mhd_get_crds_ec(mhd, jx,jy,jz, p, d, crd_ec);
+	    float xx = crd_ec[0], yy = crd_ec[1], zz = crd_ec[2];
+	    float rr = sqrtf(sqr(xx) + sqr(yy) + sqr(zz));
+	    if (rr < r1 || rr > r2) continue;
+
+	    MRC_I2(map->ec_imap[d], 0, ec_n_map[d]) = jx;
+	    MRC_I2(map->ec_imap[d], 1, ec_n_map[d]) = jy;
+	    MRC_I2(map->ec_imap[d], 2, ec_n_map[d]) = jz;
+	    MRC_I2(map->ec_imap[d], 3, ec_n_map[d]) = p;
+	    
+	    ec_n_map[d]++;
+	  }
+	  
+	}
+      }
+    }
+  }
+
+  for (int d = 0; d < 3; d++) {
+    assert(map->ec_n_map[d] == ec_n_map[d]);
+  }
+}
 
