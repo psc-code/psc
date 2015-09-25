@@ -221,6 +221,8 @@ ggcm_mhd_fill_ghosts_E(struct ggcm_mhd *mhd, struct mrc_fld *E)
   if (ops->fill_ghosts_E) {
     ops->fill_ghosts_E(mhd, E);
   }
+  ggcm_mhd_bnd_fill_ghosts_E(mhd->bnd, E);
+  ggcm_mhd_bnd_fill_ghosts_E(mhd->bnd1, E);
 }
 
 int

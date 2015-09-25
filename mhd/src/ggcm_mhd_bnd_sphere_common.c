@@ -96,7 +96,6 @@ sphere_fill_ghosts_mhd_do(struct mrc_fld *fld,
   }
 }
 
-
 // ----------------------------------------------------------------------
 // ggcm_mhd_bnd_sphere_fill_ghosts
 
@@ -123,6 +122,47 @@ ggcm_mhd_bnd_sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld_ba
       sub->bnvals, m, bntim, mhd->par.gamm);
 
   mrc_fld_put_as(fld, fld_base);
+}
+
+// ----------------------------------------------------------------------
+// sphere_fill_ghosts_E
+
+static void
+sphere_fill_ghosts_E(struct ggcm_mhd_bnd *bnd, struct mrc_fld *E)
+{
+  struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
+  struct ggcm_mhd_bnd_sphere_map *map = &sub->map;
+
+  for (int d = 0; d < 3; d++) {
+    for (int i = 0; i < map->ec_n_map[d]; i++) {
+      int ix = MRC_I2(map->ec_imap[d], 0, i);
+      int iy = MRC_I2(map->ec_imap[d], 1, i);
+      int iz = MRC_I2(map->ec_imap[d], 2, i);
+      int p  = MRC_I2(map->ec_imap[d], 3, i);
+
+      M3(E, 0, ix,iy,iz, p) = 0.f;
+      M3(E, 1, ix,iy,iz, p) = 0.f;
+      M3(E, 2, ix,iy,iz, p) = 0.f;
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_bnd_sphere_fill_ghosts_E
+
+static void
+ggcm_mhd_bnd_sphere_fill_ghosts_E(struct ggcm_mhd_bnd *bnd, struct mrc_fld *E_base)
+{
+  struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
+  struct ggcm_mhd_bnd_sphere_map *map = &sub->map;
+
+  if (map->ec_n_map[0] + map->ec_n_map[1] + map->ec_n_map[2] == 0) {
+    return;
+  }
+
+  struct mrc_fld *E = mrc_fld_get_as(E_base, FLD_TYPE);
+  sphere_fill_ghosts_E(bnd, E);
+  mrc_fld_put_as(E, E_base);
 }
 
 // ----------------------------------------------------------------------
@@ -166,5 +206,6 @@ struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_sphere = {
   .param_descr      = ggcm_mhd_bnd_sphere_descr,
   .setup            = ggcm_mhd_bnd_sphere_setup,
   .fill_ghosts      = ggcm_mhd_bnd_sphere_fill_ghosts,
+  .fill_ghosts_E    = ggcm_mhd_bnd_sphere_fill_ghosts_E,
 };
 
