@@ -59,8 +59,9 @@ ggcm_mhd_bnd_sphere_setup(struct ggcm_mhd_bnd *bnd)
 
 static void
 sphere_fill_ghosts_mhd_do(struct mrc_fld *fld,
-    int cc_n_map, struct mrc_fld*cc_mhd_imap,
-    double bnvals[FIXED_NR], int m, float bntim, float gamm)
+			  int cc_n_map, struct mrc_fld *cc_imap,
+			  double bnvals[FIXED_NR], int m, float bntim,
+			  float gamm)
 {
   double rvx = bnvals[FIXED_RR] * bnvals[FIXED_VX];
   double rvy = bnvals[FIXED_RR] * bnvals[FIXED_VY];
@@ -72,10 +73,10 @@ sphere_fill_ghosts_mhd_do(struct mrc_fld *fld,
   double eebn = uubn + .5 * b2bn;
 
   for (int i = 0; i < cc_n_map; i++) {
-    int ix = MRC_I2(cc_mhd_imap, 0, i);
-    int iy = MRC_I2(cc_mhd_imap, 1, i);
-    int iz = MRC_I2(cc_mhd_imap, 2, i);
-    int p  = MRC_I2(cc_mhd_imap, 3, i);
+    int ix = MRC_I2(cc_imap, 0, i);
+    int iy = MRC_I2(cc_imap, 1, i);
+    int iz = MRC_I2(cc_imap, 2, i);
+    int p  = MRC_I2(cc_imap, 3, i);
 
     M3 (fld, m + RR,  ix,iy,iz, p) = bnvals[FIXED_RR];
     M3 (fld, m + RVX, ix,iy,iz, p) = rvx;
@@ -135,7 +136,7 @@ static struct param ggcm_mhd_bnd_sphere_descr[] = {
   { "r1"              , VAR(map.r1)          , MRC_VAR_DOUBLE            },
   { "r2"              , VAR(map.r2)          , MRC_VAR_DOUBLE            },
   { "cc_n_map"        , VAR(map.cc_n_map)    , MRC_VAR_INT               },
-  { "cc_mhd_imap"     , VAR(map.cc_imap)     , MRC_VAR_OBJ(mrc_fld)      },
+  { "cc_imap"         , VAR(map.cc_imap)     , MRC_VAR_OBJ(mrc_fld)      },
 
   { "rr"              , VAR(bnvals[FIXED_RR]), PARAM_DOUBLE(1.) },
   { "pp"              , VAR(bnvals[FIXED_PP]), PARAM_DOUBLE(1.) },
