@@ -147,17 +147,70 @@ ggcm_mhd_bnd_sphere_map_find_cc_n_map(struct ggcm_mhd_bnd_sphere_map *map)
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_bnd_sphere_map_find_ec_n_map
+
+static void
+ggcm_mhd_bnd_sphere_map_find_ec_n_map(struct ggcm_mhd_bnd_sphere_map *map)
+{
+  struct ggcm_mhd *mhd = map->mhd;
+
+  int gdims[3];
+  mrc_domain_get_global_dims(mhd->domain, gdims);
+
+  float r1 = map->r1, r2 = map->r2;
+  int ec_n_map[3] = {};
+  for (int p = 0; p < mrc_fld_nr_patches(mhd->fld); p++) {
+    struct mrc_patch_info info;
+    mrc_domain_get_local_patch_info(mhd->domain, p, &info);
+
+    // edge-centered
+    int l[3] = { 2, 2, 2 }, r[3] = { 1, 1, 1 };
+    for (int d = 0; d < 3; d++) {
+      if (gdims[d] == 1) {
+	l[d] = 0;
+	r[d] = 0;
+      }
+    }
+    for (int jz = -l[2]; jz < info.ldims[2] + r[2]; jz++) {
+      for (int jy = -l[1]; jy < info.ldims[1] + r[1]; jy++) {
+	for (int jx = -l[0]; jx < info.ldims[0] + r[0]; jx++) {
+	  for (int d = 0; d < 3; d++) {
+	    // find the correct edge centered coords for the locations of E
+	    float crd_ec[3];
+	    ggcm_mhd_get_crds_ec(mhd, jx,jy,jz, p, d, crd_ec);
+	    float xx = crd_ec[0], yy = crd_ec[1], zz = crd_ec[2];
+	    float rr = sqrtf(sqr(xx) + sqr(yy) + sqr(zz));
+	    if (rr < r1 || rr > r2) continue;
+
+	    ec_n_map[d]++;
+	  }
+	}
+      }
+    }
+  }
+
+  for (int d = 0; d < 3; d++) {
+    map->ec_n_map[d] = ec_n_map[d];
+  }
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_bnd_sphere_map_setup_flds
 
 void
 ggcm_mhd_bnd_sphere_map_setup_flds(struct ggcm_mhd_bnd_sphere_map *map)
 {
-  ggcm_mhd_bnd_sphere_map_find_cc_n_map(map);
-
   // cell-centered
-
+  ggcm_mhd_bnd_sphere_map_find_cc_n_map(map);
   mrc_fld_set_type(map->cc_imap, "int");
   mrc_fld_set_param_int_array(map->cc_imap, "dims", 2, (int[2]) { 4, map->cc_n_map });
+
+  // edge-centered
+  ggcm_mhd_bnd_sphere_map_find_ec_n_map(map);
+  for (int d = 0; d < 3; d++) {
+    mrc_fld_set_type(map->ec_imap[d], "int");
+    mrc_fld_set_param_int_array(map->ec_imap[d], "dims", 2, (int[2]) { 4, map->ec_n_map[d] });
+  }
 }
 
 // ----------------------------------------------------------------------

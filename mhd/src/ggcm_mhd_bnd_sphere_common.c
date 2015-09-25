@@ -137,6 +137,12 @@ static struct param ggcm_mhd_bnd_sphere_descr[] = {
   { "r2"              , VAR(map.r2)          , MRC_VAR_DOUBLE            },
   { "cc_n_map"        , VAR(map.cc_n_map)    , MRC_VAR_INT               },
   { "cc_imap"         , VAR(map.cc_imap)     , MRC_VAR_OBJ(mrc_fld)      },
+  { "ec_n_map[0]"     , VAR(map.ec_n_map[0]) , MRC_VAR_INT               },
+  { "ec_n_map[1]"     , VAR(map.ec_n_map[1]) , MRC_VAR_INT               },
+  { "ec_n_map[2]"     , VAR(map.ec_n_map[2]) , MRC_VAR_INT               },
+  { "ec_imap[0]"      , VAR(map.ec_imap[0])  , MRC_VAR_OBJ(mrc_fld)      },
+  { "ec_imap[1]"      , VAR(map.ec_imap[1])  , MRC_VAR_OBJ(mrc_fld)      },
+  { "ec_imap[2]"      , VAR(map.ec_imap[2])  , MRC_VAR_OBJ(mrc_fld)      },
 
   { "rr"              , VAR(bnvals[FIXED_RR]), PARAM_DOUBLE(1.) },
   { "pp"              , VAR(bnvals[FIXED_PP]), PARAM_DOUBLE(1.) },
