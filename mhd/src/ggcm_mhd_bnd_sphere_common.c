@@ -29,12 +29,10 @@ enum {
 struct ggcm_mhd_bnd_sphere {
   // params
   double radius;
+  double bnvals[FIXED_NR];  // constant values to set
 
   // state
   struct ggcm_mhd_bnd_sphere_map map;
-
-  // constant values to set
-  double bnvals[FIXED_NR];
 };
 
 #define ggcm_mhd_bnd_sphere(bnd) mrc_to_subobj(bnd, struct ggcm_mhd_bnd_sphere)
@@ -52,6 +50,7 @@ ggcm_mhd_bnd_sphere_setup(struct ggcm_mhd_bnd *bnd)
   ggcm_mhd_bnd_sphere_map_setup_flds(map);
   ggcm_mhd_bnd_setup_member_objs_sub(bnd);
   ggcm_mhd_bnd_sphere_map_setup_cc(map);
+  ggcm_mhd_bnd_sphere_map_setup_ec(map);
 }
 
 // ----------------------------------------------------------------------
@@ -94,9 +93,13 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld, int m)
     } else {
       assert(0);
     }
+#if 0
+    // we'd need to have a face-centered map to do this right,
+    // but for now we'll do E field instead, anyway
     M3(fld, m + BX , ix,iy,iz, p) = bnvals[FIXED_BX];
     M3(fld, m + BY , ix,iy,iz, p) = bnvals[FIXED_BY];
     M3(fld, m + BZ , ix,iy,iz, p) = bnvals[FIXED_BZ];
+#endif
   }
 }
 
@@ -140,9 +143,7 @@ sphere_fill_ghosts_E(struct ggcm_mhd_bnd *bnd, struct mrc_fld *E)
       int iz = MRC_I2(map->ec_imap[d], 2, i);
       int p  = MRC_I2(map->ec_imap[d], 3, i);
 
-      M3(E, 0, ix,iy,iz, p) = 0.f;
-      M3(E, 1, ix,iy,iz, p) = 0.f;
-      M3(E, 2, ix,iy,iz, p) = 0.f;
+      M3(E, d, ix,iy,iz, p) = 0.f;
     }
   }
 }
@@ -171,6 +172,14 @@ ggcm_mhd_bnd_sphere_fill_ghosts_E(struct ggcm_mhd_bnd *bnd, struct mrc_fld *E_ba
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_bnd_sphere, x)
 static struct param ggcm_mhd_bnd_sphere_descr[] = {
   { "radius"          , VAR(radius)          , PARAM_DOUBLE(1.)          },
+  { "rr"              , VAR(bnvals[FIXED_RR]), PARAM_DOUBLE(1.)          },
+  { "pp"              , VAR(bnvals[FIXED_PP]), PARAM_DOUBLE(1.)          },
+  { "vx"              , VAR(bnvals[FIXED_VX]), PARAM_DOUBLE(0.)          },
+  { "vy"              , VAR(bnvals[FIXED_VY]), PARAM_DOUBLE(0.)          },
+  { "vz"              , VAR(bnvals[FIXED_VZ]), PARAM_DOUBLE(0.)          },
+  { "bx"              , VAR(bnvals[FIXED_BX]), PARAM_DOUBLE(0.)          },
+  { "by"              , VAR(bnvals[FIXED_BY]), PARAM_DOUBLE(0.)          },
+  { "bz"              , VAR(bnvals[FIXED_BZ]), PARAM_DOUBLE(0.)          },
 
   { "min_dr"          , VAR(map.min_dr)      , MRC_VAR_DOUBLE            },
   { "r1"              , VAR(map.r1)          , MRC_VAR_DOUBLE            },
@@ -183,15 +192,6 @@ static struct param ggcm_mhd_bnd_sphere_descr[] = {
   { "ec_imap[0]"      , VAR(map.ec_imap[0])  , MRC_VAR_OBJ(mrc_fld)      },
   { "ec_imap[1]"      , VAR(map.ec_imap[1])  , MRC_VAR_OBJ(mrc_fld)      },
   { "ec_imap[2]"      , VAR(map.ec_imap[2])  , MRC_VAR_OBJ(mrc_fld)      },
-
-  { "rr"              , VAR(bnvals[FIXED_RR]), PARAM_DOUBLE(1.) },
-  { "pp"              , VAR(bnvals[FIXED_PP]), PARAM_DOUBLE(1.) },
-  { "vx"              , VAR(bnvals[FIXED_VX]), PARAM_DOUBLE(0.) },
-  { "vy"              , VAR(bnvals[FIXED_VY]), PARAM_DOUBLE(0.) },
-  { "vz"              , VAR(bnvals[FIXED_VZ]), PARAM_DOUBLE(0.) },
-  { "bx"              , VAR(bnvals[FIXED_BX]), PARAM_DOUBLE(0.) },
-  { "by"              , VAR(bnvals[FIXED_BY]), PARAM_DOUBLE(0.) },
-  { "bz"              , VAR(bnvals[FIXED_BZ]), PARAM_DOUBLE(0.) },
 
   {},
 };
