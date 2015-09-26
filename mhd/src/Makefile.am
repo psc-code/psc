@@ -71,6 +71,11 @@ libmhd_la_SOURCES = \
 	calc_currcc.c \
 	calc_divb.c \
 	\
+	ggcm_mhd_dipole.c \
+	ggcm_mhd_dipole_none.c \
+	ggcm_mhd_dipole_float.c \
+	ggcm_mhd_dipole_double.c \
+	\
 	ggcm_mhd_ic.c \
 	\
 	ggcm_mhd_step.c \
