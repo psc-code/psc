@@ -116,3 +116,98 @@ struct mrc_class_ggcm_mhd_dipole mrc_class_ggcm_mhd_dipole = {
   .destroy          = _ggcm_mhd_dipole_destroy,
 };
 
+/////////////////////////////////////////////////////////////////////////
+// diag items that go with ggcm_mhd_dipole
+
+#include "ggcm_mhd_diag_private.h"
+#include "ggcm_mhd_diag_item_private.h"
+
+#include <mrc_domain.h>
+#include <mrc_fld_as_float.h>
+
+// ======================================================================
+// ggcm_mhd_diag_item subclass "bdip"
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_diag_item_bdip_run
+
+static void
+ggcm_mhd_diag_item_bdip_run(struct ggcm_mhd_diag_item *item,
+			    struct mrc_io *io, struct mrc_fld *f,
+			    int diag_type, float plane)
+{
+  struct ggcm_mhd *mhd = item->diag->mhd;
+  struct ggcm_mhd_dipole *mhd_dipole = ggcm_mhd_get_var_obj(mhd, "mhd_dipole");
+  struct mrc_fld *bdip = mhd_dipole->bdip;
+
+  ggcm_mhd_diag_c_write_one_field(io, bdip, 0, "bdipx", 1., diag_type, plane);
+  ggcm_mhd_diag_c_write_one_field(io, bdip, 1, "bdipy", 1., diag_type, plane);
+  ggcm_mhd_diag_c_write_one_field(io, bdip, 2, "bdipz", 1., diag_type, plane);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_diag_item subclass "bdip"
+
+struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_bdip = {
+  .name             = "bdip",
+  .run              = ggcm_mhd_diag_item_bdip_run,
+};
+
+// ======================================================================
+// ggcm_mhd_diag_item subclass "bdipcc"
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_diag_item_bdipcc_run
+
+static void
+ggcm_mhd_diag_item_bdipcc_run(struct ggcm_mhd_diag_item *item,
+			      struct mrc_io *io, struct mrc_fld *fld,
+			      int diag_type, float plane)
+{
+  struct ggcm_mhd *mhd = item->diag->mhd;
+  struct ggcm_mhd_dipole *mhd_dipole = ggcm_mhd_get_var_obj(mhd, "mhd_dipole");
+
+  struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, SW_2, "bdipccx:bdipccy:bbdipccz");
+  mrc_fld_set_type(fld_r, FLD_TYPE);
+  mrc_fld_setup(fld_r);
+
+  struct mrc_fld *r = mrc_fld_get_as(fld_r, FLD_TYPE);
+  struct mrc_fld *bdip = mrc_fld_get_as(mhd_dipole->bdip, FLD_TYPE);
+
+  int mhd_type;
+  mrc_fld_get_param_int(mhd->fld, "mhd_type", &mhd_type);
+  if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM) {
+    mrc_fld_foreach(r, ix,iy,iz, 0, 0) {
+      F3(r, 0, ix,iy,iz) = .5f * (F3(bdip, 0, ix,iy,iz) + F3(bdip, 0, ix-1,iy,iz));
+      F3(r, 1, ix,iy,iz) = .5f * (F3(bdip, 1, ix,iy,iz) + F3(bdip, 1, ix,iy-1,iz));
+      F3(r, 2, ix,iy,iz) = .5f * (F3(bdip, 2, ix,iy,iz) + F3(bdip, 2, ix,iy,iz-1));
+    } mrc_fld_foreach_end;
+  } else if (mhd_type == MT_SEMI_CONSERVATIVE ||
+	     mhd_type == MT_FULLY_CONSERVATIVE) {
+    mrc_fld_foreach(r, ix,iy,iz, 0, 0) {
+      F3(r, 0, ix,iy,iz) = .5f * (F3(bdip, 0, ix,iy,iz) + F3(bdip, 0, ix+1,iy,iz));
+      F3(r, 1, ix,iy,iz) = .5f * (F3(bdip, 1, ix,iy,iz) + F3(bdip, 1, ix,iy+1,iz));
+      F3(r, 2, ix,iy,iz) = .5f * (F3(bdip, 2, ix,iy,iz) + F3(bdip, 2, ix,iy,iz+1));
+    } mrc_fld_foreach_end;
+  } else {
+    assert(0);
+  }
+
+  mrc_fld_put_as(r, fld_r);
+  mrc_fld_put_as(bdip, mhd_dipole->bdip);
+
+  ggcm_mhd_diag_c_write_one_field(io, fld_r, 0, "bdipccx", 1., diag_type, plane);
+  ggcm_mhd_diag_c_write_one_field(io, fld_r, 1, "bdipccy", 1., diag_type, plane);
+  ggcm_mhd_diag_c_write_one_field(io, fld_r, 2, "bdipccz", 1., diag_type, plane);
+
+  mrc_fld_destroy(fld_r);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_diag_item subclass "bdipcc"
+
+struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_bdipcc = {
+  .name             = "bdipcc",
+  .run              = ggcm_mhd_diag_item_bdipcc_run,
+};
+
