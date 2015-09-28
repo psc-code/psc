@@ -1152,9 +1152,6 @@ mrc_obj_write(struct mrc_obj *obj, struct mrc_io *io)
 
   mrc_io_write_attr_string(io, path, "mrc_obj_name", obj->name);
   mrc_io_write_attr_string(io, path, "mrc_obj_class", cls->name);
-  if (cls->write) {
-    cls->write(obj, io);
-  }
   if (cls->param_descr) {
     char *p = (char *) obj + cls->param_offset;
     mrc_obj_write_params(obj, p, cls->param_descr, path, io);
@@ -1162,15 +1159,18 @@ mrc_obj_write(struct mrc_obj *obj, struct mrc_io *io)
 
   mrc_obj_write_dict(obj, path, io);
 
-  if (obj->ops) { 
+  if (obj->ops) {
     mrc_io_write_attr_string(io, path, "mrc_obj_type", obj->ops->name);
-    if (obj->ops->write) {
-      obj->ops->write(obj, io);
-    }
     if (obj->ops->param_descr) {
       char *p = (char *) obj->subctx + obj->ops->param_offset;
       mrc_obj_write_params(obj, p, obj->ops->param_descr, path, io);
     }
+  }
+  if (cls->write) {
+    cls->write(obj, io);
+  }
+  if (obj->ops && obj->ops->write) {
+    obj->ops->write(obj, io);
   }
 
   struct mrc_obj *child;
