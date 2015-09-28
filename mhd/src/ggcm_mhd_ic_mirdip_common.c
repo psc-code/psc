@@ -175,9 +175,27 @@ ggcm_mhd_ic_mirdip_run(struct ggcm_mhd_ic *ic)
 // ggcm_mhd_mirdip_ic_init_ymask
 
 static void
-ggcm_mhd_ic_mirdip_init_ymask(struct ggcm_mhd_ic *ic, struct mrc_fld *ymask)
+ggcm_mhd_ic_mirdip_init_ymask(struct ggcm_mhd_ic *ic, struct mrc_fld *ymask_base)
 {
-  ymaskn_c(ic->mhd, ymask);
+  struct ggcm_mhd *mhd = ic->mhd;
+  struct mrc_fld *ymask = mrc_fld_get_as(ymask_base, FLD_TYPE);
+  mrc_fld_data_t isphere2 = sqr(mhd->par.isphere);
+
+  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);  
+
+  for (int p = 0; p < mrc_fld_nr_patches(ymask); p++) {
+    mrc_fld_foreach(ymask, ix,iy,iz, 2, 2) {
+      mrc_fld_data_t val = 1.f;
+      if (sqr(MRC_MCRDX(crds, ix, p)) +
+	  sqr(MRC_MCRDY(crds, iy, p)) +
+	  sqr(MRC_MCRDZ(crds, iz, p)) < isphere2) {
+	val = 0.f;
+      }
+      M3(ymask, 0, ix,iy,iz, p) = val;
+    } mrc_fld_foreach_end;
+  }
+
+  mrc_fld_put_as(ymask, ymask_base);
 }
 
 // ----------------------------------------------------------------------

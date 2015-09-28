@@ -17,4 +17,7 @@ struct ggcm_mhd_ic_ops {
 
 #define ggcm_mhd_ic_ops(ic) ((struct ggcm_mhd_ic_ops *)((ic)->obj.ops))
 
+extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_mirdip_float_ops;
+extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_mirdip_double_ops;
+
 #endif
