@@ -53,6 +53,17 @@ _mrc_domain_write(struct mrc_domain *domain, struct mrc_io *io)
   mrc_io_write_int(io, domain, "mpi_size", domain->size);
 }
 
+int
+mrc_domain_nr_patches(struct mrc_domain *domain)
+{
+  int nr_patches;
+  assert(mrc_domain_is_setup(domain));
+  assert(mrc_domain_ops(domain)->get_patches);
+  mrc_domain_ops(domain)->get_patches(domain, &nr_patches);
+  
+  return nr_patches;
+}
+
 struct mrc_patch *
 mrc_domain_get_patches(struct mrc_domain *domain, int *nr_patches)
 {
@@ -77,6 +88,7 @@ int
 mrc_domain_get_neighbor_rank(struct mrc_domain *domain, int shift[3])
 {
   assert(mrc_domain_is_setup(domain));
+  assert(mrc_domain_ops(domain)->get_neighbor_rank);
   return mrc_domain_ops(domain)->get_neighbor_rank(domain, shift);
 }
 
@@ -100,7 +112,10 @@ void
 mrc_domain_get_bc(struct mrc_domain *domain, int *bc)
 {
   assert(mrc_domain_is_setup(domain));
-  mrc_domain_ops(domain)->get_bc(domain, bc);
+  
+  for (int d = 0; d < 3; d++) {
+    bc[d] = domain->bc[d];
+  }  
 }
 
 void
@@ -252,10 +267,19 @@ mrc_domain_init()
 // ======================================================================
 // mrc_domain class
 
+static struct mrc_param_select bc_descr[] = {
+  { .val = BC_NONE       , .str = "none"     },
+  { .val = BC_PERIODIC   , .str = "periodic" },
+  {},
+};
+
 #define VAR(x) (void *)offsetof(struct mrc_domain, x)
 static struct param mrc_domain_descr[] = {
-  { "crds"           , VAR(crds)          , MRC_VAR_OBJ(mrc_crds)   },
-  { "ddc"            , VAR(ddc)           , MRC_VAR_OBJ(mrc_ddc)    },
+  { "crds"           , VAR(crds)          , MRC_VAR_OBJ(mrc_crds)           },
+  { "ddc"            , VAR(ddc)           , MRC_VAR_OBJ(mrc_ddc)            },
+  { "bcx"            , VAR(bc[0])         , PARAM_SELECT(BC_NONE, bc_descr) },
+  { "bcy"            , VAR(bc[1])         , PARAM_SELECT(BC_NONE, bc_descr) },
+  { "bcz"            , VAR(bc[2])         , PARAM_SELECT(BC_NONE, bc_descr) },
   {},
 };
 #undef VAR
@@ -270,4 +294,3 @@ struct mrc_class_mrc_domain mrc_class_mrc_domain = {
   .read             = _mrc_domain_read,
   .write            = _mrc_domain_write,
 };
-

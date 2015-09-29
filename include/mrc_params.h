@@ -153,4 +153,8 @@ void mrc_params_print(void *p, struct param *params, const char *title,
 		      MPI_Comm comm);
 void mrc_params_print_one(void *p, struct param *prm, MPI_Comm comm);
 
+// FIXME!!!
+// This function should go away and users should convert to proper mrc_params infrastructure
+int parse_float_array(const char *str, float *arr, int n);
+
 #endif

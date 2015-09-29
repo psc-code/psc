@@ -22,6 +22,7 @@ struct mhd_reconstruct_ops {
 
 extern struct mhd_reconstruct_ops mhd_reconstruct_pcm_double_ops;
 extern struct mhd_reconstruct_ops mhd_reconstruct_pcm_float_ops;
-extern struct mhd_reconstruct_ops mhd_reconstruct_plm_ops;
+extern struct mhd_reconstruct_ops mhd_reconstruct_plm_double_ops;
+extern struct mhd_reconstruct_ops mhd_reconstruct_plm_float_ops;
 
 #endif

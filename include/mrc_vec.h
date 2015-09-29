@@ -14,6 +14,9 @@ MRC_CLASS_DECLARE(mrc_vec, struct mrc_vec);
 // instead of allocating memory, use the pointer we provide
 void mrc_vec_set_array(struct mrc_vec *vec, void *arr);
 
+// replace our own allocated memory by the pointer provided (and free our mem)
+void mrc_vec_replace_array(struct mrc_vec *vec, void *arr);
+
 // gets the pointer to the allocated storage in the vector
 void *mrc_vec_get_array(struct mrc_vec *vec);
 
@@ -31,5 +34,8 @@ void mrc_vec_waxpy(struct mrc_vec *w, double alpha, struct mrc_vec *x, struct mr
 // Data management operations
 void mrc_vec_set(struct mrc_vec *x, double alpha);
 void mrc_vec_copy(struct mrc_vec *vec_to, struct mrc_vec *vec_from);
+
+int mrc_vec_len(struct mrc_vec *x);
+int mrc_vec_size_of_type(struct mrc_vec *x);
 
 #endif

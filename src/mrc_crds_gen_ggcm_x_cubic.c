@@ -46,7 +46,7 @@ f_fsm(struct mrc_crds_gen *gen, double x, double fak)
   dx = par->w0;
   dx += par->w1 * fsm3(x, par->a1, par->b1);
   dx += par->w2 * fsm3(x, par->a2, par->b2);
-  return dx;
+  return fak * dx;
 }
 
 static void

@@ -6,7 +6,7 @@
 #include "ggcm_mhd_ic_private.h"
 
 #include <mrc_fld.h>
-#include <mrc_fld_as_float.h>
+#include <mrc_fld_as_double.h>
 #include <mrc_domain.h>
 #include <mrc_crds.h> 
 
@@ -16,18 +16,32 @@
 #include <stdlib.h> 
 #include <assert.h>
 
+// ----------------------------------------------------------------------
+
+static double
+random_double()
+{
+  return (double) random() / RAND_MAX;
+}
+
 // ======================================================================
 // ggcm_mhd_ic subclass "kh"
 
 struct ggcm_mhd_ic_kh {
-  float pert; // initial pertubation amplitude
-  float r0; // initial density 0 
-  float r1; // initial density 1  
-  float v0; // velocity 0 
-  float v1; // velocity 1
-  float B0; // initial B
-  float p0; // initial pressure
-  float lambda; // wave number 
+  int variant; // initial condition variant (1: random perturbation, 3: single mode)
+  double rho0; // initial density 0 
+  double rho1; // initial density 1  
+  double v0; // velocity 0 
+  double v1; // velocity 1
+  double p0; // initial pressure
+  double B0x; // initial Bx
+  double B0y; // initial By
+  double B0z; // initial Bz
+  double B0z_harris; // initial Bz harris
+  double pert; // initial pertubation amplitude
+  double pert_random; // random pertubation amplitude
+  double lambda; // shear layer width
+  double sigma; // width of perturbation
 };
 
 // ----------------------------------------------------------------------
@@ -40,42 +54,61 @@ ggcm_mhd_ic_kh_run(struct ggcm_mhd_ic *ic)
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);  
   struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
   struct ggcm_mhd_ic_kh *sub = mrc_to_subobj(ic, struct ggcm_mhd_ic_kh);
-  // FIXME, the "1" no of ghosts is ugly here, and caused by the use of
-  // the B1* macros which shift the index (due to staggering)...
-  // FIXME, need to set all components, can't rely on things being initialized to
-  // zero because of the -> primitive conversion which divides by RR :(
-  double xl[3], xh[3];
-  float xmid[3], L[3], r[3];
-  mrc_crds_get_param_double3(crds, "l", xl);
-  mrc_crds_get_param_double3(crds, "h", xh);
-  for(int i=0; i<3; i++){
-    L[i] = xh[i] - xl[i];
-    xmid[i] = 0.5 * (xh[i] + xl[i]);
+
+  int rank; MPI_Comm_rank(ggcm_mhd_ic_comm(ic), &rank);
+  srandom(rank);
+
+  if (sub->variant == 0) { // single mode and random perturbation, finite width shear
+    for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
+      mrc_fld_foreach(fld, ix,iy,iz, 1, 1) {
+	double xx = MRC_MCRDX(crds, ix, p);
+	double yy = MRC_MCRDY(crds, iy, p);
+
+	double s = 1. + .5 * (tanh((yy - .25) / sub->lambda) - tanh((yy + .25) / sub->lambda));
+	RR_(fld, ix,iy,iz, p) = sub->rho0 * s + sub->rho1 * (1. - s);
+	// shear flow
+	VX_(fld, ix,iy,iz, p) = sub->v0 * s + sub->v1 * (1. - s);
+	// single mode perturbation
+	VY_(fld, ix,iy,iz, p) = sub->pert * sin(2.*M_PI * xx) * exp(-sqr(yy) / sqr(sub->sigma));
+
+	// random perturbation
+	VX_(fld, ix,iy,iz, p) += sub->pert_random * (random_double() - .5);
+	VY_(fld, ix,iy,iz, p) += sub->pert_random * (random_double() - .5);
+
+	PP_(fld, ix,iy,iz, p) = sub->p0 
+	  + .5 * sqr(sub->B0z_harris) / sqr(cosh((yy - .25) / sub->lambda))
+	  + .5 * sqr(sub->B0z_harris) / sqr(cosh((yy + .25) / sub->lambda));
+	BX_(fld, ix,iy,iz, p) = sub->B0x; 
+	BY_(fld, ix,iy,iz, p) = sub->B0y;
+	BZ_(fld, ix,iy,iz, p) = sub->B0z + sub->B0z_harris * s - sub->B0z_harris * (1. - s);
+      } mrc_fld_foreach_end;
+    }
+ } else if (sub->variant == 1) { // athena: random perturbations
+    for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
+      mrc_fld_foreach(fld, ix,iy,iz, 1, 1) {
+	double yy = MRC_MCRDY(crds, iy, p);
+
+	if (fabs(yy) < .25) {
+	  RR_(fld, ix,iy,iz, p) = sub->rho0;
+	  VX_(fld, ix,iy,iz, p) = sub->v0;
+	} else {
+	  RR_(fld, ix,iy,iz, p) = sub->rho1;
+	  VX_(fld, ix,iy,iz, p) = sub->v1;
+	}
+	// random perturbation
+	VX_(fld, ix,iy,iz, p) += sub->pert_random * (random_double() - .5);
+	VY_(fld, ix,iy,iz, p) += sub->pert_random * (random_double() - .5);
+
+	PP_(fld, ix,iy,iz, p) = sub->p0;
+
+	BX_(fld, ix,iy,iz, p) = sub->B0x; 
+	BY_(fld, ix,iy,iz, p) = sub->B0y;
+	BZ_(fld, ix,iy,iz, p) = sub->B0z;
+      } mrc_fld_foreach_end;
+    }
+  } else {
+    assert(0);
   }
-  //float wave1; 
-
-  //float tmp = sub-> lambda; 
-  mrc_fld_foreach(fld, ix,iy,iz, 1, 1) {
-    r[0] = MRC_CRD(crds, 0, ix); 
-    r[1] = MRC_CRD(crds, 1, iy);
-
-    float wave1 = sin(2.* sub->lambda * M_PI * (r[0] - xmid[0]) / L[0]); 
-
-    if(fabs(r[1]) < 0.25*L[1]){
-      RR(fld, ix,iy,iz) = sub->r0;
-      PP(fld, ix,iy,iz) = sub->p0;
-      VX(fld, ix,iy,iz) = sub->v0;
-      VY(fld, ix,iy,iz) = sub->pert*wave1; 
-    }else{
-      RR(fld, ix,iy,iz) = sub->r1;
-      PP(fld, ix,iy,iz) = sub->p0;
-      VX(fld, ix,iy,iz) = sub->v1;
-      VY(fld, ix,iy,iz) = sub->pert*wave1; 
-    }   
-    BX(fld, ix,iy,iz) = sub->B0; 
-    BY(fld, ix,iy,iz) = 0.0; 
-    VZ(fld, ix,iy,iz) = 0.0;
-  } mrc_fld_foreach_end;
 
   mrc_fld_put_as(fld, mhd->fld);
 
@@ -88,14 +121,21 @@ ggcm_mhd_ic_kh_run(struct ggcm_mhd_ic *ic)
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_ic_kh, x)
 static struct param ggcm_mhd_ic_kh_descr[] = {
-  {"pert", VAR(pert), PARAM_FLOAT(1e-2)},  
-  {"r0", VAR(r0), PARAM_FLOAT(2.0)},
-  {"r1", VAR(r1), PARAM_FLOAT(1.0)},
-  {"v0", VAR(v0), PARAM_FLOAT(0.5)},
-  {"v1", VAR(v1), PARAM_FLOAT(-0.5)},
-  {"B0", VAR(B0), PARAM_FLOAT(0.0)}, 
-  {"p0", VAR(p0), PARAM_FLOAT(2.5)},
-  {"lambda", VAR(lambda), PARAM_FLOAT(1.0)},
+  { "variant"       , VAR(variant)       , PARAM_INT(0)          },
+  { "rho0"          , VAR(rho0)          , PARAM_DOUBLE(2.)      },
+  { "rho1"          , VAR(rho1)          , PARAM_DOUBLE(1.)      },
+  { "v0"            , VAR(v0)            , PARAM_DOUBLE(.5)      },
+  { "v1"            , VAR(v1)            , PARAM_DOUBLE(-.5)     },
+  { "B0x"           , VAR(B0x)           , PARAM_DOUBLE(0.)      },
+  { "B0y"           , VAR(B0y)           , PARAM_DOUBLE(0.)      },
+  { "B0z"           , VAR(B0z)           , PARAM_DOUBLE(0.)      },
+  { "B0z_harris"    , VAR(B0z_harris)    , PARAM_DOUBLE(0.)      },
+  { "p0"            , VAR(p0)            , PARAM_DOUBLE(2.5)     },
+  { "pert"          , VAR(pert)          , PARAM_DOUBLE(1e-2)    },
+  { "pert_random"   , VAR(pert_random)   , PARAM_DOUBLE(0.)      },
+  { "lambda"        , VAR(lambda)        , PARAM_DOUBLE(.05)     },
+  { "sigma"         , VAR(sigma)         , PARAM_DOUBLE(.2)      },
+  // FIXME, should use PARAM_SELECT
   {},
 };
 #undef VAR
@@ -130,6 +170,9 @@ ggcm_mhd_kh_create(struct ggcm_mhd *mhd)
   mrc_crds_set_param_double3(crds, "l", (double[3]) {  0.0, 0.0, 0.0 });
   mrc_crds_set_param_double3(crds, "h", (double[3]) {  1.0, 1.0, 0.1 });
 }
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_kh_ops 
 
 static struct ggcm_mhd_ops ggcm_mhd_kh_ops = {
   .name             = "kh",

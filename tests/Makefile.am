@@ -15,10 +15,12 @@ check_PROGRAMS = \
 	test_mrc_domain_mb \
 	test_mrc_fld \
 	test_mrc_fld_io \
+	test_mrc_fld_view \
 	test_mrc_f3 \
 	test_mrc_m1 \
 	test_mrc_m3 \
 	test_mrc_ddc \
+	test_mrc_mat \
 	test_rlc \
 	test_rmhd \
 	test_kdv \
@@ -36,7 +38,7 @@ tutorial_mrc_obj_SOURCES = tutorial_mrc_obj.c vector.c vector_double.c vector_fl
 LDADD = ../src/libmrctest.la ../src/libmrc.la
 
 TEST_EXTENSIONS = .sh
-SH_LOG_COMPILER = sh
+SH_LOG_COMPILER = bash
 
 TESTS = \
 	test_io_0.sh \

@@ -145,7 +145,7 @@ mrc_domain_simple_get_neighbor_rank_patch(struct mrc_domain *domain, int p, int 
   int proc_nei[3];
   for (int d = 0; d < 3; d++) {
     proc_nei[d] = simple->proc[d] + dir[d];
-    if (simple->bc[d] == BC_PERIODIC) {
+    if (domain->bc[d] == BC_PERIODIC) {
       if (proc_nei[d] < 0) {
 	proc_nei[d] += simple->nr_procs[d];
       }
@@ -194,30 +194,21 @@ mrc_domain_simple_get_nr_procs(struct mrc_domain *domain, int *nr_procs)
 }
 
 static void
-mrc_domain_simple_get_bc(struct mrc_domain *domain, int *bc)
-{
-  struct mrc_domain_simple *simple = mrc_domain_simple(domain);
-
-  for (int d = 0; d < 3; d++) {
-    bc[d] = simple->bc[d];
-  }
-}
-
-static void
-mrc_domain_simple_get_global_patch_info(struct mrc_domain *domain, int patch,
+mrc_domain_simple_get_global_patch_info(struct mrc_domain *domain, int gpatch,
 					struct mrc_patch_info *info)
 {
   struct mrc_domain_simple *simple = mrc_domain_simple(domain);
 
-  mrc_domain_simple_rank2proc(domain, patch, info->idx3);
+  mrc_domain_simple_rank2proc(domain, gpatch, info->idx3);
   for (int d = 0; d < 3; d++) {
     assert(simple->gdims[d] % simple->nr_procs[d] == 0);
     info->ldims[d] = simple->gdims[d] / simple->nr_procs[d];
     info->off[d] = info->idx3[d] * info->ldims[d];
-    info->rank = patch;
-    info->patch = 0;
-    info->global_patch = patch;
   }
+  info->rank = gpatch;
+  info->patch = 0;
+  info->global_patch = gpatch;
+  info->level = 0;
 }
 
 static void
@@ -254,24 +245,12 @@ mrc_domain_simple_create_ddc(struct mrc_domain *domain)
   return ddc;
 }
 
-static struct mrc_param_select bc_descr[] = {
-  { .val = BC_NONE       , .str = "none"     },
-  { .val = BC_PERIODIC   , .str = "periodic" },
-  {},
-};
-
 #define VAR(x) (void *)offsetof(struct mrc_domain_simple, x)
 static struct param mrc_domain_simple_params_descr[] = {
   { "lm"              , VAR(patch.ldims)     , PARAM_INT3(0, 0, 0)    },
   { "m"               , VAR(gdims)           , PARAM_INT3(32, 32, 32),
   .help = "global number of grid points in x, y, z direction" },
   { "np"              , VAR(nr_procs)        , PARAM_INT3(1, 1, 1)    },
-  { "bcx"             , VAR(bc[0])           , PARAM_SELECT(BC_NONE,
-							    bc_descr) },
-  { "bcy"             , VAR(bc[1])           , PARAM_SELECT(BC_NONE,
-							    bc_descr) },
-  { "bcz"             , VAR(bc[2])           , PARAM_SELECT(BC_NONE,
-							    bc_descr) },
   {},
 };
 #undef VAR
@@ -288,7 +267,6 @@ struct mrc_domain_ops mrc_domain_simple_ops = {
   .get_level_idx3_patch_info = mrc_domain_simple_get_level_idx3_patch_info,
   .get_global_dims           = mrc_domain_simple_get_global_dims,
   .get_nr_procs              = mrc_domain_simple_get_nr_procs,
-  .get_bc                    = mrc_domain_simple_get_bc,
   .get_local_patch_info      = mrc_domain_simple_get_local_patch_info,
   .get_global_patch_info     = mrc_domain_simple_get_global_patch_info,
   .get_nr_global_patches     = mrc_domain_simple_get_nr_global_patches,

@@ -26,6 +26,7 @@ struct xdmf_spatial {
   struct mrc_patch_info *patch_infos;
   float *xl[3];
   float *dx[3];
+  int sw;
   const char *crd_nc_path[3];
 
   int nr_fld_info;
@@ -61,7 +62,7 @@ struct xdmf_spatial *xdmf_spatial_create_f1(list_t *xdmf_spatial_list,
 struct xdmf_spatial *xdmf_spatial_create_m3(list_t *xdmf_spatial_list,
 					    const char *name, 
 					    struct mrc_domain *domain,
-					    struct mrc_io *io);
+					    struct mrc_io *io, int sw);
 struct xdmf_spatial *xdmf_spatial_create_m3_parallel(list_t *xdmf_spatial_list,
 						     const char *name, 
 						     struct mrc_domain *domain,

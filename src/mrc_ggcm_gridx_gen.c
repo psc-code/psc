@@ -78,6 +78,16 @@ generate_ggcm_x_grid(struct mrc_crds_gen *gen, double *xx, double *dx,
   }
   //  printf("gridx: fak=%g xn1=%g xn=%g\n", fak, xn1, gen->xh);
 
+  double length, target_length;
+  length = xn1 - gen->xl;
+  target_length = gen->xh - gen->xl;
+  if (fabs(length - target_length) / target_length > 0.01) {
+    mpi_printf(MPI_COMM_WORLD,
+               "Error: grid did not converge to within 1%% of target length!\n");
+    mpi_printf(MPI_COMM_WORLD, "(length = %g, target = %g)\n", length, target_length);
+    assert(0);
+  }
+
   int step_out = gen->n / 20;
   if (step_out > 20) step_out = 20;
 

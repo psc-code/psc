@@ -41,7 +41,7 @@ void mrc_ddc_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx);
 void mrc_ddc_amr_add_value(struct mrc_ddc *ddc,
 			   int row_patch, int rowm, int row[3],
 			   int col_patch, int colm, int col[3],
-			   float val);
+			   double val);
 void mrc_ddc_amr_assemble(struct mrc_ddc *ddc);
 void mrc_ddc_amr_apply(struct mrc_ddc *ddc, struct mrc_m3 *fld);
 
@@ -57,7 +57,8 @@ struct mrc_ddc_amr_stencil {
   int nr_entries;
 };
   
-bool mrc_domain_is_ghost(struct mrc_domain *domain, int ext[3], int p, int i[3]);
+bool mrc_domain_is_local_ghost(struct mrc_domain *domain, int ext[3], int lp, int i[3]);
+bool mrc_domain_is_ghost(struct mrc_domain *domain, int ext[3], int pp, int i[3]);
 void mrc_ddc_amr_set_by_stencil(struct mrc_ddc *ddc, int m, int bnd, int ext[3],
 				struct mrc_ddc_amr_stencil *stencil_coarse,
 				struct mrc_ddc_amr_stencil *stencil_fine);

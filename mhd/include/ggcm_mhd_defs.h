@@ -7,68 +7,6 @@
 
 #define BND (2)
 
-// ----------------------------------------------------------------------
-// fields
-// FIXME, these are dependent on what openggcm does
-// indices based on mhd-corea.for
-
-enum {
-  _RR1,
-  _RV1X,
-  _RV1Y,
-  _RV1Z,
-  _UU1,
-  _B1X,
-  _B1Y,
-  _B1Z,
-
-  _RR2,
-  _RV2X,
-  _RV2Y,
-  _RV2Z,
-  _UU2,
-  _B2X,
-  _B2Y,
-  _B2Z,
-
-  _YMASK, // 16
-  _ZMASK,
-  _CMSV,
-  
-  _RR, // 19
-  _PP,
-  _VX,
-  _VY,
-  _VZ,
-  _BX,
-  _BY,
-  _BZ,
-
-  _TMP1, // 27
-  _TMP2,
-  _TMP3,
-  _TMP4,
-
-  _FLX, // 31
-  _FLY,
-  _FLZ,
-
-  _CX, // 34
-  _CY,
-  _CZ,
-  _XTRA1, // 37
-  _XTRA2,
-  _RESIS,
-  _CURRX, // 40
-  _CURRY,
-  _CURRZ,
-  _RMASK,
-  _BDIPX,
-  _BDIPY, 
-  _BDIPZ,
-  _NR_FLDS,
-};
-
 // for the state vector
 
 enum {
@@ -96,7 +34,7 @@ enum {
 // ----------------------------------------------------------------------
 // macros to ease field access
 
-#define B1XYZ(f,m, ix,iy,iz) F3(f, _B1X+(m), ix,iy,iz)
+#define BXYZ(f,m, ix,iy,iz) F3(f, BX+(m), ix,iy,iz)
 
 #define RR(U, i,j,k)   F3(U, RR , i,j,k)
 #define RVX(U, i,j,k)  F3(U, RVX, i,j,k)
@@ -108,10 +46,25 @@ enum {
 #define BZ(U, i,j,k)   F3(U, BZ , i,j,k)
 #define UU(U, i,j,k)   F3(U, UU , i,j,k)
 
-#define VX(f, ix,iy,iz) F3(f, VX, ix,iy,iz)
-#define VY(f, ix,iy,iz) F3(f, VY, ix,iy,iz)
-#define VZ(f, ix,iy,iz) F3(f, VZ, ix,iy,iz)
-#define PP(f, ix,iy,iz) F3(f, PP, ix,iy,iz)
+#define VX(f, i,j,k)   F3(f, VX, i,j,k)
+#define VY(f, i,j,k)   F3(f, VY, i,j,k)
+#define VZ(f, i,j,k)   F3(f, VZ, i,j,k)
+#define PP(f, i,j,k)   F3(f, PP, i,j,k)
+
+#define RR_(U, i,j,k, p)   M3(U, RR , i,j,k, p)
+#define RVX_(U, i,j,k, p)  M3(U, RVX, i,j,k, p)
+#define RVY_(U, i,j,k, p)  M3(U, RVY, i,j,k, p)
+#define RVZ_(U, i,j,k, p)  M3(U, RVZ, i,j,k, p)
+#define EE_(U, i,j,k, p)   M3(U, EE , i,j,k, p)
+#define BX_(U, i,j,k, p)   M3(U, BX , i,j,k, p)
+#define BY_(U, i,j,k, p)   M3(U, BY , i,j,k, p)
+#define BZ_(U, i,j,k, p)   M3(U, BZ , i,j,k, p)
+#define UU_(U, i,j,k, p)   M3(U, UU , i,j,k, p)
+
+#define VX_(f, i,j,k, p)   M3(f, VX , i,j,k, p)
+#define VY_(f, i,j,k, p)   M3(f, VY , i,j,k, p)
+#define VZ_(f, i,j,k, p)   M3(f, VZ , i,j,k, p)
+#define PP_(f, i,j,k, p)   M3(f, PP , i,j,k, p)
 
 // ----------------------------------------------------------------------
 // coordinates

@@ -265,6 +265,7 @@ mrc_io_write_field2d(struct mrc_io *io, float scale, struct mrc_fld *fld,
 {
   struct mrc_io_ops *ops = mrc_io_ops(io);
   assert(mrc_fld_comp_name(fld, 0));
+  assert(ops->write_field2d);
   ops->write_field2d(io, scale, fld, outtype, sheet);
 }
 

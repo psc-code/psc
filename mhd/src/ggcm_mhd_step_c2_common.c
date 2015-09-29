@@ -2,12 +2,15 @@
 #include "ggcm_mhd_step_private.h"
 #include "ggcm_mhd_private.h"
 #include "ggcm_mhd_defs.h"
+#include "ggcm_mhd_defs_extra.h"
 #include "ggcm_mhd_crds.h"
+#include "ggcm_mhd_diag_private.h"
 
 #include <mrc_domain.h>
 #include <mrc_profile.h>
 
 #include <math.h>
+#include <string.h>
 
 #include "mhd_sc.c"
 
@@ -308,7 +311,7 @@ pushfv_c(struct ggcm_mhd *mhd, int m, mrc_fld_data_t dt, int m_prev, int m_curr,
   if (limit == LIMIT_NONE) {
     fluxl_c(mhd, m_curr + m);
   } else {
-    vgrv(f, _CX, _BX); vgrv(f, _CY, _BY); vgrv(f, _CY, _BY);
+    vgrv(f, _CX, _BX); vgrv(f, _CY, _BY); vgrv(f, _CZ, _BZ);
     limit1_c(f, m_curr + m, mhd->time, mhd->par.timelo, _CX);
     fluxb_c(mhd, m_curr + m);
   }
@@ -590,7 +593,7 @@ bcthy3z_NL1(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int IZ
   }
 
   // edge centered E = - v x B (+ dissipation)
-  mrc_fld_foreach(f, ix,iy,iz, 1, 0) {
+  mrc_fld_foreach(f, ix,iy,iz, 0, 1) {
     mrc_fld_data_t ttmp[2];
     calc_v_x_B(ttmp, f, m_curr, ix, iy, iz, XX, YY, ZZ, IX, IY, IZ,
 	       JX1, JY1, JZ1, JX2, JY2, JZ2, bd2x, bd2y, bd2z, dt);
@@ -725,19 +728,35 @@ pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_prev, int m_curr, int
 }
 
 // ======================================================================
-// ggcm_mhd_step subclass "c"
+// ggcm_mhd_step subclass "c2"
 //
 // this class will do full predictor / corrector steps,
 // ie., including primvar() etc.
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_step_c_pred
+// ggcm_mhd_step_c2_newstep
 
 static void
-ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step)
+ggcm_mhd_step_c2_newstep(struct ggcm_mhd_step *step, float *dtn)
 {
-  primvar_c(step->mhd, _RR1);
-  zmaskn(step->mhd, step->mhd->fld);
+  struct ggcm_mhd *mhd = step->mhd;
+
+  ggcm_mhd_fill_ghosts(mhd, mhd->fld, _RR1, mhd->time);
+  zmaskn(mhd, mhd->fld, _ZMASK, mhd->fld, _YMASK, mhd->fld);
+  // assert(strcmp(mrc_fld_type(mhd->fld), "float") == 0);
+  *dtn = newstep_sc(mhd, mhd->fld, mhd->fld, _ZMASK);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_step_c2_pred
+
+static void
+ggcm_mhd_step_c2_pred(struct ggcm_mhd_step *step)
+{
+  struct ggcm_mhd *mhd = step->mhd;
+
+  primvar_c(mhd, _RR1);
+  zmaskn(mhd, mhd->fld, _ZMASK, mhd->fld, _YMASK, mhd->fld);
 
   mrc_fld_data_t dth = .5f * step->mhd->dt;
   static int PR;
@@ -750,12 +769,112 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step)
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_step_c_corr
+// ggcm_mhd_step_c2_corr
 
 static void
-ggcm_mhd_step_c_corr(struct ggcm_mhd_step *step)
+ggcm_mhd_step_c2_corr(struct ggcm_mhd_step *step)
 {
   primvar_c(step->mhd, _RR2);
+  static int PR;
+  if (!PR) {
+    PR = prof_register("corr_c", 1., 0, 0);
+  }
+  prof_start(PR);
   pushstage_c(step->mhd, step->mhd->dt, _RR1, _RR2, _RR1, LIMIT_1);
+  prof_stop(PR);
+  
+  // --- check for NaNs and small density
+  // (still controlled by do_badval_checks)
+  badval_checks_sc(step->mhd, step->mhd->fld, step->mhd->fld);
 }
 
+// ----------------------------------------------------------------------
+// ggcm_mhd_step_c2_setup
+
+static void
+ggcm_mhd_step_c2_setup(struct ggcm_mhd_step *step)
+{
+  step->mhd->ymask = mrc_fld_make_view(step->mhd->fld, _YMASK, _YMASK + 1);
+
+  ggcm_mhd_step_setup_member_objs_sub(step);
+  ggcm_mhd_step_setup_super(step);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_step_c2_setup_flds
+
+static void
+ggcm_mhd_step_c2_setup_flds(struct ggcm_mhd_step *step)
+{
+  struct ggcm_mhd *mhd = step->mhd;
+
+  mrc_fld_set_type(mhd->fld, FLD_TYPE);
+  mrc_fld_set_param_int(mhd->fld, "nr_ghosts", 2);
+  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_SEMI_CONSERVATIVE);
+  mrc_fld_set_param_int(mhd->fld, "nr_comps", _NR_FLDS);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_step_c2_get_e_ec
+
+static void
+ggcm_mhd_step_c2_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
+                          struct mrc_fld *state_vec)
+{
+  // the state vector should already be FLD_TYPE, but Eout is the data type
+  // of the output
+  struct mrc_fld *E = mrc_fld_get_as(Eout, FLD_TYPE);
+  struct mrc_fld *x = mrc_fld_get_as(state_vec, FLD_TYPE);
+
+  mrc_fld_foreach(x, ix, iy, iz, 0, 1) {
+    F3(E, 0, ix, iy, iz) = F3(x, _FLX, ix, iy, iz);
+    F3(E, 1, ix, iy, iz) = F3(x, _FLY, ix, iy, iz);
+    F3(E, 2, ix, iy, iz) = F3(x, _FLZ, ix, iy, iz);
+  } mrc_fld_foreach_end;
+
+  mrc_fld_put_as(E, Eout);
+  // FIXME, should use _put_as, but don't want copy-back
+  if (strcmp(mrc_fld_type(state_vec), FLD_TYPE) != 0) {
+    mrc_fld_destroy(x);
+  }
+} 
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_step_c2_diag_item_zmask_run
+
+static void
+ggcm_mhd_step_c2_diag_item_zmask_run(struct ggcm_mhd_step *step,
+				    struct ggcm_mhd_diag_item *item,
+				    struct mrc_io *io, struct mrc_fld *f,
+				    int diag_type, float plane)
+{
+  ggcm_mhd_diag_c_write_one_field(io, f, _ZMASK, "zmask", 1., diag_type, plane);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_step_c2_diag_item_rmask_run
+
+static void
+ggcm_mhd_step_c2_diag_item_rmask_run(struct ggcm_mhd_step *step,
+				    struct ggcm_mhd_diag_item *item,
+				    struct mrc_io *io, struct mrc_fld *f,
+				    int diag_type, float plane)
+{
+  ggcm_mhd_diag_c_write_one_field(io, f, _RMASK, "rmask", 1., diag_type, plane);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_step subclass "c2_*"
+
+struct ggcm_mhd_step_ops ggcm_mhd_step_c2_ops = {
+  .name                = ggcm_mhd_step_c2_name,
+  .newstep             = ggcm_mhd_step_c2_newstep,
+  .pred                = ggcm_mhd_step_c2_pred,
+  .corr                = ggcm_mhd_step_c2_corr,
+  .run                 = ggcm_mhd_step_run_predcorr,
+  .setup               = ggcm_mhd_step_c2_setup,
+  .setup_flds          = ggcm_mhd_step_c2_setup_flds,
+  .get_e_ec            = ggcm_mhd_step_c2_get_e_ec,
+  .diag_item_zmask_run = ggcm_mhd_step_c2_diag_item_zmask_run,
+  .diag_item_rmask_run = ggcm_mhd_step_c2_diag_item_rmask_run,
+};

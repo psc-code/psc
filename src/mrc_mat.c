@@ -1,5 +1,130 @@
 
-#include <mrc_mat.h>
+#include <mrc_mat_private.h>
+
+#include <stdlib.h>
+
+#define mrc_mat_ops(mat) ((struct mrc_mat_ops *) mat->obj.ops)
+
+// ----------------------------------------------------------------------
+// mrc_mat_add_value
+
+void
+mrc_mat_add_value(struct mrc_mat *mat, int row_idx, int col_idx, double val)
+{
+  struct mrc_mat_ops *ops = mrc_mat_ops(mat);
+  assert(ops->add_value);
+  ops->add_value(mat, row_idx, col_idx, val);
+}
+
+// ----------------------------------------------------------------------
+// mrc_mat_assemble
+
+void
+mrc_mat_assemble(struct mrc_mat *mat)
+{
+  struct mrc_mat_ops *ops = mrc_mat_ops(mat);
+  assert(ops->assemble);
+  ops->assemble(mat);
+}
+
+// ----------------------------------------------------------------------
+// mrc_mat_apply
+
+void
+mrc_mat_apply(struct mrc_vec *y, struct mrc_mat *mat, struct mrc_vec *x)
+{
+  struct mrc_mat_ops *ops = mrc_mat_ops(mat);
+  assert(ops->apply);
+  ops->apply(y, mat, x);
+}
+
+// ----------------------------------------------------------------------
+// mrc_mat_apply_add
+
+void
+mrc_mat_apply_add(struct mrc_vec *y, struct mrc_mat *mat, struct mrc_vec *x)
+{
+  struct mrc_mat_ops *ops = mrc_mat_ops(mat);
+  assert(ops->apply_add);
+  ops->apply_add(y, mat, x);
+}
+
+// ----------------------------------------------------------------------
+// mrc_mat_apply_in_place
+
+void
+mrc_mat_apply_in_place(struct mrc_mat *mat, struct mrc_vec *x)
+{
+  struct mrc_mat_ops *ops = mrc_mat_ops(mat);
+  assert(ops->apply_in_place);
+  ops->apply_in_place(mat, x);
+}
+
+// ----------------------------------------------------------------------
+// mrc_mat_apply_general
+
+void mrc_mat_apply_general(struct mrc_vec *z, double alpha,
+			   struct mrc_mat *mat, struct mrc_vec *x,
+			   double beta, struct mrc_vec *y)
+{
+  struct mrc_mat_ops *ops = mrc_mat_ops(mat);
+  assert(ops->apply_general);
+  ops->apply_general(z, alpha, mat, x, beta, y);
+}
+
+// ----------------------------------------------------------------------
+// mrc_mat_print
+
+void
+mrc_mat_print(struct mrc_mat *mat)
+{
+  struct mrc_mat_ops *ops = mrc_mat_ops(mat);
+  assert(ops->print);
+  ops->print(mat);
+}
+
+// ----------------------------------------------------------------------
+// mrc_mat_init
+
+static void
+mrc_mat_init()
+{
+  mrc_class_register_subclass(&mrc_class_mrc_mat, &mrc_mat_csr_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_mat, &mrc_mat_csr_mpi_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_mat, &mrc_mat_mcsr_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_mat, &mrc_mat_mcsr_mpi_ops);
+#ifdef HAVE_PETSC
+  mrc_class_register_subclass(&mrc_class_mrc_mat, &mrc_mat_petsc_ops);
+#endif
+}
+
+// ----------------------------------------------------------------------
+// mrc_mat description
+
+#define VAR(x) (void *)offsetof(struct mrc_mat, x)
+static struct param mrc_mat_descr[] = {
+  { "m"                 , VAR(m)                 , PARAM_INT(0) },
+  { "n"                 , VAR(n)                 , PARAM_INT(0) },
+  {},
+};
+#undef VAR
+
+// ----------------------------------------------------------------------
+// mrc_mat class
+
+struct mrc_class_mrc_mat mrc_class_mrc_mat = {
+  .name         = "mrc_mat",
+  .size         = sizeof(struct mrc_mat),
+  .param_descr  = mrc_mat_descr,
+  .init         = mrc_mat_init,
+};
+
+
+// ======================================================================
+// petsc-specific function that should be revisited eventually FIXME
+
+#ifdef HAVE_PETSC
+
 #define CE assert(ierr == 0)
 
 int
@@ -72,3 +197,5 @@ __MatInsertValue(Mat M, int im, int in, PetscScalar v,
 {
   return __MatSetValue(M, im, in, v, INSERT_VALUES, ctx);  
 }
+
+#endif

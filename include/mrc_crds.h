@@ -23,12 +23,12 @@ struct mrc_crds {
   struct mrc_crds_gen *crds_gen[3];
 };
 
-#define MRC_CRD(crds, d, ix) MRC_F1((crds)->crd[d],0, ix)
+#define MRC_CRD(crds, d, ix) MRC_S2((crds)->crd[d], ix, 0)
 #define MRC_CRDX(crds, ix) MRC_CRD(crds, 0, ix)
 #define MRC_CRDY(crds, iy) MRC_CRD(crds, 1, iy)
 #define MRC_CRDZ(crds, iz) MRC_CRD(crds, 2, iz)
 
-#define MRC_DCRD(crds, d, ix) MRC_D2((crds)->dcrd[d], ix, d)
+#define MRC_DCRD(crds, d, ix) MRC_D2((crds)->dcrd[d], ix, 0)
 #define MRC_DCRDX(crds, ix) MRC_DCRD(crds, 0, ix)
 #define MRC_DCRDY(crds, iy) MRC_DCRD(crds, 1, iy)
 #define MRC_DCRDZ(crds, iz) MRC_DCRD(crds, 2, iz)
@@ -47,7 +47,8 @@ struct mrc_crds {
 
 MRC_CLASS_DECLARE(mrc_crds, struct mrc_crds);
 
-void mrc_crds_get_dx(struct mrc_crds *crds, double dx[3]);
+void mrc_crds_get_dx_base(struct mrc_crds *crds, double dx[3]);
+void mrc_crds_get_dx(struct mrc_crds *crds, int p, double dx[3]);
 
 struct mrc_crds_ops {
   MRC_SUBCLASS_OPS(struct mrc_crds);

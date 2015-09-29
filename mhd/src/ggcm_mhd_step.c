@@ -2,13 +2,17 @@
 #include "ggcm_mhd_step_private.h"
 
 #include "ggcm_mhd_defs.h"
+#include "ggcm_mhd_defs_extra.h"
 #include "ggcm_mhd_private.h"
+#include "ggcm_mhd_diag_private.h"
+#include "ggcm_mhd_diag_item_private.h"
 
 #include <mrc_io.h>
 #include <mrc_profile.h>
 #include <mrc_bits.h>
 #include <math.h>
 #include <assert.h>
+#include <mpi.h>
 
 // ======================================================================
 // ggcm_mhd_step class
@@ -26,14 +30,52 @@ ggcm_mhd_step_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_step_get_e_ec
+
+void
+ggcm_mhd_step_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *E,
+                        struct mrc_fld *x)
+{
+  struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
+  assert(ops && ops->get_e_ec);
+  ops->get_e_ec(step, E, x);
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_step_run
 
 void
 ggcm_mhd_step_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 {
   struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
+  static int pr;
+  if (!pr) {
+    pr = prof_register("ggcm_mhd_step_run", 0, 0, 0.);
+  }
+
+  prof_start(pr);
   assert(ops && ops->run);
   ops->run(step, x);
+  prof_stop(pr);
+
+  if (step->debug_dump) {
+    struct ggcm_mhd *mhd = step->mhd;
+    static struct ggcm_mhd_diag *diag;
+    static int cnt;
+    if (!diag) {
+      diag = ggcm_mhd_diag_create(ggcm_mhd_comm(mhd));
+      ggcm_mhd_diag_set_type(diag, "c");
+      ggcm_mhd_diag_set_name(diag, "ggcm_mhd_debug");
+      ggcm_mhd_diag_set_param_obj(diag, "mhd", mhd);
+      ggcm_mhd_diag_set_param_string(diag, "fields", "rr1:rv1:uu1:b1:rr:v:pp:b:divb");
+      ggcm_mhd_diag_set_from_options(diag);
+      ggcm_mhd_diag_set_param_string(diag, "run", "dbg");
+      ggcm_mhd_diag_setup(diag);
+      ggcm_mhd_diag_view(diag);
+    }
+    ggcm_mhd_fill_ghosts(mhd, mhd->fld, 0, mhd->time);
+    ggcm_mhd_diag_run_now(diag, mhd->fld, DIAG_TYPE_3D, cnt++);
+  }
 
   // FIXME, this should be done by mrc_ts
   struct ggcm_mhd *mhd = step->mhd;
@@ -63,7 +105,10 @@ ggcm_mhd_step_run_predcorr(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
   float dtn;
   if (step->do_nwst) {
-    newstep(mhd, &dtn);
+    assert(ops && ops->newstep);
+    ops->newstep(step, &dtn);
+    // yes, dtn isn't set to mhd->dt until the end of the step... this
+    // is what the fortran code did
   }
 
   ggcm_mhd_fill_ghosts(mhd, x, _RR1, mhd->time);
@@ -75,11 +120,25 @@ ggcm_mhd_step_run_predcorr(struct ggcm_mhd_step *step, struct mrc_fld *x)
   ops->corr(step);
 
   if (step->do_nwst) {
-    dtn = fminf(1., dtn); // FIXME, only kept for compatibility
+    if (step->legacy_dt_handling) {
+      dtn = fminf(1., dtn); // FIXME, only kept for compatibility
+    }
 
     if (dtn > 1.02 * mhd->dt || dtn < mhd->dt / 1.01) {
-      mpi_printf(ggcm_mhd_comm(mhd), "switched dt %g <- %g\n",
-		 dtn, mhd->dt);
+      mpi_printf(ggcm_mhd_comm(mhd), "switched dt %g <- %g\n", dtn, mhd->dt);
+      
+      // FIXME: determining when to die on a bad dt should be generalized, since
+      //        there's another hiccup if refining dt for actual AMR      
+      bool first_step = mhd->istep <= 1;
+      bool last_step = mhd->time + dtn > (1.0 - 1e-5) * mhd->max_time;
+
+      if (!first_step && !last_step &&
+          (dtn < 0.5 * mhd->dt || dtn > 2.0 * mhd->dt)) {            
+        mpi_printf(ggcm_mhd_comm(mhd), "!!! dt changed by > a factor of 2. "
+                   "Dying now!\n");
+        ggcm_mhd_wrongful_death(mhd, 2);
+      }
+      
       mhd->dt = dtn;
     }
   }
@@ -88,65 +147,25 @@ ggcm_mhd_step_run_predcorr(struct ggcm_mhd_step *step, struct mrc_fld *x)
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_step_mhd_type
+// ggcm_mhd_step_has_calc_rhs
 
-int
-ggcm_mhd_step_mhd_type(struct ggcm_mhd_step *step)
+bool
+ggcm_mhd_step_has_calc_rhs(struct ggcm_mhd_step *step)
 {
   struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
-  return ops->mhd_type;
+  assert(ops);
+  return ops->calc_rhs;
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_step_fld_type
-
-const char *
-ggcm_mhd_step_fld_type(struct ggcm_mhd_step *step)
-{
-  struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
-  return ops->fld_type;
-}
-
-// ----------------------------------------------------------------------
-// ggcm_mhd_step_nr_ghosts
-
-int
-ggcm_mhd_step_nr_ghosts(struct ggcm_mhd_step *step)
-{
-  struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
-  assert(ops->nr_ghosts > 0);
-  return ops->nr_ghosts;
-}
-
-// ----------------------------------------------------------------------
-// ggcm_mhd_step_get_3d_fld
-//
-// FIXME, this should cache the fields, rather than creating/destroying
-// all the time
-
-struct mrc_fld *
-ggcm_mhd_step_get_3d_fld(struct ggcm_mhd_step *step, int nr_comps)
-{
-  struct mrc_fld *fld = step->mhd->fld;
-
-  struct mrc_fld *f = mrc_fld_create(ggcm_mhd_step_comm(step));
-  mrc_fld_set_type(f , mrc_fld_type(fld));
-  mrc_fld_set_param_obj(f, "domain", fld->_domain);
-  mrc_fld_set_param_int(f, "nr_spatial_dims", 3);
-  mrc_fld_set_param_int(f, "nr_comps", nr_comps);
-  mrc_fld_set_param_int(f, "nr_ghosts", fld->_nr_ghosts);
-  mrc_fld_setup(f);
-
-  return f;
-}
-
-// ----------------------------------------------------------------------
-// ggcm_mhd_step_put_3d_fld
+// ggcm_mhd_step_setup_flds
 
 void
-ggcm_mhd_step_put_3d_fld(struct ggcm_mhd_step *step, struct mrc_fld *f)
+ggcm_mhd_step_setup_flds(struct ggcm_mhd_step *step)
 {
-  mrc_fld_destroy(f);
+  struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
+  assert(ops && ops->setup_flds);
+  return ops->setup_flds(step);
 }
 
 // ----------------------------------------------------------------------
@@ -205,18 +224,48 @@ _ggcm_mhd_step_destroy(struct ggcm_mhd_step *step)
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_step_diag_item_zmask_run
+
+static void
+ggcm_mhd_step_diag_item_zmask_run(struct ggcm_mhd_step *step,
+				  struct ggcm_mhd_diag_item *item,
+				  struct mrc_io *io, struct mrc_fld *f,
+				  int diag_type, float plane)
+{
+  struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
+  assert(ops && ops->diag_item_zmask_run);
+  ops->diag_item_zmask_run(step, item, io, f, diag_type, plane);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_step_diag_item_rmask_run
+
+static void
+ggcm_mhd_step_diag_item_rmask_run(struct ggcm_mhd_step *step,
+				  struct ggcm_mhd_diag_item *item,
+				  struct mrc_io *io, struct mrc_fld *f,
+				  int diag_type, float plane)
+{
+  struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
+  assert(ops && ops->diag_item_rmask_run);
+  ops->diag_item_rmask_run(step, item, io, f, diag_type, plane);
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_step_init
 
 static void
 ggcm_mhd_step_init()
 {
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_step, &ggcm_mhd_step_c3_float_ops);
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_step, &ggcm_mhd_step_c3_double_ops);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_step, &ggcm_mhd_step_cweno_ops);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_step, &ggcm_mhd_step_c_float_ops);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_step, &ggcm_mhd_step_c_double_ops);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_step, &ggcm_mhd_step_c2_float_ops);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_step, &ggcm_mhd_step_c2_double_ops);
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_step, &ggcm_mhd_step_c3_float_ops);
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_step, &ggcm_mhd_step_c3_double_ops);
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_step, &ggcm_mhd_step_vlct_ops);
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_step, &ggcm_mhd_step_vl_ops);
 }
 
 // ----------------------------------------------------------------------
@@ -224,12 +273,18 @@ ggcm_mhd_step_init()
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_step, x)
 static struct param ggcm_mhd_step_descr[] = {
-  { "mhd"             , VAR(mhd)             , PARAM_OBJ(ggcm_mhd)       },
+  { "mhd"               , VAR(mhd)               , PARAM_OBJ(ggcm_mhd)     },
   // This is a bit hacky, do_nwst may normally be set in the timeloop
   // to determine whether to run newstep() the next timestep or not,
   // but this allows to set it to "always on" easily for test runs
-  { "do_nwst"         , VAR(do_nwst)         , PARAM_BOOL(false)         },
-  { "profile_every"   , VAR(profile_every)   , PARAM_INT(10)             },
+  { "do_nwst"           , VAR(do_nwst)           , PARAM_BOOL(false)       },
+  { "debug_dump"        , VAR(debug_dump)        , PARAM_BOOL(false)       },
+  { "profile_every"     , VAR(profile_every)     , PARAM_INT(10)           },
+  // FIXME, is there really a need to keep this around?
+  // It limits the (normalized) to stay <= 1, and it should also wrap the
+  // "find new dt first -- but do this timestep still with old dt"
+  // weirdness
+  { "legacy_dt_handling", VAR(legacy_dt_handling), PARAM_BOOL(true)        },
   {},
 };
 #undef VAR
@@ -243,5 +298,54 @@ struct mrc_class_ggcm_mhd_step mrc_class_ggcm_mhd_step = {
   .param_descr      = ggcm_mhd_step_descr,
   .init             = ggcm_mhd_step_init,
   .destroy          = _ggcm_mhd_step_destroy,
+};
+
+/////////////////////////////////////////////////////////////////////////
+// diag items to go with specific ggcm_mhd_step subclasses
+
+// ======================================================================
+// ggcm_mhd_diag_item subclass "zmask"
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_diag_item_zmask_run
+
+static void
+ggcm_mhd_diag_item_zmask_run(struct ggcm_mhd_diag_item *item,
+			   struct mrc_io *io, struct mrc_fld *f,
+			   int diag_type, float plane)
+{
+  struct ggcm_mhd_step *step = item->diag->mhd->step;
+  ggcm_mhd_step_diag_item_zmask_run(step, item, io, f, diag_type, plane);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_diag_item subclass "zmask"
+
+struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_zmask = {
+  .name             = "zmask",
+  .run              = ggcm_mhd_diag_item_zmask_run,
+};
+
+// ======================================================================
+// ggcm_mhd_diag_item subclass "rmask"
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_diag_item_rmask_run
+
+static void
+ggcm_mhd_diag_item_rmask_run(struct ggcm_mhd_diag_item *item,
+			     struct mrc_io *io, struct mrc_fld *f,
+			     int diag_type, float plane)
+{
+  struct ggcm_mhd_step *step = item->diag->mhd->step;
+  ggcm_mhd_step_diag_item_rmask_run(step, item, io, f, diag_type, plane);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_diag_item subclass "rmask"
+
+struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_rmask = {
+  .name             = "rmask",
+  .run              = ggcm_mhd_diag_item_rmask_run,
 };
 

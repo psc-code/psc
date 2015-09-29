@@ -2,12 +2,17 @@
 #include "ggcm_mhd_step_private.h"
 #include "ggcm_mhd_private.h"
 #include "ggcm_mhd_defs.h"
+#include "ggcm_mhd_defs_extra.h"
 #include "ggcm_mhd_crds.h"
+#include "ggcm_mhd_diag_private.h"
 
 #include <mrc_domain.h>
 #include <mrc_profile.h>
 
 #include <math.h>
+#include <string.h>
+
+#include "mhd_sc.c"
 
 // TODO:
 // - handle various resistivity models
@@ -306,7 +311,7 @@ pushfv_c(struct ggcm_mhd *mhd, int m, mrc_fld_data_t dt, int m_prev, int m_curr,
   if (limit == LIMIT_NONE) {
     fluxl_c(mhd, m_curr + m);
   } else {
-    vgrv(f, _CX, _BX); vgrv(f, _CY, _BY); vgrv(f, _CY, _BY);
+    vgrv(f, _CX, _BX); vgrv(f, _CY, _BY); vgrv(f, _CZ, _BZ);
     limit1_c(f, m_curr + m, mhd->time, mhd->par.timelo, _CX);
     fluxb_c(mhd, m_curr + m);
   }
@@ -729,6 +734,18 @@ pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_prev, int m_curr, int
 // ie., including primvar() etc.
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_step_c_newstep
+
+static void
+ggcm_mhd_step_c_newstep(struct ggcm_mhd_step *step, float *dtn)
+{
+  struct ggcm_mhd *mhd = step->mhd;
+
+  ggcm_mhd_fill_ghosts(mhd, mhd->fld, _RR1, mhd->time);
+  *dtn = newstep_sc_ggcm(mhd, mhd->fld);
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_step_c_pred
 
 static void
@@ -758,7 +775,104 @@ ggcm_mhd_step_c_corr(struct ggcm_mhd_step *step)
   primbb_c(step->mhd, _RR2);
   //  zmaskn_c(step->mhd);
 
+  static int PR;
+  if (!PR) {
+    PR = prof_register("corr_c", 1., 0, 0);
+  }
+  prof_start(PR);
   pushstage_c(step->mhd, step->mhd->dt, _RR1, _RR2, _RR1, LIMIT_1);
+  prof_stop(PR);
+  
+  // --- check for NaNs and small density
+  // (still controlled by do_badval_checks)
+  badval_checks_sc(step->mhd, step->mhd->fld, step->mhd->fld);
 }
 
- 
+// ----------------------------------------------------------------------
+// ggcm_mhd_step_c_setup
+
+static void
+ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
+{
+  step->mhd->ymask = mrc_fld_make_view(step->mhd->fld, _YMASK, _YMASK + 1);
+
+  ggcm_mhd_step_setup_member_objs_sub(step);
+  ggcm_mhd_step_setup_super(step);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_step_c_destroy
+
+static void
+ggcm_mhd_step_c_destroy(struct ggcm_mhd_step *step)
+{
+  mrc_fld_destroy(step->mhd->ymask);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_step_c_get_e_ec
+
+static void
+ggcm_mhd_step_c_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
+                         struct mrc_fld *state_vec)
+{
+  // the state vector should already be FLD_TYPE, but Eout is the data type
+  // of the output
+  struct mrc_fld *E = mrc_fld_get_as(Eout, FLD_TYPE);
+  struct mrc_fld *x = mrc_fld_get_as(state_vec, FLD_TYPE);
+
+  mrc_fld_foreach(x, ix, iy, iz, 1, 0) {
+    F3(E, 0, ix, iy, iz) = F3(x, _FLX, ix, iy, iz);
+    F3(E, 1, ix, iy, iz) = F3(x, _FLY, ix, iy, iz);
+    F3(E, 2, ix, iy, iz) = F3(x, _FLZ, ix, iy, iz);
+  } mrc_fld_foreach_end;
+
+  mrc_fld_put_as(E, Eout);
+  // FIXME, should use _put_as, but don't want copy-back
+  if (strcmp(mrc_fld_type(state_vec), FLD_TYPE) != 0) {
+    mrc_fld_destroy(x);
+  }
+} 
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_step_c_diag_item_zmask_run
+
+static void
+ggcm_mhd_step_c_diag_item_zmask_run(struct ggcm_mhd_step *step,
+				    struct ggcm_mhd_diag_item *item,
+				    struct mrc_io *io, struct mrc_fld *f,
+				    int diag_type, float plane)
+{
+  ggcm_mhd_diag_c_write_one_field(io, f, _ZMASK, "zmask", 1., diag_type, plane);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_step_c_diag_item_rmask_run
+
+static void
+ggcm_mhd_step_c_diag_item_rmask_run(struct ggcm_mhd_step *step,
+				    struct ggcm_mhd_diag_item *item,
+				    struct mrc_io *io, struct mrc_fld *f,
+				    int diag_type, float plane)
+{
+  ggcm_mhd_diag_c_write_one_field(io, f, _RMASK, "rmask", 1., diag_type, plane);
+}
+
+#include "ggcm_mhd_step_legacy.c"
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_step subclass "c_*"
+
+struct ggcm_mhd_step_ops ggcm_mhd_step_c_ops = {
+  .name                = ggcm_mhd_step_c_name,
+  .newstep             = ggcm_mhd_step_c_newstep,
+  .pred                = ggcm_mhd_step_c_pred,
+  .corr                = ggcm_mhd_step_c_corr,
+  .run                 = ggcm_mhd_step_run_predcorr,
+  .setup               = ggcm_mhd_step_c_setup,
+  .destroy             = ggcm_mhd_step_c_destroy,
+  .setup_flds          = ggcm_mhd_step_legacy_setup_flds,
+  .get_e_ec            = ggcm_mhd_step_c_get_e_ec,
+  .diag_item_zmask_run = ggcm_mhd_step_c_diag_item_zmask_run,
+  .diag_item_rmask_run = ggcm_mhd_step_c_diag_item_rmask_run,
+};

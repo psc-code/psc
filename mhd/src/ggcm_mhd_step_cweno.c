@@ -1,5 +1,6 @@
 #include "ggcm_mhd_step_cweno_private.h"
 
+#include "ggcm_mhd_defs_extra.h"
 #include "ggcm_mhd_private.h"
 #include "ggcm_mhd_crds.h"
 #include "ggcm_mhd_diag.h"
@@ -66,7 +67,7 @@ ggcm_mhd_step_cweno_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
 
   mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
     for (int m = 0; m < 8; m++) {
-      MRC_F3(r, m, ix,iy,iz) *= MRC_F3(f, _YMASK, ix,iy,iz);
+      MRC_F3(r, m, ix,iy,iz) *= MRC_F3(mhd->ymask, 0, ix,iy,iz);
     }
   } mrc_fld_foreach_end;
 
@@ -97,17 +98,41 @@ ggcm_mhd_step_cweno_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_step_cweno_setup
+
+static void
+ggcm_mhd_step_cweno_setup(struct ggcm_mhd_step *step)
+{
+  step->mhd->ymask = mrc_fld_make_view(step->mhd->fld, _YMASK, _YMASK + 1);
+
+  ggcm_mhd_step_setup_member_objs_sub(step);
+  ggcm_mhd_step_setup_super(step);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_step_cweno_setup_flds
+
+static void
+ggcm_mhd_step_cweno_setup_flds(struct ggcm_mhd_step *step)
+{
+  struct ggcm_mhd *mhd = step->mhd;
+
+  mrc_fld_set_type(mhd->fld, "float");
+  mrc_fld_set_param_int(mhd->fld, "nr_ghosts", 2);
+#if SEMICONSV
+  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_SEMI_CONSERVATIVE);
+#else
+  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_FULLY_CONSERVATIVE);
+#endif
+  mrc_fld_set_param_int(mhd->fld, "nr_comps", _NR_FLDS);
+}
+// ----------------------------------------------------------------------
 // ggcm_mhd_step subclass "cweno"
 
 struct ggcm_mhd_step_ops ggcm_mhd_step_cweno_ops = {
   .name        = "cweno",
-#if SEMICONSV
-  .mhd_type    = MT_SEMI_CONSERVATIVE,
-#else
-  .mhd_type    = MT_FULLY_CONSERVATIVE,
-#endif
-  .fld_type    = "float",
-  .nr_ghosts   = 2,
+  .setup       = ggcm_mhd_step_cweno_setup,
+  .setup_flds  = ggcm_mhd_step_cweno_setup_flds,
   .calc_rhs    = ggcm_mhd_step_cweno_calc_rhs,
 };
 

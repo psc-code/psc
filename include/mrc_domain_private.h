@@ -15,6 +15,8 @@ struct mrc_domain {
   int rank, size;
   struct mrc_crds *crds;
   struct mrc_ddc *ddc;
+  
+  int bc[3];
 };
 
 struct mrc_domain_ops {
@@ -22,7 +24,6 @@ struct mrc_domain_ops {
   struct mrc_patch *(*get_patches)(struct mrc_domain *domain, int *nr_patches);
   void (*get_global_dims)(struct mrc_domain *domain, int *dims);
   void (*get_nr_procs)(struct mrc_domain *domain, int *nr_procs);
-  void (*get_bc)(struct mrc_domain *domain, int *bc);
   int  (*get_neighbor_rank)(struct mrc_domain *, int shift[3]);
   void (*get_neighbor_rank_patch)(struct mrc_domain *domain, int p, int dir[3],
 				  int *nei_rank, int *nei_patch);
@@ -47,7 +48,6 @@ struct mrc_domain_simple {
   int gdims[3];
   struct mrc_patch patch;
   int nr_procs[3];
-  int bc[3];
 
   int proc[3];
 };
@@ -94,7 +94,6 @@ struct mrc_domain_multi {
   int gpatch_off; //< global patch # on this proc is gpatch_off..gpatch_off+nr_patches
   struct mrc_patch *patches;
   int np[3]; //< # of patches per direction
-  int bc[3];
   int *gpatch_off_all;
   int *ldims[3]; //< patch dims for all patches by direction
   int *off[3]; //< offsets for all patches by direction
@@ -127,7 +126,6 @@ struct mrc_domain_amr {
   int nr_patches;
   int gpatch_off; //< global patch # on this proc is gpatch_off..gpatch_off+nr_patches
   struct mrc_patch *patches;
-  int bc[3];
   int *gpatch_off_all;
   struct mrc_sfc sfc;
 
@@ -138,6 +136,8 @@ struct mrc_domain_amr {
     int l, sfc_idx;
   } *map_gpatch_to_sfc;	//Maps [0..nr_gpatches] -> l, sfc_idx
 };
+
+#define mrc_domain_amr(domain) mrc_to_subobj(domain, struct mrc_domain_amr)
 
 extern struct mrc_domain_ops mrc_domain_amr_ops;
 
@@ -187,8 +187,6 @@ map2dir(int map)
 
 
 struct mrc_domain_mb { 
-  int bc[3]; // boundary conditions in x/y/z
-
   // unique block related bits
   struct mrc_block_factory * _block_factory;
   int ppb[3]; // how to subdivide blocks into patches

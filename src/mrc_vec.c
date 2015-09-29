@@ -53,6 +53,10 @@ _mrc_vec_setup(struct mrc_vec *vec)
 {
   if (!vec->with_array) {
     vec->arr = calloc(vec->len, vec->size_of_type);
+
+#ifdef MRC_VEC_INIT_NAN
+    memset(vec->arr, 0xff, vec->len * vec->size_of_type);
+#endif
   }
 }
 
@@ -79,6 +83,19 @@ mrc_vec_set_array(struct mrc_vec *vec, void *arr)
   struct mrc_vec_ops *ops = mrc_vec_ops(vec);
   assert(ops && ops->set_array);
   ops->set_array(vec, arr);
+}
+
+// ----------------------------------------------------------------------
+// mrc_vec_replace_array
+//
+// replace our own allocated memory by the pointer provided (and free our mem)
+
+void
+mrc_vec_replace_array(struct mrc_vec *vec, void *arr)
+{
+  struct mrc_vec_ops *ops = mrc_vec_ops(vec);
+  assert(ops && ops->replace_array);
+  ops->replace_array(vec, arr);
 }
 
 // ----------------------------------------------------------------------
@@ -125,7 +142,18 @@ mrc_vec_sub_set_array(struct mrc_vec *vec, void *arr)
 }
 
 // ----------------------------------------------------------------------
-// mrc_vec_sub_get_array
+// mrc_vec_sub_replace_array
+
+static void
+mrc_vec_sub_replace_array(struct mrc_vec *vec, void *arr)
+{
+  assert(arr);
+  free(vec->arr);
+  vec->arr = arr;
+}
+
+// ----------------------------------------------------------------------
+// mrc_vec_sub__array
 
 static void *
 mrc_vec_sub_get_array(struct mrc_vec *vec)
@@ -142,6 +170,24 @@ mrc_vec_sub_put_array(struct mrc_vec *vec, void *arr)
 {
   assert(mrc_vec_is_setup(vec));
   assert(arr == vec->arr);
+}
+
+// ----------------------------------------------------------------------
+// mrc_vec_len
+
+int
+mrc_vec_len(struct mrc_vec *x)
+{
+  return x->len;
+}
+
+// ----------------------------------------------------------------------
+// mrc_vec_size_of_type
+
+int
+mrc_vec_size_of_type(struct mrc_vec *x)
+{
+  return x->size_of_type;
 }
 
 // ======================================================================
@@ -212,6 +258,7 @@ mrc_vec_sub_put_array(struct mrc_vec *vec, void *arr)
     .methods               = mrc_vec_##type##_methods,			\
     .create                = mrc_vec_##type##_create,			\
     .set_array             = mrc_vec_sub_set_array,			\
+    .replace_array         = mrc_vec_sub_replace_array,			\
     .get_array             = mrc_vec_sub_get_array,			\
     .put_array             = mrc_vec_sub_put_array,			\
     .axpy                  = mrc_vec_##type##_axpy,			\

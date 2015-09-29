@@ -29,7 +29,7 @@ calc_cweno_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *flux[3],
   struct mrc_fld *flux_p[3], *flux_m[3];
   
   for (int f = 0; f < 3; f++) {
-    u_delta[f] = ggcm_mhd_get_fields(mhd, "u_delta", _B1Z + 1);
+    u_delta[f] = ggcm_mhd_get_fields(mhd, "u_delta", BZ + 1);
     u_p[f] = ggcm_mhd_get_fields(mhd, "u_p", _JZ + 1);
     u_m[f] = ggcm_mhd_get_fields(mhd, "u_m", _JZ + 1);
     E_p[f] = ggcm_mhd_get_fields(mhd, "E_p", 3);

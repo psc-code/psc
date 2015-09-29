@@ -16,6 +16,7 @@ main(int argc, char **argv)
   ggcm_mhd_view(mhd);
 
   struct mrc_io *io = mrc_io_create(ggcm_mhd_comm(mhd));
+  mrc_io_set_type(io, "hdf5_serial");
   mrc_io_setup(io);
 
   mrc_io_open(io, "w", 0, 0.);

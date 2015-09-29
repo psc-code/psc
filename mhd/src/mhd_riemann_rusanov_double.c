@@ -5,7 +5,7 @@
 #include "mhd_riemann_rusanov_common.c"
 
 // ----------------------------------------------------------------------
-// mhd_riemann_pcm_ops
+// mhd_riemann_rusanov_double_ops
 
 struct mhd_riemann_ops mhd_riemann_rusanov_double_ops = {
   .name             = "rusanov_double",

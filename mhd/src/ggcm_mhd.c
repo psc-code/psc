@@ -2,6 +2,7 @@
 #include "ggcm_mhd_private.h"
 
 #include "ggcm_mhd_defs.h"
+#include "ggcm_mhd_defs_extra.h"
 #include "ggcm_mhd_crds.h"
 #include "ggcm_mhd_crds_private.h"
 #include "ggcm_mhd_crds_gen.h"
@@ -14,6 +15,7 @@
 #include <mrc_ddc.h>
 #include <mrc_ts.h>
 #include <mrc_ts_monitor.h>
+#include <mrc_io.h>
 #include <mrc_profile.h>
 
 #include <assert.h>
@@ -76,10 +78,6 @@ static const char *fldname[_NR_FLDS] = {
   [_CURRZ] = "currz",
 
   [_RMASK] = "rmask",
-
-  [_BDIPX] = "bdipx",
-  [_BDIPY] = "bdipy",
-  [_BDIPZ] = "bdipz",
 };
 
 // ----------------------------------------------------------------------
@@ -94,15 +92,12 @@ _ggcm_mhd_create(struct ggcm_mhd *mhd)
   ggcm_mhd_step_set_param_obj(mhd->step, "mhd", mhd);
   ggcm_mhd_diag_set_param_obj(mhd->diag, "mhd", mhd);
   ggcm_mhd_bnd_set_param_obj(mhd->bnd, "mhd", mhd);
+  ggcm_mhd_bnd_set_param_obj(mhd->bnd1, "mhd", mhd);
   ggcm_mhd_ic_set_param_obj(mhd->ic, "mhd", mhd);
 
   mrc_fld_set_name(mhd->fld, "ggcm_mhd_fld");
   mrc_fld_set_param_obj(mhd->fld, "domain", mhd->domain);
   mrc_fld_set_param_int(mhd->fld, "nr_spatial_dims", 3);
-  mrc_fld_set_param_int(mhd->fld, "nr_comps", _NR_FLDS);
-  for (int m = 0; m < _NR_FLDS; m++) {
-    mrc_fld_set_comp_name(mhd->fld, m, fldname[m]);
-  }
   mrc_fld_dict_add_obj(mhd->fld, "mhd", mhd);
 }
 
@@ -142,11 +137,14 @@ ggcm_mhd_setup_internal(struct ggcm_mhd *mhd)
 {
   const int *ghost_dims = mrc_fld_ghost_dims(mhd->fld);
   const int *dims = mrc_fld_dims(mhd->fld);
+  int shift = 0;
+  if (mhd->fld->_nr_spatial_dims == 3 
+   && mhd->fld->_is_aos) shift = 1;
   for (int d = 0; d < 3; d++) {
     // local domain size
-    mhd->im[d] = dims[d];
+    mhd->im[d] = dims[d+shift];
     // local domain size incl ghost points
-    mhd->img[d] = ghost_dims[d];
+    mhd->img[d] = ghost_dims[d+shift];
   }
 }
 
@@ -164,28 +162,65 @@ _ggcm_mhd_read(struct ggcm_mhd *mhd, struct mrc_io *io)
 static void
 _ggcm_mhd_setup(struct ggcm_mhd *mhd)
 {
-  const char *fld_type = ggcm_mhd_step_fld_type(mhd->step);
-  int nr_ghosts = ggcm_mhd_step_nr_ghosts(mhd->step);
-  assert(fld_type);
-  mrc_fld_set_type(mhd->fld, fld_type);
-  mrc_fld_set_param_int(mhd->fld, "nr_ghosts", nr_ghosts);
-  mrc_fld_dict_add_int(mhd->fld, "mhd_type", ggcm_mhd_step_mhd_type(mhd->step));
+  ggcm_mhd_step_setup_flds(mhd->step);
+  for (int m = 0; m < mrc_fld_nr_comps(mhd->fld); m++) {
+    mrc_fld_set_comp_name(mhd->fld, m, fldname[m]);
+  }
 
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
   // only set the sw on the domain's crds if they're not already set
-  if (crds->sw == 0) {
-    mrc_crds_set_param_int(crds, "sw", nr_ghosts);
+  if (1||crds->sw == 0) {
+    mrc_crds_set_param_int(crds, "sw", mhd->fld->_nr_ghosts);
+  }
+
+  if (mhd->amr > 0) {
+    ggcm_mhd_setup_amr_domain(mhd);
   }
 
   ggcm_mhd_setup_member_objs(mhd);
   ggcm_mhd_setup_internal(mhd);
+
+  if (mhd->amr > 0) {
+    // FIXME, all leaked
+    mhd->ddc_amr_cc = ggcm_mhd_create_amr_ddc(mhd);
+    mhd->ddc_amr_E  = ggcm_mhd_create_amr_ddc_E(mhd);
+    for (int d = 0; d < 3; d++) {
+      mhd->ddc_amr_flux[d] = ggcm_mhd_create_amr_ddc_flux(mhd, d);
+    }
+  }
 }
 
 void
 ggcm_mhd_fill_ghosts(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m, float bntim)
 {
-  mrc_ddc_fill_ghosts_fld(mrc_domain_get_ddc(mhd->domain), m, m + 8, fld);
+  if (mhd->amr == 0) {
+    // FIXME, this really should be done in a cleaner way (pass mb, me, probably)
+    int mhd_type;
+    mrc_fld_get_param_int(fld, "mhd_type", &mhd_type);
+    if (mhd_type == MT_GKEYLL) {
+      int nr_comps = mrc_fld_nr_comps(fld);
+      mrc_ddc_fill_ghosts_fld(mrc_domain_get_ddc(mhd->domain), m, m + nr_comps, fld);
+    } else {
+      mrc_ddc_fill_ghosts_fld(mrc_domain_get_ddc(mhd->domain), m, m + 8, fld);
+    }
+  } else {
+    assert(m == 0);
+    mrc_ddc_amr_apply(mhd->ddc_amr_cc, fld);
+    // ggcm_mhd_amr_fill_ghosts_b(mhd, fld); // has been taken over by ddc_amr_cc
+  }
   ggcm_mhd_bnd_fill_ghosts(mhd->bnd, fld, m, bntim);
+  ggcm_mhd_bnd_fill_ghosts(mhd->bnd1, fld, m, bntim);
+}
+
+void
+ggcm_mhd_fill_ghosts_E(struct ggcm_mhd *mhd, struct mrc_fld *E)
+{
+  struct ggcm_mhd_ops *ops = ggcm_mhd_ops(mhd);
+  // FIXME, should this be done via ggcm_mhd_bnd instead through ggcm_mhd itself?
+  // FIXME, also could do patch boundary ghost points / the AMR correction
+  if (ops->fill_ghosts_E) {
+    ops->fill_ghosts_E(mhd, E);
+  }
 }
 
 int
@@ -193,6 +228,127 @@ ggcm_mhd_ntot(struct ggcm_mhd *mhd)
 {
   const int *ghost_dims = mrc_fld_ghost_dims(mhd->fld);
   return ghost_dims[0] * ghost_dims[1] * ghost_dims[2];
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_get_crds_cc
+
+void
+ggcm_mhd_get_crds_cc(struct ggcm_mhd *mhd, int ix, int iy, int iz, int p,
+		     float crd_cc[3])
+{
+  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
+  crd_cc[0] = MRC_MCRDX(crds, ix, p);
+  crd_cc[1] = MRC_MCRDY(crds, iy, p);
+  crd_cc[2] = MRC_MCRDZ(crds, iz, p);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_get_crds_nc
+
+void
+ggcm_mhd_get_crds_nc(struct ggcm_mhd *mhd, int ix, int iy, int iz, int p,
+		     float crd_nc[3])
+{
+  float crd_cc[3], crd_cc_m[3];
+  ggcm_mhd_get_crds_cc(mhd, ix  ,iy  ,iz  , p, crd_cc);
+  ggcm_mhd_get_crds_cc(mhd, ix-1,iy-1,iz-1, p, crd_cc_m);
+
+  crd_nc[0] = .5f * (crd_cc_m[0] + crd_cc[0]);
+  crd_nc[1] = .5f * (crd_cc_m[1] + crd_cc[1]);
+  crd_nc[2] = .5f * (crd_cc_m[2] + crd_cc[2]);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_get_crds_fc
+
+void
+ggcm_mhd_get_crds_fc(struct ggcm_mhd *mhd, int ix, int iy, int iz, int p,
+		     int d, float crd_fc[3])
+{
+  float crd_cc[3];
+  float crd_nc[3];
+  ggcm_mhd_get_crds_cc(mhd, ix, iy, iz, p, crd_cc);
+  ggcm_mhd_get_crds_nc(mhd, ix, iy, iz, p, crd_nc);
+
+  if (d == 0) {
+    // Bx located at i, j+.5, k+.5
+    crd_fc[0] = crd_nc[0];
+    crd_fc[1] = crd_cc[1];
+    crd_fc[2] = crd_cc[2];
+  } else if (d == 1) {
+    // By located at i+.5, j, k+.5
+    crd_fc[0] = crd_cc[0];
+    crd_fc[1] = crd_nc[1];
+    crd_fc[2] = crd_cc[2];
+  } else if (d == 2) {
+    // Bz located at i+.5, j+.5, k
+    crd_fc[0] = crd_cc[0];
+    crd_fc[1] = crd_cc[1];
+    crd_fc[2] = crd_nc[2];
+  } else {
+    assert(0);
+  }
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_get_crds_ec
+
+void
+ggcm_mhd_get_crds_ec(struct ggcm_mhd *mhd, int ix, int iy, int iz, int p,
+		     int d, float crd_ec[3])
+{
+  float crd_cc[3], crd_nc[3];
+  ggcm_mhd_get_crds_cc(mhd, ix,iy,iz, p, crd_cc);
+  ggcm_mhd_get_crds_nc(mhd, ix,iy,iz, p, crd_nc);
+
+  if (d == 0) {
+    // Ex located at i+.5, j, k
+    crd_ec[0] = crd_cc[0];
+    crd_ec[1] = crd_nc[1];
+    crd_ec[2] = crd_nc[2];
+  } else if (d == 1) {
+    // Ey located at i, j+.5, k
+    crd_ec[0] = crd_nc[0];
+    crd_ec[1] = crd_cc[1];
+    crd_ec[2] = crd_nc[2];
+  } else if (d == 2) {
+    // Ez located at i, j, k+.5
+    crd_ec[0] = crd_nc[0];
+    crd_ec[1] = crd_nc[1];
+    crd_ec[2] = crd_cc[2];
+  } else {
+    assert(0);
+  }
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_get_3d_fld
+//
+// FIXME, this should cache the fields, rather than creating/destroying
+// all the time
+
+struct mrc_fld *
+ggcm_mhd_get_3d_fld(struct ggcm_mhd *mhd, int nr_comps)
+{
+  struct mrc_fld *f = mrc_fld_create(ggcm_mhd_comm(mhd));
+  mrc_fld_set_type(f , mrc_fld_type(mhd->fld));
+  mrc_fld_set_param_obj(f, "domain", mhd->fld->_domain);
+  mrc_fld_set_param_int(f, "nr_spatial_dims", 3);
+  mrc_fld_set_param_int(f, "nr_comps", nr_comps);
+  mrc_fld_set_param_int(f, "nr_ghosts", mhd->fld->_nr_ghosts);
+  mrc_fld_setup(f);
+
+  return f;
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_put_3d_fld
+
+void
+ggcm_mhd_put_3d_fld(struct ggcm_mhd *mhd, struct mrc_fld *f)
+{
+  mrc_fld_destroy(f);
 }
 
 // ----------------------------------------------------------------------
@@ -215,6 +371,7 @@ ggcm_mhd_default_box(struct ggcm_mhd *mhd)
   mhd->par.resnorm = 1.f;
   mhd->par.tnorm = 1.f;
   mhd->par.diffco = 0.f;
+  mhd->par.r_db_dt = 0.f;
 
   ggcm_mhd_set_param_float(mhd, "isphere", 0.);
   ggcm_mhd_set_param_float(mhd, "diffsphere", 0.);
@@ -222,15 +379,13 @@ ggcm_mhd_default_box(struct ggcm_mhd *mhd)
 
   // default to periodic boundary conditions
   ggcm_mhd_bnd_set_type(mhd->bnd, "none");
+  ggcm_mhd_bnd_set_type(mhd->bnd1, "none");
   mrc_domain_set_param_int(mhd->domain, "bcx", BC_PERIODIC);
   mrc_domain_set_param_int(mhd->domain, "bcy", BC_PERIODIC);
   mrc_domain_set_param_int(mhd->domain, "bcz", BC_PERIODIC);
 
   // generate MHD solver grid from mrc_crds
   ggcm_mhd_crds_gen_set_type(mhd->crds->crds_gen, "mrc");
-
-  // default time stepping to CWENO
-  ggcm_mhd_step_set_type(mhd->step, "cweno");
 }
 
 // ======================================================================
@@ -267,6 +422,7 @@ static struct param ggcm_mhd_descr[] = {
   { "speedlimit"      , VAR(par.speedlimit)  , PARAM_FLOAT(1500.f)   },
   { "thx"             , VAR(par.thx)         , PARAM_FLOAT(.40f)     },
   { "isphere"         , VAR(par.isphere)     , PARAM_FLOAT(3.0f)     },
+  { "r_db_dt"         , VAR(par.r_db_dt)     , PARAM_FLOAT(1.4f)     },
   { "timelo"          , VAR(par.timelo)      , PARAM_FLOAT(0.f)      },
   { "d_i"             , VAR(par.d_i)         , PARAM_FLOAT(0.f)      },
   { "dtmin"           , VAR(par.dtmin)       , PARAM_FLOAT(.0002f)   },
@@ -278,20 +434,27 @@ static struct param ggcm_mhd_descr[] = {
   { "diff_swbnd"      , VAR(par.diff_swbnd)  , PARAM_FLOAT(-1e30)    },
   { "diff_obnd"       , VAR(par.diff_obnd)   , PARAM_INT(0)          },
 
+  { "monitor_conservation", VAR(par.monitor_conservation), PARAM_BOOL(false)  },
+  { "amr_grid_file"   , VAR(amr_grid_file)   , PARAM_STRING("amr_grid.txt")   },
+  { "amr"             , VAR(amr)             , PARAM_INT(0)                   },
+
   { "time"            , VAR(time)            , MRC_VAR_FLOAT         },
   { "dt"              , VAR(dt)              , MRC_VAR_FLOAT         },
   { "istep"           , VAR(istep)           , MRC_VAR_INT           },
   { "timla"           , VAR(timla)           , MRC_VAR_FLOAT         },
   { "dacttime"        , VAR(dacttime)        , MRC_VAR_DOUBLE        },
-
+  { "max_time"        , VAR(max_time)        , PARAM_FLOAT(0.0)      },
+  
   { "domain"          , VAR(domain)          , MRC_VAR_OBJ(mrc_domain)        },
   { "fld"             , VAR(fld)             , MRC_VAR_OBJ(mrc_fld)           },
   { "crds"            , VAR(crds)            , MRC_VAR_OBJ(ggcm_mhd_crds)     },
   { "step"            , VAR(step)            , MRC_VAR_OBJ(ggcm_mhd_step)     },
   { "diag"            , VAR(diag)            , MRC_VAR_OBJ(ggcm_mhd_diag)     },
   { "bnd"             , VAR(bnd)             , MRC_VAR_OBJ(ggcm_mhd_bnd)      },
+  { "bnd1"            , VAR(bnd1)            , MRC_VAR_OBJ(ggcm_mhd_bnd)      },
   { "ic"              , VAR(ic)              , MRC_VAR_OBJ(ggcm_mhd_ic)       },
 
+  { "do_badval_checks", VAR(do_badval_checks), PARAM_BOOL(true)             },
   {},
 };
 #undef VAR
@@ -305,6 +468,38 @@ struct mrc_class_ggcm_mhd mrc_class_ggcm_mhd = {
   .setup            = _ggcm_mhd_setup,
   .read             = _ggcm_mhd_read,
 };
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_wrongful_death
+//
+// Dump state and MPI_Abort, used for dtmin type crashes. This must be
+// called from all mhd processes.
+
+void
+ggcm_mhd_wrongful_death(struct ggcm_mhd *mhd, int errcode)
+{
+  static int cnt = 0;
+  struct ggcm_mhd_diag *diag = ggcm_mhd_diag_create(ggcm_mhd_comm(mhd));
+  // this extra diag will deadlock if using the fortran diag server...
+  // FIXME: this is not a reliable way to fix the problem, but it works at the moment
+  assert(strcmp(ggcm_mhd_diag_type(mhd->diag), "s2") != 0 &&
+         strcmp(ggcm_mhd_diag_type(mhd->diag), "f2") != 0);
+  ggcm_mhd_diag_set_type(diag, "c");
+  ggcm_mhd_diag_set_param_obj(diag, "mhd", mhd);
+  ggcm_mhd_diag_set_param_string(diag, "run", "wrongful_death");
+  ggcm_mhd_diag_set_param_string(diag, "fields", "rr1:rv1:uu1:b1:rr:pp:v:b:j:e_cc:divb");
+  ggcm_mhd_diag_setup(diag);
+  // ggcm_mhd_diag_view(diag);
+  
+  mpi_printf(ggcm_mhd_comm(mhd), "Something bad happened. Dumping state then "
+             "keeling over.\n");
+  // ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);  // is this needed?
+  ggcm_mhd_diag_run_now(diag, mhd->fld, DIAG_TYPE_3D, cnt++);
+  ggcm_mhd_diag_shutdown(diag);
+  
+  MPI_Barrier(ggcm_mhd_comm(mhd));
+  MPI_Abort(MPI_COMM_WORLD, errcode);
+}
 
 // ----------------------------------------------------------------------
 // ts_ggcm_mhd_step_calc_rhs
@@ -375,7 +570,11 @@ ggcm_mhd_main(int *argc, char ***argv)
   double time_start = MPI_Wtime();
 
   struct mrc_ts *ts = mrc_ts_create(mrc_domain_comm(mhd->domain));
-  mrc_ts_set_type(ts, "rk2");
+  if (ggcm_mhd_step_has_calc_rhs(mhd->step)) {
+    mrc_ts_set_type(ts, "rk2");
+  } else {
+    mrc_ts_set_type(ts, "step");
+  }
   mrc_ts_set_context(ts, ggcm_mhd_to_mrc_obj(mhd));
 
   struct mrc_ts_monitor *mon_output =
@@ -383,6 +582,14 @@ ggcm_mhd_main(int *argc, char ***argv)
   mrc_ts_monitor_set_type(mon_output, "ggcm");
   mrc_ts_monitor_set_name(mon_output, "mrc_ts_output");
   mrc_ts_add_monitor(ts, mon_output);
+
+  if (mhd->par.monitor_conservation) {
+    struct mrc_ts_monitor *mon_conservation =
+      mrc_ts_monitor_create(mrc_ts_comm(ts));
+    mrc_ts_monitor_set_type(mon_conservation, "conservation");
+    mrc_ts_monitor_set_name(mon_conservation, "mrc_ts_conservation");
+    mrc_ts_add_monitor(ts, mon_conservation);
+  }
 
   mrc_ts_set_dt(ts, 1e-6);
   mrc_ts_set_solution(ts, mrc_fld_to_mrc_obj(mhd->fld));

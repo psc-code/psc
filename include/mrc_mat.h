@@ -4,8 +4,24 @@
 
 #include <mrc.h>
 #include <mrc_domain.h>
+
+// ======================================================================
+// mrc_mat
+
+MRC_CLASS_DECLARE(mrc_mat, struct mrc_mat);
+
+void mrc_mat_assemble(struct mrc_mat *mat);
+void mrc_mat_add_value(struct mrc_mat *mat, int row_idx, int col_idx, double val);
+void mrc_mat_apply(struct mrc_vec *y, struct mrc_mat *mat, struct mrc_vec *x);
+void mrc_mat_apply_add(struct mrc_vec *y, struct mrc_mat *mat, struct mrc_vec *x);
+void mrc_mat_apply_in_place(struct mrc_mat *mat, struct mrc_vec *x);
+void mrc_mat_apply_general(struct mrc_vec *z, double alpha,
+			   struct mrc_mat *mat, struct mrc_vec *x,
+			   double beta, struct mrc_vec *y);
+void mrc_mat_print(struct mrc_mat *mat);
+
 //======================================================================
-// THE STORY OF THIS FILE
+// THE STORY OF THE FOLLOWING PART OF THIS FILE
 //
 // The code mrc-v3 had petsc integration before the rest of libmrc. It also had wonderful
 // things like Multi-block domains and arbitrary metric coordinates. When it came time
@@ -13,6 +29,8 @@
 // became a subclass of the domain. Other things, however, didn't. mrc-v3 needed matrix 
 // support for it's use of the petsc implicit timestepper methods, so it has this simple framework 
 // to wrap petsc matrices. I haven't gone beyond that, but someone should at some point.
+
+#ifdef HAVE_PETSC
 
 // ======================================================================
 // matrix prealloc/create
@@ -58,5 +76,6 @@ int mrc_matrix_find_global_index(struct mrc_domain *domain,
 				 int lpatch, 
 				 int jx, int jy, int jz);
 
+#endif
 
 #endif

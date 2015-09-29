@@ -62,7 +62,7 @@ mhd_reconstruct_pcm_run_fc(struct mhd_reconstruct *mr,
 }
 
 // ----------------------------------------------------------------------
-// mhd_reconstruct_pcm_runc
+// mhd_reconstruct_pcm_run
 
 static void
 mhd_reconstruct_pcm_run(struct mhd_reconstruct *mr,

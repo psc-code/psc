@@ -78,6 +78,20 @@ AS_IF([test "$have_hdf5" != "no"],
       [AC_DEFINE([HAVE_HDF5], [], [we have HDF5 library + headers])])
 AM_CONDITIONAL([HAVE_HDF5], [test "$have_hdf5" != "no"])
 
+# check for gkeyll
+
+AC_ARG_WITH([gkeyll],AS_HELP_STRING([--with-gkeyll=dir], [Build with GKEYLL coupling]),
+[], [with_gkeyll=no])
+
+have_gkeyll=no
+AS_IF([test "x$with_gkeyll" != "xno"],
+  [GKSOFTWARE="$with_gkeyll/.."
+   AC_SUBST(GKSOFTWARE)
+   have_gkeyll=yes
+   AC_DEFINE([HAVE_GKEYLL], [], [we have GKEYLL library + headers])
+  ])
+AM_CONDITIONAL([HAVE_GKEYLL], [test "$have_gkeyll" != "no"])
+
 # check for PAPI
 AC_ARG_WITH([papi],AS_HELP_STRING([--without-papi], [Disable PAPI]))
 
@@ -104,6 +118,12 @@ AS_IF([test "$have_petsc" != "no"],
       [AC_DEFINE([HAVE_PETSC], [], [we have petsc library + headers])])
 AM_CONDITIONAL([HAVE_PETSC], [test "$have_petsc" != "no"])
 
+# check for Viscid (analysis / plotting python package) so that we
+# can mark some tests XFAIL
+# Get Viscid at https://github.com/KristoforMaynard/Viscid
+AM_PATH_PYTHON(2.6)
+AX_PYTHON_MODULE(viscid)
+AM_CONDITIONAL([HAVE_VISCID], [test "$HAVE_PYMOD_VISCID" != "no"])
 
 # Checks for options
 
@@ -165,6 +185,8 @@ AC_CONFIG_FILES([Makefile
 		 tests/test_mrc_f3_0.sh
 		 tests/test_mrc_f3_1.sh
 		 tests/test_mrc_f3_2.sh
+		 mhd/tests/mhd_wave_cpaw.sh
+		 mhd/tests/check_wave_cpaw.py
 ])
 
 AC_OUTPUT

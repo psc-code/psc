@@ -26,60 +26,60 @@ calc_fluxes_per_face(struct mrc_fld **flux, struct ggcm_mhd *mhd, struct mrc_fld
   mrc_fld_foreach(fld, ix, iy, iz, 1, 1) {
 
 #if SEMICONSV
-    float rhoi = 1.f / MRC_F3(fld, _RR1, ix,iy,iz);
+    float rhoi = 1.f / MRC_F3(fld, RR, ix,iy,iz);
     float pp = (gamma - 1.f) *
-      (MRC_F3(fld, _UU1, ix,iy,iz) - .5f * rhoi * (sqr(MRC_F3(fld, _RV1X, ix,iy,iz)) +
-						   sqr(MRC_F3(fld, _RV1Y, ix,iy,iz)) +
-						   sqr(MRC_F3(fld, _RV1Z, ix,iy,iz))));
+      (MRC_F3(fld, UU, ix,iy,iz) - .5f * rhoi * (sqr(MRC_F3(fld, RVX, ix,iy,iz)) +
+						 sqr(MRC_F3(fld, RVY, ix,iy,iz)) +
+						 sqr(MRC_F3(fld, RVZ, ix,iy,iz))));
 
     // mass consv.
-    FLUX(flux, i, _RR1, ix,iy,iz) = MRC_F3(fld, _RV1X+i, ix,iy,iz);
+    FLUX(flux, i, RR, ix,iy,iz) = MRC_F3(fld, RVX+i, ix,iy,iz);
 
     // momentum eq.
     for (int j = 0; j < 3; j++) {
-      FLUX(flux, j, _RV1X+i, ix,iy,iz) =
-	rhoi * MRC_F3(fld, _RV1X+j, ix,iy,iz) * MRC_F3(fld, _RV1X+i, ix,iy,iz) +
+      FLUX(flux, j, RVX+i, ix,iy,iz) =
+	rhoi * MRC_F3(fld, RVX+j, ix,iy,iz) * MRC_F3(fld, RVX+i, ix,iy,iz) +
 	((j == i) ? (RFACT*pp) : 0.) ;
     }
 
     // energy eq.
-    FLUX(flux, i, _UU1, ix,iy,iz) =
-      ((MRC_F3(fld, _UU1, ix,iy,iz) + pp) * MRC_F3(fld, _RV1X+i, ix,iy,iz)) * rhoi;
+    FLUX(flux, i, UU, ix,iy,iz) =
+      ((MRC_F3(fld, UU, ix,iy,iz) + pp) * MRC_F3(fld, RVX+i, ix,iy,iz)) * rhoi;
 
 #else
 
-    float rhoi = 1.f / MRC_F3(fld, _RR1, ix,iy,iz);
+    float rhoi = 1.f / MRC_F3(fld, RR, ix,iy,iz);
     float BB = (0.5f) * (sqr(MRC_F3(fld, _B1X, ix,iy,iz)) +
 				 sqr(MRC_F3(fld, _B1Y, ix,iy,iz)) +
 				 sqr(MRC_F3(fld, _B1Z, ix,iy,iz)));
-    float mB = (MRC_F3(fld, _B1X, ix,iy,iz) * MRC_F3(fld, _RV1X, ix,iy,iz)) +
-      (MRC_F3(fld, _B1Y, ix,iy,iz) * MRC_F3(fld, _RV1Y, ix,iy,iz)) +
-      (MRC_F3(fld, _B1Z, ix,iy,iz) * MRC_F3(fld, _RV1Z, ix,iy,iz)) ;
+    float mB = (MRC_F3(fld, _B1X, ix,iy,iz) * MRC_F3(fld, RVX, ix,iy,iz)) +
+      (MRC_F3(fld, _B1Y, ix,iy,iz) * MRC_F3(fld, RVY, ix,iy,iz)) +
+      (MRC_F3(fld, _B1Z, ix,iy,iz) * MRC_F3(fld, RVZ, ix,iy,iz)) ;
     float JB = -(MRC_F3(fld, _B1X, ix,iy,iz)  * MRC_F3(fld, _JX, ix,iy,iz))
       -(MRC_F3(fld, _B1Y, ix,iy,iz) * MRC_F3(fld, _JY, ix,iy,iz))
       -(MRC_F3(fld, _B1Z, ix,iy,iz) * MRC_F3(fld, _JZ, ix,iy,iz)) ;
     float pp = (gamma - 1.f) *
-      (MRC_F3(fld, _UU1, ix,iy,iz) - .5f * rhoi * (sqr(MRC_F3(fld, _RV1X, ix,iy,iz)) +
-						 sqr(MRC_F3(fld, _RV1Y, ix,iy,iz)) +
-						 sqr(MRC_F3(fld, _RV1Z, ix,iy,iz)))-
+      (MRC_F3(fld, UU, ix,iy,iz) - .5f * rhoi * (sqr(MRC_F3(fld, RVX, ix,iy,iz)) +
+						 sqr(MRC_F3(fld, RVY, ix,iy,iz)) +
+						 sqr(MRC_F3(fld, RVZ, ix,iy,iz)))-
        (.5f * (sqr(MRC_F3(fld, _B1X, ix,iy,iz)) +
 				 sqr(MRC_F3(fld, _B1Y, ix,iy,iz)) +
 				 sqr(MRC_F3(fld, _B1Z, ix,iy,iz)))));
 
     // mass consv.
-    FLUX(flux, i, _RR1, ix,iy,iz) = MRC_F3(fld, _RV1X+i, ix,iy,iz);
+    FLUX(flux, i, RR, ix,iy,iz) = MRC_F3(fld, RVX+i, ix,iy,iz);
 
     // momentum eq.
     for (int j = 0; j < 3; j++) {
-      FLUX(flux, j, _RV1X+i, ix,iy,iz) =
-	rhoi * MRC_F3(fld, _RV1X+j, ix,iy,iz) * MRC_F3(fld, _RV1X+i, ix,iy,iz) +
+      FLUX(flux, j, RVX+i, ix,iy,iz) =
+	rhoi * MRC_F3(fld, RVX+j, ix,iy,iz) * MRC_F3(fld, RVX+i, ix,iy,iz) +
 	((j == i) ? pp : 0.) +
 	((j == i) ? BB : 0.) -  (MRC_F3(fld, _B1X+i, ix,iy,iz) * MRC_F3(fld, _B1X+j, ix,iy,iz));
     }
 
     // energy eq.
-    FLUX(flux, i, _UU1, ix,iy,iz) =
-      ( ((MRC_F3(fld, _UU1, ix,iy,iz) + pp + BB)*MRC_F3(fld, _RV1X+i, ix,iy,iz))-
+    FLUX(flux, i, UU, ix,iy,iz) =
+      ( ((MRC_F3(fld, UU, ix,iy,iz) + pp + BB)*MRC_F3(fld, RVX+i, ix,iy,iz))-
 	( mB * MRC_F3(fld, _B1X+i, ix,iy,iz)) +
 	(d_i * ( -0.5*MRC_F3(fld, _JX+i, ix,iy,iz)*BB - MRC_F3(fld, _B1X+i, ix,iy,iz)*JB)) ) * rhoi;
 #endif

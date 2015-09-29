@@ -46,8 +46,8 @@ main(int argc, char **argv)
     fprintf(fout2, "%d\n", fld->_dims.vals[0]);
 
     mrc_f1_foreach(fld, i, 0, 0) {
-      fprintf(fout1, "%16.10g\n", MRC_F1(fld, 0, i));
-      fprintf(fout2, "%16.10g\n", MRC_F1(fld, 1, i));
+      fprintf(fout1, "%16.10g\n", MRC_D2(fld, i, 0));
+      fprintf(fout2, "%16.10g\n", MRC_D2(fld, i, 1));
     } mrc_f1_foreach_end;
   }
   fclose(fout1);

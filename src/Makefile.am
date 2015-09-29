@@ -2,9 +2,7 @@
 AM_CPPFLAGS = -I$(srcdir)/../include
 
 
-lib_LTLIBRARIES = libmrc.la 
-
-noinst_LTLIBRARIES = libmrctest.la
+lib_LTLIBRARIES = libmrc.la libmrctest.la
 
 libmrc_la_SOURCES = \
 	mrc_mod.c \
@@ -30,7 +28,13 @@ libmrc_la_SOURCES = \
 	mrc_crds_gen_ggcm_x_cubic.c \
 	mrc_crds_gen_ggcm_yz.c \
 	mrc_crds_gen_gaussian.c \
+	mrc_decomposition.c \
 	mrc_vec.c \
+	mrc_mat.c \
+	mrc_mat_csr.c \
+	mrc_mat_csr_mpi.c \
+	mrc_mat_mcsr.c \
+	mrc_mat_mcsr_mpi.c \
 	mrc_fld.c \
 	mrc_fld_float.c \
 	mrc_fld_double.c \
@@ -73,14 +77,14 @@ endif HAVE_HDF5
 if HAVE_PETSC
 libmrc_la_SOURCES += \
 	mrc_vec_petsc.c \
+	mrc_mat_petsc.c \
 	mrc_ts_petsc.c \
 	mrc_domain_mb.c \
 	mrc_block_factory.c \
 	mrc_block_factory_simple.c \
 	mrc_block_factory_cylindrical.c \
 	mrc_block_factory_half_cylinder.c \
-	mrc_ddc_mb.c \
-	mrc_mat.c
+	mrc_ddc_mb.c
 endif HAVE_PETSC
 
 libmrctest_la_SOURCES = \

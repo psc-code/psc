@@ -23,7 +23,7 @@ ggcm_mhd_diag_item_rr1_run(struct ggcm_mhd_diag_item *item,
 			   int diag_type, float plane)
 {
   float scale_rr = 1.;
-  ggcm_mhd_diag_c_write_one_field(io, fld, _RR1, "rr1", scale_rr, diag_type, plane);
+  ggcm_mhd_diag_c_write_one_field(io, fld, RR, "rr1", scale_rr, diag_type, plane);
 }
 
 // ----------------------------------------------------------------------
@@ -47,11 +47,18 @@ ggcm_mhd_diag_item_uu1_run(struct ggcm_mhd_diag_item *item,
 {
   struct ggcm_mhd *mhd = item->diag->mhd;
 
+  int gdims[3];
+  mrc_domain_get_global_dims(fld->_domain, gdims);
+  int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
+
   int mhd_type;
   mrc_fld_get_param_int(fld, "mhd_type", &mhd_type);
 
+  int bnd = fld->_nr_ghosts;
+
   struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, SW_2, "uu1");
   mrc_fld_set_type(fld_r, FLD_TYPE);
+  mrc_fld_set_param_int(fld_r, "nr_ghosts", bnd);
   mrc_fld_setup(fld_r);
 
   struct mrc_fld *r = mrc_fld_get_as(fld_r, FLD_TYPE);
@@ -59,25 +66,31 @@ ggcm_mhd_diag_item_uu1_run(struct ggcm_mhd_diag_item *item,
 
   if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM ||
       mhd_type == MT_SEMI_CONSERVATIVE) {
-    mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
-      F3(r, 0, ix,iy,iz) = UU(f, ix,iy,iz);
-    } mrc_fld_foreach_end;
+    for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
+      mrc_fld_foreach(f, ix,iy,iz, bnd, bnd) {
+	M3(r, 0, ix,iy,iz, p) = UU_(f, ix,iy,iz, p);
+      } mrc_fld_foreach_end;
+    }
   } else if (mhd_type == MT_FULLY_CONSERVATIVE) {
-    mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
-      float b2  = (sqr(.5f * (BX(f, ix,iy,iz) + BX(f, ix+1,iy  ,iz  ))) +
-		   sqr(.5f * (BY(f, ix,iy,iz) + BY(f, ix  ,iy+1,iz  ))) +
-		   sqr(.5f * (BZ(f, ix,iy,iz) + BZ(f, ix  ,iy  ,iz+1))));
-      F3(r, 0, ix,iy,iz) = EE(f, ix,iy,iz) -.5f * b2;
-    } mrc_fld_foreach_end;
+    for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
+      mrc_fld_foreach(f, ix,iy,iz, bnd - 1, bnd - 1) {
+	float b2  = (sqr(.5f * (BX_(f, ix,iy,iz, p) + BX_(f, ix+dx,iy   ,iz   , p))) +
+		     sqr(.5f * (BY_(f, ix,iy,iz, p) + BY_(f, ix   ,iy+dy,iz   , p))) +
+		     sqr(.5f * (BZ_(f, ix,iy,iz, p) + BZ_(f, ix   ,iy   ,iz+dz, p))));
+	M3(r, 0, ix,iy,iz, p) = EE_(f, ix,iy,iz, p) -.5f * b2;
+      } mrc_fld_foreach_end;
+    }
   } else {
     assert(0);
   }
 
   float max = 0.;
-  mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
-    max = mrc_fld_max(max, mrc_fld_abs(F3(r, 0, ix,iy,iz)));
-    if (!isfinite(UU(f, ix,iy,iz))) max = 9999.;
-  } mrc_fld_foreach_end;
+  for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
+    mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
+      max = mrc_fld_max(max, mrc_fld_abs(M3(r, 0, ix,iy,iz, p)));
+      if (!isfinite(UU_(f, ix,iy,iz, p))) max = 9999.;
+    } mrc_fld_foreach_end;
+  }
   mprintf("max uu1 = %g\n", max);
 
   mrc_fld_put_as(r, fld_r);
@@ -108,9 +121,9 @@ ggcm_mhd_diag_item_rv1_run(struct ggcm_mhd_diag_item *item,
 			   int diag_type, float plane)
 {
   float scale_rv = 1.;
-  ggcm_mhd_diag_c_write_one_field(io, fld, _RV1X, "rv1x", scale_rv, diag_type, plane);
-  ggcm_mhd_diag_c_write_one_field(io, fld, _RV1Y, "rv1y", scale_rv, diag_type, plane);
-  ggcm_mhd_diag_c_write_one_field(io, fld, _RV1Z, "rv1z", scale_rv, diag_type, plane);
+  ggcm_mhd_diag_c_write_one_field(io, fld, RVX, "rv1x", scale_rv, diag_type, plane);
+  ggcm_mhd_diag_c_write_one_field(io, fld, RVY, "rv1y", scale_rv, diag_type, plane);
+  ggcm_mhd_diag_c_write_one_field(io, fld, RVZ, "rv1z", scale_rv, diag_type, plane);
 }
 
 // ----------------------------------------------------------------------
@@ -133,9 +146,9 @@ ggcm_mhd_diag_item_b1_run(struct ggcm_mhd_diag_item *item,
 			  int diag_type, float plane)
 {
   float scale_bb = 1.;
-  ggcm_mhd_diag_c_write_one_field(io, fld, _B1X, "b1x", scale_bb, diag_type, plane);
-  ggcm_mhd_diag_c_write_one_field(io, fld, _B1Y, "b1y", scale_bb, diag_type, plane);
-  ggcm_mhd_diag_c_write_one_field(io, fld, _B1Z, "b1z", scale_bb, diag_type, plane);
+  ggcm_mhd_diag_c_write_one_field(io, fld, BX, "b1x", scale_bb, diag_type, plane);
+  ggcm_mhd_diag_c_write_one_field(io, fld, BY, "b1y", scale_bb, diag_type, plane);
+  ggcm_mhd_diag_c_write_one_field(io, fld, BZ, "b1z", scale_bb, diag_type, plane);
 }
 
 // ----------------------------------------------------------------------

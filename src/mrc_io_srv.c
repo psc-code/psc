@@ -1,6 +1,7 @@
 
 #include "mrc_io_private.h"
 #include <mrc_params.h>
+#include <mrc_profile.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -31,12 +32,14 @@ enum {
   ID_DIAGS_SUBDOMAIN,
   ID_DIAGS_DATA,
   ID_DIAGS_2DDATA,
+  ID_DIAGS_CMD_RESPONSE,
 };
 
 enum {
   DIAG_CMD_CREATE,
   DIAG_CMD_OPENFILE,
   DIAG_CMD_SHUTDOWN,
+  DIAG_RESPONSE_SHUTDOWN_COMPLETE,
 };
 
 // ======================================================================
@@ -153,11 +156,33 @@ diagc_combined_close(struct mrc_io *io)
 static void
 diagc_combined_destroy(struct mrc_io *io)
 {
+  static int pr_diag_shutdown = 0;
+  int comm_world_rank = 0;
+  int wait_for_response, icmd[2];
+
   struct diagc_combined_params *par = io->obj.subctx;
 
-  if (io->rank == 0) {
-    int icmd[1] = { DIAG_CMD_SHUTDOWN };
-    MPI_Send(icmd, 1, MPI_INT, par->rank_diagsrv, ID_DIAGS_CMD, MPI_COMM_WORLD);
+  MPI_Comm_rank(MPI_COMM_WORLD, &comm_world_rank);
+  if (mrc_io_is_setup(io) && comm_world_rank == 0) {
+    wait_for_response = 1;
+  } else {
+    wait_for_response = 0;
+  }
+  
+  icmd[0] = DIAG_CMD_SHUTDOWN;
+  icmd[1] = wait_for_response;
+  MPI_Send(icmd, 2, MPI_INT, par->rank_diagsrv, ID_DIAGS_CMD, MPI_COMM_WORLD);
+
+  if (0&&wait_for_response) {
+    int response = 0;
+    if (pr_diag_shutdown == 0) {
+      pr_diag_shutdown = prof_register("diagc_combined_shutdown", 0, 0, 0);
+    }
+    prof_start(pr_diag_shutdown);
+    MPI_Recv(&response, 1, MPI_INT, par->rank_diagsrv, ID_DIAGS_CMD_RESPONSE,
+             MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    assert(response == DIAG_RESPONSE_SHUTDOWN_COMPLETE);
+    prof_stop(pr_diag_shutdown);
   }
 }
 
@@ -875,6 +900,7 @@ static struct param diagsrv_params_descr[] = {
   };
   INIT_LIST_HEAD(&ds.mrc_io_list);
 
+  int respond_to_rank = -1;
   int gdims[3];
   float *w2 = NULL;
 
@@ -887,6 +913,9 @@ static struct param diagsrv_params_descr[] = {
     MPI_Status stat;
     MPI_Recv(icmd, 2, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &stat);
     if (icmd[0] == DIAG_CMD_SHUTDOWN) {
+      if (icmd[1]) {
+        respond_to_rank = stat.MPI_SOURCE;
+      }
       break;
     }
 
@@ -1079,8 +1108,6 @@ static struct param diagsrv_params_descr[] = {
   }  //for (;;) //loop waiting for data to write...
   free(w2);
 
-  mprintf("diagsrv shutting down\n");
-
   while (!list_empty(&ds.mrc_io_list)) {
     struct mrc_io_entry *p = list_entry(ds.mrc_io_list.next, struct mrc_io_entry, entry);
     mrc_io_destroy(p->io);
@@ -1090,4 +1117,11 @@ static struct param diagsrv_params_descr[] = {
   }
 
   srv_ops->destroy(&ds);
+
+  if (respond_to_rank > -1) {
+    int response = DIAG_RESPONSE_SHUTDOWN_COMPLETE;
+    assert(respond_to_rank == 0);
+    MPI_Send(&response, 1, MPI_INT, respond_to_rank, ID_DIAGS_CMD_RESPONSE,
+	     MPI_COMM_WORLD);
+  }
 }

@@ -29,25 +29,27 @@ ggcm_mhd_crds_gen_run_aux_default(struct ggcm_mhd_crds_gen *gen,
 
   // FIXME: this is not bounds checked at all since sw is set from mrc_crds,
   //        NOT ggcm_mhd_crds, which is on the LHS OR RHS here
-  for (int d = 0; d < 3; d++) {
-    // yes, these are labled with 'x', but we loops over all dimensions here
-    float *fxx1 = ggcm_mhd_crds_get_crd(crds, d, FX1);
-    float *fxx2 = ggcm_mhd_crds_get_crd(crds, d, FX2);
-    float *bdx1 = ggcm_mhd_crds_get_crd(crds, d, BD1);
-    float *bdx2 = ggcm_mhd_crds_get_crd(crds, d, BD2);
-    float *bdx3 = ggcm_mhd_crds_get_crd(crds, d, BD3);
-    float *bdx4 = ggcm_mhd_crds_get_crd(crds, d, BD4);
-
-    for (int i = -sw; i < im[d] + sw; i++) {
-      fxx2[i] = sqr(fxx1[i]);
-    }
-    for (int i = -sw; i < im[d] + sw - 1; i++) {
-      bdx1[i] = 1.0 / (fxx1[i+1] - fxx1[i]);
-      bdx4[i] = 1.0 / (fxx1[i+1] - fxx1[i]);
-    }
-    for (int i = -sw + 1; i < im[d] + sw - 1; i++) {
-      bdx2[i] = 0.5 * (fxx1[i+1] - fxx1[i-1]);
-      bdx3[i] = 1.0 / bdx2[i];
+  for (int p = 0; p < mrc_domain_nr_patches(crds->domain); p++) {
+    for (int d = 0; d < 3; d++) {
+      // yes, these are labled with 'x', but we loops over all dimensions here
+      float *fxx1 = ggcm_mhd_crds_get_crd_p(crds, d, FX1, p);
+      float *fxx2 = ggcm_mhd_crds_get_crd_p(crds, d, FX2, p);
+      float *bdx1 = ggcm_mhd_crds_get_crd_p(crds, d, BD1, p);
+      float *bdx2 = ggcm_mhd_crds_get_crd_p(crds, d, BD2, p);
+      float *bdx3 = ggcm_mhd_crds_get_crd_p(crds, d, BD3, p);
+      float *bdx4 = ggcm_mhd_crds_get_crd_p(crds, d, BD4, p);
+      
+      for (int i = -sw; i < im[d] + sw; i++) {
+	fxx2[i] = sqr(fxx1[i]);
+      }
+      for (int i = -sw; i < im[d] + sw - 1; i++) {
+	bdx1[i] = 1.0 / (fxx1[i+1] - fxx1[i]);
+	bdx4[i] = 1.0 / (fxx1[i+1] - fxx1[i]);
+      }
+      for (int i = -sw + 1; i < im[d] + sw - 1; i++) {
+	bdx2[i] = 0.5 * (fxx1[i+1] - fxx1[i-1]);
+	bdx3[i] = 1.0 / bdx2[i];
+      }
     }
   }
 }

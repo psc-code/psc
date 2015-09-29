@@ -27,6 +27,6 @@ primvar_c(struct ggcm_mhd *mhd, int m)
 void
 primvar1_c(struct ggcm_mhd *mhd)
 {
-  return primvar_c(mhd, _RR1);
+  return primvar_c(mhd, 0);
 }
 

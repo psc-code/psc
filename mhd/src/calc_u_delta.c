@@ -26,7 +26,7 @@ static void __unused
 limit_1(struct mrc_fld *u_delta[3], struct mrc_fld *u)
 {
   mrc_fld_foreach(u, ix,iy,iz, 1, 1) {
-    for (int m = 0; m <= _B1Z; m++) {
+    for (int m = 0; m <= BZ; m++) {
       MRC_F3(u_delta[0], m, ix,iy,iz) = 
 	fmaxf((MRC_F3(u, m, ix+1,iy,iz) - MRC_F3(u, m, ix  ,iy,iz)) *
 	      (MRC_F3(u, m, ix  ,iy,iz) - MRC_F3(u, m, ix-1,iy,iz)) , 0.f) /
@@ -64,7 +64,7 @@ limit_2(struct mrc_fld *u_delta[3], struct mrc_fld *u)
   for (int i = 0; i < 3; i++) {    
     dind[i] = 1; 
     mrc_fld_foreach(u, ix,iy,iz, 1, 1) {
-	for (int m = 0; m <= _B1Z; m++) {    
+	for (int m = 0; m <= BZ; m++) {    
 	  float rl =  ( MRC_F3(u, m, ix+dind[0], iy+dind[1], iz+dind[2])  - MRC_F3(u, m, ix, iy, iz));
 	  float rr =  ( MRC_F3(u, m, ix, iy, iz)  - MRC_F3(u, m, ix-dind[0], iy-dind[1], iz-dind[2]));
 	  if ( rl*rr > 0 ) {
@@ -94,7 +94,7 @@ limit_3(struct mrc_fld *u_delta[3], struct mrc_fld *u)
   for (int i = 0; i < 3; i++) {    
     dind[i] = 1; 
     mrc_fld_foreach(u, ix,iy,iz, 1, 1) {
-      for (int m = 0; m <= _B1Z; m++) {    
+      for (int m = 0; m <= BZ; m++) {    
 	float rl =  2.0*( MRC_F3(u, m, ix+dind[0], iy+dind[1], iz+dind[2])  - MRC_F3(u, m, ix, iy, iz));
 	float rr =  2.0*( MRC_F3(u, m, ix, iy, iz)  - MRC_F3(u, m, ix-dind[0], iy-dind[1], iz-dind[2]));
 	float cen = .5f*( MRC_F3(u, m, ix+dind[0], iy+dind[1], iz+dind[2])  - 
@@ -122,7 +122,7 @@ limit_4(struct mrc_fld *u_delta[3], struct mrc_fld *u)
   for (int i = 0; i < 3; i++) {    
     dind[i] = 1; 
     mrc_fld_foreach(u, ix,iy,iz, 1, 1) {
-      for (int m = 0; m <= _B1Z; m++) {    
+      for (int m = 0; m <= BZ; m++) {    
 	float rl =  theta *( MRC_F3(u, m, ix+dind[0], iy+dind[1], iz+dind[2])  - MRC_F3(u, m, ix, iy, iz));
 	float rr =  theta *( MRC_F3(u, m, ix, iy, iz)  - MRC_F3(u, m, ix-dind[0], iy-dind[1], iz-dind[2]));
 	float cen =   .5f *( MRC_F3(u, m, ix+dind[0], iy+dind[1], iz+dind[2])  - 
@@ -150,7 +150,7 @@ limit_5(struct mrc_fld *u_delta[3], struct mrc_fld *u)
   for (int i = 0; i < 3; i++) {    
     dind[i] = 1; 
     mrc_fld_foreach(u, ix,iy,iz, 1, 1) {
-      for (int m = 0; m <= _B1Z; m++) {    
+      for (int m = 0; m <= BZ; m++) {    
 	float rl = ( MRC_F3(u, m, ix+dind[0], iy+dind[1], iz+dind[2])  - MRC_F3(u, m, ix, iy, iz));
 	float rr = ( MRC_F3(u, m, ix, iy, iz)  - MRC_F3(u, m, ix-dind[0], iy-dind[1], iz-dind[2]));
 

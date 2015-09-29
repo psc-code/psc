@@ -51,7 +51,7 @@
 
 enum {
   // reuse B in the _fluxes_ (only) to store E field
-  _EX = _B1X,
+  _EX = BX,
   _EY,
   _EZ,
 
