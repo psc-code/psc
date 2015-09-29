@@ -88,14 +88,14 @@ mrc_block_factory_simple2d_run(struct mrc_block_factory *fac, struct mrc_domain 
   // check if any of our directions is periodic. If so, assign 
   // the appropriate mapping.
 
-  if (mb->bc[0] == BC_PERIODIC) {
+  if (domain->bc[0] == BC_PERIODIC) {
     blocks[0].faces[FACE_LEFT] = 
       (struct MB_face) { 0, FACE_RIGHT , .map = { 0, MB_Y, MB_Z } };
     blocks[0].faces[FACE_RIGHT] = 
       (struct MB_face) { 0, FACE_LEFT  , .map = { 0, MB_Y, MB_Z } };
   }
 
-  if (mb->bc[1] == BC_PERIODIC) {
+  if (domain->bc[1] == BC_PERIODIC) {
     blocks[0].faces[FACE_BOTTOM] = 
       (struct MB_face) { 0, FACE_TOP   , .map = { MB_X, 0, MB_Z } };
     blocks[0].faces[FACE_TOP] = 
@@ -148,19 +148,19 @@ mrc_block_factory_simple3d_run(struct mrc_block_factory *fac, struct mrc_domain 
      .xh = { sub->xe, sub->ye, sub->ze } ,   
    };
 
-  if (mb->bc[0] == BC_PERIODIC) {
+  if (domain->bc[0] == BC_PERIODIC) {
     blocks[0].faces[FACE_LEFT] = 
       (struct MB_face) { 0, FACE_RIGHT , .map = { 0, MB_Y, MB_Z } };
     blocks[0].faces[FACE_RIGHT] = 
       (struct MB_face) { 0, FACE_LEFT  , .map = { 0, MB_Y, MB_Z } };
   }
-  if (mb->bc[1] == BC_PERIODIC) {
+  if (domain->bc[1] == BC_PERIODIC) {
     blocks[0].faces[FACE_BOTTOM] = 
       (struct MB_face) { 0, FACE_TOP   , .map = { MB_X, 0, MB_Z } };
     blocks[0].faces[FACE_TOP] = 
       (struct MB_face) { 0, FACE_BOTTOM, .map = { MB_X, 0, MB_Z } };
   }
-  if (mb->bc[2] == BC_PERIODIC) {
+  if (domain->bc[2] == BC_PERIODIC) {
     blocks[0].faces[FACE_FRONT] = 
       (struct MB_face) { 0, FACE_BACK  , .map = { MB_X, MB_Y, 0 } };
     blocks[0].faces[FACE_BACK] = 
