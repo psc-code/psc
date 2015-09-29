@@ -148,7 +148,6 @@ mrc_crds_get_dx_base(struct mrc_crds *crds, double dx[3])
     }
   } else {
     assert(strcmp(mrc_crds_type(crds), "uniform") == 0);
-    assert(mrc_domain_nr_patches(crds->domain) == 1);
     // the only place where this makes sense is if we have one patch / proc, no AMR, anyway
     mrc_crds_get_dx(crds, 0, dx); // the only 
   }
