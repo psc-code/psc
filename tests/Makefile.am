@@ -38,7 +38,7 @@ tutorial_mrc_obj_SOURCES = tutorial_mrc_obj.c vector.c vector_double.c vector_fl
 LDADD = ../src/libmrctest.la ../src/libmrc.la
 
 TEST_EXTENSIONS = .sh
-SH_LOG_COMPILER = sh
+SH_LOG_COMPILER = bash
 
 TESTS = \
 	test_io_0.sh \
