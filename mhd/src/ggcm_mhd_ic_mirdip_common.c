@@ -22,6 +22,9 @@ struct ggcm_mhd_ic_mirdip {
   float prat; // determines initial interior pressure as a fraction of solar wind pressure
 
   float dipole_moment[3];
+
+  // solar wind values to use if there is not "bndsw" object around
+  double bnvals[SW_NR];
 };
 
 #define ggcm_mhd_ic_mirdip(ic) mrc_to_subobj(ic, struct ggcm_mhd_ic_mirdip)
@@ -100,9 +103,16 @@ static void
 ggcm_mhd_ic_mirdip_ini_b(struct ggcm_mhd_ic *ic, float b_sw[3])
 {
   struct ggcm_mhd_ic_mirdip *sub = ggcm_mhd_ic_mirdip(ic);
-  struct ggcm_mhd_dipole *mhd_dipole = ggcm_mhd_get_var_obj(ic->mhd, "mhd_dipole");
-  if (!mhd_dipole) {
-    return;
+  struct ggcm_mhd *mhd = ic->mhd;
+  struct ggcm_mhd_dipole *mhd_dipole = ggcm_mhd_get_var_obj(mhd, "mhd_dipole");
+  if (mhd_dipole) {
+    ggcm_mhd_dipole_get(mhd_dipole);
+  } else {
+    mhd_dipole = ggcm_mhd_dipole_create(ggcm_mhd_ic_comm(ic));
+    ggcm_mhd_dipole_set_type(mhd_dipole, FLD_TYPE);
+    ggcm_mhd_dipole_set_from_options(mhd_dipole);
+    ggcm_mhd_dipole_set_param_obj(mhd_dipole, "mhd", mhd);
+    ggcm_mhd_dipole_setup(mhd_dipole);
   }
 
   float x0[3] = {0.0, 0.0, 0.0};
@@ -110,41 +120,42 @@ ggcm_mhd_ic_mirdip_ini_b(struct ggcm_mhd_ic *ic, float b_sw[3])
   /* mprintf("mirdip_ini_b dipole moment: %f %f %f\n", sub->dipole_moment[0], */
   /* 	  sub->dipole_moment[1], sub->dipole_moment[2]); */
 
-  struct mrc_fld *_b = mrc_fld_make_view(ic->mhd->fld, BX, BX + 3);
-  ggcm_mhd_dipole_add_dipole(mhd_dipole, _b, x0, sub->dipole_moment, sub->xmir, 0.);
+  struct mrc_fld *b_base = mrc_fld_make_view(mhd->fld, BX, BX + 3);
+  ggcm_mhd_dipole_add_dipole(mhd_dipole, b_base, x0, sub->dipole_moment, sub->xmir, 0.);
 
   if (sub->xmir != 0.0) {
     x0[0] = 2.0 * sub->xmir;
     sub->dipole_moment[0] *= -1.0;
-    ggcm_mhd_dipole_add_dipole(mhd_dipole, _b, x0, sub->dipole_moment, sub->xmir, 1.);
+    ggcm_mhd_dipole_add_dipole(mhd_dipole, b_base, x0, sub->dipole_moment, sub->xmir, 1.);
     sub->dipole_moment[0] *= -1.0;
   }
 
-  struct mrc_fld *b = mrc_fld_get_as(_b, FLD_TYPE);
+  mrc_fld_destroy(b_base);
+
+  struct mrc_fld *f = mrc_fld_get_as(mhd->fld, FLD_TYPE);
 
   // finish up
-  for (int p = 0; p < mrc_fld_nr_patches(b); p++) {
-    mrc_fld_foreach(b, ix,iy,iz, 0, 1) {
-      for (int i = 0; i < 3; i++){
+  for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
+    mrc_fld_foreach(f, ix,iy,iz, 0, 1) {
+      for (int d = 0; d < 3; d++){
 	float crd_fc[3];
-	ggcm_mhd_get_crds_fc(ic->mhd, ix,iy,iz, p, i, crd_fc);
+	ggcm_mhd_get_crds_fc(mhd, ix,iy,iz, p, d, crd_fc);
 	
 	// zero B if inside r1lim
 	float r = sqrtf(sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]));
 	if (r < sub->r1lim) {
-	  M3(b, i, ix,iy,iz, p) = 0.0;
+	  M3(f, BX + d, ix,iy,iz, p) = 0.0;
 	}
 	
 	// add B_IMF
-	M3(b, i, ix,iy,iz, p) += b_sw[i];
+	M3(f, BX + d, ix,iy,iz, p) += b_sw[d];
       }
     } mrc_fld_foreach_end;
   }
 
-  mrc_fld_put_as(b, _b);
+  mrc_fld_put_as(f, mhd->fld);
 
-  mrc_fld_destroy(_b);
-
+  ggcm_mhd_dipole_put(mhd_dipole);
 }
 
 // ----------------------------------------------------------------------
@@ -153,6 +164,8 @@ ggcm_mhd_ic_mirdip_ini_b(struct ggcm_mhd_ic *ic, float b_sw[3])
 static void
 ggcm_mhd_ic_mirdip_run(struct ggcm_mhd_ic *ic)
 {
+  struct ggcm_mhd_ic_mirdip *sub = ggcm_mhd_ic_mirdip(ic);
+
   // ini_b is done when we still have the primitive variables stored in
   // mhd->fld, so it needs to use the right ("regular") staggering because
   // the convert_from_primitive() will fix up the staggering to whatever
@@ -163,7 +176,13 @@ ggcm_mhd_ic_mirdip_run(struct ggcm_mhd_ic *ic)
 
   float vals[SW_NR];
   struct ggcm_mhd_bndsw *bndsw = ggcm_mhd_get_var_obj(ic->mhd, "bndsw");
-  ggcm_mhd_bndsw_get_initial(bndsw, vals);
+  if (bndsw) {
+    ggcm_mhd_bndsw_get_initial(bndsw, vals);
+  } else {
+    for (int m = 0; m < SW_NR; m++) {
+      vals[m] = sub->bnvals[m];
+    }
+  }
   ggcm_mhd_ic_mirdip_ini1(ic, vals);
   ggcm_mhd_ic_mirdip_ini_b(ic, &vals[SW_BX]);
 
@@ -211,6 +230,15 @@ static struct param ggcm_mhd_ic_mirdip_descr[] = {
   { "prat"         , VAR(prat)         , PARAM_FLOAT(.5)           },
 
   { "dipole_moment", VAR(dipole_moment), PARAM_FLOAT3(0., 0., -1.) },
+
+  { "rr"           , VAR(bnvals[SW_RR]), PARAM_DOUBLE(1.)          },
+  { "pp"           , VAR(bnvals[SW_PP]), PARAM_DOUBLE(1.)          },
+  { "vx"           , VAR(bnvals[SW_VX]), PARAM_DOUBLE(0.)          },
+  { "vy"           , VAR(bnvals[SW_VY]), PARAM_DOUBLE(0.)          },
+  { "vz"           , VAR(bnvals[SW_VZ]), PARAM_DOUBLE(0.)          },
+  { "bx"           , VAR(bnvals[SW_BX]), PARAM_DOUBLE(0.)          },
+  { "by"           , VAR(bnvals[SW_BY]), PARAM_DOUBLE(0.)          },
+  { "bz"           , VAR(bnvals[SW_BZ]), PARAM_DOUBLE(0.)          },
   {},
 };
 #undef VAR
