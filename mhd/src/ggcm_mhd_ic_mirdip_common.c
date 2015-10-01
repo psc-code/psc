@@ -117,8 +117,8 @@ ggcm_mhd_ic_mirdip_ini_b(struct ggcm_mhd_ic *ic, float b_sw[3])
 
   float x0[3] = {0.0, 0.0, 0.0};
 
-  /* mprintf("mirdip_ini_b dipole moment: %f %f %f\n", sub->dipole_moment[0], */
-  /* 	  sub->dipole_moment[1], sub->dipole_moment[2]); */
+  mprintf("mirdip_ini_b dipole moment: %f %f %f\n", sub->dipole_moment[0],
+  	  sub->dipole_moment[1], sub->dipole_moment[2]);
 
   struct mrc_fld *b_base = mrc_fld_make_view(mhd->fld, BX, BX + 3);
   ggcm_mhd_dipole_add_dipole(mhd_dipole, b_base, x0, sub->dipole_moment, sub->xmir, 0.);
@@ -165,6 +165,7 @@ static void
 ggcm_mhd_ic_mirdip_run(struct ggcm_mhd_ic *ic)
 {
   struct ggcm_mhd_ic_mirdip *sub = ggcm_mhd_ic_mirdip(ic);
+  struct ggcm_mhd *mhd = ic->mhd;
 
   // ini_b is done when we still have the primitive variables stored in
   // mhd->fld, so it needs to use the right ("regular") staggering because
@@ -175,13 +176,18 @@ ggcm_mhd_ic_mirdip_run(struct ggcm_mhd_ic *ic)
   mrc_fld_set_param_int(ic->mhd->fld, "mhd_type", MT_PRIMITIVE);
 
   float vals[SW_NR];
-  struct ggcm_mhd_bndsw *bndsw = ggcm_mhd_get_var_obj(ic->mhd, "bndsw");
+  struct ggcm_mhd_bndsw *bndsw = ggcm_mhd_get_var_obj(mhd, "bndsw");
   if (bndsw) {
     ggcm_mhd_bndsw_get_initial(bndsw, vals);
   } else {
-    for (int m = 0; m < SW_NR; m++) {
-      vals[m] = sub->bnvals[m];
-    }
+    vals[SW_RR] = sub->bnvals[SW_RR] / mhd->par.rrnorm;
+    vals[SW_VX] = sub->bnvals[SW_VX] / mhd->par.vvnorm;
+    vals[SW_VY] = sub->bnvals[SW_VY] / mhd->par.vvnorm;
+    vals[SW_VZ] = sub->bnvals[SW_VZ] / mhd->par.vvnorm;
+    vals[SW_PP] = sub->bnvals[SW_PP] / mhd->par.ppnorm;
+    vals[SW_BX] = sub->bnvals[SW_BX] / mhd->par.bbnorm;
+    vals[SW_BY] = sub->bnvals[SW_BY] / mhd->par.bbnorm;
+    vals[SW_BZ] = sub->bnvals[SW_BZ] / mhd->par.bbnorm;
   }
   ggcm_mhd_ic_mirdip_ini1(ic, vals);
   ggcm_mhd_ic_mirdip_ini_b(ic, &vals[SW_BX]);
