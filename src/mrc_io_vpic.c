@@ -294,7 +294,8 @@ mrc_io_vpic_write_fld_global(struct mrc_io *io, struct mrc_fld *fld)
   mrc_domain_get_param_int3(domain, "np", g->topology);
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   float xl[3], xh[3];
-  mrc_crds_get_dx(crds, g->delta_x);
+  // FIXME: "base" only really makes sense for amr..
+  mrc_crds_get_dx_base(crds, g->delta_x);
   mrc_crds_get_param_float3(crds, "l", xl);
   mrc_crds_get_param_float3(crds, "h", xh);
   for (int d = 0; d < 3; d++) {
@@ -396,7 +397,8 @@ mrc_io_vpic_write_header(struct mrc_io *io, FILE *file, struct mrc_fld *fld, int
   const int *gridSize = mrc_fld_dims(fld); // FIXME mrc_fld_spatial_dims()
   float deltaTime = sub->global.delta_t;
   float gridStep[DIMENSION];
-  mrc_crds_get_dx(crds, gridStep);
+  // FIXME: base only really makes sense for AMR
+  mrc_crds_get_dx_base(crds, gridStep);
   float gridOrigin[DIMENSION] = { 0., 0., 0. }; // FIXME?
   float cvac = sub->global.cvac;
   float epsilon = sub->global.eps;
