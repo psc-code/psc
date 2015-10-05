@@ -934,27 +934,34 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
       assert(!m3->_is_aos);
       switch (m3->_data_type) {
       case MRC_NT_FLOAT:
+      {
       	float *buf_ptr = ctx->send_bufs[writer] + buf_sizes[writer];
       	BUFLOOP(ix, iy, iz, ilo, ihi) {
-	    *buf_ptr++ = MRC_S5(m3, ix-off[0],iy-off[1],iz-off[2], m, p);
+    	    *buf_ptr++ = MRC_S5(m3, ix-off[0],iy-off[1],iz-off[2], m, p);
       	} BUFLOOP_END
       	break;
+      }
       case MRC_NT_DOUBLE:
+      {
       	double *buf_ptr = ctx->send_bufs[writer] + buf_sizes[writer];
       	BUFLOOP(ix, iy, iz, ilo, ihi) {
-	    *buf_ptr++ = MRC_D5(m3, ix-off[0],iy-off[1],iz-off[2], m, p);
+          *buf_ptr++ = MRC_D5(m3, ix-off[0],iy-off[1],iz-off[2], m, p);
       	} BUFLOOP_END
       	break;
+      }
       case MRC_NT_INT:
+      {
       	int *buf_ptr = ctx->send_bufs[writer] + buf_sizes[writer];
       	BUFLOOP(ix, iy, iz, ilo, ihi) {
-	    *buf_ptr++ = MRC_I5(m3, ix-off[0],iy-off[1],iz-off[2], m, p);
+    	    *buf_ptr++ = MRC_I5(m3, ix-off[0],iy-off[1],iz-off[2], m, p);
       	} BUFLOOP_END
       	break;
+      }
       default:
+      {
       	assert(0);
       }
-
+      }
       int len = (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
       buf_sizes[writer] += len;
     }
@@ -1108,26 +1115,34 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
 
     switch (m3->_data_type) {
     case MRC_NT_FLOAT:
+    {
       float *buf_ptr = ctx->recv_bufs[info.rank] + buf_sizes[info.rank];
       BUFLOOP(ix, iy, iz, ilo, ihi) {
-	MRC_S4(fld, ix,iy,iz, 0) = *buf_ptr++;
+      	MRC_S4(fld, ix,iy,iz, 0) = *buf_ptr++;
       } BUFLOOP_END
       break;
+    }
     case MRC_NT_DOUBLE:
+    {
       double *buf_ptr = ctx->recv_bufs[info.rank] + buf_sizes[info.rank];
       BUFLOOP(ix, iy, iz, ilo, ihi) {
-	MRC_D4(fld, ix,iy,iz, 0) = *buf_ptr++;
+      	MRC_D4(fld, ix,iy,iz, 0) = *buf_ptr++;
       } BUFLOOP_END
       break;     
+    }
     case MRC_NT_INT:
+    {
      int *buf_ptr = ctx->recv_bufs[info.rank] + buf_sizes[info.rank];
       BUFLOOP(ix, iy, iz, ilo, ihi) {
-	MRC_I4(fld, ix,iy,iz, 0) = *buf_ptr++;
+      	MRC_I4(fld, ix,iy,iz, 0) = *buf_ptr++;
       } BUFLOOP_END
       break;
+    }
     default:
+    {
       	assert(0);
-      }    
+    }
+    }    
     buf_sizes[info.rank] += len;
     rr++;
   }
@@ -1163,29 +1178,34 @@ collective_recv_fld_local(struct collective_m3_ctx *ctx,
     }
     switch (m3->_data_type) {
     case MRC_NT_FLOAT:
-      float *buf_ptr = ctx->recv_bufs[info.rank] + buf_sizes[info.rank];
+    {
       BUFLOOP(ix, iy, iz, ilo, ihi) {
         MRC_S4(fld, ix,iy,iz, 0) =
           MRC_S5(m3, ix - off[0], iy - off[1], iz - off[2], m, p);
       } BUFLOOP_END
       break;
+    }
     case MRC_NT_DOUBLE:
-      double *buf_ptr = ctx->recv_bufs[info.rank] + buf_sizes[info.rank];
+    {
       BUFLOOP(ix, iy, iz, ilo, ihi) {
         MRC_D4(fld, ix,iy,iz, 0) =
           MRC_D5(m3, ix - off[0], iy - off[1], iz - off[2], m, p);
       } BUFLOOP_END
       break;     
+    }
     case MRC_NT_INT:
-     int *buf_ptr = ctx->recv_bufs[info.rank] + buf_sizes[info.rank];
+    {
       BUFLOOP(ix, iy, iz, ilo, ihi) {
         MRC_I4(fld, ix,iy,iz, 0) =
           MRC_I5(m3, ix - off[0], iy - off[1], iz - off[2], m, p);
       } BUFLOOP_END
       break;
+    }
     default:
+    {
       	assert(0);
-      }    
+    }
+    }    
   }
 }
 
