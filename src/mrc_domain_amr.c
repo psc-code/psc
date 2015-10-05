@@ -11,8 +11,6 @@
 
 #define TAG_SCAN_OFF (1000)
 
-#define to_mrc_domain_amr(domain) mrc_to_subobj(domain, struct mrc_domain_amr)
-
 static int
 sfc_level_idx3_to_idx(struct mrc_domain_amr *amr, int l, int idx3[3])
 {
@@ -66,7 +64,7 @@ compare_level_sfc_idx(const void *p1, const void *p2)
 static void
 map_create(struct mrc_domain *domain)
 {
-  struct mrc_domain_amr *amr = to_mrc_domain_amr(domain);
+  struct mrc_domain_amr *amr = mrc_domain_amr(domain);
 
   amr->map_gpatch_to_sfc = calloc(amr->nr_global_patches,
 				  sizeof(*amr->map_gpatch_to_sfc));
@@ -89,7 +87,7 @@ map_create(struct mrc_domain *domain)
 static void
 map_destroy(struct mrc_domain *domain)
 {
-  struct mrc_domain_amr *amr = to_mrc_domain_amr(domain);
+  struct mrc_domain_amr *amr = mrc_domain_amr(domain);
 
   free(amr->map_gpatch_to_sfc);
 }
@@ -97,7 +95,7 @@ map_destroy(struct mrc_domain *domain)
 static int
 map_sfc_idx_to_gpatch(struct mrc_domain *domain, int l, int sfc_idx)
 {
-  struct mrc_domain_amr *amr = to_mrc_domain_amr(domain);
+  struct mrc_domain_amr *amr = mrc_domain_amr(domain);
 
   // FIXME, do binary search
   for (int gp = 0; gp < amr->nr_global_patches; gp++) {
@@ -112,7 +110,7 @@ map_sfc_idx_to_gpatch(struct mrc_domain *domain, int l, int sfc_idx)
 static void
 map_gpatch_to_sfc_idx(struct mrc_domain *domain, int gpatch, int *l, int *sfc_idx)
 {
-  struct mrc_domain_amr *amr = to_mrc_domain_amr(domain);
+  struct mrc_domain_amr *amr = mrc_domain_amr(domain);
 
   *l       = amr->map_gpatch_to_sfc[gpatch].l;
   *sfc_idx = amr->map_gpatch_to_sfc[gpatch].sfc_idx;
@@ -124,7 +122,7 @@ static void
 gpatch_to_rank_patch(struct mrc_domain *domain, int gpatch,
 		     int *rank, int *patch)
 {
-  struct mrc_domain_amr *amr = to_mrc_domain_amr(domain);
+  struct mrc_domain_amr *amr = mrc_domain_amr(domain);
 
   // FIXME, this can be done much more efficiently using binary search...
   for (int i = 0; i < domain->size; i++) {
@@ -146,7 +144,7 @@ static void
 mrc_domain_amr_get_global_patch_info(struct mrc_domain *domain, int gpatch,
 				     struct mrc_patch_info *info)
 {
-  struct mrc_domain_amr *amr = to_mrc_domain_amr(domain);
+  struct mrc_domain_amr *amr = mrc_domain_amr(domain);
 
   assert(gpatch < amr->nr_global_patches);
   info->global_patch = gpatch;
@@ -172,7 +170,7 @@ static void
 mrc_domain_amr_get_local_patch_info(struct mrc_domain *domain, int patch,
 				      struct mrc_patch_info *info)
 {
-  struct mrc_domain_amr *amr = to_mrc_domain_amr(domain);
+  struct mrc_domain_amr *amr = mrc_domain_amr(domain);
 
   mrc_domain_amr_get_global_patch_info(domain, amr->gpatch_off + patch,
 				       info);
@@ -184,7 +182,7 @@ mrc_domain_amr_get_local_patch_info(struct mrc_domain *domain, int patch,
 static void
 mrc_domain_amr_create(struct mrc_domain *domain)
 {
-  struct mrc_domain_amr *amr = to_mrc_domain_amr(domain);
+  struct mrc_domain_amr *amr = mrc_domain_amr(domain);
 
   INIT_LIST_HEAD(&amr->global_patch_list);
   amr->nr_levels = -1;
@@ -202,7 +200,7 @@ mrc_domain_amr_create(struct mrc_domain *domain)
 static void
 mrc_domain_amr_add_patch(struct mrc_domain *domain, int l, int idx3[3])
 {
-  struct mrc_domain_amr *amr = to_mrc_domain_amr(domain);
+  struct mrc_domain_amr *amr = mrc_domain_amr(domain);
 
   struct mrc_amr_patch *patch = calloc(1, sizeof(*patch));
   patch->l = l;
@@ -220,7 +218,7 @@ mrc_domain_amr_add_patch(struct mrc_domain *domain, int l, int idx3[3])
 static void
 setup_gpatch_off_all(struct mrc_domain *domain)
 {
-  struct mrc_domain_amr *amr = to_mrc_domain_amr(domain);
+  struct mrc_domain_amr *amr = mrc_domain_amr(domain);
 
   amr->gpatch_off_all = calloc(domain->size + 1, sizeof(*amr->gpatch_off_all));
   int nr_global_patches = amr->nr_global_patches;
@@ -255,7 +253,7 @@ setup_gpatch_off_all(struct mrc_domain *domain)
 static void
 mrc_domain_amr_setup(struct mrc_domain *domain)
 {
-  struct mrc_domain_amr *amr = to_mrc_domain_amr(domain);
+  struct mrc_domain_amr *amr = mrc_domain_amr(domain);
 
   MPI_Comm comm = mrc_domain_comm(domain);
   MPI_Comm_rank(comm, &domain->rank);
@@ -296,7 +294,7 @@ mrc_domain_amr_setup(struct mrc_domain *domain)
 static void
 mrc_domain_amr_destroy(struct mrc_domain *domain)
 {
-  struct mrc_domain_amr *amr = to_mrc_domain_amr(domain);
+  struct mrc_domain_amr *amr = mrc_domain_amr(domain);
 
   free(amr->gpatch_off_all);
   free(amr->patches);
@@ -309,7 +307,7 @@ mrc_domain_amr_destroy(struct mrc_domain *domain)
 static void
 mrc_domain_amr_view(struct mrc_domain *domain)
 {
-  struct mrc_domain_amr *amr = to_mrc_domain_amr(domain);
+  struct mrc_domain_amr *amr = mrc_domain_amr(domain);
 
   if (domain->rank == 0) {
     mprintf("nr_levels = %d\n", amr->nr_levels);
@@ -354,7 +352,7 @@ mrc_domain_amr_view(struct mrc_domain *domain)
 static struct mrc_patch *
 mrc_domain_amr_get_patches(struct mrc_domain *domain, int *nr_patches)
 {
-  struct mrc_domain_amr *amr = to_mrc_domain_amr(domain);
+  struct mrc_domain_amr *amr = mrc_domain_amr(domain);
   if (nr_patches) {
     *nr_patches = amr->nr_patches;
   }
@@ -367,23 +365,10 @@ mrc_domain_amr_get_patches(struct mrc_domain *domain, int *nr_patches)
 static void
 mrc_domain_amr_get_global_dims(struct mrc_domain *domain, int *dims)
 {
-  struct mrc_domain_amr *amr = to_mrc_domain_amr(domain);
+  struct mrc_domain_amr *amr = mrc_domain_amr(domain);
 
   for (int d = 0; d < 3; d++) {
     dims[d] = amr->gdims[d];
-  }
-}
-
-// ----------------------------------------------------------------------
-// mrc_domain_amr_get_bc
-
-static void
-mrc_domain_amr_get_bc(struct mrc_domain *domain, int *bc)
-{
-  struct mrc_domain_amr *amr = to_mrc_domain_amr(domain);
-
-  for (int d = 0; d < 3; d++) {
-    bc[d] = amr->bc[d];
   }
 }
 
@@ -393,7 +378,7 @@ mrc_domain_amr_get_bc(struct mrc_domain *domain, int *bc)
 static void
 mrc_domain_amr_get_nr_global_patches(struct mrc_domain *domain, int *nr_global_patches)
 {
-  struct mrc_domain_amr *amr = to_mrc_domain_amr(domain);
+  struct mrc_domain_amr *amr = mrc_domain_amr(domain);
 
   *nr_global_patches = amr->nr_global_patches;
 }
@@ -405,15 +390,19 @@ static void
 mrc_domain_amr_get_level_idx3_patch_info(struct mrc_domain *domain, int level,
 					 int idx3[3], struct mrc_patch_info *info)
 {
-  struct mrc_domain_amr *amr = to_mrc_domain_amr(domain);
+  struct mrc_domain_amr *amr = mrc_domain_amr(domain);
 
-
+  info->rank = -1;
+  info->patch = -1;
+  info->global_patch = -1;
+  for (int d = 0; d < 3; d++) {
+    if (idx3[d] < 0 || idx3[d] >= (1 << level))
+      return;
+  }
+  
   int sfc_idx = sfc_level_idx3_to_idx(amr, level, idx3);
   int gpatch = map_sfc_idx_to_gpatch(domain, level, sfc_idx);
   if (gpatch < 0) {
-    info->rank = -1;
-    info->patch = -1;
-    info->global_patch = -1;
     return;
   }
   mrc_domain_amr_get_global_patch_info(domain, gpatch, info);
@@ -444,7 +433,7 @@ mrc_domain_amr_get_neighbor_rank_patch(struct mrc_domain *domain, int p, int dir
 static void
 mrc_domain_amr_get_nr_levels(struct mrc_domain *domain, int *p_nr_levels)
 {
-  struct mrc_domain_amr *amr = to_mrc_domain_amr(domain);
+  struct mrc_domain_amr *amr = mrc_domain_amr(domain);
 
   *p_nr_levels = amr->nr_levels + 1;
 }
@@ -480,7 +469,7 @@ mrc_domain_amr_write(struct mrc_domain *domain, struct mrc_io *io)
 static void
 mrc_domain_amr_plot(struct mrc_domain *domain)
 {
-  struct mrc_domain_amr *amr = to_mrc_domain_amr(domain);
+  struct mrc_domain_amr *amr = mrc_domain_amr(domain);
 
   if (domain->rank != 0) {
     return;
@@ -533,12 +522,6 @@ mrc_domain_amr_create_ddc(struct mrc_domain *domain)
   return ddc;
 }
 
-static struct mrc_param_select bc_descr[] = {
-  { .val = BC_NONE       , .str = "none"     },
-  { .val = BC_PERIODIC   , .str = "periodic" },
-  {},
-};
-
 static struct mrc_param_select curve_descr[] = {
   { .val = CURVE_BYDIM   , .str = "bydim"    },
   { .val = CURVE_MORTON  , .str = "morton"   },
@@ -549,12 +532,6 @@ static struct mrc_param_select curve_descr[] = {
 #define VAR(x) (void *)offsetof(struct mrc_domain_amr, x)
 static struct param mrc_domain_amr_params_descr[] = {
   { "m"               , VAR(gdims)           , PARAM_INT3(32, 32, 32) },
-  { "bcx"             , VAR(bc[0])           , PARAM_SELECT(BC_NONE,
-							    bc_descr) },
-  { "bcy"             , VAR(bc[1])           , PARAM_SELECT(BC_NONE,
-							    bc_descr) },
-  { "bcz"             , VAR(bc[2])           , PARAM_SELECT(BC_NONE,
-							    bc_descr) },
   { "curve_type"      , VAR(sfc.curve_type)  , PARAM_SELECT(CURVE_BYDIM,
 							    curve_descr) },
   { "nr_patches"      , VAR(nr_patches)      , PARAM_INT(-1) },
@@ -573,7 +550,6 @@ struct mrc_domain_ops mrc_domain_amr_ops = {
   .destroy                   = mrc_domain_amr_destroy,
   .add_patch                 = mrc_domain_amr_add_patch,
   .get_patches               = mrc_domain_amr_get_patches,
-  .get_bc                    = mrc_domain_amr_get_bc,
   .get_nr_global_patches     = mrc_domain_amr_get_nr_global_patches,
   .get_global_dims           = mrc_domain_amr_get_global_dims,
   .get_global_patch_info     = mrc_domain_amr_get_global_patch_info,

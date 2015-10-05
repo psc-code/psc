@@ -97,13 +97,11 @@ main(int argc, char **argv)
 
   mrc_fld_foreach_patch(fld, p) {
     struct mrc_fld_patch *m3p = mrc_fld_patch_get(fld, p);
-    mrc_crds_patch_get(crds, p);
     mrc_m3_foreach(m3p, ix,iy,iz, 0, 0) {
-      float xx = MRC_MCRDX(crds, ix), yy = MRC_MCRDY(crds, iy);
+      float xx = MRC_MCRDX(crds, ix, p), yy = MRC_MCRDY(crds, iy, p);
       MRC_M3(m3p, 0, ix,iy,iz) = sin(kx * xx) * cos(ky * yy);
     } mrc_m3_foreach_end;
     mrc_fld_patch_put(fld);
-    mrc_crds_patch_put(crds);
   }
 
   // write field to disk

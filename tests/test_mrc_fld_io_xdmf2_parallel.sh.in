@@ -1,0 +1,5 @@
+#! /bin/bash
+
+IOTYPE="xdmf2_parallel"
+
+source templates/mrc_fld_io_checks

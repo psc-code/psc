@@ -1,23 +1,13 @@
 
-//#define BOUNDS_CHECK
-
 #include "ggcm_mhd_defs.h"
 #include "ggcm_mhd_private.h"
-#include "ggcm_mhd_step.h"
-#include "ggcm_mhd_crds_private.h"
-#include "ggcm_mhd_crds_gen.h"
-#include "ggcm_mhd_bnd.h"
+#include "ggcm_mhd_crds.h"
 #include "ggcm_mhd_diag.h"
 #include "ggcm_mhd_ic_private.h"
 
-#include <mrc_ts.h>
-#include <mrc_ts_monitor.h>
 #include <mrc_fld.h>
+#include <mrc_fld_as_float.h>
 #include <mrc_domain.h>
-#include <mrc_params.h>
-#include <mrc_ddc.h>
-#include <mrctest.h>
-#include <mrc_io.h> 
 
 #include <math.h>
 #include <string.h>
@@ -47,14 +37,17 @@ ggcm_mhd_ic_cosine_run(struct ggcm_mhd_ic *ic)
 {
   struct ggcm_mhd_ic_cosine *sub = mrc_to_subobj(ic, struct ggcm_mhd_ic_cosine);
   struct ggcm_mhd *mhd = ic->mhd;
-  struct mrc_fld *f3 = mrc_fld_get_as(mhd->fld, "float");
+  struct mrc_fld *f3 = mrc_fld_get_as(mhd->fld, FLD_TYPE);
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);  
 
   struct mrc_fld *fld_psi = mrc_domain_fld_create(mhd->domain, SW_2, NULL);
+  mrc_fld_set_type(fld_psi, FLD_TYPE);
   mrc_fld_setup(fld_psi);
 
-  float xl[3], xh[3], L[3], r[3];
-  mrc_crds_get_xl_xh(crds, xl, xh);
+  double xl[3], xh[3];
+  float L[3], r[3];
+  mrc_crds_get_param_double3(crds, "l", xl);
+  mrc_crds_get_param_double3(crds, "h", xh);
   for(int i = 0; i < 3; i++){
     L[i] = xh[i] - xl[i];
   }
@@ -75,8 +68,8 @@ ggcm_mhd_ic_cosine_run(struct ggcm_mhd_ic *ic)
     r[0] = .5*(MRC_CRDX(crds, ix) + MRC_CRDX(crds, ix-1));
     r[1] = .5*(MRC_CRDY(crds, iy) + MRC_CRDY(crds, iy-1));
 
-    MRC_F3(fld_psi, 0, ix,iy,iz) = ( L[0] / (4. * M_PI) ) * (1. - cos(2*kx*r[0])) * sin(ky*r[1]);   
-    //MRC_F3(fld_psi, 0, ix,iy,iz) = 0.01*cos(kx*r[0])*(sin(ky*r[1]));
+    F3(fld_psi, 0, ix,iy,iz) = ( L[0] / (4. * M_PI) ) * (1. - cos(2*kx*r[0])) * sin(ky*r[1]);   
+    //F3(fld_psi, 0, ix,iy,iz) = 0.01*cos(kx*r[0])*(sin(ky*r[1]));
     //(L[0] / (4.*M_PI)) * ((1 - cos(kx*r[0])) * sin(ky*r[1]));
   } mrc_fld_foreach_end;
 
@@ -90,21 +83,19 @@ ggcm_mhd_ic_cosine_run(struct ggcm_mhd_ic *ic)
     r[1] = MRC_CRD(crds, 1, iy);
     r[2] = MRC_CRD(crds, 2, iz); 
     
-    B1Y(f3, ix,iy,iz) = by0 * cos(kx*r[0]) - 
-      (MRC_F3(fld_psi, 0, ix+1,iy,iz) - MRC_F3(fld_psi, 0, ix,iy,iz)) / bd2x[ix];    
-    B1X(f3, ix,iy,iz) =  0.0;
-    //(MRC_F3(fld_psi, 0, ix,iy+1,iz) - MRC_F3(fld_psi, 0, ix,iy,iz)) / bd2y[iy];
-    B1Z(f3, ix,iy,iz) = sqrt( sqr(bz0) - sqr(B1Y(f3,ix,iy,iz)) ); 
-    MRC_F3(f3, _RR1, ix, iy, iz) = rho0;
-
-    MRC_F3(f3, _UU1 , ix, iy, iz) =  MRC_F3(f3, _RR1, ix, iy, iz) / (mhd->par.gamm -1.f) + 	
-      .5f * (sqr(MRC_F3(f3, _RV1X, ix, iy, iz)) +
-	     sqr(MRC_F3(f3, _RV1Y, ix, iy, iz)) +
-	     sqr(MRC_F3(f3, _RV1Z, ix, iy, iz))) / MRC_F3(f3, _RR1, ix, iy, iz) +
-      .5f * (sqr(.5*(B1X(f3, ix,iy,iz) + B1X(f3, ix+1,iy,iz))) +
-	     sqr(.5*(B1Y(f3, ix,iy,iz) + B1Y(f3, ix,iy+1,iz))) +
-	     sqr(.5*(B1Z(f3, ix,iy,iz) + B1Z(f3, ix,iy,iz+1))));
+    BY(f3, ix,iy,iz) = by0 * cos(kx*r[0]) -
+      (F3(fld_psi, 0, ix+1,iy,iz) - F3(fld_psi, 0, ix,iy,iz)) / bd2x[ix];
+    BX(f3, ix,iy,iz) =  0.0;
+    //(F3(fld_psi, 0, ix,iy+1,iz) - F3(fld_psi, 0, ix,iy,iz)) / bd2y[iy];
+    BZ(f3, ix,iy,iz) = sqrt( sqr(bz0) - sqr(BY(f3,ix,iy,iz)) );
+    RR(f3, ix,iy,iz) = rho0;
+    PP(f3, ix,iy,iz) = RR(f3, ix,iy,iz);
   } mrc_fld_foreach_end;
+
+  mrc_fld_put_as(f3, mhd->fld);
+  mrc_fld_destroy(fld_psi);
+
+  ggcm_mhd_convert_from_primitive(mhd, mhd->fld);
 }
 
 // ----------------------------------------------------------------------
@@ -143,38 +134,14 @@ struct ggcm_mhd_ic_ops ggcm_mhd_ic_cosine_ops = {
 static void
 ggcm_mhd_cosine_create(struct ggcm_mhd *mhd)
 {
-  mhd->par.rrnorm = 1.f;
-  mhd->par.ppnorm = 1.f;
-  mhd->par.vvnorm = 1.f;
-  mhd->par.bbnorm = 1.f;
-  mhd->par.ccnorm = 1.f;
-  mhd->par.eenorm = 1.f;
-  mhd->par.resnorm = 1.f;
-  mhd->par.diffco = 0.f;
-
-  //ggcm_mhd_bnd_set_type(mhd->bnd, "none");
-
-  mrc_domain_set_param_int(mhd->domain, "bcx", BC_PERIODIC);
-  mrc_domain_set_param_int(mhd->domain, "bcy", BC_PERIODIC);	   
-  mrc_domain_set_param_int(mhd->domain, "bcz", BC_PERIODIC);
+  ggcm_mhd_default_box(mhd);
 
   /* set defaults for coord arrays */
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
   mrc_crds_set_type(crds, "two_gaussian");
   mrc_crds_set_param_int(crds, "sw", SW_2);   // 'stencil width' 
-  mrc_crds_set_param_float3(crds, "l", (float[3]) {  0.0, 0.0, -1.0 });
-  mrc_crds_set_param_float3(crds, "h", (float[3]) {  2.*M_PI, 2.*M_PI,  1.0 });
-
-  /* set defaults for the ddc, this does the communication */
-  struct mrc_ddc *ddc = mrc_domain_get_ddc(mhd->domain);
-  mrc_ddc_set_param_int(ddc, "max_n_fields", 8);
-  mrc_ddc_set_param_int3(ddc, "ibn", (int[3]) { SW_2, SW_2, SW_2 });
-
-  // generate MHD solver grid from mrc_crds
-  ggcm_mhd_crds_gen_set_type(mhd->crds->crds_gen, "mrc");
-  ggcm_mhd_set_param_float(mhd, "isphere", 0.);
-  ggcm_mhd_set_param_float(mhd, "diffsphere", 0.);
-  ggcm_mhd_set_param_float(mhd, "speedlimit", 1e9);
+  mrc_crds_set_param_double3(crds, "l", (double[3]) {  0.0, 0.0, -1.0 });
+  mrc_crds_set_param_double3(crds, "h", (double[3]) {  2.*M_PI, 2.*M_PI,  1.0 });
 }
 
 static struct ggcm_mhd_ops ggcm_mhd_cosine_ops = {
@@ -189,48 +156,10 @@ extern struct ggcm_mhd_diag_ops ggcm_mhd_diag_c_ops;
 int
 main(int argc, char **argv)
 {
-  MPI_Init(&argc, &argv);
-  libmrc_params_init(argc, argv);
-  ggcm_mhd_register();
-
   mrc_class_register_subclass(&mrc_class_ggcm_mhd, &ggcm_mhd_cosine_ops);  
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_diag, &ggcm_mhd_diag_c_ops);
-
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_cosine_ops);  
  
-  struct ggcm_mhd *mhd = ggcm_mhd_create(MPI_COMM_WORLD);
-  ggcm_mhd_set_type(mhd, "cosine");
-  ggcm_mhd_step_set_type(mhd->step, "cweno");
-  ggcm_mhd_set_from_options(mhd);
-  ggcm_mhd_setup(mhd);
-  ggcm_mhd_view(mhd);
-
-  // set up initial condition
-  ggcm_mhd_ic_run(mhd->ic);
-
-  // run time integration
-  struct mrc_ts *ts = mrc_ts_create(mrc_domain_comm(mhd->domain));
-  mrc_ts_set_type(ts, "rk2");
-  mrc_ts_set_context(ts, ggcm_mhd_to_mrc_obj(mhd));
-
-  struct mrc_ts_monitor *mon_output =
-    mrc_ts_monitor_create(mrc_ts_comm(ts));
-  mrc_ts_monitor_set_type(mon_output, "ggcm");
-  mrc_ts_monitor_set_name(mon_output, "mrc_ts_output");
-  mrc_ts_add_monitor(ts, mon_output);
-
-  mrc_ts_set_dt(ts, 1e-6);
-  mrc_ts_set_solution(ts, mrc_fld_to_mrc_obj(mhd->fld));
-  mrc_ts_set_rhs_function(ts, ts_ggcm_mhd_step_calc_rhs, mhd);
-  mrc_ts_set_from_options(ts);
-  mrc_ts_view(ts);
-  mrc_ts_setup(ts);
-  mrc_ts_solve(ts);
-  mrc_ts_view(ts);
-  mrc_ts_destroy(ts);  
-  ggcm_mhd_destroy(mhd);
-
-  MPI_Finalize();
-  return 0;
+  return ggcm_mhd_main(&argc, &argv);
 }
 

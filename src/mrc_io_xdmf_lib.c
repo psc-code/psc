@@ -47,14 +47,18 @@ xdmf_write_topology_m1(FILE *f, int im[3], const char *filename, int p)
 }
 
 static void
-xdmf_write_topology_uniform_m3(FILE *f, int im[3], float xl[3], float dx[3])
+xdmf_write_topology_uniform_m3(FILE *f, int im[3], float xl[3], float dx[3], int _sw)
 {
+  int sw[3];
+  for (int d = 0; d < 3; d++) {
+    sw[d] = im[d] > 1 ? _sw : 0;
+  }
   fprintf(f, "     <Topology TopologyType=\"3DCoRectMesh\" Dimensions=\"%d %d %d\"/>\n",
-	  im[2] + 1, im[1] + 1, im[0] + 1);
+	  im[2] + 1 + 2*sw[2], im[1] + 1 + 2*sw[1], im[0] + 1 + 2*sw[0]);
 
   fprintf(f, "     <Geometry GeometryType=\"Origin_DxDyDz\">\n");
   fprintf(f, "     <DataItem Name=\"Origin\" DataType=\"Float\" Dimensions=\"3\" Format=\"XML\">\n");
-  fprintf(f, "        %g %g %g\n", xl[2], xl[1], xl[0]);
+  fprintf(f, "        %g %g %g\n", xl[2] - sw[2] * dx[2], xl[1] - sw[1] * dx[1], xl[0] - sw[0] * dx[0]);
   fprintf(f, "     </DataItem>\n");
   fprintf(f, "     <DataItem Name=\"DxDyDz\" DataType=\"Float\" Dimensions=\"3\" Format=\"XML\">\n");
   fprintf(f, "        %g %g %g\n", dx[2], dx[1], dx[0]);
@@ -214,13 +218,14 @@ xdmf_spatial_create_f1(list_t *xdmf_spatial_list, const char *name,
 
 struct xdmf_spatial *
 xdmf_spatial_create_m3(list_t *xdmf_spatial_list, const char *name, 
-		       struct mrc_domain *domain, struct mrc_io *io)
+		       struct mrc_domain *domain, struct mrc_io *io, int sw)
 {
   // OPT, we could skip this on procs which aren't writing xdmf
 
   struct xdmf_spatial *xs = calloc(1, sizeof(*xs));
   xs->name = strdup(name);
   xs->dim = 3;
+  xs->sw = sw;
   mrc_domain_get_nr_global_patches(domain, &xs->nr_global_patches);
   xs->patch_infos = calloc(xs->nr_global_patches, sizeof(*xs->patch_infos));
   for (int d = 0; d < 3; d++) {
@@ -229,16 +234,16 @@ xdmf_spatial_create_m3(list_t *xdmf_spatial_list, const char *name,
   }
 
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
-  float xl[3], dx[3];
-  if (strcmp(mrc_crds_type(crds), "multi_uniform") == 0 ||
-      strcmp(mrc_crds_type(crds), "amr_uniform") == 0 ||
+  double xl[3];
+  double dx[3];
+  if (strcmp(mrc_crds_type(crds), "amr_uniform") == 0 ||
       strcmp(mrc_crds_type(crds), "uniform") == 0) {
     xs->uniform = true;
-    mrc_crds_get_xl_xh(crds, xl, NULL);
-    mrc_crds_get_dx(crds, dx);
+    mrc_crds_get_param_double3(crds, "l", xl);
+    mrc_crds_get_dx_base(crds, dx);
   } else {
     for (int d = 0; d < 3; d++) {
-      xs->crd_nc_path[d] = mrc_io_obj_path(io, crds->mcrd_nc[d]);
+      xs->crd_nc_path[d] = mrc_io_obj_path(io, crds->crd_nc[d]);
     }
   }
 
@@ -281,20 +286,20 @@ xdmf_spatial_create_m3_parallel(list_t *xdmf_spatial_list, const char *name,
   }
 
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
-  if (strcmp(mrc_crds_type(crds), "multi_uniform") == 0 ||
-      strcmp(mrc_crds_type(crds), "amr_uniform") == 0 ||
+  if (strcmp(mrc_crds_type(crds), "amr_uniform") == 0 ||
       strcmp(mrc_crds_type(crds), "uniform") == 0) {
     xs->uniform = true;
-    float xl[3], dx[3];
-    mrc_crds_get_xl_xh(crds, xl, NULL);
-    mrc_crds_get_dx(crds, dx);
+    double xl[3];
+    double dx[3];
+    mrc_crds_get_param_double3(crds, "l", xl);
+    mrc_crds_get_dx(crds, 0, dx);
     for (int d = 0; d < 3; d++) {
       xs->xl[d][0] = xl[d] + slab_off[d] * dx[d];
       xs->dx[d][0] = dx[d];
     }
   } else {
     for (int d = 0; d < 3; d++) {
-      xs->crd_nc_path[d] = strdup(mrc_io_obj_path(io, crds->mcrd_nc[d]));
+      xs->crd_nc_path[d] = strdup(mrc_io_obj_path(io, crds->crd_nc[d]));
     }
   }
 
@@ -349,7 +354,7 @@ xdmf_spatial_write(struct xdmf_spatial *xs, const char *filename,
       if (xs->uniform) {
 	float xl[3] = { xs->xl[0][s], xs->xl[1][s], xs->xl[2][s] };
 	float dx[3] = { xs->dx[0][s], xs->dx[1][s], xs->dx[2][s] };
-	xdmf_write_topology_uniform_m3(f, ldims, xl, dx);
+	xdmf_write_topology_uniform_m3(f, ldims, xl, dx, xs->sw);
       } else {
 	xdmf_write_topology_m3(f, ldims, fname, xs->crd_nc_path, patch);
       }

@@ -3,10 +3,11 @@
 #define MRC_H
 
 #include <mrc_common.h>
+#include <stdbool.h>
 
 // ======================================================================
-// global flags 
-// 
+// global flags
+//
 // these are used to change fundamental libmrc behavior
 // they can be combined using logical |, &, and set with
 // the two functions below.
@@ -26,6 +27,8 @@ enum {
 
 void mrc_set_flags(unsigned long flags);
 void mrc_clear_flags(unsigned long flags);
+
+void libmrc_finalize(void);
 
 // private to libmrc
 

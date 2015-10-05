@@ -26,9 +26,9 @@ enum {
 #define CRDX(ix) (MRC_CRDX(crds, (ix)+BND))
 
 static void
-fill_ghosts(struct mrc_f1 *x, int m_x)
+fill_ghosts(struct mrc_fld *x, int m_x)
 {
-  int mx = mrc_f1_dims(x)[0];
+  int mx = mrc_fld_dims(x)[0];
   MRC_F1(x, m_x , -2  ) = MRC_F1(x, m_x , mx-2);
   MRC_F1(x, m_x , -1  ) = MRC_F1(x, m_x , mx-1);
   MRC_F1(x, m_x , mx  ) = MRC_F1(x, m_x , 0);
@@ -46,7 +46,7 @@ static void
 calc_rhs(void *ctx, struct mrc_obj *_rhs, float time, struct mrc_obj *_x)
 {
   struct mrc_domain *domain = ctx;
-  struct mrc_f1 *rhs = (struct mrc_f1 *) _rhs, *x = (struct mrc_f1 *) _x;
+  struct mrc_fld *rhs = (struct mrc_fld *) _rhs, *x = (struct mrc_fld *) _x;
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
 
   fill_ghosts(x, U);
@@ -70,18 +70,18 @@ main(int argc, char **argv)
   mrc_domain_set_param_int3(domain, "m", (int [3]) { 160, 1, 1 });
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   mrc_crds_set_param_int(crds, "sw", BND);
-  mrc_crds_set_param_float3(crds, "l", (float[3]) { -8., 0., 0. });
-  mrc_crds_set_param_float3(crds, "h", (float[3]) {  8., 0., 0. });
+  mrc_crds_set_param_double3(crds, "l", (double[3]) { -8., 0., 0. });
+  mrc_crds_set_param_double3(crds, "h", (double[3]) {  8., 0., 0. });
 
   mrc_domain_set_from_options(domain);
   mrc_domain_setup(domain);
 
-  struct mrc_f1 *x = mrc_domain_f1_create(domain);
-  mrc_f1_set_name(x, "x");
-  mrc_f1_set_param_int(x, "sw", BND);
-  mrc_f1_set_param_int(x, "nr_comps", NR_FLDS);
-  mrc_f1_setup(x);
-  mrc_f1_set_comp_name(x, U, "u");
+  struct mrc_fld *x = mrc_domain_f1_create(domain);
+  mrc_fld_set_name(x, "x");
+  mrc_fld_set_param_int(x, "nr_ghosts", BND);
+  mrc_fld_set_param_int(x, "nr_comps", NR_FLDS);
+  mrc_fld_setup(x);
+  mrc_fld_set_comp_name(x, U, "u");
 
   // setup initial equilibrium and perturbation
   mrc_f1_foreach(x, ix, 0, 0) {
@@ -91,7 +91,7 @@ main(int argc, char **argv)
 
   // run time integration
   struct mrc_ts *ts = mrc_ts_create_std(MPI_COMM_WORLD, NULL, NULL);
-  mrc_ts_set_solution(ts, mrc_f1_to_mrc_obj(x));
+  mrc_ts_set_solution(ts, mrc_fld_to_mrc_obj(x));
   mrc_ts_set_rhs_function(ts, calc_rhs, domain);
   mrc_ts_set_from_options(ts);
   mrc_ts_setup(ts);
@@ -99,7 +99,7 @@ main(int argc, char **argv)
   mrc_ts_view(ts);
   mrc_ts_destroy(ts);
 
-  mrc_f1_destroy(x);
+  mrc_fld_destroy(x);
 
   MPI_Finalize();
   return 0;

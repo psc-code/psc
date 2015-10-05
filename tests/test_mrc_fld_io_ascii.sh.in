@@ -1,0 +1,5 @@
+#! /bin/bash
+
+IOTYPE="ascii"
+
+source templates/mrc_fld_io_checks

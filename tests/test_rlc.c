@@ -30,21 +30,21 @@ MRC_CLASS_DECLARE(rlc, struct rlc);
 
 // ======================================================================
 
-static struct mrc_f1 *
+static struct mrc_fld *
 rlc_get_fld(struct rlc *rlc, const char *name)
 {
-  struct mrc_f1 *x = mrc_f1_create(rlc_comm(rlc));
-  mrc_f1_set_param_int(x, "dimsx", 2);
-  mrc_f1_set_name(x, name);
-  mrc_f1_setup(x);
-  mrc_f1_view(x);
+  struct mrc_fld *x = mrc_fld_create(rlc_comm(rlc));
+  mrc_fld_set_param_int_array(x, "dims", 2, (int [2]) { 2, 1 });
+  mrc_fld_set_name(x, name);
+  mrc_fld_setup(x);
+  mrc_fld_view(x);
   return x;
 }
 
 static void
 rlc_diag(void *ctx, float time, struct mrc_obj *_x, FILE *file)
 {
-  struct mrc_f1 *x = (struct mrc_f1 *) _x;
+  struct mrc_fld *x = (struct mrc_fld *) _x;
 
   fprintf(file, "%g %g %g\n", time, Q(x), I(x));
 }
@@ -53,7 +53,7 @@ static void
 rlc_calc_rhs(void *ctx, struct mrc_obj *_rhs, float t, struct mrc_obj *_x)
 {
   struct rlc *rlc = ctx;
-  struct mrc_f1 *rhs = (struct mrc_f1 *) _rhs, *x = (struct mrc_f1 *) _x;
+  struct mrc_fld *rhs = (struct mrc_fld *) _rhs, *x = (struct mrc_fld *) _x;
   float R = rlc->R, L = rlc->L, C = rlc->C;
   float V0 = rlc->V0, omega = rlc->omega;
   
@@ -99,7 +99,7 @@ main(int argc, char **argv)
   rlc_setup(rlc);
   rlc_view(rlc);
 
-  struct mrc_f1 *x = rlc_get_fld(rlc, "x");
+  struct mrc_fld *x = rlc_get_fld(rlc, "x");
 
   // set initial condition
   Q(x) = 1.;
@@ -107,7 +107,7 @@ main(int argc, char **argv)
 
   // run time integration
   struct mrc_ts *ts = mrc_ts_create_std(MPI_COMM_WORLD, rlc_diag, rlc);
-  mrc_ts_set_solution(ts, mrc_f1_to_mrc_obj(x));
+  mrc_ts_set_solution(ts, mrc_fld_to_mrc_obj(x));
   mrc_ts_set_rhs_function(ts, rlc_calc_rhs, rlc);
   mrc_ts_set_from_options(ts);
   mrc_ts_setup(ts);
@@ -115,7 +115,7 @@ main(int argc, char **argv)
   //  mrc_ts_view(ts);
   mrc_ts_destroy(ts);
 
-  mrc_f1_destroy(x);
+  mrc_fld_destroy(x);
 
   rlc_destroy(rlc);
 

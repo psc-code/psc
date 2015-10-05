@@ -1,0 +1,21 @@
+ESTATUS=0
+for fldtype in "float" "float_aos" "double" "double_aos" "int"
+do
+    for nproc in 1 2
+    do
+	echo "Testing ${fldtype} with ${nproc} procs"
+	@MPIRUN@ -n ${nproc} ./test_mrc_fld_io --mrc_fld_type ${fldtype} --mrc_domain_npx ${nproc} \
+	    --mrc_io_type ${IOTYPE}
+	teststatus=$?
+	if test $teststatus -ne 0
+	then
+	    echo "XXX failed XXX"
+	    ESTATUS=${teststatus}
+	else
+	    echo "OOO passed OOO"
+	fi
+	
+    done
+done
+
+exit $ESTATUS

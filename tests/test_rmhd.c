@@ -5,6 +5,7 @@
 #include <mrc_params.h>
 #include <mrc_nr.h>
 #include <mrc_bits.h>
+#include <mrc_crds_gen.h>
 
 #include <mrc_ts_monitor_private.h>
 #include <mrc_ts_private.h>
@@ -40,7 +41,7 @@ struct rmhd {
   float cfl;
 
   struct mrc_domain *domain;
-  struct mrc_f1 *By0;
+  struct mrc_fld *By0;
 };
 
 MRC_CLASS_DECLARE(rmhd, struct rmhd);
@@ -52,26 +53,17 @@ MRC_CLASS_DECLARE(rmhd, struct rmhd);
 static void
 _rmhd_create(struct rmhd *rmhd)
 {
-  rmhd->domain = mrc_domain_create(rmhd_comm(rmhd));
   mrc_domain_set_param_int3(rmhd->domain, "m", (int [3]) { 100, 1, 1 });
-  struct mrc_crds *crds = mrc_domain_get_crds(rmhd->domain);
-  mrc_crds_set_type(crds, "rectilinear_jr2");
 }
 
-static void
-_rmhd_set_from_options(struct rmhd *rmhd)
-{
-  mrc_domain_set_from_options(rmhd->domain);
-}
-
-static struct mrc_f1 *
+static struct mrc_fld *
 rmhd_get_fld(struct rmhd *rmhd, int nr_comps, const char *name)
 {
-  struct mrc_f1 *x = mrc_domain_f1_create(rmhd->domain);
-  mrc_f1_set_name(x, name);
-  mrc_f1_set_param_int(x, "sw", BND);
-  mrc_f1_set_param_int(x, "nr_comps", nr_comps);
-  mrc_f1_setup(x);
+  struct mrc_fld *x = mrc_domain_f1_create(rmhd->domain);
+  mrc_fld_set_name(x, name);
+  mrc_fld_set_param_int(x, "nr_ghosts", BND);
+  mrc_fld_set_param_int(x, "nr_comps", nr_comps);
+  mrc_fld_setup(x);
   return x;
 }
 
@@ -79,10 +71,11 @@ static void
 _rmhd_setup(struct rmhd *rmhd)
 {
   struct mrc_crds *crds = mrc_domain_get_crds(rmhd->domain);
-  mrc_crds_set_param_float3(crds, "l", (float [3]) { -rmhd->Lx / 2. });
-  mrc_crds_set_param_float3(crds, "h", (float [3]) {  rmhd->Lx / 2. });
+  mrc_crds_set_param_double3(crds, "l", (double[3]) { -rmhd->Lx / 2. });
+  mrc_crds_set_param_double3(crds, "h", (double[3]) {  rmhd->Lx / 2. });
   mrc_crds_set_param_int(crds, "sw", BND);
-  mrc_domain_setup(rmhd->domain);
+
+  rmhd_setup_member_objs(rmhd);
 
   rmhd->By0 = rmhd_get_fld(rmhd, 1, "By0");
 }
@@ -90,7 +83,7 @@ _rmhd_setup(struct rmhd *rmhd)
 static void
 _rmhd_destroy(struct rmhd *rmhd)
 {
-  mrc_f1_destroy(rmhd->By0);
+  mrc_fld_destroy(rmhd->By0);
 }
 
 #define Dxx(x, m_x, ix)							\
@@ -102,8 +95,8 @@ _rmhd_destroy(struct rmhd *rmhd)
   (Dxx(x, m_x, ix) - sqr(rmhd->ky) * MRC_F1(x, m_x, ix))
 
 static void
-rmhd_solve_poisson(struct rmhd *rmhd, struct mrc_f1 *x, int m_x,
-		   struct mrc_f1 *b, int m_b)
+rmhd_solve_poisson(struct rmhd *rmhd, struct mrc_fld *x, int m_x,
+		   struct mrc_fld *b, int m_b)
 {
   struct mrc_crds *crds = mrc_domain_get_crds(rmhd->domain);
   static float *aa, *bb, *cc;
@@ -128,10 +121,10 @@ rmhd_solve_poisson(struct rmhd *rmhd, struct mrc_f1 *x, int m_x,
 static void
 rmhd_diag(void *ctx, float time, struct mrc_obj *_x, FILE *file)
 {
-  struct mrc_f1 *x = (struct mrc_f1 *) _x;
+  struct mrc_fld *x = (struct mrc_fld *) _x;
   float absmax[NR_FLDS];
   for (int m = 0; m < NR_FLDS; m++) {
-    absmax[m] = mrc_f1_norm_comp(x, m);
+    absmax[m] = mrc_fld_norm_comp(x, m);
   }
   
   fprintf(file, "%g", time);
@@ -151,9 +144,9 @@ rmhd_diag(void *ctx, float time, struct mrc_obj *_x, FILE *file)
 }
 
 static void
-rmhd_set_bnd_zero(struct rmhd *rmhd, struct mrc_f1 *x, int m_x)
+rmhd_set_bnd_zero(struct rmhd *rmhd, struct mrc_fld *x, int m_x)
 {
-  int mx = mrc_f1_dims(x)[0];
+  int mx = mrc_fld_dims(x)[0];
   MRC_F1(x, m_x , -1) = 0.;
   MRC_F1(x, m_x , mx) = 0.;
 }
@@ -180,10 +173,10 @@ static void
 rmhd_calc_rhs(void *ctx, struct mrc_obj *_rhs, float time, struct mrc_obj *_x)
 {
   struct rmhd *rmhd = ctx;
-  struct mrc_f1 *rhs = (struct mrc_f1 *) _rhs, *x = (struct mrc_f1 *) _x;
+  struct mrc_fld *rhs = (struct mrc_fld *) _rhs, *x = (struct mrc_fld *) _x;
   struct mrc_crds *crds = mrc_domain_get_crds(rmhd->domain);
-  struct mrc_f1 *By0 = rmhd->By0;
-  struct mrc_f1 *phi = rmhd_get_fld(rmhd, 1, "phi");
+  struct mrc_fld *By0 = rmhd->By0;
+  struct mrc_fld *phi = rmhd_get_fld(rmhd, 1, "phi");
 
   rmhd_set_bnd_zero(rmhd, x, OM_I);
   rmhd_set_bnd_zero(rmhd, x, PSI_R);
@@ -214,7 +207,7 @@ rmhd_calc_rhs(void *ctx, struct mrc_obj *_rhs, float time, struct mrc_obj *_x)
       rmhd->d_i * rmhd->ky * (By0(ix) * J_r - By0pp * PSI_R(ix));
   }
 
-  mrc_f1_destroy(phi);
+  mrc_fld_destroy(phi);
 }
 
 // ======================================================================
@@ -227,6 +220,9 @@ static struct param rmhd_param_descr[] = {
   { "d_i"             , VAR(d_i)            , PARAM_FLOAT(0.)       },
   { "ky"              , VAR(ky)             , PARAM_FLOAT(.5)       },
   { "cfl"             , VAR(cfl)            , PARAM_FLOAT(.5)       },
+
+  { "domain"          , VAR(domain)         , MRC_VAR_OBJ(mrc_domain)    },
+
   {},
 };
 #undef VAR
@@ -236,7 +232,6 @@ struct mrc_class_rmhd mrc_class_rmhd = {
   .size             = sizeof(struct rmhd),
   .param_descr      = rmhd_param_descr,
   .create           = _rmhd_create,
-  .set_from_options = _rmhd_set_from_options,
   .setup            = _rmhd_setup,
   .destroy          = _rmhd_destroy,
 };
@@ -270,13 +265,13 @@ mrc_ts_monitor_output_phi_run(struct mrc_ts_monitor *mon, struct mrc_ts *ts)
   mrc_io_open(out->io, "w", out->nr, ts->time);
 
   struct rmhd *rmhd = (struct rmhd *) ts->ctx_obj;
-  struct mrc_f1 *x = (struct mrc_f1 *) ts->x;
+  struct mrc_fld *x = (struct mrc_fld *) ts->x;
 
-  struct mrc_f1 *phi = rmhd_get_fld(rmhd, 1, "phi");
-  mrc_f1_set_comp_name(phi, 0, "phi_i");
+  struct mrc_fld *phi = rmhd_get_fld(rmhd, 1, "phi");
+  mrc_fld_set_comp_name(phi, 0, "phi_i");
   rmhd_solve_poisson(rmhd, phi, PHI_I, x, OM_I);
-  mrc_f1_write(phi, out->io);
-  mrc_f1_destroy(phi);
+  mrc_fld_write(phi, out->io);
+  mrc_fld_destroy(phi);
 
   mrc_io_close(out->io);
   out->nr++;
@@ -307,12 +302,12 @@ main(int argc, char **argv)
 
   // i.c.
   struct mrc_crds *crds = mrc_domain_get_crds(rmhd->domain);
-  struct mrc_f1 *By0 = rmhd->By0;
-  struct mrc_f1 *x = rmhd_get_fld(rmhd, NR_FLDS, "x");
-  mrc_f1_set_comp_name(x, OM_I, "om_i");
-  mrc_f1_set_comp_name(x, PSI_R, "psi_r");
-  mrc_f1_set_comp_name(x, BZ_I, "bz_i");
-  mrc_f1_set_comp_name(x, VZ_R, "vz_r");
+  struct mrc_fld *By0 = rmhd->By0;
+  struct mrc_fld *x = rmhd_get_fld(rmhd, NR_FLDS, "x");
+  mrc_fld_set_comp_name(x, OM_I, "om_i");
+  mrc_fld_set_comp_name(x, PSI_R, "psi_r");
+  mrc_fld_set_comp_name(x, BZ_I, "bz_i");
+  mrc_fld_set_comp_name(x, VZ_R, "vz_r");
 
   // setup initial equilibrium and perturbation
   mrc_f1_foreach(x, ix, 1, 1) {
@@ -336,7 +331,7 @@ main(int argc, char **argv)
   } mrc_f1_foreach_end;
 
   // write out equilibrium
-  mrc_f1_dump(rmhd->By0, "By0", 0);
+  mrc_fld_dump(rmhd->By0, "By0", 0);
 
   // calculate dt
   int gdims[3];
@@ -355,7 +350,7 @@ main(int argc, char **argv)
 
   mrc_ts_set_context(ts, rmhd_to_mrc_obj(rmhd));
 
-  mrc_ts_set_solution(ts, mrc_f1_to_mrc_obj(x));
+  mrc_ts_set_solution(ts, mrc_fld_to_mrc_obj(x));
   mrc_ts_set_rhs_function(ts, rmhd_calc_rhs, rmhd);
   mrc_ts_set_from_options(ts);
   mrc_ts_set_dt(ts, dt);
@@ -364,7 +359,7 @@ main(int argc, char **argv)
   mrc_ts_view(ts);
   mrc_ts_destroy(ts);
 
-  mrc_f1_destroy(x);
+  mrc_fld_destroy(x);
 
   rmhd_destroy(rmhd);
 

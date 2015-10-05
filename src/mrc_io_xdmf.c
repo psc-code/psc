@@ -188,8 +188,10 @@ hdf5_write_field2d_serial(struct mrc_io *io, float scale, struct mrc_fld *fld,
   hid_t filespace = H5Screate_simple(2, fdims, NULL); H5_CHK(filespace);
   hid_t dataset = H5Dcreate(group, "2d", H5T_NATIVE_FLOAT, filespace,
 			    H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT); H5_CHK(dataset);
-  
-  ierr = H5Dwrite(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, fld->_arr); CE;
+
+  struct mrc_fld *f = mrc_fld_get_as(fld, "float");
+  ierr = H5Dwrite(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, f->_arr); CE;
+  mrc_fld_put_as(f, fld);
 
   ierr = H5Dclose(dataset); CE;
   ierr = H5Sclose(filespace); CE;
@@ -633,7 +635,7 @@ hdf5_write_crds(struct mrc_io *io, const int im[3], struct mrc_domain *domain, i
 }
 
 static void
-hdf5_write_mcrds(struct mrc_io *io, struct mrc_domain *domain, int sw)
+hdf5_write_mcrds(struct mrc_io *io, struct mrc_domain *domain, int bnd)
 {
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
 
@@ -654,30 +656,31 @@ hdf5_write_mcrds(struct mrc_io *io, struct mrc_domain *domain, int sw)
     if (hdf5->crd_written[d])
       continue;
 
-    struct mrc_m1 *mcrd = crds->mcrd[d];
+    struct mrc_fld *mcrd = crds->crd[d];
     mrc_m1_foreach_patch(mcrd, p) {
-      struct mrc_m1_patch *mcrdp = mrc_m1_patch_get(mcrd, p);
-      int im = mcrdp->im[0];
-      float *crd_nc = calloc(im + 1, sizeof(*crd_nc));
-      if (sw > 0) {
-	for (int i = 0; i <= im; i++) {
-	  crd_nc[i] = .5 * (MRC_M1(mcrdp,0, i-1) + MRC_M1(mcrdp,0, i));
+      int im = mrc_fld_dims(mcrd)[0];
+      int is = mrc_fld_ghost_offs(mcrd)[0];
+      float *crd_nc = calloc(im + 2*bnd + 1, sizeof(*crd_nc));
+      crd_nc += bnd;
+      if (-is > bnd) {
+	for (int i = -bnd; i <= bnd + im; i++) {
+	  crd_nc[i] = .5 * (MRC_M1(mcrd,0, i -1, p) + MRC_M1(mcrd,0, i, p));
 	}
       } else {
-	for (int i = 1; i < im; i++) {
-	  crd_nc[i] = .5 * (MRC_M1(mcrdp,0, i-1) + MRC_M1(mcrdp,0, i));
+	for (int i = -bnd + 1; i < bnd + im; i++) {
+	  crd_nc[i] = .5 * (MRC_M1(mcrd,0, i-1, p) + MRC_M1(mcrd,0, i, p));
 	}
 	// extrapolate
-	crd_nc[0]  = MRC_M1(mcrdp,0, 0) - .5 * (MRC_M1(mcrdp,0, 1) - MRC_M1(mcrdp,0, 0));
-	crd_nc[im] = MRC_M1(mcrdp,0, im-1) + .5 * (MRC_M1(mcrdp,0, im-1) - MRC_M1(mcrdp,0, im-2));
+	crd_nc[-bnd]   = MRC_M1(mcrd,0, -bnd    , p) - .5 * (MRC_M1(mcrd,0, -bnd+1  , p) - MRC_M1(mcrd,0, -bnd    , p));
+	crd_nc[im+bnd] = MRC_M1(mcrd,0, im+bnd-1, p) + .5 * (MRC_M1(mcrd,0, im+bnd-1, p) - MRC_M1(mcrd,0, im+bnd-2, p));
       }
-      hsize_t im1 = im + 1;
+      crd_nc -= bnd;
+      hsize_t im1 = im + 2*bnd + 1;
       char name[20];
       sprintf(name, "%c-%d", 'x' + d, p);
       H5LTmake_dataset_float(hdf5->group_crd, name, 1, &im1, crd_nc);
 
       free(crd_nc);
-      mrc_m1_patch_put(mcrd);
     }
     hdf5->crd_written[d] = true;
   }
@@ -744,6 +747,9 @@ ds_xdmf_read_attr(struct mrc_io *io, const char *path, int type,
   case PT_FLOAT3:
     ierr = H5LTget_attribute_float(group, ".", name, pv->u_float3); CE;
     break;
+  case PT_DOUBLE3:
+    ierr = H5LTget_attribute_double(group, ".", name, pv->u_double3); CE;
+    break;
   case PT_INT_ARRAY: {
     int attr = H5Aopen(group, name, H5P_DEFAULT); H5_CHK(attr);
     H5A_info_t ainfo;
@@ -754,6 +760,11 @@ ds_xdmf_read_attr(struct mrc_io *io, const char *path, int type,
     ierr = H5LTget_attribute_int(group, ".", name, pv->u_int_array.vals); CE;
     break;
   }
+  case PT_PTR:
+    mpi_printf(mrc_io_comm(io), "WARNING: not reading back pointer attribute\n");
+    break;
+  default:
+    assert(0);
   }
   ierr = H5Gclose(group); CE;
 }
@@ -776,37 +787,44 @@ ds_xdmf_write_attr(struct mrc_io *io, const char *path, int type,
   case PT_SELECT:
   case PT_INT:
   case MRC_VAR_INT:
-    H5LTset_attribute_int(group, ".", name, &pv->u_int, 1);
+    ierr = H5LTset_attribute_int(group, ".", name, &pv->u_int, 1); CE;
     break;
   case PT_BOOL:
   case MRC_VAR_BOOL: {
     int val = pv->u_bool;
-    H5LTset_attribute_int(group, ".", name, &val, 1);
+    ierr = H5LTset_attribute_int(group, ".", name, &val, 1); CE;
     break;
   }
   case PT_FLOAT:
   case MRC_VAR_FLOAT:
-    H5LTset_attribute_float(group, ".", name, &pv->u_float, 1);
+    ierr = H5LTset_attribute_float(group, ".", name, &pv->u_float, 1); CE;
     break;
   case PT_DOUBLE:
   case MRC_VAR_DOUBLE:
-    H5LTset_attribute_double(group, ".", name, &pv->u_double, 1);
+    ierr = H5LTset_attribute_double(group, ".", name, &pv->u_double, 1); CE;
     break;
   case PT_STRING:
     if (pv->u_string) {
-      H5LTset_attribute_string(group, ".", name, pv->u_string);
+      ierr = H5LTset_attribute_string(group, ".", name, pv->u_string); CE;
     } else {
-      H5LTset_attribute_string(group, ".", name, "(NULL)");
+      ierr = H5LTset_attribute_string(group, ".", name, "(NULL)"); CE;
     }
     break;
   case PT_INT3:
-    H5LTset_attribute_int(group, ".", name, pv->u_int3, 3);
+    ierr = H5LTset_attribute_int(group, ".", name, pv->u_int3, 3); CE;
     break;
   case PT_FLOAT3:
-    H5LTset_attribute_float(group, ".", name, pv->u_float3, 3);
+    ierr = H5LTset_attribute_float(group, ".", name, pv->u_float3, 3); CE;
+    break;
+  case PT_DOUBLE3:
+    ierr = H5LTset_attribute_double(group, ".", name, pv->u_double3, 3); CE;
     break;
   case PT_INT_ARRAY:
-    H5LTset_attribute_int(group, ".", name, pv->u_int_array.vals, pv->u_int_array.nr_vals);
+    if (pv->u_int_array.nr_vals == 0) {
+      mprintf("WARNING: not writing int_array of length 0\n");
+      break;
+    }
+    ierr = H5LTset_attribute_int(group, ".", name, pv->u_int_array.vals, pv->u_int_array.nr_vals); CE;
     break;
   }
   ierr = H5Gclose(group); CE;
@@ -868,7 +886,7 @@ xdmf_spatial_create_3d(struct mrc_io *io, const int im[3], int p, int nr_subdoma
 
 static struct xdmf_spatial *
 xdmf_spatial_create_2d_x(struct mrc_io *io, int im[2], 
-			 const char *sfx, int sheet, int nr_subdomains)
+			 const char *sfx, float sheet, int nr_subdomains)
 {
   // OPT, we could skip this on procs which aren't writing xdmf
 
@@ -885,7 +903,7 @@ xdmf_spatial_create_2d_x(struct mrc_io *io, int im[2],
 
 static struct xdmf_spatial *
 xdmf_spatial_create_2d_y(struct mrc_io *io, int im[2], 
-			 const char *sfx, int sheet, int nr_subdomains)
+			 const char *sfx, float sheet, int nr_subdomains)
 {
   // OPT, we could skip this on procs which aren't writing xdmf
 
@@ -902,7 +920,7 @@ xdmf_spatial_create_2d_y(struct mrc_io *io, int im[2],
 
 static struct xdmf_spatial *
 xdmf_spatial_create_2d_z(struct mrc_io *io, int im[2], 
-			 const char *sfx, int sheet, int nr_subdomains)
+			 const char *sfx, float sheet, int nr_subdomains)
 {
   // OPT, we could skip this on procs which aren't writing xdmf
 
@@ -1036,104 +1054,28 @@ ds_xdmf_write_field2d(struct mrc_io *io, float scale, struct mrc_fld *fld,
 }
 
 static void
-ds_xdmf_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
-{
-  int ierr;
-  struct diag_hdf5 *hdf5 = diag_hdf5(io);
-
-  hid_t group = H5Gopen(hdf5->file, path, H5P_DEFAULT); H5_CHK(group);
-  
-  hsize_t hdims[1] = { f1->_ghost_dims[0] };
-  for (int m = 0; m < f1->nr_comp; m++) {
-    assert(mrc_f1_comp_name(f1, m));
-    hid_t groupc = H5Gcreate(group, mrc_f1_comp_name(f1, m), H5P_DEFAULT, H5P_DEFAULT,
-			     H5P_DEFAULT); H5_CHK(groupc);
-    ierr = H5LTset_attribute_int(groupc, ".", "m", &m, 1); CE;
-    ierr = H5LTmake_dataset_float(groupc, "1d", 1, hdims,
-				  &MRC_F1(f1, m, f1->_ghost_off[0])); CE;
-    H5Gclose(groupc);
-  }
-
-  H5Gclose(group);
-}
-
-struct read_f1_cb0_data {
-  struct mrc_io *io;
-  struct mrc_f1 *f1;
-  hid_t filespace;
-  hid_t memspace;
-};
-
-static herr_t
-read_f1_cb0(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
-{
-  struct read_f1_cb0_data *data = op_data;
-  herr_t ierr;
-
-  hid_t group = H5Gopen(g_id, name, H5P_DEFAULT); H5_CHK(group);
-  int m;
-  ierr = H5LTget_attribute_int(group, ".", "m", &m); CE;
-  mrc_f1_set_comp_name(data->f1, m, name);
-
-  hid_t dset = H5Dopen(group, "1d", H5P_DEFAULT); H5_CHK(dset);
-  ierr = H5Dread(dset, H5T_NATIVE_FLOAT, data->memspace, data->filespace, H5P_DEFAULT,
-		 &MRC_F1(data->f1, m, data->f1->_ghost_off[0])); CE;
-  ierr = H5Dclose(dset); CE;
-
-  ierr = H5Gclose(group); CE;
-  return 0;
-}
-
-static void
-ds_xdmf_read_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
-{
-  struct diag_hdf5 *hdf5 = diag_hdf5(io);
-  herr_t ierr;
-
-  hid_t group = H5Gopen(hdf5->file, path, H5P_DEFAULT); H5_CHK(group);
-  hsize_t hdims[1] = { f1->_ghost_dims[0] };
-  hid_t filespace = H5Screate_simple(1, hdims, NULL);
-  hid_t memspace = H5Screate_simple(1, hdims, NULL);
-
-  struct read_f1_cb0_data cb_data = {
-    .io        = io,
-    .f1        = f1,
-    .filespace = filespace,
-    .memspace  = memspace,
-  };
-  hsize_t idx = 0;
-  ierr = H5Literate_by_name(group, ".", H5_INDEX_NAME, H5_ITER_INC, &idx,
-			    read_f1_cb0, &cb_data, H5P_DEFAULT); CE;
-  
-  ierr = H5Sclose(filespace); CE;
-  ierr = H5Sclose(memspace); CE;
-  ierr = H5Gclose(group); CE;
-}
-
-static void
-ds_xdmf_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
+ds_xdmf_write_m1(struct mrc_io *io, const char *path, struct mrc_fld *m1)
 {
   int ierr;
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
 
   hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT); H5_CHK(group0);
-  H5LTset_attribute_int(group0, ".", "nr_patches", &m1->nr_patches, 1);
+  int nr_patches = mrc_fld_nr_patches(m1);
+  H5LTset_attribute_int(group0, ".", "nr_patches", &nr_patches, 1);
 
   mrc_m1_foreach_patch(m1, p) {
-    struct mrc_m1_patch *m1p = mrc_m1_patch_get(m1, p);
     char name[10]; sprintf(name, "p%d", p);
     hid_t group = H5Gcreate(group0, name, H5P_DEFAULT, H5P_DEFAULT,
 			    H5P_DEFAULT); H5_CHK(group);
 
-    hsize_t hdims[3] = { m1p->im[0] };
-    for (int m = 0; m < m1->nr_comp; m++) {
-      hid_t groupc = H5Gcreate(group, mrc_m1_comp_name(m1, m), H5P_DEFAULT, H5P_DEFAULT,
+    hsize_t hdims[1] = { mrc_fld_ghost_dims(m1)[0] };
+    for (int m = 0; m < mrc_fld_nr_comps(m1); m++) {
+      hid_t groupc = H5Gcreate(group, mrc_fld_comp_name(m1, m), H5P_DEFAULT, H5P_DEFAULT,
 			       H5P_DEFAULT); H5_CHK(groupc);
       ierr = H5LTset_attribute_int(groupc, ".", "m", &m, 1); CE;
-      ierr = H5LTmake_dataset_float(groupc, "1d", 1, hdims, &MRC_M1(m1p, m, m1p->ib[0])); CE;
+      ierr = H5LTmake_dataset_float(groupc, "1d", 1, hdims, &MRC_M1(m1, m, mrc_fld_ghost_offs(m1)[0], p)); CE;
       H5Gclose(groupc);
     }
-    mrc_m1_patch_put(m1);
     H5Gclose(group);
   }
 
@@ -1142,7 +1084,8 @@ ds_xdmf_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
 
 struct read_m1_cb_data {
   struct mrc_io *io;
-  struct mrc_m1_patch *m1p;
+  struct mrc_fld *m1;
+  int p;
   hid_t filespace;
   hid_t memspace;
 };
@@ -1159,7 +1102,7 @@ read_m1_cb(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
 
   hid_t dset = H5Dopen(group, "1d", H5P_DEFAULT); H5_CHK(dset);
   ierr = H5Dread(dset, H5T_NATIVE_FLOAT, data->memspace, data->filespace, H5P_DEFAULT,
-		 &MRC_M1(data->m1p, m, data->m1p->ib[0])); CE;
+		 &MRC_M1(data->m1, m, mrc_fld_ghost_offs(data->m1)[0], data->p)); CE;
   ierr = H5Dclose(dset); CE;
 
   ierr = H5Gclose(group); CE;
@@ -1167,7 +1110,7 @@ read_m1_cb(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
 }
 
 static void
-ds_xdmf_read_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
+ds_xdmf_read_m1(struct mrc_io *io, const char *path, struct mrc_fld *m1)
 {
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
   herr_t ierr;
@@ -1177,17 +1120,17 @@ ds_xdmf_read_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
 #endif
 
   hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT); H5_CHK(group0);
-  for (int p = 0; p < m1->nr_patches; p++) {
-    struct mrc_m1_patch *m1p = mrc_m1_patch_get(m1, p);
+  for (int p = 0; p < mrc_fld_nr_patches(m1); p++) {
     char name[10]; sprintf(name, "p%d", p);
     hid_t group = H5Gopen(group0, name, H5P_DEFAULT); H5_CHK(group);
-    hsize_t hdims[1] = { m1p->im[0] };
+    hsize_t hdims[1] = { mrc_fld_ghost_dims(m1)[0] };
     hid_t filespace = H5Screate_simple(1, hdims, NULL);
     hid_t memspace = H5Screate_simple(1, hdims, NULL);
 
     struct read_m1_cb_data cb_data = {
       .io        = io,
-      .m1p       = m1p,
+      .m1        = m1,
+      .p         = p,
       .filespace = filespace,
       .memspace  = memspace,
     };
@@ -1198,7 +1141,6 @@ ds_xdmf_read_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
     ierr = H5Sclose(filespace); CE;
     ierr = H5Sclose(memspace); CE;
     ierr = H5Gclose(group); CE;
-    mrc_m1_patch_put(m1);
   }
 
   ierr = H5Gclose(group0); CE;
@@ -1225,7 +1167,7 @@ ds_xdmf_read_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
 
   hsize_t hdims[fld->_dims.nr_vals];
   for (int d = 0; d < fld->_dims.nr_vals; d++) {
-    hdims[d] = fld->_dims.vals[fld->_dims.nr_vals - 1 - d];
+    hdims[d] = mrc_fld_ghost_dims(fld)[fld->_dims.nr_vals - 1 - d];
   }
   hid_t filespace = H5Screate_simple(fld->_dims.nr_vals, hdims, NULL);
   hid_t datatype = get_h5_datatype(fld);
@@ -1243,70 +1185,24 @@ ds_xdmf_write_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
   int ierr;
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
 
+  if (fld->_dims.nr_vals == 0) {
+    mprintf("WARNING: not writing mrc_fld with 0 dims!\n");
+    return;
+  }
+
   hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT); H5_CHK(group0);
 
   hsize_t hdims[fld->_dims.nr_vals];
   for (int d = 0; d < fld->_dims.nr_vals; d++) {
-    hdims[d] = fld->_dims.vals[fld->_dims.nr_vals - 1 - d];
+    hdims[d] = mrc_fld_ghost_dims(fld)[fld->_dims.nr_vals - 1 - d];
   }
-  hid_t filespace = H5Screate_simple(fld->_dims.nr_vals, hdims, NULL);
-  hid_t datatype = get_h5_datatype(fld);
+  hid_t filespace = H5Screate_simple(fld->_dims.nr_vals, hdims, NULL); H5_CHK(filespace);
+  hid_t datatype = get_h5_datatype(fld); H5_CHK(datatype);
   hid_t dset = H5Dcreate(group0, "fld", datatype, filespace, H5P_DEFAULT,
-			 H5P_DEFAULT, H5P_DEFAULT);
+			 H5P_DEFAULT, H5P_DEFAULT); H5_CHK(dset);
   ierr = H5Dwrite(dset, datatype, H5S_ALL, filespace, H5P_DEFAULT, fld->_arr); CE;
   ierr = H5Dclose(dset); CE;
   ierr = H5Sclose(filespace); CE;
-
-  ierr = H5Gclose(group0); CE;
-}
-
-static void
-ds_xdmf_write_f3(struct mrc_io *io, const char *path, struct mrc_fld *fld, float scale)
-{
-  int ierr;
-  struct diag_hdf5 *hdf5 = diag_hdf5(io);
-
-  hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT); H5_CHK(group0);
-
-  assert(scale == 1.f);
-
-
-  struct xdmf_spatial *xs = xdmf_spatial_find(io, "3df", -1);
-  if (!xs) {
-    xs = xdmf_spatial_create_3d(io, fld->_dims.vals, -1, io->size);
-    hdf5_write_crds(io, fld->_dims.vals, fld->_domain, fld->_sw.vals[0]);
-  }
-
-  int nr_comps = mrc_fld_nr_comps(fld);
-  for (int m = 0; m < nr_comps; m++) {
-    assert(mrc_fld_comp_name(fld, m));
-    save_fld_info(xs, strdup(mrc_fld_comp_name(fld, m)), strdup(path), false);
-    hid_t group = H5Gcreate(group0, mrc_fld_comp_name(fld, m), 
-			    H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    ierr = H5LTset_attribute_int(group, ".", "m", &m, 1); CE;
-
-    hsize_t fdims[3] = { mrc_fld_dims(fld)[2],
-			 mrc_fld_dims(fld)[1],
-			 mrc_fld_dims(fld)[0] };
-    hsize_t mdims[3] = { mrc_fld_ghost_dims(fld)[2],
-			 mrc_fld_ghost_dims(fld)[1],
-			 mrc_fld_ghost_dims(fld)[0] };
-    hsize_t offs[3] = { -mrc_fld_ghost_offs(fld)[2],
-			-mrc_fld_ghost_offs(fld)[1],
-			-mrc_fld_ghost_offs(fld)[0] };
-
-    hid_t filespace = H5Screate_simple(3, fdims, NULL);
-    hid_t memspace = H5Screate_simple(3, mdims, NULL);
-    H5Sselect_hyperslab(memspace, H5S_SELECT_SET, offs, NULL, fdims, NULL);
-
-    hid_t dset = H5Dcreate(group, "3d", H5T_NATIVE_FLOAT, filespace, H5P_DEFAULT,
-			   H5P_DEFAULT, H5P_DEFAULT);
-    ierr  = H5Dwrite(dset, H5T_NATIVE_FLOAT, memspace, filespace, H5P_DEFAULT,
-		     fld->_arr); CE;
-    ierr = H5Dclose(dset); CE;
-
-    ierr = H5Gclose(group); CE;
-  }
 
   ierr = H5Gclose(group0); CE;
 }
@@ -1321,29 +1217,56 @@ ds_xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3)
   int nr_patches = mrc_fld_nr_patches(m3);
   H5LTset_attribute_int(group0, ".", "nr_patches", &nr_patches, 1);
 
+  int bnd = 0; // number of ghost point layers to write
+  // FIXME, this should be settable by the user somehow
+
   mrc_fld_foreach_patch(m3, p) {
     struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, p);
 
-    struct xdmf_spatial *xs = xdmf_spatial_find(io, "3df", p);
+    struct xdmf_spatial *xs = xdmf_spatial_find(io, "3df", -1);
     if (!xs) {
       int np[3];
       mrc_domain_get_param_int3(m3->_domain, "np", np);
       xs = xdmf_spatial_create_3d(io, m3->_ghost_dims, p, np[0] * np[1] * np[2]);
       if (p == 0) {
-	hdf5_write_mcrds(io, m3->_domain, m3->_sw.vals[0]); // FIXME, 1,2 may be different
+	hdf5_write_mcrds(io, m3->_domain, bnd);
       }
     }
 
     for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
       char fld_name[strlen(mrc_fld_comp_name(m3, m)) + 5];
 
-      sprintf(fld_name, "%s-%d", mrc_fld_comp_name(m3, m), p);
+      if (nr_patches == 1) {
+	sprintf(fld_name, "%s", mrc_fld_comp_name(m3, m));
+      } else {
+	sprintf(fld_name, "%s-%d", mrc_fld_comp_name(m3, m), p);
+      }
 
       save_fld_info(xs, strdup(fld_name), strdup(path), false);
-      hsize_t hdims[3] = { m3->_ghost_dims[2], m3->_ghost_dims[1], m3->_ghost_dims[0] };
+
+      hsize_t fdims[3] = { mrc_fld_dims(m3)[2] + 2 * bnd,
+			   mrc_fld_dims(m3)[1] + 2 * bnd,
+			   mrc_fld_dims(m3)[0] + 2 * bnd };
+      hsize_t mdims[3] = { mrc_fld_ghost_dims(m3)[2],
+			   mrc_fld_ghost_dims(m3)[1],
+			   mrc_fld_ghost_dims(m3)[0] };
+      hsize_t offs[3] = { -mrc_fld_ghost_offs(m3)[2] - bnd,
+			  -mrc_fld_ghost_offs(m3)[1] - bnd,
+			  -mrc_fld_ghost_offs(m3)[0] - bnd};
+
+      hid_t filespace = H5Screate_simple(3, fdims, NULL);
+      hid_t memspace = H5Screate_simple(3, mdims, NULL);
+      H5Sselect_hyperslab(memspace, H5S_SELECT_SET, offs, NULL, fdims, NULL);
+
       hid_t group = H5Gcreate(group0, fld_name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-      ierr = H5LTmake_dataset_float(group, "3d", 3, hdims,
-				    &MRC_M3(m3p, 0, m3->_ghost_offs[0], m3->_ghost_offs[1], m3->_ghost_offs[2])); CE;
+      hid_t dset = H5Dcreate(group, "3d", H5T_NATIVE_FLOAT, filespace, H5P_DEFAULT,
+			     H5P_DEFAULT, H5P_DEFAULT);
+      ierr  = H5Dwrite(dset, H5T_NATIVE_FLOAT, memspace, filespace, H5P_DEFAULT,
+		       &MRC_M3(m3p, 0, m3->_ghost_offs[0], m3->_ghost_offs[1], m3->_ghost_offs[2])); CE;
+      ierr = H5Dclose(dset); CE;
+      
+      // ierr = H5LTmake_dataset_float(group, "3d", 3, hdims,
+      // 				    &MRC_M3(m3p, 0, m3->_ghost_offs[0], m3->_ghost_offs[1], m3->_ghost_offs[2])); CE;
       ierr = H5Gclose(group); CE;
       mrc_fld_patch_put(m3);
     }
@@ -1425,7 +1348,7 @@ struct mrc_io_ops mrc_io_xdmf_ops = {
   .write_field   = ds_xdmf_write_field,
   .write_field2d = ds_xdmf_write_field2d,
   .write_attr    = ds_xdmf_write_attr,
-  .write_f1      = ds_xdmf_write_f1,
+  .write_m1      = ds_xdmf_write_m1,
   .write_m3      = ds_xdmf_write_m3,
 };
 
@@ -1438,10 +1361,8 @@ struct mrc_io_ops mrc_io_xdmf_serial_ops = {
   .close         = ds_xdmf_close,
   .write_field   = ds_xdmf_write_field,
   .write_field2d = ds_xdmf_write_field2d,
-  .write_f3      = ds_xdmf_write_f3,
+  .write_m3      = ds_xdmf_write_m3,
   .read_f3       = ds_xdmf_read_f3,
-  .write_f1      = ds_xdmf_write_f1,
-  .read_f1       = ds_xdmf_read_f1,
   .write_m1      = ds_xdmf_write_m1,
   .read_m1       = ds_xdmf_read_m1,
   .write_attr    = ds_xdmf_write_attr,
@@ -1460,8 +1381,6 @@ struct mrc_io_ops mrc_io_hdf5_serial_ops = {
   .write_field2d = ds_xdmf_write_field2d,
   .write_fld     = ds_xdmf_write_fld,
   .read_fld      = ds_xdmf_read_fld,
-  .write_f1      = ds_xdmf_write_f1,
-  .read_f1       = ds_xdmf_read_f1,
   .write_m1      = ds_xdmf_write_m1,
   .read_m1       = ds_xdmf_read_m1,
   .write_attr    = ds_xdmf_write_attr,
@@ -1837,8 +1756,8 @@ hdf5_write_crds_parallel(struct mrc_io *io, struct mrc_fld *fld)
 
 struct read_f1_cb_data {
   struct mrc_io *io;
-  struct mrc_f1 *fld;
-  struct mrc_f1 *lfld;
+  struct mrc_fld *fld;
+  struct mrc_fld *lfld;
   hid_t filespace;
   hid_t memspace;
   hid_t dxpl;
@@ -1855,7 +1774,7 @@ read_f1_cb(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
   H5LTget_attribute_int(group, ".", "m", &m);
 
   hid_t dset = H5Dopen(group, "1d", H5P_DEFAULT);
-  H5Dread(dset, H5T_NATIVE_FLOAT, data->memspace, data->filespace, data->dxpl, data->fld->arr);
+  H5Dread(dset, H5T_NATIVE_FLOAT, data->memspace, data->filespace, data->dxpl, data->fld->_arr);
   H5Dclose(dset);
 
   ierr = H5Gclose(group); CE;
@@ -1864,10 +1783,12 @@ read_f1_cb(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
 }
 
 static void
-ds_xdmf_parallel_read_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
+ds_xdmf_parallel_read_m1(struct mrc_io *io, const char *path, struct mrc_fld *f1)
 {
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
   herr_t ierr;
+
+  assert(mrc_fld_nr_patches(f1) == 1);
 
   assert(io->size == 1);
 #ifndef NDEBUG
@@ -1875,7 +1796,7 @@ ds_xdmf_parallel_read_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
 #endif
 
   hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT);
-  const int *ghost_dims = mrc_f1_ghost_dims(f1);
+  const int *ghost_dims = mrc_fld_ghost_dims(f1);
   hsize_t hdims[1] = { ghost_dims[0] };
 
   hid_t filespace = H5Screate_simple(1, hdims, NULL);
@@ -1995,10 +1916,12 @@ ds_xdmf_parallel_read_f3(struct mrc_io *io, const char *path, struct mrc_fld *fl
 }
 
 static void
-ds_xdmf_parallel_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
+ds_xdmf_parallel_write_m1(struct mrc_io *io, const char *path, struct mrc_fld *f1)
 {
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
   herr_t ierr;
+
+  assert(mrc_fld_nr_patches(f1) == 1);
 
 #ifndef NDEBUG
   MPI_Barrier(io->obj.comm);
@@ -2009,10 +1932,10 @@ ds_xdmf_parallel_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1
 
   assert(io->size == 1);
   hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT);
-  const int *ghost_dims = mrc_f1_ghost_dims(f1);
+  const int *ghost_dims = mrc_fld_ghost_dims(f1);
   hsize_t hdims[1] = { ghost_dims[0] };
-  for (int m = 0; m < f1->nr_comp; m++) {
-    hid_t group = H5Gcreate(group0, mrc_f1_comp_name(f1, m), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  for (int m = 0; m < mrc_fld_nr_comps(f1); m++) {
+    hid_t group = H5Gcreate(group0, mrc_fld_comp_name(f1, m), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     H5LTset_attribute_int(group, ".", "m", &m, 1);
     
     hid_t dxpl = H5Pcreate(H5P_DATASET_XFER);
@@ -2025,7 +1948,7 @@ ds_xdmf_parallel_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1
     hid_t memspace = H5Screate_simple(1, hdims, NULL);
     hid_t dset = H5Dcreate(group, "1d", H5T_NATIVE_FLOAT, filespace, H5P_DEFAULT,
 			   H5P_DEFAULT, H5P_DEFAULT);
-    H5Dwrite(dset, H5T_NATIVE_FLOAT, memspace, filespace, dxpl, f1->arr);
+    H5Dwrite(dset, H5T_NATIVE_FLOAT, memspace, filespace, dxpl, f1->_arr);
     H5Dclose(dset);
     H5Sclose(filespace);
     H5Sclose(memspace);
@@ -2115,9 +2038,9 @@ struct mrc_io_ops mrc_io_xdmf_parallel_ops = {
   .setup         = ds_xdmf_setup,
   .open          = ds_xdmf_parallel_open,
   .close         = ds_xdmf_parallel_close,
-  .read_f1       = ds_xdmf_parallel_read_f1,
+  .read_m1       = ds_xdmf_parallel_read_m1,
   .read_f3       = ds_xdmf_parallel_read_f3,
-  .write_f1      = ds_xdmf_parallel_write_f1,
+  .write_m1      = ds_xdmf_parallel_write_m1,
   .write_field   = ds_xdmf_parallel_write_field,
   .read_attr     = ds_xdmf_read_attr,
   .write_attr    = ds_xdmf_write_attr,

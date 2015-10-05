@@ -43,7 +43,7 @@ calc_rhs(void *ctx, struct mrc_obj *_rhs, float time, struct mrc_obj *_x)
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   struct mrc_ddc *ddc = mrc_domain_get_ddc(domain);
   
-  mrc_ddc_fill_ghosts(ddc, 0, NR_FLDS, x);
+  mrc_ddc_fill_ghosts_fld(ddc, 0, NR_FLDS, x);
 
   mrc_fld_foreach(x, ix, iy, iz, 0, 0) {
     MRC_F3(rhs, U, ix,iy,iz) =  - Dxxx(x, U, ix,iy,iz) +
@@ -66,11 +66,8 @@ main(int argc, char **argv)
   mrc_domain_set_param_int(domain, "bcx", BC_PERIODIC);
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   mrc_crds_set_param_int(crds, "sw", BND);
-  mrc_crds_set_param_float3(crds, "l", (float[3]) { -8., 0., 0. });
-  mrc_crds_set_param_float3(crds, "h", (float[3]) {  8., 1., 1. });
-
-  struct mrc_ddc *ddc = mrc_domain_get_ddc(domain);
-  mrc_ddc_set_param_int3(ddc, "ibn", (int[3]) { BND, BND, BND });
+  mrc_crds_set_param_double3(crds, "l", (double[3]) { -8., 0., 0. });
+  mrc_crds_set_param_double3(crds, "h", (double[3]) {  8., 1., 1. });
 
   mrc_domain_set_from_options(domain);
   mrc_domain_setup(domain);

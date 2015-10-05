@@ -50,17 +50,17 @@ main(int argc, char **argv)
 
   switch (testcase) {
   case 1:
-    mrc_crds_set_type(crds, "multi_uniform");
+    mrc_crds_set_type(crds, "uniform");
     mrc_domain_set_from_options(domain);
     mrc_domain_setup(domain);
     test_read_write(domain);
     break;
   case 2: ;
-    mrc_crds_set_type(crds, "multi_rectilinear");
+    mrc_crds_set_type(crds, "rectilinear");
     mrc_crds_set_param_int(crds, "sw", 2);
     mrc_domain_set_from_options(domain);
     mrc_domain_setup(domain);
-    mrctest_set_crds_multi_rectilinear_1(domain);
+    mrctest_set_crds_rectilinear_1(domain);
     test_read_write(domain);
     break;
   }

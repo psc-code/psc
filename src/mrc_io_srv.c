@@ -1,6 +1,7 @@
 
 #include "mrc_io_private.h"
 #include <mrc_params.h>
+#include <mrc_profile.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -31,12 +32,14 @@ enum {
   ID_DIAGS_SUBDOMAIN,
   ID_DIAGS_DATA,
   ID_DIAGS_2DDATA,
+  ID_DIAGS_CMD_RESPONSE,
 };
 
 enum {
   DIAG_CMD_CREATE,
   DIAG_CMD_OPENFILE,
   DIAG_CMD_SHUTDOWN,
+  DIAG_RESPONSE_SHUTDOWN_COMPLETE,
 };
 
 // ======================================================================
@@ -67,7 +70,7 @@ diagc_combined_send_domain_info(struct mrc_io *io, struct mrc_domain *domain)
     return;
 
   struct diagc_combined_params *par = io->obj.subctx;
-    
+
   int iw[9], *off = iw, *ldims = iw + 3, *gdims = iw + 6;
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(domain, &nr_patches);
@@ -153,11 +156,33 @@ diagc_combined_close(struct mrc_io *io)
 static void
 diagc_combined_destroy(struct mrc_io *io)
 {
+  static int pr_diag_shutdown = 0;
+  int comm_world_rank = 0;
+  int wait_for_response, icmd[2];
+
   struct diagc_combined_params *par = io->obj.subctx;
 
-  if (io->rank == 0) {
-    int icmd[1] = { DIAG_CMD_SHUTDOWN };
-    MPI_Send(icmd, 1, MPI_INT, par->rank_diagsrv, ID_DIAGS_CMD, MPI_COMM_WORLD);
+  MPI_Comm_rank(MPI_COMM_WORLD, &comm_world_rank);
+  if (mrc_io_is_setup(io) && comm_world_rank == 0) {
+    wait_for_response = 1;
+  } else {
+    wait_for_response = 0;
+  }
+  
+  icmd[0] = DIAG_CMD_SHUTDOWN;
+  icmd[1] = wait_for_response;
+  MPI_Send(icmd, 2, MPI_INT, par->rank_diagsrv, ID_DIAGS_CMD, MPI_COMM_WORLD);
+
+  if (0&&wait_for_response) {
+    int response = 0;
+    if (pr_diag_shutdown == 0) {
+      pr_diag_shutdown = prof_register("diagc_combined_shutdown", 0, 0, 0);
+    }
+    prof_start(pr_diag_shutdown);
+    MPI_Recv(&response, 1, MPI_INT, par->rank_diagsrv, ID_DIAGS_CMD_RESPONSE,
+             MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    assert(response == DIAG_RESPONSE_SHUTDOWN_COMPLETE);
+    prof_stop(pr_diag_shutdown);
   }
 }
 
@@ -167,10 +192,12 @@ diagc_combined_destroy(struct mrc_io *io)
 static void
 copy_and_scale(float *buf, struct mrc_fld *fld, int m, float scale)
 {
+  struct mrc_fld *f = mrc_fld_get_as(fld, "float");
   int i = 0;
-  mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
-    buf[i++] = scale * MRC_F3(fld, m, ix,iy,iz);
+  mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
+    buf[i++] = scale * MRC_F3(f, m, ix,iy,iz);
   } mrc_fld_foreach_end;
+  mrc_fld_put_as(f, fld);
 }
 
 static void
@@ -213,6 +240,16 @@ diagc_combined_write_field(struct mrc_io *io, const char *path,
 }
 
 static void
+diagc_combined_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *fld)
+{
+  int nr_comps = mrc_fld_nr_comps(fld);
+  for (int m = 0; m < nr_comps; m++) {
+    assert(mrc_fld_comp_name(fld, m));
+    diagc_combined_write_field(io, path, 1.f, fld, m);
+  }
+}
+
+static void
 diagc_combined_write_field2d(struct mrc_io *io, float scale, struct mrc_fld *fld,
 			     int outtype, float sheet)
 {
@@ -248,7 +285,9 @@ diagc_combined_write_field2d(struct mrc_io *io, float scale, struct mrc_fld *fld
     dims[dim] = 1;
 
     MPI_Send(iw, 6, MPI_INT, par->rank_diagsrv, ID_DIAGS_SUBDOMAIN, MPI_COMM_WORLD);
+    struct mrc_fld *f = mrc_fld_get_as(fld, "float");
     MPI_Send(fld->_arr, fld->_len, MPI_FLOAT, par->rank_diagsrv, ID_DIAGS_2DDATA, MPI_COMM_WORLD);
+    mrc_fld_put_as(f, fld);
   } else {
     MPI_Send(iw, 6, MPI_INT, par->rank_diagsrv, ID_DIAGS_SUBDOMAIN, MPI_COMM_WORLD);
   }
@@ -279,6 +318,10 @@ diagc_combined_write_attr(struct mrc_io *io, const char *path, int type,
       MPI_Send(&pv->u_float, 1, MPI_FLOAT, par->rank_diagsrv,
 	       ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD);
       break;
+    case PT_DOUBLE:
+      MPI_Send(&pv->u_double, 1, MPI_DOUBLE, par->rank_diagsrv,
+         ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD);
+      break;
     case PT_STRING:
       MPI_Send((char *)pv->u_string, strlen(pv->u_string) + 1, MPI_CHAR, par->rank_diagsrv,
 	       ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD);
@@ -289,6 +332,10 @@ diagc_combined_write_attr(struct mrc_io *io, const char *path, int type,
       break;
     case PT_FLOAT3:
       MPI_Send(pv->u_float3, 3, MPI_FLOAT, par->rank_diagsrv,
+	       ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD);
+      break;
+    case PT_DOUBLE3:
+      MPI_Send(pv->u_double3, 3, MPI_DOUBLE, par->rank_diagsrv,
 	       ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD);
       break;
     case PT_INT_ARRAY:
@@ -311,7 +358,7 @@ struct mrc_io_ops mrc_io_combined_ops = {
   .setup         = diagc_combined_setup,
   .destroy       = diagc_combined_destroy,
   .open          = diagc_combined_open,
-  .write_field   = diagc_combined_write_field,
+  .write_m3      = diagc_combined_write_m3,
   .write_field2d = diagc_combined_write_field2d,
   .write_attr    = diagc_combined_write_attr,
   .close         = diagc_combined_close,
@@ -346,7 +393,7 @@ struct diagsrv_srv_ops {
   void  (*open)(struct diagsrv_one *ds, int step, float time);
   struct mrc_fld *(*get_gfld_2d)(struct diagsrv_one *ds, int dims[2]);
   struct mrc_fld *(*get_gfld_3d)(struct diagsrv_one *ds, int dims[3]);
-  void  (*put_gfld_2d)(struct diagsrv_one *ds, struct mrc_fld *fld, char *fld_name, 
+  void  (*put_gfld_2d)(struct diagsrv_one *ds, struct mrc_fld *fld, char *fld_name,
 		       int outtype, float sheet);
   void  (*put_gfld_3d)(struct diagsrv_one *ds, struct mrc_fld *fld);
   void  (*write_attr)(struct diagsrv_one *ds, const char *path, int type,
@@ -450,8 +497,8 @@ ds_srv_get_gfld_2d(struct diagsrv_one *ds, int gdims[2])
   struct mrc_fld *f2 = mrc_fld_create(MPI_COMM_SELF);
   mrc_fld_set_param_int_array(f2, "dims", 3, (int[3]) { gdims[0], gdims[1], 1 });
   mrc_fld_set_array(f2, srv->gfld);
-  f2->_domain = srv->domain; // FIXME, quite a hack
   mrc_fld_setup(f2);
+  f2->_domain = srv->domain; // FIXME, quite a hack
   return f2;
 }
 
@@ -575,8 +622,8 @@ ds_srv_cache_get_gfld_2d(struct diagsrv_one *ds, int gdims[2])
   struct mrc_fld *f2 = mrc_fld_create(MPI_COMM_SELF);
   mrc_fld_set_param_int_array(f2, "dims", 3, (int[3]) { gdims[0], gdims[1], 1 });
   mrc_fld_set_array(f2, srv->gflds[srv->nr_flds]);
-  f2->_domain = srv->domain; // FIXME, quite a hack
   mrc_fld_setup(f2);
+  f2->_domain = srv->domain; // FIXME, quite a hack
   return f2;
 }
 
@@ -603,6 +650,7 @@ ds_srv_cache_put_gfld_2d(struct diagsrv_one *ds, struct mrc_fld *gfld, char *fld
   srv->outtypes[srv->nr_flds] = outtype;
   srv->sheets[srv->nr_flds] = sheet;
   srv->nr_flds++;
+  mrc_fld_destroy(gfld);
 }
 
 static void
@@ -628,7 +676,7 @@ ds_srv_cache_write_attr(struct diagsrv_one *ds, const char *path, int type,
     if (strcmp(p->path, path) == 0)
       goto found;
   }
-  
+
   p = calloc(1, sizeof(*p));
   p->attrs = mrc_obj_create(MPI_COMM_SELF);
   mrc_obj_set_name(p->attrs, path);
@@ -663,9 +711,9 @@ ds_srv_cache_close(struct diagsrv_one *ds)
       struct mrc_fld *gfld2 = mrc_fld_create(MPI_COMM_SELF);
       mrc_fld_set_param_int_array(gfld2, "dims", 3, (int[3]) { gdims[1], gdims[2], 1 });
       mrc_fld_set_array(gfld2, srv->gflds[i]);
-      gfld2->_domain = srv->domain; // FIXME, quite a hack
       mrc_fld_set_comp_name(gfld2, 0, srv->fld_names[i]);
       mrc_fld_setup(gfld2);
+      gfld2->_domain = srv->domain; // FIXME, quite a hack
       mrc_io_write_field2d(ds->io, 1., gfld2, DIAG_TYPE_2D_X, srv->sheets[i]);
       mrc_fld_destroy(gfld2);
       break;
@@ -674,9 +722,9 @@ ds_srv_cache_close(struct diagsrv_one *ds)
       struct mrc_fld *gfld2 = mrc_fld_create(MPI_COMM_SELF);
       mrc_fld_set_param_int_array(gfld2, "dims", 3, (int[3]) { gdims[0], gdims[2], 1 });
       mrc_fld_set_array(gfld2, srv->gflds[i]);
-      gfld2->_domain = srv->domain; // FIXME, quite a hack
       mrc_fld_set_comp_name(gfld2, 0, srv->fld_names[i]);
       mrc_fld_setup(gfld2);
+      gfld2->_domain = srv->domain; // FIXME, quite a hack
       mrc_io_write_field2d(ds->io, 1., gfld2, DIAG_TYPE_2D_Y, srv->sheets[i]);
       mrc_fld_destroy(gfld2);
       break;
@@ -685,9 +733,9 @@ ds_srv_cache_close(struct diagsrv_one *ds)
       struct mrc_fld *gfld2 = mrc_fld_create(MPI_COMM_SELF);
       mrc_fld_set_param_int_array(gfld2, "dims", 3, (int[3]) { gdims[0], gdims[1], 1 });
       mrc_fld_set_array(gfld2, srv->gflds[i]);
-      gfld2->_domain = srv->domain; // FIXME, quite a hack
       mrc_fld_set_comp_name(gfld2, 0, srv->fld_names[i]);
       mrc_fld_setup(gfld2);
+      gfld2->_domain = srv->domain; // FIXME, quite a hack
       mrc_io_write_field2d(ds->io, 1., gfld2, DIAG_TYPE_2D_Z, srv->sheets[i]);
       mrc_fld_destroy(gfld2);
       break;
@@ -730,19 +778,27 @@ struct diagsrv_srv_ops ds_srv_cache_ops = {
 static void
 add_to_field_2d(struct mrc_fld *g, struct mrc_fld *l, int ib[2])
 {
+  struct mrc_fld *_g = mrc_fld_get_as(g, "float");
+  struct mrc_fld *_l = mrc_fld_get_as(l, "float");
   for (int iy = 0; iy < l->_dims.vals[1]; iy++) {
     for (int ix = 0; ix < l->_dims.vals[0]; ix++) {
-      MRC_F2(g,0, ix+ib[0],iy+ib[1]) = MRC_F2(l,0, ix,iy);
+      MRC_F2(_g,0, ix+ib[0],iy+ib[1]) = MRC_F2(_l,0, ix,iy);
     }
   }
+  mrc_fld_put_as(_g, g);
+  mrc_fld_put_as(_l, l);
 }
 
 static void
-add_to_field_3d(struct mrc_fld *g, struct mrc_fld *l, int ib[3])
+add_to_field_3d(struct mrc_fld *g_, struct mrc_fld *l_, int ib[3])
 {
+  struct mrc_fld *g = mrc_fld_get_as(g_, "float");
+  struct mrc_fld *l = mrc_fld_get_as(l_, "float");
   mrc_fld_foreach(l, ix,iy,iz, 0, 0) {
     MRC_F3(g,0, ix+ib[0],iy+ib[1],iz+ib[2]) = MRC_F3(l,0, ix,iy,iz);
   } mrc_fld_foreach_end;
+  mrc_fld_put_as(g, g_);
+  mrc_fld_put_as(l, l_);
 }
 
 // ----------------------------------------------------------------------
@@ -757,7 +813,7 @@ static struct diagsrv_srv_ops *ds_srvs[] = {
 static struct diagsrv_srv_ops *
 find_ds_srv(const char *ds_srv)
 {
-#if 0  
+#if 0
   fprintf(stderr,"Available ds_srvs:\n");
   for (int i = 0; ds_srvs[i]; i++){
     fprintf(stderr,"ds_srvs[i]:%s\n",ds_srvs[i]->name);
@@ -797,7 +853,7 @@ diagsrv_recv_domain_info(int nr_procs, int ldims[3])
     for (int d = 0; d < 3; d++) {
       // find max local domain
       if (ldims[d] < _ldims[d]) {
-	ldims[d] = _ldims[d];
+        ldims[d] = _ldims[d];
       }
       // FIXME, this is a bit stupid, but by far the easiest way without assuming
       // internal mpi_domain knowledge -- we repeatedly receive the same pieces
@@ -806,7 +862,7 @@ diagsrv_recv_domain_info(int nr_procs, int ldims[3])
       MPI_Recv(buf, _ldims[d], MPI_FLOAT, rank, ID_DIAGS_CMD_CRDX + d, MPI_COMM_WORLD,
 	       MPI_STATUS_IGNORE);
       for (int i = 0; i < _ldims[d]; i++) {
-	MRC_CRD(crds, d, i + off[d]) = buf[i];
+        MRC_CRD(crds, d, i + off[d]) = buf[i];
       }
       free(buf);
     }
@@ -844,6 +900,7 @@ static struct param diagsrv_params_descr[] = {
   };
   INIT_LIST_HEAD(&ds.mrc_io_list);
 
+  int respond_to_rank = -1;
   int gdims[3];
   float *w2 = NULL;
 
@@ -856,6 +913,9 @@ static struct param diagsrv_params_descr[] = {
     MPI_Status stat;
     MPI_Recv(icmd, 2, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &stat);
     if (icmd[0] == DIAG_CMD_SHUTDOWN) {
+      if (icmd[1]) {
+        respond_to_rank = stat.MPI_SOURCE;
+      }
       break;
     }
 
@@ -895,7 +955,7 @@ static struct param diagsrv_params_descr[] = {
     }
 
     for (;;) { //waiting for field to write.
-  
+
       char fld_name80[80];
       MPI_Recv(fld_name80, 80, MPI_CHAR, 0, MPI_ANY_TAG, MPI_COMM_WORLD,
 	       &status);
@@ -920,6 +980,10 @@ static struct param diagsrv_params_descr[] = {
 	  MPI_Recv(&val.u_float, 1, MPI_FLOAT, 0, ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD,
 		   MPI_STATUS_IGNORE);
 	  break;
+  case PT_DOUBLE:
+    MPI_Recv(&val.u_double, 1, MPI_DOUBLE, 0, ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD,
+       MPI_STATUS_IGNORE);
+    break;
 	case PT_STRING: ;
 	  char str[100];
 	  MPI_Recv(str, 100, MPI_CHAR, 0, ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD,
@@ -932,6 +996,10 @@ static struct param diagsrv_params_descr[] = {
 	  break;
 	case PT_FLOAT3:
 	  MPI_Recv(val.u_float3, 3, MPI_FLOAT, 0, ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD,
+		   MPI_STATUS_IGNORE);
+	  break;
+	case PT_DOUBLE3:
+	  MPI_Recv(val.u_double3, 3, MPI_DOUBLE, 0, ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD,
 		   MPI_STATUS_IGNORE);
 	  break;
 	case PT_INT_ARRAY:
@@ -963,7 +1031,7 @@ static struct param diagsrv_params_descr[] = {
 
       char obj_name80[80];
       strcpy(obj_name80, fld_name80);
-      
+
       MPI_Recv(fld_name80, 80, MPI_CHAR, 0, ID_DIAGS_FLDNAME, MPI_COMM_WORLD,
 	       MPI_STATUS_IGNORE);
 
@@ -987,31 +1055,33 @@ static struct param diagsrv_params_descr[] = {
 
 	struct mrc_fld *gfld2 = srv_ops->get_gfld_2d(&ds, (int [2]) { gdims[i0], gdims[i1] });
 
-	for (int k = 0; k < nr_procs; k++) { 
+	for (int k = 0; k < nr_procs; k++) {
 	  int iw[6], *off = iw, *dims = iw + 3; // off, then dims
 	  MPI_Recv(iw, 6, MPI_INT, k, ID_DIAGS_SUBDOMAIN, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-	  
+
 	  // receive data and add to field
 	  if (iw[0] > -1) {
 	    struct mrc_fld *lfld2 = mrc_fld_create(MPI_COMM_SELF);
 	    mrc_fld_set_param_int_array(lfld2, "dims", 3, (int[3]) { dims[i0], dims[i1], 1 });
 	    mrc_fld_set_array(lfld2, w2);
 	    mrc_fld_setup(lfld2);
-	    MPI_Recv(lfld2->_arr, lfld2->_len, MPI_FLOAT, k, ID_DIAGS_2DDATA, MPI_COMM_WORLD,
+	    struct mrc_fld *_lfld2 = mrc_fld_get_as(lfld2, "float");
+	    MPI_Recv(_lfld2->_arr, lfld2->_len, MPI_FLOAT, k, ID_DIAGS_2DDATA, MPI_COMM_WORLD,
 		     MPI_STATUS_IGNORE);
+	    mrc_fld_put_as(_lfld2, lfld2);
 	    add_to_field_2d(gfld2, lfld2, (int [2]) { off[i0], off[i1] });
 	    mrc_fld_destroy(lfld2);
 	  }
 	}
-	
+
 	srv_ops->put_gfld_2d(&ds, gfld2, fld_name80, outtype, sheet);
       } else {
 	struct mrc_fld *gfld3 = srv_ops->get_gfld_3d(&ds, gdims);
 
-	for (int k = 0; k < nr_procs; k++) { 
+	for (int k = 0; k < nr_procs; k++) {
 	  int iw[6], *off = iw, *dims = iw + 3; // off, then dims
 	  MPI_Recv(iw, 6, MPI_INT, k, ID_DIAGS_SUBDOMAIN, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-	  
+
 	  // receive data and add to field
 	  if (iw[0] > -1) {
 	    struct mrc_fld *lfld3 = mrc_fld_create(MPI_COMM_SELF);
@@ -1019,8 +1089,10 @@ static struct param diagsrv_params_descr[] = {
 				       (int[4]) { dims[0], dims[1], dims[2], 1 });
 	    mrc_fld_set_array(lfld3, w2);
 	    mrc_fld_setup(lfld3);
+	    struct mrc_fld *_lfld3 = mrc_fld_get_as(lfld3, "float");
 	    MPI_Recv(lfld3->_arr, lfld3->_len, MPI_FLOAT, k, ID_DIAGS_DATA, MPI_COMM_WORLD,
 		     MPI_STATUS_IGNORE);
+	    mrc_fld_put_as(_lfld3, lfld3);
 	    add_to_field_3d(gfld3, lfld3, off);
 	    mrc_fld_destroy(lfld3);
 	  }
@@ -1030,13 +1102,11 @@ static struct param diagsrv_params_descr[] = {
 	mrc_fld_set_comp_name(gfld3, 0, fld_name80);
 	srv_ops->put_gfld_3d(&ds, gfld3);
       }
-    }  
+    }
     srv_ops->close(&ds);
     ds.io = NULL;
   }  //for (;;) //loop waiting for data to write...
   free(w2);
-
-  mprintf("diagsrv shutting down\n");
 
   while (!list_empty(&ds.mrc_io_list)) {
     struct mrc_io_entry *p = list_entry(ds.mrc_io_list.next, struct mrc_io_entry, entry);
@@ -1047,4 +1117,11 @@ static struct param diagsrv_params_descr[] = {
   }
 
   srv_ops->destroy(&ds);
+
+  if (respond_to_rank > -1) {
+    int response = DIAG_RESPONSE_SHUTDOWN_COMPLETE;
+    assert(respond_to_rank == 0);
+    MPI_Send(&response, 1, MPI_INT, respond_to_rank, ID_DIAGS_CMD_RESPONSE,
+	     MPI_COMM_WORLD);
+  }
 }

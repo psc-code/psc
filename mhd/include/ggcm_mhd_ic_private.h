@@ -12,8 +12,7 @@ struct ggcm_mhd_ic {
 struct ggcm_mhd_ic_ops {
   MRC_SUBCLASS_OPS(struct ggcm_mhd_ic);
   void (*run)(struct ggcm_mhd_ic *ic);
-  void (*ini_b)(struct ggcm_mhd_ic *ic, float b_sw[3]);
-  void (*init_masks)(struct ggcm_mhd_ic *ic);
+  void (*init_ymask)(struct ggcm_mhd_ic *ic, struct mrc_fld *ymask);
 };
 
 #define ggcm_mhd_ic_ops(ic) ((struct ggcm_mhd_ic_ops *)((ic)->obj.ops))

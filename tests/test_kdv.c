@@ -42,25 +42,25 @@ _kdv_create(struct kdv *kdv)
   mrc_domain_set_param_int3(kdv->domain, "m", (int [3]) { 160, 1, 1 });
   struct mrc_crds *crds = mrc_domain_get_crds(kdv->domain);
   mrc_crds_set_param_int(crds, "sw", BND);
-  mrc_crds_set_param_float3(crds, "l", (float[3]) { -8., 0., 0. });
-  mrc_crds_set_param_float3(crds, "h", (float[3]) {  8., 0., 0. });
+  mrc_crds_set_param_double3(crds, "l", (double[3]) { -8., 0., 0. });
+  mrc_crds_set_param_double3(crds, "h", (double[3]) {  8., 0., 0. });
 }
 
-static struct mrc_f1 *
+static struct mrc_fld *
 kdv_get_fld(struct kdv *kdv, int nr_comps, const char *name)
 {
-  struct mrc_f1 *x = mrc_domain_f1_create(kdv->domain);
-  mrc_f1_set_name(x, name);
-  mrc_f1_set_param_int(x, "sw", BND);
-  mrc_f1_set_param_int(x, "nr_comps", nr_comps);
-  mrc_f1_setup(x);
+  struct mrc_fld *x = mrc_domain_f1_create(kdv->domain);
+  mrc_fld_set_name(x, name);
+  mrc_fld_set_param_int(x, "nr_ghosts", BND);
+  mrc_fld_set_param_int(x, "nr_comps", nr_comps);
+  mrc_fld_setup(x);
   return x;
 }
 
 static void
-kdv_fill_ghosts(struct kdv *kdv, struct mrc_f1 *x, int m_x)
+kdv_fill_ghosts(struct kdv *kdv, struct mrc_fld *x, int m_x)
 {
-  int mx = mrc_f1_dims(x)[0];
+  int mx = mrc_fld_dims(x)[0];
   MRC_F1(x, m_x , -2  ) = MRC_F1(x, m_x , mx-2);
   MRC_F1(x, m_x , -1  ) = MRC_F1(x, m_x , mx-1);
   MRC_F1(x, m_x , mx  ) = MRC_F1(x, m_x , 0);
@@ -75,7 +75,7 @@ kdv_fill_ghosts(struct kdv *kdv, struct mrc_f1 *x, int m_x)
   ((MRC_F1(x, m_x, ix+2) - 2.*MRC_F1(x, m_x, ix+1) + 2.*MRC_F1(x, m_x, ix-1) - MRC_F1(x, m_x, ix-2)) / (2.*powf(CRDX(ix+1) - CRDX(ix), 3.)))
 
 static void
-kdv_rhsf(void *ctx, struct mrc_f1 *rhs, float time, struct mrc_f1 *x)
+kdv_rhsf(void *ctx, struct mrc_fld *rhs, float time, struct mrc_fld *x)
 {
   struct kdv *kdv = ctx;
   struct mrc_crds *crds = mrc_domain_get_crds(kdv->domain);
@@ -85,6 +85,8 @@ kdv_rhsf(void *ctx, struct mrc_f1 *rhs, float time, struct mrc_f1 *x)
   mrc_f1_foreach(x, ix, 0, 0) {
     MRC_F1(rhs, U, ix) =  - Dxxx(x, U, ix) + 6. * MRC_F1(x, U, ix) * Dx(x, U, ix);
   } mrc_f1_foreach_end;
+
+  mrc_obj_print_class_info(CLASS_INFO_VERB_DIFF);
 }
 
 // ======================================================================
@@ -107,6 +109,7 @@ int
 main(int argc, char **argv)
 {
   MPI_Init(&argc, &argv);
+  mrc_class_mrc_fld.watch = true;
   libmrc_params_init(argc, argv);
 
   struct kdv *kdv = kdv_create(MPI_COMM_WORLD);
@@ -116,8 +119,8 @@ main(int argc, char **argv)
 
   // i.c.
   struct mrc_crds *crds = mrc_domain_get_crds(kdv->domain);
-  struct mrc_f1 *x = kdv_get_fld(kdv, NR_FLDS, "x");
-  mrc_f1_set_comp_name(x, U, "u");
+  struct mrc_fld *x = kdv_get_fld(kdv, NR_FLDS, "x");
+  mrc_fld_set_comp_name(x, U, "u");
 
   // setup initial equilibrium and perturbation
   mrc_f1_foreach(x, ix, 0, 0) {
@@ -128,17 +131,18 @@ main(int argc, char **argv)
   // run time integration
   struct mrc_ts *ts = mrc_ts_create_std(MPI_COMM_WORLD, NULL, NULL);
   mrc_ts_set_context(ts, kdv_to_mrc_obj(kdv));
-  mrc_ts_set_solution(ts, mrc_f1_to_mrc_obj(x));
+  mrc_ts_set_solution(ts, mrc_fld_to_mrc_obj(x));
   mrc_ts_set_from_options(ts);
   mrc_ts_setup(ts);
   mrc_ts_solve(ts);
   mrc_ts_view(ts);
   mrc_ts_destroy(ts);
 
-  mrc_f1_destroy(x);
+  mrc_fld_destroy(x);
 
   kdv_destroy(kdv);
 
+  libmrc_finalize();
   MPI_Finalize();
   return 0;
 }

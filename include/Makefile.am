@@ -26,6 +26,14 @@ include_HEADERS = \
 	mrc_ts_monitor.h \
 	mrc_ts_monitor_private.h \
 	mrc_ts_private.h \
+	mrc_block_factory.h \
+	mrc_block_factory_private.h \
+	mrc_trafo.h \
+	mrc_trafo_cartesian.h \
+	mrc_trafo_cylindrical.h \
+	mrc_trafo_curvilin.h \
+	mrc_trafo_fast.h \
+	mrc_mat.h \
 	mrc_vec.h \
 	mrc_vec_private.h \
 	mrctest.h

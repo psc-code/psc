@@ -1,7 +1,7 @@
 
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = include src tests mhd
+SUBDIRS = include src tests mhd util
 
 
 

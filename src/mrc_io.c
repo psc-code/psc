@@ -121,36 +121,6 @@ mrc_io_close(struct mrc_io *io)
 }
 
 // ----------------------------------------------------------------------
-// mrc_io_read_f1
-
-void
-mrc_io_read_f1(struct mrc_io *io, const char *path, struct mrc_f1 *fld)
-{
-  struct mrc_io_ops *ops = mrc_io_ops(io);
-  if (ops->read_f1) {
-    ops->read_f1(io, path, fld);
-  } else {
-    assert(fld->domain);
-    struct mrc_m1 *m1 = mrc_domain_m1_create(fld->domain);
-    mrc_m1_set_param_int(m1, "sw", fld->_sw);
-    mrc_m1_set_param_int(m1, "dim", fld->dim);
-    mrc_m1_set_param_int(m1, "nr_comps", fld->nr_comp);
-    mrc_m1_setup(m1);
-    mrc_io_read_m1(io, path, m1);
-
-    struct mrc_m1_patch *m1p = mrc_m1_patch_get(m1, 0);
-    for (int m = 0; m < m1->nr_comp; m++) {
-      mrc_f1_set_comp_name(fld, m, mrc_m1_comp_name(m1, m));
-      mrc_m1_foreach_bnd(m1p, ix) {
-	MRC_F1(fld, m, ix) = MRC_M1(m1p, m, ix);
-      } mrc_m1_foreach_end;
-    }
-    mrc_m1_patch_put(m1);
-    mrc_m1_destroy(m1);
-  }
-}
-
-// ----------------------------------------------------------------------
 // mrc_io_read_f3
 
 void
@@ -162,8 +132,8 @@ mrc_io_read_f3(struct mrc_io *io, const char *path, struct mrc_fld *fld)
   } else {
     assert(fld->_domain);
     struct mrc_fld *m3 = mrc_domain_m3_create(fld->_domain);
-    mrc_fld_set_sw(m3, fld->_sw.vals[0]);
-    mrc_fld_set_nr_comps(m3, mrc_fld_nr_comps(fld));
+    mrc_fld_set_param_int(m3, "nr_ghosts", fld->_sw.vals[0]);
+    mrc_fld_set_param_int(m3, "nr_comps", mrc_fld_nr_comps(fld));
     mrc_fld_setup(m3);
     mrc_io_read_m3(io, path, m3);
 
@@ -187,8 +157,10 @@ mrc_io_read_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
   struct mrc_io_ops *ops = mrc_io_ops(io);
   if (ops->read_fld) {
     ops->read_fld(io, path, fld);
-  } else if (fld->_dims.nr_vals == 4) {
-    mrc_io_read_f3(io, path, fld);
+  } else if (fld->_dims.nr_vals == 3) {
+    if (strcmp(mrc_fld_type(fld), "float") == 0) {
+      mrc_io_read_m1(io, path, fld);
+    }
   } else if (fld->_dims.nr_vals == 5) {
     mrc_io_read_m3(io, path, fld);
   } else {
@@ -205,86 +177,16 @@ mrc_io_write_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
   struct mrc_io_ops *ops = mrc_io_ops(io);
   if (ops->write_fld) {
     ops->write_fld(io, path, fld);
-  } else if (fld->_dims.nr_vals == 4) {
-    mrc_io_write_f3(io, path, fld, 1.f);
+  } else if (fld->_dims.nr_vals == 3) {
+    if (strcmp(mrc_fld_type(fld), "float") == 0) {
+      mrc_io_write_m1(io, path, fld);
+    }
   } else if (fld->_dims.nr_vals == 5) {
     mrc_io_write_m3(io, path, fld);
+  } else if (fld->_dims.nr_vals == 1) {
+    MHERE;
   } else {
     assert(0);
-  }
-}
-
-// ----------------------------------------------------------------------
-// mrc_io_write_f1
-
-void
-mrc_io_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *fld)
-{
-  struct mrc_io_ops *ops = mrc_io_ops(io);
-  if (ops->write_f1) {
-    ops->write_f1(io, path, fld);
-  } else if (fld->domain) {
-    int sw, dim, nr_comps;
-    mrc_f1_get_param_int(fld, "nr_comps", &nr_comps);
-    mrc_f1_get_param_int(fld, "sw", &sw);
-    mrc_f1_get_param_int(fld, "dim", &dim);
-    struct mrc_m1 *m1 = mrc_domain_m1_create(fld->domain);
-    mrc_m1_set_param_int(m1, "nr_comps", nr_comps); 
-    mrc_m1_set_param_int(m1, "sw", sw);
-    mrc_m1_set_param_int(m1, "dim", dim); 
-    mrc_m1_setup(m1);
-    for (int m = 0; m < fld->nr_comp; m++) {
-      mrc_m1_set_comp_name(m1, m, mrc_f1_comp_name(fld, m));
-      mrc_m1_foreach_patch(m1, p) {
-	struct mrc_m1_patch *m1p = mrc_m1_patch_get(m1, p);
-	mrc_m1_foreach(m1p, ix, sw, sw) {
-	  MRC_M1(m1p, m, ix) = MRC_F1(fld, m, ix);
-	} mrc_m1_foreach_end;
-	mrc_m1_patch_put(m1);
-      }
-    }
-    mrc_io_write_m1(io, path, m1);
-    mrc_m1_destroy(m1);
-  } else {
-    MHERE;
-  }
-}
-
-// ----------------------------------------------------------------------
-// mrc_io_write_f3
-
-void
-mrc_io_write_f3(struct mrc_io *io, const char *path, struct mrc_fld *fld, float scale)
-{
-  struct mrc_io_ops *ops = mrc_io_ops(io);
-  if (ops->write_f3) {
-    ops->write_f3(io, path, fld, scale);
-  } else if (ops->write_field) {
-    int nr_comps = mrc_fld_nr_comps(fld);
-    for (int m = 0; m < nr_comps; m++) {
-      assert(mrc_fld_comp_name(fld, m));
-      ops->write_field(io, path, scale, fld, m);
-    }
-  } else {
-    int nr_comps = mrc_fld_nr_comps(fld);
-    struct mrc_fld *m3 = mrc_domain_m3_create(fld->_domain);
-    mrc_fld_set_nr_comps(m3, nr_comps);
-    mrc_fld_set_sw(m3, fld->_sw.vals[0]); // FIXME, how about 1,2
-    for (int m = 0; m < nr_comps; m++) {
-      mrc_fld_set_comp_name(m3, m, mrc_fld_comp_name(fld, m));
-    }
-    mrc_fld_setup(m3);
-    for (int m = 0; m < nr_comps; m++) {
-      mrc_fld_foreach_patch(m3, p) {
-	struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, p);
-	mrc_m3_foreach_bnd(m3p, ix,iy,iz) {
-	  MRC_M3(m3p, m, ix,iy,iz) = MRC_F3(fld, m, ix,iy,iz) * scale;
-	} mrc_m3_foreach_end;
-	mrc_fld_patch_put(m3);
-      }
-    }
-    mrc_io_write_m3(io, path, m3);
-    mrc_fld_destroy(m3);
   }
 }
 
@@ -292,13 +194,13 @@ mrc_io_write_f3(struct mrc_io *io, const char *path, struct mrc_fld *fld, float 
 // mrc_io_write_m1
 
 void
-mrc_io_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *fld)
+mrc_io_write_m1(struct mrc_io *io, const char *path, struct mrc_fld *fld)
 {
   struct mrc_io_ops *ops = mrc_io_ops(io);
   if (ops->write_m1) {
     ops->write_m1(io, path, fld);
   } else {
-    //    MHERE; // FIXME
+    MHERE; // FIXME
   }
 }
 
@@ -306,11 +208,14 @@ mrc_io_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *fld)
 // mrc_io_read_m1
 
 void
-mrc_io_read_m1(struct mrc_io *io, const char *path, struct mrc_m1 *fld)
+mrc_io_read_m1(struct mrc_io *io, const char *path, struct mrc_fld *fld)
 {
   struct mrc_io_ops *ops = mrc_io_ops(io);
-  assert(ops->read_m1);
-  ops->read_m1(io, path, fld);
+  if (ops->read_m1) {
+    ops->read_m1(io, path, fld);
+  } else {
+    assert(0);
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -320,8 +225,18 @@ void
 mrc_io_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *fld)
 {
   struct mrc_io_ops *ops = mrc_io_ops(io);
-  assert(ops->write_m3);
-  ops->write_m3(io, path, fld);
+  if (ops->write_m3) {
+    ops->write_m3(io, path, fld);
+  } else if (ops->write_field) {
+    assert(mrc_fld_nr_patches(fld) == 1);
+    int nr_comps = mrc_fld_nr_comps(fld);
+    for (int m = 0; m < nr_comps; m++) {
+      assert(mrc_fld_comp_name(fld, m));
+      ops->write_field(io, path, 1., fld, m);
+    }
+  } else {
+    assert(0);
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -331,8 +246,14 @@ void
 mrc_io_read_m3(struct mrc_io *io, const char *path, struct mrc_fld *fld)
 {
   struct mrc_io_ops *ops = mrc_io_ops(io);
-  assert(ops->read_m3);
-  ops->read_m3(io, path, fld);
+  if (ops->read_m3) {
+    ops->read_m3(io, path, fld);
+  } else if (ops->read_f3) {
+    assert(mrc_fld_nr_patches(fld) == 1);
+    mrc_io_read_f3(io, path, fld);
+  } else {
+    assert(0);
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -344,6 +265,7 @@ mrc_io_write_field2d(struct mrc_io *io, float scale, struct mrc_fld *fld,
 {
   struct mrc_io_ops *ops = mrc_io_ops(io);
   assert(mrc_fld_comp_name(fld, 0));
+  assert(ops->write_field2d);
   ops->write_field2d(io, scale, fld, outtype, sheet);
 }
 
@@ -383,45 +305,55 @@ mrc_io_write_field_slice(struct mrc_io *io, float scale, struct mrc_fld *fld,
     s1 *= scale;
     s2 *= scale;
 
+    struct mrc_fld *f = mrc_fld_get_as(fld, "float");
     switch (dim) {
-    case 0:
-      mrc_fld_set_param_int_array(f2, "dims", 3, (int[3]) { dims[1], dims[2], 1 });
+    case 0: {
+      mrc_fld_set_param_int_array(f2, "dims", 5, (int[5]) { dims[1], dims[2], 1, 1, 1 });
       mrc_fld_setup(f2);
+      struct mrc_fld *_f2 = mrc_fld_get_as(f2, "float");
       for(int iz = 0; iz < dims[2]; iz++) {
 	for(int iy = 0; iy < dims[1]; iy++) {
-	  MRC_F2(f2,0, iy,iz) = (s1 * MRC_F3(fld,0, ii-2,iy,iz) +
-				 s2 * MRC_F3(fld,0, ii-1,iy,iz));
+	  MRC_F2(_f2,0, iy,iz) = (s1 * MRC_F3(f,0, ii-2,iy,iz) +
+				  s2 * MRC_F3(f,0, ii-1,iy,iz));
 	}
       }
+      mrc_fld_put_as(_f2, f2);
+    }
       break;
-    case 1:
-      mrc_fld_set_param_int_array(f2, "dims", 3, (int[3]) { dims[0], dims[2], 1 });
+    case 1: {
+      mrc_fld_set_param_int_array(f2, "dims", 5, (int[5]) { dims[0], dims[2], 1, 1, 1 });
       mrc_fld_setup(f2);
+      struct mrc_fld *_f2 = mrc_fld_get_as(f2, "float");
       for(int iz = 0; iz < dims[2]; iz++) {
 	for(int ix = 0; ix < dims[0]; ix++) {
-	  MRC_F2(f2,0, ix,iz) = (s1 * MRC_F3(fld,0, ix,ii-2,iz) +
-				 s2 * MRC_F3(fld,0, ix,ii-1,iz));
+	  MRC_F2(_f2,0, ix,iz) = (s1 * MRC_F3(f,0, ix,ii-2,iz) +
+				  s2 * MRC_F3(f,0, ix,ii-1,iz));
 	}
       }
-      break;
-    case 2:
-      mrc_fld_set_param_int_array(f2, "dims", 3, (int[3]) { dims[0], dims[1], 1 });
-      mrc_fld_setup(f2);
-      for(int iy = 0; iy < dims[1]; iy++) {
-	for(int ix = 0; ix < dims[0]; ix++) {
-	  MRC_F2(f2,0, ix,iy) = (s1 * MRC_F3(fld,0, ix,iy,ii-2) +
-				 s2 * MRC_F3(fld,0, ix,iy,ii-1));
-	}
-      }
+      mrc_fld_put_as(_f2, f2);
       break;
     }
-
+    case 2: {
+      mrc_fld_set_param_int_array(f2, "dims", 5, (int[5]) { dims[0], dims[1], 1, 1, 1 });
+      mrc_fld_setup(f2);
+      struct mrc_fld *_f2 = mrc_fld_get_as(f2, "float");
+      for(int iy = 0; iy < dims[1]; iy++) {
+	for(int ix = 0; ix < dims[0]; ix++) {
+	  MRC_F2(_f2,0, ix,iy) = (s1 * MRC_F3(f,0, ix,iy,ii-2) +
+				  s2 * MRC_F3(f,0, ix,iy,ii-1));
+	}
+      }
+      mrc_fld_put_as(_f2, f2);
+      break;
+    }
+    }
+    mrc_fld_put_as(f, fld);
   } else {
     // not on local proc
-    mrc_fld_set_param_int_array(f2, "dims", 3, (int[3]) { 0, 0, 1 });
+    mrc_fld_set_param_int_array(f2, "dims", 5, (int[5]) { 0, 0, 0, 1, 1 });
     mrc_fld_setup(f2);
   }
-  f2->_domain = fld->_domain;
+  f2->_domain = fld->_domain; // FIXME, 2D field isn't directly based on domain, so shouldn't link to it (?)
   mrc_fld_set_comp_name(f2, 0, mrc_fld_comp_name(fld, 0));
   ops->write_field2d(io, 1., f2, outtype, sheet);
   mrc_fld_destroy(f2);
@@ -451,6 +383,43 @@ mrc_io_read_attr_int(struct mrc_io *io, const char *path, const char *name,
 }
 
 void
+mrc_io_read_attr_int3(struct mrc_io *io, const char *path, const char *name,
+		      int (*val)[3])
+{
+  struct mrc_io_ops *ops = mrc_io_ops(io);
+  assert(ops->read_attr);
+  union param_u u;
+  ops->read_attr(io, path, PT_INT3, name, &u);
+  for (int d = 0; d < 3; d++) {
+    (*val)[d] = u.u_int3[d];
+  }
+}
+
+void
+mrc_io_read_attr_float(struct mrc_io *io, const char *path, const char *name,
+		     float *val)
+{
+  struct mrc_io_ops *ops = mrc_io_ops(io);
+  assert(ops->read_attr);
+  union param_u u;
+  ops->read_attr(io, path, PT_FLOAT, name, &u);
+  *val = u.u_float;
+}
+
+void
+mrc_io_read_attr_float3(struct mrc_io *io, const char *path, const char *name,
+		      float (*val)[3])
+{
+  struct mrc_io_ops *ops = mrc_io_ops(io);
+  assert(ops->read_attr);
+  union param_u u;
+  ops->read_attr(io, path, PT_FLOAT3, name, &u);
+  for (int d = 0; d < 3; d++) {
+    (*val)[d] = u.u_float3[d];
+  }
+}
+
+void
 mrc_io_read_attr_double(struct mrc_io *io, const char *path, const char *name,
 			double *val)
 {
@@ -462,6 +431,20 @@ mrc_io_read_attr_double(struct mrc_io *io, const char *path, const char *name,
 }
 
 void
+mrc_io_read_attr_double3(struct mrc_io *io, const char *path, const char *name,
+		      double (*val)[3])
+{
+  struct mrc_io_ops *ops = mrc_io_ops(io);
+  assert(ops->read_attr);
+  union param_u u;
+  ops->read_attr(io, path, PT_DOUBLE3, name, &u);
+  for (int d = 0; d < 3; d++) {
+    (*val)[d] = u.u_double3[d];
+  }
+}
+
+
+void
 mrc_io_read_attr_string(struct mrc_io *io, const char *path, const char *name,
 			char **val)
 {
@@ -471,6 +454,18 @@ mrc_io_read_attr_string(struct mrc_io *io, const char *path, const char *name,
   ops->read_attr(io, path, PT_STRING, name, &u);
   *val = (char *) u.u_string;
 }
+
+void
+mrc_io_read_attr_bool(struct mrc_io *io, const char *path, const char *name,
+		      bool *val)
+{
+  struct mrc_io_ops *ops = mrc_io_ops(io);
+  assert(ops->read_attr);
+  union param_u u;
+  ops->read_attr(io, path, PT_BOOL, name, &u);
+  *val = u.u_bool;
+}
+
 
 // ----------------------------------------------------------------------
 // mrc_io_write_attr
@@ -507,6 +502,32 @@ mrc_io_write_attr_int3(struct mrc_io *io, const char *path, const char *name,
   }
 }
 
+
+
+void
+mrc_io_write_attr_float(struct mrc_io *io, const char *path, const char *name,
+		      float val)
+{
+  struct mrc_io_ops *ops = mrc_io_ops(io);
+  if (ops->write_attr) {
+    union param_u u = { .u_float = val };
+    ops->write_attr(io, path, PT_FLOAT, name, &u);
+  }
+}
+
+void
+mrc_io_write_attr_float3(struct mrc_io *io, const char *path, const char *name,
+		       float val[3])
+{
+  struct mrc_io_ops *ops = mrc_io_ops(io);
+  if (ops->write_attr) {
+    union param_u u = { .u_float3 = { val[0], val[1], val[2] } };
+    ops->write_attr(io, path, PT_FLOAT3, name, &u);
+  }
+}
+
+
+
 void
 mrc_io_write_attr_string(struct mrc_io *io, const char *path, const char *name,
 			 const char *val)
@@ -526,6 +547,28 @@ mrc_io_write_attr_double(struct mrc_io *io, const char *path, const char *name,
   if (ops->write_attr) {
     union param_u u = { .u_double = val };
     ops->write_attr(io, path, PT_DOUBLE, name, &u);
+  }
+}
+
+void
+mrc_io_write_attr_double3(struct mrc_io *io, const char *path, const char *name,
+		       double val[3])
+{
+  struct mrc_io_ops *ops = mrc_io_ops(io);
+  if (ops->write_attr) {
+    union param_u u = { .u_double3 = { val[0], val[1], val[2] } };
+    ops->write_attr(io, path, PT_DOUBLE3, name, &u);
+  }
+}
+
+void
+mrc_io_write_attr_bool(struct mrc_io *io, const char *path, const char *name,
+		       bool val)
+{
+  struct mrc_io_ops *ops = mrc_io_ops(io);
+  if (ops->write_attr) {
+    union param_u u = { .u_bool = val };
+    ops->write_attr(io, path, PT_BOOL, name, &u);
   }
 }
 
@@ -632,6 +675,7 @@ mrc_io_init()
 #ifdef H5_HAVE_PARALLEL
   mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_xdmf_parallel_ops);
   mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_xdmf2_parallel_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_hdf5_parallel_ops);
 #endif
 #endif
   mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_ascii_ops);

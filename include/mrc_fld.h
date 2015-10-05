@@ -13,30 +13,42 @@
 
 //#define BOUNDS_CHECK
 
-#ifdef BOUNDS_CHECK
-
-#include <assert.h>
-
-#define MRC_F1(f1,m, ix)						\
-  (*({ float *p = &(f1)->arr[(m) * (f1)->_ghost_dims[0] + (ix) - (f1)->_ghost_off[0]];	\
-      assert((ix) >= (f1)->_ghost_off[0] && (ix) < (f1)->_ghost_off[0] + (f1)->_ghost_dims[0]);	\
-      p;}))
-
-#else
-
-#define MRC_F1(f1,m, ix)					\
-  ((f1)->arr[(m) * (f1)->_ghost_dims[0] + (ix) - (f1)->_ghost_off[0]])
-
-#endif
-
 #define MRC_F3(f3,m, ix,iy,iz) MRC_S4(f3, ix,iy,iz,m)
-
 #define MRC_F2(f3,m, ix,iy) MRC_S3(f3, ix,iy,m)
+#define MRC_F1(f1,m, ix) MRC_S2(f1, ix,m)
 
 struct mrc_io;
 
 // ======================================================================
 // mrc_fld
+
+// mrc_fld is a rather complicated beast. Let's try to break it down:
+//
+// It is used both as generic multi-d array (up to MRC_FLD_MAXDIMS), as well as a
+// 3-d dimensional field living on a given domain (in parallel) (plus 1-d, too), with
+// potentially a number of components, and multiple patches per MPI process.
+// The local (per process) view of the latter is just a multi-d array, so it uses to
+// generic infrastructure -- but the setup happens based on a
+// mrc_domain, rather than specifying bounds manually.
+//
+// In its generic view, the field has up to MRC_FLD_MAXDIMS, each of
+// which has a lower and an upper bound. I'll use python notation,
+// e.g. bounds 2:5 means 2,3,4 (excl. of 5)
+// These bounds are stored as ghost_offs, ghost_dims (where the upper
+// bound is hence ghost_offs[d] + ghost_dims[d], FIXME?). To add to
+// the confusion, there's also offs and dims -- which are identical to
+// the ghost_* values if there are no ghost points guard cells / halos
+// / whatever you like to call them. However, the _ghost_* values are really
+// the more fundamental ones as far as the field is concerned, though
+// in an application, it may be more convenient to think in terms of
+// the "real" interior dimensions.
+//
+// In addition, there is now also _start and _stride, which kinda mirror
+// _ghost_offs and _ghost_dims in a regularly allocated contiguous field.
+// However, _start and _stride allow to create views of a given field,
+// where the points contained inside the view are then not necessarily
+// contiguous anymore, but rather just a view into an originally allocated
+// contiguous field.
 
 enum {
   MRC_NT_FLOAT,
@@ -50,7 +62,7 @@ enum {
 // for mrc_m3 emulation
 struct mrc_fld_patch {
   int _p;
-  struct mrc_m3 *_m3;
+  struct mrc_fld *_fld;
 };
 
 struct mrc_fld {
@@ -59,19 +71,30 @@ struct mrc_fld {
   struct mrc_param_int_array _dims;
   struct mrc_param_int_array _offs;
   struct mrc_param_int_array _sw;
+  // if (optinally) allocated through mrc_domain, _domain will be set, and the 
+  // following quantities will be used to set up _dims, _offs, _sw in mrc_fld_setup()
+  struct mrc_domain *_domain; //< optional, if allocated through mrc_domain
+  int _nr_spatial_dims; //< number of spatial dims to use (1 or 3)
+  int _dim; //< if number of spatial dims == 1, field is along this dim of the domain
+  int _nr_comps; //< number of components of the field
+  int _nr_ghosts; //< number of ghostpoints in non-invariant (dim > 1) directions
 
   // state
+  int _stride[MRC_FLD_MAXDIMS];
+  int _start[MRC_FLD_MAXDIMS];
   int _ghost_offs[MRC_FLD_MAXDIMS];
   int _ghost_dims[MRC_FLD_MAXDIMS];
   int _data_type;
   int _size_of_type;
   void *_arr;
+  void *_arr_off; //< same as _arr, but contains precalculated offset for faster/simpler access
   int _len;
   struct mrc_vec *_vec; //< underlying mrc_vec that manages memory alloc/free (could be petsc)
-  struct mrc_domain *_domain; //< optional, if allocated through mrc_domain
-  // for mrc_f3 emulation
+  struct mrc_fld *_view_base; //< if this mrc_fld is a view, this is the field it's derived from
+  int *_view_offs;
   int _nr_allocated_comp_name;
   char **_comp_name;
+  bool _is_aos; //< indicates whether the layout (w.r.t to domain) is array-of-struct
   // for mrc_m3 emulation (FIXME, should be eliminated eventually (?))
   struct mrc_fld_patch *_patches;
 };
@@ -79,22 +102,29 @@ struct mrc_fld {
 MRC_CLASS_DECLARE(mrc_fld, struct mrc_fld);
 
 void mrc_fld_set_array(struct mrc_fld *x, void *arr);
+void mrc_fld_replace_array(struct mrc_fld *x, void *arr);
 void mrc_fld_set_comp_names(struct mrc_fld *fld, const char *comps);
 void mrc_fld_set_comp_name(struct mrc_fld *fld, int m, const char *name);
-void mrc_fld_set_sw(struct mrc_fld *fld, int sw);
 const char *mrc_fld_comp_name(struct mrc_fld *fld, int m);
 void mrc_fld_set(struct mrc_fld *x, float val);
-void mrc_fld_set_nr_comps(struct mrc_fld *fld, int nr_comps);
 int mrc_fld_nr_comps(struct mrc_fld *fld);
 const int *mrc_fld_offs(struct mrc_fld *x);
 const int *mrc_fld_dims(struct mrc_fld *x);
+const int *mrc_fld_sw(struct mrc_fld *x);
 const int *mrc_fld_ghost_offs(struct mrc_fld *x);
 const int *mrc_fld_ghost_dims(struct mrc_fld *x);
 struct mrc_fld *mrc_fld_duplicate(struct mrc_fld *fld);
+struct mrc_fld *mrc_fld_create_view(struct mrc_fld *fld, int nr_dims, int *dims, int *offs);
+struct mrc_fld *mrc_fld_create_view_ext(struct mrc_fld *fld, int nr_dims, int *dims, int *offs, int *sw,
+					int *new_offs);
+struct mrc_fld *mrc_fld_make_view(struct mrc_fld *fld, int mb, int me);
 void mrc_fld_copy(struct mrc_fld *fld_to, struct mrc_fld *fld_from);
 void mrc_fld_write_comps(struct mrc_fld *fld, struct mrc_io *io, int mm[]);
+void mrc_fld_dump(struct mrc_fld *fld, const char *basename, int n);
 // for multi-patch mrc_fld only (former mrc_m3)
 int mrc_fld_nr_patches(struct mrc_fld *fld);
+float mrc_fld_norm_comp(struct mrc_fld *x, int m);
+void mrc_fld_setup_vec(struct mrc_fld *fld);
 
 struct mrc_fld *mrc_fld_get_as(struct mrc_fld *fld_base,
 			       const char *type);
@@ -116,6 +146,46 @@ mrc_fld_same_shape(struct mrc_fld *fld_1, struct mrc_fld *fld_2)
   return true;
 }
 
+static inline const int *
+mrc_fld_spatial_dims(struct mrc_fld *x)
+{
+  return mrc_fld_dims(x) + x->_is_aos;
+}
+
+static inline const int *
+mrc_fld_spatial_offs(struct mrc_fld *x)
+{
+  return mrc_fld_offs(x) + x->_is_aos;
+}
+
+static inline const int *
+mrc_fld_spatial_sw(struct mrc_fld *x)
+{
+  return mrc_fld_sw(x) + x->_is_aos;
+}
+
+#if 0 // slower, not using _arr_off
+
+#define __MRC_FLD(fld, type, i0,i1,i2,i3,i4)				\
+  (((type *) (fld)->_arr)[((i4) - (fld)->_start[4]) * (fld)->_stride[4] + \
+			  ((i3) - (fld)->_start[3]) * (fld)->_stride[3] + \
+			  ((i2) - (fld)->_start[2]) * (fld)->_stride[2] + \
+			  ((i1) - (fld)->_start[1]) * (fld)->_stride[1] + \
+			  ((i0) - (fld)->_start[0]) * (fld)->_stride[0]])
+
+#else // same, but faster because of precalc offset
+
+#define __MRC_FLD(fld, type, i0,i1,i2,i3,i4)				\
+  (((type *) (fld)->_arr_off)[(i4) * (fld)->_stride[4] +		\
+			      (i3) * (fld)->_stride[3] +		\
+			      (i2) * (fld)->_stride[2] +		\
+			      (i1) * (fld)->_stride[1] +		\
+			      (i0) * (fld)->_stride[0]])
+
+
+#endif
+
+
 #ifdef BOUNDS_CHECK
 
 #include <string.h>
@@ -130,43 +200,76 @@ mrc_fld_same_shape(struct mrc_fld *fld_1, struct mrc_fld *fld_2)
       assert(i2 >= (fld)->_ghost_offs[2] && i2 < (fld)->_ghost_offs[2] + (fld)->_ghost_dims[2]); \
       assert(i3 >= (fld)->_ghost_offs[3] && i3 < (fld)->_ghost_offs[3] + (fld)->_ghost_dims[3]); \
       assert(i4 >= (fld)->_ghost_offs[4] && i4 < (fld)->_ghost_offs[4] + (fld)->_ghost_dims[4]); \
-      assert((fld)->_arr);						\
-      type *_p  =							\
-	&(((type *) (fld)->_arr)[(((((i4) - (fld)->_ghost_offs[4]) *	\
-				    (fld)->_ghost_dims[3] + (i3) - (fld)->_ghost_offs[3]) * \
-				   (fld)->_ghost_dims[2] + (i2) - (fld)->_ghost_offs[2]) * \
-				  (fld)->_ghost_dims[1] + (i1) - (fld)->_ghost_offs[1]) * \
-				 (fld)->_ghost_dims[0] + (i0) - (fld)->_ghost_offs[0]]); \
+      assert((fld)->_arr_off);						\
+      type *_p = &__MRC_FLD(fld, type, i0,i1,i2,i3,i4);			\
       _p; }))
 
 #else
 
-#define MRC_FLD(fld, type, i0,i1,i2,i3,i4)				\
-  (((type *) (fld)->_arr)[(((((i4) - (fld)->_ghost_offs[4]) *		\
-			     (fld)->_ghost_dims[3] + (i3) - (fld)->_ghost_offs[3]) * \
-			    (fld)->_ghost_dims[2] + (i2) - (fld)->_ghost_offs[2]) * \
-			   (fld)->_ghost_dims[1] + (i1) - (fld)->_ghost_offs[1]) * \
-			  (fld)->_ghost_dims[0] + (i0) - (fld)->_ghost_offs[0]])
+#define MRC_FLD(fld, type, i0,i1,i2,i3,i4) __MRC_FLD(fld, type, i0,i1,i2,i3,i4)
 
 #endif
 
+#define MRC_S1(fld, i0) MRC_FLD(fld, float, i0,0,0,0,0)
+#define MRC_D1(fld, i0) MRC_FLD(fld, double, i0,0,0,0,0)
+#define MRC_I1(fld, i0) MRC_FLD(fld, int, i0,0,0,0,0)
+
+#define MRC_S2(fld, i0,i1) MRC_FLD(fld, float, i0,i1,0,0,0)
+#define MRC_D2(fld, i0,i1) MRC_FLD(fld, double, i0,i1,0,0,0)
+#define MRC_I2(fld, i0,i1) MRC_FLD(fld, int, i0,i1,0,0,0)
+
 #define MRC_S3(fld, i0,i1,i2) MRC_FLD(fld, float, i0,i1,i2,0,0)
 #define MRC_D3(fld, i0,i1,i2) MRC_FLD(fld, double, i0,i1,i2,0,0)
+#define MRC_I3(fld, i0,i1,i2) MRC_FLD(fld, int, i0,i1,i2,0,0)
 
 #define MRC_S4(fld, i0,i1,i2,i3) MRC_FLD(fld, float, i0,i1,i2,i3,0)
 #define MRC_D4(fld, i0,i1,i2,i3) MRC_FLD(fld, double, i0,i1,i2,i3,0)
+#define MRC_I4(fld, i0,i1,i2,i3) MRC_FLD(fld, int, i0,i1,i2,i3,0)
 
 #define MRC_S5(fld, i0,i1,i2,i3,i4) MRC_FLD(fld, float, i0,i1,i2,i3,i4)
 #define MRC_D5(fld, i0,i1,i2,i3,i4) MRC_FLD(fld, double, i0,i1,i2,i3,i4)
+#define MRC_I5(fld, i0,i1,i2,i3,i4) MRC_FLD(fld, int, i0,i1,i2,i3,i4)
 
-#define mrc_fld_foreach(fld, ix,iy,iz, l,r)				\
-  for (int iz = (fld)->_offs.vals[2] - (l); iz < (fld)->_offs.vals[2] + (fld)->_dims.vals[2] + (r); iz++) { \
-  for (int iy = (fld)->_offs.vals[1] - (l); iy < (fld)->_offs.vals[1] + (fld)->_dims.vals[1] + (r); iy++) { \
-  for (int ix = (fld)->_offs.vals[0] - (l); ix < (fld)->_offs.vals[0] + (fld)->_dims.vals[0] + (r); ix++) \
+#define mrc_fld_foreach(fld, ix,iy,iz, l,r) do {			\
+  const int *_offs = mrc_fld_spatial_offs(fld);				\
+  const int *_dims = mrc_fld_spatial_dims(fld);				\
+  int _l[3] = { _offs[0]            - (_dims[0] > 1 ? (l) : 0),		\
+		_offs[1]            - (_dims[1] > 1 ? (l) : 0),		\
+		_offs[2]            - (_dims[2] > 1 ? (l) : 0) };	\
+  int _r[3] = { _offs[0] + _dims[0] + (_dims[0] > 1 ? (r) : 0),		\
+		_offs[1] + _dims[1] + (_dims[1] > 1 ? (r) : 0),		\
+		_offs[2] + _dims[2] + (_dims[2] > 1 ? (r) : 0) };	\
+  for (int iz = _l[2]; iz < _r[2]; iz++) {				\
+  for (int iy = _l[1]; iy < _r[1]; iy++) {				\
+  for (int ix = _l[0]; ix < _r[0]; ix++)				\
 
 #define mrc_fld_foreach_end			\
   }						\
-    } do {} while (0)				\
+  }						\
+  } while (0)				\
+
+// FIXME? should use something like mrc_fld_spatial_ghost_offs/dims?
+#define mrc_fld_foreach_bnd(fld, ix,iy,iz) do {				\
+  const int *_offs = mrc_fld_ghost_offs(fld);				\
+  const int *_dims = mrc_fld_ghost_dims(fld);				\
+  int _l[3] = { _offs[0], _offs[1], _offs[2] };				\
+  int _r[3] = { _offs[0] + _dims[0], _offs[1] + _dims[1], _offs[2] + _dims[2] }; \
+  for (int iz = _l[2]; iz < _r[2]; iz++) {				\
+  for (int iy = _l[1]; iy < _r[1]; iy++) {				\
+  for (int ix = _l[0]; ix < _r[0]; ix++)				\
+
+#define mrc_fld_foreach_bnd_end			\
+  }						\
+  }						\
+  } while (0)				\
+
+// ----------------------------------------------------------------------
+// mrc_f1
+
+#define mrc_f1_foreach(f1, ix, l,r)					\
+  for (int ix = (f1)->_offs.vals[0] - l; ix < (f1)->_offs.vals[0] + (f1)->_dims.vals[0] + r; ix++) \
+
+#define mrc_f1_foreach_end do {} while (0)	\
 
 // ----------------------------------------------------------------------
 // mrc_m3 emulation
@@ -186,22 +289,22 @@ mrc_fld_patch_put(struct mrc_fld *fld)
 {
 }
 
-#define MRC_M3(m3p, m, ix,iy,iz) MRC_S5((m3p)->_m3, ix, iy, iz, m, (m3p)->_p)
+#define MRC_M3(m3p, m, ix,iy,iz) MRC_S5((m3p)->_fld, ix, iy, iz, m, (m3p)->_p)
 
 #define mrc_m3_foreach(m3p, ix,iy,iz, l,r) {			\
   int _l[3] = { -l, -l, -l };					\
-  int _r[3] = { m3p->_m3->_ghost_dims[0] + 2 * m3p->_m3->_ghost_offs[0] + r,	\
-		m3p->_m3->_ghost_dims[1] + 2 * m3p->_m3->_ghost_offs[1] + r,	\
-		m3p->_m3->_ghost_dims[2] + 2 * m3p->_m3->_ghost_offs[2] + r};	\
+  int _r[3] = { m3p->_fld->_ghost_dims[0] + 2 * m3p->_fld->_ghost_offs[0] + r,	\
+		m3p->_fld->_ghost_dims[1] + 2 * m3p->_fld->_ghost_offs[1] + r,	\
+		m3p->_fld->_ghost_dims[2] + 2 * m3p->_fld->_ghost_offs[2] + r }; \
   for (int iz = _l[2]; iz < _r[2]; iz++) {			\
     for (int iy = _l[1]; iy < _r[1]; iy++) {			\
       for (int ix = _l[0]; ix < _r[0]; ix++)			\
 
 #define mrc_m3_foreach_bnd(m3p, ix,iy,iz) {		\
-  int _l[3] = { m3p->_m3->_ghost_offs[0], m3p->_m3->_ghost_offs[1], m3p->_m3->_ghost_offs[2] };	\
-  int _r[3] = { m3p->_m3->_ghost_offs[0] + m3p->_m3->_ghost_dims[0],			\
-		m3p->_m3->_ghost_offs[1] + m3p->_m3->_ghost_dims[1],			\
-		m3p->_m3->_ghost_offs[2] + m3p->_m3->_ghost_dims[2] };			\
+  int _l[3] = { m3p->_fld->_ghost_offs[0], m3p->_fld->_ghost_offs[1], m3p->_fld->_ghost_offs[2] };	\
+  int _r[3] = { m3p->_fld->_ghost_offs[0] + m3p->_fld->_ghost_dims[0],	\
+		m3p->_fld->_ghost_offs[1] + m3p->_fld->_ghost_dims[1],	\
+		m3p->_fld->_ghost_offs[2] + m3p->_fld->_ghost_dims[2] }; \
   for (int iz = _l[2]; iz < _r[2]; iz++) {				\
     for (int iy = _l[1]; iy < _r[1]; iy++) {				\
       for (int ix = _l[0]; ix < _r[0]; ix++)				\
@@ -213,7 +316,22 @@ mrc_fld_patch_put(struct mrc_fld *fld)
 struct mrc_fld_ops {
   MRC_SUBCLASS_OPS(struct mrc_fld);
   const char *vec_type;
+  void (*ddc_copy_to_buf)(struct mrc_fld *fld, int mb, int me, int p,
+			  int ilo[3], int ihi[3], void *buf);
+  void (*ddc_copy_from_buf)(struct mrc_fld *fld, int mb, int me, int p,
+			    int ilo[3], int ihi[3], void *buf);
+  void (*ddc_add_from_buf)(struct mrc_fld *fld, int mb, int me, int p,
+			   int ilo[3], int ihi[3], void *buf);
 };
+
+// FIXME, fld should be the first argument (and struct mrc_fld *), but we want compatibility with the
+// old-style mrc_ddc_funcs until the go away.
+void mrc_fld_ddc_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *buf,
+			     void *fld);
+void mrc_fld_ddc_copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *buf,
+			       void *fld);
+void mrc_fld_ddc_add_form_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *buf,
+			      void *fld);
 
 typedef void (*mrc_fld_copy_to_func_t)(struct mrc_fld *,
 				       struct mrc_fld *);
@@ -221,98 +339,22 @@ typedef void (*mrc_fld_copy_from_func_t)(struct mrc_fld *,
 					 struct mrc_fld *);
 
 // ======================================================================
-// mrc_f1
-
-struct mrc_f1 {
-  struct mrc_obj obj;
-  float *arr;
-  int _ghost_off[1];
-  int _ghost_dims[1];
-  int _off[1];
-  int _dims[1];
-  int nr_comp;
-  int len;
-  bool with_array;
-  struct mrc_domain *domain; //< optional, if allocated through mrc_domain
-  int dim; //< # along this dim of the domain
-  int _sw; //< # of ghost points
-  char **_comp_name;
-};
-
-MRC_CLASS_DECLARE(mrc_f1, struct mrc_f1);
-struct mrc_f1 *mrc_f1_duplicate(struct mrc_f1 *x);
-void mrc_f1_set_comp_name(struct mrc_f1 *x, int m, const char *name);
-const char *mrc_f1_comp_name(struct mrc_f1 *x, int m);
-const int *mrc_f1_off(struct mrc_f1 *x);
-const int *mrc_f1_dims(struct mrc_f1 *x);
-const int *mrc_f1_ghost_dims(struct mrc_f1 *x);
-void mrc_f1_set_array(struct mrc_f1 *x, float *arr);
-void mrc_f1_dump(struct mrc_f1 *x, const char *basename, int n);
-void mrc_f1_zero(struct mrc_f1 *x);
-void mrc_f1_copy(struct mrc_f1 *x, struct mrc_f1 *y);
-void mrc_f1_axpy(struct mrc_f1 *y, float alpha, struct mrc_f1 *x);
-void mrc_f1_waxpy(struct mrc_f1 *w, float alpha, struct mrc_f1 *x,
-		  struct mrc_f1 *y);
-float mrc_f1_norm(struct mrc_f1 *x);
-float mrc_f1_norm_comp(struct mrc_f1 *x, int m);
-
-#define mrc_f1_foreach(f1, ix, l,r)					\
-  for (int ix = (f1)->_off[0] - l; ix < (f1)->_off[0] + (f1)->_dims[0] + r; ix++) \
-
-#define mrc_f1_foreach_end do {} while (0)	\
-
-// ======================================================================
 // mrc_m1
 
-struct mrc_m1_patch {
-  float *arr;
-  int im[1];
-  int ib[1];
-};
-
-struct mrc_m1 {
-  struct mrc_obj obj;
-  int nr_comp;
-  int nr_patches;
-  int dim; //< this dimension of the domain
-  struct mrc_m1_patch *patches;
-  struct mrc_domain *domain;
-  int sw;
-  char **_comp_name;
-};
-
-MRC_CLASS_DECLARE(mrc_m1, struct mrc_m1);
-
-void mrc_m1_set_comp_name(struct mrc_m1 *x, int m, const char *name);
-const char *mrc_m1_comp_name(struct mrc_m1 *x, int m);
-bool mrc_m1_same_shape(struct mrc_m1 *m1_1, struct mrc_m1 *m1_2);
-
-static inline struct mrc_m1_patch *
-mrc_m1_patch_get(struct mrc_m1 *m1, int p)
-{
-  return &m1->patches[p];
-}
-
-static inline void
-mrc_m1_patch_put(struct mrc_m1 *m1)
-{
-}
-
-#define MRC_M1(m1p,m, ix)					\
-  ((m1p)->arr[((m) * (m1p)->im[0] + (ix) - (m1p)->ib[0])])
+#define MRC_M1(fld, m, ix, p) MRC_S3(fld, ix, m, p)
 
 #define mrc_m1_foreach_patch(m1, p) \
-  for (int p = 0; p < m1->nr_patches; p++)
+  for (int p = 0; p < mrc_fld_nr_patches(m1); p++)
 
-#define mrc_m1_foreach(m1p, ix, l,r) {			\
-  int _l[1] = { -l };					\
-  int _r[1] = { m1p->im[0] + 2 * m1p->ib[0]  + r};	\
-  for (int ix = _l[0]; ix < _r[0]; ix++)		\
+#define mrc_m1_foreach(m1, ix, l,r) {					\
+  int _l[1] = { -l };							\
+  int _r[1] = { m1->_ghost_dims[0] + 2 * m1->_ghost_offs[0]  + r};	\
+  for (int ix = _l[0]; ix < _r[0]; ix++)				\
 
-#define mrc_m1_foreach_bnd(m1p, ix) {			\
-  int _l[1] = { m1p->ib[0] };				\
-  int _r[1] = { m1p->ib[0] + m1p->im[0]};		\
-  for (int ix = _l[0]; ix < _r[0]; ix++)		\
+#define mrc_m1_foreach_bnd(m1, ix) {					\
+  int _l[1] = { m1->_ghost_offs[0] };					\
+  int _r[1] = { m1->_ghost_offs[0] + m1->_ghost_dims[0]};		\
+  for (int ix = _l[0]; ix < _r[0]; ix++)				\
 
 #define mrc_m1_foreach_end  }
   

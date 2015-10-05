@@ -5,9 +5,9 @@
 #include "ggcm_mhd_private.h"
 #include "ggcm_mhd_crds.h"
 
-#include "ggcm_mhd_crds.h"
-
 #include <mrc_domain.h>
+#include <mrc_fld_as_float.h>
+
 #include <assert.h>
 
 // ======================================================================
@@ -20,7 +20,7 @@
 // ggcm_mhd_bnd_conducting_x_fill_ghosts
 
 enum {
-  _EX = _B1Z + 1,
+  _EX = BZ + 1,
   _EY,
   _EZ,
   _JX,
@@ -30,12 +30,13 @@ enum {
 };
 
 // compute one sided finite diff approx. 
+// FIXME, need special case for B field components for staggering
 #define OSDx2l(fld, i, ix,iy,iz,s)				     \
-  ((-3.0*MRC_F3(fld, i, ix,iy,iz) + 4.0* MRC_F3(fld, i, ix+1,iy,iz)  \
-   - MRC_F3(fld, i, ix+2, iy, iz) ) / s ) 
+  ((-3.0*F3(fld, i, ix,iy,iz) + 4.0* F3(fld, i, ix+1,iy,iz)  \
+   - F3(fld, i, ix+2, iy, iz) ) / s ) 
 #define OSDx2h(fld, i, ix,iy,iz,s)				     \
-  (( 3.0*MRC_F3(fld, i, ix,iy,iz) - 4.0* MRC_F3(fld, i, ix-1,iy,iz)  \
-   + MRC_F3(fld, i, ix-2, iy, iz) ) / s ) 
+  (( 3.0*F3(fld, i, ix,iy,iz) - 4.0* F3(fld, i, ix-1,iy,iz)  \
+   + F3(fld, i, ix-2, iy, iz) ) / s ) 
 
 static void
 ggcm_mhd_bnd_conducting_x_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld,
@@ -95,56 +96,56 @@ ggcm_mhd_bnd_conducting_x_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int iy = -sw; iy < ny + sw; iy++) {
 	// bd1y and bd2y indices offset by one 
-	MRC_F3(f3,_B1Y, -1,iy,iz) = MRC_F3(f3, _B1Y, 0,iy,iz) -
-	  (1./bd1x[-1])*OSDx2l(f3, _B1Y, 0,iy,iz,2.*bd2x[0] );
-        MRC_F3(f3,_B1Z, -1,iy,iz) =  MRC_F3(f3, _B1Z, 0,iy,iz) -
-	  (1./bd1x[-1])*OSDx2l(f3, _B1Z, 0,iy,iz,2.*bd2x[0] );
+	BY(f3, -1,iy,iz) = BY(f3, 0,iy,iz) -
+	  (1./bd1x[-1])*OSDx2l(f3, BY, 0,iy,iz,2.*bd2x[0] );
+        BZ(f3, -1,iy,iz) = BZ(f3, 0,iy,iz) -
+	  (1./bd1x[-1])*OSDx2l(f3, BZ, 0,iy,iz,2.*bd2x[0] );
       }
     }
 
     // set normal magnetic field component for divB=0
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int iy = -sw; iy < ny + sw; iy++) {
-	MRC_F3(f3,_B1X, -1,iy,iz) = MRC_F3(f3,_B1X, 0,iy,iz) + bd2x[0] *  
-	  ((MRC_F3(f3,_B1Y, 0,iy,iz) - MRC_F3(f3,_B1Y, 0,iy-1,iz) ) / bd2y[iy] + 
-	   (MRC_F3(f3,_B1Z, 0,iy,iz) - MRC_F3(f3,_B1Z, 0,iy,iz-1) ) / bd2z[iz]);
+	BX(f3, -1,iy,iz) = BX(f3, 0,iy,iz) + bd2x[0] *
+	  ((BY(f3, 0,iy,iz) - BY(f3, 0,iy-1,iz) ) / bd2y[iy] +
+	   (BZ(f3, 0,iy,iz) - BZ(f3, 0,iy,iz-1) ) / bd2z[iz]);
       }
     }	
     // transverse magnetic field extrapolated 
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int iy = -sw; iy < ny + sw; iy++) {       
 	// bd1x and bd2y indices offset by one 
-	MRC_F3(f3,_B1Y, -2,iy,iz) = MRC_F3(f3,_B1Y, -1,iy,iz) -
-	  (1./bd1x[-2])*OSDx2l(f3, _B1Y, -1,iy,iz,2.*bd2x[-1] );
-	MRC_F3(f3,_B1Z, -2,iy,iz) = MRC_F3(f3,_B1Z, -1,iy,iz) -
-	  (1./bd1x[-2])*OSDx2l(f3, _B1Z, -1,iy,iz,2.*bd2x[-1] );
+	BY(f3, -2,iy,iz) = BY(f3, -1,iy,iz) -
+	  (1./bd1x[-2])*OSDx2l(f3, BY, -1,iy,iz,2.*bd2x[-1] );
+	BZ(f3, -2,iy,iz) = BZ(f3, -1,iy,iz) -
+	  (1./bd1x[-2])*OSDx2l(f3, BZ, -1,iy,iz,2.*bd2x[-1] );
       }
     }
     // set normal magnetic field component for divB=0
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int iy = -sw; iy < ny + sw; iy++) {
-	MRC_F3(f3,_B1X, -2,iy,iz) = MRC_F3(f3,_B1X, -1,iy,iz) + bd2x[-1] * 
-	  ((MRC_F3(f3,_B1Y, -1,iy,iz) - MRC_F3(f3,_B1Y, -1,iy-1,iz) ) / bd2y[iy] + 
-           (MRC_F3(f3,_B1Z, -1,iy,iz) - MRC_F3(f3,_B1Z, -1,iy,iz-1) ) / bd2z[iz]);      
+	BX(f3, -2,iy,iz) = BX(f3, -1,iy,iz) + bd2x[-1] *
+	  ((BY(f3, -1,iy,iz) - BY(f3, -1,iy-1,iz) ) / bd2y[iy] +
+           (BZ(f3, -1,iy,iz) - BZ(f3, -1,iy,iz-1) ) / bd2z[iz]);
       }
     }	
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int iy = -sw; iy < ny + sw; iy++) {	
 	// impenetrable wall 
-	MRC_F3(f3,_RV1X, -2,iy,iz) = -MRC_F3(f3,_RV1X, 1,iy,iz);	
-	MRC_F3(f3,_RV1X, -1,iy,iz) = -MRC_F3(f3,_RV1X, 0,iy,iz);
-	MRC_F3(f3,_RR1, -1,iy,iz) = MRC_F3(f3,_RR1, 0,iy,iz);
-	MRC_F3(f3,_RR1, -2,iy,iz) = MRC_F3(f3,_RR1, 1,iy,iz);
+	F3(f3,RVX, -2,iy,iz) = -F3(f3,RVX, 1,iy,iz);	
+	F3(f3,RVX, -1,iy,iz) = -F3(f3,RVX, 0,iy,iz);
+	F3(f3,RR, -1,iy,iz) = F3(f3,RR, 0,iy,iz);
+	F3(f3,RR, -2,iy,iz) = F3(f3,RR, 1,iy,iz);
 	
 	// the rest are extrapolations 
-	MRC_F3(f3,_RV1Y, -1,iy,iz) = 2.*MRC_F3(f3,_RV1Y, 0,iy,iz)-MRC_F3(f3,_RV1Y, 1,iy,iz);	
-	MRC_F3(f3,_RV1Y, -2,iy,iz) = 2.*MRC_F3(f3,_RV1Y, -1,iy,iz)-MRC_F3(f3,_RV1Y, 0,iy,iz);
+	F3(f3,RVY, -1,iy,iz) = 2.*F3(f3,RVY, 0,iy,iz)-F3(f3,RVY, 1,iy,iz);	
+	F3(f3,RVY, -2,iy,iz) = 2.*F3(f3,RVY, -1,iy,iz)-F3(f3,RVY, 0,iy,iz);
 	
-	MRC_F3(f3,_RV1Z, -1,iy,iz) = 2.*MRC_F3(f3,_RV1Z, 0,iy,iz)-MRC_F3(f3,_RV1Z, 1,iy,iz);	
-	MRC_F3(f3,_RV1Z, -2,iy,iz) = 2.*MRC_F3(f3,_RV1Z, -1,iy,iz)-MRC_F3(f3,_RV1Z, 0,iy,iz);
+	F3(f3,RVZ, -1,iy,iz) = 2.*F3(f3,RVZ, 0,iy,iz)-F3(f3,RVZ, 1,iy,iz);	
+	F3(f3,RVZ, -2,iy,iz) = 2.*F3(f3,RVZ, -1,iy,iz)-F3(f3,RVZ, 0,iy,iz);
 	
-	MRC_F3(f3,_UU1, -1,iy,iz) = 2.*MRC_F3(f3,_UU1, 0,iy,iz)-MRC_F3(f3,_UU1, 1,iy,iz);	
-	MRC_F3(f3,_UU1, -2,iy,iz) = 2.*MRC_F3(f3,_UU1, -1,iy,iz)-MRC_F3(f3,_UU1, 0,iy,iz);	
+	F3(f3,UU, -1,iy,iz) = 2.*F3(f3,UU, 0,iy,iz)-F3(f3,UU, 1,iy,iz);	
+	F3(f3,UU, -2,iy,iz) = 2.*F3(f3,UU, -1,iy,iz)-F3(f3,UU, 0,iy,iz);	
       }
     }
   }
@@ -155,61 +156,66 @@ ggcm_mhd_bnd_conducting_x_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *
     //  transverse magnetic field extrapolated
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int iy = -sw; iy < ny + sw; iy++) {
-	MRC_F3(f3,_B1Y, nx,iy,iz) = MRC_F3(f3, _B1Y, nx-1,iy,iz) + 
-	  (1./bd1x[nx])*OSDx2h(f3, _B1Y, nx-1,iy,iz,2.*bd2x[nx+1]); 
-	MRC_F3(f3,_B1Z, nx,iy,iz) = MRC_F3(f3, _B1Z, nx-1,iy,iz) +
-	  (1./bd1x[nx])*OSDx2h(f3, _B1Z, nx-1,iy,iz,2.*bd2x[nx+1]); 
+	BY(f3, nx,iy,iz) = BY(f3, nx-1,iy,iz) +
+	  (1./bd1x[nx])*OSDx2h(f3, BY, nx-1,iy,iz,2.*bd2x[nx+1]);
+	BZ(f3, nx,iy,iz) = BZ(f3, nx-1,iy,iz) +
+	  (1./bd1x[nx])*OSDx2h(f3, BZ, nx-1,iy,iz,2.*bd2x[nx+1]);
+
+
+
+
+
       }
     }
     // set normal magnetic field component for divB=0
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int iy = -sw; iy < ny + sw; iy++) {
-	MRC_F3(f3,_B1X, nx-1,iy,iz) = MRC_F3(f3,_B1X, nx-2,iy,iz) - bd2x[nx-1] *
-	  ((MRC_F3(f3,_B1Y, nx-1,iy,iz) - MRC_F3(f3,_B1Y, nx-1,iy-1,iz) ) / bd2y[iy] +
-	   (MRC_F3(f3,_B1Z, nx-1,iy,iz) - MRC_F3(f3,_B1Z, nx-1,iy,iz-1) ) / bd2z[iz]);
+	BX(f3, nx-1,iy,iz) = BX(f3, nx-2,iy,iz) - bd2x[nx-1] *
+	  ((BY(f3, nx-1,iy,iz) - BY(f3, nx-1,iy-1,iz) ) / bd2y[iy] +
+	   (BZ(f3, nx-1,iy,iz) - BZ(f3, nx-1,iy,iz-1) ) / bd2z[iz]);
       }
     }	
     //  transverse magnetic field extrapolated
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int iy = -sw; iy < ny + sw; iy++) {
-	MRC_F3(f3,_B1Y, nx+1,iy,iz) = MRC_F3(f3, _B1Y, nx,iy,iz) + 
-	  (1./bd1x[nx])* OSDx2h(f3, _B1Y, nx+1,iy,iz,2.*bd2x[nx+1] );
-        MRC_F3(f3,_B1Z, nx+1,iy,iz) = MRC_F3(f3, _B1Z, nx,iy,iz) + 
-	  (1./bd1x[nx])*OSDx2h(f3, _B1Z, nx+1,iy,iz,2.*bd2x[nx+1]);
+	BY(f3, nx+1,iy,iz) = BY(f3, nx,iy,iz) +
+	  (1./bd1x[nx])*OSDx2h(f3, BY, nx+1,iy,iz,2.*bd2x[nx+1]);
+        BZ(f3, nx+1,iy,iz) = BZ(f3, nx,iy,iz) +
+	  (1./bd1x[nx])*OSDx2h(f3, BZ, nx+1,iy,iz,2.*bd2x[nx+1]);
       }
     }
     // set normal magnetic field component for divB=0
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int iy = -sw; iy < ny + sw; iy++) {
-	MRC_F3(f3,_B1X, nx,iy,iz) = MRC_F3(f3,_B1X, nx-1,iy,iz) - bd2x[nx] *  
-	  ((MRC_F3(f3,_B1Y, nx,iy,iz) - MRC_F3(f3,_B1Y, nx,iy-1,iz) ) / bd2y[iy] + 
-	   (MRC_F3(f3,_B1Z, nx,iy,iz) - MRC_F3(f3,_B1Z, nx,iy,iz-1) ) / bd2z[iz]);
+	BX(f3, nx,iy,iz) = BX(f3, nx-1,iy,iz) - bd2x[nx] *
+	  ((BY(f3, nx,iy,iz) - BY(f3, nx,iy-1,iz) ) / bd2y[iy] +
+	   (BZ(f3, nx,iy,iz) - BZ(f3, nx,iy,iz-1) ) / bd2z[iz]);
       }
     }	
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int iy = -sw; iy < ny + sw; iy++) {
 
 	// impenetrable wall 	
-	MRC_F3(f3,_RV1X, nx+1,iy,iz) = -MRC_F3(f3,_RV1X, nx-2,iy,iz);	
-	MRC_F3(f3,_RV1X, nx,iy,iz) = -MRC_F3(f3,_RV1X, nx-1,iy,iz);
-	MRC_F3(f3,_RR1, nx+1,iy,iz) = MRC_F3(f3,_RR1, nx-2,iy,iz);	
-	MRC_F3(f3,_RR1, nx,iy,iz) = MRC_F3(f3,_RR1, nx-1,iy,iz);
+	F3(f3,RVX, nx+1,iy,iz) = -F3(f3,RVX, nx-2,iy,iz);	
+	F3(f3,RVX, nx,iy,iz) = -F3(f3,RVX, nx-1,iy,iz);
+	F3(f3,RR, nx+1,iy,iz) = F3(f3,RR, nx-2,iy,iz);	
+	F3(f3,RR, nx,iy,iz) = F3(f3,RR, nx-1,iy,iz);
 
 	// the rest are extrapolations 
-	MRC_F3(f3,_RV1Y, nx,iy,iz) = MRC_F3(f3,_RV1Y, nx-1,iy,iz) + 
-	  (1./bd1x[nx-1]) * OSDx2h(f3, _RV1Y, nx-1,iy,iz,2.*bd2x[nx-1]);  	
-	MRC_F3(f3,_RV1Y, nx+1,iy,iz) = MRC_F3(f3,_RV1Y, nx,iy,iz) + 
-	  (1./bd1x[nx]) * OSDx2h(f3, _RV1Y, nx,iy,iz,2.*bd2x[nx]);  	
+	F3(f3,RVY, nx,iy,iz) = F3(f3,RVY, nx-1,iy,iz) + 
+	  (1./bd1x[nx-1]) * OSDx2h(f3, RVY, nx-1,iy,iz,2.*bd2x[nx-1]);  	
+	F3(f3,RVY, nx+1,iy,iz) = F3(f3,RVY, nx,iy,iz) + 
+	  (1./bd1x[nx]) * OSDx2h(f3, RVY, nx,iy,iz,2.*bd2x[nx]);  	
 	
-	MRC_F3(f3,_RV1Z, nx,iy,iz) = MRC_F3(f3,_RV1Z, nx-1,iy,iz) + 
-	  (1./bd1x[nx-1]) * OSDx2h(f3, _RV1Z, nx-1,iy,iz,2.*bd2x[nx-1]);  	
-	MRC_F3(f3,_RV1Z, nx+1,iy,iz) = MRC_F3(f3,_RV1Z, nx,iy,iz) +
-	  (1./bd1x[nx]) * OSDx2h(f3, _RV1Z, nx,iy,iz,2.*bd2x[nx]);  	
+	F3(f3,RVZ, nx,iy,iz) = F3(f3,RVZ, nx-1,iy,iz) + 
+	  (1./bd1x[nx-1]) * OSDx2h(f3, RVZ, nx-1,iy,iz,2.*bd2x[nx-1]);  	
+	F3(f3,RVZ, nx+1,iy,iz) = F3(f3,RVZ, nx,iy,iz) +
+	  (1./bd1x[nx]) * OSDx2h(f3, RVZ, nx,iy,iz,2.*bd2x[nx]);  	
 
-	MRC_F3(f3,_UU1, nx,iy,iz) = MRC_F3(f3,_UU1, nx-1,iy,iz) + 
-	  (1./bd1x[nx-1]) * OSDx2h(f3, _UU1, nx-1,iy,iz,2.*bd2x[nx-1]);  	
-	MRC_F3(f3,_UU1, nx+1,iy,iz) = MRC_F3(f3,_UU1, nx,iy,iz) +
-	  (1./bd1x[nx]) * OSDx2h(f3, _UU1, nx,iy,iz,2.*bd2x[nx]);  	
+	F3(f3,UU, nx,iy,iz) = F3(f3,UU, nx-1,iy,iz) + 
+	  (1./bd1x[nx-1]) * OSDx2h(f3, UU, nx-1,iy,iz,2.*bd2x[nx-1]);  	
+	F3(f3,UU, nx+1,iy,iz) = F3(f3,UU, nx,iy,iz) +
+	  (1./bd1x[nx]) * OSDx2h(f3, UU, nx,iy,iz,2.*bd2x[nx]);  	
       }
     }
   }

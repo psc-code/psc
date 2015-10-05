@@ -177,21 +177,29 @@ xdmf_collective_write_attr(struct mrc_io *io, const char *path, int type,
   switch (type) {
   case PT_SELECT:
   case PT_INT:
+  case MRC_VAR_INT:
     ierr = H5LTset_attribute_int(group, ".", name, &pv->u_int, 1); CE;
     break;
-  case PT_BOOL: {
+  case PT_BOOL: 
+  case MRC_VAR_BOOL: {
     int val = pv->u_bool;
     ierr = H5LTset_attribute_int(group, ".", name, &val, 1); CE;
     break;
   }
   case PT_FLOAT:
+  case MRC_VAR_FLOAT:
     ierr = H5LTset_attribute_float(group, ".", name, &pv->u_float, 1); CE;
     break;
   case PT_DOUBLE:
+  case MRC_VAR_DOUBLE:
     ierr = H5LTset_attribute_double(group, ".", name, &pv->u_double, 1); CE;
     break;
   case PT_STRING:
-    ierr = H5LTset_attribute_string(group, ".", name, pv->u_string); CE;
+    if (pv->u_string) {
+      ierr = H5LTset_attribute_string(group, ".", name, pv->u_string); CE;
+    } else {
+      ierr = H5LTset_attribute_string(group, ".", name, "(NULL)"); CE;
+    }
     break;
   case PT_INT3:
     ierr = H5LTset_attribute_int(group, ".", name, pv->u_int3, 3); CE;
@@ -199,10 +207,19 @@ xdmf_collective_write_attr(struct mrc_io *io, const char *path, int type,
   case PT_FLOAT3:
     ierr = H5LTset_attribute_float(group, ".", name, pv->u_float3, 3); CE;
     break;
+  case PT_DOUBLE3:
+    ierr = H5LTset_attribute_double(group, ".", name, pv->u_double3, 3); CE;
+    break;
   case PT_INT_ARRAY:
     ierr = H5LTset_attribute_int(group, ".", name, pv->u_int_array.vals,
 				 pv->u_int_array.nr_vals); CE;
     break;
+  case PT_PTR:
+    break;
+  default:
+    mprintf("mrc_io_xdmf_collective: not writing attr '%s' (type %d)\n",
+	    name, type);
+    assert(0);
   }
   ierr = H5Gclose(group); CE;
 }
@@ -221,9 +238,11 @@ xdmf_collective_read_attr(struct mrc_io *io, const char *path, int type,
     switch (type) {
     case PT_SELECT:
     case PT_INT:
+    case MRC_VAR_INT:
       ierr = H5LTget_attribute_int(group, ".", name, &pv->u_int); CE;
       break;
-    case PT_BOOL: ;
+    case PT_BOOL:
+    case MRC_VAR_BOOL: ;
       int val;
       ierr = H5LTget_attribute_int(group, ".", name, &val); CE;
       pv->u_bool = val;
@@ -241,12 +260,19 @@ xdmf_collective_read_attr(struct mrc_io *io, const char *path, int type,
       ierr = H5LTget_attribute_info(group, ".", name, &dims, &class, &sz); CE;
       pv->u_string = malloc(sz);
       ierr = H5LTget_attribute_string(group, ".", name, (char *)pv->u_string); CE;
+      if (strcmp(pv->u_string, "(NULL)") == 0) {
+	free((char *) pv->u_string);
+	pv->u_string = NULL;
+      }
       break;
     case PT_INT3:
       ierr = H5LTget_attribute_int(group, ".", name, pv->u_int3); CE;
       break;
     case PT_FLOAT3:
       ierr = H5LTget_attribute_float(group, ".", name, pv->u_float3); CE;
+      break;
+    case PT_DOUBLE3:
+      ierr = H5LTget_attribute_double(group, ".", name, pv->u_double3); CE;
       break;
     case PT_INT_ARRAY: {
       int attr = H5Aopen(group, name, H5P_DEFAULT); H5_CHK(attr);
@@ -258,6 +284,12 @@ xdmf_collective_read_attr(struct mrc_io *io, const char *path, int type,
       ierr = H5LTget_attribute_int(group, ".", name, pv->u_int_array.vals); CE;
       break;
     }
+    case PT_PTR:
+      break;
+    default:
+      mprintf("mrc_io_xdmf_collective: not reading attr '%s' (type %d)\n", name, type);
+      assert(0);
+      break;
     }
     ierr = H5Gclose(group); CE;
   }
@@ -267,9 +299,11 @@ xdmf_collective_read_attr(struct mrc_io *io, const char *path, int type,
   switch (type) {
   case PT_SELECT:
   case PT_INT:
+  case MRC_VAR_INT:
     MPI_Bcast(&pv->u_int, 1, MPI_INT, root, comm);
     break;
-  case PT_BOOL: ;
+  case PT_BOOL:
+  case MRC_VAR_BOOL: ;
     int val = pv->u_int;
     MPI_Bcast(&val, 1, MPI_INT, root, comm);
     pv->u_int = val;
@@ -298,6 +332,23 @@ xdmf_collective_read_attr(struct mrc_io *io, const char *path, int type,
   case PT_FLOAT3:
     MPI_Bcast(pv->u_float3, 3, MPI_FLOAT, root, comm);
     break;
+  case PT_DOUBLE3:
+    MPI_Bcast(pv->u_double3, 3, MPI_DOUBLE, root, comm);
+    break;
+  case PT_INT_ARRAY:
+    MPI_Bcast(&pv->u_int_array.nr_vals, 1, MPI_INT, root, comm);
+    if (io->rank != root) {
+      free(pv->u_int_array.vals);
+      pv->u_int_array.vals = calloc(pv->u_int_array.nr_vals, sizeof(int));
+    }
+    MPI_Bcast(pv->u_int_array.vals, pv->u_int_array.nr_vals, MPI_INT, root, comm);
+    break;
+  case PT_PTR:
+    break;
+  default:
+    mprintf("mrc_io_xdmf_collective: attr '%s' (type %d)\n", name, type);
+    assert(0);
+    break;
   }
 }
 
@@ -309,13 +360,14 @@ xdmf_collective_read_attr(struct mrc_io *io, const char *path, int type,
 // only called on writer procs
 
 static void
-collective_m1_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1,
+collective_m1_write_f1(struct mrc_io *io, const char *path, struct mrc_fld *f1,
 		       int m, hid_t group0)
 {
   struct xdmf *xdmf = to_xdmf(io);
   int ierr;
 
-  hid_t group_fld = H5Gcreate(group0, mrc_f1_comp_name(f1, m), H5P_DEFAULT,
+  assert(f1->_data_type == MRC_NT_FLOAT);
+  hid_t group_fld = H5Gcreate(group0, mrc_fld_comp_name(f1, m), H5P_DEFAULT,
 			      H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group_fld);
   ierr = H5LTset_attribute_int(group_fld, ".", "m", &m, 1); CE;
   
@@ -324,7 +376,7 @@ collective_m1_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1,
   int i0 = 0;
   ierr = H5LTset_attribute_int(group, ".", "global_patch", &i0, 1); CE;
 
-  hsize_t fdims[1] = { mrc_f1_ghost_dims(f1)[0] };
+  hsize_t fdims[1] = { mrc_fld_ghost_dims(f1)[0] };
   hid_t filespace = H5Screate_simple(1, fdims, NULL); H5_CHK(filespace);
   hid_t dset = H5Dcreate(group, "1d", H5T_NATIVE_FLOAT, filespace, H5P_DEFAULT,
 			 H5P_DEFAULT, H5P_DEFAULT); H5_CHK(dset);
@@ -344,7 +396,7 @@ collective_m1_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1,
     H5Sselect_none(memspace);
     H5Sselect_none(filespace);
   }
-  ierr = H5Dwrite(dset, H5T_NATIVE_FLOAT, memspace, filespace, dxpl, f1->arr); CE;
+  ierr = H5Dwrite(dset, H5T_NATIVE_FLOAT, memspace, filespace, dxpl, f1->_arr); CE;
   
   ierr = H5Dclose(dset); CE;
   ierr = H5Sclose(memspace); CE;
@@ -371,17 +423,18 @@ struct collective_m1_ctx {
 
 static void
 collective_m1_send_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
-			 struct mrc_m1 *m1, int m)
+			 struct mrc_fld *m1, int m)
 {
   struct xdmf *xdmf = to_xdmf(io);
   int dim = ctx->dim;
 
+  assert(m1->_data_type == MRC_NT_FLOAT);
   ctx->send_reqs = calloc(ctx->nr_patches, sizeof(*ctx->send_reqs));
   ctx->nr_send_reqs = 0;
 
   for (int p = 0; p < ctx->nr_patches; p++) {
     struct mrc_patch_info info;
-    mrc_domain_get_local_patch_info(m1->domain, p, &info);
+    mrc_domain_get_local_patch_info(m1->_domain, p, &info);
     bool skip = false;
     for (int d = 0; d < 3; d++) {
       if (d != dim && info.off[d] != 0) {
@@ -392,7 +445,6 @@ collective_m1_send_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
       continue;
     }
     
-    struct mrc_m1_patch *m1p = mrc_m1_patch_get(m1, p);
     // FIXME, should use intersection, probably won't work if slab_dims are actually smaller
     int ib = 0;
     if (info.off[dim] == 0) { // FIXME, -> generic code
@@ -404,10 +456,9 @@ collective_m1_send_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
     }
     //mprintf("send to %d tag %d len %d\n", xdmf->writers[0], info.global_patch, ie - ib);
     assert(ib < ie);
-    MPI_Isend(&MRC_M1(m1p, m, ib), ie - ib, MPI_FLOAT,
+    MPI_Isend(&MRC_M1(m1, m, ib, p), ie - ib, MPI_FLOAT,
 	      xdmf->writers[0], info.global_patch, mrc_io_comm(io),
 	      &ctx->send_reqs[ctx->nr_send_reqs++]);
-    mrc_m1_patch_put(m1);
   }
 }
 
@@ -420,7 +471,7 @@ collective_m1_send_end(struct mrc_io *io, struct collective_m1_ctx *ctx)
 
 static void
 collective_m1_recv_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
-			 struct mrc_domain *domain, struct mrc_f1 *f1, int m)
+			 struct mrc_domain *domain, struct mrc_fld *f1, int m)
 {
   struct xdmf *xdmf = to_xdmf(io);
 
@@ -476,21 +527,20 @@ collective_m1_recv_end(struct mrc_io *io, struct collective_m1_ctx *ctx)
 // xdmf_collective_write_m1
 
 static void
-xdmf_collective_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
+xdmf_collective_write_m1(struct mrc_io *io, const char *path, struct mrc_fld *m1)
 {
   struct xdmf *xdmf = to_xdmf(io);
   struct xdmf_file *file = &xdmf->file;
   int ierr;
 
   struct collective_m1_ctx ctx;
-  int nr_comps;
-  mrc_m1_get_param_int(m1, "nr_comps", &nr_comps);
-  mrc_m1_get_param_int(m1, "dim", &ctx.dim);
-  mrc_m1_get_param_int(m1, "sw", &ctx.sw);
-  mrc_domain_get_global_dims(m1->domain, ctx.gdims);
-  mrc_domain_get_nr_global_patches(m1->domain, &ctx.nr_global_patches);
-  mrc_domain_get_nr_procs(m1->domain, ctx.np);
-  mrc_domain_get_patches(m1->domain, &ctx.nr_patches);
+  int nr_comps = mrc_fld_nr_comps(m1);
+  mrc_fld_get_param_int(m1, "dim", &ctx.dim);
+  ctx.sw = m1->_sw.vals[0];
+  mrc_domain_get_global_dims(m1->_domain, ctx.gdims);
+  mrc_domain_get_nr_global_patches(m1->_domain, &ctx.nr_global_patches);
+  mrc_domain_get_nr_procs(m1->_domain, ctx.np);
+  mrc_domain_get_patches(m1->_domain, &ctx.nr_patches);
   int dim = ctx.dim;
   int slab_off_save, slab_dims_save;
   slab_off_save = xdmf->slab_off[0];
@@ -504,23 +554,23 @@ xdmf_collective_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
   if (xdmf->is_writer) {
     // we're creating the f1 on all writers, but only fill and actually write
     // it on writers[0]
-    struct mrc_f1 *f1 = mrc_f1_create(MPI_COMM_SELF);
-    mrc_f1_set_param_int(f1, "dimsx", xdmf->slab_dims[0]);
-    mrc_f1_set_param_int(f1, "offx", xdmf->slab_off[0]);
-    mrc_f1_setup(f1);
+    struct mrc_fld *f1 = mrc_fld_create(MPI_COMM_SELF);
+    mrc_fld_set_param_int_array(f1, "dims", 2, (int [2]) { xdmf->slab_dims[0], 1 });
+    mrc_fld_set_param_int_array(f1, "offs", 2, (int [2]) { xdmf->slab_off[0] , 0 });
+    mrc_fld_setup(f1);
 
     hid_t group0 = H5Gopen(file->h5_file, path, H5P_DEFAULT); H5_CHK(group0);
     for (int m = 0; m < nr_comps; m++) {
-      mrc_f1_set_comp_name(f1, 0, mrc_m1_comp_name(m1, m));
-      collective_m1_recv_begin(io, &ctx, m1->domain, f1, m);
+      mrc_fld_set_comp_name(f1, 0, mrc_fld_comp_name(m1, m));
+      collective_m1_recv_begin(io, &ctx, m1->_domain, f1, m);
       collective_m1_send_begin(io, &ctx, m1, m);
       collective_m1_recv_end(io, &ctx);
-      collective_m1_write_f1(io, path, f1, m, group0);
+      collective_m1_write_f1(io, path, f1, 0, group0);
       collective_m1_send_end(io, &ctx);
     }
     ierr = H5Gclose(group0); CE;
 
-    mrc_f1_destroy(f1);
+    mrc_fld_destroy(f1);
   } else { // not writer
     for (int m = 0; m < nr_comps; m++) {
       collective_m1_send_begin(io, &ctx, m1, m);
@@ -535,7 +585,7 @@ xdmf_collective_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
 
 static void
 collective_m1_read_recv_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
-			      struct mrc_m1 *m1, int m)
+			      struct mrc_fld *m1, int m)
 {
   struct xdmf *xdmf = to_xdmf(io);
 
@@ -547,30 +597,28 @@ collective_m1_read_recv_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
 
   for (int p = 0; p < ctx->nr_patches; p++) {
     struct mrc_patch_info info;
-    mrc_domain_get_local_patch_info(m1->domain, p, &info);
+    mrc_domain_get_local_patch_info(m1->_domain, p, &info);
     int ib = -ctx->sw;
     int ie = info.ldims[ctx->dim] + ctx->sw;
-    struct mrc_m1_patch *m1p = mrc_m1_patch_get(m1, p);
     //	mprintf("recv to %d tag %d\n", xdmf->writers[0], info.global_patch);
-    MPI_Irecv(&MRC_M1(m1p, m, ib), ie - ib, MPI_FLOAT,
+    MPI_Irecv(&MRC_M1(m1, m, ib, p), ie - ib, MPI_FLOAT,
 	      xdmf->writers[0], info.global_patch, mrc_io_comm(io),
 	      &ctx->recv_reqs[ctx->nr_recv_reqs++]);
-    mrc_m1_patch_put(m1);
   }
 }
 
 static void
 collective_m1_read_recv_end(struct mrc_io *io, struct collective_m1_ctx *ctx,
-			    struct mrc_m1 *m1, int m)
+			    struct mrc_fld *m1, int m)
 {
   MPI_Waitall(ctx->nr_recv_reqs, ctx->recv_reqs, MPI_STATUSES_IGNORE);
   free(ctx->recv_reqs);
-  mrc_m1_set_comp_name(m1, m, ctx->comp_name);
+  mrc_fld_set_comp_name(m1, m, ctx->comp_name);
 }
 
 static void
 collective_m1_read_send_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
-			      struct mrc_domain *domain, struct mrc_f1 *f1, int m)
+			      struct mrc_domain *domain, struct mrc_fld *f1, int m)
 {
   struct xdmf *xdmf = to_xdmf(io);
 
@@ -580,7 +628,7 @@ collective_m1_read_send_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
   int dim = ctx->dim;
   ctx->send_reqs = calloc(io->size + ctx->nr_global_patches, sizeof(*ctx->send_reqs));
   ctx->nr_send_reqs = 0;
-  const char *comp_name = mrc_f1_comp_name(f1, m);
+  const char *comp_name = mrc_fld_comp_name(f1, m);
   assert(comp_name && strlen(comp_name) < 99);
   for (int r = 0; r < io->size; r++) {
     MPI_Isend((char *) comp_name, strlen(comp_name) + 1, MPI_CHAR,
@@ -611,7 +659,7 @@ collective_m1_read_send_end(struct mrc_io *io, struct collective_m1_ctx *ctx)
 
 struct read_m1_cb_data {
   struct mrc_io *io;
-  struct mrc_f1 *gfld;
+  struct mrc_fld *gfld;
   hid_t filespace;
   hid_t memspace;
   hid_t dxpl;
@@ -621,14 +669,14 @@ static herr_t
 read_m1_cb(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
 {
   struct read_m1_cb_data *data = op_data;
-  struct mrc_f1 *gfld = data->gfld;
-  int *ib = gfld->_ghost_off;
+  struct mrc_fld *gfld = data->gfld;
+  int *ib = gfld->_ghost_offs;
   int ierr;
 
   hid_t group_fld = H5Gopen(g_id, name, H5P_DEFAULT); H5_CHK(group_fld);
   int m;
   ierr = H5LTget_attribute_int(group_fld, ".", "m", &m); CE;
-  mrc_f1_set_comp_name(data->gfld, m, name);
+  mrc_fld_set_comp_name(data->gfld, m, name);
   hid_t group = H5Gopen(group_fld, "p0", H5P_DEFAULT); H5_CHK(group);
 
   hid_t dset = H5Dopen(group, "1d", H5P_DEFAULT); H5_CHK(dset);
@@ -646,31 +694,31 @@ read_m1_cb(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
 // xdmf_collective_read_m1
 
 static void
-xdmf_collective_read_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
+xdmf_collective_read_m1(struct mrc_io *io, const char *path, struct mrc_fld *m1)
 {
   struct xdmf *xdmf = to_xdmf(io);
   struct xdmf_file *file = &xdmf->file;
   int ierr;
 
+  assert(m1->_data_type == MRC_NT_FLOAT);
   struct collective_m1_ctx ctx;
-  int nr_comps, gdims[3];
-  mrc_m1_get_param_int(m1, "nr_comps", &nr_comps);
-  mrc_m1_get_param_int(m1, "dim", &ctx.dim);
-  mrc_m1_get_param_int(m1, "sw", &ctx.sw);
-  mrc_domain_get_global_dims(m1->domain, gdims);
-  mrc_domain_get_nr_global_patches(m1->domain, &ctx.nr_global_patches);
-  mrc_domain_get_patches(m1->domain, &ctx.nr_patches);
+  int gdims[3];
+  int nr_comps = mrc_fld_nr_comps(m1);
+  mrc_fld_get_param_int(m1, "dim", &ctx.dim);
+  ctx.sw = m1->_sw.vals[0];
+  mrc_domain_get_global_dims(m1->_domain, gdims);
+  mrc_domain_get_nr_global_patches(m1->_domain, &ctx.nr_global_patches);
+  mrc_domain_get_patches(m1->_domain, &ctx.nr_patches);
 
   if (xdmf->is_writer) {
-    struct mrc_f1 *f1 = mrc_f1_create(MPI_COMM_SELF);
-    mrc_f1_set_param_int(f1, "nr_comps", nr_comps);
-    mrc_f1_set_param_int(f1, "dimsx", gdims[ctx.dim]);
-    mrc_f1_set_param_int(f1, "sw", ctx.sw);
-    mrc_f1_setup(f1);
+    struct mrc_fld *f1 = mrc_fld_create(MPI_COMM_SELF);
+    mrc_fld_set_param_int_array(f1, "dims", 2, (int [2]) { gdims[ctx.dim], nr_comps });
+    mrc_fld_set_param_int_array(f1, "sw", 2, (int [2]) { ctx.sw, 0 });
+    mrc_fld_setup(f1);
 
     hid_t group0 = H5Gopen(file->h5_file, path, H5P_DEFAULT); H5_CHK(group0);
 
-    hsize_t hgdims[1] = { mrc_f1_ghost_dims(f1)[0] };
+    hsize_t hgdims[1] = { mrc_fld_ghost_dims(f1)[0] };
 
     hid_t filespace = H5Screate_simple(1, hgdims, NULL); H5_CHK(filespace);
     hid_t memspace;
@@ -710,7 +758,7 @@ xdmf_collective_read_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
 
     for (int m = 0; m < nr_comps; m++) {
       collective_m1_read_recv_begin(io, &ctx, m1, m);
-      collective_m1_read_send_begin(io, &ctx, m1->domain, f1, m);
+      collective_m1_read_send_begin(io, &ctx, m1->_domain, f1, m);
       collective_m1_read_recv_end(io, &ctx, m1, m);
       collective_m1_read_send_end(io, &ctx);
     }
@@ -731,14 +779,15 @@ static bool
 find_intersection(int *ilo, int *ihi, const int *ib1, const int *im1,
 		  const int *ib2, const int *im2)
 {
+  bool has_intersection = true;
   for (int d = 0; d < 3; d++) {
     ilo[d] = MAX(ib1[d], ib2[d]);
     ihi[d] = MIN(ib1[d] + im1[d], ib2[d] + im2[d]);
     if (ihi[d] - ilo[d] <= 0) {
-      return false;
+      has_intersection = false;
     }
   }
-  return true;
+  return has_intersection;
 }
 
 // ----------------------------------------------------------------------
@@ -763,12 +812,12 @@ struct collective_m3_ctx {
   int slow_indices_rmndr;
 
   struct collective_m3_entry *sends;
-  float **send_bufs; // one for each writer
+  void **send_bufs; // one for each writer
   MPI_Request *send_reqs;
   int nr_sends;
 
   struct collective_m3_entry *recvs;
-  float **recv_bufs; // one for each rank
+  void **recv_bufs; // one for each rank
   MPI_Request *recv_reqs;
   int nr_recvs;
 };
@@ -819,7 +868,12 @@ get_writer_off_dims(struct collective_m3_ctx *ctx, int writer,
 
 // ----------------------------------------------------------------------
 // collective_send_fld_begin
+#define BUFLOOP(ix, iy, iz, ilo, hi) \
+      for (int iz = ilo[2]; iz < ihi[2]; iz++) {\
+	for (int iy = ilo[1]; iy < ihi[1]; iy++) {\
+	  for (int ix = ilo[0]; ix < ihi[0]; ix++)
 
+#define BUFLOOP_END }}
 static void
 collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
 			  struct mrc_fld *m3, int m)
@@ -862,7 +916,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
       continue;
     }
 
-    ctx->send_bufs[writer] = malloc(buf_sizes[writer] * sizeof(*ctx->send_bufs[writer]));
+    ctx->send_bufs[writer] = malloc(buf_sizes[writer] * m3->_size_of_type);
     buf_sizes[writer] = 0;
 
     // fill buf per writer
@@ -877,20 +931,50 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
 
       struct mrc_patch_info info;
       mrc_domain_get_local_patch_info(m3->_domain, p, &info);
-      float *buf_ptr = ctx->send_bufs[writer] + buf_sizes[writer];
-      for (int iz = ilo[2]; iz < ihi[2]; iz++) {
-	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
-	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+      assert(!m3->_is_aos);
+      switch (m3->_data_type) {
+      case MRC_NT_FLOAT:
+      	float *buf_ptr = ctx->send_bufs[writer] + buf_sizes[writer];
+      	BUFLOOP(ix, iy, iz, ilo, ihi) {
 	    *buf_ptr++ = MRC_S5(m3, ix-off[0],iy-off[1],iz-off[2], m, p);
-	  }
-	}
+      	} BUFLOOP_END
+      	break;
+      case MRC_NT_DOUBLE:
+      	double *buf_ptr = ctx->send_bufs[writer] + buf_sizes[writer];
+      	BUFLOOP(ix, iy, iz, ilo, ihi) {
+	    *buf_ptr++ = MRC_D5(m3, ix-off[0],iy-off[1],iz-off[2], m, p);
+      	} BUFLOOP_END
+      	break;
+      case MRC_NT_INT:
+      	int *buf_ptr = ctx->send_bufs[writer] + buf_sizes[writer];
+      	BUFLOOP(ix, iy, iz, ilo, ihi) {
+	    *buf_ptr++ = MRC_I5(m3, ix-off[0],iy-off[1],iz-off[2], m, p);
+      	} BUFLOOP_END
+      	break;
+      default:
+      	assert(0);
       }
 
       int len = (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
       buf_sizes[writer] += len;
     }
 
-    MPI_Isend(ctx->send_bufs[writer], buf_sizes[writer], MPI_FLOAT,
+    MPI_Datatype mpi_dtype;
+    switch (m3->_data_type) {
+    case MRC_NT_FLOAT:
+      mpi_dtype = MPI_FLOAT;
+      break;
+    case MRC_NT_DOUBLE:
+      mpi_dtype = MPI_DOUBLE;
+      break;
+    case MRC_NT_INT:
+      mpi_dtype = MPI_INT;
+      break;
+    default:
+      assert(0);
+    }
+
+    MPI_Isend(ctx->send_bufs[writer], buf_sizes[writer], mpi_dtype,
 	      xdmf->writers[writer], 0x1000, mrc_io_comm(io),
 	      &ctx->send_reqs[writer]);
   }
@@ -958,10 +1042,25 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
     }
 
     // alloc aggregate recv buffers
-    ctx->recv_bufs[rank] = malloc(buf_sizes[rank] * sizeof(ctx->recv_bufs[rank]));
+    ctx->recv_bufs[rank] = malloc(buf_sizes[rank] * m3->_size_of_type);
+ 
+   MPI_Datatype mpi_dtype;
+    switch (m3->_data_type) {
+    case MRC_NT_FLOAT:
+      mpi_dtype = MPI_FLOAT;
+      break;
+    case MRC_NT_DOUBLE:
+      mpi_dtype = MPI_DOUBLE;
+      break;
+    case MRC_NT_INT:
+      mpi_dtype = MPI_INT;
+      break;
+    default:
+      assert(0);
+    }
 
     // recv aggregate buffers
-    MPI_Irecv(ctx->recv_bufs[rank], buf_sizes[rank], MPI_FLOAT,
+    MPI_Irecv(ctx->recv_bufs[rank], buf_sizes[rank], mpi_dtype,
 	      rank, 0x1000, mrc_io_comm(io),
 	      &ctx->recv_reqs[rank]);
   }
@@ -1006,14 +1105,29 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
     }
     
     int len = (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
-    float *buf_ptr = ctx->recv_bufs[info.rank] + buf_sizes[info.rank];
-    for (int iz = ilo[2]; iz < ihi[2]; iz++) {
-      for (int iy = ilo[1]; iy < ihi[1]; iy++) {
-	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	  MRC_F3(fld,0, ix,iy,iz) = *buf_ptr++;
-	}
-      }
-    }
+
+    switch (m3->_data_type) {
+    case MRC_NT_FLOAT:
+      float *buf_ptr = ctx->recv_bufs[info.rank] + buf_sizes[info.rank];
+      BUFLOOP(ix, iy, iz, ilo, ihi) {
+	MRC_S4(fld, ix,iy,iz, 0) = *buf_ptr++;
+      } BUFLOOP_END
+      break;
+    case MRC_NT_DOUBLE:
+      double *buf_ptr = ctx->recv_bufs[info.rank] + buf_sizes[info.rank];
+      BUFLOOP(ix, iy, iz, ilo, ihi) {
+	MRC_D4(fld, ix,iy,iz, 0) = *buf_ptr++;
+      } BUFLOOP_END
+      break;     
+    case MRC_NT_INT:
+     int *buf_ptr = ctx->recv_bufs[info.rank] + buf_sizes[info.rank];
+      BUFLOOP(ix, iy, iz, ilo, ihi) {
+	MRC_I4(fld, ix,iy,iz, 0) = *buf_ptr++;
+      } BUFLOOP_END
+      break;
+    default:
+      	assert(0);
+      }    
     buf_sizes[info.rank] += len;
     rr++;
   }
@@ -1047,16 +1161,31 @@ collective_recv_fld_local(struct collective_m3_ctx *ctx,
     if (!has_intersection) {
       continue;
     }
-    struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, p);
-    for (int iz = ilo[2]; iz < ihi[2]; iz++) {
-      for (int iy = ilo[1]; iy < ihi[1]; iy++) {
-	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	  MRC_F3(fld,0, ix,iy,iz) =
-	    MRC_M3(m3p, m, ix - off[0], iy - off[1], iz - off[2]);
-	}
-      }
-    }
-    mrc_fld_patch_put(m3);
+    switch (m3->_data_type) {
+    case MRC_NT_FLOAT:
+      float *buf_ptr = ctx->recv_bufs[info.rank] + buf_sizes[info.rank];
+      BUFLOOP(ix, iy, iz, ilo, ihi) {
+        MRC_S4(fld, ix,iy,iz, 0) =
+          MRC_S5(m3, ix - off[0], iy - off[1], iz - off[2], m, p);
+      } BUFLOOP_END
+      break;
+    case MRC_NT_DOUBLE:
+      double *buf_ptr = ctx->recv_bufs[info.rank] + buf_sizes[info.rank];
+      BUFLOOP(ix, iy, iz, ilo, ihi) {
+        MRC_D4(fld, ix,iy,iz, 0) =
+          MRC_D5(m3, ix - off[0], iy - off[1], iz - off[2], m, p);
+      } BUFLOOP_END
+      break;     
+    case MRC_NT_INT:
+     int *buf_ptr = ctx->recv_bufs[info.rank] + buf_sizes[info.rank];
+      BUFLOOP(ix, iy, iz, ilo, ihi) {
+        MRC_I4(fld, ix,iy,iz, 0) =
+          MRC_I5(m3, ix - off[0], iy - off[1], iz - off[2], m, p);
+      } BUFLOOP_END
+      break;
+    default:
+      	assert(0);
+      }    
   }
 }
 
@@ -1085,7 +1214,15 @@ collective_write_fld(struct collective_m3_ctx *ctx, struct mrc_io *io,
 
   hsize_t fdims[3] = { ctx->slab_dims[2], ctx->slab_dims[1], ctx->slab_dims[0] };
   hid_t filespace = H5Screate_simple(3, fdims, NULL); H5_CHK(filespace);
-  hid_t dset = H5Dcreate(group, "3d", H5T_NATIVE_FLOAT, filespace, H5P_DEFAULT,
+  hid_t dtype;
+  switch (fld->_data_type) {
+  case MRC_NT_FLOAT: dtype = H5T_NATIVE_FLOAT; break;
+  case MRC_NT_DOUBLE: dtype = H5T_NATIVE_DOUBLE; break;
+  case MRC_NT_INT: dtype = H5T_NATIVE_INT; break;
+  default: assert(0);
+  }
+  assert(!fld->_is_aos);
+  hid_t dset = H5Dcreate(group, "3d", dtype, filespace, H5P_DEFAULT,
 			 H5P_DEFAULT, H5P_DEFAULT); H5_CHK(dset);
   hid_t dxpl = H5Pcreate(H5P_DATASET_XFER); H5_CHK(dxpl);
 #ifdef H5_HAVE_PARALLEL
@@ -1105,7 +1242,7 @@ collective_write_fld(struct collective_m3_ctx *ctx, struct mrc_io *io,
   ierr = H5Sselect_hyperslab(filespace, H5S_SELECT_SET, foff, NULL,
 			     mdims, NULL); CE;
 
-  ierr = H5Dwrite(dset, H5T_NATIVE_FLOAT, memspace, filespace, dxpl, fld->_arr); CE;
+  ierr = H5Dwrite(dset, dtype, memspace, filespace, dxpl, fld->_arr); CE;
   
   ierr = H5Dclose(dset); CE;
   ierr = H5Sclose(memspace); CE;
@@ -1137,6 +1274,17 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
 					 ctx.slab_off, ctx.slab_dims, io);
   }
 
+  // If we have an aos field, we need to get it as soa for collection and writing
+  struct mrc_fld *m3_soa = m3;
+  if (m3->_is_aos) {
+    switch (m3->_data_type) {
+      case MRC_NT_FLOAT: m3_soa = mrc_fld_get_as(m3, "float"); break;
+      case MRC_NT_DOUBLE: m3_soa = mrc_fld_get_as(m3, "double"); break;
+      case MRC_NT_INT: m3_soa = mrc_fld_get_as(m3, "int"); break;
+      default: assert(0);
+    }
+  }
+
   if (xdmf->is_writer) {
     int writer;
     MPI_Comm_rank(xdmf->comm_writers, &writer);
@@ -1147,6 +1295,12 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
     /* 	    writer_dims[0], writer_dims[1], writer_dims[2]); */
 
     struct mrc_fld *fld = mrc_fld_create(MPI_COMM_NULL);
+    switch (m3->_data_type) {
+    case MRC_NT_FLOAT: mrc_fld_set_type(fld, "float"); break;
+    case MRC_NT_DOUBLE: mrc_fld_set_type(fld, "double"); break;
+    case MRC_NT_INT: mrc_fld_set_type(fld, "int"); break;
+    default: assert(0);
+    }
     mrc_fld_set_param_int_array(fld, "dims", 4,
 				(int[4]) { writer_dims[0], writer_dims[1], writer_dims[2], 1 });
     mrc_fld_set_param_int_array(fld, "offs", 4,
@@ -1163,12 +1317,12 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
     }
     int nr_1 = 1;
     H5LTset_attribute_int(group0, ".", "nr_patches", &nr_1, 1);
-    
+
     for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
-      collective_recv_fld_begin(&ctx, io, fld, m3);
-      collective_send_fld_begin(&ctx, io, m3, m);
-      collective_recv_fld_local(&ctx, io, fld, m3, m);
-      collective_recv_fld_end(&ctx, io, fld, m3, m);
+      collective_recv_fld_begin(&ctx, io, fld, m3_soa);
+      collective_send_fld_begin(&ctx, io, m3_soa, m);
+      collective_recv_fld_local(&ctx, io, fld, m3_soa, m);
+      collective_recv_fld_end(&ctx, io, fld, m3_soa, m);
       collective_write_fld(&ctx, io, path, fld, m, m3, xs, group0);
       collective_send_fld_end(&ctx, io, m3, m);
     }
@@ -1177,9 +1331,13 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
     mrc_fld_destroy(fld);
   } else {
     for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
-      collective_send_fld_begin(&ctx, io, m3, m);
-      collective_send_fld_end(&ctx, io, m3, m);
+      collective_send_fld_begin(&ctx, io, m3_soa, m);
+      collective_send_fld_end(&ctx, io, m3_soa, m);
     }
+  }
+
+  if (m3->_is_aos) {
+    mrc_fld_put_as(m3_soa, m3);
   }
 }
 
@@ -1228,24 +1386,56 @@ collective_m3_send_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
     struct collective_m3_entry *send = &ctx->sends[i];
     int *ilo = send->ilo, *ihi = send->ihi;
     struct mrc_fld *fld = mrc_fld_create(MPI_COMM_NULL);
+    mrc_fld_set_type(fld, mrc_fld_type(gfld));
     mrc_fld_set_param_int_array(fld, "offs", 4,
 			       (int[4]) { ilo[0], ilo[1], ilo[2], 0 });
     mrc_fld_set_param_int_array(fld, "dims", 4,
 			       (int [4]) { ihi[0] - ilo[0], ihi[1] - ilo[1], ihi[2] - ilo[2],
 				    mrc_fld_nr_comps(gfld) });
     mrc_fld_setup(fld);
-    
-    for (int m = 0; m < mrc_fld_nr_comps(gfld); m++) {
-      for (int iz = ilo[2]; iz < ihi[2]; iz++) {
-	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
-	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	    MRC_F3(fld, m, ix,iy,iz) = MRC_F3(gfld, m, ix,iy,iz);
-	  }
-	}
-      }
+
+    MPI_Datatype dtype;
+    switch (fld->_data_type) {
+      case MRC_NT_FLOAT:
+       dtype = MPI_FLOAT;
+        for (int m = 0; m < mrc_fld_nr_comps(gfld); m++) {
+          for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+            for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+              for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+                MRC_S4(fld,ix,iy,iz,m) = MRC_S4(gfld,ix,iy,iz,m);
+              }
+            }
+          }
+        }
+      break;
+      case MRC_NT_DOUBLE: 
+        dtype = MPI_DOUBLE;
+        for (int m = 0; m < mrc_fld_nr_comps(gfld); m++) {
+          for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+            for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+              for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+                MRC_D4(fld,ix,iy,iz,m) = MRC_D4(gfld,ix,iy,iz,m);
+              }
+            }
+          }
+        }
+        break;
+      case MRC_NT_INT:
+        dtype = MPI_INT;
+        for (int m = 0; m < mrc_fld_nr_comps(gfld); m++) {
+          for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+            for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+              for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+                MRC_I4(fld,ix,iy,iz,m) = MRC_I4(gfld,ix,iy,iz,m);
+              }
+            }
+          }
+        }
+        break;
+      default: assert(0);
     }
     
-    MPI_Isend(fld->_arr, fld->_len, MPI_FLOAT, send->rank, send->patch,
+    MPI_Isend(fld->_arr, fld->_len, dtype, send->rank, send->patch,
 	      mrc_io_comm(io), &ctx->send_reqs[i]);
     send->fld = fld;
   }
@@ -1330,14 +1520,23 @@ collective_m3_recv_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
 
     struct mrc_fld *fld = mrc_fld_create(MPI_COMM_NULL);
     int *ilo = recv->ilo, *ihi = recv->ihi; // FIXME, -> off, dims
+    mrc_fld_set_type(fld, mrc_fld_type(m3));
     mrc_fld_set_param_int_array(fld, "offs", 4,
 			       (int[4]) { ilo[0], ilo[1], ilo[2], 0 });
     mrc_fld_set_param_int_array(fld, "dims", 4,
 			       (int[4]) { ihi[0] - ilo[0], ihi[1] - ilo[1], ihi[2] - ilo[2],
 				   mrc_fld_nr_comps(m3) });
     mrc_fld_setup(fld);
+
+    MPI_Datatype dtype;
+    switch (fld->_data_type) {
+      case MRC_NT_FLOAT: dtype = MPI_FLOAT; break;
+      case MRC_NT_DOUBLE: dtype = MPI_DOUBLE; break;
+      case MRC_NT_INT: dtype = MPI_INT; break;
+      default: assert(0);
+    }
     
-    MPI_Irecv(fld->_arr, fld->_len, MPI_FLOAT, recv->rank,
+    MPI_Irecv(fld->_arr, fld->_len, dtype, recv->rank,
 	      recv->global_patch, mrc_io_comm(io), &ctx->recv_reqs[i]);
     recv->fld = fld;
   }
@@ -1354,15 +1553,41 @@ collective_m3_recv_end(struct mrc_io *io, struct collective_m3_ctx *ctx,
     struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, recv->patch);
 
     int *ilo = recv->ilo, *ihi = recv->ihi;
-    for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
-      for (int iz = ilo[2]; iz < ihi[2]; iz++) {
-	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
-	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	    MRC_M3(m3p, m, ix,iy,iz) = MRC_F3(recv->fld, m, ix,iy,iz);
-	  }
-	}
+    switch (m3->_data_type) {
+      case MRC_NT_FLOAT:
+        for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
+          for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+            for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+              for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+                MRC_S5((m3p)->_fld, ix, iy, iz, m, (m3p)->_p) = MRC_S4(recv->fld,ix,iy,iz,m);
+                }
+              }
+            }
+          }
+        break;
+      case MRC_NT_DOUBLE:
+        for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
+          for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+            for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+              for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+                MRC_D5((m3p)->_fld, ix, iy, iz, m, (m3p)->_p) = MRC_D4(recv->fld,ix,iy,iz,m);
+                }
+              }
+            }
+          }
+        break;
+      case MRC_NT_INT:
+        for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
+          for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+            for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+              for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+                MRC_I5((m3p)->_fld, ix, iy, iz, m, (m3p)->_p) = MRC_I4(recv->fld,ix,iy,iz,m);
+                }
+              }
+            }
+          }
+        break;
       }
-    }
     mrc_fld_patch_put(m3);
     mrc_fld_destroy(recv->fld);
   }
@@ -1392,8 +1617,27 @@ read_m3_cb(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
   hid_t dset = H5Dopen(group, "3d", H5P_DEFAULT); H5_CHK(dset);
   struct mrc_fld *gfld = data->gfld;
   int *ib = gfld->_ghost_offs;
-  ierr = H5Dread(dset, H5T_NATIVE_FLOAT, data->memspace, data->filespace,
-		 data->dxpl, &MRC_F3(gfld, m, ib[0], ib[1], ib[2])); CE;
+  hid_t dtype;
+  void *arr;  
+  switch (gfld->_data_type) {
+  case MRC_NT_FLOAT:
+    dtype = H5T_NATIVE_FLOAT;
+    arr = &MRC_S4(gfld, ib[0],ib[1],ib[2],m);
+    break;
+  case MRC_NT_DOUBLE:
+    dtype = H5T_NATIVE_DOUBLE;
+    arr = &MRC_D4(gfld, ib[0],ib[1],ib[2],m); 
+    break;
+  case MRC_NT_INT:
+    dtype = H5T_NATIVE_INT;
+    arr = &MRC_I4(gfld, ib[0],ib[1],ib[2],m);
+    break;
+  default: assert(0);
+  }
+  assert(!gfld->_is_aos);
+
+  ierr = H5Dread(dset, dtype, data->memspace, data->filespace,
+		 data->dxpl, arr); CE;
   ierr = H5Dclose(dset); CE;
   
   ierr = H5Gclose(group); CE;
@@ -1435,6 +1679,7 @@ collective_m3_read_fld(struct mrc_io *io, struct collective_m3_ctx *ctx,
 			     mdims, NULL); CE;
   hid_t memspace = H5Screate_simple(3, mdims, NULL); H5_CHK(memspace);
   hid_t dxpl = H5Pcreate(H5P_DATASET_XFER); H5_CHK(dxpl);
+
 #ifdef H5_HAVE_PARALLEL
   if (xdmf->use_independent_io) {
     H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_INDEPENDENT);
@@ -1467,25 +1712,47 @@ xdmf_collective_read_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3)
   struct xdmf_file *file = &xdmf->file;
   int ierr;
 
+  //assert(m3->_data_type == MRC_NT_FLOAT);
   struct collective_m3_ctx ctx;
   collective_m3_init(io, &ctx, m3->_domain);
 
+  // If we have an aos field, we need to get it as soa for reading and distribution
+  struct mrc_fld *m3_soa = m3;
+  if (m3->_is_aos) {
+    switch (m3->_data_type) {
+      case MRC_NT_FLOAT: m3_soa = mrc_fld_get_as(m3, "float"); break;
+      case MRC_NT_DOUBLE: m3_soa = mrc_fld_get_as(m3, "double"); break;
+      case MRC_NT_INT: m3_soa = mrc_fld_get_as(m3, "int"); break;
+      default: assert(0);
+    }
+  }
+
   if (xdmf->is_writer) {
     struct mrc_fld *gfld = mrc_fld_create(MPI_COMM_SELF);
-    mrc_fld_set_nr_comps(gfld, mrc_fld_nr_comps(m3));
+    mrc_fld_set_param_int(gfld, "nr_comps", mrc_fld_nr_comps(m3));
+    switch (m3->_data_type) {
+      case MRC_NT_FLOAT: mrc_fld_set_type(gfld, "float"); break;
+      case MRC_NT_DOUBLE: mrc_fld_set_type(gfld, "double"); break;
+      case MRC_NT_INT: mrc_fld_set_type(gfld, "int"); break;
+      default: assert(0);
+    }
 
     hid_t group0 = H5Gopen(file->h5_file, path, H5P_DEFAULT); H5_CHK(group0);
     collective_m3_read_fld(io, &ctx, group0, gfld);
     ierr = H5Gclose(group0); CE;
 
-    collective_m3_recv_begin(io, &ctx, m3->_domain, m3);
+    collective_m3_recv_begin(io, &ctx, m3->_domain, m3_soa);
     collective_m3_send_begin(io, &ctx, m3->_domain, gfld);
-    collective_m3_recv_end(io, &ctx, m3->_domain, m3);
+    collective_m3_recv_end(io, &ctx, m3->_domain, m3_soa);
     collective_m3_send_end(io, &ctx);
     mrc_fld_destroy(gfld);
   } else {
-    collective_m3_recv_begin(io, &ctx, m3->_domain, m3);
-    collective_m3_recv_end(io, &ctx, m3->_domain, m3);
+    collective_m3_recv_begin(io, &ctx, m3->_domain, m3_soa);
+    collective_m3_recv_end(io, &ctx, m3->_domain, m3_soa);
+  }
+
+  if (m3->_is_aos) {
+    mrc_fld_put_as(m3_soa, m3);
   }
 }
 

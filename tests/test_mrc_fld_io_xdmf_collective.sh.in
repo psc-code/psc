@@ -1,0 +1,5 @@
+#! /bin/bash
+
+IOTYPE="xdmf_collective"
+
+source templates/mrc_fld_io_checks
