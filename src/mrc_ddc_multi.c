@@ -552,9 +552,9 @@ ddc_run_local(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
   struct mrc_ddc_rank_info *ri = patt2->ri;
 
   // overlap: local exchange
-  for (int i = 0; i < ri[multi->mpi_rank].n_send_entries; i++) {
-    struct mrc_ddc_sendrecv_entry *se = &ri[multi->mpi_rank].send_entry[i];
-    struct mrc_ddc_sendrecv_entry *re = &ri[multi->mpi_rank].recv_entry[i];
+  for (int i = 0; i < ri[sub->mpi_rank].n_send_entries; i++) {
+    struct mrc_ddc_sendrecv_entry *se = &ri[sub->mpi_rank].send_entry[i];
+    struct mrc_ddc_sendrecv_entry *re = &ri[sub->mpi_rank].recv_entry[i];
     to_buf(mb, me, se->patch, se->ilo, se->ihi, patt2->local_buf, ctx);
     from_buf(mb, me, se->nei_patch, re->ilo, re->ihi, patt2->local_buf, ctx);
   }
