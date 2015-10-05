@@ -73,35 +73,35 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
     if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) { // FIXME
       struct mrc_fld *crd_nc = crds->crd_nc[d];
       if (!crd_nc) {
-	crd_nc = mrc_fld_create(mrc_crds_comm(crds)); // FIXME, leaked
-	crds->crd_nc[d] = crd_nc;
-	char s[10];
-	sprintf(s, "crd%d_nc", d);
-	mrc_fld_set_name(crd_nc, s);
-	mrc_fld_set_param_obj(crd_nc, "domain", crds->domain);
-	mrc_fld_set_param_int(crd_nc, "nr_spatial_dims", 1);
-	mrc_fld_set_param_int(crd_nc, "dim", d);
-	mrc_fld_set_param_int(crd_nc, "nr_ghosts", 1);
-	mrc_fld_setup(crd_nc);
-	mrc_fld_set_comp_name(crd_nc, 0, s);
+  crd_nc = mrc_fld_create(mrc_crds_comm(crds)); // FIXME, leaked
+  crds->crd_nc[d] = crd_nc;
+  char s[10];
+  sprintf(s, "crd%d_nc", d);
+  mrc_fld_set_name(crd_nc, s);
+  mrc_fld_set_param_obj(crd_nc, "domain", crds->domain);
+  mrc_fld_set_param_int(crd_nc, "nr_spatial_dims", 1);
+  mrc_fld_set_param_int(crd_nc, "dim", d);
+  mrc_fld_set_param_int(crd_nc, "nr_ghosts", 1);
+  mrc_fld_setup(crd_nc);
+  mrc_fld_set_comp_name(crd_nc, 0, s);
 
-	mrc_m1_foreach_patch(crd_nc, p) {
-	  if (crds->sw > 0) {
-	    mrc_m1_foreach(crd_cc, i, 0, 1) {
-	      MRC_M1(crd_nc,0, i, p) = .5 * (MRC_M1(crd_cc,0, i-1, p) + MRC_M1(crd_cc,0, i, p));
-	    } mrc_m1_foreach_end;
-	  } else {
-	    mrc_m1_foreach(crd_cc, i, -1, 0) {
-	      MRC_M1(crd_nc,0, i, p) = .5 * (MRC_M1(crd_cc,0, i-1, p) + MRC_M1(crd_cc,0, i, p));
-	    } mrc_m1_foreach_end;
-	    int ld = mrc_fld_dims(crd_nc)[0];
-	    // extrapolate
-	    MRC_M1(crd_nc,0, 0 , p) = MRC_M1(crd_cc,0, 0   , p)
-	      - .5 * (MRC_M1(crd_cc,0,    1, p) - MRC_M1(crd_cc,0, 0   , p));
-	    MRC_M1(crd_nc,0, ld, p) = MRC_M1(crd_cc,0, ld-1, p)
-	      + .5 * (MRC_M1(crd_cc,0, ld-1, p) - MRC_M1(crd_cc,0, ld-2, p));
-	  }
-	}
+  mrc_m1_foreach_patch(crd_nc, p) {
+    if (crds->sw > 0) {
+      mrc_m1_foreach(crd_cc, i, 0, 1) {
+        MRC_M1(crd_nc,0, i, p) = .5 * (MRC_M1(crd_cc,0, i-1, p) + MRC_M1(crd_cc,0, i, p));
+      } mrc_m1_foreach_end;
+    } else {
+      mrc_m1_foreach(crd_cc, i, -1, 0) {
+        MRC_M1(crd_nc,0, i, p) = .5 * (MRC_M1(crd_cc,0, i-1, p) + MRC_M1(crd_cc,0, i, p));
+      } mrc_m1_foreach_end;
+      int ld = mrc_fld_dims(crd_nc)[0];
+      // extrapolate
+      MRC_M1(crd_nc,0, 0 , p) = MRC_M1(crd_cc,0, 0   , p)
+        - .5 * (MRC_M1(crd_cc,0,    1, p) - MRC_M1(crd_cc,0, 0   , p));
+      MRC_M1(crd_nc,0, ld, p) = MRC_M1(crd_cc,0, ld-1, p)
+        + .5 * (MRC_M1(crd_cc,0, ld-1, p) - MRC_M1(crd_cc,0, ld-2, p));
+    }
+  }
       }
       int gdims[3];
       mrc_domain_get_global_dims(crds->domain, gdims);
@@ -159,22 +159,6 @@ mrc_crds_setup_alloc_only(struct mrc_crds *crds)
 {
   assert(crds->domain && mrc_domain_is_setup(crds->domain));
 
-static void
-mrc_crds_multi_alloc(struct mrc_crds *crds, int d)
-{
-  mrc_m1_destroy(crds->mcrd[d]);
-  crds->mcrd[d] = mrc_domain_m1_create(crds->domain);
-  char s[5]; sprintf(s, "crd%d", d);
-  mrc_m1_set_name(crds->mcrd[d], s);
-  mrc_m1_set_param_int(crds->mcrd[d], "sw", crds->par.sw);
-  mrc_m1_set_param_int(crds->mcrd[d], "dim", d);
-  mrc_m1_setup(crds->mcrd[d]);
-  mrc_m1_set_comp_name(crds->mcrd[d], 0, s);
-}
-
-void
-mrc_crds_patch_get(struct mrc_crds *crds, int p)
-{
   for (int d = 0; d < 3; d++) {
     mrc_fld_set_param_obj(crds->crd[d], "domain", crds->domain);
     mrc_fld_set_param_int(crds->crd[d], "nr_spatial_dims", 1);
@@ -242,8 +226,8 @@ _mrc_crds_setup(struct mrc_crds *crds)
       int off = patches[p].off[d];
 
       mrc_m1_foreach_bnd(crds->crd[d], ix) {
-	MRC_DMCRD(crds, d, ix, p) = MRC_D2(x, ix + off, 0);
-	MRC_MCRD(crds, d, ix, p) = (float)MRC_D2(x, ix + off, 0);
+        MRC_DMCRD(crds, d, ix, p) = MRC_D2(x, ix + off, 0);
+        MRC_MCRD(crds, d, ix, p) = (float)MRC_D2(x, ix + off, 0);
       } mrc_m1_foreach_end;
     }
   }
@@ -309,8 +293,8 @@ mrc_crds_amr_uniform_setup(struct mrc_crds *crds)
       double dx = (xe - xb) / info.ldims[d];
 
       mrc_m1_foreach_bnd(mcrd, i) {
-	MRC_D3(dcrd,i, 0, p) = xl[d] + (xb + (i + .5) * dx) / gdims[d] * (xh[d] - xl[d]);
-	MRC_M1(mcrd,0, i, p) = (float)MRC_D3(dcrd,i, 0, p);
+        MRC_D3(dcrd,i, 0, p) = xl[d] + (xb + (i + .5) * dx) / gdims[d] * (xh[d] - xl[d]);
+        MRC_M1(mcrd,0, i, p) = (float)MRC_D3(dcrd,i, 0, p);
       } mrc_m1_foreach_end;
     }
   }
@@ -369,43 +353,41 @@ mrc_crds_mb_setup(struct mrc_crds *crds)
       struct MB_block *block = &(blocks[b]);
 
       for (int d = 0; d < 3; d ++) {
-	struct mrc_fld *x = mrc_fld_create(MPI_COMM_SELF);
-	mrc_fld_set_type(x, "double");
-	mrc_fld_set_param_int_array(x, "dims", 2, (int[2]) { block->mx[d] + 1, 2 });
-	mrc_fld_set_param_int_array(x, "sw"  , 2, (int[2]) { sw, 0 });
-	mrc_fld_setup(x);
+        struct mrc_fld *x = mrc_fld_create(MPI_COMM_SELF);
+        mrc_fld_set_type(x, "double");
+        mrc_fld_set_param_int_array(x, "dims", 2, (int[2]) { block->mx[d] + 1, 2 });
+        mrc_fld_set_param_int_array(x, "sw"  , 2, (int[2]) { sw, 0 });
+        mrc_fld_setup(x);
 
-	// If I had my way, I'd kill off the original crds_gen children to minimize confusion,
-	// but I guess I'll just have to write the docs to make it clear what's going on here.
-	assert(block->coord_gen[d]);
+        // If I had my way, I'd kill off the original crds_gen children to minimize confusion,
+        // but I guess I'll just have to write the docs to make it clear what's going on here.
+        assert(block->coord_gen[d]);
 
-	mrc_crds_gen_set_param_int(block->coord_gen[d], "n", block->mx[d]);
-	mrc_crds_gen_set_param_int(block->coord_gen[d], "d", d);
-	mrc_crds_gen_set_param_int(block->coord_gen[d], "sw", sw);
-	mrc_crds_gen_set_param_obj(block->coord_gen[d], "crds", crds);
-	mrc_crds_gen_set_param_double(block->coord_gen[d], "xl", block->xl[d]);
-	mrc_crds_gen_set_param_double(block->coord_gen[d], "xh", block->xh[d]);
+        mrc_crds_gen_set_param_int(block->coord_gen[d], "n", block->mx[d]);
+        mrc_crds_gen_set_param_int(block->coord_gen[d], "d", d);
+        mrc_crds_gen_set_param_int(block->coord_gen[d], "sw", sw);
+        mrc_crds_gen_set_param_obj(block->coord_gen[d], "crds", crds);
+        mrc_crds_gen_set_param_double(block->coord_gen[d], "xl", block->xl[d]);
+        mrc_crds_gen_set_param_double(block->coord_gen[d], "xh", block->xh[d]);
 
-	mrc_crds_gen_run(block->coord_gen[d], &MRC_D2(x, 0, 0), &MRC_D2(x, 0, 1));
-	
-	mrc_m1_foreach_patch(crds->crd[d], p) {
-	  struct mrc_patch_info info;
-	  mrc_domain_get_local_patch_info(crds->domain, p, &info);
-	  if (b == info.p_block) {
-	    // This is offset of the patch in the block
-	    int off = info.p_ix[d];
-	    mrc_m1_foreach_bnd(crds->crd[d], ix) {
-	      MRC_DMCRD(crds, d, ix, p) = MRC_D2(x, ix + off, 0);
-	      MRC_MCRD(crds, d, ix, p) = (float)MRC_D2(x, ix + off, 0);
-	    } mrc_m1_foreach_end;
-
-	  }
-	}
-	mrc_fld_destroy(x);
+        mrc_crds_gen_run(block->coord_gen[d], &MRC_D2(x, 0, 0), &MRC_D2(x, 0, 1));
+    
+        mrc_m1_foreach_patch(crds->crd[d], p) {
+          struct mrc_patch_info info;
+          mrc_domain_get_local_patch_info(crds->domain, p, &info);
+          if (b == info.p_block) {
+            // This is offset of the patch in the block
+            int off = info.p_ix[d];
+            mrc_m1_foreach_bnd(crds->crd[d], ix) {
+              MRC_DMCRD(crds, d, ix, p) = MRC_D2(x, ix + off, 0);
+              MRC_MCRD(crds, d, ix, p) = (float)MRC_D2(x, ix + off, 0);
+          } mrc_m1_foreach_end;
+        }
       }
+      mrc_fld_destroy(x);
     }
-
- }
+  }
+}
 
 
 static struct mrc_crds_ops mrc_crds_mb_ops = {
