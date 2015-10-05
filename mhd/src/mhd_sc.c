@@ -4,7 +4,7 @@
 // ----------------------------------------------------------------------
 // zmaskn
 
-static void __unused
+static void _mrc_unused
 zmaskn(struct ggcm_mhd *mhd, struct mrc_fld *zmask, int m_zmask,
        struct mrc_fld *ymask, int m_ymask, struct mrc_fld *x)
 {
@@ -30,7 +30,7 @@ zmaskn(struct ggcm_mhd *mhd, struct mrc_fld *zmask, int m_zmask,
 // ----------------------------------------------------------------------
 // newstep_sc
 
-static mrc_fld_data_t __unused
+static mrc_fld_data_t _mrc_unused
 newstep_sc(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zmask, 
 	   int m_zmask)
 {
@@ -140,7 +140,7 @@ newstep_sc(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zmask,
 // like newstep_c, but doesn't need any of the prep work
 // (no primvar, primbb, ymask, zmask)
 
-static mrc_fld_data_t __unused
+static mrc_fld_data_t _mrc_unused
 newstep_sc_ggcm(struct ggcm_mhd *mhd, struct mrc_fld *x)
 {
   static int PR;
@@ -233,7 +233,7 @@ newstep_sc_ggcm(struct ggcm_mhd *mhd, struct mrc_fld *x)
 //     4           density smaller than 0.0
 //     5           pressure smaller than 0.0
 
-static void __unused
+static void _mrc_unused
 badval_checks_sc(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *prim)
 {
   static int pr = 0;
@@ -313,7 +313,7 @@ badval_checks_sc(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *prim)
 //
 // nudge rr and uu such that rr >= rrmin if needed
 
-static void __unused
+static void _mrc_unused
 enforce_rrmin_sc(struct ggcm_mhd *mhd, struct mrc_fld *x)
 {
   static int pr = 0;

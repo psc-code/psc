@@ -113,7 +113,7 @@ mrc_mat_csr_mpi_destroy(struct mrc_mat *mat)
 {
   struct mrc_mat_csr_mpi *sub = mrc_mat_csr_mpi(mat);
 
-  mrc_mat_destroy(sub->A);
+  mrc_mat_destroy(sub->A); 
   mrc_mat_destroy(sub->B);
 
   mrc_decomposition_destroy(sub->dc_row);
@@ -154,7 +154,7 @@ mrc_mat_csr_mpi_add_value(struct mrc_mat *mat, int row_idx, int col_idx, double 
 // ----------------------------------------------------------------------
 // _mcsr_mpi_dump_mat
 
-static void __unused
+static void _mrc_unused
 _csr_mpi_dump_mat(FILE *f, struct mrc_mat *mat_mpi, int which, bool ignore_identity)
 {
   struct mrc_mat_csr_mpi *sub_mpi = mrc_mat_csr_mpi(mat_mpi);

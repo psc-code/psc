@@ -146,7 +146,7 @@ mrc_mat_mcsr_mpi_add_value(struct mrc_mat *mat, int row_idx, int col_idx, double
 // ----------------------------------------------------------------------
 // _mcsr_mpi_dump_mat
 
-static void __unused
+static void _mrc_unused
 _mcsr_mpi_dump_mat(FILE *f, struct mrc_mat *mat_mpi, int which, bool ignore_identity)
 {
   struct mrc_mat_mcsr_mpi *sub_mpi = mrc_mat_mcsr_mpi(mat_mpi);
