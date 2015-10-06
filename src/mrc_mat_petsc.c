@@ -1,5 +1,6 @@
 
 #include "mrc_mat_private.h"
+#include "mrc_vec.h"
 
 #include <petscmat.h>
 
@@ -82,48 +83,49 @@ mrc_mat_petsc_assemble(struct mrc_mat *mat)
 // ----------------------------------------------------------------------
 // mrc_mat_petsc_apply
 
-typedef Vec (*fgp_t)(struct mrc_fld *);
-typedef void (*fpp_t)(struct mrc_fld *, Vec *);
+typedef void (*vgp_t)(struct mrc_vec *, Vec *);
+typedef void (*vpp_t)(struct mrc_vec *, Vec *);
 
 static void
-mrc_mat_petsc_apply(struct mrc_fld *y, struct mrc_mat *mat, struct mrc_fld *x)
+mrc_mat_petsc_apply(struct mrc_vec *y, struct mrc_mat *mat, struct mrc_vec *x)
 {
   struct mrc_mat_petsc *sub = mrc_mat_petsc(mat);
   int ierr;
 
-  fgp_t fld_get_petsc = (fgp_t) mrc_fld_get_method(x, "get_petsc_vec");
-  fpp_t fld_put_petsc = (fpp_t) mrc_fld_get_method(x, "put_petsc_vec");
+  vgp_t vec_get_petsc = (vgp_t) mrc_vec_get_method(x, "get_petsc_vec");
+  vpp_t vec_put_petsc = (vpp_t) mrc_vec_get_method(x, "put_petsc_vec");
 
-  Vec xvec = fld_get_petsc(x);
-  Vec yvec = fld_get_petsc(y);
+  Vec xvec, yvec;
+  vec_get_petsc(x, &xvec);
+  vec_get_petsc(y, &yvec);
 
   ierr = MatMult(sub->mat, xvec, yvec); CE;
 
-  fld_put_petsc(x, &xvec);
-  fld_put_petsc(y, &yvec);
+  vec_put_petsc(x, &xvec);
+  vec_put_petsc(y, &yvec);
 }
 
 // ----------------------------------------------------------------------
 // mrc_mat_petsc_apply_in_place
 
 static void
-mrc_mat_petsc_apply_in_place(struct mrc_mat *mat, struct mrc_fld *x)
+mrc_mat_petsc_apply_in_place(struct mrc_mat *mat, struct mrc_vec *x)
 {
   struct mrc_mat_petsc *sub = mrc_mat_petsc(mat);
   int ierr;
 
-  fgp_t fld_get_petsc = (fgp_t) mrc_fld_get_method(x, "get_petsc_vec");
-  fpp_t fld_put_petsc = (fpp_t) mrc_fld_get_method(x, "put_petsc_vec");
+  vgp_t vec_get_petsc = (vgp_t) mrc_vec_get_method(x, "get_petsc_vec");
+  vpp_t vec_put_petsc = (vpp_t) mrc_vec_get_method(x, "put_petsc_vec");
 
   Vec xvec, yvec;
-  xvec = fld_get_petsc(x);
+  vec_get_petsc(x, &xvec);
   ierr = VecDuplicate(xvec, &yvec); CE;
 
   ierr = MatMult(sub->mat, xvec, yvec); CE;
   ierr = VecCopy(yvec, xvec); CE;
 
   ierr = VecDestroy(&yvec); CE;
-  fld_put_petsc(x, &xvec);
+  vec_put_petsc(x, &xvec);
 }
 
 // ----------------------------------------------------------------------
