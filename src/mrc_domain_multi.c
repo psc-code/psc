@@ -433,12 +433,19 @@ mrc_domain_multi_read(struct mrc_domain *domain, struct mrc_io *io)
   MPI_Comm_size(mrc_domain_comm(domain), &mpi_size);
 
   struct mrc_io_ops *io_ops = (struct mrc_io_ops *) io->obj.ops;
-  assert(!io_ops->parallel);
 
-  const char *path = mrc_io_obj_path(io, domain);
-  char path2[strlen(path) + 20];
-  sprintf(path2, "%s/rank_%d", path, mpi_rank);
-  mrc_io_read_attr_int(io, path2, "nr_patches", &multi->nr_patches);
+  // FIXME: With the addition of **do_setup() below it may no longer
+  // be necessary to have this read/write of local patch number
+  // for non-parallel writers, as the structure will be regenerated
+  // anyway.
+  if(!io_ops->parallel) {
+    const char *path = mrc_io_obj_path(io, domain);
+    char path2[strlen(path) + 20];
+    sprintf(path2, "%s/rank_%d", path, mpi_rank);
+    mrc_io_read_attr_int(io, path2, "nr_patches", &multi->nr_patches);
+  } else {
+    multi->nr_patches = -1;
+  }
 
 #if 0
   // need to read attributes collectively :(
@@ -456,8 +463,8 @@ mrc_domain_multi_read(struct mrc_domain *domain, struct mrc_io *io)
 
   // FIXME? We're mostly redoing things from scratch, rather
   // than reading them...
+  // WARNING: This may break PSC checkpointing. (but I think setup was getting run anyway)
   mrc_domain_multi_do_setup(domain);
-
   mrc_domain_read_super(domain, io);
 }
 

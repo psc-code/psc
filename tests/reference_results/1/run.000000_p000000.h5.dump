@@ -10,11 +10,11 @@ GROUP "/" {
       }
       ATTRIBUTE "domain" {
          DATATYPE  H5T_STRING {
-               STRSIZE 25;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 25;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_domain-uid"
@@ -22,11 +22,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_class" {
          DATATYPE  H5T_STRING {
-               STRSIZE 8;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 8;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_fld"
@@ -41,11 +41,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_name" {
          DATATYPE  H5T_STRING {
-               STRSIZE 7;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 7;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "crd[0]"
@@ -53,11 +53,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_type" {
          DATATYPE  H5T_STRING {
-               STRSIZE 6;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 6;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "float"
@@ -86,11 +86,11 @@ GROUP "/" {
       }
       ATTRIBUTE "vec" {
          DATATYPE  H5T_STRING {
-               STRSIZE 22;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 22;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_vec-uid"
@@ -127,11 +127,11 @@ GROUP "/" {
       }
       ATTRIBUTE "domain" {
          DATATYPE  H5T_STRING {
-               STRSIZE 25;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 25;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_domain-uid"
@@ -139,11 +139,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_class" {
          DATATYPE  H5T_STRING {
-               STRSIZE 8;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 8;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_fld"
@@ -158,11 +158,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_name" {
          DATATYPE  H5T_STRING {
-               STRSIZE 7;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 7;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "crd[1]"
@@ -170,11 +170,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_type" {
          DATATYPE  H5T_STRING {
-               STRSIZE 6;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 6;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "float"
@@ -203,11 +203,11 @@ GROUP "/" {
       }
       ATTRIBUTE "vec" {
          DATATYPE  H5T_STRING {
-               STRSIZE 22;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 22;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_vec-uid"
@@ -246,11 +246,11 @@ GROUP "/" {
       }
       ATTRIBUTE "domain" {
          DATATYPE  H5T_STRING {
-               STRSIZE 25;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 25;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_domain-uid"
@@ -258,11 +258,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_class" {
          DATATYPE  H5T_STRING {
-               STRSIZE 8;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 8;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_fld"
@@ -277,11 +277,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_name" {
          DATATYPE  H5T_STRING {
-               STRSIZE 7;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 7;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "crd[2]"
@@ -289,11 +289,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_type" {
          DATATYPE  H5T_STRING {
-               STRSIZE 6;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 6;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "float"
@@ -322,11 +322,11 @@ GROUP "/" {
       }
       ATTRIBUTE "vec" {
          DATATYPE  H5T_STRING {
-               STRSIZE 22;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 22;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_vec-uid"
@@ -362,11 +362,11 @@ GROUP "/" {
    GROUP "crds_gen_x-uid" {
       ATTRIBUTE "crds" {
          DATATYPE  H5T_STRING {
-               STRSIZE 23;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 23;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_crds-uid"
@@ -381,11 +381,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_class" {
          DATATYPE  H5T_STRING {
-               STRSIZE 13;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 13;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_crds_gen"
@@ -400,11 +400,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_name" {
          DATATYPE  H5T_STRING {
-               STRSIZE 11;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 11;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "crds_gen_x"
@@ -412,11 +412,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_type" {
          DATATYPE  H5T_STRING {
-               STRSIZE 8;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 8;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "uniform"
@@ -454,11 +454,11 @@ GROUP "/" {
    GROUP "crds_gen_y-uid" {
       ATTRIBUTE "crds" {
          DATATYPE  H5T_STRING {
-               STRSIZE 23;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 23;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_crds-uid"
@@ -473,11 +473,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_class" {
          DATATYPE  H5T_STRING {
-               STRSIZE 13;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 13;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_crds_gen"
@@ -492,11 +492,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_name" {
          DATATYPE  H5T_STRING {
-               STRSIZE 11;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 11;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "crds_gen_y"
@@ -504,11 +504,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_type" {
          DATATYPE  H5T_STRING {
-               STRSIZE 8;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 8;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "uniform"
@@ -546,11 +546,11 @@ GROUP "/" {
    GROUP "crds_gen_z-uid" {
       ATTRIBUTE "crds" {
          DATATYPE  H5T_STRING {
-               STRSIZE 23;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 23;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_crds-uid"
@@ -565,11 +565,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_class" {
          DATATYPE  H5T_STRING {
-               STRSIZE 13;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 13;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_crds_gen"
@@ -584,11 +584,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_name" {
          DATATYPE  H5T_STRING {
-               STRSIZE 11;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 11;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "crds_gen_z"
@@ -596,11 +596,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_type" {
          DATATYPE  H5T_STRING {
-               STRSIZE 8;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 8;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "uniform"
@@ -645,11 +645,11 @@ GROUP "/" {
       }
       ATTRIBUTE "domain" {
          DATATYPE  H5T_STRING {
-               STRSIZE 25;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 25;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_domain-uid"
@@ -657,11 +657,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_class" {
          DATATYPE  H5T_STRING {
-               STRSIZE 8;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 8;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_fld"
@@ -676,11 +676,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_name" {
          DATATYPE  H5T_STRING {
-               STRSIZE 8;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 8;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "dcrd[0]"
@@ -688,11 +688,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_type" {
          DATATYPE  H5T_STRING {
-               STRSIZE 7;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 7;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "double"
@@ -721,11 +721,11 @@ GROUP "/" {
       }
       ATTRIBUTE "vec" {
          DATATYPE  H5T_STRING {
-               STRSIZE 22;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 22;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_vec-uid"
@@ -742,11 +742,11 @@ GROUP "/" {
       }
       ATTRIBUTE "domain" {
          DATATYPE  H5T_STRING {
-               STRSIZE 25;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 25;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_domain-uid"
@@ -754,11 +754,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_class" {
          DATATYPE  H5T_STRING {
-               STRSIZE 8;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 8;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_fld"
@@ -773,11 +773,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_name" {
          DATATYPE  H5T_STRING {
-               STRSIZE 8;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 8;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "dcrd[1]"
@@ -785,11 +785,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_type" {
          DATATYPE  H5T_STRING {
-               STRSIZE 7;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 7;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "double"
@@ -818,11 +818,11 @@ GROUP "/" {
       }
       ATTRIBUTE "vec" {
          DATATYPE  H5T_STRING {
-               STRSIZE 22;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 22;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_vec-uid"
@@ -839,11 +839,11 @@ GROUP "/" {
       }
       ATTRIBUTE "domain" {
          DATATYPE  H5T_STRING {
-               STRSIZE 25;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 25;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_domain-uid"
@@ -851,11 +851,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_class" {
          DATATYPE  H5T_STRING {
-               STRSIZE 8;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 8;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_fld"
@@ -870,11 +870,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_name" {
          DATATYPE  H5T_STRING {
-               STRSIZE 8;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 8;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "dcrd[2]"
@@ -882,11 +882,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_type" {
          DATATYPE  H5T_STRING {
-               STRSIZE 7;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 7;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "double"
@@ -915,11 +915,11 @@ GROUP "/" {
       }
       ATTRIBUTE "vec" {
          DATATYPE  H5T_STRING {
-               STRSIZE 22;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 22;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_vec-uid"
@@ -929,11 +929,11 @@ GROUP "/" {
    GROUP "m3" {
       ATTRIBUTE "m3" {
          DATATYPE  H5T_STRING {
-               STRSIZE 22;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 22;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "test_m3-uid"
@@ -943,11 +943,11 @@ GROUP "/" {
    GROUP "mrc_crds-uid" {
       ATTRIBUTE "crd[0]" {
          DATATYPE  H5T_STRING {
-               STRSIZE 21;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 21;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "crd[0]-uid"
@@ -955,11 +955,11 @@ GROUP "/" {
       }
       ATTRIBUTE "crd[1]" {
          DATATYPE  H5T_STRING {
-               STRSIZE 21;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 21;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "crd[1]-uid"
@@ -967,11 +967,11 @@ GROUP "/" {
       }
       ATTRIBUTE "crd[2]" {
          DATATYPE  H5T_STRING {
-               STRSIZE 21;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 21;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "crd[2]-uid"
@@ -979,11 +979,11 @@ GROUP "/" {
       }
       ATTRIBUTE "crds_gen_x" {
          DATATYPE  H5T_STRING {
-               STRSIZE 25;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 25;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "crds_gen_x-uid"
@@ -991,11 +991,11 @@ GROUP "/" {
       }
       ATTRIBUTE "crds_gen_y" {
          DATATYPE  H5T_STRING {
-               STRSIZE 25;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 25;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "crds_gen_y-uid"
@@ -1003,11 +1003,11 @@ GROUP "/" {
       }
       ATTRIBUTE "crds_gen_z" {
          DATATYPE  H5T_STRING {
-               STRSIZE 25;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 25;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "crds_gen_z-uid"
@@ -1015,11 +1015,11 @@ GROUP "/" {
       }
       ATTRIBUTE "dcrd[0]" {
          DATATYPE  H5T_STRING {
-               STRSIZE 22;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 22;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "dcrd[0]-uid"
@@ -1027,11 +1027,11 @@ GROUP "/" {
       }
       ATTRIBUTE "dcrd[1]" {
          DATATYPE  H5T_STRING {
-               STRSIZE 22;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 22;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "dcrd[1]-uid"
@@ -1039,11 +1039,11 @@ GROUP "/" {
       }
       ATTRIBUTE "dcrd[2]" {
          DATATYPE  H5T_STRING {
-               STRSIZE 22;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 22;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "dcrd[2]-uid"
@@ -1051,11 +1051,11 @@ GROUP "/" {
       }
       ATTRIBUTE "domain" {
          DATATYPE  H5T_STRING {
-               STRSIZE 25;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 25;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_domain-uid"
@@ -1077,11 +1077,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_class" {
          DATATYPE  H5T_STRING {
-               STRSIZE 9;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 9;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_crds"
@@ -1096,11 +1096,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_name" {
          DATATYPE  H5T_STRING {
-               STRSIZE 9;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 9;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_crds"
@@ -1108,11 +1108,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_type" {
          DATATYPE  H5T_STRING {
-               STRSIZE 8;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 8;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "uniform"
@@ -1129,11 +1129,11 @@ GROUP "/" {
    GROUP "mrc_ddc-uid" {
       ATTRIBUTE "domain" {
          DATATYPE  H5T_STRING {
-               STRSIZE 25;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 25;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_domain-uid"
@@ -1155,11 +1155,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_class" {
          DATATYPE  H5T_STRING {
-               STRSIZE 8;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 8;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_ddc"
@@ -1174,11 +1174,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_name" {
          DATATYPE  H5T_STRING {
-               STRSIZE 8;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 8;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_ddc"
@@ -1186,11 +1186,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_type" {
          DATATYPE  H5T_STRING {
-               STRSIZE 6;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 6;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "multi"
@@ -1228,11 +1228,11 @@ GROUP "/" {
       }
       ATTRIBUTE "crds" {
          DATATYPE  H5T_STRING {
-               STRSIZE 23;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 23;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_crds-uid"
@@ -1247,11 +1247,11 @@ GROUP "/" {
       }
       ATTRIBUTE "ddc" {
          DATATYPE  H5T_STRING {
-               STRSIZE 22;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 22;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_ddc-uid"
@@ -1273,11 +1273,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_class" {
          DATATYPE  H5T_STRING {
-               STRSIZE 11;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 11;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_domain"
@@ -1292,11 +1292,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_name" {
          DATATYPE  H5T_STRING {
-               STRSIZE 11;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 11;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_domain"
@@ -1304,11 +1304,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_type" {
          DATATYPE  H5T_STRING {
-               STRSIZE 6;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 6;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "multi"
@@ -1335,222 +1335,6 @@ GROUP "/" {
          (0): 2
          }
       }
-      GROUP "p0" {
-         ATTRIBUTE "idx3" {
-            DATATYPE  H5T_STD_I32LE
-            DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-            DATA {
-            (0): 0, 0, 0
-            }
-         }
-         ATTRIBUTE "ldims" {
-            DATATYPE  H5T_STD_I32LE
-            DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-            DATA {
-            (0): 11, 16, 32
-            }
-         }
-         ATTRIBUTE "off" {
-            DATATYPE  H5T_STD_I32LE
-            DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-            DATA {
-            (0): 0, 0, 0
-            }
-         }
-         ATTRIBUTE "sfc_idx" {
-            DATATYPE  H5T_STD_I32LE
-            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-            DATA {
-            (0): 0
-            }
-         }
-      }
-      GROUP "p1" {
-         ATTRIBUTE "idx3" {
-            DATATYPE  H5T_STD_I32LE
-            DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-            DATA {
-            (0): 1, 0, 0
-            }
-         }
-         ATTRIBUTE "ldims" {
-            DATATYPE  H5T_STD_I32LE
-            DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-            DATA {
-            (0): 11, 16, 32
-            }
-         }
-         ATTRIBUTE "off" {
-            DATATYPE  H5T_STD_I32LE
-            DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-            DATA {
-            (0): 11, 0, 0
-            }
-         }
-         ATTRIBUTE "sfc_idx" {
-            DATATYPE  H5T_STD_I32LE
-            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-            DATA {
-            (0): 1
-            }
-         }
-      }
-      GROUP "p2" {
-         ATTRIBUTE "idx3" {
-            DATATYPE  H5T_STD_I32LE
-            DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-            DATA {
-            (0): 2, 0, 0
-            }
-         }
-         ATTRIBUTE "ldims" {
-            DATATYPE  H5T_STD_I32LE
-            DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-            DATA {
-            (0): 11, 16, 32
-            }
-         }
-         ATTRIBUTE "off" {
-            DATATYPE  H5T_STD_I32LE
-            DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-            DATA {
-            (0): 22, 0, 0
-            }
-         }
-         ATTRIBUTE "sfc_idx" {
-            DATATYPE  H5T_STD_I32LE
-            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-            DATA {
-            (0): 2
-            }
-         }
-      }
-      GROUP "p3" {
-         ATTRIBUTE "idx3" {
-            DATATYPE  H5T_STD_I32LE
-            DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-            DATA {
-            (0): 0, 1, 0
-            }
-         }
-         ATTRIBUTE "ldims" {
-            DATATYPE  H5T_STD_I32LE
-            DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-            DATA {
-            (0): 11, 16, 32
-            }
-         }
-         ATTRIBUTE "off" {
-            DATATYPE  H5T_STD_I32LE
-            DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-            DATA {
-            (0): 0, 16, 0
-            }
-         }
-         ATTRIBUTE "sfc_idx" {
-            DATATYPE  H5T_STD_I32LE
-            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-            DATA {
-            (0): 3
-            }
-         }
-      }
-      GROUP "p4" {
-         ATTRIBUTE "idx3" {
-            DATATYPE  H5T_STD_I32LE
-            DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-            DATA {
-            (0): 1, 1, 0
-            }
-         }
-         ATTRIBUTE "ldims" {
-            DATATYPE  H5T_STD_I32LE
-            DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-            DATA {
-            (0): 11, 16, 32
-            }
-         }
-         ATTRIBUTE "off" {
-            DATATYPE  H5T_STD_I32LE
-            DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-            DATA {
-            (0): 11, 16, 0
-            }
-         }
-         ATTRIBUTE "sfc_idx" {
-            DATATYPE  H5T_STD_I32LE
-            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-            DATA {
-            (0): 4
-            }
-         }
-      }
-      GROUP "p5" {
-         ATTRIBUTE "idx3" {
-            DATATYPE  H5T_STD_I32LE
-            DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-            DATA {
-            (0): 2, 1, 0
-            }
-         }
-         ATTRIBUTE "ldims" {
-            DATATYPE  H5T_STD_I32LE
-            DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-            DATA {
-            (0): 11, 16, 32
-            }
-         }
-         ATTRIBUTE "off" {
-            DATATYPE  H5T_STD_I32LE
-            DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-            DATA {
-            (0): 22, 16, 0
-            }
-         }
-         ATTRIBUTE "sfc_idx" {
-            DATATYPE  H5T_STD_I32LE
-            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-            DATA {
-            (0): 5
-            }
-         }
-      }
-      GROUP "rank_0" {
-         ATTRIBUTE "nr_patches" {
-            DATATYPE  H5T_STD_I32LE
-            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-            DATA {
-            (0): 2
-            }
-         }
-      }
-      GROUP "rank_1" {
-         ATTRIBUTE "nr_patches" {
-            DATATYPE  H5T_STD_I32LE
-            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-            DATA {
-            (0): 2
-            }
-         }
-      }
-      GROUP "rank_2" {
-         ATTRIBUTE "nr_patches" {
-            DATATYPE  H5T_STD_I32LE
-            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-            DATA {
-            (0): 1
-            }
-         }
-      }
-      GROUP "rank_3" {
-         ATTRIBUTE "nr_patches" {
-            DATATYPE  H5T_STD_I32LE
-            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-            DATA {
-            (0): 1
-            }
-         }
-      }
    }
    GROUP "test_m3-uid" {
       ATTRIBUTE "dim" {
@@ -1562,11 +1346,11 @@ GROUP "/" {
       }
       ATTRIBUTE "domain" {
          DATATYPE  H5T_STRING {
-               STRSIZE 25;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 25;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_domain-uid"
@@ -1574,11 +1358,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_class" {
          DATATYPE  H5T_STRING {
-               STRSIZE 8;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 8;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_fld"
@@ -1593,11 +1377,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_name" {
          DATATYPE  H5T_STRING {
-               STRSIZE 8;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 8;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "test_m3"
@@ -1605,11 +1389,11 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_type" {
          DATATYPE  H5T_STRING {
-               STRSIZE 6;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 6;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "float"
@@ -1645,11 +1429,11 @@ GROUP "/" {
       }
       ATTRIBUTE "vec" {
          DATATYPE  H5T_STRING {
-               STRSIZE 22;
-               STRPAD H5T_STR_NULLTERM;
-               CSET H5T_CSET_ASCII;
-               CTYPE H5T_C_S1;
-            }
+            STRSIZE 22;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_vec-uid"
