@@ -79,8 +79,8 @@ struct mrc_io_vpic_global {
   float delta_t;
   float cvac;
   float eps;
-  float extents[3][2];
-  float delta_x[3];
+  double extents[3][2];
+  double delta_x[3];
   int topology[3];
 };
 
@@ -293,11 +293,11 @@ mrc_io_vpic_write_fld_global(struct mrc_io *io, struct mrc_fld *fld)
   struct mrc_domain *domain = fld->_domain;
   mrc_domain_get_param_int3(domain, "np", g->topology);
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
-  float xl[3], xh[3];
+  double xl[3], xh[3];
   // FIXME: "base" only really makes sense for amr..
   mrc_crds_get_dx_base(crds, g->delta_x);
-  mrc_crds_get_param_float3(crds, "l", xl);
-  mrc_crds_get_param_float3(crds, "h", xh);
+  mrc_crds_get_param_double3(crds, "l", xl);
+  mrc_crds_get_param_double3(crds, "h", xh);
   for (int d = 0; d < 3; d++) {
     g->extents[d][0] = xl[d];
     g->extents[d][1] = xh[d];
@@ -396,7 +396,7 @@ mrc_io_vpic_write_header(struct mrc_io *io, FILE *file, struct mrc_fld *fld, int
   int dumpTime = io->step;
   const int *gridSize = mrc_fld_dims(fld); // FIXME mrc_fld_spatial_dims()
   float deltaTime = sub->global.delta_t;
-  float gridStep[DIMENSION];
+  double gridStep[DIMENSION];
   // FIXME: base only really makes sense for AMR
   mrc_crds_get_dx_base(crds, gridStep);
   float gridOrigin[DIMENSION] = { 0., 0., 0. }; // FIXME?
@@ -417,7 +417,7 @@ mrc_io_vpic_write_header(struct mrc_io *io, FILE *file, struct mrc_fld *fld, int
   fwrite(&dumpTime, sizeof(int), 1, file);
   fwrite(gridSize, sizeof(int), DIMENSION, file);
   fwrite(&deltaTime, sizeof(float), 1, file);
-  fwrite(gridStep, sizeof(float), DIMENSION, file);
+  fwrite(gridStep, sizeof(double), DIMENSION, file);
   fwrite(gridOrigin, sizeof(float), DIMENSION, file);
   fwrite(&cvac, sizeof(float), 1, file);
   fwrite(&epsilon, sizeof(float), 1, file);
