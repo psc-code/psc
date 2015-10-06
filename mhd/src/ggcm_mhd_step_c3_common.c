@@ -820,7 +820,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
   push_ej_c(step, dt, x_curr, prim, x_next);
 
   calce_c(step, E, x_curr, prim, dt);
-  ggcm_mhd_fill_ghosts_E(mhd, E);
+  //  ggcm_mhd_fill_ghosts_E(mhd, E);
   update_ct(mhd, x_next, E, dt, true);
 
   ggcm_mhd_put_3d_fld(mhd, E);
@@ -966,7 +966,7 @@ ggcm_mhd_step_c3_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
   ggcm_mhd_step_c3_primvar(step, prim, x);
   zmaskn(step->mhd, zmask, 0, ymask, 0, x);
   calce_c(step, E, x, prim, mhd->dt);
-  ggcm_mhd_fill_ghosts_E(mhd, E);
+  //  ggcm_mhd_fill_ghosts_E(mhd, E);
   
   ggcm_mhd_put_3d_fld(mhd, prim);
   mrc_fld_put_as(E, Eout);
