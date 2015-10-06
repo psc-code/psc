@@ -1065,6 +1065,9 @@ mrc_obj_read2(struct mrc_obj *obj, struct mrc_io *io, const char *path)
   if (obj->ops && obj->ops->read) {
     obj->ops->read(obj, io);
   } else {
+    // This change to call order makes it more consistent with C++,
+    // which implicitly calls base class constructors before 
+    // derived class constructors
     mrc_obj_read_super(obj, io);
     if (obj->ops && obj->ops->create) {
       obj->ops->create(obj);
