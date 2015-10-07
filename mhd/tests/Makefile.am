@@ -20,6 +20,9 @@ check_PROGRAMS = \
 
 LDADD = ../src/libmhd.la ../../src/libmrc.la
 
+TEST_EXTENSIONS = .sh
+SH_LOG_COMPILER = bash
+
 TESTS = \
 	test_ggcm_mhd_crds \
 	test_ggcm_mhd \

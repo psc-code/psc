@@ -142,3 +142,25 @@ libmhd_la_LIBADD += \
 	-L$(GKSOFTWARE)/lapack/lib -llapack -lblas
 endif
 
+noinst_HEADERS = \
+	LcRegisterModules.h \
+	mhd_util.h
+
+EXTRA_libmhd_la_SOURCES = \
+	ggcm_mhd_bnd_conducting_y_common.c \
+	ggcm_mhd_bnd_inoutflow_common.c \
+	ggcm_mhd_bnd_sphere_common.c \
+	ggcm_mhd_convert_common.c \
+	ggcm_mhd_step_c2_common.c \
+	ggcm_mhd_step_c3_common.c \
+	ggcm_mhd_step_c_common.c \
+	ggcm_mhd_step_legacy.c \
+	mhd_1d.c \
+	mhd_3d.c \
+	mhd_reconstruct_pcm_common.c \
+	mhd_reconstruct_plm_common.c \
+	mhd_riemann_rusanov_common.c \
+	mhd_sc.c \
+	primbb_common.c \
+	primvar_common.c \
+	zmaskn_common.c

@@ -1,6 +1,8 @@
 
 AM_CPPFLAGS = -I$(srcdir)/../include
 
+EXTRA_DIST = reference_results
+
 check_PROGRAMS = \
 	test_mrc_obj \
 	test_io \

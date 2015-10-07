@@ -91,3 +91,10 @@ endif HAVE_PETSC
 libmrctest_la_SOURCES = \
 	mrctest.c
 
+EXTRA_libmrc_la_SOURCES = \
+	mrc_fld_common.c
+
+noinst_HEADERS = \
+	hilbert.h \
+	mrc_io_xdmf_lib.h \
+	rkf45_butcher.h

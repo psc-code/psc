@@ -187,8 +187,13 @@ AC_CONFIG_FILES([Makefile
 		 tests/test_mrc_f3_0.sh
 		 tests/test_mrc_f3_1.sh
 		 tests/test_mrc_f3_2.sh
+		 mhd/tests/test_mhd_wave_cpaw.sh
 		 mhd/tests/mhd_wave_cpaw.sh
+		 mhd/tests/mhd_wave_cpaw_amr.sh
 		 mhd/tests/check_wave_cpaw.py
+		 mhd/tests/mhd_ot.sh
+		 mhd/tests/mhd_bw.sh
+		 mhd/tests/mhd_double_tearing_x.sh
 ])
 
 AC_OUTPUT
