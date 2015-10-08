@@ -14,6 +14,7 @@ static struct mrc_fld *
 setup_with_domain(struct mrc_domain *domain)
 {
   struct mrc_fld *fld = mrc_domain_fld_create(domain, sw, "1,2,3,4,5,6");
+  //struct mrc_fld *fld = mrc_domain_fld_create(domain, sw, NULL);
   //  mrc_fld_set_param_int_array(fld, "offs", 5, (int [5]) { 0, 2, 3, 0, 0 });
   mrc_fld_set_from_options(fld);
   mrc_fld_setup(fld);
@@ -84,6 +85,21 @@ check_standard(struct mrc_fld *fld1, struct mrc_fld *fld2)
 	  }
 	}
       }
+    }
+  }
+
+  assert(fld1->_nr_allocated_comp_name == fld2->_nr_allocated_comp_name);
+
+  for (int m = 0; m < fld1->_nr_allocated_comp_name; m++) {
+    const char *name1 = mrc_fld_comp_name(fld1, m);
+    const char *name2 = mrc_fld_comp_name(fld2, m);
+    // Check if both names are NULL (or the same memory location)
+    if ( name1 != name2) {
+      // Make sure neither one individually is NULL
+      assert(name1);
+      assert(name2);
+      // Compare the actual text
+      assert(strcmp(name1, name2) == 0);
     }
   }
 }
