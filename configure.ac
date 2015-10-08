@@ -171,7 +171,7 @@ AC_CONFIG_FILES([Makefile
 		 tests/test_mrc_domain_mb_0.sh
 		 tests/test_mrc_fld.sh
 		 tests/test_mrc_fld_io_xdmf_collective.sh
-		 tests/test_mrc_fld_io_xdmf2_parallel.sh
+		 tests/test_mrc_fld_io_xdmf2.sh
 		 tests/test_mrc_fld_io_hdf5_serial.sh
 		 tests/test_mrc_fld_io_hdf5_parallel.sh
 		 tests/test_mrc_fld_io_ascii.sh

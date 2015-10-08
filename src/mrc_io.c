@@ -674,13 +674,17 @@ mrc_io_init()
   mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_hdf5_serial_ops);
 #ifdef H5_HAVE_PARALLEL
   mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_xdmf_parallel_ops);
-  mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_xdmf2_parallel_ops);
   mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_hdf5_parallel_ops);
 #endif
 #endif
   mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_ascii_ops);
   mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_vpic_ops);
   mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_combined_ops);
+  // ========================================
+  // Deprecated / eternally broken io types (FIXME)
+  // ====================
+  // mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_xdmf2_parallel_ops);
+
 }
 
 // ======================================================================
