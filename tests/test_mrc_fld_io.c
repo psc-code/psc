@@ -99,7 +99,7 @@ check_standard(struct mrc_fld *fld1, struct mrc_fld *fld2)
       }
     }
   }
-  mprintf("%d %d\n", fld1->_nr_allocated_comp_name, fld2->_nr_allocated_comp_name);
+
   assert(fld1->_nr_allocated_comp_name == fld2->_nr_allocated_comp_name);
 
   for (int m = 0; m < fld1->_nr_allocated_comp_name; m++) {

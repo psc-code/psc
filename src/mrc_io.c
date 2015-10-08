@@ -166,6 +166,18 @@ mrc_io_read_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
   } else {
     assert(0);
   }
+  // FIXME: To save/recover comp names, just write them as attributes
+  for ( int m=0; m < mrc_fld_nr_comps(fld); m++) {
+    char comp_label[100];
+    sprintf(comp_label, "comp_name_%d", m);
+    char *comp_name = NULL;
+    // FIXME: Is the string memory returned from this leaked?
+    mrc_io_read_attr_string(io, path, (const char *) comp_label, &comp_name);
+    if (comp_name) {
+      mrc_fld_set_comp_name(fld, m, (const char *) comp_name);
+      free(comp_name); // I think this free is needed, otherwise we leak the returned memory
+    }
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -187,6 +199,12 @@ mrc_io_write_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
     MHERE;
   } else {
     assert(0);
+  }
+  // FIXME: To save/recover comp names, just write them as attributes
+  for ( int m=0; m < mrc_fld_nr_comps(fld); m++) {
+    char comp_label[100];
+    sprintf(comp_label, "comp_name_%d", m);
+    mrc_io_write_attr_string(io, path, (const char *) comp_label, mrc_fld_comp_name(fld, m));
   }
 }
 

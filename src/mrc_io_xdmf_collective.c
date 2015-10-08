@@ -261,8 +261,8 @@ xdmf_collective_read_attr(struct mrc_io *io, const char *path, int type,
       pv->u_string = malloc(sz);
       ierr = H5LTget_attribute_string(group, ".", name, (char *)pv->u_string); CE;
       if (strcmp(pv->u_string, "(NULL)") == 0) {
-	free((char *) pv->u_string);
-	pv->u_string = NULL;
+      	free((char *) pv->u_string);
+      	pv->u_string = NULL;
       }
       break;
     case PT_INT3:
@@ -317,9 +317,15 @@ xdmf_collective_read_attr(struct mrc_io *io, const char *path, int type,
   case PT_STRING: ;
     int len;
     if (io->rank == root) {
-      len = strlen(pv->u_string);
+      len = pv->u_string ? strlen(pv->u_string) : 0;
     }
     MPI_Bcast(&len, 1, MPI_INT, root, comm);
+
+    if (!len) {
+      pv->u_string = NULL;
+      break;
+    }
+
     if (io->rank != root) {
       pv->u_string = malloc(len + 1);
     }
