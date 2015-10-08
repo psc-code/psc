@@ -22,6 +22,18 @@ setup_with_domain(struct mrc_domain *domain)
   return(fld);
 }
 
+static struct mrc_fld *
+setup_with_domain_nameless_comps(struct mrc_domain *domain)
+{
+  struct mrc_fld *fld = mrc_domain_fld_create(domain, sw, NULL);
+  //  mrc_fld_set_param_int_array(fld, "offs", 5, (int [5]) { 0, 2, 3, 0, 0 });
+  mrc_fld_set_from_options(fld);
+  mrc_fld_set_param_int(fld, "nr_comps", 6);
+  mrc_fld_setup(fld);
+  //mrc_fld_view(fld);
+  return(fld);
+}
+
 static void
 init_standard(struct mrc_fld *fld)
 {
@@ -87,7 +99,7 @@ check_standard(struct mrc_fld *fld1, struct mrc_fld *fld2)
       }
     }
   }
-
+  mprintf("%d %d\n", fld1->_nr_allocated_comp_name, fld2->_nr_allocated_comp_name);
   assert(fld1->_nr_allocated_comp_name == fld2->_nr_allocated_comp_name);
 
   for (int m = 0; m < fld1->_nr_allocated_comp_name; m++) {
@@ -120,7 +132,16 @@ main(int argc, char **argv)
   //  mrc_domain_view(domain);
 
   //struct mrc_fld *fld = setup_without_domain();
-  struct mrc_fld *fld = setup_with_domain(domain);
+  bool nameless = false;
+  mrc_params_get_option_bool("nameless", &nameless);
+
+  struct mrc_fld *fld;
+  if ( nameless ) {
+    fld = setup_with_domain_nameless_comps(domain);
+  } else {
+    fld = setup_with_domain(domain);
+  }
+
   init_standard(fld);
 
 
