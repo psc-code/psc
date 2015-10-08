@@ -1,22 +1,5 @@
 #! /bin/bash
 
-ESTATUS=0
 IOTYPE="hdf5_serial"
 
-for fldtype in "float" "float_aos" "double" "double_aos" "int"
-do
-    echo "Testing ${fldtype}"
-    @MPIRUN@ -n 1 ./test_mrc_fld_io --mrc_fld_type ${fldtype} \
-	--mrc_io_type ${IOTYPE}
-    teststatus=$?
-    if test $teststatus -ne 0
-	then
-	echo "FAILED"
-	ESTATUS=${teststatus}
-    else
-	echo "PASSED"
-    fi
-
-done
-
-exit $ESTATUS
+source templates/mrc_fld_io_checks
