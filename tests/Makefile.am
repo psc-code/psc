@@ -81,6 +81,7 @@ TESTS = \
 	test_mrc_ddc_1.sh
 
 XFAIL_TESTS = \
+	test_mrc_fld_io_xdmf_serial.sh \
 	test_mrc_m3_3.sh \
 	test_mrc_m3_5.sh \
 	test_mrc_fld_io_ascii.sh
