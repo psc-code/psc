@@ -129,7 +129,7 @@ main(int argc, char **argv)
   }
   
   //////
-  int rank, size;
+  int rank;
   MPI_Comm_rank(mrc_fld_comm(x), &rank);
   int _r = 2;
   // this test to see if _r is local only works if y is evenly
