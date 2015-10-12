@@ -1236,7 +1236,7 @@ collective_write_fld(struct collective_m3_ctx *ctx, struct mrc_io *io,
     compname = (const char *) default_name;
   }
 
-  xdmf_spatial_save_fld_info(xs, strdup(compname), strdup(path), false);
+  xdmf_spatial_save_fld_info(xs, strdup(compname), strdup(path), false, m3->_data_type);
 
   hid_t group_fld = H5Gcreate(group0, compname, H5P_DEFAULT,
 			      H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group_fld);
