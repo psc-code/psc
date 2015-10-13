@@ -379,7 +379,11 @@ int mrc_obj_print_class_info(int verbosity);
   {                                                                     \
     return mrc_obj_get_param_float_array((struct mrc_obj *)obj, name, vals); \
   }                                                                     \
-                                                                        \
+  static inline int                                                    \
+  pfx ## _get_param_ptr(obj_type *obj, const char *name, void **pval)  \
+  {                                                                    \
+    return mrc_obj_get_param_ptr((struct mrc_obj *)obj, name, pval);    \
+  }                                                                     \
   static inline void                                                    \
   pfx ## _get_var(obj_type *obj, const char *name, union param_u **pv)  \
   {                                                                     \
