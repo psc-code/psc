@@ -772,55 +772,33 @@ mrc_ddc_mb_fill_ghosts_fld(struct mrc_ddc *ddc, int mb, int me,
 }
 
 // ======================================================================
-// mrc_ddc_multi_ops
-
-#define VAR(x) (void *)offsetof(struct mrc_ddc_mb, x)
-static struct param mrc_ddc_mb_descr[] = {
-  { "domain"          , VAR(domain)       , PARAM_OBJ(mrc_domain) },
-  {},
-};
-#undef VAR
-
-struct mrc_ddc_ops mrc_ddc_mb_ops = {
-  .name                  = "mb",
-  .size                  = sizeof(struct mrc_ddc_mb),
-  .param_descr           = mrc_ddc_mb_descr,
-  .destroy               = _mrc_ddc_mb_destroy,
-  .set_domain            = mrc_ddc_mb_set_domain,
-  .get_domain            = mrc_ddc_mb_get_domain,
-  .fill_ghosts_fld       = mrc_ddc_mb_fill_ghosts_fld,
-  .global_to_local_fld   = mrc_ddc_mb_global_to_local_fld,
-  .fill_ghost_edges_fld  = mrc_ddc_mb_fill_ghost_edges_fld,
-};
+// Methods
+// ====================
+// These are some functions particular to the MB domain that map patches
+// and indices across boundaries taking into account the block mappings.
+// They could use a better name and API, and intrinsically rely on petsc
+// at the moment.
 
 
-
-// ======================================================================
-// ======================================================================
-// FIXME: These matrix bits don't belong here at all, but they rely on ddc
-// internals to figure out where things belong in matrices. Until we have
-// a proper matrix class, and it makes sense to have ddc matrix hooks, we'll
-// have to keep them here.
-#include <mrc_mat.h>
-
-// ======================================================================
-// MB_MatSetValue
-
-// Bad name, can't think of a better one.
-// Replaces __I3g macro from old code.
-// maybe this better belongs in the domain? Dunno.
-// lpatch here is the LOCAL patch index
-int mrc_matrix_find_global_index(struct mrc_domain *domain, 
-				 int lpatch, 
-				 int jx, int jy, int jz)
+// Maps from the local patch (lpatch) interior coordinates to the global
+// domain coordinates. Note this is not field specific.
+// Used to be called mrc_matrix_find_global_index
+static int
+map_patch_interior_index_to_global(struct mrc_domain *domain, 
+         int lpatch, 
+         int jx, int jy, int jz)
 {
   struct mrc_domain_mb *mb = mrc_domain_mb(domain);
   return get_world_array_index(domain, mb->gpatch_off + lpatch,
-			       (int[3]){0,0,0}, jx, jy, jz);
+             (int[3]){0,0,0}, jx, jy, jz);
 }
 
-static inline int
-MB_get_index(struct mrc_domain *mb, int k1, int i1x, int i1y, int i1z)
+// Maps from an arbitrary coordinate relative to global patch k1 to some interior
+// point in the global array. Unlike the above function this one will map points
+// exterior to a given patch into their appropriate place in the domain.
+// Used to be called MB_get_index
+static int
+map_global_patch_index_to_global(struct mrc_domain *mb, int k1, int i1x, int i1y, int i1z)
 {
   int i1[3] = { i1x, i1y, i1z }, k2, i2[3];
   int ierr = mb_patch_map_to_interior(mb, k1, i1, &k2, i2);
@@ -830,133 +808,31 @@ MB_get_index(struct mrc_domain *mb, int k1, int i1x, int i1y, int i1z)
   return get_world_array_index(mb,k2,(int[3]){0,0,0}, i2[0], i2[1], i2[2]);
 }
 
-// FIXME bc arg never used
-// k is GLOBAL patch number
-int
-mrc_matrix_set_value(struct mrc_domain *mb, Mat mat, int bs, int im, int ig, 
-	       int k, int jm, int jx, int jy, int jz,
-	       double val)
-{
-  int ierr;
+// ======================================================================
+// mrc_ddc_multi_ops
 
-  pfb;
-#warning FIXME, not here and look at patch bnd
-  struct mrc_domain_mb *sub = mrc_domain_mb(mb);
-  struct mrc_patch_info *info = &sub->patch_info[k];
-  if (jx < 0) {
-    if (info->p_pface[FACE_LEFT].pf_btype == BTYPE_SP) {
-      switch (jm) {
-      case 3:
-      case 4:
-      case 6:
-      case 7:
-	val *= -1.;
-	break;
-      }
-    }
-  }
+#define VAR(x) (void *)offsetof(struct mrc_ddc_mb, x)
+static struct param mrc_ddc_mb_descr[] = {
+  { "domain"          , VAR(domain)       , PARAM_OBJ(mrc_domain) },
+  {},
+};
+#undef VAR
 
-  int jg = MB_get_index(mb, k, jx, jy, jz);
-  assert(jg >= 0);
-  
-  // This whole branch will break in most instances, so
-  // I'm just going to comment it out and remove the 
-  // MB_bc from this function call.
-#if 0
-  if (jg < 0) {
-    int j[3] = { jx, jy, jz };
-    // FIXME? the answer is not unique (edges/corners)
-    int f = MB_find_face(mb, k, j);
-    int dir = face2dir(f), bnd = face2bnd(f);
-    int btype = sub->patches[k].p_pface[f].pf_btype;
+static struct mrc_obj_method mrc_ddc_mb_methods[] = {
+  MRC_OBJ_METHOD("map_patch_interior_index_to_global", map_patch_interior_index_to_global),
+  MRC_OBJ_METHOD("map_global_patch_index_to_global", map_global_patch_index_to_global),
+  {}
+};
 
-    switch (bc[btype].bc[jm]) {
-    case BC_DIRICHLET:
-    case BC_NEUMANN:
-      if (bnd == 0) {
-	ASSERT(j[dir] == -1);
- 	j[dir]++;
-      } else {
-	ASSERT(j[dir] == sub->patches[k].ldims[dir]);
-	j[dir]--;
-      }
-      jg = MB_get_index(mb, k, j[0], j[1], j[2]);
-      ASSERT(jg >= 0);
-      if (bc[btype].bc[jm] == BC_DIRICHLET) {
-	val = -val;
-      }
-      break;
-    default:
-      ASSERT(0);
-    }
-  }
-#endif
-  ierr = MatSetValue(mat, ig*bs+im, jg*bs+jm, val, ADD_VALUES); CE;
-  pfr;
-}
-
-// FIXME bc arg never used
-int
-__mrc_matrix_set_value(struct mrc_domain *mb, Mat mat, int bs, int im, int ig, 
-		 int k, int jm, int jx, int jy, int jz,
-		 double val, struct mat_create_ctx *mc)
-{
-  int ierr;
-
-  pfb;
-#if 1
-#warning FIXME, not here and look at patch bnd
-  struct mrc_domain_mb *sub = mrc_domain_mb(mb);
-  struct mrc_patch_info *info = &sub->patch_info[k];
-  if (jx < 0) {
-    if (info->p_pface[FACE_LEFT].pf_btype == BTYPE_SP) {
-      switch (jm) {
-      case 3:
-      case 4:
-      case 6:
-      case 7:
-	val *= -1.;
-      }
-    }
-  }
-#endif
-  int jg = MB_get_index(mb, k, jx, jy, jz);
-  assert(jg >= 0);
-
-  // This whole branch will break in most instances, so
-  // I'm just going to comment it out and remove the 
-  // MB_bc from this function call.
-#if 0
-  if (jg < 0) {
-    int j[3] = { jx, jy, jz };
-    // FIXME? the answer is not unique (edges/corners)
-    int f = MB_find_face(mb, k, j);
-    int dir = face2dir(f), bnd = face2bnd(f);
-    int btype = sub->patches[k].p_pface[f].pf_btype;
-    printf("jx = %d btype = %d\n", jx, btype);
-
-    switch (bc[btype].bc[jm]) {
-    case BC_DIRICHLET:
-    case BC_NEUMANN:
-      if (bnd == 0) {
-	ASSERT(j[dir] == -1);
-	j[dir]++;
-      } else {
-	ASSERT(j[dir] == sub->patches[k].ldims[dir]);
-	j[dir]--;
-      }
-      jg = MB_get_index(mb, k, j[0], j[1], j[2]);
-      ASSERT(jg >= 0);
-      if (bc[btype].bc[jm] == BC_DIRICHLET) {
-	val = -val;
-      }
-      break;
-    default:
-      ASSERT(0);
-    }
-  }
-#endif 
-  ierr = __MatSetValue(mat, ig*bs+im, jg*bs+jm, val, ADD_VALUES, mc); CE;
-  pfr;
-}
-
+struct mrc_ddc_ops mrc_ddc_mb_ops = {
+  .name                  = "mb",
+  .size                  = sizeof(struct mrc_ddc_mb),
+  .param_descr           = mrc_ddc_mb_descr,
+  .methods               = mrc_ddc_mb_methods,
+  .destroy               = _mrc_ddc_mb_destroy,
+  .set_domain            = mrc_ddc_mb_set_domain,
+  .get_domain            = mrc_ddc_mb_get_domain,
+  .fill_ghosts_fld       = mrc_ddc_mb_fill_ghosts_fld,
+  .global_to_local_fld   = mrc_ddc_mb_global_to_local_fld,
+  .fill_ghost_edges_fld  = mrc_ddc_mb_fill_ghost_edges_fld,
+};
