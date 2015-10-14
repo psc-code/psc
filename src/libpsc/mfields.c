@@ -210,8 +210,8 @@ psc_mfields_write_as_mrc_fld(struct psc_mfields *mflds, struct mrc_io *io)
 {
   struct mrc_fld *fld = mrc_domain_m3_create(ppsc->mrc_domain);
   mrc_fld_set_name(fld, psc_mfields_name(mflds));
-  mrc_fld_set_sw(fld, 2);
-  mrc_fld_set_nr_comps(fld, mflds->nr_fields);
+  mrc_fld_set_param_int(fld, "nr_ghosts", 2);
+  mrc_fld_set_param_int(fld, "nr_comps", mflds->nr_fields);
   mrc_fld_setup(fld);
   for (int m = 0; m < mrc_fld_nr_comps(fld); m++) {
       mrc_fld_set_comp_name(fld, m, psc_mfields_comp_name(mflds, m));
