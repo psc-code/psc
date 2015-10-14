@@ -80,6 +80,20 @@ AS_IF([test "$have_hdf5" != "no"],
       [AC_DEFINE([HAVE_HDF5], [], [we have HDF5 library + headers])])
 AM_CONDITIONAL([HAVE_HDF5], [test "$have_hdf5" != "no"])
 
+# check for gkeyll
+
+AC_ARG_WITH([gkeyll],AS_HELP_STRING([--with-gkeyll=dir], [Build with GKEYLL coupling]),
+[], [with_gkeyll=no])
+
+have_gkeyll=no
+AS_IF([test "x$with_gkeyll" != "xno"],
+  [GKSOFTWARE="$with_gkeyll/.."
+   AC_SUBST(GKSOFTWARE)
+   have_gkeyll=yes
+   AC_DEFINE([HAVE_GKEYLL], [], [we have GKEYLL library + headers])
+  ])
+AM_CONDITIONAL([HAVE_GKEYLL], [test "$have_gkeyll" != "no"])
+
 # check for PAPI
 AC_ARG_WITH([papi],AS_HELP_STRING([--without-papi], [Disable PAPI]))
 
@@ -106,6 +120,12 @@ AS_IF([test "$have_petsc" != "no"],
       [AC_DEFINE([HAVE_PETSC], [], [we have petsc library + headers])])
 AM_CONDITIONAL([HAVE_PETSC], [test "$have_petsc" != "no"])
 
+# check for Viscid (analysis / plotting python package) so that we
+# can mark some tests XFAIL
+# Get Viscid at https://github.com/KristoforMaynard/Viscid
+AM_PATH_PYTHON(2.6)
+AX_PYTHON_MODULE(viscid)
+AM_CONDITIONAL([HAVE_VISCID], [test "$HAVE_PYMOD_VISCID" != "no"])
 
 # Checks for options
 
@@ -124,8 +144,14 @@ AC_CONFIG_FILES([Makefile
 		 tests/Makefile
 		 mhd/Makefile
 		 mhd/include/Makefile
-		 mhd/src/Makefile
+		 mhd/src/Makefile		
 		 mhd/tests/Makefile
+     util/Makefile
+		 tests/templates/mrc_fld_io_checks
+		 tests/templates/update_xdmf_ref
+		 tests/templates/update_hdf5_ref
+		 tests/templates/check_xdmf_ref
+		 tests/templates/check_hdf5_ref
 		 tests/test_ddc_0.sh
 		 tests/test_mrc_ddc_1.sh
 		 tests/test_io_0.sh
@@ -142,7 +168,14 @@ AC_CONFIG_FILES([Makefile
 		 tests/test_io_read_multi_1.sh
 		 tests/test_mrc_domain_simple_0.sh
 		 tests/test_mrc_domain_multi_0.sh
+		 tests/test_mrc_domain_mb_0.sh
 		 tests/test_mrc_fld.sh
+		 tests/test_mrc_fld_io_xdmf_collective.sh
+		 tests/test_mrc_fld_io_xdmf_serial.sh
+		 tests/test_mrc_fld_io_xdmf2.sh
+		 tests/test_mrc_fld_io_hdf5_serial.sh
+		 tests/test_mrc_fld_io_hdf5_parallel.sh
+		 tests/test_mrc_fld_io_ascii.sh
 		 tests/test_mrc_m1_0.sh
 		 tests/test_mrc_m1_1.sh
 		 tests/test_mrc_m3_0.sh
@@ -155,6 +188,13 @@ AC_CONFIG_FILES([Makefile
 		 tests/test_mrc_f3_0.sh
 		 tests/test_mrc_f3_1.sh
 		 tests/test_mrc_f3_2.sh
+		 mhd/tests/test_mhd_wave_cpaw.sh
+		 mhd/tests/mhd_wave_cpaw.sh
+		 mhd/tests/mhd_wave_cpaw_amr.sh
+		 mhd/tests/check_wave_cpaw.py
+		 mhd/tests/mhd_ot.sh
+		 mhd/tests/mhd_bw.sh
+		 mhd/tests/mhd_double_tearing_x.sh
 ])
 
 AC_OUTPUT

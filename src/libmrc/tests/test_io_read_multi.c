@@ -10,9 +10,9 @@
 #include <assert.h>
 
 static void
-test_write_read_m1(struct mrc_m1 *fld)
+test_write_read_m1(struct mrc_fld *fld)
 {
-  struct mrc_io *io = mrc_io_create(mrc_m1_comm(fld));
+  struct mrc_io *io = mrc_io_create(mrc_fld_comm(fld));
   mrc_io_set_from_options(io);
   mrc_io_setup(io);
 
@@ -22,18 +22,18 @@ test_write_read_m1(struct mrc_m1 *fld)
 
   mrc_io_destroy(io);
 
-  io = mrc_io_create(mrc_m1_comm(fld));
+  io = mrc_io_create(mrc_fld_comm(fld));
   mrc_io_set_from_options(io);
   mrc_io_setup(io);
 
   mrc_io_open(io, "r", 0, 0.);
-  struct mrc_m1 *fld2 = mrc_io_read_path(io, "/fld", "fld", mrc_m1);
+  struct mrc_fld *fld2 = mrc_io_read_path(io, "/fld", "fld", mrc_fld);
   mrc_io_close(io);
 
   mrc_io_destroy(io);
 
   mrctest_m1_compare(fld, fld2, 0.);
-  mrc_m1_destroy(fld2);
+  mrc_fld_destroy(fld2);
 }
 
 static void
@@ -49,9 +49,9 @@ mod_domain(struct mrc_mod *mod, void *arg)
 
   switch (testcase) {
   case 1: ;
-    struct mrc_m1 *m1 = mrctest_create_m1_1(domain, 1);
+    struct mrc_fld *m1 = mrctest_create_m1_1(domain, 1);
     test_write_read_m1(m1);
-    mrc_m1_destroy(m1);
+    mrc_fld_destroy(m1);
     break;
   default:
     assert(0);

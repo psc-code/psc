@@ -1,0 +1,15 @@
+openmpirun -n 4 mhd_ot \
+    --mx 128 --my 128 --mz 2 --npx 2 --npy 2 \
+    --magdiffu const \
+    --mrc_ts_output_every_time 0.01  \
+    --mrc_ts_max_time 1. \
+    --mrc_ts_dt 0.001 \
+    --mrc_ts_type step \
+    --ggcm_mhd_step_type c_float \
+    --ggcm_mhd_crds_type c \
+    --ggcm_mhd_diag_fields rr:pp:v:b:rr1:rv1:uu1:b1:divb \
+    --ggcm_mhd_diag_run ot_c \
+    --diff_obnd -2 \
+    --diffconstant 1e4 \
+    --diffsphere 0. \
+    --do_nwst 1 \

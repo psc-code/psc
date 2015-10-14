@@ -7,6 +7,7 @@
 
 #include <mrc_domain.h>
 #include <assert.h>
+#include <string.h>
 
 // ----------------------------------------------------------------------
 // ggcm_mhd_crds_gen_mrc_run
@@ -17,36 +18,43 @@
 static void
 ggcm_mhd_crds_gen_mrc_run(struct ggcm_mhd_crds_gen *gen, struct ggcm_mhd_crds *crds)
 {
-  struct mrc_patch_info info;
-  mrc_domain_get_local_patch_info(crds->domain, 0, &info);
   struct mrc_crds *mrc_crds = mrc_domain_get_crds(crds->domain);
-  int *ldims = info.ldims;
 
-  float *fxx1 = ggcm_mhd_crds_get_crd(crds, 0, FX1);
-  float *fyy1 = ggcm_mhd_crds_get_crd(crds, 1, FX1);
-  float *fzz1 = ggcm_mhd_crds_get_crd(crds, 2, FX1);
-  float *fdx1 = ggcm_mhd_crds_get_crd(crds, 0, FD1);
-  float *fdy1 = ggcm_mhd_crds_get_crd(crds, 1, FD1);
-  float *fdz1 = ggcm_mhd_crds_get_crd(crds, 2, FD1);
+  for (int p = 0; p < mrc_domain_nr_patches(crds->domain); p++) {
+    struct mrc_patch_info info;
+    mrc_domain_get_local_patch_info(crds->domain, p, &info);
+    int *ldims = info.ldims;
+    for (int d = 0; d < 3; d++) {
+      float *fxx1 = ggcm_mhd_crds_get_crd_p(crds, d, FX1, p);
+      float *fdx1 = ggcm_mhd_crds_get_crd_p(crds, d, FD1, p);
+      int sw = mrc_crds->sw;
+      
+      // FIXME: this is not bounds checked at all since sw is set from mrc_crds,
+      //        NOT ggcm_mhd_crds, which is on the left hand side here
+      for (int i = -sw; i < ldims[d] + sw; i++) {
+	fxx1[i] = MRC_MCRD(mrc_crds, d, i, p);
+      }
+      
+      // have to move one in on both sides
+      for (int i = -sw + 1; i < ldims[d] + sw - 1; i++) {
+	if (gen->legacy_fd1) {
+	  int off = info.off[d];
+	  fdx1[i] = 1.0 / MRC_F1(mrc_crds->global_crd[d], 1, i + off);
+	} else {
+	  fdx1[i] = 1.0 / (0.5 * (MRC_MCRD(mrc_crds, d, i+1, p) - MRC_MCRD(mrc_crds, d, i-1, p)));
+	}
+      }
+      
+    }
+  }
 
-  for (int i = -2; i < ldims[0] + 2; i++) {
-    fxx1[i] = MRC_CRDX(mrc_crds, i);
-  }
-  for (int i = -2; i < ldims[1] + 2; i++) {
-    fyy1[i] = MRC_CRDY(mrc_crds, i);
-  }
-  for (int i = -2; i < ldims[2] + 2; i++) {
-    fzz1[i] = MRC_CRDZ(mrc_crds, i);
-  }
-
-  for (int i = -1; i < ldims[0] + 1; i++) {
-    fdx1[i] = 1. / (.5 * (MRC_CRDX(mrc_crds, i+1) - MRC_CRDX(mrc_crds, i-1)));
-  }
-  for (int i = -1; i < ldims[1] + 1; i++) {
-    fdy1[i] = 1. / (.5 * (MRC_CRDY(mrc_crds, i+1) - MRC_CRDY(mrc_crds, i-1)));
-  }
-  for (int i = -1; i < ldims[2] + 1; i++) {
-    fdz1[i] = 1. / (.5 * (MRC_CRDZ(mrc_crds, i+1) - MRC_CRDZ(mrc_crds, i-1)));
+  if (strcmp(mrc_crds_type(mrc_crds), "amr_uniform") != 0) {
+    for (int d = 0; d < 3; d++) {
+      struct mrc_fld *global_x = crds->global_f1[d];
+      mrc_f1_foreach(global_x, i, 1, 1) {
+	MRC_F1(global_x, 0, i) = MRC_D2(mrc_crds->global_crd[d], i, 0);
+      } mrc_f1_foreach_end;
+    }
   }
 }
 

@@ -1,6 +1,7 @@
 
 #include "mrctest.h"
 
+#include <mrc.h>
 #include <mrc_domain.h>
 #include <mrc_fld.h>
 #include <mrc_params.h>
@@ -42,7 +43,7 @@ void
 mrctest_finalize()
 {
   prof_print();
-  libmrc_params_finalize();
+  libmrc_finalize();
   MPI_Finalize();
 }
 
@@ -78,8 +79,8 @@ mrctest_create_domain(MPI_Comm comm, struct mrctest_domain_params *par)
   mrc_domain_set_param_int3(domain, "np", par->nproc);
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   mrc_crds_set_param_int(crds, "sw", SW_2);
-  mrc_crds_set_param_float3(crds, "l", (float[3]) { -30., -20., -20. });
-  mrc_crds_set_param_float3(crds, "h", (float[3]) {  50.,  20.,  20. });
+  mrc_crds_set_param_double3(crds, "l", (double[3]) { -30., -20., -20. });
+  mrc_crds_set_param_double3(crds, "h", (double[3]) {  50.,  20.,  20. });
   mrc_domain_set_from_options(domain);
   mrc_domain_setup(domain);
 
@@ -96,8 +97,8 @@ mrctest_create_domain_rectilinear(MPI_Comm comm, struct mrctest_domain_params *p
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   mrc_crds_set_type(crds, "rectilinear");
   mrc_crds_set_param_int(crds, "sw", SW_2);
-  mrc_crds_set_param_float3(crds, "l", (float[3]) { -30., -20., -20. });
-  mrc_crds_set_param_float3(crds, "h", (float[3]) {  50.,  20.,  20. });
+  mrc_crds_set_param_double3(crds, "l", (double[3]) { -30., -20., -20. });
+  mrc_crds_set_param_double3(crds, "h", (double[3]) {  50.,  20.,  20. });
   mrc_domain_set_from_options(domain);
   mrc_domain_setup(domain);
   int sw;
@@ -113,37 +114,19 @@ mrctest_create_domain_rectilinear(MPI_Comm comm, struct mrctest_domain_params *p
 }
 
 void
-mrctest_set_crds_multi_rectilinear_1(struct mrc_domain *domain)
+mrctest_set_crds_rectilinear_1(struct mrc_domain *domain)
 {
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   int sw;
   mrc_crds_get_param_int(crds, "sw", &sw);
   struct mrc_patch *patches = mrc_domain_get_patches(domain, NULL);
   for (int d = 0; d < 3; d++) {
-    mrc_m1_foreach_patch(crds->mcrd[d], p) {
-      struct mrc_m1_patch *m1p = mrc_m1_patch_get(crds->mcrd[d], p);
-      mrc_m1_foreach(m1p, ix, sw, sw) {
+    mrc_m1_foreach_patch(crds->crd[d], p) {
+      mrc_m1_foreach(crds->crd[d], ix, sw, sw) {
 	int jx = ix + patches[p].off[d];
-	MRC_M1(m1p, 0, ix) = jx*jx;
+	MRC_M1(crds->crd[d], 0, ix, p) = jx*jx;
       } mrc_m1_foreach_end;
-      mrc_m1_patch_put(crds->mcrd[d]);
     }
-  }
-}
-
-void
-mrctest_set_crds_rectilinear_1(struct mrc_domain *domain)
-{
-  struct mrc_crds *crds = mrc_domain_get_crds(domain);
-  int sw;
-  mrc_crds_get_param_int(crds, "sw", &sw);
-  struct mrc_patch_info info;
-  mrc_domain_get_local_patch_info(domain, 0, &info);
-  for (int d = 0; d < 3; d++) {
-    mrc_f1_foreach(crds->crd[d], ix, sw, sw) {
-      int jx = ix + info.off[d];
-      MRC_F1(crds->crd[d], 0, ix) = jx*jx*jx;
-    } mrc_f1_foreach_end;
   }
 }
 
@@ -190,21 +173,19 @@ mrctest_create_field_2(struct mrc_domain *domain)
   return fld;
 }
 
-struct mrc_m1 *
+struct mrc_fld *
 mrctest_create_m1_1(struct mrc_domain *domain, int dim)
 {
-  struct mrc_m1 *m1 = mrc_domain_m1_create(domain);
-  mrc_m1_set_param_int(m1, "sw", 2);
-  mrc_m1_set_param_int(m1, "dim", dim);
-  mrc_m1_setup(m1);
-  mrc_m1_set_comp_name(m1, 0, "test");
-  
+  struct mrc_fld *m1 = mrc_domain_m1_create(domain);
+  mrc_fld_set_param_int(m1, "nr_ghosts", 2);
+  mrc_fld_set_param_int(m1, "dim", dim);
+  mrc_fld_setup(m1);
+  mrc_fld_set_comp_name(m1, 0, "test");
+
   mrc_m1_foreach_patch(m1, p) {
-    struct mrc_m1_patch *m1p = mrc_m1_patch_get(m1, p);
-    mrc_m1_foreach(m1p, ix, 2, 2) {
-      MRC_M1(m1p, 0, ix) = 1.f + ix * ix;
+    mrc_m1_foreach(m1, ix, 2, 2) {
+      MRC_M1(m1, 0, ix, p) = 1.f + ix * ix;
     } mrc_m1_foreach_end;
-    mrc_m1_patch_put(m1);
   }
   return m1;
 }
@@ -259,23 +240,16 @@ mrctest_fld_compare(struct mrc_fld *fld1, struct mrc_fld *fld2, float eps)
 // mrctest_m1_compare
 
 void
-mrctest_m1_compare(struct mrc_m1 *m1_1, struct mrc_m1 *m1_2, float eps)
+mrctest_m1_compare(struct mrc_fld *m1_1, struct mrc_fld *m1_2, float eps)
 {
-  assert(mrc_m1_same_shape(m1_1, m1_2));
-  int sw;
-  mrc_m1_get_param_int(m1_1, "sw", &sw);
-  for (int m = 0; m < m1_2->nr_comp; m++) {
+  assert(mrc_fld_same_shape(m1_1, m1_2));
+  int sw = m1_1->_sw.vals[0];
+  for (int m = 0; m < mrc_fld_nr_comps(m1_2); m++) {
     float diff = 0.;
     mrc_m1_foreach_patch(m1_1, p) {
-      struct mrc_m1_patch *m1p_1 = mrc_m1_patch_get(m1_1, p);
-      struct mrc_m1_patch *m1p_2 = mrc_m1_patch_get(m1_2, p);
-      
-      mrc_m1_foreach(m1p_1, ix, sw, sw) {
-	diff = fmaxf(diff, fabsf(MRC_M1(m1p_1, m, ix) - MRC_M1(m1p_2, m, ix)));
+      mrc_m1_foreach(m1_1, ix, sw, sw) {
+	diff = fmaxf(diff, fabsf(MRC_M1(m1_1, m, ix, p) - MRC_M1(m1_2, m, ix, p)));
       } mrc_m1_foreach_end;
-
-      mrc_m1_patch_put(m1_1);
-      mrc_m1_patch_put(m1_2);
     }
     if (diff > eps) {
       mprintf("mrctest_m1_compare: m = %d diff = %g\n", m, diff);
@@ -316,12 +290,12 @@ mrctest_m3_compare(struct mrc_fld *m3_1, struct mrc_fld *m3_2)
 void
 mrctest_crds_compare(struct mrc_crds *crds1, struct mrc_crds *crds2)
 {
-  int sw = crds1->par.sw;
+  int sw = crds1->sw;
 
-  assert(crds1->par.sw == crds2->par.sw);
+  assert(crds1->sw == crds2->sw);
   for (int d = 0; d < 3; d++) {
-    assert(crds1->par.xl[d] == crds2->par.xl[d]);
-    assert(crds1->par.xh[d] == crds2->par.xh[d]);
+    assert(crds1->xl[d] == crds2->xl[d]);
+    assert(crds1->xh[d] == crds2->xh[d]);
   }
 
   assert(strcmp(mrc_crds_type(crds1), mrc_crds_type(crds2)) == 0);
@@ -336,20 +310,16 @@ mrctest_crds_compare(struct mrc_crds *crds1, struct mrc_crds *crds2)
 	}
       } mrc_f1_foreach_end;
     } else {
-      mrc_m1_foreach_patch(crds1->mcrd[d], p) {
-	struct mrc_m1_patch *m1p_1 = mrc_m1_patch_get(crds1->mcrd[d], p);
-	struct mrc_m1_patch *m1p_2 = mrc_m1_patch_get(crds2->mcrd[d], p);
+      mrc_m1_foreach_patch(crds1->crd[d], p) {
 	float diff = 0.;
-	mrc_m1_foreach(m1p_1, ix, sw, sw) {
-	  diff = fmaxf(diff, fabsf(MRC_M1(m1p_1, 0, ix) - MRC_M1(m1p_2, 0, ix)));
+	mrc_m1_foreach(crds1->crd[d], ix, sw, sw) {
+	  diff = fmaxf(diff, fabsf(MRC_M1(crds1->crd[d], 0, ix, p) - MRC_M1(crds2->crd[d], 0, ix, p)));
 	  if (diff > 0.) {
 	    mprintf("mrctest_crds_compare: ix = %d diff = %g %g/%g\n", ix, diff,
-		    MRC_M1(m1p_1, 0, ix), MRC_M1(m1p_2, 0, ix));
+		    MRC_M1(crds1->crd[d], 0, ix, p), MRC_M1(crds2->crd[d], 0, ix, p));
 	    assert(0);
 	  }
 	} mrc_m1_foreach_end;
-	mrc_m1_patch_put(crds1->mcrd[d]);
-	mrc_m1_patch_put(crds2->mcrd[d]);
       }
     }
   }

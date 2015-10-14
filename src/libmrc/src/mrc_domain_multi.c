@@ -219,7 +219,7 @@ mrc_domain_multi_setup_map(struct mrc_domain *domain)
 }
 
 static void
-mrc_domain_multi_setup(struct mrc_domain *domain)
+mrc_domain_multi_do_setup(struct mrc_domain *domain)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
@@ -270,7 +270,12 @@ mrc_domain_multi_setup(struct mrc_domain *domain)
       multi->patches[p].off[d] = info.off[d];
     }
   }
+}
 
+static void
+mrc_domain_multi_setup(struct mrc_domain *domain)
+{
+  mrc_domain_multi_do_setup(domain);
   mrc_domain_setup_super(domain);
 }
 
@@ -319,16 +324,6 @@ mrc_domain_multi_get_nr_procs(struct mrc_domain *domain, int *nr_procs)
 
   for (int d = 0; d < 3; d++) {
     nr_procs[d] = multi->np[d];
-  }
-}
-
-static void
-mrc_domain_multi_get_bc(struct mrc_domain *domain, int *bc)
-{
-  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
-
-  for (int d = 0; d < 3; d++) {
-    bc[d] = multi->bc[d];
   }
 }
 
@@ -438,12 +433,19 @@ mrc_domain_multi_read(struct mrc_domain *domain, struct mrc_io *io)
   MPI_Comm_size(mrc_domain_comm(domain), &mpi_size);
 
   struct mrc_io_ops *io_ops = (struct mrc_io_ops *) io->obj.ops;
-  assert(!io_ops->parallel);
 
-  const char *path = mrc_io_obj_path(io, domain);
-  char path2[strlen(path) + 20];
-  sprintf(path2, "%s/rank_%d", path, mpi_rank);
-  mrc_io_read_attr_int(io, path2, "nr_patches", &multi->nr_patches);
+  // FIXME: With the addition of **do_setup() below it may no longer
+  // be necessary to have this read/write of local patch number
+  // for non-parallel writers, as the structure will be regenerated
+  // anyway.
+  if(!io_ops->parallel) {
+    const char *path = mrc_io_obj_path(io, domain);
+    char path2[strlen(path) + 20];
+    sprintf(path2, "%s/rank_%d", path, mpi_rank);
+    mrc_io_read_attr_int(io, path2, "nr_patches", &multi->nr_patches);
+  } else {
+    multi->nr_patches = -1;
+  }
 
 #if 0
   // need to read attributes collectively :(
@@ -459,6 +461,10 @@ mrc_domain_multi_read(struct mrc_domain *domain, struct mrc_io *io)
   }
 #endif
 
+  // FIXME? We're mostly redoing things from scratch, rather
+  // than reading them...
+  // WARNING: This may break PSC checkpointing. (but I think setup was getting run anyway)
+  mrc_domain_multi_do_setup(domain);
   mrc_domain_read_super(domain, io);
 }
 
@@ -519,7 +525,7 @@ mrc_domain_multi_get_neighbor_rank_patch(struct mrc_domain *domain, int p, int d
   int patch_idx_nei[3];
   for (int d = 0; d < 3; d++) {
     patch_idx_nei[d] = info.idx3[d] + dir[d];
-    if (multi->bc[d] == BC_PERIODIC) {
+    if (domain->bc[d] == BC_PERIODIC) {
       if (patch_idx_nei[d] < 0) {
 	patch_idx_nei[d] += multi->np[d];
       }
@@ -547,12 +553,6 @@ mrc_domain_multi_create_ddc(struct mrc_domain *domain)
   return ddc;
 }
 
-static struct mrc_param_select bc_descr[] = {
-  { .val = BC_NONE       , .str = "none"     },
-  { .val = BC_PERIODIC   , .str = "periodic" },
-  {},
-};
-
 static struct mrc_param_select curve_descr[] = {
   { .val = CURVE_BYDIM   , .str = "bydim"    },
   { .val = CURVE_MORTON  , .str = "morton"   },
@@ -566,15 +566,6 @@ static struct param mrc_domain_multi_params_descr[] = {
     .help = "Global dimensions of the domain (as number of cells per direction)." },
   { "np"              , VAR(np)              , PARAM_INT3(1, 1, 1),
     .help = "Number of patches to divide global domain into (per direction)" },
-  { "bcx"             , VAR(bc[0])           , PARAM_SELECT(BC_NONE,
-							    bc_descr),
-    .help = "Boundary condition in x direction" },
-  { "bcy"             , VAR(bc[1])           , PARAM_SELECT(BC_NONE,
-							    bc_descr),
-    .help = "Boundary condition in y direction" },
-  { "bcz"             , VAR(bc[2])           , PARAM_SELECT(BC_NONE,
-							    bc_descr),
-    .help = "Boundary condition in z direction" },
   { "curve_type"      , VAR(sfc.curve_type)  , PARAM_SELECT(CURVE_BYDIM,
 							    curve_descr),
     .help = "Type of spacing filling curve to use for distributing patches." },
@@ -596,7 +587,6 @@ struct mrc_domain_ops mrc_domain_multi_ops = {
   .get_patches               = mrc_domain_multi_get_patches,
   .get_global_dims           = mrc_domain_multi_get_global_dims,
   .get_nr_procs              = mrc_domain_multi_get_nr_procs,
-  .get_bc                    = mrc_domain_multi_get_bc,
   .get_nr_levels             = mrc_domain_multi_get_nr_levels,
   .get_nr_global_patches     = mrc_domain_multi_get_nr_global_patches,
   .get_global_patch_info     = mrc_domain_multi_get_global_patch_info,

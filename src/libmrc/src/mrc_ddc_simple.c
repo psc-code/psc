@@ -6,7 +6,36 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#define to_mrc_ddc_simple(ddc) ((struct mrc_ddc_simple *) (ddc)->obj.subctx)
+// This entire file may be obsolete, since "multi" will do the same and more
+// However, "multi" will do aggregation, while "simple" does not, so there may be
+// in point in comparing performance...
+
+// TODO: support dynamically adapting "max_n_fields" to whatever is needed
+// TODO: add a fill_ghosts_fld() method and have it handle different data types
+// dynamically
+
+// ======================================================================
+// mrc_ddc_simple
+
+struct mrc_ddc_pattern {
+  struct mrc_ddc_sendrecv send[N_DIR];
+  struct mrc_ddc_sendrecv recv[N_DIR];
+};
+
+struct mrc_ddc_simple {
+  // parameters
+  int n_proc[3]; // # procs in 3D grid
+  int ilo[3], ihi[3]; // local domain (no ghosts)
+  int bc[3]; // boundary condition
+
+  int proc[3]; // this proc's position in the 3D proc grid
+  struct mrc_ddc_pattern add_ghosts;
+  struct mrc_ddc_pattern fill_ghosts;
+  MPI_Request send_reqs[N_DIR];
+  MPI_Request recv_reqs[N_DIR];
+};
+
+#define mrc_ddc_simple(ddc) mrc_to_subobj(ddc, struct mrc_ddc_simple)
 
 // ----------------------------------------------------------------------
 // mrc_ddc_simple_get_rank_nei
@@ -14,32 +43,32 @@
 static int
 get_rank(struct mrc_ddc *ddc, const int proc[3])
 {
-  struct mrc_ddc_simple *simple = to_mrc_ddc_simple(ddc);
+  struct mrc_ddc_simple *sub = mrc_ddc_simple(ddc);
   for (int d = 0; d < 3; d++) {
-    assert(proc[d] >= 0 && proc[d] < simple->n_proc[d]);
+    assert(proc[d] >= 0 && proc[d] < sub->n_proc[d]);
   }
-  return (proc[2] * simple->n_proc[1] + proc[1]) * simple->n_proc[0] + proc[0];
+  return (proc[2] * sub->n_proc[1] + proc[1]) * sub->n_proc[0] + proc[0];
 }
 
 static void
 mrc_ddc_simple_get_nei_rank_patch(struct mrc_ddc *ddc, int p, int dir[3],
 				  int *nei_rank, int *nei_patch)
 {
-  struct mrc_ddc_simple *simple = to_mrc_ddc_simple(ddc);
+  struct mrc_ddc_simple *sub = mrc_ddc_simple(ddc);
   assert(p == 0);
 
   int proc_nei[3];
   for (int d = 0; d < 3; d++) {
-    proc_nei[d] = simple->proc[d] + dir[d];
-    if (simple->bc[d] == BC_PERIODIC) {
+    proc_nei[d] = sub->proc[d] + dir[d];
+    if (sub->bc[d] == BC_PERIODIC) {
       if (proc_nei[d] < 0) {
-	proc_nei[d] += simple->n_proc[d];
+	proc_nei[d] += sub->n_proc[d];
       }
-      if (proc_nei[d] >= simple->n_proc[d]) {
-	proc_nei[d] -= simple->n_proc[d];
+      if (proc_nei[d] >= sub->n_proc[d]) {
+	proc_nei[d] -= sub->n_proc[d];
       }
     }
-    if (proc_nei[d] < 0 || proc_nei[d] >= simple->n_proc[d]) {
+    if (proc_nei[d] < 0 || proc_nei[d] >= sub->n_proc[d]) {
       *nei_rank = -1;
       *nei_patch = -1;
       return;
@@ -55,7 +84,7 @@ mrc_ddc_simple_get_nei_rank_patch(struct mrc_ddc *ddc, int p, int dir[3],
 static void
 ddc_init_outside(struct mrc_ddc *ddc, struct mrc_ddc_sendrecv *sr, int dir[3])
 {
-  struct mrc_ddc_simple *simple = to_mrc_ddc_simple(ddc);
+  struct mrc_ddc_simple *sub = mrc_ddc_simple(ddc);
 
   int dummy;
   mrc_ddc_simple_get_nei_rank_patch(ddc, 0, dir, &sr->nei_rank, &dummy);
@@ -66,16 +95,16 @@ ddc_init_outside(struct mrc_ddc *ddc, struct mrc_ddc_sendrecv *sr, int dir[3])
   for (int d = 0; d < 3; d++) {
     switch (dir[d]) {
     case -1:
-      sr->ilo[d] = simple->ilo[d] - ddc->ibn[d];
-      sr->ihi[d] = simple->ilo[d];
+      sr->ilo[d] = sub->ilo[d] - ddc->ibn[d];
+      sr->ihi[d] = sub->ilo[d];
       break;
     case 0:
-      sr->ilo[d] = simple->ilo[d];
-      sr->ihi[d] = simple->ihi[d];
+      sr->ilo[d] = sub->ilo[d];
+      sr->ihi[d] = sub->ihi[d];
       break;
     case 1:
-      sr->ilo[d] = simple->ihi[d];
-      sr->ihi[d] = simple->ihi[d] + ddc->ibn[d];
+      sr->ilo[d] = sub->ihi[d];
+      sr->ihi[d] = sub->ihi[d] + ddc->ibn[d];
       break;
     }
     sr->len *= (sr->ihi[d] - sr->ilo[d]);
@@ -89,7 +118,7 @@ ddc_init_outside(struct mrc_ddc *ddc, struct mrc_ddc_sendrecv *sr, int dir[3])
 static void
 ddc_init_inside(struct mrc_ddc *ddc, struct mrc_ddc_sendrecv *sr, int dir[3])
 {
-  struct mrc_ddc_simple *simple = to_mrc_ddc_simple(ddc);
+  struct mrc_ddc_simple *sub = mrc_ddc_simple(ddc);
 
   int dummy;
   mrc_ddc_simple_get_nei_rank_patch(ddc, 0, dir, &sr->nei_rank, &dummy);
@@ -100,16 +129,16 @@ ddc_init_inside(struct mrc_ddc *ddc, struct mrc_ddc_sendrecv *sr, int dir[3])
   for (int d = 0; d < 3; d++) {
     switch (dir[d]) {
     case -1:
-      sr->ilo[d] = simple->ilo[d];
-      sr->ihi[d] = simple->ilo[d] + ddc->ibn[d];
+      sr->ilo[d] = sub->ilo[d];
+      sr->ihi[d] = sub->ilo[d] + ddc->ibn[d];
       break;
     case 0:
-      sr->ilo[d] = simple->ilo[d];
-      sr->ihi[d] = simple->ihi[d];
+      sr->ilo[d] = sub->ilo[d];
+      sr->ihi[d] = sub->ihi[d];
       break;
     case 1:
-      sr->ilo[d] = simple->ihi[d] - ddc->ibn[d];
-      sr->ihi[d] = simple->ihi[d];
+      sr->ilo[d] = sub->ihi[d] - ddc->ibn[d];
+      sr->ihi[d] = sub->ihi[d];
       break;
     }
     sr->len *= (sr->ihi[d] - sr->ilo[d]);
@@ -123,7 +152,7 @@ ddc_init_inside(struct mrc_ddc *ddc, struct mrc_ddc_sendrecv *sr, int dir[3])
 static void
 mrc_ddc_simple_setup(struct mrc_ddc *ddc)
 {
-  struct mrc_ddc_simple *simple = to_mrc_ddc_simple(ddc);
+  struct mrc_ddc_simple *sub = mrc_ddc_simple(ddc);
 
   if (ddc->size_of_type == sizeof(float)) {
     ddc->mpi_type = MPI_FLOAT;
@@ -133,13 +162,13 @@ mrc_ddc_simple_setup(struct mrc_ddc *ddc)
     assert(0);
   }
 
-  assert(simple->n_proc[0] * simple->n_proc[1] * simple->n_proc[2] == ddc->size);
+  assert(sub->n_proc[0] * sub->n_proc[1] * sub->n_proc[2] == ddc->size);
   assert(ddc->max_n_fields > 0);
 
   int rr = ddc->rank;
-  simple->proc[0] = rr % simple->n_proc[0]; rr /= simple->n_proc[0];
-  simple->proc[1] = rr % simple->n_proc[1]; rr /= simple->n_proc[1];
-  simple->proc[2] = rr;
+  sub->proc[0] = rr % sub->n_proc[0]; rr /= sub->n_proc[0];
+  sub->proc[1] = rr % sub->n_proc[1]; rr /= sub->n_proc[1];
+  sub->proc[2] = rr;
 
   int dir[3];
 
@@ -149,11 +178,11 @@ mrc_ddc_simple_setup(struct mrc_ddc *ddc)
 	if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0)
 	  continue;
 
-	ddc_init_outside(ddc, &simple->add_ghosts.send[mrc_ddc_dir2idx(dir)], dir);
-	ddc_init_inside(ddc, &simple->add_ghosts.recv[mrc_ddc_dir2idx(dir)], dir);
+	ddc_init_outside(ddc, &sub->add_ghosts.send[mrc_ddc_dir2idx(dir)], dir);
+	ddc_init_inside(ddc, &sub->add_ghosts.recv[mrc_ddc_dir2idx(dir)], dir);
 
-	ddc_init_inside(ddc, &simple->fill_ghosts.send[mrc_ddc_dir2idx(dir)], dir);
-	ddc_init_outside(ddc, &simple->fill_ghosts.recv[mrc_ddc_dir2idx(dir)], dir);
+	ddc_init_inside(ddc, &sub->fill_ghosts.send[mrc_ddc_dir2idx(dir)], dir);
+	ddc_init_outside(ddc, &sub->fill_ghosts.recv[mrc_ddc_dir2idx(dir)], dir);
       }
     }
   }
@@ -168,7 +197,7 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
 	void (*to_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf, void *ctx),
 	void (*from_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf, void *ctx))
 {
-  struct mrc_ddc_simple *simple = to_mrc_ddc_simple(ddc);
+  struct mrc_ddc_simple *sub = mrc_ddc_simple(ddc);
   int dir[3];
 
   // post all receives
@@ -186,9 +215,9 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
 		 r->len);
 #endif
 	  MPI_Irecv(r->buf, r->len * (me - mb), ddc->mpi_type, r->nei_rank,
-		    0x1000 + dir1neg, ddc->obj.comm, &simple->recv_reqs[dir1]);
+		    0x1000 + dir1neg, ddc->obj.comm, &sub->recv_reqs[dir1]);
 	} else {
-	  simple->recv_reqs[dir1] = MPI_REQUEST_NULL;
+	  sub->recv_reqs[dir1] = MPI_REQUEST_NULL;
 	}
       }
     }
@@ -209,16 +238,16 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
 		 s->len);
 #endif
 	  MPI_Isend(s->buf, s->len * (me - mb), ddc->mpi_type, s->nei_rank,
-		    0x1000 + dir1, ddc->obj.comm, &simple->send_reqs[dir1]);
+		    0x1000 + dir1, ddc->obj.comm, &sub->send_reqs[dir1]);
 	} else {
-	  simple->send_reqs[dir1] = MPI_REQUEST_NULL;
+	  sub->send_reqs[dir1] = MPI_REQUEST_NULL;
 	}
       }
     }
   }
 
   // finish receives
-  MPI_Waitall(27, simple->recv_reqs, MPI_STATUSES_IGNORE);
+  MPI_Waitall(27, sub->recv_reqs, MPI_STATUSES_IGNORE);
   for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
     for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
       for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
@@ -232,7 +261,7 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
   }
 
   // finish sends
-  MPI_Waitall(27, simple->send_reqs, MPI_STATUSES_IGNORE);
+  MPI_Waitall(27, sub->send_reqs, MPI_STATUSES_IGNORE);
 }
 
 // ----------------------------------------------------------------------
@@ -241,9 +270,10 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
 static void
 mrc_ddc_simple_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 {
-  struct mrc_ddc_simple *simple = to_mrc_ddc_simple(ddc);
+  struct mrc_ddc_simple *sub = mrc_ddc_simple(ddc);
 
-  ddc_run(ddc, &simple->add_ghosts, mb, me, ctx,
+  assert(me - mb <= ddc->max_n_fields);
+  ddc_run(ddc, &sub->add_ghosts, mb, me, ctx,
 	  ddc->funcs->copy_to_buf, ddc->funcs->add_from_buf);
 }
 
@@ -253,9 +283,10 @@ mrc_ddc_simple_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 static void
 mrc_ddc_simple_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 {
-  struct mrc_ddc_simple *simple = to_mrc_ddc_simple(ddc);
+  struct mrc_ddc_simple *sub = mrc_ddc_simple(ddc);
 
-  ddc_run(ddc, &simple->fill_ghosts, mb, me, ctx,
+  assert(me - mb <= ddc->max_n_fields);
+  ddc_run(ddc, &sub->fill_ghosts, mb, me, ctx,
 	  ddc->funcs->copy_to_buf, ddc->funcs->copy_from_buf);
 }
 

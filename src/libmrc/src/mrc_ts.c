@@ -4,6 +4,7 @@
 
 #include <mrc_ts_monitor.h>
 #include <mrc_params.h>
+#include <mrc_common.h>
 #include <assert.h>
 
 #define mrc_ts_ops(ts) ((struct mrc_ts_ops *) ts->obj.ops)
@@ -23,6 +24,24 @@ _mrc_ts_view(struct mrc_ts *ts)
   MPI_Comm comm = mrc_ts_comm(ts);
   mpi_printf(comm, "nr_steps      = %d\n", ts->n);
   mpi_printf(comm, "nr_rhsf_evals = %d\n", ts->nr_rhsf_evals);
+}
+
+float
+mrc_ts_time(struct mrc_ts *ts)
+{
+  return ts->time;
+}
+
+float
+mrc_ts_dt(struct mrc_ts *ts)
+{
+  return ts->dt;
+}
+
+int
+mrc_ts_step_number(struct mrc_ts *ts)
+{
+  return ts->n;
 }
 
 void
@@ -51,6 +70,9 @@ mrc_ts_set_solution(struct mrc_ts *ts, struct mrc_obj *x)
   ts->vec_norm =
     (float (*)(struct mrc_obj *)) mrc_obj_get_method(x, "norm");
   assert(ts->vec_norm);
+  ts->vec_set =
+    (void (*)(struct mrc_obj *, float)) mrc_obj_get_method(x, "set");
+  assert(ts->vec_set);
 }
 
 void
@@ -76,6 +98,36 @@ mrc_ts_set_rhs_function(struct mrc_ts *ts,
 }
 
 void
+mrc_ts_set_step_function(struct mrc_ts *ts,
+			 void (*stepf)(void *ctx, struct mrc_ts *ts,
+				       struct mrc_obj *x),
+			 void *ctx)
+{
+  ts->stepf = stepf;
+  ts->stepf_ctx = ctx;
+}
+
+void
+mrc_ts_set_pre_step_function(struct mrc_ts *ts,
+			     void (*pre_step)(void *ctx, struct mrc_ts *ts,
+					      struct mrc_obj *x),
+			     void *ctx)
+{
+  ts->pre_step = pre_step;
+  ts->pre_step_ctx = ctx;
+}
+
+void
+mrc_ts_set_post_step_function(struct mrc_ts *ts,
+			     void (*post_step)(void *ctx, struct mrc_ts *ts,
+					       struct mrc_obj *x),
+			     void *ctx)
+{
+  ts->post_step = post_step;
+  ts->post_step_ctx = ctx;
+}
+
+void
 mrc_ts_add_monitor(struct mrc_ts *ts, struct mrc_ts_monitor *mon)
 {
   list_add_tail(&mon->monitors_entry, &ts->monitors);
@@ -85,13 +137,29 @@ mrc_ts_add_monitor(struct mrc_ts *ts, struct mrc_ts_monitor *mon)
 void
 mrc_ts_step(struct mrc_ts *ts)
 {
+  if (ts->pre_step) {
+    ts->pre_step(ts->pre_step_ctx, ts, ts->x);
+  }
+
   assert(mrc_ts_ops(ts)->step);
   mrc_ts_ops(ts)->step(ts);
+
+  if (ts->post_step) {
+    ts->post_step(ts->post_step_ctx, ts, ts->x);
+  }
+
 }
 
 void
 mrc_ts_solve(struct mrc_ts *ts)
 {
+  float _dummyflt = 0.0;
+  if (ts->ctx_obj) {
+    if (mrc_obj_get_param_float(ts->ctx_obj, "max_time", &_dummyflt) == 0) {
+      mrc_obj_set_param_float(ts->ctx_obj, "max_time", ts->max_time);
+    }
+  }
+  
   if (mrc_ts_ops(ts)->solve) {
     mrc_ts_ops(ts)->solve(ts);
     return;
@@ -168,9 +236,18 @@ mrc_ts_create_std(MPI_Comm comm,
 static void
 mrc_ts_init()
 {
+  mrc_class_register_subclass(&mrc_class_mrc_ts, &mrc_ts_step_ops);
   mrc_class_register_subclass(&mrc_class_mrc_ts, &mrc_ts_ode45_ops);
   mrc_class_register_subclass(&mrc_class_mrc_ts, &mrc_ts_rk2_ops);
   mrc_class_register_subclass(&mrc_class_mrc_ts, &mrc_ts_rk4_ops);
+  
+#ifdef HAVE_PETSC
+  mrc_class_register_subclass(&mrc_class_mrc_ts, &mrc_ts_petsc_ops);
+#endif
+
+  // Did this break or something? 'Cause, I could fix it, if I had known it was broken. 
+  // This is why we have a bug tracking system people...
+  //  mrc_class_register_subclass(&mrc_class_mrc_ts, &mrc_ts_rkf45_ops);
 }
 
 // ======================================================================

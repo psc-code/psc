@@ -16,15 +16,13 @@ set_m3(struct mrc_fld *m3)
 
   mrc_fld_foreach_patch(m3, p) {
     struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, p);
-    mrc_crds_patch_get(crds, p);
     int *off = patches[p].off;
     mrc_m3_foreach(m3p, ix,iy,iz, 0,0) {
       MRC_M3(m3p, 0, ix,iy,iz) =
 	(iz + off[2]) * 10000 + (iy + off[1]) * 100 + (ix + off[0]);
-      MRC_M3(m3p, 1, ix,iy,iz) = MRC_MCRD(crds, 0, ix);
+      MRC_M3(m3p, 1, ix,iy,iz) = MRC_MCRD(crds, 0, ix, p);
     } mrc_m3_foreach_end;
     mrc_fld_patch_put(m3);
-    mrc_crds_patch_put(crds);
   }
 }
 
@@ -96,19 +94,18 @@ main(int argc, char **argv)
 
   struct mrc_domain *domain = mrc_domain_create(MPI_COMM_WORLD);
   mrc_domain_set_type(domain, "multi");
-  struct mrc_crds *crds = mrc_domain_get_crds(domain);
-  mrc_crds_set_type(crds, "multi_uniform");
   mrc_domain_set_from_options(domain);
   mrc_domain_setup(domain);
   mrc_domain_view(domain);
   
-  if (strcmp(mrc_crds_type(crds), "multi_rectilinear") == 0) {
-    mrctest_set_crds_multi_rectilinear_1(domain);
+  struct mrc_crds *crds = mrc_domain_get_crds(domain);
+  if (strcmp(mrc_crds_type(crds), "rectilinear") == 0) {
+    mrctest_set_crds_rectilinear_1(domain);
   }
 
   struct mrc_fld *m3 = mrc_domain_m3_create(domain);
   mrc_fld_set_name(m3, "test_m3");
-  mrc_fld_set_nr_comps(m3, 2);
+  mrc_fld_set_param_int(m3, "nr_comps", 2);
   mrc_fld_set_from_options(m3);
   mrc_fld_setup(m3);
   mrc_fld_set_comp_name(m3, 0, "fld0");

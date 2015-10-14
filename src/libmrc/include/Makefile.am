@@ -2,30 +2,48 @@
 include_HEADERS = \
 	bintree.h \
 	bitfield3d.h \
-	mrc.h \
 	mrc_bits.h \
+	mrc_block_factory.h \
+	mrc_block_factory_private.h \
 	mrc_common.h \
+	mrc_crds_gen.h \
+	mrc_crds_gen_private.h \
 	mrc_crds.h \
 	mrc_ddc.h \
 	mrc_ddc_private.h \
-	mrc_domain.h \
+	mrc_decomposition.h \
+	mrc_decomposition_private.h \
 	mrc_domain_dynamic.h \
+	mrc_domain.h \
 	mrc_domain_private.h \
+	mrc_fld_as_double_aos.h \
+	mrc_fld_as_double.h \
+	mrc_fld_as_float_aos.h \
+	mrc_fld_as_float.h \
 	mrc_fld.h \
 	mrc_fortran.h \
+	mrc_ggcm_gridx_gen.h \
+	mrc.h \
 	mrc_io.h \
 	mrc_io_private.h \
 	mrc_list.h \
+	mrc_mat.h \
+	mrc_mat_private.h \
 	mrc_mod.h \
 	mrc_nr.h \
 	mrc_obj.h \
 	mrc_params.h \
 	mrc_profile.h \
 	mrc_profile_nop.h \
+	mrctest.h \
+	mrc_trafo_cartesian.h \
+	mrc_trafo_curvilin.h \
+	mrc_trafo_cylindrical.h \
+	mrc_trafo_fast.h \
+	mrc_trafo.h \
 	mrc_ts.h \
 	mrc_ts_monitor.h \
 	mrc_ts_monitor_private.h \
 	mrc_ts_private.h \
 	mrc_vec.h \
-	mrc_vec_private.h \
-	mrctest.h
+	mrc_vec_private.h

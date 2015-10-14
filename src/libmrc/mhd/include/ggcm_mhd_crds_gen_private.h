@@ -6,6 +6,7 @@
 
 struct ggcm_mhd_crds_gen {
   struct mrc_obj obj;
+  bool legacy_fd1;
 };
 
 struct ggcm_mhd_crds_gen_ops {
@@ -15,7 +16,6 @@ struct ggcm_mhd_crds_gen_ops {
   void (*run_aux)(struct ggcm_mhd_crds_gen *gen, struct ggcm_mhd_crds *crds);
 };
 
-extern struct ggcm_mhd_crds_gen_ops ggcm_mhd_crds_gen_c_ops;
 extern struct ggcm_mhd_crds_gen_ops ggcm_mhd_crds_gen_mrc_ops;
 
 #endif

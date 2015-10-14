@@ -5,6 +5,7 @@
 #include "ggcm_mhd_private.h"
 
 #include <mrc_io.h>
+#include <mrc_fld_as_double.h>
 
 #include <assert.h>
 
@@ -12,16 +13,20 @@
 // ggcm_mhd_ic class
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_ic_init_masks_default
+// ggcm_mhd_ic_init_ymask_default
 
 static void
-ggcm_mhd_ic_init_masks_default(struct ggcm_mhd_ic *ic)
+ggcm_mhd_ic_init_ymask_default(struct ggcm_mhd_ic *ic, struct mrc_fld *ymask_base)
 {
-  struct mrc_fld *fld = ic->mhd->fld;
+  struct mrc_fld *ymask = mrc_fld_get_as(ymask_base, FLD_TYPE);
 
-  mrc_fld_foreach(fld, ix, iy, iz, 1, 1) {
-    MRC_F3(fld, _YMASK, ix,iy,iz) = 1.;
-  } mrc_fld_foreach_end;
+  for (int p = 0; p < mrc_fld_nr_patches(ymask); p++) {
+    mrc_fld_foreach(ymask, ix, iy, iz, 2, 2) {
+      M3(ymask, 0, ix,iy,iz, p) = 1.;
+    } mrc_fld_foreach_end;
+  }
+    
+  mrc_fld_put_as(ymask, ymask_base);
 }
 
 // ----------------------------------------------------------------------
@@ -35,23 +40,14 @@ ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic)
   assert(ops && ops->run);
   ops->run(ic);
 
-  if (ops->init_masks) {
-    ops->init_masks(ic);
+  if (ops->init_ymask) {
+    assert(ic->mhd->ymask);
+    ops->init_ymask(ic, ic->mhd->ymask);
   } else {
-    ggcm_mhd_ic_init_masks_default(ic);
+    if (ic->mhd->ymask) {
+      ggcm_mhd_ic_init_ymask_default(ic, ic->mhd->ymask);
+    }
   }
-}
-
-// ----------------------------------------------------------------------
-// ggcm_mhd_ic_ini_b
-
-void
-ggcm_mhd_ic_ini_b(struct ggcm_mhd_ic *ic, float b_sw[3])
-{
-  assert(ic->mhd);
-  struct ggcm_mhd_ic_ops *ops = ggcm_mhd_ic_ops(ic);
-  assert(ops && ops->ini_b);
-  ops->ini_b(ic, b_sw);
 }
 
 // ----------------------------------------------------------------------

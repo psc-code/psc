@@ -40,9 +40,6 @@ test(bool periodic)
 
   struct mrc_ddc *ddc = mrc_domain_create_ddc(domain);
   mrc_ddc_set_funcs(ddc, &mrc_ddc_funcs_fld);
-  mrc_ddc_set_param_int3(ddc, "ibn", (int [3]) { bnd, bnd, bnd });
-  mrc_ddc_set_param_int(ddc, "max_n_fields", 2);
-  mrc_ddc_set_param_int(ddc, "size_of_type", sizeof(float));
   mrc_ddc_setup(ddc);
   mrc_ddc_view(ddc);
 
@@ -59,7 +56,7 @@ test(bool periodic)
   } mrc_fld_foreach_end;
 
   for (int i = 0; i < 1; i++) {
-    mrc_ddc_fill_ghosts(ddc, 0, 2, fld);
+    mrc_ddc_fill_ghosts_fld(ddc, 0, 2, fld);
   }
 
   int N[3];

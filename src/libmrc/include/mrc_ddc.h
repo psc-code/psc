@@ -23,8 +23,17 @@ void mrc_ddc_set_domain(struct mrc_ddc *ddc, struct mrc_domain *domain);
 struct mrc_domain *mrc_ddc_get_domain(struct mrc_ddc *ddc);
 void mrc_ddc_setup(struct mrc_ddc *ddc);
 void mrc_ddc_destroy(struct mrc_ddc *ddc);
-void mrc_ddc_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx);
+void mrc_ddc_fill_ghosts_fld(struct mrc_ddc *ddc, int mb, int me, struct mrc_fld *fld);
+
+// FIXME: I have to have these for MB, but they don't really make sense for anything else
+void mrc_ddc_global_to_local_fld(struct mrc_ddc *ddc, struct mrc_fld *gfld, struct mrc_fld *lfld);
+void mrc_ddc_fill_ghost_edges_fld(struct mrc_ddc *ddc, int mb, int me, struct mrc_fld *fld);
+
+// OBSOLETE: when doing boundary exchange on a mrc_fld, use the API above
+// this one is more flexible, and still used in PSC, but it should go away when we
+// always use mrc_fld's
 void mrc_ddc_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx);
+void mrc_ddc_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx);
 void mrc_ddc_fill_ghosts_begin(struct mrc_ddc *ddc, int mb, int me, void *ctx);
 void mrc_ddc_fill_ghosts_end(struct mrc_ddc *ddc, int mb, int me, void *ctx);
 void mrc_ddc_fill_ghosts_local(struct mrc_ddc *ddc, int mb, int me, void *ctx);
@@ -35,7 +44,7 @@ void mrc_ddc_fill_ghosts_local(struct mrc_ddc *ddc, int mb, int me, void *ctx);
 void mrc_ddc_amr_add_value(struct mrc_ddc *ddc,
 			   int row_patch, int rowm, int row[3],
 			   int col_patch, int colm, int col[3],
-			   float val);
+			   double val);
 void mrc_ddc_amr_assemble(struct mrc_ddc *ddc);
 void mrc_ddc_amr_apply(struct mrc_ddc *ddc, struct mrc_m3 *fld);
 
@@ -51,7 +60,8 @@ struct mrc_ddc_amr_stencil {
   int nr_entries;
 };
   
-bool mrc_domain_is_ghost(struct mrc_domain *domain, int ext[3], int p, int i[3]);
+bool mrc_domain_is_local_ghost(struct mrc_domain *domain, int ext[3], int lp, int i[3]);
+bool mrc_domain_is_ghost(struct mrc_domain *domain, int ext[3], int pp, int i[3]);
 void mrc_ddc_amr_set_by_stencil(struct mrc_ddc *ddc, int m, int bnd, int ext[3],
 				struct mrc_ddc_amr_stencil *stencil_coarse,
 				struct mrc_ddc_amr_stencil *stencil_fine);
@@ -63,7 +73,6 @@ void mrc_ddc_amr_set_by_stencil(struct mrc_ddc *ddc, int m, int bnd, int ext[3],
        ix - ilo[0]])
 
 extern struct mrc_ddc_funcs mrc_ddc_funcs_fld;
-extern struct mrc_ddc_funcs mrc_ddc_funcs_m3;
 
 static inline int
 mrc_ddc_dir2idx(int dir[3])

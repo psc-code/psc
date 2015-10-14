@@ -13,6 +13,8 @@ struct xdmf_fld_info {
   char *name;
   char *path;
   bool is_vec;
+  char *dtype;
+  int precision;
 };
 
 struct xdmf_spatial {
@@ -26,6 +28,7 @@ struct xdmf_spatial {
   struct mrc_patch_info *patch_infos;
   float *xl[3];
   float *dx[3];
+  int sw;
   const char *crd_nc_path[3];
 
   int nr_fld_info;
@@ -61,13 +64,13 @@ struct xdmf_spatial *xdmf_spatial_create_f1(list_t *xdmf_spatial_list,
 struct xdmf_spatial *xdmf_spatial_create_m3(list_t *xdmf_spatial_list,
 					    const char *name, 
 					    struct mrc_domain *domain,
-					    struct mrc_io *io);
+					    struct mrc_io *io, int sw);
 struct xdmf_spatial *xdmf_spatial_create_m3_parallel(list_t *xdmf_spatial_list,
 						     const char *name, 
 						     struct mrc_domain *domain,
 						     int slab_off[3], int slab_dims[3],
 						     struct mrc_io *io);
 void xdmf_spatial_save_fld_info(struct xdmf_spatial *xs, char *fld_name,
-				char *path, bool is_vec);
+				char *path, bool is_vec, int mrc_dtype);
 
 #endif

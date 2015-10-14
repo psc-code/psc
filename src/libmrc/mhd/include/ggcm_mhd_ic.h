@@ -10,6 +10,5 @@ MRC_CLASS_DECLARE(ggcm_mhd_ic, struct ggcm_mhd_ic);
 
 void ggcm_mhd_ic_set_mhd(struct ggcm_mhd_ic *ic, struct ggcm_mhd *mhd);
 void ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic);
-void ggcm_mhd_ic_ini_b(struct ggcm_mhd_ic *ic, float b_sw[3]);
 
 #endif

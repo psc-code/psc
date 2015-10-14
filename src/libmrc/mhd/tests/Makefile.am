@@ -7,34 +7,52 @@ bin_PROGRAMS = \
 	mhd_cosine \
 	mhd_bw \
 	mhd_ot \
-	mhd_whistler
+	mhd_harris \
+	mhd_kh \
+	mhd_ici \
+	mhd_hydroblast \
+	mhd_mhdblast \
+	mhd_wave
 
 check_PROGRAMS = \
 	test_ggcm_mhd_crds \
-	test_ggcm_mhd \
-	mhd2
+	test_ggcm_mhd
 
-noinst_LTLIBRARIES = libmhdtbd.la
+LDADD = ../src/libmhd.la ../../src/libmrc.la
 
-libmhdtbd_la_SOURCES = \
-	ggcm_mhd_ic_whistler.c \
-	ggcm_mhd_ic_bw.c \
-	ggcm_mhd_ic_ot.c \
-	ggcm_mhd_ic_otzi.c \
-	ggcm_mhd_ic_hydroblast.c \
-	ggcm_mhd_ic_mhdblast.c \
-	ggcm_mhd_ic_kh.c \
-	ggcm_mhd_ic_ici.c \
-	ggcm_mhd_ic_wave_sound.c \
-	ggcm_mhd_ic_wave_alfven.c \
-	ggcm_mhd_diag_c.c \
-	ggcm_diag_lib.c
-
-LDADD = libmhdtbd.la ../src/libmhd.la ../../src/libmrc.la
+TEST_EXTENSIONS = .sh
+SH_LOG_COMPILER = bash
 
 TESTS = \
 	test_ggcm_mhd_crds \
-	test_ggcm_mhd
+	test_ggcm_mhd \
+	test_mhd_wave_cpaw.sh \
+	mhd_wave_cpaw_amr.sh \
+	mhd_ot.sh \
+	mhd_bw.sh \
+	mhd_double_tearing_x.sh
 
 XFAIL_TESTS = \
 	test_ggcm_mhd_crds
+
+if !HAVE_VISCID
+XFAIL_TESTS += \
+	test_mhd_wave_cpaw.sh
+endif
+
+if HAVE_GKEYLL
+
+AM_CFLAGS = -Bdynamic
+AM_CXXFLAGS = -Bdynamic
+
+bin_PROGRAMS += mhd_gkeyll
+
+nodist_EXTRA_mhd_gkeyll_SOURCES = dummy.cxx
+
+mhd_gkeyll_LDADD = \
+	-lstdc++ \
+	$(LDADD)
+
+endif
+
+AM_LDFLAGS = -framework Accelerate

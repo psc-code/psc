@@ -87,8 +87,6 @@ main(int argc, char **argv)
   mrc_domain_set_param_int(domain, "bcx", BC_PERIODIC);
   mrc_domain_set_param_int(domain, "bcy", BC_PERIODIC);
   mrc_domain_set_param_int(domain, "bcz", BC_PERIODIC);
-  struct mrc_crds *crds = mrc_domain_get_crds(domain);
-  mrc_crds_set_type(crds, "multi_uniform");
   mrc_domain_set_from_options(domain);
   mrc_domain_setup(domain);
   mrc_domain_view(domain);
@@ -96,8 +94,8 @@ main(int argc, char **argv)
 
   struct mrc_fld *m3 = mrc_domain_m3_create(domain);
   mrc_fld_set_name(m3, "test_m3");
-  mrc_fld_set_nr_comps(m3, 2);
-  mrc_fld_set_sw(m3, 1);
+  mrc_fld_set_param_int(m3, "nr_comps", 2);
+  mrc_fld_set_param_int(m3, "nr_ghosts", 1);
   mrc_fld_set_from_options(m3);
   mrc_fld_setup(m3);
   mrc_fld_set_comp_name(m3, 0, "fld0");
@@ -107,13 +105,9 @@ main(int argc, char **argv)
   set_m3(m3);
 
   struct mrc_ddc *ddc = mrc_domain_create_ddc(domain);
-  mrc_ddc_set_funcs(ddc, &mrc_ddc_funcs_m3);
-  mrc_ddc_set_param_int3(ddc, "ibn", m3->_sw.vals);
-  mrc_ddc_set_param_int(ddc, "max_n_fields", 2);
-  mrc_ddc_set_param_int(ddc, "size_of_type", sizeof(float));
   mrc_ddc_setup(ddc);
   mrc_ddc_view(ddc);
-  mrc_ddc_fill_ghosts(ddc, 0, 2, m3);
+  mrc_ddc_fill_ghosts_fld(ddc, 0, 2, m3);
   mrc_ddc_destroy(ddc);
 
   check_m3(m3);
