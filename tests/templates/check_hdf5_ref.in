@@ -1,0 +1,9 @@
+
+for a in @abs_srcdir@/../reference_results/$TEST/*.h5.dump; do 
+    b=`basename $a .dump`
+    h5dump $b > $b.dump
+    sed 's/uid-0x[0-9a-f]*/uid/g' $b.dump | 
+    sed '/GROUP "mrc_vec-uid" {/,/^   }/d' |
+    diff -b -I 'STRSIZE [0-9]\{1,2\}' -u $a -
+    rm $b.dump
+done

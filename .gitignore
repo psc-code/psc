@@ -4,6 +4,7 @@
 *.lo
 *.a
 *.la
+.libs
 Makefile
 Makefile.in
 aclocal.m4
@@ -22,5 +23,6 @@ ltmain.sh
 missing
 depcomp
 stamp-h1
+.dirstamp
 .deps
 test-driver

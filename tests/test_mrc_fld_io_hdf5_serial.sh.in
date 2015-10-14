@@ -1,0 +1,5 @@
+#! /bin/bash
+
+IOTYPE="hdf5_serial"
+
+source templates/mrc_fld_io_checks

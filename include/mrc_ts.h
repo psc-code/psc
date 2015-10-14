@@ -10,6 +10,9 @@ struct mrc_ts_monitor;
 
 MRC_CLASS_DECLARE(mrc_ts, struct mrc_ts);
 
+float mrc_ts_time(struct mrc_ts *ts);
+float mrc_ts_dt(struct mrc_ts *ts);
+int mrc_ts_step_number(struct mrc_ts *ts);
 void mrc_ts_set_dt(struct mrc_ts *ts, float dt);
 void mrc_ts_set_solution(struct mrc_ts *ts, struct mrc_obj *x);
 void mrc_ts_add_monitor(struct mrc_ts *ts, struct mrc_ts_monitor *mon);
@@ -18,6 +21,19 @@ void mrc_ts_set_rhs_function(struct mrc_ts *ts,
 			     void (*rhsf)(void *ctx, struct mrc_obj *x, float time,
 					  struct mrc_obj *rhs),
 			     void *ctx);
+void mrc_ts_set_step_function(struct mrc_ts *ts,
+			      void (*stepf)(void *ctx, struct mrc_ts *ts,
+					    struct mrc_obj *x),
+			      void *ctx);
+void mrc_ts_set_pre_step_function(struct mrc_ts *ts,
+				  void (*pre_step)(void *ctx, struct mrc_ts *ts,
+						     struct mrc_obj *x),
+				  void *ctx);
+void mrc_ts_set_post_step_function(struct mrc_ts *ts,
+				  void (*post_step)(void *ctx, struct mrc_ts *ts,
+						    struct mrc_obj *x),
+				  void *ctx);
+
 void mrc_ts_step(struct mrc_ts *ts);
 void mrc_ts_solve(struct mrc_ts *ts);
 

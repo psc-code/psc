@@ -1,0 +1,16 @@
+
+    for a in @abs_srcdir@/../reference_results/$TEST/*.xdmf; do 
+    	b=`basename $a`
+    	if sed 's/uid-0x[0-9a-f]*/uid/g' $b | diff -b -u $a -
+    	then
+    	    echo "${b} matches, not updating"
+    	else
+    	    echo "${b} doesn't match. Update?"
+    	    select yn in "Yes" "No"; do
+    		case $yn in
+    		    Yes ) sed 's/uid-0x[0-9a-f]*/uid/g' $b > $a; break;;
+    		    No ) break;;
+    		esac
+    	    done
+    	fi
+    done

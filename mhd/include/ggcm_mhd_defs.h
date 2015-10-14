@@ -7,95 +7,76 @@
 
 #define BND (2)
 
-// ----------------------------------------------------------------------
-// fields
-// FIXME, these are dependent on what openggcm does
-// indices based on mhd-corea.for
+// for the state vector
 
 enum {
-  _RR1,
-  _RV1X,
-  _RV1Y,
-  _RV1Z,
-  _UU1,
-  _B1X,
-  _B1Y,
-  _B1Z,
+  RR,
+  RVX,
+  RVY,
+  RVZ,
+  UU,
+  BX,
+  BY,
+  BZ,
+  EE = UU,
+};
 
-  _RR2,
-  _RV2X,
-  _RV2Y,
-  _RV2Z,
-  _UU2,
-  _B2X,
-  _B2Y,
-  _B2Z,
+// for primitive fields
 
-  _YMASK, // 16
-  _ZMASK,
-  _CMSV,
-  
-  _RR, // 19
-  _PP,
-  _VX,
-  _VY,
-  _VZ,
-  _BX,
-  _BY,
-  _BZ,
-
-  _TMP1, // 27
-  _TMP2,
-  _TMP3,
-  _TMP4,
-
-  _FLX, // 31
-  _FLY,
-  _FLZ,
-
-  _CX, // 34
-  _CY,
-  _CZ,
-  _XTRA1, // 37
-  _XTRA2,
-  _RESIS,
-  _CURRX, // 40
-  _CURRY,
-  _CURRZ,
-  _RMASK,
-  _BDIPX,
-  _BDIPY, 
-  _BDIPZ,
-  _NR_FLDS,
+enum {
+  VX = 1,
+  VY = 2,
+  VZ = 3,
+  PP = 4,
+  CMSV = 5,
 };
 
 // ----------------------------------------------------------------------
 // macros to ease field access
 
-#if 0
-#define B1XYZ(f,m, ix,iy,iz) MRC_F3(f, _B1X+(m), ix,iy,iz)
-#else // GGCM staggering
-#define B1XYZ(f,m, ix,iy,iz) MRC_F3(f, _B1X+(m),		\
-				    (ix) - ((m) == 0),		\
-				    (iy) - ((m) == 1),		\
-				    (iz) - ((m) == 2))
-#endif
+#define BXYZ(f,m, ix,iy,iz) F3(f, BX+(m), ix,iy,iz)
 
-#define B1X(f, ix,iy,iz) B1XYZ(f, 0, ix,iy,iz)
-#define B1Y(f, ix,iy,iz) B1XYZ(f, 1, ix,iy,iz)
-#define B1Z(f, ix,iy,iz) B1XYZ(f, 2, ix,iy,iz)
+#define RR(U, i,j,k)   F3(U, RR , i,j,k)
+#define RVX(U, i,j,k)  F3(U, RVX, i,j,k)
+#define RVY(U, i,j,k)  F3(U, RVY, i,j,k)
+#define RVZ(U, i,j,k)  F3(U, RVZ, i,j,k)
+#define EE(U, i,j,k)   F3(U, EE , i,j,k)
+#define BX(U, i,j,k)   F3(U, BX , i,j,k)
+#define BY(U, i,j,k)   F3(U, BY , i,j,k)
+#define BZ(U, i,j,k)   F3(U, BZ , i,j,k)
+#define UU(U, i,j,k)   F3(U, UU , i,j,k)
+
+#define VX(f, i,j,k)   F3(f, VX, i,j,k)
+#define VY(f, i,j,k)   F3(f, VY, i,j,k)
+#define VZ(f, i,j,k)   F3(f, VZ, i,j,k)
+#define PP(f, i,j,k)   F3(f, PP, i,j,k)
+
+#define RR_(U, i,j,k, p)   M3(U, RR , i,j,k, p)
+#define RVX_(U, i,j,k, p)  M3(U, RVX, i,j,k, p)
+#define RVY_(U, i,j,k, p)  M3(U, RVY, i,j,k, p)
+#define RVZ_(U, i,j,k, p)  M3(U, RVZ, i,j,k, p)
+#define EE_(U, i,j,k, p)   M3(U, EE , i,j,k, p)
+#define BX_(U, i,j,k, p)   M3(U, BX , i,j,k, p)
+#define BY_(U, i,j,k, p)   M3(U, BY , i,j,k, p)
+#define BZ_(U, i,j,k, p)   M3(U, BZ , i,j,k, p)
+#define UU_(U, i,j,k, p)   M3(U, UU , i,j,k, p)
+
+#define VX_(f, i,j,k, p)   M3(f, VX , i,j,k, p)
+#define VY_(f, i,j,k, p)   M3(f, VY , i,j,k, p)
+#define VZ_(f, i,j,k, p)   M3(f, VZ , i,j,k, p)
+#define PP_(f, i,j,k, p)   M3(f, PP , i,j,k, p)
 
 // ----------------------------------------------------------------------
 // coordinates
 
 enum {
-  FX1, // node-centered, [-1:mx-1]
+  FX1, // x_{i+1/2} cell-centered, [-1:mx-1]
   FX2, // same as FX1, squared
-  FD1,
-  BD1,
-  BD2,
-  BD3,
-  BD4,
+  FD1, // 1 / (x_{i+1} - x_{i}) = 1 / (.5*(FX1[i+1] - FX1[i-1]))
+  BD1, // 1 / (x_{i+3/2} - x_{i+1/2}) = 1 / (FX1[i+1] - FX1[i])
+  BD2, // x_{i+1} - x_{i} = .5*(FX1[i+1] - FX1[i-1])
+  BD3, // 1 / BD2 == FD1
+  BD4, // == BD1
   NR_CRDS, // FIXME, update from Fortran
 };
 

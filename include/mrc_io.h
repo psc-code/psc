@@ -28,13 +28,10 @@ MRC_CLASS_DECLARE(mrc_io, struct mrc_io);
 void mrc_io_open(struct mrc_io *io, const char *mode, int step, float time);
 void mrc_io_close(struct mrc_io *io);
 void mrc_io_read_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld);
-void mrc_io_read_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1);
 void mrc_io_read_f3(struct mrc_io *io, const char *path, struct mrc_fld *fld);
 void mrc_io_write_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld);
-void mrc_io_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1);
-void mrc_io_write_f3(struct mrc_io *io, const char *path, struct mrc_fld *fld, float scale);
-void mrc_io_read_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1);
-void mrc_io_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1);
+void mrc_io_read_m1(struct mrc_io *io, const char *path, struct mrc_fld *m1);
+void mrc_io_write_m1(struct mrc_io *io, const char *path, struct mrc_fld *m1);
 void mrc_io_read_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3);
 void mrc_io_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3);
 void mrc_io_write_field2d(struct mrc_io *io, float scale, struct mrc_fld *fld,
@@ -45,7 +42,12 @@ void mrc_io_write_field_slice(struct mrc_io *io, float scale, struct mrc_fld *fl
 void mrc_io_read_attr(struct mrc_io *io, const char *path, int type, const char *name,
 		      union param_u *pv);
 void mrc_io_read_attr_int(struct mrc_io *io, const char *path, const char *name, int *val);
+void mrc_io_read_attr_int3(struct mrc_io *io, const char *path, const char *name, int (*val)[3]);
+void mrc_io_read_attr_float(struct mrc_io *io, const char *path, const char *name, float *val);
+void mrc_io_read_attr_float3(struct mrc_io *io, const char *path, const char *name, float (*val)[3]);
 void mrc_io_read_attr_double(struct mrc_io *io, const char *path, const char *name, double *val);
+void mrc_io_read_attr_double3(struct mrc_io *io, const char *path, const char *name, double (*val)[3]);
+void mrc_io_read_attr_bool(struct mrc_io *io, const char *path, const char *name, bool *pv);
 void mrc_io_read_attr_string(struct mrc_io *io, const char *path, const char *name,
 			  char **pv);
 
@@ -53,7 +55,11 @@ void mrc_io_write_attr(struct mrc_io *io, const char *path, int type, const char
 		       union param_u *pv);
 void mrc_io_write_attr_int(struct mrc_io *io, const char *path, const char *name, int val);
 void mrc_io_write_attr_int3(struct mrc_io *io, const char *path, const char *name, int val[3]);
+void mrc_io_write_attr_float(struct mrc_io *io, const char *path, const char *name, float val);
+void mrc_io_write_attr_float3(struct mrc_io *io, const char *path, const char *name, float val[3]);
 void mrc_io_write_attr_double(struct mrc_io *io, const char *path, const char *name, double val);
+void mrc_io_write_attr_double3(struct mrc_io *io, const char *path, const char *name, double val[3]);
+void mrc_io_write_attr_bool(struct mrc_io *io, const char *path, const char *name, const bool val);
 void mrc_io_write_attr_string(struct mrc_io *io, const char *path, const char *name,
 			      const char *val);
 

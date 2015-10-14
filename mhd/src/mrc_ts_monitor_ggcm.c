@@ -2,8 +2,8 @@
 #include <mrc_ts_monitor_private.h>
 
 #include "ggcm_mhd_private.h"
-#include "ggcm_mhd_commu.h"
 #include "ggcm_mhd_diag.h"
+#include "ggcm_mhd_defs.h"
 
 #include <mrc_ts_private.h> // FIXME?
 #include <mrc_io.h>
@@ -26,10 +26,9 @@ mrc_ts_monitor_ggcm_run(struct mrc_ts_monitor *mon, struct mrc_ts *ts)
 	     out->nr, ts->time);
   struct ggcm_mhd *mhd = (struct ggcm_mhd *) ts->ctx_obj;
 
-  // FIXME? hack misusing istep as output counter
-  mhd->istep = out->nr++;
   mhd->time = ts->time;
-  ggcm_mhd_diag_run(mhd->diag);
+  ggcm_mhd_fill_ghosts(mhd, mhd->fld, 0, mhd->time);
+  ggcm_mhd_diag_run_now(mhd->diag, mhd->fld, DIAG_TYPE_3D, out->nr++);
 }
 
 struct mrc_ts_monitor_ops mrc_ts_monitor_ggcm_ops = {

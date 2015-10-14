@@ -20,7 +20,17 @@ extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_rr1;
 extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_uu1;
 extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_rv1;
 extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_b1;
+extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_rr;
+extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_v;
+extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_pp;
+extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_b;
 extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_j;
 extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_divb;
+extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_rank;
+extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_e_ec;
+extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_e_cc;
+extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_gkeyll_e;
+extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_gkeyll_i;
+extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_gkeyll_em;
 
 #endif

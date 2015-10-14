@@ -5,10 +5,13 @@ set -e
 @MPIRUN@ -n 1 ./test_mrc_m1 --mrc_io_type xdmf_serial --case 2
 
 TEST=m1_1
-for a in reference_results/$TEST/*.h5.dump; do 
-    b=`basename $a .dump`
-    h5dump $b > $b.dump
-    diff -b -u $a $b.dump
-    rm $b.dump
+
+while getopts ":u:" Option
+do
+    echo "Updating Reference Results"
+    source templates/update_hdf5_ref
 done
+    
+
+source templates/check_hdf5_ref
 

@@ -23,6 +23,18 @@ ggcm_mhd_diag_run(struct ggcm_mhd_diag *diag)
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_diag_run_now
+
+void
+ggcm_mhd_diag_run_now(struct ggcm_mhd_diag *diag, struct mrc_fld *fld,
+			int diag_type, int itdia)
+{
+  struct ggcm_mhd_diag_ops *ops = ggcm_mhd_diag_ops(diag);
+  assert(ops && ops->run);
+  ops->run_now(diag, fld, diag_type, itdia);
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_diag_shutdown
 
 void

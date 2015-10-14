@@ -5,8 +5,11 @@
 #include "ggcm_mhd_private.h"
 #include "ggcm_mhd_diag_private.h"
 
+#include <mrc_fld_as_double.h>
+#include <mrc_domain.h>
 #include <stdio.h>
 #include <assert.h>
+#include <math.h>
 
 // ======================================================================
 // ggcm_mhd_diag_item subclass "rr1"
@@ -16,13 +19,11 @@
 
 static void
 ggcm_mhd_diag_item_rr1_run(struct ggcm_mhd_diag_item *item,
-			   struct mrc_io *io, struct mrc_fld *f,
+			   struct mrc_io *io, struct mrc_fld *fld,
 			   int diag_type, float plane)
 {
-  struct ggcm_mhd *mhd = item->diag->mhd;
-
-  float scale_rr = mhd->par.rrnorm;
-  ggcm_mhd_diag_c_write_one_field(io, f, _RR1, "rr1", scale_rr, diag_type, plane);
+  float scale_rr = 1.;
+  ggcm_mhd_diag_c_write_one_field(io, fld, RR, "rr1", scale_rr, diag_type, plane);
 }
 
 // ----------------------------------------------------------------------
@@ -41,11 +42,63 @@ struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_rr1 = {
 
 static void
 ggcm_mhd_diag_item_uu1_run(struct ggcm_mhd_diag_item *item,
-			   struct mrc_io *io, struct mrc_fld *f,
+			   struct mrc_io *io, struct mrc_fld *fld,
 			   int diag_type, float plane)
 {
+  struct ggcm_mhd *mhd = item->diag->mhd;
+
+  int gdims[3];
+  mrc_domain_get_global_dims(fld->_domain, gdims);
+  int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
+
+  int mhd_type;
+  mrc_fld_get_param_int(fld, "mhd_type", &mhd_type);
+
+  int bnd = fld->_nr_ghosts;
+
+  struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, SW_2, "uu1");
+  mrc_fld_set_type(fld_r, FLD_TYPE);
+  mrc_fld_set_param_int(fld_r, "nr_ghosts", bnd);
+  mrc_fld_setup(fld_r);
+
+  struct mrc_fld *r = mrc_fld_get_as(fld_r, FLD_TYPE);
+  struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
+
+  if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM ||
+      mhd_type == MT_SEMI_CONSERVATIVE) {
+    for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
+      mrc_fld_foreach(f, ix,iy,iz, bnd, bnd) {
+	M3(r, 0, ix,iy,iz, p) = UU_(f, ix,iy,iz, p);
+      } mrc_fld_foreach_end;
+    }
+  } else if (mhd_type == MT_FULLY_CONSERVATIVE) {
+    for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
+      mrc_fld_foreach(f, ix,iy,iz, bnd - 1, bnd - 1) {
+	float b2  = (sqr(.5f * (BX_(f, ix,iy,iz, p) + BX_(f, ix+dx,iy   ,iz   , p))) +
+		     sqr(.5f * (BY_(f, ix,iy,iz, p) + BY_(f, ix   ,iy+dy,iz   , p))) +
+		     sqr(.5f * (BZ_(f, ix,iy,iz, p) + BZ_(f, ix   ,iy   ,iz+dz, p))));
+	M3(r, 0, ix,iy,iz, p) = EE_(f, ix,iy,iz, p) -.5f * b2;
+      } mrc_fld_foreach_end;
+    }
+  } else {
+    assert(0);
+  }
+
+  float max = 0.;
+  for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
+    mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
+      max = mrc_fld_max(max, mrc_fld_abs(M3(r, 0, ix,iy,iz, p)));
+      if (!isfinite(UU_(f, ix,iy,iz, p))) max = 9999.;
+    } mrc_fld_foreach_end;
+  }
+  mprintf("max uu1 = %g\n", max);
+
+  mrc_fld_put_as(r, fld_r);
+  mrc_fld_put_as(f, fld);
+
   float scale_uu = 1.;
-  ggcm_mhd_diag_c_write_one_field(io, f, _UU1, "uu1", scale_uu, diag_type, plane);
+  ggcm_mhd_diag_c_write_one_field(io, fld_r, 0, "uu1", scale_uu, diag_type, plane);
+  mrc_fld_destroy(fld_r);
 }
 
 // ----------------------------------------------------------------------
@@ -64,13 +117,13 @@ struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_uu1 = {
 
 static void
 ggcm_mhd_diag_item_rv1_run(struct ggcm_mhd_diag_item *item,
-			   struct mrc_io *io, struct mrc_fld *f,
+			   struct mrc_io *io, struct mrc_fld *fld,
 			   int diag_type, float plane)
 {
   float scale_rv = 1.;
-  ggcm_mhd_diag_c_write_one_field(io, f, _RV1X, "rv1x", scale_rv, diag_type, plane);
-  ggcm_mhd_diag_c_write_one_field(io, f, _RV1Y, "rv1y", scale_rv, diag_type, plane);
-  ggcm_mhd_diag_c_write_one_field(io, f, _RV1Z, "rv1z", scale_rv, diag_type, plane);
+  ggcm_mhd_diag_c_write_one_field(io, fld, RVX, "rv1x", scale_rv, diag_type, plane);
+  ggcm_mhd_diag_c_write_one_field(io, fld, RVY, "rv1y", scale_rv, diag_type, plane);
+  ggcm_mhd_diag_c_write_one_field(io, fld, RVZ, "rv1z", scale_rv, diag_type, plane);
 }
 
 // ----------------------------------------------------------------------
@@ -89,13 +142,13 @@ struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_rv1 = {
 
 static void
 ggcm_mhd_diag_item_b1_run(struct ggcm_mhd_diag_item *item,
-			  struct mrc_io *io, struct mrc_fld *f,
+			  struct mrc_io *io, struct mrc_fld *fld,
 			  int diag_type, float plane)
 {
-  float scale_rv = 1.;
-  ggcm_mhd_diag_c_write_one_field(io, f, _B1X, "b1x", scale_rv, diag_type, plane);
-  ggcm_mhd_diag_c_write_one_field(io, f, _B1Y, "b1y", scale_rv, diag_type, plane);
-  ggcm_mhd_diag_c_write_one_field(io, f, _B1Z, "b1z", scale_rv, diag_type, plane);
+  float scale_bb = 1.;
+  ggcm_mhd_diag_c_write_one_field(io, fld, BX, "b1x", scale_bb, diag_type, plane);
+  ggcm_mhd_diag_c_write_one_field(io, fld, BY, "b1y", scale_bb, diag_type, plane);
+  ggcm_mhd_diag_c_write_one_field(io, fld, BZ, "b1z", scale_bb, diag_type, plane);
 }
 
 // ----------------------------------------------------------------------

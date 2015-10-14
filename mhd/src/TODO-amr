@@ -1,0 +1,14 @@
+
+- flux correction
+
+- 2nd order interpolation (limited or not...)
+
+- limited will not be easy, since it can't be put into a matrix :(
+
+- 3-d, choose refinement per direction (e.g., 2:2:1)
+
+- all the B/E stuff
+
+- AOS doesn't work with AMR // indexing should be mrc_fld business, anyway
+
+- mrc_fld aos vs non-aos could now be done without distinction because of the stride business
