@@ -340,11 +340,11 @@ psc_setup_mrc_domain(struct psc *psc, int nr_patches)
   mrc_domain_set_param_int3(domain, "np", psc->domain.np);
 
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
-  mrc_crds_set_type(crds, "multi_uniform");
+  mrc_crds_set_type(crds, "uniform");
   mrc_crds_set_param_int(crds, "sw", 2);
-  mrc_crds_set_param_float3(crds, "l",  (float[3]) { psc->domain.corner[0],
+  mrc_crds_set_param_double3(crds, "l",  (double[3]) { psc->domain.corner[0],
 	psc->domain.corner[1], psc->domain.corner[2] });
-  mrc_crds_set_param_float3(crds, "h",  (float[3]) {
+  mrc_crds_set_param_double3(crds, "h",  (double[3]) {
       psc->domain.corner[0] + psc->domain.length[0],
       psc->domain.corner[1] + psc->domain.length[1],
       psc->domain.corner[2] + psc->domain.length[2] });
