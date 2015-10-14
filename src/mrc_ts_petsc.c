@@ -113,11 +113,15 @@ void
 mrc_ts_petsc_set_jacobian_function(struct mrc_ts *ts,
 			     int (*calc_jac)(Mat J, Vec x, float t, void *ctx),
 			     int (*get_jac_mat)(void *ctx, Mat *M),
+			     int (*calc_pre_mat)(Mat Pre, Vec x, float t, void *ctx),
+			     int (*get_pre_mat)(void *ctx, Mat *M),
 			     void *ctx)
 {
   struct mrc_ts_petsc *sub = mrc_ts_petsc(ts);
   sub->calc_jac = calc_jac;
   sub->get_jac_mat = get_jac_mat;
+  sub->calc_pre_mat = calc_pre_mat;
+  sub->get_pre_mat = get_pre_mat;
   sub->jacf_ctx = ctx;
 }
 
@@ -130,6 +134,14 @@ wrap_mrc_jacobian_function(TS ts, PetscReal t, Vec xg, Mat *J, Mat *B,
   struct mrc_ts_petsc *sub = mrc_ts_petsc(tl);
   int ierr, step, it, freq, freq_step;
   SNES snes;
+  int bsin, bsctx, sizein, sizectx;
+  ierr = VecGetBlockSize(xg, &bsin); CE;
+  ierr = VecGetLocalSize(xg, &sizein); CE;
+  ierr = VecGetBlockSize(sub->xg_vec, &bsctx); CE;
+  ierr = VecGetLocalSize(sub->xg_vec, &sizectx); CE;
+  if ( sizein == sizectx && bsin != bsctx) {
+    VecSetBlockSize(xg, bsctx);
+  }
 
   PetscFunctionBegin;
   ierr = TSGetSNES(ts, &snes); CE;
@@ -168,10 +180,16 @@ wrap_mrc_jacobian_function(TS ts, PetscReal t, Vec xg, Mat *J, Mat *B,
  compute:
     ierr = PetscPrintf(PETSC_COMM_WORLD, "Computing Jacobian... "); CE;
     //    ierr = LogEventBegin(KG_calc_jac); CE;
-    ierr = sub->calc_jac(*B, xg, (float) t, sub->jacf_ctx); CE;
-    //    ierr = LogEventEnd(KG_calc_jac); CE;
+    ierr = sub->calc_jac(*J, xg, (float) t, sub->jacf_ctx); CE;
     ierr = PetscPrintf(PETSC_COMM_WORLD, "done\n"); CE;
+    //    ierr = LogEventEnd(KG_calc_jac); CE;
     *flag = SAME_NONZERO_PATTERN;
+    if (sub->sep_pre) {
+      ierr = PetscPrintf(PETSC_COMM_WORLD, "Computing Preconditioner Matrix... "); CE;
+      ierr = sub->calc_pre_mat(*B, xg, (float) t, sub->jacf_ctx); CE;
+      *flag = *((MatStructure *) sub->pre_mat_structure);
+      ierr = PetscPrintf(PETSC_COMM_WORLD, "done\n"); CE;
+    }
     //    ierr = MatView(*J, PETSC_VIEWER_STDOUT_WORLD); CE;
     //    ierr = print_jac(*J); CE;
     //ierr = MatCopy(*B, Bsave, SAME_NONZERO_PATTERN); CE;
@@ -260,8 +278,20 @@ _mrc_ts_petsc_setup(struct mrc_ts *ts)
   if (sub->calc_jac){
     assert(sub->get_jac_mat);
     sub->get_jac_mat(sub->jacf_ctx, &sub->J);
-    ierr = TSSetRHSJacobian(sub->petsc_ts, sub->J, sub->J,
-			    wrap_mrc_jacobian_function, ts); CE;
+    if (sub->sep_pre) {
+      assert(sub->get_pre_mat);
+      assert(sub->calc_pre_mat);
+      if (!sub->pre_mat_structure) {
+	sub->pre_mat_structure = calloc(1, sizeof(MatStructure));
+      }
+      sub->get_pre_mat(sub->jacf_ctx, &sub->Pre);
+      ierr = TSSetRHSJacobian(sub->petsc_ts, sub->J, sub->Pre,
+			      wrap_mrc_jacobian_function, ts); CE;
+    }
+    else {
+      ierr = TSSetRHSJacobian(sub->petsc_ts, sub->J, sub->J,
+			      wrap_mrc_jacobian_function, ts); CE;
+    }
   }
 
 
@@ -287,6 +317,9 @@ _mrc_ts_petsc_destroy(struct mrc_ts *ts)
     ierr = MatDestroy(&(sub->J));
   }
   ierr = TSDestroy(&(sub->petsc_ts)); CE;  
+  
+  if (sub->pre_mat_structure) free(sub->pre_mat_structure);
+
 }
 
 static void 
@@ -336,9 +369,21 @@ static struct mrc_obj_method mrc_ts_petsc_methods[] = {
   {}
 };
 
+#define VAR(x) (void *)offsetof(struct mrc_ts_petsc, x)
+static struct param mrc_ts_petsc_param_descr[] = {
+  { "sep_pre"           , VAR(sep_pre)           , PARAM_BOOL(false),
+  .help = "the preconditioner will be calculated from a matrix other than the jacobian" },
+  { "pre_mat_structure" , VAR(pre_mat_structure) , PARAM_PTR(NULL),
+    .help = "A pointer to the petsc structure flag describing the preconditioner matrix. NOT FOR COMMAND LINE USE!" },
+  {},
+};
+#undef VAR
+
+
 struct mrc_ts_ops mrc_ts_petsc_ops = {
   .name             = "petsc",
   .size             = sizeof(struct mrc_ts_petsc),
+  .param_descr      = mrc_ts_petsc_param_descr,
   .create           = _mrc_ts_petsc_create,
   .setup            = _mrc_ts_petsc_setup,
   .destroy          = _mrc_ts_petsc_destroy,

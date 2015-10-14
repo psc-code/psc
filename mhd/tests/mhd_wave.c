@@ -70,7 +70,7 @@ cpaw_omega(double ksq, double k_par, double B, double rho,
 // rho: background density
 // d_i: hall parameter (length)
 // polarization == 1: right handed whistlers, -1: left handed ion cyclotron
-static double __unused
+static double _mrc_unused
 cpaw_omega_3d(double k[3], double B[3], double rho, double d_i,
               double polarization)
 {

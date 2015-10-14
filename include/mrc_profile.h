@@ -99,6 +99,18 @@ prof_start(int pr)
 }
 
 static inline void
+prof_restart(int pr)
+{
+  pr--;
+  assert(pr < MAX_PROF);
+
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  prof_globals.info[pr].time -= tv.tv_sec * 1000000ll + tv.tv_usec;
+  prof_globals.info[pr].cnt--;
+}
+
+static inline void
 prof_stop(int pr)
 {
   pr--;

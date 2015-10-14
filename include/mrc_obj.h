@@ -126,6 +126,7 @@ int mrc_obj_get_param_int3(struct mrc_obj *obj, const char *name, int *pval);
 int mrc_obj_get_param_float3(struct mrc_obj *obj, const char *name, float *pval);
 int mrc_obj_get_param_double3(struct mrc_obj *obj, const char *name, double *pval);
 int mrc_obj_get_param_obj(struct mrc_obj *obj, const char *name, struct mrc_obj **pval);
+int mrc_obj_get_param_ptr(struct mrc_obj *obj, const char *name, void **pval);
 int mrc_obj_get_param_float_array_nr_vals(struct mrc_obj *obj, const char *name, int *nr_vals);
 int mrc_obj_get_param_float_array(struct mrc_obj *obj, const char *name, float *pval);
 
@@ -152,6 +153,8 @@ void mrc_obj_add_child(struct mrc_obj *obj, struct mrc_obj *child);
 struct mrc_obj *mrc_obj_find_child(struct mrc_obj *obj, const char *name);
 void mrc_obj_write(struct mrc_obj *obj, struct mrc_io *io);
 struct mrc_obj *mrc_obj_read(struct mrc_io *io, const char *path, struct mrc_class *cls);
+struct mrc_obj *mrc_obj_read_comm(struct mrc_io *io, const char *path, struct mrc_class *cls,
+				  MPI_Comm comm);
 void mrc_obj_read_super(struct mrc_obj *obj, struct mrc_io *io);
 void mrc_obj_read_member_objs(struct mrc_obj *obj, struct mrc_io *io);
 void mrc_obj_read_member_objs_sub(struct mrc_obj *obj, struct mrc_io *io);
@@ -376,7 +379,11 @@ int mrc_obj_print_class_info(int verbosity);
   {                                                                     \
     return mrc_obj_get_param_float_array((struct mrc_obj *)obj, name, vals); \
   }                                                                     \
-                                                                        \
+  static inline int                                                    \
+  pfx ## _get_param_ptr(obj_type *obj, const char *name, void **pval)  \
+  {                                                                    \
+    return mrc_obj_get_param_ptr((struct mrc_obj *)obj, name, pval);    \
+  }                                                                     \
   static inline void                                                    \
   pfx ## _get_var(obj_type *obj, const char *name, union param_u **pv)  \
   {                                                                     \

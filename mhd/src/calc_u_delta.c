@@ -22,7 +22,7 @@ limit_0(struct mrc_fld *u_delta[3], struct mrc_fld *u)
 // TVD slope limiter  (van Leer 1977) harmonic mean
 // (dxu_)ijk = max{ (u_i+1jk-u_ijk)*(u_ijk-u_i-1jk)  / (u_i+1jk - u_i-1jk)}
 
-static void __unused
+static void _mrc_unused
 limit_1(struct mrc_fld *u_delta[3], struct mrc_fld *u)
 {
   mrc_fld_foreach(u, ix,iy,iz, 1, 1) {
@@ -57,7 +57,7 @@ limit_1(struct mrc_fld *u_delta[3], struct mrc_fld *u)
 // return zero if they are not all postivie or all negative  
 // minmod(a,b) = 0.5[sign(a)+sign(b)]*min(|a|,|b|) eq (41) 
 
-static void __unused
+static void _mrc_unused
 limit_2(struct mrc_fld *u_delta[3], struct mrc_fld *u)
 {
   int dind[3] = {0, 0, 0};  
@@ -87,7 +87,7 @@ limit_2(struct mrc_fld *u_delta[3], struct mrc_fld *u)
 // limit_3
 //
 // MONCEN limiter (Van Leer)
-static void __unused
+static void _mrc_unused
 limit_3(struct mrc_fld *u_delta[3], struct mrc_fld *u)
 {
   int dind[3] = {0, 0, 0};

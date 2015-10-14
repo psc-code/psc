@@ -87,6 +87,9 @@ struct mrc_obj *__mrc_io_read_path(struct mrc_io *io, const char *path, const ch
 				   struct mrc_class *cls);
 struct mrc_obj *__mrc_io_read_ref(struct mrc_io *io, struct mrc_obj *obj_parent,
 				  const char *name, struct mrc_class *cls);
+struct mrc_obj *__mrc_io_read_ref_comm(struct mrc_io *io, struct mrc_obj *obj_parent,
+				       const char *name, struct mrc_class *cls,
+				       MPI_Comm comm);
 void __mrc_io_write_path(struct mrc_io *io, const char *path, const char *name,
 			 struct mrc_obj *obj);
 void __mrc_io_write_ref(struct mrc_io *io, struct mrc_obj *obj_parent, const char *name,
@@ -101,6 +104,10 @@ void __mrc_io_write_ref(struct mrc_io *io, struct mrc_obj *obj_parent, const cha
   (struct cls *)							\
   __mrc_io_read_ref(io, (struct mrc_obj *) obj, name,			\
 		    (struct mrc_class *)(&mrc_class_ ## cls))
+#define mrc_io_read_ref_comm(io, obj, name, cls, comm)			\
+  (struct cls *)							\
+  __mrc_io_read_ref_comm(io, (struct mrc_obj *) obj, name,		\
+			 (struct mrc_class *)(&mrc_class_ ## cls), comm)
 #define mrc_io_write_path(io, path, name, obj)			\
   __mrc_io_write_path(io, path, name, (struct mrc_obj *) obj)
 #define mrc_io_write_ref(io, obj_parent, name, obj)		\

@@ -11,7 +11,7 @@
 // ----------------------------------------------------------------------
 // mhd_prim_from_fc
 
-static void __unused
+static void _mrc_unused
 mhd_prim_from_fc(struct ggcm_mhd *mhd, struct mrc_fld *W_cc, struct mrc_fld *U_cc,
 		 int ldim, int l, int r)
 {
@@ -38,7 +38,7 @@ mhd_prim_from_fc(struct ggcm_mhd *mhd, struct mrc_fld *W_cc, struct mrc_fld *U_c
 // ----------------------------------------------------------------------
 // mhd_fc_from_prim
 
-static void __unused
+static void _mrc_unused
 mhd_fc_from_prim(struct ggcm_mhd *mhd, struct mrc_fld *U_cc, struct mrc_fld *W_cc,
 		    int ldim, int l, int r)
 {
@@ -90,7 +90,7 @@ mhd_sc_from_prim_1d(struct ggcm_mhd *mhd, struct mrc_fld *U1d, struct mrc_fld *W
 // ----------------------------------------------------------------------
 // mhd_prim_from_sc
 
-static void __unused
+static void _mrc_unused
 mhd_prim_from_sc(struct ggcm_mhd *mhd, struct mrc_fld *W_cc, struct mrc_fld *U_cc,
 		 int ldim, int l, int r)
 {
@@ -113,7 +113,7 @@ mhd_prim_from_sc(struct ggcm_mhd *mhd, struct mrc_fld *W_cc, struct mrc_fld *U_c
 // ----------------------------------------------------------------------
 // mhd_sc_from_prim
 
-static void __unused
+static void _mrc_unused
 mhd_sc_from_prim(struct ggcm_mhd *mhd, struct mrc_fld *U_cc, struct mrc_fld *W_cc,
 		 int ldim, int l, int r)
 {
@@ -138,7 +138,7 @@ mhd_sc_from_prim(struct ggcm_mhd *mhd, struct mrc_fld *U_cc, struct mrc_fld *W_c
 // ----------------------------------------------------------------------
 // pick_line_fc
 
-static void __unused
+static void _mrc_unused
 pick_line_fc(struct mrc_fld *U_1d, struct mrc_fld *Bxi,
 	     struct mrc_fld *U, struct mrc_fld *Bcc,
 	     int ldim, int l, int r, int j, int k, int dir, int p)
@@ -172,7 +172,7 @@ pick_line_fc(struct mrc_fld *U_1d, struct mrc_fld *Bxi,
 // ----------------------------------------------------------------------
 // pick_line_sc
 
-static void __unused
+static void _mrc_unused
 pick_line_sc(struct mrc_fld *x1, struct mrc_fld *x,
 	     int ldim, int l, int r, int j, int k, int dim, int p)
 {
@@ -199,7 +199,7 @@ pick_line_sc(struct mrc_fld *x1, struct mrc_fld *x,
 // ----------------------------------------------------------------------
 // put_line_fc
 
-static void __unused
+static void _mrc_unused
 put_line_fc(struct mrc_fld *flux, struct mrc_fld *F_1d,
 	    int ldim, int l, int r, int j, int k, int dir, int p)
 {
@@ -231,7 +231,7 @@ put_line_fc(struct mrc_fld *flux, struct mrc_fld *F_1d,
 // put_line_sc
 
 // FIXME, make arg order consistent with put_line_fc
-static void __unused
+static void _mrc_unused
 put_line_sc(struct mrc_fld *flux, struct mrc_fld *F,
 	    int ldim, int l, int r, int j, int k, int dim, int p)
 {

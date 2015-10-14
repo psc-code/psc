@@ -14,6 +14,10 @@ mhd_mhdblast
 mhd_harris
 mhd_wave
 mhd_gkeyll
+
+mhd_wave_cpaw.sh
+check_wave_cpaw.py
+
 bak
 mhdblast001
 bowshock001

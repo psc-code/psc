@@ -186,7 +186,7 @@ static struct mrc_ddc_amr_stencil stencils_fine[NR_COMPS] = {
   [HZ] = { stencil_fine_HZ, ARRAY_SIZE(stencil_fine_HZ) },
 };
 
-static void __unused
+static void _mrc_unused
 find_ghosts(struct mrc_domain *domain, struct mrc_fld *fld, int m,
 	    int ext[3], int bnd)
 {

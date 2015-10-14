@@ -9,7 +9,7 @@
 //
 // cell-averaged B
 
-static void __unused
+static void _mrc_unused
 compute_B_cc(struct mrc_fld *B_cc, struct mrc_fld *x, int l, int r)
 {
   int gdims[3];
@@ -30,7 +30,7 @@ compute_B_cc(struct mrc_fld *B_cc, struct mrc_fld *x, int l, int r)
 
 void correct_E(struct ggcm_mhd *mhd, struct mrc_fld *E);
 
-static void __unused
+static void _mrc_unused
 update_ct_uniform(struct ggcm_mhd *mhd,
 		  struct mrc_fld *x, struct mrc_fld *E, mrc_fld_data_t dt, int _l, int _r,
 		  bool do_correct)
@@ -117,7 +117,7 @@ update_ct_uniform(struct ggcm_mhd *mhd,
 // ----------------------------------------------------------------------
 // update_ct
 
-static void __unused
+static void _mrc_unused
 update_ct(struct ggcm_mhd *mhd,
 	  struct mrc_fld *x, struct mrc_fld *E, mrc_fld_data_t dt,
 	  bool do_correct)
@@ -160,7 +160,7 @@ update_ct(struct ggcm_mhd *mhd,
 // ----------------------------------------------------------------------
 // mhd_fluxes
 
-static void __unused
+static void _mrc_unused
 mhd_fluxes(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3], struct mrc_fld *x,
 	   struct mrc_fld *B_cc, int bn, int nghost,
 	   void (*flux_func)(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3],
@@ -211,7 +211,7 @@ mhd_fluxes(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3], struct mrc_fld
 // ----------------------------------------------------------------------
 // update_finite_volume_uniform
 
-static void __unused
+static void _mrc_unused
 update_finite_volume_uniform(struct ggcm_mhd *mhd,
 			     struct mrc_fld *x, struct mrc_fld *fluxes[3],
 			     struct mrc_fld *ymask,
@@ -257,7 +257,7 @@ update_finite_volume_uniform(struct ggcm_mhd *mhd,
 // ----------------------------------------------------------------------
 // update_finite_volume
 
-static void __unused
+static void _mrc_unused
 update_finite_volume(struct ggcm_mhd *mhd,
 		     struct mrc_fld *x, struct mrc_fld *fluxes[3],
 		     struct mrc_fld *ymask, mrc_fld_data_t dt, bool do_correct)
@@ -295,7 +295,7 @@ update_finite_volume(struct ggcm_mhd *mhd,
 // mrc_fld_copy_range
 
 // FIXME, mv to right place
-static void __unused
+static void _mrc_unused
 mrc_fld_copy_range(struct mrc_fld *to, struct mrc_fld *from, int mb, int me)
 {
   assert(to->_nr_ghosts == from->_nr_ghosts);

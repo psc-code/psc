@@ -36,8 +36,10 @@ void mrc_view_printf(MPI_Comm comm, const char *fmt, ...);
 
 #define MHERE do { int __rank; MPI_Comm_rank(MPI_COMM_WORLD, &__rank); printf("[%d] HERE: in %s() at %s:%d\n", __rank, __FUNCTION__, __FILE__, __LINE__); } while(0)
 
-#ifndef __unused
-#define __unused __attribute__((__unused__))
+#ifdef __GNUC__
+#define	_mrc_unused	__attribute__((__unused__))
+#else
+#define	_mrc_unused	/* no attribute */
 #endif
 
 #ifndef __deprecated

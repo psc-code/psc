@@ -80,7 +80,7 @@ libmrc_params_init(int argc, char **argv)
       // only have one"-", and apparently isn't flexible
 #ifdef HAVE_PETSC
       if (strncmp(argv[i], "-", 1) == 0) {
-	mprintf("passing argument '%s' to petsc\n", argv[i]);
+	mpi_printf(MPI_COMM_WORLD, "passing argument '%s' to petsc\n", argv[i]);
 	petsc_argv[petsc_argc] = argv[i];
 	petsc_argc++;
 	if (i < argc - 1 && strncmp(argv[i+1], "-", 1) != 0) {

@@ -136,6 +136,42 @@ mrc_ddc_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 }
 
 // ----------------------------------------------------------------------
+// mrc_ddc_fill_ghosts_begin
+
+void
+mrc_ddc_fill_ghosts_begin(struct mrc_ddc *ddc, int mb, int me, void *ctx)
+{
+  assert(me - mb <= ddc->max_n_fields);
+  struct mrc_ddc_ops *ops = mrc_ddc_ops(ddc);
+  assert(ops->fill_ghosts_begin);
+  ops->fill_ghosts_begin(ddc, mb, me, ctx);
+}
+
+// ----------------------------------------------------------------------
+// mrc_ddc_fill_ghosts_end
+
+void
+mrc_ddc_fill_ghosts_end(struct mrc_ddc *ddc, int mb, int me, void *ctx)
+{
+  assert(me - mb <= ddc->max_n_fields);
+  struct mrc_ddc_ops *ops = mrc_ddc_ops(ddc);
+  assert(ops->fill_ghosts_end);
+  ops->fill_ghosts_end(ddc, mb, me, ctx);
+}
+
+// ----------------------------------------------------------------------
+// mrc_ddc_fill_ghosts_local
+
+void
+mrc_ddc_fill_ghosts_local(struct mrc_ddc *ddc, int mb, int me, void *ctx)
+{
+  assert(me - mb <= ddc->max_n_fields);
+  struct mrc_ddc_ops *ops = mrc_ddc_ops(ddc);
+  assert(ops->fill_ghosts_local);
+  ops->fill_ghosts_local(ddc, mb, me, ctx);
+}
+
+// ----------------------------------------------------------------------
 // mrc_ddc_add_ghosts
 //
 // OBSOLETE

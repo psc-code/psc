@@ -51,6 +51,7 @@ libmrc_la_SOURCES = \
 	mrc_io_util.c \
 	mrc_io_srv.c \
 	mrc_io_asc.c \
+	mrc_io_vpic.c \
 	mrc_obj.c \
 	mrc_nr_tridag.c \
 	mrc_erfi.c \
@@ -83,9 +84,17 @@ libmrc_la_SOURCES += \
 	mrc_block_factory.c \
 	mrc_block_factory_simple.c \
 	mrc_block_factory_cylindrical.c \
+	mrc_block_factory_half_cylinder.c \
 	mrc_ddc_mb.c
 endif HAVE_PETSC
 
 libmrctest_la_SOURCES = \
 	mrctest.c
 
+EXTRA_libmrc_la_SOURCES = \
+	mrc_fld_common.c
+
+noinst_HEADERS = \
+	hilbert.h \
+	mrc_io_xdmf_lib.h \
+	rkf45_butcher.h

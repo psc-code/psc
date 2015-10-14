@@ -135,6 +135,7 @@ obj_create(MPI_Comm comm, struct mrc_class *cls, bool basic_only)
   }
 
   // no ref count for this reference, will be deleted on final destroy()
+#pragma omp critical
   list_add_tail(&obj->instance_entry, &cls->instances);
 
   // keep track what classes have been instantiated
@@ -255,6 +256,7 @@ mrc_obj_put(struct mrc_obj *obj)
     return;
 
   struct mrc_class *cls = obj->cls;
+#pragma omp critical
   list_del(&obj->instance_entry);
 
   if (obj->ops) {
@@ -292,6 +294,7 @@ mrc_obj_put(struct mrc_obj *obj)
         free((float *)p->val.u_float_array.vals);
       }
     }
+    free((char *)p->prm.name);
     list_del(&p->entry);
     free(p);
   }
@@ -745,6 +748,15 @@ mrc_obj_get_param_obj(struct mrc_obj *obj, const char *name, struct mrc_obj **pv
 }
 
 int
+mrc_obj_get_param_ptr(struct mrc_obj *obj, const char *name, void **val)
+{
+  union param_u uval;
+  int err = mrc_obj_get_param_type(obj, name, PT_PTR, &uval);
+  *val = uval.u_ptr;
+  return err;
+}
+
+int
 mrc_obj_get_param_float_array_nr_vals(struct mrc_obj *obj, const char *name, int *nr_vals)
 {
   union param_u uval;
@@ -955,6 +967,7 @@ mrc_obj_read_super(struct mrc_obj *obj, struct mrc_io *io)
   if (cls->read) {
     cls->read(obj, io);
   } else {
+    mrc_obj_read_member_objs(obj, io);
     mrc_obj_read_children(obj, io);
     // FIXME, ugly: basically the same as mrc_obj_setup(), but skipping the children
     // setup
@@ -1052,10 +1065,13 @@ mrc_obj_read2(struct mrc_obj *obj, struct mrc_io *io, const char *path)
   if (obj->ops && obj->ops->read) {
     obj->ops->read(obj, io);
   } else {
+    // This change to call order makes it more consistent with C++,
+    // which implicitly calls base class constructors before 
+    // derived class constructors
+    mrc_obj_read_super(obj, io);
     if (obj->ops && obj->ops->create) {
       obj->ops->create(obj);
     }
-    mrc_obj_read_super(obj, io);
   }
 }
 
@@ -1085,6 +1101,23 @@ mrc_obj_read(struct mrc_io *io, const char *path, struct mrc_class *cls)
   }
 
   obj = obj_create(mrc_io_comm(io), cls, true);
+  mrc_obj_read2(obj, io, path);
+  return obj;
+}
+
+struct mrc_obj *
+mrc_obj_read_comm(struct mrc_io *io, const char *path, struct mrc_class *cls,
+		  MPI_Comm comm)
+{
+  init_class(cls);
+
+  struct mrc_obj *obj = mrc_io_find_obj(io, path);
+  if (obj) {
+    assert(obj->cls == cls);
+    return obj;
+  }
+
+  obj = obj_create(comm, cls, true);
   mrc_obj_read2(obj, io, path);
   return obj;
 }
@@ -1136,7 +1169,9 @@ static unsigned long
 mrc_obj_uid(struct mrc_obj *obj)
 {
   unsigned long uid = (unsigned long) obj;
-  MPI_Bcast(&uid, 1, MPI_LONG, 0, obj->comm);
+  if (obj->comm != MPI_COMM_NULL) {
+    MPI_Bcast(&uid, 1, MPI_LONG, 0, obj->comm);
+  }
   return uid;
 }
 

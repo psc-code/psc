@@ -3,6 +3,7 @@
 #include "mrc_params.h"
 #include "mrc_ddc.h"
 #include "mrc_io.h"
+#include "mrc_io_private.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -293,6 +294,7 @@ mrc_domain_multi_destroy(struct mrc_domain *domain)
   if (multi->have_activepatches) {
     bitfield3d_destroy(&multi->activepatches);
   }
+  sfc_destroy(&multi->sfc);
 }
 
 static struct mrc_patch *
@@ -368,14 +370,29 @@ mrc_domain_multi_get_level_idx3_patch_info(struct mrc_domain *domain, int level,
 static void
 mrc_domain_multi_write(struct mrc_domain *domain, struct mrc_io *io)
 {
+  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
+
   int nr_global_patches;
   mrc_domain_multi_get_nr_global_patches(domain, &nr_global_patches);
   mrc_io_write_int(io, domain, "nr_global_patches", nr_global_patches);
 
+  struct mrc_io_ops *io_ops = (struct mrc_io_ops *) io->obj.ops;
+  if (io_ops->parallel) {
+    return;
+  }
+
+  int mpi_rank;
+  MPI_Comm_rank(mrc_domain_comm(domain), &mpi_rank);
+
+  char path[strlen(mrc_io_obj_path(io, domain)) + 10];
+  sprintf(path, "%s/rank_%d", mrc_io_obj_path(io, domain), mpi_rank);
+  mrc_io_write_attr_int(io, path, "nr_patches", multi->nr_patches);
+
+#if 0
   int mpi_size;
   MPI_Comm_size(mrc_domain_comm(domain), &mpi_size);
 
-  char path[strlen(mrc_domain_name(domain)) + 10];
+  char path[strlen(mrc_io_obj_path(io, domain)) + 10];
   int last_rank = 0, nr_patches_in_rank = 0;
   for (int gp = 0; gp < nr_global_patches; gp++) {
     struct mrc_patch_info info;
@@ -401,6 +418,7 @@ mrc_domain_multi_write(struct mrc_domain *domain, struct mrc_io *io)
     last_rank++;
     nr_patches_in_rank = 0;
   }
+#endif
 }
 
 static void
@@ -414,11 +432,26 @@ mrc_domain_multi_read(struct mrc_domain *domain, struct mrc_io *io)
   MPI_Comm_rank(mrc_domain_comm(domain), &mpi_rank);
   MPI_Comm_size(mrc_domain_comm(domain), &mpi_size);
 
-  const char *path = mrc_io_obj_path(io, domain);
+  struct mrc_io_ops *io_ops = (struct mrc_io_ops *) io->obj.ops;
+
+  // FIXME: With the addition of **do_setup() below it may no longer
+  // be necessary to have this read/write of local patch number
+  // for non-parallel writers, as the structure will be regenerated
+  // anyway.
+  if(!io_ops->parallel) {
+    const char *path = mrc_io_obj_path(io, domain);
+    char path2[strlen(path) + 20];
+    sprintf(path2, "%s/rank_%d", path, mpi_rank);
+    mrc_io_read_attr_int(io, path2, "nr_patches", &multi->nr_patches);
+  } else {
+    multi->nr_patches = -1;
+  }
+
+#if 0
   // need to read attributes collectively :(
   // FIXME, maybe we should just write an array?
   for (int i = 0; i < mpi_size; i++) {
-  char path2[strlen(path) + 10];
+  char path2[strlen(path) + 20];
     sprintf(path2, "%s/rank_%d", path, i);
     int nr_patches;
     mrc_io_read_attr_int(io, path2, "nr_patches", &nr_patches);
@@ -426,11 +459,12 @@ mrc_domain_multi_read(struct mrc_domain *domain, struct mrc_io *io)
       multi->nr_patches = nr_patches;
     }
   }
+#endif
 
   // FIXME? We're mostly redoing things from scratch, rather
   // than reading them...
+  // WARNING: This may break PSC checkpointing. (but I think setup was getting run anyway)
   mrc_domain_multi_do_setup(domain);
-
   mrc_domain_read_super(domain, io);
 }
 

@@ -15,7 +15,7 @@
 // time-stepping routine (c.f. mrc_ts_rk2.c). Without this, zero-values at 
 // boundaries will give inf and nan values for non-periodic boudnaries.
 
-void __unused 
+void _mrc_unused 
 ggcm_mhd_fill_ghost_fld(struct ggcm_mhd *mhd, struct mrc_fld *_fld)
 {
   struct mrc_fld *f3 = mrc_fld_get_as(mhd->fld, "float");

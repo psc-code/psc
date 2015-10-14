@@ -2,6 +2,7 @@
 #include "mrc_io_xdmf_lib.h"
 
 #include <mrc_io_private.h>
+#include <mrc_fld.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -94,8 +95,8 @@ xdmf_write_fld_m1(FILE *f, struct xdmf_fld_info *fld_info, int im[3],
 {
   fprintf(f, "     <Attribute Name=\"%s\" AttributeType=\"%s\" Center=\"Node\">\n",
 	  fld_info->name, fld_info->is_vec ? "Vector" : "Scalar");
-  fprintf(f, "       <DataItem Dimensions=\"%d %d %d%s\" NumberType=\"Float\" Precision=\"4\" Format=\"HDF\">\n",
-	  1, 1, im[0], fld_info->is_vec ? " 3" : "");
+  fprintf(f, "       <DataItem Dimensions=\"%d %d %d%s\" NumberType=\"%s\" Precision=\"%d\" Format=\"HDF\">\n",
+	  1, 1, im[0], fld_info->is_vec ? " 3" : "", fld_info->dtype, fld_info->precision);
   fprintf(f, "        %s:/%s/%s/p%d/1d\n", filename, fld_info->path, fld_info->name, p);
   fprintf(f, "       </DataItem>\n");
   fprintf(f, "     </Attribute>\n");
@@ -107,8 +108,8 @@ xdmf_write_fld_m3(FILE *f, struct xdmf_fld_info *fld_info, int im[3],
 {
   fprintf(f, "     <Attribute Name=\"%s\" AttributeType=\"%s\" Center=\"Cell\">\n",
 	  fld_info->name, fld_info->is_vec ? "Vector" : "Scalar");
-  fprintf(f, "       <DataItem Dimensions=\"%d %d %d%s\" NumberType=\"Float\" Precision=\"4\" Format=\"HDF\">\n",
-	  im[2], im[1], im[0], fld_info->is_vec ? " 3" : "");
+  fprintf(f, "       <DataItem Dimensions=\"%d %d %d%s\" NumberType=\"%s\" Precision=\"%d\" Format=\"HDF\">\n",
+	  im[2], im[1], im[0], fld_info->is_vec ? " 3" : "", fld_info->dtype, fld_info->precision);
   fprintf(f, "        %s:/%s/%s/p%d/3d\n", filename, fld_info->path, fld_info->name, p);
   fprintf(f, "       </DataItem>\n");
   fprintf(f, "     </Attribute>\n");
@@ -309,13 +310,34 @@ xdmf_spatial_create_m3_parallel(list_t *xdmf_spatial_list, const char *name,
 
 void
 xdmf_spatial_save_fld_info(struct xdmf_spatial *xs, char *fld_name,
-			   char *path, bool is_vec)
+			   char *path, bool is_vec, int mrc_dtype)
 {
   assert(xs->nr_fld_info < MAX_XDMF_FLD_INFO);
   struct xdmf_fld_info *fld_info = &xs->fld_info[xs->nr_fld_info++];
   fld_info->name = fld_name;
   fld_info->path = path;
   fld_info->is_vec = is_vec;
+  switch (mrc_dtype) {
+  case MRC_NT_FLOAT: 
+  {
+    fld_info->dtype = strdup("Float");
+    fld_info->precision = 4;
+    break;
+  }
+  case MRC_NT_DOUBLE: 
+  {
+    fld_info->dtype = strdup("Float");
+    fld_info->precision = 8;
+    break;
+  }
+  case MRC_NT_INT: 
+  {
+    fld_info->dtype = strdup("Int");
+    fld_info->precision = 4;
+    break;
+  }
+  default: assert(0);
+  }
 }
 
 
@@ -388,6 +410,7 @@ xdmf_spatial_destroy(struct xdmf_spatial *xs)
     struct xdmf_fld_info *fld_info = &xs->fld_info[m];
     free(fld_info->name);
     free(fld_info->path);
+    free(fld_info->dtype);
   }
   list_del(&xs->entry);
   free(xs->name);

@@ -34,6 +34,9 @@ void mrc_ddc_fill_ghost_edges_fld(struct mrc_ddc *ddc, int mb, int me, struct mr
 // always use mrc_fld's
 void mrc_ddc_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx);
 void mrc_ddc_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx);
+void mrc_ddc_fill_ghosts_begin(struct mrc_ddc *ddc, int mb, int me, void *ctx);
+void mrc_ddc_fill_ghosts_end(struct mrc_ddc *ddc, int mb, int me, void *ctx);
+void mrc_ddc_fill_ghosts_local(struct mrc_ddc *ddc, int mb, int me, void *ctx);
 
 // AMR-specific functionality
 // should probably be given a more generic interface,

@@ -50,32 +50,6 @@ int __MatInsertValue(Mat M, int im, int in, PetscScalar v,
 		     struct mat_create_ctx *mc);
 
 
-
-// To the poor soul who has to implement an mrc_matrix class: I have no idea why there is a 
-// a public (mrc) and private (__mrc) version of this function, and if they are different.
-// obviously the private version should never be used outside of the class, but for some reason
-// they are both used. 
-
-// Right now they live in mrc_ddc_mb.c. This is obviously the wrong place for them, but they
-// require some ddc internals. One day maybe the hooks needed by these functions will
-// exist in the ddc, but that's not something I have time for now.
-
-// They used to be called MB_MatSetValue and __MB_MatSetValue, if you decide to crawl back through
-// the code
-
-int mrc_matrix_set_value(struct mrc_domain *mb, Mat mat, int bs, int im, int ig, 
-		   int b, int jm, int jx, int jy, int jz,
-		   double val);
-
-int __mrc_matrix_set_value(struct mrc_domain *mb, Mat mat, int bs, int im, int ig, 
-		     int b, int jm, int jx, int jy, int jz,
-		     double val, struct mat_create_ctx *mc);
-
-// This lives in ddc too, but it replaces a macro __I3g that was in the domain header
-int mrc_matrix_find_global_index(struct mrc_domain *domain, 
-				 int lpatch, 
-				 int jx, int jy, int jz);
-
 #endif
 
 #endif

@@ -62,6 +62,7 @@ extern struct diagsrv_srv_ops ds_srv_ops;
 extern struct diagsrv_srv_ops ds_srv_cache_ops;
 
 extern struct mrc_io_ops mrc_io_ascii_ops;
+extern struct mrc_io_ops mrc_io_vpic_ops;
 extern struct mrc_io_ops mrc_io_xdmf_ops;
 extern struct mrc_io_ops mrc_io_xdmf_serial_ops;
 extern struct mrc_io_ops mrc_io_xdmf_to_one_ops;
