@@ -454,11 +454,11 @@ collective_m1_send_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
     // FIXME, should use intersection, probably won't work if slab_dims are actually smaller
     int ib = 0;
     if (info.off[dim] == 0) { // FIXME, -> generic code
-      ib = xdmf->slab_off[0];
+      ib = xdmf->slab_off[dim];
     }
     int ie = info.ldims[dim];
     if (info.off[dim] + info.ldims[dim] == ctx->gdims[dim]) {
-      ie = xdmf->slab_off[0] + xdmf->slab_dims[0] - info.off[dim];
+      ie = xdmf->slab_off[dim] + xdmf->slab_dims[dim] - info.off[dim];
     }
     //mprintf("send to %d tag %d len %d\n", xdmf->writers[0], info.global_patch, ie - ib);
     assert(ib < ie);
@@ -504,11 +504,11 @@ collective_m1_recv_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
     
     int ib = info.off[dim];
     if (ib == 0) {
-      ib = xdmf->slab_off[0];
+      ib = xdmf->slab_off[dim];
     }
     int ie = info.off[dim] + info.ldims[dim];
     if (ie == ctx->gdims[dim]) {
-      ie = xdmf->slab_off[0] + xdmf->slab_dims[0];
+      ie = xdmf->slab_off[dim] + xdmf->slab_dims[dim];
     }
     //mprintf("recv from %d tag %d len %d\n", info.rank, gp, ie - ib);
     MPI_Irecv(&MRC_F1(f1, 0, ib), ie - ib, MPI_FLOAT, info.rank,
@@ -549,20 +549,20 @@ xdmf_collective_write_m1(struct mrc_io *io, const char *path, struct mrc_fld *m1
   mrc_domain_get_patches(m1->_domain, &ctx.nr_patches);
   int dim = ctx.dim;
   int slab_off_save, slab_dims_save;
-  slab_off_save = xdmf->slab_off[0];
-  slab_dims_save = xdmf->slab_dims[0];
+  slab_off_save = xdmf->slab_off[dim];
+  slab_dims_save = xdmf->slab_dims[dim];
   // FIXME
-  if (!xdmf->slab_dims[0]) {
-    xdmf->slab_dims[0] = ctx.gdims[dim] + 2 * ctx.sw;
-    xdmf->slab_off[0] = -ctx.sw;
+  if (!xdmf->slab_dims[dim]) {
+    xdmf->slab_dims[dim] = ctx.gdims[dim] + 2 * ctx.sw;
+    xdmf->slab_off[dim] = -ctx.sw;
   }
 
   if (xdmf->is_writer) {
     // we're creating the f1 on all writers, but only fill and actually write
     // it on writers[0]
     struct mrc_fld *f1 = mrc_fld_create(MPI_COMM_SELF);
-    mrc_fld_set_param_int_array(f1, "dims", 2, (int [2]) { xdmf->slab_dims[0], 1 });
-    mrc_fld_set_param_int_array(f1, "offs", 2, (int [2]) { xdmf->slab_off[0] , 0 });
+    mrc_fld_set_param_int_array(f1, "dims", 2, (int [2]) { xdmf->slab_dims[dim], 1 });
+    mrc_fld_set_param_int_array(f1, "offs", 2, (int [2]) { xdmf->slab_off[dim] , 0 });
     mrc_fld_setup(f1);
 
     hid_t group0 = H5Gopen(file->h5_file, path, H5P_DEFAULT); H5_CHK(group0);
@@ -583,8 +583,8 @@ xdmf_collective_write_m1(struct mrc_io *io, const char *path, struct mrc_fld *m1
       collective_m1_send_end(io, &ctx);
     }
   }
-  xdmf->slab_dims[0] = slab_dims_save;
-  xdmf->slab_off[0] = slab_off_save;
+  xdmf->slab_dims[dim] = slab_dims_save;
+  xdmf->slab_off[dim] = slab_off_save;
 }
 
 // ----------------------------------------------------------------------
