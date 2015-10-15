@@ -1,21 +1,27 @@
 
 # sample kelvin-helmholtz run, with checkpointing
 
-~/src/psc/src/psc_kelvin_helmholtz \
+mpirun -n 2 ../src/psc_kelvin_helmholtz \
     --gdims_y 80 --gdims_z 80 \
     --npy 2 --npz 2 \
-    --nmax 5 \
+    --nmax 11 \
     --output_fields e,h,j,n,v \
     --write_tfield no \
-    --write_pfield yes --pfield_step 10 \
-    --write_checkpoint \
+    --write_pfield yes --pfield_step 5 \
+    --write_checkpoint --write_checkpoint_every_step 5 \
     --psc_push_particles_type 1vb_c \
     --psc_push_fields_type c \
     --psc_bnd_fields_type c \
     --psc_bnd_type c \
     --psc_bnd_particles_type c
 
-~/src/psc/src/psc_kelvin_helmholtz \
+mkdir -p first_run
+cp *.xdmf *.h5 first_run
+
+mpirun -n 2 ../src/psc_kelvin_helmholtz \
     --from_checkpoint 5 --checkpoint_nmax 11 \
 
+h5dump first_run/pfd.000010_p000000.h5 > original.dump
+h5dump pfd.000010_p000000.h5 > restart.dump
 
+diff original.dump restart.dump
