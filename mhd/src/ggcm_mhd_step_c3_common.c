@@ -880,6 +880,9 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   prof_start(pr_A);
   ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
   ggcm_mhd_step_c3_primvar(step, prim, x);
+  // --- check for NaNs and negative pressures
+  // (still controlled by do_badval_checks)
+  badval_checks_sc(mhd, x, prim);
   zmaskn(step->mhd, zmask, 0, ymask, 0, x);
 
   // set x_half = x^n, then advance to n+1/2
@@ -910,16 +913,15 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   prof_start(pr_B);
   ggcm_mhd_fill_ghosts(mhd, x_half, 0, mhd->time + mhd->bndt);
   ggcm_mhd_step_c3_primvar(step, prim, x_half);
+  // --- check for NaNs and negative pressures
+  // (still controlled by do_badval_checks)
+  badval_checks_sc(mhd, x_half, prim);
   pushstage_c(step, mhd->dt, x_half, x, prim, LIMIT_1);
   if (sub->enforce_rrmin) {
     enforce_rrmin_sc(mhd, x_half);
   }
   prof_stop(pr_B);
 
-  // --- check for NaNs and negative pressures
-  // (still controlled by do_badval_checks)
-  badval_checks_sc(mhd, x, prim);
-  
   // --- update timestep
   if (step->do_nwst) {
     dtn = mrc_fld_min(1., dtn); // FIXME, only kept for compatibility
