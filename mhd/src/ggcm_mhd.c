@@ -87,7 +87,8 @@ static void
 _ggcm_mhd_create(struct ggcm_mhd *mhd)
 {
   mrc_domain_set_type(mhd->domain, "simple");
-
+  ggcm_mhd_bnd_set_name(mhd->bnd1, "bnd1");
+  
   ggcm_mhd_crds_set_param_obj(mhd->crds, "domain", mhd->domain);
   ggcm_mhd_step_set_param_obj(mhd->step, "mhd", mhd);
   ggcm_mhd_diag_set_param_obj(mhd->diag, "mhd", mhd);
