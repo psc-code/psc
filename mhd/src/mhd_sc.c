@@ -128,7 +128,7 @@ newstep_sc(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zmask,
     mpi_printf(ggcm_mhd_comm(mhd), "!!! dt < dtmin. Dying now!\n");
     mpi_printf(ggcm_mhd_comm(mhd), "!!! dt %g -> %g, dtmin = %g\n",
 	       mhd->dt, dtn, dtmin);
-    ggcm_mhd_wrongful_death(mhd, -1);
+    ggcm_mhd_wrongful_death(mhd, mhd->fld, -1);
   }
 
   return dtn;
@@ -215,7 +215,7 @@ newstep_sc_ggcm(struct ggcm_mhd *mhd, struct mrc_fld *x)
     mpi_printf(ggcm_mhd_comm(mhd), "!!! dt < dtmin. Dying now!\n");
     mpi_printf(ggcm_mhd_comm(mhd), "!!! dt %g -> %g, dtmin = %g\n",
 	       mhd->dt, dtn, dtmin);   
-    ggcm_mhd_wrongful_death(mhd, -1);
+    ggcm_mhd_wrongful_death(mhd, mhd->fld, -1);
   }
 
   prof_stop(PR);
@@ -301,7 +301,7 @@ badval_checks_sc(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *prim)
     MPI_Allreduce(&local_has_badval, &global_has_badval, 1, MPI_INT, MPI_MAX,
                   ggcm_mhd_comm(mhd));
     if (global_has_badval) {
-      ggcm_mhd_wrongful_death(mhd, global_has_badval);
+      ggcm_mhd_wrongful_death(mhd, x, global_has_badval);
     }
     
     prof_stop(pr);
