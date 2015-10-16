@@ -145,9 +145,16 @@ ggcm_mhd_dipole_sub_add_dipole(struct ggcm_mhd_dipole *mhd_dipole, struct mrc_fl
       case MT_PRIMITIVE:
       case MT_SEMI_CONSERVATIVE:
       case MT_FULLY_CONSERVATIVE:
-	M3(b, 0, ix,iy,iz, p) = keep * M3(b, 0, ix,iy,iz, p) + curl_a[0];
-	M3(b, 1, ix,iy,iz, p) = keep * M3(b, 1, ix,iy,iz, p) + curl_a[1];
-	M3(b, 2, ix,iy,iz, p) = keep * M3(b, 2, ix,iy,iz, p) + curl_a[2];
+	for (int d = 0; d < 3; d++){
+	  float crd_fc[3];
+	  ggcm_mhd_get_crds_fc(mhd, ix,iy,iz, p, d, crd_fc);
+
+	  // only set B outside of r1lim
+	  float r = sqrtf(sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]));
+	  if (r >= mhd_dipole->r1lim) {
+	    M3(b, d, ix,iy,iz, p) = keep * M3(b, d, ix,iy,iz, p) + curl_a[d];
+	  }
+	}
 	break;
       default:
 	assert(0);

@@ -100,6 +100,7 @@ ggcm_mhd_dipole_init()
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_dipole, x)
 static struct param ggcm_mhd_dipole_descr[] = {
   { "mhd"                , VAR(mhd)                , PARAM_OBJ(ggcm_mhd)    },
+  { "r1lim"              , VAR(r1lim)              , PARAM_DOUBLE(1.5)      },
   {},
 };
 #undef VAR

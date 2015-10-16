@@ -7,8 +7,11 @@
 struct ggcm_mhd_dipole {
   struct mrc_obj obj;
 
-  // state
+  // params
   struct ggcm_mhd *mhd;
+  double r1lim;
+
+  // state
   struct mrc_fld *bdip;
 };
 
