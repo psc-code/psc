@@ -10,10 +10,10 @@
 
 enum {
   FIXED_RR,
-  FIXED_PP,
   FIXED_VX,
   FIXED_VY,
   FIXED_VZ,
+  FIXED_PP,
   FIXED_BX,
   FIXED_BY,
   FIXED_BZ,
@@ -64,7 +64,15 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld, int m)
   struct ggcm_mhd *mhd = bnd->mhd;
 
   double gamm = mhd->par.gamm;
-  double *bnvals = sub->bnvals;
+  double bnvals[FIXED_NR];
+  bnvals[FIXED_RR] = sub->bnvals[FIXED_RR] / mhd->par.rrnorm;
+  bnvals[FIXED_VX] = sub->bnvals[FIXED_VX] / mhd->par.vvnorm;
+  bnvals[FIXED_VY] = sub->bnvals[FIXED_VY] / mhd->par.vvnorm;
+  bnvals[FIXED_VZ] = sub->bnvals[FIXED_VZ] / mhd->par.vvnorm;
+  bnvals[FIXED_PP] = sub->bnvals[FIXED_PP] / mhd->par.ppnorm;
+  bnvals[FIXED_BX] = sub->bnvals[FIXED_BX] / mhd->par.bbnorm;
+  bnvals[FIXED_BY] = sub->bnvals[FIXED_BY] / mhd->par.bbnorm;
+  bnvals[FIXED_BZ] = sub->bnvals[FIXED_BZ] / mhd->par.bbnorm;
 
   double rvx = bnvals[FIXED_RR] * bnvals[FIXED_VX];
   double rvy = bnvals[FIXED_RR] * bnvals[FIXED_VY];
