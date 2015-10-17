@@ -97,6 +97,26 @@ ggcm_mhd_ic_mirdip_ini1(struct ggcm_mhd_ic *ic, float vals[])
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_ic_mirdip_get_mhd_dipole
+
+static struct ggcm_mhd_dipole *
+ggcm_mhd_ic_mirdip_get_mhd_dipole(struct ggcm_mhd_ic *ic)
+{
+  struct ggcm_mhd_dipole *mhd_dipole = ggcm_mhd_get_var_obj(ic->mhd, "mhd_dipole");
+  if (mhd_dipole) {
+    ggcm_mhd_dipole_get(mhd_dipole);
+  } else {
+    mhd_dipole = ggcm_mhd_dipole_create(ggcm_mhd_ic_comm(ic));
+    ggcm_mhd_dipole_set_type(mhd_dipole, FLD_TYPE);
+    ggcm_mhd_dipole_set_from_options(mhd_dipole);
+    ggcm_mhd_dipole_set_param_obj(mhd_dipole, "mhd", ic->mhd);
+    ggcm_mhd_dipole_setup(mhd_dipole);
+  }
+
+  return mhd_dipole;
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_ic_mirdip_ini_b
 
 static void
@@ -104,16 +124,7 @@ ggcm_mhd_ic_mirdip_ini_b(struct ggcm_mhd_ic *ic, float b_sw[3])
 {
   struct ggcm_mhd_ic_mirdip *sub = ggcm_mhd_ic_mirdip(ic);
   struct ggcm_mhd *mhd = ic->mhd;
-  struct ggcm_mhd_dipole *mhd_dipole = ggcm_mhd_get_var_obj(mhd, "mhd_dipole");
-  if (mhd_dipole) {
-    ggcm_mhd_dipole_get(mhd_dipole);
-  } else {
-    mhd_dipole = ggcm_mhd_dipole_create(ggcm_mhd_ic_comm(ic));
-    ggcm_mhd_dipole_set_type(mhd_dipole, FLD_TYPE);
-    ggcm_mhd_dipole_set_from_options(mhd_dipole);
-    ggcm_mhd_dipole_set_param_obj(mhd_dipole, "mhd", mhd);
-    ggcm_mhd_dipole_setup(mhd_dipole);
-  }
+  struct ggcm_mhd_dipole *mhd_dipole = ggcm_mhd_ic_mirdip_get_mhd_dipole(ic);
 
   float x0[3] = {0.0, 0.0, 0.0};
 
@@ -133,6 +144,7 @@ ggcm_mhd_ic_mirdip_ini_b(struct ggcm_mhd_ic *ic, float b_sw[3])
   mrc_fld_destroy(b_base);
 
   struct mrc_fld *f = mrc_fld_get_as(mhd->fld, FLD_TYPE);
+  struct mrc_fld *b0 = mrc_fld_get_as(mhd->b0, FLD_TYPE);
 
   // finish up
   for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
@@ -149,11 +161,15 @@ ggcm_mhd_ic_mirdip_ini_b(struct ggcm_mhd_ic *ic, float b_sw[3])
 	
 	// add B_IMF
 	M3(f, BX + d, ix,iy,iz, p) += b_sw[d];
+
+	// subtract previously calculated background dipole
+	M3(f, BX + d, ix,iy,iz, p) -= M3(b0, d, ix,iy,iz, p);
       }
     } mrc_fld_foreach_end;
   }
 
   mrc_fld_put_as(f, mhd->fld);
+  mrc_fld_put_as(b0, mhd->b0);
 
   ggcm_mhd_dipole_put(mhd_dipole);
 }
@@ -194,6 +210,21 @@ ggcm_mhd_ic_mirdip_run(struct ggcm_mhd_ic *ic)
 
   mrc_fld_set_param_int(ic->mhd->fld, "mhd_type", mhd_type);
   ggcm_mhd_convert_from_primitive(ic->mhd, ic->mhd->fld);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_mirdip_ic_init_b0
+
+static void
+ggcm_mhd_ic_mirdip_init_b0(struct ggcm_mhd_ic *ic, struct mrc_fld *b0)
+{
+  struct ggcm_mhd_ic_mirdip *sub = ggcm_mhd_ic_mirdip(ic);
+  struct ggcm_mhd_dipole *mhd_dipole = ggcm_mhd_ic_mirdip_get_mhd_dipole(ic);
+
+  float x0[3] = {0.0, 0.0, 0.0};
+  ggcm_mhd_dipole_add_dipole(mhd_dipole, b0, x0, sub->dipole_moment, 0., 0.);
+
+  ggcm_mhd_dipole_put(mhd_dipole);
 }
 
 // ----------------------------------------------------------------------
@@ -257,5 +288,6 @@ struct ggcm_mhd_ic_ops ggcm_mhd_ic_mirdip_ops = {
   .size             = sizeof(struct ggcm_mhd_ic_mirdip),
   .param_descr      = ggcm_mhd_ic_mirdip_descr,
   .run              = ggcm_mhd_ic_mirdip_run,
+  .init_b0          = ggcm_mhd_ic_mirdip_init_b0,
   .init_ymask       = ggcm_mhd_ic_mirdip_init_ymask,
 };

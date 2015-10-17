@@ -37,8 +37,36 @@ ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic)
 {
   assert(ic->mhd);
   struct ggcm_mhd_ic_ops *ops = ggcm_mhd_ic_ops(ic);
-  assert(ops && ops->run);
+
+  if (ops->init_b0) {
+    ic->mhd->b0 = ggcm_mhd_get_3d_fld(ic->mhd, 3);
+    ops->init_b0(ic, ic->mhd->b0);
+  }
+
+  assert(ops->run);
   ops->run(ic);
+
+  if (ops->init_b0) {
+    // for now, always add b0 to b
+    if (1) {
+      struct mrc_fld *b0 = mrc_fld_get_as(ic->mhd->b0, FLD_TYPE);
+      struct mrc_fld *fld = mrc_fld_get_as(ic->mhd->fld, FLD_TYPE);
+      
+      for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
+	mrc_fld_foreach(fld, ix,iy,iz, 2, 2) {
+	  for (int d = 0; d < 3; d++) {
+	    M3(fld, BX+d, ix,iy,iz, p) += M3(b0, d, ix,iy,iz, p);
+	  }
+	} mrc_fld_foreach_end;
+      }
+      
+      mrc_fld_put_as(b0, ic->mhd->b0);
+      mrc_fld_put_as(fld, ic->mhd->fld);
+      
+      ggcm_mhd_put_3d_fld(ic->mhd, ic->mhd->b0);
+      ic->mhd->b0 = NULL;
+    }
+  }
 
   if (ops->init_ymask) {
     assert(ic->mhd->ymask);
