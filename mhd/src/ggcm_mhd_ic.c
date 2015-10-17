@@ -3,6 +3,7 @@
 
 #include "ggcm_mhd_defs.h"
 #include "ggcm_mhd_private.h"
+#include "ggcm_mhd_step.h"
 
 #include <mrc_io.h>
 #include <mrc_fld_as_double.h>
@@ -35,23 +36,27 @@ ggcm_mhd_ic_init_ymask_default(struct ggcm_mhd_ic *ic, struct mrc_fld *ymask_bas
 void
 ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic)
 {
-  assert(ic->mhd);
+  struct ggcm_mhd *mhd = ic->mhd;
+  assert(mhd);
+
   struct ggcm_mhd_ic_ops *ops = ggcm_mhd_ic_ops(ic);
 
   if (ops->init_b0) {
-    ic->mhd->b0 = ggcm_mhd_get_3d_fld(ic->mhd, 3);
-    ops->init_b0(ic, ic->mhd->b0);
+    mhd->b0 = ggcm_mhd_get_3d_fld(mhd, 3);
+    ops->init_b0(ic, mhd->b0);
   }
 
   assert(ops->run);
   ops->run(ic);
 
   if (ops->init_b0) {
-    // for now, always add b0 to b
-    if (1) {
-      struct mrc_fld *b0 = mrc_fld_get_as(ic->mhd->b0, FLD_TYPE);
-      struct mrc_fld *fld = mrc_fld_get_as(ic->mhd->fld, FLD_TYPE);
+    if (!ggcm_mhd_step_supports_b0(mhd->step)) {
+      // if the stepper doesn't support a separate b0, 
+      // add b0 into b, destroy b0 again.
+      struct mrc_fld *b0 = mrc_fld_get_as(mhd->b0, FLD_TYPE);
+      struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
       
+      // FIXME, could use some axpy kinda thing
       for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
 	mrc_fld_foreach(fld, ix,iy,iz, 2, 2) {
 	  for (int d = 0; d < 3; d++) {
@@ -60,20 +65,20 @@ ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic)
 	} mrc_fld_foreach_end;
       }
       
-      mrc_fld_put_as(b0, ic->mhd->b0);
-      mrc_fld_put_as(fld, ic->mhd->fld);
+      mrc_fld_put_as(b0, mhd->b0);
+      mrc_fld_put_as(fld, mhd->fld);
       
-      ggcm_mhd_put_3d_fld(ic->mhd, ic->mhd->b0);
-      ic->mhd->b0 = NULL;
+      ggcm_mhd_put_3d_fld(mhd, mhd->b0);
+      mhd->b0 = NULL;
     }
   }
 
   if (ops->init_ymask) {
-    assert(ic->mhd->ymask);
-    ops->init_ymask(ic, ic->mhd->ymask);
+    assert(mhd->ymask);
+    ops->init_ymask(ic, mhd->ymask);
   } else {
-    if (ic->mhd->ymask) {
-      ggcm_mhd_ic_init_ymask_default(ic, ic->mhd->ymask);
+    if (mhd->ymask) {
+      ggcm_mhd_ic_init_ymask_default(ic, mhd->ymask);
     }
   }
 }

@@ -66,6 +66,10 @@ enum {
 #define VZ_(f, i,j,k, p)   M3(f, VZ , i,j,k, p)
 #define PP_(f, i,j,k, p)   M3(f, PP , i,j,k, p)
 
+#define B0(b, d, i,j,k, p)  M3(b0, d, i,j,k, p)
+#define B1(U, d, i,j,k, p)  M3(U, BX+d, i,j,k, p)
+#define BT(U, d, i,j,k, p)  (b0 ? (B1(U, d, i,j,k, p) + B0(b0, d, i,j,k, p)) : B1(U, d, i,j,k, p))
+
 // ----------------------------------------------------------------------
 // coordinates
 

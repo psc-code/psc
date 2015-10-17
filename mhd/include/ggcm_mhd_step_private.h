@@ -46,6 +46,7 @@ struct ggcm_mhd_step_ops {
 			      struct ggcm_mhd_diag_item *item,
 			      struct mrc_io *io, struct mrc_fld *f,
 			      int diag_type, float plane);
+  bool supports_b0;
 
   int task_pred_nl1;
   int task_corr_nl1;

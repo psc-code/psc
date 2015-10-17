@@ -195,7 +195,7 @@ ggcm_mhd_diag_item_b_run(struct ggcm_mhd_diag_item *item,
     }
   } else if (mhd_type == MT_SEMI_CONSERVATIVE ||
 	     mhd_type == MT_FULLY_CONSERVATIVE) {
-    compute_B_cc(fld_r, f, bnd, bnd);
+    compute_Bt_cc(mhd, fld_r, f, bnd, bnd);
   } else {
     assert(0);
   }

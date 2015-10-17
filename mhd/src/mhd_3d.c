@@ -26,6 +26,33 @@ compute_B_cc(struct mrc_fld *B_cc, struct mrc_fld *x, int l, int r)
 }
 
 // ----------------------------------------------------------------------
+// compute_Bt_cc
+//
+// cell-averaged Btotal (ie., add B0 back in, if applicable)
+
+static void _mrc_unused
+compute_Bt_cc(struct ggcm_mhd *mhd, struct mrc_fld *B_cc, struct mrc_fld *x, int l, int r)
+{
+  struct mrc_fld *b0 = mhd->b0;
+  if (!b0) {
+    compute_B_cc(B_cc, x, l, r);
+    return;
+  }
+
+  int gdims[3];
+  mrc_domain_get_global_dims(x->_domain, gdims);
+  int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
+
+  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+    mrc_fld_foreach(x, i,j,k, l, r) {
+      M3(B_cc, 0, i,j,k, p) = .5f * (BT(x, 0, i,j,k, p) + BT(x, 0, i+dx,j,k, p));
+      M3(B_cc, 1, i,j,k, p) = .5f * (BT(x, 1, i,j,k, p) + BT(x, 1, i,j+dy,k, p));
+      M3(B_cc, 2, i,j,k, p) = .5f * (BT(x, 2, i,j,k, p) + BT(x, 2, i,j,k+dz, p));
+    } mrc_fld_foreach_end;
+  }
+}
+
+// ----------------------------------------------------------------------
 // update_ct_uniform
 
 void correct_E(struct ggcm_mhd *mhd, struct mrc_fld *E);

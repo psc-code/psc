@@ -4,9 +4,9 @@
 // ----------------------------------------------------------------------
 // zmaskn
 
-static void _mrc_unused
-zmaskn(struct ggcm_mhd *mhd, struct mrc_fld *zmask, int m_zmask,
-       struct mrc_fld *ymask, int m_ymask, struct mrc_fld *x)
+static inline void
+zmaskn_inl(struct ggcm_mhd *mhd, struct mrc_fld *zmask, int m_zmask,
+	   struct mrc_fld *ymask, int m_ymask, struct mrc_fld *x, struct mrc_fld *b0)
 {
   float va02i = 1.f / sqr(mhd->par.speedlimit / mhd->par.vvnorm);
   float eps   = 1e-15f;
@@ -17,9 +17,9 @@ zmaskn(struct ggcm_mhd *mhd, struct mrc_fld *zmask, int m_zmask,
 
   for (int p = 0; p < mrc_fld_nr_patches(zmask); p++) {
     mrc_fld_foreach(zmask, ix,iy,iz, 1, 1) {
-      mrc_fld_data_t bb = (sqr(.5f * (BX_(x, ix,iy,iz, p) + BX_(x, ix+dx,iy,iz, p))) +
-			   sqr(.5f * (BY_(x, ix,iy,iz, p) + BY_(x, ix,iy+dy,iz, p))) +
-			   sqr(.5f * (BZ_(x, ix,iy,iz, p) + BZ_(x, ix,iy,iz+dz, p))));
+      mrc_fld_data_t bb = (sqr(.5f * (BT(x, 0, ix,iy,iz, p) + BT(x, 0, ix+dx,iy,iz, p))) +
+			   sqr(.5f * (BT(x, 1, ix,iy,iz, p) + BT(x, 1, ix,iy+dy,iz, p))) +
+			   sqr(.5f * (BT(x, 2, ix,iy,iz, p) + BT(x, 2, ix,iy,iz+dz, p))));
       float rrm = fmaxf(eps, bb * va02i);
       M3(zmask, m_zmask, ix,iy,iz, p) = M3(ymask, m_ymask, ix,iy,iz, p) *
 	fminf(1.f, RR_(x, ix,iy,iz, p) / rrm);
@@ -27,12 +27,23 @@ zmaskn(struct ggcm_mhd *mhd, struct mrc_fld *zmask, int m_zmask,
   }
 }
 
+static void _mrc_unused
+zmaskn(struct ggcm_mhd *mhd, struct mrc_fld *zmask, int m_zmask,
+       struct mrc_fld *ymask, int m_ymask, struct mrc_fld *x)
+{
+  if (mhd->b0) {
+    zmaskn_inl(mhd, zmask, m_zmask, ymask, m_ymask, x, mhd->b0);
+  } else {
+    zmaskn_inl(mhd, zmask, m_zmask, ymask, m_ymask, x, NULL);
+  }
+}
+
 // ----------------------------------------------------------------------
 // newstep_sc
 
-static mrc_fld_data_t _mrc_unused
-newstep_sc(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zmask, 
-	   int m_zmask)
+static inline mrc_fld_data_t
+newstep_sc_inl(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zmask, 
+	       int m_zmask, struct mrc_fld *b0)
 {
   int gdims[3];
   mrc_domain_get_global_dims(mhd->domain, gdims);
@@ -57,9 +68,9 @@ newstep_sc(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zmask,
     mrc_fld_foreach(x, ix, iy, iz, 0, 0) {
       mrc_fld_data_t hh = mrc_fld_max(mrc_fld_max(fd1x[ix], fd1y[iy]), fd1z[iz]);
       mrc_fld_data_t rri = 1.f / mrc_fld_abs(RR_(x, ix,iy,iz, p)); // FIXME abs necessary?
-      mrc_fld_data_t bb = (sqr(.5f * (BX_(x, ix,iy,iz, p) + BX_(x, ix+dx,iy,iz, p))) + 
-			   sqr(.5f * (BY_(x, ix,iy,iz, p) + BY_(x, ix,iy+dy,iz, p))) +
-			   sqr(.5f * (BZ_(x, ix,iy,iz, p) + BZ_(x, ix,iy,iz+dz, p))));
+      mrc_fld_data_t bb = (sqr(.5f * (BT(x, 0, ix,iy,iz, p) + BT(x, 0, ix+dx,iy,iz, p))) + 
+			   sqr(.5f * (BT(x, 1, ix,iy,iz, p) + BT(x, 1, ix,iy+dy,iz, p))) +
+			   sqr(.5f * (BT(x, 2, ix,iy,iz, p) + BT(x, 2, ix,iy,iz+dz, p))));
       if (have_hall) {
 	bb *= 1 + sqr(two_pi_d_i * hh);
       }      
@@ -132,6 +143,17 @@ newstep_sc(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zmask,
   }
 
   return dtn;
+}
+
+static mrc_fld_data_t _mrc_unused
+newstep_sc(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zmask, 
+	   int m_zmask)
+{
+  if (mhd->b0) {
+    return newstep_sc_inl(mhd, x, zmask, m_zmask, mhd->b0);
+  } else {
+    return newstep_sc_inl(mhd, x, zmask, m_zmask, NULL);
+  }
 }
 
 // ----------------------------------------------------------------------
