@@ -450,6 +450,8 @@ static struct param ggcm_mhd_descr[] = {
   
   { "domain"          , VAR(domain)          , MRC_VAR_OBJ(mrc_domain)        },
   { "fld"             , VAR(fld)             , MRC_VAR_OBJ(mrc_fld)           },
+  // FIXME, need to checkpoint b0, but only if !NULL
+  //  { "b0"              , VAR(b0)              , MRC_VAR_OBJ(mrc_fld)           },
   { "crds"            , VAR(crds)            , MRC_VAR_OBJ(ggcm_mhd_crds)     },
   { "step"            , VAR(step)            , MRC_VAR_OBJ(ggcm_mhd_step)     },
   { "diag"            , VAR(diag)            , MRC_VAR_OBJ(ggcm_mhd_diag)     },
