@@ -6,6 +6,7 @@
 #include "ggcm_mhd_step.h"
 
 #include <mrc_io.h>
+#include <mrc_ddc.h>
 #include <mrc_fld_as_double.h>
 
 #include <assert.h>
@@ -44,6 +45,8 @@ ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic)
   if (ops->init_b0) {
     mhd->b0 = ggcm_mhd_get_3d_fld(mhd, 3);
     ops->init_b0(ic, mhd->b0);
+    // FIXME, this doesn't set B values in exterior ghost points
+    mrc_ddc_fill_ghosts_fld(mrc_domain_get_ddc(mhd->domain), 0, 3, mhd->b0);
   }
 
   assert(ops->run);

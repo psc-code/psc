@@ -17,6 +17,15 @@ struct ggcm_mhd_params {
   float rrmin;
   float bbnorm, vvnorm, rrnorm, ppnorm;
   float ccnorm, eenorm, resnorm, tnorm;
+  float bbnorm0, vvnorm0, rrnorm0, ppnorm0;
+  float ccnorm0, eenorm0, resnorm0, tnorm0;
+
+  float RE;
+  float earth_mag_moment;
+  float ionodens;
+  float mu0;
+  float amu;
+
   float diffco, diffth;
   float diffsphere;
   float speedlimit, thx;

@@ -20,6 +20,7 @@
 
 #include <assert.h>
 #include <string.h>
+#include <math.h>
 
 #define ggcm_mhd_ops(mhd) ((struct ggcm_mhd_ops *) mhd->obj.ops)
 
@@ -160,9 +161,39 @@ _ggcm_mhd_read(struct ggcm_mhd *mhd, struct mrc_io *io)
   ggcm_mhd_setup_internal(mhd);
 }
 
+// ----------------------------------------------------------------------
+// ggcm_mhd_setup_normalization
+
+static void
+ggcm_mhd_setup_normalization(struct ggcm_mhd *mhd)
+{
+  float RE = mhd->par.RE;
+  mhd->par.bbnorm = (1. / mhd->par.bbnorm0) *
+    mhd->par.mu0 * mhd->par.earth_mag_moment / (4.*M_PI * RE * RE * RE);
+  mhd->par.vvnorm = (1. / mhd->par.vvnorm0) *
+    (mhd->par.bbnorm * mhd->par.bbnorm0) / sqrt(mhd->par.mu0 * mhd->par.ionodens * mhd->par.amu);
+  mhd->par.rrnorm = (1. / mhd->par.rrnorm0) * 
+    (mhd->par.ionodens);
+  mhd->par.ppnorm = (1. / mhd->par.ppnorm0) *
+    sqr(mhd->par.vvnorm * mhd->par.vvnorm0) * (mhd->par.ionodens * mhd->par.amu);
+  mhd->par.ccnorm = (1. / mhd->par.ccnorm0) *
+    (mhd->par.bbnorm * mhd->par.bbnorm0) / (RE * mhd->par.mu0);
+  mhd->par.eenorm = (1. / mhd->par.eenorm0) *
+    (mhd->par.vvnorm * mhd->par.vvnorm0) * (mhd->par.bbnorm * mhd->par.bbnorm0);
+  mhd->par.resnorm = (1. / mhd->par.resnorm0) *
+    ((mhd->par.eenorm * mhd->par.eenorm0) / (mhd->par.ccnorm * mhd->par.ccnorm0));
+  mhd->par.tnorm =
+    RE / (mhd->par.vvnorm * mhd->par.vvnorm0);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_setup
+
 static void
 _ggcm_mhd_setup(struct ggcm_mhd *mhd)
 {
+  ggcm_mhd_setup_normalization(mhd);
+
   ggcm_mhd_step_setup_flds(mhd->step);
   for (int m = 0; m < mrc_fld_nr_comps(mhd->fld); m++) {
     mrc_fld_set_comp_name(mhd->fld, m, fldname[m]);
@@ -365,14 +396,21 @@ ggcm_mhd_put_3d_fld(struct ggcm_mhd *mhd, struct mrc_fld *f)
 void
 ggcm_mhd_default_box(struct ggcm_mhd *mhd)
 {
-  mhd->par.rrnorm = 1.f;
-  mhd->par.ppnorm = 1.f;
-  mhd->par.vvnorm = 1.f;
-  mhd->par.bbnorm = 1.f;
-  mhd->par.ccnorm = 1.f;
-  mhd->par.eenorm = 1.f;
-  mhd->par.resnorm = 1.f;
-  mhd->par.tnorm = 1.f;
+  mhd->par.RE = 1.f;
+  mhd->par.mu0 = 1.f;
+  mhd->par.amu = 1.f;
+  mhd->par.ionodens = 1.f;
+  mhd->par.earth_mag_moment = 4. * M_PI;
+
+  mhd->par.bbnorm0 = 1.f;
+  mhd->par.vvnorm0 = 1.f;
+  mhd->par.rrnorm0 = 1.f;
+  mhd->par.ppnorm0 = 1.f;
+  mhd->par.ccnorm0 = 1.f;
+  mhd->par.eenorm0 = 1.f;
+  mhd->par.resnorm0 = 1.f;
+  mhd->par.tnorm0 = 1.f;
+
   mhd->par.diffco = 0.f;
   mhd->par.r_db_dt = 0.f;
 
@@ -411,6 +449,7 @@ static struct mrc_param_select magdiffu_descr[] = {
 static struct param ggcm_mhd_descr[] = {
   { "gamma"           , VAR(par.gamm)        , PARAM_FLOAT(1.66667f) },
   { "rrmin"           , VAR(par.rrmin)       , PARAM_FLOAT(.1f)      },
+
   { "bbnorm"          , VAR(par.bbnorm)      , PARAM_FLOAT(30574.f)  },
   { "vvnorm"          , VAR(par.vvnorm)      , PARAM_FLOAT(6692.98f) },
   { "rrnorm"          , VAR(par.rrnorm)      , PARAM_FLOAT(10000.f)  },
@@ -419,6 +458,22 @@ static struct param ggcm_mhd_descr[] = {
   { "eenorm"          , VAR(par.eenorm)      , PARAM_FLOAT(204631.f) },
   { "resnorm"         , VAR(par.resnorm)     , PARAM_FLOAT(53.5848e6)},
   { "tnorm"           , VAR(par.tnorm)       , PARAM_FLOAT(.95189935)},
+
+  { "bbnorm0"         , VAR(par.bbnorm0)     , PARAM_FLOAT(1e-9)     },
+  { "vvnorm0"         , VAR(par.vvnorm0)     , PARAM_FLOAT(1e3)      },
+  { "rrnorm0"         , VAR(par.rrnorm0)     , PARAM_FLOAT(1e6)      },
+  { "ppnorm0"         , VAR(par.ppnorm0)     , PARAM_FLOAT(1e-12)    },
+  { "ccnorm0"         , VAR(par.ccnorm0)     , PARAM_FLOAT(1e-6)     },
+  { "eenorm0"         , VAR(par.eenorm0)     , PARAM_FLOAT(1e-3)     },
+  { "resnorm0"        , VAR(par.resnorm0)    , PARAM_FLOAT(1.)       },
+  { "tnorm0"          , VAR(par.tnorm0)      , PARAM_FLOAT(1.)       },
+
+  { "earth_mag_moment", VAR(par.earth_mag_moment), PARAM_FLOAT(0.79064817E+2)  },
+  { "re"              , VAR(par.RE)              , PARAM_FLOAT(6371040.)        },
+  { "ionodens"        , VAR(par.ionodens)        , PARAM_FLOAT(1e10)            },
+  { "mu0"             , VAR(par.mu0)             , PARAM_FLOAT(1.2566370E-06)   },
+  { "amu"             , VAR(par.amu)             , PARAM_FLOAT(1.6605655E-27)   },
+
   { "diffconstant"    , VAR(par.diffco)      , PARAM_FLOAT(.03f)     },
   { "diffthreshold"   , VAR(par.diffth)      , PARAM_FLOAT(.75f)     },
   { "diffsphere"      , VAR(par.diffsphere)  , PARAM_FLOAT(6.f)      },
