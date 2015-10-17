@@ -33,5 +33,6 @@ extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_gkeyll_e;
 extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_gkeyll_i;
 extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_gkeyll_em;
 extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_ymask;
+extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_b0;
 
 #endif
