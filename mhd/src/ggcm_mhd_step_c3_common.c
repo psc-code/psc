@@ -469,7 +469,7 @@ res1_const_c(struct ggcm_mhd *mhd, struct mrc_fld *resis)
 {
   // resistivity comes in ohm*m
   int diff_obnd = mhd->par.diff_obnd;
-  mrc_fld_data_t eta0i = 1. / mhd->par.resnorm;
+  mrc_fld_data_t eta0i = 1. / mhd->resnorm;
   mrc_fld_data_t diffsphere2 = sqr(mhd->par.diffsphere);
   mrc_fld_data_t diff = mhd->par.diffco * eta0i;
 

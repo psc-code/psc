@@ -24,15 +24,6 @@ ggcm_mhd_mirdip_create(struct ggcm_mhd *mhd)
 {
   ggcm_mhd_default_box(mhd);
 
-  mhd->par.bbnorm = 30574.f;
-  mhd->par.vvnorm = 6692.98f;
-  mhd->par.rrnorm = 10000.f;
-  mhd->par.ppnorm = 7.43866e8;
-  mhd->par.ccnorm = 3.81885;
-  mhd->par.eenorm = 204631.f;
-  mhd->par.resnorm = 53.5848e6;
-  mhd->par.tnorm = .95189935;
-
   ggcm_mhd_ic_set_type(mhd->ic, "mirdip_double");
   ggcm_mhd_bnd_set_type(mhd->bnd, "inoutflow_sc_double");
   ggcm_mhd_step_set_type(mhd->step , "c3_double"); // FIXME, if not double, the conversion mess up the "view" field

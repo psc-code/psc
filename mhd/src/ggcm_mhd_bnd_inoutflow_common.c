@@ -167,14 +167,14 @@ bnd_sw(struct ggcm_mhd_bnd *bnd, int ix, int iy, int iz, int p, float bn[SW_NR],
 
     ggcm_mhd_bndsw_at(bndsw, bntim, xx, bn);
   } else {
-    bn[SW_RR] = sub->bnvals[SW_RR] / mhd->par.rrnorm;
-    bn[SW_VX] = sub->bnvals[SW_VX] / mhd->par.vvnorm;
-    bn[SW_VY] = sub->bnvals[SW_VY] / mhd->par.vvnorm;
-    bn[SW_VZ] = sub->bnvals[SW_VZ] / mhd->par.vvnorm;
-    bn[SW_PP] = sub->bnvals[SW_PP] / mhd->par.ppnorm;
-    bn[SW_BX] = sub->bnvals[SW_BX] / mhd->par.bbnorm;
-    bn[SW_BY] = sub->bnvals[SW_BY] / mhd->par.bbnorm;
-    bn[SW_BZ] = sub->bnvals[SW_BZ] / mhd->par.bbnorm;
+    bn[SW_RR] = sub->bnvals[SW_RR] / mhd->rrnorm;
+    bn[SW_VX] = sub->bnvals[SW_VX] / mhd->vvnorm;
+    bn[SW_VY] = sub->bnvals[SW_VY] / mhd->vvnorm;
+    bn[SW_VZ] = sub->bnvals[SW_VZ] / mhd->vvnorm;
+    bn[SW_PP] = sub->bnvals[SW_PP] / mhd->ppnorm;
+    bn[SW_BX] = sub->bnvals[SW_BX] / mhd->bbnorm;
+    bn[SW_BY] = sub->bnvals[SW_BY] / mhd->bbnorm;
+    bn[SW_BZ] = sub->bnvals[SW_BZ] / mhd->bbnorm;
   }
 }
 

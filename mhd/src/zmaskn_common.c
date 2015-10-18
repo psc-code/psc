@@ -21,7 +21,7 @@ zmaskn_c(struct ggcm_mhd *mhd)
   prof_start(PR);
 
   struct mrc_fld *f = mrc_fld_get_as(mhd->fld, FLD_TYPE);
-  float va02i = 1.f / sqr(mhd->par.speedlimit / mhd->par.vvnorm);
+  float va02i = 1.f / sqr(mhd->par.speedlimit / mhd->vvnorm);
   float eps   = 1e-15f;
 
   for (int p = 0; p < mrc_fld_nr_patches(f); p++) {

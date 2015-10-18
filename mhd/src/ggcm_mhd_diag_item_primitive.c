@@ -46,7 +46,7 @@ ggcm_mhd_diag_item_v_run(struct ggcm_mhd_diag_item *item,
   mrc_fld_put_as(r, fld_r);
   mrc_fld_put_as(f, fld);
 
-  mrc_fld_data_t scale_vv = mhd->par.vvnorm;
+  mrc_fld_data_t scale_vv = mhd->vvnorm;
   ggcm_mhd_diag_c_write_one_field(io, fld_r, 0, "vx", scale_vv, diag_type, plane);
   ggcm_mhd_diag_c_write_one_field(io, fld_r, 1, "vy", scale_vv, diag_type, plane);
   ggcm_mhd_diag_c_write_one_field(io, fld_r, 2, "vz", scale_vv, diag_type, plane);
@@ -75,7 +75,7 @@ ggcm_mhd_diag_item_rr_run(struct ggcm_mhd_diag_item *item,
 {
   struct ggcm_mhd *mhd = item->diag->mhd;
 
-  mrc_fld_data_t scale_rr = mhd->par.rrnorm;
+  mrc_fld_data_t scale_rr = mhd->rrnorm;
   ggcm_mhd_diag_c_write_one_field(io, fld, RR, "rr", scale_rr, diag_type, plane);
 }
 
@@ -147,7 +147,7 @@ ggcm_mhd_diag_item_pp_run(struct ggcm_mhd_diag_item *item,
   mrc_fld_put_as(r, fld_r);
   mrc_fld_put_as(f, fld);
 
-  ggcm_mhd_diag_c_write_one_field(io, fld_r, 0, "pp", mhd->par.ppnorm, diag_type, plane);
+  ggcm_mhd_diag_c_write_one_field(io, fld_r, 0, "pp", mhd->ppnorm, diag_type, plane);
 
   mrc_fld_destroy(fld_r);
 }
@@ -203,7 +203,7 @@ ggcm_mhd_diag_item_b_run(struct ggcm_mhd_diag_item *item,
   mrc_fld_put_as(r, fld_r);
   mrc_fld_put_as(f, fld);
 
-  mrc_fld_data_t scale_bb = mhd->par.bbnorm;
+  mrc_fld_data_t scale_bb = mhd->bbnorm;
   ggcm_mhd_diag_c_write_one_field(io, fld_r, 0, "bx", scale_bb, diag_type, plane);
   ggcm_mhd_diag_c_write_one_field(io, fld_r, 1, "by", scale_bb, diag_type, plane);
   ggcm_mhd_diag_c_write_one_field(io, fld_r, 2, "bz", scale_bb, diag_type, plane);

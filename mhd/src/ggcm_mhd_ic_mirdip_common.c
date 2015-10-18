@@ -81,7 +81,7 @@ ggcm_mhd_ic_mirdip_ini1(struct ggcm_mhd_ic *ic, float vals[])
     mrc_fld_foreach(fld, ix,iy,iz, 2, 2) {
       mrc_fld_data_t tmplam = lmbda(MRC_MCRDX(crds, ix, p), -xxx1, -xxx2);
       RR_(fld, ix,iy,iz, p) = 
-	tmplam * vals[SW_RR] + (1. - tmplam) * (rrini / mhd->par.rrnorm);
+	tmplam * vals[SW_RR] + (1. - tmplam) * (rrini / mhd->rrnorm);
       
       VX_(fld, ix,iy,iz, p) = vxsta1(MRC_MCRDX(crds, ix, p), MRC_MCRDY(crds, iy, p), MRC_MCRDZ(crds, iz, p),
 				     vals[SW_VX], xxx2, xxx1, 2., xmir);
@@ -196,14 +196,14 @@ ggcm_mhd_ic_mirdip_run(struct ggcm_mhd_ic *ic)
   if (bndsw) {
     ggcm_mhd_bndsw_get_initial(bndsw, vals);
   } else {
-    vals[SW_RR] = sub->bnvals[SW_RR] / mhd->par.rrnorm;
-    vals[SW_VX] = sub->bnvals[SW_VX] / mhd->par.vvnorm;
-    vals[SW_VY] = sub->bnvals[SW_VY] / mhd->par.vvnorm;
-    vals[SW_VZ] = sub->bnvals[SW_VZ] / mhd->par.vvnorm;
-    vals[SW_PP] = sub->bnvals[SW_PP] / mhd->par.ppnorm;
-    vals[SW_BX] = sub->bnvals[SW_BX] / mhd->par.bbnorm;
-    vals[SW_BY] = sub->bnvals[SW_BY] / mhd->par.bbnorm;
-    vals[SW_BZ] = sub->bnvals[SW_BZ] / mhd->par.bbnorm;
+    vals[SW_RR] = sub->bnvals[SW_RR] / mhd->rrnorm;
+    vals[SW_VX] = sub->bnvals[SW_VX] / mhd->vvnorm;
+    vals[SW_VY] = sub->bnvals[SW_VY] / mhd->vvnorm;
+    vals[SW_VZ] = sub->bnvals[SW_VZ] / mhd->vvnorm;
+    vals[SW_PP] = sub->bnvals[SW_PP] / mhd->ppnorm;
+    vals[SW_BX] = sub->bnvals[SW_BX] / mhd->bbnorm;
+    vals[SW_BY] = sub->bnvals[SW_BY] / mhd->bbnorm;
+    vals[SW_BZ] = sub->bnvals[SW_BZ] / mhd->bbnorm;
   }
   ggcm_mhd_ic_mirdip_ini1(ic, vals);
   ggcm_mhd_ic_mirdip_ini_b(ic, &vals[SW_BX]);

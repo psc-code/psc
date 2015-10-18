@@ -323,7 +323,7 @@ compute_Ediffu_const(struct ggcm_mhd_step *step, struct mrc_fld *E_ec,
     } mrc_fld_foreach_end;
   }
 
-  mrc_fld_data_t eta = mhd->par.diffco / mhd->par.resnorm;
+  mrc_fld_data_t eta = mhd->par.diffco / mhd->resnorm;
   mrc_fld_data_t d_i = mhd->par.d_i;
 
   for (int p = 0; p < mrc_fld_nr_patches(E_ec); p++) {

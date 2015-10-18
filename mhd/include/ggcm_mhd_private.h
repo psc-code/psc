@@ -15,11 +15,9 @@ enum {
 struct ggcm_mhd_params {
   float gamm;
   float rrmin;
-  float bbnorm, vvnorm, rrnorm, ppnorm;
-  float ccnorm, eenorm, resnorm, tnorm;
+
   float bbnorm0, vvnorm0, rrnorm0, ppnorm0;
   float ccnorm0, eenorm0, resnorm0, tnorm0;
-
   float RE;
   float earth_mag_moment;
   float ionodens;
@@ -74,6 +72,13 @@ struct ggcm_mhd {
   struct ggcm_mhd_ic *ic;
 
   // mhd state
+  // normalization parameters
+  // multiplying the internal normalized quantities by these will produce
+  // physical values in SI units, but with a prefix given by the corresponding
+  // XXnorm0 parameter
+  float bbnorm, vvnorm, rrnorm, ppnorm;
+  float ccnorm, eenorm, resnorm, tnorm;
+
   float time; // current time
   float dt;   // current timestep (parameter to pred/corr, so can be .5 dt)
   int istep;

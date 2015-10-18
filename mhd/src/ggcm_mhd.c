@@ -168,22 +168,22 @@ static void
 ggcm_mhd_setup_normalization(struct ggcm_mhd *mhd)
 {
   float RE = mhd->par.RE;
-  mhd->par.bbnorm = (1. / mhd->par.bbnorm0) *
+  mhd->bbnorm = (1. / mhd->par.bbnorm0) *
     mhd->par.mu0 * mhd->par.earth_mag_moment / (4.*M_PI * RE * RE * RE);
-  mhd->par.vvnorm = (1. / mhd->par.vvnorm0) *
-    (mhd->par.bbnorm * mhd->par.bbnorm0) / sqrt(mhd->par.mu0 * mhd->par.ionodens * mhd->par.amu);
-  mhd->par.rrnorm = (1. / mhd->par.rrnorm0) * 
+  mhd->vvnorm = (1. / mhd->par.vvnorm0) *
+    (mhd->bbnorm * mhd->par.bbnorm0) / sqrt(mhd->par.mu0 * mhd->par.ionodens * mhd->par.amu);
+  mhd->rrnorm = (1. / mhd->par.rrnorm0) * 
     (mhd->par.ionodens);
-  mhd->par.ppnorm = (1. / mhd->par.ppnorm0) *
-    sqr(mhd->par.vvnorm * mhd->par.vvnorm0) * (mhd->par.ionodens * mhd->par.amu);
-  mhd->par.ccnorm = (1. / mhd->par.ccnorm0) *
-    (mhd->par.bbnorm * mhd->par.bbnorm0) / (RE * mhd->par.mu0);
-  mhd->par.eenorm = (1. / mhd->par.eenorm0) *
-    (mhd->par.vvnorm * mhd->par.vvnorm0) * (mhd->par.bbnorm * mhd->par.bbnorm0);
-  mhd->par.resnorm = (1. / mhd->par.resnorm0) *
-    ((mhd->par.eenorm * mhd->par.eenorm0) / (mhd->par.ccnorm * mhd->par.ccnorm0));
-  mhd->par.tnorm =
-    RE / (mhd->par.vvnorm * mhd->par.vvnorm0);
+  mhd->ppnorm = (1. / mhd->par.ppnorm0) *
+    sqr(mhd->vvnorm * mhd->par.vvnorm0) * (mhd->par.ionodens * mhd->par.amu);
+  mhd->ccnorm = (1. / mhd->par.ccnorm0) *
+    (mhd->bbnorm * mhd->par.bbnorm0) / (RE * mhd->par.mu0);
+  mhd->eenorm = (1. / mhd->par.eenorm0) *
+    (mhd->vvnorm * mhd->par.vvnorm0) * (mhd->bbnorm * mhd->par.bbnorm0);
+  mhd->resnorm = (1. / mhd->par.resnorm0) *
+    ((mhd->eenorm * mhd->par.eenorm0) / (mhd->ccnorm * mhd->par.ccnorm0));
+  mhd->tnorm =
+    RE / (mhd->vvnorm * mhd->par.vvnorm0);
 }
 
 // ----------------------------------------------------------------------
@@ -450,15 +450,6 @@ static struct param ggcm_mhd_descr[] = {
   { "gamma"           , VAR(par.gamm)        , PARAM_FLOAT(1.66667f) },
   { "rrmin"           , VAR(par.rrmin)       , PARAM_FLOAT(.1f)      },
 
-  { "bbnorm"          , VAR(par.bbnorm)      , PARAM_FLOAT(30574.f)  },
-  { "vvnorm"          , VAR(par.vvnorm)      , PARAM_FLOAT(6692.98f) },
-  { "rrnorm"          , VAR(par.rrnorm)      , PARAM_FLOAT(10000.f)  },
-  { "ppnorm"          , VAR(par.ppnorm)      , PARAM_FLOAT(7.43866e8)},
-  { "ccnorm"          , VAR(par.ccnorm)      , PARAM_FLOAT(3.81885)  },
-  { "eenorm"          , VAR(par.eenorm)      , PARAM_FLOAT(204631.f) },
-  { "resnorm"         , VAR(par.resnorm)     , PARAM_FLOAT(53.5848e6)},
-  { "tnorm"           , VAR(par.tnorm)       , PARAM_FLOAT(.95189935)},
-
   { "bbnorm0"         , VAR(par.bbnorm0)     , PARAM_FLOAT(1e-9)     },
   { "vvnorm0"         , VAR(par.vvnorm0)     , PARAM_FLOAT(1e3)      },
   { "rrnorm0"         , VAR(par.rrnorm0)     , PARAM_FLOAT(1e6)      },
@@ -495,6 +486,15 @@ static struct param ggcm_mhd_descr[] = {
   { "monitor_conservation", VAR(par.monitor_conservation), PARAM_BOOL(false)  },
   { "amr_grid_file"   , VAR(amr_grid_file)   , PARAM_STRING("amr_grid.txt")   },
   { "amr"             , VAR(amr)             , PARAM_INT(0)                   },
+
+  { "bbnorm"          , VAR(bbnorm)          , MRC_VAR_FLOAT         },
+  { "vvnorm"          , VAR(vvnorm)          , MRC_VAR_FLOAT         },
+  { "rrnorm"          , VAR(rrnorm)          , MRC_VAR_FLOAT         },
+  { "ppnorm"          , VAR(ppnorm)          , MRC_VAR_FLOAT         },
+  { "ccnorm"          , VAR(ccnorm)          , MRC_VAR_FLOAT         },
+  { "eenorm"          , VAR(eenorm)          , MRC_VAR_FLOAT         },
+  { "resnorm"         , VAR(resnorm)         , MRC_VAR_FLOAT         },
+  { "tnorm"           , VAR(tnorm)           , MRC_VAR_FLOAT         },
 
   { "time"            , VAR(time)            , MRC_VAR_FLOAT         },
   { "dt"              , VAR(dt)              , MRC_VAR_FLOAT         },

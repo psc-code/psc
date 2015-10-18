@@ -8,7 +8,7 @@ static inline void
 zmaskn_inl(struct ggcm_mhd *mhd, struct mrc_fld *zmask, int m_zmask,
 	   struct mrc_fld *ymask, int m_ymask, struct mrc_fld *x, struct mrc_fld *b0)
 {
-  float va02i = 1.f / sqr(mhd->par.speedlimit / mhd->par.vvnorm);
+  float va02i = 1.f / sqr(mhd->par.speedlimit / mhd->vvnorm);
   float eps   = 1e-15f;
 
   int gdims[3];
@@ -49,7 +49,7 @@ newstep_sc_inl(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zmask,
   mrc_domain_get_global_dims(mhd->domain, gdims);
   int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
 
-  mrc_fld_data_t splim2 = sqr(mhd->par.speedlimit / mhd->par.vvnorm);
+  mrc_fld_data_t splim2 = sqr(mhd->par.speedlimit / mhd->vvnorm);
   mrc_fld_data_t gamm   = mhd->par.gamm;
   mrc_fld_data_t d_i    = mhd->par.d_i;
 
@@ -125,9 +125,9 @@ newstep_sc_inl(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zmask,
 	  if (tt <= dtmin) {
 	    fprintf(file,"%s %7d %7d %7d\n"," dtmin at ", ix, iy, ix);
 	    fprintf(file,"%s %12.5g %12.5g %12.5g\n"," hh,vv,tt ", hh, vv, tt);
-	    fprintf(file,"%s %12.5g %12.5g %12.5g\n"," bx,y,z   ", BX(x, ix,iy,iz)*mhd->par.bbnorm, BY(x, ix,iy,iz)*mhd->par.bbnorm, BZ(x, ix,iy,iz)*mhd->par.bbnorm);
-	    fprintf(file,"%s %12.5g %12.5g %12.5g\n"," vx,y,z   ", VX(x, ix,iy,iz)*mhd->par.vvnorm, VY(x, ix,iy,iz)*mhd->par.vvnorm, VZ(x, ix,iy,iz)*mhd->par.vvnorm);
-	    fprintf(file,"%s %12.5g %12.5g %12.5g\n"," rr,pp,zm ", RR(x, ix,iy,iz)*mhd->par.rrnorm, PP(x, ix,iy,iz)*mhd->par.ppnorm, F3(zmask, m_zmask, ix,iy,iz));
+	    fprintf(file,"%s %12.5g %12.5g %12.5g\n"," bx,y,z   ", BX(x, ix,iy,iz)*mhd->bbnorm, BY(x, ix,iy,iz)*mhd->bbnorm, BZ(x, ix,iy,iz)*mhd->bbnorm);
+	    fprintf(file,"%s %12.5g %12.5g %12.5g\n"," vx,y,z   ", VX(x, ix,iy,iz)*mhd->vvnorm, VY(x, ix,iy,iz)*mhd->vvnorm, VZ(x, ix,iy,iz)*mhd->vvnorm);
+	    fprintf(file,"%s %12.5g %12.5g %12.5g\n"," rr,pp,zm ", RR(x, ix,iy,iz)*mhd->rrnorm, PP(x, ix,iy,iz)*mhd->ppnorm, F3(zmask, m_zmask, ix,iy,iz));
 	    float *fx1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FX1);
 	    float *fx1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FX1);
 	    float *fx1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FX1);
@@ -178,14 +178,14 @@ newstep_sc_ggcm(struct ggcm_mhd *mhd, struct mrc_fld *x)
   float *fx2y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FX2);
   float *fx2z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FX2);
 
-  mrc_fld_data_t splim2 = sqr(mhd->par.speedlimit / mhd->par.vvnorm);
+  mrc_fld_data_t splim2 = sqr(mhd->par.speedlimit / mhd->vvnorm);
   mrc_fld_data_t isphere2 = sqr(mhd->par.isphere);
   mrc_fld_data_t gamm   = mhd->par.gamm;
   mrc_fld_data_t d_i    = mhd->par.d_i;
   mrc_fld_data_t thx    = mhd->par.thx;
   mrc_fld_data_t eps    = 1e-9f;
   mrc_fld_data_t dt     = 1e10f;
-  mrc_fld_data_t va02i  = 1.f / sqr(mhd->par.speedlimit / mhd->par.vvnorm);
+  mrc_fld_data_t va02i  = 1.f / sqr(mhd->par.speedlimit / mhd->vvnorm);
   mrc_fld_data_t epsz   = 1e-15f;
   mrc_fld_data_t s      = gamm - 1.f;
 
@@ -266,7 +266,7 @@ badval_checks_sc(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *prim)
   int max_comp = MIN(mrc_fld_nr_comps(x), 8);
 
   mrc_fld_data_t ppmin = 0.0;
-  mrc_fld_data_t rrmin = 0.0;  // mhd->par.rrmin / mhd->par.rrnorm
+  mrc_fld_data_t rrmin = 0.0;  // mhd->par.rrmin / mhd->rrnorm
 
   if (mhd->do_badval_checks) {
     if (!pr) {
@@ -352,7 +352,7 @@ enforce_rrmin_sc(struct ggcm_mhd *mhd, struct mrc_fld *x)
   crdy = ggcm_mhd_crds_get_crd(mhd->crds, 1, FX1);
   crdz = ggcm_mhd_crds_get_crd(mhd->crds, 2, FX1);
   
-  rrmin = mhd->par.rrmin / mhd->par.rrnorm;
+  rrmin = mhd->par.rrmin / mhd->rrnorm;
   s = mhd->par.gamm - 1.0;
   
   for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
