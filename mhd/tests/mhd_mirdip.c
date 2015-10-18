@@ -22,7 +22,20 @@
 static void
 ggcm_mhd_mirdip_create(struct ggcm_mhd *mhd)
 {
-  ggcm_mhd_default_box(mhd);
+  // normalization based on RE, equitorial field, ionospheric density
+  mhd->par.norm_length = 6371040.; // earth radius in m
+  mhd->par.norm_B = 3.0574001e-05; // equitorial dipole field in T
+  mhd->par.norm_density = 1e10; // approximate ionospheric density in 1/m^3
+
+  // select output / input unit prefixes as in OpenGGCM
+  mhd->par.bbnorm0  = 1e-9;  // uT
+  mhd->par.vvnorm0  = 1e3;   // km/s
+  mhd->par.rrnorm0  = 1e6;   // 1/cm^3
+  mhd->par.ppnorm0  = 1e-12; // pPa
+  mhd->par.ccnorm0  = 1e-6;  // uA/m^2
+  mhd->par.eenorm0  = 1e-3;  // mV/m
+  mhd->par.resnorm0 = 1.f;   // ...
+  mhd->par.tnorm0   = 1.f;   // s
 
   ggcm_mhd_ic_set_type(mhd->ic, "mirdip_double");
   ggcm_mhd_bnd_set_type(mhd->bnd, "inoutflow_sc_double");
