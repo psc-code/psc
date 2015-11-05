@@ -102,7 +102,6 @@ struct ggcm_mhd_ops {
   MRC_SUBCLASS_OPS(struct ggcm_mhd);
   void (*get_state)(struct ggcm_mhd *mhd);
   void (*set_state)(struct ggcm_mhd *mhd);
-  void (*fill_ghosts_E)(struct ggcm_mhd *mhd, struct mrc_fld *E);
 };
 
 extern struct ggcm_mhd_ops ggcm_mhd_ops_box;
