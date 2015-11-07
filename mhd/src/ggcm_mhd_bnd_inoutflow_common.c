@@ -187,6 +187,7 @@ static void
 obndra_mhd_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim, int p)
 {
   struct ggcm_mhd *mhd = bnd->mhd;
+  struct mrc_fld *b0 = mhd->b0;
 
   const int *sw = mrc_fld_spatial_sw(f), *dims = mrc_fld_spatial_dims(f);
   int swx = sw[0], swy = sw[1], swz = sw[2];
@@ -217,6 +218,11 @@ obndra_mhd_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float b
 	M3(f, mm + BX , ix,iy,iz, p) = bn[SW_BX];
 	M3(f, mm + BY , ix,iy,iz, p) = bn[SW_BY];
 	M3(f, mm + BZ , ix,iy,iz, p) = bn[SW_BZ];
+	if (b0) {
+	  for (int d = 0; d < 3; d++) {
+	    M3(f, mm + BX + d , ix,iy,iz, p) -= M3(b0, d, ix,iy,iz, p);
+	  }
+	}
       }
     }
   }
