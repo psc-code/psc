@@ -85,56 +85,36 @@ ggcm_mhd_dipole_sub_add_dipole(struct ggcm_mhd_dipole *mhd_dipole, struct mrc_fl
   struct mrc_fld *a = mrc_fld_get_as(a_base, FLD_TYPE);
   struct mrc_fld *b = mrc_fld_get_as(b_base, FLD_TYPE);
 
-  mrc_fld_data_t a0[3], apx[3], apy[3], apz[3];
   mrc_fld_data_t curl_a[3];
 
   // calculate A first, then take its curl
-  // calc A and store in in the 3 consecutive fields starting at ax
-  bool precalc_a = true;
-  if (precalc_a) {
-    for (int p = 0; p < mrc_fld_nr_patches(a); p++) {
-      mrc_fld_foreach(a, ix,iy,iz, 0, 1) {
-	mrc_fld_data_t vecpot[3];
-	ggcm_mhd_dipole_sub_vect_pot(mhd, ix,iy,iz, p, x0, moment, xmir, vecpot);
-	M3(a, 0, ix,iy,iz, p) = vecpot[0];
-	M3(a, 1, ix,iy,iz, p) = vecpot[1];
-	M3(a, 2, ix,iy,iz, p) = vecpot[2];
-      } mrc_fld_foreach_end;
-    }
-    if (mhd->amr > 0) {
-      mrc_ddc_amr_apply(mhd->ddc_amr_E, a);
-    }
+  for (int p = 0; p < mrc_fld_nr_patches(a); p++) {
+    mrc_fld_foreach(a, ix,iy,iz, 1, 2) {
+      mrc_fld_data_t vecpot[3];
+      ggcm_mhd_dipole_sub_vect_pot(mhd, ix,iy,iz, p, x0, moment, xmir, vecpot);
+      M3(a, 0, ix,iy,iz, p) = vecpot[0];
+      M3(a, 1, ix,iy,iz, p) = vecpot[1];
+      M3(a, 2, ix,iy,iz, p) = vecpot[2];
+    } mrc_fld_foreach_end;
+  }
+  if (mhd->amr > 0) {
+    mrc_ddc_amr_apply(mhd->ddc_amr_E, a);
   }
 
   // B = keep * B + coef * curl A
+  // FIXME, this doesn't fill Bnormal one ghost cell out on the right (high) side
   for (int p = 0; p < mrc_fld_nr_patches(b); p++) {
     float *bd3x = ggcm_mhd_crds_get_crd_p(mhd->crds, 0, BD3, p);
     float *bd3y = ggcm_mhd_crds_get_crd_p(mhd->crds, 1, BD3, p);
     float *bd3z = ggcm_mhd_crds_get_crd_p(mhd->crds, 2, BD3, p);
 
-    mrc_fld_foreach(b, ix,iy,iz, 0, 1) {
-      if (precalc_a) {
-	// we precalculated A, lets sort things out... these copies
-	// really dont need to be done, but it makes calculating curl A the
-	// the same when we don't already have A
-	for (int i = 0; i < 3; i++) {
-	  apx[i] = M3(a, i, ix+1,iy  ,iz  , p);
-	  apy[i] = M3(a, i, ix  ,iy+1,iz  , p);
-	  apz[i] = M3(a, i, ix  ,iy  ,iz+1, p);
-	  a0[i]  = M3(a, i, ix  ,iy  ,iz  , p);
-	}
-      } else {
-	// this is for when we did not pre-calculate A
-	// this should be slower by a factor of 4
-	ggcm_mhd_dipole_sub_vect_pot(mhd, ix  ,iy  ,iz  , p, x0, moment, xmir, a0);
-	ggcm_mhd_dipole_sub_vect_pot(mhd, ix+1,iy  ,iz  , p, x0, moment, xmir, apx);
-	ggcm_mhd_dipole_sub_vect_pot(mhd, ix  ,iy+1,iz  , p, x0, moment, xmir, apy);
-	ggcm_mhd_dipole_sub_vect_pot(mhd, ix  ,iy  ,iz+1, p, x0, moment, xmir, apz);
-      }
-
-      curl_a[0] = ((apy[2] - a0[2]) * bd3y[iy] - (apz[1] - a0[1]) * bd3z[iz]);
-      curl_a[1] = ((apz[0] - a0[0]) * bd3z[iz] - (apx[2] - a0[2]) * bd3x[ix]);
-      curl_a[2] = ((apx[1] - a0[1]) * bd3x[ix] - (apy[0] - a0[0]) * bd3y[iy]);
+    mrc_fld_foreach(b, ix,iy,iz, 1, 1) {
+      curl_a[0] = ((M3(a, 2, ix,iy+1,iz, p) - M3(a, 2, ix,iy,iz, p)) * bd3y[iy] -
+		   (M3(a, 1, ix,iy,iz+1, p) - M3(a, 1, ix,iy,iz, p)) * bd3z[iz]);
+      curl_a[1] = ((M3(a, 0, ix,iy,iz+1, p) - M3(a, 0, ix,iy,iz, p)) * bd3z[iz] -
+		   (M3(a, 2, ix+1,iy,iz, p) - M3(a, 2, ix,iy,iz, p)) * bd3x[ix]);
+      curl_a[2] = ((M3(a, 1, ix+1,iy,iz, p) - M3(a, 1, ix,iy,iz, p)) * bd3x[ix] -
+		   (M3(a, 0, ix,iy+1,iz, p) - M3(a, 0, ix,iy,iz, p)) * bd3y[iy]);
       
       switch (mhd_type) {
       case MT_SEMI_CONSERVATIVE_GGCM:
