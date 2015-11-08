@@ -178,6 +178,7 @@ ggcm_mhd_setup_normalization(struct ggcm_mhd *mhd)
   mhd->eenorm = mhd->vvnorm * b0;
   mhd->resnorm = mhd->eenorm / mhd->ccnorm;
   mhd->tnorm = x0 / mhd->vvnorm;
+  mhd->qqnorm = mhd->ccnorm / (mhd->rrnorm * mhd->vvnorm);
 
   MPI_Comm comm = ggcm_mhd_comm(mhd);
   mpi_printf(comm, "NORMALIZATION: based on x0 = %g m\n", mhd->par.norm_length);
@@ -193,6 +194,7 @@ ggcm_mhd_setup_normalization(struct ggcm_mhd *mhd)
   mpi_printf(comm, "NORMALIZATION: eenorm  = %g V/m\n", mhd->eenorm);
   mpi_printf(comm, "NORMALIZATION: resnorm = %g \n", mhd->resnorm);
   mpi_printf(comm, "NORMALIZATION: tnorm   = %g s\n", mhd->tnorm);
+  mpi_printf(comm, "NORMALIZATION: qqnorm  = %g C\n", mhd->qqnorm);
 
   mhd->bbnorm /= mhd->par.bbnorm0;
   mhd->rrnorm /= mhd->par.rrnorm0;
@@ -202,6 +204,7 @@ ggcm_mhd_setup_normalization(struct ggcm_mhd *mhd)
   mhd->eenorm /= mhd->par.eenorm0;
   mhd->resnorm /= mhd->par.resnorm0;
   mhd->tnorm /= mhd->par.tnorm0;
+  mhd->qqnorm /= mhd->par.qqnorm0;
 }
 
 // ----------------------------------------------------------------------

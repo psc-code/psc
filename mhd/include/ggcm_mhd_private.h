@@ -18,6 +18,7 @@ struct ggcm_mhd_params {
 
   float bbnorm0, vvnorm0, rrnorm0, ppnorm0;
   float ccnorm0, eenorm0, resnorm0, tnorm0;
+  float qqnorm0;
   float norm_length; // normalizing length (in m)
   float norm_B; // normalizing magnetic field (in T)
   float norm_density; // normalizing density (in 1/m^3)
@@ -78,6 +79,7 @@ struct ggcm_mhd {
   // XXnorm0 parameter
   float bbnorm, vvnorm, rrnorm, ppnorm;
   float ccnorm, eenorm, resnorm, tnorm;
+  float qqnorm;
 
   float time; // current time
   float dt;   // current timestep (parameter to pred/corr, so can be .5 dt)
