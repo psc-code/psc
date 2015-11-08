@@ -19,6 +19,9 @@
 #include "mhd_3d.c"
 #include "mhd_sc.c"
 
+//#define SPLIT
+//FIXME, when using hydro_rusanov / no pushpp, things go wrong when > timelo
+
 #define ZMASK(f, i,j,k, p) M3(f, 0, i,j,k, p)
 #define RMASK(f, i,j,k, p) M3(f, 0, i,j,k, p)
 
@@ -186,6 +189,8 @@ mhd_cc_fluxes(struct ggcm_mhd_step *step, struct mrc_fld *F_1d,
   }									\
 }
 
+#ifndef SPLIT
+
 static void
 flux_pred(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3], struct mrc_fld *x, struct mrc_fld *B_cc,
 	  int ldim, int bnd, int j, int k, int dir, int p)
@@ -203,6 +208,41 @@ flux_pred(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3], struct mrc_fld 
   mhd_riemann_run(sub->riemann, F_1d, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
   put_line_sc(fluxes[dir], F_1d, ldim, 0, 1, j, k, dir, p);
 }
+
+#else
+
+static void
+flux_pred_reconstruct(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3],
+		      struct mrc_fld *x, struct mrc_fld *B_cc,
+		      int ldim, int bnd, int j, int k, int dir, int p)
+{
+  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
+
+  struct mrc_fld *U_1d = sub->U_1d, *U_l = sub->U_l, *U_r = sub->U_r;
+  struct mrc_fld *W_1d = sub->W_1d, *W_l = sub->W_l, *W_r = sub->W_r;
+
+  pick_line_sc(U_1d, x, ldim, 1, 1, j, k, dir, p);
+  mhd_prim_from_sc(step->mhd, W_1d, U_1d, ldim, 1, 1);
+  mhd_reconstruct_run(sub->reconstruct, U_l, U_r, W_l, W_r, W_1d, NULL,
+		      ldim, 1, 1, dir);
+}
+
+static void
+flux_pred_riemann(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3],
+		  struct mrc_fld *x, struct mrc_fld *B_cc,
+		  int ldim, int bnd, int j, int k, int dir, int p)
+{
+  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
+
+  struct mrc_fld *U_l = sub->U_l, *U_r = sub->U_r;
+  struct mrc_fld *W_l = sub->W_l, *W_r = sub->W_r;
+  struct mrc_fld *F_1d = sub->F_1d;
+
+  mhd_riemann_run(sub->riemann, F_1d, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
+  put_line_sc(fluxes[dir], F_1d, ldim, 0, 1, j, k, dir, p);
+}
+
+#endif
 
 static inline mrc_fld_data_t
 limit_hz(mrc_fld_data_t a2, mrc_fld_data_t aa, mrc_fld_data_t a1)
@@ -827,7 +867,12 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
   rmaskn_c(step);
 
   if (limit == LIMIT_NONE || mhd->time < mhd->par.timelo) {
+#ifdef SPLIT
+    mhd_fluxes_split(step, fluxes, x_curr, NULL, 0, 0,
+		     flux_pred_reconstruct, flux_pred_riemann);
+#else
     mhd_fluxes(step, fluxes, x_curr, NULL, 0, 0, flux_pred);
+#endif
   } else {
     mhd_fluxes(step, fluxes, x_curr, NULL, 0, 0, flux_corr);
   }
