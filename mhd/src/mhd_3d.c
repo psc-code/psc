@@ -273,12 +273,12 @@ mhd_fluxes_split(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3], struct m
 
   const int *ldims = mrc_fld_spatial_dims(x);
 
+  // reconstruct
   for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
     if (gdims[0] > 1) {
       for (int k = -bnd[2]; k < ldims[2] + bnd[2]; k++) {
 	for (int j = -bnd[1]; j < ldims[1] + bnd[1]; j++) {
 	  reconstr_func(step, U_l, U_r, x, B_cc, ldims[0], nghost, j, k, 0, p);
-	  riemann_func(step, fluxes, U_l, U_r, B_cc, ldims[0], nghost, j, k, 0, p);
 	}
       }
     }
@@ -287,7 +287,6 @@ mhd_fluxes_split(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3], struct m
       for (int k = -bnd[2]; k < ldims[2] + bnd[2]; k++) {
 	for (int i = -bnd[0]; i < ldims[0] + bnd[0]; i++) {
 	  reconstr_func(step, U_l, U_r, x, B_cc, ldims[1], nghost, k, i, 1, p);
-	  riemann_func(step, fluxes, U_l, U_r, B_cc, ldims[1], nghost, k, i, 1, p);
 	}
       }
     }
@@ -296,6 +295,32 @@ mhd_fluxes_split(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3], struct m
       for (int j = -bnd[1]; j < ldims[1] + bnd[1]; j++) {
 	for (int i = -bnd[0]; i < ldims[0] + bnd[0]; i++) {
 	  reconstr_func(step, U_l, U_r, x, B_cc, ldims[2], nghost, i, j, 2, p);
+	}
+      }
+    }
+  }
+
+  // calculate fluxes
+  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+    if (gdims[0] > 1) {
+      for (int k = -bnd[2]; k < ldims[2] + bnd[2]; k++) {
+	for (int j = -bnd[1]; j < ldims[1] + bnd[1]; j++) {
+	  riemann_func(step, fluxes, U_l, U_r, B_cc, ldims[0], nghost, j, k, 0, p);
+	}
+      }
+    }
+
+    if (gdims[1] > 1) {
+      for (int k = -bnd[2]; k < ldims[2] + bnd[2]; k++) {
+	for (int i = -bnd[0]; i < ldims[0] + bnd[0]; i++) {
+	  riemann_func(step, fluxes, U_l, U_r, B_cc, ldims[1], nghost, k, i, 1, p);
+	}
+      }
+    }
+
+    if (gdims[2] > 1) {
+      for (int j = -bnd[1]; j < ldims[1] + bnd[1]; j++) {
+	for (int i = -bnd[0]; i < ldims[0] + bnd[0]; i++) {
 	  riemann_func(step, fluxes, U_l, U_r, B_cc, ldims[2], nghost, i, j, 2, p);
 	}
       }
