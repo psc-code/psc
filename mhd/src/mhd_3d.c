@@ -1,5 +1,6 @@
 
 #include "ggcm_mhd_crds.h"
+#include "ggcm_mhd_step_private.h"
 #include "mhd_util.h"
 
 #include <mrc_ddc.h>
@@ -241,13 +242,23 @@ mhd_fluxes(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3], struct mrc_fld
 static void _mrc_unused
 mhd_fluxes_split(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3], struct mrc_fld *x,
 		 struct mrc_fld *B_cc, int bn, int nghost,
-		 void (*reconstr_func)(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3],
+		 void (*reconstr_func)(struct ggcm_mhd_step *step,
+				       struct mrc_fld *U_l[3], struct mrc_fld *U_r[3],
 				       struct mrc_fld *x, struct mrc_fld *B_cc,
 				       int ldim, int bnd, int j, int k, int dir, int p),
 		 void (*riemann_func)(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3],
-				      struct mrc_fld *x, struct mrc_fld *B_cc,
+				      struct mrc_fld *U_l[3], struct mrc_fld *U_r[3],
+				      struct mrc_fld *B_cc,
 				      int ldim, int bnd, int j, int k, int dir, int p))
 {
+  struct ggcm_mhd *mhd = step->mhd;
+  struct mrc_fld *U_l[3] = { ggcm_mhd_get_3d_fld(mhd, 5),
+			     ggcm_mhd_get_3d_fld(mhd, 5),
+			     ggcm_mhd_get_3d_fld(mhd, 5), };
+  struct mrc_fld *U_r[3] = { ggcm_mhd_get_3d_fld(mhd, 5),
+			     ggcm_mhd_get_3d_fld(mhd, 5),
+			     ggcm_mhd_get_3d_fld(mhd, 5), };
+
   int gdims[3];
   mrc_domain_get_global_dims(x->_domain, gdims);
 
@@ -266,8 +277,8 @@ mhd_fluxes_split(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3], struct m
     if (gdims[0] > 1) {
       for (int k = -bnd[2]; k < ldims[2] + bnd[2]; k++) {
 	for (int j = -bnd[1]; j < ldims[1] + bnd[1]; j++) {
-	  reconstr_func(step, fluxes, x, B_cc, ldims[0], nghost, j, k, 0, p);
-	  riemann_func(step, fluxes, x, B_cc, ldims[0], nghost, j, k, 0, p);
+	  reconstr_func(step, U_l, U_r, x, B_cc, ldims[0], nghost, j, k, 0, p);
+	  riemann_func(step, fluxes, U_l, U_r, B_cc, ldims[0], nghost, j, k, 0, p);
 	}
       }
     }
@@ -275,8 +286,8 @@ mhd_fluxes_split(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3], struct m
     if (gdims[1] > 1) {
       for (int k = -bnd[2]; k < ldims[2] + bnd[2]; k++) {
 	for (int i = -bnd[0]; i < ldims[0] + bnd[0]; i++) {
-	  reconstr_func(step, fluxes, x, B_cc, ldims[1], nghost, k, i, 1, p);
-	  riemann_func(step, fluxes, x, B_cc, ldims[1], nghost, k, i, 1, p);
+	  reconstr_func(step, U_l, U_r, x, B_cc, ldims[1], nghost, k, i, 1, p);
+	  riemann_func(step, fluxes, U_l, U_r, B_cc, ldims[1], nghost, k, i, 1, p);
 	}
       }
     }
@@ -284,12 +295,19 @@ mhd_fluxes_split(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3], struct m
     if (gdims[2] > 1) {
       for (int j = -bnd[1]; j < ldims[1] + bnd[1]; j++) {
 	for (int i = -bnd[0]; i < ldims[0] + bnd[0]; i++) {
-	  reconstr_func(step, fluxes, x, B_cc, ldims[2], nghost, i, j, 2, p);
-	  riemann_func(step, fluxes, x, B_cc, ldims[2], nghost, i, j, 2, p);
+	  reconstr_func(step, U_l, U_r, x, B_cc, ldims[2], nghost, i, j, 2, p);
+	  riemann_func(step, fluxes, U_l, U_r, B_cc, ldims[2], nghost, i, j, 2, p);
 	}
       }
     }
   }
+
+  ggcm_mhd_put_3d_fld(mhd, U_l[0]);
+  ggcm_mhd_put_3d_fld(mhd, U_l[1]);
+  ggcm_mhd_put_3d_fld(mhd, U_l[2]);
+  ggcm_mhd_put_3d_fld(mhd, U_r[0]);
+  ggcm_mhd_put_3d_fld(mhd, U_r[1]);
+  ggcm_mhd_put_3d_fld(mhd, U_r[2]);
 }
 
 // ----------------------------------------------------------------------
