@@ -876,8 +876,24 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
 
   if (limit == LIMIT_NONE || mhd->time < mhd->par.timelo) {
 #ifdef SPLIT
-    mhd_fluxes_split(step, fluxes, x_curr, NULL, 0, 0,
-		     flux_pred_reconstruct, flux_pred_riemann);
+    struct mrc_fld *U_l[3] = { ggcm_mhd_get_3d_fld(mhd, 5),
+			       ggcm_mhd_get_3d_fld(mhd, 5),
+			       ggcm_mhd_get_3d_fld(mhd, 5), };
+    struct mrc_fld *U_r[3] = { ggcm_mhd_get_3d_fld(mhd, 5),
+			       ggcm_mhd_get_3d_fld(mhd, 5),
+			       ggcm_mhd_get_3d_fld(mhd, 5), };
+    
+    mhd_fluxes_reconstruct(step, U_l, U_r, x_curr, NULL, 0, 0,
+			   flux_pred_reconstruct);
+    mhd_fluxes_riemann(step, fluxes, U_l, U_r, NULL, 0, 0,
+		       flux_pred_riemann);
+
+    ggcm_mhd_put_3d_fld(mhd, U_l[0]);
+    ggcm_mhd_put_3d_fld(mhd, U_l[1]);
+    ggcm_mhd_put_3d_fld(mhd, U_l[2]);
+    ggcm_mhd_put_3d_fld(mhd, U_r[0]);
+    ggcm_mhd_put_3d_fld(mhd, U_r[1]);
+    ggcm_mhd_put_3d_fld(mhd, U_r[2]);
 #else
     mhd_fluxes(step, fluxes, x_curr, NULL, 0, 0, flux_pred);
 #endif
