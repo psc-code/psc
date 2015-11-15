@@ -51,6 +51,7 @@ ggcm_mhd_bnd_sphere_setup(struct ggcm_mhd_bnd *bnd)
   ggcm_mhd_bnd_setup_member_objs_sub(bnd);
   ggcm_mhd_bnd_sphere_map_setup_cc(map);
   ggcm_mhd_bnd_sphere_map_setup_ec(map);
+  ggcm_mhd_bnd_sphere_map_setup_fc(map);
 }
 
 // ----------------------------------------------------------------------
@@ -200,6 +201,12 @@ static struct param ggcm_mhd_bnd_sphere_descr[] = {
   { "ec_imap[0]"      , VAR(map.ec_imap[0])  , MRC_VAR_OBJ(mrc_fld)      },
   { "ec_imap[1]"      , VAR(map.ec_imap[1])  , MRC_VAR_OBJ(mrc_fld)      },
   { "ec_imap[2]"      , VAR(map.ec_imap[2])  , MRC_VAR_OBJ(mrc_fld)      },
+  { "fc_n_map[0]"     , VAR(map.fc_n_map[0]) , MRC_VAR_INT               },
+  { "fc_n_map[1]"     , VAR(map.fc_n_map[1]) , MRC_VAR_INT               },
+  { "fc_n_map[2]"     , VAR(map.fc_n_map[2]) , MRC_VAR_INT               },
+  { "fc_imap[0]"      , VAR(map.fc_imap[0])  , MRC_VAR_OBJ(mrc_fld)      },
+  { "fc_imap[1]"      , VAR(map.fc_imap[1])  , MRC_VAR_OBJ(mrc_fld)      },
+  { "fc_imap[2]"      , VAR(map.fc_imap[2])  , MRC_VAR_OBJ(mrc_fld)      },
 
   {},
 };

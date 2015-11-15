@@ -242,6 +242,62 @@ ggcm_mhd_bnd_sphere_map_find_ec_n_map(struct ggcm_mhd_bnd_sphere_map *map)
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_bnd_sphere_map_find_fc_n_map
+//
+// NOTE: This is different from what we do for cc and ec:
+// Here, we find the faces that make up the boundary between cells
+// inside and outside the domain -- on these faces, we'll set
+// reconstructed fluxes on the ghost side
+
+static void
+ggcm_mhd_bnd_sphere_map_find_fc_n_map(struct ggcm_mhd_bnd_sphere_map *map)
+{
+  struct ggcm_mhd *mhd = map->mhd;
+
+  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
+  int gdims[3];
+  mrc_domain_get_global_dims(mhd->domain, gdims);
+
+  int fc_n_map[3] = {};
+  for (int p = 0; p < mrc_fld_nr_patches(mhd->fld); p++) {
+    struct mrc_patch_info info;
+    mrc_domain_get_local_patch_info(mhd->domain, p, &info);
+
+    int l[3] = { 2, 2, 2 }, r[3] = { 1, 1, 1 };
+    for (int d = 0; d < 3; d++) {
+      if (gdims[d] == 1) {
+	l[d] = 0;
+	r[d] = 0;
+      }
+    }
+    for (int jz = -l[2]; jz < info.ldims[2] + r[2]; jz++) {
+      for (int jy = -l[1]; jy < info.ldims[1] + r[1]; jy++) {
+	for (int jx = -l[0]; jx < info.ldims[0] + r[0]; jx++) {
+	  for (int d = 0; d < 3; d++) {
+	    double xx0[3] = { MRC_MCRDX(crds, jx, p),
+			      MRC_MCRDY(crds, jy, p),
+			      MRC_MCRDZ(crds, jz, p) };
+	    double xxp[3] = { MRC_MCRDX(crds, jx + (d == 0), p),
+			      MRC_MCRDY(crds, jy + (d == 1), p),
+			      MRC_MCRDZ(crds, jz + (d == 2), p) };
+	    bool bnd0 = ggcm_mhd_bnd_sphere_map_is_bnd(map, xx0);
+	    bool bndp = ggcm_mhd_bnd_sphere_map_is_bnd(map, xxp);
+	    if (bnd0 != bndp) {
+	      // one inside, the other outside
+	      fc_n_map[d]++;
+	    }
+	  }
+	}
+      }
+    }
+  }
+
+  for (int d = 0; d < 3; d++) {
+    map->fc_n_map[d] = fc_n_map[d];
+  }
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_bnd_sphere_map_setup_flds
 
 void
@@ -257,6 +313,13 @@ ggcm_mhd_bnd_sphere_map_setup_flds(struct ggcm_mhd_bnd_sphere_map *map)
   for (int d = 0; d < 3; d++) {
     mrc_fld_set_type(map->ec_imap[d], "int");
     mrc_fld_set_param_int_array(map->ec_imap[d], "dims", 2, (int[2]) { 4, map->ec_n_map[d] });
+  }
+
+  // face-centered
+  ggcm_mhd_bnd_sphere_map_find_fc_n_map(map);
+  for (int d = 0; d < 3; d++) {
+    mrc_fld_set_type(map->fc_imap[d], "int");
+    mrc_fld_set_param_int_array(map->fc_imap[d], "dims", 2, (int[2]) { 5, map->fc_n_map[d] });
   }
 }
 
@@ -352,5 +415,80 @@ ggcm_mhd_bnd_sphere_map_setup_ec(struct ggcm_mhd_bnd_sphere_map *map)
   for (int d = 0; d < 3; d++) {
     assert(map->ec_n_map[d] == ec_n_map[d]);
   }
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_bnd_sphere_map_setup_fc
+//
+// NOTE: This is different from what we do for cc and ec:
+// Here, we find the faces that make up the boundary between cells
+// inside and outside the domain -- on these faces, we'll set
+// reconstructed fluxes on the ghost side
+
+void
+ggcm_mhd_bnd_sphere_map_setup_fc(struct ggcm_mhd_bnd_sphere_map *map)
+{
+  struct ggcm_mhd *mhd = map->mhd;
+
+#if 0
+  struct mrc_fld *ymask = mrc_fld_get_as(map->mhd->ymask, FLD_TYPE);
+#endif
+  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
+  int gdims[3];
+  mrc_domain_get_global_dims(mhd->domain, gdims);
+
+  int fc_n_map[3] = {};
+  for (int p = 0; p < mrc_fld_nr_patches(mhd->fld); p++) {
+    struct mrc_patch_info info;
+    mrc_domain_get_local_patch_info(mhd->domain, p, &info);
+
+    int l[3] = { 2, 2, 2 }, r[3] = { 1, 1, 1 };
+    for (int d = 0; d < 3; d++) {
+      if (gdims[d] == 1) {
+	l[d] = 0;
+	r[d] = 0;
+      }
+    }
+    for (int jz = -l[2]; jz < info.ldims[2] + r[2]; jz++) {
+      for (int jy = -l[1]; jy < info.ldims[1] + r[1]; jy++) {
+	for (int jx = -l[0]; jx < info.ldims[0] + r[0]; jx++) {
+	  for (int d = 0; d < 3; d++) {
+	    double xx0[3] = { MRC_MCRDX(crds, jx, p),
+			      MRC_MCRDY(crds, jy, p),
+			      MRC_MCRDZ(crds, jz, p) };
+	    double xxp[3] = { MRC_MCRDX(crds, jx + (d == 0), p),
+			      MRC_MCRDY(crds, jy + (d == 1), p),
+			      MRC_MCRDZ(crds, jz + (d == 2), p) };
+	    bool bnd0 = ggcm_mhd_bnd_sphere_map_is_bnd(map, xx0);
+	    bool bndp = ggcm_mhd_bnd_sphere_map_is_bnd(map, xxp);
+	    if (bnd0 != bndp) {
+	      // one inside, the other outside
+	      MRC_I2(map->fc_imap[d], 0, fc_n_map[d]) = jx + (d == 0);
+	      MRC_I2(map->fc_imap[d], 1, fc_n_map[d]) = jy + (d == 1);
+	      MRC_I2(map->fc_imap[d], 2, fc_n_map[d]) = jz + (d == 2);
+	      MRC_I2(map->fc_imap[d], 3, fc_n_map[d]) = p;
+	      MRC_I2(map->fc_imap[d], 4, fc_n_map[d]) = bndp;
+	      fc_n_map[d]++;
+
+#if 0
+	      // for debugging, mark the ghostcells adjacent to
+	      // x-faces of the boundary in ymask
+	      if (d == 0) {
+		M3(ymask, 0, jx+bndp, jy,jz, p) = 2.;
+	      }
+#endif
+	    }
+	  }
+	}
+      }
+    }
+  }
+
+  for (int d = 0; d < 3; d++) {
+    assert(map->fc_n_map[d] == fc_n_map[d]);
+  }
+#if 0
+  mrc_fld_put_as(ymask, map->mhd->ymask);
+#endif
 }
 

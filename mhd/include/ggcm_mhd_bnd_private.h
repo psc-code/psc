@@ -54,6 +54,10 @@ struct ggcm_mhd_bnd_sphere_map {
   // for managing edge-centered ghost points
   int ec_n_map[3];
   struct mrc_fld *ec_imap[3];
+
+  // for managing face-centered boundary
+  int fc_n_map[3];
+  struct mrc_fld *fc_imap[3];
 };
 
 void ggcm_mhd_bnd_sphere_map_setup(struct ggcm_mhd_bnd_sphere_map *map,
@@ -61,6 +65,7 @@ void ggcm_mhd_bnd_sphere_map_setup(struct ggcm_mhd_bnd_sphere_map *map,
 void ggcm_mhd_bnd_sphere_map_setup_flds(struct ggcm_mhd_bnd_sphere_map *map);
 void ggcm_mhd_bnd_sphere_map_setup_cc(struct ggcm_mhd_bnd_sphere_map *map);
 void ggcm_mhd_bnd_sphere_map_setup_ec(struct ggcm_mhd_bnd_sphere_map *map);
+void ggcm_mhd_bnd_sphere_map_setup_fc(struct ggcm_mhd_bnd_sphere_map *map);
 
 
 #endif
