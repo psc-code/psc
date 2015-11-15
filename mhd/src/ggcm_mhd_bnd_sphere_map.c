@@ -10,26 +10,44 @@
 #include <math.h>
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_bnd_sphere_map_is_bnd
+
+static bool
+ggcm_mhd_bnd_sphere_map_is_bnd(struct ggcm_mhd_bnd_sphere_map *map, double xx[3])
+{
+  return (sqr(xx[0]) + sqr(xx[1]) + sqr(xx[2])) < sqr(map->radius);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_bnd_sphere_map_is_ghost
+
+static bool
+ggcm_mhd_bnd_sphere_map_is_ghost(struct ggcm_mhd_bnd_sphere_map *map, double xx[3])
+{
+  double rr = sqr(xx[0]) + sqr(xx[1]) + sqr(xx[2]);
+  return (rr < sqr(map->radius) && rr > sqr(map->r1));
+    
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_bnd_sphere_map_set_ymask
 
 static void
-ggcm_mhd_bnd_sphere_map_set_ymask(struct ggcm_mhd_bnd_sphere_map *map, double radius)
+ggcm_mhd_bnd_sphere_map_set_ymask(struct ggcm_mhd_bnd_sphere_map *map)
 {
   assert(map->mhd->ymask);
   struct mrc_fld *ymask = mrc_fld_get_as(map->mhd->ymask, FLD_TYPE);
-  mrc_fld_data_t r2 = sqr(radius);
 
   struct mrc_crds *crds = mrc_domain_get_crds(map->mhd->domain);  
 
   for (int p = 0; p < mrc_fld_nr_patches(ymask); p++) {
     mrc_fld_foreach(ymask, ix,iy,iz, 2, 2) {
-      mrc_fld_data_t val = 1.f;
-      if (sqr(MRC_MCRDX(crds, ix, p)) +
-	  sqr(MRC_MCRDY(crds, iy, p)) +
-	  sqr(MRC_MCRDZ(crds, iz, p)) < r2) {
-	val = 0.f;
+      double xx[3] = { MRC_MCRDX(crds, ix, p),
+		       MRC_MCRDY(crds, iy, p),
+		       MRC_MCRDZ(crds, iz, p) };
+      if (ggcm_mhd_bnd_sphere_map_is_bnd(map, xx)) {
+	M3(ymask, 0, ix,iy,iz, p) = 0.;
       }
-      M3(ymask, 0, ix,iy,iz, p) = val;
     } mrc_fld_foreach_end;
   }
 
@@ -66,37 +84,36 @@ ggcm_mhd_bnd_sphere_map_find_dr(struct ggcm_mhd_bnd_sphere_map *map, double *dr)
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_bnd_sphere_map_find_r1_r2
+// ggcm_mhd_bnd_sphere_map_find_r1
 //
 // determines r1 to be small enough so that
 // +/- 2 grid points around each cell with center outside of r2
 // are outside (ie., their centers) the smaller r1 sphere
 
 static void
-ggcm_mhd_bnd_sphere_map_find_r1_r2(struct ggcm_mhd_bnd_sphere_map *map,
-				   double radius, double *p_r1, double *p_r2)
+ggcm_mhd_bnd_sphere_map_find_r1(struct ggcm_mhd_bnd_sphere_map *map)
 {
   struct ggcm_mhd *mhd = map->mhd;
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
 
   double dr = map->min_dr;
-  double r2 = radius;
+  double r2 = map->radius;
   double r1 = r2 - dr;
 
  loop2:
-  // check if r1, r2 are ok
+  // check if r1 is ok
   for (int p = 0; p < mrc_domain_nr_patches(mhd->domain); p++) {
     struct mrc_patch_info info;
     mrc_domain_get_local_patch_info(mhd->domain, p, &info);
     for (int iz = 0; iz < info.ldims[2]; iz++) {
       for (int iy = 0; iy < info.ldims[1]; iy++) {
 	for (int ix = 0; ix < info.ldims[0]; ix++) {
-	  double xx = MRC_MCRDX(crds, ix, p);
-	  double yy = MRC_MCRDY(crds, iy, p);
-	  double zz = MRC_MCRDZ(crds, iz, p);
-	  
-	  double rr = sqrt(sqr(xx) + sqr(yy) + sqr(zz));
-	  if (rr <= r2) continue;
+	  double xx[3] = { MRC_MCRDX(crds, ix, p),
+			   MRC_MCRDY(crds, iy, p),
+			   MRC_MCRDZ(crds, iz, p), };
+	  if (ggcm_mhd_bnd_sphere_map_is_bnd(map, xx)) {
+	    continue;
+	  }
 	  
 	  for (int jz = -2; jz <= 2; jz++) {
 	    for (int jy = -2; jy <= 2; jy++) {
@@ -117,9 +134,7 @@ ggcm_mhd_bnd_sphere_map_find_r1_r2(struct ggcm_mhd_bnd_sphere_map *map,
     }
   }
 
-  MPI_Allreduce(&r1, p_r1, 1, MPI_DOUBLE, MPI_MIN, ggcm_mhd_comm(mhd));
-
-  *p_r2 = r2;
+  MPI_Allreduce(&r1, &map->r1, 1, MPI_DOUBLE, MPI_MIN, ggcm_mhd_comm(mhd));
 }
 
 // ----------------------------------------------------------------------
@@ -130,10 +145,11 @@ ggcm_mhd_bnd_sphere_map_setup(struct ggcm_mhd_bnd_sphere_map *map, struct ggcm_m
 			      double radius)
 {
   map->mhd = mhd;
+  map->radius = radius;
   ggcm_mhd_bnd_sphere_map_find_dr(map, &map->min_dr);
-  ggcm_mhd_bnd_sphere_map_find_r1_r2(map, radius, &map->r1, &map->r2);
+  ggcm_mhd_bnd_sphere_map_find_r1(map);
 
-  ggcm_mhd_bnd_sphere_map_set_ymask(map, radius);
+  ggcm_mhd_bnd_sphere_map_set_ymask(map);
 }
 
 // ----------------------------------------------------------------------
@@ -148,7 +164,7 @@ ggcm_mhd_bnd_sphere_map_find_cc_n_map(struct ggcm_mhd_bnd_sphere_map *map)
   int gdims[3];
   mrc_domain_get_global_dims(mhd->domain, gdims);
 
-  double r1 = map->r1, r2 = map->r2;
+  double r1 = map->r1;
   assert(r1 > 0.);
 
   int cc_n_map = 0;
@@ -165,12 +181,12 @@ ggcm_mhd_bnd_sphere_map_find_cc_n_map(struct ggcm_mhd_bnd_sphere_map *map)
     for (int jz = -sw[2]; jz < info.ldims[2] + sw[2]; jz++) {
       for (int jy = -sw[1]; jy < info.ldims[1] + sw[1]; jy++) {
 	for (int jx = -sw[0]; jx < info.ldims[0] + sw[0]; jx++) {
-	  float xx = MRC_MCRDX(crds, jx, p);
-	  float yy = MRC_MCRDY(crds, jy, p);
-	  float zz = MRC_MCRDZ(crds, jz, p);
-	  float rr = sqrtf(sqr(xx) + sqr(yy) + sqr(zz));
-	  if (rr < r1 || rr > r2) continue;
-	  cc_n_map++;
+	  double xx[3] = { MRC_MCRDX(crds, jx, p),
+			   MRC_MCRDY(crds, jy, p),
+			   MRC_MCRDZ(crds, jz, p), };
+	  if (ggcm_mhd_bnd_sphere_map_is_ghost(map, xx)) {
+	    cc_n_map++;
+	  }
 	}
       }
     }
@@ -189,7 +205,6 @@ ggcm_mhd_bnd_sphere_map_find_ec_n_map(struct ggcm_mhd_bnd_sphere_map *map)
   int gdims[3];
   mrc_domain_get_global_dims(mhd->domain, gdims);
 
-  float r1 = map->r1, r2 = map->r2;
   int ec_n_map[3] = {};
   for (int p = 0; p < mrc_fld_nr_patches(mhd->fld); p++) {
     struct mrc_patch_info info;
@@ -210,11 +225,11 @@ ggcm_mhd_bnd_sphere_map_find_ec_n_map(struct ggcm_mhd_bnd_sphere_map *map)
 	    // find the correct edge centered coords for the locations of E
 	    float crd_ec[3];
 	    ggcm_mhd_get_crds_ec(mhd, jx,jy,jz, p, d, crd_ec);
-	    float xx = crd_ec[0], yy = crd_ec[1], zz = crd_ec[2];
-	    float rr = sqrtf(sqr(xx) + sqr(yy) + sqr(zz));
-	    if (rr < r1 || rr > r2) continue;
+	    double xx[3] = { crd_ec[0], crd_ec[1], crd_ec[2] };
 
-	    ec_n_map[d]++;
+	    if (ggcm_mhd_bnd_sphere_map_is_ghost(map, xx)) {
+	      ec_n_map[d]++;
+	    }
 	  }
 	}
       }
@@ -257,7 +272,6 @@ ggcm_mhd_bnd_sphere_map_setup_cc(struct ggcm_mhd_bnd_sphere_map *map)
   int gdims[3];
   mrc_domain_get_global_dims(mhd->domain, gdims);
 
-  double r1 = map->r1, r2 = map->r2;
   int cc_n_map = 0;
   for (int p = 0; p < mrc_fld_nr_patches(mhd->fld); p++) {
     struct mrc_patch_info info;
@@ -272,18 +286,16 @@ ggcm_mhd_bnd_sphere_map_setup_cc(struct ggcm_mhd_bnd_sphere_map *map)
     for (int jz = -sw[2]; jz < info.ldims[2] + sw[2]; jz++) {
       for (int jy = -sw[1]; jy < info.ldims[1] + sw[1]; jy++) {
 	for (int jx = -sw[0]; jx < info.ldims[0] + sw[0]; jx++) {
-	  double xx = MRC_MCRDX(crds, jx, p);
-	  double yy = MRC_MCRDY(crds, jy, p);
-	  double zz = MRC_MCRDZ(crds, jz, p);
-	  double rr = sqrtf(sqr(xx) + sqr(yy) + sqr(zz));
-	  if (rr < r1 || rr > r2) continue;
-	  
-	  MRC_I2(map->cc_imap, 0, cc_n_map) = jx;
-	  MRC_I2(map->cc_imap, 1, cc_n_map) = jy;
-	  MRC_I2(map->cc_imap, 2, cc_n_map) = jz;
-	  MRC_I2(map->cc_imap, 3, cc_n_map) = p;
-
-	  cc_n_map++;
+	  double xx[3] = { MRC_MCRDX(crds, jx, p),
+			   MRC_MCRDY(crds, jy, p),
+			   MRC_MCRDZ(crds, jz, p), };
+	  if (ggcm_mhd_bnd_sphere_map_is_ghost(map, xx)) {
+	    MRC_I2(map->cc_imap, 0, cc_n_map) = jx;
+	    MRC_I2(map->cc_imap, 1, cc_n_map) = jy;
+	    MRC_I2(map->cc_imap, 2, cc_n_map) = jz;
+	    MRC_I2(map->cc_imap, 3, cc_n_map) = p;
+	    cc_n_map++;
+	  }
 	}
       }
     }
@@ -303,7 +315,6 @@ ggcm_mhd_bnd_sphere_map_setup_ec(struct ggcm_mhd_bnd_sphere_map *map)
   int gdims[3];
   mrc_domain_get_global_dims(mhd->domain, gdims);
 
-  float r1 = map->r1, r2 = map->r2;
   int ec_n_map[3] = {};
   for (int p = 0; p < mrc_fld_nr_patches(mhd->fld); p++) {
     struct mrc_patch_info info;
@@ -323,18 +334,16 @@ ggcm_mhd_bnd_sphere_map_setup_ec(struct ggcm_mhd_bnd_sphere_map *map)
 	    // find the correct edge centered coords for the locations of E
 	    float crd_ec[3];
 	    ggcm_mhd_get_crds_ec(mhd, jx,jy,jz, p, d, crd_ec);
-	    float xx = crd_ec[0], yy = crd_ec[1], zz = crd_ec[2];
-	    float rr = sqrtf(sqr(xx) + sqr(yy) + sqr(zz));
-	    if (rr < r1 || rr > r2) continue;
+	    double xx[3] = { crd_ec[0], crd_ec[1], crd_ec[2] };
 
-	    MRC_I2(map->ec_imap[d], 0, ec_n_map[d]) = jx;
-	    MRC_I2(map->ec_imap[d], 1, ec_n_map[d]) = jy;
-	    MRC_I2(map->ec_imap[d], 2, ec_n_map[d]) = jz;
-	    MRC_I2(map->ec_imap[d], 3, ec_n_map[d]) = p;
-	    
-	    ec_n_map[d]++;
+	    if (ggcm_mhd_bnd_sphere_map_is_ghost(map, xx)) {
+	      MRC_I2(map->ec_imap[d], 0, ec_n_map[d]) = jx;
+	      MRC_I2(map->ec_imap[d], 1, ec_n_map[d]) = jy;
+	      MRC_I2(map->ec_imap[d], 2, ec_n_map[d]) = jz;
+	      MRC_I2(map->ec_imap[d], 3, ec_n_map[d]) = p;
+	      ec_n_map[d]++;
+	    }
 	  }
-	  
 	}
       }
     }

@@ -41,9 +41,10 @@ extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_sphere_fc_double_aos;
 
 struct ggcm_mhd_bnd_sphere_map {
   struct ggcm_mhd *mhd;
+  double radius;
   double min_dr;
-  double r1;
-  double r2;
+  double r1; // inner radius, that determines spherical shell that we set
+  // ghost point values inside of
 
   // maps
   // for managing cell-centered ghost points
