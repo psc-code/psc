@@ -102,6 +102,7 @@ ggcm_mhd_step_c3_setup(struct ggcm_mhd_step *step)
   setup_mrc_fld_1d(sub->lim1, mhd->fld, 5);
 
   mhd->ymask = ggcm_mhd_get_3d_fld(mhd, 1);
+  mrc_fld_set(mhd->ymask, 1.);
   sub->zmask = ggcm_mhd_get_3d_fld(mhd, 1);
   sub->rmask = ggcm_mhd_get_3d_fld(mhd, 1);
 

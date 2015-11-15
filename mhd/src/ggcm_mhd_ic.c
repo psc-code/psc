@@ -15,23 +15,6 @@
 // ggcm_mhd_ic class
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_ic_init_ymask_default
-
-static void
-ggcm_mhd_ic_init_ymask_default(struct ggcm_mhd_ic *ic, struct mrc_fld *ymask_base)
-{
-  struct mrc_fld *ymask = mrc_fld_get_as(ymask_base, FLD_TYPE);
-
-  for (int p = 0; p < mrc_fld_nr_patches(ymask); p++) {
-    mrc_fld_foreach(ymask, ix, iy, iz, 2, 2) {
-      M3(ymask, 0, ix,iy,iz, p) = 1.;
-    } mrc_fld_foreach_end;
-  }
-    
-  mrc_fld_put_as(ymask, ymask_base);
-}
-
-// ----------------------------------------------------------------------
 // ggcm_mhd_ic_run
 
 void
@@ -73,15 +56,6 @@ ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic)
       
       ggcm_mhd_put_3d_fld(mhd, mhd->b0);
       mhd->b0 = NULL;
-    }
-  }
-
-  if (ops->init_ymask) {
-    assert(mhd->ymask);
-    ops->init_ymask(ic, mhd->ymask);
-  } else {
-    if (mhd->ymask) {
-      ggcm_mhd_ic_init_ymask_default(ic, mhd->ymask);
     }
   }
 }

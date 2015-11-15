@@ -5,7 +5,36 @@
 
 #include <mrc_domain.h>
 #include <mrc_bits.h>
+#include <mrc_fld_as_double.h>
+
 #include <math.h>
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_bnd_sphere_map_set_ymask
+
+static void
+ggcm_mhd_bnd_sphere_map_set_ymask(struct ggcm_mhd_bnd_sphere_map *map, double radius)
+{
+  assert(map->mhd->ymask);
+  struct mrc_fld *ymask = mrc_fld_get_as(map->mhd->ymask, FLD_TYPE);
+  mrc_fld_data_t r2 = sqr(radius);
+
+  struct mrc_crds *crds = mrc_domain_get_crds(map->mhd->domain);  
+
+  for (int p = 0; p < mrc_fld_nr_patches(ymask); p++) {
+    mrc_fld_foreach(ymask, ix,iy,iz, 2, 2) {
+      mrc_fld_data_t val = 1.f;
+      if (sqr(MRC_MCRDX(crds, ix, p)) +
+	  sqr(MRC_MCRDY(crds, iy, p)) +
+	  sqr(MRC_MCRDZ(crds, iz, p)) < r2) {
+	val = 0.f;
+      }
+      M3(ymask, 0, ix,iy,iz, p) = val;
+    } mrc_fld_foreach_end;
+  }
+
+  mrc_fld_put_as(ymask, map->mhd->ymask);
+}
 
 // ----------------------------------------------------------------------
 // ggcm_mhd_bnd_sphere_map_find_dr
@@ -103,6 +132,8 @@ ggcm_mhd_bnd_sphere_map_setup(struct ggcm_mhd_bnd_sphere_map *map, struct ggcm_m
   map->mhd = mhd;
   ggcm_mhd_bnd_sphere_map_find_dr(map, &map->min_dr);
   ggcm_mhd_bnd_sphere_map_find_r1_r2(map, radius, &map->r1, &map->r2);
+
+  ggcm_mhd_bnd_sphere_map_set_ymask(map, radius);
 }
 
 // ----------------------------------------------------------------------

@@ -253,6 +253,7 @@ ggcm_mhd_step_vlct_setup(struct ggcm_mhd_step *step)
   setup_mrc_fld_1d(sub->Bxi, mhd->fld, 1);
 
   mhd->ymask = ggcm_mhd_get_3d_fld(mhd, 1);
+  mrc_fld_set(mhd->ymask, 1.);
 
   ggcm_mhd_step_setup_member_objs_sub(step);
 }
