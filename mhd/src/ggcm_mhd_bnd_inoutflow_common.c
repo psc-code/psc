@@ -264,16 +264,42 @@ obndra_mhd(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim)
 	}
       }
     }
+    if (mrc_domain_at_boundary_hi(mhd->domain, 1, p)) {
+      for (int iz = -swz; iz < mz + swz; iz++) {
+	for (int ix = -swx; ix < mx + swx; ix++) {
+	  for (int iy = my; iy < my + swy; iy++) {
+	    for (int m = mm; m < mm + 5; m++) {
+	      M3(f,m, ix,iy,iz, p) = M3(f,m, ix,iy-1,iz, p);
+	    }
+	    M3(f,mm + BX, ix,iy,iz, p) = M3(f,mm + BX, ix,iy-1,iz, p);
+	    M3(f,mm + BZ, ix,iy,iz, p) = M3(f,mm + BZ, ix,iy-1,iz, p);
+	  }
+	}
+      }
+    }
 
     if (mrc_domain_at_boundary_lo(mhd->domain, 2, p)) {
       for (int iy = -swy; iy < my + swy; iy++) {
 	for (int ix = -swx; ix < mx + swx; ix++) {
-	  for (int iz = 0; iz > -swz; iz--) {
+	  for (int iz = -1; iz >= -swz; iz--) {
 	    for (int m = mm; m < mm + 5; m++) {
-	      M3(f,m, ix,iy,iz-1, p) = M3(f,m, ix,iy,iz, p);
+	      M3(f,m, ix,iy,iz, p) = M3(f,m, ix,iy,iz+1, p);
 	    }
-	    M3(f,mm + BX, ix,iy,iz-1, p) = M3(f,mm + BX, ix,iy,iz, p);
-	    M3(f,mm + BY, ix,iy,iz-1, p) = M3(f,mm + BY, ix,iy,iz, p);
+	    M3(f,mm + BX, ix,iy,iz, p) = M3(f,mm + BX, ix,iy,iz+1, p);
+	    M3(f,mm + BY, ix,iy,iz, p) = M3(f,mm + BY, ix,iy,iz+1, p);
+	  }
+	}
+      }
+    }
+    if (mrc_domain_at_boundary_hi(mhd->domain, 2, p)) {
+      for (int iy = -swy; iy < my + swy; iy++) {
+	for (int ix = -swx; ix < mx + swx; ix++) {
+	  for (int iz = mz; iz < mz + swz; iz++) {
+	    for (int m = mm; m < mm + 5; m++) {
+	      M3(f,m, ix,iy,iz, p) = M3(f,m, ix,iy,iz-1, p);
+	    }
+	    M3(f,mm + BX, ix,iy,iz, p) = M3(f,mm + BX, ix,iy,iz-1, p);
+	    M3(f,mm + BY, ix,iy,iz, p) = M3(f,mm + BY, ix,iy,iz-1, p);
 	  }
 	}
       }
@@ -288,32 +314,6 @@ obndra_mhd(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim)
 	    }
 	    M3(f,mm + BY, ix,iy,iz, p) = M3(f,mm + BY, ix-1,iy,iz, p);
 	    M3(f,mm + BZ, ix,iy,iz, p) = M3(f,mm + BZ, ix-1,iy,iz, p);
-	  }
-	}
-      }
-    }
-    if (mrc_domain_at_boundary_hi(mhd->domain, 1, p)) {
-      for (int iz = -swz; iz < mz + swz; iz++) {
-	for (int ix = -swx; ix < mx + swx; ix++) {
-	  for (int iy = my; iy < my + swy; iy++) {
-	    for (int m = mm; m < mm + 5; m++) {
-	      M3(f,m, ix,iy,iz, p) = M3(f,m, ix,iy-1,iz, p);
-	    }
-	    M3(f,mm + BX, ix,iy,iz, p) = M3(f,mm + BX, ix,iy-1,iz, p);
-	    M3(f,mm + BZ, ix,iy,iz, p) = M3(f,mm + BZ, ix,iy-1,iz, p);
-	  }
-	}
-      }
-    }
-    if (mrc_domain_at_boundary_hi(mhd->domain, 2, p)) {
-      for (int iy = -swy; iy < my + swy; iy++) {
-	for (int ix = -swx; ix < mx + swx; ix++) {
-	  for (int iz = mz; iz < mz + swz; iz++) {
-	    for (int m = mm; m < mm + 5; m++) {
-	      M3(f,m, ix,iy,iz, p) = M3(f,m, ix,iy,iz-1, p);
-	    }
-	    M3(f,mm + BX, ix,iy,iz, p) = M3(f,mm + BX, ix,iy,iz-1, p);
-	    M3(f,mm + BY, ix,iy,iz, p) = M3(f,mm + BY, ix,iy,iz-1, p);
 	  }
 	}
       }
@@ -514,24 +514,6 @@ obndrb(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm)
 	}
       }
     }
-    if (mrc_domain_at_boundary_lo(mhd->domain, 2, p)) {
-      for (int iy = -swy - SHIFT; iy < my + swy - 1 - SHIFT; iy++) {
-	for (int ix = -swx - SHIFT; ix < mx + swx - 1 - SHIFT; ix++) {
-	  for (int iz = 0; iz > -swz; iz--) {
-	    M3(f, mm+2, ix,iy,SHIFT + iz, p) = BNDDIV_BZ_L(ix,iy,SHIFT + iz, p);
-	  }
-	}
-      }
-    }
-    if (mrc_domain_at_boundary_hi(mhd->domain, 0, p)) {
-      for (int iz = -swz - SHIFT; iz < mz + swz - 1 - SHIFT; iz++) {
-	for (int iy = -swy - SHIFT; iy < my + swy - 1 - SHIFT; iy++) {
-	  for (int ix = mx; ix < mx + swx; ix++) {
-	    M3(f, mm+0, SHIFT + ix,iy,iz, p) = BNDDIV_BX_H(SHIFT + ix,iy,iz, p);
-	  }
-	}
-      }
-    }
     if (mrc_domain_at_boundary_hi(mhd->domain, 1, p)) {
       for (int iz = -swz - SHIFT; iz < mz + swz - 1 - SHIFT; iz++) {
 	for (int ix = -swx - SHIFT; ix < mx + swx - 1 - SHIFT; ix++) {
@@ -541,11 +523,47 @@ obndrb(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm)
 	}
       }
     }
+
+    if (mrc_domain_at_boundary_lo(mhd->domain, 2, p)) {
+      for (int iy = -swy - SHIFT; iy < my + swy - 1 - SHIFT; iy++) {
+	for (int ix = -swx - SHIFT; ix < mx + swx - 1 - SHIFT; ix++) {
+	  for (int iz = 0; iz > -swz; iz--) {
+	    M3(f, mm+2, ix,iy,SHIFT + iz, p) = BNDDIV_BZ_L(ix,iy,SHIFT + iz, p);
+	  }
+	}
+      }
+    }
     if (mrc_domain_at_boundary_hi(mhd->domain, 2, p)) {
       for (int iy = -swy - SHIFT; iy < my + swy - 1 - SHIFT; iy++) {
 	for (int ix = -swx - SHIFT; ix < mx + swx - 1 - SHIFT; ix++) {
 	  for (int iz = mz; iz < mz + swz; iz++) {
 	    M3(f, mm+2, ix,iy,SHIFT + iz, p) = BNDDIV_BZ_H(ix,iy,SHIFT + iz, p);
+	  }
+	}
+      }
+    }
+
+#if 0
+#define BNDDIV_BX_H(ix, iy, iz, p)					\
+  (M3(f, mm+0, ix-1,iy,iz, p) -						\
+   bdy3[iy]/bdx3[ix-1] * (M3(f, mm+1, ix-1,iy+1,iz  , p) -		\
+			  M3(f, mm+1, ix-1,iy  ,iz  , p)) -		\
+   bdz3[iz]/bdx3[ix-1] * (M3(f, mm+2, ix-1,iy  ,iz+1, p) -		\
+			  M3(f, mm+2, ix-1,iy  ,iz  , p)))
+#endif
+    if (mrc_domain_at_boundary_hi(mhd->domain, 0, p)) {
+      for (int iz = -swz - SHIFT; iz < mz + swz - 1 - SHIFT; iz++) {
+	for (int iy = -swy - SHIFT; iy < my + swy - 1 - SHIFT; iy++) {
+	  for (int ix = mx; ix < mx + swx; ix++) {
+	    M3(f, mm+0, SHIFT + ix,iy,iz, p) = BNDDIV_BX_H(SHIFT + ix,iy,iz, p);
+	    if (ix == 32 && iy == 16 && (iz == 0 || iz == 32)) {
+	      mprintf("BX k %d  %g -- %g\n", iz, M3(f, mm+0, ix,iy,iz, p), M3(f, mm+0, ix-1,iy,iz, p));
+	      mprintf("BX %g %g %g %g\n",
+		      M3(f, mm+1, ix-1,iy+1,iz  , p),
+		      M3(f, mm+1, ix-1,iy  ,iz  , p),
+		      M3(f, mm+2, ix-1,iy  ,iz+1, p), // 31, 16, 33
+		      M3(f, mm+2, ix-1,iy  ,iz  , p));
+	    }
 	  }
 	}
       }
