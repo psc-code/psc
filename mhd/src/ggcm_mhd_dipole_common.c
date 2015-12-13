@@ -89,7 +89,7 @@ ggcm_mhd_dipole_sub_add_dipole(struct ggcm_mhd_dipole *mhd_dipole, struct mrc_fl
 
   // calculate A first, then take its curl
   for (int p = 0; p < mrc_fld_nr_patches(a); p++) {
-    mrc_fld_foreach(a, ix,iy,iz, 1, 2) {
+    mrc_fld_foreach(a, ix,iy,iz, 2, 2) {
       mrc_fld_data_t vecpot[3];
       ggcm_mhd_dipole_sub_vect_pot(mhd, ix,iy,iz, p, x0, moment, xmir, vecpot);
       M3(a, 0, ix,iy,iz, p) = vecpot[0];
@@ -108,7 +108,7 @@ ggcm_mhd_dipole_sub_add_dipole(struct ggcm_mhd_dipole *mhd_dipole, struct mrc_fl
     float *bd3y = ggcm_mhd_crds_get_crd_p(mhd->crds, 1, BD3, p);
     float *bd3z = ggcm_mhd_crds_get_crd_p(mhd->crds, 2, BD3, p);
 
-    mrc_fld_foreach(b, ix,iy,iz, 1, 1) {
+    mrc_fld_foreach(b, ix,iy,iz, 2, 1) {
       curl_a[0] = ((M3(a, 2, ix,iy+1,iz, p) - M3(a, 2, ix,iy,iz, p)) * bd3y[iy] -
 		   (M3(a, 1, ix,iy,iz+1, p) - M3(a, 1, ix,iy,iz, p)) * bd3z[iz]);
       curl_a[1] = ((M3(a, 0, ix,iy,iz+1, p) - M3(a, 0, ix,iy,iz, p)) * bd3z[iz] -
