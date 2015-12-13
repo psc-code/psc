@@ -36,6 +36,20 @@ ggcm_mhd_bnd_fill_ghosts_E(struct ggcm_mhd_bnd *bnd, struct mrc_fld *E)
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_bnd_fill_ghosts_reconstr
+
+void
+ggcm_mhd_bnd_fill_ghosts_reconstr(struct ggcm_mhd_bnd *bnd, struct mrc_fld *U_l[],
+				  struct mrc_fld *U_r[])
+{
+  struct ggcm_mhd_bnd_ops *ops = ggcm_mhd_bnd_ops(bnd);
+  assert(ops);
+  if (ops->fill_ghosts_reconstr) {
+    ops->fill_ghosts_reconstr(bnd, U_l, U_r);
+  }
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_bnd_init
 
 static void

@@ -886,6 +886,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
     
     mhd_fluxes_reconstruct(step, U_l, U_r, x_curr, NULL, 0, 0,
 			   flux_pred_reconstruct);
+    ggcm_mhd_fill_ghosts_reconstr(mhd, U_l, U_r);
     mhd_fluxes_riemann(step, fluxes, U_l, U_r, NULL, 0, 0,
 		       flux_pred_riemann);
 

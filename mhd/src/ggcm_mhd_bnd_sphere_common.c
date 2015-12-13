@@ -160,7 +160,7 @@ sphere_fill_ghosts_E(struct ggcm_mhd_bnd *bnd, struct mrc_fld *E)
 // ----------------------------------------------------------------------
 // ggcm_mhd_bnd_sphere_fill_ghosts_E
 
-static void
+static void _mrc_unused
 ggcm_mhd_bnd_sphere_fill_ghosts_E(struct ggcm_mhd_bnd *bnd, struct mrc_fld *E_base)
 {
   struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
@@ -173,6 +173,100 @@ ggcm_mhd_bnd_sphere_fill_ghosts_E(struct ggcm_mhd_bnd *bnd, struct mrc_fld *E_ba
   struct mrc_fld *E = mrc_fld_get_as(E_base, FLD_TYPE);
   sphere_fill_ghosts_E(bnd, E);
   mrc_fld_put_as(E, E_base);
+}
+
+// ----------------------------------------------------------------------
+// sphere_fill_ghosts_reconstr
+
+static void
+sphere_fill_ghosts_reconstr(struct ggcm_mhd_bnd *bnd, struct mrc_fld *U_l[],
+			    struct mrc_fld *U_r[])
+{
+  struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
+  struct ggcm_mhd_bnd_sphere_map *map = &sub->map;
+
+  for (int d = 0; d < 3; d++) {
+    for (int i = 0; i < map->fc_n_map[d]; i++) {
+      int ix = MRC_I2(map->fc_imap[d], 0, i);
+      int iy = MRC_I2(map->fc_imap[d], 1, i);
+      int iz = MRC_I2(map->fc_imap[d], 2, i);
+      int p  = MRC_I2(map->fc_imap[d], 3, i);
+      int bndp = MRC_I2(map->fc_imap[d], 4, i);
+
+      float crd_fc[3];
+      ggcm_mhd_get_crds_fc(bnd->mhd, ix,iy,iz, p, d, crd_fc);
+
+      // find true (inside) face values
+      mrc_fld_data_t U_ghost[5], U_true[5];
+      for (int m = 0; m < 5; m++) {
+	if (bndp) {
+	  U_true[m] = M3(U_l[d], m, ix,iy,iz, p);
+	} else {
+	  U_true[m] = M3(U_r[d], m, ix,iy,iz, p);
+	}
+      }
+
+      // from BATSRUS / ganymede b.c.
+      // for inflow float everything 
+      for (int m = 0; m < 5; m++) {
+	U_ghost[m] = U_true[m];
+      }
+
+      // calculate r^2
+      mrc_fld_data_t r2 = 0.;
+      for (int m = 0; m < 3; m++) {
+	r2 += sqr(crd_fc[m]);
+      }
+
+      // for outflow reflect radial velocity: uG = u - 2*(u.r)*r/r^2
+      mrc_fld_data_t UdotR = 0.;
+      for (int m = 0; m < 3; m++) {
+	UdotR += U_true[RVX + m] * crd_fc[m];
+      }
+      if (UdotR > 0.) {
+	for (int m = 0; m < 3; m++) {
+	  U_ghost[RVX + m] = U_true[RVX + m] - 2. * UdotR / r2 * crd_fc[m];
+	}
+      }
+
+      // store ghost values back
+      for (int m = 0; m < 5; m++) {
+	if (bndp) {
+	  M3(U_r[d], m, ix, iy,iz, p) = U_ghost[m];
+	} else {
+	  M3(U_l[d], m, ix, iy,iz, p) = U_ghost[m];
+	}
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_bnd_sphere_fill_ghosts_reconstr
+
+static void
+ggcm_mhd_bnd_sphere_fill_ghosts_reconstr(struct ggcm_mhd_bnd *bnd, struct mrc_fld *U_l_base[],
+					 struct mrc_fld *U_r_base[])
+{
+  struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
+  struct ggcm_mhd_bnd_sphere_map *map = &sub->map;
+
+  if (map->fc_n_map[0] + map->fc_n_map[1] + map->fc_n_map[2] == 0) {
+    return;
+  }
+
+  struct mrc_fld *U_l[3], *U_r[3];
+  for (int d = 0; d < 3; d++) {
+    U_l[d] = mrc_fld_get_as(U_l_base[d], FLD_TYPE);
+    U_r[d] = mrc_fld_get_as(U_r_base[d], FLD_TYPE);
+  }
+
+  sphere_fill_ghosts_reconstr(bnd, U_l, U_r);
+
+  for (int d = 0; d < 3; d++) {
+    mrc_fld_put_as(U_l[d], U_l_base[d]);
+    mrc_fld_put_as(U_r[d], U_r_base[d]);
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -221,6 +315,7 @@ struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_sphere = {
   .param_descr      = ggcm_mhd_bnd_sphere_descr,
   .setup            = ggcm_mhd_bnd_sphere_setup,
   .fill_ghosts      = ggcm_mhd_bnd_sphere_fill_ghosts,
-  .fill_ghosts_E    = ggcm_mhd_bnd_sphere_fill_ghosts_E,
+  //  .fill_ghosts_E    = ggcm_mhd_bnd_sphere_fill_ghosts_E,
+  .fill_ghosts_reconstr = ggcm_mhd_bnd_sphere_fill_ghosts_reconstr,
 };
 

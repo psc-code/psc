@@ -14,6 +14,8 @@ struct ggcm_mhd_bnd_ops {
   void (*fill_ghosts)(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld,
 		      int m, float bntim);
   void (*fill_ghosts_E)(struct ggcm_mhd_bnd *bnd, struct mrc_fld *E);
+  void (*fill_ghosts_reconstr)(struct ggcm_mhd_bnd *bnd, struct mrc_fld *U_l[],
+			       struct mrc_fld *U_r[]);
 };
 
 extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_none;
