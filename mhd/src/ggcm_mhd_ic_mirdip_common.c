@@ -56,7 +56,7 @@ vxsta1(mrc_fld_data_t x, mrc_fld_data_t y, mrc_fld_data_t z, mrc_fld_data_t v0,
   mrc_fld_data_t s = (r - r1) / (r2 - r1);
   s = fmax(s, 0.);
   s = fmin(s, 1.);
-  if (x < xmir) {
+  if (xmir != 0. && x < xmir) {
     return v0;
   } else {
     return v0 * s;
