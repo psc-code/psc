@@ -409,7 +409,7 @@ curbc_c(struct ggcm_mhd_step *step, struct mrc_fld *j_cc,
 
   // then average to cell centers
   for (int p = 0; p < mrc_fld_nr_patches(j_cc); p++) {
-    mrc_fld_foreach(j_cc, i,j,k, 1, 1) {
+    mrc_fld_foreach(j_cc, i,j,k, 2, 1) {
       mrc_fld_data_t s = .25f * ZMASK(zmask, i, j, k, p);
       M3(j_cc, 0, i,j,k, p) = s * (M3(j_ec, 0, i   ,j+dy,k+dz, p) + M3(j_ec, 0, i,j   ,k+dz, p) +
 				   M3(j_ec, 0, i   ,j+dy,k   , p) + M3(j_ec, 0, i,j   ,k   , p));
