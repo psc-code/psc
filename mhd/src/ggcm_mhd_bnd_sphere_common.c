@@ -75,13 +75,14 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld, int m)
   bnvals[FIXED_BY] = sub->bnvals[FIXED_BY] / mhd->bbnorm;
   bnvals[FIXED_BZ] = sub->bnvals[FIXED_BZ] / mhd->bbnorm;
 
-  double rvx = bnvals[FIXED_RR] * bnvals[FIXED_VX];
-  double rvy = bnvals[FIXED_RR] * bnvals[FIXED_VY];
-  double rvz = bnvals[FIXED_RR] * bnvals[FIXED_VZ];
+  double rrbn = bnvals[FIXED_RR];
+  double rvx = rrbn * bnvals[FIXED_VX];
+  double rvy = rrbn * bnvals[FIXED_VY];
+  double rvz = rrbn * bnvals[FIXED_VZ];
 
-  double vvbn  = sqr(bnvals[FIXED_VX]) + sqr(bnvals[FIXED_VY]) + sqr(bnvals[FIXED_VZ]);
-  double uubn  = .5f * (bnvals[FIXED_RR]*vvbn) + bnvals[FIXED_PP] / (gamm - 1.f);
-  double b2bn  = sqr(bnvals[FIXED_BX]) + sqr(bnvals[FIXED_BY]) + sqr(bnvals[FIXED_BZ]);
+  double vvbn = sqr(bnvals[FIXED_VX]) + sqr(bnvals[FIXED_VY]) + sqr(bnvals[FIXED_VZ]);
+  double uubn = .5f * (rrbn*vvbn) + bnvals[FIXED_PP] / (gamm - 1.f);
+  double b2bn = sqr(bnvals[FIXED_BX]) + sqr(bnvals[FIXED_BY]) + sqr(bnvals[FIXED_BZ]);
   double eebn = uubn + .5 * b2bn;
 
   for (int i = 0; i < map->cc_n_map; i++) {
@@ -90,7 +91,7 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld, int m)
     int iz = MRC_I2(map->cc_imap, 2, i);
     int p  = MRC_I2(map->cc_imap, 3, i);
 
-    M3 (fld, m + RR,  ix,iy,iz, p) = bnvals[FIXED_RR];
+    M3 (fld, m + RR,  ix,iy,iz, p) = rrbn;
     M3 (fld, m + RVX, ix,iy,iz, p) = rvx;
     M3 (fld, m + RVY, ix,iy,iz, p) = rvy;
     M3 (fld, m + RVZ, ix,iy,iz, p) = rvz;
