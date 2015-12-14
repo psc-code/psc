@@ -20,10 +20,14 @@ struct mhd_riemann_ops {
 
 #define mhd_riemann_ops(ai) ((struct mhd_riemann_ops *)(ai)->obj.ops)
 
+// These two are missing the pressure, and are really openggcm (c3) specific
 extern struct mhd_riemann_ops mhd_riemann_rusanov_double_ops;
 extern struct mhd_riemann_ops mhd_riemann_rusanov_float_ops;
+// MHD
+extern struct mhd_riemann_ops mhd_riemann_rusanov_ops;
 extern struct mhd_riemann_ops mhd_riemann_hll_ops;
 extern struct mhd_riemann_ops mhd_riemann_hlld_ops;
+// Hydro
 extern struct mhd_riemann_ops mhd_riemann_hydro_rusanov_ops;
 extern struct mhd_riemann_ops mhd_riemann_hydro_hll_ops;
 extern struct mhd_riemann_ops mhd_riemann_hydro_hllc_ops;

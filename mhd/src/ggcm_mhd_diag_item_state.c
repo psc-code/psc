@@ -80,6 +80,15 @@ ggcm_mhd_diag_item_uu1_run(struct ggcm_mhd_diag_item *item,
 	M3(r, 0, ix,iy,iz, p) = EE_(f, ix,iy,iz, p) -.5f * b2;
       } mrc_fld_foreach_end;
     }
+  } else if (mhd_type == MT_FULLY_CONSERVATIVE_CC) {
+    for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
+      mrc_fld_foreach(f, ix,iy,iz, bnd - 1, bnd - 1) {
+	float b2  = (sqr(BX_(f, ix,iy,iz, p)) +
+		     sqr(BY_(f, ix,iy,iz, p)) +
+		     sqr(BZ_(f, ix,iy,iz, p)));
+	M3(r, 0, ix,iy,iz, p) = EE_(f, ix,iy,iz, p) -.5f * b2;
+      } mrc_fld_foreach_end;
+    }
   } else {
     assert(0);
   }

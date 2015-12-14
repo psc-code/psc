@@ -197,6 +197,36 @@ pick_line_sc(struct mrc_fld *x1, struct mrc_fld *x,
 }
 
 // ----------------------------------------------------------------------
+// pick_line_fc_cc
+
+static void _mrc_unused
+pick_line_fc_cc(struct mrc_fld *x1, struct mrc_fld *x,
+		int ldim, int l, int r, int j, int k, int dim, int p)
+{
+#define PICK_LINE(X,Y,Z,I,J,K) do {			\
+    for (int i = -l; i < ldim + r; i++) {		\
+      F1(x1, RR , i) = M3(x, RR   , I,J,K, p);		\
+      F1(x1, RVX, i) = M3(x, RVX+X, I,J,K, p);		\
+      F1(x1, RVY, i) = M3(x, RVX+Y, I,J,K, p);		\
+      F1(x1, RVZ, i) = M3(x, RVX+Z, I,J,K, p);		\
+      F1(x1, EE , i) = M3(x, EE   , I,J,K, p);		\
+      F1(x1, BX , i) = M3(x, BX+X , I,J,K, p);		\
+      F1(x1, BY , i) = M3(x, BX+Y , I,J,K, p);		\
+      F1(x1, BZ , i) = M3(x, BX+Z , I,J,K, p);		\
+    }							\
+  } while (0)
+
+  if (dim == 0) {
+    PICK_LINE(0,1,2, i,j,k);
+  } else if (dim == 1) {
+    PICK_LINE(1,2,0, k,i,j);
+  } else if (dim == 2) {
+    PICK_LINE(2,0,1, j,k,i);
+  }
+#undef PICK_LINE
+}
+
+// ----------------------------------------------------------------------
 // put_line_fc
 
 static void _mrc_unused
@@ -228,12 +258,44 @@ put_line_fc(struct mrc_fld *flux, struct mrc_fld *F_1d,
 }
 
 // ----------------------------------------------------------------------
+// put_line_fc
+
+static void _mrc_unused
+put_line_fc_cc(struct mrc_fld *flux, struct mrc_fld *F_1d,
+	       int ldim, int l, int r, int j, int k, int dir, int p)
+{
+#define PUT_LINE(X, Y, Z, I, J, K) do {				\
+    for (int i = -l; i < ldim + r; i++) {			\
+      M3(flux, RR     , I,J,K, p) = F1(F_1d, RR , i);		\
+      M3(flux, RVX + X, I,J,K, p) = F1(F_1d, RVX, i);		\
+      M3(flux, RVX + Y, I,J,K, p) = F1(F_1d, RVY, i);		\
+      M3(flux, RVX + Z, I,J,K, p) = F1(F_1d, RVZ, i);		\
+      M3(flux, EE     , I,J,K, p) = F1(F_1d, EE , i);		\
+      M3(flux, BX + X , I,J,K, p) = F1(F_1d, BX , i);		\
+      M3(flux, BX + Y , I,J,K, p) = F1(F_1d, BY , i);		\
+      M3(flux, BX + Z , I,J,K, p) = F1(F_1d, BZ , i);		\
+    }								\
+} while (0)
+
+  if (dir == 0) {
+    PUT_LINE(0, 1, 2, i, j, k);
+  } else if (dir == 1) {
+    PUT_LINE(1, 2, 0, k, i, j);
+  } else if (dir == 2) {
+    PUT_LINE(2, 0, 1, j, k, i);
+  } else {
+    assert(0);
+  }
+#undef PUT_LINE
+}
+
+// ----------------------------------------------------------------------
 // put_line_sc
 
 // FIXME, make arg order consistent with put_line_fc
 static void _mrc_unused
 put_line_sc(struct mrc_fld *flux, struct mrc_fld *F,
-	    int ldim, int l, int r, int j, int k, int dim, int p)
+	    int ldim, int l, int r, int j, int k, int dir, int p)
 {
 #define PUT_LINE(X,Y,Z, I,J,K) do {					\
     for (int i = -l; i < ldim + r; i++) {				\
@@ -245,11 +307,11 @@ put_line_sc(struct mrc_fld *flux, struct mrc_fld *F,
     }									\
   } while (0)
 
-  if (dim == 0) {
+  if (dir == 0) {
     PUT_LINE(0,1,2, i,j,k);
-  } else if (dim == 1) {
+  } else if (dir == 1) {
     PUT_LINE(1,2,0, k,i,j);
-  } else if (dim == 2) {
+  } else if (dir == 2) {
     PUT_LINE(2,0,1, j,k,i);
   }
 #undef PUT_LINE

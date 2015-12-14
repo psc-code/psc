@@ -4,7 +4,7 @@ mpirun -n 1 ../mhd_ot \
     --mrc_crds_lx 0. --mrc_crds_hx 1.0 \
     --mrc_crds_ly 0. --mrc_crds_hy 1.0 \
     --mrc_crds_lz -0.01 --mrc_crds_hz 0.01 \
-    --ggcm_mhd_diag_fields rr1:uu1:rv1:j:b1:divb:rr:pp:v:b \
+    --ggcm_mhd_diag_fields rr1:uu1:rv1:b1:rr:pp:v:b \
     --ggcm_mhd_step_type mhdcc_double \
     --xggcm_mhd_step_debug_dump \
     --lmx 0 --lmy 0 --lmz 0 --d_i 0.00 \

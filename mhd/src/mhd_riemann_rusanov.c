@@ -12,29 +12,38 @@
 // fluxes_cc
 
 static void
-fluxes_cc(mrc_fld_data_t F[5], mrc_fld_data_t U[5], mrc_fld_data_t W[5], 
-	  mrc_fld_data_t gamma)
+fluxes_cc(mrc_fld_data_t F[8], mrc_fld_data_t U[8], mrc_fld_data_t W[8], 
+	  mrc_fld_data_t gamma, mrc_fld_data_t bb)
 {
   F[RR]  = W[RR] * W[VX];
-  F[RVX] = W[RR] * W[VX] * W[VX] + W[PP];
-  F[RVY] = W[RR] * W[VY] * W[VX];
-  F[RVZ] = W[RR] * W[VZ] * W[VX];
-  F[UU]  = (U[UU] + W[PP]) * W[VX];
+  F[RVX] = W[RR] * W[VX] * W[VX] + W[PP] + .5 * bb - W[BX] * W[BX];
+  F[RVY] = W[RR] * W[VY] * W[VX]                   - W[BY] * W[BX];
+  F[RVZ] = W[RR] * W[VZ] * W[VX]                   - W[BZ] * W[BX];
+  mrc_fld_data_t mb = W[BX] * W[VX] + W[BY] * W[VY] + W[BZ] * W[VZ];
+  F[EE] = (U[EE] + W[PP] + .5 * bb) * W[VX] - W[BX] * mb;
+#if 0
+  F[BY] = W[BY] * W[VX] - W[BX] * W[VY];
+  F[BZ] = W[BZ] * W[VX] - W[BX] * W[VZ]; 
+#endif
 }
 
 // ----------------------------------------------------------------------
-// fluxes_hll
+// fluxes_rusanov
 
 static void
-fluxes_hll(mrc_fld_data_t F[5], mrc_fld_data_t Ul[5], mrc_fld_data_t Ur[5],
-	   mrc_fld_data_t Wl[5], mrc_fld_data_t Wr[5], mrc_fld_data_t gamma)
+fluxes_rusanov(mrc_fld_data_t F[8], mrc_fld_data_t Ul[8], mrc_fld_data_t Ur[8],
+	   mrc_fld_data_t Wl[8], mrc_fld_data_t Wr[8], mrc_fld_data_t gamma)
 {
-  mrc_fld_data_t Fl[5], Fr[5];
+  mrc_fld_data_t Fl[8], Fr[8];
+  mrc_fld_data_t bb, cs2;
 
-  fluxes_cc(Fl, Ul, Wl, gamma);
-  fluxes_cc(Fr, Ur, Wr, gamma);
+  bb = sqr(Wl[BX]) + sqr(Wl[BY]) + sqr(Wl[BZ]);
+  fluxes_cc(Fl, Ul, Wl, gamma, bb);
 
-  mrc_fld_data_t vv, cs2;
+  bb = sqr(Wr[BX]) + sqr(Wr[BY]) + sqr(Wr[BZ]);
+  fluxes_cc(Fr, Ur, Wr, gamma, bb);
+
+  mrc_fld_data_t vv;
 
   cs2 = gamma * Wl[PP] / Wl[RR];
   mrc_fld_data_t cpv_l = Wl[VX] + sqrtf(cs2);
@@ -48,46 +57,12 @@ fluxes_hll(mrc_fld_data_t F[5], mrc_fld_data_t Ul[5], mrc_fld_data_t Ur[5],
   mrc_fld_data_t SL =  fminf(fminf(cmv_l, cmv_r), 0.); 
 
   //  mrc_fld_data_t lambda = .5 * (cmsv_l + cmsv_r);  
-  for (int m = 0; m < 5; m++) {
+  for (int m = 0; m < 8; m++) {
     F[m] = ((SR * Fl[m] - SL * Fr[m]) + (SR * SL * (Ur[m] - Ul[m]))) / (SR - SL);
   }
 }
 
-// ----------------------------------------------------------------------
-// mhd_riemann_hll_run
-
-static void
-mhd_riemann_hll_run(struct mhd_riemann *riemann, struct mrc_fld *F,
-		    struct mrc_fld *U_l, struct mrc_fld *U_r,
-		    struct mrc_fld *W_l, struct mrc_fld *W_r,
-		    int ldim, int l, int r, int dim)
-{
-  mrc_fld_data_t gamma = riemann->mhd->par.gamm;
-  for (int i = -l; i < ldim + r; i++) {
-    fluxes_hll(&F1(F, 0, i), &F1(U_l, 0, i), &F1(U_r, 0, i),
-	       &F1(W_l, 0, i), &F1(W_r, 0, i), gamma);
-  }
-}
-
 #if 0
-
-// ----------------------------------------------------------------------
-// fluxes_cc
-
-static void
-fluxes_cc(mrc_fld_data_t F[8], mrc_fld_data_t U[8], mrc_fld_data_t W[8], 
-	  mrc_fld_data_t gamma, mrc_fld_data_t bb)
-{
-
-  mrc_fld_data_t mb = W[BX] * W[VX] + W[BY] * W[VY] + W[BZ] * W[VZ];
-  F[RR]  = W[RR] * W[VX];
-  F[RVX] = W[RR] * W[VX] * W[VX] + W[PP] + .5 * bb - sqr(W[BX]);
-  F[RVY] = W[RR] * W[VY] * W[VX] - W[BX] * W[BY];
-  F[RVZ] = W[RR] * W[VZ] * W[VX] - W[BX] * W[BZ];
-  F[BY] = W[BY] * W[VX] - W[BX] * W[VY];
-  F[BZ] = W[BZ] * W[VX] - W[BX] * W[VZ]; 
-  F[UU] = (U[EE] + W[PP] + .5 * bb) * W[VX] - W[BX] * mb ; 
-}
 
 // ----------------------------------------------------------------------
 // fluxes_hll
@@ -127,29 +102,29 @@ fluxes_hll(mrc_fld_data_t F[8], mrc_fld_data_t Ul[8], mrc_fld_data_t Ur[8],
   }
 }
 
-// ----------------------------------------------------------------------
-// mhd_riemann_hll_run
-
-static void
-mhd_riemann_hll_run(struct mhd_riemann *riemann, struct mrc_fld *F,
-			struct mrc_fld *U_l, struct mrc_fld *U_r,
-			struct mrc_fld *W_l, struct mrc_fld *W_r,
-			int ldim, int l, int r, int dim)
-{
-  mrc_fld_data_t gamma = riemann->mhd->par.gamm;
-  for (int i = -l; i < ldim + r; i++) {
-    fluxes_hll(&F1(F, 0, i), &F1(U_l, 0, i), &F1(U_r, 0, i),
-		   &F1(W_l, 0, i), &F1(W_r, 0, i), gamma);
-  }
-}
-
 #endif
 
 // ----------------------------------------------------------------------
-// mhd_riemann_hll_ops
+// mhd_riemann_rusanov_run
 
-struct mhd_riemann_ops mhd_riemann_hll_ops = {
-  .name             = "hll",
-  .run              = mhd_riemann_hll_run,
+static void
+mhd_riemann_rusanov_run(struct mhd_riemann *riemann, struct mrc_fld *F,
+		    struct mrc_fld *U_l, struct mrc_fld *U_r,
+		    struct mrc_fld *W_l, struct mrc_fld *W_r,
+		    int ldim, int l, int r, int dim)
+{
+  mrc_fld_data_t gamma = riemann->mhd->par.gamm;
+  for (int i = -l; i < ldim + r; i++) {
+    fluxes_rusanov(&F1(F, 0, i), &F1(U_l, 0, i), &F1(U_r, 0, i),
+	       &F1(W_l, 0, i), &F1(W_r, 0, i), gamma);
+  }
+}
+
+// ----------------------------------------------------------------------
+// mhd_riemann_rusanov_ops
+
+struct mhd_riemann_ops mhd_riemann_rusanov_ops = {
+  .name             = "rusanov",
+  .run              = mhd_riemann_rusanov_run,
 };
 

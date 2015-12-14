@@ -55,9 +55,11 @@ mhd_reconstruct_pcm_run_fc(struct mhd_reconstruct *mr,
   mhd_fc_from_prim(mr->mhd, Ul, Wl, ldim, l, r);
   mhd_fc_from_prim(mr->mhd, Ur, Wr, ldim, l, r);
 
-  for (int i = -l; i < ldim + r; i++) {
-    F1(Wl, BX, i) = F1(Bxi, 0, i);
-    F1(Wr, BX, i) = F1(Bxi, 0, i);
+  if (Bxi) {
+    for (int i = -l; i < ldim + r; i++) {
+      F1(Wl, BX, i) = F1(Bxi, 0, i);
+      F1(Wr, BX, i) = F1(Bxi, 0, i);
+    }
   }
 }
 
@@ -72,7 +74,6 @@ mhd_reconstruct_pcm_run(struct mhd_reconstruct *mr,
 			int ldim, int l, int r, int dir)
 {
   int nr_comps = mrc_fld_dims(U_l)[0];
-
   switch (nr_comps) {
   case 5: return mhd_reconstruct_pcm_run_sc(mr, U_l, U_r, W_l, W_r, W_1d, Bxi, ldim, l, r, dir);
   case 8: return mhd_reconstruct_pcm_run_fc(mr, U_l, U_r, W_l, W_r, W_1d, Bxi, ldim, l, r, dir);

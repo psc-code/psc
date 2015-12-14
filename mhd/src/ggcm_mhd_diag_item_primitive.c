@@ -140,6 +140,18 @@ ggcm_mhd_diag_item_pp_run(struct ggcm_mhd_diag_item *item,
 	M3(r,0, ix,iy,iz, p) = (gamm - 1.f) * (EE_(f, ix,iy,iz, p) - .5f * rvv - .5f * b2);
       } mrc_fld_foreach_end;
     }
+  } else if (mhd_type == MT_FULLY_CONSERVATIVE_CC) {
+    for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
+      mrc_fld_foreach(f, ix,iy,iz, bnd, bnd) {
+	mrc_fld_data_t rvv = (sqr(RVX_(f, ix,iy,iz, p)) +
+			      sqr(RVY_(f, ix,iy,iz, p)) +
+			      sqr(RVZ_(f, ix,iy,iz, p))) / RR_(f, ix,iy,iz, p);
+	mrc_fld_data_t b2  = (sqr(BX_(f, ix,iy,iz, p)) +
+			      sqr(BY_(f, ix,iy,iz, p)) +
+			      sqr(BZ_(f, ix,iy,iz, p)));
+	M3(r,0, ix,iy,iz, p) = (gamm - 1.f) * (EE_(f, ix,iy,iz, p) - .5f * rvv - .5f * b2);
+      } mrc_fld_foreach_end;
+    }
   } else {
     assert(0);
   }
@@ -196,6 +208,15 @@ ggcm_mhd_diag_item_b_run(struct ggcm_mhd_diag_item *item,
   } else if (mhd_type == MT_SEMI_CONSERVATIVE ||
 	     mhd_type == MT_FULLY_CONSERVATIVE) {
     compute_Bt_cc(mhd, fld_r, f, bnd, bnd);
+  } else if (mhd_type == MT_FULLY_CONSERVATIVE_CC) {
+    // FIXME, doesn't really need a copy
+    for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
+      mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
+	M3(r, 0, ix,iy,iz, p) = BX_(f, ix,iy,iz, p);
+	M3(r, 1, ix,iy,iz, p) = BY_(f, ix,iy,iz, p);
+	M3(r, 2, ix,iy,iz, p) = BZ_(f, ix,iy,iz, p);
+      } mrc_fld_foreach_end;
+    }
   } else {
     assert(0);
   }

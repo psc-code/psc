@@ -112,6 +112,7 @@ libmhd_la_SOURCES = \
 	mhd_riemann.c \
 	mhd_riemann_rusanov_float.c \
 	mhd_riemann_rusanov_double.c \
+	mhd_riemann_rusanov.c \
 	mhd_riemann_hll.c \
 	mhd_riemann_hlld.c \
 	mhd_riemann_hydro_rusanov.c \

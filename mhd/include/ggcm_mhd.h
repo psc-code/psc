@@ -48,6 +48,8 @@ enum {
   // the following have B staggered the "normal" way: [0..mx]
   MT_SEMI_CONSERVATIVE,
   MT_FULLY_CONSERVATIVE,
+  // cell-centered fully conservative MHD
+  MT_FULLY_CONSERVATIVE_CC,
   // the multi-moment schemes are cell-centered for all quantities
   MT_GKEYLL,
 
