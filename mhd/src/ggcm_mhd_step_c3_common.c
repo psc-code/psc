@@ -938,6 +938,7 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
     pr_B = prof_register("c3_corr", 0, 0, 0);
   }
 
+#if 0
   if (sub->debug_dump) {
     static struct ggcm_mhd_diag *diag;
     static int cnt;
@@ -948,13 +949,14 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
       ggcm_mhd_diag_set_param_obj(diag, "mhd", mhd);
       ggcm_mhd_diag_set_param_string(diag, "fields", "rr1:rv1:uu1:b1:rr:v:pp:b:divb");
       ggcm_mhd_diag_set_from_options(diag);
-      ggcm_mhd_diag_set_param_string(diag, "run", "dbg");
+      ggcm_mhd_diag_set_param_string(diag, "run", "dbg0");
       ggcm_mhd_diag_setup(diag);
       ggcm_mhd_diag_view(diag);
     }
     ggcm_mhd_fill_ghosts(mhd, mhd->fld, 0, mhd->time);
     ggcm_mhd_diag_run_now(diag, mhd->fld, DIAG_TYPE_3D, cnt++);
   }
+#endif
 
   mrc_fld_data_t dtn = 0.0;
   if (step->do_nwst) {
