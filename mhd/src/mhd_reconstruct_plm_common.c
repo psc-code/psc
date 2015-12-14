@@ -91,8 +91,10 @@ mhd_reconstruct_plm_run_fc(struct mhd_reconstruct *mr,
       F1(Wl, n, i+1) = F1(W1d, n, i) + .5 * dWm[n];
       F1(Wr, n, i  ) = F1(W1d, n, i) - .5 * dWm[n];
     }
-    F1(Wl, BX, i) = F1(Bxi, 0, i);
-    F1(Wr, BX, i) = F1(Bxi, 0, i);
+    if (Bxi) {
+      F1(Wl, BX, i) = F1(Bxi, 0, i);
+      F1(Wr, BX, i) = F1(Bxi, 0, i);
+    }
   }
 
   mhd_fc_from_prim(mr->mhd, Ul, Wl, ldim, 0, 1);
