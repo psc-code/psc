@@ -188,79 +188,6 @@ flux_riemann(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3],
   put_line_fc_cc(fluxes[dir], F_1d, ldim, 0, 1, j, k, dir, p);
 }
 
-// ----------------------------------------------------------------------
-// curr_cc
-//
-// cell-centered current density
-
-static void
-curr_cc(struct ggcm_mhd *mhd, struct mrc_fld *j_cc, struct mrc_fld *x)
-{
-  int gdims[3];
-  mrc_domain_get_global_dims(x->_domain, gdims);
-  int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
-
-  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
-    float *bd4x = ggcm_mhd_crds_get_crd_p(mhd->crds, 0, BD4, p) - 1;
-    float *bd4y = ggcm_mhd_crds_get_crd_p(mhd->crds, 1, BD4, p) - 1;
-    float *bd4z = ggcm_mhd_crds_get_crd_p(mhd->crds, 2, BD4, p) - 1;
-
-    mrc_fld_foreach(j_cc, i,j,k, 1, 1) {
-      M3(j_cc, 0, i,j,k, p) =
-	(B1(x, 2, i,j+dy,k, p) - B1(x, 2, i,j-dy,k, p)) * .5f*bd4y[j] -
-	(B1(x, 1, i,j,k+dz, p) - B1(x, 1, i,j,k-dz, p)) * .5f*bd4z[k];
-      M3(j_cc, 1, i,j,k, p) =
-	(B1(x, 0, i,j,k+dz, p) - B1(x, 0, i,j,k-dz, p)) * .5f*bd4z[k] -
-	(B1(x, 2, i+dx,j,k, p) - B1(x, 2, i-dx,j,k, p)) * .5f*bd4x[i];
-      M3(j_cc, 2, i,j,k, p) =
-	(B1(x, 1, i+dx,j,k, p) - B1(x, 1, i-dx,j,k, p)) * .5f*bd4x[i] -
-	(B1(x, 0, i,j+dy,k, p) - B1(x, 0, i,j-dy,k, p)) * .5f*bd4y[j];
-    } mrc_fld_foreach_end;
-  }
-}
-
-static void
-push_ej_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, struct mrc_fld *x_curr,
-	  struct mrc_fld *prim, struct mrc_fld *x_next)
-{
-  struct ggcm_mhd *mhd = step->mhd;
-  struct mrc_fld *j_cc = ggcm_mhd_get_3d_fld(mhd, 3);
-  struct mrc_fld *b_cc = ggcm_mhd_get_3d_fld(mhd, 3);
-
-  int gdims[3];
-  mrc_domain_get_global_dims(mhd->domain, gdims);
-  int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
-
-  curr_cc(mhd, j_cc, x_curr);
-  compute_Bt_cc(mhd, b_cc, x_curr, 1, 1);
-	
-  mrc_fld_data_t s1 = .25f * dt;
-  for (int p = 0; p < mrc_fld_nr_patches(x_next); p++) {
-    mrc_fld_foreach(x_next, i,j,k, 0, 0) {
-      mrc_fld_data_t s2 = s1;
-      mrc_fld_data_t cx = M3(j_cc, 0, i,j,k, p);
-      mrc_fld_data_t cy = M3(j_cc, 1, i,j,k, p);
-      mrc_fld_data_t cz = M3(j_cc, 2, i,j,k, p);
-      mrc_fld_data_t ffx = s2 * (cy * M3(b_cc, 2, i,j,k, p) - cz * M3(b_cc, 1, i,j,k, p));
-      mrc_fld_data_t ffy = s2 * (cz * M3(b_cc, 0, i,j,k, p) - cx * M3(b_cc, 2, i,j,k, p));
-      mrc_fld_data_t ffz = s2 * (cx * M3(b_cc, 1, i,j,k, p) - cy * M3(b_cc, 0, i,j,k, p));
-      mrc_fld_data_t duu = (ffx * M3(prim, VX, i,j,k, p) +
-			    ffy * M3(prim, VY, i,j,k, p) +
-			    ffz * M3(prim, VZ, i,j,k, p));
-
-#if 0  
-      M3(x_next, RVX, i,j,k, p) += ffx;
-      M3(x_next, RVY, i,j,k, p) += ffy;
-      M3(x_next, RVZ, i,j,k, p) += ffz;
-      M3(x_next, UU , i,j,k, p) += duu;
-#endif
-    } mrc_fld_foreach_end;
-  }
-
-  ggcm_mhd_put_3d_fld(mhd, j_cc);
-  ggcm_mhd_put_3d_fld(mhd, b_cc);
-}
-
 static inline mrc_fld_data_t
 bcthy3f(mrc_fld_data_t s1, mrc_fld_data_t s2)
 {
@@ -477,10 +404,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
 
   update_finite_volume(mhd, x_next, fluxes, mhd->ymask, dt, true);
 
-  push_ej_c(step, dt, x_curr, prim, x_next);
-
   calce_c(step, E, x_curr, prim, dt);
-  //  ggcm_mhd_fill_ghosts_E(mhd, E);
   update_ct(mhd, x_next, E, dt, true);
 
   ggcm_mhd_put_3d_fld(mhd, E);
