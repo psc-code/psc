@@ -365,6 +365,7 @@ update_finite_volume_uniform(struct ggcm_mhd *mhd,
     }
   }
 
+  int nr_comps = mrc_fld_nr_comps(fluxes[0]);
   for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
     double ddx[3]; mrc_crds_get_dx(crds, p, ddx);
     mrc_fld_data_t dt_on_dx[3] = { dt / ddx[0], dt / ddx[1], dt / ddx[2] };
@@ -377,7 +378,7 @@ update_finite_volume_uniform(struct ggcm_mhd *mhd,
 
     mrc_fld_foreach(x, i,j,k, l, r) {
       mrc_fld_data_t ym = ymask ? M3(ymask, 0, i,j,k, p) : 1.f;
-      for (int m = 0; m < 5; m++) {
+      for (int m = 0; m < nr_comps; m++) {
 	M3(x, m, i,j,k, p) -= ym *
 	  (dt_on_dx[0] * (M3(fluxes[0], m, i+dx,j,k, p) - M3(fluxes[0], m, i,j,k, p)) +
 	   dt_on_dx[1] * (M3(fluxes[1], m, i,j+dy,k, p) - M3(fluxes[1], m, i,j,k, p)) + 
@@ -407,6 +408,7 @@ update_finite_volume(struct ggcm_mhd *mhd,
     }
   }
 
+  int nr_comps = mrc_fld_nr_comps(fluxes[0]);
   for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
     float *fd1x = ggcm_mhd_crds_get_crd_p(mhd->crds, 0, FD1, p);
     float *fd1y = ggcm_mhd_crds_get_crd_p(mhd->crds, 1, FD1, p);
@@ -414,7 +416,7 @@ update_finite_volume(struct ggcm_mhd *mhd,
 
     mrc_fld_foreach(x, i,j,k, 0, 0) {
       mrc_fld_data_t ym = ymask ? M3(ymask, 0, i,j,k, p) : 1.f;
-      for (int m = 0; m < 5; m++) {
+      for (int m = 0; m < nr_comps; m++) {
 	M3(x, m, i,j,k, p) -= dt * ym *
 	  (fd1x[i] * (M3(fluxes[0], m, i+dx,j,k, p) - M3(fluxes[0], m, i,j,k, p)) +
 	   fd1y[j] * (M3(fluxes[1], m, i,j+dy,k, p) - M3(fluxes[1], m, i,j,k, p)) +

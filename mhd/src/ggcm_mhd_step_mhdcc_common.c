@@ -1,4 +1,3 @@
-#define BOUNDS_CHECK
 
 #include <mrc_fld_as_double.h>
 #define F1(f, m, i) MRC_D2(f, m, i)
@@ -405,7 +404,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
   update_finite_volume(mhd, x_next, fluxes, mhd->ymask, dt, true);
 
   calce_c(step, E, x_curr, prim, dt);
-  update_ct(mhd, x_next, E, dt, true);
+  //  //  update_ct(mhd, x_next, E, dt, true);
 
   ggcm_mhd_put_3d_fld(mhd, E);
   ggcm_mhd_put_3d_fld(mhd, fluxes[0]);
