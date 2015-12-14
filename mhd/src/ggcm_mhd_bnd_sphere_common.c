@@ -30,6 +30,7 @@ struct ggcm_mhd_bnd_sphere {
   // params
   double radius;
   double bnvals[FIXED_NR];  // constant values to set
+  int test; // for testing, set to != 0
 
   // state
   struct ggcm_mhd_bnd_sphere_map map;
@@ -113,6 +114,120 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld, int m)
   }
 }
 
+static void
+sphere_fill_ghosts_test_1(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld, int m)
+{
+  struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
+  struct ggcm_mhd_bnd_sphere_map *map = &sub->map;
+
+  for (int d = 0; d < 3; d++) {
+    for (int i = 0; i < map->fc_n_map[d]; i++) {
+      int ix = MRC_I2(map->fc_imap[d], 0, i);
+      int iy = MRC_I2(map->fc_imap[d], 1, i);
+      int iz = MRC_I2(map->fc_imap[d], 2, i);
+      int p  = MRC_I2(map->fc_imap[d], 3, i);
+      int bndp = MRC_I2(map->fc_imap[d], 4, i);
+
+      if (d == 0) {
+	M3(fld, 0, ix - (1-bndp),iy,iz, p) = 0.;
+      } else if (d == 1) {
+	M3(fld, 0, ix,iy - (1-bndp),iz, p) = 0.;
+      } else if (d == 2) {
+	M3(fld, 0, ix,iy,iz - (1-bndp), p) = 0.;
+      }
+    }
+  }
+  for (int d = 0; d < 3; d++) {
+    for (int i = 0; i < map->fc_n_map[d]; i++) {
+      int ix = MRC_I2(map->fc_imap[d], 0, i);
+      int iy = MRC_I2(map->fc_imap[d], 1, i);
+      int iz = MRC_I2(map->fc_imap[d], 2, i);
+      int p  = MRC_I2(map->fc_imap[d], 3, i);
+      int bndp = MRC_I2(map->fc_imap[d], 4, i);
+
+      if (d == 0) {
+	M3(fld, 0, ix - (1-bndp),iy,iz, p) += 2.;
+      } else if (d == 1) {
+	M3(fld, 0, ix,iy - (1-bndp),iz, p) += 2.;
+      } else if (d == 2) {
+	M3(fld, 0, ix,iy,iz - (1-bndp), p) += 2.;
+      }
+    }
+  }
+}
+
+static void
+sphere_fill_ghosts_test_2(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld, int m)
+{
+  struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
+  struct ggcm_mhd_bnd_sphere_map *map = &sub->map;
+
+  struct mrc_fld *cnt = ggcm_mhd_get_3d_fld(bnd->mhd, 1);
+
+  for (int d = 0; d < 3; d++) {
+    for (int i = 0; i < map->fc_n_map[d]; i++) {
+      int ix = MRC_I2(map->fc_imap[d], 0, i);
+      int iy = MRC_I2(map->fc_imap[d], 1, i);
+      int iz = MRC_I2(map->fc_imap[d], 2, i);
+      int p  = MRC_I2(map->fc_imap[d], 3, i);
+      int bndp = MRC_I2(map->fc_imap[d], 4, i);
+
+      if (d == 0) {
+	M3(fld, 0, ix-(1-bndp),iy,iz, p) = 0.;
+	M3(cnt, 0, ix-(1-bndp),iy,iz, p) = 0.;
+      } else if (d == 1) {
+	M3(fld, 0, ix,iy-(1-bndp),iz, p) = 0.;
+	M3(cnt, 0, ix,iy-(1-bndp),iz, p) = 0.;
+      } else if (d == 2) {
+	M3(fld, 0, ix,iy,iz-(1-bndp), p) = 0.;
+	M3(cnt, 0, ix,iy,iz-(1-bndp), p) = 0.;
+      }
+    }
+  }
+  for (int d = 0; d < 3; d++) {
+    for (int i = 0; i < map->fc_n_map[d]; i++) {
+      int ix = MRC_I2(map->fc_imap[d], 0, i);
+      int iy = MRC_I2(map->fc_imap[d], 1, i);
+      int iz = MRC_I2(map->fc_imap[d], 2, i);
+      int p  = MRC_I2(map->fc_imap[d], 3, i);
+      int bndp = MRC_I2(map->fc_imap[d], 4, i);
+
+      if (d == 0) {
+	M3(fld, 0, ix-(1-bndp),iy,iz, p) += M3(fld, 0, ix-bndp,iy,iz, p);
+	M3(cnt, 0, ix-(1-bndp),iy,iz, p) += 1.;
+      } else if (d == 1) {
+	M3(fld, 0, ix,iy-(1-bndp),iz, p) += M3(fld, 0, ix,iy-bndp,iz, p);
+	M3(cnt, 0, ix,iy-(1-bndp),iz, p) += 1.;
+      } else if (d == 2) {
+	M3(fld, 0, ix,iy,iz-(1-bndp), p) += M3(fld, 0, ix,iy,iz-bndp, p);
+	M3(cnt, 0, ix,iy,iz-(1-bndp), p) += 1.;
+      }
+    }
+  }
+
+  for (int d = 0; d < 3; d++) {
+    for (int i = 0; i < map->fc_n_map[d]; i++) {
+      int ix = MRC_I2(map->fc_imap[d], 0, i);
+      int iy = MRC_I2(map->fc_imap[d], 1, i);
+      int iz = MRC_I2(map->fc_imap[d], 2, i);
+      int p  = MRC_I2(map->fc_imap[d], 3, i);
+      int bndp = MRC_I2(map->fc_imap[d], 4, i);
+
+      if (d == 0) {
+	M3(fld, 0, ix-(1-bndp),iy,iz, p) /= M3(cnt, 0, ix-(1-bndp),iy,iz, p);
+	M3(cnt, 0, ix-(1-bndp),iy,iz, p) = 1.;
+      } else if (d == 1) {
+	M3(fld, 0, ix,iy-(1-bndp),iz, p) /= M3(cnt, 0, ix,iy-(1-bndp),iz, p);
+	M3(cnt, 0, ix,iy-(1-bndp),iz, p) = 1.;
+      } else if (d == 2) {
+	M3(fld, 0, ix,iy,iz-(1-bndp), p) /= M3(cnt, 0, ix,iy,iz-(1-bndp), p);
+	M3(cnt, 0, ix,iy,iz-(1-bndp), p) = 1.;
+      }
+    }
+  }
+  ggcm_mhd_put_3d_fld(bnd->mhd, cnt);
+}
+
 // ----------------------------------------------------------------------
 // ggcm_mhd_bnd_sphere_fill_ghosts
 
@@ -133,7 +248,15 @@ ggcm_mhd_bnd_sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld_ba
   assert(m == 0 || m == 8);
 
   struct mrc_fld *fld = mrc_fld_get_as(fld_base, FLD_TYPE);
-  sphere_fill_ghosts(bnd, fld, m);
+  if (sub->test == 0) {
+    sphere_fill_ghosts(bnd, fld, m);
+  } else if (sub->test == 1) {
+    sphere_fill_ghosts_test_1(bnd, fld, m);
+  } else if (sub->test == 2) {
+    sphere_fill_ghosts_test_2(bnd, fld, m);
+  } else {
+    assert(0);
+  }
   mrc_fld_put_as(fld, fld_base);
 }
 
@@ -284,6 +407,7 @@ static struct param ggcm_mhd_bnd_sphere_descr[] = {
   { "bx"              , VAR(bnvals[FIXED_BX]), PARAM_DOUBLE(0.)          },
   { "by"              , VAR(bnvals[FIXED_BY]), PARAM_DOUBLE(0.)          },
   { "bz"              , VAR(bnvals[FIXED_BZ]), PARAM_DOUBLE(0.)          },
+  { "test"            , VAR(test),             PARAM_INT(0)              },
 
   { "min_dr"          , VAR(map.min_dr)      , MRC_VAR_DOUBLE            },
   { "radius"          , VAR(map.radius)      , MRC_VAR_DOUBLE            },

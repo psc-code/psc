@@ -15,6 +15,7 @@ mhd_harris
 mhd_wave
 mhd_gkeyll
 mhd_mirdip
+mhd_test_bnd_sphere
 mhd_wave_cpaw.sh
 check_wave_cpaw.py
 bak
