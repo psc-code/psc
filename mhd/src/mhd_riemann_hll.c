@@ -9,84 +9,43 @@
 #include <math.h>
 
 // ----------------------------------------------------------------------
-// fluxes_cc
+// constants
 
-static void
-fluxes_cc(mrc_fld_data_t F[5], mrc_fld_data_t U[5], mrc_fld_data_t W[5], 
-	  mrc_fld_data_t gamma)
+static mrc_fld_data_t Gamma;
+
+// ----------------------------------------------------------------------
+// fluxes
+
+static inline void
+fluxes(mrc_fld_data_t F[8], mrc_fld_data_t U[8], mrc_fld_data_t W[8])
 {
+  mrc_fld_data_t b2 = sqr(W[BX]) + sqr(W[BY]) + sqr(W[BZ]);
+
   F[RR]  = W[RR] * W[VX];
-  F[RVX] = W[RR] * W[VX] * W[VX] + W[PP];
-  F[RVY] = W[RR] * W[VY] * W[VX];
-  F[RVZ] = W[RR] * W[VZ] * W[VX];
-  F[UU]  = (U[UU] + W[PP]) * W[VX];
-}
-
-// ----------------------------------------------------------------------
-// fluxes_hll
-
-static void
-fluxes_hll(mrc_fld_data_t F[5], mrc_fld_data_t Ul[5], mrc_fld_data_t Ur[5],
-	   mrc_fld_data_t Wl[5], mrc_fld_data_t Wr[5], mrc_fld_data_t gamma)
-{
-  mrc_fld_data_t Fl[5], Fr[5];
-
-  fluxes_cc(Fl, Ul, Wl, gamma);
-  fluxes_cc(Fr, Ur, Wr, gamma);
-
-  mrc_fld_data_t vv, cs2;
-
-  cs2 = gamma * Wl[PP] / Wl[RR];
-  mrc_fld_data_t cpv_l = Wl[VX] + sqrtf(cs2);
-  mrc_fld_data_t cmv_l = Wl[VX] - sqrtf(cs2); 
-
-  cs2 = gamma * Wr[PP] / Wr[RR];
-  mrc_fld_data_t cpv_r = Wr[VX] + sqrtf(cs2);
-  mrc_fld_data_t cmv_r = Wr[VX] - sqrtf(cs2); 
-
-  mrc_fld_data_t SR =  fmaxf(fmaxf(cpv_l, cpv_r), 0.); 
-  mrc_fld_data_t SL =  fminf(fminf(cmv_l, cmv_r), 0.); 
-
-  //  mrc_fld_data_t lambda = .5 * (cmsv_l + cmsv_r);  
-  for (int m = 0; m < 5; m++) {
-    F[m] = ((SR * Fl[m] - SL * Fr[m]) + (SR * SL * (Ur[m] - Ul[m]))) / (SR - SL);
-  }
-}
-
-// ----------------------------------------------------------------------
-// mhd_riemann_hll_run
-
-static void
-mhd_riemann_hll_run(struct mhd_riemann *riemann, struct mrc_fld *F,
-		    struct mrc_fld *U_l, struct mrc_fld *U_r,
-		    struct mrc_fld *W_l, struct mrc_fld *W_r,
-		    int ldim, int l, int r, int dim)
-{
-  mrc_fld_data_t gamma = riemann->mhd->par.gamm;
-  for (int i = -l; i < ldim + r; i++) {
-    fluxes_hll(&F1(F, 0, i), &F1(U_l, 0, i), &F1(U_r, 0, i),
-	       &F1(W_l, 0, i), &F1(W_r, 0, i), gamma);
-  }
-}
-
-#if 0
-
-// ----------------------------------------------------------------------
-// fluxes_cc
-
-static void
-fluxes_cc(mrc_fld_data_t F[8], mrc_fld_data_t U[8], mrc_fld_data_t W[8], 
-	  mrc_fld_data_t gamma, mrc_fld_data_t bb)
-{
-
-  mrc_fld_data_t mb = W[BX] * W[VX] + W[BY] * W[VY] + W[BZ] * W[VZ];
-  F[RR]  = W[RR] * W[VX];
-  F[RVX] = W[RR] * W[VX] * W[VX] + W[PP] + .5 * bb - sqr(W[BX]);
-  F[RVY] = W[RR] * W[VY] * W[VX] - W[BX] * W[BY];
-  F[RVZ] = W[RR] * W[VZ] * W[VX] - W[BX] * W[BZ];
+  F[RVX] = W[RR] * W[VX] * W[VX] + W[PP] + .5 * b2 - W[BX] * W[BX];
+  F[RVY] = W[RR] * W[VY] * W[VX]                   - W[BY] * W[BX];
+  F[RVZ] = W[RR] * W[VZ] * W[VX]                   - W[BZ] * W[BX];
+  F[EE] = (U[EE] + W[PP] + .5 * b2) * W[VX]
+    - W[BX] * (W[BX] * W[VX] + W[BY] * W[VY] + W[BZ] * W[VZ]);
+  F[BX] = 0;
   F[BY] = W[BY] * W[VX] - W[BX] * W[VY];
   F[BZ] = W[BZ] * W[VX] - W[BX] * W[VZ]; 
-  F[UU] = (U[EE] + W[PP] + .5 * bb) * W[VX] - W[BX] * mb ; 
+}
+
+// ----------------------------------------------------------------------
+// wavespeed
+//
+// calculate speed of fastest (fast magnetosonic) wave
+
+static inline mrc_fld_data_t
+wavespeed(mrc_fld_data_t U[8], mrc_fld_data_t W[8])
+{
+  mrc_fld_data_t cs2 = Gamma * W[PP] / W[RR];
+  mrc_fld_data_t b2 = sqr(W[BX]) + sqr(W[BY]) + sqr(W[BZ]);
+  mrc_fld_data_t as2 = b2 / W[RR]; 
+  mrc_fld_data_t cf2 = .5f * (cs2 + as2 + 
+			      mrc_fld_sqrt(sqr(as2 + cs2) - (4.f * sqr(sqrt(cs2) * W[BX]) / W[RR])));
+  return mrc_fld_sqrt(cf2);
 }
 
 // ----------------------------------------------------------------------
@@ -94,36 +53,26 @@ fluxes_cc(mrc_fld_data_t F[8], mrc_fld_data_t U[8], mrc_fld_data_t W[8],
 
 static void
 fluxes_hll(mrc_fld_data_t F[8], mrc_fld_data_t Ul[8], mrc_fld_data_t Ur[8],
-	       mrc_fld_data_t Wl[8], mrc_fld_data_t Wr[8], mrc_fld_data_t gamma)
+	       mrc_fld_data_t Wl[8], mrc_fld_data_t Wr[8])
 {
   mrc_fld_data_t Fl[8], Fr[8];
-  mrc_fld_data_t bb, cs2, as2, cf;
+  mrc_fld_data_t cf;
 
-  bb = sqr(Wl[BX]) + sqr(Wl[BY]) + sqr(Wl[BZ]);
-  cs2 = gamma * Wl[PP] / Wl[RR];
-  as2 = bb / Wl[RR]; 
-  cf = sqrtf(.5 * (cs2 + as2 + sqrtf(sqr(as2 + cs2)
-       - (4. * sqr(sqrt(cs2) * Wl[BX]) / Wl[RR]))));       
+  cf = wavespeed(Ul, Wl);
+  mrc_fld_data_t cp_l = Wl[VX] + cf;
+  mrc_fld_data_t cm_l = Wl[VX] - cf; 
+  fluxes(Fl, Ul, Wl);
 
-  fluxes_cc(Fl, Ul, Wl, gamma, bb);
-  mrc_fld_data_t cpv_l = Wl[VX] + cf;
-  mrc_fld_data_t cmv_l = Wl[VX] - cf; 
-  
-  bb = sqr(Wr[BX]) + sqr(Wr[BY]) + sqr(Wr[BZ]);
-  cs2 = gamma * Wr[PP] / Wr[RR];
-  as2 = bb / Wr[RR]; 
-  cf = sqrtf(.5 * (cs2 + as2 + sqrtf(sqr(as2 + cs2)
-       - (4. * sqr(sqrt(cs2) * Wr[BX]) / Wr[RR]))));     
+  cf = wavespeed(Ur, Wr);
+  mrc_fld_data_t cp_r = Wr[VX] + cf;
+  mrc_fld_data_t cm_r = Wr[VX] - cf; 
+  fluxes(Fr, Ur, Wr);
 
-  fluxes_cc(Fr, Ur, Wr, gamma, bb);
-  mrc_fld_data_t cpv_r = Wr[VX] + cf;
-  mrc_fld_data_t cmv_r = Wr[VX] - cf; 
+  mrc_fld_data_t c_l =  mrc_fld_min(mrc_fld_min(cm_l, cm_r), 0.); 
+  mrc_fld_data_t c_r =  mrc_fld_max(mrc_fld_max(cp_l, cp_r), 0.); 
 
-  mrc_fld_data_t SR =  fmaxf(fmaxf(cpv_l, cpv_r), 0.); 
-  mrc_fld_data_t SL =  fminf(fminf(cmv_l, cmv_r), 0.); 
-
-  for (int m = 0; m <8; m++) {
-    F[m] = ((SR * Fl[m] - SL * Fr[m]) + (SR * SL * (Ur[m] - Ul[m]))) / (SR - SL);
+  for (int m = 0; m < 8; m++) {
+    F[m] = ((c_r * Fl[m] - c_l * Fr[m]) + (c_r * c_l * (Ur[m] - Ul[m]))) / (c_r - c_l);
   }
 }
 
@@ -136,14 +85,13 @@ mhd_riemann_hll_run(struct mhd_riemann *riemann, struct mrc_fld *F,
 			struct mrc_fld *W_l, struct mrc_fld *W_r,
 			int ldim, int l, int r, int dim)
 {
-  mrc_fld_data_t gamma = riemann->mhd->par.gamm;
+  Gamma = riemann->mhd->par.gamm;
+
   for (int i = -l; i < ldim + r; i++) {
     fluxes_hll(&F1(F, 0, i), &F1(U_l, 0, i), &F1(U_r, 0, i),
-		   &F1(W_l, 0, i), &F1(W_r, 0, i), gamma);
+		   &F1(W_l, 0, i), &F1(W_r, 0, i));
   }
 }
-
-#endif
 
 // ----------------------------------------------------------------------
 // mhd_riemann_hll_ops

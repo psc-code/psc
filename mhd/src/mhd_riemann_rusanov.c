@@ -11,7 +11,7 @@
 // ----------------------------------------------------------------------
 // constants
 
-mrc_fld_data_t Gamma;
+static mrc_fld_data_t Gamma;
 
 // ----------------------------------------------------------------------
 // fluxes
@@ -25,7 +25,7 @@ fluxes(mrc_fld_data_t F[8], mrc_fld_data_t U[8], mrc_fld_data_t W[8])
   F[RVX] = W[RR] * W[VX] * W[VX] + W[PP] + .5 * b2 - W[BX] * W[BX];
   F[RVY] = W[RR] * W[VY] * W[VX]                   - W[BY] * W[BX];
   F[RVZ] = W[RR] * W[VZ] * W[VX]                   - W[BZ] * W[BX];
-  F[EE] = (U[EE] + W[PP] + .5 * b2) * W[VX] 
+  F[EE] = (U[EE] + W[PP] + .5 * b2) * W[VX]
     - W[BX] * (W[BX] * W[VX] + W[BY] * W[VY] + W[BZ] * W[VZ]);
   F[BX] = 0;
   F[BY] = W[BY] * W[VX] - W[BX] * W[VY];
@@ -87,6 +87,7 @@ mhd_riemann_rusanov_run(struct mhd_riemann *riemann, struct mrc_fld *F,
 		    int ldim, int l, int r, int dim)
 {
   Gamma = riemann->mhd->par.gamm;
+
   for (int i = -l; i < ldim + r; i++) {
     fluxes_rusanov(&F1(F, 0, i), &F1(U_l, 0, i), &F1(U_r, 0, i),
 	       &F1(W_l, 0, i), &F1(W_r, 0, i));
