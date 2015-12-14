@@ -84,7 +84,11 @@ newstep_sc_inl(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zmask,
       mrc_fld_data_t vv = mrc_fld_sqrt(vv1 + vv2) + mrc_fld_sqrt(rrvv) * rri;
       vv = mrc_fld_max(eps, vv);
       
-      mrc_fld_data_t tt = thx / mrc_fld_max(eps, hh*vv*M3(zmask, m_zmask, ix,iy,iz, p));
+      mrc_fld_data_t zm = 1.f;
+      if (zmask) {
+	zm = F3(zmask, m_zmask, ix,iy,iz);
+      }
+      mrc_fld_data_t tt = thx / mrc_fld_max(eps, hh*vv*zm);
       dt = mrc_fld_min(dt, tt);
     } mrc_fld_foreach_end;
   }
@@ -121,13 +125,17 @@ newstep_sc_inl(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zmask,
 			 fabsf(RR(x, ix,iy,iz))) +
 	    mrc_fld_sqrt(sqr(VX(x, ix,iy,iz)) + sqr(VY(x, ix,iy,iz)) + sqr(VZ(x, ix,iy,iz)));
 	  vv = fmaxf(eps, vv);
-	  mrc_fld_data_t tt = thx / fmaxf(eps, hh*vv*F3(zmask, m_zmask, ix,iy,iz));
+	  mrc_fld_data_t zm = 1.f;
+	  if (zmask) {
+	    zm = F3(zmask, m_zmask, ix,iy,iz);
+	  }
+	  mrc_fld_data_t tt = thx / fmaxf(eps, hh*vv*zm);
 	  if (tt <= dtmin) {
 	    fprintf(file,"%s %7d %7d %7d\n"," dtmin at ", ix, iy, ix);
 	    fprintf(file,"%s %12.5g %12.5g %12.5g\n"," hh,vv,tt ", hh, vv, tt);
 	    fprintf(file,"%s %12.5g %12.5g %12.5g\n"," bx,y,z   ", BX(x, ix,iy,iz)*mhd->bbnorm, BY(x, ix,iy,iz)*mhd->bbnorm, BZ(x, ix,iy,iz)*mhd->bbnorm);
 	    fprintf(file,"%s %12.5g %12.5g %12.5g\n"," vx,y,z   ", VX(x, ix,iy,iz)*mhd->vvnorm, VY(x, ix,iy,iz)*mhd->vvnorm, VZ(x, ix,iy,iz)*mhd->vvnorm);
-	    fprintf(file,"%s %12.5g %12.5g %12.5g\n"," rr,pp,zm ", RR(x, ix,iy,iz)*mhd->rrnorm, PP(x, ix,iy,iz)*mhd->ppnorm, F3(zmask, m_zmask, ix,iy,iz));
+	    fprintf(file,"%s %12.5g %12.5g %12.5g\n"," rr,pp,zm ", RR(x, ix,iy,iz)*mhd->rrnorm, PP(x, ix,iy,iz)*mhd->ppnorm, zm);
 	    float *fx1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FX1);
 	    float *fx1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FX1);
 	    float *fx1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FX1);
