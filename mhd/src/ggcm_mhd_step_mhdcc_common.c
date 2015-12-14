@@ -70,7 +70,7 @@ ggcm_mhd_step_mhdcc_create(struct ggcm_mhd_step *step)
   struct ggcm_mhd_step_mhdcc *sub = ggcm_mhd_step_mhdcc(step);
 
   mhd_reconstruct_set_type(sub->reconstruct, "pcm_" FLD_TYPE);
-  mhd_riemann_set_type(sub->riemann, "rusanov_" FLD_TYPE);
+  mhd_riemann_set_type(sub->riemann, "hydro_rusanov");
 }
 
 // ----------------------------------------------------------------------
@@ -758,7 +758,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
   ggcm_mhd_put_3d_fld(mhd, U_r[2]);
 
   update_finite_volume(mhd, x_next, fluxes, mhd->ymask, dt, true);
-  pushpp_c(step, dt, x_next, prim);
+  //  pushpp_c(step, dt, x_next, prim);
 
   push_ej_c(step, dt, x_curr, prim, x_next);
 
