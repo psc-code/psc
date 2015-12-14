@@ -101,6 +101,7 @@ libmhd_la_SOURCES = \
 	ggcm_mhd_step_c2_double.c \
 	ggcm_mhd_step_c3_float.c \
 	ggcm_mhd_step_c3_double.c \
+	ggcm_mhd_step_mhdcc_common.c \
 	ggcm_mhd_step_vlct.c \
 	ggcm_mhd_step_vl.c \
 	mhd_reconstruct.c \
