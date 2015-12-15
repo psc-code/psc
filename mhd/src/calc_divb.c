@@ -84,6 +84,24 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
 	max = mrc_fld_max(max, mrc_fld_abs(M3(d,0, ix,iy,iz, p)));
       } mrc_fld_foreach_end;
     }
+  } else if (mhd_type == MT_FULLY_CONSERVATIVE_CC) {
+    for (int p = 0; p < mrc_fld_nr_patches(divb); p++) {
+      float *fd1x = ggcm_mhd_crds_get_crd_p(mhd->crds, 0, FD1, p);
+      float *fd1y = ggcm_mhd_crds_get_crd_p(mhd->crds, 1, FD1, p);
+      float *fd1z = ggcm_mhd_crds_get_crd_p(mhd->crds, 2, FD1, p);
+
+      mrc_fld_foreach(divb, ix,iy,iz, 0*bnd, 0*bnd) {
+	M3(d,0, ix,iy,iz, p) =
+	  (BX_(f, ix+dx,iy,iz, p) - BX_(f, ix-dx,iy,iz, p)) * hx * fd1x[ix] +
+	  (BY_(f, ix,iy+dy,iz, p) - BY_(f, ix,iy-dy,iz, p)) * hy * fd1y[iy] +
+	  (BZ_(f, ix,iy,iz+dz, p) - BZ_(f, ix,iy,iz-dz, p)) * hz * fd1z[iz];
+	if (ymask) {
+	  M3(d,0, ix,iy,iz, p) *= M3(ymask, 0, ix,iy,iz, p);
+	}
+	
+	max = mrc_fld_max(max, mrc_fld_abs(M3(d,0, ix,iy,iz, p)));
+      } mrc_fld_foreach_end;
+    }
   } else {
     assert(0);
   }
