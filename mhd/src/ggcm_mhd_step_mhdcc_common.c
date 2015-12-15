@@ -128,12 +128,14 @@ flux_reconstruct(struct ggcm_mhd_step *step,
   struct mrc_fld *U_1d = sub->U_1d, *U_l = sub->U_l, *U_r = sub->U_r;
   struct mrc_fld *W_1d = sub->W_1d, *W_l = sub->W_l, *W_r = sub->W_r;
 
-  pick_line_fc_cc(U_1d, x, ldim, 1, 1, j, k, dir, p);
-  mhd_prim_from_fc(step->mhd, W_1d, U_1d, ldim, 1, 1);
+  // FIXME: +2,+2 is specifically for PLM reconstr (and enough for PCM)
+  pick_line_fc_cc(U_1d, x, ldim, bnd + 2, bnd + 2, j, k, dir, p);
+  mhd_prim_from_fc(step->mhd, W_1d, U_1d, ldim, bnd + 2, bnd + 2);
+  int l = bnd, r = bnd + 1;
   mhd_reconstruct_run(sub->reconstruct, U_l, U_r, W_l, W_r, W_1d, NULL,
-		      ldim, 1, 1, dir);
-  put_line_fc_cc(U3d_l[dir], U_l, ldim, 0, 1, j, k, dir, p);
-  put_line_fc_cc(U3d_r[dir], U_r, ldim, 0, 1, j, k, dir, p);
+		      ldim, l, r, dir);
+  put_line_fc_cc(U3d_l[dir], U_l, ldim, l, r, j, k, dir, p);
+  put_line_fc_cc(U3d_r[dir], U_r, ldim, l, r, j, k, dir, p);
 }
 
 // ----------------------------------------------------------------------
@@ -151,12 +153,13 @@ flux_riemann(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3],
   struct mrc_fld *W_l = sub->W_l, *W_r = sub->W_r;
   struct mrc_fld *F_1d = sub->F_1d;
 
-  pick_line_fc_cc(U_l, U3d_l[dir], ldim, 0, 1, j, k, dir, p);
-  pick_line_fc_cc(U_r, U3d_r[dir], ldim, 0, 1, j, k, dir, p);
-  mhd_prim_from_fc(step->mhd, W_l, U_l, ldim, 0, 1);
-  mhd_prim_from_fc(step->mhd, W_r, U_r, ldim, 0, 1);
-  mhd_riemann_run(sub->riemann, F_1d, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
-  put_line_fc_cc(fluxes[dir], F_1d, ldim, 0, 1, j, k, dir, p);
+  int l = bnd, r = bnd + 1;
+  pick_line_fc_cc(U_l, U3d_l[dir], ldim, l, r, j, k, dir, p);
+  pick_line_fc_cc(U_r, U3d_r[dir], ldim, l, r, j, k, dir, p);
+  mhd_prim_from_fc(step->mhd, W_l, U_l, ldim, l, r);
+  mhd_prim_from_fc(step->mhd, W_r, U_r, ldim, l, r);
+  mhd_riemann_run(sub->riemann, F_1d, U_l, U_r, W_l, W_r, ldim, l, r, dir);
+  put_line_fc_cc(fluxes[dir], F_1d, ldim, l, r, j, k, dir, p);
 }
 
 static void

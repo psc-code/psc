@@ -95,7 +95,7 @@ def plot_slice_xy(flds, fld, xlim=None, ylim=None):
     if not ylim:
         ylim = (crd[1][0], crd[1][-1])
     mx, my, mz = fld.shape
-    plt.pcolormesh(crd[0], crd[1], fld[mx/2-1,:,:])
+    plt.pcolormesh(crd[0], crd[1], fld[mx/2-1,:,:])#, cmap="gray")
     plt.xlim(xlim)
     plt.ylim(ylim)
     plt.gca().set_aspect("equal")
@@ -120,10 +120,9 @@ zlim = None
 
 pfx = "run"
 fldname = "rr"
-flds0 = GgcmFields(".", 0, pfx)
-step = 20
+step = 10
 flds = GgcmFields(".", step, pfx)
-fld = flds[fldname] - flds0[fldname]
+fld = flds[fldname]# - GgcmFields(".", 0, pfx)[fldname]
 
 plt.figure()
 plot_slice_xy(flds, fld, xlim, zlim)

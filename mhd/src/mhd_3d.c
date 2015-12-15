@@ -267,7 +267,7 @@ mhd_fluxes_reconstruct(struct ggcm_mhd_step *step,
     if (gdims[0] > 1) {
       for (int k = -bnd[2]; k < ldims[2] + bnd[2]; k++) {
 	for (int j = -bnd[1]; j < ldims[1] + bnd[1]; j++) {
-	  reconstr_func(step, U_l, U_r, x, B_cc, ldims[0], nghost, j, k, 0, p);
+	  reconstr_func(step, U_l, U_r, x, B_cc, ldims[0], bn, j, k, 0, p);
 	}
       }
     }
@@ -275,7 +275,7 @@ mhd_fluxes_reconstruct(struct ggcm_mhd_step *step,
     if (gdims[1] > 1) {
       for (int k = -bnd[2]; k < ldims[2] + bnd[2]; k++) {
 	for (int i = -bnd[0]; i < ldims[0] + bnd[0]; i++) {
-	  reconstr_func(step, U_l, U_r, x, B_cc, ldims[1], nghost, k, i, 1, p);
+	  reconstr_func(step, U_l, U_r, x, B_cc, ldims[1], bn, k, i, 1, p);
 	}
       }
     }
@@ -283,7 +283,7 @@ mhd_fluxes_reconstruct(struct ggcm_mhd_step *step,
     if (gdims[2] > 1) {
       for (int j = -bnd[1]; j < ldims[1] + bnd[1]; j++) {
 	for (int i = -bnd[0]; i < ldims[0] + bnd[0]; i++) {
-	  reconstr_func(step, U_l, U_r, x, B_cc, ldims[2], nghost, i, j, 2, p);
+	  reconstr_func(step, U_l, U_r, x, B_cc, ldims[2], bn, i, j, 2, p);
 	}
       }
     }

@@ -69,7 +69,9 @@ mhd_reconstruct_plm_run_fc(struct mhd_reconstruct *mr,
   mrc_fld_data_t dWr[8], dWg[8];
   mrc_fld_data_t dWm[8];
 
-  for (int i = -1; i < ldim + 1; i++) {
+  // These limits are such that Wl[l..r) and Wr[l..r) both get set,
+  // (typically, r = l + 1, so that [l..l] are all set)
+  for (int i = -l - 1; i < ldim + r; i++) {
     for (int n = 0; n < 8; n++) {
       dWc[n] = F1(W1d, n, i+1) - F1(W1d, n, i-1);
       dWl[n] = F1(W1d, n, i  ) - F1(W1d, n, i-1);
@@ -97,8 +99,8 @@ mhd_reconstruct_plm_run_fc(struct mhd_reconstruct *mr,
     }
   }
 
-  mhd_fc_from_prim(mr->mhd, Ul, Wl, ldim, 0, 1);
-  mhd_fc_from_prim(mr->mhd, Ur, Wr, ldim, 0, 1);
+  mhd_fc_from_prim(mr->mhd, Ul, Wl, ldim, l, r+1);
+  mhd_fc_from_prim(mr->mhd, Ur, Wr, ldim, l, r+1);
 }
 
 // ----------------------------------------------------------------------
