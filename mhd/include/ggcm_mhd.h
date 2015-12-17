@@ -41,20 +41,16 @@ void ggcm_mhd_fld_put_as(struct mrc_fld *fld, struct mrc_fld *fld_base,
 struct mrc_fld *ggcm_mhd_get_fld_as_fortran(struct mrc_fld *fld_base);
 void ggcm_mhd_put_fld_as_fortran(struct mrc_fld *fld, struct mrc_fld *fld_base);
 
-enum {
-  MT_PRIMITIVE,
-  // the following have B staggered the openggcm way: [-1..mx[
-  MT_SEMI_CONSERVATIVE_GGCM,
-  // the following have B staggered the "normal" way: [0..mx]
-  MT_SEMI_CONSERVATIVE,
-  MT_FULLY_CONSERVATIVE,
-  // cell-centered fully conservative MHD
-  MT_FULLY_CONSERVATIVE_CC,
-  // the multi-moment schemes are cell-centered for all quantities
-  MT_GKEYLL,
-
-  N_MT,
-};
+#define MT_PRIMITIVE (0)
+// the following has B staggered the openggcm way: [-1..mx[
+#define MT_SEMI_CONSERVATIVE_GGCM (1)
+// the following have B staggered the "normal" way: [0..mx]
+#define MT_SEMI_CONSERVATIVE (2)
+#define MT_FULLY_CONSERVATIVE (3)
+// cell-centered fully conservative MHD
+#define MT_FULLY_CONSERVATIVE_CC (4)
+// the multi-moment schemes are cell-centered for all quantities
+#define MT_GKEYLL (5)
 
 // ----------------------------------------------------------------------
 // wrappers / helpers
