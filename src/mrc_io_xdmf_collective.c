@@ -941,7 +941,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
       switch (m3->_data_type) {
       case MRC_NT_FLOAT:
       {
-      	float *buf_ptr = ctx->send_bufs[writer] + buf_sizes[writer];
+      	float *buf_ptr = (float *) ctx->send_bufs[writer] + buf_sizes[writer];
       	BUFLOOP(ix, iy, iz, ilo, ihi) {
     	    *buf_ptr++ = MRC_S5(m3, ix-off[0],iy-off[1],iz-off[2], m, p);
       	} BUFLOOP_END
@@ -949,7 +949,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
       }
       case MRC_NT_DOUBLE:
       {
-      	double *buf_ptr = ctx->send_bufs[writer] + buf_sizes[writer];
+      	double *buf_ptr = (double *) ctx->send_bufs[writer] + buf_sizes[writer];
       	BUFLOOP(ix, iy, iz, ilo, ihi) {
           *buf_ptr++ = MRC_D5(m3, ix-off[0],iy-off[1],iz-off[2], m, p);
       	} BUFLOOP_END
@@ -957,7 +957,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
       }
       case MRC_NT_INT:
       {
-      	int *buf_ptr = ctx->send_bufs[writer] + buf_sizes[writer];
+      	int *buf_ptr = (int *) ctx->send_bufs[writer] + buf_sizes[writer];
       	BUFLOOP(ix, iy, iz, ilo, ihi) {
     	    *buf_ptr++ = MRC_I5(m3, ix-off[0],iy-off[1],iz-off[2], m, p);
       	} BUFLOOP_END
@@ -1122,7 +1122,7 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
     switch (m3->_data_type) {
     case MRC_NT_FLOAT:
     {
-      float *buf_ptr = ctx->recv_bufs[info.rank] + buf_sizes[info.rank];
+      float *buf_ptr = (float *) ctx->recv_bufs[info.rank] + buf_sizes[info.rank];
       BUFLOOP(ix, iy, iz, ilo, ihi) {
       	MRC_S4(fld, ix,iy,iz, 0) = *buf_ptr++;
       } BUFLOOP_END
@@ -1130,7 +1130,7 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
     }
     case MRC_NT_DOUBLE:
     {
-      double *buf_ptr = ctx->recv_bufs[info.rank] + buf_sizes[info.rank];
+      double *buf_ptr = (double *) ctx->recv_bufs[info.rank] + buf_sizes[info.rank];
       BUFLOOP(ix, iy, iz, ilo, ihi) {
       	MRC_D4(fld, ix,iy,iz, 0) = *buf_ptr++;
       } BUFLOOP_END
@@ -1138,7 +1138,7 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
     }
     case MRC_NT_INT:
     {
-     int *buf_ptr = ctx->recv_bufs[info.rank] + buf_sizes[info.rank];
+     int *buf_ptr = (int *) ctx->recv_bufs[info.rank] + buf_sizes[info.rank];
       BUFLOOP(ix, iy, iz, ilo, ihi) {
       	MRC_I4(fld, ix,iy,iz, 0) = *buf_ptr++;
       } BUFLOOP_END
