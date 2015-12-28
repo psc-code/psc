@@ -148,7 +148,7 @@ sfc_hilbert_setup(struct mrc_sfc *sfc, int *np)
   int p = 0;
   for (int h = 0; h < (1 << n_total_bits); h++) {
     bitmask_t p_bm[3];
-    hilbert_i2c(sfc->hilbert_nr_dims, nbits_max, h, p_bm);
+    mrc_hilbert_i2c(sfc->hilbert_nr_dims, nbits_max, h, p_bm);
     int inside = true;
     for (int i = 0; i < sfc->hilbert_nr_dims; i++) {
       int d = sfc->hilbert_dim[i];
@@ -179,7 +179,7 @@ sfc_hilbert_idx3_to_idx(struct mrc_sfc *sfc, const int p[3])
     int d = sfc->hilbert_dim[i];
     p_bm[i] = p[d];
   }
-  int h = hilbert_c2i(sfc->hilbert_nr_dims, nbits_max, p_bm);
+  int h = mrc_hilbert_c2i(sfc->hilbert_nr_dims, nbits_max, p_bm);
   return sfc->hilbert_map_h_to_p[h];
 }
 
@@ -190,7 +190,7 @@ sfc_hilbert_idx_to_idx3(struct mrc_sfc *sfc, int idx, int p[3])
   int nbits_max = sfc->nbits_max;
 
   bitmask_t p_bm[3];
-  hilbert_i2c(sfc->hilbert_nr_dims, nbits_max, h, p_bm);
+  mrc_hilbert_i2c(sfc->hilbert_nr_dims, nbits_max, h, p_bm);
   for (int d = 0; d < 3; d++) {
     p[d] = 0;
   }
