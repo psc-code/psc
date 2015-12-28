@@ -122,7 +122,7 @@ bitTranspose(unsigned nDims, unsigned nBits, bitmask_t inCoords)
 #endif
 
 /*****************************************************************
- * hilbert_i2c
+ * mrc_hilbert_i2c
  * 
  * Convert an index into a Hilbert curve to a set of coordinates.
  * Inputs:
@@ -136,7 +136,7 @@ bitTranspose(unsigned nDims, unsigned nBits, bitmask_t inCoords)
  *      nDims*nBits <= (sizeof index) * (bits_per_byte)
  */
 void
-hilbert_i2c(unsigned nDims, unsigned nBits, bitmask_t index, bitmask_t coord[])
+mrc_hilbert_i2c(unsigned nDims, unsigned nBits, bitmask_t index, bitmask_t coord[])
 {
   if (nDims > 1)
     {
@@ -181,7 +181,7 @@ hilbert_i2c(unsigned nDims, unsigned nBits, bitmask_t index, bitmask_t coord[])
 }
 
 /*****************************************************************
- * hilbert_c2i
+ * mrc_hilbert_c2i
  * 
  * Convert coordinates of a point on a Hilbert curve to its index.
  * Inputs:
@@ -194,7 +194,7 @@ hilbert_i2c(unsigned nDims, unsigned nBits, bitmask_t index, bitmask_t coord[])
  *      nDims*nBits <= (sizeof bitmask_t) * (bits_per_byte)
  */
 bitmask_t
-hilbert_c2i(unsigned nDims, unsigned nBits, bitmask_t const coord[])
+mrc_hilbert_c2i(unsigned nDims, unsigned nBits, bitmask_t const coord[])
 {
   if (nDims > 1)
     {
@@ -509,13 +509,13 @@ getIEEEinitValues(double const* c1,
 }
 
 /*****************************************************************
- * hilbert_cmp, hilbert_ieee_cmp
+ * mrc_hilbert_cmp, mrc_hilbert_ieee_cmp
  * 
  * Determine which of two points lies further along the Hilbert curve
  * Inputs:
  *  nDims:      Number of coordinates.
- *  nBytes:     Number of bytes of storage/coordinate (hilbert_cmp only)
- *  nBits:      Number of bits/coordinate. (hilbert_cmp only)
+ *  nBytes:     Number of bytes of storage/coordinate (mrc_hilbert_cmp only)
+ *  nBits:      Number of bits/coordinate. (mrc_hilbert_cmp only)
  *  coord1:     Array of nDims nBytes-byte coordinates (or doubles for ieee_cmp).
  *  coord2:     Array of nDims nBytes-byte coordinates (or doubles for ieee_cmp).
  * Return value:
@@ -526,7 +526,7 @@ getIEEEinitValues(double const* c1,
  */
 
 static int
-hilbert_cmp_work(unsigned nDims, unsigned nBytes, unsigned nBits,
+mrc_hilbert_cmp_work(unsigned nDims, unsigned nBytes, unsigned nBits,
 		 unsigned max, unsigned y,
 		 char const* c1, char const* c2,
 		 unsigned rotation,
@@ -563,18 +563,18 @@ hilbert_cmp_work(unsigned nDims, unsigned nBytes, unsigned nBits,
 }
 
 int
-hilbert_cmp(unsigned nDims, unsigned nBytes, unsigned nBits,
+mrc_hilbert_cmp(unsigned nDims, unsigned nBytes, unsigned nBits,
 	    void const* c1, void const* c2)
 {
   bitmask_t const one = 1;
   bitmask_t bits = one << (nDims-1);
-  return hilbert_cmp_work(nDims, nBytes, nBits, 0, nBits,
+  return mrc_hilbert_cmp_work(nDims, nBytes, nBits, 0, nBits,
 			  (char const*)c1, (char const*)c2,
 			  0, bits, bits, getIntBits);
 }
 
 int
-hilbert_ieee_cmp(unsigned nDims, double const* c1, double const* c2)
+mrc_hilbert_ieee_cmp(unsigned nDims, double const* c1, double const* c2)
 {
   unsigned rotation, max;
   bitmask_t bits, index;
@@ -588,13 +588,13 @@ hilbert_ieee_cmp(unsigned nDims, double const* c1, double const* c2)
     }
   
   getIEEEinitValues(c1, max+53, nDims, &rotation, &bits, &index);
-  return hilbert_cmp_work(nDims, 8, 64, max, max+53,
+  return mrc_hilbert_cmp_work(nDims, 8, 64, max, max+53,
 			  (char const*)c1, (char const*)c2,
 			  rotation, bits, index, getIEEEBits);
 }
 
 /*****************************************************************
- * hilbert_box_vtx
+ * mrc_hilbert_box_vtx
  * 
  * Determine the first or last vertex of a box to lie on a Hilbert curve
  * Inputs:
@@ -614,7 +614,7 @@ hilbert_ieee_cmp(unsigned nDims, double const* c1, double const* c2)
 
 
 static unsigned
-hilbert_box_vtx_work(unsigned nDims, unsigned nBytes, unsigned nBits,
+mrc_hilbert_box_vtx_work(unsigned nDims, unsigned nBytes, unsigned nBits,
 		     int findMin,
 		     unsigned max, unsigned y,
 		     char* c1, char* c2,
@@ -674,18 +674,18 @@ hilbert_box_vtx_work(unsigned nDims, unsigned nBytes, unsigned nBits,
 }
 
 unsigned
-hilbert_box_vtx(unsigned nDims, unsigned nBytes, unsigned nBits,
+mrc_hilbert_box_vtx(unsigned nDims, unsigned nBytes, unsigned nBits,
 		int findMin, void* c1, void* c2)
 {
   bitmask_t const one = 1;
   bitmask_t bits = one << (nDims-1);
-  return hilbert_box_vtx_work(nDims, nBytes, nBits, findMin,
+  return mrc_hilbert_box_vtx_work(nDims, nBytes, nBits, findMin,
 			      0, nBits, (char*)c1, (char*)c2,
 			      0, bits, bits, getIntBits);
 }
 
 unsigned
-hilbert_ieee_box_vtx(unsigned nDims,
+mrc_hilbert_ieee_box_vtx(unsigned nDims,
 		     int findMin, double* c1, double* c2)
 {
   unsigned rotation, max;
@@ -701,13 +701,13 @@ hilbert_ieee_box_vtx(unsigned nDims,
   
   getIEEEinitValues(c1, max+53, nDims, &rotation, &bits, &index);
 
-  return hilbert_box_vtx_work(nDims, 8, 64, findMin,
+  return mrc_hilbert_box_vtx_work(nDims, 8, 64, findMin,
 			      max, max+53, (char *)c1, (char *)c2,
 			      rotation, bits, index, getIEEEBits);
 }
 
 /*****************************************************************
- * hilbert_box_pt
+ * mrc_hilbert_box_pt
  * 
  * Determine the first or last point of a box to lie on a Hilbert curve
  * Inputs:
@@ -723,7 +723,7 @@ hilbert_ieee_box_vtx(unsigned nDims,
  *      nBits <= (sizeof bitmask_t) * (bits_per_byte)
  */
 unsigned
-hilbert_box_pt_work(unsigned nDims, unsigned nBytes, unsigned nBits,
+mrc_hilbert_box_pt_work(unsigned nDims, unsigned nBytes, unsigned nBits,
 		    int findMin,
 		    unsigned max, unsigned y,
 		    char* c1, char* c2,
@@ -784,19 +784,19 @@ hilbert_box_pt_work(unsigned nDims, unsigned nBytes, unsigned nBits,
 }
 
 unsigned
-hilbert_box_pt(unsigned nDims, unsigned nBytes, unsigned nBits,
+mrc_hilbert_box_pt(unsigned nDims, unsigned nBytes, unsigned nBits,
 		int findMin, void* c1, void* c2)
 {
   bitmask_t const one = 1;
   bitmask_t bits = one << (nDims-1);
-  return hilbert_box_pt_work(nDims, nBytes, nBits, findMin,
+  return mrc_hilbert_box_pt_work(nDims, nBytes, nBits, findMin,
 			     0, nBits, (char*)c1, (char*)c2,
 			     0, bits, bits,
 			     getIntBits, propogateIntBits);
 }
 
 unsigned
-hilbert_ieee_box_pt(unsigned nDims,
+mrc_hilbert_ieee_box_pt(unsigned nDims,
 		    int findMin, double* c1, double* c2)
 {
   unsigned rotation, max;
@@ -808,7 +808,7 @@ hilbert_ieee_box_pt(unsigned nDims,
       rotation = 0;
       bits = (bitmask_t)1 << (nDims-1);
       index = 1;
-      hilbert_box_pt_work(nDims, 8, 64, findMin,
+      mrc_hilbert_box_pt_work(nDims, 8, 64, findMin,
 			  IEEErepBits-1, IEEErepBits, (char *)c1, (char *)c2,
 			  rotation, bits, index,
 			  getIEEEBits, propogateIEEEBits);
@@ -823,14 +823,14 @@ hilbert_ieee_box_pt(unsigned nDims,
   
   getIEEEinitValues(c1, max+53, nDims, &rotation, &bits, &index);
 
-  return hilbert_box_pt_work(nDims, 8, 64, findMin,
+  return mrc_hilbert_box_pt_work(nDims, 8, 64, findMin,
 			     max, max+53, (char *)c1, (char *)c2,
 			     rotation, bits, index,
 			     getIEEEBits, propogateIEEEBits);
 }
 
 /*****************************************************************
- * hilbert_nextinbox
+ * mrc_hilbert_nextinbox
  * 
  * Determine the first point of a box after or before a given point to lie on
  * a Hilbert curve
@@ -852,7 +852,7 @@ hilbert_ieee_box_pt(unsigned nDims,
  *      nBits <= (sizeof bitmask_t) * (bits_per_byte)
  */
 int
-hilbert_nextinbox(unsigned nDims, unsigned nBytes, unsigned nBits,
+mrc_hilbert_nextinbox(unsigned nDims, unsigned nBytes, unsigned nBits,
 		  int findPrev, void* c1V, void* c2V, void const* ptV)
 {
   bitmask_t const one = 1;
@@ -1007,7 +1007,7 @@ hilbert_nextinbox(unsigned nDims, unsigned nBytes, unsigned nBits,
 		  cc2[byteId] = hipart | (lo2 &~ hibits);
 		}
 
-	      hilbert_box_pt(nDims, nBytes, nBits, !findPrev, c1V, c2V);
+	      mrc_hilbert_box_pt(nDims, nBytes, nBits, !findPrev, c1V, c2V);
 	      return 1;
 	    }
 	}
@@ -1032,7 +1032,7 @@ hilbert_nextinbox(unsigned nDims, unsigned nBytes, unsigned nBits,
 
 
 /*****************************************************************
- * hilbert_incr
+ * mrc_hilbert_incr
  * 
  * Advance from one point to its successor on a Hilbert curve
  * Inputs:
@@ -1046,7 +1046,7 @@ hilbert_nextinbox(unsigned nDims, unsigned nBytes, unsigned nBits,
  */
 
 void
-hilbert_incr(unsigned nDims, unsigned nBits, bitmask_t coord[])
+mrc_hilbert_incr(unsigned nDims, unsigned nBits, bitmask_t coord[])
 {
   bitmask_t const one = 1;
   bitmask_t const ndOnes = ones(bitmask_t,nDims);
@@ -1117,17 +1117,17 @@ hilbert_incr(unsigned nDims, unsigned nBits, bitmask_t coord[])
 
    Sept 1998: Second release
 
-   Dec 1998: Fixed bug in hilbert_c2i that allowed a shift by number of bits in
+   Dec 1998: Fixed bug in mrc_hilbert_c2i that allowed a shift by number of bits in
    bitmask to vaporize index, in last bit of the function.  Implemented
-   hilbert_incr.
+   mrc_hilbert_incr.
 
-   August 1999: Added argument to hilbert_nextinbox so that you can, optionally,
+   August 1999: Added argument to mrc_hilbert_nextinbox so that you can, optionally,
    find the previous point along the curve to intersect the box, rather than the
    next point.
 
    Nov 1999: Defined fast bit-transpose function (fast, at least, if the number
    of bits is large), and reimplemented i2c and c2i in terms of it.  Collapsed
-   loops in hilbert_cmp, with the intention of reusing the cmp code to compare
+   loops in mrc_hilbert_cmp, with the intention of reusing the cmp code to compare
    more general bitstreams.
 
    Feb 2000: Implemented almost all the floating point versions of cmp, etc, so
@@ -1186,7 +1186,7 @@ int main()
         {
 	  bitmask_t coord1[maxDim];
 	  int miscount = 0;
-          hilbert_i2c( nDims, nBits, r, coord );
+          mrc_hilbert_i2c( nDims, nBits, r, coord );
           printf("%d: ", (unsigned)r);
           for (i = 0; i < nDims; ++i)
 	    {
@@ -1198,7 +1198,7 @@ int main()
 	  if (r > 0 && miscount != 1)
 	    printf(".....error");
 	  printf("\n");
-          r1 = hilbert_c2i( nDims, nBits, coord );
+          r1 = mrc_hilbert_c2i( nDims, nBits, coord );
           if ( r != r1 )
             printf( "r = 0x%x; r1 = 0x%x\n", (unsigned)r, (unsigned)r1);
 	  for (i = 0; i < nDims; ++i)
@@ -1210,8 +1210,8 @@ int main()
 	  for (r1 = 0; r1 < r; ++r1 )
 	    {
 	      unsigned ans;
-	      hilbert_i2c( nDims, nBits, r1, coord1 );
-	      ans = hilbert_cmp( nDims, sizeof(coord[0]), nBits, coord, coord1);
+	      mrc_hilbert_i2c( nDims, nBits, r1, coord1 );
+	      ans = mrc_hilbert_cmp( nDims, sizeof(coord[0]), nBits, coord, coord1);
 	      if (ans != 1)
 		{
 		  int width = (nDims*nBits + 3) / 4;
@@ -1220,8 +1220,8 @@ int main()
 			  width, (unsigned)r1, ans );
 		}
 	    }
-	  hilbert_i2c( nDims, nBits, r1, coord1 );
-	  if (hilbert_cmp( nDims, sizeof(coord[0]), nBits, coord, coord1) != 0)
+	  mrc_hilbert_i2c( nDims, nBits, r1, coord1 );
+	  if (mrc_hilbert_cmp( nDims, sizeof(coord[0]), nBits, coord, coord1) != 0)
 	    printf( "cmp r = 0x%0*x; r1 = 0x%0*x\n", (nDims*nBits+3)/4, (unsigned)r,
 		    (nDims*nBits+3)/4, (unsigned)r1 );
 	  
@@ -1241,8 +1241,8 @@ int cmp(const void* xv, const void* yv)
 {
   double const* x = xv;
   double const* y = yv;
-  /* return hilbert_cmp(2, 8, 64, x, y); */
-  return hilbert_ieee_cmp(2, x, y);
+  /* return mrc_hilbert_cmp(2, 8, 64, x, y); */
+  return mrc_hilbert_ieee_cmp(2, x, y);
 }
 
 int main()
@@ -1291,7 +1291,7 @@ int main()
 	coord[i] = ((k>>i)&1)? -1.: 1.;
 
 
-      hilbert_ieee_cmp( nDims, coord, coord);
+      mrc_hilbert_ieee_cmp( nDims, coord, coord);
     }
   return 0;
 }
@@ -1308,7 +1308,7 @@ unsigned g_nDims;
 
 int cmp(void const* c1p, void const* c2p)
 {
-  return hilbert_cmp(g_nDims, sizeof(unsigned), 8*sizeof(unsigned), c1p, c2p);
+  return mrc_hilbert_cmp(g_nDims, sizeof(unsigned), 8*sizeof(unsigned), c1p, c2p);
 }
 
 int main()
@@ -1345,7 +1345,7 @@ int main()
       work[k] = corner1[k];
     }
   
-  hilbert_box_vtx(nDims, sizeof(unsigned), 8*sizeof(unsigned),
+  mrc_hilbert_box_vtx(nDims, sizeof(unsigned), 8*sizeof(unsigned),
 		  1, cornerlo, work);
   printf("Predicted lo corner: ");
   for (k = 0; k < nDims; ++k)
@@ -1360,7 +1360,7 @@ int main()
       cornerhi[k] = corner1[k];
     }
   
-  hilbert_box_vtx(nDims, sizeof(unsigned), 8*sizeof(unsigned),
+  mrc_hilbert_box_vtx(nDims, sizeof(unsigned), 8*sizeof(unsigned),
 		  0, work, cornerhi);
   printf("Predicted hi corner: ");
   for (k = 0; k < nDims; ++k)
@@ -1409,7 +1409,7 @@ unsigned g_nDims;
 
 int cmp(void const* c1p, void const* c2p)
 {
-  return hilbert_ieee_cmp(g_nDims, c1p, c2p);
+  return mrc_hilbert_ieee_cmp(g_nDims, c1p, c2p);
 }
 
 int main()
@@ -1441,7 +1441,7 @@ int main()
 	  work[k] = corner1[k];
 	}
   
-      hilbert_ieee_box_vtx(nDims, 1, cornerlo, work);
+      mrc_hilbert_ieee_box_vtx(nDims, 1, cornerlo, work);
     
       /* find last corner */
       for (k = 0; k < nDims; ++k)
@@ -1450,7 +1450,7 @@ int main()
 	  cornerhi[k] = corner1[k];
 	}
   
-      hilbert_ieee_box_vtx(nDims, 0, work, cornerhi);
+      mrc_hilbert_ieee_box_vtx(nDims, 0, work, cornerhi);
 
       array = (array_t*) malloc(maxDim*sizeof(key_t) << nDims);
       for (k = 0; k < (1<<nDims); ++k)
@@ -1495,7 +1495,7 @@ unsigned g_nDims;
 
 int cmp(void const* c1p, void const* c2p)
 {
-  return hilbert_cmp(g_nDims, sizeof(unsigned), 8*sizeof(unsigned), c1p, c2p);
+  return mrc_hilbert_cmp(g_nDims, sizeof(unsigned), 8*sizeof(unsigned), c1p, c2p);
 }
 
 int main()
@@ -1539,7 +1539,7 @@ int main()
       work[k] = point1[k];
     }
   
-  hilbert_box_pt(nDims, sizeof(unsigned), 8*sizeof(unsigned),
+  mrc_hilbert_box_pt(nDims, sizeof(unsigned), 8*sizeof(unsigned),
 		 1, pointlo, work);
   printf("Predicted lo point: ");
   for (k = 0; k < nDims; ++k)
@@ -1554,7 +1554,7 @@ int main()
       pointhi[k] = point1[k];
     }
   
-  hilbert_box_pt(nDims, sizeof(unsigned), 8*sizeof(unsigned),
+  mrc_hilbert_box_pt(nDims, sizeof(unsigned), 8*sizeof(unsigned),
 		 0, work, pointhi);
   printf("Predicted hi point: ");
   for (k = 0; k < nDims; ++k)
@@ -1644,7 +1644,7 @@ int main()
       pointhi[k] = point1[k];
     }
   
-  hilbert_ieee_box_pt(nDims, 0, work, pointhi);
+  mrc_hilbert_ieee_box_pt(nDims, 0, work, pointhi);
   printf("Predicted hi point: ");
   for (k = 0; k < nDims; ++k)
     printf("%10lg", pointhi[k]);
@@ -1657,7 +1657,7 @@ int main()
       work[k] = point1[k];
     }
   
-  hilbert_ieee_box_pt(nDims, 1, pointlo, work);
+  mrc_hilbert_ieee_box_pt(nDims, 1, pointlo, work);
   printf("Predicted lo point: ");
   for (k = 0; k < nDims; ++k)
     printf("%10lg", pointlo[k]);
@@ -1665,7 +1665,7 @@ int main()
 
   /* validate by sorting random boundary points */
 #define nPts 1000000
-  assert(hilbert_ieee_cmp(nDims, pointlo, pointhi) < 0);
+  assert(mrc_hilbert_ieee_cmp(nDims, pointlo, pointhi) < 0);
   for (i = 0; i < nPts; ++i)
     {
       double pt1[maxDim], pt2[maxDim];
@@ -1683,18 +1683,18 @@ int main()
 	  else
 	    pt2[k] = point0[k] + drand48()*(point1[k]-point0[k]);
 	}
-      if (hilbert_ieee_cmp(nDims, pt1, pt2) < 0)
+      if (mrc_hilbert_ieee_cmp(nDims, pt1, pt2) < 0)
 	{
-	  if (hilbert_ieee_cmp(nDims, pt1, pointlo) < 0)
+	  if (mrc_hilbert_ieee_cmp(nDims, pt1, pointlo) < 0)
 	    memcpy(pointlo, pt1, maxDim*sizeof(double));
-	  if (hilbert_ieee_cmp(nDims, pointhi, pt2) < 0)
+	  if (mrc_hilbert_ieee_cmp(nDims, pointhi, pt2) < 0)
 	    memcpy(pointhi, pt2, maxDim*sizeof(double));
 	}
       else
 	{
-	  if (hilbert_ieee_cmp(nDims, pt2, pointlo) < 0)
+	  if (mrc_hilbert_ieee_cmp(nDims, pt2, pointlo) < 0)
 	    memcpy(pointlo, pt2, maxDim*sizeof(double));
-	  if (hilbert_ieee_cmp(nDims, pointhi, pt1) < 0)
+	  if (mrc_hilbert_ieee_cmp(nDims, pointhi, pt1) < 0)
 	    memcpy(pointhi, pt1, maxDim*sizeof(double));
 	}
     }
@@ -1736,7 +1736,7 @@ int main()
   printf("Find prev?: ");
   scanf("%d", &findPrev);
   
-  stat =  hilbert_nextinbox(nDims, nBytes, 8*nBytes, findPrev, c1, c2, pt);
+  stat =  mrc_hilbert_nextinbox(nDims, nBytes, 8*nBytes, findPrev, c1, c2, pt);
 
   if (stat)
     for (i = 0; i < nDims; ++i)
