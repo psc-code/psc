@@ -1,12 +1,20 @@
 
 # quick sample harris run
 
-~/src/psc/src/psc_harris \
-    --gdims_y 64 --gdims_z 128 \
-    --npy 2 --npz 2 \
+mpirun -n 8 ~/src/psc/src/psc_harris \
+    --mi_over_me 25. \
+    --gdims_y 200 --gdims_z 800 \
+    --npy 2 --npz 4 \
     --nmax 1001 \
-    --output_fields e,h,j,n,v \
+    --output_fields e,h,j,n_1st_single,v_1st_single \
     --write_tfield no \
-    --write_pfield yes --pfield_step 100 \
-    --psc_push_particles_type 1vb \
-    --psc_moments_type 1st_cc \
+    --write_pfield yes --pfield_step 10 \
+    --particles_type single \
+    --fields_type single \
+    --gdims_in_terms_of_cells \
+    --psc_push_particles_type 1vb_single \
+    --psc_bnd_particles_type single \
+    --psc_push_fields_type single \
+    --psc_bnd_type single \
+    --psc_bnd_fields_type single \
+    2>&1 | tee psc.log

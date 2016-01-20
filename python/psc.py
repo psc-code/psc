@@ -27,10 +27,10 @@ class PscFields:
         self.timestep = self._h5file[path].attrs["timestep"][0]
 
     def _read_crd(self, dim):
-        path = _find_path(self._h5file, "crd%d" % (dim))
-        dset = self._h5file["%s/crd%d/p0/1d" % (path, dim)]
+        path = _find_path(self._h5file, "crd[%d]" % (dim))
+        dset = self._h5file["%s/crd[%d]/p0/1d" % (path, dim)]
         sw = self._h5file[path].attrs["sw"][0]
-        crd = dset[sw:-sw]
+        crd = dset[:]
 
         for i in xrange(downscale):
             crd = .5*(crd[::2] + crd[1::2])
