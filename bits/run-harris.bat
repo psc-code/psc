@@ -1,7 +1,14 @@
+#! /bin/bash
+
+#PBS -l nodes=4:ppn=32
+#PBS -j oe
+
+cd $PBS_O_WORKDIR
 
 # sample harris run
 
-mpirun -n 128 ~/src/psc/src/psc_harris \
+export LD_LIBRARY_PATH=$HOME/src/psc/src/libmrc/src/.libs:$LD_LIBRARY_PATH
+aprun -n 128 ~/src/psc/src/.libs/psc_harris \
     --mi_over_me 25. \
     --npy 8 --npz 16 \
     --nmax 50001 \
