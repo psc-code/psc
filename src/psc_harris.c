@@ -111,16 +111,15 @@ psc_harris_setup(struct psc *psc)
   harris->AA = harris->pert * harris->B0 * psc->domain.length[2] / (2. * M_PI);
 
   psc->kinds[KIND_ELECTRON].m = 1.;
-  psc->kinds[KIND_ION     ].m = harris->mi_over_me;
   psc->kinds[KIND_ELECTRON].T = harris->Te;
-  psc->kinds[KIND_ELECTRON].T = harris->Ti;
+  psc->kinds[KIND_ION     ].m = harris->mi_over_me;
+  psc->kinds[KIND_ION     ].T = harris->Ti;
 
   if (harris->eta0 > 0.) {
     double nu = harris->eta0 * harris->B0 * 3.76 * pow(harris->Te, 1.5);
     psc_collision_set_type(psc->collision, "c");
     psc_collision_set_param_double(psc->collision, "nu", nu);
   }
-
 
   // initializes fields, particles, etc.
   psc_setup_super(psc);
