@@ -146,7 +146,25 @@ psi(struct psc *psc, double x[3])
   double *length = psc->domain.length;
 
   double val = -lambda_de * B0 * log(cosh(x[1] / lambda_de) + eps * cos(x[2] / lambda_de));
-  val += pert * B0 * length[2] / (2. * M_PI) * cos(M_PI * x[1] / length[1]) * cos(2. * M_PI * x[2] / length[2]);
+  val += pert * B0 * length[2] / (2. * M_PI) * 
+    cos(M_PI * x[1] / length[1]) * cos(2. * M_PI * x[2] / length[2]);
+  return val;
+}
+
+// ----------------------------------------------------------------------
+// current
+
+static double
+current(struct psc *psc, double x[3])
+{
+  struct psc_island_coalescence *sub = psc_island_coalescence(psc);
+  double lambda_de = sub->lambda * sub->di, eps = sub->eps, B0 = sub->B0, pert = sub->pert;
+  double *length = psc->domain.length;
+
+  double val = B0 / lambda_de * 
+    (1. - sqr(eps)) * pow(cosh(x[1] / lambda_de) + eps * cos(x[2] / lambda_de), -2.);
+  val -= pert * B0 * length[2] / (2. * M_PI) * (sqr(M_PI / length[1]) + sqr(2. * M_PI / length[2])) 
+      * cos(M_PI * x[1] / length[1]) * cos(2. * M_PI * x[2] / length[2]);
   return val;
 }
 
@@ -156,8 +174,6 @@ psi(struct psc *psc, double x[3])
 static double
 psc_island_coalescence_init_field(struct psc *psc, double x[3], int m)
 {
-  struct psc_island_coalescence *sub = psc_island_coalescence(psc);
-  double lambda_de = sub->lambda * sub->di, eps = sub->eps, B0 = sub->B0;
   double dy = psc->patch[0].dx[1], dz = psc->patch[0].dx[2];
 
   switch (m) {
@@ -166,9 +182,9 @@ psc_island_coalescence_init_field(struct psc *psc, double x[3], int m)
   case HZ: return - (psi(psc, (double[3]) { x[0], x[1] + .5 * dy, x[2] }) - 
 		     psi(psc, (double[3]) { x[0], x[1] - .5 * dy, x[2] })) / dy;
 
-  // FIXME, not needed anymore, just for initial j output
-  case JXI: return B0 / lambda_de * 
-    (1. - sqr(eps)) * pow(cosh(x[1] / lambda_de) + eps * cos(x[2] / lambda_de), -2.);
+  // not needed anymore, just for initial j output
+  case JXI: return current(psc, (double [3]) { x[0], x[1], x[2] });
+
   default: return 0.;
   }
 }
@@ -181,13 +197,12 @@ psc_island_coalescence_init_npt(struct psc *psc, int pop, double x[3],
 				struct psc_particle_npt *npt)
 {
   struct psc_island_coalescence *sub = psc_island_coalescence(psc);
-  double lambda_de = sub->lambda * sub->di, eps = sub->eps, B0 = sub->B0;
+  double lambda_de = sub->lambda * sub->di, eps = sub->eps;
   double nb = sub->nb, Te = sub->Te, Ti = sub->Ti;
 
   double n =
     (1. - sqr(eps)) * pow(cosh(x[1] / lambda_de) + eps * cos(x[2] / lambda_de), -2.);
-  double j = B0 / lambda_de * 
-    (1. - sqr(eps)) * pow(cosh(x[1] / lambda_de) + eps * cos(x[2] / lambda_de), -2.);
+  double j = current(psc, x);
 
   switch (pop) {
   case 0: // ion drifting
