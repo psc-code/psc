@@ -136,7 +136,7 @@ ggcm_mhd_step_run_predcorr(struct ggcm_mhd_step *step, struct mrc_fld *x)
           (dtn < 0.5 * mhd->dt || dtn > 2.0 * mhd->dt)) {            
         mpi_printf(ggcm_mhd_comm(mhd), "!!! dt changed by > a factor of 2. "
                    "Dying now!\n");
-        ggcm_mhd_wrongful_death(mhd, 2);
+        ggcm_mhd_wrongful_death(mhd, mhd->fld, 2);
       }
       
       mhd->dt = dtn;

@@ -87,7 +87,8 @@ static void
 _ggcm_mhd_create(struct ggcm_mhd *mhd)
 {
   mrc_domain_set_type(mhd->domain, "simple");
-
+  ggcm_mhd_bnd_set_name(mhd->bnd1, "bnd1");
+  
   ggcm_mhd_crds_set_param_obj(mhd->crds, "domain", mhd->domain);
   ggcm_mhd_step_set_param_obj(mhd->step, "mhd", mhd);
   ggcm_mhd_diag_set_param_obj(mhd->diag, "mhd", mhd);
@@ -221,6 +222,8 @@ ggcm_mhd_fill_ghosts_E(struct ggcm_mhd *mhd, struct mrc_fld *E)
   if (ops->fill_ghosts_E) {
     ops->fill_ghosts_E(mhd, E);
   }
+  ggcm_mhd_bnd_fill_ghosts_E(mhd->bnd, E);
+  ggcm_mhd_bnd_fill_ghosts_E(mhd->bnd1, E);
 }
 
 int
@@ -476,7 +479,7 @@ struct mrc_class_ggcm_mhd mrc_class_ggcm_mhd = {
 // called from all mhd processes.
 
 void
-ggcm_mhd_wrongful_death(struct ggcm_mhd *mhd, int errcode)
+ggcm_mhd_wrongful_death(struct ggcm_mhd *mhd, struct mrc_fld *x, int errcode)
 {
   static int cnt = 0;
   struct ggcm_mhd_diag *diag = ggcm_mhd_diag_create(ggcm_mhd_comm(mhd));
@@ -494,7 +497,7 @@ ggcm_mhd_wrongful_death(struct ggcm_mhd *mhd, int errcode)
   mpi_printf(ggcm_mhd_comm(mhd), "Something bad happened. Dumping state then "
              "keeling over.\n");
   // ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);  // is this needed?
-  ggcm_mhd_diag_run_now(diag, mhd->fld, DIAG_TYPE_3D, cnt++);
+  ggcm_mhd_diag_run_now(diag, x, DIAG_TYPE_3D, cnt++);
   ggcm_mhd_diag_shutdown(diag);
   
   MPI_Barrier(ggcm_mhd_comm(mhd));
