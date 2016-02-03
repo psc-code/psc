@@ -820,7 +820,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
   push_ej_c(step, dt, x_curr, prim, x_next);
 
   calce_c(step, E, x_curr, prim, dt);
-  ggcm_mhd_fill_ghosts_E(mhd, E);
+  //  ggcm_mhd_fill_ghosts_E(mhd, E);
   update_ct(mhd, x_next, E, dt, true);
 
   ggcm_mhd_put_3d_fld(mhd, E);
@@ -880,6 +880,9 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   prof_start(pr_A);
   ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
   ggcm_mhd_step_c3_primvar(step, prim, x);
+  // --- check for NaNs and negative pressures
+  // (still controlled by do_badval_checks)
+  badval_checks_sc(mhd, x, prim);
   zmaskn(step->mhd, zmask, 0, ymask, 0, x);
 
   // set x_half = x^n, then advance to n+1/2
@@ -910,16 +913,15 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   prof_start(pr_B);
   ggcm_mhd_fill_ghosts(mhd, x_half, 0, mhd->time + mhd->bndt);
   ggcm_mhd_step_c3_primvar(step, prim, x_half);
+  // --- check for NaNs and negative pressures
+  // (still controlled by do_badval_checks)
+  badval_checks_sc(mhd, x_half, prim);
   pushstage_c(step, mhd->dt, x_half, x, prim, LIMIT_1);
   if (sub->enforce_rrmin) {
     enforce_rrmin_sc(mhd, x_half);
   }
   prof_stop(pr_B);
 
-  // --- check for NaNs and negative pressures
-  // (still controlled by do_badval_checks)
-  badval_checks_sc(mhd, x, prim);
-  
   // --- update timestep
   if (step->do_nwst) {
     dtn = mrc_fld_min(1., dtn); // FIXME, only kept for compatibility
@@ -936,7 +938,7 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
           (dtn < 0.5 * mhd->dt || dtn > 2.0 * mhd->dt)) {            
         mpi_printf(ggcm_mhd_comm(mhd), "!!! dt changed by > a factor of 2. "
                    "Dying now!\n");
-        ggcm_mhd_wrongful_death(mhd, 2);
+        ggcm_mhd_wrongful_death(mhd, mhd->fld, 2);
       }
 
       mhd->dt = dtn;
@@ -966,7 +968,7 @@ ggcm_mhd_step_c3_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
   ggcm_mhd_step_c3_primvar(step, prim, x);
   zmaskn(step->mhd, zmask, 0, ymask, 0, x);
   calce_c(step, E, x, prim, mhd->dt);
-  ggcm_mhd_fill_ghosts_E(mhd, E);
+  //  ggcm_mhd_fill_ghosts_E(mhd, E);
   
   ggcm_mhd_put_3d_fld(mhd, prim);
   mrc_fld_put_as(E, Eout);

@@ -526,14 +526,14 @@ ggcm_mhd_step_vlct_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
         mpi_printf(ggcm_mhd_comm(mhd), "!!! dt < dtmin. Dying now!\n");
         mpi_printf(ggcm_mhd_comm(mhd), "!!! dt %g -> %g, dtmin = %g\n",
                    old_dt, mhd->dt, mhd->par.dtmin);
-        ggcm_mhd_wrongful_death(mhd, -1);
+        ggcm_mhd_wrongful_death(mhd, mhd->fld, -1);
       }
 
       if (!first_step && !last_step &&
           (mhd->dt < 0.5 * old_dt || mhd->dt > 2.0 * old_dt)) {
         mpi_printf(ggcm_mhd_comm(mhd), "!!! dt changed by > a factor of 2. "
                    "Dying now!\n");
-        ggcm_mhd_wrongful_death(mhd, 2);
+        ggcm_mhd_wrongful_death(mhd, mhd->fld, 2);
       }
     }
   }

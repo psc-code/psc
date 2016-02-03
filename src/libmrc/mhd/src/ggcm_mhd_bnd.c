@@ -23,6 +23,19 @@ ggcm_mhd_bnd_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld,
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_bnd_fill_ghosts_E
+
+void
+ggcm_mhd_bnd_fill_ghosts_E(struct ggcm_mhd_bnd *bnd, struct mrc_fld *E)
+{
+  struct ggcm_mhd_bnd_ops *ops = ggcm_mhd_bnd_ops(bnd);
+  assert(ops);
+  if (ops->fill_ghosts_E) {
+    ops->fill_ghosts_E(bnd, E);
+  }
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_bnd_init
 
 static void

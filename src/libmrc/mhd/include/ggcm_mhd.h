@@ -55,7 +55,7 @@ enum {
 // ----------------------------------------------------------------------
 // wrappers / helpers
 
-void ggcm_mhd_wrongful_death(struct ggcm_mhd *mhd, int errcode);
+void ggcm_mhd_wrongful_death(struct ggcm_mhd *mhd, struct mrc_fld *x, int errcode);
 
 void ts_ggcm_mhd_step_calc_rhs(void *ctx, struct mrc_obj *_rhs, float time,
 			       struct mrc_obj *_x);
