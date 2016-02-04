@@ -3,7 +3,8 @@
 
 #include "psc_bnd.h"
 #include "psc_output_fields_item.h"
-#include "psc_fields_as_c.h"
+#include "psc_fields_as_single.h"
+#include "psc_particles_as_single.h"
 
 #include <mrc_io.h>
 
@@ -33,18 +34,18 @@ fld_create(struct psc *psc, int nr_fields)
 // ----------------------------------------------------------------------
 // psc_calc_rho
 
-void
+static void
 psc_calc_rho(struct psc *psc, struct psc_mparticles *mprts, struct psc_mfields *rho)
 {
   // FIXME, output_fields should be taking care of this?
   struct psc_bnd *bnd = psc_bnd_create(psc_comm(psc));
   psc_bnd_set_name(bnd, "psc_output_fields_bnd_calc_rho");
-  psc_bnd_set_type(bnd, "c");
+  psc_bnd_set_type(bnd, FIELDS_TYPE);
   psc_bnd_set_psc(bnd, psc);
   psc_bnd_setup(bnd);
 
   struct psc_output_fields_item *item = psc_output_fields_item_create(psc_comm(psc));
-  psc_output_fields_item_set_type(item, "rho_1st_nc_double");
+  psc_output_fields_item_set_type(item, "rho_1st_nc_" PARTICLE_TYPE);
   psc_output_fields_item_set_psc_bnd(item, bnd);
   psc_output_fields_item_setup(item);
   psc_output_fields_item_run(item, psc->flds, mprts, rho);
@@ -190,15 +191,24 @@ psc_checks_continuity_after_particle_push(struct psc_checks *checks, struct psc 
 // ----------------------------------------------------------------------
 // psc_calc_dive
 
-void
+static void
 psc_calc_dive(struct psc *psc, struct psc_mfields *mflds, struct psc_mfields *dive)
 {
+  // FIXME, output_fields should be taking care of this?
+  struct psc_bnd *bnd = psc_bnd_create(psc_comm(psc));
+  psc_bnd_set_name(bnd, "psc_output_fields_bnd_calc_dive");
+  psc_bnd_set_type(bnd, FIELDS_TYPE);
+  psc_bnd_set_psc(bnd, psc);
+  psc_bnd_setup(bnd);
+
   struct psc_output_fields_item *item = psc_output_fields_item_create(psc_comm(psc));
-  psc_output_fields_item_set_type(item, "dive");
-  psc_output_fields_item_set_psc_bnd(item, psc->bnd);
+  psc_output_fields_item_set_type(item, "dive_" FIELDS_TYPE);
+  psc_output_fields_item_set_psc_bnd(item, bnd);
   psc_output_fields_item_setup(item);
   psc_output_fields_item_run(item, mflds, psc->particles, dive); // FIXME, should accept NULL for mprts
   psc_output_fields_item_destroy(item);
+
+  psc_bnd_destroy(bnd);
 }
 
 // ----------------------------------------------------------------------

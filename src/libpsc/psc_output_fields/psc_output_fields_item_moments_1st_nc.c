@@ -51,11 +51,13 @@ do_rho_run(int p, fields_t *pf, struct psc_particles *prts)
 
 static void
 rho_run(struct psc_output_fields_item *item, struct psc_fields *flds,
-      struct psc_particles *prts_base, struct psc_fields *res)
+      struct psc_particles *prts_base, struct psc_fields *res_base)
 {
   struct psc_particles *prts = psc_particles_get_as(prts_base, PARTICLE_TYPE, 0);
+  struct psc_fields *res = psc_fields_get_as(res_base, FIELDS_TYPE, 0, 0);
   psc_fields_zero_range(res, 0, res->nr_comp);
   do_rho_run(res->p, res, prts);
   psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
+  psc_fields_put_as(res, res_base, 0, 1);
 }
 

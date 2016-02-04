@@ -535,13 +535,19 @@ fields_device_pack_yz(struct psc_mfields *mflds, int mb, int me)
   dim3 dimGrid((n_threads + (THREADS_PER_BLOCK - 1)) / THREADS_PER_BLOCK);
   dim3 dimBlock(THREADS_PER_BLOCK);
     
-  const int NR_COMPONENTS = 3;
-  assert(me - mb == NR_COMPONENTS);
   float *d_bnd_buf = mflds_cuda->d_bnd_buf;
   float *d_flds = mflds_cuda->d_flds + mb * size;
-  k_fields_device_pack_yz<B, pack, NR_COMPONENTS> <<<dimGrid, dimBlock>>>
-    (d_bnd_buf, d_flds, gmy, gmz, mflds->nr_patches,
-     mflds->nr_fields);
+  if (me - mb == 3) {
+    k_fields_device_pack_yz<B, pack, 3> <<<dimGrid, dimBlock>>>
+      (d_bnd_buf, d_flds, gmy, gmz, mflds->nr_patches,
+       mflds->nr_fields);
+  } else if (me - mb == 1) {
+    k_fields_device_pack_yz<B, pack, 1> <<<dimGrid, dimBlock>>>
+      (d_bnd_buf, d_flds, gmy, gmz, mflds->nr_patches,
+       mflds->nr_fields);
+  } else {
+    assert(0);
+  }
   cuda_sync_if_enabled();
 }
 
@@ -575,8 +581,6 @@ __fields_cuda_fill_ghosts_local(struct psc_mfields *mflds, int mb, int me)
 {
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
   const int B = 2;
-  const int NR_COMPONENTS = 3;
-  assert(me - mb == NR_COMPONENTS);
 
   int *im = mflds_cuda->im;
   assert(im[0] == 1);
@@ -589,9 +593,17 @@ __fields_cuda_fill_ghosts_local(struct psc_mfields *mflds, int mb, int me)
   dim3 dimBlock(THREADS_PER_BLOCK);
     
   float *d_flds = mflds_cuda->d_flds + mb * im[1] * im[2];
-  k_fill_ghosts_local_yz<B, NR_COMPONENTS> <<<dimGrid, dimBlock>>>
-    (d_flds, mflds_cuda->d_nei_patch, im[1], im[2],
-     nr_fields, nr_patches);
+  if (me - mb == 3) {
+    k_fill_ghosts_local_yz<B, 3> <<<dimGrid, dimBlock>>>
+      (d_flds, mflds_cuda->d_nei_patch, im[1], im[2],
+       nr_fields, nr_patches);
+  } else if (me - mb == 1) {
+    k_fill_ghosts_local_yz<B, 1> <<<dimGrid, dimBlock>>>
+      (d_flds, mflds_cuda->d_nei_patch, im[1], im[2],
+       nr_fields, nr_patches);
+  } else {
+    assert(0);
+  }
   cuda_sync_if_enabled();
 
 #if 0
@@ -630,7 +642,7 @@ fields_host_pack_yz(struct psc_mfields *mflds, int mb, int me)
     struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
     struct psc_fields_cuda *flds_cuda = psc_fields_cuda(flds);
     struct psc_fields_cuda_bnd *cf = &flds_cuda->bnd;
-    real *h_buf = mflds_cuda->h_bnd_buf + p * buf_size * MAX_BND_COMPONENTS;
+    real *h_buf = mflds_cuda->h_bnd_buf + p * buf_size * (me - mb);
     
     int gmy = cf->im[1], gmz = cf->im[2];
     int tid = 0;
@@ -758,7 +770,7 @@ __fields_cuda_from_device_yz(struct psc_mfields *mflds, int mb, int me)
   
   prof_start(pr2);
   check(cudaMemcpy(mflds_cuda->h_bnd_buf, mflds_cuda->d_bnd_buf,
-		   MAX_BND_COMPONENTS * buf_size * mflds->nr_patches *
+		   (me - mb) * buf_size * mflds->nr_patches *
 		   sizeof(*mflds_cuda->h_bnd_buf),
 		   cudaMemcpyDeviceToHost));
   prof_stop(pr2);
@@ -1330,8 +1342,6 @@ static void
 fields_device_pack3_yz(struct psc_mfields *mflds, int mb, int me)
 {
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
-  const int NR_COMPONENTS = 3;
-  assert(me - mb == NR_COMPONENTS);
 
   int *im = mflds_cuda->im;
   assert(im[0] == 1);
@@ -1353,9 +1363,17 @@ fields_device_pack3_yz(struct psc_mfields *mflds, int mb, int me)
   dim3 dimBlock(THREADS_PER_BLOCK);
     
   float *d_flds = mflds_cuda->d_flds + mb * im[1] * im[2];
-  k_fields_device_pack3_yz<pack> <<<dimGrid, dimBlock>>>
-    (mflds_cuda->d_bnd_buf, d_flds, d_map, mflds_cuda->d_nei_patch,
-     im[1], im[2], nr_patches, NR_COMPONENTS, nr_map);
+  if (me - mb == 3) {
+    k_fields_device_pack3_yz<pack> <<<dimGrid, dimBlock>>>
+      (mflds_cuda->d_bnd_buf, d_flds, d_map, mflds_cuda->d_nei_patch,
+       im[1], im[2], nr_patches, 3, nr_map);
+  } else if (me - mb == 1) {
+    k_fields_device_pack3_yz<pack> <<<dimGrid, dimBlock>>>
+      (mflds_cuda->d_bnd_buf, d_flds, d_map, mflds_cuda->d_nei_patch,
+       im[1], im[2], nr_patches, 1, nr_map);
+  } else {
+    assert(0);
+  }
   cuda_sync_if_enabled();
 #else
   thrust::device_ptr<float> d_bnd_buf(mflds_cuda->d_bnd_buf);

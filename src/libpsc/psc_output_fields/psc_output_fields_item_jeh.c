@@ -1,7 +1,8 @@
-
 #include "psc_output_fields_item_private.h"
 
 #include "psc_fields_as_c.h"
+
+// FIXME, we're assuming that the result fields are "c" type
 
 // ======================================================================
 
@@ -340,30 +341,6 @@ struct psc_output_fields_item_ops psc_output_fields_item_h2_ops = {
   .nr_comp   = 3,
   .fld_names = { "hx2", "hy2", "hz2" },
   .run       = calc_H2_cc,
-};
-
-// ======================================================================
-
-static void
-calc_dive_nc(struct psc_output_fields_item *item, struct psc_fields *flds_base,
-	     struct psc_particles *prts, struct psc_fields *f)
-{
-  define_dxdydz(dx, dy, dz);
-  struct psc_fields *flds = psc_fields_get_as(flds_base, FIELDS_TYPE, JXI, HX + 3);
-  psc_foreach_3d(ppsc, f->p, ix, iy, iz, 0, 0) {
-    F3(f, 0, ix,iy,iz) = 
-      ((F3(flds, EX, ix,iy,iz) - F3(flds, EX, ix-dx,iy,iz)) / ppsc->patch[f->p].dx[0] +
-       (F3(flds, EY, ix,iy,iz) - F3(flds, EY, ix,iy-dy,iz)) / ppsc->patch[f->p].dx[1] +
-       (F3(flds, EZ, ix,iy,iz) - F3(flds, EZ, ix,iy,iz-dz)) / ppsc->patch[f->p].dx[2]);
-  } foreach_3d_end;
-  psc_fields_put_as(flds, flds_base, 0, 0);
-}
-
-struct psc_output_fields_item_ops psc_output_fields_item_dive_ops = {
-  .name      = "dive",
-  .nr_comp   = 1,
-  .fld_names = { "dive" },
-  .run       = calc_dive_nc,
 };
 
 // ======================================================================

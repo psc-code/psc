@@ -20,6 +20,37 @@
 #define F3_DEV(fldnr,ix,jy,jz)			\
   (d_flds)[X3_DEV_OFF_YZ(fldnr, jy,jz)]
 
+#define F3_DDEV(d_flds, fldnr,ix,jy,jz)		\
+  (d_flds)[X3_DEV_OFF_YZ(fldnr, jy,jz)]
+
+// FIXME, duplicated
+// ----------------------------------------------------------------------
+// macros to access C (host) versions of the fields
+
+#define F3_OFF_CUDA(pf, fldnr, jx,jy,jz)				\
+  ((((((fldnr)								\
+       * (pf)->im[2] + ((jz)-(pf)->ib[2]))				\
+      * (pf)->im[1] + ((jy)-(pf)->ib[1]))				\
+     * (pf)->im[0] + ((jx)-(pf)->ib[0]))))
+
+#ifndef BOUNDS_CHECK
+
+#define F3_CUDA(h_flds, pf, fldnr, jx,jy,jz)	\
+  (h_flds[F3_OFF_CUDA(pf, fldnr, jx,jy,jz)])
+
+#else
+
+#define F3_CUDA(pf, fldnr, jx,jy,jz)				\
+  (*({int off = F3_OFF_CUDA(pf, fldnr, jx,jy,jz);			\
+      assert(fldnr >= 0 && fldnr < (pf)->nr_comp);			\
+      assert(jx >= (pf)->ib[0] && jx < (pf)->ib[0] + (pf)->im[0]);	\
+      assert(jy >= (pf)->ib[1] && jy < (pf)->ib[1] + (pf)->im[1]);	\
+      assert(jz >= (pf)->ib[2] && jz < (pf)->ib[2] + (pf)->im[2]);	\
+      &(h_flds[off]);						\
+    }))
+
+#endif
+
 
 __global__ static void
 push_fields_E_yz(real *d_flds0, real dt, real cny, real cnz, int my, int mz,
@@ -142,5 +173,179 @@ cuda_push_fields_H_yz(struct psc_mfields *mflds)
   RUN_KERNEL(dimGrid, dimBlock,
 	     push_fields_H_yz, (mflds_cuda->d_flds, cny, cnz, my, mz,
 				size, grid[1]));
+}
+
+EXTERN_C void
+cuda_marder_correct_yz_gold(struct psc_mfields *mflds, struct psc_mfields *mf,
+			    int p, int ldims[3], float fac[3],
+			    int ly[3], int ry[3],
+			    int lz[3], int rz[3])
+{
+  struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+  struct psc_fields *f = psc_mfields_get_patch(mf, p);
+
+  float *hflds = (float *) malloc(flds->nr_comp * flds->im[0] * flds->im[1] * flds->im[2] * sizeof(*hflds));
+  float *hf = (float *) malloc(f->nr_comp * flds->im[0] * flds->im[1] * flds->im[2] * sizeof(*hf));
+  
+  __fields_cuda_from_device(flds, hflds, EX, EX + 3);
+  __fields_cuda_from_device(f, hf, 0, 1);
+  
+  for (int iz = -1; iz < ldims[2]; iz++) {
+    for (int iy = -1; iy < ldims[1]; iy++) {
+      if (iy >= -ly[1] && iy < ry[1] &&
+	  iz >= -ly[2] && iz < ry[2]) {
+	F3_CUDA(hflds, flds, EY, 0,iy,iz) += 
+	  fac[1] * (F3_CUDA(hf, f, 0, 0,iy+1,iz) - F3_CUDA(hf, f, 0, 0,iy,iz));
+	}
+      
+      if (iy >= -lz[1] && iy < rz[1] &&
+	  iz >= -lz[2] && iz < rz[2]) {
+	F3_CUDA(hflds, flds, EZ, 0,iy,iz) += 
+	  fac[2] * (F3_CUDA(hf, f, 0, 0,iy,iz+1) - F3_CUDA(hf, f, 0, 0,iy,iz));
+      }
+    }
+  }
+  
+  __fields_cuda_to_device(flds, hflds, EX, EX + 3);
+  
+  free(hflds);
+  free(hf);
+}
+
+__global__ static void
+marder_correct_yz(real *d_flds, real *d_f, float facy, float facz,
+		  int lyy, int lyz, int ryy, int ryz,
+		  int lzy, int lzz, int rzy, int rzz, int my, int mz)
+{
+  int iy = blockIdx.x * blockDim.x + threadIdx.x;
+  int iz = blockIdx.y * blockDim.y + threadIdx.y;
+
+  iy -= BND;
+  iz -= BND;
+
+  if (iy >= -lyy && iy < ryy &&
+      iz >= -lyz && iz < ryz) {
+    F3_DDEV(d_flds, EY, 0,iy,iz) += 
+      facy * (F3_DDEV(d_f, 0, 0,iy+1,iz) - F3_DDEV(d_f, 0, 0,iy,iz));
+  }
+  
+  if (iy >= -lzy && iy < rzy &&
+      iz >= -lzz && iz < rzz) {
+    F3_DDEV(d_flds, EZ, 0,iy,iz) += 
+      facz * (F3_DDEV(d_f, 0, 0,iy,iz+1) - F3_DDEV(d_f, 0, 0,iy,iz));
+  }
+}
+
+EXTERN_C void
+cuda_marder_correct_yz(struct psc_mfields *mflds, struct psc_mfields *mf,
+		       int p, int ldims[3], float fac[3],
+		       int ly[3], int ry[3],
+		       int lz[3], int rz[3])
+{
+#if 0
+  cuda_marder_correct_yz_gold(mflds, mf, p, ldims, fac, ly, ry, lz, rz);
+  return;
+#endif
+
+  if (mflds->nr_patches == 0) {
+    return;
+  }
+
+  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
+  struct psc_mfields_cuda *mf_cuda = psc_mfields_cuda(mf);
+  struct psc_patch *patch = &ppsc->patch[p];
+
+  unsigned int size = mflds_cuda->im[0] * mflds_cuda->im[1] * mflds_cuda->im[2];
+  int my = mflds_cuda->im[1];
+  int mz = mflds_cuda->im[2];
+
+  int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
+  int grid[2]  = { (patch->ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
+		   (patch->ldims[2] + 2*BND + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
+  int dimGrid[2] = { grid[0], grid[1] };
+
+  RUN_KERNEL(dimGrid, dimBlock,
+	     marder_correct_yz, (mflds_cuda->d_flds + p * size * mflds->nr_fields,
+				 mf_cuda->d_flds + p * size * mf->nr_fields, fac[1], fac[2],
+				 ly[1], ly[2], ry[1], ry[2],
+				 lz[1], lz[2], rz[1], rz[2], my, mz));
+}
+
+// ======================================================================
+
+__global__ static void
+axpy_comp_yz(real *y_flds, int ym, float a, real *x_flds, int xm,
+	     int my, int mz)
+{
+  int iy = blockIdx.x * blockDim.x + threadIdx.x;
+  int iz = blockIdx.y * blockDim.y + threadIdx.y;
+
+  if (iy >= my || iz >= mz) {
+    return;
+  }
+
+  iy -= BND;
+  iz -= BND;
+
+  F3_DDEV(y_flds, ym, 0,iy,iz) += a * F3_DDEV(x_flds, xm, 0,iy,iz);
+}
+
+void
+cuda_axpy_comp_yz(struct psc_fields *y, int ym, float a, struct psc_fields *x, int xm)
+{
+  struct psc_fields_cuda *y_cuda = psc_fields_cuda(y);
+  struct psc_fields_cuda *x_cuda = psc_fields_cuda(x);
+  struct psc_patch *patch = &ppsc->patch[0];
+
+  int my = y->im[1];
+  int mz = y->im[2];
+
+  int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
+  int grid[2]  = { (patch->ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
+		   (patch->ldims[2] + 2*BND + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
+  int dimGrid[2] = { grid[0], grid[1] };
+
+  RUN_KERNEL(dimGrid, dimBlock,
+	     axpy_comp_yz, (y_cuda->d_flds, ym, a, x_cuda->d_flds, xm, my, mz));
+}
+
+// ======================================================================
+
+__global__ static void
+calc_dive_yz(real *flds, real *f, float dy, float dz,
+	     int ldimsy, int ldimsz, int my, int mz)
+{
+  int iy = blockIdx.x * blockDim.x + threadIdx.x;
+  int iz = blockIdx.y * blockDim.y + threadIdx.y;
+
+  if (iy >= ldimsy || iz >= ldimsz) {
+    return;
+  }
+
+  F3_DDEV(f, 0, 0,iy,iz) = 
+    ((F3_DDEV(flds, EY, 0,iy,iz) - F3_DDEV(flds, EY, 0,iy-1,iz)) / dy +
+     (F3_DDEV(flds, EZ, 0,iy,iz) - F3_DDEV(flds, EZ, 0,iy,iz-1)) / dz);
+}
+
+EXTERN_C void
+cuda_calc_dive_yz(struct psc_fields *flds, struct psc_fields *f)
+{
+  float dy = ppsc->patch[f->p].dx[1];
+  float dz = ppsc->patch[f->p].dx[2];
+
+  struct psc_fields_cuda *flds_cuda = psc_fields_cuda(flds);
+  struct psc_fields_cuda *f_cuda = psc_fields_cuda(f);
+  int *ldims = ppsc->patch[0].ldims;
+
+  int my = f->im[1];
+  int mz = f->im[2];
+
+  int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
+  int grid[2]  = { (ldims[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
+		   (ldims[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
+  int dimGrid[2] = { grid[0], grid[1] };
+
+  RUN_KERNEL(dimGrid, dimBlock,
+	     calc_dive_yz, (flds_cuda->d_flds, f_cuda->d_flds, dy, dz, ldims[1], ldims[2], my, mz));
 }
 
