@@ -6,6 +6,7 @@
 #include "psc_push_fields.h"
 #include "psc_bnd_fields_private.h"
 #include "psc_pulse.h"
+#include "psc_fields_c.h"
 
 #include <assert.h>
 
@@ -55,7 +56,7 @@
 void PSC_set_globals_F77(f_real *cori, f_real *alpha, f_real *eta);
 
 void PSC_set_patch_F77(f_int *imn, f_int *imx, f_int *rd,
-		       f_real *dt, f_real *dxyz, f_real *corner);
+		       f_real *dt, f_real *dxyz);
 
 void PSC_set_params_F77(f_real *qq, f_real *mm, f_real *tt, f_real *cc, f_real *eps0,
 			f_int *nmax, f_real *lw, f_real *i0, f_real *n0,
@@ -163,11 +164,12 @@ void
 PSC_set_patch(struct psc *psc, int p)
 {
   struct psc_patch *patch = &psc->patch[p];
-  int imx[3];
+  int imn[3], imx[3];
   for (int d = 0; d < 3; d++) {
-    imx[d] = patch->off[d] + patch->ldims[d] - 1;
+    imn[d] = 0;
+    imx[d] = patch->ldims[d] - 1;
   }
-  PSC_set_patch_F77(patch->off, imx, psc->ibn, &psc->dt, patch->dx, patch->xb);
+  PSC_set_patch_F77(imn, imx, psc->ibn, &psc->dt, patch->dx);
 }
 
 void
@@ -228,11 +230,25 @@ PIC_push_part_yz(struct psc *psc, int p, struct psc_particles *prts, struct psc_
 {
   PSC_set_timestep(psc);
   PSC_set_patch(psc, p);
+#if 0
   fields_fortran_real_t **flds = pf->data;
   PIC_push_part_yz_F77(&prts->n_part, &psc_particles_fortran(prts)->particles[-1], &psc->p2A, &psc->p2B,
 		       flds[JXI], flds[JYI], flds[JZI],
 		       flds[EX], flds[EY], flds[EZ],
 		       flds[HX], flds[HY], flds[HZ]);
+#else
+  int *ib = pf->ib;
+  PIC_push_part_yz_F77(&prts->n_part, &psc_particles_fortran(prts)->particles[-1], &psc->p2A, &psc->p2B,
+		       &F3_C(pf, JXI, ib[0], ib[1], ib[2]),
+		       &F3_C(pf, JYI, ib[0], ib[1], ib[2]),
+		       &F3_C(pf, JZI, ib[0], ib[1], ib[2]),
+		       &F3_C(pf, EX , ib[0], ib[1], ib[2]),
+		       &F3_C(pf, EY , ib[0], ib[1], ib[2]),
+		       &F3_C(pf, EZ , ib[0], ib[1], ib[2]),
+		       &F3_C(pf, HX , ib[0], ib[1], ib[2]),
+		       &F3_C(pf, HY , ib[0], ib[1], ib[2]),
+		       &F3_C(pf, HZ , ib[0], ib[1], ib[2]));
+#endif
 }
 
 void
@@ -328,6 +344,7 @@ INIT_basic()
 void
 PIC_msa_e(struct psc_fields *pf)
 {
+  assert(0); // FIXME, local fields are now 0-based
   fields_fortran_real_t **flds = pf->data;
   PSC_set_timestep(ppsc);
   PIC_msa_e_F77(flds[EX], flds[EY], flds[EZ],
@@ -338,6 +355,7 @@ PIC_msa_e(struct psc_fields *pf)
 void
 PIC_msa_h(struct psc_fields *pf)
 {
+  assert(0); // FIXME, local fields are now 0-based
   fields_fortran_real_t **flds = pf->data;
   PSC_set_timestep(ppsc);
   PIC_msa_h_F77(flds[EX], flds[EY], flds[EZ],
@@ -394,6 +412,7 @@ PIC_pml_msb(struct psc_fields *pf)
 void
 PIC_fill_ghosts_h_b(struct psc *psc, int p, struct psc_fields *pf)
 {
+  assert(0); // FIXME, local fields are now 0-based
   fields_fortran_real_t **flds = pf->data;
   PSC_set_timestep(psc);
   PSC_set_patch(psc, p);

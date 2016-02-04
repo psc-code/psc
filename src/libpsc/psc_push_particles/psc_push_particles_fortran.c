@@ -66,15 +66,13 @@ psc_push_particles_fortran_push_a_yz(struct psc_push_particles *push,
 				     struct psc_particles *prts_base,
 				     struct psc_fields *flds_base)
 {
-  assert(ppsc->nr_patches == 1);
-  
   static int pr;
   if (!pr) {
     pr = prof_register("fort_part_yz", 1., 0, 0);
   }
 
   struct psc_particles *prts = psc_particles_get_as(prts_base, "fortran", 0);
-  struct psc_fields *flds = psc_fields_get_as(flds_base, "fortran", EX, EX + 6);
+  struct psc_fields *flds = psc_fields_get_as(flds_base, "c", EX, EX + 6);
   
   prof_start(pr);
   psc_fields_zero_range(flds, JXI, JXI + 3);

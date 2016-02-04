@@ -36,4 +36,10 @@ particles_fortran_get_one(struct psc_particles *prts, int n)
   return &psc_particles_fortran(prts)->particles[n];
 }
 
+static inline int
+particle_fortran_real_fint(particle_fortran_real_t x)
+{
+  return (int)(x + 10.f) - 10;
+}
+
 #endif

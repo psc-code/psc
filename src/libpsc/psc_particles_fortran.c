@@ -2,6 +2,7 @@
 #include "psc.h"
 #include "psc_particles_fortran.h"
 #include "psc_particles_c.h"
+#include "psc_particles_double.h"
 
 #include <stdlib.h>
 
@@ -41,7 +42,6 @@ static void
 psc_particles_fortran_copy_to_c(struct psc_particles *prts_base,
 				struct psc_particles *prts_c, unsigned int flags)
 {
-  struct psc_patch *patch = &ppsc->patch[prts_base->p];
   struct psc_particles_c *c = psc_particles_c(prts_c);
   prts_c->n_part = prts_base->n_part;
   assert(prts_c->n_part <= c->n_alloced);
@@ -49,9 +49,9 @@ psc_particles_fortran_copy_to_c(struct psc_particles *prts_base,
     particle_fortran_t *part_base = particles_fortran_get_one(prts_base, n);
     particle_c_t *part = particles_c_get_one(prts_c, n);
     
-    part->xi  = part_base->xi - patch->xb[0];
-    part->yi  = part_base->yi - patch->xb[1];
-    part->zi  = part_base->zi - patch->xb[2];
+    part->xi  = part_base->xi;
+    part->yi  = part_base->yi;
+    part->zi  = part_base->zi;
     part->pxi = part_base->pxi;
     part->pyi = part_base->pyi;
     part->pzi = part_base->pzi;
@@ -65,7 +65,6 @@ static void
 psc_particles_fortran_copy_from_c(struct psc_particles *prts_base,
 				  struct psc_particles *prts_c, unsigned int flags)
 {
-  struct psc_patch *patch = &ppsc->patch[prts_base->p];
   struct psc_particles_fortran *fort = psc_particles_fortran(prts_base);
   prts_base->n_part = prts_c->n_part;
   assert(prts_base->n_part <= fort->n_alloced);
@@ -73,15 +72,104 @@ psc_particles_fortran_copy_from_c(struct psc_particles *prts_base,
     particle_fortran_t *part_base = particles_fortran_get_one(prts_base, n);
     particle_c_t *part = particles_c_get_one(prts_c, n);
     
-    part_base->xi  = part->xi + patch->xb[0];
-    part_base->yi  = part->yi + patch->xb[1];
-    part_base->zi  = part->zi + patch->xb[2];
+    part_base->xi  = part->xi;
+    part_base->yi  = part->yi;
+    part_base->zi  = part->zi;
     part_base->pxi = part->pxi;
     part_base->pyi = part->pyi;
     part_base->pzi = part->pzi;
     part_base->qni = part->qni;
     part_base->mni = part->mni;
     part_base->wni = part->wni;
+  }
+}
+
+static inline void
+calc_vxi(particle_double_real_t vxi[3], particle_double_t *part)
+{
+  particle_double_real_t root =
+    1.f / sqrtf(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
+  vxi[0] = part->pxi * root;
+  vxi[1] = part->pyi * root;
+  vxi[2] = part->pzi * root;
+}
+
+static void
+psc_particles_fortran_copy_to_double(struct psc_particles *prts_fortran,
+				     struct psc_particles *prts_dbl, unsigned int flags)
+{
+  particle_double_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
+  // don't shift in invariant directions
+  for (int d = 0; d < 3; d++) {
+    if (ppsc->domain.gdims[d] == 1) {
+      dth[d] = 0.;
+    }
+  }
+
+  struct psc_particles_double *dbl = psc_particles_double(prts_dbl);
+  prts_dbl->n_part = prts_fortran->n_part;
+  assert(prts_dbl->n_part <= dbl->n_alloced);
+  for (int n = 0; n < prts_dbl->n_part; n++) {
+    particle_double_t *part_dbl = particles_double_get_one(prts_dbl, n);
+    particle_fortran_t *part_fortran = particles_fortran_get_one(prts_fortran, n);
+    
+    particle_double_real_t qni_wni;
+    if (part_fortran->qni != 0.) {
+      qni_wni = part_fortran->qni * part_fortran->wni;
+    } else {
+      qni_wni = part_fortran->wni;
+    }
+    
+    part_dbl->xi          = part_fortran->xi;
+    part_dbl->yi          = part_fortran->yi;
+    part_dbl->zi          = part_fortran->zi;
+    part_dbl->pxi         = part_fortran->pxi;
+    part_dbl->pyi         = part_fortran->pyi;
+    part_dbl->pzi         = part_fortran->pzi;
+    part_dbl->qni_wni     = qni_wni;
+    part_dbl->kind        = (qni_wni > 0) ? 1 : 0;
+
+    particle_double_real_t vxi[3];
+    calc_vxi(vxi, part_dbl);
+    part_dbl->xi += dth[0] * vxi[0];
+    part_dbl->yi += dth[1] * vxi[1];
+    part_dbl->zi += dth[2] * vxi[2];
+  }
+}
+
+static void
+psc_particles_fortran_copy_from_double(struct psc_particles *prts_fortran,
+				       struct psc_particles *prts_dbl, unsigned int flags)
+{
+  particle_double_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
+  // don't shift in invariant directions
+  for (int d = 0; d < 3; d++) {
+    if (ppsc->domain.gdims[d] == 1) {
+      dth[d] = 0.;
+    }
+  }
+
+  prts_fortran->n_part = prts_dbl->n_part;
+  assert(prts_fortran->n_part <= psc_particles_fortran(prts_fortran)->n_alloced);
+  for (int n = 0; n < prts_dbl->n_part; n++) {
+    particle_double_t *part_dbl = particles_double_get_one(prts_dbl, n);
+    particle_fortran_t *part_fortran = particles_fortran_get_one(prts_fortran, n);
+    
+    particle_fortran_real_t qni = ppsc->kinds[part_dbl->kind].q;
+    particle_fortran_real_t mni = ppsc->kinds[part_dbl->kind].m;
+    particle_fortran_real_t wni = part_dbl->qni_wni / qni;
+    
+    particle_double_real_t vxi[3];
+    calc_vxi(vxi, part_dbl);
+    part_fortran->xi  = part_dbl->xi - dth[0] * vxi[0];
+    part_fortran->yi  = part_dbl->yi - dth[1] * vxi[1];
+    part_fortran->zi  = part_dbl->zi - dth[2] * vxi[2];
+    part_fortran->pxi = part_dbl->pxi;
+    part_fortran->pyi = part_dbl->pyi;
+    part_fortran->pzi = part_dbl->pzi;
+    part_fortran->qni = qni;
+    part_fortran->mni = mni;
+    part_fortran->wni = wni;
   }
 }
 
@@ -96,8 +184,10 @@ struct psc_mparticles_ops psc_mparticles_fortran_ops = {
 // psc_particles: subclass "fortran"
 
 static struct mrc_obj_method psc_particles_fortran_methods[] = {
-  MRC_OBJ_METHOD("copy_to_c",   psc_particles_fortran_copy_to_c),
-  MRC_OBJ_METHOD("copy_from_c", psc_particles_fortran_copy_from_c),
+  MRC_OBJ_METHOD("copy_to_c"       , psc_particles_fortran_copy_to_c),
+  MRC_OBJ_METHOD("copy_from_c"     , psc_particles_fortran_copy_from_c),
+  MRC_OBJ_METHOD("copy_to_double"  , psc_particles_fortran_copy_to_double),
+  MRC_OBJ_METHOD("copy_from_double", psc_particles_fortran_copy_from_double),
   {}
 };
 
