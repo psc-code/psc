@@ -15,6 +15,7 @@ libsubdir_la_SOURCES = \
 	psc_bnd_particles_cuda.c \
 	psc_bnd_fields_cuda.c \
 	psc_output_fields_item_flds_cuda.c \
+	psc_output_fields_item_moments_1st_nc_cuda.c \
 	b40c/kernel_utils.h \
 	b40c/radixsort_kernel_common.h \
 	b40c/radixsort_key_conversion.h \
@@ -42,7 +43,8 @@ libsubdir_la_LIBADD = \
 	cuda_bnd.lo \
 	cuda_exclusive_scan_2.lo \
 	cuda_push_fields_yz.lo \
-	cuda_push_part_yz_1vb.lo
+	cuda_push_part_yz_1vb.lo \
+	cuda_moments_1st_nc.lo
 
 CUDACC_FLAGS = -g --ptxas-options=-v --maxrregcount=32 --use_fast_math $(filter-out -fopenmp -msse2 -msse4.1 -Wall -ffast-math,$(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) $(CFLAGS) $(AM_CFLAGS)) $(CUDAMPIFLAGS) $(CUDACFLAGS)
 
@@ -65,6 +67,7 @@ cuda_push_part_yz5.lo: push_part_p2_noshift_3.c push_part_kernelcall_3.c
 cuda_push_part_yz6.lo: push_part_p2_noshift_6.c push_part_kernelcall_6.c
 cuda_push_part_yz_1st.lo: push_part_p1_1st.c push_part_p2_1st.c push_part_kernelcall_6.c
 cuda_push_part_yz_1vb.lo: cuda_common.h particles_cuda.h ../../include/psc_particles_cuda.h
+cuda_moments_1st_nc.lo: cuda_common.h particles_cuda.h ../../include/psc_particles_cuda.h
 
 cuda_spine.lo: b40c/radixsort_reduction_kernel.h b40c/radixsort_scanscatter_kernel.h cuda_sort2_spine.h
 #cuda_sort3.lo: b40c/radixsort_reduction_kernel.h b40c/radixsort_scanscatter_kernel3.h

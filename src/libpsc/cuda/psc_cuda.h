@@ -30,6 +30,7 @@ cuda_float_as_int(float f)
 // ======================================================================
 
 EXTERN_C void cuda_axpy_comp_yz(struct psc_fields *y, int ym, float a, struct psc_fields *x, int xm);
+EXTERN_C void cuda_zero_comp_yz(struct psc_fields *x, int xm);
 
 EXTERN_C void cuda_marder_correct_yz(struct psc_mfields *mflds, struct psc_mfields *mf,
 				     int p, int ldims[3], float fac[3],
@@ -44,6 +45,8 @@ EXTERN_C void yz8x8_1vbec3d_cuda_push_mprts(struct psc_mparticles *mprts, struct
 EXTERN_C void yz2x2_1vbec3d_gmem_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds);
 EXTERN_C void yz4x4_1vbec3d_gmem_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds);
 EXTERN_C void yz8x8_1vbec3d_gmem_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds);
+
+EXTERN_C void yz_moments_rho_1st_nc_cuda_run_patches(struct psc_mparticles *mprts, struct psc_mfields *mres);
 
 EXTERN_C void yz_a_set_constants(struct psc_particles *prts, struct psc_fields *pf);
 EXTERN_C void yz_b_set_constants(struct psc_particles *prts, struct psc_fields *pf);

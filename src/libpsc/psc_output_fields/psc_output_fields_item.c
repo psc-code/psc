@@ -63,10 +63,15 @@ psc_output_fields_item_run(struct psc_output_fields_item *item,
       psc_mparticles_cuda_reorder(particles);
   }
 #endif
-  for (int p = 0; p < res->nr_patches; p++) {
-    ops->run(item, psc_mfields_get_patch(flds, p),
-	     psc_mparticles_get_patch(particles, p),
-	     psc_mfields_get_patch(res, p));
+  if (ops->run_patches) {
+    ops->run_patches(item, flds, particles, res);
+  } else {
+    assert(ops->run);
+    for (int p = 0; p < res->nr_patches; p++) {
+      ops->run(item, psc_mfields_get_patch(flds, p),
+	       psc_mparticles_get_patch(particles, p),
+	       psc_mfields_get_patch(res, p));
+    }
   }
   if (ops->flags & POFI_ADD_GHOSTS) {
     psc_bnd_add_ghosts(item->bnd, res, 0, res->nr_fields);
@@ -126,6 +131,7 @@ psc_output_fields_item_init()
   mrc_class_register_subclass(&mrc_class_psc_output_fields_item, &psc_output_fields_item_dive_single_ops);
 #ifdef USE_CUDA
   mrc_class_register_subclass(&mrc_class_psc_output_fields_item, &psc_output_fields_item_dive_cuda_ops);
+  mrc_class_register_subclass(&mrc_class_psc_output_fields_item, &psc_output_fields_item_rho_1st_nc_cuda_ops);
 #endif
 }
 

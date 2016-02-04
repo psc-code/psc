@@ -19,6 +19,9 @@ struct psc_output_fields_item_ops {
   void (*run)(struct psc_output_fields_item *item,
 	      struct psc_fields *flds, struct psc_particles *prts,
 	      struct psc_fields *res);
+  void (*run_patches)(struct psc_output_fields_item *item,
+		      struct psc_mfields *mflds, struct psc_mparticles *mprts,
+		      struct psc_mfields *mres);
   int nr_comp;
   char *fld_names[6];
   unsigned int flags;
@@ -74,6 +77,8 @@ extern struct psc_output_fields_item_ops psc_output_fields_item_coll_stats_singl
 
 extern struct psc_output_fields_item_ops psc_output_fields_item_dive_c_ops;
 extern struct psc_output_fields_item_ops psc_output_fields_item_dive_single_ops;
+
 extern struct psc_output_fields_item_ops psc_output_fields_item_dive_cuda_ops;
+extern struct psc_output_fields_item_ops psc_output_fields_item_rho_1st_nc_cuda_ops;
 
 #endif
