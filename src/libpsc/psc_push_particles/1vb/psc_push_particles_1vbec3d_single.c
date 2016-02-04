@@ -8,7 +8,6 @@
 #define F3_CACHE F3_S
 #define F3_CACHE_TYPE "single"
 
-#define PUSHER_TYPE "1vbec3d"
 #define INTERPOLATE_1ST INTERPOLATE_1ST_EC
 
 #include "1vb_yz.c"
@@ -19,5 +18,7 @@
 struct psc_push_particles_ops psc_push_particles_1vbec3d_single_ops = {
   .name                  = "1vbec3d_single",
   .push_a_yz             = psc_push_particles_push_a_yz,
+  .particles_type        = PARTICLE_TYPE,
+  .fields_type           = FIELDS_TYPE,
 };
 

@@ -8,7 +8,6 @@
 #define F3_CACHE F3_C
 #define F3_CACHE_TYPE "c"
 
-#define PUSHER_TYPE "1vbec"
 #define INTERPOLATE_1ST INTERPOLATE_1ST_EC
 #define VB_2D
 
@@ -20,5 +19,7 @@
 struct psc_push_particles_ops psc_push_particles_1vbec_double_ops = {
   .name                  = "1vbec_double",
   .push_a_yz             = psc_push_particles_push_a_yz,
+  .particles_type        = PARTICLE_TYPE,
+  .fields_type           = FIELDS_TYPE,
 };
 

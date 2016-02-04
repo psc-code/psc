@@ -70,70 +70,6 @@ find_idx_off_pos_1st_rel(particle_real_t xi[3], int lg[3], particle_real_t og[3]
   }
 }
 
-#define INTERPOLATE_SETUP_1ST_STD			\
-  particle_real_t g0y = 1.f - og[1];			\
-  particle_real_t g0z = 1.f - og[2];			\
-  particle_real_t g1y = og[1];				\
-  particle_real_t g1z = og[2];				\
-  							\
-  particle_real_t h0y = 1.f - oh[1];			\
-  particle_real_t h0z = 1.f - oh[2];			\
-  particle_real_t h1y = oh[1];				\
-  particle_real_t h1z = oh[2]
-
-
-#define INTERPOLATE_SETUP_1ST_EC			\
-  particle_real_t g0y = 1.f - og[1];			\
-  particle_real_t g0z = 1.f - og[2];			\
-  particle_real_t g1y = og[1];				\
-  particle_real_t g1z = og[2]
-
-
-#define INTERPOLATE_FIELD_1ST(m, gy, gz)				\
-  (gz##0z*(gy##0y*F3_CACHE(pf, m, 0,l##gy[1]  ,l##gz[2]  ) +		\
-	   gy##1y*F3_CACHE(pf, m, 0,l##gy[1]+1,l##gz[2]  )) +		\
-   gz##1z*(gy##0y*F3_CACHE(pf, m, 0,l##gy[1]  ,l##gz[2]+1) +		\
-	   gy##1y*F3_CACHE(pf, m, 0,l##gy[1]+1,l##gz[2]+1)))
-
-#define INTERPOLATE_1ST_STD(exq, eyq, ezq, hxq, hyq, hzq)		\
-  do {									\
-    INTERPOLATE_SETUP_1ST_STD;						\
-									\
-    exq = INTERPOLATE_FIELD_1ST(EX, g, g);				\
-    eyq = INTERPOLATE_FIELD_1ST(EY, h, g);				\
-    ezq = INTERPOLATE_FIELD_1ST(EZ, g, h);				\
-    									\
-    hxq = INTERPOLATE_FIELD_1ST(HX, h, h);				\
-    hyq = INTERPOLATE_FIELD_1ST(HY, g, h);				\
-    hzq = INTERPOLATE_FIELD_1ST(HZ, h, g);				\
-    									\
-    assert_finite(exq); assert_finite(eyq); assert_finite(ezq);		\
-    assert_finite(hxq); assert_finite(hyq); assert_finite(hzq);		\
-  } while (0)
-
-#define INTERPOLATE_1ST_EC(exq, eyq, ezq, hxq, hyq, hzq)        	\
-  do {									\
-    INTERPOLATE_SETUP_1ST_EC;						\
-    									\
-    exq = (g0z*(g0y*F3_CACHE(pf, EX, 0,lg[1]  ,lg[2]  ) +		\
-		g1y*F3_CACHE(pf, EX, 0,lg[1]+1,lg[2]  )) +		\
-	   g1z*(g0y*F3_CACHE(pf, EX, 0,lg[1]  ,lg[2]+1) +		\
-		g1y*F3_CACHE(pf, EX, 0,lg[1]+1,lg[2]+1)));		\
-    eyq = (g0z*F3_CACHE(pf, EY, 0,lg[1]  ,lg[2]  ) +			\
-	   g1z*F3_CACHE(pf, EY, 0,lg[1]  ,lg[2]+1));			\
-    ezq = (g0y*F3_CACHE(pf, EZ, 0,lg[1]  ,lg[2]  ) +			\
-	   g1y*F3_CACHE(pf, EZ, 0,lg[1]+1,lg[2]  ));			\
-									\
-    hxq = F3_CACHE(pf, HX, 0,lg[1]  ,lg[2]  );				\
-    hyq = (g0y*F3_CACHE(pf, HY, 0,lg[1]  ,lg[2]  ) +			\
-	   g1y*F3_CACHE(pf, HY, 0,lg[1]+1,lg[2]  ));			\
-    hzq = (g0z*F3_CACHE(pf, HZ, 0,lg[1]  ,lg[2]  ) +			\
-	   g1z*F3_CACHE(pf, HZ, 0,lg[1]  ,lg[2]+1));			\
-    									\
-    assert_finite(exq); assert_finite(eyq); assert_finite(ezq);		\
-    assert_finite(hxq); assert_finite(hyq); assert_finite(hzq);		\
-  } while (0)
-
 #ifdef F3_CURR
 
 // ======================================================================
@@ -233,9 +169,9 @@ curr_3d_vb_cell(struct psc_fields *pf, int i[3], particle_real_t x[3], particle_
   do {									\
     int lf[3];								\
     particle_real_t of[3];						\
-    find_idx_off_1st_rel(&part->xi, lf, of, 0.f, dxi);			\
+    find_idx_off_1st_rel(&part->xi, lf, of, 0.f, prm.dxi);		\
     									\
-    particle_real_t fnqx = vxi[0] * particle_wni(part) * fnqx_kind[part->kind]; \
+    particle_real_t fnqx = vxi[0] * particle_wni(part) * prm.fnqx_kind[part->kind]; \
     F3_CURR(pf, JXI, 0,lf[1]  ,lf[2]  ) += (1.f - of[1]) * (1.f - of[2]) * fnqx; \
     F3_CURR(pf, JXI, 0,lf[1]+1,lf[2]  ) += (      of[1]) * (1.f - of[2]) * fnqx; \
     F3_CURR(pf, JXI, 0,lf[1]  ,lf[2]+1) += (1.f - of[1]) * (      of[2]) * fnqx; \
@@ -274,8 +210,8 @@ curr_3d_vb_cell(struct psc_fields *pf, int i[3], particle_real_t x[3], particle_
       second_dir = 1 - first_dir;					\
     }									\
     									\
-    particle_real_t fnq[2] = { particle_wni(part) * fnqy_kind[part->kind], \
-			       particle_wni(part) * fnqz_kind[part->kind] }; \
+    particle_real_t fnq[2] = { particle_wni(prt) * prm.fnqy_kind[prt->kind], \
+			       particle_wni(prt) * prm.fnqz_kind[prt->kind] }; \
     									\
     if (first_dir >= 0) {						\
       off[1-first_dir] = 0;						\
@@ -326,10 +262,10 @@ curr_3d_vb_cell(struct psc_fields *pf, int i[3], particle_real_t x[3], particle_
       second_dir = 3 - first_dir;					\
     }									\
 									\
-    particle_real_t fnq[3] = { particle_wni(part) * fnqx_kind[part->kind], \
-			       particle_wni(part) * fnqy_kind[part->kind], \
-			       particle_wni(part) * fnqz_kind[part->kind] }; \
-    dx[0] = vxi[0] * dt * dxi[0];					\
+    particle_real_t fnq[3] = { particle_wni(prt) * prm.fnqx_kind[prt->kind], \
+			       particle_wni(prt) * prm.fnqy_kind[prt->kind], \
+			       particle_wni(prt) * prm.fnqz_kind[prt->kind] }; \
+    dx[0] = vxi[0] * prm.dt * prm.dxi[0];				\
     									\
     if (first_dir >= 0) {						\
       off[3 - first_dir] = 0;						\

@@ -30,13 +30,17 @@ libsubdir_la_SOURCES = \
 	push_part_1vb.c \
 	push_part_1vb_c_yz.c \
 	push_part_1sff_xz.c \
-	push_part_single_1vb_yz.c \
 	push_part_single2_1vb_yz.c \
-	push_part_single_1vbec_yz.c \
-	push_part_single_1vbec3d_yz.c \
-	push_part_double_1vb_yz.c \
-	push_part_double_1vbec_yz.c \
-	push_part_double_1vbec3d_yz.c \
+	\
+	1vb/psc_push_particles_1vb_single.c \
+	1vb/psc_push_particles_1vbec_single.c \
+	1vb/psc_push_particles_1vbec3d_single.c \
+	1vb/psc_push_particles_1vbec3d_single_by_block.c \
+	\
+	1vb/psc_push_particles_1vb_double.c \
+	1vb/psc_push_particles_1vbec_double.c \
+	1vb/psc_push_particles_1vbec3d_double.c \
+	\
 	psc_push_particles_1st.h \
 	psc_push_particles_double.h \
 	psc_push_particles_single.h

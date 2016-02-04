@@ -30,6 +30,7 @@ typedef void (*psc_particles_copy_from_func_t)(struct psc_particles *,
 extern struct psc_particles_ops psc_particles_c_ops;
 extern struct psc_particles_ops psc_particles_single_ops;
 extern struct psc_particles_ops psc_particles_double_ops;
+extern struct psc_particles_ops psc_particles_single_by_block_ops;
 extern struct psc_particles_ops psc_particles_fortran_ops;
 extern struct psc_particles_ops psc_particles_cuda_ops;
 

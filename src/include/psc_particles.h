@@ -81,6 +81,7 @@ MAKE_MPARTICLES_TYPE(cbe)
 #ifdef USE_CUDA
 MAKE_MPARTICLES_TYPE(cuda)
 #endif
+extern struct psc_mparticles_ops psc_mparticles_single_by_block_ops;
 
 void psc_mparticles_set_domain_nr_particles(struct psc_mparticles *mparticles,
 					    struct mrc_domain *domain,

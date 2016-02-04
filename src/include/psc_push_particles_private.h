@@ -30,6 +30,8 @@ struct psc_push_particles_ops {
 			struct psc_mparticles *mprts, struct psc_mfields *mflds);
   
   unsigned int mp_flags; //< flags for _get_cuda(), alloc
+  const char *particles_type;
+  const char *fields_type;
 };
 
 // ======================================================================
@@ -51,6 +53,7 @@ extern struct psc_push_particles_ops psc_push_particles_1vbec_single_ops;
 extern struct psc_push_particles_ops psc_push_particles_1vbec_double_ops;
 extern struct psc_push_particles_ops psc_push_particles_1vbec3d_single_ops;
 extern struct psc_push_particles_ops psc_push_particles_1vbec3d_double_ops;
+extern struct psc_push_particles_ops psc_push_particles_1vbec3d_single_by_block_ops;
 extern struct psc_push_particles_ops psc_push_particles_fortran_ops;
 extern struct psc_push_particles_ops psc_push_particles_vay_ops;
 extern struct psc_push_particles_ops psc_push_particles_sse2_ops;
