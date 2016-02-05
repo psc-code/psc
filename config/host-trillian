@@ -1,7 +1,7 @@
 # trillan (PrgEnv-gnu)
 
 if test -z "$CC"; then
-   CC="cc"
+   CC="cc -dynamic"
 fi
 
 if test -z "$F77"; then
