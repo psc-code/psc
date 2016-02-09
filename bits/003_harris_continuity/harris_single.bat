@@ -12,6 +12,7 @@ mpirun -n 8 ~/src/psc/src/psc_harris \
     --write_tfield no \
     --write_pfield yes --pfield_step 100 \
     --stats_every 10 \
+    --psc_checks_single \
     --psc_checks_continuity_every_step 10 \
     --psc_checks_continuity_verbose \
     --psc_checks_continuity_threshold 1e-5 \
