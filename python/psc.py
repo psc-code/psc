@@ -126,6 +126,24 @@ class PscFields:
 
         return A.reshape(nz, ny, 1)
 
+    def _get_curlbx(self):
+        dz = self.crd[2][1] - self.crd[2][0]
+        dy = self.crd[1][1] - self.crd[1][0]
+        dy *= d_i
+        dz *= d_i
+        # d_y Bz - d_z By
+
+        if False:
+            hz, hy = self["hz"], self["hy"]
+            rv = np.empty_like(hy)
+            rv[1:-1,1:-1,0] = ((hz[1:-1,2:,0] - hz[1:-1,:-2,0]) / (2*dy) -
+                               (hy[2:,1:-1,0] - hy[:-2,1:-1,0]) / (2*dz))
+        else:
+            hz, hy = self["hz_fc"], self["hy_fc"]
+            rv = np.empty_like(hy)
+            rv[:-1,:-1,0] = ((hz[:-1,1:,0] - hz[:-1,:-1,0]) / dy -
+                             (hy[1:,:-1,0] - hy[:-1,:-1,0]) / dz)
+        return rv
         
 class PscParticles:
     def __init__(self, path, step):
