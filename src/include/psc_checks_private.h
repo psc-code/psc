@@ -22,4 +22,15 @@ struct psc_checks {
   struct psc_mfields *rho_m, *rho_p;
 };
 
+struct psc_checks_ops {
+  MRC_SUBCLASS_OPS(struct psc_checks);
+  void (*continuity_before_particle_push)(struct psc_checks *checks, struct psc *psc);
+  void (*continuity_after_particle_push)(struct psc_checks *checks, struct psc *psc);
+  void (*gauss)(struct psc_checks *checks, struct psc *psc);
+};
+
+extern struct psc_checks_ops psc_checks_double_ops;
+
+#define psc_checks_ops(checks) ((struct psc_checks_ops *)((checks)->obj.ops))
+
 #endif
