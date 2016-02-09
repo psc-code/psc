@@ -15,16 +15,24 @@ def _find_path(file, obj_name):
 
 class PscFields:
     def __init__(self, path, step, pfx="p"):
-        filename = "%s/%sfd.%06d_p%06d.h5" % (path, pfx, step, 0)
+        if pfx == "p": pfx = "pfd"
+        if pfx == "t": pfx = "tfd"
+        filename = "%s/%s.%06d_p%06d.h5" % (path, pfx, step, 0)
         print "Opening '%s'" % (filename)
         self._h5file = h5py.File(filename, 'r')
 
         self.crd = [self._read_crd(d) / d_i for d in xrange(3)]
+        self.crd_nc = [self._read_crd_nc(d) / d_i for d in xrange(3)]
 
-        path = _find_path(self._h5file, "psc")
-        self.cc = self._h5file[path].attrs["cc"][0]
-        self.time = self._h5file[path].attrs["time"][0] / self.cc
-        self.timestep = self._h5file[path].attrs["timestep"][0]
+        try:
+            path = _find_path(self._h5file, "psc")
+            self.cc = self._h5file[path].attrs["cc"][0]
+            self.time = self._h5file[path].attrs["time"][0] / self.cc
+            self.timestep = self._h5file[path].attrs["timestep"][0]
+        except:
+            self.cc = -1
+            self.time = step
+            self.timestep = step
 
     def _read_crd(self, dim):
         path = _find_path(self._h5file, "crd[%d]" % (dim))
@@ -34,6 +42,16 @@ class PscFields:
 
         for i in xrange(downscale):
             crd = .5*(crd[::2] + crd[1::2])
+
+        return crd
+
+    def _read_crd_nc(self, dim):
+        path = _find_path(self._h5file, "crd%d_nc" % (dim))
+        dset = self._h5file["%s/crd%d_nc/p0/1d" % (path, dim)]
+        sw = self._h5file[path].attrs["sw"][0]
+        crd = dset[1:]
+
+        assert downscale == 0
 
         return crd
 
@@ -67,6 +85,8 @@ class PscFields:
         elif what in ["ne", "ni", "nn"]:
             return self._read_f3("n", what)
         elif what in ["dive", "divj", "divb"]:
+            return self._read_f3(what, what)
+        elif what in ["d_rho", "div_j", "div_E", "rho"]:
             return self._read_f3(what, what)
         else:
             func = "_get_" + what
