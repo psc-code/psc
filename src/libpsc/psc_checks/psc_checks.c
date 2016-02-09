@@ -3,7 +3,7 @@
 
 #include "psc_bnd.h"
 #include "psc_output_fields_item.h"
-#include "psc_fields_as_single.h"
+#include "psc_fields_as_c.h"
 #include "psc_particles_as_double.h"
 
 #include <mrc_io.h>
