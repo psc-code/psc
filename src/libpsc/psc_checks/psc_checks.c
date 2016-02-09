@@ -124,10 +124,19 @@ psc_checks_continuity(struct psc_checks *checks, struct psc *psc,
       double div_j = F3(p_div_j,0, jx,jy,jz);
       max_err = fmax(max_err, fabs(d_rho + div_j));
       if (fabs(d_rho + div_j) > eps) {
-	printf("(%d,%d,%d): %g -- %g diff %g\n", jx, jy, jz,
-	       d_rho, -div_j, d_rho + div_j);
+	mprintf("(%d,%d,%d): %g -- %g diff %g\n", jx, jy, jz,
+		d_rho, -div_j, d_rho + div_j);
       }
     } psc_foreach_3d_end;
+  }
+
+  // find global max
+  double tmp = max_err;
+  MPI_Allreduce(&tmp, &max_err, 1, MPI_DOUBLE, MPI_MAX, psc_checks_comm(checks));
+
+  if (checks->continuity_verbose || max_err >= eps) {
+    mpi_printf(psc_checks_comm(checks),
+	       "continuity: max_err = %g (thres %g)\n", max_err, eps);
   }
 
   if (checks->continuity_dump_always || max_err >= eps) {
@@ -144,10 +153,6 @@ psc_checks_continuity(struct psc_checks *checks, struct psc *psc,
     psc_mfields_write_as_mrc_fld(div_j, io);
     psc_mfields_write_as_mrc_fld(d_rho, io);
     mrc_io_close(io);
-  }
-
-  if (checks->continuity_verbose || max_err >= eps) {
-    mprintf("continuity: max_err = %g (thres %g)\n", max_err, eps);
   }
 
   assert(max_err < eps);
@@ -263,8 +268,12 @@ psc_checks_gauss(struct psc_checks *checks, struct psc *psc)
     } psc_foreach_3d_end;
   }
 
+  // find global max
+  double tmp = max_err;
+  MPI_Allreduce(&tmp, &max_err, 1, MPI_DOUBLE, MPI_MAX, psc_checks_comm(checks));
+
   if (checks->gauss_verbose || max_err >= eps) {
-    mprintf("gauss: max_err = %g (thres %g)\n", max_err, eps);
+    mpi_printf(psc_checks_comm(checks), "gauss: max_err = %g (thres %g)\n", max_err, eps);
   }
 
   if (checks->gauss_dump_always || max_err >= eps) {
