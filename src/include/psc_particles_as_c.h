@@ -18,6 +18,8 @@ typedef mparticles_c_t mparticles_t;
 #define particle_mni                particle_c_mni
 #define particle_wni                particle_c_wni
 #define particle_kind               particle_c_kind
+#define particle_x                  particle_c_x
+#define particle_px                 particle_c_px
 #define particle_get_relative_pos   particle_c_get_relative_pos
 #define particle_real_nint          particle_c_real_nint
 #define particle_real_fint          particle_c_real_fint

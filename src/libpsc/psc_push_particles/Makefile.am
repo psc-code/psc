@@ -26,18 +26,21 @@ libsubdir_la_SOURCES = \
 	push_part_1st_xz.c \
 	push_part_1st_yz.c \
 	push_part_1vb.c \
-	push_part_1vb_c_yz.c \
 	push_part_1sff_xz.c \
 	push_part_single2_1vb_yz.c \
 	\
 	1vb/psc_push_particles_1vb_single.c \
 	1vb/psc_push_particles_1vbec_single.c \
-	1vb/psc_push_particles_1vbec3d_single.c \
-	1vb/psc_push_particles_1vbec3d_single_by_block.c \
+	1vb/psc_push_particles_1vbec_single_yz.c \
+	1vb/psc_push_particles_1vbec_single_xyz.c \
+	1vb/psc_push_particles_1vbec_single_by_block.c \
+	1vb/psc_push_particles_1vbec_single_by_block_yz.c \
+	1vb/psc_push_particles_1vbec_single_by_block_xyz.c \
 	\
 	1vb/psc_push_particles_1vb_double.c \
 	1vb/psc_push_particles_1vbec_double.c \
-	1vb/psc_push_particles_1vbec3d_double.c \
+	1vb/psc_push_particles_1vbec_double_yz.c \
+	1vb/psc_push_particles_1vbec_double_xyz.c \
 	\
 	psc_push_particles_1st.h \
 	psc_push_particles_double.h \
@@ -58,7 +61,4 @@ endif USE_CUDA
 
 EXTRA_libsubdir_la_SOURCES = \
 	c_common_push.c \
-	1vb_yz.c \
-	1vb_yz_2.c \
-	1vbec_yz.c \
-	1vbec3d_yz.c
+	1vb.c

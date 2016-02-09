@@ -3,8 +3,7 @@
 #include "psc_fields_as_c.h"
 #include "psc_particles_as_double.h"
 
-#define F3_CACHE_TYPE "c"
-#define F3_CACHE F3_C
+#define F3_CACHE F3
 
 #include <mrc_profile.h>
 #include <math.h>
@@ -275,7 +274,7 @@ static struct psc_fields *
 cache_fields_from_em(fields_t *pf)
 {
   struct psc_fields *fld = psc_fields_create(MPI_COMM_NULL);
-  psc_fields_set_type(fld, F3_CACHE_TYPE);
+  psc_fields_set_type(fld, FIELDS_TYPE);
   // FIXME, can do -1 .. 2? NO!, except maybe for 1st order
   // Has to be at least -2 .. +3 because of staggering
   // FIXME, get rid of caching since it's no different from the actual

@@ -59,6 +59,9 @@ particles_double_get_one(struct psc_particles *prts, int n)
       rv;							\
     })
 
+#define particle_double_x(prt) ((prt)->xi)
+#define particle_double_px(prt) ((prt)->pxi)
+
 static inline particle_double_real_t
 particle_double_qni_wni(particle_double_t *p)
 {

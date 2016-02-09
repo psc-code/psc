@@ -4,6 +4,25 @@
 
 #define check(a) do { int ierr = a; if (ierr != cudaSuccess) fprintf(stderr, "IERR = %d (%d)\n", ierr, cudaSuccess); assert(ierr == cudaSuccess); } while(0)
 
+// ======================================================================
+
+#ifdef __CUDACC__
+#define CUDA_DEVICE __device__
+#define CUDA_GLOBAL __global__
+#define CUDA_CONSTANT __constant__ __device__
+#define CUDA_SHARED __shared__
+#define CUDA_SYNCTHREADS() __syncthreads()
+#define CUDA_LAUNCH_BOUNDS(t, n) __launch_bounds__(t, n)
+#else
+#define CUDA_DEVICE
+#define CUDA_GLOBAL
+#define CUDA_CONSTANT
+#define __forceinline__
+#define CUDA_SHARED static
+#define CUDA_SYNCTHREADS() do {} while (0)
+#define CUDA_LAUNCH_BOUNDS(t, n)
+#endif
+
 #ifndef __CUDACC__
 
 // ======================================================================
@@ -13,12 +32,15 @@
 #include <string.h>
 #include <math.h>
 
+#define atomicAdd(addr, val) \
+  do { *(addr) += (val); } while (0)
+
 static struct {
   int x, y;
 } threadIdx _mrc_unused;
 
 static struct {
-  int x, y;
+  int x, y, z;
 } blockIdx _mrc_unused;
 
 static struct {
@@ -92,10 +114,10 @@ rsqrtf(float x)
 }
 
 static inline int
-cuda_nint(real x)
+cuda_nint(float x)
 {
   // FIXME?
-  return (int)(x + real(10.5)) - 10;
+  return (int)(x + (float)(10.5)) - 10;
 }
 
 #else
@@ -120,7 +142,7 @@ cuda_sync_if_enabled()
 #define EXTERN_C extern "C"
 
 __device__ static inline int
-cuda_nint(real x)
+cuda_nint(float x)
 {
   return __float2int_rn(x);
 }
@@ -130,5 +152,21 @@ cuda_nint(real x)
 #define fabsr fabsf
 
 #define rsqrtr rsqrtf
+
+static inline float
+cuda_int_as_float(int i)
+{
+  union { int i; float f; } u;
+  u.i = i;
+  return u.f;
+};
+
+static inline int
+cuda_float_as_int(float f)
+{
+  union { int i; float f; } u;
+  u.f = f;
+  return u.i;
+};
 
 #endif

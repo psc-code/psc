@@ -26,8 +26,11 @@ struct psc_push_particles_ops {
 		    struct psc_particles *prts, struct psc_fields *flds);
   void (*push_a_xyz)(struct psc_push_particles *push_particles,
 		     struct psc_particles *prts, struct psc_fields *flds);
+
   void (*push_mprts_yz)(struct psc_push_particles *push_particles,
 			struct psc_mparticles *mprts, struct psc_mfields *mflds);
+  void (*push_mprts_xyz)(struct psc_push_particles *push_particles,
+			 struct psc_mparticles *mprts, struct psc_mfields *mflds);
   
   unsigned int mp_flags; //< flags for _get_cuda(), alloc
   const char *particles_type;
@@ -43,7 +46,6 @@ extern struct psc_push_particles_ops psc_push_particles_1st_ops;
 extern struct psc_push_particles_ops psc_push_particles_1sff_ops;
 extern struct psc_push_particles_ops psc_push_particles_1vb_ops;
 extern struct psc_push_particles_ops psc_push_particles_1vb_mix_ops;
-extern struct psc_push_particles_ops psc_push_particles_1vb_c_ops;
 extern struct psc_push_particles_ops psc_push_particles_1vb_single_ops;
 extern struct psc_push_particles_ops psc_push_particles_1vb_double_ops;
 extern struct psc_push_particles_ops psc_push_particles_1vb_ps_ops;
@@ -51,9 +53,7 @@ extern struct psc_push_particles_ops psc_push_particles_1vb_ps2_ops;
 extern struct psc_push_particles_ops psc_push_particles_1vb2_single_ops;
 extern struct psc_push_particles_ops psc_push_particles_1vbec_single_ops;
 extern struct psc_push_particles_ops psc_push_particles_1vbec_double_ops;
-extern struct psc_push_particles_ops psc_push_particles_1vbec3d_single_ops;
-extern struct psc_push_particles_ops psc_push_particles_1vbec3d_double_ops;
-extern struct psc_push_particles_ops psc_push_particles_1vbec3d_single_by_block_ops;
+extern struct psc_push_particles_ops psc_push_particles_1vbec_single_by_block_ops;
 extern struct psc_push_particles_ops psc_push_particles_fortran_ops;
 extern struct psc_push_particles_ops psc_push_particles_vay_ops;
 extern struct psc_push_particles_ops psc_push_particles_sse2_ops;
@@ -65,6 +65,9 @@ extern struct psc_push_particles_ops psc_push_particles_1vbec3d_8x8_cuda_ops;
 extern struct psc_push_particles_ops psc_push_particles_1vbec3d_2x2_gmem_cuda_ops;
 extern struct psc_push_particles_ops psc_push_particles_1vbec3d_4x4_gmem_cuda_ops;
 extern struct psc_push_particles_ops psc_push_particles_1vbec3d_8x8_gmem_cuda_ops;
+extern struct psc_push_particles_ops psc_push_particles_1vbec_cuda2_ops;
+extern struct psc_push_particles_ops psc_push_particles_1vbec_cuda2_host_ops;
+extern struct psc_push_particles_ops psc_push_particles_1vbec_acc_ops;
 
 #define psc_push_particles_ops(push_particles) ((struct psc_push_particles_ops *)((push_particles)->obj.ops))
 

@@ -11,22 +11,6 @@
 #include "psc_particles_cuda.h"
 #include "psc_fields_cuda.h"
 
-static inline float
-cuda_int_as_float(int i)
-{
-  union { int i; float f; } u;
-  u.i = i;
-  return u.f;
-};
-
-static inline int
-cuda_float_as_int(float f)
-{
-  union { int i; float f; } u;
-  u.f = f;
-  return u.i;
-};
-
 // ======================================================================
 
 EXTERN_C void cuda_axpy_comp_yz(struct psc_fields *y, int ym, float a, struct psc_fields *x, int xm);

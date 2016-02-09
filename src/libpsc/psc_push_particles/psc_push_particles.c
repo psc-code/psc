@@ -48,6 +48,40 @@ psc_push_particles_run_patch_yz(struct psc_push_particles *push,
   psc_balance_comp_time_by_patch[prts_base->p] += MPI_Wtime();
 }
 
+static void
+psc_push_particles_run_patch_xyz(struct psc_push_particles *push,
+				 struct psc_particles *prts_base,
+				 struct psc_fields *flds_base)
+{
+  struct psc_push_particles_ops *ops = psc_push_particles_ops(push);
+  assert(ops->push_a_xyz);
+
+  psc_balance_comp_time_by_patch[prts_base->p] -= MPI_Wtime();
+
+  struct psc_particles *prts;
+  if (ops->particles_type) {
+    prts = psc_particles_get_as(prts_base, ops->particles_type, 0);
+  } else {
+    prts = prts_base;
+  }
+  struct psc_fields *flds;
+  if (ops->fields_type) {
+    flds = psc_fields_get_as(flds_base, ops->fields_type, EX, EX + 6);
+  } else {
+    flds = flds_base;
+  }
+
+  ops->push_a_xyz(push, prts, flds);
+
+  if (ops->particles_type) {
+    psc_particles_put_as(prts, prts_base, 0);
+  }
+  if (ops->fields_type) {
+    psc_fields_put_as(flds, flds_base, JXI, JXI + 3);
+  }
+
+  psc_balance_comp_time_by_patch[prts_base->p] += MPI_Wtime();
+}
 
 static void
 psc_push_particles_run_yz(struct psc_push_particles *push, struct psc_mparticles *mprts,
@@ -63,6 +97,25 @@ psc_push_particles_run_yz(struct psc_push_particles *push, struct psc_mparticles
     for (int p = 0; p < mprts->nr_patches; p++) {
       psc_push_particles_run_patch_yz(push, psc_mparticles_get_patch(mprts, p),
 				      psc_mfields_get_patch(mflds, p));
+    }
+  }
+  prof_stop(pr_time_step_no_comm);
+}
+
+static void
+psc_push_particles_run_xyz(struct psc_push_particles *push, struct psc_mparticles *mprts,
+			   struct psc_mfields *mflds)
+{
+  struct psc_push_particles_ops *ops = psc_push_particles_ops(push);
+
+  prof_restart(pr_time_step_no_comm);
+  if (ops->push_mprts_xyz) {
+    ops->push_mprts_xyz(push, mprts, mflds);
+  } else {
+#pragma omp parallel for
+    for (int p = 0; p < mprts->nr_patches; p++) {
+      psc_push_particles_run_patch_xyz(push, psc_mparticles_get_patch(mprts, p),
+				       psc_mfields_get_patch(mflds, p));
     }
   }
   prof_stop(pr_time_step_no_comm);
@@ -84,15 +137,14 @@ psc_push_particles_run(struct psc_push_particles *push,
 
   if (im[0] == 1 && im[1] > 1 && im[2] > 1) { // yz
     psc_push_particles_run_yz(push, mprts, mflds);
+  } else if (im[0] > 1 && im[1] > 1 && im[2] > 1) { // xyz
+    psc_push_particles_run_xyz(push, mprts, mflds);
   } else {
 #pragma omp parallel for
     for (int p = 0; p < mprts->nr_patches; p++) {
       struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
       struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-      if (im[0] > 1 && im[1] > 1 && im[2] > 1) { // xyz
-	assert(ops->push_a_xyz);
-	ops->push_a_xyz(push, prts, flds);
-      } else if (im[0] > 1 && im[2] > 1) { // xz
+      if (im[0] > 1 && im[2] > 1) { // xz
 	assert(ops->push_a_xz);
 	ops->push_a_xz(push, prts, flds);
       } else if (im[0] > 1 && im[1] > 1) { // xy
@@ -158,15 +210,12 @@ psc_push_particles_init()
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1st_ops);
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1sff_ops);
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vb_ops);
-  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vb_c_ops);
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vb_single_ops);
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vb_double_ops);
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vb2_single_ops);
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vbec_single_ops);
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vbec_double_ops);
-  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vbec3d_single_ops);
-  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vbec3d_double_ops);
-  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vbec3d_single_by_block_ops);
+  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vbec_single_by_block_ops);
 #ifdef USE_FORTRAN
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_fortran_ops);
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_vay_ops);
@@ -189,6 +238,13 @@ psc_push_particles_init()
 #ifdef USE_SSE2
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vb_mix_ops);
 #endif
+#endif
+  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vbec_cuda2_host_ops);
+#ifdef USE_CUDA2
+  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vbec_cuda2_ops);
+#endif
+#ifdef USE_ACC
+  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vbec_acc_ops);
 #endif
 }
 

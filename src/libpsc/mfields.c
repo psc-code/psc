@@ -372,6 +372,10 @@ psc_mfields_init()
   mrc_class_register_subclass(&mrc_class_psc_mfields, &psc_mfields_mix_ops);
   mrc_class_register_subclass(&mrc_class_psc_mfields, &psc_mfields_cuda_ops);
 #endif
+  mrc_class_register_subclass(&mrc_class_psc_mfields, &psc_mfields_cuda2_ops);
+#ifdef USE_ACC
+  mrc_class_register_subclass(&mrc_class_psc_mfields, &psc_mfields_acc_ops);
+#endif
 }
 
 #define VAR(x) (void *)offsetof(struct psc_mfields, x)

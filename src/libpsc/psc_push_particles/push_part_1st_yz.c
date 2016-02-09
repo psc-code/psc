@@ -6,10 +6,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "inc_interpolate.c"
-#include "c_common_push.c"
+#include "inc_defs.h"
 
-#define F3_CACHE F3
+#define DIM DIM_YZ
+
+#include "inc_params.c"
+#include "inc_cache.c"
+#include "inc_interpolate.c"
+#include "inc_push.c"
 
 static void
 do_push_part_1st_yz(int p, fields_t *pf, struct psc_particles *pp)
@@ -26,7 +30,6 @@ do_push_part_1st_yz(int p, fields_t *pf, struct psc_particles *pp)
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t fnqys = ppsc->patch[p].dx[1] * fnqs / dt;
   particle_real_t fnqzs = ppsc->patch[p].dx[2] * fnqs / dt;
-  particle_real_t dxi[3] = { 1.f / ppsc->patch[p].dx[0], 1.f / ppsc->patch[p].dx[1], 1.f / ppsc->patch[p].dx[2] };
 
   for (int n = 0; n < pp->n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
@@ -40,8 +43,8 @@ do_push_part_1st_yz(int p, fields_t *pf, struct psc_particles *pp)
 
     int lg[3], lh[3];
     particle_real_t og[3], oh[3];
-    find_idx_off_1st_rel(&part->xi, lg, og, 0.f, dxi); // FIXME passing xi hack
-    find_idx_off_1st_rel(&part->xi, lh, oh, -.5f, dxi);
+    find_idx_off_1st_rel(&part->xi, lg, og, 0.f); // FIXME passing xi hack
+    find_idx_off_1st_rel(&part->xi, lh, oh, -.5f);
 
     // CHARGE DENSITY FORM FACTOR AT (n+.5)*dt 
 
@@ -71,7 +74,7 @@ do_push_part_1st_yz(int p, fields_t *pf, struct psc_particles *pp)
 
     int lf[3];
     particle_real_t of[3];
-    find_idx_off_1st_rel(xi, lf, of, 0.f, dxi);
+    find_idx_off_1st_rel(xi, lf, of, 0.f);
 
     for (int i = -1; i <= 2; i++) {
       S1Y(i) = 0.f;
@@ -156,6 +159,7 @@ psc_push_particles_1st_push_a_yz(struct psc_push_particles *push,
   struct psc_fields *flds = psc_fields_get_as(flds_base, FIELDS_TYPE, EX, EX + 6);
 
   prof_start(pr);
+  params_1vb_set(ppsc, NULL, NULL);
   psc_fields_zero_range(flds, JXI, JXI + 3);
   do_push_part_1st_yz(prts->p, flds, prts);
   prof_stop(pr);

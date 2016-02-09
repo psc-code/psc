@@ -24,7 +24,9 @@ SUBDIRS = \
 	psc_checks \
 	fortran \
 	sse2 \
-	cuda
+	cuda \
+	cuda2 \
+	acc
 
 noinst_LTLIBRARIES = libpsc.la
 
@@ -48,7 +50,8 @@ libpsc_la_LIBADD = \
 	psc_push_photons/libsubdir.la \
 	psc_randomize/libsubdir.la \
 	psc_sort/libsubdir.la \
-	psc_checks/libsubdir.la
+	psc_checks/libsubdir.la \
+	cuda2/libsubdir.la
 
 if USE_SSE2
 libpsc_la_LIBADD += \
@@ -59,6 +62,11 @@ if USE_CUDA
 libpsc_la_LIBADD += \
 	cuda/libsubdir.la
 endif USE_CUDA
+
+if USE_ACC
+libpsc_la_LIBADD += \
+	acc/libsubdir.la
+endif USE_ACC
 
 if USE_CBE
 

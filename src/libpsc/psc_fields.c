@@ -208,6 +208,10 @@ psc_fields_init()
 #ifdef USE_CUDA
   mrc_class_register_subclass(&mrc_class_psc_fields, &psc_fields_cuda_ops);
 #endif
+  mrc_class_register_subclass(&mrc_class_psc_fields, &psc_fields_cuda2_ops);
+#ifdef USE_ACC
+  mrc_class_register_subclass(&mrc_class_psc_fields, &psc_fields_acc_ops);
+#endif
 }
 
 // ======================================================================
