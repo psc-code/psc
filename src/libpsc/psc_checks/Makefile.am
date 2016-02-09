@@ -5,5 +5,6 @@ noinst_LTLIBRARIES = libsubdir.la
 
 libsubdir_la_SOURCES = \
 	psc_checks.c \
-	psc_checks_double.c
+	psc_checks_double.c \
+	psc_checks_single.c
 

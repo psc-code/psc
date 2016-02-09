@@ -30,6 +30,7 @@ struct psc_checks_ops {
 };
 
 extern struct psc_checks_ops psc_checks_double_ops;
+extern struct psc_checks_ops psc_checks_single_ops;
 
 #define psc_checks_ops(checks) ((struct psc_checks_ops *)((checks)->obj.ops))
 

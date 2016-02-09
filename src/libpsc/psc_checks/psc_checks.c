@@ -44,6 +44,7 @@ static void
 psc_checks_init()
 {
   mrc_class_register_subclass(&mrc_class_psc_checks, &psc_checks_double_ops);
+  mrc_class_register_subclass(&mrc_class_psc_checks, &psc_checks_single_ops);
 }
 
 // ----------------------------------------------------------------------
