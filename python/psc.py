@@ -81,8 +81,12 @@ class PscFields:
             return self._read_f3("e", what)
         elif what in ["hx", "hy", "hz"]:
             return self._read_f3("h", what)
+        elif what in ["hx_fc", "hy_fc", "hz_fc"]:
+            return self._read_f3("h_fc", what)
         elif what in ["jx", "jy", "jz"]:
             return self._read_f3("j", what)
+        elif what in ["jx_ec", "jy_ec", "jz_ec"]:
+            return self._read_f3("j_ec", what)
         elif what in ["ne", "ni", "nn"]:
             return self._read_f3("n", what)
         elif what in ["dive", "divj", "divb"]:
