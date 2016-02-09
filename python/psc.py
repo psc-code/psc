@@ -51,7 +51,8 @@ class PscFields:
         sw = self._h5file[path].attrs["sw"][0]
         crd = dset[1:]
 
-        assert downscale == 0
+        for i in xrange(downscale):
+            crd = crd[::2]
 
         return crd
 
