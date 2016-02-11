@@ -335,6 +335,90 @@ conducting_wall_J_hi(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
   }
 }
 
+// ======================================================================
+// open
+
+// ----------------------------------------------------------------------
+// open_H_lo
+
+static void
+open_H_lo(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
+{
+  struct psc_patch *patch = ppsc->patch + pf->p;
+
+  if (d == 2) {
+#ifdef DEBUG
+    for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
+      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
+	fields_t_set_nan(&F3(pf, HX, ix, iy, -1));
+	fields_t_set_nan(&F3(pf, HX, ix, iy, -2));
+	fields_t_set_nan(&F3(pf, HY, ix, iy, -1));
+	fields_t_set_nan(&F3(pf, HY, ix, iy, -2));
+	fields_t_set_nan(&F3(pf, HZ, ix, iy, -1));
+	fields_t_set_nan(&F3(pf, HZ, ix, iy, -2));
+      }
+    }
+#endif
+    int p = pf->p;
+    fields_real_t dt = ppsc->dt, dy = ppsc->patch[p].dx[1], dz = ppsc->patch[p].dx[2];
+    for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
+      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
+	F3(pf, HY, ix,iy,-1) = (/* + 4.f * C_s_pulse_z1(x+0.5*dx,y,z,t) */
+				- 2.f * F3(pf, EX, ix,iy,0)
+				- dt/dy * (F3(pf, HZ, ix,iy,0) - F3(pf, HZ, ix,iy-1,0))
+				- (1.f - dt/dz) * F3(pf, HY, ix,iy,0)
+				/*+ dt * jx*/) / (1.f + dt/dz);
+	F3(pf, HX, ix,iy,-1) = (/* - 4.f * C_p_pulse_z1(x+0.5*dx,y,z,t) */
+				+ 2.f * F3(pf, EY, ix,iy,0)
+				/*- dt/dx * (F3(pf, HZ, ix,iy,0) - F3(pf, HZ, ix-1,iy,0)) FIXME not in yz 2d */
+				- (1.f - dt/dz) * F3(pf, HY, ix,iy,0)
+				/*- dt * jx*/) / (1.f + dt/dz);
+      }
+    }
+  } else {
+    assert(0);
+  }
+}
+
+static void
+open_H_hi(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
+{
+  struct psc_patch *patch = ppsc->patch + pf->p;
+
+  if (d == 2) {
+    int mz = patch->ldims[2];
+#ifdef DEBUG
+    for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
+      for (int ix = -2; ix < patch->ldims[0] + 2; ix++) {
+	fields_t_set_nan(&F3(pf, HX, ix, iy, mz  ));
+	fields_t_set_nan(&F3(pf, HX, ix, iy, mz+1));
+	fields_t_set_nan(&F3(pf, HY, ix, iy, mz  ));
+	fields_t_set_nan(&F3(pf, HY, ix, iy, mz+1));
+	fields_t_set_nan(&F3(pf, HZ, ix, iy, mz+1));
+      }
+    }
+#endif
+    int p = pf->p;
+    fields_real_t dt = ppsc->dt, dy = ppsc->patch[p].dx[1], dz = ppsc->patch[p].dx[2];
+    for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
+      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
+	F3(pf, HY, ix,iy,mz) = (/* - 4.f * C_s_pulse_z2(x+0.5*dx,y,z,t) */
+				+ 2.f * F3(pf, EX, ix,iy,mz)
+				+ dt/dy * (F3(pf, HZ, ix,iy,mz) - F3(pf, HZ, ix,iy-1,mz))
+				- (1.f - dt/dz) * F3(pf, HY, ix,iy,mz-1)
+				/*- dt * jx*/) / (1.f + dt/dz);
+	F3(pf, HX, ix,iy,mz) = (/* + 4.f * C_p_pulse_z2(x+0.5*dx,y,z,t) */
+				- 2.f * F3(pf, EY, ix,iy,mz)
+				/*+ dt/dx * (F3(pf, HZ, ix,iy,mz) - F3(pf, HZ, ix-1,iy,mz)) FIXME not in yz 2d*/
+				- (1.f - dt/dz) * F3(pf, HX, ix,iy,mz-1)
+				/*+ dt * jx*/) / (1.f + dt/dz);
+      }
+    }
+  } else {
+    assert(0);
+  }
+}
+
 // ----------------------------------------------------------------------
 // psc_bnd_fields_sub_fill_ghosts_E
 
@@ -398,6 +482,7 @@ psc_bnd_fields_sub_fill_ghosts_H(struct psc_bnd_fields *bnd, struct psc_fields *
 	conducting_wall_H_lo(bnd, flds, d);
 	break;
       case BND_FLD_OPEN:
+	open_H_lo(bnd, flds, d);
 	break;
       default:
 	assert(0);
@@ -414,6 +499,7 @@ psc_bnd_fields_sub_fill_ghosts_H(struct psc_bnd_fields *bnd, struct psc_fields *
 	conducting_wall_H_hi(bnd, flds, d);
 	break;
       case BND_FLD_OPEN:
+	open_H_hi(bnd, flds, d);
 	break;
       default:
 	assert(0);
