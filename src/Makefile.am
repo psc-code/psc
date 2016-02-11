@@ -4,6 +4,7 @@ AM_CFLAGS = -I$(top_srcdir)/src/include -I$(srcdir)/libmrc/include
 SUBDIRS = include libmrc libpsc tests
 
 bin_PROGRAMS = \
+	psc_shear \
 	psc_turbulence \
 	psc_es1 \
 	psc_em_wave \
