@@ -346,7 +346,36 @@ open_H_lo(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
 {
   struct psc_patch *patch = ppsc->patch + pf->p;
 
-  if (d == 2) {
+  if (d == 1) {
+#ifdef DEBUG
+    for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
+      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
+	fields_t_set_nan(&F3(pf, HX, ix, -1, iz));
+	fields_t_set_nan(&F3(pf, HX, ix, -2, iz));
+	fields_t_set_nan(&F3(pf, HY, ix, -1, iz));
+	fields_t_set_nan(&F3(pf, HY, ix, -2, iz));
+	fields_t_set_nan(&F3(pf, HZ, ix, -1, iz));
+	fields_t_set_nan(&F3(pf, HZ, ix, -2, iz));
+      }
+    }
+#endif
+    int p = pf->p;
+    fields_real_t dt = ppsc->dt, dy = ppsc->patch[p].dx[1], dz = ppsc->patch[p].dx[2];
+    for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
+      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
+	F3(pf, HX, ix,-1,iz) = (/* + 4.f * C_s_pulse_y1(x,y,z+0.5*dz,t) */
+				- 2.f * F3(pf, EZ, ix,0,iz)
+				/*- dt/dx * (F3(pf, HY, ix,0,iz) - F3(pf, HY, ix-1,0,iz)) */
+				- (1.f - dt/dy) * F3(pf, HX, ix,0,iz)
+				/*+ dt * jz*/) / (1.f + dt/dy);
+	F3(pf, HZ, ix,-1,iz) = (/* + 4.f * C_p_pulse_y1(x+.5*dx,y,z,t) */
+				+ 2.f * F3(pf, EX, ix,0,iz)
+				- dt/dz * (F3(pf, HY, ix,0,iz) - F3(pf, HY, ix,0,iz-1))
+				- (1.f - dt/dy) * F3(pf, HZ, ix,0,iz)
+				/*+ dt * jx*/) / (1.f + dt/dy);
+      }
+    }
+  } else if (d == 2) {
 #ifdef DEBUG
     for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
       for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
@@ -385,7 +414,36 @@ open_H_hi(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
 {
   struct psc_patch *patch = ppsc->patch + pf->p;
 
-  if (d == 2) {
+  if (d == 1) {
+    int my = patch->ldims[1];
+#ifdef DEBUG
+    for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
+      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
+	fields_t_set_nan(&F3(pf, HX, ix, my  , iz));
+	fields_t_set_nan(&F3(pf, HX, ix, my+1, iz));
+	fields_t_set_nan(&F3(pf, HY, ix, my  , iz));
+	fields_t_set_nan(&F3(pf, HY, ix, my+1, iz));
+	fields_t_set_nan(&F3(pf, HZ, ix, my+1, iz));
+      }
+    }
+#endif
+    int p = pf->p;
+    fields_real_t dt = ppsc->dt, dy = ppsc->patch[p].dx[1], dz = ppsc->patch[p].dx[2];
+    for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
+      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
+	F3(pf, HX, ix,my,iz) = (/* + 4.f * C_s_pulse_y2(x,y,z+0.5*dz,t) */
+				+ 2.f * F3(pf, EZ, ix,my,iz)
+				/*+ dt/dx * (F3(pf, HY, ix,my,iz) - F3(pf, HY, ix-1,my,iz)) */
+				- (1.f - dt/dy) * F3(pf, HX, ix,my-1,iz)
+				/*- dt * jz*/) / (1.f + dt/dy);
+	F3(pf, HZ, ix,my,iz) = (/* + 4.f * C_p_pulse_y2(x+.5*dx,y,z,t) */
+				- 2.f * F3(pf, EX, ix,my,iz)
+				+ dt/dz * (F3(pf, HY, ix,my,iz) - F3(pf, HY, ix,my,iz-1))
+				- (1.f - dt/dy) * F3(pf, HZ, ix,my-1,iz)
+				/*- dt * jx*/) / (1.f + dt/dy);
+      }
+    }
+  } else if (d == 2) {
     int mz = patch->ldims[2];
 #ifdef DEBUG
     for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
