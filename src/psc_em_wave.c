@@ -16,14 +16,15 @@
 
 struct psc_em_wave {
   // parameters
-  double ky, kz; // wave number 
+  double k; // wave number 
+  double theta; // wave vector angle (with respect to z, in y-z plane)
   double amplitude_s, amplitude_p; // amplitudes for the two polarizations
 };
 
 #define VAR(x) (void *)offsetof(struct psc_em_wave, x)
 static struct param psc_em_wave_descr[] = {
-  { "ky"            , VAR(ky)               , PARAM_DOUBLE(0.)         },
-  { "kz"            , VAR(kz)               , PARAM_DOUBLE(1.)         },
+  { "k"             , VAR(k)                , PARAM_DOUBLE(1.)         },
+  { "theta"         , VAR(theta)            , PARAM_DOUBLE(0.)         },
   { "amplitude_s"   , VAR(amplitude_s)      , PARAM_DOUBLE(1.)         },
   { "amplitude_p"   , VAR(amplitude_p)      , PARAM_DOUBLE(0.)         },
   {},
@@ -56,14 +57,20 @@ static double
 psc_em_wave_init_field(struct psc *psc, double x[3], int m)
 {
   struct psc_em_wave *sub = psc_em_wave(psc);
-  double ky = sub->ky, kz = sub->kz;
+  double theta_rad = sub->theta * 2. * M_PI / 360.;
+  double ky = sub->k * sin(theta_rad), kz = sub->k * cos(theta_rad);
   double amplitude_s = sub->amplitude_s, amplitude_p = sub->amplitude_p;
+  double hat_y =  cos(theta_rad);
+  double hat_z = -sin(theta_rad);
 
   switch (m) {
-  case EX: return  amplitude_s *           sin(ky * x[1] + kz * x[2]);
-  case HY: return  amplitude_s * sgn(kz) * sin(ky * x[1] + kz * x[2]);
-  case EY: return  amplitude_p *           sin(ky * x[1] + kz * x[2]);
-  case HX: return -amplitude_p * sgn(kz) * sin(ky * x[1] + kz * x[2]);
+  case EX: return amplitude_s *          sin(ky * x[1] + kz * x[2]);
+  case HY: return amplitude_s *  hat_y * sin(ky * x[1] + kz * x[2]);
+  case HZ: return amplitude_s *  hat_z * sin(ky * x[1] + kz * x[2]);
+
+  case HX: return amplitude_p *          sin(ky * x[1] + kz * x[2]);
+  case EY: return amplitude_p * -hat_y * sin(ky * x[1] + kz * x[2]);
+  case EZ: return amplitude_p * -hat_z * sin(ky * x[1] + kz * x[2]);
   default: return 0.;
   }
 }

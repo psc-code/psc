@@ -1,10 +1,9 @@
 #! /bin/bash
 
-# wave propagating in z direction, conducting b.c.
+# wave propagating in +z direction, conducting b.c.
 
 mpirun -n 1 ~/src/psc/src/psc_em_wave \
     --output_fields e,h,j \
-    --ky 0. --kz 1. \
     --gdims_y 2 --gdims_z 32 \
     --write_tfield no \
     --write_pfield yes --pfield_step 1 \
