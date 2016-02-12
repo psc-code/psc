@@ -42,7 +42,6 @@ extern struct psc_bnd_particles_ops psc_bnd_particles_double_ops;
 extern struct psc_bnd_particles_ops psc_bnd_particles_double_omp_ops;
 extern struct psc_bnd_particles_ops psc_bnd_particles_single2_ops;
 extern struct psc_bnd_particles_ops psc_bnd_particles_fortran_ops;
-extern struct psc_bnd_particles_ops psc_bnd_particles_mix_ops;
 extern struct psc_bnd_particles_ops psc_bnd_particles_cuda_ops;
 
 #endif
