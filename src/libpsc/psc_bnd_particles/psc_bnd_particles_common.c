@@ -695,13 +695,13 @@ inject_particles(struct psc_particles *prts, struct psc_fields *flds,
       double dz = dir * zr * pxi[Z] * ppsc->dt;
       xi[Z] = pos[Z] + dz;
 
-      double Jz = prt->qni_wni * dz * ppsc->coeff.cori;
+      double Jz = prt->qni_wni * dz * ppsc->coeff.cori / ppsc->dt;
       if (Z == 2) {
-	F3_C(flds, JXI + Z, ix,iy  ,iz) += (1 - yr) * Jz / ppsc->dt;
-	F3_C(flds, JXI + Z, ix,iy+1,iz) += (    yr) * Jz / ppsc->dt;
+	F3_C(flds, JXI + Z, ix,iy  ,iz) += (1 - yr) * Jz;
+	F3_C(flds, JXI + Z, ix,iy+1,iz) += (    yr) * Jz;
       } else if (Z == 1) {
-	F3_C(flds, JXI + Z, ix,iy,iz  ) += (1 - xr) * Jz / ppsc->dt;
-	F3_C(flds, JXI + Z, ix,iy,iz+1) += (    xr) * Jz / ppsc->dt;
+	F3_C(flds, JXI + Z, ix,iy,iz  ) += (1 - xr) * Jz;
+	F3_C(flds, JXI + Z, ix,iy,iz+1) += (    xr) * Jz;
       } else {
 	assert(0);
       }
