@@ -321,7 +321,7 @@ psc_checks_sub_gauss(struct psc_checks *checks, struct psc *psc)
 // psc_checks_sub_ops
 
 struct psc_checks_ops psc_checks_sub_ops = {
-  .name                            = PARTICLE_TYPE,
+  .name                            = "1st_" PARTICLE_TYPE,
   .setup                           = psc_checks_sub_setup,
   .continuity_before_particle_push = psc_checks_sub_continuity_before_particle_push,
   .continuity_after_particle_push  = psc_checks_sub_continuity_after_particle_push,
