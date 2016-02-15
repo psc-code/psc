@@ -456,6 +456,7 @@ nvt_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
     psc_fields_zero_range(res, 0, res->nr_comp);
     do_nvt_a_1st_run(res->p, res, prts);
     add_ghosts_boundary(res, 0, res->nr_comp);
+    psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
   }
 
   psc_bnd_add_ghosts(item->bnd, mres, 0, mres->nr_fields);
@@ -507,6 +508,7 @@ nvp_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
     psc_fields_zero_range(res, 0, res->nr_comp);
     do_nvp_1st_run(res->p, res, prts);
     add_ghosts_boundary(res, 0, res->nr_comp);
+    psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
   }
 
   psc_bnd_add_ghosts(item->bnd, mres, 0, mres->nr_fields);
