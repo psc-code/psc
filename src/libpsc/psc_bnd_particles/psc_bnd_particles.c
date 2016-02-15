@@ -96,6 +96,13 @@ psc_bnd_particles_exchange(struct psc_bnd_particles *bnd, struct psc_mparticles 
 void
 psc_bnd_particles_open_calc_moments(struct psc_bnd_particles *bnd, struct psc_mparticles *mprts)
 {
+  // no need to calculate moments if we're not having any open boundary
+  if (!(ppsc->domain.bnd_part_lo[0] == BND_PART_OPEN || ppsc->domain.bnd_part_hi[0] == BND_PART_OPEN ||
+	ppsc->domain.bnd_part_lo[1] == BND_PART_OPEN || ppsc->domain.bnd_part_hi[1] == BND_PART_OPEN ||
+	ppsc->domain.bnd_part_lo[2] == BND_PART_OPEN || ppsc->domain.bnd_part_hi[2] == BND_PART_OPEN)) {
+    return;
+  }
+
   struct psc_bnd_particles_ops *ops = psc_bnd_particles_ops(bnd);
   assert(ops->open_calc_moments);
   ops->open_calc_moments(bnd, mprts);
