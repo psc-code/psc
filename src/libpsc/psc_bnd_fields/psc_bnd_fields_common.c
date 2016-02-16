@@ -367,12 +367,12 @@ open_H_lo(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
 				- 2.f * F3(pf, EZ, ix,0,iz)
 				/*- dt/dx * (F3(pf, HY, ix,0,iz) - F3(pf, HY, ix-1,0,iz)) */
 				- (1.f - dt/dy) * F3(pf, HX, ix,0,iz)
-				/*+ dt * jz*/) / (1.f + dt/dy);
+				+ dt * F3(pf, JZI, ix,0,iz)) / (1.f + dt/dy);
 	F3(pf, HZ, ix,-1,iz) = (/* + 4.f * C_p_pulse_y1(x+.5*dx,y,z,t) */
 				+ 2.f * F3(pf, EX, ix,0,iz)
 				- dt/dz * (F3(pf, HY, ix,0,iz) - F3(pf, HY, ix,0,iz-1))
 				- (1.f - dt/dy) * F3(pf, HZ, ix,0,iz)
-				/*+ dt * jx*/) / (1.f + dt/dy);
+				+ dt * F3(pf, JXI, ix,0,iz)) / (1.f + dt/dy);
       }
     }
   } else if (d == 2) {
@@ -396,12 +396,12 @@ open_H_lo(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
 				- 2.f * F3(pf, EX, ix,iy,0)
 				- dt/dy * (F3(pf, HZ, ix,iy,0) - F3(pf, HZ, ix,iy-1,0))
 				- (1.f - dt/dz) * F3(pf, HY, ix,iy,0)
-				/*+ dt * jx*/) / (1.f + dt/dz);
+				+ dt * F3(pf, JXI, ix,iy,0)) / (1.f + dt/dz);
 	F3(pf, HX, ix,iy,-1) = (/* - 4.f * C_p_pulse_z1(x+0.5*dx,y,z,t) */
 				+ 2.f * F3(pf, EY, ix,iy,0)
 				/*- dt/dx * (F3(pf, HZ, ix,iy,0) - F3(pf, HZ, ix-1,iy,0)) FIXME not in yz 2d */
 				- (1.f - dt/dz) * F3(pf, HY, ix,iy,0)
-				/*- dt * jx*/) / (1.f + dt/dz);
+				- dt * F3(pf, JYI, ix,iy,0)) / (1.f + dt/dz);
       }
     }
   } else {
@@ -435,12 +435,12 @@ open_H_hi(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
 				+ 2.f * F3(pf, EZ, ix,my,iz)
 				/*+ dt/dx * (F3(pf, HY, ix,my,iz) - F3(pf, HY, ix-1,my,iz)) */
 				- (1.f - dt/dy) * F3(pf, HX, ix,my-1,iz)
-				/*- dt * jz*/) / (1.f + dt/dy);
+				- dt * F3(pf, JZI, ix,my,iz)) / (1.f + dt/dy);
 	F3(pf, HZ, ix,my,iz) = (/* + 4.f * C_p_pulse_y2(x+.5*dx,y,z,t) */
 				- 2.f * F3(pf, EX, ix,my,iz)
 				+ dt/dz * (F3(pf, HY, ix,my,iz) - F3(pf, HY, ix,my,iz-1))
 				- (1.f - dt/dy) * F3(pf, HZ, ix,my-1,iz)
-				/*- dt * jx*/) / (1.f + dt/dy);
+				- dt * F3(pf, JXI, ix,my,iz)) / (1.f + dt/dy);
       }
     }
   } else if (d == 2) {
@@ -464,12 +464,12 @@ open_H_hi(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
 				+ 2.f * F3(pf, EX, ix,iy,mz)
 				+ dt/dy * (F3(pf, HZ, ix,iy,mz) - F3(pf, HZ, ix,iy-1,mz))
 				- (1.f - dt/dz) * F3(pf, HY, ix,iy,mz-1)
-				/*- dt * jx*/) / (1.f + dt/dz);
+				- dt * F3(pf, JXI, ix,iy,mz)) / (1.f + dt/dz);
 	F3(pf, HX, ix,iy,mz) = (/* + 4.f * C_p_pulse_z2(x+0.5*dx,y,z,t) */
 				- 2.f * F3(pf, EY, ix,iy,mz)
 				/*+ dt/dx * (F3(pf, HZ, ix,iy,mz) - F3(pf, HZ, ix-1,iy,mz)) FIXME not in yz 2d*/
 				- (1.f - dt/dz) * F3(pf, HX, ix,iy,mz-1)
-				/*+ dt * jx*/) / (1.f + dt/dz);
+				+ dt * F3(pf, JYI, ix,iy,mz)) / (1.f + dt/dz);
       }
     }
   } else {
