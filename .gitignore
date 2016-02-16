@@ -10,6 +10,7 @@ okfile
 *.la
 *.asc
 *.pyc
+*.orig
 .libs
 BACKUP
 SELECT
@@ -30,6 +31,7 @@ src/psc_test_singlepart
 src/psc_test_microsphere
 src/psc_test_twoparticles
 src/psc_test_fdtd
+src/psc_test_open
 Makefile.in
 Makefile
 m4/libtool.m4

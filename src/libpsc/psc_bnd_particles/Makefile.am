@@ -13,11 +13,6 @@ libsubdir_la_SOURCES = \
 	psc_bnd_particles_single2.c \
 	psc_bnd_particles_fortran.c
 
-if USE_CUDA
-libsubdir_la_SOURCES += \
-	psc_bnd_particles_mix.c
-endif USE_CUDA
-
 EXTRA_libsubdir_la_SOURCES = \
 	psc_bnd_particles_common.c \
 	psc_bnd_particles_common_omp.c \

@@ -43,8 +43,10 @@ psc_checks_gauss(struct psc_checks *checks, struct psc *psc)
 static void
 psc_checks_init()
 {
-  mrc_class_register_subclass(&mrc_class_psc_checks, &psc_checks_double_ops);
-  mrc_class_register_subclass(&mrc_class_psc_checks, &psc_checks_single_ops);
+  mrc_class_register_subclass(&mrc_class_psc_checks, &psc_checks_1st_double_ops);
+  mrc_class_register_subclass(&mrc_class_psc_checks, &psc_checks_1st_single_ops);
+  mrc_class_register_subclass(&mrc_class_psc_checks, &psc_checks_2nd_double_ops);
+  mrc_class_register_subclass(&mrc_class_psc_checks, &psc_checks_2nd_single_ops);
 }
 
 // ----------------------------------------------------------------------

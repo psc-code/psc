@@ -43,7 +43,8 @@ calc_rho(struct psc *psc, struct psc_mparticles *mprts, struct psc_mfields *rho)
   psc_bnd_setup(bnd);
 
   struct psc_output_fields_item *item = psc_output_fields_item_create(psc_comm(psc));
-  psc_output_fields_item_set_type(item, "rho_1st_nc_" PARTICLE_TYPE);
+  // makes, e.g., "rho_1st_nc_single"
+  psc_output_fields_item_set_type(item, "rho_" PSC_CHECKS_ORDER "_nc_" PARTICLE_TYPE);
   psc_output_fields_item_set_psc_bnd(item, bnd);
   psc_output_fields_item_setup(item);
   psc_output_fields_item_run(item, psc->flds, mprts, rho);
@@ -321,7 +322,8 @@ psc_checks_sub_gauss(struct psc_checks *checks, struct psc *psc)
 // psc_checks_sub_ops
 
 struct psc_checks_ops psc_checks_sub_ops = {
-  .name                            = PARTICLE_TYPE,
+  // makes, e.g., "1st_single"
+  .name                            = PSC_CHECKS_ORDER "_" PARTICLE_TYPE,
   .setup                           = psc_checks_sub_setup,
   .continuity_before_particle_push = psc_checks_sub_continuity_before_particle_push,
   .continuity_after_particle_push  = psc_checks_sub_continuity_after_particle_push,

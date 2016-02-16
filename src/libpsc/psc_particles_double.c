@@ -16,7 +16,7 @@ psc_particles_double_setup(struct psc_particles *prts)
 {
   struct psc_particles_double *sub = psc_particles_double(prts);
 
-  sub->n_alloced = prts->n_part * 1.2;
+  sub->n_alloced = prts->n_part * 1.2 + 1000000;
   sub->particles = calloc(sub->n_alloced, sizeof(*sub->particles));
 }
 

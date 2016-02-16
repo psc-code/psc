@@ -30,7 +30,7 @@ struct psc_output_fields_item_ops psc_output_fields_item_rho_1st_nc_c_ops = {
   .name               = "rho_1st_nc_c",
   .nr_comp            = 1,
   .fld_names          = { "rho_nc" },
-  .run_patches        = rho_run_patches,
+  .run_all            = rho_run_all,
   .flags              = POFI_ADD_GHOSTS,
 };
 

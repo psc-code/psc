@@ -116,6 +116,8 @@ psc_step(struct psc *psc)
 
   psc_checks_gauss(psc->checks, psc);
 
+  psc_bnd_particles_open_calc_moments(psc->bnd_particles, psc->particles);
+
   // particle propagation n*dt -> (n+1.0)*dt
   psc_checks_continuity_before_particle_push(psc->checks, psc);
   psc_push_particles_run(psc->push_particles, psc->particles, psc->flds);
