@@ -296,9 +296,21 @@ ggcm_mhd_get_crds_cc(struct ggcm_mhd *mhd, int ix, int iy, int iz, int p,
 		     float crd_cc[3])
 {
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-  crd_cc[0] = MRC_MCRDX(crds, ix, p);
-  crd_cc[1] = MRC_MCRDY(crds, iy, p);
-  crd_cc[2] = MRC_MCRDZ(crds, iz, p);
+  if (ix == -3) { // FIXME, ugly ugly hack
+    crd_cc[0] = 2. * MRC_MCRDX(crds, -2, p) - MRC_MCRDX(crds, -1, p); }
+  else {
+    crd_cc[0] = MRC_MCRDX(crds, ix, p);
+  }
+  if (iy == -3) { 
+    crd_cc[1] = 2. * MRC_MCRDY(crds, -2, p) - MRC_MCRDY(crds, -1, p); }
+  else {
+    crd_cc[1] = MRC_MCRDY(crds, iy, p);
+  }
+  if (iz == -3) { 
+    crd_cc[2] = 2. * MRC_MCRDZ(crds, -2, p) - MRC_MCRDZ(crds, -1, p); }
+  else {
+    crd_cc[2] = MRC_MCRDZ(crds, iz, p);
+  }
 }
 
 // ----------------------------------------------------------------------
