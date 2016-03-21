@@ -397,6 +397,9 @@ ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic)
 
   if (ops->init_b0) {
     if (!ggcm_mhd_step_supports_b0(mhd->step)) {
+      int mhd_type;
+      mrc_fld_get_param_int(mhd->fld, "mhd_type", &mhd_type);
+      
       // if the stepper doesn't support a separate b0, 
       // add b0 into b, destroy b0 again.
       struct mrc_fld *b0 = mrc_fld_get_as(mhd->b0, FLD_TYPE);
@@ -405,8 +408,20 @@ ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic)
       // FIXME, could use some axpy kinda thing
       for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
 	mrc_fld_foreach(fld, ix,iy,iz, 2, 2) {
+	  // FIXME, this somehow should be handled differently
+	  if (mhd_type == MT_FULLY_CONSERVATIVE_CC) {
+	    EE_(fld, ix,iy,iz, p) -= .5*(sqr(BX_(fld, ix,iy,iz, p)) +
+					 sqr(BY_(fld, ix,iy,iz, p)) +
+					 sqr(BZ_(fld, ix,iy,iz, p)));
+	  }
 	  for (int d = 0; d < 3; d++) {
 	    M3(fld, BX+d, ix,iy,iz, p) += M3(b0, d, ix,iy,iz, p);
+	  }
+	  // FIXME, this somehow should be handled differently
+	  if (mhd_type == MT_FULLY_CONSERVATIVE_CC) {
+	    EE_(fld, ix,iy,iz, p) += .5*(sqr(BX_(fld, ix,iy,iz, p)) +
+					 sqr(BY_(fld, ix,iy,iz, p)) +
+					 sqr(BZ_(fld, ix,iy,iz, p)));
 	  }
 	} mrc_fld_foreach_end;
       }

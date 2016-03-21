@@ -221,8 +221,32 @@ ggcm_mhd_ic_mirdip_init_b0(struct ggcm_mhd_ic *ic, struct mrc_fld *b0)
   struct ggcm_mhd_ic_mirdip *sub = ggcm_mhd_ic_mirdip(ic);
   struct ggcm_mhd_dipole *mhd_dipole = ggcm_mhd_ic_mirdip_get_mhd_dipole(ic);
 
+  int mhd_type;
+  mrc_fld_get_param_int(ic->mhd->fld, "mhd_type", &mhd_type);
+  if (mhd_type == MT_FULLY_CONSERVATIVE_CC) {
+    // FIXME, leave B0 == 0 for now
+    return;
+  }
+  
   float x0[3] = {0.0, 0.0, 0.0};
   ggcm_mhd_dipole_add_dipole(mhd_dipole, b0, x0, sub->dipole_moment, 0., 0.);
+
+#if 0
+  // convert from fc to cc if needed
+  if (mhd_type == MT_FULLY_CONSERVATIVE_CC) {
+    int gdims[3];
+    mrc_domain_get_global_dims(ic->mhd->fld->_domain, gdims);
+    int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
+
+    for (int p = 0; p < mrc_fld_nr_patches(b0); p++) {
+      mrc_fld_foreach(b0, ix,iy,iz, 0, 0) {
+	M3(b0, 0, ix,iy,iz, p) = 0*.5f * (M3(b0, 0, ix,iy,iz, p) + 0*M3(b0, 0, ix+dx,iy,iz, p));
+	M3(b0, 1, ix,iy,iz, p) = 0*.5f * (M3(b0, 1, ix,iy,iz, p) + 0*M3(b0, 1, ix,iy+dy,iz, p));
+	M3(b0, 2, ix,iy,iz, p) = 0*.5f * (M3(b0, 2, ix,iy,iz, p) + 0*M3(b0, 2, ix,iy,iz+dz, p));
+      } mrc_fld_foreach_end;
+    }
+  }
+#endif
 
   ggcm_mhd_dipole_put(mhd_dipole);
 }
