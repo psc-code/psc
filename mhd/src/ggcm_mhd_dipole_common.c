@@ -125,6 +125,7 @@ ggcm_mhd_dipole_sub_add_dipole(struct ggcm_mhd_dipole *mhd_dipole, struct mrc_fl
       case MT_PRIMITIVE:
       case MT_SEMI_CONSERVATIVE:
       case MT_FULLY_CONSERVATIVE:
+      case MT_FULLY_CONSERVATIVE_CC:
 	for (int d = 0; d < 3; d++){
 	  float crd_fc[3];
 	  ggcm_mhd_get_crds_fc(mhd, ix,iy,iz, p, d, crd_fc);
