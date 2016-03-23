@@ -32,6 +32,8 @@ void ggcm_mhd_default_box(struct ggcm_mhd *mhd);
 
 void ggcm_mhd_convert_from_primitive(struct ggcm_mhd *mhd,
 				     struct mrc_fld *fld_base);
+void ggcm_mhd_convert_from_primitive_cc(struct ggcm_mhd *mhd,
+					struct mrc_fld *fld_base);
 
 struct mrc_fld *ggcm_mhd_fld_get_as(struct mrc_fld *fld_base, const char *type,
 				    int mhd_type, int mb, int me);
@@ -41,16 +43,23 @@ void ggcm_mhd_fld_put_as(struct mrc_fld *fld, struct mrc_fld *fld_base,
 struct mrc_fld *ggcm_mhd_get_fld_as_fortran(struct mrc_fld *fld_base);
 void ggcm_mhd_put_fld_as_fortran(struct mrc_fld *fld, struct mrc_fld *fld_base);
 
+// primitive fluid variables, face-centered B
 #define MT_PRIMITIVE (0)
+// primitive fluid variables, cell-centered B
+#define MT_PRIMITIVE_CC (1)
+
 // the following has B staggered the openggcm way: [-1..mx[
-#define MT_SEMI_CONSERVATIVE_GGCM (1)
+#define MT_SEMI_CONSERVATIVE_GGCM (2)
+
 // the following have B staggered the "normal" way: [0..mx]
-#define MT_SEMI_CONSERVATIVE (2)
-#define MT_FULLY_CONSERVATIVE (3)
+#define MT_SEMI_CONSERVATIVE (3)
+#define MT_FULLY_CONSERVATIVE (4)
+
 // cell-centered fully conservative MHD
-#define MT_FULLY_CONSERVATIVE_CC (4)
+#define MT_FULLY_CONSERVATIVE_CC (5)
+
 // the multi-moment schemes are cell-centered for all quantities
-#define MT_GKEYLL (5)
+#define MT_GKEYLL (6)
 
 // ----------------------------------------------------------------------
 // wrappers / helpers
