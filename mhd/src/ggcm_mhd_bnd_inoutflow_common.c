@@ -195,10 +195,18 @@ obndra_mhd_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float b
       for (int ix = -swx; ix < 0; ix++) {
 	float bn[SW_NR];
 	bnd_sw(bnd, ix, iy, iz, p, bn, bntim);
+	float b[3] = { bn[SW_BX], bn[SW_BY], bn[SW_BZ] };
+
+	// subtract background field if used
+	if (b0) {
+	  for (int d = 0; d < 3; d++) {
+	    b[d] -= M3(b0, d, ix,iy,iz, p);
+	  }
+	}
 	
 	float vvbn  = sqr(bn[SW_VX]) + sqr(bn[SW_VY]) + sqr(bn[SW_VZ]);
 	float uubn  = .5f * (bn[SW_RR]*vvbn) + bn[SW_PP] / (mhd->par.gamm - 1.f);
-	float b2bn  = sqr(bn[SW_BX]) + sqr(bn[SW_BY]) + sqr(bn[SW_BZ]);
+	float b2bn  = sqr(b[0]) + sqr(b[1]) + sqr(b[2]);
 	
 	M3(f, mm + RR , ix,iy,iz, p) = bn[SW_RR];
 	M3(f, mm + RVX, ix,iy,iz, p) = bn[SW_RR] * bn[SW_VX];
@@ -213,14 +221,9 @@ obndra_mhd_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float b
 	} else {
 	  assert(0);
 	}
-	M3(f, mm + BX , ix,iy,iz, p) = bn[SW_BX];
-	M3(f, mm + BY , ix,iy,iz, p) = bn[SW_BY];
-	M3(f, mm + BZ , ix,iy,iz, p) = bn[SW_BZ];
-	if (b0) {
-	  for (int d = 0; d < 3; d++) {
-	    M3(f, mm + BX + d , ix,iy,iz, p) -= M3(b0, d, ix,iy,iz, p);
-	  }
-	}
+	M3(f, mm + BX , ix,iy,iz, p) = b[0];
+	M3(f, mm + BY , ix,iy,iz, p) = b[1];
+	M3(f, mm + BZ , ix,iy,iz, p) = b[2];
       }
     }
   }
