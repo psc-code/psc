@@ -231,6 +231,35 @@ ggcm_mhd_ic_mirdip_init_b0(struct ggcm_mhd_ic *ic, struct mrc_fld *b0)
   float x0[3] = {0.0, 0.0, 0.0};
   ggcm_mhd_dipole_add_dipole(mhd_dipole, b0, x0, sub->dipole_moment, 0., 0.);
 
+  float vals[SW_NR];
+  struct ggcm_mhd_bndsw *bndsw = ggcm_mhd_get_var_obj(ic->mhd, "bndsw");
+  if (bndsw) {
+    ggcm_mhd_bndsw_get_initial(bndsw, vals);
+  } else {
+    vals[SW_RR] = sub->bnvals[SW_RR] / ic->mhd->rrnorm;
+    vals[SW_VX] = sub->bnvals[SW_VX] / ic->mhd->vvnorm;
+    vals[SW_VY] = sub->bnvals[SW_VY] / ic->mhd->vvnorm;
+    vals[SW_VZ] = sub->bnvals[SW_VZ] / ic->mhd->vvnorm;
+    vals[SW_PP] = sub->bnvals[SW_PP] / ic->mhd->ppnorm;
+    vals[SW_BX] = sub->bnvals[SW_BX] / ic->mhd->bbnorm;
+    vals[SW_BY] = sub->bnvals[SW_BY] / ic->mhd->bbnorm;
+    vals[SW_BZ] = sub->bnvals[SW_BZ] / ic->mhd->bbnorm;
+  }
+
+  struct mrc_fld *_b0 = mrc_fld_get_as(b0, FLD_TYPE);
+
+  // finish up
+  for (int p = 0; p < mrc_fld_nr_patches(_b0); p++) {
+    mrc_fld_foreach(_b0, ix,iy,iz, 2, 2) {
+      for (int d = 0; d < 3; d++){
+	// add B_IMF
+	M3(_b0, d, ix,iy,iz, p) += vals[SW_BX + d];
+      }
+    } mrc_fld_foreach_end;
+  }
+
+  mrc_fld_put_as(_b0, b0);
+
   ggcm_mhd_dipole_put(mhd_dipole);
 }
 
