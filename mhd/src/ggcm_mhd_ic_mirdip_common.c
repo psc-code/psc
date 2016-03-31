@@ -19,6 +19,7 @@ struct ggcm_mhd_ic_mirdip {
   float xmir;
   float rrini;
   float prat; // determines initial interior pressure as a fraction of solar wind pressure
+  float stretch_tail; // vx == 0 is stretched by this factor on the tail side
 
   float dipole_moment[3];
 
@@ -74,7 +75,7 @@ ggcm_mhd_ic_mirdip_ini1(struct ggcm_mhd_ic *ic, float vals[])
   struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
 
   mrc_fld_data_t xxx1 = sub->xxx1, xxx2 = sub->xxx2, xmir = sub->xmir;
-  mrc_fld_data_t rrini = sub->rrini;
+  mrc_fld_data_t rrini = sub->rrini, stretch_tail = sub->stretch_tail;
 
   for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
     mrc_fld_foreach(fld, ix,iy,iz, 2, 2) {
@@ -83,7 +84,7 @@ ggcm_mhd_ic_mirdip_ini1(struct ggcm_mhd_ic *ic, float vals[])
 	tmplam * vals[SW_RR] + (1. - tmplam) * (rrini / mhd->rrnorm);
       
       VX_(fld, ix,iy,iz, p) = vxsta1(MRC_MCRDX(crds, ix, p), MRC_MCRDY(crds, iy, p), MRC_MCRDZ(crds, iz, p),
-				     vals[SW_VX], xxx2, xxx1, 2., xmir);
+				     vals[SW_VX], xxx2, xxx1, stretch_tail, xmir);
       VY_(fld, ix,iy,iz, p) = 0.;
       VZ_(fld, ix,iy,iz, p) = 0.;
       
@@ -273,6 +274,7 @@ static struct param ggcm_mhd_ic_mirdip_descr[] = {
   { "xmir"         , VAR(xmir)         , PARAM_FLOAT(-15.0)        },  // off if == 0.0
   { "rrini"        , VAR(rrini)        , PARAM_FLOAT(3.0)          },
   { "prat"         , VAR(prat)         , PARAM_FLOAT(.5)           },
+  { "stretch_tail" , VAR(stretch_tail) , PARAM_FLOAT(2.)           },
 
   { "dipole_moment", VAR(dipole_moment), PARAM_FLOAT3(0., 0., -1.) },
 
