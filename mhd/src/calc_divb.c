@@ -92,9 +92,9 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
 
       mrc_fld_foreach(divb, ix,iy,iz, 0*bnd, 0*bnd) {
 	M3(d,0, ix,iy,iz, p) =
-	  (BX_(f, ix+dx,iy,iz, p) - BX_(f, ix-dx,iy,iz, p)) * hx * fd1x[ix] +
-	  (BY_(f, ix,iy+dy,iz, p) - BY_(f, ix,iy-dy,iz, p)) * hy * fd1y[iy] +
-	  (BZ_(f, ix,iy,iz+dz, p) - BZ_(f, ix,iy,iz-dz, p)) * hz * fd1z[iz];
+	  (BX_(f, ix+dx,iy,iz, p) - BX_(f, ix-dx,iy,iz, p)) * hx * .5f*fd1x[ix] +
+	  (BY_(f, ix,iy+dy,iz, p) - BY_(f, ix,iy-dy,iz, p)) * hy * .5f*fd1y[iy] +
+	  (BZ_(f, ix,iy,iz+dz, p) - BZ_(f, ix,iy,iz-dz, p)) * hz * .5f*fd1z[iz];
 	if (ymask) {
 	  M3(d,0, ix,iy,iz, p) *= M3(ymask, 0, ix,iy,iz, p);
 	}

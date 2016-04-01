@@ -88,14 +88,14 @@ ggcm_mhd_calc_currcc_fc_cc(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
 
     mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
       M3(c, 0, ix,iy,iz, p) =
-	(M3(f, m+2, ix,iy+dy,iz, p) - M3(f, m+2, ix,iy-dy,iz, p)) * fd1y[iy] -
-	(M3(f, m+1, ix,iy,iz+dz, p) - M3(f, m+1, ix,iy,iz-dz, p)) * fd1z[iz];
+	(M3(f, m+2, ix,iy+dy,iz, p) - M3(f, m+2, ix,iy-dy,iz, p)) * .5f*fd1y[iy] -
+	(M3(f, m+1, ix,iy,iz+dz, p) - M3(f, m+1, ix,iy,iz-dz, p)) * .5f*fd1z[iz];
       M3(c, 1, ix,iy,iz, p) =
-	(M3(f, m+0, ix,iy,iz+dz, p) - M3(f, m+0, ix,iy,iz-dz, p)) * fd1z[iz] -
-	(M3(f, m+2, ix+dx,iy,iz, p) - M3(f, m+2, ix-dx,iy,iz, p)) * fd1x[ix];
+	(M3(f, m+0, ix,iy,iz+dz, p) - M3(f, m+0, ix,iy,iz-dz, p)) * .5f*fd1z[iz] -
+	(M3(f, m+2, ix+dx,iy,iz, p) - M3(f, m+2, ix-dx,iy,iz, p)) * .5f*fd1x[ix];
       M3(c, 2, ix,iy,iz, p) =
-	(M3(f,1 , ix+dx,iy,iz, p) - M3(f, m+1, ix-dx,iy,iz, p)) * fd1x[ix] -
-	(M3(f,0 , ix,iy+dy,iz, p) - M3(f, m+0, ix,iy-dy,iz, p)) * fd1y[iy];
+	(M3(f, m+1, ix+dx,iy,iz, p) - M3(f, m+1, ix-dx,iy,iz, p)) * .5f*fd1x[ix] -
+	(M3(f, m+0, ix,iy+dy,iz, p) - M3(f, m+0, ix,iy-dy,iz, p)) * .5f*fd1y[iy];
     } mrc_fld_foreach_end;
   }
 
