@@ -36,10 +36,10 @@ ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic)
     /* initialize magnetic field from vector potential */
     struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
 
-    struct mrc_fld *Az = mrc_domain_fld_create(mhd->domain, 2, "Az");
-    mrc_fld_set_type(Az, FLD_TYPE);
-    mrc_fld_setup(Az);
-    mrc_fld_view(Az);
+    struct mrc_fld *A = mrc_domain_fld_create(mhd->domain, 2, "Ax:Ay:Az");
+    mrc_fld_set_type(A, FLD_TYPE);
+    mrc_fld_setup(A);
+    mrc_fld_view(A);
     
     int gdims[3], p1x, p1y;
     mrc_domain_get_global_dims(mhd->domain, gdims);
@@ -53,21 +53,24 @@ ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic)
       
       /* initialize vector potential */
       mrc_fld_foreach(fld, ix,iy,iz, 1, 2) {
+	// FIXME crds
 	double crd[3] = { MRC_DMCRDX(crds, ix, p) - .5 * dx[0],
 			  MRC_DMCRDY(crds, iy, p) - .5 * dx[1],
 			  MRC_DMCRDZ(crds, iz, p) };
 
-	M3(Az, 0, ix,iy,iz, p) = ops->vector_potential(ic, 2, crd);
+	M3(A, 0, ix,iy,iz, p) = ops->vector_potential(ic, 0, crd);
+	M3(A, 1, ix,iy,iz, p) = ops->vector_potential(ic, 1, crd);
+	M3(A, 2, ix,iy,iz, p) = ops->vector_potential(ic, 2, crd);
       } mrc_fld_foreach_end;
       
       /* initialize face-centered fields */
       mrc_fld_foreach(fld, ix,iy,iz, 1, 1) {
-	BX_(fld, ix,iy,iz, p) =  (M3(Az, 0, ix    , iy+p1y, iz, p) - M3(Az, 0, ix,iy,iz, p)) / dx[1];
-	BY_(fld, ix,iy,iz, p) = -(M3(Az, 0, ix+p1x, iy    , iz, p) - M3(Az, 0, ix,iy,iz, p)) / dx[0];
+	BX_(fld, ix,iy,iz, p) =  (M3(A, 2, ix    , iy+p1y, iz, p) - M3(A, 2, ix,iy,iz, p)) / dx[1];
+	BY_(fld, ix,iy,iz, p) = -(M3(A, 2, ix+p1x, iy    , iz, p) - M3(A, 2, ix,iy,iz, p)) / dx[0];
       } mrc_fld_foreach_end;
     }
     
-    mrc_fld_destroy(Az);
+    mrc_fld_destroy(A);
     mrc_fld_put_as(fld, mhd->fld);
   }
 
