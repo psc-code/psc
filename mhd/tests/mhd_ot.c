@@ -51,8 +51,6 @@ ggcm_mhd_ic_ot_run(struct ggcm_mhd_ic *ic)
 
   /* Initialize vector potential */
 
-  double max_divb = 0.;
-  
   for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
     /* get dx for this patch */
     mrc_domain_get_local_patch_info(mhd->domain, p, &pinfo);
@@ -86,18 +84,7 @@ ggcm_mhd_ic_ot_run(struct ggcm_mhd_ic *ic)
       VY_(fld, ix,iy,iz, p) =  v0*sin(2.*M_PI * xx);
       PP_(fld, ix,iy,iz, p) = pp0;
     } mrc_fld_foreach_end;    
-
-    /* calc max divb */    
-    mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
-      double val =
-        (BX(fld, ix+p1x, iy    , iz) - BX(fld, ix,iy,iz)) / dx[0] +
-        (BY(fld, ix    , iy+p1y, iz) - BY(fld, ix,iy,iz)) / dx[1];
-
-      max_divb = fmax(max_divb, fabs(val));
-    } mrc_fld_foreach_end;
   }
-
-  mprintf("max divb = %g\n", max_divb);
 
   mrc_fld_destroy(Az);
   mrc_fld_put_as(fld, mhd->fld);
