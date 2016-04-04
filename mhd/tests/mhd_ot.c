@@ -20,6 +20,24 @@
 // ggcm_mhd_ic subclass "ot"
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_ic_ot_primitive
+
+static void
+ggcm_mhd_ic_ot_primitive(struct ggcm_mhd_ic *ic, double prim[5], double crd[3])
+{
+  double rr0 = 25. / (36.*M_PI);
+  double v0 = 1.;
+  double pp0 = 5. / (12.*M_PI);
+
+  double xx = crd[0], yy = crd[1];
+
+  prim[RR] = rr0;
+  prim[PP] = pp0;
+  prim[VX] = -v0 * sin(2. * M_PI * yy);
+  prim[VY] =  v0 * sin(2. * M_PI * xx);
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_ic_ot_run
 
 static void
@@ -33,11 +51,10 @@ ggcm_mhd_ic_ot_run(struct ggcm_mhd_ic *ic)
   double dx0[3], dx[3];
   mrc_crds_get_dx_base(crds, dx0);
 
-  int gdims[3], p1x, p1y, p1z;
+  int gdims[3], p1x, p1y;
   mrc_domain_get_global_dims(mhd->domain, gdims);
   p1x = (gdims[0] > 1);
   p1y = (gdims[1] > 1);
-  p1z = (gdims[2] > 1);
 
   struct mrc_fld *Az = mrc_domain_fld_create(mhd->domain, 2, "Az");
   mrc_fld_set_type(Az, FLD_TYPE);
@@ -45,9 +62,6 @@ ggcm_mhd_ic_ot_run(struct ggcm_mhd_ic *ic)
   mrc_fld_view(Az);
 
   mrc_fld_data_t B0 = 1. / sqrt(4.*M_PI);
-  mrc_fld_data_t rr0 = 25. / (36.*M_PI);
-  mrc_fld_data_t v0 = 1.;
-  mrc_fld_data_t pp0 = 5. / (12.*M_PI);
 
   /* Initialize vector potential */
 
@@ -77,12 +91,13 @@ ggcm_mhd_ic_ot_run(struct ggcm_mhd_ic *ic)
 
     /* Initialize density, momentum, total energy */
     mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
-      mrc_fld_data_t xx = MRC_MCRDX(crds, ix, p), yy = MRC_MCRDY(crds, iy, p);
-      
-      RR_(fld, ix,iy,iz, p) = rr0;
-      VX_(fld, ix,iy,iz, p) = -v0*sin(2.*M_PI * yy);
-      VY_(fld, ix,iy,iz, p) =  v0*sin(2.*M_PI * xx);
-      PP_(fld, ix,iy,iz, p) = pp0;
+      double crd[3] = { MRC_DMCRDX(crds, ix, p), MRC_DMCRDY(crds, iy, p), MRC_DMCRDZ(crds, iz, p) };
+      mrc_fld_data_t prim[5] = {};
+      ggcm_mhd_ic_ot_primitive(ic, prim, crd);
+      RR_(fld, ix,iy,iz, p) = prim[RR];
+      VX_(fld, ix,iy,iz, p) = prim[VX];
+      VY_(fld, ix,iy,iz, p) = prim[VY];
+      PP_(fld, ix,iy,iz, p) = prim[PP];
     } mrc_fld_foreach_end;    
   }
 
