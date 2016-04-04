@@ -22,7 +22,7 @@ ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic)
 {
   struct ggcm_mhd *mhd = ic->mhd;
   assert(mhd);
-
+  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
   struct ggcm_mhd_ic_ops *ops = ggcm_mhd_ic_ops(ic);
 
   if (ops->init_b0) {
@@ -32,8 +32,73 @@ ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic)
     mrc_ddc_fill_ghosts_fld(mrc_domain_get_ddc(mhd->domain), 0, 3, mhd->b0);
   }
 
-  assert(ops->run);
-  ops->run(ic);
+  if (ops->vector_potential) {
+    /* initialize magnetic field from vector potential */
+    struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
+
+    struct mrc_fld *Az = mrc_domain_fld_create(mhd->domain, 2, "Az");
+    mrc_fld_set_type(Az, FLD_TYPE);
+    mrc_fld_setup(Az);
+    mrc_fld_view(Az);
+    
+    int gdims[3], p1x, p1y;
+    mrc_domain_get_global_dims(mhd->domain, gdims);
+    p1x = (gdims[0] > 1);
+    p1y = (gdims[1] > 1);
+
+    for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
+      struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
+      double dx[3];
+      mrc_crds_get_dx(crds, p, dx);
+      
+      /* initialize vector potential */
+      mrc_fld_foreach(fld, ix,iy,iz, 1, 2) {
+	double crd[3] = { MRC_DMCRDX(crds, ix, p) - .5 * dx[0],
+			  MRC_DMCRDY(crds, iy, p) - .5 * dx[1],
+			  MRC_DMCRDZ(crds, iz, p) };
+
+	M3(Az, 0, ix,iy,iz, p) = ops->vector_potential(ic, 2, crd);
+      } mrc_fld_foreach_end;
+      
+      /* initialize face-centered fields */
+      mrc_fld_foreach(fld, ix,iy,iz, 1, 1) {
+	BX_(fld, ix,iy,iz, p) =  (M3(Az, 0, ix    , iy+p1y, iz, p) - M3(Az, 0, ix,iy,iz, p)) / dx[1];
+	BY_(fld, ix,iy,iz, p) = -(M3(Az, 0, ix+p1x, iy    , iz, p) - M3(Az, 0, ix,iy,iz, p)) / dx[0];
+      } mrc_fld_foreach_end;
+    }
+    
+    mrc_fld_destroy(Az);
+    mrc_fld_put_as(fld, mhd->fld);
+  }
+
+  if (ops->primitive) {
+    /* initialize density, velocity, pressure */
+    struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
+
+    for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
+      mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
+	double crd[3] = { MRC_DMCRDX(crds, ix, p), MRC_DMCRDY(crds, iy, p), MRC_DMCRDZ(crds, iz, p) };
+	
+	mrc_fld_data_t prim[5];
+	for (int m = 0; m < 5; m++) {
+	  prim[m] = ops->primitive(ic, m, crd);
+	}
+	
+	RR_(fld, ix,iy,iz, p) = prim[RR];
+	VX_(fld, ix,iy,iz, p) = prim[VX];
+	VY_(fld, ix,iy,iz, p) = prim[VY];
+	PP_(fld, ix,iy,iz, p) = prim[PP];
+      } mrc_fld_foreach_end;    
+    }
+
+    mrc_fld_put_as(fld, mhd->fld);
+
+    ggcm_mhd_convert_from_primitive(mhd, mhd->fld);
+  }
+
+  if (ops->run) {
+    ops->run(ic);
+  }
 
   if (ops->init_b0) {
     if (!ggcm_mhd_step_supports_b0(mhd->step)) {
