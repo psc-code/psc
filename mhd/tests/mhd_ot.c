@@ -47,9 +47,7 @@ ggcm_mhd_ic_ot_run(struct ggcm_mhd_ic *ic)
   struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
 
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-  struct mrc_patch_info pinfo;
-  double dx0[3], dx[3];
-  mrc_crds_get_dx_base(crds, dx0);
+  double dx[3];
 
   int gdims[3], p1x, p1y;
   mrc_domain_get_global_dims(mhd->domain, gdims);
@@ -66,15 +64,7 @@ ggcm_mhd_ic_ot_run(struct ggcm_mhd_ic *ic)
   /* Initialize vector potential */
 
   for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
-    /* get dx for this patch */
-    mrc_domain_get_local_patch_info(mhd->domain, p, &pinfo);
-    for (int d = 0; d < 3; d++){
-      float refine = 1.0;
-      if (pinfo.ldims[d] > 1) {
-        refine = 1.0 / (1 << pinfo.level);
-      }
-      dx[d] = dx0[d] * refine;
-    }
+    mrc_crds_get_dx(crds, p, dx);
     
     /* Initialize vector potential */
     mrc_fld_foreach(fld, ix,iy,iz, 1, 2) {
