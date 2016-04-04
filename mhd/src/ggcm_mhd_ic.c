@@ -53,14 +53,14 @@ ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic)
       
       /* initialize vector potential */
       mrc_fld_foreach(fld, ix,iy,iz, 1, 2) {
-	// FIXME crds
-	double crd[3] = { MRC_DMCRDX(crds, ix, p) - .5 * dx[0],
-			  MRC_DMCRDY(crds, iy, p) - .5 * dx[1],
-			  MRC_DMCRDZ(crds, iz, p) };
-
-	M3(A, 0, ix,iy,iz, p) = ops->vector_potential(ic, 0, crd);
-	M3(A, 1, ix,iy,iz, p) = ops->vector_potential(ic, 1, crd);
-	M3(A, 2, ix,iy,iz, p) = ops->vector_potential(ic, 2, crd);
+	for (int m = 0; m < 3; m++) {
+	  // FIXME, want double precision crds natively here
+	  float crd_ec[3];
+	  ggcm_mhd_get_crds_ec(mhd, ix,iy,iz, p, m, crd_ec);
+	  double dcrd_ec[3] = { crd_ec[0], crd_ec[1], crd_ec[2] };
+	  
+	  M3(A, m, ix,iy,iz, p) = ops->vector_potential(ic, m, dcrd_ec);
+	}
       } mrc_fld_foreach_end;
       
       /* initialize face-centered fields */
@@ -80,11 +80,13 @@ ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic)
 
     for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
       mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
-	double crd[3] = { MRC_DMCRDX(crds, ix, p), MRC_DMCRDY(crds, iy, p), MRC_DMCRDZ(crds, iz, p) };
+	float crd_cc[3];
+	ggcm_mhd_get_crds_cc(mhd, ix,iy,iz, p, crd_cc);
+	double dcrd_cc[3] = { crd_cc[0], crd_cc[1], crd_cc[2] };
 	
 	mrc_fld_data_t prim[5];
 	for (int m = 0; m < 5; m++) {
-	  prim[m] = ops->primitive(ic, m, crd);
+	  prim[m] = ops->primitive(ic, m, dcrd_cc);
 	}
 	
 	RR_(fld, ix,iy,iz, p) = prim[RR];
