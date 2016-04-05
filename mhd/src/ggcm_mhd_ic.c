@@ -204,6 +204,40 @@ ggcm_mhd_ic_B_from_primitive(struct ggcm_mhd_ic *ic)
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_ic_hydro_from_primitive
+
+static void
+ggcm_mhd_ic_hydro_from_primitive(struct ggcm_mhd_ic *ic)
+{
+  struct ggcm_mhd *mhd = ic->mhd;
+  struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
+  struct ggcm_mhd_ic_ops *ops = ggcm_mhd_ic_ops(ic);
+  
+  for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
+    mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
+      float crd_cc[3];
+      ggcm_mhd_get_crds_cc(mhd, ix,iy,iz, p, crd_cc);
+      double dcrd_cc[3] = { crd_cc[0], crd_cc[1], crd_cc[2] };
+      
+      mrc_fld_data_t prim[5];
+      for (int m = 0; m < 5; m++) {
+	prim[m] = ops->primitive(ic, m, dcrd_cc);
+      }
+      
+      RR_(fld, ix,iy,iz, p) = prim[RR];
+      VX_(fld, ix,iy,iz, p) = prim[VX];
+      VY_(fld, ix,iy,iz, p) = prim[VY];
+      VZ_(fld, ix,iy,iz, p) = prim[VZ];
+      PP_(fld, ix,iy,iz, p) = prim[PP];
+    } mrc_fld_foreach_end;    
+  }
+
+  mrc_fld_put_as(fld, mhd->fld);
+
+  ggcm_mhd_convert_from_primitive(mhd, mhd->fld);
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_ic_run
 
 void
@@ -220,39 +254,17 @@ ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic)
     mrc_ddc_fill_ghosts_fld(mrc_domain_get_ddc(mhd->domain), 0, 3, mhd->b0);
   }
 
+  /* initialize magnetic field */
   if (ops->vector_potential) {
-    /* initialize magnetic field from vector potential */
     ggcm_mhd_ic_B_from_vector_potential(ic);
   } else {
     ggcm_mhd_ic_B_from_primitive(ic);
   }
 
+  /* initialize density, velocity, pressure, or corresponding
+     conservative quantities */
   if (ops->primitive) {
-    /* initialize density, velocity, pressure */
-    struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
-
-    for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
-      mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
-	float crd_cc[3];
-	ggcm_mhd_get_crds_cc(mhd, ix,iy,iz, p, crd_cc);
-	double dcrd_cc[3] = { crd_cc[0], crd_cc[1], crd_cc[2] };
-	
-	mrc_fld_data_t prim[5];
-	for (int m = 0; m < 5; m++) {
-	  prim[m] = ops->primitive(ic, m, dcrd_cc);
-	}
-	
-	RR_(fld, ix,iy,iz, p) = prim[RR];
-	VX_(fld, ix,iy,iz, p) = prim[VX];
-	VY_(fld, ix,iy,iz, p) = prim[VY];
-	VZ_(fld, ix,iy,iz, p) = prim[VZ];
-	PP_(fld, ix,iy,iz, p) = prim[PP];
-      } mrc_fld_foreach_end;    
-    }
-
-    mrc_fld_put_as(fld, mhd->fld);
-
-    ggcm_mhd_convert_from_primitive(mhd, mhd->fld);
+    ggcm_mhd_ic_hydro_from_primitive(ic);
   }
 
   if (ops->run) {
