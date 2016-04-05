@@ -60,6 +60,52 @@ ggcm_mhd_ic_B_from_vector_potential_fc(struct ggcm_mhd_ic *ic, struct mrc_fld *f
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_ic_B_from_vector_potential_cc
+//
+// initialize face-centered B from edge-centered vector potential
+
+static mrc_fld_data_t
+get_vector_potential_cc(struct ggcm_mhd_ic *ic, int m, int ix, int iy, int iz, int p)
+{
+  struct ggcm_mhd *mhd = ic->mhd;
+  struct ggcm_mhd_ic_ops *ops = ggcm_mhd_ic_ops(ic);
+
+  // FIXME, want double precision crds natively here
+  float crd_cc[3];
+  ggcm_mhd_get_crds_cc(mhd, ix,iy,iz, p, crd_cc);
+  double dcrd_cc[3] = { crd_cc[0], crd_cc[1], crd_cc[2] };
+  
+  return ops->vector_potential(ic, m, dcrd_cc);
+}
+
+static void
+ggcm_mhd_ic_B_from_vector_potential_cc(struct ggcm_mhd_ic *ic, struct mrc_fld *fld)
+{
+  struct ggcm_mhd *mhd = ic->mhd;
+  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
+
+  int gdims[3], p1x, p1y;
+  mrc_domain_get_global_dims(mhd->domain, gdims);
+  p1x = (gdims[0] > 1);
+  p1y = (gdims[1] > 1);
+  
+  for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
+    double dx[3];
+    mrc_crds_get_dx(crds, p, dx);
+    
+    /* initialize face-centered fields */
+    mrc_fld_foreach(fld, ix,iy,iz, 1, 1) {
+      mrc_fld_data_t Az_xp = get_vector_potential_cc(ic, 2, ix+p1x,iy    ,iz, p);
+      mrc_fld_data_t Az_xm = get_vector_potential_cc(ic, 2, ix-p1x,iy    ,iz, p);
+      mrc_fld_data_t Az_yp = get_vector_potential_cc(ic, 2, ix    ,iy+p1y,iz, p);
+      mrc_fld_data_t Az_ym = get_vector_potential_cc(ic, 2, ix    ,iy-p1y,iz, p);
+      BX_(fld, ix,iy,iz, p) =  (Az_yp - Az_ym) / (2. * dx[1]);
+      BY_(fld, ix,iy,iz, p) = -(Az_xp - Az_xm) / (2. * dx[0]);
+    } mrc_fld_foreach_end;
+  }
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_ic_B_from_vector_potential
 
 static void
@@ -74,6 +120,8 @@ ggcm_mhd_ic_B_from_vector_potential(struct ggcm_mhd_ic *ic)
   if (mhd_type == MT_FULLY_CONSERVATIVE ||
       mhd_type == MT_SEMI_CONSERVATIVE) {
     ggcm_mhd_ic_B_from_vector_potential_fc(ic, fld);
+  } else if (mhd_type == MT_FULLY_CONSERVATIVE_CC) {
+    ggcm_mhd_ic_B_from_vector_potential_cc(ic, fld);
   } else {
     mprintf("mhd_type %d unhandled\n", mhd_type);
     assert(0);
