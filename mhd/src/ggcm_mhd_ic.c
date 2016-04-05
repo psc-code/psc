@@ -111,6 +111,30 @@ ggcm_mhd_ic_B_from_primitive_yee(struct ggcm_mhd_ic *ic, struct mrc_fld *fld)
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_ic_B_from_primitive_cc
+//
+// initialize cell-centered B directly
+
+static void
+ggcm_mhd_ic_B_from_primitive_cc(struct ggcm_mhd_ic *ic, struct mrc_fld *fld)
+{
+  struct ggcm_mhd *mhd = ic->mhd;
+  struct ggcm_mhd_ic_ops *ops = ggcm_mhd_ic_ops(ic);
+
+  for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
+    mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
+      float crd_cc[3];
+      ggcm_mhd_get_crds_cc(mhd, ix,iy,iz, p, crd_cc);
+      double dcrd_cc[3] = { crd_cc[0], crd_cc[1], crd_cc[2] };
+	
+      for (int m = 0; m < 3; m++) {
+	M3(fld, BX+m, ix,iy,iz, p) = ops->primitive(ic, BX + m, dcrd_cc);
+      }
+    } mrc_fld_foreach_end;    
+  }
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_ic_B_from_primitive
 
 static void
@@ -125,6 +149,8 @@ ggcm_mhd_ic_B_from_primitive(struct ggcm_mhd_ic *ic)
   if (mhd_type == MT_FULLY_CONSERVATIVE ||
       mhd_type == MT_SEMI_CONSERVATIVE) {
     ggcm_mhd_ic_B_from_primitive_yee(ic, fld);
+  } else if (mhd_type == MT_FULLY_CONSERVATIVE_CC) {
+    ggcm_mhd_ic_B_from_primitive_cc(ic, fld);
   } else {
     mprintf("mhd_type %d unhandled\n", mhd_type);
     assert(0);
