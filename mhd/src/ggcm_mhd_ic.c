@@ -317,7 +317,7 @@ ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic)
   /* initialize magnetic field */
   if (ops->vector_potential) {
     ggcm_mhd_ic_B_from_vector_potential(ic);
-  } else {
+  } else if (ops->primitive) {
     ggcm_mhd_ic_B_from_primitive(ic);
   }
 
