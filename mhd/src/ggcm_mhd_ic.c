@@ -15,6 +15,125 @@
 // ggcm_mhd_ic class
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_ic_B_from_vector_potential_yee
+//
+// initialize face-centered B from edge-centered vector potential
+// on the Yee grid
+
+static void
+ggcm_mhd_ic_B_from_vector_potential_yee(struct ggcm_mhd_ic *ic, struct mrc_fld *fld)
+{
+  struct ggcm_mhd *mhd = ic->mhd;
+  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
+  struct ggcm_mhd_ic_ops *ops = ggcm_mhd_ic_ops(ic);
+
+  struct mrc_fld *A = mrc_domain_fld_create(mhd->domain, 2, "Ax:Ay:Az");
+  mrc_fld_set_type(A, FLD_TYPE);
+  mrc_fld_setup(A);
+  mrc_fld_view(A);
+  
+  int gdims[3], p1x, p1y;
+  mrc_domain_get_global_dims(mhd->domain, gdims);
+  p1x = (gdims[0] > 1);
+  p1y = (gdims[1] > 1);
+  
+  for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
+    double dx[3];
+    mrc_crds_get_dx(crds, p, dx);
+    
+    /* initialize vector potential */
+    mrc_fld_foreach(fld, ix,iy,iz, 1, 2) {
+      for (int m = 0; m < 3; m++) {
+	// FIXME, want double precision crds natively here
+	float crd_ec[3];
+	ggcm_mhd_get_crds_ec(mhd, ix,iy,iz, p, m, crd_ec);
+	double dcrd_ec[3] = { crd_ec[0], crd_ec[1], crd_ec[2] };
+	
+	M3(A, m, ix,iy,iz, p) = ops->vector_potential(ic, m, dcrd_ec);
+      }
+    } mrc_fld_foreach_end;
+    
+    /* initialize face-centered fields */
+    mrc_fld_foreach(fld, ix,iy,iz, 1, 1) {
+      BX_(fld, ix,iy,iz, p) =  (M3(A, 2, ix    , iy+p1y, iz, p) - M3(A, 2, ix,iy,iz, p)) / dx[1];
+      BY_(fld, ix,iy,iz, p) = -(M3(A, 2, ix+p1x, iy    , iz, p) - M3(A, 2, ix,iy,iz, p)) / dx[0];
+    } mrc_fld_foreach_end;
+  }
+  
+  mrc_fld_destroy(A);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_ic_B_from_vector_potential
+
+static void
+ggcm_mhd_ic_B_from_vector_potential(struct ggcm_mhd_ic *ic)
+{
+  struct ggcm_mhd *mhd = ic->mhd;
+  int mhd_type;
+  mrc_fld_get_param_int(mhd->fld, "mhd_type", &mhd_type);
+  
+  struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
+
+  if (mhd_type == MT_FULLY_CONSERVATIVE ||
+      mhd_type == MT_SEMI_CONSERVATIVE) {
+    ggcm_mhd_ic_B_from_vector_potential_yee(ic, fld);
+  } else {
+    mprintf("mhd_type %d unhandled\n", mhd_type);
+    assert(0);
+  }
+
+  mrc_fld_put_as(fld, mhd->fld);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_ic_B_from_primitive_yee
+//
+// initialize face-centered B directly
+
+static void
+ggcm_mhd_ic_B_from_primitive_yee(struct ggcm_mhd_ic *ic, struct mrc_fld *fld)
+{
+  struct ggcm_mhd *mhd = ic->mhd;
+  struct ggcm_mhd_ic_ops *ops = ggcm_mhd_ic_ops(ic);
+
+  for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
+    mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
+      for (int m = 0; m < 3; m++) {
+	float crd_fc[3];
+	ggcm_mhd_get_crds_fc(mhd, ix,iy,iz, p, m, crd_fc);
+	double dcrd_fc[3] = { crd_fc[0], crd_fc[1], crd_fc[2] };
+	
+	M3(fld, BX+m, ix,iy,iz, p) = ops->primitive(ic, BX + m, dcrd_fc);
+      }
+    } mrc_fld_foreach_end;    
+  }
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_ic_B_from_primitive
+
+static void
+ggcm_mhd_ic_B_from_primitive(struct ggcm_mhd_ic *ic)
+{
+  struct ggcm_mhd *mhd = ic->mhd;
+  int mhd_type;
+  mrc_fld_get_param_int(mhd->fld, "mhd_type", &mhd_type);
+  
+  struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
+
+  if (mhd_type == MT_FULLY_CONSERVATIVE ||
+      mhd_type == MT_SEMI_CONSERVATIVE) {
+    ggcm_mhd_ic_B_from_primitive_yee(ic, fld);
+  } else {
+    mprintf("mhd_type %d unhandled\n", mhd_type);
+    assert(0);
+  }
+
+  mrc_fld_put_as(fld, mhd->fld);
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_ic_run
 
 void
@@ -22,7 +141,6 @@ ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic)
 {
   struct ggcm_mhd *mhd = ic->mhd;
   assert(mhd);
-  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
   struct ggcm_mhd_ic_ops *ops = ggcm_mhd_ic_ops(ic);
 
   if (ops->init_b0) {
@@ -34,44 +152,9 @@ ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic)
 
   if (ops->vector_potential) {
     /* initialize magnetic field from vector potential */
-    struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
-
-    struct mrc_fld *A = mrc_domain_fld_create(mhd->domain, 2, "Ax:Ay:Az");
-    mrc_fld_set_type(A, FLD_TYPE);
-    mrc_fld_setup(A);
-    mrc_fld_view(A);
-    
-    int gdims[3], p1x, p1y;
-    mrc_domain_get_global_dims(mhd->domain, gdims);
-    p1x = (gdims[0] > 1);
-    p1y = (gdims[1] > 1);
-
-    for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
-      struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
-      double dx[3];
-      mrc_crds_get_dx(crds, p, dx);
-      
-      /* initialize vector potential */
-      mrc_fld_foreach(fld, ix,iy,iz, 1, 2) {
-	for (int m = 0; m < 3; m++) {
-	  // FIXME, want double precision crds natively here
-	  float crd_ec[3];
-	  ggcm_mhd_get_crds_ec(mhd, ix,iy,iz, p, m, crd_ec);
-	  double dcrd_ec[3] = { crd_ec[0], crd_ec[1], crd_ec[2] };
-	  
-	  M3(A, m, ix,iy,iz, p) = ops->vector_potential(ic, m, dcrd_ec);
-	}
-      } mrc_fld_foreach_end;
-      
-      /* initialize face-centered fields */
-      mrc_fld_foreach(fld, ix,iy,iz, 1, 1) {
-	BX_(fld, ix,iy,iz, p) =  (M3(A, 2, ix    , iy+p1y, iz, p) - M3(A, 2, ix,iy,iz, p)) / dx[1];
-	BY_(fld, ix,iy,iz, p) = -(M3(A, 2, ix+p1x, iy    , iz, p) - M3(A, 2, ix,iy,iz, p)) / dx[0];
-      } mrc_fld_foreach_end;
-    }
-    
-    mrc_fld_destroy(A);
-    mrc_fld_put_as(fld, mhd->fld);
+    ggcm_mhd_ic_B_from_vector_potential(ic);
+  } else {
+    ggcm_mhd_ic_B_from_primitive(ic);
   }
 
   if (ops->primitive) {
@@ -92,6 +175,7 @@ ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic)
 	RR_(fld, ix,iy,iz, p) = prim[RR];
 	VX_(fld, ix,iy,iz, p) = prim[VX];
 	VY_(fld, ix,iy,iz, p) = prim[VY];
+	VZ_(fld, ix,iy,iz, p) = prim[VZ];
 	PP_(fld, ix,iy,iz, p) = prim[PP];
       } mrc_fld_foreach_end;    
     }

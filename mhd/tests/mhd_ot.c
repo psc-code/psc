@@ -28,6 +28,7 @@ ggcm_mhd_ic_ot_primitive(struct ggcm_mhd_ic *ic, int m, double crd[3])
   double rr0 = 25. / (36.*M_PI);
   double v0 = 1.;
   double pp0 = 5. / (12.*M_PI);
+  mrc_fld_data_t B0 = 1. / sqrt(4.*M_PI);
 
   double xx = crd[0], yy = crd[1];
 
@@ -36,6 +37,9 @@ ggcm_mhd_ic_ot_primitive(struct ggcm_mhd_ic *ic, int m, double crd[3])
   case PP: return pp0;
   case VX: return -v0 * sin(2. * M_PI * yy);
   case VY: return  v0 * sin(2. * M_PI * xx);
+  // B here won't actually be used because the vector potential takes preference
+  case BX: return -B0 * sin(2. * M_PI * yy);
+  case BY: return  B0 * sin(4. * M_PI * xx);
   default: return 0.;
   }
 }
