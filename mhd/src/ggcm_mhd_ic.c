@@ -15,13 +15,12 @@
 // ggcm_mhd_ic class
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_ic_B_from_vector_potential_yee
+// ggcm_mhd_ic_B_from_vector_potential_fc
 //
 // initialize face-centered B from edge-centered vector potential
-// on the Yee grid
 
 static void
-ggcm_mhd_ic_B_from_vector_potential_yee(struct ggcm_mhd_ic *ic, struct mrc_fld *fld)
+ggcm_mhd_ic_B_from_vector_potential_fc(struct ggcm_mhd_ic *ic, struct mrc_fld *fld)
 {
   struct ggcm_mhd *mhd = ic->mhd;
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
@@ -77,7 +76,7 @@ ggcm_mhd_ic_B_from_vector_potential(struct ggcm_mhd_ic *ic)
 
   if (mhd_type == MT_FULLY_CONSERVATIVE ||
       mhd_type == MT_SEMI_CONSERVATIVE) {
-    ggcm_mhd_ic_B_from_vector_potential_yee(ic, fld);
+    ggcm_mhd_ic_B_from_vector_potential_fc(ic, fld);
   } else {
     mprintf("mhd_type %d unhandled\n", mhd_type);
     assert(0);
@@ -87,12 +86,12 @@ ggcm_mhd_ic_B_from_vector_potential(struct ggcm_mhd_ic *ic)
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_ic_B_from_primitive_yee
+// ggcm_mhd_ic_B_from_primitive_fc
 //
 // initialize face-centered B directly
 
 static void
-ggcm_mhd_ic_B_from_primitive_yee(struct ggcm_mhd_ic *ic, struct mrc_fld *fld)
+ggcm_mhd_ic_B_from_primitive_fc(struct ggcm_mhd_ic *ic, struct mrc_fld *fld)
 {
   struct ggcm_mhd *mhd = ic->mhd;
   struct ggcm_mhd_ic_ops *ops = ggcm_mhd_ic_ops(ic);
@@ -148,7 +147,7 @@ ggcm_mhd_ic_B_from_primitive(struct ggcm_mhd_ic *ic)
 
   if (mhd_type == MT_FULLY_CONSERVATIVE ||
       mhd_type == MT_SEMI_CONSERVATIVE) {
-    ggcm_mhd_ic_B_from_primitive_yee(ic, fld);
+    ggcm_mhd_ic_B_from_primitive_fc(ic, fld);
   } else if (mhd_type == MT_FULLY_CONSERVATIVE_CC) {
     ggcm_mhd_ic_B_from_primitive_cc(ic, fld);
   } else {
