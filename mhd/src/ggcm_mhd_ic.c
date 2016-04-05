@@ -20,7 +20,7 @@
 // initialize face-centered B from edge-centered vector potential
 
 static mrc_fld_data_t
-get_vector_potential_ec(struct ggcm_mhd_ic *ic, int ix, int iy, int iz, int p, int m)
+get_vector_potential_ec(struct ggcm_mhd_ic *ic, int m, int ix, int iy, int iz, int p)
 {
   struct ggcm_mhd *mhd = ic->mhd;
   struct ggcm_mhd_ic_ops *ops = ggcm_mhd_ic_ops(ic);
@@ -38,13 +38,7 @@ ggcm_mhd_ic_B_from_vector_potential_fc(struct ggcm_mhd_ic *ic, struct mrc_fld *f
 {
   struct ggcm_mhd *mhd = ic->mhd;
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-  struct ggcm_mhd_ic_ops *ops = ggcm_mhd_ic_ops(ic);
 
-  struct mrc_fld *A = mrc_domain_fld_create(mhd->domain, 2, "Ax:Ay:Az");
-  mrc_fld_set_type(A, FLD_TYPE);
-  mrc_fld_setup(A);
-  mrc_fld_view(A);
-  
   int gdims[3], p1x, p1y;
   mrc_domain_get_global_dims(mhd->domain, gdims);
   p1x = (gdims[0] > 1);
@@ -54,21 +48,15 @@ ggcm_mhd_ic_B_from_vector_potential_fc(struct ggcm_mhd_ic *ic, struct mrc_fld *f
     double dx[3];
     mrc_crds_get_dx(crds, p, dx);
     
-    /* initialize vector potential */
-    mrc_fld_foreach(fld, ix,iy,iz, 1, 2) {
-      for (int m = 0; m < 3; m++) {
-	M3(A, m, ix,iy,iz, p) = get_vector_potential_ec(ic, ix,iy,iz, p, m);
-      }
-    } mrc_fld_foreach_end;
-    
     /* initialize face-centered fields */
-    mrc_fld_foreach(fld, ix,iy,iz, 1, 1) {
-      BX_(fld, ix,iy,iz, p) =  (M3(A, 2, ix    , iy+p1y, iz, p) - M3(A, 2, ix,iy,iz, p)) / dx[1];
-      BY_(fld, ix,iy,iz, p) = -(M3(A, 2, ix+p1x, iy    , iz, p) - M3(A, 2, ix,iy,iz, p)) / dx[0];
+    mrc_fld_foreach(fld, ix,iy,iz, 1, 2) {
+      mrc_fld_data_t Az    = get_vector_potential_ec(ic, 2, ix    ,iy    ,iz, p);
+      mrc_fld_data_t Az_xp = get_vector_potential_ec(ic, 2, ix+p1x,iy    ,iz, p);
+      mrc_fld_data_t Az_yp = get_vector_potential_ec(ic, 2, ix    ,iy+p1y,iz, p);
+      BX_(fld, ix,iy,iz, p) =  (Az_yp - Az) / dx[1];
+      BY_(fld, ix,iy,iz, p) = -(Az_xp - Az) / dx[0];
     } mrc_fld_foreach_end;
   }
-  
-  mrc_fld_destroy(A);
 }
 
 // ----------------------------------------------------------------------
