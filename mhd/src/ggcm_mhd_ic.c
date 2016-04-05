@@ -19,6 +19,20 @@
 //
 // initialize face-centered B from edge-centered vector potential
 
+static mrc_fld_data_t
+get_vector_potential_ec(struct ggcm_mhd_ic *ic, int ix, int iy, int iz, int p, int m)
+{
+  struct ggcm_mhd *mhd = ic->mhd;
+  struct ggcm_mhd_ic_ops *ops = ggcm_mhd_ic_ops(ic);
+
+  // FIXME, want double precision crds natively here
+  float crd_ec[3];
+  ggcm_mhd_get_crds_ec(mhd, ix,iy,iz, p, m, crd_ec);
+  double dcrd_ec[3] = { crd_ec[0], crd_ec[1], crd_ec[2] };
+  
+  return ops->vector_potential(ic, m, dcrd_ec);
+}
+
 static void
 ggcm_mhd_ic_B_from_vector_potential_fc(struct ggcm_mhd_ic *ic, struct mrc_fld *fld)
 {
@@ -43,12 +57,7 @@ ggcm_mhd_ic_B_from_vector_potential_fc(struct ggcm_mhd_ic *ic, struct mrc_fld *f
     /* initialize vector potential */
     mrc_fld_foreach(fld, ix,iy,iz, 1, 2) {
       for (int m = 0; m < 3; m++) {
-	// FIXME, want double precision crds natively here
-	float crd_ec[3];
-	ggcm_mhd_get_crds_ec(mhd, ix,iy,iz, p, m, crd_ec);
-	double dcrd_ec[3] = { crd_ec[0], crd_ec[1], crd_ec[2] };
-	
-	M3(A, m, ix,iy,iz, p) = ops->vector_potential(ic, m, dcrd_ec);
+	M3(A, m, ix,iy,iz, p) = get_vector_potential_ec(ic, ix,iy,iz, p, m);
       }
     } mrc_fld_foreach_end;
     
