@@ -204,7 +204,9 @@ ggcm_mhd_ic_B_from_primitive(struct ggcm_mhd_ic *ic)
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_ic_hydro_from_primitive
+// ggcm_mhd_ic_hydro_from_primitive_semi
+// 
+// init semi conservative hydro state
 
 static void
 ggcm_mhd_ic_hydro_from_primitive_semi(struct ggcm_mhd_ic *ic, struct mrc_fld *fld)
@@ -230,7 +232,44 @@ ggcm_mhd_ic_hydro_from_primitive_semi(struct ggcm_mhd_ic *ic, struct mrc_fld *fl
       RVY_(fld, ix,iy,iz, p) = prim[RR] * prim[VY];
       RVZ_(fld, ix,iy,iz, p) = prim[RR] * prim[VZ];
       UU_ (fld, ix,iy,iz, p) = prim[PP] / gamma_m1
-	+ .5*prim[RR] * (sqr(prim[VX]) + sqr(prim[VY]) + sqr(prim[VZ]));
+	+ .5f * prim[RR] * (sqr(prim[VX]) + sqr(prim[VY]) + sqr(prim[VZ]));
+    } mrc_fld_foreach_end;    
+  }
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_ic_hydro_from_primitive_fully_cc
+//
+// init fully conservative hydro state assuming that B is cell centered
+
+static void
+ggcm_mhd_ic_hydro_from_primitive_fully_cc(struct ggcm_mhd_ic *ic, struct mrc_fld *fld)
+{
+  struct ggcm_mhd *mhd = ic->mhd;
+  struct ggcm_mhd_ic_ops *ops = ggcm_mhd_ic_ops(ic);
+
+  mrc_fld_data_t gamma_m1 = mhd->par.gamm - 1.;
+
+  for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
+    mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
+      float crd_cc[3];
+      ggcm_mhd_get_crds_cc(mhd, ix,iy,iz, p, crd_cc);
+      double dcrd_cc[3] = { crd_cc[0], crd_cc[1], crd_cc[2] };
+      
+      mrc_fld_data_t prim[5];
+      for (int m = 0; m < 5; m++) {
+	prim[m] = ops->primitive(ic, m, dcrd_cc);
+      }
+      
+      RR_ (fld, ix,iy,iz, p) = prim[RR];
+      RVX_(fld, ix,iy,iz, p) = prim[RR] * prim[VX];
+      RVY_(fld, ix,iy,iz, p) = prim[RR] * prim[VY];
+      RVZ_(fld, ix,iy,iz, p) = prim[RR] * prim[VZ];
+      EE_ (fld, ix,iy,iz, p) = prim[PP] / gamma_m1
+	+ .5f * prim[RR] * (sqr(prim[VX]) + sqr(prim[VY]) + sqr(prim[VZ]))
+	+ .5f * (sqr(BX_(fld, ix,iy,iz, p)) +
+		 sqr(BY_(fld, ix,iy,iz, p)) +
+		 sqr(BZ_(fld, ix,iy,iz, p)));
     } mrc_fld_foreach_end;    
   }
 }
@@ -249,6 +288,8 @@ ggcm_mhd_ic_hydro_from_primitive(struct ggcm_mhd_ic *ic)
 
   if (mhd_type == MT_SEMI_CONSERVATIVE) {
     ggcm_mhd_ic_hydro_from_primitive_semi(ic, fld);
+  } else if (mhd_type == MT_FULLY_CONSERVATIVE_CC) {
+    ggcm_mhd_ic_hydro_from_primitive_fully_cc(ic, fld);
   } else {
     assert(0);
   }
