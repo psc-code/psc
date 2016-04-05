@@ -61,55 +61,43 @@ static struct param ggcm_mhd_ic_kh_descr[] = {
   { "pert_random"   , VAR(pert_random)   , PARAM_DOUBLE(0.)      },
   { "lambda"        , VAR(lambda)        , PARAM_DOUBLE(.05)     },
   { "sigma"         , VAR(sigma)         , PARAM_DOUBLE(.2)      },
-  // FIXME, should use PARAM_SELECT
   {},
 };
 #undef VAR
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_ic_kh0_run
+// ggcm_mhd_ic_kh0_primitive
 //
 // single mode and random perturbation, finite width shear
 
-static void
-ggcm_mhd_ic_kh0_run(struct ggcm_mhd_ic *ic)
+static double
+ggcm_mhd_ic_kh0_primitive(struct ggcm_mhd_ic *ic, int m, double crd[3])
 {
-  struct ggcm_mhd *mhd = ic->mhd;
-  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);  
-  struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
   struct ggcm_mhd_ic_kh *sub = mrc_to_subobj(ic, struct ggcm_mhd_ic_kh);
+  double xx = crd[0], yy = crd[1];
 
-  int rank; MPI_Comm_rank(ggcm_mhd_ic_comm(ic), &rank);
-  srandom(rank);
+  double s = 1. + .5 * (tanh((yy - .25) / sub->lambda) - tanh((yy + .25) / sub->lambda));
+  
+  switch (m) {
+  case RR: return sub->rho0 * s + sub->rho1 * (1. - s);
 
-  for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
-    mrc_fld_foreach(fld, ix,iy,iz, 1, 1) {
-      double xx = MRC_MCRDX(crds, ix, p);
-      double yy = MRC_MCRDY(crds, iy, p);
-      
-      double s = 1. + .5 * (tanh((yy - .25) / sub->lambda) - tanh((yy + .25) / sub->lambda));
-      RR_(fld, ix,iy,iz, p) = sub->rho0 * s + sub->rho1 * (1. - s);
-      // shear flow
-      VX_(fld, ix,iy,iz, p) = sub->v0 * s + sub->v1 * (1. - s);
-      // single mode perturbation
-      VY_(fld, ix,iy,iz, p) = sub->pert * sin(2.*M_PI * xx) * exp(-sqr(yy) / sqr(sub->sigma));
-      
-      // random perturbation
-      VX_(fld, ix,iy,iz, p) += sub->pert_random * (random_double() - .5);
-      VY_(fld, ix,iy,iz, p) += sub->pert_random * (random_double() - .5);
-      
-      PP_(fld, ix,iy,iz, p) = sub->p0 
-	+ .5 * sqr(sub->B0z_harris) / sqr(cosh((yy - .25) / sub->lambda))
-	+ .5 * sqr(sub->B0z_harris) / sqr(cosh((yy + .25) / sub->lambda));
-      BX_(fld, ix,iy,iz, p) = sub->B0x; 
-      BY_(fld, ix,iy,iz, p) = sub->B0y;
-      BZ_(fld, ix,iy,iz, p) = sub->B0z + sub->B0z_harris * s - sub->B0z_harris * (1. - s);
-    } mrc_fld_foreach_end;
+  // VX: shear flow + random perturbation
+  case VX: return sub->v0 * s + sub->v1 * (1. - s)
+      + sub->pert_random * (random_double() - .5);
+    
+  // BY: single mode + random perturbation
+  case VY: return sub->pert * sin(2.*M_PI * xx) * exp(-sqr(yy) / sqr(sub->sigma))
+      + sub->pert_random * (random_double() - .5);
+  
+  case PP: return sub->p0 
+      + .5 * sqr(sub->B0z_harris) / sqr(cosh((yy - .25) / sub->lambda))
+      + .5 * sqr(sub->B0z_harris) / sqr(cosh((yy + .25) / sub->lambda));
+
+  case BX: return sub->B0x; 
+  case BY: return sub->B0y;
+  case BZ: return sub->B0z + sub->B0z_harris * s - sub->B0z_harris * (1. - s);
+  default: return 0.;
   }
-
-  mrc_fld_put_as(fld, mhd->fld);
-
-  ggcm_mhd_convert_from_primitive(mhd, mhd->fld);
 }
 
 // ----------------------------------------------------------------------
@@ -119,53 +107,34 @@ struct ggcm_mhd_ic_ops ggcm_mhd_ic_kh0_ops = {
   .name        = "kh",
   .size        = sizeof(struct ggcm_mhd_ic_kh),
   .param_descr = ggcm_mhd_ic_kh_descr,
-  .run         = ggcm_mhd_ic_kh0_run,
+  .primitive   = ggcm_mhd_ic_kh0_primitive,
 };
 
 
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_ic_kh1_run
+// ggcm_mhd_ic_kh1_primitive
 //
 // athena-like: random perturbations
 
-static void
-ggcm_mhd_ic_kh1_run(struct ggcm_mhd_ic *ic)
+static double
+ggcm_mhd_ic_kh1_primitive(struct ggcm_mhd_ic *ic, int m, double crd[3])
 {
-  struct ggcm_mhd *mhd = ic->mhd;
-  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);  
-  struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
   struct ggcm_mhd_ic_kh *sub = mrc_to_subobj(ic, struct ggcm_mhd_ic_kh);
+  double yy = crd[1];
 
-  int rank; MPI_Comm_rank(ggcm_mhd_ic_comm(ic), &rank);
-  srandom(rank);
-
-  for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
-    mrc_fld_foreach(fld, ix,iy,iz, 1, 1) {
-      double yy = MRC_MCRDY(crds, iy, p);
-      
-      if (fabs(yy) < .25) {
-	RR_(fld, ix,iy,iz, p) = sub->rho0;
-	VX_(fld, ix,iy,iz, p) = sub->v0;
-      } else {
-	RR_(fld, ix,iy,iz, p) = sub->rho1;
-	VX_(fld, ix,iy,iz, p) = sub->v1;
-      }
-	// random perturbation
-      VX_(fld, ix,iy,iz, p) += sub->pert_random * (random_double() - .5);
-      VY_(fld, ix,iy,iz, p) += sub->pert_random * (random_double() - .5);
-      
-      PP_(fld, ix,iy,iz, p) = sub->p0;
-      
-      BX_(fld, ix,iy,iz, p) = sub->B0x; 
-      BY_(fld, ix,iy,iz, p) = sub->B0y;
-      BZ_(fld, ix,iy,iz, p) = sub->B0z;
-    } mrc_fld_foreach_end;
+  switch (m) {
+  case RR: return (fabs(yy) < .25 ? sub->rho0 : sub->rho1);
+  case VX: return (fabs(yy) < .25 ? sub->v1   : sub->v0) 
+      + sub->pert_random * (random_double() - .5);
+  case VY: return 0.f
+      + sub->pert_random * (random_double() - .5);
+  case PP: return sub->p0;
+  case BX: return sub->B0x;
+  case BY: return sub->B0y;
+  case BZ: return sub->B0z;
+  default: return 0.f;
   }
-
-  mrc_fld_put_as(fld, mhd->fld);
-
-  ggcm_mhd_convert_from_primitive(mhd, mhd->fld);
 }
 
 // ----------------------------------------------------------------------
@@ -175,7 +144,7 @@ struct ggcm_mhd_ic_ops ggcm_mhd_ic_kh1_ops = {
   .name        = "kh",
   .size        = sizeof(struct ggcm_mhd_ic_kh),
   .param_descr = ggcm_mhd_ic_kh_descr,
-  .run         = ggcm_mhd_ic_kh1_run,
+  .primitive   = ggcm_mhd_ic_kh1_primitive,
 };
 
 
