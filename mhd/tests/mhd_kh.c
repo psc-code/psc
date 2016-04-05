@@ -28,7 +28,6 @@ random_double()
 // ggcm_mhd_ic subclass "kh"
 
 struct ggcm_mhd_ic_kh {
-  int variant; // initial condition variant (1: random perturbation, 3: single mode)
   double rho0; // initial density 0 
   double rho1; // initial density 1  
   double v0; // velocity 0 
@@ -49,7 +48,6 @@ struct ggcm_mhd_ic_kh {
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_ic_kh, x)
 static struct param ggcm_mhd_ic_kh_descr[] = {
-  { "variant"       , VAR(variant)       , PARAM_INT(0)          },
   { "rho0"          , VAR(rho0)          , PARAM_DOUBLE(2.)      },
   { "rho1"          , VAR(rho1)          , PARAM_DOUBLE(1.)      },
   { "v0"            , VAR(v0)            , PARAM_DOUBLE(.5)      },
@@ -70,6 +68,8 @@ static struct param ggcm_mhd_ic_kh_descr[] = {
 
 // ----------------------------------------------------------------------
 // ggcm_mhd_ic_kh0_run
+//
+// single mode and random perturbation, finite width shear
 
 static void
 ggcm_mhd_ic_kh0_run(struct ggcm_mhd_ic *ic)
@@ -82,56 +82,29 @@ ggcm_mhd_ic_kh0_run(struct ggcm_mhd_ic *ic)
   int rank; MPI_Comm_rank(ggcm_mhd_ic_comm(ic), &rank);
   srandom(rank);
 
-  if (sub->variant == 0) { // single mode and random perturbation, finite width shear
-    for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
-      mrc_fld_foreach(fld, ix,iy,iz, 1, 1) {
-	double xx = MRC_MCRDX(crds, ix, p);
-	double yy = MRC_MCRDY(crds, iy, p);
-
-	double s = 1. + .5 * (tanh((yy - .25) / sub->lambda) - tanh((yy + .25) / sub->lambda));
-	RR_(fld, ix,iy,iz, p) = sub->rho0 * s + sub->rho1 * (1. - s);
-	// shear flow
-	VX_(fld, ix,iy,iz, p) = sub->v0 * s + sub->v1 * (1. - s);
-	// single mode perturbation
-	VY_(fld, ix,iy,iz, p) = sub->pert * sin(2.*M_PI * xx) * exp(-sqr(yy) / sqr(sub->sigma));
-
-	// random perturbation
-	VX_(fld, ix,iy,iz, p) += sub->pert_random * (random_double() - .5);
-	VY_(fld, ix,iy,iz, p) += sub->pert_random * (random_double() - .5);
-
-	PP_(fld, ix,iy,iz, p) = sub->p0 
-	  + .5 * sqr(sub->B0z_harris) / sqr(cosh((yy - .25) / sub->lambda))
-	  + .5 * sqr(sub->B0z_harris) / sqr(cosh((yy + .25) / sub->lambda));
-	BX_(fld, ix,iy,iz, p) = sub->B0x; 
-	BY_(fld, ix,iy,iz, p) = sub->B0y;
-	BZ_(fld, ix,iy,iz, p) = sub->B0z + sub->B0z_harris * s - sub->B0z_harris * (1. - s);
-      } mrc_fld_foreach_end;
-    }
- } else if (sub->variant == 1) { // athena: random perturbations
-    for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
-      mrc_fld_foreach(fld, ix,iy,iz, 1, 1) {
-	double yy = MRC_MCRDY(crds, iy, p);
-
-	if (fabs(yy) < .25) {
-	  RR_(fld, ix,iy,iz, p) = sub->rho0;
-	  VX_(fld, ix,iy,iz, p) = sub->v0;
-	} else {
-	  RR_(fld, ix,iy,iz, p) = sub->rho1;
-	  VX_(fld, ix,iy,iz, p) = sub->v1;
-	}
-	// random perturbation
-	VX_(fld, ix,iy,iz, p) += sub->pert_random * (random_double() - .5);
-	VY_(fld, ix,iy,iz, p) += sub->pert_random * (random_double() - .5);
-
-	PP_(fld, ix,iy,iz, p) = sub->p0;
-
-	BX_(fld, ix,iy,iz, p) = sub->B0x; 
-	BY_(fld, ix,iy,iz, p) = sub->B0y;
-	BZ_(fld, ix,iy,iz, p) = sub->B0z;
-      } mrc_fld_foreach_end;
-    }
-  } else {
-    assert(0);
+  for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
+    mrc_fld_foreach(fld, ix,iy,iz, 1, 1) {
+      double xx = MRC_MCRDX(crds, ix, p);
+      double yy = MRC_MCRDY(crds, iy, p);
+      
+      double s = 1. + .5 * (tanh((yy - .25) / sub->lambda) - tanh((yy + .25) / sub->lambda));
+      RR_(fld, ix,iy,iz, p) = sub->rho0 * s + sub->rho1 * (1. - s);
+      // shear flow
+      VX_(fld, ix,iy,iz, p) = sub->v0 * s + sub->v1 * (1. - s);
+      // single mode perturbation
+      VY_(fld, ix,iy,iz, p) = sub->pert * sin(2.*M_PI * xx) * exp(-sqr(yy) / sqr(sub->sigma));
+      
+      // random perturbation
+      VX_(fld, ix,iy,iz, p) += sub->pert_random * (random_double() - .5);
+      VY_(fld, ix,iy,iz, p) += sub->pert_random * (random_double() - .5);
+      
+      PP_(fld, ix,iy,iz, p) = sub->p0 
+	+ .5 * sqr(sub->B0z_harris) / sqr(cosh((yy - .25) / sub->lambda))
+	+ .5 * sqr(sub->B0z_harris) / sqr(cosh((yy + .25) / sub->lambda));
+      BX_(fld, ix,iy,iz, p) = sub->B0x; 
+      BY_(fld, ix,iy,iz, p) = sub->B0y;
+      BZ_(fld, ix,iy,iz, p) = sub->B0z + sub->B0z_harris * s - sub->B0z_harris * (1. - s);
+    } mrc_fld_foreach_end;
   }
 
   mrc_fld_put_as(fld, mhd->fld);
@@ -153,6 +126,8 @@ struct ggcm_mhd_ic_ops ggcm_mhd_ic_kh0_ops = {
 
 // ----------------------------------------------------------------------
 // ggcm_mhd_ic_kh1_run
+//
+// athena-like: random perturbations
 
 static void
 ggcm_mhd_ic_kh1_run(struct ggcm_mhd_ic *ic)
@@ -165,56 +140,27 @@ ggcm_mhd_ic_kh1_run(struct ggcm_mhd_ic *ic)
   int rank; MPI_Comm_rank(ggcm_mhd_ic_comm(ic), &rank);
   srandom(rank);
 
-  if (sub->variant == 0) { // single mode and random perturbation, finite width shear
-    for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
-      mrc_fld_foreach(fld, ix,iy,iz, 1, 1) {
-	double xx = MRC_MCRDX(crds, ix, p);
-	double yy = MRC_MCRDY(crds, iy, p);
-
-	double s = 1. + .5 * (tanh((yy - .25) / sub->lambda) - tanh((yy + .25) / sub->lambda));
-	RR_(fld, ix,iy,iz, p) = sub->rho0 * s + sub->rho1 * (1. - s);
-	// shear flow
-	VX_(fld, ix,iy,iz, p) = sub->v0 * s + sub->v1 * (1. - s);
-	// single mode perturbation
-	VY_(fld, ix,iy,iz, p) = sub->pert * sin(2.*M_PI * xx) * exp(-sqr(yy) / sqr(sub->sigma));
-
+  for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
+    mrc_fld_foreach(fld, ix,iy,iz, 1, 1) {
+      double yy = MRC_MCRDY(crds, iy, p);
+      
+      if (fabs(yy) < .25) {
+	RR_(fld, ix,iy,iz, p) = sub->rho0;
+	VX_(fld, ix,iy,iz, p) = sub->v0;
+      } else {
+	RR_(fld, ix,iy,iz, p) = sub->rho1;
+	VX_(fld, ix,iy,iz, p) = sub->v1;
+      }
 	// random perturbation
-	VX_(fld, ix,iy,iz, p) += sub->pert_random * (random_double() - .5);
-	VY_(fld, ix,iy,iz, p) += sub->pert_random * (random_double() - .5);
-
-	PP_(fld, ix,iy,iz, p) = sub->p0 
-	  + .5 * sqr(sub->B0z_harris) / sqr(cosh((yy - .25) / sub->lambda))
-	  + .5 * sqr(sub->B0z_harris) / sqr(cosh((yy + .25) / sub->lambda));
-	BX_(fld, ix,iy,iz, p) = sub->B0x; 
-	BY_(fld, ix,iy,iz, p) = sub->B0y;
-	BZ_(fld, ix,iy,iz, p) = sub->B0z + sub->B0z_harris * s - sub->B0z_harris * (1. - s);
-      } mrc_fld_foreach_end;
-    }
- } else if (sub->variant == 1) { // athena: random perturbations
-    for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
-      mrc_fld_foreach(fld, ix,iy,iz, 1, 1) {
-	double yy = MRC_MCRDY(crds, iy, p);
-
-	if (fabs(yy) < .25) {
-	  RR_(fld, ix,iy,iz, p) = sub->rho0;
-	  VX_(fld, ix,iy,iz, p) = sub->v0;
-	} else {
-	  RR_(fld, ix,iy,iz, p) = sub->rho1;
-	  VX_(fld, ix,iy,iz, p) = sub->v1;
-	}
-	// random perturbation
-	VX_(fld, ix,iy,iz, p) += sub->pert_random * (random_double() - .5);
-	VY_(fld, ix,iy,iz, p) += sub->pert_random * (random_double() - .5);
-
-	PP_(fld, ix,iy,iz, p) = sub->p0;
-
-	BX_(fld, ix,iy,iz, p) = sub->B0x; 
-	BY_(fld, ix,iy,iz, p) = sub->B0y;
-	BZ_(fld, ix,iy,iz, p) = sub->B0z;
-      } mrc_fld_foreach_end;
-    }
-  } else {
-    assert(0);
+      VX_(fld, ix,iy,iz, p) += sub->pert_random * (random_double() - .5);
+      VY_(fld, ix,iy,iz, p) += sub->pert_random * (random_double() - .5);
+      
+      PP_(fld, ix,iy,iz, p) = sub->p0;
+      
+      BX_(fld, ix,iy,iz, p) = sub->B0x; 
+      BY_(fld, ix,iy,iz, p) = sub->B0y;
+      BZ_(fld, ix,iy,iz, p) = sub->B0z;
+    } mrc_fld_foreach_end;
   }
 
   mrc_fld_put_as(fld, mhd->fld);
