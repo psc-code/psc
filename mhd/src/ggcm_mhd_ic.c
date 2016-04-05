@@ -207,12 +207,13 @@ ggcm_mhd_ic_B_from_primitive(struct ggcm_mhd_ic *ic)
 // ggcm_mhd_ic_hydro_from_primitive
 
 static void
-ggcm_mhd_ic_hydro_from_primitive(struct ggcm_mhd_ic *ic)
+ggcm_mhd_ic_hydro_from_primitive_semi(struct ggcm_mhd_ic *ic, struct mrc_fld *fld)
 {
   struct ggcm_mhd *mhd = ic->mhd;
-  struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
   struct ggcm_mhd_ic_ops *ops = ggcm_mhd_ic_ops(ic);
-  
+
+  mrc_fld_data_t gamma_m1 = mhd->par.gamm - 1.;
+
   for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
     mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
       float crd_cc[3];
@@ -224,17 +225,35 @@ ggcm_mhd_ic_hydro_from_primitive(struct ggcm_mhd_ic *ic)
 	prim[m] = ops->primitive(ic, m, dcrd_cc);
       }
       
-      RR_(fld, ix,iy,iz, p) = prim[RR];
-      VX_(fld, ix,iy,iz, p) = prim[VX];
-      VY_(fld, ix,iy,iz, p) = prim[VY];
-      VZ_(fld, ix,iy,iz, p) = prim[VZ];
-      PP_(fld, ix,iy,iz, p) = prim[PP];
+      RR_ (fld, ix,iy,iz, p) = prim[RR];
+      RVX_(fld, ix,iy,iz, p) = prim[RR] * prim[VX];
+      RVY_(fld, ix,iy,iz, p) = prim[RR] * prim[VY];
+      RVZ_(fld, ix,iy,iz, p) = prim[RR] * prim[VZ];
+      UU_ (fld, ix,iy,iz, p) = prim[PP] / gamma_m1
+	+ .5*prim[RR] * (sqr(prim[VX]) + sqr(prim[VY]) + sqr(prim[VZ]));
     } mrc_fld_foreach_end;    
   }
+}
 
+// ----------------------------------------------------------------------
+// ggcm_mhd_ic_hydro_from_primitive
+
+static void
+ggcm_mhd_ic_hydro_from_primitive(struct ggcm_mhd_ic *ic)
+{
+  struct ggcm_mhd *mhd = ic->mhd;
+  int mhd_type;
+  mrc_fld_get_param_int(mhd->fld, "mhd_type", &mhd_type);
+
+  struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
+
+  if (mhd_type == MT_SEMI_CONSERVATIVE) {
+    ggcm_mhd_ic_hydro_from_primitive_semi(ic, fld);
+  } else {
+    assert(0);
+  }
+  
   mrc_fld_put_as(fld, mhd->fld);
-
-  ggcm_mhd_convert_from_primitive(mhd, mhd->fld);
 }
 
 // ----------------------------------------------------------------------
