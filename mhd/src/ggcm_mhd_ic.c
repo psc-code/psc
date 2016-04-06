@@ -109,14 +109,12 @@ ggcm_mhd_ic_B_from_vector_potential_cc(struct ggcm_mhd_ic *ic, struct mrc_fld *f
 // ggcm_mhd_ic_B_from_vector_potential
 
 static void
-ggcm_mhd_ic_B_from_vector_potential(struct ggcm_mhd_ic *ic)
+ggcm_mhd_ic_B_from_vector_potential(struct ggcm_mhd_ic *ic, struct mrc_fld *fld)
 {
   struct ggcm_mhd *mhd = ic->mhd;
   int mhd_type;
   mrc_fld_get_param_int(mhd->fld, "mhd_type", &mhd_type);
   
-  struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
-
   if (mhd_type == MT_FULLY_CONSERVATIVE ||
       mhd_type == MT_SEMI_CONSERVATIVE) {
     ggcm_mhd_ic_B_from_vector_potential_fc(ic, fld);
@@ -126,8 +124,6 @@ ggcm_mhd_ic_B_from_vector_potential(struct ggcm_mhd_ic *ic)
     mprintf("mhd_type %d unhandled\n", mhd_type);
     assert(0);
   }
-
-  mrc_fld_put_as(fld, mhd->fld);
 }
 
 // ----------------------------------------------------------------------
@@ -182,14 +178,12 @@ ggcm_mhd_ic_B_from_primitive_cc(struct ggcm_mhd_ic *ic, struct mrc_fld *fld)
 // ggcm_mhd_ic_B_from_primitive
 
 static void
-ggcm_mhd_ic_B_from_primitive(struct ggcm_mhd_ic *ic)
+ggcm_mhd_ic_B_from_primitive(struct ggcm_mhd_ic *ic, struct mrc_fld *fld)
 {
   struct ggcm_mhd *mhd = ic->mhd;
   int mhd_type;
   mrc_fld_get_param_int(mhd->fld, "mhd_type", &mhd_type);
   
-  struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
-
   if (mhd_type == MT_FULLY_CONSERVATIVE ||
       mhd_type == MT_SEMI_CONSERVATIVE) {
     ggcm_mhd_ic_B_from_primitive_fc(ic, fld);
@@ -199,8 +193,6 @@ ggcm_mhd_ic_B_from_primitive(struct ggcm_mhd_ic *ic)
     mprintf("mhd_type %d unhandled\n", mhd_type);
     assert(0);
   }
-
-  mrc_fld_put_as(fld, mhd->fld);
 }
 
 // ----------------------------------------------------------------------
@@ -315,11 +307,13 @@ ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic)
   }
 
   /* initialize magnetic field */
+  struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
   if (ops->vector_potential) {
-    ggcm_mhd_ic_B_from_vector_potential(ic);
+    ggcm_mhd_ic_B_from_vector_potential(ic, fld);
   } else if (ops->primitive) {
-    ggcm_mhd_ic_B_from_primitive(ic);
+    ggcm_mhd_ic_B_from_primitive(ic, fld);
   }
+  mrc_fld_put_as(fld, mhd->fld);
 
   /* initialize density, velocity, pressure, or corresponding
      conservative quantities */
