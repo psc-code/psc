@@ -14,6 +14,8 @@
 // ======================================================================
 // ggcm_mhd_ic class
 
+typedef double (*primitive_f)(struct ggcm_mhd_ic *ic, int m, double crd[3]);
+
 // ----------------------------------------------------------------------
 // ggcm_mhd_ic_B_from_vector_potential_fc
 //
@@ -132,10 +134,9 @@ ggcm_mhd_ic_B_from_vector_potential(struct ggcm_mhd_ic *ic, struct mrc_fld *b)
 // initialize face-centered B directly
 
 static void
-ggcm_mhd_ic_B_from_primitive_fc(struct ggcm_mhd_ic *ic, struct mrc_fld *b)
+ggcm_mhd_ic_B_from_primitive_fc(struct ggcm_mhd_ic *ic, struct mrc_fld *b, primitive_f primitive)
 {
   struct ggcm_mhd *mhd = ic->mhd;
-  struct ggcm_mhd_ic_ops *ops = ggcm_mhd_ic_ops(ic);
 
   for (int p = 0; p < mrc_fld_nr_patches(b); p++) {
     mrc_fld_foreach(b, ix,iy,iz, 0, 0) {
@@ -144,7 +145,7 @@ ggcm_mhd_ic_B_from_primitive_fc(struct ggcm_mhd_ic *ic, struct mrc_fld *b)
 	ggcm_mhd_get_crds_fc(mhd, ix,iy,iz, p, m, crd_fc);
 	double dcrd_fc[3] = { crd_fc[0], crd_fc[1], crd_fc[2] };
 	
-	M3(b, m, ix,iy,iz, p) = ops->primitive(ic, BX + m, dcrd_fc);
+	M3(b, m, ix,iy,iz, p) += primitive(ic, BX + m, dcrd_fc);
       }
     } mrc_fld_foreach_end;    
   }
@@ -156,10 +157,9 @@ ggcm_mhd_ic_B_from_primitive_fc(struct ggcm_mhd_ic *ic, struct mrc_fld *b)
 // initialize cell-centered B directly
 
 static void
-ggcm_mhd_ic_B_from_primitive_cc(struct ggcm_mhd_ic *ic, struct mrc_fld *b)
+ggcm_mhd_ic_B_from_primitive_cc(struct ggcm_mhd_ic *ic, struct mrc_fld *b, primitive_f primitive)
 {
   struct ggcm_mhd *mhd = ic->mhd;
-  struct ggcm_mhd_ic_ops *ops = ggcm_mhd_ic_ops(ic);
 
   for (int p = 0; p < mrc_fld_nr_patches(b); p++) {
     mrc_fld_foreach(b, ix,iy,iz, 0, 0) {
@@ -168,7 +168,7 @@ ggcm_mhd_ic_B_from_primitive_cc(struct ggcm_mhd_ic *ic, struct mrc_fld *b)
       double dcrd_cc[3] = { crd_cc[0], crd_cc[1], crd_cc[2] };
 	
       for (int m = 0; m < 3; m++) {
-	M3(b, m, ix,iy,iz, p) = ops->primitive(ic, BX + m, dcrd_cc);
+	M3(b, m, ix,iy,iz, p) = primitive(ic, BX + m, dcrd_cc);
       }
     } mrc_fld_foreach_end;    
   }
@@ -178,7 +178,7 @@ ggcm_mhd_ic_B_from_primitive_cc(struct ggcm_mhd_ic *ic, struct mrc_fld *b)
 // ggcm_mhd_ic_B_from_primitive
 
 static void
-ggcm_mhd_ic_B_from_primitive(struct ggcm_mhd_ic *ic, struct mrc_fld *b)
+ggcm_mhd_ic_B_from_primitive(struct ggcm_mhd_ic *ic, struct mrc_fld *b, primitive_f primitive)
 {
   struct ggcm_mhd *mhd = ic->mhd;
   int mhd_type;
@@ -186,9 +186,9 @@ ggcm_mhd_ic_B_from_primitive(struct ggcm_mhd_ic *ic, struct mrc_fld *b)
   
   if (mhd_type == MT_FULLY_CONSERVATIVE ||
       mhd_type == MT_SEMI_CONSERVATIVE) {
-    ggcm_mhd_ic_B_from_primitive_fc(ic, b);
+    ggcm_mhd_ic_B_from_primitive_fc(ic, b, primitive);
   } else if (mhd_type == MT_FULLY_CONSERVATIVE_CC) {
-    ggcm_mhd_ic_B_from_primitive_cc(ic, b);
+    ggcm_mhd_ic_B_from_primitive_cc(ic, b, primitive);
   } else {
     mprintf("mhd_type %d unhandled\n", mhd_type);
     assert(0);
@@ -312,7 +312,7 @@ ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic)
   if (ops->vector_potential) {
     ggcm_mhd_ic_B_from_vector_potential(ic, b);
   } else if (ops->primitive) {
-    ggcm_mhd_ic_B_from_primitive(ic, b);
+    ggcm_mhd_ic_B_from_primitive(ic, b, ops->primitive);
   }
   mrc_fld_destroy(b);
   mrc_fld_put_as(fld, mhd->fld);
