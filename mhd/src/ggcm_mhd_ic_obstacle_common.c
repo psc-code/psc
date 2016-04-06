@@ -9,6 +9,10 @@
 
 #include "mrc_domain.h"
 
+// there's no need to init B using vector potential, B being constant,
+// but it can be useful for testing
+#define USE_VECTOR_POTENTIAL 1
+
 // ======================================================================
 // ggcm_mhd_ic subclass "obstacle"
 
@@ -83,12 +87,8 @@ ggcm_mhd_ic_obstacle_primitive(struct ggcm_mhd_ic *ic, int m, double crd[3])
 static double
 ggcm_mhd_ic_obstacle_primitive_bg(struct ggcm_mhd_ic *ic, int m, double crd[3])
 {
-  struct ggcm_mhd_ic_obstacle *sub = ggcm_mhd_ic_obstacle(ic);
-
   mrc_fld_data_t vals[SW_NR];
   get_solar_wind(ic, vals);
-
-  double xx = crd[0], yy = crd[1], zz = crd[2];
 
   switch (m) {
   case BX: return vals[SW_BX];
@@ -97,6 +97,28 @@ ggcm_mhd_ic_obstacle_primitive_bg(struct ggcm_mhd_ic *ic, int m, double crd[3])
   default: return 0.;
   }
 }
+
+#ifdef USE_VECTOR_POTENTIAL
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_ic_obstacle_vector_potential_bg
+
+static double
+ggcm_mhd_ic_obstacle_vector_potential_bg(struct ggcm_mhd_ic *ic, int m, double crd[3])
+{
+  mrc_fld_data_t vals[SW_NR];
+  get_solar_wind(ic, vals);
+
+  double xx = crd[0], yy = crd[1];
+
+  switch (m) {
+  case 1: return vals[SW_BZ] * xx;
+  case 2: return vals[SW_BX] * yy - vals[SW_BY] * xx;
+  default: return 0.;
+  }
+}
+
+#endif
 
 // ----------------------------------------------------------------------
 // ggcm_mhd_ic_obstacle_descr
@@ -122,9 +144,12 @@ static struct param ggcm_mhd_ic_obstacle_descr[] = {
 // ggcm_mhd_ic subclass "obstacle"
 
 struct ggcm_mhd_ic_ops ggcm_mhd_ic_obstacle_ops = {
-  .name             = ggcm_mhd_ic_obstacle_name,
-  .size             = sizeof(struct ggcm_mhd_ic_obstacle),
-  .param_descr      = ggcm_mhd_ic_obstacle_descr,
-  .primitive        = ggcm_mhd_ic_obstacle_primitive,
-  .primitive_bg     = ggcm_mhd_ic_obstacle_primitive_bg,
+  .name                = ggcm_mhd_ic_obstacle_name,
+  .size                = sizeof(struct ggcm_mhd_ic_obstacle),
+  .param_descr         = ggcm_mhd_ic_obstacle_descr,
+  .primitive           = ggcm_mhd_ic_obstacle_primitive,
+  .primitive_bg        = ggcm_mhd_ic_obstacle_primitive_bg,
+#ifdef USE_VECTOR_POTENTIAL
+  .vector_potential_bg = ggcm_mhd_ic_obstacle_vector_potential_bg,
+#endif
 };
