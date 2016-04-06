@@ -13,6 +13,7 @@ struct ggcm_mhd_ic_ops {
   MRC_SUBCLASS_OPS(struct ggcm_mhd_ic);
   void (*run)(struct ggcm_mhd_ic *ic);
   double (*primitive)(struct ggcm_mhd_ic *ic, int m, double crd[3]);
+  double (*primitive_bg)(struct ggcm_mhd_ic *ic, int m, double crd[3]);
   double (*vector_potential)(struct ggcm_mhd_ic *ic, int m, double crd[3]);
   void (*init_b0)(struct ggcm_mhd_ic *ic, struct mrc_fld *b0);
 };

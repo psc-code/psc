@@ -55,8 +55,8 @@ ggcm_mhd_ic_B_from_vector_potential_fc(struct ggcm_mhd_ic *ic, struct mrc_fld *b
       mrc_fld_data_t Az    = get_vector_potential_ec(ic, 2, ix    ,iy    ,iz, p);
       mrc_fld_data_t Az_xp = get_vector_potential_ec(ic, 2, ix+p1x,iy    ,iz, p);
       mrc_fld_data_t Az_yp = get_vector_potential_ec(ic, 2, ix    ,iy+p1y,iz, p);
-      M3(b, 0, ix,iy,iz, p) =  (Az_yp - Az) / dx[1];
-      M3(b, 1, ix,iy,iz, p) = -(Az_xp - Az) / dx[0];
+      M3(b, 0, ix,iy,iz, p) +=  (Az_yp - Az) / dx[1];
+      M3(b, 1, ix,iy,iz, p) += -(Az_xp - Az) / dx[0];
     } mrc_fld_foreach_end;
   }
 }
@@ -101,8 +101,8 @@ ggcm_mhd_ic_B_from_vector_potential_cc(struct ggcm_mhd_ic *ic, struct mrc_fld *b
       mrc_fld_data_t Az_xm = get_vector_potential_cc(ic, 2, ix-p1x,iy    ,iz, p);
       mrc_fld_data_t Az_yp = get_vector_potential_cc(ic, 2, ix    ,iy+p1y,iz, p);
       mrc_fld_data_t Az_ym = get_vector_potential_cc(ic, 2, ix    ,iy-p1y,iz, p);
-      M3(b, 0, ix,iy,iz, p) =  (Az_yp - Az_ym) / (2. * dx[1]);
-      M3(b, 1, ix,iy,iz, p) = -(Az_xp - Az_xm) / (2. * dx[0]);
+      M3(b, 0, ix,iy,iz, p) +=  (Az_yp - Az_ym) / (2. * dx[1]);
+      M3(b, 1, ix,iy,iz, p) += -(Az_xp - Az_xm) / (2. * dx[0]);
     } mrc_fld_foreach_end;
   }
 }
@@ -168,7 +168,7 @@ ggcm_mhd_ic_B_from_primitive_cc(struct ggcm_mhd_ic *ic, struct mrc_fld *b, primi
       double dcrd_cc[3] = { crd_cc[0], crd_cc[1], crd_cc[2] };
 	
       for (int m = 0; m < 3; m++) {
-	M3(b, m, ix,iy,iz, p) = primitive(ic, BX + m, dcrd_cc);
+	M3(b, m, ix,iy,iz, p) += primitive(ic, BX + m, dcrd_cc);
       }
     } mrc_fld_foreach_end;    
   }
@@ -306,14 +306,25 @@ ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic)
     mrc_ddc_fill_ghosts_fld(mrc_domain_get_ddc(mhd->domain), 0, 3, mhd->b0);
   }
 
-  /* initialize magnetic field */
   struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
   struct mrc_fld *b = mrc_fld_make_view(fld, BX, BX + 3);
+
+  /* initialize background magnetic field */
+  if (ggcm_mhd_step_supports_b0(mhd->step)) {
+    assert(0);
+  } else {
+    if (ops->primitive_bg) {
+      ggcm_mhd_ic_B_from_primitive(ic, b, ops->primitive_bg);
+    }
+  }
+
+  /* initialize magnetic field */
   if (ops->vector_potential) {
     ggcm_mhd_ic_B_from_vector_potential(ic, b);
   } else if (ops->primitive) {
     ggcm_mhd_ic_B_from_primitive(ic, b, ops->primitive);
   }
+
   mrc_fld_destroy(b);
   mrc_fld_put_as(fld, mhd->fld);
 

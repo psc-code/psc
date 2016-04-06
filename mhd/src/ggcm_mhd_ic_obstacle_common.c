@@ -73,6 +73,24 @@ ggcm_mhd_ic_obstacle_primitive(struct ggcm_mhd_ic *ic, int m, double crd[3])
   case VX: return vxsta1(xx, yy, zz, vals[SW_VX], sub->r1, sub->r2);
   case VY: return vxsta1(xx, yy, zz, vals[SW_VY], sub->r1, sub->r2);
   case VZ: return vxsta1(xx, yy, zz, vals[SW_VZ], sub->r1, sub->r2);
+  default: return 0.;
+  }
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_ic_obstacle_primitive_bg
+
+static double
+ggcm_mhd_ic_obstacle_primitive_bg(struct ggcm_mhd_ic *ic, int m, double crd[3])
+{
+  struct ggcm_mhd_ic_obstacle *sub = ggcm_mhd_ic_obstacle(ic);
+
+  mrc_fld_data_t vals[SW_NR];
+  get_solar_wind(ic, vals);
+
+  double xx = crd[0], yy = crd[1], zz = crd[2];
+
+  switch (m) {
   case BX: return vals[SW_BX];
   case BY: return vals[SW_BY];
   case BZ: return vals[SW_BZ];
@@ -108,4 +126,5 @@ struct ggcm_mhd_ic_ops ggcm_mhd_ic_obstacle_ops = {
   .size             = sizeof(struct ggcm_mhd_ic_obstacle),
   .param_descr      = ggcm_mhd_ic_obstacle_descr,
   .primitive        = ggcm_mhd_ic_obstacle_primitive,
+  .primitive_bg     = ggcm_mhd_ic_obstacle_primitive_bg,
 };
