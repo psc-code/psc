@@ -200,6 +200,12 @@ ggcm_mhd_ic_mirdip_vector_potential_b(struct ggcm_mhd_ic *ic, int m, double x[3]
   case 2: A += vals[SW_BX] * x[1] - vals[SW_BY] * x[0]; break;
   }
 
+  // subtract out B0-vector potential
+  // this is somewhat odd, as in, why are we adding the main dipole and then subtract it here again,
+  // but the main dipole field is actually not cut-off at xmir, whereas this one here is, so they
+  // different
+  A -= ggcm_mhd_ic_mirdip_vector_potential_b0(ic, m, x);
+
   return A;
 }
 
@@ -320,22 +326,6 @@ ggcm_mhd_ic_mirdip_ini_b(struct ggcm_mhd_ic *ic, float b_sw[3])
 
   mrc_fld_put_as(b, b_base);
   mrc_fld_destroy(b_base);
-
-  struct mrc_fld *f = mrc_fld_get_as(mhd->fld, FLD_TYPE);
-  struct mrc_fld *b0 = mrc_fld_get_as(mhd->b0, FLD_TYPE);
-
-  // finish up
-  for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
-    mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
-      for (int d = 0; d < 3; d++){
-	// subtract previously calculated background dipole
-	M3(f, BX + d, ix,iy,iz, p) -= M3(b0, d, ix,iy,iz, p);
-      }
-    } mrc_fld_foreach_end;
-  }
-
-  mrc_fld_put_as(f, mhd->fld);
-  mrc_fld_put_as(b0, mhd->b0);
 
   ggcm_mhd_dipole_put(mhd_dipole);
 }
