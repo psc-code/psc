@@ -183,10 +183,17 @@ ggcm_mhd_ic_mirdip_vector_potential_b(struct ggcm_mhd_ic *ic, int m, double x[3]
     first_time = false;
   }
 
-  float x0[3] = { 0.f, 0.f, 0.f };
-
   // get main dipole vector potential
-  double A = ggcm_mhd_dipole_vector_potential(mhd_dipole, m, x, x0, sub->dipole_moment, sub->xmir);
+  double A = ggcm_mhd_dipole_vector_potential(mhd_dipole, m, x, (float [3]) { 0.f, 0.f, 0.f },
+					      sub->dipole_moment, sub->xmir);
+
+  if (sub->xmir != 0.0) {
+    // add mirror dipole vector potential
+    sub->dipole_moment[0] *= -1.f;
+    A += ggcm_mhd_dipole_vector_potential(mhd_dipole, m, x, (float [3]) { 2.f * sub->xmir, 0.f, 0.f },
+					  sub->dipole_moment, sub->xmir);
+    sub->dipole_moment[0] *= -1.f;
+  }
 
   /* // add IMF vector potential */
   /* switch (m) { */
@@ -315,16 +322,6 @@ ggcm_mhd_ic_mirdip_ini_b(struct ggcm_mhd_ic *ic, float b_sw[3])
   ggcm_mhd_put_3d_fld(mhd, a_base);
 
   mrc_fld_put_as(b, b_base);
-
-
-
-  if (sub->xmir != 0.0) {
-    x0[0] = 2.0 * sub->xmir;
-    sub->dipole_moment[0] *= -1.0;
-    ggcm_mhd_dipole_add_dipole(mhd_dipole, b_base, x0, sub->dipole_moment, sub->xmir, 1.);
-    sub->dipole_moment[0] *= -1.0;
-  }
-
   mrc_fld_destroy(b_base);
 
   struct mrc_fld *f = mrc_fld_get_as(mhd->fld, FLD_TYPE);
