@@ -31,6 +31,11 @@ ggcm_mhd_dipole_sub_vector_potential(struct ggcm_mhd_dipole *mhd_dipole, int m,
   r2 = fmax(r2, .01f); // make sure r**2 >= 0.01
   mrc_fld_data_t r3i = powf(r2, -1.5f); // r3i = 1 / r**3
 
+  // set A = 0 inside of r1lim
+  if (r2 <= sqr(mhd_dipole->r1lim)) {
+    return 0.;
+  }
+
   // set A = 0 if we are sunward of xmir
   if (xmir != 0.0 && x[0] < xmir) {
     return 0.f;

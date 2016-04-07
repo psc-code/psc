@@ -8,7 +8,6 @@
 #include "ggcm_mhd_bndsw.h"
 #include "ggcm_mhd_dipole.h"
 #include "ggcm_mhd_crds.h"
-#include "ggcm_mhd_dipole_private.h" // FIXME
 
 #include "mrc_domain.h"
 
@@ -268,14 +267,8 @@ ggcm_mhd_ic_mirdip_ini_b(struct ggcm_mhd_ic *ic, float b_sw[3])
 	curl_a[2] = ((M3(a, 1, ix+1,iy,iz, p) - M3(a, 1, ix-1,iy,iz, p)) * .5f * fd1x[ix] -
 		     (M3(a, 0, ix,iy+1,iz, p) - M3(a, 0, ix,iy-1,iz, p)) * .5f * fd1y[iy]);
 	
-	float crd_cc[3];
-	ggcm_mhd_get_crds_cc(mhd, ix,iy,iz, p, crd_cc);
-	float r = sqrtf(sqr(crd_cc[0]) + sqr(crd_cc[1]) + sqr(crd_cc[2]));
-	// only set B outside of r1lim
-	if (r >= mhd_dipole->r1lim) {
-	  for (int d = 0; d < 3; d++){
-	    M3(b, d, ix,iy,iz, p) = curl_a[d];
-	  }
+	for (int d = 0; d < 3; d++){
+	  M3(b, d, ix,iy,iz, p) = curl_a[d];
 	}
       } mrc_fld_foreach_end;
     }
@@ -304,14 +297,7 @@ ggcm_mhd_ic_mirdip_ini_b(struct ggcm_mhd_ic *ic, float b_sw[3])
 	case MT_SEMI_CONSERVATIVE:
 	case MT_FULLY_CONSERVATIVE:
 	  for (int d = 0; d < 3; d++){
-	    float crd_fc[3];
-	    ggcm_mhd_get_crds_fc(mhd, ix,iy,iz, p, d, crd_fc);
-	    
-	    // only set B outside of r1lim
-	    float r = sqrtf(sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]));
-	    if (r >= mhd_dipole->r1lim) {
-	      M3(b, d, ix,iy,iz, p) = curl_a[d];
-	    }
+	    M3(b, d, ix,iy,iz, p) = curl_a[d];
 	  }
 	  break;
 	default:
@@ -416,14 +402,8 @@ ggcm_mhd_ic_mirdip_init_b0(struct ggcm_mhd_ic *ic, struct mrc_fld *b0_base)
 	curl_a[2] = ((M3(a, 1, ix+1,iy,iz, p) - M3(a, 1, ix-1,iy,iz, p)) * .5f * fd1x[ix] -
 		     (M3(a, 0, ix,iy+1,iz, p) - M3(a, 0, ix,iy-1,iz, p)) * .5f * fd1y[iy]);
 	
-	float crd_cc[3];
-	ggcm_mhd_get_crds_cc(mhd, ix,iy,iz, p, crd_cc);
-	float r = sqrtf(sqr(crd_cc[0]) + sqr(crd_cc[1]) + sqr(crd_cc[2]));
-	// only set B outside of r1lim
-	if (r >= mhd_dipole->r1lim) {
-	  for (int d = 0; d < 3; d++){
-	    M3(b0, d, ix,iy,iz, p) = curl_a[d];
-	  }
+	for (int d = 0; d < 3; d++){
+	  M3(b0, d, ix,iy,iz, p) = curl_a[d];
 	}
       } mrc_fld_foreach_end;
     }
@@ -452,14 +432,7 @@ ggcm_mhd_ic_mirdip_init_b0(struct ggcm_mhd_ic *ic, struct mrc_fld *b0_base)
 	case MT_SEMI_CONSERVATIVE:
 	case MT_FULLY_CONSERVATIVE:
 	  for (int d = 0; d < 3; d++){
-	    float crd_fc[3];
-	    ggcm_mhd_get_crds_fc(mhd, ix,iy,iz, p, d, crd_fc);
-	    
-	    // only set B outside of r1lim
-	    float r = sqrtf(sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]));
-	    if (r >= mhd_dipole->r1lim) {
-	      M3(b0, d, ix,iy,iz, p) = curl_a[d];
-	    }
+	    M3(b0, d, ix,iy,iz, p) = curl_a[d];
 	  }
 	  break;
 	default:
