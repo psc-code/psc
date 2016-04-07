@@ -7,6 +7,8 @@
 #include "ggcm_mhd_private.h"
 #include "ggcm_mhd_bndsw.h"
 #include "ggcm_mhd_dipole.h"
+#include "ggcm_mhd_crds.h"
+#include "ggcm_mhd_dipole_private.h" // FIXME
 
 #include "mrc_domain.h"
 
@@ -217,20 +219,117 @@ ggcm_mhd_ic_mirdip_run(struct ggcm_mhd_ic *ic)
 // ggcm_mhd_mirdip_ic_init_b0
 
 static void
-ggcm_mhd_ic_mirdip_init_b0(struct ggcm_mhd_ic *ic, struct mrc_fld *b0)
+ggcm_mhd_ic_mirdip_init_b0(struct ggcm_mhd_ic *ic, struct mrc_fld *b0_base)
 {
+  struct ggcm_mhd *mhd = ic->mhd;
   struct ggcm_mhd_ic_mirdip *sub = ggcm_mhd_ic_mirdip(ic);
   struct ggcm_mhd_dipole *mhd_dipole = ggcm_mhd_ic_mirdip_get_mhd_dipole(ic);
 
-  /* int mhd_type; */
-  /* mrc_fld_get_param_int(ic->mhd->fld, "mhd_type", &mhd_type); */
-  /* if (mhd_type == MT_FULLY_CONSERVATIVE_CC) { */
-  /*   // FIXME, leave B0 == 0 for now */
-  /*   return; */
-  /* } */
-  
-  float x0[3] = {0.0, 0.0, 0.0};
-  ggcm_mhd_dipole_add_dipole(mhd_dipole, b0, x0, sub->dipole_moment, 0., 0.);
+  int mhd_type;
+  mrc_fld_get_param_int(mhd->fld, "mhd_type", &mhd_type);
+
+  float x0[3] = { 0.f, 0.f, 0.f };
+  float *moment = sub->dipole_moment;
+  float xmir = 0.f;
+
+  struct mrc_fld *a_base = ggcm_mhd_get_3d_fld(mhd, 3);
+  struct mrc_fld *a = mrc_fld_get_as(a_base, FLD_TYPE);
+  struct mrc_fld *b0 = mrc_fld_get_as(b0_base, FLD_TYPE);
+
+  // calculate A first, then take its curl
+  for (int p = 0; p < mrc_fld_nr_patches(a); p++) {
+    mrc_fld_foreach(a, ix,iy,iz, 2, 2) {
+      for (int m = 0; m < 3; m++) {
+	float crd[3];
+	if (mhd_type == MT_PRIMITIVE_CC ||
+	    mhd_type == MT_FULLY_CONSERVATIVE_CC) { // cell-centered B
+	  ggcm_mhd_get_crds_cc(mhd, ix,iy,iz, p, crd);
+	} else {
+	  ggcm_mhd_get_crds_ec(mhd, ix,iy,iz, p, m, crd);
+	}
+	double x[3] = { crd[0], crd[1], crd[2] };
+	M3(a, m, ix,iy,iz, p) = ggcm_mhd_dipole_vector_potential(mhd_dipole, m, x, x0, moment, xmir);
+      }
+    } mrc_fld_foreach_end;
+  }
+
+  // B = keep * B + curl A
+
+  mrc_fld_data_t curl_a[3];
+
+  if (mhd_type == MT_PRIMITIVE_CC ||
+      mhd_type == MT_FULLY_CONSERVATIVE_CC) { // cell-centered B
+    for (int p = 0; p < mrc_fld_nr_patches(b0); p++) {
+      float *fd1x = ggcm_mhd_crds_get_crd_p(mhd->crds, 0, FD1, p);
+      float *fd1y = ggcm_mhd_crds_get_crd_p(mhd->crds, 1, FD1, p);
+      float *fd1z = ggcm_mhd_crds_get_crd_p(mhd->crds, 2, FD1, p);
+      
+      mrc_fld_foreach(b0, ix,iy,iz, 1, 1) {
+	curl_a[0] = ((M3(a, 2, ix,iy+1,iz, p) - M3(a, 2, ix,iy-1,iz, p)) * .5f * fd1y[iy] -
+		     (M3(a, 1, ix,iy,iz+1, p) - M3(a, 1, ix,iy,iz-1, p)) * .5f * fd1z[iz]);
+	curl_a[1] = ((M3(a, 0, ix,iy,iz+1, p) - M3(a, 0, ix,iy,iz-1, p)) * .5f * fd1z[iz] -
+		     (M3(a, 2, ix+1,iy,iz, p) - M3(a, 2, ix-1,iy,iz, p)) * .5f * fd1x[ix]);
+	curl_a[2] = ((M3(a, 1, ix+1,iy,iz, p) - M3(a, 1, ix-1,iy,iz, p)) * .5f * fd1x[ix] -
+		     (M3(a, 0, ix,iy+1,iz, p) - M3(a, 0, ix,iy-1,iz, p)) * .5f * fd1y[iy]);
+	
+	float crd_cc[3];
+	ggcm_mhd_get_crds_cc(mhd, ix,iy,iz, p, crd_cc);
+	float r = sqrtf(sqr(crd_cc[0]) + sqr(crd_cc[1]) + sqr(crd_cc[2]));
+	// only set B outside of r1lim
+	if (r >= mhd_dipole->r1lim) {
+	  for (int d = 0; d < 3; d++){
+	    M3(b0, d, ix,iy,iz, p) = curl_a[d];
+	  }
+	}
+      } mrc_fld_foreach_end;
+    }
+  } else { // face-centered B
+    // FIXME, this doesn't fill Bnormal one ghost cell out on the right (high) side
+    for (int p = 0; p < mrc_fld_nr_patches(b0); p++) {
+      float *bd3x = ggcm_mhd_crds_get_crd_p(mhd->crds, 0, BD3, p);
+      float *bd3y = ggcm_mhd_crds_get_crd_p(mhd->crds, 1, BD3, p);
+      float *bd3z = ggcm_mhd_crds_get_crd_p(mhd->crds, 2, BD3, p);
+      
+      mrc_fld_foreach(b0, ix,iy,iz, 2, 1) {
+	curl_a[0] = ((M3(a, 2, ix,iy+1,iz, p) - M3(a, 2, ix,iy,iz, p)) * bd3y[iy] -
+		     (M3(a, 1, ix,iy,iz+1, p) - M3(a, 1, ix,iy,iz, p)) * bd3z[iz]);
+	curl_a[1] = ((M3(a, 0, ix,iy,iz+1, p) - M3(a, 0, ix,iy,iz, p)) * bd3z[iz] -
+		     (M3(a, 2, ix+1,iy,iz, p) - M3(a, 2, ix,iy,iz, p)) * bd3x[ix]);
+	curl_a[2] = ((M3(a, 1, ix+1,iy,iz, p) - M3(a, 1, ix,iy,iz, p)) * bd3x[ix] -
+		     (M3(a, 0, ix,iy+1,iz, p) - M3(a, 0, ix,iy,iz, p)) * bd3y[iy]);
+	
+	switch (mhd_type) {
+	case MT_SEMI_CONSERVATIVE_GGCM:
+	  M3(b0, 0, ix-1,iy,iz, p) = curl_a[0];
+	  M3(b0, 1, ix,iy-1,iz, p) = curl_a[1];
+	  M3(b0, 2, ix,iy,iz-1, p) = curl_a[2];
+	  break;
+	case MT_PRIMITIVE:
+	case MT_SEMI_CONSERVATIVE:
+	case MT_FULLY_CONSERVATIVE:
+	  for (int d = 0; d < 3; d++){
+	    float crd_fc[3];
+	    ggcm_mhd_get_crds_fc(mhd, ix,iy,iz, p, d, crd_fc);
+	    
+	    // only set B outside of r1lim
+	    float r = sqrtf(sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]));
+	    if (r >= mhd_dipole->r1lim) {
+	      M3(b0, d, ix,iy,iz, p) = curl_a[d];
+	    }
+	  }
+	  break;
+	default:
+	  assert(0);
+	}
+      } mrc_fld_foreach_end;
+    }
+  }
+
+  mrc_fld_put_as(a, a_base);
+  ggcm_mhd_put_3d_fld(mhd, a_base);
+  mrc_fld_put_as(b0, b0_base);
+
+  //  ggcm_mhd_dipole_add_dipole(mhd_dipole, b0, x0, sub->dipole_moment, 0., 0.);
 
   float vals[SW_NR];
   struct ggcm_mhd_bndsw *bndsw = ggcm_mhd_get_var_obj(ic->mhd, "bndsw");
