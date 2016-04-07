@@ -319,13 +319,11 @@ ggcm_mhd_ic_hydro_from_primitive_fully_cc(struct ggcm_mhd_ic *ic, struct mrc_fld
 // ggcm_mhd_ic_hydro_from_primitive
 
 static void
-ggcm_mhd_ic_hydro_from_primitive(struct ggcm_mhd_ic *ic)
+ggcm_mhd_ic_hydro_from_primitive(struct ggcm_mhd_ic *ic, struct mrc_fld *fld)
 {
   struct ggcm_mhd *mhd = ic->mhd;
   int mhd_type;
   mrc_fld_get_param_int(mhd->fld, "mhd_type", &mhd_type);
-
-  struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
 
   if (mhd_type == MT_SEMI_CONSERVATIVE) {
     ggcm_mhd_ic_hydro_from_primitive_semi(ic, fld);
@@ -334,8 +332,6 @@ ggcm_mhd_ic_hydro_from_primitive(struct ggcm_mhd_ic *ic)
   } else {
     assert(0);
   }
-  
-  mrc_fld_put_as(fld, mhd->fld);
 }
 
 // ----------------------------------------------------------------------
@@ -386,13 +382,14 @@ ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic)
   }
 
   mrc_fld_destroy(b);
-  mrc_fld_put_as(fld, mhd->fld);
 
   /* initialize density, velocity, pressure, or corresponding
      conservative quantities */
   if (ops->primitive) {
-    ggcm_mhd_ic_hydro_from_primitive(ic);
+    ggcm_mhd_ic_hydro_from_primitive(ic, fld);
   }
+
+  mrc_fld_put_as(fld, mhd->fld);
 
   if (ops->run) {
     ops->run(ic);
