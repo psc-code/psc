@@ -16,11 +16,11 @@
 // ggcm_mhd_dipole_sub
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_dipole_sub_vect_pot
+// ggcm_mhd_dipole_sub_vector_potential
 
 static double
-ggcm_mhd_dipole_sub_vect_pot_crd(struct ggcm_mhd *mhd, int m, double x[3],
-				 float x0[3], float moment[3], float xmir)
+ggcm_mhd_dipole_sub_vector_potential(struct ggcm_mhd_dipole *mhd_dipole, int m,
+				     double x[3], float x0[3], float moment[3], float xmir)
 {
   // find x_prime (x - x0), and r3i (1 / r**3)
   mrc_fld_data_t x_prime[3], r2 = 0.0;
@@ -66,7 +66,7 @@ ggcm_mhd_dipole_sub_vect_pot(struct ggcm_mhd_dipole *mhd_dipole, int m,
     ggcm_mhd_get_crds_ec(mhd, ix,iy,iz, p, m, crd);
   }
   double x[3] = { crd[0], crd[1], crd[2] };
-  return ggcm_mhd_dipole_sub_vect_pot_crd(mhd, m, x, x0, moment, xmir);
+  return ggcm_mhd_dipole_sub_vector_potential(mhd_dipole, m, x, x0, moment, xmir);
 }
  
 // ----------------------------------------------------------------------
@@ -180,6 +180,7 @@ ggcm_mhd_dipole_sub_add_dipole(struct ggcm_mhd_dipole *mhd_dipole, struct mrc_fl
 // ggcm_mhd_dipole subclass
 
 struct ggcm_mhd_dipole_ops ggcm_mhd_dipole_sub_ops = {
-  .name            = ggcm_mhd_dipole_sub_name,
-  .add_dipole      = ggcm_mhd_dipole_sub_add_dipole,
+  .name             = ggcm_mhd_dipole_sub_name,
+  .add_dipole       = ggcm_mhd_dipole_sub_add_dipole,
+  .vector_potential = ggcm_mhd_dipole_sub_vector_potential,
 };

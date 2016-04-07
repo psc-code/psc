@@ -55,6 +55,18 @@ ggcm_mhd_dipole_add_dipole(struct ggcm_mhd_dipole *mhd_dipole, struct mrc_fld *b
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_dipole_vector_potential
+
+double
+ggcm_mhd_dipole_vector_potential(struct ggcm_mhd_dipole *mhd_dipole, int m,
+				 double x[3], float x0[3], float moment[3], float xmir)
+{
+  struct ggcm_mhd_dipole_ops *ops = ggcm_mhd_dipole_ops(mhd_dipole);
+  assert(ops && ops->vector_potential);
+  return ops->vector_potential(mhd_dipole, m, x, x0, moment, xmir);
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_dipole_set_b_field
 
 void
