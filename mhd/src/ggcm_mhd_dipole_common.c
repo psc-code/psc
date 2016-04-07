@@ -20,10 +20,12 @@
 //
 // vector potential on edges
 
-static void
-ggcm_mhd_dipole_sub_vect_pot_ec(struct ggcm_mhd *mhd, int ix, int iy, int iz, int p, float x0[3],
-				float moment[3], float xmir, mrc_fld_data_t a[3])
+static double
+ggcm_mhd_dipole_sub_vect_pot_ec(struct ggcm_mhd *mhd, int m,
+				int ix, int iy, int iz, int p,
+				float x0[3], float moment[3], float xmir)
 {
+  mrc_fld_data_t a[3];
   // there is one r per component of A since all components of A are not
   // colocated
   mrc_fld_data_t r1 = 0.0;
@@ -67,6 +69,8 @@ ggcm_mhd_dipole_sub_vect_pot_ec(struct ggcm_mhd *mhd, int ix, int iy, int iz, in
       }
     }
   }
+
+  return a[m];
 }
 
 // ----------------------------------------------------------------------
@@ -74,10 +78,12 @@ ggcm_mhd_dipole_sub_vect_pot_ec(struct ggcm_mhd *mhd, int ix, int iy, int iz, in
 //
 // vector potential on cell centers
 
-static void
-ggcm_mhd_dipole_sub_vect_pot_cc(struct ggcm_mhd *mhd, int ix, int iy, int iz, int p, float x0[3],
-				float moment[3], float xmir, mrc_fld_data_t a[3])
+static double
+ggcm_mhd_dipole_sub_vect_pot_cc(struct ggcm_mhd *mhd, int m,
+				int ix, int iy, int iz, int p,
+				float x0[3], float moment[3], float xmir)
 {
+  mrc_fld_data_t a[3];
   // there is one r per component of A since all components of A are not
   // colocated
   float x_cc[3];
@@ -106,8 +112,31 @@ ggcm_mhd_dipole_sub_vect_pot_cc(struct ggcm_mhd *mhd, int ix, int iy, int iz, in
       a[d] = 0.f;
     }
   }
+
+  return a[m];
 }
 
+// ----------------------------------------------------------------------
+// ggcm_mhd_dipole_sub_vect_pot
+
+static double
+ggcm_mhd_dipole_sub_vect_pot(struct ggcm_mhd_dipole *mhd_dipole, int m,
+			     int ix, int iy, int iz, int p,
+			     float x0[3], float moment[3], float xmir)
+{
+  struct ggcm_mhd *mhd = mhd_dipole->mhd;
+
+  int mhd_type;
+  mrc_fld_get_param_int(mhd->fld, "mhd_type", &mhd_type);
+
+  if (mhd_type == MT_PRIMITIVE_CC ||
+      mhd_type == MT_FULLY_CONSERVATIVE_CC) { // cell-centered B
+    return ggcm_mhd_dipole_sub_vect_pot_cc(mhd, m, ix,iy,iz, p, x0, moment, xmir);
+  } else {
+    return ggcm_mhd_dipole_sub_vect_pot_ec(mhd, m, ix,iy,iz, p, x0, moment, xmir);
+  }
+}
+ 
 // ----------------------------------------------------------------------
 // ggcm_mhd_dipole_sub_add_dipole
 
@@ -131,16 +160,9 @@ ggcm_mhd_dipole_sub_add_dipole(struct ggcm_mhd_dipole *mhd_dipole, struct mrc_fl
   // calculate A first, then take its curl
   for (int p = 0; p < mrc_fld_nr_patches(a); p++) {
     mrc_fld_foreach(a, ix,iy,iz, 2, 2) {
-      mrc_fld_data_t vecpot[3];
-      if (mhd_type == MT_PRIMITIVE_CC ||
-	  mhd_type == MT_FULLY_CONSERVATIVE_CC) { // cell-centered B
-	ggcm_mhd_dipole_sub_vect_pot_cc(mhd, ix,iy,iz, p, x0, moment, xmir, vecpot);
-      } else {
-	ggcm_mhd_dipole_sub_vect_pot_ec(mhd, ix,iy,iz, p, x0, moment, xmir, vecpot);
+      for (int m = 0; m < 3; m++) {
+	M3(a, m, ix,iy,iz, p) = ggcm_mhd_dipole_sub_vect_pot(mhd_dipole, m, ix,iy,iz, p, x0, moment, xmir);
       }
-      M3(a, 0, ix,iy,iz, p) = vecpot[0];
-      M3(a, 1, ix,iy,iz, p) = vecpot[1];
-      M3(a, 2, ix,iy,iz, p) = vecpot[2];
     } mrc_fld_foreach_end;
   }
   if (mhd->amr > 0) {
