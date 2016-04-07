@@ -56,9 +56,7 @@ static inline mrc_fld_data_t
 lmbda(mrc_fld_data_t XX, mrc_fld_data_t R1, mrc_fld_data_t R2)
 {
   mrc_fld_data_t LL = (XX - R2) / (R1 - R2);
-  LL = fmax(LL, 0.);
-  LL = fmin(LL, 1.);
-  return LL;
+  return fmin(fmax(LL, 0.f), 1.f);
 }
 
 // ----------------------------------------------------------------------
@@ -74,8 +72,7 @@ vxsta1(mrc_fld_data_t x, mrc_fld_data_t y, mrc_fld_data_t z, mrc_fld_data_t v0,
   }
   mrc_fld_data_t r = sqrt(sqr(xx) + sqr(y) + sqr(z));
   mrc_fld_data_t s = (r - r1) / (r2 - r1);
-  s = fmax(s, 0.);
-  s = fmin(s, 1.);
+  s = fmin(fmax(s, 0.), 1.f);
   if (xmir != 0. && x < xmir) {
     return v0;
   } else {
@@ -84,36 +81,32 @@ vxsta1(mrc_fld_data_t x, mrc_fld_data_t y, mrc_fld_data_t z, mrc_fld_data_t v0,
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_ic_mirdip_ini1
+// ggcm_mhd_ic_mirdip_primitive
 
-static void
-ggcm_mhd_ic_mirdip_ini1(struct ggcm_mhd_ic *ic, float vals[])
+static double
+ggcm_mhd_ic_mirdip_primitive(struct ggcm_mhd_ic *ic, int m, double crd[3])
 {
   struct ggcm_mhd_ic_mirdip *sub = ggcm_mhd_ic_mirdip(ic);
   struct ggcm_mhd *mhd = ic->mhd;
-  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-  struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
+
+  float vals[SW_NR];
+  get_solar_wind(ic, vals);
+
+  double xx = crd[0], yy = crd[1], zz = crd[2];
 
   mrc_fld_data_t xxx1 = sub->xxx1, xxx2 = sub->xxx2, xmir = sub->xmir;
-  mrc_fld_data_t rrini = sub->rrini, stretch_tail = sub->stretch_tail;
+  mrc_fld_data_t rrini = sub->rrini / mhd->rrnorm, stretch_tail = sub->stretch_tail;
 
-  for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
-    mrc_fld_foreach(fld, ix,iy,iz, 2, 2) {
-      mrc_fld_data_t tmplam = lmbda(MRC_MCRDX(crds, ix, p), -xxx1, -xxx2);
-      RR_(fld, ix,iy,iz, p) = 
-	tmplam * vals[SW_RR] + (1. - tmplam) * (rrini / mhd->rrnorm);
-      
-      VX_(fld, ix,iy,iz, p) = vxsta1(MRC_MCRDX(crds, ix, p), MRC_MCRDY(crds, iy, p), MRC_MCRDZ(crds, iz, p),
-				     vals[SW_VX], xxx2, xxx1, stretch_tail, xmir);
-      VY_(fld, ix,iy,iz, p) = 0.;
-      VZ_(fld, ix,iy,iz, p) = 0.;
-      
-      mrc_fld_data_t ppmin = sub->prat * vals[SW_PP];
-      PP_(fld, ix,iy,iz, p) = vals[SW_PP] * tmplam + (1. - tmplam) * ppmin;
-    } mrc_fld_foreach_end;
+  mrc_fld_data_t tmplam = lmbda(xx, -xxx1, -xxx2);
+
+  switch (m) {
+  case RR: return tmplam * vals[SW_RR] + (1.f - tmplam) * rrini;
+  case PP: return tmplam * vals[SW_PP] + (1.f - tmplam) * sub->prat * vals[SW_PP];
+  case VX: return vxsta1(xx, yy, zz, vals[SW_VX], xxx2, xxx1, stretch_tail, xmir);
+  case VY: return 0.;
+  case VZ: return 0.;
+  default: return 0.;
   }
-
-  mrc_fld_put_as(fld, mhd->fld);
 }
 
 // ----------------------------------------------------------------------
@@ -209,39 +202,6 @@ ggcm_mhd_ic_mirdip_vector_potential(struct ggcm_mhd_ic *ic, int m, double x[3])
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_mirdip_ic_run
-
-static void
-ggcm_mhd_ic_mirdip_run(struct ggcm_mhd_ic *ic)
-{
-  // ini_b is done when we still have the primitive variables stored in
-  // mhd->fld, so it needs to use the right ("regular") staggering because
-  // the convert_from_primitive() will fix up the staggering to whatever
-  // we really need in the end.
-  int mhd_type_save;
-  mrc_fld_get_param_int(ic->mhd->fld, "mhd_type", &mhd_type_save);
-  int mhd_type = MT_PRIMITIVE;
-  if (mhd_type_save == MT_FULLY_CONSERVATIVE_CC) {
-    mhd_type = MT_PRIMITIVE_CC;
-  }
-  mrc_fld_set_param_int(ic->mhd->fld, "mhd_type", mhd_type);
-
-  float vals[SW_NR];
-  get_solar_wind(ic, vals);
-
-  ggcm_mhd_ic_mirdip_ini1(ic, vals);
-
-  mrc_fld_set_param_int(ic->mhd->fld, "mhd_type", mhd_type_save);
-  if (mhd_type == MT_PRIMITIVE) {
-    ggcm_mhd_convert_from_primitive(ic->mhd, ic->mhd->fld);
-  } else if (mhd_type == MT_PRIMITIVE_CC) {
-    ggcm_mhd_convert_from_primitive_cc(ic->mhd, ic->mhd->fld);
-  } else {
-    assert(0);
-  }
-}
-
-// ----------------------------------------------------------------------
 // ggcm_mhd_ic_mirdip_descr
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_ic_mirdip, x)
@@ -274,7 +234,7 @@ struct ggcm_mhd_ic_ops ggcm_mhd_ic_mirdip_ops = {
   .name                = ggcm_mhd_ic_mirdip_name,
   .size                = sizeof(struct ggcm_mhd_ic_mirdip),
   .param_descr         = ggcm_mhd_ic_mirdip_descr,
-  .run                 = ggcm_mhd_ic_mirdip_run,
-  .vector_potential_bg = ggcm_mhd_ic_mirdip_vector_potential_bg,
+  .primitive           = ggcm_mhd_ic_mirdip_primitive,
   .vector_potential    = ggcm_mhd_ic_mirdip_vector_potential,
+  .vector_potential_bg = ggcm_mhd_ic_mirdip_vector_potential_bg,
 };
