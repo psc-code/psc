@@ -348,8 +348,11 @@ ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic)
   assert(mhd);
   struct ggcm_mhd_ic_ops *ops = ggcm_mhd_ic_ops(ic);
 
-  if (ops->init_b0) {
+  if (ggcm_mhd_step_supports_b0(mhd->step)) {
     mhd->b0 = ggcm_mhd_get_3d_fld(mhd, 3);
+  }
+
+  if (ops->init_b0) {
     ops->init_b0(ic, mhd->b0);
     // FIXME, this doesn't set B values in exterior ghost points
     mrc_ddc_fill_ghosts_fld(mrc_domain_get_ddc(mhd->domain), 0, 3, mhd->b0);
@@ -360,7 +363,13 @@ ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic)
 
   /* initialize background magnetic field */
   if (ggcm_mhd_step_supports_b0(mhd->step)) {
-    assert(0);
+    struct mrc_fld *b0 = mrc_fld_get_as(mhd->b0, FLD_TYPE);
+    if (ops->vector_potential_bg) {
+      ggcm_mhd_ic_B_from_vector_potential(ic, b0, ops->vector_potential_bg);
+    } else if (ops->primitive_bg) {
+      ggcm_mhd_ic_B_from_primitive(ic, b0, ops->primitive_bg);
+    }
+    mrc_fld_put_as(b0, mhd->b0);
   } else {
     if (ops->vector_potential_bg) {
       ggcm_mhd_ic_B_from_vector_potential(ic, b, ops->vector_potential_bg);
