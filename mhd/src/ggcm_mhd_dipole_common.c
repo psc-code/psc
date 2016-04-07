@@ -21,25 +21,20 @@
 // vector potential on edges
 
 static double
-ggcm_mhd_dipole_sub_vect_pot_ec(struct ggcm_mhd *mhd, int m,
-				int ix, int iy, int iz, int p,
+ggcm_mhd_dipole_sub_vect_pot_ec(struct ggcm_mhd *mhd, int m, double x[3],
 				float x0[3], float moment[3], float xmir)
 {
-  // find the correct edge centered coords for the locations of A
-  float x_ec[3];
-  ggcm_mhd_get_crds_ec(mhd, ix,iy,iz, p, m, x_ec);
-
   // find x_prime (x - x0), and r3i (1 / r**3)
   mrc_fld_data_t x_prime[3], r2 = 0.0;
   for (int j = 0; j < 3; j++) {
-    x_prime[j] = x_ec[j] - x0[j];
+    x_prime[j] = x[j] - x0[j];
     r2 += sqr(x_prime[j]);
   }
   r2 = fmax(r2, .01f); // make sure r**2 >= 0.01
   mrc_fld_data_t r3i = powf(r2, -1.5f); // r3i = 1 / r**3
 
   // set A = 0 if we are sunward of xmir
-  if (xmir != 0.0 && x_ec[0] < xmir) {
+  if (xmir != 0.0 && x[0] < xmir) {
     return 0.f;
   }
 
@@ -58,24 +53,20 @@ ggcm_mhd_dipole_sub_vect_pot_ec(struct ggcm_mhd *mhd, int m,
 // vector potential on cell centers
 
 static double
-ggcm_mhd_dipole_sub_vect_pot_cc(struct ggcm_mhd *mhd, int m,
-				int ix, int iy, int iz, int p,
+ggcm_mhd_dipole_sub_vect_pot_cc(struct ggcm_mhd *mhd, int m, double x[3],
 				float x0[3], float moment[3], float xmir)
 {
-  float x_cc[3];
-  ggcm_mhd_get_crds_cc(mhd, ix,iy,iz, p, x_cc);
-
   // find x_prime (x - x0), and r3i (1 / r**3)
   mrc_fld_data_t x_prime[3], r2 = 0.f;
   for (int d = 0; d < 3; d++){
-    x_prime[d] = x_cc[d] - x0[d];
+    x_prime[d] = x[d] - x0[d];
     r2 += sqr(x_prime[d]);
   }
   r2 = fmax(r2, .01f); // make sure r**2 >= 0.01
   mrc_fld_data_t r3i = powf(r2, -1.5f); // r3i = 1 / r**3
 
   // set A = 0 if we are sunward of xmir
-  if (xmir != 0.0 && x_cc[0] < xmir) {
+  if (xmir != 0.0 && x[0] < xmir) {
     return 0.f;
   }
   
@@ -103,9 +94,16 @@ ggcm_mhd_dipole_sub_vect_pot(struct ggcm_mhd_dipole *mhd_dipole, int m,
 
   if (mhd_type == MT_PRIMITIVE_CC ||
       mhd_type == MT_FULLY_CONSERVATIVE_CC) { // cell-centered B
-    return ggcm_mhd_dipole_sub_vect_pot_cc(mhd, m, ix,iy,iz, p, x0, moment, xmir);
+    float crd[3];
+    ggcm_mhd_get_crds_cc(mhd, ix,iy,iz, p, crd);
+    double x[3] = { crd[0], crd[1], crd[2] };
+    return ggcm_mhd_dipole_sub_vect_pot_cc(mhd, m, x, x0, moment, xmir);
   } else {
-    return ggcm_mhd_dipole_sub_vect_pot_ec(mhd, m, ix,iy,iz, p, x0, moment, xmir);
+  // find the correct edge centered coords for the locations of A
+    float crd[3];
+    ggcm_mhd_get_crds_ec(mhd, ix,iy,iz, p, m, crd);
+    double x[3] = { crd[0], crd[1], crd[2] };
+    return ggcm_mhd_dipole_sub_vect_pot_ec(mhd, m, x, x0, moment, xmir);
   }
 }
  
