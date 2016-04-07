@@ -25,52 +25,31 @@ ggcm_mhd_dipole_sub_vect_pot_ec(struct ggcm_mhd *mhd, int m,
 				int ix, int iy, int iz, int p,
 				float x0[3], float moment[3], float xmir)
 {
-  mrc_fld_data_t a[3];
-  // there is one r per component of A since all components of A are not
-  // colocated
-  mrc_fld_data_t r1 = 0.0;
-  mrc_fld_data_t r2 = 0.0;
-  // in x[i][j] i indexes the component of A it is for and j is x,y,z
-  float x_ec[3][3];
-  mrc_fld_data_t x_prime[3][3];
-  // one r3i for each component of A
-  mrc_fld_data_t r3i[3] = {0.0, 0.0, 0.0}; // r3i = 1 / r**3
-
   // find the correct edge centered coords for the locations of A
-  for (int d = 0; d < 3; d++) {
-    ggcm_mhd_get_crds_ec(mhd, ix,iy,iz, p, d, x_ec[d]);
-  }
+  float x_ec[3];
+  ggcm_mhd_get_crds_ec(mhd, ix,iy,iz, p, m, x_ec);
 
   // find x_prime (x - x0), and r3i (1 / r**3)
-  // loop over i is for the A components
-  for (int i = 0; i < 3; i++){
-    r2 = 0.0;
-    // loop over crds x,y,z
-    for(int j=0; j < 3; j++){
-      x_prime[i][j] = x_ec[i][j] - x0[j];
-      r2 += x_prime[i][j] * x_prime[i][j];
-    }
-    r2 = fmax(r2, 0.01); // make sure r**2 >= 0.01
-    r1 = sqrtf(r2);
-    r3i[i] = 1.0 / (r1 * r2);
+  mrc_fld_data_t x_prime[3], r2 = 0.0;
+  for (int j = 0; j < 3; j++) {
+    x_prime[j] = x_ec[j] - x0[j];
+    r2 += sqr(x_prime[j]);
+  }
+  r2 = fmax(r2, .01f); // make sure r**2 >= 0.01
+  mrc_fld_data_t r3i = powf(r2, -1.5f); // r3i = 1 / r**3
+
+  // set A = 0 if we are sunward of xmir
+  if (xmir != 0.0 && x_ec[0] < xmir) {
+    return 0.f;
   }
 
   // A = m x r / r**3
-  a[0] = (  moment[1] * x_prime[0][2] - moment[2] * x_prime[0][1]) * r3i[0];
-  a[1] = (- moment[0] * x_prime[1][2] + moment[2] * x_prime[1][0]) * r3i[1];
-  a[2] = (  moment[0] * x_prime[2][1] - moment[1] * x_prime[2][0]) * r3i[2];
-
-  // set A[i] = 0 if we are sunward of xmir, this can be true for one component
-  // but not others since components of A are not colocated
-  if(xmir != 0.0){
-    for(int i=0; i < 3; i++){
-      if(x_ec[i][0] < xmir){
-        a[i] = 0.0;
-      }
-    }
+  switch (m) {
+  case 0: return (moment[1] * x_prime[2] - moment[2] * x_prime[1]) * r3i;
+  case 1: return (moment[2] * x_prime[0] - moment[0] * x_prime[2]) * r3i;
+  case 2: return (moment[0] * x_prime[1] - moment[1] * x_prime[0]) * r3i;
+  default: assert(0);
   }
-
-  return a[m];
 }
 
 // ----------------------------------------------------------------------
@@ -83,16 +62,11 @@ ggcm_mhd_dipole_sub_vect_pot_cc(struct ggcm_mhd *mhd, int m,
 				int ix, int iy, int iz, int p,
 				float x0[3], float moment[3], float xmir)
 {
-  mrc_fld_data_t a[3];
-  // there is one r per component of A since all components of A are not
-  // colocated
   float x_cc[3];
-  mrc_fld_data_t x_prime[3];
-
   ggcm_mhd_get_crds_cc(mhd, ix,iy,iz, p, x_cc);
 
   // find x_prime (x - x0), and r3i (1 / r**3)
-  mrc_fld_data_t r2 = 0.f;
+  mrc_fld_data_t x_prime[3], r2 = 0.f;
   for (int d = 0; d < 3; d++){
     x_prime[d] = x_cc[d] - x0[d];
     r2 += sqr(x_prime[d]);
@@ -100,20 +74,18 @@ ggcm_mhd_dipole_sub_vect_pot_cc(struct ggcm_mhd *mhd, int m,
   r2 = fmax(r2, .01f); // make sure r**2 >= 0.01
   mrc_fld_data_t r3i = powf(r2, -1.5f); // r3i = 1 / r**3
 
-  // A = m x r / r**3
-  a[0] = (moment[1] * x_prime[2] - moment[2] * x_prime[1]) * r3i;
-  a[1] = (moment[2] * x_prime[0] - moment[0] * x_prime[2]) * r3i;
-  a[2] = (moment[0] * x_prime[1] - moment[1] * x_prime[0]) * r3i;
-
-  // set A[i] = 0 if we are sunward of xmir, this can be true for one component
-  // but not others since components of A are not colocated
+  // set A = 0 if we are sunward of xmir
   if (xmir != 0.0 && x_cc[0] < xmir) {
-    for (int d = 0; d < 3; d++) {
-      a[d] = 0.f;
-    }
+    return 0.f;
   }
-
-  return a[m];
+  
+  // A = m x r / r**3
+  switch (m) {
+  case 0: return (moment[1] * x_prime[2] - moment[2] * x_prime[1]) * r3i;
+  case 1: return (moment[2] * x_prime[0] - moment[0] * x_prime[2]) * r3i;
+  case 2: return (moment[0] * x_prime[1] - moment[1] * x_prime[0]) * r3i;
+  default: assert(0);
+  }
 }
 
 // ----------------------------------------------------------------------
