@@ -138,6 +138,36 @@ ggcm_mhd_ic_mirdip_get_mhd_dipole(struct ggcm_mhd_ic *ic)
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_ic_mirdip_vector_potential_b0
+
+static double
+ggcm_mhd_ic_mirdip_vector_potential_b0(struct ggcm_mhd_ic *ic, int m, double x[3])
+{
+  struct ggcm_mhd_ic_mirdip *sub = ggcm_mhd_ic_mirdip(ic);
+  static struct ggcm_mhd_dipole *mhd_dipole;
+  static float vals[SW_NR];
+  static bool first_time = true;
+  if (first_time) {
+    mhd_dipole = ggcm_mhd_ic_mirdip_get_mhd_dipole(ic);
+    get_solar_wind(ic, vals);
+    first_time = false;
+  }
+
+  float x0[3] = { 0.f, 0.f, 0.f };
+
+  // get main dipole vector potential
+  double A = ggcm_mhd_dipole_vector_potential(mhd_dipole, m, x, x0, sub->dipole_moment, 0.f);
+
+  // add IMF vector potential
+  switch (m) {
+  case 1: A += vals[SW_BZ] * x[0]; break;
+  case 2: A += vals[SW_BX] * x[1] - vals[SW_BY] * x[0]; break;
+  }
+
+  return A;
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_ic_mirdip_ini_b
 
 static void
@@ -218,36 +248,6 @@ ggcm_mhd_ic_mirdip_run(struct ggcm_mhd_ic *ic)
   } else {
     assert(0);
   }
-}
-
-// ----------------------------------------------------------------------
-// ggcm_mhd_ic_mirdip_vector_potential_b0
-
-static double
-ggcm_mhd_ic_mirdip_vector_potential_b0(struct ggcm_mhd_ic *ic, int m, double x[3])
-{
-  struct ggcm_mhd_ic_mirdip *sub = ggcm_mhd_ic_mirdip(ic);
-  static struct ggcm_mhd_dipole *mhd_dipole;
-  static float vals[SW_NR];
-  static bool first_time = true;
-  if (first_time) {
-    mhd_dipole = ggcm_mhd_ic_mirdip_get_mhd_dipole(ic);
-    get_solar_wind(ic, vals);
-    first_time = false;
-  }
-
-  float x0[3] = { 0.f, 0.f, 0.f };
-
-  // get main dipole vector potential
-  double A = ggcm_mhd_dipole_vector_potential(mhd_dipole, m, x, x0, sub->dipole_moment, 0.f);
-
-  // add IMF vector potential
-  switch (m) {
-  case 1: A += vals[SW_BZ] * x[0]; break;
-  case 2: A += vals[SW_BX] * x[1] - vals[SW_BY] * x[0]; break;
-  }
-
-  return A;
 }
 
 // ----------------------------------------------------------------------
