@@ -153,10 +153,9 @@ ggcm_mhd_ic_mirdip_vector_potential_b0(struct ggcm_mhd_ic *ic, int m, double x[3
     first_time = false;
   }
 
-  float x0[3] = { 0.f, 0.f, 0.f };
-
   // get main dipole vector potential
-  double A = ggcm_mhd_dipole_vector_potential(mhd_dipole, m, x, x0, sub->dipole_moment, 0.f);
+  double A = ggcm_mhd_dipole_vector_potential(mhd_dipole, m, x, (float [3]) { 0.f, 0.f, 0.f },
+					      sub->dipole_moment, sub->xmir);
 
   // add IMF vector potential
   switch (m) {
@@ -195,11 +194,11 @@ ggcm_mhd_ic_mirdip_vector_potential_b(struct ggcm_mhd_ic *ic, int m, double x[3]
     sub->dipole_moment[0] *= -1.f;
   }
 
-  /* // add IMF vector potential */
-  /* switch (m) { */
-  /* case 1: A += vals[SW_BZ] * x[0]; break; */
-  /* case 2: A += vals[SW_BX] * x[1] - vals[SW_BY] * x[0]; break; */
-  /* } */
+  // add IMF vector potential
+  switch (m) {
+  case 1: A += vals[SW_BZ] * x[0]; break;
+  case 2: A += vals[SW_BX] * x[1] - vals[SW_BY] * x[0]; break;
+  }
 
   return A;
 }
@@ -216,8 +215,6 @@ ggcm_mhd_ic_mirdip_ini_b(struct ggcm_mhd_ic *ic, float b_sw[3])
 
   int mhd_type;
   mrc_fld_get_param_int(mhd->fld, "mhd_type", &mhd_type);
-
-  float x0[3] = {0.0, 0.0, 0.0};
 
   mprintf("mirdip_ini_b dipole moment: %f %f %f\n", sub->dipole_moment[0],
   	  sub->dipole_moment[1], sub->dipole_moment[2]);
@@ -331,9 +328,6 @@ ggcm_mhd_ic_mirdip_ini_b(struct ggcm_mhd_ic *ic, float b_sw[3])
   for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
     mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
       for (int d = 0; d < 3; d++){
-	// add B_IMF
-	M3(f, BX + d, ix,iy,iz, p) += b_sw[d];
-
 	// subtract previously calculated background dipole
 	M3(f, BX + d, ix,iy,iz, p) -= M3(b0, d, ix,iy,iz, p);
       }
