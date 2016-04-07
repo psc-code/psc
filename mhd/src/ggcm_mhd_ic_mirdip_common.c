@@ -334,24 +334,20 @@ ggcm_mhd_ic_mirdip_init_b0(struct ggcm_mhd_ic *ic, struct mrc_fld *b0_base)
 
   mrc_fld_put_as(a, a_base);
   ggcm_mhd_put_3d_fld(mhd, a_base);
-  mrc_fld_put_as(b0, b0_base);
 
   //  ggcm_mhd_dipole_add_dipole(mhd_dipole, b0, x0, sub->dipole_moment, 0., 0.);
 
-
-  struct mrc_fld *_b0 = mrc_fld_get_as(b0, FLD_TYPE);
-
   // finish up
-  for (int p = 0; p < mrc_fld_nr_patches(_b0); p++) {
-    mrc_fld_foreach(_b0, ix,iy,iz, 2, 2) {
+  for (int p = 0; p < mrc_fld_nr_patches(b0); p++) {
+    mrc_fld_foreach(b0, ix,iy,iz, 2, 2) {
       for (int d = 0; d < 3; d++){
 	// add B_IMF
-	M3(_b0, d, ix,iy,iz, p) += vals[SW_BX + d];
+	M3(b0, d, ix,iy,iz, p) += vals[SW_BX + d];
       }
     } mrc_fld_foreach_end;
   }
 
-  mrc_fld_put_as(_b0, b0);
+  mrc_fld_put_as(b0, b0_base);
 
   ggcm_mhd_dipole_put(mhd_dipole);
 }
