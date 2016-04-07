@@ -24,29 +24,34 @@ struct ggcm_mhd_ic_mirdip {
 
   float dipole_moment[3];
 
-  // solar wind values to use if there is not "bndsw" object around
+  // solar wind values to use if there is no "bndsw" object around
   double bnvals[SW_NR];
+
+  double bnvals_code[SW_NR]; // normalized to code units
+  double rrini_code;
 };
 
 #define ggcm_mhd_ic_mirdip(ic) mrc_to_subobj(ic, struct ggcm_mhd_ic_mirdip)
 
 // ----------------------------------------------------------------------
-// get_solar_wind
+// ggcm_mhd_ic_mirdip_setup
 
 static void
-get_solar_wind(struct ggcm_mhd_ic *ic, float vals[])
+ggcm_mhd_ic_mirdip_setup(struct ggcm_mhd_ic *ic)
 {
   struct ggcm_mhd_ic_mirdip *sub = ggcm_mhd_ic_mirdip(ic);
   struct ggcm_mhd *mhd = ic->mhd;
 
-  vals[SW_RR] = sub->bnvals[SW_RR] / mhd->rrnorm;
-  vals[SW_VX] = sub->bnvals[SW_VX] / mhd->vvnorm;
-  vals[SW_VY] = sub->bnvals[SW_VY] / mhd->vvnorm;
-  vals[SW_VZ] = sub->bnvals[SW_VZ] / mhd->vvnorm;
-  vals[SW_PP] = sub->bnvals[SW_PP] / mhd->ppnorm;
-  vals[SW_BX] = sub->bnvals[SW_BX] / mhd->bbnorm;
-  vals[SW_BY] = sub->bnvals[SW_BY] / mhd->bbnorm;
-  vals[SW_BZ] = sub->bnvals[SW_BZ] / mhd->bbnorm;
+  sub->bnvals_code[SW_RR] = sub->bnvals[SW_RR] / mhd->rrnorm;
+  sub->bnvals_code[SW_VX] = sub->bnvals[SW_VX] / mhd->vvnorm;
+  sub->bnvals_code[SW_VY] = sub->bnvals[SW_VY] / mhd->vvnorm;
+  sub->bnvals_code[SW_VZ] = sub->bnvals[SW_VZ] / mhd->vvnorm;
+  sub->bnvals_code[SW_PP] = sub->bnvals[SW_PP] / mhd->ppnorm;
+  sub->bnvals_code[SW_BX] = sub->bnvals[SW_BX] / mhd->bbnorm;
+  sub->bnvals_code[SW_BY] = sub->bnvals[SW_BY] / mhd->bbnorm;
+  sub->bnvals_code[SW_BZ] = sub->bnvals[SW_BZ] / mhd->bbnorm;
+
+  sub->rrini_code = sub->rrini / mhd->rrnorm;
 }
 
 // ----------------------------------------------------------------------
@@ -87,22 +92,16 @@ static double
 ggcm_mhd_ic_mirdip_primitive(struct ggcm_mhd_ic *ic, int m, double crd[3])
 {
   struct ggcm_mhd_ic_mirdip *sub = ggcm_mhd_ic_mirdip(ic);
-  struct ggcm_mhd *mhd = ic->mhd;
-
-  float vals[SW_NR];
-  get_solar_wind(ic, vals);
 
   double xx = crd[0], yy = crd[1], zz = crd[2];
 
-  mrc_fld_data_t xxx1 = sub->xxx1, xxx2 = sub->xxx2, xmir = sub->xmir;
-  mrc_fld_data_t rrini = sub->rrini / mhd->rrnorm, stretch_tail = sub->stretch_tail;
-
-  mrc_fld_data_t tmplam = lmbda(xx, -xxx1, -xxx2);
+  double *vals = sub->bnvals_code;
+  mrc_fld_data_t tmplam = lmbda(xx, -sub->xxx1, -sub->xxx2);
 
   switch (m) {
-  case RR: return tmplam * vals[SW_RR] + (1.f - tmplam) * rrini;
+  case RR: return tmplam * vals[SW_RR] + (1.f - tmplam) * sub->rrini_code;
   case PP: return tmplam * vals[SW_PP] + (1.f - tmplam) * sub->prat * vals[SW_PP];
-  case VX: return vxsta1(xx, yy, zz, vals[SW_VX], xxx2, xxx1, stretch_tail, xmir);
+  case VX: return vxsta1(xx, yy, zz, vals[SW_VX], sub->xxx2, sub->xxx1, sub->stretch_tail, sub->xmir);
   case VY: return 0.;
   case VZ: return 0.;
   default: return 0.;
@@ -137,11 +136,9 @@ ggcm_mhd_ic_mirdip_vector_potential_bg(struct ggcm_mhd_ic *ic, int m, double x[3
 {
   struct ggcm_mhd_ic_mirdip *sub = ggcm_mhd_ic_mirdip(ic);
   static struct ggcm_mhd_dipole *mhd_dipole;
-  static float vals[SW_NR];
   static bool first_time = true;
   if (first_time) {
     mhd_dipole = ggcm_mhd_ic_mirdip_get_mhd_dipole(ic);
-    get_solar_wind(ic, vals);
     first_time = false;
   }
 
@@ -150,6 +147,7 @@ ggcm_mhd_ic_mirdip_vector_potential_bg(struct ggcm_mhd_ic *ic, int m, double x[3
 					      sub->dipole_moment, sub->xmir);
 
   // add IMF vector potential
+  double *vals = sub->bnvals_code;
   switch (m) {
   case 1: A += vals[SW_BZ] * x[0]; break;
   case 2: A += vals[SW_BX] * x[1] - vals[SW_BY] * x[0]; break;
@@ -166,11 +164,9 @@ ggcm_mhd_ic_mirdip_vector_potential(struct ggcm_mhd_ic *ic, int m, double x[3])
 {
   struct ggcm_mhd_ic_mirdip *sub = ggcm_mhd_ic_mirdip(ic);
   static struct ggcm_mhd_dipole *mhd_dipole;
-  static float vals[SW_NR];
   static bool first_time = true;
   if (first_time) {
     mhd_dipole = ggcm_mhd_ic_mirdip_get_mhd_dipole(ic);
-    get_solar_wind(ic, vals);
     first_time = false;
   }
 
@@ -187,6 +183,7 @@ ggcm_mhd_ic_mirdip_vector_potential(struct ggcm_mhd_ic *ic, int m, double x[3])
   }
 
   // add IMF vector potential
+  double *vals = sub->bnvals_code;
   switch (m) {
   case 1: A += vals[SW_BZ] * x[0]; break;
   case 2: A += vals[SW_BX] * x[1] - vals[SW_BY] * x[0]; break;
@@ -234,6 +231,7 @@ struct ggcm_mhd_ic_ops ggcm_mhd_ic_mirdip_ops = {
   .name                = ggcm_mhd_ic_mirdip_name,
   .size                = sizeof(struct ggcm_mhd_ic_mirdip),
   .param_descr         = ggcm_mhd_ic_mirdip_descr,
+  .setup               = ggcm_mhd_ic_mirdip_setup,
   .primitive           = ggcm_mhd_ic_mirdip_primitive,
   .vector_potential    = ggcm_mhd_ic_mirdip_vector_potential,
   .vector_potential_bg = ggcm_mhd_ic_mirdip_vector_potential_bg,
