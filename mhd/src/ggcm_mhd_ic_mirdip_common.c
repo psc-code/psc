@@ -221,6 +221,30 @@ ggcm_mhd_ic_mirdip_run(struct ggcm_mhd_ic *ic)
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_ic_mirdip_vector_potential_b0
+
+static double
+ggcm_mhd_ic_mirdip_vector_potential_b0(struct ggcm_mhd_ic *ic, int m, double x[3])
+{
+  struct ggcm_mhd_ic_mirdip *sub = ggcm_mhd_ic_mirdip(ic);
+  static struct ggcm_mhd_dipole *mhd_dipole;
+  static bool first_time = true;
+  if (first_time) {
+    mhd_dipole = ggcm_mhd_ic_mirdip_get_mhd_dipole(ic);
+    first_time = false;
+  }
+
+  float x0[3] = { 0.f, 0.f, 0.f };
+  float *moment = sub->dipole_moment;
+  float xmir = 0.f;
+
+  // get main dipole vector potential
+  double A = ggcm_mhd_dipole_vector_potential(mhd_dipole, m, x, x0, moment, xmir);
+
+  return A;
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_mirdip_ic_init_b0
 
 static void
@@ -234,10 +258,6 @@ ggcm_mhd_ic_mirdip_init_b0(struct ggcm_mhd_ic *ic, struct mrc_fld *b0_base)
 
   int mhd_type;
   mrc_fld_get_param_int(mhd->fld, "mhd_type", &mhd_type);
-
-  float x0[3] = { 0.f, 0.f, 0.f };
-  float *moment = sub->dipole_moment;
-  float xmir = 0.f;
 
   struct mrc_fld *a_base = ggcm_mhd_get_3d_fld(mhd, 3);
   struct mrc_fld *a = mrc_fld_get_as(a_base, FLD_TYPE);
@@ -255,7 +275,7 @@ ggcm_mhd_ic_mirdip_init_b0(struct ggcm_mhd_ic *ic, struct mrc_fld *b0_base)
 	  ggcm_mhd_get_crds_ec(mhd, ix,iy,iz, p, m, crd);
 	}
 	double x[3] = { crd[0], crd[1], crd[2] };
-	M3(a, m, ix,iy,iz, p) = ggcm_mhd_dipole_vector_potential(mhd_dipole, m, x, x0, moment, xmir);
+	M3(a, m, ix,iy,iz, p) = ggcm_mhd_ic_mirdip_vector_potential_b0(ic, m, x);
       }
     } mrc_fld_foreach_end;
   }
