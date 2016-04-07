@@ -150,45 +150,6 @@ ggcm_mhd_convert_fc_cc_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_convert_fc_cc_from_primitive_cc
-//
-// converts from primitive variables to fully-conservative cell-centered in-place.
-// No ghost points are set, the staggered B fields need to exist on all faces
-// (that means one more than cell-centered dims)
-
-static void
-ggcm_mhd_convert_fc_cc_from_primitive_cc(struct ggcm_mhd *mhd, struct mrc_fld *fld_base)
-{
-  mrc_fld_data_t gamma_m1 = mhd->par.gamm - 1.;
-
-  struct mrc_fld *fld = mrc_fld_get_as(fld_base, FLD_TYPE);
-
-  // don't go into ghost cells in invariant directions
-  int gdims[3];
-  mrc_domain_get_global_dims(mhd->domain, gdims);
-
-  for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
-    mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
-      RVX_(fld, ix,iy,iz, p) = RR_(fld, ix,iy,iz, p) * VX_(fld, ix,iy,iz, p);
-      RVY_(fld, ix,iy,iz, p) = RR_(fld, ix,iy,iz, p) * VY_(fld, ix,iy,iz, p);
-      RVZ_(fld, ix,iy,iz, p) = RR_(fld, ix,iy,iz, p) * VZ_(fld, ix,iy,iz, p);
-      BX_ (fld, ix,iy,iz, p) = BX_(fld, ix,iy,iz, p);
-      BY_ (fld, ix,iy,iz, p) = BY_(fld, ix,iy,iz, p);
-      BZ_ (fld, ix,iy,iz, p) = BZ_(fld, ix,iy,iz, p);
-      EE_ (fld, ix,iy,iz, p) = PP_(fld, ix,iy,iz, p) / gamma_m1
-	+ .5*(sqr(BX_(fld, ix,iy,iz, p)) +
-	      sqr(BY_(fld, ix,iy,iz, p)) +
-	      sqr(BZ_(fld, ix,iy,iz, p)))
-	+ .5*(sqr(RVX_(fld, ix,iy,iz, p)) +
-	      sqr(RVY_(fld, ix,iy,iz, p)) +
-	      sqr(RVZ_(fld, ix,iy,iz, p))) / RR_(fld, ix,iy,iz, p);
-    } mrc_fld_foreach_end;
-  }
-
-  mrc_fld_put_as(fld, fld_base);
-}
-
-// ----------------------------------------------------------------------
 // ggcm_mhd_convert_gkeyll_from_primitive
 //
 // converts from primitive MHD variables to multi-fluid moment variables
@@ -332,25 +293,6 @@ ggcm_mhd_convert_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_base)
     return ggcm_mhd_convert_fc_cc_from_primitive(mhd, fld_base);
   } else if (mhd_type == MT_GKEYLL) {
     return ggcm_mhd_convert_gkeyll_from_primitive(mhd, fld_base);
-  } else {
-    assert(0);
-  }
-}
-
-// ----------------------------------------------------------------------
-// ggcm_mhd_convert_from_primitive_cc
-//
-// converts from primitive cc variables to the appropriate fully-conservative /
-// semi-conservative state vector.
-
-void
-ggcm_mhd_convert_from_primitive_cc(struct ggcm_mhd *mhd, struct mrc_fld *fld_base)
-{
-  int mhd_type;
-  mrc_fld_get_param_int(fld_base, "mhd_type", &mhd_type);
-
-  if (mhd_type == MT_FULLY_CONSERVATIVE_CC) {
-    return ggcm_mhd_convert_fc_cc_from_primitive_cc(mhd, fld_base);
   } else {
     assert(0);
   }

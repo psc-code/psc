@@ -32,8 +32,6 @@ void ggcm_mhd_default_box(struct ggcm_mhd *mhd);
 
 void ggcm_mhd_convert_from_primitive(struct ggcm_mhd *mhd,
 				     struct mrc_fld *fld_base);
-void ggcm_mhd_convert_from_primitive_cc(struct ggcm_mhd *mhd,
-					struct mrc_fld *fld_base);
 
 struct mrc_fld *ggcm_mhd_fld_get_as(struct mrc_fld *fld_base, const char *type,
 				    int mhd_type, int mb, int me);
