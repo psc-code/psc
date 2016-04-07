@@ -32,6 +32,25 @@ struct ggcm_mhd_ic_mirdip {
 #define ggcm_mhd_ic_mirdip(ic) mrc_to_subobj(ic, struct ggcm_mhd_ic_mirdip)
 
 // ----------------------------------------------------------------------
+// get_solar_wind
+
+static void
+get_solar_wind(struct ggcm_mhd_ic *ic, float vals[])
+{
+  struct ggcm_mhd_ic_mirdip *sub = ggcm_mhd_ic_mirdip(ic);
+  struct ggcm_mhd *mhd = ic->mhd;
+
+  vals[SW_RR] = sub->bnvals[SW_RR] / mhd->rrnorm;
+  vals[SW_VX] = sub->bnvals[SW_VX] / mhd->vvnorm;
+  vals[SW_VY] = sub->bnvals[SW_VY] / mhd->vvnorm;
+  vals[SW_VZ] = sub->bnvals[SW_VZ] / mhd->vvnorm;
+  vals[SW_PP] = sub->bnvals[SW_PP] / mhd->ppnorm;
+  vals[SW_BX] = sub->bnvals[SW_BX] / mhd->bbnorm;
+  vals[SW_BY] = sub->bnvals[SW_BY] / mhd->bbnorm;
+  vals[SW_BZ] = sub->bnvals[SW_BZ] / mhd->bbnorm;
+}
+
+// ----------------------------------------------------------------------
 // lmbda
 
 static inline mrc_fld_data_t
@@ -173,9 +192,6 @@ ggcm_mhd_ic_mirdip_ini_b(struct ggcm_mhd_ic *ic, float b_sw[3])
 static void
 ggcm_mhd_ic_mirdip_run(struct ggcm_mhd_ic *ic)
 {
-  struct ggcm_mhd_ic_mirdip *sub = ggcm_mhd_ic_mirdip(ic);
-  struct ggcm_mhd *mhd = ic->mhd;
-
   // ini_b is done when we still have the primitive variables stored in
   // mhd->fld, so it needs to use the right ("regular") staggering because
   // the convert_from_primitive() will fix up the staggering to whatever
@@ -189,19 +205,8 @@ ggcm_mhd_ic_mirdip_run(struct ggcm_mhd_ic *ic)
   mrc_fld_set_param_int(ic->mhd->fld, "mhd_type", mhd_type);
 
   float vals[SW_NR];
-  struct ggcm_mhd_bndsw *bndsw = ggcm_mhd_get_var_obj(mhd, "bndsw");
-  if (bndsw) {
-    ggcm_mhd_bndsw_get_initial(bndsw, vals);
-  } else {
-    vals[SW_RR] = sub->bnvals[SW_RR] / mhd->rrnorm;
-    vals[SW_VX] = sub->bnvals[SW_VX] / mhd->vvnorm;
-    vals[SW_VY] = sub->bnvals[SW_VY] / mhd->vvnorm;
-    vals[SW_VZ] = sub->bnvals[SW_VZ] / mhd->vvnorm;
-    vals[SW_PP] = sub->bnvals[SW_PP] / mhd->ppnorm;
-    vals[SW_BX] = sub->bnvals[SW_BX] / mhd->bbnorm;
-    vals[SW_BY] = sub->bnvals[SW_BY] / mhd->bbnorm;
-    vals[SW_BZ] = sub->bnvals[SW_BZ] / mhd->bbnorm;
-  }
+  get_solar_wind(ic, vals);
+
   ggcm_mhd_ic_mirdip_ini1(ic, vals);
   ggcm_mhd_ic_mirdip_ini_b(ic, &vals[SW_BX]);
 
@@ -222,8 +227,10 @@ static void
 ggcm_mhd_ic_mirdip_init_b0(struct ggcm_mhd_ic *ic, struct mrc_fld *b0_base)
 {
   struct ggcm_mhd *mhd = ic->mhd;
-  struct ggcm_mhd_ic_mirdip *sub = ggcm_mhd_ic_mirdip(ic);
   struct ggcm_mhd_dipole *mhd_dipole = ggcm_mhd_ic_mirdip_get_mhd_dipole(ic);
+
+  float vals[SW_NR];
+  get_solar_wind(ic, vals);
 
   int mhd_type;
   mrc_fld_get_param_int(mhd->fld, "mhd_type", &mhd_type);
@@ -331,20 +338,6 @@ ggcm_mhd_ic_mirdip_init_b0(struct ggcm_mhd_ic *ic, struct mrc_fld *b0_base)
 
   //  ggcm_mhd_dipole_add_dipole(mhd_dipole, b0, x0, sub->dipole_moment, 0., 0.);
 
-  float vals[SW_NR];
-  struct ggcm_mhd_bndsw *bndsw = ggcm_mhd_get_var_obj(ic->mhd, "bndsw");
-  if (bndsw) {
-    ggcm_mhd_bndsw_get_initial(bndsw, vals);
-  } else {
-    vals[SW_RR] = sub->bnvals[SW_RR] / ic->mhd->rrnorm;
-    vals[SW_VX] = sub->bnvals[SW_VX] / ic->mhd->vvnorm;
-    vals[SW_VY] = sub->bnvals[SW_VY] / ic->mhd->vvnorm;
-    vals[SW_VZ] = sub->bnvals[SW_VZ] / ic->mhd->vvnorm;
-    vals[SW_PP] = sub->bnvals[SW_PP] / ic->mhd->ppnorm;
-    vals[SW_BX] = sub->bnvals[SW_BX] / ic->mhd->bbnorm;
-    vals[SW_BY] = sub->bnvals[SW_BY] / ic->mhd->bbnorm;
-    vals[SW_BZ] = sub->bnvals[SW_BZ] / ic->mhd->bbnorm;
-  }
 
   struct mrc_fld *_b0 = mrc_fld_get_as(b0, FLD_TYPE);
 
