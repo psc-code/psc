@@ -228,18 +228,24 @@ ggcm_mhd_ic_mirdip_vector_potential_b0(struct ggcm_mhd_ic *ic, int m, double x[3
 {
   struct ggcm_mhd_ic_mirdip *sub = ggcm_mhd_ic_mirdip(ic);
   static struct ggcm_mhd_dipole *mhd_dipole;
+  static float vals[SW_NR];
   static bool first_time = true;
   if (first_time) {
     mhd_dipole = ggcm_mhd_ic_mirdip_get_mhd_dipole(ic);
+    get_solar_wind(ic, vals);
     first_time = false;
   }
 
   float x0[3] = { 0.f, 0.f, 0.f };
-  float *moment = sub->dipole_moment;
-  float xmir = 0.f;
 
   // get main dipole vector potential
-  double A = ggcm_mhd_dipole_vector_potential(mhd_dipole, m, x, x0, moment, xmir);
+  double A = ggcm_mhd_dipole_vector_potential(mhd_dipole, m, x, x0, sub->dipole_moment, 0.f);
+
+  // add IMF vector potential
+  switch (m) {
+  case 1: A += vals[SW_BZ] * x[0]; break;
+  case 2: A += vals[SW_BX] * x[1] - vals[SW_BY] * x[0]; break;
+  }
 
   return A;
 }
@@ -252,9 +258,6 @@ ggcm_mhd_ic_mirdip_init_b0(struct ggcm_mhd_ic *ic, struct mrc_fld *b0_base)
 {
   struct ggcm_mhd *mhd = ic->mhd;
   struct ggcm_mhd_dipole *mhd_dipole = ggcm_mhd_ic_mirdip_get_mhd_dipole(ic);
-
-  float vals[SW_NR];
-  get_solar_wind(ic, vals);
 
   int mhd_type;
   mrc_fld_get_param_int(mhd->fld, "mhd_type", &mhd_type);
@@ -354,18 +357,6 @@ ggcm_mhd_ic_mirdip_init_b0(struct ggcm_mhd_ic *ic, struct mrc_fld *b0_base)
 
   mrc_fld_put_as(a, a_base);
   ggcm_mhd_put_3d_fld(mhd, a_base);
-
-  //  ggcm_mhd_dipole_add_dipole(mhd_dipole, b0, x0, sub->dipole_moment, 0., 0.);
-
-  // finish up
-  for (int p = 0; p < mrc_fld_nr_patches(b0); p++) {
-    mrc_fld_foreach(b0, ix,iy,iz, 2, 2) {
-      for (int d = 0; d < 3; d++){
-	// add B_IMF
-	M3(b0, d, ix,iy,iz, p) += vals[SW_BX + d];
-      }
-    } mrc_fld_foreach_end;
-  }
 
   mrc_fld_put_as(b0, b0_base);
 
