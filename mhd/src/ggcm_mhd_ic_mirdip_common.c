@@ -27,8 +27,11 @@ struct ggcm_mhd_ic_mirdip {
   // solar wind values to use if there is no "bndsw" object around
   double bnvals[SW_NR];
 
+  // state
   double bnvals_code[SW_NR]; // normalized to code units
   double rrini_code;
+
+  struct ggcm_mhd_dipole *mhd_dipole;
 };
 
 #define ggcm_mhd_ic_mirdip(ic) mrc_to_subobj(ic, struct ggcm_mhd_ic_mirdip)
@@ -52,6 +55,20 @@ ggcm_mhd_ic_mirdip_setup(struct ggcm_mhd_ic *ic)
   sub->bnvals_code[SW_BZ] = sub->bnvals[SW_BZ] / mhd->bbnorm;
 
   sub->rrini_code = sub->rrini / mhd->rrnorm;
+
+  // need a mhd_dipole object that'll take care of setting the dipole(s) involved
+  sub->mhd_dipole = ggcm_mhd_get_var_obj(ic->mhd, "mhd_dipole");
+  if (sub->mhd_dipole) {
+    // if run as openggcm, ggcm_mhd has a mhd_dipole member, so use that
+    ggcm_mhd_dipole_get(sub->mhd_dipole);
+  } else {
+    // otherwise, we gotta make our own
+    sub->mhd_dipole = ggcm_mhd_dipole_create(ggcm_mhd_ic_comm(ic));
+    ggcm_mhd_dipole_set_type(sub->mhd_dipole, FLD_TYPE);
+    ggcm_mhd_dipole_set_from_options(sub->mhd_dipole);
+    ggcm_mhd_dipole_set_param_obj(sub->mhd_dipole, "mhd", ic->mhd);
+    ggcm_mhd_dipole_setup(sub->mhd_dipole);
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -109,41 +126,15 @@ ggcm_mhd_ic_mirdip_primitive(struct ggcm_mhd_ic *ic, int m, double crd[3])
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_ic_mirdip_get_mhd_dipole
-
-static struct ggcm_mhd_dipole *
-ggcm_mhd_ic_mirdip_get_mhd_dipole(struct ggcm_mhd_ic *ic)
-{
-  struct ggcm_mhd_dipole *mhd_dipole = ggcm_mhd_get_var_obj(ic->mhd, "mhd_dipole");
-  if (mhd_dipole) {
-    ggcm_mhd_dipole_get(mhd_dipole);
-  } else {
-    mhd_dipole = ggcm_mhd_dipole_create(ggcm_mhd_ic_comm(ic));
-    ggcm_mhd_dipole_set_type(mhd_dipole, FLD_TYPE);
-    ggcm_mhd_dipole_set_from_options(mhd_dipole);
-    ggcm_mhd_dipole_set_param_obj(mhd_dipole, "mhd", ic->mhd);
-    ggcm_mhd_dipole_setup(mhd_dipole);
-  }
-
-  return mhd_dipole;
-}
-
-// ----------------------------------------------------------------------
 // ggcm_mhd_ic_mirdip_vector_potential_bg
 
 static double
 ggcm_mhd_ic_mirdip_vector_potential_bg(struct ggcm_mhd_ic *ic, int m, double x[3])
 {
   struct ggcm_mhd_ic_mirdip *sub = ggcm_mhd_ic_mirdip(ic);
-  static struct ggcm_mhd_dipole *mhd_dipole;
-  static bool first_time = true;
-  if (first_time) {
-    mhd_dipole = ggcm_mhd_ic_mirdip_get_mhd_dipole(ic);
-    first_time = false;
-  }
 
   // get main dipole vector potential
-  double A = ggcm_mhd_dipole_vector_potential(mhd_dipole, m, x, (float [3]) { 0.f, 0.f, 0.f },
+  double A = ggcm_mhd_dipole_vector_potential(sub->mhd_dipole, m, x, (float [3]) { 0.f, 0.f, 0.f },
 					      sub->dipole_moment, sub->xmir);
 
   // add IMF vector potential
@@ -163,21 +154,15 @@ static double
 ggcm_mhd_ic_mirdip_vector_potential(struct ggcm_mhd_ic *ic, int m, double x[3])
 {
   struct ggcm_mhd_ic_mirdip *sub = ggcm_mhd_ic_mirdip(ic);
-  static struct ggcm_mhd_dipole *mhd_dipole;
-  static bool first_time = true;
-  if (first_time) {
-    mhd_dipole = ggcm_mhd_ic_mirdip_get_mhd_dipole(ic);
-    first_time = false;
-  }
 
   // get main dipole vector potential
-  double A = ggcm_mhd_dipole_vector_potential(mhd_dipole, m, x, (float [3]) { 0.f, 0.f, 0.f },
+  double A = ggcm_mhd_dipole_vector_potential(sub->mhd_dipole, m, x, (float [3]) { 0.f, 0.f, 0.f },
 					      sub->dipole_moment, sub->xmir);
 
   if (sub->xmir != 0.0) {
     // add mirror dipole vector potential
     sub->dipole_moment[0] *= -1.f;
-    A += ggcm_mhd_dipole_vector_potential(mhd_dipole, m, x, (float [3]) { 2.f * sub->xmir, 0.f, 0.f },
+    A += ggcm_mhd_dipole_vector_potential(sub->mhd_dipole, m, x, (float [3]) { 2.f * sub->xmir, 0.f, 0.f },
 					  sub->dipole_moment, sub->xmir);
     sub->dipole_moment[0] *= -1.f;
   }
