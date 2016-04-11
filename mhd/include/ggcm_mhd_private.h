@@ -131,15 +131,6 @@ void ggcm_mhd_amr_fill_ghosts_b(struct ggcm_mhd *mhd, struct mrc_fld *fld);
 // MRC_MCRD macros, though the latter only support cell-centered coords at this
 // time
 
-void ggcm_mhd_get_crds_cc(struct mrc_crds *crds, int ix, int iy, int iz, int p,
-			  float crd[3]);
-void ggcm_mhd_get_crds_nc(struct mrc_crds *crds, int ix, int iy, int iz, int p,
-			  float crd[3]);
-void ggcm_mhd_get_crds_fc(struct mrc_crds *crds, int ix, int iy, int iz, int p,
-			  int d, float crd[3]);
-void ggcm_mhd_get_crds_ec(struct mrc_crds *crds, int ix, int iy, int iz, int p,
-			  int d, float crd[3]);
-
 void primvar_c(struct ggcm_mhd *mhd, int m_curr);
 void primvar_float(struct ggcm_mhd *mhd, int m_curr);
 void primvar_double(struct ggcm_mhd *mhd, int m_curr);

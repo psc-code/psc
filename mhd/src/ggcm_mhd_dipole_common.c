@@ -67,9 +67,9 @@ ggcm_mhd_dipole_sub_vect_pot(struct ggcm_mhd_dipole *mhd_dipole, int m,
   float crd[3];
   if (mhd_type == MT_PRIMITIVE_CC ||
       mhd_type == MT_FULLY_CONSERVATIVE_CC) { // cell-centered B
-    ggcm_mhd_get_crds_cc(crds, ix,iy,iz, p, crd);
+    mrc_crds_at_cc(crds, ix,iy,iz, p, crd);
   } else {
-    ggcm_mhd_get_crds_ec(crds, ix,iy,iz, p, m, crd);
+    mrc_crds_at_ec(crds, ix,iy,iz, p, m, crd);
   }
   double x[3] = { crd[0], crd[1], crd[2] };
   return ggcm_mhd_dipole_sub_vector_potential(mhd_dipole, m, x, x0, moment, xmir);
@@ -126,7 +126,7 @@ ggcm_mhd_dipole_sub_add_dipole(struct ggcm_mhd_dipole *mhd_dipole, struct mrc_fl
 		     (M3(a, 0, ix,iy+1,iz, p) - M3(a, 0, ix,iy-1,iz, p)) * .5f * fd1y[iy]);
 	
 	float crd_cc[3];
-	ggcm_mhd_get_crds_cc(crds, ix,iy,iz, p, crd_cc);
+	mrc_crds_at_cc(crds, ix,iy,iz, p, crd_cc);
 	float r = sqrtf(sqr(crd_cc[0]) + sqr(crd_cc[1]) + sqr(crd_cc[2]));
 	// only set B outside of r1lim
 	if (r >= mhd_dipole->r1lim) {
@@ -162,7 +162,7 @@ ggcm_mhd_dipole_sub_add_dipole(struct ggcm_mhd_dipole *mhd_dipole, struct mrc_fl
 	case MT_FULLY_CONSERVATIVE:
 	  for (int d = 0; d < 3; d++){
 	    float crd_fc[3];
-	    ggcm_mhd_get_crds_fc(crds, ix,iy,iz, p, d, crd_fc);
+	    mrc_crds_at_fc(crds, ix,iy,iz, p, d, crd_fc);
 	    
 	    // only set B outside of r1lim
 	    float r = sqrtf(sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]));

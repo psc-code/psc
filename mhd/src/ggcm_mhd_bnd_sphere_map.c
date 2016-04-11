@@ -225,7 +225,7 @@ ggcm_mhd_bnd_sphere_map_find_ec_n_map(struct ggcm_mhd_bnd_sphere_map *map)
 	  for (int d = 0; d < 3; d++) {
 	    // find the correct edge centered coords for the locations of E
 	    float crd_ec[3];
-	    ggcm_mhd_get_crds_ec(crds, jx,jy,jz, p, d, crd_ec);
+	    mrc_crds_at_ec(crds, jx,jy,jz, p, d, crd_ec);
 	    double xx[3] = { crd_ec[0], crd_ec[1], crd_ec[2] };
 
 	    if (ggcm_mhd_bnd_sphere_map_is_ghost(map, xx)) {
@@ -398,7 +398,7 @@ ggcm_mhd_bnd_sphere_map_setup_ec(struct ggcm_mhd_bnd_sphere_map *map)
 	  for (int d = 0; d < 3; d++) {
 	    // find the correct edge centered coords for the locations of E
 	    float crd_ec[3];
-	    ggcm_mhd_get_crds_ec(crds, jx,jy,jz, p, d, crd_ec);
+	    mrc_crds_at_ec(crds, jx,jy,jz, p, d, crd_ec);
 	    double xx[3] = { crd_ec[0], crd_ec[1], crd_ec[2] };
 
 	    if (ggcm_mhd_bnd_sphere_map_is_ghost(map, xx)) {

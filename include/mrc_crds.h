@@ -66,5 +66,83 @@ struct mrc_crds_ops {
   MRC_SUBCLASS_OPS(struct mrc_crds);
 };
 
+// ----------------------------------------------------------------------
+// mrc_crds_at_cc
+
+static inline void
+mrc_crds_at_cc(struct mrc_crds *crds, int ix, int iy, int iz, int p,
+	       float crd_cc[3])
+{
+  crd_cc[0] = MRC_MCRDX(crds, ix, p);
+  crd_cc[1] = MRC_MCRDY(crds, iy, p);
+  crd_cc[2] = MRC_MCRDZ(crds, iz, p);
+}
+
+// ----------------------------------------------------------------------
+// mrc_crds_at_nc
+
+static inline void
+mrc_crds_at_nc(struct mrc_crds *crds, int ix, int iy, int iz, int p,
+	       float crd_nc[3])
+{
+  crd_nc[0] = MRC_MCRDX_NC(crds, ix, p);
+  crd_nc[1] = MRC_MCRDY_NC(crds, iy, p);
+  crd_nc[2] = MRC_MCRDZ_NC(crds, iz, p);
+}
+
+// ----------------------------------------------------------------------
+// mrc_crds_at_fc
+
+static inline void
+mrc_crds_at_fc(struct mrc_crds *crds, int ix, int iy, int iz, int p,
+	       int d, float crd_fc[3])
+{
+  if (d == 0) {
+    // Bx located at i, j+.5, k+.5
+    crd_fc[0] = MRC_MCRDX_NC(crds, ix, p);
+    crd_fc[1] = MRC_MCRDY   (crds, iy, p);
+    crd_fc[2] = MRC_MCRDZ   (crds, iz, p);
+  } else if (d == 1) {
+    // By located at i+.5, j, k+.5
+    crd_fc[0] = MRC_MCRDX   (crds, ix, p);
+    crd_fc[1] = MRC_MCRDY_NC(crds, iy, p);
+    crd_fc[2] = MRC_MCRDZ   (crds, iz, p);
+  } else if (d == 2) {
+    // Bz located at i+.5, j+.5, k
+    crd_fc[0] = MRC_MCRDX   (crds, ix, p);
+    crd_fc[1] = MRC_MCRDY   (crds, iy, p);
+    crd_fc[2] = MRC_MCRDZ_NC(crds, iz, p);
+  } else {
+    assert(0);
+  }
+}
+
+// ----------------------------------------------------------------------
+// mrc_crds_at_ec
+
+static inline void
+mrc_crds_at_ec(struct mrc_crds *crds, int ix, int iy, int iz, int p,
+	       int d, float crd_ec[3])
+{
+  if (d == 0) {
+    // Ex located at i+.5, j, k
+    crd_ec[0] = MRC_MCRDX   (crds, ix, p);
+    crd_ec[1] = MRC_MCRDY_NC(crds, iy, p);
+    crd_ec[2] = MRC_MCRDZ_NC(crds, iz, p);
+  } else if (d == 1) {
+    // Ey located at i, j+.5, k
+    crd_ec[0] = MRC_MCRDX_NC(crds, ix, p);
+    crd_ec[1] = MRC_MCRDY   (crds, iy, p);
+    crd_ec[2] = MRC_MCRDZ_NC(crds, iz, p);
+  } else if (d == 2) {
+    // Ez located at i, j, k+.5
+    crd_ec[0] = MRC_MCRDX_NC(crds, ix, p);
+    crd_ec[1] = MRC_MCRDY_NC(crds, iy, p);
+    crd_ec[2] = MRC_MCRDZ   (crds, iz, p);
+  } else {
+    assert(0);
+  }
+}
+
 #endif
 
