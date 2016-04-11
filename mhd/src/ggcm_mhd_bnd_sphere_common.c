@@ -309,6 +309,7 @@ sphere_fill_ghosts_reconstr(struct ggcm_mhd_bnd *bnd, struct mrc_fld *U_l[],
 {
   struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
   struct ggcm_mhd_bnd_sphere_map *map = &sub->map;
+  struct mrc_crds *crds = mrc_domain_get_crds(bnd->mhd);
 
   for (int d = 0; d < 3; d++) {
     for (int i = 0; i < map->fc_n_map[d]; i++) {
@@ -319,7 +320,7 @@ sphere_fill_ghosts_reconstr(struct ggcm_mhd_bnd *bnd, struct mrc_fld *U_l[],
       int bndp = MRC_I2(map->fc_imap[d], 4, i);
 
       float crd_fc[3];
-      ggcm_mhd_get_crds_fc(bnd->mhd, ix,iy,iz, p, d, crd_fc);
+      ggcm_mhd_get_crds_fc(crds, ix,iy,iz, p, d, crd_fc);
 
       // find true (inside) face values
       mrc_fld_data_t U_ghost[5], U_true[5];

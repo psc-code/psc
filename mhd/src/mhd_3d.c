@@ -88,17 +88,17 @@ update_ct_uniform(struct ggcm_mhd *mhd,
       for (int j = -l[1]; j < ldims[1] + r[1]; j++) {
 	for (int i = -l[0]; i < ldims[0] + r[0]; i++) {
 	  float crd_fc[3];
-	  ggcm_mhd_get_crds_fc(mhd, i,j,k, p, 0, crd_fc);
+	  ggcm_mhd_get_crds_fc(crds, i,j,k, p, 0, crd_fc);
 	  if (sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]) >= r_db_dt_sq) {
 	    M3(x, BX, i,j,k, p) += (dt_on_dx[2] * (M3(E, 1, i   ,j   ,k+dz, p) - M3(E, 1, i,j,k, p)) -
 				    dt_on_dx[1] * (M3(E, 2, i   ,j+dy,k   , p) - M3(E, 2, i,j,k, p)));
 	  }
-	  ggcm_mhd_get_crds_fc(mhd, i,j,k, p, 1, crd_fc);
+	  ggcm_mhd_get_crds_fc(crds, i,j,k, p, 1, crd_fc);
 	  if (sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]) >= r_db_dt_sq) {
 	    M3(x, BY, i,j,k, p) += (dt_on_dx[0] * (M3(E, 2, i+dx,j   ,k   , p) - M3(E, 2, i,j,k, p)) -
 				    dt_on_dx[2] * (M3(E, 0, i   ,j   ,k+dz, p) - M3(E, 0, i,j,k, p)));
 	  }
-	  ggcm_mhd_get_crds_fc(mhd, i,j,k, p, 2, crd_fc);
+	  ggcm_mhd_get_crds_fc(crds, i,j,k, p, 2, crd_fc);
 	  if (sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]) >= r_db_dt_sq) {
 	    M3(x, BZ, i,j,k, p) += (dt_on_dx[1] * (M3(E, 0, i   ,j+dy,k   , p) - M3(E, 0, i,j,k, p)) -
 				    dt_on_dx[0] * (M3(E, 1, i+dx,j   ,k   , p) - M3(E, 1, i,j,k, p)));
@@ -107,7 +107,7 @@ update_ct_uniform(struct ggcm_mhd *mhd,
         if (gdims[0] > 1) {  
 	  int i = ldims[0] + r[0];
 	  float crd_fc[3];
-	  ggcm_mhd_get_crds_fc(mhd, i,j,k, p, 0, crd_fc);
+	  ggcm_mhd_get_crds_fc(crds, i,j,k, p, 0, crd_fc);
 	  if (sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]) >= r_db_dt_sq) {
 	    M3(x, BX, i,j,k, p) += (dt_on_dx[2] * (M3(E, 1, i   ,j   ,k+dz, p) - M3(E, 1, i,j,k, p)) -
 				    dt_on_dx[1] * (M3(E, 2, i   ,j+dy,k   , p) - M3(E, 2, i,j,k, p)));
@@ -118,7 +118,7 @@ update_ct_uniform(struct ggcm_mhd *mhd,
 	for (int i = -l[0]; i < ldims[0] + r[0]; i++) {
 	  int j = ldims[1] + r[1];
 	  float crd_fc[3];
-	  ggcm_mhd_get_crds_fc(mhd, i,j,k, p, 1, crd_fc);
+	  ggcm_mhd_get_crds_fc(crds, i,j,k, p, 1, crd_fc);
 	  if (sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]) >= r_db_dt_sq) {
 	    M3(x, BY, i,j,k, p) += (dt_on_dx[0] * (M3(E, 2, i+dx,j   ,k   , p) - M3(E, 2, i,j,k, p)) -
 				    dt_on_dx[2] * (M3(E, 0, i   ,j   ,k+dz, p) - M3(E, 0, i,j,k, p)));
@@ -131,7 +131,7 @@ update_ct_uniform(struct ggcm_mhd *mhd,
     	for (int i = -l[0]; i < ldims[0] + r[0]; i++) {
     	  int k = ldims[2] + r[2];
 	  float crd_fc[3];
-	  ggcm_mhd_get_crds_fc(mhd, i,j,k, p, 2, crd_fc);
+	  ggcm_mhd_get_crds_fc(crds, i,j,k, p, 2, crd_fc);
 	  if (sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]) >= r_db_dt_sq) {
 	    M3(x, BZ, i,j,k, p) += (dt_on_dx[1] * (M3(E, 0, i   ,j+dy,k   , p) - M3(E, 0, i,j,k, p)) -
 				    dt_on_dx[0] * (M3(E, 1, i+dx,j   ,k   , p) - M3(E, 1, i,j,k, p)));
@@ -150,6 +150,8 @@ update_ct(struct ggcm_mhd *mhd,
 	  struct mrc_fld *x, struct mrc_fld *E, mrc_fld_data_t dt,
 	  bool do_correct)
 {
+  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
+
   if (mhd->amr > 0 && do_correct) {
     mrc_ddc_amr_apply(mhd->ddc_amr_E, E);
     //    correct_E(mhd, E);
@@ -166,17 +168,17 @@ update_ct(struct ggcm_mhd *mhd,
 
     mrc_fld_foreach(x, i,j,k, 0, 1) {
       float crd_fc[3];
-      ggcm_mhd_get_crds_fc(mhd, i,j,k, p, 0, crd_fc);
+      ggcm_mhd_get_crds_fc(crds, i,j,k, p, 0, crd_fc);
       if (sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]) >= r_db_dt_sq) {
 	M3(x, BX, i,j,k, p) -= dt * (bd3y[j] * (M3(E, 2, i,j+dy,k, p) - M3(E, 2, i,j,k, p)) -
 				     bd3z[k] * (M3(E, 1, i,j,k+dz, p) - M3(E, 1, i,j,k, p)));
       }
-      ggcm_mhd_get_crds_fc(mhd, i,j,k, p, 1, crd_fc);
+      ggcm_mhd_get_crds_fc(crds, i,j,k, p, 1, crd_fc);
       if (sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]) >= r_db_dt_sq) {
 	M3(x, BY, i,j,k, p) -= dt * (bd3z[k] * (M3(E, 0, i,j,k+dz, p) - M3(E, 0, i,j,k, p)) -
 				     bd3x[i] * (M3(E, 2, i+dx,j,k, p) - M3(E, 2, i,j,k, p)));
       }
-      ggcm_mhd_get_crds_fc(mhd, i,j,k, p, 2, crd_fc);
+      ggcm_mhd_get_crds_fc(crds, i,j,k, p, 2, crd_fc);
       if (sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]) >= r_db_dt_sq) {
 	M3(x, BZ, i,j,k, p) -= dt * (bd3x[i] * (M3(E, 1, i+dx,j,k, p) - M3(E, 1, i,j,k, p)) -
 				     bd3y[j] * (M3(E, 0, i,j+dy,k, p) - M3(E, 0, i,j,k, p)));

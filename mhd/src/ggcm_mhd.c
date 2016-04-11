@@ -292,11 +292,9 @@ ggcm_mhd_ntot(struct ggcm_mhd *mhd)
 // ggcm_mhd_get_crds_cc
 
 void
-ggcm_mhd_get_crds_cc(struct ggcm_mhd *mhd, int ix, int iy, int iz, int p,
+ggcm_mhd_get_crds_cc(struct mrc_crds *crds, int ix, int iy, int iz, int p,
 		     float crd_cc[3])
 {
-  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-
   crd_cc[0] = MRC_MCRDX(crds, ix, p);
   crd_cc[1] = MRC_MCRDY(crds, iy, p);
   crd_cc[2] = MRC_MCRDZ(crds, iz, p);
@@ -306,11 +304,9 @@ ggcm_mhd_get_crds_cc(struct ggcm_mhd *mhd, int ix, int iy, int iz, int p,
 // ggcm_mhd_get_crds_nc
 
 void
-ggcm_mhd_get_crds_nc(struct ggcm_mhd *mhd, int ix, int iy, int iz, int p,
+ggcm_mhd_get_crds_nc(struct mrc_crds *crds, int ix, int iy, int iz, int p,
 		     float crd_nc[3])
 {
-  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-
   crd_nc[0] = MRC_MCRDX_NC(crds, ix, p);
   crd_nc[1] = MRC_MCRDY_NC(crds, iy, p);
   crd_nc[2] = MRC_MCRDZ_NC(crds, iz, p);
@@ -320,11 +316,9 @@ ggcm_mhd_get_crds_nc(struct ggcm_mhd *mhd, int ix, int iy, int iz, int p,
 // ggcm_mhd_get_crds_fc
 
 void
-ggcm_mhd_get_crds_fc(struct ggcm_mhd *mhd, int ix, int iy, int iz, int p,
+ggcm_mhd_get_crds_fc(struct mrc_crds *crds, int ix, int iy, int iz, int p,
 		     int d, float crd_fc[3])
 {
-  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-
   if (d == 0) {
     // Bx located at i, j+.5, k+.5
     crd_fc[0] = MRC_MCRDX_NC(crds, ix, p);
@@ -349,11 +343,9 @@ ggcm_mhd_get_crds_fc(struct ggcm_mhd *mhd, int ix, int iy, int iz, int p,
 // ggcm_mhd_get_crds_ec
 
 void
-ggcm_mhd_get_crds_ec(struct ggcm_mhd *mhd, int ix, int iy, int iz, int p,
+ggcm_mhd_get_crds_ec(struct mrc_crds *crds, int ix, int iy, int iz, int p,
 		     int d, float crd_ec[3])
 {
-  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-
   if (d == 0) {
     // Ex located at i+.5, j, k
     crd_ec[0] = MRC_MCRDX   (crds, ix, p);

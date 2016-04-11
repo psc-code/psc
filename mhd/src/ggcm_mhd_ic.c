@@ -27,10 +27,11 @@ get_vector_potential_ec(struct ggcm_mhd_ic *ic, int m, int ix, int iy, int iz, i
 			vector_potential_f vector_potential)
 {
   struct ggcm_mhd *mhd = ic->mhd;
+  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
 
   // FIXME, want double precision crds natively here
   float crd_ec[3];
-  ggcm_mhd_get_crds_ec(mhd, ix,iy,iz, p, m, crd_ec);
+  ggcm_mhd_get_crds_ec(crds, ix,iy,iz, p, m, crd_ec);
   double dcrd_ec[3] = { crd_ec[0], crd_ec[1], crd_ec[2] };
   
   return vector_potential(ic, m, dcrd_ec);
@@ -93,10 +94,11 @@ get_vector_potential_cc(struct ggcm_mhd_ic *ic, int m, int ix, int iy, int iz, i
 			vector_potential_f vector_potential)
 {
   struct ggcm_mhd *mhd = ic->mhd;
+  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
 
   // FIXME, want double precision crds natively here
   float crd_cc[3];
-  ggcm_mhd_get_crds_cc(mhd, ix,iy,iz, p, crd_cc);
+  ggcm_mhd_get_crds_cc(crds, ix,iy,iz, p, crd_cc);
   double dcrd_cc[3] = { crd_cc[0], crd_cc[1], crd_cc[2] };
   
   return vector_potential(ic, m, dcrd_cc);
@@ -186,12 +188,13 @@ static void
 ggcm_mhd_ic_B_from_primitive_fc(struct ggcm_mhd_ic *ic, struct mrc_fld *b, primitive_f primitive)
 {
   struct ggcm_mhd *mhd = ic->mhd;
+  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
 
   for (int p = 0; p < mrc_fld_nr_patches(b); p++) {
     mrc_fld_foreach(b, ix,iy,iz, 0, 0) {
       for (int m = 0; m < 3; m++) {
 	float crd_fc[3];
-	ggcm_mhd_get_crds_fc(mhd, ix,iy,iz, p, m, crd_fc);
+	ggcm_mhd_get_crds_fc(crds, ix,iy,iz, p, m, crd_fc);
 	double dcrd_fc[3] = { crd_fc[0], crd_fc[1], crd_fc[2] };
 	
 	M3(b, m, ix,iy,iz, p) += primitive(ic, BX + m, dcrd_fc);
@@ -209,11 +212,12 @@ static void
 ggcm_mhd_ic_B_from_primitive_cc(struct ggcm_mhd_ic *ic, struct mrc_fld *b, primitive_f primitive)
 {
   struct ggcm_mhd *mhd = ic->mhd;
+  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
 
   for (int p = 0; p < mrc_fld_nr_patches(b); p++) {
     mrc_fld_foreach(b, ix,iy,iz, 0, 0) {
       float crd_cc[3];
-      ggcm_mhd_get_crds_cc(mhd, ix,iy,iz, p, crd_cc);
+      ggcm_mhd_get_crds_cc(crds, ix,iy,iz, p, crd_cc);
       double dcrd_cc[3] = { crd_cc[0], crd_cc[1], crd_cc[2] };
 	
       for (int m = 0; m < 3; m++) {
@@ -253,6 +257,7 @@ static void
 ggcm_mhd_ic_hydro_from_primitive_semi(struct ggcm_mhd_ic *ic, struct mrc_fld *fld)
 {
   struct ggcm_mhd *mhd = ic->mhd;
+  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
   struct ggcm_mhd_ic_ops *ops = ggcm_mhd_ic_ops(ic);
 
   mrc_fld_data_t gamma_m1 = mhd->par.gamm - 1.;
@@ -260,7 +265,7 @@ ggcm_mhd_ic_hydro_from_primitive_semi(struct ggcm_mhd_ic *ic, struct mrc_fld *fl
   for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
     mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
       float crd_cc[3];
-      ggcm_mhd_get_crds_cc(mhd, ix,iy,iz, p, crd_cc);
+      ggcm_mhd_get_crds_cc(crds, ix,iy,iz, p, crd_cc);
       double dcrd_cc[3] = { crd_cc[0], crd_cc[1], crd_cc[2] };
       
       mrc_fld_data_t prim[5];
@@ -287,6 +292,7 @@ static void
 ggcm_mhd_ic_hydro_from_primitive_fully_cc(struct ggcm_mhd_ic *ic, struct mrc_fld *fld)
 {
   struct ggcm_mhd *mhd = ic->mhd;
+  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
   struct ggcm_mhd_ic_ops *ops = ggcm_mhd_ic_ops(ic);
 
   mrc_fld_data_t gamma_m1 = mhd->par.gamm - 1.;
@@ -294,7 +300,7 @@ ggcm_mhd_ic_hydro_from_primitive_fully_cc(struct ggcm_mhd_ic *ic, struct mrc_fld
   for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
     mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
       float crd_cc[3];
-      ggcm_mhd_get_crds_cc(mhd, ix,iy,iz, p, crd_cc);
+      ggcm_mhd_get_crds_cc(crds, ix,iy,iz, p, crd_cc);
       double dcrd_cc[3] = { crd_cc[0], crd_cc[1], crd_cc[2] };
       
       mrc_fld_data_t prim[5];

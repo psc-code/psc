@@ -201,6 +201,7 @@ static void
 ggcm_mhd_bnd_sphere_map_find_ec_n_map(struct ggcm_mhd_bnd_sphere_map *map)
 {
   struct ggcm_mhd *mhd = map->mhd;
+  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
 
   int gdims[3];
   mrc_domain_get_global_dims(mhd->domain, gdims);
@@ -224,7 +225,7 @@ ggcm_mhd_bnd_sphere_map_find_ec_n_map(struct ggcm_mhd_bnd_sphere_map *map)
 	  for (int d = 0; d < 3; d++) {
 	    // find the correct edge centered coords for the locations of E
 	    float crd_ec[3];
-	    ggcm_mhd_get_crds_ec(mhd, jx,jy,jz, p, d, crd_ec);
+	    ggcm_mhd_get_crds_ec(crds, jx,jy,jz, p, d, crd_ec);
 	    double xx[3] = { crd_ec[0], crd_ec[1], crd_ec[2] };
 
 	    if (ggcm_mhd_bnd_sphere_map_is_ghost(map, xx)) {
@@ -374,6 +375,7 @@ void
 ggcm_mhd_bnd_sphere_map_setup_ec(struct ggcm_mhd_bnd_sphere_map *map)
 {
   struct ggcm_mhd *mhd = map->mhd;
+  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
 
   int gdims[3];
   mrc_domain_get_global_dims(mhd->domain, gdims);
@@ -396,7 +398,7 @@ ggcm_mhd_bnd_sphere_map_setup_ec(struct ggcm_mhd_bnd_sphere_map *map)
 	  for (int d = 0; d < 3; d++) {
 	    // find the correct edge centered coords for the locations of E
 	    float crd_ec[3];
-	    ggcm_mhd_get_crds_ec(mhd, jx,jy,jz, p, d, crd_ec);
+	    ggcm_mhd_get_crds_ec(crds, jx,jy,jz, p, d, crd_ec);
 	    double xx[3] = { crd_ec[0], crd_ec[1], crd_ec[2] };
 
 	    if (ggcm_mhd_bnd_sphere_map_is_ghost(map, xx)) {
