@@ -59,6 +59,9 @@ _mrc_crds_read(struct mrc_crds *crds, struct mrc_io *io)
     crds->global_crd[1] = mrc_io_read_ref(io, crds, "global_crd[1]", mrc_fld);
     crds->global_crd[2] = mrc_io_read_ref(io, crds, "global_crd[2]", mrc_fld);
   }
+
+  assert(0); // checkpoint read is broken for crd_nc, since we've only written data
+  // without the ghost points
 }
 
 static void
@@ -149,7 +152,7 @@ mrc_crds_setup_alloc_only(struct mrc_crds *crds)
     mrc_fld_set_param_obj(crds->crd_nc[d], "domain", crds->domain);
     mrc_fld_set_param_int(crds->crd_nc[d], "nr_spatial_dims", 1);
     mrc_fld_set_param_int(crds->crd_nc[d], "dim", d);
-    mrc_fld_set_param_int(crds->crd_nc[d], "nr_ghosts", 1);
+    mrc_fld_set_param_int(crds->crd_nc[d], "nr_ghosts", crds->sw + 1);
     mrc_fld_set_comp_name(crds->crd_nc[d], 0, mrc_fld_name(crds->crd_nc[d]));
     mrc_fld_setup(crds->crd_nc[d]);
   }
@@ -171,36 +174,6 @@ mrc_crds_setup_alloc_global_array(struct mrc_crds *crds)
 }
 
 // ----------------------------------------------------------------------
-// mrc_crds_setup_nc
-
-static void
-mrc_crds_setup_nc(struct mrc_crds *crds)
-{
-  for (int d = 0; d < 3; d++) {
-    struct mrc_fld *crd_cc = crds->crd[d];
-    struct mrc_fld *crd_nc = crds->crd_nc[d];
-
-    mrc_m1_foreach_patch(crd_nc, p) {
-      if (crds->sw > 0) {
-	mrc_m1_foreach(crd_cc, i, 0, 1) {
-	  MRC_M1(crd_nc,0, i, p) = .5 * (MRC_M1(crd_cc,0, i-1, p) + MRC_M1(crd_cc,0, i, p));
-	} mrc_m1_foreach_end;
-      } else {
-	mrc_m1_foreach(crd_cc, i, -1, 0) {
-	  MRC_M1(crd_nc,0, i, p) = .5 * (MRC_M1(crd_cc,0, i-1, p) + MRC_M1(crd_cc,0, i, p));
-	} mrc_m1_foreach_end;
-	int ld = mrc_fld_dims(crd_nc)[0];
-	// extrapolate
-	MRC_M1(crd_nc,0, 0 , p) = MRC_M1(crd_cc,0, 0   , p)
-	  - .5 * (MRC_M1(crd_cc,0,    1, p) - MRC_M1(crd_cc,0, 0   , p));
-	MRC_M1(crd_nc,0, ld, p) = MRC_M1(crd_cc,0, ld-1, p)
-	  + .5 * (MRC_M1(crd_cc,0, ld-1, p) - MRC_M1(crd_cc,0, ld-2, p));
-      }
-    }
-  }
-}
-
-// ----------------------------------------------------------------------
 // _mrc_crds_setup
 
 static void
@@ -217,6 +190,8 @@ _mrc_crds_setup(struct mrc_crds *crds)
   mrc_domain_get_global_dims(crds->domain, gdims);
   patches = mrc_domain_get_patches(crds->domain, &nr_patches);
 
+  int sw = crds->sw;
+
   for (int d = 0; d < 3; d ++) {
     struct mrc_fld *x = crds->global_crd[d];
 
@@ -230,18 +205,30 @@ _mrc_crds_setup(struct mrc_crds *crds)
     mrc_crds_gen_set_param_double(gen, "xh", xh[d]);
     mrc_crds_gen_run(gen, &MRC_D2(x, 0, 0), &MRC_D2(x, 0, 1));
 
+    struct mrc_fld *crd_nc = crds->crd_nc[d];
+
     mrc_fld_foreach_patch(crds->crd[d], p) {
       // shift to beginning of local domain
       int off = patches[p].off[d];
 
-      mrc_m1_foreach_bnd(crds->crd[d], ix) {
-        MRC_DMCRD(crds, d, ix, p) = MRC_D2(x, ix + off, 0);
-        MRC_MCRD(crds, d, ix, p) = (float)MRC_D2(x, ix + off, 0);
+      mrc_m1_foreach(crds->crd[d], i, sw, sw) {
+        MRC_DMCRD(crds, d, i, p) = MRC_D2(x, i + off, 0);
+        MRC_MCRD(crds, d, i, p) = (float)MRC_D2(x, i + off, 0);
+      } mrc_m1_foreach_end;
+
+      mrc_m1_foreach(crds->crd[d], i, sw, sw + 1) {
+	if (i + off == -sw) { // extrapolate on low side
+	  MRC_M1(crd_nc, 0, i, p) = MRC_D2(x, i + off, 0)
+	    - .5 * (MRC_D2(x, i+1 + off, 0) - MRC_D2(x, i + off, 0));
+	} else if (i + off == gdims[d] + sw) { // extrapolate on high side
+	  MRC_M1(crd_nc, 0, i, p) = MRC_D2(x, i-1 + off, 0)
+	    + .5 * (MRC_D2(x, i-1 + off, 0) - MRC_D2(x, i-2 + off, 0));
+	} else {
+	  MRC_M1(crd_nc, 0, i, p) = .5 * (MRC_D2(x, i-1 + off, 0) + MRC_D2(x, i + off, 0));
+	}
       } mrc_m1_foreach_end;
     }
   }
-
-  mrc_crds_setup_nc(crds);
 }
 
 static void
@@ -441,6 +428,10 @@ static struct param mrc_crds_params_descr[] = {
   { "dcrd[0]"        , VAR(dcrd[0])       , MRC_VAR_OBJ(mrc_fld)     },
   { "dcrd[1]"        , VAR(dcrd[1])       , MRC_VAR_OBJ(mrc_fld)     },
   { "dcrd[2]"        , VAR(dcrd[2])       , MRC_VAR_OBJ(mrc_fld)     },
+
+  /* { "crd_nc[0]"      , VAR(crd_nc[0])     , MRC_VAR_OBJ(mrc_fld)     }, */
+  /* { "crd_nc[1]"      , VAR(crd_nc[1])     , MRC_VAR_OBJ(mrc_fld)     }, */
+  /* { "crd_nc[2]"      , VAR(crd_nc[2])     , MRC_VAR_OBJ(mrc_fld)     }, */
 
   { "crds_gen_x"     , VAR(crds_gen[0])   , MRC_VAR_OBJ(mrc_crds_gen)},
   { "crds_gen_y"     , VAR(crds_gen[1])   , MRC_VAR_OBJ(mrc_crds_gen)},
