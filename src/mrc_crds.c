@@ -115,7 +115,7 @@ mrc_crds_get_dx_base(struct mrc_crds *crds, double dx[3])
   if (strcmp(mrc_crds_type(crds), "amr_uniform") == 0) {
     int lm[3];
     mrc_domain_get_param_int3(crds->domain, "m", lm);
-    for (int d=0; d < 3; d++) {
+    for (int d = 0; d < 3; d++) {
       dx[d] = (crds->xh[d] - crds->xl[d]) / lm[d];
     }
   } else {
@@ -205,8 +205,6 @@ _mrc_crds_setup(struct mrc_crds *crds)
     mrc_crds_gen_set_param_double(gen, "xh", xh[d]);
     mrc_crds_gen_run(gen, &MRC_D2(x, 0, 0), &MRC_D2(x, 0, 1));
 
-    struct mrc_fld *crd_nc = crds->crd_nc[d];
-
     mrc_fld_foreach_patch(crds->crd[d], p) {
       // shift to beginning of local domain
       int off = patches[p].off[d];
@@ -218,13 +216,13 @@ _mrc_crds_setup(struct mrc_crds *crds)
 
       mrc_m1_foreach(crds->crd[d], i, sw, sw + 1) {
 	if (i + off == -sw) { // extrapolate on low side
-	  MRC_M1(crd_nc, 0, i, p) = MRC_D2(x, i + off, 0)
+	  MRC_MCRD_NC(crds, d, i, p) = MRC_D2(x, i + off, 0)
 	    - .5 * (MRC_D2(x, i+1 + off, 0) - MRC_D2(x, i + off, 0));
 	} else if (i + off == gdims[d] + sw) { // extrapolate on high side
-	  MRC_M1(crd_nc, 0, i, p) = MRC_D2(x, i-1 + off, 0)
+	  MRC_MCRD_NC(crds, d, i, p) = MRC_D2(x, i-1 + off, 0)
 	    + .5 * (MRC_D2(x, i-1 + off, 0) - MRC_D2(x, i-2 + off, 0));
 	} else {
-	  MRC_M1(crd_nc, 0, i, p) = .5 * (MRC_D2(x, i-1 + off, 0) + MRC_D2(x, i + off, 0));
+	  MRC_MCRD_NC(crds, d, i, p) = .5 * (MRC_D2(x, i-1 + off, 0) + MRC_D2(x, i + off, 0));
 	}
       } mrc_m1_foreach_end;
     }

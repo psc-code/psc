@@ -44,6 +44,11 @@ struct mrc_crds {
 #define MRC_DMCRDY(crds, iy, p) MRC_DMCRD(crds, 1, iy, p)
 #define MRC_DMCRDZ(crds, iz, p) MRC_DMCRD(crds, 2, iz, p)
 
+#define MRC_MCRD_NC(crds, d, ix, p) MRC_M1((crds)->crd_nc[d],0, ix, p)
+#define MRC_MCRDX_NC(crds, ix, p) MRC_MCRD(crds, 0, ix, p)
+#define MRC_MCRDY_NC(crds, iy, p) MRC_MCRD(crds, 1, iy, p)
+#define MRC_MCRDZ_NC(crds, iz, p) MRC_MCRD(crds, 2, iz, p)
+
 
 MRC_CLASS_DECLARE(mrc_crds, struct mrc_crds);
 
