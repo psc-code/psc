@@ -18,6 +18,8 @@ struct mrc_crds {
   struct mrc_fld *dcrd[3]; // Double version of the coordinates
                            // not fully supported in io yet
   struct mrc_fld *crd_nc[3];
+  struct mrc_fld *dcrd_nc[3];
+
   struct mrc_fld *global_crd[3];
 
   struct mrc_crds_gen *crds_gen[3];
@@ -44,10 +46,15 @@ struct mrc_crds {
 #define MRC_DMCRDY(crds, iy, p) MRC_DMCRD(crds, 1, iy, p)
 #define MRC_DMCRDZ(crds, iz, p) MRC_DMCRD(crds, 2, iz, p)
 
-#define MRC_MCRD_NC(crds, d, ix, p) MRC_M1((crds)->crd_nc[d],0, ix, p)
-#define MRC_MCRDX_NC(crds, ix, p) MRC_MCRD(crds, 0, ix, p)
-#define MRC_MCRDY_NC(crds, iy, p) MRC_MCRD(crds, 1, iy, p)
-#define MRC_MCRDZ_NC(crds, iz, p) MRC_MCRD(crds, 2, iz, p)
+#define MRC_MCRD_NC(crds, d, ix, p) MRC_M1((crds)->crd_nc[d], 0, ix, p)
+#define MRC_MCRDX_NC(crds, ix, p) MRC_MCRD_NC(crds, 0, ix, p)
+#define MRC_MCRDY_NC(crds, iy, p) MRC_MCRD_NC(crds, 1, iy, p)
+#define MRC_MCRDZ_NC(crds, iz, p) MRC_MCRD_NC(crds, 2, iz, p)
+
+#define MRC_DMCRD_NC(crds, d, ix, p) MRC_D3((crds)->dcrd_nc[d], ix, 0, p)
+#define MRC_DMCRDX_NC(crds, ix, p) MRC_DMCRD_NC(crds, 0, ix, p)
+#define MRC_DMCRDY_NC(crds, iy, p) MRC_DMCRD_NC(crds, 1, iy, p)
+#define MRC_DMCRDZ_NC(crds, iz, p) MRC_DMCRD_NC(crds, 2, iz, p)
 
 
 MRC_CLASS_DECLARE(mrc_crds, struct mrc_crds);

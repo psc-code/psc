@@ -37,6 +37,9 @@ _mrc_crds_create(struct mrc_crds *crds)
     sprintf(s, "crd_nc[%d]", d);
     mrc_fld_set_name(crds->crd_nc[d], s);
 
+    sprintf(s, "dcrd_nc[%d]", d);
+    mrc_fld_set_name(crds->dcrd_nc[d], s);
+
     crds->global_crd[d] = mrc_fld_create(mrc_crds_comm(crds));
     sprintf(s, "global_crd[%d]", d);
     mrc_fld_set_name(crds->global_crd[d], s);
@@ -61,7 +64,8 @@ _mrc_crds_read(struct mrc_crds *crds, struct mrc_io *io)
   }
 
   assert(0); // checkpoint read is broken for crd_nc, since we've only written data
-  // without the ghost points
+  // without the ghost points -- can be resolved by reading dcrd_nc and copying,
+  // or by writing all ghostpoints when doing hdf5_serial
 }
 
 static void
@@ -155,6 +159,15 @@ mrc_crds_setup_alloc_only(struct mrc_crds *crds)
     mrc_fld_set_param_int(crds->crd_nc[d], "nr_ghosts", crds->sw + 1);
     mrc_fld_set_comp_name(crds->crd_nc[d], 0, mrc_fld_name(crds->crd_nc[d]));
     mrc_fld_setup(crds->crd_nc[d]);
+
+    // node-centered coords
+    mrc_fld_set_type(crds->dcrd_nc[d], "double");
+    mrc_fld_set_param_obj(crds->dcrd_nc[d], "domain", crds->domain);
+    mrc_fld_set_param_int(crds->dcrd_nc[d], "nr_spatial_dims", 1);
+    mrc_fld_set_param_int(crds->dcrd_nc[d], "dim", d);
+    mrc_fld_set_param_int(crds->dcrd_nc[d], "nr_ghosts", crds->sw + 1);
+    mrc_fld_set_comp_name(crds->dcrd_nc[d], 0, mrc_fld_name(crds->dcrd_nc[d]));
+    mrc_fld_setup(crds->dcrd_nc[d]);
   }
 }
 
@@ -211,19 +224,20 @@ _mrc_crds_setup(struct mrc_crds *crds)
 
       mrc_m1_foreach(crds->crd[d], i, sw, sw) {
         MRC_DMCRD(crds, d, i, p) = MRC_D2(x, i + off, 0);
-        MRC_MCRD(crds, d, i, p) = (float)MRC_D2(x, i + off, 0);
+        MRC_MCRD(crds, d, i, p) = MRC_DMCRD(crds, d, i, p);
       } mrc_m1_foreach_end;
 
       mrc_m1_foreach(crds->crd[d], i, sw, sw + 1) {
 	if (i + off == -sw) { // extrapolate on low side
-	  MRC_MCRD_NC(crds, d, i, p) = MRC_D2(x, i + off, 0)
+	  MRC_DMCRD_NC(crds, d, i, p) = MRC_D2(x, i + off, 0)
 	    - .5 * (MRC_D2(x, i+1 + off, 0) - MRC_D2(x, i + off, 0));
 	} else if (i + off == gdims[d] + sw) { // extrapolate on high side
-	  MRC_MCRD_NC(crds, d, i, p) = MRC_D2(x, i-1 + off, 0)
+	  MRC_DMCRD_NC(crds, d, i, p) = MRC_D2(x, i-1 + off, 0)
 	    + .5 * (MRC_D2(x, i-1 + off, 0) - MRC_D2(x, i-2 + off, 0));
 	} else {
-	  MRC_MCRD_NC(crds, d, i, p) = .5 * (MRC_D2(x, i-1 + off, 0) + MRC_D2(x, i + off, 0));
+	  MRC_DMCRD_NC(crds, d, i, p) = .5 * (MRC_D2(x, i-1 + off, 0) + MRC_D2(x, i + off, 0));
 	}
+	MRC_MCRD_NC(crds, d, i, p) = MRC_DMCRD_NC(crds, d, i, p);
       } mrc_m1_foreach_end;
     }
   }
@@ -430,6 +444,10 @@ static struct param mrc_crds_params_descr[] = {
   /* { "crd_nc[0]"      , VAR(crd_nc[0])     , MRC_VAR_OBJ(mrc_fld)     }, */
   /* { "crd_nc[1]"      , VAR(crd_nc[1])     , MRC_VAR_OBJ(mrc_fld)     }, */
   /* { "crd_nc[2]"      , VAR(crd_nc[2])     , MRC_VAR_OBJ(mrc_fld)     }, */
+
+  { "dcrd_nc[0]"     , VAR(dcrd_nc[0])    , MRC_VAR_OBJ(mrc_fld)     },
+  { "dcrd_nc[1]"     , VAR(dcrd_nc[1])    , MRC_VAR_OBJ(mrc_fld)     },
+  { "dcrd_nc[2]"     , VAR(dcrd_nc[2])    , MRC_VAR_OBJ(mrc_fld)     },
 
   { "crds_gen_x"     , VAR(crds_gen[0])   , MRC_VAR_OBJ(mrc_crds_gen)},
   { "crds_gen_y"     , VAR(crds_gen[1])   , MRC_VAR_OBJ(mrc_crds_gen)},
