@@ -64,14 +64,13 @@ ggcm_mhd_dipole_sub_vect_pot(struct ggcm_mhd_dipole *mhd_dipole, int m,
   int mhd_type;
   mrc_fld_get_param_int(mhd->fld, "mhd_type", &mhd_type);
 
-  float crd[3];
+  double x[3];
   if (mhd_type == MT_PRIMITIVE_CC ||
       mhd_type == MT_FULLY_CONSERVATIVE_CC) { // cell-centered B
-    mrc_crds_at_cc(crds, ix,iy,iz, p, crd);
+    mrc_dcrds_at_cc(crds, ix,iy,iz, p, x);
   } else {
-    mrc_crds_at_ec(crds, ix,iy,iz, p, m, crd);
+    mrc_dcrds_at_ec(crds, ix,iy,iz, p, m, x);
   }
-  double x[3] = { crd[0], crd[1], crd[2] };
   return ggcm_mhd_dipole_sub_vector_potential(mhd_dipole, m, x, x0, moment, xmir);
 }
  
