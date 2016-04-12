@@ -135,7 +135,7 @@ ggcm_mhd_ic_mirdip_vector_potential_bg(struct ggcm_mhd_ic *ic, int m, double x[3
 
   // get main dipole vector potential
   double A = ggcm_mhd_dipole_vector_potential(sub->mhd_dipole, m, x, (float [3]) { 0.f, 0.f, 0.f },
-					      sub->dipole_moment, sub->xmir);
+					      sub->dipole_moment, 0.);
 
   // add IMF vector potential
   double *vals = sub->bnvals_code;
