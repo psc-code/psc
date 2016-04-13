@@ -68,6 +68,7 @@ ggcm_mhd_ic_mirdip_setup(struct ggcm_mhd_ic *ic)
     ggcm_mhd_dipole_set_from_options(sub->mhd_dipole);
     ggcm_mhd_dipole_set_param_obj(sub->mhd_dipole, "mhd", ic->mhd);
     ggcm_mhd_dipole_setup(sub->mhd_dipole);
+    ggcm_mhd_dipole_view(sub->mhd_dipole);
   }
 }
 
