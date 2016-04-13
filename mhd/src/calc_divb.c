@@ -112,6 +112,8 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
     mrc_fld_put_as(ymask, mhd->ymask);
   }
 
-  mprintf("max divb = %g\n", max);
+  mrc_fld_data_t max_divb;
+  MPI_Allreduce(&max, &max_divb, 1, MPI_MRC_FLD_DATA_T, MPI_MAX, ggcm_mhd_comm(mhd));
+  mpi_printf(ggcm_mhd_comm(mhd), "max divb = %g\n", max_divb);
 }
 

@@ -100,7 +100,9 @@ ggcm_mhd_diag_item_uu1_run(struct ggcm_mhd_diag_item *item,
       if (!isfinite(UU_(f, ix,iy,iz, p))) max = 9999.;
     } mrc_fld_foreach_end;
   }
-  mprintf("max uu1 = %g\n", max);
+  float max_uu1;
+  MPI_Allreduce(&max, &max_uu1, 1, MPI_FLOAT, MPI_MAX, ggcm_mhd_comm(mhd));
+  mpi_printf(ggcm_mhd_comm(mhd), "max uu1 = %g\n", max_uu1);
 
   mrc_fld_put_as(r, fld_r);
   mrc_fld_put_as(f, fld);
