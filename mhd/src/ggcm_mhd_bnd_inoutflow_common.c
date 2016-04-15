@@ -88,16 +88,16 @@ struct ggcm_mhd_bnd_sub {
 // FIXME, bd3 maybe isn't right, and should be bdy3[iy+1], e.g., but oob trouble?
 #define BNDDIV_BY_L(ix, iy, iz, p)					\
   (M3(f, mm+1, ix,iy+2,iz, p) +						\
-   bdx3[ix]/bdy3[iy] * (M3(f, mm+0, ix+1,iy+1,iz  , p) -		\
-			M3(f, mm+0, ix-1,iy+1,iz  , p)) +		\
-   bdz3[iz]/bdy3[iy] * (M3(f, mm+2, ix  ,iy+1,iz+1, p) -		\
-			M3(f, mm+2, ix  ,iy+1,iz-1, p)))
+   bdx3[ix]/bdy3[iy+1] * (M3(f, mm+0, ix+1,iy+1,iz  , p) -		\
+			  M3(f, mm+0, ix-1,iy+1,iz  , p)) +		\
+   bdz3[iz]/bdy3[iy+1] * (M3(f, mm+2, ix  ,iy+1,iz+1, p) -		\
+			  M3(f, mm+2, ix  ,iy+1,iz-1, p)))
 #define BNDDIV_BZ_L(ix, iy, iz, p)					\
   (M3(f, mm+2, ix,iy,iz+2, p) +						\
-   bdx3[ix]/bdz3[iz] * (M3(f, mm+0, ix+1,iy  ,iz+1, p) -		\
-			M3(f, mm+0, ix-1,iy  ,iz+1, p)) +		\
-   bdy3[iy]/bdz3[iz] * (M3(f, mm+1, ix  ,iy+1,iz+1, p) -		\
-			M3(f, mm+1, ix  ,iy-1,iz+1, p)))
+   bdx3[ix]/bdz3[iz+1] * (M3(f, mm+0, ix+1,iy  ,iz+1, p) -		\
+			  M3(f, mm+0, ix-1,iy  ,iz+1, p)) +		\
+   bdy3[iy]/bdz3[iz+1] * (M3(f, mm+1, ix  ,iy+1,iz+1, p) -		\
+			  M3(f, mm+1, ix  ,iy-1,iz+1, p)))
 
 #define BNDDIV_BX_H(ix, iy, iz, p)					\
   (M3(f, mm+0, ix-2,iy,iz, p) -						\
