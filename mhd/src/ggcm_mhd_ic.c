@@ -22,19 +22,6 @@ typedef double (*primitive_f)(struct ggcm_mhd_ic *ic, int m, double crd[3]);
 //
 // initialize face-centered B from edge-centered vector potential
 
-static mrc_fld_data_t
-get_vector_potential_ec(struct ggcm_mhd_ic *ic, int m, int ix, int iy, int iz, int p,
-			vector_potential_f vector_potential)
-{
-  struct ggcm_mhd *mhd = ic->mhd;
-  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-
-  double dcrd_ec[3];
-  mrc_dcrds_at_ec(crds, ix,iy,iz, p, m, dcrd_ec);
-  
-  return vector_potential(ic, m, dcrd_ec);
-}
-
 static void
 ggcm_mhd_ic_B_from_vector_potential_fc(struct ggcm_mhd_ic *ic, struct mrc_fld *b,
 				       vector_potential_f vector_potential)
@@ -97,19 +84,6 @@ ggcm_mhd_ic_B_from_vector_potential_fc(struct ggcm_mhd_ic *ic, struct mrc_fld *b
 //
 // initialize face-centered B from edge-centered vector potential
 
-static mrc_fld_data_t
-get_vector_potential_cc(struct ggcm_mhd_ic *ic, int m, int ix, int iy, int iz, int p,
-			vector_potential_f vector_potential)
-{
-  struct ggcm_mhd *mhd = ic->mhd;
-  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-
-  double dcrd_cc[3];
-  mrc_dcrds_at_cc(crds, ix,iy,iz, p, dcrd_cc);
-  
-  return vector_potential(ic, m, dcrd_cc);
-}
-
 static void
 ggcm_mhd_ic_B_from_vector_potential_cc(struct ggcm_mhd_ic *ic, struct mrc_fld *b,
 				       vector_potential_f vector_potential)
@@ -117,48 +91,36 @@ ggcm_mhd_ic_B_from_vector_potential_cc(struct ggcm_mhd_ic *ic, struct mrc_fld *b
   struct ggcm_mhd *mhd = ic->mhd;
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
 
-  int gdims[3], p1x, p1y, p1z;
-  mrc_domain_get_global_dims(mhd->domain, gdims);
-  p1x = (gdims[0] > 1);
-  p1y = (gdims[1] > 1);
-  p1z = (gdims[2] > 1);
-  
+  double crd_xp[3], crd_xm[3], crd_yp[3], crd_ym[3], crd_zp[3], crd_zm[3];
+
   for (int p = 0; p < mrc_fld_nr_patches(b); p++) {
-    double dx[3];
-    mrc_crds_get_dx(crds, p, dx);
-    
     /* initialize face-centered fields */
     mrc_fld_foreach(b, ix,iy,iz, 1, 1) {
-      mrc_fld_data_t Ax_yp = get_vector_potential_cc(ic, 0, ix    ,iy+p1y,iz    , p,
-						     vector_potential);
-      mrc_fld_data_t Ax_ym = get_vector_potential_cc(ic, 0, ix    ,iy-p1y,iz    , p,
-						     vector_potential);
-      mrc_fld_data_t Ax_zp = get_vector_potential_cc(ic, 0, ix    ,iy    ,iz+p1z, p,
-						     vector_potential);
-      mrc_fld_data_t Ax_zm = get_vector_potential_cc(ic, 0, ix    ,iy    ,iz-p1z, p,
-						     vector_potential);
+      mrc_dcrds_at_cc(crds, ix+1, iy  , iz  , p, crd_xp);
+      mrc_dcrds_at_cc(crds, ix-1, iy  , iz  , p, crd_xm);
+      mrc_dcrds_at_cc(crds, ix  , iy+1, iz  , p, crd_yp);
+      mrc_dcrds_at_cc(crds, ix  , iy-1, iz  , p, crd_ym);
+      mrc_dcrds_at_cc(crds, ix  , iy  , iz+1, p, crd_zp);
+      mrc_dcrds_at_cc(crds, ix  , iy  , iz-1, p, crd_zm);
 
-      mrc_fld_data_t Ay_xp = get_vector_potential_cc(ic, 1, ix+p1x,iy    ,iz    , p,
-						     vector_potential);
-      mrc_fld_data_t Ay_xm = get_vector_potential_cc(ic, 1, ix-p1x,iy    ,iz    , p,
-						     vector_potential);
-      mrc_fld_data_t Ay_zp = get_vector_potential_cc(ic, 1, ix    ,iy    ,iz+p1z, p,
-						     vector_potential);
-      mrc_fld_data_t Ay_zm = get_vector_potential_cc(ic, 1, ix    ,iy    ,iz-p1z, p,
-						     vector_potential);
+      mrc_fld_data_t Ax_yp = vector_potential(ic, 0, crd_yp);
+      mrc_fld_data_t Ax_ym = vector_potential(ic, 0, crd_ym);
+      mrc_fld_data_t Ax_zp = vector_potential(ic, 0, crd_zp);
+      mrc_fld_data_t Ax_zm = vector_potential(ic, 0, crd_zm);
 
-      mrc_fld_data_t Az_xp = get_vector_potential_cc(ic, 2, ix+p1x,iy    ,iz    , p,
-						     vector_potential);
-      mrc_fld_data_t Az_xm = get_vector_potential_cc(ic, 2, ix-p1x,iy    ,iz    , p,
-						     vector_potential);
-      mrc_fld_data_t Az_yp = get_vector_potential_cc(ic, 2, ix    ,iy+p1y,iz    , p,
-						     vector_potential);
-      mrc_fld_data_t Az_ym = get_vector_potential_cc(ic, 2, ix    ,iy-p1y,iz    , p,
-						     vector_potential);
+      mrc_fld_data_t Ay_xp = vector_potential(ic, 1, crd_xp);
+      mrc_fld_data_t Ay_xm = vector_potential(ic, 1, crd_xm);
+      mrc_fld_data_t Ay_zp = vector_potential(ic, 1, crd_zp);
+      mrc_fld_data_t Ay_zm = vector_potential(ic, 1, crd_zm);
 
-      M3(b, 0, ix,iy,iz, p) += (Az_yp - Az_ym) / (2. * dx[1]) - (Ay_zp - Ay_zm) / (2. * dx[2]);
-      M3(b, 1, ix,iy,iz, p) += (Ax_zp - Ax_zm) / (2. * dx[2]) - (Az_xp - Az_xm) / (2. * dx[0]);
-      M3(b, 2, ix,iy,iz, p) += (Ay_xp - Ay_xm) / (2. * dx[0]) - (Ax_yp - Ax_ym) / (2. * dx[1]);
+      mrc_fld_data_t Az_xp = vector_potential(ic, 2, crd_xp);
+      mrc_fld_data_t Az_xm = vector_potential(ic, 2, crd_xm);
+      mrc_fld_data_t Az_yp = vector_potential(ic, 2, crd_yp);
+      mrc_fld_data_t Az_ym = vector_potential(ic, 2, crd_ym);
+
+      M3(b, 0, ix,iy,iz, p) += (Az_yp - Az_ym) / (crd_yp[1] - crd_ym[1]) - (Ay_zp - Ay_zm) / (crd_zp[2] - crd_zm[2]);
+      M3(b, 1, ix,iy,iz, p) += (Ax_zp - Ax_zm) / (crd_zp[2] - crd_zm[2]) - (Az_xp - Az_xm) / (crd_xp[0] - crd_xm[0]);
+      M3(b, 2, ix,iy,iz, p) += (Ay_xp - Ay_xm) / (crd_xp[0] - crd_xm[0]) - (Ax_yp - Ax_ym) / (crd_yp[1] - crd_ym[1]);
     } mrc_fld_foreach_end;
   }
 }
