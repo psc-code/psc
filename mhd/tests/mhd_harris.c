@@ -43,7 +43,7 @@ ggcm_mhd_ic_harris_primitive(struct ggcm_mhd_ic *ic, int m, double crd[3])
   struct ggcm_mhd_ic_harris *sub = ggcm_mhd_ic_harris(ic);
   struct ggcm_mhd *mhd = ic->mhd;
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-  double pert = sub->pert;
+  double pert = sub->pert, cs_width = sub->cs_width;
   double xx = crd[0], yy = crd[1];
 
   double xl[3], xh[3];
@@ -52,13 +52,14 @@ ggcm_mhd_ic_harris_primitive(struct ggcm_mhd_ic *ic, int m, double crd[3])
   double lx = xh[0] - xl[0];
   double ly = xh[1] - xl[1];
 
-  double rr = sub->n_inf + sub->n_0 / sqr(cosh(2.*yy));
+  // FIXME, only right if cs_width == .5 (constant factor) ?
+  double rr = sub->n_inf + sub->n_0 / sqr(cosh(yy/cs_width));
 
   switch (m) {
   case RR: return rr;
   case PP: return .5 * rr;
   // B here won't actually be used because the vector potential takes preference
-  case BX: return -pert * (   M_PI/ly) * cos(2*M_PI*xx/lx) * sin(M_PI*yy/ly) + sub->B_0 * tanh(2.*yy);
+  case BX: return -pert * (   M_PI/ly) * cos(2*M_PI*xx/lx) * sin(M_PI*yy/ly) + sub->B_0 * tanh(yy/cs_width);
   case BY: return -pert * (2.*M_PI/lx) * sin(2*M_PI*xx/lx) * cos(M_PI*yy/ly);
   default: return 0.;
   }
@@ -73,7 +74,7 @@ ggcm_mhd_ic_harris_vector_potential(struct ggcm_mhd_ic *ic, int m, double crd[3]
   struct ggcm_mhd_ic_harris *sub = ggcm_mhd_ic_harris(ic);
   struct ggcm_mhd *mhd = ic->mhd;
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-  double pert = sub->pert;
+  double pert = sub->pert, cs_width = sub->cs_width;
   double xx = crd[0], yy = crd[1];
 
   double xl[3], xh[3];
@@ -83,7 +84,7 @@ ggcm_mhd_ic_harris_vector_potential(struct ggcm_mhd_ic *ic, int m, double crd[3]
   double ly = xh[1] - xl[1];
 
   switch (m) {
-  case 2: return pert * cos(2*M_PI*xx/lx) * cos(M_PI*yy/ly) + sub->B_0 * .5 * log(cosh(2.*yy));
+  case 2: return pert * cos(2*M_PI*xx/lx) * cos(M_PI*yy/ly) + sub->B_0 * cs_width * log(cosh(yy/cs_width));
   default: return 0.;
   }
 }
