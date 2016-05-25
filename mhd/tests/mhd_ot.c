@@ -81,7 +81,10 @@ ggcm_mhd_ot_create(struct ggcm_mhd *mhd)
 {
   ggcm_mhd_default_box(mhd);
 
-  /* set defaults for coord arrays */
+  // default mesh size
+  mrc_domain_set_param_int3(mhd->domain, "m", (int[3]) { 64, 64, 1 });
+
+  // default domain size
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
   mrc_crds_set_type(crds, "uniform");
   mrc_crds_set_param_int(crds, "sw", SW_2);   // 'stencil width' 
