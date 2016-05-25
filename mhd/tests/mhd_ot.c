@@ -22,8 +22,8 @@
 // ----------------------------------------------------------------------
 // ggcm_mhd_ic_ot_primitive
 
-static void
-ggcm_mhd_ic_ot_primitive(struct ggcm_mhd_ic *ic, double prim[5], double crd[3])
+static double
+ggcm_mhd_ic_ot_primitive(struct ggcm_mhd_ic *ic, int m, double crd[3])
 {
   double rr0 = 25. / (36.*M_PI);
   double v0 = 1.;
@@ -31,10 +31,29 @@ ggcm_mhd_ic_ot_primitive(struct ggcm_mhd_ic *ic, double prim[5], double crd[3])
 
   double xx = crd[0], yy = crd[1];
 
-  prim[RR] = rr0;
-  prim[PP] = pp0;
-  prim[VX] = -v0 * sin(2. * M_PI * yy);
-  prim[VY] =  v0 * sin(2. * M_PI * xx);
+  switch (m) {
+  case RR: return rr0;
+  case PP: return pp0;
+  case VX: return -v0 * sin(2. * M_PI * yy);
+  case VY: return  v0 * sin(2. * M_PI * xx);
+  default: return 0.;
+  }
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_ic_ot_vector_potential
+
+static double
+ggcm_mhd_ic_ot_vector_potential(struct ggcm_mhd_ic *ic, int m, double crd[3])
+{
+  mrc_fld_data_t B0 = 1. / sqrt(4.*M_PI);
+
+  double xx = crd[0], yy = crd[1];
+
+  switch (m) {
+  case 2: return B0 / (4.*M_PI) * cos(4.*M_PI * xx) + B0 / (2.*M_PI) * cos(2.*M_PI * yy);
+  default: return 0.;
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -61,16 +80,17 @@ ggcm_mhd_ic_ot_run(struct ggcm_mhd_ic *ic)
 
   mrc_fld_data_t B0 = 1. / sqrt(4.*M_PI);
 
-  /* Initialize vector potential */
-
   for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
     mrc_crds_get_dx(crds, p, dx);
     
     /* Initialize vector potential */
     mrc_fld_foreach(fld, ix,iy,iz, 1, 2) {
-      mrc_fld_data_t xx = MRC_MCRDX(crds, ix, p) - .5 * dx[0];
-      mrc_fld_data_t yy = MRC_MCRDY(crds, iy, p) - .5 * dx[1];
-      M3(Az, 0, ix,iy,iz, p) = B0 / (4.*M_PI) * cos(4.*M_PI * xx) + B0 / (2.*M_PI) * cos(2.*M_PI * yy);
+      double crd[3] = { MRC_DMCRDX(crds, ix, p) - .5 * dx[0],
+			MRC_DMCRDY(crds, iy, p) - .5 * dx[1],
+			MRC_DMCRDZ(crds, iz, p) };
+      double vecpot[3];
+      vecpot[2] = ggcm_mhd_ic_ot_vector_potential(ic, 2, crd);
+      M3(Az, 0, ix,iy,iz, p) = vecpot[2];
     } mrc_fld_foreach_end;
     
     /* Initialize face-centered fields */
@@ -79,11 +99,15 @@ ggcm_mhd_ic_ot_run(struct ggcm_mhd_ic *ic)
       BY_(fld, ix,iy,iz, p) = -(M3(Az, 0, ix+p1x, iy    , iz, p) - M3(Az, 0, ix,iy,iz, p)) / dx[0];
     } mrc_fld_foreach_end;
 
-    /* Initialize density, momentum, total energy */
+    /* Initialize density, velocity, pressure */
     mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
       double crd[3] = { MRC_DMCRDX(crds, ix, p), MRC_DMCRDY(crds, iy, p), MRC_DMCRDZ(crds, iz, p) };
-      mrc_fld_data_t prim[5] = {};
-      ggcm_mhd_ic_ot_primitive(ic, prim, crd);
+
+      mrc_fld_data_t prim[5];
+      for (int m = 0; m < 5; m++) {
+	prim[m] = ggcm_mhd_ic_ot_primitive(ic, m, crd);
+      }
+
       RR_(fld, ix,iy,iz, p) = prim[RR];
       VX_(fld, ix,iy,iz, p) = prim[VX];
       VY_(fld, ix,iy,iz, p) = prim[VY];
