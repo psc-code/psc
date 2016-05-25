@@ -543,27 +543,11 @@ obndrb(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm)
       }
     }
 
-#if 0
-#define BNDDIV_BX_H(ix, iy, iz, p)					\
-  (M3(f, mm+0, ix-1,iy,iz, p) -						\
-   bdy3[iy]/bdx3[ix-1] * (M3(f, mm+1, ix-1,iy+1,iz  , p) -		\
-			  M3(f, mm+1, ix-1,iy  ,iz  , p)) -		\
-   bdz3[iz]/bdx3[ix-1] * (M3(f, mm+2, ix-1,iy  ,iz+1, p) -		\
-			  M3(f, mm+2, ix-1,iy  ,iz  , p)))
-#endif
     if (mrc_domain_at_boundary_hi(mhd->domain, 0, p)) {
       for (int iz = -swz - SHIFT; iz < mz + swz - 1 - SHIFT; iz++) {
 	for (int iy = -swy - SHIFT; iy < my + swy - 1 - SHIFT; iy++) {
 	  for (int ix = mx; ix < mx + swx; ix++) {
 	    M3(f, mm+0, SHIFT + ix,iy,iz, p) = BNDDIV_BX_H(SHIFT + ix,iy,iz, p);
-	    if (ix == 32 && iy == 16 && (iz == 0 || iz == 32)) {
-	      mprintf("BX k %d  %g -- %g\n", iz, M3(f, mm+0, ix,iy,iz, p), M3(f, mm+0, ix-1,iy,iz, p));
-	      mprintf("BX %g %g %g %g\n",
-		      M3(f, mm+1, ix-1,iy+1,iz  , p),
-		      M3(f, mm+1, ix-1,iy  ,iz  , p),
-		      M3(f, mm+2, ix-1,iy  ,iz+1, p), // 31, 16, 33
-		      M3(f, mm+2, ix-1,iy  ,iz  , p));
-	    }
 	  }
 	}
       }
