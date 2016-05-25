@@ -5,12 +5,11 @@ matplotlib.use("Agg")
 import viscid
 from viscid.plot import mpl
 
-steps = xrange(0, 10)
+steps = xrange(0, 1)
 
 flds = ['divB', 'rr', 'bx', 'by', 'bz', 'vx', 'vy', 'vz', 'pp']
-flds = ['rr']
 
-plot_kwargs = dict(cmap='hot')
+plot_kwargs = dict()
 
 f = viscid.load_file("run.3d.xdmf")
 
@@ -24,7 +23,7 @@ for step in steps:
         if fld == "divB":
             dat *= f["ymask"]
                                    
-        mpl.plot(dat, **plot_kwargs)
+        mpl.plot(dat, "y=0.f", **plot_kwargs)
 
         mpl.plt.savefig("%s-xy-%06d.png" % (fld, step), dpi=200)
         mpl.plt.close()
