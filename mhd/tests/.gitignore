@@ -31,4 +31,5 @@ ref
 *.png
 *.mp4
 *.log
-log.txt
+old
+
