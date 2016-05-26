@@ -18,7 +18,6 @@ struct ggcm_mhd_ic_mirdip {
   float xxx2;
   float xmir;
   float rrini;
-  float r1lim;
   float prat; // determines initial interior pressure as a fraction of solar wind pressure
 
   float dipole_moment[3];
@@ -148,17 +147,8 @@ ggcm_mhd_ic_mirdip_ini_b(struct ggcm_mhd_ic *ic, float b_sw[3])
 
   // finish up
   for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
-    mrc_fld_foreach(f, ix,iy,iz, 0, 1) {
+    mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
       for (int d = 0; d < 3; d++){
-	float crd_fc[3];
-	ggcm_mhd_get_crds_fc(mhd, ix,iy,iz, p, d, crd_fc);
-	
-	// zero B if inside r1lim
-	float r = sqrtf(sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]));
-	if (r < sub->r1lim) {
-	  M3(f, BX + d, ix,iy,iz, p) = 0.0;
-	}
-	
 	// add B_IMF
 	M3(f, BX + d, ix,iy,iz, p) += b_sw[d];
 
@@ -263,7 +253,6 @@ static struct param ggcm_mhd_ic_mirdip_descr[] = {
   { "xxx2"         , VAR(xxx2)         , PARAM_FLOAT(12.0)         },
   { "xmir"         , VAR(xmir)         , PARAM_FLOAT(-15.0)        },  // off if == 0.0
   { "rrini"        , VAR(rrini)        , PARAM_FLOAT(3.0)          },
-  { "r1lim"        , VAR(r1lim)        , PARAM_FLOAT(1.5)          },
   { "prat"         , VAR(prat)         , PARAM_FLOAT(.5)           },
 
   { "dipole_moment", VAR(dipole_moment), PARAM_FLOAT3(0., 0., -1.) },

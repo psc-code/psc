@@ -12,7 +12,6 @@ mpirun -n 4 ../mhd_mirdip \
     --ggcm_mhd_ic_prat 1. \
     --ggcm_mhd_ic_xxx1 2.5 --ggcm_mhd_ic_xxx2 2.2 \
     --ggcm_mhd_ic_xmir -2.6 \
-    --ggcm_mhd_ic_r1lim .5 \
     --ggcm_mhd_dipole_r1lim .5 \
     \
     --ggcm_mhd_bnd_type inoutflow_fc_cc_double \
