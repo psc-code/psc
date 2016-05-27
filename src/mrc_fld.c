@@ -946,33 +946,38 @@ mrc_fld_ddc_add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *bu
 // mrc_fld_float_copy_from_double
 
 static void
-mrc_fld_float_copy_from_double(struct mrc_fld *fld_float,
-			       struct mrc_fld *fld_double)
+mrc_fld_float_copy_from_double(struct mrc_fld *to, struct mrc_fld *from)
 {
-  assert(mrc_fld_same_shape(fld_float, fld_double));
-  assert(fld_float->_data_type == MRC_NT_FLOAT);
-  assert(fld_double->_data_type == MRC_NT_DOUBLE);
-  float *f_arr = fld_float->_arr;
-  double *d_arr = fld_double->_arr;
-  for (int i = 0; i < fld_float->_len; i++) {
-    f_arr[i] = d_arr[i];
+  assert(mrc_fld_same_shape(to, from));
+  assert(to->_data_type == MRC_NT_FLOAT);
+  assert(from->_data_type == MRC_NT_DOUBLE);
+
+  for (int p = 0; p < mrc_fld_nr_patches(to); p++) {
+    mrc_fld_foreach(to, ix,iy,iz, to->_nr_ghosts, to->_nr_ghosts) {
+      for (int m = 0; m < to->_nr_comps; m++) {
+	MRC_S5(to, ix,iy,iz, m, p) = MRC_D5(from, ix,iy,iz, m, p);
+      }
+    } mrc_fld_foreach_end;
   }
+  mprintf("000 %g\n", MRC_D5(from, 0,0,0, 0, 0));
 }
 
 // ----------------------------------------------------------------------
 // mrc_fld_float_copy_to_double
 
 static void
-mrc_fld_float_copy_to_double(struct mrc_fld *fld_float,
-			     struct mrc_fld *fld_double)
+mrc_fld_float_copy_to_double(struct mrc_fld *from, struct mrc_fld *to)
 {
-  assert(mrc_fld_same_shape(fld_float, fld_double));
-  assert(fld_float->_data_type == MRC_NT_FLOAT);
-  assert(fld_double->_data_type == MRC_NT_DOUBLE);
-  float *f_arr = fld_float->_arr;
-  double *d_arr = fld_double->_arr;
-  for (int i = 0; i < fld_float->_len; i++) {
-    d_arr[i] = f_arr[i];
+  assert(mrc_fld_same_shape(to, from));
+  assert(to->_data_type == MRC_NT_DOUBLE);
+  assert(from->_data_type == MRC_NT_FLOAT);
+
+  for (int p = 0; p < mrc_fld_nr_patches(to); p++) {
+    mrc_fld_foreach(to, ix,iy,iz, to->_nr_ghosts, to->_nr_ghosts) {
+      for (int m = 0; m < to->_nr_comps; m++) {
+	MRC_D5(to, ix,iy,iz, m, p) = MRC_S5(from, ix,iy,iz, m, p);
+      }
+    } mrc_fld_foreach_end;
   }
 }
 
