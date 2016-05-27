@@ -968,7 +968,6 @@ mrc_fld_float_copy_from_double(struct mrc_fld *to, struct mrc_fld *from)
       }
     } mrc_fld_foreach_end;
   }
-  mprintf("000 %g\n", MRC_D5(from, 0,0,0, 0, 0));
 }
 
 // ----------------------------------------------------------------------
