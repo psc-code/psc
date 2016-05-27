@@ -96,22 +96,34 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld, int m)
     M3 (fld, m + RVX, ix,iy,iz, p) = rvx;
     M3 (fld, m + RVY, ix,iy,iz, p) = rvy;
     M3 (fld, m + RVZ, ix,iy,iz, p) = rvz;
+
+#if 0
+    // FIXME, this is still kinda specific / hacky to ganymede
+    // to avoid cutting off the initial perturbation from e.g., the mirror dipole,
+    // let's just keep B untouched
+    if (MT == MT_FULLY_CONSERVATIVE_CC) {
+      M3(fld, m + BX , ix,iy,iz, p) = bnvals[FIXED_BX];
+      M3(fld, m + BY , ix,iy,iz, p) = bnvals[FIXED_BY];
+      M3(fld, m + BZ , ix,iy,iz, p) = bnvals[FIXED_BZ];
+    } else {
+      // we'd need to have a face-centered map to do this right,
+      // but for now we'll do E field instead, anyway...
+    }
+#endif
+    
     if (MT == MT_SEMI_CONSERVATIVE ||
         MT == MT_SEMI_CONSERVATIVE_GGCM) {
       M3(fld, m + UU , ix,iy,iz, p) = uubn;
-    } else if (MT == MT_FULLY_CONSERVATIVE ||
-	       MT == MT_FULLY_CONSERVATIVE_CC) {
+    } else if (MT == MT_FULLY_CONSERVATIVE) {
       M3(fld, m + EE , ix,iy,iz, p) = eebn;
+    } else if (MT == MT_FULLY_CONSERVATIVE_CC) {
+      M3(fld, m + EE , ix,iy,iz, p) = uubn
+	+ .5 * (sqr(M3(fld, m + BX, ix,iy,iz, p)) +
+		sqr(M3(fld, m + BY, ix,iy,iz, p)) +
+		sqr(M3(fld, m + BZ, ix,iy,iz, p)));
     } else {
       assert(0);
     }
-#if 0
-    // we'd need to have a face-centered map to do this right,
-    // but for now we'll do E field instead, anyway
-    M3(fld, m + BX , ix,iy,iz, p) = bnvals[FIXED_BX];
-    M3(fld, m + BY , ix,iy,iz, p) = bnvals[FIXED_BY];
-    M3(fld, m + BZ , ix,iy,iz, p) = bnvals[FIXED_BZ];
-#endif
   }
 }
 
