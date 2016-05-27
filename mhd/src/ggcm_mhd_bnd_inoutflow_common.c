@@ -47,73 +47,78 @@ struct ggcm_mhd_bnd_sub {
 
 // FIXME, which of these ghost points are actually used? / loop limits
 
+#define _BX(f, mm, ix,iy,iz, p) M3(f, mm+0, ix+SHIFT,iy,iz, p)
+#define _BY(f, mm, ix,iy,iz, p) M3(f, mm+1, ix,iy+SHIFT,iz, p)
+#define _BZ(f, mm, ix,iy,iz, p) M3(f, mm+2, ix,iy,iz+SHIFT, p)
+
 #if MT == MT_FULLY_CONSERVATIVE_CC
+// maybe this should use fd1 to be more explicit, but that's identical to bd3, anyway
 
 #define BNDDIV_BY_L(ix, iy, iz, p)					\
-  (M3(f, mm+1, ix,iy+2,iz, p) +						\
-   bdx3[ix]/bdy3[iy+1] * (M3(f, mm+0, ix+1,iy+1,iz  , p) -		\
-			  M3(f, mm+0, ix-1,iy+1,iz  , p)) +		\
-   bdz3[iz]/bdy3[iy+1] * (M3(f, mm+2, ix  ,iy+1,iz+1, p) -		\
-			  M3(f, mm+2, ix  ,iy+1,iz-1, p)))
+  (_BY(f, mm, ix,iy+2,iz, p) +						\
+   bdx3[ix]/bdy3[iy+1] * (_BX(f, mm, ix+1,iy+1,iz  , p) -		\
+			  _BX(f, mm, ix-1,iy+1,iz  , p)) +		\
+   bdz3[iz]/bdy3[iy+1] * (_BZ(f, mm, ix  ,iy+1,iz+1, p) -		\
+			  _BZ(f, mm, ix  ,iy+1,iz-1, p)))
 #define BNDDIV_BZ_L(ix, iy, iz, p)					\
-  (M3(f, mm+2, ix,iy,iz+2, p) +						\
-   bdx3[ix]/bdz3[iz+1] * (M3(f, mm+0, ix+1,iy  ,iz+1, p) -		\
-			  M3(f, mm+0, ix-1,iy  ,iz+1, p)) +		\
-   bdy3[iy]/bdz3[iz+1] * (M3(f, mm+1, ix  ,iy+1,iz+1, p) -		\
-			  M3(f, mm+1, ix  ,iy-1,iz+1, p)))
+  (_BZ(f, mm, ix,iy,iz+2, p) +						\
+   bdx3[ix]/bdz3[iz+1] * (_BX(f, mm, ix+1,iy  ,iz+1, p) -		\
+			  _BX(f, mm, ix-1,iy  ,iz+1, p)) +		\
+   bdy3[iy]/bdz3[iz+1] * (_BY(f, mm, ix  ,iy+1,iz+1, p) -		\
+			  _BY(f, mm, ix  ,iy-1,iz+1, p)))
 
 #define BNDDIV_BX_H(ix, iy, iz, p)					\
-  (M3(f, mm+0, ix-2,iy,iz, p) -						\
-   bdy3[iy]/bdx3[ix-1] * (M3(f, mm+1, ix-1,iy+1,iz  , p) -		\
-			  M3(f, mm+1, ix-1,iy-1,iz  , p)) -		\
-   bdz3[iz]/bdx3[ix-1] * (M3(f, mm+2, ix-1,iy  ,iz+1, p) -		\
-			  M3(f, mm+2, ix-1,iy  ,iz-1, p)))
+  (_BX(f, mm, ix-2,iy,iz, p) -						\
+   bdy3[iy]/bdx3[ix-1] * (_BY(f, mm, ix-1,iy+1,iz  , p) -		\
+			  _BY(f, mm, ix-1,iy-1,iz  , p)) -		\
+   bdz3[iz]/bdx3[ix-1] * (_BZ(f, mm, ix-1,iy  ,iz+1, p) -		\
+			  _BZ(f, mm, ix-1,iy  ,iz-1, p)))
 #define BNDDIV_BY_H(ix, iy, iz, p)					\
-  (M3(f, mm+1, ix,iy-2,iz, p) -						\
-   bdx3[ix]/bdy3[iy-1] * (M3(f, mm+0, ix+1,iy-1,iz  , p) -		\
-			  M3(f, mm+0, ix-1,iy-1,iz  , p)) -		\
-   bdz3[iz]/bdy3[iy-1] * (M3(f, mm+2, ix  ,iy-1,iz+1, p) -		\
-			M3(f, mm+2, ix  ,iy-1,iz-1, p)))
+  (_BY(f, mm, ix,iy-2,iz, p) -						\
+   bdx3[ix]/bdy3[iy-1] * (_BX(f, mm, ix+1,iy-1,iz  , p) -		\
+			  _BX(f, mm, ix-1,iy-1,iz  , p)) -		\
+   bdz3[iz]/bdy3[iy-1] * (_BZ(f, mm, ix  ,iy-1,iz+1, p) -		\
+			  _BZ(f, mm, ix  ,iy-1,iz-1, p)))
 #define BNDDIV_BZ_H(ix, iy, iz, p)					\
-  (M3(f, mm+2, ix,iy,iz-2, p) -						\
-   bdx3[ix]/bdz3[iz-1] * (M3(f, mm+0, ix+1,iy  ,iz-1, p) -		\
-			  M3(f, mm+0, ix-1,iy  ,iz-1, p)) -		\
-   bdy3[iy]/bdz3[iz-1] * (M3(f, mm+1, ix  ,iy+1,iz-1, p) -		\
-			  M3(f, mm+1, ix  ,iy-1,iz-1, p)))
+  (_BZ(f, mm, ix,iy,iz-2, p) -						\
+   bdx3[ix]/bdz3[iz-1] * (_BX(f, mm, ix+1,iy  ,iz-1, p) -		\
+			  _BX(f, mm, ix-1,iy  ,iz-1, p)) -		\
+   bdy3[iy]/bdz3[iz-1] * (_BY(f, mm, ix  ,iy+1,iz-1, p) -		\
+			  _BY(f, mm, ix  ,iy-1,iz-1, p)))
 
 #else
 
 #define BNDDIV_BY_L(ix, iy, iz, p)					\
-  (M3(f, mm+1, ix,iy+1+SHIFT,iz, p) +					\
-   bdx3[ix]/bdy3[iy] * (M3(f, mm+0, ix+1+SHIFT,iy,iz  , p) -		\
-			M3(f, mm+0, ix  +SHIFT,iy,iz  , p)) +		\
-   bdz3[iz]/bdy3[iy] * (M3(f, mm+2, ix  ,iy,iz+1+SHIFT, p) -		\
-			M3(f, mm+2, ix  ,iy,iz  +SHIFT, p)))
+  (_BY(f, mm, ix,iy+1,iz, p) +						\
+   bdx3[ix]/bdy3[iy] * (_BX(f, mm, ix+1,iy,iz  , p) -			\
+			_BX(f, mm, ix  ,iy,iz  , p)) +			\
+   bdz3[iz]/bdy3[iy] * (_BZ(f, mm, ix  ,iy,iz+1, p) -			\
+			_BZ(f, mm, ix  ,iy,iz  , p)))
 #define BNDDIV_BZ_L(ix, iy, iz, p)					\
-  (M3(f, mm+2, ix,iy,iz+1+SHIFT, p) +					\
-   bdx3[ix]/bdz3[iz] * (M3(f, mm+0, ix+1+SHIFT,iy  ,iz, p) -		\
-			M3(f, mm+0, ix  +SHIFT,iy  ,iz, p)) +		\
-   bdy3[iy]/bdz3[iz] * (M3(f, mm+1, ix  ,iy+1+SHIFT,iz, p) -		\
-			M3(f, mm+1, ix  ,iy  +SHIFT,iz, p)))
+  (_BZ(f, mm, ix,iy,iz+1, p) +						\
+   bdx3[ix]/bdz3[iz] * (_BX(f, mm, ix+1,iy  ,iz, p) -			\
+			_BX(f, mm, ix  ,iy  ,iz, p)) +			\
+   bdy3[iy]/bdz3[iz] * (_BY(f, mm, ix  ,iy+1,iz, p) -			\
+			_BY(f, mm, ix  ,iy  ,iz, p)))
 
 #define BNDDIV_BX_H(ix, iy, iz, p)					\
-  (M3(f, mm+0, ix-1+SHIFT,iy,iz, p) -					\
-   bdy3[iy]/bdx3[ix-1] * (M3(f, mm+1, ix-1,iy+1+SHIFT,iz  , p) -	\
-			  M3(f, mm+1, ix-1,iy  +SHIFT,iz  , p)) -	\
-   bdz3[iz]/bdx3[ix-1] * (M3(f, mm+2, ix-1,iy  ,iz+1+SHIFT, p) -	\
-			  M3(f, mm+2, ix-1,iy  ,iz  +SHIFT, p)))
+  (_BX(f, mm, ix-1,iy,iz, p) -						\
+   bdy3[iy]/bdx3[ix-1] * (_BY(f, mm, ix-1,iy+1,iz  , p) -		\
+			  _BY(f, mm, ix-1,iy  ,iz  , p)) -		\
+   bdz3[iz]/bdx3[ix-1] * (_BZ(f, mm, ix-1,iy  ,iz+1, p) -		\
+			  _BZ(f, mm, ix-1,iy  ,iz  , p)))
 #define BNDDIV_BY_H(ix, iy, iz, p)					\
-  (M3(f, mm+1, ix,iy-1+SHIFT,iz, p) -					\
-   bdx3[ix]/bdy3[iy-1] * (M3(f, mm+0, ix+1+SHIFT,iy-1,iz  , p) -	\
-			  M3(f, mm+0, ix  +SHIFT,iy-1,iz  , p)) -	\
-   bdz3[iz]/bdy3[iy-1] * (M3(f, mm+2, ix  ,iy-1,iz+1+SHIFT, p) -	\
-			  M3(f, mm+2, ix  ,iy-1,iz  +SHIFT, p)))
+  (_BY(f, mm, ix,iy-1,iz, p) -						\
+   bdx3[ix]/bdy3[iy-1] * (_BX(f, mm, ix+1,iy-1,iz  , p) -		\
+			  _BX(f, mm, ix  ,iy-1,iz  , p)) -		\
+   bdz3[iz]/bdy3[iy-1] * (_BZ(f, mm, ix  ,iy-1,iz+1, p) -		\
+			  _BZ(f, mm, ix  ,iy-1,iz  , p)))
 #define BNDDIV_BZ_H(ix, iy, iz, p)					\
-  (M3(f, mm+2, ix,iy,iz-1+SHIFT, p) -					\
-   bdx3[ix]/bdz3[iz-1] * (M3(f, mm+0, ix+1+SHIFT,iy  ,iz-1, p) -	\
-			  M3(f, mm+0, ix  +SHIFT,iy  ,iz-1, p)) -	\
-   bdy3[iy]/bdz3[iz-1] * (M3(f, mm+1, ix  ,iy+1+SHIFT,iz-1, p) -	\
-			  M3(f, mm+1, ix  ,iy  +SHIFT,iz-1, p)))
+  (_BZ(f, mm, ix,iy,iz-1, p) -						\
+   bdx3[ix]/bdz3[iz-1] * (_BX(f, mm, ix+1,iy  ,iz-1, p) -		\
+			  _BX(f, mm, ix  ,iy  ,iz-1, p)) -		\
+   bdy3[iy]/bdz3[iz-1] * (_BY(f, mm, ix  ,iy+1,iz-1, p) -		\
+			  _BY(f, mm, ix  ,iy  ,iz-1, p)))
 
 #endif
 
@@ -517,7 +522,7 @@ obndrb(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm)
       for (int iz = -s_t[2]; iz < m_t[2] + s_t[2]; iz++) {
 	for (int ix = -s_t[0]; ix < m_t[0] + s_t[0]; ix++) {
 	  for (int iy = l_n[1]; iy > l_n[1] - s_n[1]; iy--) {
-	    M3(f, mm+1, ix,iy+SHIFT,iz, p) = BNDDIV_BY_L(ix,iy,iz, p);
+	    _BY(f, mm, ix,iy,iz, p) = BNDDIV_BY_L(ix,iy,iz, p);
 	  }
 	}
       }
@@ -526,7 +531,7 @@ obndrb(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm)
       for (int iz = -s_t[2]; iz < m_t[2] + s_t[2]; iz++) {
 	for (int ix = -s_t[0]; ix < m_t[0] + s_t[0]; ix++) {
 	  for (int iy = r_n[1]; iy < r_n[1] + s_n[1]; iy++) {
-	    M3(f, mm+1, ix,iy+SHIFT,iz, p) = BNDDIV_BY_H(ix,iy,iz, p);
+	    _BY(f, mm, ix,iy,iz, p) = BNDDIV_BY_H(ix,iy,iz, p);
 	  }
 	}
       }
@@ -536,7 +541,7 @@ obndrb(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm)
       for (int iy = -s_t[1]; iy < m_t[1] + s_t[1]; iy++) {
 	for (int ix = -s_t[0]; ix < m_t[0] + s_t[0]; ix++) {
 	  for (int iz = l_n[2]; iz > l_n[2] - s_n[2]; iz--) {
-	    M3(f, mm+2, ix,iy,iz+SHIFT, p) = BNDDIV_BZ_L(ix,iy,iz, p);
+	    _BZ(f, mm, ix,iy,iz, p) = BNDDIV_BZ_L(ix,iy,iz, p);
 	  }
 	}
       }
@@ -545,7 +550,7 @@ obndrb(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm)
       for (int iy = -s_t[1]; iy < m_t[1] + s_t[1]; iy++) {
 	for (int ix = -s_t[0]; ix < m_t[0] + s_t[0]; ix++) {
 	  for (int iz = r_n[2]; iz < r_n[2] + s_n[2]; iz++) {
-	    M3(f, mm+2, ix,iy,iz+SHIFT, p) = BNDDIV_BZ_H(ix,iy,iz, p);
+	    _BZ(f, mm, ix,iy,iz, p) = BNDDIV_BZ_H(ix,iy,iz, p);
 	  }
 	}
       }
@@ -555,7 +560,7 @@ obndrb(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm)
       for (int iz = -s_t[2]; iz < m_t[2] + s_t[2]; iz++) {
 	for (int iy = -s_t[1]; iy < m_t[1] + s_t[1]; iy++) {
 	  for (int ix = r_n[0]; ix < r_n[0] + s_n[0]; ix++) {
-	    M3(f, mm+0, ix+SHIFT,iy,iz, p) = BNDDIV_BX_H(ix,iy,iz, p);
+	    _BX(f, mm, ix,iy,iz, p) = BNDDIV_BX_H(ix,iy,iz, p);
 	  }
 	}
       }
