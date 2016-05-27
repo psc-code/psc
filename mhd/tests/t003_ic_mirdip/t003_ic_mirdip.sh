@@ -1,8 +1,15 @@
 #!/bin/sh 
 
 mpirun -n 4 ../mhd_mirdip \
+    --mrc_crds_type rectilinear \
     --mrc_crds_lx -3.5 --mrc_crds_ly -3.5 --mrc_crds_lz -3.5 \
     --mrc_crds_hx  3.5 --mrc_crds_hy  3.5 --mrc_crds_hz  3.5 \
+    --crds_gen_x_type ggcm_yz \
+    --crds_gen_x_center_spacing 0.04 \
+    --crds_gen_y_type ggcm_yz \
+    --crds_gen_y_center_spacing 0.04 \
+    --crds_gen_z_type ggcm_yz \
+    --crds_gen_z_center_spacing 0.04 \
     \
     --mrc_domain_mx 64 --mrc_domain_my 64 --mrc_domain_mz 64 \
     --mrc_domain_npx 2 --mrc_domain_npy 1 --mrc_domain_npz 2 \
