@@ -568,7 +568,16 @@ mrc_fld_norm_comp(struct mrc_fld *x, int m)
 void
 mrc_fld_set(struct mrc_fld *fld, float val)
 {
-  mrc_vec_set(fld->_vec, (double) val);
+  // FIXME, there are probably many places like this, where we
+  // hand things off to _vec, or use _arr directly, which break
+  // fields that are just views
+  if (!fld->_view_base) {
+    mrc_vec_set(fld->_vec, (double) val);
+  } else {
+    struct mrc_fld_ops *ops = mrc_fld_ops(fld);
+    assert(ops && ops->set);
+    ops->set(fld, val);
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -1189,19 +1198,33 @@ mrc_fld_int_ddc_copy_to_buf(struct mrc_fld *fld, int mb, int me, int p,
 #define MAKE_MRC_FLD_TYPE(NAME, type, TYPE, IS_AOS)			\
 									\
   static void								\
-  mrc_fld_##NAME##_create(struct mrc_fld *fld)        \
+  mrc_fld_##NAME##_create(struct mrc_fld *fld)				\
   {									\
     fld->_data_type = MRC_NT_##TYPE;					\
     fld->_size_of_type = sizeof(type);					\
     fld->_is_aos = IS_AOS;						\
   }									\
-  static void       \
-  mrc_fld_##NAME##_read(struct mrc_fld *fld, struct mrc_io *io) \
-  {                                                             \
-    mrc_fld_##NAME##_create(fld);                               \
-    _mrc_fld_read(fld, io);                                     \
-  }                                                             \
+  static void								\
+  mrc_fld_##NAME##_read(struct mrc_fld *fld, struct mrc_io *io)		\
+  {									\
+    mrc_fld_##NAME##_create(fld);					\
+    _mrc_fld_read(fld, io);						\
+  }									\
   									\
+  static void								\
+  mrc_fld_##NAME##_set(struct mrc_fld *fld, float val)			\
+  {									\
+    assert(!fld->_is_aos);						\
+									\
+    for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {			\
+      mrc_fld_foreach(fld, ix,iy,iz, fld->_nr_ghosts, fld->_nr_ghosts) { \
+	for (int m = 0; m < fld->_nr_comps; m++) {			\
+	  MRC_FLD(fld, type, ix,iy,iz, m, p) = val;			\
+	}								\
+      } mrc_fld_foreach_end;						\
+    }									\
+  }									\
+									\
   void mrc_fld_##NAME##_ddc_copy_from_buf(struct mrc_fld *, int, int,	\
 					  int, int[3], int[3], void *); \
   void mrc_fld_##NAME##_ddc_copy_to_buf(struct mrc_fld *, int, int,	\
@@ -1210,8 +1233,9 @@ mrc_fld_int_ddc_copy_to_buf(struct mrc_fld *fld, int mb, int me, int p,
   static struct mrc_fld_ops mrc_fld_##NAME##_ops = {			\
     .name                  = #NAME,					\
     .methods               = mrc_fld_##NAME##_methods,			\
-    .create                = mrc_fld_##NAME##_create,     \
-    .read                  = mrc_fld_##NAME##_read,     \
+    .create                = mrc_fld_##NAME##_create,			\
+    .read                  = mrc_fld_##NAME##_read,			\
+    .set                   = mrc_fld_##NAME##_set,			\
     .ddc_copy_from_buf	   = mrc_fld_##NAME##_ddc_copy_from_buf,	\
     .ddc_copy_to_buf	   = mrc_fld_##NAME##_ddc_copy_to_buf,		\
     .vec_type              = #type,					\

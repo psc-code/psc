@@ -316,6 +316,7 @@ mrc_fld_patch_put(struct mrc_fld *fld)
 struct mrc_fld_ops {
   MRC_SUBCLASS_OPS(struct mrc_fld);
   const char *vec_type;
+  void (*set)(struct mrc_fld *fld, float val);
   void (*ddc_copy_to_buf)(struct mrc_fld *fld, int mb, int me, int p,
 			  int ilo[3], int ihi[3], void *buf);
   void (*ddc_copy_from_buf)(struct mrc_fld *fld, int mb, int me, int p,
