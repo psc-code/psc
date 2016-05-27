@@ -45,47 +45,10 @@ struct ggcm_mhd_bnd_sub {
 //   (But it might be the reason for the remaining small discrepancies between the
 //   two staggerings.)
 
-#if SHIFT == -1
-
-// DIFF bdy2[] index etc was inconsistent, now actually divg free
 // FIXME, which of these ghost points are actually used? / loop limits
 
-#define BNDDIV_BY_L(ix, iy, iz, p)					\
-  (M3(f, mm+1, ix,iy+1,iz, p) + (1. / bdy3[iy+1]) *			\
-   (bdx3[ix] * (M3(f, mm+0, ix  ,iy+1,iz  , p) -			\
-		M3(f, mm+0, ix-1,iy+1,iz  , p)) +			\
-    bdz3[iz] * (M3(f, mm+2, ix  ,iy+1,iz  , p) -			\
-		M3(f, mm+2, ix  ,iy+1,iz-1, p))))
-#define BNDDIV_BZ_L(ix, iy, iz, p)					\
-  (M3(f, mm+2, ix,iy,iz+1, p) + (1. / bdz3[iz+1]) *			\
-   (bdx3[ix] * (M3(f, mm+0, ix  ,iy  ,iz+1, p) -			\
-		M3(f, mm+0, ix-1,iy  ,iz+1, p)) +			\
-    bdy3[iy] * (M3(f, mm+1, ix  ,iy  ,iz+1, p) -			\
-		M3(f, mm+1, ix  ,iy-1,iz+1, p))))
-
-#define BNDDIV_BX_H(ix, iy, iz, p)					\
-  (M3(f, mm+0, ix-1,iy,iz, p) - (1. / bdx3[ix]) *			\
-   (bdy3[iy] * (M3(f, mm+1, ix  ,iy  ,iz  , p) -			\
-		M3(f, mm+1, ix  ,iy-1,iz  , p)) +			\
-    bdz3[iz] * (M3(f, mm+2, ix  ,iy  ,iz  , p) -			\
-		M3(f, mm+2, ix  ,iy  ,iz-1, p))))
-#define BNDDIV_BY_H(ix, iy, iz, p)					\
-  (M3(f, mm+1, ix,iy-1,iz, p) - (1. / bdy3[iy]) *			\
-   (bdx3[ix] * (M3(f, mm+0, ix  ,iy  ,iz  , p) -			\
-		M3(f, mm+0, ix-1,iy  ,iz  , p)) +			\
-    bdz3[iz] * (M3(f, mm+2, ix  ,iy  ,iz  , p) -			\
-		M3(f, mm+2, ix  ,iy  ,iz-1, p))))
-#define BNDDIV_BZ_H(ix, iy, iz, p)					\
-  (M3(f, mm+2, ix,iy,iz-1, p) - (1. / bdz3[iz]) *			\
-   (bdx3[ix] * (M3(f, mm+0, ix  ,iy  ,iz  , p) -			\
-		M3(f, mm+0, ix-1,iy  ,iz  , p)) +			\
-    bdy3[iy] * (M3(f, mm+1, ix  ,iy  ,iz  , p) -			\
-		M3(f, mm+1, ix  ,iy-1,iz  , p))))
-
-#elif SHIFT == 0
-
 #if MT == MT_FULLY_CONSERVATIVE_CC
-// FIXME, bd3 maybe isn't right, and should be bdy3[iy+1], e.g., but oob trouble?
+
 #define BNDDIV_BY_L(ix, iy, iz, p)					\
   (M3(f, mm+1, ix,iy+2,iz, p) +						\
    bdx3[ix]/bdy3[iy+1] * (M3(f, mm+0, ix+1,iy+1,iz  , p) -		\
@@ -120,46 +83,37 @@ struct ggcm_mhd_bnd_sub {
 
 #else
 
-// DIFF bdy2[] index etc was inconsistent, now actually divg free
-// FIXME, which of these ghost points are actually used? / loop limits
-
 #define BNDDIV_BY_L(ix, iy, iz, p)					\
-  (M3(f, mm+1, ix,iy+1,iz, p) +						\
-   bdx3[ix]/bdy3[iy] * (M3(f, mm+0, ix+1,iy,iz  , p) -			\
-			M3(f, mm+0, ix  ,iy,iz  , p)) +			\
-   bdz3[iz]/bdy3[iy] * (M3(f, mm+2, ix  ,iy,iz+1, p) -			\
-			M3(f, mm+2, ix  ,iy,iz  , p)))
+  (M3(f, mm+1, ix,iy+1+SHIFT,iz, p) +					\
+   bdx3[ix]/bdy3[iy] * (M3(f, mm+0, ix+1+SHIFT,iy,iz  , p) -		\
+			M3(f, mm+0, ix  +SHIFT,iy,iz  , p)) +		\
+   bdz3[iz]/bdy3[iy] * (M3(f, mm+2, ix  ,iy,iz+1+SHIFT, p) -		\
+			M3(f, mm+2, ix  ,iy,iz  +SHIFT, p)))
 #define BNDDIV_BZ_L(ix, iy, iz, p)					\
-  (M3(f, mm+2, ix,iy,iz+1, p) +						\
-   bdx3[ix]/bdz3[iz] * (M3(f, mm+0, ix+1,iy  ,iz, p) -			\
-			M3(f, mm+0, ix  ,iy  ,iz, p)) +			\
-   bdy3[iy]/bdz3[iz] * (M3(f, mm+1, ix  ,iy+1,iz, p) -			\
-			M3(f, mm+1, ix  ,iy  ,iz, p)))
+  (M3(f, mm+2, ix,iy,iz+1+SHIFT, p) +					\
+   bdx3[ix]/bdz3[iz] * (M3(f, mm+0, ix+1+SHIFT,iy  ,iz, p) -		\
+			M3(f, mm+0, ix  +SHIFT,iy  ,iz, p)) +		\
+   bdy3[iy]/bdz3[iz] * (M3(f, mm+1, ix  ,iy+1+SHIFT,iz, p) -		\
+			M3(f, mm+1, ix  ,iy  +SHIFT,iz, p)))
 
 #define BNDDIV_BX_H(ix, iy, iz, p)					\
-  (M3(f, mm+0, ix-1,iy,iz, p) -						\
-   bdy3[iy]/bdx3[ix-1] * (M3(f, mm+1, ix-1,iy+1,iz  , p) -		\
-			  M3(f, mm+1, ix-1,iy  ,iz  , p)) -		\
-   bdz3[iz]/bdx3[ix-1] * (M3(f, mm+2, ix-1,iy  ,iz+1, p) -		\
-			  M3(f, mm+2, ix-1,iy  ,iz  , p)))
+  (M3(f, mm+0, ix-1+SHIFT,iy,iz, p) -					\
+   bdy3[iy]/bdx3[ix-1] * (M3(f, mm+1, ix-1,iy+1+SHIFT,iz  , p) -	\
+			  M3(f, mm+1, ix-1,iy  +SHIFT,iz  , p)) -	\
+   bdz3[iz]/bdx3[ix-1] * (M3(f, mm+2, ix-1,iy  ,iz+1+SHIFT, p) -	\
+			  M3(f, mm+2, ix-1,iy  ,iz  +SHIFT, p)))
 #define BNDDIV_BY_H(ix, iy, iz, p)					\
-  (M3(f, mm+1, ix,iy-1,iz, p) -						\
-   bdx3[ix]/bdy3[iy-1] * (M3(f, mm+0, ix+1,iy-1,iz  , p) -		\
-			  M3(f, mm+0, ix  ,iy-1,iz  , p)) -		\
-   bdz3[iz]/bdy3[iy-1] * (M3(f, mm+2, ix  ,iy-1,iz+1, p) -		\
-			  M3(f, mm+2, ix  ,iy-1,iz  , p)))
+  (M3(f, mm+1, ix,iy-1+SHIFT,iz, p) -					\
+   bdx3[ix]/bdy3[iy-1] * (M3(f, mm+0, ix+1+SHIFT,iy-1,iz  , p) -	\
+			  M3(f, mm+0, ix  +SHIFT,iy-1,iz  , p)) -	\
+   bdz3[iz]/bdy3[iy-1] * (M3(f, mm+2, ix  ,iy-1,iz+1+SHIFT, p) -	\
+			  M3(f, mm+2, ix  ,iy-1,iz  +SHIFT, p)))
 #define BNDDIV_BZ_H(ix, iy, iz, p)					\
-  (M3(f, mm+2, ix,iy,iz-1, p) -						\
-   bdx3[ix]/bdz3[iz-1] * (M3(f, mm+0, ix+1,iy  ,iz-1, p) -		\
-			  M3(f, mm+0, ix  ,iy  ,iz-1, p)) -		\
-   bdy3[iy]/bdz3[iz-1] * (M3(f, mm+1, ix  ,iy+1,iz-1, p) -		\
-			  M3(f, mm+1, ix  ,iy  ,iz-1, p)))
-
-#endif
-
-#else
-
-#error unknown SHIFT
+  (M3(f, mm+2, ix,iy,iz-1+SHIFT, p) -					\
+   bdx3[ix]/bdz3[iz-1] * (M3(f, mm+0, ix+1+SHIFT,iy  ,iz-1, p) -	\
+			  M3(f, mm+0, ix  +SHIFT,iy  ,iz-1, p)) -	\
+   bdy3[iy]/bdz3[iz-1] * (M3(f, mm+1, ix  ,iy+1+SHIFT,iz-1, p) -	\
+			  M3(f, mm+1, ix  ,iy  +SHIFT,iz-1, p)))
 
 #endif
 
@@ -537,7 +491,6 @@ obndrb(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm)
   const int *sw = mrc_fld_spatial_sw(f), *ldims = mrc_fld_spatial_dims(f);
 #if MT == MT_FULLY_CONSERVATIVE_CC
   // tangential
-  int o_t[3] = { 0, 0, 0 }; // offset
   int m_t[3] = { ldims[0], ldims[1], ldims[2] }; // number of points
   int s_t[3] = { sw[0] - 1, sw[1] - 1, sw[2] - 1 }; // number of ghost points to fill
   // normal
@@ -546,7 +499,6 @@ obndrb(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm)
   int s_n[3] = { sw[0], sw[1], sw[2] };
 #else
   // tangential
-  int o_t[3] = { 0, 0, 0 }; // offset
   int m_t[3] = { ldims[0], ldims[1], ldims[2] }; // number of points
   int s_t[3] = { sw[0] - 1, sw[1] - 1, sw[2] - 1 };
   // normal
@@ -554,7 +506,6 @@ obndrb(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm)
   int r_n[3] = { ldims[0], ldims[1], ldims[2] };
   int s_n[3] = { sw[0] - 1, sw[1] - 1, sw[2] - 1 }; // number of ghost points to fill
 #endif
-  assert(SHIFT == 0);
 
   for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
     float *bdx3 = ggcm_mhd_crds_get_crd_p(mhd->crds, 0, BD3, p);
@@ -563,48 +514,48 @@ obndrb(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm)
 
     // assumes x1 bnd = fix, others = open
     if (mrc_domain_at_boundary_lo(mhd->domain, 1, p)) {
-      for (int iz = o_t[2] - s_t[2]; iz < o_t[2] + m_t[2] + s_t[2]; iz++) {
-	for (int ix = o_t[0] - s_t[0]; ix < o_t[0] + m_t[0] + s_t[0]; ix++) {
+      for (int iz = -s_t[2]; iz < m_t[2] + s_t[2]; iz++) {
+	for (int ix = -s_t[0]; ix < m_t[0] + s_t[0]; ix++) {
 	  for (int iy = l_n[1]; iy > l_n[1] - s_n[1]; iy--) {
-	    M3(f, mm+1, ix,iy,iz, p) = BNDDIV_BY_L(ix,iy,iz, p);
+	    M3(f, mm+1, ix,iy+SHIFT,iz, p) = BNDDIV_BY_L(ix,iy,iz, p);
 	  }
 	}
       }
     }
     if (mrc_domain_at_boundary_hi(mhd->domain, 1, p)) {
-      for (int iz = o_t[2] - s_t[2]; iz < o_t[2] + m_t[2] + s_t[2]; iz++) {
-	for (int ix = o_t[0] - s_t[0]; ix < o_t[0] + m_t[0] + s_t[0]; ix++) {
+      for (int iz = -s_t[2]; iz < m_t[2] + s_t[2]; iz++) {
+	for (int ix = -s_t[0]; ix < m_t[0] + s_t[0]; ix++) {
 	  for (int iy = r_n[1]; iy < r_n[1] + s_n[1]; iy++) {
-	    M3(f, mm+1, ix,iy,iz, p) = BNDDIV_BY_H(ix,iy,iz, p);
+	    M3(f, mm+1, ix,iy+SHIFT,iz, p) = BNDDIV_BY_H(ix,iy,iz, p);
 	  }
 	}
       }
     }
 
     if (mrc_domain_at_boundary_lo(mhd->domain, 2, p)) {
-      for (int iy = o_t[1] - s_t[1]; iy < o_t[1] + m_t[1] + s_t[1]; iy++) {
-	for (int ix = o_t[0] - s_t[0]; ix < o_t[0] + m_t[0] + s_t[0]; ix++) {
+      for (int iy = -s_t[1]; iy < m_t[1] + s_t[1]; iy++) {
+	for (int ix = -s_t[0]; ix < m_t[0] + s_t[0]; ix++) {
 	  for (int iz = l_n[2]; iz > l_n[2] - s_n[2]; iz--) {
-	    M3(f, mm+2, ix,iy,iz, p) = BNDDIV_BZ_L(ix,iy,iz, p);
+	    M3(f, mm+2, ix,iy,iz+SHIFT, p) = BNDDIV_BZ_L(ix,iy,iz, p);
 	  }
 	}
       }
     }
     if (mrc_domain_at_boundary_hi(mhd->domain, 2, p)) {
-      for (int iy = o_t[1] - s_t[1]; iy < o_t[1] + m_t[1] + s_t[1]; iy++) {
-	for (int ix = o_t[0] - s_t[0]; ix < o_t[0] + m_t[0] + s_t[0]; ix++) {
+      for (int iy = -s_t[1]; iy < m_t[1] + s_t[1]; iy++) {
+	for (int ix = -s_t[0]; ix < m_t[0] + s_t[0]; ix++) {
 	  for (int iz = r_n[2]; iz < r_n[2] + s_n[2]; iz++) {
-	    M3(f, mm+2, ix,iy,iz, p) = BNDDIV_BZ_H(ix,iy,iz, p);
+	    M3(f, mm+2, ix,iy,iz+SHIFT, p) = BNDDIV_BZ_H(ix,iy,iz, p);
 	  }
 	}
       }
     }
 
     if (mrc_domain_at_boundary_hi(mhd->domain, 0, p)) {
-      for (int iz = o_t[2] - s_t[2]; iz < o_t[2] + m_t[2] + s_t[2]; iz++) {
-	for (int iy = o_t[1] - s_t[1]; iy < o_t[1] + m_t[1] + s_t[1]; iy++) {
+      for (int iz = -s_t[2]; iz < m_t[2] + s_t[2]; iz++) {
+	for (int iy = -s_t[1]; iy < m_t[1] + s_t[1]; iy++) {
 	  for (int ix = r_n[0]; ix < r_n[0] + s_n[0]; ix++) {
-	    M3(f, mm+0, ix,iy,iz, p) = BNDDIV_BX_H(ix,iy,iz, p);
+	    M3(f, mm+0, ix+SHIFT,iy,iz, p) = BNDDIV_BX_H(ix,iy,iz, p);
 	  }
 	}
       }
