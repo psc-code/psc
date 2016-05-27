@@ -21,6 +21,8 @@ mrc_ts_monitor_run(struct mrc_ts_monitor *mon, struct mrc_ts *ts)
     while (mon->next_time <= ts->time) {
       mon->next_time += mon->every_time;
     }
+  } else if (ts->time >= ts->max_time) {
+    mrc_ts_monitor_ops(mon)->run(mon, ts);
   }
 }
 

@@ -108,6 +108,16 @@ mrc_ts_set_step_function(struct mrc_ts *ts,
 }
 
 void
+mrc_ts_set_get_dt_function(struct mrc_ts *ts,
+			   double (*get_dt_f)(void *ctx, struct mrc_ts *ts,
+					      struct mrc_obj *x),
+			   void *ctx)
+{
+  ts->get_dt_f = get_dt_f;
+  ts->get_dt_f_ctx = ctx;
+}
+
+void
 mrc_ts_set_pre_step_function(struct mrc_ts *ts,
 			     void (*pre_step)(void *ctx, struct mrc_ts *ts,
 					      struct mrc_obj *x),
@@ -132,6 +142,14 @@ mrc_ts_add_monitor(struct mrc_ts *ts, struct mrc_ts_monitor *mon)
 {
   list_add_tail(&mon->monitors_entry, &ts->monitors);
   mrc_ts_add_child(ts, (struct mrc_obj *) mon);
+}
+
+void
+mrc_ts_get_dt(struct mrc_ts *ts)
+{
+  if (ts->get_dt_f) {
+    ts->dt = ts->get_dt_f(ts->rhsf_ctx, ts, ts->x);
+  }
 }
 
 void
@@ -166,6 +184,7 @@ mrc_ts_solve(struct mrc_ts *ts)
   }
 
   while ((ts->time < ts->max_time) && (ts->n < ts->max_steps)) {
+    mrc_ts_get_dt(ts);
     if (ts->time + ts->dt > ts->max_time) {
       ts->dt = ts->max_time - ts->time;
     }
