@@ -20,10 +20,10 @@ for step in steps:
         mpl.plt.figure()
 
         dat = f[fld]
-        if fld == "divB":
-            dat *= f["ymask"]
+        # if fld == "divB":
+        #     dat *= f["ymask"]
                                    
         mpl.plot(dat, "y=0.f", **plot_kwargs)
 
-        mpl.plt.savefig("%s-xy-%06d.png" % (fld, step), dpi=200)
+        mpl.plt.savefig("%s-xz-%06d.png" % (fld, step), dpi=200)
         mpl.plt.close()
