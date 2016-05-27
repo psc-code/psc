@@ -40,7 +40,7 @@ ggcm_mhd_ic_B_from_vector_potential_fc(struct ggcm_mhd_ic *ic, struct mrc_fld *b
 
       mrc_dcrds_at_ec(crds, ix  , iy+1, iz  , p, 0, xx);
       mrc_fld_data_t Ax_yp = vector_potential(ic, 0, xx);
-     double x_yp = xx[1];
+      double x_yp = xx[1];
  
       mrc_dcrds_at_ec(crds, ix  , iy  , iz+1, p, 0, xx);
       mrc_fld_data_t Ax_zp = vector_potential(ic, 0, xx);
@@ -75,6 +75,69 @@ ggcm_mhd_ic_B_from_vector_potential_fc(struct ggcm_mhd_ic *ic, struct mrc_fld *b
       M3(b, 0, ix,iy,iz, p) += (Az_yp - Az) / (z_yp - z_y0) - (Ay_zp - Ay) / (y_zp - y_z0);
       M3(b, 1, ix,iy,iz, p) += (Ax_zp - Ax) / (x_zp - x_z0) - (Az_xp - Az) / (z_xp - z_x0);
       M3(b, 2, ix,iy,iz, p) += (Ay_xp - Ay) / (y_xp - y_x0) - (Ax_yp - Ax) / (x_yp - x_y0);
+    } mrc_fld_foreach_end;
+  }
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_ic_B_from_vector_potential_fc_ggcm
+//
+// initialize face-centered B from edge-centered vector potential, using
+// ggcm-staggered grid
+
+static void
+ggcm_mhd_ic_B_from_vector_potential_fc_ggcm(struct ggcm_mhd_ic *ic, struct mrc_fld *b,
+					    vector_potential_f vector_potential)
+{
+  struct ggcm_mhd *mhd = ic->mhd;
+  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
+
+  double xx[3];
+
+  /* initialize face-centered B from edge-centered vector potential */
+  for (int p = 0; p < mrc_fld_nr_patches(b); p++) {
+    mrc_fld_foreach(b, ix,iy,iz, 1, 2) {
+      mrc_dcrds_at_ec(crds, ix  , iy  , iz  , p, 0, xx);
+      mrc_fld_data_t Ax    = vector_potential(ic, 0, xx);
+      double x_y0 = xx[1], x_z0 = xx[2];
+
+      mrc_dcrds_at_ec(crds, ix  , iy+1, iz  , p, 0, xx);
+      mrc_fld_data_t Ax_yp = vector_potential(ic, 0, xx);
+      double x_yp = xx[1];
+ 
+      mrc_dcrds_at_ec(crds, ix  , iy  , iz+1, p, 0, xx);
+      mrc_fld_data_t Ax_zp = vector_potential(ic, 0, xx);
+      double x_zp = xx[2];
+
+
+      mrc_dcrds_at_ec(crds, ix  , iy  , iz  , p, 1, xx);
+      mrc_fld_data_t Ay    = vector_potential(ic, 1, xx);
+      double y_x0 = xx[0], y_z0 = xx[2];
+
+      mrc_dcrds_at_ec(crds, ix  , iy  , iz+1, p, 1, xx);
+      mrc_fld_data_t Ay_zp = vector_potential(ic, 1, xx);
+      double y_zp = xx[2];
+
+      mrc_dcrds_at_ec(crds, ix+1, iy  , iz  , p, 1, xx);
+      mrc_fld_data_t Ay_xp = vector_potential(ic, 1, xx);
+      double y_xp = xx[0];
+
+
+      mrc_dcrds_at_ec(crds, ix  , iy  , iz  , p, 2, xx);
+      mrc_fld_data_t Az    = vector_potential(ic, 2, xx);
+      double z_x0 = xx[0], z_y0 = xx[1];
+
+      mrc_dcrds_at_ec(crds, ix+1, iy  , iz  , p, 2, xx);
+      mrc_fld_data_t Az_xp = vector_potential(ic, 2, xx);
+      double z_xp = xx[0];
+
+      mrc_dcrds_at_ec(crds, ix  , iy+1, iz  , p, 2, xx);
+      mrc_fld_data_t Az_yp = vector_potential(ic, 2, xx);
+      double z_yp = xx[1];
+
+      M3(b, 0, ix-1,iy,iz, p) += (Az_yp - Az) / (z_yp - z_y0) - (Ay_zp - Ay) / (y_zp - y_z0);
+      M3(b, 1, ix,iy-1,iz, p) += (Ax_zp - Ax) / (x_zp - x_z0) - (Az_xp - Az) / (z_xp - z_x0);
+      M3(b, 2, ix,iy,iz-1, p) += (Ay_xp - Ay) / (y_xp - y_x0) - (Ax_yp - Ax) / (x_yp - x_y0);
     } mrc_fld_foreach_end;
   }
 }
@@ -139,6 +202,8 @@ ggcm_mhd_ic_B_from_vector_potential(struct ggcm_mhd_ic *ic, struct mrc_fld *b,
   if (mhd_type == MT_FULLY_CONSERVATIVE ||
       mhd_type == MT_SEMI_CONSERVATIVE) {
     ggcm_mhd_ic_B_from_vector_potential_fc(ic, b, vector_potential);
+  } else if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM) {
+    ggcm_mhd_ic_B_from_vector_potential_fc_ggcm(ic, b, vector_potential);
   } else if (mhd_type == MT_FULLY_CONSERVATIVE_CC) {
     ggcm_mhd_ic_B_from_vector_potential_cc(ic, b, vector_potential);
   } else {
@@ -295,7 +360,8 @@ ggcm_mhd_ic_hydro_from_primitive(struct ggcm_mhd_ic *ic, struct mrc_fld *fld)
   int mhd_type;
   mrc_fld_get_param_int(mhd->fld, "mhd_type", &mhd_type);
 
-  if (mhd_type == MT_SEMI_CONSERVATIVE) {
+  if (mhd_type == MT_SEMI_CONSERVATIVE ||
+      mhd_type == MT_SEMI_CONSERVATIVE_GGCM) {
     ggcm_mhd_ic_hydro_from_primitive_semi(ic, fld);
   } else if (mhd_type == MT_FULLY_CONSERVATIVE_CC) {
     ggcm_mhd_ic_hydro_from_primitive_fully_cc(ic, fld);
