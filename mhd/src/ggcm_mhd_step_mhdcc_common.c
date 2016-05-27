@@ -198,6 +198,18 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_step_mhdcc_get_dt
+
+static double
+ggcm_mhd_step_mhdcc_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
+{
+  struct ggcm_mhd *mhd = step->mhd;
+
+  ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
+  return newstep_fc_cc(mhd, x, NULL, 0);
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_step_mhdcc_run
 
 static void
@@ -232,30 +244,6 @@ ggcm_mhd_step_mhdcc_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
     ggcm_mhd_diag_run_now(diag, mhd->fld, DIAG_TYPE_3D, cnt++);
   }
 #endif
-
-  // --- update timestep
-  if (step->do_nwst) {
-    ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
-    mrc_fld_data_t dtn = newstep_sc(mhd, x, NULL, 0);
-
-    if (dtn > 1.02 * mhd->dt || dtn < mhd->dt / 1.01) {
-      mpi_printf(ggcm_mhd_comm(mhd), "switched dt %g <- %g\n", dtn, mhd->dt);
-
-      // FIXME: determining when to die on a bad dt should be generalized, since
-      //        there's another hiccup if refining dt for actual AMR
-      bool first_step = mhd->istep <= 1;
-      bool last_step = mhd->time + dtn > (1.0 - 1e-5) * mhd->max_time;
-
-      if (!first_step && !last_step &&
-          (dtn < 0.5 * mhd->dt || dtn > 2.0 * mhd->dt)) {            
-        mpi_printf(ggcm_mhd_comm(mhd), "!!! dt changed by > a factor of 2. "
-                   "Dying now!\n");
-	ggcm_mhd_wrongful_death(mhd, mhd->fld, 2);
-      }
-
-      mhd->dt = dtn;
-    }
-  }
 
   // --- PREDICTOR
   prof_start(pr_A);
@@ -306,6 +294,7 @@ struct ggcm_mhd_step_ops ggcm_mhd_step_mhdcc_ops = {
   .param_descr         = ggcm_mhd_step_mhdcc_descr,
   .create              = ggcm_mhd_step_mhdcc_create,
   .setup               = ggcm_mhd_step_mhdcc_setup,
+  .get_dt              = ggcm_mhd_step_mhdcc_get_dt,
   .run                 = ggcm_mhd_step_mhdcc_run,
   .destroy             = ggcm_mhd_step_mhdcc_destroy,
   .setup_flds          = ggcm_mhd_step_mhdcc_setup_flds,

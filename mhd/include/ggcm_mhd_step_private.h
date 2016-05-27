@@ -30,6 +30,7 @@ struct ggcm_mhd_step {
 struct ggcm_mhd_step_ops {
   MRC_SUBCLASS_OPS(struct ggcm_mhd_step);
   void (*newstep)(struct ggcm_mhd_step *, float *dtn);
+  double (*get_dt)(struct ggcm_mhd_step *, struct mrc_fld *x);
   void (*pred)(struct ggcm_mhd_step *);
   void (*corr)(struct ggcm_mhd_step *);
   void (*calc_rhs)(struct ggcm_mhd_step *step, struct mrc_fld *rhs,

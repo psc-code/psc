@@ -18,6 +18,20 @@
 // ggcm_mhd_step class
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_step_get_dt
+
+double
+ggcm_mhd_step_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
+{
+  struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
+  if (ops && ops->get_dt) {
+    step->mhd->dt = ops->get_dt(step, x);
+  }
+
+  return step->mhd->dt;
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_step_calc_rhs
 
 void

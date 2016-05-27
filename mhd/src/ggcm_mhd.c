@@ -519,6 +519,25 @@ ts_ggcm_mhd_step_run(void *ctx, struct mrc_ts *ts, struct mrc_obj *_x)
 }
 
 // ----------------------------------------------------------------------
+// ts_ggcm_mhd_step_get_dt
+//
+// wrapper to be used in a mrc_ts object
+
+double
+ts_ggcm_mhd_step_get_dt(void *ctx, struct mrc_ts *ts, struct mrc_obj *_x)
+{
+  struct ggcm_mhd *mhd = ctx;
+  struct mrc_fld *x = (struct mrc_fld *) _x;
+  
+  mhd->time = mrc_ts_time(ts);
+  mhd->dt = mrc_ts_dt(ts);
+  mhd->istep = mrc_ts_step_number(ts);
+
+  double dt = ggcm_mhd_step_get_dt(mhd->step, x);
+  return dt;
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_main
 //
 // Helper function that does most of the work of actually running a
@@ -574,6 +593,7 @@ ggcm_mhd_main(int *argc, char ***argv)
 
   mrc_ts_set_dt(ts, 1e-6);
   mrc_ts_set_solution(ts, mrc_fld_to_mrc_obj(mhd->fld));
+  mrc_ts_set_get_dt_function(ts, ts_ggcm_mhd_step_get_dt, mhd);
   mrc_ts_set_rhs_function(ts, ts_ggcm_mhd_step_calc_rhs, mhd);
   mrc_ts_set_step_function(ts, ts_ggcm_mhd_step_run, mhd);
   mrc_ts_set_from_options(ts);
