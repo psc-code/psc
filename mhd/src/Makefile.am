@@ -36,6 +36,7 @@ libmhd_la_SOURCES = \
 	ggcm_mhd_bnd_sphere_fc_double.c \
 	ggcm_mhd_bnd_sphere_sc_float.c \
 	ggcm_mhd_bnd_sphere_sc_double.c \
+	ggcm_mhd_bnd_sphere_sc_ggcm_double.c \
 	ggcm_mhd_bnd_sphere_sc_double_aos.c \
 	ggcm_mhd_bnd_sphere_fc_double_aos.c \
 	ggcm_mhd_bnd_sphere_fc_cc_double.c \
