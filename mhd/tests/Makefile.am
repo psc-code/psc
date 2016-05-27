@@ -2,6 +2,7 @@
 AM_CPPFLAGS = -I$(srcdir)/../../include -I$(srcdir)/../include
 
 bin_PROGRAMS = \
+	mhd_cpaw \
 	mhd_mirdip \
 	mhd_fadeev \
 	mhd_test_bnd_sphere \
