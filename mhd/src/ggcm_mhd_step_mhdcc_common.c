@@ -206,7 +206,7 @@ ggcm_mhd_step_mhdcc_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
   struct ggcm_mhd *mhd = step->mhd;
 
   ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
-  return newstep_fc_cc(mhd, x, NULL, 0);
+  return newstep_sc(mhd, x, NULL, 0);
 }
 
 // ----------------------------------------------------------------------
