@@ -5,7 +5,7 @@ matplotlib.use("Agg")
 import viscid
 from viscid.plot import mpl
 
-steps = xrange(0, 17)
+steps = xrange(0, 21)
 
 flds = ['divB', 'rr', 'bx', 'by', 'bz', 'vx', 'vy', 'vz', 'pp']
 flds = ['vy']
