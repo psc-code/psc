@@ -31,6 +31,7 @@ struct ggcm_mhd_bnd_sphere {
   double radius;
   double bnvals[FIXED_NR];  // constant values to set
   int test; // for testing, set to != 0
+  int radial_velocity; // 0 : float, 1: reflect, 2: reflect if outflow
 
   // state
   struct ggcm_mhd_bnd_sphere_map map;
@@ -110,7 +111,7 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld, int m)
       // but for now we'll do E field instead, anyway...
     }
 #endif
-    
+
     if (MT == MT_SEMI_CONSERVATIVE ||
         MT == MT_SEMI_CONSERVATIVE_GGCM) {
       M3(fld, m + UU , ix,iy,iz, p) = uubn;
@@ -334,9 +335,10 @@ sphere_fill_ghosts_reconstr(struct ggcm_mhd_bnd *bnd, struct mrc_fld *U_l[],
       float crd_fc[3];
       mrc_crds_at_fc(crds, ix,iy,iz, p, d, crd_fc);
 
+      int n_comps = mrc_fld_nr_comps(U_l[0]);
       // find true (inside) face values
-      mrc_fld_data_t U_ghost[5], U_true[5];
-      for (int m = 0; m < 5; m++) {
+      mrc_fld_data_t U_ghost[n_comps], U_true[n_comps];
+      for (int m = 0; m < n_comps; m++) {
 	if (bndp) {
 	  U_true[m] = M3(U_l[d], m, ix,iy,iz, p);
 	} else {
@@ -346,29 +348,31 @@ sphere_fill_ghosts_reconstr(struct ggcm_mhd_bnd *bnd, struct mrc_fld *U_l[],
 
       // from BATSRUS / ganymede b.c.
       // for inflow float everything 
-      for (int m = 0; m < 5; m++) {
+      for (int m = 0; m < n_comps; m++) {
 	U_ghost[m] = U_true[m];
       }
 
-      // calculate r^2
-      mrc_fld_data_t r2 = 0.;
-      for (int m = 0; m < 3; m++) {
-	r2 += sqr(crd_fc[m]);
-      }
-
-      // for outflow reflect radial velocity: uG = u - 2*(u.r)*r/r^2
-      mrc_fld_data_t UdotR = 0.;
-      for (int m = 0; m < 3; m++) {
-	UdotR += U_true[RVX + m] * crd_fc[m];
-      }
-      if (UdotR > 0.) {
+      if (sub->radial_velocity != 0) {
+	// calculate r^2
+	mrc_fld_data_t r2 = 0.;
 	for (int m = 0; m < 3; m++) {
-	  U_ghost[RVX + m] = U_true[RVX + m] - 2. * UdotR / r2 * crd_fc[m];
+	  r2 += sqr(crd_fc[m]);
+	}
+	
+	// for outflow reflect radial velocity: uG = u - 2*(u.r)*r/r^2
+	mrc_fld_data_t UdotR = 0.;
+	for (int m = 0; m < 3; m++) {
+	  UdotR += U_true[RVX + m] * crd_fc[m];
+	}
+	if (sub->radial_velocity == 1 || UdotR > 0.) {
+	  for (int m = 0; m < 3; m++) {
+	    U_ghost[RVX + m] = U_true[RVX + m] - 2. * UdotR / r2 * crd_fc[m];
+	  }
 	}
       }
 
       // store ghost values back
-      for (int m = 0; m < 5; m++) {
+      for (int m = 0; m < n_comps; m++) {
 	if (bndp) {
 	  M3(U_r[d], m, ix, iy,iz, p) = U_ghost[m];
 	} else {
@@ -422,6 +426,7 @@ static struct param ggcm_mhd_bnd_sphere_descr[] = {
   { "by"              , VAR(bnvals[FIXED_BY]), PARAM_DOUBLE(0.)          },
   { "bz"              , VAR(bnvals[FIXED_BZ]), PARAM_DOUBLE(0.)          },
   { "test"            , VAR(test),             PARAM_INT(0)              },
+  { "radial_velocity" , VAR(radial_velocity),  PARAM_INT(0)              },
 
   { "min_dr"          , VAR(map.min_dr)      , MRC_VAR_DOUBLE            },
   { "radius"          , VAR(map.radius)      , MRC_VAR_DOUBLE            },
