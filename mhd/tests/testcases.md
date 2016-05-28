@@ -19,3 +19,11 @@
 * t006_alfven_wing: Ganymede-based Alfven wing test without dipole
   field.
 
+* t007_cpaw_mhd: MHD-based circular polarized Alfven wave test, 1d,
+  Jimmy-MHD staggered scheme
+
+* t008_cpaw_mhd: MHD-based circular polarized Alfven wave test, 1d,
+  cell-centered scheme
+
+
+
