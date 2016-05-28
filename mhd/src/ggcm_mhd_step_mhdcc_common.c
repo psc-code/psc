@@ -205,7 +205,7 @@ ggcm_mhd_step_mhdcc_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 {
   struct ggcm_mhd *mhd = step->mhd;
   struct mrc_fld *x_half = ggcm_mhd_get_3d_fld(mhd, 8);
-  mrc_fld_dict_add_int(x_half, "mhd_type", MT_SEMI_CONSERVATIVE);
+  mrc_fld_dict_add_int(x_half, "mhd_type", MT_FULLY_CONSERVATIVE_CC);
 
   static int pr_A, pr_B;
   if (!pr_A) {
