@@ -16,3 +16,6 @@
   ggcm-staggered B grid. This tests bnd_sphere and bnd_inoutflow to
   some extent, too.
 
+* t006_alfven_wing: Ganymede-based Alfven wing test without dipole
+  field.
+
