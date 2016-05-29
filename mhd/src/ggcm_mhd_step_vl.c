@@ -56,7 +56,7 @@ flux_pred(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld *x
   fld1d_state_t W = sub->W, W_l = sub->W_l, W_r = sub->W_r;
   fld1d_state_t F = sub->F;
 
-  pick_line_sc(U.mrc_fld, x, ldim, 2, 2, j, k, dir, p);
+  pick_line_sc(U, x, ldim, 2, 2, j, k, dir, p);
   mhd_prim_from_sc(step->mhd, W.mrc_fld, U.mrc_fld, ldim, 2, 2); // for up to plm reconstruction
   mhd_reconstruct_run(sub->reconstruct_pred, U_l.mrc_fld, U_r.mrc_fld, W_l.mrc_fld, W_r.mrc_fld, W.mrc_fld, NULL,
 		      ldim, 1, 1, dir);
@@ -73,7 +73,7 @@ flux_corr(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld *x
   fld1d_state_t W = sub->W, W_l = sub->W_l, W_r = sub->W_r;
   fld1d_state_t F = sub->F;
 
-  pick_line_sc(U.mrc_fld, x, ldim, 2, 2, j, k, dir, p);
+  pick_line_sc(U, x, ldim, 2, 2, j, k, dir, p);
   mhd_prim_from_sc(step->mhd, W.mrc_fld, U.mrc_fld, ldim, 2, 2); // for up to plm reconstruction
   mhd_reconstruct_run(sub->reconstruct_corr, U_l.mrc_fld, U_r.mrc_fld, W_l.mrc_fld, W_r.mrc_fld, W.mrc_fld, NULL,
 		      ldim, 1, 1, dir);

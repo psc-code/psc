@@ -68,16 +68,16 @@ pick_line_fc(fld1d_state_t u
 // pick_line_sc
 
 static void _mrc_unused
-pick_line_sc(struct mrc_fld *x1, struct mrc_fld *x,
+pick_line_sc(fld1d_state_t u, struct mrc_fld *U,
 	     int ldim, int l, int r, int j, int k, int dim, int p)
 {
 #define PICK_LINE(X,Y,Z,I,J,K) do {			\
     for (int i = -l; i < ldim + r; i++) {		\
-      F1(x1, RR , i) = M3(x, RR   , I,J,K, p);		\
-      F1(x1, RVX, i) = M3(x, RVX+X, I,J,K, p);		\
-      F1(x1, RVY, i) = M3(x, RVX+Y, I,J,K, p);		\
-      F1(x1, RVZ, i) = M3(x, RVX+Z, I,J,K, p);		\
-      F1(x1, UU , i) = M3(x, UU   , I,J,K, p);		\
+      F1S(u, RR , i) = M3(U, RR   , I,J,K, p);		\
+      F1S(u, RVX, i) = M3(U, RVX+X, I,J,K, p);		\
+      F1S(u, RVY, i) = M3(U, RVX+Y, I,J,K, p);		\
+      F1S(u, RVZ, i) = M3(U, RVX+Z, I,J,K, p);		\
+      F1S(u, UU , i) = M3(U, UU   , I,J,K, p);		\
     }							\
   } while (0)
 
