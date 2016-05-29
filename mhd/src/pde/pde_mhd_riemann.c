@@ -37,6 +37,22 @@ fluxes_sc(mrc_fld_data_t F[5], mrc_fld_data_t U[5], mrc_fld_data_t W[5])
 }
 
 // ----------------------------------------------------------------------
+// fluxes_hydro
+
+// FIXME, sc vs hydro is a kinda arbitrary distinction, but the former does not
+// contain pressure, because that's what's needed for Jimmy-MHD ("c3")
+
+static void
+fluxes_hydro(mrc_fld_data_t F[5], mrc_fld_data_t U[5], mrc_fld_data_t W[5])
+{
+  F[RR]  = W[RR] * W[VX];
+  F[RVX] = W[RR] * W[VX] * W[VX] + W[PP];
+  F[RVY] = W[RR] * W[VY] * W[VX];
+  F[RVZ] = W[RR] * W[VZ] * W[VX];
+  F[UU]  = (U[UU] + W[PP]) * W[VX];
+}
+
+// ----------------------------------------------------------------------
 // wavespeed_fc
 //
 // calculate speed of fastest (fast magnetosonic) wave
@@ -110,6 +126,34 @@ fluxes_rusanov_sc(mrc_fld_data_t F[5], mrc_fld_data_t Ul[5], mrc_fld_data_t Ur[5
 }
 
 // ----------------------------------------------------------------------
+// fluxes_rusanov_hydro
+
+static void
+fluxes_rusanov_hydro(mrc_fld_data_t F[5], mrc_fld_data_t Ul[5], mrc_fld_data_t Ur[5],
+		     mrc_fld_data_t Wl[5], mrc_fld_data_t Wr[5])
+{
+  mrc_fld_data_t Fl[5], Fr[5];
+  
+  fluxes_hydro(Fl, Ul, Wl);
+  fluxes_hydro(Fr, Ur, Wr);
+
+  mrc_fld_data_t vv, cs2;
+  vv = sqr(Wl[VX]) + sqr(Wl[VY]) + sqr(Wl[VZ]);
+  cs2 = Gamma * Wl[PP] / Wl[RR];
+  mrc_fld_data_t cmsv_l = sqrtf(vv) + sqrtf(cs2);
+
+  vv = sqr(Wr[VX]) + sqr(Wr[VY]) + sqr(Wr[VZ]);
+  cs2 = Gamma * Wr[PP] / Wr[RR];
+  mrc_fld_data_t cmsv_r = sqrtf(vv) + sqrtf(cs2);
+
+  mrc_fld_data_t lambda = .5 * (cmsv_l + cmsv_r);
+  
+  for (int m = 0; m < 5; m++) {
+    F[m] = .5f * ((Fr[m] + Fl[m]) - lambda * (Ur[m] - Ul[m]));
+  }
+}
+
+// ----------------------------------------------------------------------
 // mhd_riemann_rusanov_run_fc
 
 static void _mrc_unused
@@ -140,6 +184,23 @@ mhd_riemann_rusanov_run_sc(struct ggcm_mhd *mhd, fld1d_state_t F,
   for (int i = -l; i < ldim + r; i++) {
     fluxes_rusanov_sc(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
 		      &F1S(W_l, 0, i), &F1S(W_r, 0, i));
+  }
+}
+
+// ----------------------------------------------------------------------
+// mhd_riemann_rusanov_run_hydro
+
+static void _mrc_unused
+mhd_riemann_rusanov_run_hydro(struct ggcm_mhd *mhd, fld1d_state_t F,
+			      fld1d_state_t U_l, fld1d_state_t U_r,
+			      fld1d_state_t W_l, fld1d_state_t W_r,
+			      int ldim, int l, int r, int dim)
+{
+  Gamma = mhd->par.gamm;
+
+  for (int i = -l; i < ldim + r; i++) {
+    fluxes_rusanov_hydro(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
+			 &F1S(W_l, 0, i), &F1S(W_r, 0, i));
   }
 }
 
