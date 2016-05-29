@@ -5,7 +5,6 @@
 #include <ggcm_mhd_defs.h>
 #include <ggcm_mhd_diag.h>
 #include <mhd_riemann.h>
-#include <mhd_reconstruct.h>
 
 #include <mrc_domain.h>
 #include <mrc_ddc.h>
