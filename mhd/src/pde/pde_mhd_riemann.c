@@ -213,6 +213,68 @@ fluxes_hll_hydro(mrc_fld_data_t F[5], mrc_fld_data_t Ul[5], mrc_fld_data_t Ur[5]
 }
 
 // ----------------------------------------------------------------------
+// fluxes_hllc_hydro
+
+static void
+fluxes_hllc_hydro(mrc_fld_data_t F[5], mrc_fld_data_t Ul[5], mrc_fld_data_t Ur[5],
+		  mrc_fld_data_t Wl[5], mrc_fld_data_t Wr[5])
+{
+  mrc_fld_data_t Fl[5], Fr[5];
+
+  fluxes_hydro(Fl, Ul, Wl);
+  fluxes_hydro(Fr, Ur, Wr);
+
+  mrc_fld_data_t cs2;
+
+  cs2 = Gamma * Wl[PP] / Wl[RR];
+  mrc_fld_data_t cpv_l = Wl[VX] + sqrtf(cs2);
+  mrc_fld_data_t cmv_l = Wl[VX] - sqrtf(cs2); 
+
+  cs2 = Gamma * Wr[PP] / Wr[RR];
+  mrc_fld_data_t cpv_r = Wr[VX] + sqrtf(cs2);
+  mrc_fld_data_t cmv_r = Wr[VX] - sqrtf(cs2); 
+
+  mrc_fld_data_t SR =  fmaxf(fmaxf(cpv_l, cpv_r), 0.); 
+  mrc_fld_data_t SL =  fminf(fminf(cmv_l, cmv_r), 0.); 
+
+  mrc_fld_data_t SRmUR = SR - Wr[VX];
+  mrc_fld_data_t SLmUL = SL - Wl[VX];
+  mrc_fld_data_t SM =
+    (SRmUR * Wr[RR] * Wr[VX] - SLmUL * Wl[RR] * Wl[VX] - Wr[PP] + Wl[PP]) / 
+    (SRmUR * Wr[RR] - SLmUL * Wl[RR]);
+
+  mrc_fld_data_t spT= Wr[PP] + (Wr[RR] * SRmUR * (SM - Wr[VX]));
+
+  mrc_fld_data_t sUR[5];
+  mrc_fld_data_t sUL[5]; 
+  
+  sUR[0] = Wr[RR] * SRmUR / ( SR - SM );
+  sUL[0] = Wl[RR] * SLmUL / ( SL - SM ); 
+
+  sUR[1] = sUR[0] * SM;
+  sUL[1] = sUL[0] * SM;
+  sUR[2] = sUR[0] * Wr[VY]; 
+  sUL[2] = sUL[0] * Wl[VY]; 
+  sUR[3] = sUR[0] * Wr[VZ]; 
+  sUL[3] = sUL[0] * Wl[VZ];
+
+  sUR[4] = ((SR - Wr[VX]) * Ur[UU] - Wr[PP] * Wr[VX] + spT * SM) / (SR - SM); 
+  sUL[4] = ((SL - Wl[VX]) * Ul[UU] - Wl[PP] * Wl[VX] + spT * SM) / (SL - SM); 
+
+ for (int m = 0; m < 5; m++) {
+   if ( SL > 0 ) {
+     F[m] = Fl[m];
+   } else if (( SL <= 0 ) && ( SM >= 0 )) {  
+     F[m] = (SL * (sUL[m]-Ul[m])) + Fl[m];
+   } else if (( SR >= 0 ) && ( SM <= 0 )) {
+     F[m] = (SR * (sUR[m]-Ur[m])) + Fr[m];
+   } else if ( SR < 0 ) { 	  
+     F[m] = Fr[m];
+   }
+ }
+}
+
+// ----------------------------------------------------------------------
 // mhd_riemann_rusanov_run_fc
 
 static void _mrc_unused
@@ -294,6 +356,23 @@ mhd_riemann_hll_run_hydro(struct ggcm_mhd *mhd, fld1d_state_t F,
   for (int i = -l; i < ldim + r; i++) {
     fluxes_hll_hydro(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
 		     &F1S(W_l, 0, i), &F1S(W_r, 0, i));
+  }
+}
+
+// ----------------------------------------------------------------------
+// mhd_riemann_hllc_run_hydro
+
+static void _mrc_unused
+mhd_riemann_hllc_run_hydro(struct ggcm_mhd *mhd, fld1d_state_t F,
+			   fld1d_state_t U_l, fld1d_state_t U_r,
+			   fld1d_state_t W_l, fld1d_state_t W_r,
+			   int ldim, int l, int r, int dim)
+{
+  Gamma = mhd->par.gamm;
+
+  for (int i = -l; i < ldim + r; i++) {
+    fluxes_hllc_hydro(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
+		      &F1S(W_l, 0, i), &F1S(W_r, 0, i));
   }
 }
 
