@@ -19,7 +19,6 @@
 #include "pde/pde_mhd_line.c"
 #include "pde/pde_mhd_convert.c"
 
-#include "mhd_1d.c"
 #include "mhd_3d.c"
 
 
