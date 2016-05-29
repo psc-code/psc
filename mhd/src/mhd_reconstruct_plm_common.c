@@ -17,9 +17,9 @@
 // FIXME bnd
 static void
 mhd_reconstruct_plm_run_sc(struct mhd_reconstruct *mr,
-			   struct mrc_fld *Ul, struct mrc_fld *Ur,
-			   struct mrc_fld *Wl, struct mrc_fld *Wr,
-			   struct mrc_fld *W1d, struct mrc_fld *Bxi,
+			   fld1d_state_t U_l, fld1d_state_t U_r,
+			   fld1d_state_t W_l, fld1d_state_t W_r,
+			   fld1d_state_t W, struct mrc_fld *Bxi,
 			   int ldim, int l, int r, int dir)
 {
   mrc_fld_data_t dWc[5], dWl[5];
@@ -28,9 +28,9 @@ mhd_reconstruct_plm_run_sc(struct mhd_reconstruct *mr,
 
   for (int i = -1; i < ldim + 1; i++) {
     for (int n = 0; n < 5; n++) {
-      dWc[n] = F1(W1d, n, i+1) - F1(W1d, n, i-1);
-      dWl[n] = F1(W1d, n, i  ) - F1(W1d, n, i-1);
-      dWr[n] = F1(W1d, n, i+1) - F1(W1d, n, i  );
+      dWc[n] = F1S(W, n, i+1) - F1S(W, n, i-1);
+      dWl[n] = F1S(W, n, i  ) - F1S(W, n, i-1);
+      dWr[n] = F1S(W, n, i+1) - F1S(W, n, i  );
       dWg[n] = (dWl[n] * dWr[n] > 0.) ? 2. * dWl[n] * dWr[n] / (dWl[n] + dWr[n]) : 0.;
     }
 
@@ -46,13 +46,13 @@ mhd_reconstruct_plm_run_sc(struct mhd_reconstruct *mr,
     }
 
     for (int n = 0; n < 5; n++) {
-      F1(Wl, n, i+1) = F1(W1d, n, i) + .5 * dWm[n];
-      F1(Wr, n, i  ) = F1(W1d, n, i) - .5 * dWm[n];
+      F1S(W_l, n, i+1) = F1S(W, n, i) + .5 * dWm[n];
+      F1S(W_r, n, i  ) = F1S(W, n, i) - .5 * dWm[n];
     }
   }
 
-  mhd_sc_from_prim(mr->mhd, (fld1d_state_t) { .mrc_fld = Ul }, (fld1d_state_t) { .mrc_fld = Wl }, ldim, 0, 1);
-  mhd_sc_from_prim(mr->mhd, (fld1d_state_t) { .mrc_fld = Ur }, (fld1d_state_t) { .mrc_fld = Wr }, ldim, 0, 1);
+  mhd_sc_from_prim(mr->mhd, U_l, W_l, ldim, 0, 1);
+  mhd_sc_from_prim(mr->mhd, U_r, W_r, ldim, 0, 1);
 }
 
 // ----------------------------------------------------------------------
@@ -61,9 +61,9 @@ mhd_reconstruct_plm_run_sc(struct mhd_reconstruct *mr,
 // FIXME bnd
 static void
 mhd_reconstruct_plm_run_fc(struct mhd_reconstruct *mr,
-			   struct mrc_fld *Ul, struct mrc_fld *Ur,
-			   struct mrc_fld *Wl, struct mrc_fld *Wr,
-			   struct mrc_fld *W1d, struct mrc_fld *Bxi,
+			   fld1d_state_t U_l, fld1d_state_t U_r,
+			   fld1d_state_t W_l, fld1d_state_t W_r,
+			   fld1d_state_t W, struct mrc_fld *Bxi,
 			   int ldim, int l, int r, int dir)
 {
   mrc_fld_data_t dWc[8], dWl[8];
@@ -74,9 +74,9 @@ mhd_reconstruct_plm_run_fc(struct mhd_reconstruct *mr,
   // (typically, r = l + 1, so that [l..l] are all set)
   for (int i = -l - 1; i < ldim + r; i++) {
     for (int n = 0; n < 8; n++) {
-      dWc[n] = F1(W1d, n, i+1) - F1(W1d, n, i-1);
-      dWl[n] = F1(W1d, n, i  ) - F1(W1d, n, i-1);
-      dWr[n] = F1(W1d, n, i+1) - F1(W1d, n, i  );
+      dWc[n] = F1S(W, n, i+1) - F1S(W, n, i-1);
+      dWl[n] = F1S(W, n, i  ) - F1S(W, n, i-1);
+      dWr[n] = F1S(W, n, i+1) - F1S(W, n, i  );
       dWg[n] = (dWl[n] * dWr[n] > 0.) ? 2. * dWl[n] * dWr[n] / (dWl[n] + dWr[n]) : 0.;
     }
 
@@ -91,17 +91,17 @@ mhd_reconstruct_plm_run_fc(struct mhd_reconstruct *mr,
     }
 
     for (int n = 0; n < 8; n++) {
-      F1(Wl, n, i+1) = F1(W1d, n, i) + .5 * dWm[n];
-      F1(Wr, n, i  ) = F1(W1d, n, i) - .5 * dWm[n];
+      F1S(W_l, n, i+1) = F1S(W, n, i) + .5 * dWm[n];
+      F1S(W_r, n, i  ) = F1S(W, n, i) - .5 * dWm[n];
     }
     if (Bxi) {
-      F1(Wl, BX, i) = F1(Bxi, 0, i);
-      F1(Wr, BX, i) = F1(Bxi, 0, i);
+      F1S(W_l, BX, i) = F1(Bxi, 0, i);
+      F1S(W_r, BX, i) = F1(Bxi, 0, i);
     }
   }
 
-  mhd_fc_from_prim(mr->mhd, (fld1d_state_t) { .mrc_fld = Ul }, (fld1d_state_t) { .mrc_fld = Wl }, ldim, l, r+1);
-  mhd_fc_from_prim(mr->mhd, (fld1d_state_t) { .mrc_fld = Ur }, (fld1d_state_t) { .mrc_fld = Wr }, ldim, l, r+1);
+  mhd_fc_from_prim(mr->mhd, U_l, W_l, ldim, l, r+1);
+  mhd_fc_from_prim(mr->mhd, U_r, W_r, ldim, l, r+1);
 }
 
 // ----------------------------------------------------------------------
@@ -111,14 +111,14 @@ static void
 mhd_reconstruct_plm_run(struct mhd_reconstruct *mr,
 			struct mrc_fld *U_l, struct mrc_fld *U_r,
 			struct mrc_fld *W_l, struct mrc_fld *W_r,
-			struct mrc_fld *W_1d, struct mrc_fld *Bxi,
+			struct mrc_fld *W, struct mrc_fld *Bxi,
 			int ldim, int l, int r, int dir)
 {
   int nr_comps = mrc_fld_dims(U_l)[0];
 
   switch (nr_comps) {
-  case 5: return mhd_reconstruct_plm_run_sc(mr, U_l, U_r, W_l, W_r, W_1d, Bxi, ldim, l, r, dir);
-  case 8: return mhd_reconstruct_plm_run_fc(mr, U_l, U_r, W_l, W_r, W_1d, Bxi, ldim, l, r, dir);
+  case 5: return mhd_reconstruct_plm_run_sc(mr, (fld1d_state_t) { .mrc_fld = U_l }, (fld1d_state_t) { .mrc_fld = U_r}, (fld1d_state_t) { .mrc_fld = W_l }, (fld1d_state_t) { .mrc_fld = W_r }, (fld1d_state_t) { .mrc_fld = W }, Bxi, ldim, l, r, dir);
+  case 8: return mhd_reconstruct_plm_run_fc(mr, (fld1d_state_t) { .mrc_fld = U_l }, (fld1d_state_t) { .mrc_fld = U_r}, (fld1d_state_t) { .mrc_fld = W_l }, (fld1d_state_t) { .mrc_fld = W_r }, (fld1d_state_t) { .mrc_fld = W }, Bxi, ldim, l, r, dir);
   default: assert(0);
   }
 }
