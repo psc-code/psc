@@ -31,8 +31,8 @@ mhd_reconstruct_pcm_run_sc(struct mhd_reconstruct *mr,
     }
   }
 
-  mhd_sc_from_prim_1d(mr->mhd, U_l, W_l, ldim, l, r);
-  mhd_sc_from_prim_1d(mr->mhd, U_r, W_r, ldim, l, r);
+  mhd_sc_from_prim(mr->mhd, U_l, W_l, ldim, l, r);
+  mhd_sc_from_prim(mr->mhd, U_r, W_r, ldim, l, r);
 }
 
 // ----------------------------------------------------------------------
