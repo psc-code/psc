@@ -215,7 +215,7 @@ flux_pred(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3], struct mrc_fld 
   mhd_reconstruct_run(sub->reconstruct, U_l.mrc_fld, U_r.mrc_fld, W_l.mrc_fld, W_r.mrc_fld, W.mrc_fld, NULL,
 		      ldim, 1, 1, dir);
   mhd_riemann_run(sub->riemann, F.mrc_fld, U_l.mrc_fld, U_r.mrc_fld, W_l.mrc_fld, W_r.mrc_fld, ldim, 0, 1, dir);
-  put_line_sc(fluxes[dir], F.mrc_fld, ldim, 0, 1, j, k, dir, p);
+  put_line_sc(fluxes[dir], F, ldim, 0, 1, j, k, dir, p);
 }
 
 #else
@@ -330,7 +330,7 @@ flux_corr(struct ggcm_mhd_step *step,
       F1S(F, m, i) = cx * F1S(F_lo, m, i) + (1.f - cx) * fhx;
     }
   }
-  put_line_sc(fluxes[dir], F.mrc_fld, ldim, 0, 1, j, k, dir, p);
+  put_line_sc(fluxes[dir], F, ldim, 0, 1, j, k, dir, p);
 }
 
 static void
