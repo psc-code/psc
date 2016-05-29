@@ -4,7 +4,7 @@
 //
 // line fields (fld1d_*_t)
 
-#define MRC_FLD_F1(f, m, i) MRC_D2(f, m, i)
+#define MRC_FLD_F1(f, m, i) MRC_FLD(f, mrc_fld_data_t, m,i,0,0,0)
 
 // ----------------------------------------------------------------------
 // mrc_fld_create_1d
