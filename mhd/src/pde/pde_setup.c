@@ -1,4 +1,5 @@
 
+#include <mrc_domain.h>
 #include <mrc_bits.h>
 
 #include <stdlib.h>

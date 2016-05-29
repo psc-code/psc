@@ -4,6 +4,9 @@
 #include "ggcm_mhd_defs.h"
 #include "mhd_util.h"
 
+#include "pde/pde_setup.c"
+#include "pde/pde_mhd_convert.c"
+
 #include "mhd_1d.c"
 
 // ======================================================================
