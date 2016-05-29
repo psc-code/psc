@@ -212,7 +212,7 @@ flux_corr(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld *x
   pick_line_fc(U_1d, Bxi, x, B_cc, ldim, nghost - 1, nghost - 1, j, k, dir, p);
   mhd_prim_from_fc(step->mhd, W_1d, U_1d, ldim, nghost - 1, nghost - 1);
   mhd_reconstruct_run(sub->reconstruct_corr, U_l, U_r, W_l, W_r, W_1d, Bxi,
-		      ldim, 99, 99, dir);
+		      ldim, 1, 1, dir);
   mhd_riemann_run(sub->riemann, F_1d, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
   put_line_fc(flux[dir], F_1d, ldim, 0, 1, j, k, dir, p);
 }
