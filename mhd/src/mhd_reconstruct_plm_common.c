@@ -53,8 +53,8 @@ mhd_reconstruct_plm_run_sc(struct mhd_reconstruct *mr,
     }
   }
 
-  mhd_sc_from_prim(mr->mhd, Ul, Wl, ldim, 0, 1);
-  mhd_sc_from_prim(mr->mhd, Ur, Wr, ldim, 0, 1);
+  mhd_sc_from_prim(mr->mhd, (fld1d_state_t) { .mrc_fld = Ul }, (fld1d_state_t) { .mrc_fld = Wl }, ldim, 0, 1);
+  mhd_sc_from_prim(mr->mhd, (fld1d_state_t) { .mrc_fld = Ur }, (fld1d_state_t) { .mrc_fld = Wr }, ldim, 0, 1);
 }
 
 // ----------------------------------------------------------------------
