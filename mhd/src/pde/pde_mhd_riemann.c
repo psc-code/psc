@@ -182,6 +182,37 @@ fluxes_hll_fc(mrc_fld_data_t F[8], mrc_fld_data_t Ul[8], mrc_fld_data_t Ur[8],
 }
 
 // ----------------------------------------------------------------------
+// fluxes_hll_hydro
+
+static void
+fluxes_hll_hydro(mrc_fld_data_t F[5], mrc_fld_data_t Ul[5], mrc_fld_data_t Ur[5],
+		 mrc_fld_data_t Wl[5], mrc_fld_data_t Wr[5])
+{
+  mrc_fld_data_t Fl[5], Fr[5];
+
+  fluxes_hydro(Fl, Ul, Wl);
+  fluxes_hydro(Fr, Ur, Wr);
+
+  mrc_fld_data_t cs2;
+
+  cs2 = Gamma * Wl[PP] / Wl[RR];
+  mrc_fld_data_t cpv_l = Wl[VX] + sqrtf(cs2);
+  mrc_fld_data_t cmv_l = Wl[VX] - sqrtf(cs2); 
+
+  cs2 = Gamma * Wr[PP] / Wr[RR];
+  mrc_fld_data_t cpv_r = Wr[VX] + sqrtf(cs2);
+  mrc_fld_data_t cmv_r = Wr[VX] - sqrtf(cs2); 
+
+  mrc_fld_data_t SR =  fmaxf(fmaxf(cpv_l, cpv_r), 0.); 
+  mrc_fld_data_t SL =  fminf(fminf(cmv_l, cmv_r), 0.); 
+
+  //  mrc_fld_data_t lambda = .5 * (cmsv_l + cmsv_r);  
+  for (int m = 0; m < 5; m++) {
+    F[m] = ((SR * Fl[m] - SL * Fr[m]) + (SR * SL * (Ur[m] - Ul[m]))) / (SR - SL);
+  }
+}
+
+// ----------------------------------------------------------------------
 // mhd_riemann_rusanov_run_fc
 
 static void _mrc_unused
@@ -246,6 +277,23 @@ mhd_riemann_hll_run_fc(struct ggcm_mhd *mhd, fld1d_state_t F,
   for (int i = -l; i < ldim + r; i++) {
     fluxes_hll_fc(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
 		  &F1S(W_l, 0, i), &F1S(W_r, 0, i));
+  }
+}
+
+// ----------------------------------------------------------------------
+// mhd_riemann_hll_run_hydro
+
+static void _mrc_unused
+mhd_riemann_hll_run_hydro(struct ggcm_mhd *mhd, fld1d_state_t F,
+			  fld1d_state_t U_l, fld1d_state_t U_r,
+			  fld1d_state_t W_l, fld1d_state_t W_r,
+			  int ldim, int l, int r, int dim)
+{
+  Gamma = mhd->par.gamm;
+
+  for (int i = -l; i < ldim + r; i++) {
+    fluxes_hll_hydro(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
+		     &F1S(W_l, 0, i), &F1S(W_r, 0, i));
   }
 }
 
