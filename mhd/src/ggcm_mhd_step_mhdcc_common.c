@@ -22,6 +22,7 @@
 #include <string.h>
 
 #include "pde/pde_setup.c"
+#include "pde/pde_mhd_line.c"
 
 #include "mhd_1d.c"
 #include "mhd_3d.c"
