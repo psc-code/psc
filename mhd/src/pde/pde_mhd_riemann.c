@@ -86,7 +86,7 @@ fluxes_rusanov_fc(mrc_fld_data_t F[8], mrc_fld_data_t Ul[8], mrc_fld_data_t Ur[8
 
 static void
 fluxes_rusanov_sc(mrc_fld_data_t F[5], mrc_fld_data_t Ul[5], mrc_fld_data_t Ur[5],
-		  mrc_fld_data_t Wl[5], mrc_fld_data_t Wr[5], mrc_fld_data_t gamma)
+		  mrc_fld_data_t Wl[5], mrc_fld_data_t Wr[5])
 {
   mrc_fld_data_t Fl[5], Fr[5];
   
@@ -95,11 +95,11 @@ fluxes_rusanov_sc(mrc_fld_data_t F[5], mrc_fld_data_t Ul[5], mrc_fld_data_t Ur[5
 
   mrc_fld_data_t vv, cs2;
   vv = sqr(Wl[VX]) + sqr(Wl[VY]) + sqr(Wl[VZ]);
-  cs2 = gamma * Wl[PP] / Wl[RR];
+  cs2 = Gamma * Wl[PP] / Wl[RR];
   mrc_fld_data_t cmsv_l = sqrtf(vv) + sqrtf(cs2);
 
   vv = sqr(Wr[VX]) + sqr(Wr[VY]) + sqr(Wr[VZ]);
-  cs2 = gamma * Wr[PP] / Wr[RR];
+  cs2 = Gamma * Wr[PP] / Wr[RR];
   mrc_fld_data_t cmsv_r = sqrtf(vv) + sqrtf(cs2);
 
   mrc_fld_data_t lambda = .5 * (cmsv_l + cmsv_r);
@@ -135,10 +135,11 @@ mhd_riemann_rusanov_run_sc(struct ggcm_mhd *mhd, fld1d_state_t F,
 			   fld1d_state_t W_l, fld1d_state_t W_r,
 			   int ldim, int l, int r, int dim)
 {
-  mrc_fld_data_t gamma = mhd->par.gamm;
+  Gamma = mhd->par.gamm;
+
   for (int i = -l; i < ldim + r; i++) {
     fluxes_rusanov_sc(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
-		      &F1S(W_l, 0, i), &F1S(W_r, 0, i), gamma);
+		      &F1S(W_l, 0, i), &F1S(W_r, 0, i));
   }
 }
 
