@@ -154,6 +154,34 @@ fluxes_rusanov_hydro(mrc_fld_data_t F[5], mrc_fld_data_t Ul[5], mrc_fld_data_t U
 }
 
 // ----------------------------------------------------------------------
+// fluxes_hll_fc
+
+static void
+fluxes_hll_fc(mrc_fld_data_t F[8], mrc_fld_data_t Ul[8], mrc_fld_data_t Ur[8],
+	      mrc_fld_data_t Wl[8], mrc_fld_data_t Wr[8])
+{
+  mrc_fld_data_t Fl[8], Fr[8];
+  mrc_fld_data_t cf;
+
+  cf = wavespeed_fc(Ul, Wl);
+  mrc_fld_data_t cp_l = Wl[VX] + cf;
+  mrc_fld_data_t cm_l = Wl[VX] - cf; 
+  fluxes_fc(Fl, Ul, Wl);
+
+  cf = wavespeed_fc(Ur, Wr);
+  mrc_fld_data_t cp_r = Wr[VX] + cf;
+  mrc_fld_data_t cm_r = Wr[VX] - cf; 
+  fluxes_fc(Fr, Ur, Wr);
+
+  mrc_fld_data_t c_l =  mrc_fld_min(mrc_fld_min(cm_l, cm_r), 0.); 
+  mrc_fld_data_t c_r =  mrc_fld_max(mrc_fld_max(cp_l, cp_r), 0.); 
+
+  for (int m = 0; m < 8; m++) {
+    F[m] = ((c_r * Fl[m] - c_l * Fr[m]) + (c_r * c_l * (Ur[m] - Ul[m]))) / (c_r - c_l);
+  }
+}
+
+// ----------------------------------------------------------------------
 // mhd_riemann_rusanov_run_fc
 
 static void _mrc_unused
@@ -201,6 +229,23 @@ mhd_riemann_rusanov_run_hydro(struct ggcm_mhd *mhd, fld1d_state_t F,
   for (int i = -l; i < ldim + r; i++) {
     fluxes_rusanov_hydro(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
 			 &F1S(W_l, 0, i), &F1S(W_r, 0, i));
+  }
+}
+
+// ----------------------------------------------------------------------
+// mhd_riemann_hll_run_fc
+
+static void _mrc_unused
+mhd_riemann_hll_run_fc(struct ggcm_mhd *mhd, fld1d_state_t F,
+		       fld1d_state_t U_l, fld1d_state_t U_r,
+		       fld1d_state_t W_l, fld1d_state_t W_r,
+		       int ldim, int l, int r, int dim)
+{
+  Gamma = mhd->par.gamm;
+
+  for (int i = -l; i < ldim + r; i++) {
+    fluxes_hll_fc(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
+		  &F1S(W_l, 0, i), &F1S(W_r, 0, i));
   }
 }
 
