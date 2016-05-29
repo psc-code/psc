@@ -23,8 +23,8 @@ mhd_reconstruct_pcm_run(struct mhd_reconstruct *mr,
 {
   int nr_comps = mrc_fld_dims(U_l)[0];
   switch (nr_comps) {
-  case 5: return mhd_reconstruct_pcm_run_sc(mr, (fld1d_state_t) { .mrc_fld = U_l }, (fld1d_state_t) { .mrc_fld = U_r}, (fld1d_state_t) { .mrc_fld = W_l }, (fld1d_state_t) { .mrc_fld = W_r }, (fld1d_state_t) { .mrc_fld = W }, Bxi, ldim, l, r, dir);
-  case 8: return mhd_reconstruct_pcm_run_fc(mr, (fld1d_state_t) { .mrc_fld = U_l }, (fld1d_state_t) { .mrc_fld = U_r}, (fld1d_state_t) { .mrc_fld = W_l }, (fld1d_state_t) { .mrc_fld = W_r }, (fld1d_state_t) { .mrc_fld = W }, Bxi, ldim, l, r, dir);
+  case 5: return mhd_reconstruct_pcm_run_sc(mr->mhd, (fld1d_state_t) { .mrc_fld = U_l }, (fld1d_state_t) { .mrc_fld = U_r}, (fld1d_state_t) { .mrc_fld = W_l }, (fld1d_state_t) { .mrc_fld = W_r }, (fld1d_state_t) { .mrc_fld = W }, Bxi, ldim, l, r, dir);
+  case 8: return mhd_reconstruct_pcm_run_fc(mr->mhd, (fld1d_state_t) { .mrc_fld = U_l }, (fld1d_state_t) { .mrc_fld = U_r}, (fld1d_state_t) { .mrc_fld = W_l }, (fld1d_state_t) { .mrc_fld = W_r }, (fld1d_state_t) { .mrc_fld = W }, Bxi, ldim, l, r, dir);
   default: assert(0);
   }
 }
