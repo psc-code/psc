@@ -18,6 +18,7 @@
 #include "pde/pde_mhd_line.c"
 #include "pde/pde_mhd_convert.c"
 #include "pde/pde_mhd_reconstruct.c"
+#include "pde/pde_mhd_riemann.c"
 
 #include "mhd_3d.c"
 #include "mhd_sc.c"
@@ -32,8 +33,6 @@
 // ggcm_mhd_step subclass "c3"
 
 struct ggcm_mhd_step_c3 {
-  struct mhd_riemann *riemann;
-
   fld1d_state_t U;
   fld1d_state_t U_l;
   fld1d_state_t U_r;
@@ -67,17 +66,6 @@ enum {
 };
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_step_c3_create
-
-static void
-ggcm_mhd_step_c3_create(struct ggcm_mhd_step *step)
-{
-  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
-
-  mhd_riemann_set_type(sub->riemann, "rusanov_" FLD_TYPE);
-}
-
-// ----------------------------------------------------------------------
 // ggcm_mhd_step_c3_setup
 
 static void
@@ -91,8 +79,6 @@ ggcm_mhd_step_c3_setup(struct ggcm_mhd_step *step)
   pde_setup(mhd->fld);
   // FIXME, very hacky way of making the 1d state fields 5-component
   s_n_comps = 5;
-
-  mhd_riemann_set_param_obj(sub->riemann, "mhd", mhd);
 
   fld1d_state_setup(&sub->U);
   fld1d_state_setup(&sub->U_l);
@@ -210,7 +196,7 @@ flux_pred(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3], struct mrc_fld 
   mhd_prim_from_sc(step->mhd, W, U, ldim, 1, 1);
   mhd_reconstruct_pcm_run_sc(step->mhd, U_l, U_r, W_l, W_r, W, NULL,
 			     ldim, 1, 1, dir);
-  mhd_riemann_run(sub->riemann, F.mrc_fld, U_l.mrc_fld, U_r.mrc_fld, W_l.mrc_fld, W_r.mrc_fld, ldim, 0, 1, dir);
+  mhd_riemann_rusanov_run_sc(step->mhd, F, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
   put_line_sc(fluxes[dir], F, ldim, 0, 1, j, k, dir, p);
 }
 
@@ -251,7 +237,7 @@ flux_pred_riemann(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3],
   pick_line_sc(U_r, U3d_r[dir], ldim, 0, 1, j, k, dir, p);
   mhd_prim_from_sc(step->mhd, W_l, U_l, ldim, 0, 1);
   mhd_prim_from_sc(step->mhd, W_r, U_r, ldim, 0, 1);
-  mhd_riemann_run(sub->riemann, F_1d, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
+  mhd_riemann_rusanov_run_sc(step->mhd, F, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
   put_line_sc(fluxes[dir], F_1d, ldim, 0, 1, j, k, dir, p);
 }
 
@@ -311,7 +297,7 @@ flux_corr(struct ggcm_mhd_step *step,
   mhd_prim_from_sc(step->mhd, W, U, ldim, 2, 2);
   mhd_reconstruct_pcm_run_sc(step->mhd, U_l, U_r, W_l, W_r, W, NULL,
 			     ldim, 1, 1, dir);
-  mhd_riemann_run(sub->riemann, F_lo.mrc_fld, U_l.mrc_fld, U_r.mrc_fld, W_l.mrc_fld, W_r.mrc_fld, ldim, 0, 1, dir);
+  mhd_riemann_rusanov_run_sc(step->mhd, F_lo, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
   mhd_cc_fluxes(step, F_cc.mrc_fld, U.mrc_fld, W.mrc_fld, ldim, 2, 2, dir);
   mhd_limit1(Lim1.mrc_fld, U.mrc_fld, W.mrc_fld, ldim, 1, 1, dir);
 
@@ -1102,7 +1088,6 @@ static struct param ggcm_mhd_step_c3_descr[] = {
   { "enforce_rrmin"   , VAR(enforce_rrmin)   , PARAM_BOOL(false)             },
   { "debug_dump"      , VAR(debug_dump)      , PARAM_BOOL(false)            },
   
-  { "riemann"         , VAR(riemann)         , MRC_VAR_OBJ(mhd_riemann)     },
   {},
 };
 #undef VAR
@@ -1114,7 +1099,6 @@ struct ggcm_mhd_step_ops ggcm_mhd_step_c3_ops = {
   .name                = ggcm_mhd_step_c3_name,
   .size                = sizeof(struct ggcm_mhd_step_c3),
   .param_descr         = ggcm_mhd_step_c3_descr,
-  .create              = ggcm_mhd_step_c3_create,
   .setup               = ggcm_mhd_step_c3_setup,
   .run                 = ggcm_mhd_step_c3_run,
   .destroy             = ggcm_mhd_step_c3_destroy,
