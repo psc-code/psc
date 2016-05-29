@@ -21,6 +21,8 @@
 #include <math.h>
 #include <string.h>
 
+#include "pde/pde_setup.c"
+
 #include "mhd_1d.c"
 #include "mhd_3d.c"
 #include "mhd_sc.c"
@@ -38,7 +40,7 @@ struct ggcm_mhd_step_mhdcc {
   struct mrc_fld *W_1d;
   struct mrc_fld *W_l;
   struct mrc_fld *W_r;
-  struct mrc_fld *F_1d;
+  fld1d_state_t F;
 
   bool debug_dump;
 };
@@ -71,6 +73,8 @@ ggcm_mhd_step_mhdcc_setup(struct ggcm_mhd_step *step)
 
   assert(mhd);
 
+  pde_setup(mhd->fld);
+
   mhd_reconstruct_set_param_obj(sub->reconstruct, "mhd", mhd);
   mhd_riemann_set_param_obj(sub->riemann, "mhd", mhd);
 
@@ -80,7 +84,8 @@ ggcm_mhd_step_mhdcc_setup(struct ggcm_mhd_step *step)
   setup_mrc_fld_1d(sub->W_1d, mhd->fld, 8);
   setup_mrc_fld_1d(sub->W_l , mhd->fld, 8);
   setup_mrc_fld_1d(sub->W_r , mhd->fld, 8);
-  setup_mrc_fld_1d(sub->F_1d, mhd->fld, 8);
+
+  fld1d_state_setup(&sub->F);
 
   mhd->ymask = ggcm_mhd_get_3d_fld(mhd, 1);
   mrc_fld_set(mhd->ymask, 1.);
@@ -151,15 +156,15 @@ flux_riemann(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3],
 
   struct mrc_fld *U_l = sub->U_l, *U_r = sub->U_r;
   struct mrc_fld *W_l = sub->W_l, *W_r = sub->W_r;
-  struct mrc_fld *F_1d = sub->F_1d;
+  fld1d_state_t F = sub->F;
 
   int l = bnd, r = bnd + 1;
   pick_line_fc_cc(U_l, U3d_l[dir], ldim, l, r, j, k, dir, p);
   pick_line_fc_cc(U_r, U3d_r[dir], ldim, l, r, j, k, dir, p);
   mhd_prim_from_fc(step->mhd, W_l, U_l, ldim, l, r);
   mhd_prim_from_fc(step->mhd, W_r, U_r, ldim, l, r);
-  mhd_riemann_run(sub->riemann, F_1d, U_l, U_r, W_l, W_r, ldim, l, r, dir);
-  put_line_fc_cc(fluxes[dir], F_1d, ldim, l, r, j, k, dir, p);
+  mhd_riemann_run(sub->riemann, F.mrc_fld, U_l, U_r, W_l, W_r, ldim, l, r, dir);
+  put_line_fc_cc(fluxes[dir], F.mrc_fld, ldim, l, r, j, k, dir, p);
 }
 
 static void
@@ -280,7 +285,6 @@ static struct param ggcm_mhd_step_mhdcc_descr[] = {
   { "W_1d"            , VAR(W_1d)            , MRC_VAR_OBJ(mrc_fld)         },
   { "W_l"             , VAR(W_l)             , MRC_VAR_OBJ(mrc_fld)         },
   { "W_r"             , VAR(W_r)             , MRC_VAR_OBJ(mrc_fld)         },
-  { "F_1d"            , VAR(F_1d)            , MRC_VAR_OBJ(mrc_fld)         },
   {},
 };
 #undef VAR
