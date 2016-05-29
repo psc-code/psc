@@ -34,26 +34,26 @@ mhd_prim_from_fc(struct ggcm_mhd *mhd, fld1d_state_t W, fld1d_state_t U,
 // mhd_fc_from_prim
 
 static void _mrc_unused
-mhd_fc_from_prim(struct ggcm_mhd *mhd, struct mrc_fld *U_cc, struct mrc_fld *W_cc,
+mhd_fc_from_prim(struct ggcm_mhd *mhd, fld1d_state_t U, fld1d_state_t W,
 		    int ldim, int l, int r)
 {
   mrc_fld_data_t gamma_minus_1 = mhd->par.gamm - 1.;
 
   for (int i = -l; i < ldim + r; i++) {
-    mrc_fld_data_t *U = &F1(U_cc, 0, i), *W = &F1(W_cc, 0, i);
+    mrc_fld_data_t *u = &F1S(U, 0, i), *w = &F1S(W, 0, i);
 
-    mrc_fld_data_t rr = W[RR];
-    U[RR ] = rr;
-    U[RVX] = rr * W[VX];
-    U[RVY] = rr * W[VY];
-    U[RVZ] = rr * W[VZ];
-    U[EE ] = 
-      W[PP] / gamma_minus_1 +
-      + .5 * (sqr(W[VX]) + sqr(W[VY]) + sqr(W[VZ])) * rr
-      + .5 * (sqr(W[BX]) + sqr(W[BY]) + sqr(W[BZ]));
-    U[BX ] = W[BX];
-    U[BY ] = W[BY];
-    U[BZ ] = W[BZ];
+    mrc_fld_data_t rr = w[RR];
+    u[RR ] = rr;
+    u[RVX] = rr * w[VX];
+    u[RVY] = rr * w[VY];
+    u[RVZ] = rr * w[VZ];
+    u[EE ] = 
+      w[PP] / gamma_minus_1 +
+      + .5 * (sqr(w[VX]) + sqr(w[VY]) + sqr(w[VZ])) * rr
+      + .5 * (sqr(w[BX]) + sqr(w[BY]) + sqr(w[BZ]));
+    u[BX ] = w[BX];
+    u[BY ] = w[BY];
+    u[BZ ] = w[BZ];
   }
 }
 

@@ -102,8 +102,8 @@ mhd_reconstruct_plm_run_fc(struct mhd_reconstruct *mr,
     }
   }
 
-  mhd_fc_from_prim(mr->mhd, Ul, Wl, ldim, l, r+1);
-  mhd_fc_from_prim(mr->mhd, Ur, Wr, ldim, l, r+1);
+  mhd_fc_from_prim(mr->mhd, (fld1d_state_t) { .mrc_fld = Ul }, (fld1d_state_t) { .mrc_fld = Wl }, ldim, l, r+1);
+  mhd_fc_from_prim(mr->mhd, (fld1d_state_t) { .mrc_fld = Ur }, (fld1d_state_t) { .mrc_fld = Wr }, ldim, l, r+1);
 }
 
 // ----------------------------------------------------------------------

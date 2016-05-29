@@ -55,8 +55,8 @@ mhd_reconstruct_pcm_run_fc(struct mhd_reconstruct *mr,
   }
 
   // CHECKME, seems inconsistent to use cell-centered Bx here, then replace it afterwards
-  mhd_fc_from_prim(mr->mhd, Ul, Wl, ldim, l, r);
-  mhd_fc_from_prim(mr->mhd, Ur, Wr, ldim, l, r);
+  mhd_fc_from_prim(mr->mhd, (fld1d_state_t) { .mrc_fld = Ul }, (fld1d_state_t) { .mrc_fld = Wl }, ldim, l, r);
+  mhd_fc_from_prim(mr->mhd, (fld1d_state_t) { .mrc_fld = Ur }, (fld1d_state_t) { .mrc_fld = Wr }, ldim, l, r);
 
   if (Bxi) {
     for (int i = -l; i < ldim + r; i++) {
