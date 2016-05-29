@@ -10,7 +10,6 @@
 #include "ggcm_mhd_defs.h"
 #include "ggcm_mhd_crds.h"
 #include "ggcm_mhd_diag_private.h"
-#include "mhd_riemann.h"
 #include "mhd_util.h"
 
 #include <mrc_domain.h>
@@ -24,6 +23,7 @@
 #include "pde/pde_mhd_line.c"
 #include "pde/pde_mhd_convert.c"
 #include "pde/pde_mhd_reconstruct.c"
+#include "pde/pde_mhd_riemann.c"
 
 #include "mhd_3d.c"
 #include "mhd_sc.c"
@@ -32,8 +32,6 @@
 // ggcm_mhd_step subclass "mhdcc"
 
 struct ggcm_mhd_step_mhdcc {
-  struct mhd_riemann *riemann;
-
   fld1d_state_t U;
   fld1d_state_t U_l;
   fld1d_state_t U_r;
@@ -51,17 +49,6 @@ struct ggcm_mhd_step_mhdcc {
 // - handle various resistivity models
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_step_mhdcc_create
-
-static void
-ggcm_mhd_step_mhdcc_create(struct ggcm_mhd_step *step)
-{
-  struct ggcm_mhd_step_mhdcc *sub = ggcm_mhd_step_mhdcc(step);
-
-  mhd_riemann_set_type(sub->riemann, "rusanov");
-}
-
-// ----------------------------------------------------------------------
 // ggcm_mhd_step_mhdcc_setup
 
 static void
@@ -73,8 +60,6 @@ ggcm_mhd_step_mhdcc_setup(struct ggcm_mhd_step *step)
   assert(mhd);
 
   pde_setup(mhd->fld);
-
-  mhd_riemann_set_param_obj(sub->riemann, "mhd", mhd);
 
   fld1d_state_setup(&sub->U);
   fld1d_state_setup(&sub->U_l);
@@ -159,7 +144,7 @@ flux_riemann(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3],
   pick_line_fc_cc(U_r, U3d_r[dir], ldim, l, r, j, k, dir, p);
   mhd_prim_from_fc(step->mhd, W_l, U_l, ldim, l, r);
   mhd_prim_from_fc(step->mhd, W_r, U_r, ldim, l, r);
-  mhd_riemann_run(sub->riemann, F.mrc_fld, U_l.mrc_fld, U_r.mrc_fld, W_l.mrc_fld, W_r.mrc_fld, ldim, l, r, dir);
+  mhd_riemann_rusanov_run_fc(step->mhd, F, U_l, U_r, W_l, W_r, ldim, l, r, dir);
   put_line_fc_cc(fluxes[dir], F, ldim, l, r, j, k, dir, p);
 }
 
@@ -271,8 +256,6 @@ ggcm_mhd_step_mhdcc_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_step_mhdcc, x)
 static struct param ggcm_mhd_step_mhdcc_descr[] = {
   { "debug_dump"      , VAR(debug_dump)      , PARAM_BOOL(false)            },
-  
-  { "riemann"         , VAR(riemann)         , MRC_VAR_OBJ(mhd_riemann)     },
   {},
 };
 #undef VAR
@@ -284,7 +267,6 @@ struct ggcm_mhd_step_ops ggcm_mhd_step_mhdcc_ops = {
   .name                = ggcm_mhd_step_mhdcc_name,
   .size                = sizeof(struct ggcm_mhd_step_mhdcc),
   .param_descr         = ggcm_mhd_step_mhdcc_descr,
-  .create              = ggcm_mhd_step_mhdcc_create,
   .setup               = ggcm_mhd_step_mhdcc_setup,
   .get_dt              = ggcm_mhd_step_mhdcc_get_dt,
   .run                 = ggcm_mhd_step_mhdcc_run,
