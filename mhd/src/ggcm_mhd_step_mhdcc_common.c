@@ -24,6 +24,7 @@
 #include "pde/pde_setup.c"
 #include "pde/pde_mhd_line.c"
 #include "pde/pde_mhd_convert.c"
+#include "pde/pde_mhd_reconstruct.c"
 
 #include "mhd_3d.c"
 #include "mhd_sc.c"
@@ -32,7 +33,6 @@
 // ggcm_mhd_step subclass "mhdcc"
 
 struct ggcm_mhd_step_mhdcc {
-  struct mhd_reconstruct *reconstruct;
   struct mhd_riemann *riemann;
 
   fld1d_state_t U;
@@ -59,7 +59,6 @@ ggcm_mhd_step_mhdcc_create(struct ggcm_mhd_step *step)
 {
   struct ggcm_mhd_step_mhdcc *sub = ggcm_mhd_step_mhdcc(step);
 
-  mhd_reconstruct_set_type(sub->reconstruct, "pcm_" FLD_TYPE);
   mhd_riemann_set_type(sub->riemann, "rusanov");
 }
 
@@ -76,7 +75,6 @@ ggcm_mhd_step_mhdcc_setup(struct ggcm_mhd_step *step)
 
   pde_setup(mhd->fld);
 
-  mhd_reconstruct_set_param_obj(sub->reconstruct, "mhd", mhd);
   mhd_riemann_set_param_obj(sub->riemann, "mhd", mhd);
 
   fld1d_state_setup(&sub->U);
@@ -137,8 +135,8 @@ flux_reconstruct(struct ggcm_mhd_step *step,
   pick_line_fc_cc(U, x, ldim, bnd + 2, bnd + 2, j, k, dir, p);
   mhd_prim_from_fc(step->mhd, W, U, ldim, bnd + 2, bnd + 2);
   int l = bnd, r = bnd + 1;
-  mhd_reconstruct_run(sub->reconstruct, U_l.mrc_fld, U_r.mrc_fld, W_l.mrc_fld, W_r.mrc_fld, W.mrc_fld, NULL,
-		      ldim, l, r, dir);
+  mhd_reconstruct_pcm_run_fc(step->mhd, U_l, U_r, W_l, W_r, W, NULL,
+			     ldim, l, r, dir);
   put_line_fc_cc(U3d_l[dir], U_l, ldim, l, r, j, k, dir, p);
   put_line_fc_cc(U3d_r[dir], U_r, ldim, l, r, j, k, dir, p);
 }
@@ -275,7 +273,6 @@ ggcm_mhd_step_mhdcc_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 static struct param ggcm_mhd_step_mhdcc_descr[] = {
   { "debug_dump"      , VAR(debug_dump)      , PARAM_BOOL(false)            },
   
-  { "reconstruct"     , VAR(reconstruct)     , MRC_VAR_OBJ(mhd_reconstruct) },
   { "riemann"         , VAR(riemann)         , MRC_VAR_OBJ(mhd_riemann)     },
   {},
 };

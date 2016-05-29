@@ -18,6 +18,7 @@
 #include "pde/pde_setup.c"
 #include "pde/pde_mhd_line.c"
 #include "pde/pde_mhd_convert.c"
+#include "pde/pde_mhd_reconstruct.c"
 
 #include "mhd_3d.c"
 
@@ -29,8 +30,6 @@ static int ldims[3];
 struct ggcm_mhd_step_vl {
   bool debug_dump;
 
-  struct mhd_reconstruct *reconstruct_pred;
-  struct mhd_reconstruct *reconstruct_corr;
   struct mhd_riemann *riemann;
 
   fld1d_state_t U;
@@ -57,8 +56,8 @@ flux_pred(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld *x
 
   pick_line_sc(U, x, ldim, 2, 2, j, k, dir, p);
   mhd_prim_from_sc(step->mhd, W, U, ldim, 2, 2); // for up to plm reconstruction
-  mhd_reconstruct_run(sub->reconstruct_pred, U_l.mrc_fld, U_r.mrc_fld, W_l.mrc_fld, W_r.mrc_fld, W.mrc_fld, NULL,
-		      ldim, 1, 1, dir);
+  mhd_reconstruct_pcm_run_sc(step->mhd, U_l, U_r, W_l, W_r, W, NULL,
+			     ldim, 1, 1, dir);
   mhd_riemann_run(sub->riemann, F.mrc_fld, U_l.mrc_fld, U_r.mrc_fld, W_l.mrc_fld, W_r.mrc_fld, ldim, 0, 1, dir);
   put_line_sc(flux[dir], F, ldim, 0, 1, j, k, dir, p);
 }
@@ -74,8 +73,8 @@ flux_corr(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld *x
 
   pick_line_sc(U, x, ldim, 2, 2, j, k, dir, p);
   mhd_prim_from_sc(step->mhd, W, U, ldim, 2, 2); // for up to plm reconstruction
-  mhd_reconstruct_run(sub->reconstruct_corr, U_l.mrc_fld, U_r.mrc_fld, W_l.mrc_fld, W_r.mrc_fld, W.mrc_fld, NULL,
-		      ldim, 1, 1, dir);
+  mhd_reconstruct_plm_run_sc(step->mhd, U_l, U_r, W_l, W_r, W, NULL,
+			     ldim, 1, 1, dir);
   mhd_riemann_run(sub->riemann, F.mrc_fld, U_l.mrc_fld, U_r.mrc_fld, W_l.mrc_fld, W_r.mrc_fld, ldim, 0, 1, dir);
   put_line_sc(flux[dir], F, ldim, 0, 1, j, k, dir, p);
 }
@@ -88,8 +87,6 @@ ggcm_mhd_step_vl_create(struct ggcm_mhd_step *step)
 {
   struct ggcm_mhd_step_vl *sub = ggcm_mhd_step_vl(step);
 
-  mhd_reconstruct_set_type(sub->reconstruct_pred, "pcm_double");
-  mhd_reconstruct_set_type(sub->reconstruct_corr, "plm_double");
   mhd_riemann_set_type(sub->riemann, "hydro_rusanov");
 }
 
@@ -104,8 +101,6 @@ ggcm_mhd_step_vl_setup(struct ggcm_mhd_step *step)
 
   pde_setup(mhd->fld);
 
-  mhd_reconstruct_set_param_obj(sub->reconstruct_pred, "mhd", mhd);
-  mhd_reconstruct_set_param_obj(sub->reconstruct_corr, "mhd", mhd);
   mhd_riemann_set_param_obj(sub->riemann, "mhd", mhd);
 
   fld1d_state_setup(&sub->U);
@@ -243,8 +238,6 @@ ggcm_mhd_step_vl_setup_flds(struct ggcm_mhd_step *step)
 static struct param ggcm_mhd_step_vl_descr[] = {
   { "debug_dump"      , VAR(debug_dump)      , PARAM_BOOL(false)            },
 
-  { "reconstruct_pred", VAR(reconstruct_pred), MRC_VAR_OBJ(mhd_reconstruct) },
-  { "reconstruct_corr", VAR(reconstruct_corr), MRC_VAR_OBJ(mhd_reconstruct) },
   { "riemann"         , VAR(riemann)         , MRC_VAR_OBJ(mhd_riemann)     },
   {},
 };
