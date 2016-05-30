@@ -202,8 +202,7 @@ flux_pred(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld *x
 
   pick_line_fc(U, Bxi, x, B_cc, ldim, nghost, nghost, j, k, dir, p);
   mhd_prim_from_cons(W, U, ldim, nghost, nghost);
-  mhd_reconstruct_pcm_run_fc(U_l, U_r, W_l, W_r, W, Bxi,
-			     ldim, nghost - 1, nghost, dir);
+  mhd_reconstruct_pcm(U_l, U_r, W_l, W_r, W, Bxi, ldim, nghost - 1, nghost, dir);
   mhd_riemann(F, U_l, U_r, W_l, W_r, ldim, nghost - 1, nghost, dir);
   put_line_fc(flux[dir], F, ldim, nghost - 1, nghost, j, k, dir, p);
 }
@@ -220,8 +219,7 @@ flux_corr(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld *x
 
   pick_line_fc(U, Bxi, x, B_cc, ldim, nghost - 1, nghost - 1, j, k, dir, p);
   mhd_prim_from_cons(W, U, ldim, nghost - 1, nghost - 1);
-  mhd_reconstruct_plm_run_fc(U_l, U_r, W_l, W_r, W, Bxi,
-			     ldim, 1, 1, dir);
+  mhd_reconstruct_plm(U_l, U_r, W_l, W_r, W, Bxi, ldim, 1, 1, dir);
   mhd_riemann(F, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
   put_line_fc(flux[dir], F, ldim, 0, 1, j, k, dir, p);
 }

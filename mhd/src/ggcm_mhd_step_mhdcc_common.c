@@ -130,8 +130,7 @@ flux_reconstruct(struct ggcm_mhd_step *step,
   pick_line_fc_cc(U, x, ldim, bnd + 2, bnd + 2, j, k, dir, p);
   mhd_prim_from_cons(W, U, ldim, bnd + 2, bnd + 2);
   int l = bnd, r = bnd + 1;
-  mhd_reconstruct_pcm_run_fc(U_l, U_r, W_l, W_r, W, NULL,
-			     ldim, l, r, dir);
+  mhd_reconstruct_pcm(U_l, U_r, W_l, W_r, W, NULL, ldim, l, r, dir);
   put_line_fc_cc(U3d_l[dir], U_l, ldim, l, r, j, k, dir, p);
   put_line_fc_cc(U3d_r[dir], U_r, ldim, l, r, j, k, dir, p);
 }
