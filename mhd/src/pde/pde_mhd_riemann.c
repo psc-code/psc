@@ -188,12 +188,14 @@ fluxes_hll(mrc_fld_data_t F[], mrc_fld_data_t Ul[], mrc_fld_data_t Ur[],
 }
 
 // ----------------------------------------------------------------------
-// fluxes_hllc_hydro
+// fluxes_hllc
 
 static void
-fluxes_hllc_hydro(mrc_fld_data_t F[5], mrc_fld_data_t Ul[5], mrc_fld_data_t Ur[5],
-		  mrc_fld_data_t Wl[5], mrc_fld_data_t Wr[5])
+fluxes_hllc(mrc_fld_data_t F[5], mrc_fld_data_t Ul[5], mrc_fld_data_t Ur[5],
+	    mrc_fld_data_t Wl[5], mrc_fld_data_t Wr[5])
 {
+  assert(s_opt_eqn == OPT_EQN_MHD_SCONS || s_opt_eqn == OPT_EQN_HD); 
+
   mrc_fld_data_t Fl[5], Fr[5];
 
   fluxes(Fl, Ul, Wl);
@@ -282,14 +284,16 @@ hlld_calc_state_s(mrc_fld_data_t Ws[8], mrc_fld_data_t U[8], mrc_fld_data_t W[8]
 
 
 // ----------------------------------------------------------------------
-// fluxes_hlld_fc
+// fluxes_hlld
 // 
 // Miyoshi & Kusano (2005)
 
 static void
-fluxes_hlld_fc(mrc_fld_data_t F[8], mrc_fld_data_t Ul[8], mrc_fld_data_t Ur[8],
-	       mrc_fld_data_t Wl[8], mrc_fld_data_t Wr[8])
+fluxes_hlld(mrc_fld_data_t F[8], mrc_fld_data_t Ul[8], mrc_fld_data_t Ur[8],
+	    mrc_fld_data_t Wl[8], mrc_fld_data_t Wr[8])
 {
+  assert(s_opt_eqn == OPT_EQN_MHD_FCONS);
+
     mrc_fld_data_t Fl[8], Fr[8];
     mrc_fld_data_t bb, cs2, as2, cf;
     
@@ -446,8 +450,8 @@ mhd_riemann_run_fc(fld1d_state_t F, fld1d_state_t U_l, fld1d_state_t U_r,
     }
   } else if (s_opt_riemann == OPT_RIEMANN_HLLD) {
     for (int i = -l; i < ldim + r; i++) {
-      fluxes_hlld_fc(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
-		     &F1S(W_l, 0, i), &F1S(W_r, 0, i));
+      fluxes_hlld(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
+		  &F1S(W_l, 0, i), &F1S(W_r, 0, i));
     }
   } else {
     assert(0);
@@ -492,8 +496,8 @@ mhd_riemann_run_hydro(fld1d_state_t F, fld1d_state_t U_l, fld1d_state_t U_r,
     }
   } else if (s_opt_riemann == OPT_RIEMANN_HLLC) {
     for (int i = -l; i < ldim + r; i++) {
-      fluxes_hllc_hydro(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
-			&F1S(W_l, 0, i), &F1S(W_r, 0, i));
+      fluxes_hllc(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
+		  &F1S(W_l, 0, i), &F1S(W_r, 0, i));
     }
   } else {
     assert(0);
