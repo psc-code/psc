@@ -79,3 +79,20 @@ mhd_reconstruct_plm(fld1d_state_t U_l, fld1d_state_t U_r,
   mhd_cons_from_prim(U_r, W_r, ldim, l, r+1);
 }
 
+// ----------------------------------------------------------------------
+// mhd_reconstruct
+
+static void _mrc_unused
+mhd_reconstruct(fld1d_state_t U_l, fld1d_state_t U_r,
+		fld1d_state_t W_l, fld1d_state_t W_r,
+		fld1d_state_t W, struct mrc_fld *Bxi,
+		int ldim, int l, int r, int dir)
+{
+  if (s_opt_limiter == OPT_LIMITER_FLAT) {
+    mhd_reconstruct_pcm(U_l, U_r, W_l, W_r, W, Bxi, ldim, l, r, dir);
+  } else if (s_opt_limiter == OPT_LIMITER_GMINMOD) {
+    mhd_reconstruct_plm(U_l, U_r, W_l, W_r, W, Bxi, ldim, l, r, dir);
+  } else {
+    assert(0);
+  }
+}

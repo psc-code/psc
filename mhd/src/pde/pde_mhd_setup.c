@@ -4,6 +4,7 @@
 
 struct mhd_options {
   int eqn;
+  int limiter;
   int riemann;
 };
 
@@ -21,6 +22,21 @@ static struct mrc_param_select opt_eqn_descr[] _mrc_unused = {
 static const int s_opt_eqn = OPT_EQN;
 #else
 static int s_opt_eqn _mrc_unused;
+#endif
+
+// ----------------------------------------------------------------------
+// limiter
+
+static struct mrc_param_select opt_limiter_descr[] _mrc_unused = {
+  { .val = OPT_LIMITER_FLAT     , .str = "flat"        },
+  { .val = OPT_LIMITER_GMINMOD  , .str = "gminmod"     },
+  {},
+};
+
+#ifdef OPT_LIMITER
+static const int s_opt_limiter = OPT_LIMITER;
+#else
+static int s_opt_limiter _mrc_unused;
 #endif
 
 // ----------------------------------------------------------------------
@@ -46,6 +62,13 @@ static int s_opt_riemann _mrc_unused;
 static void _mrc_unused
 pde_mhd_set_options(struct ggcm_mhd *mhd, struct mhd_options *opt)
 {
+  // limiter
+#ifdef OPT_LIMITER
+  assert(OPT_LIMITER == opt->limiter);
+#else
+  s_opt_limiter = opt->limiter;
+#endif
+
   // riemann
 #ifdef OPT_RIEMANN
   assert(OPT_RIEMANN == opt->riemann);

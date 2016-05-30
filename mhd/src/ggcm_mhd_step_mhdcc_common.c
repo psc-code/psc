@@ -130,7 +130,7 @@ flux_reconstruct(struct ggcm_mhd_step *step,
   pick_line_fc_cc(U, x, ldim, bnd + 2, bnd + 2, j, k, dir, p);
   mhd_prim_from_cons(W, U, ldim, bnd + 2, bnd + 2);
   int l = bnd, r = bnd + 1;
-  mhd_reconstruct_pcm(U_l, U_r, W_l, W_r, W, NULL, ldim, l, r, dir);
+  mhd_reconstruct(U_l, U_r, W_l, W_r, W, NULL, ldim, l, r, dir);
   put_line_fc_cc(U3d_l[dir], U_l, ldim, l, r, j, k, dir, p);
   put_line_fc_cc(U3d_r[dir], U_r, ldim, l, r, j, k, dir, p);
 }
@@ -267,6 +267,8 @@ ggcm_mhd_step_mhdcc_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 static struct param ggcm_mhd_step_mhdcc_descr[] = {
   { "eqn"                , VAR(opt.eqn)            , PARAM_SELECT(OPT_EQN,
 								  opt_eqn_descr)                },
+  { "limiter"            , VAR(opt.limiter)        , PARAM_SELECT(OPT_LIMITER_FLAT,
+								  opt_limiter_descr)            },
   { "riemann"            , VAR(opt.riemann)        , PARAM_SELECT(OPT_RIEMANN_RUSANOV,
 								  opt_riemann_descr)            },
 

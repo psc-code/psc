@@ -14,6 +14,11 @@
 #define OPT_EQN_MHD_SCONS     (2) // semi-conservative MHD (w/o pressure in flux)
 #define OPT_EQN_HD            (3) // hydrodynamics
 
+// --- OPT_LIMITER ------------------------------------------------------
+
+#define OPT_LIMITER_FLAT     (1)
+#define OPT_LIMITER_GMINMOD  (2)
+
 // --- OPT_RIEMANN ------------------------------------------------------
 
 #define OPT_RIEMANN_RUSANOV   (1)

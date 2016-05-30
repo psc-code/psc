@@ -76,7 +76,7 @@ flux_corr(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld *x
 
   pick_line_sc(U, x, ldim, 2, 2, j, k, dir, p);
   mhd_prim_from_cons(W, U, ldim, 2, 2); // for up to plm reconstruction
-  mhd_reconstruct_plm(U_l, U_r, W_l, W_r, W, NULL, ldim, 1, 1, dir);
+  mhd_reconstruct(U_l, U_r, W_l, W_r, W, NULL, ldim, 1, 1, dir);
   mhd_riemann(F, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
   put_line_sc(flux[dir], F, ldim, 0, 1, j, k, dir, p);
 }
@@ -231,6 +231,8 @@ ggcm_mhd_step_vl_setup_flds(struct ggcm_mhd_step *step)
 static struct param ggcm_mhd_step_vl_descr[] = {
   { "eqn"                , VAR(opt.eqn)            , PARAM_SELECT(OPT_EQN,
 								  opt_eqn_descr)                },
+  { "limiter"            , VAR(opt.limiter)        , PARAM_SELECT(OPT_LIMITER_FLAT,
+								  opt_limiter_descr)            },
   { "riemann"            , VAR(opt.riemann)        , PARAM_SELECT(OPT_RIEMANN_RUSANOV,
 								  opt_riemann_descr)            },
 
