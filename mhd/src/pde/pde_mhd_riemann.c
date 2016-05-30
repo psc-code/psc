@@ -159,61 +159,31 @@ fluxes_rusanov(mrc_fld_data_t F[], mrc_fld_data_t Ul[], mrc_fld_data_t Ur[],
 }
 
 // ----------------------------------------------------------------------
-// fluxes_hll_fc
+// fluxes_hll
 
 static void
-fluxes_hll_fc(mrc_fld_data_t F[8], mrc_fld_data_t Ul[8], mrc_fld_data_t Ur[8],
-	      mrc_fld_data_t Wl[8], mrc_fld_data_t Wr[8])
+fluxes_hll(mrc_fld_data_t F[], mrc_fld_data_t Ul[], mrc_fld_data_t Ur[],
+	   mrc_fld_data_t Wl[], mrc_fld_data_t Wr[])
 {
-  mrc_fld_data_t Fl[8], Fr[8];
+  mrc_fld_data_t Fl[s_n_comps], Fr[s_n_comps];
   mrc_fld_data_t cf;
 
   cf = wavespeed(Ul, Wl);
   mrc_fld_data_t cp_l = Wl[VX] + cf;
-  mrc_fld_data_t cm_l = Wl[VX] - cf; 
-  fluxes(Fl, Ul, Wl);
+  mrc_fld_data_t cm_l = Wl[VX] - cf;
 
   cf = wavespeed(Ur, Wr);
   mrc_fld_data_t cp_r = Wr[VX] + cf;
-  mrc_fld_data_t cm_r = Wr[VX] - cf; 
-  fluxes(Fr, Ur, Wr);
+  mrc_fld_data_t cm_r = Wr[VX] - cf;
 
-  mrc_fld_data_t c_l =  mrc_fld_min(mrc_fld_min(cm_l, cm_r), 0.); 
-  mrc_fld_data_t c_r =  mrc_fld_max(mrc_fld_max(cp_l, cp_r), 0.); 
-
-  for (int m = 0; m < 8; m++) {
-    F[m] = ((c_r * Fl[m] - c_l * Fr[m]) + (c_r * c_l * (Ur[m] - Ul[m]))) / (c_r - c_l);
-  }
-}
-
-// ----------------------------------------------------------------------
-// fluxes_hll_hydro
-
-static void
-fluxes_hll_hydro(mrc_fld_data_t F[5], mrc_fld_data_t Ul[5], mrc_fld_data_t Ur[5],
-		 mrc_fld_data_t Wl[5], mrc_fld_data_t Wr[5])
-{
-  mrc_fld_data_t Fl[5], Fr[5];
+  mrc_fld_data_t c_l =  mrc_fld_min(mrc_fld_min(cm_l, cm_r), 0.);
+  mrc_fld_data_t c_r =  mrc_fld_max(mrc_fld_max(cp_l, cp_r), 0.);
 
   fluxes(Fl, Ul, Wl);
   fluxes(Fr, Ur, Wr);
 
-  mrc_fld_data_t cs2;
-
-  cs2 = s_gamma * Wl[PP] / Wl[RR];
-  mrc_fld_data_t cpv_l = Wl[VX] + sqrtf(cs2);
-  mrc_fld_data_t cmv_l = Wl[VX] - sqrtf(cs2); 
-
-  cs2 = s_gamma * Wr[PP] / Wr[RR];
-  mrc_fld_data_t cpv_r = Wr[VX] + sqrtf(cs2);
-  mrc_fld_data_t cmv_r = Wr[VX] - sqrtf(cs2); 
-
-  mrc_fld_data_t SR =  fmaxf(fmaxf(cpv_l, cpv_r), 0.); 
-  mrc_fld_data_t SL =  fminf(fminf(cmv_l, cmv_r), 0.); 
-
-  //  mrc_fld_data_t lambda = .5 * (cmsv_l + cmsv_r);  
-  for (int m = 0; m < 5; m++) {
-    F[m] = ((SR * Fl[m] - SL * Fr[m]) + (SR * SL * (Ur[m] - Ul[m]))) / (SR - SL);
+  for (int m = 0; m < s_n_comps; m++) {
+    F[m] = ((c_r * Fl[m] - c_l * Fr[m]) + (c_r * c_l * (Ur[m] - Ul[m]))) / (c_r - c_l);
   }
 }
 
@@ -471,8 +441,8 @@ mhd_riemann_run_fc(fld1d_state_t F, fld1d_state_t U_l, fld1d_state_t U_r,
     }
   } else if (s_opt_riemann == OPT_RIEMANN_HLL) {
     for (int i = -l; i < ldim + r; i++) {
-      fluxes_hll_fc(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
-		    &F1S(W_l, 0, i), &F1S(W_r, 0, i));
+      fluxes_hll(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
+		 &F1S(W_l, 0, i), &F1S(W_r, 0, i));
     }
   } else if (s_opt_riemann == OPT_RIEMANN_HLLD) {
     for (int i = -l; i < ldim + r; i++) {
@@ -517,8 +487,8 @@ mhd_riemann_run_hydro(fld1d_state_t F, fld1d_state_t U_l, fld1d_state_t U_r,
     }
   } else if (s_opt_riemann == OPT_RIEMANN_HLL) {
     for (int i = -l; i < ldim + r; i++) {
-      fluxes_hll_hydro(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
-		       &F1S(W_l, 0, i), &F1S(W_r, 0, i));
+      fluxes_hll(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
+		 &F1S(W_l, 0, i), &F1S(W_r, 0, i));
     }
   } else if (s_opt_riemann == OPT_RIEMANN_HLLC) {
     for (int i = -l; i < ldim + r; i++) {
