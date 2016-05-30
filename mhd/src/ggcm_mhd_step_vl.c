@@ -59,7 +59,7 @@ flux_pred(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld *x
   fld1d_state_t F = sub->F;
 
   pick_line_sc(U, x, ldim, 2, 2, j, k, dir, p);
-  mhd_prim_from_sc(W, U, ldim, 2, 2); // for up to plm reconstruction
+  mhd_prim_from_cons(W, U, ldim, 2, 2); // for up to plm reconstruction
   mhd_reconstruct_pcm_run_sc(U_l, U_r, W_l, W_r, W, NULL,
 			     ldim, 1, 1, dir);
   mhd_riemann(F, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
@@ -76,7 +76,7 @@ flux_corr(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld *x
   fld1d_state_t F = sub->F;
 
   pick_line_sc(U, x, ldim, 2, 2, j, k, dir, p);
-  mhd_prim_from_sc(W, U, ldim, 2, 2); // for up to plm reconstruction
+  mhd_prim_from_cons(W, U, ldim, 2, 2); // for up to plm reconstruction
   mhd_reconstruct_plm_run_sc(U_l, U_r, W_l, W_r, W, NULL,
 			     ldim, 1, 1, dir);
   mhd_riemann(F, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);

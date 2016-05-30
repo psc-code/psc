@@ -4,10 +4,10 @@
 #define TINY_NUMBER 1.0e-20 // FIXME
 
 // ----------------------------------------------------------------------
-// mhd_prim_from_fc
+// mhd_prim_from_fcons
 
-static void _mrc_unused
-mhd_prim_from_fc(fld1d_state_t W, fld1d_state_t U, int ldim, int l, int r)
+static void
+mhd_prim_from_fcons(fld1d_state_t W, fld1d_state_t U, int ldim, int l, int r)
 {
   mrc_fld_data_t gamma_minus_1 = s_gamma - 1.f;
 
@@ -56,10 +56,10 @@ mhd_fc_from_prim(fld1d_state_t U, fld1d_state_t W, int ldim, int l, int r)
 }
 
 // ----------------------------------------------------------------------
-// mhd_prim_from_sc
+// mhd_prim_from_scons
 
-static void _mrc_unused
-mhd_prim_from_sc(fld1d_state_t W, fld1d_state_t U, int ldim, int l, int r)
+static void
+mhd_prim_from_scons(fld1d_state_t W, fld1d_state_t U, int ldim, int l, int r)
 {
   mrc_fld_data_t gamma_minus_1 = s_gamma - 1.f;
 
@@ -99,3 +99,18 @@ mhd_sc_from_prim(fld1d_state_t U, fld1d_state_t W, int ldim, int l, int r)
   }
 }
 
+// ----------------------------------------------------------------------
+// mhd_prim_from_cons
+
+static void _mrc_unused
+mhd_prim_from_cons(fld1d_state_t W, fld1d_state_t U, int ldim, int l, int r)
+{
+  if (s_opt_eqn == OPT_EQN_MHD_FCONS) {
+    mhd_prim_from_fcons(W, U, ldim, l, r);
+  } else if (s_opt_eqn == OPT_EQN_MHD_SCONS ||
+	     s_opt_eqn == OPT_EQN_HD) {
+    mhd_prim_from_scons(W, U, ldim, l, r);
+  } else {
+    assert(0);
+  }
+}
