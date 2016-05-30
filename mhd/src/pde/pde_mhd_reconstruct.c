@@ -3,8 +3,7 @@
 // mhd_reconstruct_pcm_run_sc
 
 static void _mrc_unused
-mhd_reconstruct_pcm_run_sc(struct ggcm_mhd *mhd,
-			   fld1d_state_t U_l, fld1d_state_t U_r,
+mhd_reconstruct_pcm_run_sc(fld1d_state_t U_l, fld1d_state_t U_r,
 			   fld1d_state_t W_l, fld1d_state_t W_r,
 			   fld1d_state_t W, struct mrc_fld *Bxi,
 			   int ldim, int l, int r, int dim)
@@ -26,8 +25,7 @@ mhd_reconstruct_pcm_run_sc(struct ggcm_mhd *mhd,
 // mhd_reconstruct_pcm_run_fc
 
 static void _mrc_unused
-mhd_reconstruct_pcm_run_fc(struct ggcm_mhd *mhd,
-			   fld1d_state_t U_l, fld1d_state_t U_r,
+mhd_reconstruct_pcm_run_fc(fld1d_state_t U_l, fld1d_state_t U_r,
 			   fld1d_state_t W_l, fld1d_state_t W_r,
 			   fld1d_state_t W, struct mrc_fld *Bxi,
 			   int ldim, int l, int r, int dir)
@@ -60,8 +58,7 @@ mhd_reconstruct_pcm_run_fc(struct ggcm_mhd *mhd,
 
 // FIXME bnd
 static void _mrc_unused
-mhd_reconstruct_plm_run_sc(struct ggcm_mhd *mhd,
-			   fld1d_state_t U_l, fld1d_state_t U_r,
+mhd_reconstruct_plm_run_sc(fld1d_state_t U_l, fld1d_state_t U_r,
 			   fld1d_state_t W_l, fld1d_state_t W_r,
 			   fld1d_state_t W, struct mrc_fld *Bxi,
 			   int ldim, int l, int r, int dir)
@@ -104,8 +101,7 @@ mhd_reconstruct_plm_run_sc(struct ggcm_mhd *mhd,
 
 // FIXME bnd
 static void _mrc_unused
-mhd_reconstruct_plm_run_fc(struct ggcm_mhd *mhd,
-			   fld1d_state_t U_l, fld1d_state_t U_r,
+mhd_reconstruct_plm_run_fc(fld1d_state_t U_l, fld1d_state_t U_r,
 			   fld1d_state_t W_l, fld1d_state_t W_r,
 			   fld1d_state_t W, struct mrc_fld *Bxi,
 			   int ldim, int l, int r, int dir)

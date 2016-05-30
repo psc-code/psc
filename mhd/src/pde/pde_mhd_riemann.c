@@ -453,7 +453,7 @@ fluxes_hlld_fc(mrc_fld_data_t F[8], mrc_fld_data_t Ul[8], mrc_fld_data_t Ur[8],
 // mhd_riemann_rusanov_run_fc
 
 static void _mrc_unused
-mhd_riemann_rusanov_run_fc(struct ggcm_mhd *mhd, fld1d_state_t F,
+mhd_riemann_rusanov_run_fc(fld1d_state_t F,
 			   fld1d_state_t U_l, fld1d_state_t U_r,
 			   fld1d_state_t W_l, fld1d_state_t W_r,
 			   int ldim, int l, int r, int dim)
@@ -468,7 +468,7 @@ mhd_riemann_rusanov_run_fc(struct ggcm_mhd *mhd, fld1d_state_t F,
 // mhd_riemann_rusanov_run_sc
 
 static void _mrc_unused
-mhd_riemann_rusanov_run_sc(struct ggcm_mhd *mhd, fld1d_state_t F,
+mhd_riemann_rusanov_run_sc(fld1d_state_t F,
 			   fld1d_state_t U_l, fld1d_state_t U_r,
 			   fld1d_state_t W_l, fld1d_state_t W_r,
 			   int ldim, int l, int r, int dim)
@@ -483,7 +483,7 @@ mhd_riemann_rusanov_run_sc(struct ggcm_mhd *mhd, fld1d_state_t F,
 // mhd_riemann_rusanov_run_hydro
 
 static void _mrc_unused
-mhd_riemann_rusanov_run_hydro(struct ggcm_mhd *mhd, fld1d_state_t F,
+mhd_riemann_rusanov_run_hydro(fld1d_state_t F,
 			      fld1d_state_t U_l, fld1d_state_t U_r,
 			      fld1d_state_t W_l, fld1d_state_t W_r,
 			      int ldim, int l, int r, int dim)
@@ -498,7 +498,7 @@ mhd_riemann_rusanov_run_hydro(struct ggcm_mhd *mhd, fld1d_state_t F,
 // mhd_riemann_hll_run_fc
 
 static void _mrc_unused
-mhd_riemann_hll_run_fc(struct ggcm_mhd *mhd, fld1d_state_t F,
+mhd_riemann_hll_run_fc(fld1d_state_t F,
 		       fld1d_state_t U_l, fld1d_state_t U_r,
 		       fld1d_state_t W_l, fld1d_state_t W_r,
 		       int ldim, int l, int r, int dim)
@@ -513,7 +513,7 @@ mhd_riemann_hll_run_fc(struct ggcm_mhd *mhd, fld1d_state_t F,
 // mhd_riemann_hll_run_hydro
 
 static void _mrc_unused
-mhd_riemann_hll_run_hydro(struct ggcm_mhd *mhd, fld1d_state_t F,
+mhd_riemann_hll_run_hydro(fld1d_state_t F,
 			  fld1d_state_t U_l, fld1d_state_t U_r,
 			  fld1d_state_t W_l, fld1d_state_t W_r,
 			  int ldim, int l, int r, int dim)
@@ -528,7 +528,7 @@ mhd_riemann_hll_run_hydro(struct ggcm_mhd *mhd, fld1d_state_t F,
 // mhd_riemann_hllc_run_hydro
 
 static void _mrc_unused
-mhd_riemann_hllc_run_hydro(struct ggcm_mhd *mhd, fld1d_state_t F,
+mhd_riemann_hllc_run_hydro(fld1d_state_t F,
 			   fld1d_state_t U_l, fld1d_state_t U_r,
 			   fld1d_state_t W_l, fld1d_state_t W_r,
 			   int ldim, int l, int r, int dim)
@@ -543,7 +543,7 @@ mhd_riemann_hllc_run_hydro(struct ggcm_mhd *mhd, fld1d_state_t F,
 // mhd_riemann_hlld_run_fc
 
 static void _mrc_unused
-mhd_riemann_hlld_run_fc(struct ggcm_mhd *mhd, fld1d_state_t F,
+mhd_riemann_hlld_run_fc(fld1d_state_t F,
 			fld1d_state_t U_l, fld1d_state_t U_r,
 			fld1d_state_t W_l, fld1d_state_t W_r,
 			int ldim, int l, int r, int dim)
