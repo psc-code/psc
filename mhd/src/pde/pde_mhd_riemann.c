@@ -3,11 +3,6 @@
 #define sign(x) (( x > 0. ) - ( x < 0. ))
 
 // ----------------------------------------------------------------------
-// constants
-
-static mrc_fld_data_t Gamma _mrc_unused;
-
-// ----------------------------------------------------------------------
 // fluxes_fc
 
 static inline void
@@ -63,7 +58,7 @@ fluxes_hydro(mrc_fld_data_t F[5], mrc_fld_data_t U[5], mrc_fld_data_t W[5])
 static inline mrc_fld_data_t
 wavespeed_fc(mrc_fld_data_t U[8], mrc_fld_data_t W[8])
 {
-  mrc_fld_data_t cs2 = Gamma * W[PP] / W[RR];
+  mrc_fld_data_t cs2 = s_gamma * W[PP] / W[RR];
   mrc_fld_data_t b2 = sqr(W[BX]) + sqr(W[BY]) + sqr(W[BZ]);
   mrc_fld_data_t as2 = b2 / W[RR]; 
   mrc_fld_data_t cf2 = .5f * (cs2 + as2 + 
@@ -114,11 +109,11 @@ fluxes_rusanov_sc(mrc_fld_data_t F[5], mrc_fld_data_t Ul[5], mrc_fld_data_t Ur[5
 
   mrc_fld_data_t vv, cs2;
   vv = sqr(Wl[VX]) + sqr(Wl[VY]) + sqr(Wl[VZ]);
-  cs2 = Gamma * Wl[PP] / Wl[RR];
+  cs2 = s_gamma * Wl[PP] / Wl[RR];
   mrc_fld_data_t cmsv_l = sqrtf(vv) + sqrtf(cs2);
 
   vv = sqr(Wr[VX]) + sqr(Wr[VY]) + sqr(Wr[VZ]);
-  cs2 = Gamma * Wr[PP] / Wr[RR];
+  cs2 = s_gamma * Wr[PP] / Wr[RR];
   mrc_fld_data_t cmsv_r = sqrtf(vv) + sqrtf(cs2);
 
   mrc_fld_data_t lambda = .5 * (cmsv_l + cmsv_r);
@@ -142,11 +137,11 @@ fluxes_rusanov_hydro(mrc_fld_data_t F[5], mrc_fld_data_t Ul[5], mrc_fld_data_t U
 
   mrc_fld_data_t vv, cs2;
   vv = sqr(Wl[VX]) + sqr(Wl[VY]) + sqr(Wl[VZ]);
-  cs2 = Gamma * Wl[PP] / Wl[RR];
+  cs2 = s_gamma * Wl[PP] / Wl[RR];
   mrc_fld_data_t cmsv_l = sqrtf(vv) + sqrtf(cs2);
 
   vv = sqr(Wr[VX]) + sqr(Wr[VY]) + sqr(Wr[VZ]);
-  cs2 = Gamma * Wr[PP] / Wr[RR];
+  cs2 = s_gamma * Wr[PP] / Wr[RR];
   mrc_fld_data_t cmsv_r = sqrtf(vv) + sqrtf(cs2);
 
   mrc_fld_data_t lambda = .5 * (cmsv_l + cmsv_r);
@@ -198,11 +193,11 @@ fluxes_hll_hydro(mrc_fld_data_t F[5], mrc_fld_data_t Ul[5], mrc_fld_data_t Ur[5]
 
   mrc_fld_data_t cs2;
 
-  cs2 = Gamma * Wl[PP] / Wl[RR];
+  cs2 = s_gamma * Wl[PP] / Wl[RR];
   mrc_fld_data_t cpv_l = Wl[VX] + sqrtf(cs2);
   mrc_fld_data_t cmv_l = Wl[VX] - sqrtf(cs2); 
 
-  cs2 = Gamma * Wr[PP] / Wr[RR];
+  cs2 = s_gamma * Wr[PP] / Wr[RR];
   mrc_fld_data_t cpv_r = Wr[VX] + sqrtf(cs2);
   mrc_fld_data_t cmv_r = Wr[VX] - sqrtf(cs2); 
 
@@ -229,11 +224,11 @@ fluxes_hllc_hydro(mrc_fld_data_t F[5], mrc_fld_data_t Ul[5], mrc_fld_data_t Ur[5
 
   mrc_fld_data_t cs2;
 
-  cs2 = Gamma * Wl[PP] / Wl[RR];
+  cs2 = s_gamma * Wl[PP] / Wl[RR];
   mrc_fld_data_t cpv_l = Wl[VX] + sqrtf(cs2);
   mrc_fld_data_t cmv_l = Wl[VX] - sqrtf(cs2); 
 
-  cs2 = Gamma * Wr[PP] / Wr[RR];
+  cs2 = s_gamma * Wr[PP] / Wr[RR];
   mrc_fld_data_t cpv_r = Wr[VX] + sqrtf(cs2);
   mrc_fld_data_t cmv_r = Wr[VX] - sqrtf(cs2); 
 
@@ -322,7 +317,7 @@ fluxes_hlld_fc(mrc_fld_data_t F[8], mrc_fld_data_t Ul[8], mrc_fld_data_t Ur[8],
     mrc_fld_data_t bb, cs2, as2, cf;
     
     bb = sqr(Wl[BX]) + sqr(Wl[BY]) + sqr(Wl[BZ]);
-    cs2 = Gamma * Wl[PP] / Wl[RR];
+    cs2 = s_gamma * Wl[PP] / Wl[RR];
     as2 = bb / Wl[RR]; 
     cf = sqrtf(.5 * (cs2 + as2 + sqrtf(sqr(as2 + cs2)
 				       - (4. * sqr(sqrt(cs2) * Wl[BX]) / Wl[RR]))));       
@@ -332,7 +327,7 @@ fluxes_hlld_fc(mrc_fld_data_t F[8], mrc_fld_data_t Ul[8], mrc_fld_data_t Ur[8],
     mrc_fld_data_t cmv_l = Wl[VX] - cf; 
     
     bb = sqr(Wr[BX]) + sqr(Wr[BY]) + sqr(Wr[BZ]);
-    cs2 = Gamma * Wr[PP] / Wr[RR];
+    cs2 = s_gamma * Wr[PP] / Wr[RR];
     as2 = bb / Wr[RR]; 
     cf = sqrtf(.5 * (cs2 + as2 + sqrtf(sqr(as2 + cs2)
 				       - (4. * sqr(sqrt(cs2) * Wr[BX]) / Wr[RR]))));     
@@ -463,8 +458,6 @@ mhd_riemann_rusanov_run_fc(struct ggcm_mhd *mhd, fld1d_state_t F,
 			   fld1d_state_t W_l, fld1d_state_t W_r,
 			   int ldim, int l, int r, int dim)
 {
-  Gamma = mhd->par.gamm;
-
   for (int i = -l; i < ldim + r; i++) {
     fluxes_rusanov_fc(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
 		      &F1S(W_l, 0, i), &F1S(W_r, 0, i));
@@ -480,8 +473,6 @@ mhd_riemann_rusanov_run_sc(struct ggcm_mhd *mhd, fld1d_state_t F,
 			   fld1d_state_t W_l, fld1d_state_t W_r,
 			   int ldim, int l, int r, int dim)
 {
-  Gamma = mhd->par.gamm;
-
   for (int i = -l; i < ldim + r; i++) {
     fluxes_rusanov_sc(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
 		      &F1S(W_l, 0, i), &F1S(W_r, 0, i));
@@ -497,8 +488,6 @@ mhd_riemann_rusanov_run_hydro(struct ggcm_mhd *mhd, fld1d_state_t F,
 			      fld1d_state_t W_l, fld1d_state_t W_r,
 			      int ldim, int l, int r, int dim)
 {
-  Gamma = mhd->par.gamm;
-
   for (int i = -l; i < ldim + r; i++) {
     fluxes_rusanov_hydro(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
 			 &F1S(W_l, 0, i), &F1S(W_r, 0, i));
@@ -514,8 +503,6 @@ mhd_riemann_hll_run_fc(struct ggcm_mhd *mhd, fld1d_state_t F,
 		       fld1d_state_t W_l, fld1d_state_t W_r,
 		       int ldim, int l, int r, int dim)
 {
-  Gamma = mhd->par.gamm;
-
   for (int i = -l; i < ldim + r; i++) {
     fluxes_hll_fc(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
 		  &F1S(W_l, 0, i), &F1S(W_r, 0, i));
@@ -531,8 +518,6 @@ mhd_riemann_hll_run_hydro(struct ggcm_mhd *mhd, fld1d_state_t F,
 			  fld1d_state_t W_l, fld1d_state_t W_r,
 			  int ldim, int l, int r, int dim)
 {
-  Gamma = mhd->par.gamm;
-
   for (int i = -l; i < ldim + r; i++) {
     fluxes_hll_hydro(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
 		     &F1S(W_l, 0, i), &F1S(W_r, 0, i));
@@ -548,8 +533,6 @@ mhd_riemann_hllc_run_hydro(struct ggcm_mhd *mhd, fld1d_state_t F,
 			   fld1d_state_t W_l, fld1d_state_t W_r,
 			   int ldim, int l, int r, int dim)
 {
-  Gamma = mhd->par.gamm;
-
   for (int i = -l; i < ldim + r; i++) {
     fluxes_hllc_hydro(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
 		      &F1S(W_l, 0, i), &F1S(W_r, 0, i));
@@ -565,8 +548,6 @@ mhd_riemann_hlld_run_fc(struct ggcm_mhd *mhd, fld1d_state_t F,
 			fld1d_state_t W_l, fld1d_state_t W_r,
 			int ldim, int l, int r, int dim)
 {
-  Gamma = mhd->par.gamm;
-
   for (int i = -l; i < ldim + r; i++) {
     fluxes_hlld_fc(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
 		   &F1S(W_l, 0, i), &F1S(W_r, 0, i));

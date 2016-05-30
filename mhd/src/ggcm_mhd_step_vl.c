@@ -14,6 +14,7 @@
 #define F1(f, m, i) MRC_D2(f, m, i)
 
 #include "pde/pde_setup.c"
+#include "pde/pde_mhd_setup.c"
 #include "pde/pde_mhd_line.c"
 #include "pde/pde_mhd_convert.c"
 #include "pde/pde_mhd_reconstruct.c"
@@ -86,6 +87,7 @@ ggcm_mhd_step_vl_setup(struct ggcm_mhd_step *step)
   struct ggcm_mhd *mhd = step->mhd;
 
   pde_setup(mhd->fld);
+  pde_mhd_setup(mhd);
 
   fld1d_state_setup(&sub->U);
   fld1d_state_setup(&sub->U_l);

@@ -14,6 +14,7 @@
 #include <string.h>
 
 #include "pde/pde_setup.c"
+#include "pde/pde_mhd_setup.c"
 #include "pde/pde_mhd_line.c"
 #include "pde/pde_mhd_convert.c"
 #include "pde/pde_mhd_reconstruct.c"
@@ -78,6 +79,7 @@ ggcm_mhd_step_c3_setup(struct ggcm_mhd_step *step)
   pde_setup(mhd->fld);
   // FIXME, very hacky way of making the 1d state fields 5-component
   s_n_comps = 5;
+  pde_mhd_setup(mhd);
 
   fld1d_state_setup(&sub->U);
   fld1d_state_setup(&sub->U_l);
