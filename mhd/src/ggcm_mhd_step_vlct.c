@@ -18,6 +18,7 @@
 #include "pde/pde_mhd_line.c"
 #include "pde/pde_mhd_convert.c"
 #include "pde/pde_mhd_reconstruct.c"
+#include "pde/pde_mhd_riemann.c"
 
 #include "mhd_3d.c"
 
@@ -33,8 +34,6 @@ static int ldims[3];
 
 struct ggcm_mhd_step_vlct {
   bool debug_dump;
-
-  struct mhd_riemann *riemann;
 
   struct mrc_fld *Bxi;
 
@@ -199,7 +198,7 @@ flux_pred(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld *x
   mhd_prim_from_fc(step->mhd, W, U, ldim, nghost, nghost);
   mhd_reconstruct_pcm_run_fc(step->mhd, U_l, U_r, W_l, W_r, W, Bxi,
 			     ldim, nghost - 1, nghost, dir);
-  mhd_riemann_run(sub->riemann, F.mrc_fld, U_l.mrc_fld, U_r.mrc_fld, W_l.mrc_fld, W_r.mrc_fld, ldim, nghost - 1, nghost, dir);
+  mhd_riemann_hll_run_fc(step->mhd, F, U_l, U_r, W_l, W_r, ldim, nghost - 1, nghost, dir);
   put_line_fc(flux[dir], F, ldim, nghost - 1, nghost, j, k, dir, p);
 }
 
@@ -217,19 +216,8 @@ flux_corr(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld *x
   mhd_prim_from_fc(step->mhd, W, U, ldim, nghost - 1, nghost - 1);
   mhd_reconstruct_plm_run_fc(step->mhd, U_l, U_r, W_l, W_r, W, Bxi,
 			     ldim, 1, 1, dir);
-  mhd_riemann_run(sub->riemann, F.mrc_fld, U_l.mrc_fld, U_r.mrc_fld, W_l.mrc_fld, W_r.mrc_fld, ldim, 0, 1, dir);
+  mhd_riemann_hll_run_fc(step->mhd, F, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
   put_line_fc(flux[dir], F, ldim, 0, 1, j, k, dir, p);
-}
-
-// ----------------------------------------------------------------------
-// ggcm_mhd_step_vlct_create
-
-static void
-ggcm_mhd_step_vlct_create(struct ggcm_mhd_step *step)
-{
-  struct ggcm_mhd_step_vlct *sub = ggcm_mhd_step_vlct(step);
-
-  mhd_riemann_set_type(sub->riemann, "hll");
 }
 
 // ----------------------------------------------------------------------
@@ -242,8 +230,6 @@ ggcm_mhd_step_vlct_setup(struct ggcm_mhd_step *step)
   struct ggcm_mhd *mhd = step->mhd;
 
   pde_setup(mhd->fld);
-
-  mhd_riemann_set_param_obj(sub->riemann, "mhd", mhd);
 
   setup_mrc_fld_1d(sub->Bxi, mhd->fld, 1);
 
@@ -690,8 +676,6 @@ ggcm_mhd_step_vlct_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
 static struct param ggcm_mhd_step_vlct_descr[] = {
   { "debug_dump"      , VAR(debug_dump)      , PARAM_BOOL(false)            },
 
-  { "riemann"         , VAR(riemann)         , MRC_VAR_OBJ(mhd_riemann)     },
-
   { "Bxi"             , VAR(Bxi)             , MRC_VAR_OBJ(mrc_fld)         },
   {},
 };
@@ -704,7 +688,6 @@ struct ggcm_mhd_step_ops ggcm_mhd_step_vlct_ops = {
   .name             = "vlct",
   .size             = sizeof(struct ggcm_mhd_step_vlct),
   .param_descr      = ggcm_mhd_step_vlct_descr,
-  .create           = ggcm_mhd_step_vlct_create,
   .setup            = ggcm_mhd_step_vlct_setup,
   .destroy          = ggcm_mhd_step_vlct_destroy,
   .run              = ggcm_mhd_step_vlct_run,
