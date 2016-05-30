@@ -12,6 +12,8 @@ struct mhd_options {
 static struct mrc_param_select opt_riemann_descr[] _mrc_unused = {
   { .val = OPT_RIEMANN_RUSANOV  , .str = "rusanov"     },
   { .val = OPT_RIEMANN_HLL      , .str = "hll"         },
+  { .val = OPT_RIEMANN_HLLC     , .str = "hllc"        },
+  { .val = OPT_RIEMANN_HLLD     , .str = "hlld"        },
   {},
 };
 

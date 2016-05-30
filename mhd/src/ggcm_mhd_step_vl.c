@@ -30,6 +30,8 @@ static int ldims[3];
 // ggcm_mhd_step subclass "vl"
 
 struct ggcm_mhd_step_vl {
+  struct mhd_options opt;
+
   bool debug_dump;
 
   fld1d_state_t U;
@@ -58,7 +60,7 @@ flux_pred(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld *x
   mhd_prim_from_sc(W, U, ldim, 2, 2); // for up to plm reconstruction
   mhd_reconstruct_pcm_run_sc(U_l, U_r, W_l, W_r, W, NULL,
 			     ldim, 1, 1, dir);
-  mhd_riemann_rusanov_run_hydro(F, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
+  mhd_riemann_run_hydro(F, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
   put_line_sc(flux[dir], F, ldim, 0, 1, j, k, dir, p);
 }
 
@@ -75,7 +77,7 @@ flux_corr(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld *x
   mhd_prim_from_sc(W, U, ldim, 2, 2); // for up to plm reconstruction
   mhd_reconstruct_plm_run_sc(U_l, U_r, W_l, W_r, W, NULL,
 			     ldim, 1, 1, dir);
-  mhd_riemann_rusanov_run_hydro(F, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
+  mhd_riemann_run_hydro(F, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
   put_line_sc(flux[dir], F, ldim, 0, 1, j, k, dir, p);
 }
 
@@ -211,7 +213,10 @@ ggcm_mhd_step_vl_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 static void
 ggcm_mhd_step_vl_setup_flds(struct ggcm_mhd_step *step)
 {
+  struct ggcm_mhd_step_vl *sub = ggcm_mhd_step_vl(step);
   struct ggcm_mhd *mhd = step->mhd;
+
+  pde_mhd_set_options(mhd, &sub->opt);
 
   mrc_fld_set_type(mhd->fld, FLD_TYPE);
   mrc_fld_set_param_int(mhd->fld, "nr_ghosts", 2);
@@ -224,7 +229,10 @@ ggcm_mhd_step_vl_setup_flds(struct ggcm_mhd_step *step)
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_step_vl, x)
 static struct param ggcm_mhd_step_vl_descr[] = {
-  { "debug_dump"      , VAR(debug_dump)      , PARAM_BOOL(false)            },
+  { "riemann"            , VAR(opt.riemann)        , PARAM_SELECT(OPT_RIEMANN_RUSANOV,
+								  opt_riemann_descr)            },
+
+  { "debug_dump"         , VAR(debug_dump)         , PARAM_BOOL(false)                          },
   {},
 };
 #undef VAR
