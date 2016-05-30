@@ -3,10 +3,10 @@
 #define sign(x) (( x > 0. ) - ( x < 0. ))
 
 // ----------------------------------------------------------------------
-// fluxes_fc
+// fluxes_mhd_fcons
 
 static inline void
-fluxes_fc(mrc_fld_data_t F[8], mrc_fld_data_t U[8], mrc_fld_data_t W[8])
+fluxes_mhd_fcons(mrc_fld_data_t F[8], mrc_fld_data_t U[8], mrc_fld_data_t W[8])
 {
   mrc_fld_data_t b2 = sqr(W[BX]) + sqr(W[BY]) + sqr(W[BZ]);
 
@@ -22,10 +22,10 @@ fluxes_fc(mrc_fld_data_t F[8], mrc_fld_data_t U[8], mrc_fld_data_t W[8])
 }
 
 // ----------------------------------------------------------------------
-// fluxes_sc
+// fluxes_mhd_scons
 
-static void // FIXME, duplicated
-fluxes_sc(mrc_fld_data_t F[5], mrc_fld_data_t U[5], mrc_fld_data_t W[5])
+static void
+fluxes_mhd_scons(mrc_fld_data_t F[5], mrc_fld_data_t U[5], mrc_fld_data_t W[5])
 {
   F[RR]  = W[RR] * W[VX];
   F[RVX] = W[RR] * W[VX] * W[VX];
@@ -35,13 +35,13 @@ fluxes_sc(mrc_fld_data_t F[5], mrc_fld_data_t U[5], mrc_fld_data_t W[5])
 }
 
 // ----------------------------------------------------------------------
-// fluxes_hydro
+// fluxes_hd
 
-// FIXME, sc vs hydro is a kinda arbitrary distinction, but the former does not
+// FIXME, mhd_scons vs hd is a kinda arbitrary distinction, but the former does not
 // contain pressure, because that's what's needed for Jimmy-MHD ("c3")
 
 static void
-fluxes_hydro(mrc_fld_data_t F[5], mrc_fld_data_t U[5], mrc_fld_data_t W[5])
+fluxes_hd(mrc_fld_data_t F[5], mrc_fld_data_t U[5], mrc_fld_data_t W[5])
 {
   F[RR]  = W[RR] * W[VX];
   F[RVX] = W[RR] * W[VX] * W[VX] + W[PP];
@@ -57,21 +57,21 @@ static void
 fluxes(mrc_fld_data_t F[5], mrc_fld_data_t U[5], mrc_fld_data_t W[5])
 {
   if (s_opt_eqn == OPT_EQN_MHD_FCONS) {
-    fluxes_fc(F, U, W);
+    fluxes_mhd_fcons(F, U, W);
   } else if (s_opt_eqn == OPT_EQN_MHD_SCONS) {
-    fluxes_sc(F, U, W);
+    fluxes_mhd_scons(F, U, W);
   } else if (s_opt_eqn == OPT_EQN_HD) {
-    fluxes_hydro(F, U, W);
+    fluxes_hd(F, U, W);
   }
 }
 
 // ----------------------------------------------------------------------
-// wavespeed_fc
+// wavespeed_mhd_fcons
 //
 // calculate speed of fastest (fast magnetosonic) wave
 
 static inline mrc_fld_data_t
-wavespeed_fc(mrc_fld_data_t U[], mrc_fld_data_t W[])
+wavespeed_mhd_fcons(mrc_fld_data_t U[], mrc_fld_data_t W[])
 {
   mrc_fld_data_t cs2 = s_gamma * W[PP] / W[RR];
   mrc_fld_data_t b2 = sqr(W[BX]) + sqr(W[BY]) + sqr(W[BZ]);
@@ -82,12 +82,12 @@ wavespeed_fc(mrc_fld_data_t U[], mrc_fld_data_t W[])
 }
 
 // ----------------------------------------------------------------------
-// wavespeed_sc
+// wavespeed_mhd_scons
 //
 // calculate speed of fastest wave (soundspeed)
 
 static inline mrc_fld_data_t
-wavespeed_sc(mrc_fld_data_t U[], mrc_fld_data_t W[])
+wavespeed_mhd_scons(mrc_fld_data_t U[], mrc_fld_data_t W[])
 {
   return sqrtf(s_gamma * W[PP] / W[RR]);
 }
@@ -99,9 +99,10 @@ static inline mrc_fld_data_t
 wavespeed(mrc_fld_data_t U[], mrc_fld_data_t W[])
 {
   if (s_opt_eqn == OPT_EQN_MHD_FCONS) {
-    return wavespeed_fc(U, W);
-  } else if (s_opt_eqn == OPT_EQN_MHD_SCONS) {
-    return wavespeed_sc(U, W);
+    return wavespeed_mhd_fcons(U, W);
+  } else if (s_opt_eqn == OPT_EQN_MHD_SCONS ||
+	     s_opt_eqn == OPT_EQN_HD) {
+    return wavespeed_mhd_scons(U, W);
   } else {
     assert(0);
   }
@@ -125,7 +126,8 @@ fluxes_rusanov(mrc_fld_data_t F[], mrc_fld_data_t Ul[], mrc_fld_data_t Ur[],
     mrc_fld_data_t cp_l = Wl[VX] + cf;
     mrc_fld_data_t cm_l = Wl[VX] - cf; 
     c_l = mrc_fld_max(mrc_fld_abs(cm_l), mrc_fld_abs(cp_l)); 
-  } else if (s_opt_eqn == OPT_EQN_MHD_SCONS) {
+  } else if (s_opt_eqn == OPT_EQN_MHD_SCONS ||
+	     s_opt_eqn == OPT_EQN_HD) {
     mrc_fld_data_t vv = sqr(Wl[VX]) + sqr(Wl[VY]) + sqr(Wl[VZ]);
     c_l = sqrtf(vv) + cf;
   }
@@ -135,14 +137,16 @@ fluxes_rusanov(mrc_fld_data_t F[], mrc_fld_data_t Ul[], mrc_fld_data_t Ur[],
     mrc_fld_data_t cp_r = Wr[VX] + cf;
     mrc_fld_data_t cm_r = Wr[VX] - cf; 
     c_r = mrc_fld_max(mrc_fld_abs(cm_r), mrc_fld_abs(cp_r)); 
-  } else if (s_opt_eqn == OPT_EQN_MHD_SCONS) {
+  } else if (s_opt_eqn == OPT_EQN_MHD_SCONS ||
+	     s_opt_eqn == OPT_EQN_HD) {
     mrc_fld_data_t vv = sqr(Wr[VX]) + sqr(Wr[VY]) + sqr(Wr[VZ]);
     c_r = sqrtf(vv) + cf;
   }
 
   if (s_opt_eqn == OPT_EQN_MHD_FCONS) {
     c_max = mrc_fld_max(c_l, c_r);
-  } else if (s_opt_eqn == OPT_EQN_MHD_SCONS) {
+  } else if (s_opt_eqn == OPT_EQN_MHD_SCONS ||
+	     s_opt_eqn == OPT_EQN_HD) {
     c_max = .5 * (c_l + c_r);
   }
 
@@ -151,34 +155,6 @@ fluxes_rusanov(mrc_fld_data_t F[], mrc_fld_data_t Ul[], mrc_fld_data_t Ur[],
 
   for (int m = 0; m < s_n_comps; m++) {
     F[m] = .5f * (Fl[m] + Fr[m] - c_max * (Ur[m] - Ul[m]));
-  }
-}
-
-// ----------------------------------------------------------------------
-// fluxes_rusanov_hydro
-
-static void
-fluxes_rusanov_hydro(mrc_fld_data_t F[5], mrc_fld_data_t Ul[5], mrc_fld_data_t Ur[5],
-		     mrc_fld_data_t Wl[5], mrc_fld_data_t Wr[5])
-{
-  mrc_fld_data_t Fl[5], Fr[5];
-  
-  fluxes_hydro(Fl, Ul, Wl);
-  fluxes_hydro(Fr, Ur, Wr);
-
-  mrc_fld_data_t vv, cs2;
-  vv = sqr(Wl[VX]) + sqr(Wl[VY]) + sqr(Wl[VZ]);
-  cs2 = s_gamma * Wl[PP] / Wl[RR];
-  mrc_fld_data_t cmsv_l = sqrtf(vv) + sqrtf(cs2);
-
-  vv = sqr(Wr[VX]) + sqr(Wr[VY]) + sqr(Wr[VZ]);
-  cs2 = s_gamma * Wr[PP] / Wr[RR];
-  mrc_fld_data_t cmsv_r = sqrtf(vv) + sqrtf(cs2);
-
-  mrc_fld_data_t lambda = .5 * (cmsv_l + cmsv_r);
-  
-  for (int m = 0; m < 5; m++) {
-    F[m] = .5f * ((Fr[m] + Fl[m]) - lambda * (Ur[m] - Ul[m]));
   }
 }
 
@@ -192,15 +168,15 @@ fluxes_hll_fc(mrc_fld_data_t F[8], mrc_fld_data_t Ul[8], mrc_fld_data_t Ur[8],
   mrc_fld_data_t Fl[8], Fr[8];
   mrc_fld_data_t cf;
 
-  cf = wavespeed_fc(Ul, Wl);
+  cf = wavespeed(Ul, Wl);
   mrc_fld_data_t cp_l = Wl[VX] + cf;
   mrc_fld_data_t cm_l = Wl[VX] - cf; 
-  fluxes_fc(Fl, Ul, Wl);
+  fluxes(Fl, Ul, Wl);
 
-  cf = wavespeed_fc(Ur, Wr);
+  cf = wavespeed(Ur, Wr);
   mrc_fld_data_t cp_r = Wr[VX] + cf;
   mrc_fld_data_t cm_r = Wr[VX] - cf; 
-  fluxes_fc(Fr, Ur, Wr);
+  fluxes(Fr, Ur, Wr);
 
   mrc_fld_data_t c_l =  mrc_fld_min(mrc_fld_min(cm_l, cm_r), 0.); 
   mrc_fld_data_t c_r =  mrc_fld_max(mrc_fld_max(cp_l, cp_r), 0.); 
@@ -219,8 +195,8 @@ fluxes_hll_hydro(mrc_fld_data_t F[5], mrc_fld_data_t Ul[5], mrc_fld_data_t Ur[5]
 {
   mrc_fld_data_t Fl[5], Fr[5];
 
-  fluxes_hydro(Fl, Ul, Wl);
-  fluxes_hydro(Fr, Ur, Wr);
+  fluxes(Fl, Ul, Wl);
+  fluxes(Fr, Ur, Wr);
 
   mrc_fld_data_t cs2;
 
@@ -250,8 +226,8 @@ fluxes_hllc_hydro(mrc_fld_data_t F[5], mrc_fld_data_t Ul[5], mrc_fld_data_t Ur[5
 {
   mrc_fld_data_t Fl[5], Fr[5];
 
-  fluxes_hydro(Fl, Ul, Wl);
-  fluxes_hydro(Fr, Ur, Wr);
+  fluxes(Fl, Ul, Wl);
+  fluxes(Fr, Ur, Wr);
 
   mrc_fld_data_t cs2;
 
@@ -353,7 +329,7 @@ fluxes_hlld_fc(mrc_fld_data_t F[8], mrc_fld_data_t Ul[8], mrc_fld_data_t Ur[8],
     cf = sqrtf(.5 * (cs2 + as2 + sqrtf(sqr(as2 + cs2)
 				       - (4. * sqr(sqrt(cs2) * Wl[BX]) / Wl[RR]))));       
     
-    fluxes_fc(Fl, Ul, Wl);
+    fluxes(Fl, Ul, Wl);
     mrc_fld_data_t cpv_l = Wl[VX] + cf;
     mrc_fld_data_t cmv_l = Wl[VX] - cf; 
     
@@ -363,7 +339,7 @@ fluxes_hlld_fc(mrc_fld_data_t F[8], mrc_fld_data_t Ul[8], mrc_fld_data_t Ur[8],
     cf = sqrtf(.5 * (cs2 + as2 + sqrtf(sqr(as2 + cs2)
 				       - (4. * sqr(sqrt(cs2) * Wr[BX]) / Wr[RR]))));     
     
-    fluxes_fc(Fr, Ur, Wr);
+    fluxes(Fr, Ur, Wr);
     mrc_fld_data_t cpv_r = Wr[VX] + cf;
     mrc_fld_data_t cmv_r = Wr[VX] - cf;     
     mrc_fld_data_t SR =  fmaxf(fmaxf(cpv_l, cpv_r), 0.); 
@@ -536,8 +512,8 @@ mhd_riemann_run_hydro(fld1d_state_t F, fld1d_state_t U_l, fld1d_state_t U_r,
 {
   if (s_opt_riemann == OPT_RIEMANN_RUSANOV) {
     for (int i = -l; i < ldim + r; i++) {
-      fluxes_rusanov_hydro(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
-			   &F1S(W_l, 0, i), &F1S(W_r, 0, i));
+      fluxes_rusanov(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
+		     &F1S(W_l, 0, i), &F1S(W_r, 0, i));
     }
   } else if (s_opt_riemann == OPT_RIEMANN_HLL) {
     for (int i = -l; i < ldim + r; i++) {
