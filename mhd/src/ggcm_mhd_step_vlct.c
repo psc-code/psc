@@ -13,6 +13,8 @@
 #include <mrc_fld_as_double.h>
 #define F1(f, m, i) MRC_D2(f, m, i)
 
+#include "pde/pde_defs.h"
+
 #include "pde/pde_setup.c"
 #include "pde/pde_mhd_setup.c"
 #include "pde/pde_mhd_line.c"

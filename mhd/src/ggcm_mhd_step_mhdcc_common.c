@@ -19,6 +19,8 @@
 #include <math.h>
 #include <string.h>
 
+#include "pde/pde_defs.h"
+
 #include "pde/pde_setup.c"
 #include "pde/pde_mhd_setup.c"
 #include "pde/pde_mhd_line.c"
