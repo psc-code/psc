@@ -51,6 +51,21 @@ fluxes_hydro(mrc_fld_data_t F[5], mrc_fld_data_t U[5], mrc_fld_data_t W[5])
 }
 
 // ----------------------------------------------------------------------
+// fluxes
+
+static void
+fluxes(mrc_fld_data_t F[5], mrc_fld_data_t U[5], mrc_fld_data_t W[5])
+{
+  if (s_opt_eqn == OPT_EQN_MHD_FCONS) {
+    fluxes_fc(F, U, W);
+  } else if (s_opt_eqn == OPT_EQN_MHD_SCONS) {
+    fluxes_sc(F, U, W);
+  } else if (s_opt_eqn == OPT_EQN_HD) {
+    fluxes_hydro(F, U, W);
+  }
+}
+
+// ----------------------------------------------------------------------
 // wavespeed_fc
 //
 // calculate speed of fastest (fast magnetosonic) wave
@@ -78,58 +93,64 @@ wavespeed_sc(mrc_fld_data_t U[], mrc_fld_data_t W[])
 }
 
 // ----------------------------------------------------------------------
-// fluxes_rusanov_fc
+// wavespeed
 
-static void
-fluxes_rusanov_fc(mrc_fld_data_t F[], mrc_fld_data_t Ul[], mrc_fld_data_t Ur[],
-		  mrc_fld_data_t Wl[], mrc_fld_data_t Wr[])
+static inline mrc_fld_data_t
+wavespeed(mrc_fld_data_t U[], mrc_fld_data_t W[])
 {
-  mrc_fld_data_t Fl[s_n_comps], Fr[s_n_comps];
-  mrc_fld_data_t cf;
-
-  cf = wavespeed_fc(Ul, Wl);
-  mrc_fld_data_t cp_l = Wl[VX] + cf;
-  mrc_fld_data_t cm_l = Wl[VX] - cf; 
-  fluxes_fc(Fl, Ul, Wl);
-
-  cf = wavespeed_fc(Ur, Wr);
-  mrc_fld_data_t cp_r = Wr[VX] + cf;
-  mrc_fld_data_t cm_r = Wr[VX] - cf; 
-  fluxes_fc(Fr, Ur, Wr);
-
-  mrc_fld_data_t c_l = mrc_fld_max(mrc_fld_abs(cm_l), mrc_fld_abs(cp_l)); 
-  mrc_fld_data_t c_r = mrc_fld_max(mrc_fld_abs(cm_r), mrc_fld_abs(cp_r)); 
-  mrc_fld_data_t c_max = mrc_fld_max(c_l, c_r);
-
-  for (int m = 0; m < s_n_comps; m++) {
-    F[m] = .5f * (Fl[m] + Fr[m] - c_max * (Ur[m] - Ul[m]));
+  if (s_opt_eqn == OPT_EQN_MHD_FCONS) {
+    return wavespeed_fc(U, W);
+  } else if (s_opt_eqn == OPT_EQN_MHD_SCONS) {
+    return wavespeed_sc(U, W);
+  } else {
+    assert(0);
   }
 }
 
 // ----------------------------------------------------------------------
-// fluxes_rusanov_sc
+// fluxes_rusanov
+//
+// FIXME? scons/hydro do things weirdly, IIRC to match what original OpenGGCM
+// is doing.
 
 static void
-fluxes_rusanov_sc(mrc_fld_data_t F[], mrc_fld_data_t Ul[], mrc_fld_data_t Ur[],
-		  mrc_fld_data_t Wl[], mrc_fld_data_t Wr[])
+fluxes_rusanov(mrc_fld_data_t F[], mrc_fld_data_t Ul[], mrc_fld_data_t Ur[],
+	       mrc_fld_data_t Wl[], mrc_fld_data_t Wr[])
 {
   mrc_fld_data_t Fl[s_n_comps], Fr[s_n_comps];
-  mrc_fld_data_t vv, cf;
+  mrc_fld_data_t cf, c_l, c_r, c_max;
 
-  vv = sqr(Wl[VX]) + sqr(Wl[VY]) + sqr(Wl[VZ]);
-  cf = wavespeed_sc(Ul, Wl);
-  mrc_fld_data_t c_l = sqrtf(vv) + cf;
-  fluxes_sc(Fl, Ul, Wl);
+  cf = wavespeed(Ul, Wl);
+  if (s_opt_eqn == OPT_EQN_MHD_FCONS) {
+    mrc_fld_data_t cp_l = Wl[VX] + cf;
+    mrc_fld_data_t cm_l = Wl[VX] - cf; 
+    c_l = mrc_fld_max(mrc_fld_abs(cm_l), mrc_fld_abs(cp_l)); 
+  } else if (s_opt_eqn == OPT_EQN_MHD_SCONS) {
+    mrc_fld_data_t vv = sqr(Wl[VX]) + sqr(Wl[VY]) + sqr(Wl[VZ]);
+    c_l = sqrtf(vv) + cf;
+  }
 
-  vv = sqr(Wr[VX]) + sqr(Wr[VY]) + sqr(Wr[VZ]);
-  cf = wavespeed_sc(Ur, Wr);
-  mrc_fld_data_t c_r = sqrtf(vv) + cf;
-  fluxes_sc(Fr, Ur, Wr);
+  cf = wavespeed(Ur, Wr);
+  if (s_opt_eqn == OPT_EQN_MHD_FCONS) {
+    mrc_fld_data_t cp_r = Wr[VX] + cf;
+    mrc_fld_data_t cm_r = Wr[VX] - cf; 
+    c_r = mrc_fld_max(mrc_fld_abs(cm_r), mrc_fld_abs(cp_r)); 
+  } else if (s_opt_eqn == OPT_EQN_MHD_SCONS) {
+    mrc_fld_data_t vv = sqr(Wr[VX]) + sqr(Wr[VY]) + sqr(Wr[VZ]);
+    c_r = sqrtf(vv) + cf;
+  }
 
-  mrc_fld_data_t c_max = .5 * (c_l + c_r);
-  
+  if (s_opt_eqn == OPT_EQN_MHD_FCONS) {
+    c_max = mrc_fld_max(c_l, c_r);
+  } else if (s_opt_eqn == OPT_EQN_MHD_SCONS) {
+    c_max = .5 * (c_l + c_r);
+  }
+
+  fluxes(Fl, Ul, Wl);
+  fluxes(Fr, Ur, Wr);
+
   for (int m = 0; m < s_n_comps; m++) {
-    F[m] = .5f * (Fr[m] + Fl[m] - c_max * (Ur[m] - Ul[m]));
+    F[m] = .5f * (Fl[m] + Fr[m] - c_max * (Ur[m] - Ul[m]));
   }
 }
 
@@ -469,8 +490,8 @@ mhd_riemann_run_fc(fld1d_state_t F, fld1d_state_t U_l, fld1d_state_t U_r,
 {
   if (s_opt_riemann == OPT_RIEMANN_RUSANOV) {
     for (int i = -l; i < ldim + r; i++) {
-      fluxes_rusanov_fc(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
-			&F1S(W_l, 0, i), &F1S(W_r, 0, i));
+      fluxes_rusanov(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
+		     &F1S(W_l, 0, i), &F1S(W_r, 0, i));
     }
   } else if (s_opt_riemann == OPT_RIEMANN_HLL) {
     for (int i = -l; i < ldim + r; i++) {
@@ -497,8 +518,8 @@ mhd_riemann_run_sc(fld1d_state_t F, fld1d_state_t U_l, fld1d_state_t U_r,
 {
   if (s_opt_riemann == OPT_RIEMANN_RUSANOV) {
     for (int i = -l; i < ldim + r; i++) {
-      fluxes_rusanov_sc(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
-			&F1S(W_l, 0, i), &F1S(W_r, 0, i));
+      fluxes_rusanov(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
+		     &F1S(W_l, 0, i), &F1S(W_r, 0, i));
     }
   } else {
     assert(0);
