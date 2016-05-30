@@ -15,6 +15,8 @@
 
 #include "pde/pde_defs.h"
 
+#define OPT_EQN OPT_EQN_MHD_FCONS
+
 #include "pde/pde_setup.c"
 #include "pde/pde_mhd_setup.c"
 #include "pde/pde_mhd_line.c"
@@ -202,7 +204,7 @@ flux_pred(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld *x
   mhd_prim_from_fc(W, U, ldim, nghost, nghost);
   mhd_reconstruct_pcm_run_fc(U_l, U_r, W_l, W_r, W, Bxi,
 			     ldim, nghost - 1, nghost, dir);
-  mhd_riemann_run_fc(F, U_l, U_r, W_l, W_r, ldim, nghost - 1, nghost, dir);
+  mhd_riemann(F, U_l, U_r, W_l, W_r, ldim, nghost - 1, nghost, dir);
   put_line_fc(flux[dir], F, ldim, nghost - 1, nghost, j, k, dir, p);
 }
 
@@ -220,7 +222,7 @@ flux_corr(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld *x
   mhd_prim_from_fc(W, U, ldim, nghost - 1, nghost - 1);
   mhd_reconstruct_plm_run_fc(U_l, U_r, W_l, W_r, W, Bxi,
 			     ldim, 1, 1, dir);
-  mhd_riemann_run_fc(F, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
+  mhd_riemann(F, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
   put_line_fc(flux[dir], F, ldim, 0, 1, j, k, dir, p);
 }
 
@@ -682,6 +684,8 @@ ggcm_mhd_step_vlct_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_step_vlct, x)
 static struct param ggcm_mhd_step_vlct_descr[] = {
+  { "eqn"                , VAR(opt.eqn)            , PARAM_SELECT(OPT_EQN,
+								  opt_eqn_descr)                },
   { "riemann"            , VAR(opt.riemann)        , PARAM_SELECT(OPT_RIEMANN_HLL,
 								  opt_riemann_descr)            },
 

@@ -8,6 +8,14 @@
 // ----------------------------------------------------------------------
 // these option can potentially be set at run time
 
+// --- OPT_EQN ----------------------------------------------------------
+
+#define OPT_EQN_MHD_FCONS     (1) // fully-conservative MHD
+#define OPT_EQN_MHD_SCONS     (2) // semi-conservative MHD (w/o pressure in flux)
+#define OPT_EQN_HD            (3) // hydrodynamics
+
+// --- OPT_RIEMANN ------------------------------------------------------
+
 #define OPT_RIEMANN_RUSANOV   (1)
 #define OPT_RIEMANN_HLL       (2)
 #define OPT_RIEMANN_HLLC      (3)

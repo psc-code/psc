@@ -3,8 +3,25 @@
 // options
 
 struct mhd_options {
+  int eqn;
   int riemann;
 };
+
+// ----------------------------------------------------------------------
+// eqn
+
+static struct mrc_param_select opt_eqn_descr[] _mrc_unused = {
+  { .val = OPT_EQN_MHD_FCONS    , .str = "mhd_fcons"   },
+  { .val = OPT_EQN_MHD_SCONS    , .str = "mhd_scons"   },
+  { .val = OPT_EQN_HD           , .str = "hd"          },
+  {},
+};
+
+#ifdef OPT_EQN
+static const int s_opt_eqn = OPT_EQN;
+#else
+static int s_opt_eqn _mrc_unused;
+#endif
 
 // ----------------------------------------------------------------------
 // riemann

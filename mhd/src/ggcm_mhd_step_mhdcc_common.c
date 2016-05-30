@@ -21,6 +21,8 @@
 
 #include "pde/pde_defs.h"
 
+#define OPT_EQN OPT_EQN_MHD_FCONS
+
 #include "pde/pde_setup.c"
 #include "pde/pde_mhd_setup.c"
 #include "pde/pde_mhd_line.c"
@@ -153,7 +155,7 @@ flux_riemann(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3],
   pick_line_fc_cc(U_r, U3d_r[dir], ldim, l, r, j, k, dir, p);
   mhd_prim_from_fc(W_l, U_l, ldim, l, r);
   mhd_prim_from_fc(W_r, U_r, ldim, l, r);
-  mhd_riemann_run_fc(F, U_l, U_r, W_l, W_r, ldim, l, r, dir);
+  mhd_riemann(F, U_l, U_r, W_l, W_r, ldim, l, r, dir);
   put_line_fc_cc(fluxes[dir], F, ldim, l, r, j, k, dir, p);
 }
 
@@ -264,6 +266,8 @@ ggcm_mhd_step_mhdcc_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_step_mhdcc, x)
 static struct param ggcm_mhd_step_mhdcc_descr[] = {
+  { "eqn"                , VAR(opt.eqn)            , PARAM_SELECT(OPT_EQN,
+								  opt_eqn_descr)                },
   { "riemann"            , VAR(opt.riemann)        , PARAM_SELECT(OPT_RIEMANN_RUSANOV,
 								  opt_riemann_descr)            },
 
