@@ -450,21 +450,6 @@ fluxes_hlld_fc(mrc_fld_data_t F[8], mrc_fld_data_t Ul[8], mrc_fld_data_t Ur[8],
 }
 
 // ----------------------------------------------------------------------
-// mhd_riemann_rusanov_run_fc
-
-static void _mrc_unused
-mhd_riemann_rusanov_run_fc(fld1d_state_t F,
-			   fld1d_state_t U_l, fld1d_state_t U_r,
-			   fld1d_state_t W_l, fld1d_state_t W_r,
-			   int ldim, int l, int r, int dim)
-{
-  for (int i = -l; i < ldim + r; i++) {
-    fluxes_rusanov_fc(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
-		      &F1S(W_l, 0, i), &F1S(W_r, 0, i));
-  }
-}
-
-// ----------------------------------------------------------------------
 // mhd_riemann_rusanov_run_hydro
 
 static void _mrc_unused
@@ -476,21 +461,6 @@ mhd_riemann_rusanov_run_hydro(fld1d_state_t F,
   for (int i = -l; i < ldim + r; i++) {
     fluxes_rusanov_hydro(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
 			 &F1S(W_l, 0, i), &F1S(W_r, 0, i));
-  }
-}
-
-// ----------------------------------------------------------------------
-// mhd_riemann_hll_run_fc
-
-static void _mrc_unused
-mhd_riemann_hll_run_fc(fld1d_state_t F,
-		       fld1d_state_t U_l, fld1d_state_t U_r,
-		       fld1d_state_t W_l, fld1d_state_t W_r,
-		       int ldim, int l, int r, int dim)
-{
-  for (int i = -l; i < ldim + r; i++) {
-    fluxes_hll_fc(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
-		  &F1S(W_l, 0, i), &F1S(W_r, 0, i));
   }
 }
 
@@ -548,9 +518,15 @@ mhd_riemann_run_fc(fld1d_state_t F, fld1d_state_t U_l, fld1d_state_t U_r,
 		   int ldim, int l, int r, int dim)
 {
   if (s_opt_riemann == OPT_RIEMANN_RUSANOV) {
-    return mhd_riemann_rusanov_run_fc(F, U_l, U_r, W_l, W_r, ldim, l, r, dim);
+    for (int i = -l; i < ldim + r; i++) {
+      fluxes_rusanov_fc(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
+			&F1S(W_l, 0, i), &F1S(W_r, 0, i));
+    }
   } else if (s_opt_riemann == OPT_RIEMANN_HLL) {
-    return mhd_riemann_hll_run_fc(F, U_l, U_r, W_l, W_r, ldim, l, r, dim);
+    for (int i = -l; i < ldim + r; i++) {
+      fluxes_hll_fc(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
+		    &F1S(W_l, 0, i), &F1S(W_r, 0, i));
+    }
   } else {
     assert(0);
   }

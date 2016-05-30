@@ -35,6 +35,8 @@
 // ggcm_mhd_step subclass "mhdcc"
 
 struct ggcm_mhd_step_mhdcc {
+  struct mhd_options opt;
+
   fld1d_state_t U;
   fld1d_state_t U_l;
   fld1d_state_t U_r;
@@ -97,7 +99,10 @@ ggcm_mhd_step_mhdcc_destroy(struct ggcm_mhd_step *step)
 static void
 ggcm_mhd_step_mhdcc_setup_flds(struct ggcm_mhd_step *step)
 {
+  struct ggcm_mhd_step_mhdcc *sub = ggcm_mhd_step_mhdcc(step);
   struct ggcm_mhd *mhd = step->mhd;
+
+  pde_mhd_set_options(mhd, &sub->opt);
 
   mrc_fld_set_type(mhd->fld, FLD_TYPE);
   mrc_fld_set_param_int(mhd->fld, "nr_ghosts", 2);
@@ -148,7 +153,7 @@ flux_riemann(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3],
   pick_line_fc_cc(U_r, U3d_r[dir], ldim, l, r, j, k, dir, p);
   mhd_prim_from_fc(W_l, U_l, ldim, l, r);
   mhd_prim_from_fc(W_r, U_r, ldim, l, r);
-  mhd_riemann_rusanov_run_fc(F, U_l, U_r, W_l, W_r, ldim, l, r, dir);
+  mhd_riemann_run_fc(F, U_l, U_r, W_l, W_r, ldim, l, r, dir);
   put_line_fc_cc(fluxes[dir], F, ldim, l, r, j, k, dir, p);
 }
 
@@ -259,7 +264,10 @@ ggcm_mhd_step_mhdcc_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_step_mhdcc, x)
 static struct param ggcm_mhd_step_mhdcc_descr[] = {
-  { "debug_dump"      , VAR(debug_dump)      , PARAM_BOOL(false)            },
+  { "riemann"            , VAR(opt.riemann)        , PARAM_SELECT(OPT_RIEMANN_RUSANOV,
+								  opt_riemann_descr)            },
+
+  { "debug_dump"         , VAR(debug_dump)         , PARAM_BOOL(false)                          },
   {},
 };
 #undef VAR

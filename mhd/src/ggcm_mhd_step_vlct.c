@@ -35,6 +35,8 @@ static int ldims[3];
 // ggcm_mhd_step subclass "vlct"
 
 struct ggcm_mhd_step_vlct {
+  struct mhd_options opt;
+
   bool debug_dump;
 
   struct mrc_fld *Bxi;
@@ -200,7 +202,7 @@ flux_pred(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld *x
   mhd_prim_from_fc(W, U, ldim, nghost, nghost);
   mhd_reconstruct_pcm_run_fc(U_l, U_r, W_l, W_r, W, Bxi,
 			     ldim, nghost - 1, nghost, dir);
-  mhd_riemann_hll_run_fc(F, U_l, U_r, W_l, W_r, ldim, nghost - 1, nghost, dir);
+  mhd_riemann_run_fc(F, U_l, U_r, W_l, W_r, ldim, nghost - 1, nghost, dir);
   put_line_fc(flux[dir], F, ldim, nghost - 1, nghost, j, k, dir, p);
 }
 
@@ -218,7 +220,7 @@ flux_corr(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld *x
   mhd_prim_from_fc(W, U, ldim, nghost - 1, nghost - 1);
   mhd_reconstruct_plm_run_fc(U_l, U_r, W_l, W_r, W, Bxi,
 			     ldim, 1, 1, dir);
-  mhd_riemann_hll_run_fc(F, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
+  mhd_riemann_run_fc(F, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
   put_line_fc(flux[dir], F, ldim, 0, 1, j, k, dir, p);
 }
 
@@ -598,7 +600,10 @@ ggcm_mhd_step_vlct_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 static void
 ggcm_mhd_step_vlct_setup_flds(struct ggcm_mhd_step *step)
 {
+  struct ggcm_mhd_step_vlct *sub = ggcm_mhd_step_vlct(step);
   struct ggcm_mhd *mhd = step->mhd;
+
+  pde_mhd_set_options(mhd, &sub->opt);
 
   mrc_fld_set_type(mhd->fld, FLD_TYPE);
   mrc_fld_set_param_int(mhd->fld, "nr_ghosts", 4);
@@ -677,9 +682,12 @@ ggcm_mhd_step_vlct_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_step_vlct, x)
 static struct param ggcm_mhd_step_vlct_descr[] = {
-  { "debug_dump"      , VAR(debug_dump)      , PARAM_BOOL(false)            },
+  { "riemann"            , VAR(opt.riemann)        , PARAM_SELECT(OPT_RIEMANN_HLL,
+								  opt_riemann_descr)            },
 
-  { "Bxi"             , VAR(Bxi)             , MRC_VAR_OBJ(mrc_fld)         },
+  { "debug_dump"         , VAR(debug_dump)         , PARAM_BOOL(false)                          },
+
+  { "Bxi"                , VAR(Bxi)                , MRC_VAR_OBJ(mrc_fld)                       },
   {},
 };
 #undef VAR
