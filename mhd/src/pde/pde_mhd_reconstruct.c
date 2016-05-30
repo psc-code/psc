@@ -17,8 +17,8 @@ mhd_reconstruct_pcm_run_sc(fld1d_state_t U_l, fld1d_state_t U_r,
     }
   }
 
-  mhd_sc_from_prim(U_l, W_l, ldim, l, r);
-  mhd_sc_from_prim(U_r, W_r, ldim, l, r);
+  mhd_cons_from_prim(U_l, W_l, ldim, l, r);
+  mhd_cons_from_prim(U_r, W_r, ldim, l, r);
 }
 
 // ----------------------------------------------------------------------
@@ -40,8 +40,8 @@ mhd_reconstruct_pcm_run_fc(fld1d_state_t U_l, fld1d_state_t U_r,
   }
 
   // CHECKME, seems inconsistent to use cell-centered Bx here, then replace it afterwards
-  mhd_fc_from_prim(U_l, W_l, ldim, l, r);
-  mhd_fc_from_prim(U_r, W_r, ldim, l, r);
+  mhd_cons_from_prim(U_l, W_l, ldim, l, r);
+  mhd_cons_from_prim(U_r, W_r, ldim, l, r);
 
   if (Bxi) {
     for (int i = -l; i < ldim + r; i++) {
@@ -92,8 +92,8 @@ mhd_reconstruct_plm_run_sc(fld1d_state_t U_l, fld1d_state_t U_r,
     }
   }
 
-  mhd_sc_from_prim(U_l, W_l, ldim, 0, 1);
-  mhd_sc_from_prim(U_r, W_r, ldim, 0, 1);
+  mhd_cons_from_prim(U_l, W_l, ldim, 0, 1);
+  mhd_cons_from_prim(U_r, W_r, ldim, 0, 1);
 }
 
 // ----------------------------------------------------------------------
@@ -140,7 +140,7 @@ mhd_reconstruct_plm_run_fc(fld1d_state_t U_l, fld1d_state_t U_r,
     }
   }
 
-  mhd_fc_from_prim(U_l, W_l, ldim, l, r+1);
-  mhd_fc_from_prim(U_r, W_r, ldim, l, r+1);
+  mhd_cons_from_prim(U_l, W_l, ldim, l, r+1);
+  mhd_cons_from_prim(U_r, W_r, ldim, l, r+1);
 }
 
