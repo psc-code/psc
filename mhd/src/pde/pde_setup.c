@@ -25,7 +25,7 @@ static int s_dijk[3];  // set to 1 if actual direction, 0 if invariant
 // ----------------------------------------------------------------------
 // pde_setup
 
-static void _mrc_unused
+static void
 pde_setup(struct mrc_fld *fld)
 {
   s_n_ghosts = fld->_nr_ghosts;
