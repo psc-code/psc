@@ -7,15 +7,14 @@
 // mhd_prim_from_fc
 
 static void _mrc_unused
-mhd_prim_from_fc(struct ggcm_mhd *mhd, fld1d_state_t W, fld1d_state_t U,
-		 int ldim, int l, int r)
+mhd_prim_from_fc(fld1d_state_t W, fld1d_state_t U, int ldim, int l, int r)
 {
-  mrc_fld_data_t gamma_minus_1 = mhd->par.gamm - 1.;
+  mrc_fld_data_t gamma_minus_1 = s_gamma - 1.f;
 
   for (int i = -l; i < ldim + r; i++) {
     mrc_fld_data_t *w = &F1S(W, 0, i), *u = &F1S(U, 0, i);
 
-    mrc_fld_data_t rri = 1. / u[RR];
+    mrc_fld_data_t rri = 1.f / u[RR];
     w[RR] = u[RR];
     w[VX] = u[RVX] * rri;
     w[VY] = u[RVY] * rri;
@@ -34,10 +33,9 @@ mhd_prim_from_fc(struct ggcm_mhd *mhd, fld1d_state_t W, fld1d_state_t U,
 // mhd_fc_from_prim
 
 static void _mrc_unused
-mhd_fc_from_prim(struct ggcm_mhd *mhd, fld1d_state_t U, fld1d_state_t W,
-		    int ldim, int l, int r)
+mhd_fc_from_prim(fld1d_state_t U, fld1d_state_t W, int ldim, int l, int r)
 {
-  mrc_fld_data_t gamma_minus_1 = mhd->par.gamm - 1.;
+  mrc_fld_data_t gamma_minus_1 = s_gamma - 1.f;
 
   for (int i = -l; i < ldim + r; i++) {
     mrc_fld_data_t *u = &F1S(U, 0, i), *w = &F1S(W, 0, i);
@@ -61,15 +59,14 @@ mhd_fc_from_prim(struct ggcm_mhd *mhd, fld1d_state_t U, fld1d_state_t W,
 // mhd_prim_from_sc
 
 static void _mrc_unused
-mhd_prim_from_sc(struct ggcm_mhd *mhd, fld1d_state_t W, fld1d_state_t U,
-		 int ldim, int l, int r)
+mhd_prim_from_sc(fld1d_state_t W, fld1d_state_t U, int ldim, int l, int r)
 {
-  mrc_fld_data_t gamma_minus_1 = mhd->par.gamm - 1.;
+  mrc_fld_data_t gamma_minus_1 = s_gamma - 1.f;
 
   for (int i = -l; i < ldim + r; i++) {
     mrc_fld_data_t *w = &F1S(W, 0, i), *u = &F1S(U, 0, i);
 
-    mrc_fld_data_t rri = 1. / u[RR];
+    mrc_fld_data_t rri = 1.f / u[RR];
     w[RR] = u[RR];
     w[VX] = rri * u[RVX];
     w[VY] = rri * u[RVY];
@@ -84,10 +81,9 @@ mhd_prim_from_sc(struct ggcm_mhd *mhd, fld1d_state_t W, fld1d_state_t U,
 // mhd_sc_from_prim
 
 static void _mrc_unused
-mhd_sc_from_prim(struct ggcm_mhd *mhd, fld1d_state_t U, fld1d_state_t W,
-		 int ldim, int l, int r)
+mhd_sc_from_prim(fld1d_state_t U, fld1d_state_t W, int ldim, int l, int r)
 {
-  mrc_fld_data_t gamma_minus_1 = mhd->par.gamm - 1.;
+  mrc_fld_data_t gamma_minus_1 = s_gamma - 1.f;
 
   for (int i = -l; i < ldim + r; i++) {
     mrc_fld_data_t *u = &F1S(U, 0, i), *w = &F1S(W, 0, i);
