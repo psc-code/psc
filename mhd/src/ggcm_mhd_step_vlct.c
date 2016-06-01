@@ -11,7 +11,6 @@
 #include <mrc_io.h>
 
 #include <mrc_fld_as_double.h>
-#define F1(f, m, i) MRC_D2(f, m, i)
 
 #include "pde/pde_defs.h"
 
@@ -41,8 +40,6 @@ struct ggcm_mhd_step_vlct {
 
   bool debug_dump;
 
-  struct mrc_fld *Bxi;
-
   fld1d_state_t U;
   fld1d_state_t U_l;
   fld1d_state_t U_r;
@@ -50,6 +47,7 @@ struct ggcm_mhd_step_vlct {
   fld1d_state_t W_l;
   fld1d_state_t W_r;
   fld1d_state_t F;
+  fld1d_t bx;
 };
 
 #define ggcm_mhd_step_vlct(step) mrc_to_subobj(step, struct ggcm_mhd_step_vlct)
@@ -197,15 +195,15 @@ fluxes_pred(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld 
   fld1d_state_t U = sub->U, U_l = sub->U_l, U_r = sub->U_r;
   fld1d_state_t W = sub->W, W_l = sub->W_l, W_r = sub->W_r;
   fld1d_state_t F = sub->F;
-  struct mrc_fld *Bxi = sub->Bxi;
+  fld1d_t bx = sub->bx;
 
   for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
     pde_for_each_dir(dir) {
       int ldim = s_ldims[dir];
       pde_for_each_line(dir, j, k, nghost) {
-	pick_line_fc(U, Bxi, x, B_cc, ldim, nghost, nghost, j, k, dir, p);
+	pick_line_fc(U, bx, x, B_cc, ldim, nghost, nghost, j, k, dir, p);
 	mhd_prim_from_cons(W, U, ldim, nghost, nghost);
-	mhd_reconstruct_pcm(U_l, U_r, W_l, W_r, W, Bxi, ldim, nghost - 1, nghost, dir);
+	mhd_reconstruct_pcm(U_l, U_r, W_l, W_r, W, bx, ldim, nghost - 1, nghost, dir);
 	mhd_riemann(F, U_l, U_r, W_l, W_r, ldim, nghost - 1, nghost, dir);
 	put_line_fc(flux[dir], F, ldim, nghost - 1, nghost, j, k, dir, p);
       }
@@ -220,15 +218,15 @@ fluxes_corr(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld 
   fld1d_state_t U = sub->U, U_l = sub->U_l, U_r = sub->U_r;
   fld1d_state_t W = sub->W, W_l = sub->W_l, W_r = sub->W_r;
   fld1d_state_t F = sub->F;
-  struct mrc_fld *Bxi = sub->Bxi;
+  fld1d_t bx = sub->bx;
 
   for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
     pde_for_each_dir(dir) {
       int ldim = s_ldims[dir];
       pde_for_each_line(dir, j, k, 1) {
-	pick_line_fc(U, Bxi, x, B_cc, ldim, nghost - 1, nghost - 1, j, k, dir, p);
+	pick_line_fc(U, bx, x, B_cc, ldim, nghost - 1, nghost - 1, j, k, dir, p);
 	mhd_prim_from_cons(W, U, ldim, nghost - 1, nghost - 1);
-	mhd_reconstruct(U_l, U_r, W_l, W_r, W, Bxi, ldim, 1, 1, dir);
+	mhd_reconstruct(U_l, U_r, W_l, W_r, W, bx, ldim, 1, 1, dir);
 	mhd_riemann(F, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
 	put_line_fc(flux[dir], F, ldim, 0, 1, j, k, dir, p);
       }
@@ -248,8 +246,6 @@ ggcm_mhd_step_vlct_setup(struct ggcm_mhd_step *step)
   pde_setup(mhd->fld);
   pde_mhd_setup(mhd);
 
-  setup_mrc_fld_1d(sub->Bxi, mhd->fld, 1);
-
   fld1d_state_setup(&sub->U);
   fld1d_state_setup(&sub->U_l);
   fld1d_state_setup(&sub->U_r);
@@ -257,6 +253,7 @@ ggcm_mhd_step_vlct_setup(struct ggcm_mhd_step *step)
   fld1d_state_setup(&sub->W_l);
   fld1d_state_setup(&sub->W_r);
   fld1d_state_setup(&sub->F);
+  fld1d_setup(&sub->bx);
 
   mhd->ymask = ggcm_mhd_get_3d_fld(mhd, 1);
   mrc_fld_set(mhd->ymask, 1.);
@@ -702,8 +699,6 @@ static struct param ggcm_mhd_step_vlct_descr[] = {
 								  opt_riemann_descr)            },
 
   { "debug_dump"         , VAR(debug_dump)         , PARAM_BOOL(false)                          },
-
-  { "Bxi"                , VAR(Bxi)                , MRC_VAR_OBJ(mrc_fld)                       },
   {},
 };
 #undef VAR

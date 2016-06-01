@@ -22,9 +22,34 @@ mrc_fld_create_1d(int nr_comps, int size)
 }
 
 // ======================================================================
+// fld1d_t
+//
+// 1d line of mrc_fld_data_t, access with F1()
+
+typedef struct {
+  struct mrc_fld *mrc_fld;
+} fld1d_t;
+
+#define F1(f, i) MRC_FLD_F1((f).mrc_fld, 0, i)
+
+static inline void
+fld1d_setup(fld1d_t *f)
+{
+  assert(!f->mrc_fld);
+
+  f->mrc_fld = mrc_fld_create_1d(1, s_size_1d);
+}
+
+static inline bool
+fld1d_is_setup(fld1d_t f)
+{
+  return f.mrc_fld;
+}
+
+// ======================================================================
 // fld1d_state_t
 //
-// 1d line of s_n_comp doubles, access with F1S
+// 1d line of s_n_comp mrc_fld_data_t, access with F1S
 
 typedef struct {
   struct mrc_fld *mrc_fld;

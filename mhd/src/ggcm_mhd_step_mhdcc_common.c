@@ -1,6 +1,5 @@
 
 #include <mrc_fld_as_double.h>
-#define F1(f, m, i) MRC_D2(f, m, i)
 
 #define ggcm_mhd_step_mhdcc_ops ggcm_mhd_step_mhdcc_double_ops
 #define ggcm_mhd_step_mhdcc_name "mhdcc_double"
@@ -130,7 +129,7 @@ flux_reconstruct(struct ggcm_mhd_step *step,
   pick_line_fc_cc(U, x, ldim, bnd + 2, bnd + 2, j, k, dir, p);
   mhd_prim_from_cons(W, U, ldim, bnd + 2, bnd + 2);
   int l = bnd, r = bnd + 1;
-  mhd_reconstruct(U_l, U_r, W_l, W_r, W, NULL, ldim, l, r, dir);
+  mhd_reconstruct(U_l, U_r, W_l, W_r, W, (fld1d_t) {}, ldim, l, r, dir);
   put_line_fc_cc(U3d_l[dir], U_l, ldim, l, r, j, k, dir, p);
   put_line_fc_cc(U3d_r[dir], U_r, ldim, l, r, j, k, dir, p);
 }

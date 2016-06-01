@@ -5,7 +5,7 @@
 static void _mrc_unused
 mhd_reconstruct_pcm(fld1d_state_t U_l, fld1d_state_t U_r,
 		    fld1d_state_t W_l, fld1d_state_t W_r,
-		    fld1d_state_t W, struct mrc_fld *Bxi,
+		    fld1d_state_t W, fld1d_t bx,
 		    int ldim, int l, int r, int dir)
 {
   for (int i = -l; i < ldim + r; i++) {
@@ -21,11 +21,11 @@ mhd_reconstruct_pcm(fld1d_state_t U_l, fld1d_state_t U_r,
   mhd_cons_from_prim(U_l, W_l, ldim, l, r);
   mhd_cons_from_prim(U_r, W_r, ldim, l, r);
 
-  // if not doing fully conservative, Bxi will be NULL, so the following will be skipped
-  if (Bxi) {
+  // if not doing fully conservative, bx will be NULL, so the following will be skipped
+  if (fld1d_is_setup(bx)) {
     for (int i = -l; i < ldim + r; i++) {
-      F1S(W_l, BX, i) = F1(Bxi, 0, i);
-      F1S(W_r, BX, i) = F1(Bxi, 0, i);
+      F1S(W_l, BX, i) = F1(bx, i);
+      F1S(W_r, BX, i) = F1(bx, i);
     }
   }
 }
@@ -37,7 +37,7 @@ mhd_reconstruct_pcm(fld1d_state_t U_l, fld1d_state_t U_r,
 static void _mrc_unused
 mhd_reconstruct_plm(fld1d_state_t U_l, fld1d_state_t U_r,
 		    fld1d_state_t W_l, fld1d_state_t W_r,
-		    fld1d_state_t W, struct mrc_fld *Bxi,
+		    fld1d_state_t W, fld1d_t bx,
 		    int ldim, int l, int r, int dir)
 {
   mrc_fld_data_t dWc[s_n_comps], dWl[s_n_comps];
@@ -69,9 +69,9 @@ mhd_reconstruct_plm(fld1d_state_t U_l, fld1d_state_t U_r,
       F1S(W_r, n, i  ) = F1S(W, n, i) - .5 * dWm[n];
     }
 
-    if (Bxi) {
-      F1S(W_l, BX, i) = F1(Bxi, 0, i);
-      F1S(W_r, BX, i) = F1(Bxi, 0, i);
+    if (fld1d_is_setup(bx)) {
+      F1S(W_l, BX, i) = F1(bx, i);
+      F1S(W_r, BX, i) = F1(bx, i);
     }
   }
 
@@ -85,13 +85,13 @@ mhd_reconstruct_plm(fld1d_state_t U_l, fld1d_state_t U_r,
 static void _mrc_unused
 mhd_reconstruct(fld1d_state_t U_l, fld1d_state_t U_r,
 		fld1d_state_t W_l, fld1d_state_t W_r,
-		fld1d_state_t W, struct mrc_fld *Bxi,
+		fld1d_state_t W, fld1d_t bx,
 		int ldim, int l, int r, int dir)
 {
   if (s_opt_limiter == OPT_LIMITER_FLAT) {
-    mhd_reconstruct_pcm(U_l, U_r, W_l, W_r, W, Bxi, ldim, l, r, dir);
+    mhd_reconstruct_pcm(U_l, U_r, W_l, W_r, W, bx, ldim, l, r, dir);
   } else if (s_opt_limiter == OPT_LIMITER_GMINMOD) {
-    mhd_reconstruct_plm(U_l, U_r, W_l, W_r, W, Bxi, ldim, l, r, dir);
+    mhd_reconstruct_plm(U_l, U_r, W_l, W_r, W, bx, ldim, l, r, dir);
   } else {
     assert(0);
   }

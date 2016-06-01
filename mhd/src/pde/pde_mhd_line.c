@@ -66,8 +66,7 @@ put_line_fc_cc(struct mrc_fld *flux, fld1d_state_t F,
 // pick_line_fc
 
 static void _mrc_unused
-pick_line_fc(fld1d_state_t u
-, struct mrc_fld *Bxi,
+pick_line_fc(fld1d_state_t u, fld1d_t bx,
 	     struct mrc_fld *U, struct mrc_fld *Bcc,
 	     int ldim, int l, int r, int j, int k, int dir, int p)
 {
@@ -82,7 +81,7 @@ pick_line_fc(fld1d_state_t u
       F1S(u, BX , i) = M3(Bcc, X    , I,J,K, p);	       \
       F1S(u, BY , i) = M3(Bcc, Y    , I,J,K, p);	       \
       F1S(u, BZ , i) = M3(Bcc, Z    , I,J,K, p);	       \
-      F1(Bxi, 0, i)  = M3(U, BX+X   , I,J,K, p);	       \
+      F1(bx, i)      = M3(U, BX+X   , I,J,K, p);	       \
     }							       \
   } while (0)
   if (dir == 0) {

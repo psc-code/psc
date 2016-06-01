@@ -11,7 +11,6 @@
 #include <mrc_io.h>
 
 #include <mrc_fld_as_double.h>
-#define F1(f, m, i) MRC_D2(f, m, i)
 
 #include "pde/pde_defs.h"
 
@@ -63,7 +62,7 @@ fluxes_pred(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld 
       pde_for_each_line(dir, j, k, 0) {
 	pick_line_sc(U, x, ldim, 2, 2, j, k, dir, p);
 	mhd_prim_from_cons(W, U, ldim, 2, 2); // for up to plm reconstruction
-	mhd_reconstruct_pcm(U_l, U_r, W_l, W_r, W, NULL, ldim, 1, 1, dir);
+	mhd_reconstruct_pcm(U_l, U_r, W_l, W_r, W, (fld1d_t) {}, ldim, 1, 1, dir);
 	mhd_riemann(F, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
 	put_line_sc(flux[dir], F, ldim, 0, 1, j, k, dir, p);
       }
@@ -85,7 +84,7 @@ fluxes_corr(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld 
       pde_for_each_line(dir, j, k, 0) {
 	pick_line_sc(U, x, ldim, 2, 2, j, k, dir, p);
 	mhd_prim_from_cons(W, U, ldim, 2, 2); // for up to plm reconstruction
-	mhd_reconstruct(U_l, U_r, W_l, W_r, W, NULL, ldim, 1, 1, dir);
+	mhd_reconstruct(U_l, U_r, W_l, W_r, W, (fld1d_t) {}, ldim, 1, 1, dir);
 	mhd_riemann(F, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
 	put_line_sc(flux[dir], F, ldim, 0, 1, j, k, dir, p);
       }
