@@ -165,19 +165,6 @@ ggcm_mhd_step_c3_primvar(struct ggcm_mhd_step *step, struct mrc_fld *prim,
 }
 
 // ----------------------------------------------------------------------
-// fluxes_cc
-
-static void
-fluxes_cc(mrc_fld_data_t F[5], mrc_fld_data_t U[5], mrc_fld_data_t W[5])
-{
-  F[RR]  = W[RR] * W[VX];
-  F[RVX] = W[RR] * W[VX] * W[VX];
-  F[RVY] = W[RR] * W[VY] * W[VX];
-  F[RVZ] = W[RR] * W[VZ] * W[VX];
-  F[UU]  = (U[UU] + W[PP]) * W[VX];
-}
-
-// ----------------------------------------------------------------------
 // mhd_cc_fluxes
 
 static void  
@@ -186,7 +173,7 @@ mhd_cc_fluxes(struct ggcm_mhd_step *step, fld1d_state_t F,
 	      int ldim, int l, int r, int dim)
 {
   for (int i = -l; i < ldim + r; i++) {					\
-    fluxes_cc(&F1S(F, 0, i), &F1S(U, 0, i), &F1S(W, 0, i));		\
+    fluxes_mhd_scons(&F1S(F, 0, i), &F1S(U, 0, i), &F1S(W, 0, i));		\
   }									\
 }
 
