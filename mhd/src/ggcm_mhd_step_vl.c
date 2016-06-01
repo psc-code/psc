@@ -62,7 +62,7 @@ fluxes_pred(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld 
       pde_for_each_line(dir, j, k, 0) {
 	pick_line_sc(U, x, ldim, 2, 2, j, k, dir, p);
 	mhd_prim_from_cons(W, U, ldim, 2, 2); // for up to plm reconstruction
-	mhd_reconstruct_pcm(U_l, U_r, W_l, W_r, W, (fld1d_t) {}, ldim, 1, 1, dir);
+	mhd_reconstruct_pcm(U_l, U_r, W_l, W_r, W, (fld1d_t) {}, ldim, 0, 1, dir);
 	mhd_riemann(F, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
 	put_line_sc(flux[dir], F, ldim, 0, 1, j, k, dir, p);
       }
@@ -84,7 +84,7 @@ fluxes_corr(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld 
       pde_for_each_line(dir, j, k, 0) {
 	pick_line_sc(U, x, ldim, 2, 2, j, k, dir, p);
 	mhd_prim_from_cons(W, U, ldim, 2, 2); // for up to plm reconstruction
-	mhd_reconstruct(U_l, U_r, W_l, W_r, W, (fld1d_t) {}, ldim, 1, 1, dir);
+	mhd_reconstruct(U_l, U_r, W_l, W_r, W, (fld1d_t) {}, ldim, 0, 1, dir);
 	mhd_riemann(F, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
 	put_line_sc(flux[dir], F, ldim, 0, 1, j, k, dir, p);
       }
@@ -170,6 +170,7 @@ ggcm_mhd_step_vl_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   ldims[2] = mrc_fld_spatial_dims(x)[2];
 
   struct mrc_fld *x_half = ggcm_mhd_get_3d_fld(mhd, 8);
+  mrc_fld_dict_add_int(x_half, "mhd_type", MT_FULLY_CONSERVATIVE_CC); // FIXME
   struct mrc_fld *flux[3] = { ggcm_mhd_get_3d_fld(mhd, 5),
 			      ggcm_mhd_get_3d_fld(mhd, 5),
 			      ggcm_mhd_get_3d_fld(mhd, 5), };
@@ -231,7 +232,7 @@ ggcm_mhd_step_vl_setup_flds(struct ggcm_mhd_step *step)
 
   mrc_fld_set_type(mhd->fld, FLD_TYPE);
   mrc_fld_set_param_int(mhd->fld, "nr_ghosts", 2);
-  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_FULLY_CONSERVATIVE);
+  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_FULLY_CONSERVATIVE_CC);  // FIXME
   mrc_fld_set_param_int(mhd->fld, "nr_comps", 8); // FIXME, should be 5, but needs testing
 }
 
