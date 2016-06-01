@@ -187,8 +187,13 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
 
   ggcm_mhd_fill_ghosts_reconstr(mhd, U_l, U_r);
 
-  mhd_fluxes_riemann(step, fluxes, U_l, U_r, NULL, 0, 0,
-		     flux_riemann);
+  for (int p = 0; p < mrc_fld_nr_patches(x_curr); p++) {
+    pde_for_each_dir(dir) {
+      pde_for_each_line(dir, j, k) {
+	flux_riemann(step, fluxes, U_l, U_r, x_curr, s_ldims[dir], 0, j, k, dir, p);
+       }
+    }
+  }
 
   update_finite_volume(mhd, x_next, fluxes, mhd->ymask, dt, true);
   
