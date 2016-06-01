@@ -8,7 +8,7 @@ bin_PROGRAMS = \
 	mhd_test_bnd_sphere \
 	mhd_double_tearing \
 	mhd_cosine \
-	mhd_sod \
+	mhd_shocktube \
 	mhd_bw \
 	mhd_ot \
 	mhd_harris \

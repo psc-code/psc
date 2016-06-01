@@ -1,6 +1,6 @@
 #!/bin/sh 
 
-mpirun -n 1 ../mhd_sod \
+mpirun -n 1 ../mhd_shocktube \
     \
     --mrc_domain_mx 512 \
     --mrc_domain_npx 1 \

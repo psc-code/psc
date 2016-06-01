@@ -3,7 +3,7 @@
 # FIXME: for this test, it shouldn't be necessary to zero initial b
 # field, since it's supposed to be hydro...
 
-mpirun -n 1 ../mhd_sod \
+mpirun -n 1 ../mhd_shocktube \
     \
     --mrc_domain_mx 128 \
     --mrc_domain_npx 1 \
