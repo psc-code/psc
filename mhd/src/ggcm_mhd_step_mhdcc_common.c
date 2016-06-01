@@ -179,7 +179,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
   // reconstruct
   for (int p = 0; p < mrc_fld_nr_patches(x_curr); p++) {
     pde_for_each_dir(dir) {
-      pde_for_each_line(dir, j, k) {
+      pde_for_each_line(dir, j, k, 0) {
 	flux_reconstruct(step, U_l, U_r, x_curr, NULL, s_ldims[dir], 0, j, k, dir, p);
        }
     }
@@ -190,7 +190,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
   // riemann solve
   for (int p = 0; p < mrc_fld_nr_patches(x_curr); p++) {
     pde_for_each_dir(dir) {
-      pde_for_each_line(dir, j, k) {
+      pde_for_each_line(dir, j, k, 0) {
 	flux_riemann(step, fluxes, U_l, U_r, x_curr, s_ldims[dir], 0, j, k, dir, p);
        }
     }

@@ -190,13 +190,25 @@ ggcm_mhd_step_vl_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
   // ghosts have already been set
   mrc_fld_copy_range(x_half, x, 0, 5);
-  mhd_fluxes(step, flux, x, NULL, 0, 99, flux_pred);
+  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+    pde_for_each_dir(dir) {
+      pde_for_each_line(dir, j, k, 0) {
+	flux_pred(step, flux, x, NULL, s_ldims[dir], 99, j, k, dir, p);
+      }
+    }
+  }
   update_finite_volume_uniform(mhd, x_half, flux, NULL, .5 * dt, 0, 0, false);
 
   // CORRECTOR
 
   ggcm_mhd_fill_ghosts(mhd, x_half, 0, mhd->time);
-  mhd_fluxes(step, flux, x_half, NULL, 0, 99, flux_corr);
+  for (int p = 0; p < mrc_fld_nr_patches(x_half); p++) {
+    pde_for_each_dir(dir) {
+      pde_for_each_line(dir, j, k, 0) {
+	flux_corr(step, flux, x_half, NULL, s_ldims[dir], 99, j, k, dir, p);
+      }
+    }
+  }
   update_finite_volume_uniform(mhd, x, flux, NULL, dt, 0, 0, true);
 
   // clean up

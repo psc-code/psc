@@ -569,7 +569,13 @@ ggcm_mhd_step_vlct_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   }
 
   mrc_fld_copy_range(x_half, x, 0, 8);
-  mhd_fluxes(step, flux, x, B_cc, nghost, nghost, flux_pred);
+  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+    pde_for_each_dir(dir) {
+      pde_for_each_line(dir, j, k, nghost) {
+	flux_pred(step, flux, x, B_cc, s_ldims[dir], nghost, j, k, dir, p);
+      }
+    }
+  }
   update_finite_volume_uniform(mhd, x_half, flux, mhd->ymask, .5 * dt, nghost - 1, nghost - 1, false);
   compute_E(step, E_ec, x, B_cc, flux, 4);
   ggcm_mhd_fill_ghosts_E(mhd, E_ec);
@@ -578,7 +584,13 @@ ggcm_mhd_step_vlct_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   // CORRECTOR
 
   compute_B_cc(B_cc, x_half, nghost - 1, nghost - 1);
-  mhd_fluxes(step, flux, x_half, B_cc, 1, nghost, flux_corr);
+  for (int p = 0; p < mrc_fld_nr_patches(x_half); p++) {
+    pde_for_each_dir(dir) {
+      pde_for_each_line(dir, j, k, 1) {
+	flux_corr(step, flux, x_half, B_cc, s_ldims[dir], nghost, j, k, dir, p);
+      }
+    }
+  }
   update_finite_volume_uniform(mhd, x, flux, mhd->ymask, dt, 0, 0, true);
   compute_E(step, E_ec, x_half, B_cc, flux, 4);
   ggcm_mhd_fill_ghosts_E(mhd, E_ec);

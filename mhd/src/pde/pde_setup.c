@@ -63,14 +63,20 @@ pde_setup(struct mrc_fld *fld)
 // ----------------------------------------------------------------------
 // pde_for_each_line
 
-#define pde_for_each_line(dir, j, k)					\
+#define pde_for_each_line(dir, j, k, sw)				\
   int j, k, *_i1, *_i2, _i1b, _i1e, _i2b, _i2e;				\
   if (dir == 0) {							\
-    _i1 = &j; _i2 = &k; _i1b = 0; _i2b = 0; _i1e = s_ldims[1]; _i2e = s_ldims[2]; \
+    _i1 = &j; _i2 = &k;							\
+    _i1b = s_sw[1] ? -sw : 0; _i1e = s_ldims[1] + (s_sw[1] ? sw : 0);	\
+    _i2b = s_sw[2] ? -sw : 0; _i2e = s_ldims[2] + (s_sw[2] ? sw : 0);	\
   } else if (dir == 1) {						\
-    _i1 = &k; _i2 = &j; _i1b = 0; _i2b = 0; _i1e = s_ldims[0]; _i2e = s_ldims[2]; \
+    _i1 = &k; _i2 = &j;							\
+    _i1b = s_sw[0] ? -sw : 0; _i1e = s_ldims[0] + (s_sw[0] ? sw : 0);	\
+    _i2b = s_sw[2] ? -sw : 0; _i2e = s_ldims[2] + (s_sw[2] ? sw : 0);	\
   } else if (dir == 2) {						\
-    _i1 = &j; _i2 = &k; _i1b = 0; _i2b = 0; _i1e = s_ldims[0]; _i2e = s_ldims[1]; \
+    _i1 = &j; _i2 = &k;							\
+    _i1b = s_sw[0] ? -sw : 0; _i1e = s_ldims[0] + (s_sw[0] ? sw : 0);	\
+    _i2b = s_sw[1] ? -sw : 0; _i2e = s_ldims[1] + (s_sw[1] ? sw : 0);	\
   } else {								\
     assert(0);								\
   }									\

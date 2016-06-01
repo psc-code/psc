@@ -910,7 +910,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
 #else
     for (int p = 0; p < mrc_fld_nr_patches(x_curr); p++) {
       pde_for_each_dir(dir) {
-	pde_for_each_line(dir, j, k) {
+	pde_for_each_line(dir, j, k, 0) {
 	  flux_pred(step, fluxes, x_curr, NULL, s_ldims[dir], 0, j, k, dir, p);
 	}
       }
@@ -919,7 +919,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
   } else {
     for (int p = 0; p < mrc_fld_nr_patches(x_curr); p++) {
       pde_for_each_dir(dir) {
-	pde_for_each_line(dir, j, k) {
+	pde_for_each_line(dir, j, k, 0) {
 	  flux_corr(step, fluxes, x_curr, NULL, s_ldims[dir], 0, j, k, dir, p);
 	}
       }
