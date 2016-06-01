@@ -51,3 +51,30 @@ pde_setup(struct mrc_fld *fld)
   }
 }
 
+// ======================================================================
+
+// ----------------------------------------------------------------------
+// pde_for_each_dir
+
+#define pde_for_each_dir(dir)			\
+      for (int dir = 0; dir < 3; dir++)		\
+	if (s_sw[dir] > 0)
+
+// ----------------------------------------------------------------------
+// pde_for_each_line
+
+#define pde_for_each_line(dir, j, k)					\
+  int j, k, *_i1, *_i2, _i1b, _i1e, _i2b, _i2e;				\
+  if (dir == 0) {							\
+    _i1 = &j; _i2 = &k; _i1b = 0; _i2b = 0; _i1e = s_ldims[1]; _i2e = s_ldims[2]; \
+  } else if (dir == 1) {						\
+    _i1 = &k; _i2 = &j; _i1b = 0; _i2b = 0; _i1e = s_ldims[0]; _i2e = s_ldims[2]; \
+  } else if (dir == 2) {						\
+    _i1 = &j; _i2 = &k; _i1b = 0; _i2b = 0; _i1e = s_ldims[0]; _i2e = s_ldims[1]; \
+  } else {								\
+    assert(0);								\
+  }									\
+  for (*_i2 = _i2b; *_i2 < _i2e; (*_i2)++)				\
+    for (*_i1 = _i1b; *_i1 < _i1e; (*_i1)++)
+
+
