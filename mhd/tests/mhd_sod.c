@@ -14,6 +14,12 @@
 struct ggcm_mhd_ic_sod {
   double rr_l, rr_r; // initial density 
   double pp_l, pp_r; // initial inside  pressure
+  double vx_l, vx_r; // initial vx
+  double vy_l, vy_r; // initial vy
+  double vz_l, vz_r; // initial vz
+  double bx;         // initial Bx
+  double by_l, by_r; // initial By
+  double bz_l, bz_r; // initial Bz
 };
 // ----------------------------------------------------------------------
 // ggcm_mhd_ic_sod_primitive
@@ -26,6 +32,12 @@ ggcm_mhd_ic_sod_primitive(struct ggcm_mhd_ic *ic, int m, double crd[3])
   switch (m) {
   case RR: return crd[0] < .5 ? sub->rr_l : sub->rr_r;
   case PP: return crd[0] < .5 ? sub->pp_l : sub->pp_r;
+  case VX: return crd[0] < .5 ? sub->vx_l : sub->vx_r;
+  case VY: return crd[0] < .5 ? sub->vy_l : sub->vy_r;
+  case VZ: return crd[0] < .5 ? sub->vz_l : sub->vz_r;
+  case BX: return sub->bx;
+  case BY: return crd[0] < .5 ? sub->by_l : sub->by_r;
+  case BZ: return crd[0] < .5 ? sub->bz_l : sub->bz_r;
   default: return 0.;
   }
 }
@@ -38,8 +50,19 @@ ggcm_mhd_ic_sod_primitive(struct ggcm_mhd_ic *ic, int m, double crd[3])
 static struct param ggcm_mhd_ic_sod_descr[] = {
   { "rr_l"        , VAR(rr_l)         , PARAM_DOUBLE(1.)    },
   { "rr_r"        , VAR(rr_r)         , PARAM_DOUBLE(.125)  },
-  { "pp_l"        , VAR(pp_l)         , PARAM_DOUBLE(1.0)   },
-  { "pp_r"        , VAR(pp_r)         , PARAM_DOUBLE(0.1)   },
+  { "pp_l"        , VAR(pp_l)         , PARAM_DOUBLE(1.)    },
+  { "pp_r"        , VAR(pp_r)         , PARAM_DOUBLE(.1)    },
+  { "vx_l"        , VAR(vx_l)         , PARAM_DOUBLE(0.)    },
+  { "vx_r"        , VAR(vx_r)         , PARAM_DOUBLE(0.)    },
+  { "vy_l"        , VAR(vy_l)         , PARAM_DOUBLE(0.)    },
+  { "vy_r"        , VAR(vy_r)         , PARAM_DOUBLE(0.)    },
+  { "vz_l"        , VAR(vz_l)         , PARAM_DOUBLE(0.)    },
+  { "vz_r"        , VAR(vz_r)         , PARAM_DOUBLE(0.)    },
+  { "bx"          , VAR(bx)           , PARAM_DOUBLE(.75)   },
+  { "by_l"        , VAR(by_l)         , PARAM_DOUBLE(1.)    },
+  { "by_r"        , VAR(by_r)         , PARAM_DOUBLE(-1.)   },
+  { "bz_l"        , VAR(bz_l)         , PARAM_DOUBLE(0.)    },
+  { "bz_r"        , VAR(bz_r)         , PARAM_DOUBLE(0.)    },
   {},
 };
 #undef VAR
@@ -64,6 +87,7 @@ static void
 ggcm_mhd_sod_create(struct ggcm_mhd *mhd)
 {
   ggcm_mhd_default_box(mhd);
+  mhd->par.gamm = 2.;
 
   ggcm_mhd_bnd_set_type(mhd->bnd, "open_x");
   mrc_domain_set_param_int(mhd->domain, "bcx", BC_NONE);
