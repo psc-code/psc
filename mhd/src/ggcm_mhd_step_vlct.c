@@ -191,8 +191,7 @@ compute_E(struct ggcm_mhd_step *step, struct mrc_fld *E,
 }
 
 static void
-flux_pred(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld *x, struct mrc_fld *B_cc,
-	  int ldim, int nghost, int j, int k, int dir, int p)
+fluxes_pred(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld *x, struct mrc_fld *B_cc)
 {
   struct ggcm_mhd_step_vlct *sub = ggcm_mhd_step_vlct(step);
   fld1d_state_t U = sub->U, U_l = sub->U_l, U_r = sub->U_r;
@@ -200,16 +199,22 @@ flux_pred(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld *x
   fld1d_state_t F = sub->F;
   struct mrc_fld *Bxi = sub->Bxi;
 
-  pick_line_fc(U, Bxi, x, B_cc, ldim, nghost, nghost, j, k, dir, p);
-  mhd_prim_from_cons(W, U, ldim, nghost, nghost);
-  mhd_reconstruct_pcm(U_l, U_r, W_l, W_r, W, Bxi, ldim, nghost - 1, nghost, dir);
-  mhd_riemann(F, U_l, U_r, W_l, W_r, ldim, nghost - 1, nghost, dir);
-  put_line_fc(flux[dir], F, ldim, nghost - 1, nghost, j, k, dir, p);
+  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+    pde_for_each_dir(dir) {
+      int ldim = s_ldims[dir];
+      pde_for_each_line(dir, j, k, nghost) {
+	pick_line_fc(U, Bxi, x, B_cc, ldim, nghost, nghost, j, k, dir, p);
+	mhd_prim_from_cons(W, U, ldim, nghost, nghost);
+	mhd_reconstruct_pcm(U_l, U_r, W_l, W_r, W, Bxi, ldim, nghost - 1, nghost, dir);
+	mhd_riemann(F, U_l, U_r, W_l, W_r, ldim, nghost - 1, nghost, dir);
+	put_line_fc(flux[dir], F, ldim, nghost - 1, nghost, j, k, dir, p);
+      }
+    }
+  }
 }
 
 static void
-flux_corr(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld *x, struct mrc_fld *B_cc,
-	  int ldim, int nghost, int j, int k, int dir, int p)
+fluxes_corr(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld *x, struct mrc_fld *B_cc)
 {
   struct ggcm_mhd_step_vlct *sub = ggcm_mhd_step_vlct(step);
   fld1d_state_t U = sub->U, U_l = sub->U_l, U_r = sub->U_r;
@@ -217,11 +222,18 @@ flux_corr(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld *x
   fld1d_state_t F = sub->F;
   struct mrc_fld *Bxi = sub->Bxi;
 
-  pick_line_fc(U, Bxi, x, B_cc, ldim, nghost - 1, nghost - 1, j, k, dir, p);
-  mhd_prim_from_cons(W, U, ldim, nghost - 1, nghost - 1);
-  mhd_reconstruct(U_l, U_r, W_l, W_r, W, Bxi, ldim, 1, 1, dir);
-  mhd_riemann(F, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
-  put_line_fc(flux[dir], F, ldim, 0, 1, j, k, dir, p);
+  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+    pde_for_each_dir(dir) {
+      int ldim = s_ldims[dir];
+      pde_for_each_line(dir, j, k, 1) {
+	pick_line_fc(U, Bxi, x, B_cc, ldim, nghost - 1, nghost - 1, j, k, dir, p);
+	mhd_prim_from_cons(W, U, ldim, nghost - 1, nghost - 1);
+	mhd_reconstruct(U_l, U_r, W_l, W_r, W, Bxi, ldim, 1, 1, dir);
+	mhd_riemann(F, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
+	put_line_fc(flux[dir], F, ldim, 0, 1, j, k, dir, p);
+      }
+    }
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -569,13 +581,7 @@ ggcm_mhd_step_vlct_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   }
 
   mrc_fld_copy_range(x_half, x, 0, 8);
-  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
-    pde_for_each_dir(dir) {
-      pde_for_each_line(dir, j, k, nghost) {
-	flux_pred(step, flux, x, B_cc, s_ldims[dir], nghost, j, k, dir, p);
-      }
-    }
-  }
+  fluxes_pred(step, flux, x, B_cc);
   update_finite_volume_uniform(mhd, x_half, flux, mhd->ymask, .5 * dt, nghost - 1, nghost - 1, false);
   compute_E(step, E_ec, x, B_cc, flux, 4);
   ggcm_mhd_fill_ghosts_E(mhd, E_ec);
@@ -584,13 +590,7 @@ ggcm_mhd_step_vlct_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   // CORRECTOR
 
   compute_B_cc(B_cc, x_half, nghost - 1, nghost - 1);
-  for (int p = 0; p < mrc_fld_nr_patches(x_half); p++) {
-    pde_for_each_dir(dir) {
-      pde_for_each_line(dir, j, k, 1) {
-	flux_corr(step, flux, x_half, B_cc, s_ldims[dir], nghost, j, k, dir, p);
-      }
-    }
-  }
+  fluxes_corr(step, flux, x_half, B_cc);
   update_finite_volume_uniform(mhd, x, flux, mhd->ymask, dt, 0, 0, true);
   compute_E(step, E_ec, x_half, B_cc, flux, 4);
   ggcm_mhd_fill_ghosts_E(mhd, E_ec);
@@ -664,7 +664,7 @@ ggcm_mhd_step_vlct_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
   }
 
   // Do convective term using the apprepriate fluxes to go cc -> ec
-  mhd_fluxes(step, flux, x, B_cc, nghost, nghost, flux_pred);
+  fluxes_pred(step, flux, x, B_cc);
   compute_E(step, Econv, x, B_cc, flux, 2);
 
   // add both electric fields together (glue the operators together)

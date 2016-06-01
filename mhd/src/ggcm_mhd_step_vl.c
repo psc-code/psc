@@ -50,35 +50,47 @@ struct ggcm_mhd_step_vl {
 // ======================================================================
 
 static void
-flux_pred(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld *x, struct mrc_fld *B_cc,
-	  int ldim, int nghost, int j, int k, int dir, int p)
+fluxes_pred(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld *x)
 {
   struct ggcm_mhd_step_vl *sub = ggcm_mhd_step_vl(step);
   fld1d_state_t U = sub->U, U_l = sub->U_l, U_r = sub->U_r;
   fld1d_state_t W = sub->W, W_l = sub->W_l, W_r = sub->W_r;
   fld1d_state_t F = sub->F;
 
-  pick_line_sc(U, x, ldim, 2, 2, j, k, dir, p);
-  mhd_prim_from_cons(W, U, ldim, 2, 2); // for up to plm reconstruction
-  mhd_reconstruct_pcm(U_l, U_r, W_l, W_r, W, NULL, ldim, 1, 1, dir);
-  mhd_riemann(F, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
-  put_line_sc(flux[dir], F, ldim, 0, 1, j, k, dir, p);
+  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+    pde_for_each_dir(dir) {
+      int ldim = s_ldims[dir];
+      pde_for_each_line(dir, j, k, 0) {
+	pick_line_sc(U, x, ldim, 2, 2, j, k, dir, p);
+	mhd_prim_from_cons(W, U, ldim, 2, 2); // for up to plm reconstruction
+	mhd_reconstruct_pcm(U_l, U_r, W_l, W_r, W, NULL, ldim, 1, 1, dir);
+	mhd_riemann(F, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
+	put_line_sc(flux[dir], F, ldim, 0, 1, j, k, dir, p);
+      }
+    }
+  }
 }
 
 static void
-flux_corr(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld *x, struct mrc_fld *B_cc,
-	  int ldim, int nghost, int j, int k, int dir, int p)
+fluxes_corr(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld *x)
 {
   struct ggcm_mhd_step_vl *sub = ggcm_mhd_step_vl(step);
   fld1d_state_t U = sub->U, U_l = sub->U_l, U_r = sub->U_r;
   fld1d_state_t W = sub->W, W_l = sub->W_l, W_r = sub->W_r;
   fld1d_state_t F = sub->F;
 
-  pick_line_sc(U, x, ldim, 2, 2, j, k, dir, p);
-  mhd_prim_from_cons(W, U, ldim, 2, 2); // for up to plm reconstruction
-  mhd_reconstruct(U_l, U_r, W_l, W_r, W, NULL, ldim, 1, 1, dir);
-  mhd_riemann(F, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
-  put_line_sc(flux[dir], F, ldim, 0, 1, j, k, dir, p);
+  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+    pde_for_each_dir(dir) {
+      int ldim = s_ldims[dir];
+      pde_for_each_line(dir, j, k, 0) {
+	pick_line_sc(U, x, ldim, 2, 2, j, k, dir, p);
+	mhd_prim_from_cons(W, U, ldim, 2, 2); // for up to plm reconstruction
+	mhd_reconstruct(U_l, U_r, W_l, W_r, W, NULL, ldim, 1, 1, dir);
+	mhd_riemann(F, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
+	put_line_sc(flux[dir], F, ldim, 0, 1, j, k, dir, p);
+      }
+    }
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -190,25 +202,13 @@ ggcm_mhd_step_vl_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
   // ghosts have already been set
   mrc_fld_copy_range(x_half, x, 0, 5);
-  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
-    pde_for_each_dir(dir) {
-      pde_for_each_line(dir, j, k, 0) {
-	flux_pred(step, flux, x, NULL, s_ldims[dir], 99, j, k, dir, p);
-      }
-    }
-  }
+  fluxes_pred(step, flux, x);
   update_finite_volume_uniform(mhd, x_half, flux, NULL, .5 * dt, 0, 0, false);
 
   // CORRECTOR
 
   ggcm_mhd_fill_ghosts(mhd, x_half, 0, mhd->time);
-  for (int p = 0; p < mrc_fld_nr_patches(x_half); p++) {
-    pde_for_each_dir(dir) {
-      pde_for_each_line(dir, j, k, 0) {
-	flux_corr(step, flux, x_half, NULL, s_ldims[dir], 99, j, k, dir, p);
-      }
-    }
-  }
+  fluxes_corr(step, flux, x);
   update_finite_volume_uniform(mhd, x, flux, NULL, dt, 0, 0, true);
 
   // clean up
