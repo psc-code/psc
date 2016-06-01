@@ -173,8 +173,48 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
 			     ggcm_mhd_get_3d_fld(mhd, 8),
 			     ggcm_mhd_get_3d_fld(mhd, 8), };
   
-  mhd_fluxes_reconstruct(step, U_l, U_r, x_curr, NULL, 0, 0,
-			 flux_reconstruct);
+  int gdims[3];
+  mrc_domain_get_global_dims(x_curr->_domain, gdims);
+
+  int bn = 0;
+  int bnd[3];
+  for (int d = 0; d < 3; d++) {
+    if (gdims[d] == 1) {
+      bnd[d] = 0;
+    } else {
+      bnd[d] = bn;
+    }
+  }
+
+  const int *ldims = mrc_fld_spatial_dims(x_curr);
+
+  // reconstruct
+  for (int p = 0; p < mrc_fld_nr_patches(x_curr); p++) {
+    if (gdims[0] > 1) {
+      for (int k = -bnd[2]; k < ldims[2] + bnd[2]; k++) {
+	for (int j = -bnd[1]; j < ldims[1] + bnd[1]; j++) {
+	  flux_reconstruct(step, U_l, U_r, x_curr, NULL, ldims[0], bn, j, k, 0, p);
+	}
+      }
+    }
+
+    if (gdims[1] > 1) {
+      for (int k = -bnd[2]; k < ldims[2] + bnd[2]; k++) {
+	for (int i = -bnd[0]; i < ldims[0] + bnd[0]; i++) {
+	  flux_reconstruct(step, U_l, U_r, x_curr, NULL, ldims[1], bn, k, i, 1, p);
+	}
+      }
+    }
+
+    if (gdims[2] > 1) {
+      for (int j = -bnd[1]; j < ldims[1] + bnd[1]; j++) {
+	for (int i = -bnd[0]; i < ldims[0] + bnd[0]; i++) {
+	  flux_reconstruct(step, U_l, U_r, x_curr, NULL, ldims[2], bn, i, j, 2, p);
+	}
+      }
+    }
+  }
+
   ggcm_mhd_fill_ghosts_reconstr(mhd, U_l, U_r);
 
   mhd_fluxes_riemann(step, fluxes, U_l, U_r, NULL, 0, 0,
