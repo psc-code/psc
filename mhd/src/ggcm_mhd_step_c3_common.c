@@ -181,12 +181,12 @@ fluxes_cc(mrc_fld_data_t F[5], mrc_fld_data_t U[5], mrc_fld_data_t W[5])
 // mhd_cc_fluxes
 
 static void  
-mhd_cc_fluxes(struct ggcm_mhd_step *step, struct mrc_fld *F_1d,
-	      struct mrc_fld *U_1d, struct mrc_fld *W_1d,
+mhd_cc_fluxes(struct ggcm_mhd_step *step, fld1d_state_t F,
+	      fld1d_state_t U, fld1d_state_t W,
 	      int ldim, int l, int r, int dim)
 {
   for (int i = -l; i < ldim + r; i++) {					\
-    fluxes_cc(&_F1(F_1d, 0, i), &_F1(U_1d, 0, i), &_F1(W_1d, 0, i));	\
+    fluxes_cc(&F1S(F, 0, i), &F1S(U, 0, i), &F1S(W, 0, i));		\
   }									\
 }
 
@@ -278,13 +278,13 @@ limit_hz(mrc_fld_data_t a2, mrc_fld_data_t aa, mrc_fld_data_t a1)
 }
 
 static void
-mhd_limit1(struct mrc_fld *lim1, struct mrc_fld *U_1d, struct mrc_fld *W_1d,
+mhd_limit1(fld1d_state_t lim1, fld1d_state_t U, fld1d_state_t W,
 	   int ldim, int l, int r, int dim)
 {
   for (int i = -l; i < ldim + r; i++) {
-    mrc_fld_data_t lim1_pp = limit_hz(_F1(W_1d, PP, i-1), _F1(W_1d, PP, i), _F1(W_1d, PP, i+1));
+    mrc_fld_data_t lim1_pp = limit_hz(F1S(W, PP, i-1), F1S(W, PP, i), F1S(W, PP, i+1));
     for (int m = 0; m < 5; m++) {
-      _F1(lim1, m, i) = fmaxf(limit_hz(_F1(U_1d, m, i-1), _F1(U_1d, m, i), _F1(U_1d, m, i+1)), 
+      F1S(lim1, m, i) = fmaxf(limit_hz(F1S(U, m, i-1), F1S(U, m, i), F1S(U, m, i+1)), 
 			      lim1_pp);
     }
   }
@@ -305,8 +305,10 @@ flux_corr(struct ggcm_mhd_step *step,
   mhd_prim_from_cons(W, U, ldim, 2, 2);
   mhd_reconstruct(U_l, U_r, W_l, W_r, W, (fld1d_t) {}, ldim, 1, 1, dir);
   mhd_riemann(F_lo, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
-  mhd_cc_fluxes(step, F_cc.mrc_fld, U.mrc_fld, W.mrc_fld, ldim, 2, 2, dir);
-  mhd_limit1(Lim1.mrc_fld, U.mrc_fld, W.mrc_fld, ldim, 1, 1, dir);
+
+  mhd_cc_fluxes(step, F_cc, U, W, ldim, 2, 2, dir);
+
+  mhd_limit1(Lim1, U, W, ldim, 1, 1, dir);
 
   mrc_fld_data_t s1 = 1. / 12.;
   mrc_fld_data_t s7 = 7. * s1;
