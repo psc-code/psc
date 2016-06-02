@@ -37,6 +37,7 @@
 
 struct ggcm_mhd_step_mhdcc {
   struct mhd_options opt;
+  bool debug_dump;
 
   fld1d_state_t U;
   fld1d_state_t U_l;
@@ -46,7 +47,7 @@ struct ggcm_mhd_step_mhdcc {
   fld1d_state_t W_r;
   fld1d_state_t F;
 
-  bool debug_dump;
+  struct mrc_fld *x_star;
 };
 
 #define ggcm_mhd_step_mhdcc(step) mrc_to_subobj(step, struct ggcm_mhd_step_mhdcc)
@@ -79,6 +80,9 @@ ggcm_mhd_step_mhdcc_setup(struct ggcm_mhd_step *step)
   mhd->ymask = ggcm_mhd_get_3d_fld(mhd, 1);
   mrc_fld_set(mhd->ymask, 1.);
 
+  sub->x_star = ggcm_mhd_get_3d_fld(mhd, s_n_comps);
+  mrc_fld_dict_add_int(sub->x_star, "mhd_type", MT_FULLY_CONSERVATIVE_CC);
+
   ggcm_mhd_step_setup_member_objs_sub(step);
   ggcm_mhd_step_setup_super(step);
 }
@@ -89,9 +93,11 @@ ggcm_mhd_step_mhdcc_setup(struct ggcm_mhd_step *step)
 static void
 ggcm_mhd_step_mhdcc_destroy(struct ggcm_mhd_step *step)
 {
+  struct ggcm_mhd_step_mhdcc *sub = ggcm_mhd_step_mhdcc(step);
   struct ggcm_mhd *mhd = step->mhd;
 
   ggcm_mhd_put_3d_fld(mhd, mhd->ymask);
+  ggcm_mhd_put_3d_fld(mhd, sub->x_star);
 }
 
 // ----------------------------------------------------------------------
@@ -226,9 +232,9 @@ ggcm_mhd_step_mhdcc_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
 static void
 ggcm_mhd_step_mhdcc_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 {
+  struct ggcm_mhd_step_mhdcc *sub = ggcm_mhd_step_mhdcc(step);
+  struct mrc_fld *x_star = sub->x_star;
   struct ggcm_mhd *mhd = step->mhd;
-  struct mrc_fld *x_half = ggcm_mhd_get_3d_fld(mhd, 8);
-  mrc_fld_dict_add_int(x_half, "mhd_type", MT_FULLY_CONSERVATIVE_CC);
 
   static int pr_A, pr_B;
   if (!pr_A) {
@@ -260,19 +266,17 @@ ggcm_mhd_step_mhdcc_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   prof_start(pr_A);
   ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
 
-  // set x_half = x^n, then advance to n+1/2
-  mrc_fld_copy_range(x_half, x, 0, 8);
-  pushstage_c(step, .5f * mhd->dt, x, x_half);
+  // set x_star = x^n, then advance to n+1/2
+  mrc_fld_copy_range(x_star, x, 0, 8);
+  pushstage_c(step, .5f * mhd->dt, x, x_star);
   prof_stop(pr_A);
 
   // --- CORRECTOR
   prof_start(pr_B);
-  ggcm_mhd_fill_ghosts(mhd, x_half, 0, mhd->time + mhd->bndt);
+  ggcm_mhd_fill_ghosts(mhd, x_star, 0, mhd->time + mhd->bndt);
 
-  pushstage_c(step, mhd->dt, x_half, x);
+  pushstage_c(step, mhd->dt, x_star, x);
   prof_stop(pr_B);
-
-  ggcm_mhd_put_3d_fld(mhd, x_half);
 }
 
 // ----------------------------------------------------------------------
