@@ -191,7 +191,7 @@ flux_pred(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3], struct mrc_fld 
 
   pick_line_sc(U, x, j, k, dir, p, -1, ldim + 1);
   mhd_prim_from_cons(W, U, -1, ldim + 1);
-  mhd_reconstruct(U_l, U_r, W_l, W_r, W, (fld1d_t) {}, ldim, 1, 1, dir);
+  mhd_reconstruct(U_l, U_r, W_l, W_r, W, (fld1d_t) {}, -1, ldim + 1);
   mhd_riemann(F, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
   put_line_sc(fluxes[dir], F, j, k, dir, p, 0, ldim + 1);
 }
@@ -290,7 +290,7 @@ flux_corr(struct ggcm_mhd_step *step,
 
   pick_line_sc(U, x, j, k, dir, p, -2, ldim + 2);
   mhd_prim_from_cons(W, U, -2, ldim + 2);
-  mhd_reconstruct(U_l, U_r, W_l, W_r, W, (fld1d_t) {}, ldim, 1, 1, dir);
+  mhd_reconstruct(U_l, U_r, W_l, W_r, W, (fld1d_t) {}, 0, ldim + 1);
   mhd_riemann(F_lo, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
 
   mhd_cc_fluxes(step, F_cc, U, W, ldim, 2, 2, dir);

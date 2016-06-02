@@ -136,7 +136,7 @@ mhd_flux_pt1(struct ggcm_mhd_step *step, struct mrc_fld *x,
   pick_line_fc_cc(U, x, j, k, dir, p, -(bnd + 2), ldim + (bnd + 2));
   mhd_prim_from_cons(W, U, -(bnd + 2), ldim + (bnd + 2));
   int l = bnd, r = bnd + 1;
-  mhd_reconstruct(U_l, U_r, W_l, W_r, W, (fld1d_t) {}, ldim, l, r, dir);
+  mhd_reconstruct(U_l, U_r, W_l, W_r, W, (fld1d_t) {}, -l, ldim + r);
 }
 
 // ----------------------------------------------------------------------
