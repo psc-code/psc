@@ -435,26 +435,25 @@ fluxes_hlld(mrc_fld_data_t F[8], mrc_fld_data_t Ul[8], mrc_fld_data_t Ur[8],
 
 static void
 mhd_riemann(fld1d_state_t F, fld1d_state_t U_l, fld1d_state_t U_r,
-	    fld1d_state_t W_l, fld1d_state_t W_r,
-	    int ldim, int l, int r, int dim)
+	    fld1d_state_t W_l, fld1d_state_t W_r, int ib, int ie)
 {
   if (s_opt_riemann == OPT_RIEMANN_RUSANOV) {
-    for (int i = -l; i < ldim + r; i++) {
+    for (int i = ib; i < ie; i++) {
       fluxes_rusanov(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
 		     &F1S(W_l, 0, i), &F1S(W_r, 0, i));
     }
   } else if (s_opt_riemann == OPT_RIEMANN_HLL) {
-    for (int i = -l; i < ldim + r; i++) {
+    for (int i = ib; i < ie; i++) {
       fluxes_hll(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
 		 &F1S(W_l, 0, i), &F1S(W_r, 0, i));
     }
   } else if (s_opt_riemann == OPT_RIEMANN_HLLC) {
-    for (int i = -l; i < ldim + r; i++) {
+    for (int i = ib; i < ie; i++) {
       fluxes_hllc(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
 		  &F1S(W_l, 0, i), &F1S(W_r, 0, i));
     }
   } else if (s_opt_riemann == OPT_RIEMANN_HLLD) {
-    for (int i = -l; i < ldim + r; i++) {
+    for (int i = ib; i < ie; i++) {
       fluxes_hlld(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),
 		  &F1S(W_l, 0, i), &F1S(W_r, 0, i));
     }
