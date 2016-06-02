@@ -30,5 +30,6 @@
 
 #define OPT_TIME_INTEGRATOR_EULER                   (1)
 #define OPT_TIME_INTEGRATOR_PREDCORR                (2)
+#define OPT_TIME_INTEGRATOR_TVD_RK2                 (3)
 
 #endif

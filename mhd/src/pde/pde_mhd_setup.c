@@ -63,6 +63,7 @@ static int s_opt_riemann _mrc_unused;
 static struct mrc_param_select opt_time_integrator_descr[] _mrc_unused = {
   { .val = OPT_TIME_INTEGRATOR_EULER   , .str = "euler"     },
   { .val = OPT_TIME_INTEGRATOR_PREDCORR, .str = "predcorr"  },
+  { .val = OPT_TIME_INTEGRATOR_TVD_RK2 , .str = "tvd_rk2"   },
   {},
 };
 

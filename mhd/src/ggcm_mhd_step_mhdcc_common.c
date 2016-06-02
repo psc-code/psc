@@ -277,6 +277,34 @@ ggcm_mhd_step_predcorr(struct ggcm_mhd_step *step, struct mrc_fld *x, double dt)
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_step_tvd_rk2
+
+static void
+ggcm_mhd_step_tvd_rk2(struct ggcm_mhd_step *step, struct mrc_fld *x, double dt)
+{
+  struct ggcm_mhd_step_mhdcc *sub = ggcm_mhd_step_mhdcc(step);
+  struct ggcm_mhd *mhd = step->mhd;
+  struct mrc_fld *x_star = sub->x_star;
+  
+  // set x* = x^n
+  mrc_fld_copy(x_star, x);
+
+  // stage 1
+  // advance x*
+  pushstage_c(step, dt, mhd->time, x_star, x_star);
+  // now x* = x^n + dt rhs(x^n)
+  
+  // stage 2
+  // advance x* again (now called x**)
+  pushstage_c(step, dt, mhd->time + mhd->bndt, x_star, x_star);
+  // now x** = x* + dt rhs(x*)
+  
+  // finally advance x^{n+1} = .5 * x** + .5 * x^n;
+  mrc_fld_axpby(x, .5, x_star, .5);
+}
+
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_step_mhdcc_run
 
 static void
@@ -288,6 +316,8 @@ ggcm_mhd_step_mhdcc_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
     ggcm_mhd_step_euler(step, x, mhd->dt);
   } else if (s_opt_time_integrator == OPT_TIME_INTEGRATOR_PREDCORR) {
     ggcm_mhd_step_predcorr(step, x, mhd->dt);
+  } else if (s_opt_time_integrator == OPT_TIME_INTEGRATOR_TVD_RK2) {
+    ggcm_mhd_step_tvd_rk2(step, x, mhd->dt);
   } else {
     assert(0);
   }
