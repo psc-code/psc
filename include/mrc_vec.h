@@ -31,6 +31,7 @@ void mrc_vec_put_array(struct mrc_vec *vec, void *arr);
 // Vector math operations
 void mrc_vec_axpy(struct mrc_vec *y, double alpha, struct mrc_vec *x);
 void mrc_vec_waxpy(struct mrc_vec *w, double alpha, struct mrc_vec *x, struct mrc_vec *y);
+void mrc_vec_axpby(struct mrc_vec *y, double alpha, struct mrc_vec *x, double beta);
 // Data management operations
 void mrc_vec_set(struct mrc_vec *x, double alpha);
 void mrc_vec_copy(struct mrc_vec *vec_to, struct mrc_vec *vec_from);

@@ -499,6 +499,23 @@ mrc_fld_waxpy(struct mrc_fld *w, float alpha, struct mrc_fld *x, struct mrc_fld 
 }
 
 // ----------------------------------------------------------------------
+// mrc_fld_axpby
+//
+// FIXME, does interior only, should have some way to specify
+// should use mrc_vec*
+
+void
+mrc_fld_axpby(struct mrc_fld *y, double a, struct mrc_fld *x, double b)
+{
+  if (a == 0. && b == 1.) { // nothing to do
+    return;
+  }
+
+  assert(mrc_fld_same_shape(x, y));
+  mrc_vec_axpby(y->_vec, a, x->_vec, b);
+}
+
+// ----------------------------------------------------------------------
 // mrc_fld_norm
 
 // FIXME, should return double

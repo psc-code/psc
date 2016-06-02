@@ -119,6 +119,8 @@ struct mrc_fld *mrc_fld_create_view_ext(struct mrc_fld *fld, int nr_dims, int *d
 					int *new_offs);
 struct mrc_fld *mrc_fld_make_view(struct mrc_fld *fld, int mb, int me);
 void mrc_fld_copy(struct mrc_fld *fld_to, struct mrc_fld *fld_from);
+void mrc_fld_axpy(struct mrc_fld *y, float alpha, struct mrc_fld *x);
+void mrc_fld_axpby(struct mrc_fld *y, double alpha, struct mrc_fld *x, double beta);
 void mrc_fld_write_comps(struct mrc_fld *fld, struct mrc_io *io, int mm[]);
 void mrc_fld_dump(struct mrc_fld *fld, const char *basename, int n);
 // for multi-patch mrc_fld only (former mrc_m3)
