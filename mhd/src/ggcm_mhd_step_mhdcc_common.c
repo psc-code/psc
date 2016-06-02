@@ -134,7 +134,7 @@ mhd_flux_pt1(struct ggcm_mhd_step *step, struct mrc_fld *x,
 
   // FIXME: +2,+2 is specifically for PLM reconstr (and enough for PCM)
   pick_line_fc_cc(U, x, ldim, bnd + 2, bnd + 2, j, k, dir, p);
-  mhd_prim_from_cons(W, U, ldim, bnd + 2, bnd + 2);
+  mhd_prim_from_cons(W, U, -(bnd + 2), ldim + (bnd + 2));
   int l = bnd, r = bnd + 1;
   mhd_reconstruct(U_l, U_r, W_l, W_r, W, (fld1d_t) {}, ldim, l, r, dir);
 }
@@ -197,8 +197,8 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, mrc_fld_data_t time_c
 	pde_for_each_line(dir, j, k, 0) {
 	  pick_line_fc_cc(sub->U_l, U_l[dir], s_ldims[dir], 0, 1, j, k, dir, p);
 	  pick_line_fc_cc(sub->U_r, U_r[dir], s_ldims[dir], 0, 1, j, k, dir, p);
-	  mhd_prim_from_cons(sub->W_l, sub->U_l, s_ldims[dir], 0, 1);
-	  mhd_prim_from_cons(sub->W_r, sub->U_r, s_ldims[dir], 0, 1);
+	  mhd_prim_from_cons(sub->W_l, sub->U_l, 0, s_ldims[dir] + 1);
+	  mhd_prim_from_cons(sub->W_r, sub->U_r, 0, s_ldims[dir] + 1);
 	  
 	  mhd_flux_pt2(step, fluxes, s_ldims[dir], 0, j, k, dir, p);
 	}

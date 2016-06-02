@@ -18,8 +18,8 @@ mhd_reconstruct_pcm(fld1d_state_t U_l, fld1d_state_t U_r,
   }
 
   // CHECKME, seems inconsistent to use cell-centered Bx here, then replace it afterwards
-  mhd_cons_from_prim(U_l, W_l, ldim, l, r);
-  mhd_cons_from_prim(U_r, W_r, ldim, l, r);
+  mhd_cons_from_prim(U_l, W_l, -l, ldim + r);
+  mhd_cons_from_prim(U_r, W_r, -l, ldim + r);
 
   // if not doing fully conservative, bx will be NULL, so the following will be skipped
   if (fld1d_is_setup(bx)) {
@@ -75,8 +75,8 @@ mhd_reconstruct_plm(fld1d_state_t U_l, fld1d_state_t U_r,
     }
   }
 
-  mhd_cons_from_prim(U_l, W_l, ldim, l, r+1);
-  mhd_cons_from_prim(U_r, W_r, ldim, l, r+1);
+  mhd_cons_from_prim(U_l, W_l, -l, ldim + r+1);
+  mhd_cons_from_prim(U_r, W_r, -l, ldim + r+1);
 }
 
 // ----------------------------------------------------------------------

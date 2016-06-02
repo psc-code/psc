@@ -7,11 +7,11 @@
 // mhd_prim_from_fcons
 
 static void
-mhd_prim_from_fcons(fld1d_state_t W, fld1d_state_t U, int ldim, int l, int r)
+mhd_prim_from_fcons(fld1d_state_t W, fld1d_state_t U, int ib, int ie)
 {
   mrc_fld_data_t gamma_minus_1 = s_gamma - 1.f;
 
-  for (int i = -l; i < ldim + r; i++) {
+  for (int i = ib; i < ie; i++) {
     mrc_fld_data_t *w = &F1S(W, 0, i), *u = &F1S(U, 0, i);
 
     mrc_fld_data_t rri = 1.f / u[RR];
@@ -33,11 +33,11 @@ mhd_prim_from_fcons(fld1d_state_t W, fld1d_state_t U, int ldim, int l, int r)
 // mhd_fcons_from_prim
 
 static void _mrc_unused
-mhd_fcons_from_prim(fld1d_state_t U, fld1d_state_t W, int ldim, int l, int r)
+mhd_fcons_from_prim(fld1d_state_t U, fld1d_state_t W, int ib, int ie)
 {
   mrc_fld_data_t gamma_minus_1 = s_gamma - 1.f;
 
-  for (int i = -l; i < ldim + r; i++) {
+  for (int i = ib; i < ie; i++) {
     mrc_fld_data_t *u = &F1S(U, 0, i), *w = &F1S(W, 0, i);
 
     mrc_fld_data_t rr = w[RR];
@@ -59,11 +59,11 @@ mhd_fcons_from_prim(fld1d_state_t U, fld1d_state_t W, int ldim, int l, int r)
 // mhd_prim_from_scons
 
 static void
-mhd_prim_from_scons(fld1d_state_t W, fld1d_state_t U, int ldim, int l, int r)
+mhd_prim_from_scons(fld1d_state_t W, fld1d_state_t U, int ib, int ie)
 {
   mrc_fld_data_t gamma_minus_1 = s_gamma - 1.f;
 
-  for (int i = -l; i < ldim + r; i++) {
+  for (int i = ib; i < ie; i++) {
     mrc_fld_data_t *w = &F1S(W, 0, i), *u = &F1S(U, 0, i);
 
     mrc_fld_data_t rri = 1.f / u[RR];
@@ -81,11 +81,11 @@ mhd_prim_from_scons(fld1d_state_t W, fld1d_state_t U, int ldim, int l, int r)
 // mhd_scons_from_prim
 
 static void _mrc_unused
-mhd_scons_from_prim(fld1d_state_t U, fld1d_state_t W, int ldim, int l, int r)
+mhd_scons_from_prim(fld1d_state_t U, fld1d_state_t W, int ib, int ie)
 {
   mrc_fld_data_t gamma_minus_1 = s_gamma - 1.f;
 
-  for (int i = -l; i < ldim + r; i++) {
+  for (int i = ib; i < ie; i++) {
     mrc_fld_data_t *u = &F1S(U, 0, i), *w = &F1S(W, 0, i);
 
     mrc_fld_data_t rr = w[RR];
@@ -103,13 +103,13 @@ mhd_scons_from_prim(fld1d_state_t U, fld1d_state_t W, int ldim, int l, int r)
 // mhd_prim_from_cons
 
 static void _mrc_unused
-mhd_prim_from_cons(fld1d_state_t W, fld1d_state_t U, int ldim, int l, int r)
+mhd_prim_from_cons(fld1d_state_t W, fld1d_state_t U, int ib, int ie)
 {
   if (s_opt_eqn == OPT_EQN_MHD_FCONS) {
-    mhd_prim_from_fcons(W, U, ldim, l, r);
+    mhd_prim_from_fcons(W, U, ib, ie);
   } else if (s_opt_eqn == OPT_EQN_MHD_SCONS ||
 	     s_opt_eqn == OPT_EQN_HD) {
-    mhd_prim_from_scons(W, U, ldim, l, r);
+    mhd_prim_from_scons(W, U, ib, ie);
   } else {
     assert(0);
   }
@@ -119,13 +119,13 @@ mhd_prim_from_cons(fld1d_state_t W, fld1d_state_t U, int ldim, int l, int r)
 // mhd_cons_from_prim
 
 static void _mrc_unused
-mhd_cons_from_prim(fld1d_state_t U, fld1d_state_t W, int ldim, int l, int r)
+mhd_cons_from_prim(fld1d_state_t U, fld1d_state_t W, int ib, int ie)
 {
   if (s_opt_eqn == OPT_EQN_MHD_FCONS) {
-    mhd_fcons_from_prim(U, W, ldim, l, r);
+    mhd_fcons_from_prim(U, W, ib, ie);
   } else if (s_opt_eqn == OPT_EQN_MHD_SCONS ||
 	     s_opt_eqn == OPT_EQN_HD) {
-    mhd_scons_from_prim(U, W, ldim, l, r);
+    mhd_scons_from_prim(U, W, ib, ie);
   } else {
     assert(0);
   }
