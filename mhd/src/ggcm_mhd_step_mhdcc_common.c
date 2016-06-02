@@ -227,20 +227,45 @@ ggcm_mhd_step_mhdcc_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_step_predcorr
+
+static void
+ggcm_mhd_step_predcorr(struct ggcm_mhd_step *step, struct mrc_fld *x, double dt)
+{
+  struct ggcm_mhd_step_mhdcc *sub = ggcm_mhd_step_mhdcc(step);
+  struct ggcm_mhd *mhd = step->mhd;
+  struct mrc_fld *x_star = sub->x_star;
+
+  static int pr_A, pr_B;
+  if (!pr_A) {
+    pr_A = prof_register("mhd_step_pred", 0, 0, 0);
+    pr_B = prof_register("mhd_step_corr", 0, 0, 0);
+  }
+
+  // --- PREDICTOR
+  prof_start(pr_A);
+  ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
+
+  // set x_star = x^n, then advance to n+1/2
+  mrc_fld_copy_range(x_star, x, 0, 8);
+  pushstage_c(step, .5f * mhd->dt, x, x_star);
+  prof_stop(pr_A);
+
+  // --- CORRECTOR
+  prof_start(pr_B);
+  ggcm_mhd_fill_ghosts(mhd, x_star, 0, mhd->time + mhd->bndt);
+
+  pushstage_c(step, mhd->dt, x_star, x);
+  prof_stop(pr_B);
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_step_mhdcc_run
 
 static void
 ggcm_mhd_step_mhdcc_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 {
-  struct ggcm_mhd_step_mhdcc *sub = ggcm_mhd_step_mhdcc(step);
-  struct mrc_fld *x_star = sub->x_star;
   struct ggcm_mhd *mhd = step->mhd;
-
-  static int pr_A, pr_B;
-  if (!pr_A) {
-    pr_A = prof_register("mhdcc_pred", 0, 0, 0);
-    pr_B = prof_register("mhdcc_corr", 0, 0, 0);
-  }
 
 #if 0
   if (sub->debug_dump) {
@@ -262,21 +287,7 @@ ggcm_mhd_step_mhdcc_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   }
 #endif
 
-  // --- PREDICTOR
-  prof_start(pr_A);
-  ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
-
-  // set x_star = x^n, then advance to n+1/2
-  mrc_fld_copy_range(x_star, x, 0, 8);
-  pushstage_c(step, .5f * mhd->dt, x, x_star);
-  prof_stop(pr_A);
-
-  // --- CORRECTOR
-  prof_start(pr_B);
-  ggcm_mhd_fill_ghosts(mhd, x_star, 0, mhd->time + mhd->bndt);
-
-  pushstage_c(step, mhd->dt, x_star, x);
-  prof_stop(pr_B);
+  ggcm_mhd_step_predcorr(step, x, mhd->dt);
 }
 
 // ----------------------------------------------------------------------
