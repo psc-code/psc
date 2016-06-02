@@ -26,4 +26,9 @@
 #define OPT_RIEMANN_HLLC      (3)
 #define OPT_RIEMANN_HLLD      (4)
 
+// -- OPT_TIME_INTEGRATOR -----------------------------------------------
+
+#define OPT_TIME_INTEGRATOR_EULER                   (1)
+#define OPT_TIME_INTEGRATOR_PREDCORR                (2)
+
 #endif

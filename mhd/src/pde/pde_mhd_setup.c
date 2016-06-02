@@ -6,6 +6,7 @@ struct mhd_options {
   int eqn;
   int limiter;
   int riemann;
+  int time_integrator;
 };
 
 // ----------------------------------------------------------------------
@@ -57,6 +58,21 @@ static int s_opt_riemann _mrc_unused;
 #endif
 
 // ----------------------------------------------------------------------
+// time_integrator
+
+static struct mrc_param_select opt_time_integrator_descr[] _mrc_unused = {
+  { .val = OPT_TIME_INTEGRATOR_EULER   , .str = "euler"     },
+  { .val = OPT_TIME_INTEGRATOR_PREDCORR, .str = "predcorr"  },
+  {},
+};
+
+#ifdef OPT_TIME_INTEGRATOR
+static const int s_opt_time_integrator = OPT_TIME_INTEGRATOR;
+#else
+static int s_opt_time_integrator _mrc_unused;
+#endif
+
+// ----------------------------------------------------------------------
 // pde_mhd_set_options
 
 static void _mrc_unused
@@ -74,6 +90,13 @@ pde_mhd_set_options(struct ggcm_mhd *mhd, struct mhd_options *opt)
   assert(OPT_RIEMANN == opt->riemann);
 #else
   s_opt_riemann = opt->riemann;
+#endif
+
+  // time_integrator
+#ifdef OPT_TIME_INTEGRATOR
+  assert(OPT_TIME_INTEGRATOR == opt->time_integrator);
+#else
+  s_opt_time_integrator = opt->time_integrator;
 #endif
 }
 

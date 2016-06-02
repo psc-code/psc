@@ -226,6 +226,22 @@ ggcm_mhd_step_mhdcc_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_step_euler
+
+static void
+ggcm_mhd_step_euler(struct ggcm_mhd_step *step, struct mrc_fld *x, double dt)
+{
+  static int pr_A;
+  if (!pr_A) {
+    pr_A = prof_register("mhd_step_euler", 0, 0, 0);
+  }
+
+  prof_start(pr_A);
+  pushstage_c(step, dt, x, x);
+  prof_stop(pr_A);
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_step_predcorr
 
 static void
@@ -246,15 +262,15 @@ ggcm_mhd_step_predcorr(struct ggcm_mhd_step *step, struct mrc_fld *x, double dt)
   ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
 
   // set x_star = x^n, then advance to n+1/2
-  mrc_fld_copy_range(x_star, x, 0, 8);
-  pushstage_c(step, .5f * mhd->dt, x, x_star);
+  mrc_fld_copy(x_star, x);
+  pushstage_c(step, .5f * dt, x, x_star);
   prof_stop(pr_A);
 
   // --- CORRECTOR
   prof_start(pr_B);
-  ggcm_mhd_fill_ghosts(mhd, x_star, 0, mhd->time + mhd->bndt);
+  ggcm_mhd_fill_ghosts(mhd, x_star, 0, mhd->time + .5f * mhd->bndt);
 
-  pushstage_c(step, mhd->dt, x_star, x);
+  pushstage_c(step, dt, x_star, x);
   prof_stop(pr_B);
 }
 
@@ -264,10 +280,15 @@ ggcm_mhd_step_predcorr(struct ggcm_mhd_step *step, struct mrc_fld *x, double dt)
 static void
 ggcm_mhd_step_mhdcc_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 {
-  struct ggcm_mhd_step_mhdcc *sub = ggcm_mhd_step_mhdcc(step);
   struct ggcm_mhd *mhd = step->mhd;
 
-  ggcm_mhd_step_predcorr(step, x, mhd->dt);
+  if (s_opt_time_integrator == OPT_TIME_INTEGRATOR_EULER) {
+    ggcm_mhd_step_euler(step, x, mhd->dt);
+  } else if (s_opt_time_integrator == OPT_TIME_INTEGRATOR_PREDCORR) {
+    ggcm_mhd_step_predcorr(step, x, mhd->dt);
+  } else {
+    assert(0);
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -281,6 +302,8 @@ static struct param ggcm_mhd_step_mhdcc_descr[] = {
 								  opt_limiter_descr)            },
   { "riemann"            , VAR(opt.riemann)        , PARAM_SELECT(OPT_RIEMANN_RUSANOV,
 								  opt_riemann_descr)            },
+  { "time_integrator"    , VAR(opt.time_integrator), PARAM_SELECT(OPT_TIME_INTEGRATOR_PREDCORR,
+								  opt_time_integrator_descr)    },
   {},
 };
 #undef VAR
