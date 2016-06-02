@@ -163,7 +163,7 @@ flux_riemann(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3],
 }
 
 static void
-pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
+pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, mrc_fld_data_t time_curr,
 	    struct mrc_fld *x_curr, struct mrc_fld *x_next)
 {
   struct ggcm_mhd *mhd = step->mhd;
@@ -177,6 +177,8 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
 			     ggcm_mhd_get_3d_fld(mhd, 8),
 			     ggcm_mhd_get_3d_fld(mhd, 8), };
   
+  ggcm_mhd_fill_ghosts(mhd, x_curr, 0, time_curr);
+
   int gdims[3];
   mrc_domain_get_global_dims(x_curr->_domain, gdims);
 
@@ -231,13 +233,15 @@ ggcm_mhd_step_mhdcc_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
 static void
 ggcm_mhd_step_euler(struct ggcm_mhd_step *step, struct mrc_fld *x, double dt)
 {
+  struct ggcm_mhd *mhd = step->mhd;
+
   static int pr_A;
   if (!pr_A) {
     pr_A = prof_register("mhd_step_euler", 0, 0, 0);
   }
 
   prof_start(pr_A);
-  pushstage_c(step, dt, x, x);
+  pushstage_c(step, dt, mhd->time, x, x);
   prof_stop(pr_A);
 }
 
@@ -259,18 +263,16 @@ ggcm_mhd_step_predcorr(struct ggcm_mhd_step *step, struct mrc_fld *x, double dt)
 
   // --- PREDICTOR
   prof_start(pr_A);
-  ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
-
-  // set x_star = x^n, then advance to n+1/2
+  // set x* = x^n, then advance to n+1/2
   mrc_fld_copy(x_star, x);
-  pushstage_c(step, .5f * dt, x, x_star);
+  pushstage_c(step, .5f * dt, mhd->time, x, x_star);
+  // now x^* = x^n + .5 * dt rhs(x^n)
   prof_stop(pr_A);
 
   // --- CORRECTOR
   prof_start(pr_B);
-  ggcm_mhd_fill_ghosts(mhd, x_star, 0, mhd->time + .5f * mhd->bndt);
-
-  pushstage_c(step, dt, x_star, x);
+  // x^{n+1} = x^n + dt rhs(x_star)
+  pushstage_c(step, dt, mhd->time + .5f * mhd->bndt, x_star, x);
   prof_stop(pr_B);
 }
 
