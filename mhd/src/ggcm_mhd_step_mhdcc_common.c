@@ -37,7 +37,6 @@
 
 struct ggcm_mhd_step_mhdcc {
   struct mhd_options opt;
-  bool debug_dump;
 
   fld1d_state_t U;
   fld1d_state_t U_l;
@@ -265,27 +264,8 @@ ggcm_mhd_step_predcorr(struct ggcm_mhd_step *step, struct mrc_fld *x, double dt)
 static void
 ggcm_mhd_step_mhdcc_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 {
+  struct ggcm_mhd_step_mhdcc *sub = ggcm_mhd_step_mhdcc(step);
   struct ggcm_mhd *mhd = step->mhd;
-
-#if 0
-  if (sub->debug_dump) {
-    static struct ggcm_mhd_diag *diag;
-    static int cnt;
-    if (!diag) {
-      diag = ggcm_mhd_diag_create(ggcm_mhd_comm(mhd));
-      ggcm_mhd_diag_set_type(diag, "c");
-      ggcm_mhd_diag_set_name(diag, "ggcm_mhd_debug");
-      ggcm_mhd_diag_set_param_obj(diag, "mhd", mhd);
-      ggcm_mhd_diag_set_param_string(diag, "fields", "rr1:rv1:uu1:b1:rr:v:pp:b:divb:ymask:zmask");
-      ggcm_mhd_diag_set_from_options(diag);
-      ggcm_mhd_diag_set_param_string(diag, "run", "dbg0");
-      ggcm_mhd_diag_setup(diag);
-      ggcm_mhd_diag_view(diag);
-    }
-    ggcm_mhd_fill_ghosts(mhd, mhd->fld, 0, mhd->time);
-    ggcm_mhd_diag_run_now(diag, mhd->fld, DIAG_TYPE_3D, cnt++);
-  }
-#endif
 
   ggcm_mhd_step_predcorr(step, x, mhd->dt);
 }
@@ -301,8 +281,6 @@ static struct param ggcm_mhd_step_mhdcc_descr[] = {
 								  opt_limiter_descr)            },
   { "riemann"            , VAR(opt.riemann)        , PARAM_SELECT(OPT_RIEMANN_RUSANOV,
 								  opt_riemann_descr)            },
-
-  { "debug_dump"         , VAR(debug_dump)         , PARAM_BOOL(false)                          },
   {},
 };
 #undef VAR
