@@ -201,11 +201,11 @@ fluxes_pred(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld 
     pde_for_each_dir(dir) {
       int ldim = s_ldims[dir];
       pde_for_each_line(dir, j, k, nghost) {
-	pick_line_fc(U, bx, x, B_cc, ldim, nghost, nghost, j, k, dir, p);
+	pick_line_fc(U, bx, x, B_cc, j, k, dir, p, -nghost, ldim + nghost);
 	mhd_prim_from_cons(W, U, -nghost, ldim + nghost);
 	mhd_reconstruct_pcm(U_l, U_r, W_l, W_r, W, bx, ldim, nghost - 1, nghost, dir);
 	mhd_riemann(F, U_l, U_r, W_l, W_r, ldim, nghost - 1, nghost, dir);
-	put_line_fc(flux[dir], F, ldim, nghost - 1, nghost, j, k, dir, p);
+	put_line_fc(flux[dir], F, j, k, dir, p, -(nghost - 1), ldim + nghost);
       }
     }
   }
@@ -224,11 +224,11 @@ fluxes_corr(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld 
     pde_for_each_dir(dir) {
       int ldim = s_ldims[dir];
       pde_for_each_line(dir, j, k, 1) {
-	pick_line_fc(U, bx, x, B_cc, ldim, nghost - 1, nghost - 1, j, k, dir, p);
+	pick_line_fc(U, bx, x, B_cc, j, k, dir, p, - (nghost - 1), ldim + (nghost - 1));
 	mhd_prim_from_cons(W, U, - (nghost - 1), ldim + (nghost - 1));
 	mhd_reconstruct(U_l, U_r, W_l, W_r, W, bx, ldim, 1, 1, dir);
 	mhd_riemann(F, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
-	put_line_fc(flux[dir], F, ldim, 0, 1, j, k, dir, p);
+	put_line_fc(flux[dir], F, j, k, dir, p, 0, ldim + 1);
       }
     }
   }

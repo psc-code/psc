@@ -133,7 +133,7 @@ mhd_flux_pt1(struct ggcm_mhd_step *step, struct mrc_fld *x,
   fld1d_state_t W = sub->W, W_l = sub->W_l, W_r = sub->W_r;
 
   // FIXME: +2,+2 is specifically for PLM reconstr (and enough for PCM)
-  pick_line_fc_cc(U, x, ldim, bnd + 2, bnd + 2, j, k, dir, p);
+  pick_line_fc_cc(U, x, j, k, dir, p, -(bnd + 2), ldim + (bnd + 2));
   mhd_prim_from_cons(W, U, -(bnd + 2), ldim + (bnd + 2));
   int l = bnd, r = bnd + 1;
   mhd_reconstruct(U_l, U_r, W_l, W_r, W, (fld1d_t) {}, ldim, l, r, dir);
@@ -153,7 +153,7 @@ mhd_flux_pt2(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3],
 
   int l = bnd, r = bnd + 1;
   mhd_riemann(F, U_l, U_r, W_l, W_r, ldim, l, r, dir);
-  put_line_fc_cc(fluxes[dir], F, ldim, l, r, j, k, dir, p);
+  put_line_fc_cc(fluxes[dir], F, j, k, dir, p, -l, ldim + r);
 }
 
 // ----------------------------------------------------------------------
@@ -183,8 +183,8 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, mrc_fld_data_t time_c
       pde_for_each_dir(dir) {
 	pde_for_each_line(dir, j, k, 0) {
 	  mhd_flux_pt1(step, x_curr, s_ldims[dir], 0, j, k, dir, p);
-	  put_line_fc_cc(U_l[dir], sub->U_l, s_ldims[dir], 0, 1, j, k, dir, p);
-	  put_line_fc_cc(U_r[dir], sub->U_r, s_ldims[dir], 0, 1, j, k, dir, p);
+	  put_line_fc_cc(U_l[dir], sub->U_l, j, k, dir, p, 0, s_ldims[dir] + 1);
+	  put_line_fc_cc(U_r[dir], sub->U_r, j, k, dir, p, 0, s_ldims[dir] + 1);
 	}
       }
     }
@@ -195,8 +195,8 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, mrc_fld_data_t time_c
     for (int p = 0; p < mrc_fld_nr_patches(x_curr); p++) {
       pde_for_each_dir(dir) {
 	pde_for_each_line(dir, j, k, 0) {
-	  pick_line_fc_cc(sub->U_l, U_l[dir], s_ldims[dir], 0, 1, j, k, dir, p);
-	  pick_line_fc_cc(sub->U_r, U_r[dir], s_ldims[dir], 0, 1, j, k, dir, p);
+	  pick_line_fc_cc(sub->U_l, U_l[dir], j, k, dir, p, 0, s_ldims[dir] + 1);
+	  pick_line_fc_cc(sub->U_r, U_r[dir], j, k, dir, p, 0, s_ldims[dir] + 1);
 	  mhd_prim_from_cons(sub->W_l, sub->U_l, 0, s_ldims[dir] + 1);
 	  mhd_prim_from_cons(sub->W_r, sub->U_r, 0, s_ldims[dir] + 1);
 	  

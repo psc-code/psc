@@ -4,10 +4,10 @@
 
 static void _mrc_unused
 pick_line_fc_cc(fld1d_state_t u, struct mrc_fld *U,
-		int ldim, int l, int r, int j, int k, int dim, int p)
+		int j, int k, int dir, int p, int ib, int ie)
 {
 #define PICK_LINE(X,Y,Z,I,J,K) do {			\
-    for (int i = -l; i < ldim + r; i++) {		\
+    for (int i = ib; i < ie; i++) {			\
       F1S(u, RR , i) = M3(U, RR   , I,J,K, p);		\
       F1S(u, RVX, i) = M3(U, RVX+X, I,J,K, p);		\
       F1S(u, RVY, i) = M3(U, RVX+Y, I,J,K, p);		\
@@ -19,11 +19,11 @@ pick_line_fc_cc(fld1d_state_t u, struct mrc_fld *U,
     }							\
   } while (0)
 
-  if (dim == 0) {
+  if (dir == 0) {
     PICK_LINE(0,1,2, i,j,k);
-  } else if (dim == 1) {
+  } else if (dir == 1) {
     PICK_LINE(1,2,0, k,i,j);
-  } else if (dim == 2) {
+  } else if (dir == 2) {
     PICK_LINE(2,0,1, j,k,i);
   }
 #undef PICK_LINE
@@ -34,10 +34,10 @@ pick_line_fc_cc(fld1d_state_t u, struct mrc_fld *U,
 
 static void _mrc_unused
 put_line_fc_cc(struct mrc_fld *flux, fld1d_state_t F,
-	       int ldim, int l, int r, int j, int k, int dir, int p)
+	       int j, int k, int dir, int p, int ib, int ie)
 {
 #define PUT_LINE(X, Y, Z, I, J, K) do {				\
-    for (int i = -l; i < ldim + r; i++) {			\
+    for (int i = ib; i < ie; i++) {				\
       M3(flux, RR     , I,J,K, p) = F1S(F, RR , i);		\
       M3(flux, RVX + X, I,J,K, p) = F1S(F, RVX, i);		\
       M3(flux, RVX + Y, I,J,K, p) = F1S(F, RVY, i);		\
@@ -68,11 +68,11 @@ put_line_fc_cc(struct mrc_fld *flux, fld1d_state_t F,
 static void _mrc_unused
 pick_line_fc(fld1d_state_t u, fld1d_t bx,
 	     struct mrc_fld *U, struct mrc_fld *Bcc,
-	     int ldim, int l, int r, int j, int k, int dir, int p)
+	     int j, int k, int dir, int p, int ib, int ie)
 {
 #define PICK_LINE(X, Y, Z, I, J, K)			       \
   do {							       \
-    for (int i = - l; i < ldim + r; i++) {		       \
+    for (int i = ib; i < ie; i++) {			       \
       F1S(u, RR , i) = M3(U, RR     , I,J,K, p);	       \
       F1S(u, RVX, i) = M3(U, RVX + X, I,J,K, p);	       \
       F1S(u, RVY, i) = M3(U, RVX + Y, I,J,K, p);	       \
@@ -101,10 +101,10 @@ pick_line_fc(fld1d_state_t u, fld1d_t bx,
 
 static void _mrc_unused
 put_line_fc(struct mrc_fld *flux, fld1d_state_t F,
-	    int ldim, int l, int r, int j, int k, int dir, int p)
+	    int j, int k, int dir, int p, int ib, int ie)
 {
 #define PUT_LINE(X, Y, Z, I, J, K) do {				\
-    for (int i = -l; i < ldim + r; i++) {			\
+    for (int i = ib; i < ie; i++) {				\
       M3(flux, RR     , I,J,K, p) = F1S(F, RR , i);		\
       M3(flux, RVX + X, I,J,K, p) = F1S(F, RVX, i);		\
       M3(flux, RVX + Y, I,J,K, p) = F1S(F, RVY, i);		\
@@ -133,10 +133,10 @@ put_line_fc(struct mrc_fld *flux, fld1d_state_t F,
 
 static void _mrc_unused
 pick_line_sc(fld1d_state_t u, struct mrc_fld *U,
-	     int ldim, int l, int r, int j, int k, int dim, int p)
+	     int j, int k, int dim, int p, int ib, int ie)
 {
 #define PICK_LINE(X,Y,Z,I,J,K) do {			\
-    for (int i = -l; i < ldim + r; i++) {		\
+    for (int i = ib; i < ie; i++) {			\
       F1S(u, RR , i) = M3(U, RR   , I,J,K, p);		\
       F1S(u, RVX, i) = M3(U, RVX+X, I,J,K, p);		\
       F1S(u, RVY, i) = M3(U, RVX+Y, I,J,K, p);		\
@@ -160,10 +160,10 @@ pick_line_sc(fld1d_state_t u, struct mrc_fld *U,
 
 static void _mrc_unused
 put_line_sc(struct mrc_fld *flux, fld1d_state_t F,
-	    int ldim, int l, int r, int j, int k, int dir, int p)
+	    int j, int k, int dir, int p, int ib, int ie)
 {
 #define PUT_LINE(X,Y,Z, I,J,K) do {					\
-    for (int i = -l; i < ldim + r; i++) {				\
+    for (int i = ib; i < ie; i++) {					\
       M3(flux, RR   , I,J,K, p) = F1S(F, RR , i);			\
       M3(flux, RVX+X, I,J,K, p) = F1S(F, RVX, i);			\
       M3(flux, RVX+Y, I,J,K, p) = F1S(F, RVY, i);			\

@@ -60,11 +60,11 @@ fluxes_pred(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld 
     pde_for_each_dir(dir) {
       int ldim = s_ldims[dir];
       pde_for_each_line(dir, j, k, 0) {
-	pick_line_sc(U, x, ldim, 2, 2, j, k, dir, p);
+	pick_line_sc(U, x, j, k, dir, p, -2, ldim + 2);
 	mhd_prim_from_cons(W, U, -2, ldim + 2); // for up to plm reconstruction
 	mhd_reconstruct_pcm(U_l, U_r, W_l, W_r, W, (fld1d_t) {}, ldim, 0, 1, dir);
 	mhd_riemann(F, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
-	put_line_sc(flux[dir], F, ldim, 0, 1, j, k, dir, p);
+	put_line_sc(flux[dir], F, j, k, dir, p, 0, ldim + 1);
       }
     }
   }
@@ -82,11 +82,11 @@ fluxes_corr(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld 
     pde_for_each_dir(dir) {
       int ldim = s_ldims[dir];
       pde_for_each_line(dir, j, k, 0) {
-	pick_line_sc(U, x, ldim, 2, 2, j, k, dir, p);
+	pick_line_sc(U, x, j, k, dir, p, -2, ldim + 2);
 	mhd_prim_from_cons(W, U, -2, ldim + 2); // for up to plm reconstruction
 	mhd_reconstruct(U_l, U_r, W_l, W_r, W, (fld1d_t) {}, ldim, 0, 1, dir);
 	mhd_riemann(F, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
-	put_line_sc(flux[dir], F, ldim, 0, 1, j, k, dir, p);
+	put_line_sc(flux[dir], F, j, k, dir, p, 0, ldim + 1);
       }
     }
   }
