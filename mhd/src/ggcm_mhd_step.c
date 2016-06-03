@@ -172,17 +172,6 @@ ggcm_mhd_step_has_calc_rhs(struct ggcm_mhd_step *step)
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_step_supports_b0
-
-bool
-ggcm_mhd_step_supports_b0(struct ggcm_mhd_step *step)
-{
-  struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
-  assert(ops);
-  return ops->supports_b0;
-}
-
-// ----------------------------------------------------------------------
 // ggcm_mhd_step_setup_flds
 
 void

@@ -427,7 +427,7 @@ ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic)
   struct mrc_fld *b = mrc_fld_make_view(fld, BX, BX + 3);
 
   /* initialize background magnetic field */
-  if (ggcm_mhd_step_supports_b0(mhd->step)) {
+  if (mhd->b0) {
     struct mrc_fld *b0 = mrc_fld_get_as(mhd->b0, FLD_TYPE);
     if (ops->vector_potential_bg) {
       ggcm_mhd_ic_B_from_vector_potential(ic, b0, ops->vector_potential_bg);

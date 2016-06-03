@@ -1119,5 +1119,4 @@ struct ggcm_mhd_step_ops ggcm_mhd_step_c3_ops = {
   .get_e_ec            = ggcm_mhd_step_c3_get_e_ec,
   .diag_item_zmask_run = ggcm_mhd_step_c3_diag_item_zmask_run,
   .diag_item_rmask_run = ggcm_mhd_step_c3_diag_item_rmask_run,
-  .supports_b0         = true,
 };

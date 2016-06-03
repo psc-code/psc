@@ -37,7 +37,4 @@ void ggcm_mhd_step_setup_flds(struct ggcm_mhd_step *step);
 // that takes over the entire step (then the timestepper should be just "step").
 bool ggcm_mhd_step_has_calc_rhs(struct ggcm_mhd_step *step);
 
-// returns whether this stepper supports a separate background B field
-bool ggcm_mhd_step_supports_b0(struct ggcm_mhd_step *step);
-
 #endif
