@@ -26,14 +26,26 @@ ggcm_mhd_step_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
   struct ggcm_mhd *mhd = step->mhd;
 
   struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
-  if (ops && ops->get_dt) {
-    mhd->dt = ops->get_dt(step, x);
+  if (!ops->get_dt) {
+    return mhd->dt;
+  }
 
-    if (mhd->istep > 0 && mhd->dt < mhd->par.dtmin) {
+  if (!step->legacy_dt_handling) {
+    double dtn = ops->get_dt(step, x);
+
+    if (mhd->istep > 0 && dtn < mhd->par.dtmin) {
       mpi_printf(ggcm_mhd_comm(mhd), "!!! dt < dtmin. Dying now!\n");
-      mpi_printf(ggcm_mhd_comm(mhd), "!!! dt = %g, dtmin = %g\n",
-		 mhd->dt, mhd->par.dtmin);
+      mpi_printf(ggcm_mhd_comm(mhd), "!!! dt = %g (was %g), dtmin = %g\n",
+		 dtn, mhd->dt, mhd->par.dtmin);
       ggcm_mhd_wrongful_death(mhd, mhd->fld, -1);
+    }
+    
+    mhd->dt = dtn;
+  } else { // legacy_dt_handling
+    if (step->do_nwst) {
+      step->dtn = ops->get_dt(step, x);
+      // yes, dtn isn't set to mhd->dt until the end of the step... this
+      // is what the fortran code did
     }
   }
 
@@ -98,6 +110,24 @@ ggcm_mhd_step_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
     }
     ggcm_mhd_fill_ghosts(mhd, mhd->fld, 0, mhd->time);
     ggcm_mhd_diag_run_now(diag, mhd->fld, DIAG_TYPE_3D, cnt++);
+  }
+
+  if (step->legacy_dt_handling && ops->get_dt) {
+    struct ggcm_mhd *mhd = step->mhd;
+    float dtn = fminf(1., step->dtn);
+
+    if (dtn > 1.02 * mhd->dt || dtn < mhd->dt / 1.01) {
+      mpi_printf(ggcm_mhd_comm(mhd), "switched dt %g <- %g\n", dtn, mhd->dt);
+      
+      if (mhd->istep > 0 &&
+          (dtn < 0.5 * mhd->dt || dtn > 2.0 * mhd->dt)) {            
+        mpi_printf(ggcm_mhd_comm(mhd), "!!! dt changed by > a factor of 2. "
+                   "Dying now!\n");
+        ggcm_mhd_wrongful_death(mhd, mhd->fld, 2);
+      }
+      
+      mhd->dt = dtn;
+    }
   }
 
   // FIXME, this should be done by mrc_ts

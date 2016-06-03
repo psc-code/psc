@@ -14,7 +14,7 @@ mpirun -n 1 ../mhd_ot \
     --mrc_ts_max_time 1.0 \
     --ggcm_mhd_step_type mhdcc_double \
     --xggcm_mhd_step_debug_dump \
-    --ggcm_mhd_step_do_nwst \
+    --ggcm_mhd_step_legacy_dt_handling false \
     \
     --timelo 1000. \
     \

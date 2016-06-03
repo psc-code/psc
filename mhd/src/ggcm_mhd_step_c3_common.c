@@ -59,8 +59,6 @@ struct ggcm_mhd_step_c3 {
   struct mrc_fld *rmask;
   
   bool enforce_rrmin;
-
-  double dtn; // timestep, to be set next time
 };
 
 #define ggcm_mhd_step_c3(step) mrc_to_subobj(step, struct ggcm_mhd_step_c3)
@@ -921,14 +919,28 @@ ggcm_mhd_step_c3_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
   struct ggcm_mhd *mhd = step->mhd;
   struct mrc_fld *ymask = mhd->ymask, *zmask = sub->zmask;
 
-  sub->dtn = 0.;
   if (step->do_nwst) {
     ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
     zmaskn(mhd, zmask, 0, ymask, 0, x);
-    sub->dtn = pde_mhd_get_dt_scons(mhd, x, zmask, 0);
+    double dtn = pde_mhd_get_dt_scons(mhd, x, zmask, 0);
+
+    // --- update timestep
+    dtn = mrc_fld_min(1., dtn); // FIXME, only kept for compatibility
+
+    if (dtn > 1.02 * mhd->dt || dtn < mhd->dt / 1.01) {
+      mpi_printf(ggcm_mhd_comm(mhd), "switched dt %g <- %g\n", dtn, mhd->dt);
+
+      if (mhd->istep > 0 &&
+          (dtn < 0.5 * mhd->dt || dtn > 2.0 * mhd->dt)) {            
+        mpi_printf(ggcm_mhd_comm(mhd), "!!! dt changed by > a factor of 2. "
+                   "Dying now!\n");
+        ggcm_mhd_wrongful_death(mhd, mhd->fld, 2);
+      }
+      
+      return dtn;
+    }
   }
- 
-  // actually return old time step for now
+
   return mhd->dt;
 }
 
@@ -997,29 +1009,6 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
     enforce_rrmin_sc(mhd, x_half);
   }
   prof_stop(pr_B);
-
-  // --- update timestep
-  if (step->do_nwst) {
-    mrc_fld_data_t dtn = mrc_fld_min(1., sub->dtn); // FIXME, only kept for compatibility
-
-    if (dtn > 1.02 * mhd->dt || dtn < mhd->dt / 1.01) {
-      mpi_printf(ggcm_mhd_comm(mhd), "switched dt %g <- %g\n", dtn, mhd->dt);
-
-      // FIXME: determining when to die on a bad dt should be generalized, since
-      //        there's another hiccup if refining dt for actual AMR
-      bool first_step = mhd->istep <= 1;
-      bool last_step = mhd->time + dtn > (1.0 - 1e-5) * mhd->max_time;
-
-      if (!first_step && !last_step &&
-          (dtn < 0.5 * mhd->dt || dtn > 2.0 * mhd->dt)) {            
-        mpi_printf(ggcm_mhd_comm(mhd), "!!! dt changed by > a factor of 2. "
-                   "Dying now!\n");
-        ggcm_mhd_wrongful_death(mhd, mhd->fld, 2);
-      }
-
-      mhd->dt = dtn;
-    }
-  }
 
   ggcm_mhd_put_3d_fld(mhd, x_half);
   ggcm_mhd_put_3d_fld(mhd, prim);
