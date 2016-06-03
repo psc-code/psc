@@ -23,12 +23,21 @@
 double
 ggcm_mhd_step_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
 {
+  struct ggcm_mhd *mhd = step->mhd;
+
   struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
   if (ops && ops->get_dt) {
-    step->mhd->dt = ops->get_dt(step, x);
+    mhd->dt = ops->get_dt(step, x);
+
+    if (mhd->dt < mhd->par.dtmin) {
+      mpi_printf(ggcm_mhd_comm(mhd), "!!! dt < dtmin. Dying now!\n");
+      mpi_printf(ggcm_mhd_comm(mhd), "!!! dt = %g, dtmin = %g\n",
+		 mhd->dt, mhd->par.dtmin);
+      ggcm_mhd_wrongful_death(mhd, mhd->fld, -1);
+    }
   }
 
-  return step->mhd->dt;
+  return mhd->dt;
 }
 
 // ----------------------------------------------------------------------
