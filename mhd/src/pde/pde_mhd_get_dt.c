@@ -8,6 +8,8 @@ static mrc_fld_data_t _mrc_unused
 pde_mhd_get_dt_scons(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zmask, 
 		     int m_zmask)
 {
+  assert(s_opt_eqn == OPT_EQN_MHD_SCONS);
+
   struct mrc_fld *b0 = mhd->b0;
 
   int gdims[3];
@@ -71,6 +73,8 @@ pde_mhd_get_dt_scons(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zm
 static mrc_fld_data_t _mrc_unused
 pde_mhd_get_dt_fcons(struct ggcm_mhd *mhd, struct mrc_fld *x)
 {
+  assert(s_opt_eqn == OPT_EQN_MHD_FCONS);
+
   struct mrc_fld *b0 = mhd->b0;
 
   mrc_fld_data_t splim2 = sqr(mhd->par.speedlimit / mhd->vvnorm);
@@ -134,6 +138,8 @@ static void compute_B_cc(struct mrc_fld *B_cc, struct mrc_fld *x, int l, int r);
 static mrc_fld_data_t _mrc_unused
 pde_mhd_get_dt_fcons_ct(struct ggcm_mhd *mhd, struct mrc_fld *x)
 {
+  assert(s_opt_eqn == OPT_EQN_MHD_FCONS);
+
   static const mrc_fld_data_t eps = 1.e-10; // FIXME
 
   mrc_fld_data_t gamma_m1 = s_gamma - 1.f;
@@ -201,3 +207,66 @@ pde_mhd_get_dt_fcons_ct(struct ggcm_mhd *mhd, struct mrc_fld *x)
 }
 
 #endif
+
+// ----------------------------------------------------------------------
+// pde_mhd_get_dt_hd
+
+static mrc_fld_data_t _mrc_unused
+pde_mhd_get_dt_hd(struct ggcm_mhd *mhd, struct mrc_fld *x)
+{
+  assert(s_opt_eqn == OPT_EQN_HD);
+
+  static const mrc_fld_data_t eps = 1.e-10; // FIXME
+
+  mrc_fld_data_t gamma_m1 = s_gamma - 1.f;
+  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
+
+  mrc_fld_data_t max_dti = 0.;
+  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+    double dx[3]; mrc_crds_get_dx(crds, p, dx);
+
+    mrc_fld_foreach(x, i,j,k, 0, 0) {
+      mrc_fld_data_t rri = 1.f / RR(x, i,j,k);
+      mrc_fld_data_t vx = RVX(x, i,j,k) * rri;
+      mrc_fld_data_t vy = RVY(x, i,j,k) * rri;
+      mrc_fld_data_t vz = RVZ(x, i,j,k) * rri;
+      mrc_fld_data_t vv = sqr(vx) + sqr(vy) + sqr(vz);
+      
+      /* compute sound speed */
+      mrc_fld_data_t pp = mrc_fld_max(gamma_m1 * (EE(x, i,j,k) - .5f * RR(x, i,j,k) * vv), eps);
+      mrc_fld_data_t cs = mrc_fld_sqrt(s_gamma * pp * rri);
+      
+      /* compute min dt based on maximum wave velocity */
+      if (s_sw[0]) { max_dti = mrc_fld_max(max_dti, (mrc_fld_abs(vx) + cs) / PDE_INV_DX(i)); }
+      if (s_sw[1]) { max_dti = mrc_fld_max(max_dti, (mrc_fld_abs(vy) + cs) / PDE_INV_DY(j)); }
+      if (s_sw[2]) { max_dti = mrc_fld_max(max_dti, (mrc_fld_abs(vz) + cs) / PDE_INV_DZ(k)); }
+    } mrc_fld_foreach_end;
+  }
+
+  mrc_fld_data_t dt = mhd->par.thx / max_dti;
+  mrc_fld_data_t dtn;
+  MPI_Allreduce(&dt, &dtn, 1, MPI_MRC_FLD_DATA_T, MPI_MIN, ggcm_mhd_comm(mhd));
+
+  return dtn;
+}
+
+// ----------------------------------------------------------------------
+// pde_mhd_get_dt
+
+static mrc_fld_data_t _mrc_unused
+pde_mhd_get_dt(struct ggcm_mhd *mhd, struct mrc_fld *x)
+{
+  if (s_opt_get_dt == OPT_GET_DT_MHD_GGCM) {
+    assert(0);
+  } else if (s_opt_get_dt == OPT_GET_DT_MHD) { // FIXME, name etc
+    return pde_mhd_get_dt_fcons(mhd, x);
+#ifdef OPT_DIVB_CT
+  } else if (s_opt_get_dt == OPT_GET_DT_MHD_CT) {
+    return pde_mhd_get_dt_fcons_ct(mhd, x);
+#endif
+  } else if (s_opt_get_dt == OPT_GET_DT_HD) {
+    return pde_mhd_get_dt_hd(mhd, x);
+  } else {
+    assert(0);
+  }
+}

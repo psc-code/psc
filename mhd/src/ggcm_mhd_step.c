@@ -29,7 +29,7 @@ ggcm_mhd_step_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
   if (ops && ops->get_dt) {
     mhd->dt = ops->get_dt(step, x);
 
-    if (mhd->dt < mhd->par.dtmin) {
+    if (mhd->istep > 0 && mhd->dt < mhd->par.dtmin) {
       mpi_printf(ggcm_mhd_comm(mhd), "!!! dt < dtmin. Dying now!\n");
       mpi_printf(ggcm_mhd_comm(mhd), "!!! dt = %g, dtmin = %g\n",
 		 mhd->dt, mhd->par.dtmin);

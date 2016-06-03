@@ -23,6 +23,7 @@
 #include "pde/pde_mhd_reconstruct.c"
 #include "pde/pde_mhd_riemann.c"
 #include "pde/pde_mhd_stage.c"
+#include "pde/pde_mhd_get_dt.c"
 
 #include "mhd_3d.c"
 
@@ -117,44 +118,12 @@ ggcm_mhd_step_vl_setup(struct ggcm_mhd_step *step)
 }
 
 // ----------------------------------------------------------------------
-// newstep_hydro
+// ggcm_mhd_step_vl_get_dt
 
-static mrc_fld_data_t
-newstep_hydro(struct ggcm_mhd *mhd, struct mrc_fld *x)
+static double
+ggcm_mhd_step_vl_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
 {
-  int gdims[3];
-  mrc_domain_get_global_dims(x->_domain, gdims);
-
-  mrc_fld_data_t gamma = mhd->par.gamm;
-  mrc_fld_data_t gamma_minus_1 = gamma - 1.;
-  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-
-  mrc_fld_data_t min_dt = 1e10;
-  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
-    double dx[3]; mrc_crds_get_dx(crds, p, dx);
-
-    mrc_fld_foreach(x, i,j,k, 0, 0) {
-      mrc_fld_data_t rri = 1.f / RR(x, i,j,k);
-      mrc_fld_data_t vx = RVX(x, i,j,k) * rri;
-      mrc_fld_data_t vy = RVY(x, i,j,k) * rri;
-      mrc_fld_data_t vz = RVZ(x, i,j,k) * rri;
-      
-      /* compute sound speed */
-      mrc_fld_data_t pp = mrc_fld_max(gamma_minus_1*(EE(x, i,j,k) - .5f*RR(x, i,j,k) * (sqr(vx) + sqr(vy) + sqr(vz))), 1e-15);
-      mrc_fld_data_t cs = mrc_fld_sqrt(gamma * pp * rri);
-      
-      /* compute min dt based on maximum wave velocity */
-      if (gdims[0] > 1) { min_dt = mrc_fld_min(min_dt, dx[0] / (mrc_fld_abs(vx) + cs)); }
-      if (gdims[1] > 1) { min_dt = mrc_fld_min(min_dt, dx[1] / (mrc_fld_abs(vy) + cs)); }
-      if (gdims[2] > 1) { min_dt = mrc_fld_min(min_dt, dx[2] / (mrc_fld_abs(vz) + cs)); }
-    } mrc_fld_foreach_end;
-  }
-
-  mrc_fld_data_t cfl = mhd->par.thx;
-  mrc_fld_data_t local_dt = cfl * min_dt;
-  mrc_fld_data_t global_dt;
-  MPI_Allreduce(&local_dt, &global_dt, 1, MPI_MRC_FLD_DATA_T, MPI_MIN, ggcm_mhd_comm(mhd));
-  return global_dt;
+  return pde_mhd_get_dt(step->mhd, x);
 }
 
 // ----------------------------------------------------------------------
@@ -176,14 +145,11 @@ ggcm_mhd_step_vl_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 			      ggcm_mhd_get_3d_fld(mhd, 5),
 			      ggcm_mhd_get_3d_fld(mhd, 5), };
 
-  // CFL CONDITION
-
-  ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
-
-  mhd->dt = newstep_hydro(mhd, x);
   mrc_fld_data_t dt = mhd->dt;
 
   // PREDICTOR
+
+  ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
 
   if (sub->debug_dump) {
     static struct ggcm_mhd_diag *diag;
@@ -204,7 +170,7 @@ ggcm_mhd_step_vl_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   // ghosts have already been set
   mrc_fld_copy_range(x_half, x, 0, 5);
   fluxes_pred(step, flux, x);
-  mhd_update_finite_volume(mhd, x_half, flux, NULL, .5 * dt, false, 0, 0);
+  mhd_update_finite_volume(mhd, x_half, flux, NULL, .5f * dt, false, 0, 0);
 
   // CORRECTOR
 
@@ -267,5 +233,6 @@ struct ggcm_mhd_step_ops ggcm_mhd_step_vl_ops = {
   .setup            = ggcm_mhd_step_vl_setup,
   .run              = ggcm_mhd_step_vl_run,
   .setup_flds       = ggcm_mhd_step_vl_setup_flds,
+  .get_dt           = ggcm_mhd_step_vl_get_dt,
 };
 

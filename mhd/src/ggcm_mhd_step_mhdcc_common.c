@@ -237,10 +237,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, mrc_fld_data_t time_c
 static double
 ggcm_mhd_step_mhdcc_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
 {
-  struct ggcm_mhd *mhd = step->mhd;
-
-  ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
-  return pde_mhd_get_dt_fcons(mhd, x);
+  return pde_mhd_get_dt(step->mhd, x);
 }
 
 // ----------------------------------------------------------------------
@@ -352,6 +349,10 @@ static struct param ggcm_mhd_step_mhdcc_descr[] = {
 								  opt_riemann_descr)            },
   { "time_integrator"    , VAR(opt.time_integrator), PARAM_SELECT(OPT_TIME_INTEGRATOR_PREDCORR,
 								  opt_time_integrator_descr)    },
+  { "get_dt"             , VAR(opt.get_dt)         , PARAM_SELECT(OPT_GET_DT_MHD,
+								  opt_get_dt_descr)             },
+  { "background"         , VAR(opt.background)     , PARAM_BOOL(false)                          },
+
   {},
 };
 #undef VAR

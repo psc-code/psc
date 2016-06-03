@@ -7,6 +7,7 @@ struct mhd_options {
   int limiter;
   int riemann;
   int time_integrator;
+  int get_dt;
   bool background;
 };
 
@@ -75,6 +76,23 @@ static int s_opt_time_integrator _mrc_unused;
 #endif
 
 // ----------------------------------------------------------------------
+// get_dt
+
+static struct mrc_param_select opt_get_dt_descr[] _mrc_unused = {
+  { .val = OPT_GET_DT_MHD_GGCM, .str = "mhd_ggcm"     },
+  { .val = OPT_GET_DT_MHD     , .str = "mhd"          },
+  { .val = OPT_GET_DT_MHD_CT  , .str = "mhd_ct"       },
+  { .val = OPT_GET_DT_HD      , .str = "hd"           },
+  {},
+};
+
+#ifdef OPT_GET_DT
+static const int s_opt_get_dt = OPT_GET_DT;
+#else
+static int s_opt_get_dt _mrc_unused;
+#endif
+
+// ----------------------------------------------------------------------
 // background
 
 #ifdef OPT_BACKGROUND
@@ -108,6 +126,13 @@ pde_mhd_set_options(struct ggcm_mhd *mhd, struct mhd_options *opt)
   assert(OPT_TIME_INTEGRATOR == opt->time_integrator);
 #else
   s_opt_time_integrator = opt->time_integrator;
+#endif
+
+  // get_dt
+#ifdef OPT_GET_DT
+  assert(OPT_GET_DT == opt->get_dt);
+#else
+  s_opt_get_dt = opt->get_dt;
 #endif
 
   // background

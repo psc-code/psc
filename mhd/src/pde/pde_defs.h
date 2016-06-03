@@ -33,5 +33,13 @@
 #define OPT_TIME_INTEGRATOR_TVD_RK2                 (3)
 
 // -- OPT_BACKGROUND ----------------------------------------------------
+// just true/false
+
+// -- OPT_GET_DT --------------------------------------------------------
+
+#define OPT_GET_DT_MHD_GGCM       (1)
+#define OPT_GET_DT_MHD            (2)
+#define OPT_GET_DT_MHD_CT         (3)
+#define OPT_GET_DT_HD             (4)
 
 #endif

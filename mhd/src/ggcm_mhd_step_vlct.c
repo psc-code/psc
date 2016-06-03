@@ -16,6 +16,7 @@
 
 #define OPT_EQN OPT_EQN_MHD_FCONS
 #define OPT_BACKGROUND false
+#define OPT_GET_DT OPT_GET_DT_MHD_CT
 
 // FIXME, temp hack that should be done as not compile-time regular
 // option some time
@@ -403,9 +404,7 @@ compute_Ediffu_const(struct ggcm_mhd_step *step, struct mrc_fld *E_ec,
 static double
 ggcm_mhd_step_vlct_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
 {
-  struct ggcm_mhd *mhd = step->mhd;
-
-  return pde_mhd_get_dt_fcons_ct(mhd, x);
+  return pde_mhd_get_dt(step->mhd, x);
 }
 
 // ----------------------------------------------------------------------
@@ -588,6 +587,9 @@ static struct param ggcm_mhd_step_vlct_descr[] = {
 								  opt_limiter_descr)            },
   { "riemann"            , VAR(opt.riemann)        , PARAM_SELECT(OPT_RIEMANN_HLL,
 								  opt_riemann_descr)            },
+  { "get_dt"             , VAR(opt.get_dt)         , PARAM_SELECT(OPT_GET_DT,
+								  opt_get_dt_descr)             },
+  { "background"         , VAR(opt.background)     , PARAM_BOOL(false)                          },
 
   { "debug_dump"         , VAR(debug_dump)         , PARAM_BOOL(false)                          },
   {},
