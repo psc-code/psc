@@ -1,8 +1,10 @@
 
-static inline mrc_fld_data_t
-newstep_sc_inl(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zmask, 
-	       int m_zmask, struct mrc_fld *b0)
+static mrc_fld_data_t _mrc_unused
+pde_mhd_get_dt_scons(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zmask, 
+		     int m_zmask)
 {
+  struct mrc_fld *b0 = mhd->b0;
+
   int gdims[3];
   mrc_domain_get_global_dims(mhd->domain, gdims);
   int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
@@ -26,9 +28,9 @@ newstep_sc_inl(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zmask,
     mrc_fld_foreach(x, ix, iy, iz, 0, 0) {
       mrc_fld_data_t hh = mrc_fld_max(mrc_fld_max(fd1x[ix], fd1y[iy]), fd1z[iz]);
       mrc_fld_data_t rri = 1.f / mrc_fld_abs(RR_(x, ix,iy,iz, p)); // FIXME abs necessary?
-      mrc_fld_data_t bb = (sqr(.5f * (BT(x, 0, ix,iy,iz, p) + BT(x, 0, ix+dx,iy,iz, p))) + 
-			   sqr(.5f * (BT(x, 1, ix,iy,iz, p) + BT(x, 1, ix,iy+dy,iz, p))) +
-			   sqr(.5f * (BT(x, 2, ix,iy,iz, p) + BT(x, 2, ix,iy,iz+dz, p))));
+      mrc_fld_data_t bb = (sqr(.5f * (BTX_(x, ix,iy,iz, p) + BTX_(x, ix+dx,iy,iz, p))) + 
+			   sqr(.5f * (BTY_(x, ix,iy,iz, p) + BTY_(x, ix,iy+dy,iz, p))) +
+			   sqr(.5f * (BTZ_(x, ix,iy,iz, p) + BTZ_(x, ix,iy,iz+dz, p))));
       if (have_hall) {
 	bb *= 1 + sqr(two_pi_d_i * hh);
       }      
@@ -63,16 +65,5 @@ newstep_sc_inl(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zmask,
   }
 
   return dtn;
-}
-
-static mrc_fld_data_t _mrc_unused
-pde_mhd_get_dt_scons(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zmask, 
-		     int m_zmask)
-{
-  if (s_opt_background) {
-    return newstep_sc_inl(mhd, x, zmask, m_zmask, mhd->b0);
-  } else {
-    return newstep_sc_inl(mhd, x, zmask, m_zmask, NULL);
-  }
 }
 
