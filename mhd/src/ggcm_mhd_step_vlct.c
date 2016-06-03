@@ -17,6 +17,10 @@
 #define OPT_EQN OPT_EQN_MHD_FCONS
 #define OPT_BACKGROUND false
 
+// FIXME, temp hack that should be done as not compile-time regular
+// option some time
+#define OPT_DIVB_CT
+
 #include "pde/pde_setup.c"
 #include "pde/pde_mhd_setup.c"
 #include "pde/pde_mhd_line.c"
@@ -417,10 +421,9 @@ ggcm_mhd_step_vlct_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
   ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
 
-  compute_B_cc(B_cc, x, 3, 3);
   if (step->do_nwst) {
     double old_dt = mhd->dt;
-    mhd->dt = pde_mhd_get_dt_fcons_ct(mhd, x, B_cc);
+    mhd->dt = pde_mhd_get_dt_fcons_ct(mhd, x);
     if (mhd->dt != old_dt) {
       mpi_printf(ggcm_mhd_comm(mhd), "switched dt %g <- %g\n", mhd->dt, old_dt);
       
@@ -449,6 +452,8 @@ ggcm_mhd_step_vlct_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
   // resistivity
 
+  // FIXME, this is done in get_dt, and redoing it could be avoided
+  compute_B_cc(B_cc, x, 3, 3);
   if (mhd->par.magdiffu == MAGDIFFU_CONST) {
     if (mhd->par.diffco > 0.) {
       compute_Ediffu_const(step, E_ec, x, B_cc);
