@@ -32,6 +32,7 @@ static bool s_opt_bc_reconstruct = false;
 #include "pde/pde_mhd_convert.c"
 #include "pde/pde_mhd_reconstruct.c"
 #include "pde/pde_mhd_riemann.c"
+#include "pde/pde_mhd_stage.c"
 
 #include "mhd_3d.c"
 #include "mhd_sc.c"
@@ -221,7 +222,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, mrc_fld_data_t time_c
     }
   }
     
-  update_finite_volume(mhd, x_next, fluxes, mhd->ymask, dt, true);
+  mhd_update_finite_volume(mhd, x_next, fluxes, mhd->ymask, dt, true);
 
   ggcm_mhd_put_3d_fld(mhd, fluxes[0]);
   ggcm_mhd_put_3d_fld(mhd, fluxes[1]);
