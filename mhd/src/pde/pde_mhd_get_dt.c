@@ -113,8 +113,9 @@ pde_mhd_get_dt_fcons(struct ggcm_mhd *mhd, struct mrc_fld *x)
 	  mrc_fld_data_t cs2 = s_gamma * v[PP] * rri;
 	  mrc_fld_data_t b2t = sqr(v[BY]) + sqr(v[BZ]);
 	  mrc_fld_data_t cf2 = .5f * (vA2 + cs2 + mrc_fld_sqrt(sqr(vA2 - cs2) + 4.f * cs2 * b2t * rri));
-	  
-	  if (s_sw[dir]) inv_dt = mrc_fld_max(inv_dt, (mrc_fld_abs(v[VX]) + cf2) * PDE_INV_DS(i));
+	  mrc_fld_data_t cf = mrc_fld_sqrt(cf2);
+
+	  if (s_sw[dir]) inv_dt = mrc_fld_max(inv_dt, (mrc_fld_abs(v[VX]) + cf) * PDE_INV_DS(i));
 	}
       }
     }
