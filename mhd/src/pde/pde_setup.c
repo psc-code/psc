@@ -22,6 +22,44 @@ static int s_dijk[3];  // set to 1 if actual direction, 0 if invariant
 
 #include "pde_fld1d.c"
 
+// ======================================================================
+// static info for current patch
+
+// ----------------------------------------------------------------------
+// s_patches
+//
+// mesh spacing, statically saved for each patch
+
+struct pde_patch {
+  fld1d_t dx[3]; // cell sizes in each direction (ie. spacing between faces)
+  fld1d_t inv_dx[3]; // 1 / s_dx[]
+  fld1d_t inv_dxf[3]; // 1 / dxf[], where dxf = spacing between cell centers (located at face)
+};
+
+static struct pde_patch *s_patches;
+
+// ----------------------------------------------------------------------
+// s_patch
+//
+// current patch mesh info, taken from s_patches by calling
+// pde_patch_set()
+
+static struct pde_patch s_patch;
+
+// macros to access these quantities in less ugly way
+#define PDE_INV_DX(i) F1(s_patch.inv_dx[0], i)
+#define PDE_INV_DY(i) F1(s_patch.inv_dx[1], i)
+#define PDE_INV_DZ(i) F1(s_patch.inv_dx[2], i)
+
+// ----------------------------------------------------------------------
+// pde_patch_set
+
+static void _mrc_unused
+pde_patch_set(int p)
+{
+  s_patch = s_patches[p];
+}
+
 // ----------------------------------------------------------------------
 // pde_setup
 
@@ -49,6 +87,30 @@ pde_setup(struct mrc_fld *fld)
     s_size_1d = MAX(s_size_1d, s_ldims[d] + 2 * s_sw[d]);
     s_dijk[d] = (gdims[d] > 1);
   }
+
+  struct mrc_crds *crds = mrc_domain_get_crds(fld->_domain);
+
+  int n_patches = mrc_fld_nr_patches(fld);
+  s_patches = calloc(n_patches, sizeof(*s_patches));
+
+  for (int p = 0; p < n_patches; p++) {
+    struct pde_patch *patch = &s_patches[p];
+    for (int d = 0; d < 3; d++) {
+      fld1d_setup(&patch->dx[d]);
+      fld1d_setup(&patch->inv_dx[d]);
+      fld1d_setup(&patch->inv_dxf[d]);
+
+      for (int i = -s_sw[d]; i < s_ldims[d] + s_sw[d]; i++) {
+	F1(patch->dx[d], i) = MRC_DMCRD_NC(crds, d, i+1, p) - MRC_DMCRD_NC(crds, d, i, p);
+	F1(patch->inv_dx[d], i) = 1.f / F1(patch->dx[d], i);
+      }
+      
+      for (int i = -s_sw[d] + 1; i < s_ldims[d] + s_sw[d]; i++) {
+	F1(patch->inv_dxf[d], i) = 1. / (MRC_DMCRD(crds, d, i, p) - MRC_DMCRD(crds, d, i-1, p));
+      }
+    }
+  }
+
 }
 
 // ======================================================================
