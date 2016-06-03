@@ -25,6 +25,7 @@ static bool s_opt_bc_reconstruct = false;
 // mhd options
 
 #define OPT_EQN OPT_EQN_MHD_FCONS
+#define OPT_BACKGROUND false
 
 #include "pde/pde_setup.c"
 #include "pde/pde_mhd_setup.c"

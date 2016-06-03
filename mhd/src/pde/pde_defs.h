@@ -32,4 +32,6 @@
 #define OPT_TIME_INTEGRATOR_PREDCORR                (2)
 #define OPT_TIME_INTEGRATOR_TVD_RK2                 (3)
 
+// -- OPT_BACKGROUND ----------------------------------------------------
+
 #endif

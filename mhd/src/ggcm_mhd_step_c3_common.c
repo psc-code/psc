@@ -103,7 +103,9 @@ ggcm_mhd_step_c3_setup(struct ggcm_mhd_step *step)
   fld1d_state_setup(&sub->F_lo);
   fld1d_state_setup(&sub->Lim1);
 
-  mhd->b0 = ggcm_mhd_get_3d_fld(mhd, 3);
+  if (s_opt_background) {
+    mhd->b0 = ggcm_mhd_get_3d_fld(mhd, 3);
+  }
   mhd->ymask = ggcm_mhd_get_3d_fld(mhd, 1);
   mrc_fld_set(mhd->ymask, 1.);
   sub->zmask = ggcm_mhd_get_3d_fld(mhd, 1);
@@ -755,9 +757,8 @@ calce_nl1_c(struct ggcm_mhd_step *step, struct mrc_fld *E,
 	    mrc_fld_data_t dt, struct mrc_fld *x, struct mrc_fld *prim,
       struct mrc_fld *curr)
 {
-  struct mrc_fld *b0 = step->mhd->b0;
-
-  if (b0) {
+  if (s_opt_background) {
+    struct mrc_fld *b0 = step->mhd->b0;
     bcthy3z_NL1(step, 0,1,2, 0,1,1, 0,1,0, 0,0,1, E, dt, x, prim, curr, b0);
     bcthy3z_NL1(step, 1,2,0, 1,0,1, 0,0,1, 1,0,0, E, dt, x, prim, curr, b0);
     bcthy3z_NL1(step, 2,0,1, 1,1,0, 1,0,0, 0,1,0, E, dt, x, prim, curr, b0);
@@ -773,9 +774,8 @@ calce_const_c(struct ggcm_mhd_step *step, struct mrc_fld *E,
 	      mrc_fld_data_t dt, struct mrc_fld *x, struct mrc_fld *prim,
 	      struct mrc_fld *curr, struct mrc_fld *resis)
 {
-  struct mrc_fld *b0 = step->mhd->b0;
-
-  if (b0) {
+  if (s_opt_background) {
+    struct mrc_fld *b0 = step->mhd->b0;
     bcthy3z_const(step, 0,1,2, 0,1,1, 0,1,0, 0,0,1, E, dt, x, prim, curr, resis, b0);
     bcthy3z_const(step, 1,2,0, 1,0,1, 0,0,1, 1,0,0, E, dt, x, prim, curr, resis, b0);
     bcthy3z_const(step, 2,0,1, 1,1,0, 1,0,0, 0,1,0, E, dt, x, prim, curr, resis, b0);

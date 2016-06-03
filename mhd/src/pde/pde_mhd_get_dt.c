@@ -69,7 +69,7 @@ static mrc_fld_data_t _mrc_unused
 pde_mhd_get_dt_scons(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zmask, 
 		     int m_zmask)
 {
-  if (mhd->b0) {
+  if (s_opt_background) {
     return newstep_sc_inl(mhd, x, zmask, m_zmask, mhd->b0);
   } else {
     return newstep_sc_inl(mhd, x, zmask, m_zmask, NULL);

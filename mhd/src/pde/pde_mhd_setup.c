@@ -7,6 +7,7 @@ struct mhd_options {
   int limiter;
   int riemann;
   int time_integrator;
+  bool background;
 };
 
 // ----------------------------------------------------------------------
@@ -74,6 +75,15 @@ static int s_opt_time_integrator _mrc_unused;
 #endif
 
 // ----------------------------------------------------------------------
+// background
+
+#ifdef OPT_BACKGROUND
+static const bool s_opt_background = OPT_BACKGROUND;
+#else
+static bool s_opt_background _mrc_unused;
+#endif
+
+// ----------------------------------------------------------------------
 // pde_mhd_set_options
 
 static void _mrc_unused
@@ -98,6 +108,13 @@ pde_mhd_set_options(struct ggcm_mhd *mhd, struct mhd_options *opt)
   assert(OPT_TIME_INTEGRATOR == opt->time_integrator);
 #else
   s_opt_time_integrator = opt->time_integrator;
+#endif
+
+  // background
+#ifdef OPT_BACKGROUND
+  assert(OPT_BACKGROUND == opt->background);
+#else
+  s_opt_background = opt->background;
 #endif
 }
 
