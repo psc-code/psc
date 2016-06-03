@@ -73,9 +73,8 @@ pde_mhd_get_dt_scons(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zm
 static mrc_fld_data_t _mrc_unused
 pde_mhd_get_dt_fcons(struct ggcm_mhd *mhd, struct mrc_fld *x)
 {
-  assert(s_opt_eqn == OPT_EQN_MHD_FCONS);
-
   //  struct mrc_fld *b0 = mhd->b0;
+  assert(!s_opt_background);
 
   static fld1d_state_t V, U;
   if (!fld1d_state_is_setup(V)) {
@@ -83,7 +82,6 @@ pde_mhd_get_dt_fcons(struct ggcm_mhd *mhd, struct mrc_fld *x)
     fld1d_state_setup(&U);
   }
 
-  mrc_fld_data_t gamma_m1 = s_gamma - 1.f;
 #if 0
   mrc_fld_data_t d_i    = mhd->par.d_i;
   mrc_fld_data_t two_pi_d_i = 2. * M_PI * d_i;
@@ -99,19 +97,11 @@ pde_mhd_get_dt_fcons(struct ggcm_mhd *mhd, struct mrc_fld *x)
       int ib = 0, ie = s_ldims[dir];
       pde_for_each_line(dir, j, k, 0) {
 	mhd_get_line_state(U, x, j, k, dir, p, ib, ie);
+	mhd_prim_from_cons(V, U, ib, ie);
 	for (int i = ib; i < ie; i++) {
-	  mrc_fld_data_t *u = &F1S(U, 0, i);
-	  mrc_fld_data_t rri = 1.f / u[RR];
-	  mrc_fld_data_t vx = u[RVX] * rri;
-	  mrc_fld_data_t vy = u[RVY] * rri;
-	  mrc_fld_data_t vz = u[RVZ] * rri;
-	  mrc_fld_data_t v2 = sqr(vx) + sqr(vy) + sqr(vz);
-	  mrc_fld_data_t bx = u[BX];
-	  mrc_fld_data_t by = u[BY];
-	  mrc_fld_data_t bz = u[BZ];
-	  mrc_fld_data_t b2 = sqr(bx) + sqr(by) + sqr(bz);
-	  assert(!s_opt_background);
-	  mrc_fld_data_t pp = gamma_m1 * (u[EE] - .5f * u[RR] * v2 - .5f * b2);
+	  mrc_fld_data_t *v = &F1S(V, 0, i);
+	  mrc_fld_data_t rri = 1.f / v[RR];
+	  mrc_fld_data_t b2 = sqr(v[BX]) + sqr(v[BY]) + sqr(v[BZ]);
 	  
 #if 0
 	  if (have_hall) {
@@ -120,11 +110,11 @@ pde_mhd_get_dt_fcons(struct ggcm_mhd *mhd, struct mrc_fld *x)
 #endif
 	  
 	  mrc_fld_data_t vA2 = b2 * rri;
-	  mrc_fld_data_t cs2 = s_gamma * pp * rri;
-	  mrc_fld_data_t b2t = sqr(by) + sqr(bz);
+	  mrc_fld_data_t cs2 = s_gamma * v[PP] * rri;
+	  mrc_fld_data_t b2t = sqr(v[BY]) + sqr(v[BZ]);
 	  mrc_fld_data_t cf2 = .5f * (vA2 + cs2 + mrc_fld_sqrt(sqr(vA2 - cs2) + 4.f * cs2 * b2t * rri));
 	  
-	  if (s_sw[dir]) inv_dt = mrc_fld_max(inv_dt, (mrc_fld_abs(vx) + cf2) * PDE_INV_DS(i));
+	  if (s_sw[dir]) inv_dt = mrc_fld_max(inv_dt, (mrc_fld_abs(v[VX]) + cf2) * PDE_INV_DS(i));
 	}
       }
     }
