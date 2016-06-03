@@ -427,12 +427,6 @@ ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic)
     mhd->b0 = ggcm_mhd_get_3d_fld(mhd, 3);
   }
 
-  if (ops->init_b0) {
-    ops->init_b0(ic, mhd->b0);
-    // FIXME, this doesn't set B values in exterior ghost points
-    mrc_ddc_fill_ghosts_fld(mrc_domain_get_ddc(mhd->domain), 0, 3, mhd->b0);
-  }
-
   struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
   struct mrc_fld *b = mrc_fld_make_view(fld, BX, BX + 3);
 
@@ -472,45 +466,6 @@ ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic)
 
   if (ops->run) {
     ops->run(ic);
-  }
-
-  if (ops->init_b0) {
-    if (!ggcm_mhd_step_supports_b0(mhd->step)) {
-      int mhd_type;
-      mrc_fld_get_param_int(mhd->fld, "mhd_type", &mhd_type);
-      
-      // if the stepper doesn't support a separate b0, 
-      // add b0 into b, destroy b0 again.
-      struct mrc_fld *b0 = mrc_fld_get_as(mhd->b0, FLD_TYPE);
-      struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
-      
-      // FIXME, could use some axpy kinda thing
-      for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
-	mrc_fld_foreach(fld, ix,iy,iz, 2, 2) {
-	  // FIXME, this somehow should be handled differently
-	  if (mhd_type == MT_FULLY_CONSERVATIVE_CC) {
-	    EE_(fld, ix,iy,iz, p) -= .5*(sqr(BX_(fld, ix,iy,iz, p)) +
-					 sqr(BY_(fld, ix,iy,iz, p)) +
-					 sqr(BZ_(fld, ix,iy,iz, p)));
-	  }
-	  for (int d = 0; d < 3; d++) {
-	    M3(fld, BX+d, ix,iy,iz, p) += M3(b0, d, ix,iy,iz, p);
-	  }
-	  // FIXME, this somehow should be handled differently
-	  if (mhd_type == MT_FULLY_CONSERVATIVE_CC) {
-	    EE_(fld, ix,iy,iz, p) += .5*(sqr(BX_(fld, ix,iy,iz, p)) +
-					 sqr(BY_(fld, ix,iy,iz, p)) +
-					 sqr(BZ_(fld, ix,iy,iz, p)));
-	  }
-	} mrc_fld_foreach_end;
-      }
-      
-      mrc_fld_put_as(b0, mhd->b0);
-      mrc_fld_put_as(fld, mhd->fld);
-      
-      ggcm_mhd_put_3d_fld(mhd, mhd->b0);
-      mhd->b0 = NULL;
-    }
   }
 }
 
