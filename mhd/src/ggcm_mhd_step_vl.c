@@ -22,6 +22,7 @@
 #include "pde/pde_mhd_convert.c"
 #include "pde/pde_mhd_reconstruct.c"
 #include "pde/pde_mhd_riemann.c"
+#include "pde/pde_mhd_stage.c"
 
 #include "mhd_3d.c"
 
@@ -203,13 +204,13 @@ ggcm_mhd_step_vl_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   // ghosts have already been set
   mrc_fld_copy_range(x_half, x, 0, 5);
   fluxes_pred(step, flux, x);
-  update_finite_volume_uniform(mhd, x_half, flux, NULL, .5 * dt, 0, 0, false);
+  mhd_update_finite_volume(mhd, x_half, flux, NULL, .5 * dt, false, 0, 0);
 
   // CORRECTOR
 
   ggcm_mhd_fill_ghosts(mhd, x_half, 0, mhd->time);
   fluxes_corr(step, flux, x);
-  update_finite_volume_uniform(mhd, x, flux, NULL, dt, 0, 0, true);
+  mhd_update_finite_volume(mhd, x, flux, NULL, dt, true, 0, 0);
 
   // clean up
 

@@ -7,7 +7,8 @@
 static void _mrc_unused
 mhd_update_finite_volume(struct ggcm_mhd *mhd,
 			 struct mrc_fld *x, struct mrc_fld *fluxes[3],
-			 struct mrc_fld *ymask, mrc_fld_data_t dt, bool do_correct)
+			 struct mrc_fld *ymask, mrc_fld_data_t dt, bool do_correct,
+			 int l, int r)
 {
   int gdims[3];
   mrc_domain_get_global_dims(x->_domain, gdims);
@@ -25,7 +26,7 @@ mhd_update_finite_volume(struct ggcm_mhd *mhd,
   for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
     pde_patch_set(p);
 
-    mrc_fld_foreach(x, i,j,k, 0, 0) {
+    mrc_fld_foreach(x, i,j,k, l, r) {
       mrc_fld_data_t ym = ymask ? M3(ymask, 0, i,j,k, p) : 1.f;
       for (int m = 0; m < nr_comps; m++) {
 	M3(x, m, i,j,k, p) -= dt * ym *

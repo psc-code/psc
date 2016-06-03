@@ -188,53 +188,6 @@ update_ct(struct ggcm_mhd *mhd,
 }
 
 // ----------------------------------------------------------------------
-// update_finite_volume_uniform
-
-static void _mrc_unused
-update_finite_volume_uniform(struct ggcm_mhd *mhd,
-			     struct mrc_fld *x, struct mrc_fld *fluxes[3],
-			     struct mrc_fld *ymask,
-			     mrc_fld_data_t dt, int l, int r, bool do_correct)
-{
-  int gdims[3];
-  mrc_domain_get_global_dims(x->_domain, gdims);
-  int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
-  // FIXME ymask!!!
-
-  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-
-  if (mhd->amr > 0 && do_correct) {
-    for (int d = 0; d < 3; d++) {
-      if (gdims[d] > 1) {
-	mrc_ddc_amr_apply(mhd->ddc_amr_flux[d], fluxes[d]);
-      }
-    }
-  }
-
-  int nr_comps = mrc_fld_nr_comps(fluxes[0]);
-  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
-    double ddx[3]; mrc_crds_get_dx(crds, p, ddx);
-    mrc_fld_data_t dt_on_dx[3] = { dt / ddx[0], dt / ddx[1], dt / ddx[2] };
-    // FIXME, potential for accelerating the 2-d/1-d versions
-    for (int d = 0; d < 3; d++) {
-      if (gdims[d] == 1) {
-	dt_on_dx[d] = 0.f;
-      }
-    }
-
-    mrc_fld_foreach(x, i,j,k, l, r) {
-      mrc_fld_data_t ym = ymask ? M3(ymask, 0, i,j,k, p) : 1.f;
-      for (int m = 0; m < nr_comps; m++) {
-	M3(x, m, i,j,k, p) -= ym *
-	  (dt_on_dx[0] * (M3(fluxes[0], m, i+dx,j,k, p) - M3(fluxes[0], m, i,j,k, p)) +
-	   dt_on_dx[1] * (M3(fluxes[1], m, i,j+dy,k, p) - M3(fluxes[1], m, i,j,k, p)) + 
-	   dt_on_dx[2] * (M3(fluxes[2], m, i,j,k+dz, p) - M3(fluxes[2], m, i,j,k, p)));
-      }
-    } mrc_fld_foreach_end;
-  }
-}
-
-// ----------------------------------------------------------------------
 // mrc_fld_copy_range
 
 // FIXME, mv to right place

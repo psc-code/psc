@@ -222,7 +222,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, mrc_fld_data_t time_c
     }
   }
     
-  mhd_update_finite_volume(mhd, x_next, fluxes, mhd->ymask, dt, true);
+  mhd_update_finite_volume(mhd, x_next, fluxes, mhd->ymask, dt, true, 0, 0);
 
   ggcm_mhd_put_3d_fld(mhd, fluxes[0]);
   ggcm_mhd_put_3d_fld(mhd, fluxes[1]);
