@@ -956,7 +956,7 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   if (step->do_nwst) {
     ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
     zmaskn(mhd, zmask, 0, ymask, 0, x);
-    dtn = newstep_sc(mhd, x, zmask, 0);
+    dtn = pde_mhd_get_dt_scons(mhd, x, zmask, 0);
     // yes, dtn isn't set to mhd->dt until the end of the step... this
     // is what the fortran code did    
   }

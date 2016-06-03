@@ -754,7 +754,7 @@ ggcm_mhd_step_c2_newstep(struct ggcm_mhd_step *step, float *dtn)
   ggcm_mhd_fill_ghosts(mhd, mhd->fld, _RR1, mhd->time);
   zmaskn(mhd, mhd->fld, _ZMASK, mhd->fld, _YMASK, mhd->fld);
   // assert(strcmp(mrc_fld_type(mhd->fld), "float") == 0);
-  *dtn = newstep_sc(mhd, mhd->fld, mhd->fld, _ZMASK);
+  *dtn = pde_mhd_get_dt_scons(mhd, mhd->fld, mhd->fld, _ZMASK);
 }
 
 // ----------------------------------------------------------------------

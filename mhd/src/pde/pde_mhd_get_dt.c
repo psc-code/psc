@@ -54,57 +54,11 @@ newstep_sc_inl(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zmask,
   mrc_fld_data_t dtn;
   MPI_Allreduce(&dt, &dtn, 1, MPI_MRC_FLD_DATA_T, MPI_MIN, ggcm_mhd_comm(mhd));
 
-  mrc_fld_data_t dtmin  = mhd->par.dtmin;
   // dtn is the global new timestep
-  if (dtn <= dtmin) {
-    // dt is local new timestep
-    if (dt <= dtmin) {
-      char filename[20];
-      int rank;
-      FILE *file;
-
-      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-      sprintf(filename, "dtmin.%d", rank);
-      file = fopen(filename, "w");
-
-      fprintf(file, "istep,dtmin %d %f\n",mhd->istep,dtmin);
-      for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
-	float *fd1x = ggcm_mhd_crds_get_crd_p(mhd->crds, 0, FD1, p);
-	float *fd1y = ggcm_mhd_crds_get_crd_p(mhd->crds, 1, FD1, p);
-	float *fd1z = ggcm_mhd_crds_get_crd_p(mhd->crds, 2, FD1, p);
-
-	// FIXME: this re-implements all the math above
-	mrc_fld_foreach(x, ix, iy, iz, 0, 0) {
-	  mrc_fld_data_t hh = fmaxf(fmaxf(fd1x[ix], fd1y[iy]), fd1z[iz]);
-	  // FIXME, sqrtf() is not nec, we square the result again
-	  mrc_fld_data_t vv =
-	    mrc_fld_sqrt((sqr(BX(x, ix,iy,iz)) + sqr(BY(x, ix,iy,iz)) + sqr(BZ(x, ix,iy,iz)) +
-			  gamm * fmaxf(0.f, PP(x, ix,iy,iz))) /
-			 fabsf(RR(x, ix,iy,iz))) +
-	    mrc_fld_sqrt(sqr(VX(x, ix,iy,iz)) + sqr(VY(x, ix,iy,iz)) + sqr(VZ(x, ix,iy,iz)));
-	  vv = fmaxf(eps, vv);
-	  mrc_fld_data_t zm = 1.f;
-	  if (zmask) {
-	    zm = F3(zmask, m_zmask, ix,iy,iz);
-	  }
-	  mrc_fld_data_t tt = thx / fmaxf(eps, hh*vv*zm);
-	  if (tt <= dtmin) {
-	    fprintf(file,"%s %7d %7d %7d\n"," dtmin at ", ix, iy, ix);
-	    fprintf(file,"%s %12.5g %12.5g %12.5g\n"," hh,vv,tt ", hh, vv, tt);
-	    fprintf(file,"%s %12.5g %12.5g %12.5g\n"," bx,y,z   ", BX(x, ix,iy,iz)*mhd->bbnorm, BY(x, ix,iy,iz)*mhd->bbnorm, BZ(x, ix,iy,iz)*mhd->bbnorm);
-	    fprintf(file,"%s %12.5g %12.5g %12.5g\n"," vx,y,z   ", VX(x, ix,iy,iz)*mhd->vvnorm, VY(x, ix,iy,iz)*mhd->vvnorm, VZ(x, ix,iy,iz)*mhd->vvnorm);
-	    fprintf(file,"%s %12.5g %12.5g %12.5g\n"," rr,pp,zm ", RR(x, ix,iy,iz)*mhd->rrnorm, PP(x, ix,iy,iz)*mhd->ppnorm, zm);
-	    float *fx1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FX1);
-	    float *fx1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FX1);
-	    float *fx1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FX1);
-	    fprintf(file,"%s %12.5g %12.5g %12.5g %12.5g\n"," xx,yy,zz,r ",fx1x[ix],fx1y[iy],fx1z[iz],sqrtf(sqr(fx1x[ix])+sqr(fx1y[iy])+sqr(fx1z[iz])));
-	  }
-	} mrc_fld_foreach_end;
-      }
-    }
+  if (dtn <= mhd->par.dtmin) {
     mpi_printf(ggcm_mhd_comm(mhd), "!!! dt < dtmin. Dying now!\n");
     mpi_printf(ggcm_mhd_comm(mhd), "!!! dt %g -> %g, dtmin = %g\n",
-	       mhd->dt, dtn, dtmin);
+	       mhd->dt, dtn, mhd->par.dtmin);
     ggcm_mhd_wrongful_death(mhd, mhd->fld, -1);
   }
 
@@ -112,8 +66,8 @@ newstep_sc_inl(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zmask,
 }
 
 static mrc_fld_data_t _mrc_unused
-newstep_sc(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zmask, 
-	   int m_zmask)
+pde_mhd_get_dt_scons(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zmask, 
+		     int m_zmask)
 {
   if (mhd->b0) {
     return newstep_sc_inl(mhd, x, zmask, m_zmask, mhd->b0);

@@ -239,7 +239,7 @@ ggcm_mhd_step_mhdcc_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
   struct ggcm_mhd *mhd = step->mhd;
 
   ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
-  return newstep_sc(mhd, x, NULL, 0);
+  return pde_mhd_get_dt_scons(mhd, x, NULL, 0);
 }
 
 // ----------------------------------------------------------------------
