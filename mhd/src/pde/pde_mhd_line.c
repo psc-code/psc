@@ -129,13 +129,13 @@ put_line_fc(struct mrc_fld *flux, fld1d_state_t F,
 
 
 // ----------------------------------------------------------------------
-// pick_line_sc
+// mhd_get_line_state_scons
 
 static void _mrc_unused
-pick_line_sc(fld1d_state_t u, struct mrc_fld *U,
-	     int j, int k, int dim, int p, int ib, int ie)
+mhd_get_line_state_scons(fld1d_state_t u, struct mrc_fld *U,
+			 int j, int k, int dim, int p, int ib, int ie)
 {
-#define PICK_LINE(X,Y,Z,I,J,K) do {			\
+#define GET_LINE(X,Y,Z,I,J,K) do {			\
     for (int i = ib; i < ie; i++) {			\
       F1S(u, RR , i) = M3(U, RR   , I,J,K, p);		\
       F1S(u, RVX, i) = M3(U, RVX+X, I,J,K, p);		\
@@ -146,21 +146,21 @@ pick_line_sc(fld1d_state_t u, struct mrc_fld *U,
   } while (0)
 
   if (dim == 0) {
-    PICK_LINE(0,1,2, i,j,k);
+    GET_LINE(0,1,2, i,j,k);
   } else if (dim == 1) {
-    PICK_LINE(1,2,0, k,i,j);
+    GET_LINE(1,2,0, k,i,j);
   } else if (dim == 2) {
-    PICK_LINE(2,0,1, j,k,i);
+    GET_LINE(2,0,1, j,k,i);
   }
-#undef PICK_LINE
+#undef GET_LINE
 }
 
 // ----------------------------------------------------------------------
-// put_line_sc
+// mhd_put_line_state_scons
 
 static void _mrc_unused
-put_line_sc(struct mrc_fld *flux, fld1d_state_t F,
-	    int j, int k, int dir, int p, int ib, int ie)
+mhd_put_line_state_scons(struct mrc_fld *flux, fld1d_state_t F,
+			 int j, int k, int dir, int p, int ib, int ie)
 {
 #define PUT_LINE(X,Y,Z, I,J,K) do {					\
     for (int i = ib; i < ie; i++) {					\
@@ -191,6 +191,9 @@ mhd_get_line_state(fld1d_state_t u, struct mrc_fld *U, int j, int k, int dir,
 {
   if (s_opt_eqn == OPT_EQN_MHD_FCONS) {
     mhd_get_line_state_fcons(u, U, j, k, dir, p, ib, ie);
+  } else if (s_opt_eqn == OPT_EQN_MHD_SCONS ||
+	     s_opt_eqn == OPT_EQN_HD) {
+    mhd_get_line_state_scons(u, U, j, k, dir, p, ib, ie);
   } else {
     assert(0);
   }
@@ -205,6 +208,9 @@ mhd_put_line_state(struct mrc_fld *U, fld1d_state_t u,
 {
   if (s_opt_eqn == OPT_EQN_MHD_FCONS) {
     mhd_put_line_state_fcons(U, u, j, k, dir, p, ib, ie);
+  } else if (s_opt_eqn == OPT_EQN_MHD_SCONS ||
+	     s_opt_eqn == OPT_EQN_HD) {
+    mhd_put_line_state_scons(U, u, j, k, dir, p, ib, ie);
   } else {
     assert(0);
   }
