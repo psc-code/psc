@@ -132,7 +132,7 @@ mhd_flux_pt1(struct ggcm_mhd_step *step, struct mrc_fld *x,
   fld1d_state_t W = sub->W, W_l = sub->W_l, W_r = sub->W_r;
 
   // FIXME: +2,+2 is specifically for PLM reconstr (and enough for PCM)
-  pick_line_fc_cc(U, x, j, k, dir, p, ib - 2, ie + 2);
+  mhd_get_line_state(U, x, j, k, dir, p, ib - 2, ie + 2);
   mhd_prim_from_cons(W, U, ib - 2, ie + 2);
   mhd_reconstruct(U_l, U_r, W_l, W_r, W, (fld1d_t) {}, ib, ie + 1);
 }
@@ -149,7 +149,7 @@ mhd_flux_pt2(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3],
   fld1d_state_t W_l = sub->W_l, W_r = sub->W_r, F = sub->F;
 
   mhd_riemann(F, U_l, U_r, W_l, W_r, ib, ie + 1);
-  put_line_fc_cc(fluxes[dir], F, j, k, dir, p, ib, ie + 1);
+  mhd_put_line_state(fluxes[dir], F, j, k, dir, p, ib, ie + 1);
 }
 
 // ----------------------------------------------------------------------
@@ -180,8 +180,8 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, mrc_fld_data_t time_c
 	pde_for_each_line(dir, j, k, 0) {
 	  int ib = 0, ie = s_ldims[dir];
 	  mhd_flux_pt1(step, x_curr, j, k, dir, p, ib, ie);
-	  put_line_fc_cc(U_l[dir], sub->U_l, j, k, dir, p, ib, ie + 1);
-	  put_line_fc_cc(U_r[dir], sub->U_r, j, k, dir, p, ib, ie + 1);
+	  mhd_put_line_state(U_l[dir], sub->U_l, j, k, dir, p, ib, ie + 1);
+	  mhd_put_line_state(U_r[dir], sub->U_r, j, k, dir, p, ib, ie + 1);
 	}
       }
     }
@@ -193,8 +193,8 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, mrc_fld_data_t time_c
       pde_for_each_dir(dir) {
 	pde_for_each_line(dir, j, k, 0) {
 	  int ib = 0, ie = s_ldims[dir];
-	  pick_line_fc_cc(sub->U_l, U_l[dir], j, k, dir, p, ib, ie + 1);
-	  pick_line_fc_cc(sub->U_r, U_r[dir], j, k, dir, p, ib, ie + 1);
+	  mhd_get_line_state(sub->U_l, U_l[dir], j, k, dir, p, ib, ie + 1);
+	  mhd_get_line_state(sub->U_r, U_r[dir], j, k, dir, p, ib, ie + 1);
 	  mhd_prim_from_cons(sub->W_l, sub->U_l, ib, ie + 1);
 	  mhd_prim_from_cons(sub->W_r, sub->U_r, ib, ie + 1);
 	  
