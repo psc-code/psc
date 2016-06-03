@@ -63,14 +63,14 @@ mhd_put_line_state_fcons(struct mrc_fld *flux, fld1d_state_t F,
 
 
 // ----------------------------------------------------------------------
-// pick_line_fc
+// mhd_get_line_state_fcons_ct
 
 static void _mrc_unused
-pick_line_fc(fld1d_state_t u, fld1d_t bx,
-	     struct mrc_fld *U, struct mrc_fld *Bcc,
-	     int j, int k, int dir, int p, int ib, int ie)
+mhd_get_line_state_fcons_ct(fld1d_state_t u, fld1d_t bx,
+			    struct mrc_fld *U, struct mrc_fld *Bcc,
+			    int j, int k, int dir, int p, int ib, int ie)
 {
-#define PICK_LINE(X, Y, Z, I, J, K)			       \
+#define GET_LINE(X, Y, Z, I, J, K)			       \
   do {							       \
     for (int i = ib; i < ie; i++) {			       \
       F1S(u, RR , i) = M3(U, RR     , I,J,K, p);	       \
@@ -85,23 +85,23 @@ pick_line_fc(fld1d_state_t u, fld1d_t bx,
     }							       \
   } while (0)
   if (dir == 0) {
-    PICK_LINE(0, 1, 2, i, j, k);
+    GET_LINE(0, 1, 2, i, j, k);
   } else if (dir == 1) {
-    PICK_LINE(1, 2, 0, k, i, j);
+    GET_LINE(1, 2, 0, k, i, j);
   } else if (dir == 2) {
-    PICK_LINE(2, 0, 1, j, k, i);
+    GET_LINE(2, 0, 1, j, k, i);
   } else {
     assert(0);
   }
-#undef PICK_LINE
+#undef GET_LINE
 }
 
 // ----------------------------------------------------------------------
-// put_line_fc
+// mhd_put_line_state_fcons_ct
 
 static void _mrc_unused
-put_line_fc(struct mrc_fld *flux, fld1d_state_t F,
-	    int j, int k, int dir, int p, int ib, int ie)
+mhd_put_line_state_fcons_ct(struct mrc_fld *flux, fld1d_state_t F,
+			    int j, int k, int dir, int p, int ib, int ie)
 {
 #define PUT_LINE(X, Y, Z, I, J, K) do {				\
     for (int i = ib; i < ie; i++) {				\
