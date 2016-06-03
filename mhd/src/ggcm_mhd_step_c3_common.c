@@ -103,6 +103,7 @@ ggcm_mhd_step_c3_setup(struct ggcm_mhd_step *step)
   fld1d_state_setup(&sub->F_lo);
   fld1d_state_setup(&sub->Lim1);
 
+  mhd->b0 = ggcm_mhd_get_3d_fld(mhd, 3);
   mhd->ymask = ggcm_mhd_get_3d_fld(mhd, 1);
   mrc_fld_set(mhd->ymask, 1.);
   sub->zmask = ggcm_mhd_get_3d_fld(mhd, 1);

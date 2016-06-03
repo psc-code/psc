@@ -423,10 +423,6 @@ ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic)
   assert(mhd);
   struct ggcm_mhd_ic_ops *ops = ggcm_mhd_ic_ops(ic);
 
-  if (ggcm_mhd_step_supports_b0(mhd->step)) {
-    mhd->b0 = ggcm_mhd_get_3d_fld(mhd, 3);
-  }
-
   struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
   struct mrc_fld *b = mrc_fld_make_view(fld, BX, BX + 3);
 
