@@ -139,9 +139,8 @@ pde_mhd_get_dt_fcons_ct(struct ggcm_mhd *mhd, struct mrc_fld *x)
   mrc_fld_data_t gamma_m1 = s_gamma - 1.f;
   mrc_fld_data_t d_i = mhd->par.d_i;
 
-  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-
   struct mrc_fld *Bcc = ggcm_mhd_get_3d_fld(mhd, 3);
+  ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
   compute_B_cc(Bcc, x, 0, 0);
 
   mrc_fld_data_t max_dti_x = 0., max_dti_y = 0., max_dti_z = 0.;

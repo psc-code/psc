@@ -398,6 +398,17 @@ compute_Ediffu_const(struct ggcm_mhd_step *step, struct mrc_fld *E_ec,
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_step_vlct_get_dt
+
+static double
+ggcm_mhd_step_vlct_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
+{
+  struct ggcm_mhd *mhd = step->mhd;
+
+  return pde_mhd_get_dt_fcons_ct(mhd, x);
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_step_vlct_run
 
 static void
@@ -417,36 +428,8 @@ ggcm_mhd_step_vlct_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 			      ggcm_mhd_get_3d_fld(mhd, 8),
 			      ggcm_mhd_get_3d_fld(mhd, 8), };
 
-  // CFL CONDITION
-
+  // FIXME, this is done in get_dt, and redoing it could be avoided
   ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
-
-  if (step->do_nwst) {
-    double old_dt = mhd->dt;
-    mhd->dt = pde_mhd_get_dt_fcons_ct(mhd, x);
-    if (mhd->dt != old_dt) {
-      mpi_printf(ggcm_mhd_comm(mhd), "switched dt %g <- %g\n", mhd->dt, old_dt);
-      
-      // FIXME: determining when to die on a bad dt should be generalized, since
-      //        there's another hiccup if refining dt for actual AMR
-      bool first_step = mhd->istep <= 1;
-      bool last_step = mhd->time + mhd->dt > (1.0 - 1e-5) * mhd->max_time;
-      
-      if (!first_step && !last_step && mhd->dt < mhd->par.dtmin) {
-        mpi_printf(ggcm_mhd_comm(mhd), "!!! dt < dtmin. Dying now!\n");
-        mpi_printf(ggcm_mhd_comm(mhd), "!!! dt %g -> %g, dtmin = %g\n",
-                   old_dt, mhd->dt, mhd->par.dtmin);
-        ggcm_mhd_wrongful_death(mhd, mhd->fld, -1);
-      }
-
-      if (!first_step && !last_step &&
-          (mhd->dt < 0.5 * old_dt || mhd->dt > 2.0 * old_dt)) {
-        mpi_printf(ggcm_mhd_comm(mhd), "!!! dt changed by > a factor of 2. "
-                   "Dying now!\n");
-        ggcm_mhd_wrongful_death(mhd, mhd->fld, 2);
-      }
-    }
-  }
 
   mrc_fld_data_t dt = mhd->dt;
 
@@ -623,5 +606,6 @@ struct ggcm_mhd_step_ops ggcm_mhd_step_vlct_ops = {
   .run              = ggcm_mhd_step_vlct_run,
   .setup_flds       = ggcm_mhd_step_vlct_setup_flds,
   .get_e_ec         = ggcm_mhd_step_vlct_get_e_ec,
+  .get_dt           = ggcm_mhd_step_vlct_get_dt,
 };
 
