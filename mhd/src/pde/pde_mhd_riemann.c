@@ -433,7 +433,7 @@ fluxes_hlld(mrc_fld_data_t F[8], mrc_fld_data_t Ul[8], mrc_fld_data_t Ur[8],
 // ----------------------------------------------------------------------
 // mhd_riemann
 
-static void
+static void _mrc_unused
 mhd_riemann(fld1d_state_t F, fld1d_state_t U_l, fld1d_state_t U_r,
 	    fld1d_state_t W_l, fld1d_state_t W_r, int ib, int ie)
 {

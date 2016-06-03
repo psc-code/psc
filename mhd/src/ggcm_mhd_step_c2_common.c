@@ -23,6 +23,7 @@
 #include "pde/pde_mhd_setup.c"
 #include "pde/pde_mhd_line.c"
 #include "pde/pde_mhd_convert.c"
+#include "pde/pde_mhd_riemann.c"
 #include "pde/pde_mhd_get_dt.c"
 
 #include "mhd_sc.c"

@@ -73,7 +73,6 @@ pde_mhd_get_dt_scons(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zm
 static mrc_fld_data_t _mrc_unused
 pde_mhd_get_dt_fcons(struct ggcm_mhd *mhd, struct mrc_fld *x)
 {
-  //  struct mrc_fld *b0 = mhd->b0;
   assert(!s_opt_background);
 
   static fld1d_state_t V, U;
@@ -81,12 +80,6 @@ pde_mhd_get_dt_fcons(struct ggcm_mhd *mhd, struct mrc_fld *x)
     fld1d_state_setup(&V);
     fld1d_state_setup(&U);
   }
-
-#if 0
-  mrc_fld_data_t d_i    = mhd->par.d_i;
-  mrc_fld_data_t two_pi_d_i = 2. * M_PI * d_i;
-  bool have_hall = d_i > 0.f;
-#endif
 
   mrc_fld_data_t inv_dt = 0.f;
   for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
@@ -100,20 +93,10 @@ pde_mhd_get_dt_fcons(struct ggcm_mhd *mhd, struct mrc_fld *x)
 	mhd_prim_from_cons(V, U, ib, ie);
 	for (int i = ib; i < ie; i++) {
 	  mrc_fld_data_t *v = &F1S(V, 0, i);
-	  mrc_fld_data_t rri = 1.f / v[RR];
-	  mrc_fld_data_t b2 = sqr(v[BX]) + sqr(v[BY]) + sqr(v[BZ]);
-	  
-#if 0
-	  if (have_hall) {
-	    bb *= 1 + sqr(two_pi_d_i * hh);
-	  }      
-#endif
-	  
-	  mrc_fld_data_t vA2 = b2 * rri;
-	  mrc_fld_data_t cs2 = s_gamma * v[PP] * rri;
-	  mrc_fld_data_t b2t = sqr(v[BY]) + sqr(v[BZ]);
-	  mrc_fld_data_t cf2 = .5f * (vA2 + cs2 + mrc_fld_sqrt(sqr(vA2 - cs2) + 4.f * cs2 * b2t * rri));
-	  mrc_fld_data_t cf = mrc_fld_sqrt(cf2);
+	  // This is iffy: we should call wavespeed_mhd_fcons even if we're using
+	  // scons variables, since we want all MHD waves taken into account, not just
+	  // the sound waves. FIXME, there must be a better way
+	  mrc_fld_data_t cf = wavespeed_mhd_fcons(NULL, v);
 
 	  if (s_sw[dir]) inv_dt = mrc_fld_max(inv_dt, (mrc_fld_abs(v[VX]) + cf) * PDE_INV_DS(i));
 	}
