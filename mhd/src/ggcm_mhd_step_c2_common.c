@@ -12,6 +12,16 @@
 #include <math.h>
 #include <string.h>
 
+#include "pde/pde_defs.h"
+
+// mhd options
+
+#define OPT_EQN OPT_EQN_MHD_SCONS
+
+#include "pde/pde_setup.c"
+#include "pde/pde_mhd_setup.c"
+#include "pde/pde_mhd_get_dt.c"
+
 #include "mhd_sc.c"
 
 // TODO:
@@ -794,8 +804,13 @@ ggcm_mhd_step_c2_corr(struct ggcm_mhd_step *step)
 static void
 ggcm_mhd_step_c2_setup(struct ggcm_mhd_step *step)
 {
-  step->mhd->ymask = mrc_fld_make_view(step->mhd->fld, _YMASK, _YMASK + 1);
-  mrc_fld_set(step->mhd->ymask, 1.);
+  struct ggcm_mhd *mhd = step->mhd;
+
+  pde_setup(mhd->fld);
+  pde_mhd_setup(mhd);
+
+  mhd->ymask = mrc_fld_make_view(mhd->fld, _YMASK, _YMASK + 1);
+  mrc_fld_set(mhd->ymask, 1.);
 
   ggcm_mhd_step_setup_member_objs_sub(step);
   ggcm_mhd_step_setup_super(step);
