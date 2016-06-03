@@ -88,40 +88,48 @@ pde_mhd_get_dt_fcons(struct ggcm_mhd *mhd, struct mrc_fld *x)
   for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
     pde_patch_set(p);
 
-    mrc_fld_foreach(x, i,j,k, 0, 0) {
-      mrc_fld_data_t rr = RR_(x, i,j,k, p);
-      mrc_fld_data_t rri = 1.f / rr;
-      mrc_fld_data_t vx = RVX_(x, i,j,k, p) * rri;
-      mrc_fld_data_t vy = RVY_(x, i,j,k, p) * rri;
-      mrc_fld_data_t vz = RVZ_(x, i,j,k, p) * rri;
-      mrc_fld_data_t vv = sqr(vx) + sqr(vy) + sqr(vz);
-      mrc_fld_data_t bx = BTX_(x, i,j,k, p);
-      mrc_fld_data_t by = BTY_(x, i,j,k, p);
-      mrc_fld_data_t bz = BTZ_(x, i,j,k, p);
-      mrc_fld_data_t bb = sqr(bx) + sqr(by) + sqr(bz);
-      assert(!s_opt_background);
-      mrc_fld_data_t pp = gamma_m1 * (EE_(x, i,j,k, p) - .5f * rr * vv - .5f * bb);
-
+    pde_for_each_dir(dir) {
+      mrc_fld_foreach(x, i,j,k, 0, 0) {
+	mrc_fld_data_t rr = RR_(x, i,j,k, p);
+	mrc_fld_data_t rri = 1.f / rr;
+	mrc_fld_data_t vx = RVX_(x, i,j,k, p) * rri;
+	mrc_fld_data_t vy = RVY_(x, i,j,k, p) * rri;
+	mrc_fld_data_t vz = RVZ_(x, i,j,k, p) * rri;
+	mrc_fld_data_t vv = sqr(vx) + sqr(vy) + sqr(vz);
+	mrc_fld_data_t bx = BTX_(x, i,j,k, p);
+	mrc_fld_data_t by = BTY_(x, i,j,k, p);
+	mrc_fld_data_t bz = BTZ_(x, i,j,k, p);
+	mrc_fld_data_t bb = sqr(bx) + sqr(by) + sqr(bz);
+	assert(!s_opt_background);
+	mrc_fld_data_t pp = gamma_m1 * (EE_(x, i,j,k, p) - .5f * rr * vv - .5f * bb);
+	
 #if 0
-      if (have_hall) {
-	bb *= 1 + sqr(two_pi_d_i * hh);
-      }      
+	if (have_hall) {
+	  bb *= 1 + sqr(two_pi_d_i * hh);
+	}      
 #endif
- 
-      mrc_fld_data_t vA2 = bb * rri;
-      mrc_fld_data_t cs2 = s_gamma * pp * rri;
+	
+	mrc_fld_data_t vA2 = bb * rri;
+	mrc_fld_data_t cs2 = s_gamma * pp * rri;
 
-      mrc_fld_data_t cf2_x =
-	.5f * (vA2 + cs2 + mrc_fld_sqrt(sqr(vA2 - cs2) + 4.f * cs2 * (sqr(by) + sqr(bz)) * rri));
-      mrc_fld_data_t cf2_y =
-	.5f * (vA2 + cs2 + mrc_fld_sqrt(sqr(vA2 - cs2) + 4.f * cs2 * (sqr(bx) + sqr(bz)) * rri));
-      mrc_fld_data_t cf2_z =
-	.5f * (vA2 + cs2 + mrc_fld_sqrt(sqr(vA2 - cs2) + 4.f * cs2 * (sqr(bx) + sqr(by)) * rri));
+	mrc_fld_data_t v;
+	if (dir == 0) v = vx;
+	if (dir == 1) v = vy;
+	if (dir == 2) v = vz;
+	mrc_fld_data_t b2t;
+	if (dir == 0) b2t = sqr(by) + sqr(bz);
+	if (dir == 1) b2t = sqr(bz) + sqr(bx);
+	if (dir == 2) b2t = sqr(bx) + sqr(by);
+	mrc_fld_data_t inv_dx;
+	if (dir == 0) inv_dx = PDE_INV_DX(i);
+	if (dir == 1) inv_dx = PDE_INV_DY(j);
+	if (dir == 2) inv_dx = PDE_INV_DZ(k);
 
-      if (s_sw[0]) inv_dt = mrc_fld_max(inv_dt, (mrc_fld_abs(vx) + cf2_x) * PDE_INV_DX(i));
-      if (s_sw[1]) inv_dt = mrc_fld_max(inv_dt, (mrc_fld_abs(vy) + cf2_y) * PDE_INV_DY(j));
-      if (s_sw[2]) inv_dt = mrc_fld_max(inv_dt, (mrc_fld_abs(vz) + cf2_z) * PDE_INV_DZ(k));
-    } mrc_fld_foreach_end;
+	mrc_fld_data_t cf2 = .5f * (vA2 + cs2 + mrc_fld_sqrt(sqr(vA2 - cs2) + 4.f * cs2 * b2t * rri));
+
+	if (s_sw[dir]) inv_dt = mrc_fld_max(inv_dt, (mrc_fld_abs(v) + cf2) * inv_dx);
+      } mrc_fld_foreach_end;
+    }
   }
   mrc_fld_data_t dt = mhd->par.thx / inv_dt;
 
