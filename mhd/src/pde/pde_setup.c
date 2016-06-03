@@ -114,6 +114,12 @@ pde_setup(struct mrc_fld *fld)
 }
 
 // ======================================================================
+// loop over lines // loop along line
+
+static fld1d_t s_line_inv_dx;
+
+// FIXME, this is too easily confused with PDE_INV_DX
+#define PDE_INV_DS(i) F1(s_line_inv_dx, i)
 
 // ----------------------------------------------------------------------
 // pde_for_each_dir
@@ -121,6 +127,15 @@ pde_setup(struct mrc_fld *fld)
 #define pde_for_each_dir(dir)			\
       for (int dir = 0; dir < 3; dir++)		\
 	if (s_sw[dir] > 0)
+
+// ----------------------------------------------------------------------
+// pde_line_set_dir
+
+static void _mrc_unused
+pde_line_set_dir(int dir)
+{
+  s_line_inv_dx = s_patch.inv_dx[dir];
+}
 
 // ----------------------------------------------------------------------
 // pde_for_each_line

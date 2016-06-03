@@ -95,8 +95,9 @@ pde_mhd_get_dt_fcons(struct ggcm_mhd *mhd, struct mrc_fld *x)
     pde_patch_set(p);
 
     pde_for_each_dir(dir) {
+      pde_line_set_dir(dir);
+      int ib = 0, ie = s_ldims[dir];
       pde_for_each_line(dir, j, k, 0) {
-	int ib = 0, ie = s_ldims[dir];
 	mhd_get_line_state(U, x, j, k, dir, p, ib, ie);
 	for (int i = ib; i < ie; i++) {
 	  mrc_fld_data_t *u = &F1S(U, 0, i);
@@ -120,16 +121,10 @@ pde_mhd_get_dt_fcons(struct ggcm_mhd *mhd, struct mrc_fld *x)
 	  
 	  mrc_fld_data_t vA2 = b2 * rri;
 	  mrc_fld_data_t cs2 = s_gamma * pp * rri;
-	  
 	  mrc_fld_data_t b2t = sqr(by) + sqr(bz);
-	  mrc_fld_data_t inv_dx;
-	  if (dir == 0) inv_dx = PDE_INV_DX(i);
-	  if (dir == 1) inv_dx = PDE_INV_DY(j);
-	  if (dir == 2) inv_dx = PDE_INV_DZ(k);
-	  
 	  mrc_fld_data_t cf2 = .5f * (vA2 + cs2 + mrc_fld_sqrt(sqr(vA2 - cs2) + 4.f * cs2 * b2t * rri));
 	  
-	  if (s_sw[dir]) inv_dt = mrc_fld_max(inv_dt, (mrc_fld_abs(vx) + cf2) * inv_dx);
+	  if (s_sw[dir]) inv_dt = mrc_fld_max(inv_dt, (mrc_fld_abs(vx) + cf2) * PDE_INV_DS(i));
 	}
       }
     }
