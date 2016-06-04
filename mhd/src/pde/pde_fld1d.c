@@ -47,6 +47,31 @@ fld1d_is_setup(fld1d_t f)
 }
 
 // ======================================================================
+// fld1d_vec_t
+//
+// 1d line of mrc_fld_data_t, access with F1()
+
+typedef struct {
+  struct mrc_fld *mrc_fld;
+} fld1d_vec_t;
+
+#define F1V(f, m, i) MRC_FLD_F1((f).mrc_fld, m, i)
+
+static inline void
+fld1d_vec_setup(fld1d_vec_t *f)
+{
+  assert(!f->mrc_fld);
+
+  f->mrc_fld = mrc_fld_create_1d(3, s_size_1d);
+}
+
+static inline bool
+fld1d_vec_is_setup(fld1d_vec_t f)
+{
+  return f.mrc_fld;
+}
+
+// ======================================================================
 // fld1d_state_t
 //
 // 1d line of s_n_comp mrc_fld_data_t, access with F1S
