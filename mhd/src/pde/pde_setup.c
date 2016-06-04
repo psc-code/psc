@@ -18,6 +18,12 @@ static int s_ldims[3]; // local dimensions (interior only)
 static int s_sw[3];    // number of ghost points per dim
 static int s_dijk[3];  // set to 1 if actual direction, 0 if invariant
 
+// this is violating any kind of name space pretty badly, but otherwise
+// it's just way too ugly to actually use these
+#define di (s_dijk[0])
+#define dj (s_dijk[1])
+#define dk (s_dijk[2])
+
 // need to have the static parameters above before we can include pde_fld1d.c
 
 #include "pde_fld1d.c"
@@ -48,8 +54,12 @@ static struct pde_patch s_patch;
 
 // macros to access these quantities in less ugly way
 #define PDE_INV_DX(i) F1(s_patch.inv_dx[0], i)
-#define PDE_INV_DY(i) F1(s_patch.inv_dx[1], i)
-#define PDE_INV_DZ(i) F1(s_patch.inv_dx[2], i)
+#define PDE_INV_DY(j) F1(s_patch.inv_dx[1], j)
+#define PDE_INV_DZ(k) F1(s_patch.inv_dx[2], k)
+
+#define PDE_INV_DXF(i) F1(s_patch.inv_dxf[0], i)
+#define PDE_INV_DYF(j) F1(s_patch.inv_dxf[1], j)
+#define PDE_INV_DZF(k) F1(s_patch.inv_dxf[2], k)
 
 // ----------------------------------------------------------------------
 // pde_patch_set
