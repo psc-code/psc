@@ -32,7 +32,9 @@ static bool s_opt_bc_reconstruct = false;
 #include "pde/pde_mhd_line.c"
 #include "pde/pde_mhd_convert.c"
 #include "pde/pde_mhd_reconstruct.c"
+#include "pde/pde_mhd_current.c"
 #include "pde/pde_mhd_riemann.c"
+#include "pde/pde_mhd_resistive.c"
 #include "pde/pde_mhd_stage.c"
 #include "pde/pde_mhd_get_dt.c"
 
@@ -82,6 +84,7 @@ ggcm_mhd_step_mhdcc_setup(struct ggcm_mhd_step *step)
   fld1d_state_setup(&sub->W_l);
   fld1d_state_setup(&sub->W_r);
   fld1d_state_setup(&sub->F);
+  pde_mhd_aux_setup();
 
   mhd->ymask = ggcm_mhd_get_3d_fld(mhd, 1);
   mrc_fld_set(mhd->ymask, 1.);
@@ -144,14 +147,16 @@ mhd_flux_pt1(struct ggcm_mhd_step *step, struct mrc_fld *x,
 // mhd_flux_pt2
 
 static void
-mhd_flux_pt2(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3],
+mhd_flux_pt2(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3], struct mrc_fld *x,
 	     int j, int k, int dir, int p, int ib, int ie)
 {
   struct ggcm_mhd_step_mhdcc *sub = ggcm_mhd_step_mhdcc(step);
   fld1d_state_t U_l = sub->U_l, U_r = sub->U_r;
-  fld1d_state_t W_l = sub->W_l, W_r = sub->W_r, F = sub->F;
+  fld1d_state_t W = sub->W, W_l = sub->W_l, W_r = sub->W_r, F = sub->F;
 
+  mhd_line_get_current(x, j, k, dir, p, ib, ie + 1);
   mhd_riemann(F, U_l, U_r, W_l, W_r, ib, ie + 1);
+  mhd_add_resistive_flux(F, W, ib, ie + 1);
   mhd_put_line_state(fluxes[dir], F, j, k, dir, p, ib, ie + 1);
 }
 
@@ -201,7 +206,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, mrc_fld_data_t time_c
 	  mhd_prim_from_cons(sub->W_l, sub->U_l, ib, ie + 1);
 	  mhd_prim_from_cons(sub->W_r, sub->U_r, ib, ie + 1);
 	  
-	  mhd_flux_pt2(step, fluxes, j, k, dir, p, 0, s_ldims[dir]);
+	  mhd_flux_pt2(step, fluxes, x_curr, j, k, dir, p, 0, s_ldims[dir]);
 	}
       }
     } 
@@ -218,7 +223,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, mrc_fld_data_t time_c
 	pde_for_each_line(dir, j, k, 0) {
 	  int ib = 0, ie = s_ldims[dir];
 	  mhd_flux_pt1(step, x_curr, j, k, dir, p, ib, ie);
-	  mhd_flux_pt2(step, fluxes, j, k, dir, p, ib, ie);
+	  mhd_flux_pt2(step, fluxes, x_curr, j, k, dir, p, ib, ie);
 	}
       }
     }
@@ -345,6 +350,8 @@ static struct param ggcm_mhd_step_mhdcc_descr[] = {
 								  opt_eqn_descr)                },
   { "limiter"            , VAR(opt.limiter)        , PARAM_SELECT(OPT_LIMITER_FLAT,
 								  opt_limiter_descr)            },
+  { "resistivity"        , VAR(opt.resistivity)    , PARAM_SELECT(OPT_RESISTIVITY_NONE,
+								  opt_resistivity_descr)        },
   { "riemann"            , VAR(opt.riemann)        , PARAM_SELECT(OPT_RIEMANN_RUSANOV,
 								  opt_riemann_descr)            },
   { "time_integrator"    , VAR(opt.time_integrator), PARAM_SELECT(OPT_TIME_INTEGRATOR_PREDCORR,

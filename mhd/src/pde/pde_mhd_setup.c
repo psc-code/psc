@@ -6,6 +6,7 @@ struct mhd_options {
   int eqn;
   int limiter;
   int riemann;
+  int resistivity;
   int time_integrator;
   int get_dt;
   bool background;
@@ -40,6 +41,21 @@ static struct mrc_param_select opt_limiter_descr[] _mrc_unused = {
 static const int s_opt_limiter = OPT_LIMITER;
 #else
 static int s_opt_limiter _mrc_unused;
+#endif
+
+// ----------------------------------------------------------------------
+// resistivity
+
+static struct mrc_param_select opt_resistivity_descr[] _mrc_unused = {
+  { .val = OPT_RESISTIVITY_NONE     , .str = "none"        },
+  { .val = OPT_RESISTIVITY_CONST    , .str = "const"        },
+  {},
+};
+
+#ifdef OPT_RESISTIVITY
+static const int s_opt_resistivity = OPT_RESISTIVITY;
+#else
+static int s_opt_resistivity _mrc_unused;
 #endif
 
 // ----------------------------------------------------------------------
@@ -101,6 +117,27 @@ static const bool s_opt_background = OPT_BACKGROUND;
 static bool s_opt_background _mrc_unused;
 #endif
 
+// ======================================================================
+// calculated options follow
+
+// ----------------------------------------------------------------------
+// need_current (calculated)
+
+// FIXME? these aren't really all cases, e.g., OPT_RESISTIVITY_EXPLICIT by itself would be enough for yes
+#if defined(OPT_RESISTIVITY) && defined(OPT_HALL)
+#if OPT_RESISTIVITY != OPT_RESISTIVITY_NONE || OPT_HALL != OPT_HALL_NONE
+#define OPT_NEED_CURRENT 1
+#else
+#define OPT_NEED_CURRENT 0
+#endif
+#endif
+
+#ifdef OPT_NEED_CURRENT
+static const bool s_opt_need_current = OPT_NEED_CURRENT;
+#else
+static bool s_opt_need_current _mrc_unused;
+#endif
+
 // ----------------------------------------------------------------------
 // pde_mhd_set_options
 
@@ -112,6 +149,13 @@ pde_mhd_set_options(struct ggcm_mhd *mhd, struct mhd_options *opt)
   assert(OPT_LIMITER == opt->limiter);
 #else
   s_opt_limiter = opt->limiter;
+#endif
+
+  // resistivity
+#ifdef OPT_RESISTIVITY
+  assert(OPT_RESISTIVITY == opt->resistivity);
+#else
+  s_opt_resistivity = opt->resistivity;
 #endif
 
   // riemann
@@ -141,12 +185,24 @@ pde_mhd_set_options(struct ggcm_mhd *mhd, struct mhd_options *opt)
 #else
   s_opt_background = opt->background;
 #endif
+
+  // ----------------------------------------------------------------------
+  // now set "calculated options"
+  // this is replicated runtime code from compile time above
+
+  // need current
+#ifndef OPT_NEED_CURRENT
+  s_opt_need_current = (s_opt_resistivity != OPT_RESISTIVITY_NONE);
+  //			|| s_opt_hall != OPT_HALL_NONE); FIXME
+#endif
+
 }
 
 // ======================================================================
 // MHD parameters, we keep these around statically
 
-static double s_gamma;  // adiabatic exponent
+static mrc_fld_data_t s_gamma;  // adiabatic exponent
+static mrc_fld_data_t s_eta;    // (constant) resistivity 
 
 // ----------------------------------------------------------------------
 // pde_mhd_setup
@@ -155,6 +211,7 @@ static void
 pde_mhd_setup(struct ggcm_mhd *mhd)
 {
   s_gamma = mhd->par.gamm;
+  s_eta   = mhd->par.diffco;
 }
 
 // ======================================================================
@@ -164,3 +221,20 @@ pde_mhd_setup(struct ggcm_mhd *mhd)
 #define BTY_(U, i,j,k, p)  (s_opt_background ? (BY_(U, i,j,k, p) + B0(b0, 1, i,j,k, p)) : BY_(U, i,j,k, p))
 #define BTZ_(U, i,j,k, p)  (s_opt_background ? (BZ_(U, i,j,k, p) + B0(b0, 2, i,j,k, p)) : BZ_(U, i,j,k, p))
 
+// ======================================================================
+// mhd auxiliary fields
+//
+// kept around statically so we don't have to pass all this crap
+
+struct mhd_aux {
+  // current density for Hall term, resistivity
+  fld1d_vec_t j;
+};
+
+static struct mhd_aux s_aux;
+
+static void _mrc_unused
+pde_mhd_aux_setup()
+{
+  fld1d_vec_setup(&s_aux.j);
+}

@@ -19,6 +19,11 @@
 #define OPT_LIMITER_FLAT     (1)
 #define OPT_LIMITER_GMINMOD  (2)
 
+// --- OPT_RESISTIVITY --------------------------------------------------
+
+#define OPT_RESISTIVITY_NONE  (0)
+#define OPT_RESISTIVITY_CONST (1)
+
 // --- OPT_RIEMANN ------------------------------------------------------
 
 #define OPT_RIEMANN_RUSANOV   (1)
