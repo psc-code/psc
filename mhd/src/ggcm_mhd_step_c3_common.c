@@ -179,7 +179,7 @@ mhd_cc_fluxes(struct ggcm_mhd_step *step, fld1d_state_t F,
 	      fld1d_state_t U, fld1d_state_t W, int ib, int ie)
 {
   for (int i = ib; i < ie; i++) {
-    fluxes_mhd_scons(&F1S(F, 0, i), &F1S(U, 0, i), &F1S(W, 0, i));
+    fluxes_mhd_scons(&F1S(F, 0, i), &F1S(U, 0, i), &F1S(W, 0, i), i);
   }
 }
 
