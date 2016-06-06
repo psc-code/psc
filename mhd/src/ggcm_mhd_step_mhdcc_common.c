@@ -352,6 +352,8 @@ static struct param ggcm_mhd_step_mhdcc_descr[] = {
 								  opt_limiter_descr)            },
   { "resistivity"        , VAR(opt.resistivity)    , PARAM_SELECT(OPT_RESISTIVITY_NONE,
 								  opt_resistivity_descr)        },
+  { "hall"               , VAR(opt.hall)           , PARAM_SELECT(OPT_HALL_NONE,
+								  opt_hall_descr)               },
   { "riemann"            , VAR(opt.riemann)        , PARAM_SELECT(OPT_RIEMANN_RUSANOV,
 								  opt_riemann_descr)            },
   { "time_integrator"    , VAR(opt.time_integrator), PARAM_SELECT(OPT_TIME_INTEGRATOR_PREDCORR,

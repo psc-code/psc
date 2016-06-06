@@ -96,7 +96,7 @@ pde_mhd_get_dt_fcons(struct ggcm_mhd *mhd, struct mrc_fld *x)
 	  // This is iffy: we should call wavespeed_mhd_fcons even if we're using
 	  // scons variables, since we want all MHD waves taken into account, not just
 	  // the sound waves. FIXME, there must be a better way
-	  mrc_fld_data_t cf = wavespeed_mhd_fcons(NULL, v);
+	  mrc_fld_data_t cf = wavespeed_mhd_fcons(NULL, v, i);
 
 	  if (s_sw[dir]) inv_dt = mrc_fld_max(inv_dt, (mrc_fld_abs(v[VX]) + cf) * PDE_INV_DS(i));
 	}

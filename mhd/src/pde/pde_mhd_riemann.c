@@ -19,6 +19,18 @@ fluxes_mhd_fcons(mrc_fld_data_t F[8], mrc_fld_data_t U[8], mrc_fld_data_t W[8], 
   F[BX] = 0;
   F[BY] = W[BY] * W[VX] - W[BX] * W[VY];
   F[BZ] = W[BZ] * W[VX] - W[BX] * W[VZ]; 
+
+  if (s_opt_hall == OPT_HALL_CONST) {
+    mrc_fld_data_t *j = &F1V(s_aux.j, 0, i);
+    F[BY] -= s_d_i * (W[BY] * j[0] - W[BX] * j[1]);
+    F[BZ] -= s_d_i * (W[BZ] * j[0] - W[BX] * j[2]);
+    // FIXME, energy contribution
+  } else if (s_opt_hall == OPT_HALL_YES) {
+    mrc_fld_data_t *j = &F1V(s_aux.j, 0, i);
+    F[BY] -= s_d_i / W[RR] * (W[BY] * j[0] - W[BX] * j[1]);
+    F[BZ] -= s_d_i / W[RR] * (W[BZ] * j[0] - W[BX] * j[2]);
+    // FIXME, energy contribution
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -71,14 +83,24 @@ fluxes(mrc_fld_data_t F[], mrc_fld_data_t U[], mrc_fld_data_t W[], int i)
 // calculate speed of fastest (fast magnetosonic) wave
 
 static inline mrc_fld_data_t
-wavespeed_mhd_fcons(mrc_fld_data_t U[], mrc_fld_data_t W[])
+wavespeed_mhd_fcons(mrc_fld_data_t U[], mrc_fld_data_t W[], int i)
 {
   mrc_fld_data_t cs2 = s_gamma * W[PP] / W[RR];
   mrc_fld_data_t b2 = sqr(W[BX]) + sqr(W[BY]) + sqr(W[BZ]);
-  mrc_fld_data_t as2 = b2 / W[RR]; 
-  mrc_fld_data_t cf2 = .5f * (cs2 + as2 + 
-			      mrc_fld_sqrt(sqr(as2 + cs2) - (4.f * sqr(sqrt(cs2) * W[BX]) / W[RR])));
-  return mrc_fld_sqrt(cf2);
+  mrc_fld_data_t vA2 = b2 / W[RR]; 
+  mrc_fld_data_t cf2 = .5f * (cs2 + vA2 + 
+			      mrc_fld_sqrt(sqr(vA2 + cs2) - (4.f * sqr(sqrt(cs2) * W[BX]) / W[RR])));
+  mrc_fld_data_t cf = mrc_fld_sqrt(cf2);
+
+  if (s_opt_hall == OPT_HALL_CONST) {
+    mrc_fld_data_t cw = s_d_i * mrc_fld_sqrt(b2) * M_PI * PDE_INV_DS(i);
+    cf += cw;
+  } else if (s_opt_hall == OPT_HALL_YES) {
+    mrc_fld_data_t cw = s_d_i / W[RR] * mrc_fld_sqrt(b2) * M_PI * PDE_INV_DS(i);
+    cf += cw;
+  }
+
+  return cf;
 }
 
 // ----------------------------------------------------------------------
@@ -87,7 +109,7 @@ wavespeed_mhd_fcons(mrc_fld_data_t U[], mrc_fld_data_t W[])
 // calculate speed of fastest wave (soundspeed)
 
 static inline mrc_fld_data_t
-wavespeed_mhd_scons(mrc_fld_data_t U[], mrc_fld_data_t W[])
+wavespeed_mhd_scons(mrc_fld_data_t U[], mrc_fld_data_t W[], int i)
 {
   return sqrtf(s_gamma * W[PP] / W[RR]);
 }
@@ -96,13 +118,13 @@ wavespeed_mhd_scons(mrc_fld_data_t U[], mrc_fld_data_t W[])
 // wavespeed
 
 static inline mrc_fld_data_t
-wavespeed(mrc_fld_data_t U[], mrc_fld_data_t W[])
+wavespeed(mrc_fld_data_t U[], mrc_fld_data_t W[], int i)
 {
   if (s_opt_eqn == OPT_EQN_MHD_FCONS) {
-    return wavespeed_mhd_fcons(U, W);
+    return wavespeed_mhd_fcons(U, W, i);
   } else if (s_opt_eqn == OPT_EQN_MHD_SCONS ||
 	     s_opt_eqn == OPT_EQN_HD) {
-    return wavespeed_mhd_scons(U, W);
+    return wavespeed_mhd_scons(U, W, i);
   } else {
     assert(0);
   }
@@ -121,7 +143,7 @@ fluxes_rusanov(mrc_fld_data_t F[], mrc_fld_data_t Ul[], mrc_fld_data_t Ur[],
   mrc_fld_data_t Fl[s_n_comps], Fr[s_n_comps];
   mrc_fld_data_t cf, c_l, c_r, c_max;
 
-  cf = wavespeed(Ul, Wl);
+  cf = wavespeed(Ul, Wl, i);
   if (s_opt_eqn == OPT_EQN_MHD_FCONS) {
     mrc_fld_data_t cp_l = Wl[VX] + cf;
     mrc_fld_data_t cm_l = Wl[VX] - cf; 
@@ -132,7 +154,7 @@ fluxes_rusanov(mrc_fld_data_t F[], mrc_fld_data_t Ul[], mrc_fld_data_t Ur[],
     c_l = sqrtf(vv) + cf;
   }
 
-  cf = wavespeed(Ur, Wr);
+  cf = wavespeed(Ur, Wr, i);
   if (s_opt_eqn == OPT_EQN_MHD_FCONS) {
     mrc_fld_data_t cp_r = Wr[VX] + cf;
     mrc_fld_data_t cm_r = Wr[VX] - cf; 
@@ -168,11 +190,11 @@ fluxes_hll(mrc_fld_data_t F[], mrc_fld_data_t Ul[], mrc_fld_data_t Ur[],
   mrc_fld_data_t Fl[s_n_comps], Fr[s_n_comps];
   mrc_fld_data_t cf;
 
-  cf = wavespeed(Ul, Wl);
+  cf = wavespeed(Ul, Wl, i);
   mrc_fld_data_t cp_l = Wl[VX] + cf;
   mrc_fld_data_t cm_l = Wl[VX] - cf;
 
-  cf = wavespeed(Ur, Wr);
+  cf = wavespeed(Ur, Wr, i);
   mrc_fld_data_t cp_r = Wr[VX] + cf;
   mrc_fld_data_t cm_r = Wr[VX] - cf;
 

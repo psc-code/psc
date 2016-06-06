@@ -7,6 +7,7 @@ struct mhd_options {
   int limiter;
   int riemann;
   int resistivity;
+  int hall;
   int time_integrator;
   int get_dt;
   bool background;
@@ -56,6 +57,22 @@ static struct mrc_param_select opt_resistivity_descr[] _mrc_unused = {
 static const int s_opt_resistivity = OPT_RESISTIVITY;
 #else
 static int s_opt_resistivity _mrc_unused;
+#endif
+
+// ----------------------------------------------------------------------
+// hall
+
+static struct mrc_param_select opt_hall_descr[] _mrc_unused = {
+  { .val = OPT_HALL_NONE     , .str = "none"        },
+  { .val = OPT_HALL_CONST    , .str = "const"       },
+  { .val = OPT_HALL_YES      , .str = "yes"         },
+  {},
+};
+
+#ifdef OPT_HALL
+static const int s_opt_hall = OPT_HALL;
+#else
+static int s_opt_hall _mrc_unused;
 #endif
 
 // ----------------------------------------------------------------------
@@ -123,7 +140,7 @@ static bool s_opt_background _mrc_unused;
 // ----------------------------------------------------------------------
 // need_current (calculated)
 
-// FIXME? these aren't really all cases, e.g., OPT_RESISTIVITY_EXPLICIT by itself would be enough for yes
+// FIXME? these aren't really all cases, e.g., OPT_RESISTIVITY != NONE by itself would be enough for yes
 #if defined(OPT_RESISTIVITY) && defined(OPT_HALL)
 #if OPT_RESISTIVITY != OPT_RESISTIVITY_NONE || OPT_HALL != OPT_HALL_NONE
 #define OPT_NEED_CURRENT 1
@@ -156,6 +173,13 @@ pde_mhd_set_options(struct ggcm_mhd *mhd, struct mhd_options *opt)
   assert(OPT_RESISTIVITY == opt->resistivity);
 #else
   s_opt_resistivity = opt->resistivity;
+#endif
+
+  // hall
+#ifdef OPT_HALL
+  assert(OPT_HALL == opt->hall);
+#else
+  s_opt_hall = opt->hall;
 #endif
 
   // riemann
@@ -192,8 +216,8 @@ pde_mhd_set_options(struct ggcm_mhd *mhd, struct mhd_options *opt)
 
   // need current
 #ifndef OPT_NEED_CURRENT
-  s_opt_need_current = (s_opt_resistivity != OPT_RESISTIVITY_NONE);
-  //			|| s_opt_hall != OPT_HALL_NONE); FIXME
+  s_opt_need_current = (s_opt_resistivity != OPT_RESISTIVITY_NONE ||
+			s_opt_hall != OPT_HALL_NONE);
 #endif
 
 }
@@ -203,6 +227,7 @@ pde_mhd_set_options(struct ggcm_mhd *mhd, struct mhd_options *opt)
 
 static mrc_fld_data_t s_gamma;  // adiabatic exponent
 static mrc_fld_data_t s_eta;    // (constant) resistivity 
+static mrc_fld_data_t s_d_i;    // ion skin depth
 
 // ----------------------------------------------------------------------
 // pde_mhd_setup
@@ -212,6 +237,7 @@ pde_mhd_setup(struct ggcm_mhd *mhd)
 {
   s_gamma = mhd->par.gamm;
   s_eta   = mhd->par.diffco;
+  s_d_i   = mhd->par.d_i;
 }
 
 // ======================================================================

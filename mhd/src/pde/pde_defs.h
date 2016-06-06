@@ -24,6 +24,12 @@
 #define OPT_RESISTIVITY_NONE  (0)
 #define OPT_RESISTIVITY_CONST (1)
 
+// --- OPT_HALL ---------------------------------------------------------
+
+#define OPT_HALL_NONE  (0)
+#define OPT_HALL_CONST (1)
+#define OPT_HALL_YES   (2)
+
 // --- OPT_RIEMANN ------------------------------------------------------
 
 #define OPT_RIEMANN_RUSANOV   (1)
