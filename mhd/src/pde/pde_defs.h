@@ -37,6 +37,11 @@
 #define OPT_RIEMANN_HLLC      (3)
 #define OPT_RIEMANN_HLLD      (4)
 
+// --- OPT_DIVB ---------------------------------------------------------
+
+#define OPT_DIVB_NONE         (0)
+#define OPT_DIVB_GLM          (1)
+
 // -- OPT_TIME_INTEGRATOR -----------------------------------------------
 
 #define OPT_TIME_INTEGRATOR_EULER                   (1)

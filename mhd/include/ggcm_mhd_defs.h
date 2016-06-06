@@ -18,6 +18,7 @@ enum {
   BX,
   BY,
   BZ,
+  PSI,
   EE = UU,
 };
 

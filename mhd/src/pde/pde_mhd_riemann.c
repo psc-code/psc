@@ -6,7 +6,7 @@
 // fluxes_mhd_fcons
 
 static inline void
-fluxes_mhd_fcons(mrc_fld_data_t F[8], mrc_fld_data_t U[8], mrc_fld_data_t W[8], int i)
+fluxes_mhd_fcons(mrc_fld_data_t F[], mrc_fld_data_t U[], mrc_fld_data_t W[], int i)
 {
   mrc_fld_data_t b2 = sqr(W[BX]) + sqr(W[BY]) + sqr(W[BZ]);
 
@@ -30,6 +30,11 @@ fluxes_mhd_fcons(mrc_fld_data_t F[8], mrc_fld_data_t U[8], mrc_fld_data_t W[8], 
     F[BY] -= s_d_i / W[RR] * (W[BY] * j[0] - W[BX] * j[1]);
     F[BZ] -= s_d_i / W[RR] * (W[BZ] * j[0] - W[BX] * j[2]);
     // FIXME, energy contribution
+  }
+
+  if (s_opt_divb == OPT_DIVB_GLM) {
+    F[BX ] = W[PSI];
+    F[PSI] = sqr(s_divb_glm_ch) * W[BX];
   }
 }
 
@@ -277,7 +282,7 @@ fluxes_hllc(mrc_fld_data_t F[5], mrc_fld_data_t Ul[5], mrc_fld_data_t Ur[5],
 // hlld_calc_state_s
 
 static void
-hlld_calc_state_s(mrc_fld_data_t Ws[8], mrc_fld_data_t U[8], mrc_fld_data_t W[8], 
+hlld_calc_state_s(mrc_fld_data_t Ws[], mrc_fld_data_t U[], mrc_fld_data_t W[], 
 		  mrc_fld_data_t S, mrc_fld_data_t SM, mrc_fld_data_t sPt, 
 		  mrc_fld_data_t SmU)
 {
@@ -311,12 +316,12 @@ hlld_calc_state_s(mrc_fld_data_t Ws[8], mrc_fld_data_t U[8], mrc_fld_data_t W[8]
 // Miyoshi & Kusano (2005)
 
 static void
-fluxes_hlld(mrc_fld_data_t F[8], mrc_fld_data_t Ul[8], mrc_fld_data_t Ur[8],
-	    mrc_fld_data_t Wl[8], mrc_fld_data_t Wr[8], int i)
+fluxes_hlld(mrc_fld_data_t F[], mrc_fld_data_t Ul[], mrc_fld_data_t Ur[],
+	    mrc_fld_data_t Wl[], mrc_fld_data_t Wr[], int i)
 {
   assert(s_opt_eqn == OPT_EQN_MHD_FCONS);
 
-    mrc_fld_data_t Fl[8], Fr[8];
+    mrc_fld_data_t Fl[s_n_comps], Fr[s_n_comps];
     mrc_fld_data_t bb, cs2, as2, cf;
     
     bb = sqr(Wl[BX]) + sqr(Wl[BY]) + sqr(Wl[BZ]);
@@ -353,8 +358,8 @@ fluxes_hlld(mrc_fld_data_t F[8], mrc_fld_data_t Ul[8], mrc_fld_data_t Ur[8],
 			 Wl[RR] * Wr[RR] * SRmUR * SLmUL * (Wr[VX] - Wl[VX])) / 
       (SRmUR * Wr[RR] - SLmUL * Wl[RR]);
     
-    mrc_fld_data_t Urs[8], Uls[8], Wls[8], Wrs[8]; 
-    mrc_fld_data_t Urss[8], Ulss[8], Wlss[8], Wrss[8];
+    mrc_fld_data_t Urs[s_n_comps], Uls[s_n_comps], Wls[s_n_comps], Wrs[s_n_comps]; 
+    mrc_fld_data_t Urss[s_n_comps], Ulss[s_n_comps], Wlss[s_n_comps], Wrss[s_n_comps];
     
     hlld_calc_state_s(Wls, Ul, Wl, SL, SM, sPt, SLmUL);
     hlld_calc_state_s(Wrs, Ur, Wr, SR, SM, sPt, SRmUR);
@@ -433,7 +438,7 @@ fluxes_hlld(mrc_fld_data_t F[8], mrc_fld_data_t Ul[8], mrc_fld_data_t Ur[8],
     mrc_fld_data_t SLs = SM - fabs(Wl[BX]) / sqrt(Wls[RR]) ; 
     mrc_fld_data_t SRs = SM + fabs(Wr[BX]) / sqrt(Wrs[RR]) ;
         
-    for (int m = 0; m < 8; m++) {
+    for (int m = 0; m < s_n_comps; m++) {
       if ( SL > 0 ) {
 	F[m] = Fl[m];
       } else if (( SL <= 0 ) && ( SLs >= 0 )) {  
@@ -459,6 +464,10 @@ static void _mrc_unused
 mhd_riemann(fld1d_state_t F, fld1d_state_t U_l, fld1d_state_t U_r,
 	    fld1d_state_t W_l, fld1d_state_t W_r, int ib, int ie)
 {
+  // if applicable, solve GLM part of equation first, which will then be used
+  // in fluxes()
+  mhd_divb_glm_riemann(U_l, U_r, W_l, W_r, ib, ie);
+
   if (s_opt_riemann == OPT_RIEMANN_RUSANOV) {
     for (int i = ib; i < ie; i++) {
       fluxes_rusanov(&F1S(F, 0, i), &F1S(U_l, 0, i), &F1S(U_r, 0, i),

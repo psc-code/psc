@@ -33,6 +33,7 @@ static bool s_opt_bc_reconstruct = false;
 #include "pde/pde_mhd_convert.c"
 #include "pde/pde_mhd_reconstruct.c"
 #include "pde/pde_mhd_current.c"
+#include "pde/pde_mhd_divb_glm.c"
 #include "pde/pde_mhd_riemann.c"
 #include "pde/pde_mhd_resistive.c"
 #include "pde/pde_mhd_stage.c"
@@ -120,10 +121,15 @@ ggcm_mhd_step_mhdcc_setup_flds(struct ggcm_mhd_step *step)
 
   pde_mhd_set_options(mhd, &sub->opt);
 
+  int n_comps = 8;
+  if (s_opt_divb == OPT_DIVB_GLM) {
+    n_comps++;
+  }
+
   mrc_fld_set_type(mhd->fld, FLD_TYPE);
   mrc_fld_set_param_int(mhd->fld, "nr_ghosts", 2);
   mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_FULLY_CONSERVATIVE_CC);
-  mrc_fld_set_param_int(mhd->fld, "nr_comps", 8);
+  mrc_fld_set_param_int(mhd->fld, "nr_comps", n_comps);
 }
 
 // ----------------------------------------------------------------------
@@ -169,18 +175,18 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, mrc_fld_data_t time_c
 {
   struct ggcm_mhd_step_mhdcc *sub = ggcm_mhd_step_mhdcc(step);
   struct ggcm_mhd *mhd = step->mhd;
-  struct mrc_fld *fluxes[3] = { ggcm_mhd_get_3d_fld(mhd, 8),
-				ggcm_mhd_get_3d_fld(mhd, 8),
-				ggcm_mhd_get_3d_fld(mhd, 8), };
+  struct mrc_fld *fluxes[3] = { ggcm_mhd_get_3d_fld(mhd, s_n_comps),
+				ggcm_mhd_get_3d_fld(mhd, s_n_comps),
+				ggcm_mhd_get_3d_fld(mhd, s_n_comps), };
   ggcm_mhd_fill_ghosts(mhd, x_curr, 0, time_curr);
 
   if (s_opt_bc_reconstruct) {
-    struct mrc_fld *U_l[3] = { ggcm_mhd_get_3d_fld(mhd, 8),
-			       ggcm_mhd_get_3d_fld(mhd, 8),
-			       ggcm_mhd_get_3d_fld(mhd, 8), };
-    struct mrc_fld *U_r[3] = { ggcm_mhd_get_3d_fld(mhd, 8),
-			       ggcm_mhd_get_3d_fld(mhd, 8),
-			       ggcm_mhd_get_3d_fld(mhd, 8), };
+    struct mrc_fld *U_l[3] = { ggcm_mhd_get_3d_fld(mhd, s_n_comps),
+			       ggcm_mhd_get_3d_fld(mhd, s_n_comps),
+			       ggcm_mhd_get_3d_fld(mhd, s_n_comps), };
+    struct mrc_fld *U_r[3] = { ggcm_mhd_get_3d_fld(mhd, s_n_comps),
+			       ggcm_mhd_get_3d_fld(mhd, s_n_comps),
+			       ggcm_mhd_get_3d_fld(mhd, s_n_comps), };
     
     // reconstruct
     for (int p = 0; p < mrc_fld_nr_patches(x_curr); p++) {
@@ -330,6 +336,8 @@ ggcm_mhd_step_mhdcc_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 {
   struct ggcm_mhd *mhd = step->mhd;
 
+  mhd_divb_glm_source(x, .5f * mhd->dt);
+
   if (s_opt_time_integrator == OPT_TIME_INTEGRATOR_EULER) {
     ggcm_mhd_step_euler(step, x, mhd->dt);
   } else if (s_opt_time_integrator == OPT_TIME_INTEGRATOR_PREDCORR) {
@@ -339,6 +347,8 @@ ggcm_mhd_step_mhdcc_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   } else {
     assert(0);
   }
+
+  mhd_divb_glm_source(x, .5f * mhd->dt);
 }
 
 // ----------------------------------------------------------------------
@@ -354,6 +364,8 @@ static struct param ggcm_mhd_step_mhdcc_descr[] = {
 								  opt_resistivity_descr)        },
   { "hall"               , VAR(opt.hall)           , PARAM_SELECT(OPT_HALL_NONE,
 								  opt_hall_descr)               },
+  { "divb"               , VAR(opt.divb)           , PARAM_SELECT(OPT_DIVB_NONE,
+								  opt_divb_descr)               },
   { "riemann"            , VAR(opt.riemann)        , PARAM_SELECT(OPT_RIEMANN_RUSANOV,
 								  opt_riemann_descr)            },
   { "time_integrator"    , VAR(opt.time_integrator), PARAM_SELECT(OPT_TIME_INTEGRATOR_PREDCORR,
@@ -361,6 +373,7 @@ static struct param ggcm_mhd_step_mhdcc_descr[] = {
   { "get_dt"             , VAR(opt.get_dt)         , PARAM_SELECT(OPT_GET_DT_MHD,
 								  opt_get_dt_descr)             },
   { "background"         , VAR(opt.background)     , PARAM_BOOL(false)                          },
+  { "divb_glm_cr"        , VAR(opt.divb_glm_cr)    , PARAM_DOUBLE(.1)                           },
 
   {},
 };

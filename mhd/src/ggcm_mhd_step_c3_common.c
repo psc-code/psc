@@ -26,6 +26,7 @@ static bool s_opt_bc_reconstruct = false;
 #include "pde/pde_mhd_line.c"
 #include "pde/pde_mhd_convert.c"
 #include "pde/pde_mhd_reconstruct.c"
+#include "pde/pde_mhd_divb_glm.c"
 #include "pde/pde_mhd_riemann.c"
 #include "pde/pde_mhd_stage.c"
 #include "pde/pde_mhd_get_dt.c"

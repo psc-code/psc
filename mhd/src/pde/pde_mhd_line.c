@@ -16,6 +16,9 @@ mhd_get_line_state_fcons(fld1d_state_t u, struct mrc_fld *U,
       F1S(u, BX , i) = M3(U, BX+X , I,J,K, p);		\
       F1S(u, BY , i) = M3(U, BX+Y , I,J,K, p);		\
       F1S(u, BZ , i) = M3(U, BX+Z , I,J,K, p);		\
+      if (s_opt_divb == OPT_DIVB_GLM) {			\
+	F1S(u, PSI, i) = M3(U, PSI, I,J,K, p);		\
+      }							\
     }							\
   } while (0)
 
@@ -46,6 +49,9 @@ mhd_put_line_state_fcons(struct mrc_fld *flux, fld1d_state_t F,
       M3(flux, BX + X , I,J,K, p) = F1S(F, BX , i);		\
       M3(flux, BX + Y , I,J,K, p) = F1S(F, BY , i);		\
       M3(flux, BX + Z , I,J,K, p) = F1S(F, BZ , i);		\
+      if (s_opt_divb == OPT_DIVB_GLM) {				\
+	M3(flux, PSI, I,J,K, p)   = F1S(F, PSI, i);		\
+      }								\
     }								\
 } while (0)
 

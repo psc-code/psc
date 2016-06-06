@@ -108,6 +108,10 @@ pde_mhd_get_dt_fcons(struct ggcm_mhd *mhd, struct mrc_fld *x)
   mrc_fld_data_t dtn;
   MPI_Allreduce(&dt, &dtn, 1, MPI_MRC_FLD_DATA_T, MPI_MIN, ggcm_mhd_comm(mhd));
 
+  if (s_opt_divb == OPT_DIVB_GLM) {
+    s_divb_glm_ch = mhd->par.thx * s_g_dxyzmin / dtn;
+  }
+
   return dtn;
 }
 

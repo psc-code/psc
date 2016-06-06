@@ -1,16 +1,31 @@
 
 // ======================================================================
+// MHD parameters, we keep these around statically
+
+static mrc_fld_data_t s_gamma;  // adiabatic exponent
+static mrc_fld_data_t s_eta;    // (constant) resistivity 
+static mrc_fld_data_t s_d_i;    // ion skin depth
+static mrc_fld_data_t s_divb_glm_cr; // ratio of hyperbolic / parabolic divb speeds
+
+// ----------------------------------------------------------------------
+
+static mrc_fld_data_t s_divb_glm_ch; // hyperbolic c_h from Dedner et al for divb cleaning
+
+// ======================================================================
 // options
 
 struct mhd_options {
   int eqn;
   int limiter;
   int riemann;
+  int divb;
   int resistivity;
   int hall;
   int time_integrator;
   int get_dt;
   bool background;
+
+  double divb_glm_cr;
 };
 
 // ----------------------------------------------------------------------
@@ -90,6 +105,21 @@ static struct mrc_param_select opt_riemann_descr[] _mrc_unused = {
 static const int s_opt_riemann = OPT_RIEMANN;
 #else
 static int s_opt_riemann _mrc_unused;
+#endif
+
+// ----------------------------------------------------------------------
+// divb
+
+static struct mrc_param_select opt_divb_descr[] _mrc_unused = {
+  { .val = OPT_DIVB_NONE     , .str = "none"        },
+  { .val = OPT_DIVB_GLM      , .str = "glm"         },
+  {},
+};
+
+#ifdef OPT_DIVB
+static const int s_opt_divb = OPT_DIVB;
+#else
+static int s_opt_divb _mrc_unused;
 #endif
 
 // ----------------------------------------------------------------------
@@ -189,6 +219,13 @@ pde_mhd_set_options(struct ggcm_mhd *mhd, struct mhd_options *opt)
   s_opt_riemann = opt->riemann;
 #endif
 
+  // divb
+#ifdef OPT_DIVB
+  assert(OPT_DIVB == opt->divb);
+#else
+  s_opt_divb = opt->divb;
+#endif
+
   // time_integrator
 #ifdef OPT_TIME_INTEGRATOR
   assert(OPT_TIME_INTEGRATOR == opt->time_integrator);
@@ -220,14 +257,11 @@ pde_mhd_set_options(struct ggcm_mhd *mhd, struct mhd_options *opt)
 			s_opt_hall != OPT_HALL_NONE);
 #endif
 
+  // ----------------------------------------------------------------------
+  // parameters
+
+  s_divb_glm_cr = opt->divb_glm_cr;
 }
-
-// ======================================================================
-// MHD parameters, we keep these around statically
-
-static mrc_fld_data_t s_gamma;  // adiabatic exponent
-static mrc_fld_data_t s_eta;    // (constant) resistivity 
-static mrc_fld_data_t s_d_i;    // ion skin depth
 
 // ----------------------------------------------------------------------
 // pde_mhd_setup

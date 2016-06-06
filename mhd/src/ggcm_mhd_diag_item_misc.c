@@ -2,6 +2,7 @@
 #include "ggcm_mhd_diag_item_private.h"
 
 #include "ggcm_mhd_private.h"
+#include "ggcm_mhd_defs.h"
 #include "ggcm_mhd_diag_private.h"
 
 
@@ -55,4 +56,28 @@ struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_b0 = {
   .name             = "b0",
   .run              = ggcm_mhd_diag_item_b0_run,
 };
+
+// ======================================================================
+// ggcm_mhd_diag_item subclass "psi"
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_diag_item_psi_run
+
+static void
+ggcm_mhd_diag_item_psi_run(struct ggcm_mhd_diag_item *item,
+			   struct mrc_io *io, struct mrc_fld *f,
+			   int diag_type, float plane)
+{
+  struct ggcm_mhd *mhd = item->diag->mhd;
+  ggcm_mhd_diag_c_write_one_field(io, mhd->fld, PSI, "psi", 1., diag_type, plane);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_diag_item subclass "psi"
+
+struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_psi = {
+  .name             = "psi",
+  .run              = ggcm_mhd_diag_item_psi_run,
+};
+
 

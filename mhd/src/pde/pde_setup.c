@@ -12,7 +12,7 @@ static int s_n_ghosts; // number of ghost points
 static int s_n_comps;  // number of components in state vector
 static int s_n_dims;   // number of (not invariant) dimensions
 
-// mesh info
+// mesh-related info
 static int s_size_1d;  // largest local dimension (including ghosts)
 static int s_ldims[3]; // local dimensions (interior only) 
 static int s_sw[3];    // number of ghost points per dim
@@ -23,6 +23,9 @@ static int s_dijk[3];  // set to 1 if actual direction, 0 if invariant
 #define di (s_dijk[0])
 #define dj (s_dijk[1])
 #define dk (s_dijk[2])
+
+static double s_g_dxmin[3];
+static double s_g_dxyzmin; // global minimum grid spacing
 
 // need to have the static parameters above before we can include pde_fld1d.c
 
@@ -103,6 +106,7 @@ pde_setup(struct mrc_fld *fld)
   int n_patches = mrc_fld_nr_patches(fld);
   s_patches = calloc(n_patches, sizeof(*s_patches));
 
+  double dxmin[3] = { 1e10, 1e10, 1e10 };
   for (int p = 0; p < n_patches; p++) {
     struct pde_patch *patch = &s_patches[p];
     for (int d = 0; d < 3; d++) {
@@ -118,9 +122,18 @@ pde_setup(struct mrc_fld *fld)
       for (int i = -s_sw[d] + 1; i < s_ldims[d] + s_sw[d]; i++) {
 	F1(patch->inv_dxf[d], i) = 1. / (MRC_DMCRD(crds, d, i, p) - MRC_DMCRD(crds, d, i-1, p));
       }
+
+      for (int i = 0; i < s_ldims[d]; i++) {
+	dxmin[d] = fmin(dxmin[d], F1(patch->dx[d], i));
+      }
     }
   }
 
+  MPI_Allreduce(dxmin, s_g_dxmin, 3, MPI_DOUBLE, MPI_MIN, mrc_fld_comm(fld));
+  s_g_dxyzmin = 1e10;
+  for (int d = 0; d < 3; d++) {
+    s_g_dxyzmin = mrc_fld_min(s_g_dxyzmin, s_g_dxmin[d]);
+  }
 }
 
 // ======================================================================
