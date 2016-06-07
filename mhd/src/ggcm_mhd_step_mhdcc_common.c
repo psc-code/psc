@@ -374,7 +374,8 @@ static struct param ggcm_mhd_step_mhdcc_descr[] = {
 								  opt_get_dt_descr)             },
   { "background"         , VAR(opt.background)     , PARAM_BOOL(false)                          },
   { "limiter_mc_beta"    , VAR(opt.limiter_mc_beta), PARAM_DOUBLE(2.)                           },
-  { "divb_glm_cr"        , VAR(opt.divb_glm_cr)    , PARAM_DOUBLE(.1)                           },
+  { "divb_glm_alpha"     , VAR(opt.divb_glm_alpha) , PARAM_DOUBLE(.1)                           },
+  { "divb_glm_ch_fac"    , VAR(opt.divb_glm_ch_fac), PARAM_DOUBLE(1.)                           },
 
   {},
 };

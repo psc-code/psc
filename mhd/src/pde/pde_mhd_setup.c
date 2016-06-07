@@ -6,7 +6,8 @@ static mrc_fld_data_t s_gamma;  // adiabatic exponent
 static mrc_fld_data_t s_eta;    // (constant) resistivity 
 static mrc_fld_data_t s_d_i;    // ion skin depth
 // FIXME, these could/should be s_opt_*
-static mrc_fld_data_t s_divb_glm_cr; // ratio of hyperbolic / parabolic divb speeds
+static mrc_fld_data_t s_divb_glm_alpha; // ratio of hyperbolic / parabolic divb timescales
+static mrc_fld_data_t s_divb_glm_ch_fac; // multiply ch by this factor
 static mrc_fld_data_t s_limiter_mc_beta; // beta for MC limiter
 
 // ----------------------------------------------------------------------
@@ -27,7 +28,8 @@ struct mhd_options {
   int get_dt;
   bool background;
 
-  double divb_glm_cr;
+  double divb_glm_alpha;
+  double divb_glm_ch_fac;
   double limiter_mc_beta;
 };
 
@@ -265,7 +267,8 @@ pde_mhd_set_options(struct ggcm_mhd *mhd, struct mhd_options *opt)
   // ----------------------------------------------------------------------
   // parameters
 
-  s_divb_glm_cr = opt->divb_glm_cr;
+  s_divb_glm_alpha = opt->divb_glm_alpha;
+  s_divb_glm_ch_fac = opt->divb_glm_ch_fac;
   s_limiter_mc_beta = opt->limiter_mc_beta;
 }
 

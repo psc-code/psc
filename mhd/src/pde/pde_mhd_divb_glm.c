@@ -16,11 +16,11 @@ mhd_divb_glm_source(struct mrc_fld *x, double dt)
     return;
   }
 
-  mprintf("glm_ch %g\n", s_divb_glm_ch);
+  //  mprintf("glm_ch %g\n", s_divb_glm_ch);
 
-#warning CHECKME
   mrc_fld_data_t dx = s_g_dxyzmin;
-  mrc_fld_data_t fac = exp(- dt / dx * s_divb_glm_ch * s_divb_glm_cr);
+  // This is following Mignone et al, JCP 2010 instead of Dedner directly
+  mrc_fld_data_t fac = exp(-dt / dx * s_divb_glm_ch * s_divb_glm_alpha);
   
   for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
     mrc_fld_foreach(x, i,j,k, 0, 0) {
@@ -43,11 +43,11 @@ mhd_divb_glm_riemann(fld1d_state_t Ul, fld1d_state_t Ur, fld1d_state_t Wl, fld1d
   }
 
   for (int i = ib; i < ie; i++){
-    mrc_fld_data_t dB   = F1S(Wr, BX , i) - F1S(Wl, BX , i);
-    mrc_fld_data_t dpsi = F1S(Wr, PSI, i) - F1S(Wl, PSI, i);
-
-    mrc_fld_data_t Bm   = .5f * (F1S(Wl, BX , i) + F1S(Wr, BX , i)) - .5f / s_divb_glm_ch * dpsi;
-    mrc_fld_data_t psim = .5f * (F1S(Wl, PSI, i) + F1S(Wr, PSI, i)) - .5f * s_divb_glm_ch * dB;
+    mrc_fld_data_t Bm, psim;
+    Bm =   (  .5f                 * (F1S(Wl, BX , i) + F1S(Wr, BX , i)) 
+	    - .5f / s_divb_glm_ch * (F1S(Wr, PSI, i) - F1S(Wl, PSI, i)));
+    psim = (  .5f                 * (F1S(Wl, PSI, i) + F1S(Wr, PSI, i))
+	    - .5f * s_divb_glm_ch * (F1S(Wr, BX , i) - F1S(Wl, BX , i)));
 
     F1S(Wl, BX , i) = Bm;
     F1S(Wr, BX , i) = Bm;

@@ -26,6 +26,9 @@ mhd_prim_from_fcons(fld1d_state_t W, fld1d_state_t U, int ib, int ie)
     w[BX] = u[BX];
     w[BY] = u[BY];
     w[BZ] = u[BZ];
+    if (s_opt_divb == OPT_DIVB_GLM) {
+      w[PSI] = u[PSI];
+    }
   }
 }
 
@@ -52,6 +55,9 @@ mhd_fcons_from_prim(fld1d_state_t U, fld1d_state_t W, int ib, int ie)
     u[BX ] = w[BX];
     u[BY ] = w[BY];
     u[BZ ] = w[BZ];
+    if (s_opt_divb == OPT_DIVB_GLM) {
+      u[PSI] = w[PSI];
+    }
   }
 }
 
