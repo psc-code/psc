@@ -25,5 +25,41 @@
 * t008_cpaw_mhd: MHD-based circular polarized Alfven wave test, 1d,
   cell-centered scheme
 
+* t009_ot_mhdcc: Ideal MHD Orzag-Tang vortex with mhdcc
+
+* t010_ot_vlct: Ideal MHD Orzag-Tang vortex with VLCT
+
+* t011_sod_c3: Sod shocktube (hydro) with c3_double
+
+* t012_sod_mhdcc: Sod shocktube (hydro) with mhdcc
+
+* t013_sod_vl: Sod shocktube (hydro) with VL
+
+* t014_briowu_c3: Brio-Wu shocktube with c3_double
+
+* t015_briowu_mhdcc: Brio-Wu shocktube with mhdcc
+
+* t016_gem_c3: GEM challenge ideal MHD, c3_double
+
+* t017_gem_mhdcc: GEM challenge ideal MHD, mhdcc
+
+* t018_gem_mhdcc_res: GEM challenge resistive MHD, mhdcc
+
+* t019_gem_mhdcc_hall: GEM challenge resistive Hall-MHD, mhdcc
+
+* t020_gem_mhdcc_res_divbglm: GEM challenge resistive MHD, mhdcc, GLM divB cleaning
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
