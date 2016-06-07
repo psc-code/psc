@@ -373,6 +373,7 @@ static struct param ggcm_mhd_step_mhdcc_descr[] = {
   { "get_dt"             , VAR(opt.get_dt)         , PARAM_SELECT(OPT_GET_DT_MHD,
 								  opt_get_dt_descr)             },
   { "background"         , VAR(opt.background)     , PARAM_BOOL(false)                          },
+  { "limiter_mc_beta"    , VAR(opt.limiter_mc_beta), PARAM_DOUBLE(2.)                           },
   { "divb_glm_cr"        , VAR(opt.divb_glm_cr)    , PARAM_DOUBLE(.1)                           },
 
   {},

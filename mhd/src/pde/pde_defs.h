@@ -17,7 +17,9 @@
 // --- OPT_LIMITER ------------------------------------------------------
 
 #define OPT_LIMITER_FLAT     (1)
-#define OPT_LIMITER_GMINMOD  (2)
+#define OPT_LIMITER_MINMOD   (2)
+#define OPT_LIMITER_MC       (3)
+#define OPT_LIMITER_GMINMOD  (4)
 
 // --- OPT_RESISTIVITY --------------------------------------------------
 

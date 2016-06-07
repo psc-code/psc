@@ -5,7 +5,9 @@
 static mrc_fld_data_t s_gamma;  // adiabatic exponent
 static mrc_fld_data_t s_eta;    // (constant) resistivity 
 static mrc_fld_data_t s_d_i;    // ion skin depth
+// FIXME, these could/should be s_opt_*
 static mrc_fld_data_t s_divb_glm_cr; // ratio of hyperbolic / parabolic divb speeds
+static mrc_fld_data_t s_limiter_mc_beta; // beta for MC limiter
 
 // ----------------------------------------------------------------------
 
@@ -26,6 +28,7 @@ struct mhd_options {
   bool background;
 
   double divb_glm_cr;
+  double limiter_mc_beta;
 };
 
 // ----------------------------------------------------------------------
@@ -49,6 +52,8 @@ static int s_opt_eqn _mrc_unused;
 
 static struct mrc_param_select opt_limiter_descr[] _mrc_unused = {
   { .val = OPT_LIMITER_FLAT     , .str = "flat"        },
+  { .val = OPT_LIMITER_MINMOD   , .str = "minmod"      },
+  { .val = OPT_LIMITER_MC       , .str = "mc"          },
   { .val = OPT_LIMITER_GMINMOD  , .str = "gminmod"     },
   {},
 };
@@ -261,6 +266,7 @@ pde_mhd_set_options(struct ggcm_mhd *mhd, struct mhd_options *opt)
   // parameters
 
   s_divb_glm_cr = opt->divb_glm_cr;
+  s_limiter_mc_beta = opt->limiter_mc_beta;
 }
 
 // ----------------------------------------------------------------------
