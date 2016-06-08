@@ -22,7 +22,12 @@ mpirun -n 8 ../mhd_mirdip \
     \
     --mrc_ts_max_time 100. \
     --ggcm_mhd_step_type mhdcc_double \
+    --xggcm_mhd_step_debug_dump \
+    --ggcm_mhd_step_time_integrator predcorr \
     --ggcm_mhd_step_do_nwst \
+    --ggcm_mhd_step_riemann hll \
+    --ggcm_mhd_step_limiter mc \
+    --ggcm_mhd_step_bc_reconstruct \
     \
     --ggcm_mhd_norm_length 2634100. \
     --ggcm_mhd_norm_B 711.29e-9 \
