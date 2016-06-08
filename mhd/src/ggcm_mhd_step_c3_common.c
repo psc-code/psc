@@ -1078,6 +1078,7 @@ static struct param ggcm_mhd_step_c3_descr[] = {
   { "riemann"            , VAR(opt.riemann)        , PARAM_SELECT(OPT_RIEMANN_RUSANOV,
 								  opt_riemann_descr)            },
   { "background"         , VAR(opt.background)     , PARAM_BOOL(false)                          },
+  { "limiter_mc_beta"    , VAR(opt.limiter_mc_beta), PARAM_DOUBLE(2.)                           },
 
   { "enforce_rrmin"      , VAR(enforce_rrmin)      , PARAM_BOOL(false)                          },
   
