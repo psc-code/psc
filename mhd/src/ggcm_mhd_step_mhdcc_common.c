@@ -20,6 +20,12 @@
 
 #include "pde/pde_defs.h"
 
+// pde options
+
+#define OPT_FLD1D       OPT_FLD1D_C_ARRAY
+#define OPT_FLD1D_VEC   OPT_FLD1D_PTR_ARRAY
+#define OPT_FLD1D_STATE OPT_FLD1D_PTR_ARRAY
+
 // mhd options
 
 #define OPT_EQN OPT_EQN_MHD_FCONS
