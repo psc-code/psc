@@ -285,8 +285,7 @@ flux_corr(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3], struct mrc_fld 
 }
 
 static void
-pushpp_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, fld3d_t x,
-	 fld3d_t prim, fld3d_t zmask)
+pushpp_c(fld3d_t x, mrc_fld_data_t dt, fld3d_t prim, fld3d_t zmask)
 {
   mrc_fld_data_t dth = -.5f * dt;
 
@@ -299,12 +298,12 @@ pushpp_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, fld3d_t x,
 }
 
 // ----------------------------------------------------------------------
-// curr_c
+// calc_current_ec
 //
 // edge centered current density
 
 static void
-curr_c(fld3d_t j_ec, fld3d_t x)
+calc_current_ec(fld3d_t j_ec, fld3d_t x)
 {
   fld3d_foreach(i,j,k, 1, 2) {
     F3S(j_ec, 0, i,j,k) =
@@ -343,7 +342,7 @@ curbc_c(struct ggcm_mhd_step *step, struct mrc_fld *j_cc,
   for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
     fld3d_get(&_x, x, p);
     fld3d_get(&_j_ec, j_ec, p);
-    curr_c(_j_ec, _x);
+    calc_current_ec(_j_ec, _x);
     fld3d_put(&_x, x, p);
     fld3d_put(&_j_ec, j_ec, p);
   }
@@ -385,36 +384,31 @@ calc_Bt_cc(fld3d_t b_cc, fld3d_t x, fld3d_t b0, int l, int r)
 // push_ej_c
 
 static void
-push_ej_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, struct mrc_fld *j_ec,
-	  struct mrc_fld *b_cc, struct mrc_fld *prim, struct mrc_fld *x_next)
+push_ej_c(fld3d_t x_next, mrc_fld_data_t dt, fld3d_t j_ec, fld3d_t b_cc, fld3d_t prim,
+	  fld3d_t zmask)
 {
-  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
-  struct mrc_fld *zmask = sub->zmask;
-	
   mrc_fld_data_t s1 = .25f * dt;
-  for (int p = 0; p < mrc_fld_nr_patches(x_next); p++) {
-    mrc_fld_foreach(x_next, i,j,k, 0, 0) {
-      mrc_fld_data_t z = ZMASK(zmask, i,j,k, p);
-      mrc_fld_data_t s2 = s1 * z;
-      mrc_fld_data_t cx = (M3(j_ec, 0, i   ,j+dj,k+dk, p) + M3(j_ec, 0, i  ,j   ,k+dk, p) +
-			   M3(j_ec, 0, i   ,j+dj,k   , p) + M3(j_ec, 0, i  ,j   ,k   , p));
-      mrc_fld_data_t cy = (M3(j_ec, 1, i+di,j   ,k+dk, p) + M3(j_ec, 1, i  ,j   ,k+dk, p) +
-			   M3(j_ec, 1, i+di,j   ,k   , p) + M3(j_ec, 1, i  ,j   ,k   , p));
-      mrc_fld_data_t cz = (M3(j_ec, 2, i+di,j+dj,k   , p) + M3(j_ec, 2, i  ,j+dj,k   , p) +
-			   M3(j_ec, 2, i+di,j   ,k   , p) + M3(j_ec, 2, i  ,j   ,k   , p));
-      mrc_fld_data_t ffx = s2 * (cy * M3(b_cc, 2, i,j,k, p) - cz * M3(b_cc, 1, i,j,k, p));
-      mrc_fld_data_t ffy = s2 * (cz * M3(b_cc, 0, i,j,k, p) - cx * M3(b_cc, 2, i,j,k, p));
-      mrc_fld_data_t ffz = s2 * (cx * M3(b_cc, 1, i,j,k, p) - cy * M3(b_cc, 0, i,j,k, p));
-      mrc_fld_data_t duu = (ffx * M3(prim, VX, i,j,k, p) +
-			    ffy * M3(prim, VY, i,j,k, p) +
-			    ffz * M3(prim, VZ, i,j,k, p));
-      
-      M3(x_next, RVX, i,j,k, p) += ffx;
-      M3(x_next, RVY, i,j,k, p) += ffy;
-      M3(x_next, RVZ, i,j,k, p) += ffz;
-      M3(x_next, UU , i,j,k, p) += duu;
-    } mrc_fld_foreach_end;
-  }
+  fld3d_foreach(i,j,k, 0, 0) {
+    mrc_fld_data_t z = F3S(zmask, 0, i,j,k);
+    mrc_fld_data_t s2 = s1 * z;
+    mrc_fld_data_t cx = (F3S(j_ec, 0, i   ,j+dj,k+dk) + F3S(j_ec, 0, i  ,j   ,k+dk) +
+			 F3S(j_ec, 0, i   ,j+dj,k   ) + F3S(j_ec, 0, i  ,j   ,k   ));
+    mrc_fld_data_t cy = (F3S(j_ec, 1, i+di,j   ,k+dk) + F3S(j_ec, 1, i  ,j   ,k+dk) +
+			 F3S(j_ec, 1, i+di,j   ,k   ) + F3S(j_ec, 1, i  ,j   ,k   ));
+    mrc_fld_data_t cz = (F3S(j_ec, 2, i+di,j+dj,k   ) + F3S(j_ec, 2, i  ,j+dj,k   ) +
+			 F3S(j_ec, 2, i+di,j   ,k   ) + F3S(j_ec, 2, i  ,j   ,k   ));
+    mrc_fld_data_t ffx = s2 * (cy * F3S(b_cc, 2, i,j,k) - cz * F3S(b_cc, 1, i,j,k));
+    mrc_fld_data_t ffy = s2 * (cz * F3S(b_cc, 0, i,j,k) - cx * F3S(b_cc, 2, i,j,k));
+    mrc_fld_data_t ffz = s2 * (cx * F3S(b_cc, 1, i,j,k) - cy * F3S(b_cc, 0, i,j,k));
+    mrc_fld_data_t duu = (ffx * F3S(prim, VX, i,j,k) +
+			  ffy * F3S(prim, VY, i,j,k) +
+			  ffz * F3S(prim, VZ, i,j,k));
+    
+    F3S(x_next, RVX, i,j,k) += ffx;
+    F3S(x_next, RVY, i,j,k) += ffy;
+    F3S(x_next, RVZ, i,j,k) += ffz;
+    F3S(x_next, UU , i,j,k) += duu;
+  } fld3d_foreach_end;
 }
 
 // ----------------------------------------------------------------------
@@ -923,10 +917,11 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
     }
 
     mhd_update_finite_volume(mhd, _x_next, _fluxes, ymask, dt, 0, 0);
-    pushpp_c(step, dt, _x_next, _prim, zmask);
+    pushpp_c(_x_next, dt, _prim, zmask);
 
-    curr_c(_j_ec, _x_curr);
+    calc_current_ec(_j_ec, _x_curr);
     calc_Bt_cc(_b_cc, _x_curr, b0, 1, 1);
+    push_ej_c(_x_next, dt, _j_ec, _b_cc, _prim, zmask);
 
     fld3d_put(&_x_curr, x_curr, p);
     fld3d_put(&_x_next, x_next, p);
@@ -942,7 +937,6 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
       fld3d_put(&b0, mhd->b0, p);
     }
   }
-  push_ej_c(step, dt, j_ec, b_cc, prim, x_next);
 
   calce_c(step, E, x_curr, prim, dt);
   //  ggcm_mhd_fill_ghosts_E(mhd, E);
