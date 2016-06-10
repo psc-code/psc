@@ -14,12 +14,8 @@ mhd_update_finite_volume(struct ggcm_mhd *mhd,
   mrc_domain_get_global_dims(x->_domain, gdims);
   int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
 
-  if (mhd->amr > 0 && do_correct) {
-    for (int d = 0; d < 3; d++) {
-      if (gdims[d] > 1) {
-	mrc_ddc_amr_apply(mhd->ddc_amr_flux[d], fluxes[d]);
-      }
-    }
+  if (do_correct) {
+    ggcm_mhd_correct_fluxes(mhd, fluxes);
   }
 
   int nr_comps = mrc_fld_nr_comps(fluxes[0]);

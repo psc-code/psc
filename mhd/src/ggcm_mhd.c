@@ -283,6 +283,21 @@ ggcm_mhd_fill_ghosts_reconstr(struct ggcm_mhd *mhd, struct mrc_fld *U_l[],
   ggcm_mhd_bnd_fill_ghosts_reconstr(mhd->bnd1, U_l, U_r, p);
 }
 
+void
+ggcm_mhd_correct_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *fluxes[3])
+{
+  if (mhd->amr > 0) {
+    int gdims[3];
+    mrc_domain_get_global_dims(mhd->domain, gdims);
+
+    for (int d = 0; d < 3; d++) {
+      if (gdims[d] > 1) {
+	mrc_ddc_amr_apply(mhd->ddc_amr_flux[d], fluxes[d]);
+      }
+    }
+  }
+}
+
 int
 ggcm_mhd_ntot(struct ggcm_mhd *mhd)
 {
