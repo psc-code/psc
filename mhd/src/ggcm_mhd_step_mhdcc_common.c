@@ -206,18 +206,27 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, mrc_fld_data_t time_c
     struct mrc_fld *U_r[3] = { ggcm_mhd_get_3d_fld(mhd, s_n_comps),
 			       ggcm_mhd_get_3d_fld(mhd, s_n_comps),
 			       ggcm_mhd_get_3d_fld(mhd, s_n_comps), };
+    fld3d_t Ul, Ur;
+    fld3d_setup(&Ul);
+    fld3d_setup(&Ur);
     
     // reconstruct
     for (int p = 0; p < mrc_fld_nr_patches(x_curr); p++) {
       fld3d_get(&x, x_curr, p);
 
       pde_for_each_dir(dir) {
+	fld3d_get(&Ul, U_l[dir], p);
+	fld3d_get(&Ur, U_r[dir], p);
+
 	pde_for_each_line(dir, j, k, 0) {
 	  int ib = 0, ie = s_ldims[dir];
 	  mhd_flux_pt1(step, x, j, k, dir, p, ib, ie);
-	  mhd_put_line_state(U_l[dir], sub->U_l, j, k, dir, p, ib, ie + 1);
-	  mhd_put_line_state(U_r[dir], sub->U_r, j, k, dir, p, ib, ie + 1);
+	  mhd_line_put_state(Ul, sub->U_l, j, k, dir, ib, ie + 1);
+	  mhd_line_put_state(Ur, sub->U_r, j, k, dir, ib, ie + 1);
 	}
+
+	fld3d_put(&Ul, U_l[dir], p);
+	fld3d_put(&Ur, U_r[dir], p);
       }
 
       fld3d_put(&x, x_curr, p);
@@ -230,16 +239,22 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, mrc_fld_data_t time_c
       fld3d_get(&x, x_curr, p);
 
       pde_for_each_dir(dir) {
+	fld3d_get(&Ul, U_l[dir], p);
+	fld3d_get(&Ur, U_r[dir], p);
 	fld3d_get(&flux, fluxes[dir], p);
+
 	pde_for_each_line(dir, j, k, 0) {
 	  int ib = 0, ie = s_ldims[dir];
-	  mhd_get_line_state(sub->U_l, U_l[dir], j, k, dir, p, ib, ie + 1);
-	  mhd_get_line_state(sub->U_r, U_r[dir], j, k, dir, p, ib, ie + 1);
+	  mhd_line_get_state(sub->U_l, Ul, j, k, dir, ib, ie + 1);
+	  mhd_line_get_state(sub->U_r, Ur, j, k, dir, ib, ie + 1);
 	  mhd_prim_from_cons(sub->W_l, sub->U_l, ib, ie + 1);
 	  mhd_prim_from_cons(sub->W_r, sub->U_r, ib, ie + 1);
 	  
 	  mhd_flux_pt2(step, flux, x, j, k, dir, p, 0, s_ldims[dir]);
 	}
+
+	fld3d_put(&Ul, U_l[dir], p);
+	fld3d_put(&Ur, U_r[dir], p);
 	fld3d_put(&flux, fluxes[dir], p);
       }
 
