@@ -102,6 +102,42 @@ mhd_put_line_state_fcons(struct mrc_fld *flux, fld1d_state_t F,
 
 
 // ----------------------------------------------------------------------
+// mhd_line_put_state_fcons
+
+static void _mrc_unused
+mhd_line_put_state_fcons(fld3d_t U, fld1d_state_t u,
+			 int j, int k, int dir, int ib, int ie)
+{
+#define PUT_LINE(X, Y, Z, I, J, K) do {				\
+    for (int i = ib; i < ie; i++) {				\
+      F3S(U, RR     , I,J,K) = F1S(u, RR , i);		\
+      F3S(U, RVX + X, I,J,K) = F1S(u, RVX, i);		\
+      F3S(U, RVX + Y, I,J,K) = F1S(u, RVY, i);		\
+      F3S(U, RVX + Z, I,J,K) = F1S(u, RVZ, i);		\
+      F3S(U, EE     , I,J,K) = F1S(u, EE , i);		\
+      F3S(U, BX + X , I,J,K) = F1S(u, BX , i);		\
+      F3S(U, BX + Y , I,J,K) = F1S(u, BY , i);		\
+      F3S(U, BX + Z , I,J,K) = F1S(u, BZ , i);		\
+      if (s_opt_divb == OPT_DIVB_GLM) {				\
+	F3S(U, PSI, I,J,K)   = F1S(u, PSI, i);		\
+      }								\
+    }								\
+} while (0)
+
+  if (dir == 0) {
+    PUT_LINE(0, 1, 2, i, j, k);
+  } else if (dir == 1) {
+    PUT_LINE(1, 2, 0, k, i, j);
+  } else if (dir == 2) {
+    PUT_LINE(2, 0, 1, j, k, i);
+  } else {
+    assert(0);
+  }
+#undef PUT_LINE
+}
+
+
+// ----------------------------------------------------------------------
 // mhd_get_line_state_fcons_ct
 
 static void _mrc_unused
@@ -268,6 +304,24 @@ mhd_put_line_state(struct mrc_fld *U, fld1d_state_t u,
   } else if (s_opt_eqn == OPT_EQN_MHD_SCONS ||
 	     s_opt_eqn == OPT_EQN_HD) {
     mhd_put_line_state_scons(U, u, j, k, dir, p, ib, ie);
+  } else {
+    assert(0);
+  }
+}
+
+// ----------------------------------------------------------------------
+// mhd_line_put_state
+
+static void _mrc_unused
+mhd_line_put_state(fld3d_t U, fld1d_state_t u,
+		   int j, int k, int dir, int ib, int ie)
+{
+  if (s_opt_eqn == OPT_EQN_MHD_FCONS) {
+    mhd_line_put_state_fcons(U, u, j, k, dir, ib, ie);
+  } else if (s_opt_eqn == OPT_EQN_MHD_SCONS ||
+	     s_opt_eqn == OPT_EQN_HD) {
+    assert(0);
+    //mhd_put_line_state_scons(U, u, j, k, dir, p, ib, ie);
   } else {
     assert(0);
   }
