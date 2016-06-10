@@ -61,6 +61,9 @@ struct ggcm_mhd_step_mhdcc {
   fld1d_state_t F;
 
   struct mrc_fld *x_star;
+
+  struct mrc_fld *fluxes[3];
+  struct mrc_fld *Ul[3], *Ur[3];
 };
 
 #define ggcm_mhd_step_mhdcc(step) mrc_to_subobj(step, struct ggcm_mhd_step_mhdcc)
@@ -99,6 +102,14 @@ ggcm_mhd_step_mhdcc_setup(struct ggcm_mhd_step *step)
   sub->x_star = ggcm_mhd_get_3d_fld(mhd, s_n_comps);
   mrc_fld_dict_add_int(sub->x_star, "mhd_type", MT_FULLY_CONSERVATIVE_CC);
 
+  for (int d = 0; d < 3; d++) {
+    sub->fluxes[d] = ggcm_mhd_get_3d_fld(mhd, s_n_comps);
+    if (s_opt_bc_reconstruct) {
+      sub->Ul[d] = ggcm_mhd_get_3d_fld(mhd, s_n_comps);
+      sub->Ur[d] = ggcm_mhd_get_3d_fld(mhd, s_n_comps);
+    }
+  }
+
   ggcm_mhd_step_setup_member_objs_sub(step);
   ggcm_mhd_step_setup_super(step);
 }
@@ -115,6 +126,14 @@ ggcm_mhd_step_mhdcc_destroy(struct ggcm_mhd_step *step)
   ggcm_mhd_put_3d_fld(mhd, mhd->ymask);
   ggcm_mhd_put_3d_fld(mhd, mhd->bnd_mask);
   ggcm_mhd_put_3d_fld(mhd, sub->x_star);
+
+  for (int d = 0; d < 3; d++) {
+    ggcm_mhd_put_3d_fld(mhd, sub->fluxes[d]);
+    if (s_opt_bc_reconstruct) {
+      ggcm_mhd_put_3d_fld(mhd, sub->Ul[d]);
+      ggcm_mhd_put_3d_fld(mhd, sub->Ur[d]);
+    }
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -190,9 +209,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, mrc_fld_data_t time_c
 {
   struct ggcm_mhd_step_mhdcc *sub = ggcm_mhd_step_mhdcc(step);
   struct ggcm_mhd *mhd = step->mhd;
-  struct mrc_fld *fluxes[3] = { ggcm_mhd_get_3d_fld(mhd, s_n_comps),
-				ggcm_mhd_get_3d_fld(mhd, s_n_comps),
-				ggcm_mhd_get_3d_fld(mhd, s_n_comps), };
+
   ggcm_mhd_fill_ghosts(mhd, x_curr, 0, time_curr);
 
   fld3d_t x, flux; // FIXME, make static, init once?
@@ -200,23 +217,17 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, mrc_fld_data_t time_c
   fld3d_setup(&flux);
 
   if (s_opt_bc_reconstruct) {
-    struct mrc_fld *U_l[3] = { ggcm_mhd_get_3d_fld(mhd, s_n_comps),
-			       ggcm_mhd_get_3d_fld(mhd, s_n_comps),
-			       ggcm_mhd_get_3d_fld(mhd, s_n_comps), };
-    struct mrc_fld *U_r[3] = { ggcm_mhd_get_3d_fld(mhd, s_n_comps),
-			       ggcm_mhd_get_3d_fld(mhd, s_n_comps),
-			       ggcm_mhd_get_3d_fld(mhd, s_n_comps), };
     fld3d_t Ul, Ur;
     fld3d_setup(&Ul);
     fld3d_setup(&Ur);
     
-    // reconstruct
     for (int p = 0; p < mrc_fld_nr_patches(x_curr); p++) {
       fld3d_get(&x, x_curr, p);
-
+      
+      // reconstruct
       pde_for_each_dir(dir) {
-	fld3d_get(&Ul, U_l[dir], p);
-	fld3d_get(&Ur, U_r[dir], p);
+	fld3d_get(&Ul, sub->Ul[dir], p);
+	fld3d_get(&Ur, sub->Ur[dir], p);
 
 	pde_for_each_line(dir, j, k, 0) {
 	  int ib = 0, ie = s_ldims[dir];
@@ -225,25 +236,18 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, mrc_fld_data_t time_c
 	  mhd_line_put_state(Ur, sub->U_r, j, k, dir, ib, ie + 1);
 	}
 
-	fld3d_put(&Ul, U_l[dir], p);
-	fld3d_put(&Ur, U_r[dir], p);
+	fld3d_put(&Ul, sub->Ul[dir], p);
+	fld3d_put(&Ur, sub->Ur[dir], p);
       }
 
-      fld3d_put(&x, x_curr, p);
-    }
+      // set b.c. on reconstructed fields
+      ggcm_mhd_fill_ghosts_reconstr(mhd, sub->Ul, sub->Ur, p);
     
-    for (int p = 0; p < mrc_fld_nr_patches(U_l[0]); p++) {
-      ggcm_mhd_fill_ghosts_reconstr(mhd, U_l, U_r, p);
-    }
-    
-    // riemann solve
-    for (int p = 0; p < mrc_fld_nr_patches(x_curr); p++) {
-      fld3d_get(&x, x_curr, p);
-
+      // riemann solve
       pde_for_each_dir(dir) {
-	fld3d_get(&Ul, U_l[dir], p);
-	fld3d_get(&Ur, U_r[dir], p);
-	fld3d_get(&flux, fluxes[dir], p);
+	fld3d_get(&Ul, sub->Ul[dir], p);
+	fld3d_get(&Ur, sub->Ur[dir], p);
+	fld3d_get(&flux, sub->fluxes[dir], p);
 
 	pde_for_each_line(dir, j, k, 0) {
 	  int ib = 0, ie = s_ldims[dir];
@@ -255,43 +259,35 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, mrc_fld_data_t time_c
 	  mhd_flux_pt2(step, flux, x, j, k, dir, p, 0, s_ldims[dir]);
 	}
 
-	fld3d_put(&Ul, U_l[dir], p);
-	fld3d_put(&Ur, U_r[dir], p);
-	fld3d_put(&flux, fluxes[dir], p);
+	fld3d_put(&Ul, sub->Ul[dir], p);
+	fld3d_put(&Ur, sub->Ur[dir], p);
+	fld3d_put(&flux, sub->fluxes[dir], p);
       }
 
       fld3d_put(&x, x_curr, p);
     } 
 
-    ggcm_mhd_put_3d_fld(mhd, U_l[0]);
-    ggcm_mhd_put_3d_fld(mhd, U_l[1]);
-    ggcm_mhd_put_3d_fld(mhd, U_l[2]);
-    ggcm_mhd_put_3d_fld(mhd, U_r[0]);
-    ggcm_mhd_put_3d_fld(mhd, U_r[1]);
-    ggcm_mhd_put_3d_fld(mhd, U_r[2]);
   } else {
     for (int p = 0; p < mrc_fld_nr_patches(x_curr); p++) {
       fld3d_get(&x, x_curr, p);
 
       pde_for_each_dir(dir) {
-	fld3d_get(&flux, fluxes[dir], p);
+	fld3d_get(&flux, sub->fluxes[dir], p);
+
 	pde_for_each_line(dir, j, k, 0) {
 	  int ib = 0, ie = s_ldims[dir];
 	  mhd_flux_pt1(step, x, j, k, dir, p, ib, ie);
 	  mhd_flux_pt2(step, flux, x, j, k, dir, p, ib, ie);
 	}
-	fld3d_put(&flux, fluxes[dir], p);
+
+	fld3d_put(&flux, sub->fluxes[dir], p);
       }
 
       fld3d_put(&x, x_curr, p);
     }
   }
     
-  mhd_update_finite_volume(mhd, x_next, fluxes, mhd->ymask, dt, true, 0, 0);
-
-  ggcm_mhd_put_3d_fld(mhd, fluxes[0]);
-  ggcm_mhd_put_3d_fld(mhd, fluxes[1]);
-  ggcm_mhd_put_3d_fld(mhd, fluxes[2]);
+  mhd_update_finite_volume(mhd, x_next, sub->fluxes, mhd->ymask, dt, true, 0, 0);
 }
 
 // ----------------------------------------------------------------------
