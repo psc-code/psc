@@ -304,29 +304,23 @@ pushpp_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, fld3d_t x,
 // edge centered current density
 
 static void
-curr_c(struct ggcm_mhd *mhd, struct mrc_fld *j_ec, struct mrc_fld *x)
+curr_c(struct ggcm_mhd *mhd, struct mrc_fld *j_ec, struct mrc_fld *x, int p)
 {
-  int gdims[3];
-  mrc_domain_get_global_dims(x->_domain, gdims);
-  int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
-
-  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
-    float *bd4x = ggcm_mhd_crds_get_crd_p(mhd->crds, 0, BD4, p) - 1;
-    float *bd4y = ggcm_mhd_crds_get_crd_p(mhd->crds, 1, BD4, p) - 1;
-    float *bd4z = ggcm_mhd_crds_get_crd_p(mhd->crds, 2, BD4, p) - 1;
-
-    mrc_fld_foreach(j_ec, i,j,k, 1, 2) {
-      M3(j_ec, 0, i,j,k, p) =
-	(B1(x, 2, i,j,k, p) - B1(x, 2, i,j-dy,k, p)) * bd4y[j] -
-	(B1(x, 1, i,j,k, p) - B1(x, 1, i,j,k-dz, p)) * bd4z[k];
-      M3(j_ec, 1, i,j,k, p) =
-	(B1(x, 0, i,j,k, p) - B1(x, 0, i,j,k-dz, p)) * bd4z[k] -
-	(B1(x, 2, i,j,k, p) - B1(x, 2, i-dx,j,k, p)) * bd4x[i];
-      M3(j_ec, 2, i,j,k, p) =
-	(B1(x, 1, i,j,k, p) - B1(x, 1, i-dx,j,k, p)) * bd4x[i] -
-	(B1(x, 0, i,j,k, p) - B1(x, 0, i,j-dy,k, p)) * bd4y[j];
-    } mrc_fld_foreach_end;
-  }
+  float *bd4x = ggcm_mhd_crds_get_crd_p(mhd->crds, 0, BD4, p) - 1;
+  float *bd4y = ggcm_mhd_crds_get_crd_p(mhd->crds, 1, BD4, p) - 1;
+  float *bd4z = ggcm_mhd_crds_get_crd_p(mhd->crds, 2, BD4, p) - 1;
+  
+  mrc_fld_foreach(j_ec, i,j,k, 1, 2) {
+    M3(j_ec, 0, i,j,k, p) =
+      (B1(x, 2, i,j,k, p) - B1(x, 2, i,j-dj,k, p)) * bd4y[j] -
+      (B1(x, 1, i,j,k, p) - B1(x, 1, i,j,k-dk, p)) * bd4z[k];
+    M3(j_ec, 1, i,j,k, p) =
+      (B1(x, 0, i,j,k, p) - B1(x, 0, i,j,k-dk, p)) * bd4z[k] -
+      (B1(x, 2, i,j,k, p) - B1(x, 2, i-di,j,k, p)) * bd4x[i];
+    M3(j_ec, 2, i,j,k, p) =
+      (B1(x, 1, i,j,k, p) - B1(x, 1, i-di,j,k, p)) * bd4x[i] -
+      (B1(x, 0, i,j,k, p) - B1(x, 0, i,j-dj,k, p)) * bd4y[j];
+  } mrc_fld_foreach_end;
 }
 
 // ----------------------------------------------------------------------
@@ -348,7 +342,9 @@ curbc_c(struct ggcm_mhd_step *step, struct mrc_fld *j_cc,
 
   // get j on edges
   struct mrc_fld *j_ec = ggcm_mhd_get_3d_fld(mhd, 3);
-  curr_c(mhd, j_ec, x);
+  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+    curr_c(mhd, j_ec, x, p);
+  }
 
   // then average to cell centers
   for (int p = 0; p < mrc_fld_nr_patches(j_cc); p++) {
@@ -367,33 +363,23 @@ curbc_c(struct ggcm_mhd_step *step, struct mrc_fld *j_cc,
 }
 
 static void
-push_ej_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, struct mrc_fld *x_curr,
-	  struct mrc_fld *prim, struct mrc_fld *x_next)
+push_ej_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, struct mrc_fld *j_ec,
+	  struct mrc_fld *b_cc, struct mrc_fld *prim, struct mrc_fld *x_next)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
-  struct ggcm_mhd *mhd = step->mhd;
   struct mrc_fld *zmask = sub->zmask;
-  struct mrc_fld *j_ec = ggcm_mhd_get_3d_fld(mhd, 3);
-  struct mrc_fld *b_cc = ggcm_mhd_get_3d_fld(mhd, 3);
-
-  int gdims[3];
-  mrc_domain_get_global_dims(mhd->domain, gdims);
-  int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
-
-  curr_c(mhd, j_ec, x_curr);
-  compute_Bt_cc(mhd, b_cc, x_curr, 1, 1);
 	
   mrc_fld_data_t s1 = .25f * dt;
   for (int p = 0; p < mrc_fld_nr_patches(x_next); p++) {
     mrc_fld_foreach(x_next, i,j,k, 0, 0) {
       mrc_fld_data_t z = ZMASK(zmask, i,j,k, p);
       mrc_fld_data_t s2 = s1 * z;
-      mrc_fld_data_t cx = (M3(j_ec, 0, i   ,j+dy,k+dz, p) + M3(j_ec, 0, i  ,j   ,k+dz, p) +
-			   M3(j_ec, 0, i   ,j+dy,k   , p) + M3(j_ec, 0, i  ,j   ,k   , p));
-      mrc_fld_data_t cy = (M3(j_ec, 1, i+dx,j   ,k+dz, p) + M3(j_ec, 1, i  ,j   ,k+dz, p) +
-			   M3(j_ec, 1, i+dx,j   ,k   , p) + M3(j_ec, 1, i  ,j   ,k   , p));
-      mrc_fld_data_t cz = (M3(j_ec, 2, i+dx,j+dy,k   , p) + M3(j_ec, 2, i  ,j+dy,k   , p) +
-			   M3(j_ec, 2, i+dx,j   ,k   , p) + M3(j_ec, 2, i  ,j   ,k   , p));
+      mrc_fld_data_t cx = (M3(j_ec, 0, i   ,j+dj,k+dk, p) + M3(j_ec, 0, i  ,j   ,k+dk, p) +
+			   M3(j_ec, 0, i   ,j+dj,k   , p) + M3(j_ec, 0, i  ,j   ,k   , p));
+      mrc_fld_data_t cy = (M3(j_ec, 1, i+di,j   ,k+dk, p) + M3(j_ec, 1, i  ,j   ,k+dk, p) +
+			   M3(j_ec, 1, i+di,j   ,k   , p) + M3(j_ec, 1, i  ,j   ,k   , p));
+      mrc_fld_data_t cz = (M3(j_ec, 2, i+di,j+dj,k   , p) + M3(j_ec, 2, i  ,j+dj,k   , p) +
+			   M3(j_ec, 2, i+di,j   ,k   , p) + M3(j_ec, 2, i  ,j   ,k   , p));
       mrc_fld_data_t ffx = s2 * (cy * M3(b_cc, 2, i,j,k, p) - cz * M3(b_cc, 1, i,j,k, p));
       mrc_fld_data_t ffy = s2 * (cz * M3(b_cc, 0, i,j,k, p) - cx * M3(b_cc, 2, i,j,k, p));
       mrc_fld_data_t ffz = s2 * (cx * M3(b_cc, 1, i,j,k, p) - cy * M3(b_cc, 0, i,j,k, p));
@@ -407,9 +393,6 @@ push_ej_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, struct mrc_fld *x_curr,
       M3(x_next, UU , i,j,k, p) += duu;
     } mrc_fld_foreach_end;
   }
-
-  ggcm_mhd_put_3d_fld(mhd, j_ec);
-  ggcm_mhd_put_3d_fld(mhd, b_cc);
 }
 
 // ----------------------------------------------------------------------
@@ -813,6 +796,8 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
 				ggcm_mhd_get_3d_fld(mhd, 5),
 				ggcm_mhd_get_3d_fld(mhd, 5), };
   struct mrc_fld *E = ggcm_mhd_get_3d_fld(mhd, 3);
+  struct mrc_fld *j_ec = ggcm_mhd_get_3d_fld(mhd, 3);
+  struct mrc_fld *b_cc = ggcm_mhd_get_3d_fld(mhd, 3);
 
   rmaskn_c(step);
 
@@ -898,33 +883,30 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
   for (int p = 0; p < mrc_fld_nr_patches(x_next); p++) {
     pde_patch_set(p);
     fld3d_get(&_x_next, x_next, p);
+    fld3d_get(&_prim, prim, p);
     fld3d_get(&ymask, mhd->ymask, p);
+    fld3d_get(&zmask, sub->zmask, p);
     for (int d = 0; d < 3; d++) {
       fld3d_get(&_fluxes[d], fluxes[d], p);
     }
 
     mhd_update_finite_volume(mhd, _x_next, _fluxes, ymask, dt, 0, 0);
+    pushpp_c(step, dt, _x_next, _prim, zmask);
 
     fld3d_put(&_x_next, x_next, p);
     fld3d_put(&ymask, mhd->ymask, p);
-     for (int d = 0; d < 3; d++) {
+    fld3d_put(&zmask, sub->zmask, p);
+    fld3d_put(&_prim, prim, p);
+    for (int d = 0; d < 3; d++) {
       fld3d_put(&_fluxes[d], fluxes[d], p);
     }
   }
 
   for (int p = 0; p < mrc_fld_nr_patches(x_next); p++) {
-    fld3d_get(&_x_next, x_next, p);
-    fld3d_get(&_prim, prim, p);
-    fld3d_get(&zmask, sub->zmask, p);
-
-    pushpp_c(step, dt, _x_next, _prim, zmask);
-
-    fld3d_put(&_x_next, x_next, p);
-    fld3d_put(&_prim, prim, p);
-    fld3d_put(&zmask, sub->zmask, p);
+    curr_c(mhd, j_ec, x_curr, p);
   }
-
-  push_ej_c(step, dt, x_curr, prim, x_next);
+  compute_Bt_cc(mhd, b_cc, x_curr, 1, 1);
+  push_ej_c(step, dt, j_ec, b_cc, prim, x_next);
 
   calce_c(step, E, x_curr, prim, dt);
   //  ggcm_mhd_fill_ghosts_E(mhd, E);
@@ -934,6 +916,8 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
   ggcm_mhd_put_3d_fld(mhd, fluxes[0]);
   ggcm_mhd_put_3d_fld(mhd, fluxes[1]);
   ggcm_mhd_put_3d_fld(mhd, fluxes[2]);
+  ggcm_mhd_put_3d_fld(mhd, j_ec);
+  ggcm_mhd_put_3d_fld(mhd, b_cc);
 }
 
 static double
