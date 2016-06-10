@@ -28,3 +28,9 @@ fld3d_put(fld3d_t *f, struct mrc_fld *fld, int p)
 {
   f->mrc_fld = NULL;
 }
+
+static inline bool
+fld3d_is_setup(fld3d_t f)
+{
+  return f.mrc_fld;
+}
