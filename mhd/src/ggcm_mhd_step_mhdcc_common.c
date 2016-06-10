@@ -171,17 +171,24 @@ mhd_flux_pt1(struct ggcm_mhd_step *step, struct mrc_fld *X,
 // mhd_flux_pt2
 
 static void
-mhd_flux_pt2(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3], struct mrc_fld *x,
+mhd_flux_pt2(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3], struct mrc_fld *X,
 	     int j, int k, int dir, int p, int ib, int ie)
 {
   struct ggcm_mhd_step_mhdcc *sub = ggcm_mhd_step_mhdcc(step);
   fld1d_state_t U_l = sub->U_l, U_r = sub->U_r;
   fld1d_state_t W = sub->W, W_l = sub->W_l, W_r = sub->W_r, F = sub->F;
 
-  mhd_line_get_current(x, j, k, dir, p, ib, ie + 1);
+  fld3d_t x;
+  fld3d_setup(&x);
+
+  fld3d_get(&x, X, p);
+
+  mhd_line_get_current(x, j, k, dir, ib, ie + 1);
   mhd_riemann(F, U_l, U_r, W_l, W_r, ib, ie + 1);
   mhd_add_resistive_flux(F, W, ib, ie + 1);
   mhd_put_line_state(fluxes[dir], F, j, k, dir, p, ib, ie + 1);
+
+  fld3d_put(&x, X, p);
 }
 
 // ----------------------------------------------------------------------
