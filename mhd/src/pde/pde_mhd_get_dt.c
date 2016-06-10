@@ -54,7 +54,7 @@ pde_mhd_get_dt_scons(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zm
       
       mrc_fld_data_t zm = 1.f;
       if (zmask) {
-	zm = F3(zmask, m_zmask, ix,iy,iz);
+	zm = M3(zmask, m_zmask, ix,iy,iz, p);
       }
       mrc_fld_data_t tt = thx / mrc_fld_max(eps, hh*vv*zm);
       dt = mrc_fld_min(dt, tt);

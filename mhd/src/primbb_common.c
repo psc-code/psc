@@ -26,14 +26,16 @@ primbb_c(struct ggcm_mhd *mhd, int m_curr)
 
   struct mrc_fld *f = mrc_fld_get_as(mhd->fld, FLD_TYPE);
 
-  mrc_fld_foreach(f, ix,iy,iz, 1, 2) {
-    F3(f,_BX, ix,iy,iz) = .5f * (F3(f, m_curr + _B1X, ix,iy,iz) +
-				 F3(f, m_curr + _B1X, ix-1,iy,iz));
-    F3(f,_BY, ix,iy,iz) = .5f * (F3(f, m_curr + _B1Y, ix,iy,iz) +
-				 F3(f, m_curr + _B1Y, ix,iy-1,iz));
-    F3(f,_BZ, ix,iy,iz) = .5f * (F3(f, m_curr + _B1Z, ix,iy,iz) +
-				 F3(f, m_curr + _B1Z, ix,iy,iz-1));
-  } mrc_fld_foreach_end;
+  for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
+    mrc_fld_foreach(f, ix,iy,iz, 1, 2) {
+      M3(f,_BX, ix,iy,iz, p) = .5f * (M3(f, m_curr + _B1X, ix,iy,iz, p) +
+				      M3(f, m_curr + _B1X, ix-1,iy,iz, p));
+      M3(f,_BY, ix,iy,iz, p) = .5f * (M3(f, m_curr + _B1Y, ix,iy,iz, p) +
+				      M3(f, m_curr + _B1Y, ix,iy-1,iz, p));
+      M3(f,_BZ, ix,iy,iz, p) = .5f * (M3(f, m_curr + _B1Z, ix,iy,iz, p) +
+				      M3(f, m_curr + _B1Z, ix,iy,iz-1, p));
+    } mrc_fld_foreach_end;
+  }
 
   mrc_fld_put_as(f, mhd->fld);
 

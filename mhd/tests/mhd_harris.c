@@ -280,7 +280,7 @@ ggcm_mhd_ic_asymharris_run(struct ggcm_mhd_ic *ic)
       double y = MRC_MCRDY(crds, iy, p);
 
       //    A[2] = lx / (4*pi) * (1 - cos(2*kx*X)) * cos(ky*Y)
-      // F3(fld_psi, 0, ix,iy,iz) = ic_harris->pert * ly / (4. * M_PI) * (1. - cos(2*ky*(y - y0))) * cos(kx*(x - x0));
+      // M3(fld_psi, 0, ix,iy,iz, p) = ic_harris->pert * ly / (4. * M_PI) * (1. - cos(2*ky*(y - y0))) * cos(kx*(x - x0));
       // taken from Birn et. al. 2001
       if (fabs(y) < ic_asymharris->pert_halfwidth) {
         M3(fld_psi, 0, ix,iy,iz, p) = (ic_asymharris->pert *

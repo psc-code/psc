@@ -6,8 +6,6 @@
 #include <mrc_domain.h>
 #include <mrc_ddc.h>
 
-#define F3 MRC_F3 // FIXME
-
 // ----------------------------------------------------------------------
 // calc_u_cweno
 //

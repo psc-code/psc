@@ -20,10 +20,12 @@ mrc_fld_print(struct mrc_fld *x, const char *name)
   for (int r = 0; r < size; r++) {
     MPI_Barrier(comm);
     if (r == rank) {
-      mrc_fld_foreach(x, i,j,k, 0, 0) {
-	mprintf("%s[%d,%d,%d] = %g\n", name, i, j, k, F3(x, 0, i,j,k));
-      } mrc_fld_foreach_end;
-      mprintf("\n");
+      for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+	mrc_fld_foreach(x, i,j,k, 0, 0) {
+	  mprintf("%s[%d,%d,%d, %d] = %g\n", name, i, j, k, p, M3(x, 0, i,j,k, p));
+	} mrc_fld_foreach_end;
+	mprintf("\n");
+      }
     }
   }
 }
@@ -92,9 +94,11 @@ main(int argc, char **argv)
   mrc_fld_set_type(x, FLD_TYPE);
   mrc_fld_setup(x);
   mrc_fld_view(x);
-  mrc_fld_foreach(x, i,j,k, 0, 0) {
-    F3(x, 0, i,0,0) = i;
-  } mrc_fld_foreach_end;
+  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+    mrc_fld_foreach(x, i,j,k, 0, 0) {
+      M3(x, 0, i,0,0, p) = i;
+    } mrc_fld_foreach_end;
+  }
 
   struct mrc_fld *y = mrc_domain_fld_create(domain, 0, "y0");
   mrc_fld_set_type(y, FLD_TYPE);

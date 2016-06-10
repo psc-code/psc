@@ -58,12 +58,14 @@ ggcm_mhd_ic_fadeev_run(struct ggcm_mhd_ic *ic)
   struct mrc_fld *psi = mrc_fld_get_as(fld_psi, FLD_TYPE);
   struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
 
-  mrc_fld_foreach(psi, ix, iy, iz, 1, 2) {
-    r[0] = .5*(MRC_CRDX(crds, ix) + MRC_CRDX(crds, ix-1));
-    r[1] = .5*(MRC_CRDY(crds, iy) + MRC_CRDY(crds, iy-1));
-    
-    F3(psi, 0, ix,iy,iz) = -(Bo / kk)*( log(cosh(kk*r[1]) + eps*cos(kk*r[0])));
-  } mrc_fld_foreach_end;
+  for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
+    mrc_fld_foreach(psi, ix, iy, iz, 1, 2) {
+      r[0] = .5*(MRC_CRDX(crds, ix) + MRC_CRDX(crds, ix-1));
+      r[1] = .5*(MRC_CRDY(crds, iy) + MRC_CRDY(crds, iy-1));
+      
+      M3(psi, 0, ix,iy,iz, p) = -(Bo / kk)*( log(cosh(kk*r[1]) + eps*cos(kk*r[0])));
+    } mrc_fld_foreach_end;
+  }
 
   float *bd2x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD2);
   float *bd2y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD2);

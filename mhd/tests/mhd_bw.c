@@ -69,31 +69,31 @@ ggcm_mhd_ic_bw_run(struct ggcm_mhd_ic *ic)
 
     if(fabs(r[1]) < 0.5*L[1]){
       // Left 
-      F3(fld, _RR1, ix, iy, iz) = 1.0;
+      M3(fld, _RR1, ix, iy, iz) = 1.0;
       PP1(fld, ix,iy,iz) = RR1(fld, ix,iy,iz);
-      F3(fld, _B1Y , ix, iy, iz) = 0.75;
-      F3(fld, _B1X , ix, iy, iz) = 1.0;
-      F3(fld, _B1Z , ix, iy, iz) = 0.0;
+      M3(fld, _B1Y , ix, iy, iz) = 0.75;
+      M3(fld, _B1X , ix, iy, iz) = 1.0;
+      M3(fld, _B1Z , ix, iy, iz) = 0.0;
     }else{
       // Right
-      F3(fld, _RR1, ix, iy, iz) = 0.125;
+      M3(fld, _RR1, ix, iy, iz) = 0.125;
       PP1(fld, ix,iy,iz) = RR1(fld, ix,iy,iz);
-      F3(fld, _B1Y , ix, iy, iz) = 0.75;
-      F3(fld, _B1X , ix, iy, iz) = -1.0;
-      F3(fld, _B1Z , ix, iy, iz) = 0.0;
+      M3(fld, _B1Y , ix, iy, iz) = 0.75;
+      M3(fld, _B1X , ix, iy, iz) = -1.0;
+      M3(fld, _B1Z , ix, iy, iz) = 0.0;
     }
   } else if(strcmp(sub->pdim, "z") == 1){
     if(fabs(r[2]) < 0.5*L[2]){
       // Left 
-      F3(fld, _RR1, ix, iy, iz) = 1.0;
+      M3(fld, _RR1, ix, iy, iz) = 1.0;
       PP1(fld, ix,iy,iz) = RR1(fld, ix,iy,iz);
-      F3(fld, _B1Z , ix, iy, iz) = 0.75;
-      F3(fld, _B1X , ix, iy, iz) = 1.0;
+      M3(fld, _B1Z , ix, iy, iz) = 0.75;
+      M3(fld, _B1X , ix, iy, iz) = 1.0;
     }else{
       // Right
-      F3(fld, _RR1, ix, iy, iz) = 0.125;
-      F3(fld, _B1X , ix, iy, iz) = -1.0;
-      F3(fld, _B1Z , ix, iy, iz) = 0.75;
+      M3(fld, _RR1, ix, iy, iz) = 0.125;
+      M3(fld, _B1X , ix, iy, iz) = -1.0;
+      M3(fld, _B1Z , ix, iy, iz) = 0.75;
       PP1(fld, ix,iy,iz) = RR1(fld, ix,iy,iz);
       */
 

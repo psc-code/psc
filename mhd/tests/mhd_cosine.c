@@ -63,15 +63,16 @@ ggcm_mhd_ic_cosine_run(struct ggcm_mhd_ic *ic)
   //float xs = sub->xs; // Distance of each current sheet from zero
   //float pert = sub->pert; // 
 
-  mrc_fld_foreach(f3, ix, iy, iz, 2, 2) {
-
-    r[0] = .5*(MRC_CRDX(crds, ix) + MRC_CRDX(crds, ix-1));
-    r[1] = .5*(MRC_CRDY(crds, iy) + MRC_CRDY(crds, iy-1));
-
-    F3(fld_psi, 0, ix,iy,iz) = ( L[0] / (4. * M_PI) ) * (1. - cos(2*kx*r[0])) * sin(ky*r[1]);   
-    //F3(fld_psi, 0, ix,iy,iz) = 0.01*cos(kx*r[0])*(sin(ky*r[1]));
-    //(L[0] / (4.*M_PI)) * ((1 - cos(kx*r[0])) * sin(ky*r[1]));
-  } mrc_fld_foreach_end;
+  for (int p = 0; p < mrc_fld_nr_patches(f3); p++) {
+    mrc_fld_foreach(f3, ix, iy, iz, 2, 2) {
+      r[0] = .5*(MRC_CRDX(crds, ix) + MRC_CRDX(crds, ix-1));
+      r[1] = .5*(MRC_CRDY(crds, iy) + MRC_CRDY(crds, iy-1));
+      
+      M3(fld_psi, 0, ix,iy,iz, p) = ( L[0] / (4. * M_PI) ) * (1. - cos(2*kx*r[0])) * sin(ky*r[1]);   
+      //M3(fld_psi, 0, ix,iy,iz, p) = 0.01*cos(kx*r[0])*(sin(ky*r[1]));
+      //(L[0] / (4.*M_PI)) * ((1 - cos(kx*r[0])) * sin(ky*r[1]));
+    } mrc_fld_foreach_end;
+  }
 
   float *bd2x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD2);
   //float *bd2y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD2);
