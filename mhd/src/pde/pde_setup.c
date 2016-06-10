@@ -139,6 +139,25 @@ pde_setup(struct mrc_fld *fld)
 }
 
 // ======================================================================
+// loop over 3d field
+
+#define fld3d_foreach(i,j,k, l,r) do {					\
+  int _l[3] = {            - (s_sw[0] ? (l) : 0),			\
+		           - (s_sw[1] ? (l) : 0),			\
+		           - (s_sw[2] ? (l) : 0) };			\
+  int _r[3] = { s_ldims[0] + (s_sw[0] ? (r) : 0),			\
+		s_ldims[1] + (s_sw[1] ? (r) : 0),			\
+		s_ldims[2] + (s_sw[2] ? (r) : 0) };			\
+  for (int k = _l[2]; k < _r[2]; k++) {					\
+    for (int j = _l[1]; j < _r[1]; j++)	{				\
+      for (int i = _l[0]; i < _r[0]; i++)				\
+	
+#define fld3d_foreach_end					\
+      }								\
+    }								\
+  } while (0) \
+
+// ======================================================================
 // loop over lines // loop along line
 
 static fld1d_t s_line_inv_dx;
