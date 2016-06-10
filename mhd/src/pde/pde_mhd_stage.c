@@ -7,16 +7,12 @@
 static void _mrc_unused
 mhd_update_finite_volume(struct ggcm_mhd *mhd,
 			 struct mrc_fld *x, struct mrc_fld *fluxes[3],
-			 struct mrc_fld *ymask, mrc_fld_data_t dt, bool do_correct,
+			 struct mrc_fld *ymask, mrc_fld_data_t dt,
 			 int l, int r)
 {
   int gdims[3];
   mrc_domain_get_global_dims(x->_domain, gdims);
   int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
-
-  if (do_correct) {
-    ggcm_mhd_correct_fluxes(mhd, fluxes);
-  }
 
   int nr_comps = mrc_fld_nr_comps(fluxes[0]);
   for (int p = 0; p < mrc_fld_nr_patches(x); p++) {

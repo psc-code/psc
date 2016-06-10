@@ -900,7 +900,9 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
     }
   }
 
-  mhd_update_finite_volume(mhd, x_next, fluxes, mhd->ymask, dt, true, 0, 0);
+  ggcm_mhd_correct_fluxes(mhd, fluxes);
+
+  mhd_update_finite_volume(mhd, x_next, fluxes, mhd->ymask, dt, 0, 0);
   pushpp_c(step, dt, x_next, prim);
 
   push_ej_c(step, dt, x_curr, prim, x_next);

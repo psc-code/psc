@@ -470,7 +470,7 @@ ggcm_mhd_step_vlct_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
   mrc_fld_copy_range(x_half, x, 0, 8);
   fluxes_pred(step, flux, x, B_cc);
-  mhd_update_finite_volume(mhd, x_half, flux, mhd->ymask, .5 * dt, false, nghost - 1, nghost - 1);
+  mhd_update_finite_volume(mhd, x_half, flux, mhd->ymask, .5 * dt, nghost - 1, nghost - 1);
   compute_E(step, E_ec, x, B_cc, flux, 4);
   ggcm_mhd_fill_ghosts_E(mhd, E_ec);
   update_ct_uniform(mhd, x_half, E_ec, .5 * dt, nghost - 1, nghost - 1, false);
@@ -479,7 +479,8 @@ ggcm_mhd_step_vlct_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
   compute_B_cc(B_cc, x_half, nghost - 1, nghost - 1);
   fluxes_corr(step, flux, x_half, B_cc);
-  mhd_update_finite_volume(mhd, x, flux, mhd->ymask, dt, true, 0, 0);
+  ggcm_mhd_correct_fluxes(mhd, flux);
+  mhd_update_finite_volume(mhd, x, flux, mhd->ymask, dt, 0, 0);
   compute_E(step, E_ec, x_half, B_cc, flux, 4);
   ggcm_mhd_fill_ghosts_E(mhd, E_ec);
   update_ct_uniform(mhd, x, E_ec, dt, 0, 0, true);
