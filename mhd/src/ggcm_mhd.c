@@ -277,10 +277,10 @@ ggcm_mhd_fill_ghosts_E(struct ggcm_mhd *mhd, struct mrc_fld *E)
 
 void
 ggcm_mhd_fill_ghosts_reconstr(struct ggcm_mhd *mhd, struct mrc_fld *U_l[],
-			      struct mrc_fld *U_r[])
+			      struct mrc_fld *U_r[], int p)
 {
-  ggcm_mhd_bnd_fill_ghosts_reconstr(mhd->bnd, U_l, U_r);
-  ggcm_mhd_bnd_fill_ghosts_reconstr(mhd->bnd1, U_l, U_r);
+  ggcm_mhd_bnd_fill_ghosts_reconstr(mhd->bnd, U_l, U_r, p);
+  ggcm_mhd_bnd_fill_ghosts_reconstr(mhd->bnd1, U_l, U_r, p);
 }
 
 int

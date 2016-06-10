@@ -318,7 +318,7 @@ ggcm_mhd_bnd_sphere_fill_ghosts_E(struct ggcm_mhd_bnd *bnd, struct mrc_fld *E_ba
 
 static void
 sphere_fill_ghosts_reconstr(struct ggcm_mhd_bnd *bnd, struct mrc_fld *U_l[],
-			    struct mrc_fld *U_r[])
+			    struct mrc_fld *U_r[], int p)
 {
   struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
   struct ggcm_mhd_bnd_sphere_map *map = &sub->map;
@@ -326,10 +326,15 @@ sphere_fill_ghosts_reconstr(struct ggcm_mhd_bnd *bnd, struct mrc_fld *U_l[],
 
   for (int d = 0; d < 3; d++) {
     for (int i = 0; i < map->fc_n_map[d]; i++) {
+      // FIXME, we really should have maps per patch, or some other way
+      // to not go through the entire list here
+      if (p != MRC_I2(map->fc_imap[d], 3, i)) {
+	continue;
+      }
+
       int ix = MRC_I2(map->fc_imap[d], 0, i);
       int iy = MRC_I2(map->fc_imap[d], 1, i);
       int iz = MRC_I2(map->fc_imap[d], 2, i);
-      int p  = MRC_I2(map->fc_imap[d], 3, i);
       int bndp = MRC_I2(map->fc_imap[d], 4, i);
 
       float crd_fc[3];
@@ -388,7 +393,7 @@ sphere_fill_ghosts_reconstr(struct ggcm_mhd_bnd *bnd, struct mrc_fld *U_l[],
 
 static void
 ggcm_mhd_bnd_sphere_fill_ghosts_reconstr(struct ggcm_mhd_bnd *bnd, struct mrc_fld *U_l_base[],
-					 struct mrc_fld *U_r_base[])
+					 struct mrc_fld *U_r_base[], int p)
 {
   struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
   struct ggcm_mhd_bnd_sphere_map *map = &sub->map;
@@ -403,7 +408,9 @@ ggcm_mhd_bnd_sphere_fill_ghosts_reconstr(struct ggcm_mhd_bnd *bnd, struct mrc_fl
     U_r[d] = mrc_fld_get_as(U_r_base[d], FLD_TYPE);
   }
 
-  sphere_fill_ghosts_reconstr(bnd, U_l, U_r);
+  for (int p = 0; p < mrc_fld_nr_patches(U_l[0]); p++) {
+    sphere_fill_ghosts_reconstr(bnd, U_l, U_r, p);
+  }
 
   for (int d = 0; d < 3; d++) {
     mrc_fld_put_as(U_l[d], U_l_base[d]);

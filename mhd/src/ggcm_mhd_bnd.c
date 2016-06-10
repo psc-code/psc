@@ -40,12 +40,12 @@ ggcm_mhd_bnd_fill_ghosts_E(struct ggcm_mhd_bnd *bnd, struct mrc_fld *E)
 
 void
 ggcm_mhd_bnd_fill_ghosts_reconstr(struct ggcm_mhd_bnd *bnd, struct mrc_fld *U_l[],
-				  struct mrc_fld *U_r[])
+				  struct mrc_fld *U_r[], int p)
 {
   struct ggcm_mhd_bnd_ops *ops = ggcm_mhd_bnd_ops(bnd);
   assert(ops);
   if (ops->fill_ghosts_reconstr) {
-    ops->fill_ghosts_reconstr(bnd, U_l, U_r);
+    ops->fill_ghosts_reconstr(bnd, U_l, U_r, p);
   }
 }
 

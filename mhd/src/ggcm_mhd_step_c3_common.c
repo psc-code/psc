@@ -854,7 +854,9 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
 	}
       }
       
-      ggcm_mhd_fill_ghosts_reconstr(mhd, U_l, U_r);
+      for (int p = 0; p < mrc_fld_nr_patches(U_l[0]); p++) {
+	ggcm_mhd_fill_ghosts_reconstr(mhd, U_l, U_r, p);
+      }
       
       // riemann solve
       for (int p = 0; p < mrc_fld_nr_patches(x_curr); p++) {
