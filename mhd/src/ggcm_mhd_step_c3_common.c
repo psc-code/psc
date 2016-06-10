@@ -285,7 +285,7 @@ flux_corr(struct ggcm_mhd_step *step, struct mrc_fld *fluxes[3], struct mrc_fld 
 }
 
 static void
-pushpp_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, struct mrc_fld *x,
+pushpp_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, fld3d_t x,
 	 struct mrc_fld *prim, int p)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
@@ -298,15 +298,15 @@ pushpp_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, struct mrc_fld *x,
   float *fd1y = ggcm_mhd_crds_get_crd_p(mhd->crds, 1, FD1, p);
   float *fd1z = ggcm_mhd_crds_get_crd_p(mhd->crds, 2, FD1, p);
 
-  mrc_fld_foreach(x, i,j,k, 0, 0) {
+  fld3d_foreach(i,j,k, 0, 0) {
     mrc_fld_data_t fpx = fd1x[i] * (M3(prim, PP, i+di,j,k, p) - M3(prim, PP, i-di,j,k, p));
     mrc_fld_data_t fpy = fd1y[j] * (M3(prim, PP, i,j+dj,k, p) - M3(prim, PP, i,j-dj,k, p));
     mrc_fld_data_t fpz = fd1z[k] * (M3(prim, PP, i,j,k+dk, p) - M3(prim, PP, i,j,k-dk, p));
     mrc_fld_data_t z = dth * ZMASK(zmask, i,j,k, p);
-    M3(x, RVX, i,j,k, p) += z * fpx;
-    M3(x, RVY, i,j,k, p) += z * fpy;
-    M3(x, RVZ, i,j,k, p) += z * fpz;
-  } mrc_fld_foreach_end;
+    F3S(x, RVX, i,j,k) += z * fpx;
+    F3S(x, RVY, i,j,k) += z * fpy;
+    F3S(x, RVZ, i,j,k) += z * fpz;
+  } fld3d_foreach_end;
 }
 
 // ----------------------------------------------------------------------
@@ -922,7 +922,11 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
   }
 
   for (int p = 0; p < mrc_fld_nr_patches(x_next); p++) {
-    pushpp_c(step, dt, x_next, prim, p);
+    fld3d_get(&_x_next, x_next, p);
+
+    pushpp_c(step, dt, _x_next, prim, p);
+
+    fld3d_put(&_x_next, x_next, p);
   }
 
   push_ej_c(step, dt, x_curr, prim, x_next);
