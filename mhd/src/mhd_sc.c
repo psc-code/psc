@@ -73,41 +73,42 @@ newstep_sc_ggcm(struct ggcm_mhd *mhd, struct mrc_fld *x)
 
   mrc_fld_data_t two_pi_d_i = 2. * M_PI * d_i;
   bool have_hall = d_i > 0.f;
-  mrc_fld_foreach(x, ix, iy, iz, 0, 0) {
-    mrc_fld_data_t hh = fmaxf(fmaxf(fd1x[ix], fd1y[iy]), fd1z[iz]);
-    mrc_fld_data_t rri = 1.f / fabsf(RR(x, ix,iy,iz)); // FIXME abs necessary?
-    mrc_fld_data_t bb = 
-      sqr(.5f * (BX(x, ix,iy,iz) + BX(x, ix-1,iy,iz))) + 
-      sqr(.5f * (BY(x, ix,iy,iz) + BY(x, ix,iy-1,iz))) +
-      sqr(.5f * (BZ(x, ix,iy,iz) + BZ(x, ix,iy,iz-1)));
-    if (have_hall) {
-      bb *= 1 + sqr(two_pi_d_i * hh);
-    }
-    mrc_fld_data_t vv1 = fminf(bb * rri, splim2);
-    
-    mrc_fld_data_t rv2 = 
-      sqr(RVX(x, ix,iy,iz)) + sqr(RVY(x, ix,iy,iz)) + sqr(RVZ(x, ix,iy,iz));
-    mrc_fld_data_t rvv = rri * rv2;
-    mrc_fld_data_t pp = s * (UU(x, ix,iy,iz) - .5f * rvv);
-    mrc_fld_data_t vv2 = gamm * fmaxf(0.f, pp) * rri;
-    mrc_fld_data_t vv3 = rri * sqrtf(rv2);
-    mrc_fld_data_t vv = sqrtf(vv1 + vv2) + vv3;
-    vv = fmaxf(eps, vv);
-    
-    mrc_fld_data_t ymask = 1.f;
-    if (fx2x[ix] + fx2y[iy] + fx2z[iz] < isphere2)
-      ymask = 0.f;
-    
-    mrc_fld_data_t rrm = fmaxf(epsz, bb * va02i);
-    mrc_fld_data_t zmask = ymask * fminf(1.f, RR(x, ix,iy,iz) / rrm);
-    
-    mrc_fld_data_t tt = thx / fmaxf(eps, hh*vv*zmask);
-    dt = fminf(dt, tt);
-  } mrc_fld_foreach_end;
-
+  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+    mrc_fld_foreach(x, ix, iy, iz, 0, 0) {
+      mrc_fld_data_t hh = fmaxf(fmaxf(fd1x[ix], fd1y[iy]), fd1z[iz]);
+      mrc_fld_data_t rri = 1.f / fabsf(RR_(x, ix,iy,iz, p)); // FIXME abs necessary?
+      mrc_fld_data_t bb = 
+	sqr(.5f * (BX_(x, ix,iy,iz, p) + BX_(x, ix-1,iy,iz, p))) + 
+	sqr(.5f * (BY_(x, ix,iy,iz, p) + BY_(x, ix,iy-1,iz, p))) +
+	sqr(.5f * (BZ_(x, ix,iy,iz, p) + BZ_(x, ix,iy,iz-1, p)));
+      if (have_hall) {
+	bb *= 1 + sqr(two_pi_d_i * hh);
+      }
+      mrc_fld_data_t vv1 = fminf(bb * rri, splim2);
+      
+      mrc_fld_data_t rv2 = 
+	sqr(RVX_(x, ix,iy,iz, p)) + sqr(RVY_(x, ix,iy,iz, p)) + sqr(RVZ_(x, ix,iy,iz, p));
+      mrc_fld_data_t rvv = rri * rv2;
+      mrc_fld_data_t pp = s * (UU_(x, ix,iy,iz, p) - .5f * rvv);
+      mrc_fld_data_t vv2 = gamm * fmaxf(0.f, pp) * rri;
+      mrc_fld_data_t vv3 = rri * sqrtf(rv2);
+      mrc_fld_data_t vv = sqrtf(vv1 + vv2) + vv3;
+      vv = fmaxf(eps, vv);
+      
+      mrc_fld_data_t ymask = 1.f;
+      if (fx2x[ix] + fx2y[iy] + fx2z[iz] < isphere2)
+	ymask = 0.f;
+      
+      mrc_fld_data_t rrm = fmaxf(epsz, bb * va02i);
+      mrc_fld_data_t zmask = ymask * fminf(1.f, RR_(x, ix,iy,iz, p) / rrm);
+      
+      mrc_fld_data_t tt = thx / fmaxf(eps, hh*vv*zmask);
+      dt = fminf(dt, tt);
+    } mrc_fld_foreach_end;
+  }
   mrc_fld_data_t dtn;
   MPI_Allreduce(&dt, &dtn, 1, MPI_MRC_FLD_DATA_T, MPI_MIN, ggcm_mhd_comm(mhd));
-
+  
   mrc_fld_data_t dtmin = mhd->par.dtmin;
   // dtn is the global new timestep
   if (dtn <= dtmin) {

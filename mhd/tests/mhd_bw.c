@@ -40,28 +40,29 @@ ggcm_mhd_ic_bw_run(struct ggcm_mhd_ic *ic)
     L[i] = xh[i] - xl[i];
   }
 
-  mrc_fld_foreach(fld, ix, iy, iz, 2, 2) {
-    r[0] = MRC_CRD(crds, 0, ix);
-    r[1] = MRC_CRD(crds, 1, iy);
-    r[2] = MRC_CRD(crds, 2, iz);
+  for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
+    mrc_fld_foreach(fld, ix, iy, iz, 2, 2) {
+      r[0] = MRC_MCRD(crds, 0, ix, p);
+      r[1] = MRC_MCRD(crds, 1, iy, p);
+      r[2] = MRC_MCRD(crds, 2, iz, p);
     
-    if(strcmp(sub->pdim, "x") == 0){
-
-      MHERE;
-      if(fabs(r[0]) < 0.5*L[0]){
-	// Left                         
-	RR(fld, ix,iy,iz) = 1.0;
-	PP(fld, ix,iy,iz) = RR(fld, ix,iy,iz);
-	BX(fld, ix,iy,iz) = 0.75;
-	BY(fld, ix,iy,iz) = 1.0;
-      } else {
-	// Right
-	RR(fld, ix,iy,iz) = 0.125;
-	PP(fld, ix,iy,iz) = RR(fld, ix,iy,iz);
-	BX(fld, ix,iy,iz) = 0.75;
-	BY(fld, ix,iy,iz) = -1.0;
-	BZ(fld, ix,iy,iz) = 0.0;
-      }
+      if(strcmp(sub->pdim, "x") == 0){
+	
+	MHERE;
+	if(fabs(r[0]) < 0.5*L[0]){
+	  // Left                         
+	  RR_(fld, ix,iy,iz, p) = 1.0;
+	  PP_(fld, ix,iy,iz, p) = RR_(fld, ix,iy,iz, p);
+	  BX_(fld, ix,iy,iz, p) = 0.75;
+	  BY_(fld, ix,iy,iz, p) = 1.0;
+	} else {
+	  // Right
+	  RR_(fld, ix,iy,iz, p) = 0.125;
+	  PP_(fld, ix,iy,iz, p) = RR_(fld, ix,iy,iz, p);
+	  BX_(fld, ix,iy,iz, p) = 0.75;
+	  BY_(fld, ix,iy,iz, p) = -1.0;
+	  BZ_(fld, ix,iy,iz, p) = 0.0;
+	}
 
       /*
   } else if(strcmp(sub->pdim, "y") == 1){
@@ -96,10 +97,11 @@ ggcm_mhd_ic_bw_run(struct ggcm_mhd_ic *ic)
       PP1(fld, ix,iy,iz) = RR1(fld, ix,iy,iz);
       */
 
-  } else {           
-    assert(0); /* unknown initial condition */
+      } else {           
+	assert(0); /* unknown initial condition */
+      }
+    } mrc_fld_foreach_end;
   }
-  } mrc_fld_foreach_end;
   
   mrc_fld_put_as(fld, mhd->fld);
 

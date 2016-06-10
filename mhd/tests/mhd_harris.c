@@ -310,7 +310,7 @@ ggcm_mhd_ic_asymharris_run(struct ggcm_mhd_ic *ic)
       BZ_(fld, ix,iy,iz, p) = 0.0;
       RR_(fld, ix,iy,iz, p) = (0.5 * (n01 + n02) +
                                0.5 * (n01 - n02) * tanh(yprime / cs_width));
-      PP_(fld, ix,iy,iz, p) = c - (0.5 * sqr(BX(fld, ix,iy,iz)));
+      PP_(fld, ix,iy,iz, p) = c - (0.5 * sqr(BX_(fld, ix,iy,iz, p)));
       VX_(fld, ix,iy,iz, p) = 0.0;
       VY_(fld, ix,iy,iz, p) = 0.0;
       VZ_(fld, ix,iy,iz, p) = 0.0;

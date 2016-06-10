@@ -24,18 +24,20 @@ ggcm_mhd_convert_sc_ggcm_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fl
 
   struct mrc_fld *fld = mrc_fld_get_as(fld_base, FLD_TYPE);
 
-  mrc_fld_foreach(fld, ix,iy,iz, 0, 1) {
-    RVX(fld, ix,iy,iz) = RR(fld, ix,iy,iz) * VX(fld, ix,iy,iz);
-    RVY(fld, ix,iy,iz) = RR(fld, ix,iy,iz) * VY(fld, ix,iy,iz);
-    RVZ(fld, ix,iy,iz) = RR(fld, ix,iy,iz) * VZ(fld, ix,iy,iz);
-    UU (fld, ix,iy,iz) = PP(fld, ix,iy,iz) / gamma_m1
-      + .5*(sqr(RVX(fld, ix,iy,iz)) +
-	    sqr(RVY(fld, ix,iy,iz)) +
-	    sqr(RVZ(fld, ix,iy,iz))) / RR(fld, ix,iy,iz);
-    BX(fld, ix-1,iy,iz) = BX(fld, ix,iy,iz);
-    BY(fld, ix,iy-1,iz) = BY(fld, ix,iy,iz);
-    BZ(fld, ix,iy,iz-1) = BZ(fld, ix,iy,iz);
-  } mrc_fld_foreach_end;
+  for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
+    mrc_fld_foreach(fld, ix,iy,iz, 0, 1) {
+      RVX_(fld, ix,iy,iz, p) = RR_(fld, ix,iy,iz, p) * VX_(fld, ix,iy,iz, p);
+      RVY_(fld, ix,iy,iz, p) = RR_(fld, ix,iy,iz, p) * VY_(fld, ix,iy,iz, p);
+      RVZ_(fld, ix,iy,iz, p) = RR_(fld, ix,iy,iz, p) * VZ_(fld, ix,iy,iz, p);
+      UU_ (fld, ix,iy,iz, p) = PP_(fld, ix,iy,iz, p) / gamma_m1
+	+ .5f*(sqr(RVX_(fld, ix,iy,iz, p)) +
+	       sqr(RVY_(fld, ix,iy,iz, p)) +
+	       sqr(RVZ_(fld, ix,iy,iz, p))) / RR_(fld, ix,iy,iz, p);
+      BX_(fld, ix-1,iy,iz, p) = BX_(fld, ix,iy,iz, p);
+      BY_(fld, ix,iy-1,iz, p) = BY_(fld, ix,iy,iz, p);
+      BZ_(fld, ix,iy,iz-1, p) = BZ_(fld, ix,iy,iz, p);
+    } mrc_fld_foreach_end;
+  }
   
   mrc_fld_put_as(fld, fld_base);
 }

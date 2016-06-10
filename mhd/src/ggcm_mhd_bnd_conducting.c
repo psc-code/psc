@@ -30,11 +30,11 @@ enum {
 
 // compute one sided finite diff approx. 
 #define OSDy2l(fld, i, ix,iy,iz,s)				     \
-  ((-3.0*F3(fld, i, ix,iy,iz) + 4.0* F3(fld, i, ix,iy+1,iz)  \
-   - F3(fld, i, ix, iy+2, iz) ) / s ) 
+  ((-3.0*M3(fld, i, ix,iy,iz, p) + 4.0* M3(fld, i, ix,iy+1,iz, p)  \
+   - M3(fld, i, ix, iy+2, iz, p) ) / s ) 
 #define OSDy2h(fld, i, ix,iy,iz,s)				     \
-  (( 3.0*F3(fld, i, ix,iy,iz) - 4.0* F3(fld, i, ix,iy-1,iz)  \
-   + F3(fld, i, ix, iy-2, iz) ) / s ) 
+  (( 3.0*M3(fld, i, ix,iy,iz, p) - 4.0* M3(fld, i, ix,iy-1,iz, p)  \
+   + M3(fld, i, ix, iy-2, iz, p) ) / s ) 
 
 static void
 ggcm_mhd_bnd_conducting_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld_base,
@@ -56,6 +56,8 @@ ggcm_mhd_bnd_conducting_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fl
   mrc_domain_get_param_int(mhd->domain, "bcy", &bc[1]);
   mrc_domain_get_param_int(mhd->domain, "bcz", &bc[2]);
 
+  assert(mrc_fld_nr_patches(fld) == 1);
+  int p = 0;
 
   //struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
   //    bdy1[i] = 1.f / (fyy1[i+1] - fyy1[i]);
@@ -94,55 +96,55 @@ ggcm_mhd_bnd_conducting_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fl
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int ix = -sw; ix < nx + sw; ix++) {
 	// bd1y and bd2y indices offset by one 
-	BX(fld, ix,-1,iz) = BX(fld, ix,0,iz) -
+	BX_(fld, ix,-1,iz, p) = BX_(fld, ix,0,iz, p) -
 	  (1./bd1y[-1])*OSDy2l(fld, BX, ix,0,iz,2.*bd2y[0] );
-        BZ(fld, ix,-1,iz) = BZ(fld, ix,0,iz) -
+        BZ_(fld, ix,-1,iz, p) = BZ_(fld, ix,0,iz, p) -
 	  (1./bd1y[-1])*OSDy2l(fld, BZ, ix,0,iz,2.*bd2y[0] );
       }
     }
     // set normal magnetic field component for divB=0
     for (int iz = -sw+1; iz < nz + sw; iz++) {
       for (int ix = -sw+1; ix < nx + sw; ix++) {
-	BY(fld, ix,-1,iz) = BY(fld, ix,0,iz) + bd2y[0] *  
-	  ((BX(fld, ix,0,iz) - BX(fld, ix-1,0,iz) ) / bd2x[ix] + 
-	   (BZ(fld, ix,0,iz) - BZ(fld, ix,0,iz-1) ) / bd2z[iz]);
+	BY_(fld, ix,-1,iz, p) = BY_(fld, ix,0,iz, p) + bd2y[0] *  
+	  ((BX_(fld, ix,0,iz, p) - BX_(fld, ix-1,0,iz, p) ) / bd2x[ix] + 
+	   (BZ_(fld, ix,0,iz, p) - BZ_(fld, ix,0,iz-1, p) ) / bd2z[iz]);
       }
     }	
     // transverse magnetic field extrapolated 
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int ix = -sw; ix < nx + sw; ix++) {       
 	// bd1y and bd2y indices offset by one 
-	BX(fld, ix,-2,iz) = BX(fld, ix,-1,iz) -
+	BX_(fld, ix,-2,iz, p) = BX_(fld, ix,-1,iz, p) -
 	  (1./bd1y[-2])*OSDy2l(fld, BX, ix,-1,iz,2.*bd2y[-1] );
-	BZ(fld, ix,-2,iz) = BZ(fld, ix,-1,iz) -
+	BZ_(fld, ix,-2,iz, p) = BZ_(fld, ix,-1,iz, p) -
 	  (1./bd1y[-2])*OSDy2l(fld, BZ, ix,-1,iz,2.*bd2y[-1] );
       }
     }
     // set normal magnetic field component for divB=0
     for (int iz = -sw+1; iz < nz + sw; iz++) {
       for (int ix = -sw+1; ix < nx + sw; ix++) {
-	BY(fld, ix,-2,iz) = BY(fld, ix,-1,iz) + bd2y[-1] * 
-	  ((BX(fld, ix,-1,iz) - BX(fld, ix-1,-1,iz) ) / bd2x[ix] + 
-           (BZ(fld, ix,-1,iz) - BZ(fld, ix,-1,iz-1) ) / bd2z[iz]);      
+	BY_(fld, ix,-2,iz, p) = BY_(fld, ix,-1,iz, p) + bd2y[-1] * 
+	  ((BX_(fld, ix,-1,iz, p) - BX_(fld, ix-1,-1,iz, p) ) / bd2x[ix] + 
+           (BZ_(fld, ix,-1,iz, p) - BZ_(fld, ix,-1,iz-1, p) ) / bd2z[iz]);      
       }
     }	
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int ix = -sw; ix < nx + sw; ix++) {	
 	// impenetrable wall 
-	F3(fld,RVY, ix,-2,iz) = -F3(fld,RVY, ix,1,iz);	
-	F3(fld,RVY, ix,-1,iz) = -F3(fld,RVY, ix,0,iz);
-	F3(fld,RR, ix,-1,iz) = F3(fld,RR, ix,0,iz);
-	F3(fld,RR, ix,-2,iz) = F3(fld,RR, ix,1,iz);
+	M3(fld,RVY, ix,-2,iz, p) = -M3(fld,RVY, ix,1,iz, p);	
+	M3(fld,RVY, ix,-1,iz, p) = -M3(fld,RVY, ix,0,iz, p);
+	M3(fld,RR, ix,-1,iz, p) = M3(fld,RR, ix,0,iz, p);
+	M3(fld,RR, ix,-2,iz, p) = M3(fld,RR, ix,1,iz, p);
 	
 	// the rest are extrapolations 
-	F3(fld,RVX, ix,-1,iz) = 2.*F3(fld,RVX, ix,0,iz)-F3(fld,RVX, ix,1,iz);	
-	F3(fld,RVX, ix,-2,iz) = 2.*F3(fld,RVX, ix,-1,iz)-F3(fld,RVX, ix,0,iz);
+	M3(fld,RVX, ix,-1,iz, p) = 2.*M3(fld,RVX, ix,0,iz, p)-M3(fld,RVX, ix,1,iz, p);	
+	M3(fld,RVX, ix,-2,iz, p) = 2.*M3(fld,RVX, ix,-1,iz, p)-M3(fld,RVX, ix,0,iz, p);
 	
-	F3(fld,RVZ, ix,-1,iz) = 2.*F3(fld,RVZ, ix,0,iz)-F3(fld,RVZ, ix,1,iz);	
-	F3(fld,RVZ, ix,-2,iz) = 2.*F3(fld,RVZ, ix,-1,iz)-F3(fld,RVZ, ix,0,iz);
+	M3(fld,RVZ, ix,-1,iz, p) = 2.*M3(fld,RVZ, ix,0,iz, p)-M3(fld,RVZ, ix,1,iz, p);	
+	M3(fld,RVZ, ix,-2,iz, p) = 2.*M3(fld,RVZ, ix,-1,iz, p)-M3(fld,RVZ, ix,0,iz, p);
 	
-	F3(fld,UU, ix,-1,iz) = 2.*F3(fld,UU, ix,0,iz)-F3(fld,UU, ix,1,iz);	
-	F3(fld,UU, ix,-2,iz) = 2.*F3(fld,UU, ix,-1,iz)-F3(fld,UU, ix,0,iz);	
+	M3(fld,UU, ix,-1,iz, p) = 2.*M3(fld,UU, ix,0,iz, p)-M3(fld,UU, ix,1,iz, p);	
+	M3(fld,UU, ix,-2,iz, p) = 2.*M3(fld,UU, ix,-1,iz, p)-M3(fld,UU, ix,0,iz, p);	
       }
     }
   }
@@ -153,60 +155,60 @@ ggcm_mhd_bnd_conducting_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fl
     //  transverse magnetic field extrapolated
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int ix = -sw; ix < nx + sw; ix++) {
-	BX(fld, ix,ny,iz) = BX(fld, ix,ny-1,iz) + 
+	BX_(fld, ix,ny,iz, p) = BX_(fld, ix,ny-1,iz, p) + 
 	  (1./bd1y[ny])*OSDy2h(fld, BX, ix,ny-1,iz,2.*bd2y[ny+1]); 
-	BZ(fld, ix,ny,iz) = BZ(fld, ix,ny-1,iz) +
+	BZ_(fld, ix,ny,iz, p) = BZ_(fld, ix,ny-1,iz, p) +
 	  (1./bd1y[ny])*OSDy2h(fld, BZ, ix,ny-1,iz,2.*bd2y[ny+1]); 
       }
     }
     // set normal magnetic field component for divB=0
     for (int iz = -sw+1; iz < nz + sw; iz++) {
       for (int ix = -sw+1; ix < nx + sw; ix++) {
-	BY(fld, ix,ny-1,iz) = BY(fld, ix,ny-2,iz) - bd2y[ny-1] *  
-	  ((BX(fld, ix,ny-1,iz) - BX(fld, ix-1,ny-1,iz) ) / bd2x[ix] +
-	   (BZ(fld, ix,ny-1,iz) - BZ(fld, ix,ny-1,iz-1) ) / bd2z[iz]);
+	BY_(fld, ix,ny-1,iz, p) = BY_(fld, ix,ny-2,iz, p) - bd2y[ny-1] *  
+	  ((BX_(fld, ix,ny-1,iz, p) - BX_(fld, ix-1,ny-1,iz, p) ) / bd2x[ix] +
+	   (BZ_(fld, ix,ny-1,iz, p) - BZ_(fld, ix,ny-1,iz-1, p) ) / bd2z[iz]);
       }
     }	
     //  transverse magnetic field extrapolated
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int ix = -sw; ix < nx + sw; ix++) {
-	BX(fld, ix,ny+1,iz) = BX(fld, ix,ny,iz) + 
+	BX_(fld, ix,ny+1,iz, p) = BX_(fld, ix,ny,iz, p) + 
 	  (1./bd1y[ny])*OSDy2h(fld, BX, ix,ny+1,iz,2.*bd2y[ny+1]);
-        BZ(fld, ix,ny+1,iz) = BZ(fld, ix,ny,iz) + 
+        BZ_(fld, ix,ny+1,iz, p) = BZ_(fld, ix,ny,iz, p) + 
 	  (1./bd1y[ny])*OSDy2h(fld, BZ, ix,ny+1,iz,2.*bd2y[ny+1]);
       }
     }
     // set normal magnetic field component for divB=0
     for (int iz = -sw+1; iz < nz + sw; iz++) {
       for (int ix = -sw+1; ix < nx + sw; ix++) {
-	BY(fld, ix,ny,iz) = BY(fld, ix,ny-1,iz) - bd2y[ny] *  
-	  ((BX(fld, ix,ny,iz) - BX(fld, ix-1,ny,iz) ) / bd2x[ix] + 
-	   (BZ(fld, ix,ny,iz) - BZ(fld, ix,ny,iz-1) ) / bd2z[iz]);
+	BY_(fld, ix,ny,iz, p) = BY_(fld, ix,ny-1,iz, p) - bd2y[ny] *  
+	  ((BX_(fld, ix,ny,iz, p) - BX_(fld, ix-1,ny,iz, p) ) / bd2x[ix] + 
+	   (BZ_(fld, ix,ny,iz, p) - BZ_(fld, ix,ny,iz-1, p) ) / bd2z[iz]);
       }
     }	
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int ix = -sw; ix < nx + sw; ix++) {
 
 	// impenetrable wall 	
-	F3(fld,RVY, ix,ny+1,iz) = -F3(fld,RVY, ix,ny-2,iz);	
-	F3(fld,RVY, ix,ny,iz) = -F3(fld,RVY, ix,ny-1,iz);
-	F3(fld,RR, ix,ny+1,iz) = F3(fld,RR, ix,ny-2,iz);	
-	F3(fld,RR, ix,ny,iz) = F3(fld,RR, ix,ny-1,iz);
+	M3(fld,RVY, ix,ny+1,iz, p) = -M3(fld,RVY, ix,ny-2,iz, p);	
+	M3(fld,RVY, ix,ny,iz, p) = -M3(fld,RVY, ix,ny-1,iz, p);
+	M3(fld,RR, ix,ny+1,iz, p) = M3(fld,RR, ix,ny-2,iz, p);	
+	M3(fld,RR, ix,ny,iz, p) = M3(fld,RR, ix,ny-1,iz, p);
 
 	// the rest are extrapolations 
-	F3(fld,RVX, ix,ny,iz) = F3(fld,RVX, ix,ny-1,iz) + 
+	M3(fld,RVX, ix,ny,iz, p) = M3(fld,RVX, ix,ny-1,iz, p) + 
 	  (1./bd1y[ny-1]) * OSDy2h(fld, RVX, ix,ny-1,iz,2.*bd2y[ny-1]);  	
-	F3(fld,RVX, ix,ny+1,iz) = F3(fld,RVX, ix,ny,iz) + 
+	M3(fld,RVX, ix,ny+1,iz, p) = M3(fld,RVX, ix,ny,iz, p) + 
 	  (1./bd1y[ny]) * OSDy2h(fld, RVX, ix,ny,iz,2.*bd2y[ny]);  	
 	
-	F3(fld,RVZ, ix,ny,iz) = F3(fld,RVZ, ix,ny-1,iz) + 
+	M3(fld,RVZ, ix,ny,iz, p) = M3(fld,RVZ, ix,ny-1,iz, p) + 
 	  (1./bd1y[ny-1]) * OSDy2h(fld, RVZ, ix,ny-1,iz,2.*bd2y[ny-1]);  	
-	F3(fld,RVZ, ix,ny+1,iz) = F3(fld,RVZ, ix,ny,iz) +
+	M3(fld,RVZ, ix,ny+1,iz, p) = M3(fld,RVZ, ix,ny,iz, p) +
 	  (1./bd1y[ny]) * OSDy2h(fld, RVZ, ix,ny,iz,2.*bd2y[ny]);  	
 
-	F3(fld,UU, ix,ny,iz) = F3(fld,UU, ix,ny-1,iz) + 
+	M3(fld,UU, ix,ny,iz, p) = M3(fld,UU, ix,ny-1,iz, p) + 
 	  (1./bd1y[ny-1]) * OSDy2h(fld, UU, ix,ny-1,iz,2.*bd2y[ny-1]);  	
-	F3(fld,UU, ix,ny+1,iz) = F3(fld,UU, ix,ny,iz) +
+	M3(fld,UU, ix,ny+1,iz, p) = M3(fld,UU, ix,ny,iz, p) +
 	  (1./bd1y[ny]) * OSDy2h(fld, UU, ix,ny,iz,2.*bd2y[ny]);  	
       }
     }

@@ -46,6 +46,8 @@ GGCM_MHD_BND_CONDUCTING_Y_FILL_GHOST(struct ggcm_mhd_bnd *bnd,
   // used for extrapolation for double / triple ghosts
   mrc_fld_data_t Bxp, Bzp;
 
+  assert(mrc_fld_nr_patches(x) == 1);
+  int p = 0;
   // lower boundary
   if (bc[1] != BC_PERIODIC && info.off[1] == 0) { // x lo
     // either the ig loop is the outer loop, or the iz/ix loops have to go backward
@@ -54,13 +56,13 @@ GGCM_MHD_BND_CONDUCTING_Y_FILL_GHOST(struct ggcm_mhd_bnd *bnd,
       for (int iz = 0; iz < nz; iz++) {
         for (int ix = -sw; ix < nx + sw; ix++) {
 
-          F3(x, m+RR , ix, -1 - ig, iz) =   F3(x, m+RR,  ix, ig, iz);
-          F3(x, m+RVX, ix, -1 - ig, iz) =   F3(x, m+RVX, ix, ig, iz);
-          F3(x, m+RVY, ix, -1 - ig, iz) = - F3(x, m+RVY, ix, ig, iz);
-          F3(x, m+RVZ, ix, -1 - ig, iz) =   F3(x, m+RVZ, ix, ig, iz);
-          F3(x, m+UU , ix, -1 - ig, iz) =   F3(x, m+UU,  ix, ig, iz);
-          F3(x, m+BX , ix, -1 - ig, iz) =   F3(x, m+BX,  ix, ig, iz);
-          F3(x, m+BZ , ix, -1 - ig, iz) =   F3(x, m+BZ,  ix, ig, iz);
+          M3(x, m+RR , ix, -1 - ig, iz, p) =   M3(x, m+RR,  ix, ig, iz, p);
+          M3(x, m+RVX, ix, -1 - ig, iz, p) =   M3(x, m+RVX, ix, ig, iz, p);
+          M3(x, m+RVY, ix, -1 - ig, iz, p) = - M3(x, m+RVY, ix, ig, iz, p);
+          M3(x, m+RVZ, ix, -1 - ig, iz, p) =   M3(x, m+RVZ, ix, ig, iz, p);
+          M3(x, m+UU , ix, -1 - ig, iz, p) =   M3(x, m+UU,  ix, ig, iz, p);
+          M3(x, m+BX , ix, -1 - ig, iz, p) =   M3(x, m+BX,  ix, ig, iz, p);
+          M3(x, m+BZ , ix, -1 - ig, iz, p) =   M3(x, m+BZ,  ix, ig, iz, p);
 
 #if 0
           // to make div B = 0
@@ -70,27 +72,27 @@ GGCM_MHD_BND_CONDUCTING_Y_FILL_GHOST(struct ggcm_mhd_bnd *bnd,
           if (ix + 1 == nx + sw || iz + 1 == nz + sw) {
             if (ix + 1 == nx + sw) {
               // extrapolate Bx value
-              Bxp = 2.0f * F3(x, m+BX, ix, iyy, iz) - F3(x, m+BX, ix-1, iyy, iz);
+              Bxp = 2.0f * M3(x, m+BX, ix, iyy, iz, p) - M3(x, m+BX, ix-1, iyy, iz, p);
             } else {
               // use the Bx value we have
-              Bxp = F3(x, m+BX, ix+1, iyy, iz);
+              Bxp = M3(x, m+BX, ix+1, iyy, iz, p);
             }
   
             if (iz + 1 == nz + sw) {
               // extrapolate Bz value
-              Bzp = 2 * F3(x, m+BZ, ix, iyy, iz) - F3(x, m+BZ, ix, iyy, iz-1);
+              Bzp = 2 * M3(x, m+BZ, ix, iyy, iz, p) - M3(x, m+BZ, ix, iyy, iz-1);
             } else {
               // use the Bz value we have
-              Bzp = F3(x, m+BZ, ix, iyy, iz+1);
+              Bzp = M3(x, m+BZ, ix, iyy, iz+1);
             }
 
-            F3(x, m+BY, ix, iyy, iz) = F3(x, m+BY, ix, iyy + 1, iz) + dx[1] * 
-                ((Bxp - F3(x, m+BX, ix, iyy, iz)) / dx[0] +
-                 (Bzp - F3(x, m+BZ, ix, iyy, iz)) / dx[2]);
+            M3(x, m+BY, ix, iyy, iz, p) = M3(x, m+BY, ix, iyy + 1, iz, p) + dx[1] * 
+                ((Bxp - M3(x, m+BX, ix, iyy, iz, p)) / dx[0] +
+                 (Bzp - M3(x, m+BZ, ix, iyy, iz, p)) / dx[2]);
           } else {
-            F3(x, m+BY, ix, iyy, iz) = F3(x, m+BY, ix, iyy + 1, iz) + dx[1] * 
-                ((F3(x, m+BX, ix+1, iyy, iz  ) - F3(x, m+BX, ix, iyy, iz)) / dx[0] +
-                 (F3(x, m+BZ, ix  , iyy, iz+1) - F3(x, m+BZ, ix, iyy, iz)) / dx[2]);
+            M3(x, m+BY, ix, iyy, iz, p) = M3(x, m+BY, ix, iyy + 1, iz, p) + dx[1] * 
+                ((M3(x, m+BX, ix+1, iyy, iz  ) - M3(x, m+BX, ix, iyy, iz, p)) / dx[0] +
+                 (M3(x, m+BZ, ix  , iyy, iz+1) - M3(x, m+BZ, ix, iyy, iz, p)) / dx[2]);
           }
 #endif
         }
@@ -105,13 +107,13 @@ GGCM_MHD_BND_CONDUCTING_Y_FILL_GHOST(struct ggcm_mhd_bnd *bnd,
       for (int iz = 0; iz < nz; iz++) {
         for (int ix = -sw; ix < nx + sw; ix++) {
 
-          F3(x, m+RR , ix, ny + ig, iz) =   F3(x, m+RR , ix, ny - 1 - ig, iz);
-          F3(x, m+RVX, ix, ny + ig, iz) =   F3(x, m+RVX, ix, ny - 1 - ig, iz);
-          F3(x, m+RVY, ix, ny + ig, iz) = - F3(x, m+RVY, ix, ny - 1 - ig, iz);
-          F3(x, m+RVZ, ix, ny + ig, iz) =   F3(x, m+RVZ, ix, ny - 1 - ig, iz);
-          F3(x, m+UU , ix, ny + ig, iz) =   F3(x, m+UU , ix, ny - 1 - ig, iz);
-          F3(x, m+BX , ix, ny + ig, iz) =   F3(x, m+BX , ix, ny - 1 - ig, iz);
-          F3(x, m+BZ , ix, ny + ig, iz) =   F3(x, m+BZ , ix, ny - 1 - ig, iz);
+          M3(x, m+RR , ix, ny + ig, iz, p) =   M3(x, m+RR , ix, ny - 1 - ig, iz, p);
+          M3(x, m+RVX, ix, ny + ig, iz, p) =   M3(x, m+RVX, ix, ny - 1 - ig, iz, p);
+          M3(x, m+RVY, ix, ny + ig, iz, p) = - M3(x, m+RVY, ix, ny - 1 - ig, iz, p);
+          M3(x, m+RVZ, ix, ny + ig, iz, p) =   M3(x, m+RVZ, ix, ny - 1 - ig, iz, p);
+          M3(x, m+UU , ix, ny + ig, iz, p) =   M3(x, m+UU , ix, ny - 1 - ig, iz, p);
+          M3(x, m+BX , ix, ny + ig, iz, p) =   M3(x, m+BX , ix, ny - 1 - ig, iz, p);
+          M3(x, m+BZ , ix, ny + ig, iz, p) =   M3(x, m+BZ , ix, ny - 1 - ig, iz, p);
 
           // to make div B = 0
           // for double / triple ghost points, we don't have the Bx/Bz we need
@@ -121,26 +123,26 @@ GGCM_MHD_BND_CONDUCTING_Y_FILL_GHOST(struct ggcm_mhd_bnd *bnd,
           if (ix + 1 == nx + sw || iz + 1 == nz + sw) {
             if (ix + 1 == nx + sw) {
               // extrapolate Bx value
-              Bxp = 2 * F3(x, m+BX, ix, iyy, iz) - F3(x, m+BX, ix-1, iyy, iz);
+              Bxp = 2 * M3(x, m+BX, ix, iyy, iz, p) - M3(x, m+BX, ix-1, iyy, iz, p);
             } else {
               // use the Bx value we have
-              Bxp = F3(x, m+BX, ix+1, iyy, iz);
+              Bxp = M3(x, m+BX, ix+1, iyy, iz, p);
             }
   
             if (iz + 1 == nz + sw) {
               // extrapolate Bz value
-              Bzp = 2 * F3(x, m+BZ, ix, iyy, iz) - F3(x, m+BZ, ix, iyy, iz-1);
+              Bzp = 2 * M3(x, m+BZ, ix, iyy, iz, p) - M3(x, m+BZ, ix, iyy, iz-1);
             } else {
               // use the Bz value we have
-              Bzp = F3(x, m+BZ, ix, iyy, iz+1);
+              Bzp = M3(x, m+BZ, ix, iyy, iz+1);
             }
-            F3(x, m+BY, ix, iyy + 1, iz) = F3(x, m+BY, ix, iyy, iz) - dx[1] * 
-                ((Bxp - F3(x, m+BX, ix, iyy, iz)) / dx[0] +
-                 (Bzp - F3(x, m+BZ, ix, iyy, iz)) / dx[2]);
+            M3(x, m+BY, ix, iyy + 1, iz, p) = M3(x, m+BY, ix, iyy, iz, p) - dx[1] * 
+                ((Bxp - M3(x, m+BX, ix, iyy, iz, p)) / dx[0] +
+                 (Bzp - M3(x, m+BZ, ix, iyy, iz, p)) / dx[2]);
           } else{
-            F3(x, m+BY, ix, iyy + 1, iz) = F3(x, m+BY, ix, iyy, iz) - dx[1] * 
-                ((F3(x, m+BX, ix+1, iyy, iz    ) - F3(x, m+BX, ix, iyy, iz)) / dx[0] +
-                 (F3(x, m+BZ, ix  , iyy, iz + 1) - F3(x, m+BZ, ix, iyy, iz)) / dx[2]);
+            M3(x, m+BY, ix, iyy + 1, iz, p) = M3(x, m+BY, ix, iyy, iz, p) - dx[1] * 
+                ((M3(x, m+BX, ix+1, iyy, iz    ) - M3(x, m+BX, ix, iyy, iz, p)) / dx[0] +
+                 (M3(x, m+BZ, ix  , iyy, iz + 1) - M3(x, m+BZ, ix, iyy, iz, p)) / dx[2]);
           }
 #endif
         }

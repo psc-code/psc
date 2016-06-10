@@ -37,24 +37,26 @@ ggcm_mhd_ic_ici_run(struct ggcm_mhd_ic *ic)
     L[i] = xh[i] - xl[i];
   }
 
-  mrc_fld_foreach(fld, ix, iy, iz, 1, 1) {
-    r[0] = MRC_CRD(crds, 0, ix);
-    r[1] = MRC_CRD(crds, 1, iy);
-    r[2] = MRC_CRD(crds, 2, iz);
+  for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
+    mrc_fld_foreach(fld, ix, iy, iz, 1, 1) {
+      r[0] = MRC_MCRD(crds, 0, ix, p);
+      r[1] = MRC_MCRD(crds, 1, iy, p);
+      r[2] = MRC_MCRD(crds, 2, iz, p);
   
-   // island coalescence instability 
-   // based on Sullivan, Bhattacharjee & Huang 2009
-    float kx = 2.0*M_PI / L[0], ky =  2.0*M_PI / L[1];
-    BX(fld, ix, iy, iz) = cos(ky*r[1])*sin(kx*r[0]);
-    BY(fld, ix, iy, iz) = -cos(kx*r[0])*sin(ky*r[1]); 
-    // FIXME!!! I bet the 2nd should be B1Y
-    RR(fld, ix, iy, iz) = sub->n0 +   
-      0.5 * (1.0 - sqrt(sqr( BX(fld, ix, iy, iz))
-			+ sqr( BX(fld, ix, iy, iz))));
-    PP(fld, ix, iy, iz) = RR(fld, ix, iy, iz);
-    VX(fld, ix, iy, iz) = sub->v0*sin(ky*r[1]);
-    VY(fld, ix, iy, iz) = sub->v0*sin(kx*r[0]);
-  } mrc_fld_foreach_end;
+      // island coalescence instability 
+      // based on Sullivan, Bhattacharjee & Huang 2009
+      float kx = 2.0*M_PI / L[0], ky =  2.0*M_PI / L[1];
+      BX_(fld, ix, iy, iz, p) = cos(ky*r[1])*sin(kx*r[0]);
+      BY_(fld, ix, iy, iz, p) = -cos(kx*r[0])*sin(ky*r[1]); 
+      // FIXME!!! I bet the 2nd should be B1Y
+      RR_(fld, ix, iy, iz, p) = sub->n0 +   
+	0.5 * (1.0 - sqrt(sqr( BX_(fld, ix, iy, iz, p))
+			  + sqr( BX_(fld, ix, iy, iz, p))));
+      PP_(fld, ix, iy, iz, p) = RR_(fld, ix, iy, iz, p);
+      VX_(fld, ix, iy, iz, p) = sub->v0*sin(ky*r[1]);
+      VY_(fld, ix, iy, iz, p) = sub->v0*sin(kx*r[0]);
+    } mrc_fld_foreach_end;
+  }
 
   mrc_fld_put_as(fld, mhd->fld);
 

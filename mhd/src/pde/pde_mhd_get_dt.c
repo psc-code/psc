@@ -217,14 +217,14 @@ pde_mhd_get_dt_hd(struct ggcm_mhd *mhd, struct mrc_fld *x)
     double dx[3]; mrc_crds_get_dx(crds, p, dx);
 
     mrc_fld_foreach(x, i,j,k, 0, 0) {
-      mrc_fld_data_t rri = 1.f / RR(x, i,j,k);
-      mrc_fld_data_t vx = RVX(x, i,j,k) * rri;
-      mrc_fld_data_t vy = RVY(x, i,j,k) * rri;
-      mrc_fld_data_t vz = RVZ(x, i,j,k) * rri;
+      mrc_fld_data_t rri = 1.f / RR_(x, i,j,k, p);
+      mrc_fld_data_t vx = RVX_(x, i,j,k, p) * rri;
+      mrc_fld_data_t vy = RVY_(x, i,j,k, p) * rri;
+      mrc_fld_data_t vz = RVZ_(x, i,j,k, p) * rri;
       mrc_fld_data_t vv = sqr(vx) + sqr(vy) + sqr(vz);
       
       /* compute sound speed */
-      mrc_fld_data_t pp = mrc_fld_max(gamma_m1 * (EE(x, i,j,k) - .5f * RR(x, i,j,k) * vv), eps);
+      mrc_fld_data_t pp = mrc_fld_max(gamma_m1 * (EE_(x, i,j,k, p) - .5f * RR_(x, i,j,k, p) * vv), eps);
       mrc_fld_data_t cs = mrc_fld_sqrt(s_gamma * pp * rri);
       
       /* compute min dt based on maximum wave velocity */

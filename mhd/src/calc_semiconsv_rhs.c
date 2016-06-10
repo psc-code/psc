@@ -5,8 +5,7 @@
 #include "ggcm_mhd_diag.h"
 #include <mrc_domain.h>
 #include <mrc_ddc.h>
-
-#define F3 MRC_F3 // FIXME
+#include <mrc_fld_as_float.h>
 
 // ----------------------------------------------------------------------
 // calc_semiconsv_rhs
@@ -74,23 +73,25 @@ calc_semiconsv_rhs(struct ggcm_mhd *mhd, struct mrc_fld *rhs, struct mrc_fld *fl
       MRC_F3(E_cc, 2, ix, iy, iz) * MRC_F3(J_cc, 2, ix, iy, iz) ;   
   } mrc_fld_foreach_end; 
 
+ assert(mrc_fld_nr_patches(rhs) == 1);
+ int p = 0;
   // add JxB source term
   mrc_fld_foreach(rhs, ix, iy, iz, 0, 0) {    
     MRC_F3(rhs, RVX, ix, iy, iz) +=  
       MRC_F3(J_cc, 1, ix, iy, iz) * 0.5 * RFACT *
-      (BZ(fld, ix,iy,iz) + BZ(fld, ix,iy,iz+1)) -
+      (BZ_(fld, ix,iy,iz, p) + BZ_(fld, ix,iy,iz+1, p)) -
       MRC_F3(J_cc, 2, ix, iy, iz) * 0.5 * RFACT *
-      (BY(fld, ix,iy,iz) + BY(fld, ix,iy+1,iz));
+      (BY_(fld, ix,iy,iz, p) + BY_(fld, ix,iy+1,iz, p));
     MRC_F3(rhs, RVY, ix, iy, iz) -= 
       MRC_F3(J_cc, 0, ix, iy, iz) * 0.5 * RFACT *
-      (BZ(fld, ix,iy,iz)+ BZ(fld, ix,iy,iz+1)) -
+      (BZ_(fld, ix,iy,iz, p)+ BZ_(fld, ix,iy,iz+1, p)) -
       MRC_F3(J_cc, 2, ix, iy, iz) * 0.5 * RFACT *
-      (BX(fld, ix,iy,iz)+ BX(fld, ix+1,iy,iz))    ;
+      (BX_(fld, ix,iy,iz, p)+ BX_(fld, ix+1,iy,iz, p))    ;
     MRC_F3(rhs, RVZ, ix, iy, iz) +=  
       MRC_F3(J_cc, 0, ix, iy, iz) * 0.5 * RFACT *
-      (BY(fld, ix,iy,iz)+ BY(fld, ix,iy+1,iz)) -
+      (BY_(fld, ix,iy,iz, p)+ BY_(fld, ix,iy+1,iz, p)) -
       MRC_F3(J_cc, 1, ix, iy, iz) * 0.5 * RFACT *
-      (BX(fld, ix,iy,iz)+ BX(fld, ix+1,iy,iz));
+      (BX_(fld, ix,iy,iz, p)+ BX_(fld, ix+1,iy,iz, p));
   } mrc_fld_foreach_end; 
 
   mrc_fld_destroy(J_cc);
