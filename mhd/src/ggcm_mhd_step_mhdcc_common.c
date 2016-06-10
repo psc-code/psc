@@ -212,17 +212,25 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, mrc_fld_data_t time_c
 
   ggcm_mhd_fill_ghosts(mhd, x_curr, 0, time_curr);
 
-  fld3d_t x, flux; // FIXME, make static, init once?
+  fld3d_t x, fluxes[3]; // FIXME, make static, init once?
   fld3d_setup(&x);
-  fld3d_setup(&flux);
+  for (int d = 0; d < 3; d++) {
+    fld3d_setup(&fluxes[d]);
+  }
 
+  fld3d_t Ul, Ur;
   if (s_opt_bc_reconstruct) {
-    fld3d_t Ul, Ur;
     fld3d_setup(&Ul);
     fld3d_setup(&Ur);
+  }
     
-    for (int p = 0; p < mrc_fld_nr_patches(x_curr); p++) {
-      fld3d_get(&x, x_curr, p);
+  for (int p = 0; p < mrc_fld_nr_patches(x_curr); p++) {
+    fld3d_get(&x, x_curr, p);
+    for (int d = 0; d < 3; d++) {
+      fld3d_get(&fluxes[d], sub->fluxes[d], p);
+    }
+
+    if (s_opt_bc_reconstruct) {
       
       // reconstruct
       pde_for_each_dir(dir) {
@@ -247,7 +255,6 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, mrc_fld_data_t time_c
       pde_for_each_dir(dir) {
 	fld3d_get(&Ul, sub->Ul[dir], p);
 	fld3d_get(&Ur, sub->Ur[dir], p);
-	fld3d_get(&flux, sub->fluxes[dir], p);
 
 	pde_for_each_line(dir, j, k, 0) {
 	  int ib = 0, ie = s_ldims[dir];
@@ -256,34 +263,28 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, mrc_fld_data_t time_c
 	  mhd_prim_from_cons(sub->W_l, sub->U_l, ib, ie + 1);
 	  mhd_prim_from_cons(sub->W_r, sub->U_r, ib, ie + 1);
 	  
-	  mhd_flux_pt2(step, flux, x, j, k, dir, p, 0, s_ldims[dir]);
+	  mhd_flux_pt2(step, fluxes[dir], x, j, k, dir, p, 0, s_ldims[dir]);
 	}
 
 	fld3d_put(&Ul, sub->Ul[dir], p);
 	fld3d_put(&Ur, sub->Ur[dir], p);
-	fld3d_put(&flux, sub->fluxes[dir], p);
       }
 
-      fld3d_put(&x, x_curr, p);
-    } 
-
-  } else {
-    for (int p = 0; p < mrc_fld_nr_patches(x_curr); p++) {
-      fld3d_get(&x, x_curr, p);
+    } else {
 
       pde_for_each_dir(dir) {
-	fld3d_get(&flux, sub->fluxes[dir], p);
-
 	pde_for_each_line(dir, j, k, 0) {
 	  int ib = 0, ie = s_ldims[dir];
 	  mhd_flux_pt1(step, x, j, k, dir, p, ib, ie);
-	  mhd_flux_pt2(step, flux, x, j, k, dir, p, ib, ie);
+	  mhd_flux_pt2(step, fluxes[dir], x, j, k, dir, p, ib, ie);
 	}
-
-	fld3d_put(&flux, sub->fluxes[dir], p);
       }
 
-      fld3d_put(&x, x_curr, p);
+    }
+
+    fld3d_put(&x, x_curr, p);
+    for (int d = 0; d < 3; d++) {
+      fld3d_put(&fluxes[d], sub->fluxes[d], p);
     }
   }
     
