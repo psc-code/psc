@@ -33,6 +33,39 @@ mhd_get_line_state_fcons(fld1d_state_t u, struct mrc_fld *U,
 }
 
 // ----------------------------------------------------------------------
+// mhd_line_get_state_fcons
+
+static void _mrc_unused
+mhd_line_get_state_fcons(fld1d_state_t u, fld3d_t U,
+			 int j, int k, int dir, int ib, int ie)
+{
+#define GET_LINE(X,Y,Z,I,J,K) do {			\
+    for (int i = ib; i < ie; i++) {			\
+      F1S(u, RR , i) = F3S(U, RR   , I,J,K);		\
+      F1S(u, RVX, i) = F3S(U, RVX+X, I,J,K);		\
+      F1S(u, RVY, i) = F3S(U, RVX+Y, I,J,K);		\
+      F1S(u, RVZ, i) = F3S(U, RVX+Z, I,J,K);		\
+      F1S(u, EE , i) = F3S(U, EE   , I,J,K);		\
+      F1S(u, BX , i) = F3S(U, BX+X , I,J,K);		\
+      F1S(u, BY , i) = F3S(U, BX+Y , I,J,K);		\
+      F1S(u, BZ , i) = F3S(U, BX+Z , I,J,K);		\
+      if (s_opt_divb == OPT_DIVB_GLM) {			\
+	F1S(u, PSI, i) = F3S(U, PSI, I,J,K);		\
+      }							\
+    }							\
+  } while (0)
+
+  if (dir == 0) {
+    GET_LINE(0,1,2, i,j,k);
+  } else if (dir == 1) {
+    GET_LINE(1,2,0, k,i,j);
+  } else if (dir == 2) {
+    GET_LINE(2,0,1, j,k,i);
+  }
+#undef GET_LINE
+}
+
+// ----------------------------------------------------------------------
 // mhd_put_line_state_fcons
 
 static void _mrc_unused
@@ -206,6 +239,24 @@ mhd_get_line_state(fld1d_state_t u, struct mrc_fld *U, int j, int k, int dir,
 }
 
 // ----------------------------------------------------------------------
+// mhd_line_get_state
+
+static void _mrc_unused
+mhd_line_get_state(fld1d_state_t u, fld3d_t U, int j, int k, int dir,
+		   int ib, int ie)
+{
+  if (s_opt_eqn == OPT_EQN_MHD_FCONS) {
+    mhd_line_get_state_fcons(u, U, j, k, dir, ib, ie);
+  } else if (s_opt_eqn == OPT_EQN_MHD_SCONS ||
+	     s_opt_eqn == OPT_EQN_HD) {
+    assert(0);
+    //    mhd_get_line_state_scons(u, U, j, k, dir, p, ib, ie);
+  } else {
+    assert(0);
+  }
+}
+
+// ----------------------------------------------------------------------
 // mhd_put_line_state
 
 static void _mrc_unused
@@ -233,6 +284,29 @@ mhd_get_line_1(fld1d_t u, struct mrc_fld *U,
 #define GET_LINE(X,Y,Z,I,J,K) do {			\
     for (int i = ib; i < ie; i++) {			\
       F1(u, i) = M3(U, 0, I,J,K, p);			\
+    }							\
+  } while (0)
+
+  if (dir == 0) {
+    GET_LINE(0,1,2, i,j,k);
+  } else if (dir == 1) {
+    GET_LINE(1,2,0, k,i,j);
+  } else if (dir == 2) {
+    GET_LINE(2,0,1, j,k,i);
+  }
+#undef GET_LINE
+}
+
+// ----------------------------------------------------------------------
+// mhd_line_get_1
+
+static void _mrc_unused
+mhd_line_get_1(fld1d_t u, fld3d_t U,
+	       int j, int k, int dir, int ib, int ie)
+{
+#define GET_LINE(X,Y,Z,I,J,K) do {			\
+    for (int i = ib; i < ie; i++) {			\
+      F1(u, i) = F3S(U, 0, I,J,K);			\
     }							\
   } while (0)
 

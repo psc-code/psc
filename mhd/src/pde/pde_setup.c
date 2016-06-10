@@ -31,6 +31,8 @@ static double s_g_dxyzmin; // global minimum grid spacing
 
 #include "pde_fld1d.c"
 
+#include "pde_fld3d.c"
+
 // ======================================================================
 // static info for current patch
 

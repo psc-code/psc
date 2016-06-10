@@ -143,18 +143,28 @@ ggcm_mhd_step_mhdcc_setup_flds(struct ggcm_mhd_step *step)
 // mhd_flux_pt1
 
 static void
-mhd_flux_pt1(struct ggcm_mhd_step *step, struct mrc_fld *x,
+mhd_flux_pt1(struct ggcm_mhd_step *step, struct mrc_fld *X,
 	     int j, int k, int dir, int p, int ib, int ie)
 {
   struct ggcm_mhd_step_mhdcc *sub = ggcm_mhd_step_mhdcc(step);
   fld1d_state_t U = sub->U, U_l = sub->U_l, U_r = sub->U_r;
   fld1d_state_t W = sub->W, W_l = sub->W_l, W_r = sub->W_r;
 
+  fld3d_t x, bnd_mask; // FIXME, make static, init once?
+  fld3d_setup(&x);
+  fld3d_setup(&bnd_mask);
+
+  fld3d_get(&x, X, p);
+  fld3d_get(&bnd_mask, step->mhd->bnd_mask, p);
+
   // FIXME: +2,+2 is specifically for PLM reconstr (and enough for PCM)
-  mhd_get_line_state(U, x, j, k, dir, p, ib - 2, ie + 2);
-  mhd_get_line_1(s_aux.bnd_mask, step->mhd->bnd_mask, j, k, dir, p, ib - 2, ie + 2);
+  mhd_line_get_state(U, x, j, k, dir, ib - 2, ie + 2);
+  mhd_line_get_1(s_aux.bnd_mask, bnd_mask, j, k, dir, ib - 2, ie + 2);
   mhd_prim_from_cons(W, U, ib - 2, ie + 2);
   mhd_reconstruct(U_l, U_r, W_l, W_r, W, (fld1d_t) {}, ib, ie + 1);
+
+  fld3d_put(&x, X, p);
+  fld3d_put(&bnd_mask, step->mhd->bnd_mask, p);
 }
 
 // ----------------------------------------------------------------------
