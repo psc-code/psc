@@ -468,19 +468,28 @@ ggcm_mhd_step_vlct_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
     ggcm_mhd_diag_run_now(diag, x, DIAG_TYPE_3D, cnt++);
   }
 
-  fld3d_t _x_half, _x;
+  fld3d_t _x_half, _x, _flux[3];
   fld3d_setup(&_x_half);
   fld3d_setup(&_x);
+  for (int d = 0; d < 3; d++) {
+    fld3d_setup(&_flux[d]);
+  }
 
   mrc_fld_copy_range(x_half, x, 0, 8);
   fluxes_pred(step, flux, x, B_cc);
   for (int p = 0; p < mrc_fld_nr_patches(x_half); p++) {
     pde_patch_set(p);
     fld3d_get(&_x_half, x_half, p);
+    for (int d = 0; d < 3; d++) {
+      fld3d_get(&_flux[d], flux[d], p);
+    }
 
-    mhd_update_finite_volume(mhd, _x_half, flux, mhd->ymask, .5 * dt, p, nghost - 1, nghost - 1);
+    mhd_update_finite_volume(mhd, _x_half, _flux, mhd->ymask, .5 * dt, p, nghost - 1, nghost - 1);
 
     fld3d_put(&_x_half, x_half, p);
+    for (int d = 0; d < 3; d++) {
+      fld3d_get(&_flux[d], flux[d], p);
+    }
   }
   compute_E(step, E_ec, x, B_cc, flux, 4);
   ggcm_mhd_fill_ghosts_E(mhd, E_ec);
@@ -494,10 +503,16 @@ ggcm_mhd_step_vlct_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
     pde_patch_set(p);
     fld3d_get(&_x, x, p);
+    for (int d = 0; d < 3; d++) {
+      fld3d_get(&_flux[d], flux[d], p);
+    }
 
-    mhd_update_finite_volume(mhd, _x, flux, mhd->ymask, dt, p, 0, 0);
+    mhd_update_finite_volume(mhd, _x, _flux, mhd->ymask, dt, p, 0, 0);
 
     fld3d_put(&_x, x, p);
+    for (int d = 0; d < 3; d++) {
+      fld3d_put(&_flux[d], flux[d], p);
+    }
   }
   compute_E(step, E_ec, x_half, B_cc, flux, 4);
   ggcm_mhd_fill_ghosts_E(mhd, E_ec);

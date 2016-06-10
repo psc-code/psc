@@ -296,10 +296,16 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, mrc_fld_data_t time_c
   for (int p = 0; p < mrc_fld_nr_patches(x_next); p++) {
     pde_patch_set(p);
     fld3d_get(&_x_next, x_next, p);
+    for (int d = 0; d < 3; d++) {
+      fld3d_get(&fluxes[d], sub->fluxes[d], p);
+    }
 
-    mhd_update_finite_volume(mhd, _x_next, sub->fluxes, mhd->ymask, dt, p, 0, 0);
+    mhd_update_finite_volume(mhd, _x_next, fluxes, mhd->ymask, dt, p, 0, 0);
 
     fld3d_put(&_x_next, x_next, p);
+    for (int d = 0; d < 3; d++) {
+      fld3d_put(&fluxes[d], sub->fluxes[d], p);
+    }
   }
 }
 
