@@ -902,7 +902,10 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
 
   ggcm_mhd_correct_fluxes(mhd, fluxes);
 
-  mhd_update_finite_volume(mhd, x_next, fluxes, mhd->ymask, dt, 0, 0);
+  for (int p = 0; p < mrc_fld_nr_patches(x_next); p++) {
+    pde_patch_set(p);
+    mhd_update_finite_volume(mhd, x_next, fluxes, mhd->ymask, dt, p, 0, 0);
+  }
   pushpp_c(step, dt, x_next, prim);
 
   push_ej_c(step, dt, x_curr, prim, x_next);
