@@ -365,6 +365,25 @@ curbc_c(struct ggcm_mhd_step *step, struct mrc_fld *j_cc,
 }
 
 // ----------------------------------------------------------------------
+// calc_Bt_cc
+//
+// cell-averaged Btotal (ie., add B0 back in, if applicable)
+
+static void _mrc_unused
+calc_Bt_cc(struct ggcm_mhd *mhd, struct mrc_fld *B_cc, struct mrc_fld *x, int l, int r)
+{
+  struct mrc_fld *b0 = mhd->b0;
+
+  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+    mrc_fld_foreach(x, i,j,k, l, r) {
+      M3(B_cc, 0, i,j,k, p) = .5f * (BT(x, 0, i,j,k, p) + BT(x, 0, i+di,j,k, p));
+      M3(B_cc, 1, i,j,k, p) = .5f * (BT(x, 1, i,j,k, p) + BT(x, 1, i,j+dj,k, p));
+      M3(B_cc, 2, i,j,k, p) = .5f * (BT(x, 2, i,j,k, p) + BT(x, 2, i,j,k+dk, p));
+    } mrc_fld_foreach_end;
+  }
+}
+
+// ----------------------------------------------------------------------
 // push_ej_c
 
 static void
@@ -914,7 +933,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
       fld3d_put(&_fluxes[d], fluxes[d], p);
     }
   }
-  compute_Bt_cc(mhd, b_cc, x_curr, 1, 1);
+  calc_Bt_cc(mhd, b_cc, x_curr, 1, 1);
   push_ej_c(step, dt, j_ec, b_cc, prim, x_next);
 
   calce_c(step, E, x_curr, prim, dt);
