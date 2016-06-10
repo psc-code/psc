@@ -530,61 +530,51 @@ bcthy3f(mrc_fld_data_t s1, mrc_fld_data_t s2)
 static inline void
 calc_avg_dz_By(struct ggcm_mhd_step *step, struct mrc_fld *tmp,
 	       struct mrc_fld *x, struct mrc_fld *b0, int XX, int YY, int ZZ,
-	       int JX1_, int JY1_, int JZ1_, int JX2_, int JY2_, int JZ2_)
+	       int JX1_, int JY1_, int JZ1_, int JX2_, int JY2_, int JZ2_, int p)
 {
   struct ggcm_mhd *mhd = step->mhd;
 
-  int gdims[3];
-  mrc_domain_get_global_dims(x->_domain, gdims);
-
-  int JX1 = (gdims[0] > 1) ? JX1_ : 0;
-  int JY1 = (gdims[1] > 1) ? JY1_ : 0;
-  int JZ1 = (gdims[2] > 1) ? JZ1_ : 0;
-  int JX2 = (gdims[0] > 1) ? JX2_ : 0;
-  int JY2 = (gdims[1] > 1) ? JY2_ : 0;
-  int JZ2 = (gdims[2] > 1) ? JZ2_ : 0;
+  int JX1 = s_sw[0] ? JX1_ : 0;
+  int JY1 = s_sw[1] ? JY1_ : 0;
+  int JZ1 = s_sw[2] ? JZ1_ : 0;
+  int JX2 = s_sw[0] ? JX2_ : 0;
+  int JY2 = s_sw[1] ? JY2_ : 0;
+  int JZ2 = s_sw[2] ? JZ2_ : 0;
 
   // d_z B_y, d_y B_z on x edges
-  for (int p = 0; p < mrc_fld_nr_patches(tmp); p++) {
-    float *bd1x = ggcm_mhd_crds_get_crd_p(mhd->crds, 0, BD1, p);
-    float *bd1y = ggcm_mhd_crds_get_crd_p(mhd->crds, 1, BD1, p);
-    float *bd1z = ggcm_mhd_crds_get_crd_p(mhd->crds, 2, BD1, p);
-
-    mrc_fld_foreach(tmp, i,j,k, 1, 2) {
-      mrc_fld_data_t bd1[3] = { bd1x[i-1], bd1y[j-1], bd1z[k-1] };
-      
-      M3(tmp, 0, i,j,k, p) = bd1[ZZ] * 
-	(BT(x, YY, i,j,k, p) - BT(x, YY, i-JX2,j-JY2,k-JZ2, p));
-      M3(tmp, 1, i,j,k, p) = bd1[YY] * 
-	(BT(x, ZZ, i,j,k, p) - BT(x, ZZ, i-JX1,j-JY1,k-JZ1, p));
-    } mrc_fld_foreach_end;
-  }
-
+  float *bd1x = ggcm_mhd_crds_get_crd_p(mhd->crds, 0, BD1, p);
+  float *bd1y = ggcm_mhd_crds_get_crd_p(mhd->crds, 1, BD1, p);
+  float *bd1z = ggcm_mhd_crds_get_crd_p(mhd->crds, 2, BD1, p);
+  
+  mrc_fld_foreach(tmp, i,j,k, 1, 2) {
+    mrc_fld_data_t bd1[3] = { bd1x[i-1], bd1y[j-1], bd1z[k-1] };
+    
+    M3(tmp, 0, i,j,k, p) = bd1[ZZ] * 
+      (BT(x, YY, i,j,k, p) - BT(x, YY, i-JX2,j-JY2,k-JZ2, p));
+    M3(tmp, 1, i,j,k, p) = bd1[YY] * 
+      (BT(x, ZZ, i,j,k, p) - BT(x, ZZ, i-JX1,j-JY1,k-JZ1, p));
+  } mrc_fld_foreach_end;
+  
   // .5 * harmonic average if same sign
-  for (int p = 0; p < mrc_fld_nr_patches(tmp); p++) {
-    mrc_fld_foreach(tmp, i,j,k, 1, 1) {
-      mrc_fld_data_t s1, s2;
-      // dz_By on y face
-      s1 = M3(tmp, 0, i+JX2,j+JY2,k+JZ2, p) * M3(tmp, 0, i,j,k, p);
-      s2 = M3(tmp, 0, i+JX2,j+JY2,k+JZ2, p) + M3(tmp, 0, i,j,k, p);
-      M3(tmp, 2, i,j,k, p) = bcthy3f(s1, s2);
-      // dy_Bz on z face
-      s1 = M3(tmp, 1, i+JX1,j+JY1,k+JZ1, p) * M3(tmp, 1, i,j,k, p);
-      s2 = M3(tmp, 1, i+JX1,j+JY1,k+JZ1, p) + M3(tmp, 1, i,j,k, p);
-      M3(tmp, 3, i,j,k, p) = bcthy3f(s1, s2);
-    } mrc_fld_foreach_end;
-  }
+  mrc_fld_foreach(tmp, i,j,k, 1, 1) {
+    mrc_fld_data_t s1, s2;
+    // dz_By on y face
+    s1 = M3(tmp, 0, i+JX2,j+JY2,k+JZ2, p) * M3(tmp, 0, i,j,k, p);
+    s2 = M3(tmp, 0, i+JX2,j+JY2,k+JZ2, p) + M3(tmp, 0, i,j,k, p);
+    M3(tmp, 2, i,j,k, p) = bcthy3f(s1, s2);
+    // dy_Bz on z face
+    s1 = M3(tmp, 1, i+JX1,j+JY1,k+JZ1, p) * M3(tmp, 1, i,j,k, p);
+    s2 = M3(tmp, 1, i+JX1,j+JY1,k+JZ1, p) + M3(tmp, 1, i,j,k, p);
+    M3(tmp, 3, i,j,k, p) = bcthy3f(s1, s2);
+  } mrc_fld_foreach_end;
 }
 
 #define CC_TO_EC(f, m, i,j,k, I,J,K, p)		\
   ({						\
-    int I_ = (gdims[0] > 1 ) ? I : 0;		\
-    int J_ = (gdims[1] > 1 ) ? J : 0;		\
-    int K_ = (gdims[2] > 1 ) ? K : 0;		\
-    (.25f * (M3(f, m, i-I_,j-J_,k-K_, p) +	\
-	     M3(f, m, i-I_,j   ,k   , p) +	\
-	     M3(f, m, i   ,j-J_,k   , p) +	\
-	     M3(f, m, i   ,j   ,k-K_, p)));})
+    (.25f * (M3(f, m, i-di,j-dj,k-dk, p) +	\
+	     M3(f, m, i-di,j   ,k   , p) +	\
+	     M3(f, m, i   ,j-dj,k   , p) +	\
+	     M3(f, m, i   ,j   ,k-dk, p)));})
 
 // ve = v - d_i J
 static inline void
@@ -600,9 +590,6 @@ calc_ve_x_B(struct ggcm_mhd_step *step,
   struct ggcm_mhd *mhd = step->mhd;
   struct mrc_fld *b0 = mhd->b0;
   mrc_fld_data_t d_i = mhd->par.d_i;
-  
-  int gdims[3];
-  mrc_domain_get_global_dims(x->_domain, gdims);
   
   mrc_fld_data_t vcurrYY = CC_TO_EC(curr, YY, i, j, k, I, J, K, p);
   mrc_fld_data_t vcurrZZ = CC_TO_EC(curr, ZZ, i, j, k, I, J, K, p);
@@ -636,7 +623,7 @@ calc_ve_x_B(struct ggcm_mhd_step *step,
 
 static inline void
 bcthy3z_NL1(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int I, int J, int K,
-	    int _JX1, int _JY1, int _JZ1, int _JX2, int _JY2, int _JZ2,
+	    int JX1_, int JY1_, int JZ1_, int JX2_, int JY2_, int JZ2_,
 	    struct mrc_fld *E, mrc_fld_data_t dt, struct mrc_fld *x,
 	    struct mrc_fld *prim, struct mrc_fld *curr, struct mrc_fld *b0)
 {
@@ -645,25 +632,23 @@ bcthy3z_NL1(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int I, int J, in
   struct mrc_fld *rmask = sub->rmask;
   struct mrc_fld *tmp = ggcm_mhd_get_3d_fld(mhd, 4);
 
-  int gdims[3];
-  mrc_domain_get_global_dims(x->_domain, gdims);
-
-  int JX1 = (gdims[0] > 1 ) ? _JX1 : 0;
-  int JY1 = (gdims[1] > 1 ) ? _JY1 : 0;
-  int JZ1 = (gdims[2] > 1 ) ? _JZ1 : 0;
-  int JX2 = (gdims[0] > 1 ) ? _JX2 : 0;
-  int JY2 = (gdims[1] > 1 ) ? _JY2 : 0;
-  int JZ2 = (gdims[2] > 1 ) ? _JZ2 : 0;
-
-  calc_avg_dz_By(step, tmp, x, b0, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2);
+  int JX1 = s_sw[0] ? JX1_ : 0;
+  int JY1 = s_sw[1] ? JY1_ : 0;
+  int JZ1 = s_sw[2] ? JZ1_ : 0;
+  int JX2 = s_sw[0] ? JX2_ : 0;
+  int JY2 = s_sw[1] ? JY2_ : 0;
+  int JZ2 = s_sw[2] ? JZ2_ : 0;
 
   mrc_fld_data_t diffmul = 1.f;
   if (mhd->time < mhd->par.diff_timelo) { // no anomalous res at startup
     diffmul = 0.f;
   }
 
-  // edge centered E = - ve x B (+ dissipation)
   for (int p = 0; p < mrc_fld_nr_patches(E); p++) {
+    // average dz_by
+    calc_avg_dz_By(step, tmp, x, b0, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2, p);
+
+    // edge centered E = - ve x B (+ dissipation)
     float *bd2x = ggcm_mhd_crds_get_crd_p(mhd->crds, 0, BD2, p);
     float *bd2y = ggcm_mhd_crds_get_crd_p(mhd->crds, 1, BD2, p);
     float *bd2z = ggcm_mhd_crds_get_crd_p(mhd->crds, 2, BD2, p);
@@ -695,7 +680,7 @@ bcthy3z_NL1(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int I, int J, in
 
 static inline void
 bcthy3z_const(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int I, int J, int K,
-	      int _JX1, int _JY1, int _JZ1, int _JX2, int _JY2, int _JZ2,
+	      int JX1_, int JY1_, int JZ1_, int JX2_, int JY2_, int JZ2_,
 	      struct mrc_fld *E, mrc_fld_data_t dt, struct mrc_fld *x,
 	      struct mrc_fld *prim, struct mrc_fld *curr, struct mrc_fld *resis,
 	      struct mrc_fld *b0)
@@ -703,17 +688,16 @@ bcthy3z_const(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int I, int J, 
   struct ggcm_mhd *mhd = step->mhd;
   struct mrc_fld *tmp = ggcm_mhd_get_3d_fld(mhd, 4);
 
-  int gdims[3];
-  mrc_domain_get_global_dims(x->_domain, gdims);
+  int JX1 = s_sw[0] ? JX1_ : 0;
+  int JY1 = s_sw[1] ? JY1_ : 0;
+  int JZ1 = s_sw[2] ? JZ1_ : 0;
+  int JX2 = s_sw[0] ? JX2_ : 0;
+  int JY2 = s_sw[1] ? JY2_ : 0;
+  int JZ2 = s_sw[2] ? JZ2_ : 0;
 
-  int JX1 = (gdims[0] > 1 ) ? _JX1 : 0;
-  int JY1 = (gdims[1] > 1 ) ? _JY1 : 0;
-  int JZ1 = (gdims[2] > 1 ) ? _JZ1 : 0;
-  int JX2 = (gdims[0] > 1 ) ? _JX2 : 0;
-  int JY2 = (gdims[1] > 1 ) ? _JY2 : 0;
-  int JZ2 = (gdims[2] > 1 ) ? _JZ2 : 0;
-
-  calc_avg_dz_By(step, tmp, x, b0, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2);
+  for (int p = 0; p < mrc_fld_nr_patches(E); p++) {
+    calc_avg_dz_By(step, tmp, x, b0, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2, p);
+  }
 
   // edge centered E = - ve x B (+ dissipation)
   for (int p = 0; p < mrc_fld_nr_patches(E); p++) {
@@ -740,16 +724,10 @@ calce_nl1_c(struct ggcm_mhd_step *step, struct mrc_fld *E,
 	    mrc_fld_data_t dt, struct mrc_fld *x, struct mrc_fld *prim,
       struct mrc_fld *curr)
 {
-  if (s_opt_background) {
-    struct mrc_fld *b0 = step->mhd->b0;
-    bcthy3z_NL1(step, 0,1,2, 0,1,1, 0,1,0, 0,0,1, E, dt, x, prim, curr, b0);
-    bcthy3z_NL1(step, 1,2,0, 1,0,1, 0,0,1, 1,0,0, E, dt, x, prim, curr, b0);
-    bcthy3z_NL1(step, 2,0,1, 1,1,0, 1,0,0, 0,1,0, E, dt, x, prim, curr, b0);
-  } else {
-    bcthy3z_NL1(step, 0,1,2, 0,1,1, 0,1,0, 0,0,1, E, dt, x, prim, curr, NULL);
-    bcthy3z_NL1(step, 1,2,0, 1,0,1, 0,0,1, 1,0,0, E, dt, x, prim, curr, NULL);
-    bcthy3z_NL1(step, 2,0,1, 1,1,0, 1,0,0, 0,1,0, E, dt, x, prim, curr, NULL);
-  }
+  struct mrc_fld *b0 = step->mhd->b0;
+  bcthy3z_NL1(step, 0,1,2, 0,1,1, 0,1,0, 0,0,1, E, dt, x, prim, curr, b0);
+  bcthy3z_NL1(step, 1,2,0, 1,0,1, 0,0,1, 1,0,0, E, dt, x, prim, curr, b0);
+  bcthy3z_NL1(step, 2,0,1, 1,1,0, 1,0,0, 0,1,0, E, dt, x, prim, curr, b0);
 }
 
 static void
@@ -757,43 +735,28 @@ calce_const_c(struct ggcm_mhd_step *step, struct mrc_fld *E,
 	      mrc_fld_data_t dt, struct mrc_fld *x, struct mrc_fld *prim,
 	      struct mrc_fld *curr, struct mrc_fld *resis)
 {
-  if (s_opt_background) {
-    struct mrc_fld *b0 = step->mhd->b0;
-    bcthy3z_const(step, 0,1,2, 0,1,1, 0,1,0, 0,0,1, E, dt, x, prim, curr, resis, b0);
-    bcthy3z_const(step, 1,2,0, 1,0,1, 0,0,1, 1,0,0, E, dt, x, prim, curr, resis, b0);
-    bcthy3z_const(step, 2,0,1, 1,1,0, 1,0,0, 0,1,0, E, dt, x, prim, curr, resis, b0);
-  } else {
-    bcthy3z_const(step, 0,1,2, 0,1,1, 0,1,0, 0,0,1, E, dt, x, prim, curr, resis, NULL);
-    bcthy3z_const(step, 1,2,0, 1,0,1, 0,0,1, 1,0,0, E, dt, x, prim, curr, resis, NULL);
-    bcthy3z_const(step, 2,0,1, 1,1,0, 1,0,0, 0,1,0, E, dt, x, prim, curr, resis, NULL);
-  }
+  struct mrc_fld *b0 = step->mhd->b0;
+  bcthy3z_const(step, 0,1,2, 0,1,1, 0,1,0, 0,0,1, E, dt, x, prim, curr, resis, b0);
+  bcthy3z_const(step, 1,2,0, 1,0,1, 0,0,1, 1,0,0, E, dt, x, prim, curr, resis, b0);
+  bcthy3z_const(step, 2,0,1, 1,1,0, 1,0,0, 0,1,0, E, dt, x, prim, curr, resis, b0);
 }
 
 static void
 calce_c(struct ggcm_mhd_step *step, struct mrc_fld *E,
-	struct mrc_fld *x, struct mrc_fld *prim, mrc_fld_data_t dt)
+	struct mrc_fld *x, struct mrc_fld *prim, mrc_fld_data_t dt,
+	struct mrc_fld *curr, struct mrc_fld *resis)
 {
   struct ggcm_mhd *mhd = step->mhd;
 
   switch (mhd->par.magdiffu) {
   case MAGDIFFU_NL1: {
-    struct mrc_fld *curr = ggcm_mhd_get_3d_fld(mhd, 3);
-
     calc_resis_nl1_c(step, curr, x);
     calce_nl1_c(step, E, dt, x, prim, curr);
-    
-    ggcm_mhd_put_3d_fld(mhd, curr);
     break;
   }
   case MAGDIFFU_CONST: {
-    struct mrc_fld *curr = ggcm_mhd_get_3d_fld(mhd, 3);
-    struct mrc_fld *resis = ggcm_mhd_get_3d_fld(mhd, 1);
-
     calc_resis_const_c(step, curr, resis, x);
     calce_const_c(step, E, dt, x, prim, curr, resis);
-
-    ggcm_mhd_put_3d_fld(mhd, curr);
-    ggcm_mhd_put_3d_fld(mhd, resis);
     break;
   }
   default:
@@ -814,6 +777,8 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
   struct mrc_fld *E = ggcm_mhd_get_3d_fld(mhd, 3);
   struct mrc_fld *j_ec = ggcm_mhd_get_3d_fld(mhd, 3);
   struct mrc_fld *b_cc = ggcm_mhd_get_3d_fld(mhd, 3);
+  struct mrc_fld *curr = ggcm_mhd_get_3d_fld(mhd, 3);
+  struct mrc_fld *resis = ggcm_mhd_get_3d_fld(mhd, 1);
 
   rmaskn_c(step);
 
@@ -892,9 +857,9 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
   fld3d_setup(&_x_next);
   fld3d_setup(&ymask);
   fld3d_setup(&zmask);
-  fld3d_setup(&_j_ec);
   fld3d_setup(&_prim);
-  fld3d_setup(&_b_cc);
+  fld3d_setup(&_j_ec); // TMP
+  fld3d_setup(&_b_cc); // TMP
   fld3d_setup(&b0);
   for (int d = 0; d < 3; d++) {
     fld3d_setup(&_fluxes[d]);
@@ -938,9 +903,13 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
     }
   }
 
-  calce_c(step, E, x_curr, prim, dt);
+  calce_c(step, E, x_curr, prim, dt, curr, resis);
+
   //  ggcm_mhd_fill_ghosts_E(mhd, E);
   update_ct(mhd, x_next, E, dt, true);
+
+  ggcm_mhd_put_3d_fld(mhd, curr);
+  ggcm_mhd_put_3d_fld(mhd, resis);
 
   ggcm_mhd_put_3d_fld(mhd, E);
   ggcm_mhd_put_3d_fld(mhd, fluxes[0]);
@@ -1066,15 +1035,20 @@ ggcm_mhd_step_c3_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
   // of the output
   struct mrc_fld *E = mrc_fld_get_as(Eout, FLD_TYPE);
   struct mrc_fld *prim = ggcm_mhd_get_3d_fld(mhd, 5);
+  struct mrc_fld *curr = ggcm_mhd_get_3d_fld(mhd, 3);
+  struct mrc_fld *resis = ggcm_mhd_get_3d_fld(mhd, 1);
+
 
   ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
   ggcm_mhd_step_c3_primvar(step, prim, x);
   zmaskn(step->mhd, zmask, 0, ymask, 0, x);
-  calce_c(step, E, x, prim, mhd->dt);
+  calce_c(step, E, x, prim, mhd->dt, curr, resis);
   //  ggcm_mhd_fill_ghosts_E(mhd, E);
   
-  ggcm_mhd_put_3d_fld(mhd, prim);
   mrc_fld_put_as(E, Eout);
+  ggcm_mhd_put_3d_fld(mhd, prim);
+  ggcm_mhd_put_3d_fld(mhd, curr);
+  ggcm_mhd_put_3d_fld(mhd, resis);
 } 
 
 // ----------------------------------------------------------------------
