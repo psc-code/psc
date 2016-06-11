@@ -143,51 +143,6 @@ update_ct_uniform(struct ggcm_mhd *mhd,
 }
 
 // ----------------------------------------------------------------------
-// update_ct
-
-static void _mrc_unused
-update_ct(struct ggcm_mhd *mhd,
-	  struct mrc_fld *x, struct mrc_fld *E, mrc_fld_data_t dt,
-	  bool do_correct)
-{
-  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-
-  if (mhd->amr > 0 && do_correct) {
-    mrc_ddc_amr_apply(mhd->ddc_amr_E, E);
-    //    correct_E(mhd, E);
-  }
-
-  const float r_db_dt_sq = sqr(mhd->par.r_db_dt);
-  int gdims[3]; mrc_domain_get_global_dims(x->_domain, gdims);
-  int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
-
-  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
-    float *bd3x = ggcm_mhd_crds_get_crd_p(mhd->crds, 0, BD3, p);
-    float *bd3y = ggcm_mhd_crds_get_crd_p(mhd->crds, 1, BD3, p);
-    float *bd3z = ggcm_mhd_crds_get_crd_p(mhd->crds, 2, BD3, p);
-
-    mrc_fld_foreach(x, i,j,k, 0, 1) {
-      float crd_fc[3];
-      mrc_crds_at_fc(crds, i,j,k, p, 0, crd_fc);
-      if (sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]) >= r_db_dt_sq) {
-	M3(x, BX, i,j,k, p) -= dt * (bd3y[j] * (M3(E, 2, i,j+dy,k, p) - M3(E, 2, i,j,k, p)) -
-				     bd3z[k] * (M3(E, 1, i,j,k+dz, p) - M3(E, 1, i,j,k, p)));
-      }
-      mrc_crds_at_fc(crds, i,j,k, p, 1, crd_fc);
-      if (sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]) >= r_db_dt_sq) {
-	M3(x, BY, i,j,k, p) -= dt * (bd3z[k] * (M3(E, 0, i,j,k+dz, p) - M3(E, 0, i,j,k, p)) -
-				     bd3x[i] * (M3(E, 2, i+dx,j,k, p) - M3(E, 2, i,j,k, p)));
-      }
-      mrc_crds_at_fc(crds, i,j,k, p, 2, crd_fc);
-      if (sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]) >= r_db_dt_sq) {
-	M3(x, BZ, i,j,k, p) -= dt * (bd3x[i] * (M3(E, 1, i+dx,j,k, p) - M3(E, 1, i,j,k, p)) -
-				     bd3y[j] * (M3(E, 0, i,j+dy,k, p) - M3(E, 0, i,j,k, p)));
-      }
-    } mrc_fld_foreach_end;
-  }
-}
-
-// ----------------------------------------------------------------------
 // mrc_fld_copy_range
 
 // FIXME, mv to right place

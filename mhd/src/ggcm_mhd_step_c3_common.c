@@ -686,6 +686,40 @@ calce_c(struct ggcm_mhd_step *step, fld3d_t E, mrc_fld_data_t dt,
   }
 }
 
+// ----------------------------------------------------------------------
+// update_ct
+
+static void
+update_ct(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *E,
+	  mrc_fld_data_t dt, int p)
+{
+  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
+
+  mrc_fld_data_t r_db_dt_sq = sqr(mhd->par.r_db_dt);
+
+  mrc_fld_foreach(x, i,j,k, 0, 1) {
+    float crd_fc[3];
+    mrc_crds_at_fc(crds, i,j,k, p, 0, crd_fc);
+    if (sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]) >= r_db_dt_sq) {
+      M3(x, BX, i,j,k, p) -= dt * (PDE_INV_DY(j) * (M3(E, 2, i,j+dj,k, p) - M3(E, 2, i,j,k, p)) -
+				   PDE_INV_DZ(k) * (M3(E, 1, i,j,k+dk, p) - M3(E, 1, i,j,k, p)));
+    }
+    mrc_crds_at_fc(crds, i,j,k, p, 1, crd_fc);
+    if (sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]) >= r_db_dt_sq) {
+      M3(x, BY, i,j,k, p) -= dt * (PDE_INV_DZ(k) * (M3(E, 0, i,j,k+dk, p) - M3(E, 0, i,j,k, p)) -
+				   PDE_INV_DX(i) * (M3(E, 2, i+di,j,k, p) - M3(E, 2, i,j,k, p)));
+    }
+    mrc_crds_at_fc(crds, i,j,k, p, 2, crd_fc);
+    if (sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]) >= r_db_dt_sq) {
+      M3(x, BZ, i,j,k, p) -= dt * (PDE_INV_DX(i) * (M3(E, 1, i+di,j,k, p) - M3(E, 1, i,j,k, p)) -
+				   PDE_INV_DY(j) * (M3(E, 0, i,j+dj,k, p) - M3(E, 0, i,j,k, p)));
+    }
+  } mrc_fld_foreach_end;
+}
+
+// ----------------------------------------------------------------------
+// pushstage_c
+
 static void
 pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
 	    struct mrc_fld *x_curr, struct mrc_fld *x_next,
@@ -820,7 +854,14 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
   }
 
   //  ggcm_mhd_fill_ghosts_E(mhd, E);
-  update_ct(mhd, x_next, E, dt, true);
+  if (mhd->amr > 0) {
+    mrc_ddc_amr_apply(mhd->ddc_amr_E, E);
+  }
+
+  for (int p = 0; p < mrc_fld_nr_patches(x_next); p++) {
+    pde_patch_set(p);
+    update_ct(mhd, x_next, E, dt, p);
+  }
 
   ggcm_mhd_put_3d_fld(mhd, E);
   ggcm_mhd_put_3d_fld(mhd, fluxes[0]);
