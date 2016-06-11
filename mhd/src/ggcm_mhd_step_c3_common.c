@@ -62,6 +62,7 @@ struct ggcm_mhd_step_c3 {
   struct mrc_fld *rmask;
   
   struct mrc_fld *fluxes[3];
+  struct mrc_fld *E;
   struct mrc_fld *Ul[3], *Ur[3];
 
   bool enforce_rrmin;
@@ -116,6 +117,7 @@ ggcm_mhd_step_c3_setup(struct ggcm_mhd_step *step)
   sub->zmask = ggcm_mhd_get_3d_fld(mhd, 1);
   sub->rmask = ggcm_mhd_get_3d_fld(mhd, 1);
 
+  sub->E = ggcm_mhd_get_3d_fld(mhd, 3);
   for (int d = 0; d < 3; d++) {
     sub->fluxes[d] = ggcm_mhd_get_3d_fld(mhd, s_n_comps);
     if (s_opt_bc_reconstruct) {
@@ -141,6 +143,7 @@ ggcm_mhd_step_c3_destroy(struct ggcm_mhd_step *step)
   ggcm_mhd_put_3d_fld(mhd, sub->zmask);
   ggcm_mhd_put_3d_fld(mhd, sub->rmask);
 
+  ggcm_mhd_put_3d_fld(mhd, sub->E);
   for (int d = 0; d < 3; d++) {
     ggcm_mhd_put_3d_fld(mhd, sub->fluxes[d]);
     if (s_opt_bc_reconstruct) {
@@ -746,14 +749,13 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
-  struct mrc_fld *E = ggcm_mhd_get_3d_fld(mhd, 3);
 
   rmaskn_c(step);
 
-  if (limit == LIMIT_NONE || mhd->time < mhd->par.timelo) {
+  for (int p = 0; p < mrc_fld_nr_patches(x_curr); p++) {
 
-    if (s_opt_bc_reconstruct) {
-      for (int p = 0; p < mrc_fld_nr_patches(x_curr); p++) {
+    if (limit == LIMIT_NONE || mhd->time < mhd->par.timelo) {
+      if (s_opt_bc_reconstruct) {
 	// reconstruct
 	pde_for_each_dir(dir) {
 	  pde_for_each_line(dir, j, k, 0) {
@@ -777,9 +779,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
 	    flux_pred_pt2(step, sub->fluxes, j, k, dir, p, ib, ie);
 	  }
 	}
-      }
-    } else {
-      for (int p = 0; p < mrc_fld_nr_patches(x_curr); p++) {
+      } else { // !s_opt_bc_reconstruct
 	pde_for_each_dir(dir) {
 	  pde_for_each_line(dir, j, k, 0) {
 	    int ib = 0, ie = s_ldims[dir];
@@ -788,9 +788,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
 	  }
 	}
       }
-    }
-  } else {
-    for (int p = 0; p < mrc_fld_nr_patches(x_curr); p++) {
+    } else { // !LIMIT_NONE
       pde_for_each_dir(dir) {
 	pde_for_each_line(dir, j, k, 0) {
 	  int ib = 0, ie = s_ldims[dir];
@@ -798,12 +796,13 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
 	}
       }
     }
+
   }
 
   ggcm_mhd_correct_fluxes(mhd, sub->fluxes);
 
   fld3d_t _x_curr, _x_next, ymask, zmask, rmask, _prim, b0, fluxes[3];
-  fld3d_t _E;
+  fld3d_t E;
   fld3d_setup(&_x_curr);
   fld3d_setup(&_x_next);
   fld3d_setup(&ymask);
@@ -813,7 +812,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
   for (int d = 0; d < 3; d++) {
     fld3d_setup(&fluxes[d]);
   }
-  fld3d_setup(&_E);
+  fld3d_setup(&E);
 
   for (int p = 0; p < mrc_fld_nr_patches(x_next); p++) {
     pde_patch_set(p);
@@ -829,12 +828,12 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
     if (s_opt_background) {
       fld3d_get(&b0, mhd->b0, p);
     }
-    fld3d_get(&_E, E, p);
+    fld3d_get(&E, sub->E, p);
 
     mhd_update_finite_volume(mhd, _x_next, fluxes, ymask, dt, 0, 0);
     pushpp_c(_x_next, dt, _prim, zmask);
     push_ej_c(_x_next, dt, _x_curr, _prim, zmask, b0);
-    calce_c(step, _E, dt, _x_curr, _prim, zmask, rmask, b0, p);
+    calce_c(step, E, dt, _x_curr, _prim, zmask, rmask, b0, p);
 
     fld3d_put(&_x_curr, x_curr, p);
     fld3d_put(&_x_next, x_next, p);
@@ -848,26 +847,24 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
     if (s_opt_background) {
       fld3d_put(&b0, mhd->b0, p);
     }
-    fld3d_put(&_E, E, p);
+    fld3d_put(&E, sub->E, p);
   }
 
   //  ggcm_mhd_fill_ghosts_E(mhd, E);
   if (mhd->amr > 0) {
-    mrc_ddc_amr_apply(mhd->ddc_amr_E, E);
+    mrc_ddc_amr_apply(mhd->ddc_amr_E, sub->E);
   }
 
   for (int p = 0; p < mrc_fld_nr_patches(x_next); p++) {
     pde_patch_set(p);
     fld3d_get(&_x_next, x_next, p);
-    fld3d_get(&_E, E, p);
+    fld3d_get(&E, sub->E, p);
 
-    update_ct(mhd, _x_next, _E, dt, p);
+    update_ct(mhd, _x_next, E, dt, p);
 
     fld3d_put(&_x_next, x_next, p);
-    fld3d_put(&_E, E, p);
+    fld3d_put(&E, sub->E, p);
   }
-
-  ggcm_mhd_put_3d_fld(mhd, E);
 }
 
 static double
