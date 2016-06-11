@@ -477,24 +477,6 @@ res1_const_c(struct ggcm_mhd *mhd, fld3d_t resis, int p)
   } fld3d_foreach_end;
 }
 
-static void
-calc_resis_const_c(struct ggcm_mhd_step *step, fld3d_t curr, fld3d_t resis,
-		   fld3d_t x, fld3d_t zmask, int p)
-{
-  struct ggcm_mhd *mhd = step->mhd;
-
-  curbc_c(curr, x, zmask);
-  res1_const_c(mhd, resis, p);
-}
-
-static void
-calc_resis_nl1_c(struct ggcm_mhd_step *step, fld3d_t curr,
-		 fld3d_t x, fld3d_t zmask, int p)
-{
-  // used to zero _RESIS field, but that's not needed.
-  curbc_c(curr, x, zmask);
-}
-
 static inline mrc_fld_data_t
 bcthy3f(mrc_fld_data_t s1, mrc_fld_data_t s2)
 {
@@ -538,13 +520,6 @@ calc_avg_dz_By(fld3d_t tmp, fld3d_t x, fld3d_t b0,
     F3S(tmp, 3, i,j,k) = bcthy3f(s1, s2);
   } fld3d_foreach_end;
 }
-
-#define CC_TO_EC(f, m, i,j,k, I,J,K, p)			\
-  ({							\
-    (.25f * (M3(f, m, i-di*I,j-dj*J,k-dk*K, p) +	\
-	     M3(f, m, i-di*I,j     ,k     , p) +	\
-	     M3(f, m, i     ,j-dj*J,k     , p) +	\
-	     M3(f, m, i     ,j     ,k-dk*K, p)));})
 
 #define _CC_TO_EC(f, m, i,j,k, I,J,K)			\
   ({							\
@@ -703,14 +678,15 @@ calce_c(struct ggcm_mhd_step *step, struct mrc_fld *E,
 
     switch (mhd->par.magdiffu) {
     case MAGDIFFU_NL1:
-      calc_resis_nl1_c(step, _curr, _x, zmask, p);
+      curbc_c(_curr, _x, zmask);
       calce_nl1_c(step, _E, dt, _x, _prim, _curr, rmask, b0);
       break;
 
     case MAGDIFFU_CONST:
       fld3d_get(&_resis, resis, p);
       
-      calc_resis_const_c(step, _curr, _resis, _x, zmask, p);
+      curbc_c(_curr, _x, zmask);
+      res1_const_c(mhd, _resis, p);
       calce_const_c(_E, dt, _x, _prim, _curr, _resis, b0);
       
       fld3d_put(&_resis, resis, p);
