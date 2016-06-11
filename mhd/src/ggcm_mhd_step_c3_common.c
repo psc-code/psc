@@ -330,39 +330,34 @@ curbc_c(struct ggcm_mhd_step *step, struct mrc_fld *j_cc,
 	struct mrc_fld *x)
 { 
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
-  struct ggcm_mhd *mhd = step->mhd;
-  struct mrc_fld *zmask = sub->zmask;
 
-  int gdims[3];
-  mrc_domain_get_global_dims(mhd->domain, gdims);
-  int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
-
-  // get j on edges
-  struct mrc_fld *j_ec = ggcm_mhd_get_3d_fld(mhd, 3);
-  fld3d_t _x, _j_ec;
+  static fld3d_t j_ec;
+  if (!fld3d_is_setup(j_ec)) {
+    fld3d_setup_tmp(&j_ec, 3);
+  }
+  fld3d_t _x, zmask;
 
   for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
     fld3d_get(&_x, x, p);
-    fld3d_get(&_j_ec, j_ec, p);
-    calc_current_ec(_j_ec, _x);
+    fld3d_get(&zmask, sub->zmask, p);
+
+    // get j on edges
+    calc_current_ec(j_ec, _x);
+
+    // then average to cell centers
+    fld3d_foreach(i,j,k, 2, 1) {
+      mrc_fld_data_t s = .25f * F3S(zmask, 0,  i,j,k);
+      M3(j_cc, 0, i,j,k, p) = s * (F3S(j_ec, 0, i   ,j+dj,k+dk) + F3S(j_ec, 0, i   ,j   ,k+dk) +
+				   F3S(j_ec, 0, i   ,j+dj,k   ) + F3S(j_ec, 0, i   ,j   ,k   ));
+      M3(j_cc, 1, i,j,k, p) = s * (F3S(j_ec, 1, i+di,j   ,k+dk) + F3S(j_ec, 1, i+di,j   ,k   ) +
+				   F3S(j_ec, 1, i   ,j   ,k+dk) + F3S(j_ec, 1, i   ,j   ,k   ));
+      M3(j_cc, 2, i,j,k, p) = s * (F3S(j_ec, 2, i+di,j+dj,k   ) + F3S(j_ec, 2, i   ,j+dj,k   ) + 
+				   F3S(j_ec, 2, i+di,j   ,k   ) + F3S(j_ec, 2, i   ,j   ,k   ));
+    } fld3d_foreach_end;
+
     fld3d_put(&_x, x, p);
-    fld3d_put(&_j_ec, j_ec, p);
+    fld3d_put(&zmask, sub->zmask, p);
   }
-
-  // then average to cell centers
-  for (int p = 0; p < mrc_fld_nr_patches(j_cc); p++) {
-    mrc_fld_foreach(j_cc, i,j,k, 2, 1) {
-      mrc_fld_data_t s = .25f * ZMASK(zmask, i, j, k, p);
-      M3(j_cc, 0, i,j,k, p) = s * (M3(j_ec, 0, i   ,j+dy,k+dz, p) + M3(j_ec, 0, i,j   ,k+dz, p) +
-				   M3(j_ec, 0, i   ,j+dy,k   , p) + M3(j_ec, 0, i,j   ,k   , p));
-      M3(j_cc, 1, i,j,k, p) = s * (M3(j_ec, 1, i+dx,j   ,k+dz, p) + M3(j_ec, 1, i,j   ,k+dz, p) +
-				   M3(j_ec, 1, i+dx,j   ,k   , p) + M3(j_ec, 1, i,j   ,k   , p));
-      M3(j_cc, 2, i,j,k, p) = s * (M3(j_ec, 2, i+dx,j+dy,k   , p) + M3(j_ec, 2, i,j+dy,k   , p) +
-				   M3(j_ec, 2, i+dx,j   ,k   , p) + M3(j_ec, 2, i,j   ,k   , p));
-    } mrc_fld_foreach_end;
-  }
-
-  ggcm_mhd_put_3d_fld(mhd, j_ec);
 }
 
 // ----------------------------------------------------------------------
