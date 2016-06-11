@@ -616,61 +616,59 @@ static inline void
 bcthy3z_NL1(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int I, int J, int K,
 	    int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2,
 	    struct mrc_fld *E, mrc_fld_data_t dt, struct mrc_fld *x,
-	    struct mrc_fld *prim, struct mrc_fld *curr, struct mrc_fld *b0)
+	    struct mrc_fld *prim, struct mrc_fld *curr, struct mrc_fld *b0, int p)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
   struct mrc_fld *rmask = sub->rmask;
-  struct mrc_fld *tmp = ggcm_mhd_get_3d_fld(mhd, 4);
-  fld3d_t _tmp, _x, _b0, _prim, _curr;
+  static fld3d_t tmp;
+  if (!fld3d_is_setup(tmp)) {
+    fld3d_setup_tmp(&tmp, 4);
+  }
+  fld3d_t _E, _x, _b0, _prim, _curr;
 
   mrc_fld_data_t diffmul = 1.f;
   if (mhd->time < mhd->par.diff_timelo) { // no anomalous res at startup
     diffmul = 0.f;
   }
 
-  for (int p = 0; p < mrc_fld_nr_patches(E); p++) {
-    pde_patch_set(p);
-    // average dz_by
-    fld3d_get(&_tmp, tmp, p);
-    fld3d_get(&_x, x, p);
-    fld3d_get(&_prim, prim, p);
-    fld3d_get(&_b0, b0, p);
-    fld3d_get(&_curr, curr, p);
+  fld3d_get(&_E, E, p);
+  fld3d_get(&_x, x, p);
+  fld3d_get(&_prim, prim, p);
+  fld3d_get(&_b0, b0, p);
+  fld3d_get(&_curr, curr, p);
+  
+  // average dz_By
+  calc_avg_dz_By(tmp, _x, _b0, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2);
 
-    calc_avg_dz_By(_tmp, _x, _b0, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2);
-
-    // edge centered E = - ve x B (+ dissipation)
-
-    mrc_fld_foreach(E, i,j,k, 0, 1) {
-      mrc_fld_data_t ttmp[2];
-      calc_ve_x_B(ttmp, _x, _prim, _curr, _tmp, _b0, i, j, k, XX, YY, ZZ, I, J, K,
-      		  JX1, JY1, JZ1, JX2, JY2, JZ2, dt);
-      
-      mrc_fld_data_t t1m = BT(x, ZZ, i+JX1,j+JY1,k+JZ1, p) - BT(x, ZZ, i,j,k, p);
-      mrc_fld_data_t t1p = fabsf(BT(x, ZZ, i+JX1,j+JY1,k+JZ1, p)) + fabsf(BT(x, ZZ, i,j,k, p));
-      mrc_fld_data_t t2m = BT(x, YY, i+JX2,j+JY2,k+JZ2, p) - BT(x, YY, i,j,k, p);
-      mrc_fld_data_t t2p = fabsf(BT(x, YY, i+JX2,j+JY2,k+JZ2, p)) + fabsf(BT(x, YY, i,j,k, p));
-      mrc_fld_data_t tp = t1p + t2p + REPS;
-      mrc_fld_data_t tpi = diffmul / tp;
-      mrc_fld_data_t d1 = sqr(t1m * tpi);
-      mrc_fld_data_t d2 = sqr(t2m * tpi);
-      if (d1 < mhd->par.diffth) d1 = 0.;
-      if (d2 < mhd->par.diffth) d2 = 0.;
-      ttmp[0] -= d1 * t1m * RMASK(rmask, i,j,k, p);
-      ttmp[1] -= d2 * t2m * RMASK(rmask, i,j,k, p);
-      //    M3(f, _RESIS, i,j,k, p) += fabsf(d1+d2) * ZMASK(zmask, i,j,k, p);
-      M3(E, XX, i,j,k, p) = - (ttmp[0] - ttmp[1]);
-    } mrc_fld_foreach_end;
-
-    fld3d_put(&_tmp, tmp, p);
-    fld3d_put(&_x, x, p);
-    fld3d_put(&_prim, prim, p);
-    fld3d_put(&_b0, b0, p);
-    fld3d_put(&_curr, curr, p);
-  }
-
-  ggcm_mhd_put_3d_fld(mhd, tmp);
+  // edge centered E = - ve x B (+ dissipation)
+  
+  mrc_fld_foreach(E, i,j,k, 0, 1) {
+    mrc_fld_data_t ttmp[2];
+    calc_ve_x_B(ttmp, _x, _prim, _curr, tmp, _b0, i, j, k, XX, YY, ZZ, I, J, K,
+		JX1, JY1, JZ1, JX2, JY2, JZ2, dt);
+    
+    mrc_fld_data_t t1m = BT(x, ZZ, i+JX1,j+JY1,k+JZ1, p) - BT(x, ZZ, i,j,k, p);
+    mrc_fld_data_t t1p = fabsf(BT(x, ZZ, i+JX1,j+JY1,k+JZ1, p)) + fabsf(BT(x, ZZ, i,j,k, p));
+    mrc_fld_data_t t2m = BT(x, YY, i+JX2,j+JY2,k+JZ2, p) - BT(x, YY, i,j,k, p);
+    mrc_fld_data_t t2p = fabsf(BT(x, YY, i+JX2,j+JY2,k+JZ2, p)) + fabsf(BT(x, YY, i,j,k, p));
+    mrc_fld_data_t tp = t1p + t2p + REPS;
+    mrc_fld_data_t tpi = diffmul / tp;
+    mrc_fld_data_t d1 = sqr(t1m * tpi);
+    mrc_fld_data_t d2 = sqr(t2m * tpi);
+    if (d1 < mhd->par.diffth) d1 = 0.;
+    if (d2 < mhd->par.diffth) d2 = 0.;
+    ttmp[0] -= d1 * t1m * RMASK(rmask, i,j,k, p);
+    ttmp[1] -= d2 * t2m * RMASK(rmask, i,j,k, p);
+    //    M3(f, _RESIS, i,j,k, p) += fabsf(d1+d2) * ZMASK(zmask, i,j,k, p);
+    F3S(_E, XX, i,j,k) = - (ttmp[0] - ttmp[1]);
+  } mrc_fld_foreach_end;
+  
+  fld3d_put(&_E, E, p);
+  fld3d_put(&_x, x, p);
+  fld3d_put(&_prim, prim, p);
+  fld3d_put(&_b0, b0, p);
+  fld3d_put(&_curr, curr, p);
 }
 
 static inline void
@@ -678,66 +676,61 @@ bcthy3z_const(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int I, int J, 
 	      int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2,
 	      struct mrc_fld *E, mrc_fld_data_t dt, struct mrc_fld *x,
 	      struct mrc_fld *prim, struct mrc_fld *curr, struct mrc_fld *resis,
-	      struct mrc_fld *b0)
+	      struct mrc_fld *b0, int p)
 {
-  struct ggcm_mhd *mhd = step->mhd;
-  static fld3d_t _tmp, _x, _b0, _prim, _curr;
-  /* if (!fld3d_is_setup(tmp)) { */
-  /*   fld3d_setup_tmp(&tmp, 4); */
-  /* } */
-  struct mrc_fld *tmp = ggcm_mhd_get_3d_fld(mhd, 4);
-
-  for (int p = 0; p < mrc_fld_nr_patches(E); p++) {
-    pde_patch_set(p);
-    fld3d_get(&_tmp, tmp, p);
-    fld3d_get(&_x, x, p);
-    fld3d_get(&_prim, prim, p);
-    fld3d_get(&_curr, curr, p);
-    fld3d_get(&_b0, b0, p);
-
-    calc_avg_dz_By(_tmp, _x, _b0, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2);
-
-    // edge centered E = - ve x B (+ dissipation)
-    mrc_fld_foreach(E, i,j,k, 0, 1) {
-      mrc_fld_data_t ttmp[2];
-      calc_ve_x_B(ttmp, _x, _prim, _curr, _tmp, _b0, i, j, k, XX, YY, ZZ, I, J, K,
-		  JX1, JY1, JZ1, JX2, JY2, JZ2, dt);
-      
-      mrc_fld_data_t vcurrXX = CC_TO_EC(curr, XX, i,j,k, I,J,K, p);
-      mrc_fld_data_t vresis = CC_TO_EC(resis, 0, i,j,k, I,J,K, p);
-      M3(E, XX, i,j,k, p) = - (ttmp[0] - ttmp[1]) + vresis * vcurrXX;
-    } mrc_fld_foreach_end;
-
-    fld3d_put(&_tmp, tmp, p);
-    fld3d_put(&_x, x, p);
-    fld3d_put(&_prim, prim, p);
-    fld3d_put(&_curr, curr, p);
-    fld3d_put(&_b0, b0, p);
+  static fld3d_t tmp;
+  if (!fld3d_is_setup(tmp)) {
+    fld3d_setup_tmp(&tmp, 4);
   }
+  fld3d_t _E, _x, _b0, _prim, _curr;
 
-  ggcm_mhd_put_3d_fld(mhd, tmp);
+  fld3d_get(&_E, E, p);
+  fld3d_get(&_x, x, p);
+  fld3d_get(&_prim, prim, p);
+  fld3d_get(&_curr, curr, p);
+  fld3d_get(&_b0, b0, p);
+  
+  // average dz_By
+  calc_avg_dz_By(tmp, _x, _b0, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2);
+  
+  // edge centered E = - ve x B (+ dissipation)
+  mrc_fld_foreach(E, i,j,k, 0, 1) {
+    mrc_fld_data_t ttmp[2];
+    calc_ve_x_B(ttmp, _x, _prim, _curr, tmp, _b0, i, j, k, XX, YY, ZZ, I, J, K,
+		JX1, JY1, JZ1, JX2, JY2, JZ2, dt);
+    
+    mrc_fld_data_t vcurrXX = CC_TO_EC(curr, XX, i,j,k, I,J,K, p);
+    mrc_fld_data_t vresis = CC_TO_EC(resis, 0, i,j,k, I,J,K, p);
+    F3S(_E, XX, i,j,k) = - (ttmp[0] - ttmp[1]) + vresis * vcurrXX;
+  } mrc_fld_foreach_end;
+  
+  fld3d_put(&_E, E, p);
+  fld3d_put(&_x, x, p);
+  fld3d_put(&_prim, prim, p);
+  fld3d_put(&_curr, curr, p);
+  fld3d_put(&_b0, b0, p);
 }
 
 static void
 calce_nl1_c(struct ggcm_mhd_step *step, struct mrc_fld *E,
 	    mrc_fld_data_t dt, struct mrc_fld *x, struct mrc_fld *prim,
-      struct mrc_fld *curr)
+	    struct mrc_fld *curr, int p)
 {
   struct mrc_fld *b0 = step->mhd->b0;
-  bcthy3z_NL1(step, 0,1,2, 0,dj,dk, 0,dj,0, 0,0,dk, E, dt, x, prim, curr, b0);
-  bcthy3z_NL1(step, 1,2,0, di,0,dk, 0,0,dk, di,0,0, E, dt, x, prim, curr, b0);
-  bcthy3z_NL1(step, 2,0,1, di,di,0, di,0,0, 0,dj,0, E, dt, x, prim, curr, b0);
+  bcthy3z_NL1(step, 0,1,2, 0,dj,dk, 0,dj,0, 0,0,dk, E, dt, x, prim, curr, b0, p);
+  bcthy3z_NL1(step, 1,2,0, di,0,dk, 0,0,dk, di,0,0, E, dt, x, prim, curr, b0, p);
+  bcthy3z_NL1(step, 2,0,1, di,di,0, di,0,0, 0,dj,0, E, dt, x, prim, curr, b0, p);
 }
 
 static void
 calce_const_c(struct ggcm_mhd_step *step, struct mrc_fld *E,
 	      mrc_fld_data_t dt, struct mrc_fld *x, struct mrc_fld *prim,
-	      struct mrc_fld *curr, struct mrc_fld *resis)
+	      struct mrc_fld *curr, struct mrc_fld *resis, int p)
 {
   struct mrc_fld *b0 = step->mhd->b0;
-  bcthy3z_const(step, 0,1,2, 0,dj,dk, 0,dj,0, 0,0,dk, E, dt, x, prim, curr, resis, b0);
-  bcthy3z_const(step, 1,2,0, di,0,dk, 0,0,dk, di,0,0, E, dt, x, prim, curr, resis, b0);
-  bcthy3z_const(step, 2,0,1, di,dj,0, di,0,0, 0,dj,0, E, dt, x, prim, curr, resis, b0);
+  bcthy3z_const(step, 0,1,2, 0,dj,dk, 0,dj,0, 0,0,dk, E, dt, x, prim, curr, resis, b0, p);
+  bcthy3z_const(step, 1,2,0, di,0,dk, 0,0,dk, di,0,0, E, dt, x, prim, curr, resis, b0, p);
+  bcthy3z_const(step, 2,0,1, di,dj,0, di,0,0, 0,dj,0, E, dt, x, prim, curr, resis, b0, p);
 }
 
 static void
@@ -750,12 +743,18 @@ calce_c(struct ggcm_mhd_step *step, struct mrc_fld *E,
   switch (mhd->par.magdiffu) {
   case MAGDIFFU_NL1: {
     calc_resis_nl1_c(step, curr, x);
-    calce_nl1_c(step, E, dt, x, prim, curr);
+    for (int p = 0; p < mrc_fld_nr_patches(E); p++) {
+      pde_patch_set(p);
+      calce_nl1_c(step, E, dt, x, prim, curr, p);
+    }
     break;
   }
   case MAGDIFFU_CONST: {
     calc_resis_const_c(step, curr, resis, x);
-    calce_const_c(step, E, dt, x, prim, curr, resis);
+    for (int p = 0; p < mrc_fld_nr_patches(E); p++) {
+      pde_patch_set(p);
+      calce_const_c(step, E, dt, x, prim, curr, resis, p);
+    }
     break;
   }
   default:
