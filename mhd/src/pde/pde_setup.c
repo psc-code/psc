@@ -58,6 +58,10 @@ static struct pde_patch *s_patches;
 static struct pde_patch s_patch;
 
 // macros to access these quantities in less ugly way
+#define PDE_DX(i) F1(s_patch.dx[0], i)
+#define PDE_DY(j) F1(s_patch.dx[1], j)
+#define PDE_DZ(k) F1(s_patch.dx[2], k)
+
 #define PDE_INV_DX(i) F1(s_patch.inv_dx[0], i)
 #define PDE_INV_DY(j) F1(s_patch.inv_dx[1], j)
 #define PDE_INV_DZ(k) F1(s_patch.inv_dx[2], k)
