@@ -690,31 +690,31 @@ calce_c(struct ggcm_mhd_step *step, fld3d_t E, mrc_fld_data_t dt,
 // update_ct
 
 static void
-update_ct(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *E,
+update_ct(struct ggcm_mhd *mhd, fld3d_t x, fld3d_t E,
 	  mrc_fld_data_t dt, int p)
 {
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
 
   mrc_fld_data_t r_db_dt_sq = sqr(mhd->par.r_db_dt);
 
-  mrc_fld_foreach(x, i,j,k, 0, 1) {
+  fld3d_foreach(i,j,k, 0, 1) {
     float crd_fc[3];
     mrc_crds_at_fc(crds, i,j,k, p, 0, crd_fc);
     if (sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]) >= r_db_dt_sq) {
-      M3(x, BX, i,j,k, p) -= dt * (PDE_INV_DY(j) * (M3(E, 2, i,j+dj,k, p) - M3(E, 2, i,j,k, p)) -
-				   PDE_INV_DZ(k) * (M3(E, 1, i,j,k+dk, p) - M3(E, 1, i,j,k, p)));
+      F3S(x, BX, i,j,k) -= dt * (PDE_INV_DY(j) * (F3S(E, 2, i,j+dj,k) - F3S(E, 2, i,j,k)) -
+				 PDE_INV_DZ(k) * (F3S(E, 1, i,j,k+dk) - F3S(E, 1, i,j,k)));
     }
     mrc_crds_at_fc(crds, i,j,k, p, 1, crd_fc);
     if (sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]) >= r_db_dt_sq) {
-      M3(x, BY, i,j,k, p) -= dt * (PDE_INV_DZ(k) * (M3(E, 0, i,j,k+dk, p) - M3(E, 0, i,j,k, p)) -
-				   PDE_INV_DX(i) * (M3(E, 2, i+di,j,k, p) - M3(E, 2, i,j,k, p)));
+      F3S(x, BY, i,j,k) -= dt * (PDE_INV_DZ(k) * (F3S(E, 0, i,j,k+dk) - F3S(E, 0, i,j,k)) -
+				 PDE_INV_DX(i) * (F3S(E, 2, i+di,j,k) - F3S(E, 2, i,j,k)));
     }
     mrc_crds_at_fc(crds, i,j,k, p, 2, crd_fc);
     if (sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]) >= r_db_dt_sq) {
-      M3(x, BZ, i,j,k, p) -= dt * (PDE_INV_DX(i) * (M3(E, 1, i+di,j,k, p) - M3(E, 1, i,j,k, p)) -
-				   PDE_INV_DY(j) * (M3(E, 0, i,j+dj,k, p) - M3(E, 0, i,j,k, p)));
+      F3S(x, BZ, i,j,k) -= dt * (PDE_INV_DX(i) * (F3S(E, 1, i+di,j,k) - F3S(E, 1, i,j,k)) -
+				 PDE_INV_DY(j) * (F3S(E, 0, i,j+dj,k) - F3S(E, 0, i,j,k)));
     }
-  } mrc_fld_foreach_end;
+  } fld3d_foreach_end;
 }
 
 // ----------------------------------------------------------------------
@@ -860,7 +860,13 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
 
   for (int p = 0; p < mrc_fld_nr_patches(x_next); p++) {
     pde_patch_set(p);
-    update_ct(mhd, x_next, E, dt, p);
+    fld3d_get(&_x_next, x_next, p);
+    fld3d_get(&_E, E, p);
+
+    update_ct(mhd, _x_next, _E, dt, p);
+
+    fld3d_put(&_x_next, x_next, p);
+    fld3d_put(&_E, E, p);
   }
 
   ggcm_mhd_put_3d_fld(mhd, E);
