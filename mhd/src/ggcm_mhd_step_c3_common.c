@@ -614,7 +614,7 @@ calc_ve_x_B(mrc_fld_data_t ttmp[2], fld3d_t x, fld3d_t prim,
 
 static inline void
 bcthy3z_NL1(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int I, int J, int K,
-	    int JX1_, int JY1_, int JZ1_, int JX2_, int JY2_, int JZ2_,
+	    int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2,
 	    struct mrc_fld *E, mrc_fld_data_t dt, struct mrc_fld *x,
 	    struct mrc_fld *prim, struct mrc_fld *curr, struct mrc_fld *b0)
 {
@@ -623,13 +623,6 @@ bcthy3z_NL1(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int I, int J, in
   struct mrc_fld *rmask = sub->rmask;
   struct mrc_fld *tmp = ggcm_mhd_get_3d_fld(mhd, 4);
   fld3d_t _tmp, _x, _b0, _prim, _curr;
-
-  int JX1 = s_sw[0] ? JX1_ : 0;
-  int JY1 = s_sw[1] ? JY1_ : 0;
-  int JZ1 = s_sw[2] ? JZ1_ : 0;
-  int JX2 = s_sw[0] ? JX2_ : 0;
-  int JY2 = s_sw[1] ? JY2_ : 0;
-  int JZ2 = s_sw[2] ? JZ2_ : 0;
 
   mrc_fld_data_t diffmul = 1.f;
   if (mhd->time < mhd->par.diff_timelo) { // no anomalous res at startup
@@ -682,7 +675,7 @@ bcthy3z_NL1(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int I, int J, in
 
 static inline void
 bcthy3z_const(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int I, int J, int K,
-	      int JX1_, int JY1_, int JZ1_, int JX2_, int JY2_, int JZ2_,
+	      int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2,
 	      struct mrc_fld *E, mrc_fld_data_t dt, struct mrc_fld *x,
 	      struct mrc_fld *prim, struct mrc_fld *curr, struct mrc_fld *resis,
 	      struct mrc_fld *b0)
@@ -693,13 +686,6 @@ bcthy3z_const(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int I, int J, 
   /*   fld3d_setup_tmp(&tmp, 4); */
   /* } */
   struct mrc_fld *tmp = ggcm_mhd_get_3d_fld(mhd, 4);
-
-  int JX1 = s_sw[0] ? JX1_ : 0;
-  int JY1 = s_sw[1] ? JY1_ : 0;
-  int JZ1 = s_sw[2] ? JZ1_ : 0;
-  int JX2 = s_sw[0] ? JX2_ : 0;
-  int JY2 = s_sw[1] ? JY2_ : 0;
-  int JZ2 = s_sw[2] ? JZ2_ : 0;
 
   for (int p = 0; p < mrc_fld_nr_patches(E); p++) {
     pde_patch_set(p);
@@ -738,9 +724,9 @@ calce_nl1_c(struct ggcm_mhd_step *step, struct mrc_fld *E,
       struct mrc_fld *curr)
 {
   struct mrc_fld *b0 = step->mhd->b0;
-  bcthy3z_NL1(step, 0,1,2, 0,1,1, 0,1,0, 0,0,1, E, dt, x, prim, curr, b0);
-  bcthy3z_NL1(step, 1,2,0, 1,0,1, 0,0,1, 1,0,0, E, dt, x, prim, curr, b0);
-  bcthy3z_NL1(step, 2,0,1, 1,1,0, 1,0,0, 0,1,0, E, dt, x, prim, curr, b0);
+  bcthy3z_NL1(step, 0,1,2, 0,dj,dk, 0,dj,0, 0,0,dk, E, dt, x, prim, curr, b0);
+  bcthy3z_NL1(step, 1,2,0, di,0,dk, 0,0,dk, di,0,0, E, dt, x, prim, curr, b0);
+  bcthy3z_NL1(step, 2,0,1, di,di,0, di,0,0, 0,dj,0, E, dt, x, prim, curr, b0);
 }
 
 static void
@@ -749,9 +735,9 @@ calce_const_c(struct ggcm_mhd_step *step, struct mrc_fld *E,
 	      struct mrc_fld *curr, struct mrc_fld *resis)
 {
   struct mrc_fld *b0 = step->mhd->b0;
-  bcthy3z_const(step, 0,1,2, 0,1,1, 0,1,0, 0,0,1, E, dt, x, prim, curr, resis, b0);
-  bcthy3z_const(step, 1,2,0, 1,0,1, 0,0,1, 1,0,0, E, dt, x, prim, curr, resis, b0);
-  bcthy3z_const(step, 2,0,1, 1,1,0, 1,0,0, 0,1,0, E, dt, x, prim, curr, resis, b0);
+  bcthy3z_const(step, 0,1,2, 0,dj,dk, 0,dj,0, 0,0,dk, E, dt, x, prim, curr, resis, b0);
+  bcthy3z_const(step, 1,2,0, di,0,dk, 0,0,dk, di,0,0, E, dt, x, prim, curr, resis, b0);
+  bcthy3z_const(step, 2,0,1, di,dj,0, di,0,0, 0,dj,0, E, dt, x, prim, curr, resis, b0);
 }
 
 static void
