@@ -231,6 +231,33 @@ mhd_get_line_state_scons(fld1d_state_t u, struct mrc_fld *U,
 }
 
 // ----------------------------------------------------------------------
+// mhd_line_get_state_scons
+
+static void _mrc_unused
+mhd_line_get_state_scons(fld1d_state_t u, fld3d_t U,
+			 int j, int k, int dim, int ib, int ie)
+{
+#define GET_LINE(X,Y,Z,I,J,K) do {			\
+    for (int i = ib; i < ie; i++) {			\
+      F1S(u, RR , i) = F3S(U, RR   , I,J,K);		\
+      F1S(u, RVX, i) = F3S(U, RVX+X, I,J,K);		\
+      F1S(u, RVY, i) = F3S(U, RVX+Y, I,J,K);		\
+      F1S(u, RVZ, i) = F3S(U, RVX+Z, I,J,K);		\
+      F1S(u, UU , i) = F3S(U, UU   , I,J,K);		\
+    }							\
+  } while (0)
+
+  if (dim == 0) {
+    GET_LINE(0,1,2, i,j,k);
+  } else if (dim == 1) {
+    GET_LINE(1,2,0, k,i,j);
+  } else if (dim == 2) {
+    GET_LINE(2,0,1, j,k,i);
+  }
+#undef GET_LINE
+}
+
+// ----------------------------------------------------------------------
 // mhd_put_line_state_scons
 
 static void _mrc_unused
@@ -244,6 +271,33 @@ mhd_put_line_state_scons(struct mrc_fld *flux, fld1d_state_t F,
       M3(flux, RVX+Y, I,J,K, p) = F1S(F, RVY, i);			\
       M3(flux, RVX+Z, I,J,K, p) = F1S(F, RVZ, i);			\
       M3(flux, UU   , I,J,K, p) = F1S(F, UU , i);			\
+    }									\
+  } while (0)
+
+  if (dir == 0) {
+    PUT_LINE(0,1,2, i,j,k);
+  } else if (dir == 1) {
+    PUT_LINE(1,2,0, k,i,j);
+  } else if (dir == 2) {
+    PUT_LINE(2,0,1, j,k,i);
+  }
+#undef PUT_LINE
+}
+
+// ----------------------------------------------------------------------
+// mhd_line_put_state_scons
+
+static void _mrc_unused
+mhd_line_put_state_scons(fld3d_t U, fld1d_state_t u,
+			 int j, int k, int dir, int ib, int ie)
+{
+#define PUT_LINE(X,Y,Z, I,J,K) do {					\
+    for (int i = ib; i < ie; i++) {					\
+      F3S(U, RR   , I,J,K) = F1S(u, RR , i);				\
+      F3S(U, RVX+X, I,J,K) = F1S(u, RVX, i);				\
+      F3S(U, RVX+Y, I,J,K) = F1S(u, RVY, i);				\
+      F3S(U, RVX+Z, I,J,K) = F1S(u, RVZ, i);				\
+      F3S(U, UU   , I,J,K) = F1S(u, UU , i);				\
     }									\
   } while (0)
 
@@ -285,8 +339,7 @@ mhd_line_get_state(fld1d_state_t u, fld3d_t U, int j, int k, int dir,
     mhd_line_get_state_fcons(u, U, j, k, dir, ib, ie);
   } else if (s_opt_eqn == OPT_EQN_MHD_SCONS ||
 	     s_opt_eqn == OPT_EQN_HD) {
-    assert(0);
-    //    mhd_get_line_state_scons(u, U, j, k, dir, p, ib, ie);
+    mhd_line_get_state_scons(u, U, j, k, dir, ib, ie);
   } else {
     assert(0);
   }
@@ -320,8 +373,7 @@ mhd_line_put_state(fld3d_t U, fld1d_state_t u,
     mhd_line_put_state_fcons(U, u, j, k, dir, ib, ie);
   } else if (s_opt_eqn == OPT_EQN_MHD_SCONS ||
 	     s_opt_eqn == OPT_EQN_HD) {
-    assert(0);
-    //mhd_put_line_state_scons(U, u, j, k, dir, p, ib, ie);
+    mhd_line_put_state_scons(U, u, j, k, dir, ib, ie);
   } else {
     assert(0);
   }
