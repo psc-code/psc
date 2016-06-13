@@ -53,3 +53,19 @@ fld3d_is_setup(fld3d_t f)
 {
   return f.mrc_fld;
 }
+
+static void _mrc_unused
+fld3d_get_list(int p, fld3d_t *list[])
+{
+  for (fld3d_t **f = list; *f; f++) {
+    fld3d_get(*f, p);
+  }
+}
+
+static void _mrc_unused
+fld3d_put_list(int p, fld3d_t *list[])
+{
+  for (fld3d_t **f = list; *f; f++) {
+    fld3d_put(*f, p);
+  }
+}
