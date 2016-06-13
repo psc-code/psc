@@ -33,6 +33,20 @@
 
 #define _BT(p_U, d, i,j,k)  (F3S(p_U, BX+d, i,j,k) + (s_opt_background ? F3S(p_b0, d, i,j,k) : 0))
 
+#define _CC_TO_EC(f, m, i,j,k, I,J,K)			\
+  ({							\
+    (.25f * (F3S(f, m, i-di*I,j-dj*J,k-dk*K) +		\
+	     F3S(f, m, i-di*I,j     ,k     ) +		\
+	     F3S(f, m, i     ,j-dj*J,k     ) +		\
+	     F3S(f, m, i     ,j     ,k-dk*K)));})
+
+#define _EC_TO_CC(f, m, i,j,k, I,J,K)			\
+  ({							\
+    (.25f * (F3S(f, m, i+di*I,j+dj*J,k+dk*K) +		\
+	     F3S(f, m, i+di*I,j     ,k     ) +		\
+	     F3S(f, m, i     ,j+dj*J,k     ) +		\
+	     F3S(f, m, i     ,j     ,k+dk*K)));})
+
 static int s_opt_enforce_rrmin;
 
 // ======================================================================
@@ -176,27 +190,6 @@ patch_zmaskn(struct ggcm_mhd *mhd, fld3d_t p_zmask, fld3d_t p_ymask,
 // (hydro) predictor
 
 // ----------------------------------------------------------------------
-// line_flux_pred_pt1
-
-static void
-line_flux_pred_pt1(fld3d_t p_U, int j, int k, int dir, int ib, int ie)
-{
-  mhd_line_get_state(l_U, p_U, j, k, dir, ib - 1, ie + 1);
-  mhd_prim_from_cons(l_W, l_U, ib - 1, ie + 1);
-  mhd_reconstruct(l_Ul, l_Ur, l_Wl, l_Wr, l_W, (fld1d_t) {}, ib, ie + 1);
-}
-
-// ----------------------------------------------------------------------
-// line_flux_pred_pt2
-
-static void
-line_flux_pred_pt2(fld3d_t p_F, int j, int k, int dir, int ib, int ie)
-{
-  mhd_riemann(l_F, l_Ul, l_Ur, l_Wl, l_Wr, ib, ie + 1);
-  mhd_line_put_state(l_F, p_F, j, k, dir, ib, ie + 1);
-}
-
-// ----------------------------------------------------------------------
 // patch_flux_pred
 
 static void
@@ -205,8 +198,11 @@ patch_flux_pred(struct ggcm_mhd_step *step, fld3d_t p_F[3], fld3d_t p_U)
   pde_for_each_dir(dir) {
     pde_for_each_line(dir, j, k, 0) {
       int ib = 0, ie = s_ldims[dir];
-      line_flux_pred_pt1(p_U, j, k, dir, ib, ie);
-      line_flux_pred_pt2(p_F[dir], j, k, dir, ib, ie);
+      mhd_line_get_state(l_U, p_U, j, k, dir, ib - 1, ie + 1);
+      mhd_prim_from_cons(l_W, l_U, ib - 1, ie + 1);
+      mhd_reconstruct(l_Ul, l_Ur, l_Wl, l_Wr, l_W, (fld1d_t) {}, ib, ie + 1);
+      mhd_riemann(l_F, l_Ul, l_Ur, l_Wl, l_Wr, ib, ie + 1);
+      mhd_line_put_state(l_F, p_F[dir], j, k, dir, ib, ie + 1);
     }
   }
 }
@@ -308,15 +304,15 @@ patch_flux_corr(struct ggcm_mhd_step *step, fld3d_t p_F[3], fld3d_t p_U)
 // patch_push_pp
 
 static void
-patch_push_pp(fld3d_t p_U, mrc_fld_data_t dt, fld3d_t pW, fld3d_t pzmask)
+patch_push_pp(fld3d_t p_U, mrc_fld_data_t dt, fld3d_t p_W, fld3d_t p_zmask)
 {
   mrc_fld_data_t dth = -.5f * dt;
 
   fld3d_foreach(i,j,k, 0, 0) {
-    mrc_fld_data_t z = dth * F3S(pzmask, 0, i,j,k);
-    F3S(p_U, RVX, i,j,k) += z * PDE_INV_DX(i) * (F3S(pW, PP, i+di,j,k) - F3S(pW, PP, i-di,j,k));
-    F3S(p_U, RVY, i,j,k) += z * PDE_INV_DY(j) * (F3S(pW, PP, i,j+dj,k) - F3S(pW, PP, i,j-dj,k));
-    F3S(p_U, RVZ, i,j,k) += z * PDE_INV_DZ(k) * (F3S(pW, PP, i,j,k+dk) - F3S(pW, PP, i,j,k-dk));
+    mrc_fld_data_t z = dth * F3S(p_zmask, 0, i,j,k);
+    F3S(p_U, RVX, i,j,k) += z * PDE_INV_DX(i) * (F3S(p_W, PP, i+di,j,k) - F3S(p_W, PP, i-di,j,k));
+    F3S(p_U, RVY, i,j,k) += z * PDE_INV_DY(j) * (F3S(p_W, PP, i,j+dj,k) - F3S(p_W, PP, i,j-dj,k));
+    F3S(p_U, RVZ, i,j,k) += z * PDE_INV_DZ(k) * (F3S(p_W, PP, i,j,k+dk) - F3S(p_W, PP, i,j,k-dk));
   } fld3d_foreach_end;
 }
 
@@ -326,18 +322,15 @@ patch_push_pp(fld3d_t p_U, mrc_fld_data_t dt, fld3d_t pW, fld3d_t pzmask)
 // edge centered current density
 
 static void
-patch_calc_current_ec(fld3d_t j_ec, fld3d_t x)
+patch_calc_current_ec(fld3d_t p_jec, fld3d_t p_U)
 {
   fld3d_foreach(i,j,k, 1, 2) {
-    F3S(j_ec, 0, i,j,k) =
-      (F3S(x, BZ, i,j,k) - F3S(x, BZ, i,j-dj,k)) * PDE_INV_DYF(j) -
-      (F3S(x, BY, i,j,k) - F3S(x, BY, i,j,k-dk)) * PDE_INV_DZF(k);
-    F3S(j_ec, 1, i,j,k) =
-      (F3S(x, BX, i,j,k) - F3S(x, BX, i,j,k-dk)) * PDE_INV_DZF(k) -
-      (F3S(x, BZ, i,j,k) - F3S(x, BZ, i-di,j,k)) * PDE_INV_DXF(i);
-    F3S(j_ec, 2, i,j,k) =
-      (F3S(x, BY, i,j,k) - F3S(x, BY, i-di,j,k)) * PDE_INV_DXF(i) -
-      (F3S(x, BX, i,j,k) - F3S(x, BX, i,j-dj,k)) * PDE_INV_DYF(j);
+    F3S(p_jec, 0, i,j,k) = ((F3S(p_U, BZ, i,j,k) - F3S(p_U, BZ, i,j-dj,k)) * PDE_INV_DYF(j) -
+			    (F3S(p_U, BY, i,j,k) - F3S(p_U, BY, i,j,k-dk)) * PDE_INV_DZF(k));
+    F3S(p_jec, 1, i,j,k) = ((F3S(p_U, BX, i,j,k) - F3S(p_U, BX, i,j,k-dk)) * PDE_INV_DZF(k) -
+			    (F3S(p_U, BZ, i,j,k) - F3S(p_U, BZ, i-di,j,k)) * PDE_INV_DXF(i));
+    F3S(p_jec, 2, i,j,k) = ((F3S(p_U, BY, i,j,k) - F3S(p_U, BY, i-di,j,k)) * PDE_INV_DXF(i) -
+			    (F3S(p_U, BX, i,j,k) - F3S(p_U, BX, i,j-dj,k)) * PDE_INV_DYF(j));
   } fld3d_foreach_end;
 }
 
@@ -347,25 +340,22 @@ patch_calc_current_ec(fld3d_t j_ec, fld3d_t x)
 // cell-centered current density
 
 static void
-patch_calc_current_cc(fld3d_t j_cc, fld3d_t x, fld3d_t zmask)
+patch_calc_current_cc(fld3d_t p_jcc, fld3d_t p_U, fld3d_t p_zmask)
 { 
-  static fld3d_t j_ec;
-  if (!fld3d_is_setup(j_ec)) {
-    fld3d_setup_tmp(&j_ec, 3);
+  static fld3d_t p_jec;
+  if (!fld3d_is_setup(p_jec)) {
+    fld3d_setup_tmp(&p_jec, 3);
   }
   
   // get j on edges
-  patch_calc_current_ec(j_ec, x);
+  patch_calc_current_ec(p_jec, p_U);
   
   // then average to cell centers
   fld3d_foreach(i,j,k, 2, 1) {
-    mrc_fld_data_t s = .25f * F3S(zmask, 0,  i,j,k);
-    F3S(j_cc, 0, i,j,k) = s * (F3S(j_ec, 0, i   ,j+dj,k+dk) + F3S(j_ec, 0, i   ,j   ,k+dk) +
-			       F3S(j_ec, 0, i   ,j+dj,k   ) + F3S(j_ec, 0, i   ,j   ,k   ));
-    F3S(j_cc, 1, i,j,k) = s * (F3S(j_ec, 1, i+di,j   ,k+dk) + F3S(j_ec, 1, i+di,j   ,k   ) +
-			       F3S(j_ec, 1, i   ,j   ,k+dk) + F3S(j_ec, 1, i   ,j   ,k   ));
-    F3S(j_cc, 2, i,j,k) = s * (F3S(j_ec, 2, i+di,j+dj,k   ) + F3S(j_ec, 2, i   ,j+dj,k   ) + 
-			       F3S(j_ec, 2, i+di,j   ,k   ) + F3S(j_ec, 2, i   ,j   ,k   ));
+    mrc_fld_data_t z = F3S(p_zmask, 0,  i,j,k);
+    F3S(p_jcc, 0, i,j,k) = z * _EC_TO_CC(p_jec, 0, i,j,k, 0,1,1);
+    F3S(p_jcc, 1, i,j,k) = z * _EC_TO_CC(p_jec, 1, i,j,k, 1,0,1);
+    F3S(p_jcc, 2, i,j,k) = z * _EC_TO_CC(p_jec, 2, i,j,k, 1,1,0);
   } fld3d_foreach_end;
 }
 
@@ -388,40 +378,35 @@ patch_calc_Bt_cc(fld3d_t p_b, fld3d_t p_U, fld3d_t p_b0, int l, int r)
 // patch_push_ej
 
 static void
-patch_push_ej(fld3d_t x_next, mrc_fld_data_t dt, fld3d_t x_curr, fld3d_t prim,
-	      fld3d_t zmask, fld3d_t b0)
+patch_push_ej(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Ucurr, fld3d_t p_Wcurr,
+	      fld3d_t p_zmask, fld3d_t p_b0)
 {
-  static fld3d_t j_ec, b_cc;
-  if (!fld3d_is_setup(j_ec)) {
-    fld3d_setup_tmp(&j_ec, 3);
-    fld3d_setup_tmp(&b_cc, 3);
+  static fld3d_t p_jec, p_bcc;
+  if (!fld3d_is_setup(p_jec)) {
+    fld3d_setup_tmp(&p_jec, 3);
+    fld3d_setup_tmp(&p_bcc, 3);
   }
 
   // FIXME/OPT, cell centered current is calculated here, and later again in calce()
-  patch_calc_current_ec(j_ec, x_curr);
-  patch_calc_Bt_cc(b_cc, x_curr, b0, 1, 1);
+  patch_calc_current_ec(p_jec, p_Ucurr);
+  patch_calc_Bt_cc(p_bcc, p_Ucurr, p_b0, 1, 1);
 
-  mrc_fld_data_t s1 = .25f * dt;
   fld3d_foreach(i,j,k, 0, 0) {
-    mrc_fld_data_t z = F3S(zmask, 0, i,j,k);
-    mrc_fld_data_t s2 = s1 * z;
-    mrc_fld_data_t cx = (F3S(j_ec, 0, i   ,j+dj,k+dk) + F3S(j_ec, 0, i  ,j   ,k+dk) +
-			 F3S(j_ec, 0, i   ,j+dj,k   ) + F3S(j_ec, 0, i  ,j   ,k   ));
-    mrc_fld_data_t cy = (F3S(j_ec, 1, i+di,j   ,k+dk) + F3S(j_ec, 1, i  ,j   ,k+dk) +
-			 F3S(j_ec, 1, i+di,j   ,k   ) + F3S(j_ec, 1, i  ,j   ,k   ));
-    mrc_fld_data_t cz = (F3S(j_ec, 2, i+di,j+dj,k   ) + F3S(j_ec, 2, i  ,j+dj,k   ) +
-			 F3S(j_ec, 2, i+di,j   ,k   ) + F3S(j_ec, 2, i  ,j   ,k   ));
-    mrc_fld_data_t ffx = s2 * (cy * F3S(b_cc, 2, i,j,k) - cz * F3S(b_cc, 1, i,j,k));
-    mrc_fld_data_t ffy = s2 * (cz * F3S(b_cc, 0, i,j,k) - cx * F3S(b_cc, 2, i,j,k));
-    mrc_fld_data_t ffz = s2 * (cx * F3S(b_cc, 1, i,j,k) - cy * F3S(b_cc, 0, i,j,k));
-    mrc_fld_data_t duu = (ffx * F3S(prim, VX, i,j,k) +
-			  ffy * F3S(prim, VY, i,j,k) +
-			  ffz * F3S(prim, VZ, i,j,k));
+    mrc_fld_data_t s2 = dt * F3S(p_zmask, 0, i,j,k);
+    mrc_fld_data_t cx = _EC_TO_CC(p_jec, 0, i,j,k, 0,1,1);
+    mrc_fld_data_t cy = _EC_TO_CC(p_jec, 1, i,j,k, 1,0,1);
+    mrc_fld_data_t cz = _EC_TO_CC(p_jec, 2, i,j,k, 1,1,0);
+    mrc_fld_data_t ffx = s2 * (cy * F3S(p_bcc, 2, i,j,k) - cz * F3S(p_bcc, 1, i,j,k));
+    mrc_fld_data_t ffy = s2 * (cz * F3S(p_bcc, 0, i,j,k) - cx * F3S(p_bcc, 2, i,j,k));
+    mrc_fld_data_t ffz = s2 * (cx * F3S(p_bcc, 1, i,j,k) - cy * F3S(p_bcc, 0, i,j,k));
+    mrc_fld_data_t duu = (ffx * F3S(p_Wcurr, VX, i,j,k) +
+			  ffy * F3S(p_Wcurr, VY, i,j,k) +
+			  ffz * F3S(p_Wcurr, VZ, i,j,k));
     
-    F3S(x_next, RVX, i,j,k) += ffx;
-    F3S(x_next, RVY, i,j,k) += ffy;
-    F3S(x_next, RVZ, i,j,k) += ffz;
-    F3S(x_next, UU , i,j,k) += duu;
+    F3S(p_Unext, RVX, i,j,k) += ffx;
+    F3S(p_Unext, RVY, i,j,k) += ffy;
+    F3S(p_Unext, RVZ, i,j,k) += ffz;
+    F3S(p_Unext, UU , i,j,k) += duu;
   } fld3d_foreach_end;
 }
 
@@ -547,13 +532,6 @@ patch_calc_avg_dz_By(fld3d_t tmp, fld3d_t x, fld3d_t p_b0,
     F3S(tmp, 3, i,j,k) = bcthy3f(s1, s2);
   } fld3d_foreach_end;
 }
-
-#define _CC_TO_EC(f, m, i,j,k, I,J,K)			\
-  ({							\
-    (.25f * (F3S(f, m, i-di*I,j-dj*J,k-dk*K) +		\
-	     F3S(f, m, i-di*I,j     ,k     ) +		\
-	     F3S(f, m, i     ,j-dj*J,k     ) +		\
-	     F3S(f, m, i     ,j     ,k-dk*K)));})
 
 // ve = v - d_i J
 static inline void
