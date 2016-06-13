@@ -105,23 +105,23 @@ mhd_put_line_state_fcons(struct mrc_fld *flux, fld1d_state_t F,
 // mhd_line_put_state_fcons
 
 static void _mrc_unused
-mhd_line_put_state_fcons(fld3d_t U, fld1d_state_t u,
+mhd_line_put_state_fcons(fld1d_state_t l_U, fld3d_t p_U,
 			 int j, int k, int dir, int ib, int ie)
 {
-#define PUT_LINE(X, Y, Z, I, J, K) do {				\
-    for (int i = ib; i < ie; i++) {				\
-      F3S(U, RR     , I,J,K) = F1S(u, RR , i);		\
-      F3S(U, RVX + X, I,J,K) = F1S(u, RVX, i);		\
-      F3S(U, RVX + Y, I,J,K) = F1S(u, RVY, i);		\
-      F3S(U, RVX + Z, I,J,K) = F1S(u, RVZ, i);		\
-      F3S(U, EE     , I,J,K) = F1S(u, EE , i);		\
-      F3S(U, BX + X , I,J,K) = F1S(u, BX , i);		\
-      F3S(U, BX + Y , I,J,K) = F1S(u, BY , i);		\
-      F3S(U, BX + Z , I,J,K) = F1S(u, BZ , i);		\
-      if (s_opt_divb == OPT_DIVB_GLM) {				\
-	F3S(U, PSI, I,J,K)   = F1S(u, PSI, i);		\
-      }								\
-    }								\
+#define PUT_LINE(X, Y, Z, I, J, K) do {					\
+    for (int i = ib; i < ie; i++) {					\
+      F3S(p_U, RR     , I,J,K) = F1S(l_U, RR , i);			\
+      F3S(p_U, RVX + X, I,J,K) = F1S(l_U, RVX, i);			\
+      F3S(p_U, RVX + Y, I,J,K) = F1S(l_U, RVY, i);			\
+      F3S(p_U, RVX + Z, I,J,K) = F1S(l_U, RVZ, i);			\
+      F3S(p_U, EE     , I,J,K) = F1S(l_U, EE , i);			\
+      F3S(p_U, BX + X , I,J,K) = F1S(l_U, BX , i);			\
+      F3S(p_U, BX + Y , I,J,K) = F1S(l_U, BY , i);			\
+      F3S(p_U, BX + Z , I,J,K) = F1S(l_U, BZ , i);			\
+      if (s_opt_divb == OPT_DIVB_GLM) {					\
+	F3S(p_U, PSI, I,J,K)   = F1S(l_U, PSI, i);			\
+      }									\
+    }									\
 } while (0)
 
   if (dir == 0) {
@@ -288,16 +288,16 @@ mhd_put_line_state_scons(struct mrc_fld *flux, fld1d_state_t F,
 // mhd_line_put_state_scons
 
 static void _mrc_unused
-mhd_line_put_state_scons(fld3d_t U, fld1d_state_t u,
+mhd_line_put_state_scons(fld1d_state_t l_U, fld3d_t p_U,
 			 int j, int k, int dir, int ib, int ie)
 {
 #define PUT_LINE(X,Y,Z, I,J,K) do {					\
     for (int i = ib; i < ie; i++) {					\
-      F3S(U, RR   , I,J,K) = F1S(u, RR , i);				\
-      F3S(U, RVX+X, I,J,K) = F1S(u, RVX, i);				\
-      F3S(U, RVX+Y, I,J,K) = F1S(u, RVY, i);				\
-      F3S(U, RVX+Z, I,J,K) = F1S(u, RVZ, i);				\
-      F3S(U, UU   , I,J,K) = F1S(u, UU , i);				\
+      F3S(p_U, RR   , I,J,K) = F1S(l_U, RR , i);			\
+      F3S(p_U, RVX+X, I,J,K) = F1S(l_U, RVX, i);			\
+      F3S(p_U, RVX+Y, I,J,K) = F1S(l_U, RVY, i);			\
+      F3S(p_U, RVX+Z, I,J,K) = F1S(l_U, RVZ, i);			\
+      F3S(p_U, UU   , I,J,K) = F1S(l_U, UU , i);			\
     }									\
   } while (0)
 
@@ -366,14 +366,14 @@ mhd_put_line_state(struct mrc_fld *U, fld1d_state_t u,
 // mhd_line_put_state
 
 static void _mrc_unused
-mhd_line_put_state(fld3d_t U, fld1d_state_t u,
+mhd_line_put_state(fld1d_state_t l_U, fld3d_t p_U,
 		   int j, int k, int dir, int ib, int ie)
 {
   if (s_opt_eqn == OPT_EQN_MHD_FCONS) {
-    mhd_line_put_state_fcons(U, u, j, k, dir, ib, ie);
+    mhd_line_put_state_fcons(l_U, p_U, j, k, dir, ib, ie);
   } else if (s_opt_eqn == OPT_EQN_MHD_SCONS ||
 	     s_opt_eqn == OPT_EQN_HD) {
-    mhd_line_put_state_scons(U, u, j, k, dir, ib, ie);
+    mhd_line_put_state_scons(l_U, p_U, j, k, dir, ib, ie);
   } else {
     assert(0);
   }

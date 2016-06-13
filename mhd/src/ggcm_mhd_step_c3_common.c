@@ -160,14 +160,12 @@ ggcm_mhd_step_c3_setup_flds(struct ggcm_mhd_step *step)
 static void
 patch_primvar(fld3d_t p_W, fld3d_t p_U, int p)
 {
-  mrc_fld_data_t gamma_m1 = s_gamma - 1.f;
-
   int dir = 0;
   pde_for_each_line(dir, j, k, 2) {
     int ib = -2, ie = s_ldims[0] + 2;
     mhd_line_get_state(l_U, p_U, j, k, dir, ib, ie);
     mhd_prim_from_cons(l_W, l_U, ib, ie);
-    mhd_line_put_state(p_W, l_W, j, k, dir, ib, ie);
+    mhd_line_put_state(l_W, p_W, j, k, dir, ib, ie);
   }
 }
 
@@ -212,7 +210,7 @@ static void
 line_flux_pred_pt2(fld3d_t p_F, int j, int k, int dir, int ib, int ie)
 {
   mhd_riemann(l_F, l_Ul, l_Ur, l_Wl, l_Wr, ib, ie + 1);
-  mhd_line_put_state(p_F, l_F, j, k, dir, ib, ie + 1);
+  mhd_line_put_state(l_F, p_F, j, k, dir, ib, ie + 1);
 }
 
 // ----------------------------------------------------------------------
@@ -263,8 +261,8 @@ patch_flux_pred_bc_reconstruct(struct ggcm_mhd_step *step, fld3d_t p_F[3], fld3d
     pde_for_each_line(dir, j, k, 0) {
       int ib = 0, ie = s_ldims[dir];
       line_flux_pred_pt1(p_U, j, k, dir, ib, ie);
-      mhd_line_put_state(p_Ul[dir], l_Ul, j, k, dir, ib, ie + 1);
-      mhd_line_put_state(p_Ul[dir], l_Ur, j, k, dir, ib, ie + 1);
+      mhd_line_put_state(l_Ul, p_Ul[dir], j, k, dir, ib, ie + 1);
+      mhd_line_put_state(l_Ur, p_Ul[dir], j, k, dir, ib, ie + 1);
     }
   }
   
@@ -375,7 +373,7 @@ line_flux_corr(fld3d_t p_F, fld3d_t p_U,
     }
   }
 
-  mhd_line_put_state(p_F, l_F, j, k, dir, ib, ie + 1);
+  mhd_line_put_state(l_F, p_F, j, k, dir, ib, ie + 1);
 }
 
 // ----------------------------------------------------------------------

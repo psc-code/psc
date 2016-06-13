@@ -197,7 +197,7 @@ mhd_flux_pt2(struct ggcm_mhd_step *step, fld3d_t flux, fld3d_t x,
   mhd_line_get_current(x, j, k, dir, ib, ie + 1);
   mhd_riemann(F, U_l, U_r, W_l, W_r, ib, ie + 1);
   mhd_add_resistive_flux(F, W, ib, ie + 1);
-  mhd_line_put_state(flux, F, j, k, dir, ib, ie + 1);
+  mhd_line_put_state(F, flux, j, k, dir, ib, ie + 1);
 }
 
 // ----------------------------------------------------------------------
@@ -242,8 +242,8 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, mrc_fld_data_t time_c
 	pde_for_each_line(dir, j, k, 0) {
 	  int ib = 0, ie = s_ldims[dir];
 	  mhd_flux_pt1(step, x, j, k, dir, p, ib, ie);
-	  mhd_line_put_state(Ul, sub->U_l, j, k, dir, ib, ie + 1);
-	  mhd_line_put_state(Ur, sub->U_r, j, k, dir, ib, ie + 1);
+	  mhd_line_put_state(sub->U_l, Ul, j, k, dir, ib, ie + 1);
+	  mhd_line_put_state(sub->U_r, Ur, j, k, dir, ib, ie + 1);
 	}
 
 	fld3d_put(&Ul, sub->Ul[dir], p);
