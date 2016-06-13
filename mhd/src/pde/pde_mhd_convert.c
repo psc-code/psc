@@ -79,7 +79,7 @@ mhd_prim_from_scons(fld1d_state_t W, fld1d_state_t U, int ib, int ie)
     w[VZ] = rri * u[RVZ];
     mrc_fld_data_t rvv = (sqr(u[RVX]) + sqr(u[RVY]) + sqr(u[RVZ])) * rri;
     w[PP] = gamma_minus_1 * (u[UU] - .5 * rvv);
-    w[PP] = fmax(w[PP], TINY_NUMBER);
+    w[PP] = mrc_fld_max(w[PP], TINY_NUMBER);
   }
 }
 
