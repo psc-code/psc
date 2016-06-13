@@ -16,6 +16,7 @@ static int s_n_dims;   // number of (not invariant) dimensions
 static int s_size_1d;  // largest local dimension (including ghosts)
 static int s_ldims[3]; // local dimensions (interior only) 
 static int s_sw[3];    // number of ghost points per dim
+static int s_lgdims[3]; // local dimensions including ghosts
 static int s_dijk[3];  // set to 1 if actual direction, 0 if invariant
 
 // this is violating any kind of name space pretty badly, but otherwise
@@ -112,6 +113,7 @@ pde_setup(struct mrc_fld *fld)
   for (int d = 0; d < 3; d++) {
     s_ldims[d] = mrc_fld_spatial_dims(fld)[d];
     s_sw[d] = mrc_fld_spatial_sw(fld)[d];
+    s_lgdims[d] = s_ldims[d] + 2 * s_sw[d];
     s_size_1d = MAX(s_size_1d, s_ldims[d] + 2 * s_sw[d]);
     s_dijk[d] = (gdims[d] > 1);
   }

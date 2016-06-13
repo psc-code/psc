@@ -5,47 +5,53 @@
 // 3d patch of mrc_fld_data_t, access with F3
 
 typedef struct {
+  mrc_fld_data_t *arr_off;
   struct mrc_fld *mrc_fld;
-  int p;
-  bool is_temp;
 } fld3d_t;
 
-#define F3S(f, m, i,j,k) M3((f).mrc_fld, m, i,j,k, (f).p)
+//#define F3S(f, m, i,j,k) M3((f).mrc_fld, m, i,j,k, (f).p)
+
+#define F3S(f, m, i,j,k)						\
+  (((f).arr_off)[((((m)) * s_lgdims[2] +				\
+		   (k)) * s_lgdims[1] +					\
+		  (j)) * s_lgdims[0] +					\
+		 (i)])
 
 static inline void
 fld3d_setup(fld3d_t *f, struct mrc_fld *fld)
 {
   f->mrc_fld = fld;
-  f->p = -1;
-  f->is_temp = false;
 }
 
 static inline void
 fld3d_setup_tmp(fld3d_t *f, int n_comps)
 {
-  f->mrc_fld = mrc_fld_create(MPI_COMM_SELF);
-  mrc_fld_set_type(f->mrc_fld, FLD_TYPE);
-  mrc_fld_set_param_int_array(f->mrc_fld, "dims", 5,
-			      (int[]) { s_ldims[0], s_ldims[1], s_ldims[2], n_comps, 1 });
-  mrc_fld_set_param_int_array(f->mrc_fld, "sw", 5,
-			      (int[]) { s_sw[0], s_sw[1], s_sw[2], 0, 0 });
-  mrc_fld_setup(f->mrc_fld);
-  f->p = 0;
-  f->is_temp = true;
+  f->mrc_fld = NULL;
+  f->arr_off = calloc(s_lgdims[0] * s_lgdims[1] * s_lgdims[2] * n_comps,
+		      sizeof(*f->arr_off));
+  f->arr_off += (((0
+		   * s_lgdims[2] + s_sw[2] )
+		  * s_lgdims[1] + s_sw[1])
+		 * s_lgdims[0] + s_sw[0]);
 }
 
 static inline void
 fld3d_get(fld3d_t *f, int p)
 {
-  assert(!f->is_temp);
-  f->p = p;
+  assert(f->mrc_fld);
+  f->arr_off = f->mrc_fld->_arr_off;
+  assert(f->mrc_fld->_stride[0] == 1);
+  assert(f->mrc_fld->_stride[1] == s_lgdims[0]);
+  assert(f->mrc_fld->_stride[2] == s_lgdims[0] * s_lgdims[1]);
+  assert(f->mrc_fld->_stride[3] == s_lgdims[0] * s_lgdims[1] * s_lgdims[2]);
+  f->arr_off += p * s_lgdims[0] * s_lgdims[1] * s_lgdims[2];
 }
 
 static inline void
 fld3d_put(fld3d_t *f, int p)
 {
-  assert(!f->is_temp);
-  f->p = -1;
+  assert(f->mrc_fld);
+  f->arr_off = NULL;
 }
 
 static inline bool
