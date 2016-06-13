@@ -155,21 +155,6 @@ ggcm_mhd_step_c3_setup_flds(struct ggcm_mhd_step *step)
 }
 
 // ----------------------------------------------------------------------
-// patch_primvar
-
-static void
-patch_primvar(fld3d_t p_W, fld3d_t p_U, int p)
-{
-  int dir = 0;
-  pde_for_each_line(dir, j, k, 2) {
-    int ib = -2, ie = s_ldims[0] + 2;
-    mhd_line_get_state(l_U, p_U, j, k, dir, ib, ie);
-    mhd_prim_from_cons(l_W, l_U, ib, ie);
-    mhd_line_put_state(l_W, p_W, j, k, dir, ib, ie);
-  }
-}
-
-// ----------------------------------------------------------------------
 // patch_zmaskn
 
 static void
@@ -996,7 +981,7 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *f_U)
   for (int p = 0; p < mrc_fld_nr_patches(f_U); p++) {
     fld3d_get(&p_U, f_U, p);
     fld3d_get(&p_W, f_W, p);
-    patch_primvar(p_W, p_U, p);
+    patch_prim_from_cons(p_W, p_U, 2);
     fld3d_put(&p_U, f_U, p);
     fld3d_put(&p_W, f_W, p);
   }
@@ -1032,7 +1017,7 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *f_U)
   for (int p = 0; p < mrc_fld_nr_patches(f_U); p++) {
     fld3d_get(&p_U, f_Uhalf, p);
     fld3d_get(&p_W, f_W, p);
-    patch_primvar(p_W, p_U, p);
+    patch_prim_from_cons(p_W, p_U, 2);
     fld3d_put(&p_U, f_Uhalf, p);
     fld3d_put(&p_W, f_W, p);
   }
@@ -1073,7 +1058,7 @@ ggcm_mhd_step_c3_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
     fld3d_get(&p_rmask, sub->rmask, p);
     fld3d_get(&p_b0, mhd->b0, p);
 
-    patch_primvar(p_W, p_U, p);
+    patch_prim_from_cons(p_W, p_U, 2);
     patch_zmaskn(mhd, p_zmask, p_ymask, p_U, p_b0);
     patch_calce(step, p_E, mhd->dt, p_U, p_W, p_zmask, p_rmask, p_b0, p);
 

@@ -137,3 +137,24 @@ mhd_cons_from_prim(fld1d_state_t U, fld1d_state_t W, int ib, int ie)
   }
 }
 
+// ----------------------------------------------------------------------
+// patch_prim_from_cons
+
+static void _mrc_unused
+patch_prim_from_cons(fld3d_t p_W, fld3d_t p_U, int sw)
+{
+  static fld1d_state_t l_U, l_W;
+  if (!fld1d_state_is_setup(l_U)) {
+    fld1d_state_setup(&l_U);
+    fld1d_state_setup(&l_W);
+  }
+
+  int dir = 0;
+  pde_for_each_line(dir, j, k, sw) {
+    int ib = -sw, ie = s_ldims[0] + sw;
+    mhd_line_get_state(l_U, p_U, j, k, dir, ib, ie);
+    mhd_prim_from_cons(l_W, l_U, ib, ie);
+    mhd_line_put_state(l_W, p_W, j, k, dir, ib, ie);
+  }
+}
+
