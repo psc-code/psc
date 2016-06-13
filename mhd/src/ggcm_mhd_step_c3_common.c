@@ -900,9 +900,7 @@ pushstage(struct ggcm_mhd_step *step, struct mrc_fld *f_Unext,
   fld3d_setup(&p_E, sub->f_E);
 
   // primvar, badval, reconstruct
-  for (int p = 0; p < mrc_fld_nr_patches(f_Unext); p++) {
-    pde_patch_set(p);
-
+  pde_for_each_patch(p) {
     fld3d_t *patches[] = { &p_Ucurr, &p_Wcurr, &p_F[0], &p_F[1], &p_F[2], NULL };
     fld3d_get_list(p, patches);
     patch_pushstage_pt1(step, p_Ucurr, p_Wcurr, p_F, limit, p);
@@ -913,8 +911,7 @@ pushstage(struct ggcm_mhd_step *step, struct mrc_fld *f_Unext,
   ggcm_mhd_correct_fluxes(mhd, sub->f_F);
 
   // add MHD terms, find E
-  for (int p = 0; p < mrc_fld_nr_patches(f_Ucurr); p++) {
-    pde_patch_set(p);
+  pde_for_each_patch(p) {
     fld3d_t *mhd_patches[] = { &p_Unext, &p_Ucurr, &p_Wcurr, 
 			       &p_E, &p_F[0], &p_F[1], &p_F[2],
 			       &p_ymask, &p_zmask, &p_rmask, NULL };
@@ -936,8 +933,7 @@ pushstage(struct ggcm_mhd_step *step, struct mrc_fld *f_Unext,
   // correct E field
   ggcm_mhd_correct_E(mhd, sub->f_E);
 
-  for (int p = 0; p < mrc_fld_nr_patches(f_Unext); p++) {
-    pde_patch_set(p);
+  pde_for_each_patch(p) {
     fld3d_t *update_ct_patches[] = { &p_Unext, &p_E, NULL };
 
     fld3d_get_list(p, update_ct_patches);
@@ -961,7 +957,7 @@ ggcm_mhd_step_c3_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
     fld3d_setup(&p_U, x);
     fld3d_setup(&p_b0, mhd->b0);
 
-    for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+    pde_for_each_patch(p) {
       fld3d_t *zmaskn_patches[] = { &p_zmask, &p_ymask, &p_U, NULL };
 
       fld3d_get_list(p, zmaskn_patches);
@@ -1060,8 +1056,7 @@ ggcm_mhd_step_c3_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
   fld3d_setup(&p_rmask, sub->rmask);
 
   ggcm_mhd_fill_ghosts(mhd, f_U, 0, mhd->time);
-  for (int p = 0; p < mrc_fld_nr_patches(f_E); p++) {
-    pde_patch_set(p);
+  pde_for_each_patch(p) {
     fld3d_t *get_e_ec_patches[] = { &p_E, &p_U, &p_W, &p_ymask, &p_zmask, &p_rmask, &p_b0, NULL };
 
     fld3d_get_list(p, get_e_ec_patches);

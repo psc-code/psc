@@ -47,6 +47,7 @@ struct pde_patch {
   fld1d_t inv_dxf[3]; // 1 / dxf[], where dxf = spacing between cell centers (located at face)
 };
 
+static int s_n_patches;
 static struct pde_patch *s_patches;
 
 // ----------------------------------------------------------------------
@@ -72,11 +73,19 @@ static struct pde_patch s_patch;
 
 // ----------------------------------------------------------------------
 // pde_patch_set
+//
+// it has a return value so that it can be used within a
+//   for (int p = 0; pde_patch_set(p); p++) 
+// loop.
 
-static void _mrc_unused
+static bool _mrc_unused
 pde_patch_set(int p)
 {
-  s_patch = s_patches[p];
+  if (p < s_n_patches) {
+    s_patch = s_patches[p];
+    return true;
+  }
+  return false;
 }
 
 // ----------------------------------------------------------------------
@@ -109,11 +118,11 @@ pde_setup(struct mrc_fld *fld)
 
   struct mrc_crds *crds = mrc_domain_get_crds(fld->_domain);
 
-  int n_patches = mrc_fld_nr_patches(fld);
-  s_patches = calloc(n_patches, sizeof(*s_patches));
+  s_n_patches = mrc_fld_nr_patches(fld);
+  s_patches = calloc(s_n_patches, sizeof(*s_patches));
 
   double dxmin[3] = { 1e10, 1e10, 1e10 };
-  for (int p = 0; p < n_patches; p++) {
+  for (int p = 0; p < s_n_patches; p++) {
     struct pde_patch *patch = &s_patches[p];
     for (int d = 0; d < 3; d++) {
       fld1d_setup(&patch->dx[d]);
@@ -141,6 +150,12 @@ pde_setup(struct mrc_fld *fld)
     s_g_dxyzmin = mrc_fld_min(s_g_dxyzmin, s_g_dxmin[d]);
   }
 }
+
+// ======================================================================
+// loop over patches
+
+#define pde_for_each_patch(p)			\
+  for (int p = 0; pde_patch_set(p); p++)
 
 // ======================================================================
 // loop over 3d field
