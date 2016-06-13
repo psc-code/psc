@@ -928,6 +928,74 @@ ggcm_mhd_step_c3_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
   return mhd->dt;
 }
 
+static void
+patch_badval_checks_sc(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *prim)
+{
+  if (!mhd->do_badval_checks) {
+    return;
+  }
+
+  int has_badval = 0;
+  
+  int max_comp = MIN(mrc_fld_nr_comps(x), 8);
+
+  mrc_fld_data_t ppmin = 0.;
+  mrc_fld_data_t rrmin = 0.;  // mhd->par.rrmin / mhd->rrnorm
+
+  static int pr = 0;
+  if (!pr) {
+    pr = prof_register("badval_checks", 0.0, 0, 0);
+  }
+  
+  prof_start(pr);
+
+  float *crdx = ggcm_mhd_crds_get_crd(mhd->crds, 0, FX1);
+  float *crdy = ggcm_mhd_crds_get_crd(mhd->crds, 1, FX1);
+  float *crdz = ggcm_mhd_crds_get_crd(mhd->crds, 2, FX1);
+  
+  // Check for negative pressure if we have a valid prim
+  if (prim) {
+    for (int p = 0; p < mrc_fld_nr_patches(prim); p++) {
+      mrc_fld_foreach(prim, i,j,k, 0, 0) {
+	if (PP_(prim, i,j,k, p) < ppmin) {
+	  has_badval = 5;
+	  mprintf("pressure @ (x=%g y=%g z=%g) = %lg < %lg\n",
+		  crdx[i], crdy[j], crdz[k], PP_(prim, i,j,k, p), ppmin);
+	}
+      } mrc_fld_foreach_end;
+    }
+  }
+  
+  // check for NaNs and negative density
+  if (x) {
+    for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+      mrc_fld_foreach(x, i,j,k, 0, 0) {
+	// Check for negative density
+	if (RR_(x, i,j,k, p) < rrmin) {
+	  has_badval = 4;
+	  mprintf("density @ (x=%g y=%g z=%g) = %lg < %lg\n",
+		  crdx[i], crdy[j], crdz[k], RR_(prim, i,j,k, p), rrmin);
+	}
+	
+	// Check for NaN
+	for (int comp=0; comp < max_comp; comp++) {
+	  if isnan(M3(x, comp, i,j,k, p)) {
+              has_badval = 3;
+              mprintf("NaN in field %d @ (x=%g y=%g z=%g)\n",
+                      comp, crdx[i], crdy[j], crdz[k]);
+            }
+	}
+      } mrc_fld_foreach_end;
+    }
+  }
+
+  if (has_badval) {
+    ggcm_mhd_wrongful_death(mhd, x, has_badval);
+  }
+  
+  prof_stop(pr);
+}
+
 // ----------------------------------------------------------------------
 // ggcm_mhd_step_c3_run
 
@@ -966,9 +1034,8 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *f_U)
     fld3d_put_list(p, primvar_patches);
   }
 
-  // --- check for NaNs and negative pressures
-  // (still controlled by do_badval_checks)
-  badval_checks_sc(mhd, f_U, f_W);
+  // check for NaNs and negative pressures
+  patch_badval_checks_sc(mhd, f_U, f_W);
 
   // zmaskn
   for (int p = 0; p < mrc_fld_nr_patches(f_zmask); p++) {
@@ -997,9 +1064,8 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *f_U)
     patch_prim_from_cons(p_W, p_Uhalf, 2);
     fld3d_put_list(p, primvar_patches);
   }
-  // --- check for NaNs and negative pressures
-  // (still controlled by do_badval_checks)
-  badval_checks_sc(mhd, f_Uhalf, f_W);
+  // check for NaNs and negative pressures
+  patch_badval_checks_sc(mhd, f_Uhalf, f_W);
   pushstage_c(step, f_U, mhd->dt, f_Uhalf, f_W, LIMIT_1);
   if (sub->enforce_rrmin) {
     enforce_rrmin_sc(mhd, f_Uhalf);
