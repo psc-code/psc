@@ -15,8 +15,6 @@
 
 #include "pde/pde_defs.h"
 
-static bool s_opt_bc_reconstruct = false;
-
 // mhd options
 
 #define OPT_EQN OPT_EQN_MHD_SCONS
@@ -37,6 +35,8 @@ static bool s_opt_bc_reconstruct = false;
 //FIXME, when using hydro_rusanov / no pushpp, things go wrong when > timelo
 
 #define _BT(p_U, d, i,j,k)  (F3S(p_U, BX+d, i,j,k) + (s_opt_background ? F3S(p_b0, d, i,j,k) : 0))
+
+static int s_opt_enforce_rrmin;
 
 // ======================================================================
 // ggcm_mhd_step subclass "c3"
@@ -147,6 +147,7 @@ ggcm_mhd_step_c3_setup_flds(struct ggcm_mhd_step *step)
   struct ggcm_mhd *mhd = step->mhd;
 
   pde_mhd_set_options(mhd, &sub->opt);
+  s_opt_enforce_rrmin = sub->enforce_rrmin;
 
   mrc_fld_set_type(mhd->fld, FLD_TYPE);
   mrc_fld_set_param_int(mhd->fld, "nr_ghosts", 2);
@@ -211,63 +212,6 @@ patch_flux_pred(struct ggcm_mhd_step *step, fld3d_t p_F[3], fld3d_t p_U)
       line_flux_pred_pt2(p_F[dir], j, k, dir, ib, ie);
     }
   }
-}
-
-// ----------------------------------------------------------------------
-// patch_flux_pred_bc_reconstruct
-//
-// does the same as patch_flux_pred, but allows for setting b.c. on
-// reconstructed fields along the way
-
-static void
-patch_flux_pred_bc_reconstruct(struct ggcm_mhd_step *step, fld3d_t p_F[3], fld3d_t p_U, int p)
-{
-  // even though we do everything for one patch only, we still need
-  // the full mrc_fld's for setting the boundary reconstructed values,
-  // since there's no mechanism to pass a single-patch field
-  static struct mrc_fld *f_Ul[3], *f_Ur[3];
-  static fld3d_t p_Ul[3], p_Ur[3];
-  if (!f_Ul[0]) {
-    for (int d = 0; d < 3; d++) {
-      f_Ul[d] = ggcm_mhd_get_3d_fld(step->mhd, s_n_comps);
-      f_Ur[d] = ggcm_mhd_get_3d_fld(step->mhd, s_n_comps);
-      fld3d_setup(&p_Ul[d], f_Ul[d]);
-      fld3d_setup(&p_Ur[d], f_Ur[d]);
-    }
-  }
-
-  // reconstruct
-  fld3d_t *pt1_patches[] = { &p_Ul[0], &p_Ur[0], &p_Ul[1], &p_Ur[1], &p_Ul[2], &p_Ur[2], NULL };
-
-  fld3d_get_list(p, pt1_patches);
-  pde_for_each_dir(dir) {
-    pde_for_each_line(dir, j, k, 0) {
-      int ib = 0, ie = s_ldims[dir];
-      line_flux_pred_pt1(p_U, j, k, dir, ib, ie);
-      mhd_line_put_state(l_Ul, p_Ul[dir], j, k, dir, ib, ie + 1);
-      mhd_line_put_state(l_Ur, p_Ul[dir], j, k, dir, ib, ie + 1);
-    }
-  }
-  fld3d_put_list(p, pt1_patches);
-
-  // set boundary on reconstructed values
-  ggcm_mhd_fill_ghosts_reconstr(step->mhd, f_Ul, f_Ur, p);
-  
-  // riemann solve
-  fld3d_t *pt2_patches[] = { &p_Ul[0], &p_Ur[0], &p_Ul[1], &p_Ur[1], &p_Ul[2], &p_Ur[2], NULL };
-
-  fld3d_get_list(p, pt2_patches);
-  pde_for_each_dir(dir) {
-    pde_for_each_line(dir, j, k, 0) {
-      int ib = 0, ie = s_ldims[dir];
-      mhd_line_get_state(l_Ul, p_Ul[dir], j, k, dir, ib, ie + 1);
-      mhd_line_get_state(l_Ur, p_Ur[dir], j, k, dir, ib, ie + 1);
-      mhd_prim_from_cons(l_Wl, l_Ul, ib, ie + 1);
-      mhd_prim_from_cons(l_Wr, l_Ur, ib, ie + 1);
-      line_flux_pred_pt2(p_F[dir], j, k, dir, ib, ie);
-    }
-  }
-  fld3d_put_list(p, pt2_patches);
 }
 
 // ======================================================================
@@ -846,6 +790,10 @@ patch_badval_checks_sc(struct ggcm_mhd *mhd, fld3d_t p_U, fld3d_t p_W, int p)
 static void
 patch_enforce_rrmin_sc(struct ggcm_mhd *mhd, fld3d_t p_U, int p)
 {
+  if (!s_opt_enforce_rrmin) {
+    return;
+  }
+
   mrc_fld_data_t rrmin = mhd->par.rrmin / mhd->rrnorm;
   mrc_fld_data_t gamma_m1 = s_gamma - 1.f;
   
@@ -877,6 +825,56 @@ patch_enforce_rrmin_sc(struct ggcm_mhd *mhd, fld3d_t p_U, int p)
 }
 
 // ----------------------------------------------------------------------
+// patch_pushstage_pt1
+
+static void
+patch_pushstage_pt1(struct ggcm_mhd_step *step, fld3d_t p_Ucurr, fld3d_t p_Wcurr,
+		    fld3d_t p_F[3], int limit, int p)
+{
+  struct ggcm_mhd *mhd = step->mhd;
+
+  // primvar, badval
+  patch_prim_from_cons(p_Wcurr, p_Ucurr, 2);
+  patch_badval_checks_sc(mhd, p_Ucurr, p_Wcurr, p);
+  
+  // find hydro fluxes
+  // FIXME: we could use the fact that we calculate primitive variables already
+  if (limit == LIMIT_NONE) {
+    patch_flux_pred(step, p_F, p_Ucurr);
+  } else { // !LIMIT_NONE
+    patch_flux_corr(step, p_F, p_Ucurr);
+  }
+}
+
+// ----------------------------------------------------------------------
+// patch_pushstage_pt2
+
+static void
+patch_pushstage_pt2(struct ggcm_mhd_step *step, fld3d_t p_Unext, mrc_fld_data_t dt,
+		    fld3d_t p_Ucurr, fld3d_t p_Wcurr,
+		    fld3d_t p_E, fld3d_t p_F[3], fld3d_t p_ymask, fld3d_t p_zmask,
+		    fld3d_t p_rmask, fld3d_t p_b0, int stage, int p)
+{
+  struct ggcm_mhd *mhd = step->mhd;
+
+  // update hydro quantities
+  mhd_update_finite_volume(mhd, p_Unext, p_F, p_ymask, dt, 0, 0);
+  // update momentum (grad p)
+  patch_push_pp(p_Unext, dt, p_Wcurr, p_zmask);
+  if (stage == 0) {
+    patch_zmaskn(mhd, p_zmask, p_ymask, p_Ucurr, p_b0);
+  }
+  // update momentum (J x B) and energy
+  patch_push_ej(p_Unext, dt, p_Ucurr, p_Wcurr, p_zmask, p_b0);
+  // enforce rrmin
+  patch_enforce_rrmin_sc(mhd, p_Unext, p);
+
+  // find E
+  patch_rmaskn(mhd, p_rmask, p_zmask, p);
+  patch_calce(step, p_E, dt, p_Ucurr, p_Wcurr, p_zmask, p_rmask, p_b0, p);
+}
+
+// ----------------------------------------------------------------------
 // pushstage_c
 
 static void
@@ -901,8 +899,9 @@ pushstage_c(struct ggcm_mhd_step *step, struct mrc_fld *f_Unext,
   }
   fld3d_setup(&p_E, sub->f_E);
 
+  // primvar, badval, reconstruct
   int limit;
-  if (stage == 0) {
+  if (stage == 0 || mhd->time < mhd->par.timelo) {
     limit = LIMIT_NONE;
   } else {
     limit = LIMIT_1;
@@ -911,25 +910,9 @@ pushstage_c(struct ggcm_mhd_step *step, struct mrc_fld *f_Unext,
   for (int p = 0; p < mrc_fld_nr_patches(f_Unext); p++) {
     pde_patch_set(p);
 
-    // primvar, badval
     fld3d_t *patches[] = { &p_Ucurr, &p_Wcurr, &p_F[0], &p_F[1], &p_F[2], NULL };
     fld3d_get_list(p, patches);
-    
-    patch_prim_from_cons(p_Wcurr, p_Ucurr, 2);
-    patch_badval_checks_sc(mhd, p_Ucurr, p_Wcurr, p);
-      
-    // find hydro fluxes
-    // FIXME: we could use the fact that we calculate primitive variables already
-    if (limit == LIMIT_NONE || mhd->time < mhd->par.timelo) {
-      if (s_opt_bc_reconstruct) {
-	patch_flux_pred_bc_reconstruct(step, p_F, p_Ucurr, p);
-      } else {
-	patch_flux_pred(step, p_F, p_Ucurr);
-      }
-    } else { // !LIMIT_NONE
-      patch_flux_corr(step, p_F, p_Ucurr);
-    }
-
+    patch_pushstage_pt1(step, p_Ucurr, p_Wcurr, p_F, limit, p);
     fld3d_put_list(p, patches);
   }
 
@@ -939,23 +922,17 @@ pushstage_c(struct ggcm_mhd_step *step, struct mrc_fld *f_Unext,
   // add MHD terms, find E
   for (int p = 0; p < mrc_fld_nr_patches(f_Ucurr); p++) {
     pde_patch_set(p);
-    fld3d_t *mhd_patches[] = { &p_Ucurr, &p_Unext, &p_Wcurr, &p_ymask, &p_zmask, &p_rmask,
-			       &p_F[0], &p_F[1], &p_F[2], &p_E, NULL };
+    fld3d_t *mhd_patches[] = { &p_Unext, &p_Ucurr, &p_Wcurr, 
+			       &p_E, &p_F[0], &p_F[1], &p_F[2],
+			       &p_ymask, &p_zmask, &p_rmask, NULL };
 
     fld3d_get_list(p, mhd_patches);
     if (s_opt_background) {
       fld3d_get(&p_b0, p);
     }
 
-    mhd_update_finite_volume(mhd, p_Unext, p_F, p_ymask, dt, 0, 0);
-    patch_push_pp(p_Unext, dt, p_Wcurr, p_zmask);
-    patch_push_ej(p_Unext, dt, p_Ucurr, p_Wcurr, p_zmask, p_b0);
-
-    if (stage == 0) {
-      patch_zmaskn(mhd, p_zmask, p_ymask, p_Ucurr, p_b0);
-    }
-    patch_rmaskn(mhd, p_rmask, p_zmask, p);
-    patch_calce(step, p_E, dt, p_Ucurr, p_Wcurr, p_zmask, p_rmask, p_b0, p);
+    patch_pushstage_pt2(step, p_Unext, dt, p_Ucurr, p_Wcurr,
+			p_E, p_F, p_ymask, p_zmask, p_rmask, p_b0, stage, p);
 
     fld3d_put_list(p, mhd_patches);
     if (s_opt_background) {
@@ -968,23 +945,14 @@ pushstage_c(struct ggcm_mhd_step *step, struct mrc_fld *f_Unext,
     mrc_ddc_amr_apply(mhd->ddc_amr_E, sub->f_E);
   }
 
-  // update B using E
   for (int p = 0; p < mrc_fld_nr_patches(f_Unext); p++) {
     pde_patch_set(p);
     fld3d_t *update_ct_patches[] = { &p_Unext, &p_E, NULL };
 
     fld3d_get_list(p, update_ct_patches);
+    // update B using E
     patch_update_ct(mhd, p_Unext, p_E, dt, p);
     fld3d_put_list(p, update_ct_patches);
-  }
-
-  // enforce rrmin
-  for (int p = 0; p < mrc_fld_nr_patches(f_Unext); p++) {
-    if (sub->enforce_rrmin) {
-      fld3d_get(&p_Unext, p);
-      patch_enforce_rrmin_sc(mhd, p_Unext, p);
-      fld3d_put(&p_Unext, p);
-    }
   }
 }
 
