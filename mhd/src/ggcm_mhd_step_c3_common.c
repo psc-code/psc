@@ -237,7 +237,9 @@ patch_flux_pred_bc_reconstruct(struct ggcm_mhd_step *step, fld3d_t p_F[3], fld3d
   }
 
   // reconstruct
-  fld3d_get_list(p, (fld3d_t *[]) { &p_Ul[0], &p_Ur[0], &p_Ul[1], &p_Ur[1], &p_Ul[2], &p_Ur[2], NULL });
+  fld3d_t *pt1_patches[] = { &p_Ul[0], &p_Ur[0], &p_Ul[1], &p_Ur[1], &p_Ul[2], &p_Ur[2], NULL };
+
+  fld3d_get_list(p, pt1_patches);
   pde_for_each_dir(dir) {
     pde_for_each_line(dir, j, k, 0) {
       int ib = 0, ie = s_ldims[dir];
@@ -246,13 +248,15 @@ patch_flux_pred_bc_reconstruct(struct ggcm_mhd_step *step, fld3d_t p_F[3], fld3d
       mhd_line_put_state(l_Ur, p_Ul[dir], j, k, dir, ib, ie + 1);
     }
   }
-  fld3d_put_list(p, (fld3d_t *[]) { &p_Ul[0], &p_Ur[0], &p_Ul[1], &p_Ur[1], &p_Ul[2], &p_Ur[2], NULL });
+  fld3d_put_list(p, pt1_patches);
 
   // set boundary on reconstructed values
   ggcm_mhd_fill_ghosts_reconstr(step->mhd, f_Ul, f_Ur, p);
   
   // riemann solve
-  fld3d_get_list(p, (fld3d_t *[]) { &p_Ul[0], &p_Ur[0], &p_Ul[1], &p_Ur[1], &p_Ul[2], &p_Ur[2], NULL });
+  fld3d_t *pt2_patches[] = { &p_Ul[0], &p_Ur[0], &p_Ul[1], &p_Ur[1], &p_Ul[2], &p_Ur[2], NULL };
+
+  fld3d_get_list(p, pt2_patches);
   pde_for_each_dir(dir) {
     pde_for_each_line(dir, j, k, 0) {
       int ib = 0, ie = s_ldims[dir];
@@ -263,7 +267,7 @@ patch_flux_pred_bc_reconstruct(struct ggcm_mhd_step *step, fld3d_t p_F[3], fld3d
       line_flux_pred_pt2(p_F[dir], j, k, dir, ib, ie);
     }
   }
-  fld3d_put_list(p, (fld3d_t *[]) { &p_Ul[0], &p_Ur[0], &p_Ul[1], &p_Ur[1], &p_Ul[2], &p_Ur[2], NULL });
+  fld3d_put_list(p, pt2_patches);
 }
 
 // ======================================================================
@@ -817,7 +821,8 @@ pushstage_c(struct ggcm_mhd_step *step, struct mrc_fld *f_Unext,
 
   for (int p = 0; p < mrc_fld_nr_patches(f_Ucurr); p++) {
     pde_patch_set(p);
-    fld3d_get_list(p, (fld3d_t *[]) { &p_Ucurr, &p_F[0], &p_F[1], &p_F[2], NULL });
+    fld3d_t *hydro_patches[] = { &p_Ucurr, &p_F[0], &p_F[1], &p_F[2], NULL };
+    fld3d_get_list(p, hydro_patches);
 
     if (limit == LIMIT_NONE || mhd->time < mhd->par.timelo) {
       if (s_opt_bc_reconstruct) {
@@ -829,16 +834,17 @@ pushstage_c(struct ggcm_mhd_step *step, struct mrc_fld *f_Unext,
       patch_flux_corr(step, p_F, p_Ucurr);
     }
 
-    fld3d_put_list(p, (fld3d_t *[]) { &p_Ucurr, &p_F[0], &p_F[1], &p_F[2], NULL });
+    fld3d_put_list(p, hydro_patches);
   }
 
   ggcm_mhd_correct_fluxes(mhd, sub->f_F);
 
   for (int p = 0; p < mrc_fld_nr_patches(f_Ucurr); p++) {
     pde_patch_set(p);
+    fld3d_t *mhd_patches[] = { &p_Ucurr, &p_Unext, &p_Wcurr, &p_ymask, &p_zmask, &p_rmask,
+			       &p_F[0], &p_F[1], &p_F[2], &p_E, NULL };
 
-    fld3d_get_list(p, (fld3d_t *[]) { &p_Ucurr, &p_Unext, &p_Wcurr, &p_ymask, &p_zmask, &p_rmask,
-	  &p_F[0], &p_F[1], &p_F[2], &p_E, NULL });
+    fld3d_get_list(p, mhd_patches);
     if (s_opt_background) {
       fld3d_get(&p_b0, p);
     }
@@ -850,8 +856,7 @@ pushstage_c(struct ggcm_mhd_step *step, struct mrc_fld *f_Unext,
     patch_rmaskn(mhd, p_rmask, p_zmask, p);
     patch_calce(step, p_E, dt, p_Ucurr, p_Wcurr, p_zmask, p_rmask, p_b0, p);
 
-    fld3d_put_list(p, (fld3d_t *[]) { &p_Ucurr, &p_Unext, &p_Wcurr, &p_ymask, &p_zmask, &p_rmask,
-	  &p_F[0], &p_F[1], &p_F[2], &p_E, NULL });
+    fld3d_put_list(p, mhd_patches);
     if (s_opt_background) {
       fld3d_put(&p_b0, p);
     }
@@ -864,11 +869,11 @@ pushstage_c(struct ggcm_mhd_step *step, struct mrc_fld *f_Unext,
 
   for (int p = 0; p < mrc_fld_nr_patches(f_Unext); p++) {
     pde_patch_set(p);
-    fld3d_get_list(p, (fld3d_t *[]) { &p_Unext, &p_E, NULL });
+    fld3d_t *update_ct_patches[] = { &p_Unext, &p_E, NULL };
 
+    fld3d_get_list(p, update_ct_patches);
     patch_update_ct(mhd, p_Unext, p_E, dt, p);
-
-    fld3d_put_list(p, (fld3d_t *[]) { &p_Unext, &p_E, NULL });
+    fld3d_put_list(p, update_ct_patches);
   }
 }
 
@@ -887,14 +892,16 @@ ggcm_mhd_step_c3_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
     fld3d_setup(&p_b0, mhd->b0);
 
     for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
-      fld3d_get_list(p, (fld3d_t *[]) { &p_zmask, &p_ymask, &p_U, NULL });
+      fld3d_t *zmaskn_patches[] = { &p_zmask, &p_ymask, &p_U, NULL };
+
+      fld3d_get_list(p, zmaskn_patches);
       if (s_opt_background) {
 	fld3d_get(&p_b0, p);
       }
 
       patch_zmaskn(mhd, p_zmask, p_ymask, p_U, p_b0);
 
-      fld3d_put_list(p, (fld3d_t *[]) { &p_zmask, &p_ymask, &p_U, NULL });
+      fld3d_put_list(p, zmaskn_patches);
       if (s_opt_background) {
 	fld3d_put(&p_b0, p);
       }
@@ -952,9 +959,11 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *f_U)
 
   // primvar
   for (int p = 0; p < mrc_fld_nr_patches(f_U); p++) {
-    fld3d_get_list(p, (fld3d_t *[]) { &p_U, &p_W, NULL });
+    fld3d_t *primvar_patches[] = { &p_U, &p_W, NULL };
+
+    fld3d_get_list(p, primvar_patches);
     patch_prim_from_cons(p_W, p_U, 2);
-    fld3d_put_list(p, (fld3d_t *[]) { &p_U, &p_W, NULL });
+    fld3d_put_list(p, primvar_patches);
   }
 
   // --- check for NaNs and negative pressures
@@ -963,9 +972,11 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *f_U)
 
   // zmaskn
   for (int p = 0; p < mrc_fld_nr_patches(f_zmask); p++) {
-    fld3d_get_list(p, (fld3d_t *[]) { &p_zmask, &p_ymask, &p_U, &p_b0, NULL });
+    fld3d_t *zmaskn_patches[] = { &p_zmask, &p_ymask, &p_U, &p_b0, NULL };
+
+    fld3d_get_list(p, zmaskn_patches);
     patch_zmaskn(mhd, p_zmask, p_ymask, p_U, p_b0);
-    fld3d_put_list(p, (fld3d_t *[]) { &p_zmask, &p_ymask, &p_U, &p_b0, NULL });
+    fld3d_put_list(p, zmaskn_patches);
   }
 
   // set x_half = x^n, then advance to n+1/2
@@ -980,9 +991,11 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *f_U)
   prof_start(pr_B);
   ggcm_mhd_fill_ghosts(mhd, f_Uhalf, 0, mhd->time + mhd->bndt);
   for (int p = 0; p < mrc_fld_nr_patches(f_U); p++) {
-    fld3d_get_list(p, (fld3d_t *[]) { &p_Uhalf, &p_W, NULL });
+    fld3d_t *primvar_patches[] = { &p_Uhalf, &p_W, NULL };
+
+    fld3d_get_list(p, primvar_patches);
     patch_prim_from_cons(p_W, p_Uhalf, 2);
-    fld3d_put_list(p, (fld3d_t *[]) { &p_Uhalf, &p_W, NULL });
+    fld3d_put_list(p, primvar_patches);
   }
   // --- check for NaNs and negative pressures
   // (still controlled by do_badval_checks)
@@ -1019,13 +1032,13 @@ ggcm_mhd_step_c3_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
   ggcm_mhd_fill_ghosts(mhd, f_U, 0, mhd->time);
   for (int p = 0; p < mrc_fld_nr_patches(f_E); p++) {
     pde_patch_set(p);
-    fld3d_get_list(p, (fld3d_t *[]) { &p_E, &p_U, &p_W, &p_ymask, &p_zmask, &p_rmask, &p_b0, NULL });
+    fld3d_t *get_e_ec_patches[] = { &p_E, &p_U, &p_W, &p_ymask, &p_zmask, &p_rmask, &p_b0, NULL };
 
+    fld3d_get_list(p, get_e_ec_patches);
     patch_prim_from_cons(p_W, p_U, 2);
     patch_zmaskn(mhd, p_zmask, p_ymask, p_U, p_b0);
     patch_calce(step, p_E, mhd->dt, p_U, p_W, p_zmask, p_rmask, p_b0, p);
-
-    fld3d_put_list(p, (fld3d_t *[]) { &p_E, &p_U, &p_W, &p_ymask, &p_zmask, &p_rmask, &p_b0, NULL });
+    fld3d_put_list(p, get_e_ec_patches);
   }
   //  ggcm_mhd_fill_ghosts_E(mhd, E);
   
