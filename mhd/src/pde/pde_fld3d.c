@@ -7,6 +7,7 @@
 typedef struct {
   struct mrc_fld *mrc_fld;
   int p;
+  bool is_temp;
 } fld3d_t;
 
 #define F3S(f, m, i,j,k) M3((f).mrc_fld, m, i,j,k, (f).p)
@@ -15,6 +16,7 @@ static inline void
 fld3d_setup(fld3d_t *f)
 {
   f->mrc_fld = NULL;
+  f->is_temp = false;
 }
 
 static inline void
@@ -28,11 +30,13 @@ fld3d_setup_tmp(fld3d_t *f, int n_comps)
 			      (int[]) { s_sw[0], s_sw[1], s_sw[2], 0, 0 });
   mrc_fld_setup(f->mrc_fld);
   f->p = 0;
+  f->is_temp = true;
 }
 
 static inline void
 fld3d_get(fld3d_t *f, struct mrc_fld *fld, int p)
 {
+  assert(!f->is_temp);
   f->mrc_fld = fld;
   f->p = p;
 }
@@ -40,6 +44,7 @@ fld3d_get(fld3d_t *f, struct mrc_fld *fld, int p)
 static inline void
 fld3d_put(fld3d_t *f, struct mrc_fld *fld, int p)
 {
+  assert(!f->is_temp);
   f->mrc_fld = NULL;
 }
 

@@ -824,6 +824,7 @@ pushstage_c(struct ggcm_mhd_step *step, struct mrc_fld *x_next,
   fld3d_setup(&p_Wcurr);
   fld3d_setup(&ymask);
   fld3d_setup(&zmask);
+  fld3d_setup(&rmask);
   fld3d_setup(&p_b0);
   for (int d = 0; d < 3; d++) {
     fld3d_setup(&fluxes[d]);
@@ -921,6 +922,10 @@ ggcm_mhd_step_c3_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
   if (step->do_nwst) {
     ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
     fld3d_t p_zmask, p_ymask, p_U, p_b0;
+    fld3d_setup(&p_zmask);
+    fld3d_setup(&p_ymask);
+    fld3d_setup(&p_U);
+    fld3d_setup(&p_b0);
     for (int p = 0; p < mrc_fld_nr_patches(zmask); p++) {
       fld3d_get(&p_zmask, zmask, p);
       fld3d_get(&p_ymask, ymask, p);
@@ -972,6 +977,11 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *f_U)
   }
 
   fld3d_t p_U, p_W, p_zmask, p_ymask, p_b0;
+  fld3d_setup(&p_U);
+  fld3d_setup(&p_W);
+  fld3d_setup(&p_zmask);
+  fld3d_setup(&p_ymask);
+  fld3d_setup(&p_b0);
 
   // --- PREDICTOR
   prof_start(pr_A);
