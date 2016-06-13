@@ -50,8 +50,10 @@ struct ggcm_mhd_step_c3 {
   struct mrc_fld *zmask;
   struct mrc_fld *rmask;
   
-  struct mrc_fld *fluxes[3];
-  struct mrc_fld *E;
+  struct mrc_fld *f_W;
+  struct mrc_fld *f_Uhalf;
+  struct mrc_fld *f_fluxes[3];
+  struct mrc_fld *f_E;
 
   bool enforce_rrmin;
 };
@@ -72,7 +74,7 @@ enum {
 
 // 1-d state vars statically rather than having to pass them around
 
-static fld1d_state_t lU, lUl, lUr, lW, lWl, lWr, lF;
+static fld1d_state_t l_U, l_Ul, l_Ur, l_W, l_Wl, l_Wr, l_F;
 
 // ----------------------------------------------------------------------
 // ggcm_mhd_step_c3_setup
@@ -90,13 +92,13 @@ ggcm_mhd_step_c3_setup(struct ggcm_mhd_step *step)
   s_n_comps = 5;
   pde_mhd_setup(mhd);
 
-  fld1d_state_setup(&lU);
-  fld1d_state_setup(&lUl);
-  fld1d_state_setup(&lUr);
-  fld1d_state_setup(&lW);
-  fld1d_state_setup(&lWl);
-  fld1d_state_setup(&lWr);
-  fld1d_state_setup(&lF);
+  fld1d_state_setup(&l_U);
+  fld1d_state_setup(&l_Ul);
+  fld1d_state_setup(&l_Ur);
+  fld1d_state_setup(&l_W);
+  fld1d_state_setup(&l_Wl);
+  fld1d_state_setup(&l_Wr);
+  fld1d_state_setup(&l_F);
 
   if (s_opt_background) {
     mhd->b0 = ggcm_mhd_get_3d_fld(mhd, 3);
@@ -106,10 +108,13 @@ ggcm_mhd_step_c3_setup(struct ggcm_mhd_step *step)
   sub->zmask = ggcm_mhd_get_3d_fld(mhd, 1);
   sub->rmask = ggcm_mhd_get_3d_fld(mhd, 1);
 
-  sub->E = ggcm_mhd_get_3d_fld(mhd, 3);
+  sub->f_W = ggcm_mhd_get_3d_fld(mhd, s_n_comps);
+  sub->f_Uhalf = ggcm_mhd_get_3d_fld(mhd, 8);
+  mrc_fld_dict_add_int(sub->f_Uhalf, "mhd_type", MT_SEMI_CONSERVATIVE);
   for (int d = 0; d < 3; d++) {
-    sub->fluxes[d] = ggcm_mhd_get_3d_fld(mhd, s_n_comps);
+    sub->f_fluxes[d] = ggcm_mhd_get_3d_fld(mhd, s_n_comps);
   }
+  sub->f_E = ggcm_mhd_get_3d_fld(mhd, 3);
 
   ggcm_mhd_step_setup_member_objs_sub(step);
   ggcm_mhd_step_setup_super(step);
@@ -128,10 +133,11 @@ ggcm_mhd_step_c3_destroy(struct ggcm_mhd_step *step)
   ggcm_mhd_put_3d_fld(mhd, sub->zmask);
   ggcm_mhd_put_3d_fld(mhd, sub->rmask);
 
-  ggcm_mhd_put_3d_fld(mhd, sub->E);
+  ggcm_mhd_put_3d_fld(mhd, sub->f_Uhalf);
   for (int d = 0; d < 3; d++) {
-    ggcm_mhd_put_3d_fld(mhd, sub->fluxes[d]);
+    ggcm_mhd_put_3d_fld(mhd, sub->f_fluxes[d]);
   }
+  ggcm_mhd_put_3d_fld(mhd, sub->f_E);
 }
 
 // ----------------------------------------------------------------------
@@ -156,7 +162,7 @@ ggcm_mhd_step_c3_setup_flds(struct ggcm_mhd_step *step)
 
 static void
 ggcm_mhd_step_c3_primvar(struct ggcm_mhd_step *step, struct mrc_fld *prim,
-			struct mrc_fld *x)
+			 struct mrc_fld *x)
 {
   mrc_fld_data_t gamm = step->mhd->par.gamm;
   mrc_fld_data_t s = gamm - 1.f;
@@ -181,34 +187,34 @@ ggcm_mhd_step_c3_primvar(struct ggcm_mhd_step *step, struct mrc_fld *prim,
 // line_flux_pred_pt1
 
 static void
-line_flux_pred_pt1(fld3d_t pU, int j, int k, int dir, int ib, int ie)
+line_flux_pred_pt1(fld3d_t p_U, int j, int k, int dir, int ib, int ie)
 {
-  mhd_line_get_state(lU, pU, j, k, dir, ib - 1, ie + 1);
-  mhd_prim_from_cons(lW, lU, ib - 1, ie + 1);
-  mhd_reconstruct(lUl, lUr, lWl, lWr, lW, (fld1d_t) {}, ib, ie + 1);
+  mhd_line_get_state(l_U, p_U, j, k, dir, ib - 1, ie + 1);
+  mhd_prim_from_cons(l_W, l_U, ib - 1, ie + 1);
+  mhd_reconstruct(l_Ul, l_Ur, l_Wl, l_Wr, l_W, (fld1d_t) {}, ib, ie + 1);
 }
 
 // ----------------------------------------------------------------------
 // line_flux_pred_pt2
 
 static void
-line_flux_pred_pt2(fld3d_t pF, int j, int k, int dir, int ib, int ie)
+line_flux_pred_pt2(fld3d_t p_F, int j, int k, int dir, int ib, int ie)
 {
-  mhd_riemann(lF, lUl, lUr, lWl, lWr, ib, ie + 1);
-  mhd_line_put_state(pF, lF, j, k, dir, ib, ie + 1);
+  mhd_riemann(l_F, l_Ul, l_Ur, l_Wl, l_Wr, ib, ie + 1);
+  mhd_line_put_state(p_F, l_F, j, k, dir, ib, ie + 1);
 }
 
 // ----------------------------------------------------------------------
 // patch_flux_pred
 
 static void
-patch_flux_pred(struct ggcm_mhd_step *step, fld3d_t pF[3], fld3d_t pU)
+patch_flux_pred(struct ggcm_mhd_step *step, fld3d_t p_F[3], fld3d_t p_U)
 {
   pde_for_each_dir(dir) {
     pde_for_each_line(dir, j, k, 0) {
       int ib = 0, ie = s_ldims[dir];
-      line_flux_pred_pt1(pU, j, k, dir, ib, ie);
-      line_flux_pred_pt2(pF[dir], j, k, dir, ib, ie);
+      line_flux_pred_pt1(p_U, j, k, dir, ib, ie);
+      line_flux_pred_pt2(p_F[dir], j, k, dir, ib, ie);
     }
   }
 }
@@ -220,67 +226,65 @@ patch_flux_pred(struct ggcm_mhd_step *step, fld3d_t pF[3], fld3d_t pU)
 // reconstructed fields along the way
 
 static void
-patch_flux_pred_bc_reconstruct(struct ggcm_mhd_step *step, fld3d_t pF[3], fld3d_t pU, int p)
+patch_flux_pred_bc_reconstruct(struct ggcm_mhd_step *step, fld3d_t p_F[3], fld3d_t p_U, int p)
 {
-  static bool first_time = true;
   // even though we do everything for one patch only, we still need
   // the full mrc_fld's for setting the boundary reconstructed values,
   // since there's no mechanism to pass a single-patch field
-  static struct mrc_fld *fUl[3], *fUr[3];
-  static fld3d_t pUl[3], pUr[3];
-  if (first_time) {
+  static struct mrc_fld *f_Ul[3], *f_Ur[3];
+  static fld3d_t p_Ul[3], p_Ur[3];
+  if (!f_Ul[0]) {
     for (int d = 0; d < 3; d++) {
-      fUl[d] = ggcm_mhd_get_3d_fld(step->mhd, s_n_comps);
-      fUr[d] = ggcm_mhd_get_3d_fld(step->mhd, s_n_comps);
-      fld3d_setup(&pUl[d]);
-      fld3d_setup(&pUr[d]);
+      f_Ul[d] = ggcm_mhd_get_3d_fld(step->mhd, s_n_comps);
+      f_Ur[d] = ggcm_mhd_get_3d_fld(step->mhd, s_n_comps);
+      fld3d_setup(&p_Ul[d]);
+      fld3d_setup(&p_Ur[d]);
     }
-    first_time = false;
   }
 
   // reconstruct
   for (int d = 0; d < 3; d++) {
-    fld3d_get(&pUl[d], fUl[d], p);
-    fld3d_get(&pUr[d], fUr[d], p);
+    fld3d_get(&p_Ul[d], f_Ul[d], p);
+    fld3d_get(&p_Ur[d], f_Ur[d], p);
   }
   
   pde_for_each_dir(dir) {
     pde_for_each_line(dir, j, k, 0) {
       int ib = 0, ie = s_ldims[dir];
-      line_flux_pred_pt1(pU, j, k, dir, ib, ie);
-      mhd_line_put_state(pUl[dir], lUl, j, k, dir, ib, ie + 1);
-      mhd_line_put_state(pUl[dir], lUr, j, k, dir, ib, ie + 1);
+      line_flux_pred_pt1(p_U, j, k, dir, ib, ie);
+      mhd_line_put_state(p_Ul[dir], l_Ul, j, k, dir, ib, ie + 1);
+      mhd_line_put_state(p_Ul[dir], l_Ur, j, k, dir, ib, ie + 1);
     }
   }
   
   for (int d = 0; d < 3; d++) {
-    fld3d_put(&pUl[d], fUl[d], p);
-    fld3d_put(&pUr[d], fUr[d], p);
+    fld3d_put(&p_Ul[d], f_Ul[d], p);
+    fld3d_put(&p_Ur[d], f_Ur[d], p);
   }
 
   // set boundary on reconstructed values
-  ggcm_mhd_fill_ghosts_reconstr(step->mhd, fUl, fUr, p);
+  ggcm_mhd_fill_ghosts_reconstr(step->mhd, f_Ul, f_Ur, p);
   
   // riemann solve
   for (int d = 0; d < 3; d++) {
-    fld3d_get(&pUl[d], fUl[d], p);
-    fld3d_get(&pUr[d], fUr[d], p);
+    fld3d_get(&p_Ul[d], f_Ul[d], p);
+    fld3d_get(&p_Ur[d], f_Ur[d], p);
   }
 
   pde_for_each_dir(dir) {
     pde_for_each_line(dir, j, k, 0) {
       int ib = 0, ie = s_ldims[dir];
-      mhd_line_get_state(lUl, pUl[dir], j, k, dir, ib, ie + 1);
-      mhd_line_get_state(lUr, pUr[dir], j, k, dir, ib, ie + 1);
-      mhd_prim_from_cons(lWl, lUl, ib, ie + 1);
-      mhd_prim_from_cons(lWr, lUr, ib, ie + 1);
-      line_flux_pred_pt2(pF[dir], j, k, dir, ib, ie);
+      mhd_line_get_state(l_Ul, p_Ul[dir], j, k, dir, ib, ie + 1);
+      mhd_line_get_state(l_Ur, p_Ur[dir], j, k, dir, ib, ie + 1);
+      mhd_prim_from_cons(l_Wl, l_Ul, ib, ie + 1);
+      mhd_prim_from_cons(l_Wr, l_Ur, ib, ie + 1);
+      line_flux_pred_pt2(p_F[dir], j, k, dir, ib, ie);
     }
   }
 
   for (int d = 0; d < 3; d++) {
-    fld3d_get(&pUl[d], fUl[d], p);
-    fld3d_get(&pUr[d], fUr[d], p);
+    fld3d_get(&p_Ul[d], f_Ul[d], p);
+    fld3d_get(&p_Ur[d], f_Ur[d], p);
   }
 }
 
@@ -317,76 +321,76 @@ limit_hz(mrc_fld_data_t a2, mrc_fld_data_t aa, mrc_fld_data_t a1)
 // line_flux_corr
 
 static void
-line_flux_corr(fld3d_t pF, fld3d_t pU,
+line_flux_corr(fld3d_t p_F, fld3d_t p_U,
 	       int j, int k, int dir, int ib, int ie)
 {
-  static fld1d_state_t lFcc, lFlo, lLim1;
-  if (!fld1d_state_is_setup(lFcc)) {
-    fld1d_state_setup(&lFcc);
-    fld1d_state_setup(&lFlo);
-    fld1d_state_setup(&lLim1);
+  static fld1d_state_t l_Fcc, l_Flo, l_lim1;
+  if (!fld1d_state_is_setup(l_Fcc)) {
+    fld1d_state_setup(&l_Fcc);
+    fld1d_state_setup(&l_Flo);
+    fld1d_state_setup(&l_lim1);
   }
 
   // calculate low order fluxes
-  mhd_line_get_state(lU, pU, j, k, dir, ib - 2, ie + 2);
-  mhd_prim_from_cons(lW, lU, ib - 2, ie + 2);
-  mhd_reconstruct(lUl, lUr, lWl, lWr, lW, (fld1d_t) {}, ib, ie + 1);
-  mhd_riemann(lFlo, lUl, lUr, lWl, lWr, ib, ie + 1);
+  mhd_line_get_state(l_U, p_U, j, k, dir, ib - 2, ie + 2);
+  mhd_prim_from_cons(l_W, l_U, ib - 2, ie + 2);
+  mhd_reconstruct(l_Ul, l_Ur, l_Wl, l_Wr, l_W, (fld1d_t) {}, ib, ie + 1);
+  mhd_riemann(l_Flo, l_Ul, l_Ur, l_Wl, l_Wr, ib, ie + 1);
 
   // find cell centered fluxes
   for (int i = ib - 2; i < ie + 2; i++) {
-    fluxes_mhd_scons(&F1S(lFlo, 0, i), &F1S(lU, 0, i), &F1S(lW, 0, i), i);
+    fluxes_mhd_scons(&F1S(l_Flo, 0, i), &F1S(l_U, 0, i), &F1S(l_W, 0, i), i);
   }
 
   // limit1 (Harten-Zwas)
   for (int i = ib; i < ie; i++) {
-    mrc_fld_data_t lim1_pp = limit_hz(F1S(lW, PP, i-1), F1S(lW, PP, i), F1S(lW, PP, i+1));
+    mrc_fld_data_t lim1_pp = limit_hz(F1S(l_W, PP, i-1), F1S(l_W, PP, i), F1S(l_W, PP, i+1));
     for (int m = 0; m < 5; m++) {
-      F1S(lLim1, m, i) = mrc_fld_max(limit_hz(F1S(lU, m, i-1), F1S(lU, m, i), F1S(lU, m, i+1)), 
-				     lim1_pp);
+      F1S(l_lim1, m, i) = mrc_fld_max(limit_hz(F1S(l_U, m, i-1), F1S(l_U, m, i), F1S(l_U, m, i+1)), 
+				      lim1_pp);
     }
   }
 
   // find high-order flux and blend
   for (int i = ib; i < ie + 1; i++) {
     for (int m = 0; m < 5; m++) {
-      mrc_fld_data_t fhx = ((7.f / 12.f) * (F1S(lFcc, m, i-1) + F1S(lFcc, m, i  )) -
-			    (1.f / 12.f) * (F1S(lFcc, m, i-2) + F1S(lFcc, m, i+1)));
-      mrc_fld_data_t cx = mrc_fld_max(F1S(lLim1, m, i-1), F1S(lLim1, m, i));
-      F1S(lF, m, i) = cx * F1S(lFlo, m, i) + (1.f - cx) * fhx;
+      mrc_fld_data_t fhx = ((7.f / 12.f) * (F1S(l_Fcc, m, i-1) + F1S(l_Fcc, m, i  )) -
+			    (1.f / 12.f) * (F1S(l_Fcc, m, i-2) + F1S(l_Fcc, m, i+1)));
+      mrc_fld_data_t cx = mrc_fld_max(F1S(l_lim1, m, i-1), F1S(l_lim1, m, i));
+      F1S(l_F, m, i) = cx * F1S(l_Flo, m, i) + (1.f - cx) * fhx;
     }
   }
 
-  mhd_line_put_state(pF, lF, j, k, dir, ib, ie + 1);
+  mhd_line_put_state(p_F, l_F, j, k, dir, ib, ie + 1);
 }
 
 // ----------------------------------------------------------------------
 // patch_flux_corr
 
 static void
-patch_flux_corr(struct ggcm_mhd_step *step, fld3d_t pF[3], fld3d_t pU)
+patch_flux_corr(struct ggcm_mhd_step *step, fld3d_t p_F[3], fld3d_t p_U)
 {
   pde_for_each_dir(dir) {
     pde_for_each_line(dir, j, k, 0) {
       int ib = 0, ie = s_ldims[dir];
-      line_flux_corr(pF[dir], pU, j, k, dir, ib, ie);
+      line_flux_corr(p_F[dir], p_U, j, k, dir, ib, ie);
     }
   }
 }
 
 // ----------------------------------------------------------------------
-// patch_pushpp
+// patch_push_pp
 
 static void
-patch_pushpp(fld3d_t pU, mrc_fld_data_t dt, fld3d_t pW, fld3d_t pzmask)
+patch_push_pp(fld3d_t p_U, mrc_fld_data_t dt, fld3d_t pW, fld3d_t pzmask)
 {
   mrc_fld_data_t dth = -.5f * dt;
 
   fld3d_foreach(i,j,k, 0, 0) {
     mrc_fld_data_t z = dth * F3S(pzmask, 0, i,j,k);
-    F3S(pU, RVX, i,j,k) += z * PDE_INV_DX(i) * (F3S(pW, PP, i+di,j,k) - F3S(pW, PP, i-di,j,k));
-    F3S(pU, RVY, i,j,k) += z * PDE_INV_DY(j) * (F3S(pW, PP, i,j+dj,k) - F3S(pW, PP, i,j-dj,k));
-    F3S(pU, RVZ, i,j,k) += z * PDE_INV_DZ(k) * (F3S(pW, PP, i,j,k+dk) - F3S(pW, PP, i,j,k-dk));
+    F3S(p_U, RVX, i,j,k) += z * PDE_INV_DX(i) * (F3S(pW, PP, i+di,j,k) - F3S(pW, PP, i-di,j,k));
+    F3S(p_U, RVY, i,j,k) += z * PDE_INV_DY(j) * (F3S(pW, PP, i,j+dj,k) - F3S(pW, PP, i,j-dj,k));
+    F3S(p_U, RVZ, i,j,k) += z * PDE_INV_DZ(k) * (F3S(pW, PP, i,j,k+dk) - F3S(pW, PP, i,j,k-dk));
   } fld3d_foreach_end;
 }
 
@@ -811,104 +815,104 @@ patch_update_ct(struct ggcm_mhd *mhd, fld3d_t x, fld3d_t E,
 // pushstage_c
 
 static void
-pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt,
-	    struct mrc_fld *x_curr, struct mrc_fld *x_next,
-	    struct mrc_fld *prim, int limit)
+pushstage_c(struct ggcm_mhd_step *step, struct mrc_fld *x_next,
+	    mrc_fld_data_t dt, struct mrc_fld *f_Ucurr, struct mrc_fld *f_Wcurr,
+	    int limit)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
 
-  fld3d_t _x_curr, _x_next, ymask, zmask, rmask, _prim, b0, fluxes[3];
+  fld3d_t _x_next, p_Ucurr, p_Wcurr, ymask, zmask, rmask, b0, fluxes[3];
   fld3d_t E;
-  fld3d_setup(&_x_curr);
   fld3d_setup(&_x_next);
+  fld3d_setup(&p_Ucurr);
+  fld3d_setup(&p_Wcurr);
   fld3d_setup(&ymask);
   fld3d_setup(&zmask);
-  fld3d_setup(&_prim);
   fld3d_setup(&b0);
   for (int d = 0; d < 3; d++) {
     fld3d_setup(&fluxes[d]);
   }
   fld3d_setup(&E);
 
-  for (int p = 0; p < mrc_fld_nr_patches(x_curr); p++) {
+  for (int p = 0; p < mrc_fld_nr_patches(f_Ucurr); p++) {
     pde_patch_set(p);
-    fld3d_get(&_x_curr, x_curr, p);
+    fld3d_get(&p_Ucurr, f_Ucurr, p);
     for (int d = 0; d < 3; d++) {
-      fld3d_get(&fluxes[d], sub->fluxes[d], p);
+      fld3d_get(&fluxes[d], sub->f_fluxes[d], p);
     }
 
     if (limit == LIMIT_NONE || mhd->time < mhd->par.timelo) {
       if (s_opt_bc_reconstruct) {
-	patch_flux_pred_bc_reconstruct(step, fluxes, _x_curr, p);
+	patch_flux_pred_bc_reconstruct(step, fluxes, p_Ucurr, p);
       } else {
-	patch_flux_pred(step, fluxes, _x_curr);
+	patch_flux_pred(step, fluxes, p_Ucurr);
       }
     } else { // !LIMIT_NONE
-      patch_flux_corr(step, fluxes, _x_curr);
+      patch_flux_corr(step, fluxes, p_Ucurr);
     }
 
-    fld3d_put(&_x_curr, x_curr, p);
+    fld3d_put(&p_Ucurr, f_Ucurr, p);
     for (int d = 0; d < 3; d++) {
-      fld3d_put(&fluxes[d], sub->fluxes[d], p);
+      fld3d_put(&fluxes[d], sub->f_fluxes[d], p);
     }
   }
 
-  ggcm_mhd_correct_fluxes(mhd, sub->fluxes);
+  ggcm_mhd_correct_fluxes(mhd, sub->f_fluxes);
 
-  for (int p = 0; p < mrc_fld_nr_patches(x_curr); p++) {
+  for (int p = 0; p < mrc_fld_nr_patches(f_Ucurr); p++) {
     pde_patch_set(p);
 
-    fld3d_get(&_x_curr, x_curr, p);
+    fld3d_get(&p_Ucurr, f_Ucurr, p);
     fld3d_get(&_x_next, x_next, p);
-    fld3d_get(&_prim, prim, p);
+    fld3d_get(&p_Wcurr, f_Wcurr, p);
     fld3d_get(&ymask, mhd->ymask, p);
     fld3d_get(&zmask, sub->zmask, p);
     fld3d_get(&rmask, sub->rmask, p);
     for (int d = 0; d < 3; d++) {
-      fld3d_get(&fluxes[d], sub->fluxes[d], p);
+      fld3d_get(&fluxes[d], sub->f_fluxes[d], p);
     }
     if (s_opt_background) {
       fld3d_get(&b0, mhd->b0, p);
     }
-    fld3d_get(&E, sub->E, p);
+    fld3d_get(&E, sub->f_E, p);
 
     mhd_update_finite_volume(mhd, _x_next, fluxes, ymask, dt, 0, 0);
-    patch_pushpp(_x_next, dt, _prim, zmask);
-    patch_push_ej(_x_next, dt, _x_curr, _prim, zmask, b0);
+    patch_push_pp(_x_next, dt, p_Wcurr, zmask);
+    patch_push_ej(_x_next, dt, p_Ucurr, p_Wcurr, zmask, b0);
 
     patch_rmaskn(mhd, rmask, zmask, p);
-    patch_calce(step, E, dt, _x_curr, _prim, zmask, rmask, b0, p);
+    patch_calce(step, E, dt, p_Ucurr, p_Wcurr, zmask, rmask, b0, p);
 
-    fld3d_put(&_x_curr, x_curr, p);
+    fld3d_put(&p_Ucurr, f_Ucurr, p);
     fld3d_put(&_x_next, x_next, p);
     fld3d_put(&ymask, mhd->ymask, p);
     fld3d_put(&zmask, sub->zmask, p);
     fld3d_put(&rmask, sub->rmask, p);
-    fld3d_put(&_prim, prim, p);
+    fld3d_put(&p_Wcurr, f_Wcurr, p);
     for (int d = 0; d < 3; d++) {
-      fld3d_put(&fluxes[d], sub->fluxes[d], p);
+      fld3d_put(&fluxes[d], sub->f_fluxes[d], p);
     }
     if (s_opt_background) {
       fld3d_put(&b0, mhd->b0, p);
     }
-    fld3d_put(&E, sub->E, p);
+    fld3d_put(&E, sub->f_E, p);
   }
 
   //  ggcm_mhd_fill_ghosts_E(mhd, E);
   if (mhd->amr > 0) {
-    mrc_ddc_amr_apply(mhd->ddc_amr_E, sub->E);
+    mrc_ddc_amr_apply(mhd->ddc_amr_E, sub->f_E);
   }
 
   for (int p = 0; p < mrc_fld_nr_patches(x_next); p++) {
     pde_patch_set(p);
     fld3d_get(&_x_next, x_next, p);
-    fld3d_get(&E, sub->E, p);
+    fld3d_get(&E, sub->f_E, p);
 
     patch_update_ct(mhd, _x_next, E, dt, p);
 
     fld3d_put(&_x_next, x_next, p);
-    fld3d_put(&E, sub->E, p);
+    fld3d_put(&E, sub->f_E, p);
   }
 }
 
@@ -954,9 +958,6 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   struct mrc_fld *ymask = step->mhd->ymask, *zmask = sub->zmask;
 
   struct ggcm_mhd *mhd = step->mhd;
-  struct mrc_fld *x_half = ggcm_mhd_get_3d_fld(mhd, 8);
-  mrc_fld_dict_add_int(x_half, "mhd_type", MT_SEMI_CONSERVATIVE);
-  struct mrc_fld *prim = ggcm_mhd_get_3d_fld(mhd, 5);
 
   static int pr_A, pr_B;
   if (!pr_A) {
@@ -967,35 +968,32 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   // --- PREDICTOR
   prof_start(pr_A);
   ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
-  ggcm_mhd_step_c3_primvar(step, prim, x);
+  ggcm_mhd_step_c3_primvar(step, sub->f_W, x);
   // --- check for NaNs and negative pressures
   // (still controlled by do_badval_checks)
-  badval_checks_sc(mhd, x, prim);
+  badval_checks_sc(mhd, x, sub->f_W);
   zmaskn(step->mhd, zmask, 0, ymask, 0, x);
 
   // set x_half = x^n, then advance to n+1/2
-  mrc_fld_copy_range(x_half, x, 0, 8);
-  pushstage_c(step, .5f * mhd->dt, x, x_half, prim, LIMIT_NONE);
+  mrc_fld_copy_range(sub->f_Uhalf, x, 0, 8);
+  pushstage_c(step, sub->f_Uhalf, .5f * mhd->dt, x, sub->f_W, LIMIT_NONE);
   if (sub->enforce_rrmin) {
-    enforce_rrmin_sc(mhd, x_half);
+    enforce_rrmin_sc(mhd, sub->f_Uhalf);
   }
   prof_stop(pr_A);
 
   // --- CORRECTOR
   prof_start(pr_B);
-  ggcm_mhd_fill_ghosts(mhd, x_half, 0, mhd->time + mhd->bndt);
-  ggcm_mhd_step_c3_primvar(step, prim, x_half);
+  ggcm_mhd_fill_ghosts(mhd, sub->f_Uhalf, 0, mhd->time + mhd->bndt);
+  ggcm_mhd_step_c3_primvar(step, sub->f_W, sub->f_Uhalf);
   // --- check for NaNs and negative pressures
   // (still controlled by do_badval_checks)
-  badval_checks_sc(mhd, x_half, prim);
-  pushstage_c(step, mhd->dt, x_half, x, prim, LIMIT_1);
+  badval_checks_sc(mhd, sub->f_Uhalf, sub->f_W);
+  pushstage_c(step, x, mhd->dt, sub->f_Uhalf, sub->f_W, LIMIT_1);
   if (sub->enforce_rrmin) {
-    enforce_rrmin_sc(mhd, x_half);
+    enforce_rrmin_sc(mhd, sub->f_Uhalf);
   }
   prof_stop(pr_B);
-
-  ggcm_mhd_put_3d_fld(mhd, x_half);
-  ggcm_mhd_put_3d_fld(mhd, prim);
 }
 
 // ----------------------------------------------------------------------
@@ -1010,28 +1008,27 @@ ggcm_mhd_step_c3_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
   // the state vector should already be FLD_TYPE, but Eout is the data type
   // of the output
   struct mrc_fld *E = mrc_fld_get_as(Eout, FLD_TYPE);
-  struct mrc_fld *prim = ggcm_mhd_get_3d_fld(mhd, 5);
   struct mrc_fld *curr = ggcm_mhd_get_3d_fld(mhd, 3);
 
-  fld3d_t _E, _x, _prim, zmask, rmask, b0;
+  fld3d_t _E, _x, p_W, zmask, rmask, b0;
 
   ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
-  ggcm_mhd_step_c3_primvar(step, prim, x);
+  ggcm_mhd_step_c3_primvar(step, sub->f_W, x);
   zmaskn(step->mhd, sub->zmask, 0, mhd->ymask, 0, x);
   for (int p = 0; p < mrc_fld_nr_patches(E); p++) {
     pde_patch_set(p);
     fld3d_get(&_E, E, p);
     fld3d_get(&_x, x, p);
-    fld3d_get(&_prim, prim, p);
+    fld3d_get(&p_W, sub->f_W, p);
     fld3d_get(&b0, mhd->b0, p);
     fld3d_get(&zmask, sub->zmask, p);
     fld3d_get(&rmask, sub->rmask, p);
   
-    patch_calce(step, _E, mhd->dt, _x, _prim, zmask, rmask, b0, p);
+    patch_calce(step, _E, mhd->dt, _x, p_W, zmask, rmask, b0, p);
 
     fld3d_put(&_E, E, p);
     fld3d_put(&_x, x, p);
-    fld3d_put(&_prim, prim, p);
+    fld3d_put(&p_W, sub->f_W, p);
     fld3d_put(&b0, mhd->b0, p);
     fld3d_put(&zmask, sub->zmask, p);
     fld3d_put(&rmask, sub->rmask, p);
@@ -1039,7 +1036,6 @@ ggcm_mhd_step_c3_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
   //  ggcm_mhd_fill_ghosts_E(mhd, E);
   
   mrc_fld_put_as(E, Eout);
-  ggcm_mhd_put_3d_fld(mhd, prim);
   ggcm_mhd_put_3d_fld(mhd, curr);
 } 
 
