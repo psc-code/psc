@@ -973,6 +973,44 @@ patch_badval_checks_sc(struct ggcm_mhd *mhd, fld3d_t p_U, fld3d_t p_W, int p)
 }
 
 // ----------------------------------------------------------------------
+// patch_enforce_rrmin_sc
+//
+// nudge rr and uu such that rr >= rrmin if needed
+
+static void
+patch_enforce_rrmin_sc(struct ggcm_mhd *mhd, struct mrc_fld *x, int p)
+{
+  mrc_fld_data_t rrmin = mhd->par.rrmin / mhd->rrnorm;
+  mrc_fld_data_t gamma_m1 = s_gamma - 1.f;
+  
+  fld3d_foreach(ix,iy,iz, 0, 0) {
+    mrc_fld_data_t rr = RR_(x, ix, iy, iz, p);
+    if (rr < rrmin) {
+      // get pressure
+      mrc_fld_data_t rrvv = (sqr(RVX_(x, ix, iy, iz, p)) +
+			     sqr(RVY_(x, ix, iy, iz, p)) +
+			     sqr(RVZ_(x, ix, iy, iz, p)));
+      mrc_fld_data_t uu = UU_(x, ix, iy, iz, p);
+      mrc_fld_data_t pp = gamma_m1 * (uu - .5f * rrvv / rr);
+      
+      // set new values using rrmin
+      mrc_fld_data_t new_rr = rrmin;
+      mrc_fld_data_t new_uu = pp / gamma_m1 + .5f * rrvv / new_rr;
+      RR_(x, ix, iy, iz, p) = new_rr;
+      UU_(x, ix, iy, iz, p) = new_uu;
+      
+      float *crdx = ggcm_mhd_crds_get_crd(mhd->crds, 0, FX1);
+      float *crdy = ggcm_mhd_crds_get_crd(mhd->crds, 1, FX1);
+      float *crdz = ggcm_mhd_crds_get_crd(mhd->crds, 2, FX1);
+      
+      mprintf("!! Note: enforcing min density at (x=%g y=%g z=%g): "
+	      "rr %lg -> %lg, uu %lg -> %lg\n",
+	      crdx[ix], crdy[iy], crdz[iz], rr, new_rr, uu, new_uu);
+    }
+  } fld3d_foreach_end;
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_step_c3_run
 
 static void
@@ -1020,8 +1058,13 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *f_U)
   }
 
   pushstage_c(step, f_Uhalf, .5f * mhd->dt, f_U, f_W, LIMIT_NONE);
+
   if (sub->enforce_rrmin) {
-    enforce_rrmin_sc(mhd, f_Uhalf);
+    for (int p = 0; p < mrc_fld_nr_patches(f_U); p++) {
+      fld3d_get(&p_Uhalf, p);
+      patch_enforce_rrmin_sc(mhd, f_Uhalf, p);
+      fld3d_put(&p_Uhalf, p);
+    }
   }
   prof_stop(pr_A);
 
@@ -1041,8 +1084,13 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *f_U)
   }
 
   pushstage_c(step, f_U, mhd->dt, f_Uhalf, f_W, LIMIT_1);
+
   if (sub->enforce_rrmin) {
-    enforce_rrmin_sc(mhd, f_Uhalf);
+    for (int p = 0; p < mrc_fld_nr_patches(f_U); p++) {
+      fld3d_get(&p_U, p);
+      patch_enforce_rrmin_sc(mhd, f_U, p);
+      fld3d_put(&p_U, p);
+    }
   }
   prof_stop(pr_B);
 }
