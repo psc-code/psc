@@ -158,7 +158,7 @@ ggcm_mhd_step_c3_setup_flds(struct ggcm_mhd_step *step)
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_step_c3_primvar
+// patch_primvar
 
 static void
 patch_primvar(fld3d_t p_W, fld3d_t p_U, int p)
@@ -178,6 +178,46 @@ patch_primvar(fld3d_t p_W, fld3d_t p_U, int p)
     F3S(p_W, PP, i,j,k) = gamma_m1 * (F3S(p_U, UU, i,j,k) - .5f * rvv);
   } fld3d_foreach_end;
 }
+
+// ----------------------------------------------------------------------
+// patch_zmaskn
+
+static inline void
+patch_zmaskn_inl(struct ggcm_mhd *mhd, struct mrc_fld *zmask, int m_zmask,
+		 struct mrc_fld *ymask, int m_ymask, struct mrc_fld *x, struct mrc_fld *b0)
+{
+  float va02i = 1.f / sqr(mhd->par.speedlimit / mhd->vvnorm);
+  float eps   = 1e-15f;
+
+  int gdims[3];
+  mrc_domain_get_global_dims(mhd->domain, gdims);
+  int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
+
+  for (int p = 0; p < mrc_fld_nr_patches(zmask); p++) {
+    mrc_fld_foreach(zmask, ix,iy,iz, 1, 1) {
+      mrc_fld_data_t bb = (sqr(.5f * (BT(x, 0, ix,iy,iz, p) + BT(x, 0, ix+dx,iy,iz, p))) +
+			   sqr(.5f * (BT(x, 1, ix,iy,iz, p) + BT(x, 1, ix,iy+dy,iz, p))) +
+			   sqr(.5f * (BT(x, 2, ix,iy,iz, p) + BT(x, 2, ix,iy,iz+dz, p))));
+      float rrm = fmaxf(eps, bb * va02i);
+      M3(zmask, m_zmask, ix,iy,iz, p) = M3(ymask, m_ymask, ix,iy,iz, p) *
+	fminf(1.f, RR_(x, ix,iy,iz, p) / rrm);
+    } mrc_fld_foreach_end;
+  }
+}
+
+static void _mrc_unused
+patch_zmaskn(struct ggcm_mhd *mhd, struct mrc_fld *zmask, int m_zmask,
+	     struct mrc_fld *ymask, int m_ymask, struct mrc_fld *x)
+{
+  if (mhd->b0) {
+    zmaskn_inl(mhd, zmask, m_zmask, ymask, m_ymask, x, mhd->b0);
+  } else {
+    zmaskn_inl(mhd, zmask, m_zmask, ymask, m_ymask, x, NULL);
+  }
+}
+
+// ======================================================================
+// (hydro) predictor
 
 // ----------------------------------------------------------------------
 // line_flux_pred_pt1
@@ -283,6 +323,9 @@ patch_flux_pred_bc_reconstruct(struct ggcm_mhd_step *step, fld3d_t p_F[3], fld3d
     fld3d_get(&p_Ur[d], f_Ur[d], p);
   }
 }
+
+// ======================================================================
+// (hydro) corrector
 
 // ----------------------------------------------------------------------
 // limit_hz
@@ -921,7 +964,7 @@ ggcm_mhd_step_c3_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
   if (step->do_nwst) {
     ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
-    zmaskn(mhd, zmask, 0, ymask, 0, x);
+    patch_zmaskn(mhd, zmask, 0, ymask, 0, x);
     double dtn = pde_mhd_get_dt_scons(mhd, x, zmask, 0);
 
     // --- update timestep
@@ -977,7 +1020,7 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   // --- check for NaNs and negative pressures
   // (still controlled by do_badval_checks)
   badval_checks_sc(mhd, x, sub->f_W);
-  zmaskn(step->mhd, zmask, 0, ymask, 0, x);
+  patch_zmaskn(step->mhd, zmask, 0, ymask, 0, x);
 
   // set x_half = x^n, then advance to n+1/2
   mrc_fld_copy_range(sub->f_Uhalf, x, 0, 8);
@@ -1031,7 +1074,7 @@ ggcm_mhd_step_c3_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
     fld3d_put(&p_U, x, p);
     fld3d_put(&p_W, sub->f_W, p);
   }
-  zmaskn(step->mhd, sub->zmask, 0, mhd->ymask, 0, x);
+  patch_zmaskn(step->mhd, sub->zmask, 0, mhd->ymask, 0, x);
   for (int p = 0; p < mrc_fld_nr_patches(E); p++) {
     pde_patch_set(p);
     fld3d_get(&_E, E, p);
