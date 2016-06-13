@@ -172,7 +172,7 @@ mhd_flux_pt1(struct ggcm_mhd_step *step, fld3d_t x,
   fld3d_t bnd_mask;
   fld3d_setup(&bnd_mask, step->mhd->bnd_mask);
 
-  fld3d_get(&bnd_mask, step->mhd->bnd_mask, p);
+  fld3d_get(&bnd_mask, p);
 
   // FIXME: +2,+2 is specifically for PLM reconstr (and enough for PCM)
   mhd_line_get_state(U, x, j, k, dir, ib - 2, ie + 2);
@@ -229,17 +229,17 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, mrc_fld_data_t time_c
   }
     
   for (int p = 0; p < mrc_fld_nr_patches(x_curr); p++) {
-    fld3d_get(&x, x_curr, p);
+    fld3d_get(&x, p);
     for (int d = 0; d < 3; d++) {
-      fld3d_get(&fluxes[d], sub->fluxes[d], p);
+      fld3d_get(&fluxes[d], p);
     }
 
     if (s_opt_bc_reconstruct) {
       
       // reconstruct
       pde_for_each_dir(dir) {
-	fld3d_get(&Ul[dir], sub->Ul[dir], p);
-	fld3d_get(&Ur[dir], sub->Ur[dir], p);
+	fld3d_get(&Ul[dir], p);
+	fld3d_get(&Ur[dir], p);
 
 	pde_for_each_line(dir, j, k, 0) {
 	  int ib = 0, ie = s_ldims[dir];
@@ -257,8 +257,8 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, mrc_fld_data_t time_c
     
       // riemann solve
       pde_for_each_dir(dir) {
-	fld3d_get(&Ul[dir], sub->Ul[dir], p);
-	fld3d_get(&Ur[dir], sub->Ur[dir], p);
+	fld3d_get(&Ul[dir], p);
+	fld3d_get(&Ur[dir], p);
 
 	pde_for_each_line(dir, j, k, 0) {
 	  int ib = 0, ie = s_ldims[dir];
@@ -296,10 +296,10 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, mrc_fld_data_t time_c
 
   for (int p = 0; p < mrc_fld_nr_patches(x_next); p++) {
     pde_patch_set(p);
-    fld3d_get(&_x_next, x_next, p);
-    fld3d_get(&ymask, mhd->ymask, p);
+    fld3d_get(&_x_next, p);
+    fld3d_get(&ymask, p);
     for (int d = 0; d < 3; d++) {
-      fld3d_get(&fluxes[d], sub->fluxes[d], p);
+      fld3d_get(&fluxes[d], p);
     }
 
     mhd_update_finite_volume(mhd, _x_next, fluxes, ymask, dt, 0, 0);

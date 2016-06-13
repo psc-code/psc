@@ -180,9 +180,9 @@ ggcm_mhd_step_vl_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   fluxes_pred(step, flux, x);
   for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
     pde_patch_set(p);
-    fld3d_get(&_x_half, x_half, p);
+    fld3d_get(&_x_half, p);
     for (int d = 0; d < 3; d++) {
-      fld3d_get(&_flux[d], flux[d], p);
+      fld3d_get(&_flux[d], p);
     }
 
     mhd_update_finite_volume(mhd, _x_half, _flux, (fld3d_t) {}, .5f * dt, 0, 0);
@@ -200,9 +200,9 @@ ggcm_mhd_step_vl_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   ggcm_mhd_correct_fluxes(mhd, flux);
   for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
     pde_patch_set(p);
-    fld3d_get(&_x, x, p);
+    fld3d_get(&_x, p);
     for (int d = 0; d < 3; d++) {
-      fld3d_get(&_flux[d], flux[d], p);
+      fld3d_get(&_flux[d], p);
     }
 
     mhd_update_finite_volume(mhd, _x, _flux, (fld3d_t) {}, dt, 0, 0);

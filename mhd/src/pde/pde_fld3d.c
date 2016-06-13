@@ -35,10 +35,9 @@ fld3d_setup_tmp(fld3d_t *f, int n_comps)
 }
 
 static inline void
-fld3d_get(fld3d_t *f, struct mrc_fld *fld, int p)
+fld3d_get(fld3d_t *f, int p)
 {
   assert(!f->is_temp);
-  assert(f->mrc_fld == fld);
   f->p = p;
 }
 
