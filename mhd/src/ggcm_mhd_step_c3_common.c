@@ -161,26 +161,22 @@ ggcm_mhd_step_c3_setup_flds(struct ggcm_mhd_step *step)
 // ggcm_mhd_step_c3_primvar
 
 static void
-ggcm_mhd_step_c3_primvar(struct ggcm_mhd_step *step, struct mrc_fld *prim,
-			 struct mrc_fld *x)
+patch_primvar(fld3d_t p_W, fld3d_t p_U, int p)
 {
-  mrc_fld_data_t gamm = step->mhd->par.gamm;
-  mrc_fld_data_t s = gamm - 1.f;
+  mrc_fld_data_t gamma_m1 = s_gamma - 1.f;
 
-  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
-    mrc_fld_foreach(x, i,j,k, 2, 2) {
-      M3(prim, RR, i,j,k, p) = RR_(x, i,j,k, p);
-      mrc_fld_data_t rri = 1.f / RR_(x, i,j,k, p);
-      M3(prim, VX, i,j,k, p) = rri * RVX_(x, i,j,k, p);
-      M3(prim, VY, i,j,k, p) = rri * RVY_(x, i,j,k, p);
-      M3(prim, VZ, i,j,k, p) = rri * RVZ_(x, i,j,k, p);
-      mrc_fld_data_t rvv =
-	M3(prim, VX, i,j,k, p) * RVX_(x, i,j,k, p) +
-	M3(prim, VY, i,j,k, p) * RVY_(x, i,j,k, p) +
-	M3(prim, VZ, i,j,k, p) * RVZ_(x, i,j,k, p);
-      M3(prim, PP, i,j,k, p) = s * (UU_(x, i,j,k, p) - .5f * rvv);
-    } mrc_fld_foreach_end;
-  }
+  fld3d_foreach(i,j,k, 2, 2) {
+    F3S(p_W, RR, i,j,k) = F3S(p_U, RR, i,j,k);
+    mrc_fld_data_t rri = 1.f / F3S(p_U, RR, i,j,k);
+    F3S(p_W, VX, i,j,k) = rri * F3S(p_U, RVX, i,j,k);
+    F3S(p_W, VY, i,j,k) = rri * F3S(p_U, RVY, i,j,k);
+    F3S(p_W, VZ, i,j,k) = rri * F3S(p_U, RVZ, i,j,k);
+    mrc_fld_data_t rvv =
+      F3S(p_W, VX, i,j,k) * F3S(p_U, RVX, i,j,k) +
+      F3S(p_W, VY, i,j,k) * F3S(p_U, RVY, i,j,k) +
+      F3S(p_W, VZ, i,j,k) * F3S(p_U, RVZ, i,j,k);
+    F3S(p_W, PP, i,j,k) = gamma_m1 * (F3S(p_U, UU, i,j,k) - .5f * rvv);
+  } fld3d_foreach_end;
 }
 
 // ----------------------------------------------------------------------
@@ -965,10 +961,19 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
     pr_B = prof_register("c3_corr", 0, 0, 0);
   }
 
+  fld3d_t p_U, p_W;
+
   // --- PREDICTOR
   prof_start(pr_A);
   ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
-  ggcm_mhd_step_c3_primvar(step, sub->f_W, x);
+  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+    fld3d_get(&p_U, x, p);
+    fld3d_get(&p_W, sub->f_W, p);
+    patch_primvar(p_W, p_U, p);
+    fld3d_put(&p_U, x, p);
+    fld3d_put(&p_W, sub->f_W, p);
+  }
+
   // --- check for NaNs and negative pressures
   // (still controlled by do_badval_checks)
   badval_checks_sc(mhd, x, sub->f_W);
@@ -985,7 +990,13 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   // --- CORRECTOR
   prof_start(pr_B);
   ggcm_mhd_fill_ghosts(mhd, sub->f_Uhalf, 0, mhd->time + mhd->bndt);
-  ggcm_mhd_step_c3_primvar(step, sub->f_W, sub->f_Uhalf);
+  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+    fld3d_get(&p_U, sub->f_Uhalf, p);
+    fld3d_get(&p_W, sub->f_W, p);
+    patch_primvar(p_W, p_U, p);
+    fld3d_put(&p_U, sub->f_Uhalf, p);
+    fld3d_put(&p_W, sub->f_W, p);
+  }
   // --- check for NaNs and negative pressures
   // (still controlled by do_badval_checks)
   badval_checks_sc(mhd, sub->f_Uhalf, sub->f_W);
@@ -1010,10 +1021,16 @@ ggcm_mhd_step_c3_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
   struct mrc_fld *E = mrc_fld_get_as(Eout, FLD_TYPE);
   struct mrc_fld *curr = ggcm_mhd_get_3d_fld(mhd, 3);
 
-  fld3d_t _E, _x, p_W, zmask, rmask, b0;
+  fld3d_t p_U, p_W, _E, _x, zmask, rmask, b0;
 
   ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
-  ggcm_mhd_step_c3_primvar(step, sub->f_W, x);
+  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+    fld3d_get(&p_U, x, p);
+    fld3d_get(&p_W, sub->f_W, p);
+    patch_primvar(p_W, p_U, p);
+    fld3d_put(&p_U, x, p);
+    fld3d_put(&p_W, sub->f_W, p);
+  }
   zmaskn(step->mhd, sub->zmask, 0, mhd->ymask, 0, x);
   for (int p = 0; p < mrc_fld_nr_patches(E); p++) {
     pde_patch_set(p);
