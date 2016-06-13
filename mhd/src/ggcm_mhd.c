@@ -298,6 +298,14 @@ ggcm_mhd_correct_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *fluxes[3])
   }
 }
 
+void
+ggcm_mhd_correct_E(struct ggcm_mhd *mhd, struct mrc_fld *E)
+{
+  if (mhd->amr > 0) {
+    mrc_ddc_amr_apply(mhd->ddc_amr_E, E);
+  }
+}
+
 int
 ggcm_mhd_ntot(struct ggcm_mhd *mhd)
 {

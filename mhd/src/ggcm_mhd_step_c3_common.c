@@ -841,7 +841,7 @@ patch_pushstage_pt1(struct ggcm_mhd_step *step, fld3d_t p_Ucurr, fld3d_t p_Wcurr
   // FIXME: we could use the fact that we calculate primitive variables already
   if (limit == LIMIT_NONE) {
     patch_flux_pred(step, p_F, p_Ucurr);
-  } else { // !LIMIT_NONE
+  } else {
     patch_flux_corr(step, p_F, p_Ucurr);
   }
 }
@@ -875,12 +875,12 @@ patch_pushstage_pt2(struct ggcm_mhd_step *step, fld3d_t p_Unext, mrc_fld_data_t 
 }
 
 // ----------------------------------------------------------------------
-// pushstage_c
+// pushstage
 
 static void
-pushstage_c(struct ggcm_mhd_step *step, struct mrc_fld *f_Unext,
-	    mrc_fld_data_t dt, struct mrc_fld *f_Ucurr, struct mrc_fld *f_Wcurr,
-	    int stage)
+pushstage(struct ggcm_mhd_step *step, struct mrc_fld *f_Unext,
+	  mrc_fld_data_t dt, struct mrc_fld *f_Ucurr, struct mrc_fld *f_Wcurr,
+	  int stage, int limit)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
@@ -900,13 +900,6 @@ pushstage_c(struct ggcm_mhd_step *step, struct mrc_fld *f_Unext,
   fld3d_setup(&p_E, sub->f_E);
 
   // primvar, badval, reconstruct
-  int limit;
-  if (stage == 0 || mhd->time < mhd->par.timelo) {
-    limit = LIMIT_NONE;
-  } else {
-    limit = LIMIT_1;
-  }
-
   for (int p = 0; p < mrc_fld_nr_patches(f_Unext); p++) {
     pde_patch_set(p);
 
@@ -940,10 +933,8 @@ pushstage_c(struct ggcm_mhd_step *step, struct mrc_fld *f_Unext,
     }
   }
 
-  //  ggcm_mhd_fill_ghosts_E(mhd, E);
-  if (mhd->amr > 0) {
-    mrc_ddc_amr_apply(mhd->ddc_amr_E, sub->f_E);
-  }
+  // correct E field
+  ggcm_mhd_correct_E(mhd, sub->f_E);
 
   for (int p = 0; p < mrc_fld_nr_patches(f_Unext); p++) {
     pde_patch_set(p);
@@ -1032,7 +1023,7 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *f_U)
 
   ggcm_mhd_fill_ghosts(mhd, f_U, 0, mhd->time);
   mrc_fld_copy(f_Uhalf, f_U);
-  pushstage_c(step, f_Uhalf, .5f * mhd->dt, f_U, f_W, 0);
+  pushstage(step, f_Uhalf, .5f * mhd->dt, f_U, f_W, 0, LIMIT_NONE);
 
   prof_stop(pr_A);
 
@@ -1040,7 +1031,8 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *f_U)
   prof_start(pr_B);
 
   ggcm_mhd_fill_ghosts(mhd, f_Uhalf, 0, mhd->time + mhd->bndt);
-  pushstage_c(step, f_U, mhd->dt, f_Uhalf, f_W, 1);
+  int limit = mhd->time < mhd->par.timelo ? LIMIT_NONE : LIMIT_1;
+  pushstage(step, f_U, mhd->dt, f_Uhalf, f_W, 1, limit);
 
   prof_stop(pr_B);
 }
