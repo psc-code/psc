@@ -29,9 +29,6 @@
 #include "pde/pde_mhd_stage.c"
 #include "pde/pde_mhd_get_dt.c"
 
-#include "mhd_3d.c"
-#include "mhd_sc.c"
-
 //FIXME, when using hydro_rusanov / no pushpp, things go wrong when > timelo
 
 #define _BT(p_U, d, i,j,k)  (F3S(p_U, BX+d, i,j,k) + (s_opt_background ? F3S(p_b0, d, i,j,k) : 0))
