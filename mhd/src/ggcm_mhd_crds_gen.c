@@ -31,8 +31,7 @@ ggcm_mhd_crds_gen_run_aux_default(struct ggcm_mhd_crds_gen *gen,
   //        NOT ggcm_mhd_crds, which is on the LHS OR RHS here
   for (int p = 0; p < mrc_domain_nr_patches(crds->domain); p++) {
     for (int d = 0; d < 3; d++) {
-      // yes, these are labled with 'x', but we loops over all dimensions here
-      float *fxx1 = ggcm_mhd_crds_get_crd_p(crds, d, FX1, p);
+      // yes, these are labeled with 'x', but we loop over all dimensions here
       float *fxx2 = ggcm_mhd_crds_get_crd_p(crds, d, FX2, p);
       float *bdx1 = ggcm_mhd_crds_get_crd_p(crds, d, BD1, p);
       float *bdx2 = ggcm_mhd_crds_get_crd_p(crds, d, BD2, p);
@@ -40,15 +39,22 @@ ggcm_mhd_crds_gen_run_aux_default(struct ggcm_mhd_crds_gen *gen,
       float *bdx4 = ggcm_mhd_crds_get_crd_p(crds, d, BD4, p);
       
       for (int i = -sw; i < im[d] + sw; i++) {
-	fxx2[i] = sqr(fxx1[i]);
+	fxx2[i] = sqr(MRC_CRD(mrc_crds, d, i));
       }
       for (int i = -sw; i < im[d] + sw - 1; i++) {
-	bdx1[i] = 1.0 / (fxx1[i+1] - fxx1[i]);
-	bdx4[i] = 1.0 / (fxx1[i+1] - fxx1[i]);
+	bdx1[i] = 1.f / (MRC_CRD(mrc_crds, d, i+1) - MRC_CRD(mrc_crds, d, i));
+	bdx4[i] = 1.f / (MRC_CRD(mrc_crds, d, i+1) - MRC_CRD(mrc_crds, d, i));
       }
-      for (int i = -sw + 1; i < im[d] + sw - 1; i++) {
-	bdx2[i] = 0.5 * (fxx1[i+1] - fxx1[i-1]);
-	bdx3[i] = 1.0 / bdx2[i];
+      for (int i = -sw; i < im[d] + sw; i++) {
+	float old = bdx2[i];
+	if (i == -sw || i == im[d] + sw - 1) {
+	  // we could just use this always, but it gives finite precision
+	  // errors compared to the version below, which is how fortran did it
+	  bdx2[i] = MRC_MCRD_NC(mrc_crds, d, i+1, 0) - MRC_MCRD_NC(mrc_crds, d, i, 0);
+	} else {
+	  bdx2[i] = .5f * (MRC_MCRD(mrc_crds, d, i+1, 0) - MRC_MCRD(mrc_crds, d, i-1, 0));
+	}
+	bdx3[i] = 1.f / bdx2[i];
       }
     }
   }
