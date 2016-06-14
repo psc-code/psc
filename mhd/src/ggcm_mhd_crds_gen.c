@@ -70,11 +70,7 @@ ggcm_mhd_crds_gen_run(struct ggcm_mhd_crds_gen *gen, struct ggcm_mhd_crds *crds)
   assert(ops && ops->run);
 
   ops->run(gen, crds);
-  if (ops && ops->run_aux) {
-    ops->run_aux(gen, crds);
-  } else {
-    ggcm_mhd_crds_gen_run_aux_default(gen, crds);
-  }
+  ggcm_mhd_crds_gen_run_aux_default(gen, crds);
 }
 
 // ----------------------------------------------------------------------
