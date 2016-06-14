@@ -134,6 +134,21 @@ ggcm_mhd_ic_mirdip_vector_potential_bg(struct ggcm_mhd_ic *ic, int m, double x[3
 {
   struct ggcm_mhd_ic_mirdip *sub = ggcm_mhd_ic_mirdip(ic);
 
+  // FIXME
+  // It's rather ugly to do this here, but in setup() it's too early, because
+  // bndsw isn't set up yet at the time...
+  static bool first_time = true;
+  if (first_time) {
+    struct ggcm_mhd_bndsw *bndsw = ggcm_mhd_get_var_obj(ic->mhd, "bndsw");
+    if (bndsw) {
+      float bnvals[SW_NR];
+      ggcm_mhd_bndsw_get_initial(bndsw, bnvals);
+      for (int m = 0; m < SW_NR; m++) {
+	sub->bnvals_code[m] = bnvals[m];
+      }
+    }
+  }
+
   // get main dipole vector potential
   double A = ggcm_mhd_dipole_vector_potential(sub->mhd_dipole, m, x, (float [3]) { 0.f, 0.f, 0.f },
 					      sub->dipole_moment, 0.);
