@@ -88,11 +88,6 @@ ggcm_mhd_step_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
     pr = prof_register("ggcm_mhd_step_run", 0, 0, 0.);
   }
 
-  prof_start(pr);
-  assert(ops && ops->run);
-  ops->run(step, x);
-  prof_stop(pr);
-
   if (step->debug_dump) {
     struct ggcm_mhd *mhd = step->mhd;
     static struct ggcm_mhd_diag *diag;
@@ -111,6 +106,11 @@ ggcm_mhd_step_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
     ggcm_mhd_fill_ghosts(mhd, mhd->fld, 0, mhd->time);
     ggcm_mhd_diag_run_now(diag, mhd->fld, DIAG_TYPE_3D, cnt++);
   }
+
+  prof_start(pr);
+  assert(ops && ops->run);
+  ops->run(step, x);
+  prof_stop(pr);
 
   if (step->legacy_dt_handling && ops->get_dt) {
     struct ggcm_mhd *mhd = step->mhd;
