@@ -1,7 +1,7 @@
 
 AM_CPPFLAGS = -I$(srcdir)/../../include -I$(srcdir)/../include
 
-bin_PROGRAMS = \
+check_PROGRAMS = \
 	mhd_cpaw \
 	mhd_mirdip \
 	mhd_fadeev \
@@ -18,7 +18,7 @@ bin_PROGRAMS = \
 	mhd_mhdblast \
 	mhd_wave
 
-check_PROGRAMS = \
+check_PROGRAMS += \
 	test_ggcm_mhd_crds \
 	test_ggcm_mhd
 
@@ -49,7 +49,7 @@ if HAVE_GKEYLL
 AM_CFLAGS = -Bdynamic
 AM_CXXFLAGS = -Bdynamic
 
-bin_PROGRAMS += mhd_gkeyll
+check_PROGRAMS += mhd_gkeyll
 
 nodist_EXTRA_mhd_gkeyll_SOURCES = dummy.cxx
 
