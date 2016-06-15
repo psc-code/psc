@@ -7,7 +7,6 @@
 #include "ggcm_mhd_step_private.h"
 #include "ggcm_mhd_private.h"
 #include "ggcm_mhd_defs.h"
-#include "ggcm_mhd_crds.h"
 #include "ggcm_mhd_diag_private.h"
 #include "mhd_util.h"
 

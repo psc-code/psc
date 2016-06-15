@@ -2,7 +2,6 @@
 #include "ggcm_mhd_step_private.h"
 #include "ggcm_mhd_private.h"
 #include "ggcm_mhd_defs.h"
-#include "ggcm_mhd_crds.h"
 #include "ggcm_mhd_diag_private.h"
 #include "mhd_util.h"
 
@@ -725,23 +724,19 @@ patch_badval_checks_sc(struct ggcm_mhd *mhd, fld3d_t p_U, fld3d_t p_W, int p)
   mrc_fld_data_t ppmin = 0.;
   mrc_fld_data_t rrmin = 0.;  // mhd->par.rrmin / mhd->rrnorm
   
-  float *crdx = ggcm_mhd_crds_get_crd(mhd->crds, 0, FX1);
-  float *crdy = ggcm_mhd_crds_get_crd(mhd->crds, 1, FX1);
-  float *crdz = ggcm_mhd_crds_get_crd(mhd->crds, 2, FX1);
-  
   fld3d_foreach(i,j,k, 0, 0) {
     // check for negative pressure
     if (F3S(p_W, PP, i,j,k) < ppmin) {
       has_badval = 5;
       mprintf("pressure @ (x=%g y=%g z=%g) = %lg < %lg\n",
-	      crdx[i], crdy[j], crdz[k], F3S(p_W, PP, i,j,k), ppmin);
+	      PDE_CRDX_CC(i), PDE_CRDY_CC(j), PDE_CRDZ_CC(k), F3S(p_W, PP, i,j,k), ppmin);
     }
     
     // check for negative density
     if (F3S(p_U, RR, i,j,k) < rrmin) {
       has_badval = 4;
       mprintf("density @ (x=%g y=%g z=%g) = %lg < %lg\n",
-	      crdx[i], crdy[j], crdz[k], F3S(p_U, RR, i,j,k), rrmin);
+	      PDE_CRDX_CC(i), PDE_CRDY_CC(j), PDE_CRDZ_CC(k), F3S(p_U, RR, i,j,k), rrmin);
     }
     
     // check for invalid values
@@ -749,7 +744,7 @@ patch_badval_checks_sc(struct ggcm_mhd *mhd, fld3d_t p_U, fld3d_t p_W, int p)
       if (!isfinite(F3S(p_U, m, i,j,k))) {
 	has_badval = 3;
 	mprintf("NaN in field %d @ (x=%g y=%g z=%g)\n",
-		m, crdx[i], crdy[j], crdz[k]);
+		m, PDE_CRDX_CC(i), PDE_CRDY_CC(j), PDE_CRDZ_CC(k));
       }
     }
   } fld3d_foreach_end;
@@ -788,13 +783,9 @@ patch_enforce_rrmin_sc(struct ggcm_mhd *mhd, fld3d_t p_U, int p)
       F3S(p_U, RR, i,j,k) = new_rr;
       F3S(p_U, UU, i,j,k) = new_uu;
       
-      float *crdx = ggcm_mhd_crds_get_crd(mhd->crds, 0, FX1);
-      float *crdy = ggcm_mhd_crds_get_crd(mhd->crds, 1, FX1);
-      float *crdz = ggcm_mhd_crds_get_crd(mhd->crds, 2, FX1);
-      
       mprintf("!! Note: enforcing min density at (x=%g y=%g z=%g): "
 	      "rr %lg -> %lg, uu %lg -> %lg\n",
-	      crdx[i], crdy[j], crdz[k], rr, new_rr, uu, new_uu);
+	      PDE_CRDX_CC(i), PDE_CRDY_CC(j), PDE_CRDZ_CC(k), rr, new_rr, uu, new_uu);
     }
   } fld3d_foreach_end;
 }

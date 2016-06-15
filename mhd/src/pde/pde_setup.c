@@ -43,6 +43,7 @@ static double s_g_dxyzmin; // global minimum grid spacing
 // mesh spacing, statically saved for each patch
 
 struct pde_patch {
+  fld1d_t crd_cc[3]; // cell centered coordinates
   fld1d_t dx[3]; // cell sizes in each direction (ie. spacing between faces)
   fld1d_t inv_dx[3]; // 1 / s_dx[]
   fld1d_t inv_dxf[3]; // 1 / dxf[], where dxf = spacing between cell centers (located at face)
@@ -60,6 +61,10 @@ static struct pde_patch *s_patches;
 static struct pde_patch s_patch;
 
 // macros to access these quantities in less ugly way
+#define PDE_CRDX_CC(i) F1(s_patch.crd_cc[0], i)
+#define PDE_CRDY_CC(j) F1(s_patch.crd_cc[1], j)
+#define PDE_CRDZ_CC(k) F1(s_patch.crd_cc[2], k)
+
 #define PDE_DX(i) F1(s_patch.dx[0], i)
 #define PDE_DY(j) F1(s_patch.dx[1], j)
 #define PDE_DZ(k) F1(s_patch.dx[2], k)
@@ -127,11 +132,13 @@ pde_setup(struct mrc_fld *fld)
   for (int p = 0; p < s_n_patches; p++) {
     struct pde_patch *patch = &s_patches[p];
     for (int d = 0; d < 3; d++) {
+      fld1d_setup(&patch->crd_cc[d]);
       fld1d_setup(&patch->dx[d]);
       fld1d_setup(&patch->inv_dx[d]);
       fld1d_setup(&patch->inv_dxf[d]);
 
       for (int i = -s_sw[d]; i < s_ldims[d] + s_sw[d]; i++) {
+	F1(patch->crd_cc[d], i) = MRC_DMCRD(crds, d, i, p);
 	F1(patch->dx[d], i) = MRC_DMCRD_NC(crds, d, i+1, p) - MRC_DMCRD_NC(crds, d, i, p);
 	F1(patch->inv_dx[d], i) = 1.f / F1(patch->dx[d], i);
       }
