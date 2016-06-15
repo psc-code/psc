@@ -111,7 +111,7 @@ ggcm_mhd_crds_set_from_mrc_crds(struct ggcm_mhd_crds *crds)
   if (strcmp(mrc_domain_type(crds->domain), "simple") == 0) {
     for (int d = 0; d < 3; d++) {
       struct mrc_fld *global_x = crds->global_f1[d];
-      mrc_f1_foreach(global_x, i, 0, 0) {
+      mrc_f1_foreach(global_x, i, 1, 1) {
 	MRC_F1(global_x, 0, i) = MRC_D2(mrc_crds->global_crd[d], i, 0);
       } mrc_f1_foreach_end;
     }
@@ -139,12 +139,14 @@ _ggcm_mhd_crds_setup(struct ggcm_mhd_crds *crds)
     }
     mrc_fld_setup(crds->f1[d]);
 
+    // global crds
     mrc_fld_set_param_int_array(crds->global_f1[d], "dims", 1, (int[1]) { gdims[d] });
-    mrc_fld_set_param_int_array(crds->global_f1[d], "sw"  , 1, (int[1]) { mrc_crds->sw });
+    // because the corresponding Fortran array has 1 ghost point, this one is the same
+    mrc_fld_set_param_int_array(crds->global_f1[d], "sw", 1, (int[1]) { 1 });
     mrc_fld_setup(crds->global_f1[d]);
   }
 
-  // set up values from mrc_crds
+  // set values from mrc_crds
   ggcm_mhd_crds_set_from_mrc_crds(crds);
 
   if (strcmp(mrc_crds_type(mrc_crds), "amr_uniform") == 0) {
