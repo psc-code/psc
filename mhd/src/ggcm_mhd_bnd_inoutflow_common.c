@@ -19,6 +19,10 @@ struct ggcm_mhd_bnd_sub {
 //   point, which however afterwards will be fixed up here, so should be okay)
 //   The current implementation of eta J in Ohm's Law probably really needs two
 //   ghost points.
+//   There is still asymmetric behavior, e.g., setting normal B field in obndra_zh
+//   is required to avoid things going wrong at the zh-xh edge, while there's no
+//   problem at the zl-xh edge. working guess is that this is related to the pusher,
+//   actually
 //
 // - The "Set div B = 0" implementation at corners is iffy (order dependent), it
 //   will, e.g., set By based on Bx at the wall (which is not well defined), and
@@ -26,18 +30,19 @@ struct ggcm_mhd_bnd_sub {
 //   (But it might be the reason for the remaining small discrepancies between the
 //   two staggerings.)
 //
-// - In order to not get trouble at the boundaries, this does the same as
-//   Fortran in that it copies normal components into ghost cells just like c.c.
-//   quantities, which is (a) not justified and (b) introduces asymmetry.
+// - Known difference to the Fortran version: Bnormal components in obndra() are copied
+//   with their staggering in mind now, rather than treating them as if they were c.c.
 //
-// - There are right now only minor discrepancies (machine eps) discrepancies between this
-//   and the Fortran version.
+// - We really should only be using _BX/_BY/_BZ, but I think they're used in all cases
+//   that actually matter -- changing the other places would need
+//   adjusting of the loop limits, while now we just set one more, unneeded point on either side
+//   depending on sc_ggcm / sc (But that's just a guess)
 
 // FIXME, which of these ghost points are actually used? / loop limits
 
-#define _BX(f, mm, ix,iy,iz, p) M3(f, mm+0, ix+SHIFT,iy,iz, p)
-#define _BY(f, mm, ix,iy,iz, p) M3(f, mm+1, ix,iy+SHIFT,iz, p)
-#define _BZ(f, mm, ix,iy,iz, p) M3(f, mm+2, ix,iy,iz+SHIFT, p)
+#define _BX(f, mm, ix,iy,iz, p) M3(f, mm+BX, ix+SHIFT,iy,iz, p)
+#define _BY(f, mm, ix,iy,iz, p) M3(f, mm+BY, ix,iy+SHIFT,iz, p)
+#define _BZ(f, mm, ix,iy,iz, p) M3(f, mm+BZ, ix,iy,iz+SHIFT, p)
 
 #if MT == MT_FULLY_CONSERVATIVE_CC
 // maybe this should use fd1 to be more explicit, but that's identical to bd3, anyway
@@ -209,9 +214,9 @@ obndra_mhd_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float b
 	} else {
 	  assert(0);
 	}
-	M3(f, mm + BX , ix,iy,iz, p) = b[0];
-	M3(f, mm + BY , ix,iy,iz, p) = b[1];
-	M3(f, mm + BZ , ix,iy,iz, p) = b[2];
+	_BX(f, mm, ix+1,iy,iz, p) = b[0];
+	M3(f, mm+BY, ix,iy,iz, p) = b[1];
+	M3(f, mm+BZ, ix,iy,iz, p) = b[2];
       }
     }
   }
@@ -232,8 +237,10 @@ obndra_yl_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
 	    M3(f,m, ix,-iy-1,iz, p) = M3(f,m, ix,iy,iz, p);
 	  }
 	  M3(f,mm + BX, ix,-iy-1,iz, p) = M3(f,mm + BX, ix,iy,iz, p);
-	  M3(f,mm + BY, ix,-iy-1,iz, p) = M3(f,mm + BY, ix,iy,iz, p);
 	  M3(f,mm + BZ, ix,-iy-1,iz, p) = M3(f,mm + BZ, ix,iy,iz, p);
+	}
+	for (int iy = 1; iy < sw[1]; iy++) {
+	  _BY(f, mm, ix,-iy,iz, p) = _BY(f, mm, ix,iy,iz, p);
 	}
       }
     }
@@ -256,7 +263,9 @@ obndra_zl_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
 	  }
 	  M3(f,mm + BX, ix,iy,-iz-1, p) = M3(f,mm + BX, ix,iy,iz, p);
 	  M3(f,mm + BY, ix,iy,-iz-1, p) = M3(f,mm + BY, ix,iy,iz, p);
-	  M3(f,mm + BZ, ix,iy,-iz-1, p) = M3(f,mm + BZ, ix,iy,iz, p);
+	}
+	for (int iz = 1; iz < sw[2]; iz++) {
+	  _BZ(f, mm, ix,iy,-iz, p) = _BZ(f, mm, ix,iy,iz, p);
 	}
       }
     }
@@ -278,9 +287,11 @@ obndra_xh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
 	  for (int m = mm; m < mm + 5; m++) {
 	    M3(f,m, mx+ix,iy,iz, p) = M3(f,m, mx-ix-1,iy,iz, p);
 	  }
-	  M3(f,mm + BX, mx+ix,iy,iz, p) = M3(f,mm + BX, mx-ix-1,iy,iz, p);
 	  M3(f,mm + BY, mx+ix,iy,iz, p) = M3(f,mm + BY, mx-ix-1,iy,iz, p);
 	  M3(f,mm + BZ, mx+ix,iy,iz, p) = M3(f,mm + BZ, mx-ix-1,iy,iz, p);
+	}
+	for (int ix = 1; ix < sw[0]; ix++) {
+	  _BX(f, mm, mx+ix,iy,iz, p) = _BX(f, mm, mx-ix,iy,iz, p);
 	}
       }
     }
@@ -303,8 +314,10 @@ obndra_yh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
 	    M3(f,m, ix,my+iy,iz, p) = M3(f,m, ix,my-iy-1,iz, p);
 	  }
 	  M3(f,mm + BX, ix,my+iy,iz, p) = M3(f,mm + BX, ix,my-iy-1,iz, p);
-	  M3(f,mm + BY, ix,my+iy,iz, p) = M3(f,mm + BY, ix,my-iy-1,iz, p);
 	  M3(f,mm + BZ, ix,my+iy,iz, p) = M3(f,mm + BZ, ix,my-iy-1,iz, p);
+	}
+	for (int iy = 1; iy < sw[1]; iy++) {
+	  _BY(f, mm, ix,my+iy,iz, p) = _BY(f, mm, ix,my-iy-1,iz, p);
 	}
       }
     }
@@ -328,7 +341,9 @@ obndra_zh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
 	  }
 	  M3(f,mm + BX, ix,iy,mz+iz, p) = M3(f,mm + BX, ix,iy,mz-iz-1, p);
 	  M3(f,mm + BY, ix,iy,mz+iz, p) = M3(f,mm + BY, ix,iy,mz-iz-1, p);
-	  M3(f,mm + BZ, ix,iy,mz+iz, p) = M3(f,mm + BZ, ix,iy,mz-iz-1, p);
+	}
+	for (int iz = 1; iz < sw[2]; iz++) {
+	  _BZ(f, mm, ix,iy,mz+iz, p) = _BZ(f, mm, ix,iy,mz-iz, p);
 	}
       }
     }
@@ -700,7 +715,7 @@ ggcm_mhd_bnd_sub_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld,
     obndra_gkeyll(bnd, f, m, bntim);
   } else {
     obndra_mhd(bnd, f, m, bntim);
-    obndrb(bnd, f, m + BX);
+    obndrb(bnd, f, m);
   }
   mrc_fld_put_as(f, fld);
 
