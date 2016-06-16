@@ -48,8 +48,11 @@ struct ggcm_mhd_bnd_sphere_map {
   struct ggcm_mhd *mhd;
   double radius;
   double min_dr;
-  double r1; // inner radius, that determines spherical shell that we set
-  // ghost point values inside of
+  double dr; // step size to use when determining r1
+  double extra_dr; // extra amount (* min_dr) to subtract from final r1
+
+  // the spherical shell where we set ghost points is r1 <= r <= radius
+  double r1;
 
   // maps
   // for managing cell-centered ghost points

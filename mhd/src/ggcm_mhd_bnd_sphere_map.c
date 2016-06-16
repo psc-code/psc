@@ -137,6 +137,12 @@ ggcm_mhd_bnd_sphere_map_find_r1(struct ggcm_mhd_bnd_sphere_map *map)
 			   MRC_MCRDY(crds, iy, p),
 			   MRC_MCRDZ(crds, iz, p), };
 	  if (ggcm_mhd_bnd_sphere_map_is_bnd(map, xx)) {
+	    // if we're inside the sphere, nothing to check
+	    continue;
+	  }
+	  double rr = sqrt(sqr(xx[0]) + sqr(xx[1]) + sqr(xx[2]));
+	  if (rr > 2. * r2) {
+	    // if we're outside of 2 * map->radius, that should be safe
 	    continue;
 	  }
 	  
@@ -148,7 +154,7 @@ ggcm_mhd_bnd_sphere_map_find_r1(struct ggcm_mhd_bnd_sphere_map *map)
 		double zzz = MRC_MCRDZ(crds, iz+jz, p);
 		double rrr = sqrt(sqr(xxx) + sqr(yyy) + sqr(zzz));
 		if (rrr < r1) {
-		  r1 -= .01; // FIXME, hardcoded number
+		  r1 -= map->dr;
 		  goto loop2;
 		}
 	      }
@@ -158,6 +164,7 @@ ggcm_mhd_bnd_sphere_map_find_r1(struct ggcm_mhd_bnd_sphere_map *map)
       }
     }
   }
+  r1 -= map->extra_dr * dr;
 
   MPI_Allreduce(&r1, &map->r1, 1, MPI_DOUBLE, MPI_MIN, ggcm_mhd_comm(mhd));
 }

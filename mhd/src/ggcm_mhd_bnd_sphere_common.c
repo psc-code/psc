@@ -435,6 +435,8 @@ static struct param ggcm_mhd_bnd_sphere_descr[] = {
   { "test"            , VAR(test),             PARAM_INT(0)              },
   { "radial_velocity" , VAR(radial_velocity),  PARAM_INT(0)              },
 
+  { "dr"              , VAR(map.dr)          , PARAM_DOUBLE(.01)         },
+  { "extra_dr"        , VAR(map.extra_dr)    , PARAM_DOUBLE(0.)          },
   { "min_dr"          , VAR(map.min_dr)      , MRC_VAR_DOUBLE            },
   { "radius"          , VAR(map.radius)      , MRC_VAR_DOUBLE            },
   { "r1"              , VAR(map.r1)          , MRC_VAR_DOUBLE            },
