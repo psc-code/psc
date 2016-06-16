@@ -620,10 +620,11 @@ obndrb(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm)
 
     // assumes x1 bnd = fix, others = open
     obndrb_yl_open(mhd, f, mm, m_t, s_t, l_n, s_n, p, bdx3, bdy3, bdz3);
-    obndrb_yh_open(mhd, f, mm, m_t, s_t, r_n, s_n, p, bdx3, bdy3, bdz3);
     obndrb_zl_open(mhd, f, mm, m_t, s_t, l_n, s_n, p, bdx3, bdy3, bdz3);
-    obndrb_zh_open(mhd, f, mm, m_t, s_t, r_n, s_n, p, bdx3, bdy3, bdz3);
+
     obndrb_xh_open(mhd, f, mm, m_t, s_t, r_n, s_n, p, bdx3, bdy3, bdz3);
+    obndrb_yh_open(mhd, f, mm, m_t, s_t, r_n, s_n, p, bdx3, bdy3, bdz3);
+    obndrb_zh_open(mhd, f, mm, m_t, s_t, r_n, s_n, p, bdx3, bdy3, bdz3);
   }
 }
 
