@@ -14,25 +14,6 @@ struct ggcm_mhd_bnd_sub {
 // FIXME
 // The B boundary conditions have numerous issues:
 //
-// - Originally (and still in the Fortran version), there are issues
-//   in actually getting div B = 0 as desired.  
-//
-// - Originally (and still in the Fortran version), there is an asymmetry in
-//   the lower vs upper boundaries, in particular in y, z.
-//   The code would set, e.g., By[-2], By[-1] and By[my], By[my+1].
-//   In the original staggering, ie., the By on the boundary and one cell to
-//   the left would be set on the lower side, but on the upper side, the code would
-//   set the two By values to the right of the boundary, not the one on the wall
-//
-// - With the new staggering, we could only do the opposite, which is still
-//   asymmetric, and also would imply different b.c. depending on the
-//   the staggering chosen. So instead, the ggcm_mhd_bnd "c" and "c2" now
-//   set the values right on the boundary and the next one outside of the
-//   boundary, which is different from Fortran, but symmetric and
-//   allows us to get the same results independently of which staggering is
-//   chosen (well, almost, it seems there's another rather small error
-//   appearing after a couple of steps, which may or may not be real)
-//
 // - It's not clear how many ghost points we need in the first place, and how
 //   this all interacts with the bpush update (I think bpush updates a boundary
 //   point, which however afterwards will be fixed up here, so should be okay)
@@ -44,6 +25,13 @@ struct ggcm_mhd_bnd_sub {
 //   then Bx at the wall based on that By. It's unlikely to really matter, though.
 //   (But it might be the reason for the remaining small discrepancies between the
 //   two staggerings.)
+//
+// - In order to not get trouble at the boundaries, this does the same as
+//   Fortran in that it copies normal components into ghost cells just like c.c.
+//   quantities, which is (a) not justified and (b) introduces asymmetry.
+//
+// - There are right now only minor discrepancies (machine eps) discrepancies between this
+//   and the Fortran version.
 
 // FIXME, which of these ghost points are actually used? / loop limits
 
@@ -230,6 +218,124 @@ obndra_mhd_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float b
 }
 
 // ----------------------------------------------------------------------
+// obndra_yl_open
+
+static void
+obndra_yl_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
+	       const int sw[3], const int ldims[3], int p)
+{
+  if (mrc_domain_at_boundary_lo(mhd->domain, 1, p)) {
+    for (int iz = -sw[2]; iz < ldims[2] + sw[2]; iz++) {
+      for (int ix = -sw[0]; ix < ldims[0] + sw[0]; ix++) {
+	for (int iy = 0; iy < sw[1]; iy++) {
+	  for (int m = mm; m < mm + 5; m++) {
+	    M3(f,m, ix,-iy-1,iz, p) = M3(f,m, ix,iy,iz, p);
+	  }
+	  M3(f,mm + BX, ix,-iy-1,iz, p) = M3(f,mm + BX, ix,iy,iz, p);
+	  M3(f,mm + BY, ix,-iy-1,iz, p) = M3(f,mm + BY, ix,iy,iz, p);
+	  M3(f,mm + BZ, ix,-iy-1,iz, p) = M3(f,mm + BZ, ix,iy,iz, p);
+	}
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
+// obndra_zl_open
+
+static void
+obndra_zl_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
+	       const int sw[3], const int ldims[3], int p)
+{
+  if (mrc_domain_at_boundary_lo(mhd->domain, 2, p)) {
+    for (int iy = -sw[1]; iy < ldims[1] + sw[1]; iy++) {
+      for (int ix = -sw[0]; ix < ldims[0] + sw[0]; ix++) {
+	for (int iz = 0; iz < sw[2]; iz++) {
+	  for (int m = mm; m < mm + 5; m++) {
+	    M3(f,m, ix,iy,-iz-1, p) = M3(f,m, ix,iy,iz, p);
+	  }
+	  M3(f,mm + BX, ix,iy,-iz-1, p) = M3(f,mm + BX, ix,iy,iz, p);
+	  M3(f,mm + BY, ix,iy,-iz-1, p) = M3(f,mm + BY, ix,iy,iz, p);
+	  M3(f,mm + BZ, ix,iy,-iz-1, p) = M3(f,mm + BZ, ix,iy,iz, p);
+	}
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
+// obndra_xh_open
+
+static void
+obndra_xh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
+	       const int sw[3], const int ldims[3], int p)
+{
+  if (mrc_domain_at_boundary_hi(mhd->domain, 0, p)) {
+    int mx = ldims[0];
+    for (int iz = -sw[2]; iz < ldims[2] + sw[2]; iz++) {
+      for (int iy = -sw[1]; iy < ldims[1] + sw[1]; iy++) {
+	for (int ix = 0; ix < sw[0]; ix++) {
+	  for (int m = mm; m < mm + 5; m++) {
+	    M3(f,m, mx+ix,iy,iz, p) = M3(f,m, mx-ix-1,iy,iz, p);
+	  }
+	  M3(f,mm + BX, mx+ix,iy,iz, p) = M3(f,mm + BX, mx-ix-1,iy,iz, p);
+	  M3(f,mm + BY, mx+ix,iy,iz, p) = M3(f,mm + BY, mx-ix-1,iy,iz, p);
+	  M3(f,mm + BZ, mx+ix,iy,iz, p) = M3(f,mm + BZ, mx-ix-1,iy,iz, p);
+	}
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
+// obndra_yh_open
+
+static void
+obndra_yh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
+	       const int sw[3], const int ldims[3], int p)
+{
+  if (mrc_domain_at_boundary_hi(mhd->domain, 1, p)) {
+    int my = ldims[1];
+    for (int iz = -sw[2]; iz < ldims[2] + sw[2]; iz++) {
+      for (int ix = -sw[0]; ix < ldims[0] + sw[0]; ix++) {
+	for (int iy = 0; iy < sw[1]; iy++) {
+	  for (int m = mm; m < mm + 5; m++) {
+	    M3(f,m, ix,my+iy,iz, p) = M3(f,m, ix,my-iy-1,iz, p);
+	  }
+	  M3(f,mm + BX, ix,my+iy,iz, p) = M3(f,mm + BX, ix,my-iy-1,iz, p);
+	  M3(f,mm + BY, ix,my+iy,iz, p) = M3(f,mm + BY, ix,my-iy-1,iz, p);
+	  M3(f,mm + BZ, ix,my+iy,iz, p) = M3(f,mm + BZ, ix,my-iy-1,iz, p);
+	}
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
+// obndra_zh_open
+
+static void
+obndra_zh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
+	       const int sw[3], const int ldims[3], int p)
+{
+  if (mrc_domain_at_boundary_hi(mhd->domain, 2, p)) {
+    int mz = ldims[2];
+    for (int iy = -sw[1]; iy < ldims[1] + sw[1]; iy++) {
+      for (int ix = -sw[0]; ix < ldims[0] + sw[0]; ix++) {
+	for (int iz = 0; iz < sw[2]; iz++) {
+	  for (int m = mm; m < mm + 5; m++) {
+	    M3(f,m, ix,iy,mz+iz, p) = M3(f,m, ix,iy,mz-iz-1, p);
+	  }
+	  M3(f,mm + BX, ix,iy,mz+iz, p) = M3(f,mm + BX, ix,iy,mz-iz-1, p);
+	  M3(f,mm + BY, ix,iy,mz+iz, p) = M3(f,mm + BY, ix,iy,mz-iz-1, p);
+	  M3(f,mm + BZ, ix,iy,mz+iz, p) = M3(f,mm + BZ, ix,iy,mz-iz-1, p);
+	}
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
 // obndra_mhd
 //
 // set open fluid boundary conditions for MHD fields
@@ -252,73 +358,13 @@ obndra_mhd(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim)
 	assert(0);
       }
     }
-    if (mrc_domain_at_boundary_lo(mhd->domain, 1, p)) {
-      for (int iz = -swz; iz < mz + swz; iz++) {
-	for (int ix = -swx; ix < mx + swx; ix++) {
-	  for (int iy = 0; iy > -swy; iy--) {
-	    for (int m = mm; m < mm + 5; m++) {
-	      M3(f,m, ix,iy-1,iz, p) = M3(f,m, ix,iy,iz, p);
-	    }
-	    M3(f,mm + BX, ix,iy-1,iz, p) = M3(f,mm + BX, ix,iy,iz, p);
-	    M3(f,mm + BZ, ix,iy-1,iz, p) = M3(f,mm + BZ, ix,iy,iz, p);
-	  }
-	}
-      }
-    }
-    if (mrc_domain_at_boundary_hi(mhd->domain, 1, p)) {
-      for (int iz = -swz; iz < mz + swz; iz++) {
-	for (int ix = -swx; ix < mx + swx; ix++) {
-	  for (int iy = my; iy < my + swy; iy++) {
-	    for (int m = mm; m < mm + 5; m++) {
-	      M3(f,m, ix,iy,iz, p) = M3(f,m, ix,iy-1,iz, p);
-	    }
-	    M3(f,mm + BX, ix,iy,iz, p) = M3(f,mm + BX, ix,iy-1,iz, p);
-	    M3(f,mm + BZ, ix,iy,iz, p) = M3(f,mm + BZ, ix,iy-1,iz, p);
-	  }
-	}
-      }
-    }
+    obndra_xh_open(mhd, f, mm, sw, dims, p);
 
-    if (mrc_domain_at_boundary_lo(mhd->domain, 2, p)) {
-      for (int iy = -swy; iy < my + swy; iy++) {
-	for (int ix = -swx; ix < mx + swx; ix++) {
-	  for (int iz = -1; iz >= -swz; iz--) {
-	    for (int m = mm; m < mm + 5; m++) {
-	      M3(f,m, ix,iy,iz, p) = M3(f,m, ix,iy,iz+1, p);
-	    }
-	    M3(f,mm + BX, ix,iy,iz, p) = M3(f,mm + BX, ix,iy,iz+1, p);
-	    M3(f,mm + BY, ix,iy,iz, p) = M3(f,mm + BY, ix,iy,iz+1, p);
-	  }
-	}
-      }
-    }
-    if (mrc_domain_at_boundary_hi(mhd->domain, 2, p)) {
-      for (int iy = -swy; iy < my + swy; iy++) {
-	for (int ix = -swx; ix < mx + swx; ix++) {
-	  for (int iz = mz; iz < mz + swz; iz++) {
-	    for (int m = mm; m < mm + 5; m++) {
-	      M3(f,m, ix,iy,iz, p) = M3(f,m, ix,iy,iz-1, p);
-	    }
-	    M3(f,mm + BX, ix,iy,iz, p) = M3(f,mm + BX, ix,iy,iz-1, p);
-	    M3(f,mm + BY, ix,iy,iz, p) = M3(f,mm + BY, ix,iy,iz-1, p);
-	  }
-	}
-      }
-    }
-    
-    if (mrc_domain_at_boundary_hi(mhd->domain, 0, p)) {
-      for (int iz = -swz; iz < mz + swz; iz++) {
-	for (int iy = -swy; iy < my + swy; iy++) {
-	  for (int ix = mx; ix < mx + swx; ix++) {
-	    for (int m = mm; m < mm + 5; m++) {
-	      M3(f,m, ix,iy,iz, p) = M3(f,m, ix-1,iy,iz, p);
-	    }
-	    M3(f,mm + BY, ix,iy,iz, p) = M3(f,mm + BY, ix-1,iy,iz, p);
-	    M3(f,mm + BZ, ix,iy,iz, p) = M3(f,mm + BZ, ix-1,iy,iz, p);
-	  }
-	}
-      }
-    }
+    obndra_yl_open(mhd, f, mm, sw, dims, p);
+    obndra_yh_open(mhd, f, mm, sw, dims, p);
+
+    obndra_zl_open(mhd, f, mm, sw, dims, p);
+    obndra_zh_open(mhd, f, mm, sw, dims, p);
   }
 }
 
@@ -541,7 +587,7 @@ obndrb_xh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
     for (int iz = -s_t[2]; iz < m_t[2] + s_t[2]; iz++) {
       for (int iy = -s_t[1]; iy < m_t[1] + s_t[1]; iy++) {
 	for (int ix = r_n[0]; ix < r_n[0] + s_n[0]; ix++) {
-	    _BX(f, mm, ix,iy,iz, p) = BNDDIV_BX_H(ix,iy,iz, p);
+	  _BX(f, mm, ix,iy,iz, p) = BNDDIV_BX_H(ix,iy,iz, p);
 	}
       }
     }
@@ -610,7 +656,7 @@ obndrb(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm)
   // normal
   int l_n[3] = { 0, 0, 0 };
   int r_n[3] = { ldims[0], ldims[1], ldims[2] };
-  int s_n[3] = { sw[0] - 1, sw[1] - 1, sw[2] - 1 }; // number of ghost points to fill
+  int s_n[3] = { sw[0], sw[1], sw[2] }; // number of ghost points to fill
 #endif
 
   for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
