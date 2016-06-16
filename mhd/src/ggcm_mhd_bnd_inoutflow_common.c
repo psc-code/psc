@@ -491,6 +491,104 @@ obndra_gkeyll(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim)
   }
 }
 
+// ----------------------------------------------------------------------
+// obndrb_yl_open
+
+static void
+obndrb_yl_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
+	       int m_t[3], int s_t[3], int l_n[3], int s_n[3], int p,
+	       float *bdx3, float *bdy3, float *bdz3)
+{
+  if (mrc_domain_at_boundary_lo(mhd->domain, 1, p)) {
+    for (int iz = -s_t[2]; iz < m_t[2] + s_t[2]; iz++) {
+      for (int ix = -s_t[0]; ix < m_t[0] + s_t[0]; ix++) {
+	for (int iy = l_n[1]; iy > l_n[1] - s_n[1]; iy--) {
+	  _BY(f, mm, ix,iy,iz, p) = BNDDIV_BY_L(ix,iy,iz, p);
+	}
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
+// obndrb_zl_open
+
+static void
+obndrb_zl_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
+	       int m_t[3], int s_t[3], int l_n[3], int s_n[3], int p,
+	       float *bdx3, float *bdy3, float *bdz3)
+{
+  if (mrc_domain_at_boundary_lo(mhd->domain, 2, p)) {
+    for (int iy = -s_t[1]; iy < m_t[1] + s_t[1]; iy++) {
+      for (int ix = -s_t[0]; ix < m_t[0] + s_t[0]; ix++) {
+	for (int iz = l_n[2]; iz > l_n[2] - s_n[2]; iz--) {
+	  _BZ(f, mm, ix,iy,iz, p) = BNDDIV_BZ_L(ix,iy,iz, p);
+	}
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
+// obndrb_xh_open
+
+static void
+obndrb_xh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
+	       int m_t[3], int s_t[3], int r_n[3], int s_n[3], int p,
+	       float *bdx3, float *bdy3, float *bdz3)
+{
+  if (mrc_domain_at_boundary_hi(mhd->domain, 0, p)) {
+    for (int iz = -s_t[2]; iz < m_t[2] + s_t[2]; iz++) {
+      for (int iy = -s_t[1]; iy < m_t[1] + s_t[1]; iy++) {
+	for (int ix = r_n[0]; ix < r_n[0] + s_n[0]; ix++) {
+	    _BX(f, mm, ix,iy,iz, p) = BNDDIV_BX_H(ix,iy,iz, p);
+	}
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
+// obndrb_yh_open
+
+static void
+obndrb_yh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
+	       int m_t[3], int s_t[3], int r_n[3], int s_n[3], int p,
+	       float *bdx3, float *bdy3, float *bdz3)
+{
+  if (mrc_domain_at_boundary_hi(mhd->domain, 1, p)) {
+    for (int iz = -s_t[2]; iz < m_t[2] + s_t[2]; iz++) {
+      for (int ix = -s_t[0]; ix < m_t[0] + s_t[0]; ix++) {
+	for (int iy = r_n[1]; iy < r_n[1] + s_n[1]; iy++) {
+	  _BY(f, mm, ix,iy,iz, p) = BNDDIV_BY_H(ix,iy,iz, p);
+	}
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
+// obndrb_zh_open
+
+static void
+obndrb_zh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
+	       int m_t[3], int s_t[3], int r_n[3], int s_n[3], int p,
+	       float *bdx3, float *bdy3, float *bdz3)
+{
+  if (mrc_domain_at_boundary_hi(mhd->domain, 2, p)) {
+    for (int iy = -s_t[1]; iy < m_t[1] + s_t[1]; iy++) {
+      for (int ix = -s_t[0]; ix < m_t[0] + s_t[0]; ix++) {
+	for (int iz = r_n[2]; iz < r_n[2] + s_n[2]; iz++) {
+	  _BZ(f, mm, ix,iy,iz, p) = BNDDIV_BZ_H(ix,iy,iz, p);
+	}
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
+// obndrb
+
 static void
 obndrb(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm)
 {
@@ -521,53 +619,11 @@ obndrb(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm)
     float *bdz3 = ggcm_mhd_crds_get_crd_p(mhd->crds, 2, BD3, p);
 
     // assumes x1 bnd = fix, others = open
-    if (mrc_domain_at_boundary_lo(mhd->domain, 1, p)) {
-      for (int iz = -s_t[2]; iz < m_t[2] + s_t[2]; iz++) {
-	for (int ix = -s_t[0]; ix < m_t[0] + s_t[0]; ix++) {
-	  for (int iy = l_n[1]; iy > l_n[1] - s_n[1]; iy--) {
-	    _BY(f, mm, ix,iy,iz, p) = BNDDIV_BY_L(ix,iy,iz, p);
-	  }
-	}
-      }
-    }
-    if (mrc_domain_at_boundary_hi(mhd->domain, 1, p)) {
-      for (int iz = -s_t[2]; iz < m_t[2] + s_t[2]; iz++) {
-	for (int ix = -s_t[0]; ix < m_t[0] + s_t[0]; ix++) {
-	  for (int iy = r_n[1]; iy < r_n[1] + s_n[1]; iy++) {
-	    _BY(f, mm, ix,iy,iz, p) = BNDDIV_BY_H(ix,iy,iz, p);
-	  }
-	}
-      }
-    }
-
-    if (mrc_domain_at_boundary_lo(mhd->domain, 2, p)) {
-      for (int iy = -s_t[1]; iy < m_t[1] + s_t[1]; iy++) {
-	for (int ix = -s_t[0]; ix < m_t[0] + s_t[0]; ix++) {
-	  for (int iz = l_n[2]; iz > l_n[2] - s_n[2]; iz--) {
-	    _BZ(f, mm, ix,iy,iz, p) = BNDDIV_BZ_L(ix,iy,iz, p);
-	  }
-	}
-      }
-    }
-    if (mrc_domain_at_boundary_hi(mhd->domain, 2, p)) {
-      for (int iy = -s_t[1]; iy < m_t[1] + s_t[1]; iy++) {
-	for (int ix = -s_t[0]; ix < m_t[0] + s_t[0]; ix++) {
-	  for (int iz = r_n[2]; iz < r_n[2] + s_n[2]; iz++) {
-	    _BZ(f, mm, ix,iy,iz, p) = BNDDIV_BZ_H(ix,iy,iz, p);
-	  }
-	}
-      }
-    }
-
-    if (mrc_domain_at_boundary_hi(mhd->domain, 0, p)) {
-      for (int iz = -s_t[2]; iz < m_t[2] + s_t[2]; iz++) {
-	for (int iy = -s_t[1]; iy < m_t[1] + s_t[1]; iy++) {
-	  for (int ix = r_n[0]; ix < r_n[0] + s_n[0]; ix++) {
-	    _BX(f, mm, ix,iy,iz, p) = BNDDIV_BX_H(ix,iy,iz, p);
-	  }
-	}
-      }
-    }
+    obndrb_yl_open(mhd, f, mm, m_t, s_t, l_n, s_n, p, bdx3, bdy3, bdz3);
+    obndrb_yh_open(mhd, f, mm, m_t, s_t, r_n, s_n, p, bdx3, bdy3, bdz3);
+    obndrb_zl_open(mhd, f, mm, m_t, s_t, l_n, s_n, p, bdx3, bdy3, bdz3);
+    obndrb_zh_open(mhd, f, mm, m_t, s_t, r_n, s_n, p, bdx3, bdy3, bdz3);
+    obndrb_xh_open(mhd, f, mm, m_t, s_t, r_n, s_n, p, bdx3, bdy3, bdz3);
   }
 }
 
