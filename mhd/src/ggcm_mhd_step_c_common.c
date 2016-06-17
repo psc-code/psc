@@ -25,7 +25,7 @@
 #include "pde/pde_mhd_zmaskn.c"
 #include "pde/pde_mhd_badval_checks.c"
 
-#include "mhd_sc.c"
+//#include "mhd_sc.c"
 
 // TODO:
 // - handle various resistivity models
@@ -711,12 +711,93 @@ struct ggcm_mhd_step_c {
 // ggcm_mhd_step_c_newstep
 
 static void
-ggcm_mhd_step_c_newstep(struct ggcm_mhd_step *step, float *dtn)
+ggcm_mhd_step_c_newstep(struct ggcm_mhd_step *step, float *p_dtn)
 {
   struct ggcm_mhd *mhd = step->mhd;
 
-  ggcm_mhd_fill_ghosts(mhd, mhd->fld, _RR1, mhd->time);
-  *dtn = newstep_sc_ggcm(mhd, mhd->fld);
+  struct mrc_fld *x = mhd->fld;
+
+  ggcm_mhd_fill_ghosts(mhd, x, _RR1, mhd->time);
+
+  static int PR;
+  if (!PR) {
+    PR = prof_register("newstep_sc_ggcm", 1., 0, 0);
+  }
+  prof_start(PR);
+
+  float *fd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FD1);
+  float *fd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FD1);
+  float *fd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FD1);
+  float *fx2x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FX2);
+  float *fx2y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FX2);
+  float *fx2z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FX2);
+
+  mrc_fld_data_t splim2 = sqr(mhd->par.speedlimit / mhd->vvnorm);
+  mrc_fld_data_t isphere2 = sqr(mhd->par.isphere);
+  mrc_fld_data_t gamm   = mhd->par.gamm;
+  mrc_fld_data_t d_i    = mhd->par.d_i;
+  mrc_fld_data_t thx    = mhd->par.thx;
+  mrc_fld_data_t eps    = 1e-9f;
+  mrc_fld_data_t dt     = 1e10f;
+  mrc_fld_data_t va02i  = 1.f / sqr(mhd->par.speedlimit / mhd->vvnorm);
+  mrc_fld_data_t epsz   = 1e-15f;
+  mrc_fld_data_t s      = gamm - 1.f;
+
+  mrc_fld_data_t two_pi_d_i = 2. * M_PI * d_i;
+  bool have_hall = d_i > 0.f;
+  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+    mrc_fld_foreach(x, ix, iy, iz, 0, 0) {
+      mrc_fld_data_t hh = fmaxf(fmaxf(fd1x[ix], fd1y[iy]), fd1z[iz]);
+      mrc_fld_data_t rri = 1.f / fabsf(RR_(x, ix,iy,iz, p)); // FIXME abs necessary?
+      mrc_fld_data_t bb = 
+	sqr(.5f * (BX_(x, ix,iy,iz, p) + BX_(x, ix-1,iy,iz, p))) + 
+	sqr(.5f * (BY_(x, ix,iy,iz, p) + BY_(x, ix,iy-1,iz, p))) +
+	sqr(.5f * (BZ_(x, ix,iy,iz, p) + BZ_(x, ix,iy,iz-1, p)));
+      if (have_hall) {
+	bb *= 1 + sqr(two_pi_d_i * hh);
+      }
+      mrc_fld_data_t vv1 = fminf(bb * rri, splim2);
+      
+      mrc_fld_data_t rv2 = 
+	sqr(RVX_(x, ix,iy,iz, p)) + sqr(RVY_(x, ix,iy,iz, p)) + sqr(RVZ_(x, ix,iy,iz, p));
+      mrc_fld_data_t rvv = rri * rv2;
+      mrc_fld_data_t pp = s * (UU_(x, ix,iy,iz, p) - .5f * rvv);
+      mrc_fld_data_t vv2 = gamm * fmaxf(0.f, pp) * rri;
+      mrc_fld_data_t vv3 = rri * sqrtf(rv2);
+      mrc_fld_data_t vv = sqrtf(vv1 + vv2) + vv3;
+      vv = fmaxf(eps, vv);
+      
+      mrc_fld_data_t ymask = 1.f;
+      if (fx2x[ix] + fx2y[iy] + fx2z[iz] < isphere2)
+	ymask = 0.f;
+      
+      mrc_fld_data_t rrm = fmaxf(epsz, bb * va02i);
+      mrc_fld_data_t zmask = ymask * fminf(1.f, RR_(x, ix,iy,iz, p) / rrm);
+      
+      mrc_fld_data_t tt = thx / fmaxf(eps, hh*vv*zmask);
+      dt = fminf(dt, tt);
+    } mrc_fld_foreach_end;
+  }
+  mrc_fld_data_t dtn;
+  MPI_Allreduce(&dt, &dtn, 1, MPI_MRC_FLD_DATA_T, MPI_MIN, ggcm_mhd_comm(mhd));
+  
+  mrc_fld_data_t dtmin = mhd->par.dtmin;
+  // dtn is the global new timestep
+  if (dtn <= dtmin) {
+    // dtn is the local new timestep
+    // if (dt <= dtmin) {
+    //   TODO: write dtmin files?
+    // }
+    
+    mpi_printf(ggcm_mhd_comm(mhd), "!!! dt < dtmin. Dying now!\n");
+    mpi_printf(ggcm_mhd_comm(mhd), "!!! dt %g -> %g, dtmin = %g\n",
+	       mhd->dt, dtn, dtmin);   
+    ggcm_mhd_wrongful_death(mhd, mhd->fld, -1);
+  }
+
+  prof_stop(PR);
+
+  *p_dtn = dtn;
 }
 
 // ----------------------------------------------------------------------
