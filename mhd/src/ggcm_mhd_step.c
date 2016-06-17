@@ -77,6 +77,29 @@ ggcm_mhd_step_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *E,
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_step_legacy_dt_post
+
+static void
+ggcm_mhd_step_legacy_dt_post(struct ggcm_mhd_step *step, float dtn)
+{
+  struct ggcm_mhd *mhd = step->mhd;
+  dtn = fminf(1.f, dtn);
+  
+  if (dtn > 1.02f * mhd->dt || dtn < mhd->dt / 1.01f) {
+    mpi_printf(ggcm_mhd_comm(mhd), "switched dt %g <- %g\n", dtn, mhd->dt);
+    
+    if (mhd->istep > 0 &&
+	(dtn < 0.5 * mhd->dt || dtn > 2.0 * mhd->dt)) {            
+      mpi_printf(ggcm_mhd_comm(mhd), "!!! dt changed by > a factor of 2. "
+		 "Dying now!\n");
+      ggcm_mhd_wrongful_death(mhd, mhd->fld, 2);
+    }
+    
+    mhd->dt = dtn;
+  }
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_step_run
 
 void
@@ -114,21 +137,7 @@ ggcm_mhd_step_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   prof_stop(pr);
 
   if (step->legacy_dt_handling && ops->get_dt) {
-    struct ggcm_mhd *mhd = step->mhd;
-    float dtn = fminf(1., step->dtn);
-
-    if (dtn > 1.02 * mhd->dt || dtn < mhd->dt / 1.01) {
-      mpi_printf(ggcm_mhd_comm(mhd), "switched dt %g <- %g\n", dtn, mhd->dt);
-      
-      if (mhd->istep > 0 &&
-          (dtn < 0.5 * mhd->dt || dtn > 2.0 * mhd->dt)) {            
-        mpi_printf(ggcm_mhd_comm(mhd), "!!! dt changed by > a factor of 2. "
-                   "Dying now!\n");
-        ggcm_mhd_wrongful_death(mhd, mhd->fld, 2);
-      }
-      
-      mhd->dt = dtn;
-    }
+    ggcm_mhd_step_legacy_dt_post(step, step->dtn);
   }
 
   // FIXME, this should be done by mrc_ts
@@ -175,25 +184,7 @@ ggcm_mhd_step_run_predcorr(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
   if (step->do_nwst) {
     if (step->legacy_dt_handling) {
-      dtn = fminf(1., dtn); // FIXME, only kept for compatibility
-    }
-
-    if (dtn > 1.02 * mhd->dt || dtn < mhd->dt / 1.01) {
-      mpi_printf(ggcm_mhd_comm(mhd), "switched dt %g <- %g\n", dtn, mhd->dt);
-      
-      // FIXME: determining when to die on a bad dt should be generalized, since
-      //        there's another hiccup if refining dt for actual AMR      
-      bool first_step = mhd->istep <= 1;
-      bool last_step = mhd->time + dtn > (1.0 - 1e-5) * mhd->max_time;
-
-      if (!first_step && !last_step &&
-          (dtn < 0.5 * mhd->dt || dtn > 2.0 * mhd->dt)) {            
-        mpi_printf(ggcm_mhd_comm(mhd), "!!! dt changed by > a factor of 2. "
-                   "Dying now!\n");
-        ggcm_mhd_wrongful_death(mhd, mhd->fld, 2);
-      }
-      
-      mhd->dt = dtn;
+      ggcm_mhd_step_legacy_dt_post(step, dtn);
     }
   }
 
