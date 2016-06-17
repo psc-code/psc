@@ -23,6 +23,7 @@
 #include "pde/pde_mhd_primvar.c"
 #include "pde/pde_mhd_primbb.c"
 #include "pde/pde_mhd_zmaskn.c"
+#include "pde/pde_mhd_badval_checks.c"
 
 #include "mhd_sc.c"
 
@@ -76,6 +77,9 @@ static float *s_fd1x, *s_fd1y, *s_fd1z;
 #define BD4X(ix) BD1X(ix)
 #define BD4Y(iy) BD1Y(iy)
 #define BD4Z(iz) BD1Z(iz)
+
+
+// ======================================================================
 
 static void
 rmaskn_c(fld3d_t p_f)
@@ -768,9 +772,8 @@ ggcm_mhd_step_c_corr(struct ggcm_mhd_step *step)
   prof_stop(PR);
   
   // --- check for NaNs and small density
-  // (still controlled by do_badval_checks)
-  badval_checks_sc(step->mhd, step->mhd->fld, step->mhd->fld);
-
+  patch_badval_checks_sc(step->mhd, p_f, p_f);
+  
   fld3d_put(&p_f, 0);
 }
 
