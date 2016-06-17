@@ -76,9 +76,13 @@ static float *s_fd1x, *s_fd1y, *s_fd1z;
 #define BD4Y(iy) BD1Y(iy)
 #define BD4Z(iz) BD1Z(iz)
 
+#include "pde/pde_mhd_line.c"
+#include "pde/pde_mhd_convert.c"
+#include "pde/pde_mhd_divb_glm.c"
+#include "pde/pde_mhd_riemann.c"
 // FIXME, this is here, because it uses FD1X etc,
 // so it either shouldn't, or we put the macros above into some pde_* compat file
-#include "pde/pde_mhd_newstep.c"
+#include "pde/pde_mhd_get_dt.c"
 
 // ======================================================================
 
@@ -717,25 +721,13 @@ ggcm_mhd_step_c_newstep(struct ggcm_mhd_step *step, float *p_dtn)
   struct ggcm_mhd *mhd = step->mhd;
 
   ggcm_mhd_fill_ghosts(mhd, mhd->fld, _RR1, mhd->time);
+  mrc_fld_data_t dtn = pde_mhd_get_dt_scons_ggcm(mhd, mhd->fld);
 
-  fld3d_t p_f;
-  fld3d_setup(&p_f, mhd->fld);
-
-  mrc_fld_data_t dt = 1e10f;
-  pde_for_each_patch(p) {
-    fld3d_get(&p_f, p);
-    dt = mrc_fld_min(dt, patch_newstep_scons_ggcm(p_f));
-    fld3d_put(&p_f, p);
-  }
-  mrc_fld_data_t dtn;
-  MPI_Allreduce(&dt, &dtn, 1, MPI_MRC_FLD_DATA_T, MPI_MIN, ggcm_mhd_comm(mhd));
-  
-  mrc_fld_data_t dtmin = mhd->par.dtmin;
   // dtn is the global new timestep
-  if (dtn <= dtmin) {
+  if (dtn <= mhd->par.dtmin) {
     mpi_printf(ggcm_mhd_comm(mhd), "!!! dt < dtmin. Dying now!\n");
     mpi_printf(ggcm_mhd_comm(mhd), "!!! dt %g -> %g, dtmin = %g\n",
-	       mhd->dt, dtn, dtmin);   
+	       mhd->dt, dtn, mhd->par.dtmin);   
     ggcm_mhd_wrongful_death(mhd, mhd->fld, -1);
   }
 
