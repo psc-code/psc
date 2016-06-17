@@ -61,25 +61,13 @@ static float *s_bd3x, *s_bd3y, *s_bd3z;
 #define BD1Y(iy) PDE_INV_DYF(iy+1)
 #define BD1Z(iz) PDE_INV_DZF(iz+1)
 
-#if 1
-#define BD2X(ix) (s_bd2x[ix])
-#define BD2Y(iy) (s_bd2y[iy])
-#define BD2Z(iz) (s_bd2z[iz])
-#else
 #define BD2X(ix) PDE_DX(ix)
 #define BD2Y(iy) PDE_DY(iy)
 #define BD2Z(iz) PDE_DZ(iz)
-#endif
 
-#if 1
-#define BD3X(ix) (s_bd3x[ix])
-#define BD3Y(iy) (s_bd3y[iy])
-#define BD3Z(iz) (s_bd3z[iz])
-#else
 #define BD3X(ix) PDE_INV_DX(ix)
 #define BD3Y(iy) PDE_INV_DY(iy)
 #define BD3Z(iz) PDE_INV_DZ(iz)
-#endif
 
 #define BD4X(ix) BD1X(ix)
 #define BD4Y(iy) BD1Y(iy)
