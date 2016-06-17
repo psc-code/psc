@@ -18,9 +18,11 @@
 
 #define OPT_EQN OPT_EQN_MHD_SCONS
 
-#include "mhd_sc.c"
 #include "pde/pde_setup.c"
 #include "pde/pde_mhd_setup.c"
+#include "pde/pde_mhd_primvar.c"
+
+#include "mhd_sc.c"
 
 // TODO:
 // - handle various resistivity models
@@ -725,7 +727,7 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step)
   pde_patch_set(0);
   s_mhd_time = step->mhd->time;
 
-  primvar_c(step->mhd, _RR1);
+  patch_primvar(p_f, _RR1);
   primbb_c(step->mhd, _RR1);
   zmaskn_c(step->mhd);
 
@@ -753,7 +755,7 @@ ggcm_mhd_step_c_corr(struct ggcm_mhd_step *step)
   pde_patch_set(0);
   s_mhd_time = step->mhd->time;
 
-  primvar_c(step->mhd, _RR2);
+  patch_primvar(p_f, _RR2);
   primbb_c(step->mhd, _RR2);
   //  zmaskn_c(step->mhd);
 
