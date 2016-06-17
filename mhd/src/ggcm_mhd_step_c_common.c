@@ -34,6 +34,14 @@ enum {
   LIMIT_1,
 };
 
+static float *fx1x, *fx1y, *fx1z;
+static float *fx2x, *fx2y, *fx2z;
+static float *fd1x, *fd1y, *fd1z;
+static float *bd1x, *bd1y, *bd1z;
+static float *bd2x, *bd2y, *bd2z;
+static float *bd3x, *bd3y, *bd3z;
+static float *bd4x, *bd4y, *bd4z;
+
 static void
 rmaskn_c(fld3d_t p_f, struct ggcm_mhd *mhd)
 {
@@ -44,8 +52,6 @@ rmaskn_c(fld3d_t p_f, struct ggcm_mhd *mhd)
   mrc_domain_get_global_dims(mhd->domain, gdims);
   struct mrc_patch_info info;
   mrc_domain_get_local_patch_info(mhd->domain, 0, &info);
-
-  float *fx1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FX1);
 
   fld3d_foreach(ix,iy,iz, 2, 2) {
     F3S(p_f,_RMASK, ix,iy,iz) = 0.f;
@@ -181,10 +187,6 @@ fluxb_c(fld3d_t p_f, int m)
 static void
 pushn_c(fld3d_t p_f, struct ggcm_mhd *mhd, int ma, int mc, mrc_fld_data_t dt)
 {
-  float *fd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FD1);
-  float *fd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FD1);
-  float *fd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FD1);
-
   fld3d_foreach(ix,iy,iz, 0, 0) {
     mrc_fld_data_t s = dt * F3S(p_f,_YMASK, ix,iy,iz);
     F3S(p_f,mc, ix,iy,iz) = F3S(p_f,ma, ix,iy,iz)
@@ -197,10 +199,6 @@ pushn_c(fld3d_t p_f, struct ggcm_mhd *mhd, int ma, int mc, mrc_fld_data_t dt)
 static void
 pushpp_c(fld3d_t p_f, struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m)
 {
-  float *fd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FD1);
-  float *fd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FD1);
-  float *fd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FD1);
-
   mrc_fld_data_t dth = -.5f * dt;
   fld3d_foreach(ix,iy,iz, 0, 0) {
     mrc_fld_data_t fpx = fd1x[ix] * (F3S(p_f, _PP, ix+1,iy,iz) - F3S(p_f, _PP, ix-1,iy,iz));
@@ -312,12 +310,8 @@ pushfv_c(fld3d_t p_f, struct ggcm_mhd *mhd, int m, mrc_fld_data_t dt,
 // edge centered current density
 
 static void
-curr_c(fld3d_t p_f, struct ggcm_mhd *mhd, int m_j, int m_curr)
+curr_c(fld3d_t p_f, int m_j, int m_curr)
 {
-  float *bd4x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD4);
-  float *bd4y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD4);
-  float *bd4z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD4);
-
   fld3d_foreach(ix,iy,iz, 2, 1) {
     F3S(p_f, m_j + 0, ix,iy,iz) =
       (F3S(p_f, m_curr + _B1Z, ix,iy+1,iz) - F3S(p_f, m_curr + _B1Z, ix,iy,iz)) * bd4y[iy] -
@@ -359,7 +353,7 @@ curbc_c(fld3d_t p_f, struct ggcm_mhd *mhd, int m_curr)
 { 
   enum { _TX = _TMP1, _TY = _TMP2, _TZ = _TMP3 };
 
-  curr_c(p_f, mhd, _TX, m_curr);
+  curr_c(p_f, _TX, m_curr);
 
   // j averaged to cell-centered
   fld3d_foreach(ix,iy,iz, 1, 1) {
@@ -379,7 +373,7 @@ push_ej_c(fld3d_t p_f, struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_curr, int 
   enum { XJX = _BX, XJY = _BY, XJZ = _BZ };
   enum { BX = _TMP1, BY = _TMP2, BZ = _TMP3 };
 
-  curr_c(p_f, mhd, XJX, m_curr);
+  curr_c(p_f, XJX, m_curr);
   currbb_c(p_f, BX, m_curr);
 	
   mrc_fld_data_t s1 = .25f * dt;
@@ -428,10 +422,6 @@ res1_const_c(fld3d_t p_f, struct ggcm_mhd *mhd)
   mrc_domain_get_global_dims(mhd->domain, gdims);
   struct mrc_patch_info info;
   mrc_domain_get_local_patch_info(mhd->domain, 0, &info);
-
-  float *fx2x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FX2);
-  float *fx2y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FX2);
-  float *fx2z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FX2);
 
   fld3d_foreach(ix,iy,iz, 1, 1) {
     F3S(p_f, _RESIS, ix,iy,iz) = 0.f;
@@ -485,10 +475,6 @@ static inline void
 calc_avg_dz_By(fld3d_t p_f, struct ggcm_mhd *mhd, int m_curr, int XX, int YY, int ZZ,
 	       int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2)
 {
-  float *bd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD1);
-  float *bd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD1);
-  float *bd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD1);
-
   // d_z B_y, d_y B_z on x edges
   fld3d_foreach(ix,iy,iz, 2, 1) {
     mrc_fld_data_t bd1[3] = { bd1x[ix], bd1y[iy], bd1z[iz] };
@@ -558,10 +544,6 @@ bcthy3z_NL1(fld3d_t p_f, struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, i
 	    int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2,
 	    mrc_fld_data_t dt, int m_curr)
 {
-  float *bd2x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD2);
-  float *bd2y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD2);
-  float *bd2z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD2);
-
   calc_avg_dz_By(p_f, mhd, m_curr, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2);
 
   mrc_fld_data_t diffmul=1.0;
@@ -596,10 +578,6 @@ static void
 bcthy3z_const(fld3d_t p_f, struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int IX, int IY, int IZ,
 	      int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2, mrc_fld_data_t dt, int m_curr)
 {
-  float *bd2x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD2);
-  float *bd2y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD2);
-  float *bd2z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD2);
-
   calc_avg_dz_By(p_f, mhd, m_curr, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2);
 
   // edge centered E = - v x B (+ dissipation)
@@ -646,10 +624,6 @@ calce_c(fld3d_t p_f, struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_curr)
 static void
 bpush_c(fld3d_t p_f, struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_prev, int m_next)
 {
-  float *bd3x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD3);
-  float *bd3y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD3);
-  float *bd3z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD3);
-
   fld3d_foreach(ix,iy,iz, 0, 0) {
     F3S(p_f, m_next + _B1X, ix,iy,iz) = F3S(p_f, m_prev + _B1X, ix,iy,iz) +
       dt * (bd3y[iy] * (F3S(p_f,_FLZ, ix,iy,iz) - F3S(p_f,_FLZ, ix,iy-1,iz)) -
@@ -803,6 +777,34 @@ ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
 
   ggcm_mhd_step_setup_member_objs_sub(step);
   ggcm_mhd_step_setup_super(step);
+
+  fx1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FX1);
+  fx1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FX1);
+  fx1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FX1);
+
+  fx2x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FX2);
+  fx2y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FX2);
+  fx2z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FX2);
+
+  fd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FD1);
+  fd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FD1);
+  fd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FD1);
+
+  bd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD1);
+  bd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD1);
+  bd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD1);
+
+  bd2x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD2);
+  bd2y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD2);
+  bd2z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD2);
+
+  bd3x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD3);
+  bd3y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD3);
+  bd3z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD3);
+
+  bd4x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD4);
+  bd4y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD4);
+  bd4z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD4);
 }
 
 // ----------------------------------------------------------------------
