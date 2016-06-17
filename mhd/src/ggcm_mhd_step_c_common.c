@@ -83,31 +83,9 @@ static float *s_fd1x, *s_fd1y, *s_fd1z;
 // FIXME, this is here, because it uses FD1X etc,
 // so it either shouldn't, or we put the macros above into some pde_* compat file
 #include "pde/pde_mhd_get_dt.c"
+#include "pde/pde_mhd_rmaskn.c"
 
 // ======================================================================
-
-static void
-rmaskn_c(fld3d_t p_f)
-{
-  mrc_fld_data_t diffco = s_diffco;
-
-  fld3d_foreach(ix,iy,iz, 2, 2) {
-    F3S(p_f,_RMASK, ix,iy,iz) = 0.f;
-    if (FX1X(ix) < s_diff_swbnd)
-      continue;
-    if (iy + s_patch.off[1] < s_diff_obnd)
-      continue;
-    if (iz + s_patch.off[2] < s_diff_obnd)
-      continue;
-    if (ix + s_patch.off[0] >= s_gdims[0] - s_diff_obnd)
-      continue;
-    if (iy + s_patch.off[1] >= s_gdims[1] - s_diff_obnd)
-      continue;
-    if (iz + s_patch.off[2] >= s_gdims[2] - s_diff_obnd)
-      continue;
-    F3S(p_f, _RMASK, ix,iy,iz) = diffco * F3S(p_f, _ZMASK, ix,iy,iz);
-  } fld3d_foreach_end;
-}
 
 static void
 vgflrr_c(fld3d_t p_f)
@@ -668,7 +646,7 @@ static void
 pushstage_c(fld3d_t p_f, mrc_fld_data_t dt, int m_prev, int m_curr, int m_next,
 	    int limit)
 {
-  rmaskn_c(p_f);
+  patch_rmaskn_c(p_f);
 
   if (limit != LIMIT_NONE) {
     vgrs(p_f, _BX, 0.f); vgrs(p_f, _BY, 0.f); vgrs(p_f, _BZ, 0.f);
@@ -889,6 +867,8 @@ static struct param ggcm_mhd_step_c_descr[] = {
   { "mhd_primbb"         , VAR(opt.mhd_primbb)     , PARAM_SELECT(OPT_MHD_C,
 								  opt_mhd_descr)                },
   { "mhd_zmaskn"         , VAR(opt.mhd_zmaskn)     , PARAM_SELECT(OPT_MHD_C,
+								  opt_mhd_descr)                },
+  { "mhd_rmaskn"         , VAR(opt.mhd_rmaskn)     , PARAM_SELECT(OPT_MHD_FORTRAN,
 								  opt_mhd_descr)                },
   { "mhd_newstep"        , VAR(opt.mhd_newstep)    , PARAM_SELECT(OPT_MHD_C,
 								  opt_mhd_descr)                },

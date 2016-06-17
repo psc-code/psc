@@ -45,6 +45,7 @@ struct mhd_options {
   int mhd_primvar;
   int mhd_primbb;
   int mhd_zmaskn;
+  int mhd_rmaskn;
   int mhd_newstep;
   int mhd_pushpred;
   int mhd_pushcorr;
@@ -238,6 +239,15 @@ static int s_opt_mhd_zmaskn _mrc_unused;
 #endif
 
 // ----------------------------------------------------------------------
+// mhd_rmaskn
+
+#ifdef OPT_MHD_RMASKN
+static const int s_opt_mhd_rmaskn = OPT_MHD_RMASKN;
+#else
+static int s_opt_mhd_rmaskn _mrc_unused;
+#endif
+
+// ----------------------------------------------------------------------
 // mhd_newstep
 
 #ifdef OPT_MHD_NEWSTEP
@@ -373,6 +383,13 @@ pde_mhd_set_options(struct ggcm_mhd *mhd, struct mhd_options *opt)
   assert(OPT_MHD_ZMASKN == opt->mhd_zmaskn);
 #else
   s_opt_mhd_zmaskn = opt->mhd_zmaskn;
+#endif
+
+  // mhd_rmaskn
+#ifdef OPT_MHD_RMASKN
+  assert(OPT_MHD_RMASKN == opt->mhd_rmaskn);
+#else
+  s_opt_mhd_rmaskn = opt->mhd_rmaskn;
 #endif
 
   // mhd_newstep
