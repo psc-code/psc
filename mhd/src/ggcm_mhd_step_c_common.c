@@ -39,8 +39,6 @@ enum {
 static mrc_fld_data_t s_mhd_time;
 
 static float *s_fd1x, *s_fd1y, *s_fd1z;
-static float *s_bd2x, *s_bd2y, *s_bd2z;
-static float *s_bd3x, *s_bd3y, *s_bd3z;
 
 #define FX1X(ix) PDE_CRDX_CC(ix)
 #define FX1Y(iy) PDE_CRDY_CC(iy)
@@ -809,14 +807,6 @@ ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
   s_fd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FD1);
   s_fd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FD1);
   s_fd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FD1);
-
-  s_bd2x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD2);
-  s_bd2y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD2);
-  s_bd2z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD2);
-
-  s_bd3x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD3);
-  s_bd3y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD3);
-  s_bd3z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD3);
 }
 
 // ----------------------------------------------------------------------
