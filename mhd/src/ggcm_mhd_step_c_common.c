@@ -716,22 +716,12 @@ struct ggcm_mhd_step_c {
 // ggcm_mhd_step_c_newstep
 
 static void
-ggcm_mhd_step_c_newstep(struct ggcm_mhd_step *step, float *p_dtn)
+ggcm_mhd_step_c_newstep(struct ggcm_mhd_step *step, float *dtn)
 {
   struct ggcm_mhd *mhd = step->mhd;
 
   ggcm_mhd_fill_ghosts(mhd, mhd->fld, _RR1, mhd->time);
-  mrc_fld_data_t dtn = pde_mhd_get_dt_scons_ggcm(mhd, mhd->fld);
-
-  // dtn is the global new timestep
-  if (dtn <= mhd->par.dtmin) {
-    mpi_printf(ggcm_mhd_comm(mhd), "!!! dt < dtmin. Dying now!\n");
-    mpi_printf(ggcm_mhd_comm(mhd), "!!! dt %g -> %g, dtmin = %g\n",
-	       mhd->dt, dtn, mhd->par.dtmin);   
-    ggcm_mhd_wrongful_death(mhd, mhd->fld, -1);
-  }
-
-  *p_dtn = dtn;
+  *dtn = pde_mhd_get_dt_scons_ggcm(mhd, mhd->fld);
 }
 
 // ----------------------------------------------------------------------

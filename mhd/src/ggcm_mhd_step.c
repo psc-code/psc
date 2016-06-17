@@ -83,6 +83,15 @@ static void
 ggcm_mhd_step_legacy_dt_post(struct ggcm_mhd_step *step, float dtn)
 {
   struct ggcm_mhd *mhd = step->mhd;
+
+  // dtn is the global new timestep
+  if (dtn <= mhd->par.dtmin) {
+    mpi_printf(ggcm_mhd_comm(mhd), "!!! dt < dtmin. Dying now!\n");
+    mpi_printf(ggcm_mhd_comm(mhd), "!!! dt %g -> %g, dtmin = %g\n",
+	       mhd->dt, dtn, mhd->par.dtmin);   
+    ggcm_mhd_wrongful_death(mhd, mhd->fld, -1);
+  }
+
   dtn = fminf(1.f, dtn);
   
   if (dtn > 1.02f * mhd->dt || dtn < mhd->dt / 1.01f) {
