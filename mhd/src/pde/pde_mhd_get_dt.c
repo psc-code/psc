@@ -4,10 +4,10 @@
 #ifdef FD1X
 
 // ----------------------------------------------------------------------
-// patch_get_dt_scons_ggcm
+// patch_get_dt_scons_ggcm_c
 
 static mrc_fld_data_t
-patch_get_dt_scons_ggcm(fld3d_t p_f)
+patch_get_dt_scons_ggcm_c(fld3d_t p_f)
 {
   mrc_fld_data_t dt = 1e10f;
 
@@ -54,6 +54,51 @@ patch_get_dt_scons_ggcm(fld3d_t p_f)
   } fld3d_foreach_end;
 
   return dt;
+}
+
+// ----------------------------------------------------------------------
+// patch_get_dt_scons_ggcm_fortran
+
+#if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
+
+#include "pde/pde_fortran.h"
+
+#define newstep_F77 F77_FUNC(newstep,NEWSTEP)
+
+void newstep_F77(real *pp, real *rr, real *vx, real *vy, real *vz,
+		 real *bx, real *by, real *bz, real *zmask, real *dtn);
+
+static mrc_fld_data_t
+patch_get_dt_scons_ggcm_fortran(fld3d_t p_f)
+{
+  patch_primvar(p_f, _RR1);
+  patch_primbb(p_f, _RR1);
+  patch_zmaskn(p_f);
+
+  real dtn;
+  newstep_F77(F(p_f, _PP), F(p_f, _RR), F(p_f, _VX), F(p_f, _VY), F(p_f, _VZ),
+	      F(p_f, _BX), F(p_f, _BY), F(p_f, _BZ), F(p_f, _ZMASK), &dtn);
+
+  return dtn;
+}
+
+#endif // HAVE_OPENGGCM && MRC_FLD_AS_FLOAT_H
+
+// ----------------------------------------------------------------------
+// patch_get_dt_scons_ggcm
+
+static mrc_fld_data_t
+patch_get_dt_scons_ggcm(fld3d_t p_f)
+{
+  if (s_opt_mhd_newstep == OPT_MHD_C) {
+    return patch_get_dt_scons_ggcm_c(p_f);
+#if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
+  } else if (s_opt_mhd_newstep == OPT_MHD_FORTRAN) {
+    return patch_get_dt_scons_ggcm_fortran(p_f);
+#endif
+  } else {
+    assert(0);
+  }
 }
 
 // ----------------------------------------------------------------------

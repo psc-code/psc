@@ -888,6 +888,10 @@ static struct param ggcm_mhd_step_c_descr[] = {
 								  opt_mhd_descr)                },
   { "mhd_primbb"         , VAR(opt.mhd_primbb)     , PARAM_SELECT(OPT_MHD_C,
 								  opt_mhd_descr)                },
+  { "mhd_zmaskn"         , VAR(opt.mhd_zmaskn)     , PARAM_SELECT(OPT_MHD_C,
+								  opt_mhd_descr)                },
+  { "mhd_newstep"        , VAR(opt.mhd_newstep)    , PARAM_SELECT(OPT_MHD_C,
+								  opt_mhd_descr)                },
   
   {},
 };
