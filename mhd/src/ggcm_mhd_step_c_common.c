@@ -35,7 +35,6 @@ enum {
 };
 
 static float *s_fd1x, *s_fd1y, *s_fd1z;
-static float *s_bd1x, *s_bd1y, *s_bd1z;
 static float *s_bd2x, *s_bd2y, *s_bd2z;
 static float *s_bd3x, *s_bd3y, *s_bd3z;
 
@@ -47,21 +46,40 @@ static float *s_bd3x, *s_bd3y, *s_bd3z;
 #define FX2Y(iy) (sqr(FX1Y(iy)))
 #define FX2Z(iz) (sqr(FX1Z(iz)))
 
+// FD1 is really different if 'legacy_fd1' is used
+#if 1
 #define FD1X(ix) (s_fd1x[ix])
 #define FD1Y(iy) (s_fd1y[iy])
 #define FD1Z(iz) (s_fd1z[iz])
+#else
+#define FD1X(ix) PDE_INV_DX(ix)
+#define FD1Y(iy) PDE_INV_DY(iy)
+#define FD1Z(iz) PDE_INV_DZ(iz)
+#endif
 
-#define BD1X(ix) (s_bd1x[ix])
-#define BD1Y(iy) (s_bd1y[iy])
-#define BD1Z(iz) (s_bd1z[iz])
+#define BD1X(ix) PDE_INV_DXF(ix+1)
+#define BD1Y(iy) PDE_INV_DYF(iy+1)
+#define BD1Z(iz) PDE_INV_DZF(iz+1)
 
+#if 1
 #define BD2X(ix) (s_bd2x[ix])
 #define BD2Y(iy) (s_bd2y[iy])
 #define BD2Z(iz) (s_bd2z[iz])
+#else
+#define BD2X(ix) PDE_DX(ix)
+#define BD2Y(iy) PDE_DY(iy)
+#define BD2Z(iz) PDE_DZ(iz)
+#endif
 
+#if 1
 #define BD3X(ix) (s_bd3x[ix])
 #define BD3Y(iy) (s_bd3y[iy])
 #define BD3Z(iz) (s_bd3z[iz])
+#else
+#define BD3X(ix) PDE_INV_DX(ix)
+#define BD3Y(iy) PDE_INV_DY(iy)
+#define BD3Z(iz) PDE_INV_DZ(iz)
+#endif
 
 #define BD4X(ix) BD1X(ix)
 #define BD4Y(iy) BD1Y(iy)
@@ -806,10 +824,6 @@ ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
   s_fd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FD1);
   s_fd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FD1);
   s_fd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FD1);
-
-  s_bd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD1);
-  s_bd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD1);
-  s_bd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD1);
 
   s_bd2x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD2);
   s_bd2y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD2);
