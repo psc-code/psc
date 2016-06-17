@@ -35,20 +35,18 @@ enum {
 };
 
 static float *s_fx1x, *s_fx1y, *s_fx1z;
-static float *s_fx2x, *s_fx2y, *s_fx2z;
 static float *s_fd1x, *s_fd1y, *s_fd1z;
 static float *s_bd1x, *s_bd1y, *s_bd1z;
 static float *s_bd2x, *s_bd2y, *s_bd2z;
 static float *s_bd3x, *s_bd3y, *s_bd3z;
-static float *s_bd4x, *s_bd4y, *s_bd4z;
 
 #define FX1X(ix) (s_fx1x[ix])
 #define FX1Y(iy) (s_fx1y[iy])
 #define FX1Z(iz) (s_fx1z[iz])
 
-#define FX2X(ix) (s_fx2x[ix])
-#define FX2Y(iy) (s_fx2y[iy])
-#define FX2Z(iz) (s_fx2z[iz])
+#define FX2X(ix) (sqr(s_fx1x[ix]))
+#define FX2Y(iy) (sqr(s_fx1y[iy]))
+#define FX2Z(iz) (sqr(s_fx1z[iz]))
 
 #define FD1X(ix) (s_fd1x[ix])
 #define FD1Y(iy) (s_fd1y[iy])
@@ -66,9 +64,9 @@ static float *s_bd4x, *s_bd4y, *s_bd4z;
 #define BD3Y(iy) (s_bd3y[iy])
 #define BD3Z(iz) (s_bd3z[iz])
 
-#define BD4X(ix) (s_bd4x[ix])
-#define BD4Y(iy) (s_bd4y[iy])
-#define BD4Z(iz) (s_bd4z[iz])
+#define BD4X(ix) BD1X(ix)
+#define BD4Y(iy) BD1Y(iy)
+#define BD4Z(iz) BD1Z(iz)
 
 static void
 rmaskn_c(fld3d_t p_f, struct ggcm_mhd *mhd)
@@ -809,10 +807,6 @@ ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
   s_fx1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FX1);
   s_fx1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FX1);
 
-  s_fx2x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FX2);
-  s_fx2y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FX2);
-  s_fx2z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FX2);
-
   s_fd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FD1);
   s_fd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FD1);
   s_fd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FD1);
@@ -828,10 +822,6 @@ ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
   s_bd3x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD3);
   s_bd3y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD3);
   s_bd3z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD3);
-
-  s_bd4x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD4);
-  s_bd4y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD4);
-  s_bd4z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD4);
 }
 
 // ----------------------------------------------------------------------
