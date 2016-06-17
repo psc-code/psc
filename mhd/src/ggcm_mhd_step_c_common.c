@@ -25,8 +25,6 @@
 #include "pde/pde_mhd_zmaskn.c"
 #include "pde/pde_mhd_badval_checks.c"
 
-//#include "mhd_sc.c"
-
 // TODO:
 // - handle various resistivity models
 // - handle limit2, limit3
@@ -715,9 +713,10 @@ ggcm_mhd_step_c_newstep(struct ggcm_mhd_step *step, float *p_dtn)
 {
   struct ggcm_mhd *mhd = step->mhd;
 
-  struct mrc_fld *x = mhd->fld;
+  ggcm_mhd_fill_ghosts(mhd, mhd->fld, _RR1, mhd->time);
 
-  ggcm_mhd_fill_ghosts(mhd, x, _RR1, mhd->time);
+  fld3d_t p_f;
+  fld3d_setup(&p_f, mhd->fld);
 
   static int PR;
   if (!PR) {
@@ -725,58 +724,51 @@ ggcm_mhd_step_c_newstep(struct ggcm_mhd_step *step, float *p_dtn)
   }
   prof_start(PR);
 
-  float *fd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FD1);
-  float *fd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FD1);
-  float *fd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FD1);
-  float *fx2x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FX2);
-  float *fx2y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FX2);
-  float *fx2z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FX2);
+  mrc_fld_data_t splim2   = sqr(s_speedlimit_code);
+  mrc_fld_data_t isphere2 = sqr(s_isphere);
+  mrc_fld_data_t va02i    = 1.f / splim2;
+  mrc_fld_data_t eps      = 1e-9f;
+  mrc_fld_data_t epsz     = 1e-15f;
+  mrc_fld_data_t gamma_m1 = s_gamma - 1.f;
 
-  mrc_fld_data_t splim2 = sqr(mhd->par.speedlimit / mhd->vvnorm);
-  mrc_fld_data_t isphere2 = sqr(mhd->par.isphere);
-  mrc_fld_data_t gamm   = mhd->par.gamm;
-  mrc_fld_data_t d_i    = mhd->par.d_i;
-  mrc_fld_data_t thx    = mhd->par.thx;
-  mrc_fld_data_t eps    = 1e-9f;
-  mrc_fld_data_t dt     = 1e10f;
-  mrc_fld_data_t va02i  = 1.f / sqr(mhd->par.speedlimit / mhd->vvnorm);
-  mrc_fld_data_t epsz   = 1e-15f;
-  mrc_fld_data_t s      = gamm - 1.f;
+  mrc_fld_data_t two_pi_d_i = 2. * M_PI * s_d_i;
+  bool have_hall = s_d_i > 0.f;
 
-  mrc_fld_data_t two_pi_d_i = 2. * M_PI * d_i;
-  bool have_hall = d_i > 0.f;
-  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
-    mrc_fld_foreach(x, ix, iy, iz, 0, 0) {
-      mrc_fld_data_t hh = fmaxf(fmaxf(fd1x[ix], fd1y[iy]), fd1z[iz]);
-      mrc_fld_data_t rri = 1.f / fabsf(RR_(x, ix,iy,iz, p)); // FIXME abs necessary?
+  mrc_fld_data_t dt = 1e10f;
+  pde_for_each_patch(p) {
+    fld3d_get(&p_f, p);
+    fld3d_foreach(i, j, k, 0, 0) {
+      mrc_fld_data_t hh = mrc_fld_max(mrc_fld_max(FD1X(i), FD1Y(j)), FD1Z(k));
+      mrc_fld_data_t rri = 1.f / mrc_fld_abs(F3S(p_f, RR, i,j,k)); // FIME abs necessary?
       mrc_fld_data_t bb = 
-	sqr(.5f * (BX_(x, ix,iy,iz, p) + BX_(x, ix-1,iy,iz, p))) + 
-	sqr(.5f * (BY_(x, ix,iy,iz, p) + BY_(x, ix,iy-1,iz, p))) +
-	sqr(.5f * (BZ_(x, ix,iy,iz, p) + BZ_(x, ix,iy,iz-1, p)));
+	sqr(.5f * (F3S(p_f, BX, i,j,k) + F3S(p_f, BX, i-1,j,k))) + 
+	sqr(.5f * (F3S(p_f, BY, i,j,k) + F3S(p_f, BY, i,j-1,k))) +
+	sqr(.5f * (F3S(p_f, BZ, i,j,k) + F3S(p_f, BZ, i,j,k-1)));
       if (have_hall) {
 	bb *= 1 + sqr(two_pi_d_i * hh);
       }
       mrc_fld_data_t vv1 = fminf(bb * rri, splim2);
       
       mrc_fld_data_t rv2 = 
-	sqr(RVX_(x, ix,iy,iz, p)) + sqr(RVY_(x, ix,iy,iz, p)) + sqr(RVZ_(x, ix,iy,iz, p));
+	sqr(F3S(p_f, RVX, i,j,k)) + sqr(F3S(p_f, RVY, i,j,k)) + sqr(F3S(p_f, RVZ, i,j,k));
       mrc_fld_data_t rvv = rri * rv2;
-      mrc_fld_data_t pp = s * (UU_(x, ix,iy,iz, p) - .5f * rvv);
-      mrc_fld_data_t vv2 = gamm * fmaxf(0.f, pp) * rri;
+      mrc_fld_data_t pp = gamma_m1 * (F3S(p_f, UU, i,j,k) - .5f * rvv);
+      mrc_fld_data_t vv2 = s_gamma * mrc_fld_max(0.f, pp) * rri;
       mrc_fld_data_t vv3 = rri * sqrtf(rv2);
       mrc_fld_data_t vv = sqrtf(vv1 + vv2) + vv3;
-      vv = fmaxf(eps, vv);
+      vv = mrc_fld_max(eps, vv);
       
       mrc_fld_data_t ymask = 1.f;
-      if (fx2x[ix] + fx2y[iy] + fx2z[iz] < isphere2)
+      if (FX2X(i) + FX2Y(j) + FX2Z(k) < isphere2)
 	ymask = 0.f;
       
-      mrc_fld_data_t rrm = fmaxf(epsz, bb * va02i);
-      mrc_fld_data_t zmask = ymask * fminf(1.f, RR_(x, ix,iy,iz, p) / rrm);
+      mrc_fld_data_t rrm = mrc_fld_max(epsz, bb * va02i);
+      mrc_fld_data_t zmask = ymask * fminf(1.f, F3S(p_f, RR, i,j,k) / rrm);
       
-      mrc_fld_data_t tt = thx / fmaxf(eps, hh*vv*zmask);
+      mrc_fld_data_t tt = s_cfl / mrc_fld_max(eps, hh*vv*zmask);
       dt = fminf(dt, tt);
-    } mrc_fld_foreach_end;
+    } fld3d_foreach_end;
+    fld3d_put(&p_f, p);
   }
   mrc_fld_data_t dtn;
   MPI_Allreduce(&dt, &dtn, 1, MPI_MRC_FLD_DATA_T, MPI_MIN, ggcm_mhd_comm(mhd));
@@ -784,11 +776,6 @@ ggcm_mhd_step_c_newstep(struct ggcm_mhd_step *step, float *p_dtn)
   mrc_fld_data_t dtmin = mhd->par.dtmin;
   // dtn is the global new timestep
   if (dtn <= dtmin) {
-    // dtn is the local new timestep
-    // if (dt <= dtmin) {
-    //   TODO: write dtmin files?
-    // }
-    
     mpi_printf(ggcm_mhd_comm(mhd), "!!! dt < dtmin. Dying now!\n");
     mpi_printf(ggcm_mhd_comm(mhd), "!!! dt %g -> %g, dtmin = %g\n",
 	       mhd->dt, dtn, dtmin);   

@@ -5,6 +5,7 @@
 static mrc_fld_data_t s_gamma;  // adiabatic exponent
 static mrc_fld_data_t s_eta;    // (constant) resistivity 
 static mrc_fld_data_t s_d_i;    // ion skin depth
+static mrc_fld_data_t s_cfl;    // CFL number
 
 static int s_magdiffu;
 static mrc_fld_data_t s_diffco; // same as s_eta, but not normalized
@@ -15,6 +16,7 @@ static mrc_fld_data_t s_diffsphere;
 static mrc_fld_data_t s_diffth;
 static mrc_fld_data_t s_timelo;
 static mrc_fld_data_t s_speedlimit_code;
+static mrc_fld_data_t s_isphere;
 
 // FIXME, these could/should be s_opt_*
 static mrc_fld_data_t s_divb_glm_alpha; // ratio of hyperbolic / parabolic divb timescales
@@ -311,6 +313,7 @@ pde_mhd_setup(struct ggcm_mhd *mhd)
   // FIXME, this isn't really a good place to normalize
   s_eta   = mhd->par.diffco / mhd->resnorm;
   s_d_i   = mhd->par.d_i;
+  s_cfl   = mhd->par.thx;
 
   // openggcm specific params
   s_magdiffu = mhd->par.magdiffu;
@@ -322,6 +325,7 @@ pde_mhd_setup(struct ggcm_mhd *mhd)
   s_diffth = mhd->par.diffth;
   s_timelo = mhd->par.timelo;
   s_speedlimit_code = mhd->par.speedlimit / mhd->vvnorm;
+  s_isphere = mhd->par.isphere;
 }
 
 // ======================================================================
