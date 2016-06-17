@@ -99,6 +99,7 @@ ggcm_mhd_step_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
       ggcm_mhd_diag_set_param_obj(diag, "mhd", mhd);
       ggcm_mhd_diag_set_param_string(diag, "fields", "rr1:rv1:uu1:b1:rr:v:pp:b:divb");
       ggcm_mhd_diag_set_from_options(diag);
+      // overwrite run name (needs to be after set_from_options)
       ggcm_mhd_diag_set_param_string(diag, "run", "dbg");
       ggcm_mhd_diag_setup(diag);
       ggcm_mhd_diag_view(diag);
