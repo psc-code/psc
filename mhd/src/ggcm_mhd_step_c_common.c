@@ -34,19 +34,18 @@ enum {
   LIMIT_1,
 };
 
-static float *s_fx1x, *s_fx1y, *s_fx1z;
 static float *s_fd1x, *s_fd1y, *s_fd1z;
 static float *s_bd1x, *s_bd1y, *s_bd1z;
 static float *s_bd2x, *s_bd2y, *s_bd2z;
 static float *s_bd3x, *s_bd3y, *s_bd3z;
 
-#define FX1X(ix) (s_fx1x[ix])
-#define FX1Y(iy) (s_fx1y[iy])
-#define FX1Z(iz) (s_fx1z[iz])
+#define FX1X(ix) PDE_CRDX_CC(ix)
+#define FX1Y(iy) PDE_CRDY_CC(iy)
+#define FX1Z(iz) PDE_CRDZ_CC(iz)
 
-#define FX2X(ix) (sqr(s_fx1x[ix]))
-#define FX2Y(iy) (sqr(s_fx1y[iy]))
-#define FX2Z(iz) (sqr(s_fx1z[iz]))
+#define FX2X(ix) (sqr(FX1X(ix)))
+#define FX2Y(iy) (sqr(FX1Y(iy)))
+#define FX2Z(iz) (sqr(FX1Z(iz)))
 
 #define FD1X(ix) (s_fd1x[ix])
 #define FD1Y(iy) (s_fd1y[iy])
@@ -669,6 +668,7 @@ pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_prev, int m_curr, int
   fld3d_t p_f;
   fld3d_setup(&p_f, mhd->fld);
   fld3d_get(&p_f, 0);
+  pde_patch_set(0);
 
   rmaskn_c(p_f, mhd);
 
@@ -802,10 +802,6 @@ ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
 
   ggcm_mhd_step_setup_member_objs_sub(step);
   ggcm_mhd_step_setup_super(step);
-
-  s_fx1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FX1);
-  s_fx1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FX1);
-  s_fx1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FX1);
 
   s_fd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FD1);
   s_fd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FD1);
