@@ -884,6 +884,8 @@ ggcm_mhd_step_c_diag_item_rmask_run(struct ggcm_mhd_step *step,
 static struct param ggcm_mhd_step_c_descr[] = {
   { "eqn"                , VAR(opt.eqn)            , PARAM_SELECT(OPT_EQN,
 								  opt_eqn_descr)                },
+  { "mhd_primvar"        , VAR(opt.mhd_primvar)    , PARAM_SELECT(OPT_MHD_C,
+								  opt_mhd_descr)                },
   
   {},
 };

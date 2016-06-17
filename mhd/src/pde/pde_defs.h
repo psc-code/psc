@@ -70,4 +70,9 @@
 #define OPT_GET_DT_MHD_CT         (3)
 #define OPT_GET_DT_HD             (4)
 
+// -- OPT_MHD_PRIMVAR ---------------------------------------------------
+
+#define OPT_MHD_C       (1)
+#define OPT_MHD_FORTRAN (2)
+
 #endif

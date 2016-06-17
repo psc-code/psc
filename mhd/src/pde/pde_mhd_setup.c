@@ -42,6 +42,8 @@ struct mhd_options {
   bool background;
   bool bc_reconstruct;
 
+  int mhd_primvar;
+
   double divb_glm_alpha;
   double divb_glm_ch_fac;
   double limiter_mc_beta;
@@ -194,6 +196,21 @@ static const bool s_opt_bc_reconstruct = OPT_BC_RECONSTRUCT;
 static bool s_opt_bc_reconstruct _mrc_unused;
 #endif
 
+// ----------------------------------------------------------------------
+// mhd_primvar
+
+static struct mrc_param_select opt_mhd_descr[] _mrc_unused = {
+  { .val = OPT_MHD_C      , .str = "c"           },
+  { .val = OPT_MHD_FORTRAN, .str = "fortran"     },
+  {},
+};
+
+#ifdef OPT_MHD_PRIMVAR
+static const int s_opt_mhd_primvar = OPT_MHD_PRIMVAR;
+#else
+static int s_opt_mhd_primvar _mrc_unused;
+#endif
+
 // ======================================================================
 // calculated options follow
 
@@ -282,6 +299,13 @@ pde_mhd_set_options(struct ggcm_mhd *mhd, struct mhd_options *opt)
   assert(OPT_BC_RECONSTRUCT == opt->bc_reconstruct);
 #else
   s_opt_bc_reconstruct = opt->bc_reconstruct;
+#endif
+
+  // mhd_primvar
+#ifdef OPT_MHD_PRIMVAR
+  assert(OPT_MHD_PRIMVAR == opt->mhd_primvar);
+#else
+  s_opt_mhd_primvar = opt->mhd_primvar;
 #endif
 
   // ----------------------------------------------------------------------
