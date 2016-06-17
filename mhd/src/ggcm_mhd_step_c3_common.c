@@ -27,6 +27,7 @@
 #include "pde/pde_mhd_riemann.c"
 #include "pde/pde_mhd_stage.c"
 #include "pde/pde_mhd_get_dt.c"
+#include "pde/pde_mhd_badval_checks.c"
 
 //FIXME, when using hydro_rusanov / no pushpp, things go wrong when > timelo
 
@@ -712,46 +713,6 @@ patch_update_ct(struct ggcm_mhd *mhd, fld3d_t x, fld3d_t E,
   } fld3d_foreach_end;
 }
 
-static void
-patch_badval_checks_sc(struct ggcm_mhd *mhd, fld3d_t p_U, fld3d_t p_W, int p)
-{
-  if (!mhd->do_badval_checks) {
-    return;
-  }
-
-  int has_badval = 0;
-  
-  mrc_fld_data_t ppmin = 0.;
-  mrc_fld_data_t rrmin = 0.;  // mhd->par.rrmin / mhd->rrnorm
-  
-  fld3d_foreach(i,j,k, 0, 0) {
-    // check for negative pressure
-    if (F3S(p_W, PP, i,j,k) < ppmin) {
-      has_badval = 5;
-      mprintf("pressure @ (x=%g y=%g z=%g) = %lg < %lg\n",
-	      PDE_CRDX_CC(i), PDE_CRDY_CC(j), PDE_CRDZ_CC(k), F3S(p_W, PP, i,j,k), ppmin);
-    }
-    
-    // check for negative density
-    if (F3S(p_U, RR, i,j,k) < rrmin) {
-      has_badval = 4;
-      mprintf("density @ (x=%g y=%g z=%g) = %lg < %lg\n",
-	      PDE_CRDX_CC(i), PDE_CRDY_CC(j), PDE_CRDZ_CC(k), F3S(p_U, RR, i,j,k), rrmin);
-    }
-    
-    // check for invalid values
-    for (int m = 0; m < 8; m++) {
-      if (!isfinite(F3S(p_U, m, i,j,k))) {
-	has_badval = 3;
-	mprintf("NaN in field %d @ (x=%g y=%g z=%g)\n",
-		m, PDE_CRDX_CC(i), PDE_CRDY_CC(j), PDE_CRDZ_CC(k));
-      }
-    }
-  } fld3d_foreach_end;
-  
-  assert(!has_badval);
-}
-
 // ----------------------------------------------------------------------
 // patch_enforce_rrmin_sc
 //
@@ -801,7 +762,7 @@ patch_pushstage_pt1(struct ggcm_mhd_step *step, fld3d_t p_Ucurr, fld3d_t p_Wcurr
 
   // primvar, badval
   patch_prim_from_cons(p_Wcurr, p_Ucurr, 2);
-  patch_badval_checks_sc(mhd, p_Ucurr, p_Wcurr, p);
+  patch_badval_checks_sc(mhd, p_Ucurr, p_Wcurr);
   
   // find hydro fluxes
   // FIXME: we could use the fact that we calculate primitive variables already
