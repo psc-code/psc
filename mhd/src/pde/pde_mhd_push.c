@@ -87,7 +87,7 @@ patch_pushpred_c(fld3d_t p_f, mrc_fld_data_t dt)
 {
   mrc_fld_data_t dth = .5f * dt;
 
-  patch_rmaskn_fortran(p_f);
+  patch_rmaskn(p_f);
   patch_pushfluid1_fortran(p_f, dth);
   patch_pushfield1_fortran(p_f, dth);
 }
