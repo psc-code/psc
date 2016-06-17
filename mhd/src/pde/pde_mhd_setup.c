@@ -12,7 +12,7 @@ static mrc_fld_data_t s_limiter_mc_beta; // beta for MC limiter
 
 // ----------------------------------------------------------------------
 
-static mrc_fld_data_t s_divb_glm_ch; // hyperbolic c_h from Dedner et al for divb cleaning
+static mrc_fld_data_t s_divb_glm_ch _mrc_unused; // hyperbolic c_h from Dedner et al for divb cleaning
 
 // ======================================================================
 // options
