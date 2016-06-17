@@ -22,6 +22,7 @@
 #include "pde/pde_mhd_setup.c"
 #include "pde/pde_mhd_primvar.c"
 #include "pde/pde_mhd_primbb.c"
+#include "pde/pde_mhd_zmaskn.c"
 
 #include "mhd_sc.c"
 
@@ -728,7 +729,7 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step)
 
   patch_primvar(p_f, _RR1);
   patch_primbb(p_f, _RR1);
-  zmaskn_c(step->mhd);
+  patch_zmaskn(p_f);
 
   mrc_fld_data_t dth = .5f * step->mhd->dt;
   static int PR;
@@ -756,7 +757,7 @@ ggcm_mhd_step_c_corr(struct ggcm_mhd_step *step)
 
   patch_primvar(p_f, _RR2);
   patch_primbb(p_f, _RR2);
-  //  zmaskn_c(step->mhd);
+  //  patch_zmaskn(p_f);
 
   static int PR;
   if (!PR) {

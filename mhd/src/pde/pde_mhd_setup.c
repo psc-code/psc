@@ -14,6 +14,7 @@ static mrc_fld_data_t s_diff_timelo;
 static mrc_fld_data_t s_diffsphere;
 static mrc_fld_data_t s_diffth;
 static mrc_fld_data_t s_timelo;
+static mrc_fld_data_t s_speedlimit_code;
 
 // FIXME, these could/should be s_opt_*
 static mrc_fld_data_t s_divb_glm_alpha; // ratio of hyperbolic / parabolic divb timescales
@@ -320,6 +321,7 @@ pde_mhd_setup(struct ggcm_mhd *mhd)
   s_diffsphere = mhd->par.diffsphere;
   s_diffth = mhd->par.diffth;
   s_timelo = mhd->par.timelo;
+  s_speedlimit_code = mhd->par.speedlimit / mhd->vvnorm;
 }
 
 // ======================================================================
