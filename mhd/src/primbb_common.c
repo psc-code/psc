@@ -8,6 +8,16 @@
 #include <math.h>
 #include <assert.h>
 
+#include "pde/pde_defs.h"
+
+// mhd options
+
+#define OPT_EQN OPT_EQN_MHD_SCONS
+
+#include "pde/pde_setup.c"
+#include "pde/pde_mhd_setup.c"
+#include "pde/pde_mhd_primbb.c"
+
 // ----------------------------------------------------------------------
 // primbb_c
 
@@ -26,15 +36,16 @@ primbb_c(struct ggcm_mhd *mhd, int m_curr)
 
   struct mrc_fld *f = mrc_fld_get_as(mhd->fld, FLD_TYPE);
 
+  pde_setup(f);
+  pde_mhd_setup(mhd);
+
+  fld3d_t p_f;
+  fld3d_setup(&p_f, f);
+
   for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
-    mrc_fld_foreach(f, ix,iy,iz, 1, 2) {
-      M3(f,_BX, ix,iy,iz, p) = .5f * (M3(f, m_curr + _B1X, ix,iy,iz, p) +
-				      M3(f, m_curr + _B1X, ix-1,iy,iz, p));
-      M3(f,_BY, ix,iy,iz, p) = .5f * (M3(f, m_curr + _B1Y, ix,iy,iz, p) +
-				      M3(f, m_curr + _B1Y, ix,iy-1,iz, p));
-      M3(f,_BZ, ix,iy,iz, p) = .5f * (M3(f, m_curr + _B1Z, ix,iy,iz, p) +
-				      M3(f, m_curr + _B1Z, ix,iy,iz-1, p));
-    } mrc_fld_foreach_end;
+    fld3d_get(&p_f, p);
+    patch_primbb(p_f, m_curr);
+    fld3d_put(&p_f, p);
   }
 
   mrc_fld_put_as(f, mhd->fld);
