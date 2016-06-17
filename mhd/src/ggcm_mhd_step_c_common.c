@@ -654,15 +654,9 @@ bpush_c(fld3d_t p_f, mrc_fld_data_t dt, int m_prev, int m_next)
 }
 
 static void
-pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_prev, int m_curr, int m_next,
+pushstage_c(fld3d_t p_f, mrc_fld_data_t dt, int m_prev, int m_curr, int m_next,
 	    int limit)
 {
-  fld3d_t p_f;
-  fld3d_setup(&p_f, mhd->fld);
-  fld3d_get(&p_f, 0);
-  pde_patch_set(0);
-  s_mhd_time = mhd->time;
-
   rmaskn_c(p_f);
 
   if (limit != LIMIT_NONE) {
@@ -693,8 +687,6 @@ pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_prev, int m_curr, int
   push_ej_c(p_f, dt, m_curr, m_next);
   calce_c(p_f, dt, m_curr);
   bpush_c(p_f, dt, m_prev, m_next);
-
-  fld3d_put(&p_f, 0);
 }
 
 // ======================================================================
@@ -727,6 +719,12 @@ ggcm_mhd_step_c_newstep(struct ggcm_mhd_step *step, float *dtn)
 static void
 ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step)
 {
+  fld3d_t p_f;
+  fld3d_setup(&p_f, step->mhd->fld);
+  fld3d_get(&p_f, 0);
+  pde_patch_set(0);
+  s_mhd_time = step->mhd->time;
+
   primvar_c(step->mhd, _RR1);
   primbb_c(step->mhd, _RR1);
   zmaskn_c(step->mhd);
@@ -737,8 +735,10 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step)
     PR = prof_register("pred_c", 1., 0, 0);
   }
   prof_start(PR);
-  pushstage_c(step->mhd, dth, _RR1, _RR1, _RR2, LIMIT_NONE);
+  pushstage_c(p_f, dth, _RR1, _RR1, _RR2, LIMIT_NONE);
   prof_stop(PR);
+
+  fld3d_put(&p_f, 0);
 }
 
 // ----------------------------------------------------------------------
@@ -747,6 +747,12 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step)
 static void
 ggcm_mhd_step_c_corr(struct ggcm_mhd_step *step)
 {
+  fld3d_t p_f;
+  fld3d_setup(&p_f, step->mhd->fld);
+  fld3d_get(&p_f, 0);
+  pde_patch_set(0);
+  s_mhd_time = step->mhd->time;
+
   primvar_c(step->mhd, _RR2);
   primbb_c(step->mhd, _RR2);
   //  zmaskn_c(step->mhd);
@@ -756,12 +762,14 @@ ggcm_mhd_step_c_corr(struct ggcm_mhd_step *step)
     PR = prof_register("corr_c", 1., 0, 0);
   }
   prof_start(PR);
-  pushstage_c(step->mhd, step->mhd->dt, _RR1, _RR2, _RR1, LIMIT_1);
+  pushstage_c(p_f, step->mhd->dt, _RR1, _RR2, _RR1, LIMIT_1);
   prof_stop(PR);
   
   // --- check for NaNs and small density
   // (still controlled by do_badval_checks)
   badval_checks_sc(step->mhd, step->mhd->fld, step->mhd->fld);
+
+  fld3d_put(&p_f, 0);
 }
 
 // ----------------------------------------------------------------------
