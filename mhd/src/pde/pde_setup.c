@@ -19,6 +19,8 @@ static int s_sw[3];    // number of ghost points per dim
 static int s_lgdims[3]; // local dimensions including ghosts
 static int s_dijk[3];  // set to 1 if actual direction, 0 if invariant
 
+static int s_gdims[3]; // global dimensions
+
 // this is violating any kind of name space pretty badly, but otherwise
 // it's just way too ugly to actually use these
 #define di (s_dijk[0])
@@ -47,6 +49,7 @@ struct pde_patch {
   fld1d_t dx[3]; // cell sizes in each direction (ie. spacing between faces)
   fld1d_t inv_dx[3]; // 1 / s_dx[]
   fld1d_t inv_dxf[3]; // 1 / dxf[], where dxf = spacing between cell centers (located at face)
+  int off[3]; // offset of lower-left corner of this patch
 };
 
 static int s_n_patches;
@@ -103,12 +106,11 @@ pde_setup(struct mrc_fld *fld)
   s_n_ghosts = fld->_nr_ghosts;
   s_n_comps = mrc_fld_nr_comps(fld);
 
-  int gdims[3];
-  mrc_domain_get_global_dims(fld->_domain, gdims);
+  mrc_domain_get_global_dims(fld->_domain, s_gdims);
   int n_dims = 3;
-  if (gdims[2] == 1) {
+  if (s_gdims[2] == 1) {
     n_dims--;
-    if (gdims[1] == 1) {
+    if (s_gdims[1] == 1) {
       n_dims--;
     }
   }
@@ -120,7 +122,7 @@ pde_setup(struct mrc_fld *fld)
     s_sw[d] = mrc_fld_spatial_sw(fld)[d];
     s_lgdims[d] = s_ldims[d] + 2 * s_sw[d];
     s_size_1d = MAX(s_size_1d, s_ldims[d] + 2 * s_sw[d]);
-    s_dijk[d] = (gdims[d] > 1);
+    s_dijk[d] = (s_gdims[d] > 1);
   }
 
   struct mrc_crds *crds = mrc_domain_get_crds(fld->_domain);
@@ -130,12 +132,15 @@ pde_setup(struct mrc_fld *fld)
 
   double dxmin[3] = { 1e10, 1e10, 1e10 };
   for (int p = 0; p < s_n_patches; p++) {
+    struct mrc_patch_info patch_info;
+    mrc_domain_get_local_patch_info(fld->_domain, p, &patch_info);
     struct pde_patch *patch = &s_patches[p];
     for (int d = 0; d < 3; d++) {
       fld1d_setup(&patch->crd_cc[d]);
       fld1d_setup(&patch->dx[d]);
       fld1d_setup(&patch->inv_dx[d]);
       fld1d_setup(&patch->inv_dxf[d]);
+      patch->off[d] = patch_info.off[d];
 
       for (int i = -s_sw[d]; i < s_ldims[d] + s_sw[d]; i++) {
 	F1(patch->crd_cc[d], i) = MRC_DMCRD(crds, d, i, p);

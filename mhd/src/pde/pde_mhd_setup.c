@@ -5,6 +5,10 @@
 static mrc_fld_data_t s_gamma;  // adiabatic exponent
 static mrc_fld_data_t s_eta;    // (constant) resistivity 
 static mrc_fld_data_t s_d_i;    // ion skin depth
+
+static mrc_fld_data_t s_diff_swbnd;
+static int s_diff_obnd;
+
 // FIXME, these could/should be s_opt_*
 static mrc_fld_data_t s_divb_glm_alpha; // ratio of hyperbolic / parabolic divb timescales
 static mrc_fld_data_t s_divb_glm_ch_fac; // multiply ch by this factor
@@ -295,9 +299,14 @@ pde_mhd_set_options(struct ggcm_mhd *mhd, struct mhd_options *opt)
 static void
 pde_mhd_setup(struct ggcm_mhd *mhd)
 {
+  // general (x)mhd params
   s_gamma = mhd->par.gamm;
   s_eta   = mhd->par.diffco;
   s_d_i   = mhd->par.d_i;
+
+  // openggcm specific params
+  s_diff_swbnd = mhd->par.diff_swbnd;
+  s_diff_obnd = mhd->par.diff_obnd;
 }
 
 // ======================================================================
