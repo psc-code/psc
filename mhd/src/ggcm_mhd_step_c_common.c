@@ -69,73 +69,62 @@ rmaskn_c(struct ggcm_mhd *mhd)
 }
 
 static void
-vgflrr_c(struct ggcm_mhd *mhd)
+vgflrr_c(fld3d_t p_f)
 {
-  struct mrc_fld *f = mhd->fld;
-
-  mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
-    mrc_fld_data_t a = F3(f,_RR, ix,iy,iz);
-    F3(f,_TMP1, ix,iy,iz) = a * F3(f,_VX, ix,iy,iz);
-    F3(f,_TMP2, ix,iy,iz) = a * F3(f,_VY, ix,iy,iz);
-    F3(f,_TMP3, ix,iy,iz) = a * F3(f,_VZ, ix,iy,iz);
-  } mrc_fld_foreach_end;
+  fld3d_foreach(ix,iy,iz, 2, 2) {
+    mrc_fld_data_t a = F3S(p_f,_RR, ix,iy,iz);
+    F3S(p_f,_TMP1, ix,iy,iz) = a * F3S(p_f,_VX, ix,iy,iz);
+    F3S(p_f,_TMP2, ix,iy,iz) = a * F3S(p_f,_VY, ix,iy,iz);
+    F3S(p_f,_TMP3, ix,iy,iz) = a * F3S(p_f,_VZ, ix,iy,iz);
+  } fld3d_foreach_end;
 }
 
 static void
-vgflrvx_c(struct ggcm_mhd *mhd)
+vgflrvx_c(fld3d_t p_f)
 {
-  struct mrc_fld *f = mhd->fld;
-
-  mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
-    mrc_fld_data_t a = F3(f,_RR, ix,iy,iz) * F3(f,_VX, ix,iy,iz);
-    F3(f,_TMP1, ix,iy,iz) = a * F3(f,_VX, ix,iy,iz);
-    F3(f,_TMP2, ix,iy,iz) = a * F3(f,_VY, ix,iy,iz);
-    F3(f,_TMP3, ix,iy,iz) = a * F3(f,_VZ, ix,iy,iz);
-  } mrc_fld_foreach_end;
+  fld3d_foreach(ix,iy,iz, 2, 2) {
+    mrc_fld_data_t a = F3S(p_f,_RR, ix,iy,iz) * F3S(p_f,_VX, ix,iy,iz);
+    F3S(p_f,_TMP1, ix,iy,iz) = a * F3S(p_f,_VX, ix,iy,iz);
+    F3S(p_f,_TMP2, ix,iy,iz) = a * F3S(p_f,_VY, ix,iy,iz);
+    F3S(p_f,_TMP3, ix,iy,iz) = a * F3S(p_f,_VZ, ix,iy,iz);
+  } fld3d_foreach_end;
 }
 
 static void
-vgflrvy_c(struct ggcm_mhd *mhd)
+vgflrvy_c(fld3d_t p_f)
 {
-  struct mrc_fld *f = mhd->fld;
-
-  mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
-    mrc_fld_data_t a = F3(f,_RR, ix,iy,iz) * F3(f,_VY, ix,iy,iz);
-    F3(f,_TMP1, ix,iy,iz) = a * F3(f,_VX, ix,iy,iz);
-    F3(f,_TMP2, ix,iy,iz) = a * F3(f,_VY, ix,iy,iz);
-    F3(f,_TMP3, ix,iy,iz) = a * F3(f,_VZ, ix,iy,iz);
-  } mrc_fld_foreach_end;
+  fld3d_foreach(ix,iy,iz, 2, 2) {
+    mrc_fld_data_t a = F3S(p_f,_RR, ix,iy,iz) * F3S(p_f,_VY, ix,iy,iz);
+    F3S(p_f,_TMP1, ix,iy,iz) = a * F3S(p_f,_VX, ix,iy,iz);
+    F3S(p_f,_TMP2, ix,iy,iz) = a * F3S(p_f,_VY, ix,iy,iz);
+    F3S(p_f,_TMP3, ix,iy,iz) = a * F3S(p_f,_VZ, ix,iy,iz);
+  } fld3d_foreach_end;
 }
 
 static void
-vgflrvz_c(struct ggcm_mhd *mhd)
+vgflrvz_c(fld3d_t p_f)
 {
-  struct mrc_fld *f = mhd->fld;
-
-  mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
-    mrc_fld_data_t a = F3(f,_RR, ix,iy,iz) * F3(f,_VZ, ix,iy,iz);
-    F3(f,_TMP1, ix,iy,iz) = a * F3(f,_VX, ix,iy,iz);
-    F3(f,_TMP2, ix,iy,iz) = a * F3(f,_VY, ix,iy,iz);
-    F3(f,_TMP3, ix,iy,iz) = a * F3(f,_VZ, ix,iy,iz);
-  } mrc_fld_foreach_end;
+  fld3d_foreach(ix,iy,iz, 2, 2) {
+    mrc_fld_data_t a = F3S(p_f,_RR, ix,iy,iz) * F3S(p_f,_VZ, ix,iy,iz);
+    F3S(p_f,_TMP1, ix,iy,iz) = a * F3S(p_f,_VX, ix,iy,iz);
+    F3S(p_f,_TMP2, ix,iy,iz) = a * F3S(p_f,_VY, ix,iy,iz);
+    F3S(p_f,_TMP3, ix,iy,iz) = a * F3S(p_f,_VZ, ix,iy,iz);
+  } fld3d_foreach_end;
 }
 
 static void
-vgfluu_c(struct ggcm_mhd *mhd)
+vgfluu_c(fld3d_t p_f)
 {
-  struct mrc_fld *f = mhd->fld;
-
-  mrc_fld_data_t gamma = mhd->par.gamm;
-  mrc_fld_data_t s = gamma / (gamma - 1.f);
-  mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
-    mrc_fld_data_t ep = s * F3(f,_PP, ix,iy,iz) +
-      .5f * F3(f,_RR, ix,iy,iz) * (sqr(F3(f,_VX, ix,iy,iz)) + 
-				   sqr(F3(f,_VY, ix,iy,iz)) + 
-				   sqr(F3(f,_VZ, ix,iy,iz)));
-    F3(f,_TMP1, ix,iy,iz) = ep * F3(f,_VX, ix,iy,iz);
-    F3(f,_TMP2, ix,iy,iz) = ep * F3(f,_VY, ix,iy,iz);
-    F3(f,_TMP3, ix,iy,iz) = ep * F3(f,_VZ, ix,iy,iz);
-  } mrc_fld_foreach_end;
+  mrc_fld_data_t s = s_gamma / (s_gamma - 1.f);
+  fld3d_foreach(ix,iy,iz, 2, 2) {
+    mrc_fld_data_t ep = s * F3S(p_f,_PP, ix,iy,iz) +
+      .5f * F3S(p_f,_RR, ix,iy,iz) * (sqr(F3S(p_f,_VX, ix,iy,iz)) + 
+				      sqr(F3S(p_f,_VY, ix,iy,iz)) + 
+				      sqr(F3S(p_f,_VZ, ix,iy,iz)));
+    F3S(p_f,_TMP1, ix,iy,iz) = ep * F3S(p_f,_VX, ix,iy,iz);
+    F3S(p_f,_TMP2, ix,iy,iz) = ep * F3S(p_f,_VY, ix,iy,iz);
+    F3S(p_f,_TMP3, ix,iy,iz) = ep * F3S(p_f,_VZ, ix,iy,iz);
+  } fld3d_foreach_end;
 }
 
 static void
@@ -299,14 +288,20 @@ limit1_c(struct mrc_fld *f, int m, mrc_fld_data_t time, mrc_fld_data_t timelo, i
 static void
 vgfl_c(struct ggcm_mhd *mhd, int m)
 {
+  fld3d_t p_f;
+  fld3d_setup(&p_f, mhd->fld);
+  fld3d_get(&p_f, 0);
+
   switch (m) {
-  case _RR1:  return vgflrr_c(mhd);
-  case _RV1X: return vgflrvx_c(mhd);
-  case _RV1Y: return vgflrvy_c(mhd);
-  case _RV1Z: return vgflrvz_c(mhd);
-  case _UU1:  return vgfluu_c(mhd);
+  case _RR1:  return vgflrr_c(p_f);
+  case _RV1X: return vgflrvx_c(p_f);
+  case _RV1Y: return vgflrvy_c(p_f);
+  case _RV1Z: return vgflrvz_c(p_f);
+  case _UU1:  return vgfluu_c(p_f);
   default: assert(0);
   }
+
+  fld3d_put(&p_f, 0);
 }
 
 static void
