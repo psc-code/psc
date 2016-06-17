@@ -46,6 +46,8 @@ struct mhd_options {
   int mhd_primbb;
   int mhd_zmaskn;
   int mhd_newstep;
+  int mhd_pushpred;
+  int mhd_pushcorr;
 
   double divb_glm_alpha;
   double divb_glm_ch_fac;
@@ -244,6 +246,24 @@ static const int s_opt_mhd_newstep = OPT_MHD_NEWSTEP;
 static int s_opt_mhd_newstep _mrc_unused;
 #endif
 
+// ----------------------------------------------------------------------
+// mhd_pushpred
+
+#ifdef OPT_MHD_PUSHPRED
+static const int s_opt_mhd_pushpred = OPT_MHD_PUSHPRED;
+#else
+static int s_opt_mhd_pushpred _mrc_unused;
+#endif
+
+// ----------------------------------------------------------------------
+// mhd_pushcorr
+
+#ifdef OPT_MHD_PUSHCORR
+static const int s_opt_mhd_pushcorr = OPT_MHD_PUSHCORR;
+#else
+static int s_opt_mhd_pushcorr _mrc_unused;
+#endif
+
 // ======================================================================
 // calculated options follow
 
@@ -360,6 +380,20 @@ pde_mhd_set_options(struct ggcm_mhd *mhd, struct mhd_options *opt)
   assert(OPT_MHD_NEWSTEP == opt->mhd_newstep);
 #else
   s_opt_mhd_newstep = opt->mhd_newstep;
+#endif
+
+  // mhd_pushpred
+#ifdef OPT_MHD_PUSHPRED
+  assert(OPT_MHD_PUSHPRED == opt->mhd_pushpred);
+#else
+  s_opt_mhd_pushpred = opt->mhd_pushpred;
+#endif
+
+  // mhd_pushcorr
+#ifdef OPT_MHD_PUSHCORR
+  assert(OPT_MHD_PUSHCORR == opt->mhd_pushcorr);
+#else
+  s_opt_mhd_pushcorr = opt->mhd_pushcorr;
 #endif
 
   // ----------------------------------------------------------------------
