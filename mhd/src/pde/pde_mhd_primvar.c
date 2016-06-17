@@ -23,12 +23,12 @@ patch_primvar_c(fld3d_t p_f, int m)
   } fld3d_foreach_end;
 }
 
+// ----------------------------------------------------------------------
+// patch_primvar_fortran
+
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
 
 #include "pde/pde_fortran.h"
-
-// ----------------------------------------------------------------------
-// patch_primvar_fortran
 
 #define primvar_F77 F77_FUNC(primvar,PRIMVAR)
 
@@ -56,7 +56,10 @@ patch_primvar_fortran(fld3d_t p_f, int m)
 
 #endif
 
-static void
+// ----------------------------------------------------------------------
+// patch_primvar
+
+static void _mrc_unused
 patch_primvar(fld3d_t p_f, int m)
 {
   if (s_opt_mhd_primvar == OPT_MHD_C) {

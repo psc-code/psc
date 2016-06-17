@@ -43,6 +43,7 @@ struct mhd_options {
   bool bc_reconstruct;
 
   int mhd_primvar;
+  int mhd_primbb;
 
   double divb_glm_alpha;
   double divb_glm_ch_fac;
@@ -196,8 +197,8 @@ static const bool s_opt_bc_reconstruct = OPT_BC_RECONSTRUCT;
 static bool s_opt_bc_reconstruct _mrc_unused;
 #endif
 
-// ----------------------------------------------------------------------
-// mhd_primvar
+// ======================================================================
+// (legacy) mhd options
 
 static struct mrc_param_select opt_mhd_descr[] _mrc_unused = {
   { .val = OPT_MHD_C      , .str = "c"           },
@@ -205,10 +206,22 @@ static struct mrc_param_select opt_mhd_descr[] _mrc_unused = {
   {},
 };
 
+// ----------------------------------------------------------------------
+// mhd_primvar
+
 #ifdef OPT_MHD_PRIMVAR
 static const int s_opt_mhd_primvar = OPT_MHD_PRIMVAR;
 #else
 static int s_opt_mhd_primvar _mrc_unused;
+#endif
+
+// ----------------------------------------------------------------------
+// mhd_primbb
+
+#ifdef OPT_MHD_PRIMBB
+static const int s_opt_mhd_primbb = OPT_MHD_PRIMBB;
+#else
+static int s_opt_mhd_primbb _mrc_unused;
 #endif
 
 // ======================================================================
@@ -306,6 +319,13 @@ pde_mhd_set_options(struct ggcm_mhd *mhd, struct mhd_options *opt)
   assert(OPT_MHD_PRIMVAR == opt->mhd_primvar);
 #else
   s_opt_mhd_primvar = opt->mhd_primvar;
+#endif
+
+  // mhd_primbb
+#ifdef OPT_MHD_PRIMBB
+  assert(OPT_MHD_PRIMBB == opt->mhd_primbb);
+#else
+  s_opt_mhd_primbb = opt->mhd_primbb;
 #endif
 
   // ----------------------------------------------------------------------

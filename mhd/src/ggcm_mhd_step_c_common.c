@@ -886,6 +886,8 @@ static struct param ggcm_mhd_step_c_descr[] = {
 								  opt_eqn_descr)                },
   { "mhd_primvar"        , VAR(opt.mhd_primvar)    , PARAM_SELECT(OPT_MHD_C,
 								  opt_mhd_descr)                },
+  { "mhd_primbb"         , VAR(opt.mhd_primbb)     , PARAM_SELECT(OPT_MHD_C,
+								  opt_mhd_descr)                },
   
   {},
 };
