@@ -86,6 +86,7 @@ static float *s_fd1x, *s_fd1y, *s_fd1z;
 #include "pde/pde_mhd_rmaskn.c"
 #include "pde/pde_mhd_pushfluid.c"
 #include "pde/pde_mhd_push_ej.c"
+#include "pde/pde_mhd_bpush.c"
 
 // ======================================================================
 
@@ -316,22 +317,6 @@ calce_c(fld3d_t p_f, mrc_fld_data_t dt, int m_curr)
 }
 
 static void
-bpush_c(fld3d_t p_f, mrc_fld_data_t dt, int m_prev, int m_next)
-{
-  fld3d_foreach(ix,iy,iz, 0, 0) {
-    F3S(p_f, m_next + _B1X, ix,iy,iz) = F3S(p_f, m_prev + _B1X, ix,iy,iz) +
-      dt * (BD3Y(iy) * (F3S(p_f,_FLZ, ix,iy,iz) - F3S(p_f,_FLZ, ix,iy-1,iz)) -
-	    BD3Z(iz) * (F3S(p_f,_FLY, ix,iy,iz) - F3S(p_f,_FLY, ix,iy,iz-1)));
-    F3S(p_f, m_next + _B1Y, ix,iy,iz) = F3S(p_f, m_prev + _B1Y, ix,iy,iz) +
-      dt * (BD3Z(iz) * (F3S(p_f,_FLX, ix,iy,iz) - F3S(p_f,_FLX, ix,iy,iz-1)) -
-	    BD3X(ix) * (F3S(p_f,_FLZ, ix,iy,iz) - F3S(p_f,_FLZ, ix-1,iy,iz)));
-    F3S(p_f, m_next + _B1Z, ix,iy,iz) = F3S(p_f, m_prev + _B1Z, ix,iy,iz) +
-      dt * (BD3X(ix) * (F3S(p_f,_FLY, ix,iy,iz) - F3S(p_f,_FLY, ix-1,iy,iz)) -
-	    BD3Y(iy) * (F3S(p_f,_FLX, ix,iy,iz) - F3S(p_f,_FLX, ix,iy-1,iz)));
-  } fld3d_foreach_end;
-}
-
-static void
 pushstage_c(fld3d_t p_f, mrc_fld_data_t dt, int m_prev, int m_curr, int m_next,
 	    int limit)
 {
@@ -358,7 +343,7 @@ pushstage_c(fld3d_t p_f, mrc_fld_data_t dt, int m_prev, int m_curr, int m_next,
 
   patch_push_ej(p_f, dt, m_curr, m_next);
   calce_c(p_f, dt, m_curr);
-  bpush_c(p_f, dt, m_prev, m_next);
+  patch_bpush1(p_f, dt, m_prev, m_next);
 }
 
 // ======================================================================
@@ -551,13 +536,15 @@ static struct param ggcm_mhd_step_c_descr[] = {
 								  opt_mhd_descr)                },
   { "mhd_zmaskn"         , VAR(opt.mhd_zmaskn)     , PARAM_SELECT(OPT_MHD_C,
 								  opt_mhd_descr)                },
-  { "mhd_rmaskn"         , VAR(opt.mhd_rmaskn)     , PARAM_SELECT(OPT_MHD_FORTRAN,
+  { "mhd_rmaskn"         , VAR(opt.mhd_rmaskn)     , PARAM_SELECT(OPT_MHD_C,
 								  opt_mhd_descr)                },
   { "mhd_newstep"        , VAR(opt.mhd_newstep)    , PARAM_SELECT(OPT_MHD_C,
 								  opt_mhd_descr)                },
   { "mhd_pushfluid1"     , VAR(opt.mhd_pushfluid1) , PARAM_SELECT(OPT_MHD_C,
 								  opt_mhd_descr)                },
   { "mhd_push_ej"        , VAR(opt.mhd_push_ej)    , PARAM_SELECT(OPT_MHD_C,
+								  opt_mhd_descr)                },
+  { "mhd_bpush1"         , VAR(opt.mhd_bpush1)     , PARAM_SELECT(OPT_MHD_C,
 								  opt_mhd_descr)                },
   
   {},
