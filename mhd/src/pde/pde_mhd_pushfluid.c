@@ -235,6 +235,13 @@ static void
 pushfluid_c(fld3d_t p_f, mrc_fld_data_t dt,
 	    int m_prev, int m_curr, int m_next, int limit)
 {
+  if (limit != LIMIT_NONE) {
+    vgrs(p_f, _BX, 0.f); vgrs(p_f, _BY, 0.f); vgrs(p_f, _BZ, 0.f);
+    limit1_c(p_f, _PP, _BX);
+    assert(limit == LIMIT_1);
+    // limit2, 3
+  }
+
   pushfv_c(p_f, _RR1 , dt, m_prev, m_curr, m_next, limit);
   pushfv_c(p_f, _RV1X, dt, m_prev, m_curr, m_next, limit);
   pushfv_c(p_f, _RV1Y, dt, m_prev, m_curr, m_next, limit);
@@ -300,6 +307,15 @@ patch_pushfluid1(fld3d_t p_f, mrc_fld_data_t dt)
 // ======================================================================
 
 // ----------------------------------------------------------------------
+// patch_pushfluid2_c
+
+static void
+patch_pushfluid2_c(fld3d_t p_f, mrc_fld_data_t dt)
+{
+  pushfluid_c(p_f, dt, _RR1, _RR2, _RR1, LIMIT_1);
+}
+
+// ----------------------------------------------------------------------
 // patch_pushfluid2_fortran
 
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
@@ -333,7 +349,7 @@ static void _mrc_unused
 patch_pushfluid2(fld3d_t p_f, mrc_fld_data_t dt)
 {
   if (s_opt_mhd_pushfluid2 == OPT_MHD_C) {
-    assert(0);//patch_pushfluid2_c(p_f, dt);
+    patch_pushfluid2_c(p_f, dt);
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
   } else if (s_opt_mhd_pushfluid2 == OPT_MHD_FORTRAN) {
     patch_pushfluid2_fortran(p_f, dt);

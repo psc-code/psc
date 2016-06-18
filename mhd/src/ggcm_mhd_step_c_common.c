@@ -157,12 +157,6 @@ pushstage_c(fld3d_t p_f, mrc_fld_data_t dt, int m_prev, int m_curr, int m_next,
 {
   patch_rmaskn_c(p_f);
 
-  if (limit != LIMIT_NONE) {
-    vgrs(p_f, _BX, 0.f); vgrs(p_f, _BY, 0.f); vgrs(p_f, _BZ, 0.f);
-    limit1_c(p_f, _PP, _BX);
-    // limit2, 3
-  }
-
   pushfluid_c(p_f, dt, m_prev, m_curr, m_next, limit);
 
   switch (s_magdiffu) {
