@@ -46,7 +46,7 @@ patch_pushfield1_c(fld3d_t p_f, mrc_fld_data_t dt)
     //calc_resis_const(bxB,byB,bzB,currx,curry,currz,tmp1,tmp2,tmp3,flx,fly,flz,zmask,rr,pp,resis);
   }
 
-  patch_push_ej_fortran(p_f, dt, _RR1, _RR2);
+  patch_push_ej(p_f, dt, _RR1, _RR2);
   pfie3_F77(F(p_f, _B1X), F(p_f, _B1Y), F(p_f, _B1Z),
 	    F(p_f, _B1X), F(p_f, _B1Y), F(p_f, _B1Z),
 	    F(p_f, _B2X), F(p_f, _B2Y), F(p_f, _B2Z),

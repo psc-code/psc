@@ -51,6 +51,7 @@ struct mhd_options {
   int mhd_pushcorr;
   int mhd_pushfluid1;
   int mhd_pushfield1;
+  int mhd_push_ej;
 
   double divb_glm_alpha;
   double divb_glm_ch_fac;
@@ -294,6 +295,15 @@ static const int s_opt_mhd_pushfield1 = OPT_MHD_PUSHFIELD1;
 static int s_opt_mhd_pushfield1 _mrc_unused;
 #endif
 
+// ----------------------------------------------------------------------
+// mhd_push_ej
+
+#ifdef OPT_MHD_PUSH_EJ
+static const int s_opt_mhd_push_ej = OPT_MHD_PUSH_EJ;
+#else
+static int s_opt_mhd_push_ej _mrc_unused;
+#endif
+
 // ======================================================================
 // calculated options follow
 
@@ -445,6 +455,13 @@ pde_mhd_set_options(struct ggcm_mhd *mhd, struct mhd_options *opt)
   assert(OPT_MHD_PUSHFIELD1 == opt->mhd_pushfield1);
 #else
   s_opt_mhd_pushfield1 = opt->mhd_pushfield1;
+#endif
+
+  // mhd_push_ej
+#ifdef OPT_MHD_PUSH_EJ
+  assert(OPT_MHD_PUSH_EJ == opt->mhd_push_ej);
+#else
+  s_opt_mhd_push_ej = opt->mhd_push_ej;
 #endif
 
   // ----------------------------------------------------------------------

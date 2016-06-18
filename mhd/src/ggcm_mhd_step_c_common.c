@@ -85,47 +85,9 @@ static float *s_fd1x, *s_fd1y, *s_fd1z;
 #include "pde/pde_mhd_get_dt.c"
 #include "pde/pde_mhd_rmaskn.c"
 #include "pde/pde_mhd_pushfluid.c"
+#include "pde/pde_mhd_push_ej.c"
 
 // ======================================================================
-
-// ----------------------------------------------------------------------
-// curr_c
-//
-// edge centered current density
-
-static void
-curr_c(fld3d_t p_f, int m_j, int m_curr)
-{
-  fld3d_foreach(ix,iy,iz, 2, 1) {
-    F3S(p_f, m_j + 0, ix,iy,iz) =
-      (F3S(p_f, m_curr + _B1Z, ix,iy+1,iz) - F3S(p_f, m_curr + _B1Z, ix,iy,iz)) * BD4Y(iy) -
-      (F3S(p_f, m_curr + _B1Y, ix,iy,iz+1) - F3S(p_f, m_curr + _B1Y, ix,iy,iz)) * BD4Z(iz);
-    F3S(p_f, m_j + 1, ix,iy,iz) =
-      (F3S(p_f, m_curr + _B1X, ix,iy,iz+1) - F3S(p_f, m_curr + _B1X, ix,iy,iz)) * BD4Z(iz) -
-      (F3S(p_f, m_curr + _B1Z, ix+1,iy,iz) - F3S(p_f, m_curr + _B1Z, ix,iy,iz)) * BD4X(ix);
-    F3S(p_f, m_j + 2, ix,iy,iz) =
-      (F3S(p_f, m_curr + _B1Y, ix+1,iy,iz) - F3S(p_f, m_curr + _B1Y, ix,iy,iz)) * BD4X(ix) -
-      (F3S(p_f, m_curr + _B1X, ix,iy+1,iz) - F3S(p_f, m_curr + _B1X, ix,iy,iz)) * BD4Y(iy);
-  } fld3d_foreach_end;
-}
-
-// ----------------------------------------------------------------------
-// currbb_c
-//
-// cell-averaged B
-
-static void
-currbb_c(fld3d_t p_f, int m, int m_curr)
-{
-  fld3d_foreach(ix,iy,iz, 1, 1) {
-    F3S(p_f, m+0, ix,iy,iz) = .5f * (F3S(p_f, m_curr + _B1X, ix  ,iy,iz) +
-				     F3S(p_f, m_curr + _B1X, ix-1,iy,iz));
-    F3S(p_f, m+1, ix,iy,iz) = .5f * (F3S(p_f, m_curr + _B1Y, ix,iy  ,iz) +
-				     F3S(p_f, m_curr + _B1Y, ix,iy-1,iz));
-    F3S(p_f, m+2, ix,iy,iz) = .5f * (F3S(p_f, m_curr + _B1Z, ix,iy,iz  ) +
-				     F3S(p_f, m_curr + _B1Z, ix,iy,iz-1));
-  } fld3d_foreach_end;
-}
 
 // ----------------------------------------------------------------------
 // curbc_c
@@ -148,48 +110,6 @@ curbc_c(fld3d_t p_f, int m_curr)
 				      F3S(p_f, _TY, ix  ,iy,iz-1) + F3S(p_f, _TY, ix-1,iy,iz-1));
     F3S(p_f, _CURRZ, ix,iy,iz) = s * (F3S(p_f, _TZ, ix  ,iy  ,iz) + F3S(p_f, _TZ, ix-1,iy  ,iz) +
 				      F3S(p_f, _TZ, ix  ,iy-1,iz) + F3S(p_f, _TZ, ix-1,iy-1,iz));
-  } fld3d_foreach_end;
-}
-
-static void
-push_ej_c(fld3d_t p_f, mrc_fld_data_t dt, int m_curr, int m_next)
-{
-  enum { XJX = _BX, XJY = _BY, XJZ = _BZ };
-  enum { BX = _TMP1, BY = _TMP2, BZ = _TMP3 };
-
-  curr_c(p_f, XJX, m_curr);
-  currbb_c(p_f, BX, m_curr);
-	
-  mrc_fld_data_t s1 = .25f * dt;
-  fld3d_foreach(ix,iy,iz, 0, 0) {
-    mrc_fld_data_t z = F3S(p_f,_ZMASK, ix,iy,iz);
-    mrc_fld_data_t s2 = s1 * z;
-    mrc_fld_data_t cx = (F3S(p_f, XJX, ix  ,iy  ,iz  ) +
-		F3S(p_f, XJX, ix  ,iy-1,iz  ) +
-		F3S(p_f, XJX, ix  ,iy  ,iz-1) +
-		F3S(p_f, XJX, ix  ,iy-1,iz-1));
-    mrc_fld_data_t cy = (F3S(p_f, XJY, ix  ,iy  ,iz  ) +
-		F3S(p_f, XJY, ix-1,iy  ,iz  ) +
-		F3S(p_f, XJY, ix  ,iy  ,iz-1) +
-		F3S(p_f, XJY, ix-1,iy  ,iz-1));
-    mrc_fld_data_t cz = (F3S(p_f, XJZ, ix  ,iy  ,iz  ) +
-		F3S(p_f, XJZ, ix-1,iy  ,iz  ) +
-		F3S(p_f, XJZ, ix  ,iy-1,iz  ) +
-		F3S(p_f, XJZ, ix-1,iy-1,iz  ));
-    mrc_fld_data_t ffx = s2 * (cy * F3S(p_f, BZ, ix,iy,iz) -
-		      cz * F3S(p_f, BY, ix,iy,iz));
-    mrc_fld_data_t ffy = s2 * (cz * F3S(p_f, BX, ix,iy,iz) -
-		      cx * F3S(p_f, BZ, ix,iy,iz));
-    mrc_fld_data_t ffz = s2 * (cx * F3S(p_f, BY, ix,iy,iz) -
-		      cy * F3S(p_f, BX, ix,iy,iz));
-    mrc_fld_data_t duu = (ffx * F3S(p_f, _VX, ix,iy,iz) +
-		 ffy * F3S(p_f, _VY, ix,iy,iz) +
-		 ffz * F3S(p_f, _VZ, ix,iy,iz));
-
-    F3S(p_f, m_next + _RV1X, ix,iy,iz) += ffx;
-    F3S(p_f, m_next + _RV1Y, ix,iy,iz) += ffy;
-    F3S(p_f, m_next + _RV1Z, ix,iy,iz) += ffz;
-    F3S(p_f, m_next + _UU1 , ix,iy,iz) += duu;
   } fld3d_foreach_end;
 }
 
@@ -436,7 +356,7 @@ pushstage_c(fld3d_t p_f, mrc_fld_data_t dt, int m_prev, int m_curr, int m_next,
     assert(0);
   }
 
-  push_ej_c(p_f, dt, m_curr, m_next);
+  patch_push_ej(p_f, dt, m_curr, m_next);
   calce_c(p_f, dt, m_curr);
   bpush_c(p_f, dt, m_prev, m_next);
 }
@@ -636,6 +556,8 @@ static struct param ggcm_mhd_step_c_descr[] = {
   { "mhd_newstep"        , VAR(opt.mhd_newstep)    , PARAM_SELECT(OPT_MHD_C,
 								  opt_mhd_descr)                },
   { "mhd_pushfluid1"     , VAR(opt.mhd_pushfluid1) , PARAM_SELECT(OPT_MHD_C,
+								  opt_mhd_descr)                },
+  { "mhd_push_ej"        , VAR(opt.mhd_push_ej)    , PARAM_SELECT(OPT_MHD_C,
 								  opt_mhd_descr)                },
   
   {},
