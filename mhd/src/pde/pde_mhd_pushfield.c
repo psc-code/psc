@@ -1,6 +1,68 @@
 
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
 
+#define calc_resis_nl1_F77 F77_FUNC(calc_resis_nl1,CALC_RESIS_NL1)
+#define vgr0_F77 F77_FUNC(vgr0,VGR0)
+#define push_ej_F77 F77_FUNC(push_ej,PUSH_EJ)
+#define pfie3_F77 F77_FUNC(pfie3,PFIE3)
+
+void calc_resis_nl1_F77(real *bx, real *by, real *bz, real *resis);
+void vgr0_F77(integer *ntot, real *f);
+void push_ej_F77(real *b1x, real *b1y, real *b1z,
+		 real *rv1x, real *rv1y, real *rv1z, real *uu1,
+		 real *zmask, real *vx, real *vy, real *vz,
+		 real *dt);
+void pfie3_F77(real *b1x, real *b1y, real *b1z,
+	       real *b2x, real *b2y, real *b2z,
+	       real *b3x, real *b3y, real *b3z,
+	       real *rvx, real *rvy, real *rvz, real *uu,
+	       real *zmask, real *rmask, real *resis,
+	       real *flx, real *fly, real *flz,
+	       real *vx, real *vy, real *vz,
+	       real *currx, real *curry, real *currz,
+	       real *dt, real *time);
+#endif
+
+// ----------------------------------------------------------------------
+// patch_pushfield1_c
+
+static void
+patch_pushfield1_c(fld3d_t p_f, mrc_fld_data_t dt)
+{
+  if (s_magdiffu == MAGDIFFU_NL1) {
+    calc_resis_nl1_F77(F(p_f, _B1X), F(p_f, _B1Y), F(p_f, _B1Z), F(p_f, _RESIS));
+    int ntot = s_lgdims[0] * s_lgdims[1] * s_lgdims[2];
+    vgr0_F77(&ntot, F(p_f, _CURRX));
+    vgr0_F77(&ntot, F(p_f, _CURRY));
+    vgr0_F77(&ntot, F(p_f, _CURRZ));
+  } else if (s_magdiffu == MAGDIFFU_RES1) {
+    assert(0);
+    //    calc_resis_res1(bxB,byB,bzB,currx,curry,currz,tmp1,tmp2,tmp3,flx,fly,flz,zmask,rr,pp,resis);
+  } else if (s_magdiffu == MAGDIFFU_CONST) {
+    assert(0);
+    //calc_resis_const(bxB,byB,bzB,currx,curry,currz,tmp1,tmp2,tmp3,flx,fly,flz,zmask,rr,pp,resis);
+  }
+
+  push_ej_F77(F(p_f, _B1X), F(p_f, _B1Y), F(p_f, _B1Z),
+	      F(p_f, _RV2X), F(p_f, _RV2Y), F(p_f, _RV2Z), F(p_f, _UU2), 
+	      F(p_f, _ZMASK), F(p_f, _VX), F(p_f, _VY), F(p_f, _VZ), &dt);
+
+  pfie3_F77(F(p_f, _B1X), F(p_f, _B1Y), F(p_f, _B1Z),
+	    F(p_f, _B1X), F(p_f, _B1Y), F(p_f, _B1Z),
+	    F(p_f, _B2X), F(p_f, _B2Y), F(p_f, _B2Z),
+	    F(p_f, _RV2X), F(p_f, _RV2Y), F(p_f, _RV2Z), F(p_f, _UU2), 
+	    F(p_f, _ZMASK), F(p_f, _RMASK), F(p_f, _RESIS),
+	    F(p_f, _FLX), F(p_f, _FLY), F(p_f, _FLZ),
+	    F(p_f, _VX), F(p_f, _VY), F(p_f, _VZ),
+	    F(p_f, _CURRX), F(p_f, _CURRY), F(p_f, _CURRZ),
+	    &dt, &s_mhd_time);
+}
+
+// ----------------------------------------------------------------------
+// patch_pushfield1_fortran
+
+#if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
+
 #define pushfield1_F77 F77_FUNC(pushfield1,PUSHFIELD1)
 
 void pushfield1_F77(real *rr1, real *rv1x, real *rv1y, real *rv1z, real *uu1,
@@ -36,7 +98,7 @@ static void _mrc_unused
 patch_pushfield1(fld3d_t p_f, mrc_fld_data_t dt)
 {
   if (s_opt_mhd_pushfield1 == OPT_MHD_C) {
-    assert(0);//patch_pushfield1_c(p_f, dt);
+    patch_pushfield1_c(p_f, dt);
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
   } else if (s_opt_mhd_pushfield1 == OPT_MHD_FORTRAN) {
     patch_pushfield1_fortran(p_f, dt);
