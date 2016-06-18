@@ -2,18 +2,9 @@
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
 
 #define calc_resis_nl1_F77 F77_FUNC(calc_resis_nl1,CALC_RESIS_NL1)
-#define pfie3_F77 F77_FUNC(pfie3,PFIE3)
 
 void calc_resis_nl1_F77(real *bx, real *by, real *bz, real *resis);
-void pfie3_F77(real *b1x, real *b1y, real *b1z,
-	       real *b2x, real *b2y, real *b2z,
-	       real *b3x, real *b3y, real *b3z,
-	       real *rvx, real *rvy, real *rvz, real *uu,
-	       real *zmask, real *rmask, real *resis,
-	       real *flx, real *fly, real *flz,
-	       real *vx, real *vy, real *vz,
-	       real *currx, real *curry, real *currz,
-	       real *dt, real *time);
+
 #endif
 
 // ----------------------------------------------------------------------
@@ -47,15 +38,7 @@ patch_pushfield1_c(fld3d_t p_f, mrc_fld_data_t dt)
   }
 
   patch_push_ej(p_f, dt, _RR1, _RR2);
-  pfie3_F77(F(p_f, _B1X), F(p_f, _B1Y), F(p_f, _B1Z),
-	    F(p_f, _B1X), F(p_f, _B1Y), F(p_f, _B1Z),
-	    F(p_f, _B2X), F(p_f, _B2Y), F(p_f, _B2Z),
-	    F(p_f, _RV2X), F(p_f, _RV2Y), F(p_f, _RV2Z), F(p_f, _UU2), 
-	    F(p_f, _ZMASK), F(p_f, _RMASK), F(p_f, _RESIS),
-	    F(p_f, _FLX), F(p_f, _FLY), F(p_f, _FLZ),
-	    F(p_f, _VX), F(p_f, _VY), F(p_f, _VZ),
-	    F(p_f, _CURRX), F(p_f, _CURRY), F(p_f, _CURRZ),
-	    &dt, &s_mhd_time);
+  patch_pfie3(p_f, dt, _RR1, _RR1, _RR2);
 }
 
 // ----------------------------------------------------------------------
