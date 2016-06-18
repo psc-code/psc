@@ -1,17 +1,4 @@
 
-#if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
-
-#define calce_F77 F77_FUNC(calce,CALCE)
-
-void calce_F77(real *bx2, real *by2, real *bz2,
-	       real *zmask, real *rmask, real *resis,
-	       real *flx, real *fly, real *flz,
-	       real *vx, real *vy, real *vz,
-	       real *currx, real *curry, real *currz,
-	       real *dt, real *time);
-
-#endif
-
 // ----------------------------------------------------------------------
 // patch_pfie3_c
 
@@ -19,12 +6,7 @@ static void
 patch_pfie3_c(fld3d_t p_f, mrc_fld_data_t dt,
 	      int m_prev, int m_curr, int m_next)
 {
-  calce_F77(F(p_f, _B1X + m_curr), F(p_f, _B1Y + m_curr), F(p_f, _B1Z + m_curr), 
-	    F(p_f, _ZMASK), F(p_f, _RMASK), F(p_f, _RESIS), 
-	    F(p_f, _FLX), F(p_f, _FLY), F(p_f, _FLZ), 
-	    F(p_f, _VX), F(p_f, _VY), F(p_f, _VZ), 
-	    F(p_f, _CURRX), F(p_f, _CURRY), F(p_f, _CURRZ), 
-	    &dt, &s_mhd_time);
+  patch_calce(p_f, dt, m_curr);
   patch_bpush1(p_f, dt, m_prev, m_next);
 }
 

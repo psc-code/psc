@@ -54,6 +54,7 @@ struct mhd_options {
   int mhd_push_ej;
   int mhd_pfie3;
   int mhd_bpush1;
+  int mhd_calce;
 
   double divb_glm_alpha;
   double divb_glm_ch_fac;
@@ -324,6 +325,15 @@ static const int s_opt_mhd_bpush1 = OPT_MHD_BPUSH1;
 static int s_opt_mhd_bpush1 _mrc_unused;
 #endif
 
+// ----------------------------------------------------------------------
+// mhd_calce
+
+#ifdef OPT_MHD_CALCE
+static const int s_opt_mhd_calce = OPT_MHD_CALCE;
+#else
+static int s_opt_mhd_calce _mrc_unused;
+#endif
+
 // ======================================================================
 // calculated options follow
 
@@ -496,6 +506,13 @@ pde_mhd_set_options(struct ggcm_mhd *mhd, struct mhd_options *opt)
   assert(OPT_MHD_BPUSH1 == opt->mhd_bpush1);
 #else
   s_opt_mhd_bpush1 = opt->mhd_bpush1;
+#endif
+
+  // mhd_calce
+#ifdef OPT_MHD_CALCE
+  assert(OPT_MHD_CALCE == opt->mhd_calce);
+#else
+  s_opt_mhd_calce = opt->mhd_calce;
 #endif
 
   // ----------------------------------------------------------------------
