@@ -10,7 +10,6 @@
 #include "pde/pde_fortran.h"
 
 #define pushpred_F77 F77_FUNC(pushpred,PUSHPRED)
-#define pushfluid1_F77 F77_FUNC(pushfluid1,PUSHFLUID1)
 #define pushfield1_F77 F77_FUNC(pushfield1,PUSHFIELD1)
 
 void pushpred_F77(real *rr1, real *rv1x, real *rv1y, real *rv1z, real *uu1,
@@ -22,11 +21,6 @@ void pushpred_F77(real *rr1, real *rv1x, real *rv1y, real *rv1z, real *uu1,
 		  real *flx, real *fly, real *flz,
 		  real *tmp1, real *tmp2, real *tmp3, real *resis,
 		  real *dt, real *time);
-void pushfluid1_F77(real *rr1, real *rv1x, real *rv1y, real *rv1z, real *uu1,
-		    real *rr2, real *rv2x, real *rv2y, real *rv2z, real *uu2,
-		    real *rr, real *vx, real *vy, real *vz, real *pp,
-		    real *ymask, real *zmask, real *cmsv,
-		    real *dth);
 void pushfield1_F77(real *rr1, real *rv1x, real *rv1y, real *rv1z, real *uu1,
 		    real *b1x, real *b1y, real *b1z,
 		    real *rr2, real *rv2x, real *rv2y, real *rv2z, real *uu2,
@@ -36,16 +30,6 @@ void pushfield1_F77(real *rr1, real *rv1x, real *rv1y, real *rv1z, real *uu1,
 		    real *flx, real *fly, real *flz,
 		    real *tmp1, real *tmp2, real *tmp3, real *resis,
 		    real *dth, real *time);
-
-static void
-patch_pushfluid1_fortran(fld3d_t p_f, mrc_fld_data_t dth)
-{
-  pushfluid1_F77(F(p_f, _RR1), F(p_f, _RV1X), F(p_f, _RV1Y), F(p_f, _RV1Z), F(p_f, _UU1),
-		 F(p_f, _RR2), F(p_f, _RV2X), F(p_f, _RV2Y), F(p_f, _RV2Z), F(p_f, _UU2),
-		 F(p_f, _RR), F(p_f, _VX), F(p_f, _VY), F(p_f, _VZ), F(p_f, _PP),
-		 F(p_f, _YMASK), F(p_f, _ZMASK), F(p_f, _CMSV),
-		 &dth);
-}
 
 static void
 patch_pushfield1_fortran(fld3d_t p_f, mrc_fld_data_t dth)
@@ -88,7 +72,7 @@ patch_pushpred_c(fld3d_t p_f, mrc_fld_data_t dt)
   mrc_fld_data_t dth = .5f * dt;
 
   patch_rmaskn(p_f);
-  patch_pushfluid1_fortran(p_f, dth);
+  patch_pushfluid1(p_f, dth);
   patch_pushfield1_fortran(p_f, dth);
 }
 

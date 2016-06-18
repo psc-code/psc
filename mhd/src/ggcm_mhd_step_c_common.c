@@ -88,21 +88,6 @@ static float *s_fd1x, *s_fd1y, *s_fd1z;
 
 // ======================================================================
 
-static void
-pushpp_c(fld3d_t p_f, mrc_fld_data_t dt, int m)
-{
-  mrc_fld_data_t dth = -.5f * dt;
-  fld3d_foreach(ix,iy,iz, 0, 0) {
-    mrc_fld_data_t fpx = FD1X(ix) * (F3S(p_f, _PP, ix+1,iy,iz) - F3S(p_f, _PP, ix-1,iy,iz));
-    mrc_fld_data_t fpy = FD1Y(iy) * (F3S(p_f, _PP, ix,iy+1,iz) - F3S(p_f, _PP, ix,iy-1,iz));
-    mrc_fld_data_t fpz = FD1Z(iz) * (F3S(p_f, _PP, ix,iy,iz+1) - F3S(p_f, _PP, ix,iy,iz-1));
-    mrc_fld_data_t z = dth * F3S(p_f,_ZMASK, ix,iy,iz);
-    F3S(p_f, m + _RV1X, ix,iy,iz) += z * fpx;
-    F3S(p_f, m + _RV1Y, ix,iy,iz) += z * fpy;
-    F3S(p_f, m + _RV1Z, ix,iy,iz) += z * fpz;
-  } fld3d_foreach_end;
-}
-
 // ----------------------------------------------------------------------
 // curr_c
 //
@@ -440,8 +425,6 @@ pushstage_c(fld3d_t p_f, mrc_fld_data_t dt, int m_prev, int m_curr, int m_next,
 
   pushfluid_c(p_f, dt, m_prev, m_curr, m_next, limit);
 
-  pushpp_c(p_f, dt, m_next);
-
   switch (s_magdiffu) {
   case MAGDIFFU_NL1:
     calc_resis_nl1_c(p_f, m_curr);
@@ -651,6 +634,8 @@ static struct param ggcm_mhd_step_c_descr[] = {
   { "mhd_rmaskn"         , VAR(opt.mhd_rmaskn)     , PARAM_SELECT(OPT_MHD_FORTRAN,
 								  opt_mhd_descr)                },
   { "mhd_newstep"        , VAR(opt.mhd_newstep)    , PARAM_SELECT(OPT_MHD_C,
+								  opt_mhd_descr)                },
+  { "mhd_pushfluid1"     , VAR(opt.mhd_pushfluid1) , PARAM_SELECT(OPT_MHD_C,
 								  opt_mhd_descr)                },
   
   {},
