@@ -3,6 +3,19 @@
 // patch_pushpred
 
 // ----------------------------------------------------------------------
+// patch_pushpred_c
+
+static void
+patch_pushpred_c(fld3d_t p_f, mrc_fld_data_t dt)
+{
+  mrc_fld_data_t dth = .5f * dt;
+
+  patch_rmaskn(p_f);
+  patch_pushfluid1(p_f, dth);
+  patch_pushfield1(p_f, dth);
+}
+
+// ----------------------------------------------------------------------
 // patch_pushpred_fortran
 
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
@@ -37,21 +50,6 @@ patch_pushpred_fortran(fld3d_t p_f, mrc_fld_data_t dt)
 
 #endif
 
-// ======================================================================
-
-// ----------------------------------------------------------------------
-// patch_pushpred_c
-
-static void
-patch_pushpred_c(fld3d_t p_f, mrc_fld_data_t dt)
-{
-  mrc_fld_data_t dth = .5f * dt;
-
-  patch_rmaskn(p_f);
-  patch_pushfluid1(p_f, dth);
-  patch_pushfield1(p_f, dth);
-}
-
 // ----------------------------------------------------------------------
 // patch_pushpred
 
@@ -71,6 +69,17 @@ patch_pushpred(fld3d_t p_f, mrc_fld_data_t dt)
 
 // ======================================================================
 // patch_pushcorr
+
+// ----------------------------------------------------------------------
+// patch_pushcorr_c
+
+static void
+patch_pushcorr_c(fld3d_t p_f, mrc_fld_data_t dt)
+{
+  patch_rmaskn(p_f);
+  patch_pushfluid2(p_f, dt);
+  patch_pushfield2(p_f, dt);
+}
 
 // ----------------------------------------------------------------------
 // patch_pushcorr_fortran
@@ -114,7 +123,7 @@ static void
 patch_pushcorr(fld3d_t p_f, mrc_fld_data_t dt)
 {
   if (s_opt_mhd_pushcorr == OPT_MHD_C) {
-    assert(0);
+    patch_pushcorr_c(p_f, dt);
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
   } else if (s_opt_mhd_pushcorr == OPT_MHD_FORTRAN) {
     patch_pushcorr_fortran(p_f, dt);

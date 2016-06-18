@@ -297,3 +297,50 @@ patch_pushfluid1(fld3d_t p_f, mrc_fld_data_t dt)
   }
 }
 
+// ======================================================================
+
+// ----------------------------------------------------------------------
+// patch_pushfluid2_fortran
+
+#if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
+
+#include "pde/pde_fortran.h"
+
+#define pushfluid2_F77 F77_FUNC(pushfluid2,PUSHFLUID2)
+
+void pushfluid2_F77(real *rr1, real *rv1x, real *rv1y, real *rv1z, real *uu1,
+		    real *rr2, real *rv2x, real *rv2y, real *rv2z, real *uu2,
+		    real *rr, real *vx, real *vy, real *vz, real *pp,
+		    real *ymask, real *zmask, real *cmsv,
+		    real *dth, real *time);
+
+static void
+patch_pushfluid2_fortran(fld3d_t p_f, mrc_fld_data_t dth)
+{
+  pushfluid2_F77(F(p_f, _RR1), F(p_f, _RV1X), F(p_f, _RV1Y), F(p_f, _RV1Z), F(p_f, _UU1),
+		 F(p_f, _RR2), F(p_f, _RV2X), F(p_f, _RV2Y), F(p_f, _RV2Z), F(p_f, _UU2),
+		 F(p_f, _RR), F(p_f, _VX), F(p_f, _VY), F(p_f, _VZ), F(p_f, _PP),
+		 F(p_f, _YMASK), F(p_f, _ZMASK), F(p_f, _CMSV),
+		 &dth, &s_mhd_time);
+}
+
+#endif
+
+// ----------------------------------------------------------------------
+// patch_pushfluid2
+
+static void _mrc_unused
+patch_pushfluid2(fld3d_t p_f, mrc_fld_data_t dt)
+{
+  if (s_opt_mhd_pushfluid2 == OPT_MHD_C) {
+    assert(0);//patch_pushfluid2_c(p_f, dt);
+#if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
+  } else if (s_opt_mhd_pushfluid2 == OPT_MHD_FORTRAN) {
+    patch_pushfluid2_fortran(p_f, dt);
+#endif
+  } else {
+    assert(0);
+  }
+}
+
+

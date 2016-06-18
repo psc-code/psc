@@ -50,7 +50,9 @@ struct mhd_options {
   int mhd_pushpred;
   int mhd_pushcorr;
   int mhd_pushfluid1;
+  int mhd_pushfluid2;
   int mhd_pushfield1;
+  int mhd_pushfield2;
   int mhd_push_ej;
   int mhd_pfie3;
   int mhd_bpush1;
@@ -290,12 +292,30 @@ static int s_opt_mhd_pushfluid1 _mrc_unused;
 #endif
 
 // ----------------------------------------------------------------------
+// mhd_pushfluid2
+
+#ifdef OPT_MHD_PUSHFLUID2
+static const int s_opt_mhd_pushfluid2 = OPT_MHD_PUSHFLUID2;
+#else
+static int s_opt_mhd_pushfluid2 _mrc_unused;
+#endif
+
+// ----------------------------------------------------------------------
 // mhd_pushfield1
 
 #ifdef OPT_MHD_PUSHFIELD1
 static const int s_opt_mhd_pushfield1 = OPT_MHD_PUSHFIELD1;
 #else
 static int s_opt_mhd_pushfield1 _mrc_unused;
+#endif
+
+// ----------------------------------------------------------------------
+// mhd_pushfield2
+
+#ifdef OPT_MHD_PUSHFIELD2
+static const int s_opt_mhd_pushfield2 = OPT_MHD_PUSHFIELD2;
+#else
+static int s_opt_mhd_pushfield2 _mrc_unused;
 #endif
 
 // ----------------------------------------------------------------------
@@ -480,11 +500,25 @@ pde_mhd_set_options(struct ggcm_mhd *mhd, struct mhd_options *opt)
   s_opt_mhd_pushfluid1 = opt->mhd_pushfluid1;
 #endif
 
+  // mhd_pushfluid1
+#ifdef OPT_MHD_PUSHFLUID2
+  assert(OPT_MHD_PUSHFLUID2 == opt->mhd_pushfluid2);
+#else
+  s_opt_mhd_pushfluid2 = opt->mhd_pushfluid2;
+#endif
+
   // mhd_pushfield1
 #ifdef OPT_MHD_PUSHFIELD1
   assert(OPT_MHD_PUSHFIELD1 == opt->mhd_pushfield1);
 #else
   s_opt_mhd_pushfield1 = opt->mhd_pushfield1;
+#endif
+
+  // mhd_pushfield2
+#ifdef OPT_MHD_PUSHFIELD2
+  assert(OPT_MHD_PUSHFIELD2 == opt->mhd_pushfield2);
+#else
+  s_opt_mhd_pushfield2 = opt->mhd_pushfield2;
 #endif
 
   // mhd_push_ej
