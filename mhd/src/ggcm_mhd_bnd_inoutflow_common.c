@@ -362,8 +362,6 @@ obndra_mhd(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim)
   struct ggcm_mhd *mhd = bnd->mhd;
 
   const int *sw = mrc_fld_spatial_sw(f), *dims = mrc_fld_spatial_dims(f);
-  int swx = sw[0], swy = sw[1], swz = sw[2];
-  int mx = dims[0], my = dims[1], mz = dims[2];
 
   for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
     if (mrc_domain_at_boundary_lo(mhd->domain, 0, p)) {
