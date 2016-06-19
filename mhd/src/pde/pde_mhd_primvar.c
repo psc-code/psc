@@ -22,24 +22,19 @@ patch_prim_from_cons_v2(fld3d_t p_W, fld3d_t p_U, int sw)
 }
 
 // ----------------------------------------------------------------------
-// patch_primvar_c
+// patch_cmsv
 
 static void
-patch_primvar_c(fld3d_t p_f, int m)
+patch_cmsv(fld3d_t p_cmsv, fld3d_t p_W, fld3d_t p_U)
 {
-  fld3d_t p_W, p_U;
-  fld3d_setup_view(&p_W, p_f, _RR);
-  fld3d_setup_view(&p_U, p_f, m);
-  patch_prim_from_cons_v2(p_W, p_U, 2);
-
   fld3d_foreach(i,j,k, 2, 2) {
-    mrc_fld_data_t rri = 1.f / F3S(p_f, m + _RR1, i,j,k);
+    mrc_fld_data_t rri = 1.f / F3S(p_U, RR, i,j,k);
     mrc_fld_data_t rvv =
-      F3S(p_f,_VX, i,j,k) * F3S(p_f, m + _RV1X, i,j,k) +
-      F3S(p_f,_VY, i,j,k) * F3S(p_f, m + _RV1Y, i,j,k) +
-      F3S(p_f,_VZ, i,j,k) * F3S(p_f, m + _RV1Z, i,j,k);
-    mrc_fld_data_t cs2 = mrc_fld_max(s_gamma * F3S(p_f,_PP, i,j,k) * rri, 0.f);
-    F3S(p_f,_CMSV, i,j,k) = mrc_fld_sqrt(rvv * rri) + mrc_fld_sqrt(cs2);
+      F3S(p_W, VX, i,j,k) * F3S(p_U, RVX, i,j,k) +
+      F3S(p_W, VY, i,j,k) * F3S(p_U, RVY, i,j,k) +
+      F3S(p_W, VZ, i,j,k) * F3S(p_U, RVZ, i,j,k);
+    mrc_fld_data_t cs2 = mrc_fld_max(s_gamma * F3S(p_W, PP, i,j,k) * rri, 0.f);
+    F3S(p_cmsv, 0, i,j,k) = mrc_fld_sqrt(rvv * rri) + mrc_fld_sqrt(cs2);
   } fld3d_foreach_end;
 }
 
@@ -83,7 +78,13 @@ static void _mrc_unused
 patch_primvar(fld3d_t p_f, int m)
 {
   if (s_opt_mhd_primvar == OPT_MHD_C) {
-    patch_primvar_c(p_f, m);
+    fld3d_t p_W, p_U, p_cmsv;
+    fld3d_setup_view(&p_W, p_f, _RR);
+    fld3d_setup_view(&p_U, p_f, m);
+    fld3d_setup_view(&p_cmsv, p_f, _CMSV);
+
+    patch_prim_from_cons_v2(p_W, p_U, 2);
+    patch_cmsv(p_cmsv, p_W, p_U);
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
   } else if (s_opt_mhd_primvar == OPT_MHD_FORTRAN) {
     patch_primvar_fortran(p_f, m);
