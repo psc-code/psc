@@ -3,13 +3,8 @@
 #include "ggcm_mhd_private.h"
 #include "ggcm_mhd_defs.h"
 #include "ggcm_mhd_defs_extra.h"
-#include "ggcm_mhd_crds.h"
 #include "ggcm_mhd_diag_private.h"
 
-#include <mrc_domain.h>
-#include <mrc_profile.h>
-
-#include <math.h>
 #include <string.h>
 
 // FIXME: major ugliness
@@ -235,13 +230,7 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step)
   patch_zmaskn(p_zmask, p_W, p_bcc, p_ymask);
 
   mrc_fld_data_t dth = .5f * step->mhd->dt;
-  static int PR;
-  if (!PR) {
-    PR = prof_register("pred_c", 1., 0, 0);
-  }
-  prof_start(PR);
   pushstage_c(p_f, dth, _RR1, _RR1, _RR2, LIMIT_NONE);
-  prof_stop(PR);
 
   fld3d_put(&p_f, 0);
 }
@@ -268,13 +257,7 @@ ggcm_mhd_step_c_corr(struct ggcm_mhd_step *step)
   patch_primbb(p_bcc, p_U);
   //  patch_zmaskn(p_f);
 
-  static int PR;
-  if (!PR) {
-    PR = prof_register("corr_c", 1., 0, 0);
-  }
-  prof_start(PR);
   pushstage_c(p_f, step->mhd->dt, _RR1, _RR2, _RR1, LIMIT_1);
-  prof_stop(PR);
   
   // --- check for NaNs and small density
   patch_badval_checks_sc(step->mhd, p_f, p_f);
