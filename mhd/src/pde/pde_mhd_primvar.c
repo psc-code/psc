@@ -1,25 +1,5 @@
 
-// ----------------------------------------------------------------------
-// patch_prim_from_cons_v2
-
-static void
-patch_prim_from_cons_v2(fld3d_t p_W, fld3d_t p_U, int sw)
-{
-  mrc_fld_data_t gamma_m1 = s_gamma - 1.f;
-
-  fld3d_foreach(i,j,k, sw, sw) {
-    F3S(p_W, RR, i,j,k) = F3S(p_U, RR, i,j,k);
-    mrc_fld_data_t rri  = 1.f / F3S(p_U, RR, i,j,k);
-    F3S(p_W, VX, i,j,k) = rri * F3S(p_U, RVX, i,j,k);
-    F3S(p_W, VY, i,j,k) = rri * F3S(p_U, RVY, i,j,k);
-    F3S(p_W, VZ, i,j,k) = rri * F3S(p_U, RVZ, i,j,k);
-    mrc_fld_data_t rvv =
-      F3S(p_W, VX, i,j,k) * F3S(p_U, RVX, i,j,k) +
-      F3S(p_W, VY, i,j,k) * F3S(p_U, RVY, i,j,k) +
-      F3S(p_W, VZ, i,j,k) * F3S(p_U, RVZ, i,j,k);
-    F3S(p_W, PP, i,j,k) = gamma_m1 * (F3S(p_U, UU, i,j,k) - .5f * rvv);
-  } fld3d_foreach_end;
-}
+#include "pde/pde_mhd_convert.c"
 
 // ----------------------------------------------------------------------
 // patch_cmsv
@@ -83,7 +63,7 @@ patch_primvar(fld3d_t p_f, int m)
     fld3d_setup_view(&p_U, p_f, m);
     fld3d_setup_view(&p_cmsv, p_f, _CMSV);
 
-    patch_prim_from_cons_v2(p_W, p_U, 2);
+    patch_prim_from_cons(p_W, p_U, 2);
     patch_cmsv(p_cmsv, p_W, p_U);
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
   } else if (s_opt_mhd_primvar == OPT_MHD_FORTRAN) {

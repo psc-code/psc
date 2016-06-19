@@ -1,4 +1,7 @@
 
+#ifndef PDE_MHD_LINE_C
+#define PDE_MHD_LINE_C
+
 // ----------------------------------------------------------------------
 // mhd_get_line_state_fcons
 
@@ -426,3 +429,4 @@ mhd_line_get_1(fld1d_t u, fld3d_t U,
 #undef GET_LINE
 }
 
+#endif
