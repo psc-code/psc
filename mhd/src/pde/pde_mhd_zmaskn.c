@@ -43,14 +43,8 @@ patch_zmaskn_fortran(fld3d_t p_zmask, fld3d_t p_W, fld3d_t p_bcc, fld3d_t p_ymas
 // patch_zmaskn
 
 static void _mrc_unused
-patch_zmaskn(fld3d_t p_f)
+patch_zmaskn(fld3d_t p_zmask, fld3d_t p_W, fld3d_t p_bcc, fld3d_t p_ymask)
 {
-  fld3d_t p_zmask, p_W, p_bcc, p_ymask;
-  fld3d_setup_view(&p_zmask, p_f, _ZMASK);
-  fld3d_setup_view(&p_W    , p_f, _RR);
-  fld3d_setup_view(&p_bcc  , p_f, _BX);
-  fld3d_setup_view(&p_ymask, p_f, _YMASK);
-
   if (s_opt_mhd_zmaskn == OPT_MHD_C) {
     patch_zmaskn_c(p_zmask, p_W, p_bcc, p_ymask);
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
