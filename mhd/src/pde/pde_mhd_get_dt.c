@@ -7,20 +7,8 @@
 // patch_get_dt_scons_ggcm_c
 
 static mrc_fld_data_t
-patch_get_dt_scons_ggcm_c(fld3d_t p_f)
+patch_get_dt_scons_ggcm_c(fld3d_t p_W, fld3d_t p_bcc, fld3d_t p_zmask)
 {
-  fld3d_t p_W, p_U, p_cmsv, p_bcc, p_ymask, p_zmask;
-  fld3d_setup_view(&p_W    , p_f, _RR);
-  fld3d_setup_view(&p_U    , p_f, _RR1);
-  fld3d_setup_view(&p_cmsv , p_f, _CMSV);
-  fld3d_setup_view(&p_bcc  , p_f, _BX);
-  fld3d_setup_view(&p_ymask, p_f, _YMASK);
-  fld3d_setup_view(&p_zmask, p_f, _ZMASK);
-  
-  patch_primvar(p_W, p_U, p_cmsv);
-  patch_primbb(p_bcc, p_U);
-  patch_zmaskn(p_zmask, p_W, p_bcc, p_ymask);
-
   mrc_fld_data_t dt = 1e10f;
 
   mrc_fld_data_t splim = s_speedlimit_code;
@@ -28,16 +16,16 @@ patch_get_dt_scons_ggcm_c(fld3d_t p_f)
 
   fld3d_foreach(i, j, k, 0, 0) {
     mrc_fld_data_t hh = mrc_fld_max(mrc_fld_max(FD1X(i), FD1Y(j)), FD1Z(k));
-    mrc_fld_data_t rri = 1.f / mrc_fld_abs(F3S(p_f, RR, i,j,k)); // FIME abs necessary?
-    mrc_fld_data_t bb = sqr(F3S(p_f, _BX, i,j,k)) + sqr(F3S(p_f, _BY, i,j,k)) + sqr(F3S(p_f, _BZ, i,j,k));
+    mrc_fld_data_t rri = 1.f / mrc_fld_abs(F3S(p_W, RR, i,j,k)); // FIME abs necessary?
+    mrc_fld_data_t bb = sqr(F3S(p_bcc, 0, i,j,k)) + sqr(F3S(p_bcc, 1, i,j,k)) + sqr(F3S(p_bcc, 2, i,j,k));
     mrc_fld_data_t vv1 = fminf(sqrtf(bb * rri), splim);
-    mrc_fld_data_t pp = F3S(p_f, _PP, i,j,k);
+    mrc_fld_data_t pp = F3S(p_W, PP, i,j,k);
     mrc_fld_data_t vv2 = sqrtf(s_gamma * mrc_fld_max(0.f, pp) * rri);
-    mrc_fld_data_t vv3 = sqrtf(sqr(F3S(p_f, _VX, i,j,k)) + sqr(F3S(p_f, _VY, i,j,k)) + sqr(F3S(p_f, _VZ, i,j,k)));
+    mrc_fld_data_t vv3 = sqrtf(sqr(F3S(p_W, VX, i,j,k)) + sqr(F3S(p_W, VY, i,j,k)) + sqr(F3S(p_W, VZ, i,j,k)));
     mrc_fld_data_t vv = sqrtf(sqr(vv1) + sqr(vv2)) + vv3;
     vv = mrc_fld_max(eps, vv);
     
-    mrc_fld_data_t zmask = F3S(p_f, _ZMASK, i,j,k);
+    mrc_fld_data_t zmask = F3S(p_zmask, 0, i,j,k);
     mrc_fld_data_t tt = s_cfl / mrc_fld_max(eps, hh*vv*zmask);
     dt = mrc_fld_min(dt, tt);
   } fld3d_foreach_end;
@@ -58,23 +46,11 @@ void newstep_F77(real *pp, real *rr, real *vx, real *vy, real *vz,
 		 real *bx, real *by, real *bz, real *zmask, real *dtn);
 
 static mrc_fld_data_t
-patch_get_dt_scons_ggcm_fortran(fld3d_t p_f)
+patch_get_dt_scons_ggcm_fortran(fld3d_t p_W, fld3d_t p_bcc, fld3d_t p_zmask)
 {
-  fld3d_t p_W, p_U, p_cmsv, p_bcc, p_ymask, p_zmask;
-  fld3d_setup_view(&p_W    , p_f, _RR);
-  fld3d_setup_view(&p_U    , p_f, _RR1);
-  fld3d_setup_view(&p_cmsv , p_f, _CMSV);
-  fld3d_setup_view(&p_bcc  , p_f, _BX);
-  fld3d_setup_view(&p_ymask, p_f, _YMASK);
-  fld3d_setup_view(&p_zmask, p_f, _ZMASK);
-  
-  patch_primvar(p_W, p_U, p_cmsv);
-  patch_primbb(p_bcc, p_U);
-  patch_zmaskn(p_zmask, p_W, p_bcc, p_ymask);
-
   real dtn;
-  newstep_F77(F(p_f, _PP), F(p_f, _RR), F(p_f, _VX), F(p_f, _VY), F(p_f, _VZ),
-	      F(p_f, _BX), F(p_f, _BY), F(p_f, _BZ), F(p_f, _ZMASK), &dtn);
+  newstep_F77(F(p_W, PP), F(p_W, RR), F(p_W, VX), F(p_W, VY), F(p_W, VZ),
+	      F(p_bcc, 0), F(p_bcc, 1), F(p_bcc, 2), F(p_zmask, 0), &dtn);
 
   return dtn;
 }
@@ -85,13 +61,18 @@ patch_get_dt_scons_ggcm_fortran(fld3d_t p_f)
 // patch_get_dt_scons_ggcm
 
 static mrc_fld_data_t
-patch_get_dt_scons_ggcm(fld3d_t p_f)
+patch_get_dt_scons_ggcm(fld3d_t p_U, fld3d_t p_W, fld3d_t p_ymask,
+			fld3d_t p_cmsv, fld3d_t p_bcc, fld3d_t p_zmask)
 {
+  patch_primvar(p_W, p_U, p_cmsv);
+  patch_primbb(p_bcc, p_U);
+  patch_zmaskn(p_zmask, p_W, p_bcc, p_ymask);
+
   if (s_opt_mhd_newstep == OPT_MHD_C) {
-    return patch_get_dt_scons_ggcm_c(p_f);
+    return patch_get_dt_scons_ggcm_c(p_W, p_bcc, p_zmask);
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
   } else if (s_opt_mhd_newstep == OPT_MHD_FORTRAN) {
-    return patch_get_dt_scons_ggcm_fortran(p_f);
+    return patch_get_dt_scons_ggcm_fortran(p_W, p_bcc, p_zmask);
 #endif
   } else {
     assert(0);
@@ -110,7 +91,16 @@ pde_mhd_get_dt_scons_ggcm(struct ggcm_mhd *mhd, struct mrc_fld *x)
   mrc_fld_data_t dt = 1e10f;
   pde_for_each_patch(p) {
     fld3d_get(&p_f, p);
-    dt = mrc_fld_min(dt, patch_get_dt_scons_ggcm(p_f));
+    fld3d_t p_W, p_U, p_cmsv, p_bcc, p_ymask, p_zmask;
+    fld3d_setup_view(&p_W    , p_f, _RR);
+    fld3d_setup_view(&p_U    , p_f, _RR1);
+    fld3d_setup_view(&p_cmsv , p_f, _CMSV);
+    fld3d_setup_view(&p_bcc  , p_f, _BX);
+    fld3d_setup_view(&p_ymask, p_f, _YMASK);
+    fld3d_setup_view(&p_zmask, p_f, _ZMASK);
+
+    dt = mrc_fld_min(dt, patch_get_dt_scons_ggcm(p_U, p_W, p_ymask, p_cmsv, p_bcc, p_zmask));
+
     fld3d_put(&p_f, p);
   }
   mrc_fld_data_t dtn;
