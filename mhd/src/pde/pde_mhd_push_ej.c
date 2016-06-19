@@ -1,24 +1,5 @@
 
-// ----------------------------------------------------------------------
-// curr_c
-//
-// edge centered current density
-
-static void
-curr_c(fld3d_t p_f, int m_j, int m_curr)
-{
-  fld3d_foreach(ix,iy,iz, 2, 1) {
-    F3S(p_f, m_j + 0, ix,iy,iz) =
-      (F3S(p_f, m_curr + _B1Z, ix,iy+1,iz) - F3S(p_f, m_curr + _B1Z, ix,iy,iz)) * BD4Y(iy) -
-      (F3S(p_f, m_curr + _B1Y, ix,iy,iz+1) - F3S(p_f, m_curr + _B1Y, ix,iy,iz)) * BD4Z(iz);
-    F3S(p_f, m_j + 1, ix,iy,iz) =
-      (F3S(p_f, m_curr + _B1X, ix,iy,iz+1) - F3S(p_f, m_curr + _B1X, ix,iy,iz)) * BD4Z(iz) -
-      (F3S(p_f, m_curr + _B1Z, ix+1,iy,iz) - F3S(p_f, m_curr + _B1Z, ix,iy,iz)) * BD4X(ix);
-    F3S(p_f, m_j + 2, ix,iy,iz) =
-      (F3S(p_f, m_curr + _B1Y, ix+1,iy,iz) - F3S(p_f, m_curr + _B1Y, ix,iy,iz)) * BD4X(ix) -
-      (F3S(p_f, m_curr + _B1X, ix,iy+1,iz) - F3S(p_f, m_curr + _B1X, ix,iy,iz)) * BD4Y(iy);
-  } fld3d_foreach_end;
-}
+#include "pde/pde_mhd_calc_current.c"
 
 // ----------------------------------------------------------------------
 // currbb_c
@@ -47,7 +28,7 @@ patch_push_ej_c(fld3d_t p_f, mrc_fld_data_t dt, int m_curr, int m_next)
   enum { XJX = _BX, XJY = _BY, XJZ = _BZ };
   enum { BX = _TMP1, BY = _TMP2, BZ = _TMP3 };
 
-  curr_c(p_f, XJX, m_curr);
+  patch_curr(p_f, XJX, m_curr);
   currbb_c(p_f, BX, m_curr);
 	
   mrc_fld_data_t s1 = .25f * dt;

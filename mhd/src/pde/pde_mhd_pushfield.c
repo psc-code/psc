@@ -11,19 +11,45 @@ patch_calc_resis_nl1_c(fld3d_t p_f, int m_curr)
 }
 
 // ----------------------------------------------------------------------
-// patch_calc_resis_nl1_fortran
+// patch_calc_resis_const_c
+
+static void
+patch_calc_resis_const_c(fld3d_t p_f, int m_curr)
+{
+  patch_curbc(p_f, m_curr);
+  patch_res1_const(p_f);
+}
+
+// ----------------------------------------------------------------------
+// patch_calc_resis_nl1/const_fortran
 
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
 
 #define calc_resis_nl1_F77 F77_FUNC(calc_resis_nl1,CALC_RESIS_NL1)
+#define calc_resis_const_F77 F77_FUNC(calc_resis_const,CALC_RESIS_CONST)
 
 void calc_resis_nl1_F77(real *bx, real *by, real *bz, real *resis);
+void calc_resis_const_F77(real *bx, real *by, real *bz, 
+			  real *currx, real *curry, real *currz,
+			  real *tmp1, real *tmp2, real *tmp3,
+			  real *flx, real *fly, real *flz,
+			  real *zmask, real *rr, real *pp, real *resis);
 
 static void
 patch_calc_resis_nl1_fortran(fld3d_t p_f, int m_curr)
 {
   calc_resis_nl1_F77(F(p_f, _B1X + m_curr), F(p_f, _B1Y + m_curr), F(p_f, _B1Z + m_curr),
 		     F(p_f, _RESIS));
+}
+
+static void
+patch_calc_resis_const_fortran(fld3d_t p_f, int m_curr)
+{
+  calc_resis_const_F77(F(p_f, _B1X + m_curr), F(p_f, _B1Y + m_curr), F(p_f, _B1Z + m_curr),
+		       F(p_f, _CURRX), F(p_f, _CURRY), F(p_f, _CURRZ),
+		       F(p_f, _TMP1), F(p_f, _TMP2), F(p_f, _TMP3),
+		       F(p_f, _FLX), F(p_f, _FLY), F(p_f, _FLZ),
+		       F(p_f, _ZMASK), F(p_f, _RR), F(p_f, _PP), F(p_f, _RESIS));
 }
 
 #endif
@@ -39,6 +65,23 @@ patch_calc_resis_nl1(fld3d_t p_f, int m_curr)
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
   } else if (s_opt_mhd_calc_resis == OPT_MHD_FORTRAN) {
     patch_calc_resis_nl1_fortran(p_f, m_curr);
+#endif
+  } else {
+    assert(0);
+  }
+}
+
+// ----------------------------------------------------------------------
+// patch_calc_resis_const
+
+static void
+patch_calc_resis_const(fld3d_t p_f, int m_curr)
+{
+  if (s_opt_mhd_calc_resis == OPT_MHD_C) {
+    patch_calc_resis_const_c(p_f, m_curr);
+#if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
+  } else if (s_opt_mhd_calc_resis == OPT_MHD_FORTRAN) {
+    patch_calc_resis_const_fortran(p_f, m_curr);
 #endif
   } else {
     assert(0);
@@ -71,8 +114,7 @@ patch_pushfield1_c(fld3d_t p_f, mrc_fld_data_t dt)
     assert(0);
     //    calc_resis_res1(bxB,byB,bzB,currx,curry,currz,tmp1,tmp2,tmp3,flx,fly,flz,zmask,rr,pp,resis);
   } else if (s_magdiffu == MAGDIFFU_CONST) {
-    assert(0);
-    //calc_resis_const(bxB,byB,bzB,currx,curry,currz,tmp1,tmp2,tmp3,flx,fly,flz,zmask,rr,pp,resis);
+    patch_calc_resis_const(p_f, _RR1);
   }
 
   patch_push_ej(p_f, dt, _RR1, _RR2);
@@ -146,8 +188,7 @@ patch_pushfield2_c(fld3d_t p_f, mrc_fld_data_t dt)
     assert(0);
     //    calc_resis_res1(bxB,byB,bzB,currx,curry,currz,tmp1,tmp2,tmp3,flx,fly,flz,zmask,rr,pp,resis);
   } else if (s_magdiffu == MAGDIFFU_CONST) {
-    assert(0);
-    //calc_resis_const(bxB,byB,bzB,currx,curry,currz,tmp1,tmp2,tmp3,flx,fly,flz,zmask,rr,pp,resis);
+    patch_calc_resis_const(p_f, _RR2);
   }
 
   patch_push_ej(p_f, dt, _RR2, _RR1);

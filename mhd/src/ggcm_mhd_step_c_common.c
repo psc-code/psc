@@ -95,60 +95,11 @@ static float *s_fd1x, *s_fd1y, *s_fd1z;
 
 // ======================================================================
 
-// ----------------------------------------------------------------------
-// curbc_c
-//
-// cell-centered j
-
-static void
-curbc_c(fld3d_t p_f, int m_curr)
-{ 
-  enum { _TX = _TMP1, _TY = _TMP2, _TZ = _TMP3 };
-
-  curr_c(p_f, _TX, m_curr);
-
-  // j averaged to cell-centered
-  fld3d_foreach(ix,iy,iz, 1, 1) {
-    mrc_fld_data_t s = .25f * F3S(p_f, _ZMASK, ix, iy, iz);
-    F3S(p_f, _CURRX, ix,iy,iz) = s * (F3S(p_f, _TX, ix,iy  ,iz  ) + F3S(p_f, _TX, ix,iy-1,iz  ) +
-				      F3S(p_f, _TX, ix,iy  ,iz-1) + F3S(p_f, _TX, ix,iy-1,iz-1));
-    F3S(p_f, _CURRY, ix,iy,iz) = s * (F3S(p_f, _TY, ix  ,iy,iz  ) + F3S(p_f, _TY, ix-1,iy,iz  ) +
-				      F3S(p_f, _TY, ix  ,iy,iz-1) + F3S(p_f, _TY, ix-1,iy,iz-1));
-    F3S(p_f, _CURRZ, ix,iy,iz) = s * (F3S(p_f, _TZ, ix  ,iy  ,iz) + F3S(p_f, _TZ, ix-1,iy  ,iz) +
-				      F3S(p_f, _TZ, ix  ,iy-1,iz) + F3S(p_f, _TZ, ix-1,iy-1,iz));
-  } fld3d_foreach_end;
-}
-
-static void
-res1_const_c(fld3d_t p_f)
-{
-  mrc_fld_data_t diffsphere2 = sqr(s_diffsphere);
-
-  fld3d_foreach(ix,iy,iz, 1, 1) {
-    F3S(p_f, _RESIS, ix,iy,iz) = 0.f;
-    mrc_fld_data_t r2 = FX2X(ix) + FX2Y(iy) + FX2Z(iz);
-    if (r2 < diffsphere2)
-      continue;
-    if (iy + s_patch.off[1] < s_diff_obnd)
-      continue;
-    if (iz + s_patch.off[2] < s_diff_obnd)
-      continue;
-    if (ix + s_patch.off[0] >= s_gdims[0] - s_diff_obnd)
-      continue;
-    if (iy + s_patch.off[1] >= s_gdims[1] - s_diff_obnd)
-      continue;
-    if (iz + s_patch.off[2] >= s_gdims[2] - s_diff_obnd)
-      continue;
-
-    F3S(p_f, _RESIS, ix,iy,iz) = s_eta;
-  } fld3d_foreach_end;
-}
-
 static void
 calc_resis_const_c(fld3d_t p_f, int m_curr)
 {
-  curbc_c(p_f, m_curr);
-  res1_const_c(p_f);
+  patch_curbc(p_f, m_curr);
+  patch_res1_const(p_f);
 }
 
 static void
