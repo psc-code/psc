@@ -179,6 +179,7 @@ limit1_c(fld3d_t p_f, int m, int C)
   }
 
   fld3d_foreach(ix,iy,iz, 1, 1) {
+    assert(!s_limit_aspect_low);
 /* .if (limit_aspect_low) then */
 /* .call lowmask(0,0,0,tl1) */
     limit1a(p_f, m, ix,iy,iz, 1,0,0, C + 0);
@@ -237,9 +238,9 @@ pushfluid_c(fld3d_t p_f, mrc_fld_data_t dt,
 {
   if (limit != LIMIT_NONE) {
     vgrs(p_f, _BX, 0.f); vgrs(p_f, _BY, 0.f); vgrs(p_f, _BZ, 0.f);
+    assert(!s_do_limit2);
+    assert(!s_do_limit3);
     limit1_c(p_f, _PP, _BX);
-    assert(limit == LIMIT_1);
-    // limit2, 3
   }
 
   pushfv_c(p_f, _RR1 , dt, m_prev, m_curr, m_next, limit);

@@ -5,6 +5,7 @@ bcthy3f(mrc_fld_data_t s1, mrc_fld_data_t s2)
   const mrc_fld_data_t REPS = 1.e-10f;
 
   if (s1 > 0.f && fabsf(s2) > REPS) {
+    assert(!s_calce_aspect_low);
 /* .if(calce_aspect_low) then */
 /* .call lowmask(IX, 0, 0,tl1) */
 /* .call lowmask( 0,IY, 0,tl2) */

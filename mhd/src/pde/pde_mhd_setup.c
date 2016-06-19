@@ -18,6 +18,11 @@ static mrc_fld_data_t s_timelo;
 static mrc_fld_data_t s_speedlimit_code;
 static mrc_fld_data_t s_isphere;
 
+static bool s_do_limit2;
+static bool s_do_limit3;
+static bool s_limit_aspect_low;
+static bool s_calce_aspect_low;
+
 // FIXME, these could/should be s_opt_*
 static mrc_fld_data_t s_divb_glm_alpha; // ratio of hyperbolic / parabolic divb timescales
 static mrc_fld_data_t s_divb_glm_ch_fac; // multiply ch by this factor
@@ -591,6 +596,11 @@ pde_mhd_setup(struct ggcm_mhd *mhd)
   s_timelo = mhd->par.timelo;
   s_speedlimit_code = mhd->par.speedlimit / mhd->vvnorm;
   s_isphere = mhd->par.isphere;
+
+  s_do_limit2 = mhd->par.do_limit2;
+  s_do_limit3 = mhd->par.do_limit3;
+  s_limit_aspect_low = mhd->par.limit_aspect_low;
+  s_calce_aspect_low = mhd->par.calce_aspect_low;
 }
 
 // ======================================================================

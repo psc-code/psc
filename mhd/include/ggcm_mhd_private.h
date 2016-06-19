@@ -40,6 +40,11 @@ struct ggcm_mhd_params {
   int modnewstep;
   int magdiffu;
 
+  bool do_limit2;
+  bool do_limit3;
+  bool limit_aspect_low;
+  bool calce_aspect_low;
+
   // params for multi-fluid moment runs
   // to be obtained from gkeyll instead
   // of from command line options

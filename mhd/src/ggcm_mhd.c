@@ -425,6 +425,11 @@ static struct param ggcm_mhd_descr[] = {
   { "diff_swbnd"      , VAR(par.diff_swbnd)  , PARAM_FLOAT(-1e30)    },
   { "diff_obnd"       , VAR(par.diff_obnd)   , PARAM_INT(0)          },
 
+  { "do_limit2"           , VAR(par.do_limit2)           , PARAM_BOOL(false)  },
+  { "do_limit3"           , VAR(par.do_limit3)           , PARAM_BOOL(false)  },
+  { "limit_aspect_low"    , VAR(par.limit_aspect_low)    , PARAM_BOOL(false)  },
+  { "calce_aspect_low"    , VAR(par.calce_aspect_low)    , PARAM_BOOL(false)  },
+
   { "monitor_conservation", VAR(par.monitor_conservation), PARAM_BOOL(false)  },
   { "amr_grid_file"   , VAR(amr_grid_file)   , PARAM_STRING("amr_grid.txt")   },
   { "amr"             , VAR(amr)             , PARAM_INT(0)                   },
