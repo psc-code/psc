@@ -1,32 +1,4 @@
 
-// ----------------------------------------------------------------------
-// patch_res1_const
-
-static void _mrc_unused
-patch_res1_const(fld3d_t p_f)
-{
-  mrc_fld_data_t diffsphere2 = sqr(s_diffsphere);
-
-  fld3d_foreach(ix,iy,iz, 1, 1) {
-    F3S(p_f, _RESIS, ix,iy,iz) = 0.f;
-    mrc_fld_data_t r2 = FX2X(ix) + FX2Y(iy) + FX2Z(iz);
-    if (r2 < diffsphere2)
-      continue;
-    if (iy + s_patch.off[1] < s_diff_obnd)
-      continue;
-    if (iz + s_patch.off[2] < s_diff_obnd)
-      continue;
-    if (ix + s_patch.off[0] >= s_gdims[0] - s_diff_obnd)
-      continue;
-    if (iy + s_patch.off[1] >= s_gdims[1] - s_diff_obnd)
-      continue;
-    if (iz + s_patch.off[2] >= s_gdims[2] - s_diff_obnd)
-      continue;
-
-    F3S(p_f, _RESIS, ix,iy,iz) = s_eta;
-  } fld3d_foreach_end;
-}
-
 // ======================================================================
 
 static inline float

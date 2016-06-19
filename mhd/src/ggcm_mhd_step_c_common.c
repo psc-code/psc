@@ -92,21 +92,9 @@ static float *s_fd1x, *s_fd1y, *s_fd1z;
 #include "pde/pde_mhd_push_ej.c"
 #include "pde/pde_mhd_calce.c"
 #include "pde/pde_mhd_bpush.c"
+#include "pde/pde_mhd_calc_resis.c"
 
 // ======================================================================
-
-static void
-calc_resis_const_c(fld3d_t p_f, int m_curr)
-{
-  patch_curbc(p_f, m_curr);
-  patch_res1_const(p_f);
-}
-
-static void
-calc_resis_nl1_c(fld3d_t p_f, int m_curr)
-{
-  // used to zero _RESIS field, but that's not needed.
-}
 
 static void
 pushstage_c(fld3d_t p_f, mrc_fld_data_t dt, int m_prev, int m_curr, int m_next,
@@ -118,10 +106,10 @@ pushstage_c(fld3d_t p_f, mrc_fld_data_t dt, int m_prev, int m_curr, int m_next,
 
   switch (s_magdiffu) {
   case MAGDIFFU_NL1:
-    calc_resis_nl1_c(p_f, m_curr);
+    patch_calc_resis_nl1_c(p_f, m_curr);
     break;
   case MAGDIFFU_CONST:
-    calc_resis_const_c(p_f, m_curr);
+    patch_calc_resis_const_c(p_f, m_curr);
     break;
   default:
     assert(0);
