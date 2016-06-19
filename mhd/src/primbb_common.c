@@ -44,7 +44,7 @@ primbb_c(struct ggcm_mhd *mhd, int m_curr)
 
   for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
     fld3d_get(&p_f, p);
-    patch_primbb_c(p_f, m_curr);
+    patch_primbb(p_f, m_curr);
     fld3d_put(&p_f, p);
   }
 
