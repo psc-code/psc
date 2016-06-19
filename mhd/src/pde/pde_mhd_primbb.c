@@ -36,12 +36,8 @@ patch_primbb_fortran(fld3d_t p_bcc, fld3d_t p_U)
 // patch_primbb
 
 static void _mrc_unused
-patch_primbb(fld3d_t p_f, int m)
+patch_primbb(fld3d_t p_bcc, fld3d_t p_U)
 {
-  fld3d_t p_bcc, p_U;
-  fld3d_setup_view(&p_bcc, p_f, _BX);
-  fld3d_setup_view(&p_U, p_f, m);
-
   if (s_opt_mhd_primbb == OPT_MHD_C) {
     patch_primbb_c(p_bcc, p_U);
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)

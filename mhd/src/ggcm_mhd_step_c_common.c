@@ -222,13 +222,14 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step)
   pde_patch_set(0);
   s_mhd_time = step->mhd->time;
 
-  fld3d_t p_W, p_U, p_cmsv;
+  fld3d_t p_W, p_U, p_cmsv, p_bcc;
   fld3d_setup_view(&p_W, p_f, _RR);
   fld3d_setup_view(&p_U, p_f, _RR1);
   fld3d_setup_view(&p_cmsv, p_f, _CMSV);
+  fld3d_setup_view(&p_bcc, p_f, _BX);
   
   patch_primvar(p_W, p_U, p_cmsv);
-  patch_primbb(p_f, _RR1);
+  patch_primbb(p_bcc, p_U);
   patch_zmaskn(p_f);
 
   mrc_fld_data_t dth = .5f * step->mhd->dt;
@@ -255,13 +256,14 @@ ggcm_mhd_step_c_corr(struct ggcm_mhd_step *step)
   pde_patch_set(0);
   s_mhd_time = step->mhd->time;
 
-  fld3d_t p_W, p_U, p_cmsv;
+  fld3d_t p_W, p_U, p_cmsv, p_bcc;
   fld3d_setup_view(&p_W, p_f, _RR);
   fld3d_setup_view(&p_U, p_f, _RR2);
   fld3d_setup_view(&p_cmsv, p_f, _CMSV);
+  fld3d_setup_view(&p_bcc, p_f, _BX);
   
   patch_primvar(p_W, p_U, p_cmsv);
-  patch_primbb(p_f, _RR2);
+  patch_primbb(p_bcc, p_U);
   //  patch_zmaskn(p_f);
 
   static int PR;

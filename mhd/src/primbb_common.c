@@ -39,12 +39,16 @@ primbb_c(struct ggcm_mhd *mhd, int m_curr)
   pde_setup(f);
   pde_mhd_setup(mhd);
 
-  fld3d_t p_f;
+  fld3d_t p_f, p_bcc, p_U;
   fld3d_setup(&p_f, f);
 
   for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
     fld3d_get(&p_f, p);
-    patch_primbb(p_f, m_curr);
+    fld3d_setup_view(&p_bcc, p_f, _BX);
+    fld3d_setup_view(&p_U, p_f, m_curr);
+
+    patch_primbb(p_bcc, p_U);
+
     fld3d_put(&p_f, p);
   }
 
