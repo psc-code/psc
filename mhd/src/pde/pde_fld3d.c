@@ -36,6 +36,14 @@ fld3d_setup_tmp(fld3d_t *f, int n_comps)
 }
 
 static inline void
+fld3d_setup_view(fld3d_t *f, fld3d_t base, int m)
+{
+  assert(base.arr_off);
+  f->arr_off = base.arr_off + m * s_lgdims[0] * s_lgdims[1] * s_lgdims[2];
+  f->mrc_fld = NULL;
+}
+
+static inline void
 fld3d_get(fld3d_t *f, int p)
 {
   assert(f->mrc_fld);
