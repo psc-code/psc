@@ -40,7 +40,7 @@ zmaskn_c(struct ggcm_mhd *mhd)
 
   for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
     fld3d_get(&p_f, p);
-    patch_zmaskn_c(p_f);
+    patch_zmaskn(p_f);
     fld3d_put(&p_f, p);
   }
   mrc_fld_put_as(f, mhd->fld);
