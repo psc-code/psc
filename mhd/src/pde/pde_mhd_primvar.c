@@ -48,15 +48,10 @@ patch_primvar_fortran(fld3d_t p_W, fld3d_t p_U, fld3d_t p_cmsv)
 // patch_primvar
 
 static void _mrc_unused
-patch_primvar(fld3d_t p_f, int m)
+patch_primvar(fld3d_t p_W, fld3d_t p_U, fld3d_t p_cmsv)
 {
-  fld3d_t p_W, p_U, p_cmsv;
-  fld3d_setup_view(&p_W, p_f, _RR);
-  fld3d_setup_view(&p_U, p_f, m);
-  fld3d_setup_view(&p_cmsv, p_f, _CMSV);
-  
   if (s_opt_mhd_primvar == OPT_MHD_C) {
-    patch_prim_from_cons(p_W, p_U, 2);
+    patch_prim_from_cons_v2(p_W, p_U, 2);
     patch_cmsv(p_cmsv, p_W, p_U);
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
   } else if (s_opt_mhd_primvar == OPT_MHD_FORTRAN) {

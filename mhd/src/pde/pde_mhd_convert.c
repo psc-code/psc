@@ -168,6 +168,7 @@ patch_prim_from_cons(fld3d_t p_W, fld3d_t p_U, int sw)
 //
 // FIXME: this is here for reference, and should eventually go away
 // however, it may also have better performance
+// and it gives exactly the same answer as Fortran
 
 static void _mrc_unused
 patch_prim_from_cons_v2(fld3d_t p_W, fld3d_t p_U, int sw)

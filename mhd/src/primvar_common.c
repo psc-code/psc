@@ -40,12 +40,17 @@ primvar_c(struct ggcm_mhd *mhd, int m_curr)
   pde_setup(f);
   pde_mhd_setup(mhd);
 
-  fld3d_t p_f;
+  fld3d_t p_f, p_W, p_U, p_cmsv;
   fld3d_setup(&p_f, f);
 
   for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
     fld3d_get(&p_f, p);
-    patch_primvar(p_f, m_curr);
+    fld3d_setup_view(&p_W, p_f, _RR);
+    fld3d_setup_view(&p_U, p_f, m_curr);
+    fld3d_setup_view(&p_cmsv, p_f, _CMSV);
+  
+    patch_primvar(p_W, p_U, p_cmsv);
+
     fld3d_put(&p_f, p);
   }   
   mrc_fld_put_as(f, mhd->fld);

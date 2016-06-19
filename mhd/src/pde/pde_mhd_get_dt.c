@@ -9,7 +9,12 @@
 static mrc_fld_data_t
 patch_get_dt_scons_ggcm_c(fld3d_t p_f)
 {
-  patch_primvar(p_f, _RR1);
+  fld3d_t p_W, p_U, p_cmsv;
+  fld3d_setup_view(&p_W, p_f, _RR);
+  fld3d_setup_view(&p_U, p_f, _RR1);
+  fld3d_setup_view(&p_cmsv, p_f, _CMSV);
+  
+  patch_primvar(p_W, p_U, p_cmsv);
   patch_primbb(p_f, _RR1);
   patch_zmaskn(p_f);
 
@@ -52,7 +57,12 @@ void newstep_F77(real *pp, real *rr, real *vx, real *vy, real *vz,
 static mrc_fld_data_t
 patch_get_dt_scons_ggcm_fortran(fld3d_t p_f)
 {
-  patch_primvar(p_f, _RR1);
+  fld3d_t p_W, p_U, p_cmsv;
+  fld3d_setup_view(&p_W, p_f, _RR);
+  fld3d_setup_view(&p_U, p_f, _RR1);
+  fld3d_setup_view(&p_cmsv, p_f, _CMSV);
+  
+  patch_primvar(p_W, p_U, p_cmsv);
   patch_primbb(p_f, _RR1);
   patch_zmaskn(p_f);
 
