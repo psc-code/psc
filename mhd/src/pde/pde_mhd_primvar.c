@@ -33,20 +33,13 @@ void primvar_F77(integer *ntot,
 		 real *cmsv, real *gamma, real *tmp1);
 
 static void
-patch_primvar_fortran(fld3d_t p_f, int m)
+patch_primvar_fortran(fld3d_t p_W, fld3d_t p_U, fld3d_t p_cmsv)
 {
   int ntot = s_lgdims[0] * s_lgdims[1] * s_lgdims[2];
-  if (m == _RR1) {
-    primvar_F77(&ntot, F(p_f, _RR1), F(p_f, _RV1X), F(p_f, _RV1Y), F(p_f, _RV1Z), F(p_f, _UU1),
-		F(p_f, _RR), F(p_f, _VX), F(p_f, _VY), F(p_f, _VZ), F(p_f, _PP), F(p_f, _CMSV),
-		&s_gamma, F(p_f, _TMP1));
-  } else if (m == _RR2) {
-    primvar_F77(&ntot, F(p_f, _RR2), F(p_f, _RV2X), F(p_f, _RV2Y), F(p_f, _RV2Z), F(p_f, _UU2),
-		F(p_f, _RR), F(p_f, _VX), F(p_f, _VY), F(p_f, _VZ), F(p_f, _PP), F(p_f, _CMSV),
-		&s_gamma, F(p_f, _TMP1));
-  } else {
-    assert(0);
-  }
+  // very ugly way to pass _TMP1...
+  primvar_F77(&ntot, F(p_U, RR), F(p_U, RVX), F(p_U, RVY), F(p_U, RVZ), F(p_U, UU),
+	      F(p_W, RR), F(p_W, VX), F(p_W, VY), F(p_W, VZ), F(p_W, PP), F(p_cmsv, 0),
+	      &s_gamma, F(p_W, _TMP1 - _RR));
 }
 
 #endif
@@ -57,17 +50,17 @@ patch_primvar_fortran(fld3d_t p_f, int m)
 static void _mrc_unused
 patch_primvar(fld3d_t p_f, int m)
 {
+  fld3d_t p_W, p_U, p_cmsv;
+  fld3d_setup_view(&p_W, p_f, _RR);
+  fld3d_setup_view(&p_U, p_f, m);
+  fld3d_setup_view(&p_cmsv, p_f, _CMSV);
+  
   if (s_opt_mhd_primvar == OPT_MHD_C) {
-    fld3d_t p_W, p_U, p_cmsv;
-    fld3d_setup_view(&p_W, p_f, _RR);
-    fld3d_setup_view(&p_U, p_f, m);
-    fld3d_setup_view(&p_cmsv, p_f, _CMSV);
-
     patch_prim_from_cons(p_W, p_U, 2);
     patch_cmsv(p_cmsv, p_W, p_U);
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
   } else if (s_opt_mhd_primvar == OPT_MHD_FORTRAN) {
-    patch_primvar_fortran(p_f, m);
+    patch_primvar_fortran(p_W, p_U, p_cmsv);
 #endif
   } else {
     assert(0);
