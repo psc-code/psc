@@ -1,5 +1,16 @@
 
 // ----------------------------------------------------------------------
+// patch_calc_resis_nl1_c
+
+static void
+patch_calc_resis_nl1_c(fld3d_t p_f, int m_curr)
+{
+  fld3d_foreach(i,j,k, 2, 2) {
+    F3S(p_f, _RESIS, i,j,k) = 0.f;
+  } fld3d_foreach_end;
+}
+
+// ----------------------------------------------------------------------
 // patch_calc_resis_nl1_fortran
 
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
@@ -24,7 +35,7 @@ static void
 patch_calc_resis_nl1(fld3d_t p_f, int m_curr)
 {
   if (s_opt_mhd_calc_resis == OPT_MHD_C) {
-    assert(0); //patch_calc_resis_nl1_c(p_f, m_curr);
+    patch_calc_resis_nl1_c(p_f, m_curr);
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
   } else if (s_opt_mhd_calc_resis == OPT_MHD_FORTRAN) {
     patch_calc_resis_nl1_fortran(p_f, m_curr);
