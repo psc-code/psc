@@ -43,6 +43,16 @@ fld3d_setup_view(fld3d_t *f, fld3d_t base, int m)
   f->mrc_fld = NULL;
 }
 
+static inline fld3d_t
+fld3d_make_view(fld3d_t base, int m)
+{
+  fld3d_t f;
+  assert(base.arr_off);
+  f.arr_off = base.arr_off + m * s_lgdims[0] * s_lgdims[1] * s_lgdims[2];
+  f.mrc_fld = NULL;
+  return f;
+}
+
 static inline void
 fld3d_get(fld3d_t *f, int p)
 {
