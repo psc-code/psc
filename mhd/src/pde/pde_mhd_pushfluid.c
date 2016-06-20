@@ -254,12 +254,27 @@ pushpp_c(fld3d_t p_Unext, fld3d_t p_W, fld3d_t p_zmask, mrc_fld_data_t dt)
 }
 
 static void
-_pushfluid_c(fld3d_t p_Unext, fld3d_t p_Uprev, fld3d_t p_Ucurr, fld3d_t p_W,
-	    fld3d_t p_cmsv, fld3d_t p_ymask, fld3d_t p_zmask,
-	    mrc_fld_data_t dt, int limit, fld3d_t p_f)
+patch_pushfluid_c(fld3d_t p_f, mrc_fld_data_t dt, int stage)
 {
+  fld3d_t p_Unext, p_Uprev, p_Ucurr;
+  if (stage == 0) {
+    fld3d_setup_view(&p_Unext, p_f, _RR2);
+    fld3d_setup_view(&p_Uprev, p_f, _RR1);
+    fld3d_setup_view(&p_Ucurr, p_f, _RR1);
+  } else {
+    fld3d_setup_view(&p_Unext, p_f, _RR1);
+    fld3d_setup_view(&p_Uprev, p_f, _RR1);
+    fld3d_setup_view(&p_Ucurr, p_f, _RR2);
+  }
   fld3d_t p_B;
   fld3d_setup_view(&p_B    , p_f, _BX);
+  fld3d_t p_W, p_cmsv, p_ymask, p_zmask;
+  fld3d_setup_view(&p_W    , p_f, _RR);
+  fld3d_setup_view(&p_cmsv , p_f, _CMSV);
+  fld3d_setup_view(&p_ymask, p_f, _YMASK);
+  fld3d_setup_view(&p_zmask, p_f, _ZMASK);
+
+  int limit = stage == 0 ? LIMIT_NONE : LIMIT_1;
 
   if (limit != LIMIT_NONE) {
     vgrs(p_B, 0, 0.f); vgrs(p_B, 1, 0.f); vgrs(p_B, 2, 0.f);
@@ -275,59 +290,6 @@ _pushfluid_c(fld3d_t p_Unext, fld3d_t p_Uprev, fld3d_t p_Ucurr, fld3d_t p_W,
   pushfv_c(p_Unext, p_Uprev, p_Ucurr, UU , p_W, p_cmsv, p_ymask, dt, limit, p_B, p_f);
 
   pushpp_c(p_Unext, p_W, p_zmask, dt);
-}
-
-// ----------------------------------------------------------------------
-// patch_pushfluid1_c
-
-static void
-patch_pushfluid1_c(fld3d_t p_f, mrc_fld_data_t dt)
-{
-  fld3d_t p_Unext, p_Uprev, p_Ucurr;
-  fld3d_t p_Wcurr, p_cmsv, p_ymask, p_zmask;
-  fld3d_setup_view(&p_Unext, p_f, _RR2);
-  fld3d_setup_view(&p_Uprev, p_f, _RR1);
-  fld3d_setup_view(&p_Ucurr, p_f, _RR1);
-  fld3d_setup_view(&p_Wcurr, p_f, _RR);
-  fld3d_setup_view(&p_cmsv , p_f, _CMSV);
-  fld3d_setup_view(&p_ymask, p_f, _YMASK);
-  fld3d_setup_view(&p_zmask, p_f, _ZMASK);
-
-  _pushfluid_c(p_Unext, p_Uprev, p_Ucurr, p_Wcurr,
-	      p_cmsv, p_ymask, p_zmask, dt, LIMIT_NONE, p_f);
-}
-
-// ----------------------------------------------------------------------
-// patch_pushfluid2_c
-
-static void
-patch_pushfluid2_c(fld3d_t p_f, mrc_fld_data_t dt)
-{
-  fld3d_t p_Unext, p_Uprev, p_Ucurr;
-  fld3d_t p_Wcurr, p_cmsv, p_ymask, p_zmask;
-  fld3d_setup_view(&p_Unext, p_f, _RR1);
-  fld3d_setup_view(&p_Uprev, p_f, _RR1);
-  fld3d_setup_view(&p_Ucurr, p_f, _RR2);
-  fld3d_setup_view(&p_Wcurr, p_f, _RR);
-  fld3d_setup_view(&p_cmsv , p_f, _CMSV);
-  fld3d_setup_view(&p_ymask, p_f, _YMASK);
-  fld3d_setup_view(&p_zmask, p_f, _ZMASK);
-
-  _pushfluid_c(p_Unext, p_Uprev, p_Ucurr, p_Wcurr,
-	      p_cmsv, p_ymask, p_zmask, dt, LIMIT_1, p_f);
-}
-
-// ----------------------------------------------------------------------
-// patch_pushfluid_c
-
-static void _mrc_unused
-patch_pushfluid_c(fld3d_t p_f, mrc_fld_data_t dt, int stage)
-{
-  if (stage == 0) {
-    patch_pushfluid1_c(p_f, dt);
-  } else {
-    patch_pushfluid2_c(p_f, dt);
-  }
 }
 
 // ----------------------------------------------------------------------
