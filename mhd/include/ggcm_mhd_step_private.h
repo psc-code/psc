@@ -45,13 +45,6 @@ struct ggcm_mhd_step_ops {
 			      struct ggcm_mhd_diag_item *item,
 			      struct mrc_io *io, struct mrc_fld *f,
 			      int diag_type, float plane);
-
-  int task_pred_nl1;
-  int task_corr_nl1;
-  int task_corr1_nl1;
-  int task_pred_const;
-  int task_corr_const;
-  int task_corr1_const;
 };
 
 void ggcm_mhd_step_run_predcorr(struct ggcm_mhd_step *step, struct mrc_fld *x);
