@@ -31,7 +31,7 @@ calc_avg_dz_By(fld3d_t p_dB, fld3d_t p_U, fld3d_t p_f, int XX, int YY, int ZZ,
 
   // d_z B_y, d_y B_z on x edges
   fld3d_foreach(ix,iy,iz, 2, 1) {
-    mrc_fld_data_t bd1[3] = { BD1X(ix), BD1Y(iy), BD1Z(iz) };
+    mrc_fld_data_t bd1[3] = { PDE_INV_DXF(ix+1), PDE_INV_DYF(iy+1), PDE_INV_DZF(iz+1) };
 
     F3S(p_tmp1, 0, ix,iy,iz) = bd1[ZZ] * 
       (F3S(p_U, BX + YY, ix+JX2,iy+JY2,iz+JZ2) - F3S(p_U, BX + YY, ix,iy,iz));
@@ -66,8 +66,8 @@ calc_v_x_B(mrc_fld_data_t ttmp[2], fld3d_t p_U, fld3d_t p_W, fld3d_t p_dB,
 	   int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2,
 	   mrc_fld_data_t dt)
 {
-  mrc_fld_data_t bd2[3] = { BD2X(ix), BD2Y(iy), BD2Z(iz) };
-  mrc_fld_data_t bd2p[3] = { BD2X(ix+1), BD2Y(iy+1), BD2Z(iz+1) };
+  mrc_fld_data_t bd2[3] = { PDE_DX(ix), PDE_DY(iy), PDE_DZ(iz) };
+  mrc_fld_data_t bd2p[3] = { PDE_DX(ix+1), PDE_DY(iy+1), PDE_DZ(iz+1) };
   mrc_fld_data_t vbZZ;
   // edge centered velocity
   mrc_fld_data_t vvYY = CC_TO_EC(p_W, VX + YY, ix,iy,iz, IX,IY,IZ) /* - d_i * vcurrYY */;

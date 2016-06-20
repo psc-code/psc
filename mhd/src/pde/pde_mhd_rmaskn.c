@@ -12,7 +12,7 @@ patch_rmaskn_c(fld3d_t p_rmask, fld3d_t p_zmask)
 
   fld3d_foreach(ix,iy,iz, 2, 2) {
     F3S(p_rmask, 0, ix,iy,iz) = 0.f;
-    if (FX1X(ix) < s_diff_swbnd)
+    if (PDE_CRDX_CC(ix) < s_diff_swbnd)
       continue;
     if (iy + s_patch.off[1] < s_diff_obnd)
       continue;

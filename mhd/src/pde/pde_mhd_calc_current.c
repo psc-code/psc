@@ -12,12 +12,12 @@ static void _mrc_unused
 patch_calc_current_ec(fld3d_t p_J, fld3d_t p_U)
 {
   fld3d_foreach(i,j,k, 2, 1) {
-    F3S(p_J, 0, i,j,k) = ((F3S(p_U, BZ, i,j+1,k) - F3S(p_U, BZ, i,j,k)) * BD4Y(j) -
-			  (F3S(p_U, BY, i,j,k+1) - F3S(p_U, BY, i,j,k)) * BD4Z(k));
-    F3S(p_J, 1, i,j,k) = ((F3S(p_U, BX, i,j,k+1) - F3S(p_U, BX, i,j,k)) * BD4Z(k) -
-			  (F3S(p_U, BZ, i+1,j,k) - F3S(p_U, BZ, i,j,k)) * BD4X(i));
-    F3S(p_J, 2, i,j,k) = ((F3S(p_U, BY, i+1,j,k) - F3S(p_U, BY, i,j,k)) * BD4X(i) -
-			  (F3S(p_U, BX, i,j+1,k) - F3S(p_U, BX, i,j,k)) * BD4Y(j));
+    F3S(p_J, 0, i,j,k) = ((F3S(p_U, BZ, i,j+1,k) - F3S(p_U, BZ, i,j,k)) * PDE_INV_DYF(j+1) -
+			  (F3S(p_U, BY, i,j,k+1) - F3S(p_U, BY, i,j,k)) * PDE_INV_DZF(k+1));
+    F3S(p_J, 1, i,j,k) = ((F3S(p_U, BX, i,j,k+1) - F3S(p_U, BX, i,j,k)) * PDE_INV_DZF(k+1) -
+			  (F3S(p_U, BZ, i+1,j,k) - F3S(p_U, BZ, i,j,k)) * PDE_INV_DXF(i+1));
+    F3S(p_J, 2, i,j,k) = ((F3S(p_U, BY, i+1,j,k) - F3S(p_U, BY, i,j,k)) * PDE_INV_DXF(i+1) -
+			  (F3S(p_U, BX, i,j+1,k) - F3S(p_U, BX, i,j,k)) * PDE_INV_DYF(j+1));
   } fld3d_foreach_end;
 }
 

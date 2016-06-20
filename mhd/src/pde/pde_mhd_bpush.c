@@ -11,26 +11,26 @@ patch_bpush1_c(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Uprev, fld3d_t p_E)
   if (p_Unext.arr_off == p_Uprev.arr_off) {
     fld3d_foreach(i,j,k, 0, 0) {
       F3S(p_Unext, BX, i,j,k) +=
-	dt * (BD3Y(j) * (F3S(p_E, 2, i,j,k) - F3S(p_E, 2, i,j-1,k)) -
-	      BD3Z(k) * (F3S(p_E, 1, i,j,k) - F3S(p_E, 1, i,j,k-1)));
+	dt * (PDE_INV_DY(j) * (F3S(p_E, 2, i,j,k) - F3S(p_E, 2, i,j-1,k)) -
+	      PDE_INV_DZ(k) * (F3S(p_E, 1, i,j,k) - F3S(p_E, 1, i,j,k-1)));
       F3S(p_Unext, BY, i,j,k) +=
-	dt * (BD3Z(k) * (F3S(p_E, 0, i,j,k) - F3S(p_E, 0, i,j,k-1)) -
-	      BD3X(i) * (F3S(p_E, 2, i,j,k) - F3S(p_E, 2, i-1,j,k)));
+	dt * (PDE_INV_DZ(k) * (F3S(p_E, 0, i,j,k) - F3S(p_E, 0, i,j,k-1)) -
+	      PDE_INV_DX(i) * (F3S(p_E, 2, i,j,k) - F3S(p_E, 2, i-1,j,k)));
       F3S(p_Unext, BZ, i,j,k) +=
-	dt * (BD3X(i) * (F3S(p_E, 1, i,j,k) - F3S(p_E, 1, i-1,j,k)) -
-	      BD3Y(j) * (F3S(p_E, 0, i,j,k) - F3S(p_E, 0, i,j-1,k)));
+	dt * (PDE_INV_DX(i) * (F3S(p_E, 1, i,j,k) - F3S(p_E, 1, i-1,j,k)) -
+	      PDE_INV_DY(j) * (F3S(p_E, 0, i,j,k) - F3S(p_E, 0, i,j-1,k)));
     } fld3d_foreach_end;
   } else {
     fld3d_foreach(i,j,k, 0, 0) {
       F3S(p_Unext, BX, i,j,k) = F3S(p_Uprev, BX, i,j,k) +
-	dt * (BD3Y(j) * (F3S(p_E, 2, i,j,k) - F3S(p_E, 2, i,j-1,k)) -
-	      BD3Z(k) * (F3S(p_E, 1, i,j,k) - F3S(p_E, 1, i,j,k-1)));
+	dt * (PDE_INV_DY(j) * (F3S(p_E, 2, i,j,k) - F3S(p_E, 2, i,j-1,k)) -
+	      PDE_INV_DZ(k) * (F3S(p_E, 1, i,j,k) - F3S(p_E, 1, i,j,k-1)));
       F3S(p_Unext, BY, i,j,k) = F3S(p_Uprev, BY, i,j,k) +
-	dt * (BD3Z(k) * (F3S(p_E, 0, i,j,k) - F3S(p_E, 0, i,j,k-1)) -
-	      BD3X(i) * (F3S(p_E, 2, i,j,k) - F3S(p_E, 2, i-1,j,k)));
+	dt * (PDE_INV_DZ(k) * (F3S(p_E, 0, i,j,k) - F3S(p_E, 0, i,j,k-1)) -
+	      PDE_INV_DX(i) * (F3S(p_E, 2, i,j,k) - F3S(p_E, 2, i-1,j,k)));
       F3S(p_Unext, BZ, i,j,k) = F3S(p_Uprev, BZ, i,j,k) +
-	dt * (BD3X(i) * (F3S(p_E, 1, i,j,k) - F3S(p_E, 1, i-1,j,k)) -
-	      BD3Y(j) * (F3S(p_E, 0, i,j,k) - F3S(p_E, 0, i,j-1,k)));
+	dt * (PDE_INV_DX(i) * (F3S(p_E, 1, i,j,k) - F3S(p_E, 1, i-1,j,k)) -
+	      PDE_INV_DY(j) * (F3S(p_E, 0, i,j,k) - F3S(p_E, 0, i,j-1,k)));
     } fld3d_foreach_end;
   }
 }
