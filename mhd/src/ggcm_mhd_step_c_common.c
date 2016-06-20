@@ -32,11 +32,6 @@
 // - handle limit2, limit3
 // - handle lowmask
 
-enum {
-  LIMIT_NONE,
-  LIMIT_1,
-};
-
 static mrc_fld_data_t s_mhd_time;
 
 static float *s_fd1x, *s_fd1y, *s_fd1z;

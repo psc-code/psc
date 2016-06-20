@@ -217,7 +217,7 @@ limit1_c(fld3d_t p_U, int m, fld3d_t p_C)
 static void
 pushfv_c(fld3d_t p_Unext, fld3d_t p_Uprev, fld3d_t p_Ucurr, int m, 
 	 fld3d_t p_Wcurr, fld3d_t p_cmsv, fld3d_t p_ymask, mrc_fld_data_t dt,
-	 int limit, fld3d_t p_B, fld3d_t p_f)
+	 bool limit, fld3d_t p_B, fld3d_t p_f)
 {
   fld3d_t p_Ffc, p_Fcc, p_C;
   fld3d_setup_view(&p_Ffc  , p_f, _FLX);
@@ -225,7 +225,7 @@ pushfv_c(fld3d_t p_Unext, fld3d_t p_Uprev, fld3d_t p_Ucurr, int m,
   fld3d_setup_view(&p_C    , p_f, _CX);
 
   vgfl_c(p_Fcc, p_Wcurr, m);
-  if (limit == LIMIT_NONE) {
+  if (!limit) {
     fluxl_c(p_Ffc, p_Fcc, p_cmsv, p_Ucurr, m);
   } else {
     vgrv(p_C, 0, p_B, 0);
@@ -261,9 +261,9 @@ patch_pushfluid_c(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Uprev,
   fld3d_t p_B;
   fld3d_setup_view(&p_B    , p_f, _BX);
 
-  int limit = stage == 0 ? LIMIT_NONE : LIMIT_1;
+  bool limit = stage != 0;
 
-  if (limit != LIMIT_NONE) {
+  if (limit) {
     vgrs(p_B, 0, 0.f); vgrs(p_B, 1, 0.f); vgrs(p_B, 2, 0.f);
     assert(!s_do_limit2);
     assert(!s_do_limit3);
