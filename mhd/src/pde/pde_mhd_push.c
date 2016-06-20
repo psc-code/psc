@@ -8,24 +8,12 @@
 // patch_push_c
 
 static void
-patch_push_c(fld3d_t p_f, mrc_fld_data_t dt, int stage)
+patch_push_c(fld3d_t p_Unext, fld3d_t p_Uprev, fld3d_t p_Ucurr,
+	     fld3d_t p_W, fld3d_t p_cmsv,
+	     fld3d_t p_ymask, fld3d_t p_zmask,
+	     fld3d_t p_f, mrc_fld_data_t dt, int stage)
 {
-  fld3d_t p_Unext, p_Uprev, p_Ucurr;
-  fld3d_t p_W, p_cmsv, p_ymask, p_zmask, p_rmask;
-  fld3d_t p_resis, p_Jcc;
-  if (stage == 0) {
-    fld3d_setup_view(&p_Unext, p_f, _RR2);
-    fld3d_setup_view(&p_Uprev, p_f, _RR1);
-    fld3d_setup_view(&p_Ucurr, p_f, _RR1);
-  } else {
-    fld3d_setup_view(&p_Unext, p_f, _RR1);
-    fld3d_setup_view(&p_Uprev, p_f, _RR1);
-    fld3d_setup_view(&p_Ucurr, p_f, _RR2);
-  }
-  fld3d_setup_view(&p_W    , p_f, _RR);
-  fld3d_setup_view(&p_cmsv , p_f, _CMSV);
-  fld3d_setup_view(&p_ymask, p_f, _YMASK);
-  fld3d_setup_view(&p_zmask, p_f, _ZMASK);
+  fld3d_t p_rmask, p_resis, p_Jcc;
   fld3d_setup_view(&p_rmask, p_f, _RMASK);
   fld3d_setup_view(&p_resis, p_f, _RESIS);
   fld3d_setup_view(&p_Jcc  , p_f, _CURRX);
@@ -114,12 +102,16 @@ patch_push_fortran(fld3d_t p_f, mrc_fld_data_t dt, int stage)
 // patch_push
 
 static void
-patch_push(fld3d_t p_f, mrc_fld_data_t dt, int stage)
+patch_push(fld3d_t p_Unext, fld3d_t p_Uprev, fld3d_t p_Ucurr,
+	   fld3d_t p_W, fld3d_t p_cmsv,
+	   fld3d_t p_ymask, fld3d_t p_zmask,
+	   fld3d_t p_f, mrc_fld_data_t dt, int stage)
 {
   int opt_mhd_push = stage ? s_opt_mhd_pushpred : s_opt_mhd_pushcorr;
 
   if (opt_mhd_push == OPT_MHD_C) {
-    patch_push_c(p_f, dt, stage);
+    patch_push_c(p_Unext, p_Uprev, p_Ucurr, p_W, p_cmsv,
+		 p_ymask, p_zmask, p_f, dt, stage);
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
   } else if (opt_mhd_push == OPT_MHD_FORTRAN) {
     patch_push_fortran(p_f, dt, stage);
@@ -135,26 +127,33 @@ patch_push(fld3d_t p_f, mrc_fld_data_t dt, int stage)
 static void
 patch_pushstage(fld3d_t p_f, mrc_fld_data_t dt, int stage)
 {
-  fld3d_t p_W, p_Ucurr, p_cmsv, p_bcc, p_ymask, p_zmask;
-  fld3d_setup_view(&p_W    , p_f, _RR);
+  fld3d_t p_Unext, p_Uprev, p_Ucurr;
+  fld3d_t p_W, p_cmsv, p_ymask, p_zmask;
   if (stage == 0) {
+    fld3d_setup_view(&p_Unext, p_f, _RR2);
+    fld3d_setup_view(&p_Uprev, p_f, _RR1);
     fld3d_setup_view(&p_Ucurr, p_f, _RR1);
   } else {
+    fld3d_setup_view(&p_Unext, p_f, _RR1);
+    fld3d_setup_view(&p_Uprev, p_f, _RR1);
     fld3d_setup_view(&p_Ucurr, p_f, _RR2);
   }
+  fld3d_setup_view(&p_W    , p_f, _RR);
   fld3d_setup_view(&p_cmsv , p_f, _CMSV);
+  fld3d_setup_view(&p_ymask, p_f, _YMASK);
+  fld3d_setup_view(&p_zmask, p_f, _ZMASK);
 
   patch_primvar(p_W, p_Ucurr, p_cmsv);
 
   if (stage == 0) {
-    fld3d_setup_view(&p_bcc  , p_f, _BX);
-    fld3d_setup_view(&p_ymask, p_f, _YMASK);
-    fld3d_setup_view(&p_zmask, p_f, _ZMASK);
+    fld3d_t p_bcc;
+    fld3d_setup_view(&p_bcc, p_f, _BX);
     patch_primbb(p_bcc, p_Ucurr);
     patch_zmaskn(p_zmask, p_W, p_bcc, p_ymask);
   }
 
-  patch_push(p_f, dt, stage);
+  patch_push(p_Unext, p_Uprev, p_Ucurr, p_W, p_cmsv,
+	     p_ymask, p_zmask, p_f, dt, stage);
 
   if (stage == 1) {
     patch_badval_checks_sc(p_Ucurr, p_W);
