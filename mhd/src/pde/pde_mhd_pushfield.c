@@ -12,8 +12,8 @@
 static void
 vgr0(fld3d_t p_f, int m)
 {
-  fld3d_foreach(ix,iy,iz, 2, 2) {
-    F3S(p_f, m, ix,iy,iz) = 0.;
+  fld3d_foreach(i,j,k, 2, 2) {
+    F3S(p_f, m, i,j,k) = 0.;
   } fld3d_foreach_end;
 }
 

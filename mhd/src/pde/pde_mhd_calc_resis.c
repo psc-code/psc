@@ -30,23 +30,23 @@ patch_res1_const(fld3d_t p_resis)
 {
   mrc_fld_data_t diffsphere2 = sqr(s_diffsphere);
 
-  fld3d_foreach(ix,iy,iz, 1, 1) {
-    F3S(p_resis, 0, ix,iy,iz) = 0.f;
-    mrc_fld_data_t r2 = sqr(PDE_CRDX_CC(ix)) + sqr(PDE_CRDY_CC(iy)) + sqr(PDE_CRDZ_CC(iz));
+  fld3d_foreach(i,j,k, 1, 1) {
+    F3S(p_resis, 0, i,j,k) = 0.f;
+    mrc_fld_data_t r2 = sqr(PDE_CRDX_CC(i)) + sqr(PDE_CRDY_CC(j)) + sqr(PDE_CRDZ_CC(k));
     if (r2 < diffsphere2)
       continue;
-    if (iy + s_patch.off[1] < s_diff_obnd)
+    if (j + s_patch.off[1] < s_diff_obnd)
       continue;
-    if (iz + s_patch.off[2] < s_diff_obnd)
+    if (k + s_patch.off[2] < s_diff_obnd)
       continue;
-    if (ix + s_patch.off[0] >= s_gdims[0] - s_diff_obnd)
+    if (i + s_patch.off[0] >= s_gdims[0] - s_diff_obnd)
       continue;
-    if (iy + s_patch.off[1] >= s_gdims[1] - s_diff_obnd)
+    if (j + s_patch.off[1] >= s_gdims[1] - s_diff_obnd)
       continue;
-    if (iz + s_patch.off[2] >= s_gdims[2] - s_diff_obnd)
+    if (k + s_patch.off[2] >= s_gdims[2] - s_diff_obnd)
       continue;
 
-    F3S(p_resis, 0, ix,iy,iz) = s_eta;
+    F3S(p_resis, 0, i,j,k) = s_eta;
   } fld3d_foreach_end;
 }
 

@@ -148,16 +148,16 @@ pde_mhd_get_dt_scons(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zm
     float *fd1y = ggcm_mhd_crds_get_crd_p(mhd->crds, 1, FD1, p);
     float *fd1z = ggcm_mhd_crds_get_crd_p(mhd->crds, 2, FD1, p);
 
-    mrc_fld_foreach(x, ix, iy, iz, 0, 0) {
-      mrc_fld_data_t hh = mrc_fld_max(mrc_fld_max(fd1x[ix], fd1y[iy]), fd1z[iz]);
-      mrc_fld_data_t rri = 1.f / mrc_fld_abs(RR_(x, ix,iy,iz, p)); // FIXME abs necessary?
-      mrc_fld_data_t bb = (sqr(.5f * (BTX_(x, ix,iy,iz, p) + BTX_(x, ix+dx,iy,iz, p))) + 
-			   sqr(.5f * (BTY_(x, ix,iy,iz, p) + BTY_(x, ix,iy+dy,iz, p))) +
-			   sqr(.5f * (BTZ_(x, ix,iy,iz, p) + BTZ_(x, ix,iy,iz+dz, p))));
-      mrc_fld_data_t rrvv = (sqr(RVX_(x, ix,iy,iz, p)) + 
-			     sqr(RVY_(x, ix,iy,iz, p)) +
-			     sqr(RVZ_(x, ix,iy,iz, p)));
-      mrc_fld_data_t pp = gamma_m1 * (UU_(x, ix,iy,iz, p) - .5f * rrvv * rri);
+    mrc_fld_foreach(x, i,j,k, 0, 0) {
+      mrc_fld_data_t hh = mrc_fld_max(mrc_fld_max(fd1x[i], fd1y[j]), fd1z[k]);
+      mrc_fld_data_t rri = 1.f / mrc_fld_abs(RR_(x, i,j,k, p)); // FIME abs necessary?
+      mrc_fld_data_t bb = (sqr(.5f * (BTX_(x, i,j,k, p) + BTX_(x, i+dx,j,k, p))) + 
+			   sqr(.5f * (BTY_(x, i,j,k, p) + BTY_(x, i,j+dy,k, p))) +
+			   sqr(.5f * (BTZ_(x, i,j,k, p) + BTZ_(x, i,j,k+dz, p))));
+      mrc_fld_data_t rrvv = (sqr(RVX_(x, i,j,k, p)) + 
+			     sqr(RVY_(x, i,j,k, p)) +
+			     sqr(RVZ_(x, i,j,k, p)));
+      mrc_fld_data_t pp = gamma_m1 * (UU_(x, i,j,k, p) - .5f * rrvv * rri);
 
       if (have_hall) {
 	bb *= 1 + sqr(two_pi_d_i * hh);
@@ -170,7 +170,7 @@ pde_mhd_get_dt_scons(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zm
       
       mrc_fld_data_t zm = 1.f;
       if (zmask) {
-	zm = M3(zmask, m_zmask, ix,iy,iz, p);
+	zm = M3(zmask, m_zmask, i,j,k, p);
       }
       mrc_fld_data_t tt = thx / mrc_fld_max(eps, hh*vv*zm);
       dt = mrc_fld_min(dt, tt);
