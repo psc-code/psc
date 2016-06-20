@@ -55,9 +55,9 @@ patch_res1_const(fld3d_t p_resis)
 
 static void
 patch_calc_resis_const_c(fld3d_t p_resis, fld3d_t p_Jcc, fld3d_t p_U,
-			 fld3d_t p_zmask, fld3d_t p_f)
+			 fld3d_t p_zmask)
 {
-  patch_calc_current_cc(p_Jcc, p_U, p_zmask, p_f);
+  patch_calc_current_cc(p_Jcc, p_U, p_zmask);
   patch_res1_const(p_resis);
 }
 
@@ -87,12 +87,12 @@ patch_calc_resis_nl1_fortran(fld3d_t p_resis)
 
 static void
 patch_calc_resis_const_fortran(fld3d_t p_resis, fld3d_t p_Jcc, fld3d_t p_U, 
-			       fld3d_t p_zmask, fld3d_t p_f)
+			       fld3d_t p_zmask)
 {
   calc_resis_const_F77(F(p_U, BX), F(p_U, BY), F(p_U, BZ),
 		       F(p_Jcc, 0), F(p_Jcc, 1), F(p_Jcc, 2),
-		       F(p_f, _TMP1), F(p_f, _TMP2), F(p_f, _TMP3),
-		       F(p_f, _FLX), F(p_f, _FLY), F(p_f, _FLZ),
+		       F(s_p_f, _TMP1), F(s_p_f, _TMP2), F(s_p_f, _TMP3),
+		       F(s_p_f, _FLX), F(s_p_f, _FLY), F(s_p_f, _FLZ),
 		       F(p_zmask, 0), NULL, NULL, F(p_resis, 0));
 }
 
@@ -123,13 +123,13 @@ patch_calc_resis_nl1(fld3d_t p_resis)
 
 static void _mrc_unused
 patch_calc_resis_const(fld3d_t p_resis, fld3d_t p_Jcc, fld3d_t p_U, 
-		       fld3d_t p_zmask, fld3d_t p_f)
+		       fld3d_t p_zmask)
 {
   if (s_opt_mhd_calc_resis == OPT_MHD_C) {
-    patch_calc_resis_const_c(p_resis, p_Jcc, p_U, p_zmask, p_f);
+    patch_calc_resis_const_c(p_resis, p_Jcc, p_U, p_zmask);
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
   } else if (s_opt_mhd_calc_resis == OPT_MHD_FORTRAN) {
-    patch_calc_resis_const_fortran(p_resis, p_Jcc, p_U, p_zmask, p_f);
+    patch_calc_resis_const_fortran(p_resis, p_Jcc, p_U, p_zmask);
 #endif
   } else {
     assert(0);

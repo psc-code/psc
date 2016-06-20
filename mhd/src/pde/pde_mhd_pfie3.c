@@ -11,11 +11,11 @@
 static void
 patch_pfie3_c(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Uprev,
 	      fld3d_t p_Ucurr, fld3d_t p_W, fld3d_t p_zmask, fld3d_t p_rmask,
-	      fld3d_t p_resis, fld3d_t p_Jcc, fld3d_t p_f)
+	      fld3d_t p_resis, fld3d_t p_Jcc)
 {
   fld3d_t p_E = fld3d_make_tmp(3, _FLX);
 
-  patch_calce(p_E, dt, p_Ucurr, p_W, p_zmask, p_rmask, p_resis, p_Jcc, p_f);
+  patch_calce(p_E, dt, p_Ucurr, p_W, p_zmask, p_rmask, p_resis, p_Jcc);
   patch_bpush1(p_Unext, dt, p_Uprev, p_E);
 }
 
@@ -38,7 +38,7 @@ void pfie3_F77(real *b1x, real *b1y, real *b1z,
 static void
 patch_pfie3_fortran(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Uprev,
 		    fld3d_t p_Ucurr, fld3d_t p_W, fld3d_t p_zmask, fld3d_t p_rmask,
-		    fld3d_t p_resis, fld3d_t p_Jcc, fld3d_t p_f)
+		    fld3d_t p_resis, fld3d_t p_Jcc)
 {
   fld3d_t p_E = fld3d_make_tmp(3, _FLX);
 
@@ -63,15 +63,15 @@ patch_pfie3_fortran(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Uprev,
 static void
 patch_pfie3(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Uprev,
 	    fld3d_t p_Ucurr, fld3d_t p_W, fld3d_t p_zmask, fld3d_t p_rmask,
-	    fld3d_t p_resis, fld3d_t p_Jcc, fld3d_t p_f)
+	    fld3d_t p_resis, fld3d_t p_Jcc)
 {
   if (s_opt_mhd_pfie3 == OPT_MHD_C) {
     patch_pfie3_c(p_Unext, dt, p_Uprev, p_Ucurr, p_W, p_zmask, p_rmask, p_resis,
-		  p_Jcc, p_f);
+		  p_Jcc);
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
   } else if (s_opt_mhd_pfie3 == OPT_MHD_FORTRAN) {
     patch_pfie3_fortran(p_Unext, dt, p_Uprev, p_Ucurr, p_W, p_zmask, p_rmask, p_resis,
-			p_Jcc, p_f);
+			p_Jcc);
 #endif
   } else {
     assert(0);

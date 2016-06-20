@@ -23,7 +23,7 @@ vgr0(fld3d_t p_f, int m)
 static void
 patch_pushfield_c(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Uprev,
 		  fld3d_t p_Ucurr, fld3d_t p_W, fld3d_t p_zmask, fld3d_t p_rmask,
-		  fld3d_t p_resis, fld3d_t p_Jcc, fld3d_t p_f, int stage)
+		  fld3d_t p_resis, fld3d_t p_Jcc, int stage)
 {
   if (s_magdiffu == MAGDIFFU_NL1) {
     patch_calc_resis_nl1(p_resis);
@@ -34,12 +34,12 @@ patch_pushfield_c(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Uprev,
     assert(0);
     //    calc_resis_res1(bxB,byB,bzB,currx,curry,currz,tmp1,tmp2,tmp3,flx,fly,flz,zmask,rr,pp,resis);
   } else if (s_magdiffu == MAGDIFFU_CONST) {
-    patch_calc_resis_const(p_resis, p_Jcc, p_Ucurr, p_zmask, p_f);
+    patch_calc_resis_const(p_resis, p_Jcc, p_Ucurr, p_zmask);
   }
 
-  patch_push_ej(p_Unext, dt, p_Ucurr, p_W, p_zmask, p_f);
+  patch_push_ej(p_Unext, dt, p_Ucurr, p_W, p_zmask);
   patch_pfie3(p_Unext, dt, p_Uprev, p_Ucurr, p_W, p_zmask, p_rmask,
-	      p_resis, p_Jcc, p_f);
+	      p_resis, p_Jcc);
 }
 
 // ----------------------------------------------------------------------
@@ -70,30 +70,30 @@ void pushfield2_F77(real *rr1, real *rv1x, real *rv1y, real *rv1z, real *uu1,
 		    real *dth, real *time);
 
 static void
-patch_pushfield1_fortran(fld3d_t p_f, mrc_fld_data_t dt)
+patch_pushfield1_fortran(mrc_fld_data_t dt)
 {
-  pushfield1_F77(F(p_f, _RR1), F(p_f, _RV1X), F(p_f, _RV1Y), F(p_f, _RV1Z), F(p_f, _UU1),
-		 F(p_f, _B1X), F(p_f, _B1Y), F(p_f, _B1Z),
-		 F(p_f, _RR2), F(p_f, _RV2X), F(p_f, _RV2Y), F(p_f, _RV2Z), F(p_f, _UU2),
-		 F(p_f, _B2X), F(p_f, _B2Y), F(p_f, _B2Z),
-		 F(p_f, _RR), F(p_f, _VX), F(p_f, _VY), F(p_f, _VZ), F(p_f, _PP),
-		 F(p_f, _CMSV), F(p_f, _YMASK), F(p_f, _ZMASK), F(p_f, _RMASK),
-		 F(p_f, _FLX), F(p_f, _FLY), F(p_f, _FLZ),
-		 F(p_f, _TMP1), F(p_f, _TMP2), F(p_f, _TMP3), F(p_f, _RESIS),
+  pushfield1_F77(F(s_p_f, _RR1), F(s_p_f, _RV1X), F(s_p_f, _RV1Y), F(s_p_f, _RV1Z), F(s_p_f, _UU1),
+		 F(s_p_f, _B1X), F(s_p_f, _B1Y), F(s_p_f, _B1Z),
+		 F(s_p_f, _RR2), F(s_p_f, _RV2X), F(s_p_f, _RV2Y), F(s_p_f, _RV2Z), F(s_p_f, _UU2),
+		 F(s_p_f, _B2X), F(s_p_f, _B2Y), F(s_p_f, _B2Z),
+		 F(s_p_f, _RR), F(s_p_f, _VX), F(s_p_f, _VY), F(s_p_f, _VZ), F(s_p_f, _PP),
+		 F(s_p_f, _CMSV), F(s_p_f, _YMASK), F(s_p_f, _ZMASK), F(s_p_f, _RMASK),
+		 F(s_p_f, _FLX), F(s_p_f, _FLY), F(s_p_f, _FLZ),
+		 F(s_p_f, _TMP1), F(s_p_f, _TMP2), F(s_p_f, _TMP3), F(s_p_f, _RESIS),
 		 &dt, &s_mhd_time);
 }
 
 static void
-patch_pushfield2_fortran(fld3d_t p_f, mrc_fld_data_t dt)
+patch_pushfield2_fortran(mrc_fld_data_t dt)
 {
-  pushfield2_F77(F(p_f, _RR1), F(p_f, _RV1X), F(p_f, _RV1Y), F(p_f, _RV1Z), F(p_f, _UU1),
-		 F(p_f, _B1X), F(p_f, _B1Y), F(p_f, _B1Z),
-		 F(p_f, _RR2), F(p_f, _RV2X), F(p_f, _RV2Y), F(p_f, _RV2Z), F(p_f, _UU2),
-		 F(p_f, _B2X), F(p_f, _B2Y), F(p_f, _B2Z),
-		 F(p_f, _RR), F(p_f, _VX), F(p_f, _VY), F(p_f, _VZ), F(p_f, _PP),
-		 F(p_f, _CMSV), F(p_f, _YMASK), F(p_f, _ZMASK), F(p_f, _RMASK),
-		 F(p_f, _FLX), F(p_f, _FLY), F(p_f, _FLZ),
-		 F(p_f, _TMP1), F(p_f, _TMP2), F(p_f, _TMP3), F(p_f, _RESIS),
+  pushfield2_F77(F(s_p_f, _RR1), F(s_p_f, _RV1X), F(s_p_f, _RV1Y), F(s_p_f, _RV1Z), F(s_p_f, _UU1),
+		 F(s_p_f, _B1X), F(s_p_f, _B1Y), F(s_p_f, _B1Z),
+		 F(s_p_f, _RR2), F(s_p_f, _RV2X), F(s_p_f, _RV2Y), F(s_p_f, _RV2Z), F(s_p_f, _UU2),
+		 F(s_p_f, _B2X), F(s_p_f, _B2Y), F(s_p_f, _B2Z),
+		 F(s_p_f, _RR), F(s_p_f, _VX), F(s_p_f, _VY), F(s_p_f, _VZ), F(s_p_f, _PP),
+		 F(s_p_f, _CMSV), F(s_p_f, _YMASK), F(s_p_f, _ZMASK), F(s_p_f, _RMASK),
+		 F(s_p_f, _FLX), F(s_p_f, _FLY), F(s_p_f, _FLZ),
+		 F(s_p_f, _TMP1), F(s_p_f, _TMP2), F(s_p_f, _TMP3), F(s_p_f, _RESIS),
 		 &dt, &s_mhd_time);
 }
 
@@ -101,12 +101,12 @@ patch_pushfield2_fortran(fld3d_t p_f, mrc_fld_data_t dt)
 // patch_pushfield_fortran
 
 static void _mrc_unused
-patch_pushfield_fortran(fld3d_t p_f, mrc_fld_data_t dt, int stage)
+patch_pushfield_fortran(mrc_fld_data_t dt, int stage)
 {
   if (stage == 0) {
-    patch_pushfield1_fortran(p_f, dt);
+    patch_pushfield1_fortran(dt);
   } else {
-    patch_pushfield2_fortran(p_f, dt);
+    patch_pushfield2_fortran(dt);
   }
 }
 
@@ -118,16 +118,16 @@ patch_pushfield_fortran(fld3d_t p_f, mrc_fld_data_t dt, int stage)
 static void _mrc_unused
 patch_pushfield(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Uprev,
 		fld3d_t p_Ucurr, fld3d_t p_W, fld3d_t p_zmask, fld3d_t p_rmask,
-		fld3d_t p_resis, fld3d_t p_Jcc, fld3d_t p_f, int stage)
+		fld3d_t p_resis, fld3d_t p_Jcc, int stage)
 {
   int opt_mhd_pushfield = stage ? s_opt_mhd_pushfield2 : s_opt_mhd_pushfield1;
 
   if (opt_mhd_pushfield == OPT_MHD_C) {
     patch_pushfield_c(p_Unext, dt, p_Uprev, p_Ucurr, p_W,
-		      p_zmask, p_rmask, p_resis, p_Jcc, p_f, stage);
+		      p_zmask, p_rmask, p_resis, p_Jcc, stage);
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
   } else if (opt_mhd_pushfield == OPT_MHD_FORTRAN) {
-    patch_pushfield_fortran(p_f, dt, stage);
+    patch_pushfield_fortran(dt, stage);
 #endif
   } else {
     assert(0);

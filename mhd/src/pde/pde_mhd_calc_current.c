@@ -30,7 +30,7 @@ patch_calc_current_ec(fld3d_t p_J, fld3d_t p_U)
 // cell centered current density
 
 static void _mrc_unused
-patch_calc_current_cc(fld3d_t p_Jcc, fld3d_t p_U, fld3d_t p_zmask, fld3d_t p_f)
+patch_calc_current_cc(fld3d_t p_Jcc, fld3d_t p_U, fld3d_t p_zmask)
 { 
   fld3d_t p_Jec = fld3d_make_tmp(3, _TMP1); /* was named _TX */
 

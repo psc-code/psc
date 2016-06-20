@@ -9,7 +9,7 @@
 
 static void
 patch_push_ej_c(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Ucurr,
-		fld3d_t p_W, fld3d_t p_zmask, fld3d_t p_f)
+		fld3d_t p_W, fld3d_t p_zmask)
 {
   fld3d_t p_Jec = fld3d_make_tmp(3, _BX), p_Bcc = fld3d_make_tmp(3, _TMP1);
 
@@ -54,7 +54,7 @@ void push_ej_F77(real *b1x, real *b1y, real *b1z,
 
 static void
 patch_push_ej_fortran(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Ucurr,
-		      fld3d_t p_W, fld3d_t p_zmask, fld3d_t p_f)
+		      fld3d_t p_W, fld3d_t p_zmask)
 {
   push_ej_F77(F(p_Ucurr, BX), F(p_Ucurr, BY), F(p_Ucurr, BZ),
 	      F(p_Unext, RVX), F(p_Unext, RVY), F(p_Unext, RVZ), F(p_Unext, UU), 
@@ -68,13 +68,13 @@ patch_push_ej_fortran(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Ucurr,
 
 static void
 patch_push_ej(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Ucurr,
-	      fld3d_t p_W, fld3d_t p_zmask, fld3d_t p_f)
+	      fld3d_t p_W, fld3d_t p_zmask)
 {
   if (s_opt_mhd_push_ej == OPT_MHD_C) {
-    patch_push_ej_c(p_Unext, dt, p_Ucurr, p_W, p_zmask, p_f);
+    patch_push_ej_c(p_Unext, dt, p_Ucurr, p_W, p_zmask);
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
   } else if (s_opt_mhd_push_ej == OPT_MHD_FORTRAN) {
-    patch_push_ej_fortran(p_Unext, dt, p_Ucurr, p_W, p_zmask, p_f);
+    patch_push_ej_fortran(p_Unext, dt, p_Ucurr, p_W, p_zmask);
 #endif
   } else {
     assert(0);

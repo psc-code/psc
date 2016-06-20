@@ -11,7 +11,7 @@ static void
 patch_push_c(fld3d_t p_Unext, fld3d_t p_Uprev, fld3d_t p_Ucurr,
 	     fld3d_t p_W, fld3d_t p_cmsv,
 	     fld3d_t p_ymask, fld3d_t p_zmask,
-	     fld3d_t p_f, mrc_fld_data_t dt, int stage)
+	     mrc_fld_data_t dt, int stage)
 {
   fld3d_t p_rmask = fld3d_make_tmp(1, _RMASK), p_resis = fld3d_make_tmp(1, _RESIS);
   fld3d_t p_Jcc = fld3d_make_tmp(3, _CURRX);
@@ -22,9 +22,9 @@ patch_push_c(fld3d_t p_Unext, fld3d_t p_Uprev, fld3d_t p_Ucurr,
 
   patch_rmaskn(p_rmask, p_zmask);
   patch_pushfluid(p_Unext, dt, p_Uprev, p_Ucurr, p_W,
-		  p_cmsv, p_ymask, p_zmask, p_f, stage);
+		  p_cmsv, p_ymask, p_zmask, stage);
   patch_pushfield(p_Unext, dt, p_Uprev, p_Ucurr, p_W,
-		  p_zmask, p_rmask, p_resis, p_Jcc, p_f, stage);
+		  p_zmask, p_rmask, p_resis, p_Jcc, stage);
 }
 
 // ----------------------------------------------------------------------
@@ -57,40 +57,40 @@ void pushcorr_F77(real *rr1, real *rv1x, real *rv1y, real *rv1z, real *uu1,
 		  real *dt, real *time);
 
 static void
-patch_pushpred_fortran(fld3d_t p_f, mrc_fld_data_t dt)
+patch_pushpred_fortran(mrc_fld_data_t dt)
 {
-  pushpred_F77(F(p_f, _RR1), F(p_f, _RV1X), F(p_f, _RV1Y), F(p_f, _RV1Z), F(p_f, _UU1),
-	       F(p_f, _B1X), F(p_f, _B1Y), F(p_f, _B1Z),
-	       F(p_f, _RR2), F(p_f, _RV2X), F(p_f, _RV2Y), F(p_f, _RV2Z), F(p_f, _UU2),
-	       F(p_f, _B2X), F(p_f, _B2Y), F(p_f, _B2Z),
-	       F(p_f, _RR), F(p_f, _VX), F(p_f, _VY), F(p_f, _VZ), F(p_f, _PP),
-	       F(p_f, _CMSV), F(p_f, _YMASK), F(p_f, _ZMASK), F(p_f, _RMASK),
-	       F(p_f, _FLX), F(p_f, _FLY), F(p_f, _FLZ),
-	       F(p_f, _TMP1), F(p_f, _TMP2), F(p_f, _TMP3), F(p_f, _RESIS),
+  pushpred_F77(F(s_p_f, _RR1), F(s_p_f, _RV1X), F(s_p_f, _RV1Y), F(s_p_f, _RV1Z), F(s_p_f, _UU1),
+	       F(s_p_f, _B1X), F(s_p_f, _B1Y), F(s_p_f, _B1Z),
+	       F(s_p_f, _RR2), F(s_p_f, _RV2X), F(s_p_f, _RV2Y), F(s_p_f, _RV2Z), F(s_p_f, _UU2),
+	       F(s_p_f, _B2X), F(s_p_f, _B2Y), F(s_p_f, _B2Z),
+	       F(s_p_f, _RR), F(s_p_f, _VX), F(s_p_f, _VY), F(s_p_f, _VZ), F(s_p_f, _PP),
+	       F(s_p_f, _CMSV), F(s_p_f, _YMASK), F(s_p_f, _ZMASK), F(s_p_f, _RMASK),
+	       F(s_p_f, _FLX), F(s_p_f, _FLY), F(s_p_f, _FLZ),
+	       F(s_p_f, _TMP1), F(s_p_f, _TMP2), F(s_p_f, _TMP3), F(s_p_f, _RESIS),
 	       &dt, &s_mhd_time);
 }
 
 static void
-patch_pushcorr_fortran(fld3d_t p_f, mrc_fld_data_t dt)
+patch_pushcorr_fortran(mrc_fld_data_t dt)
 {
-  pushcorr_F77(F(p_f, _RR1), F(p_f, _RV1X), F(p_f, _RV1Y), F(p_f, _RV1Z), F(p_f, _UU1),
-	       F(p_f, _B1X), F(p_f, _B1Y), F(p_f, _B1Z),
-	       F(p_f, _RR2), F(p_f, _RV2X), F(p_f, _RV2Y), F(p_f, _RV2Z), F(p_f, _UU2),
-	       F(p_f, _B2X), F(p_f, _B2Y), F(p_f, _B2Z),
-	       F(p_f, _RR), F(p_f, _VX), F(p_f, _VY), F(p_f, _VZ), F(p_f, _PP),
-	       F(p_f, _CMSV), F(p_f, _YMASK), F(p_f, _ZMASK), F(p_f, _RMASK),
-	       F(p_f, _FLX), F(p_f, _FLY), F(p_f, _FLZ),
-	       F(p_f, _TMP1), F(p_f, _TMP2), F(p_f, _TMP3), F(p_f, _RESIS),
+  pushcorr_F77(F(s_p_f, _RR1), F(s_p_f, _RV1X), F(s_p_f, _RV1Y), F(s_p_f, _RV1Z), F(s_p_f, _UU1),
+	       F(s_p_f, _B1X), F(s_p_f, _B1Y), F(s_p_f, _B1Z),
+	       F(s_p_f, _RR2), F(s_p_f, _RV2X), F(s_p_f, _RV2Y), F(s_p_f, _RV2Z), F(s_p_f, _UU2),
+	       F(s_p_f, _B2X), F(s_p_f, _B2Y), F(s_p_f, _B2Z),
+	       F(s_p_f, _RR), F(s_p_f, _VX), F(s_p_f, _VY), F(s_p_f, _VZ), F(s_p_f, _PP),
+	       F(s_p_f, _CMSV), F(s_p_f, _YMASK), F(s_p_f, _ZMASK), F(s_p_f, _RMASK),
+	       F(s_p_f, _FLX), F(s_p_f, _FLY), F(s_p_f, _FLZ),
+	       F(s_p_f, _TMP1), F(s_p_f, _TMP2), F(s_p_f, _TMP3), F(s_p_f, _RESIS),
 	       &dt, &s_mhd_time);
 }
 
 static void
-patch_push_fortran(fld3d_t p_f, mrc_fld_data_t dt, int stage)
+patch_push_fortran(mrc_fld_data_t dt, int stage)
 {
   if (stage == 0) {
-    patch_pushpred_fortran(p_f, dt);
+    patch_pushpred_fortran(dt);
   } else {
-    patch_pushcorr_fortran(p_f, dt);
+    patch_pushcorr_fortran(dt);
   }
 }
 
@@ -109,10 +109,10 @@ patch_push(fld3d_t p_Unext, fld3d_t p_Uprev, fld3d_t p_Ucurr,
 
   if (opt_mhd_push == OPT_MHD_C) {
     patch_push_c(p_Unext, p_Uprev, p_Ucurr, p_W, p_cmsv,
-		 p_ymask, p_zmask, p_f, dt, stage);
+		 p_ymask, p_zmask, dt, stage);
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
   } else if (opt_mhd_push == OPT_MHD_FORTRAN) {
-    patch_push_fortran(p_f, dt, stage);
+    patch_push_fortran(dt, stage);
 #endif
   } else {
     assert(0);

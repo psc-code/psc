@@ -217,7 +217,7 @@ limit1_c(fld3d_t p_U, int m, fld3d_t p_C)
 static void
 pushfv_c(fld3d_t p_Unext, fld3d_t p_Uprev, fld3d_t p_Ucurr, int m, 
 	 fld3d_t p_Wcurr, fld3d_t p_cmsv, fld3d_t p_ymask, mrc_fld_data_t dt,
-	 bool limit, fld3d_t p_B, fld3d_t p_f)
+	 bool limit, fld3d_t p_B)
 {
   fld3d_t p_Ffc = fld3d_make_tmp(3, _FLX), p_Fcc = fld3d_make_tmp(3, _TMP1), p_C = fld3d_make_tmp(3, _CX);
 
@@ -253,7 +253,7 @@ pushpp_c(fld3d_t p_Unext, fld3d_t p_W, fld3d_t p_zmask, mrc_fld_data_t dt)
 static void
 patch_pushfluid_c(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Uprev,
 		  fld3d_t p_Ucurr, fld3d_t p_W, fld3d_t p_cmsv, fld3d_t p_ymask,
-		  fld3d_t p_zmask, fld3d_t p_f, int stage)
+		  fld3d_t p_zmask, int stage)
 {
   fld3d_t p_B = fld3d_make_tmp(3, _BX);
   bool limit = stage != 0;
@@ -265,11 +265,11 @@ patch_pushfluid_c(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Uprev,
     limit1_c(p_W, PP, p_B);
   }
 
-  pushfv_c(p_Unext, p_Uprev, p_Ucurr, RR , p_W, p_cmsv, p_ymask, dt, limit, p_B, p_f);
-  pushfv_c(p_Unext, p_Uprev, p_Ucurr, RVX, p_W, p_cmsv, p_ymask, dt, limit, p_B, p_f);
-  pushfv_c(p_Unext, p_Uprev, p_Ucurr, RVY, p_W, p_cmsv, p_ymask, dt, limit, p_B, p_f);
-  pushfv_c(p_Unext, p_Uprev, p_Ucurr, RVZ, p_W, p_cmsv, p_ymask, dt, limit, p_B, p_f);
-  pushfv_c(p_Unext, p_Uprev, p_Ucurr, UU , p_W, p_cmsv, p_ymask, dt, limit, p_B, p_f);
+  pushfv_c(p_Unext, p_Uprev, p_Ucurr, RR , p_W, p_cmsv, p_ymask, dt, limit, p_B);
+  pushfv_c(p_Unext, p_Uprev, p_Ucurr, RVX, p_W, p_cmsv, p_ymask, dt, limit, p_B);
+  pushfv_c(p_Unext, p_Uprev, p_Ucurr, RVY, p_W, p_cmsv, p_ymask, dt, limit, p_B);
+  pushfv_c(p_Unext, p_Uprev, p_Ucurr, RVZ, p_W, p_cmsv, p_ymask, dt, limit, p_B);
+  pushfv_c(p_Unext, p_Uprev, p_Ucurr, UU , p_W, p_cmsv, p_ymask, dt, limit, p_B);
 
   pushpp_c(p_Unext, p_W, p_zmask, dt);
 }
@@ -298,32 +298,32 @@ void pushfluid2_F77(real *rr1, real *rv1x, real *rv1y, real *rv1z, real *uu1,
 		    real *dth, real *time);
 
 static void
-patch_pushfluid1_fortran(fld3d_t p_f, mrc_fld_data_t dth)
+patch_pushfluid1_fortran(mrc_fld_data_t dth)
 {
-  pushfluid1_F77(F(p_f, _RR1), F(p_f, _RV1X), F(p_f, _RV1Y), F(p_f, _RV1Z), F(p_f, _UU1),
-		 F(p_f, _RR2), F(p_f, _RV2X), F(p_f, _RV2Y), F(p_f, _RV2Z), F(p_f, _UU2),
-		 F(p_f, _RR), F(p_f, _VX), F(p_f, _VY), F(p_f, _VZ), F(p_f, _PP),
-		 F(p_f, _YMASK), F(p_f, _ZMASK), F(p_f, _CMSV),
+  pushfluid1_F77(F(s_p_f, _RR1), F(s_p_f, _RV1X), F(s_p_f, _RV1Y), F(s_p_f, _RV1Z), F(s_p_f, _UU1),
+		 F(s_p_f, _RR2), F(s_p_f, _RV2X), F(s_p_f, _RV2Y), F(s_p_f, _RV2Z), F(s_p_f, _UU2),
+		 F(s_p_f, _RR), F(s_p_f, _VX), F(s_p_f, _VY), F(s_p_f, _VZ), F(s_p_f, _PP),
+		 F(s_p_f, _YMASK), F(s_p_f, _ZMASK), F(s_p_f, _CMSV),
 		 &dth);
 }
 
 static void
-patch_pushfluid2_fortran(fld3d_t p_f, mrc_fld_data_t dth)
+patch_pushfluid2_fortran(mrc_fld_data_t dth)
 {
-  pushfluid2_F77(F(p_f, _RR1), F(p_f, _RV1X), F(p_f, _RV1Y), F(p_f, _RV1Z), F(p_f, _UU1),
-		 F(p_f, _RR2), F(p_f, _RV2X), F(p_f, _RV2Y), F(p_f, _RV2Z), F(p_f, _UU2),
-		 F(p_f, _RR), F(p_f, _VX), F(p_f, _VY), F(p_f, _VZ), F(p_f, _PP),
-		 F(p_f, _YMASK), F(p_f, _ZMASK), F(p_f, _CMSV),
+  pushfluid2_F77(F(s_p_f, _RR1), F(s_p_f, _RV1X), F(s_p_f, _RV1Y), F(s_p_f, _RV1Z), F(s_p_f, _UU1),
+		 F(s_p_f, _RR2), F(s_p_f, _RV2X), F(s_p_f, _RV2Y), F(s_p_f, _RV2Z), F(s_p_f, _UU2),
+		 F(s_p_f, _RR), F(s_p_f, _VX), F(s_p_f, _VY), F(s_p_f, _VZ), F(s_p_f, _PP),
+		 F(s_p_f, _YMASK), F(s_p_f, _ZMASK), F(s_p_f, _CMSV),
 		 &dth, &s_mhd_time);
 }
 
 static void
-patch_pushfluid_fortran(fld3d_t p_f, mrc_fld_data_t dt, int stage)
+patch_pushfluid_fortran(mrc_fld_data_t dt, int stage)
 {
   if (stage == 0) {
-    patch_pushfluid1_fortran(p_f, dt);
+    patch_pushfluid1_fortran(dt);
   } else {
-    patch_pushfluid2_fortran(p_f, dt);
+    patch_pushfluid2_fortran(dt);
   }
 }
 
@@ -335,16 +335,16 @@ patch_pushfluid_fortran(fld3d_t p_f, mrc_fld_data_t dt, int stage)
 static void _mrc_unused
 patch_pushfluid(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Uprev,
 		fld3d_t p_Ucurr, fld3d_t p_W, fld3d_t p_cmsv, fld3d_t p_ymask,
-		fld3d_t p_zmask, fld3d_t p_f, int stage)
+		fld3d_t p_zmask, int stage)
 {
   int opt_mhd_pushfluid = stage ? s_opt_mhd_pushfluid2 : s_opt_mhd_pushfluid1;
 
   if (opt_mhd_pushfluid == OPT_MHD_C) {
     patch_pushfluid_c(p_Unext, dt, p_Uprev, p_Ucurr, p_W,
-		      p_cmsv, p_ymask, p_zmask, p_f, stage);
+		      p_cmsv, p_ymask, p_zmask, stage);
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
   } else if (opt_mhd_pushfluid == OPT_MHD_FORTRAN) {
-    patch_pushfluid_fortran(p_f, dt, stage);
+    patch_pushfluid_fortran(dt, stage);
 #endif
   } else {
     assert(0);
