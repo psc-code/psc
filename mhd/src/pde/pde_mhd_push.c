@@ -3,32 +3,45 @@
 #include "pde/pde_mhd_pushfluid.c"
 #include "pde/pde_mhd_pushfield.c"
 
-// ======================================================================
-// patch_pushpred
-
 // ----------------------------------------------------------------------
-// patch_pushpred_c
+// patch_push_c
 
 static void
-patch_pushpred_c(fld3d_t p_f, mrc_fld_data_t dt)
+patch_push_c(fld3d_t p_f, mrc_fld_data_t dt, int stage)
 {
-  mrc_fld_data_t dth = .5f * dt;
-
-  patch_rmaskn(p_f);
-  patch_pushfluid1(p_f, dth);
-  patch_pushfield1(p_f, dth);
+  if (stage == 0) {
+    mrc_fld_data_t dth = .5f * dt;
+    
+    patch_rmaskn(p_f);
+    patch_pushfluid1(p_f, dth);
+    patch_pushfield(p_f, dth, 0);
+  } else {
+    patch_rmaskn(p_f);
+    patch_pushfluid2(p_f, dt);
+    patch_pushfield(p_f, dt, 1);
+  }
 }
 
 // ----------------------------------------------------------------------
-// patch_pushpred_fortran
+// patch_push_fortran
 
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
 
 #include "pde/pde_fortran.h"
 
 #define pushpred_F77 F77_FUNC(pushpred,PUSHPRED)
+#define pushcorr_F77 F77_FUNC(pushcorr,PUSHCORR)
 
 void pushpred_F77(real *rr1, real *rv1x, real *rv1y, real *rv1z, real *uu1,
+		  real *b1x, real *b1y, real *b1z,
+		  real *rr2, real *rv2x, real *rv2y, real *rv2z, real *uu2,
+		  real *b2x, real *b2y, real *b2z,
+		  real *rr, real *vx, real *vy, real *vz, real *pp,
+		  real *cmsv, real *ymask, real *zmask, real *rmask,
+		  real *flx, real *fly, real *flz,
+		  real *tmp1, real *tmp2, real *tmp3, real *resis,
+		  real *dt, real *time);
+void pushcorr_F77(real *rr1, real *rv1x, real *rv1y, real *rv1z, real *uu1,
 		  real *b1x, real *b1y, real *b1z,
 		  real *rr2, real *rv2x, real *rv2y, real *rv2z, real *uu2,
 		  real *b2x, real *b2y, real *b2z,
@@ -52,58 +65,6 @@ patch_pushpred_fortran(fld3d_t p_f, mrc_fld_data_t dt)
 	       &dt, &s_mhd_time);
 }
 
-#endif
-
-// ----------------------------------------------------------------------
-// patch_pushpred
-
-static void
-patch_pushpred(fld3d_t p_f, mrc_fld_data_t dt)
-{
-  if (s_opt_mhd_pushpred == OPT_MHD_C) {
-    patch_pushpred_c(p_f, dt);
-#if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
-  } else if (s_opt_mhd_pushpred == OPT_MHD_FORTRAN) {
-    patch_pushpred_fortran(p_f, dt);
-#endif
-  } else {
-    assert(0);
-  }
-}
-
-// ======================================================================
-// patch_pushcorr
-
-// ----------------------------------------------------------------------
-// patch_pushcorr_c
-
-static void
-patch_pushcorr_c(fld3d_t p_f, mrc_fld_data_t dt)
-{
-  patch_rmaskn(p_f);
-  patch_pushfluid2(p_f, dt);
-  patch_pushfield2(p_f, dt);
-}
-
-// ----------------------------------------------------------------------
-// patch_pushcorr_fortran
-
-#if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
-
-#include "pde/pde_fortran.h"
-
-#define pushcorr_F77 F77_FUNC(pushcorr,PUSHCORR)
-
-void pushcorr_F77(real *rr1, real *rv1x, real *rv1y, real *rv1z, real *uu1,
-		  real *b1x, real *b1y, real *b1z,
-		  real *rr2, real *rv2x, real *rv2y, real *rv2z, real *uu2,
-		  real *b2x, real *b2y, real *b2z,
-		  real *rr, real *vx, real *vy, real *vz, real *pp,
-		  real *cmsv, real *ymask, real *zmask, real *rmask,
-		  real *flx, real *fly, real *flz,
-		  real *tmp1, real *tmp2, real *tmp3, real *resis,
-		  real *dt, real *time);
-
 static void
 patch_pushcorr_fortran(fld3d_t p_f, mrc_fld_data_t dt)
 {
@@ -118,19 +79,31 @@ patch_pushcorr_fortran(fld3d_t p_f, mrc_fld_data_t dt)
 	       &dt, &s_mhd_time);
 }
 
+static void
+patch_push_fortran(fld3d_t p_f, mrc_fld_data_t dt, int stage)
+{
+  if (stage == 0) {
+    patch_pushpred_fortran(p_f, dt);
+  } else {
+    patch_pushcorr_fortran(p_f, dt);
+  }
+}
+
 #endif
 
 // ----------------------------------------------------------------------
-// patch_pushcorr
+// patch_push
 
 static void
-patch_pushcorr(fld3d_t p_f, mrc_fld_data_t dt)
+patch_push(fld3d_t p_f, mrc_fld_data_t dt, int stage)
 {
-  if (s_opt_mhd_pushcorr == OPT_MHD_C) {
-    patch_pushcorr_c(p_f, dt);
+  int opt_mhd_push = stage ? s_opt_mhd_pushpred : s_opt_mhd_pushcorr;
+
+  if (opt_mhd_push == OPT_MHD_C) {
+    patch_push_c(p_f, dt, stage);
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
-  } else if (s_opt_mhd_pushcorr == OPT_MHD_FORTRAN) {
-    patch_pushcorr_fortran(p_f, dt);
+  } else if (opt_mhd_push == OPT_MHD_FORTRAN) {
+    patch_push_fortran(p_f, dt, stage);
 #endif
   } else {
     assert(0);
@@ -165,10 +138,6 @@ patch_pushstage(fld3d_t p_f, mrc_fld_data_t dt, int stage)
     patch_zmaskn(p_zmask, p_W, p_bcc, p_ymask);
   }
 
-  if (stage == 0) { // predictor
-    patch_pushpred(p_f, dt);
-  } else {
-    patch_pushcorr(p_f, dt);
-  }
+  patch_push(p_f, dt, stage);
 }
 

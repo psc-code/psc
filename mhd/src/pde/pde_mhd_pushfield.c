@@ -58,22 +58,23 @@ patch_pushfield_c(fld3d_t p_f, mrc_fld_data_t dt, int stage)
 }
 
 // ----------------------------------------------------------------------
-// patch_pushfield1_c
-
-static void
-patch_pushfield1_c(fld3d_t p_f, mrc_fld_data_t dt)
-{
-  patch_pushfield_c(p_f, dt, 0);
-}
-
-// ----------------------------------------------------------------------
-// patch_pushfield1_fortran
+// patch_pushfield_fortran
 
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
 
 #define pushfield1_F77 F77_FUNC(pushfield1,PUSHFIELD1)
+#define pushfield2_F77 F77_FUNC(pushfield2,PUSHFIELD2)
 
 void pushfield1_F77(real *rr1, real *rv1x, real *rv1y, real *rv1z, real *uu1,
+		    real *b1x, real *b1y, real *b1z,
+		    real *rr2, real *rv2x, real *rv2y, real *rv2z, real *uu2,
+		    real *b2x, real *b2y, real *b2z,
+		    real *rr, real *vx, real *vy, real *vz, real *pp,
+		    real *cmsv, real *ymask, real *zmask, real *rmask,
+		    real *flx, real *fly, real *flz,
+		    real *tmp1, real *tmp2, real *tmp3, real *resis,
+		    real *dth, real *time);
+void pushfield2_F77(real *rr1, real *rv1x, real *rv1y, real *rv1z, real *uu1,
 		    real *b1x, real *b1y, real *b1z,
 		    real *rr2, real *rv2x, real *rv2y, real *rv2z, real *uu2,
 		    real *b2x, real *b2y, real *b2z,
@@ -97,53 +98,6 @@ patch_pushfield1_fortran(fld3d_t p_f, mrc_fld_data_t dt)
 		 &dt, &s_mhd_time);
 }
 
-#endif
-
-// ----------------------------------------------------------------------
-// patch_pushfield1
-
-static void _mrc_unused
-patch_pushfield1(fld3d_t p_f, mrc_fld_data_t dt)
-{
-  if (s_opt_mhd_pushfield1 == OPT_MHD_C) {
-    patch_pushfield1_c(p_f, dt);
-#if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
-  } else if (s_opt_mhd_pushfield1 == OPT_MHD_FORTRAN) {
-    patch_pushfield1_fortran(p_f, dt);
-#endif
-  } else {
-    assert(0);
-  }
-}
-
-// ======================================================================
-
-// ----------------------------------------------------------------------
-// patch_pushfield2_c
-
-static void
-patch_pushfield2_c(fld3d_t p_f, mrc_fld_data_t dt)
-{
-  patch_pushfield_c(p_f, dt, 1);
-}
-
-// ----------------------------------------------------------------------
-// patch_pushfield2_fortran
-
-#if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
-
-#define pushfield2_F77 F77_FUNC(pushfield2,PUSHFIELD2)
-
-void pushfield2_F77(real *rr1, real *rv1x, real *rv1y, real *rv1z, real *uu1,
-		    real *b1x, real *b1y, real *b1z,
-		    real *rr2, real *rv2x, real *rv2y, real *rv2z, real *uu2,
-		    real *b2x, real *b2y, real *b2z,
-		    real *rr, real *vx, real *vy, real *vz, real *pp,
-		    real *cmsv, real *ymask, real *zmask, real *rmask,
-		    real *flx, real *fly, real *flz,
-		    real *tmp1, real *tmp2, real *tmp3, real *resis,
-		    real *dth, real *time);
-
 static void
 patch_pushfield2_fortran(fld3d_t p_f, mrc_fld_data_t dt)
 {
@@ -158,19 +112,34 @@ patch_pushfield2_fortran(fld3d_t p_f, mrc_fld_data_t dt)
 		 &dt, &s_mhd_time);
 }
 
+// ----------------------------------------------------------------------
+// patch_pushfield_fortran
+
+static void _mrc_unused
+patch_pushfield_fortran(fld3d_t p_f, mrc_fld_data_t dt, int stage)
+{
+  if (stage == 0) {
+    patch_pushfield1_fortran(p_f, dt);
+  } else {
+    patch_pushfield2_fortran(p_f, dt);
+  }
+}
+
 #endif
 
 // ----------------------------------------------------------------------
-// patch_pushfield2
+// patch_pushfield
 
 static void _mrc_unused
-patch_pushfield2(fld3d_t p_f, mrc_fld_data_t dt)
+patch_pushfield(fld3d_t p_f, mrc_fld_data_t dt, int stage)
 {
-  if (s_opt_mhd_pushfield2 == OPT_MHD_C) {
-    patch_pushfield2_c(p_f, dt);
+  int opt_mhd_pushfield = stage ? s_opt_mhd_pushfield2 : s_opt_mhd_pushfield1;
+
+  if (opt_mhd_pushfield == OPT_MHD_C) {
+    patch_pushfield_c(p_f, dt, stage);
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
-  } else if (s_opt_mhd_pushfield2 == OPT_MHD_FORTRAN) {
-    patch_pushfield2_fortran(p_f, dt);
+  } else if (opt_mhd_pushfield == OPT_MHD_FORTRAN) {
+    patch_pushfield_fortran(p_f, dt, stage);
 #endif
   } else {
     assert(0);
