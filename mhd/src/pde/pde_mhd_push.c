@@ -9,17 +9,14 @@
 static void
 patch_push_c(fld3d_t p_f, mrc_fld_data_t dt, int stage)
 {
+  patch_rmaskn(p_f);
+
   if (stage == 0) {
-    mrc_fld_data_t dth = .5f * dt;
-    
-    patch_rmaskn(p_f);
-    patch_pushfluid1(p_f, dth);
-    patch_pushfield(p_f, dth, 0);
-  } else {
-    patch_rmaskn(p_f);
-    patch_pushfluid2(p_f, dt);
-    patch_pushfield(p_f, dt, 1);
+    dt *= .5f;
   }
+
+  patch_pushfluid(p_f, dt, stage);
+  patch_pushfield(p_f, dt, stage);
 }
 
 // ----------------------------------------------------------------------
