@@ -26,56 +26,14 @@
 
 #include "pde/pde_setup.c"
 #include "pde/pde_mhd_setup.c"
+#include "pde/pde_mhd_compat.c"
+#include "pde/pde_mhd_get_dt.c"
+#include "pde/pde_mhd_push.c"
 
 // TODO:
 // - handle remaining resistivity models
 // - handle limit2, limit3
 // - handle lowmask
-
-static mrc_fld_data_t s_mhd_time;
-
-static float *s_fd1x, *s_fd1y, *s_fd1z;
-
-#define FX1X(ix) PDE_CRDX_CC(ix)
-#define FX1Y(iy) PDE_CRDY_CC(iy)
-#define FX1Z(iz) PDE_CRDZ_CC(iz)
-
-#define FX2X(ix) (sqr(FX1X(ix)))
-#define FX2Y(iy) (sqr(FX1Y(iy)))
-#define FX2Z(iz) (sqr(FX1Z(iz)))
-
-// FD1 is really different if 'legacy_fd1' is used
-#if 1
-#define FD1X(ix) (s_fd1x[ix])
-#define FD1Y(iy) (s_fd1y[iy])
-#define FD1Z(iz) (s_fd1z[iz])
-#else
-#define FD1X(ix) PDE_INV_DX(ix)
-#define FD1Y(iy) PDE_INV_DY(iy)
-#define FD1Z(iz) PDE_INV_DZ(iz)
-#endif
-
-#define BD1X(ix) PDE_INV_DXF(ix+1)
-#define BD1Y(iy) PDE_INV_DYF(iy+1)
-#define BD1Z(iz) PDE_INV_DZF(iz+1)
-
-#define BD2X(ix) PDE_DX(ix)
-#define BD2Y(iy) PDE_DY(iy)
-#define BD2Z(iz) PDE_DZ(iz)
-
-#define BD3X(ix) PDE_INV_DX(ix)
-#define BD3Y(iy) PDE_INV_DY(iy)
-#define BD3Z(iz) PDE_INV_DZ(iz)
-
-#define BD4X(ix) BD1X(ix)
-#define BD4Y(iy) BD1Y(iy)
-#define BD4Z(iz) BD1Z(iz)
-
-// FIXME, this is here, because it uses FD1X etc,
-// so it either shouldn't, or we put the macros above into some pde_* compat file
-
-#include "pde/pde_mhd_get_dt.c"
-#include "pde/pde_mhd_push.c"
 
 // ======================================================================
 // ggcm_mhd_step subclass "c"
