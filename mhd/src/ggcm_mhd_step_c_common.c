@@ -135,7 +135,14 @@ ggcm_mhd_step_c_destroy(struct ggcm_mhd_step *step)
   mrc_fld_destroy(step->mhd->ymask);
 }
 
-void ggcm_mhd_step_legacy_dt_post(struct ggcm_mhd_step *step, float dtn); // FIXME
+// ----------------------------------------------------------------------
+// ggcm_mhd_step_c_get_dt
+
+static double
+ggcm_mhd_step_c_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
+{
+  return pde_mhd_get_dt_scons_ggcm(step->mhd, x);
+}
 
 // ----------------------------------------------------------------------
 // ggcm_mhd_step_c_run
@@ -147,13 +154,6 @@ ggcm_mhd_step_c_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
   assert(x == mhd->fld);
 
-  float dtn = 0.f;
-  if (step->do_nwst) {
-    dtn = pde_mhd_get_dt_scons_ggcm(mhd, x);
-    // yes, mhd->dt isn't set to dtn until the end of the step... this
-    // is what the fortran code did
-  }
-
   // FIXME? It's not going to make a difference, but this is the
   // time at the beginning of the whole step, rather than the time of the current state
   s_mhd_time = mhd->time; 
@@ -163,12 +163,6 @@ ggcm_mhd_step_c_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
   ggcm_mhd_fill_ghosts(mhd, x, _RR2, mhd->time + mhd->bndt);
   pde_mhd_pushstage(x, mhd->dt, 1);
-
-  if (step->do_nwst) {
-    if (step->legacy_dt_handling) {
-      ggcm_mhd_step_legacy_dt_post(step, dtn);
-    }
-  }
 }
 
 // ----------------------------------------------------------------------
@@ -274,6 +268,7 @@ struct ggcm_mhd_step_ops ggcm_mhd_step_c_ops = {
   .setup               = ggcm_mhd_step_c_setup,
   .destroy             = ggcm_mhd_step_c_destroy,
   .setup_flds          = ggcm_mhd_step_c_setup_flds,
+  .get_dt              = ggcm_mhd_step_c_get_dt,
   .run                 = ggcm_mhd_step_c_run,
   .get_e_ec            = ggcm_mhd_step_c_get_e_ec,
   .diag_item_zmask_run = ggcm_mhd_step_c_diag_item_zmask_run,

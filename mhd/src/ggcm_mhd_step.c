@@ -157,50 +157,6 @@ ggcm_mhd_step_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_step_run_predcorr
-//
-// library-type function to be used by ggcm_mhd_step subclasses that
-// implement the OpenGGCM predictor-corrector scheme
-
-void
-ggcm_mhd_step_run_predcorr(struct ggcm_mhd_step *step, struct mrc_fld *x)
-{
-  static int PR_push;
-  if (!PR_push) {
-    PR_push = prof_register("ggcm_mhd_step_run_predcorr", 1., 0, 0);
-  }
-
-  prof_start(PR_push);
-
-  struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
-  struct ggcm_mhd *mhd = step->mhd;
-
-  float dtn;
-  if (step->do_nwst) {
-    assert(ops && ops->newstep);
-    ops->newstep(step, &dtn);
-    // yes, dtn isn't set to mhd->dt until the end of the step... this
-    // is what the fortran code did
-  }
-
-  ggcm_mhd_fill_ghosts(mhd, x, _RR1, mhd->time);
-  assert(ops && ops->pred);
-  ops->pred(step);
-
-  ggcm_mhd_fill_ghosts(mhd, x, _RR2, mhd->time + mhd->bndt);
-  assert(ops && ops->corr);
-  ops->corr(step);
-
-  if (step->do_nwst) {
-    if (step->legacy_dt_handling) {
-      ggcm_mhd_step_legacy_dt_post(step, dtn);
-    }
-  }
-
-  prof_stop(PR_push);
-}
-
-// ----------------------------------------------------------------------
 // ggcm_mhd_step_has_calc_rhs
 
 bool

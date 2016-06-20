@@ -749,17 +749,17 @@ pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_prev, int m_curr, int
 // ie., including primvar() etc.
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_step_c2_newstep
+// ggcm_mhd_step_c2_get_dt
 
-static void
-ggcm_mhd_step_c2_newstep(struct ggcm_mhd_step *step, float *dtn)
+static double
+ggcm_mhd_step_c2_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
 {
   struct ggcm_mhd *mhd = step->mhd;
 
-  ggcm_mhd_fill_ghosts(mhd, mhd->fld, _RR1, mhd->time);
-  zmaskn(mhd, mhd->fld, _ZMASK, mhd->fld, _YMASK, mhd->fld);
+  ggcm_mhd_fill_ghosts(mhd, x, _RR1, mhd->time);
+  zmaskn(mhd, mhd->fld, _ZMASK, x, _YMASK, mhd->fld);
   // assert(strcmp(mrc_fld_type(mhd->fld), "float") == 0);
-  *dtn = pde_mhd_get_dt_scons(mhd, mhd->fld, mhd->fld, _ZMASK);
+  return pde_mhd_get_dt_scons(mhd, x, x, _ZMASK);
 }
 
 // ----------------------------------------------------------------------
@@ -801,6 +801,23 @@ ggcm_mhd_step_c2_corr(struct ggcm_mhd_step *step)
   // --- check for NaNs and small density
   // (still controlled by do_badval_checks)
   badval_checks_sc(step->mhd, step->mhd->fld, step->mhd->fld);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_step_c2_run
+
+static void
+ggcm_mhd_step_c2_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
+{
+  struct ggcm_mhd *mhd = step->mhd;
+
+  assert(x == mhd->fld);
+
+  ggcm_mhd_fill_ghosts(mhd, x, _RR1, mhd->time);
+  ggcm_mhd_step_c2_pred(step);
+
+  ggcm_mhd_fill_ghosts(mhd, x, _RR2, mhd->time + mhd->bndt);
+  ggcm_mhd_step_c2_corr(step);
 }
 
 // ----------------------------------------------------------------------
@@ -889,10 +906,8 @@ ggcm_mhd_step_c2_diag_item_rmask_run(struct ggcm_mhd_step *step,
 
 struct ggcm_mhd_step_ops ggcm_mhd_step_c2_ops = {
   .name                = ggcm_mhd_step_c2_name,
-  .newstep             = ggcm_mhd_step_c2_newstep,
-  .pred                = ggcm_mhd_step_c2_pred,
-  .corr                = ggcm_mhd_step_c2_corr,
-  .run                 = ggcm_mhd_step_run_predcorr,
+  .get_dt              = ggcm_mhd_step_c2_get_dt,
+  .run                 = ggcm_mhd_step_c2_run,
   .setup               = ggcm_mhd_step_c2_setup,
   .setup_flds          = ggcm_mhd_step_c2_setup_flds,
   .get_e_ec            = ggcm_mhd_step_c2_get_e_ec,
