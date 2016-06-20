@@ -254,25 +254,12 @@ pushpp_c(fld3d_t p_Unext, fld3d_t p_W, fld3d_t p_zmask, mrc_fld_data_t dt)
 }
 
 static void
-patch_pushfluid_c(fld3d_t p_f, mrc_fld_data_t dt, int stage)
+patch_pushfluid_c(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Uprev,
+		  fld3d_t p_Ucurr, fld3d_t p_W, fld3d_t p_cmsv, fld3d_t p_ymask,
+		  fld3d_t p_zmask, fld3d_t p_f, int stage)
 {
-  fld3d_t p_Unext, p_Uprev, p_Ucurr;
-  if (stage == 0) {
-    fld3d_setup_view(&p_Unext, p_f, _RR2);
-    fld3d_setup_view(&p_Uprev, p_f, _RR1);
-    fld3d_setup_view(&p_Ucurr, p_f, _RR1);
-  } else {
-    fld3d_setup_view(&p_Unext, p_f, _RR1);
-    fld3d_setup_view(&p_Uprev, p_f, _RR1);
-    fld3d_setup_view(&p_Ucurr, p_f, _RR2);
-  }
   fld3d_t p_B;
   fld3d_setup_view(&p_B    , p_f, _BX);
-  fld3d_t p_W, p_cmsv, p_ymask, p_zmask;
-  fld3d_setup_view(&p_W    , p_f, _RR);
-  fld3d_setup_view(&p_cmsv , p_f, _CMSV);
-  fld3d_setup_view(&p_ymask, p_f, _YMASK);
-  fld3d_setup_view(&p_zmask, p_f, _ZMASK);
 
   int limit = stage == 0 ? LIMIT_NONE : LIMIT_1;
 
@@ -353,10 +340,27 @@ patch_pushfluid_fortran(fld3d_t p_f, mrc_fld_data_t dt, int stage)
 static void _mrc_unused
 patch_pushfluid(fld3d_t p_f, mrc_fld_data_t dt, int stage)
 {
+  fld3d_t p_Unext, p_Uprev, p_Ucurr;
+  fld3d_t p_W, p_cmsv, p_ymask, p_zmask;
+  if (stage == 0) {
+    fld3d_setup_view(&p_Unext, p_f, _RR2);
+    fld3d_setup_view(&p_Uprev, p_f, _RR1);
+    fld3d_setup_view(&p_Ucurr, p_f, _RR1);
+  } else {
+    fld3d_setup_view(&p_Unext, p_f, _RR1);
+    fld3d_setup_view(&p_Uprev, p_f, _RR1);
+    fld3d_setup_view(&p_Ucurr, p_f, _RR2);
+  }
+  fld3d_setup_view(&p_W    , p_f, _RR);
+  fld3d_setup_view(&p_cmsv , p_f, _CMSV);
+  fld3d_setup_view(&p_ymask, p_f, _YMASK);
+  fld3d_setup_view(&p_zmask, p_f, _ZMASK);
+
   int opt_mhd_pushfluid = stage ? s_opt_mhd_pushfluid2 : s_opt_mhd_pushfluid1;
 
   if (opt_mhd_pushfluid == OPT_MHD_C) {
-    patch_pushfluid_c(p_f, dt, stage);
+    patch_pushfluid_c(p_Unext, dt, p_Uprev, p_Ucurr, p_W,
+		      p_cmsv, p_ymask, p_zmask, p_f, stage);
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
   } else if (opt_mhd_pushfluid == OPT_MHD_FORTRAN) {
     patch_pushfluid_fortran(p_f, dt, stage);
