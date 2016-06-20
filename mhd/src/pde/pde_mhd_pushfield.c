@@ -23,6 +23,12 @@ vgr0(fld3d_t p_f, int m)
 static void
 patch_pushfield1_c(fld3d_t p_f, mrc_fld_data_t dt)
 {
+  fld3d_t p_Unext, p_Ucurr, p_W, p_zmask;
+  fld3d_setup_view(&p_Unext, p_f, _RR2);
+  fld3d_setup_view(&p_Ucurr, p_f, _RR1);
+  fld3d_setup_view(&p_W    , p_f, _RR);
+  fld3d_setup_view(&p_zmask, p_f, _ZMASK);
+
   if (s_magdiffu == MAGDIFFU_NL1) {
     patch_calc_resis_nl1(p_f, _RR1);
     vgr0(p_f, _CURRX);
@@ -35,7 +41,7 @@ patch_pushfield1_c(fld3d_t p_f, mrc_fld_data_t dt)
     patch_calc_resis_const(p_f, _RR1);
   }
 
-  patch_push_ej(p_f, dt, _RR1, _RR2);
+  patch_push_ej(p_Unext, dt, p_Ucurr, p_W, p_zmask, p_f);
   patch_pfie3(p_f, dt, _RR1, _RR1, _RR2);
 }
 
@@ -97,6 +103,12 @@ patch_pushfield1(fld3d_t p_f, mrc_fld_data_t dt)
 static void
 patch_pushfield2_c(fld3d_t p_f, mrc_fld_data_t dt)
 {
+  fld3d_t p_Unext, p_Ucurr, p_W, p_zmask;
+  fld3d_setup_view(&p_Unext, p_f, _RR1);
+  fld3d_setup_view(&p_Ucurr, p_f, _RR2);
+  fld3d_setup_view(&p_W    , p_f, _RR);
+  fld3d_setup_view(&p_zmask, p_f, _ZMASK);
+
   if (s_magdiffu == MAGDIFFU_NL1) {
     patch_calc_resis_nl1(p_f, _RR2);
     vgr0(p_f, _CURRX);
@@ -109,7 +121,7 @@ patch_pushfield2_c(fld3d_t p_f, mrc_fld_data_t dt)
     patch_calc_resis_const(p_f, _RR2);
   }
 
-  patch_push_ej(p_f, dt, _RR2, _RR1);
+  patch_push_ej(p_Unext, dt, p_Ucurr, p_W, p_zmask, p_f);
   patch_pfie3(p_f, dt, _RR1, _RR2, _RR1);
 }
 

@@ -5,68 +5,40 @@
 #include "pde/pde_mhd_calc_current.c"
 
 // ----------------------------------------------------------------------
-// currbb_c
-//
-// cell-averaged B
-
-static void _mrc_unused
-currbb_c(fld3d_t p_f, int m, int m_curr)
-{
-  fld3d_foreach(ix,iy,iz, 1, 1) {
-    F3S(p_f, m+0, ix,iy,iz) = .5f * (F3S(p_f, m_curr + _B1X, ix  ,iy,iz) +
-				     F3S(p_f, m_curr + _B1X, ix-1,iy,iz));
-    F3S(p_f, m+1, ix,iy,iz) = .5f * (F3S(p_f, m_curr + _B1Y, ix,iy  ,iz) +
-				     F3S(p_f, m_curr + _B1Y, ix,iy-1,iz));
-    F3S(p_f, m+2, ix,iy,iz) = .5f * (F3S(p_f, m_curr + _B1Z, ix,iy,iz  ) +
-				     F3S(p_f, m_curr + _B1Z, ix,iy,iz-1));
-  } fld3d_foreach_end;
-}
-
-// ----------------------------------------------------------------------
 // patch_push_ej_c
 
 static void
-patch_push_ej_c(fld3d_t p_f, mrc_fld_data_t dt, int m_curr, int m_next)
+patch_push_ej_c(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Ucurr,
+		fld3d_t p_W, fld3d_t p_zmask, fld3d_t p_f)
 {
-  enum { XJX = _BX, XJY = _BY, XJZ = _BZ };
-  enum { BX = _TMP1, BY = _TMP2, BZ = _TMP3 };
+  fld3d_t p_Jec, p_Bcc;
+  fld3d_setup_view(&p_Jec  , p_f, _BX);
+  fld3d_setup_view(&p_Bcc  , p_f, _TMP1);
 
-  fld3d_t p_Jec, p_U;
-  fld3d_setup_view(&p_Jec, p_f, XJX);
-  fld3d_setup_view(&p_U, p_f, m_curr);
-  patch_calc_current_ec(p_Jec, p_U);
-  currbb_c(p_f, BX, m_curr);
+  patch_calc_current_ec(p_Jec, p_Ucurr);
+  patch_primbb(p_Bcc, p_Ucurr);
 	
   mrc_fld_data_t s1 = .25f * dt;
-  fld3d_foreach(ix,iy,iz, 0, 0) {
-    mrc_fld_data_t z = F3S(p_f,_ZMASK, ix,iy,iz);
+  fld3d_foreach(i,j,k, 0, 0) {
+    mrc_fld_data_t z = F3S(p_zmask, 0, i,j,k);
     mrc_fld_data_t s2 = s1 * z;
-    mrc_fld_data_t cx = (F3S(p_f, XJX, ix  ,iy  ,iz  ) +
-		F3S(p_f, XJX, ix  ,iy-1,iz  ) +
-		F3S(p_f, XJX, ix  ,iy  ,iz-1) +
-		F3S(p_f, XJX, ix  ,iy-1,iz-1));
-    mrc_fld_data_t cy = (F3S(p_f, XJY, ix  ,iy  ,iz  ) +
-		F3S(p_f, XJY, ix-1,iy  ,iz  ) +
-		F3S(p_f, XJY, ix  ,iy  ,iz-1) +
-		F3S(p_f, XJY, ix-1,iy  ,iz-1));
-    mrc_fld_data_t cz = (F3S(p_f, XJZ, ix  ,iy  ,iz  ) +
-		F3S(p_f, XJZ, ix-1,iy  ,iz  ) +
-		F3S(p_f, XJZ, ix  ,iy-1,iz  ) +
-		F3S(p_f, XJZ, ix-1,iy-1,iz  ));
-    mrc_fld_data_t ffx = s2 * (cy * F3S(p_f, BZ, ix,iy,iz) -
-		      cz * F3S(p_f, BY, ix,iy,iz));
-    mrc_fld_data_t ffy = s2 * (cz * F3S(p_f, BX, ix,iy,iz) -
-		      cx * F3S(p_f, BZ, ix,iy,iz));
-    mrc_fld_data_t ffz = s2 * (cx * F3S(p_f, BY, ix,iy,iz) -
-		      cy * F3S(p_f, BX, ix,iy,iz));
-    mrc_fld_data_t duu = (ffx * F3S(p_f, _VX, ix,iy,iz) +
-		 ffy * F3S(p_f, _VY, ix,iy,iz) +
-		 ffz * F3S(p_f, _VZ, ix,iy,iz));
+    mrc_fld_data_t cx = (F3S(p_Jec, 0, i,j  ,k  ) + F3S(p_Jec, 0, i,j-1,k  ) +
+			 F3S(p_Jec, 0, i,j  ,k-1) + F3S(p_Jec, 0, i,j-1,k-1));
+    mrc_fld_data_t cy = (F3S(p_Jec, 1, i  ,j,k  ) + F3S(p_Jec, 1, i-1,j,k  ) +
+			 F3S(p_Jec, 1, i  ,j,k-1) + F3S(p_Jec, 1, i-1,j,k-1));
+    mrc_fld_data_t cz = (F3S(p_Jec, 2, i  ,j  ,k) + F3S(p_Jec, 2, i-1,j  ,k) +
+			 F3S(p_Jec, 2, i  ,j-1,k) + F3S(p_Jec, 2, i-1,j-1,k));
+    mrc_fld_data_t ffx = s2 * (cy * F3S(p_Bcc, 2, i,j,k) - cz * F3S(p_Bcc, 1, i,j,k));
+    mrc_fld_data_t ffy = s2 * (cz * F3S(p_Bcc, 0, i,j,k) - cx * F3S(p_Bcc, 2, i,j,k));
+    mrc_fld_data_t ffz = s2 * (cx * F3S(p_Bcc, 1, i,j,k) - cy * F3S(p_Bcc, 0, i,j,k));
+    mrc_fld_data_t duu = (ffx * F3S(p_W, VX, i,j,k) +
+			  ffy * F3S(p_W, VY, i,j,k) +
+			  ffz * F3S(p_W, VZ, i,j,k));
 
-    F3S(p_f, m_next + _RV1X, ix,iy,iz) += ffx;
-    F3S(p_f, m_next + _RV1Y, ix,iy,iz) += ffy;
-    F3S(p_f, m_next + _RV1Z, ix,iy,iz) += ffz;
-    F3S(p_f, m_next + _UU1 , ix,iy,iz) += duu;
+    F3S(p_Unext, RVX, i,j,k) += ffx;
+    F3S(p_Unext, RVY, i,j,k) += ffy;
+    F3S(p_Unext, RVZ, i,j,k) += ffz;
+    F3S(p_Unext, UU , i,j,k) += duu;
   } fld3d_foreach_end;
 }
 
@@ -83,12 +55,12 @@ void push_ej_F77(real *b1x, real *b1y, real *b1z,
 		 real *dt);
 
 static void
-patch_push_ej_fortran(fld3d_t p_f, mrc_fld_data_t dt, int m_curr, int m_next)
+patch_push_ej_fortran(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Ucurr,
+		      fld3d_t p_W, fld3d_t p_zmask, fld3d_t p_f)
 {
-  push_ej_F77(F(p_f, _B1X + m_curr), F(p_f, _B1Y + m_curr), F(p_f, _B1Z + m_curr),
-	      F(p_f, _RV1X + m_next), F(p_f, _RV1Y + m_next), F(p_f, _RV1Z + m_next),
-	      F(p_f, _UU1 + m_next), 
-	      F(p_f, _ZMASK), F(p_f, _VX), F(p_f, _VY), F(p_f, _VZ), &dt);
+  push_ej_F77(F(p_Ucurr, BX), F(p_Ucurr, BY), F(p_Ucurr, BZ),
+	      F(p_Unext, RVX), F(p_Unext, RVY), F(p_Unext, RVZ), F(p_Unext, UU), 
+	      F(p_zmask, 0), F(p_W, VX), F(p_W, VY), F(p_W, VZ), &dt);
 }
 
 #endif
@@ -97,13 +69,14 @@ patch_push_ej_fortran(fld3d_t p_f, mrc_fld_data_t dt, int m_curr, int m_next)
 // patch_push_ej
 
 static void
-patch_push_ej(fld3d_t p_f, mrc_fld_data_t dt, int m_curr, int m_next)
+patch_push_ej(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Ucurr,
+	      fld3d_t p_W, fld3d_t p_zmask, fld3d_t p_f)
 {
   if (s_opt_mhd_push_ej == OPT_MHD_C) {
-    patch_push_ej_c(p_f, dt, m_curr, m_next);
+    patch_push_ej_c(p_Unext, dt, p_Ucurr, p_W, p_zmask, p_f);
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
   } else if (s_opt_mhd_push_ej == OPT_MHD_FORTRAN) {
-    patch_push_ej_fortran(p_f, dt, m_curr, m_next);
+    patch_push_ej_fortran(p_Unext, dt, p_Ucurr, p_W, p_zmask, p_f);
 #endif
   } else {
     assert(0);

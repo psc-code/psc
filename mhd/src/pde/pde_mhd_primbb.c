@@ -4,6 +4,8 @@
 
 // ----------------------------------------------------------------------
 // patch_primbb_c
+//
+// was also known in Fortran as currbb()
 
 static void
 patch_primbb_c(fld3d_t p_bcc, fld3d_t p_U)
