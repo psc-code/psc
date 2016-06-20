@@ -254,33 +254,27 @@ pushpp_c(fld3d_t p_Unext, fld3d_t p_W, fld3d_t p_zmask, mrc_fld_data_t dt)
 }
 
 static void
-pushfluid_c(fld3d_t p_f, mrc_fld_data_t dt,
-	    int m_prev, int m_curr, int m_next, int limit)
+pushfluid_c(fld3d_t p_Unext, fld3d_t p_Uprev, fld3d_t p_Ucurr, fld3d_t p_W,
+	    fld3d_t p_cmsv, fld3d_t p_ymask, fld3d_t p_zmask,
+	    mrc_fld_data_t dt, int limit, fld3d_t p_f)
 {
-  fld3d_t p_Unext, p_Uprev, p_Ucurr, p_Wcurr, p_cmsv, p_ymask, p_zmask, p_B;
-  fld3d_setup_view(&p_Uprev, p_f, m_prev);
-  fld3d_setup_view(&p_Unext, p_f, m_next);
-  fld3d_setup_view(&p_Ucurr, p_f, m_curr);
-  fld3d_setup_view(&p_Wcurr, p_f, _RR);
-  fld3d_setup_view(&p_cmsv , p_f, _CMSV);
-  fld3d_setup_view(&p_ymask, p_f, _YMASK);
-  fld3d_setup_view(&p_zmask, p_f, _ZMASK);
+  fld3d_t p_B;
   fld3d_setup_view(&p_B    , p_f, _BX);
 
   if (limit != LIMIT_NONE) {
     vgrs(p_B, 0, 0.f); vgrs(p_B, 1, 0.f); vgrs(p_B, 2, 0.f);
     assert(!s_do_limit2);
     assert(!s_do_limit3);
-    limit1_c(p_Wcurr, PP, p_B);
+    limit1_c(p_W, PP, p_B);
   }
 
-  pushfv_c(p_Unext, p_Uprev, p_Ucurr, RR , p_Wcurr, p_cmsv, p_ymask, dt, limit, p_B, p_f);
-  pushfv_c(p_Unext, p_Uprev, p_Ucurr, RVX, p_Wcurr, p_cmsv, p_ymask, dt, limit, p_B, p_f);
-  pushfv_c(p_Unext, p_Uprev, p_Ucurr, RVY, p_Wcurr, p_cmsv, p_ymask, dt, limit, p_B, p_f);
-  pushfv_c(p_Unext, p_Uprev, p_Ucurr, RVZ, p_Wcurr, p_cmsv, p_ymask, dt, limit, p_B, p_f);
-  pushfv_c(p_Unext, p_Uprev, p_Ucurr, UU , p_Wcurr, p_cmsv, p_ymask, dt, limit, p_B, p_f);
+  pushfv_c(p_Unext, p_Uprev, p_Ucurr, RR , p_W, p_cmsv, p_ymask, dt, limit, p_B, p_f);
+  pushfv_c(p_Unext, p_Uprev, p_Ucurr, RVX, p_W, p_cmsv, p_ymask, dt, limit, p_B, p_f);
+  pushfv_c(p_Unext, p_Uprev, p_Ucurr, RVY, p_W, p_cmsv, p_ymask, dt, limit, p_B, p_f);
+  pushfv_c(p_Unext, p_Uprev, p_Ucurr, RVZ, p_W, p_cmsv, p_ymask, dt, limit, p_B, p_f);
+  pushfv_c(p_Unext, p_Uprev, p_Ucurr, UU , p_W, p_cmsv, p_ymask, dt, limit, p_B, p_f);
 
-  pushpp_c(p_Unext, p_Wcurr, p_zmask, dt);
+  pushpp_c(p_Unext, p_W, p_zmask, dt);
 }
 
 // ----------------------------------------------------------------------
@@ -289,7 +283,18 @@ pushfluid_c(fld3d_t p_f, mrc_fld_data_t dt,
 static void
 patch_pushfluid1_c(fld3d_t p_f, mrc_fld_data_t dt)
 {
-  pushfluid_c(p_f, dt, _RR1, _RR1, _RR2, LIMIT_NONE);
+  fld3d_t p_Unext, p_Uprev, p_Ucurr;
+  fld3d_t p_Wcurr, p_cmsv, p_ymask, p_zmask;
+  fld3d_setup_view(&p_Unext, p_f, _RR2);
+  fld3d_setup_view(&p_Uprev, p_f, _RR1);
+  fld3d_setup_view(&p_Ucurr, p_f, _RR1);
+  fld3d_setup_view(&p_Wcurr, p_f, _RR);
+  fld3d_setup_view(&p_cmsv , p_f, _CMSV);
+  fld3d_setup_view(&p_ymask, p_f, _YMASK);
+  fld3d_setup_view(&p_zmask, p_f, _ZMASK);
+
+  pushfluid_c(p_Unext, p_Uprev, p_Ucurr, p_Wcurr,
+	      p_cmsv, p_ymask, p_zmask, dt, LIMIT_NONE, p_f);
 }
 
 // ----------------------------------------------------------------------
@@ -344,7 +349,18 @@ patch_pushfluid1(fld3d_t p_f, mrc_fld_data_t dt)
 static void
 patch_pushfluid2_c(fld3d_t p_f, mrc_fld_data_t dt)
 {
-  pushfluid_c(p_f, dt, _RR1, _RR2, _RR1, LIMIT_1);
+  fld3d_t p_Unext, p_Uprev, p_Ucurr;
+  fld3d_t p_Wcurr, p_cmsv, p_ymask, p_zmask;
+  fld3d_setup_view(&p_Unext, p_f, _RR1);
+  fld3d_setup_view(&p_Uprev, p_f, _RR1);
+  fld3d_setup_view(&p_Ucurr, p_f, _RR2);
+  fld3d_setup_view(&p_Wcurr, p_f, _RR);
+  fld3d_setup_view(&p_cmsv , p_f, _CMSV);
+  fld3d_setup_view(&p_ymask, p_f, _YMASK);
+  fld3d_setup_view(&p_zmask, p_f, _ZMASK);
+
+  pushfluid_c(p_Unext, p_Uprev, p_Ucurr, p_Wcurr,
+	      p_cmsv, p_ymask, p_zmask, dt, LIMIT_1, p_f);
 }
 
 // ----------------------------------------------------------------------
