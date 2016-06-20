@@ -215,22 +215,14 @@ limit1_c(fld3d_t p_U, int m, fld3d_t p_C)
 }
 
 static void
-pushfv_c(fld3d_t p_f, int m, mrc_fld_data_t dt,
-	 int m_prev, int m_curr, int m_next, int limit)
+pushfv_c(fld3d_t p_Unext, fld3d_t p_Uprev, fld3d_t p_Ucurr, int m, 
+	 fld3d_t p_Wcurr, fld3d_t p_cmsv, fld3d_t p_ymask, mrc_fld_data_t dt,
+	 int limit, fld3d_t p_B, fld3d_t p_f)
 {
-  fld3d_t p_Wcurr, p_Ucurr, p_Uprev, p_Unext;
-  fld3d_t p_cmsv, p_ymask;
-  fld3d_t p_Ffc, p_Fcc, p_C, p_B;
-  fld3d_setup_view(&p_Wcurr, p_f, _RR);
-  fld3d_setup_view(&p_Ucurr, p_f, m_curr);
-  fld3d_setup_view(&p_Uprev, p_f, m_prev);
-  fld3d_setup_view(&p_Unext, p_f, m_next);
+  fld3d_t p_Ffc, p_Fcc, p_C;
   fld3d_setup_view(&p_Ffc  , p_f, _FLX);
   fld3d_setup_view(&p_Fcc  , p_f, _TMP1);
-  fld3d_setup_view(&p_cmsv , p_f, _CMSV);
-  fld3d_setup_view(&p_ymask, p_f, _YMASK);
   fld3d_setup_view(&p_C    , p_f, _CX);
-  fld3d_setup_view(&p_B    , p_f, _BX);
 
   vgfl_c(p_Fcc, p_Wcurr, m);
   if (limit == LIMIT_NONE) {
@@ -247,17 +239,17 @@ pushfv_c(fld3d_t p_f, int m, mrc_fld_data_t dt,
 }
 
 static void
-pushpp_c(fld3d_t p_f, mrc_fld_data_t dt, int m)
+pushpp_c(fld3d_t p_Unext, fld3d_t p_W, fld3d_t p_zmask, mrc_fld_data_t dt)
 {
   mrc_fld_data_t dth = -.5f * dt;
   fld3d_foreach(ix,iy,iz, 0, 0) {
-    mrc_fld_data_t fpx = FD1X(ix) * (F3S(p_f, _PP, ix+1,iy,iz) - F3S(p_f, _PP, ix-1,iy,iz));
-    mrc_fld_data_t fpy = FD1Y(iy) * (F3S(p_f, _PP, ix,iy+1,iz) - F3S(p_f, _PP, ix,iy-1,iz));
-    mrc_fld_data_t fpz = FD1Z(iz) * (F3S(p_f, _PP, ix,iy,iz+1) - F3S(p_f, _PP, ix,iy,iz-1));
-    mrc_fld_data_t z = dth * F3S(p_f,_ZMASK, ix,iy,iz);
-    F3S(p_f, m + _RV1X, ix,iy,iz) += z * fpx;
-    F3S(p_f, m + _RV1Y, ix,iy,iz) += z * fpy;
-    F3S(p_f, m + _RV1Z, ix,iy,iz) += z * fpz;
+    mrc_fld_data_t fpx = FD1X(ix) * (F3S(p_W, PP, ix+1,iy,iz) - F3S(p_W, PP, ix-1,iy,iz));
+    mrc_fld_data_t fpy = FD1Y(iy) * (F3S(p_W, PP, ix,iy+1,iz) - F3S(p_W, PP, ix,iy-1,iz));
+    mrc_fld_data_t fpz = FD1Z(iz) * (F3S(p_W, PP, ix,iy,iz+1) - F3S(p_W, PP, ix,iy,iz-1));
+    mrc_fld_data_t z = dth * F3S(p_zmask, 0, ix,iy,iz);
+    F3S(p_Unext, RVX, ix,iy,iz) += z * fpx;
+    F3S(p_Unext, RVY, ix,iy,iz) += z * fpy;
+    F3S(p_Unext, RVZ, ix,iy,iz) += z * fpz;
   } fld3d_foreach_end;
 }
 
@@ -265,22 +257,30 @@ static void
 pushfluid_c(fld3d_t p_f, mrc_fld_data_t dt,
 	    int m_prev, int m_curr, int m_next, int limit)
 {
+  fld3d_t p_Unext, p_Uprev, p_Ucurr, p_Wcurr, p_cmsv, p_ymask, p_zmask, p_B;
+  fld3d_setup_view(&p_Uprev, p_f, m_prev);
+  fld3d_setup_view(&p_Unext, p_f, m_next);
+  fld3d_setup_view(&p_Ucurr, p_f, m_curr);
+  fld3d_setup_view(&p_Wcurr, p_f, _RR);
+  fld3d_setup_view(&p_cmsv , p_f, _CMSV);
+  fld3d_setup_view(&p_ymask, p_f, _YMASK);
+  fld3d_setup_view(&p_zmask, p_f, _ZMASK);
+  fld3d_setup_view(&p_B    , p_f, _BX);
+
   if (limit != LIMIT_NONE) {
-    fld3d_t p_B;
-    fld3d_setup_view(&p_B, p_f, _BX);
     vgrs(p_B, 0, 0.f); vgrs(p_B, 1, 0.f); vgrs(p_B, 2, 0.f);
     assert(!s_do_limit2);
     assert(!s_do_limit3);
-    limit1_c(p_f, _PP, p_B);
+    limit1_c(p_Wcurr, PP, p_B);
   }
 
-  pushfv_c(p_f, _RR1 , dt, m_prev, m_curr, m_next, limit);
-  pushfv_c(p_f, _RV1X, dt, m_prev, m_curr, m_next, limit);
-  pushfv_c(p_f, _RV1Y, dt, m_prev, m_curr, m_next, limit);
-  pushfv_c(p_f, _RV1Z, dt, m_prev, m_curr, m_next, limit);
-  pushfv_c(p_f, _UU1 , dt, m_prev, m_curr, m_next, limit);
+  pushfv_c(p_Unext, p_Uprev, p_Ucurr, RR , p_Wcurr, p_cmsv, p_ymask, dt, limit, p_B, p_f);
+  pushfv_c(p_Unext, p_Uprev, p_Ucurr, RVX, p_Wcurr, p_cmsv, p_ymask, dt, limit, p_B, p_f);
+  pushfv_c(p_Unext, p_Uprev, p_Ucurr, RVY, p_Wcurr, p_cmsv, p_ymask, dt, limit, p_B, p_f);
+  pushfv_c(p_Unext, p_Uprev, p_Ucurr, RVZ, p_Wcurr, p_cmsv, p_ymask, dt, limit, p_B, p_f);
+  pushfv_c(p_Unext, p_Uprev, p_Ucurr, UU , p_Wcurr, p_cmsv, p_ymask, dt, limit, p_B, p_f);
 
-  pushpp_c(p_f, dt, m_next);
+  pushpp_c(p_Unext, p_Wcurr, p_zmask, dt);
 }
 
 // ----------------------------------------------------------------------
