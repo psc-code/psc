@@ -1,4 +1,9 @@
 
+#ifndef PDE_MHD_SETUP_C
+#define PDE_MHD_SETUP_C
+
+#include "pde/pde_setup.c"
+
 // ======================================================================
 // MHD parameters, we keep these around statically
 
@@ -649,3 +654,5 @@ pde_mhd_aux_setup()
   fld1d_setup(&s_aux.bnd_mask);
   fld1d_vec_setup(&s_aux.j);
 }
+
+#endif

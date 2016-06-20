@@ -1,4 +1,7 @@
 
+#ifndef PDE_SETUP_C
+#define PDE_SETUP_C
+
 #include <mrc_domain.h>
 #include <mrc_bits.h>
 
@@ -258,4 +261,6 @@ pde_line_set_dir(int dir)
   for (*_i2 = _i2b; *_i2 < _i2e; (*_i2)++)				\
     for (*_i1 = _i1b; *_i1 < _i1e; (*_i1)++)
 
+
+#endif
 

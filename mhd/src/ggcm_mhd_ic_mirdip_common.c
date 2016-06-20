@@ -7,7 +7,6 @@
 #include "ggcm_mhd_private.h"
 #include "ggcm_mhd_bndsw.h"
 #include "ggcm_mhd_dipole.h"
-#include "ggcm_mhd_crds.h"
 
 #include "mrc_domain.h"
 

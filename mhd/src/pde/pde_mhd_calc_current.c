@@ -2,6 +2,8 @@
 #ifndef PDE_MHD_CALC_CURRENT_C
 #define PDE_MHD_CALC_CURRENT_C
 
+#include "pde/pde_mhd_setup.c"
+
 // ----------------------------------------------------------------------
 // patch_calc_current_ec
 //
