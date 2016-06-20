@@ -9,14 +9,35 @@
 static void
 patch_push_c(fld3d_t p_f, mrc_fld_data_t dt, int stage)
 {
-  patch_rmaskn(p_f);
+  fld3d_t p_Unext, p_Uprev, p_Ucurr;
+  fld3d_t p_W, p_cmsv, p_ymask, p_zmask, p_rmask;
+  fld3d_t p_resis, p_Jcc;
+  if (stage == 0) {
+    fld3d_setup_view(&p_Unext, p_f, _RR2);
+    fld3d_setup_view(&p_Uprev, p_f, _RR1);
+    fld3d_setup_view(&p_Ucurr, p_f, _RR1);
+  } else {
+    fld3d_setup_view(&p_Unext, p_f, _RR1);
+    fld3d_setup_view(&p_Uprev, p_f, _RR1);
+    fld3d_setup_view(&p_Ucurr, p_f, _RR2);
+  }
+  fld3d_setup_view(&p_W    , p_f, _RR);
+  fld3d_setup_view(&p_cmsv , p_f, _CMSV);
+  fld3d_setup_view(&p_ymask, p_f, _YMASK);
+  fld3d_setup_view(&p_zmask, p_f, _ZMASK);
+  fld3d_setup_view(&p_rmask, p_f, _RMASK);
+  fld3d_setup_view(&p_resis, p_f, _RESIS);
+  fld3d_setup_view(&p_Jcc  , p_f, _CURRX);
 
   if (stage == 0) {
     dt *= .5f;
   }
 
-  patch_pushfluid(p_f, dt, stage);
-  patch_pushfield(p_f, dt, stage);
+  patch_rmaskn(p_rmask, p_zmask);
+  patch_pushfluid(p_Unext, dt, p_Uprev, p_Ucurr, p_W,
+		  p_cmsv, p_ymask, p_zmask, p_f, stage);
+  patch_pushfield(p_Unext, dt, p_Uprev, p_Ucurr, p_W,
+		  p_zmask, p_rmask, p_resis, p_Jcc, p_f, stage);
 }
 
 // ----------------------------------------------------------------------

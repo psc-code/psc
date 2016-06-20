@@ -21,30 +21,15 @@ vgr0(fld3d_t p_f, int m)
 // patch_pushfield_c
 
 static void
-patch_pushfield_c(fld3d_t p_f, mrc_fld_data_t dt, int stage)
+patch_pushfield_c(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Uprev,
+		  fld3d_t p_Ucurr, fld3d_t p_W, fld3d_t p_zmask, fld3d_t p_rmask,
+		  fld3d_t p_resis, fld3d_t p_Jcc, fld3d_t p_f, int stage)
 {
-  fld3d_t p_Unext, p_Uprev, p_Ucurr;
-  fld3d_t p_W, p_rmask, p_zmask, p_resis, p_Jcc;
-  if (stage == 0) {
-    fld3d_setup_view(&p_Unext, p_f, _RR2);
-    fld3d_setup_view(&p_Uprev, p_f, _RR1);
-    fld3d_setup_view(&p_Ucurr, p_f, _RR1);
-  } else {
-    fld3d_setup_view(&p_Unext, p_f, _RR1);
-    fld3d_setup_view(&p_Uprev, p_f, _RR1);
-    fld3d_setup_view(&p_Ucurr, p_f, _RR2);
-  }
-  fld3d_setup_view(&p_W    , p_f, _RR);
-  fld3d_setup_view(&p_zmask, p_f, _ZMASK);
-  fld3d_setup_view(&p_rmask, p_f, _RMASK);
-  fld3d_setup_view(&p_resis, p_f, _RESIS);
-  fld3d_setup_view(&p_Jcc  , p_f, _CURRX);
-
   if (s_magdiffu == MAGDIFFU_NL1) {
     patch_calc_resis_nl1(p_resis);
-    vgr0(p_f, _CURRX);
-    vgr0(p_f, _CURRY);
-    vgr0(p_f, _CURRZ);
+    vgr0(p_Jcc, 0);
+    vgr0(p_Jcc, 1);
+    vgr0(p_Jcc, 2);
   } else if (s_magdiffu == MAGDIFFU_RES1) {
     assert(0);
     //    calc_resis_res1(bxB,byB,bzB,currx,curry,currz,tmp1,tmp2,tmp3,flx,fly,flz,zmask,rr,pp,resis);
@@ -131,12 +116,15 @@ patch_pushfield_fortran(fld3d_t p_f, mrc_fld_data_t dt, int stage)
 // patch_pushfield
 
 static void _mrc_unused
-patch_pushfield(fld3d_t p_f, mrc_fld_data_t dt, int stage)
+patch_pushfield(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Uprev,
+		fld3d_t p_Ucurr, fld3d_t p_W, fld3d_t p_zmask, fld3d_t p_rmask,
+		fld3d_t p_resis, fld3d_t p_Jcc, fld3d_t p_f, int stage)
 {
   int opt_mhd_pushfield = stage ? s_opt_mhd_pushfield2 : s_opt_mhd_pushfield1;
 
   if (opt_mhd_pushfield == OPT_MHD_C) {
-    patch_pushfield_c(p_f, dt, stage);
+    patch_pushfield_c(p_Unext, dt, p_Uprev, p_Ucurr, p_W,
+		      p_zmask, p_rmask, p_resis, p_Jcc, p_f, stage);
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
   } else if (opt_mhd_pushfield == OPT_MHD_FORTRAN) {
     patch_pushfield_fortran(p_f, dt, stage);

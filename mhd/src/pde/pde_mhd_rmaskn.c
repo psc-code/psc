@@ -6,12 +6,12 @@
 // patch_rmaskn_c
 
 static void
-patch_rmaskn_c(fld3d_t p_f)
+patch_rmaskn_c(fld3d_t p_rmask, fld3d_t p_zmask)
 {
   mrc_fld_data_t diffco = s_diffco;
 
   fld3d_foreach(ix,iy,iz, 2, 2) {
-    F3S(p_f,_RMASK, ix,iy,iz) = 0.f;
+    F3S(p_rmask, 0, ix,iy,iz) = 0.f;
     if (FX1X(ix) < s_diff_swbnd)
       continue;
     if (iy + s_patch.off[1] < s_diff_obnd)
@@ -24,7 +24,7 @@ patch_rmaskn_c(fld3d_t p_f)
       continue;
     if (iz + s_patch.off[2] >= s_gdims[2] - s_diff_obnd)
       continue;
-    F3S(p_f, _RMASK, ix,iy,iz) = diffco * F3S(p_f, _ZMASK, ix,iy,iz);
+    F3S(p_rmask, 0, ix,iy,iz) = diffco * F3S(p_zmask, 0, ix,iy,iz);
   } fld3d_foreach_end;
 }
 
@@ -40,9 +40,9 @@ patch_rmaskn_c(fld3d_t p_f)
 void rmaskn_F77(real *zmask, real *rmask);
 
 static void
-patch_rmaskn_fortran(fld3d_t p_f)
+patch_rmaskn_fortran(fld3d_t p_rmask, fld3d_t p_zmask)
 {
-  rmaskn_F77(F(p_f, _ZMASK), F(p_f, _RMASK));
+  rmaskn_F77(F(p_zmask, 0), F(p_rmask, 0));
 }
 
 #endif
@@ -51,13 +51,13 @@ patch_rmaskn_fortran(fld3d_t p_f)
 // patch_rmaskn
 
 static void _mrc_unused
-patch_rmaskn(fld3d_t p_f)
+patch_rmaskn(fld3d_t p_rmask, fld3d_t p_zmask)
 {
   if (s_opt_mhd_rmaskn == OPT_MHD_C) {
-    patch_rmaskn_c(p_f);
+    patch_rmaskn_c(p_rmask, p_zmask);
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
   } else if (s_opt_mhd_rmaskn == OPT_MHD_FORTRAN) {
-    patch_rmaskn_fortran(p_f);
+    patch_rmaskn_fortran(p_rmask, p_zmask);
 #endif
   } else {
     assert(0);
