@@ -2,6 +2,8 @@
 #ifndef PDE_MHD_COMPAT_C
 #define PDE_MHD_COMPAT_C
 
+#include "ggcm_mhd_crds.h"
+
 // ======================================================================
 // compatibility functionality for original openggcm
 //
@@ -23,5 +25,13 @@ static float *s_fd1x, *s_fd1y, *s_fd1z;
 #define FD1Y(j) PDE_INV_DY(j)
 #define FD1Z(k) PDE_INV_DZ(k)
 #endif
+
+static void
+pde_mhd_compat_setup(struct ggcm_mhd *mhd)
+{
+  s_fd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FD1);
+  s_fd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FD1);
+  s_fd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FD1);
+}
 
 #endif

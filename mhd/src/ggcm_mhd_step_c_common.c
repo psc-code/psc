@@ -72,16 +72,13 @@ ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
   struct ggcm_mhd *mhd = step->mhd;
   pde_setup(mhd->fld);
   pde_mhd_setup(mhd);
+  pde_mhd_compat_setup(mhd);
 
   mhd->ymask = mrc_fld_make_view(mhd->fld, _YMASK, _YMASK + 1);
   mrc_fld_set(mhd->ymask, 1.);
 
   ggcm_mhd_step_setup_member_objs_sub(step);
   ggcm_mhd_step_setup_super(step);
-
-  s_fd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FD1);
-  s_fd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FD1);
-  s_fd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FD1);
 }
 
 // ----------------------------------------------------------------------
