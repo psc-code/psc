@@ -11,9 +11,7 @@ static void
 patch_push_ej_c(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Ucurr,
 		fld3d_t p_W, fld3d_t p_zmask, fld3d_t p_f)
 {
-  fld3d_t p_Jec, p_Bcc;
-  fld3d_setup_view(&p_Jec  , p_f, _BX);
-  fld3d_setup_view(&p_Bcc  , p_f, _TMP1);
+  fld3d_t p_Jec = fld3d_make_tmp(3, _BX), p_Bcc = fld3d_make_tmp(3, _TMP1);
 
   patch_calc_current_ec(p_Jec, p_Ucurr);
   patch_primbb(p_Bcc, p_Ucurr);

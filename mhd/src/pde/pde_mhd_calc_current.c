@@ -32,14 +32,13 @@ patch_calc_current_ec(fld3d_t p_J, fld3d_t p_U)
 static void _mrc_unused
 patch_calc_current_cc(fld3d_t p_Jcc, fld3d_t p_U, fld3d_t p_zmask, fld3d_t p_f)
 { 
-  fld3d_t p_Jec;
-  fld3d_setup_view(&p_Jec  , p_f, _TMP1); /* was named _TX */
+  fld3d_t p_Jec = fld3d_make_tmp(3, _TMP1); /* was named _TX */
 
   patch_calc_current_ec(p_Jec, p_U);
 
   // j averaged to cell-centered
   fld3d_foreach(i,j,k, 1, 1) {
-    mrc_fld_data_t s = .25f * F3S(p_f, _ZMASK, i, j, k);
+    mrc_fld_data_t s = .25f * F3S(p_zmask, 0, i, j, k);
     F3S(p_Jcc, 0, i,j,k) = s * (F3S(p_Jec, 0, i,j  ,k  ) + F3S(p_Jec, 0, i,j-1,k  ) +
 				F3S(p_Jec, 0, i,j  ,k-1) + F3S(p_Jec, 0, i,j-1,k-1));
     F3S(p_Jcc, 1, i,j,k) = s * (F3S(p_Jec, 1, i  ,j,k  ) + F3S(p_Jec, 1, i-1,j,k  ) +

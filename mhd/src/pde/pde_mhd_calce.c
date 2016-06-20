@@ -26,8 +26,7 @@ static inline void
 calc_avg_dz_By(fld3d_t p_dB, fld3d_t p_U, fld3d_t p_f, int XX, int YY, int ZZ,
 	       int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2)
 {
-  fld3d_t p_tmp1;
-  fld3d_setup_view(&p_tmp1, p_f, _TMP1);
+  fld3d_t p_tmp1 = fld3d_make_tmp(2, _TMP1);
 
   // d_z B_y, d_y B_z on x edges
   fld3d_foreach(i,j,k, 2, 1) {
@@ -99,8 +98,7 @@ bcthy3z_NL1(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W, fld3d_t p_
 	    int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2)
 {
   const mrc_fld_data_t REPS = 1.e-10f;
-  fld3d_t p_dB;
-  fld3d_setup_view(&p_dB, p_f, _TMP3);
+  fld3d_t p_dB = fld3d_make_tmp(2, _TMP3);
 
   calc_avg_dz_By(p_dB, p_U, p_f, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2);
 
@@ -137,8 +135,7 @@ bcthy3z_const(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W, fld3d_t 
 	      fld3d_t p_f, int XX, int YY, int ZZ, int I, int J, int K,
 	      int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2)
 {
-  fld3d_t p_dB;
-  fld3d_setup_view(&p_dB, p_f, _TMP3);
+  fld3d_t p_dB = fld3d_make_tmp(2, _TMP3);
 
   calc_avg_dz_By(p_dB, p_U, p_f, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2);
 

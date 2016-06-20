@@ -13,10 +13,8 @@ patch_push_c(fld3d_t p_Unext, fld3d_t p_Uprev, fld3d_t p_Ucurr,
 	     fld3d_t p_ymask, fld3d_t p_zmask,
 	     fld3d_t p_f, mrc_fld_data_t dt, int stage)
 {
-  fld3d_t p_rmask, p_resis, p_Jcc;
-  fld3d_setup_view(&p_rmask, p_f, _RMASK);
-  fld3d_setup_view(&p_resis, p_f, _RESIS);
-  fld3d_setup_view(&p_Jcc  , p_f, _CURRX);
+  fld3d_t p_rmask = fld3d_make_tmp(1, _RMASK), p_resis = fld3d_make_tmp(1, _RESIS);
+  fld3d_t p_Jcc = fld3d_make_tmp(3, _CURRX);
 
   if (stage == 0) {
     dt *= .5f;
