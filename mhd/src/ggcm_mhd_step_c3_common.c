@@ -758,11 +758,9 @@ static void
 patch_pushstage_pt1(struct ggcm_mhd_step *step, fld3d_t p_Ucurr, fld3d_t p_Wcurr,
 		    fld3d_t p_F[3], int limit, int p)
 {
-  struct ggcm_mhd *mhd = step->mhd;
-
   // primvar, badval
   patch_prim_from_cons(p_Wcurr, p_Ucurr, 2);
-  patch_badval_checks_sc(mhd, p_Ucurr, p_Wcurr);
+  patch_badval_checks_sc(p_Ucurr, p_Wcurr);
   
   // find hydro fluxes
   // FIXME: we could use the fact that we calculate primitive variables already

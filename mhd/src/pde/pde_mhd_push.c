@@ -2,6 +2,7 @@
 #include "pde/pde_mhd_rmaskn.c"
 #include "pde/pde_mhd_pushfluid.c"
 #include "pde/pde_mhd_pushfield.c"
+#include "pde/pde_mhd_badval_checks.c"
 
 // ----------------------------------------------------------------------
 // patch_push_c
@@ -157,5 +158,26 @@ patch_pushstage(fld3d_t p_f, mrc_fld_data_t dt, int stage)
   }
 
   patch_push(p_f, dt, stage);
+}
+
+// ----------------------------------------------------------------------
+// pde_mhd_pushstage
+
+static void
+pde_mhd_pushstage(struct mrc_fld *x, mrc_fld_data_t dt, int stage)
+{
+  fld3d_t p_f;
+  fld3d_setup(&p_f, x);
+
+  pde_for_each_patch(p) {
+    fld3d_get(&p_f, p);
+
+    patch_pushstage(p_f, dt, stage);
+    if (stage == 1) {
+      patch_badval_checks_sc(p_f, p_f); // FIXME
+    }
+
+    fld3d_put(&p_f, p);
+  }
 }
 

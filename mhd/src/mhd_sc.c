@@ -61,7 +61,7 @@ badval_checks_sc(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *prim)
   mrc_fld_data_t ppmin = 0.0;
   mrc_fld_data_t rrmin = 0.0;  // mhd->par.rrmin / mhd->rrnorm
 
-  if (mhd->do_badval_checks) {
+  if (mhd->par.do_badval_checks) {
     if (!pr) {
       pr = prof_register("badval_checks", 0.0, 0, 0);
     }

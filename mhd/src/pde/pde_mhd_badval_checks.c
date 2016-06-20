@@ -1,4 +1,7 @@
 
+#ifndef PDE_MHD_BADVAL_CHECKS_C
+#define PDE_MHD_BADVAL_CHECKS_C
+
 // FIXME, this is an extremely ugly way to use the same function for 
 // the everything-in-one-field case and the separate-fields
 // case
@@ -12,9 +15,9 @@
 // patch_badval_checks_sc
 
 static void
-patch_badval_checks_sc(struct ggcm_mhd *mhd, fld3d_t p_U, fld3d_t p_W)
+patch_badval_checks_sc(fld3d_t p_U, fld3d_t p_W)
 {
-  if (!mhd->do_badval_checks) {
+  if (!s_do_badval_checks) {
     return;
   }
 
@@ -51,3 +54,4 @@ patch_badval_checks_sc(struct ggcm_mhd *mhd, fld3d_t p_U, fld3d_t p_W)
   assert(!has_badval);
 }
 
+#endif

@@ -425,6 +425,8 @@ static struct param ggcm_mhd_descr[] = {
   { "diff_swbnd"      , VAR(par.diff_swbnd)  , PARAM_FLOAT(-1e30)    },
   { "diff_obnd"       , VAR(par.diff_obnd)   , PARAM_INT(0)          },
 
+  { "do_badval_checks"    , VAR(par.do_badval_checks)    , PARAM_BOOL(true)   },
+
   { "do_limit2"           , VAR(par.do_limit2)           , PARAM_BOOL(false)  },
   { "do_limit3"           , VAR(par.do_limit3)           , PARAM_BOOL(false)  },
   { "limit_aspect_low"    , VAR(par.limit_aspect_low)    , PARAM_BOOL(false)  },
@@ -461,7 +463,6 @@ static struct param ggcm_mhd_descr[] = {
   { "bnd1"            , VAR(bnd1)            , MRC_VAR_OBJ(ggcm_mhd_bnd)      },
   { "ic"              , VAR(ic)              , MRC_VAR_OBJ(ggcm_mhd_ic)       },
 
-  { "do_badval_checks", VAR(do_badval_checks), PARAM_BOOL(true)             },
   {},
 };
 #undef VAR

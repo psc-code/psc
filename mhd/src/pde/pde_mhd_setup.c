@@ -17,6 +17,7 @@ static mrc_fld_data_t s_diffth;
 static mrc_fld_data_t s_timelo;
 static mrc_fld_data_t s_speedlimit_code;
 static mrc_fld_data_t s_isphere;
+static bool s_do_badval_checks;
 
 static bool s_do_limit2;
 static bool s_do_limit3;
@@ -613,6 +614,7 @@ pde_mhd_setup(struct ggcm_mhd *mhd)
   s_timelo = mhd->par.timelo;
   s_speedlimit_code = mhd->par.speedlimit / mhd->vvnorm;
   s_isphere = mhd->par.isphere;
+  s_do_badval_checks = mhd->par.do_badval_checks;
 
   s_do_limit2 = mhd->par.do_limit2;
   s_do_limit3 = mhd->par.do_limit3;

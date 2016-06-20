@@ -76,7 +76,6 @@ static float *s_fd1x, *s_fd1y, *s_fd1z;
 
 #include "pde/pde_mhd_get_dt.c"
 #include "pde/pde_mhd_push.c"
-#include "pde/pde_mhd_badval_checks.c"
 
 // ======================================================================
 // ggcm_mhd_step subclass "c"
@@ -136,52 +135,39 @@ ggcm_mhd_step_c_destroy(struct ggcm_mhd_step *step)
   mrc_fld_destroy(step->mhd->ymask);
 }
 
+void ggcm_mhd_step_legacy_dt_post(struct ggcm_mhd_step *step, float dtn); // FIXME
+
 // ----------------------------------------------------------------------
-// ggcm_mhd_step_c_newstep
+// ggcm_mhd_step_c_run
 
 static void
-ggcm_mhd_step_c_newstep(struct ggcm_mhd_step *step, float *dtn)
+ggcm_mhd_step_c_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 {
   struct ggcm_mhd *mhd = step->mhd;
 
-  ggcm_mhd_fill_ghosts(mhd, mhd->fld, _RR1, mhd->time);
-  *dtn = pde_mhd_get_dt_scons_ggcm(mhd, mhd->fld);
-}
+  assert(x == mhd->fld);
 
-// ----------------------------------------------------------------------
-// ggcm_mhd_step_c_pred
-
-static void
-ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step)
-{
-  struct ggcm_mhd *mhd = step->mhd;
-  fld3d_t p_f;
-  fld3d_setup(&p_f, mhd->fld);
-  s_mhd_time = mhd->time;
-
-  pde_for_each_patch(p) {
-    fld3d_get(&p_f, p);
-    patch_pushstage(p_f, mhd->dt, 0);
-    fld3d_put(&p_f, 0);
+  float dtn = 0.f;
+  if (step->do_nwst) {
+    dtn = pde_mhd_get_dt_scons_ggcm(mhd, x);
+    // yes, mhd->dt isn't set to dtn until the end of the step... this
+    // is what the fortran code did
   }
-}
 
-// ----------------------------------------------------------------------
-// ggcm_mhd_step_c_corr
+  // FIXME? It's not going to make a difference, but this is the
+  // time at the beginning of the whole step, rather than the time of the current state
+  s_mhd_time = mhd->time; 
 
-static void
-ggcm_mhd_step_c_corr(struct ggcm_mhd_step *step)
-{
-  struct ggcm_mhd *mhd = step->mhd;
-  fld3d_t p_f;
-  fld3d_setup(&p_f, mhd->fld);
-  s_mhd_time = mhd->time;
+  ggcm_mhd_fill_ghosts(mhd, x, _RR1, mhd->time);
+  pde_mhd_pushstage(x, mhd->dt, 0);
 
-  pde_for_each_patch(p) {
-    fld3d_get(&p_f, 0);
-    patch_pushstage(p_f, mhd->dt, 1);
-    patch_badval_checks_sc(step->mhd, p_f, p_f);
-    fld3d_put(&p_f, 0);
+  ggcm_mhd_fill_ghosts(mhd, x, _RR2, mhd->time + mhd->bndt);
+  pde_mhd_pushstage(x, mhd->dt, 1);
+
+  if (step->do_nwst) {
+    if (step->legacy_dt_handling) {
+      ggcm_mhd_step_legacy_dt_post(step, dtn);
+    }
   }
 }
 
@@ -288,10 +274,7 @@ struct ggcm_mhd_step_ops ggcm_mhd_step_c_ops = {
   .setup               = ggcm_mhd_step_c_setup,
   .destroy             = ggcm_mhd_step_c_destroy,
   .setup_flds          = ggcm_mhd_step_c_setup_flds,
-  .newstep             = ggcm_mhd_step_c_newstep,
-  .pred                = ggcm_mhd_step_c_pred,
-  .corr                = ggcm_mhd_step_c_corr,
-  .run                 = ggcm_mhd_step_run_predcorr,
+  .run                 = ggcm_mhd_step_c_run,
   .get_e_ec            = ggcm_mhd_step_c_get_e_ec,
   .diag_item_zmask_run = ggcm_mhd_step_c_diag_item_zmask_run,
   .diag_item_rmask_run = ggcm_mhd_step_c_diag_item_rmask_run,
