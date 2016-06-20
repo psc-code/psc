@@ -33,7 +33,7 @@ ggcm_mhd_step_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
   if (!step->legacy_dt_handling) {
     double dtn = ops->get_dt(step, x);
 
-    if (mhd->istep > 0 && dtn < mhd->par.dtmin) {
+    if (dtn < mhd->par.dtmin) {
       mpi_printf(ggcm_mhd_comm(mhd), "!!! dt < dtmin. Dying now!\n");
       mpi_printf(ggcm_mhd_comm(mhd), "!!! dt = %g (was %g), dtmin = %g\n",
 		 dtn, mhd->dt, mhd->par.dtmin);
@@ -44,7 +44,7 @@ ggcm_mhd_step_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
   } else { // legacy_dt_handling
     if (step->do_nwst) {
       step->dtn = ops->get_dt(step, x);
-      // yes, dtn isn't set to mhd->dt until the end of the step... this
+      // yes, mhd->dt isn't set to dtn until the end of the step... this
       // is what the fortran code did
     }
   }

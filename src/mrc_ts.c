@@ -145,18 +145,17 @@ mrc_ts_add_monitor(struct mrc_ts *ts, struct mrc_ts_monitor *mon)
 }
 
 void
-mrc_ts_get_dt(struct mrc_ts *ts)
-{
-  if (ts->get_dt_f) {
-    ts->dt = ts->get_dt_f(ts->rhsf_ctx, ts, ts->x);
-  }
-}
-
-void
 mrc_ts_step(struct mrc_ts *ts)
 {
   if (ts->pre_step) {
     ts->pre_step(ts->pre_step_ctx, ts, ts->x);
+  }
+
+  if (ts->get_dt_f) {
+    ts->dt = ts->get_dt_f(ts->rhsf_ctx, ts, ts->x);
+    if (ts->time + ts->dt > ts->max_time) {
+      ts->dt = ts->max_time - ts->time;
+    }
   }
 
   assert(mrc_ts_ops(ts)->step);
@@ -184,11 +183,6 @@ mrc_ts_solve(struct mrc_ts *ts)
   }
 
   while ((ts->time < ts->max_time) && (ts->n < ts->max_steps)) {
-    mrc_ts_get_dt(ts);
-    if (ts->time + ts->dt > ts->max_time) {
-      ts->dt = ts->max_time - ts->time;
-    }
-
     mrc_ts_monitors_run(ts);
     mrc_ts_step(ts);
     ts->time += ts->dt;
