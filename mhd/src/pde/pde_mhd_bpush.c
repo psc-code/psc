@@ -6,19 +6,33 @@
 // patch_bpush1_c
 
 static void
-patch_bpush1_c(fld3d_t p_f, mrc_fld_data_t dt, int m_prev, int m_next)
+patch_bpush1_c(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Uprev, fld3d_t p_E)
 {
-  fld3d_foreach(ix,iy,iz, 0, 0) {
-    F3S(p_f, m_next + _B1X, ix,iy,iz) = F3S(p_f, m_prev + _B1X, ix,iy,iz) +
-      dt * (BD3Y(iy) * (F3S(p_f,_FLZ, ix,iy,iz) - F3S(p_f,_FLZ, ix,iy-1,iz)) -
-	    BD3Z(iz) * (F3S(p_f,_FLY, ix,iy,iz) - F3S(p_f,_FLY, ix,iy,iz-1)));
-    F3S(p_f, m_next + _B1Y, ix,iy,iz) = F3S(p_f, m_prev + _B1Y, ix,iy,iz) +
-      dt * (BD3Z(iz) * (F3S(p_f,_FLX, ix,iy,iz) - F3S(p_f,_FLX, ix,iy,iz-1)) -
-	    BD3X(ix) * (F3S(p_f,_FLZ, ix,iy,iz) - F3S(p_f,_FLZ, ix-1,iy,iz)));
-    F3S(p_f, m_next + _B1Z, ix,iy,iz) = F3S(p_f, m_prev + _B1Z, ix,iy,iz) +
-      dt * (BD3X(ix) * (F3S(p_f,_FLY, ix,iy,iz) - F3S(p_f,_FLY, ix-1,iy,iz)) -
-	    BD3Y(iy) * (F3S(p_f,_FLX, ix,iy,iz) - F3S(p_f,_FLX, ix,iy-1,iz)));
-  } fld3d_foreach_end;
+  if (p_Unext.arr_off == p_Uprev.arr_off) {
+    fld3d_foreach(i,j,k, 0, 0) {
+      F3S(p_Unext, BX, i,j,k) +=
+	dt * (BD3Y(j) * (F3S(p_E, 2, i,j,k) - F3S(p_E, 2, i,j-1,k)) -
+	      BD3Z(k) * (F3S(p_E, 1, i,j,k) - F3S(p_E, 1, i,j,k-1)));
+      F3S(p_Unext, BY, i,j,k) +=
+	dt * (BD3Z(k) * (F3S(p_E, 0, i,j,k) - F3S(p_E, 0, i,j,k-1)) -
+	      BD3X(i) * (F3S(p_E, 2, i,j,k) - F3S(p_E, 2, i-1,j,k)));
+      F3S(p_Unext, BZ, i,j,k) +=
+	dt * (BD3X(i) * (F3S(p_E, 1, i,j,k) - F3S(p_E, 1, i-1,j,k)) -
+	      BD3Y(j) * (F3S(p_E, 0, i,j,k) - F3S(p_E, 0, i,j-1,k)));
+    } fld3d_foreach_end;
+  } else {
+    fld3d_foreach(i,j,k, 0, 0) {
+      F3S(p_Unext, BX, i,j,k) = F3S(p_Uprev, BX, i,j,k) +
+	dt * (BD3Y(j) * (F3S(p_E, 2, i,j,k) - F3S(p_E, 2, i,j-1,k)) -
+	      BD3Z(k) * (F3S(p_E, 1, i,j,k) - F3S(p_E, 1, i,j,k-1)));
+      F3S(p_Unext, BY, i,j,k) = F3S(p_Uprev, BY, i,j,k) +
+	dt * (BD3Z(k) * (F3S(p_E, 0, i,j,k) - F3S(p_E, 0, i,j,k-1)) -
+	      BD3X(i) * (F3S(p_E, 2, i,j,k) - F3S(p_E, 2, i-1,j,k)));
+      F3S(p_Unext, BZ, i,j,k) = F3S(p_Uprev, BZ, i,j,k) +
+	dt * (BD3X(i) * (F3S(p_E, 1, i,j,k) - F3S(p_E, 1, i-1,j,k)) -
+	      BD3Y(j) * (F3S(p_E, 0, i,j,k) - F3S(p_E, 0, i,j-1,k)));
+    } fld3d_foreach_end;
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -33,12 +47,11 @@ void bpush1_F77(real *bx1, real *by1, real *bz1,
 		real *flx, real *fly, real *flz, real *dt);
 
 static void
-patch_bpush1_fortran(fld3d_t p_f, mrc_fld_data_t dt, int m_prev, int m_next)
+patch_bpush1_fortran(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Uprev, fld3d_t p_E)
 {
-  bpush1_F77(F(p_f, _B1X + m_prev), F(p_f, _B1Y + m_prev), F(p_f, _B1Z + m_prev), 
-	     F(p_f, _B1X + m_next), F(p_f, _B1Y + m_next), F(p_f, _B1Z + m_next), 
-	     F(p_f, _FLX), F(p_f, _FLY), F(p_f, _FLZ), 
-	     &dt);
+  bpush1_F77(F(p_Uprev, BX), F(p_Uprev, BY), F(p_Uprev, BZ), 
+	     F(p_Unext, BX), F(p_Unext, BY), F(p_Unext, BZ), 
+	     F(p_E, 0), F(p_E, 1), F(p_E, 2), &dt);
 }
 
 #endif
@@ -47,13 +60,13 @@ patch_bpush1_fortran(fld3d_t p_f, mrc_fld_data_t dt, int m_prev, int m_next)
 // patch_bpush1
 
 static void
-patch_bpush1(fld3d_t p_f, mrc_fld_data_t dt, int m_prev, int m_next)
+patch_bpush1(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Uprev, fld3d_t p_E)
 {
   if (s_opt_mhd_bpush1 == OPT_MHD_C) {
-    patch_bpush1_c(p_f, dt, m_prev, m_next);
+    patch_bpush1_c(p_Unext, dt, p_Uprev, p_E);
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
   } else if (s_opt_mhd_bpush1 == OPT_MHD_FORTRAN) {
-    patch_bpush1_fortran(p_f, dt, m_prev, m_next);
+    patch_bpush1_fortran(p_Unext, dt, p_Uprev, p_E);
 #endif
   } else {
     assert(0);

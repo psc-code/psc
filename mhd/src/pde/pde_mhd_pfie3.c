@@ -12,8 +12,13 @@ static void
 patch_pfie3_c(fld3d_t p_f, mrc_fld_data_t dt,
 	      int m_prev, int m_curr, int m_next)
 {
+  fld3d_t p_Unext, p_Uprev, p_E;
+  fld3d_setup_view(&p_Unext, p_f, m_next);
+  fld3d_setup_view(&p_Uprev, p_f, m_prev);
+  fld3d_setup_view(&p_E    , p_f, _FLX);
+
   patch_calce(p_f, dt, m_curr);
-  patch_bpush1(p_f, dt, m_prev, m_next);
+  patch_bpush1(p_Unext, dt, p_Uprev, p_E);
 }
 
 // ----------------------------------------------------------------------
