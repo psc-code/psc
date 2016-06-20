@@ -79,7 +79,7 @@ ggcm_mhd_step_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *E,
 // ----------------------------------------------------------------------
 // ggcm_mhd_step_legacy_dt_post
 
-static void
+void
 ggcm_mhd_step_legacy_dt_post(struct ggcm_mhd_step *step, float dtn)
 {
   struct ggcm_mhd *mhd = step->mhd;
