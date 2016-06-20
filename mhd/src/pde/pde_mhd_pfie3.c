@@ -1,4 +1,7 @@
 
+#ifndef PDE_MHD_PFIE3_C
+#define PDE_MHD_PFIE3_C
+
 // ----------------------------------------------------------------------
 // patch_pfie3_c
 
@@ -62,3 +65,4 @@ patch_pfie3(fld3d_t p_f, mrc_fld_data_t dt, int m_prev, int m_curr, int m_next)
   }
 }
 
+#endif

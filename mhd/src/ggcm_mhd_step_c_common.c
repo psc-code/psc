@@ -29,7 +29,6 @@
 #include "pde/pde_mhd_primvar.c"
 #include "pde/pde_mhd_primbb.c"
 #include "pde/pde_mhd_zmaskn.c"
-#include "pde/pde_mhd_badval_checks.c"
 
 // TODO:
 // - handle various resistivity models
@@ -93,32 +92,9 @@ static float *s_fd1x, *s_fd1y, *s_fd1z;
 #include "pde/pde_mhd_calce.c"
 #include "pde/pde_mhd_bpush.c"
 #include "pde/pde_mhd_calc_resis.c"
+#include "pde/pde_mhd_push.c"
 
 // ======================================================================
-
-static void
-pushstage_c(fld3d_t p_f, mrc_fld_data_t dt, int m_prev, int m_curr, int m_next,
-	    int limit)
-{
-  patch_rmaskn_c(p_f);
-
-  pushfluid_c(p_f, dt, m_prev, m_curr, m_next, limit);
-
-  switch (s_magdiffu) {
-  case MAGDIFFU_NL1:
-    patch_calc_resis_nl1_c(p_f, m_curr);
-    break;
-  case MAGDIFFU_CONST:
-    patch_calc_resis_const_c(p_f, m_curr);
-    break;
-  default:
-    assert(0);
-  }
-
-  patch_push_ej(p_f, dt, m_curr, m_next);
-  patch_calce(p_f, dt, m_curr);
-  patch_bpush1(p_f, dt, m_prev, m_next);
-}
 
 // ======================================================================
 // ggcm_mhd_step subclass "c"
@@ -150,28 +126,16 @@ ggcm_mhd_step_c_newstep(struct ggcm_mhd_step *step, float *dtn)
 static void
 ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step)
 {
+  struct ggcm_mhd *mhd = step->mhd;
   fld3d_t p_f;
-  fld3d_setup(&p_f, step->mhd->fld);
-  fld3d_get(&p_f, 0);
-  pde_patch_set(0);
-  s_mhd_time = step->mhd->time;
+  fld3d_setup(&p_f, mhd->fld);
+  s_mhd_time = mhd->time;
 
-  fld3d_t p_W, p_U, p_cmsv, p_bcc, p_ymask, p_zmask;
-  fld3d_setup_view(&p_W    , p_f, _RR);
-  fld3d_setup_view(&p_U    , p_f, _RR1);
-  fld3d_setup_view(&p_cmsv , p_f, _CMSV);
-  fld3d_setup_view(&p_bcc  , p_f, _BX);
-  fld3d_setup_view(&p_ymask, p_f, _YMASK);
-  fld3d_setup_view(&p_zmask, p_f, _ZMASK);
-  
-  patch_primvar(p_W, p_U, p_cmsv);
-  patch_primbb(p_bcc, p_U);
-  patch_zmaskn(p_zmask, p_W, p_bcc, p_ymask);
-
-  mrc_fld_data_t dth = .5f * step->mhd->dt;
-  pushstage_c(p_f, dth, _RR1, _RR1, _RR2, LIMIT_NONE);
-
-  fld3d_put(&p_f, 0);
+  pde_for_each_patch(p) {
+    fld3d_get(&p_f, p);
+    patch_pushstage(p_f, mhd->dt, 0);
+    fld3d_put(&p_f, 0);
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -180,28 +144,17 @@ ggcm_mhd_step_c_pred(struct ggcm_mhd_step *step)
 static void
 ggcm_mhd_step_c_corr(struct ggcm_mhd_step *step)
 {
+  struct ggcm_mhd *mhd = step->mhd;
   fld3d_t p_f;
-  fld3d_setup(&p_f, step->mhd->fld);
-  fld3d_get(&p_f, 0);
-  pde_patch_set(0);
-  s_mhd_time = step->mhd->time;
+  fld3d_setup(&p_f, mhd->fld);
+  s_mhd_time = mhd->time;
 
-  fld3d_t p_W, p_U, p_cmsv, p_bcc;
-  fld3d_setup_view(&p_W    , p_f, _RR);
-  fld3d_setup_view(&p_U    , p_f, _RR2);
-  fld3d_setup_view(&p_cmsv , p_f, _CMSV);
-  fld3d_setup_view(&p_bcc  , p_f, _BX);
-  
-  patch_primvar(p_W, p_U, p_cmsv);
-  patch_primbb(p_bcc, p_U);
-  //  patch_zmaskn(p_f);
-
-  pushstage_c(p_f, step->mhd->dt, _RR1, _RR2, _RR1, LIMIT_1);
-  
-  // --- check for NaNs and small density
-  patch_badval_checks_sc(step->mhd, p_f, p_f);
-  
-  fld3d_put(&p_f, 0);
+  pde_for_each_patch(p) {
+    fld3d_get(&p_f, 0);
+    patch_pushstage(p_f, mhd->dt, 1);
+    patch_badval_checks_sc(step->mhd, p_f, p_f);
+    fld3d_put(&p_f, 0);
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -316,11 +269,27 @@ static struct param ggcm_mhd_step_c_descr[] = {
 								  opt_mhd_descr)                },
   { "mhd_newstep"        , VAR(opt.mhd_newstep)    , PARAM_SELECT(OPT_MHD_C,
 								  opt_mhd_descr)                },
+  { "mhd_pushpred"       , VAR(opt.mhd_pushpred)   , PARAM_SELECT(OPT_MHD_C,
+								  opt_mhd_descr)                },
+  { "mhd_pushcorr"       , VAR(opt.mhd_pushcorr)   , PARAM_SELECT(OPT_MHD_C,
+								  opt_mhd_descr)                },
   { "mhd_pushfluid1"     , VAR(opt.mhd_pushfluid1) , PARAM_SELECT(OPT_MHD_C,
+								  opt_mhd_descr)                },
+  { "mhd_pushfluid2"     , VAR(opt.mhd_pushfluid2) , PARAM_SELECT(OPT_MHD_C,
+								  opt_mhd_descr)                },
+  { "mhd_pushfield1"     , VAR(opt.mhd_pushfield1) , PARAM_SELECT(OPT_MHD_C,
+								  opt_mhd_descr)                },
+  { "mhd_pushfield2"     , VAR(opt.mhd_pushfield2) , PARAM_SELECT(OPT_MHD_C,
 								  opt_mhd_descr)                },
   { "mhd_push_ej"        , VAR(opt.mhd_push_ej)    , PARAM_SELECT(OPT_MHD_C,
 								  opt_mhd_descr)                },
+  { "mhd_pfie3"          , VAR(opt.mhd_pfie3)      , PARAM_SELECT(OPT_MHD_C,
+								  opt_mhd_descr)                },
   { "mhd_bpush1"         , VAR(opt.mhd_bpush1)     , PARAM_SELECT(OPT_MHD_C,
+								  opt_mhd_descr)                },
+  { "mhd_calce"          , VAR(opt.mhd_calce)      , PARAM_SELECT(OPT_MHD_C,
+								  opt_mhd_descr)                },
+  { "mhd_calc_resis"     , VAR(opt.mhd_calc_resis) , PARAM_SELECT(OPT_MHD_C,
 								  opt_mhd_descr)                },
   
   {},

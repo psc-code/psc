@@ -1,5 +1,9 @@
 
+#ifndef PDE_MHD_PUSHFIELD_C
+#define PDE_MHD_PUSHFIELD_C
+
 #include "pde/pde_mhd_calc_resis.c"
+#include "pde/pde_mhd_pfie3.c"
 
 // ----------------------------------------------------------------------
 // vgr0
@@ -158,3 +162,4 @@ patch_pushfield2(fld3d_t p_f, mrc_fld_data_t dt)
   }
 }
 
+#endif

@@ -1,4 +1,9 @@
 
+#include "pde/pde_mhd_rmaskn.c"
+#include "pde/pde_mhd_pushfluid.c"
+#include "pde/pde_mhd_pushfield.c"
+#include "pde/pde_mhd_badval_checks.c"
+
 // ======================================================================
 // patch_pushpred
 
@@ -130,6 +135,41 @@ patch_pushcorr(fld3d_t p_f, mrc_fld_data_t dt)
 #endif
   } else {
     assert(0);
+  }
+}
+
+// ----------------------------------------------------------------------
+// patch_pushstage
+
+static void
+patch_pushstage(fld3d_t p_f, mrc_fld_data_t dt, int stage)
+{
+  int m_curr;
+  if (stage == 0) {
+    m_curr = _RR1;
+  } else {
+    m_curr = _RR2;
+  }
+
+  fld3d_t p_W, p_Ucurr, p_cmsv, p_bcc, p_ymask, p_zmask;
+  fld3d_setup_view(&p_W    , p_f, _RR);
+  fld3d_setup_view(&p_Ucurr, p_f, m_curr);
+  fld3d_setup_view(&p_cmsv , p_f, _CMSV);
+
+  patch_primvar(p_W, p_Ucurr, p_cmsv);
+
+  if (stage == 0) {
+    fld3d_setup_view(&p_bcc  , p_f, _BX);
+    fld3d_setup_view(&p_ymask, p_f, _YMASK);
+    fld3d_setup_view(&p_zmask, p_f, _ZMASK);
+    patch_primbb(p_bcc, p_Ucurr);
+    patch_zmaskn(p_zmask, p_W, p_bcc, p_ymask);
+  }
+
+  if (stage == 0) { // predictor
+    patch_pushpred(p_f, dt);
+  } else {
+    patch_pushcorr(p_f, dt);
   }
 }
 

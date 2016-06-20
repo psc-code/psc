@@ -1,4 +1,7 @@
 
+#ifndef PDE_MHD_CALC_RESIS_C
+#define PDE_MHD_CALC_RESIS_C
+
 // ======================================================================
 // nl1
 
@@ -129,3 +132,4 @@ patch_calc_resis_const(fld3d_t p_f, int m_curr)
   }
 }
 
+#endif

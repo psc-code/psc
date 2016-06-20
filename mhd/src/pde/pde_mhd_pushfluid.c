@@ -1,4 +1,7 @@
 
+#ifndef PDE_MHD_PUSHFLUID_C
+#define PDE_MHD_PUSHFLUID_C
+
 static void
 vgflrr_c(fld3d_t p_f)
 {
@@ -360,4 +363,4 @@ patch_pushfluid2(fld3d_t p_f, mrc_fld_data_t dt)
   }
 }
 
-
+#endif

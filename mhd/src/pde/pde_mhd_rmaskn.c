@@ -1,4 +1,7 @@
 
+#ifndef PDE_MHD_RMASKN
+#define PDE_MHD_RMASKN
+
 // ----------------------------------------------------------------------
 // patch_rmaskn_c
 
@@ -61,3 +64,4 @@ patch_rmaskn(fld3d_t p_f)
   }
 }
 
+#endif
