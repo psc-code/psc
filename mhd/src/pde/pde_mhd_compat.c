@@ -17,10 +17,6 @@ static float *s_fd1x, *s_fd1y, *s_fd1z;
 #define FX1Y(iy) PDE_CRDY_CC(iy)
 #define FX1Z(iz) PDE_CRDZ_CC(iz)
 
-#define FX2X(ix) (sqr(FX1X(ix)))
-#define FX2Y(iy) (sqr(FX1Y(iy)))
-#define FX2Z(iz) (sqr(FX1Z(iz)))
-
 // FD1 is really different if 'legacy_fd1' is used
 #if 1
 #define FD1X(ix) (s_fd1x[ix])

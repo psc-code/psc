@@ -32,7 +32,7 @@ patch_res1_const(fld3d_t p_resis)
 
   fld3d_foreach(ix,iy,iz, 1, 1) {
     F3S(p_resis, 0, ix,iy,iz) = 0.f;
-    mrc_fld_data_t r2 = FX2X(ix) + FX2Y(iy) + FX2Z(iz);
+    mrc_fld_data_t r2 = sqr(PDE_CRDX_CC(ix)) + sqr(PDE_CRDY_CC(iy)) + sqr(PDE_CRDZ_CC(iz));
     if (r2 < diffsphere2)
       continue;
     if (iy + s_patch.off[1] < s_diff_obnd)
