@@ -3,62 +3,75 @@
 #define PDE_MHD_PUSHFLUID_C
 
 static void
-vgflrr_c(fld3d_t p_f)
+vgflrr_c(fld3d_t p_F, fld3d_t p_W)
 {
   fld3d_foreach(ix,iy,iz, 2, 2) {
-    mrc_fld_data_t a = F3S(p_f,_RR, ix,iy,iz);
-    F3S(p_f,_TMP1, ix,iy,iz) = a * F3S(p_f,_VX, ix,iy,iz);
-    F3S(p_f,_TMP2, ix,iy,iz) = a * F3S(p_f,_VY, ix,iy,iz);
-    F3S(p_f,_TMP3, ix,iy,iz) = a * F3S(p_f,_VZ, ix,iy,iz);
+    mrc_fld_data_t a = F3S(p_W, RR, ix,iy,iz);
+    F3S(p_F, 0, ix,iy,iz) = a * F3S(p_W, VX, ix,iy,iz);
+    F3S(p_F, 1, ix,iy,iz) = a * F3S(p_W, VY, ix,iy,iz);
+    F3S(p_F, 2, ix,iy,iz) = a * F3S(p_W, VZ, ix,iy,iz);
   } fld3d_foreach_end;
 }
 
 static void
-vgflrvx_c(fld3d_t p_f)
+vgflrvx_c(fld3d_t p_F, fld3d_t p_W)
 {
   fld3d_foreach(ix,iy,iz, 2, 2) {
-    mrc_fld_data_t a = F3S(p_f,_RR, ix,iy,iz) * F3S(p_f,_VX, ix,iy,iz);
-    F3S(p_f,_TMP1, ix,iy,iz) = a * F3S(p_f,_VX, ix,iy,iz);
-    F3S(p_f,_TMP2, ix,iy,iz) = a * F3S(p_f,_VY, ix,iy,iz);
-    F3S(p_f,_TMP3, ix,iy,iz) = a * F3S(p_f,_VZ, ix,iy,iz);
+    mrc_fld_data_t a = F3S(p_W, RR, ix,iy,iz) * F3S(p_W, VX, ix,iy,iz);
+    F3S(p_F, 0, ix,iy,iz) = a * F3S(p_W, VX, ix,iy,iz);
+    F3S(p_F, 1, ix,iy,iz) = a * F3S(p_W, VY, ix,iy,iz);
+    F3S(p_F, 2, ix,iy,iz) = a * F3S(p_W, VZ, ix,iy,iz);
   } fld3d_foreach_end;
 }
 
 static void
-vgflrvy_c(fld3d_t p_f)
+vgflrvy_c(fld3d_t p_F, fld3d_t p_W)
 {
   fld3d_foreach(ix,iy,iz, 2, 2) {
-    mrc_fld_data_t a = F3S(p_f,_RR, ix,iy,iz) * F3S(p_f,_VY, ix,iy,iz);
-    F3S(p_f,_TMP1, ix,iy,iz) = a * F3S(p_f,_VX, ix,iy,iz);
-    F3S(p_f,_TMP2, ix,iy,iz) = a * F3S(p_f,_VY, ix,iy,iz);
-    F3S(p_f,_TMP3, ix,iy,iz) = a * F3S(p_f,_VZ, ix,iy,iz);
+    mrc_fld_data_t a = F3S(p_W, RR, ix,iy,iz) * F3S(p_W, VY, ix,iy,iz);
+    F3S(p_F, 0, ix,iy,iz) = a * F3S(p_W, VX, ix,iy,iz);
+    F3S(p_F, 1, ix,iy,iz) = a * F3S(p_W, VY, ix,iy,iz);
+    F3S(p_F, 2, ix,iy,iz) = a * F3S(p_W, VZ, ix,iy,iz);
   } fld3d_foreach_end;
 }
 
 static void
-vgflrvz_c(fld3d_t p_f)
+vgflrvz_c(fld3d_t p_F, fld3d_t p_W)
 {
   fld3d_foreach(ix,iy,iz, 2, 2) {
-    mrc_fld_data_t a = F3S(p_f,_RR, ix,iy,iz) * F3S(p_f,_VZ, ix,iy,iz);
-    F3S(p_f,_TMP1, ix,iy,iz) = a * F3S(p_f,_VX, ix,iy,iz);
-    F3S(p_f,_TMP2, ix,iy,iz) = a * F3S(p_f,_VY, ix,iy,iz);
-    F3S(p_f,_TMP3, ix,iy,iz) = a * F3S(p_f,_VZ, ix,iy,iz);
+    mrc_fld_data_t a = F3S(p_W, RR, ix,iy,iz) * F3S(p_W, VZ, ix,iy,iz);
+    F3S(p_F, 0, ix,iy,iz) = a * F3S(p_W, VX, ix,iy,iz);
+    F3S(p_F, 1, ix,iy,iz) = a * F3S(p_W, VY, ix,iy,iz);
+    F3S(p_F, 2, ix,iy,iz) = a * F3S(p_W, VZ, ix,iy,iz);
   } fld3d_foreach_end;
 }
 
 static void
-vgfluu_c(fld3d_t p_f)
+vgfluu_c(fld3d_t p_F, fld3d_t p_W)
 {
   mrc_fld_data_t s = s_gamma / (s_gamma - 1.f);
   fld3d_foreach(ix,iy,iz, 2, 2) {
-    mrc_fld_data_t ep = s * F3S(p_f,_PP, ix,iy,iz) +
-      .5f * F3S(p_f,_RR, ix,iy,iz) * (sqr(F3S(p_f,_VX, ix,iy,iz)) + 
-				      sqr(F3S(p_f,_VY, ix,iy,iz)) + 
-				      sqr(F3S(p_f,_VZ, ix,iy,iz)));
-    F3S(p_f,_TMP1, ix,iy,iz) = ep * F3S(p_f,_VX, ix,iy,iz);
-    F3S(p_f,_TMP2, ix,iy,iz) = ep * F3S(p_f,_VY, ix,iy,iz);
-    F3S(p_f,_TMP3, ix,iy,iz) = ep * F3S(p_f,_VZ, ix,iy,iz);
+    mrc_fld_data_t ep = s * F3S(p_W, PP, ix,iy,iz) +
+      .5f * F3S(p_W, RR, ix,iy,iz) * (sqr(F3S(p_W, VX, ix,iy,iz)) + 
+				      sqr(F3S(p_W, VY, ix,iy,iz)) + 
+				      sqr(F3S(p_W, VZ, ix,iy,iz)));
+    F3S(p_F, 0, ix,iy,iz) = ep * F3S(p_W, VX, ix,iy,iz);
+    F3S(p_F, 1, ix,iy,iz) = ep * F3S(p_W, VY, ix,iy,iz);
+    F3S(p_F, 2, ix,iy,iz) = ep * F3S(p_W, VZ, ix,iy,iz);
   } fld3d_foreach_end;
+}
+
+static void
+vgfl_c(fld3d_t p_F, fld3d_t p_W, int m)
+{
+  switch (m) {
+  case RR:  return vgflrr_c(p_F, p_W);
+  case RVX: return vgflrvx_c(p_F, p_W);
+  case RVY: return vgflrvy_c(p_F, p_W);
+  case RVZ: return vgflrvz_c(p_F, p_W);
+  case UU:  return vgfluu_c(p_F, p_W);
+  default: assert(0);
+  }
 }
 
 static void
@@ -192,23 +205,14 @@ limit1_c(fld3d_t p_f, int m, int C)
 }
 
 static void
-vgfl_c(fld3d_t p_f, int m)
-{
-  switch (m) {
-  case _RR1:  return vgflrr_c(p_f);
-  case _RV1X: return vgflrvx_c(p_f);
-  case _RV1Y: return vgflrvy_c(p_f);
-  case _RV1Z: return vgflrvz_c(p_f);
-  case _UU1:  return vgfluu_c(p_f);
-  default: assert(0);
-  }
-}
-
-static void
 pushfv_c(fld3d_t p_f, int m, mrc_fld_data_t dt,
 	 int m_prev, int m_curr, int m_next, int limit)
 {
-  vgfl_c(p_f, m);
+  fld3d_t p_F, p_W;
+  fld3d_setup_view(&p_F, p_f, _TMP1);
+  fld3d_setup_view(&p_W, p_f, _RR);
+
+  vgfl_c(p_F, p_W, m);
   if (limit == LIMIT_NONE) {
     fluxl_c(p_f, m_curr + m);
   } else {
