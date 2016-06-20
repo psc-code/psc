@@ -31,7 +31,10 @@ patch_push_ej_c(fld3d_t p_f, mrc_fld_data_t dt, int m_curr, int m_next)
   enum { XJX = _BX, XJY = _BY, XJZ = _BZ };
   enum { BX = _TMP1, BY = _TMP2, BZ = _TMP3 };
 
-  patch_curr(p_f, XJX, m_curr);
+  fld3d_t p_Jec, p_U;
+  fld3d_setup_view(&p_Jec, p_f, XJX);
+  fld3d_setup_view(&p_U, p_f, m_curr);
+  patch_calc_current_ec(p_Jec, p_U);
   currbb_c(p_f, BX, m_curr);
 	
   mrc_fld_data_t s1 = .25f * dt;

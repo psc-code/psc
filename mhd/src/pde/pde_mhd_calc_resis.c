@@ -56,7 +56,12 @@ patch_res1_const(fld3d_t p_f)
 static void
 patch_calc_resis_const_c(fld3d_t p_f, int m_curr)
 {
-  patch_curbc(p_f, m_curr);
+  fld3d_t p_Jcc, p_U, p_zmask;
+  fld3d_setup_view(&p_Jcc  , p_f, _CURRX);
+  fld3d_setup_view(&p_U    , p_f, m_curr);
+  fld3d_setup_view(&p_zmask, p_f, _ZMASK);
+
+  patch_calc_current_cc(p_Jcc, p_U, p_zmask, p_f);
   patch_res1_const(p_f);
 }
 

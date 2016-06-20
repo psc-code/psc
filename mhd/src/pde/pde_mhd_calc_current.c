@@ -3,47 +3,47 @@
 #define PDE_MHD_CALC_CURRENT_C
 
 // ----------------------------------------------------------------------
-// patch_curr
+// patch_calc_current_ec
 //
+// (original Fortran name: curr())
 // edge centered current density
 
 static void _mrc_unused
-patch_curr(fld3d_t p_f, int m_j, int m_curr)
+patch_calc_current_ec(fld3d_t p_J, fld3d_t p_U)
 {
-  fld3d_foreach(ix,iy,iz, 2, 1) {
-    F3S(p_f, m_j + 0, ix,iy,iz) =
-      (F3S(p_f, m_curr + _B1Z, ix,iy+1,iz) - F3S(p_f, m_curr + _B1Z, ix,iy,iz)) * BD4Y(iy) -
-      (F3S(p_f, m_curr + _B1Y, ix,iy,iz+1) - F3S(p_f, m_curr + _B1Y, ix,iy,iz)) * BD4Z(iz);
-    F3S(p_f, m_j + 1, ix,iy,iz) =
-      (F3S(p_f, m_curr + _B1X, ix,iy,iz+1) - F3S(p_f, m_curr + _B1X, ix,iy,iz)) * BD4Z(iz) -
-      (F3S(p_f, m_curr + _B1Z, ix+1,iy,iz) - F3S(p_f, m_curr + _B1Z, ix,iy,iz)) * BD4X(ix);
-    F3S(p_f, m_j + 2, ix,iy,iz) =
-      (F3S(p_f, m_curr + _B1Y, ix+1,iy,iz) - F3S(p_f, m_curr + _B1Y, ix,iy,iz)) * BD4X(ix) -
-      (F3S(p_f, m_curr + _B1X, ix,iy+1,iz) - F3S(p_f, m_curr + _B1X, ix,iy,iz)) * BD4Y(iy);
+  fld3d_foreach(i,j,k, 2, 1) {
+    F3S(p_J, 0, i,j,k) = ((F3S(p_U, BZ, i,j+1,k) - F3S(p_U, BZ, i,j,k)) * BD4Y(j) -
+			  (F3S(p_U, BY, i,j,k+1) - F3S(p_U, BY, i,j,k)) * BD4Z(k));
+    F3S(p_J, 1, i,j,k) = ((F3S(p_U, BX, i,j,k+1) - F3S(p_U, BX, i,j,k)) * BD4Z(k) -
+			  (F3S(p_U, BZ, i+1,j,k) - F3S(p_U, BZ, i,j,k)) * BD4X(i));
+    F3S(p_J, 2, i,j,k) = ((F3S(p_U, BY, i+1,j,k) - F3S(p_U, BY, i,j,k)) * BD4X(i) -
+			  (F3S(p_U, BX, i,j+1,k) - F3S(p_U, BX, i,j,k)) * BD4Y(j));
   } fld3d_foreach_end;
 }
 
 // ----------------------------------------------------------------------
-// patch_curbc
+// patch_calc_current_cc
 //
+// (original Fortran name: curbc())
 // cell centered current density
 
 static void _mrc_unused
-patch_curbc(fld3d_t p_f, int m_curr)
+patch_calc_current_cc(fld3d_t p_Jcc, fld3d_t p_U, fld3d_t p_zmask, fld3d_t p_f)
 { 
-  enum { _TX = _TMP1, _TY = _TMP2, _TZ = _TMP3 };
+  fld3d_t p_Jec;
+  fld3d_setup_view(&p_Jec  , p_f, _TMP1); /* was named _TX */
 
-  patch_curr(p_f, _TX, m_curr);
+  patch_calc_current_ec(p_Jec, p_U);
 
   // j averaged to cell-centered
-  fld3d_foreach(ix,iy,iz, 1, 1) {
-    mrc_fld_data_t s = .25f * F3S(p_f, _ZMASK, ix, iy, iz);
-    F3S(p_f, _CURRX, ix,iy,iz) = s * (F3S(p_f, _TX, ix,iy  ,iz  ) + F3S(p_f, _TX, ix,iy-1,iz  ) +
-				      F3S(p_f, _TX, ix,iy  ,iz-1) + F3S(p_f, _TX, ix,iy-1,iz-1));
-    F3S(p_f, _CURRY, ix,iy,iz) = s * (F3S(p_f, _TY, ix  ,iy,iz  ) + F3S(p_f, _TY, ix-1,iy,iz  ) +
-				      F3S(p_f, _TY, ix  ,iy,iz-1) + F3S(p_f, _TY, ix-1,iy,iz-1));
-    F3S(p_f, _CURRZ, ix,iy,iz) = s * (F3S(p_f, _TZ, ix  ,iy  ,iz) + F3S(p_f, _TZ, ix-1,iy  ,iz) +
-				      F3S(p_f, _TZ, ix  ,iy-1,iz) + F3S(p_f, _TZ, ix-1,iy-1,iz));
+  fld3d_foreach(i,j,k, 1, 1) {
+    mrc_fld_data_t s = .25f * F3S(p_f, _ZMASK, i, j, k);
+    F3S(p_Jcc, 0, i,j,k) = s * (F3S(p_Jec, 0, i,j  ,k  ) + F3S(p_Jec, 0, i,j-1,k  ) +
+				F3S(p_Jec, 0, i,j  ,k-1) + F3S(p_Jec, 0, i,j-1,k-1));
+    F3S(p_Jcc, 1, i,j,k) = s * (F3S(p_Jec, 1, i  ,j,k  ) + F3S(p_Jec, 1, i-1,j,k  ) +
+				F3S(p_Jec, 1, i  ,j,k-1) + F3S(p_Jec, 1, i-1,j,k-1));
+    F3S(p_Jcc, 2, i,j,k) = s * (F3S(p_Jec, 2, i  ,j  ,k) + F3S(p_Jec, 2, i-1,j  ,k) +
+				F3S(p_Jec, 2, i  ,j-1,k) + F3S(p_Jec, 2, i-1,j-1,k));
   } fld3d_foreach_end;
 }
 
