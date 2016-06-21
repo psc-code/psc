@@ -37,6 +37,7 @@
 #include "pde/pde_mhd_calc_current.c"
 #include "pde/pde_mhd_push_ej.c"
 #include "pde/pde_mhd_calc_resis.c"
+#include "pde/pde_mhd_calce.c"
 
 // FIXME, don't even know why I have to do this
 #undef PP
@@ -66,7 +67,7 @@ struct ggcm_mhd_step_c2 {
 #define ggcm_mhd_step_c2(step) mrc_to_subobj(step, struct ggcm_mhd_step_c2)
 
 static inline float
-bcthy3f(mrc_fld_data_t s1, mrc_fld_data_t s2)
+xbcthy3f(mrc_fld_data_t s1, mrc_fld_data_t s2)
 {
   if (s1 > 0.f && fabsf(s2) > REPS) {
 /* .if(calce_aspect_low) then */
@@ -81,45 +82,43 @@ bcthy3f(mrc_fld_data_t s1, mrc_fld_data_t s2)
 }
 
 static inline void
-calc_avg_dz_By(struct ggcm_mhd *mhd, struct mrc_fld *f, int m_curr, int XX, int YY, int ZZ,
-	       int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2)
+xcalc_avg_dz_By(fld3d_t p_dB, fld3d_t p_U, int XX, int YY, int ZZ,
+		int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2)
 {
-  float *bd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD1);
-  float *bd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD1);
-  float *bd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD1);
+  fld3d_t p_tmp1 = fld3d_make_tmp(2, _TMP1);
 
   // d_z B_y, d_y B_z on x edges
-  mrc_fld_foreach(f, i,j,k, 1, 2) {
-    mrc_fld_data_t bd1[3] = { bd1x[i-1], bd1y[j-1], bd1z[k-1] };
+  fld3d_foreach(i,j,k, 1, 2) {
+    mrc_fld_data_t bd1[3] = { PDE_INV_DXF(i), PDE_INV_DYF(j), PDE_INV_DZF(k) };
 
-    F3(f, _TMP1, i,j,k) = bd1[ZZ] * 
-      (F3(f, m_curr + _B1X + YY, i,j,k) - F3(f, m_curr + _B1X + YY, i-JX2,j-JY2,k-JZ2));
-    F3(f, _TMP2, i,j,k) = bd1[YY] * 
-      (F3(f, m_curr + _B1X + ZZ, i,j,k) - F3(f, m_curr + _B1X + ZZ, i-JX1,j-JY1,k-JZ1));
-  } mrc_fld_foreach_end;
+    F3S(p_tmp1, 0, i,j,k) = bd1[ZZ] * 
+      (F3S(p_U, BX + YY, i,j,k) - F3S(p_U, BX + YY, i-JX2,j-JY2,k-JZ2));
+    F3S(p_tmp1, 1, i,j,k) = bd1[YY] * 
+      (F3S(p_U, BX + ZZ, i,j,k) - F3S(p_U, BX + ZZ, i-JX1,j-JY1,k-JZ1));
+  } fld3d_foreach_end;
 
   // .5 * harmonic average if same sign
-  mrc_fld_foreach(f, i,j,k, 1, 1) {
+  fld3d_foreach(i,j,k, 1, 1) {
     mrc_fld_data_t s1, s2;
     // dz_By on y face
-    s1 = F3(f, _TMP1, i+JX2,j+JY2,k+JZ2) * F3(f, _TMP1, i,j,k);
-    s2 = F3(f, _TMP1, i+JX2,j+JY2,k+JZ2) + F3(f, _TMP1, i,j,k);
-    F3(f, _TMP3, i,j,k) = bcthy3f(s1, s2);
+    s1 = F3S(p_tmp1, 0, i+JX2,j+JY2,k+JZ2) * F3S(p_tmp1, 0, i,j,k);
+    s2 = F3S(p_tmp1, 0, i+JX2,j+JY2,k+JZ2) + F3S(p_tmp1, 0, i,j,k);
+    F3S(p_dB, 0, i,j,k) = xbcthy3f(s1, s2);
     // dy_Bz on z face
-    s1 = F3(f, _TMP2, i+JX1,j+JY1,k+JZ1) * F3(f, _TMP2, i,j,k);
-    s2 = F3(f, _TMP2, i+JX1,j+JY1,k+JZ1) + F3(f, _TMP2, i,j,k);
-    F3(f, _TMP4, i,j,k) = bcthy3f(s1, s2);
-  } mrc_fld_foreach_end;
+    s1 = F3S(p_tmp1, 1, i+JX1,j+JY1,k+JZ1) * F3S(p_tmp1, 1, i,j,k);
+    s2 = F3S(p_tmp1, 1, i+JX1,j+JY1,k+JZ1) + F3S(p_tmp1, 1, i,j,k);
+    F3S(p_dB, 1, i,j,k) = xbcthy3f(s1, s2);
+  } fld3d_foreach_end;
 }
 
-#define CC_TO_EC(f, m, i,j,k, I,J,K) \
+#define xCC_TO_EC(f, m, i,j,k, I,J,K) \
   (.25f * (F3(f, m, i-I,j-J,k-K) +  \
 	   F3(f, m, i-I,j   ,k   ) +  \
 	   F3(f, m, i   ,j-J,k   ) +  \
 	   F3(f, m, i   ,j   ,k-K)))
 
 static inline void
-calc_v_x_B(mrc_fld_data_t ttmp[2], struct mrc_fld *f, int m_curr, int i, int j, int k,
+xcalc_v_x_B(mrc_fld_data_t ttmp[2], struct mrc_fld *f, int m_curr, int i, int j, int k,
 	   int XX, int YY, int ZZ, int I, int J, int K,
 	   int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2,
 	   float *bd2x, float *bd2y, float *bd2z, mrc_fld_data_t dt)
@@ -128,7 +127,7 @@ calc_v_x_B(mrc_fld_data_t ttmp[2], struct mrc_fld *f, int m_curr, int i, int j, 
     mrc_fld_data_t bd2[3] = { bd2x[i], bd2y[j], bd2z[k] };
     mrc_fld_data_t vbZZ;
     // edge centered velocity
-    mrc_fld_data_t vvYY = CC_TO_EC(f, _VX + YY, i,j,k, I,J,K) /* - d_i * vcurrYY */;
+    mrc_fld_data_t vvYY = xCC_TO_EC(f, _VX + YY, i,j,k, I,J,K) /* - d_i * vcurrYY */;
     if (vvYY > 0.f) {
       vbZZ = F3(f, m_curr + _B1X + ZZ, i-JX1,j-JY1,k-JZ1) +
 	F3(f, _TMP4, i-JX1,j-JY1,k-JZ1) * (bd2m[YY] - dt*vvYY);
@@ -140,7 +139,7 @@ calc_v_x_B(mrc_fld_data_t ttmp[2], struct mrc_fld *f, int m_curr, int i, int j, 
 
     mrc_fld_data_t vbYY;
     // edge centered velocity
-    mrc_fld_data_t vvZZ = CC_TO_EC(f, _VX + ZZ, i,j,k, I,J,K) /* - d_i * vcurrZZ */;
+    mrc_fld_data_t vvZZ = xCC_TO_EC(f, _VX + ZZ, i,j,k, I,J,K) /* - d_i * vcurrZZ */;
     if (vvZZ > 0.f) {
       vbYY = F3(f, m_curr + _B1X + YY, i-JX2,j-JY2,k-JZ2) +
 	F3(f, _TMP3, i-JX2,j-JY2,k-JZ2) * (bd2m[ZZ] - dt*vvZZ);
@@ -153,7 +152,7 @@ calc_v_x_B(mrc_fld_data_t ttmp[2], struct mrc_fld *f, int m_curr, int i, int j, 
 }
 
 static void
-bcthy3z_NL1(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int I, int J, int K,
+xbcthy3z_NL1(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int I, int J, int K,
 	    int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2,
 	    mrc_fld_data_t dt, int m_curr)
 {
@@ -163,7 +162,8 @@ bcthy3z_NL1(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int I, int J, int K,
   float *bd2y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD2);
   float *bd2z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD2);
 
-  calc_avg_dz_By(mhd, f, m_curr, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2);
+  fld3d_t p_dB = fld3d_make_view(s_p_f, _TMP3), p_U = fld3d_make_view(s_p_f, m_curr);
+  xcalc_avg_dz_By(p_dB, p_U, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2);
 
   mrc_fld_data_t diffmul=1.0;
   if (mhd->time < mhd->par.diff_timelo) { // no anomalous res at startup
@@ -171,9 +171,9 @@ bcthy3z_NL1(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int I, int J, int K,
   }
 
   // edge centered E = - v x B (+ dissipation)
-  mrc_fld_foreach(f, i,j,k, 0, 1) {
+  fld3d_foreach(i,j,k, 0, 1) {
     mrc_fld_data_t ttmp[2];
-    calc_v_x_B(ttmp, f, m_curr, i, j, k, XX, YY, ZZ, I, J, K,
+    xcalc_v_x_B(ttmp, f, m_curr, i, j, k, XX, YY, ZZ, I, J, K,
 	       JX1, JY1, JZ1, JX2, JY2, JZ2, bd2x, bd2y, bd2z, dt);
     
     mrc_fld_data_t t1m = F3(f, m_curr + _B1X + ZZ, i+JX1,j+JY1,k+JZ1) - F3(f, m_curr + _B1X + ZZ, i,j,k);
@@ -190,11 +190,11 @@ bcthy3z_NL1(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int I, int J, int K,
     ttmp[1] -= d2 * t2m * F3(f, _RMASK, i,j,k);
     F3(f, _RESIS, i,j,k) += fabsf(d1+d2) * F3(f, _ZMASK, i,j,k);
     F3(f, _FLX + XX, i,j,k) = ttmp[0] - ttmp[1];
-  } mrc_fld_foreach_end;
+  } fld3d_foreach_end;
 }
 
 static void
-bcthy3z_const(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int I, int J, int K,
+xbcthy3z_const(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int I, int J, int K,
 	      int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2, mrc_fld_data_t dt, int m_curr)
 {
   struct mrc_fld *f = mhd->fld;
@@ -203,34 +203,35 @@ bcthy3z_const(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int I, int J, int K,
   float *bd2y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD2);
   float *bd2z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD2);
 
-  calc_avg_dz_By(mhd, f, m_curr, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2);
+  fld3d_t p_dB = fld3d_make_view(s_p_f, _TMP3), p_U = fld3d_make_view(s_p_f, m_curr);
+  xcalc_avg_dz_By(p_dB, p_U, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2);
 
   // edge centered E = - v x B (+ dissipation)
-  mrc_fld_foreach(f, i,j,k, 0, 1) {
+  fld3d_foreach(i,j,k, 0, 1) {
     mrc_fld_data_t ttmp[2];
-    calc_v_x_B(ttmp, f, m_curr, i, j, k, XX, YY, ZZ, I, J, K,
+    xcalc_v_x_B(ttmp, f, m_curr, i, j, k, XX, YY, ZZ, I, J, K,
 	       JX1, JY1, JZ1, JX2, JY2, JZ2, bd2x, bd2y, bd2z, dt);
 
-    mrc_fld_data_t vcurrXX = CC_TO_EC(f, _CURRX + XX, i,j,k, I,J,K);
-    mrc_fld_data_t vresis = CC_TO_EC(f, _RESIS, i,j,k, I,J,K);
+    mrc_fld_data_t vcurrXX = xCC_TO_EC(f, _CURRX + XX, i,j,k, I,J,K);
+    mrc_fld_data_t vresis = xCC_TO_EC(f, _RESIS, i,j,k, I,J,K);
     F3(f, _FLX + XX, i,j,k) = ttmp[0] - ttmp[1] - vresis * vcurrXX;
-  } mrc_fld_foreach_end;
+  } fld3d_foreach_end;
 }
 
 static void
-calce_nl1_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_curr)
+xcalce_nl1_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_curr)
 {
-  bcthy3z_NL1(mhd, 0,1,2, 0,1,1, 0,1,0, 0,0,1, dt, m_curr);
-  bcthy3z_NL1(mhd, 1,2,0, 1,0,1, 0,0,1, 1,0,0, dt, m_curr);
-  bcthy3z_NL1(mhd, 2,0,1, 1,1,0, 1,0,0, 0,1,0, dt, m_curr);
+  xbcthy3z_NL1(mhd, 0,1,2, 0,1,1, 0,1,0, 0,0,1, dt, m_curr);
+  xbcthy3z_NL1(mhd, 1,2,0, 1,0,1, 0,0,1, 1,0,0, dt, m_curr);
+  xbcthy3z_NL1(mhd, 2,0,1, 1,1,0, 1,0,0, 0,1,0, dt, m_curr);
 }
 
 static void
-calce_const_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_curr)
+xcalce_const_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_curr)
 {
-  bcthy3z_const(mhd, 0,1,2, 0,1,1, 0,1,0, 0,0,1, dt, m_curr);
-  bcthy3z_const(mhd, 1,2,0, 1,0,1, 0,0,1, 1,0,0, dt, m_curr);
-  bcthy3z_const(mhd, 2,0,1, 1,1,0, 1,0,0, 0,1,0, dt, m_curr);
+  xbcthy3z_const(mhd, 0,1,2, 0,1,1, 0,1,0, 0,0,1, dt, m_curr);
+  xbcthy3z_const(mhd, 1,2,0, 1,0,1, 0,0,1, 1,0,0, dt, m_curr);
+  xbcthy3z_const(mhd, 2,0,1, 1,1,0, 1,0,0, 0,1,0, dt, m_curr);
 }
 
 static void
@@ -238,9 +239,9 @@ calce_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_curr)
 {
   switch (mhd->par.magdiffu) {
   case MAGDIFFU_NL1:
-    return calce_nl1_c(mhd, dt, m_curr);
+    return xcalce_nl1_c(mhd, dt, m_curr);
   case MAGDIFFU_CONST:
-    return calce_const_c(mhd, dt, m_curr);
+    return xcalce_const_c(mhd, dt, m_curr);
   default:
     assert(0);
   }
@@ -254,7 +255,7 @@ bpush_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_prev, int m_next)
   float *bd3y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD3);
   float *bd3z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD3);
 
-  mrc_fld_foreach(f, i,j,k, 0, 0) {
+  fld3d_foreach(i,j,k, 0, 0) {
     F3(f, m_next + _B1X, i,j,k) = F3(f, m_prev + _B1X, i,j,k) +
       dt * (bd3y[j] * (F3(f,_FLZ, i,j+1,k) - F3(f,_FLZ, i,j,k)) -
 	    bd3z[k] * (F3(f,_FLY, i,j,k+1) - F3(f,_FLY, i,j,k)));
@@ -264,7 +265,7 @@ bpush_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_prev, int m_next)
     F3(f, m_next + _B1Z, i,j,k) = F3(f, m_prev + _B1Z, i,j,k) +
       dt * (bd3x[i] * (F3(f,_FLY, i+1,j,k) - F3(f,_FLY, i,j,k)) -
 	    bd3y[j] * (F3(f,_FLX, i,j+1,k) - F3(f,_FLX, i,j,k)));
-  } mrc_fld_foreach_end;
+  } fld3d_foreach_end;
 }
 
 static void
@@ -446,11 +447,11 @@ ggcm_mhd_step_c2_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
   struct mrc_fld *E = mrc_fld_get_as(Eout, FLD_TYPE);
   struct mrc_fld *x = mrc_fld_get_as(state_vec, FLD_TYPE);
 
-  mrc_fld_foreach(x, i, j, k, 0, 1) {
+  fld3d_foreach(i, j, k, 0, 1) {
     F3(E, 0, i,j,k) = F3(x, _FLX, i,j,k);
     F3(E, 1, i,j,k) = F3(x, _FLY, i,j,k);
     F3(E, 2, i,j,k) = F3(x, _FLZ, i,j,k);
-  } mrc_fld_foreach_end;
+  } fld3d_foreach_end;
 
   mrc_fld_put_as(E, Eout);
   // FIXME, should use _put_as, but don't want copy-back
