@@ -19,12 +19,6 @@
 #define OPT_EQN OPT_EQN_MHD_SCONS
 #define OPT_BACKGROUND false
 
-#include "pde/pde_setup.c"
-#include "pde/pde_mhd_setup.c"
-#include "pde/pde_mhd_line.c"
-#include "pde/pde_mhd_convert.c"
-#include "pde/pde_mhd_divb_glm.c"
-#include "pde/pde_mhd_riemann.c"
 #include "pde/pde_mhd_get_dt.c"
 
 #include "mhd_sc.c"
@@ -40,6 +34,18 @@ enum {
   LIMIT_NONE,
   LIMIT_1,
 };
+
+// ======================================================================
+// ggcm_mhd_step subclass "c2"
+//
+// this class will do full predictor / corrector steps,
+// ie., including primvar() etc.
+
+struct ggcm_mhd_step_c2 {
+  struct mhd_options opt;
+};
+
+#define ggcm_mhd_step_c2(step) mrc_to_subobj(step, struct ggcm_mhd_step_c2)
 
 static void
 rmaskn_c(struct ggcm_mhd *mhd)
@@ -844,8 +850,10 @@ ggcm_mhd_step_c2_setup(struct ggcm_mhd_step *step)
 static void
 ggcm_mhd_step_c2_setup_flds(struct ggcm_mhd_step *step)
 {
+  struct ggcm_mhd_step_c2 *sub = ggcm_mhd_step_c2(step);
   struct ggcm_mhd *mhd = step->mhd;
 
+  pde_mhd_set_options(mhd, &sub->opt);
   mrc_fld_set_type(mhd->fld, FLD_TYPE);
   mrc_fld_set_param_int(mhd->fld, "nr_ghosts", 2);
   mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_SEMI_CONSERVATIVE);
@@ -902,10 +910,56 @@ ggcm_mhd_step_c2_diag_item_rmask_run(struct ggcm_mhd_step *step,
 }
 
 // ----------------------------------------------------------------------
+// subclass description
+
+#define VAR(x) (void *)offsetof(struct ggcm_mhd_step_c2, x)
+static struct param ggcm_mhd_step_c2_descr[] = {
+  { "eqn"                , VAR(opt.eqn)            , PARAM_SELECT(OPT_EQN,
+								  opt_eqn_descr)                },
+  { "mhd_primvar"        , VAR(opt.mhd_primvar)    , PARAM_SELECT(OPT_MHD_C,
+								  opt_mhd_descr)                },
+  { "mhd_primbb"         , VAR(opt.mhd_primbb)     , PARAM_SELECT(OPT_MHD_C,
+								  opt_mhd_descr)                },
+  { "mhd_zmaskn"         , VAR(opt.mhd_zmaskn)     , PARAM_SELECT(OPT_MHD_C,
+								  opt_mhd_descr)                },
+  { "mhd_rmaskn"         , VAR(opt.mhd_rmaskn)     , PARAM_SELECT(OPT_MHD_C,
+								  opt_mhd_descr)                },
+  { "mhd_newstep"        , VAR(opt.mhd_newstep)    , PARAM_SELECT(OPT_MHD_C,
+								  opt_mhd_descr)                },
+  { "mhd_pushpred"       , VAR(opt.mhd_pushpred)   , PARAM_SELECT(OPT_MHD_C,
+								  opt_mhd_descr)                },
+  { "mhd_pushcorr"       , VAR(opt.mhd_pushcorr)   , PARAM_SELECT(OPT_MHD_C,
+								  opt_mhd_descr)                },
+  { "mhd_pushfluid1"     , VAR(opt.mhd_pushfluid1) , PARAM_SELECT(OPT_MHD_C,
+								  opt_mhd_descr)                },
+  { "mhd_pushfluid2"     , VAR(opt.mhd_pushfluid2) , PARAM_SELECT(OPT_MHD_C,
+								  opt_mhd_descr)                },
+  { "mhd_pushfield1"     , VAR(opt.mhd_pushfield1) , PARAM_SELECT(OPT_MHD_C,
+								  opt_mhd_descr)                },
+  { "mhd_pushfield2"     , VAR(opt.mhd_pushfield2) , PARAM_SELECT(OPT_MHD_C,
+								  opt_mhd_descr)                },
+  { "mhd_push_ej"        , VAR(opt.mhd_push_ej)    , PARAM_SELECT(OPT_MHD_C,
+								  opt_mhd_descr)                },
+  { "mhd_pfie3"          , VAR(opt.mhd_pfie3)      , PARAM_SELECT(OPT_MHD_C,
+								  opt_mhd_descr)                },
+  { "mhd_bpush1"         , VAR(opt.mhd_bpush1)     , PARAM_SELECT(OPT_MHD_C,
+								  opt_mhd_descr)                },
+  { "mhd_calce"          , VAR(opt.mhd_calce)      , PARAM_SELECT(OPT_MHD_C,
+								  opt_mhd_descr)                },
+  { "mhd_calc_resis"     , VAR(opt.mhd_calc_resis) , PARAM_SELECT(OPT_MHD_C,
+								  opt_mhd_descr)                },
+  
+  {},
+};
+#undef VAR
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_step subclass "c2_*"
 
 struct ggcm_mhd_step_ops ggcm_mhd_step_c2_ops = {
   .name                = ggcm_mhd_step_c2_name,
+  .size                = sizeof(struct ggcm_mhd_step_c2),
+  .param_descr         = ggcm_mhd_step_c2_descr,
   .get_dt              = ggcm_mhd_step_c2_get_dt,
   .run                 = ggcm_mhd_step_c2_run,
   .setup               = ggcm_mhd_step_c2_setup,

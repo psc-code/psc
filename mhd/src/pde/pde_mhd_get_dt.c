@@ -1,6 +1,7 @@
 
 #include "ggcm_mhd_crds.h" // FIXME
 
+#include "pde/pde_mhd_setup.c"
 #include "pde/pde_mhd_zmaskn.c"
 #include "pde/pde_mhd_riemann.c"
 
