@@ -9,6 +9,9 @@
 #define OPT_FLD1D_C_ARRAY   (2)
 #define OPT_FLD1D_PTR_ARRAY (3)
 
+#define OPT_STAGGER_REG     (0)
+#define OPT_STAGGER_GGCM    (1)
+
 // ======================================================================
 // MHD options
 

@@ -23,6 +23,7 @@
 // mhd options
 
 #define OPT_EQN OPT_EQN_MHD_SCONS
+#define OPT_STAGGER OPT_STAGGER_GGCM
 
 #include "pde/pde_setup.c"
 #include "pde/pde_mhd_setup.c"

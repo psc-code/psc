@@ -10,6 +10,8 @@
 // (original Fortran name: curr())
 // edge centered current density
 
+#if OPT_STAGGER == OPT_STAGGER_GGCM
+
 static void _mrc_unused
 patch_calc_current_ec(fld3d_t p_J, fld3d_t p_U)
 {
@@ -22,6 +24,23 @@ patch_calc_current_ec(fld3d_t p_J, fld3d_t p_U)
 			  (F3S(p_U, BX, i,j+1,k) - F3S(p_U, BX, i,j,k)) * PDE_INV_DYF(j+1));
   } fld3d_foreach_end;
 }
+
+#else
+
+static void
+patch_calc_current_ec(fld3d_t p_J, fld3d_t p_U)
+{
+  fld3d_foreach(i,j,k, 1, 2) {
+    F3S(p_J, 0, i,j,k) = ((F3S(p_U, BZ, i,j,k) - F3S(p_U, BZ, i,j-1,k)) * PDE_INV_DYF(j) -
+			  (F3S(p_U, BY, i,j,k) - F3S(p_U, BY, i,j,k-1)) * PDE_INV_DZF(k));
+    F3S(p_J, 1, i,j,k) = ((F3S(p_U, BX, i,j,k) - F3S(p_U, BX, i,j,k-1)) * PDE_INV_DZF(k) -
+			  (F3S(p_U, BZ, i,j,k) - F3S(p_U, BZ, i-1,j,k)) * PDE_INV_DXF(i));
+    F3S(p_J, 2, i,j,k) = ((F3S(p_U, BY, i,j,k) - F3S(p_U, BY, i-1,j,k)) * PDE_INV_DXF(i) -
+			  (F3S(p_U, BX, i,j,k) - F3S(p_U, BX, i,j-1,k)) * PDE_INV_DYF(j));
+  } fld3d_foreach_end;
+}
+
+#endif
 
 // ----------------------------------------------------------------------
 // patch_calc_current_cc

@@ -34,6 +34,7 @@
 #include "pde/pde_mhd_get_dt.c"
 #include "pde/pde_mhd_pushfluid.c"
 #include "pde/pde_mhd_rmaskn.c"
+#include "pde/pde_mhd_calc_current.c"
 
 // FIXME, don't even know why I have to do this
 #undef PP
@@ -61,32 +62,6 @@ struct ggcm_mhd_step_c2 {
 };
 
 #define ggcm_mhd_step_c2(step) mrc_to_subobj(step, struct ggcm_mhd_step_c2)
-
-// ----------------------------------------------------------------------
-// curr_c
-//
-// edge centered current density
-
-static void
-curr_c(struct ggcm_mhd *mhd, int m_j, int m_curr)
-{
-  struct mrc_fld *f = mhd->fld;
-  float *bd4x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD4) - 1;
-  float *bd4y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD4) - 1;
-  float *bd4z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD4) - 1;
-
-  mrc_fld_foreach(f, ix,iy,iz, 1, 2) {
-    F3(f, m_j + 0, ix,iy,iz) =
-      (F3(f, m_curr + _B1Z, ix,iy,iz) - F3(f, m_curr + _B1Z, ix,iy-1,iz)) * bd4y[iy] -
-      (F3(f, m_curr + _B1Y, ix,iy,iz) - F3(f, m_curr + _B1Y, ix,iy,iz-1)) * bd4z[iz];
-    F3(f, m_j + 1, ix,iy,iz) =
-      (F3(f, m_curr + _B1X, ix,iy,iz) - F3(f, m_curr + _B1X, ix,iy,iz-1)) * bd4z[iz] -
-      (F3(f, m_curr + _B1Z, ix,iy,iz) - F3(f, m_curr + _B1Z, ix-1,iy,iz)) * bd4x[ix];
-    F3(f, m_j + 2, ix,iy,iz) =
-      (F3(f, m_curr + _B1Y, ix,iy,iz) - F3(f, m_curr + _B1Y, ix-1,iy,iz)) * bd4x[ix] -
-      (F3(f, m_curr + _B1X, ix,iy,iz) - F3(f, m_curr + _B1X, ix,iy-1,iz)) * bd4y[iy];
-  } mrc_fld_foreach_end;
-}
 
 // ----------------------------------------------------------------------
 // currbb_c
@@ -118,7 +93,9 @@ curbc_c(struct ggcm_mhd *mhd, int m_curr)
 { 
   enum { _TX = _TMP1, _TY = _TMP2, _TZ = _TMP3 };
 
-  curr_c(mhd, _TX, m_curr);
+  fld3d_t p_J = fld3d_make_view(s_p_f, _TX), p_U = fld3d_make_view(s_p_f, m_curr);
+
+  patch_calc_current_ec(p_J, p_U);
 
   struct mrc_fld *f = mhd->fld;
 
@@ -140,7 +117,9 @@ push_ej_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_curr, int m_next)
   enum { XJX = _BX, XJY = _BY, XJZ = _BZ };
   enum { BX = _TMP1, BY = _TMP2, BZ = _TMP3 };
 
-  curr_c(mhd, XJX, m_curr);
+  fld3d_t p_J = fld3d_make_view(s_p_f, XJX), p_U = fld3d_make_view(s_p_f, m_curr);
+
+  patch_calc_current_ec(p_J, p_U);
   currbb_c(mhd, BX, m_curr);
 	
   struct mrc_fld *f = mhd->fld;
