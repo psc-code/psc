@@ -45,12 +45,6 @@ struct ggcm_mhd_step_c2 {
 
 #define ggcm_mhd_step_c2(step) mrc_to_subobj(step, struct ggcm_mhd_step_c2)
 
-// ======================================================================
-// ggcm_mhd_step subclass "c2"
-//
-// this class will do full predictor / corrector steps,
-// ie., including primvar() etc.
-
 // ----------------------------------------------------------------------
 // ggcm_mhd_step_c2_setup_flds
 
@@ -113,6 +107,10 @@ ggcm_mhd_step_c2_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   struct ggcm_mhd *mhd = step->mhd;
 
   assert(x == mhd->fld);
+
+  // FIXME? It's not going to make a difference, but this is the
+  // time at the beginning of the whole step, rather than the time of the current state
+  s_mhd_time = mhd->time; 
 
   ggcm_mhd_fill_ghosts(mhd, x, _RR1, mhd->time);
   pde_mhd_pushstage(x, mhd->dt, 0);
@@ -221,11 +219,11 @@ struct ggcm_mhd_step_ops ggcm_mhd_step_c2_ops = {
   .name                = ggcm_mhd_step_c2_name,
   .size                = sizeof(struct ggcm_mhd_step_c2),
   .param_descr         = ggcm_mhd_step_c2_descr,
-  .get_dt              = ggcm_mhd_step_c2_get_dt,
-  .run                 = ggcm_mhd_step_c2_run,
   .setup               = ggcm_mhd_step_c2_setup,
   .destroy             = ggcm_mhd_step_c2_destroy,
   .setup_flds          = ggcm_mhd_step_c2_setup_flds,
+  .get_dt              = ggcm_mhd_step_c2_get_dt,
+  .run                 = ggcm_mhd_step_c2_run,
   .get_e_ec            = ggcm_mhd_step_c2_get_e_ec,
   .diag_item_zmask_run = ggcm_mhd_step_c2_diag_item_zmask_run,
   .diag_item_rmask_run = ggcm_mhd_step_c2_diag_item_rmask_run,

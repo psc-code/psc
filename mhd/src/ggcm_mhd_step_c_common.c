@@ -132,11 +132,11 @@ ggcm_mhd_step_c_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
   struct mrc_fld *E = mrc_fld_get_as(Eout, FLD_TYPE);
   struct mrc_fld *x = mrc_fld_get_as(state_vec, FLD_TYPE);
 
-  mrc_fld_foreach(x, ix, iy, iz, 1, 0) {
-    F3(E, 0, ix, iy, iz) = F3(x, _FLX, ix, iy, iz);
-    F3(E, 1, ix, iy, iz) = F3(x, _FLY, ix, iy, iz);
-    F3(E, 2, ix, iy, iz) = F3(x, _FLZ, ix, iy, iz);
-  } mrc_fld_foreach_end;
+  fld3d_foreach(i, j, k, 1, 0) {
+    F3(E, 0, i,j,k) = F3(x, _FLX, i,j,k);
+    F3(E, 1, i,j,k) = F3(x, _FLY, i,j,k);
+    F3(E, 2, i,j,k) = F3(x, _FLZ, i,j,k);
+  } fld3d_foreach_end;
 
   mrc_fld_put_as(E, Eout);
   // FIXME, should use _put_as, but don't want copy-back
