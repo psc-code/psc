@@ -66,51 +66,6 @@ struct ggcm_mhd_step_c2 {
 
 #define ggcm_mhd_step_c2(step) mrc_to_subobj(step, struct ggcm_mhd_step_c2)
 
-static inline float
-xbcthy3f(mrc_fld_data_t s1, mrc_fld_data_t s2)
-{
-  if (s1 > 0.f && fabsf(s2) > REPS) {
-/* .if(calce_aspect_low) then */
-/* .call lowmask(I, 0, 0,tl1) */
-/* .call lowmask( 0,J, 0,tl2) */
-/* .call lowmask( 0, 0,K,tl3) */
-/* .call lowmask(I,J,K,tl4) */
-/*       tt=tt*(1.0-max(tl1,tl2,tl3,tl4)) */
-    return s1 / s2;
-  }
-  return 0.f;
-}
-
-static inline void
-xcalc_avg_dz_By(fld3d_t p_dB, fld3d_t p_U, int XX, int YY, int ZZ,
-		int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2)
-{
-  fld3d_t p_tmp1 = fld3d_make_tmp(2, _TMP1);
-
-  // d_z B_y, d_y B_z on x edges
-  fld3d_foreach(i,j,k, 1, 2) {
-    mrc_fld_data_t bd1[3] = { PDE_INV_DXF(i), PDE_INV_DYF(j), PDE_INV_DZF(k) };
-
-    F3S(p_tmp1, 0, i,j,k) = bd1[ZZ] * 
-      (F3S(p_U, BX + YY, i,j,k) - F3S(p_U, BX + YY, i-JX2,j-JY2,k-JZ2));
-    F3S(p_tmp1, 1, i,j,k) = bd1[YY] * 
-      (F3S(p_U, BX + ZZ, i,j,k) - F3S(p_U, BX + ZZ, i-JX1,j-JY1,k-JZ1));
-  } fld3d_foreach_end;
-
-  // .5 * harmonic average if same sign
-  fld3d_foreach(i,j,k, 1, 1) {
-    mrc_fld_data_t s1, s2;
-    // dz_By on y face
-    s1 = F3S(p_tmp1, 0, i+JX2,j+JY2,k+JZ2) * F3S(p_tmp1, 0, i,j,k);
-    s2 = F3S(p_tmp1, 0, i+JX2,j+JY2,k+JZ2) + F3S(p_tmp1, 0, i,j,k);
-    F3S(p_dB, 0, i,j,k) = xbcthy3f(s1, s2);
-    // dy_Bz on z face
-    s1 = F3S(p_tmp1, 1, i+JX1,j+JY1,k+JZ1) * F3S(p_tmp1, 1, i,j,k);
-    s2 = F3S(p_tmp1, 1, i+JX1,j+JY1,k+JZ1) + F3S(p_tmp1, 1, i,j,k);
-    F3S(p_dB, 1, i,j,k) = xbcthy3f(s1, s2);
-  } fld3d_foreach_end;
-}
-
 #define xCC_TO_EC(f, m, i,j,k, I,J,K) \
   (.25f * (F3(f, m, i-I,j-J,k-K) +  \
 	   F3(f, m, i-I,j   ,k   ) +  \
@@ -163,7 +118,7 @@ xbcthy3z_NL1(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int I, int J, int K,
   float *bd2z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD2);
 
   fld3d_t p_dB = fld3d_make_view(s_p_f, _TMP3), p_U = fld3d_make_view(s_p_f, m_curr);
-  xcalc_avg_dz_By(p_dB, p_U, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2);
+  calc_avg_dz_By(p_dB, p_U, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2);
 
   mrc_fld_data_t diffmul=1.0;
   if (mhd->time < mhd->par.diff_timelo) { // no anomalous res at startup
@@ -204,7 +159,7 @@ xbcthy3z_const(struct ggcm_mhd *mhd, int XX, int YY, int ZZ, int I, int J, int K
   float *bd2z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD2);
 
   fld3d_t p_dB = fld3d_make_view(s_p_f, _TMP3), p_U = fld3d_make_view(s_p_f, m_curr);
-  xcalc_avg_dz_By(p_dB, p_U, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2);
+  calc_avg_dz_By(p_dB, p_U, XX, YY, ZZ, JX1, JY1, JZ1, JX2, JY2, JZ2);
 
   // edge centered E = - v x B (+ dissipation)
   fld3d_foreach(i,j,k, 0, 1) {

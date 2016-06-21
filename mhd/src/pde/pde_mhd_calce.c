@@ -22,6 +22,8 @@ bcthy3f(mrc_fld_data_t s1, mrc_fld_data_t s2)
   return 0.f;
 }
 
+#if OPT_STAGGER == OPT_STAGGER_GGCM
+
 static inline void
 calc_avg_dz_By(fld3d_t p_dB, fld3d_t p_U, int XX, int YY, int ZZ,
 	       int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2)
@@ -51,6 +53,40 @@ calc_avg_dz_By(fld3d_t p_dB, fld3d_t p_U, int XX, int YY, int ZZ,
     F3S(p_dB, 1, i,j,k) = bcthy3f(s1, s2);
   } fld3d_foreach_end;
 }
+
+#else
+
+static inline void
+calc_avg_dz_By(fld3d_t p_dB, fld3d_t p_U, int XX, int YY, int ZZ,
+	       int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2)
+{
+  fld3d_t p_tmp1 = fld3d_make_tmp(2, _TMP1);
+
+  // d_z B_y, d_y B_z on x edges
+  fld3d_foreach(i,j,k, 1, 2) {
+    mrc_fld_data_t bd1[3] = { PDE_INV_DXF(i), PDE_INV_DYF(j), PDE_INV_DZF(k) };
+
+    F3S(p_tmp1, 0, i,j,k) = bd1[ZZ] * 
+      (F3S(p_U, BX + YY, i,j,k) - F3S(p_U, BX + YY, i-JX2,j-JY2,k-JZ2));
+    F3S(p_tmp1, 1, i,j,k) = bd1[YY] * 
+      (F3S(p_U, BX + ZZ, i,j,k) - F3S(p_U, BX + ZZ, i-JX1,j-JY1,k-JZ1));
+  } fld3d_foreach_end;
+
+  // .5 * harmonic average if same sign
+  fld3d_foreach(i,j,k, 1, 1) {
+    mrc_fld_data_t s1, s2;
+    // dz_By on y face
+    s1 = F3S(p_tmp1, 0, i+JX2,j+JY2,k+JZ2) * F3S(p_tmp1, 0, i,j,k);
+    s2 = F3S(p_tmp1, 0, i+JX2,j+JY2,k+JZ2) + F3S(p_tmp1, 0, i,j,k);
+    F3S(p_dB, 0, i,j,k) = bcthy3f(s1, s2);
+    // dy_Bz on z face
+    s1 = F3S(p_tmp1, 1, i+JX1,j+JY1,k+JZ1) * F3S(p_tmp1, 1, i,j,k);
+    s2 = F3S(p_tmp1, 1, i+JX1,j+JY1,k+JZ1) + F3S(p_tmp1, 1, i,j,k);
+    F3S(p_dB, 1, i,j,k) = bcthy3f(s1, s2);
+  } fld3d_foreach_end;
+}
+
+#endif
 
 #define CC_TO_EC(p_f, m, i,j,k, I,J,K) \
   (.25f * (F3S(p_f, m, i  ,j  ,k  ) +  \
