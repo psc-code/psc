@@ -127,24 +127,4 @@ void ggcm_mhd_setup_amr_domain(struct ggcm_mhd *mhd);
 // reference implementation only
 void ggcm_mhd_amr_fill_ghosts_b(struct ggcm_mhd *mhd, struct mrc_fld *fld);
 
-// direct access to coords for a given cell
-// (ideally avoided for performance critical parts, because it's slower)
-//
-// FIXME, this should maybe become a feature of mrc_crds, or go away entirely
-// because it duplicates already existing functionality to access coordinates via
-// MRC_MCRD macros, though the latter only support cell-centered coords at this
-// time
-
-void primvar_c(struct ggcm_mhd *mhd, int m_curr);
-void primvar_float(struct ggcm_mhd *mhd, int m_curr);
-void primvar_double(struct ggcm_mhd *mhd, int m_curr);
-void primvar1_c(struct ggcm_mhd *mhd);
-void primbb_c(struct ggcm_mhd *mhd, int m_curr);
-void primbb_float(struct ggcm_mhd *mhd, int m_curr);
-void primbb_double(struct ggcm_mhd *mhd, int m_curr);
-void zmaskn_c(struct ggcm_mhd *mhd);
-void zmaskn_float(struct ggcm_mhd *mhd);
-void zmaskn_double(struct ggcm_mhd *mhd);
-void newstep(struct ggcm_mhd *mhd, float *dtn);
-
 #endif

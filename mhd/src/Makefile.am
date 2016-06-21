@@ -54,15 +54,6 @@ libmhd_la_SOURCES = \
 	ggcm_mhd_diag_item.c \
 	ggcm_mhd_diag_item_state.c \
 	ggcm_mhd_diag_item_primitive.c \
-	primvar.c \
-	primvar_float.c \
-	primvar_double.c \
-	primbb.c \
-	primbb_float.c \
-	primbb_double.c \
-	zmaskn.c \
-	zmaskn_float.c \
-	zmaskn_double.c \
 	ggcm_mhd_diag_item_divb.c \
 	ggcm_mhd_diag_item_rank.c \
 	ggcm_mhd_diag_item_j.c \
