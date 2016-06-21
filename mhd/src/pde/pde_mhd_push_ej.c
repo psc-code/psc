@@ -16,19 +16,14 @@ patch_push_ej_c(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Ucurr,
   patch_calc_current_ec(p_Jec, p_Ucurr);
   patch_primbb(p_Bcc, p_Ucurr);
 	
-  mrc_fld_data_t s1 = .25f * dt;
   fld3d_foreach(i,j,k, 0, 0) {
-    mrc_fld_data_t z = F3S(p_zmask, 0, i,j,k);
-    mrc_fld_data_t s2 = s1 * z;
-    mrc_fld_data_t cx = (F3S(p_Jec, 0, i,j  ,k  ) + F3S(p_Jec, 0, i,j-1,k  ) +
-			 F3S(p_Jec, 0, i,j  ,k-1) + F3S(p_Jec, 0, i,j-1,k-1));
-    mrc_fld_data_t cy = (F3S(p_Jec, 1, i  ,j,k  ) + F3S(p_Jec, 1, i-1,j,k  ) +
-			 F3S(p_Jec, 1, i  ,j,k-1) + F3S(p_Jec, 1, i-1,j,k-1));
-    mrc_fld_data_t cz = (F3S(p_Jec, 2, i  ,j  ,k) + F3S(p_Jec, 2, i-1,j  ,k) +
-			 F3S(p_Jec, 2, i  ,j-1,k) + F3S(p_Jec, 2, i-1,j-1,k));
-    mrc_fld_data_t ffx = s2 * (cy * F3S(p_Bcc, 2, i,j,k) - cz * F3S(p_Bcc, 1, i,j,k));
-    mrc_fld_data_t ffy = s2 * (cz * F3S(p_Bcc, 0, i,j,k) - cx * F3S(p_Bcc, 2, i,j,k));
-    mrc_fld_data_t ffz = s2 * (cx * F3S(p_Bcc, 1, i,j,k) - cy * F3S(p_Bcc, 0, i,j,k));
+    mrc_fld_data_t s = dt * F3S(p_zmask, 0, i,j,k);
+    mrc_fld_data_t cx = EC_TO_CC(p_Jec, 0, i,j,k);
+    mrc_fld_data_t cy = EC_TO_CC(p_Jec, 1, i,j,k);
+    mrc_fld_data_t cz = EC_TO_CC(p_Jec, 2, i,j,k);
+    mrc_fld_data_t ffx = s * (cy * F3S(p_Bcc, 2, i,j,k) - cz * F3S(p_Bcc, 1, i,j,k));
+    mrc_fld_data_t ffy = s * (cz * F3S(p_Bcc, 0, i,j,k) - cx * F3S(p_Bcc, 2, i,j,k));
+    mrc_fld_data_t ffz = s * (cx * F3S(p_Bcc, 1, i,j,k) - cy * F3S(p_Bcc, 0, i,j,k));
     mrc_fld_data_t duu = (ffx * F3S(p_W, VX, i,j,k) +
 			  ffy * F3S(p_W, VY, i,j,k) +
 			  ffz * F3S(p_W, VZ, i,j,k));

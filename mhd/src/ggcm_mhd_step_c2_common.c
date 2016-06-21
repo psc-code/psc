@@ -35,6 +35,7 @@
 #include "pde/pde_mhd_pushfluid.c"
 #include "pde/pde_mhd_rmaskn.c"
 #include "pde/pde_mhd_calc_current.c"
+#include "pde/pde_mhd_push_ej.c"
 
 // FIXME, don't even know why I have to do this
 #undef PP
@@ -62,53 +63,6 @@ struct ggcm_mhd_step_c2 {
 };
 
 #define ggcm_mhd_step_c2(step) mrc_to_subobj(step, struct ggcm_mhd_step_c2)
-
-static void
-push_ej_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_curr, int m_next)
-{
-  enum { XJX = _BX, XJY = _BY, XJZ = _BZ };
-  enum { BX = _TMP1, BY = _TMP2, BZ = _TMP3 };
-
-  fld3d_t p_J = fld3d_make_view(s_p_f, XJX), p_U = fld3d_make_view(s_p_f, m_curr);
-  fld3d_t p_Bcc = fld3d_make_view(s_p_f, BX);
-
-  patch_calc_current_ec(p_J, p_U);
-  patch_primbb(p_Bcc, p_U);
-	
-  struct mrc_fld *f = mhd->fld;
-
-  mrc_fld_data_t s1 = .25f * dt;
-  mrc_fld_foreach(f, i,j,k, 0, 0) {
-    mrc_fld_data_t z = F3(f,_ZMASK, i,j,k);
-    mrc_fld_data_t s2 = s1 * z;
-    mrc_fld_data_t cx = (F3(f, XJX, i  ,j+1,k+1) +
-		F3(f, XJX, i  ,j  ,k+1) +
-		F3(f, XJX, i  ,j+1,k  ) +
-		F3(f, XJX, i  ,j  ,k  ));
-    mrc_fld_data_t cy = (F3(f, XJY, i+1,j  ,k+1) +
-		F3(f, XJY, i  ,j  ,k+1) +
-		F3(f, XJY, i+1,j  ,k  ) +
-		F3(f, XJY, i  ,j  ,k  ));
-    mrc_fld_data_t cz = (F3(f, XJZ, i+1,j+1,k  ) +
-		F3(f, XJZ, i  ,j+1,k  ) +
-		F3(f, XJZ, i+1,j  ,k  ) +
-		F3(f, XJZ, i  ,j  ,k  ));
-    mrc_fld_data_t ffx = s2 * (cy * F3(f, BZ, i,j,k) -
-		      cz * F3(f, BY, i,j,k));
-    mrc_fld_data_t ffy = s2 * (cz * F3(f, BX, i,j,k) -
-		      cx * F3(f, BZ, i,j,k));
-    mrc_fld_data_t ffz = s2 * (cx * F3(f, BY, i,j,k) -
-		      cy * F3(f, BX, i,j,k));
-    mrc_fld_data_t duu = (ffx * F3(f, _VX, i,j,k) +
-		 ffy * F3(f, _VY, i,j,k) +
-		 ffz * F3(f, _VZ, i,j,k));
-
-    F3(f, m_next + _RV1X, i,j,k) += ffx;
-    F3(f, m_next + _RV1Y, i,j,k) += ffy;
-    F3(f, m_next + _RV1Z, i,j,k) += ffz;
-    F3(f, m_next + _UU1 , i,j,k) += duu;
-  } mrc_fld_foreach_end;
-}
 
 static void
 res1_const_c(struct ggcm_mhd *mhd)
@@ -411,7 +365,8 @@ pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_prev, int m_curr, int
     assert(0);
   }
 
-  push_ej_c(mhd, dt, m_curr, m_next);
+  patch_push_ej(p_Unext, dt, p_Ucurr, p_W, p_zmask);
+
   calce_c(mhd, dt, m_curr);
   bpush_c(mhd, dt, m_prev, m_next);
 }
