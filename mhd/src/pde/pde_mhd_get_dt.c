@@ -11,11 +11,11 @@
 #include "pde/pde_mhd_primbb.c"
 
 // ----------------------------------------------------------------------
-// patch_get_dt_scons_ggcm_c
+// patch_get_dt_scons_c
 
 static mrc_fld_data_t
-patch_get_dt_scons_ggcm_c(fld3d_t p_U, fld3d_t p_W, fld3d_t p_ymask,
-			  fld3d_t p_cmsv, fld3d_t p_bcc, fld3d_t p_zmask)
+patch_get_dt_scons_c(fld3d_t p_U, fld3d_t p_W, fld3d_t p_ymask,
+		     fld3d_t p_cmsv, fld3d_t p_bcc, fld3d_t p_zmask)
 {
   patch_primvar(p_W, p_U, p_cmsv);
   patch_primbb(p_bcc, p_U);
@@ -57,8 +57,8 @@ void newstep_F77(real *pp, real *rr, real *vx, real *vy, real *vz,
 		 real *bx, real *by, real *bz, real *zmask, real *dtn);
 
 static mrc_fld_data_t
-patch_get_dt_scons_ggcm_fortran(fld3d_t p_U, fld3d_t p_W, fld3d_t p_ymask,
-				fld3d_t p_cmsv, fld3d_t p_bcc, fld3d_t p_zmask)
+patch_get_dt_scons_fortran(fld3d_t p_U, fld3d_t p_W, fld3d_t p_ymask,
+			   fld3d_t p_cmsv, fld3d_t p_bcc, fld3d_t p_zmask)
 {
   patch_primvar(p_W, p_U, p_cmsv);
   patch_primbb(p_bcc, p_U);
@@ -74,17 +74,17 @@ patch_get_dt_scons_ggcm_fortran(fld3d_t p_U, fld3d_t p_W, fld3d_t p_ymask,
 #endif // HAVE_OPENGGCM && MRC_FLD_AS_FLOAT_H
 
 // ----------------------------------------------------------------------
-// patch_get_dt_scons_ggcm
+// patch_get_dt_scons
 
 static mrc_fld_data_t
-patch_get_dt_scons_ggcm(fld3d_t p_U, fld3d_t p_W, fld3d_t p_ymask,
-			fld3d_t p_cmsv, fld3d_t p_bcc, fld3d_t p_zmask)
+patch_get_dt_scons(fld3d_t p_U, fld3d_t p_W, fld3d_t p_ymask,
+		   fld3d_t p_cmsv, fld3d_t p_bcc, fld3d_t p_zmask)
 {
   if (s_opt_mhd_newstep == OPT_MHD_C) {
-    return patch_get_dt_scons_ggcm_c(p_U, p_W, p_ymask, p_cmsv, p_bcc, p_zmask);
+    return patch_get_dt_scons_c(p_U, p_W, p_ymask, p_cmsv, p_bcc, p_zmask);
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
   } else if (s_opt_mhd_newstep == OPT_MHD_FORTRAN) {
-    return patch_get_dt_scons_ggcm_fortran(p_U, p_W, p_ymask, p_cmsv, p_bcc, p_zmask);
+    return patch_get_dt_scons_fortran(p_U, p_W, p_ymask, p_cmsv, p_bcc, p_zmask);
 #endif
   } else {
     assert(0);
@@ -92,10 +92,10 @@ patch_get_dt_scons_ggcm(fld3d_t p_U, fld3d_t p_W, fld3d_t p_ymask,
 }
 
 // ----------------------------------------------------------------------
-// pde_mhd_get_dt_scons_ggcm
+// pde_mhd_get_dt_scons
 
 static mrc_fld_data_t _mrc_unused
-pde_mhd_get_dt_scons_ggcm(struct ggcm_mhd *mhd, struct mrc_fld *x)
+pde_mhd_get_dt_scons(struct ggcm_mhd *mhd, struct mrc_fld *x)
 {
   fld3d_t p_f;
   fld3d_setup(&p_f, x);
@@ -111,7 +111,7 @@ pde_mhd_get_dt_scons_ggcm(struct ggcm_mhd *mhd, struct mrc_fld *x)
     fld3d_setup_view(&p_ymask, p_f, _YMASK);
     fld3d_setup_view(&p_zmask, p_f, _ZMASK);
 
-    dt = mrc_fld_min(dt, patch_get_dt_scons_ggcm(p_U, p_W, p_ymask, p_cmsv, p_bcc, p_zmask));
+    dt = mrc_fld_min(dt, patch_get_dt_scons(p_U, p_W, p_ymask, p_cmsv, p_bcc, p_zmask));
 
     fld3d_put(&p_f, p);
   }

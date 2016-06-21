@@ -161,7 +161,7 @@ ggcm_mhd_step_c2_destroy(struct ggcm_mhd_step *step)
 static double
 ggcm_mhd_step_c2_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
 {
-  return pde_mhd_get_dt_scons_ggcm(step->mhd, x);
+  return pde_mhd_get_dt_scons(step->mhd, x);
 }
 
 // ----------------------------------------------------------------------
