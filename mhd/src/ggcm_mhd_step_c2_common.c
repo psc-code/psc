@@ -38,6 +38,7 @@
 #include "pde/pde_mhd_push_ej.c"
 #include "pde/pde_mhd_calc_resis.c"
 #include "pde/pde_mhd_calce.c"
+#include "pde/pde_mhd_bpush.c"
 
 // FIXME, don't even know why I have to do this
 #undef PP
@@ -63,27 +64,6 @@ struct ggcm_mhd_step_c2 {
 };
 
 #define ggcm_mhd_step_c2(step) mrc_to_subobj(step, struct ggcm_mhd_step_c2)
-
-static void
-bpush_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_prev, int m_next)
-{
-  struct mrc_fld *f = mhd->fld;
-  float *bd3x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD3);
-  float *bd3y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD3);
-  float *bd3z = ggcm_mhd_crds_get_crd(mhd->crds, 2, BD3);
-
-  fld3d_foreach(i,j,k, 0, 0) {
-    F3(f, m_next + _B1X, i,j,k) = F3(f, m_prev + _B1X, i,j,k) +
-      dt * (bd3y[j] * (F3(f,_FLZ, i,j+1,k) - F3(f,_FLZ, i,j,k)) -
-	    bd3z[k] * (F3(f,_FLY, i,j,k+1) - F3(f,_FLY, i,j,k)));
-    F3(f, m_next + _B1Y, i,j,k) = F3(f, m_prev + _B1Y, i,j,k) +
-      dt * (bd3z[k] * (F3(f,_FLX, i,j,k+1) - F3(f,_FLX, i,j,k)) -
-	    bd3x[i] * (F3(f,_FLZ, i+1,j,k) - F3(f,_FLZ, i,j,k)));
-    F3(f, m_next + _B1Z, i,j,k) = F3(f, m_prev + _B1Z, i,j,k) +
-      dt * (bd3x[i] * (F3(f,_FLY, i+1,j,k) - F3(f,_FLY, i,j,k)) -
-	    bd3y[j] * (F3(f,_FLX, i,j+1,k) - F3(f,_FLX, i,j,k)));
-  } fld3d_foreach_end;
-}
 
 static void
 pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_prev, int m_curr, int m_next,
@@ -136,7 +116,8 @@ pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_prev, int m_curr, int
   patch_push_ej(p_Unext, dt, p_Ucurr, p_W, p_zmask);
 
   patch_calce(p_E, dt, p_Ucurr, p_W, p_zmask, p_rmask, p_resis, p_Jcc);
-  bpush_c(mhd, dt, m_prev, m_next);
+  patch_bpush1(p_Unext, dt, p_Uprev, p_E);
+  //  bpush_c(mhd, dt, m_prev, m_next);
 }
 
 // ======================================================================
