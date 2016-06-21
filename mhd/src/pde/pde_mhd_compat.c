@@ -4,6 +4,8 @@
 
 #include "ggcm_mhd_crds.h"
 
+#include "pde/pde_mhd_setup.c"
+
 // ======================================================================
 // compatibility functionality for original openggcm
 //

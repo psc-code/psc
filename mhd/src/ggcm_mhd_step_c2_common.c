@@ -12,6 +12,17 @@
 #include <math.h>
 #include <string.h>
 
+// FIXME: major ugliness
+// The fortran fields do primitive vars in the order _RR,_PP,_VX,_VY,_VZ
+// but in C, we stick with the corresponding conservative var order, ie.,
+// RR,VX,VY,VZ,PP
+// The below hackily switches the order around in C, so that it matches fortran
+
+#define PP 1
+#define VX 2
+#define VY 3
+#define VZ 4
+
 #include "pde/pde_defs.h"
 
 // mhd options
@@ -19,8 +30,16 @@
 #define OPT_EQN OPT_EQN_MHD_SCONS
 #define OPT_BACKGROUND false
 
+#include "pde/pde_mhd_compat.c"
 #include "pde/pde_mhd_get_dt.c"
+#include "pde/pde_mhd_pushfluid.c"
 #include "pde/pde_mhd_rmaskn.c"
+
+// FIXME, don't even know why I have to do this
+#undef PP
+#undef VX
+#undef VY
+#undef VZ
 
 #include "mhd_sc.c"
 
@@ -42,265 +61,6 @@ struct ggcm_mhd_step_c2 {
 };
 
 #define ggcm_mhd_step_c2(step) mrc_to_subobj(step, struct ggcm_mhd_step_c2)
-
-static void
-vgflrr_c(struct ggcm_mhd *mhd)
-{
-  struct mrc_fld *f = mhd->fld;
-
-  mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
-    mrc_fld_data_t a = F3(f,_RR, ix,iy,iz);
-    F3(f,_TMP1, ix,iy,iz) = a * F3(f,_VX, ix,iy,iz);
-    F3(f,_TMP2, ix,iy,iz) = a * F3(f,_VY, ix,iy,iz);
-    F3(f,_TMP3, ix,iy,iz) = a * F3(f,_VZ, ix,iy,iz);
-  } mrc_fld_foreach_end;
-}
-
-static void
-vgflrvx_c(struct ggcm_mhd *mhd)
-{
-  struct mrc_fld *f = mhd->fld;
-
-  mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
-    mrc_fld_data_t a = F3(f,_RR, ix,iy,iz) * F3(f,_VX, ix,iy,iz);
-    F3(f,_TMP1, ix,iy,iz) = a * F3(f,_VX, ix,iy,iz);
-    F3(f,_TMP2, ix,iy,iz) = a * F3(f,_VY, ix,iy,iz);
-    F3(f,_TMP3, ix,iy,iz) = a * F3(f,_VZ, ix,iy,iz);
-  } mrc_fld_foreach_end;
-}
-
-static void
-vgflrvy_c(struct ggcm_mhd *mhd)
-{
-  struct mrc_fld *f = mhd->fld;
-
-  mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
-    mrc_fld_data_t a = F3(f,_RR, ix,iy,iz) * F3(f,_VY, ix,iy,iz);
-    F3(f,_TMP1, ix,iy,iz) = a * F3(f,_VX, ix,iy,iz);
-    F3(f,_TMP2, ix,iy,iz) = a * F3(f,_VY, ix,iy,iz);
-    F3(f,_TMP3, ix,iy,iz) = a * F3(f,_VZ, ix,iy,iz);
-  } mrc_fld_foreach_end;
-}
-
-static void
-vgflrvz_c(struct ggcm_mhd *mhd)
-{
-  struct mrc_fld *f = mhd->fld;
-
-  mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
-    mrc_fld_data_t a = F3(f,_RR, ix,iy,iz) * F3(f,_VZ, ix,iy,iz);
-    F3(f,_TMP1, ix,iy,iz) = a * F3(f,_VX, ix,iy,iz);
-    F3(f,_TMP2, ix,iy,iz) = a * F3(f,_VY, ix,iy,iz);
-    F3(f,_TMP3, ix,iy,iz) = a * F3(f,_VZ, ix,iy,iz);
-  } mrc_fld_foreach_end;
-}
-
-static void
-vgfluu_c(struct ggcm_mhd *mhd)
-{
-  struct mrc_fld *f = mhd->fld;
-
-  mrc_fld_data_t gamma = mhd->par.gamm;
-  mrc_fld_data_t s = gamma / (gamma - 1.f);
-  mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
-    mrc_fld_data_t ep = s * F3(f,_PP, ix,iy,iz) +
-      .5f * F3(f,_RR, ix,iy,iz) * (sqr(F3(f,_VX, ix,iy,iz)) + 
-				   sqr(F3(f,_VY, ix,iy,iz)) + 
-				   sqr(F3(f,_VZ, ix,iy,iz)));
-    F3(f,_TMP1, ix,iy,iz) = ep * F3(f,_VX, ix,iy,iz);
-    F3(f,_TMP2, ix,iy,iz) = ep * F3(f,_VY, ix,iy,iz);
-    F3(f,_TMP3, ix,iy,iz) = ep * F3(f,_VZ, ix,iy,iz);
-  } mrc_fld_foreach_end;
-}
-
-static void
-fluxl_c(struct ggcm_mhd *mhd, int m)
-{
-  struct mrc_fld *f = mhd->fld;
-
-  mrc_fld_foreach(f, ix,iy,iz, 1, 0) {
-    mrc_fld_data_t aa = F3(f,m, ix,iy,iz);
-    mrc_fld_data_t cmsv = F3(f,_CMSV, ix,iy,iz);
-    F3(f,_FLX, ix,iy,iz) =
-      .5f * ((F3(f,_TMP1, ix  ,iy,iz) + F3(f,_TMP1, ix+1,iy,iz)) -
-	     .5f * (F3(f,_CMSV, ix+1,iy,iz) + cmsv) * (F3(f,m, ix+1,iy,iz) - aa));
-    F3(f,_FLY, ix,iy,iz) =
-      .5f * ((F3(f,_TMP2, ix,iy  ,iz) + F3(f,_TMP2, ix,iy+1,iz)) -
-	     .5f * (F3(f,_CMSV, ix,iy+1,iz) + cmsv) * (F3(f,m, ix,iy+1,iz) - aa));
-    F3(f,_FLZ, ix,iy,iz) =
-      .5f * ((F3(f,_TMP3, ix,iy,iz  ) + F3(f,_TMP3, ix,iy,iz+1)) -
-	     .5f * (F3(f,_CMSV, ix,iy,iz+1) + cmsv) * (F3(f,m, ix,iy,iz+1) - aa));
-  } mrc_fld_foreach_end;
-}
-
-static void
-fluxb_c(struct ggcm_mhd *mhd, int m)
-{
-  struct mrc_fld *f = mhd->fld;
-
-  mrc_fld_data_t s1 = 1.f/12.f;
-  mrc_fld_data_t s7 = 7.f * s1;
-
-  mrc_fld_foreach(f, ix,iy,iz, 1, 0) {
-    mrc_fld_data_t fhx = (s7 * (F3(f, _TMP1, ix  ,iy,iz) + F3(f, _TMP1, ix+1,iy,iz)) -
-		 s1 * (F3(f, _TMP1, ix-1,iy,iz) + F3(f, _TMP1, ix+2,iy,iz)));
-    mrc_fld_data_t fhy = (s7 * (F3(f, _TMP2, ix,iy  ,iz) + F3(f, _TMP2, ix,iy+1,iz)) -
-		 s1 * (F3(f, _TMP2, ix,iy-1,iz) + F3(f, _TMP2, ix,iy+2,iz)));
-    mrc_fld_data_t fhz = (s7 * (F3(f, _TMP3, ix,iy,iz  ) + F3(f, _TMP3, ix,iy,iz+1)) -
-		 s1 * (F3(f, _TMP3, ix,iy,iz-1) + F3(f, _TMP3, ix,iy,iz+2)));
-
-    mrc_fld_data_t aa = F3(f,m, ix,iy,iz);
-    mrc_fld_data_t cmsv = F3(f,_CMSV, ix,iy,iz);
-    mrc_fld_data_t flx =
-      .5f * ((F3(f,_TMP1, ix  ,iy,iz) + F3(f,_TMP1, ix+1,iy,iz)) -
-	     .5f * (F3(f,_CMSV, ix+1,iy,iz) + cmsv) * (F3(f,m, ix+1,iy,iz) - aa));
-    mrc_fld_data_t fly =
-      .5f * ((F3(f,_TMP2, ix,iy  ,iz) + F3(f,_TMP2, ix,iy+1,iz)) -
-	     .5f * (F3(f,_CMSV, ix,iy+1,iz) + cmsv) * (F3(f,m, ix,iy+1,iz) - aa));
-    mrc_fld_data_t flz = 
-      .5f * ((F3(f,_TMP3, ix,iy,iz  ) + F3(f,_TMP3, ix,iy,iz+1)) -
-	     .5f * (F3(f,_CMSV, ix,iy,iz+1) + cmsv) * (F3(f,m, ix,iy,iz+1) - aa));
-
-    mrc_fld_data_t cx = F3(f, _CX, ix,iy,iz);
-    F3(f, _FLX, ix,iy,iz) = cx * flx + (1.f - cx) * fhx;
-    mrc_fld_data_t cy = F3(f, _CY, ix,iy,iz);
-    F3(f, _FLY, ix,iy,iz) = cy * fly + (1.f - cy) * fhy;
-    mrc_fld_data_t cz = F3(f, _CZ, ix,iy,iz);
-    F3(f, _FLZ, ix,iy,iz) = cz * flz + (1.f - cz) * fhz;
-  } mrc_fld_foreach_end;
-}
-
-static void
-pushn_c(struct ggcm_mhd *mhd, int ma, int mc, mrc_fld_data_t dt)
-{
-  struct mrc_fld *f = mhd->fld;
-  float *fd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FD1);
-  float *fd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FD1);
-  float *fd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FD1);
-
-  mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
-    mrc_fld_data_t s = dt * F3(f,_YMASK, ix,iy,iz);
-    F3(f,mc, ix,iy,iz) = F3(f,ma, ix,iy,iz)
-      - s * (fd1x[ix] * (F3(f,_FLX, ix,iy,iz) - F3(f,_FLX, ix-1,iy,iz)) +
-	     fd1y[iy] * (F3(f,_FLY, ix,iy,iz) - F3(f,_FLY, ix,iy-1,iz)) +
-	     fd1z[iz] * (F3(f,_FLZ, ix,iy,iz) - F3(f,_FLZ, ix,iy,iz-1)));
-  } mrc_fld_foreach_end;
-}
-
-static void
-pushpp_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m)
-{
-  struct mrc_fld *f = mhd->fld;
-  float *fd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FD1);
-  float *fd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FD1);
-  float *fd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FD1);
-
-  mrc_fld_data_t dth = -.5f * dt;
-  mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
-    mrc_fld_data_t fpx = fd1x[ix] * (F3(f, _PP, ix+1,iy,iz) - F3(f, _PP, ix-1,iy,iz));
-    mrc_fld_data_t fpy = fd1y[iy] * (F3(f, _PP, ix,iy+1,iz) - F3(f, _PP, ix,iy-1,iz));
-    mrc_fld_data_t fpz = fd1z[iz] * (F3(f, _PP, ix,iy,iz+1) - F3(f, _PP, ix,iy,iz-1));
-    mrc_fld_data_t z = dth * F3(f,_ZMASK, ix,iy,iz);
-    F3(f, m + _RV1X, ix,iy,iz) += z * fpx;
-    F3(f, m + _RV1Y, ix,iy,iz) += z * fpy;
-    F3(f, m + _RV1Z, ix,iy,iz) += z * fpz;
-  } mrc_fld_foreach_end;
-}
-
-static void
-vgrs(struct mrc_fld *f, int m, mrc_fld_data_t s)
-{
-  mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
-    F3(f, m, ix,iy,iz) = s;
-  } mrc_fld_foreach_end;
-}
-
-static void
-vgrv(struct mrc_fld *f, int m_to, int m_from)
-{
-  mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
-    F3(f, m_to, ix,iy,iz) = F3(f, m_from, ix,iy,iz);
-  } mrc_fld_foreach_end;
-}
-
-static inline void
-limit1a(struct mrc_fld *f, int m, int ix, int iy, int iz, int IX, int IY, int IZ, int C)
-{
-  const mrc_fld_data_t reps = 0.003;
-  const mrc_fld_data_t seps = -0.001;
-  const mrc_fld_data_t teps = 1.e-25;
-
-  // Harten/Zwas type switch
-  mrc_fld_data_t aa = F3(f, m, ix,iy,iz);
-  mrc_fld_data_t a1 = F3(f, m, ix+IX,iy+IY,iz+IZ);
-  mrc_fld_data_t a2 = F3(f, m, ix-IX,iy-IY,iz-IZ);
-  mrc_fld_data_t d1 = aa - a2;
-  mrc_fld_data_t d2 = a1 - aa;
-  mrc_fld_data_t s1 = fabsf(d1);
-  mrc_fld_data_t s2 = fabsf(d2);
-  mrc_fld_data_t f1 = fabsf(a1) + fabsf(a2) + fabsf(aa);
-  mrc_fld_data_t s5 = s1 + s2 + reps*f1 + teps;
-  mrc_fld_data_t r3 = fabsf(s1 - s2) / s5; // edge condition
-  mrc_fld_data_t f2 = seps * f1 * f1;
-  if (d1 * d2 < f2) {
-    r3 = 1.f;
-  }
-  r3 = r3 * r3;
-  r3 = r3 * r3;
-  r3 = fminf(2.f * r3, 1.);
-  F3(f, C, ix   ,iy   ,iz   ) = fmaxf(F3(f, C, ix   ,iy   ,iz   ), r3);
-  F3(f, C, ix-IX,iy-IY,iz-IZ) = fmaxf(F3(f, C, ix-IX,iy-IY,iz-IZ), r3);
-}
-
-static void
-limit1_c(struct mrc_fld *f, int m, mrc_fld_data_t time, mrc_fld_data_t timelo, int C)
-{
-  if (time < timelo) {
-    vgrs(f, C + 0, 1.f);
-    vgrs(f, C + 1, 1.f);
-    vgrs(f, C + 2, 1.f);
-    return;
-  }
-
-  mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
-/* .if (limit_aspect_low) then */
-/* .call lowmask(0,0,0,tl1) */
-    limit1a(f, m, ix,iy,iz, 1,0,0, C + 0);
-    limit1a(f, m, ix,iy,iz, 0,1,0, C + 1);
-    limit1a(f, m, ix,iy,iz, 0,0,1, C + 2);
-  } mrc_fld_foreach_end;
-}
-
-static void
-vgfl_c(struct ggcm_mhd *mhd, int m)
-{
-  switch (m) {
-  case _RR1:  return vgflrr_c(mhd);
-  case _RV1X: return vgflrvx_c(mhd);
-  case _RV1Y: return vgflrvy_c(mhd);
-  case _RV1Z: return vgflrvz_c(mhd);
-  case _UU1:  return vgfluu_c(mhd);
-  default: assert(0);
-  }
-}
-
-static void
-pushfv_c(struct ggcm_mhd *mhd, int m, mrc_fld_data_t dt, int m_prev, int m_curr, int m_next,
-	 bool limit)
-{
-  struct mrc_fld *f = mhd->fld;
-
-  vgfl_c(mhd, m);
-  if (!limit) {
-    fluxl_c(mhd, m_curr + m);
-  } else {
-    vgrv(f, _CX, _BX); vgrv(f, _CY, _BY); vgrv(f, _CZ, _BZ);
-    limit1_c(f, m_curr + m, mhd->time, mhd->par.timelo, _CX);
-    fluxb_c(mhd, m_curr + m);
-  }
-
-  pushn_c(mhd, m_prev + m, m_next + m, dt);
-}
 
 // ----------------------------------------------------------------------
 // curr_c
@@ -682,24 +442,29 @@ pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_prev, int m_curr, int
   pde_patch_set(0);
   fld3d_get(&p_f, 0);
 
-  fld3d_t p_rmask = fld3d_make_view(p_f, _RMASK), p_zmask = fld3d_make_view(p_f, _ZMASK);
+  int stage = m_curr == _RR1 ? 0 : 1;
+
+  fld3d_t p_rmask = fld3d_make_view(p_f, _RMASK);
+  fld3d_t p_Unext, p_Uprev, p_Ucurr;
+  fld3d_t p_W, p_cmsv, p_ymask, p_zmask;
+  if (stage == 0) {
+    fld3d_setup_view(&p_Unext, p_f, _RR2);
+    fld3d_setup_view(&p_Uprev, p_f, _RR1);
+    fld3d_setup_view(&p_Ucurr, p_f, _RR1);
+  } else {
+    fld3d_setup_view(&p_Unext, p_f, _RR1);
+    fld3d_setup_view(&p_Uprev, p_f, _RR1);
+    fld3d_setup_view(&p_Ucurr, p_f, _RR2);
+  }
+  fld3d_setup_view(&p_W    , p_f, _RR);
+  fld3d_setup_view(&p_cmsv , p_f, _CMSV);
+  fld3d_setup_view(&p_ymask, p_f, _YMASK);
+  fld3d_setup_view(&p_zmask, p_f, _ZMASK);
+
   patch_rmaskn(p_rmask, p_zmask);
 
-  if (limit) {
-    struct mrc_fld *f = mhd->fld;
-
-    vgrs(f, _BX, 0.f); vgrs(f, _BY, 0.f); vgrs(f, _BZ, 0.f);
-    limit1_c(f, _PP, mhd->time, mhd->par.timelo, _BX);
-    // limit2, 3
-  }
-
-  pushfv_c(mhd, _RR1 , dt, m_prev, m_curr, m_next, limit);
-  pushfv_c(mhd, _RV1X, dt, m_prev, m_curr, m_next, limit);
-  pushfv_c(mhd, _RV1Y, dt, m_prev, m_curr, m_next, limit);
-  pushfv_c(mhd, _RV1Z, dt, m_prev, m_curr, m_next, limit);
-  pushfv_c(mhd, _UU1 , dt, m_prev, m_curr, m_next, limit);
-
-  pushpp_c(mhd, dt, m_next);
+  patch_pushfluid_c(p_Unext, dt, p_Uprev, p_Ucurr, p_W, p_cmsv,
+		    p_ymask, p_zmask, stage);
 
   switch (mhd->par.magdiffu) {
   case MAGDIFFU_NL1:
@@ -805,6 +570,7 @@ ggcm_mhd_step_c2_setup(struct ggcm_mhd_step *step)
 
   pde_setup(mhd->fld);
   pde_mhd_setup(mhd);
+  pde_mhd_compat_setup(mhd);
 
   mhd->ymask = mrc_fld_make_view(mhd->fld, _YMASK, _YMASK + 1);
   mrc_fld_set(mhd->ymask, 1.);
