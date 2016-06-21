@@ -25,8 +25,6 @@
 #define OPT_EQN OPT_EQN_MHD_SCONS
 #define OPT_STAGGER OPT_STAGGER_GGCM
 
-#include "pde/pde_setup.c"
-#include "pde/pde_mhd_setup.c"
 #include "pde/pde_mhd_compat.c"
 #include "pde/pde_mhd_get_dt.c"
 #include "pde/pde_mhd_push.c"
@@ -71,6 +69,7 @@ static void
 ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
 {
   struct ggcm_mhd *mhd = step->mhd;
+
   pde_setup(mhd->fld);
   pde_mhd_setup(mhd);
   pde_mhd_compat_setup(mhd);

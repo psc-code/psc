@@ -3,13 +3,8 @@
 #include "ggcm_mhd_private.h"
 #include "ggcm_mhd_defs.h"
 #include "ggcm_mhd_defs_extra.h"
-#include "ggcm_mhd_crds.h"
 #include "ggcm_mhd_diag_private.h"
 
-#include <mrc_domain.h>
-#include <mrc_profile.h>
-
-#include <math.h>
 #include <string.h>
 
 // FIXME: major ugliness
@@ -28,7 +23,6 @@
 // mhd options
 
 #define OPT_EQN OPT_EQN_MHD_SCONS
-#define OPT_BACKGROUND false
 
 #include "pde/pde_mhd_compat.c"
 #include "pde/pde_mhd_get_dt.c"
@@ -45,7 +39,7 @@
 #include "mhd_sc.c"
 
 // TODO:
-// - handle various resistivity models
+// - handle remaining resistivity models
 // - handle limit2, limit3
 // - handle lowmask
 
@@ -62,16 +56,13 @@ struct ggcm_mhd_step_c2 {
 #define ggcm_mhd_step_c2(step) mrc_to_subobj(step, struct ggcm_mhd_step_c2)
 
 static void
-pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_prev, int m_curr, int m_next,
-	    bool limit)
+pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int stage)
 {
   struct mrc_fld *f = mhd->fld;
   fld3d_t p_f;
   fld3d_setup(&p_f, f);
   pde_patch_set(0);
   fld3d_get(&p_f, 0);
-
-  int stage = m_curr == _RR1 ? 0 : 1;
 
   fld3d_t p_rmask = fld3d_make_view(p_f, _RMASK);
   fld3d_t p_resis = fld3d_make_view(p_f, _RESIS);
@@ -92,12 +83,26 @@ pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_prev, int m_curr, int
   fld3d_setup_view(&p_ymask, p_f, _YMASK);
   fld3d_setup_view(&p_zmask, p_f, _ZMASK);
 
+  if (stage == 0) {
+    primvar_c(mhd, _RR1);
+    zmaskn(mhd, mhd->fld, _ZMASK, mhd->fld, _YMASK, mhd->fld);
+    dt /= 2.;
+  } else {
+    primvar_c(mhd, _RR2);
+  }
+
   patch_rmaskn(p_rmask, p_zmask);
 
   patch_pushfluid_c(p_Unext, dt, p_Uprev, p_Ucurr, p_W, p_cmsv,
 		    p_ymask, p_zmask, stage);
   patch_pushfield_c(p_Unext, dt, p_Uprev, p_Ucurr, p_W, p_zmask, p_rmask,
 		    p_resis, p_Jcc, stage);
+
+  if (stage == 1) {
+    // --- check for NaNs and small density
+    // (still controlled by do_badval_checks)
+    badval_checks_sc(mhd, mhd->fld, mhd->fld);
+  }
 }
 
 // ======================================================================
@@ -107,75 +112,19 @@ pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_prev, int m_curr, int
 // ie., including primvar() etc.
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_step_c2_get_dt
-
-static double
-ggcm_mhd_step_c2_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
-{
-  struct ggcm_mhd *mhd = step->mhd;
-
-  ggcm_mhd_fill_ghosts(mhd, x, _RR1, mhd->time);
-  zmaskn(mhd, mhd->fld, _ZMASK, x, _YMASK, mhd->fld);
-  // assert(strcmp(mrc_fld_type(mhd->fld), "float") == 0);
-  return pde_mhd_get_dt_scons(mhd, x, x, _ZMASK);
-}
-
-// ----------------------------------------------------------------------
-// ggcm_mhd_step_c2_pred
+// ggcm_mhd_step_c2_setup_flds
 
 static void
-ggcm_mhd_step_c2_pred(struct ggcm_mhd_step *step)
+ggcm_mhd_step_c2_setup_flds(struct ggcm_mhd_step *step)
 {
+  struct ggcm_mhd_step_c2 *sub = ggcm_mhd_step_c2(step);
   struct ggcm_mhd *mhd = step->mhd;
 
-  primvar_c(mhd, _RR1);
-  zmaskn(mhd, mhd->fld, _ZMASK, mhd->fld, _YMASK, mhd->fld);
-
-  mrc_fld_data_t dth = .5f * step->mhd->dt;
-  static int PR;
-  if (!PR) {
-    PR = prof_register("pred_c", 1., 0, 0);
-  }
-  prof_start(PR);
-  pushstage_c(step->mhd, dth, _RR1, _RR1, _RR2, false);
-  prof_stop(PR);
-}
-
-// ----------------------------------------------------------------------
-// ggcm_mhd_step_c2_corr
-
-static void
-ggcm_mhd_step_c2_corr(struct ggcm_mhd_step *step)
-{
-  primvar_c(step->mhd, _RR2);
-  static int PR;
-  if (!PR) {
-    PR = prof_register("corr_c", 1., 0, 0);
-  }
-  prof_start(PR);
-  pushstage_c(step->mhd, step->mhd->dt, _RR1, _RR2, _RR1, true);
-  prof_stop(PR);
-  
-  // --- check for NaNs and small density
-  // (still controlled by do_badval_checks)
-  badval_checks_sc(step->mhd, step->mhd->fld, step->mhd->fld);
-}
-
-// ----------------------------------------------------------------------
-// ggcm_mhd_step_c2_run
-
-static void
-ggcm_mhd_step_c2_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
-{
-  struct ggcm_mhd *mhd = step->mhd;
-
-  assert(x == mhd->fld);
-
-  ggcm_mhd_fill_ghosts(mhd, x, _RR1, mhd->time);
-  ggcm_mhd_step_c2_pred(step);
-
-  ggcm_mhd_fill_ghosts(mhd, x, _RR2, mhd->time + mhd->bndt);
-  ggcm_mhd_step_c2_corr(step);
+  pde_mhd_set_options(mhd, &sub->opt);
+  mrc_fld_set_type(mhd->fld, FLD_TYPE);
+  mrc_fld_set_param_int(mhd->fld, "nr_ghosts", 2);
+  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_SEMI_CONSERVATIVE);
+  mrc_fld_set_param_int(mhd->fld, "nr_comps", _NR_FLDS);
 }
 
 // ----------------------------------------------------------------------
@@ -198,19 +147,43 @@ ggcm_mhd_step_c2_setup(struct ggcm_mhd_step *step)
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_step_c2_setup_flds
+// ggcm_mhd_step_c2_destroy
 
 static void
-ggcm_mhd_step_c2_setup_flds(struct ggcm_mhd_step *step)
+ggcm_mhd_step_c2_destroy(struct ggcm_mhd_step *step)
 {
-  struct ggcm_mhd_step_c2 *sub = ggcm_mhd_step_c2(step);
+  mrc_fld_destroy(step->mhd->ymask);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_step_c2_get_dt
+
+static double
+ggcm_mhd_step_c2_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
+{
   struct ggcm_mhd *mhd = step->mhd;
 
-  pde_mhd_set_options(mhd, &sub->opt);
-  mrc_fld_set_type(mhd->fld, FLD_TYPE);
-  mrc_fld_set_param_int(mhd->fld, "nr_ghosts", 2);
-  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_SEMI_CONSERVATIVE);
-  mrc_fld_set_param_int(mhd->fld, "nr_comps", _NR_FLDS);
+  ggcm_mhd_fill_ghosts(mhd, x, _RR1, mhd->time);
+  zmaskn(mhd, mhd->fld, _ZMASK, x, _YMASK, mhd->fld);
+  // assert(strcmp(mrc_fld_type(mhd->fld), "float") == 0);
+  return pde_mhd_get_dt_scons(mhd, x, x, _ZMASK);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_step_c2_run
+
+static void
+ggcm_mhd_step_c2_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
+{
+  struct ggcm_mhd *mhd = step->mhd;
+
+  assert(x == mhd->fld);
+
+  ggcm_mhd_fill_ghosts(mhd, x, _RR1, mhd->time);
+  pushstage_c(mhd, mhd->dt, 0);
+
+  ggcm_mhd_fill_ghosts(mhd, x, _RR2, mhd->time + mhd->bndt);
+  pushstage_c(mhd, mhd->dt, 1);
 }
 
 // ----------------------------------------------------------------------
@@ -316,6 +289,7 @@ struct ggcm_mhd_step_ops ggcm_mhd_step_c2_ops = {
   .get_dt              = ggcm_mhd_step_c2_get_dt,
   .run                 = ggcm_mhd_step_c2_run,
   .setup               = ggcm_mhd_step_c2_setup,
+  .destroy             = ggcm_mhd_step_c2_destroy,
   .setup_flds          = ggcm_mhd_step_c2_setup_flds,
   .get_e_ec            = ggcm_mhd_step_c2_get_e_ec,
   .diag_item_zmask_run = ggcm_mhd_step_c2_diag_item_zmask_run,

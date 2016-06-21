@@ -133,18 +133,14 @@ pde_mhd_get_dt_scons(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zm
   mrc_domain_get_global_dims(mhd->domain, gdims);
   int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
 
-  mrc_fld_data_t splim2 = sqr(mhd->par.speedlimit / mhd->vvnorm);
-  mrc_fld_data_t gamma_m1 = s_gamma - 1.f;
-  mrc_fld_data_t d_i    = mhd->par.d_i;
-
-  mrc_fld_data_t thx    = mhd->par.thx;
-  mrc_fld_data_t eps    = 1e-9f;
   mrc_fld_data_t dt     = 1e10f;
+  pde_for_each_patch(p) {
+    mrc_fld_data_t splim2 = sqr(s_speedlimit_code);
+    mrc_fld_data_t gamma_m1 = s_gamma - 1.f;
+    mrc_fld_data_t eps    = 1e-9f;
+    mrc_fld_data_t two_pi_d_i = 2. * M_PI * s_d_i;
+    bool have_hall = s_d_i > 0.f;
 
-  mrc_fld_data_t two_pi_d_i = 2. * M_PI * d_i;
-  bool have_hall = d_i > 0.f;
-
-  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
     float *fd1x = ggcm_mhd_crds_get_crd_p(mhd->crds, 0, FD1, p);
     float *fd1y = ggcm_mhd_crds_get_crd_p(mhd->crds, 1, FD1, p);
     float *fd1z = ggcm_mhd_crds_get_crd_p(mhd->crds, 2, FD1, p);
@@ -173,7 +169,7 @@ pde_mhd_get_dt_scons(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zm
       if (zmask) {
 	zm = M3(zmask, m_zmask, i,j,k, p);
       }
-      mrc_fld_data_t tt = thx / mrc_fld_max(eps, hh*vv*zm);
+      mrc_fld_data_t tt = s_cfl / mrc_fld_max(eps, hh*vv*zm);
       dt = mrc_fld_min(dt, tt);
     } mrc_fld_foreach_end;
   }
