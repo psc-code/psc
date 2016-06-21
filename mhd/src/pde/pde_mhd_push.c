@@ -126,7 +126,6 @@ static void
 patch_pushstage(fld3d_t p_f, mrc_fld_data_t dt, int stage)
 {
   fld3d_t p_Unext, p_Uprev, p_Ucurr;
-  fld3d_t p_W, p_cmsv, p_ymask, p_zmask;
   if (stage == 0) {
     fld3d_setup_view(&p_Unext, p_f, _RR2);
     fld3d_setup_view(&p_Uprev, p_f, _RR1);
@@ -136,10 +135,10 @@ patch_pushstage(fld3d_t p_f, mrc_fld_data_t dt, int stage)
     fld3d_setup_view(&p_Uprev, p_f, _RR1);
     fld3d_setup_view(&p_Ucurr, p_f, _RR2);
   }
-  fld3d_setup_view(&p_W    , p_f, _RR);
-  fld3d_setup_view(&p_cmsv , p_f, _CMSV);
-  fld3d_setup_view(&p_ymask, p_f, _YMASK);
-  fld3d_setup_view(&p_zmask, p_f, _ZMASK);
+  fld3d_t p_W     = fld3d_make_view(p_f, _RR);
+  fld3d_t p_cmsv  = fld3d_make_view(p_f, _CMSV);
+  fld3d_t p_ymask = fld3d_make_view(p_f, _YMASK);
+  fld3d_t p_zmask = fld3d_make_view(p_f, _ZMASK);
 
   patch_primvar(p_W, p_Ucurr, p_cmsv);
 

@@ -29,14 +29,7 @@
 #include "pde/pde_mhd_rmaskn.c"
 #include "pde/pde_mhd_pushfluid.c"
 #include "pde/pde_mhd_pushfield.c"
-
-// FIXME, don't even know why I have to do this
-#undef PP
-#undef VX
-#undef VY
-#undef VZ
-
-#include "mhd_sc.c"
+#include "pde/pde_mhd_badval_checks.c"
 
 // TODO:
 // - handle remaining resistivity models
@@ -56,19 +49,29 @@ struct ggcm_mhd_step_c2 {
 #define ggcm_mhd_step_c2(step) mrc_to_subobj(step, struct ggcm_mhd_step_c2)
 
 static void
-pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int stage)
+patch_push(fld3d_t p_Unext, fld3d_t p_Uprev, fld3d_t p_Ucurr,
+	   fld3d_t p_W, fld3d_t p_cmsv,
+	   fld3d_t p_ymask, fld3d_t p_zmask,
+	   mrc_fld_data_t dt, int stage)
 {
-  struct mrc_fld *f = mhd->fld;
-  fld3d_t p_f;
-  fld3d_setup(&p_f, f);
-  pde_patch_set(0);
-  fld3d_get(&p_f, 0);
+  fld3d_t p_rmask = fld3d_make_tmp(1, _RMASK), p_resis = fld3d_make_tmp(1, _RESIS);
+  fld3d_t p_Jcc = fld3d_make_tmp(3, _CURRX);
 
-  fld3d_t p_rmask = fld3d_make_view(p_f, _RMASK);
-  fld3d_t p_resis = fld3d_make_view(p_f, _RESIS);
-  fld3d_t p_Jcc = fld3d_make_view(p_f, _CURRX);
+  if (stage == 0) {
+    dt *= .5f;
+  }
+
+  patch_rmaskn(p_rmask, p_zmask);
+  patch_pushfluid(p_Unext, dt, p_Uprev, p_Ucurr, p_W,
+		  p_cmsv, p_ymask, p_zmask, stage);
+  patch_pushfield(p_Unext, dt, p_Uprev, p_Ucurr, p_W,
+		  p_zmask, p_rmask, p_resis, p_Jcc, stage);
+}
+
+static void
+patch_pushstage(fld3d_t p_f, mrc_fld_data_t dt, int stage)
+{
   fld3d_t p_Unext, p_Uprev, p_Ucurr;
-  fld3d_t p_W, p_cmsv, p_ymask, p_zmask;
   if (stage == 0) {
     fld3d_setup_view(&p_Unext, p_f, _RR2);
     fld3d_setup_view(&p_Uprev, p_f, _RR1);
@@ -78,30 +81,38 @@ pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int stage)
     fld3d_setup_view(&p_Uprev, p_f, _RR1);
     fld3d_setup_view(&p_Ucurr, p_f, _RR2);
   }
-  fld3d_setup_view(&p_W    , p_f, _RR);
-  fld3d_setup_view(&p_cmsv , p_f, _CMSV);
-  fld3d_setup_view(&p_ymask, p_f, _YMASK);
-  fld3d_setup_view(&p_zmask, p_f, _ZMASK);
-
+  fld3d_t p_W     = fld3d_make_view(p_f, _RR);
+  fld3d_t p_cmsv  = fld3d_make_view(p_f, _CMSV);
+  fld3d_t p_ymask = fld3d_make_view(p_f, _YMASK);
+  fld3d_t p_zmask = fld3d_make_view(p_f, _ZMASK);
+  
+  patch_primvar(p_W, p_Ucurr, p_cmsv);
+  
   if (stage == 0) {
-    primvar_c(mhd, _RR1);
-    zmaskn(mhd, mhd->fld, _ZMASK, mhd->fld, _YMASK, mhd->fld);
-    dt /= 2.;
-  } else {
-    primvar_c(mhd, _RR2);
+    fld3d_t p_bcc;
+    fld3d_setup_view(&p_bcc, p_f, _BX);
+    patch_primbb(p_bcc, p_Ucurr);
+    patch_zmaskn(p_zmask, p_W, p_bcc, p_ymask);
   }
-
-  patch_rmaskn(p_rmask, p_zmask);
-
-  patch_pushfluid_c(p_Unext, dt, p_Uprev, p_Ucurr, p_W, p_cmsv,
-		    p_ymask, p_zmask, stage);
-  patch_pushfield_c(p_Unext, dt, p_Uprev, p_Ucurr, p_W, p_zmask, p_rmask,
-		    p_resis, p_Jcc, stage);
+  
+  patch_push(p_Unext, p_Uprev, p_Ucurr, p_W, p_cmsv,
+	     p_ymask, p_zmask, dt, stage);
 
   if (stage == 1) {
-    // --- check for NaNs and small density
-    // (still controlled by do_badval_checks)
-    badval_checks_sc(mhd, mhd->fld, mhd->fld);
+    patch_badval_checks_sc(p_Ucurr, p_W);
+  }
+}
+
+static void
+pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int stage)
+{
+  fld3d_t p_f;
+  fld3d_setup(&p_f, mhd->fld);
+
+  pde_for_each_patch(p) {
+    fld3d_get(&p_f, p);
+    patch_pushstage(p_f, dt, stage);
+    fld3d_put(&p_f, p);
   }
 }
 
