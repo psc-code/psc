@@ -31,11 +31,6 @@
 
 #define REPS (1.e-10f)
 
-enum {
-  LIMIT_NONE,
-  LIMIT_1,
-};
-
 // ======================================================================
 // ggcm_mhd_step subclass "c2"
 //
@@ -291,12 +286,12 @@ vgfl_c(struct ggcm_mhd *mhd, int m)
 
 static void
 pushfv_c(struct ggcm_mhd *mhd, int m, mrc_fld_data_t dt, int m_prev, int m_curr, int m_next,
-	 int limit)
+	 bool limit)
 {
   struct mrc_fld *f = mhd->fld;
 
   vgfl_c(mhd, m);
-  if (limit == LIMIT_NONE) {
+  if (!limit) {
     fluxl_c(mhd, m_curr + m);
   } else {
     vgrv(f, _CX, _BX); vgrv(f, _CY, _BY); vgrv(f, _CZ, _BZ);
@@ -679,7 +674,7 @@ bpush_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_prev, int m_next)
 
 static void
 pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_prev, int m_curr, int m_next,
-	    int limit)
+	    bool limit)
 {
   struct mrc_fld *f = mhd->fld;
   fld3d_t p_f;
@@ -690,7 +685,7 @@ pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_prev, int m_curr, int
   fld3d_t p_rmask = fld3d_make_view(p_f, _RMASK), p_zmask = fld3d_make_view(p_f, _ZMASK);
   patch_rmaskn(p_rmask, p_zmask);
 
-  if (limit != LIMIT_NONE) {
+  if (limit) {
     struct mrc_fld *f = mhd->fld;
 
     vgrs(f, _BX, 0.f); vgrs(f, _BY, 0.f); vgrs(f, _BZ, 0.f);
@@ -759,7 +754,7 @@ ggcm_mhd_step_c2_pred(struct ggcm_mhd_step *step)
     PR = prof_register("pred_c", 1., 0, 0);
   }
   prof_start(PR);
-  pushstage_c(step->mhd, dth, _RR1, _RR1, _RR2, LIMIT_NONE);
+  pushstage_c(step->mhd, dth, _RR1, _RR1, _RR2, false);
   prof_stop(PR);
 }
 
@@ -775,7 +770,7 @@ ggcm_mhd_step_c2_corr(struct ggcm_mhd_step *step)
     PR = prof_register("corr_c", 1., 0, 0);
   }
   prof_start(PR);
-  pushstage_c(step->mhd, step->mhd->dt, _RR1, _RR2, _RR1, LIMIT_1);
+  pushstage_c(step->mhd, step->mhd->dt, _RR1, _RR2, _RR1, true);
   prof_stop(PR);
   
   // --- check for NaNs and small density
