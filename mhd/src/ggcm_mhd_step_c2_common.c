@@ -63,34 +63,6 @@ struct ggcm_mhd_step_c2 {
 
 #define ggcm_mhd_step_c2(step) mrc_to_subobj(step, struct ggcm_mhd_step_c2)
 
-// ----------------------------------------------------------------------
-// curbc_c
-//
-// cell-centered j
-
-static void
-curbc_c(struct ggcm_mhd *mhd, int m_curr)
-{ 
-  enum { _TX = _TMP1, _TY = _TMP2, _TZ = _TMP3 };
-
-  fld3d_t p_J = fld3d_make_view(s_p_f, _TX), p_U = fld3d_make_view(s_p_f, m_curr);
-
-  patch_calc_current_ec(p_J, p_U);
-
-  struct mrc_fld *f = mhd->fld;
-
-  // j averaged to cell-centered
-  mrc_fld_foreach(f, i,j,k, 1, 1) {
-    mrc_fld_data_t s = .25f * F3(f, _ZMASK, i, j, k);
-    F3(f, _CURRX, i,j,k) = s * (F3(f, _TX, i,j+1,k+1) + F3(f, _TX, i,j,k+1) +
-				   F3(f, _TX, i,j+1,k  ) + F3(f, _TX, i,j,k  ));
-    F3(f, _CURRY, i,j,k) = s * (F3(f, _TY, i+1,j,k+1) + F3(f, _TY, i,j,k+1) +
-				   F3(f, _TY, i+1,j,k  ) + F3(f, _TY, i,j,k  ));
-    F3(f, _CURRZ, i,j,k) = s * (F3(f, _TZ, i+1,j+1,k) + F3(f, _TZ, i,j+1,k) +
-				   F3(f, _TZ, i+1,j  ,k) + F3(f, _TZ, i,j  ,k));
-  } mrc_fld_foreach_end;
-}
-
 static void
 push_ej_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_curr, int m_next)
 {
@@ -180,7 +152,9 @@ res1_const_c(struct ggcm_mhd *mhd)
 static void
 calc_resis_const_c(struct ggcm_mhd *mhd, int m_curr)
 {
-  curbc_c(mhd, m_curr);
+  fld3d_t p_U = fld3d_make_view(s_p_f, m_curr);
+  fld3d_t p_Jcc = fld3d_make_view(s_p_f, _CURRX), p_zmask = fld3d_make_view(s_p_f, _ZMASK);
+  patch_calc_current_cc(p_Jcc, p_U, p_zmask);
   res1_const_c(mhd);
 }
 

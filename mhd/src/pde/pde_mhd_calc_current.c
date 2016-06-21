@@ -56,14 +56,12 @@ patch_calc_current_cc(fld3d_t p_Jcc, fld3d_t p_U, fld3d_t p_zmask)
   patch_calc_current_ec(p_Jec, p_U);
 
   // j averaged to cell-centered
+  // FIXME, multiplication by z_mask is redundant?
   fld3d_foreach(i,j,k, 1, 1) {
-    mrc_fld_data_t s = .25f * F3S(p_zmask, 0, i, j, k);
-    F3S(p_Jcc, 0, i,j,k) = s * (F3S(p_Jec, 0, i,j  ,k  ) + F3S(p_Jec, 0, i,j-1,k  ) +
-				F3S(p_Jec, 0, i,j  ,k-1) + F3S(p_Jec, 0, i,j-1,k-1));
-    F3S(p_Jcc, 1, i,j,k) = s * (F3S(p_Jec, 1, i  ,j,k  ) + F3S(p_Jec, 1, i-1,j,k  ) +
-				F3S(p_Jec, 1, i  ,j,k-1) + F3S(p_Jec, 1, i-1,j,k-1));
-    F3S(p_Jcc, 2, i,j,k) = s * (F3S(p_Jec, 2, i  ,j  ,k) + F3S(p_Jec, 2, i-1,j  ,k) +
-				F3S(p_Jec, 2, i  ,j-1,k) + F3S(p_Jec, 2, i-1,j-1,k));
+    mrc_fld_data_t z = F3S(p_zmask, 0, i, j, k);
+    F3S(p_Jcc, 0, i,j,k) = z * EC_TO_CC(p_Jec, 0, i,j,k);
+    F3S(p_Jcc, 1, i,j,k) = z * EC_TO_CC(p_Jec, 1, i,j,k);
+    F3S(p_Jcc, 2, i,j,k) = z * EC_TO_CC(p_Jec, 2, i,j,k);
   } fld3d_foreach_end;
 }
 

@@ -655,4 +655,29 @@ pde_mhd_aux_setup()
   fld1d_vec_setup(&s_aux.j);
 }
 
+// ======================================================================
+
+#if OPT_STAGGER == OPT_STAGGER_GGCM
+
+#define EC_TO_CC(f, m, i,j,k)						\
+  ({									\
+    (.25f * (F3S(f, m, i-di*(m!=0),j-dj*(m!=1),k-dk*(m!=2)) +		\
+	     F3S(f, m, i-di*(m!=0),j          ,k          ) +		\
+	     F3S(f, m, i          ,j-dj*(m!=1),k          ) +		\
+	     F3S(f, m, i          ,j          ,k-dk*(m!=2))));		\
+  })
+
+#else
+
+#define EC_TO_CC(f, m, i,j,k)						\
+  ({									\
+    (.25f * (F3S(f, m, i+di*(m!=0),j+dj*(m!=1),k+dk*(m!=2)) +		\
+	     F3S(f, m, i+di*(m!=0),j          ,k          ) +		\
+	     F3S(f, m, i          ,j+dj*(m!=1),k          ) +		\
+	     F3S(f, m, i          ,j          ,k+dk*(m!=2))));		\
+  })
+
+#endif
+
+
 #endif
