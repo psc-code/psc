@@ -65,19 +65,6 @@ struct ggcm_mhd_step_c2 {
 #define ggcm_mhd_step_c2(step) mrc_to_subobj(step, struct ggcm_mhd_step_c2)
 
 static void
-calce_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_curr)
-{
-  switch (mhd->par.magdiffu) {
-  case MAGDIFFU_NL1:
-    return calce_nl1_c(mhd, dt, m_curr);
-  case MAGDIFFU_CONST:
-    return calce_const_c(mhd, dt, m_curr);
-  default:
-    assert(0);
-  }
-}
-
-static void
 bpush_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_prev, int m_next)
 {
   struct mrc_fld *f = mhd->fld;
@@ -128,6 +115,7 @@ pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_prev, int m_curr, int
   fld3d_setup_view(&p_cmsv , p_f, _CMSV);
   fld3d_setup_view(&p_ymask, p_f, _YMASK);
   fld3d_setup_view(&p_zmask, p_f, _ZMASK);
+  fld3d_t p_E = fld3d_make_tmp(3, _FLX);
 
   patch_rmaskn(p_rmask, p_zmask);
 
@@ -140,7 +128,6 @@ pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_prev, int m_curr, int
     break;
   case MAGDIFFU_CONST:
     patch_calc_resis_const_c(p_resis, p_Jcc, p_Ucurr, p_zmask);
-    //calc_resis_const_c(mhd, m_curr);
     break;
   default:
     assert(0);
@@ -148,7 +135,7 @@ pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_prev, int m_curr, int
 
   patch_push_ej(p_Unext, dt, p_Ucurr, p_W, p_zmask);
 
-  calce_c(mhd, dt, m_curr);
+  patch_calce(p_E, dt, p_Ucurr, p_W, p_zmask, p_rmask, p_resis, p_Jcc);
   bpush_c(mhd, dt, m_prev, m_next);
 }
 
