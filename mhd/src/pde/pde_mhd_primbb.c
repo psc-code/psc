@@ -7,6 +7,8 @@
 //
 // was also known in Fortran as currbb()
 
+#if OPT_STAGGER == OPT_STAGGER_GGCM
+
 static void
 patch_primbb_c(fld3d_t p_bcc, fld3d_t p_U)
 {
@@ -16,6 +18,20 @@ patch_primbb_c(fld3d_t p_bcc, fld3d_t p_U)
     F3S(p_bcc, 2, i,j,k) = .5f * (F3S(p_U, BZ, i,j,k) + F3S(p_U, BZ, i,j,k-1));
   } fld3d_foreach_end;
 }
+
+#else
+
+static void
+patch_primbb_c(fld3d_t p_bcc, fld3d_t p_U)
+{
+  fld3d_foreach(i,j,k, 1, 2) {
+    F3S(p_bcc, 0, i,j,k) = .5f * (F3S(p_U, BX, i,j,k) + F3S(p_U, BX, i+1,j,k));
+    F3S(p_bcc, 1, i,j,k) = .5f * (F3S(p_U, BY, i,j,k) + F3S(p_U, BY, i,j+1,k));
+    F3S(p_bcc, 2, i,j,k) = .5f * (F3S(p_U, BZ, i,j,k) + F3S(p_U, BZ, i,j,k+1));
+  } fld3d_foreach_end;
+}
+
+#endif
 
 // ----------------------------------------------------------------------
 // patch_primbb_fortran

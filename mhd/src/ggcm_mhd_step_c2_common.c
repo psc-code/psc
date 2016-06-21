@@ -64,26 +64,6 @@ struct ggcm_mhd_step_c2 {
 #define ggcm_mhd_step_c2(step) mrc_to_subobj(step, struct ggcm_mhd_step_c2)
 
 // ----------------------------------------------------------------------
-// currbb_c
-//
-// cell-averaged B
-
-static void
-currbb_c(struct ggcm_mhd *mhd, int m, int m_curr)
-{
-  struct mrc_fld *f = mhd->fld;
-
-  mrc_fld_foreach(f, i,j,k, 1, 1) {
-    F3(f, m + 0, i,j,k) = .5f * (F3(f, m_curr + _B1X, i  ,j,k) +
-				    F3(f, m_curr + _B1X, i+1,j,k));
-    F3(f, m + 1, i,j,k) = .5f * (F3(f, m_curr + _B1Y, i,j  ,k) +
-				    F3(f, m_curr + _B1Y, i,j+1,k));
-    F3(f, m + 2, i,j,k) = .5f * (F3(f, m_curr + _B1Z, i,j,k  ) +
-				    F3(f, m_curr + _B1Z, i,j,k+1));
-  } mrc_fld_foreach_end;
-}
-
-// ----------------------------------------------------------------------
 // curbc_c
 //
 // cell-centered j
@@ -118,9 +98,10 @@ push_ej_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_curr, int m_next)
   enum { BX = _TMP1, BY = _TMP2, BZ = _TMP3 };
 
   fld3d_t p_J = fld3d_make_view(s_p_f, XJX), p_U = fld3d_make_view(s_p_f, m_curr);
+  fld3d_t p_Bcc = fld3d_make_view(s_p_f, BX);
 
   patch_calc_current_ec(p_J, p_U);
-  currbb_c(mhd, BX, m_curr);
+  patch_primbb(p_Bcc, p_U);
 	
   struct mrc_fld *f = mhd->fld;
 
