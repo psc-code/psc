@@ -20,6 +20,7 @@
 #define OPT_BACKGROUND false
 
 #include "pde/pde_mhd_get_dt.c"
+#include "pde/pde_mhd_rmaskn.c"
 
 #include "mhd_sc.c"
 
@@ -46,40 +47,6 @@ struct ggcm_mhd_step_c2 {
 };
 
 #define ggcm_mhd_step_c2(step) mrc_to_subobj(step, struct ggcm_mhd_step_c2)
-
-static void
-rmaskn_c(struct ggcm_mhd *mhd)
-{
-  struct mrc_fld *f = mhd->fld;
-
-  mrc_fld_data_t diffco = mhd->par.diffco;
-  mrc_fld_data_t diff_swbnd = mhd->par.diff_swbnd;
-  int diff_obnd = mhd->par.diff_obnd;
-  int gdims[3];
-  mrc_domain_get_global_dims(mhd->domain, gdims);
-  struct mrc_patch_info info;
-  mrc_domain_get_local_patch_info(mhd->domain, 0, &info);
-
-  float *fx1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FX1);
-
-  mrc_fld_foreach(f, ix,iy,iz, 2, 2) {
-    F3(f,_RMASK, ix,iy,iz) = 0.f;
-    mrc_fld_data_t xxx = fx1x[ix];
-    if (xxx < diff_swbnd)
-      continue;
-    if (iy + info.off[1] < diff_obnd)
-      continue;
-    if (iz + info.off[2] < diff_obnd)
-      continue;
-    if (ix + info.off[0] >= gdims[0] - diff_obnd)
-      continue;
-    if (iy + info.off[1] >= gdims[1] - diff_obnd)
-      continue;
-    if (iz + info.off[2] >= gdims[2] - diff_obnd)
-      continue;
-    F3(f, _RMASK, ix,iy,iz) = diffco * F3(f, _ZMASK, ix,iy,iz);
-  } mrc_fld_foreach_end;
-}
 
 static void
 vgflrr_c(struct ggcm_mhd *mhd)
@@ -714,7 +681,14 @@ static void
 pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_prev, int m_curr, int m_next,
 	    int limit)
 {
-  rmaskn_c(mhd);
+  struct mrc_fld *f = mhd->fld;
+  fld3d_t p_f;
+  fld3d_setup(&p_f, f);
+  pde_patch_set(0);
+  fld3d_get(&p_f, 0);
+
+  fld3d_t p_rmask = fld3d_make_view(p_f, _RMASK), p_zmask = fld3d_make_view(p_f, _ZMASK);
+  patch_rmaskn(p_rmask, p_zmask);
 
   if (limit != LIMIT_NONE) {
     struct mrc_fld *f = mhd->fld;
