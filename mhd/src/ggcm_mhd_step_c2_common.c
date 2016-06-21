@@ -166,7 +166,7 @@ ggcm_mhd_step_c2_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
   ggcm_mhd_fill_ghosts(mhd, x, _RR1, mhd->time);
   zmaskn(mhd, mhd->fld, _ZMASK, x, _YMASK, mhd->fld);
   // assert(strcmp(mrc_fld_type(mhd->fld), "float") == 0);
-  return pde_mhd_get_dt_scons(mhd, x, x, _ZMASK);
+  return pde_mhd_get_dt_scons_v2(mhd, x, x, _ZMASK);
 }
 
 // ----------------------------------------------------------------------
