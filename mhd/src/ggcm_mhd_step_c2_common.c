@@ -36,6 +36,7 @@
 #include "pde/pde_mhd_rmaskn.c"
 #include "pde/pde_mhd_calc_current.c"
 #include "pde/pde_mhd_push_ej.c"
+#include "pde/pde_mhd_calc_resis.c"
 
 // FIXME, don't even know why I have to do this
 #undef PP
@@ -63,60 +64,6 @@ struct ggcm_mhd_step_c2 {
 };
 
 #define ggcm_mhd_step_c2(step) mrc_to_subobj(step, struct ggcm_mhd_step_c2)
-
-static void
-res1_const_c(struct ggcm_mhd *mhd)
-{
-  // resistivity comes in ohm*m
-  int diff_obnd = mhd->par.diff_obnd;
-  mrc_fld_data_t eta0i = 1. / mhd->resnorm;
-  mrc_fld_data_t diffsphere2 = sqr(mhd->par.diffsphere);
-  mrc_fld_data_t diff = mhd->par.diffco * eta0i;
-
-  int gdims[3];
-  mrc_domain_get_global_dims(mhd->domain, gdims);
-  struct mrc_patch_info info;
-  mrc_domain_get_local_patch_info(mhd->domain, 0, &info);
-
-  struct mrc_fld *f = mhd->fld;
-  float *fx2x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FX2);
-  float *fx2y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FX2);
-  float *fx2z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FX2);
-
-  mrc_fld_foreach(f, i,j,k, 1, 1) {
-    F3(f, _RESIS, i,j,k) = 0.f;
-    mrc_fld_data_t r2 = fx2x[i] + fx2y[j] + fx2z[k];
-    if (r2 < diffsphere2)
-      continue;
-    if (j + info.off[1] < diff_obnd)
-      continue;
-    if (k + info.off[2] < diff_obnd)
-      continue;
-    if (i + info.off[0] >= gdims[0] - diff_obnd)
-      continue;
-    if (j + info.off[1] >= gdims[1] - diff_obnd)
-      continue;
-    if (k + info.off[2] >= gdims[2] - diff_obnd)
-      continue;
-
-    F3(f, _RESIS, i,j,k) = diff;
-  } mrc_fld_foreach_end;
-}
-
-static void
-calc_resis_const_c(struct ggcm_mhd *mhd, int m_curr)
-{
-  fld3d_t p_U = fld3d_make_view(s_p_f, m_curr);
-  fld3d_t p_Jcc = fld3d_make_view(s_p_f, _CURRX), p_zmask = fld3d_make_view(s_p_f, _ZMASK);
-  patch_calc_current_cc(p_Jcc, p_U, p_zmask);
-  res1_const_c(mhd);
-}
-
-static void
-calc_resis_nl1_c(struct ggcm_mhd *mhd, int m_curr)
-{
-  // used to zero _RESIS field, but that's not needed.
-}
 
 static inline float
 bcthy3f(mrc_fld_data_t s1, mrc_fld_data_t s2)
@@ -333,6 +280,8 @@ pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_prev, int m_curr, int
   int stage = m_curr == _RR1 ? 0 : 1;
 
   fld3d_t p_rmask = fld3d_make_view(p_f, _RMASK);
+  fld3d_t p_resis = fld3d_make_view(p_f, _RESIS);
+  fld3d_t p_Jcc = fld3d_make_view(p_f, _CURRX);
   fld3d_t p_Unext, p_Uprev, p_Ucurr;
   fld3d_t p_W, p_cmsv, p_ymask, p_zmask;
   if (stage == 0) {
@@ -356,10 +305,11 @@ pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_prev, int m_curr, int
 
   switch (mhd->par.magdiffu) {
   case MAGDIFFU_NL1:
-    calc_resis_nl1_c(mhd, m_curr);
+    patch_calc_resis_nl1_c(p_resis);
     break;
   case MAGDIFFU_CONST:
-    calc_resis_const_c(mhd, m_curr);
+    patch_calc_resis_const_c(p_resis, p_Jcc, p_Ucurr, p_zmask);
+    //calc_resis_const_c(mhd, m_curr);
     break;
   default:
     assert(0);
