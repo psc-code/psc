@@ -124,11 +124,14 @@ pde_mhd_get_dt_scons_ggcm(struct ggcm_mhd *mhd, struct mrc_fld *x)
 #endif
 
 // ----------------------------------------------------------------------
-// pde_mhd_get_dt_scons
+// pde_mhd_get_dt_scons_v2
+//
+// regular staggering only, takes into account B0
+// FIXME, should be merged with the other scons get_dt
 
 static mrc_fld_data_t _mrc_unused
-pde_mhd_get_dt_scons(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zmask, 
-		     int m_zmask)
+pde_mhd_get_dt_scons_v2(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zmask, 
+			int m_zmask)
 {
   assert(s_opt_eqn == OPT_EQN_MHD_SCONS);
 

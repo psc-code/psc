@@ -897,7 +897,7 @@ ggcm_mhd_step_c3_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
 	fld3d_put(&p_b0, p);
       }
     }
-    double dtn = pde_mhd_get_dt_scons(mhd, x, sub->zmask, 0);
+    double dtn = pde_mhd_get_dt_scons_v2(mhd, x, sub->zmask, 0);
 
     // --- update timestep
     dtn = mrc_fld_min(1., dtn); // FIXME, only kept for compatibility
