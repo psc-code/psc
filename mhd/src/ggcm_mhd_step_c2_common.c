@@ -26,10 +26,7 @@
 
 #include "pde/pde_mhd_compat.c"
 #include "pde/pde_mhd_get_dt.c"
-#include "pde/pde_mhd_rmaskn.c"
-#include "pde/pde_mhd_pushfluid.c"
-#include "pde/pde_mhd_pushfield.c"
-#include "pde/pde_mhd_badval_checks.c"
+#include "pde/pde_mhd_push.c"
 
 // TODO:
 // - handle remaining resistivity models
@@ -47,74 +44,6 @@ struct ggcm_mhd_step_c2 {
 };
 
 #define ggcm_mhd_step_c2(step) mrc_to_subobj(step, struct ggcm_mhd_step_c2)
-
-static void
-patch_push(fld3d_t p_Unext, fld3d_t p_Uprev, fld3d_t p_Ucurr,
-	   fld3d_t p_W, fld3d_t p_cmsv,
-	   fld3d_t p_ymask, fld3d_t p_zmask,
-	   mrc_fld_data_t dt, int stage)
-{
-  fld3d_t p_rmask = fld3d_make_tmp(1, _RMASK), p_resis = fld3d_make_tmp(1, _RESIS);
-  fld3d_t p_Jcc = fld3d_make_tmp(3, _CURRX);
-
-  if (stage == 0) {
-    dt *= .5f;
-  }
-
-  patch_rmaskn(p_rmask, p_zmask);
-  patch_pushfluid(p_Unext, dt, p_Uprev, p_Ucurr, p_W,
-		  p_cmsv, p_ymask, p_zmask, stage);
-  patch_pushfield(p_Unext, dt, p_Uprev, p_Ucurr, p_W,
-		  p_zmask, p_rmask, p_resis, p_Jcc, stage);
-}
-
-static void
-patch_pushstage(fld3d_t p_f, mrc_fld_data_t dt, int stage)
-{
-  fld3d_t p_Unext, p_Uprev, p_Ucurr;
-  if (stage == 0) {
-    fld3d_setup_view(&p_Unext, p_f, _RR2);
-    fld3d_setup_view(&p_Uprev, p_f, _RR1);
-    fld3d_setup_view(&p_Ucurr, p_f, _RR1);
-  } else {
-    fld3d_setup_view(&p_Unext, p_f, _RR1);
-    fld3d_setup_view(&p_Uprev, p_f, _RR1);
-    fld3d_setup_view(&p_Ucurr, p_f, _RR2);
-  }
-  fld3d_t p_W     = fld3d_make_view(p_f, _RR);
-  fld3d_t p_cmsv  = fld3d_make_view(p_f, _CMSV);
-  fld3d_t p_ymask = fld3d_make_view(p_f, _YMASK);
-  fld3d_t p_zmask = fld3d_make_view(p_f, _ZMASK);
-  
-  patch_primvar(p_W, p_Ucurr, p_cmsv);
-  
-  if (stage == 0) {
-    fld3d_t p_bcc;
-    fld3d_setup_view(&p_bcc, p_f, _BX);
-    patch_primbb(p_bcc, p_Ucurr);
-    patch_zmaskn(p_zmask, p_W, p_bcc, p_ymask);
-  }
-  
-  patch_push(p_Unext, p_Uprev, p_Ucurr, p_W, p_cmsv,
-	     p_ymask, p_zmask, dt, stage);
-
-  if (stage == 1) {
-    patch_badval_checks_sc(p_Ucurr, p_W);
-  }
-}
-
-static void
-pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int stage)
-{
-  fld3d_t p_f;
-  fld3d_setup(&p_f, mhd->fld);
-
-  pde_for_each_patch(p) {
-    fld3d_get(&p_f, p);
-    patch_pushstage(p_f, dt, stage);
-    fld3d_put(&p_f, p);
-  }
-}
 
 // ======================================================================
 // ggcm_mhd_step subclass "c2"
@@ -186,10 +115,10 @@ ggcm_mhd_step_c2_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   assert(x == mhd->fld);
 
   ggcm_mhd_fill_ghosts(mhd, x, _RR1, mhd->time);
-  pushstage_c(mhd, mhd->dt, 0);
+  pde_mhd_pushstage(x, mhd->dt, 0);
 
   ggcm_mhd_fill_ghosts(mhd, x, _RR2, mhd->time + mhd->bndt);
-  pushstage_c(mhd, mhd->dt, 1);
+  pde_mhd_pushstage(x, mhd->dt, 1);
 }
 
 // ----------------------------------------------------------------------
