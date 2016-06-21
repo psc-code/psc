@@ -45,40 +45,6 @@ patch_get_dt_scons_ggcm_c(fld3d_t p_U, fld3d_t p_W, fld3d_t p_ymask,
 }
 
 // ----------------------------------------------------------------------
-// patch_get_dt_scons
-
-static mrc_fld_data_t
-patch_get_dt_scons(fld3d_t p_U, fld3d_t p_W, fld3d_t p_ymask,
-		   fld3d_t p_cmsv, fld3d_t p_bcc, fld3d_t p_zmask)
-{
-  patch_primvar(p_W, p_U, p_cmsv);
-  patch_primbb(p_bcc, p_U);
-  patch_zmaskn(p_zmask, p_W, p_bcc, p_ymask);
-
-  mrc_fld_data_t splim = s_speedlimit_code;
-  mrc_fld_data_t eps   = 1e-9f;
-
-  mrc_fld_data_t dt = 1e10f;
-  fld3d_foreach(i,j,k, 0, 0) {
-    mrc_fld_data_t hh = mrc_fld_max(mrc_fld_max(FD1X(i), FD1Y(j)), FD1Z(k));
-    mrc_fld_data_t rri = 1.f / mrc_fld_abs(F3S(p_W, RR, i,j,k)); // FIME abs necessary?
-    mrc_fld_data_t bb = sqr(F3S(p_bcc, 0, i,j,k)) + sqr(F3S(p_bcc, 1, i,j,k)) + sqr(F3S(p_bcc, 2, i,j,k));
-    mrc_fld_data_t vA = mrc_fld_min(mrc_fld_sqrt(bb * rri), splim);
-    mrc_fld_data_t pp = F3S(p_W, PP, i,j,k);
-    mrc_fld_data_t cs = mrc_fld_sqrt(s_gamma * pp * rri);
-    mrc_fld_data_t vv3 = mrc_fld_sqrt(sqr(F3S(p_W, VX, i,j,k)) + sqr(F3S(p_W, VY, i,j,k)) + sqr(F3S(p_W, VZ, i,j,k)));
-    mrc_fld_data_t cmax = mrc_fld_sqrt(sqr(vA) + sqr(cs)) + vv3;
-    cmax = mrc_fld_max(eps, cmax);
-    
-    mrc_fld_data_t zm = F3S(p_zmask, 0, i,j,k);
-    mrc_fld_data_t tt = s_cfl / mrc_fld_max(eps, hh*cmax*zm);
-    dt = mrc_fld_min(dt, tt);
-  } fld3d_foreach_end;
-
-  return dt;
-}
-
-// ----------------------------------------------------------------------
 // patch_get_dt_scons_ggcm_fortran
 
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
@@ -152,36 +118,6 @@ pde_mhd_get_dt_scons_ggcm(struct ggcm_mhd *mhd, struct mrc_fld *x)
   mrc_fld_data_t dtn;
   MPI_Allreduce(&dt, &dtn, 1, MPI_MRC_FLD_DATA_T, MPI_MIN, ggcm_mhd_comm(mhd));
   
-  return dtn;
-}
-
-// ----------------------------------------------------------------------
-// pde_mhd_get_dt_scons_v2
-
-static mrc_fld_data_t _mrc_unused
-pde_mhd_get_dt_scons_v2(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zmask, 
-			int m_zmask)
-{
-  fld3d_t p_f;
-  fld3d_setup(&p_f, x);
-
-  mrc_fld_data_t dt = 1e10f;
-  pde_for_each_patch(p) {
-    fld3d_get(&p_f, p);
-    fld3d_t p_W, p_U, p_cmsv, p_bcc, p_ymask, p_zmask;
-    fld3d_setup_view(&p_W    , p_f, _RR);
-    fld3d_setup_view(&p_U    , p_f, _RR1);
-    fld3d_setup_view(&p_cmsv , p_f, _CMSV);
-    fld3d_setup_view(&p_bcc  , p_f, _BX);
-    fld3d_setup_view(&p_ymask, p_f, _YMASK);
-    fld3d_setup_view(&p_zmask, p_f, _ZMASK);
-
-    dt = mrc_fld_min(dt, patch_get_dt_scons(p_U, p_W, p_ymask, p_cmsv, p_bcc, p_zmask));
-  }
-
-  mrc_fld_data_t dtn;
-  MPI_Allreduce(&dt, &dtn, 1, MPI_MRC_FLD_DATA_T, MPI_MIN, ggcm_mhd_comm(mhd));
-
   return dtn;
 }
 
