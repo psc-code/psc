@@ -32,13 +32,9 @@
 
 #include "pde/pde_mhd_compat.c"
 #include "pde/pde_mhd_get_dt.c"
-#include "pde/pde_mhd_pushfluid.c"
 #include "pde/pde_mhd_rmaskn.c"
-#include "pde/pde_mhd_calc_current.c"
-#include "pde/pde_mhd_push_ej.c"
-#include "pde/pde_mhd_calc_resis.c"
-#include "pde/pde_mhd_calce.c"
-#include "pde/pde_mhd_bpush.c"
+#include "pde/pde_mhd_pushfluid.c"
+#include "pde/pde_mhd_pushfield.c"
 
 // FIXME, don't even know why I have to do this
 #undef PP
@@ -95,29 +91,13 @@ pushstage_c(struct ggcm_mhd *mhd, mrc_fld_data_t dt, int m_prev, int m_curr, int
   fld3d_setup_view(&p_cmsv , p_f, _CMSV);
   fld3d_setup_view(&p_ymask, p_f, _YMASK);
   fld3d_setup_view(&p_zmask, p_f, _ZMASK);
-  fld3d_t p_E = fld3d_make_tmp(3, _FLX);
 
   patch_rmaskn(p_rmask, p_zmask);
 
   patch_pushfluid_c(p_Unext, dt, p_Uprev, p_Ucurr, p_W, p_cmsv,
 		    p_ymask, p_zmask, stage);
-
-  switch (mhd->par.magdiffu) {
-  case MAGDIFFU_NL1:
-    patch_calc_resis_nl1_c(p_resis);
-    break;
-  case MAGDIFFU_CONST:
-    patch_calc_resis_const_c(p_resis, p_Jcc, p_Ucurr, p_zmask);
-    break;
-  default:
-    assert(0);
-  }
-
-  patch_push_ej(p_Unext, dt, p_Ucurr, p_W, p_zmask);
-
-  patch_calce(p_E, dt, p_Ucurr, p_W, p_zmask, p_rmask, p_resis, p_Jcc);
-  patch_bpush1(p_Unext, dt, p_Uprev, p_E);
-  //  bpush_c(mhd, dt, m_prev, m_next);
+  patch_pushfield_c(p_Unext, dt, p_Uprev, p_Ucurr, p_W, p_zmask, p_rmask,
+		    p_resis, p_Jcc, stage);
 }
 
 // ======================================================================

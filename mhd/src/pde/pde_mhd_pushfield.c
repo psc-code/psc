@@ -27,6 +27,7 @@ patch_pushfield_c(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Uprev,
 {
   if (s_magdiffu == MAGDIFFU_NL1) {
     patch_calc_resis_nl1(p_resis);
+    // FIXME, should be unnec
     vgr0(p_Jcc, 0);
     vgr0(p_Jcc, 1);
     vgr0(p_Jcc, 2);
