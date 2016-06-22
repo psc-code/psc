@@ -199,7 +199,7 @@ ggcm_mhd_diag_item_b_run(struct ggcm_mhd_diag_item *item,
   struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
   if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM) {
     for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
-      mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
+      mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
 	M3(r, 0, ix,iy,iz, p) = .5f * (BX_(f, ix,iy,iz, p) + BX_(f, ix-1,iy,iz, p));
 	M3(r, 1, ix,iy,iz, p) = .5f * (BY_(f, ix,iy,iz, p) + BY_(f, ix,iy-1,iz, p));
 	M3(r, 2, ix,iy,iz, p) = .5f * (BZ_(f, ix,iy,iz, p) + BZ_(f, ix,iy,iz-1, p));
@@ -207,11 +207,11 @@ ggcm_mhd_diag_item_b_run(struct ggcm_mhd_diag_item *item,
     }
   } else if (mhd_type == MT_SEMI_CONSERVATIVE ||
 	     mhd_type == MT_FULLY_CONSERVATIVE) {
-    compute_Bt_cc(mhd, fld_r, f, bnd, bnd);
+    compute_Bt_cc(mhd, fld_r, f, 1, 1);
   } else if (mhd_type == MT_FULLY_CONSERVATIVE_CC) {
     struct mrc_fld *b0 = mhd->b0;
     for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
-      mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
+      mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
 	M3(r, 0, ix,iy,iz, p) = BT(f, 0, ix,iy,iz, p);
 	M3(r, 1, ix,iy,iz, p) = BT(f, 1, ix,iy,iz, p);
 	M3(r, 2, ix,iy,iz, p) = BT(f, 2, ix,iy,iz, p);
