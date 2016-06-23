@@ -215,8 +215,12 @@ obndra_mhd_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float b
 	  assert(0);
 	}
 	_BX(f, mm, ix+1,iy,iz, p) = b[0];
-	M3(f, mm+BY, ix,iy,iz, p) = b[1];
-	M3(f, mm+BZ, ix,iy,iz, p) = b[2];
+	if (iy > -swy) {
+	  _BY(f, mm, ix,iy,iz, p) = b[1];
+	}
+	if (iz > -swz) {
+	  _BZ(f, mm, ix,iy,iz, p) = b[2];
+	}
       }
     }
   }
@@ -236,8 +240,12 @@ obndra_yl_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
 	  for (int m = mm; m < mm + 5; m++) {
 	    M3(f,m, ix,-iy-1,iz, p) = M3(f,m, ix,iy,iz, p);
 	  }
-	  M3(f,mm + BX, ix,-iy-1,iz, p) = M3(f,mm + BX, ix,iy,iz, p);
-	  M3(f,mm + BZ, ix,-iy-1,iz, p) = M3(f,mm + BZ, ix,iy,iz, p);
+	  if (ix > -sw[0]) {
+	    _BX(f, mm, ix,-iy-1,iz, p) = _BX(f, mm, ix,iy,iz, p);
+	  }
+	  if (iz > -sw[2]) {
+	    _BZ(f, mm, ix,-iy-1,iz, p) = _BZ(f, mm, ix,iy,iz, p);
+	  }
 	}
 	for (int iy = 1; iy < sw[1]; iy++) {
 	  _BY(f, mm, ix,-iy,iz, p) = _BY(f, mm, ix,iy,iz, p);
@@ -261,8 +269,12 @@ obndra_zl_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
 	  for (int m = mm; m < mm + 5; m++) {
 	    M3(f,m, ix,iy,-iz-1, p) = M3(f,m, ix,iy,iz, p);
 	  }
-	  M3(f,mm + BX, ix,iy,-iz-1, p) = M3(f,mm + BX, ix,iy,iz, p);
-	  M3(f,mm + BY, ix,iy,-iz-1, p) = M3(f,mm + BY, ix,iy,iz, p);
+	  if (ix > -sw[0]) {
+	    _BX(f, mm, ix,iy,-iz-1, p) = _BX(f, mm, ix,iy,iz, p);
+	  }
+	  if (iy > -sw[1]) {
+	    _BY(f, mm, ix,iy,-iz-1, p) = _BY(f, mm, ix,iy,iz, p);
+	  }
 	}
 	for (int iz = 1; iz < sw[2]; iz++) {
 	  _BZ(f, mm, ix,iy,-iz, p) = _BZ(f, mm, ix,iy,iz, p);
@@ -287,8 +299,12 @@ obndra_xh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
 	  for (int m = mm; m < mm + 5; m++) {
 	    M3(f,m, mx+ix,iy,iz, p) = M3(f,m, mx-ix-1,iy,iz, p);
 	  }
-	  M3(f,mm + BY, mx+ix,iy,iz, p) = M3(f,mm + BY, mx-ix-1,iy,iz, p);
-	  M3(f,mm + BZ, mx+ix,iy,iz, p) = M3(f,mm + BZ, mx-ix-1,iy,iz, p);
+	  if (iy > -sw[1]) {
+	    _BY(f, mm, mx+ix,iy,iz, p) = _BY(f, mm, mx-ix-1,iy,iz, p);
+	  }
+	  if (iz > -sw[2]) {
+	    _BZ(f, mm, mx+ix,iy,iz, p) = _BZ(f, mm, mx-ix-1,iy,iz, p);
+	  }
 	}
 	for (int ix = 1; ix < sw[0]; ix++) {
 	  _BX(f, mm, mx+ix,iy,iz, p) = _BX(f, mm, mx-ix,iy,iz, p);
@@ -313,8 +329,12 @@ obndra_yh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
 	  for (int m = mm; m < mm + 5; m++) {
 	    M3(f,m, ix,my+iy,iz, p) = M3(f,m, ix,my-iy-1,iz, p);
 	  }
-	  M3(f,mm + BX, ix,my+iy,iz, p) = M3(f,mm + BX, ix,my-iy-1,iz, p);
-	  M3(f,mm + BZ, ix,my+iy,iz, p) = M3(f,mm + BZ, ix,my-iy-1,iz, p);
+	  if (ix > -sw[0]) {
+	    _BX(f, mm, ix,my+iy,iz, p) = _BX(f, mm, ix,my-iy-1,iz, p);
+	  }
+	  if (iz > -sw[2]) {
+	    _BZ(f, mm, ix,my+iy,iz, p) = _BZ(f, mm, ix,my-iy-1,iz, p);
+	  }
 	}
 	for (int iy = 1; iy < sw[1]; iy++) {
 	  _BY(f, mm, ix,my+iy,iz, p) = _BY(f, mm, ix,my-iy-1,iz, p);
@@ -339,8 +359,12 @@ obndra_zh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
 	  for (int m = mm; m < mm + 5; m++) {
 	    M3(f,m, ix,iy,mz+iz, p) = M3(f,m, ix,iy,mz-iz-1, p);
 	  }
-	  M3(f,mm + BX, ix,iy,mz+iz, p) = M3(f,mm + BX, ix,iy,mz-iz-1, p);
-	  M3(f,mm + BY, ix,iy,mz+iz, p) = M3(f,mm + BY, ix,iy,mz-iz-1, p);
+	  if (ix > -sw[0]) {
+	    _BX(f, mm, ix,iy,mz+iz, p) = _BX(f, mm, ix,iy,mz-iz-1, p);
+	  }
+	  if (iy > -sw[1]) {
+	    _BY(f, mm, ix,iy,mz+iz, p) = _BY(f, mm, ix,iy,mz-iz-1, p);
+	  }
 	}
 	for (int iz = 1; iz < sw[2]; iz++) {
 	  _BZ(f, mm, ix,iy,mz+iz, p) = _BZ(f, mm, ix,iy,mz-iz, p);
