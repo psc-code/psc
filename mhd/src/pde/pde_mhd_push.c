@@ -141,6 +141,9 @@ patch_pushstage(fld3d_t p_f, mrc_fld_data_t dt, int stage)
   fld3d_t p_zmask = fld3d_make_view(p_f, _ZMASK);
 
   patch_primvar(p_W, p_Ucurr, p_cmsv);
+  if (stage == 1) {
+    patch_badval_checks_sc(p_Ucurr, p_W);
+  }
 
   if (stage == 0) {
     fld3d_t p_bcc;
@@ -151,10 +154,6 @@ patch_pushstage(fld3d_t p_f, mrc_fld_data_t dt, int stage)
 
   patch_push(p_Unext, p_Uprev, p_Ucurr, p_W, p_cmsv,
 	     p_ymask, p_zmask, p_f, dt, stage);
-
-  if (stage == 1) {
-    patch_badval_checks_sc(p_Ucurr, p_W);
-  }
 }
 
 // ----------------------------------------------------------------------
