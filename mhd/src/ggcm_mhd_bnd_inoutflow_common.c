@@ -7,6 +7,7 @@
 struct ggcm_mhd_bnd_sub {
   double bnvals[SW_NR];
   bool apply_bndsw;
+  bool do_legacy;
 };
 
 #define ggcm_mhd_bnd_sub(bnd) mrc_to_subobj(bnd, struct ggcm_mhd_bnd_sub);
@@ -675,6 +676,7 @@ obndrb_zh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
 static void
 obndrb(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm)
 {
+  struct ggcm_mhd_bnd_sub *sub = ggcm_mhd_bnd_sub(bnd);
   struct ggcm_mhd *mhd = bnd->mhd;
 
   const int *sw = mrc_fld_spatial_sw(f), *ldims = mrc_fld_spatial_dims(f);
@@ -702,12 +704,22 @@ obndrb(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm)
     float *bdz3 = ggcm_mhd_crds_get_crd_p(mhd->crds, 2, BD3, p);
 
     // assumes x1 bnd = fix, others = open
-    obndrb_yl_open(mhd, f, mm, m_t, s_t, l_n, s_n, p, bdx3, bdy3, bdz3);
-    obndrb_zl_open(mhd, f, mm, m_t, s_t, l_n, s_n, p, bdx3, bdy3, bdz3);
+    if (!sub->do_legacy) {
+      obndrb_yl_open(mhd, f, mm, m_t, s_t, l_n, s_n, p, bdx3, bdy3, bdz3);
+      obndrb_yh_open(mhd, f, mm, m_t, s_t, r_n, s_n, p, bdx3, bdy3, bdz3);
+      
+      obndrb_zl_open(mhd, f, mm, m_t, s_t, l_n, s_n, p, bdx3, bdy3, bdz3);
+      obndrb_zh_open(mhd, f, mm, m_t, s_t, r_n, s_n, p, bdx3, bdy3, bdz3);
+      
+      obndrb_xh_open(mhd, f, mm, m_t, s_t, r_n, s_n, p, bdx3, bdy3, bdz3);
+    } else {
+      obndrb_yl_open(mhd, f, mm, m_t, s_t, l_n, s_n, p, bdx3, bdy3, bdz3);
+      obndrb_zl_open(mhd, f, mm, m_t, s_t, l_n, s_n, p, bdx3, bdy3, bdz3);
 
-    obndrb_xh_open(mhd, f, mm, m_t, s_t, r_n, s_n, p, bdx3, bdy3, bdz3);
-    obndrb_yh_open(mhd, f, mm, m_t, s_t, r_n, s_n, p, bdx3, bdy3, bdz3);
-    obndrb_zh_open(mhd, f, mm, m_t, s_t, r_n, s_n, p, bdx3, bdy3, bdz3);
+      obndrb_xh_open(mhd, f, mm, m_t, s_t, r_n, s_n, p, bdx3, bdy3, bdz3);
+      obndrb_yh_open(mhd, f, mm, m_t, s_t, r_n, s_n, p, bdx3, bdy3, bdz3);
+      obndrb_zh_open(mhd, f, mm, m_t, s_t, r_n, s_n, p, bdx3, bdy3, bdz3);
+    }
   }
 }
 
@@ -775,10 +787,10 @@ ggcm_mhd_bnd_sub_setup(struct ggcm_mhd_bnd *bnd)
  
 	if (mrc_domain_at_boundary_hi(mhd->domain, d, p)) {
 	  if (i[d] >= dims[d]) {
-	      M3(bnd_mask, 0, ix,iy,iz, p) = 1.f;
-	    } else if (i[d] == dims[d] - 1) {
-	      M3(bnd_mask, 0, ix,iy,iz, p) = 2.f;
-	    }
+	    M3(bnd_mask, 0, ix,iy,iz, p) = 1.f;
+	  } else if (i[d] == dims[d] - 1) {
+	    M3(bnd_mask, 0, ix,iy,iz, p) = 2.f;
+	  }
 	}
       }
    } mrc_fld_foreach_end;
@@ -801,6 +813,7 @@ static struct param ggcm_mhd_bnd_sub_descr[] = {
   { "by"           , VAR(bnvals[SW_BY])           , PARAM_DOUBLE(0.) },
   { "bz"           , VAR(bnvals[SW_BZ])           , PARAM_DOUBLE(0.) },
   { "apply_bndsw"  , VAR(apply_bndsw)             , PARAM_BOOL(true) },
+  { "do_legacy"    , VAR(do_legacy)               , PARAM_BOOL(false)},
 
   {},
 };
