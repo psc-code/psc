@@ -120,6 +120,39 @@ patch_push(fld3d_t p_Unext, fld3d_t p_Uprev, fld3d_t p_Ucurr,
 }
 
 // ----------------------------------------------------------------------
+// patch_poison_bnd
+
+static void _mrc_unused
+patch_poison_bnd(fld3d_t p_U)
+{
+#if OPT_STAGGER == OPT_STAGGER_GGCM
+  const int S = 1;
+#else
+  const int S = 0;
+#endif
+
+  fld3d_foreach(i,j,k, 2, 2) {
+    if (i >= 0 && i < s_ldims[0] &&
+	j >= 0 && j < s_ldims[1] &&
+	k >= 0 && k < s_ldims[2]) {
+      continue;
+    }
+    for (int m = 0; m < 5; m++) {
+      F3S(p_U, m, i,j,k) = 999999.;
+    }
+    if (i+S < 0 || i+S > s_ldims[0]) {
+      F3S(p_U, BX, i,j,k) = 999999.;
+    }
+    if (j+S < 0 || j+S > s_ldims[1]) {
+      F3S(p_U, BY, i,j,k) = 999999.;
+    }
+    if (k+S < 0 || k+S > s_ldims[2]) {
+      F3S(p_U, BZ, i,j,k) = 999999.;
+    }
+  } fld3d_foreach_end;
+}
+
+// ----------------------------------------------------------------------
 // patch_pushstage
 
 static void
@@ -154,6 +187,10 @@ patch_pushstage(fld3d_t p_f, mrc_fld_data_t dt, int stage)
 
   patch_push(p_Unext, p_Uprev, p_Ucurr, p_W, p_cmsv,
 	     p_ymask, p_zmask, p_f, dt, stage);
+
+  /* if (stage == 1) { */
+  /*   patch_poison_bnd(p_Unext); */
+  /* } */
 }
 
 // ----------------------------------------------------------------------
