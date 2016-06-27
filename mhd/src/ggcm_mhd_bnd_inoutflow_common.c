@@ -232,20 +232,20 @@ obndra_mhd_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float b
 
 static void
 obndra_yl_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
-	       const int sw[3], const int ldims[3], int p)
+	       const int sw[3], const int ldims[3], int b, int p)
 {
   if (mrc_domain_at_boundary_lo(mhd->domain, 1, p)) {
     for (int iz = -sw[2]; iz < ldims[2] + sw[2]; iz++) {
       for (int ix = -sw[0]; ix < ldims[0] + sw[0]; ix++) {
 	for (int iy = 0; iy < sw[1]; iy++) {
 	  for (int m = mm; m < mm + 5; m++) {
-	    M3(f,m, ix,-iy-1,iz, p) = M3(f,m, ix,iy,iz, p);
+	    M3(f,m, ix,b-iy,iz, p) = M3(f,m, ix,b+1+iy,iz, p);
 	  }
 	  if (ix > -sw[0]) {
-	    _BX(f, mm, ix,-iy-1,iz, p) = _BX(f, mm, ix,iy,iz, p);
+	    _BX(f, mm, ix,b-iy,iz, p) = _BX(f, mm, ix,b+1+iy,iz, p);
 	  }
 	  if (iz > -sw[2]) {
-	    _BZ(f, mm, ix,-iy-1,iz, p) = _BZ(f, mm, ix,iy,iz, p);
+	    _BZ(f, mm, ix,b-iy,iz, p) = _BZ(f, mm, ix,b+1+iy,iz, p);
 	  }
 	}
 	for (int iy = 1; iy < sw[1]; iy++) {
@@ -261,20 +261,20 @@ obndra_yl_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
 
 static void
 obndra_zl_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
-	       const int sw[3], const int ldims[3], int p)
+	       const int sw[3], const int ldims[3], int b, int p)
 {
   if (mrc_domain_at_boundary_lo(mhd->domain, 2, p)) {
     for (int iy = -sw[1]; iy < ldims[1] + sw[1]; iy++) {
       for (int ix = -sw[0]; ix < ldims[0] + sw[0]; ix++) {
 	for (int iz = 0; iz < sw[2]; iz++) {
 	  for (int m = mm; m < mm + 5; m++) {
-	    M3(f,m, ix,iy,-iz-1, p) = M3(f,m, ix,iy,iz, p);
+	    M3(f,m, ix,iy,b-iz, p) = M3(f,m, ix,iy,b+1+iz, p);
 	  }
 	  if (ix > -sw[0]) {
-	    _BX(f, mm, ix,iy,-iz-1, p) = _BX(f, mm, ix,iy,iz, p);
+	    _BX(f, mm, ix,iy,b-iz, p) = _BX(f, mm, ix,iy,b+1+iz, p);
 	  }
 	  if (iy > -sw[1]) {
-	    _BY(f, mm, ix,iy,-iz-1, p) = _BY(f, mm, ix,iy,iz, p);
+	    _BY(f, mm, ix,iy,b-iz, p) = _BY(f, mm, ix,iy,b+1+iz, p);
 	  }
 	}
 	for (int iz = 1; iz < sw[2]; iz++) {
@@ -290,7 +290,7 @@ obndra_zl_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
 
 static void
 obndra_xh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
-	       const int sw[3], const int ldims[3], int p)
+	       const int sw[3], const int ldims[3], int b, int p)
 {
   if (mrc_domain_at_boundary_hi(mhd->domain, 0, p)) {
     int mx = ldims[0];
@@ -298,13 +298,13 @@ obndra_xh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
       for (int iy = -sw[1]; iy < ldims[1] + sw[1]; iy++) {
 	for (int ix = 0; ix < sw[0]; ix++) {
 	  for (int m = mm; m < mm + 5; m++) {
-	    M3(f,m, mx+ix,iy,iz, p) = M3(f,m, mx-ix-1,iy,iz, p);
+	    M3(f,m, b+ix,iy,iz, p) = M3(f,m, b-ix-1,iy,iz, p);
 	  }
 	  if (iy > -sw[1]) {
-	    _BY(f, mm, mx+ix,iy,iz, p) = _BY(f, mm, mx-ix-1,iy,iz, p);
+	    _BY(f, mm, b+ix,iy,iz, p) = _BY(f, mm, b-ix-1,iy,iz, p);
 	  }
 	  if (iz > -sw[2]) {
-	    _BZ(f, mm, mx+ix,iy,iz, p) = _BZ(f, mm, mx-ix-1,iy,iz, p);
+	    _BZ(f, mm, b+ix,iy,iz, p) = _BZ(f, mm, b-ix-1,iy,iz, p);
 	  }
 	}
 	for (int ix = 1; ix < sw[0]; ix++) {
@@ -320,7 +320,7 @@ obndra_xh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
 
 static void
 obndra_yh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
-	       const int sw[3], const int ldims[3], int p)
+	       const int sw[3], const int ldims[3], int b, int p)
 {
   if (mrc_domain_at_boundary_hi(mhd->domain, 1, p)) {
     int my = ldims[1];
@@ -328,13 +328,13 @@ obndra_yh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
       for (int ix = -sw[0]; ix < ldims[0] + sw[0]; ix++) {
 	for (int iy = 0; iy < sw[1]; iy++) {
 	  for (int m = mm; m < mm + 5; m++) {
-	    M3(f,m, ix,my+iy,iz, p) = M3(f,m, ix,my-iy-1,iz, p);
+	    M3(f,m, ix,b+iy,iz, p) = M3(f,m, ix,b-iy-1,iz, p);
 	  }
 	  if (ix > -sw[0]) {
-	    _BX(f, mm, ix,my+iy,iz, p) = _BX(f, mm, ix,my-iy-1,iz, p);
+	    _BX(f, mm, ix,b+iy,iz, p) = _BX(f, mm, ix,b-iy-1,iz, p);
 	  }
 	  if (iz > -sw[2]) {
-	    _BZ(f, mm, ix,my+iy,iz, p) = _BZ(f, mm, ix,my-iy-1,iz, p);
+	    _BZ(f, mm, ix,b+iy,iz, p) = _BZ(f, mm, ix,b-iy-1,iz, p);
 	  }
 	}
 	for (int iy = 1; iy < sw[1]; iy++) {
@@ -350,7 +350,7 @@ obndra_yh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
 
 static void
 obndra_zh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
-	       const int sw[3], const int ldims[3], int p)
+	       const int sw[3], const int ldims[3], int b, int p)
 {
   if (mrc_domain_at_boundary_hi(mhd->domain, 2, p)) {
     int mz = ldims[2];
@@ -358,13 +358,13 @@ obndra_zh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
       for (int ix = -sw[0]; ix < ldims[0] + sw[0]; ix++) {
 	for (int iz = 0; iz < sw[2]; iz++) {
 	  for (int m = mm; m < mm + 5; m++) {
-	    M3(f,m, ix,iy,mz+iz, p) = M3(f,m, ix,iy,mz-iz-1, p);
+	    M3(f,m, ix,iy,b+iz, p) = M3(f,m, ix,iy,b-iz-1, p);
 	  }
 	  if (ix > -sw[0]) {
-	    _BX(f, mm, ix,iy,mz+iz, p) = _BX(f, mm, ix,iy,mz-iz-1, p);
+	    _BX(f, mm, ix,iy,b+iz, p) = _BX(f, mm, ix,iy,b-iz-1, p);
 	  }
 	  if (iy > -sw[1]) {
-	    _BY(f, mm, ix,iy,mz+iz, p) = _BY(f, mm, ix,iy,mz-iz-1, p);
+	    _BY(f, mm, ix,iy,b+iz, p) = _BY(f, mm, ix,iy,b-iz-1, p);
 	  }
 	}
 	for (int iz = 1; iz < sw[2]; iz++) {
@@ -386,7 +386,17 @@ obndra_mhd(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim)
   struct ggcm_mhd_bnd_sub *sub = ggcm_mhd_bnd_sub(bnd);
   struct ggcm_mhd *mhd = bnd->mhd;
 
-  const int *sw = mrc_fld_spatial_sw(f), *dims = mrc_fld_spatial_dims(f);
+  const int *sw = mrc_fld_spatial_sw(f), *ldims = mrc_fld_spatial_dims(f);
+  int bl[3], bh[3];
+  for (int d = 0; d < 3; d++) {
+    if (sub->do_legacy) {
+      bl[d] = -1;
+      bh[d] = ldims[d];
+    } else {
+      bl[d] = 0;
+      bh[d] = ldims[d] - 1;
+    }
+  }
 
   for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
     if (mrc_domain_at_boundary_lo(mhd->domain, 0, p)) {
@@ -396,13 +406,13 @@ obndra_mhd(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim)
 	assert(0);
       }
     }
-    obndra_xh_open(mhd, f, mm, sw, dims, p);
+    obndra_xh_open(mhd, f, mm, sw, ldims, bh[0], p);
 
-    obndra_yl_open(mhd, f, mm, sw, dims, p);
-    obndra_yh_open(mhd, f, mm, sw, dims, p);
+    obndra_yl_open(mhd, f, mm, sw, ldims, bl[1], p);
+    obndra_yh_open(mhd, f, mm, sw, ldims, bh[1], p);
 
-    obndra_zl_open(mhd, f, mm, sw, dims, p);
-    obndra_zh_open(mhd, f, mm, sw, dims, p);
+    obndra_zl_open(mhd, f, mm, sw, ldims, bl[2], p);
+    obndra_zh_open(mhd, f, mm, sw, ldims, bh[2], p);
   }
 }
 
