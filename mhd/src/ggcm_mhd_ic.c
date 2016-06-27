@@ -33,7 +33,7 @@ ggcm_mhd_ic_B_from_vector_potential_fc(struct ggcm_mhd_ic *ic, struct mrc_fld *b
 
   /* initialize face-centered B from edge-centered vector potential */
   for (int p = 0; p < mrc_fld_nr_patches(b); p++) {
-    mrc_fld_foreach(b, ix,iy,iz, 1, 2) {
+    mrc_fld_foreach(b, ix,iy,iz, 2, 2) {
       mrc_dcrds_at_ec(crds, ix  , iy  , iz  , p, 0, xx);
       mrc_fld_data_t Ax    = vector_potential(ic, 0, xx);
       double x_y0 = xx[1], x_z0 = xx[2];
@@ -72,9 +72,15 @@ ggcm_mhd_ic_B_from_vector_potential_fc(struct ggcm_mhd_ic *ic, struct mrc_fld *b
       mrc_fld_data_t Az_yp = vector_potential(ic, 2, xx);
       double z_yp = xx[1];
 
-      M3(b, 0, ix-S,iy,iz, p) += (Az_yp - Az) / (z_yp - z_y0) - (Ay_zp - Ay) / (y_zp - y_z0);
-      M3(b, 1, ix,iy-S,iz, p) += (Ax_zp - Ax) / (x_zp - x_z0) - (Az_xp - Az) / (z_xp - z_x0);
-      M3(b, 2, ix,iy,iz-S, p) += (Ay_xp - Ay) / (y_xp - y_x0) - (Ax_yp - Ax) / (x_yp - x_y0);
+      if (ix > -2) {
+	M3(b, 0, ix-S,iy,iz, p) += (Az_yp - Az) / (z_yp - z_y0) - (Ay_zp - Ay) / (y_zp - y_z0);
+      }
+      if (iy > -2) {
+	M3(b, 1, ix,iy-S,iz, p) += (Ax_zp - Ax) / (x_zp - x_z0) - (Az_xp - Az) / (z_xp - z_x0);
+      }
+      if (iz > -2) {
+	M3(b, 2, ix,iy,iz-S, p) += (Ay_xp - Ay) / (y_xp - y_x0) - (Ax_yp - Ax) / (x_yp - x_y0);
+      }
     } mrc_fld_foreach_end;
   }
 }
