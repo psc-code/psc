@@ -49,6 +49,10 @@
 
 * t020_gem_mhdcc_res_divbglm: GEM challenge resistive MHD, mhdcc, GLM divB cleaning
 
+* t021_openggcm_step: Full OpenGGCM test (run the runme), hi-order,
+  const resistivity. ref.sh / run.sh run step "fortran" / "c_float",
+  respectively, and should produce identical results.
+
 
 
 
