@@ -29,26 +29,23 @@ calc_avg_dz_By(fld3d_t p_dB, fld3d_t p_U, int XX, int YY, int ZZ,
   fld3d_t p_tmp1 = fld3d_make_tmp(2, _TMP1);
 
   // d_z B_y, d_y B_z on x edges
+  fld3d_foreach_stagger(i,j,k, 1, 2) {
 #if OPT_STAGGER == OPT_STAGGER_GGCM
-  fld3d_foreach(i,j,k, 2, 1) {
     mrc_fld_data_t bd1[3] = { PDE_INV_DXF(i+1), PDE_INV_DYF(j+1), PDE_INV_DZF(k+1) };
 
     F3S(p_tmp1, 0, i,j,k) = bd1[ZZ] * 
       (F3S(p_U, BX + YY, i+IDZ,j+JDZ,k+KDZ) - F3S(p_U, BX + YY, i,j,k));
     F3S(p_tmp1, 1, i,j,k) = bd1[YY] * 
       (F3S(p_U, BX + ZZ, i+IDY,j+JDY,k+KDY) - F3S(p_U, BX + ZZ, i,j,k));
-  } fld3d_foreach_end;
 #else
-  fld3d_foreach(i,j,k, 1, 2) {
     mrc_fld_data_t bd1[3] = { PDE_INV_DXF(i), PDE_INV_DYF(j), PDE_INV_DZF(k) };
 
     F3S(p_tmp1, 0, i,j,k) = bd1[ZZ] * 
       (F3S(p_U, BX + YY, i,j,k) - F3S(p_U, BX + YY, i-IDZ,j-JDZ,k-KDZ));
     F3S(p_tmp1, 1, i,j,k) = bd1[YY] * 
       (F3S(p_U, BX + ZZ, i,j,k) - F3S(p_U, BX + ZZ, i-IDY,j-JDY,k-KDY));
-  } fld3d_foreach_end;
-
 #endif
+  } fld3d_foreach_end;
 
   // .5 * harmonic average if same sign
   fld3d_foreach(i,j,k, 1, 1) {
@@ -167,12 +164,7 @@ bcthy3z_NL1(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W, fld3d_t p_
   }
 
   // edge centered E = - v x B (+ dissipation)
-#if OPT_STAGGER == OPT_STAGGER_GGCM
-  fld3d_foreach(i,j,k, 1, 0) {
-#else
-  fld3d_foreach(i,j,k, 0, 1) {
-#endif
-
+  fld3d_foreach_stagger(i,j,k, 0, 1) {
     mrc_fld_data_t ttmp[2];
     calc_v_x_B(ttmp, p_U, p_W, p_dB, i, j, k, XX, YY, ZZ, I, J, K,
 	       IDY, JDY, KDY, IDZ, JDZ, KDZ, dt);
@@ -204,11 +196,7 @@ bcthy3z_const(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W, fld3d_t 
   calc_avg_dz_By(p_dB, p_U, XX, YY, ZZ, IDY, JDY, KDY, IDZ, JDZ, KDZ);
 
   // edge centered E = - v x B (+ dissipation)
-#if OPT_STAGGER == OPT_STAGGER_GGCM
-  fld3d_foreach(i,j,k, 1, 0) {
-#else
-  fld3d_foreach(i,j,k, 0, 1) {
-#endif
+  fld3d_foreach_stagger(i,j,k, 0, 1) {
     mrc_fld_data_t ttmp[2];
     calc_v_x_B(ttmp, p_U, p_W, p_dB, i, j, k, XX, YY, ZZ, I, J, K,
 	       IDY, JDY, KDY, IDZ, JDZ, KDZ, dt);

@@ -709,4 +709,10 @@ pde_mhd_aux_setup()
 
 #endif
 
+#if OPT_STAGGER == OPT_STAGGER_GGCM
+#define fld3d_foreach_stagger(i,j,k, l, r) fld3d_foreach(i,j,k, (l)+1, (r)-1)
+#else
+#define fld3d_foreach_stagger(i,j,k, l, r) fld3d_foreach(i,j,k, l, r)
+#endif
+
 #endif
