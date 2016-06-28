@@ -16,10 +16,6 @@ patch_push_c(fld3d_t p_Unext, fld3d_t p_Uprev, fld3d_t p_Ucurr,
   fld3d_t p_rmask = fld3d_make_tmp(1, _RMASK), p_resis = fld3d_make_tmp(1, _RESIS);
   fld3d_t p_Jcc = fld3d_make_tmp(3, _CURRX);
 
-  if (stage == 0) {
-    dt *= .5f;
-  }
-
   patch_rmaskn(p_rmask, p_zmask);
   patch_pushfluid(p_Unext, dt, p_Uprev, p_Ucurr, p_W,
 		  p_cmsv, p_ymask, p_zmask, stage);
@@ -88,7 +84,8 @@ static void
 patch_push_fortran(mrc_fld_data_t dt, int stage)
 {
   if (stage == 0) {
-    patch_pushpred_fortran(dt);
+    // fortran expects full timestep, but predictor got pass .5f * mhd->dt
+    patch_pushpred_fortran(2.f * dt);
   } else {
     patch_pushcorr_fortran(dt);
   }
