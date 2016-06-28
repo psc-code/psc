@@ -657,6 +657,11 @@ pde_mhd_aux_setup()
 
 // ======================================================================
 
+// ----------------------------------------------------------------------
+// EC_TO_CC
+//
+// edge-center to cell-center averaging
+
 #if OPT_STAGGER == OPT_STAGGER_GGCM
 
 #define EC_TO_CC(f, m, i,j,k)						\
@@ -679,5 +684,29 @@ pde_mhd_aux_setup()
 
 #endif
 
+// ----------------------------------------------------------------------
+// CURL_FC
+// 
+// this curl gives values on face centers, assumes the input is on cell edges
+
+#if OPT_STAGGER == OPT_STAGGER_GGCM
+
+#define CURLX_FC(p_f, i,j,k) (PDE_INV_DY(j) * (F3S(p_E, 2, i,j,k) - F3S(p_E, 2, i,j-1,k)) - \
+			      PDE_INV_DZ(k) * (F3S(p_E, 1, i,j,k) - F3S(p_E, 1, i,j,k-1)))
+#define CURLY_FC(p_f, i,j,k) (PDE_INV_DZ(k) * (F3S(p_E, 0, i,j,k) - F3S(p_E, 0, i,j,k-1)) - \
+			      PDE_INV_DX(i) * (F3S(p_E, 2, i,j,k) - F3S(p_E, 2, i-1,j,k)))
+#define CURLZ_FC(p_f, i,j,k) (PDE_INV_DX(i) * (F3S(p_E, 1, i,j,k) - F3S(p_E, 1, i-1,j,k)) - \
+			      PDE_INV_DY(j) * (F3S(p_E, 0, i,j,k) - F3S(p_E, 0, i,j-1,k)))
+
+#else
+
+#define CURLX_FC(p_f, i,j,k) (PDE_INV_DY(j) * (F3S(p_E, 2, i,j+1,k) - F3S(p_E, 2, i,j,k)) - \
+			      PDE_INV_DZ(k) * (F3S(p_E, 1, i,j,k+1) - F3S(p_E, 1, i,j,k)))
+#define CURLY_FC(p_f, i,j,k) (PDE_INV_DZ(k) * (F3S(p_E, 0, i,j,k+1) - F3S(p_E, 0, i,j,k)) - \
+			      PDE_INV_DX(i) * (F3S(p_E, 2, i+1,j,k) - F3S(p_E, 2, i,j,k)))
+#define CURLZ_FC(p_f, i,j,k) (PDE_INV_DX(i) * (F3S(p_E, 1, i+1,j,k) - F3S(p_E, 1, i,j,k)) - \
+			      PDE_INV_DY(j) * (F3S(p_E, 0, i,j+1,k) - F3S(p_E, 0, i,j,k)))
+
+#endif
 
 #endif
