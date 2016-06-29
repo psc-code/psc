@@ -79,7 +79,7 @@ ggcm_mhd_step_c2_setup(struct ggcm_mhd_step *step)
   pde_mhd_setup(mhd);
   pde_mhd_compat_setup(mhd);
 
-  mhd->ymask = mrc_fld_make_view(mhd->fld, _YMASK, _YMASK + 1);
+  mhd->ymask = ggcm_mhd_get_3d_fld(mhd, 1);
   mrc_fld_set(mhd->ymask, 1.);
 
   sub->f_Uhalf = ggcm_mhd_get_3d_fld(mhd, 8);
