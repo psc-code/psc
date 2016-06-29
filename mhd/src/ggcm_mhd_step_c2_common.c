@@ -8,17 +8,6 @@
 
 #include <string.h>
 
-// FIXME: major ugliness
-// The fortran fields do primitive vars in the order _RR,_PP,_VX,_VY,_VZ
-// but in C, we stick with the corresponding conservative var order, ie.,
-// RR,VX,VY,VZ,PP
-// The below hackily switches the order around in C, so that it matches fortran
-
-#define PP 1
-#define VX 2
-#define VY 3
-#define VZ 4
-
 #include "pde/pde_defs.h"
 
 // mhd options
