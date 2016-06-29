@@ -96,10 +96,12 @@ patch_calc_avg_dz_By(fld3d_t p_dB, fld3d_t p_B, int XX, int YY, int ZZ)
 }
  
 // ----------------------------------------------------------------------
-// calc_v_x_B
+// calc_ve_x_B
+//
+// calculates (v - d_i J) x B, so without Hall it's just v x B
 
 static inline void
-calc_v_x_B(mrc_fld_data_t ttmp[2], fld3d_t p_B, fld3d_t p_W, fld3d_t p_dB,
+calc_ve_x_B(mrc_fld_data_t ttmp[2], fld3d_t p_B, fld3d_t p_W, fld3d_t p_dB,
 	   int i, int j, int k, int XX, int YY, int ZZ,
 	   mrc_fld_data_t dt)
 {
@@ -158,48 +160,6 @@ calc_v_x_B(mrc_fld_data_t ttmp[2], fld3d_t p_B, fld3d_t p_W, fld3d_t p_dB,
   ttmp[1] = vbYY * vvZZ;
 }
 
-// FIXME, repeated with b0
-
-// ve = v - d_i J
-static inline void
-calc_ve_x_B_b0(mrc_fld_data_t ttmp[2], fld3d_t p_B, fld3d_t p_W, fld3d_t p_dB,
-	       int i, int j, int k, int XX, int YY, int ZZ,
-	       mrc_fld_data_t dt)
-{
-  // FIXME, need to check index/shift
-  mrc_fld_data_t bd2m[3] = { PDE_DX(i-1), PDE_DY(j-1), PDE_DZ(k-1) };
-  mrc_fld_data_t bd2[3] = { PDE_DX(i), PDE_DY(j), PDE_DZ(k) };
-
-  // edge centered velocity
-  mrc_fld_data_t vvYY = CC_TO_EC(p_W, VX + YY, i,j,k, XX);
-  if (s_opt_hall != OPT_HALL_NONE) {
-    mrc_fld_data_t vcurrYY = CC_TO_EC(s_p_aux.Jcc, YY, i, j, k, XX);
-    vvYY -= s_d_i * vcurrYY;
-  }
-
-  mrc_fld_data_t vbZZ;
-  if (vvYY > 0.f) {
-    vbZZ = BT(p_B, ZZ, i-ID(YY),j-JD(YY),k-KD(YY)) + F3S_YYM(p_dB, 1, i,j,k) * (bd2m[YY] - dt*vvYY);
-  } else {
-    vbZZ = BT(p_B, ZZ, i,j,k) - F3S(p_dB, 1, i,j,k) * (bd2[YY] + dt*vvYY);
-  }
-  ttmp[0] = vbZZ * vvYY;
-  
-  mrc_fld_data_t vbYY;
-  // edge centered velocity
-  mrc_fld_data_t vvZZ = CC_TO_EC(p_W, VX + ZZ, i,j,k, XX);
-  if (s_opt_hall != OPT_HALL_NONE) {
-    mrc_fld_data_t vcurrZZ = CC_TO_EC(s_p_aux.Jcc, ZZ, i, j, k, XX);
-    vvZZ -= s_d_i * vcurrZZ;
-  }
-  if (vvZZ > 0.f) {
-    vbYY = BT(p_B, YY, i-ID(ZZ),j-JD(ZZ),k-KD(ZZ)) + F3S_ZZM(p_dB, 0, i,j,k) * (bd2m[ZZ] - dt*vvZZ);
-  } else {
-    vbYY = BT(p_B, YY, i,j,k) - F3S(p_dB, 0, i,j,k) * (bd2[ZZ] + dt*vvZZ);
-  }
-  ttmp[1] = vbYY * vvZZ;
-}
-
 static void
 patch_bcthy3z_NL1(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
 		  fld3d_t p_rmask,
@@ -220,7 +180,7 @@ patch_bcthy3z_NL1(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
   // edge centered E = - v x B (+ dissipation)
   fld3d_foreach_stagger(i,j,k, 0, 1) {
     mrc_fld_data_t ttmp[2];
-    calc_v_x_B(ttmp, p_B, p_W, p_dB, i, j, k, XX, YY, ZZ, dt);
+    calc_ve_x_B(ttmp, p_B, p_W, p_dB, i, j, k, XX, YY, ZZ, dt);
 
     mrc_fld_data_t t1m = F3S_YYP(p_B, ZZ, i,j,k) - F3S(p_B, ZZ, i,j,k);
     mrc_fld_data_t t1p = mrc_fld_abs(F3S_YYP(p_B, ZZ, i,j,k)) + mrc_fld_abs(F3S(p_B, ZZ, i,j,k));
@@ -263,7 +223,7 @@ patch_bcthy3z_NL1_b0(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
   
   fld3d_foreach(i,j,k, 0, 1) {
     mrc_fld_data_t ttmp[2];
-    calc_ve_x_B_b0(ttmp, p_B, p_W, p_dB, i, j, k, XX, YY, ZZ, dt);
+    calc_ve_x_B(ttmp, p_B, p_W, p_dB, i, j, k, XX, YY, ZZ, dt);
     
     mrc_fld_data_t t1m = BT(p_B, ZZ, i+ID(YY),j+JD(YY),k+KD(YY)) - BT(p_B, ZZ, i,j,k);
     mrc_fld_data_t t1p = fabsf(BT(p_B, ZZ, i+ID(YY),j+JD(YY),k+KD(YY))) + fabsf(BT(p_B, ZZ, i,j,k));
@@ -298,7 +258,7 @@ patch_bcthy3z_const(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
   // edge centered E = - v x B (+ dissipation)
   fld3d_foreach_stagger(i,j,k, 0, 1) {
     mrc_fld_data_t ttmp[2];
-    calc_v_x_B(ttmp, p_B, p_W, p_dB, i, j, k, XX, YY, ZZ, dt);
+    calc_ve_x_B(ttmp, p_B, p_W, p_dB, i, j, k, XX, YY, ZZ, dt);
 
     mrc_fld_data_t vcurrXX = CC_TO_EC(s_p_aux.Jcc, XX, i,j,k, XX);
     mrc_fld_data_t vresis = CC_TO_EC(p_resis, 0, i,j,k, XX);
@@ -323,7 +283,7 @@ patch_bcthy3z_const_b0(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
   // edge centered E = - ve x B (+ dissipation)
   fld3d_foreach(i,j,k, 0, 1) {
     mrc_fld_data_t ttmp[2];
-    calc_ve_x_B_b0(ttmp, p_B, p_W, p_dB, i, j, k, XX, YY, ZZ, dt);
+    calc_ve_x_B(ttmp, p_B, p_W, p_dB, i, j, k, XX, YY, ZZ, dt);
     
     mrc_fld_data_t vcurrXX = CC_TO_EC(s_p_aux.Jcc, XX, i,j,k, XX);
     mrc_fld_data_t vresis = CC_TO_EC(p_resis, 0, i,j,k, XX);
