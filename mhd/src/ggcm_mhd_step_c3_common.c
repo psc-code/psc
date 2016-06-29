@@ -21,6 +21,7 @@
 #include "pde/pde_mhd_riemann.c"
 #include "pde/pde_mhd_push_ej.c"
 #include "pde/pde_mhd_rmaskn.c"
+#include "pde/pde_mhd_calc_resis.c"
 #include "pde/pde_mhd_stage.c"
 #include "pde/pde_mhd_get_dt.c"
 #include "pde/pde_mhd_badval_checks.c"
@@ -292,47 +293,6 @@ patch_push_pp(fld3d_t p_U, mrc_fld_data_t dt, fld3d_t p_W, fld3d_t p_zmask)
   } fld3d_foreach_end;
 }
 
-// ----------------------------------------------------------------------
-// patch_res1_const
-
-static void
-patch_res1_const(struct ggcm_mhd *mhd, fld3d_t resis, int p)
-{
-  // resistivity comes in ohm*m
-  int diff_obnd = mhd->par.diff_obnd;
-  mrc_fld_data_t eta0i = 1. / mhd->resnorm;
-  mrc_fld_data_t diffsphere2 = sqr(mhd->par.diffsphere);
-  mrc_fld_data_t diff = mhd->par.diffco * eta0i;
-
-  int gdims[3];
-  mrc_domain_get_global_dims(mhd->domain, gdims);
-  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-
-  struct mrc_patch_info info;
-  mrc_domain_get_local_patch_info(mhd->domain, p, &info);
-  
-  fld3d_foreach(i,j,k, 1, 1) {
-    F3S(resis, 0, i,j,k) = 0.f;
-    mrc_fld_data_t r2 = (sqr(MRC_MCRDX(crds, i, p)) +
-			 sqr(MRC_MCRDY(crds, j, p)) +
-			 sqr(MRC_MCRDZ(crds, k, p)));
-    if (r2 < diffsphere2)
-      continue;
-    if (j + info.off[1] < diff_obnd)
-      continue;
-    if (k + info.off[2] < diff_obnd)
-      continue;
-    if (i + info.off[0] >= gdims[0] - diff_obnd)
-      continue;
-    if (j + info.off[1] >= gdims[1] - diff_obnd)
-      continue;
-    if (k + info.off[2] >= gdims[2] - diff_obnd)
-      continue;
-    
-    F3S(resis, 0, i,j,k) = diff;
-  } fld3d_foreach_end;
-}
-
 static inline mrc_fld_data_t
 bcthy3f(mrc_fld_data_t s1, mrc_fld_data_t s2)
 {
@@ -514,7 +474,7 @@ patch_calce(struct ggcm_mhd_step *step, fld3d_t E, mrc_fld_data_t dt,
     }
 
     patch_calc_current_cc(curr, x, zmask);
-    patch_res1_const(mhd, resis, p);
+    patch_res1_const(resis);
 
     patch_bcthy3z_const(0,1,2, 0,dj,dk, 0,dj,0, 0,0,dk, E, dt, x, prim, curr, resis, b0);
     patch_bcthy3z_const(1,2,0, di,0,dk, 0,0,dk, di,0,0, E, dt, x, prim, curr, resis, b0);
