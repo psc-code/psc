@@ -113,17 +113,45 @@ ggcm_mhd_step_c2_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
 }
 
 // ----------------------------------------------------------------------
+// patch_calc_e
+
+static void
+patch_calc_e(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
+	     fld3d_t p_zmask, fld3d_t p_rmask)
+{
+  static fld3d_t p_resis;
+  fld3d_setup_tmp_compat(&p_resis, 1, _RESIS);
+
+  switch (s_magdiffu) {
+  case MAGDIFFU_NL1:
+    patch_calc_resis_nl1(p_resis);
+    patch_calce_nl1_c(p_E, dt, p_U, p_W, p_rmask);
+    break;
+  case MAGDIFFU_RES1:
+    assert(0);
+    // calc_resis_res1(bxB,byB,bzB,currx,curry,currz,tmp1,tmp2,tmp3,flx,fly,flz,zmask,rr,pp,resis);
+    // calce...
+    break;
+  case MAGDIFFU_CONST:
+    patch_calc_resis_const(p_resis, s_p_aux.Jcc, p_U, p_zmask);
+    patch_calce_const_c(p_E, dt, p_U, p_W, p_resis);
+    break;
+  default:
+    assert(0);
+  }
+}
+
+// ----------------------------------------------------------------------
 // patch_pushstage
 
 static void
 patch_pushstage(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Ucurr, fld3d_t p_ymask,
 		fld3d_t p_zmask, fld3d_t p_E, int stage, int limit)
 {
-  static fld3d_t p_W, p_cmsv, p_rmask, p_resis, p_Jcc, p_B;
+  static fld3d_t p_W, p_cmsv, p_rmask, p_Jcc, p_B;
   fld3d_setup_tmp_compat(&p_W, 5, _RR);
   fld3d_setup_tmp_compat(&p_cmsv, 1, _CMSV);
   fld3d_setup_tmp_compat(&p_rmask, 1, _RMASK);
-  fld3d_setup_tmp_compat(&p_resis, 1, _RESIS);
   fld3d_setup_tmp_compat(&p_Jcc, 3, _CURRX);
   fld3d_setup_tmp_compat(&p_B, 3, _BX);
 
@@ -156,24 +184,7 @@ patch_pushstage(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Ucurr, fld3d_t p_y
 
   patch_push_ej(p_Unext, dt, p_Ucurr, p_W, p_zmask);
 
-  switch (s_magdiffu) {
-  case MAGDIFFU_NL1:
-    patch_calc_resis_nl1(p_resis);
-    patch_calce_nl1_c(p_E, dt, p_Ucurr, p_W, p_rmask);
-    break;
-  case MAGDIFFU_RES1:
-    assert(0);
-    // calc_resis_res1(bxB,byB,bzB,currx,curry,currz,tmp1,tmp2,tmp3,flx,fly,flz,zmask,rr,pp,resis);
-    // calce...
-    break;
-  case MAGDIFFU_CONST:
-    patch_calc_resis_const(p_resis, s_p_aux.Jcc, p_Ucurr, p_zmask);
-    patch_calce_const_c(p_E, dt, p_Ucurr, p_W, p_resis);
-    break;
-  default:
-    assert(0);
-  }
-
+  patch_calc_e(p_E, dt, p_Ucurr, p_W, p_zmask, p_rmask);
   patch_bpush1(p_Unext, dt, p_Unext, p_E);
 }
 

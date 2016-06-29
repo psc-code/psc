@@ -299,21 +299,22 @@ patch_push_pp(fld3d_t p_U, mrc_fld_data_t dt, fld3d_t p_W, fld3d_t p_zmask)
   } fld3d_foreach_end;
 }
 
+// ----------------------------------------------------------------------
+// patch_calc_e
+
 static void
-xpatch_calce(struct ggcm_mhd_step *step, fld3d_t p_E, mrc_fld_data_t dt,
-	    fld3d_t p_U, fld3d_t p_W, fld3d_t p_zmask, fld3d_t p_rmask, fld3d_t p_b0,
-	    int p)
+patch_calc_e(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
+	     fld3d_t p_zmask, fld3d_t p_rmask)
 {
-  struct ggcm_mhd *mhd = step->mhd;
   if (s_opt_hall != OPT_HALL_NONE ||
-      mhd->par.magdiffu == MAGDIFFU_CONST) {
+      s_magdiffu == MAGDIFFU_CONST) {
     if (!fld3d_is_setup(s_p_aux.Jcc)) {
       fld3d_setup_tmp(&s_p_aux.Jcc, 3);
     }
     patch_calc_current_cc(s_p_aux.Jcc, p_U, p_zmask);
   }
 
-  switch (mhd->par.magdiffu) {
+  switch (s_magdiffu) {
   case MAGDIFFU_NL1:
     patch_calce_nl1_c(p_E, dt, p_U, p_W, p_rmask);
     break;
@@ -414,7 +415,7 @@ patch_pushstage_pt2(struct ggcm_mhd_step *step, fld3d_t p_Unext, mrc_fld_data_t 
 
   // find E
   patch_rmaskn_c(p_rmask, p_zmask);
-  xpatch_calce(step, p_E, dt, p_Ucurr, p_Wcurr, p_zmask, p_rmask, p_b0, p);
+  patch_calc_e(p_E, dt, p_Ucurr, p_Wcurr, p_zmask, p_rmask);
 }
 
 // ----------------------------------------------------------------------
@@ -597,7 +598,7 @@ ggcm_mhd_step_c3_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
 
     patch_prim_from_cons(p_W, p_U, 2);
     patch_zmaskn_x(mhd, p_zmask, p_ymask, p_U, p_b0); // FIXME, name conflict
-    patch_calce(step, p_E, mhd->dt, p_U, p_W, p_zmask, p_rmask, p_b0, p);
+    patch_calc_e(p_E, mhd->dt, p_U, p_W, p_zmask, p_rmask);
 
     fld3d_put_list(p, get_e_ec_patches);
     if (s_opt_background) {
