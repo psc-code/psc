@@ -197,12 +197,13 @@ limit1a(fld3d_t p_U, int m, int i, int j, int k, int I, int J, int K, fld3d_t p_
 static void
 limit1_c(fld3d_t p_U, int m, fld3d_t p_C)
 {
-  if (s_mhd_time < s_timelo) {
-    vgrs(p_C, 0, 1.f);
-    vgrs(p_C, 1, 1.f);
-    vgrs(p_C, 2, 1.f);
-    return;
-  }
+  // we now don't limit at all if earlier than timelo
+  /* if (s_mhd_time < s_timelo) { */
+  /*   vgrs(p_C, 0, 1.f); */
+  /*   vgrs(p_C, 1, 1.f); */
+  /*   vgrs(p_C, 2, 1.f); */
+  /*   return; */
+  /* } */
 
   fld3d_foreach(i,j,k, 1, 1) {
     assert(!s_limit_aspect_low);
@@ -260,7 +261,7 @@ patch_pushfluid_c(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Uprev,
 {
   static fld3d_t p_B;
   fld3d_setup_tmp_compat(&p_B, 3, _BX);
-  bool limit = stage != 0;
+  bool limit = stage != 0 && s_mhd_time > s_timelo;
 
   if (limit) {
     vgrs(p_B, 0, 0.f); vgrs(p_B, 1, 0.f); vgrs(p_B, 2, 0.f);

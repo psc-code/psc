@@ -147,7 +147,7 @@ patch_pushstage(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Ucurr, fld3d_t p_y
 
   patch_rmaskn(p_rmask, p_zmask);
 
-  bool limit = stage != 0;
+  bool limit = stage != 0 && s_mhd_time > s_timelo;
 
   if (limit) {
     vgrs(p_B, 0, 0.f); vgrs(p_B, 1, 0.f); vgrs(p_B, 2, 0.f);
