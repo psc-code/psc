@@ -18,7 +18,10 @@
 #include "pde/pde_mhd_get_dt.c"
 #include "pde/pde_mhd_rmaskn.c"
 #include "pde/pde_mhd_pushfluid.c"
-#include "pde/pde_mhd_pushfield.c"
+#include "pde/pde_mhd_push_ej.c"
+#include "pde/pde_mhd_calc_resis.c"
+#include "pde/pde_mhd_calce.c"
+#include "pde/pde_mhd_bpush.c"
 #include "pde/pde_mhd_badval_checks.c"
 
 // TODO:

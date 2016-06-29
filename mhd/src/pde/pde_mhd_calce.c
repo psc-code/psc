@@ -279,7 +279,7 @@ patch_calce_fortran(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
 // ----------------------------------------------------------------------
 // patch_calce
 
-static void
+static void _mrc_unused
 patch_calce(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
 	    fld3d_t p_zmask, fld3d_t p_rmask, fld3d_t p_resis,
 	    fld3d_t p_Jcc)
