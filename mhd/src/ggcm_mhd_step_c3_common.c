@@ -299,52 +299,6 @@ patch_push_pp(fld3d_t p_U, mrc_fld_data_t dt, fld3d_t p_W, fld3d_t p_zmask)
   } fld3d_foreach_end;
 }
 
-#define _BT(p_U, d, i,j,k)  (F3S(p_U, BX+d, i,j,k) + (s_opt_background ? F3S(p_b0, d, i,j,k) : 0))
-static inline void
-patch_bcthy3z_NL1(struct ggcm_mhd_step *step, int XX, int YY, int ZZ,
-		  fld3d_t E, mrc_fld_data_t dt, fld3d_t x, fld3d_t prim,
-		  fld3d_t curr, fld3d_t rmask, fld3d_t p_b0)
-{
-  struct ggcm_mhd *mhd = step->mhd;
-  static fld3d_t p_dB;
-  if (!fld3d_is_setup(p_dB)) {
-    fld3d_setup_tmp(&p_dB, 2);
-  }
-  fld3d_t p_B = fld3d_make_view(x, BX);
-
-  mrc_fld_data_t diffmul = 1.f;
-  if (mhd->time < mhd->par.diff_timelo) { // no anomalous res at startup
-    diffmul = 0.f;
-  }
-
-  // average dz_By
-  patch_calc_avg_dz_By(p_dB, p_B, p_b0, XX, YY, ZZ);
-
-  // edge centered E = - ve x B (+ dissipation)
-  
-  fld3d_foreach(i,j,k, 0, 1) {
-    mrc_fld_data_t ttmp[2];
-    calc_ve_x_B(ttmp, p_B, prim, p_dB, curr, p_b0, i, j, k, XX, YY, ZZ, dt);
-    
-    mrc_fld_data_t t1m = _BT(x, ZZ, i+ID(YY),j+JD(YY),k+KD(YY)) - _BT(x, ZZ, i,j,k);
-    mrc_fld_data_t t1p = fabsf(_BT(x, ZZ, i+ID(YY),j+JD(YY),k+KD(YY))) + fabsf(_BT(x, ZZ, i,j,k));
-    mrc_fld_data_t t2m = _BT(x, YY, i+ID(ZZ),j+JD(ZZ),k+KD(ZZ)) - _BT(x, YY, i,j,k);
-    mrc_fld_data_t t2p = fabsf(_BT(x, YY, i+ID(ZZ),j+JD(ZZ),k+KD(ZZ))) + fabsf(_BT(x, YY, i,j,k));
-    mrc_fld_data_t tp = t1p + t2p + REPS;
-    mrc_fld_data_t tpi = diffmul / tp;
-    mrc_fld_data_t d1 = sqr(t1m * tpi);
-    mrc_fld_data_t d2 = sqr(t2m * tpi);
-    if (d1 < mhd->par.diffth) d1 = 0.;
-    if (d2 < mhd->par.diffth) d2 = 0.;
-    ttmp[0] -= d1 * t1m * F3S(rmask, 0, i,j,k);
-    ttmp[1] -= d2 * t2m * F3S(rmask, 0, i,j,k);
-    //    M3(f, _RESIS, i,j,k, p) += fabsf(d1+d2) * ZMASK(zmask, i,j,k, p);
-    F3S(E, XX, i,j,k) = - (ttmp[0] - ttmp[1]);
-  } fld3d_foreach_end;
-}
-
-#undef _BT
-
 static inline void
 patch_bcthy3z_const(int XX, int YY, int ZZ,
 		    fld3d_t E, mrc_fld_data_t dt, fld3d_t x, fld3d_t prim,
@@ -371,37 +325,37 @@ patch_bcthy3z_const(int XX, int YY, int ZZ,
 }
 
 static void
-xpatch_calce(struct ggcm_mhd_step *step, fld3d_t E, mrc_fld_data_t dt,
-	    fld3d_t x, fld3d_t prim, fld3d_t zmask, fld3d_t rmask, fld3d_t b0,
+xpatch_calce(struct ggcm_mhd_step *step, fld3d_t p_E, mrc_fld_data_t dt,
+	    fld3d_t p_U, fld3d_t p_W, fld3d_t p_zmask, fld3d_t p_rmask, fld3d_t p_b0,
 	    int p)
 {
   struct ggcm_mhd *mhd = step->mhd;
-  static fld3d_t curr;
-  if (!fld3d_is_setup(curr)) {
-    fld3d_setup_tmp(&curr, 3);
+  static fld3d_t p_Jcc;
+  if (!fld3d_is_setup(p_Jcc)) {
+    fld3d_setup_tmp(&p_Jcc, 3);
   }
 
   switch (mhd->par.magdiffu) {
   case MAGDIFFU_NL1:
-    patch_calc_current_cc(curr, x, zmask);
+    patch_calc_current_cc(p_Jcc, p_U, p_zmask);
 
-    patch_bcthy3z_NL1(step, 0,1,2, E, dt, x, prim, curr, rmask, b0);
-    patch_bcthy3z_NL1(step, 1,2,0, E, dt, x, prim, curr, rmask, b0);
-    patch_bcthy3z_NL1(step, 2,0,1, E, dt, x, prim, curr, rmask, b0);
+    patch_bcthy3z_NL1(p_E, dt, p_U, p_W, p_rmask, p_Jcc, p_b0, 0,1,2);
+    patch_bcthy3z_NL1(p_E, dt, p_U, p_W, p_rmask, p_Jcc, p_b0, 1,2,0);
+    patch_bcthy3z_NL1(p_E, dt, p_U, p_W, p_rmask, p_Jcc, p_b0, 2,0,1);
     break;
     
   case MAGDIFFU_CONST: {
-    static fld3d_t resis;
-    if (!fld3d_is_setup(resis)) {
-      fld3d_setup_tmp(&resis, 1);
+    static fld3d_t p_resis;
+    if (!fld3d_is_setup(p_resis)) {
+      fld3d_setup_tmp(&p_resis, 1);
     }
 
-    patch_calc_current_cc(curr, x, zmask);
-    patch_res1_const(resis);
+    patch_calc_current_cc(p_Jcc, p_U, p_zmask);
+    patch_res1_const(p_resis);
 
-    patch_bcthy3z_const(0,1,2, E, dt, x, prim, curr, resis, b0);
-    patch_bcthy3z_const(1,2,0, E, dt, x, prim, curr, resis, b0);
-    patch_bcthy3z_const(2,0,1, E, dt, x, prim, curr, resis, b0);
+    patch_bcthy3z_const(0,1,2, p_E, dt, p_U, p_W, p_Jcc, p_resis, p_b0);
+    patch_bcthy3z_const(1,2,0, p_E, dt, p_U, p_W, p_Jcc, p_resis, p_b0);
+    patch_bcthy3z_const(2,0,1, p_E, dt, p_U, p_W, p_Jcc, p_resis, p_b0);
     break;
   }    
   default:
