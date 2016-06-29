@@ -15,6 +15,9 @@
 #define OPT_TMP_NORMAL      (0)
 #define OPT_TMP_COMPAT      (1)
 
+#define OPT_GGCM_CRDS_NORMAL (0)
+#define OPT_GGCM_CRDS_LEGACY (1)
+
 // ======================================================================
 // MHD options
 

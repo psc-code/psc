@@ -10,6 +10,8 @@
 
 #include "pde/pde_defs.h"
 
+#define OPT_GGCM_CRDS OPT_GGCM_CRDS_LEGACY
+
 // mhd options
 
 #define OPT_EQN OPT_EQN_MHD_SCONS

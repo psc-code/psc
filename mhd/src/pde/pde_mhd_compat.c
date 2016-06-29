@@ -15,15 +15,15 @@
 
 static mrc_fld_data_t s_mhd_time;
 
-static float *s_fd1x, *s_fd1y, *s_fd1z;
-
 // we keep a static copy of the mhd->mrc_fld (as fld3d_t) around,
 // in order to have fld3d_make_tmp() actually provide the temporaries in their
 // original location. also used for fortran interfacing
 static fld3d_t s_p_f;
 
 // FD1 is really different if 'legacy_fd1' is used
-#if 1
+#if OPT_GGCM_CRDS == OPT_GGCM_CRDS_LEGACY
+static float *s_fd1x, *s_fd1y, *s_fd1z;
+
 #define FD1X(i) (s_fd1x[i])
 #define FD1Y(j) (s_fd1y[j])
 #define FD1Z(k) (s_fd1z[k])
@@ -36,9 +36,11 @@ static fld3d_t s_p_f;
 static void
 pde_mhd_compat_setup(struct ggcm_mhd *mhd)
 {
+#if OPT_GGCM_CRDS == OPT_GGCM_CRDS_LEGACY
   s_fd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FD1);
   s_fd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FD1);
   s_fd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FD1);
+#endif
 
   // for temp / Fortran interface, in which case we only have one patch
   fld3d_setup(&s_p_f, mhd->fld);

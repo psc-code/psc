@@ -21,6 +21,7 @@
 #include "pde/pde_defs.h"
 
 #define OPT_TMP OPT_TMP_COMPAT
+#define OPT_GGCM_CRDS OPT_GGCM_CRDS_LEGACY
 
 // mhd options
 
