@@ -159,7 +159,7 @@ patch_pushstage(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Ucurr, fld3d_t p_y
   switch (s_magdiffu) {
   case MAGDIFFU_NL1:
     patch_calc_resis_nl1(p_resis);
-    calce_nl1_c(p_E, dt, p_Ucurr, p_W, p_rmask);
+    patch_calce_nl1_c(p_E, dt, p_Ucurr, p_W, p_rmask);
     break;
   case MAGDIFFU_RES1:
     assert(0);
@@ -168,7 +168,7 @@ patch_pushstage(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Ucurr, fld3d_t p_y
     break;
   case MAGDIFFU_CONST:
     patch_calc_resis_const(p_resis, s_p_aux.Jcc, p_Ucurr, p_zmask);
-    calce_const_c(p_E, dt, p_Ucurr, p_W, p_resis);
+    patch_calce_const_c(p_E, dt, p_Ucurr, p_W, p_resis);
     break;
   default:
     assert(0);

@@ -305,30 +305,25 @@ xpatch_calce(struct ggcm_mhd_step *step, fld3d_t p_E, mrc_fld_data_t dt,
 	    int p)
 {
   struct ggcm_mhd *mhd = step->mhd;
-  if (!fld3d_is_setup(s_p_aux.Jcc)) {
-    fld3d_setup_tmp(&s_p_aux.Jcc, 3);
+  if (s_opt_hall != OPT_HALL_NONE ||
+      mhd->par.magdiffu == MAGDIFFU_CONST) {
+    if (!fld3d_is_setup(s_p_aux.Jcc)) {
+      fld3d_setup_tmp(&s_p_aux.Jcc, 3);
+    }
+    patch_calc_current_cc(s_p_aux.Jcc, p_U, p_zmask);
   }
-
-  // FIXME for Hall or const resis
-  patch_calc_current_cc(s_p_aux.Jcc, p_U, p_zmask);
 
   switch (mhd->par.magdiffu) {
   case MAGDIFFU_NL1:
-    patch_bcthy3z_NL1(p_E, dt, p_U, p_W, p_rmask, 0,1,2);
-    patch_bcthy3z_NL1(p_E, dt, p_U, p_W, p_rmask, 1,2,0);
-    patch_bcthy3z_NL1(p_E, dt, p_U, p_W, p_rmask, 2,0,1);
+    patch_calce_nl1_c(p_E, dt, p_U, p_W, p_rmask);
     break;
-    
   case MAGDIFFU_CONST: {
     static fld3d_t p_resis;
     if (!fld3d_is_setup(p_resis)) {
       fld3d_setup_tmp(&p_resis, 1);
     }
     patch_res1_const(p_resis);
-
-    patch_bcthy3z_const(p_E, dt, p_U, p_W, p_resis, 0,1,2);
-    patch_bcthy3z_const(p_E, dt, p_U, p_W, p_resis, 1,2,0);
-    patch_bcthy3z_const(p_E, dt, p_U, p_W, p_resis, 2,0,1);
+    patch_calce_const_c(p_E, dt, p_U, p_W, p_resis);
     break;
   }    
   default:

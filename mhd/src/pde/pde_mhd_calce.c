@@ -204,6 +204,9 @@ patch_bcthy3z_NL1(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
 
 #undef BT
 
+// ----------------------------------------------------------------------
+// patch_bcthy3z_const
+
 static void
 patch_bcthy3z_const(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
 		    fld3d_t p_resis,
@@ -226,17 +229,23 @@ patch_bcthy3z_const(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
   } fld3d_foreach_end;
 }
 
+// ----------------------------------------------------------------------
+// patch_calce_nl1_c
+
 static void
-calce_nl1_c(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
-	    fld3d_t p_rmask)
+patch_calce_nl1_c(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
+		  fld3d_t p_rmask)
 {
   patch_bcthy3z_NL1(p_E, dt, p_U, p_W, p_rmask, 0,1,2);
   patch_bcthy3z_NL1(p_E, dt, p_U, p_W, p_rmask, 1,2,0);
   patch_bcthy3z_NL1(p_E, dt, p_U, p_W, p_rmask, 2,0,1);
 }
 
+// ----------------------------------------------------------------------
+// patch_calce_const_c
+
 static void
-calce_const_c(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W, fld3d_t p_resis)
+patch_calce_const_c(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W, fld3d_t p_resis)
 {
   patch_bcthy3z_const(p_E, dt, p_U, p_W, p_resis, 0,1,2);
   patch_bcthy3z_const(p_E, dt, p_U, p_W, p_resis, 1,2,0);
@@ -255,9 +264,9 @@ patch_calce_c(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
 
   switch (s_magdiffu) {
   case MAGDIFFU_NL1:
-    return calce_nl1_c(p_E, dt, p_U, p_W, p_rmask);
+    return patch_calce_nl1_c(p_E, dt, p_U, p_W, p_rmask);
   case MAGDIFFU_CONST:
-    return calce_const_c(p_E, dt, p_U, p_W, p_resis);
+    return patch_calce_const_c(p_E, dt, p_U, p_W, p_resis);
   default:
     assert(0);
   }
