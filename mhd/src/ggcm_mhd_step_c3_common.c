@@ -34,13 +34,6 @@
 	     F3S(f, m, i     ,j-dj*J,k     ) +		\
 	     F3S(f, m, i     ,j     ,k-dk*K)));})
 
-#define _EC_TO_CC(f, m, i,j,k, I,J,K)			\
-  ({							\
-    (.25f * (F3S(f, m, i+di*I,j+dj*J,k+dk*K) +		\
-	     F3S(f, m, i+di*I,j     ,k     ) +		\
-	     F3S(f, m, i     ,j+dj*J,k     ) +		\
-	     F3S(f, m, i     ,j     ,k+dk*K)));})
-
 static int s_opt_enforce_rrmin;
 
 // ======================================================================
@@ -342,9 +335,9 @@ patch_calc_current_cc(fld3d_t p_jcc, fld3d_t p_U, fld3d_t p_zmask)
   // then average to cell centers
   fld3d_foreach(i,j,k, 2, 1) {
     mrc_fld_data_t z = F3S(p_zmask, 0,  i,j,k);
-    F3S(p_jcc, 0, i,j,k) = z * _EC_TO_CC(p_jec, 0, i,j,k, 0,1,1);
-    F3S(p_jcc, 1, i,j,k) = z * _EC_TO_CC(p_jec, 1, i,j,k, 1,0,1);
-    F3S(p_jcc, 2, i,j,k) = z * _EC_TO_CC(p_jec, 2, i,j,k, 1,1,0);
+    F3S(p_jcc, 0, i,j,k) = z * EC_TO_CC(p_jec, 0, i,j,k);
+    F3S(p_jcc, 1, i,j,k) = z * EC_TO_CC(p_jec, 1, i,j,k);
+    F3S(p_jcc, 2, i,j,k) = z * EC_TO_CC(p_jec, 2, i,j,k);
   } fld3d_foreach_end;
 }
 
@@ -382,9 +375,9 @@ patch_push_ej(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Ucurr, fld3d_t p_Wcu
 
   fld3d_foreach(i,j,k, 0, 0) {
     mrc_fld_data_t s2 = dt * F3S(p_zmask, 0, i,j,k);
-    mrc_fld_data_t cx = _EC_TO_CC(p_jec, 0, i,j,k, 0,1,1);
-    mrc_fld_data_t cy = _EC_TO_CC(p_jec, 1, i,j,k, 1,0,1);
-    mrc_fld_data_t cz = _EC_TO_CC(p_jec, 2, i,j,k, 1,1,0);
+    mrc_fld_data_t cx = EC_TO_CC(p_jec, 0, i,j,k);
+    mrc_fld_data_t cy = EC_TO_CC(p_jec, 1, i,j,k);
+    mrc_fld_data_t cz = EC_TO_CC(p_jec, 2, i,j,k);
     mrc_fld_data_t ffx = s2 * (cy * F3S(p_bcc, 2, i,j,k) - cz * F3S(p_bcc, 1, i,j,k));
     mrc_fld_data_t ffy = s2 * (cz * F3S(p_bcc, 0, i,j,k) - cx * F3S(p_bcc, 2, i,j,k));
     mrc_fld_data_t ffz = s2 * (cx * F3S(p_bcc, 1, i,j,k) - cy * F3S(p_bcc, 0, i,j,k));
