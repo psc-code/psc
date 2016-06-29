@@ -314,10 +314,9 @@ xpatch_calce(struct ggcm_mhd_step *step, fld3d_t p_E, mrc_fld_data_t dt,
 
   switch (mhd->par.magdiffu) {
   case MAGDIFFU_NL1:
-
-    patch_bcthy3z_NL1_b0(p_E, dt, p_U, p_W, p_rmask, 0,1,2);
-    patch_bcthy3z_NL1_b0(p_E, dt, p_U, p_W, p_rmask, 1,2,0);
-    patch_bcthy3z_NL1_b0(p_E, dt, p_U, p_W, p_rmask, 2,0,1);
+    patch_bcthy3z_NL1(p_E, dt, p_U, p_W, p_rmask, 0,1,2);
+    patch_bcthy3z_NL1(p_E, dt, p_U, p_W, p_rmask, 1,2,0);
+    patch_bcthy3z_NL1(p_E, dt, p_U, p_W, p_rmask, 2,0,1);
     break;
     
   case MAGDIFFU_CONST: {
@@ -325,12 +324,11 @@ xpatch_calce(struct ggcm_mhd_step *step, fld3d_t p_E, mrc_fld_data_t dt,
     if (!fld3d_is_setup(p_resis)) {
       fld3d_setup_tmp(&p_resis, 1);
     }
-
     patch_res1_const(p_resis);
 
-    patch_bcthy3z_const_b0(p_E, dt, p_U, p_W, p_resis, 0,1,2);
-    patch_bcthy3z_const_b0(p_E, dt, p_U, p_W, p_resis, 1,2,0);
-    patch_bcthy3z_const_b0(p_E, dt, p_U, p_W, p_resis, 2,0,1);
+    patch_bcthy3z_const(p_E, dt, p_U, p_W, p_resis, 0,1,2);
+    patch_bcthy3z_const(p_E, dt, p_U, p_W, p_resis, 1,2,0);
+    patch_bcthy3z_const(p_E, dt, p_U, p_W, p_resis, 2,0,1);
     break;
   }    
   default:
