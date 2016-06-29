@@ -4,6 +4,10 @@
 
 // ======================================================================
 
+static struct {
+  fld3d_t b0;
+} s_p_aux;
+
 static inline float
 bcthy3f(mrc_fld_data_t s1, mrc_fld_data_t s2)
 {
@@ -34,6 +38,16 @@ bcthy3f(mrc_fld_data_t s1, mrc_fld_data_t s2)
 #define F3S_YYM(p_f, m, i,j,k) F3S_M(YY, p_f, m, i,j,k)
 #define F3S_ZZM(p_f, m, i,j,k) F3S_M(ZZ, p_f, m, i,j,k)
 
+#undef BT
+#define BT(p_B, d, i,j,k)  (F3S(p_B, d, i,j,k) + (s_opt_background ? F3S(s_p_aux.b0, d, i,j,k) : 0))
+#define BT_YYP(p_B, d, i,j,k) BT(p_B, d, i+ID(YY),j+JD(YY),k+KD(YY))
+#define BT_ZZP(p_B, d, i,j,k) BT(p_B, d, i+ID(ZZ),j+JD(ZZ),k+KD(ZZ))
+#define BT_YYM(p_B, d, i,j,k) BT(p_B, d, i-ID(YY),j-JD(YY),k-KD(YY))
+#define BT_ZZM(p_B, d, i,j,k) BT(p_B, d, i-ID(ZZ),j-JD(ZZ),k-KD(ZZ))
+
+// ----------------------------------------------------------------------
+// patch_calc_avg_dz_By
+
 static inline void
 patch_calc_avg_dz_By(fld3d_t p_dB, fld3d_t p_B, int XX, int YY, int ZZ)
 {
@@ -45,13 +59,13 @@ patch_calc_avg_dz_By(fld3d_t p_dB, fld3d_t p_B, int XX, int YY, int ZZ)
 #if OPT_STAGGER == OPT_STAGGER_GGCM
     mrc_fld_data_t bd1[3] = { PDE_INV_DXF(i+1), PDE_INV_DYF(j+1), PDE_INV_DZF(k+1) };
 
-    F3S(p_tmp1, 0, i,j,k) = bd1[ZZ] * (F3S_ZZP(p_B, YY, i,j,k) - F3S(p_B, YY, i,j,k));
-    F3S(p_tmp1, 1, i,j,k) = bd1[YY] * (F3S_YYP(p_B, ZZ, i,j,k) - F3S(p_B, ZZ, i,j,k));
+    F3S(p_tmp1, 0, i,j,k) = bd1[ZZ] * (BT_ZZP(p_B, YY, i,j,k) - BT(p_B, YY, i,j,k));
+    F3S(p_tmp1, 1, i,j,k) = bd1[YY] * (BT_YYP(p_B, ZZ, i,j,k) - BT(p_B, ZZ, i,j,k));
 #else
     mrc_fld_data_t bd1[3] = { PDE_INV_DXF(i), PDE_INV_DYF(j), PDE_INV_DZF(k) };
 
-    F3S(p_tmp1, 0, i,j,k) = bd1[ZZ] * (F3S(p_B, YY, i,j,k) - F3S_ZZM(p_B, YY, i,j,k));
-    F3S(p_tmp1, 1, i,j,k) = bd1[YY] * (F3S(p_B, ZZ, i,j,k) - F3S_YYM(p_B, ZZ, i,j,k));
+    F3S(p_tmp1, 0, i,j,k) = bd1[ZZ] * (BT(p_B, YY, i,j,k) - BT_ZZM(p_B, YY, i,j,k));
+    F3S(p_tmp1, 1, i,j,k) = bd1[YY] * (BT(p_B, ZZ, i,j,k) - BT_YYM(p_B, ZZ, i,j,k));
 #endif
   } fld3d_foreach_end;
 
@@ -80,39 +94,8 @@ patch_calc_avg_dz_By(fld3d_t p_dB, fld3d_t p_B, int XX, int YY, int ZZ)
   } fld3d_foreach_end;
 }
  
-// FIXME, same as above, but taking into account b0. consolidate.
- 
-#undef BT
-#define BT(p_B, d, i,j,k)  (F3S(p_B, d, i,j,k) + (s_opt_background ? F3S(p_b0, d, i,j,k) : 0))
-
-static inline void
-patch_calc_avg_dz_By_b0(fld3d_t p_dB, fld3d_t p_B, fld3d_t p_b0,
-			int XX, int YY, int ZZ)
-{
-  static fld3d_t p_tmp1;
-  fld3d_setup_tmp_compat(&p_tmp1, 2, _TMP1);
-
-  fld3d_foreach(i,j,k, 1, 2) {
-    // FIXME, check offset -1
-    mrc_fld_data_t bd1[3] = { PDE_INV_DX(i-1), PDE_INV_DY(j-1), PDE_INV_DZ(k-1) };
-    
-    F3S(p_tmp1, 0, i,j,k) = bd1[ZZ] * (BT(p_B, YY, i,j,k) - BT(p_B, YY, i-ID(ZZ),j-JD(ZZ),k-KD(ZZ)));
-    F3S(p_tmp1, 1, i,j,k) = bd1[YY] * (BT(p_B, ZZ, i,j,k) - BT(p_B, ZZ, i-ID(YY),j-JD(YY),k-KD(YY)));
-  } fld3d_foreach_end;
-  
-  // .5 * harmonic average if same sign
-  fld3d_foreach(i,j,k, 1, 1) {
-    mrc_fld_data_t s1, s2;
-    // dz_By on y face
-    s1 = F3S_ZZP(p_tmp1, 0, i,j,k) * F3S(p_tmp1, 0, i,j,k);
-    s2 = F3S_ZZP(p_tmp1, 0, i,j,k) + F3S(p_tmp1, 0, i,j,k);
-    F3S(p_dB, 0, i,j,k) = bcthy3f(s1, s2);
-    // dy_Bz on z face
-    s1 = F3S_YYP(p_tmp1, 1, i,j,k) * F3S(p_tmp1, 1, i,j,k);
-    s2 = F3S_YYP(p_tmp1, 1, i,j,k) + F3S(p_tmp1, 1, i,j,k);
-    F3S(p_dB, 1, i,j,k) = bcthy3f(s1, s2);
-  } fld3d_foreach_end;
-}
+// ----------------------------------------------------------------------
+// calc_v_x_B
 
 static inline void
 calc_v_x_B(mrc_fld_data_t ttmp[2], fld3d_t p_B, fld3d_t p_W, fld3d_t p_dB,
@@ -167,7 +150,7 @@ calc_v_x_B(mrc_fld_data_t ttmp[2], fld3d_t p_B, fld3d_t p_W, fld3d_t p_dB,
 // ve = v - d_i J
 static inline void
 calc_ve_x_B_b0(mrc_fld_data_t ttmp[2], fld3d_t p_B, fld3d_t p_W,
-	       fld3d_t p_dB, fld3d_t p_Jcc, fld3d_t p_b0,
+	       fld3d_t p_dB, fld3d_t p_Jcc,
 	       int i, int j, int k, int XX, int YY, int ZZ,
 	       mrc_fld_data_t dt)
 {
@@ -239,7 +222,7 @@ patch_bcthy3z_NL1(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
 
 static inline void
 patch_bcthy3z_NL1_b0(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
-		     fld3d_t p_rmask, fld3d_t p_Jcc, fld3d_t p_b0,
+		     fld3d_t p_rmask, fld3d_t p_Jcc,
 		     int XX, int YY, int ZZ)
 {
   const mrc_fld_data_t REPS = 1.e-10f;
@@ -255,13 +238,13 @@ patch_bcthy3z_NL1_b0(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
   }
 
   // average dz_By
-  patch_calc_avg_dz_By_b0(p_dB, p_B, p_b0, XX, YY, ZZ);
+  patch_calc_avg_dz_By(p_dB, p_B, XX, YY, ZZ);
 
   // edge centered E = - ve x B (+ dissipation)
   
   fld3d_foreach(i,j,k, 0, 1) {
     mrc_fld_data_t ttmp[2];
-    calc_ve_x_B_b0(ttmp, p_B, p_W, p_dB, p_Jcc, p_b0, i, j, k, XX, YY, ZZ, dt);
+    calc_ve_x_B_b0(ttmp, p_B, p_W, p_dB, p_Jcc, i, j, k, XX, YY, ZZ, dt);
     
     mrc_fld_data_t t1m = BT(p_B, ZZ, i+ID(YY),j+JD(YY),k+KD(YY)) - BT(p_B, ZZ, i,j,k);
     mrc_fld_data_t t1p = fabsf(BT(p_B, ZZ, i+ID(YY),j+JD(YY),k+KD(YY))) + fabsf(BT(p_B, ZZ, i,j,k));
@@ -306,7 +289,7 @@ patch_bcthy3z_const(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
 
 static inline void
 patch_bcthy3z_const_b0(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
-		       fld3d_t p_resis, fld3d_t p_Jcc, fld3d_t p_b0,
+		       fld3d_t p_resis, fld3d_t p_Jcc,
 		       int XX, int YY, int ZZ)
 {
   static fld3d_t p_dB;
@@ -316,12 +299,12 @@ patch_bcthy3z_const_b0(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
   fld3d_t p_B = fld3d_make_view(p_U, BX);
   
   // average dz_By
-  patch_calc_avg_dz_By_b0(p_dB, p_B, p_b0, XX, YY, ZZ);
+  patch_calc_avg_dz_By(p_dB, p_B, XX, YY, ZZ);
   
   // edge centered E = - ve x B (+ dissipation)
   fld3d_foreach(i,j,k, 0, 1) {
     mrc_fld_data_t ttmp[2];
-    calc_ve_x_B_b0(ttmp, p_B, p_W, p_dB, p_Jcc, p_b0, i, j, k, XX, YY, ZZ, dt);
+    calc_ve_x_B_b0(ttmp, p_B, p_W, p_dB, p_Jcc, i, j, k, XX, YY, ZZ, dt);
     
     mrc_fld_data_t vcurrXX = CC_TO_EC(p_Jcc, XX, i,j,k, XX);
     mrc_fld_data_t vresis = CC_TO_EC(p_resis, 0, i,j,k, XX);

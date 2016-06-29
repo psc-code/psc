@@ -314,9 +314,9 @@ xpatch_calce(struct ggcm_mhd_step *step, fld3d_t p_E, mrc_fld_data_t dt,
   case MAGDIFFU_NL1:
     patch_calc_current_cc(p_Jcc, p_U, p_zmask);
 
-    patch_bcthy3z_NL1_b0(p_E, dt, p_U, p_W, p_rmask, p_Jcc, p_b0, 0,1,2);
-    patch_bcthy3z_NL1_b0(p_E, dt, p_U, p_W, p_rmask, p_Jcc, p_b0, 1,2,0);
-    patch_bcthy3z_NL1_b0(p_E, dt, p_U, p_W, p_rmask, p_Jcc, p_b0, 2,0,1);
+    patch_bcthy3z_NL1_b0(p_E, dt, p_U, p_W, p_rmask, p_Jcc, 0,1,2);
+    patch_bcthy3z_NL1_b0(p_E, dt, p_U, p_W, p_rmask, p_Jcc, 1,2,0);
+    patch_bcthy3z_NL1_b0(p_E, dt, p_U, p_W, p_rmask, p_Jcc, 2,0,1);
     break;
     
   case MAGDIFFU_CONST: {
@@ -328,9 +328,9 @@ xpatch_calce(struct ggcm_mhd_step *step, fld3d_t p_E, mrc_fld_data_t dt,
     patch_calc_current_cc(p_Jcc, p_U, p_zmask);
     patch_res1_const(p_resis);
 
-    patch_bcthy3z_const_b0(p_E, dt, p_U, p_W, p_resis, p_Jcc, p_b0, 0,1,2);
-    patch_bcthy3z_const_b0(p_E, dt, p_U, p_W, p_resis, p_Jcc, p_b0, 1,2,0);
-    patch_bcthy3z_const_b0(p_E, dt, p_U, p_W, p_resis, p_Jcc, p_b0, 2,0,1);
+    patch_bcthy3z_const_b0(p_E, dt, p_U, p_W, p_resis, p_Jcc, 0,1,2);
+    patch_bcthy3z_const_b0(p_E, dt, p_U, p_W, p_resis, p_Jcc, 1,2,0);
+    patch_bcthy3z_const_b0(p_E, dt, p_U, p_W, p_resis, p_Jcc, 2,0,1);
     break;
   }    
   default:
@@ -469,6 +469,7 @@ pushstage(struct ggcm_mhd_step *step, struct mrc_fld *f_Unext,
     fld3d_get_list(p, mhd_patches);
     if (s_opt_background) {
       fld3d_get(&p_b0, p);
+      s_p_aux.b0 = p_b0;
     }
 
     patch_pushstage_pt2(step, p_Unext, dt, p_Ucurr, p_Wcurr,
