@@ -49,6 +49,8 @@ patch_calc_Bt_cc(fld3d_t p_b, fld3d_t p_U, fld3d_t p_b0, int l, int r)
   } fld3d_foreach_end;
 }
 
+#undef _BT
+
 // ----------------------------------------------------------------------
 // patch_primbb_fortran
 
