@@ -125,7 +125,7 @@ ggcm_mhd_step_c2_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
 static void
 patch_pushstage(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Ucurr, fld3d_t p_ymask,
-		fld3d_t p_zmask, fld3d_t p_E, int stage)
+		fld3d_t p_zmask, fld3d_t p_E, int stage, int limit)
 {
   static fld3d_t p_W, p_cmsv, p_rmask, p_resis, p_Jcc, p_B;
   fld3d_setup_tmp_compat(&p_W, 5, _RR);
@@ -146,8 +146,6 @@ patch_pushstage(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Ucurr, fld3d_t p_y
   }
 
   patch_rmaskn(p_rmask, p_zmask);
-
-  bool limit = stage != 0 && s_mhd_time > s_timelo;
 
   if (limit) {
     vgrs(p_B, 0, 0.f); vgrs(p_B, 1, 0.f); vgrs(p_B, 2, 0.f);
@@ -202,10 +200,12 @@ pushstage(struct mrc_fld *f_Unext, mrc_fld_data_t dt, struct mrc_fld *f_Ucurr,
   fld3d_setup(&p_zmask, f_zmask);
   fld3d_setup(&p_E    , f_E);
 
+  bool limit = stage != 0 && s_mhd_time > s_timelo;
+
   pde_for_each_patch(p) {
     fld3d_t *patches[] = { &p_Unext, &p_Ucurr, &p_ymask, &p_zmask, &p_E, NULL };
     fld3d_get_list(p, patches);
-    patch_pushstage(p_Unext, dt, p_Ucurr, p_ymask, p_zmask, p_E, stage);
+    patch_pushstage(p_Unext, dt, p_Ucurr, p_ymask, p_zmask, p_E, stage, limit);
     fld3d_put_list(p, patches);
   }
 }
