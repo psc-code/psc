@@ -47,6 +47,7 @@ struct ggcm_mhd_step_c2 {
 
   struct mrc_fld *f_zmask;
   struct mrc_fld *f_Uhalf;
+  struct mrc_fld *f_E;
 };
 
 #define ggcm_mhd_step_c2(step) mrc_to_subobj(step, struct ggcm_mhd_step_c2)
@@ -88,6 +89,8 @@ ggcm_mhd_step_c2_setup(struct ggcm_mhd_step *step)
   sub->f_Uhalf = ggcm_mhd_get_3d_fld(mhd, 8);
   mrc_fld_dict_add_int(sub->f_Uhalf, "mhd_type", MT_SEMI_CONSERVATIVE);
 
+  sub->f_E = ggcm_mhd_get_3d_fld(mhd, 3);
+
   ggcm_mhd_step_setup_member_objs_sub(step);
   ggcm_mhd_step_setup_super(step);
 }
@@ -104,6 +107,7 @@ ggcm_mhd_step_c2_destroy(struct ggcm_mhd_step *step)
   mrc_fld_destroy(mhd->ymask);
   mrc_fld_destroy(sub->f_zmask);
   mrc_fld_destroy(sub->f_Uhalf);
+  mrc_fld_destroy(sub->f_E);
 }
 
 // ----------------------------------------------------------------------
@@ -121,7 +125,7 @@ ggcm_mhd_step_c2_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
 static void
 patch_push(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Ucurr,
 	   fld3d_t p_W, fld3d_t p_cmsv,
-	   fld3d_t p_ymask, fld3d_t p_zmask,
+	   fld3d_t p_ymask, fld3d_t p_zmask, fld3d_t p_E,
 	   int stage)
 {
   static fld3d_t p_rmask, p_resis, p_Jcc;
@@ -133,7 +137,7 @@ patch_push(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Ucurr,
   patch_pushfluid(p_Unext, dt, p_Unext, p_Ucurr, p_W,
 		  p_cmsv, p_ymask, p_zmask, stage);
   patch_pushfield(p_Unext, dt, p_Unext, p_Ucurr, p_W,
-		  p_zmask, p_rmask, p_resis, p_Jcc, stage);
+		  p_zmask, p_rmask, p_resis, p_Jcc, p_E, stage);
 }
 
 // ----------------------------------------------------------------------
@@ -141,7 +145,7 @@ patch_push(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Ucurr,
 
 static void
 patch_pushstage(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Ucurr, fld3d_t p_ymask,
-		fld3d_t p_zmask, int stage)
+		fld3d_t p_zmask, fld3d_t p_E, int stage)
 {
   static fld3d_t p_W, p_cmsv;
   fld3d_setup_tmp_compat(&p_W, 5, _RR);
@@ -158,7 +162,7 @@ patch_pushstage(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Ucurr, fld3d_t p_y
   }
 
   patch_push(p_Unext, dt, p_Ucurr, p_W, p_cmsv,
-	     p_ymask, p_zmask, stage);
+	     p_ymask, p_zmask, p_E, stage);
 }
 
 // ----------------------------------------------------------------------
@@ -166,18 +170,20 @@ patch_pushstage(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Ucurr, fld3d_t p_y
 
 static void
 pushstage(struct mrc_fld *f_Unext, mrc_fld_data_t dt, struct mrc_fld *f_Ucurr,
-	  struct mrc_fld *f_ymask, struct mrc_fld *f_zmask, int stage)
+	  struct mrc_fld *f_ymask, struct mrc_fld *f_zmask, struct mrc_fld *f_E,
+	  int stage)
 {
-  fld3d_t p_Unext, p_Ucurr, p_ymask, p_zmask;
+  fld3d_t p_Unext, p_Ucurr, p_ymask, p_zmask, p_E;
   fld3d_setup(&p_Unext, f_Unext);
   fld3d_setup(&p_Ucurr, f_Ucurr);
   fld3d_setup(&p_ymask, f_ymask);
   fld3d_setup(&p_zmask, f_zmask);
+  fld3d_setup(&p_E    , f_E);
 
   pde_for_each_patch(p) {
-    fld3d_t *patches[] = { &p_Unext, &p_Ucurr, &p_ymask, &p_zmask, NULL };
+    fld3d_t *patches[] = { &p_Unext, &p_Ucurr, &p_ymask, &p_zmask, &p_E, NULL };
     fld3d_get_list(p, patches);
-    patch_pushstage(p_Unext, dt, p_Ucurr, p_ymask, p_zmask, stage);
+    patch_pushstage(p_Unext, dt, p_Ucurr, p_ymask, p_zmask, p_E, stage);
     fld3d_put_list(p, patches);
   }
 }
@@ -191,7 +197,7 @@ ggcm_mhd_step_c2_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   struct ggcm_mhd_step_c2 *sub = ggcm_mhd_step_c2(step);
   struct ggcm_mhd *mhd = step->mhd;
 
-  struct mrc_fld *f_ymask = mhd->ymask, *f_zmask = sub->f_zmask;
+  struct mrc_fld *f_ymask = mhd->ymask, *f_zmask = sub->f_zmask, *f_E = sub->f_E;
   struct mrc_fld *f_U = mrc_fld_make_view(x, _RR1, _RR1 + 8);
   mrc_fld_dict_add_int(f_U, "mhd_type", MT_SEMI_CONSERVATIVE);
   struct mrc_fld *f_Uhalf = sub->f_Uhalf;
@@ -204,11 +210,11 @@ ggcm_mhd_step_c2_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   mrc_fld_copy(f_Uhalf, f_U);
   // then advance f_Uhalf += .5f * dt * rhs(f_U)
   ggcm_mhd_fill_ghosts(mhd, f_U, 0, mhd->time);
-  pushstage(f_Uhalf, .5f * mhd->dt, f_U, f_ymask, f_zmask, 0);
+  pushstage(f_Uhalf, .5f * mhd->dt, f_U, f_ymask, f_zmask, f_E, 0);
 
   // f_U += dt * rhs(f_Uhalf)
   ggcm_mhd_fill_ghosts(mhd, f_Uhalf, 0, mhd->time + mhd->bndt);
-  pushstage(f_U, mhd->dt, f_Uhalf, f_ymask, f_zmask, 1);
+  pushstage(f_U, mhd->dt, f_Uhalf, f_ymask, f_zmask, f_E, 1);
 
   mrc_fld_destroy(f_U);
 }
@@ -220,22 +226,20 @@ static void
 ggcm_mhd_step_c2_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
                           struct mrc_fld *state_vec)
 {
+  struct ggcm_mhd_step_c2 *sub = ggcm_mhd_step_c2(step);
+
   // the state vector should already be FLD_TYPE, but Eout is the data type
   // of the output
   struct mrc_fld *E = mrc_fld_get_as(Eout, FLD_TYPE);
-  struct mrc_fld *x = mrc_fld_get_as(state_vec, FLD_TYPE);
+  struct mrc_fld *f_E = sub->f_E;
 
   fld3d_foreach(i, j, k, 0, 1) {
-    F3(E, 0, i,j,k) = F3(x, _FLX, i,j,k);
-    F3(E, 1, i,j,k) = F3(x, _FLY, i,j,k);
-    F3(E, 2, i,j,k) = F3(x, _FLZ, i,j,k);
+    F3(E, 0, i,j,k) = F3(f_E, 0, i,j,k);
+    F3(E, 1, i,j,k) = F3(f_E, 1, i,j,k);
+    F3(E, 2, i,j,k) = F3(f_E, 2, i,j,k);
   } fld3d_foreach_end;
 
   mrc_fld_put_as(E, Eout);
-  // FIXME, should use _put_as, but don't want copy-back
-  if (strcmp(mrc_fld_type(state_vec), FLD_TYPE) != 0) {
-    mrc_fld_destroy(x);
-  }
 } 
 
 // ----------------------------------------------------------------------

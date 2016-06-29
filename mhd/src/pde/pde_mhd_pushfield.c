@@ -23,7 +23,7 @@ vgr0(fld3d_t p_f, int m)
 static void
 patch_pushfield_c(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Uprev,
 		  fld3d_t p_Ucurr, fld3d_t p_W, fld3d_t p_zmask, fld3d_t p_rmask,
-		  fld3d_t p_resis, fld3d_t p_Jcc, int stage)
+		  fld3d_t p_resis, fld3d_t p_Jcc, fld3d_t p_E, int stage)
 {
   if (s_magdiffu == MAGDIFFU_NL1) {
     patch_calc_resis_nl1(p_resis);
@@ -40,7 +40,7 @@ patch_pushfield_c(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Uprev,
 
   patch_push_ej(p_Unext, dt, p_Ucurr, p_W, p_zmask);
   patch_pfie3(p_Unext, dt, p_Uprev, p_Ucurr, p_W, p_zmask, p_rmask,
-	      p_resis, p_Jcc);
+	      p_resis, p_Jcc, p_E);
 }
 
 // ----------------------------------------------------------------------
@@ -119,13 +119,13 @@ patch_pushfield_fortran(mrc_fld_data_t dt, int stage)
 static void _mrc_unused
 patch_pushfield(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Uprev,
 		fld3d_t p_Ucurr, fld3d_t p_W, fld3d_t p_zmask, fld3d_t p_rmask,
-		fld3d_t p_resis, fld3d_t p_Jcc, int stage)
+		fld3d_t p_resis, fld3d_t p_Jcc, fld3d_t p_E, int stage)
 {
   int opt_mhd_pushfield = stage ? s_opt_mhd_pushfield2 : s_opt_mhd_pushfield1;
 
   if (opt_mhd_pushfield == OPT_MHD_C) {
     patch_pushfield_c(p_Unext, dt, p_Uprev, p_Ucurr, p_W,
-		      p_zmask, p_rmask, p_resis, p_Jcc, stage);
+		      p_zmask, p_rmask, p_resis, p_Jcc, p_E, stage);
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
   } else if (opt_mhd_pushfield == OPT_MHD_FORTRAN) {
     patch_pushfield_fortran(dt, stage);

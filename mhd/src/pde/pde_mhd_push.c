@@ -10,7 +10,7 @@
 static void
 patch_push_c(fld3d_t p_Unext, fld3d_t p_Uprev, fld3d_t p_Ucurr,
 	     fld3d_t p_W, fld3d_t p_cmsv,
-	     fld3d_t p_ymask, fld3d_t p_zmask,
+	     fld3d_t p_ymask, fld3d_t p_zmask, fld3d_t p_E,
 	     mrc_fld_data_t dt, int stage)
 {
   static fld3d_t p_rmask, p_resis, p_Jcc;
@@ -22,7 +22,7 @@ patch_push_c(fld3d_t p_Unext, fld3d_t p_Uprev, fld3d_t p_Ucurr,
   patch_pushfluid(p_Unext, dt, p_Uprev, p_Ucurr, p_W,
 		  p_cmsv, p_ymask, p_zmask, stage);
   patch_pushfield(p_Unext, dt, p_Uprev, p_Ucurr, p_W,
-		  p_zmask, p_rmask, p_resis, p_Jcc, stage);
+		  p_zmask, p_rmask, p_resis, p_Jcc, p_E, stage);
 }
 
 // ----------------------------------------------------------------------
@@ -102,13 +102,13 @@ static void
 patch_push(fld3d_t p_Unext, fld3d_t p_Uprev, fld3d_t p_Ucurr,
 	   fld3d_t p_W, fld3d_t p_cmsv,
 	   fld3d_t p_ymask, fld3d_t p_zmask,
-	   fld3d_t p_f, mrc_fld_data_t dt, int stage)
+	   fld3d_t p_f, fld3d_t p_E, mrc_fld_data_t dt, int stage)
 {
   int opt_mhd_push = stage ? s_opt_mhd_pushpred : s_opt_mhd_pushcorr;
 
   if (opt_mhd_push == OPT_MHD_C) {
     patch_push_c(p_Unext, p_Uprev, p_Ucurr, p_W, p_cmsv,
-		 p_ymask, p_zmask, dt, stage);
+		 p_ymask, p_zmask, p_E, dt, stage);
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
   } else if (opt_mhd_push == OPT_MHD_FORTRAN) {
     patch_push_fortran(dt, stage);
@@ -171,6 +171,7 @@ patch_pushstage(fld3d_t p_f, mrc_fld_data_t dt, int stage)
   fld3d_t p_cmsv  = fld3d_make_view(p_f, _CMSV);
   fld3d_t p_ymask = fld3d_make_view(p_f, _YMASK);
   fld3d_t p_zmask = fld3d_make_view(p_f, _ZMASK);
+  fld3d_t p_E     = fld3d_make_view(p_f, _FLX);
 
   patch_primvar(p_W, p_Ucurr, p_cmsv);
   if (stage == 1) {
@@ -185,7 +186,7 @@ patch_pushstage(fld3d_t p_f, mrc_fld_data_t dt, int stage)
   }
 
   patch_push(p_Unext, p_Uprev, p_Ucurr, p_W, p_cmsv,
-	     p_ymask, p_zmask, p_f, dt, stage);
+	     p_ymask, p_zmask, p_f, p_E, dt, stage);
 
   /* if (stage == 1) { */
   /*   patch_poison_bnd(p_Unext); */
