@@ -24,6 +24,24 @@ patch_bpush1_c(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Uprev, fld3d_t p_E)
 }
 
 // ----------------------------------------------------------------------
+// patch_update_ct
+//
+// FIXME, consolidate with above (loop limits?)
+
+static void _mrc_unused
+patch_update_ct(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t E)
+{
+  fld3d_foreach(i,j,k, 0, 1) {
+    F3S(p_Unext, BX, i,j,k) -= dt * (PDE_INV_DY(j) * (F3S(E, 2, i,j+dj,k) - F3S(E, 2, i,j,k)) -
+				     PDE_INV_DZ(k) * (F3S(E, 1, i,j,k+dk) - F3S(E, 1, i,j,k)));
+    F3S(p_Unext, BY, i,j,k) -= dt * (PDE_INV_DZ(k) * (F3S(E, 0, i,j,k+dk) - F3S(E, 0, i,j,k)) -
+				     PDE_INV_DX(i) * (F3S(E, 2, i+di,j,k) - F3S(E, 2, i,j,k)));
+    F3S(p_Unext, BZ, i,j,k) -= dt * (PDE_INV_DX(i) * (F3S(E, 1, i+di,j,k) - F3S(E, 1, i,j,k)) -
+				     PDE_INV_DY(j) * (F3S(E, 0, i,j+dj,k) - F3S(E, 0, i,j,k)));
+  } fld3d_foreach_end;
+}
+
+// ----------------------------------------------------------------------
 // patch_bpush1_fortran
 
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
@@ -47,7 +65,7 @@ patch_bpush1_fortran(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Uprev, fld3d_
 // ----------------------------------------------------------------------
 // patch_bpush1
 
-static void
+static void _mrc_unused
 patch_bpush1(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Uprev, fld3d_t p_E)
 {
   if (s_opt_mhd_bpush1 == OPT_MHD_C) {

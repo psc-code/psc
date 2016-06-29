@@ -22,6 +22,7 @@
 #include "pde/pde_mhd_push_ej.c"
 #include "pde/pde_mhd_rmaskn.c"
 #include "pde/pde_mhd_calc_resis.c"
+#include "pde/pde_mhd_bpush.c"
 #include "pde/pde_mhd_stage.c"
 #include "pde/pde_mhd_get_dt.c"
 #include "pde/pde_mhd_badval_checks.c"
@@ -487,37 +488,6 @@ patch_calce(struct ggcm_mhd_step *step, fld3d_t E, mrc_fld_data_t dt,
 }
 
 // ----------------------------------------------------------------------
-// patch_update_ct
-
-static void
-patch_update_ct(struct ggcm_mhd *mhd, fld3d_t x, fld3d_t E,
-		mrc_fld_data_t dt, int p)
-{
-  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-
-  mrc_fld_data_t r_db_dt_sq = sqr(mhd->par.r_db_dt);
-
-  fld3d_foreach(i,j,k, 0, 1) {
-    float crd_fc[3];
-    mrc_crds_at_fc(crds, i,j,k, p, 0, crd_fc);
-    if (sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]) >= r_db_dt_sq) {
-      F3S(x, BX, i,j,k) -= dt * (PDE_INV_DY(j) * (F3S(E, 2, i,j+dj,k) - F3S(E, 2, i,j,k)) -
-				 PDE_INV_DZ(k) * (F3S(E, 1, i,j,k+dk) - F3S(E, 1, i,j,k)));
-    }
-    mrc_crds_at_fc(crds, i,j,k, p, 1, crd_fc);
-    if (sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]) >= r_db_dt_sq) {
-      F3S(x, BY, i,j,k) -= dt * (PDE_INV_DZ(k) * (F3S(E, 0, i,j,k+dk) - F3S(E, 0, i,j,k)) -
-				 PDE_INV_DX(i) * (F3S(E, 2, i+di,j,k) - F3S(E, 2, i,j,k)));
-    }
-    mrc_crds_at_fc(crds, i,j,k, p, 2, crd_fc);
-    if (sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]) >= r_db_dt_sq) {
-      F3S(x, BZ, i,j,k) -= dt * (PDE_INV_DX(i) * (F3S(E, 1, i+di,j,k) - F3S(E, 1, i,j,k)) -
-				 PDE_INV_DY(j) * (F3S(E, 0, i,j+dj,k) - F3S(E, 0, i,j,k)));
-    }
-  } fld3d_foreach_end;
-}
-
-// ----------------------------------------------------------------------
 // patch_enforce_rrmin_sc
 //
 // nudge rr and uu such that rr >= rrmin if needed
@@ -599,7 +569,7 @@ patch_pushstage_pt2(struct ggcm_mhd_step *step, fld3d_t p_Unext, mrc_fld_data_t 
   patch_enforce_rrmin_sc(mhd, p_Unext, p);
 
   // find E
-  patch_rmaskn(p_rmask, p_zmask);
+  patch_rmaskn_c(p_rmask, p_zmask);
   patch_calce(step, p_E, dt, p_Ucurr, p_Wcurr, p_zmask, p_rmask, p_b0, p);
 }
 
@@ -667,7 +637,7 @@ pushstage(struct ggcm_mhd_step *step, struct mrc_fld *f_Unext,
 
     fld3d_get_list(p, update_ct_patches);
     // update B using E
-    patch_update_ct(mhd, p_Unext, p_E, dt, p);
+    patch_update_ct(p_Unext, dt, p_E);
     fld3d_put_list(p, update_ct_patches);
   }
 }
@@ -831,8 +801,6 @@ static struct param ggcm_mhd_step_c3_descr[] = {
 								  opt_limiter_descr)            },
   { "riemann"            , VAR(opt.riemann)        , PARAM_SELECT(OPT_RIEMANN_RUSANOV,
 								  opt_riemann_descr)            },
-  { "mhd_rmaskn"         , VAR(opt.mhd_rmaskn)     , PARAM_SELECT(OPT_MHD_C,
-								  opt_mhd_descr)                },
   { "background"         , VAR(opt.background)     , PARAM_BOOL(false)                          },
   { "limiter_mc_beta"    , VAR(opt.limiter_mc_beta), PARAM_DOUBLE(2.)                           },
 
