@@ -3,13 +3,7 @@
 #include "ggcm_mhd_private.h"
 #include "ggcm_mhd_defs.h"
 #include "ggcm_mhd_diag_private.h"
-#include "mhd_util.h"
 
-#include <mrc_domain.h>
-#include <mrc_profile.h>
-#include <mrc_io.h>
-
-#include <math.h>
 #include <string.h>
 
 #include "pde/pde_defs.h"
@@ -929,33 +923,18 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *f_U)
   struct ggcm_mhd *mhd = step->mhd;
   struct mrc_fld *f_Uhalf = sub->f_Uhalf, *f_W = sub->f_W;
 
-  static int pr_A, pr_B;
-  if (!pr_A) {
-    pr_A = prof_register("c3_pred", 0, 0, 0);
-    pr_B = prof_register("c3_corr", 0, 0, 0);
-  }
-
   // --- PREDICTOR
-  prof_start(pr_A);
-
   // set U_half = U^n, then advance to n+1/2.
   // WARNING: If we're fixing up neg pressure/density in primvar, we should probably do
   // the copy later
-
   ggcm_mhd_fill_ghosts(mhd, f_U, 0, mhd->time);
   mrc_fld_copy(f_Uhalf, f_U);
   pushstage(step, f_Uhalf, .5f * mhd->dt, f_U, f_W, 0, LIMIT_NONE);
 
-  prof_stop(pr_A);
-
   // --- CORRECTOR
-  prof_start(pr_B);
-
   ggcm_mhd_fill_ghosts(mhd, f_Uhalf, 0, mhd->time + mhd->bndt);
   int limit = mhd->time < mhd->par.timelo ? LIMIT_NONE : LIMIT_1;
   pushstage(step, f_U, mhd->dt, f_Uhalf, f_W, 1, limit);
-
-  prof_stop(pr_B);
 }
 
 // ----------------------------------------------------------------------
