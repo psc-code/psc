@@ -80,29 +80,6 @@ calc_avg_dz_By(fld3d_t p_dB, fld3d_t p_B, int XX, int YY, int ZZ)
   } fld3d_foreach_end;
 }
   
-// ----------------------------------------------------------------------
-// CC_TO_EC
-//
-// average (p_f, m) from cell center to edge center in direction M
-
-#if OPT_STAGGER == OPT_STAGGER_GGCM
-
-#define CC_TO_EC(p_f, m, i,j,k, M)			\
-  (.25f * (F3S(p_f, m, i       ,j       ,k       ) +	\
-	   F3S(p_f, m, i       ,j+(M!=1),k+(M!=2)) +	\
-	   F3S(p_f, m, i+(M!=0),j       ,k+(M!=2)) +	\
-	   F3S(p_f, m, i+(M!=0),j+(M!=1),k      )))
-  
-#else
-  
-#define CC_TO_EC(p_f, m, i,j,k, M)			\
-  (.25f * (F3S(p_f, m, i-(M!=0),j-(M!=1),k-(M!=2)) +	\
-	   F3S(p_f, m, i-(M!=0),j       ,k       ) +	\
-	   F3S(p_f, m, i       ,j-(M!=1),k       ) +	\
-	   F3S(p_f, m, i       ,j       ,k-(M!=2))))
-
-#endif
-
 static inline void
 calc_v_x_B(mrc_fld_data_t ttmp[2], fld3d_t p_B, fld3d_t p_W, fld3d_t p_dB,
 	   int i, int j, int k, int XX, int YY, int ZZ,

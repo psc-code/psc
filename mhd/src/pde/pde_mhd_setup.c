@@ -666,21 +666,44 @@ pde_mhd_aux_setup()
 
 #define EC_TO_CC(f, m, i,j,k)						\
   ({									\
-    (.25f * (F3S(f, m, i-di*(m!=0),j          ,k          ) +		\
-	     F3S(f, m, i          ,j-dj*(m!=1),k          ) +		\
-	     F3S(f, m, i          ,j          ,k-dk*(m!=2)) +		\
-	     F3S(f, m, i-di*(m!=0),j-dj*(m!=1),k-dk*(m!=2))));		\
+    (.25f * (F3S(f, m, i-(m!=0?di:0),j            ,k            ) +	\
+	     F3S(f, m, i            ,j-(m!=1?dj:0),k            ) +	\
+	     F3S(f, m, i            ,j            ,k-(m!=2?dk:0)) +	\
+	     F3S(f, m, i-(m!=0?di:0),j-(m!=1?dj:0),k-(m!=2?dk:0))));	\
   })
 
 #else
 
 #define EC_TO_CC(f, m, i,j,k)						\
   ({									\
-    (.25f * (F3S(f, m, i+di*(m!=0),j+dj*(m!=1),k+dk*(m!=2)) +		\
-	     F3S(f, m, i+di*(m!=0),j          ,k          ) +		\
-	     F3S(f, m, i          ,j+dj*(m!=1),k          ) +		\
-	     F3S(f, m, i          ,j          ,k+dk*(m!=2))));		\
+    (.25f * (F3S(f, m, i+(m!=0?di:0),j+(m!=1?dj:0),k+(m!=2?dk:0)) +	\
+	     F3S(f, m, i+(m!=0?di:0),j            ,k            ) +	\
+	     F3S(f, m, i            ,j+(m!=1?dj:0),k            ) +	\
+	     F3S(f, m, i            ,j            ,k+(m!=2?dk:0))));	\
   })
+
+#endif
+
+// ----------------------------------------------------------------------
+// CC_TO_EC
+//
+// average (p_f, m) from cell center to edge center in direction M
+
+#if OPT_STAGGER == OPT_STAGGER_GGCM
+
+#define CC_TO_EC(p_f, m, i,j,k, M)					\
+  (.25f * (F3S(p_f, m, i            ,j            ,k            ) +	\
+	   F3S(p_f, m, i            ,j+(M!=1?dj:0),k+(M!=2?dk:0)) +	\
+	   F3S(p_f, m, i+(M!=0?di:0),j            ,k+(M!=2?dk:0)) +	\
+	   F3S(p_f, m, i+(M!=0?di:0),j+(M!=1?dj:0),k           )))
+  
+#else
+  
+#define CC_TO_EC(p_f, m, i,j,k, M)					\
+  (.25f * (F3S(p_f, m, i-(M!=0?di:0),j-(M!=1?dj:0),k-(M!=2?dk:0)) +	\
+	   F3S(p_f, m, i-(M!=0?di:0),j            ,k            ) +	\
+	   F3S(p_f, m, i            ,j-(M!=1?dj:0),k            ) +	\
+	   F3S(p_f, m, i            ,j            ,k-(M!=2?dk:0))))
 
 #endif
 
