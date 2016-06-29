@@ -69,11 +69,6 @@ struct ggcm_mhd_step_c3 {
 
 #define REPS (1.e-10f)
 
-enum {
-  LIMIT_NONE,
-  LIMIT_1,
-};
-
 // 1-d state vars statically rather than having to pass them around
 
 static fld1d_state_t l_U, l_Ul, l_Ur, l_W, l_Wl, l_Wr, l_F;
@@ -750,7 +745,7 @@ patch_enforce_rrmin_sc(struct ggcm_mhd *mhd, fld3d_t p_U, int p)
 
 static void
 patch_pushstage_pt1(struct ggcm_mhd_step *step, fld3d_t p_Ucurr, fld3d_t p_Wcurr,
-		    fld3d_t p_F[3], int limit, int p)
+		    fld3d_t p_F[3], bool limit, int p)
 {
   // primvar, badval
   patch_prim_from_cons(p_Wcurr, p_Ucurr, 2);
@@ -758,10 +753,10 @@ patch_pushstage_pt1(struct ggcm_mhd_step *step, fld3d_t p_Ucurr, fld3d_t p_Wcurr
   
   // find hydro fluxes
   // FIXME: we could use the fact that we calculate primitive variables already
-  if (limit == LIMIT_NONE) {
-    patch_flux_pred(step, p_F, p_Ucurr);
-  } else {
+  if (limit) {
     patch_flux_corr(step, p_F, p_Ucurr);
+  } else {
+    patch_flux_pred(step, p_F, p_Ucurr);
   }
 }
 
@@ -799,7 +794,7 @@ patch_pushstage_pt2(struct ggcm_mhd_step *step, fld3d_t p_Unext, mrc_fld_data_t 
 static void
 pushstage(struct ggcm_mhd_step *step, struct mrc_fld *f_Unext,
 	  mrc_fld_data_t dt, struct mrc_fld *f_Ucurr, struct mrc_fld *f_Wcurr,
-	  int stage, int limit)
+	  int stage, bool limit)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
@@ -929,11 +924,11 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *f_U)
   // the copy later
   ggcm_mhd_fill_ghosts(mhd, f_U, 0, mhd->time);
   mrc_fld_copy(f_Uhalf, f_U);
-  pushstage(step, f_Uhalf, .5f * mhd->dt, f_U, f_W, 0, LIMIT_NONE);
+  pushstage(step, f_Uhalf, .5f * mhd->dt, f_U, f_W, 0, false);
 
   // --- CORRECTOR
   ggcm_mhd_fill_ghosts(mhd, f_Uhalf, 0, mhd->time + mhd->bndt);
-  int limit = mhd->time < mhd->par.timelo ? LIMIT_NONE : LIMIT_1;
+  int limit = mhd->time >= mhd->par.timelo;
   pushstage(step, f_U, mhd->dt, f_Uhalf, f_W, 1, limit);
 }
 
