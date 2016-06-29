@@ -22,6 +22,7 @@
 #include "pde/pde_mhd_push_ej.c"
 #include "pde/pde_mhd_rmaskn.c"
 #include "pde/pde_mhd_calc_resis.c"
+#include "pde/pde_mhd_calce.c"
 #include "pde/pde_mhd_bpush.c"
 #include "pde/pde_mhd_stage.c"
 #include "pde/pde_mhd_get_dt.c"
@@ -294,21 +295,6 @@ patch_push_pp(fld3d_t p_U, mrc_fld_data_t dt, fld3d_t p_W, fld3d_t p_zmask)
   } fld3d_foreach_end;
 }
 
-static inline mrc_fld_data_t
-bcthy3f(mrc_fld_data_t s1, mrc_fld_data_t s2)
-{
-  if (s1 > 0.f && fabsf(s2) > REPS) {
-/* .if(calce_aspect_low) then */
-/* .call lowmask(I, 0, 0,tl1) */
-/* .call lowmask( 0,J, 0,tl2) */
-/* .call lowmask( 0, 0,K,tl3) */
-/* .call lowmask(I,J,K,tl4) */
-/*       tt=tt*(1.0-max(tl1,tl2,tl3,tl4)) */
-    return s1 / s2;
-  }
-  return 0.f;
-}
-
 static inline void
 patch_calc_avg_dz_By(fld3d_t tmp, fld3d_t x, fld3d_t p_b0,
 		     int XX, int YY, int ZZ,
@@ -449,7 +435,7 @@ patch_bcthy3z_const(int XX, int YY, int ZZ, int I, int J, int K,
 }
 
 static void
-patch_calce(struct ggcm_mhd_step *step, fld3d_t E, mrc_fld_data_t dt,
+xpatch_calce(struct ggcm_mhd_step *step, fld3d_t E, mrc_fld_data_t dt,
 	    fld3d_t x, fld3d_t prim, fld3d_t zmask, fld3d_t rmask, fld3d_t b0,
 	    int p)
 {
@@ -570,7 +556,7 @@ patch_pushstage_pt2(struct ggcm_mhd_step *step, fld3d_t p_Unext, mrc_fld_data_t 
 
   // find E
   patch_rmaskn_c(p_rmask, p_zmask);
-  patch_calce(step, p_E, dt, p_Ucurr, p_Wcurr, p_zmask, p_rmask, p_b0, p);
+  xpatch_calce(step, p_E, dt, p_Ucurr, p_Wcurr, p_zmask, p_rmask, p_b0, p);
 }
 
 // ----------------------------------------------------------------------
