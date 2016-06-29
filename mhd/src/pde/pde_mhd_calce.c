@@ -270,7 +270,6 @@ patch_calce_c(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
   default:
     assert(0);
   }
-
 }
 
 // ----------------------------------------------------------------------
@@ -321,4 +320,43 @@ patch_calce(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
   }
 }
 
+// ----------------------------------------------------------------------
+// patch_calc_e
+//
+// alternate (newer, better) way, that incorporates all the steps necessary in
+// actually calculating the E field, beginning to end
+
+static void _mrc_unused
+patch_calc_e(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
+	     fld3d_t p_zmask, fld3d_t p_rmask)
+{
+  static fld3d_t p_resis;
+  fld3d_setup_tmp_compat(&p_resis, 1, _RESIS);
+
+  if (s_opt_hall != OPT_HALL_NONE || s_magdiffu == MAGDIFFU_CONST) {
+    if (!fld3d_is_setup(s_p_aux.Jcc)) {
+      fld3d_setup_tmp(&s_p_aux.Jcc, 3);
+    }
+    patch_calc_current_cc(s_p_aux.Jcc, p_U, p_zmask);
+  }
+
+  switch (s_magdiffu) {
+  case MAGDIFFU_NL1:
+    patch_calce_nl1_c(p_E, dt, p_U, p_W, p_rmask);
+    break;
+  case MAGDIFFU_RES1:
+    assert(0);
+    // calc_resis_res1(bxB,byB,bzB,currx,curry,currz,tmp1,tmp2,tmp3,flx,fly,flz,zmask,rr,pp,resis);
+    // calce...
+    break;
+  case MAGDIFFU_CONST:
+    patch_res1_const(p_resis);
+    patch_calce_const_c(p_E, dt, p_U, p_W, p_resis);
+    break;
+  default:
+    assert(0);
+  }
+}
+
 #endif
+
