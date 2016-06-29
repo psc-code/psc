@@ -45,6 +45,7 @@
 struct ggcm_mhd_step_c2 {
   struct mhd_options opt;
 
+  struct mrc_fld *f_zmask;
   struct mrc_fld *f_Uhalf;
 };
 
@@ -82,6 +83,8 @@ ggcm_mhd_step_c2_setup(struct ggcm_mhd_step *step)
   mhd->ymask = ggcm_mhd_get_3d_fld(mhd, 1);
   mrc_fld_set(mhd->ymask, 1.);
 
+  sub->f_zmask = ggcm_mhd_get_3d_fld(mhd, 1);
+
   sub->f_Uhalf = ggcm_mhd_get_3d_fld(mhd, 8);
   mrc_fld_dict_add_int(sub->f_Uhalf, "mhd_type", MT_SEMI_CONSERVATIVE);
 
@@ -95,7 +98,12 @@ ggcm_mhd_step_c2_setup(struct ggcm_mhd_step *step)
 static void
 ggcm_mhd_step_c2_destroy(struct ggcm_mhd_step *step)
 {
-  mrc_fld_destroy(step->mhd->ymask);
+  struct ggcm_mhd_step_c2 *sub = ggcm_mhd_step_c2(step);
+  struct ggcm_mhd *mhd = step->mhd;
+
+  mrc_fld_destroy(mhd->ymask);
+  mrc_fld_destroy(sub->f_zmask);
+  mrc_fld_destroy(sub->f_Uhalf);
 }
 
 // ----------------------------------------------------------------------
@@ -183,8 +191,7 @@ ggcm_mhd_step_c2_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   struct ggcm_mhd_step_c2 *sub = ggcm_mhd_step_c2(step);
   struct ggcm_mhd *mhd = step->mhd;
 
-  struct mrc_fld *f_ymask = mhd->ymask;
-  struct mrc_fld *f_zmask = mrc_fld_make_view(x, _ZMASK, _ZMASK + 1);
+  struct mrc_fld *f_ymask = mhd->ymask, *f_zmask = sub->f_zmask;
   struct mrc_fld *f_U = mrc_fld_make_view(x, _RR1, _RR1 + 8);
   mrc_fld_dict_add_int(f_U, "mhd_type", MT_SEMI_CONSERVATIVE);
   struct mrc_fld *f_Uhalf = sub->f_Uhalf;
@@ -204,7 +211,6 @@ ggcm_mhd_step_c2_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   pushstage(f_U, mhd->dt, f_Uhalf, f_ymask, f_zmask, 1);
 
   mrc_fld_destroy(f_U);
-  mrc_fld_destroy(f_zmask);
 }
 
 // ----------------------------------------------------------------------
