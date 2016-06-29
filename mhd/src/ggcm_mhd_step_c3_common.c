@@ -20,14 +20,12 @@
 #include "pde/pde_mhd_reconstruct.c"
 #include "pde/pde_mhd_divb_glm.c"
 #include "pde/pde_mhd_riemann.c"
-#include "pde/pde_mhd_calc_current.c"
+#include "pde/pde_mhd_push_ej.c"
 #include "pde/pde_mhd_stage.c"
 #include "pde/pde_mhd_get_dt.c"
 #include "pde/pde_mhd_badval_checks.c"
 
 //FIXME, when using hydro_rusanov / no pushpp, things go wrong when > timelo
-
-#define _BT(p_U, d, i,j,k)  (F3S(p_U, BX+d, i,j,k) + (s_opt_background ? F3S(p_b0, d, i,j,k) : 0))
 
 static int s_opt_enforce_rrmin;
 
@@ -291,57 +289,6 @@ patch_push_pp(fld3d_t p_U, mrc_fld_data_t dt, fld3d_t p_W, fld3d_t p_zmask)
     F3S(p_U, RVX, i,j,k) += z * PDE_INV_DX(i) * (F3S(p_W, PP, i+di,j,k) - F3S(p_W, PP, i-di,j,k));
     F3S(p_U, RVY, i,j,k) += z * PDE_INV_DY(j) * (F3S(p_W, PP, i,j+dj,k) - F3S(p_W, PP, i,j-dj,k));
     F3S(p_U, RVZ, i,j,k) += z * PDE_INV_DZ(k) * (F3S(p_W, PP, i,j,k+dk) - F3S(p_W, PP, i,j,k-dk));
-  } fld3d_foreach_end;
-}
-
-// ----------------------------------------------------------------------
-// patch_calc_Bt_cc
-//
-// cell-averaged Btotal (ie., add B0 back in, if applicable)
-
-static void _mrc_unused
-patch_calc_Bt_cc(fld3d_t p_b, fld3d_t p_U, fld3d_t p_b0, int l, int r)
-{
-  fld3d_foreach(i,j,k, l, r) {
-    F3S(p_b, 0, i,j,k) = .5f * (_BT(p_U, 0, i,j,k) + _BT(p_U, 0, i+di,j,k));
-    F3S(p_b, 1, i,j,k) = .5f * (_BT(p_U, 1, i,j,k) + _BT(p_U, 1, i,j+dj,k));
-    F3S(p_b, 2, i,j,k) = .5f * (_BT(p_U, 2, i,j,k) + _BT(p_U, 2, i,j,k+dk));
-  } fld3d_foreach_end;
-}
-
-// ----------------------------------------------------------------------
-// patch_push_ej
-
-static void
-patch_push_ej(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Ucurr, fld3d_t p_Wcurr,
-	      fld3d_t p_zmask, fld3d_t p_b0)
-{
-  static fld3d_t p_jec, p_bcc;
-  if (!fld3d_is_setup(p_jec)) {
-    fld3d_setup_tmp(&p_jec, 3);
-    fld3d_setup_tmp(&p_bcc, 3);
-  }
-
-  // FIXME/OPT, cell centered current is calculated here, and later again in calce()
-  patch_calc_current_ec(p_jec, p_Ucurr);
-  patch_calc_Bt_cc(p_bcc, p_Ucurr, p_b0, 1, 1);
-
-  fld3d_foreach(i,j,k, 0, 0) {
-    mrc_fld_data_t s2 = dt * F3S(p_zmask, 0, i,j,k);
-    mrc_fld_data_t cx = EC_TO_CC(p_jec, 0, i,j,k);
-    mrc_fld_data_t cy = EC_TO_CC(p_jec, 1, i,j,k);
-    mrc_fld_data_t cz = EC_TO_CC(p_jec, 2, i,j,k);
-    mrc_fld_data_t ffx = s2 * (cy * F3S(p_bcc, 2, i,j,k) - cz * F3S(p_bcc, 1, i,j,k));
-    mrc_fld_data_t ffy = s2 * (cz * F3S(p_bcc, 0, i,j,k) - cx * F3S(p_bcc, 2, i,j,k));
-    mrc_fld_data_t ffz = s2 * (cx * F3S(p_bcc, 1, i,j,k) - cy * F3S(p_bcc, 0, i,j,k));
-    mrc_fld_data_t duu = (ffx * F3S(p_Wcurr, VX, i,j,k) +
-			  ffy * F3S(p_Wcurr, VY, i,j,k) +
-			  ffz * F3S(p_Wcurr, VZ, i,j,k));
-    
-    F3S(p_Unext, RVX, i,j,k) += ffx;
-    F3S(p_Unext, RVY, i,j,k) += ffy;
-    F3S(p_Unext, RVZ, i,j,k) += ffz;
-    F3S(p_Unext, UU , i,j,k) += duu;
   } fld3d_foreach_end;
 }
 
@@ -725,7 +672,7 @@ patch_pushstage_pt2(struct ggcm_mhd_step *step, fld3d_t p_Unext, mrc_fld_data_t 
     patch_zmaskn_x(mhd, p_zmask, p_ymask, p_Ucurr, p_b0);
   }
   // update momentum (J x B) and energy
-  patch_push_ej(p_Unext, dt, p_Ucurr, p_Wcurr, p_zmask, p_b0);
+  patch_push_ej_b0(p_Unext, dt, p_Ucurr, p_Wcurr, p_zmask, p_b0);
   // enforce rrmin
   patch_enforce_rrmin_sc(mhd, p_Unext, p);
 

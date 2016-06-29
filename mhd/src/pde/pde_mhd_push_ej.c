@@ -2,6 +2,7 @@
 #ifndef PDE_MHD_PUSHEJ_C
 #define PDE_MHD_PUSHEJ_C
 
+#include "pde/pde_mhd_primbb.c"
 #include "pde/pde_mhd_calc_current.c"
 
 // ----------------------------------------------------------------------
@@ -38,6 +39,44 @@ patch_push_ej_c(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Ucurr,
 }
 
 // ----------------------------------------------------------------------
+// patch_push_ej_b0
+//
+// FIXME, consolidate with above
+
+static void _mrc_unused
+patch_push_ej_b0(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Ucurr,
+		 fld3d_t p_W, fld3d_t p_zmask, fld3d_t p_b0)
+{
+  static fld3d_t p_jec, p_bcc;
+  if (!fld3d_is_setup(p_jec)) {
+    fld3d_setup_tmp(&p_jec, 3);
+    fld3d_setup_tmp(&p_bcc, 3);
+  }
+
+  // FIXME/OPT, cell centered current is calculated here, and later again in calce()
+  patch_calc_current_ec(p_jec, p_Ucurr);
+  patch_calc_Bt_cc(p_bcc, p_Ucurr, p_b0, 1, 1);
+
+  fld3d_foreach(i,j,k, 0, 0) {
+    mrc_fld_data_t s2 = dt * F3S(p_zmask, 0, i,j,k);
+    mrc_fld_data_t cx = EC_TO_CC(p_jec, 0, i,j,k);
+    mrc_fld_data_t cy = EC_TO_CC(p_jec, 1, i,j,k);
+    mrc_fld_data_t cz = EC_TO_CC(p_jec, 2, i,j,k);
+    mrc_fld_data_t ffx = s2 * (cy * F3S(p_bcc, 2, i,j,k) - cz * F3S(p_bcc, 1, i,j,k));
+    mrc_fld_data_t ffy = s2 * (cz * F3S(p_bcc, 0, i,j,k) - cx * F3S(p_bcc, 2, i,j,k));
+    mrc_fld_data_t ffz = s2 * (cx * F3S(p_bcc, 1, i,j,k) - cy * F3S(p_bcc, 0, i,j,k));
+    mrc_fld_data_t duu = (ffx * F3S(p_W, VX, i,j,k) +
+			  ffy * F3S(p_W, VY, i,j,k) +
+			  ffz * F3S(p_W, VZ, i,j,k));
+    
+    F3S(p_Unext, RVX, i,j,k) += ffx;
+    F3S(p_Unext, RVY, i,j,k) += ffy;
+    F3S(p_Unext, RVZ, i,j,k) += ffz;
+    F3S(p_Unext, UU , i,j,k) += duu;
+  } fld3d_foreach_end;
+}
+
+// ----------------------------------------------------------------------
 // patch_push_ej_fortran
 
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
@@ -63,7 +102,7 @@ patch_push_ej_fortran(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Ucurr,
 // ----------------------------------------------------------------------
 // patch_push_ej
 
-static void
+static void _mrc_unused
 patch_push_ej(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Ucurr,
 	      fld3d_t p_W, fld3d_t p_zmask)
 {
