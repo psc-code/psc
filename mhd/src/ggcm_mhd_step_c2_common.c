@@ -116,8 +116,10 @@ patch_push(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Ucurr,
 	   fld3d_t p_ymask, fld3d_t p_zmask,
 	   int stage)
 {
-  fld3d_t p_rmask = fld3d_make_tmp(1, _RMASK), p_resis = fld3d_make_tmp(1, _RESIS);
-  fld3d_t p_Jcc = fld3d_make_tmp(3, _CURRX);
+  static fld3d_t p_rmask, p_resis, p_Jcc;
+  fld3d_setup_tmp_compat(&p_rmask, 1, _RMASK);
+  fld3d_setup_tmp_compat(&p_resis, 1, _RESIS);
+  fld3d_setup_tmp_compat(&p_Jcc, 3, _CURRX);
 
   patch_rmaskn(p_rmask, p_zmask);
   patch_pushfluid(p_Unext, dt, p_Unext, p_Ucurr, p_W,
@@ -133,14 +135,16 @@ static void
 patch_pushstage(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Ucurr, fld3d_t p_ymask,
 		fld3d_t p_zmask, int stage)
 {
-  fld3d_t p_W     = fld3d_make_tmp(5, _RR);
-  fld3d_t p_cmsv  = fld3d_make_tmp(1, _CMSV);
+  static fld3d_t p_W, p_cmsv;
+  fld3d_setup_tmp_compat(&p_W, 5, _RR);
+  fld3d_setup_tmp_compat(&p_cmsv, 1, _CMSV);
 
   patch_primvar(p_W, p_Ucurr, p_cmsv);
   patch_badval_checks_sc(p_Ucurr, p_W); // FIXME, incorporate
 
   if (stage == 0) {
-    fld3d_t p_bcc = fld3d_make_tmp(3, _BX);
+    static fld3d_t p_bcc;
+    fld3d_setup_tmp_compat(&p_bcc, 3, _BX);
     patch_primbb(p_bcc, p_Ucurr);
     patch_zmaskn(p_zmask, p_W, p_bcc, p_ymask);
   }

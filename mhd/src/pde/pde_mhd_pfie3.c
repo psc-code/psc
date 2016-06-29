@@ -13,7 +13,8 @@ patch_pfie3_c(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Uprev,
 	      fld3d_t p_Ucurr, fld3d_t p_W, fld3d_t p_zmask, fld3d_t p_rmask,
 	      fld3d_t p_resis, fld3d_t p_Jcc)
 {
-  fld3d_t p_E = fld3d_make_tmp(3, _FLX);
+  static fld3d_t p_E;
+  fld3d_setup_tmp_compat(&p_E, 3, _FLX);
 
   patch_calce(p_E, dt, p_Ucurr, p_W, p_zmask, p_rmask, p_resis, p_Jcc);
   patch_bpush1(p_Unext, dt, p_Uprev, p_E);
@@ -40,7 +41,7 @@ patch_pfie3_fortran(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Uprev,
 		    fld3d_t p_Ucurr, fld3d_t p_W, fld3d_t p_zmask, fld3d_t p_rmask,
 		    fld3d_t p_resis, fld3d_t p_Jcc)
 {
-  fld3d_t p_E = fld3d_make_tmp(3, _FLX);
+  fld3d_t p_E = fld3d_make_view(s_p_f, _FLX);
 
   pfie3_F77(F(p_Uprev, BX), F(p_Uprev, BY), F(p_Uprev, BZ),
   	    F(p_Ucurr, BX), F(p_Ucurr, BY), F(p_Ucurr, BZ),

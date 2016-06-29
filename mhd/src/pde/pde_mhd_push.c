@@ -13,8 +13,10 @@ patch_push_c(fld3d_t p_Unext, fld3d_t p_Uprev, fld3d_t p_Ucurr,
 	     fld3d_t p_ymask, fld3d_t p_zmask,
 	     mrc_fld_data_t dt, int stage)
 {
-  fld3d_t p_rmask = fld3d_make_tmp(1, _RMASK), p_resis = fld3d_make_tmp(1, _RESIS);
-  fld3d_t p_Jcc = fld3d_make_tmp(3, _CURRX);
+  static fld3d_t p_rmask, p_resis, p_Jcc;
+  fld3d_setup_tmp_compat(&p_rmask, 1, _RMASK);
+  fld3d_setup_tmp_compat(&p_resis, 1, _RESIS);
+  fld3d_setup_tmp_compat(&p_Jcc, 3, _CURRX);
 
   patch_rmaskn(p_rmask, p_zmask);
   patch_pushfluid(p_Unext, dt, p_Uprev, p_Ucurr, p_W,

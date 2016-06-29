@@ -51,7 +51,8 @@ patch_calc_current_ec(fld3d_t p_J, fld3d_t p_U)
 static void _mrc_unused
 patch_calc_current_cc(fld3d_t p_Jcc, fld3d_t p_U, fld3d_t p_zmask)
 { 
-  fld3d_t p_Jec = fld3d_make_tmp(3, _TMP1); /* was named _TX */
+  static fld3d_t p_Jec;
+  fld3d_setup_tmp_compat(&p_Jec, 3, _TMP1); /* was named _TX */
 
   patch_calc_current_ec(p_Jec, p_U);
 

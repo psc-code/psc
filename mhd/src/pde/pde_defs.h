@@ -12,6 +12,9 @@
 #define OPT_STAGGER_REG     (0)
 #define OPT_STAGGER_GGCM    (1)
 
+#define OPT_TMP_NORMAL      (0)
+#define OPT_TMP_COMPAT      (1)
+
 // ======================================================================
 // MHD options
 

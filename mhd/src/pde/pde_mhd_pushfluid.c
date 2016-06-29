@@ -219,7 +219,10 @@ pushfv_c(fld3d_t p_Unext, fld3d_t p_Uprev, fld3d_t p_Ucurr, int m,
 	 fld3d_t p_Wcurr, fld3d_t p_cmsv, fld3d_t p_ymask, mrc_fld_data_t dt,
 	 bool limit, fld3d_t p_B)
 {
-  fld3d_t p_Ffc = fld3d_make_tmp(3, _FLX), p_Fcc = fld3d_make_tmp(3, _TMP1), p_C = fld3d_make_tmp(3, _CX);
+  static fld3d_t p_Ffc, p_Fcc, p_C;
+  fld3d_setup_tmp_compat(&p_Ffc, 3, _FLX);
+  fld3d_setup_tmp_compat(&p_Fcc, 3, _TMP1);
+  fld3d_setup_tmp_compat(&p_C, 3, _CX);
 
   vgfl_c(p_Fcc, p_Wcurr, m);
   if (!limit) {
@@ -255,7 +258,8 @@ patch_pushfluid_c(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Uprev,
 		  fld3d_t p_Ucurr, fld3d_t p_W, fld3d_t p_cmsv, fld3d_t p_ymask,
 		  fld3d_t p_zmask, int stage)
 {
-  fld3d_t p_B = fld3d_make_tmp(3, _BX);
+  static fld3d_t p_B;
+  fld3d_setup_tmp_compat(&p_B, 3, _BX);
   bool limit = stage != 0;
 
   if (limit) {

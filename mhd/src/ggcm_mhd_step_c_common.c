@@ -20,6 +20,8 @@
 
 #include "pde/pde_defs.h"
 
+#define OPT_TMP OPT_TMP_COMPAT
+
 // mhd options
 
 #define OPT_EQN OPT_EQN_MHD_SCONS

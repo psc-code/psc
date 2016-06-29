@@ -37,7 +37,8 @@ bcthy3f(mrc_fld_data_t s1, mrc_fld_data_t s2)
 static inline void
 calc_avg_dz_By(fld3d_t p_dB, fld3d_t p_B, int XX, int YY, int ZZ)
 {
-  fld3d_t p_tmp1 = fld3d_make_tmp(2, _TMP1);
+  static fld3d_t p_tmp1;
+  fld3d_setup_tmp_compat(&p_tmp1, 2, _TMP1);
 
   // d_z B_y, d_y B_z on x edges
   fld3d_foreach_stagger(i,j,k, 1, 2) {
@@ -155,8 +156,9 @@ bcthy3z_NL1(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W, fld3d_t p_
 	    fld3d_t p_rmask, fld3d_t p_resis, int XX, int YY, int ZZ)
 {
   const mrc_fld_data_t REPS = 1.e-10f;
+  static fld3d_t p_dB;
+  fld3d_setup_tmp_compat(&p_dB, 2, _TMP3);
   fld3d_t p_B = fld3d_make_view(p_U, BX);
-  fld3d_t p_dB = fld3d_make_tmp(2, _TMP3);
 
   calc_avg_dz_By(p_dB, p_B, XX, YY, ZZ);
 
@@ -191,8 +193,9 @@ static void
 bcthy3z_const(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W, fld3d_t p_resis, fld3d_t p_Jcc,
 	      int XX, int YY, int ZZ)
 {
+  static fld3d_t p_dB;
+  fld3d_setup_tmp_compat(&p_dB, 2, _TMP3);
   fld3d_t p_B = fld3d_make_view(p_U, BX);
-  fld3d_t p_dB = fld3d_make_tmp(2, _TMP3);
 
   calc_avg_dz_By(p_dB, p_B, XX, YY, ZZ);
 
