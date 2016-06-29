@@ -19,6 +19,7 @@
 #include "pde/pde_mhd_convert.c"
 #include "pde/pde_mhd_reconstruct.c"
 #include "pde/pde_mhd_riemann.c"
+#include "pde/pde_mhd_pushfluid.c"
 #include "pde/pde_mhd_push_ej.c"
 #include "pde/pde_mhd_rmaskn.c"
 #include "pde/pde_mhd_calc_resis.c"
@@ -284,22 +285,6 @@ patch_flux_corr(struct ggcm_mhd_step *step, fld3d_t p_F[3], fld3d_t p_U)
 }
 
 // ----------------------------------------------------------------------
-// patch_push_pp
-
-static void
-patch_push_pp(fld3d_t p_U, mrc_fld_data_t dt, fld3d_t p_W, fld3d_t p_zmask)
-{
-  mrc_fld_data_t dth = -.5f * dt;
-
-  fld3d_foreach(i,j,k, 0, 0) {
-    mrc_fld_data_t z = dth * F3S(p_zmask, 0, i,j,k);
-    F3S(p_U, RVX, i,j,k) += z * PDE_INV_DX(i) * (F3S(p_W, PP, i+di,j,k) - F3S(p_W, PP, i-di,j,k));
-    F3S(p_U, RVY, i,j,k) += z * PDE_INV_DY(j) * (F3S(p_W, PP, i,j+dj,k) - F3S(p_W, PP, i,j-dj,k));
-    F3S(p_U, RVZ, i,j,k) += z * PDE_INV_DZ(k) * (F3S(p_W, PP, i,j,k+dk) - F3S(p_W, PP, i,j,k-dk));
-  } fld3d_foreach_end;
-}
-
-// ----------------------------------------------------------------------
 // patch_enforce_rrmin_sc
 //
 // nudge rr and uu such that rr >= rrmin if needed
@@ -371,7 +356,7 @@ patch_pushstage_pt2(struct ggcm_mhd_step *step, fld3d_t p_Unext, mrc_fld_data_t 
   // update hydro quantities
   mhd_update_finite_volume(mhd, p_Unext, p_F, p_ymask, dt, 0, 0);
   // update momentum (grad p)
-  patch_push_pp(p_Unext, dt, p_Wcurr, p_zmask);
+  pushpp_c(p_Unext, p_Wcurr, p_zmask, dt);
   if (stage == 0) {
     patch_zmaskn_x(mhd, p_zmask, p_ymask, p_Ucurr, p_b0);
   }

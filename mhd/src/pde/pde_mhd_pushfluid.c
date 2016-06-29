@@ -244,13 +244,10 @@ pushpp_c(fld3d_t p_Unext, fld3d_t p_W, fld3d_t p_zmask, mrc_fld_data_t dt)
 {
   mrc_fld_data_t dth = -.5f * dt;
   fld3d_foreach(i,j,k, 0, 0) {
-    mrc_fld_data_t fpx = FD1X(i) * (F3S(p_W, PP, i+1,j,k) - F3S(p_W, PP, i-1,j,k));
-    mrc_fld_data_t fpy = FD1Y(j) * (F3S(p_W, PP, i,j+1,k) - F3S(p_W, PP, i,j-1,k));
-    mrc_fld_data_t fpz = FD1Z(k) * (F3S(p_W, PP, i,j,k+1) - F3S(p_W, PP, i,j,k-1));
     mrc_fld_data_t z = dth * F3S(p_zmask, 0, i,j,k);
-    F3S(p_Unext, RVX, i,j,k) += z * fpx;
-    F3S(p_Unext, RVY, i,j,k) += z * fpy;
-    F3S(p_Unext, RVZ, i,j,k) += z * fpz;
+    F3S(p_Unext, RVX, i,j,k) += z * FD1X(i) * (F3S(p_W, PP, i+di,j,k) - F3S(p_W, PP, i-di,j,k));
+    F3S(p_Unext, RVY, i,j,k) += z * FD1Y(j) * (F3S(p_W, PP, i,j+dj,k) - F3S(p_W, PP, i,j-dj,k));
+    F3S(p_Unext, RVZ, i,j,k) += z * FD1Z(k) * (F3S(p_W, PP, i,j,k+dk) - F3S(p_W, PP, i,j,k-dk));
   } fld3d_foreach_end;
 }
 
