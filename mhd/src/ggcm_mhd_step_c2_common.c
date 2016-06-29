@@ -105,18 +105,18 @@ ggcm_mhd_step_c2_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
 // patch_push
 
 static void
-patch_push(fld3d_t p_Unext, fld3d_t p_Uprev, fld3d_t p_Ucurr,
+patch_push(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Ucurr,
 	   fld3d_t p_W, fld3d_t p_cmsv,
 	   fld3d_t p_ymask, fld3d_t p_zmask,
-	   mrc_fld_data_t dt, int stage)
+	   int stage)
 {
   fld3d_t p_rmask = fld3d_make_tmp(1, _RMASK), p_resis = fld3d_make_tmp(1, _RESIS);
   fld3d_t p_Jcc = fld3d_make_tmp(3, _CURRX);
 
   patch_rmaskn(p_rmask, p_zmask);
-  patch_pushfluid(p_Unext, dt, p_Uprev, p_Ucurr, p_W,
+  patch_pushfluid(p_Unext, dt, p_Unext, p_Ucurr, p_W,
 		  p_cmsv, p_ymask, p_zmask, stage);
-  patch_pushfield(p_Unext, dt, p_Uprev, p_Ucurr, p_W,
+  patch_pushfield(p_Unext, dt, p_Unext, p_Ucurr, p_W,
 		  p_zmask, p_rmask, p_resis, p_Jcc, stage);
 }
 
@@ -124,51 +124,42 @@ patch_push(fld3d_t p_Unext, fld3d_t p_Uprev, fld3d_t p_Ucurr,
 // patch_pushstage
 
 static void
-patch_pushstage(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Ucurr, fld3d_t p_f, int stage)
+patch_pushstage(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Ucurr, fld3d_t p_ymask,
+		fld3d_t p_zmask, int stage)
 {
-  fld3d_t p_Uprev;
-  if (stage == 0) {
-    fld3d_setup_view(&p_Uprev, p_f, _RR1);
-  } else {
-    fld3d_setup_view(&p_Uprev, p_f, _RR1);
-  }
-  fld3d_t p_W     = fld3d_make_view(p_f, _RR);
-  fld3d_t p_cmsv  = fld3d_make_view(p_f, _CMSV);
-  fld3d_t p_ymask = fld3d_make_view(p_f, _YMASK);
-  fld3d_t p_zmask = fld3d_make_view(p_f, _ZMASK);
+  fld3d_t p_W     = fld3d_make_tmp(5, _RR);
+  fld3d_t p_cmsv  = fld3d_make_tmp(1, _CMSV);
 
   patch_primvar(p_W, p_Ucurr, p_cmsv);
-  if (stage == 1) {
-    patch_badval_checks_sc(p_Ucurr, p_W);
-  }
+  patch_badval_checks_sc(p_Ucurr, p_W); // FIXME, incorporate
 
   if (stage == 0) {
-    fld3d_t p_bcc;
-    fld3d_setup_view(&p_bcc, p_f, _BX);
+    fld3d_t p_bcc = fld3d_make_tmp(3, _BX);
     patch_primbb(p_bcc, p_Ucurr);
     patch_zmaskn(p_zmask, p_W, p_bcc, p_ymask);
   }
 
-  patch_push(p_Unext, p_Uprev, p_Ucurr, p_W, p_cmsv,
-	     p_ymask, p_zmask, dt, stage);
+  patch_push(p_Unext, dt, p_Ucurr, p_W, p_cmsv,
+	     p_ymask, p_zmask, stage);
 }
 
 // ----------------------------------------------------------------------
 // pushstage
 
 static void
-pushstage(struct mrc_fld *f_Unext, mrc_fld_data_t dt, struct mrc_fld *f_Ucurr, struct mrc_fld *x,
-	  int stage)
+pushstage(struct mrc_fld *f_Unext, mrc_fld_data_t dt, struct mrc_fld *f_Ucurr,
+	  struct mrc_fld *f_ymask, struct mrc_fld *f_zmask, int stage)
 {
-  fld3d_t p_f, p_Unext, p_Ucurr;
-  fld3d_setup(&p_f, x);
+  fld3d_t p_Unext, p_Ucurr, p_ymask, p_zmask;
   fld3d_setup(&p_Unext, f_Unext);
   fld3d_setup(&p_Ucurr, f_Ucurr);
+  fld3d_setup(&p_ymask, f_ymask);
+  fld3d_setup(&p_zmask, f_zmask);
 
   pde_for_each_patch(p) {
-    fld3d_t *patches[] = { &p_Unext, &p_Ucurr, &p_f, NULL };
+    fld3d_t *patches[] = { &p_Unext, &p_Ucurr, &p_ymask, &p_zmask, NULL };
     fld3d_get_list(p, patches);
-    patch_pushstage(p_Unext, dt, p_Ucurr, p_f, stage);
+    patch_pushstage(p_Unext, dt, p_Ucurr, p_ymask, p_zmask, stage);
     fld3d_put_list(p, patches);
   }
 }
@@ -180,26 +171,30 @@ static void
 ggcm_mhd_step_c2_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 {
   struct ggcm_mhd *mhd = step->mhd;
-
-  assert(x == mhd->fld);
-
-  // FIXME? It's not going to make a difference, but this is the
-  // time at the beginning of the whole step, rather than the time of the current state
-  s_mhd_time = mhd->time; 
-
+  struct mrc_fld *f_ymask = mhd->ymask;
+  struct mrc_fld *f_zmask = mrc_fld_make_view(x, _ZMASK, _ZMASK + 1);
   struct mrc_fld *f_U1 = mrc_fld_make_view(x, _RR1, _RR1 + 8);
   mrc_fld_dict_add_int(f_U1, "mhd_type", MT_SEMI_CONSERVATIVE);
   struct mrc_fld *f_U2 = mrc_fld_make_view(x, _RR2, _RR2 + 8);
   mrc_fld_dict_add_int(f_U2, "mhd_type", MT_SEMI_CONSERVATIVE);
 
-  ggcm_mhd_fill_ghosts(mhd, f_U1, 0, mhd->time);
-  pushstage(f_U2, .5f * mhd->dt, f_U1, x, 0);
+  // FIXME? It's not going to make a difference, but this is the
+  // time at the beginning of the whole step, rather than the time of the current state
+  s_mhd_time = mhd->time; 
 
+  // set f_U2 = f_U1
+  mrc_fld_copy(f_U2, f_U1);
+  // then advance f_U2 += .5f * dt * rhs(f_U1)
+  ggcm_mhd_fill_ghosts(mhd, f_U1, 0, mhd->time);
+  pushstage(f_U2, .5f * mhd->dt, f_U1, f_ymask, f_zmask, 0);
+
+  // f_U1 += dt * rhs(f_U2)
   ggcm_mhd_fill_ghosts(mhd, f_U2, 0, mhd->time + mhd->bndt);
-  pushstage(f_U1, mhd->dt, f_U2, x, 1);
+  pushstage(f_U1, mhd->dt, f_U2, f_ymask, f_zmask, 1);
 
   mrc_fld_destroy(f_U1);
   mrc_fld_destroy(f_U2);
+  mrc_fld_destroy(f_zmask);
 }
 
 // ----------------------------------------------------------------------
