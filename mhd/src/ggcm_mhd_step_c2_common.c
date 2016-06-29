@@ -1,8 +1,9 @@
 
+#undef HAVE_OPENGGCM_FORTRAN
+
 #include "ggcm_mhd_step_private.h"
 #include "ggcm_mhd_private.h"
 #include "ggcm_mhd_defs.h"
-#include "ggcm_mhd_defs_extra.h"
 #include "ggcm_mhd_diag_private.h"
 
 #include <string.h>
@@ -65,7 +66,7 @@ ggcm_mhd_step_c2_setup_flds(struct ggcm_mhd_step *step)
   mrc_fld_set_type(mhd->fld, FLD_TYPE);
   mrc_fld_set_param_int(mhd->fld, "nr_ghosts", 2);
   mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_SEMI_CONSERVATIVE);
-  mrc_fld_set_param_int(mhd->fld, "nr_comps", _NR_FLDS);
+  mrc_fld_set_param_int(mhd->fld, "nr_comps", 8);
 }
 
 // ----------------------------------------------------------------------
@@ -197,10 +198,9 @@ ggcm_mhd_step_c2_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   struct ggcm_mhd_step_c2 *sub = ggcm_mhd_step_c2(step);
   struct ggcm_mhd *mhd = step->mhd;
 
-  struct mrc_fld *f_ymask = mhd->ymask, *f_zmask = sub->f_zmask, *f_E = sub->f_E;
-  struct mrc_fld *f_U = mrc_fld_make_view(x, _RR1, _RR1 + 8);
-  mrc_fld_dict_add_int(f_U, "mhd_type", MT_SEMI_CONSERVATIVE);
+  struct mrc_fld *f_U = x;
   struct mrc_fld *f_Uhalf = sub->f_Uhalf;
+  struct mrc_fld *f_ymask = mhd->ymask, *f_zmask = sub->f_zmask, *f_E = sub->f_E;
 
   // FIXME? It's not going to make a difference, but this is the
   // time at the beginning of the whole step, rather than the time of the current state
@@ -215,8 +215,6 @@ ggcm_mhd_step_c2_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   // f_U += dt * rhs(f_Uhalf)
   ggcm_mhd_fill_ghosts(mhd, f_Uhalf, 0, mhd->time + mhd->bndt);
   pushstage(f_U, mhd->dt, f_Uhalf, f_ymask, f_zmask, f_E, 1);
-
-  mrc_fld_destroy(f_U);
 }
 
 // ----------------------------------------------------------------------
@@ -251,7 +249,9 @@ ggcm_mhd_step_c2_diag_item_zmask_run(struct ggcm_mhd_step *step,
 				    struct mrc_io *io, struct mrc_fld *f,
 				    int diag_type, float plane)
 {
-  ggcm_mhd_diag_c_write_one_field(io, f, _ZMASK, "zmask", 1., diag_type, plane);
+  struct ggcm_mhd_step_c2 *sub = ggcm_mhd_step_c2(step);
+
+  ggcm_mhd_diag_c_write_one_field(io, sub->f_zmask, 0, "zmask", 1., diag_type, plane);
 }
 
 // ----------------------------------------------------------------------
@@ -263,7 +263,9 @@ ggcm_mhd_step_c2_diag_item_rmask_run(struct ggcm_mhd_step *step,
 				    struct mrc_io *io, struct mrc_fld *f,
 				    int diag_type, float plane)
 {
-  ggcm_mhd_diag_c_write_one_field(io, f, _RMASK, "rmask", 1., diag_type, plane);
+  // rmask is only allocated temporarily and as one patch only, this
+  // would have to change if we want to output it
+  assert(0);
 }
 
 // ----------------------------------------------------------------------
