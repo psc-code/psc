@@ -1,4 +1,6 @@
 
+#undef HAVE_OPENGGCM_FORTRAN
+
 #include "ggcm_mhd_step_private.h"
 #include "ggcm_mhd_private.h"
 #include "ggcm_mhd_defs.h"
@@ -12,13 +14,13 @@
 
 #define OPT_EQN OPT_EQN_MHD_SCONS
 
-#include "pde/pde_setup.c"
-#include "pde/pde_mhd_setup.c"
+#include "pde/pde_mhd_compat.c"
 #include "pde/pde_mhd_line.c"
 #include "pde/pde_mhd_convert.c"
 #include "pde/pde_mhd_reconstruct.c"
 #include "pde/pde_mhd_divb_glm.c"
 #include "pde/pde_mhd_riemann.c"
+#include "pde/pde_mhd_calc_current.c"
 #include "pde/pde_mhd_stage.c"
 #include "pde/pde_mhd_get_dt.c"
 #include "pde/pde_mhd_badval_checks.c"
@@ -74,6 +76,7 @@ ggcm_mhd_step_c3_setup(struct ggcm_mhd_step *step)
   // FIXME, very hacky way of making the 1d state fields 5-component
   s_n_comps = 5;
   pde_mhd_setup(mhd);
+  pde_mhd_compat_setup(mhd);
 
   fld1d_state_setup(&l_U);
   fld1d_state_setup(&l_Ul);
@@ -288,49 +291,6 @@ patch_push_pp(fld3d_t p_U, mrc_fld_data_t dt, fld3d_t p_W, fld3d_t p_zmask)
     F3S(p_U, RVX, i,j,k) += z * PDE_INV_DX(i) * (F3S(p_W, PP, i+di,j,k) - F3S(p_W, PP, i-di,j,k));
     F3S(p_U, RVY, i,j,k) += z * PDE_INV_DY(j) * (F3S(p_W, PP, i,j+dj,k) - F3S(p_W, PP, i,j-dj,k));
     F3S(p_U, RVZ, i,j,k) += z * PDE_INV_DZ(k) * (F3S(p_W, PP, i,j,k+dk) - F3S(p_W, PP, i,j,k-dk));
-  } fld3d_foreach_end;
-}
-
-// ----------------------------------------------------------------------
-// patch_calc_current_ec
-//
-// edge centered current density
-
-static void
-patch_calc_current_ec(fld3d_t p_jec, fld3d_t p_U)
-{
-  fld3d_foreach(i,j,k, 1, 2) {
-    F3S(p_jec, 0, i,j,k) = ((F3S(p_U, BZ, i,j,k) - F3S(p_U, BZ, i,j-dj,k)) * PDE_INV_DYF(j) -
-			    (F3S(p_U, BY, i,j,k) - F3S(p_U, BY, i,j,k-dk)) * PDE_INV_DZF(k));
-    F3S(p_jec, 1, i,j,k) = ((F3S(p_U, BX, i,j,k) - F3S(p_U, BX, i,j,k-dk)) * PDE_INV_DZF(k) -
-			    (F3S(p_U, BZ, i,j,k) - F3S(p_U, BZ, i-di,j,k)) * PDE_INV_DXF(i));
-    F3S(p_jec, 2, i,j,k) = ((F3S(p_U, BY, i,j,k) - F3S(p_U, BY, i-di,j,k)) * PDE_INV_DXF(i) -
-			    (F3S(p_U, BX, i,j,k) - F3S(p_U, BX, i,j-dj,k)) * PDE_INV_DYF(j));
-  } fld3d_foreach_end;
-}
-
-// ----------------------------------------------------------------------
-// patch_calc_current_cc
-//
-// cell-centered current density
-
-static void
-patch_calc_current_cc(fld3d_t p_jcc, fld3d_t p_U, fld3d_t p_zmask)
-{ 
-  static fld3d_t p_jec;
-  if (!fld3d_is_setup(p_jec)) {
-    fld3d_setup_tmp(&p_jec, 3);
-  }
-  
-  // get j on edges
-  patch_calc_current_ec(p_jec, p_U);
-  
-  // then average to cell centers
-  fld3d_foreach(i,j,k, 2, 1) {
-    mrc_fld_data_t z = F3S(p_zmask, 0,  i,j,k);
-    F3S(p_jcc, 0, i,j,k) = z * EC_TO_CC(p_jec, 0, i,j,k);
-    F3S(p_jcc, 1, i,j,k) = z * EC_TO_CC(p_jec, 1, i,j,k);
-    F3S(p_jcc, 2, i,j,k) = z * EC_TO_CC(p_jec, 2, i,j,k);
   } fld3d_foreach_end;
 }
 
@@ -903,6 +863,8 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *f_U)
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
   struct mrc_fld *f_Uhalf = sub->f_Uhalf, *f_W = sub->f_W;
+
+  s_mhd_time = mhd->time; 
 
   // --- PREDICTOR
   // set U_half = U^n, then advance to n+1/2.
