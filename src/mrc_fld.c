@@ -468,7 +468,13 @@ void
 mrc_fld_copy(struct mrc_fld *fld_to, struct mrc_fld *fld_from)
 {
   assert(mrc_fld_same_shape(fld_to, fld_from));
-  mrc_vec_copy(fld_to->_vec, fld_from->_vec);
+  if (!fld_to->_view_base && !fld_from->_view_base) {
+    mrc_vec_copy(fld_to->_vec, fld_from->_vec);
+  } else {
+    struct mrc_fld_ops *ops = mrc_fld_ops(fld_to);
+    assert(ops && ops->copy);
+    ops->copy(fld_to, fld_from);
+  }
 }
 
 
@@ -1277,6 +1283,22 @@ mrc_fld_int_ddc_copy_to_buf(struct mrc_fld *fld, int mb, int me, int p,
     }									\
   }									\
 									\
+  static void								\
+  mrc_fld_##NAME##_copy(struct mrc_fld *fld_to, struct mrc_fld *fld_from) \
+  {									\
+    assert(!fld_to->_is_aos && !fld_from->_is_aos);			\
+    assert(strcmp(mrc_fld_type(fld_to), mrc_fld_type(fld_from)) == 0);	\
+									\
+    for (int p = 0; p < mrc_fld_nr_patches(fld_to); p++) {			\
+      mrc_fld_foreach(fld_to, ix,iy,iz, fld_to->_nr_ghosts, fld_to->_nr_ghosts) { \
+	for (int m = 0; m < fld_to->_nr_comps; m++) {			\
+	  MRC_FLD(fld_to, type, ix,iy,iz, m, p) = 			\
+	    MRC_FLD(fld_from, type, ix,iy,iz, m, p);			\
+	}								\
+      } mrc_fld_foreach_end;						\
+    }									\
+  }									\
+									\
   void mrc_fld_##NAME##_ddc_copy_from_buf(struct mrc_fld *, int, int,	\
 					  int, int[3], int[3], void *); \
   void mrc_fld_##NAME##_ddc_copy_to_buf(struct mrc_fld *, int, int,	\
@@ -1288,6 +1310,7 @@ mrc_fld_int_ddc_copy_to_buf(struct mrc_fld *fld, int mb, int me, int p,
     .create                = mrc_fld_##NAME##_create,			\
     .read                  = mrc_fld_##NAME##_read,			\
     .set                   = mrc_fld_##NAME##_set,			\
+    .copy                  = mrc_fld_##NAME##_copy,			\
     .ddc_copy_from_buf	   = mrc_fld_##NAME##_ddc_copy_from_buf,	\
     .ddc_copy_to_buf	   = mrc_fld_##NAME##_ddc_copy_to_buf,		\
     .vec_type              = #type,					\
