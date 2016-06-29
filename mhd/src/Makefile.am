@@ -86,10 +86,10 @@ libmhd_la_SOURCES = \
 	calc_semiconsv_rhs.c \
 	ggcm_mhd_get_fields.c \
 	ggcm_mhd_step_cweno.c \
-	ggcm_mhd_step_c_float.c \
-	ggcm_mhd_step_c_double.c \
-	ggcm_mhd_step_c2_float.c \
-	ggcm_mhd_step_c2_double.c \
+	ggcm_mhd_step_mhd_scons_float.c \
+	ggcm_mhd_step_mhd_scons_double.c \
+	ggcm_mhd_step_mhd_scons_ggcm_float.c \
+	ggcm_mhd_step_mhd_scons_ggcm_double.c \
 	ggcm_mhd_step_c3_float.c \
 	ggcm_mhd_step_c3_double.c \
 	ggcm_mhd_step_mhdcc_common.c \

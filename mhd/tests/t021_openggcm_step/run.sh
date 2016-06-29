@@ -4,7 +4,7 @@ mpirun -n 6 ./openggcm \
     --ggcm_mhd_dipole_type float \
     --ggcm_mhd_ic_type mirdip_float \
     --xggcm_mhd_crds_type fortran \
-    --ggcm_mhd_step_type c_float \
+    --ggcm_mhd_step_type mhd_scons_ggcm_float \
     --ggcm_mhd_satout_type none \
     --ggcm_mhd_bnd_type inoutflow_sc_ggcm_float \
     --ggcm_mhd_bnd_do_legacy \
