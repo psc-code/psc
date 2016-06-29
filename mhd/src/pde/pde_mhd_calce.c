@@ -198,8 +198,6 @@ calc_ve_x_B(mrc_fld_data_t ttmp[2], fld3d_t p_B, fld3d_t p_W,
   ttmp[1] = vbYY * vvZZ;
 }
 
-#undef BT
-
 static void
 bcthy3z_NL1(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
 	    fld3d_t p_rmask,
@@ -222,10 +220,10 @@ bcthy3z_NL1(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
     mrc_fld_data_t ttmp[2];
     calc_v_x_B(ttmp, p_B, p_W, p_dB, i, j, k, XX, YY, ZZ, dt);
 
-    mrc_fld_data_t t1m = F3S_YYP(p_U, BX + ZZ, i,j,k) - F3S(p_U, BX + ZZ, i,j,k);
-    mrc_fld_data_t t1p = mrc_fld_abs(F3S_YYP(p_U, BX + ZZ, i,j,k)) + mrc_fld_abs(F3S(p_U, BX + ZZ, i,j,k));
-    mrc_fld_data_t t2m = F3S_ZZP(p_U, BX + YY, i,j,k) - F3S(p_U, BX + YY, i,j,k);
-    mrc_fld_data_t t2p = mrc_fld_abs(F3S_ZZP(p_U, BX + YY, i,j,k)) + mrc_fld_abs(F3S(p_U, BX + YY, i,j,k));
+    mrc_fld_data_t t1m = F3S_YYP(p_B, ZZ, i,j,k) - F3S(p_B, ZZ, i,j,k);
+    mrc_fld_data_t t1p = mrc_fld_abs(F3S_YYP(p_B, ZZ, i,j,k)) + mrc_fld_abs(F3S(p_B, ZZ, i,j,k));
+    mrc_fld_data_t t2m = F3S_ZZP(p_B, YY, i,j,k) - F3S(p_B, YY, i,j,k);
+    mrc_fld_data_t t2p = mrc_fld_abs(F3S_ZZP(p_B, YY, i,j,k)) + mrc_fld_abs(F3S(p_B, YY, i,j,k));
     mrc_fld_data_t tp = t1p + t2p + REPS;
     mrc_fld_data_t tpi = diffmul / tp;
     mrc_fld_data_t d1 = sqr(t1m * tpi);
@@ -239,7 +237,6 @@ bcthy3z_NL1(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
   } fld3d_foreach_end;
 }
 
-#define _BT(p_U, d, i,j,k)  (F3S(p_U, BX+d, i,j,k) + (s_opt_background ? F3S(p_b0, d, i,j,k) : 0))
 static inline void
 patch_bcthy3z_NL1(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
 		  fld3d_t p_rmask, fld3d_t p_Jcc, fld3d_t p_b0,
@@ -266,10 +263,10 @@ patch_bcthy3z_NL1(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
     mrc_fld_data_t ttmp[2];
     calc_ve_x_B(ttmp, p_B, p_W, p_dB, p_Jcc, p_b0, i, j, k, XX, YY, ZZ, dt);
     
-    mrc_fld_data_t t1m = _BT(p_U, ZZ, i+ID(YY),j+JD(YY),k+KD(YY)) - _BT(p_U, ZZ, i,j,k);
-    mrc_fld_data_t t1p = fabsf(_BT(p_U, ZZ, i+ID(YY),j+JD(YY),k+KD(YY))) + fabsf(_BT(p_U, ZZ, i,j,k));
-    mrc_fld_data_t t2m = _BT(p_U, YY, i+ID(ZZ),j+JD(ZZ),k+KD(ZZ)) - _BT(p_U, YY, i,j,k);
-    mrc_fld_data_t t2p = fabsf(_BT(p_U, YY, i+ID(ZZ),j+JD(ZZ),k+KD(ZZ))) + fabsf(_BT(p_U, YY, i,j,k));
+    mrc_fld_data_t t1m = BT(p_B, ZZ, i+ID(YY),j+JD(YY),k+KD(YY)) - BT(p_B, ZZ, i,j,k);
+    mrc_fld_data_t t1p = fabsf(BT(p_B, ZZ, i+ID(YY),j+JD(YY),k+KD(YY))) + fabsf(BT(p_B, ZZ, i,j,k));
+    mrc_fld_data_t t2m = BT(p_B, YY, i+ID(ZZ),j+JD(ZZ),k+KD(ZZ)) - BT(p_B, YY, i,j,k);
+    mrc_fld_data_t t2p = fabsf(BT(p_B, YY, i+ID(ZZ),j+JD(ZZ),k+KD(ZZ))) + fabsf(BT(p_B, YY, i,j,k));
     mrc_fld_data_t tp = t1p + t2p + REPS;
     mrc_fld_data_t tpi = diffmul / tp;
     mrc_fld_data_t d1 = sqr(t1m * tpi);
@@ -283,7 +280,7 @@ patch_bcthy3z_NL1(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
   } fld3d_foreach_end;
 }
 
-#undef _BT
+#undef BT
 
 static void
 bcthy3z_const(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W, fld3d_t p_resis, fld3d_t p_Jcc,
