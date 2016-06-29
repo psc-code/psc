@@ -18,9 +18,9 @@
 #include "pde/pde_mhd_line.c"
 #include "pde/pde_mhd_convert.c"
 #include "pde/pde_mhd_reconstruct.c"
-#include "pde/pde_mhd_divb_glm.c"
 #include "pde/pde_mhd_riemann.c"
 #include "pde/pde_mhd_push_ej.c"
+#include "pde/pde_mhd_rmaskn.c"
 #include "pde/pde_mhd_stage.c"
 #include "pde/pde_mhd_get_dt.c"
 #include "pde/pde_mhd_badval_checks.c"
@@ -289,44 +289,6 @@ patch_push_pp(fld3d_t p_U, mrc_fld_data_t dt, fld3d_t p_W, fld3d_t p_zmask)
     F3S(p_U, RVX, i,j,k) += z * PDE_INV_DX(i) * (F3S(p_W, PP, i+di,j,k) - F3S(p_W, PP, i-di,j,k));
     F3S(p_U, RVY, i,j,k) += z * PDE_INV_DY(j) * (F3S(p_W, PP, i,j+dj,k) - F3S(p_W, PP, i,j-dj,k));
     F3S(p_U, RVZ, i,j,k) += z * PDE_INV_DZ(k) * (F3S(p_W, PP, i,j,k+dk) - F3S(p_W, PP, i,j,k-dk));
-  } fld3d_foreach_end;
-}
-
-// ----------------------------------------------------------------------
-// patch_rmaskn
-
-static void
-patch_rmaskn(struct ggcm_mhd *mhd, fld3d_t rmask, fld3d_t zmask, int p)
-{
-  mrc_fld_data_t diffco = mhd->par.diffco;
-  mrc_fld_data_t diff_swbnd = mhd->par.diff_swbnd;
-  int diff_obnd = mhd->par.diff_obnd;
-  int gdims[3];
-  mrc_domain_get_global_dims(mhd->domain, gdims);
-
-  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-
-  struct mrc_patch_info info;
-  mrc_domain_get_local_patch_info(mhd->domain, p, &info);
-
-  // _ZMASK not set at -2 ghost
-  fld3d_foreach(i,j,k, 1, 2) {
-    F3S(rmask, 0, i,j,k) = 0.f;
-    mrc_fld_data_t xxx = MRC_MCRDX(crds, i, p);
-    if (xxx < diff_swbnd)
-      continue;
-    if (j + info.off[1] < diff_obnd)
-      continue;
-    if (k + info.off[2] < diff_obnd)
-      continue;
-    if (i + info.off[0] >= gdims[0] - diff_obnd)
-      continue;
-    if (j + info.off[1] >= gdims[1] - diff_obnd)
-      continue;
-    if (k + info.off[2] >= gdims[2] - diff_obnd)
-      continue;
-
-    F3S(rmask, 0, i,j,k) = diffco * F3S(zmask, 0, i,j,k);
   } fld3d_foreach_end;
 }
 
@@ -677,7 +639,7 @@ patch_pushstage_pt2(struct ggcm_mhd_step *step, fld3d_t p_Unext, mrc_fld_data_t 
   patch_enforce_rrmin_sc(mhd, p_Unext, p);
 
   // find E
-  patch_rmaskn(mhd, p_rmask, p_zmask, p);
+  patch_rmaskn(p_rmask, p_zmask);
   patch_calce(step, p_E, dt, p_Ucurr, p_Wcurr, p_zmask, p_rmask, p_b0, p);
 }
 
@@ -909,6 +871,8 @@ static struct param ggcm_mhd_step_c3_descr[] = {
 								  opt_limiter_descr)            },
   { "riemann"            , VAR(opt.riemann)        , PARAM_SELECT(OPT_RIEMANN_RUSANOV,
 								  opt_riemann_descr)            },
+  { "mhd_rmaskn"         , VAR(opt.mhd_rmaskn)     , PARAM_SELECT(OPT_MHD_C,
+								  opt_mhd_descr)                },
   { "background"         , VAR(opt.background)     , PARAM_BOOL(false)                          },
   { "limiter_mc_beta"    , VAR(opt.limiter_mc_beta), PARAM_DOUBLE(2.)                           },
 
