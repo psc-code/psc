@@ -167,8 +167,8 @@ patch_pushstage(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Ucurr, fld3d_t p_y
     // calce...
     break;
   case MAGDIFFU_CONST:
-    patch_calc_resis_const(p_resis, p_Jcc, p_Ucurr, p_zmask);
-    calce_const_c(p_E, dt, p_Ucurr, p_W, p_resis, p_Jcc);
+    patch_calc_resis_const(p_resis, s_p_aux.Jcc, p_Ucurr, p_zmask);
+    calce_const_c(p_E, dt, p_Ucurr, p_W, p_resis);
     break;
   default:
     assert(0);

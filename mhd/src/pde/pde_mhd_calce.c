@@ -6,6 +6,7 @@
 
 static struct {
   fld3d_t b0;
+  fld3d_t Jcc; // needed for Hall and constant resistivity
 } s_p_aux;
 
 static inline float
@@ -102,22 +103,29 @@ calc_v_x_B(mrc_fld_data_t ttmp[2], fld3d_t p_B, fld3d_t p_W, fld3d_t p_dB,
 	   int i, int j, int k, int XX, int YY, int ZZ,
 	   mrc_fld_data_t dt)
 {
-  mrc_fld_data_t vbZZ;
 #if OPT_STAGGER == OPT_STAGGER_GGCM
   mrc_fld_data_t bd2[3] = { PDE_DX(i), PDE_DY(j), PDE_DZ(k) };
   mrc_fld_data_t bd2p[3] = { PDE_DX(i+1), PDE_DY(j+1), PDE_DZ(k+1) };
+#else
+  mrc_fld_data_t bd2m[3] = { PDE_DX(i-1), PDE_DY(j-1), PDE_DZ(k-1) };
+  mrc_fld_data_t bd2[3] = { PDE_DX(i), PDE_DY(j), PDE_DZ(k) };
+#endif
+
   // edge centered velocity
-  mrc_fld_data_t vvYY = CC_TO_EC(p_W, VX + YY, i,j,k, XX) /* - d_i * vcurrYY */;
+  mrc_fld_data_t vvYY = CC_TO_EC(p_W, VX + YY, i,j,k, XX);
+  if (s_opt_hall != OPT_HALL_NONE) {
+    mrc_fld_data_t vcurrYY = CC_TO_EC(s_p_aux.Jcc, YY, i, j, k, XX);
+    vvYY -= s_d_i * vcurrYY;
+  }
+
+  mrc_fld_data_t vbZZ;
+#if OPT_STAGGER == OPT_STAGGER_GGCM
   if (vvYY > 0.f) {
     vbZZ =     F3S(p_B, ZZ, i,j,k) +     F3S(p_dB, 1, i,j,k) * (bd2[YY]  - dt*vvYY);
   } else {
     vbZZ = F3S_YYP(p_B, ZZ, i,j,k) - F3S_YYP(p_dB, 1, i,j,k) * (bd2p[YY] + dt*vvYY);
   }
 #else
-  mrc_fld_data_t bd2m[3] = { PDE_DX(i-1), PDE_DY(j-1), PDE_DZ(k-1) };
-  mrc_fld_data_t bd2[3] = { PDE_DX(i), PDE_DY(j), PDE_DZ(k) };
-  // edge centered velocity
-  mrc_fld_data_t vvYY = CC_TO_EC(p_W, VX + YY, i,j,k, XX) /* - d_i * vcurrYY */;
   if (vvYY > 0.f) {
     vbZZ = F3S_YYM(p_B, ZZ, i,j,k) + F3S_YYM(p_dB, 1, i,j,k) * (bd2m[YY] - dt*vvYY);
   } else {
@@ -126,9 +134,14 @@ calc_v_x_B(mrc_fld_data_t ttmp[2], fld3d_t p_B, fld3d_t p_W, fld3d_t p_dB,
 #endif
   ttmp[0] = vbZZ * vvYY;
   
-  mrc_fld_data_t vbYY;
   // edge centered velocity
-  mrc_fld_data_t vvZZ = CC_TO_EC(p_W, VX + ZZ, i,j,k, XX) /* - d_i * vcurrZZ */;
+  mrc_fld_data_t vvZZ = CC_TO_EC(p_W, VX + ZZ, i,j,k, XX);
+  if (s_opt_hall != OPT_HALL_NONE) {
+    mrc_fld_data_t vcurrZZ = CC_TO_EC(s_p_aux.Jcc, ZZ, i, j, k, XX);
+    vvZZ -= s_d_i * vcurrZZ;
+  }
+
+  mrc_fld_data_t vbYY;
 #if OPT_STAGGER == OPT_STAGGER_GGCM
   if (vvZZ > 0.f) {
     vbYY =     F3S(p_B, YY, i,j,k) +     F3S(p_dB, 0, i,j,k) * (bd2[ZZ]  - dt*vvZZ);
@@ -149,20 +162,22 @@ calc_v_x_B(mrc_fld_data_t ttmp[2], fld3d_t p_B, fld3d_t p_W, fld3d_t p_dB,
 
 // ve = v - d_i J
 static inline void
-calc_ve_x_B_b0(mrc_fld_data_t ttmp[2], fld3d_t p_B, fld3d_t p_W,
-	       fld3d_t p_dB, fld3d_t p_Jcc,
+calc_ve_x_B_b0(mrc_fld_data_t ttmp[2], fld3d_t p_B, fld3d_t p_W, fld3d_t p_dB,
 	       int i, int j, int k, int XX, int YY, int ZZ,
 	       mrc_fld_data_t dt)
 {
-  mrc_fld_data_t vcurrYY = CC_TO_EC(p_Jcc, YY, i, j, k, XX);
-  mrc_fld_data_t vcurrZZ = CC_TO_EC(p_Jcc, ZZ, i, j, k, XX);
-  
   // FIXME, need to check index/shift
   mrc_fld_data_t bd2m[3] = { PDE_DX(i-1), PDE_DY(j-1), PDE_DZ(k-1) };
   mrc_fld_data_t bd2[3] = { PDE_DX(i), PDE_DY(j), PDE_DZ(k) };
-  mrc_fld_data_t vbZZ;
+
   // edge centered velocity
-  mrc_fld_data_t vvYY = CC_TO_EC(p_W, VX + YY, i,j,k, XX) - s_d_i * vcurrYY;
+  mrc_fld_data_t vvYY = CC_TO_EC(p_W, VX + YY, i,j,k, XX);
+  if (s_opt_hall != OPT_HALL_NONE) {
+    mrc_fld_data_t vcurrYY = CC_TO_EC(s_p_aux.Jcc, YY, i, j, k, XX);
+    vvYY -= s_d_i * vcurrYY;
+  }
+
+  mrc_fld_data_t vbZZ;
   if (vvYY > 0.f) {
     vbZZ = BT(p_B, ZZ, i-ID(YY),j-JD(YY),k-KD(YY)) + F3S_YYM(p_dB, 1, i,j,k) * (bd2m[YY] - dt*vvYY);
   } else {
@@ -172,7 +187,11 @@ calc_ve_x_B_b0(mrc_fld_data_t ttmp[2], fld3d_t p_B, fld3d_t p_W,
   
   mrc_fld_data_t vbYY;
   // edge centered velocity
-  mrc_fld_data_t vvZZ = CC_TO_EC(p_W, VX + ZZ, i,j,k, XX) - s_d_i * vcurrZZ;
+  mrc_fld_data_t vvZZ = CC_TO_EC(p_W, VX + ZZ, i,j,k, XX);
+  if (s_opt_hall != OPT_HALL_NONE) {
+    mrc_fld_data_t vcurrZZ = CC_TO_EC(s_p_aux.Jcc, ZZ, i, j, k, XX);
+    vvZZ -= s_d_i * vcurrZZ;
+  }
   if (vvZZ > 0.f) {
     vbYY = BT(p_B, YY, i-ID(ZZ),j-JD(ZZ),k-KD(ZZ)) + F3S_ZZM(p_dB, 0, i,j,k) * (bd2m[ZZ] - dt*vvZZ);
   } else {
@@ -222,7 +241,7 @@ patch_bcthy3z_NL1(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
 
 static inline void
 patch_bcthy3z_NL1_b0(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
-		     fld3d_t p_rmask, fld3d_t p_Jcc,
+		     fld3d_t p_rmask,
 		     int XX, int YY, int ZZ)
 {
   const mrc_fld_data_t REPS = 1.e-10f;
@@ -244,7 +263,7 @@ patch_bcthy3z_NL1_b0(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
   
   fld3d_foreach(i,j,k, 0, 1) {
     mrc_fld_data_t ttmp[2];
-    calc_ve_x_B_b0(ttmp, p_B, p_W, p_dB, p_Jcc, i, j, k, XX, YY, ZZ, dt);
+    calc_ve_x_B_b0(ttmp, p_B, p_W, p_dB, i, j, k, XX, YY, ZZ, dt);
     
     mrc_fld_data_t t1m = BT(p_B, ZZ, i+ID(YY),j+JD(YY),k+KD(YY)) - BT(p_B, ZZ, i,j,k);
     mrc_fld_data_t t1p = fabsf(BT(p_B, ZZ, i+ID(YY),j+JD(YY),k+KD(YY))) + fabsf(BT(p_B, ZZ, i,j,k));
@@ -267,7 +286,7 @@ patch_bcthy3z_NL1_b0(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
 
 static void
 patch_bcthy3z_const(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
-		    fld3d_t p_resis, fld3d_t p_Jcc,
+		    fld3d_t p_resis,
 		    int XX, int YY, int ZZ)
 {
   static fld3d_t p_dB;
@@ -281,7 +300,7 @@ patch_bcthy3z_const(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
     mrc_fld_data_t ttmp[2];
     calc_v_x_B(ttmp, p_B, p_W, p_dB, i, j, k, XX, YY, ZZ, dt);
 
-    mrc_fld_data_t vcurrXX = CC_TO_EC(p_Jcc, XX, i,j,k, XX);
+    mrc_fld_data_t vcurrXX = CC_TO_EC(s_p_aux.Jcc, XX, i,j,k, XX);
     mrc_fld_data_t vresis = CC_TO_EC(p_resis, 0, i,j,k, XX);
     F3S(p_E, XX, i,j,k) = ttmp[0] - ttmp[1] - vresis * vcurrXX;
   } fld3d_foreach_end;
@@ -289,7 +308,7 @@ patch_bcthy3z_const(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
 
 static inline void
 patch_bcthy3z_const_b0(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
-		       fld3d_t p_resis, fld3d_t p_Jcc,
+		       fld3d_t p_resis,
 		       int XX, int YY, int ZZ)
 {
   static fld3d_t p_dB;
@@ -304,9 +323,9 @@ patch_bcthy3z_const_b0(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
   // edge centered E = - ve x B (+ dissipation)
   fld3d_foreach(i,j,k, 0, 1) {
     mrc_fld_data_t ttmp[2];
-    calc_ve_x_B_b0(ttmp, p_B, p_W, p_dB, p_Jcc, i, j, k, XX, YY, ZZ, dt);
+    calc_ve_x_B_b0(ttmp, p_B, p_W, p_dB, i, j, k, XX, YY, ZZ, dt);
     
-    mrc_fld_data_t vcurrXX = CC_TO_EC(p_Jcc, XX, i,j,k, XX);
+    mrc_fld_data_t vcurrXX = CC_TO_EC(s_p_aux.Jcc, XX, i,j,k, XX);
     mrc_fld_data_t vresis = CC_TO_EC(p_resis, 0, i,j,k, XX);
     F3S(p_E, XX, i,j,k) = - (ttmp[0] - ttmp[1]) + vresis * vcurrXX;
   } fld3d_foreach_end;
@@ -322,12 +341,11 @@ calce_nl1_c(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
 }
 
 static void
-calce_const_c(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W, fld3d_t p_resis,
-	      fld3d_t p_Jcc)
+calce_const_c(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W, fld3d_t p_resis)
 {
-  patch_bcthy3z_const(p_E, dt, p_U, p_W, p_resis, p_Jcc, 0,1,2);
-  patch_bcthy3z_const(p_E, dt, p_U, p_W, p_resis, p_Jcc, 1,2,0);
-  patch_bcthy3z_const(p_E, dt, p_U, p_W, p_resis, p_Jcc, 2,0,1);
+  patch_bcthy3z_const(p_E, dt, p_U, p_W, p_resis, 0,1,2);
+  patch_bcthy3z_const(p_E, dt, p_U, p_W, p_resis, 1,2,0);
+  patch_bcthy3z_const(p_E, dt, p_U, p_W, p_resis, 2,0,1);
 }
 
 // ----------------------------------------------------------------------
@@ -338,11 +356,13 @@ patch_calce_c(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
 	      fld3d_t p_zmask, fld3d_t p_rmask, fld3d_t p_resis,
 	      fld3d_t p_Jcc)
 {
+  s_p_aux.Jcc = p_Jcc; // FIXME
+
   switch (s_magdiffu) {
   case MAGDIFFU_NL1:
     return calce_nl1_c(p_E, dt, p_U, p_W, p_rmask);
   case MAGDIFFU_CONST:
-    return calce_const_c(p_E, dt, p_U, p_W, p_resis, p_Jcc);
+    return calce_const_c(p_E, dt, p_U, p_W, p_resis);
   default:
     assert(0);
   }
