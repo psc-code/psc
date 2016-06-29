@@ -87,8 +87,7 @@ calc_avg_dz_By(fld3d_t p_dB, fld3d_t p_B, int XX, int YY, int ZZ)
 
 static inline void
 patch_calc_avg_dz_By(fld3d_t p_dB, fld3d_t p_B, fld3d_t p_b0,
-		     int XX, int YY, int ZZ,
-		     int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2)
+		     int XX, int YY, int ZZ)
 {
   static fld3d_t p_tmp1;
   fld3d_setup_tmp_compat(&p_tmp1, 2, _TMP1);
