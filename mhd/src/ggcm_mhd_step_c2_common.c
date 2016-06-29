@@ -173,27 +173,27 @@ ggcm_mhd_step_c2_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   struct ggcm_mhd *mhd = step->mhd;
   struct mrc_fld *f_ymask = mhd->ymask;
   struct mrc_fld *f_zmask = mrc_fld_make_view(x, _ZMASK, _ZMASK + 1);
-  struct mrc_fld *f_U1 = mrc_fld_make_view(x, _RR1, _RR1 + 8);
-  mrc_fld_dict_add_int(f_U1, "mhd_type", MT_SEMI_CONSERVATIVE);
-  struct mrc_fld *f_U2 = mrc_fld_make_view(x, _RR2, _RR2 + 8);
-  mrc_fld_dict_add_int(f_U2, "mhd_type", MT_SEMI_CONSERVATIVE);
+  struct mrc_fld *f_U = mrc_fld_make_view(x, _RR1, _RR1 + 8);
+  mrc_fld_dict_add_int(f_U, "mhd_type", MT_SEMI_CONSERVATIVE);
+  struct mrc_fld *f_Uhalf = mrc_fld_make_view(x, _RR2, _RR2 + 8);
+  mrc_fld_dict_add_int(f_Uhalf, "mhd_type", MT_SEMI_CONSERVATIVE);
 
   // FIXME? It's not going to make a difference, but this is the
   // time at the beginning of the whole step, rather than the time of the current state
   s_mhd_time = mhd->time; 
 
-  // set f_U2 = f_U1
-  mrc_fld_copy(f_U2, f_U1);
-  // then advance f_U2 += .5f * dt * rhs(f_U1)
-  ggcm_mhd_fill_ghosts(mhd, f_U1, 0, mhd->time);
-  pushstage(f_U2, .5f * mhd->dt, f_U1, f_ymask, f_zmask, 0);
+  // set f_Uhalf = f_U
+  mrc_fld_copy(f_Uhalf, f_U);
+  // then advance f_Uhalf += .5f * dt * rhs(f_U)
+  ggcm_mhd_fill_ghosts(mhd, f_U, 0, mhd->time);
+  pushstage(f_Uhalf, .5f * mhd->dt, f_U, f_ymask, f_zmask, 0);
 
-  // f_U1 += dt * rhs(f_U2)
-  ggcm_mhd_fill_ghosts(mhd, f_U2, 0, mhd->time + mhd->bndt);
-  pushstage(f_U1, mhd->dt, f_U2, f_ymask, f_zmask, 1);
+  // f_U += dt * rhs(f_Uhalf)
+  ggcm_mhd_fill_ghosts(mhd, f_Uhalf, 0, mhd->time + mhd->bndt);
+  pushstage(f_U, mhd->dt, f_Uhalf, f_ymask, f_zmask, 1);
 
-  mrc_fld_destroy(f_U1);
-  mrc_fld_destroy(f_U2);
+  mrc_fld_destroy(f_U);
+  mrc_fld_destroy(f_Uhalf);
   mrc_fld_destroy(f_zmask);
 }
 
