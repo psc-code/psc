@@ -115,8 +115,6 @@ patch_calc_avg_dz_By(fld3d_t p_dB, fld3d_t p_B, fld3d_t p_b0,
   } fld3d_foreach_end;
 }
 
-#undef BT
-
 static inline void
 calc_v_x_B(mrc_fld_data_t ttmp[2], fld3d_t p_B, fld3d_t p_W, fld3d_t p_dB,
 	   int i, int j, int k, int XX, int YY, int ZZ,
@@ -165,17 +163,13 @@ calc_v_x_B(mrc_fld_data_t ttmp[2], fld3d_t p_B, fld3d_t p_W, fld3d_t p_dB,
   ttmp[1] = vbYY * vvZZ;
 }
 
-#define _BT(p_U, d, i,j,k)  (F3S(p_U, BX+d, i,j,k) + (s_opt_background ? F3S(p_b0, d, i,j,k) : 0))
-
 // FIXME, repeated with b0
 
 // ve = v - d_i J
 static inline void
-calc_ve_x_B(mrc_fld_data_t ttmp[2], fld3d_t x, fld3d_t p_B, fld3d_t p_W,
+calc_ve_x_B(mrc_fld_data_t ttmp[2], fld3d_t p_B, fld3d_t p_W,
 	    fld3d_t p_dB, fld3d_t curr, fld3d_t p_b0,
-	    int i, int j, int k,
-	    int XX, int YY, int ZZ, int I, int J, int K,
-	    int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2,
+	    int i, int j, int k, int XX, int YY, int ZZ,
 	    mrc_fld_data_t dt)
 {
   mrc_fld_data_t vcurrYY = CC_TO_EC(curr, YY, i, j, k, XX);
@@ -188,11 +182,9 @@ calc_ve_x_B(mrc_fld_data_t ttmp[2], fld3d_t x, fld3d_t p_B, fld3d_t p_W,
   // edge centered velocity
   mrc_fld_data_t vvYY = CC_TO_EC(p_W, VX + YY, i,j,k, XX) - s_d_i * vcurrYY;
   if (vvYY > 0.f) {
-    vbZZ = _BT(x, ZZ, i-JX1,j-JY1,k-JZ1) +
-      F3S(p_dB, 1, i-JX1,j-JY1,k-JZ1) * (bd2m[YY] - dt*vvYY);
+    vbZZ = BT(p_B, ZZ, i-ID(YY),j-JD(YY),k-KD(YY)) + F3S_YYM(p_dB, 1, i,j,k) * (bd2m[YY] - dt*vvYY);
   } else {
-    vbZZ = _BT(x, ZZ, i,j,k) -
-      F3S(p_dB, 1, i,j,k) * (bd2[YY] + dt*vvYY);
+    vbZZ = BT(p_B, ZZ, i,j,k) - F3S(p_dB, 1, i,j,k) * (bd2[YY] + dt*vvYY);
   }
   ttmp[0] = vbZZ * vvYY;
   
@@ -200,16 +192,14 @@ calc_ve_x_B(mrc_fld_data_t ttmp[2], fld3d_t x, fld3d_t p_B, fld3d_t p_W,
   // edge centered velocity
   mrc_fld_data_t vvZZ = CC_TO_EC(p_W, VX + ZZ, i,j,k, XX) - s_d_i * vcurrZZ;
   if (vvZZ > 0.f) {
-    vbYY = _BT(x, YY, i-JX2,j-JY2,k-JZ2) +
-      F3S(p_dB, 0, i-JX2,j-JY2,k-JZ2) * (bd2m[ZZ] - dt*vvZZ);
+    vbYY = BT(p_B, YY, i-ID(ZZ),j-JD(ZZ),k-KD(ZZ)) + F3S_ZZM(p_dB, 0, i,j,k) * (bd2m[ZZ] - dt*vvZZ);
   } else {
-    vbYY = _BT(x, YY, i,j,k) -
-      F3S(p_dB, 0, i,j,k) * (bd2[ZZ] + dt*vvZZ);
+    vbYY = BT(p_B, YY, i,j,k) - F3S(p_dB, 0, i,j,k) * (bd2[ZZ] + dt*vvZZ);
   }
   ttmp[1] = vbYY * vvZZ;
 }
 
-#undef _BT
+#undef BT
 
 static void
 bcthy3z_NL1(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W, fld3d_t p_zmask,

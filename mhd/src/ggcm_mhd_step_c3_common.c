@@ -325,8 +325,7 @@ patch_bcthy3z_NL1(struct ggcm_mhd_step *step, int XX, int YY, int ZZ, int I, int
   
   fld3d_foreach(i,j,k, 0, 1) {
     mrc_fld_data_t ttmp[2];
-    calc_ve_x_B(ttmp, x, p_B, prim, p_dB, curr, p_b0, i, j, k, XX, YY, ZZ, I, J, K,
-		JX1, JY1, JZ1, JX2, JY2, JZ2, dt);
+    calc_ve_x_B(ttmp, p_B, prim, p_dB, curr, p_b0, i, j, k, XX, YY, ZZ, dt);
     
     mrc_fld_data_t t1m = _BT(x, ZZ, i+JX1,j+JY1,k+JZ1) - _BT(x, ZZ, i,j,k);
     mrc_fld_data_t t1p = fabsf(_BT(x, ZZ, i+JX1,j+JY1,k+JZ1)) + fabsf(_BT(x, ZZ, i,j,k));
@@ -365,8 +364,7 @@ patch_bcthy3z_const(int XX, int YY, int ZZ, int I, int J, int K,
   // edge centered E = - ve x B (+ dissipation)
   fld3d_foreach(i,j,k, 0, 1) {
     mrc_fld_data_t ttmp[2];
-    calc_ve_x_B(ttmp, x, p_B, prim, p_dB, curr, b0, i, j, k, XX, YY, ZZ, I, J, K,
-		JX1, JY1, JZ1, JX2, JY2, JZ2, dt);
+    calc_ve_x_B(ttmp, p_B, prim, p_dB, curr, b0, i, j, k, XX, YY, ZZ, dt);
     
     mrc_fld_data_t vcurrXX = CC_TO_EC(curr, XX, i,j,k, XX);
     mrc_fld_data_t vresis = CC_TO_EC(resis, 0, i,j,k, XX);
