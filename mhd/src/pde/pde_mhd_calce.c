@@ -121,15 +121,15 @@ calc_v_x_B(mrc_fld_data_t ttmp[2], fld3d_t p_B, fld3d_t p_W, fld3d_t p_dB,
   mrc_fld_data_t vbZZ;
 #if OPT_STAGGER == OPT_STAGGER_GGCM
   if (vvYY > 0.f) {
-    vbZZ =     F3S(p_B, ZZ, i,j,k) +     F3S(p_dB, 1, i,j,k) * (bd2[YY]  - dt*vvYY);
+    vbZZ =     BT(p_B, ZZ, i,j,k) +     F3S(p_dB, 1, i,j,k) * (bd2[YY]  - dt*vvYY);
   } else {
-    vbZZ = F3S_YYP(p_B, ZZ, i,j,k) - F3S_YYP(p_dB, 1, i,j,k) * (bd2p[YY] + dt*vvYY);
+    vbZZ = BT_YYP(p_B, ZZ, i,j,k) - F3S_YYP(p_dB, 1, i,j,k) * (bd2p[YY] + dt*vvYY);
   }
 #else
   if (vvYY > 0.f) {
-    vbZZ = F3S_YYM(p_B, ZZ, i,j,k) + F3S_YYM(p_dB, 1, i,j,k) * (bd2m[YY] - dt*vvYY);
+    vbZZ = BT_YYM(p_B, ZZ, i,j,k) + F3S_YYM(p_dB, 1, i,j,k) * (bd2m[YY] - dt*vvYY);
   } else {
-    vbZZ =     F3S(p_B, ZZ, i,j,k) -     F3S(p_dB, 1, i,j,k) * (bd2[YY]  + dt*vvYY);
+    vbZZ =     BT(p_B, ZZ, i,j,k) -     F3S(p_dB, 1, i,j,k) * (bd2[YY]  + dt*vvYY);
   }
 #endif
   ttmp[0] = vbZZ * vvYY;
@@ -144,15 +144,15 @@ calc_v_x_B(mrc_fld_data_t ttmp[2], fld3d_t p_B, fld3d_t p_W, fld3d_t p_dB,
   mrc_fld_data_t vbYY;
 #if OPT_STAGGER == OPT_STAGGER_GGCM
   if (vvZZ > 0.f) {
-    vbYY =     F3S(p_B, YY, i,j,k) +     F3S(p_dB, 0, i,j,k) * (bd2[ZZ]  - dt*vvZZ);
+    vbYY =     BT(p_B, YY, i,j,k) +     F3S(p_dB, 0, i,j,k) * (bd2[ZZ]  - dt*vvZZ);
   } else {
-    vbYY = F3S_ZZP(p_B, YY, i,j,k) - F3S_ZZP(p_dB, 0, i,j,k) * (bd2p[ZZ] + dt*vvZZ);
+    vbYY = BT_ZZP(p_B, YY, i,j,k) - F3S_ZZP(p_dB, 0, i,j,k) * (bd2p[ZZ] + dt*vvZZ);
   }
 #else
   if (vvZZ > 0.f) {
-    vbYY = F3S_ZZM(p_B, YY, i,j,k) + F3S_ZZM(p_dB, 0, i,j,k) * (bd2m[ZZ] - dt*vvZZ);
+    vbYY = BT_ZZM(p_B, YY, i,j,k) + F3S_ZZM(p_dB, 0, i,j,k) * (bd2m[ZZ] - dt*vvZZ);
   } else {
-    vbYY =     F3S(p_B, YY, i,j,k) -     F3S(p_dB, 0, i,j,k) * (bd2[ZZ]  + dt*vvZZ);
+    vbYY =     BT(p_B, YY, i,j,k) -     F3S(p_dB, 0, i,j,k) * (bd2[ZZ]  + dt*vvZZ);
   }
 #endif
   ttmp[1] = vbYY * vvZZ;
