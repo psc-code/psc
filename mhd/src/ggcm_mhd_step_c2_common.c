@@ -44,6 +44,8 @@
 
 struct ggcm_mhd_step_c2 {
   struct mhd_options opt;
+
+  struct mrc_fld *f_Uhalf;
 };
 
 #define ggcm_mhd_step_c2(step) mrc_to_subobj(step, struct ggcm_mhd_step_c2)
@@ -70,6 +72,7 @@ ggcm_mhd_step_c2_setup_flds(struct ggcm_mhd_step *step)
 static void
 ggcm_mhd_step_c2_setup(struct ggcm_mhd_step *step)
 {
+  struct ggcm_mhd_step_c2 *sub = ggcm_mhd_step_c2(step);
   struct ggcm_mhd *mhd = step->mhd;
 
   pde_setup(mhd->fld);
@@ -78,6 +81,9 @@ ggcm_mhd_step_c2_setup(struct ggcm_mhd_step *step)
 
   mhd->ymask = mrc_fld_make_view(mhd->fld, _YMASK, _YMASK + 1);
   mrc_fld_set(mhd->ymask, 1.);
+
+  sub->f_Uhalf = ggcm_mhd_get_3d_fld(mhd, 8);
+  mrc_fld_dict_add_int(sub->f_Uhalf, "mhd_type", MT_SEMI_CONSERVATIVE);
 
   ggcm_mhd_step_setup_member_objs_sub(step);
   ggcm_mhd_step_setup_super(step);
@@ -170,13 +176,14 @@ pushstage(struct mrc_fld *f_Unext, mrc_fld_data_t dt, struct mrc_fld *f_Ucurr,
 static void
 ggcm_mhd_step_c2_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 {
+  struct ggcm_mhd_step_c2 *sub = ggcm_mhd_step_c2(step);
   struct ggcm_mhd *mhd = step->mhd;
+
   struct mrc_fld *f_ymask = mhd->ymask;
   struct mrc_fld *f_zmask = mrc_fld_make_view(x, _ZMASK, _ZMASK + 1);
   struct mrc_fld *f_U = mrc_fld_make_view(x, _RR1, _RR1 + 8);
   mrc_fld_dict_add_int(f_U, "mhd_type", MT_SEMI_CONSERVATIVE);
-  struct mrc_fld *f_Uhalf = mrc_fld_make_view(x, _RR2, _RR2 + 8);
-  mrc_fld_dict_add_int(f_Uhalf, "mhd_type", MT_SEMI_CONSERVATIVE);
+  struct mrc_fld *f_Uhalf = sub->f_Uhalf;
 
   // FIXME? It's not going to make a difference, but this is the
   // time at the beginning of the whole step, rather than the time of the current state
@@ -193,7 +200,6 @@ ggcm_mhd_step_c2_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   pushstage(f_U, mhd->dt, f_Uhalf, f_ymask, f_zmask, 1);
 
   mrc_fld_destroy(f_U);
-  mrc_fld_destroy(f_Uhalf);
   mrc_fld_destroy(f_zmask);
 }
 
