@@ -56,6 +56,7 @@ extern struct ggcm_mhd_step_ops ggcm_mhd_step_mhd_scons_float_ops;
 extern struct ggcm_mhd_step_ops ggcm_mhd_step_mhd_scons_double_ops;
 extern struct ggcm_mhd_step_ops ggcm_mhd_step_mhd_scons_ggcm_float_ops;
 extern struct ggcm_mhd_step_ops ggcm_mhd_step_mhd_scons_ggcm_double_ops;
+extern struct ggcm_mhd_step_ops ggcm_mhd_step_c2_float_ops;
 extern struct ggcm_mhd_step_ops ggcm_mhd_step_c3_float_ops;
 extern struct ggcm_mhd_step_ops ggcm_mhd_step_c3_double_ops;
 extern struct ggcm_mhd_step_ops ggcm_mhd_step_vlct_ops;
