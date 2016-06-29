@@ -299,31 +299,6 @@ patch_push_pp(fld3d_t p_U, mrc_fld_data_t dt, fld3d_t p_W, fld3d_t p_zmask)
   } fld3d_foreach_end;
 }
 
-static inline void
-patch_bcthy3z_const(int XX, int YY, int ZZ,
-		    fld3d_t E, mrc_fld_data_t dt, fld3d_t x, fld3d_t prim,
-		    fld3d_t curr, fld3d_t resis, fld3d_t b0)
-{
-  static fld3d_t p_dB;
-  if (!fld3d_is_setup(p_dB)) {
-    fld3d_setup_tmp(&p_dB, 2);
-  }
-  fld3d_t p_B = fld3d_make_view(x, BX);
-  
-  // average dz_By
-  patch_calc_avg_dz_By(p_dB, p_B, b0, XX, YY, ZZ);
-  
-  // edge centered E = - ve x B (+ dissipation)
-  fld3d_foreach(i,j,k, 0, 1) {
-    mrc_fld_data_t ttmp[2];
-    calc_ve_x_B(ttmp, p_B, prim, p_dB, curr, b0, i, j, k, XX, YY, ZZ, dt);
-    
-    mrc_fld_data_t vcurrXX = CC_TO_EC(curr, XX, i,j,k, XX);
-    mrc_fld_data_t vresis = CC_TO_EC(resis, 0, i,j,k, XX);
-    F3S(E, XX, i,j,k) = - (ttmp[0] - ttmp[1]) + vresis * vcurrXX;
-  } fld3d_foreach_end;
-}
-
 static void
 xpatch_calce(struct ggcm_mhd_step *step, fld3d_t p_E, mrc_fld_data_t dt,
 	    fld3d_t p_U, fld3d_t p_W, fld3d_t p_zmask, fld3d_t p_rmask, fld3d_t p_b0,
@@ -353,9 +328,9 @@ xpatch_calce(struct ggcm_mhd_step *step, fld3d_t p_E, mrc_fld_data_t dt,
     patch_calc_current_cc(p_Jcc, p_U, p_zmask);
     patch_res1_const(p_resis);
 
-    patch_bcthy3z_const(0,1,2, p_E, dt, p_U, p_W, p_Jcc, p_resis, p_b0);
-    patch_bcthy3z_const(1,2,0, p_E, dt, p_U, p_W, p_Jcc, p_resis, p_b0);
-    patch_bcthy3z_const(2,0,1, p_E, dt, p_U, p_W, p_Jcc, p_resis, p_b0);
+    patch_bcthy3z_const(p_E, dt, p_U, p_W, p_resis, p_Jcc, p_b0, 0,1,2);
+    patch_bcthy3z_const(p_E, dt, p_U, p_W, p_resis, p_Jcc, p_b0, 1,2,0);
+    patch_bcthy3z_const(p_E, dt, p_U, p_W, p_resis, p_Jcc, p_b0, 2,0,1);
     break;
   }    
   default:

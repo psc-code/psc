@@ -283,7 +283,8 @@ patch_bcthy3z_NL1(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
 #undef BT
 
 static void
-bcthy3z_const(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W, fld3d_t p_resis, fld3d_t p_Jcc,
+bcthy3z_const(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
+	      fld3d_t p_resis, fld3d_t p_Jcc,
 	      int XX, int YY, int ZZ)
 {
   static fld3d_t p_dB;
@@ -300,6 +301,31 @@ bcthy3z_const(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W, fld3d_t 
     mrc_fld_data_t vcurrXX = CC_TO_EC(p_Jcc, XX, i,j,k, XX);
     mrc_fld_data_t vresis = CC_TO_EC(p_resis, 0, i,j,k, XX);
     F3S(p_E, XX, i,j,k) = ttmp[0] - ttmp[1] - vresis * vcurrXX;
+  } fld3d_foreach_end;
+}
+
+static inline void
+patch_bcthy3z_const(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
+		    fld3d_t p_resis, fld3d_t p_Jcc, fld3d_t p_b0,
+		    int XX, int YY, int ZZ)
+{
+  static fld3d_t p_dB;
+  if (!fld3d_is_setup(p_dB)) {
+    fld3d_setup_tmp(&p_dB, 2);
+  }
+  fld3d_t p_B = fld3d_make_view(p_U, BX);
+  
+  // average dz_By
+  patch_calc_avg_dz_By(p_dB, p_B, p_b0, XX, YY, ZZ);
+  
+  // edge centered E = - ve x B (+ dissipation)
+  fld3d_foreach(i,j,k, 0, 1) {
+    mrc_fld_data_t ttmp[2];
+    calc_ve_x_B(ttmp, p_B, p_W, p_dB, p_Jcc, p_b0, i, j, k, XX, YY, ZZ, dt);
+    
+    mrc_fld_data_t vcurrXX = CC_TO_EC(p_Jcc, XX, i,j,k, XX);
+    mrc_fld_data_t vresis = CC_TO_EC(p_resis, 0, i,j,k, XX);
+    F3S(p_E, XX, i,j,k) = - (ttmp[0] - ttmp[1]) + vresis * vcurrXX;
   } fld3d_foreach_end;
 }
 
