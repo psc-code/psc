@@ -27,13 +27,6 @@
 
 #define _BT(p_U, d, i,j,k)  (F3S(p_U, BX+d, i,j,k) + (s_opt_background ? F3S(p_b0, d, i,j,k) : 0))
 
-#define _CC_TO_EC(f, m, i,j,k, I,J,K)			\
-  ({							\
-    (.25f * (F3S(f, m, i-di*I,j-dj*J,k-dk*K) +		\
-	     F3S(f, m, i-di*I,j     ,k     ) +		\
-	     F3S(f, m, i     ,j-dj*J,k     ) +		\
-	     F3S(f, m, i     ,j     ,k-dk*K)));})
-
 static int s_opt_enforce_rrmin;
 
 // ======================================================================
@@ -524,15 +517,15 @@ calc_ve_x_B(mrc_fld_data_t ttmp[2], fld3d_t x, fld3d_t prim,
 	    int JX1, int JY1, int JZ1, int JX2, int JY2, int JZ2,
 	    mrc_fld_data_t dt)
 {
-  mrc_fld_data_t vcurrYY = _CC_TO_EC(curr, YY, i, j, k, I, J, K);
-  mrc_fld_data_t vcurrZZ = _CC_TO_EC(curr, ZZ, i, j, k, I, J, K);
+  mrc_fld_data_t vcurrYY = CC_TO_EC(curr, YY, i, j, k, XX);
+  mrc_fld_data_t vcurrZZ = CC_TO_EC(curr, ZZ, i, j, k, XX);
   
   // FIXME, need to check index/shift
   mrc_fld_data_t bd2m[3] = { PDE_DX(i-1), PDE_DY(j-1), PDE_DZ(k-1) };
   mrc_fld_data_t bd2[3] = { PDE_DX(i), PDE_DY(j), PDE_DZ(k) };
   mrc_fld_data_t vbZZ;
   // edge centered velocity
-  mrc_fld_data_t vvYY = _CC_TO_EC(prim, VX + YY, i,j,k, I,J,K) - s_d_i * vcurrYY;
+  mrc_fld_data_t vvYY = CC_TO_EC(prim, VX + YY, i,j,k, XX) - s_d_i * vcurrYY;
   if (vvYY > 0.f) {
     vbZZ = _BT(x, ZZ, i-JX1,j-JY1,k-JZ1) +
       F3S(tmp, 3, i-JX1,j-JY1,k-JZ1) * (bd2m[YY] - dt*vvYY);
@@ -544,7 +537,7 @@ calc_ve_x_B(mrc_fld_data_t ttmp[2], fld3d_t x, fld3d_t prim,
   
   mrc_fld_data_t vbYY;
   // edge centered velocity
-  mrc_fld_data_t vvZZ = _CC_TO_EC(prim, VX + ZZ, i,j,k, I,J,K) - s_d_i * vcurrZZ;
+  mrc_fld_data_t vvZZ = CC_TO_EC(prim, VX + ZZ, i,j,k, XX) - s_d_i * vcurrZZ;
   if (vvZZ > 0.f) {
     vbYY = _BT(x, YY, i-JX2,j-JY2,k-JZ2) +
       F3S(tmp, 2, i-JX2,j-JY2,k-JZ2) * (bd2m[ZZ] - dt*vvZZ);
@@ -619,8 +612,8 @@ patch_bcthy3z_const(int XX, int YY, int ZZ, int I, int J, int K,
     calc_ve_x_B(ttmp, x, prim, curr, tmp, b0, i, j, k, XX, YY, ZZ, I, J, K,
 		JX1, JY1, JZ1, JX2, JY2, JZ2, dt);
     
-    mrc_fld_data_t vcurrXX = _CC_TO_EC(curr, XX, i,j,k, I,J,K);
-    mrc_fld_data_t vresis = _CC_TO_EC(resis, 0, i,j,k, I,J,K);
+    mrc_fld_data_t vcurrXX = CC_TO_EC(curr, XX, i,j,k, XX);
+    mrc_fld_data_t vresis = CC_TO_EC(resis, 0, i,j,k, XX);
     F3S(E, XX, i,j,k) = - (ttmp[0] - ttmp[1]) + vresis * vcurrXX;
   } fld3d_foreach_end;
 }
