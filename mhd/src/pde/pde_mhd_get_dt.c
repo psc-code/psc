@@ -95,25 +95,27 @@ patch_get_dt_scons(fld3d_t p_U, fld3d_t p_W, fld3d_t p_ymask,
 // pde_mhd_get_dt_scons
 
 static mrc_fld_data_t _mrc_unused
-pde_mhd_get_dt_scons(struct ggcm_mhd *mhd, struct mrc_fld *x)
+pde_mhd_get_dt_scons(struct ggcm_mhd *mhd, struct mrc_fld *f_U, struct mrc_fld *f_ymask)
 {
-  fld3d_t p_f;
-  fld3d_setup(&p_f, x);
+  fld3d_t p_U, p_ymask;
+  fld3d_setup(&p_U    , f_U    );
+  fld3d_setup(&p_ymask, f_ymask);
+
+  static fld3d_t p_W, p_cmsv, p_bcc, p_zmask;
+  fld3d_setup_tmp_compat(&p_W    , 5, _RR);
+  fld3d_setup_tmp_compat(&p_cmsv , 1, _CMSV);
+  fld3d_setup_tmp_compat(&p_bcc  , 3, _BX);
+  fld3d_setup_tmp_compat(&p_zmask, 1, _ZMASK);
 
   mrc_fld_data_t dt = 1e10f;
   pde_for_each_patch(p) {
-    fld3d_get(&p_f, p);
-    fld3d_t p_W, p_U, p_cmsv, p_bcc, p_ymask, p_zmask;
-    fld3d_setup_view(&p_W    , p_f, _RR);
-    fld3d_setup_view(&p_U    , p_f, _RR1);
-    fld3d_setup_view(&p_cmsv , p_f, _CMSV);
-    fld3d_setup_view(&p_bcc  , p_f, _BX);
-    fld3d_setup_view(&p_ymask, p_f, _YMASK);
-    fld3d_setup_view(&p_zmask, p_f, _ZMASK);
+    fld3d_get(&p_U    , p);
+    fld3d_get(&p_ymask, p);
 
     dt = mrc_fld_min(dt, patch_get_dt_scons(p_U, p_W, p_ymask, p_cmsv, p_bcc, p_zmask));
 
-    fld3d_put(&p_f, p);
+    fld3d_put(&p_U    , p);
+    fld3d_put(&p_ymask, p);
   }
   mrc_fld_data_t dtn;
   MPI_Allreduce(&dt, &dtn, 1, MPI_MRC_FLD_DATA_T, MPI_MIN, ggcm_mhd_comm(mhd));
