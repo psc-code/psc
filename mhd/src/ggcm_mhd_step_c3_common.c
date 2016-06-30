@@ -31,8 +31,6 @@
 
 //FIXME, when using hydro_rusanov / no pushpp, things go wrong when > timelo
 
-static int s_opt_enforce_rrmin;
-
 // ======================================================================
 // ggcm_mhd_step subclass "c3"
 
@@ -46,8 +44,6 @@ struct ggcm_mhd_step_c3 {
   struct mrc_fld *f_Uhalf;
   struct mrc_fld *f_F[3];
   struct mrc_fld *f_E;
-
-  bool enforce_rrmin;
 };
 
 #define ggcm_mhd_step_c3(step) mrc_to_subobj(step, struct ggcm_mhd_step_c3)
@@ -138,7 +134,6 @@ ggcm_mhd_step_c3_setup_flds(struct ggcm_mhd_step *step)
   struct ggcm_mhd *mhd = step->mhd;
 
   pde_mhd_set_options(mhd, &sub->opt);
-  s_opt_enforce_rrmin = sub->enforce_rrmin;
 
   mrc_fld_set_type(mhd->fld, FLD_TYPE);
   mrc_fld_set_param_int(mhd->fld, "nr_ghosts", 2);
@@ -285,44 +280,6 @@ patch_flux_corr(struct ggcm_mhd_step *step, fld3d_t p_F[3], fld3d_t p_U)
 }
 
 // ----------------------------------------------------------------------
-// patch_enforce_rrmin_sc
-//
-// nudge rr and uu such that rr >= rrmin if needed
-
-static void
-patch_enforce_rrmin_sc(struct ggcm_mhd *mhd, fld3d_t p_U, int p)
-{
-  if (!s_opt_enforce_rrmin) {
-    return;
-  }
-
-  mrc_fld_data_t rrmin = mhd->par.rrmin / mhd->rrnorm;
-  mrc_fld_data_t gamma_m1 = s_gamma - 1.f;
-  
-  fld3d_foreach(i,j,k, 0, 0) {
-    mrc_fld_data_t rr = F3S(p_U, RR, i,j,k);
-    if (rr < rrmin) {
-      // get pressure
-      mrc_fld_data_t rrvv = (sqr(F3S(p_U, RVX, i,j,k)) +
-			     sqr(F3S(p_U, RVY, i,j,k)) +
-			     sqr(F3S(p_U, RVZ, i,j,k)));
-      mrc_fld_data_t uu = F3S(p_U, UU, i,j,k);
-      mrc_fld_data_t pp = gamma_m1 * (uu - .5f * rrvv / rr);
-      
-      // set new values using rrmin
-      mrc_fld_data_t new_rr = rrmin;
-      mrc_fld_data_t new_uu = pp / gamma_m1 + .5f * rrvv / new_rr;
-      F3S(p_U, RR, i,j,k) = new_rr;
-      F3S(p_U, UU, i,j,k) = new_uu;
-      
-      mprintf("!! Note: enforcing min density at (x=%g y=%g z=%g): "
-	      "rr %lg -> %lg, uu %lg -> %lg\n",
-	      PDE_CRDX_CC(i), PDE_CRDY_CC(j), PDE_CRDZ_CC(k), rr, new_rr, uu, new_uu);
-    }
-  } fld3d_foreach_end;
-}
-
-// ----------------------------------------------------------------------
 // patch_pushstage_pt1
 
 static void
@@ -362,8 +319,6 @@ patch_pushstage_pt2(struct ggcm_mhd_step *step, fld3d_t p_Unext, mrc_fld_data_t 
   }
   // update momentum (J x B) and energy
   patch_push_ej_b0(p_Unext, dt, p_Ucurr, p_Wcurr, p_zmask, p_b0);
-  // enforce rrmin
-  patch_enforce_rrmin_sc(mhd, p_Unext, p);
 
   // find E
   patch_rmaskn_c(p_rmask, p_zmask);
@@ -601,8 +556,6 @@ static struct param ggcm_mhd_step_c3_descr[] = {
 								  opt_riemann_descr)            },
   { "background"         , VAR(opt.background)     , PARAM_BOOL(false)                          },
   { "limiter_mc_beta"    , VAR(opt.limiter_mc_beta), PARAM_DOUBLE(2.)                           },
-
-  { "enforce_rrmin"      , VAR(enforce_rrmin)      , PARAM_BOOL(false)                          },
   
   {},
 };
