@@ -18,8 +18,7 @@ patch_get_dt_scons_c(fld3d_t p_U, fld3d_t p_W, fld3d_t p_ymask,
 		     fld3d_t p_cmsv, fld3d_t p_bcc, fld3d_t p_zmask)
 {
   patch_primvar(p_W, p_U, p_cmsv);
-  patch_primbb(p_bcc, p_U);
-  patch_zmaskn(p_zmask, p_W, p_bcc, p_ymask);
+  patch_calc_zmask(p_zmask, p_U, p_ymask);
 
   mrc_fld_data_t splim = s_speedlimit_code;
   mrc_fld_data_t eps   = 1e-9f;

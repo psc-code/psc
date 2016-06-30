@@ -2,6 +2,8 @@
 #ifndef PDE_MHD_ZMASKN_C
 #define PDE_MHD_ZMASKN_C
 
+#include "pde/pde_mhd_primbb.c"
+
 // ----------------------------------------------------------------------
 // patch_zmaskn_c
 
@@ -80,6 +82,23 @@ patch_zmaskn(fld3d_t p_zmask, fld3d_t p_W, fld3d_t p_bcc, fld3d_t p_ymask)
   } else {
     assert(0);
   }
+}
+
+// ----------------------------------------------------------------------
+// patch_calc_zmask
+//
+// like zmaskn(), but includes preparation step (primbb)
+
+static void _mrc_unused
+patch_calc_zmask(fld3d_t p_zmask, fld3d_t p_U, fld3d_t p_ymask)
+{
+  static fld3d_t p_bcc;
+  fld3d_setup_tmp_compat(&p_bcc, 3, _BX);
+
+  patch_primbb(p_bcc, p_U);
+  // we kinda should be passing p_W rather than p_U to zmaskn(),
+  // but since we only access RR, either works
+  patch_zmaskn(p_zmask, p_U, p_bcc, p_ymask);
 }
 
 #endif

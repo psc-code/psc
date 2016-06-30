@@ -93,3 +93,22 @@ fld3d_put_list(int p, fld3d_t *list[])
     fld3d_put(*f, p);
   }
 }
+
+#if OPT_TMP == OPT_TMP_COMPAT
+
+#define fld3d_setup_tmp_compat(p_tmp, n_comps, m) do {	\
+    if (!(p_tmp)->arr_off) {				\
+      fld3d_setup_view(p_tmp, s_p_f, m);		\
+    }							\
+  } while (0)
+
+#else
+
+#define fld3d_setup_tmp_compat(p_tmp, n_comps, m) do {	\
+    if (!(p_tmp)->arr_off) {				\
+      fld3d_setup_tmp(p_tmp, n_comps);			\
+    }							\
+  } while (0)
+
+#endif
+

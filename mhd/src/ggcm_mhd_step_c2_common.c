@@ -132,10 +132,7 @@ patch_pushstage(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Ucurr, fld3d_t p_y
   patch_badval_checks_sc(p_Ucurr, p_W); // FIXME, incorporate
 
   if (stage == 0) {
-    static fld3d_t p_bcc;
-    fld3d_setup_tmp_compat(&p_bcc, 3, _BX);
-    patch_primbb(p_bcc, p_Ucurr);
-    patch_zmaskn(p_zmask, p_W, p_bcc, p_ymask);
+    patch_calc_zmask(p_zmask, p_Ucurr, p_ymask);
   }
 
   patch_rmaskn(p_rmask, p_zmask);
