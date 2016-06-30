@@ -145,11 +145,10 @@ ggcm_mhd_step_c3_setup_flds(struct ggcm_mhd_step *step)
 // patch_zmaskn_b0
 
 static void
-patch_zmaskn_b0(struct ggcm_mhd *mhd, fld3d_t p_zmask, fld3d_t p_ymask,
-	       fld3d_t p_U, fld3d_t p_b0)
+patch_zmaskn_b0(fld3d_t p_zmask, fld3d_t p_ymask, fld3d_t p_U)
 {
-  mrc_fld_data_t va02i = 1.f / sqr(mhd->par.speedlimit / mhd->vvnorm);
-  mrc_fld_data_t eps   = 1e-15f;
+  mrc_fld_data_t va02i = 1.f / sqr(s_speedlimit_code);
+  mrc_fld_data_t eps = 1e-15f;
 
   fld3d_t p_B = fld3d_make_view(p_U, BX);
 
@@ -310,11 +309,12 @@ patch_pushstage_pt2(struct ggcm_mhd_step *step, fld3d_t p_Unext, mrc_fld_data_t 
 
   // update hydro quantities
   mhd_update_finite_volume(mhd, p_Unext, p_F, p_ymask, dt, 0, 0);
+
+  if (stage == 0) {
+    patch_zmaskn_b0(p_zmask, p_ymask, p_Ucurr);
+  }
   // update momentum (grad p)
   pushpp_c(p_Unext, p_Wcurr, p_zmask, dt);
-  if (stage == 0) {
-    patch_zmaskn_b0(mhd, p_zmask, p_ymask, p_Ucurr, p_b0);
-  }
   // update momentum (J x B) and energy
   patch_push_ej_b0(p_Unext, dt, p_Ucurr, p_Wcurr, p_zmask, p_b0);
 
@@ -413,7 +413,7 @@ ggcm_mhd_step_c3_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
       fld3d_get(&p_b0, p);
     }
     
-    patch_zmaskn_b0(mhd, p_zmask, p_ymask, p_U, p_b0);
+    patch_zmaskn_b0(p_zmask, p_ymask, p_U);
     
     fld3d_put_list(p, zmaskn_patches);
     if (s_opt_background) {
@@ -482,7 +482,7 @@ ggcm_mhd_step_c3_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
     }
 
     patch_prim_from_cons(p_W, p_U, 2);
-    patch_zmaskn_b0(mhd, p_zmask, p_ymask, p_U, p_b0); // FIXME, name conflict
+    patch_zmaskn_b0(p_zmask, p_ymask, p_U); // FIXME, name conflict
     patch_calc_e(p_E, mhd->dt, p_U, p_W, p_zmask, p_rmask);
 
     fld3d_put_list(p, get_e_ec_patches);
