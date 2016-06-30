@@ -14,11 +14,17 @@
 // patch_get_dt_scons_c
 
 static mrc_fld_data_t
-patch_get_dt_scons_c(fld3d_t p_U, fld3d_t p_W, fld3d_t p_ymask,
-		     fld3d_t p_cmsv, fld3d_t p_bcc, fld3d_t p_zmask)
+patch_get_dt_scons_c(fld3d_t p_U, fld3d_t p_ymask)
 {
+  static fld3d_t p_W, p_cmsv, p_bcc, p_zmask;
+  fld3d_setup_tmp_compat(&p_W    , 5, _RR);
+  fld3d_setup_tmp_compat(&p_cmsv , 1, _CMSV);
+  fld3d_setup_tmp_compat(&p_bcc  , 3, _BX);
+  fld3d_setup_tmp_compat(&p_zmask, 1, _ZMASK);
+
   patch_primvar(p_W, p_U, p_cmsv);
-  patch_calc_zmask(p_zmask, p_U, p_ymask);
+  patch_primbb(p_bcc, p_U);
+  patch_zmaskn(p_zmask, p_W, p_bcc, p_ymask);
 
   mrc_fld_data_t splim = s_speedlimit_code;
   mrc_fld_data_t eps   = 1e-9f;
@@ -56,9 +62,14 @@ void newstep_F77(real *pp, real *rr, real *vx, real *vy, real *vz,
 		 real *bx, real *by, real *bz, real *zmask, real *dtn);
 
 static mrc_fld_data_t
-patch_get_dt_scons_fortran(fld3d_t p_U, fld3d_t p_W, fld3d_t p_ymask,
-			   fld3d_t p_cmsv, fld3d_t p_bcc, fld3d_t p_zmask)
+patch_get_dt_scons_fortran(fld3d_t p_U, fld3d_t p_ymask)
 {
+  static fld3d_t p_W, p_cmsv, p_bcc, p_zmask;
+  fld3d_setup_tmp_compat(&p_W    , 5, _RR);
+  fld3d_setup_tmp_compat(&p_cmsv , 1, _CMSV);
+  fld3d_setup_tmp_compat(&p_bcc  , 3, _BX);
+  fld3d_setup_tmp_compat(&p_zmask, 1, _ZMASK);
+
   patch_primvar(p_W, p_U, p_cmsv);
   patch_primbb(p_bcc, p_U);
   patch_zmaskn(p_zmask, p_W, p_bcc, p_ymask);
@@ -76,14 +87,13 @@ patch_get_dt_scons_fortran(fld3d_t p_U, fld3d_t p_W, fld3d_t p_ymask,
 // patch_get_dt_scons
 
 static mrc_fld_data_t
-patch_get_dt_scons(fld3d_t p_U, fld3d_t p_W, fld3d_t p_ymask,
-		   fld3d_t p_cmsv, fld3d_t p_bcc, fld3d_t p_zmask)
+patch_get_dt_scons(fld3d_t p_U, fld3d_t p_ymask)
 {
   if (s_opt_mhd_newstep == OPT_MHD_C) {
-    return patch_get_dt_scons_c(p_U, p_W, p_ymask, p_cmsv, p_bcc, p_zmask);
+    return patch_get_dt_scons_c(p_U, p_ymask);
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
   } else if (s_opt_mhd_newstep == OPT_MHD_FORTRAN) {
-    return patch_get_dt_scons_fortran(p_U, p_W, p_ymask, p_cmsv, p_bcc, p_zmask);
+    return patch_get_dt_scons_fortran(p_U, p_ymask);
 #endif
   } else {
     assert(0);
@@ -100,18 +110,12 @@ pde_mhd_get_dt_scons(struct ggcm_mhd *mhd, struct mrc_fld *f_U, struct mrc_fld *
   fld3d_setup(&p_U    , f_U    );
   fld3d_setup(&p_ymask, f_ymask);
 
-  static fld3d_t p_W, p_cmsv, p_bcc, p_zmask;
-  fld3d_setup_tmp_compat(&p_W    , 5, _RR);
-  fld3d_setup_tmp_compat(&p_cmsv , 1, _CMSV);
-  fld3d_setup_tmp_compat(&p_bcc  , 3, _BX);
-  fld3d_setup_tmp_compat(&p_zmask, 1, _ZMASK);
-
   mrc_fld_data_t dt = 1e10f;
   pde_for_each_patch(p) {
     fld3d_get(&p_U    , p);
     fld3d_get(&p_ymask, p);
 
-    dt = mrc_fld_min(dt, patch_get_dt_scons(p_U, p_W, p_ymask, p_cmsv, p_bcc, p_zmask));
+    dt = mrc_fld_min(dt, patch_get_dt_scons(p_U, p_ymask));
 
     fld3d_put(&p_U    , p);
     fld3d_put(&p_ymask, p);
