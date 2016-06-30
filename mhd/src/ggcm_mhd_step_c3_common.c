@@ -303,7 +303,7 @@ static void
 patch_pushstage_pt2(struct ggcm_mhd_step *step, fld3d_t p_Unext, mrc_fld_data_t dt,
 		    fld3d_t p_Ucurr, fld3d_t p_Wcurr,
 		    fld3d_t p_E, fld3d_t p_F[3], fld3d_t p_ymask, fld3d_t p_zmask,
-		    fld3d_t p_rmask, fld3d_t p_b0, int stage, int p)
+		    fld3d_t p_rmask, int stage, int p)
 {
   struct ggcm_mhd *mhd = step->mhd;
 
@@ -316,7 +316,7 @@ patch_pushstage_pt2(struct ggcm_mhd_step *step, fld3d_t p_Unext, mrc_fld_data_t 
   // update momentum (grad p)
   pushpp_c(p_Unext, p_Wcurr, p_zmask, dt);
   // update momentum (J x B) and energy
-  patch_push_ej_b0(p_Unext, dt, p_Ucurr, p_Wcurr, p_zmask, p_b0);
+  patch_push_ej_b0(p_Unext, dt, p_Ucurr, p_Wcurr, p_zmask, s_p_aux.b0);
 
   // find E
   patch_rmaskn_c(p_rmask, p_zmask);
@@ -334,7 +334,7 @@ pushstage(struct ggcm_mhd_step *step, struct mrc_fld *f_Unext,
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
 
-  fld3d_t p_Unext, p_Ucurr, p_Wcurr, p_ymask, p_zmask, p_rmask, p_b0;
+  fld3d_t p_Unext, p_Ucurr, p_Wcurr, p_ymask, p_zmask, p_rmask;
   fld3d_t p_F[3], p_E;
   fld3d_setup(&p_Unext, f_Unext);
   fld3d_setup(&p_Ucurr, f_Ucurr);
@@ -342,7 +342,9 @@ pushstage(struct ggcm_mhd_step *step, struct mrc_fld *f_Unext,
   fld3d_setup(&p_ymask, mhd->ymask);
   fld3d_setup(&p_zmask, sub->zmask);
   fld3d_setup(&p_rmask, sub->rmask);
-  fld3d_setup(&p_b0, mhd->b0);
+  if (s_opt_background) {
+    fld3d_setup(&s_p_aux.b0, mhd->b0);
+  }
   for (int d = 0; d < 3; d++) {
     fld3d_setup(&p_F[d], sub->f_F[d]);
   }
@@ -367,16 +369,15 @@ pushstage(struct ggcm_mhd_step *step, struct mrc_fld *f_Unext,
 
     fld3d_get_list(p, mhd_patches);
     if (s_opt_background) {
-      fld3d_get(&p_b0, p);
-      s_p_aux.b0 = p_b0;
+      fld3d_get(&s_p_aux.b0, p);
     }
 
     patch_pushstage_pt2(step, p_Unext, dt, p_Ucurr, p_Wcurr,
-			p_E, p_F, p_ymask, p_zmask, p_rmask, p_b0, stage, p);
+			p_E, p_F, p_ymask, p_zmask, p_rmask, stage, p);
 
     fld3d_put_list(p, mhd_patches);
     if (s_opt_background) {
-      fld3d_put(&p_b0, p);
+      fld3d_put(&s_p_aux.b0, p);
     }
   }
 
@@ -400,24 +401,26 @@ ggcm_mhd_step_c3_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
   struct ggcm_mhd *mhd = step->mhd;
 
   ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
-  fld3d_t p_zmask, p_ymask, p_U, p_b0;
+  fld3d_t p_zmask, p_ymask, p_U;
   fld3d_setup(&p_zmask, sub->zmask);
   fld3d_setup(&p_ymask, mhd->ymask);
   fld3d_setup(&p_U, x);
-  fld3d_setup(&p_b0, mhd->b0);
+  if (s_opt_background) {
+    fld3d_setup(&s_p_aux.b0, mhd->b0);
+  }
   
   pde_for_each_patch(p) {
     fld3d_t *zmaskn_patches[] = { &p_zmask, &p_ymask, &p_U, NULL };
     fld3d_get_list(p, zmaskn_patches);
     if (s_opt_background) {
-      fld3d_get(&p_b0, p);
+      fld3d_get(&s_p_aux.b0, p);
     }
     
     patch_zmaskn_b0(p_zmask, p_ymask, p_U);
     
     fld3d_put_list(p, zmaskn_patches);
     if (s_opt_background) {
-      fld3d_put(&p_b0, p);
+      fld3d_put(&s_p_aux.b0, p);
     }
   }
 
@@ -464,21 +467,23 @@ ggcm_mhd_step_c3_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
   // of the output
   struct mrc_fld *f_E = mrc_fld_get_as(Eout, FLD_TYPE);
 
-  fld3d_t p_U, p_W, p_E, p_ymask, p_zmask, p_rmask, p_b0;
+  fld3d_t p_U, p_W, p_E, p_ymask, p_zmask, p_rmask;
   fld3d_setup(&p_U, f_U);
   fld3d_setup(&p_W, f_W);
   fld3d_setup(&p_E, f_E);
   fld3d_setup(&p_ymask, mhd->ymask);
   fld3d_setup(&p_zmask, sub->zmask);
   fld3d_setup(&p_rmask, sub->rmask);
-  fld3d_setup(&p_b0, mhd->b0);
+  if (s_opt_background) {
+    fld3d_setup(&s_p_aux.b0, mhd->b0);
+  }
 
   ggcm_mhd_fill_ghosts(mhd, f_U, 0, mhd->time);
   pde_for_each_patch(p) {
     fld3d_t *get_e_ec_patches[] = { &p_E, &p_U, &p_W, &p_ymask, &p_zmask, &p_rmask, NULL };
     fld3d_get_list(p, get_e_ec_patches);
     if (s_opt_background) {
-      fld3d_get(&p_b0, p);
+      fld3d_get(&s_p_aux.b0, p);
     }
 
     patch_prim_from_cons(p_W, p_U, 2);
@@ -487,7 +492,7 @@ ggcm_mhd_step_c3_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
 
     fld3d_put_list(p, get_e_ec_patches);
     if (s_opt_background) {
-      fld3d_put(&p_b0, p);
+      fld3d_put(&s_p_aux.b0, p);
     }
   }
   //  ggcm_mhd_fill_ghosts_E(mhd, E);
