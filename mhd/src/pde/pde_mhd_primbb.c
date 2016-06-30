@@ -2,32 +2,34 @@
 #ifndef PDE_MHD_PRIMBB_C
 #define PDE_MHD_PRIMBB_C
 
+#if OPT_STAGGER == OPT_STAGGER_GGCM
+
+#define BTXcc(p_B, i,j,k) (.5f * (F3S(p_B, 0, i,j,k) + F3S(p_B, 0, i-1,j,k)))
+#define BTYcc(p_B, i,j,k) (.5f * (F3S(p_B, 1, i,j,k) + F3S(p_B, 1, i,j-1,k)))
+#define BTZcc(p_B, i,j,k) (.5f * (F3S(p_B, 2, i,j,k) + F3S(p_B, 2, i,j,k-1)))
+
+#else
+
+#define BTXcc(p_B, i,j,k) (.5f * (BT_(p_B, 0, i,j,k) + BT_(p_B, 0, i+di,j,k)))
+#define BTYcc(p_B, i,j,k) (.5f * (BT_(p_B, 1, i,j,k) + BT_(p_B, 1, i,j+dj,k)))
+#define BTZcc(p_B, i,j,k) (.5f * (BT_(p_B, 2, i,j,k) + BT_(p_B, 2, i,j,k+dk)))
+
+#endif
+
 // ----------------------------------------------------------------------
 // patch_primbb_c
 //
 // was also known in Fortran as currbb()
 
-#if OPT_STAGGER == OPT_STAGGER_GGCM
-
-#define BXcc(p_U, i,j,k) (.5f*(F3S(p_U, BX, i,j,k) + F3S(p_U, BX,i-1,j,k)))
-#define BYcc(p_U, i,j,k) (.5f*(F3S(p_U, BY, i,j,k) + F3S(p_U, BY,i,j-1,k)))
-#define BZcc(p_U, i,j,k) (.5f*(F3S(p_U, BZ, i,j,k) + F3S(p_U, BZ,i,j,k-1)))
-
-#else
-
-#define BXcc(p_U, i,j,k) (.5f*(F3S(p_U, BX, i,j,k) + F3S(p_U, BX,i+1,j,k)))
-#define BYcc(p_U, i,j,k) (.5f*(F3S(p_U, BY, i,j,k) + F3S(p_U, BY,i,j+1,k)))
-#define BZcc(p_U, i,j,k) (.5f*(F3S(p_U, BZ, i,j,k) + F3S(p_U, BZ,i,j,k+1)))
-
-#endif
-
 static void
-patch_primbb_c(fld3d_t p_bcc, fld3d_t p_U)
+patch_primbb_c(fld3d_t p_Bcc, fld3d_t p_U)
 {
+  fld3d_t p_B = fld3d_make_view(p_U, BX);
+
   fld3d_foreach(i,j,k, 1, 2) {
-    F3S(p_bcc, 0, i,j,k) = BXcc(p_U, i,j,k);
-    F3S(p_bcc, 1, i,j,k) = BYcc(p_U, i,j,k);
-    F3S(p_bcc, 2, i,j,k) = BZcc(p_U, i,j,k);
+    F3S(p_Bcc, 0, i,j,k) = BTXcc(p_B, i,j,k);
+    F3S(p_Bcc, 1, i,j,k) = BTYcc(p_B, i,j,k);
+    F3S(p_Bcc, 2, i,j,k) = BTZcc(p_B, i,j,k);
   } fld3d_foreach_end;
 }
 
@@ -43,9 +45,9 @@ patch_calc_Bt_cc(fld3d_t p_Bcc, fld3d_t p_U, int l, int r)
   fld3d_t p_B = fld3d_make_view(p_U, BX);
 
   fld3d_foreach(i,j,k, l, r) {
-    F3S(p_Bcc, 0, i,j,k) = .5f * (BT_(p_B, 0, i,j,k) + BT_(p_B, 0, i+di,j,k));
-    F3S(p_Bcc, 1, i,j,k) = .5f * (BT_(p_B, 1, i,j,k) + BT_(p_B, 1, i,j+dj,k));
-    F3S(p_Bcc, 2, i,j,k) = .5f * (BT_(p_B, 2, i,j,k) + BT_(p_B, 2, i,j,k+dk));
+    F3S(p_Bcc, 0, i,j,k) = BTXcc(p_B, i,j,k);
+    F3S(p_Bcc, 1, i,j,k) = BTYcc(p_B, i,j,k);
+    F3S(p_Bcc, 2, i,j,k) = BTZcc(p_B, i,j,k);
   } fld3d_foreach_end;
 }
 

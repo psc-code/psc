@@ -10,13 +10,13 @@
 static void
 patch_calc_zmask_c(fld3d_t p_zmask, fld3d_t p_U, fld3d_t p_ymask)
 {
+  fld3d_t p_B = fld3d_make_view(p_U, BX);
+
   mrc_fld_data_t va02i = 1.f / sqr(s_speedlimit_code);
   mrc_fld_data_t eps = 1e-15f;
 
   fld3d_foreach(i,j,k, 2, 2) {
-    float bb = (sqr(BXcc(p_U, i,j,k)) + 
-		sqr(BYcc(p_U, i,j,k)) +
-		sqr(BZcc(p_U, i,j,k)));
+    float bb = (sqr(BTXcc(p_B, i,j,k)) + sqr(BTYcc(p_B, i,j,k)) + sqr(BTZcc(p_B, i,j,k)));
     float rrm = mrc_fld_max(eps, bb * va02i);
     F3S(p_zmask, 0, i,j,k) = F3S(p_ymask, 0, i,j,k) * 
       mrc_fld_min(1.f, F3S(p_U, RR, i,j,k) / rrm);
