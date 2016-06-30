@@ -37,19 +37,17 @@ patch_primbb_c(fld3d_t p_bcc, fld3d_t p_U)
 // cell-averaged Btotal (ie., add B0 back in, if applicable)
 // FIXME, consolidate with above
 
-#define _BT(p_U, d, i,j,k)  (F3S(p_U, BX+d, i,j,k) + (s_opt_background ? F3S(p_b0, d, i,j,k) : 0))
-
 static void _mrc_unused
-patch_calc_Bt_cc(fld3d_t p_b, fld3d_t p_U, fld3d_t p_b0, int l, int r)
+patch_calc_Bt_cc(fld3d_t p_Bcc, fld3d_t p_U, int l, int r)
 {
+  fld3d_t p_B = fld3d_make_view(p_U, BX);
+
   fld3d_foreach(i,j,k, l, r) {
-    F3S(p_b, 0, i,j,k) = .5f * (_BT(p_U, 0, i,j,k) + _BT(p_U, 0, i+di,j,k));
-    F3S(p_b, 1, i,j,k) = .5f * (_BT(p_U, 1, i,j,k) + _BT(p_U, 1, i,j+dj,k));
-    F3S(p_b, 2, i,j,k) = .5f * (_BT(p_U, 2, i,j,k) + _BT(p_U, 2, i,j,k+dk));
+    F3S(p_Bcc, 0, i,j,k) = .5f * (BT_(p_B, 0, i,j,k) + BT_(p_B, 0, i+di,j,k));
+    F3S(p_Bcc, 1, i,j,k) = .5f * (BT_(p_B, 1, i,j,k) + BT_(p_B, 1, i,j+dj,k));
+    F3S(p_Bcc, 2, i,j,k) = .5f * (BT_(p_B, 2, i,j,k) + BT_(p_B, 2, i,j,k+dk));
   } fld3d_foreach_end;
 }
-
-#undef _BT
 
 // ----------------------------------------------------------------------
 // patch_primbb_fortran

@@ -55,7 +55,7 @@ patch_push_ej_b0(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Ucurr,
 
   // FIXME/OPT, cell centered current is calculated here, and later again in calce()
   patch_calc_current_ec(p_jec, p_Ucurr);
-  patch_calc_Bt_cc(p_bcc, p_Ucurr, p_b0, 1, 1);
+  patch_calc_Bt_cc(p_bcc, p_Ucurr, 1, 1);
 
   fld3d_foreach(i,j,k, 0, 0) {
     mrc_fld_data_t s2 = dt * F3S(p_zmask, 0, i,j,k);
