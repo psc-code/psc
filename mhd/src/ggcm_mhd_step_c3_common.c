@@ -424,25 +424,7 @@ ggcm_mhd_step_c3_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
     }
   }
 
-  double dtn = pde_mhd_get_dt_scons_v2(mhd, x, sub->zmask, 0);
-  
-  // --- update timestep
-  dtn = mrc_fld_min(1., dtn); // FIXME, only kept for compatibility
-  
-  if (dtn > 1.02 * mhd->dt || dtn < mhd->dt / 1.01) {
-    mpi_printf(ggcm_mhd_comm(mhd), "switched dt %g <- %g\n", dtn, mhd->dt);
-    
-    if (mhd->istep > 0 &&
-	(dtn < 0.5 * mhd->dt || dtn > 2.0 * mhd->dt)) {            
-      mpi_printf(ggcm_mhd_comm(mhd), "!!! dt changed by > a factor of 2. "
-                   "Dying now!\n");
-      ggcm_mhd_wrongful_death(mhd, mhd->fld, 2);
-    }
-    
-    return dtn;
-  }
-
-  return mhd->dt;
+  return pde_mhd_get_dt_scons_v2(mhd, x, sub->zmask, 0);
 }
 
 // ----------------------------------------------------------------------
