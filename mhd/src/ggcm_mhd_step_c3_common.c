@@ -401,46 +401,45 @@ ggcm_mhd_step_c3_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
 
-  if (step->do_nwst) {
-    ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
-    fld3d_t p_zmask, p_ymask, p_U, p_b0;
-    fld3d_setup(&p_zmask, sub->zmask);
-    fld3d_setup(&p_ymask, mhd->ymask);
-    fld3d_setup(&p_U, x);
-    fld3d_setup(&p_b0, mhd->b0);
-
-    pde_for_each_patch(p) {
-      fld3d_t *zmaskn_patches[] = { &p_zmask, &p_ymask, &p_U, NULL };
-
-      fld3d_get_list(p, zmaskn_patches);
-      if (s_opt_background) {
-	fld3d_get(&p_b0, p);
-      }
-
-      patch_zmaskn_x(mhd, p_zmask, p_ymask, p_U, p_b0);
-
-      fld3d_put_list(p, zmaskn_patches);
-      if (s_opt_background) {
-	fld3d_put(&p_b0, p);
-      }
+  ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
+  fld3d_t p_zmask, p_ymask, p_U, p_b0;
+  fld3d_setup(&p_zmask, sub->zmask);
+  fld3d_setup(&p_ymask, mhd->ymask);
+  fld3d_setup(&p_U, x);
+  fld3d_setup(&p_b0, mhd->b0);
+  
+  pde_for_each_patch(p) {
+    fld3d_t *zmaskn_patches[] = { &p_zmask, &p_ymask, &p_U, NULL };
+    
+    fld3d_get_list(p, zmaskn_patches);
+    if (s_opt_background) {
+      fld3d_get(&p_b0, p);
     }
-    double dtn = pde_mhd_get_dt_scons_v2(mhd, x, sub->zmask, 0);
+    
+    patch_zmaskn_x(mhd, p_zmask, p_ymask, p_U, p_b0);
+    
+    fld3d_put_list(p, zmaskn_patches);
+    if (s_opt_background) {
+      fld3d_put(&p_b0, p);
+    }
+  }
 
-    // --- update timestep
-    dtn = mrc_fld_min(1., dtn); // FIXME, only kept for compatibility
-
-    if (dtn > 1.02 * mhd->dt || dtn < mhd->dt / 1.01) {
-      mpi_printf(ggcm_mhd_comm(mhd), "switched dt %g <- %g\n", dtn, mhd->dt);
-
-      if (mhd->istep > 0 &&
-          (dtn < 0.5 * mhd->dt || dtn > 2.0 * mhd->dt)) {            
-        mpi_printf(ggcm_mhd_comm(mhd), "!!! dt changed by > a factor of 2. "
+  double dtn = pde_mhd_get_dt_scons_v2(mhd, x, sub->zmask, 0);
+  
+  // --- update timestep
+  dtn = mrc_fld_min(1., dtn); // FIXME, only kept for compatibility
+  
+  if (dtn > 1.02 * mhd->dt || dtn < mhd->dt / 1.01) {
+    mpi_printf(ggcm_mhd_comm(mhd), "switched dt %g <- %g\n", dtn, mhd->dt);
+    
+    if (mhd->istep > 0 &&
+	(dtn < 0.5 * mhd->dt || dtn > 2.0 * mhd->dt)) {            
+      mpi_printf(ggcm_mhd_comm(mhd), "!!! dt changed by > a factor of 2. "
                    "Dying now!\n");
-        ggcm_mhd_wrongful_death(mhd, mhd->fld, 2);
-      }
-      
-      return dtn;
+      ggcm_mhd_wrongful_death(mhd, mhd->fld, 2);
     }
+    
+    return dtn;
   }
 
   return mhd->dt;
