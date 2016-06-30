@@ -4,11 +4,6 @@
 
 // ======================================================================
 
-static struct {
-  fld3d_t b0;
-  fld3d_t Jcc; // needed for Hall and constant resistivity
-} s_p_aux;
-
 static inline float
 bcthy3f(mrc_fld_data_t s1, mrc_fld_data_t s2)
 {

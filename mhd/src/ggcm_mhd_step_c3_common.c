@@ -141,27 +141,6 @@ ggcm_mhd_step_c3_setup_flds(struct ggcm_mhd_step *step)
   mrc_fld_set_param_int(mhd->fld, "nr_comps", 8);
 }
 
-// ----------------------------------------------------------------------
-// patch_zmaskn_b0
-
-static void
-patch_zmaskn_b0(fld3d_t p_zmask, fld3d_t p_ymask, fld3d_t p_U)
-{
-  mrc_fld_data_t va02i = 1.f / sqr(s_speedlimit_code);
-  mrc_fld_data_t eps = 1e-15f;
-
-  fld3d_t p_B = fld3d_make_view(p_U, BX);
-
-  fld3d_foreach(ix,iy,iz, 1, 1) {
-    mrc_fld_data_t bb = (sqr(.5f * (BT_(p_B, 0, ix,iy,iz) + BT_(p_B, 0, ix+di,iy,iz))) +
-			 sqr(.5f * (BT_(p_B, 1, ix,iy,iz) + BT_(p_B, 1, ix,iy+dj,iz))) +
-			 sqr(.5f * (BT_(p_B, 2, ix,iy,iz) + BT_(p_B, 2, ix,iy,iz+dk))));
-    mrc_fld_data_t rrm = mrc_fld_max(eps, bb * va02i);
-    F3S(p_zmask, 0, ix,iy,iz) = F3S(p_ymask, 0, ix,iy,iz) *
-      mrc_fld_min(1.f, F3S(p_U, RR, ix,iy,iz) / rrm);
-  } fld3d_foreach_end;
-}
-
 // ======================================================================
 // (hydro) predictor
 
