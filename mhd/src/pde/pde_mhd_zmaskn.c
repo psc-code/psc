@@ -5,7 +5,29 @@
 #include "pde/pde_mhd_primbb.c"
 
 // ----------------------------------------------------------------------
+// patch_calc_zmask_c
+
+static void
+patch_calc_zmask_c(fld3d_t p_zmask, fld3d_t p_U, fld3d_t p_ymask)
+{
+  mrc_fld_data_t va02i = 1.f / sqr(s_speedlimit_code);
+  mrc_fld_data_t eps = 1e-15f;
+
+  fld3d_foreach(i,j,k, 2, 2) {
+    float bb = (sqr(BXcc(p_U, i,j,k)) + 
+		sqr(BYcc(p_U, i,j,k)) +
+		sqr(BZcc(p_U, i,j,k)));
+    float rrm = mrc_fld_max(eps, bb * va02i);
+    F3S(p_zmask, 0, i,j,k) = F3S(p_ymask, 0, i,j,k) * 
+      mrc_fld_min(1.f, F3S(p_U, RR, i,j,k) / rrm);
+  } fld3d_foreach_end;
+}
+
+// ----------------------------------------------------------------------
 // patch_zmaskn_c
+//
+// like the above, but expects pre-calculated bcc
+// (superseded)
 
 static void
 patch_zmaskn_c(fld3d_t p_zmask, fld3d_t p_W, fld3d_t p_bcc, fld3d_t p_ymask)
@@ -85,12 +107,10 @@ patch_zmaskn(fld3d_t p_zmask, fld3d_t p_W, fld3d_t p_bcc, fld3d_t p_ymask)
 }
 
 // ----------------------------------------------------------------------
-// patch_calc_zmask
-//
-// like zmaskn(), but includes preparation step (primbb)
+// patch_calc_zmask_gold
 
 static void _mrc_unused
-patch_calc_zmask(fld3d_t p_zmask, fld3d_t p_U, fld3d_t p_ymask)
+patch_calc_zmask_gold(fld3d_t p_zmask, fld3d_t p_U, fld3d_t p_ymask)
 {
   static fld3d_t p_bcc;
   fld3d_setup_tmp_compat(&p_bcc, 3, _BX);
@@ -99,6 +119,17 @@ patch_calc_zmask(fld3d_t p_zmask, fld3d_t p_U, fld3d_t p_ymask)
   // we kinda should be passing p_W rather than p_U to zmaskn(),
   // but since we only access RR, either works
   patch_zmaskn(p_zmask, p_U, p_bcc, p_ymask);
+}
+
+// ----------------------------------------------------------------------
+// patch_calc_zmask
+//
+// like zmaskn(), but includes preparation step (primbb)
+
+static void _mrc_unused
+patch_calc_zmask(fld3d_t p_zmask, fld3d_t p_U, fld3d_t p_ymask)
+{
+  patch_calc_zmask_c(p_zmask, p_U, p_ymask);
 }
 
 #endif
