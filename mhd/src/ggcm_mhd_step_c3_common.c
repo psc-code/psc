@@ -144,8 +144,6 @@ ggcm_mhd_step_c3_setup_flds(struct ggcm_mhd_step *step)
 // ----------------------------------------------------------------------
 // patch_zmaskn_b0
 
-#define _BT(p_U, d, i,j,k)  (F3S(p_U, BX+d, i,j,k) + (s_opt_background ? F3S(p_b0, d, i,j,k) : 0))
-
 static void
 patch_zmaskn_b0(struct ggcm_mhd *mhd, fld3d_t p_zmask, fld3d_t p_ymask,
 	       fld3d_t p_U, fld3d_t p_b0)
@@ -153,17 +151,17 @@ patch_zmaskn_b0(struct ggcm_mhd *mhd, fld3d_t p_zmask, fld3d_t p_ymask,
   mrc_fld_data_t va02i = 1.f / sqr(mhd->par.speedlimit / mhd->vvnorm);
   mrc_fld_data_t eps   = 1e-15f;
 
+  fld3d_t p_B = fld3d_make_view(p_U, BX);
+
   fld3d_foreach(ix,iy,iz, 1, 1) {
-    mrc_fld_data_t bb = (sqr(.5f * (_BT(p_U, 0, ix,iy,iz) + _BT(p_U, 0, ix+di,iy,iz))) +
-			 sqr(.5f * (_BT(p_U, 1, ix,iy,iz) + _BT(p_U, 1, ix,iy+dj,iz))) +
-			 sqr(.5f * (_BT(p_U, 2, ix,iy,iz) + _BT(p_U, 2, ix,iy,iz+dk))));
+    mrc_fld_data_t bb = (sqr(.5f * (BT_(p_B, 0, ix,iy,iz) + BT_(p_B, 0, ix+di,iy,iz))) +
+			 sqr(.5f * (BT_(p_B, 1, ix,iy,iz) + BT_(p_B, 1, ix,iy+dj,iz))) +
+			 sqr(.5f * (BT_(p_B, 2, ix,iy,iz) + BT_(p_B, 2, ix,iy,iz+dk))));
     mrc_fld_data_t rrm = mrc_fld_max(eps, bb * va02i);
     F3S(p_zmask, 0, ix,iy,iz) = F3S(p_ymask, 0, ix,iy,iz) *
       mrc_fld_min(1.f, F3S(p_U, RR, ix,iy,iz) / rrm);
   } fld3d_foreach_end;
 }
-
-#undef _BT
 
 // ======================================================================
 // (hydro) predictor
@@ -410,7 +408,6 @@ ggcm_mhd_step_c3_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
   
   pde_for_each_patch(p) {
     fld3d_t *zmaskn_patches[] = { &p_zmask, &p_ymask, &p_U, NULL };
-    
     fld3d_get_list(p, zmaskn_patches);
     if (s_opt_background) {
       fld3d_get(&p_b0, p);
