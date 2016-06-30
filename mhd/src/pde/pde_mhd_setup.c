@@ -630,6 +630,8 @@ pde_mhd_setup(struct ggcm_mhd *mhd)
 // ======================================================================
 // FIXME this is not a good place
 
+#define BT_(p_B, d, i,j,k)  (F3S(p_B, d, i,j,k) + (s_opt_background ? F3S(s_p_aux.b0, d, i,j,k) : 0))
+
 #define BTX_(U, i,j,k, p)  (s_opt_background ? (BX_(U, i,j,k, p) + B0(b0, 0, i,j,k, p)) : BX_(U, i,j,k, p))
 #define BTY_(U, i,j,k, p)  (s_opt_background ? (BY_(U, i,j,k, p) + B0(b0, 1, i,j,k, p)) : BY_(U, i,j,k, p))
 #define BTZ_(U, i,j,k, p)  (s_opt_background ? (BZ_(U, i,j,k, p) + B0(b0, 2, i,j,k, p)) : BZ_(U, i,j,k, p))
