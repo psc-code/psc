@@ -17,27 +17,9 @@
 #endif
 
 // ----------------------------------------------------------------------
-// patch_primbb_c
-//
-// was also known in Fortran as currbb()
-
-static void
-patch_primbb_c(fld3d_t p_Bcc, fld3d_t p_U)
-{
-  fld3d_t p_B = fld3d_make_view(p_U, BX);
-
-  fld3d_foreach(i,j,k, 1, 2) {
-    F3S(p_Bcc, 0, i,j,k) = BTXcc(p_B, i,j,k);
-    F3S(p_Bcc, 1, i,j,k) = BTYcc(p_B, i,j,k);
-    F3S(p_Bcc, 2, i,j,k) = BTZcc(p_B, i,j,k);
-  } fld3d_foreach_end;
-}
-
-// ----------------------------------------------------------------------
 // patch_calc_Bt_cc
 //
 // cell-averaged Btotal (ie., add B0 back in, if applicable)
-// FIXME, consolidate with above
 
 static void _mrc_unused
 patch_calc_Bt_cc(fld3d_t p_Bcc, fld3d_t p_U, int l, int r)
@@ -49,6 +31,21 @@ patch_calc_Bt_cc(fld3d_t p_Bcc, fld3d_t p_U, int l, int r)
     F3S(p_Bcc, 1, i,j,k) = BTYcc(p_B, i,j,k);
     F3S(p_Bcc, 2, i,j,k) = BTZcc(p_B, i,j,k);
   } fld3d_foreach_end;
+}
+
+// ======================================================================
+// testing / compatibility stuff follows...
+
+// ----------------------------------------------------------------------
+// patch_primbb_c
+//
+// was also known in Fortran as currbb()
+// superseded by the above
+
+static void
+patch_primbb_c(fld3d_t p_Bcc, fld3d_t p_U)
+{
+  patch_calc_Bt_cc(p_Bcc, p_U, 1, 1);
 }
 
 // ----------------------------------------------------------------------

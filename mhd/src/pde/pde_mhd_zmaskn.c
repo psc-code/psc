@@ -15,7 +15,7 @@ patch_calc_zmask_c(fld3d_t p_zmask, fld3d_t p_U, fld3d_t p_ymask)
   mrc_fld_data_t va02i = 1.f / sqr(s_speedlimit_code);
   mrc_fld_data_t eps = 1e-15f;
 
-  fld3d_foreach(i,j,k, 2, 2) {
+  fld3d_foreach(i,j,k, 1, 1) {
     float bb = (sqr(BTXcc(p_B, i,j,k)) + sqr(BTYcc(p_B, i,j,k)) + sqr(BTZcc(p_B, i,j,k)));
     float rrm = mrc_fld_max(eps, bb * va02i);
     F3S(p_zmask, 0, i,j,k) = F3S(p_ymask, 0, i,j,k) * 
