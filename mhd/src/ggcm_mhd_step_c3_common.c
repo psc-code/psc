@@ -259,12 +259,12 @@ patch_flux_corr(struct ggcm_mhd_step *step, fld3d_t p_F[3], fld3d_t p_U)
 // patch_pushstage_pt1
 
 static void
-patch_pushstage_pt1(struct ggcm_mhd_step *step, fld3d_t p_Ucurr, fld3d_t p_Wcurr,
+patch_pushstage_pt1(struct ggcm_mhd_step *step, fld3d_t p_Ucurr, fld3d_t p_W,
 		    fld3d_t p_F[3], bool limit, int p)
 {
   // primvar, badval
-  patch_prim_from_cons(p_Wcurr, p_Ucurr, 2);
-  patch_badval_checks_sc(p_Ucurr, p_Wcurr);
+  patch_prim_from_cons(p_W, p_Ucurr, 2);
+  patch_badval_checks_sc(p_Ucurr, p_W);
   
   // find hydro fluxes
   // FIXME: we could use the fact that we calculate primitive variables already
@@ -280,7 +280,7 @@ patch_pushstage_pt1(struct ggcm_mhd_step *step, fld3d_t p_Ucurr, fld3d_t p_Wcurr
 
 static void
 patch_pushstage_pt2(struct ggcm_mhd_step *step, fld3d_t p_Unext, mrc_fld_data_t dt,
-		    fld3d_t p_Ucurr, fld3d_t p_Wcurr,
+		    fld3d_t p_Ucurr, fld3d_t p_W,
 		    fld3d_t p_E, fld3d_t p_F[3], fld3d_t p_ymask, fld3d_t p_zmask,
 		    fld3d_t p_rmask, int stage, int p)
 {
@@ -293,13 +293,13 @@ patch_pushstage_pt2(struct ggcm_mhd_step *step, fld3d_t p_Unext, mrc_fld_data_t 
     patch_calc_zmask(p_zmask, p_Ucurr, p_ymask);
   }
   // update momentum (grad p)
-  pushpp_c(p_Unext, p_Wcurr, p_zmask, dt);
+  pushpp_c(p_Unext, p_W, p_zmask, dt);
   // update momentum (J x B) and energy
-  patch_push_ej_b0(p_Unext, dt, p_Ucurr, p_Wcurr, p_zmask, s_p_aux.b0);
+  patch_push_ej_b0(p_Unext, dt, p_Ucurr, p_W, p_zmask, s_p_aux.b0);
 
   // find E
   patch_rmaskn_c(p_rmask, p_zmask);
-  patch_calc_e(p_E, dt, p_Ucurr, p_Wcurr, p_zmask, p_rmask);
+  patch_calc_e(p_E, dt, p_Ucurr, p_W, p_zmask, p_rmask);
 }
 
 // ----------------------------------------------------------------------
@@ -307,17 +307,17 @@ patch_pushstage_pt2(struct ggcm_mhd_step *step, fld3d_t p_Unext, mrc_fld_data_t 
 
 static void
 pushstage(struct ggcm_mhd_step *step, struct mrc_fld *f_Unext,
-	  mrc_fld_data_t dt, struct mrc_fld *f_Ucurr, struct mrc_fld *f_Wcurr,
+	  mrc_fld_data_t dt, struct mrc_fld *f_Ucurr, struct mrc_fld *f_W,
 	  int stage, bool limit)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
 
-  fld3d_t p_Unext, p_Ucurr, p_Wcurr, p_ymask, p_zmask, p_rmask;
+  fld3d_t p_Unext, p_Ucurr, p_W, p_ymask, p_zmask, p_rmask;
   fld3d_t p_F[3], p_E;
   fld3d_setup(&p_Unext, f_Unext);
   fld3d_setup(&p_Ucurr, f_Ucurr);
-  fld3d_setup(&p_Wcurr, f_Wcurr);
+  fld3d_setup(&p_W    , f_W);
   fld3d_setup(&p_ymask, mhd->ymask);
   fld3d_setup(&p_zmask, sub->zmask);
   fld3d_setup(&p_rmask, sub->rmask);
@@ -331,9 +331,9 @@ pushstage(struct ggcm_mhd_step *step, struct mrc_fld *f_Unext,
 
   // primvar, badval, reconstruct
   pde_for_each_patch(p) {
-    fld3d_t *patches[] = { &p_Ucurr, &p_Wcurr, &p_F[0], &p_F[1], &p_F[2], NULL };
+    fld3d_t *patches[] = { &p_Ucurr, &p_W, &p_F[0], &p_F[1], &p_F[2], NULL };
     fld3d_get_list(p, patches);
-    patch_pushstage_pt1(step, p_Ucurr, p_Wcurr, p_F, limit, p);
+    patch_pushstage_pt1(step, p_Ucurr, p_W, p_F, limit, p);
     fld3d_put_list(p, patches);
   }
 
@@ -342,7 +342,7 @@ pushstage(struct ggcm_mhd_step *step, struct mrc_fld *f_Unext,
 
   // add MHD terms, find E
   pde_for_each_patch(p) {
-    fld3d_t *mhd_patches[] = { &p_Unext, &p_Ucurr, &p_Wcurr, 
+    fld3d_t *mhd_patches[] = { &p_Unext, &p_Ucurr, &p_W, 
 			       &p_E, &p_F[0], &p_F[1], &p_F[2],
 			       &p_ymask, &p_zmask, &p_rmask, NULL };
 
@@ -351,7 +351,7 @@ pushstage(struct ggcm_mhd_step *step, struct mrc_fld *f_Unext,
       fld3d_get(&s_p_aux.b0, p);
     }
 
-    patch_pushstage_pt2(step, p_Unext, dt, p_Ucurr, p_Wcurr,
+    patch_pushstage_pt2(step, p_Unext, dt, p_Ucurr, p_W,
 			p_E, p_F, p_ymask, p_zmask, p_rmask, stage, p);
 
     fld3d_put_list(p, mhd_patches);

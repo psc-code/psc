@@ -54,6 +54,8 @@ patch_get_dt_scons_c(fld3d_t p_U, fld3d_t p_ymask)
 //
 // essentially the same as before, but mostly integrated into one loop,
 // and optimized to avoid some square roots that get squared again later
+// FIXME: only this one contains hall (untested)
+// FIXME: might as well avoid calc_zmask(), too
 
 static mrc_fld_data_t
 patch_get_dt_scons_c_v2(fld3d_t p_U, fld3d_t p_ymask)
