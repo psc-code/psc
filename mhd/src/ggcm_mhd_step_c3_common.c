@@ -380,30 +380,7 @@ ggcm_mhd_step_c3_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
   struct ggcm_mhd *mhd = step->mhd;
 
   ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
-  fld3d_t p_zmask, p_ymask, p_U;
-  fld3d_setup(&p_zmask, sub->zmask);
-  fld3d_setup(&p_ymask, mhd->ymask);
-  fld3d_setup(&p_U, x);
-  if (s_opt_background) {
-    fld3d_setup(&s_p_aux.b0, mhd->b0);
-  }
-  
-  pde_for_each_patch(p) {
-    fld3d_t *zmaskn_patches[] = { &p_zmask, &p_ymask, &p_U, NULL };
-    fld3d_get_list(p, zmaskn_patches);
-    if (s_opt_background) {
-      fld3d_get(&s_p_aux.b0, p);
-    }
-    
-    patch_calc_zmask(p_zmask, p_U, p_ymask);
-    
-    fld3d_put_list(p, zmaskn_patches);
-    if (s_opt_background) {
-      fld3d_put(&s_p_aux.b0, p);
-    }
-  }
-
-  return pde_mhd_get_dt_scons_v2(mhd, x, sub->zmask, 0);
+  return pde_mhd_get_dt_scons_v2(mhd, x, sub->zmask);
 }
 
 // ----------------------------------------------------------------------

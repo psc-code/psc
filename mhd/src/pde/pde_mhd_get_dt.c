@@ -135,16 +135,34 @@ pde_mhd_get_dt_scons(struct ggcm_mhd *mhd, struct mrc_fld *f_U, struct mrc_fld *
 // FIXME, should be merged with the other scons get_dt
 
 static mrc_fld_data_t _mrc_unused
-pde_mhd_get_dt_scons_v2(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *zmask, 
-			int m_zmask)
+pde_mhd_get_dt_scons_v2(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *f_zmask)
 {
   assert(s_opt_eqn == OPT_EQN_MHD_SCONS);
 
-  struct mrc_fld *b0 = mhd->b0;
+  fld3d_t p_zmask, p_ymask, p_U;
+  fld3d_setup(&p_zmask, f_zmask);
+  fld3d_setup(&p_ymask, mhd->ymask);
+  fld3d_setup(&p_U, x);
+  if (s_opt_background) {
+    fld3d_setup(&s_p_aux.b0, mhd->b0);
+  }
+  
+  pde_for_each_patch(p) {
+    fld3d_t *zmaskn_patches[] = { &p_zmask, &p_ymask, &p_U, NULL };
+    fld3d_get_list(p, zmaskn_patches);
+    if (s_opt_background) {
+      fld3d_get(&s_p_aux.b0, p);
+    }
+    
+    patch_calc_zmask(p_zmask, p_U, p_ymask);
+    
+    fld3d_put_list(p, zmaskn_patches);
+    if (s_opt_background) {
+      fld3d_put(&s_p_aux.b0, p);
+    }
+  }
 
-  int gdims[3];
-  mrc_domain_get_global_dims(mhd->domain, gdims);
-  int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
+  struct mrc_fld *b0 = mhd->b0;
 
   mrc_fld_data_t dt     = 1e10f;
   pde_for_each_patch(p) {
@@ -161,9 +179,9 @@ pde_mhd_get_dt_scons_v2(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld 
     mrc_fld_foreach(x, i,j,k, 0, 0) {
       mrc_fld_data_t hh = mrc_fld_max(mrc_fld_max(fd1x[i], fd1y[j]), fd1z[k]);
       mrc_fld_data_t rri = 1.f / mrc_fld_abs(RR_(x, i,j,k, p)); // FIME abs necessary?
-      mrc_fld_data_t bb = (sqr(.5f * (BTX_(x, i,j,k, p) + BTX_(x, i+dx,j,k, p))) + 
-			   sqr(.5f * (BTY_(x, i,j,k, p) + BTY_(x, i,j+dy,k, p))) +
-			   sqr(.5f * (BTZ_(x, i,j,k, p) + BTZ_(x, i,j,k+dz, p))));
+      mrc_fld_data_t bb = (sqr(.5f * (BTX_(x, i,j,k, p) + BTX_(x, i+di,j,k, p))) + 
+			   sqr(.5f * (BTY_(x, i,j,k, p) + BTY_(x, i,j+dj,k, p))) +
+			   sqr(.5f * (BTZ_(x, i,j,k, p) + BTZ_(x, i,j,k+dk, p))));
       mrc_fld_data_t rrvv = (sqr(RVX_(x, i,j,k, p)) + 
 			     sqr(RVY_(x, i,j,k, p)) +
 			     sqr(RVZ_(x, i,j,k, p)));
@@ -178,10 +196,7 @@ pde_mhd_get_dt_scons_v2(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld 
       mrc_fld_data_t vv = mrc_fld_sqrt(vA2 + cs2) + mrc_fld_sqrt(rrvv) * rri;
       vv = mrc_fld_max(eps, vv);
       
-      mrc_fld_data_t zm = 1.f;
-      if (zmask) {
-	zm = M3(zmask, m_zmask, i,j,k, p);
-      }
+      mrc_fld_data_t zm = M3(f_zmask, 0, i,j,k, p);
       mrc_fld_data_t tt = s_cfl / mrc_fld_max(eps, hh*vv*zm);
       dt = mrc_fld_min(dt, tt);
     } mrc_fld_foreach_end;
