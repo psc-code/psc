@@ -99,10 +99,10 @@ ggcm_mhd_step_c2_destroy(struct ggcm_mhd_step *step)
   struct ggcm_mhd_step_c2 *sub = ggcm_mhd_step_c2(step);
   struct ggcm_mhd *mhd = step->mhd;
 
-  mrc_fld_destroy(mhd->ymask);
-  mrc_fld_destroy(sub->f_zmask);
-  mrc_fld_destroy(sub->f_Uhalf);
-  mrc_fld_destroy(sub->f_E);
+  ggcm_mhd_put_3d_fld(mhd, mhd->ymask);
+  ggcm_mhd_put_3d_fld(mhd, sub->f_zmask);
+  ggcm_mhd_put_3d_fld(mhd, sub->f_Uhalf);
+  ggcm_mhd_put_3d_fld(mhd, sub->f_E);
 }
 
 // ----------------------------------------------------------------------
@@ -187,12 +187,11 @@ pushstage(struct mrc_fld *f_Unext, mrc_fld_data_t dt, struct mrc_fld *f_Ucurr,
 // ggcm_mhd_step_c2_run
 
 static void
-ggcm_mhd_step_c2_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
+ggcm_mhd_step_c2_run(struct ggcm_mhd_step *step, struct mrc_fld *f_U)
 {
   struct ggcm_mhd_step_c2 *sub = ggcm_mhd_step_c2(step);
   struct ggcm_mhd *mhd = step->mhd;
 
-  struct mrc_fld *f_U = x;
   struct mrc_fld *f_Uhalf = sub->f_Uhalf;
   struct mrc_fld *f_ymask = mhd->ymask, *f_zmask = sub->f_zmask, *f_E = sub->f_E;
 
@@ -244,7 +243,6 @@ ggcm_mhd_step_c2_diag_item_zmask_run(struct ggcm_mhd_step *step,
 				    int diag_type, float plane)
 {
   struct ggcm_mhd_step_c2 *sub = ggcm_mhd_step_c2(step);
-
   ggcm_mhd_diag_c_write_one_field(io, sub->f_zmask, 0, "zmask", 1., diag_type, plane);
 }
 

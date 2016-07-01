@@ -37,8 +37,8 @@
 struct ggcm_mhd_step_c3 {
   struct mhd_options opt;
 
-  struct mrc_fld *zmask;
-  struct mrc_fld *rmask;
+  struct mrc_fld *f_zmask;
+  struct mrc_fld *f_rmask;
   
   struct mrc_fld *f_W;
   struct mrc_fld *f_Uhalf;
@@ -60,6 +60,22 @@ struct ggcm_mhd_step_c3 {
 static fld1d_state_t l_U, l_Ul, l_Ur, l_W, l_Wl, l_Wr, l_F;
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_step_c3_setup_flds
+
+static void
+ggcm_mhd_step_c3_setup_flds(struct ggcm_mhd_step *step)
+{
+  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
+  struct ggcm_mhd *mhd = step->mhd;
+
+  pde_mhd_set_options(mhd, &sub->opt);
+  mrc_fld_set_type(mhd->fld, FLD_TYPE);
+  mrc_fld_set_param_int(mhd->fld, "nr_ghosts", 2);
+  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_SEMI_CONSERVATIVE);
+  mrc_fld_set_param_int(mhd->fld, "nr_comps", 8);
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_step_c3_setup
 
 static void
@@ -67,8 +83,6 @@ ggcm_mhd_step_c3_setup(struct ggcm_mhd_step *step)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
-
-  assert(mhd);
 
   pde_setup(mhd->fld);
   // FIXME, very hacky way of making the 1d state fields 5-component
@@ -89,8 +103,9 @@ ggcm_mhd_step_c3_setup(struct ggcm_mhd_step *step)
   }
   mhd->ymask = ggcm_mhd_get_3d_fld(mhd, 1);
   mrc_fld_set(mhd->ymask, 1.);
-  sub->zmask = ggcm_mhd_get_3d_fld(mhd, 1);
-  sub->rmask = ggcm_mhd_get_3d_fld(mhd, 1);
+
+  sub->f_zmask = ggcm_mhd_get_3d_fld(mhd, 1);
+  sub->f_rmask = ggcm_mhd_get_3d_fld(mhd, 1);
 
   sub->f_W = ggcm_mhd_get_3d_fld(mhd, s_n_comps);
   sub->f_Uhalf = ggcm_mhd_get_3d_fld(mhd, 8);
@@ -114,9 +129,8 @@ ggcm_mhd_step_c3_destroy(struct ggcm_mhd_step *step)
   struct ggcm_mhd *mhd = step->mhd;
 
   ggcm_mhd_put_3d_fld(mhd, mhd->ymask);
-  ggcm_mhd_put_3d_fld(mhd, sub->zmask);
-  ggcm_mhd_put_3d_fld(mhd, sub->rmask);
-
+  ggcm_mhd_put_3d_fld(mhd, sub->f_zmask);
+  ggcm_mhd_put_3d_fld(mhd, sub->f_rmask);
   ggcm_mhd_put_3d_fld(mhd, sub->f_Uhalf);
   for (int d = 0; d < 3; d++) {
     ggcm_mhd_put_3d_fld(mhd, sub->f_F[d]);
@@ -125,20 +139,18 @@ ggcm_mhd_step_c3_destroy(struct ggcm_mhd_step *step)
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_step_c3_setup_flds
+// ggcm_mhd_step_c3_gt_dt
 
-static void
-ggcm_mhd_step_c3_setup_flds(struct ggcm_mhd_step *step)
+static double
+ggcm_mhd_step_c3_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
 {
-  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
 
-  pde_mhd_set_options(mhd, &sub->opt);
-
-  mrc_fld_set_type(mhd->fld, FLD_TYPE);
-  mrc_fld_set_param_int(mhd->fld, "nr_ghosts", 2);
-  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_SEMI_CONSERVATIVE);
-  mrc_fld_set_param_int(mhd->fld, "nr_comps", 8);
+  // FIXME, the fill_ghosts is necessary (should be in other steps, too)
+  // if we do it here, we should avoid doing it again in run() -- but note
+  // we're only doing it here if do_nwst is true.
+  ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
+  return pde_mhd_get_dt_scons(mhd, x, mhd->ymask);
 }
 
 // ======================================================================
@@ -319,8 +331,8 @@ pushstage(struct ggcm_mhd_step *step, struct mrc_fld *f_Unext,
   fld3d_setup(&p_Ucurr, f_Ucurr);
   fld3d_setup(&p_W    , f_W);
   fld3d_setup(&p_ymask, mhd->ymask);
-  fld3d_setup(&p_zmask, sub->zmask);
-  fld3d_setup(&p_rmask, sub->rmask);
+  fld3d_setup(&p_zmask, sub->f_zmask);
+  fld3d_setup(&p_rmask, sub->f_rmask);
   if (s_opt_background) {
     fld3d_setup(&s_p_aux.b0, mhd->b0);
   }
@@ -373,18 +385,6 @@ pushstage(struct ggcm_mhd_step *step, struct mrc_fld *f_Unext,
   }
 }
 
-static double
-ggcm_mhd_step_c3_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
-{
-  struct ggcm_mhd *mhd = step->mhd;
-
-  // FIXME, the fill_ghosts is necessary (should be in other steps, too)
-  // if we do it here, we should avoid doing it again in run() -- but note
-  // we're only doing it here if do_nwst is true.
-  ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
-  return pde_mhd_get_dt_scons(mhd, x, mhd->ymask);
-}
-
 // ----------------------------------------------------------------------
 // ggcm_mhd_step_c3_run
 
@@ -393,19 +393,17 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *f_U)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
+
   struct mrc_fld *f_Uhalf = sub->f_Uhalf, *f_W = sub->f_W;
 
   s_mhd_time = mhd->time; 
 
-  // --- PREDICTOR
-  // set U_half = U^n, then advance to n+1/2.
-  // WARNING: If we're fixing up neg pressure/density in primvar, we should probably do
-  // the copy later
-  ggcm_mhd_fill_ghosts(mhd, f_U, 0, mhd->time);
+  // set f_Uhalf = f_U
   mrc_fld_copy(f_Uhalf, f_U);
+  ggcm_mhd_fill_ghosts(mhd, f_U, 0, mhd->time);
   pushstage(step, f_Uhalf, .5f * mhd->dt, f_U, f_W, 0, false);
 
-  // --- CORRECTOR
+  // f_U += dt * rhs(f_Uhalf)
   ggcm_mhd_fill_ghosts(mhd, f_Uhalf, 0, mhd->time + mhd->bndt);
   int limit = mhd->time >= mhd->par.timelo;
   pushstage(step, f_U, mhd->dt, f_Uhalf, f_W, 1, limit);
@@ -430,8 +428,8 @@ ggcm_mhd_step_c3_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
   fld3d_setup(&p_W, f_W);
   fld3d_setup(&p_E, f_E);
   fld3d_setup(&p_ymask, mhd->ymask);
-  fld3d_setup(&p_zmask, sub->zmask);
-  fld3d_setup(&p_rmask, sub->rmask);
+  fld3d_setup(&p_zmask, sub->f_zmask);
+  fld3d_setup(&p_rmask, sub->f_rmask);
   if (s_opt_background) {
     fld3d_setup(&s_p_aux.b0, mhd->b0);
   }
@@ -468,7 +466,7 @@ ggcm_mhd_step_c3_diag_item_zmask_run(struct ggcm_mhd_step *step,
 				    int diag_type, float plane)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
-  ggcm_mhd_diag_c_write_one_field(io, sub->zmask, 0, "zmask", 1., diag_type, plane);
+  ggcm_mhd_diag_c_write_one_field(io, sub->f_zmask, 0, "zmask", 1., diag_type, plane);
 }
 
 // ----------------------------------------------------------------------
@@ -481,7 +479,7 @@ ggcm_mhd_step_c3_diag_item_rmask_run(struct ggcm_mhd_step *step,
 				    int diag_type, float plane)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
-  ggcm_mhd_diag_c_write_one_field(io, sub->rmask, 0, "rmask", 1., diag_type, plane);
+  ggcm_mhd_diag_c_write_one_field(io, sub->f_rmask, 0, "rmask", 1., diag_type, plane);
 }
 
 // ----------------------------------------------------------------------
