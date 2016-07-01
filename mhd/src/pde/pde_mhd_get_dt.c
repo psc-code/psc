@@ -147,6 +147,16 @@ pde_mhd_get_dt_scons_v2(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld 
     fld3d_setup(&s_p_aux.b0, mhd->b0);
   }
   
+  mrc_fld_data_t splim2 = sqr(s_speedlimit_code);
+
+  mrc_fld_data_t gamma_m1 = s_gamma - 1.f;
+  mrc_fld_data_t eps    = 1e-9f;
+  mrc_fld_data_t two_pi_d_i = 2. * M_PI * s_d_i;
+  bool have_hall = s_opt_hall != OPT_HALL_NONE;
+
+  struct mrc_fld *b0 = mhd->b0;
+
+  mrc_fld_data_t dt = 1e10f;
   pde_for_each_patch(p) {
     fld3d_t *zmaskn_patches[] = { &p_zmask, &p_ymask, &p_U, NULL };
     fld3d_get_list(p, zmaskn_patches);
@@ -156,28 +166,8 @@ pde_mhd_get_dt_scons_v2(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld 
     
     patch_calc_zmask(p_zmask, p_U, p_ymask);
     
-    fld3d_put_list(p, zmaskn_patches);
-    if (s_opt_background) {
-      fld3d_put(&s_p_aux.b0, p);
-    }
-  }
-
-  struct mrc_fld *b0 = mhd->b0;
-
-  mrc_fld_data_t dt     = 1e10f;
-  pde_for_each_patch(p) {
-    mrc_fld_data_t splim2 = sqr(s_speedlimit_code);
-    mrc_fld_data_t gamma_m1 = s_gamma - 1.f;
-    mrc_fld_data_t eps    = 1e-9f;
-    mrc_fld_data_t two_pi_d_i = 2. * M_PI * s_d_i;
-    bool have_hall = s_d_i > 0.f;
-
-    float *fd1x = ggcm_mhd_crds_get_crd_p(mhd->crds, 0, FD1, p);
-    float *fd1y = ggcm_mhd_crds_get_crd_p(mhd->crds, 1, FD1, p);
-    float *fd1z = ggcm_mhd_crds_get_crd_p(mhd->crds, 2, FD1, p);
-
     mrc_fld_foreach(x, i,j,k, 0, 0) {
-      mrc_fld_data_t hh = mrc_fld_max(mrc_fld_max(fd1x[i], fd1y[j]), fd1z[k]);
+      mrc_fld_data_t hh = mrc_fld_max(mrc_fld_max(FD1X(i), FD1Y(j)), FD1Z(k));
       mrc_fld_data_t rri = 1.f / mrc_fld_abs(RR_(x, i,j,k, p)); // FIME abs necessary?
       mrc_fld_data_t bb = (sqr(.5f * (BTX_(x, i,j,k, p) + BTX_(x, i+di,j,k, p))) + 
 			   sqr(.5f * (BTY_(x, i,j,k, p) + BTY_(x, i,j+dj,k, p))) +
@@ -200,6 +190,11 @@ pde_mhd_get_dt_scons_v2(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld 
       mrc_fld_data_t tt = s_cfl / mrc_fld_max(eps, hh*vv*zm);
       dt = mrc_fld_min(dt, tt);
     } mrc_fld_foreach_end;
+
+    fld3d_put_list(p, zmaskn_patches);
+    if (s_opt_background) {
+      fld3d_put(&s_p_aux.b0, p);
+    }
   }
 
   mrc_fld_data_t dtn;
