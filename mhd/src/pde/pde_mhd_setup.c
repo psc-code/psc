@@ -228,6 +228,7 @@ static bool s_opt_bc_reconstruct _mrc_unused;
 static struct mrc_param_select opt_mhd_descr[] _mrc_unused = {
   { .val = OPT_MHD_C      , .str = "c"           },
   { .val = OPT_MHD_FORTRAN, .str = "fortran"     },
+  { .val = OPT_MHD_C_V2   , .str = "c_v2"        },
   {},
 };
 

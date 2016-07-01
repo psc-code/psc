@@ -80,8 +80,14 @@
 #define OPT_GET_DT_HD             (4)
 
 // -- OPT_MHD_PRIMVAR ---------------------------------------------------
+// -- and many others
+//
+// in general, "MHD_C" is a straight translation into C, while "MHD_C2", 
+// if it exists, maybe equivalent but rewritten, and may have small
+// differences
 
 #define OPT_MHD_C       (1)
 #define OPT_MHD_FORTRAN (2)
+#define OPT_MHD_C_V2    (3)
 
 #endif

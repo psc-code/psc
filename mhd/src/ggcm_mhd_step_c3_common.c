@@ -378,8 +378,11 @@ ggcm_mhd_step_c3_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
 {
   struct ggcm_mhd *mhd = step->mhd;
 
+  // FIXME, the fill_ghosts is necessary (should be in other steps, too)
+  // if we do it here, we should avoid doing it again in run() -- but note
+  // we're only doing it here if do_nwst is true.
   ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
-  return pde_mhd_get_dt_scons_v2(mhd, x, mhd->ymask);
+  return pde_mhd_get_dt_scons(mhd, x, mhd->ymask);
 }
 
 // ----------------------------------------------------------------------
@@ -494,6 +497,14 @@ static struct param ggcm_mhd_step_c3_descr[] = {
 								  opt_riemann_descr)            },
   { "background"         , VAR(opt.background)     , PARAM_BOOL(false)                          },
   { "limiter_mc_beta"    , VAR(opt.limiter_mc_beta), PARAM_DOUBLE(2.)                           },
+  { "mhd_primvar"        , VAR(opt.mhd_primvar)    , PARAM_SELECT(OPT_MHD_C,
+								  opt_mhd_descr)                },
+  { "mhd_primbb"         , VAR(opt.mhd_primbb)     , PARAM_SELECT(OPT_MHD_C,
+								  opt_mhd_descr)                },
+  { "mhd_zmaskn"         , VAR(opt.mhd_zmaskn)     , PARAM_SELECT(OPT_MHD_C,
+								  opt_mhd_descr)                },
+  { "mhd_newstep"        , VAR(opt.mhd_newstep)    , PARAM_SELECT(OPT_MHD_C_V2,
+								  opt_mhd_descr)                },
   
   {},
 };
