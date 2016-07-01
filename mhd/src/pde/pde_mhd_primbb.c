@@ -17,35 +17,23 @@
 #endif
 
 // ----------------------------------------------------------------------
-// patch_calc_Bt_cc
-//
-// cell-averaged Btotal (ie., add B0 back in, if applicable)
-
-static void _mrc_unused
-patch_calc_Bt_cc(fld3d_t p_Bcc, fld3d_t p_U, int l, int r)
-{
-  fld3d_t p_B = fld3d_make_view(p_U, BX);
-
-  fld3d_foreach(i,j,k, l, r) {
-    F3S(p_Bcc, 0, i,j,k) = BTXcc(p_B, i,j,k);
-    F3S(p_Bcc, 1, i,j,k) = BTYcc(p_B, i,j,k);
-    F3S(p_Bcc, 2, i,j,k) = BTZcc(p_B, i,j,k);
-  } fld3d_foreach_end;
-}
-
-// ======================================================================
-// testing / compatibility stuff follows...
-
-// ----------------------------------------------------------------------
 // patch_primbb_c
 //
+// cell-averaged Btotal (ie., add B0 back in, if applicable)
 // was also known in Fortran as currbb()
-// superseded by the above
 
 static void
 patch_primbb_c(fld3d_t p_Bcc, fld3d_t p_U)
 {
-  patch_calc_Bt_cc(p_Bcc, p_U, 1, 1);
+  fld3d_t p_B = fld3d_make_view(p_U, BX);
+
+  // FIXME, at least in most cases (zmaskn, get_dt), (0, 0) limits would
+  // be enough
+  fld3d_foreach(i,j,k, 1, 1) {
+    F3S(p_Bcc, 0, i,j,k) = BTXcc(p_B, i,j,k);
+    F3S(p_Bcc, 1, i,j,k) = BTYcc(p_B, i,j,k);
+    F3S(p_Bcc, 2, i,j,k) = BTZcc(p_B, i,j,k);
+  } fld3d_foreach_end;
 }
 
 // ----------------------------------------------------------------------

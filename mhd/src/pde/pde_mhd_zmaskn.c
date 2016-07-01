@@ -101,7 +101,7 @@ patch_calc_zmask_gold(fld3d_t p_zmask, fld3d_t p_U, fld3d_t p_ymask)
 // ----------------------------------------------------------------------
 // patch_calc_zmask
 //
-// like zmaskn(), but includes preparation step (primbb)
+// like zmaskn(), but doesn't require preparation step (primbb)
 
 static void _mrc_unused
 patch_calc_zmask(fld3d_t p_zmask, fld3d_t p_U, fld3d_t p_ymask)
