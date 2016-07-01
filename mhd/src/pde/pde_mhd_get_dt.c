@@ -50,6 +50,52 @@ patch_get_dt_scons_c(fld3d_t p_U, fld3d_t p_ymask)
 }
 
 // ----------------------------------------------------------------------
+// patch_get_dt_scons_v2
+//
+// FIXME, consolidate with above
+
+static mrc_fld_data_t
+patch_get_dt_scons_v2(fld3d_t p_U, fld3d_t p_ymask, fld3d_t p_zmask)
+{
+  fld3d_t p_B = fld3d_make_view(p_U, BX);
+  
+  patch_calc_zmask(p_zmask, p_U, p_ymask);
+  
+  mrc_fld_data_t splim2 = sqr(s_speedlimit_code);
+
+  mrc_fld_data_t gamma_m1 = s_gamma - 1.f;
+  mrc_fld_data_t eps    = 1e-9f;
+  mrc_fld_data_t two_pi_d_i = 2. * M_PI * s_d_i;
+  bool have_hall = s_opt_hall != OPT_HALL_NONE;
+
+  mrc_fld_data_t dt = 1e10f;
+  fld3d_foreach(i,j,k, 0, 0) {
+    mrc_fld_data_t hh = mrc_fld_max(mrc_fld_max(FD1X(i), FD1Y(j)), FD1Z(k));
+    mrc_fld_data_t rri = 1.f / mrc_fld_abs(F3S(p_U, RR, i,j,k));
+    mrc_fld_data_t bb = sqr(BTXcc(p_B, i,j,k)) + sqr(BTYcc(p_B, i,j,k)) + sqr(BTZcc(p_B, i,j,k));
+    mrc_fld_data_t rrvv = (sqr(F3S(p_U, RVX, i,j,k)) + 
+			   sqr(F3S(p_U, RVY, i,j,k)) +
+			   sqr(F3S(p_U, RVZ, i,j,k)));
+    mrc_fld_data_t pp = gamma_m1 * (F3S(p_U, UU, i,j,k) - .5f * rrvv * rri);
+    
+    if (have_hall) {
+      bb *= 1 + sqr(two_pi_d_i * hh);
+      }      
+    
+    mrc_fld_data_t vA2 = mrc_fld_min(bb * rri, splim2);
+    mrc_fld_data_t cs2 = s_gamma * pp * rri;
+    mrc_fld_data_t vv = mrc_fld_sqrt(vA2 + cs2) + mrc_fld_sqrt(rrvv) * rri;
+    vv = mrc_fld_max(eps, vv);
+      
+    mrc_fld_data_t zm = F3S(p_zmask, 0, i,j,k);
+    mrc_fld_data_t tt = s_cfl / mrc_fld_max(eps, hh*vv*zm);
+    dt = mrc_fld_min(dt, tt);
+  } fld3d_foreach_end;
+
+  return dt;
+}
+
+// ----------------------------------------------------------------------
 // patch_get_dt_scons_ggcm_fortran
 
 #if defined(HAVE_OPENGGCM_FORTRAN) && defined(MRC_FLD_AS_FLOAT_H)
@@ -145,13 +191,6 @@ pde_mhd_get_dt_scons_v2(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld 
     fld3d_setup(&s_p_aux.b0, mhd->b0);
   }
   
-  mrc_fld_data_t splim2 = sqr(s_speedlimit_code);
-
-  mrc_fld_data_t gamma_m1 = s_gamma - 1.f;
-  mrc_fld_data_t eps    = 1e-9f;
-  mrc_fld_data_t two_pi_d_i = 2. * M_PI * s_d_i;
-  bool have_hall = s_opt_hall != OPT_HALL_NONE;
-
   mrc_fld_data_t dt = 1e10f;
   pde_for_each_patch(p) {
     fld3d_t *zmaskn_patches[] = { &p_zmask, &p_ymask, &p_U, NULL };
@@ -160,33 +199,8 @@ pde_mhd_get_dt_scons_v2(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld 
       fld3d_get(&s_p_aux.b0, p);
     }
 
-    fld3d_t p_B = fld3d_make_view(p_U, BX);
+    dt = mrc_fld_min(dt, patch_get_dt_scons_v2(p_U, p_ymask, p_zmask));
     
-    patch_calc_zmask(p_zmask, p_U, p_ymask);
-    
-    fld3d_foreach(i,j,k, 0, 0) {
-      mrc_fld_data_t hh = mrc_fld_max(mrc_fld_max(FD1X(i), FD1Y(j)), FD1Z(k));
-      mrc_fld_data_t rri = 1.f / mrc_fld_abs(F3S(p_U, RR, i,j,k));
-      mrc_fld_data_t bb = sqr(BTXcc(p_B, i,j,k)) + sqr(BTYcc(p_B, i,j,k)) + sqr(BTZcc(p_B, i,j,k));
-      mrc_fld_data_t rrvv = (sqr(F3S(p_U, RVX, i,j,k)) + 
-			     sqr(F3S(p_U, RVY, i,j,k)) +
-			     sqr(F3S(p_U, RVZ, i,j,k)));
-      mrc_fld_data_t pp = gamma_m1 * (F3S(p_U, UU, i,j,k) - .5f * rrvv * rri);
-
-      if (have_hall) {
-	bb *= 1 + sqr(two_pi_d_i * hh);
-      }      
-      
-      mrc_fld_data_t vA2 = mrc_fld_min(bb * rri, splim2);
-      mrc_fld_data_t cs2 = s_gamma * pp * rri;
-      mrc_fld_data_t vv = mrc_fld_sqrt(vA2 + cs2) + mrc_fld_sqrt(rrvv) * rri;
-      vv = mrc_fld_max(eps, vv);
-      
-      mrc_fld_data_t zm = F3S(p_zmask, 0, i,j,k);
-      mrc_fld_data_t tt = s_cfl / mrc_fld_max(eps, hh*vv*zm);
-      dt = mrc_fld_min(dt, tt);
-    } fld3d_foreach_end;
-
     fld3d_put_list(p, zmaskn_patches);
     if (s_opt_background) {
       fld3d_put(&s_p_aux.b0, p);
