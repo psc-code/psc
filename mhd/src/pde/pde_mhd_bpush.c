@@ -4,6 +4,8 @@
 
 // ----------------------------------------------------------------------
 // patch_bpush1_c
+//
+// NOTE: this one expects -E, not E as input
 
 static void
 patch_bpush1_c(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Uprev, fld3d_t p_E)
@@ -21,24 +23,6 @@ patch_bpush1_c(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t p_Uprev, fld3d_t p_E)
       F3S(p_Unext, BZ, i,j,k) = F3S(p_Uprev, BZ, i,j,k) + dt * CURLZ_FC(p_E, i,j,k);
     } fld3d_foreach_end;
   }
-}
-
-// ----------------------------------------------------------------------
-// patch_update_ct
-//
-// FIXME, consolidate with above (loop limits?)
-
-static void _mrc_unused
-patch_update_ct(fld3d_t p_Unext, mrc_fld_data_t dt, fld3d_t E)
-{
-  fld3d_foreach(i,j,k, 0, 1) {
-    F3S(p_Unext, BX, i,j,k) += dt * (PDE_INV_DY(j) * (F3S(E, 2, i,j+dj,k) - F3S(E, 2, i,j,k)) -
-				     PDE_INV_DZ(k) * (F3S(E, 1, i,j,k+dk) - F3S(E, 1, i,j,k)));
-    F3S(p_Unext, BY, i,j,k) += dt * (PDE_INV_DZ(k) * (F3S(E, 0, i,j,k+dk) - F3S(E, 0, i,j,k)) -
-				     PDE_INV_DX(i) * (F3S(E, 2, i+di,j,k) - F3S(E, 2, i,j,k)));
-    F3S(p_Unext, BZ, i,j,k) += dt * (PDE_INV_DX(i) * (F3S(E, 1, i+di,j,k) - F3S(E, 1, i,j,k)) -
-				     PDE_INV_DY(j) * (F3S(E, 0, i,j+dj,k) - F3S(E, 0, i,j,k)));
-  } fld3d_foreach_end;
 }
 
 // ----------------------------------------------------------------------

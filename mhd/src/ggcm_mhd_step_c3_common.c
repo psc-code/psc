@@ -368,7 +368,7 @@ pushstage(struct ggcm_mhd_step *step, struct mrc_fld *f_Unext,
 
     fld3d_get_list(p, update_ct_patches);
     // update B using E
-    patch_update_ct(p_Unext, dt, p_E);
+    patch_bpush1(p_Unext, dt, p_Unext, p_E);
     fld3d_put_list(p, update_ct_patches);
   }
 }
@@ -506,6 +506,8 @@ static struct param ggcm_mhd_step_c3_descr[] = {
   { "mhd_newstep"        , VAR(opt.mhd_newstep)    , PARAM_SELECT(OPT_MHD_C_V2,
 								  opt_mhd_descr)                },
   { "mhd_push_ej"        , VAR(opt.mhd_push_ej)    , PARAM_SELECT(OPT_MHD_C,
+								  opt_mhd_descr)                },
+  { "mhd_bpush1"         , VAR(opt.mhd_bpush1)     , PARAM_SELECT(OPT_MHD_C,
 								  opt_mhd_descr)                },
   
   {},
