@@ -43,7 +43,6 @@
 #include "pde/pde_mhd_get_dt.c"
 
 #include "mhd_3d.c"
-#include "mhd_sc.c"
 
 // ======================================================================
 // ggcm_mhd_step subclass "mhdcc"
