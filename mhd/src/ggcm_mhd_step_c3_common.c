@@ -295,7 +295,7 @@ patch_pushstage_pt2(struct ggcm_mhd_step *step, fld3d_t p_Unext, mrc_fld_data_t 
   // update momentum (grad p)
   pushpp_c(p_Unext, p_W, p_zmask, dt);
   // update momentum (J x B) and energy
-  patch_push_ej_b0(p_Unext, dt, p_Ucurr, p_W, p_zmask, s_p_aux.b0);
+  patch_push_ej(p_Unext, dt, p_Ucurr, p_W, p_zmask);
 
   // find E
   patch_rmaskn_c(p_rmask, p_zmask);
@@ -504,6 +504,8 @@ static struct param ggcm_mhd_step_c3_descr[] = {
   { "mhd_zmaskn"         , VAR(opt.mhd_zmaskn)     , PARAM_SELECT(OPT_MHD_C,
 								  opt_mhd_descr)                },
   { "mhd_newstep"        , VAR(opt.mhd_newstep)    , PARAM_SELECT(OPT_MHD_C_V2,
+								  opt_mhd_descr)                },
+  { "mhd_push_ej"        , VAR(opt.mhd_push_ej)    , PARAM_SELECT(OPT_MHD_C,
 								  opt_mhd_descr)                },
   
   {},
