@@ -376,11 +376,10 @@ pushstage(struct ggcm_mhd_step *step, struct mrc_fld *f_Unext,
 static double
 ggcm_mhd_step_c3_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
 {
-  struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
 
   ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
-  return pde_mhd_get_dt_scons_v2(mhd, x, sub->zmask);
+  return pde_mhd_get_dt_scons_v2(mhd, x, mhd->ymask);
 }
 
 // ----------------------------------------------------------------------

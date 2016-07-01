@@ -55,16 +55,18 @@ patch_get_dt_scons_c(fld3d_t p_U, fld3d_t p_ymask)
 // FIXME, consolidate with above
 
 static mrc_fld_data_t
-patch_get_dt_scons_v2(fld3d_t p_U, fld3d_t p_ymask, fld3d_t p_zmask)
+patch_get_dt_scons_v2(fld3d_t p_U, fld3d_t p_ymask)
 {
+  static fld3d_t p_zmask;
+  fld3d_setup_tmp_compat(&p_zmask, 1, _ZMASK);
   fld3d_t p_B = fld3d_make_view(p_U, BX);
   
   patch_calc_zmask(p_zmask, p_U, p_ymask);
   
   mrc_fld_data_t splim2 = sqr(s_speedlimit_code);
+  mrc_fld_data_t eps    = 1e-9f;
 
   mrc_fld_data_t gamma_m1 = s_gamma - 1.f;
-  mrc_fld_data_t eps    = 1e-9f;
   mrc_fld_data_t two_pi_d_i = 2. * M_PI * s_d_i;
   bool have_hall = s_opt_hall != OPT_HALL_NONE;
 
@@ -80,7 +82,7 @@ patch_get_dt_scons_v2(fld3d_t p_U, fld3d_t p_ymask, fld3d_t p_zmask)
     
     if (have_hall) {
       bb *= 1 + sqr(two_pi_d_i * hh);
-      }      
+    }
     
     mrc_fld_data_t vA2 = mrc_fld_min(bb * rri, splim2);
     mrc_fld_data_t cs2 = s_gamma * pp * rri;
@@ -179,29 +181,26 @@ pde_mhd_get_dt_scons(struct ggcm_mhd *mhd, struct mrc_fld *f_U, struct mrc_fld *
 // FIXME, should be merged with the other scons get_dt
 
 static mrc_fld_data_t _mrc_unused
-pde_mhd_get_dt_scons_v2(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *f_zmask)
+pde_mhd_get_dt_scons_v2(struct ggcm_mhd *mhd, struct mrc_fld *f_U, struct mrc_fld *f_ymask)
 {
-  assert(s_opt_eqn == OPT_EQN_MHD_SCONS);
-
-  fld3d_t p_zmask, p_ymask, p_U;
-  fld3d_setup(&p_zmask, f_zmask);
-  fld3d_setup(&p_ymask, mhd->ymask);
-  fld3d_setup(&p_U, x);
+  fld3d_t p_U, p_ymask;
+  fld3d_setup(&p_U    , f_U);
+  fld3d_setup(&p_ymask, f_ymask);
   if (s_opt_background) {
     fld3d_setup(&s_p_aux.b0, mhd->b0);
   }
   
   mrc_fld_data_t dt = 1e10f;
   pde_for_each_patch(p) {
-    fld3d_t *zmaskn_patches[] = { &p_zmask, &p_ymask, &p_U, NULL };
-    fld3d_get_list(p, zmaskn_patches);
+    fld3d_t *patches[] = { &p_U, &p_ymask, NULL };
+    fld3d_get_list(p, patches);
     if (s_opt_background) {
       fld3d_get(&s_p_aux.b0, p);
     }
 
-    dt = mrc_fld_min(dt, patch_get_dt_scons_v2(p_U, p_ymask, p_zmask));
+    dt = mrc_fld_min(dt, patch_get_dt_scons_v2(p_U, p_ymask));
     
-    fld3d_put_list(p, zmaskn_patches);
+    fld3d_put_list(p, patches);
     if (s_opt_background) {
       fld3d_put(&s_p_aux.b0, p);
     }
