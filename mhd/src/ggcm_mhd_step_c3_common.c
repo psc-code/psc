@@ -290,7 +290,7 @@ patch_pushstage_pt2(struct ggcm_mhd_step *step, fld3d_t p_Unext, mrc_fld_data_t 
   mhd_update_finite_volume(mhd, p_Unext, p_F, p_ymask, dt, 0, 0);
 
   if (stage == 0) {
-    patch_calc_zmask_b0(p_zmask, p_Ucurr, p_ymask);
+    patch_calc_zmask(p_zmask, p_Ucurr, p_ymask);
   }
   // update momentum (grad p)
   pushpp_c(p_Unext, p_Wcurr, p_zmask, dt);
@@ -395,7 +395,7 @@ ggcm_mhd_step_c3_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
       fld3d_get(&s_p_aux.b0, p);
     }
     
-    patch_calc_zmask_b0(p_zmask, p_U, p_ymask);
+    patch_calc_zmask(p_zmask, p_U, p_ymask);
     
     fld3d_put_list(p, zmaskn_patches);
     if (s_opt_background) {
@@ -466,7 +466,7 @@ ggcm_mhd_step_c3_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
     }
 
     patch_prim_from_cons(p_W, p_U, 2);
-    patch_calc_zmask_b0(p_zmask, p_U, p_ymask); // FIXME, name conflict
+    patch_calc_zmask(p_zmask, p_U, p_ymask);
     patch_calc_e(p_E, mhd->dt, p_U, p_W, p_zmask, p_rmask);
 
     fld3d_put_list(p, get_e_ec_patches);
