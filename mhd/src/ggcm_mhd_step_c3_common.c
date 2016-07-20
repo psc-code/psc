@@ -320,7 +320,7 @@ patch_pushstage_pt2(struct ggcm_mhd_step *step, fld3d_t p_Unext, mrc_fld_data_t 
 static void
 pushstage(struct ggcm_mhd_step *step, struct mrc_fld *f_Unext,
 	  mrc_fld_data_t dt, struct mrc_fld *f_Ucurr, struct mrc_fld *f_W,
-	  int stage, bool limit)
+	  int stage)
 {
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
@@ -340,6 +340,8 @@ pushstage(struct ggcm_mhd_step *step, struct mrc_fld *f_Unext,
     fld3d_setup(&p_F[d], sub->f_F[d]);
   }
   fld3d_setup(&p_E, sub->f_E);
+
+  bool limit = stage != 0 && s_mhd_time > s_timelo;
 
   // primvar, badval, reconstruct
   pde_for_each_patch(p) {
@@ -401,12 +403,11 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *f_U)
   // set f_Uhalf = f_U
   mrc_fld_copy(f_Uhalf, f_U);
   ggcm_mhd_fill_ghosts(mhd, f_U, 0, mhd->time);
-  pushstage(step, f_Uhalf, .5f * mhd->dt, f_U, f_W, 0, false);
+  pushstage(step, f_Uhalf, .5f * mhd->dt, f_U, f_W, 0);
 
   // f_U += dt * rhs(f_Uhalf)
   ggcm_mhd_fill_ghosts(mhd, f_Uhalf, 0, mhd->time + mhd->bndt);
-  int limit = mhd->time >= mhd->par.timelo;
-  pushstage(step, f_U, mhd->dt, f_Uhalf, f_W, 1, limit);
+  pushstage(step, f_U, mhd->dt, f_Uhalf, f_W, 1);
 }
 
 // ----------------------------------------------------------------------
