@@ -80,6 +80,7 @@ libmhd_la_SOURCES = \
 	ggcm_mhd_ic.c \
 	ggcm_mhd_ic_mirdip_float.c \
 	ggcm_mhd_ic_mirdip_double.c \
+	ggcm_mhd_ic_obstacle_double.c \
 	\
 	ggcm_mhd_step.c \
 	ggcm_mhd_get_fields.c \
