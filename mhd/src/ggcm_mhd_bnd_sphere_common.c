@@ -99,7 +99,8 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld, int m)
     if (MT == MT_SEMI_CONSERVATIVE ||
         MT == MT_SEMI_CONSERVATIVE_GGCM) {
       M3(fld, m + UU , ix,iy,iz, p) = uubn;
-    } else if (MT == MT_FULLY_CONSERVATIVE) {
+    } else if (MT == MT_FULLY_CONSERVATIVE ||
+	       MT == MT_FULLY_CONSERVATIVE_CC) {
       M3(fld, m + EE , ix,iy,iz, p) = eebn;
     } else {
       assert(0);
