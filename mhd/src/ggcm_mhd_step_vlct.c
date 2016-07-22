@@ -4,7 +4,6 @@
 #include <ggcm_mhd_private.h>
 #include <ggcm_mhd_defs.h>
 #include <ggcm_mhd_diag.h>
-#include <mhd_riemann.h>
 
 #include <mrc_domain.h>
 #include <mrc_ddc.h>

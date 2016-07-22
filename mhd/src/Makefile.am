@@ -108,15 +108,6 @@ libmhd_la_SOURCES = \
 	ggcm_mhd_step_mhdcc_common.c \
 	ggcm_mhd_step_vlct.c \
 	ggcm_mhd_step_vl.c \
-	mhd_riemann.c \
-	mhd_riemann_rusanov_float.c \
-	mhd_riemann_rusanov_double.c \
-	mhd_riemann_rusanov.c \
-	mhd_riemann_hll.c \
-	mhd_riemann_hlld.c \
-	mhd_riemann_hydro_rusanov.c \
-	mhd_riemann_hydro_hll.c \
-	mhd_riemann_hydro_hllc.c \
 	mhd_util.c \
 	\
 	ggcm_mhd_gkeyll.c \

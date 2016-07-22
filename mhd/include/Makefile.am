@@ -23,6 +23,4 @@ include_HEADERS = \
 	ggcm_mhd_step_cweno_private.h \
 	ggcm_mhd_step_gkeyll_lua.h \
 	ggcm_mhd_step.h \
-	ggcm_mhd_step_private.h \
-	mhd_riemann.h \
-	mhd_riemann_private.h
+	ggcm_mhd_step_private.h
