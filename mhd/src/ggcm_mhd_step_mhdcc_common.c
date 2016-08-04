@@ -20,8 +20,6 @@
 
 #include "pde/pde_defs.h"
 
-static bool s_opt_bc_reconstruct = false;
-
 // mhd options
 
 #define OPT_EQN OPT_EQN_MHD_FCONS
@@ -377,6 +375,7 @@ static struct param ggcm_mhd_step_mhdcc_descr[] = {
   { "get_dt"             , VAR(opt.get_dt)         , PARAM_SELECT(OPT_GET_DT_MHD,
 								  opt_get_dt_descr)             },
   { "background"         , VAR(opt.background)     , PARAM_BOOL(false)                          },
+  { "bc_reconstruct"     , VAR(opt.bc_reconstruct) , PARAM_BOOL(false)                          },
   { "limiter_mc_beta"    , VAR(opt.limiter_mc_beta), PARAM_DOUBLE(2.)                           },
   { "divb_glm_alpha"     , VAR(opt.divb_glm_alpha) , PARAM_DOUBLE(.1)                           },
   { "divb_glm_ch_fac"    , VAR(opt.divb_glm_ch_fac), PARAM_DOUBLE(1.)                           },

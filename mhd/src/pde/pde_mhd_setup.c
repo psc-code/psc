@@ -27,6 +27,7 @@ struct mhd_options {
   int time_integrator;
   int get_dt;
   bool background;
+  bool bc_reconstruct;
 
   double divb_glm_alpha;
   double divb_glm_ch_fac;
@@ -171,6 +172,15 @@ static const bool s_opt_background = OPT_BACKGROUND;
 static bool s_opt_background _mrc_unused;
 #endif
 
+// ----------------------------------------------------------------------
+// bc_reconstruct
+
+#ifdef OPT_BC_RECONSTRUCT
+static const bool s_opt_bc_reconstruct = OPT_BC_RECONSTRUCT;
+#else
+static bool s_opt_bc_reconstruct _mrc_unused;
+#endif
+
 // ======================================================================
 // calculated options follow
 
@@ -252,6 +262,13 @@ pde_mhd_set_options(struct ggcm_mhd *mhd, struct mhd_options *opt)
   assert(OPT_BACKGROUND == opt->background);
 #else
   s_opt_background = opt->background;
+#endif
+
+  // bc_reconstruct
+#ifdef OPT_BC_RECONSTRUCT
+  assert(OPT_BC_RECONSTRUCT == opt->bc_reconstruct);
+#else
+  s_opt_bc_reconstruct = opt->bc_reconstruct;
 #endif
 
   // ----------------------------------------------------------------------
