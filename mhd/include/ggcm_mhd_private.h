@@ -64,6 +64,7 @@ struct ggcm_mhd {
   struct mrc_domain *domain;
   struct mrc_fld *fld;
   struct mrc_fld *ymask;
+  struct mrc_fld *bnd_mask;
   // background B field
   // b0 = NULL means there is none
   struct mrc_fld *b0;

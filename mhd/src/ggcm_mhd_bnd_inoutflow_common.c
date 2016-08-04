@@ -605,6 +605,49 @@ ggcm_mhd_bnd_sub_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld,
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_bnd_sub_setup
+
+static void
+ggcm_mhd_bnd_sub_setup(struct ggcm_mhd_bnd *bnd)
+{
+  struct ggcm_mhd *mhd = bnd->mhd;
+
+  if (!mhd->bnd_mask) {
+    return;
+  }
+
+  struct mrc_fld *bnd_mask = mrc_fld_get_as(mhd->bnd_mask, FLD_TYPE);
+  const int *dims = mrc_fld_spatial_dims(bnd_mask);
+
+  for (int p = 0; p < mrc_fld_nr_patches(bnd_mask); p++) {
+    struct mrc_patch_info info;
+    mrc_domain_get_local_patch_info(mhd->domain, p, &info);
+    mrc_fld_foreach(bnd_mask, ix,iy,iz, 2, 2) {
+      int i[3] = { ix, iy, iz };
+      for (int d = 0; d < 3; d++) {
+	if (mrc_domain_at_boundary_lo(mhd->domain, d, p)) {
+	  if (i[d] < 0) {
+	    M3(bnd_mask, 0, ix,iy,iz, p) = 1.f;
+	  } else if (i[d] == 0) {
+	    M3(bnd_mask, 0, ix,iy,iz, p) = 2.f;
+	  }
+	}
+ 
+	if (mrc_domain_at_boundary_hi(mhd->domain, d, p)) {
+	  if (i[d] >= dims[d]) {
+	      M3(bnd_mask, 0, ix,iy,iz, p) = 1.f;
+	    } else if (i[d] == dims[d] - 1) {
+	      M3(bnd_mask, 0, ix,iy,iz, p) = 2.f;
+	    }
+	}
+      }
+   } mrc_fld_foreach_end;
+  }
+
+  mrc_fld_put_as(bnd_mask, mhd->bnd_mask);
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_bnd inflow description
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_bnd_sub, x)
@@ -630,6 +673,7 @@ struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_inoutflow = {
   .name             = ggcm_mhd_bnd_sub_name,
   .size             = sizeof(struct ggcm_mhd_bnd_sub),
   .param_descr      = ggcm_mhd_bnd_sub_descr,
+  .setup            = ggcm_mhd_bnd_sub_setup,
   .fill_ghosts      = ggcm_mhd_bnd_sub_fill_ghosts,
 };
 

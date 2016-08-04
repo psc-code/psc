@@ -296,6 +296,8 @@ pde_mhd_setup(struct ggcm_mhd *mhd)
 // kept around statically so we don't have to pass all this crap
 
 struct mhd_aux {
+  // bnd_mask for specifying ghost point (1), next-to-ghost point (2)
+  fld1d_t bnd_mask;
   // current density for Hall term, resistivity
   fld1d_vec_t j;
 };
@@ -305,5 +307,6 @@ static struct mhd_aux s_aux;
 static void _mrc_unused
 pde_mhd_aux_setup()
 {
+  fld1d_setup(&s_aux.bnd_mask);
   fld1d_vec_setup(&s_aux.j);
 }

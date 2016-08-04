@@ -32,6 +32,31 @@ struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_ymask = {
 
 
 // ======================================================================
+// ggcm_mhd_diag_item subclass "bnd_mask"
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_diag_item_bnd_mask_run
+
+static void
+ggcm_mhd_diag_item_bnd_mask_run(struct ggcm_mhd_diag_item *item,
+                               struct mrc_io *io, struct mrc_fld *f,
+                               int diag_type, float plane)
+{
+  struct ggcm_mhd *mhd = item->diag->mhd;
+  assert(mhd->bnd_mask);
+  ggcm_mhd_diag_c_write_one_field(io, mhd->bnd_mask, 0, "bnd_mask", 1., diag_type, plane);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_diag_item subclass "bnd_mask"
+
+struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_bnd_mask = {
+  .name             = "bnd_mask",
+  .run              = ggcm_mhd_diag_item_bnd_mask_run,
+};
+
+
+// ======================================================================
 // ggcm_mhd_diag_item subclass "b0"
 
 // ----------------------------------------------------------------------

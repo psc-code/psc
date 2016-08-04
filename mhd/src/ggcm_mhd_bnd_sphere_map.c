@@ -55,6 +55,31 @@ ggcm_mhd_bnd_sphere_map_set_ymask(struct ggcm_mhd_bnd_sphere_map *map)
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_bnd_sphere_map_set_bnd_mask
+
+static void
+ggcm_mhd_bnd_sphere_map_set_bnd_mask(struct ggcm_mhd_bnd_sphere_map *map)
+{
+  assert(map->mhd->bnd_mask);
+  struct mrc_fld *bnd_mask = mrc_fld_get_as(map->mhd->bnd_mask, FLD_TYPE);
+
+  struct mrc_crds *crds = mrc_domain_get_crds(map->mhd->domain);
+
+  for (int p = 0; p < mrc_fld_nr_patches(bnd_mask); p++) {
+    mrc_fld_foreach(bnd_mask, ix,iy,iz, 2, 2) {
+      double xx[3] = { MRC_MCRDX(crds, ix, p),
+		       MRC_MCRDY(crds, iy, p),
+		       MRC_MCRDZ(crds, iz, p) };
+      if (ggcm_mhd_bnd_sphere_map_is_bnd(map, xx)) {
+	M3(bnd_mask, 0, ix,iy,iz, p) = 1.;
+      }
+    } mrc_fld_foreach_end;
+  }
+  
+  mrc_fld_put_as(bnd_mask, map->mhd->bnd_mask);
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_bnd_sphere_map_find_dr
 //
 // find minimum cell size (over all of the domain -- FIXME?)
@@ -150,6 +175,10 @@ ggcm_mhd_bnd_sphere_map_setup(struct ggcm_mhd_bnd_sphere_map *map, struct ggcm_m
   ggcm_mhd_bnd_sphere_map_find_r1(map);
 
   ggcm_mhd_bnd_sphere_map_set_ymask(map);
+
+  if (mhd->bnd_mask) {
+    ggcm_mhd_bnd_sphere_map_set_bnd_mask(map);
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -432,9 +461,11 @@ ggcm_mhd_bnd_sphere_map_setup_fc(struct ggcm_mhd_bnd_sphere_map *map)
 {
   struct ggcm_mhd *mhd = map->mhd;
 
-#if 0
-  struct mrc_fld *ymask = mrc_fld_get_as(map->mhd->ymask, FLD_TYPE);
-#endif
+  struct mrc_fld *bnd_mask = NULL;
+  if (mhd->bnd_mask) {
+    bnd_mask = mrc_fld_get_as(mhd->bnd_mask, FLD_TYPE);
+  }
+
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
   int gdims[3];
   mrc_domain_get_global_dims(mhd->domain, gdims);
@@ -472,13 +503,14 @@ ggcm_mhd_bnd_sphere_map_setup_fc(struct ggcm_mhd_bnd_sphere_map *map)
 	      MRC_I2(map->fc_imap[d], 4, fc_n_map[d]) = bndp;
 	      fc_n_map[d]++;
 
-#if 0
-	      // for debugging, mark the ghostcells adjacent to
-	      // x-faces of the boundary in ymask
-	      if (d == 0) {
-		M3(ymask, 0, jx+bndp, jy,jz, p) = 2.;
-	      }
-#endif
+	      // mark the interior cells adjacent to the boundary faces
+              if (d == 0) {
+		M3(bnd_mask, 0, jx+bnd0,jy,jz, p) = 2.;
+	      } else if (d == 1) {
+		M3(bnd_mask, 0, jx,jy+bnd0,jz, p) = 2.;
+	      } else if (d == 2) {
+		M3(bnd_mask, 0, jx,jy,jz+bnd0, p) = 2.;
+              }
 	    }
 	  }
 	}
@@ -489,8 +521,9 @@ ggcm_mhd_bnd_sphere_map_setup_fc(struct ggcm_mhd_bnd_sphere_map *map)
   for (int d = 0; d < 3; d++) {
     assert(map->fc_n_map[d] == fc_n_map[d]);
   }
-#if 0
-  mrc_fld_put_as(ymask, map->mhd->ymask);
-#endif
+
+  if (bnd_mask) {
+    mrc_fld_put_as(bnd_mask, mhd->bnd_mask);
+  }
 }
 

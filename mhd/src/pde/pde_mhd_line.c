@@ -221,3 +221,28 @@ mhd_put_line_state(struct mrc_fld *U, fld1d_state_t u,
     assert(0);
   }
 }
+
+
+// ----------------------------------------------------------------------
+// mhd_get_line_1
+
+static void _mrc_unused
+mhd_get_line_1(fld1d_t u, struct mrc_fld *U,
+	       int j, int k, int dir, int p, int ib, int ie)
+{
+#define GET_LINE(X,Y,Z,I,J,K) do {			\
+    for (int i = ib; i < ie; i++) {			\
+      F1(u, i) = M3(U, 0, I,J,K, p);			\
+    }							\
+  } while (0)
+
+  if (dir == 0) {
+    GET_LINE(0,1,2, i,j,k);
+  } else if (dir == 1) {
+    GET_LINE(1,2,0, k,i,j);
+  } else if (dir == 2) {
+    GET_LINE(2,0,1, j,k,i);
+  }
+#undef GET_LINE
+}
+

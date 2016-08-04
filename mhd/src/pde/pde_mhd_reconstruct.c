@@ -130,7 +130,14 @@ mhd_reconstruct_plm_prim(fld1d_state_t Ul, fld1d_state_t Ur,
 
     // find limited slope
     mrc_fld_data_t dW[s_n_comps];
-    limit_slope(dW, dWm, dWp);
+    if (F1(s_aux.bnd_mask, i) == 2.f) {
+      // force constant reconstruction next to boundary
+      for (int m = 0; m < s_n_comps; m++) {
+	dW[m] = 0.f;
+      }
+    } else {
+      limit_slope(dW, dWm, dWp);
+    }
 
     // l/r states based on limited slope
     for (int m = 0; m < s_n_comps; m++) {

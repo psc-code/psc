@@ -90,6 +90,8 @@ ggcm_mhd_step_mhdcc_setup(struct ggcm_mhd_step *step)
   mhd->ymask = ggcm_mhd_get_3d_fld(mhd, 1);
   mrc_fld_set(mhd->ymask, 1.);
 
+  mhd->bnd_mask = ggcm_mhd_get_3d_fld(mhd, 1);
+
   sub->x_star = ggcm_mhd_get_3d_fld(mhd, s_n_comps);
   mrc_fld_dict_add_int(sub->x_star, "mhd_type", MT_FULLY_CONSERVATIVE_CC);
 
@@ -107,6 +109,7 @@ ggcm_mhd_step_mhdcc_destroy(struct ggcm_mhd_step *step)
   struct ggcm_mhd *mhd = step->mhd;
 
   ggcm_mhd_put_3d_fld(mhd, mhd->ymask);
+  ggcm_mhd_put_3d_fld(mhd, mhd->bnd_mask);
   ggcm_mhd_put_3d_fld(mhd, sub->x_star);
 }
 
@@ -145,6 +148,7 @@ mhd_flux_pt1(struct ggcm_mhd_step *step, struct mrc_fld *x,
 
   // FIXME: +2,+2 is specifically for PLM reconstr (and enough for PCM)
   mhd_get_line_state(U, x, j, k, dir, p, ib - 2, ie + 2);
+  mhd_get_line_1(s_aux.bnd_mask, step->mhd->bnd_mask, j, k, dir, p, ib - 2, ie + 2);
   mhd_prim_from_cons(W, U, ib - 2, ie + 2);
   mhd_reconstruct(U_l, U_r, W_l, W_r, W, (fld1d_t) {}, ib, ie + 1);
 }

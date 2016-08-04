@@ -36,6 +36,7 @@ extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_gkeyll_em;
 extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_ymask;
 extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_zmask;
 extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_rmask;
+extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_bnd_mask;
 extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_b0;
 extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_psi;
 
