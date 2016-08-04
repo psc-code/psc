@@ -115,21 +115,8 @@ ggcm_mhd_crds_gen_run_aux_default(struct ggcm_mhd_crds_gen *gen,
 void
 ggcm_mhd_crds_gen_run(struct ggcm_mhd_crds_gen *gen, struct ggcm_mhd_crds *crds)
 {
-  struct ggcm_mhd_crds_gen_ops *ops = ggcm_mhd_crds_gen_ops(gen);
-  assert(ops && ops->run);
-
-  ops->run(gen, crds);
   ggcm_mhd_crds_gen_run_default(gen, crds);
   ggcm_mhd_crds_gen_run_aux_default(gen, crds);
-}
-
-// ----------------------------------------------------------------------
-// ggcm_mhd_crds_gen_init
-
-static void
-ggcm_mhd_crds_gen_init()
-{
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_crds_gen, &ggcm_mhd_crds_gen_mrc_ops);
 }
 
 // ----------------------------------------------------------------------
@@ -149,6 +136,5 @@ struct mrc_class_ggcm_mhd_crds_gen mrc_class_ggcm_mhd_crds_gen = {
   .name             = "ggcm_mhd_crds_gen",
   .size             = sizeof(struct ggcm_mhd_crds_gen),
   .param_descr      = ggcm_mhd_crds_gen_descr,
-  .init             = ggcm_mhd_crds_gen_init,
 };
 

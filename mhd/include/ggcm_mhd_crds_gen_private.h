@@ -9,12 +9,4 @@ struct ggcm_mhd_crds_gen {
   bool legacy_fd1;
 };
 
-struct ggcm_mhd_crds_gen_ops {
-  MRC_SUBCLASS_OPS(struct ggcm_mhd_crds_gen);
-
-  void (*run)(struct ggcm_mhd_crds_gen *gen, struct ggcm_mhd_crds *crds);
-};
-
-extern struct ggcm_mhd_crds_gen_ops ggcm_mhd_crds_gen_mrc_ops;
-
 #endif
