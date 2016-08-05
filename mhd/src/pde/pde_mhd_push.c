@@ -135,16 +135,13 @@ patch_push(fld3d_t p_f, mrc_fld_data_t dt, int stage)
 static void
 patch_pushstage(fld3d_t p_f, mrc_fld_data_t dt, int stage)
 {
-  int m_curr;
-  if (stage == 0) {
-    m_curr = _RR1;
-  } else {
-    m_curr = _RR2;
-  }
-
   fld3d_t p_W, p_Ucurr, p_cmsv, p_bcc, p_ymask, p_zmask;
   fld3d_setup_view(&p_W    , p_f, _RR);
-  fld3d_setup_view(&p_Ucurr, p_f, m_curr);
+  if (stage == 0) {
+    fld3d_setup_view(&p_Ucurr, p_f, _RR1);
+  } else {
+    fld3d_setup_view(&p_Ucurr, p_f, _RR2);
+  }
   fld3d_setup_view(&p_cmsv , p_f, _CMSV);
 
   patch_primvar(p_W, p_Ucurr, p_cmsv);
@@ -158,6 +155,10 @@ patch_pushstage(fld3d_t p_f, mrc_fld_data_t dt, int stage)
   }
 
   patch_push(p_f, dt, stage);
+
+  if (stage == 1) {
+    patch_badval_checks_sc(p_Ucurr, p_W);
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -171,12 +172,7 @@ pde_mhd_pushstage(struct mrc_fld *x, mrc_fld_data_t dt, int stage)
 
   pde_for_each_patch(p) {
     fld3d_get(&p_f, p);
-
     patch_pushstage(p_f, dt, stage);
-    if (stage == 1) {
-      patch_badval_checks_sc(p_f, p_f); // FIXME
-    }
-
     fld3d_put(&p_f, p);
   }
 }
