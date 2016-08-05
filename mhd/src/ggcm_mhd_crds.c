@@ -95,14 +95,7 @@ ggcm_mhd_crds_set_from_mrc_crds(struct ggcm_mhd_crds *crds)
       }
 
       for (int i = -sw; i < ldims[d] + sw; i++) {
-	float old = bdx2[i];
-	if (i == -sw || i == ldims[d] + sw - 1) {
-	  // we could just use this always, but it gives finite precision
-	  // errors compared to the version below, which is how fortran did it
-	  bdx2[i] = MRC_MCRD_NC(mrc_crds, d, i+1, 0) - MRC_MCRD_NC(mrc_crds, d, i, 0);
-	} else {
-	  bdx2[i] = .5f * (MRC_MCRD(mrc_crds, d, i+1, 0) - MRC_MCRD(mrc_crds, d, i-1, 0));
-	}
+	bdx2[i] = MRC_MCRD_NC(mrc_crds, d, i+1, 0) - MRC_MCRD_NC(mrc_crds, d, i, 0);
 	bdx3[i] = 1.f / bdx2[i];
       }
     }
