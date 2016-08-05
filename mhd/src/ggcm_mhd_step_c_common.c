@@ -26,12 +26,9 @@
 
 #include "pde/pde_setup.c"
 #include "pde/pde_mhd_setup.c"
-#include "pde/pde_mhd_primvar.c"
-#include "pde/pde_mhd_primbb.c"
-#include "pde/pde_mhd_zmaskn.c"
 
 // TODO:
-// - handle various resistivity models
+// - handle remaining resistivity models
 // - handle limit2, limit3
 // - handle lowmask
 
@@ -79,22 +76,12 @@ static float *s_fd1x, *s_fd1y, *s_fd1z;
 #define BD4Y(iy) BD1Y(iy)
 #define BD4Z(iz) BD1Z(iz)
 
-#include "pde/pde_mhd_line.c"
-#include "pde/pde_mhd_convert.c"
-#include "pde/pde_mhd_divb_glm.c"
-#include "pde/pde_mhd_riemann.c"
 // FIXME, this is here, because it uses FD1X etc,
 // so it either shouldn't, or we put the macros above into some pde_* compat file
-#include "pde/pde_mhd_get_dt.c"
-#include "pde/pde_mhd_rmaskn.c"
-#include "pde/pde_mhd_pushfluid.c"
-#include "pde/pde_mhd_push_ej.c"
-#include "pde/pde_mhd_calce.c"
-#include "pde/pde_mhd_bpush.c"
-#include "pde/pde_mhd_calc_resis.c"
-#include "pde/pde_mhd_push.c"
 
-// ======================================================================
+#include "pde/pde_mhd_get_dt.c"
+#include "pde/pde_mhd_push.c"
+#include "pde/pde_mhd_badval_checks.c"
 
 // ======================================================================
 // ggcm_mhd_step subclass "c"
@@ -107,6 +94,52 @@ struct ggcm_mhd_step_c {
 };
 
 #define ggcm_mhd_step_c(step) mrc_to_subobj(step, struct ggcm_mhd_step_c)
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_step_c_setup_flds
+
+static void
+ggcm_mhd_step_c_setup_flds(struct ggcm_mhd_step *step)
+{
+  struct ggcm_mhd_step_c *sub = ggcm_mhd_step_c(step);
+  struct ggcm_mhd *mhd = step->mhd;
+
+  pde_mhd_set_options(mhd, &sub->opt);
+  mrc_fld_set_type(mhd->fld, FLD_TYPE);
+  mrc_fld_set_param_int(mhd->fld, "nr_ghosts", 2);
+  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_SEMI_CONSERVATIVE_GGCM);
+  mrc_fld_set_param_int(mhd->fld, "nr_comps", _NR_FLDS);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_step_c_setup
+
+static void
+ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
+{
+  struct ggcm_mhd *mhd = step->mhd;
+  pde_setup(mhd->fld);
+  pde_mhd_setup(mhd);
+
+  mhd->ymask = mrc_fld_make_view(mhd->fld, _YMASK, _YMASK + 1);
+  mrc_fld_set(mhd->ymask, 1.);
+
+  ggcm_mhd_step_setup_member_objs_sub(step);
+  ggcm_mhd_step_setup_super(step);
+
+  s_fd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FD1);
+  s_fd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FD1);
+  s_fd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FD1);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_step_c_destroy
+
+static void
+ggcm_mhd_step_c_destroy(struct ggcm_mhd_step *step)
+{
+  mrc_fld_destroy(step->mhd->ymask);
+}
 
 // ----------------------------------------------------------------------
 // ggcm_mhd_step_c_newstep
@@ -155,52 +188,6 @@ ggcm_mhd_step_c_corr(struct ggcm_mhd_step *step)
     patch_badval_checks_sc(step->mhd, p_f, p_f);
     fld3d_put(&p_f, 0);
   }
-}
-
-// ----------------------------------------------------------------------
-// ggcm_mhd_step_c_setup_flds
-
-static void
-ggcm_mhd_step_c_setup_flds(struct ggcm_mhd_step *step)
-{
-  struct ggcm_mhd_step_c *sub = ggcm_mhd_step_c(step);
-  struct ggcm_mhd *mhd = step->mhd;
-
-  pde_mhd_set_options(mhd, &sub->opt);
-  mrc_fld_set_type(mhd->fld, FLD_TYPE);
-  mrc_fld_set_param_int(mhd->fld, "nr_ghosts", 2);
-  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_SEMI_CONSERVATIVE_GGCM);
-  mrc_fld_set_param_int(mhd->fld, "nr_comps", _NR_FLDS);
-}
-
-// ----------------------------------------------------------------------
-// ggcm_mhd_step_c_setup
-
-static void
-ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
-{
-  struct ggcm_mhd *mhd = step->mhd;
-  pde_setup(mhd->fld);
-  pde_mhd_setup(mhd);
-
-  mhd->ymask = mrc_fld_make_view(mhd->fld, _YMASK, _YMASK + 1);
-  mrc_fld_set(mhd->ymask, 1.);
-
-  ggcm_mhd_step_setup_member_objs_sub(step);
-  ggcm_mhd_step_setup_super(step);
-
-  s_fd1x = ggcm_mhd_crds_get_crd(mhd->crds, 0, FD1);
-  s_fd1y = ggcm_mhd_crds_get_crd(mhd->crds, 1, FD1);
-  s_fd1z = ggcm_mhd_crds_get_crd(mhd->crds, 2, FD1);
-}
-
-// ----------------------------------------------------------------------
-// ggcm_mhd_step_c_destroy
-
-static void
-ggcm_mhd_step_c_destroy(struct ggcm_mhd_step *step)
-{
-  mrc_fld_destroy(step->mhd->ymask);
 }
 
 // ----------------------------------------------------------------------
@@ -303,13 +290,13 @@ struct ggcm_mhd_step_ops ggcm_mhd_step_c_ops = {
   .name                = ggcm_mhd_step_c_name,
   .size                = sizeof(struct ggcm_mhd_step_c),
   .param_descr         = ggcm_mhd_step_c_descr,
+  .setup               = ggcm_mhd_step_c_setup,
+  .destroy             = ggcm_mhd_step_c_destroy,
+  .setup_flds          = ggcm_mhd_step_c_setup_flds,
   .newstep             = ggcm_mhd_step_c_newstep,
   .pred                = ggcm_mhd_step_c_pred,
   .corr                = ggcm_mhd_step_c_corr,
   .run                 = ggcm_mhd_step_run_predcorr,
-  .setup               = ggcm_mhd_step_c_setup,
-  .destroy             = ggcm_mhd_step_c_destroy,
-  .setup_flds          = ggcm_mhd_step_c_setup_flds,
   .get_e_ec            = ggcm_mhd_step_c_get_e_ec,
   .diag_item_zmask_run = ggcm_mhd_step_c_diag_item_zmask_run,
   .diag_item_rmask_run = ggcm_mhd_step_c_diag_item_rmask_run,
