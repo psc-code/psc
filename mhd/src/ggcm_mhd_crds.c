@@ -72,7 +72,7 @@ ggcm_mhd_crds_set_from_mrc_crds(struct ggcm_mhd_crds *crds)
       int sw = mrc_crds->sw;
       
       for (int i = -sw; i < ldims[d] + sw; i++) {
-	fxx1[i] = MRC_MCRD(mrc_crds, d, i, p);
+	fxx1[i] = MRC_DMCRD(mrc_crds, d, i, p);
       }
       
       // have to move one in on both sides
@@ -81,21 +81,21 @@ ggcm_mhd_crds_set_from_mrc_crds(struct ggcm_mhd_crds *crds)
 	  int off = info.off[d];
 	  fdx1[i] = 1.f / MRC_D2(mrc_crds->global_crd[d], i + off, 1);
 	} else {
-	  fdx1[i] = 1.f / (.5f * (MRC_MCRD(mrc_crds, d, i+1, p) - MRC_MCRD(mrc_crds, d, i-1, p)));
+	  fdx1[i] = 1.f / (.5f * (MRC_DMCRD(mrc_crds, d, i+1, p) - MRC_DMCRD(mrc_crds, d, i-1, p)));
 	}
       }
 
       for (int i = -sw; i < ldims[d] + sw; i++) {
-	fxx2[i] = sqr(MRC_CRD(mrc_crds, d, i));
+	fxx2[i] = sqr(MRC_DMCRD(mrc_crds, d, i, p));
       }
 
       for (int i = -sw; i < ldims[d] + sw - 1; i++) {
-	bdx1[i] = 1.f / (MRC_CRD(mrc_crds, d, i+1) - MRC_CRD(mrc_crds, d, i));
-	bdx4[i] = 1.f / (MRC_CRD(mrc_crds, d, i+1) - MRC_CRD(mrc_crds, d, i));
+	bdx1[i] = 1.f / (MRC_DMCRD(mrc_crds, d, i+1, p) - MRC_DMCRD(mrc_crds, d, i, p));
+	bdx4[i] = 1.f / (MRC_DMCRD(mrc_crds, d, i+1, p) - MRC_DMCRD(mrc_crds, d, i, p));
       }
 
       for (int i = -sw; i < ldims[d] + sw; i++) {
-	bdx2[i] = MRC_MCRD_NC(mrc_crds, d, i+1, 0) - MRC_MCRD_NC(mrc_crds, d, i, 0);
+	bdx2[i] = MRC_DMCRD_NC(mrc_crds, d, i+1, p) - MRC_DMCRD_NC(mrc_crds, d, i, p);
 	bdx3[i] = 1.f / bdx2[i];
       }
     }
