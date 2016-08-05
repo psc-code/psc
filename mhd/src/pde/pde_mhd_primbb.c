@@ -1,4 +1,7 @@
 
+#ifndef PDE_MHD_PRIMBB_C
+#define PDE_MHD_PRIMBB_C
+
 // ----------------------------------------------------------------------
 // patch_primbb_c
 
@@ -49,3 +52,4 @@ patch_primbb(fld3d_t p_bcc, fld3d_t p_U)
   }
 }
 
+#endif

@@ -1,7 +1,13 @@
 
 #include "ggcm_mhd_crds.h" // FIXME
 
+#include "pde/pde_mhd_zmaskn.c"
+#include "pde/pde_mhd_riemann.c"
+
 #ifdef FD1X
+
+#include "pde/pde_mhd_primvar.c"
+#include "pde/pde_mhd_primbb.c"
 
 // ----------------------------------------------------------------------
 // patch_get_dt_scons_ggcm_c

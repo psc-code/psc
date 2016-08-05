@@ -1,4 +1,7 @@
 
+#ifndef PDE_MHD_CALCE_C
+#define PDE_MHD_CALCE_C
+
 // ======================================================================
 
 static inline float
@@ -217,3 +220,4 @@ patch_calce(fld3d_t p_f, mrc_fld_data_t dt, int m_curr)
   }
 }
 
+#endif

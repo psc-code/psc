@@ -2,7 +2,6 @@
 #include "pde/pde_mhd_rmaskn.c"
 #include "pde/pde_mhd_pushfluid.c"
 #include "pde/pde_mhd_pushfield.c"
-#include "pde/pde_mhd_badval_checks.c"
 
 // ======================================================================
 // patch_pushpred

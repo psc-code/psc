@@ -1,4 +1,7 @@
 
+#ifndef PDE_MHD_BPUSH_C
+#define PDE_MHD_BPUSH_C
+
 // ----------------------------------------------------------------------
 // patch_bpush1_c
 
@@ -57,3 +60,4 @@ patch_bpush1(fld3d_t p_f, mrc_fld_data_t dt, int m_prev, int m_next)
   }
 }
 
+#endif

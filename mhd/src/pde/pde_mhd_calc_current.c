@@ -1,4 +1,7 @@
 
+#ifndef PDE_MHD_CALC_CURRENT_C
+#define PDE_MHD_CALC_CURRENT_C
+
 // ----------------------------------------------------------------------
 // patch_curr
 //
@@ -44,3 +47,4 @@ patch_curbc(fld3d_t p_f, int m_curr)
   } fld3d_foreach_end;
 }
 
+#endif

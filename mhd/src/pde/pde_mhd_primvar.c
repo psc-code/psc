@@ -1,4 +1,7 @@
 
+#ifndef PDE_MHD_PRIMVAR_C
+#define PDE_MHD_PRIMVAR_C
+
 #include "pde/pde_mhd_convert.c"
 
 // ----------------------------------------------------------------------
@@ -62,3 +65,4 @@ patch_primvar(fld3d_t p_W, fld3d_t p_U, fld3d_t p_cmsv)
   }
 }
 
+#endif

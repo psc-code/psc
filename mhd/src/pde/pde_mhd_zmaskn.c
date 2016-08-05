@@ -1,4 +1,7 @@
 
+#ifndef PDE_MHD_ZMASKN_C
+#define PDE_MHD_ZMASKN_C
+
 // ----------------------------------------------------------------------
 // patch_zmaskn_c
 
@@ -56,3 +59,4 @@ patch_zmaskn(fld3d_t p_zmask, fld3d_t p_W, fld3d_t p_bcc, fld3d_t p_ymask)
   }
 }
 
+#endif

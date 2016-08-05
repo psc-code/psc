@@ -2,6 +2,7 @@
 #ifndef PDE_MHD_PUSHFIELD_C
 #define PDE_MHD_PUSHFIELD_C
 
+#include "pde/pde_mhd_push_ej.c"
 #include "pde/pde_mhd_calc_resis.c"
 #include "pde/pde_mhd_pfie3.c"
 

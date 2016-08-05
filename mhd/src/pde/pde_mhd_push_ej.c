@@ -1,4 +1,7 @@
 
+#ifndef PDE_MHD_PUSHEJ_C
+#define PDE_MHD_PUSHEJ_C
+
 #include "pde/pde_mhd_calc_current.c"
 
 // ----------------------------------------------------------------------
@@ -6,7 +9,7 @@
 //
 // cell-averaged B
 
-static void
+static void _mrc_unused
 currbb_c(fld3d_t p_f, int m, int m_curr)
 {
   fld3d_foreach(ix,iy,iz, 1, 1) {
@@ -103,3 +106,5 @@ patch_push_ej(fld3d_t p_f, mrc_fld_data_t dt, int m_curr, int m_next)
     assert(0);
   }
 }
+
+#endif

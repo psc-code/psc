@@ -2,6 +2,9 @@
 #ifndef PDE_MHD_PFIE3_C
 #define PDE_MHD_PFIE3_C
 
+#include "pde/pde_mhd_calce.c"
+#include "pde/pde_mhd_bpush.c"
+
 // ----------------------------------------------------------------------
 // patch_pfie3_c
 

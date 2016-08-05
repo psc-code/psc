@@ -1,4 +1,9 @@
 
+#ifndef PDE_MHD_DIVB_GLM_C
+#define PDE_MHD_DIVB_GLM_C
+
+#include "pde/pde_mhd_convert.c"
+
 // ======================================================================
 // divb cleaning with generalized langrangian multiplier
 // Dedner et al, JCP 2002
@@ -59,3 +64,4 @@ mhd_divb_glm_riemann(fld1d_state_t Ul, fld1d_state_t Ur, fld1d_state_t Wl, fld1d
   mhd_cons_from_prim(Ur, Wr, ib, ie);
 }
 
+#endif

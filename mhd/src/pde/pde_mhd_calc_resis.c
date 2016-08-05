@@ -2,6 +2,8 @@
 #ifndef PDE_MHD_CALC_RESIS_C
 #define PDE_MHD_CALC_RESIS_C
 
+#include "pde/pde_mhd_calc_current.c"
+
 // ======================================================================
 // nl1
 

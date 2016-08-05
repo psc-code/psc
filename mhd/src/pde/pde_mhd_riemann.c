@@ -1,4 +1,9 @@
 
+#ifndef PDE_MHD_RIEMANN_C
+#define PDE_MHD_RIEMANN_C
+
+#include "pde/pde_mhd_divb_glm.c"
+
 // FIXME, at least uppercase
 #define sign(x) (( x > 0. ) - ( x < 0. ))
 
@@ -492,3 +497,5 @@ mhd_riemann(fld1d_state_t F, fld1d_state_t U_l, fld1d_state_t U_r,
     assert(0);
   }
 }
+
+#endif
