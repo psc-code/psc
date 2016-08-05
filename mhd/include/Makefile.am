@@ -4,8 +4,6 @@ include_HEADERS = \
 	ggcm_mhd_bnd_private.h \
 	ggcm_mhd_bndsw.h \
 	ggcm_mhd_bndsw_private.h \
-	ggcm_mhd_crds_gen.h \
-	ggcm_mhd_crds_gen_private.h \
 	ggcm_mhd_crds.h \
 	ggcm_mhd_crds_private.h \
 	ggcm_mhd_defs_extra.h \

@@ -2,7 +2,6 @@
 #include "ggcm_mhd_private.h"
 
 #include "ggcm_mhd_crds_private.h"
-#include "ggcm_mhd_crds_gen.h"
 
 #include <mrc_domain.h>
 
