@@ -961,12 +961,30 @@ mrc_fld_float_copy_from_double(struct mrc_fld *to, struct mrc_fld *from)
   assert(to->_data_type == MRC_NT_FLOAT);
   assert(from->_data_type == MRC_NT_DOUBLE);
 
-  for (int p = 0; p < mrc_fld_nr_patches(to); p++) {
-    mrc_fld_foreach(to, ix,iy,iz, to->_nr_ghosts, to->_nr_ghosts) {
-      for (int m = 0; m < to->_nr_comps; m++) {
-	MRC_S5(to, ix,iy,iz, m, p) = MRC_D5(from, ix,iy,iz, m, p);
+  if (to->_dims.nr_vals == 5) {
+    for (int i4 = to->_ghost_offs[4]; i4 < to->_ghost_offs[4] + to->_ghost_dims[4]; i4++) {
+      for (int i3 = to->_ghost_offs[3]; i3 < to->_ghost_offs[3] + to->_ghost_dims[3]; i3++) {
+	for (int i2 = to->_ghost_offs[2]; i2 < to->_ghost_offs[2] + to->_ghost_dims[2]; i2++) {
+	  for (int i1 = to->_ghost_offs[1]; i1 < to->_ghost_offs[1] + to->_ghost_dims[1]; i1++) {
+	    for (int i0 = to->_ghost_offs[0]; i0 < to->_ghost_offs[0] + to->_ghost_dims[0]; i0++) {
+	      MRC_S5(to, i0,i1,i2,i3,i4) = MRC_D5(from, i0,i1,i2,i3,i4);
+	    }
+	  }
+	}
       }
-    } mrc_fld_foreach_end;
+    }
+  } else if (to->_dims.nr_vals == 4) {
+    for (int i3 = to->_ghost_offs[3]; i3 < to->_ghost_offs[3] + to->_ghost_dims[3]; i3++) {
+      for (int i2 = to->_ghost_offs[2]; i2 < to->_ghost_offs[2] + to->_ghost_dims[2]; i2++) {
+	for (int i1 = to->_ghost_offs[1]; i1 < to->_ghost_offs[1] + to->_ghost_dims[1]; i1++) {
+	  for (int i0 = to->_ghost_offs[0]; i0 < to->_ghost_offs[0] + to->_ghost_dims[0]; i0++) {
+	    MRC_S4(to, i0,i1,i2,i3) = MRC_D4(from, i0,i1,i2,i3);
+	  }
+	}
+      }
+    }
+  } else {
+    assert(0);
   }
 }
 
@@ -980,12 +998,30 @@ mrc_fld_float_copy_to_double(struct mrc_fld *from, struct mrc_fld *to)
   assert(to->_data_type == MRC_NT_DOUBLE);
   assert(from->_data_type == MRC_NT_FLOAT);
 
-  for (int p = 0; p < mrc_fld_nr_patches(to); p++) {
-    mrc_fld_foreach(to, ix,iy,iz, to->_nr_ghosts, to->_nr_ghosts) {
-      for (int m = 0; m < to->_nr_comps; m++) {
-	MRC_D5(to, ix,iy,iz, m, p) = MRC_S5(from, ix,iy,iz, m, p);
+  if (to->_dims.nr_vals == 5) {
+    for (int i4 = to->_ghost_offs[4]; i4 < to->_ghost_offs[4] + to->_ghost_dims[4]; i4++) {
+      for (int i3 = to->_ghost_offs[3]; i3 < to->_ghost_offs[3] + to->_ghost_dims[3]; i3++) {
+	for (int i2 = to->_ghost_offs[2]; i2 < to->_ghost_offs[2] + to->_ghost_dims[2]; i2++) {
+	  for (int i1 = to->_ghost_offs[1]; i1 < to->_ghost_offs[1] + to->_ghost_dims[1]; i1++) {
+	    for (int i0 = to->_ghost_offs[0]; i0 < to->_ghost_offs[0] + to->_ghost_dims[0]; i0++) {
+	      MRC_D5(to, i0,i1,i2,i3,i4) = MRC_S5(from, i0,i1,i2,i3,i4);
+	    }
+	  }
+	}
       }
-    } mrc_fld_foreach_end;
+    }
+  } else if (to->_dims.nr_vals == 4) {
+    for (int i3 = to->_ghost_offs[3]; i3 < to->_ghost_offs[3] + to->_ghost_dims[3]; i3++) {
+      for (int i2 = to->_ghost_offs[2]; i2 < to->_ghost_offs[2] + to->_ghost_dims[2]; i2++) {
+	for (int i1 = to->_ghost_offs[1]; i1 < to->_ghost_offs[1] + to->_ghost_dims[1]; i1++) {
+	  for (int i0 = to->_ghost_offs[0]; i0 < to->_ghost_offs[0] + to->_ghost_dims[0]; i0++) {
+	    MRC_D4(to, i0,i1,i2,i3) = MRC_S4(from, i0,i1,i2,i3);
+	  }
+	}
+      }
+    }
+  } else {
+    assert(0);
   }
 }
 
