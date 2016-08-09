@@ -33,6 +33,8 @@ _mrc_crds_create(struct mrc_crds *crds)
     sprintf(s, "dcrd[%d]", d);
     mrc_fld_set_name(crds->dcrd[d], s);
     
+    // These aren't listed as member objects, so we need to create them ourselves here
+    // because we do something hacky when writing them for xdmf_collective
     crds->crd_nc[d] = mrc_fld_create(mrc_crds_comm(crds));
     sprintf(s, "crd_nc[%d]", d);
     mrc_fld_set_name(crds->crd_nc[d], s);
@@ -54,26 +56,45 @@ _mrc_crds_create(struct mrc_crds *crds)
 static void
 _mrc_crds_read(struct mrc_crds *crds, struct mrc_io *io)
 {
-  mrc_crds_read_member_objs(crds, io);
-  // this is a carbon copy on all nodes that run the crd_gen, so this
-  // write is only for checkpointing
-  if (strcmp(mrc_io_type(io), "hdf5_serial") == 0) { // FIXME  
-    crds->global_crd[0] = mrc_io_read_ref(io, crds, "global_crd[0]", mrc_fld);
-    crds->global_crd[1] = mrc_io_read_ref(io, crds, "global_crd[1]", mrc_fld);
-    crds->global_crd[2] = mrc_io_read_ref(io, crds, "global_crd[2]", mrc_fld);
+  if (strcmp(mrc_io_type(io), "hdf5_serial") != 0) {
+    // FIXME, but reading back coordinates is broken for everything but hdf5_serial,
+    // because for other mrc_io types, we don't write crd_nc (at least not completely),
+    // so there's no (easy) way to restore it.
+    assert(0);
   }
 
-  assert(0); // checkpoint read is broken for crd_nc, since we've only written data
-  // without the ghost points -- can be resolved by reading dcrd_nc and copying,
-  // or by writing all ghostpoints when doing hdf5_serial
+  mrc_crds_read_member_objs(crds, io);
+
+  // this is a carbon copy on all nodes that run the crd_gen, so this
+  // write is only for checkpointing
+  if (strcmp(mrc_io_type(io), "hdf5_serial") == 0) {
+    crds->crd_nc[0] = mrc_io_read_ref(io, crds, "crd_nc[0]", mrc_fld);
+    crds->crd_nc[1] = mrc_io_read_ref(io, crds, "crd_nc[1]", mrc_fld);
+    crds->crd_nc[2] = mrc_io_read_ref(io, crds, "crd_nc[2]", mrc_fld);
+
+    crds->global_crd[0] = mrc_io_read_ref(io, crds, "global_crd[0]", mrc_fld);
+    crds->global_crd[1] = mrc_io_read_ref(io, crds, "global_crd[1]", mrc_fld);
+    crds->global_crd[2] = mrc_io_read_ref(io, crds, "global_crd[2]", mrc_fld);    
+  }
 }
+
+// ----------------------------------------------------------------------
+// _mrc_crds_write
 
 static void
 _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 {
-  int slab_off_save[3], slab_dims_save[3];
+  // FIXME, hacky to no end...
+  // So for xdmf_collective, we need to write crd_nc while chopping of ghost points,
+  // which breaks completely reading them back
+  // for checkpointing/hdf5_serial, however, we write them including ghost points,
+  // just like every other coordinate field...
+  // ...except that every other coordinate field is listed as a member object, so it happens
+  // automatically, but here we need to do it explicitly.
 
   if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) { // FIXME
+    int slab_off_save[3], slab_dims_save[3];
+
     mrc_io_get_param_int3(io, "slab_off", slab_off_save);
     mrc_io_get_param_int3(io, "slab_dims", slab_dims_save);
 
@@ -86,19 +107,23 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
       mrc_io_set_param_int3(io, "slab_dims", (int[3]) { gdims[d] + 1, 0, 0 });
       mrc_fld_write(crd_nc, io);
     }
-  }
 
-  // this is a carbon copy on all nodes that run the crd_gen, so this
-  // write is only for checkpointing
-  if (strcmp(mrc_io_type(io), "hdf5_serial") == 0) { // FIXME
-    mrc_io_write_ref(io, crds, "global_crd[0]", crds->global_crd[0]);
-    mrc_io_write_ref(io, crds, "global_crd[1]", crds->global_crd[1]);
-    mrc_io_write_ref(io, crds, "global_crd[2]", crds->global_crd[2]);
-  }
-
-  if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) { // FIXME
     mrc_io_set_param_int3(io, "slab_off", slab_off_save);
     mrc_io_set_param_int3(io, "slab_dims", slab_dims_save);
+  }
+
+  if (strcmp(mrc_io_type(io), "hdf5_serial") == 0) { // FIXME
+    for (int d = 0; d < 3; d++) {
+      struct mrc_fld *crd_nc = crds->crd_nc[d];
+      mrc_io_write_ref(io, crds, mrc_fld_name(crd_nc), crd_nc);
+    }
+    
+    // this is a carbon copy on all nodes that run the crd_gen, so this
+    // write is only for checkpointing
+    for (int d = 0; d < 3; d++) {
+      struct mrc_fld *global_crd = crds->global_crd[d];
+      mrc_io_write_ref(io, crds, mrc_fld_name(global_crd), global_crd);
+    }
   }
 }
 
