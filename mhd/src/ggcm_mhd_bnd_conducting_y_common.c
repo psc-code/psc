@@ -51,7 +51,7 @@ GGCM_MHD_BND_CONDUCTING_Y_FILL_GHOST(struct ggcm_mhd_bnd *bnd,
     // either the ig loop is the outer loop, or the iz/ix loops have to go backward
     for (int ig = 0; ig < sw; ig++) {      
       int iyy = -ig;  // index of edge centered B_y's interior neighbors
-      for (int iz = -sw; iz < nz + sw; iz++) {
+      for (int iz = 0; iz < nz; iz++) {
         for (int ix = -sw; ix < nx + sw; ix++) {
 
           F3(x, m+RR , ix, -1 - ig, iz) =   F3(x, m+RR,  ix, ig, iz);
@@ -62,6 +62,7 @@ GGCM_MHD_BND_CONDUCTING_Y_FILL_GHOST(struct ggcm_mhd_bnd *bnd,
           F3(x, m+BX , ix, -1 - ig, iz) =   F3(x, m+BX,  ix, ig, iz);
           F3(x, m+BZ , ix, -1 - ig, iz) =   F3(x, m+BZ,  ix, ig, iz);
 
+#if 0
           // to make div B = 0
           // for double / triple ghost points, we don't have the Bx/Bz we need
           // to make divB=0, but these By points are used by Ohm's Law, so let's
@@ -91,6 +92,7 @@ GGCM_MHD_BND_CONDUCTING_Y_FILL_GHOST(struct ggcm_mhd_bnd *bnd,
                 ((F3(x, m+BX, ix+1, iyy, iz  ) - F3(x, m+BX, ix, iyy, iz)) / dx[0] +
                  (F3(x, m+BZ, ix  , iyy, iz+1) - F3(x, m+BZ, ix, iyy, iz)) / dx[2]);
           }
+#endif
         }
       }
     }
@@ -100,7 +102,7 @@ GGCM_MHD_BND_CONDUCTING_Y_FILL_GHOST(struct ggcm_mhd_bnd *bnd,
   if (bc[1] != BC_PERIODIC && info.off[1] + info.ldims[1] == gdims[1]) { // x hi
     for (int ig = 0; ig < sw; ig++) {      
       int iyy = ny + ig - 1;  // index of edge centered B_y's interior neighbors
-      for (int iz = -sw; iz < nz + sw; iz++) {
+      for (int iz = 0; iz < nz; iz++) {
         for (int ix = -sw; ix < nx + sw; ix++) {
 
           F3(x, m+RR , ix, ny + ig, iz) =   F3(x, m+RR , ix, ny - 1 - ig, iz);
@@ -115,6 +117,7 @@ GGCM_MHD_BND_CONDUCTING_Y_FILL_GHOST(struct ggcm_mhd_bnd *bnd,
           // for double / triple ghost points, we don't have the Bx/Bz we need
           // to make divB=0, but these By points are used by Ohm's Law, so let's
           // extrapolate
+#if 0
           if (ix + 1 == nx + sw || iz + 1 == nz + sw) {
             if (ix + 1 == nx + sw) {
               // extrapolate Bx value
@@ -139,6 +142,7 @@ GGCM_MHD_BND_CONDUCTING_Y_FILL_GHOST(struct ggcm_mhd_bnd *bnd,
                 ((F3(x, m+BX, ix+1, iyy, iz    ) - F3(x, m+BX, ix, iyy, iz)) / dx[0] +
                  (F3(x, m+BZ, ix  , iyy, iz + 1) - F3(x, m+BZ, ix, iyy, iz)) / dx[2]);
           }
+#endif
         }
       }
     }
