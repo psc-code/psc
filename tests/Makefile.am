@@ -91,7 +91,6 @@ XFAIL_TESTS = \
 	test_mrc_domain_multi_0.sh \
 	test_mrc_domain_mb_0.sh \
 	test_mrc_fld_io_hdf5_parallel.sh \
-	test_mrc_fld_io_hdf5_serial.sh \
 	test_mrc_fld_io_xdmf_serial.sh \
 	test_mrc_fld_io_xdmf_collective.sh \
 	test_mrc_fld_io_xdmf2.sh \
