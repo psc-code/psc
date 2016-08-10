@@ -64,6 +64,15 @@ fld1d_is_setup(fld1d_t f)
   return f.mrc_fld;
 }
 
+static inline void
+fld1d_free(fld1d_t *f)
+{
+  assert(f->mrc_fld);
+
+  mrc_fld_destroy(f->mrc_fld);
+  f->mrc_fld = NULL;
+}
+
 #elif OPT_FLD1D == OPT_FLD1D_C_ARRAY
 
 #define TYPE mrc_fld_data_t

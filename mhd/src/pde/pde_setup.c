@@ -165,6 +165,27 @@ pde_setup(struct mrc_fld *fld)
   }
 }
 
+// ----------------------------------------------------------------------
+// pde_free
+
+static void
+pde_free()
+{
+  for (int p = 0; p < s_n_patches; p++) {
+    struct pde_patch *patch = &s_patches[p];
+    for (int d = 0; d < 3; d++) {
+      fld1d_free(&patch->crd_cc[d]);
+      fld1d_free(&patch->dx[d]);
+      fld1d_free(&patch->inv_dx[d]);
+      fld1d_free(&patch->inv_dxf[d]);
+    }
+  }
+
+  free(s_patches);
+}
+
+
+
 // ======================================================================
 // loop over patches
 
