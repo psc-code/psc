@@ -43,8 +43,10 @@ GGCM_MHD_BND_CONDUCTING_Y_FILL_GHOST(struct ggcm_mhd_bnd *bnd,
   double dx[3];
   mrc_crds_get_dx_base(mrc_domain_get_crds(mhd->domain), dx);
 
+#if 0
   // used for extrapolation for double / triple ghosts
   mrc_fld_data_t Bxp, Bzp;
+#endif
 
   assert(mrc_fld_nr_patches(x) == 1);
   int p = 0;
@@ -52,7 +54,9 @@ GGCM_MHD_BND_CONDUCTING_Y_FILL_GHOST(struct ggcm_mhd_bnd *bnd,
   if (bc[1] != BC_PERIODIC && info.off[1] == 0) { // x lo
     // either the ig loop is the outer loop, or the iz/ix loops have to go backward
     for (int ig = 0; ig < sw; ig++) {      
+#if 0
       int iyy = -ig;  // index of edge centered B_y's interior neighbors
+#endif
       for (int iz = 0; iz < nz; iz++) {
         for (int ix = -sw; ix < nx + sw; ix++) {
 
@@ -103,7 +107,9 @@ GGCM_MHD_BND_CONDUCTING_Y_FILL_GHOST(struct ggcm_mhd_bnd *bnd,
   // upper boundary
   if (bc[1] != BC_PERIODIC && info.off[1] + info.ldims[1] == gdims[1]) { // x hi
     for (int ig = 0; ig < sw; ig++) {      
+#if 0
       int iyy = ny + ig - 1;  // index of edge centered B_y's interior neighbors
+#endif
       for (int iz = 0; iz < nz; iz++) {
         for (int ix = -sw; ix < nx + sw; ix++) {
 
