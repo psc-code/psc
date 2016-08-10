@@ -279,6 +279,8 @@ ggcm_mhd_step_vlct_destroy(struct ggcm_mhd_step *step)
   struct ggcm_mhd *mhd = step->mhd;
 
   ggcm_mhd_put_3d_fld(mhd, mhd->ymask);
+
+  pde_free();
 }
 
 // ----------------------------------------------------------------------

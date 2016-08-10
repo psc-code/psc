@@ -94,6 +94,8 @@ static void
 ggcm_mhd_step_c_destroy(struct ggcm_mhd_step *step)
 {
   mrc_fld_destroy(step->mhd->ymask);
+
+  pde_free();
 }
 
 // ----------------------------------------------------------------------

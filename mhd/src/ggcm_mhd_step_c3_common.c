@@ -136,6 +136,8 @@ ggcm_mhd_step_c3_destroy(struct ggcm_mhd_step *step)
     ggcm_mhd_put_3d_fld(mhd, sub->f_F[d]);
   }
   ggcm_mhd_put_3d_fld(mhd, sub->f_E);
+
+  pde_free();
 }
 
 // ----------------------------------------------------------------------

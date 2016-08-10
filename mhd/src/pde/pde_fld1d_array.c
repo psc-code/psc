@@ -29,3 +29,14 @@ FLD1D_(is_setup)(FLD1D_(t) f)
   return f.arr;
 }
 
+// ----------------------------------------------------------------------
+// fld1d_free
+
+static inline void
+FLD1D_(free)(FLD1D_(t) *f)
+{
+  f->arr -= s_n_ghosts;
+  free(f->arr);
+  f->arr = NULL;
+}
+

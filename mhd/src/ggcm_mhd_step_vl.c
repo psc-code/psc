@@ -119,6 +119,15 @@ ggcm_mhd_step_vl_setup(struct ggcm_mhd_step *step)
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_step_vl_destroy
+
+static void
+ggcm_mhd_step_vl_destroy(struct ggcm_mhd_step *step)
+{
+  pde_free();
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_step_vl_get_dt
 
 static double
@@ -266,6 +275,7 @@ struct ggcm_mhd_step_ops ggcm_mhd_step_vl_ops = {
   .size             = sizeof(struct ggcm_mhd_step_vl),
   .param_descr      = ggcm_mhd_step_vl_descr,
   .setup            = ggcm_mhd_step_vl_setup,
+  .destroy          = ggcm_mhd_step_vl_destroy,
   .run              = ggcm_mhd_step_vl_run,
   .setup_flds       = ggcm_mhd_step_vl_setup_flds,
   .get_dt           = ggcm_mhd_step_vl_get_dt,
