@@ -1020,16 +1020,24 @@ ggcm_mhd_step_c3_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
   fld3d_setup(&p_ymask, mhd->ymask);
   fld3d_setup(&p_zmask, sub->zmask);
   fld3d_setup(&p_rmask, sub->rmask);
+  fld3d_setup(&p_b0, mhd->b0);
 
   ggcm_mhd_fill_ghosts(mhd, f_U, 0, mhd->time);
   pde_for_each_patch(p) {
-    fld3d_t *get_e_ec_patches[] = { &p_E, &p_U, &p_W, &p_ymask, &p_zmask, &p_rmask, &p_b0, NULL };
-
+    fld3d_t *get_e_ec_patches[] = { &p_E, &p_U, &p_W, &p_ymask, &p_zmask, &p_rmask, NULL };
     fld3d_get_list(p, get_e_ec_patches);
+    if (s_opt_background) {
+      fld3d_get(&p_b0, p);
+    }
+
     patch_prim_from_cons(p_W, p_U, 2);
     patch_zmaskn(mhd, p_zmask, p_ymask, p_U, p_b0);
     patch_calce(step, p_E, mhd->dt, p_U, p_W, p_zmask, p_rmask, p_b0, p);
+
     fld3d_put_list(p, get_e_ec_patches);
+    if (s_opt_background) {
+      fld3d_put(&p_b0, p);
+    }
   }
   //  ggcm_mhd_fill_ghosts_E(mhd, E);
   
