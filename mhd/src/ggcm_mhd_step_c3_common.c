@@ -230,11 +230,11 @@ line_flux_corr(fld3d_t p_F, fld3d_t p_U,
 
   // find cell centered fluxes
   for (int i = ib - 2; i < ie + 2; i++) {
-    fluxes_mhd_scons(&F1S(l_Flo, 0, i), &F1S(l_U, 0, i), &F1S(l_W, 0, i), i);
+    fluxes_mhd_scons(&F1S(l_Fcc, 0, i), &F1S(l_U, 0, i), &F1S(l_W, 0, i), i);
   }
 
   // limit1 (Harten-Zwas)
-  for (int i = ib; i < ie; i++) {
+  for (int i = ib - 1; i < ie + 1; i++) {
     mrc_fld_data_t lim1_pp = limit_hz(F1S(l_W, PP, i-1), F1S(l_W, PP, i), F1S(l_W, PP, i+1));
     for (int m = 0; m < 5; m++) {
       F1S(l_lim1, m, i) = mrc_fld_max(limit_hz(F1S(l_U, m, i-1), F1S(l_U, m, i), F1S(l_U, m, i+1)), 
