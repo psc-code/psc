@@ -725,21 +725,21 @@ static struct {
 
 #if OPT_STAGGER == OPT_STAGGER_GGCM
 
-#define CURLX_FC(p_f, i,j,k) (PDE_INV_DY(j) * (F3S(p_E, 2, i,j,k) - F3S(p_E, 2, i,j-1,k)) - \
-			      PDE_INV_DZ(k) * (F3S(p_E, 1, i,j,k) - F3S(p_E, 1, i,j,k-1)))
-#define CURLY_FC(p_f, i,j,k) (PDE_INV_DZ(k) * (F3S(p_E, 0, i,j,k) - F3S(p_E, 0, i,j,k-1)) - \
-			      PDE_INV_DX(i) * (F3S(p_E, 2, i,j,k) - F3S(p_E, 2, i-1,j,k)))
-#define CURLZ_FC(p_f, i,j,k) (PDE_INV_DX(i) * (F3S(p_E, 1, i,j,k) - F3S(p_E, 1, i-1,j,k)) - \
-			      PDE_INV_DY(j) * (F3S(p_E, 0, i,j,k) - F3S(p_E, 0, i,j-1,k)))
+#define CURLX_FC(p_E, i,j,k) (PDE_INV_DY(j) * (F3S(p_E, 2, i,j,k) - F3S(p_E, 2, i,j-dj,k)) - \
+			      PDE_INV_DZ(k) * (F3S(p_E, 1, i,j,k) - F3S(p_E, 1, i,j,k-dk)))
+#define CURLY_FC(p_E, i,j,k) (PDE_INV_DZ(k) * (F3S(p_E, 0, i,j,k) - F3S(p_E, 0, i,j,k-dk)) - \
+			      PDE_INV_DX(i) * (F3S(p_E, 2, i,j,k) - F3S(p_E, 2, i-di,j,k)))
+#define CURLZ_FC(p_E, i,j,k) (PDE_INV_DX(i) * (F3S(p_E, 1, i,j,k) - F3S(p_E, 1, i-di,j,k)) - \
+			      PDE_INV_DY(j) * (F3S(p_E, 0, i,j,k) - F3S(p_E, 0, i,j-dj,k)))
 
 #else
 
-#define CURLX_FC(p_f, i,j,k) (PDE_INV_DY(j) * (F3S(p_E, 2, i,j+1,k) - F3S(p_E, 2, i,j,k)) - \
-			      PDE_INV_DZ(k) * (F3S(p_E, 1, i,j,k+1) - F3S(p_E, 1, i,j,k)))
-#define CURLY_FC(p_f, i,j,k) (PDE_INV_DZ(k) * (F3S(p_E, 0, i,j,k+1) - F3S(p_E, 0, i,j,k)) - \
-			      PDE_INV_DX(i) * (F3S(p_E, 2, i+1,j,k) - F3S(p_E, 2, i,j,k)))
-#define CURLZ_FC(p_f, i,j,k) (PDE_INV_DX(i) * (F3S(p_E, 1, i+1,j,k) - F3S(p_E, 1, i,j,k)) - \
-			      PDE_INV_DY(j) * (F3S(p_E, 0, i,j+1,k) - F3S(p_E, 0, i,j,k)))
+#define CURLX_FC(p_E, i,j,k) (PDE_INV_DY(j) * (F3S(p_E, 2, i,j+dj,k) - F3S(p_E, 2, i,j,k)) - \
+			      PDE_INV_DZ(k) * (F3S(p_E, 1, i,j,k+dk) - F3S(p_E, 1, i,j,k)))
+#define CURLY_FC(p_E, i,j,k) (PDE_INV_DZ(k) * (F3S(p_E, 0, i,j,k+dk) - F3S(p_E, 0, i,j,k)) - \
+			      PDE_INV_DX(i) * (F3S(p_E, 2, i+di,j,k) - F3S(p_E, 2, i,j,k)))
+#define CURLZ_FC(p_E, i,j,k) (PDE_INV_DX(i) * (F3S(p_E, 1, i+di,j,k) - F3S(p_E, 1, i,j,k)) - \
+			      PDE_INV_DY(j) * (F3S(p_E, 0, i,j+dj,k) - F3S(p_E, 0, i,j,k)))
 
 #endif
 
