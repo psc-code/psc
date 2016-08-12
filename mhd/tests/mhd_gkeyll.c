@@ -175,6 +175,34 @@ struct ggcm_mhd_ic_ops ggcm_mhd_ic_bowshock3d_ops = {
 // ======================================================================
 // ggcm_mhd_ic subclass "ot"
 
+struct ggcm_mhd_ic_ot {
+  // params
+  double rr0;
+  double v0;
+  double pp0;
+  double B0;
+
+  // state
+  double kx;
+  double ky;
+};
+
+#define ggcm_mhd_ic_ot(ic) mrc_to_subobj(ic, struct ggcm_mhd_ic_ot)
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_ic_ot_setup
+
+static void
+ggcm_mhd_ic_ot_setup(struct ggcm_mhd_ic *ic)
+{
+  struct ggcm_mhd_ic_ot *sub = ggcm_mhd_ic_ot(ic);
+  struct mrc_crds *crds = mrc_domain_get_crds(ic->mhd->domain);
+  
+  sub->kx = 2. * M_PI / (crds->xh[0] - crds->xl[0]);
+  sub->ky = 2. * M_PI / (crds->xh[1] - crds->xl[1]);
+  mprintf("kx %g ky %g\n", sub->kx, sub->ky);
+}
+
 // ----------------------------------------------------------------------
 // ggcm_mhd_ic_ot_run
 //
@@ -183,6 +211,7 @@ struct ggcm_mhd_ic_ops ggcm_mhd_ic_bowshock3d_ops = {
 static void
 ggcm_mhd_ic_ot_run(struct ggcm_mhd_ic *ic)
 {
+  struct ggcm_mhd_ic_ot *sub = ggcm_mhd_ic_ot(ic);
   struct ggcm_mhd *mhd = ic->mhd;
   struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
 
@@ -191,26 +220,24 @@ ggcm_mhd_ic_ot_run(struct ggcm_mhd_ic *ic)
   double dx0[3], dx[3];
   mrc_crds_get_dx_base(crds, dx0);
 
-  int gdims[3], p1x, p1y, p1z;
+  int gdims[3], p1x, p1y;
   mrc_domain_get_global_dims(mhd->domain, gdims);
   p1x = (gdims[0] > 1);
   p1y = (gdims[1] > 1);
-  p1z = (gdims[2] > 1);
 
   struct mrc_fld *Az = mrc_domain_fld_create(mhd->domain, 2, "Az");
   mrc_fld_set_type(Az, FLD_TYPE);
   mrc_fld_setup(Az);
   mrc_fld_view(Az);
 
-  mrc_fld_data_t B0 = 1.;
-  mrc_fld_data_t rr0 = 25. / 9.;
-  mrc_fld_data_t v0 = 1.;
-  mrc_fld_data_t pp0 = 5. / 3.;
+  mrc_fld_data_t B0 = sub->B0;
+  mrc_fld_data_t rr0 = sub->rr0;
+  mrc_fld_data_t v0 = sub->v0;
+  mrc_fld_data_t pp0 = sub->pp0;
+  mrc_fld_data_t kx = sub->kx, ky = sub->ky;
 
   /* Initialize vector potential */
 
-  double max_divb = 0.;
-  
   for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
     /* get dx for this patch */
     mrc_domain_get_local_patch_info(mhd->domain, p, &pinfo);
@@ -226,7 +253,7 @@ ggcm_mhd_ic_ot_run(struct ggcm_mhd_ic *ic)
     mrc_fld_foreach(fld, ix,iy,iz, 1, 2) {
       mrc_fld_data_t xx = MRC_MCRDX(crds, ix, p) - .5 * dx[0];
       mrc_fld_data_t yy = MRC_MCRDY(crds, iy, p) - .5 * dx[1];
-      M3(Az, 0, ix,iy,iz, p) = B0 / (4.*M_PI) * cos(4.*M_PI * xx) + B0 / (2.*M_PI) * cos(2.*M_PI * yy);
+      M3(Az, 0, ix,iy,iz, p) = B0 / (2.f * kx) * cos(2.f * kx * xx) + B0 / ky * cos(ky * yy);
     } mrc_fld_foreach_end;
     
     /* Initialize face-centered fields */
@@ -240,22 +267,12 @@ ggcm_mhd_ic_ot_run(struct ggcm_mhd_ic *ic)
       mrc_fld_data_t xx = MRC_MCRDX(crds, ix, p), yy = MRC_MCRDY(crds, iy, p);
       
       RR_(fld, ix,iy,iz, p) = rr0;
-      VX_(fld, ix,iy,iz, p) = -v0*sin(2.*M_PI * yy);
-      VY_(fld, ix,iy,iz, p) =  v0*sin(2.*M_PI * xx);
+      VX_(fld, ix,iy,iz, p) = -v0*sin(ky * yy);
+      VY_(fld, ix,iy,iz, p) =  v0*sin(kx * xx);
       PP_(fld, ix,iy,iz, p) = pp0;
     } mrc_fld_foreach_end;    
 
-    /* calc max divb */    
-    mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
-      double val =
-        (BX_(fld, ix+p1x, iy    , iz, p) - BX_(fld, ix,iy,iz, p)) / dx[0] +
-        (BY_(fld, ix    , iy+p1y, iz, p) - BY_(fld, ix,iy,iz, p)) / dx[1];
-
-      max_divb = fmax(max_divb, fabs(val));
-    } mrc_fld_foreach_end;
   }
-
-  mprintf("max divb = %g\n", max_divb);
 
   mrc_fld_destroy(Az);
   mrc_fld_put_as(fld, mhd->fld);
@@ -264,13 +281,28 @@ ggcm_mhd_ic_ot_run(struct ggcm_mhd_ic *ic)
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_ic_ot_descr
+
+#define VAR(x) (void *)offsetof(struct ggcm_mhd_ic_ot, x)
+static struct param ggcm_mhd_ic_ot_descr[] = {
+  { "rr0"          , VAR(rr0)          , PARAM_DOUBLE(25. / (36. * M_PI))   },
+  { "v0"           , VAR(v0)           , PARAM_DOUBLE(1.)                   },
+  { "pp0"          , VAR(pp0)          , PARAM_DOUBLE(5. / (12. * M_PI))    },
+  { "B0"           , VAR(B0)           , PARAM_DOUBLE(0.28209479177387814)  }, // 1. / sqrt(4. * M_PI)
+  {},
+};
+#undef VAR
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_ic_ot_ops
 
 struct ggcm_mhd_ic_ops ggcm_mhd_ic_ot_ops = {
   .name        = "ot",
+  .size        = sizeof(struct ggcm_mhd_ic_ot),
+  .param_descr = ggcm_mhd_ic_ot_descr,
+  .setup       = ggcm_mhd_ic_ot_setup,
   .run         = ggcm_mhd_ic_ot_run,
 };
-
 
 // ----------------------------------------------------------------------
 // ggcm_mhd_gkeyll_create

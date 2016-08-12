@@ -43,7 +43,6 @@ ggcm_mhd_ic_ot_setup(struct ggcm_mhd_ic *ic)
   
   sub->kx = 2. * M_PI / (crds->xh[0] - crds->xl[0]);
   sub->ky = 2. * M_PI / (crds->xh[1] - crds->xl[1]);
-
 }
 
 // ----------------------------------------------------------------------
