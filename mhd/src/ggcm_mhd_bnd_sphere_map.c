@@ -510,14 +510,16 @@ ggcm_mhd_bnd_sphere_map_setup_fc(struct ggcm_mhd_bnd_sphere_map *map)
 	      MRC_I2(map->fc_imap[d], 4, fc_n_map[d]) = bndp;
 	      fc_n_map[d]++;
 
-	      // mark the interior cells adjacent to the boundary faces
-              if (d == 0) {
-		M3(bnd_mask, 0, jx+bnd0,jy,jz, p) = 2.;
-	      } else if (d == 1) {
-		M3(bnd_mask, 0, jx,jy+bnd0,jz, p) = 2.;
-	      } else if (d == 2) {
-		M3(bnd_mask, 0, jx,jy,jz+bnd0, p) = 2.;
-              }
+	      if (bnd_mask) {
+		// mark the interior cells adjacent to the boundary faces
+		if (d == 0) {
+		  M3(bnd_mask, 0, jx+bnd0,jy,jz, p) = 2.;
+		} else if (d == 1) {
+		  M3(bnd_mask, 0, jx,jy+bnd0,jz, p) = 2.;
+		} else if (d == 2) {
+		  M3(bnd_mask, 0, jx,jy,jz+bnd0, p) = 2.;
+		}
+	      }
 	    }
 	  }
 	}
