@@ -4,6 +4,7 @@
 #include "ggcm_mhd_defs.h"
 #include "ggcm_mhd_private.h"
 #include "ggcm_mhd_step.h"
+#include "ggcm_mhd_gkeyll.h"
 
 #include <mrc_io.h>
 #include <mrc_ddc.h>
@@ -147,7 +148,8 @@ ggcm_mhd_ic_B_from_vector_potential(struct ggcm_mhd_ic *ic, struct mrc_fld *b,
     ggcm_mhd_ic_B_from_vector_potential_fc(ic, b, vector_potential, 0);
   } else if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM) {
     ggcm_mhd_ic_B_from_vector_potential_fc(ic, b, vector_potential, 1);
-  } else if (mhd_type == MT_FULLY_CONSERVATIVE_CC) {
+  } else if (mhd_type == MT_FULLY_CONSERVATIVE_CC ||
+	     mhd_type == MT_GKEYLL) {
     ggcm_mhd_ic_B_from_vector_potential_cc(ic, b, vector_potential);
   } else {
     mprintf("mhd_type %d unhandled\n", mhd_type);
@@ -214,7 +216,8 @@ ggcm_mhd_ic_B_from_primitive(struct ggcm_mhd_ic *ic, struct mrc_fld *b, primitiv
   if (mhd_type == MT_FULLY_CONSERVATIVE ||
       mhd_type == MT_SEMI_CONSERVATIVE) {
     ggcm_mhd_ic_B_from_primitive_fc(ic, b, primitive);
-  } else if (mhd_type == MT_FULLY_CONSERVATIVE_CC) {
+  } else if (mhd_type == MT_FULLY_CONSERVATIVE_CC ||
+	     mhd_type == MT_GKEYLL) {
     ggcm_mhd_ic_B_from_primitive_cc(ic, b, primitive);
   } else {
     mprintf("mhd_type %d unhandled\n", mhd_type);
@@ -335,6 +338,58 @@ ggcm_mhd_ic_hydro_from_primitive_fully_cc(struct ggcm_mhd_ic *ic, struct mrc_fld
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_ic_hydro_from_primitive_gkeyll
+//
+// init gkeyll fluid state (assuming that B is cell centered)
+
+static void
+ggcm_mhd_ic_hydro_from_primitive_gkeyll(struct ggcm_mhd_ic *ic, struct mrc_fld *fld)
+{
+  struct ggcm_mhd *mhd = ic->mhd;
+  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
+  struct ggcm_mhd_ic_ops *ops = ggcm_mhd_ic_ops(ic);
+
+  mrc_fld_data_t gamma_m1 = mhd->par.gamm - 1.;
+
+  double *mass_ratios = ggcm_mhd_gkeyll_mass_ratios(mhd);
+  double *momentum_ratios = ggcm_mhd_gkeyll_momentum_ratios(mhd);
+  double *pressure_ratios = ggcm_mhd_gkeyll_pressure_ratios(mhd);
+
+  int nr_moments = ggcm_mhd_gkeyll_nr_moments(mhd);
+  int nr_fluids = ggcm_mhd_gkeyll_nr_fluids(mhd);
+
+  int idx[nr_fluids];
+  ggcm_mhd_gkeyll_fluid_species_index_all(mhd, idx);
+
+  assert(nr_moments == 5);
+
+  for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
+    mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
+      double dcrd_cc[3];
+      mrc_dcrds_at_cc(crds, ix,iy,iz, p, dcrd_cc);
+      
+      mrc_fld_data_t prim[5];
+      for (int m = 0; m < 5; m++) {
+	prim[m] = ops->primitive(ic, m, dcrd_cc);
+      }
+      
+      for (int s = 0; s < nr_fluids; s++) {
+	M3(fld, idx[s] + G5M_RRS,  ix,iy,iz, p) = prim[RR] * mass_ratios[s];
+	M3(fld, idx[s] + G5M_RVXS, ix,iy,iz, p) = prim[RR] * prim[VX] * momentum_ratios[s];
+	M3(fld, idx[s] + G5M_RVYS, ix,iy,iz, p) = prim[RR] * prim[VY] * momentum_ratios[s];
+	M3(fld, idx[s] + G5M_RVZS, ix,iy,iz, p) = prim[RR] * prim[VZ] * momentum_ratios[s];
+	M3(fld, idx[s] + G5M_UUS,  ix,iy,iz, p) = 
+	  prim[PP] * pressure_ratios[s] / gamma_m1
+	  + .5 * (sqr(M3(fld, idx[s] + G5M_RVXS, ix,iy,iz, p)) +
+		  sqr(M3(fld, idx[s] + G5M_RVYS, ix,iy,iz, p)) +
+		  sqr(M3(fld, idx[s] + G5M_RVZS, ix,iy,iz, p)))
+	  / M3(fld, idx[s] + G5M_RRS, ix,iy,iz,p);
+      }
+    } mrc_fld_foreach_end;    
+  }
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_ic_hydro_from_primitive
 
 static void
@@ -351,6 +406,8 @@ ggcm_mhd_ic_hydro_from_primitive(struct ggcm_mhd_ic *ic, struct mrc_fld *fld)
     ggcm_mhd_ic_hydro_from_primitive_fully(ic, fld);
   } else if (mhd_type == MT_FULLY_CONSERVATIVE_CC) {
     ggcm_mhd_ic_hydro_from_primitive_fully_cc(ic, fld);
+  } else if (mhd_type == MT_GKEYLL) {
+    ggcm_mhd_ic_hydro_from_primitive_gkeyll(ic, fld);
   } else {
     assert(0);
   }
@@ -367,7 +424,24 @@ ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic)
   struct ggcm_mhd_ic_ops *ops = ggcm_mhd_ic_ops(ic);
 
   struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
-  struct mrc_fld *b = mrc_fld_make_view(fld, BX, BX + 3);
+  int mhd_type;
+  mrc_fld_get_param_int(mhd->fld, "mhd_type", &mhd_type);
+
+  // FIXME, this should probably go somewhere where it's reusable
+  int idx_BX;
+  if (mhd_type == MT_SEMI_CONSERVATIVE ||
+      mhd_type == MT_SEMI_CONSERVATIVE_GGCM ||
+      mhd_type == MT_FULLY_CONSERVATIVE ||
+      mhd_type == MT_FULLY_CONSERVATIVE_CC) {
+    idx_BX = BX;
+  } else if (mhd_type == MT_GKEYLL) {
+    int idx_em = ggcm_mhd_gkeyll_em_fields_index(mhd);
+    idx_BX = idx_em + GK_BX;
+  } else {
+    assert(0);
+  }
+
+  struct mrc_fld *b = mrc_fld_make_view(fld, idx_BX, idx_BX + 3);
 
   /* initialize background magnetic field */
   if (mhd->b0) {

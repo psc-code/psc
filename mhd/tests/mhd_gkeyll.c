@@ -200,84 +200,47 @@ ggcm_mhd_ic_ot_setup(struct ggcm_mhd_ic *ic)
   
   sub->kx = 2. * M_PI / (crds->xh[0] - crds->xl[0]);
   sub->ky = 2. * M_PI / (crds->xh[1] - crds->xl[1]);
-  mprintf("kx %g ky %g\n", sub->kx, sub->ky);
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_ic_ot_run
-//
-// assuming 2d domain [-1,1]x[-1,1]
+// ggcm_mhd_ic_ot_primitive
 
-static void
-ggcm_mhd_ic_ot_run(struct ggcm_mhd_ic *ic)
+static double
+ggcm_mhd_ic_ot_primitive(struct ggcm_mhd_ic *ic, int m, double crd[3])
 {
   struct ggcm_mhd_ic_ot *sub = ggcm_mhd_ic_ot(ic);
-  struct ggcm_mhd *mhd = ic->mhd;
-  struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
 
-  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-  struct mrc_patch_info pinfo;
-  double dx0[3], dx[3];
-  mrc_crds_get_dx_base(crds, dx0);
+  double rr0 = sub->rr0, pp0 = sub->pp0, v0 = sub->v0;
+  double B0 = sub->B0, kx = sub->kx, ky = sub->ky;
+  double xx = crd[0], yy = crd[1];
 
-  int gdims[3], p1x, p1y;
-  mrc_domain_get_global_dims(mhd->domain, gdims);
-  p1x = (gdims[0] > 1);
-  p1y = (gdims[1] > 1);
-
-  struct mrc_fld *Az = mrc_domain_fld_create(mhd->domain, 2, "Az");
-  mrc_fld_set_type(Az, FLD_TYPE);
-  mrc_fld_setup(Az);
-  mrc_fld_view(Az);
-
-  mrc_fld_data_t B0 = sub->B0;
-  mrc_fld_data_t rr0 = sub->rr0;
-  mrc_fld_data_t v0 = sub->v0;
-  mrc_fld_data_t pp0 = sub->pp0;
-  mrc_fld_data_t kx = sub->kx, ky = sub->ky;
-
-  /* Initialize vector potential */
-
-  for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
-    /* get dx for this patch */
-    mrc_domain_get_local_patch_info(mhd->domain, p, &pinfo);
-    for (int d = 0; d < 3; d++){
-      float refine = 1.0;
-      if (pinfo.ldims[d] > 1) {
-        refine = 1.0 / (1 << pinfo.level);
-      }
-      dx[d] = dx0[d] * refine;
-    }
-    
-    /* Initialize vector potential */
-    mrc_fld_foreach(fld, ix,iy,iz, 1, 2) {
-      mrc_fld_data_t xx = MRC_MCRDX(crds, ix, p) - .5 * dx[0];
-      mrc_fld_data_t yy = MRC_MCRDY(crds, iy, p) - .5 * dx[1];
-      M3(Az, 0, ix,iy,iz, p) = B0 / (2.f * kx) * cos(2.f * kx * xx) + B0 / ky * cos(ky * yy);
-    } mrc_fld_foreach_end;
-    
-    /* Initialize face-centered fields */
-    mrc_fld_foreach(fld, ix,iy,iz, 1, 1) {
-      BX_(fld, ix,iy,iz, p) =  (M3(Az, 0, ix    , iy+p1y, iz, p) - M3(Az, 0, ix,iy,iz, p)) / dx[1];
-      BY_(fld, ix,iy,iz, p) = -(M3(Az, 0, ix+p1x, iy    , iz, p) - M3(Az, 0, ix,iy,iz, p)) / dx[0];
-    } mrc_fld_foreach_end;
-
-    /* Initialize density, momentum, total energy */
-    mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
-      mrc_fld_data_t xx = MRC_MCRDX(crds, ix, p), yy = MRC_MCRDY(crds, iy, p);
-      
-      RR_(fld, ix,iy,iz, p) = rr0;
-      VX_(fld, ix,iy,iz, p) = -v0*sin(ky * yy);
-      VY_(fld, ix,iy,iz, p) =  v0*sin(kx * xx);
-      PP_(fld, ix,iy,iz, p) = pp0;
-    } mrc_fld_foreach_end;    
-
+  switch (m) {
+  case RR: return rr0;
+  case PP: return pp0;
+  case VX: return -v0 * sin(ky * yy);
+  case VY: return  v0 * sin(kx * xx);
+  // B here won't actually be used because the vector potential takes preference
+  case BX: return -B0 * sin(ky * yy);
+  case BY: return  B0 * sin(2. * kx * xx);
+  default: return 0.;
   }
+}
 
-  mrc_fld_destroy(Az);
-  mrc_fld_put_as(fld, mhd->fld);
+// ----------------------------------------------------------------------
+// ggcm_mhd_ic_ot_vector_potential
 
-  ggcm_mhd_convert_from_primitive(mhd, mhd->fld);
+static double
+ggcm_mhd_ic_ot_vector_potential(struct ggcm_mhd_ic *ic, int m, double crd[3])
+{
+  struct ggcm_mhd_ic_ot *sub = ggcm_mhd_ic_ot(ic);
+
+  double B0 = sub->B0, kx = sub->kx, ky = sub->ky;
+  double xx = crd[0], yy = crd[1];
+
+  switch (m) {
+  case 2: return B0 / (2. * kx) * cos(2. * kx * xx) + B0 / ky * cos(ky * yy);
+  default: return 0.;
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -297,11 +260,12 @@ static struct param ggcm_mhd_ic_ot_descr[] = {
 // ggcm_mhd_ic_ot_ops
 
 struct ggcm_mhd_ic_ops ggcm_mhd_ic_ot_ops = {
-  .name        = "ot",
-  .size        = sizeof(struct ggcm_mhd_ic_ot),
-  .param_descr = ggcm_mhd_ic_ot_descr,
-  .setup       = ggcm_mhd_ic_ot_setup,
-  .run         = ggcm_mhd_ic_ot_run,
+  .name                = "ot",
+  .size                = sizeof(struct ggcm_mhd_ic_ot),
+  .param_descr         = ggcm_mhd_ic_ot_descr,
+  .setup               = ggcm_mhd_ic_ot_setup,
+  .primitive           = ggcm_mhd_ic_ot_primitive,
+  .vector_potential    = ggcm_mhd_ic_ot_vector_potential,
 };
 
 // ----------------------------------------------------------------------
