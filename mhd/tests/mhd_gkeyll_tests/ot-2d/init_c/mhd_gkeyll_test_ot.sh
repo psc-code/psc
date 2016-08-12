@@ -1,6 +1,6 @@
 #!/bin/sh 
 
-mpirun -n 4  ../../../mhd_gkeyll \
+mpirun -n 4  ../../../mhd_ot \
     --mrc_crds_lx 0.  --mrc_crds_hx 1. \
     --mrc_crds_ly 0.  --mrc_crds_hy 1. \
     --mrc_crds_lz 0.  --mrc_crds_hz 1. \

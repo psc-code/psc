@@ -16,9 +16,7 @@ check_PROGRAMS = \
 	mhd_ici \
 	mhd_hydroblast \
 	mhd_mhdblast \
-	mhd_wave
-
-check_PROGRAMS += \
+	mhd_wave \
 	test_ggcm_mhd_crds \
 	test_ggcm_mhd
 
@@ -51,11 +49,24 @@ AM_CXXFLAGS = -Bdynamic
 
 check_PROGRAMS += mhd_gkeyll
 
+nodist_EXTRA_mhd_cpaw_SOURCES = dummy.cxx
+nodist_EXTRA_mhd_mirdip_SOURCES = dummy.cxx
+nodist_EXTRA_mhd_fadeev_SOURCES = dummy.cxx
+nodist_EXTRA_mhd_test_bnd_sphere_SOURCES = dummy.cxx
+nodist_EXTRA_mhd_double_tearing_SOURCES = dummy.cxx
+nodist_EXTRA_mhd_cosine_SOURCES = dummy.cxx
+nodist_EXTRA_mhd_shocktube_SOURCES = dummy.cxx
+nodist_EXTRA_mhd_bw_SOURCES = dummy.cxx
+nodist_EXTRA_mhd_ot_SOURCES = dummy.cxx
+nodist_EXTRA_mhd_harris_SOURCES = dummy.cxx
+nodist_EXTRA_mhd_kh_SOURCES = dummy.cxx
+nodist_EXTRA_mhd_ici_SOURCES = dummy.cxx
+nodist_EXTRA_mhd_hydroblast_SOURCES = dummy.cxx
+nodist_EXTRA_mhd_mhdblast_SOURCES = dummy.cxx
+nodist_EXTRA_mhd_wave_SOURCES = dummy.cxx
+nodist_EXTRA_test_ggcm_mhd_crds_SOURCES = dummy.cxx
+nodist_EXTRA_test_ggcm_mhd_SOURCES = dummy.cxx
 nodist_EXTRA_mhd_gkeyll_SOURCES = dummy.cxx
-
-mhd_gkeyll_LDADD = \
-	-lstdc++ \
-	$(LDADD)
 
 endif
 

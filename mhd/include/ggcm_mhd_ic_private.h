@@ -23,5 +23,6 @@ struct ggcm_mhd_ic_ops {
 extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_mirdip_float_ops;
 extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_mirdip_double_ops;
 extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_obstacle_double_ops;
+extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_gkeyll_ops;
 
 #endif

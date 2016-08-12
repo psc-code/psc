@@ -491,6 +491,9 @@ ggcm_mhd_ic_init()
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_mirdip_float_ops);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_mirdip_double_ops);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_obstacle_double_ops);
+#ifdef HAVE_GKEYLL
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_gkeyll_ops);
+#endif
 }
 
 // ----------------------------------------------------------------------

@@ -18,10 +18,6 @@
 
 #include <ggcm_mhd_diag_item_private.h>
 
-
-extern struct ggcm_mhd_step_ops ggcm_mhd_step_gkeyll_ops;
-extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_gkeyll_ops;
-
 // ======================================================================
 // ggcm_mhd_ic subclass "bowshock3d"
 
@@ -314,11 +310,9 @@ extern struct ggcm_mhd_diag_ops ggcm_mhd_diag_c_ops;
 int
 main(int argc, char **argv)
 {
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_step, &ggcm_mhd_step_gkeyll_ops);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_diag, &ggcm_mhd_diag_c_ops);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_bowshock3d_ops);  
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_ot_ops);  
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_gkeyll_ops);  
 
   mrc_class_register_subclass(&mrc_class_ggcm_mhd, &ggcm_mhd_gkeyll_ops);  
  
