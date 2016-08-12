@@ -3,7 +3,6 @@
 #include <ggcm_mhd_step.h>
 #include <ggcm_mhd_ic_private.h>
 #include <ggcm_mhd_crds_private.h>
-#include <ggcm_mhd_crds_gen.h>
 #include <ggcm_mhd_bnd.h>
 #include <ggcm_mhd_bndsw.h>
 #include <ggcm_mhd_diag.h>
@@ -125,15 +124,15 @@ ggcm_mhd_ic_bowshock3d_run(struct ggcm_mhd_ic *ic)
       mrc_fld_data_t yy = MRC_CRD(crds, 1, iy);
       mrc_fld_data_t zz = MRC_CRD(crds, 2, iz);
 
-      PP(fld, ix, iy, iz) = sub->p0;
+      PP_(fld, ix, iy, iz, p) = sub->p0;
       if( sqrt((xx*xx) + (yy*yy) + (zz*zz)) <= sub->r_obstacle ){
-        RR(fld, ix, iy, iz) = sub->rho_obstacle;
-        VX(fld, ix, iy, iz) = 0.;
+        RR_(fld, ix, iy, iz, p) = sub->rho_obstacle;
+        VX_(fld, ix, iy, iz, p) = 0.;
       } else{
-        RR(fld, ix, iy, iz) = sub->rho0;
-        VX(fld, ix, iy, iz) = sub->v0;
+        RR_(fld, ix, iy, iz, p) = sub->rho0;
+        VX_(fld, ix, iy, iz, p) = sub->v0;
         if( xx > 0. && sqrt((yy*yy) + (zz*zz)) <= sub->r_obstacle ){
-          VX(fld, ix, iy, iz) = 0.;
+          VX_(fld, ix, iy, iz, p) = 0.;
         }
       }
     } mrc_fld_foreach_end;
@@ -249,8 +248,8 @@ ggcm_mhd_ic_ot_run(struct ggcm_mhd_ic *ic)
     /* calc max divb */    
     mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
       double val =
-        (BX(fld, ix+p1x, iy    , iz) - BX(fld, ix,iy,iz)) / dx[0] +
-        (BY(fld, ix    , iy+p1y, iz) - BY(fld, ix,iy,iz)) / dx[1];
+        (BX_(fld, ix+p1x, iy    , iz, p) - BX_(fld, ix,iy,iz, p)) / dx[0] +
+        (BY_(fld, ix    , iy+p1y, iz, p) - BY_(fld, ix,iy,iz, p)) / dx[1];
 
       max_divb = fmax(max_divb, fabs(val));
     } mrc_fld_foreach_end;
