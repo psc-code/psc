@@ -383,7 +383,6 @@ ggcm_mhd_harris_create(struct ggcm_mhd *mhd)
   mrc_domain_set_param_int(mhd->domain, "bcz", BC_PERIODIC);
 
   ggcm_mhd_ic_set_type(mhd->ic, "harris");
-  ggcm_mhd_step_set_type(mhd->step, "c2_double");
 }
 
 // ----------------------------------------------------------------------
