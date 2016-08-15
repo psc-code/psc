@@ -360,6 +360,7 @@ ggcm_mhd_ic_hydro_from_primitive_gkeyll(struct ggcm_mhd_ic *ic, struct mrc_fld *
 
   int idx[nr_fluids];
   ggcm_mhd_gkeyll_fluid_species_index_all(mhd, idx);
+  int idx_em = ggcm_mhd_gkeyll_em_fields_index(mhd);
 
   assert(nr_moments == 5);
 
@@ -373,6 +374,7 @@ ggcm_mhd_ic_hydro_from_primitive_gkeyll(struct ggcm_mhd_ic *ic, struct mrc_fld *
 	prim[m] = ops->primitive(ic, m, dcrd_cc);
       }
       
+      // fluid quantities for each species
       for (int s = 0; s < nr_fluids; s++) {
 	M3(fld, idx[s] + G5M_RRS,  ix,iy,iz, p) = prim[RR] * mass_ratios[s];
 	M3(fld, idx[s] + G5M_RVXS, ix,iy,iz, p) = prim[RR] * prim[VX] * momentum_ratios[s];
@@ -385,6 +387,22 @@ ggcm_mhd_ic_hydro_from_primitive_gkeyll(struct ggcm_mhd_ic *ic, struct mrc_fld *
 		  sqr(M3(fld, idx[s] + G5M_RVZS, ix,iy,iz, p)))
 	  / M3(fld, idx[s] + G5M_RRS, ix,iy,iz,p);
       }
+
+      // E=-vxB, i.e., only convection E field
+      M3(fld, idx_em + GK_EX, ix,iy,iz, p) =
+	- prim[VY] * M3(fld, idx_em + GK_BZ, ix,iy,iz, p)
+	+ prim[VZ] * M3(fld, idx_em + GK_BY, ix,iy,iz, p);
+      M3(fld, idx_em + GK_EY, ix,iy,iz, p) =
+	- prim[VZ] * M3(fld, idx_em + GK_BX, ix,iy,iz, p)
+	+ prim[VX] * M3(fld, idx_em + GK_BZ, ix,iy,iz, p);
+      M3(fld, idx_em + GK_EZ, ix,iy,iz, p) =
+	- prim[VX] * M3(fld, idx_em + GK_BY, ix,iy,iz, p)
+	+ prim[VY] * M3(fld, idx_em + GK_BX, ix,iy,iz, p);
+      
+      // FIXME sensible correction potentials?
+      // e.g., copy ghost vals for inoutflow bnd
+      M3(fld, idx_em + GK_PHI, ix,iy,iz, p) = .0;
+      M3(fld, idx_em + GK_PSI, ix,iy,iz, p) = .0;
     } mrc_fld_foreach_end;    
   }
 }

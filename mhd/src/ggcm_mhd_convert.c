@@ -208,7 +208,7 @@ primitive_to_gkeyll_em_fields_point(struct mrc_fld *fld, int idx_em,
   M3(fld, idx_em + GK_EY, ix,iy,iz, p) =
     - vz * M3(fld, idx_em + GK_BX, ix,iy,iz, p)
     + vx * M3(fld, idx_em + GK_BZ, ix,iy,iz, p);
-  M3(fld, idx_em + GK_EX, ix,iy,iz, p) =
+  M3(fld, idx_em + GK_EZ, ix,iy,iz, p) =
     - vx * M3(fld, idx_em + GK_BY, ix,iy,iz, p)
     + vy * M3(fld, idx_em + GK_BX, ix,iy,iz, p);
 
