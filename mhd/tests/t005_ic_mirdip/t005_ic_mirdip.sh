@@ -30,7 +30,7 @@ mpirun -n 4 ../mhd_mirdip \
     --ggcm_mhd_diag_fields rr1:uu1:rv1:b1:j:divb:rr:pp:v:b:e_cc:ymask \
     \
     --mrc_ts_max_time 0. \
-    --ggcm_mhd_step_type c_double \
+    --ggcm_mhd_step_type mhd_scons_ggcm_double \
     --ggcm_mhd_step_do_nwst \
     \
     --ggcm_mhd_norm_length 2634100. \

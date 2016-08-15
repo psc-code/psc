@@ -146,6 +146,7 @@ ggcm_mhd_ic_mirdip_vector_potential_bg(struct ggcm_mhd_ic *ic, int m, double x[3
 	sub->bnvals_code[m] = bnvals[m];
       }
     }
+    first_time = false;
   }
 
   // get main dipole vector potential
