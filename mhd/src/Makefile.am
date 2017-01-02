@@ -127,7 +127,7 @@ libmhd_la_LIBADD += \
 	-L$(GKSOFTWARE)/gsl/lib -lgsl -lgslcblas \
 	-L$(GKSOFTWARE)/txbase/lib -ltxbase \
 	-L$(GKSOFTWARE)/lua/lib -llua \
-	-lfftw3 \
+	-L/opt/local/lib -lfftw3 \
 	-L$(GKSOFTWARE)/lapack/lib -llapack -lblas
 endif
 
