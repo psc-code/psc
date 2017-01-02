@@ -29,6 +29,10 @@ struct ggcm_mhd_ic_harris {
   double pert; // strength of \psi perturbation (flux function)
   double pert_halfwidth; // half width of perturbation; if 0.0, set
                          // to 0.5 * (xh[1] - xl[1])
+  
+  // for testing: add a background field of this amount, but subtract in the perturbation,
+  // so the total B field will be the same, anyway
+  double B_0_bg;
 };
 
 #define ggcm_mhd_ic_harris(ic) mrc_to_subobj(ic, struct ggcm_mhd_ic_harris)
@@ -58,7 +62,8 @@ ggcm_mhd_ic_harris_primitive(struct ggcm_mhd_ic *ic, int m, double crd[3])
   case RR: return rr;
   case PP: return .5 * rr;
   // B here won't actually be used because the vector potential takes preference
-  case BX: return -pert * (   M_PI/ly) * cos(2*M_PI*xx/lx) * sin(M_PI*yy/ly) + sub->B_0 * tanh(yy/cs_width);
+  case BX: return -pert * (   M_PI/ly) * cos(2*M_PI*xx/lx) * sin(M_PI*yy/ly) + sub->B_0 * tanh(yy/cs_width)
+      - sub->B_0_bg;
   case BY: return -pert * (2.*M_PI/lx) * sin(2*M_PI*xx/lx) * cos(M_PI*yy/ly);
   default: return 0.;
   }
@@ -83,7 +88,37 @@ ggcm_mhd_ic_harris_vector_potential(struct ggcm_mhd_ic *ic, int m, double crd[3]
   double ly = xh[1] - xl[1];
 
   switch (m) {
-  case 2: return pert * cos(2*M_PI*xx/lx) * cos(M_PI*yy/ly) + sub->B_0 * cs_width * log(cosh(yy/cs_width));
+  case 2: return pert * cos(2*M_PI*xx/lx) * cos(M_PI*yy/ly) + sub->B_0 * cs_width * log(cosh(yy/cs_width))
+      - sub->B_0_bg * yy;
+  default: return 0.;
+  }
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_ic_harris_primitive_bg
+
+static double
+ggcm_mhd_ic_harris_primitive_bg(struct ggcm_mhd_ic *ic, int m, double crd[3])
+{
+  struct ggcm_mhd_ic_harris *sub = ggcm_mhd_ic_harris(ic);
+
+  switch (m) {
+  case BX: return sub->B_0_bg;
+  default: return 0.;
+  }
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_ic_harris_vector_potential_bg
+
+static double
+ggcm_mhd_ic_harris_vector_potential_bg(struct ggcm_mhd_ic *ic, int m, double crd[3])
+{
+  struct ggcm_mhd_ic_harris *sub = ggcm_mhd_ic_harris(ic);
+  double yy = crd[1];
+
+  switch (m) {
+  case 2: return sub->B_0_bg * yy;
   default: return 0.;
   }
 }
@@ -99,6 +134,7 @@ static struct param ggcm_mhd_ic_harris_descr[] = {
   { "cs_width"        , VAR(cs_width)        , PARAM_DOUBLE(0.5)         },
   { "pert"            , VAR(pert)            , PARAM_DOUBLE(0.1)         },
   { "pert_halfwidth"  , VAR(pert_halfwidth)  , PARAM_DOUBLE(6.4)         },
+  { "B_0_bg"          , VAR(B_0_bg)          , PARAM_DOUBLE(0.)          },
   {},
 };
 #undef VAR
@@ -112,6 +148,8 @@ struct ggcm_mhd_ic_ops ggcm_mhd_ic_harris_ops = {
   .param_descr         = ggcm_mhd_ic_harris_descr,
   .primitive           = ggcm_mhd_ic_harris_primitive,
   .vector_potential    = ggcm_mhd_ic_harris_vector_potential,
+  .primitive_bg        = ggcm_mhd_ic_harris_primitive_bg,
+  .vector_potential_bg = ggcm_mhd_ic_harris_vector_potential_bg,
 };
 
 // ======================================================================
