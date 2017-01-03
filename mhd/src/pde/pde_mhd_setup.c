@@ -643,11 +643,12 @@ pde_mhd_setup(struct ggcm_mhd *mhd)
 // kept around statically so we don't have to pass all this crap
 
 struct mhd_aux {
+  // background B field
+  fld1d_vec_t b0;
   // bnd_mask for specifying ghost point (1), next-to-ghost point (2)
   fld1d_t bnd_mask;
   // current density for Hall term, resistivity
   fld1d_vec_t j;
-  fld1d_vec_t b0;
 };
 
 static struct mhd_aux s_aux;
@@ -665,16 +666,25 @@ pde_mhd_aux_setup()
 
 struct mhd_p_aux {
   fld3d_t b0;
+  fld3d_t bnd_mask;
   fld3d_t Jcc; // needed for Hall and constant resistivity
 };
 
 static struct mhd_p_aux s_p_aux;
 
 static void _mrc_unused
-pde_mhd_p_aux_setup(struct mrc_fld *b0)
+pde_mhd_p_aux_setup_b0(struct mrc_fld *b0)
 {
   if (b0) {
     fld3d_setup(&s_p_aux.b0, b0);
+  }
+}
+
+static void _mrc_unused
+pde_mhd_p_aux_setup_bnd_mask(struct mrc_fld *bnd_mask)
+{
+  if (bnd_mask) {
+    fld3d_setup(&s_p_aux.bnd_mask, bnd_mask);
   }
 }
 
@@ -684,6 +694,9 @@ pde_mhd_p_aux_get(int p)
   if (fld3d_is_setup(s_p_aux.b0)) {
     fld3d_get(&s_p_aux.b0, p);
   }
+  if (fld3d_is_setup(s_p_aux.bnd_mask)) {
+    fld3d_get(&s_p_aux.bnd_mask, p);
+  }
 }
 
 static void _mrc_unused
@@ -691,6 +704,9 @@ pde_mhd_p_aux_put(int p)
 {
   if (fld3d_is_setup(s_p_aux.b0)) {
     fld3d_put(&s_p_aux.b0, p);
+  }
+  if (fld3d_is_setup(s_p_aux.bnd_mask)) {
+    fld3d_put(&s_p_aux.bnd_mask, p);
   }
 }
 

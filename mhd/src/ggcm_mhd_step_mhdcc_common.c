@@ -170,24 +170,17 @@ ggcm_mhd_step_mhdcc_setup_flds(struct ggcm_mhd_step *step)
 
 static void
 mhd_flux_pt1(struct ggcm_mhd_step *step, fld3d_t x,
-	     int j, int k, int dir, int p, int ib, int ie)
+	     int j, int k, int dir, int ib, int ie)
 {
   struct ggcm_mhd_step_mhdcc *sub = ggcm_mhd_step_mhdcc(step);
   fld1d_state_t U = sub->U, U_l = sub->U_l, U_r = sub->U_r;
   fld1d_state_t W = sub->W, W_l = sub->W_l, W_r = sub->W_r;
 
-  // FIXME (?)
-  fld3d_t bnd_mask;
-  fld3d_setup(&bnd_mask, step->mhd->bnd_mask);
-  fld3d_get(&bnd_mask, p);
-
   // FIXME: +2,+2 is specifically for PLM reconstr (and enough for PCM)
   mhd_line_get_state(U, x, j, k, dir, ib - 2, ie + 2);
-  mhd_line_get_1(s_aux.bnd_mask, bnd_mask, j, k, dir, ib - 2, ie + 2);
+  mhd_line_get_1(s_aux.bnd_mask, s_p_aux.bnd_mask, j, k, dir, ib - 2, ie + 2);
   mhd_prim_from_cons(W, U, ib - 2, ie + 2);
   mhd_reconstruct(U_l, U_r, W_l, W_r, W, (fld1d_t) {}, ib, ie + 1);
-
-  fld3d_put(&bnd_mask, p);
 }
 
 // ----------------------------------------------------------------------
@@ -220,15 +213,13 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, mrc_fld_data_t time_c
 
   ggcm_mhd_fill_ghosts(mhd, x_curr, 0, time_curr);
 
-  fld3d_t x, _x_next, ymask, fluxes[3]; // FIXME, make static, init once? (not if mrc_fld may change!)
+  fld3d_t x, _x_next, ymask, fluxes[3];
   fld3d_setup(&x, x_curr);
   fld3d_setup(&_x_next, x_next);
   fld3d_setup(&ymask, mhd->ymask);
   for (int d = 0; d < 3; d++) {
     fld3d_setup(&fluxes[d], sub->fluxes[d]);
   }
-  pde_mhd_p_aux_setup(step->mhd->b0);
-
   fld3d_t Ul[3], Ur[3];
   if (s_opt_bc_reconstruct) {
     for (int d = 0; d < 3; d++) {
@@ -236,6 +227,8 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, mrc_fld_data_t time_c
       fld3d_setup(&Ur[d], sub->Ur[d]);
     }
   }
+  pde_mhd_p_aux_setup_b0(step->mhd->b0);
+  pde_mhd_p_aux_setup_bnd_mask(step->mhd->bnd_mask);
     
   for (int p = 0; p < mrc_fld_nr_patches(x_curr); p++) {
     // FIXME, need pde_patch_set()?
@@ -254,7 +247,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, mrc_fld_data_t time_c
 
 	pde_for_each_line(dir, j, k, 0) {
 	  int ib = 0, ie = s_ldims[dir];
-	  mhd_flux_pt1(step, x, j, k, dir, p, ib, ie);
+	  mhd_flux_pt1(step, x, j, k, dir, ib, ie);
 	  mhd_line_put_state(sub->U_l, Ul[dir], j, k, dir, ib, ie + 1);
 	  mhd_line_put_state(sub->U_r, Ur[dir], j, k, dir, ib, ie + 1);
 	}
@@ -290,7 +283,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, mrc_fld_data_t time_c
       pde_for_each_dir(dir) {
 	pde_for_each_line(dir, j, k, 0) {
 	  int ib = 0, ie = s_ldims[dir];
-	  mhd_flux_pt1(step, x, j, k, dir, p, ib, ie);
+	  mhd_flux_pt1(step, x, j, k, dir, ib, ie);
 	  mhd_flux_pt2(step, fluxes[dir], x, j, k, dir, ib, ie);
 	}
       }

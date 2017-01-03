@@ -339,7 +339,7 @@ pushstage(struct ggcm_mhd_step *step, struct mrc_fld *f_Unext,
     fld3d_setup(&p_F[d], sub->f_F[d]);
   }
   fld3d_setup(&p_E, sub->f_E);
-  pde_mhd_p_aux_setup(mhd->b0);
+  pde_mhd_p_aux_setup_b0(mhd->b0);
 
   bool limit = stage != 0 && s_mhd_time > s_timelo;
 
@@ -427,7 +427,7 @@ ggcm_mhd_step_c3_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
   fld3d_setup(&p_ymask, mhd->ymask);
   fld3d_setup(&p_zmask, sub->f_zmask);
   fld3d_setup(&p_rmask, sub->f_rmask);
-  pde_mhd_p_aux_setup(mhd->b0);
+  pde_mhd_p_aux_setup_b0(mhd->b0);
 
   ggcm_mhd_fill_ghosts(mhd, f_U, 0, mhd->time);
   pde_for_each_patch(p) {

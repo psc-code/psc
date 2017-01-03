@@ -162,7 +162,7 @@ pde_mhd_get_dt_scons(struct ggcm_mhd *mhd, struct mrc_fld *f_U, struct mrc_fld *
   fld3d_t p_U, p_ymask;
   fld3d_setup(&p_U    , f_U    );
   fld3d_setup(&p_ymask, f_ymask);
-  pde_mhd_p_aux_setup(mhd->b0);
+  pde_mhd_p_aux_setup_b0(mhd->b0);
 
   mrc_fld_data_t dt = 1e10f;
   pde_for_each_patch(p) {
@@ -196,7 +196,7 @@ pde_mhd_get_dt_fcons(struct ggcm_mhd *mhd, struct mrc_fld *x_fld)
   }
   fld3d_t x;
   fld3d_setup(&x, x_fld);
-  pde_mhd_p_aux_setup(mhd->b0);
+  pde_mhd_p_aux_setup_b0(mhd->b0);
 
   // FIXME, this should use fld3d_t?
   mrc_fld_data_t inv_dt = 0.f;
