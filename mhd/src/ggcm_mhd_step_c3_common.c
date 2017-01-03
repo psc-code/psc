@@ -335,13 +335,11 @@ pushstage(struct ggcm_mhd_step *step, struct mrc_fld *f_Unext,
   fld3d_setup(&p_ymask, mhd->ymask);
   fld3d_setup(&p_zmask, sub->f_zmask);
   fld3d_setup(&p_rmask, sub->f_rmask);
-  if (s_opt_background) {
-    fld3d_setup(&s_p_aux.b0, mhd->b0);
-  }
   for (int d = 0; d < 3; d++) {
     fld3d_setup(&p_F[d], sub->f_F[d]);
   }
   fld3d_setup(&p_E, sub->f_E);
+  pde_mhd_p_aux_setup(mhd->b0);
 
   bool limit = stage != 0 && s_mhd_time > s_timelo;
 
@@ -363,17 +361,13 @@ pushstage(struct ggcm_mhd_step *step, struct mrc_fld *f_Unext,
 			       &p_ymask, &p_zmask, &p_rmask, NULL };
 
     fld3d_get_list(p, mhd_patches);
-    if (s_opt_background) {
-      fld3d_get(&s_p_aux.b0, p);
-    }
+    pde_mhd_p_aux_get(p);
 
     patch_pushstage_pt2(step, p_Unext, dt, p_Ucurr, p_W,
 			p_E, p_F, p_ymask, p_zmask, p_rmask, stage, p);
 
     fld3d_put_list(p, mhd_patches);
-    if (s_opt_background) {
-      fld3d_put(&s_p_aux.b0, p);
-    }
+    pde_mhd_p_aux_put(p);
   }
 
   // correct E field
@@ -433,26 +427,20 @@ ggcm_mhd_step_c3_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
   fld3d_setup(&p_ymask, mhd->ymask);
   fld3d_setup(&p_zmask, sub->f_zmask);
   fld3d_setup(&p_rmask, sub->f_rmask);
-  if (s_opt_background) {
-    fld3d_setup(&s_p_aux.b0, mhd->b0);
-  }
+  pde_mhd_p_aux_setup(mhd->b0);
 
   ggcm_mhd_fill_ghosts(mhd, f_U, 0, mhd->time);
   pde_for_each_patch(p) {
     fld3d_t *get_e_ec_patches[] = { &p_E, &p_U, &p_W, &p_ymask, &p_zmask, &p_rmask, NULL };
     fld3d_get_list(p, get_e_ec_patches);
-    if (s_opt_background) {
-      fld3d_get(&s_p_aux.b0, p);
-    }
+    pde_mhd_p_aux_get(p);
 
     patch_prim_from_cons(p_W, p_U, 2);
     patch_calc_zmask(p_zmask, p_U, p_ymask);
     patch_calc_e(p_E, mhd->dt, p_U, p_W, p_zmask, p_rmask);
 
     fld3d_put_list(p, get_e_ec_patches);
-    if (s_opt_background) {
-      fld3d_put(&s_p_aux.b0, p);
-    }
+    pde_mhd_p_aux_put(p);
   }
   //  ggcm_mhd_fill_ghosts_E(mhd, E);
   

@@ -65,6 +65,9 @@ fld3d_get(fld3d_t *f, int p)
   f->arr_off += p * s_lgdims[0] * s_lgdims[1] * s_lgdims[2];
 }
 
+// FIXME, do we require fld3d_put to close fld3d_get?
+// If so, we should do it consistently -- if not we should just get rid of it
+
 static inline void
 fld3d_put(fld3d_t *f, int p)
 {

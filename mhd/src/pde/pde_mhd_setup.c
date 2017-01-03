@@ -686,6 +686,14 @@ pde_mhd_p_aux_get(int p)
   }
 }
 
+static void _mrc_unused
+pde_mhd_p_aux_put(int p)
+{
+  if (fld3d_is_setup(s_p_aux.b0)) {
+    fld3d_put(&s_p_aux.b0, p);
+  }
+}
+
 
 // ======================================================================
 

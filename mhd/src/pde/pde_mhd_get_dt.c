@@ -162,24 +162,18 @@ pde_mhd_get_dt_scons(struct ggcm_mhd *mhd, struct mrc_fld *f_U, struct mrc_fld *
   fld3d_t p_U, p_ymask;
   fld3d_setup(&p_U    , f_U    );
   fld3d_setup(&p_ymask, f_ymask);
-  if (s_opt_background) {
-    fld3d_setup(&s_p_aux.b0, mhd->b0);
-  }
+  pde_mhd_p_aux_setup(mhd->b0);
 
   mrc_fld_data_t dt = 1e10f;
   pde_for_each_patch(p) {
     fld3d_t *patches[] = { &p_U, &p_ymask, NULL };
     fld3d_get_list(p, patches);
-    if (s_opt_background) {
-      fld3d_get(&s_p_aux.b0, p);
-    }
+    pde_mhd_p_aux_get(p);
 
     dt = mrc_fld_min(dt, patch_get_dt_scons(p_U, p_ymask));
 
     fld3d_put_list(p, patches);
-    if (s_opt_background) {
-      fld3d_put(&s_p_aux.b0, p);
-    }
+    pde_mhd_p_aux_put(p);
   }
   mrc_fld_data_t dtn;
   MPI_Allreduce(&dt, &dtn, 1, MPI_MRC_FLD_DATA_T, MPI_MIN, ggcm_mhd_comm(mhd));
