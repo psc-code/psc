@@ -53,6 +53,9 @@
   const resistivity. ref.sh / run.sh run step "fortran" / "c_float",
   respectively, and should produce identical results.
 
+* t024_gem_mhdcc_bg: Same as t017_gem_mhdcc, but with a (fake) background field to test
+  background option in mhdcc
+
 
 
 
