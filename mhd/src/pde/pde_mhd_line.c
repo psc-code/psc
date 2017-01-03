@@ -429,4 +429,42 @@ mhd_line_get_1(fld1d_t u, fld3d_t U,
 #undef GET_LINE
 }
 
+// ----------------------------------------------------------------------
+// mhd_line_get_vec
+
+static void _mrc_unused
+mhd_line_get_vec(fld1d_vec_t u, fld3d_t U,
+		 int j, int k, int dir, int ib, int ie)
+{
+#define GET_LINE(X,Y,Z,I,J,K) do {			\
+    for (int i = ib; i < ie; i++) {			\
+      F1S(u, 0, i) = F3S(U, X , I,J,K);			\
+      F1S(u, 1, i) = F3S(U, Y , I,J,K);			\
+      F1S(u, 2, i) = F3S(U, Z , I,J,K);			\
+    }							\
+  } while (0)
+
+  if (dir == 0) {
+    GET_LINE(0,1,2, i,j,k);
+  } else if (dir == 1) {
+    GET_LINE(1,2,0, k,i,j);
+  } else if (dir == 2) {
+    GET_LINE(2,0,1, j,k,i);
+  }
+#undef GET_LINE
+}
+
+// ----------------------------------------------------------------------
+// mhd_line_get_b0
+
+static void _mrc_unused
+mhd_line_get_b0(fld3d_t b0, int j, int k, int dir, int p, int ib, int ie)
+{
+  if (!s_opt_background) {
+    return;
+  }
+
+  mhd_line_get_vec(s_aux.b0, b0, j, k, dir, ib, ie + 1);
+}
+
 #endif

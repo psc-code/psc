@@ -647,6 +647,7 @@ struct mhd_aux {
   fld1d_t bnd_mask;
   // current density for Hall term, resistivity
   fld1d_vec_t j;
+  fld1d_vec_t b0;
 };
 
 static struct mhd_aux s_aux;
@@ -656,6 +657,7 @@ pde_mhd_aux_setup()
 {
   fld1d_setup(&s_aux.bnd_mask);
   fld1d_vec_setup(&s_aux.j);
+  fld1d_vec_setup(&s_aux.b0);
 }
 
 // ----------------------------------------------------------------------

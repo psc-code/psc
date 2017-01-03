@@ -13,27 +13,35 @@
 static inline void
 fluxes_mhd_fcons(mrc_fld_data_t F[], mrc_fld_data_t U[], mrc_fld_data_t W[], int i)
 {
+  mrc_fld_data_t B0X, B0Y, B0Z;
+  if (s_opt_background) {
+    mrc_fld_data_t *B0 = &F1V(s_aux.b0, 0, i);
+    B0X = B0[0]; B0Y = B0[1]; B0Z = B0[2];
+  } else {
+    B0X = B0Y = B0Z = 0.f;
+  }
+  mrc_fld_data_t BTX = B0X + W[BX], BTY = B0Y + W[BY], BTZ = B0Z + W[BZ];
   mrc_fld_data_t b2 = sqr(W[BX]) + sqr(W[BY]) + sqr(W[BZ]);
+  mrc_fld_data_t ptot = W[PP] + .5f * b2 + B0X*W[BX] + B0Y*W[BY] + B0Z*W[BZ];
+  mrc_fld_data_t v_dot_B = (W[BX] * W[VX] + W[BY] * W[VY] + W[BZ] * W[VZ]);
 
-  F[RR]  = W[RR] * W[VX];
-  F[RVX] = W[RR] * W[VX] * W[VX] + W[PP] + .5 * b2 - W[BX] * W[BX];
-  F[RVY] = W[RR] * W[VY] * W[VX]                   - W[BY] * W[BX];
-  F[RVZ] = W[RR] * W[VZ] * W[VX]                   - W[BZ] * W[BX];
-  F[EE] = (U[EE] + W[PP] + .5 * b2) * W[VX]
-    - W[BX] * (W[BX] * W[VX] + W[BY] * W[VY] + W[BZ] * W[VZ]);
+  F[RVX] = W[RR] * W[VX] * W[VX] + ptot - BTX * W[BX] - W[BX] * B0X;
+  F[RVY] = W[RR] * W[VY] * W[VX]        - BTX * W[BY] - W[BX] * B0Y;
+  F[RVZ] = W[RR] * W[VZ] * W[VX]        - BTX * W[BZ] - W[BX] * B0Z;
+  F[EE] = (U[EE] + ptot) * W[VX] - BTX * v_dot_B;
   F[BX] = 0;
-  F[BY] = W[BY] * W[VX] - W[BX] * W[VY];
-  F[BZ] = W[BZ] * W[VX] - W[BX] * W[VZ]; 
+  F[BY]  = W[VX] * BTY - W[VY] * BTX;
+  F[BZ]  = W[VX] * BTZ - W[VZ] * BTX; 
 
   if (s_opt_hall == OPT_HALL_CONST) {
     mrc_fld_data_t *j = &F1V(s_aux.j, 0, i);
-    F[BY] -= s_d_i * (W[BY] * j[0] - W[BX] * j[1]);
-    F[BZ] -= s_d_i * (W[BZ] * j[0] - W[BX] * j[2]);
+    F[BY] -= s_d_i * (j[0] * BTY - j[1] * BTX);
+    F[BZ] -= s_d_i * (j[0] * BTZ - j[2] * BTX);
     // FIXME, energy contribution
   } else if (s_opt_hall == OPT_HALL_YES) {
     mrc_fld_data_t *j = &F1V(s_aux.j, 0, i);
-    F[BY] -= s_d_i / W[RR] * (W[BY] * j[0] - W[BX] * j[1]);
-    F[BZ] -= s_d_i / W[RR] * (W[BZ] * j[0] - W[BX] * j[2]);
+    F[BY] -= s_d_i / W[RR] * (j[0] * BTY - j[1] * BTX);
+    F[BZ] -= s_d_i / W[RR] * (j[0] * BTZ - j[2] * BTX);
     // FIXME, energy contribution
   }
 
@@ -95,18 +103,30 @@ fluxes(mrc_fld_data_t F[], mrc_fld_data_t U[], mrc_fld_data_t W[], int i)
 static inline mrc_fld_data_t
 wavespeed_mhd_fcons(mrc_fld_data_t U[], mrc_fld_data_t W[], int i)
 {
+  // FIXME, replicated from fluxes() above
+  mrc_fld_data_t B0X, B0Y, B0Z;
+  if (s_opt_background) {
+    mrc_fld_data_t *B0 = &F1V(s_aux.b0, 0, i);
+    B0X = B0[0]; B0Y = B0[1]; B0Z = B0[2];
+  } else {
+    B0X = B0Y = B0Z = 0.f;
+  }
+  mrc_fld_data_t BTX = B0X + W[BX], BTY = B0Y + W[BY], BTZ = B0Z + W[BZ];
+
+  // OPT: 1/rr can be factored out, and inner square root can be written in terms
+  // of By^2 + Bz^2
   mrc_fld_data_t cs2 = s_gamma * W[PP] / W[RR];
-  mrc_fld_data_t b2 = sqr(W[BX]) + sqr(W[BY]) + sqr(W[BZ]);
-  mrc_fld_data_t vA2 = b2 / W[RR]; 
+  mrc_fld_data_t bt2 = sqr(BTX) + sqr(BTY) + sqr(BTZ);
+  mrc_fld_data_t vA2 = bt2 / W[RR]; 
   mrc_fld_data_t cf2 = .5f * (cs2 + vA2 + 
-			      mrc_fld_sqrt(sqr(vA2 + cs2) - (4.f * sqr(sqrt(cs2) * W[BX]) / W[RR])));
+			      mrc_fld_sqrt(sqr(vA2 + cs2) - (4.f * cs2 * sqr(BTX) / W[RR])));
   mrc_fld_data_t cf = mrc_fld_sqrt(cf2);
 
   if (s_opt_hall == OPT_HALL_CONST) {
-    mrc_fld_data_t cw = s_d_i * mrc_fld_sqrt(b2) * M_PI * PDE_INV_DS(i);
+    mrc_fld_data_t cw = s_d_i * mrc_fld_sqrt(bt2) * M_PI * PDE_INV_DS(i);
     cf += cw;
   } else if (s_opt_hall == OPT_HALL_YES) {
-    mrc_fld_data_t cw = s_d_i / W[RR] * mrc_fld_sqrt(b2) * M_PI * PDE_INV_DS(i);
+    mrc_fld_data_t cw = s_d_i / W[RR] * mrc_fld_sqrt(bt2) * M_PI * PDE_INV_DS(i);
     cf += cw;
   }
 

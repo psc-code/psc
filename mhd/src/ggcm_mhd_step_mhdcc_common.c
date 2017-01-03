@@ -28,7 +28,7 @@
 // mhd options
 
 #define OPT_EQN OPT_EQN_MHD_FCONS
-#define OPT_BACKGROUND false
+//#define OPT_BACKGROUND false
 
 #include "pde/pde_setup.c"
 #include "pde/pde_mhd_setup.c"
@@ -97,6 +97,10 @@ ggcm_mhd_step_mhdcc_setup(struct ggcm_mhd_step *step)
 
   mhd->bnd_mask = ggcm_mhd_get_3d_fld(mhd, 1);
 
+  if (s_opt_background) {
+    mhd->b0 = ggcm_mhd_get_3d_fld(mhd, 3);
+  }
+
   sub->x_star = ggcm_mhd_get_3d_fld(mhd, s_n_comps);
   mrc_fld_dict_add_int(sub->x_star, "mhd_type", MT_FULLY_CONSERVATIVE_CC);
 
@@ -123,6 +127,9 @@ ggcm_mhd_step_mhdcc_destroy(struct ggcm_mhd_step *step)
 
   ggcm_mhd_put_3d_fld(mhd, mhd->ymask);
   ggcm_mhd_put_3d_fld(mhd, mhd->bnd_mask);
+  if (s_opt_background) {
+    ggcm_mhd_put_3d_fld(mhd, mhd->b0);
+  }
   ggcm_mhd_put_3d_fld(mhd, sub->x_star);
 
   for (int d = 0; d < 3; d++) {
@@ -169,9 +176,9 @@ mhd_flux_pt1(struct ggcm_mhd_step *step, fld3d_t x,
   fld1d_state_t U = sub->U, U_l = sub->U_l, U_r = sub->U_r;
   fld1d_state_t W = sub->W, W_l = sub->W_l, W_r = sub->W_r;
 
+  // FIXME (?)
   fld3d_t bnd_mask;
   fld3d_setup(&bnd_mask, step->mhd->bnd_mask);
-
   fld3d_get(&bnd_mask, p);
 
   // FIXME: +2,+2 is specifically for PLM reconstr (and enough for PCM)
@@ -194,7 +201,13 @@ mhd_flux_pt2(struct ggcm_mhd_step *step, fld3d_t flux, fld3d_t x,
   fld1d_state_t U_l = sub->U_l, U_r = sub->U_r;
   fld1d_state_t W = sub->W, W_l = sub->W_l, W_r = sub->W_r, F = sub->F;
 
+  // FIXME
+  fld3d_t b0;
+  fld3d_setup(&b0, step->mhd->b0);
+  fld3d_get(&b0, p);
+
   mhd_line_get_current(x, j, k, dir, ib, ie + 1);
+  mhd_line_get_b0(b0, j, k, dir, p, ib, ie + 1);
   mhd_riemann(F, U_l, U_r, W_l, W_r, ib, ie + 1);
   mhd_add_resistive_flux(F, W, ib, ie + 1);
   mhd_line_put_state(F, flux, j, k, dir, ib, ie + 1);
@@ -274,7 +287,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, mrc_fld_data_t time_c
 	fld3d_put(&Ur[dir], p);
       }
 
-    } else {
+    } else { // !s_opt_bc_reconstruct
 
       pde_for_each_dir(dir) {
 	pde_for_each_line(dir, j, k, 0) {
