@@ -2,7 +2,7 @@
 // ======================================================================
 // fld3d_t
 //
-// 3d patch of mrc_fld_data_t, access with F3
+// 3d patch of mrc_fld_data_t, access with F3S
 
 typedef struct {
   mrc_fld_data_t *arr_off;
