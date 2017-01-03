@@ -458,13 +458,13 @@ mhd_line_get_vec(fld1d_vec_t u, fld3d_t U,
 // mhd_line_get_b0
 
 static void _mrc_unused
-mhd_line_get_b0(fld3d_t b0, int j, int k, int dir, int p, int ib, int ie)
+mhd_line_get_b0(int j, int k, int dir, int ib, int ie)
 {
   if (!s_opt_background) {
     return;
   }
 
-  mhd_line_get_vec(s_aux.b0, b0, j, k, dir, ib, ie + 1);
+  mhd_line_get_vec(s_aux.b0, s_p_aux.b0, j, k, dir, ib, ie + 1);
 }
 
 #endif

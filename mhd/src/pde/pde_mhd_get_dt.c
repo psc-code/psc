@@ -193,28 +193,30 @@ pde_mhd_get_dt_scons(struct ggcm_mhd *mhd, struct mrc_fld *f_U, struct mrc_fld *
 // pde_mhd_get_dt_fcons
 
 static mrc_fld_data_t _mrc_unused
-pde_mhd_get_dt_fcons(struct ggcm_mhd *mhd, struct mrc_fld *x)
+pde_mhd_get_dt_fcons(struct ggcm_mhd *mhd, struct mrc_fld *x_fld)
 {
   static fld1d_state_t V, U;
   if (!fld1d_state_is_setup(V)) {
     fld1d_state_setup(&V);
     fld1d_state_setup(&U);
   }
-  fld3d_t b0;
-  fld3d_setup(&b0, mhd->b0);
+  fld3d_t x;
+  fld3d_setup(&x, x_fld);
+  pde_mhd_p_aux_setup(mhd->b0);
 
   // FIXME, this should use fld3d_t?
   mrc_fld_data_t inv_dt = 0.f;
-  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+  for (int p = 0; p < mrc_fld_nr_patches(x_fld); p++) {
     pde_patch_set(p);
-    fld3d_get(&b0, p);
+    fld3d_get(&x, p);
+    pde_mhd_p_aux_get(p);
 
     pde_for_each_dir(dir) {
       pde_line_set_dir(dir);
       int ib = 0, ie = s_ldims[dir];
       pde_for_each_line(dir, j, k, 0) {
-	mhd_get_line_state(U, x, j, k, dir, p, ib, ie);
-	mhd_line_get_b0(b0, j, k, dir, p, ib, ie);
+	mhd_line_get_state(U, x, j, k, dir, ib, ie);
+	mhd_line_get_b0(j, k, dir, ib, ie);
 	mhd_prim_from_cons(V, U, ib, ie);
 	for (int i = ib; i < ie; i++) {
 	  mrc_fld_data_t *v = &F1S(V, 0, i);

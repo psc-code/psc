@@ -663,10 +663,29 @@ pde_mhd_aux_setup()
 // ----------------------------------------------------------------------
 // s_p_aux
 
-static struct {
+struct mhd_p_aux {
   fld3d_t b0;
   fld3d_t Jcc; // needed for Hall and constant resistivity
-} s_p_aux;
+};
+
+static struct mhd_p_aux s_p_aux;
+
+static void _mrc_unused
+pde_mhd_p_aux_setup(struct mrc_fld *b0)
+{
+  if (b0) {
+    fld3d_setup(&s_p_aux.b0, b0);
+  }
+}
+
+static void _mrc_unused
+pde_mhd_p_aux_get(int p)
+{
+  if (fld3d_is_setup(s_p_aux.b0)) {
+    fld3d_get(&s_p_aux.b0, p);
+  }
+}
+
 
 // ======================================================================
 
