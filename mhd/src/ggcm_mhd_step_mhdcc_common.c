@@ -195,7 +195,7 @@ mhd_flux_pt2(struct ggcm_mhd_step *step, fld3d_t flux, fld3d_t x,
   fld1d_state_t W = sub->W, W_l = sub->W_l, W_r = sub->W_r, F = sub->F;
 
   mhd_line_get_current(x, j, k, dir, ib, ie + 1);
-  mhd_line_get_b0(j, k, dir, ib, ie + 1);
+  mhd_line_get_b0_fc(j, k, dir, ib, ie + 1);
   mhd_riemann(F, U_l, U_r, W_l, W_r, ib, ie + 1);
   mhd_add_resistive_flux(F, W, ib, ie + 1);
   mhd_line_put_state(F, flux, j, k, dir, ib, ie + 1);

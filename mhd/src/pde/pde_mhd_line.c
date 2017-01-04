@@ -455,6 +455,33 @@ mhd_line_get_vec(fld1d_vec_t u, fld3d_t U,
 }
 
 // ----------------------------------------------------------------------
+// mhd_line_get_vec_fc
+// 
+// get 1d line of values from c.c. fld3d_t, average to faces
+
+static void _mrc_unused
+mhd_line_get_vec_fc(fld1d_vec_t u, fld3d_t U,
+		    int j, int k, int dir, int ib, int ie)
+{
+#define GET_LINE(X,Y,Z,I,J,K,DI,DJ,DK) do {				\
+    for (int i = ib; i < ie; i++) {					\
+      F1S(u, 0, i) = .5f*(F3S(U, X , I,J,K) + F3S(U, X, I-DI,J-DJ,K-DK)); \
+      F1S(u, 1, i) = .5f*(F3S(U, Y , I,J,K) + F3S(U, Y, I-DI,J-DJ,K-DK)); \
+      F1S(u, 2, i) = .5f*(F3S(U, Z , I,J,K) + F3S(U, Z, I-DI,J-DJ,K-DK)); \
+    }									\
+  } while (0)
+
+  if (dir == 0) {
+    GET_LINE(0,1,2, i,j,k, 1,0,0);
+  } else if (dir == 1) {
+    GET_LINE(1,2,0, k,i,j, 0,1,0);
+  } else if (dir == 2) {
+    GET_LINE(2,0,1, j,k,i, 0,0,1);
+  }
+#undef GET_LINE
+}
+
+// ----------------------------------------------------------------------
 // mhd_line_get_b0
 
 static void _mrc_unused
@@ -465,6 +492,19 @@ mhd_line_get_b0(int j, int k, int dir, int ib, int ie)
   }
 
   mhd_line_get_vec(s_aux.b0, s_p_aux.b0, j, k, dir, ib, ie + 1);
+}
+
+// ----------------------------------------------------------------------
+// mhd_line_get_b0_fc
+
+static void _mrc_unused
+mhd_line_get_b0_fc(int j, int k, int dir, int ib, int ie)
+{
+  if (!s_opt_background) {
+    return;
+  }
+
+  mhd_line_get_vec_fc(s_aux.b0, s_p_aux.b0, j, k, dir, ib, ie + 1);
 }
 
 #endif
