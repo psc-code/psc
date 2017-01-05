@@ -194,8 +194,14 @@ pde_mhd_get_dt_fcons(struct ggcm_mhd *mhd, struct mrc_fld *x_fld)
     fld1d_state_setup(&V);
     fld1d_state_setup(&U);
   }
-  fld3d_t x;
+  static fld1d_t ymask;
+  if (!fld1d_is_setup(ymask)) {
+    fld1d_setup(&ymask);
+  }
+
+  fld3d_t x, ymask_fld3;
   fld3d_setup(&x, x_fld);
+  fld3d_setup(&ymask_fld3, mhd->ymask);
   pde_mhd_p_aux_setup_b0(mhd->b0);
 
   // FIXME, this should use fld3d_t?
@@ -203,23 +209,33 @@ pde_mhd_get_dt_fcons(struct ggcm_mhd *mhd, struct mrc_fld *x_fld)
   for (int p = 0; p < mrc_fld_nr_patches(x_fld); p++) {
     pde_patch_set(p);
     fld3d_get(&x, p);
+    fld3d_get(&ymask_fld3, p);
     pde_mhd_p_aux_get(p);
 
     pde_for_each_dir(dir) {
+      if (!s_sw[dir]) {
+	continue;
+      }
+
       pde_line_set_dir(dir);
       int ib = 0, ie = s_ldims[dir];
       pde_for_each_line(dir, j, k, 0) {
 	mhd_line_get_state(U, x, j, k, dir, ib, ie);
 	mhd_line_get_b0(j, k, dir, ib, ie);
+	mhd_line_get_1(ymask, ymask_fld3, j, k, dir, ib, ie);
 	mhd_prim_from_cons(V, U, ib, ie);
 	for (int i = ib; i < ie; i++) {
+	  // skip cells outside the domain
+	  if (F1(ymask, i) == 0.f) {
+	    continue;
+	  }
 	  mrc_fld_data_t *v = &F1S(V, 0, i);
 	  // This is iffy: we need to call wavespeed_mhd_fcons even if we're using
 	  // scons variables, since we want all MHD waves taken into account, not just
 	  // the sound waves. FIXME, there must be a better way
 	  mrc_fld_data_t cf = wavespeed_mhd_fcons(NULL, v, i);
 
-	  if (s_sw[dir]) inv_dt = mrc_fld_max(inv_dt, (mrc_fld_abs(v[VX]) + cf) * PDE_INV_DS(i));
+	  inv_dt = mrc_fld_max(inv_dt, (mrc_fld_abs(v[VX]) + cf) * PDE_INV_DS(i));
 	}
       }
     }
