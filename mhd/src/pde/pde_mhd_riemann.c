@@ -25,6 +25,7 @@ fluxes_mhd_fcons(mrc_fld_data_t F[], mrc_fld_data_t U[], mrc_fld_data_t W[], int
   mrc_fld_data_t ptot = W[PP] + .5f * b2 + B0X*W[BX] + B0Y*W[BY] + B0Z*W[BZ];
   mrc_fld_data_t v_dot_B = (W[BX] * W[VX] + W[BY] * W[VY] + W[BZ] * W[VZ]);
 
+  F[RR]  = W[RR] * W[VX];
   F[RVX] = W[RR] * W[VX] * W[VX] + ptot - BTX * W[BX] - W[BX] * B0X;
   F[RVY] = W[RR] * W[VY] * W[VX]        - BTX * W[BY] - W[BX] * B0Y;
   F[RVZ] = W[RR] * W[VZ] * W[VX]        - BTX * W[BZ] - W[BX] * B0Z;
