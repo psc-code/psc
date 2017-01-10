@@ -215,12 +215,18 @@ obndra_mhd_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float b
 	} else {
 	  assert(0);
 	}
-	_BX(f, mm, ix+1,iy,iz, p) = b[0];
-	if (iy > -swy) {
-	  _BY(f, mm, ix,iy,iz, p) = b[1];
-	}
-	if (iz > -swz) {
-	  _BZ(f, mm, ix,iy,iz, p) = b[2];
+	if (MT == MT_FULLY_CONSERVATIVE_CC) {
+	  M3(f, mm + BX , ix,iy,iz, p) = b[0];
+	  M3(f, mm + BY , ix,iy,iz, p) = b[1];
+	  M3(f, mm + BZ , ix,iy,iz, p) = b[2];
+	} else {
+	  _BX(f, mm, ix+1,iy,iz, p) = b[0];
+	  if (iy > -swy) {
+	    _BY(f, mm, ix,iy,iz, p) = b[1];
+	  }
+	  if (iz > -swz) {
+	    _BZ(f, mm, ix,iy,iz, p) = b[2];
+	  }
 	}
       }
     }
@@ -375,6 +381,112 @@ obndra_zh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
   }
 }
 
+// ======================================================================
+// cell-centered
+
+// ----------------------------------------------------------------------
+// obndra_xh_open_cc
+
+static void
+obndra_xh_open_cc(struct ggcm_mhd *mhd, struct mrc_fld *f,
+		  const int sw[3], const int ldims[3], int p)
+{
+  if (mrc_domain_at_boundary_hi(mhd->domain, 0, p)) {
+    int mx = ldims[0];
+    for (int iz = -sw[2]; iz < ldims[2] + sw[2]; iz++) {
+      for (int iy = -sw[1]; iy < ldims[1] + sw[1]; iy++) {
+	for (int ix = 0; ix < sw[0]; ix++) {
+	  for (int m = 0; m < 8; m++) {
+	    M3(f,m, mx+ix,iy,iz, p) = M3(f,m, mx-ix-1,iy,iz, p);
+	  }
+	}
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
+// obndra_yl_open_cc
+
+static void
+obndra_yl_open_cc(struct ggcm_mhd *mhd, struct mrc_fld *f,
+		  const int sw[3], const int ldims[3], int p)
+{
+  if (mrc_domain_at_boundary_lo(mhd->domain, 1, p)) {
+    for (int iz = -sw[2]; iz < ldims[2] + sw[2]; iz++) {
+      for (int ix = -sw[0]; ix < ldims[0] + sw[0]; ix++) {
+	for (int iy = 0; iy < sw[1]; iy++) {
+	  for (int m = 0; m < 8; m++) {
+	    M3(f,m, ix,-1-iy,iz, p) = M3(f,m, ix,iy,iz, p);
+	  }
+	}
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
+// obndra_yh_open_cc
+
+static void
+obndra_yh_open_cc(struct ggcm_mhd *mhd, struct mrc_fld *f,
+		  const int sw[3], const int ldims[3], int p)
+{
+  if (mrc_domain_at_boundary_hi(mhd->domain, 1, p)) {
+    int my = ldims[1];
+    for (int iz = -sw[2]; iz < ldims[2] + sw[2]; iz++) {
+      for (int ix = -sw[0]; ix < ldims[0] + sw[0]; ix++) {
+	for (int iy = 0; iy < sw[1]; iy++) {
+	  for (int m = 0; m < 8; m++) {
+	    M3(f,m, ix,my+iy,iz, p) = M3(f,m, ix,my-iy-1,iz, p);
+	  }
+	}
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
+// obndra_zl_open_cc
+
+static void
+obndra_zl_open_cc(struct ggcm_mhd *mhd, struct mrc_fld *f,
+		  const int sw[3], const int ldims[3], int p)
+{
+  if (mrc_domain_at_boundary_lo(mhd->domain, 2, p)) {
+    for (int iy = -sw[1]; iy < ldims[1] + sw[1]; iy++) {
+      for (int ix = -sw[0]; ix < ldims[0] + sw[0]; ix++) {
+	for (int iz = 0; iz < sw[2]; iz++) {
+	  for (int m = 0; m < 8; m++) {
+	    M3(f,m, ix,iy,-1-iz, p) = M3(f,m, ix,iy,iz, p);
+	  }
+	}
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
+// obndra_zh_open_cc
+
+static void
+obndra_zh_open_cc(struct ggcm_mhd *mhd, struct mrc_fld *f,
+		  const int sw[3], const int ldims[3], int p)
+{
+  if (mrc_domain_at_boundary_hi(mhd->domain, 2, p)) {
+    int mz = ldims[2];
+    for (int iy = -sw[1]; iy < ldims[1] + sw[1]; iy++) {
+      for (int ix = -sw[0]; ix < ldims[0] + sw[0]; ix++) {
+	for (int iz = 0; iz < sw[2]; iz++) {
+	  for (int m = 0; m < 8; m++) {
+	    M3(f,m, ix,iy,mz+iz, p) = M3(f,m, ix,iy,mz-iz-1, p);
+	  }
+	}
+      }
+    }
+  }
+}
+
 // ----------------------------------------------------------------------
 // obndra_mhd
 //
@@ -406,13 +518,24 @@ obndra_mhd(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim)
 	assert(0);
       }
     }
-    obndra_xh_open(mhd, f, mm, sw, ldims, bh[0], p);
+    if (MT == MT_FULLY_CONSERVATIVE_CC) {
+      assert(mm == 0);
+      obndra_xh_open_cc(mhd, f, sw, ldims, p);
 
-    obndra_yl_open(mhd, f, mm, sw, ldims, bl[1], p);
-    obndra_yh_open(mhd, f, mm, sw, ldims, bh[1], p);
+      obndra_yl_open_cc(mhd, f, sw, ldims, p);
+      obndra_yh_open_cc(mhd, f, sw, ldims, p);
 
-    obndra_zl_open(mhd, f, mm, sw, ldims, bl[2], p);
-    obndra_zh_open(mhd, f, mm, sw, ldims, bh[2], p);
+      obndra_zl_open_cc(mhd, f, sw, ldims, p);
+      obndra_zh_open_cc(mhd, f, sw, ldims, p);
+    } else {
+      obndra_xh_open(mhd, f, mm, sw, ldims, bh[0], p);
+
+      obndra_yl_open(mhd, f, mm, sw, ldims, bl[1], p);
+      obndra_yh_open(mhd, f, mm, sw, ldims, bh[1], p);
+
+      obndra_zl_open(mhd, f, mm, sw, ldims, bl[2], p);
+      obndra_zh_open(mhd, f, mm, sw, ldims, bh[2], p);
+    }
   }
 }
 
