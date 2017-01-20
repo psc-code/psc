@@ -941,6 +941,20 @@ mrc_params_get_type(void *p, struct param *params, const char *name,
     case PT_OBJ:
       pval->u_obj = pv->u_obj;
       break;
+    case PT_FLOAT_ARRAY:
+      {
+  pval->u_float_array.nr_vals = pv->u_float_array.nr_vals;
+  pval->u_float_array.vals = calloc(pval->u_float_array.nr_vals, sizeof(float));
+  if (!pval->u_float_array.vals) {
+    break;
+  }
+  for (int d = 0; d < pval->u_float_array.nr_vals; d++) {
+    // FIXME?, abuse of u_float3
+    pval->u_float_array.vals[d] = pv->u_float_array.vals[d];
+  }
+      }
+      break;      
+
     default:
       assert(0);
     }

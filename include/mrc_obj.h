@@ -115,6 +115,7 @@ void mrc_obj_set_param_int3(struct mrc_obj *obj, const char *name, const int val
 void mrc_obj_set_param_float3(struct mrc_obj *obj, const char *name, const float val[3]);
 void mrc_obj_set_param_double3(struct mrc_obj *obj, const char *name, const double val[3]);
 void mrc_obj_set_param_int_array(struct mrc_obj *obj, const char *name, int nr_vals, const int val[]);
+void mrc_obj_set_param_float_array(struct mrc_obj *obj, const char *name, int nr_vals, const float val[]);
 void mrc_obj_set_param_ptr(struct mrc_obj *obj, const char *name, void* val);
 void mrc_obj_set_param_obj(struct mrc_obj *obj, const char *name, void* val);
 int mrc_obj_get_param_bool(struct mrc_obj *obj, const char *name, bool *pval);
@@ -296,6 +297,13 @@ int mrc_obj_print_class_info(int verbosity);
                               int nr_vals, const int val[])             \
   {                                                                     \
     mrc_obj_set_param_int_array((struct mrc_obj *)obj, name, nr_vals, val); \
+  }                                                                     \
+                                                                        \
+  static inline void                                                    \
+  pfx ## _set_param_float_array(obj_type *obj, const char *name,	\
+				int nr_vals, const float val[])		\
+  {                                                                     \
+    mrc_obj_set_param_float_array((struct mrc_obj *)obj, name, nr_vals, val); \
   }                                                                     \
                                                                         \
   static inline void                                                    \

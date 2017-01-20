@@ -643,6 +643,14 @@ mrc_obj_set_param_int_array(struct mrc_obj *obj, const char *name,
 }
 
 void
+mrc_obj_set_param_float_array(struct mrc_obj *obj, const char *name,
+                            int nr_vals, const float val[])
+{
+  union param_u uval = { .u_float_array = { nr_vals, (float *) val } };
+  mrc_obj_set_param_type(obj, name, PT_FLOAT_ARRAY, &uval);
+}
+
+void
 mrc_obj_set_param_ptr(struct mrc_obj *obj, const char *name, void* val)
 {
   union param_u uval = { .u_ptr = val };
