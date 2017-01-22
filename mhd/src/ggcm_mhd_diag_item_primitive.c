@@ -4,6 +4,7 @@
 #include "ggcm_mhd_defs.h"
 #include "ggcm_mhd_private.h"
 #include "ggcm_mhd_diag_private.h"
+#include "ggcm_mhd_gkeyll.h"
 
 #include <mrc_fld_as_double.h>
 #include <mrc_domain.h>
@@ -25,6 +26,9 @@ ggcm_mhd_diag_item_v_run(struct ggcm_mhd_diag_item *item,
 {
   struct ggcm_mhd *mhd = item->diag->mhd;
 
+  int mhd_type;
+  mrc_fld_get_param_int(fld, "mhd_type", &mhd_type);
+
   int bnd = fld->_nr_ghosts;
 
   struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, bnd, "vx:vy:vz");
@@ -34,13 +38,38 @@ ggcm_mhd_diag_item_v_run(struct ggcm_mhd_diag_item *item,
   struct mrc_fld *r = mrc_fld_get_as(fld_r, FLD_TYPE);
   struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
 
-  for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
-    mrc_fld_foreach(f, ix,iy,iz, bnd, bnd) {
-      mrc_fld_data_t rri = 1.f / RR_(f, ix,iy,iz, p);
-      M3(r, 0, ix,iy,iz, p) = rri * RVX_(f, ix,iy,iz, p);
-      M3(r, 1, ix,iy,iz, p) = rri * RVY_(f, ix,iy,iz, p);
-      M3(r, 2, ix,iy,iz, p) = rri * RVZ_(f, ix,iy,iz, p);
-    } mrc_fld_foreach_end;
+  if (mhd_type == MT_GKEYLL) {
+    int nr_fluids = mhd->par.gk_nr_fluids;
+    int nr_moments = mhd->par.gk_nr_moments;
+
+    assert(nr_moments == 5);
+    int idx[nr_fluids];
+    ggcm_mhd_gkeyll_fluid_species_index_all(mhd, idx);
+
+    for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
+      mrc_fld_foreach(f, ix,iy,iz, bnd, bnd) {
+        M3(r, 0, ix,iy,iz, p) = 0.;
+        mrc_fld_data_t rr = 0.;
+        for (int s = 0; s < nr_fluids; s++) {
+          M3(r, 0, ix,iy,iz, p) += M3(f, idx[s]+G5M_RVXS, ix,iy,iz, p);
+          M3(r, 1, ix,iy,iz, p) += M3(f, idx[s]+G5M_RVYS, ix,iy,iz, p);
+          M3(r, 2, ix,iy,iz, p) += M3(f, idx[s]+G5M_RVZS, ix,iy,iz, p);
+          rr += M3(f, idx[s]+G5M_RRS, ix,iy,iz, p);
+        }
+        for (int d = 0; d < 3; d++) {
+          M3(r, d, ix,iy,iz, p) /= rr;
+        }
+      } mrc_fld_foreach_end;
+    }
+  } else {
+    for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
+      mrc_fld_foreach(f, ix,iy,iz, bnd, bnd) {
+        mrc_fld_data_t rri = 1.f / RR_(f, ix,iy,iz, p);
+        M3(r, 0, ix,iy,iz, p) = rri * RVX_(f, ix,iy,iz, p);
+        M3(r, 1, ix,iy,iz, p) = rri * RVY_(f, ix,iy,iz, p);
+        M3(r, 2, ix,iy,iz, p) = rri * RVZ_(f, ix,iy,iz, p);
+      } mrc_fld_foreach_end;
+    }
   }
 
   mrc_fld_put_as(r, fld_r);
@@ -76,7 +105,44 @@ ggcm_mhd_diag_item_rr_run(struct ggcm_mhd_diag_item *item,
   struct ggcm_mhd *mhd = item->diag->mhd;
 
   mrc_fld_data_t scale_rr = mhd->rrnorm;
-  ggcm_mhd_diag_c_write_one_field(io, fld, RR, "rr", scale_rr, diag_type, plane);
+
+  int mhd_type;
+  mrc_fld_get_param_int(fld, "mhd_type", &mhd_type);
+
+  if (mhd_type == MT_GKEYLL) {
+    int bnd = fld->_nr_ghosts - 1;
+
+    struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, bnd + 1, "rr");
+    mrc_fld_set_type(fld_r, FLD_TYPE);
+    mrc_fld_setup(fld_r);
+
+    struct mrc_fld *r = mrc_fld_get_as(fld_r, FLD_TYPE);
+    struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
+
+    int nr_fluids = mhd->par.gk_nr_fluids;
+    int nr_moments = mhd->par.gk_nr_moments;
+
+    assert(nr_moments == 5);
+    int idx[nr_fluids];
+    ggcm_mhd_gkeyll_fluid_species_index_all(mhd, idx);
+
+    for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
+      mrc_fld_foreach(f, ix,iy,iz, bnd, bnd) {
+        M3(r, 0, ix,iy,iz, p) = 0.;
+        for (int s = 0; s < nr_fluids; s++)
+          M3(r, 0, ix,iy,iz, p) += M3(f, idx[s]+G5M_RRS, ix,iy,iz, p);
+      } mrc_fld_foreach_end;
+    }
+
+    mrc_fld_put_as(r, fld_r);
+    mrc_fld_put_as(f, fld);
+
+    ggcm_mhd_diag_c_write_one_field(io, r, 0, "rr", scale_rr, diag_type, plane);
+  
+    mrc_fld_destroy(fld_r);
+  } else {
+    ggcm_mhd_diag_c_write_one_field(io, fld, RR, "rr", scale_rr, diag_type, plane);
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -150,6 +216,27 @@ ggcm_mhd_diag_item_pp_run(struct ggcm_mhd_diag_item *item,
 			      sqr(BY_(f, ix,iy,iz, p)) +
 			      sqr(BZ_(f, ix,iy,iz, p)));
 	M3(r,0, ix,iy,iz, p) = (gamm - 1.f) * (EE_(f, ix,iy,iz, p) - .5f * rvv - .5f * b2);
+      } mrc_fld_foreach_end;
+    }
+  } else if (mhd_type == MT_GKEYLL) {
+    int nr_fluids = mhd->par.gk_nr_fluids;
+    int nr_moments = mhd->par.gk_nr_moments;
+
+    assert(nr_moments == 5);
+    int idx[nr_fluids];
+    ggcm_mhd_gkeyll_fluid_species_index_all(mhd, idx);
+
+    for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
+      mrc_fld_foreach(f, ix,iy,iz, bnd, bnd) {
+        M3(r, 0, ix,iy,iz, p) = 0.;
+        for (int s = 0; s < nr_fluids; s++) {
+          M3(r, 0, ix,iy,iz, p) += 
+            (gamm-1.) * ( M3(f, idx[s]+G5M_UUS, ix,iy,iz, p)
+            - .5 * (sqr(M3(f, idx[s]+G5M_RVXS, ix,iy,iz, p))
+                  + sqr(M3(f, idx[s]+G5M_RVYS, ix,iy,iz, p))
+                  + sqr(M3(f, idx[s]+G5M_RVZS, ix,iy,iz, p)))
+                  / M3(f, idx[s]+G5M_RRS, ix,iy,iz, p));
+        }
       } mrc_fld_foreach_end;
     }
   } else {
