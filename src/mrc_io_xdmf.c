@@ -751,7 +751,7 @@ ds_xdmf_read_attr(struct mrc_io *io, const char *path, int type,
     ierr = H5LTget_attribute_double(group, ".", name, pv->u_double3); CE;
     break;
   case PT_INT_ARRAY: {
-    int attr = H5Aopen(group, name, H5P_DEFAULT); H5_CHK(attr);
+    hid_t attr = H5Aopen(group, name, H5P_DEFAULT); H5_CHK(attr);
     H5A_info_t ainfo;
     ierr = H5Aget_info(attr, &ainfo); CE;
     ierr = H5Aclose(attr); CE;
