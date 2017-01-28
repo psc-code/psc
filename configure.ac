@@ -47,6 +47,9 @@ if test -z "$CC" || test "X$CC" = "Xno"; then
   AC_MSG_ERROR([No suitable C99 compiler found])
 fi
 AM_PROG_CC_C_O
+
+# default OpenMP to off
+: ${enable_openmp=no}
 AC_OPENMP
 CFLAGS="$CFLAGS $OPENMP_CFLAGS"
 

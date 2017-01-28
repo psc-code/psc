@@ -8,8 +8,10 @@
 
 struct ggcm_mhd_crds {
   struct mrc_obj obj;
-  struct ggcm_mhd_crds_gen *crds_gen;
+
+  bool legacy_fd1;
   struct mrc_domain *domain;
+
   struct mrc_fld *f1[3];
   struct mrc_fld *global_f1[3];
 

@@ -104,6 +104,7 @@ static void
 ggcm_mhd_step_cweno_setup(struct ggcm_mhd_step *step)
 {
   step->mhd->ymask = mrc_fld_make_view(step->mhd->fld, _YMASK, _YMASK + 1);
+  mrc_fld_set(step->mhd->ymask, 1.);
 
   ggcm_mhd_step_setup_member_objs_sub(step);
   ggcm_mhd_step_setup_super(step);

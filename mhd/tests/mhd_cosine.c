@@ -63,34 +63,37 @@ ggcm_mhd_ic_cosine_run(struct ggcm_mhd_ic *ic)
   //float xs = sub->xs; // Distance of each current sheet from zero
   //float pert = sub->pert; // 
 
-  mrc_fld_foreach(f3, ix, iy, iz, 2, 2) {
-
-    r[0] = .5*(MRC_CRDX(crds, ix) + MRC_CRDX(crds, ix-1));
-    r[1] = .5*(MRC_CRDY(crds, iy) + MRC_CRDY(crds, iy-1));
-
-    F3(fld_psi, 0, ix,iy,iz) = ( L[0] / (4. * M_PI) ) * (1. - cos(2*kx*r[0])) * sin(ky*r[1]);   
-    //F3(fld_psi, 0, ix,iy,iz) = 0.01*cos(kx*r[0])*(sin(ky*r[1]));
-    //(L[0] / (4.*M_PI)) * ((1 - cos(kx*r[0])) * sin(ky*r[1]));
-  } mrc_fld_foreach_end;
+  for (int p = 0; p < mrc_fld_nr_patches(f3); p++) {
+    mrc_fld_foreach(f3, ix, iy, iz, 2, 2) {
+      r[0] = .5*(MRC_CRDX(crds, ix) + MRC_CRDX(crds, ix-1));
+      r[1] = .5*(MRC_CRDY(crds, iy) + MRC_CRDY(crds, iy-1));
+      
+      M3(fld_psi, 0, ix,iy,iz, p) = ( L[0] / (4. * M_PI) ) * (1. - cos(2*kx*r[0])) * sin(ky*r[1]);   
+      //M3(fld_psi, 0, ix,iy,iz, p) = 0.01*cos(kx*r[0])*(sin(ky*r[1]));
+      //(L[0] / (4.*M_PI)) * ((1 - cos(kx*r[0])) * sin(ky*r[1]));
+    } mrc_fld_foreach_end;
+  }
 
   float *bd2x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD2);
   //float *bd2y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD2);
 
-  mrc_fld_foreach(f3, ix, iy, iz, 1, 1) {
-    // FIXME! the staggering for B is okay, but fld_psi and other stuff below needs to be
-    // fixed / checked for cell-centered
-    r[0] = MRC_CRD(crds, 0, ix);
-    r[1] = MRC_CRD(crds, 1, iy);
-    r[2] = MRC_CRD(crds, 2, iz); 
+  for (int p = 0; p < mrc_fld_nr_patches(f3); p++) {
+    mrc_fld_foreach(f3, ix, iy, iz, 1, 1) {
+      // FIXME! the staggering for B is okay, but fld_psi and other stuff below needs to be
+      // fixed / checked for cell-centered
+      r[0] = MRC_MCRD(crds, 0, ix, p);
+      r[1] = MRC_MCRD(crds, 1, iy, p);
+      r[2] = MRC_MCRD(crds, 2, iz, p); 
     
-    BY(f3, ix,iy,iz) = by0 * cos(kx*r[0]) -
-      (F3(fld_psi, 0, ix+1,iy,iz) - F3(fld_psi, 0, ix,iy,iz)) / bd2x[ix];
-    BX(f3, ix,iy,iz) =  0.0;
-    //(F3(fld_psi, 0, ix,iy+1,iz) - F3(fld_psi, 0, ix,iy,iz)) / bd2y[iy];
-    BZ(f3, ix,iy,iz) = sqrt( sqr(bz0) - sqr(BY(f3,ix,iy,iz)) );
-    RR(f3, ix,iy,iz) = rho0;
-    PP(f3, ix,iy,iz) = RR(f3, ix,iy,iz);
-  } mrc_fld_foreach_end;
+      BY_(f3, ix,iy,iz, p) = by0 * cos(kx*r[0]) -
+	(M3(fld_psi, 0, ix+1,iy,iz, p) - M3(fld_psi, 0, ix,iy,iz, p)) / bd2x[ix];
+      BX_(f3, ix,iy,iz, p) =  0.0;
+      //(M3(fld_psi, 0, ix,iy+1,iz, p) - M3(fld_psi, 0, ix,iy,iz, p)) / bd2y[iy];
+      BZ_(f3, ix,iy,iz, p) = sqrt( sqr(bz0) - sqr(BY_(f3,ix,iy,iz, p)) );
+      RR_(f3, ix,iy,iz, p) = rho0;
+      PP_(f3, ix,iy,iz, p) = RR_(f3, ix,iy,iz, p);
+    } mrc_fld_foreach_end;
+  }
 
   mrc_fld_put_as(f3, mhd->fld);
   mrc_fld_destroy(fld_psi);

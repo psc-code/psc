@@ -1154,10 +1154,17 @@ mrc_params_print_one(void *p, struct param *prm, MPI_Comm comm)
   case PT_STRING:
     mrc_view_printf(comm, "%-20s| %s\n", prm->name, pv->u_string);
     break;
-  case PT_SELECT:
-    mrc_view_printf(comm, "%-20s| %s\n", prm->name,
-		    prm->u.select.descr[pv->u_select].str);
+  case PT_SELECT: {
+    const char *s = "(not found)";
+    for (struct mrc_param_select *p = prm->u.select.descr; p; p++) {
+      if (p->val == pv->u_select) {
+	s = p->str;
+	break;
+      }
+    }
+    mrc_view_printf(comm, "%-20s| %s\n", prm->name, s);
     break;
+  }
   case PT_INT3:
     mrc_view_printf(comm, "%-20s| %d, %d, %d\n", prm->name,
 	       pv->u_int3[0], pv->u_int3[1], pv->u_int3[2]);

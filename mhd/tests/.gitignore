@@ -9,12 +9,15 @@ mhd_fadeev
 mhd_ot
 mhd_kh
 mhd_ici
+mhd_shocktube
 mhd_hydroblast
 mhd_mhdblast
 mhd_harris
 mhd_wave
 mhd_gkeyll
 mhd_mirdip
+mhd_test_bnd_sphere
+mhd_cpaw
 mhd_wave_cpaw.sh
 check_wave_cpaw.py
 bak
@@ -30,4 +33,5 @@ ref
 *.png
 *.mp4
 *.log
-log.txt
+old
+

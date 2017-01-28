@@ -33,6 +33,15 @@ _mrc_crds_create(struct mrc_crds *crds)
     sprintf(s, "dcrd[%d]", d);
     mrc_fld_set_name(crds->dcrd[d], s);
     
+    // These aren't listed as member objects, so we need to create them ourselves here
+    // because we do something hacky when writing them for xdmf_collective
+    crds->crd_nc[d] = mrc_fld_create(mrc_crds_comm(crds));
+    sprintf(s, "crd_nc[%d]", d);
+    mrc_fld_set_name(crds->crd_nc[d], s);
+
+    sprintf(s, "dcrd_nc[%d]", d);
+    mrc_fld_set_name(crds->dcrd_nc[d], s);
+
     crds->global_crd[d] = mrc_fld_create(mrc_crds_comm(crds));
     sprintf(s, "global_crd[%d]", d);
     mrc_fld_set_name(crds->global_crd[d], s);
@@ -47,82 +56,74 @@ _mrc_crds_create(struct mrc_crds *crds)
 static void
 _mrc_crds_read(struct mrc_crds *crds, struct mrc_io *io)
 {
+  if (strcmp(mrc_io_type(io), "hdf5_serial") != 0) {
+    // FIXME, but reading back coordinates is broken for everything but hdf5_serial,
+    // because for other mrc_io types, we don't write crd_nc (at least not completely),
+    // so there's no (easy) way to restore it.
+    assert(0);
+  }
+
   mrc_crds_read_member_objs(crds, io);
+
   // this is a carbon copy on all nodes that run the crd_gen, so this
   // write is only for checkpointing
-  if (strcmp(mrc_io_type(io), "hdf5_serial") == 0) { // FIXME  
+  if (strcmp(mrc_io_type(io), "hdf5_serial") == 0) {
+    crds->crd_nc[0] = mrc_io_read_ref(io, crds, "crd_nc[0]", mrc_fld);
+    crds->crd_nc[1] = mrc_io_read_ref(io, crds, "crd_nc[1]", mrc_fld);
+    crds->crd_nc[2] = mrc_io_read_ref(io, crds, "crd_nc[2]", mrc_fld);
+
     crds->global_crd[0] = mrc_io_read_ref(io, crds, "global_crd[0]", mrc_fld);
     crds->global_crd[1] = mrc_io_read_ref(io, crds, "global_crd[1]", mrc_fld);
-    crds->global_crd[2] = mrc_io_read_ref(io, crds, "global_crd[2]", mrc_fld);
+    crds->global_crd[2] = mrc_io_read_ref(io, crds, "global_crd[2]", mrc_fld);    
   }
 }
+
+// ----------------------------------------------------------------------
+// _mrc_crds_write
 
 static void
 _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 {
-  int slab_off_save[3], slab_dims_save[3];
+  // FIXME, hacky to no end...
+  // So for xdmf_collective, we need to write crd_nc while chopping of ghost points,
+  // which breaks completely reading them back
+  // for checkpointing/hdf5_serial, however, we write them including ghost points,
+  // just like every other coordinate field...
+  // ...except that every other coordinate field is listed as a member object, so it happens
+  // automatically, but here we need to do it explicitly.
+
   if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) { // FIXME
+    int slab_off_save[3], slab_dims_save[3];
+
     mrc_io_get_param_int3(io, "slab_off", slab_off_save);
     mrc_io_get_param_int3(io, "slab_dims", slab_dims_save);
-    mrc_io_set_param_int3(io, "slab_off", (int[3]) { 0, 0, 0});
-    mrc_io_set_param_int3(io, "slab_dims", (int[3]) { 0, 0, 0 });
-  }
 
-  for (int d = 0; d < 3; d++) {
-    struct mrc_fld *crd_cc = crds->crd[d];
-    if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) { // FIXME
-      struct mrc_fld *crd_nc = crds->crd_nc[d];
-      if (!crd_nc) {
-  crd_nc = mrc_fld_create(mrc_crds_comm(crds)); // FIXME, leaked
-  crds->crd_nc[d] = crd_nc;
-  char s[10];
-  sprintf(s, "crd%d_nc", d);
-  mrc_fld_set_name(crd_nc, s);
-  mrc_fld_set_param_obj(crd_nc, "domain", crds->domain);
-  mrc_fld_set_param_int(crd_nc, "nr_spatial_dims", 1);
-  mrc_fld_set_param_int(crd_nc, "dim", d);
-  mrc_fld_set_param_int(crd_nc, "nr_ghosts", 1);
-  mrc_fld_setup(crd_nc);
-  mrc_fld_set_comp_name(crd_nc, 0, s);
-
-  mrc_m1_foreach_patch(crd_nc, p) {
-    if (crds->sw > 0) {
-      mrc_m1_foreach(crd_cc, i, 0, 1) {
-        MRC_M1(crd_nc,0, i, p) = .5 * (MRC_M1(crd_cc,0, i-1, p) + MRC_M1(crd_cc,0, i, p));
-      } mrc_m1_foreach_end;
-    } else {
-      mrc_m1_foreach(crd_cc, i, -1, 0) {
-        MRC_M1(crd_nc,0, i, p) = .5 * (MRC_M1(crd_cc,0, i-1, p) + MRC_M1(crd_cc,0, i, p));
-      } mrc_m1_foreach_end;
-      int ld = mrc_fld_dims(crd_nc)[0];
-      // extrapolate
-      MRC_M1(crd_nc,0, 0 , p) = MRC_M1(crd_cc,0, 0   , p)
-        - .5 * (MRC_M1(crd_cc,0,    1, p) - MRC_M1(crd_cc,0, 0   , p));
-      MRC_M1(crd_nc,0, ld, p) = MRC_M1(crd_cc,0, ld-1, p)
-        + .5 * (MRC_M1(crd_cc,0, ld-1, p) - MRC_M1(crd_cc,0, ld-2, p));
-    }
-  }
-      }
-      int gdims[3];
-      mrc_domain_get_global_dims(crds->domain, gdims);
+    int gdims[3];
+    mrc_domain_get_global_dims(crds->domain, gdims);
+    for (int d = 0; d < 3; d++) {
       // FIXME, this is really too hacky... should per m1 / m3, not per mrc_io
+      struct mrc_fld *crd_nc = crds->crd_nc[d];
       mrc_io_set_param_int3(io, "slab_off", (int[3]) { 0, 0, 0});
       mrc_io_set_param_int3(io, "slab_dims", (int[3]) { gdims[d] + 1, 0, 0 });
       mrc_fld_write(crd_nc, io);
     }
-  }
 
-  // this is a carbon copy on all nodes that run the crd_gen, so this
-  // write is only for checkpointing
-  if (strcmp(mrc_io_type(io), "hdf5_serial") == 0) { // FIXME
-    mrc_io_write_ref(io, crds, "global_crd[0]", crds->global_crd[0]);
-    mrc_io_write_ref(io, crds, "global_crd[1]", crds->global_crd[1]);
-    mrc_io_write_ref(io, crds, "global_crd[2]", crds->global_crd[2]);
-  }
-
-  if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) { // FIXME
     mrc_io_set_param_int3(io, "slab_off", slab_off_save);
     mrc_io_set_param_int3(io, "slab_dims", slab_dims_save);
+  }
+
+  if (strcmp(mrc_io_type(io), "hdf5_serial") == 0) { // FIXME
+    for (int d = 0; d < 3; d++) {
+      struct mrc_fld *crd_nc = crds->crd_nc[d];
+      mrc_io_write_ref(io, crds, mrc_fld_name(crd_nc), crd_nc);
+    }
+    
+    // this is a carbon copy on all nodes that run the crd_gen, so this
+    // write is only for checkpointing
+    for (int d = 0; d < 3; d++) {
+      struct mrc_fld *global_crd = crds->global_crd[d];
+      mrc_io_write_ref(io, crds, mrc_fld_name(global_crd), global_crd);
+    }
   }
 }
 
@@ -143,7 +144,7 @@ mrc_crds_get_dx_base(struct mrc_crds *crds, double dx[3])
   if (strcmp(mrc_crds_type(crds), "amr_uniform") == 0) {
     int lm[3];
     mrc_domain_get_param_int3(crds->domain, "m", lm);
-    for (int d=0; d < 3; d++) {
+    for (int d = 0; d < 3; d++) {
       dx[d] = (crds->xh[d] - crds->xl[d]) / lm[d];
     }
   } else {
@@ -167,7 +168,7 @@ mrc_crds_setup_alloc_only(struct mrc_crds *crds)
     mrc_fld_set_comp_name(crds->crd[d], 0, mrc_fld_name(crds->crd[d]));
     mrc_fld_setup(crds->crd[d]);
 
-    // alloc double version of coords
+    // double version of coords
     mrc_fld_set_type(crds->dcrd[d], "double");
     mrc_fld_set_param_obj(crds->dcrd[d], "domain", crds->domain);
     mrc_fld_set_param_int(crds->dcrd[d], "nr_spatial_dims", 1);
@@ -176,6 +177,22 @@ mrc_crds_setup_alloc_only(struct mrc_crds *crds)
     mrc_fld_set_comp_name(crds->dcrd[d], 0, mrc_fld_name(crds->dcrd[d]));
     mrc_fld_setup(crds->dcrd[d]);
 
+    // node-centered coords
+    mrc_fld_set_param_obj(crds->crd_nc[d], "domain", crds->domain);
+    mrc_fld_set_param_int(crds->crd_nc[d], "nr_spatial_dims", 1);
+    mrc_fld_set_param_int(crds->crd_nc[d], "dim", d);
+    mrc_fld_set_param_int(crds->crd_nc[d], "nr_ghosts", crds->sw + 1);
+    mrc_fld_set_comp_name(crds->crd_nc[d], 0, mrc_fld_name(crds->crd_nc[d]));
+    mrc_fld_setup(crds->crd_nc[d]);
+
+    // node-centered coords
+    mrc_fld_set_type(crds->dcrd_nc[d], "double");
+    mrc_fld_set_param_obj(crds->dcrd_nc[d], "domain", crds->domain);
+    mrc_fld_set_param_int(crds->dcrd_nc[d], "nr_spatial_dims", 1);
+    mrc_fld_set_param_int(crds->dcrd_nc[d], "dim", d);
+    mrc_fld_set_param_int(crds->dcrd_nc[d], "nr_ghosts", crds->sw + 1);
+    mrc_fld_set_comp_name(crds->dcrd_nc[d], 0, mrc_fld_name(crds->dcrd_nc[d]));
+    mrc_fld_setup(crds->dcrd_nc[d]);
   }
 }
 
@@ -194,6 +211,9 @@ mrc_crds_setup_alloc_global_array(struct mrc_crds *crds)
   }
 }
 
+// ----------------------------------------------------------------------
+// _mrc_crds_setup
+
 static void
 _mrc_crds_setup(struct mrc_crds *crds)
 {
@@ -207,6 +227,8 @@ _mrc_crds_setup(struct mrc_crds *crds)
 
   mrc_domain_get_global_dims(crds->domain, gdims);
   patches = mrc_domain_get_patches(crds->domain, &nr_patches);
+
+  int sw = crds->sw;
 
   for (int d = 0; d < 3; d ++) {
     struct mrc_fld *x = crds->global_crd[d];
@@ -225,9 +247,22 @@ _mrc_crds_setup(struct mrc_crds *crds)
       // shift to beginning of local domain
       int off = patches[p].off[d];
 
-      mrc_m1_foreach_bnd(crds->crd[d], ix) {
-        MRC_DMCRD(crds, d, ix, p) = MRC_D2(x, ix + off, 0);
-        MRC_MCRD(crds, d, ix, p) = (float)MRC_D2(x, ix + off, 0);
+      mrc_m1_foreach(crds->crd[d], i, sw, sw) {
+        MRC_DMCRD(crds, d, i, p) = MRC_D2(x, i + off, 0);
+        MRC_MCRD(crds, d, i, p) = MRC_DMCRD(crds, d, i, p);
+      } mrc_m1_foreach_end;
+
+      mrc_m1_foreach(crds->crd[d], i, sw, sw + 1) {
+	if (i + off == -sw) { // extrapolate on low side
+	  MRC_DMCRD_NC(crds, d, i, p) = MRC_D2(x, i + off, 0)
+	    - .5 * (MRC_D2(x, i+1 + off, 0) - MRC_D2(x, i + off, 0));
+	} else if (i + off == gdims[d] + sw) { // extrapolate on high side
+	  MRC_DMCRD_NC(crds, d, i, p) = MRC_D2(x, i-1 + off, 0)
+	    + .5 * (MRC_D2(x, i-1 + off, 0) - MRC_D2(x, i-2 + off, 0));
+	} else {
+	  MRC_DMCRD_NC(crds, d, i, p) = .5 * (MRC_D2(x, i-1 + off, 0) + MRC_D2(x, i + off, 0));
+	}
+	MRC_MCRD_NC(crds, d, i, p) = MRC_DMCRD_NC(crds, d, i, p);
       } mrc_m1_foreach_end;
     }
   }
@@ -236,7 +271,7 @@ _mrc_crds_setup(struct mrc_crds *crds)
 static void
 _mrc_crds_destroy(struct mrc_crds *crds)
 {
-  for (int d=0; d < 3; d++) {
+  for (int d = 0; d < 3; d++) {
     mrc_fld_destroy(crds->global_crd[d]);
     mrc_fld_destroy(crds->crd_nc[d]);
   }
@@ -430,6 +465,14 @@ static struct param mrc_crds_params_descr[] = {
   { "dcrd[0]"        , VAR(dcrd[0])       , MRC_VAR_OBJ(mrc_fld)     },
   { "dcrd[1]"        , VAR(dcrd[1])       , MRC_VAR_OBJ(mrc_fld)     },
   { "dcrd[2]"        , VAR(dcrd[2])       , MRC_VAR_OBJ(mrc_fld)     },
+
+  /* { "crd_nc[0]"      , VAR(crd_nc[0])     , MRC_VAR_OBJ(mrc_fld)     }, */
+  /* { "crd_nc[1]"      , VAR(crd_nc[1])     , MRC_VAR_OBJ(mrc_fld)     }, */
+  /* { "crd_nc[2]"      , VAR(crd_nc[2])     , MRC_VAR_OBJ(mrc_fld)     }, */
+
+  { "dcrd_nc[0]"     , VAR(dcrd_nc[0])    , MRC_VAR_OBJ(mrc_fld)     },
+  { "dcrd_nc[1]"     , VAR(dcrd_nc[1])    , MRC_VAR_OBJ(mrc_fld)     },
+  { "dcrd_nc[2]"     , VAR(dcrd_nc[2])    , MRC_VAR_OBJ(mrc_fld)     },
 
   { "crds_gen_x"     , VAR(crds_gen[0])   , MRC_VAR_OBJ(mrc_crds_gen)},
   { "crds_gen_y"     , VAR(crds_gen[1])   , MRC_VAR_OBJ(mrc_crds_gen)},

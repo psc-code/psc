@@ -1,7 +1,6 @@
 
 #include "ggcm_mhd.h"
 #include "ggcm_mhd_bnd.h"
-#include "ggcm_mhd_crds.h"
 #include "ggcm_mhd_diag.h"
 #include "ggcm_mhd_step.h"
 

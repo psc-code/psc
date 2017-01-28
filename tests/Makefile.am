@@ -73,17 +73,31 @@ TESTS = \
 	test_mrc_m3_2.sh \
 	test_mrc_m3_3.sh \
 	test_mrc_m3_4.sh \
+	test_mrc_m3_5.sh \
 	test_mrc_m3_6.sh \
 	test_mrc_f3_0.sh \
 	test_mrc_f3_1.sh \
 	test_mrc_f3_2.sh \
-	test_mrc_f3_2.sh \
 	test_mrc_ddc_1.sh
 
 XFAIL_TESTS = \
+	test_io_read_0.sh \
+	test_io_read_1.sh \
+	test_io_read_2.sh \
+	test_io_read_3.sh \
+	test_io_read_4.sh \
+	test_io_read_multi_1.sh \
+	test_mrc_domain_simple_0.sh \
+	test_mrc_domain_multi_0.sh \
+	test_mrc_domain_mb_0.sh \
+	test_mrc_fld_io_hdf5_parallel.sh \
 	test_mrc_fld_io_xdmf_serial.sh \
+	test_mrc_fld_io_xdmf_collective.sh \
+	test_mrc_fld_io_xdmf2.sh \
+	test_mrc_m1_1.sh \
 	test_mrc_m3_3.sh \
 	test_mrc_m3_5.sh \
+	test_mrc_f3_2.sh \
 	test_mrc_fld_io_ascii.sh
 
 if !HAVE_PETSC

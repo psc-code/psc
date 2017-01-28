@@ -36,6 +36,20 @@ ggcm_mhd_bnd_fill_ghosts_E(struct ggcm_mhd_bnd *bnd, struct mrc_fld *E)
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_bnd_fill_ghosts_reconstr
+
+void
+ggcm_mhd_bnd_fill_ghosts_reconstr(struct ggcm_mhd_bnd *bnd, struct mrc_fld *U_l[],
+				  struct mrc_fld *U_r[], int p)
+{
+  struct ggcm_mhd_bnd_ops *ops = ggcm_mhd_bnd_ops(bnd);
+  assert(ops);
+  if (ops->fill_ghosts_reconstr) {
+    ops->fill_ghosts_reconstr(bnd, U_l, U_r, p);
+  }
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_bnd_init
 
 static void
@@ -49,13 +63,16 @@ ggcm_mhd_bnd_init()
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_bnd, &ggcm_mhd_bnd_ops_inoutflow_fc_double);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_bnd, &ggcm_mhd_bnd_ops_inoutflow_sc_double_aos);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_bnd, &ggcm_mhd_bnd_ops_inoutflow_fc_double_aos);
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_bnd, &ggcm_mhd_bnd_ops_inoutflow_fc_cc_double);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_bnd, &ggcm_mhd_bnd_ops_inoutflow_gkeyll);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_bnd, &ggcm_mhd_bnd_ops_sphere_sc_float);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_bnd, &ggcm_mhd_bnd_ops_sphere_fc_float);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_bnd, &ggcm_mhd_bnd_ops_sphere_sc_double);
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_bnd, &ggcm_mhd_bnd_ops_sphere_sc_ggcm_double);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_bnd, &ggcm_mhd_bnd_ops_sphere_fc_double);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_bnd, &ggcm_mhd_bnd_ops_sphere_sc_double_aos);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_bnd, &ggcm_mhd_bnd_ops_sphere_fc_double_aos);
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_bnd, &ggcm_mhd_bnd_ops_sphere_fc_cc_double);
 }
 
 // ----------------------------------------------------------------------

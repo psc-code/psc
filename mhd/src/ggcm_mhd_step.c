@@ -18,6 +18,41 @@
 // ggcm_mhd_step class
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_step_get_dt
+
+double
+ggcm_mhd_step_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
+{
+  struct ggcm_mhd *mhd = step->mhd;
+
+  struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
+  if (!ops->get_dt) {
+    return mhd->dt;
+  }
+
+  if (!step->legacy_dt_handling) {
+    double dtn = ops->get_dt(step, x);
+
+    if (dtn < mhd->par.dtmin) {
+      mpi_printf(ggcm_mhd_comm(mhd), "!!! dt < dtmin. Dying now!\n");
+      mpi_printf(ggcm_mhd_comm(mhd), "!!! dt = %g (was %g), dtmin = %g\n",
+		 dtn, mhd->dt, mhd->par.dtmin);
+      ggcm_mhd_wrongful_death(mhd, mhd->fld, -1);
+    }
+    
+    mhd->dt = dtn;
+  } else { // legacy_dt_handling
+    if (step->do_nwst) {
+      step->dtn = ops->get_dt(step, x);
+      // yes, mhd->dt isn't set to dtn until the end of the step... this
+      // is what the fortran code did
+    }
+  }
+
+  return mhd->dt;
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_step_calc_rhs
 
 void
@@ -42,6 +77,38 @@ ggcm_mhd_step_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *E,
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_step_legacy_dt_post
+
+void
+ggcm_mhd_step_legacy_dt_post(struct ggcm_mhd_step *step, float dtn)
+{
+  struct ggcm_mhd *mhd = step->mhd;
+
+  // dtn is the global new timestep
+  if (dtn <= mhd->par.dtmin) {
+    mpi_printf(ggcm_mhd_comm(mhd), "!!! dt < dtmin. Dying now!\n");
+    mpi_printf(ggcm_mhd_comm(mhd), "!!! dt %g -> %g, dtmin = %g\n",
+	       mhd->dt, dtn, mhd->par.dtmin);   
+    ggcm_mhd_wrongful_death(mhd, mhd->fld, -1);
+  }
+
+  dtn = fminf(1.f, dtn);
+  
+  if (dtn > 1.02f * mhd->dt || dtn < mhd->dt / 1.01f) {
+    mpi_printf(ggcm_mhd_comm(mhd), "switched dt %g <- %g\n", dtn, mhd->dt);
+    
+    if (mhd->istep > 0 &&
+	(dtn < 0.5 * mhd->dt || dtn > 2.0 * mhd->dt)) {            
+      mpi_printf(ggcm_mhd_comm(mhd), "!!! dt changed by > a factor of 2. "
+		 "Dying now!\n");
+      ggcm_mhd_wrongful_death(mhd, mhd->fld, 2);
+    }
+    
+    mhd->dt = dtn;
+  }
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_step_run
 
 void
@@ -52,11 +119,6 @@ ggcm_mhd_step_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   if (!pr) {
     pr = prof_register("ggcm_mhd_step_run", 0, 0, 0.);
   }
-
-  prof_start(pr);
-  assert(ops && ops->run);
-  ops->run(step, x);
-  prof_stop(pr);
 
   if (step->debug_dump) {
     struct ggcm_mhd *mhd = step->mhd;
@@ -69,6 +131,7 @@ ggcm_mhd_step_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
       ggcm_mhd_diag_set_param_obj(diag, "mhd", mhd);
       ggcm_mhd_diag_set_param_string(diag, "fields", "rr1:rv1:uu1:b1:rr:v:pp:b:divb");
       ggcm_mhd_diag_set_from_options(diag);
+      // overwrite run name (needs to be after set_from_options)
       ggcm_mhd_diag_set_param_string(diag, "run", "dbg");
       ggcm_mhd_diag_setup(diag);
       ggcm_mhd_diag_view(diag);
@@ -77,73 +140,20 @@ ggcm_mhd_step_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
     ggcm_mhd_diag_run_now(diag, mhd->fld, DIAG_TYPE_3D, cnt++);
   }
 
+  prof_start(pr);
+  assert(ops && ops->run);
+  ops->run(step, x);
+  prof_stop(pr);
+
+  if (step->legacy_dt_handling && ops->get_dt) {
+    ggcm_mhd_step_legacy_dt_post(step, step->dtn);
+  }
+
   // FIXME, this should be done by mrc_ts
   struct ggcm_mhd *mhd = step->mhd;
   if ((mhd->istep % step->profile_every) == 0) {
     prof_print_mpi(ggcm_mhd_comm(mhd));
   }
-}
-
-// ----------------------------------------------------------------------
-// ggcm_mhd_step_run_predcorr
-//
-// library-type function to be used by ggcm_mhd_step subclasses that
-// implement the OpenGGCM predictor-corrector scheme
-
-void
-ggcm_mhd_step_run_predcorr(struct ggcm_mhd_step *step, struct mrc_fld *x)
-{
-  static int PR_push;
-  if (!PR_push) {
-    PR_push = prof_register("ggcm_mhd_step_run_predcorr", 1., 0, 0);
-  }
-
-  prof_start(PR_push);
-
-  struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
-  struct ggcm_mhd *mhd = step->mhd;
-
-  float dtn;
-  if (step->do_nwst) {
-    assert(ops && ops->newstep);
-    ops->newstep(step, &dtn);
-    // yes, dtn isn't set to mhd->dt until the end of the step... this
-    // is what the fortran code did
-  }
-
-  ggcm_mhd_fill_ghosts(mhd, x, _RR1, mhd->time);
-  assert(ops && ops->pred);
-  ops->pred(step);
-
-  ggcm_mhd_fill_ghosts(mhd, x, _RR2, mhd->time + mhd->bndt);
-  assert(ops && ops->corr);
-  ops->corr(step);
-
-  if (step->do_nwst) {
-    if (step->legacy_dt_handling) {
-      dtn = fminf(1., dtn); // FIXME, only kept for compatibility
-    }
-
-    if (dtn > 1.02 * mhd->dt || dtn < mhd->dt / 1.01) {
-      mpi_printf(ggcm_mhd_comm(mhd), "switched dt %g <- %g\n", dtn, mhd->dt);
-      
-      // FIXME: determining when to die on a bad dt should be generalized, since
-      //        there's another hiccup if refining dt for actual AMR      
-      bool first_step = mhd->istep <= 1;
-      bool last_step = mhd->time + dtn > (1.0 - 1e-5) * mhd->max_time;
-
-      if (!first_step && !last_step &&
-          (dtn < 0.5 * mhd->dt || dtn > 2.0 * mhd->dt)) {            
-        mpi_printf(ggcm_mhd_comm(mhd), "!!! dt changed by > a factor of 2. "
-                   "Dying now!\n");
-        ggcm_mhd_wrongful_death(mhd, mhd->fld, 2);
-      }
-      
-      mhd->dt = dtn;
-    }
-  }
-
-  prof_stop(PR_push);
 }
 
 // ----------------------------------------------------------------------
@@ -260,12 +270,17 @@ ggcm_mhd_step_init()
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_step, &ggcm_mhd_step_c3_float_ops);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_step, &ggcm_mhd_step_c3_double_ops);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_step, &ggcm_mhd_step_cweno_ops);
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_step, &ggcm_mhd_step_c_float_ops);
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_step, &ggcm_mhd_step_c_double_ops);
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_step, &ggcm_mhd_step_mhd_scons_float_ops);
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_step, &ggcm_mhd_step_mhd_scons_double_ops);
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_step, &ggcm_mhd_step_mhd_scons_ggcm_float_ops);
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_step, &ggcm_mhd_step_mhd_scons_ggcm_double_ops);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_step, &ggcm_mhd_step_c2_float_ops);
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_step, &ggcm_mhd_step_c2_double_ops);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_step, &ggcm_mhd_step_vlct_ops);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_step, &ggcm_mhd_step_vl_ops);
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_step, &ggcm_mhd_step_mhdcc_double_ops);
+#ifdef HAVE_GKEYLL
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_step, &ggcm_mhd_step_gkeyll_ops);
+#endif
 }
 
 // ----------------------------------------------------------------------

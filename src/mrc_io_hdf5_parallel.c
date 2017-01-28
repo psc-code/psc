@@ -519,7 +519,7 @@ hdf5_parallel_read_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
 
 
 // ----------------------------------------------------------------------
-// mrc_io_ops_xdmf_parallel
+// mrc_io_ops_hdf5_parallel
 
 struct mrc_io_ops mrc_io_hdf5_parallel_ops = {
   .name          = "hdf5_parallel",

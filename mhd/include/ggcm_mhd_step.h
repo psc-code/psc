@@ -13,6 +13,8 @@
 
 MRC_CLASS_DECLARE(ggcm_mhd_step, struct ggcm_mhd_step);
 
+double ggcm_mhd_step_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x);
+
 // calculate the r.h.s. in the given scheme
 // should be more general than taking mrc_fld, eventually
 void ggcm_mhd_step_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,

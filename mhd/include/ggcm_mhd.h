@@ -17,6 +17,10 @@ MRC_CLASS_DECLARE(ggcm_mhd, struct ggcm_mhd);
 void ggcm_mhd_fill_ghosts(struct ggcm_mhd *mhd, struct mrc_fld *fld,
 			  int m, float bntim);
 void ggcm_mhd_fill_ghosts_E(struct ggcm_mhd *mhd, struct mrc_fld *E);
+void ggcm_mhd_fill_ghosts_reconstr(struct ggcm_mhd *mhd, struct mrc_fld *U_l[],
+				   struct mrc_fld *U_r[], int p);
+void ggcm_mhd_correct_fluxes(struct ggcm_mhd *mhd, struct mrc_fld *fluxes[3]);
+void ggcm_mhd_correct_E(struct ggcm_mhd *mhd, struct mrc_fld *E);
 void ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld,
 			struct mrc_fld *divb);
 void ggcm_mhd_calc_currcc(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
@@ -39,24 +43,30 @@ void ggcm_mhd_fld_put_as(struct mrc_fld *fld, struct mrc_fld *fld_base,
 struct mrc_fld *ggcm_mhd_get_fld_as_fortran(struct mrc_fld *fld_base);
 void ggcm_mhd_put_fld_as_fortran(struct mrc_fld *fld, struct mrc_fld *fld_base);
 
-enum {
-  MT_PRIMITIVE,
-  // the following have B staggered the openggcm way: [-1..mx[
-  MT_SEMI_CONSERVATIVE_GGCM,
-  // the following have B staggered the "normal" way: [0..mx]
-  MT_SEMI_CONSERVATIVE,
-  MT_FULLY_CONSERVATIVE,
-  // the multi-moment schemes are cell-centered for all quantities
-  MT_GKEYLL,
+// primitive fluid variables, face-centered B
+#define MT_PRIMITIVE (0)
+// primitive fluid variables, cell-centered B
+#define MT_PRIMITIVE_CC (1)
 
-  N_MT,
-};
+// the following has B staggered the openggcm way: [-1..mx[
+#define MT_SEMI_CONSERVATIVE_GGCM (2)
+
+// the following have B staggered the "normal" way: [0..mx]
+#define MT_SEMI_CONSERVATIVE (3)
+#define MT_FULLY_CONSERVATIVE (4)
+
+// cell-centered fully conservative MHD
+#define MT_FULLY_CONSERVATIVE_CC (5)
+
+// the multi-moment schemes are cell-centered for all quantities
+#define MT_GKEYLL (6)
 
 // ----------------------------------------------------------------------
 // wrappers / helpers
 
 void ggcm_mhd_wrongful_death(struct ggcm_mhd *mhd, struct mrc_fld *x, int errcode);
 
+double ts_ggcm_mhd_step_get_dt(void *ctx, struct mrc_ts *ts, struct mrc_obj *_x);
 void ts_ggcm_mhd_step_calc_rhs(void *ctx, struct mrc_obj *_rhs, float time,
 			       struct mrc_obj *_x);
 void ts_ggcm_mhd_step_run(void *ctx, struct mrc_ts *ts, struct mrc_obj *_x);

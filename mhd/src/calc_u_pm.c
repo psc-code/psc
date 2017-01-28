@@ -6,8 +6,6 @@
 #include <mrc_domain.h>
 #include <mrc_ddc.h>
 
-#define F3 MRC_F3 // FIXME
-
 // ----------------------------------------------------------------------
 // calc_u_pm  
 //
@@ -75,41 +73,41 @@ calc_u_pm(struct ggcm_mhd *mhd, struct mrc_fld *u_p[3], struct mrc_fld *u_m[3],
 
       // _p  i-> 0:E 1:   
       dind[i]=1; 
-      MRC_F3(u_p[i], BX+i, ix,iy,iz) = BXYZ(u, i, ix+dind[0],iy+dind[1],iz+dind[2]);
+      MRC_F3(u_p[i], BX+i, ix,iy,iz) = MRC_F3(u, BX+i, ix+dind[0],iy+dind[1],iz+dind[2]);
       // +1 --> Bxi+1/2y,z because staggered grid 
       dind[i]=0;
 
       dind[ip1]=1;
       MRC_F3(u_p[i], BX+ip1, ix,iy,iz) =
-      	(0.5*(BXYZ(u, ip1, ix+dind[0],iy+dind[1],iz+dind[2]) +
+      	(0.5*(MRC_F3(u, BX+ip1, ix+dind[0],iy+dind[1],iz+dind[2]) +
       	      MRC_F3(u_delta[i], BX+ip1, ix+dind[0],iy+dind[1],iz+dind[2]) +
-      	      BXYZ(u, ip1, ix,iy,iz) + MRC_F3(u_delta[i], BX+ip1, ix,iy,iz)));
+      	      MRC_F3(u, BX+ip1, ix,iy,iz) + MRC_F3(u_delta[i], BX+ip1, ix,iy,iz)));
       dind[ip1]=0;
        
       dind[ip2]=1;
       MRC_F3(u_p[i], BX+ip2, ix,iy,iz) =
-      	(0.5*(BXYZ(u, ip2, ix+dind[0],iy+dind[1],iz+dind[2] ) +
+      	(0.5*(MRC_F3(u, BX+ip2, ix+dind[0],iy+dind[1],iz+dind[2] ) +
       	      MRC_F3(u_delta[i], BX+ip2, ix+dind[0],iy+dind[1],iz+dind[2]) +
-      	      BXYZ(u, ip2, ix,iy,iz) + MRC_F3(u_delta[i], BX+ip2, ix,iy,iz)));
+      	      MRC_F3(u, BX+ip2, ix,iy,iz) + MRC_F3(u_delta[i], BX+ip2, ix,iy,iz)));
       dind[ip2]=0;
       
       // _m
       dind[i]=0; 
-      MRC_F3(u_m[i], BX+i, ix,iy,iz) = BXYZ(u, i, ix,iy,iz);
+      MRC_F3(u_m[i], BX+i, ix,iy,iz) = MRC_F3(u, BX+i, ix,iy,iz);
       //  +0 --> Bxi-1/2y,z because staggered grid
       
       dind[ip1]=1;
       MRC_F3(u_m[i], BX+ip1, ix,iy,iz) = 
-	(0.5*(BXYZ(u, ip1, ix+dind[0],iy+dind[1],iz+dind[2]) -
+	(0.5*(MRC_F3(u, BX+ip1, ix+dind[0],iy+dind[1],iz+dind[2]) -
 	      MRC_F3(u_delta[i], BX+ip1, ix+dind[0],iy+dind[1],iz+dind[2]) +
-	      BXYZ(u, ip1, ix,iy,iz) - MRC_F3(u_delta[i], BX+ip1, ix,iy,iz)));
+	      MRC_F3(u, BX+ip1, ix,iy,iz) - MRC_F3(u_delta[i], BX+ip1, ix,iy,iz)));
       dind[ip1]=0;
 
       dind[ip2]=1;
       MRC_F3(u_m[i], BX+ip2, ix,iy,iz) =
-	(0.5*(BXYZ(u, ip2, ix+dind[0],iy+dind[1],iz+dind[2] ) -
+	(0.5*(MRC_F3(u, BX+ip2, ix+dind[0],iy+dind[1],iz+dind[2] ) -
 	      MRC_F3(u_delta[i], BX+ip2, ix+dind[0],iy+dind[1],iz+dind[2]) +
-	      BXYZ(u, ip2, ix,iy,iz) - MRC_F3(u_delta[i], BX+ip2, ix,iy,iz)));
+	      MRC_F3(u, BX+ip2, ix,iy,iz) - MRC_F3(u_delta[i], BX+ip2, ix,iy,iz)));
       dind[ip2]=0;
     }
   } mrc_fld_foreach_end;
