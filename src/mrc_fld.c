@@ -109,13 +109,37 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
 
   if (!fld->_view_base) {
     // This is a field with its own storage
+
+    int _ghost_dims[MRC_FLD_MAXDIMS];
+    for (int d = 0; d < MRC_FLD_MAXDIMS; d++) {
+      _ghost_dims[d] = fld->_ghost_dims[d];
+    }
+    if (fld->_is_aos) { // c order
+      // x,y,z,m,p to m,x,y,z,p
+      int _ghost_dims_m = _ghost_dims[3];
+      _ghost_dims[3] = _ghost_dims[2];
+      _ghost_dims[2] = _ghost_dims[1];
+      _ghost_dims[1] = _ghost_dims[0];
+      _ghost_dims[0] = _ghost_dims_m;
+    }
+
     for (int d = 0; d < MRC_FLD_MAXDIMS; d++) {
       fld->_start[d]  = fld->_ghost_offs[d];
       fld->_stride[d] = 1;
       for (int dd = 0; dd < d; dd++) {
-	fld->_stride[d] *= fld->_ghost_dims[dd];
+	fld->_stride[d] *= _ghost_dims[dd];
       }
     }
+
+    if (fld->_is_aos) { // c order
+      // m,x,y,z,p to x,y,z,m,p 
+      int _stride_m = fld->_stride[0];
+      fld->_stride[0] = fld->_stride[1];
+      fld->_stride[1] = fld->_stride[2];
+      fld->_stride[2] = fld->_stride[3];
+      fld->_stride[3] = _stride_m;
+    }
+
   } else {
     // In this case, this field is just a view and has not
     // allocated its own storage
@@ -167,17 +191,10 @@ setup_3d_from_domain(struct mrc_fld *fld, int *ldims, int nr_patches, struct mrc
     }
   }
   
-  if (fld->_is_aos) {
-    mrc_fld_set_param_int_array(fld, "dims", 5,
-				(int[5]) { fld->_nr_comps, ldims[0], ldims[1], ldims[2], nr_patches });
-    mrc_fld_set_param_int_array(fld, "sw", fld->_dims.nr_vals,
-				(int[5]) { 0, sw[0], sw[1], sw[2], 0 });
-  } else {
-    mrc_fld_set_param_int_array(fld, "dims", 5,
-				(int[5]) { ldims[0], ldims[1], ldims[2], fld->_nr_comps, nr_patches });
-    mrc_fld_set_param_int_array(fld, "sw", fld->_dims.nr_vals,
-				(int[5]) { sw[0], sw[1], sw[2], 0, 0 });
-  }
+  mrc_fld_set_param_int_array(fld, "dims", 5,
+      (int[5]) { ldims[0], ldims[1], ldims[2], fld->_nr_comps, nr_patches });
+  mrc_fld_set_param_int_array(fld, "sw", fld->_dims.nr_vals,
+      (int[5]) { sw[0], sw[1], sw[2], 0, 0 });
   
 }
 
@@ -672,7 +689,7 @@ mrc_fld_make_view(struct mrc_fld *fld, int mb, int me)
 
   fld_new->_view_base = fld;
   int offs[MRC_FLD_MAXDIMS] = {};
-  offs[fld->_is_aos ? 0 : 3] = mb;
+  offs[3] = mb;
   fld_new->_view_offs = offs;
   mrc_fld_setup(fld_new);
   fld_new->_view_offs = NULL; // so we don't keep a dangling pointer around
@@ -1104,7 +1121,7 @@ mrc_fld_float_aos_copy_from_float(struct mrc_fld *fld_float_aos,
   for (int p = 0; p < mrc_fld_nr_patches(fld_float); p++) {
     mrc_fld_foreach(fld_float, ix,iy,iz, fld_float->_nr_ghosts, fld_float->_nr_ghosts) {
       for (int m = 0; m < fld_float->_nr_comps; m++) {
-  MRC_S5(fld_float_aos, m, ix,iy,iz, p) = MRC_S5(fld_float, ix,iy,iz,m, p);
+  MRC_S5(fld_float_aos, ix,iy,iz, m, p) = MRC_S5(fld_float, ix,iy,iz,m, p);
       }
     } mrc_fld_foreach_end;
   }
@@ -1122,7 +1139,7 @@ mrc_fld_float_aos_copy_to_float(struct mrc_fld *fld_float_aos,
   for (int p = 0; p < mrc_fld_nr_patches(fld_float); p++) {
     mrc_fld_foreach(fld_float, ix,iy,iz, fld_float->_nr_ghosts, fld_float->_nr_ghosts) {
       for (int m = 0; m < fld_float->_nr_comps; m++) {
-  MRC_S5(fld_float, ix,iy,iz, m, p) = MRC_S5(fld_float_aos, m, ix,iy,iz, p);
+  MRC_S5(fld_float, ix,iy,iz, m, p) = MRC_S5(fld_float_aos, ix,iy,iz, m, p);
       }
     } mrc_fld_foreach_end;
   }
@@ -1151,7 +1168,7 @@ mrc_fld_double_aos_copy_from_float(struct mrc_fld *fld_double,
   for (int p = 0; p < mrc_fld_nr_patches(fld_float); p++) {
     mrc_fld_foreach(fld_float, ix,iy,iz, fld_float->_nr_ghosts, fld_float->_nr_ghosts) {
       for (int m = 0; m < fld_float->_nr_comps; m++) {
-	MRC_D5(fld_double, m, ix,iy,iz, p) = MRC_S5(fld_float, ix,iy,iz, m, p);
+	MRC_D5(fld_double, ix,iy,iz, m, p) = MRC_S5(fld_float, ix,iy,iz, m, p);
       }
     } mrc_fld_foreach_end;
   }
@@ -1169,7 +1186,7 @@ mrc_fld_double_aos_copy_from_double(struct mrc_fld *fld_double_aos,
   for (int p = 0; p < mrc_fld_nr_patches(fld_double); p++) {
     mrc_fld_foreach(fld_double, ix,iy,iz, fld_double->_nr_ghosts, fld_double->_nr_ghosts) {
       for (int m = 0; m < fld_double->_nr_comps; m++) {
-	MRC_D5(fld_double_aos, m, ix,iy,iz, p) = MRC_D5(fld_double, ix,iy,iz, m, p);
+	MRC_D5(fld_double_aos, ix,iy,iz, m, p) = MRC_D5(fld_double, ix,iy,iz, m, p);
       }
     } mrc_fld_foreach_end;
   }
@@ -1187,7 +1204,7 @@ mrc_fld_double_aos_copy_to_float(struct mrc_fld *fld_double,
   for (int p = 0; p < mrc_fld_nr_patches(fld_float); p++) {
     mrc_fld_foreach(fld_float, ix,iy,iz, fld_float->_nr_ghosts, fld_float->_nr_ghosts) {
       for (int m = 0; m < fld_float->_nr_comps; m++) {
-	MRC_S5(fld_float, ix,iy,iz, m, p) = MRC_D5(fld_double, m, ix,iy,iz, p);
+	MRC_S5(fld_float, ix,iy,iz, m, p) = MRC_D5(fld_double, ix,iy,iz, m, p);
       }
     } mrc_fld_foreach_end;
   }
@@ -1205,7 +1222,7 @@ mrc_fld_double_aos_copy_to_double(struct mrc_fld *fld_double_aos,
   for (int p = 0; p < mrc_fld_nr_patches(fld_double); p++) {
     mrc_fld_foreach(fld_double, ix,iy,iz, fld_double->_nr_ghosts, fld_double->_nr_ghosts) {
       for (int m = 0; m < fld_double->_nr_comps; m++) {
-  MRC_D5(fld_double, ix,iy,iz, m, p) = MRC_D5(fld_double_aos, m, ix,iy,iz, p);
+  MRC_D5(fld_double, ix,iy,iz, m, p) = MRC_D5(fld_double_aos, ix,iy,iz, m, p);
       }
     } mrc_fld_foreach_end;
   }

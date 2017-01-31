@@ -151,19 +151,19 @@ mrc_fld_same_shape(struct mrc_fld *fld_1, struct mrc_fld *fld_2)
 static inline const int *
 mrc_fld_spatial_dims(struct mrc_fld *x)
 {
-  return mrc_fld_dims(x) + x->_is_aos;
+  return mrc_fld_dims(x);
 }
 
 static inline const int *
 mrc_fld_spatial_offs(struct mrc_fld *x)
 {
-  return mrc_fld_offs(x) + x->_is_aos;
+  return mrc_fld_offs(x);
 }
 
 static inline const int *
 mrc_fld_spatial_sw(struct mrc_fld *x)
 {
-  return mrc_fld_sw(x) + x->_is_aos;
+  return mrc_fld_sw(x);
 }
 
 #if 0 // slower, not using _arr_off
