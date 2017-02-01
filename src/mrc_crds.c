@@ -104,7 +104,9 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
       // FIXME, this is really too hacky... should per m1 / m3, not per mrc_io
       struct mrc_fld *crd_nc = crds->crd_nc[d];
       mrc_io_set_param_int3(io, "slab_off", (int[3]) { 0, 0, 0});
-      mrc_io_set_param_int3(io, "slab_dims", (int[3]) { gdims[d] + 1, 0, 0 });
+      int slab_dims[3] = {};
+      slab_dims[d] = gdims[d] + 1;
+      mrc_io_set_param_int3(io, "slab_dims", slab_dims);
       mrc_fld_write(crd_nc, io);
     }
 
