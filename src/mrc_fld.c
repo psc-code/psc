@@ -110,74 +110,75 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
   if (!fld->_view_base) {
     // This is a field with its own storage
 
-    int _ghost_dims[MRC_FLD_MAXDIMS];
-    for (int d = 0; d < MRC_FLD_MAXDIMS; d++) {
-      _ghost_dims[d] = fld->_ghost_dims[d];
-    }
-    if (fld->_aos && !fld->_c_order) {
+    int ghost_dims[MRC_FLD_MAXDIMS];
+
+    if (!fld->_aos && !fld->_c_order) {
+      // original order
+      ghost_dims[0] = fld->_ghost_dims[0];
+      ghost_dims[1] = fld->_ghost_dims[1];
+      ghost_dims[2] = fld->_ghost_dims[2];
+      ghost_dims[3] = fld->_ghost_dims[3];
+      ghost_dims[4] = fld->_ghost_dims[4];
+    } else if (fld->_aos && !fld->_c_order) {
       // x,y,z,m,p to m,x,y,z,p
-      int _ghost_dims_m = _ghost_dims[3];
-      _ghost_dims[3] = _ghost_dims[2];
-      _ghost_dims[2] = _ghost_dims[1];
-      _ghost_dims[1] = _ghost_dims[0];
-      _ghost_dims[0] = _ghost_dims_m;
+      ghost_dims[0] = fld->_ghost_dims[3];
+      ghost_dims[1] = fld->_ghost_dims[0];
+      ghost_dims[2] = fld->_ghost_dims[1];
+      ghost_dims[3] = fld->_ghost_dims[2];
+      ghost_dims[4] = fld->_ghost_dims[4];
     } else if (fld->_aos && fld->_c_order) {
       // x,y,z,m,p to m,z,y,x,p
-      int _ghost_dims_x = _ghost_dims[0];
-      int _ghost_dims_y = _ghost_dims[1];
-      int _ghost_dims_z = _ghost_dims[2];
-      int _ghost_dims_m = _ghost_dims[3];
-      _ghost_dims[0] = _ghost_dims_m;
-      _ghost_dims[1] = _ghost_dims_z;
-      _ghost_dims[2] = _ghost_dims_y;
-      _ghost_dims[3] = _ghost_dims_x;
+      ghost_dims[0] = fld->_ghost_dims[3];
+      ghost_dims[1] = fld->_ghost_dims[2];
+      ghost_dims[2] = fld->_ghost_dims[1];
+      ghost_dims[3] = fld->_ghost_dims[0];
+      ghost_dims[4] = fld->_ghost_dims[4];
     } else if (!fld->_aos && fld->_c_order) {
       // x,y,z,m,p to z,y,x,m,p
-      int _ghost_dims_x = _ghost_dims[0];
-      int _ghost_dims_y = _ghost_dims[1];
-      int _ghost_dims_z = _ghost_dims[2];
-      int _ghost_dims_m = _ghost_dims[3];
-      _ghost_dims[0] = _ghost_dims_z;
-      _ghost_dims[1] = _ghost_dims_y;
-      _ghost_dims[2] = _ghost_dims_x;
-      _ghost_dims[3] = _ghost_dims_m;
+      ghost_dims[0] = fld->_ghost_dims[2];
+      ghost_dims[1] = fld->_ghost_dims[1];
+      ghost_dims[2] = fld->_ghost_dims[0];
+      ghost_dims[3] = fld->_ghost_dims[3];
+      ghost_dims[4] = fld->_ghost_dims[4];
     }
 
+    int stride[5];
     for (int d = 0; d < MRC_FLD_MAXDIMS; d++) {
       fld->_start[d]  = fld->_ghost_offs[d];
-      fld->_stride[d] = 1;
+      stride[d] = 1;
       for (int dd = 0; dd < d; dd++) {
-	fld->_stride[d] *= _ghost_dims[dd];
+	stride[d] *= ghost_dims[dd];
       }
     }
 
-    if (fld->_aos && !fld->_c_order) {
+    if (!fld->_aos && !fld->_c_order) {
+      // original order
+      fld->_stride[0] = stride[0];
+      fld->_stride[1] = stride[1];
+      fld->_stride[2] = stride[2];
+      fld->_stride[3] = stride[3];
+      fld->_stride[4] = stride[4];
+    } else if (fld->_aos && !fld->_c_order) {
       // m,x,y,z,p to x,y,z,m,p 
-      int _stride_m = fld->_stride[0];
-      fld->_stride[0] = fld->_stride[1];
-      fld->_stride[1] = fld->_stride[2];
-      fld->_stride[2] = fld->_stride[3];
-      fld->_stride[3] = _stride_m;
+      fld->_stride[0] = stride[1];
+      fld->_stride[1] = stride[2];
+      fld->_stride[2] = stride[3];
+      fld->_stride[3] = stride[0];
+      fld->_stride[4] = stride[4];
     } else if (fld->_aos && fld->_c_order) {
       // m,z,y,x,p to x,y,z,m,p
-      int _stride_m = fld->_stride[0];
-      int _stride_z = fld->_stride[1];
-      int _stride_y = fld->_stride[2];
-      int _stride_x = fld->_stride[3];
-      fld->_stride[0] = _stride_x;
-      fld->_stride[1] = _stride_y;
-      fld->_stride[2] = _stride_z;
-      fld->_stride[3] = _stride_m;
+      fld->_stride[0] = stride[3];
+      fld->_stride[1] = stride[2];
+      fld->_stride[2] = stride[1];
+      fld->_stride[3] = stride[0];
+      fld->_stride[4] = stride[4];
     } else if (!fld->_aos && fld->_c_order) {
       // z,y,x,m,p to x,y,z,m,p
-      int _stride_z = fld->_stride[0];
-      int _stride_y = fld->_stride[1];
-      int _stride_x = fld->_stride[2];
-      int _stride_m = fld->_stride[3];
-      fld->_stride[0] = _stride_x;
-      fld->_stride[1] = _stride_y;
-      fld->_stride[2] = _stride_z;
-      fld->_stride[3] = _stride_m;
+      fld->_stride[0] = stride[2];
+      fld->_stride[1] = stride[1];
+      fld->_stride[2] = stride[0];
+      fld->_stride[3] = stride[3];
+      fld->_stride[4] = stride[4];
     }
 
   } else {
