@@ -307,6 +307,7 @@ diagc_combined_write_attr(struct mrc_io *io, const char *path, int type,
     MPI_Send((char *)name, strlen(name) + 1, MPI_CHAR, par->rank_diagsrv,
 	     ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD);
     switch (type) {
+    case PT_BOOL:
     case PT_INT:
     case PT_SELECT:
     case MRC_VAR_INT:
@@ -969,6 +970,7 @@ static struct param diagsrv_params_descr[] = {
 		 MPI_STATUS_IGNORE);
 	union param_u val;
 	switch (type) {
+	case PT_BOOL:
 	case PT_INT:
 	case PT_SELECT:
 	case MRC_VAR_INT:
