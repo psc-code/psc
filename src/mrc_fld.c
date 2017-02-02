@@ -143,11 +143,10 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
   } else {
     // In this case, this field is just a view and has not
     // allocated its own storage
-    int nr_dims = fld->_dims.nr_vals;
     struct mrc_fld *view_base = fld->_view_base;
     int *view_offs = fld->_view_offs, *sw = fld->_sw.vals;
     int *dims = fld->_dims.vals, *offs = fld->_offs.vals;
-    for (int d = 0; d < nr_dims; d++) {
+    for (int d = 0; d < MRC_FLD_MAXDIMS; d++) {
       assert(view_offs[d] - sw[d] >= view_base->_ghost_offs[d]);
       assert(view_offs[d] + dims[d] + sw[d] <=
 	     view_base->_ghost_offs[d] + view_base->_ghost_dims[d]);
@@ -474,6 +473,7 @@ mrc_fld_duplicate(struct mrc_fld *fld)
     mrc_fld_set_param_int_array(fld_new, "offs", fld->_offs.nr_vals, fld->_offs.vals);
     mrc_fld_set_param_int_array(fld_new, "sw", fld->_sw.nr_vals, fld->_sw.vals);
   }
+  mrc_fld_set_param_bool(fld_new, "is_aos", fld->_is_aos);
   mrc_fld_setup(fld_new);
   return fld_new;
 }
@@ -686,6 +686,7 @@ mrc_fld_make_view(struct mrc_fld *fld, int mb, int me)
   mrc_fld_set_param_int(fld_new, "nr_comps", me - mb);
   mrc_fld_set_param_int(fld_new, "nr_ghosts", fld->_nr_ghosts);
   mrc_fld_set_param_int(fld_new, "dim", fld->_dim);
+  mrc_fld_set_param_bool(fld_new, "is_aos", fld->_is_aos);
 
   fld_new->_view_base = fld;
   int offs[MRC_FLD_MAXDIMS] = {};
@@ -790,6 +791,7 @@ mrc_fld_get_as(struct mrc_fld *fld_base, const char *type)
 
   struct mrc_fld *fld = mrc_fld_create(mrc_fld_comm(fld_base));
   mrc_fld_set_type(fld, type);
+  mrc_fld_set_param_bool(fld, "is_aos", fld_base->_is_aos);
   if (fld_base->_domain) {
     // if we're based on a domain, dims/offs/sw will be set by setup()
     mrc_fld_set_param_obj(fld, "domain", fld_base->_domain);
@@ -1370,6 +1372,7 @@ static struct param mrc_fld_descr[] = {
   { "size_of_type"    , VAR(_size_of_type)   , MRC_VAR_INT           },
   { "len"             , VAR(_len)            , MRC_VAR_INT           },
   { "vec"             , VAR(_vec)            , MRC_VAR_OBJ(mrc_vec)  },
+  { "is_aos"          , VAR(_is_aos)         , PARAM_BOOL(false)     },
   {},
 };
 #undef VAR
