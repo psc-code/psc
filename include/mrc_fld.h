@@ -95,6 +95,7 @@ struct mrc_fld {
   int _nr_allocated_comp_name;
   char **_comp_name;
   bool _is_aos; //< indicates whether the layout (w.r.t to domain) is array-of-struct
+  bool _is_fortran; //< indicates whether the layout is row-major
   // for mrc_m3 emulation (FIXME, should be eliminated eventually (?))
   struct mrc_fld_patch *_patches;
 };

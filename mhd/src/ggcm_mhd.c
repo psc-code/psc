@@ -326,6 +326,7 @@ ggcm_mhd_get_3d_fld(struct ggcm_mhd *mhd, int nr_comps)
   mrc_fld_set_param_int(f, "nr_comps", nr_comps);
   mrc_fld_set_param_int(f, "nr_ghosts", mhd->fld->_nr_ghosts);
   mrc_fld_set_param_bool(f, "is_aos", mhd->fld->_is_aos);
+  mrc_fld_set_param_bool(f, "is_fortran", mhd->fld->_is_fortran);
   mrc_fld_setup(f);
 
   return f;
