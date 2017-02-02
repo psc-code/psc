@@ -39,6 +39,13 @@ GROUP "/" {
          (0): "mrc_domain-uid"
          }
       }
+      ATTRIBUTE "is_aos" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
+         }
+      }
       ATTRIBUTE "len" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
@@ -208,6 +215,13 @@ GROUP "/" {
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_domain-uid"
+         }
+      }
+      ATTRIBUTE "is_aos" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
          }
       }
       ATTRIBUTE "len" {
@@ -381,6 +395,13 @@ GROUP "/" {
          (0): "mrc_domain-uid"
          }
       }
+      ATTRIBUTE "is_aos" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
+         }
+      }
       ATTRIBUTE "len" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
@@ -550,6 +571,13 @@ GROUP "/" {
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_domain-uid"
+         }
+      }
+      ATTRIBUTE "is_aos" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
          }
       }
       ATTRIBUTE "len" {
@@ -725,6 +753,13 @@ GROUP "/" {
          (0): "mrc_domain-uid"
          }
       }
+      ATTRIBUTE "is_aos" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
+         }
+      }
       ATTRIBUTE "len" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
@@ -896,6 +931,13 @@ GROUP "/" {
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_domain-uid"
+         }
+      }
+      ATTRIBUTE "is_aos" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
          }
       }
       ATTRIBUTE "len" {
@@ -1347,6 +1389,13 @@ GROUP "/" {
          (0): "mrc_domain-uid"
          }
       }
+      ATTRIBUTE "is_aos" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
+         }
+      }
       ATTRIBUTE "len" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
@@ -1489,6 +1538,13 @@ GROUP "/" {
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_domain-uid"
+         }
+      }
+      ATTRIBUTE "is_aos" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
          }
       }
       ATTRIBUTE "len" {
@@ -1635,6 +1691,13 @@ GROUP "/" {
          (0): "mrc_domain-uid"
          }
       }
+      ATTRIBUTE "is_aos" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
+         }
+      }
       ATTRIBUTE "len" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
@@ -1777,6 +1840,13 @@ GROUP "/" {
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_domain-uid"
+         }
+      }
+      ATTRIBUTE "is_aos" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
          }
       }
       ATTRIBUTE "len" {
@@ -1923,6 +1993,13 @@ GROUP "/" {
          (0): "mrc_domain-uid"
          }
       }
+      ATTRIBUTE "is_aos" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
+         }
+      }
       ATTRIBUTE "len" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
@@ -2065,6 +2142,13 @@ GROUP "/" {
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_domain-uid"
+         }
+      }
+      ATTRIBUTE "is_aos" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
          }
       }
       ATTRIBUTE "len" {
@@ -2667,6 +2751,13 @@ GROUP "/" {
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_domain-uid"
+         }
+      }
+      ATTRIBUTE "is_aos" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
          }
       }
       ATTRIBUTE "len" {
