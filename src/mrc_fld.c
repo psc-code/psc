@@ -110,75 +110,28 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
   if (!fld->_view_base) {
     // This is a field with its own storage
 
-    int ghost_dims[MRC_FLD_MAXDIMS];
+    int *perm;
 
     if (!fld->_aos && !fld->_c_order) {
       // original order
-      ghost_dims[0] = fld->_ghost_dims[0];
-      ghost_dims[1] = fld->_ghost_dims[1];
-      ghost_dims[2] = fld->_ghost_dims[2];
-      ghost_dims[3] = fld->_ghost_dims[3];
-      ghost_dims[4] = fld->_ghost_dims[4];
+      perm = (int[5]) { 0, 1, 2, 3, 4 };
     } else if (fld->_aos && !fld->_c_order) {
       // x,y,z,m,p to m,x,y,z,p
-      ghost_dims[0] = fld->_ghost_dims[3];
-      ghost_dims[1] = fld->_ghost_dims[0];
-      ghost_dims[2] = fld->_ghost_dims[1];
-      ghost_dims[3] = fld->_ghost_dims[2];
-      ghost_dims[4] = fld->_ghost_dims[4];
+      perm = (int[5]) { 3, 0, 1, 2, 4 };
     } else if (fld->_aos && fld->_c_order) {
       // x,y,z,m,p to m,z,y,x,p
-      ghost_dims[0] = fld->_ghost_dims[3];
-      ghost_dims[1] = fld->_ghost_dims[2];
-      ghost_dims[2] = fld->_ghost_dims[1];
-      ghost_dims[3] = fld->_ghost_dims[0];
-      ghost_dims[4] = fld->_ghost_dims[4];
+      perm = (int[5]) { 3, 2, 1, 0, 4 };
     } else if (!fld->_aos && fld->_c_order) {
       // x,y,z,m,p to z,y,x,m,p
-      ghost_dims[0] = fld->_ghost_dims[2];
-      ghost_dims[1] = fld->_ghost_dims[1];
-      ghost_dims[2] = fld->_ghost_dims[0];
-      ghost_dims[3] = fld->_ghost_dims[3];
-      ghost_dims[4] = fld->_ghost_dims[4];
+      perm = (int[5]) { 2, 1, 0, 3, 4 };
     }
 
-    int stride[5];
     for (int d = 0; d < MRC_FLD_MAXDIMS; d++) {
       fld->_start[d]  = fld->_ghost_offs[d];
-      stride[d] = 1;
+      fld->_stride[perm[d]] = 1;
       for (int dd = 0; dd < d; dd++) {
-	stride[d] *= ghost_dims[dd];
+	fld->_stride[perm[d]] *= fld->_ghost_dims[perm[dd]];
       }
-    }
-
-    if (!fld->_aos && !fld->_c_order) {
-      // original order
-      fld->_stride[0] = stride[0];
-      fld->_stride[1] = stride[1];
-      fld->_stride[2] = stride[2];
-      fld->_stride[3] = stride[3];
-      fld->_stride[4] = stride[4];
-    } else if (fld->_aos && !fld->_c_order) {
-      // m,x,y,z,p to x,y,z,m,p 
-      fld->_stride[0] = stride[1];
-      fld->_stride[1] = stride[2];
-      fld->_stride[2] = stride[3];
-      fld->_stride[3] = stride[0];
-      fld->_stride[4] = stride[4];
-    } else if (fld->_aos && fld->_c_order) {
-      // m,z,y,x,p to x,y,z,m,p
-      fld->_stride[0] = stride[3];
-      fld->_stride[1] = stride[2];
-      fld->_stride[2] = stride[1];
-      fld->_stride[3] = stride[0];
-      fld->_stride[4] = stride[4];
-    } else if (!fld->_aos && fld->_c_order) {
-      // z,y,x,m,p to x,y,z,m,p
-      fld->_stride[0] = stride[2];
-      fld->_stride[1] = stride[1];
-      fld->_stride[2] = stride[0];
-      fld->_stride[3] = stride[3];
-      fld->_stride[4] = stride[4];
     }
 
   } else {
