@@ -183,15 +183,21 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
   } else {
     // In this case, this field is just a view and has not
     // allocated its own storage
+    int nr_dims = fld->_dims.nr_vals;
     struct mrc_fld *view_base = fld->_view_base;
     int *view_offs = fld->_view_offs, *sw = fld->_sw.vals;
     int *dims = fld->_dims.vals, *offs = fld->_offs.vals;
     for (int d = 0; d < MRC_FLD_MAXDIMS; d++) {
-      assert(view_offs[d] - sw[d] >= view_base->_ghost_offs[d]);
-      assert(view_offs[d] + dims[d] + sw[d] <=
-	     view_base->_ghost_offs[d] + view_base->_ghost_dims[d]);
-      fld->_stride[d] = view_base->_stride[d];
-      fld->_start[d] = view_base->_start[d] - view_offs[d] + offs[d];
+      if (d < nr_dims) {
+	assert(view_offs[d] - sw[d] >= view_base->_ghost_offs[d]);
+	assert(view_offs[d] + dims[d] + sw[d] <=
+	       view_base->_ghost_offs[d] + view_base->_ghost_dims[d]);
+	fld->_stride[d] = view_base->_stride[d];
+	fld->_start[d] = view_base->_start[d] - view_offs[d] + offs[d];
+      } else {
+	fld->_stride[d] = 0;
+	fld->_start[d] = 0;
+      }
     }
   }
 
