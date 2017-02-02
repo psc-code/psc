@@ -69,7 +69,7 @@ dispatch_vec_type(struct mrc_fld *fld)
   }
 #endif
   mrc_vec_set_type(fld->_vec, vec_type);
-  if (fld->_is_aos && (strcmp(vec_type, "petsc")==0)){
+  if (fld->_aos && (strcmp(vec_type, "petsc")==0)){
     mrc_vec_set_param_int(fld->_vec, "block_size", fld->_nr_comps);
   }  
 }
@@ -114,14 +114,14 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
     for (int d = 0; d < MRC_FLD_MAXDIMS; d++) {
       _ghost_dims[d] = fld->_ghost_dims[d];
     }
-    if (fld->_is_aos && !fld->_is_fortran) { // aos + c order
+    if (fld->_aos && !fld->_is_fortran) { // aos + c order
       // x,y,z,m,p to m,x,y,z,p
       int _ghost_dims_m = _ghost_dims[3];
       _ghost_dims[3] = _ghost_dims[2];
       _ghost_dims[2] = _ghost_dims[1];
       _ghost_dims[1] = _ghost_dims[0];
       _ghost_dims[0] = _ghost_dims_m;
-    } else if (fld->_is_aos && fld->_is_fortran) { // aos + fortran order
+    } else if (fld->_aos && fld->_is_fortran) { // aos + fortran order
       // x,y,z,m,p to m,z,y,x,p
       int _ghost_dims_x = _ghost_dims[0];
       int _ghost_dims_y = _ghost_dims[1];
@@ -131,7 +131,7 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
       _ghost_dims[1] = _ghost_dims_z;
       _ghost_dims[2] = _ghost_dims_y;
       _ghost_dims[3] = _ghost_dims_x;
-    } else if (!fld->_is_aos && fld->_is_fortran) { // soa + fortran order
+    } else if (!fld->_aos && fld->_is_fortran) { // soa + fortran order
       // x,y,z,m,p to z,y,x,m,p
       int _ghost_dims_x = _ghost_dims[0];
       int _ghost_dims_y = _ghost_dims[1];
@@ -151,14 +151,14 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
       }
     }
 
-    if (fld->_is_aos && !fld->_is_fortran) { // c order
+    if (fld->_aos && !fld->_is_fortran) { // c order
       // m,x,y,z,p to x,y,z,m,p 
       int _stride_m = fld->_stride[0];
       fld->_stride[0] = fld->_stride[1];
       fld->_stride[1] = fld->_stride[2];
       fld->_stride[2] = fld->_stride[3];
       fld->_stride[3] = _stride_m;
-    } else if (fld->_is_aos && fld->_is_fortran) {
+    } else if (fld->_aos && fld->_is_fortran) {
       // m,z,y,x,p to x,y,z,m,p
       int _stride_m = fld->_stride[0];
       int _stride_z = fld->_stride[1];
@@ -168,7 +168,7 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
       fld->_stride[1] = _stride_y;
       fld->_stride[2] = _stride_z;
       fld->_stride[3] = _stride_m;
-    } else if (!fld->_is_aos && fld->_is_fortran) {
+    } else if (!fld->_aos && fld->_is_fortran) {
       // z,y,x,m,p to x,y,z,m,p
       int _stride_z = fld->_stride[0];
       int _stride_y = fld->_stride[1];
@@ -519,7 +519,7 @@ mrc_fld_duplicate(struct mrc_fld *fld)
     mrc_fld_set_param_int_array(fld_new, "offs", fld->_offs.nr_vals, fld->_offs.vals);
     mrc_fld_set_param_int_array(fld_new, "sw", fld->_sw.nr_vals, fld->_sw.vals);
   }
-  mrc_fld_set_param_bool(fld_new, "is_aos", fld->_is_aos);
+  mrc_fld_set_param_bool(fld_new, "aos", fld->_aos);
   mrc_fld_set_param_bool(fld_new, "is_fortran", fld->_is_fortran);
   mrc_fld_setup(fld_new);
   return fld_new;
@@ -733,7 +733,7 @@ mrc_fld_make_view(struct mrc_fld *fld, int mb, int me)
   mrc_fld_set_param_int(fld_new, "nr_comps", me - mb);
   mrc_fld_set_param_int(fld_new, "nr_ghosts", fld->_nr_ghosts);
   mrc_fld_set_param_int(fld_new, "dim", fld->_dim);
-  mrc_fld_set_param_bool(fld_new, "is_aos", fld->_is_aos);
+  mrc_fld_set_param_bool(fld_new, "aos", fld->_aos);
   mrc_fld_set_param_bool(fld_new, "is_fortran", fld->_is_fortran);
 
   fld_new->_view_base = fld;
@@ -839,7 +839,7 @@ mrc_fld_get_as(struct mrc_fld *fld_base, const char *type)
 
   struct mrc_fld *fld = mrc_fld_create(mrc_fld_comm(fld_base));
   mrc_fld_set_type(fld, type);
-  mrc_fld_set_param_bool(fld, "is_aos", fld_base->_is_aos);
+  mrc_fld_set_param_bool(fld, "aos", fld_base->_aos);
   mrc_fld_set_param_bool(fld, "is_fortran", fld_base->_is_fortran);
   if (fld_base->_domain) {
     // if we're based on a domain, dims/offs/sw will be set by setup()
@@ -1328,7 +1328,7 @@ mrc_fld_int_ddc_copy_to_buf(struct mrc_fld *fld, int mb, int me, int p,
   {									\
     fld->_data_type = MRC_NT_##TYPE;					\
     fld->_size_of_type = sizeof(type);					\
-    fld->_is_aos = IS_AOS;						\
+    fld->_aos = IS_AOS;							\
   }									\
   static void								\
   mrc_fld_##NAME##_read(struct mrc_fld *fld, struct mrc_io *io)		\
@@ -1340,7 +1340,7 @@ mrc_fld_int_ddc_copy_to_buf(struct mrc_fld *fld, int mb, int me, int p,
   static void								\
   mrc_fld_##NAME##_set(struct mrc_fld *fld, float val)			\
   {									\
-    assert(!fld->_is_aos);						\
+    assert(!fld->_aos);							\
 									\
     for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {			\
       mrc_fld_foreach(fld, ix,iy,iz, fld->_nr_ghosts, fld->_nr_ghosts) { \
@@ -1354,7 +1354,7 @@ mrc_fld_int_ddc_copy_to_buf(struct mrc_fld *fld, int mb, int me, int p,
   static void								\
   mrc_fld_##NAME##_copy(struct mrc_fld *fld_to, struct mrc_fld *fld_from) \
   {									\
-    assert(!fld_to->_is_aos && !fld_from->_is_aos);			\
+    assert(!fld_to->_aos && !fld_from->_aos);				\
     assert(strcmp(mrc_fld_type(fld_to), mrc_fld_type(fld_from)) == 0);	\
 									\
     for (int p = 0; p < mrc_fld_nr_patches(fld_to); p++) {			\
@@ -1421,7 +1421,7 @@ static struct param mrc_fld_descr[] = {
   { "size_of_type"    , VAR(_size_of_type)   , MRC_VAR_INT           },
   { "len"             , VAR(_len)            , MRC_VAR_INT           },
   { "vec"             , VAR(_vec)            , MRC_VAR_OBJ(mrc_vec)  },
-  { "is_aos"          , VAR(_is_aos)         , PARAM_BOOL(false)     },
+  { "aos"             , VAR(_aos)            , PARAM_BOOL(false)     },
   { "is_fortran"      , VAR(_is_fortran)     , PARAM_BOOL(false)     },
   {},
 };

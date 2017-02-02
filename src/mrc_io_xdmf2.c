@@ -351,7 +351,7 @@ xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3_any)
 
   // If we have an aos field, we need to get it as soa
   struct mrc_fld *m3 = m3_any;
-  if (m3_any->_is_aos) {
+  if (m3_any->_aos) {
     switch (m3_any->_data_type) {
       case MRC_NT_FLOAT: m3 = mrc_fld_get_as(m3_any, "float"); break;
       case MRC_NT_DOUBLE: m3 = mrc_fld_get_as(m3_any, "double"); break;
@@ -453,7 +453,7 @@ xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3_any)
 
   H5Gclose(group0);
 
-  if (m3_any->_is_aos) {
+  if (m3_any->_aos) {
     mrc_fld_put_as(m3, m3_any);
   }
 
@@ -547,7 +547,7 @@ xdmf_read_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3_any)
 
   // If we have an aos field, we need to get it as soa
   struct mrc_fld *m3 = m3_any;
-  if (m3_any->_is_aos) {
+  if (m3_any->_aos) {
     switch (m3_any->_data_type) {
       case MRC_NT_FLOAT: m3 = mrc_fld_get_as(m3_any, "float"); break;
       case MRC_NT_DOUBLE: m3 = mrc_fld_get_as(m3_any, "double"); break;
@@ -582,7 +582,7 @@ xdmf_read_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3_any)
 
   H5Gclose(group0);
 
-  if (m3_any->_is_aos) {
+  if (m3_any->_aos) {
     mrc_fld_put_as(m3, m3_any);
   }
 
@@ -597,7 +597,7 @@ xdmf_write_m1(struct mrc_io *io, const char *path, struct mrc_fld *m1_any)
 
   // If we have an aos field, we need to get it as soa
   struct mrc_fld *m1 = m1_any;
-  if (m1_any->_is_aos) {
+  if (m1_any->_aos) {
     switch (m1_any->_data_type) {
       case MRC_NT_FLOAT: m1 = mrc_fld_get_as(m1_any, "float"); break;
       case MRC_NT_DOUBLE: m1 = mrc_fld_get_as(m1_any, "double"); break;
@@ -695,7 +695,7 @@ xdmf_write_m1(struct mrc_io *io, const char *path, struct mrc_fld *m1_any)
   }
 
   H5Gclose(group0);
-  if (m1_any->_is_aos) {
+  if (m1_any->_aos) {
     mrc_fld_put_as(m1, m1_any);
   }
 
@@ -785,7 +785,7 @@ xdmf_read_m1(struct mrc_io *io, const char *path, struct mrc_fld *m1_any)
 
   // If we have an aos field, we need to get it as soa
   struct mrc_fld *m1 = m1_any;
-  if (m1_any->_is_aos) {
+  if (m1_any->_aos) {
     switch (m1_any->_data_type) {
       case MRC_NT_FLOAT: m1 = mrc_fld_get_as(m1_any, "float"); break;
       case MRC_NT_DOUBLE: m1 = mrc_fld_get_as(m1_any, "double"); break;
@@ -820,7 +820,7 @@ xdmf_read_m1(struct mrc_io *io, const char *path, struct mrc_fld *m1_any)
 
   H5Gclose(group0);
 
-  if (m1_any->_is_aos) {
+  if (m1_any->_aos) {
     mrc_fld_put_as(m1, m1_any);
   }
 

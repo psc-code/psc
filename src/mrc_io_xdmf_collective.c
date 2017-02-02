@@ -937,7 +937,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
 
       struct mrc_patch_info info;
       mrc_domain_get_local_patch_info(m3->_domain, p, &info);
-      assert(!m3->_is_aos);
+      assert(!m3->_aos);
       switch (m3->_data_type) {
       case MRC_NT_FLOAT:
       {
@@ -1256,7 +1256,7 @@ collective_write_fld(struct collective_m3_ctx *ctx, struct mrc_io *io,
   case MRC_NT_INT: dtype = H5T_NATIVE_INT; break;
   default: assert(0);
   }
-  assert(!fld->_is_aos);
+  assert(!fld->_aos);
   hid_t dset = H5Dcreate(group, "3d", dtype, filespace, H5P_DEFAULT,
 			 H5P_DEFAULT, H5P_DEFAULT); H5_CHK(dset);
   hid_t dxpl = H5Pcreate(H5P_DATASET_XFER); H5_CHK(dxpl);
@@ -1311,7 +1311,7 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
 
   // If we have an aos field, we need to get it as soa for collection and writing
   struct mrc_fld *m3_soa = m3;
-  if (m3->_is_aos) {
+  if (m3->_aos) {
     switch (m3->_data_type) {
       case MRC_NT_FLOAT: m3_soa = mrc_fld_get_as(m3, "float"); break;
       case MRC_NT_DOUBLE: m3_soa = mrc_fld_get_as(m3, "double"); break;
@@ -1371,7 +1371,7 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
     }
   }
 
-  if (m3->_is_aos) {
+  if (m3->_aos) {
     mrc_fld_put_as(m3_soa, m3);
   }
 }
@@ -1669,7 +1669,7 @@ read_m3_cb(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
     break;
   default: assert(0);
   }
-  assert(!gfld->_is_aos);
+  assert(!gfld->_aos);
 
   ierr = H5Dread(dset, dtype, data->memspace, data->filespace,
 		 data->dxpl, arr); CE;
@@ -1753,7 +1753,7 @@ xdmf_collective_read_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3)
 
   // If we have an aos field, we need to get it as soa for reading and distribution
   struct mrc_fld *m3_soa = m3;
-  if (m3->_is_aos) {
+  if (m3->_aos) {
     switch (m3->_data_type) {
       case MRC_NT_FLOAT: m3_soa = mrc_fld_get_as(m3, "float"); break;
       case MRC_NT_DOUBLE: m3_soa = mrc_fld_get_as(m3, "double"); break;
@@ -1786,7 +1786,7 @@ xdmf_collective_read_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3)
     collective_m3_recv_end(io, &ctx, m3->_domain, m3_soa);
   }
 
-  if (m3->_is_aos) {
+  if (m3->_aos) {
     mrc_fld_put_as(m3_soa, m3);
   }
 }
