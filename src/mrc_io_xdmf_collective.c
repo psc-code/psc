@@ -402,7 +402,7 @@ collective_m1_write_f1(struct mrc_io *io, const char *path, struct mrc_fld *f1,
     H5Sselect_none(memspace);
     H5Sselect_none(filespace);
   }
-  ierr = H5Dwrite(dset, H5T_NATIVE_FLOAT, memspace, filespace, dxpl, f1->_arr); CE;
+  ierr = H5Dwrite(dset, H5T_NATIVE_FLOAT, memspace, filespace, dxpl, f1->nd.arr); CE;
   
   ierr = H5Dclose(dset); CE;
   ierr = H5Sclose(memspace); CE;
@@ -1277,7 +1277,7 @@ collective_write_fld(struct collective_m3_ctx *ctx, struct mrc_io *io,
   ierr = H5Sselect_hyperslab(filespace, H5S_SELECT_SET, foff, NULL,
 			     mdims, NULL); CE;
 
-  ierr = H5Dwrite(dset, dtype, memspace, filespace, dxpl, fld->_arr); CE;
+  ierr = H5Dwrite(dset, dtype, memspace, filespace, dxpl, fld->nd.arr); CE;
   
   ierr = H5Dclose(dset); CE;
   ierr = H5Sclose(memspace); CE;
@@ -1470,7 +1470,7 @@ collective_m3_send_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
       default: assert(0);
     }
     
-    MPI_Isend(fld->_arr, fld->_len, dtype, send->rank, send->patch,
+    MPI_Isend(fld->nd.arr, fld->_len, dtype, send->rank, send->patch,
 	      mrc_io_comm(io), &ctx->send_reqs[i]);
     send->fld = fld;
   }
@@ -1571,7 +1571,7 @@ collective_m3_recv_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
       default: assert(0);
     }
     
-    MPI_Irecv(fld->_arr, fld->_len, dtype, recv->rank,
+    MPI_Irecv(fld->nd.arr, fld->_len, dtype, recv->rank,
 	      recv->global_patch, mrc_io_comm(io), &ctx->recv_reqs[i]);
     recv->fld = fld;
   }

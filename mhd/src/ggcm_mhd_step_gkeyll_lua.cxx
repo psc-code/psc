@@ -65,7 +65,7 @@ static int ggcm_mhd_put_3d_fld_lua(lua_State *L) {
 
 static int mrc_fld_get_arr_lua(lua_State *L) {
   struct mrc_fld *fld = (struct mrc_fld *) lua_touserdata(L, -1);
-  lua_pushlightuserdata(L, fld->_arr);
+  lua_pushlightuserdata(L, fld->nd.arr);
   return 1;
 }
 
@@ -310,7 +310,7 @@ ggcm_mhd_step_gkeyll_lua_run(void *lua_state,
   lua_pushnumber(L, mhd->dt);
   lua_pushnumber(L, mhd->time);
   lua_pushinteger(L, mhd->istep);
-  lua_pushlightuserdata(L, fld->_arr);
+  lua_pushlightuserdata(L, fld->nd.arr);
 
   if (lua_pcall(L, 4, 1, 0)) {
     std::cerr << "LUA Error:" << std::endl;

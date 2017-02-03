@@ -57,7 +57,7 @@ static inline void
 fld3d_get(fld3d_t *f, int p)
 {
   assert(f->mrc_fld);
-  f->arr_off = f->mrc_fld->_arr_off;
+  f->arr_off = f->mrc_fld->nd.arr_off;
   assert(f->mrc_fld->_stride[0] == 1);
   assert(f->mrc_fld->_stride[1] == s_lgdims[0]);
   assert(f->mrc_fld->_stride[2] == s_lgdims[0] * s_lgdims[1]);

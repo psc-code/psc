@@ -29,9 +29,9 @@
 static void
 _mrc_fld_destroy(struct mrc_fld *fld)
 {
-  if (fld->_arr) {
-    mrc_vec_put_array(fld->_vec, fld->_arr);
-    fld->_arr = NULL;
+  if (fld->nd.arr) {
+    mrc_vec_put_array(fld->_vec, fld->nd.arr);
+    fld->nd.arr = NULL;
   }
 
   for (int m = 0; m < fld->_nr_allocated_comp_name; m++) {
@@ -96,7 +96,7 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
   }
 
   if (fld->_view_base) {
-    mrc_fld_set_array(fld, fld->_view_base->_arr);
+    mrc_fld_set_array(fld, fld->_view_base->nd.arr);
   }
 
   const char *vec_type = mrc_fld_ops(fld)->vec_type;
@@ -104,8 +104,8 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
   dispatch_vec_type(fld);
   mrc_vec_set_param_int(fld->_vec, "len", fld->_len);
   mrc_fld_setup_member_objs(fld); // sets up our .vec member
-  fld->_arr = mrc_vec_get_array(fld->_vec);
-  assert(fld->_arr);
+  fld->nd.arr = mrc_vec_get_array(fld->_vec);
+  assert(fld->nd.arr);
 
   if (!fld->_view_base) {
     // This is a field with its own storage
@@ -160,7 +160,7 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
   for (int d = 0; d < MRC_FLD_MAXDIMS; d++) {
     off += fld->_start[d] * fld->_stride[d];
   }
-  fld->_arr_off = fld->_arr - off * fld->_size_of_type;
+  fld->nd.arr_off = fld->nd.arr - off * fld->_size_of_type;
 }
 
 

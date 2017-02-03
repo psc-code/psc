@@ -65,8 +65,18 @@ struct mrc_fld_patch {
   struct mrc_fld *_fld;
 };
 
+// mrc_ndarray, as one might guess from the name, is somewhat modeled after numpy
+// It's a n_dims array (up to MRC_FLD_MAXDIMS). The underlying data may not be
+// contiguous, but it's accessed through a known stride per dimension
+
+struct mrc_ndarray {
+  void *arr_off; //< same as _arr, but shifted by precalculated offset for faster/simpler access
+  void *arr; //< pointer to the actual data
+};
+
 struct mrc_fld {
   struct mrc_obj obj;
+  
   // parameters
   struct mrc_param_int_array _dims;
   struct mrc_param_int_array _offs;
@@ -80,14 +90,13 @@ struct mrc_fld {
   int _nr_ghosts; //< number of ghostpoints in non-invariant (dim > 1) directions
 
   // state
+  struct mrc_ndarray nd;
   int _stride[MRC_FLD_MAXDIMS];
   int _start[MRC_FLD_MAXDIMS];
   int _ghost_offs[MRC_FLD_MAXDIMS];
   int _ghost_dims[MRC_FLD_MAXDIMS];
   int _data_type;
   int _size_of_type;
-  void *_arr;
-  void *_arr_off; //< same as _arr, but contains precalculated offset for faster/simpler access
   int _len;
   struct mrc_vec *_vec; //< underlying mrc_vec that manages memory alloc/free (could be petsc)
   struct mrc_fld *_view_base; //< if this mrc_fld is a view, this is the field it's derived from
@@ -170,20 +179,20 @@ mrc_fld_spatial_sw(struct mrc_fld *x)
 #if 0 // slower, not using _arr_off
 
 #define __MRC_FLD(fld, type, i0,i1,i2,i3,i4)				\
-  (((type *) (fld)->_arr)[((i4) - (fld)->_start[4]) * (fld)->_stride[4] + \
-			  ((i3) - (fld)->_start[3]) * (fld)->_stride[3] + \
-			  ((i2) - (fld)->_start[2]) * (fld)->_stride[2] + \
-			  ((i1) - (fld)->_start[1]) * (fld)->_stride[1] + \
-			  ((i0) - (fld)->_start[0]) * (fld)->_stride[0]])
+  (((type *) (fld)->nd.arr)[((i4) - (fld)->_start[4]) * (fld)->_stride[4] + \
+			    ((i3) - (fld)->_start[3]) * (fld)->_stride[3] + \
+			    ((i2) - (fld)->_start[2]) * (fld)->_stride[2] + \
+			    ((i1) - (fld)->_start[1]) * (fld)->_stride[1] + \
+			    ((i0) - (fld)->_start[0]) * (fld)->_stride[0]])
 
 #else // same, but faster because of precalc offset
 
 #define __MRC_FLD(fld, type, i0,i1,i2,i3,i4)				\
-  (((type *) (fld)->_arr_off)[(i4) * (fld)->_stride[4] +		\
-			      (i3) * (fld)->_stride[3] +		\
-			      (i2) * (fld)->_stride[2] +		\
-			      (i1) * (fld)->_stride[1] +		\
-			      (i0) * (fld)->_stride[0]])
+  (((type *) (fld)->nd.arr_off)[(i4) * (fld)->_stride[4] +		\
+				(i3) * (fld)->_stride[3] +		\
+				(i2) * (fld)->_stride[2] +		\
+				(i1) * (fld)->_stride[1] +		\
+				(i0) * (fld)->_stride[0]])
 
 
 #endif
@@ -203,7 +212,7 @@ mrc_fld_spatial_sw(struct mrc_fld *x)
       assert(i2 >= (fld)->_ghost_offs[2] && i2 < (fld)->_ghost_offs[2] + (fld)->_ghost_dims[2]); \
       assert(i3 >= (fld)->_ghost_offs[3] && i3 < (fld)->_ghost_offs[3] + (fld)->_ghost_dims[3]); \
       assert(i4 >= (fld)->_ghost_offs[4] && i4 < (fld)->_ghost_offs[4] + (fld)->_ghost_dims[4]); \
-      assert((fld)->_arr_off);						\
+      assert((fld)->nd.arr_off);						\
       type *_p = &__MRC_FLD(fld, type, i0,i1,i2,i3,i4);			\
       _p; }))
 
