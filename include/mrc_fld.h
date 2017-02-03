@@ -87,6 +87,8 @@ struct mrc_ndarray_access {
 // struct mrc_ndarray
 
 struct mrc_ndarray {
+  struct mrc_obj obj;
+  
   // state
   struct mrc_ndarray_access acc;
   void *arr; //< pointer to the actual data
@@ -99,6 +101,11 @@ struct mrc_ndarray {
   struct mrc_param_int_array offs;
   struct mrc_param_int_array perm;
 };
+
+MRC_CLASS_DECLARE(mrc_ndarray, struct mrc_ndarray);
+
+// ----------------------------------------------------------------------
+// struct mrc_fld
 
 struct mrc_fld {
   struct mrc_obj obj;
@@ -120,10 +127,11 @@ struct mrc_fld {
   int _nr_ghosts; //< number of ghostpoints in non-invariant (dim > 1) directions
 
   // state
-  struct mrc_ndarray nd;
+  struct mrc_ndarray *_nd;
   int _ghost_offs[MRC_FLD_MAXDIMS];
   int _ghost_dims[MRC_FLD_MAXDIMS];
   int _data_type;
+  int _size_of_type; // FIXME, redundant, should go away
   int _len;
   struct mrc_vec *_vec; //< underlying mrc_vec that manages memory alloc/free (could be petsc)
   struct mrc_fld *_view_base; //< if this mrc_fld is a view, this is the field it's derived from

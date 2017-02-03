@@ -36,10 +36,10 @@ mrc_ndarray_setup_finish(struct mrc_ndarray *nd)
 }
 
 // ----------------------------------------------------------------------
-// mrc_ndarray_setup
+// _mrc_ndarray_setup
 
 static void
-mrc_ndarray_setup(struct mrc_ndarray *nd)
+_mrc_ndarray_setup(struct mrc_ndarray *nd)
 {
   int n_dims = nd->dims.nr_vals;
   assert(n_dims == nd->offs.nr_vals);
@@ -70,6 +70,16 @@ mrc_ndarray_access(struct mrc_ndarray *nd)
   return &nd->acc;
 }
 
+// ----------------------------------------------------------------------
+// mrc_ndarray class description
+
+struct mrc_class_mrc_ndarray mrc_class_mrc_ndarray = {
+  .name         = "mrc_ndarray",
+  .size         = sizeof(struct mrc_ndarray),
+  //  .param_descr  = mrc_ndarray_descr,
+  .setup        = _mrc_ndarray_setup,
+};
+
 
 // ======================================================================
 // mrc_fld
@@ -82,9 +92,9 @@ mrc_ndarray_access(struct mrc_ndarray *nd)
 static void
 _mrc_fld_destroy(struct mrc_fld *fld)
 {
-  if (fld->nd.arr) {
-    mrc_vec_put_array(fld->_vec, fld->nd.arr);
-    fld->nd.arr = NULL;
+  if (fld->_nd->arr) {
+    mrc_vec_put_array(fld->_vec, fld->_nd->arr);
+    fld->_nd->arr = NULL;
   }
 
   for (int m = 0; m < fld->_nr_allocated_comp_name; m++) {
@@ -149,7 +159,7 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
   }
 
   if (fld->_view_base) {
-    mrc_fld_set_array(fld, fld->_view_base->nd.arr);
+    mrc_fld_set_array(fld, fld->_view_base->_nd->arr);
   }
 
   const char *vec_type = mrc_fld_ops(fld)->vec_type;
@@ -157,8 +167,13 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
   dispatch_vec_type(fld);
   mrc_vec_set_param_int(fld->_vec, "len", fld->_len);
   mrc_fld_setup_member_objs(fld); // sets up our .vec member
-  fld->nd.arr = mrc_vec_get_array(fld->_vec);
-  assert(fld->nd.arr);
+
+  struct mrc_ndarray *nd = mrc_ndarray_create(mrc_fld_comm(fld));
+  fld->_nd = nd;
+
+  nd->size_of_type = fld->_size_of_type;
+  nd->arr = mrc_vec_get_array(fld->_vec);
+  assert(nd->arr);
 
   if (!fld->_view_base) {
     // This is a field with its own storage
@@ -180,7 +195,6 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
     }
 
     int n_dims = fld->_dims.nr_vals;
-    struct mrc_ndarray *nd = &fld->nd;
     nd->dims.nr_vals = n_dims;
     nd->offs.nr_vals = n_dims;
     nd->perm.nr_vals = n_dims;
@@ -193,7 +207,7 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
       nd->perm.vals[d] = perm[d];
     }
 
-    mrc_ndarray_setup(&fld->nd);
+    mrc_ndarray_setup(nd);
   } else {
     // In this case, this field is just a view and has not
     // allocated its own storage
@@ -206,17 +220,17 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
 	assert(view_offs[d] - sw[d] >= view_base->_ghost_offs[d]);
 	assert(view_offs[d] + dims[d] + sw[d] <=
 	       view_base->_ghost_offs[d] + view_base->_ghost_dims[d]);
-	fld->nd.acc.stride[d] = view_base->nd.acc.stride[d];
-	fld->nd.start[d] = view_base->nd.start[d] - view_offs[d] + offs[d];
+	nd->acc.stride[d] = view_base->_nd->acc.stride[d];
+	nd->start[d] = view_base->_nd->start[d] - view_offs[d] + offs[d];
       } else {
-	fld->nd.acc.stride[d] = 0;
-	fld->nd.start[d] = 0;
+	nd->acc.stride[d] = 0;
+	nd->start[d] = 0;
       }
     }
-    mrc_ndarray_setup_finish(&fld->nd);
+    mrc_ndarray_setup_finish(nd);
   }
 
-  fld->_nd_acc = *mrc_ndarray_access(&fld->nd);
+  fld->_nd_acc = *mrc_ndarray_access(nd);
 }
 
 
@@ -1173,7 +1187,7 @@ mrc_fld_int_ddc_copy_to_buf(struct mrc_fld *fld, int mb, int me, int p,
   mrc_fld_##NAME##_create(struct mrc_fld *fld)				\
   {									\
     fld->_data_type = MRC_NT_##TYPE;					\
-    fld->nd.size_of_type = sizeof(type);				\
+    fld->_size_of_type = sizeof(type);					\
     fld->_aos = IS_AOS;							\
   }									\
   static void								\
@@ -1260,7 +1274,7 @@ static struct param mrc_fld_descr[] = {
   { "nr_comps"        , VAR(_nr_comps)       , PARAM_INT(1)          },
   { "nr_ghosts"       , VAR(_nr_ghosts)      , PARAM_INT(0)          },
 
-  { "size_of_type"    , VAR(nd.size_of_type) , MRC_VAR_INT           },
+  { "size_of_type"    , VAR(_size_of_type)   , MRC_VAR_INT           },
   { "len"             , VAR(_len)            , MRC_VAR_INT           },
   { "vec"             , VAR(_vec)            , MRC_VAR_OBJ(mrc_vec)  },
   { "aos"             , VAR(_aos)            , PARAM_BOOL(false)     },

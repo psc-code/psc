@@ -389,7 +389,7 @@ hdf5_parallel_write_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld
   H5Sselect_hyperslab(memspace, H5S_SELECT_SET, moff, NULL, mcount, NULL);
 
   
-  H5Dwrite(dset, datatype, memspace, filespace, dxpl, fld->nd.arr);
+  H5Dwrite(dset, datatype, memspace, filespace, dxpl, fld->_nd->arr);
   
   H5Sclose(memspace);
   H5Dclose(dset);
@@ -503,7 +503,7 @@ hdf5_parallel_read_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
   H5Sselect_hyperslab(filespace, H5S_SELECT_SET, foff, NULL, mcount, NULL);
   H5Sselect_hyperslab(memspace, H5S_SELECT_SET, moff, NULL, mcount, NULL);
 
-  H5Dread(dset, datatype, memspace, filespace, dxpl, fld->nd.arr);
+  H5Dread(dset, datatype, memspace, filespace, dxpl, fld->_nd->arr);
   
   H5Sclose(memspace);
   H5Dclose(dset);
