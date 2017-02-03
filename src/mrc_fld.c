@@ -1081,89 +1081,6 @@ static struct mrc_obj_method mrc_fld_float_methods[] = {
 };
 
 // ----------------------------------------------------------------------
-// mrc_fld_double_aos_copy_from_float
-
-static void
-mrc_fld_double_aos_copy_from_float(struct mrc_fld *fld_double,
-				   struct mrc_fld *fld_float)
-{
-  assert(fld_float->_data_type == MRC_NT_FLOAT);
-  assert(fld_double->_data_type == MRC_NT_DOUBLE);
-  for (int p = 0; p < mrc_fld_nr_patches(fld_float); p++) {
-    mrc_fld_foreach(fld_float, ix,iy,iz, fld_float->_nr_ghosts, fld_float->_nr_ghosts) {
-      for (int m = 0; m < fld_float->_nr_comps; m++) {
-	MRC_D5(fld_double, ix,iy,iz, m, p) = MRC_S5(fld_float, ix,iy,iz, m, p);
-      }
-    } mrc_fld_foreach_end;
-  }
-}
-
-// ----------------------------------------------------------------------
-// mrc_fld_double_aos_copy_from_double
-
-static void
-mrc_fld_double_aos_copy_from_double(struct mrc_fld *fld_double_aos,
-				    struct mrc_fld *fld_double)
-{
-  assert(fld_double->_data_type == MRC_NT_DOUBLE);
-  assert(fld_double_aos->_data_type == MRC_NT_DOUBLE);
-  for (int p = 0; p < mrc_fld_nr_patches(fld_double); p++) {
-    mrc_fld_foreach(fld_double, ix,iy,iz, fld_double->_nr_ghosts, fld_double->_nr_ghosts) {
-      for (int m = 0; m < fld_double->_nr_comps; m++) {
-	MRC_D5(fld_double_aos, ix,iy,iz, m, p) = MRC_D5(fld_double, ix,iy,iz, m, p);
-      }
-    } mrc_fld_foreach_end;
-  }
-}
-
-// ----------------------------------------------------------------------
-// mrc_fld_double_aos_copy_to_float
-
-static void
-mrc_fld_double_aos_copy_to_float(struct mrc_fld *fld_double,
-				 struct mrc_fld *fld_float)
-{
-  assert(fld_float->_data_type == MRC_NT_FLOAT);
-  assert(fld_double->_data_type == MRC_NT_DOUBLE);
-  for (int p = 0; p < mrc_fld_nr_patches(fld_float); p++) {
-    mrc_fld_foreach(fld_float, ix,iy,iz, fld_float->_nr_ghosts, fld_float->_nr_ghosts) {
-      for (int m = 0; m < fld_float->_nr_comps; m++) {
-	MRC_S5(fld_float, ix,iy,iz, m, p) = MRC_D5(fld_double, ix,iy,iz, m, p);
-      }
-    } mrc_fld_foreach_end;
-  }
-}
-
-// ----------------------------------------------------------------------
-// mrc_fld_double_aos_copy_to_double
-
-static void
-mrc_fld_double_aos_copy_to_double(struct mrc_fld *fld_double_aos,
-          struct mrc_fld *fld_double)
-{
-  assert(fld_double->_data_type == MRC_NT_DOUBLE);
-  assert(fld_double_aos->_data_type == MRC_NT_DOUBLE);
-  for (int p = 0; p < mrc_fld_nr_patches(fld_double); p++) {
-    mrc_fld_foreach(fld_double, ix,iy,iz, fld_double->_nr_ghosts, fld_double->_nr_ghosts) {
-      for (int m = 0; m < fld_double->_nr_comps; m++) {
-  MRC_D5(fld_double, ix,iy,iz, m, p) = MRC_D5(fld_double_aos, ix,iy,iz, m, p);
-      }
-    } mrc_fld_foreach_end;
-  }
-}
-
-// ----------------------------------------------------------------------
-// mrc_fld "double_aos" methods
-
-static struct mrc_obj_method mrc_fld_double_aos_methods[] = {
-  MRC_OBJ_METHOD("copy_to_float",   mrc_fld_double_aos_copy_to_float),
-  MRC_OBJ_METHOD("copy_from_float", mrc_fld_double_aos_copy_from_float),
-  MRC_OBJ_METHOD("copy_to_double",   mrc_fld_double_aos_copy_to_double),
-  MRC_OBJ_METHOD("copy_from_double", mrc_fld_double_aos_copy_from_double),
-  {}
-};
-
-// ----------------------------------------------------------------------
 // mrc_fld_*_methods
 
 static struct mrc_obj_method mrc_fld_double_methods[] = {
@@ -1259,7 +1176,6 @@ mrc_fld_int_ddc_copy_to_buf(struct mrc_fld *fld, int mb, int me, int p,
 
 MAKE_MRC_FLD_TYPE(float, float, FLOAT, false)
 MAKE_MRC_FLD_TYPE(double, double, DOUBLE, false)
-MAKE_MRC_FLD_TYPE(double_aos, double, DOUBLE, true)
 MAKE_MRC_FLD_TYPE(int, int, INT, false)
 
 // ----------------------------------------------------------------------
@@ -1270,7 +1186,6 @@ mrc_fld_init()
 {
   mrc_class_register_subclass(&mrc_class_mrc_fld, &mrc_fld_float_ops);
   mrc_class_register_subclass(&mrc_class_mrc_fld, &mrc_fld_double_ops);
-  mrc_class_register_subclass(&mrc_class_mrc_fld, &mrc_fld_double_aos_ops);
   mrc_class_register_subclass(&mrc_class_mrc_fld, &mrc_fld_int_ops);
 }
 

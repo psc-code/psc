@@ -16,7 +16,6 @@ include_HEADERS = \
 	mrc_domain_dynamic.h \
 	mrc_domain.h \
 	mrc_domain_private.h \
-	mrc_fld_as_double_aos.h \
 	mrc_fld_as_double.h \
 	mrc_fld_as_float.h \
 	mrc_fld.h \
