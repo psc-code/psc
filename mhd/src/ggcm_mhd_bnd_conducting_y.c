@@ -20,9 +20,6 @@ void ggcm_mhd_bnd_conducting_y_fill_ghost_float(struct ggcm_mhd_bnd *bnd,
 void ggcm_mhd_bnd_conducting_y_fill_ghost_double(struct ggcm_mhd_bnd *bnd,
                                       struct mrc_fld *fld_base,
                                       int m, float bntim);
-void ggcm_mhd_bnd_conducting_y_fill_ghost_double_aos(struct ggcm_mhd_bnd *bnd,
-                                          struct mrc_fld *fld_base,
-                                          int m, float bntim);
 
 struct ggcm_mhd_bnd_conducting_y {
   void (*conducting_y_fill_ghosts)(struct ggcm_mhd_bnd *bnd,
@@ -43,8 +40,6 @@ ggcm_mhd_bnd_conducting_y_setup(struct ggcm_mhd_bnd *bnd)
     sub->conducting_y_fill_ghosts = ggcm_mhd_bnd_conducting_y_fill_ghost_float;
   } else if (strcmp(step_fld_type, "double") == 0) {
     sub->conducting_y_fill_ghosts = ggcm_mhd_bnd_conducting_y_fill_ghost_double;
-  } else if (strcmp(step_fld_type, "double_aos") == 0) {
-    sub->conducting_y_fill_ghosts = ggcm_mhd_bnd_conducting_y_fill_ghost_double_aos;
   } else {
     mprintf(">> fld_type = '%s'\n", step_fld_type);
     assert(0); // conducting_y not implemented for this step type

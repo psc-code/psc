@@ -24,8 +24,6 @@ extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_inoutflow_sc_ggcm_double;
 extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_inoutflow_sc_float;
 extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_inoutflow_sc_double;
 extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_inoutflow_fc_double;
-extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_inoutflow_sc_double_aos;
-extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_inoutflow_fc_double_aos;
 extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_inoutflow_fc_cc_double;
 extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_inoutflow_gkeyll;
 extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_sphere_sc_float;
@@ -33,8 +31,6 @@ extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_sphere_fc_float;
 extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_sphere_sc_double;
 extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_sphere_sc_ggcm_double;
 extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_sphere_fc_double;
-extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_sphere_sc_double_aos;
-extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_sphere_fc_double_aos;
 extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_sphere_fc_cc_double;
 
 #define ggcm_mhd_bnd_ops(bnd) ((struct ggcm_mhd_bnd_ops *)((bnd)->obj.ops))
