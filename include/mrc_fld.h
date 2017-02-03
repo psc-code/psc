@@ -86,6 +86,11 @@ struct mrc_ndarray {
 
 struct mrc_fld {
   struct mrc_obj obj;
+
+  // state (here for fast access)
+  // these are copies from our ::nd member, replicated for fast access
+  void *_arr_off;
+  int _stride[MRC_FLD_MAXDIMS];
   
   // parameters
   struct mrc_param_int_array _dims;
@@ -183,26 +188,13 @@ mrc_fld_spatial_sw(struct mrc_fld *x)
   return mrc_fld_sw(x);
 }
 
-#if 0 // slower, not using _arr_off
-
 #define __MRC_FLD(fld, type, i0,i1,i2,i3,i4)				\
-  (((type *) (fld)->nd.arr)[((i4) - (fld)->nd.start[4]) * (fld)->nd.stride[4] + \
-			    ((i3) - (fld)->nd.start[3]) * (fld)->nd.stride[3] + \
-			    ((i2) - (fld)->nd.start[2]) * (fld)->nd.stride[2] + \
-			    ((i1) - (fld)->nd.start[1]) * (fld)->nd.stride[1] + \
-			    ((i0) - (fld)->nd.start[0]) * (fld)->nd.stride[0]])
+  (((type *) (fld)->_arr_off)[(i4) * (fld)->_stride[4] +		\
+			      (i3) * (fld)->_stride[3] +		\
+			      (i2) * (fld)->_stride[2] +		\
+			      (i1) * (fld)->_stride[1] +		\
+			      (i0) * (fld)->_stride[0]])
 
-#else // same, but faster because of precalc offset
-
-#define __MRC_FLD(fld, type, i0,i1,i2,i3,i4)				\
-  (((type *) (fld)->nd.arr_off)[(i4) * (fld)->nd.stride[4] +		\
-				(i3) * (fld)->nd.stride[3] +		\
-				(i2) * (fld)->nd.stride[2] +		\
-				(i1) * (fld)->nd.stride[1] +		\
-				(i0) * (fld)->nd.stride[0]])
-
-
-#endif
 
 
 #ifdef BOUNDS_CHECK
@@ -219,7 +211,7 @@ mrc_fld_spatial_sw(struct mrc_fld *x)
       assert(i2 >= (fld)->_ghost_offs[2] && i2 < (fld)->_ghost_offs[2] + (fld)->_ghost_dims[2]); \
       assert(i3 >= (fld)->_ghost_offs[3] && i3 < (fld)->_ghost_offs[3] + (fld)->_ghost_dims[3]); \
       assert(i4 >= (fld)->_ghost_offs[4] && i4 < (fld)->_ghost_offs[4] + (fld)->_ghost_dims[4]); \
-      assert((fld)->nd.arr_off);						\
+      assert((fld)->_arr_off);						\
       type *_p = &__MRC_FLD(fld, type, i0,i1,i2,i3,i4);			\
       _p; }))
 
