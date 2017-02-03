@@ -21,8 +21,11 @@
 // ======================================================================
 // mrc_ndarray
 
-void
-mrc_ndarray_setup(struct mrc_ndarray *nd)
+// ----------------------------------------------------------------------
+// mrc_ndarray_setup_finish
+
+static void
+mrc_ndarray_setup_finish(struct mrc_ndarray *nd)
 {
   // set up arr_off
   int off = 0;
@@ -147,7 +150,7 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
 	fld->nd.stride[perm[d]] *= fld->_ghost_dims[perm[dd]];
       }
     }
-
+    mrc_ndarray_setup_finish(&fld->nd);
   } else {
     // In this case, this field is just a view and has not
     // allocated its own storage
@@ -167,9 +170,8 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
 	fld->nd.start[d] = 0;
       }
     }
+    mrc_ndarray_setup_finish(&fld->nd);
   }
-
-  mrc_ndarray_setup(&fld->nd);
 }
 
 
