@@ -6,7 +6,7 @@
 #include <ggcm_mhd_gkeyll.h>
 
 #include <ggcm_mhd_private.h>
-#include <mrc_fld_as_double_aos.h>
+#include <mrc_fld_as_double.h>
 
 #include <string.h>
 
@@ -31,6 +31,8 @@ ggcm_mhd_step_gkeyll_setup_flds(struct ggcm_mhd_step *step)
   struct ggcm_mhd *mhd = step->mhd;
 
   mrc_fld_set_type(mhd->fld, FLD_TYPE);
+  mrc_fld_set_param_bool(mhd->fld, "aos", true);
+  mrc_fld_set_param_bool(mhd->fld, "c_order", true);
   mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_GKEYLL);
 
   ggcm_mhd_step_gkeyll_setup_flds_lua(mhd, sub->script_common);
@@ -70,7 +72,8 @@ ggcm_mhd_step_gkeyll_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   struct ggcm_mhd_step_gkeyll *sub = ggcm_mhd_step_gkeyll(step);
   struct ggcm_mhd *mhd = step->mhd;
 
-  assert(strcmp(mrc_fld_type(x), "double_aos") == 0);
+  assert(strcmp(mrc_fld_type(x), "double") == 0);
+  assert(x->_aos && x->_c_order);
   ggcm_mhd_step_gkeyll_lua_run(sub->lua_state, mhd, x);
 }
 
