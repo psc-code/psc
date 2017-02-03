@@ -76,6 +76,12 @@ struct mrc_ndarray {
   int stride[MRC_FLD_MAXDIMS];
   int start[MRC_FLD_MAXDIMS];
   int size_of_type;
+  int n_dims;
+
+  // parameters
+  struct mrc_param_int_array dims;
+  struct mrc_param_int_array offs;
+  struct mrc_param_int_array perm;
 };
 
 struct mrc_fld {

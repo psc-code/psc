@@ -35,6 +35,29 @@ mrc_ndarray_setup_finish(struct mrc_ndarray *nd)
   nd->arr_off = nd->arr - off * nd->size_of_type;
 }
 
+// ----------------------------------------------------------------------
+// mrc_ndarray_setup
+
+static void
+mrc_ndarray_setup(struct mrc_ndarray *nd)
+{
+  int n_dims = nd->dims.nr_vals;
+  assert(n_dims == nd->offs.nr_vals);
+  assert(n_dims == nd->perm.nr_vals);
+  nd->n_dims = n_dims;
+
+  int *dims = nd->dims.vals, *offs = nd->offs.vals, *perm = nd->perm.vals;
+  for (int d = 0; d < n_dims; d++) {
+    nd->start[d] = offs[d];
+    nd->stride[perm[d]] = 1;
+    for (int dd = 0; dd < d; dd++) {
+      nd->stride[perm[d]] *= dims[perm[dd]];
+    }
+  }
+
+  mrc_ndarray_setup_finish(nd);
+}
+
 // ======================================================================
 // mrc_fld
 
@@ -143,14 +166,21 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
       perm = (int[5]) { 2, 1, 0, 3, 4 };
     }
 
-    for (int d = 0; d < MRC_FLD_MAXDIMS; d++) {
-      fld->nd.start[d]  = fld->_ghost_offs[d];
-      fld->nd.stride[perm[d]] = 1;
-      for (int dd = 0; dd < d; dd++) {
-	fld->nd.stride[perm[d]] *= fld->_ghost_dims[perm[dd]];
-      }
+    int n_dims = fld->_dims.nr_vals;
+    struct mrc_ndarray *nd = &fld->nd;
+    nd->dims.nr_vals = n_dims;
+    nd->offs.nr_vals = n_dims;
+    nd->perm.nr_vals = n_dims;
+    nd->dims.vals = calloc(n_dims, sizeof(int));
+    nd->offs.vals = calloc(n_dims, sizeof(int));
+    nd->perm.vals = calloc(n_dims, sizeof(int));
+    for (int d = 0; d < n_dims; d++) {
+      nd->dims.vals[d] = fld->_ghost_dims[d];
+      nd->offs.vals[d] = fld->_ghost_offs[d];
+      nd->perm.vals[d] = perm[d];
     }
-    mrc_ndarray_setup_finish(&fld->nd);
+
+    mrc_ndarray_setup(&fld->nd);
   } else {
     // In this case, this field is just a view and has not
     // allocated its own storage
