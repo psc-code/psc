@@ -127,10 +127,10 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
     }
 
     for (int d = 0; d < MRC_FLD_MAXDIMS; d++) {
-      fld->_start[d]  = fld->_ghost_offs[d];
-      fld->_stride[perm[d]] = 1;
+      fld->nd.start[d]  = fld->_ghost_offs[d];
+      fld->nd.stride[perm[d]] = 1;
       for (int dd = 0; dd < d; dd++) {
-	fld->_stride[perm[d]] *= fld->_ghost_dims[perm[dd]];
+	fld->nd.stride[perm[d]] *= fld->_ghost_dims[perm[dd]];
       }
     }
 
@@ -146,11 +146,11 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
 	assert(view_offs[d] - sw[d] >= view_base->_ghost_offs[d]);
 	assert(view_offs[d] + dims[d] + sw[d] <=
 	       view_base->_ghost_offs[d] + view_base->_ghost_dims[d]);
-	fld->_stride[d] = view_base->_stride[d];
-	fld->_start[d] = view_base->_start[d] - view_offs[d] + offs[d];
+	fld->nd.stride[d] = view_base->nd.stride[d];
+	fld->nd.start[d] = view_base->nd.start[d] - view_offs[d] + offs[d];
       } else {
-	fld->_stride[d] = 0;
-	fld->_start[d] = 0;
+	fld->nd.stride[d] = 0;
+	fld->nd.start[d] = 0;
       }
     }
   }
@@ -158,7 +158,7 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
   // set up _arr_off
   int off = 0;
   for (int d = 0; d < MRC_FLD_MAXDIMS; d++) {
-    off += fld->_start[d] * fld->_stride[d];
+    off += fld->nd.start[d] * fld->nd.stride[d];
   }
   fld->nd.arr_off = fld->nd.arr - off * fld->_size_of_type;
 }

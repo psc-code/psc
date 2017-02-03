@@ -72,6 +72,8 @@ struct mrc_fld_patch {
 struct mrc_ndarray {
   void *arr_off; //< same as _arr, but shifted by precalculated offset for faster/simpler access
   void *arr; //< pointer to the actual data
+  int stride[MRC_FLD_MAXDIMS];
+  int start[MRC_FLD_MAXDIMS];
 };
 
 struct mrc_fld {
@@ -91,8 +93,6 @@ struct mrc_fld {
 
   // state
   struct mrc_ndarray nd;
-  int _stride[MRC_FLD_MAXDIMS];
-  int _start[MRC_FLD_MAXDIMS];
   int _ghost_offs[MRC_FLD_MAXDIMS];
   int _ghost_dims[MRC_FLD_MAXDIMS];
   int _data_type;
@@ -179,20 +179,20 @@ mrc_fld_spatial_sw(struct mrc_fld *x)
 #if 0 // slower, not using _arr_off
 
 #define __MRC_FLD(fld, type, i0,i1,i2,i3,i4)				\
-  (((type *) (fld)->nd.arr)[((i4) - (fld)->_start[4]) * (fld)->_stride[4] + \
-			    ((i3) - (fld)->_start[3]) * (fld)->_stride[3] + \
-			    ((i2) - (fld)->_start[2]) * (fld)->_stride[2] + \
-			    ((i1) - (fld)->_start[1]) * (fld)->_stride[1] + \
-			    ((i0) - (fld)->_start[0]) * (fld)->_stride[0]])
+  (((type *) (fld)->nd.arr)[((i4) - (fld)->nd.start[4]) * (fld)->nd.stride[4] + \
+			    ((i3) - (fld)->nd.start[3]) * (fld)->nd.stride[3] + \
+			    ((i2) - (fld)->nd.start[2]) * (fld)->nd.stride[2] + \
+			    ((i1) - (fld)->nd.start[1]) * (fld)->nd.stride[1] + \
+			    ((i0) - (fld)->nd.start[0]) * (fld)->nd.stride[0]])
 
 #else // same, but faster because of precalc offset
 
 #define __MRC_FLD(fld, type, i0,i1,i2,i3,i4)				\
-  (((type *) (fld)->nd.arr_off)[(i4) * (fld)->_stride[4] +		\
-				(i3) * (fld)->_stride[3] +		\
-				(i2) * (fld)->_stride[2] +		\
-				(i1) * (fld)->_stride[1] +		\
-				(i0) * (fld)->_stride[0]])
+  (((type *) (fld)->nd.arr_off)[(i4) * (fld)->nd.stride[4] +		\
+				(i3) * (fld)->nd.stride[3] +		\
+				(i2) * (fld)->nd.stride[2] +		\
+				(i1) * (fld)->nd.stride[1] +		\
+				(i0) * (fld)->nd.stride[0]])
 
 
 #endif
