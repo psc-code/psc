@@ -1,5 +1,5 @@
 ESTATUS=0
-for fldtype in "float" "float_aos" "double" "double_aos" "int"
+for fldtype in "float" "double" "double_aos" "int"
 do
     for nproc in 1 2
     do

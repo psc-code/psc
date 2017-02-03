@@ -38,7 +38,6 @@ libmrc_la_SOURCES = \
 	mrc_fld.c \
 	mrc_fld_float.c \
 	mrc_fld_double.c \
-	mrc_fld_float_aos.c \
 	mrc_fld_double_aos.c \
 	mrc_params.c \
 	mrc_ddc.c \
