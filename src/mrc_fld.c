@@ -73,10 +73,20 @@ mrc_ndarray_access(struct mrc_ndarray *nd)
 // ----------------------------------------------------------------------
 // mrc_ndarray class description
 
+#define VAR(x) (void *)offsetof(struct mrc_ndarray, x)
+static struct param mrc_ndarray_descr[] = {
+  { "dims"            , VAR(dims)           , PARAM_INT_ARRAY(0, 0) },
+  { "offs"            , VAR(offs)           , PARAM_INT_ARRAY(0, 0) },
+  { "perm"            , VAR(perm)           , PARAM_INT_ARRAY(0, 0) },
+
+  {},
+};
+#undef VAR
+
 struct mrc_class_mrc_ndarray mrc_class_mrc_ndarray = {
   .name         = "mrc_ndarray",
   .size         = sizeof(struct mrc_ndarray),
-  //  .param_descr  = mrc_ndarray_descr,
+  .param_descr  = mrc_ndarray_descr,
   .setup        = _mrc_ndarray_setup,
 };
 
@@ -195,18 +205,9 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
     }
 
     int n_dims = fld->_dims.nr_vals;
-    nd->dims.nr_vals = n_dims;
-    nd->offs.nr_vals = n_dims;
-    nd->perm.nr_vals = n_dims;
-    nd->dims.vals = calloc(n_dims, sizeof(int));
-    nd->offs.vals = calloc(n_dims, sizeof(int));
-    nd->perm.vals = calloc(n_dims, sizeof(int));
-    for (int d = 0; d < n_dims; d++) {
-      nd->dims.vals[d] = fld->_ghost_dims[d];
-      nd->offs.vals[d] = fld->_ghost_offs[d];
-      nd->perm.vals[d] = perm[d];
-    }
-
+    mrc_ndarray_set_param_int_array(nd, "dims", n_dims, fld->_ghost_dims);
+    mrc_ndarray_set_param_int_array(nd, "offs", n_dims, fld->_ghost_offs);
+    mrc_ndarray_set_param_int_array(nd, "perm", n_dims, perm);
     mrc_ndarray_setup(nd);
   } else {
     // In this case, this field is just a view and has not
