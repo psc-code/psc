@@ -110,8 +110,6 @@ AM_CPPFLAGS += \
 	-I$(GKSOFTWARE)/eigen/include/eigen3
 
 libmhd_la_SOURCES += \
-	ggcm_mhd_ic_gkeyll.c \
-	ggcm_mhd_ic_gkeyll_lua.cxx \
 	ggcm_mhd_step_gkeyll.c \
 	ggcm_mhd_step_gkeyll_lua.cxx \
 	LcRegisterModules.cpp
