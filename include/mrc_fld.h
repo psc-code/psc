@@ -65,15 +65,31 @@ struct mrc_fld_patch {
   struct mrc_fld *_fld;
 };
 
+// ======================================================================
 // mrc_ndarray, as one might guess from the name, is somewhat modeled after numpy
 // It's a n_dims array (up to MRC_FLD_MAXDIMS). The underlying data may not be
 // contiguous, but it's accessed through a known stride per dimension
 
+// ----------------------------------------------------------------------
+// struct mrc_ndarray_access
+//
+// This is separated out to allow for replication of the data pointer / strides
+// needed to quickly access field values without having to follow a pointer to
+// mrc_ndarray. So an mrc_obj like mrc_fld can use mrc_ndarray as a member object
+// but maintain performance
+
+struct mrc_ndarray_access {
+  void *arr_off; //< same as the data pointer (arr), but shifted by precalculated offset for faster access
+  int stride[MRC_FLD_MAXDIMS];
+};
+
+// ----------------------------------------------------------------------
+// struct mrc_ndarray
+
 struct mrc_ndarray {
   // state
-  void *arr_off; //< same as _arr, but shifted by precalculated offset for faster/simpler access
+  struct mrc_ndarray_access acc;
   void *arr; //< pointer to the actual data
-  int stride[MRC_FLD_MAXDIMS];
   int start[MRC_FLD_MAXDIMS];
   int size_of_type;
   int n_dims;
@@ -87,10 +103,9 @@ struct mrc_ndarray {
 struct mrc_fld {
   struct mrc_obj obj;
 
-  // state (here for fast access)
+  // state
   // these are copies from our ::nd member, replicated for fast access
-  void *_arr_off;
-  int _stride[MRC_FLD_MAXDIMS];
+  struct mrc_ndarray_access _nd_acc;
   
   // parameters
   struct mrc_param_int_array _dims;
@@ -189,11 +204,11 @@ mrc_fld_spatial_sw(struct mrc_fld *x)
 }
 
 #define __MRC_FLD(fld, type, i0,i1,i2,i3,i4)				\
-  (((type *) (fld)->_arr_off)[(i4) * (fld)->_stride[4] +		\
-			      (i3) * (fld)->_stride[3] +		\
-			      (i2) * (fld)->_stride[2] +		\
-			      (i1) * (fld)->_stride[1] +		\
-			      (i0) * (fld)->_stride[0]])
+  (((type *) (fld)->_nd_acc.arr_off)[(i4) * (fld)->_nd_acc.stride[4] + \
+				     (i3) * (fld)->_nd_acc.stride[3] + \
+				     (i2) * (fld)->_nd_acc.stride[2] + \
+				     (i1) * (fld)->_nd_acc.stride[1] + \
+				     (i0) * (fld)->_nd_acc.stride[0]])
 
 
 
@@ -211,7 +226,7 @@ mrc_fld_spatial_sw(struct mrc_fld *x)
       assert(i2 >= (fld)->_ghost_offs[2] && i2 < (fld)->_ghost_offs[2] + (fld)->_ghost_dims[2]); \
       assert(i3 >= (fld)->_ghost_offs[3] && i3 < (fld)->_ghost_offs[3] + (fld)->_ghost_dims[3]); \
       assert(i4 >= (fld)->_ghost_offs[4] && i4 < (fld)->_ghost_offs[4] + (fld)->_ghost_dims[4]); \
-      assert((fld)->_arr_off);						\
+      assert((fld)->_nd_acc.arr_off);					\
       type *_p = &__MRC_FLD(fld, type, i0,i1,i2,i3,i4);			\
       _p; }))
 

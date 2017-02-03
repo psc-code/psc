@@ -30,9 +30,9 @@ mrc_ndarray_setup_finish(struct mrc_ndarray *nd)
   // set up arr_off
   int off = 0;
   for (int d = 0; d < MRC_FLD_MAXDIMS; d++) {
-    off += nd->start[d] * nd->stride[d];
+    off += nd->start[d] * nd->acc.stride[d];
   }
-  nd->arr_off = nd->arr - off * nd->size_of_type;
+  nd->acc.arr_off = nd->arr - off * nd->size_of_type;
 }
 
 // ----------------------------------------------------------------------
@@ -49,14 +49,27 @@ mrc_ndarray_setup(struct mrc_ndarray *nd)
   int *dims = nd->dims.vals, *offs = nd->offs.vals, *perm = nd->perm.vals;
   for (int d = 0; d < n_dims; d++) {
     nd->start[d] = offs[d];
-    nd->stride[perm[d]] = 1;
+    nd->acc.stride[perm[d]] = 1;
     for (int dd = 0; dd < d; dd++) {
-      nd->stride[perm[d]] *= dims[perm[dd]];
+      nd->acc.stride[perm[d]] *= dims[perm[dd]];
     }
   }
 
   mrc_ndarray_setup_finish(nd);
 }
+
+// ----------------------------------------------------------------------
+// mrc_ndarray_access
+//
+// This returns the needed info (struct mrc_ndarray_access) for easy access to
+// the data
+
+static struct mrc_ndarray_access *
+mrc_ndarray_access(struct mrc_ndarray *nd)
+{
+  return &nd->acc;
+}
+
 
 // ======================================================================
 // mrc_fld
@@ -193,15 +206,17 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
 	assert(view_offs[d] - sw[d] >= view_base->_ghost_offs[d]);
 	assert(view_offs[d] + dims[d] + sw[d] <=
 	       view_base->_ghost_offs[d] + view_base->_ghost_dims[d]);
-	fld->nd.stride[d] = view_base->nd.stride[d];
+	fld->nd.acc.stride[d] = view_base->nd.acc.stride[d];
 	fld->nd.start[d] = view_base->nd.start[d] - view_offs[d] + offs[d];
       } else {
-	fld->nd.stride[d] = 0;
+	fld->nd.acc.stride[d] = 0;
 	fld->nd.start[d] = 0;
       }
     }
     mrc_ndarray_setup_finish(&fld->nd);
   }
+
+  fld->_nd_acc = *mrc_ndarray_access(&fld->nd);
 }
 
 
