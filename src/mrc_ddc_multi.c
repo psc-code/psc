@@ -593,7 +593,7 @@ mrc_ddc_multi_fill_ghosts_fld(struct mrc_ddc *ddc, int mb, int me,
 				 fld->_sw.vals);
   }
 
-  ddc->size_of_type = fld->_size_of_type;
+  ddc->size_of_type = fld->nd.size_of_type;
   mrc_ddc_multi_set_mpi_type(ddc);
   mrc_ddc_multi_alloc_buffers(ddc, sub->fill_ghosts[nr_ghosts], me - mb);
   ddc_run(ddc, sub->fill_ghosts[nr_ghosts], mb, me, fld,

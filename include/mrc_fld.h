@@ -70,10 +70,12 @@ struct mrc_fld_patch {
 // contiguous, but it's accessed through a known stride per dimension
 
 struct mrc_ndarray {
+  // state
   void *arr_off; //< same as _arr, but shifted by precalculated offset for faster/simpler access
   void *arr; //< pointer to the actual data
   int stride[MRC_FLD_MAXDIMS];
   int start[MRC_FLD_MAXDIMS];
+  int size_of_type;
 };
 
 struct mrc_fld {
@@ -96,7 +98,6 @@ struct mrc_fld {
   int _ghost_offs[MRC_FLD_MAXDIMS];
   int _ghost_dims[MRC_FLD_MAXDIMS];
   int _data_type;
-  int _size_of_type;
   int _len;
   struct mrc_vec *_vec; //< underlying mrc_vec that manages memory alloc/free (could be petsc)
   struct mrc_fld *_view_base; //< if this mrc_fld is a view, this is the field it's derived from

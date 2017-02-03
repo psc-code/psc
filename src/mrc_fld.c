@@ -19,6 +19,20 @@
 #endif
 
 // ======================================================================
+// mrc_ndarray
+
+void
+mrc_ndarray_setup(struct mrc_ndarray *nd)
+{
+  // set up arr_off
+  int off = 0;
+  for (int d = 0; d < MRC_FLD_MAXDIMS; d++) {
+    off += nd->start[d] * nd->stride[d];
+  }
+  nd->arr_off = nd->arr - off * nd->size_of_type;
+}
+
+// ======================================================================
 // mrc_fld
 
 #define mrc_fld_ops(fld) ((struct mrc_fld_ops *) (fld)->obj.ops)
@@ -155,12 +169,7 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
     }
   }
 
-  // set up _arr_off
-  int off = 0;
-  for (int d = 0; d < MRC_FLD_MAXDIMS; d++) {
-    off += fld->nd.start[d] * fld->nd.stride[d];
-  }
-  fld->nd.arr_off = fld->nd.arr - off * fld->_size_of_type;
+  mrc_ndarray_setup(&fld->nd);
 }
 
 
@@ -1117,7 +1126,7 @@ mrc_fld_int_ddc_copy_to_buf(struct mrc_fld *fld, int mb, int me, int p,
   mrc_fld_##NAME##_create(struct mrc_fld *fld)				\
   {									\
     fld->_data_type = MRC_NT_##TYPE;					\
-    fld->_size_of_type = sizeof(type);					\
+    fld->nd.size_of_type = sizeof(type);				\
     fld->_aos = IS_AOS;							\
   }									\
   static void								\
@@ -1204,7 +1213,7 @@ static struct param mrc_fld_descr[] = {
   { "nr_comps"        , VAR(_nr_comps)       , PARAM_INT(1)          },
   { "nr_ghosts"       , VAR(_nr_ghosts)      , PARAM_INT(0)          },
 
-  { "size_of_type"    , VAR(_size_of_type)   , MRC_VAR_INT           },
+  { "size_of_type"    , VAR(nd.size_of_type) , MRC_VAR_INT           },
   { "len"             , VAR(_len)            , MRC_VAR_INT           },
   { "vec"             , VAR(_vec)            , MRC_VAR_OBJ(mrc_vec)  },
   { "aos"             , VAR(_aos)            , PARAM_BOOL(false)     },

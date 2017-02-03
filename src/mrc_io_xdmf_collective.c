@@ -922,7 +922,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
       continue;
     }
 
-    ctx->send_bufs[writer] = malloc(buf_sizes[writer] * m3->_size_of_type);
+    ctx->send_bufs[writer] = malloc(buf_sizes[writer] * m3->nd.size_of_type);
     buf_sizes[writer] = 0;
 
     // fill buf per writer
@@ -1055,7 +1055,7 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
     }
 
     // alloc aggregate recv buffers
-    ctx->recv_bufs[rank] = malloc(buf_sizes[rank] * m3->_size_of_type);
+    ctx->recv_bufs[rank] = malloc(buf_sizes[rank] * m3->nd.size_of_type);
  
    MPI_Datatype mpi_dtype;
     switch (m3->_data_type) {
