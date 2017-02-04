@@ -169,7 +169,7 @@ MAKE_MRC_NDARRAY_TYPE(int, int, INT)
 int
 mrc_fld_data_type(struct mrc_fld *fld)
 {
-  return fld->_data_type;
+  return fld->_nd->data_type;
 }
 
 // ----------------------------------------------------------------------
@@ -1261,7 +1261,6 @@ mrc_fld_int_ddc_copy_to_buf(struct mrc_fld *fld, int mb, int me, int p,
   static void								\
   mrc_fld_##NAME##_create(struct mrc_fld *fld)				\
   {									\
-    fld->_data_type = MRC_NT_##TYPE;					\
     fld->_aos = IS_AOS;							\
   }									\
   static void								\
