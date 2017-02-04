@@ -98,14 +98,22 @@ mrc_ndarray_access(struct mrc_ndarray *nd)
 }
 
 // ----------------------------------------------------------------------
-// mrc_ndarray class description
+// mrc_ndarray_init
 
-static struct mrc_param_select mrc_datatype_descr[] = {
-  { .val = MRC_NT_FLOAT    , .str = "float"     },
-  { .val = MRC_NT_DOUBLE   , .str = "double"    },
-  { .val = MRC_NT_INT      , .str = "int"       },
-  {},
-};
+static struct mrc_ndarray_ops mrc_ndarray_float_ops;
+static struct mrc_ndarray_ops mrc_ndarray_double_ops;
+static struct mrc_ndarray_ops mrc_ndarray_int_ops;
+
+static void
+mrc_ndarray_init()
+{
+  mrc_class_register_subclass(&mrc_class_mrc_ndarray, &mrc_ndarray_float_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_ndarray, &mrc_ndarray_double_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_ndarray, &mrc_ndarray_int_ops);
+}
+
+// ----------------------------------------------------------------------
+// mrc_ndarray class description
 
 #define VAR(x) (void *)offsetof(struct mrc_ndarray, x)
 static struct param mrc_ndarray_descr[] = {
@@ -114,9 +122,8 @@ static struct param mrc_ndarray_descr[] = {
   { "perm"            , VAR(perm)           , PARAM_INT_ARRAY(0, 0) },
   { "view_base"       , VAR(view_base)      , PARAM_OBJ(mrc_ndarray)},
   { "view_offs"       , VAR(view_offs)      , PARAM_INT_ARRAY(0, 0) },
-  { "data_type"       , VAR(data_type)      , PARAM_SELECT(MRC_NT_FLOAT,
-							   mrc_datatype_descr) },
 
+  { "data_type"       , VAR(data_type)      , MRC_VAR_INT           },
   { "size_of_type"    , VAR(size_of_type)   , MRC_VAR_INT           },
   {},
 };
@@ -126,9 +133,30 @@ struct mrc_class_mrc_ndarray mrc_class_mrc_ndarray = {
   .name         = "mrc_ndarray",
   .size         = sizeof(struct mrc_ndarray),
   .param_descr  = mrc_ndarray_descr,
+  .init         = mrc_ndarray_init,
   .setup        = _mrc_ndarray_setup,
 };
 
+// ----------------------------------------------------------------------
+// mrc_ndarray: float, double, int subclasses
+
+#define MAKE_MRC_NDARRAY_TYPE(NAME, type, TYPE)				\
+									\
+  static void								\
+  mrc_ndarray_##NAME##_create(struct mrc_ndarray *nd)			\
+  {									\
+    nd->data_type = MRC_NT_##TYPE;					\
+    nd->size_of_type = sizeof(type);					\
+  }									\
+  									\
+  static struct mrc_ndarray_ops mrc_ndarray_##NAME##_ops = {		\
+    .name                  = #NAME,					\
+    .create                = mrc_ndarray_##NAME##_create,		\
+  };									\
+
+MAKE_MRC_NDARRAY_TYPE(float, float, FLOAT)
+MAKE_MRC_NDARRAY_TYPE(double, double, DOUBLE)
+MAKE_MRC_NDARRAY_TYPE(int, int, INT)
 
 // ======================================================================
 // mrc_fld
@@ -247,7 +275,7 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
 
   nd->arr = mrc_vec_get_array(fld->_vec);
   assert(nd->arr);
-  mrc_ndarray_set_param_int(fld->_nd, "data_type", fld->_data_type);
+  mrc_ndarray_set_type(fld->_nd, mrc_fld_ops(fld)->vec_type);
   mrc_ndarray_set_param_int_array(nd, "dims", n_dims, fld->_ghost_dims);
   mrc_ndarray_set_param_int_array(nd, "offs", n_dims, fld->_ghost_offs);
   mrc_ndarray_set_param_int_array(nd, "perm", n_dims, perm);

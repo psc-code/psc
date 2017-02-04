@@ -108,6 +108,10 @@ struct mrc_ndarray {
   int data_type;
 };
 
+struct mrc_ndarray_ops {
+  MRC_SUBCLASS_OPS(struct mrc_ndarray);
+};
+
 MRC_CLASS_DECLARE(mrc_ndarray, struct mrc_ndarray);
 
 // ----------------------------------------------------------------------
