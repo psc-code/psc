@@ -34,20 +34,6 @@ _mrc_ndarray_destroy(struct mrc_ndarray *nd)
 }
 
 // ----------------------------------------------------------------------
-// mrc_ndarray_setup_finish
-
-static void
-mrc_ndarray_setup_finish(struct mrc_ndarray *nd)
-{
-  // set up arr_off
-  int off = 0;
-  for (int d = 0; d < MRC_FLD_MAXDIMS; d++) {
-    off += nd->start[d] * nd->acc.stride[d];
-  }
-  nd->acc.arr_off = nd->arr - off * nd->size_of_type;
-}
-
-// ----------------------------------------------------------------------
 // _mrc_ndarray_setup
 
 static void
@@ -94,7 +80,12 @@ _mrc_ndarray_setup(struct mrc_ndarray *nd)
     }
   }
 
-  mrc_ndarray_setup_finish(nd);
+  // set up arr_off
+  int off = 0;
+  for (int d = 0; d < MRC_FLD_MAXDIMS; d++) {
+    off += nd->start[d] * nd->acc.stride[d];
+  }
+  nd->acc.arr_off = nd->arr - off * nd->size_of_type;
 }
 
 // ----------------------------------------------------------------------
