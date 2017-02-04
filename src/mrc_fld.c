@@ -92,6 +92,11 @@ _mrc_ndarray_setup(struct mrc_ndarray *nd)
 
   int *dims = nd->dims.vals, *offs = nd->offs.vals, *perm = nd->perm.vals;
 
+  nd->len = 1;
+  for (int d = 0; d < n_dims; d++) {
+    nd->len *= dims[d];
+  }
+
   if (!nd->view_base) {
     // new ndarray
     for (int d = 0; d < n_dims; d++) {
@@ -288,7 +293,6 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
   assert(n_dims == fld->_sw.nr_vals);
   assert(n_dims <= MRC_FLD_MAXDIMS);
 
-  fld->_nd->len = 1;
   for (int d = 0; d < MRC_FLD_MAXDIMS; d++) {
     if (d < n_dims) {
       fld->_ghost_offs[d] = fld->_offs.vals[d] - fld->_sw.vals[d];
@@ -296,7 +300,6 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
     } else {
       fld->_ghost_dims[d] = 1;
     }
-    fld->_nd->len *= fld->_ghost_dims[d];
   }
 
   assert(MRC_FLD_MAXDIMS == 5);
