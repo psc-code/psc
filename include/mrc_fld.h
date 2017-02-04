@@ -137,7 +137,6 @@ struct mrc_fld {
   int _ghost_offs[MRC_FLD_MAXDIMS];
   int _ghost_dims[MRC_FLD_MAXDIMS];
   int _data_type;
-  int _size_of_type; // FIXME, redundant, should go away
   int _len;
   struct mrc_vec *_vec; //< underlying mrc_vec that manages memory alloc/free (could be petsc)
   struct mrc_fld *_view_base; //< if this mrc_fld is a view, this is the field it's derived from

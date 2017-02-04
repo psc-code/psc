@@ -1035,7 +1035,7 @@ mrc_fld_set_petsc_vec(struct mrc_fld *fld, Vec petsc_vec)
   if ( strcmp(mrc_fld_ops(fld)->vec_type, "petsc")!=0 ){
     fprintf(stderr, "Cannot set petsc vec for fld type %s", mrc_fld_type(fld));
     fprintf(stderr, " (petsc element size: %zu B, mrc_fld element size: %d B)\n",
-	    sizeof(PetscScalar), fld->_size_of_type);
+	    sizeof(PetscScalar), fld->_nd->size_of_type);
     assert(0);
   }
   void (*vec_set_petsc)( struct mrc_vec *, Vec); 
@@ -1225,7 +1225,6 @@ mrc_fld_int_ddc_copy_to_buf(struct mrc_fld *fld, int mb, int me, int p,
   mrc_fld_##NAME##_create(struct mrc_fld *fld)				\
   {									\
     fld->_data_type = MRC_NT_##TYPE;					\
-    fld->_size_of_type = sizeof(type);					\
     fld->_aos = IS_AOS;							\
   }									\
   static void								\
@@ -1312,7 +1311,6 @@ static struct param mrc_fld_descr[] = {
   { "nr_comps"        , VAR(_nr_comps)       , PARAM_INT(1)          },
   { "nr_ghosts"       , VAR(_nr_ghosts)      , PARAM_INT(0)          },
 
-  { "size_of_type"    , VAR(_size_of_type)   , MRC_VAR_INT           },
   { "len"             , VAR(_len)            , MRC_VAR_INT           },
   { "vec"             , VAR(_vec)            , MRC_VAR_OBJ(mrc_vec)  },
   { "nd"              , VAR(_nd)             , MRC_VAR_OBJ(mrc_ndarray) },
