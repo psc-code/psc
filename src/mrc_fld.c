@@ -75,10 +75,11 @@ mrc_ndarray_access(struct mrc_ndarray *nd)
 
 #define VAR(x) (void *)offsetof(struct mrc_ndarray, x)
 static struct param mrc_ndarray_descr[] = {
-  { "dims"            , VAR(dims)           , PARAM_INT_ARRAY(0, 0) },
   { "offs"            , VAR(offs)           , PARAM_INT_ARRAY(0, 0) },
+  { "dims"            , VAR(dims)           , PARAM_INT_ARRAY(0, 0) },
   { "perm"            , VAR(perm)           , PARAM_INT_ARRAY(0, 0) },
 
+  { "size_of_type"    , VAR(size_of_type)   , MRC_VAR_INT           },
   {},
 };
 #undef VAR
@@ -176,11 +177,12 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
   assert(vec_type);
   dispatch_vec_type(fld);
   mrc_vec_set_param_int(fld->_vec, "len", fld->_len);
-  mrc_fld_setup_member_objs(fld); // sets up our .vec member
 
-  struct mrc_ndarray *nd = mrc_ndarray_create(mrc_fld_comm(fld));
-  fld->_nd = nd;
+  //mrc_fld_setup_member_objs(fld); // sets up our .vec member
 
+  mrc_vec_setup(fld->_vec);
+
+  struct mrc_ndarray *nd = fld->_nd;
   nd->size_of_type = fld->_size_of_type;
   nd->arr = mrc_vec_get_array(fld->_vec);
   assert(nd->arr);
@@ -383,11 +385,12 @@ _mrc_fld_read(struct mrc_fld *fld, struct mrc_io *io)
   if (fld->_sw.nr_vals == 0) {
     mrc_fld_set_param_int_array(fld, "sw", fld->_dims.nr_vals, NULL);
   }
-
   // instead of reading back fld->_vec (which doesn't contain anything useful,
   // anyway, since mrc_fld saves/restores the data rather than mrc_vec),
   // we make a new one, so at least we're sure that with_array won't be honored
+  // same for mrc_ndarray (for now, FIXME)
   fld->_vec = mrc_vec_create(mrc_fld_comm(fld));
+  fld->_nd = mrc_ndarray_create(mrc_fld_comm(fld));
   mrc_fld_setup_vec(fld);
   // FIXME: Hacky, but we are basically set up now, so we should advertise it
   fld->obj.is_setup = true;
@@ -1278,6 +1281,7 @@ static struct param mrc_fld_descr[] = {
   { "size_of_type"    , VAR(_size_of_type)   , MRC_VAR_INT           },
   { "len"             , VAR(_len)            , MRC_VAR_INT           },
   { "vec"             , VAR(_vec)            , MRC_VAR_OBJ(mrc_vec)  },
+  { "nd"              , VAR(_nd)             , MRC_VAR_OBJ(mrc_ndarray) },
   { "aos"             , VAR(_aos)            , PARAM_BOOL(false)     },
   { "c_order"         , VAR(_c_order)        , PARAM_BOOL(false)     },
   {},
