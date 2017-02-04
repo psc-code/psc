@@ -100,6 +100,11 @@ struct mrc_ndarray {
   struct mrc_param_int_array dims;
   struct mrc_param_int_array offs;
   struct mrc_param_int_array perm;
+
+  // if view_base is set, this mrc_ndarray will be a view
+  struct mrc_ndarray *view_base; 
+  // the view will be of size offs/dims as usual above, but shifted to start at view_offs in the base nmrc_darray
+  struct mrc_param_int_array view_offs;
 };
 
 MRC_CLASS_DECLARE(mrc_ndarray, struct mrc_ndarray);

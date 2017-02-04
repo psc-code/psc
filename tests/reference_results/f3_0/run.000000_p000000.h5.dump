@@ -3002,6 +3002,18 @@ GROUP "/" {
          (0): 4
          }
       }
+      ATTRIBUTE "view_base" {
+         DATATYPE  H5T_STRING {
+            STRSIZE 7;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+         DATA {
+         (0): "(NULL)"
+         }
+      }
    }
    GROUP "mrc_ndarray-uid" {
       ATTRIBUTE "dims" {
@@ -3063,6 +3075,18 @@ GROUP "/" {
          (0): 4
          }
       }
+      ATTRIBUTE "view_base" {
+         DATATYPE  H5T_STRING {
+            STRSIZE 7;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+         DATA {
+         (0): "(NULL)"
+         }
+      }
    }
    GROUP "mrc_ndarray-uid" {
       ATTRIBUTE "dims" {
@@ -3124,126 +3148,16 @@ GROUP "/" {
          (0): 4
          }
       }
-   }
-   GROUP "mrc_ndarray-uid" {
-      ATTRIBUTE "dims" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-         DATA {
-         (0): 32, 1, 1
-         }
-      }
-      ATTRIBUTE "mrc_obj_class" {
+      ATTRIBUTE "view_base" {
          DATATYPE  H5T_STRING {
-            STRSIZE 12;
+            STRSIZE 7;
             STRPAD H5T_STR_NULLTERM;
             CSET H5T_CSET_ASCII;
             CTYPE H5T_C_S1;
          }
          DATASPACE  SCALAR
          DATA {
-         (0): "mrc_ndarray"
-         }
-      }
-      ATTRIBUTE "mrc_obj_dict_count" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 0
-         }
-      }
-      ATTRIBUTE "mrc_obj_name" {
-         DATATYPE  H5T_STRING {
-            STRSIZE 12;
-            STRPAD H5T_STR_NULLTERM;
-            CSET H5T_CSET_ASCII;
-            CTYPE H5T_C_S1;
-         }
-         DATASPACE  SCALAR
-         DATA {
-         (0): "mrc_ndarray"
-         }
-      }
-      ATTRIBUTE "offs" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-         DATA {
-         (0): 0, 0, 0
-         }
-      }
-      ATTRIBUTE "perm" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-         DATA {
-         (0): 0, 1, 2
-         }
-      }
-      ATTRIBUTE "size_of_type" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 8
-         }
-      }
-   }
-   GROUP "mrc_ndarray-uid" {
-      ATTRIBUTE "dims" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-         DATA {
-         (0): 32, 1, 1
-         }
-      }
-      ATTRIBUTE "mrc_obj_class" {
-         DATATYPE  H5T_STRING {
-            STRSIZE 12;
-            STRPAD H5T_STR_NULLTERM;
-            CSET H5T_CSET_ASCII;
-            CTYPE H5T_C_S1;
-         }
-         DATASPACE  SCALAR
-         DATA {
-         (0): "mrc_ndarray"
-         }
-      }
-      ATTRIBUTE "mrc_obj_dict_count" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 0
-         }
-      }
-      ATTRIBUTE "mrc_obj_name" {
-         DATATYPE  H5T_STRING {
-            STRSIZE 12;
-            STRPAD H5T_STR_NULLTERM;
-            CSET H5T_CSET_ASCII;
-            CTYPE H5T_C_S1;
-         }
-         DATASPACE  SCALAR
-         DATA {
-         (0): "mrc_ndarray"
-         }
-      }
-      ATTRIBUTE "offs" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-         DATA {
-         (0): 0, 0, 0
-         }
-      }
-      ATTRIBUTE "perm" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-         DATA {
-         (0): 0, 1, 2
-         }
-      }
-      ATTRIBUTE "size_of_type" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 8
+         (0): "(NULL)"
          }
       }
    }
@@ -3307,6 +3221,164 @@ GROUP "/" {
          (0): 8
          }
       }
+      ATTRIBUTE "view_base" {
+         DATATYPE  H5T_STRING {
+            STRSIZE 7;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+         DATA {
+         (0): "(NULL)"
+         }
+      }
+   }
+   GROUP "mrc_ndarray-uid" {
+      ATTRIBUTE "dims" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+         DATA {
+         (0): 32, 1, 1
+         }
+      }
+      ATTRIBUTE "mrc_obj_class" {
+         DATATYPE  H5T_STRING {
+            STRSIZE 12;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+         DATA {
+         (0): "mrc_ndarray"
+         }
+      }
+      ATTRIBUTE "mrc_obj_dict_count" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
+         }
+      }
+      ATTRIBUTE "mrc_obj_name" {
+         DATATYPE  H5T_STRING {
+            STRSIZE 12;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+         DATA {
+         (0): "mrc_ndarray"
+         }
+      }
+      ATTRIBUTE "offs" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+         DATA {
+         (0): 0, 0, 0
+         }
+      }
+      ATTRIBUTE "perm" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+         DATA {
+         (0): 0, 1, 2
+         }
+      }
+      ATTRIBUTE "size_of_type" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 8
+         }
+      }
+      ATTRIBUTE "view_base" {
+         DATATYPE  H5T_STRING {
+            STRSIZE 7;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+         DATA {
+         (0): "(NULL)"
+         }
+      }
+   }
+   GROUP "mrc_ndarray-uid" {
+      ATTRIBUTE "dims" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+         DATA {
+         (0): 32, 1, 1
+         }
+      }
+      ATTRIBUTE "mrc_obj_class" {
+         DATATYPE  H5T_STRING {
+            STRSIZE 12;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+         DATA {
+         (0): "mrc_ndarray"
+         }
+      }
+      ATTRIBUTE "mrc_obj_dict_count" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
+         }
+      }
+      ATTRIBUTE "mrc_obj_name" {
+         DATATYPE  H5T_STRING {
+            STRSIZE 12;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+         DATA {
+         (0): "mrc_ndarray"
+         }
+      }
+      ATTRIBUTE "offs" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+         DATA {
+         (0): 0, 0, 0
+         }
+      }
+      ATTRIBUTE "perm" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+         DATA {
+         (0): 0, 1, 2
+         }
+      }
+      ATTRIBUTE "size_of_type" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 8
+         }
+      }
+      ATTRIBUTE "view_base" {
+         DATATYPE  H5T_STRING {
+            STRSIZE 7;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+         DATA {
+         (0): "(NULL)"
+         }
+      }
    }
    GROUP "mrc_ndarray-uid" {
       ATTRIBUTE "dims" {
@@ -3368,6 +3440,18 @@ GROUP "/" {
          (0): 8
          }
       }
+      ATTRIBUTE "view_base" {
+         DATATYPE  H5T_STRING {
+            STRSIZE 7;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+         DATA {
+         (0): "(NULL)"
+         }
+      }
    }
    GROUP "mrc_ndarray-uid" {
       ATTRIBUTE "dims" {
@@ -3429,6 +3513,18 @@ GROUP "/" {
          (0): 8
          }
       }
+      ATTRIBUTE "view_base" {
+         DATATYPE  H5T_STRING {
+            STRSIZE 7;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+         DATA {
+         (0): "(NULL)"
+         }
+      }
    }
    GROUP "mrc_ndarray-uid" {
       ATTRIBUTE "dims" {
@@ -3488,6 +3584,18 @@ GROUP "/" {
          DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
          DATA {
          (0): 8
+         }
+      }
+      ATTRIBUTE "view_base" {
+         DATATYPE  H5T_STRING {
+            STRSIZE 7;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+         DATA {
+         (0): "(NULL)"
          }
       }
    }
@@ -3551,6 +3659,18 @@ GROUP "/" {
          (0): 4
          }
       }
+      ATTRIBUTE "view_base" {
+         DATATYPE  H5T_STRING {
+            STRSIZE 7;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+         DATA {
+         (0): "(NULL)"
+         }
+      }
    }
    GROUP "mrc_ndarray-uid" {
       ATTRIBUTE "dims" {
@@ -3612,6 +3732,18 @@ GROUP "/" {
          (0): 4
          }
       }
+      ATTRIBUTE "view_base" {
+         DATATYPE  H5T_STRING {
+            STRSIZE 7;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+         DATA {
+         (0): "(NULL)"
+         }
+      }
    }
    GROUP "mrc_ndarray-uid" {
       ATTRIBUTE "dims" {
@@ -3671,6 +3803,18 @@ GROUP "/" {
          DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
          DATA {
          (0): 4
+         }
+      }
+      ATTRIBUTE "view_base" {
+         DATATYPE  H5T_STRING {
+            STRSIZE 7;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+         DATA {
+         (0): "(NULL)"
          }
       }
    }
@@ -3732,6 +3876,18 @@ GROUP "/" {
          DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
          DATA {
          (0): 4
+         }
+      }
+      ATTRIBUTE "view_base" {
+         DATATYPE  H5T_STRING {
+            STRSIZE 7;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+         DATA {
+         (0): "(NULL)"
          }
       }
    }
