@@ -35,6 +35,7 @@ libmrc_la_SOURCES = \
 	mrc_mat_csr_mpi.c \
 	mrc_mat_mcsr.c \
 	mrc_mat_mcsr_mpi.c \
+	mrc_ndarray.c \
 	mrc_fld.c \
 	mrc_fld_float.c \
 	mrc_fld_double.c \
