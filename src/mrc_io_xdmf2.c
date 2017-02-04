@@ -161,10 +161,18 @@ xdmf_write_attr(struct mrc_io *io, const char *path, int type,
   case PT_DOUBLE3:
     ierr = H5LTset_attribute_double(group, ".", name, pv->u_double3, 3); CE;
     break;
-  case PT_INT_ARRAY:
-    ierr = H5LTset_attribute_int(group, ".", name, pv->u_int_array.vals,
-         pv->u_int_array.nr_vals); CE;
+  case PT_INT_ARRAY: {
+    hsize_t dims = pv->u_int_array.nr_vals;
+    hid_t dataspace_id = H5Screate_simple(1, &dims, NULL); H5_CHK(dataspace_id);
+    hid_t attr_id = H5Acreate(group, name, H5T_NATIVE_INT, dataspace_id,
+			      H5P_DEFAULT, H5P_DEFAULT); H5_CHK(attr_id);
+    if (dims > 0) {
+      ierr = H5Awrite(attr_id, H5T_NATIVE_INT, pv->u_int_array.vals); CE;
+    }
+    ierr = H5Sclose(dataspace_id); CE;
+    ierr = H5Aclose(attr_id); CE;
     break;
+  }
   case PT_PTR:
     break;
   default:
