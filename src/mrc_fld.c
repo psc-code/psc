@@ -41,6 +41,13 @@ mrc_ndarray_setup_finish(struct mrc_ndarray *nd)
 static void
 _mrc_ndarray_setup(struct mrc_ndarray *nd)
 {
+  switch (nd->data_type) {
+  case MRC_NT_FLOAT:  nd->size_of_type = sizeof(float);  break;
+  case MRC_NT_DOUBLE: nd->size_of_type = sizeof(double); break;
+  case MRC_NT_INT:    nd->size_of_type = sizeof(int);    break;
+  default: assert(0);
+  };
+  
   int n_dims = nd->dims.nr_vals;
   assert(n_dims == nd->offs.nr_vals);
   assert(n_dims == nd->perm.nr_vals);
@@ -93,6 +100,13 @@ mrc_ndarray_access(struct mrc_ndarray *nd)
 // ----------------------------------------------------------------------
 // mrc_ndarray class description
 
+static struct mrc_param_select mrc_datatype_descr[] = {
+  { .val = MRC_NT_FLOAT    , .str = "float"     },
+  { .val = MRC_NT_DOUBLE   , .str = "double"    },
+  { .val = MRC_NT_INT      , .str = "int"       },
+  {},
+};
+
 #define VAR(x) (void *)offsetof(struct mrc_ndarray, x)
 static struct param mrc_ndarray_descr[] = {
   { "offs"            , VAR(offs)           , PARAM_INT_ARRAY(0, 0) },
@@ -100,6 +114,8 @@ static struct param mrc_ndarray_descr[] = {
   { "perm"            , VAR(perm)           , PARAM_INT_ARRAY(0, 0) },
   { "view_base"       , VAR(view_base)      , PARAM_OBJ(mrc_ndarray)},
   { "view_offs"       , VAR(view_offs)      , PARAM_INT_ARRAY(0, 0) },
+  { "data_type"       , VAR(data_type)      , PARAM_SELECT(MRC_NT_FLOAT,
+							   mrc_datatype_descr) },
 
   { "size_of_type"    , VAR(size_of_type)   , MRC_VAR_INT           },
   {},
@@ -229,9 +245,9 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
       
   struct mrc_ndarray *nd = fld->_nd;
 
-  nd->size_of_type = fld->_size_of_type;
   nd->arr = mrc_vec_get_array(fld->_vec);
   assert(nd->arr);
+  mrc_ndarray_set_param_int(fld->_nd, "data_type", fld->_data_type);
   mrc_ndarray_set_param_int_array(nd, "dims", n_dims, fld->_ghost_dims);
   mrc_ndarray_set_param_int_array(nd, "offs", n_dims, fld->_ghost_offs);
   mrc_ndarray_set_param_int_array(nd, "perm", n_dims, perm);

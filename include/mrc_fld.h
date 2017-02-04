@@ -105,6 +105,7 @@ struct mrc_ndarray {
   struct mrc_ndarray *view_base; 
   // the view will be of size offs/dims as usual above, but shifted to start at view_offs in the base nmrc_darray
   struct mrc_param_int_array view_offs;
+  int data_type;
 };
 
 MRC_CLASS_DECLARE(mrc_ndarray, struct mrc_ndarray);
