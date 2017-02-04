@@ -1,7 +1,9 @@
 
-#include "mrc_fld.h"
+#include "mrc_ndarray.h"
 
 #include <mrc_vec.h>
+
+#include <assert.h>
 
 // Don't like dirtying main libmrc code in this way
 #ifdef HAVE_PETSC
@@ -77,7 +79,7 @@ _mrc_ndarray_setup(struct mrc_ndarray *nd)
   int n_dims = nd->dims.nr_vals;
   assert(n_dims == nd->offs.nr_vals);
   assert(n_dims == nd->perm.nr_vals);
-  assert(n_dims <= MRC_FLD_MAXDIMS);
+  assert(n_dims <= MRC_NDARRAY_MAXDIMS);
   nd->n_dims = n_dims;
 
   int *dims = nd->dims.vals, *offs = nd->offs.vals, *perm = nd->perm.vals;
@@ -127,7 +129,7 @@ _mrc_ndarray_setup(struct mrc_ndarray *nd)
 
   // set up arr_off
   int off = 0;
-  for (int d = 0; d < MRC_FLD_MAXDIMS; d++) {
+  for (int d = 0; d < n_dims; d++) {
     off += nd->start[d] * nd->acc.stride[d];
   }
   nd->acc.arr_off = nd->arr - off * nd->size_of_type;
