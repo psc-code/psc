@@ -34,6 +34,44 @@ _mrc_ndarray_destroy(struct mrc_ndarray *nd)
 }
 
 // ----------------------------------------------------------------------
+// get_vec_type
+//
+// helper to get type for our vec member
+
+static const char *
+get_vec_type(struct mrc_ndarray *nd)
+{
+  const char *vec_type;
+  switch (nd->data_type) {
+  case MRC_NT_FLOAT:  vec_type = "float";  break;
+  case MRC_NT_DOUBLE: vec_type = "double"; break;
+  case MRC_NT_INT:    vec_type = "int";    break;
+  default: assert(0);
+  }
+
+  // This dispatch is still ugly, and maybe we should just, e.g., have
+  // mrc_vec "float"/"double" use the petsc implementation as appropriate
+#if defined(PETSC_USE_REAL_SINGLE) && !defined(PETSC_USE_COMPLEX)
+  if (nd->data_type == MRN_NT_FLOAT) {
+    vec_type = "petsc";
+  }
+#endif
+#if defined(PETSC_USE_REAL_DOUBLE) && !defined(PETSC_USE_COMPLEX)
+  if (nd->data_type == MRN_NT_DOUBLE) {
+    vec_type = "petsc";
+  }
+#endif
+
+  return vec_type;
+
+  // FIXME? we don't have this info here. The call could be done from mrc_fld,
+  // but I'm not so sure it's really needed in the first place.
+  /* if (fld->_aos && (strcmp(vec_type, "petsc")==0)){ */
+  /*   mrc_vec_set_param_int(fld->_nd->vec, "block_size", fld->_nr_comps); */
+  /* }   */
+}
+
+// ----------------------------------------------------------------------
 // _mrc_ndarray_setup
 
 static void
@@ -80,6 +118,11 @@ _mrc_ndarray_setup(struct mrc_ndarray *nd)
     }
   }
 
+  if (nd->view_base) {
+    mrc_vec_set_array(nd->vec, nd->view_base->arr);
+  }
+
+  mrc_vec_set_type(nd->vec, get_vec_type(nd));
   mrc_vec_set_param_int(nd->vec, "len", nd->len);
   mrc_vec_setup(nd->vec);
 
@@ -234,30 +277,6 @@ _mrc_fld_destroy(struct mrc_fld *fld)
 }
 
 
-static inline void
-dispatch_vec_type(struct mrc_fld *fld)
-{
-  const char *vec_type = mrc_fld_ops(fld)->vec_type;
-  // The dispatch is actually slightly prettier with the ops->vec_type
-  // method, but still ugly
-#if defined(PETSC_USE_REAL_SINGLE) && !defined(PETSC_USE_COMPLEX)
-  if (strcmp(vec_type, "float")==0) {
-    vec_type = "petsc";
-    mrc_fld_ops(fld)->vec_type = "petsc";
-  }
-#endif
-#if defined(PETSC_USE_REAL_DOUBLE) && !defined(PETSC_USE_COMPLEX)
-  if (strcmp(vec_type, "double")==0) {
-    vec_type = "petsc";
-    mrc_fld_ops(fld)->vec_type = "petsc";
-  }
-#endif
-  mrc_vec_set_type(fld->_nd->vec, vec_type);
-  if (fld->_aos && (strcmp(vec_type, "petsc")==0)){
-    mrc_vec_set_param_int(fld->_nd->vec, "block_size", fld->_nr_comps);
-  }  
-}
-
 // ----------------------------------------------------------------------
 // mrc_fld_setup_vec
 
@@ -279,14 +298,6 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
     }
     fld->_nd->len *= fld->_ghost_dims[d];
   }
-
-  if (fld->_view_base) {
-    mrc_fld_set_array(fld, fld->_view_base->_nd->arr);
-  }
-
-  const char *vec_type = mrc_fld_ops(fld)->vec_type;
-  assert(vec_type);
-  dispatch_vec_type(fld);
 
   assert(MRC_FLD_MAXDIMS == 5);
   int *perm;
@@ -312,7 +323,7 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
       
   struct mrc_ndarray *nd = fld->_nd;
 
-  mrc_ndarray_set_type(fld->_nd, mrc_fld_ops(fld)->vec_type);
+  mrc_ndarray_set_type(nd, mrc_fld_ops(fld)->vec_type);
   mrc_ndarray_set_param_int_array(nd, "dims", n_dims, fld->_ghost_dims);
   mrc_ndarray_set_param_int_array(nd, "offs", n_dims, fld->_ghost_offs);
   mrc_ndarray_set_param_int_array(nd, "perm", n_dims, perm);
