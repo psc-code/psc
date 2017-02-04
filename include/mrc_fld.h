@@ -167,6 +167,7 @@ const int *mrc_fld_dims(struct mrc_fld *x);
 const int *mrc_fld_sw(struct mrc_fld *x);
 const int *mrc_fld_ghost_offs(struct mrc_fld *x);
 const int *mrc_fld_ghost_dims(struct mrc_fld *x);
+int mrc_fld_data_type(struct mrc_fld *fld);
 struct mrc_fld *mrc_fld_duplicate(struct mrc_fld *fld);
 struct mrc_fld *mrc_fld_create_view(struct mrc_fld *fld, int nr_dims, int *dims, int *offs);
 struct mrc_fld *mrc_fld_create_view_ext(struct mrc_fld *fld, int nr_dims, int *dims, int *offs, int *sw,
@@ -235,9 +236,9 @@ mrc_fld_spatial_sw(struct mrc_fld *x)
 
 #define MRC_FLD(fld, type, i0,i1,i2,i3,i4)				\
   (*({									\
-      if (strcmp(#type, "float") == 0) assert(fld->_data_type == MRC_NT_FLOAT);	\
-      if (strcmp(#type, "double") == 0) assert(fld->_data_type == MRC_NT_DOUBLE); \
-      if (strcmp(#type, "int") == 0) assert(fld->_data_type == MRC_NT_INT); \
+      if (strcmp(#type, "float") == 0) assert(mrc_fld_data_type(fld) == MRC_NT_FLOAT); \
+      if (strcmp(#type, "double") == 0) assert(mrc_fld_data_type(fld) == MRC_NT_DOUBLE); \
+      if (strcmp(#type, "int") == 0) assert(mrc_fld_data_type(fld) == MRC_NT_INT); \
       assert(i0 >= (fld)->_ghost_offs[0] && i0 < (fld)->_ghost_offs[0] + (fld)->_ghost_dims[0]); \
       assert(i1 >= (fld)->_ghost_offs[1] && i1 < (fld)->_ghost_offs[1] + (fld)->_ghost_dims[1]); \
       assert(i2 >= (fld)->_ghost_offs[2] && i2 < (fld)->_ghost_offs[2] + (fld)->_ghost_dims[2]); \

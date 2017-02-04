@@ -1154,7 +1154,7 @@ ds_xdmf_read_m1(struct mrc_io *io, const char *path, struct mrc_fld *m1)
 static hid_t
 get_h5_datatype(struct mrc_fld *fld)
 {
-  switch (fld->_data_type) {
+  switch (mrc_fld_data_type(fld)) {
   case MRC_NT_FLOAT : return H5T_NATIVE_FLOAT;
   case MRC_NT_DOUBLE: return H5T_NATIVE_DOUBLE;
   case MRC_NT_INT   : return H5T_NATIVE_INT;

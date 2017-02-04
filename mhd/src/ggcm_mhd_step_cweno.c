@@ -62,7 +62,7 @@ ggcm_mhd_step_cweno_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
 
   calc_ct_rhs(mhd, rhs, flux);
   struct mrc_fld *r = mrc_fld_get_as(rhs, "float");
-  assert(mhd->fld->_data_type == MRC_NT_FLOAT);
+  assert(mrc_fld_data_type(mhd->fld) == MRC_NT_FLOAT);
   struct mrc_fld *f = mrc_fld_get_as(mhd->fld, mrc_fld_type(mhd->fld));
 
   mrc_fld_foreach(f, ix,iy,iz, 1, 1) {

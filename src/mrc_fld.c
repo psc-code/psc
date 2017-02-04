@@ -164,6 +164,15 @@ MAKE_MRC_NDARRAY_TYPE(int, int, INT)
 #define mrc_fld_ops(fld) ((struct mrc_fld_ops *) (fld)->obj.ops)
 
 // ----------------------------------------------------------------------
+// mrc_fld_data_type
+
+int
+mrc_fld_data_type(struct mrc_fld *fld)
+{
+  return fld->_data_type;
+}
+
+// ----------------------------------------------------------------------
 // mrc_fld_destroy
 
 static void
@@ -690,7 +699,7 @@ mrc_fld_norm(struct mrc_fld *fld)
     return res;
   }
   struct mrc_fld *x = mrc_fld_get_as(fld, "float");  
-  assert(x->_data_type == MRC_NT_FLOAT);
+  assert(mrc_fld_data_type(x) == MRC_NT_FLOAT);
   int nr_comps = mrc_fld_nr_comps(x);
   
   if (x->_dims.nr_vals == 4) {
@@ -723,7 +732,7 @@ mrc_fld_norm(struct mrc_fld *fld)
 float
 mrc_fld_norm_comp(struct mrc_fld *x, int m)
 {
-  assert(x->_data_type == MRC_NT_FLOAT);
+  assert(mrc_fld_data_type(x) == MRC_NT_FLOAT);
   float res = 0.;
   if (x->_dims.nr_vals == 3) {
     mrc_m1_foreach_patch(x, p) {
@@ -1139,8 +1148,8 @@ static void
 mrc_fld_float_copy_from_double(struct mrc_fld *to, struct mrc_fld *from)
 {
   assert(mrc_fld_same_shape(to, from));
-  assert(to->_data_type == MRC_NT_FLOAT);
-  assert(from->_data_type == MRC_NT_DOUBLE);
+  assert(mrc_fld_data_type(to) == MRC_NT_FLOAT);
+  assert(mrc_fld_data_type(from) == MRC_NT_DOUBLE);
 
   if (to->_dims.nr_vals == 5) {
     for (int i4 = to->_ghost_offs[4]; i4 < to->_ghost_offs[4] + to->_ghost_dims[4]; i4++) {
@@ -1176,8 +1185,8 @@ static void
 mrc_fld_float_copy_to_double(struct mrc_fld *from, struct mrc_fld *to)
 {
   assert(mrc_fld_same_shape(to, from));
-  assert(to->_data_type == MRC_NT_DOUBLE);
-  assert(from->_data_type == MRC_NT_FLOAT);
+  assert(mrc_fld_data_type(to) == MRC_NT_DOUBLE);
+  assert(mrc_fld_data_type(from) == MRC_NT_FLOAT);
 
   if (to->_dims.nr_vals == 5) {
     for (int i4 = to->_ghost_offs[4]; i4 < to->_ghost_offs[4] + to->_ghost_dims[4]; i4++) {

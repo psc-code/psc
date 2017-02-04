@@ -343,7 +343,7 @@ hdf5_parallel_write_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld
   hid_t memspace = H5Screate_simple(nr_file_dims, mdims, NULL);
 
   hid_t datatype;
-  switch (fld->_data_type) {
+  switch (mrc_fld_data_type(fld)) {
   case MRC_NT_FLOAT:
     datatype = H5T_NATIVE_FLOAT;
     break;
@@ -447,7 +447,7 @@ hdf5_parallel_read_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
   hid_t memspace = H5Screate_simple(nr_file_dims, mdims, NULL);
 
   hid_t datatype;
-  switch (fld->_data_type) {
+  switch (mrc_fld_data_type(fld)) {
   case MRC_NT_FLOAT:
     datatype = H5T_NATIVE_FLOAT;
     break;

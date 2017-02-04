@@ -380,7 +380,7 @@ collective_m1_write_f1(struct mrc_io *io, const char *path, struct mrc_fld *f1,
   struct xdmf *xdmf = to_xdmf(io);
   int ierr;
 
-  assert(f1->_data_type == MRC_NT_FLOAT);
+  assert(mrc_fld_data_type(f1) == MRC_NT_FLOAT);
   hid_t group_fld = H5Gcreate(group0, mrc_fld_comp_name(f1, m), H5P_DEFAULT,
 			      H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group_fld);
   ierr = H5LTset_attribute_int(group_fld, ".", "m", &m, 1); CE;
@@ -442,7 +442,7 @@ collective_m1_send_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
   struct xdmf *xdmf = to_xdmf(io);
   int dim = ctx->dim;
 
-  assert(m1->_data_type == MRC_NT_FLOAT);
+  assert(mrc_fld_data_type(m1) == MRC_NT_FLOAT);
   ctx->send_reqs = calloc(ctx->nr_patches, sizeof(*ctx->send_reqs));
   ctx->nr_send_reqs = 0;
 
@@ -714,7 +714,7 @@ xdmf_collective_read_m1(struct mrc_io *io, const char *path, struct mrc_fld *m1)
   struct xdmf_file *file = &xdmf->file;
   int ierr;
 
-  assert(m1->_data_type == MRC_NT_FLOAT);
+  assert(mrc_fld_data_type(m1) == MRC_NT_FLOAT);
   struct collective_m1_ctx ctx;
   int gdims[3];
   int nr_comps = mrc_fld_nr_comps(m1);
@@ -946,7 +946,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
       struct mrc_patch_info info;
       mrc_domain_get_local_patch_info(m3->_domain, p, &info);
       assert(!m3->_aos);
-      switch (m3->_data_type) {
+      switch (mrc_fld_data_type(m3)) {
       case MRC_NT_FLOAT:
       {
       	float *buf_ptr = (float *) ctx->send_bufs[writer] + buf_sizes[writer];
@@ -981,7 +981,7 @@ collective_send_fld_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
     }
 
     MPI_Datatype mpi_dtype;
-    switch (m3->_data_type) {
+    switch (mrc_fld_data_type(m3)) {
     case MRC_NT_FLOAT:
       mpi_dtype = MPI_FLOAT;
       break;
@@ -1066,7 +1066,7 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
     ctx->recv_bufs[rank] = malloc(buf_sizes[rank] * m3->_nd->size_of_type);
  
    MPI_Datatype mpi_dtype;
-    switch (m3->_data_type) {
+   switch (mrc_fld_data_type(m3)) {
     case MRC_NT_FLOAT:
       mpi_dtype = MPI_FLOAT;
       break;
@@ -1127,7 +1127,7 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
     
     int len = (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
 
-    switch (m3->_data_type) {
+    switch (mrc_fld_data_type(m3)) {
     case MRC_NT_FLOAT:
     {
       float *buf_ptr = (float *) ctx->recv_bufs[info.rank] + buf_sizes[info.rank];
@@ -1190,7 +1190,7 @@ collective_recv_fld_local(struct collective_m3_ctx *ctx,
     if (!has_intersection) {
       continue;
     }
-    switch (m3->_data_type) {
+    switch (mrc_fld_data_type(m3)) {
     case MRC_NT_FLOAT:
     {
       BUFLOOP(ix, iy, iz, ilo, ihi) {
@@ -1244,7 +1244,7 @@ collective_write_fld(struct collective_m3_ctx *ctx, struct mrc_io *io,
     compname = (const char *) default_name;
   }
 
-  xdmf_spatial_save_fld_info(xs, strdup(compname), strdup(path), false, m3->_data_type);
+  xdmf_spatial_save_fld_info(xs, strdup(compname), strdup(path), false, mrc_fld_data_type(m3));
 
   hid_t group_fld = H5Gcreate(group0, compname, H5P_DEFAULT,
 			      H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group_fld);
@@ -1258,7 +1258,7 @@ collective_write_fld(struct collective_m3_ctx *ctx, struct mrc_io *io,
   hsize_t fdims[3] = { ctx->slab_dims[2], ctx->slab_dims[1], ctx->slab_dims[0] };
   hid_t filespace = H5Screate_simple(3, fdims, NULL); H5_CHK(filespace);
   hid_t dtype;
-  switch (fld->_data_type) {
+  switch (mrc_fld_data_type(fld)) {
   case MRC_NT_FLOAT: dtype = H5T_NATIVE_FLOAT; break;
   case MRC_NT_DOUBLE: dtype = H5T_NATIVE_DOUBLE; break;
   case MRC_NT_INT: dtype = H5T_NATIVE_INT; break;
@@ -1320,7 +1320,7 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
   // If we have an aos field, we need to get it as soa for collection and writing
   struct mrc_fld *m3_soa = m3;
   if (m3->_aos) {
-    switch (m3->_data_type) {
+    switch (mrc_fld_data_type(m3)) {
       case MRC_NT_FLOAT: m3_soa = mrc_fld_get_as(m3, "float"); break;
       case MRC_NT_DOUBLE: m3_soa = mrc_fld_get_as(m3, "double"); break;
       case MRC_NT_INT: m3_soa = mrc_fld_get_as(m3, "int"); break;
@@ -1338,7 +1338,7 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
     /* 	    writer_dims[0], writer_dims[1], writer_dims[2]); */
 
     struct mrc_fld *fld = mrc_fld_create(MPI_COMM_NULL);
-    switch (m3->_data_type) {
+    switch (mrc_fld_data_type(m3)) {
     case MRC_NT_FLOAT: mrc_fld_set_type(fld, "float"); break;
     case MRC_NT_DOUBLE: mrc_fld_set_type(fld, "double"); break;
     case MRC_NT_INT: mrc_fld_set_type(fld, "int"); break;
@@ -1438,7 +1438,7 @@ collective_m3_send_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
     mrc_fld_setup(fld);
 
     MPI_Datatype dtype;
-    switch (fld->_data_type) {
+    switch (mrc_fld_data_type(fld)) {
       case MRC_NT_FLOAT:
        dtype = MPI_FLOAT;
         for (int m = 0; m < mrc_fld_nr_comps(gfld); m++) {
@@ -1572,7 +1572,7 @@ collective_m3_recv_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
     mrc_fld_setup(fld);
 
     MPI_Datatype dtype;
-    switch (fld->_data_type) {
+    switch (mrc_fld_data_type(fld)) {
       case MRC_NT_FLOAT: dtype = MPI_FLOAT; break;
       case MRC_NT_DOUBLE: dtype = MPI_DOUBLE; break;
       case MRC_NT_INT: dtype = MPI_INT; break;
@@ -1596,7 +1596,7 @@ collective_m3_recv_end(struct mrc_io *io, struct collective_m3_ctx *ctx,
     struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, recv->patch);
 
     int *ilo = recv->ilo, *ihi = recv->ihi;
-    switch (m3->_data_type) {
+    switch (mrc_fld_data_type(m3)) {
       case MRC_NT_FLOAT:
         for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
           for (int iz = ilo[2]; iz < ihi[2]; iz++) {
@@ -1662,7 +1662,7 @@ read_m3_cb(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
   int *ib = gfld->_ghost_offs;
   hid_t dtype;
   void *arr;  
-  switch (gfld->_data_type) {
+  switch (mrc_fld_data_type(gfld)) {
   case MRC_NT_FLOAT:
     dtype = H5T_NATIVE_FLOAT;
     arr = &MRC_S4(gfld, ib[0],ib[1],ib[2],m);
@@ -1762,7 +1762,7 @@ xdmf_collective_read_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3)
   // If we have an aos field, we need to get it as soa for reading and distribution
   struct mrc_fld *m3_soa = m3;
   if (m3->_aos) {
-    switch (m3->_data_type) {
+    switch (mrc_fld_data_type(m3)) {
       case MRC_NT_FLOAT: m3_soa = mrc_fld_get_as(m3, "float"); break;
       case MRC_NT_DOUBLE: m3_soa = mrc_fld_get_as(m3, "double"); break;
       case MRC_NT_INT: m3_soa = mrc_fld_get_as(m3, "int"); break;
@@ -1773,7 +1773,7 @@ xdmf_collective_read_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3)
   if (xdmf->is_writer) {
     struct mrc_fld *gfld = mrc_fld_create(MPI_COMM_SELF);
     mrc_fld_set_param_int(gfld, "nr_comps", mrc_fld_nr_comps(m3));
-    switch (m3->_data_type) {
+    switch (mrc_fld_data_type(m3)) {
       case MRC_NT_FLOAT: mrc_fld_set_type(gfld, "float"); break;
       case MRC_NT_DOUBLE: mrc_fld_set_type(gfld, "double"); break;
       case MRC_NT_INT: mrc_fld_set_type(gfld, "int"); break;
