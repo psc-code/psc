@@ -80,6 +80,7 @@ _mrc_ndarray_setup(struct mrc_ndarray *nd)
     }
   }
 
+  mrc_vec_set_param_int(nd->vec, "len", nd->len);
   mrc_vec_setup(nd->vec);
 
   // set up arr
@@ -286,7 +287,6 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
   const char *vec_type = mrc_fld_ops(fld)->vec_type;
   assert(vec_type);
   dispatch_vec_type(fld);
-  mrc_vec_set_param_int(fld->_nd->vec, "len", fld->_nd->len);
 
   assert(MRC_FLD_MAXDIMS == 5);
   int *perm;
