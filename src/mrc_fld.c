@@ -48,11 +48,30 @@ _mrc_ndarray_setup(struct mrc_ndarray *nd)
   nd->n_dims = n_dims;
 
   int *dims = nd->dims.vals, *offs = nd->offs.vals, *perm = nd->perm.vals;
-  for (int d = 0; d < n_dims; d++) {
-    nd->start[d] = offs[d];
-    nd->acc.stride[perm[d]] = 1;
-    for (int dd = 0; dd < d; dd++) {
-      nd->acc.stride[perm[d]] *= dims[perm[dd]];
+
+  if (!nd->view_base) {
+    // new ndarray
+    for (int d = 0; d < n_dims; d++) {
+      nd->start[d] = offs[d];
+      nd->acc.stride[perm[d]] = 1;
+      for (int dd = 0; dd < d; dd++) {
+	nd->acc.stride[perm[d]] *= dims[perm[dd]];
+      }
+    }
+  } else {
+    // make a view
+    // FIXME, this doesn't support perm at this point
+    struct mrc_ndarray *nd_base = nd->view_base;
+    assert(n_dims == nd_base->n_dims);
+    assert(n_dims == nd->view_offs.nr_vals);
+    int *base_offs = nd_base->offs.vals, *base_dims = nd_base->dims.vals;
+    int *view_offs = nd->view_offs.vals;
+
+    for (int d = 0; d < n_dims; d++) {
+      assert(view_offs[d] >= offs[d]);
+      assert(view_offs[d] + dims[d] <= base_offs[d] + base_dims[d]);
+      nd->acc.stride[d] = nd_base->acc.stride[d];
+      nd->start[d] = nd_base->start[d] - view_offs[d] + offs[d];
     }
   }
 
@@ -80,6 +99,7 @@ static struct param mrc_ndarray_descr[] = {
   { "dims"            , VAR(dims)           , PARAM_INT_ARRAY(0, 0) },
   { "perm"            , VAR(perm)           , PARAM_INT_ARRAY(0, 0) },
   { "view_base"       , VAR(view_base)      , PARAM_OBJ(mrc_ndarray)},
+  { "view_offs"       , VAR(view_offs)      , PARAM_INT_ARRAY(0, 0) },
 
   { "size_of_type"    , VAR(size_of_type)   , MRC_VAR_INT           },
   {},
@@ -156,13 +176,14 @@ dispatch_vec_type(struct mrc_fld *fld)
 void
 mrc_fld_setup_vec(struct mrc_fld *fld)
 {
-  assert(fld->_dims.nr_vals == fld->_offs.nr_vals &&
-	 fld->_dims.nr_vals == fld->_sw.nr_vals);
-  assert(fld->_dims.nr_vals <= MRC_FLD_MAXDIMS);
+  int n_dims = fld->_dims.nr_vals;
+  assert(n_dims == fld->_offs.nr_vals);
+  assert(n_dims == fld->_sw.nr_vals);
+  assert(n_dims <= MRC_FLD_MAXDIMS);
 
   fld->_len = 1;
   for (int d = 0; d < MRC_FLD_MAXDIMS; d++) {
-    if (d < fld->_dims.nr_vals) {
+    if (d < n_dims) {
       fld->_ghost_offs[d] = fld->_offs.vals[d] - fld->_sw.vals[d];
       fld->_ghost_dims[d] = fld->_dims.vals[d] + 2 * fld->_sw.vals[d];
     } else {
@@ -184,15 +205,10 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
 
   mrc_vec_setup(fld->_vec);
 
-  struct mrc_ndarray *nd = fld->_nd;
-  nd->size_of_type = fld->_size_of_type;
-  nd->arr = mrc_vec_get_array(fld->_vec);
-  assert(nd->arr);
-
+  assert(MRC_FLD_MAXDIMS == 5);
+  int *perm;
   if (!fld->_view_base) {
     // This is a field with its own storage
-
-    int *perm;
 
     if (!fld->_aos && !fld->_c_order) {
       // original order
@@ -207,40 +223,34 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
       // x,y,z,m,p to z,y,x,m,p
       perm = (int[5]) { 2, 1, 0, 3, 4 };
     }
-
-    int n_dims = fld->_dims.nr_vals;
-    mrc_ndarray_set_param_int_array(nd, "dims", n_dims, fld->_ghost_dims);
-    mrc_ndarray_set_param_int_array(nd, "offs", n_dims, fld->_ghost_offs);
-    mrc_ndarray_set_param_int_array(nd, "perm", n_dims, perm);
-    mrc_ndarray_setup(nd);
   } else {
+    perm = (int[5]) { 0, 1, 2, 3, 4 };
+  }
+      
+  struct mrc_ndarray *nd = fld->_nd;
+
+  nd->size_of_type = fld->_size_of_type;
+  nd->arr = mrc_vec_get_array(fld->_vec);
+  assert(nd->arr);
+  mrc_ndarray_set_param_int_array(nd, "dims", n_dims, fld->_ghost_dims);
+  mrc_ndarray_set_param_int_array(nd, "offs", n_dims, fld->_ghost_offs);
+  mrc_ndarray_set_param_int_array(nd, "perm", n_dims, perm);
+
+  if (fld->_view_base) {
     // In this case, this field is just a view and has not
     // allocated its own storage
-    int n_dims = fld->_dims.nr_vals;
     struct mrc_fld *view_base = fld->_view_base;
     struct mrc_ndarray *nd_base = view_base->_nd;
     assert(nd_base->n_dims == n_dims);
-    int *view_offs = fld->_view_offs, *sw = fld->_sw.vals;
     int view_ghost_offs[MRC_FLD_MAXDIMS];
     for (int d = 0; d < n_dims; d++) {
-      view_ghost_offs[d] = view_offs[d] - sw[d];
+      view_ghost_offs[d] = fld->_view_offs[d] - fld->_sw.vals[d];
     }
-    int *offs = fld->_offs.vals;
     mrc_ndarray_set_param_obj(nd, "view_base", view_base->_nd);
-    mrc_ndarray_set_param_int_array(nd, "dims", n_dims, fld->_ghost_dims);
-    mrc_ndarray_set_param_int_array(nd, "offs", n_dims, fld->_ghost_offs);
-    int perm[MRC_FLD_MAXDIMS] = { 0, 1, 2, 3, 4 };
-    mrc_ndarray_set_param_int_array(nd, "perm", n_dims, perm);
-    for (int d = 0; d < n_dims; d++) {
-      assert(view_ghost_offs[d] >= nd_base->offs.vals[d]);
-      assert(view_ghost_offs[d] + nd->dims.vals[d] <=
-	     nd_base->offs.vals[d] + nd_base->dims.vals[d]);
-      nd->acc.stride[d] = nd_base->acc.stride[d];
-      nd->start[d] = nd_base->start[d] - view_offs[d] + offs[d];
-    }
-    mrc_ndarray_setup_finish(nd);
+    mrc_ndarray_set_param_int_array(nd, "view_offs", n_dims, view_ghost_offs);
   }
 
+  mrc_ndarray_setup(nd);
   fld->_nd_acc = *mrc_ndarray_access(nd);
 }
 
