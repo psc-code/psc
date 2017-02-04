@@ -22,6 +22,18 @@
 // mrc_ndarray
 
 // ----------------------------------------------------------------------
+// _mrc_ndarray_destroy
+
+static void
+_mrc_ndarray_destroy(struct mrc_ndarray *nd)
+{
+  if (nd->arr) {
+    mrc_vec_put_array(nd->vec, nd->arr);
+    nd->arr = NULL;
+  }
+}
+
+// ----------------------------------------------------------------------
 // mrc_ndarray_setup_finish
 
 static void
@@ -86,6 +98,24 @@ _mrc_ndarray_setup(struct mrc_ndarray *nd)
 }
 
 // ----------------------------------------------------------------------
+// mrc_ndarray_set_array
+
+static void
+mrc_ndarray_set_array(struct mrc_ndarray *nd, void *arr)
+{
+  mrc_vec_set_array(nd->vec, arr);
+}
+
+// ----------------------------------------------------------------------
+// mrc_ndarray_replace_array
+
+static void
+mrc_ndarray_replace_array(struct mrc_ndarray *nd, void *arr)
+{
+  mrc_vec_replace_array(nd->vec, arr);
+}
+
+// ----------------------------------------------------------------------
 // mrc_ndarray_access
 //
 // This returns the needed info (struct mrc_ndarray_access) for easy access to
@@ -136,6 +166,7 @@ struct mrc_class_mrc_ndarray mrc_class_mrc_ndarray = {
   .param_descr  = mrc_ndarray_descr,
   .init         = mrc_ndarray_init,
   .setup        = _mrc_ndarray_setup,
+  .destroy      = _mrc_ndarray_destroy,
 };
 
 // ----------------------------------------------------------------------
@@ -179,11 +210,6 @@ mrc_fld_data_type(struct mrc_fld *fld)
 static void
 _mrc_fld_destroy(struct mrc_fld *fld)
 {
-  if (fld->_nd->arr) {
-    mrc_vec_put_array(fld->_nd->vec, fld->_nd->arr);
-    fld->_nd->arr = NULL;
-  }
-
   for (int m = 0; m < fld->_nr_allocated_comp_name; m++) {
     free(fld->_comp_name[m]);
   }
@@ -406,7 +432,7 @@ _mrc_fld_setup(struct mrc_fld *fld)
 void
 mrc_fld_set_array(struct mrc_fld *fld, void *arr)
 {
-  mrc_vec_set_array(fld->_nd->vec, arr);
+  mrc_ndarray_set_array(fld->_nd, arr);
 }
 
 // ----------------------------------------------------------------------
@@ -415,7 +441,7 @@ mrc_fld_set_array(struct mrc_fld *fld, void *arr)
 void
 mrc_fld_replace_array(struct mrc_fld *fld, void *arr)
 {
-  mrc_vec_replace_array(fld->_nd->vec, arr);
+  mrc_ndarray_replace_array(fld->_nd, arr);
 }
 
 // ----------------------------------------------------------------------
