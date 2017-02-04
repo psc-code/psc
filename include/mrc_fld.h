@@ -93,8 +93,10 @@ struct mrc_ndarray {
   struct mrc_ndarray_access acc;
   void *arr; //< pointer to the actual data
   int start[MRC_FLD_MAXDIMS];
-  int size_of_type;
   int n_dims;
+  int size_of_type;
+  int data_type;
+  int len; // number of data values in this ndarray
   struct mrc_vec *vec; //< underlying mrc_vec that manages memory alloc/free (could be petsc)
 
   // parameters
@@ -106,7 +108,6 @@ struct mrc_ndarray {
   struct mrc_ndarray *view_base; 
   // the view will be of size offs/dims as usual above, but shifted to start at view_offs in the base nmrc_darray
   struct mrc_param_int_array view_offs;
-  int data_type;
 };
 
 struct mrc_ndarray_ops {
@@ -141,7 +142,6 @@ struct mrc_fld {
   struct mrc_ndarray *_nd;
   int _ghost_offs[MRC_FLD_MAXDIMS];
   int _ghost_dims[MRC_FLD_MAXDIMS];
-  int _len;
   struct mrc_fld *_view_base; //< if this mrc_fld is a view, this is the field it's derived from
   int *_view_offs;
   int _nr_allocated_comp_name;
@@ -167,6 +167,7 @@ const int *mrc_fld_sw(struct mrc_fld *x);
 const int *mrc_fld_ghost_offs(struct mrc_fld *x);
 const int *mrc_fld_ghost_dims(struct mrc_fld *x);
 int mrc_fld_data_type(struct mrc_fld *fld);
+int mrc_fld_len(struct mrc_fld *fld);
 struct mrc_fld *mrc_fld_duplicate(struct mrc_fld *fld);
 struct mrc_fld *mrc_fld_create_view(struct mrc_fld *fld, int nr_dims, int *dims, int *offs);
 struct mrc_fld *mrc_fld_create_view_ext(struct mrc_fld *fld, int nr_dims, int *dims, int *offs, int *sw,

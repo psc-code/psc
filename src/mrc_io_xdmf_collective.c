@@ -1478,7 +1478,7 @@ collective_m3_send_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
       default: assert(0);
     }
     
-    MPI_Isend(fld->_nd->arr, fld->_len, dtype, send->rank, send->patch,
+    MPI_Isend(fld->_nd->arr, mrc_fld_len(fld), dtype, send->rank, send->patch,
 	      mrc_io_comm(io), &ctx->send_reqs[i]);
     send->fld = fld;
   }
@@ -1579,7 +1579,7 @@ collective_m3_recv_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
       default: assert(0);
     }
     
-    MPI_Irecv(fld->_nd->arr, fld->_len, dtype, recv->rank,
+    MPI_Irecv(fld->_nd->arr, mrc_fld_len(fld), dtype, recv->rank,
 	      recv->global_patch, mrc_io_comm(io), &ctx->recv_reqs[i]);
     recv->fld = fld;
   }

@@ -80,6 +80,12 @@ _mrc_ndarray_setup(struct mrc_ndarray *nd)
     }
   }
 
+  mrc_vec_setup(nd->vec);
+
+  // set up arr
+  nd->arr = mrc_vec_get_array(nd->vec);
+  assert(nd->arr);
+
   // set up arr_off
   int off = 0;
   for (int d = 0; d < MRC_FLD_MAXDIMS; d++) {
@@ -146,6 +152,7 @@ static struct param mrc_ndarray_descr[] = {
 
   { "data_type"       , VAR(data_type)      , MRC_VAR_INT           },
   { "size_of_type"    , VAR(size_of_type)   , MRC_VAR_INT           },
+  { "len"             , VAR(len)            , MRC_VAR_INT           },
   { "vec"             , VAR(vec)            , MRC_VAR_OBJ(mrc_vec)  },
   {},
 };
@@ -193,6 +200,15 @@ int
 mrc_fld_data_type(struct mrc_fld *fld)
 {
   return fld->_nd->data_type;
+}
+
+// ----------------------------------------------------------------------
+// mrc_fld_len
+
+int
+mrc_fld_len(struct mrc_fld *fld)
+{
+  return fld->_nd->len;
 }
 
 // ----------------------------------------------------------------------
@@ -252,7 +268,7 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
   assert(n_dims == fld->_sw.nr_vals);
   assert(n_dims <= MRC_FLD_MAXDIMS);
 
-  fld->_len = 1;
+  fld->_nd->len = 1;
   for (int d = 0; d < MRC_FLD_MAXDIMS; d++) {
     if (d < n_dims) {
       fld->_ghost_offs[d] = fld->_offs.vals[d] - fld->_sw.vals[d];
@@ -260,7 +276,7 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
     } else {
       fld->_ghost_dims[d] = 1;
     }
-    fld->_len *= fld->_ghost_dims[d];
+    fld->_nd->len *= fld->_ghost_dims[d];
   }
 
   if (fld->_view_base) {
@@ -270,11 +286,7 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
   const char *vec_type = mrc_fld_ops(fld)->vec_type;
   assert(vec_type);
   dispatch_vec_type(fld);
-  mrc_vec_set_param_int(fld->_nd->vec, "len", fld->_len);
-
-  //mrc_fld_setup_member_objs(fld); // sets up our .vec member
-
-  mrc_vec_setup(fld->_nd->vec);
+  mrc_vec_set_param_int(fld->_nd->vec, "len", fld->_nd->len);
 
   assert(MRC_FLD_MAXDIMS == 5);
   int *perm;
@@ -300,8 +312,6 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
       
   struct mrc_ndarray *nd = fld->_nd;
 
-  nd->arr = mrc_vec_get_array(fld->_nd->vec);
-  assert(nd->arr);
   mrc_ndarray_set_type(fld->_nd, mrc_fld_ops(fld)->vec_type);
   mrc_ndarray_set_param_int_array(nd, "dims", n_dims, fld->_ghost_dims);
   mrc_ndarray_set_param_int_array(nd, "offs", n_dims, fld->_ghost_offs);
@@ -321,6 +331,7 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
     mrc_ndarray_set_param_int_array(nd, "view_offs", n_dims, view_ghost_offs);
   }
 
+  //mrc_fld_setup_member_objs(fld); // FIXME?, does same as the next line
   mrc_ndarray_setup(nd);
   fld->_nd_acc = *mrc_ndarray_access(nd);
 }
@@ -1365,7 +1376,6 @@ static struct param mrc_fld_descr[] = {
   { "nr_comps"        , VAR(_nr_comps)       , PARAM_INT(1)          },
   { "nr_ghosts"       , VAR(_nr_ghosts)      , PARAM_INT(0)          },
 
-  { "len"             , VAR(_len)            , MRC_VAR_INT           },
   { "nd"              , VAR(_nd)             , MRC_VAR_OBJ(mrc_ndarray) },
   { "aos"             , VAR(_aos)            , PARAM_BOOL(false)     },
   { "c_order"         , VAR(_c_order)        , PARAM_BOOL(false)     },
