@@ -125,6 +125,7 @@ static struct param mrc_ndarray_descr[] = {
 
   { "data_type"       , VAR(data_type)      , MRC_VAR_INT           },
   { "size_of_type"    , VAR(size_of_type)   , MRC_VAR_INT           },
+  { "vec"             , VAR(vec)            , MRC_VAR_OBJ(mrc_vec)  },
   {},
 };
 #undef VAR
@@ -179,7 +180,7 @@ static void
 _mrc_fld_destroy(struct mrc_fld *fld)
 {
   if (fld->_nd->arr) {
-    mrc_vec_put_array(fld->_vec, fld->_nd->arr);
+    mrc_vec_put_array(fld->_nd->vec, fld->_nd->arr);
     fld->_nd->arr = NULL;
   }
 
@@ -217,9 +218,9 @@ dispatch_vec_type(struct mrc_fld *fld)
     mrc_fld_ops(fld)->vec_type = "petsc";
   }
 #endif
-  mrc_vec_set_type(fld->_vec, vec_type);
+  mrc_vec_set_type(fld->_nd->vec, vec_type);
   if (fld->_aos && (strcmp(vec_type, "petsc")==0)){
-    mrc_vec_set_param_int(fld->_vec, "block_size", fld->_nr_comps);
+    mrc_vec_set_param_int(fld->_nd->vec, "block_size", fld->_nr_comps);
   }  
 }
 
@@ -252,11 +253,11 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
   const char *vec_type = mrc_fld_ops(fld)->vec_type;
   assert(vec_type);
   dispatch_vec_type(fld);
-  mrc_vec_set_param_int(fld->_vec, "len", fld->_len);
+  mrc_vec_set_param_int(fld->_nd->vec, "len", fld->_len);
 
   //mrc_fld_setup_member_objs(fld); // sets up our .vec member
 
-  mrc_vec_setup(fld->_vec);
+  mrc_vec_setup(fld->_nd->vec);
 
   assert(MRC_FLD_MAXDIMS == 5);
   int *perm;
@@ -282,7 +283,7 @@ mrc_fld_setup_vec(struct mrc_fld *fld)
       
   struct mrc_ndarray *nd = fld->_nd;
 
-  nd->arr = mrc_vec_get_array(fld->_vec);
+  nd->arr = mrc_vec_get_array(fld->_nd->vec);
   assert(nd->arr);
   mrc_ndarray_set_type(fld->_nd, mrc_fld_ops(fld)->vec_type);
   mrc_ndarray_set_param_int_array(nd, "dims", n_dims, fld->_ghost_dims);
@@ -405,7 +406,7 @@ _mrc_fld_setup(struct mrc_fld *fld)
 void
 mrc_fld_set_array(struct mrc_fld *fld, void *arr)
 {
-  mrc_vec_set_array(fld->_vec, arr);
+  mrc_vec_set_array(fld->_nd->vec, arr);
 }
 
 // ----------------------------------------------------------------------
@@ -414,7 +415,7 @@ mrc_fld_set_array(struct mrc_fld *fld, void *arr)
 void
 mrc_fld_replace_array(struct mrc_fld *fld, void *arr)
 {
-  mrc_vec_replace_array(fld->_vec, arr);
+  mrc_vec_replace_array(fld->_nd->vec, arr);
 }
 
 // ----------------------------------------------------------------------
@@ -460,8 +461,8 @@ _mrc_fld_read(struct mrc_fld *fld, struct mrc_io *io)
   // anyway, since mrc_fld saves/restores the data rather than mrc_vec),
   // we make a new one, so at least we're sure that with_array won't be honored
   // same for mrc_ndarray (for now, FIXME)
-  fld->_vec = mrc_vec_create(mrc_fld_comm(fld));
   fld->_nd = mrc_ndarray_create(mrc_fld_comm(fld));
+  fld->_nd->vec = mrc_vec_create(mrc_fld_comm(fld));
   mrc_fld_setup_vec(fld);
   // FIXME: Hacky, but we are basically set up now, so we should advertise it
   fld->obj.is_setup = true;
@@ -632,7 +633,7 @@ mrc_fld_copy(struct mrc_fld *fld_to, struct mrc_fld *fld_from)
 {
   assert(mrc_fld_same_shape(fld_to, fld_from));
   if (!fld_to->_view_base && !fld_from->_view_base) {
-    mrc_vec_copy(fld_to->_vec, fld_from->_vec);
+    mrc_vec_copy(fld_to->_nd->vec, fld_from->_nd->vec);
   } else {
     struct mrc_fld_ops *ops = mrc_fld_ops(fld_to);
     assert(ops && ops->copy);
@@ -652,7 +653,7 @@ void
 mrc_fld_axpy(struct mrc_fld *y, float alpha, struct mrc_fld *x)
 {
   assert(mrc_fld_same_shape(x, y));
-  mrc_vec_axpy(y->_vec, (double) alpha, x->_vec);
+  mrc_vec_axpy(y->_nd->vec, (double) alpha, x->_nd->vec);
 }
 
 // ----------------------------------------------------------------------
@@ -664,7 +665,7 @@ mrc_fld_waxpy(struct mrc_fld *w, float alpha, struct mrc_fld *x, struct mrc_fld 
 {
   assert(mrc_fld_same_shape(x, y));
   assert(mrc_fld_same_shape(x, w));
-  mrc_vec_waxpy(w->_vec, (double) alpha, x->_vec, y->_vec);
+  mrc_vec_waxpy(w->_nd->vec, (double) alpha, x->_nd->vec, y->_nd->vec);
 }
 
 // ----------------------------------------------------------------------
@@ -681,7 +682,7 @@ mrc_fld_axpby(struct mrc_fld *y, double a, struct mrc_fld *x, double b)
   }
 
   assert(mrc_fld_same_shape(x, y));
-  mrc_vec_axpby(y->_vec, a, x->_vec, b);
+  mrc_vec_axpby(y->_nd->vec, a, x->_nd->vec, b);
 }
 
 // ----------------------------------------------------------------------
@@ -693,9 +694,9 @@ mrc_fld_norm(struct mrc_fld *fld)
 {
   float res = 0.;
   double (*vec_norm)(struct mrc_vec *);
-  vec_norm = (double (*)(struct mrc_vec *)) mrc_vec_get_method(fld->_vec, "norm");
+  vec_norm = (double (*)(struct mrc_vec *)) mrc_vec_get_method(fld->_nd->vec, "norm");
   if (vec_norm) {
-    res = (float) vec_norm(fld->_vec);
+    res = (float) vec_norm(fld->_nd->vec);
     return res;
   }
   struct mrc_fld *x = mrc_fld_get_as(fld, "float");  
@@ -758,7 +759,7 @@ mrc_fld_set(struct mrc_fld *fld, float val)
   // hand things off to _vec, or use _arr directly, which break
   // fields that are just views
   if (!fld->_view_base) {
-    mrc_vec_set(fld->_vec, (double) val);
+    mrc_vec_set(fld->_nd->vec, (double) val);
   } else {
     struct mrc_fld_ops *ops = mrc_fld_ops(fld);
     assert(ops && ops->set);
@@ -1348,7 +1349,6 @@ static struct param mrc_fld_descr[] = {
   { "nr_ghosts"       , VAR(_nr_ghosts)      , PARAM_INT(0)          },
 
   { "len"             , VAR(_len)            , MRC_VAR_INT           },
-  { "vec"             , VAR(_vec)            , MRC_VAR_OBJ(mrc_vec)  },
   { "nd"              , VAR(_nd)             , MRC_VAR_OBJ(mrc_ndarray) },
   { "aos"             , VAR(_aos)            , PARAM_BOOL(false)     },
   { "c_order"         , VAR(_c_order)        , PARAM_BOOL(false)     },

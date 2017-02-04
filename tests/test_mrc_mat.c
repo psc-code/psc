@@ -169,7 +169,7 @@ main(int argc, char **argv)
 
   mrc_fld_print(x, "x");
 
-  mrc_mat_apply(y->_vec, A, x->_vec);
+  mrc_mat_apply(y->_nd->vec, A, x->_nd->vec);
 
   MPI_Barrier(comm);
   mrc_fld_print(y, "y");

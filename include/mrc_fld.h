@@ -95,6 +95,7 @@ struct mrc_ndarray {
   int start[MRC_FLD_MAXDIMS];
   int size_of_type;
   int n_dims;
+  struct mrc_vec *vec; //< underlying mrc_vec that manages memory alloc/free (could be petsc)
 
   // parameters
   struct mrc_param_int_array dims;
@@ -141,7 +142,6 @@ struct mrc_fld {
   int _ghost_offs[MRC_FLD_MAXDIMS];
   int _ghost_dims[MRC_FLD_MAXDIMS];
   int _len;
-  struct mrc_vec *_vec; //< underlying mrc_vec that manages memory alloc/free (could be petsc)
   struct mrc_fld *_view_base; //< if this mrc_fld is a view, this is the field it's derived from
   int *_view_offs;
   int _nr_allocated_comp_name;
