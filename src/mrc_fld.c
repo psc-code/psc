@@ -579,16 +579,7 @@ mrc_fld_norm_comp(struct mrc_fld *x, int m)
 void
 mrc_fld_set(struct mrc_fld *fld, float val)
 {
-  // FIXME, there are probably many places like this, where we
-  // hand things off to _vec, or use _arr directly, which break
-  // fields that are just views
-  if (!fld->_view_base) {
-    mrc_vec_set(fld->_nd->vec, (double) val);
-  } else {
-    struct mrc_fld_ops *ops = mrc_fld_ops(fld);
-    assert(ops && ops->set);
-    ops->set(fld, val);
-  }
+  mrc_ndarray_set(fld->_nd, val);
 }
 
 // ----------------------------------------------------------------------
