@@ -78,6 +78,39 @@ test_1()
 }
 
 // ----------------------------------------------------------------------
+// test_2
+//
+// like test_1, but don't set offs (tests the default)
+
+static void
+test_2()
+{
+  struct mrc_ndarray *nd = mrc_ndarray_create(MPI_COMM_WORLD);
+  mrc_ndarray_set_param_int3(nd, "dims", (int [3]) { 2, 3, 4 });
+  mrc_ndarray_set_from_options(nd);
+  mrc_ndarray_setup(nd);
+  mrc_ndarray_view(nd);
+
+  for (int k = 0; k < 4; k++) {
+    for (int j = 0; j < 3; j++) {
+      for (int i = 0; i < 2; i++) {
+	S3(nd, i,j,k) = i * 10000 + j * 100 + k;
+      }
+    }
+  }
+
+  for (int k = 0; k < 4; k++) {
+    for (int j = 0; j < 3; j++) {
+      for (int i = 0; i < 2; i++) {
+	assert(S3(nd, i,j,k) == i * 10000 + j * 100 + k);
+      }
+    }
+  }
+
+  mrc_ndarray_destroy(nd);
+}
+
+// ----------------------------------------------------------------------
 // main
 
 typedef void (*test_func)(void);
@@ -85,6 +118,7 @@ typedef void (*test_func)(void);
 static test_func tests[] = {
   [0] = test_0,
   [1] = test_1,
+  [2] = test_2,
 };
 
 static int n_tests = sizeof(tests)/sizeof(tests[0]);

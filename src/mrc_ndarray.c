@@ -79,12 +79,17 @@ _mrc_ndarray_setup(struct mrc_ndarray *nd)
   
   int n_dims = nd->dims.nr_vals;
 
+  // offs default is all zeros
+  if (nd->offs.nr_vals == 0) {
+    mrc_ndarray_set_param_int_array(nd, "offs", n_dims, NULL);
+  }
+
   // perm default is identity map
   if (nd->perm.nr_vals == 0) {
     assert(MRC_NDARRAY_MAXDIMS == 5);
     mrc_ndarray_set_param_int_array(nd, "perm", n_dims, (int []) { 0, 1, 2, 3, 4 });
   }
-  
+
   assert(n_dims == nd->offs.nr_vals);
   assert(n_dims == nd->perm.nr_vals);
   assert(n_dims <= MRC_NDARRAY_MAXDIMS);
