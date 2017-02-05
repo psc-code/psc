@@ -164,31 +164,7 @@ mrc_fld_spatial_sw(struct mrc_fld *x)
   return mrc_fld_sw(x);
 }
 
-#define __MRC_FLD(fld, type, i0,i1,i2,i3,i4) __MRC_NDARRAY(&(fld)->_nd_acc, type, i0,i1,i2,i3,i4)
-
-#ifdef BOUNDS_CHECK
-
-#include <string.h>
-
-#define MRC_FLD(fld, type, i0,i1,i2,i3,i4)				\
-  (*({									\
-      if (strcmp(#type, "float") == 0) assert(mrc_fld_data_type(fld) == MRC_NT_FLOAT); \
-      if (strcmp(#type, "double") == 0) assert(mrc_fld_data_type(fld) == MRC_NT_DOUBLE); \
-      if (strcmp(#type, "int") == 0) assert(mrc_fld_data_type(fld) == MRC_NT_INT); \
-      assert(i0 >= (fld)->_ghost_offs[0] && i0 < (fld)->_ghost_offs[0] + (fld)->_ghost_dims[0]); \
-      assert(i1 >= (fld)->_ghost_offs[1] && i1 < (fld)->_ghost_offs[1] + (fld)->_ghost_dims[1]); \
-      assert(i2 >= (fld)->_ghost_offs[2] && i2 < (fld)->_ghost_offs[2] + (fld)->_ghost_dims[2]); \
-      assert(i3 >= (fld)->_ghost_offs[3] && i3 < (fld)->_ghost_offs[3] + (fld)->_ghost_dims[3]); \
-      assert(i4 >= (fld)->_ghost_offs[4] && i4 < (fld)->_ghost_offs[4] + (fld)->_ghost_dims[4]); \
-      assert((fld)->_nd_acc.arr_off);					\
-      type *_p = &__MRC_FLD(fld, type, i0,i1,i2,i3,i4);			\
-      _p; }))
-
-#else
-
-#define MRC_FLD(fld, type, i0,i1,i2,i3,i4) __MRC_FLD(fld, type, i0,i1,i2,i3,i4)
-
-#endif
+#define MRC_FLD(fld, type, i0,i1,i2,i3,i4) __MRC_NDARRAY(&(fld)->_nd_acc, type, i0,i1,i2,i3,i4)
 
 #define MRC_S1(fld, i0) MRC_FLD(fld, float, i0,0,0,0,0)
 #define MRC_D1(fld, i0) MRC_FLD(fld, double, i0,0,0,0,0)
