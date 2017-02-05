@@ -1,9 +1,5 @@
 
-#include <mrc_fld.h>
-#include <mrc_domain.h>
-#include <mrc_io.h>
-#include <mrc_params.h>
-#include <mrctest.h>
+#include <mrc_ndarray.h>
 
 #include <assert.h>
 #include <string.h>
@@ -19,15 +15,13 @@
 static void
 test_0()
 {
-  struct mrc_fld *fld = mrc_fld_create(MPI_COMM_WORLD);
-  mrc_fld_set_name(fld, "test_fld");
-  mrc_fld_set_param_int3(fld, "offs", (int [3]) { 1, 2, 3 });
-  mrc_fld_set_param_int3(fld, "dims", (int [3]) { 2, 3, 4 });
-  mrc_fld_set_from_options(fld);
-  mrc_fld_setup(fld);
-  mrc_fld_view(fld);
-
-  struct mrc_ndarray *nd = fld->_nd;
+  struct mrc_ndarray *nd = mrc_ndarray_create(MPI_COMM_WORLD);
+  mrc_ndarray_set_param_int3(nd, "offs", (int [3]) { 1, 2, 3 });
+  mrc_ndarray_set_param_int3(nd, "dims", (int [3]) { 2, 3, 4 });
+  mrc_ndarray_set_param_int3(nd, "perm", (int [3]) { 0, 1, 2 });
+  mrc_ndarray_set_from_options(nd);
+  mrc_ndarray_setup(nd);
+  mrc_ndarray_view(nd);
 
   for (int k = 3; k < 3 + 4; k++) {
     for (int j = 2; j < 2 + 3; j++) {
@@ -45,7 +39,7 @@ test_0()
     }
   }
 
-  mrc_fld_destroy(fld);
+  mrc_ndarray_destroy(nd);
 }
 
 // ----------------------------------------------------------------------
