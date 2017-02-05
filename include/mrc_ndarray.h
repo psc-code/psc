@@ -32,6 +32,37 @@ struct mrc_ndarray_access {
   int stride[MRC_NDARRAY_MAXDIMS];
 };
 
+#define __MRC_NDARRAY(nd_acc, type, i0,i1,i2,i3,i4)			\
+  (((type *) (nd_acc)->arr_off)[(i4) * (nd_acc)->stride[4] +		\
+				(i3) * (nd_acc)->stride[3] +		\
+				(i2) * (nd_acc)->stride[2] +		\
+				(i1) * (nd_acc)->stride[1] +		\
+				(i0) * (nd_acc)->stride[0]])
+
+#ifdef BOUNDS_CHECK
+
+#include <string.h>
+
+#define MRC_NDARRAY(fld, type, i0,i1,i2,i3,i4)				\
+  (*({									\
+      if (strcmp(#type, "float") == 0) assert(nd->data_type == MRC_NT_FLOAT); \
+      if (strcmp(#type, "double") == 0) assert(nd->data_type == MRC_NT_DOUBLE); \
+      if (strcmp(#type, "int") == 0) assert(nd->data_type == MRC_NT_INT); \
+      assert(i0 >= (nd)->offs.vals[0] && i0 < (nd)->offs.vals[0] + (nd)->dims.vals[0]); \
+      assert(i1 >= (nd)->offs.vals[1] && i1 < (nd)->offs.vals[1] + (nd)->dims.vals[1]); \
+      assert(i2 >= (nd)->offs.vals[2] && i2 < (nd)->offs.vals[2] + (nd)->dims.vals[2]); \
+      assert(i3 >= (nd)->offs.vals[3] && i3 < (nd)->offs.vals[3] + (nd)->dims.vals[3]); \
+      assert(i4 >= (nd)->offs.vals[4] && i4 < (nd)->offs.vals[4] + (nd)->dims.vals[4]); \
+      assert((nd)->_nd_acc.arr_off);					\
+      type *_p = &__MRC_NDARRAY(&nd->acc, type, i0,i1,i2,i3,i4);			\
+      _p; }))
+
+#else
+
+#define MRC_NDARRAY(nd, type, i0,i1,i2,i3,i4) __MRC_NDARRAY(&nd->acc, type, i0,i1,i2,i3,i4)
+
+#endif
+
 // ----------------------------------------------------------------------
 // struct mrc_ndarray
 

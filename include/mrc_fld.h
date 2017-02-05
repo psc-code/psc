@@ -164,14 +164,7 @@ mrc_fld_spatial_sw(struct mrc_fld *x)
   return mrc_fld_sw(x);
 }
 
-#define __MRC_FLD(fld, type, i0,i1,i2,i3,i4)				\
-  (((type *) (fld)->_nd_acc.arr_off)[(i4) * (fld)->_nd_acc.stride[4] + \
-				     (i3) * (fld)->_nd_acc.stride[3] + \
-				     (i2) * (fld)->_nd_acc.stride[2] + \
-				     (i1) * (fld)->_nd_acc.stride[1] + \
-				     (i0) * (fld)->_nd_acc.stride[0]])
-
-
+#define __MRC_FLD(fld, type, i0,i1,i2,i3,i4) __MRC_NDARRAY(&(fld)->_nd_acc, type, i0,i1,i2,i3,i4)
 
 #ifdef BOUNDS_CHECK
 
