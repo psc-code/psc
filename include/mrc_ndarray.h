@@ -104,6 +104,57 @@ extern struct mrc_ndarray_ops mrc_ndarray_int_ops;
 
 MRC_CLASS_DECLARE(mrc_ndarray, struct mrc_ndarray);
 
+// ======================================================================
+// mrc_ndarray_it
+
+#include <assert.h>
+
+struct mrc_ndarray_it {
+  float *ptr;
+  int idx[MRC_NDARRAY_MAXDIMS];
+  struct mrc_ndarray *nd;
+};
+
+static inline void
+mrc_ndarray_it_start_all(struct mrc_ndarray_it *it, struct mrc_ndarray *nd)
+{
+  assert(nd->data_type == MRC_NT_FLOAT);
+  
+  it->nd = nd;
+  for (int d = 0; d < nd->n_dims; d++) {
+    it->idx[d] = nd->offs.vals[d];
+  }
+  it->ptr = (float *) nd->arr;
+}
+
+static inline bool
+mrc_ndarray_it_done(struct mrc_ndarray_it *it)
+{
+  return !it->ptr;
+}
+
+static inline void
+mrc_ndarray_it_next(struct mrc_ndarray_it *it)
+{
+  assert(!mrc_ndarray_it_done(it));
+  
+  for (int d = 0; d < it->nd->n_dims; d++) {
+    it->idx[d]++;
+    it->ptr += it->nd->acc.stride[d];
+    if (it->idx[d] >= it->nd->offs.vals[d] + it->nd->dims.vals[d]) {
+      it->idx[d] = it->nd->offs.vals[d];
+      it->ptr -= it->nd->dims.vals[d] * it->nd->acc.stride[d];
+    } else {
+      goto done;
+    }
+  }
+
+  it->ptr = NULL;
+
+ done:
+  ;
+}
+
 #endif
 
 

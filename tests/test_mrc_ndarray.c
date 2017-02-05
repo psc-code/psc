@@ -111,6 +111,38 @@ test_2()
 }
 
 // ----------------------------------------------------------------------
+// test_3
+//
+// test iterator (otherwise like test_1)
+
+static void
+test_3()
+{
+  struct mrc_ndarray *nd = mrc_ndarray_create(MPI_COMM_WORLD);
+  mrc_ndarray_set_param_int3(nd, "offs", (int [3]) { 1, 2, 3 });
+  mrc_ndarray_set_param_int3(nd, "dims", (int [3]) { 2, 3, 4 });
+  mrc_ndarray_set_from_options(nd);
+  mrc_ndarray_setup(nd);
+  mrc_ndarray_view(nd);
+
+  struct mrc_ndarray_it it;
+
+  for (mrc_ndarray_it_start_all(&it, nd); !mrc_ndarray_it_done(&it); mrc_ndarray_it_next(&it)) {
+    *it.ptr = it.idx[0] * 10000 + it.idx[1] * 100 + it.idx[2];
+  }
+
+  for (mrc_ndarray_it_start_all(&it, nd); !mrc_ndarray_it_done(&it); mrc_ndarray_it_next(&it)) {
+    mprintf("val[%d,%d,%d] = %g\n", it.idx[0], it.idx[1], it.idx[2], *it.ptr);
+  }
+
+  for (mrc_ndarray_it_start_all(&it, nd); !mrc_ndarray_it_done(&it); mrc_ndarray_it_next(&it)) {
+    assert(*it.ptr == it.idx[0] * 10000 + it.idx[1] * 100 + it.idx[2]);
+  }
+
+  mrc_ndarray_destroy(nd);
+}
+
+// ----------------------------------------------------------------------
 // main
 
 typedef void (*test_func)(void);
@@ -119,6 +151,7 @@ static test_func tests[] = {
   [0] = test_0,
   [1] = test_1,
   [2] = test_2,
+  [3] = test_3,
 };
 
 static int n_tests = sizeof(tests)/sizeof(tests[0]);
