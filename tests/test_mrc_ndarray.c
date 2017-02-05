@@ -128,15 +128,15 @@ test_3()
   struct mrc_ndarray_it it;
 
   for (mrc_ndarray_it_start_all(&it, nd); !mrc_ndarray_it_done(&it); mrc_ndarray_it_next(&it)) {
-    *it.ptr = it.idx[0] * 10000 + it.idx[1] * 100 + it.idx[2];
+    IT_S(&it) = it.idx[0] * 10000 + it.idx[1] * 100 + it.idx[2];
   }
 
   for (mrc_ndarray_it_start_all(&it, nd); !mrc_ndarray_it_done(&it); mrc_ndarray_it_next(&it)) {
-    mprintf("val[%d,%d,%d] = %g\n", it.idx[0], it.idx[1], it.idx[2], *it.ptr);
+    mprintf("val[%d,%d,%d] = %g\n", it.idx[0], it.idx[1], it.idx[2], IT_S(&it));
   }
 
   for (mrc_ndarray_it_start_all(&it, nd); !mrc_ndarray_it_done(&it); mrc_ndarray_it_next(&it)) {
-    assert(*it.ptr == it.idx[0] * 10000 + it.idx[1] * 100 + it.idx[2]);
+    assert(IT_S(&it) == it.idx[0] * 10000 + it.idx[1] * 100 + it.idx[2]);
   }
 
   mrc_ndarray_destroy(nd);
