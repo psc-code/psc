@@ -30,11 +30,9 @@ struct mrc_ndarray_access {
   void *arr_off; //< same as the data pointer (arr), but shifted by
 		 //precalculated offset for faster access
   int stride[MRC_NDARRAY_MAXDIMS];
-#ifdef BOUNDS_CHECK
   int beg[MRC_NDARRAY_MAXDIMS];
   int end[MRC_NDARRAY_MAXDIMS];
   int data_type;
-#endif
 };
 
 #define ___MRC_NDARRAY(nd_acc, type, i0,i1,i2,i3,i4)			\

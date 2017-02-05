@@ -147,7 +147,6 @@ _mrc_ndarray_setup(struct mrc_ndarray *nd)
   }
   nd->acc.arr_off = nd->arr - off * nd->size_of_type;
 
-#ifdef BOUNDS_CHECK
   // store more info in nd_acc so we can do bounds checking
   for (int d = 0; d < n_dims; d++) {
     nd->acc.beg[d] = offs[d];
@@ -158,7 +157,6 @@ _mrc_ndarray_setup(struct mrc_ndarray *nd)
     nd->acc.end[d] = 1;
   }
   nd->acc.data_type = nd->data_type;
-#endif
 }
 
 // ----------------------------------------------------------------------
