@@ -113,7 +113,7 @@ test_2()
 // ----------------------------------------------------------------------
 // test_3
 //
-// test iterator (otherwise like test_1)
+// test "all" iterator (otherwise like test_1)
 
 static void
 test_3()
@@ -127,16 +127,46 @@ test_3()
 
   struct mrc_ndarray_it it;
 
-  for (mrc_ndarray_it_start_all(&it, nd); !mrc_ndarray_it_done(&it); mrc_ndarray_it_next(&it)) {
+  for (mrc_ndarray_it_all(&it, nd); !mrc_ndarray_it_done(&it); mrc_ndarray_it_next(&it)) {
     IT_S(&it) = it.idx[0] * 10000 + it.idx[1] * 100 + it.idx[2];
   }
 
-  for (mrc_ndarray_it_start_all(&it, nd); !mrc_ndarray_it_done(&it); mrc_ndarray_it_next(&it)) {
+  for (mrc_ndarray_it_all(&it, nd); !mrc_ndarray_it_done(&it); mrc_ndarray_it_next(&it)) {
     mprintf("val[%d,%d,%d] = %g\n", it.idx[0], it.idx[1], it.idx[2], IT_S(&it));
   }
 
-  for (mrc_ndarray_it_start_all(&it, nd); !mrc_ndarray_it_done(&it); mrc_ndarray_it_next(&it)) {
+  for (mrc_ndarray_it_all(&it, nd); !mrc_ndarray_it_done(&it); mrc_ndarray_it_next(&it)) {
     assert(IT_S(&it) == it.idx[0] * 10000 + it.idx[1] * 100 + it.idx[2]);
+  }
+
+  mrc_ndarray_destroy(nd);
+}
+
+// ----------------------------------------------------------------------
+// test_4
+//
+// test subset iterator (otherwise like test_3)
+
+static void
+test_4()
+{
+  struct mrc_ndarray *nd = mrc_ndarray_create(MPI_COMM_WORLD);
+  mrc_ndarray_set_param_int3(nd, "offs", (int [3]) { 1, 2, 3 });
+  mrc_ndarray_set_param_int3(nd, "dims", (int [3]) { 2, 3, 4 });
+  mrc_ndarray_set_from_options(nd);
+  mrc_ndarray_setup(nd);
+  mrc_ndarray_view(nd);
+
+  struct mrc_ndarray_it it;
+
+  mrc_ndarray_it_beg_end(&it, nd, (int [3]) { 1, 2, 4 }, (int [3]) { 3, 5, 6 });
+  for (; !mrc_ndarray_it_done(&it); mrc_ndarray_it_next(&it)) {
+    IT_S(&it) = it.idx[0] * 10000 + it.idx[1] * 100 + it.idx[2];
+  }
+
+  mrc_ndarray_it_all(&it, nd);
+  for (; !mrc_ndarray_it_done(&it); mrc_ndarray_it_next(&it)) {
+    mprintf("val[%d,%d,%d] = %g\n", it.idx[0], it.idx[1], it.idx[2], IT_S(&it));
   }
 
   mrc_ndarray_destroy(nd);
@@ -152,6 +182,7 @@ static test_func tests[] = {
   [1] = test_1,
   [2] = test_2,
   [3] = test_3,
+  [4] = test_4,
 };
 
 static int n_tests = sizeof(tests)/sizeof(tests[0]);

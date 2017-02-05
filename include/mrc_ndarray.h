@@ -123,16 +123,33 @@ struct mrc_ndarray_it {
 #define IT_I(it) (*(int *)    (it)->ptr)
 
 static inline void
-mrc_ndarray_it_start_all(struct mrc_ndarray_it *it, struct mrc_ndarray *nd)
+mrc_ndarray_it_beg_end(struct mrc_ndarray_it *it, struct mrc_ndarray *nd,
+		       int beg[], int end[])
 {
   it->n_dims = nd->n_dims;
+  it->ptr = nd->acc.arr_off;
   for (int d = 0; d < it->n_dims; d++) {
-    it->idx[d] = nd->offs.vals[d];
+    assert(beg[d] >= nd->offs.vals[d]);
+    assert(end[d] <= nd->offs.vals[d] + nd->dims.vals[d]);
+    it->end[d] = end[d];
+    it->beg[d] = beg[d];
+    it->idx[d] = beg[d];
     it->stride[d] = nd->acc.stride[d] * nd->size_of_type;
-    it->end[d] = nd->offs.vals[d] + nd->dims.vals[d];
-    it->beg[d] = nd->offs.vals[d];
+    it->ptr += it->idx[d] * it->stride[d];
   }
-  it->ptr = nd->arr; // FIXME, base on arr_off!
+}
+
+static inline void
+mrc_ndarray_it_all(struct mrc_ndarray_it *it, struct mrc_ndarray *nd)
+{
+  int beg[MRC_NDARRAY_MAXDIMS], end[MRC_NDARRAY_MAXDIMS];
+
+  for (int d = 0; d < nd->n_dims; d++) {
+    end[d] = nd->offs.vals[d] + nd->dims.vals[d];
+    beg[d] = nd->offs.vals[d];
+  }
+
+  mrc_ndarray_it_beg_end(it, nd, beg, end);
 }
 
 static inline bool
