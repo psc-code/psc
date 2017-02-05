@@ -113,7 +113,9 @@ struct mrc_ndarray_it {
   void *ptr;
   int idx[MRC_NDARRAY_MAXDIMS];
   int stride[MRC_NDARRAY_MAXDIMS]; // from nd, but in terms of bytes!
-  struct mrc_ndarray *nd;
+  int end[MRC_NDARRAY_MAXDIMS];
+  int beg[MRC_NDARRAY_MAXDIMS];
+  int n_dims;
 };
 
 #define IT_S(it) (*(float *)  (it)->ptr)
@@ -123,10 +125,12 @@ struct mrc_ndarray_it {
 static inline void
 mrc_ndarray_it_start_all(struct mrc_ndarray_it *it, struct mrc_ndarray *nd)
 {
-  it->nd = nd;
-  for (int d = 0; d < nd->n_dims; d++) {
+  it->n_dims = nd->n_dims;
+  for (int d = 0; d < it->n_dims; d++) {
     it->idx[d] = nd->offs.vals[d];
     it->stride[d] = nd->acc.stride[d] * nd->size_of_type;
+    it->end[d] = nd->offs.vals[d] + nd->dims.vals[d];
+    it->beg[d] = nd->offs.vals[d];
   }
   it->ptr = nd->arr; // FIXME, base on arr_off!
 }
@@ -142,12 +146,12 @@ mrc_ndarray_it_next(struct mrc_ndarray_it *it)
 {
   assert(!mrc_ndarray_it_done(it));
   
-  for (int d = 0; d < it->nd->n_dims; d++) {
+  for (int d = 0; d < it->n_dims; d++) {
     it->idx[d]++;
     it->ptr += it->stride[d];
-    if (it->idx[d] >= it->nd->offs.vals[d] + it->nd->dims.vals[d]) {
-      it->idx[d] = it->nd->offs.vals[d];
-      it->ptr -= it->nd->dims.vals[d] * it->stride[d];
+    if (it->idx[d] >= it->end[d]) {
+      it->idx[d] = it->beg[d];
+      it->ptr -= (it->end[d] - it->beg[d]) * it->stride[d];
     } else {
       goto done;
     }
