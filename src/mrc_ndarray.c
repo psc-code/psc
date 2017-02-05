@@ -205,6 +205,17 @@ mrc_ndarray_access(struct mrc_ndarray *nd)
 }
 
 // ----------------------------------------------------------------------
+// mrc_ndarray_set
+
+void
+mrc_ndarray_set(struct mrc_ndarray *nd, double val)
+{
+  struct mrc_ndarray_ops *ops = mrc_ndarray_ops(nd);
+  assert(ops && ops->set);
+  ops->set(nd, val);
+}
+
+// ----------------------------------------------------------------------
 // mrc_ndarray_init
 
 static void

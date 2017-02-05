@@ -99,11 +99,16 @@ struct mrc_ndarray {
 
 struct mrc_ndarray_ops {
   MRC_SUBCLASS_OPS(struct mrc_ndarray);
+  void (*set)(struct mrc_ndarray *nd, double val);
 };
+
+#define mrc_ndarray_ops(nd) ((struct mrc_ndarray_ops *) (nd)->obj.ops)
 
 struct mrc_ndarray_access *mrc_ndarray_access(struct mrc_ndarray *nd);
 void mrc_ndarray_set_array(struct mrc_ndarray *nd, void *arr);
 void mrc_ndarray_replace_array(struct mrc_ndarray *nd, void *arr);
+
+void mrc_ndarray_set(struct mrc_ndarray *nd, double val);
 
 extern struct mrc_ndarray_ops mrc_ndarray_float_ops;
 extern struct mrc_ndarray_ops mrc_ndarray_double_ops;
@@ -125,9 +130,10 @@ struct mrc_ndarray_it {
   int n_dims;
 };
 
-#define IT_S(it) (*(float *)  (it)->ptr)
-#define IT_D(it) (*(double *) (it)->ptr)
-#define IT_I(it) (*(int *)    (it)->ptr)
+#define IT_TYPE(it, type) (*(type *) (it)->ptr)
+#define IT_S(it) IT_TYPE(it, float)
+#define IT_D(it) IT_TYPE(it, double)
+#define IT_I(it) IT_TYPE(it, int)
 
 static inline void
 mrc_ndarray_it_beg_end(struct mrc_ndarray_it *it, struct mrc_ndarray *nd,

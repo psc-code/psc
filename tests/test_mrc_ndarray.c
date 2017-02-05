@@ -173,6 +173,32 @@ test_4()
 }
 
 // ----------------------------------------------------------------------
+// test_5
+//
+// test set()
+
+static void
+test_5()
+{
+  struct mrc_ndarray *nd = mrc_ndarray_create(MPI_COMM_WORLD);
+  mrc_ndarray_set_param_int3(nd, "offs", (int [3]) { 1, 2, 3 });
+  mrc_ndarray_set_param_int3(nd, "dims", (int [3]) { 2, 3, 4 });
+  mrc_ndarray_set_from_options(nd);
+  mrc_ndarray_setup(nd);
+  mrc_ndarray_view(nd);
+
+  mrc_ndarray_set(nd, 3.);
+  
+  struct mrc_ndarray_it it;
+  mrc_ndarray_it_all(&it, nd);
+  for (; !mrc_ndarray_it_done(&it); mrc_ndarray_it_next(&it)) {
+    mprintf("val[%d,%d,%d] = %g\n", it.idx[0], it.idx[1], it.idx[2], IT_S(&it));
+  }
+
+  mrc_ndarray_destroy(nd);
+}
+
+// ----------------------------------------------------------------------
 // main
 
 typedef void (*test_func)(void);
@@ -183,6 +209,7 @@ static test_func tests[] = {
   [2] = test_2,
   [3] = test_3,
   [4] = test_4,
+  [5] = test_5,
 };
 
 static int n_tests = sizeof(tests)/sizeof(tests[0]);
