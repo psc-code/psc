@@ -63,12 +63,15 @@ struct mrc_ndarray_ops {
   MRC_SUBCLASS_OPS(struct mrc_ndarray);
 };
 
-MRC_CLASS_DECLARE(mrc_ndarray, struct mrc_ndarray);
-
 struct mrc_ndarray_access *mrc_ndarray_access(struct mrc_ndarray *nd);
 void mrc_ndarray_set_array(struct mrc_ndarray *nd, void *arr);
 void mrc_ndarray_replace_array(struct mrc_ndarray *nd, void *arr);
 
+extern struct mrc_ndarray_ops mrc_ndarray_float_ops;
+extern struct mrc_ndarray_ops mrc_ndarray_double_ops;
+extern struct mrc_ndarray_ops mrc_ndarray_int_ops;
+
+MRC_CLASS_DECLARE(mrc_ndarray, struct mrc_ndarray);
 
 #endif
 

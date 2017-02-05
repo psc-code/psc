@@ -168,10 +168,6 @@ mrc_ndarray_access(struct mrc_ndarray *nd)
 // ----------------------------------------------------------------------
 // mrc_ndarray_init
 
-static struct mrc_ndarray_ops mrc_ndarray_float_ops;
-static struct mrc_ndarray_ops mrc_ndarray_double_ops;
-static struct mrc_ndarray_ops mrc_ndarray_int_ops;
-
 static void
 mrc_ndarray_init()
 {
@@ -207,25 +203,3 @@ struct mrc_class_mrc_ndarray mrc_class_mrc_ndarray = {
   .setup        = _mrc_ndarray_setup,
   .destroy      = _mrc_ndarray_destroy,
 };
-
-// ----------------------------------------------------------------------
-// mrc_ndarray: float, double, int subclasses
-
-#define MAKE_MRC_NDARRAY_TYPE(NAME, type, TYPE)				\
-									\
-  static void								\
-  mrc_ndarray_##NAME##_create(struct mrc_ndarray *nd)			\
-  {									\
-    nd->data_type = MRC_NT_##TYPE;					\
-    nd->size_of_type = sizeof(type);					\
-  }									\
-  									\
-  static struct mrc_ndarray_ops mrc_ndarray_##NAME##_ops = {		\
-    .name                  = #NAME,					\
-    .create                = mrc_ndarray_##NAME##_create,		\
-  };									\
-
-MAKE_MRC_NDARRAY_TYPE(float, float, FLOAT)
-MAKE_MRC_NDARRAY_TYPE(double, double, DOUBLE)
-MAKE_MRC_NDARRAY_TYPE(int, int, INT)
-
