@@ -59,10 +59,10 @@ _mrc_fld_destroy(struct mrc_fld *fld)
 
 
 // ----------------------------------------------------------------------
-// mrc_fld_setup_vec
+// mrc_fld_setup_ndarray
 
-void
-mrc_fld_setup_vec(struct mrc_fld *fld)
+static void
+mrc_fld_setup_ndarray(struct mrc_fld *fld)
 {
   int n_dims = fld->_dims.nr_vals;
   assert(n_dims == fld->_offs.nr_vals);
@@ -215,7 +215,7 @@ _mrc_fld_setup(struct mrc_fld *fld)
     mrc_fld_set_param_int_array(fld, "sw", fld->_dims.nr_vals, NULL);
   }
 
-  mrc_fld_setup_vec(fld);
+  mrc_fld_setup_ndarray(fld);
 }
 
 // ----------------------------------------------------------------------
@@ -280,7 +280,7 @@ _mrc_fld_read(struct mrc_fld *fld, struct mrc_io *io)
   // we make a new one, so at least we're sure that with_array won't be honored
   // same for mrc_ndarray (for now, FIXME)
   fld->_nd = mrc_ndarray_create(mrc_fld_comm(fld));
-  mrc_fld_setup_vec(fld);
+  mrc_fld_setup_ndarray(fld);
   // FIXME: Hacky, but we are basically set up now, so we should advertise it
   fld->obj.is_setup = true;
 
