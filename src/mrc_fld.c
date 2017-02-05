@@ -280,7 +280,6 @@ _mrc_fld_read(struct mrc_fld *fld, struct mrc_io *io)
   // we make a new one, so at least we're sure that with_array won't be honored
   // same for mrc_ndarray (for now, FIXME)
   fld->_nd = mrc_ndarray_create(mrc_fld_comm(fld));
-  fld->_nd->vec = mrc_vec_create(mrc_fld_comm(fld));
   mrc_fld_setup_vec(fld);
   // FIXME: Hacky, but we are basically set up now, so we should advertise it
   fld->obj.is_setup = true;
