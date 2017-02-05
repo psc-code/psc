@@ -57,12 +57,11 @@ _mrc_fld_destroy(struct mrc_fld *fld)
   }
 }
 
-
 // ----------------------------------------------------------------------
-// mrc_fld_setup_ndarray
+// setup_ghost_dims_offs
 
 static void
-mrc_fld_setup_ndarray(struct mrc_fld *fld)
+setup_ghost_dims_offs(struct mrc_fld *fld)
 {
   int n_dims = fld->_dims.nr_vals;
   assert(n_dims == fld->_offs.nr_vals);
@@ -77,7 +76,16 @@ mrc_fld_setup_ndarray(struct mrc_fld *fld)
       fld->_ghost_dims[d] = 1;
     }
   }
+}
 
+// ----------------------------------------------------------------------
+// setup_ndarray
+
+static void
+setup_ndarray(struct mrc_fld *fld)
+{
+  setup_ghost_dims_offs(fld);
+  
   assert(MRC_FLD_MAXDIMS == 5);
   int *perm;
   if (!fld->_view_base) {
@@ -101,7 +109,7 @@ mrc_fld_setup_ndarray(struct mrc_fld *fld)
   }
       
   struct mrc_ndarray *nd = fld->_nd;
-
+  int n_dims = fld->_dims.nr_vals;
   mrc_ndarray_set_type(nd, mrc_fld_ops(fld)->vec_type);
   mrc_ndarray_set_param_int_array(nd, "dims", n_dims, fld->_ghost_dims);
   mrc_ndarray_set_param_int_array(nd, "offs", n_dims, fld->_ghost_offs);
@@ -215,7 +223,7 @@ _mrc_fld_setup(struct mrc_fld *fld)
     mrc_fld_set_param_int_array(fld, "sw", fld->_dims.nr_vals, NULL);
   }
 
-  mrc_fld_setup_ndarray(fld);
+  setup_ndarray(fld);
 }
 
 // ----------------------------------------------------------------------
@@ -275,12 +283,11 @@ _mrc_fld_read(struct mrc_fld *fld, struct mrc_io *io)
   if (fld->_sw.nr_vals == 0) {
     mrc_fld_set_param_int_array(fld, "sw", fld->_dims.nr_vals, NULL);
   }
-  // instead of reading back fld->_vec (which doesn't contain anything useful,
-  // anyway, since mrc_fld saves/restores the data rather than mrc_vec),
-  // we make a new one, so at least we're sure that with_array won't be honored
-  // same for mrc_ndarray (for now, FIXME)
-  fld->_nd = mrc_ndarray_create(mrc_fld_comm(fld));
-  mrc_fld_setup_ndarray(fld);
+  // read back our _nd member, though that won't read the actual data
+  mrc_fld_read_member_objs(fld, io);
+  fld->_nd_acc = *mrc_ndarray_access(fld->_nd);
+
+  setup_ghost_dims_offs(fld);
   // FIXME: Hacky, but we are basically set up now, so we should advertise it
   fld->obj.is_setup = true;
 

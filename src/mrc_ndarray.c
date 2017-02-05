@@ -3,6 +3,7 @@
 
 #include <mrc_vec.h>
 
+#include <stdio.h>
 #include <assert.h>
 
 // Don't like dirtying main libmrc code in this way
@@ -136,6 +137,19 @@ _mrc_ndarray_setup(struct mrc_ndarray *nd)
 }
 
 // ----------------------------------------------------------------------
+// mrc_ndarray_read
+
+static void
+_mrc_ndarray_read(struct mrc_ndarray *nd, struct mrc_io *io)
+{
+  // instead of reading back .vec, which wouldn't read its data, anyway,
+  // just create a new .vec, then do the usual setup
+
+  nd->vec = mrc_vec_create(mrc_ndarray_comm(nd));
+  mrc_ndarray_setup(nd);
+}
+
+// ----------------------------------------------------------------------
 // mrc_ndarray_set_array
 
 void
@@ -201,5 +215,6 @@ struct mrc_class_mrc_ndarray mrc_class_mrc_ndarray = {
   .param_descr  = mrc_ndarray_descr,
   .init         = mrc_ndarray_init,
   .setup        = _mrc_ndarray_setup,
+  .read         = _mrc_ndarray_read,
   .destroy      = _mrc_ndarray_destroy,
 };
