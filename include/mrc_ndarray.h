@@ -37,7 +37,7 @@ struct mrc_ndarray_access {
 #endif
 };
 
-#define __MRC_NDARRAY(nd_acc, type, i0,i1,i2,i3,i4)			\
+#define ___MRC_NDARRAY(nd_acc, type, i0,i1,i2,i3,i4)			\
   (((type *) (nd_acc)->arr_off)[(i4) * (nd_acc)->stride[4] +		\
 				(i3) * (nd_acc)->stride[3] +		\
 				(i2) * (nd_acc)->stride[2] +		\
@@ -48,25 +48,27 @@ struct mrc_ndarray_access {
 
 #include <string.h>
 
-#define MRC_NDARRAY(nd, type, i0,i1,i2,i3,i4)				\
+#define __MRC_NDARRAY(nd_acc, type, i0,i1,i2,i3,i4)			\
   (*({									\
-      if (strcmp(#type, "float") == 0) assert(nd->acc.data_type == MRC_NT_FLOAT); \
-      if (strcmp(#type, "double") == 0) assert(nd->acc.data_type == MRC_NT_DOUBLE); \
-      if (strcmp(#type, "int") == 0) assert(nd->acc.data_type == MRC_NT_INT); \
-      assert(i0 >= (nd)->acc.beg[0] && i0 < (nd)->acc.end[0]);		\
-      assert(i1 >= (nd)->acc.beg[1] && i1 < (nd)->acc.end[1]);		\
-      assert(i2 >= (nd)->acc.beg[2] && i2 < (nd)->acc.end[2]);		\
-      assert(i3 >= (nd)->acc.beg[3] && i3 < (nd)->acc.end[3]);		\
-      assert(i4 >= (nd)->acc.beg[4] && i4 < (nd)->acc.end[4]);		\
-      assert((nd)->acc.arr_off);					\
-      type *_p = &__MRC_NDARRAY(&nd->acc, type, i0,i1,i2,i3,i4);			\
+      if (strcmp(#type, "float") == 0) assert((nd_acc)->data_type == MRC_NT_FLOAT); \
+      if (strcmp(#type, "double") == 0) assert((nd_acc)->data_type == MRC_NT_DOUBLE); \
+      if (strcmp(#type, "int") == 0) assert((nd_acc)->data_type == MRC_NT_INT); \
+      assert(i0 >= (nd_acc)->beg[0] && i0 < (nd_acc)->end[0]);		\
+      assert(i1 >= (nd_acc)->beg[1] && i1 < (nd_acc)->end[1]);		\
+      assert(i2 >= (nd_acc)->beg[2] && i2 < (nd_acc)->end[2]);		\
+      assert(i3 >= (nd_acc)->beg[3] && i3 < (nd_acc)->end[3]);		\
+      assert(i4 >= (nd_acc)->beg[4] && i4 < (nd_acc)->end[4]);		\
+      assert((nd_acc)->arr_off);					\
+      type *_p = &___MRC_NDARRAY(nd_acc, type, i0,i1,i2,i3,i4);		\
       _p; }))
 
 #else
 
-#define MRC_NDARRAY(nd, type, i0,i1,i2,i3,i4) __MRC_NDARRAY(&nd->acc, type, i0,i1,i2,i3,i4)
+#define __MRC_NDARRAY(nd_acc, type, i0,i1,i2,i3,i4) ___MRC_NDARRAY(nd_acc, type, i0,i1,i2,i3,i4)
 
 #endif
+
+#define MRC_NDARRAY(nd, type, i0,i1,i2,i3,i4) __MRC_NDARRAY(&nd->acc, type, i0,i1,i2,i3,i4)
 
 // ----------------------------------------------------------------------
 // struct mrc_ndarray
