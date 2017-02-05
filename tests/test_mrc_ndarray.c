@@ -29,13 +29,21 @@ test_0()
 
   struct mrc_ndarray *nd = fld->_nd;
 
-  mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
-    S3(nd, ix,iy,iz) = ix * 10000 + iy * 100 + iz;
-  } mrc_fld_foreach_end;
+  for (int k = 3; k < 3 + 4; k++) {
+    for (int j = 2; j < 2 + 3; j++) {
+      for (int i = 1; i < 1 + 2; i++) {
+	S3(nd, i,j,k) = i * 10000 + j * 100 + k;
+      }
+    }
+  }
 
-  mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
-    assert(S3(nd, ix,iy,iz) == ix * 10000 + iy * 100 + iz);
-  } mrc_fld_foreach_end;
+  for (int k = 3; k < 3 + 4; k++) {
+    for (int j = 2; j < 2 + 3; j++) {
+      for (int i = 1; i < 1 + 2; i++) {
+	assert(S3(nd, i,j,k) == i * 10000 + j * 100 + k);
+      }
+    }
+  }
 
   mrc_fld_destroy(fld);
 }
