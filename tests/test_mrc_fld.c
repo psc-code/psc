@@ -341,6 +341,42 @@ test_waxpy(const char *type)
 }
 
 // ----------------------------------------------------------------------
+// test_make_view
+//
+// view of an mrc_fld on a mrc_domain
+
+static void
+test_make_view(int sw)
+{
+  struct mrc_domain *domain = mrc_domain_create(MPI_COMM_WORLD);
+  mrc_domain_set_type(domain, "simple");
+  mrc_domain_set_from_options(domain);
+  mrc_domain_setup(domain);
+  mrc_domain_view(domain);
+  
+  struct mrc_fld *fld = mrc_domain_fld_create(domain, sw, "test0:test1");
+  mrc_fld_set_from_options(fld);
+  mrc_fld_setup(fld);
+  mrc_fld_view(fld);
+
+  for (int m = 0; m < 2; m++) {
+    mrc_fld_foreach(fld, ix,iy,iz, sw, sw) {
+      MRC_S4(fld, ix,iy,iz, m) = m * 1000 + ix * 100 + iy * 10 + iz;
+    } mrc_fld_foreach_end;
+  }
+
+  struct mrc_fld *fld2 = mrc_fld_make_view(fld, 1, 2);
+  
+  mrc_fld_foreach(fld2, ix,iy,iz, sw, sw) {
+    //mprintf("[%d,%d,%d,%d] = %g\n", 0, ix, iy, iz, MRC_S4(fld2, ix,iy,iz, 0));
+    assert(MRC_S4(fld2, ix,iy,iz, 0) == 1 * 1000 + ix * 100 + iy * 10 + iz);
+  } mrc_fld_foreach_end;
+  
+  mrc_fld_destroy(fld2);
+  mrc_fld_destroy(fld);
+}
+  
+// ----------------------------------------------------------------------
 // main
 
 int
@@ -375,6 +411,7 @@ main(int argc, char **argv)
   case 20: test_waxpy("float"); break;
   case 21: test_waxpy("double"); break;
   case 22: test_waxpy("int"); break;
+  case 23: test_make_view(0); break;
   default: assert(0);
   }
 
