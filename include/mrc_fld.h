@@ -112,9 +112,6 @@ const int *mrc_fld_ghost_dims(struct mrc_fld *x);
 int mrc_fld_data_type(struct mrc_fld *fld);
 int mrc_fld_len(struct mrc_fld *fld);
 struct mrc_fld *mrc_fld_duplicate(struct mrc_fld *fld);
-struct mrc_fld *mrc_fld_create_view(struct mrc_fld *fld, int nr_dims, int *dims, int *offs);
-struct mrc_fld *mrc_fld_create_view_ext(struct mrc_fld *fld, int nr_dims, int *dims, int *offs, int *sw,
-					int *new_offs);
 struct mrc_fld *mrc_fld_make_view(struct mrc_fld *fld, int mb, int me);
 void mrc_fld_copy(struct mrc_fld *fld_to, struct mrc_fld *fld_from);
 void mrc_fld_axpy(struct mrc_fld *y, float alpha, struct mrc_fld *x);

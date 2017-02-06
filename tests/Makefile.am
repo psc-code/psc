@@ -18,7 +18,6 @@ check_PROGRAMS = \
 	test_mrc_ndarray \
 	test_mrc_fld \
 	test_mrc_fld_io \
-	test_mrc_fld_view \
 	test_mrc_f3 \
 	test_mrc_m1 \
 	test_mrc_m3 \
