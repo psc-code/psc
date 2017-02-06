@@ -1029,20 +1029,6 @@ mrc_fld_int_ddc_copy_to_buf(struct mrc_fld *fld, int mb, int me, int p,
   }									\
   									\
   static void								\
-  mrc_fld_##NAME##_set(struct mrc_fld *fld, float val)			\
-  {									\
-    assert(!fld->_aos);							\
-									\
-    for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {			\
-      mrc_fld_foreach(fld, ix,iy,iz, fld->_nr_ghosts, fld->_nr_ghosts) { \
-	for (int m = 0; m < fld->_nr_comps; m++) {			\
-	  MRC_FLD(fld, type, ix,iy,iz, m, p) = val;			\
-	}								\
-      } mrc_fld_foreach_end;						\
-    }									\
-  }									\
-									\
-  static void								\
   mrc_fld_##NAME##_copy(struct mrc_fld *fld_to, struct mrc_fld *fld_from) \
   {									\
     assert(!fld_to->_aos && !fld_from->_aos);				\
@@ -1068,7 +1054,6 @@ mrc_fld_int_ddc_copy_to_buf(struct mrc_fld *fld, int mb, int me, int p,
     .methods               = mrc_fld_##NAME##_methods,			\
     .create                = mrc_fld_##NAME##_create,			\
     .read                  = mrc_fld_##NAME##_read,			\
-    .set                   = mrc_fld_##NAME##_set,			\
     .copy                  = mrc_fld_##NAME##_copy,			\
     .ddc_copy_from_buf	   = mrc_fld_##NAME##_ddc_copy_from_buf,	\
     .ddc_copy_to_buf	   = mrc_fld_##NAME##_ddc_copy_to_buf,		\
