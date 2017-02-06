@@ -9,6 +9,29 @@
 #define S3(nd, i,j,k) MRC_NDARRAY(nd, float, i,j,k,0,0)
 
 // ----------------------------------------------------------------------
+// setup_nd
+
+static struct mrc_ndarray *
+setup_nd(const int *offs, const int *dims, const int *perm)
+{
+  struct mrc_ndarray *nd = mrc_ndarray_create(MPI_COMM_WORLD);
+  if (offs) {
+    mrc_ndarray_set_param_int3(nd, "offs", offs);
+  }
+  if (dims) {
+    mrc_ndarray_set_param_int3(nd, "dims", dims);
+  }
+  if (perm) {
+    mrc_ndarray_set_param_int3(nd, "perm", perm);
+  }
+  mrc_ndarray_set_from_options(nd);
+  mrc_ndarray_setup(nd);
+  mrc_ndarray_view(nd);
+
+  return nd;
+}
+
+// ----------------------------------------------------------------------
 // mrc_ndarray_print_3d
 
 static void
@@ -36,6 +59,48 @@ mrc_ndarray_print_3d(struct mrc_ndarray *nd)
 }
 
 // ----------------------------------------------------------------------
+// set_and_assert_3d
+
+static void
+set_and_assert_3d(struct mrc_ndarray *nd)
+{
+  int *offs = mrc_ndarray_offs(nd), *dims = mrc_ndarray_dims(nd);
+
+  for (int k = offs[2]; k < offs[2] + dims[2]; k++) {
+    for (int j = offs[1]; j < offs[1] + dims[1]; j++) {
+      for (int i = offs[0]; i < offs[0] + dims[0]; i++) {
+	S3(nd, i,j,k) = i * 10000 + j * 100 + k;
+      }
+    }
+  }
+
+  for (int k = offs[2]; k < offs[2] + dims[2]; k++) {
+    for (int j = offs[1]; j < offs[1] + dims[1]; j++) {
+      for (int i = offs[0]; i < offs[0] + dims[0]; i++) {
+	assert(S3(nd, i,j,k) == i * 10000 + j * 100 + k);
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
+// setup_and_set_nd
+
+static struct mrc_ndarray *
+setup_and_set_nd(int *offs, int *dims, int *perm)
+{
+  struct mrc_ndarray *nd = setup_nd((int [3]) { 1, 2, 0 }, (int [3]) { 3, 4, 1 },
+				    NULL);
+
+  struct mrc_ndarray_it it;
+  for (mrc_ndarray_it_all(&it, nd); !mrc_ndarray_it_done(&it); mrc_ndarray_it_next(&it)) {
+    IT_S(&it) = it.idx[0] * 100 + it.idx[1] * 10 + it.idx[2];
+  }
+
+  return nd;
+}
+
+// ----------------------------------------------------------------------
 // test_0
 //
 // tests that we can actually store and retrieve back values in the ndarray
@@ -43,30 +108,9 @@ mrc_ndarray_print_3d(struct mrc_ndarray *nd)
 static void
 test_0()
 {
-  struct mrc_ndarray *nd = mrc_ndarray_create(MPI_COMM_WORLD);
-  mrc_ndarray_set_param_int3(nd, "offs", (int [3]) { 1, 2, 3 });
-  mrc_ndarray_set_param_int3(nd, "dims", (int [3]) { 2, 3, 4 });
-  mrc_ndarray_set_param_int3(nd, "perm", (int [3]) { 0, 1, 2 });
-  mrc_ndarray_set_from_options(nd);
-  mrc_ndarray_setup(nd);
-  mrc_ndarray_view(nd);
-
-  for (int k = 3; k < 3 + 4; k++) {
-    for (int j = 2; j < 2 + 3; j++) {
-      for (int i = 1; i < 1 + 2; i++) {
-	S3(nd, i,j,k) = i * 10000 + j * 100 + k;
-      }
-    }
-  }
-
-  for (int k = 3; k < 3 + 4; k++) {
-    for (int j = 2; j < 2 + 3; j++) {
-      for (int i = 1; i < 1 + 2; i++) {
-	assert(S3(nd, i,j,k) == i * 10000 + j * 100 + k);
-      }
-    }
-  }
-
+  struct mrc_ndarray *nd = setup_nd((int [3]) { 1, 2, 3 }, (int [3]) { 2, 3, 4 },
+				    (int [3]) { 0, 1, 2 });
+  set_and_assert_3d(nd);
   mrc_ndarray_destroy(nd);
 }
 
@@ -78,29 +122,9 @@ test_0()
 static void
 test_1()
 {
-  struct mrc_ndarray *nd = mrc_ndarray_create(MPI_COMM_WORLD);
-  mrc_ndarray_set_param_int3(nd, "offs", (int [3]) { 1, 2, 3 });
-  mrc_ndarray_set_param_int3(nd, "dims", (int [3]) { 2, 3, 4 });
-  mrc_ndarray_set_from_options(nd);
-  mrc_ndarray_setup(nd);
-  mrc_ndarray_view(nd);
-
-  for (int k = 3; k < 3 + 4; k++) {
-    for (int j = 2; j < 2 + 3; j++) {
-      for (int i = 1; i < 1 + 2; i++) {
-	S3(nd, i,j,k) = i * 10000 + j * 100 + k;
-      }
-    }
-  }
-
-  for (int k = 3; k < 3 + 4; k++) {
-    for (int j = 2; j < 2 + 3; j++) {
-      for (int i = 1; i < 1 + 2; i++) {
-	assert(S3(nd, i,j,k) == i * 10000 + j * 100 + k);
-      }
-    }
-  }
-
+  struct mrc_ndarray *nd = setup_nd((int [3]) { 1, 2, 3 }, (int [3]) { 2, 3, 4 },
+				    NULL);
+  set_and_assert_3d(nd);
   mrc_ndarray_destroy(nd);
 }
 
@@ -112,28 +136,9 @@ test_1()
 static void
 test_2()
 {
-  struct mrc_ndarray *nd = mrc_ndarray_create(MPI_COMM_WORLD);
-  mrc_ndarray_set_param_int3(nd, "dims", (int [3]) { 2, 3, 4 });
-  mrc_ndarray_set_from_options(nd);
-  mrc_ndarray_setup(nd);
-  mrc_ndarray_view(nd);
+  struct mrc_ndarray *nd = setup_nd(NULL, (int [3]) { 2, 3, 4 }, NULL);
 
-  for (int k = 0; k < 4; k++) {
-    for (int j = 0; j < 3; j++) {
-      for (int i = 0; i < 2; i++) {
-	S3(nd, i,j,k) = i * 10000 + j * 100 + k;
-      }
-    }
-  }
-
-  for (int k = 0; k < 4; k++) {
-    for (int j = 0; j < 3; j++) {
-      for (int i = 0; i < 2; i++) {
-	assert(S3(nd, i,j,k) == i * 10000 + j * 100 + k);
-      }
-    }
-  }
-
+  set_and_assert_3d(nd);
   mrc_ndarray_destroy(nd);
 }
 
@@ -145,12 +150,8 @@ test_2()
 static void
 test_3()
 {
-  struct mrc_ndarray *nd = mrc_ndarray_create(MPI_COMM_WORLD);
-  mrc_ndarray_set_param_int3(nd, "offs", (int [3]) { 1, 2, 3 });
-  mrc_ndarray_set_param_int3(nd, "dims", (int [3]) { 2, 3, 4 });
-  mrc_ndarray_set_from_options(nd);
-  mrc_ndarray_setup(nd);
-  mrc_ndarray_view(nd);
+  struct mrc_ndarray *nd = setup_nd((int [3]) { 1, 2, 3 }, (int [3]) { 2, 3, 4 },
+				    NULL);
 
   struct mrc_ndarray_it it;
 
@@ -159,11 +160,6 @@ test_3()
   }
 
   mrc_ndarray_print_3d(nd);
-
-  for (mrc_ndarray_it_all(&it, nd); !mrc_ndarray_it_done(&it); mrc_ndarray_it_next(&it)) {
-    assert(IT_S(&it) == it.idx[0] * 10000 + it.idx[1] * 100 + it.idx[2]);
-  }
-
   mrc_ndarray_destroy(nd);
 }
 
@@ -175,12 +171,8 @@ test_3()
 static void
 test_4()
 {
-  struct mrc_ndarray *nd = mrc_ndarray_create(MPI_COMM_WORLD);
-  mrc_ndarray_set_param_int3(nd, "offs", (int [3]) { 1, 2, 3 });
-  mrc_ndarray_set_param_int3(nd, "dims", (int [3]) { 2, 3, 4 });
-  mrc_ndarray_set_from_options(nd);
-  mrc_ndarray_setup(nd);
-  mrc_ndarray_view(nd);
+  struct mrc_ndarray *nd = setup_nd((int [3]) { 1, 2, 3 }, (int [3]) { 2, 3, 4 },
+				    NULL);
 
   struct mrc_ndarray_it it;
 
@@ -190,7 +182,6 @@ test_4()
   }
 
   mrc_ndarray_print_3d(nd);
-
   mrc_ndarray_destroy(nd);
 }
 
@@ -202,39 +193,24 @@ test_4()
 static void
 test_5()
 {
-  struct mrc_ndarray *nd = mrc_ndarray_create(MPI_COMM_WORLD);
-  mrc_ndarray_set_param_int3(nd, "offs", (int [3]) { 1, 2, 3 });
-  mrc_ndarray_set_param_int3(nd, "dims", (int [3]) { 2, 3, 4 });
-  mrc_ndarray_set_from_options(nd);
-  mrc_ndarray_setup(nd);
-  mrc_ndarray_view(nd);
-
+  struct mrc_ndarray *nd = setup_nd((int [3]) { 1, 2, 3 }, (int [3]) { 2, 3, 4 },
+				    NULL);
   mrc_ndarray_set(nd, 3.);
   mrc_ndarray_print_3d(nd);
-
   mrc_ndarray_destroy(nd);
 }
 
 // ----------------------------------------------------------------------
 // test_6
 //
-// test view
+// test view of same size (but will be shifted)
 
 static void
 test_6()
 {
-  struct mrc_ndarray *nd = mrc_ndarray_create(MPI_COMM_WORLD);
-  mrc_ndarray_set_param_int3(nd, "offs", (int [3]) { 1, 2, 0 });
-  mrc_ndarray_set_param_int3(nd, "dims", (int [3]) { 3, 4, 1 });
-  mrc_ndarray_set_from_options(nd);
-  mrc_ndarray_setup(nd);
-  mrc_ndarray_view(nd);
+  struct mrc_ndarray *nd = setup_and_set_nd((int [3]) { 1, 2, 0 }, (int [3]) { 3, 4, 1 },
+					    NULL);
 
-  struct mrc_ndarray_it it;
-
-  for (mrc_ndarray_it_all(&it, nd); !mrc_ndarray_it_done(&it); mrc_ndarray_it_next(&it)) {
-    IT_S(&it) = it.idx[0] * 100 + it.idx[1] * 10 + it.idx[2];
-  }
 
   printf("VIEW 1:4,2:6,0:1 (identical, though shifted)\n");
   struct mrc_ndarray *nd_view = mrc_ndarray_create(MPI_COMM_WORLD);
