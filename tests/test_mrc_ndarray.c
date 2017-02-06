@@ -9,6 +9,33 @@
 #define S3(nd, i,j,k) MRC_NDARRAY(nd, float, i,j,k,0,0)
 
 // ----------------------------------------------------------------------
+// mrc_ndarray_print_3d
+
+static void
+mrc_ndarray_print_3d(struct mrc_ndarray *nd)
+{
+  assert(mrc_ndarray_n_dims(nd) == 3);
+  const int *offs = mrc_ndarray_offs(nd);
+  const int *dims = mrc_ndarray_dims(nd);
+  printf("mrc_ndarray [%d:%d,%d:%d,%d:%d]\n",
+	 offs[0], offs[0] + dims[0],
+	 offs[1], offs[1] + dims[1],
+	 offs[2], offs[2] + dims[2]);
+
+  struct mrc_ndarray_it it;
+  mrc_ndarray_it_all(&it, nd);
+  for (; !mrc_ndarray_it_done(&it); mrc_ndarray_it_next(&it)) {
+    printf(" [%d,%d,%d] %g", it.idx[0], it.idx[1], it.idx[2], IT_S(&it));
+    if (it.idx[0] == offs[0] + dims[0] - 1) {
+      printf("\n");
+      if (it.idx[1] == offs[1] + dims[1] - 1) {
+	printf("\n");
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
 // test_0
 //
 // tests that we can actually store and retrieve back values in the ndarray
@@ -131,9 +158,7 @@ test_3()
     IT_S(&it) = it.idx[0] * 10000 + it.idx[1] * 100 + it.idx[2];
   }
 
-  for (mrc_ndarray_it_all(&it, nd); !mrc_ndarray_it_done(&it); mrc_ndarray_it_next(&it)) {
-    mprintf("val[%d,%d,%d] = %g\n", it.idx[0], it.idx[1], it.idx[2], IT_S(&it));
-  }
+  mrc_ndarray_print_3d(nd);
 
   for (mrc_ndarray_it_all(&it, nd); !mrc_ndarray_it_done(&it); mrc_ndarray_it_next(&it)) {
     assert(IT_S(&it) == it.idx[0] * 10000 + it.idx[1] * 100 + it.idx[2]);
@@ -164,10 +189,7 @@ test_4()
     IT_S(&it) = it.idx[0] * 10000 + it.idx[1] * 100 + it.idx[2];
   }
 
-  mrc_ndarray_it_all(&it, nd);
-  for (; !mrc_ndarray_it_done(&it); mrc_ndarray_it_next(&it)) {
-    mprintf("val[%d,%d,%d] = %g\n", it.idx[0], it.idx[1], it.idx[2], IT_S(&it));
-  }
+  mrc_ndarray_print_3d(nd);
 
   mrc_ndarray_destroy(nd);
 }
@@ -188,12 +210,7 @@ test_5()
   mrc_ndarray_view(nd);
 
   mrc_ndarray_set(nd, 3.);
-  
-  struct mrc_ndarray_it it;
-  mrc_ndarray_it_all(&it, nd);
-  for (; !mrc_ndarray_it_done(&it); mrc_ndarray_it_next(&it)) {
-    mprintf("val[%d,%d,%d] = %g\n", it.idx[0], it.idx[1], it.idx[2], IT_S(&it));
-  }
+  mrc_ndarray_print_3d(nd);
 
   mrc_ndarray_destroy(nd);
 }
