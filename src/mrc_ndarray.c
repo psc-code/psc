@@ -113,8 +113,18 @@ _mrc_ndarray_setup(struct mrc_ndarray *nd)
     }
   } else {
     // make a view
-    // FIXME, this doesn't support perm at this point
     struct mrc_ndarray *nd_base = nd->view_base;
+
+    // FIXME, this doesn't support perm at this point
+    for (int d = 0; d < n_dims; d++) {
+      assert(nd->perm.vals[d] == d);
+    }
+
+    // view_offs default is offs from base array
+    if (nd->view_offs.nr_vals == 0) {
+      mrc_ndarray_set_param_int_array(nd, "view_offs", n_dims, mrc_ndarray_offs(nd_base));
+    }
+
     assert(n_dims == nd_base->n_dims);
     assert(n_dims == nd->view_offs.nr_vals);
     int *base_offs = nd_base->offs.vals, *base_dims = nd_base->dims.vals;
