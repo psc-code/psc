@@ -101,6 +101,22 @@ setup_and_set_nd(int *offs, int *dims, int *perm)
 }
 
 // ----------------------------------------------------------------------
+// make_view
+
+struct mrc_ndarray *
+make_view(struct mrc_ndarray *nd_base, const int *offs, const int *dims)
+{
+  struct mrc_ndarray *nd = mrc_ndarray_create(MPI_COMM_WORLD);
+  mrc_ndarray_set_param_int3(nd, "offs", offs);
+  mrc_ndarray_set_param_int3(nd, "dims", dims);
+  mrc_ndarray_set_param_obj(nd, "view_base", nd_base);
+  mrc_ndarray_set_from_options(nd);
+  mrc_ndarray_setup(nd);
+  mrc_ndarray_view(nd);
+  return nd;
+}		   
+
+// ----------------------------------------------------------------------
 // test_0
 //
 // tests that we can actually store and retrieve back values in the ndarray
@@ -211,15 +227,8 @@ test_6()
   struct mrc_ndarray *nd = setup_and_set_nd((int [3]) { 1, 2, 0 }, (int [3]) { 3, 4, 1 },
 					    NULL);
 
-
   printf("VIEW 1:4,2:6,0:1 (identical, though shifted)\n");
-  struct mrc_ndarray *nd_view = mrc_ndarray_create(MPI_COMM_WORLD);
-  mrc_ndarray_set_param_int3(nd_view, "offs", (int [3]) { 1, 2, 0 });
-  mrc_ndarray_set_param_int3(nd_view, "dims", (int [3]) { 3, 4, 1 });
-  mrc_ndarray_set_param_obj(nd_view, "view_base", nd);
-  mrc_ndarray_set_from_options(nd_view);
-  mrc_ndarray_setup(nd_view);
-  mrc_ndarray_view(nd_view);
+  struct mrc_ndarray *nd_view = make_view(nd, (int [3]) { 1, 2, 0 }, (int [3]) { 3, 4, 1 });
   
   mrc_ndarray_print_3d(nd);
   mrc_ndarray_print_3d(nd_view);
