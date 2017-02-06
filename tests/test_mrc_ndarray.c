@@ -216,6 +216,49 @@ test_5()
 }
 
 // ----------------------------------------------------------------------
+// test_6
+//
+// test view
+
+static void
+test_6()
+{
+  struct mrc_ndarray *nd = mrc_ndarray_create(MPI_COMM_WORLD);
+  mrc_ndarray_set_param_int3(nd, "offs", (int [3]) { 1, 2, 0 });
+  mrc_ndarray_set_param_int3(nd, "dims", (int [3]) { 3, 4, 1 });
+  mrc_ndarray_set_from_options(nd);
+  mrc_ndarray_setup(nd);
+  mrc_ndarray_view(nd);
+
+  struct mrc_ndarray_it it;
+
+  for (mrc_ndarray_it_all(&it, nd); !mrc_ndarray_it_done(&it); mrc_ndarray_it_next(&it)) {
+    IT_S(&it) = it.idx[0] * 100 + it.idx[1] * 10 + it.idx[2];
+  }
+
+  printf("VIEW 1:4,2:6,0:1 (identical, though shifted)\n");
+  struct mrc_ndarray *nd_view = mrc_ndarray_create(MPI_COMM_WORLD);
+  mrc_ndarray_set_param_int3(nd_view, "offs", (int [3]) { 1, 2, 0 });
+  mrc_ndarray_set_param_int3(nd_view, "dims", (int [3]) { 3, 4, 1 });
+  mrc_ndarray_set_param_obj(nd_view, "view_base", nd);
+  mrc_ndarray_set_from_options(nd_view);
+  mrc_ndarray_setup(nd_view);
+  mrc_ndarray_view(nd_view);
+  
+  mrc_ndarray_print_3d(nd);
+  mrc_ndarray_print_3d(nd_view);
+
+  S3(nd_view, 1, 2, 0) = 999;
+
+  printf("first element set to 999 (should be in both ndarrays)\n\n");
+  mrc_ndarray_print_3d(nd);
+  mrc_ndarray_print_3d(nd_view);
+
+  mrc_ndarray_destroy(nd_view);
+  mrc_ndarray_destroy(nd);
+}
+
+// ----------------------------------------------------------------------
 // main
 
 typedef void (*test_func)(void);
@@ -227,6 +270,7 @@ static test_func tests[] = {
   [3] = test_3,
   [4] = test_4,
   [5] = test_5,
+  [6] = test_6,
 };
 
 static int n_tests = sizeof(tests)/sizeof(tests[0]);
@@ -234,9 +278,7 @@ static int n_tests = sizeof(tests)/sizeof(tests[0]);
 static void
 run_test(int n)
 {
-  mpi_printf(MPI_COMM_WORLD, "==============================================\n");
-  mpi_printf(MPI_COMM_WORLD, "TEST %d\n", n);
-  mpi_printf(MPI_COMM_WORLD, "==============================================\n");
+  mpi_printf(MPI_COMM_WORLD, "\n=== TEST %d\n", n);
 
   tests[n]();
 
