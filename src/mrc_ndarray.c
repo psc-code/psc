@@ -203,6 +203,33 @@ mrc_ndarray_access(struct mrc_ndarray *nd)
 }
 
 // ----------------------------------------------------------------------
+// mrc_ndarray_n_dims
+
+int
+mrc_ndarray_n_dims(struct mrc_ndarray *nd)
+{
+  return nd->n_dims;
+}
+
+// ----------------------------------------------------------------------
+// mrc_ndarray_dims
+
+int *
+mrc_ndarray_dims(struct mrc_ndarray *nd)
+{
+  return nd->dims.vals;
+}
+
+// ----------------------------------------------------------------------
+// mrc_ndarray_offs
+
+int *
+mrc_ndarray_offs(struct mrc_ndarray *nd)
+{
+  return nd->offs.vals;
+}
+
+// ----------------------------------------------------------------------
 // mrc_ndarray_set
 
 void
