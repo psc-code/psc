@@ -120,9 +120,9 @@ _mrc_ndarray_setup(struct mrc_ndarray *nd)
       assert(nd->perm.vals[d] == d);
     }
 
-    // view_offs default is offs from base array
+    // view_offs default is offs
     if (nd->view_offs.nr_vals == 0) {
-      mrc_ndarray_set_param_int_array(nd, "view_offs", n_dims, mrc_ndarray_offs(nd_base));
+      mrc_ndarray_set_param_int_array(nd, "view_offs", n_dims, offs);
     }
 
     assert(n_dims == nd_base->n_dims);
@@ -131,7 +131,7 @@ _mrc_ndarray_setup(struct mrc_ndarray *nd)
     int *view_offs = nd->view_offs.vals;
 
     for (int d = 0; d < n_dims; d++) {
-      assert(view_offs[d] >= offs[d]);
+      assert(view_offs[d] >= base_offs[d]);
       assert(view_offs[d] + dims[d] <= base_offs[d] + base_dims[d]);
       nd->acc.stride[d] = nd_base->acc.stride[d];
       nd->start[d] = nd_base->start[d] - view_offs[d] + offs[d];

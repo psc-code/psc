@@ -91,7 +91,7 @@ struct mrc_ndarray {
 
   // if view_base is set, this mrc_ndarray will be a view
   struct mrc_ndarray *view_base; 
-  // the view will be of size offs/dims as usual above, but shifted to start at view_offs in the base nmrc_darray
+  // the view will be of size offs/dims as usual above, but shifted to start at view_offs in the base mrc_ndarray
   struct mrc_param_int_array view_offs;
 };
 

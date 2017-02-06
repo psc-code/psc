@@ -104,11 +104,19 @@ setup_and_set_nd(int *offs, int *dims, int *perm)
 // make_view
 
 struct mrc_ndarray *
-make_view(struct mrc_ndarray *nd_base, const int *offs, const int *dims)
+make_view(struct mrc_ndarray *nd_base, const int *offs, const int *dims,
+	  const int *view_offs)
 {
   struct mrc_ndarray *nd = mrc_ndarray_create(MPI_COMM_WORLD);
-  mrc_ndarray_set_param_int3(nd, "offs", offs);
-  mrc_ndarray_set_param_int3(nd, "dims", dims);
+  if (offs) {
+    mrc_ndarray_set_param_int3(nd, "offs", offs);
+  }
+  if (dims) {
+    mrc_ndarray_set_param_int3(nd, "dims", dims);
+  }
+  if (view_offs) {
+    mrc_ndarray_set_param_int3(nd, "view_offs", view_offs);
+  }
   mrc_ndarray_set_param_obj(nd, "view_base", nd_base);
   mrc_ndarray_set_from_options(nd);
   mrc_ndarray_setup(nd);
@@ -219,7 +227,7 @@ test_5()
 // ----------------------------------------------------------------------
 // test_6
 //
-// test view of same size (but will be shifted)
+// test view of same size
 
 static void
 test_6()
@@ -227,8 +235,9 @@ test_6()
   struct mrc_ndarray *nd = setup_and_set_nd((int [3]) { 1, 2, 0 }, (int [3]) { 3, 4, 1 },
 					    NULL);
 
-  printf("VIEW 1:4,2:6,0:1 (identical, though shifted)\n");
-  struct mrc_ndarray *nd_view = make_view(nd, (int [3]) { 1, 2, 0 }, (int [3]) { 3, 4, 1 });
+  printf("VIEW 1:4,2:6,0:1 (identical)\n");
+  struct mrc_ndarray *nd_view =
+    make_view(nd, (int [3]) { 1, 2, 0 }, (int [3]) { 3, 4, 1 }, NULL);
   
   mrc_ndarray_print_3d(nd);
   mrc_ndarray_print_3d(nd_view);
@@ -236,6 +245,69 @@ test_6()
   S3(nd_view, 1, 2, 0) = 999;
 
   printf("first element set to 999 (should be in both ndarrays)\n\n");
+  mrc_ndarray_print_3d(nd);
+  mrc_ndarray_print_3d(nd_view);
+
+  mrc_ndarray_destroy(nd_view);
+  mrc_ndarray_destroy(nd);
+}
+
+// ----------------------------------------------------------------------
+// test_7
+//
+// test view that's actually a subset
+
+static void
+test_7()
+{
+  struct mrc_ndarray *nd = setup_and_set_nd((int [3]) { 1, 2, 0 }, (int [3]) { 3, 4, 1 },
+					    NULL);
+  printf("VIEW 1:3,2:5,0:1\n");
+  struct mrc_ndarray *nd_view =
+    make_view(nd, (int [3]) { 1, 2, 0 }, (int [3]) { 2, 3, 1 }, NULL);
+
+  mrc_ndarray_print_3d(nd);
+  mrc_ndarray_print_3d(nd_view);
+
+  mrc_ndarray_destroy(nd_view);
+  mrc_ndarray_destroy(nd);
+}
+
+// ----------------------------------------------------------------------
+// test_8
+//
+// test view that's actually a subset, starting not at the same corner
+
+static void
+test_8()
+{
+  struct mrc_ndarray *nd = setup_and_set_nd((int [3]) { 1, 2, 0 }, (int [3]) { 3, 4, 1 },
+					    NULL);
+  printf("VIEW 2:4,3:5,0:1\n");
+  struct mrc_ndarray *nd_view =
+    make_view(nd, (int [3]) { 2, 3, 0 }, (int [3]) { 2, 3, 1 }, NULL);
+
+  mrc_ndarray_print_3d(nd);
+  mrc_ndarray_print_3d(nd_view);
+
+  mrc_ndarray_destroy(nd_view);
+  mrc_ndarray_destroy(nd);
+}
+
+// ----------------------------------------------------------------------
+// test_9
+//
+// test subset view with shifted indices
+
+static void
+test_9()
+{
+  struct mrc_ndarray *nd = setup_and_set_nd((int [3]) { 1, 2, 0 }, (int [3]) { 3, 4, 1 },
+					    NULL);
+  printf("VIEW 0:2,0:3,0:1\n");
+  struct mrc_ndarray *nd_view =
+    make_view(nd, NULL, (int [3]) { 2, 3, 1 }, (int [3]) { 1, 3, 0 });
+
   mrc_ndarray_print_3d(nd);
   mrc_ndarray_print_3d(nd_view);
 
@@ -256,6 +328,9 @@ static test_func tests[] = {
   [4] = test_4,
   [5] = test_5,
   [6] = test_6,
+  [7] = test_7,
+  [8] = test_8,
+  [9] = test_9,
 };
 
 static int n_tests = sizeof(tests)/sizeof(tests[0]);
