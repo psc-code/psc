@@ -53,10 +53,12 @@ destroy_member_objs(void *p, struct param *descr)
     if (descr[i].type == PT_INT_ARRAY) { 
       union param_u *pv = p + (unsigned long) descr[i].var;
       free(pv->u_int_array.vals);
+      pv->u_int_array.nr_vals = 0;
     }
     if (descr[i].type == PT_FLOAT_ARRAY) { 
       union param_u *pv = p + (unsigned long) descr[i].var;
       free(pv->u_float_array.vals);
+      pv->u_float_array.nr_vals = 0;
     }
   }
 }
@@ -289,6 +291,10 @@ mrc_obj_put(struct mrc_obj *obj)
       list_entry(obj->dict_list.next, struct mrc_dict_entry, entry);
     if (p->prm.type == PT_STRING) {
       free((char *)p->val.u_string);
+    } else if (p->prm.type == PT_INT_ARRAY) {
+      if (p->val.u_int_array.vals) {
+        free((int *)p->val.u_int_array.vals);
+      }
     } else if (p->prm.type == PT_FLOAT_ARRAY) {
       if (p->val.u_float_array.vals) {
         free((float *)p->val.u_float_array.vals);
