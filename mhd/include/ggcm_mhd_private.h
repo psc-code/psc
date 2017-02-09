@@ -49,11 +49,22 @@ struct ggcm_mhd_params {
   // params for multi-fluid moment runs
   // to be obtained from gkeyll instead
   // of from command line options
-  int nr_fluids;
-  int nr_moments;
-  double mass_ratios[GK_NR_FLUIDS_MAX];
-  double momentum_ratios[GK_NR_FLUIDS_MAX];
-  double pressure_ratios[GK_NR_FLUIDS_MAX];
+  double gk_speed_of_light;
+  int gk_nr_fluids;
+  int gk_nr_moments;
+  // charge, mass per species
+  // (will define things like d_i)
+  struct mrc_param_float_array gk_charge;
+  struct mrc_param_float_array gk_mass;
+  // pressure ratios are only used in the initial condition to distribute the MHD
+  // total pressure onto species
+  struct mrc_param_float_array gk_pressure_ratios;
+
+  bool gk_norm;
+  double gk_norm_speed_of_light;
+  double gk_norm_mi_over_me;
+  double gk_norm_ppi_over_ppe;
+  double gk_norm_rr;
 
   bool monitor_conservation;
 };

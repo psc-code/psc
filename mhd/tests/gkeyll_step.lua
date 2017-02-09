@@ -1,23 +1,143 @@
+
 -------------------------------------------------
 -- SCRIPT FOR 1D/2D/3D MULTIPLE-SPECIES 5M/10M --
 -- TIME-STEPPING THROUGH runTimeStep           --
 -------------------------------------------------
 
-------------------------------------------
--- LOAD LOCAL DOMAIN PARAMS FROM LIBMRC --
-------------------------------------------
-ggcm_mhd, rank, mx, my, mz, lx, ly, lz, hx, hy, hz, lxg, lyg, lzg, hxg, hyg, hzg, gasGamma, common_script = ...
-
------------------------------------------------
--- LOAD PARAMS SHARED WITH INIT              --
 -----------------------------------------------
 -- Time-stepping needs gasGamma, lightSpeed, --
 --   epsilon0, elc/mgnErrorSpeedFactor,      --
 --   elcCharge/Mass, ionCharge/Mass, cfl     --
 -----------------------------------------------
-showlog = true
-showlocallog = false
-dofile(common_script)
+
+----------------------
+-- HELPER FUNCTIONS --
+----------------------
+function log(...)
+   if (rank == 0) then print(string.format(...)) end
+end
+function HERE()
+   local info = debug.getinfo(2)
+   local str = string.format("HERE: %d %s: %s",
+       info.currentline, info.source, tostring(info.name))
+   if (rank == 0) then print(str) end
+end
+
+-- print("qFld", qFld, "qFldX", qFldX, "qFldY", qFldY, "qFldZ", qFldZ)
+-- print("ymask", ymask, "b0", b0)
+
+hasStairSteppedBoundary = tostring(ymask) ~= "userdata: (nil)"
+hasStaticField = tostring(b0) ~= "userdata: (nil)"
+
+mu0 = 1.0
+epsilon0 =1.0/mu0/(lightSpeed^2)
+elcErrorSpeedFactor = 0.0
+mgnErrorSpeedFactor = 1.0
+
+nr_comps = nr_fluids * nr_moments + 8
+nr_ghosts = 2
+if (mz == 1) then
+   if (my == 1) then
+      nr_dims = 1
+   else
+      nr_dims = 2
+   end
+else
+   nr_dims = 3
+end
+
+charge = {getCArray(charge_array, nr_fluids)}
+mass = {getCArray(mass_array, nr_fluids)}
+
+log("==================================================== GKEYLL")
+log("%-19s | %s", "has_ymask", tostring(hasStairSteppedBoundary))
+log("%-19s | %s", "has_b0", tostring(hasStaticField))
+
+-------------------
+-- GRID AND DATA --
+-------------------
+if nonuniform then
+
+   if (nr_dims == 1) then
+      myGrid = Grid.NonUniformRectCart1D
+      lower = {0}
+      upper = {1}
+      cells = {mx}
+      vertices = {crdx}
+      myDataStruct = DataStruct.Field1D
+   elseif (nr_dims == 2) then
+      myGrid = Grid.NonUniformRectCart2D
+      lower = {0, 0}
+      upper = {1, 1}
+      cells = {mx, my}
+      vertices = {crdx, crdy}
+      myDataStruct = DataStruct.Field2D
+   elseif (nr_dims == 3) then
+      myGrid = Grid.NonUniformRectCart3D
+      lower = {0, 0, 0}
+      upper = {1, 1, 1}
+      cells = {mx, my, mz}
+      vertices = {crdx, crdy, crdz}
+      myDataStruct = DataStruct.Field3D
+   end
+
+   function createGrid()
+      return myGrid {
+         lower = lower,
+         upper = upper,
+         cells = cells,
+         vertices = vertices,
+      }
+   end
+
+else -- uniform
+
+   if (nr_dims == 1) then
+      myGrid = Grid.RectCart1D
+      lower = {lx}
+      upper = {hx}
+      cells = {mx}
+      myDataStruct = DataStruct.Field1D
+   elseif (nr_dims == 2) then
+      myGrid = Grid.RectCart2D
+      lower = {lx, ly}
+      upper = {hx, hy}
+      cells = {mx, my}
+      myDataStruct = DataStruct.Field2D
+   elseif (nr_dims == 3) then
+      myGrid = Grid.RectCart3D
+      lower = {lx, ly, lz}
+      upper = {hx, hy, hz}
+      cells = {mx, my, mz}
+      myDataStruct = DataStruct.Field3D
+   end
+
+   function createGrid()
+      return myGrid {
+         lower = lower,
+         upper = upper,
+         cells = cells,
+      }
+   end
+
+end
+
+function createData(numComponents, cptr)
+   if cptr then
+      return myDataStruct {
+         onGrid = grid,
+         numComponents = numComponents,
+         ghost = {nr_ghosts, nr_ghosts},
+         rawPointer = cptr,
+      }
+   else
+      return myDataStruct {
+         onGrid = grid,
+         numComponents = numComponents,
+         ghost = {nr_ghosts, nr_ghosts},
+      }
+   end
+end
 
 -----------------------------------------
 -- HANDLE 1,2,3-D 5M/10M AUTOMATICALLY --
@@ -51,6 +171,14 @@ elseif (nr_dims == 3) then
    end
 end
 
+if (nr_dims == 1) then
+   FieldFunction = Updater.FieldFunction1D
+elseif (nr_dims == 2) then
+   FieldFunction = Updater.FieldFunction2D
+elseif (nr_dims == 3) then
+   FieldFunction = Updater.FieldFunction3D
+end
+
 -------------------------
 -- SETUP GRID AND DATA --
 -------------------------
@@ -59,10 +187,10 @@ grid = createGrid()
 -- create sol. needed by dimensional-splitting algorithms
 -- e.g. qX is sol. after sweeping in x
 -- q/qNew are the initial/final sol.
-q = createData(grid)
-qX = createData(grid)
-if (nr_dims == 2 or nr_dims == 3) then qY = createData(grid) end
-if (nr_dims == 3) then qZ = createData(grid) end
+q = createData(nr_comps, mrc_fld_get_arr(qFld))
+qX = createData(nr_comps, mrc_fld_get_arr(qFldX))
+if (nr_dims == 2 or nr_dims == 3) then qY = createData(nr_comps, mrc_fld_get_arr(qFldY)) end
+if (nr_dims == 3) then qZ = createData(nr_comps, mrc_fld_get_arr(qFldZ)) end
 -- qNew as aliases
 if (nr_dims == 1) then qNew = qX end
 if (nr_dims == 2) then qNew = qY end
@@ -70,8 +198,8 @@ if (nr_dims == 3) then qNew = qZ end
 
 -- duplicates in case that the 
 -- time step should be re-taken
-qDup = createData(grid)
-qNewDup = createData(grid) --FIXME needed?
+qDup = createData(nr_comps)
+qNewDup = createData(nr_comps) --FIXME needed?
 
 -- begining index of the sth species
 -- s ranges from 0 to nr_fluids-1!!!
@@ -101,20 +229,18 @@ if (nr_dims == 3) then
 end
 fluidsNew,emfNew = getAliases(qNew)
 
+qFlds = {}
+if qFld then qFlds[q] = qFld end
+if qFldX then qFlds[qX] = qFldX end
+if qFldY then qFlds[qY] = qFldY end
+if qFldZ then qFlds[qZ] = qFldZ end
+
 ------------------------
 -- Boundary Condition --
 ------------------------
--- create mrc_fld to be cached and reused
-temp_mrc_fld = ggcm_get_3d_fld(ggcm_mhd, nr_moments * nr_fluids + 8)
-temp_cptr = mrc_fld_get_arr(temp_mrc_fld)
-
 function applyBc(myQ, tCurr, myDt)
-   -- copy current solution to the cache field
-   myQ:copy_to_cptr(temp_cptr)
    -- call ggcm's boundary condition to work on the cache field
-   ggcm_fill_ghosts(ggcm_mhd, temp_mrc_fld, tCurr)
-   -- copy the updated cache field back
-   myQ:copy_from_cptr(temp_cptr)
+   ggcm_fill_ghosts(ggcm_mhd, qFlds[myQ], tCurr)
 end
 
 -- free the space of the temporary field
@@ -148,6 +274,11 @@ maxEqn = HyperEquation.PhMaxwell {
 -------------------------------------------
 -- EQUATION SOLVERS ALONG EACH DIMENSION --
 -------------------------------------------
+if (hasStairSteppedBoundary) then
+   inOutField = createData(1)
+end
+
+-- FIXME: inOutField not correctly set yet
 function createSlvr(equation, direction, limiter)
    return myFluidUpdater {
       onGrid = grid,
@@ -157,7 +288,10 @@ function createSlvr(equation, direction, limiter)
       limiter = limiter,
       cfl = cfl,
       cflm = 1.1*cfl,
-      updateDirections = {direction} -- directions to update
+      updateDirections = {direction}, -- directions to update
+      hasStairSteppedBoundary = hasStairSteppedBoundary,
+      inOutField = inOutField,
+      zeroLimiterSsBnd = true,
    }
 end
 
@@ -216,6 +350,11 @@ end
 ---------------------
 -- SOURCE UPDATERS --
 ---------------------
+if (hasStaticField) then
+   staticField = createData(8)
+   staticBField = staticField:alias(3,6)
+end
+
 sourceSlvr = mySourceUpdater {
    onGrid = grid,
    numFluids = nr_fluids,
@@ -223,8 +362,11 @@ sourceSlvr = mySourceUpdater {
    mass = mass,
    epsilon0 = epsilon0,
    linearSolver = "partialPivLu",
-   hasStaticField = false,
+   hasStaticField = hasStaticField,
 }
+if (hasStaticField) then
+   sourceSlvr:setIn({staticField})
+end
 
 -- output of source updater using the initial sol.
 sourceOut = {}
@@ -254,6 +396,7 @@ fluidsOut[0] = fluidsX
 if (nr_dims ==2 or nr_dims == 3) then fluidsOut[1] = fluidsY end
 if (nr_dims == 3) then fluidsOut[2] = fluidsZ end
 -- output of all solvers in each direction
+qIn = {}; qIn[0] = q; qIn[1] = qX; qIn[2] = qY
 qOut = {}; qOut[0] = qX; qOut[1] = qY; qOut[2] = qZ
 
 -- helper function to get slvrs in along a specific direction
@@ -304,6 +447,7 @@ function updateFluidsAndField(tCurr, t)
    local useLaxSolver = false
 
    for dir = 0,nr_dims-1 do
+      applyBc(qIn[dir], tCurr, t-tCurr)
       for i,slvr in ipairs(slvrs[dir]) do
          slvr:setCurrTime(tCurr)
          local status, dtSuggested = slvr:advance(t)
@@ -323,8 +467,6 @@ function updateFluidsAndField(tCurr, t)
       if ((myStatus == false) or (useLaxSolver == true)) then
          return myStatus, myDtSuggested, useLaxSolver
       end
- 
-      applyBc(qOut[dir], tCurr, t-tCurr)
    end
 
    return myStatus, myDtSuggested, useLaxSolver
@@ -341,6 +483,7 @@ function updateFluidsAndFieldLax(tCurr, t)
    local myDtSuggested = 1e3*math.abs(t-tCurr)
 
    for dir = 0,nr_dims-1 do
+      applyBc(qIn[dir], tCurr, t-tCurr)
       for i,slvr in ipairs(laxSlvrs[dir]) do
          slvr:setCurrTime(tCurr)
          local status, dtSuggested = slvr:advance(t)
@@ -353,8 +496,6 @@ function updateFluidsAndFieldLax(tCurr, t)
       if (myStatus == false) then
          return myStatus, myDtSuggested
       end
-
-      applyBc(qOut[dir], tCurr, t-tCurr)
    end
 
    return myStatus, myDtSuggested
@@ -369,14 +510,12 @@ function solveTwoFluidSystem(tCurr, t)
 
    -- update source terms
    updateSource(sourceOut, tCurr, tCurr+dthalf)
-   applyBc(q, tCurr, t-tCurr)
 
    -- update fluids and fields
    local status, dtSuggested, useLaxSolver = updateFluidsAndField(tCurr, t)
 
    -- update source terms
    updateSource(sourceOutNew, tCurr, tCurr+dthalf)
-   applyBc(qNew, tCurr, t-tCurr)
 
    return status, dtSuggested,useLaxSolver
 end
@@ -387,23 +526,58 @@ function solveTwoFluidLaxSystem(tCurr, t)
 
    -- update source terms
    updateSource(sourceOut, tCurr, tCurr+dthalf)
-   applyBc(q, tCurr, t-tCurr)
 
    -- update fluids and fields
    local status, dtSuggested = updateFluidsAndFieldLax(tCurr, t)
 
    -- update source terms
    updateSource(sourceOutNew, tCurr, tCurr+dthalf)
-   applyBc(qNew, tCurr, t-tCurr)
 
    return status, dtSuggested
 end
+
+copyStaticField = true
+copyInOutField = true
+ymask2InOutField = FieldFunction {
+   onGrid = grid,
+   inpComponents = {0},
+   outComponents = {0},
+   func = function(x,y,z,t,val)
+      if val == 0 then return -1
+      else return val end
+   end,
+}
 
 ----------------------------------
 -- GRAND TIME-STEPPING FUNCTION --
 ----------------------------------
 function runTimeStep(myDt, tCurr, step, cptr)
-   q:copy_from_cptr(cptr)
+   -- FIXME: make sure ghost points on b0 and ymask are synced?
+   if (copyStaticField) then
+      if (hasStaticField) then
+         staticBField:copy_from_cptr(mrc_fld_get_arr(b0))
+         -- staticBField:write("staticBField.h5", tCurr)
+      end
+      copyStaticField = false
+   end
+   if (copyInOutField) then
+      if (hasStairSteppedBoundary) then
+         inOutField:copy_from_cptr(mrc_fld_get_arr(ymask))
+         --[[ FIXME FieldFunction not working
+         -- lua_rawgeti(*L, LUA_REGISTRYINDEX, fnRef);
+         ymask2InOutField:setIn( {inOutField} )
+         ymask2InOutField:setOut( {inOutField} )
+         -- ggcm ymask value 0 to gkeyll inOutField value -1
+         ymask2InOutField:advance(0)
+         --]]
+         local shift = createData(1)
+         shift:set(function () return -.5 end)
+         inOutField:accumulate(1., shift)
+         -- inOutField:write("inOutField.h5", tCurr)
+      end
+      copyInOutField = false
+   end
+
    useLaxSolver = false
 
    --FIXME qDup and qNewDup?
@@ -424,12 +598,12 @@ function runTimeStep(myDt, tCurr, step, cptr)
       end
 
       if (status == false) then
-         mprint (string.format(" ** Time step %g too large! Will retake with dt %g; useLaxSolver = %s", myDt, dtSuggested, tostring(useLaxSolver)))
+         log(" ** Time step %g too large! Will retake with dt %g; useLaxSolver = %s", myDt, dtSuggested, tostring(useLaxSolver))
          myDt = dtSuggested
          q:copy(qDup)
          qNew:copy(qNewDup)
       elseif (useLaxSolver == true) then
-         mprint (string.format(" ** Negative pressure or density at %8g! Will retake step with Lax fluxes", tCurr))
+         log(" ** Negative pressure or density at %8g! Will retake step with Lax fluxes", tCurr)
          q:copy(qDup)
          qNew:copy(qNewDup)
       else
@@ -447,7 +621,6 @@ function runTimeStep(myDt, tCurr, step, cptr)
       end 
    end -- end of retry loop
 
-   q:copy_to_cptr(cptr)
-
    return myDt
 end
+

@@ -20,6 +20,9 @@ void ggcm_mhd_bnd_conducting_y_fill_ghost_float(struct ggcm_mhd_bnd *bnd,
 void ggcm_mhd_bnd_conducting_y_fill_ghost_double(struct ggcm_mhd_bnd *bnd,
                                       struct mrc_fld *fld_base,
                                       int m, float bntim);
+void ggcm_mhd_bnd_conducting_y_fill_ghost_gkeyll(struct ggcm_mhd_bnd *bnd,
+                                          struct mrc_fld *fld_base,
+                                          int m, float bntim);
 
 struct ggcm_mhd_bnd_conducting_y {
   void (*conducting_y_fill_ghosts)(struct ggcm_mhd_bnd *bnd,
@@ -34,12 +37,20 @@ ggcm_mhd_bnd_conducting_y_setup(struct ggcm_mhd_bnd *bnd)
   struct ggcm_mhd_bnd_conducting_y *sub = ggcm_mhd_bnd_conducting_y(bnd);
   
   const char * step_fld_type = mrc_fld_type(bnd->mhd->fld);
+  int mhd_type;
+  mrc_fld_get_param_int(bnd->mhd->fld, "mhd_type", &mhd_type);
   
   // setup the fld_type dispatch
   if (strcmp(step_fld_type, "float") == 0) {
     sub->conducting_y_fill_ghosts = ggcm_mhd_bnd_conducting_y_fill_ghost_float;
   } else if (strcmp(step_fld_type, "double") == 0) {
-    sub->conducting_y_fill_ghosts = ggcm_mhd_bnd_conducting_y_fill_ghost_double;
+    if (mhd_type == MT_GKEYLL) {
+      assert(bnd->mhd->fld->_aos);
+      assert(bnd->mhd->fld->_c_order);
+      sub->conducting_y_fill_ghosts = ggcm_mhd_bnd_conducting_y_fill_ghost_gkeyll;
+    }
+    else
+      sub->conducting_y_fill_ghosts = ggcm_mhd_bnd_conducting_y_fill_ghost_double;
   } else {
     mprintf(">> fld_type = '%s'\n", step_fld_type);
     assert(0); // conducting_y not implemented for this step type

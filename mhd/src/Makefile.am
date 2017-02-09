@@ -20,6 +20,7 @@ libmhd_la_SOURCES = \
 	ggcm_mhd_bnd_conducting_y.c \
 	ggcm_mhd_bnd_conducting_y_float.c \
 	ggcm_mhd_bnd_conducting_y_double.c \
+	ggcm_mhd_bnd_conducting_y_gkeyll.c \
 	ggcm_mhd_bnd_open_x.c \
 	ggcm_mhd_bnd_inoutflow_sc_ggcm_float.c \
 	ggcm_mhd_bnd_inoutflow_sc_ggcm_double.c \
@@ -35,6 +36,7 @@ libmhd_la_SOURCES = \
 	ggcm_mhd_bnd_sphere_sc_double.c \
 	ggcm_mhd_bnd_sphere_sc_ggcm_double.c \
 	ggcm_mhd_bnd_sphere_fc_cc_double.c \
+	ggcm_mhd_bnd_sphere_gkeyll.c \
 	\
 	ggcm_mhd_bndsw.c \
 	ggcm_mhd_bndsw_none.c \

@@ -548,6 +548,7 @@ static void
 obndra_gkeyll_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim, int p)
 {
   struct ggcm_mhd *mhd = bnd->mhd;
+  struct mrc_fld *b0 = mrc_fld_get_as(mhd->b0, FLD_TYPE); // FIXME needed?
 
   const int *sw = mrc_fld_spatial_sw(f), *dims = mrc_fld_spatial_dims(f);
   int swx = sw[0], swy = sw[1], swz = sw[2];
@@ -555,50 +556,41 @@ obndra_gkeyll_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, floa
 
   int nr_moments = ggcm_mhd_gkeyll_nr_moments(mhd);
   int nr_fluids = ggcm_mhd_gkeyll_nr_fluids(mhd);
+  int nr_comps = nr_fluids * nr_moments + 8;
 
-  int idx[nr_fluids];
-  ggcm_mhd_gkeyll_fluid_species_index_all(mhd, idx);
-  int idx_em = ggcm_mhd_gkeyll_em_fields_index(mhd);
-
-  double *mass_ratios = ggcm_mhd_gkeyll_mass_ratios(mhd);
-  double *momentum_ratios = ggcm_mhd_gkeyll_momentum_ratios(mhd);
-  double *pressure_ratios = ggcm_mhd_gkeyll_pressure_ratios(mhd);
-
-  int gdims[3];
-  mrc_domain_get_global_dims(mhd->domain, gdims);
-  // B fields from bndsw are cell-centered
-  // NOT staggered
-  int dx = 0, dy = 0, dz = 0;
+  float *mass = ggcm_mhd_gkeyll_mass(mhd);
+  float *charge = ggcm_mhd_gkeyll_charge(mhd);
+  float *pressure_ratios = ggcm_mhd_gkeyll_pressure_ratios(mhd);
 
   for (int iz = -swz; iz < mz + swz; iz++) {
     for (int iy = -swy; iy < my + swy; iy++) {
       for (int ix = -swx; ix < 0; ix++) {
-	float bn[SW_NR];
-	bnd_sw(bnd, ix, iy, iz, p, bn, bntim);
-	
-	M3(f, RR , ix,iy,iz, p) = bn[SW_RR];
-	M3(f, VX , ix,iy,iz, p) = bn[SW_VX];
-	M3(f, VY , ix,iy,iz, p) = bn[SW_VY];
-	M3(f, VZ , ix,iy,iz, p) = bn[SW_VZ];
-	M3(f, PP , ix,iy,iz, p) = bn[SW_PP];
-
-	M3(f, BX , ix,iy,iz, p) = bn[SW_BX];
-	M3(f, BY , ix,iy,iz, p) = bn[SW_BY];
-	M3(f, BZ , ix,iy,iz, p) = bn[SW_BZ];
+        float bn[nr_comps];
+        bnd_sw(bnd, ix, iy, iz, p, bn, bntim);
 
         if (nr_moments == 5) {
-          float gamma_m1 = mhd->par.gamm - 1.;
-          ggcm_mhd_convert_primitive_gkeyll_5m_point(f, nr_fluids, idx,
-              mass_ratios, momentum_ratios, pressure_ratios, gamma_m1, idx_em,
-              dx,dy,dz, ix,iy,iz, p);
+          convert_primitive_5m_point_comove(bn, nr_fluids, nr_moments,
+              mass, charge, pressure_ratios, mhd->par.gamm);
         } else if (nr_moments == 10) {
           // TODO
         } else {
           assert(false);
         }
+
+        for (int c = 0; c < nr_comps; c++)
+          M3(f, c, ix,iy,iz, p) = bn[c];
+
+        if (b0) {
+          int idx_em = nr_fluids * nr_moments;
+          for (int d = 0; d < 3; d++) {
+            M3(f, idx_em+GK_BX+d, ix,iy,iz, p)-= M3(b0, d, ix,iy,iz, p);
+          }
+        }
       }
     }
   }
+
+  mrc_fld_put_as(b0, mhd->b0);
 }
 
 // ----------------------------------------------------------------------	
@@ -879,6 +871,7 @@ ggcm_mhd_bnd_sub_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld,
 
   struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
   if (MT == MT_GKEYLL) {
+     assert(f->_aos && f->_c_order);
     obndra_gkeyll(bnd, f, m, bntim);
   } else {
     obndra_mhd(bnd, f, m, bntim);

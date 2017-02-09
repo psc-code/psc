@@ -33,6 +33,11 @@ struct ggcm_mhd_ic_harris {
   // for testing: add a background field of this amount, but subtract in the perturbation,
   // so the total B field will be the same, anyway
   double B_0_bg;
+
+  // gkeyll params
+  double mass_ratio;
+  double pressure_ratio;
+  double d_i0;
 };
 
 #define ggcm_mhd_ic_harris(ic) mrc_to_subobj(ic, struct ggcm_mhd_ic_harris)
@@ -135,6 +140,9 @@ static struct param ggcm_mhd_ic_harris_descr[] = {
   { "pert"            , VAR(pert)            , PARAM_DOUBLE(0.1)         },
   { "pert_halfwidth"  , VAR(pert_halfwidth)  , PARAM_DOUBLE(6.4)         },
   { "B_0_bg"          , VAR(B_0_bg)          , PARAM_DOUBLE(0.)          },
+  { "mass_ratio"      , VAR(mass_ratio)      , PARAM_DOUBLE(25.)         },
+  { "pressure_ratio"  , VAR(pressure_ratio)  , PARAM_DOUBLE(1.)          },
+  { "d_i0"            , VAR(d_i0)            , PARAM_DOUBLE(0.05)        },
   {},
 };
 #undef VAR
@@ -386,7 +394,7 @@ static struct param ggcm_mhd_ic_asymharris_descr[] = {
 #undef VAR
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_ic_ot_ops
+// ggcm_mhd_ic_asymharris_ops
 
 struct ggcm_mhd_ic_ops ggcm_mhd_ic_asymharris_ops = {
   .name        = "asymharris",

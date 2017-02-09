@@ -15,8 +15,12 @@
 
 struct ggcm_mhd_step_gkeyll {
   const char *script;
-  const char *script_common;
+  bool has_ymask;
+  bool background;
   void *lua_state; // not using LuaState * b/c it is c++
+
+  // intermediate states for dimension-splitting
+  struct mrc_fld *qFlds[3];
 };
 
 #define ggcm_mhd_step_gkeyll(step) mrc_to_subobj(step, struct ggcm_mhd_step_gkeyll)
@@ -35,7 +39,8 @@ ggcm_mhd_step_gkeyll_setup_flds(struct ggcm_mhd_step *step)
   mrc_fld_set_param_bool(mhd->fld, "c_order", true);
   mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_GKEYLL);
 
-  ggcm_mhd_step_gkeyll_setup_flds_lua(mhd, sub->script_common);
+  ggcm_mhd_step_gkeyll_setup_flds_lua(mhd);
+
 }
 
 // ----------------------------------------------------------------------
@@ -47,9 +52,30 @@ ggcm_mhd_step_gkeyll_setup(struct ggcm_mhd_step *step)
   struct ggcm_mhd_step_gkeyll *sub = ggcm_mhd_step_gkeyll(step);
   struct ggcm_mhd *mhd = step->mhd;
 
+  if (sub->has_ymask) {
+    mhd->ymask = ggcm_mhd_get_3d_fld(mhd, 1);
+    mrc_fld_set(mhd->ymask, 1.);
+  }
+  if (sub->background) {
+    mhd->b0 = ggcm_mhd_get_3d_fld(mhd, 3);
+  }
+
+  const int *dims = mrc_fld_spatial_dims(mhd->fld);
+  sub->qFlds[0] = ggcm_mhd_get_3d_fld(mhd, mhd->fld->_nr_comps);
+  mrc_fld_dict_add_int(sub->qFlds[0], "mhd_type", MT_GKEYLL);
+  if (dims[1] > 1) {
+    sub->qFlds[1] = ggcm_mhd_get_3d_fld(mhd, mhd->fld->_nr_comps);
+    mrc_fld_dict_add_int(sub->qFlds[1], "mhd_type", MT_GKEYLL);
+  }
+  if (dims[2] > 1) {
+    sub->qFlds[2] = ggcm_mhd_get_3d_fld(mhd, mhd->fld->_nr_comps);
+    mrc_fld_dict_add_int(sub->qFlds[2], "mhd_type", MT_GKEYLL);
+  }
+
   assert(strcmp(mrc_fld_type(mhd->fld), FLD_TYPE) == 0);
-  ggcm_mhd_step_gkeyll_lua_setup(&(sub->lua_state), sub->script,
-      sub->script_common, mhd, mhd->fld);
+  assert(mhd->fld->_aos);
+  assert(mhd->fld->_c_order);
+  ggcm_mhd_step_gkeyll_lua_setup(&(sub->lua_state), sub->script, mhd, sub->qFlds);
 }
 
 // ----------------------------------------------------------------------
@@ -60,7 +86,18 @@ ggcm_mhd_step_gkeyll_destroy(struct ggcm_mhd_step *step)
 {
   struct ggcm_mhd_step_gkeyll *sub = ggcm_mhd_step_gkeyll(step);
   struct ggcm_mhd *mhd = step->mhd;
+
   ggcm_mhd_step_gkeyll_lua_destroy(sub->lua_state, mhd);
+
+  if (sub->has_ymask) {
+    ggcm_mhd_put_3d_fld(mhd, mhd->ymask);
+  }
+  if (sub->background) {
+    ggcm_mhd_put_3d_fld(mhd, mhd->b0);
+  }
+
+  for (int d = 0; d < 3; d++)
+     ggcm_mhd_put_3d_fld(mhd, sub->qFlds[d]);
 }
 
 // ----------------------------------------------------------------------
@@ -82,8 +119,9 @@ ggcm_mhd_step_gkeyll_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_step_gkeyll, x)
 static struct param ggcm_mhd_step_gkeyll_descr[] = {
-  { "script"           , VAR(script)           , PARAM_STRING("step.lua")   },
-  { "script_common"    , VAR(script_common)    , PARAM_STRING("common.lua") },
+  { "script"       , VAR(script),        PARAM_STRING("gkeyll_step.lua") },
+  { "has_ymask"    , VAR(has_ymask),     PARAM_BOOL(false)               },
+  { "background"   , VAR(background),    PARAM_BOOL(false)               },
   {},
 };
 #undef VAR

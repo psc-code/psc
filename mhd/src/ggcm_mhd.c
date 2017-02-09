@@ -205,12 +205,37 @@ ggcm_mhd_setup_normalization(struct ggcm_mhd *mhd)
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_setup_gk_norm
+
+static void
+ggcm_mhd_setup_gk_norm(struct ggcm_mhd *mhd)
+{
+  if (mhd->par.gk_norm) {
+    double mu0 = 1.;
+    double e = 1.;
+    double rr_e = mhd->par.gk_norm_rr / (1. + mhd->par.gk_norm_mi_over_me);
+    double rr_i = mhd->par.gk_norm_rr - rr_e;
+    assert(mhd->par.d_i > 0.);
+    double ion_mass = mhd->par.d_i * sqrt(mu0 * rr_i * sqr(e));
+    double electron_mass = ion_mass / mhd->par.gk_norm_mi_over_me;
+    double pressure_ratio = mhd->par.gk_norm_ppi_over_ppe;
+    
+    ggcm_mhd_set_param_double(mhd, "gk_speed_of_light", mhd->par.gk_norm_speed_of_light);
+    ggcm_mhd_set_param_float_array(mhd, "gk_charge", 2, (float[2]) { -e, e });
+    ggcm_mhd_set_param_float_array(mhd, "gk_mass", 2, (float[2]) { electron_mass, ion_mass });
+    ggcm_mhd_set_param_float_array(mhd, "gk_pressure_ratios", 2, 
+				   (float[2]) { 1./(1.+pressure_ratio), 1./(1.+1./pressure_ratio) });
+  }
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_setup
 
 static void
 _ggcm_mhd_setup(struct ggcm_mhd *mhd)
 {
   ggcm_mhd_setup_normalization(mhd);
+  ggcm_mhd_setup_gk_norm(mhd);
 
   ggcm_mhd_step_setup_flds(mhd->step);
   for (int m = 0; m < mrc_fld_nr_comps(mhd->fld); m++) {
@@ -369,6 +394,8 @@ ggcm_mhd_default_box(struct ggcm_mhd *mhd)
   mrc_domain_set_param_int(mhd->domain, "bcx", BC_PERIODIC);
   mrc_domain_set_param_int(mhd->domain, "bcy", BC_PERIODIC);
   mrc_domain_set_param_int(mhd->domain, "bcz", BC_PERIODIC);
+
+  mhd->par.gk_norm = true;
 }
 
 // ======================================================================
@@ -464,6 +491,20 @@ static struct param ggcm_mhd_descr[] = {
   { "bnd"             , VAR(bnd)             , MRC_VAR_OBJ(ggcm_mhd_bnd)      },
   { "bnd1"            , VAR(bnd1)            , MRC_VAR_OBJ(ggcm_mhd_bnd)      },
   { "ic"              , VAR(ic)              , MRC_VAR_OBJ(ggcm_mhd_ic)       },
+
+  // gkeyll parameters // FIXME, use SI defaults
+  { "gk_speed_of_light" , VAR(par.gk_speed_of_light) , PARAM_DOUBLE(1.f)              },
+  { "gk_nr_fluids"      , VAR(par.gk_nr_fluids)      , PARAM_INT(2)                   },
+  { "gk_nr_moments"     , VAR(par.gk_nr_moments)     , PARAM_INT(5)                   },
+  { "gk_charge"         , VAR(par.gk_charge)         , PARAM_FLOAT_ARRAY(2, 1.f)      },
+  { "gk_mass"           , VAR(par.gk_mass)           , PARAM_FLOAT_ARRAY(2, 1.f)      },
+  { "gk_pressure_ratios", VAR(par.gk_pressure_ratios), PARAM_FLOAT_ARRAY(2, 1.f)      },
+
+  { "gk_norm"                , VAR(par.gk_norm)                , PARAM_BOOL(false)    },
+  { "gk_norm_speed_of_light" , VAR(par.gk_norm_speed_of_light) , PARAM_DOUBLE(20.)    },
+  { "gk_norm_mi_over_me"     , VAR(par.gk_norm_mi_over_me)     , PARAM_DOUBLE(25.)    },
+  { "gk_norm_ppi_over_ppe"   , VAR(par.gk_norm_ppi_over_ppe)   , PARAM_DOUBLE(1.)     },
+  { "gk_norm_rr"             , VAR(par.gk_norm_rr)             , PARAM_DOUBLE(1.)     },
 
   {},
 };

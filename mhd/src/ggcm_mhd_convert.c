@@ -160,7 +160,7 @@ ggcm_mhd_convert_fc_cc_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_
 // pointwise conversion from primitive mhd quantities to 5m fluid quantities
 void
 primitive_to_gkeyll_5m_fluids_point(struct mrc_fld *fld, int nr_fluids, int idx[],
-    double mass_ratios[], double momentum_ratios[], double pressure_ratios[],
+    float mass[], float charge[], float pressure_ratios[],
     float gamma_m1, int ix, int iy, int iz, int p)
 {
   mrc_fld_data_t rr  = M3(fld, RR, ix,iy,iz, p);
@@ -168,6 +168,18 @@ primitive_to_gkeyll_5m_fluids_point(struct mrc_fld *fld, int nr_fluids, int idx[
   mrc_fld_data_t rvy = rr * M3(fld, VY, ix,iy,iz, p);
   mrc_fld_data_t rvz = rr * M3(fld, VZ, ix,iy,iz, p);
   mrc_fld_data_t pp  = M3(fld, PP, ix,iy,iz, p);
+
+  float mass_ratios[nr_fluids];
+  float momentum_ratios[nr_fluids];
+  float mass_total = 0.;
+  for (int s = 0; s < nr_fluids; s++) {
+     mass_total += mass[s];
+  }
+  for (int s = 0; s < nr_fluids; s++) {
+     mass_ratios[s] = mass[s]/mass_total;
+     // assume no current and all plasma co-move
+     momentum_ratios[s] = mass_ratios[s];
+  }
 
   // each species
   for (int s = 0; s < nr_fluids; s++) {
@@ -225,14 +237,14 @@ primitive_to_gkeyll_em_fields_point(struct mrc_fld *fld, int idx_em,
 
 void
 ggcm_mhd_convert_primitive_gkeyll_5m_point(struct mrc_fld *fld, int nr_fluids,
-    int idx[], double mass_ratios[], double momentum_ratios[],
-    double pressure_ratios[], float gamma_m1, int idx_em, int dx, int dy, int dz,
+    int idx[], float mass[], float charge[],
+    float pressure_ratios[], float gamma_m1, int idx_em, int dx, int dy, int dz,
     int ix, int iy, int iz, int p)
 {
   // em fields should be calculated before V used for E=-VxB are overwritten
   primitive_to_gkeyll_em_fields_point(fld, idx_em, dx, dy, dz, ix, iy, iz, p);
-  primitive_to_gkeyll_5m_fluids_point(fld, nr_fluids, idx, mass_ratios,
-      momentum_ratios, pressure_ratios, gamma_m1, ix, iy, iz, p);
+  primitive_to_gkeyll_5m_fluids_point(fld, nr_fluids, idx, mass, charge,
+      pressure_ratios, gamma_m1, ix, iy, iz, p);
 }
 
 static void
@@ -248,9 +260,9 @@ ggcm_mhd_convert_gkeyll_from_primitive(struct ggcm_mhd *mhd,
   ggcm_mhd_gkeyll_fluid_species_index_all(mhd, idx);
   int idx_em = ggcm_mhd_gkeyll_em_fields_index(mhd);
 
-  double *mass_ratios = ggcm_mhd_gkeyll_mass_ratios(mhd);
-  double *momentum_ratios = ggcm_mhd_gkeyll_momentum_ratios(mhd);
-  double *pressure_ratios = ggcm_mhd_gkeyll_pressure_ratios(mhd);
+  float *mass = ggcm_mhd_gkeyll_mass(mhd);
+  float *charge = ggcm_mhd_gkeyll_charge(mhd);
+  float *pressure_ratios = ggcm_mhd_gkeyll_pressure_ratios(mhd);
 
   int gdims[3];
   mrc_domain_get_global_dims(mhd->domain, gdims);
@@ -263,7 +275,7 @@ ggcm_mhd_convert_gkeyll_from_primitive(struct ggcm_mhd *mhd,
     for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
       mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
         ggcm_mhd_convert_primitive_gkeyll_5m_point(fld, nr_fluids, idx,
-            mass_ratios, momentum_ratios, pressure_ratios, gamma_m1, idx_em,
+            mass, charge, pressure_ratios, gamma_m1, idx_em,
             dx,dy,dz, ix,iy,iz, p);
       } mrc_fld_foreach_end;
     }

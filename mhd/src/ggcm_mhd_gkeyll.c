@@ -7,7 +7,7 @@ ggcm_mhd_gkeyll_set_nr_moments(struct ggcm_mhd *mhd,
     int nr_moments)
 {
   assert(nr_moments == 5 || nr_moments == 10);
-  mhd->par.nr_moments = nr_moments;
+  mhd->par.gk_nr_moments = nr_moments;
 }
 
 void
@@ -15,31 +15,7 @@ ggcm_mhd_gkeyll_set_nr_fluids(struct ggcm_mhd *mhd,
     int nr_fluids)
 {
   assert(nr_fluids > 0 && nr_fluids <= GK_NR_FLUIDS_MAX);
-  mhd->par.nr_fluids = nr_fluids;
-}
-
-void
-ggcm_mhd_gkeyll_set_mass_ratios(struct ggcm_mhd *mhd,
-    double mass_ratios_in[])
-{
-  for (int s = 0; s < ggcm_mhd_gkeyll_nr_fluids(mhd); s++)
-    mhd->par.mass_ratios[s] = mass_ratios_in[s];
-}
-
-void
-ggcm_mhd_gkeyll_set_momentum_ratios(struct ggcm_mhd *mhd,
-    double momentum_ratios_in[])
-{
-  for (int s = 0; s < ggcm_mhd_gkeyll_nr_fluids(mhd); s++)
-    mhd->par.momentum_ratios[s] = momentum_ratios_in[s];
-}
-
-void
-ggcm_mhd_gkeyll_set_pressure_ratios(struct ggcm_mhd *mhd,
-    double pressure_ratios_in[])
-{
-  for (int s = 0; s < ggcm_mhd_gkeyll_nr_fluids(mhd); s++)
-    mhd->par.pressure_ratios[s] = pressure_ratios_in[s];
+  mhd->par.gk_nr_fluids = nr_fluids;
 }
 
 // parameter getters
@@ -47,7 +23,7 @@ ggcm_mhd_gkeyll_set_pressure_ratios(struct ggcm_mhd *mhd,
 int
 ggcm_mhd_gkeyll_nr_moments(struct ggcm_mhd *mhd)
 {
-  int nr_moments = mhd->par.nr_moments;
+  int nr_moments = mhd->par.gk_nr_moments;
   assert(nr_moments == 5 || nr_moments == 10);
   return nr_moments;
 }
@@ -55,27 +31,27 @@ ggcm_mhd_gkeyll_nr_moments(struct ggcm_mhd *mhd)
 int
 ggcm_mhd_gkeyll_nr_fluids(struct ggcm_mhd *mhd)
 {
-  int nr_fluids = mhd->par.nr_fluids;
+  int nr_fluids = mhd->par.gk_nr_fluids;
   assert(nr_fluids > 0 && nr_fluids <= GK_NR_FLUIDS_MAX);
   return nr_fluids;
 }
 
-double *
-ggcm_mhd_gkeyll_mass_ratios(struct ggcm_mhd *mhd)
+float *
+ggcm_mhd_gkeyll_mass(struct ggcm_mhd *mhd)
 {
-  return mhd->par.mass_ratios;
+  return mhd->par.gk_mass.vals;
 }
 
-double *
-ggcm_mhd_gkeyll_momentum_ratios(struct ggcm_mhd *mhd)
+float *
+ggcm_mhd_gkeyll_charge(struct ggcm_mhd *mhd)
 {
-  return mhd->par.momentum_ratios;
+  return mhd->par.gk_charge.vals;
 }
 
-double *
+float *
 ggcm_mhd_gkeyll_pressure_ratios(struct ggcm_mhd *mhd)
 {
-  return mhd->par.pressure_ratios;
+  return mhd->par.gk_pressure_ratios.vals;
 }
 
 // index calculators
@@ -101,4 +77,57 @@ ggcm_mhd_gkeyll_em_fields_index(struct ggcm_mhd *mhd)
 {
   return ggcm_mhd_gkeyll_nr_moments(mhd) * ggcm_mhd_gkeyll_nr_fluids(mhd);
 }
+
+// ----------------------------------------------------------------------	
+// convert_primitive_5m_point_comove
+
+void
+convert_primitive_5m_point_comove(float vals[], int nr_fluids, int nr_moments,
+    float mass[], float charge[], float pressure_ratios[], float gamm)
+{
+  float mass_ratios[nr_fluids];
+  float mass_total = 0.;
+  int idx[nr_fluids];
+
+  for (int s = 0; s < nr_fluids; s++) {
+    mass_total += mass[s];
+    idx[s] = s * nr_moments;
+  }
+  for (int s = 0; s < nr_fluids; s++)
+    mass_ratios[s] = mass[s] / mass_total;
+
+  int idx_em = nr_fluids * nr_moments;
+
+  float rr = vals[RR];
+  float vx = vals[VX];
+  float vy = vals[VY];
+  float vz = vals[VZ];
+  float pp = vals[PP];
+  float bx = vals[BX];
+  float by = vals[BY];
+  float bz = vals[BZ];
+
+  vals[idx_em + GK_EX] = - vy * bz + vz * by;
+  vals[idx_em + GK_EY] = - vz * bx + vx * bz;
+  vals[idx_em + GK_EZ] = - vx * by + vy * bx;
+
+  vals[idx_em + GK_BX] = bx;
+  vals[idx_em + GK_BY] = by;
+  vals[idx_em + GK_BZ] = bz;
+
+  for (int s = 0; s < nr_fluids; s++) {
+    vals[idx[s] + G5M_RRS ] = rr * mass_ratios[s];
+    vals[idx[s] + G5M_RVXS] = rr * mass_ratios[s] * vx;
+    vals[idx[s] + G5M_RVYS] = rr * mass_ratios[s] * vy;
+    vals[idx[s] + G5M_RVZS] = rr * mass_ratios[s] * vz;
+    float pps = pp * pressure_ratios[s];
+    vals[idx[s] + G5M_UUS ] = pp * pressure_ratios[s] / (gamm - 1.)
+      + .5 * (sqr(vals[idx[s] + G5M_RVXS])
+            + sqr(vals[idx[s] + G5M_RVYS])
+            + sqr(vals[idx[s] + G5M_RVZS])) / vals[idx[s] + G5M_RRS];
+  }
+
+  vals[idx_em + GK_PHI] = 0.;
+  vals[idx_em + GK_PSI] = 0.;
+} 
 

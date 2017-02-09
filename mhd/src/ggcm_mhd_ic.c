@@ -349,11 +349,16 @@ ggcm_mhd_ic_hydro_from_primitive_gkeyll(struct ggcm_mhd_ic *ic, struct mrc_fld *
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
   struct ggcm_mhd_ic_ops *ops = ggcm_mhd_ic_ops(ic);
 
+  // FIXME, generalize / use macro / whatever
+  int gdims[3];
+  mrc_domain_get_global_dims(fld->_domain, gdims);
+  int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
+
   mrc_fld_data_t gamma_m1 = mhd->par.gamm - 1.;
 
-  double *mass_ratios = ggcm_mhd_gkeyll_mass_ratios(mhd);
-  double *momentum_ratios = ggcm_mhd_gkeyll_momentum_ratios(mhd);
-  double *pressure_ratios = ggcm_mhd_gkeyll_pressure_ratios(mhd);
+  float *qq = mhd->par.gk_charge.vals;
+  float *mm = mhd->par.gk_mass.vals;
+  float *pressure_ratios = ggcm_mhd_gkeyll_pressure_ratios(mhd);
 
   int nr_moments = ggcm_mhd_gkeyll_nr_moments(mhd);
   int nr_fluids = ggcm_mhd_gkeyll_nr_fluids(mhd);
@@ -368,18 +373,49 @@ ggcm_mhd_ic_hydro_from_primitive_gkeyll(struct ggcm_mhd_ic *ic, struct mrc_fld *
     mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
       double dcrd_cc[3];
       mrc_dcrds_at_cc(crds, ix,iy,iz, p, dcrd_cc);
+
+      double crd_xp[3], crd_xm[3], crd_yp[3], crd_ym[3], crd_zp[3], crd_zm[3];
+      mrc_dcrds_at_cc(crds, ix+1, iy  , iz  , p, crd_xp);
+      mrc_dcrds_at_cc(crds, ix-1, iy  , iz  , p, crd_xm);
+      mrc_dcrds_at_cc(crds, ix  , iy+1, iz  , p, crd_yp);
+      mrc_dcrds_at_cc(crds, ix  , iy-1, iz  , p, crd_ym);
+      mrc_dcrds_at_cc(crds, ix  , iy  , iz+1, p, crd_zp);
+      mrc_dcrds_at_cc(crds, ix  , iy  , iz-1, p, crd_zm);
       
       mrc_fld_data_t prim[5];
       for (int m = 0; m < 5; m++) {
 	prim[m] = ops->primitive(ic, m, dcrd_cc);
       }
+
+      mrc_fld_data_t Bz_yp = M3(fld, idx_em + GK_BZ, ix,iy+dy,iz, p);
+      mrc_fld_data_t Bz_ym = M3(fld, idx_em + GK_BZ, ix,iy-dy,iz, p);
+      mrc_fld_data_t By_zp = M3(fld, idx_em + GK_BY, ix,iy,iz+dz, p);
+      mrc_fld_data_t By_zm = M3(fld, idx_em + GK_BY, ix,iy,iz-dz, p);
+
+      mrc_fld_data_t Bx_zp = M3(fld, idx_em + GK_BX, ix,iy,iz+dz, p);
+      mrc_fld_data_t Bx_zm = M3(fld, idx_em + GK_BX, ix,iy,iz-dz, p);
+      mrc_fld_data_t Bz_xp = M3(fld, idx_em + GK_BZ, ix+dx,iy,iz, p);
+      mrc_fld_data_t Bz_xm = M3(fld, idx_em + GK_BZ, ix-dx,iy,iz, p);
       
+      mrc_fld_data_t By_xp = M3(fld, idx_em + GK_BY, ix+dx,iy,iz, p);
+      mrc_fld_data_t By_xm = M3(fld, idx_em + GK_BY, ix-dx,iy,iz, p);
+      mrc_fld_data_t Bx_yp = M3(fld, idx_em + GK_BX, ix,iy+dy,iz, p);
+      mrc_fld_data_t Bx_ym = M3(fld, idx_em + GK_BX, ix,iy-dy,iz, p);
+
+      mrc_fld_data_t jx = (Bz_yp - Bz_ym) / (crd_yp[1] - crd_ym[1]) - (By_zp - By_zm) / (crd_zp[2] - crd_zm[2]);
+      mrc_fld_data_t jy = (Bx_zp - Bx_zm) / (crd_zp[2] - crd_zm[2]) - (Bz_xp - Bz_xm) / (crd_xp[0] - crd_xm[0]);
+      mrc_fld_data_t jz = (By_xp - By_xm) / (crd_xp[0] - crd_xm[0]) - (Bx_yp - Bx_ym) / (crd_yp[1] - crd_ym[1]);
+
       // fluid quantities for each species
+      assert(nr_fluids == 2);
+      // FIXME, for more than two species, needs more information, and more thinking
+      // (e.g., distribute momentum to match diamagnetic drift, but
+      // also need to make sure that net (one-fluid) flow matches what MHD says.
       for (int s = 0; s < nr_fluids; s++) {
-	M3(fld, idx[s] + G5M_RRS,  ix,iy,iz, p) = prim[RR] * mass_ratios[s];
-	M3(fld, idx[s] + G5M_RVXS, ix,iy,iz, p) = prim[RR] * prim[VX] * momentum_ratios[s];
-	M3(fld, idx[s] + G5M_RVYS, ix,iy,iz, p) = prim[RR] * prim[VY] * momentum_ratios[s];
-	M3(fld, idx[s] + G5M_RVZS, ix,iy,iz, p) = prim[RR] * prim[VZ] * momentum_ratios[s];
+	M3(fld, idx[s] + G5M_RRS,  ix,iy,iz, p) = prim[RR] * mm[s] / (mm[0] + mm[1]);
+	M3(fld, idx[s] + G5M_RVXS, ix,iy,iz, p) = (jx - prim[RR] * prim[VX] * qq[1-s]/mm[1-s]) / (qq[s] / mm[s] - qq[1-s] / mm[1-s]);
+	M3(fld, idx[s] + G5M_RVYS, ix,iy,iz, p) = (jy - prim[RR] * prim[VY] * qq[1-s]/mm[1-s]) / (qq[s] / mm[s] - qq[1-s] / mm[1-s]);
+	M3(fld, idx[s] + G5M_RVZS, ix,iy,iz, p) = (jz - prim[RR] * prim[VZ] * qq[1-s]/mm[1-s]) / (qq[s] / mm[s] - qq[1-s] / mm[1-s]);
 	M3(fld, idx[s] + G5M_UUS,  ix,iy,iz, p) = 
 	  prim[PP] * pressure_ratios[s] / gamma_m1
 	  + .5 * (sqr(M3(fld, idx[s] + G5M_RVXS, ix,iy,iz, p)) +
@@ -389,6 +425,8 @@ ggcm_mhd_ic_hydro_from_primitive_gkeyll(struct ggcm_mhd_ic *ic, struct mrc_fld *
       }
 
       // E=-vxB, i.e., only convection E field
+      // FIXME, should really also contain diamagnetic drift
+      // incl electron pressure gradient
       M3(fld, idx_em + GK_EX, ix,iy,iz, p) =
 	- prim[VY] * M3(fld, idx_em + GK_BZ, ix,iy,iz, p)
 	+ prim[VZ] * M3(fld, idx_em + GK_BY, ix,iy,iz, p);

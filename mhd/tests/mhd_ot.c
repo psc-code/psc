@@ -25,6 +25,11 @@ struct ggcm_mhd_ic_ot {
   double pp0;
   double B0;
 
+  // gkeyll params
+  double mass_ratio;
+  double pressure_ratio;
+  double d_i0;
+
   // state
   double kx;
   double ky;
@@ -91,10 +96,13 @@ ggcm_mhd_ic_ot_vector_potential(struct ggcm_mhd_ic *ic, int m, double crd[3])
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_ic_ot, x)
 static struct param ggcm_mhd_ic_ot_descr[] = {
-  { "rr0"          , VAR(rr0)          , PARAM_DOUBLE(25. / (36. * M_PI))   },
-  { "v0"           , VAR(v0)           , PARAM_DOUBLE(1.)                   },
-  { "pp0"          , VAR(pp0)          , PARAM_DOUBLE(5. / (12. * M_PI))    },
-  { "B0"           , VAR(B0)           , PARAM_DOUBLE(0.28209479177387814)  }, // 1. / sqrt(4. * M_PI)
+  { "rr0"           , VAR(rr0)           , PARAM_DOUBLE(25. / (36. * M_PI))   },
+  { "v0"            , VAR(v0)            , PARAM_DOUBLE(1.)                   },
+  { "pp0"           , VAR(pp0)           , PARAM_DOUBLE(5. / (12. * M_PI))    },
+  { "B0"            , VAR(B0)            , PARAM_DOUBLE(0.28209479177387814)  }, // 1. / sqrt(4. * M_PI)
+  { "mass_ratio"    , VAR(mass_ratio)    , PARAM_DOUBLE(25.)                  },
+  { "pressure_ratio", VAR(pressure_ratio), PARAM_DOUBLE(1.)                   },
+  { "d_i0"          , VAR(d_i0)          , PARAM_DOUBLE(0.05)                 },
   {},
 };
 #undef VAR
