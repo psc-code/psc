@@ -5,7 +5,7 @@ mpirun -n 1 ../mhd_harris \
     --mrc_domain_npx 2 --mrc_domain_npy 4 \
     \
     --mrc_ts_output_every_time 1  \
-    --ggcm_mhd_diag_fields gkeyll_e:gkeyll_i:gkeyll_em \
+    --ggcm_mhd_diag_fields gkeyll_e:gkeyll_i:gkeyll_em:j:rr:pp:v \
     \
     --ggcm_mhd_gk_nr_fluids 2 \
     --ggcm_mhd_gk_nr_moments 5 \

@@ -53,7 +53,7 @@ mpirun -n 8 ../mhd_mirdip \
     --mrc_ts_output_every_time 1. \
     --mrc_ts_max_time 10000.0 \
     \
-    --ggcm_mhd_diag_fields gkeyll_e:gkeyll_i:gkeyll_em \
+    --ggcm_mhd_diag_fields gkeyll_e:gkeyll_i:gkeyll_em:j:rr:pp:v \
     \
     --ggcm_mhd_thx .9 \
     --ggcm_mhd_d_i 0. \

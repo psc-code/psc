@@ -9,7 +9,7 @@ mpirun -n 1 ../mhd_ot \
     --mrc_domain_npx 1 --mrc_domain_npy 1 \
     \
     --mrc_ts_output_every_time 0.01  \
-    --ggcm_mhd_diag_fields gkeyll_e:gkeyll_i:gkeyll_em \
+    --ggcm_mhd_diag_fields gkeyll_e:gkeyll_i:gkeyll_em:j:rr:pp:v \
     \
     --ggcm_mhd_gk_nr_fluids 2 \
     --ggcm_mhd_gk_nr_moments 5 \
