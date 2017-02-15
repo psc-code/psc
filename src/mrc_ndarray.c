@@ -271,6 +271,24 @@ mrc_ndarray_same_shape(struct mrc_ndarray *nd1, struct mrc_ndarray *nd2)
 }
 
 // ----------------------------------------------------------------------
+// mrc_ndarray_f_contiguous
+//
+// checks whether the data layout is contiguous in Fortran order
+
+bool
+mrc_ndarray_f_contiguous(struct mrc_ndarray *nd)
+{
+  int stride = 1;
+  for (int d = 0; d < nd->n_dims; d++) {
+    if (nd->nd_acc.stride[d] != stride) {
+      return false;
+    }
+    stride *= nd->dims.vals[d];
+  }
+  return true;
+}
+
+// ----------------------------------------------------------------------
 // mrc_ndarray_set
 
 void

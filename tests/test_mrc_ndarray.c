@@ -370,6 +370,23 @@ test_11()
 }
 
 // ----------------------------------------------------------------------
+// test 12
+//
+// test f_contiguous
+
+static void
+test_12()
+{
+  struct mrc_ndarray *nd = setup_and_set_nd(NULL, (int [3]) { 3, 4, 1 }, NULL);
+  printf("VIEW 1:2,1:3,0:1\n");
+  struct mrc_ndarray *nd_view =
+    make_view(nd, NULL, (int [3]) { 1, 2, 1 }, (int [3]) { 1, 1, 0 });
+
+  assert(mrc_ndarray_f_contiguous(nd));
+  assert(!mrc_ndarray_f_contiguous(nd_view));
+}
+
+// ----------------------------------------------------------------------
 // main
 
 typedef void (*test_func)(void);
@@ -387,6 +404,7 @@ static test_func tests[] = {
   [9] = test_9,
   [10] = test_10,
   [11] = test_11,
+  [12] = test_12,
 };
 
 static int n_tests = sizeof(tests)/sizeof(tests[0]);

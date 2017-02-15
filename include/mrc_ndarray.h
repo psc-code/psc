@@ -132,6 +132,7 @@ int *mrc_ndarray_dims(struct mrc_ndarray *nd);
 int *mrc_ndarray_offs(struct mrc_ndarray *nd);
 int mrc_ndarray_data_type(struct mrc_ndarray *nd);
 bool mrc_ndarray_same_shape(struct mrc_ndarray *nd1, struct mrc_ndarray *nd2);
+bool mrc_ndarray_f_contiguous(struct mrc_ndarray *nd);
 
 void mrc_ndarray_set(struct mrc_ndarray *nd, double val);
 void mrc_ndarray_copy(struct mrc_ndarray *to, struct mrc_ndarray *from);
