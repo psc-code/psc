@@ -1131,7 +1131,7 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
     {
       float *buf_ptr = (float *) ctx->recv_bufs[info.rank] + buf_sizes[info.rank];
       BUFLOOP(ix, iy, iz, ilo, ihi) {
-      	MRC_S4(nd, ix,iy,iz, 0) = *buf_ptr++;
+      	MRC_S3(nd, ix,iy,iz) = *buf_ptr++;
       } BUFLOOP_END
       break;
     }
@@ -1139,7 +1139,7 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
     {
       double *buf_ptr = (double *) ctx->recv_bufs[info.rank] + buf_sizes[info.rank];
       BUFLOOP(ix, iy, iz, ilo, ihi) {
-      	MRC_D4(nd, ix,iy,iz, 0) = *buf_ptr++;
+      	MRC_D3(nd, ix,iy,iz) = *buf_ptr++;
       } BUFLOOP_END
       break;     
     }
@@ -1147,7 +1147,7 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
     {
      int *buf_ptr = (int *) ctx->recv_bufs[info.rank] + buf_sizes[info.rank];
       BUFLOOP(ix, iy, iz, ilo, ihi) {
-      	MRC_I4(nd, ix,iy,iz, 0) = *buf_ptr++;
+      	MRC_I3(nd, ix,iy,iz) = *buf_ptr++;
       } BUFLOOP_END
       break;
     }
@@ -1193,7 +1193,7 @@ collective_recv_fld_local(struct collective_m3_ctx *ctx,
     case MRC_NT_FLOAT:
     {
       BUFLOOP(ix, iy, iz, ilo, ihi) {
-        MRC_S4(nd, ix,iy,iz, 0) =
+        MRC_S3(nd, ix,iy,iz) =
           MRC_S5(m3, ix - off[0], iy - off[1], iz - off[2], m, p);
       } BUFLOOP_END
       break;
@@ -1201,7 +1201,7 @@ collective_recv_fld_local(struct collective_m3_ctx *ctx,
     case MRC_NT_DOUBLE:
     {
       BUFLOOP(ix, iy, iz, ilo, ihi) {
-        MRC_D4(nd, ix,iy,iz, 0) =
+        MRC_D3(nd, ix,iy,iz) =
           MRC_D5(m3, ix - off[0], iy - off[1], iz - off[2], m, p);
       } BUFLOOP_END
       break;     
@@ -1209,7 +1209,7 @@ collective_recv_fld_local(struct collective_m3_ctx *ctx,
     case MRC_NT_INT:
     {
       BUFLOOP(ix, iy, iz, ilo, ihi) {
-        MRC_I4(nd, ix,iy,iz, 0) =
+        MRC_I3(nd, ix,iy,iz) =
           MRC_I5(m3, ix - off[0], iy - off[1], iz - off[2], m, p);
       } BUFLOOP_END
       break;
@@ -1343,10 +1343,8 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
     case MRC_NT_INT: mrc_ndarray_set_type(nd, "int"); break;
     default: assert(0);
     }
-    mrc_ndarray_set_param_int_array(nd, "dims", 4,
-				(int[4]) { writer_dims[0], writer_dims[1], writer_dims[2], 1 });
-    mrc_ndarray_set_param_int_array(nd, "offs", 4,
-				(int[4]) { writer_off[0], writer_off[1], writer_off[2], 0 });
+    mrc_ndarray_set_param_int_array(nd, "dims", 3, writer_dims);
+    mrc_ndarray_set_param_int_array(nd, "offs", 3, writer_off);
     mrc_ndarray_setup(nd);
 
     hid_t group0;
