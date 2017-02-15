@@ -59,6 +59,7 @@ TESTS = \
 	test_mrc_domain_simple_0.sh \
 	test_mrc_domain_multi_0.sh \
 	test_mrc_domain_mb_0.sh \
+	test_mrc_ndarray_0.sh \
 	test_mrc_fld.sh \
 	test_mrc_fld_io_hdf5_parallel.sh \
 	test_mrc_fld_io_hdf5_serial.sh \
