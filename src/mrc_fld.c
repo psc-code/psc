@@ -1014,20 +1014,8 @@ mrc_fld_int_ddc_copy_to_buf(struct mrc_fld *fld, int mb, int me, int p,
 // ----------------------------------------------------------------------
 // create float, double, int subclasses
 
-#define MAKE_MRC_FLD_TYPE(NAME, type, TYPE, IS_AOS)			\
+#define MAKE_MRC_FLD_TYPE(NAME, type, TYPE)				\
 									\
-  static void								\
-  mrc_fld_##NAME##_create(struct mrc_fld *fld)				\
-  {									\
-    fld->_aos = IS_AOS;							\
-  }									\
-  static void								\
-  mrc_fld_##NAME##_read(struct mrc_fld *fld, struct mrc_io *io)		\
-  {									\
-    mrc_fld_##NAME##_create(fld);					\
-    _mrc_fld_read(fld, io);						\
-  }									\
-  									\
   static void								\
   mrc_fld_##NAME##_copy(struct mrc_fld *fld_to, struct mrc_fld *fld_from) \
   {									\
@@ -1052,17 +1040,15 @@ mrc_fld_int_ddc_copy_to_buf(struct mrc_fld *fld, int mb, int me, int p,
   static struct mrc_fld_ops mrc_fld_##NAME##_ops = {			\
     .name                  = #NAME,					\
     .methods               = mrc_fld_##NAME##_methods,			\
-    .create                = mrc_fld_##NAME##_create,			\
-    .read                  = mrc_fld_##NAME##_read,			\
     .copy                  = mrc_fld_##NAME##_copy,			\
     .ddc_copy_from_buf	   = mrc_fld_##NAME##_ddc_copy_from_buf,	\
     .ddc_copy_to_buf	   = mrc_fld_##NAME##_ddc_copy_to_buf,		\
     .vec_type              = #type,					\
   };									\
 
-MAKE_MRC_FLD_TYPE(float, float, FLOAT, false)
-MAKE_MRC_FLD_TYPE(double, double, DOUBLE, false)
-MAKE_MRC_FLD_TYPE(int, int, INT, false)
+MAKE_MRC_FLD_TYPE(float, float, FLOAT)
+MAKE_MRC_FLD_TYPE(double, double, DOUBLE)
+MAKE_MRC_FLD_TYPE(int, int, INT)
 
 // ----------------------------------------------------------------------
 // mrc_fld_init
@@ -1123,6 +1109,7 @@ struct mrc_class_mrc_fld mrc_class_mrc_fld = {
   .init         = mrc_fld_init,
   .destroy      = _mrc_fld_destroy,
   .setup        = _mrc_fld_setup,
+  .read         = _mrc_fld_read,
   .write        = _mrc_fld_write,
 };
 
