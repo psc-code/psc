@@ -123,7 +123,7 @@ MRC_CLASS_DECLARE(mrc_ndarray, struct mrc_ndarray);
 #include <assert.h>
 
 struct mrc_ndarray_it {
-  void *ptr;
+  char *ptr;
   int idx[MRC_NDARRAY_MAXDIMS];
   int stride[MRC_NDARRAY_MAXDIMS]; // from nd, but in terms of bytes!
   int end[MRC_NDARRAY_MAXDIMS];
@@ -141,7 +141,7 @@ mrc_ndarray_it_beg_end(struct mrc_ndarray_it *it, struct mrc_ndarray *nd,
 		       int beg[], int end[])
 {
   it->n_dims = nd->n_dims;
-  it->ptr = nd->acc.arr_off;
+  it->ptr = (char *) nd->nd_acc.arr_off;
   for (int d = 0; d < it->n_dims; d++) {
     assert(beg[d] >= nd->offs.vals[d]);
     assert(end[d] <= nd->offs.vals[d] + nd->dims.vals[d]);
