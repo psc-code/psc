@@ -118,6 +118,7 @@ struct mrc_ndarray {
 struct mrc_ndarray_ops {
   MRC_SUBCLASS_OPS(struct mrc_ndarray);
   void (*set)(struct mrc_ndarray *nd, double val);
+  void (*copy)(struct mrc_ndarray *to, struct mrc_ndarray *from);
 };
 
 #define mrc_ndarray_ops(nd) ((struct mrc_ndarray_ops *) (nd)->obj.ops)
@@ -130,7 +131,9 @@ int mrc_ndarray_n_dims(struct mrc_ndarray *nd);
 int *mrc_ndarray_dims(struct mrc_ndarray *nd);
 int *mrc_ndarray_offs(struct mrc_ndarray *nd);
 int mrc_ndarray_data_type(struct mrc_ndarray *nd);
+
 void mrc_ndarray_set(struct mrc_ndarray *nd, double val);
+void mrc_ndarray_copy(struct mrc_ndarray *to, struct mrc_ndarray *from);
 
 extern struct mrc_ndarray_ops mrc_ndarray_float_ops;
 extern struct mrc_ndarray_ops mrc_ndarray_double_ops;

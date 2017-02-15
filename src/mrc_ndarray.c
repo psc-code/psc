@@ -260,6 +260,17 @@ mrc_ndarray_set(struct mrc_ndarray *nd, double val)
 }
 
 // ----------------------------------------------------------------------
+// mrc_ndarray_copy
+
+void
+mrc_ndarray_copy(struct mrc_ndarray *to, struct mrc_ndarray *from)
+{
+  struct mrc_ndarray_ops *ops = mrc_ndarray_ops(to);
+  assert(ops && ops->copy);
+  ops->copy(to, from);
+}
+
+// ----------------------------------------------------------------------
 // mrc_ndarray_init
 
 static void

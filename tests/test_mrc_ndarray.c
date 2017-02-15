@@ -48,7 +48,7 @@ mrc_ndarray_print_3d(struct mrc_ndarray *nd)
   struct mrc_ndarray_it it;
   mrc_ndarray_it_all(&it, nd);
   for (; !mrc_ndarray_it_done(&it); mrc_ndarray_it_next(&it)) {
-    printf(" [%d,%d,%d] %g", it.idx[0], it.idx[1], it.idx[2], IT_S(&it));
+    printf(" [%d,%d,%d] %03g", it.idx[0], it.idx[1], it.idx[2], IT_S(&it));
     if (it.idx[0] == offs[0] + dims[0] - 1) {
       printf("\n");
       if (it.idx[1] == offs[1] + dims[1] - 1) {
@@ -89,8 +89,7 @@ set_and_assert_3d(struct mrc_ndarray *nd)
 static struct mrc_ndarray *
 setup_and_set_nd(int *offs, int *dims, int *perm)
 {
-  struct mrc_ndarray *nd = setup_nd((int [3]) { 1, 2, 0 }, (int [3]) { 3, 4, 1 },
-				    NULL);
+  struct mrc_ndarray *nd = setup_nd(offs, dims, perm);
 
   struct mrc_ndarray_it it;
   for (mrc_ndarray_it_all(&it, nd); !mrc_ndarray_it_done(&it); mrc_ndarray_it_next(&it)) {
@@ -316,6 +315,61 @@ test_9()
 }
 
 // ----------------------------------------------------------------------
+// test_10
+//
+// test direct copy (no view involved)
+
+static void
+test_10()
+{
+  struct mrc_ndarray *nd = setup_and_set_nd((int [3]) { 1, 2, 0 }, (int [3]) { 3, 4, 1 },
+					    NULL);
+  struct mrc_ndarray *nd2 = setup_and_set_nd(NULL, (int [3]) { 3, 4, 1 }, NULL);
+
+  printf("nd\n");
+  mrc_ndarray_print_3d(nd);
+  printf("nd2\n");
+  mrc_ndarray_print_3d(nd2);
+
+  mrc_ndarray_copy(nd, nd2);
+
+  printf("nd after mrc_ndarray_copy(nd, nd2)\n");
+  mrc_ndarray_print_3d(nd);
+}
+
+// ----------------------------------------------------------------------
+// test_11
+//
+// test copy into view
+
+static void
+test_11()
+{
+  struct mrc_ndarray *nd = setup_and_set_nd(NULL, (int [3]) { 3, 4, 1 }, NULL);
+  printf("VIEW 1:2,1:3,0:1\n");
+  struct mrc_ndarray *nd_view =
+    make_view(nd, NULL, (int [3]) { 1, 2, 1 }, (int [3]) { 1, 1, 0 });
+
+  struct mrc_ndarray *nd2 = setup_and_set_nd(NULL, (int [3]) { 1, 2, 1 }, NULL);
+
+  mrc_ndarray_print_3d(nd);
+  mrc_ndarray_print_3d(nd_view);
+
+  printf("nd2 0:1,0:2,0:1\n");
+  mrc_ndarray_print_3d(nd2);
+
+  mrc_ndarray_copy(nd_view, nd2);
+
+  printf("after copy\n");
+  mrc_ndarray_print_3d(nd);
+  mrc_ndarray_print_3d(nd_view);
+  
+  mrc_ndarray_destroy(nd_view);
+  mrc_ndarray_destroy(nd);
+  mrc_ndarray_destroy(nd2);
+}
+
+// ----------------------------------------------------------------------
 // main
 
 typedef void (*test_func)(void);
@@ -331,6 +385,8 @@ static test_func tests[] = {
   [7] = test_7,
   [8] = test_8,
   [9] = test_9,
+  [10] = test_10,
+  [11] = test_11,
 };
 
 static int n_tests = sizeof(tests)/sizeof(tests[0]);
