@@ -1336,6 +1336,33 @@ ds_xdmf_read_f3(struct mrc_io *io, const char *path, struct mrc_fld *fld)
 }
 
 static void
+ds_xdmf_write_ndarray(struct mrc_io *io, const char *path, struct mrc_ndarray *nd)
+{
+  int ierr;
+  struct diag_hdf5 *hdf5 = diag_hdf5(io);
+
+  assert(nd->n_dims);
+  assert(mrc_ndarray_f_contiguous(nd));
+
+  hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT); H5_CHK(group0);
+
+  hsize_t hdims[nd->n_dims];
+  // reverse dims because HDF5 expects C order
+  for (int d = 0; d < nd->n_dims; d++) {
+    hdims[d] = nd->dims.vals[nd->n_dims - 1 - d];
+  }
+  hid_t filespace = H5Screate_simple(nd->n_dims, hdims, NULL); H5_CHK(filespace);
+  hid_t datatype = get_h5_datatype(mrc_ndarray_data_type(nd)); H5_CHK(datatype);
+  hid_t dset = H5Dcreate(group0, "ndarray", datatype, filespace, H5P_DEFAULT,
+			 H5P_DEFAULT, H5P_DEFAULT); H5_CHK(dset);
+  ierr = H5Dwrite(dset, datatype, H5S_ALL, filespace, H5P_DEFAULT, nd->arr); CE;
+  ierr = H5Dclose(dset); CE;
+  ierr = H5Sclose(filespace); CE;
+
+  ierr = H5Gclose(group0); CE;
+}
+
+static void
 ds_xdmf_get_h5_file(struct mrc_io *io, long *h5_file)
 {
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
@@ -1388,6 +1415,7 @@ struct mrc_io_ops mrc_io_hdf5_serial_ops = {
   .read_fld      = ds_xdmf_read_fld,
   .write_m1      = ds_xdmf_write_m1,
   .read_m1       = ds_xdmf_read_m1,
+  .write_ndarray = ds_xdmf_write_ndarray,
   .write_attr    = ds_xdmf_write_attr,
   .read_attr     = ds_xdmf_read_attr,
   .get_h5_file   = ds_xdmf_get_h5_file,

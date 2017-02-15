@@ -2,6 +2,7 @@
 #include "mrc_ndarray.h"
 
 #include <mrc_vec.h>
+#include <mrc_io.h>
 
 #include <stdio.h>
 #include <assert.h>
@@ -183,6 +184,15 @@ _mrc_ndarray_read(struct mrc_ndarray *nd, struct mrc_io *io)
 }
 
 // ----------------------------------------------------------------------
+// mrc_ndarray_write
+
+static void
+_mrc_ndarray_write(struct mrc_ndarray *nd, struct mrc_io *io)
+{
+  mrc_io_write_ndarray(io, mrc_io_obj_path(io, nd), nd);
+}
+
+// ----------------------------------------------------------------------
 // mrc_ndarray_set_array
 
 void
@@ -347,5 +357,6 @@ struct mrc_class_mrc_ndarray mrc_class_mrc_ndarray = {
   .init         = mrc_ndarray_init,
   .setup        = _mrc_ndarray_setup,
   .read         = _mrc_ndarray_read,
+  .write        = _mrc_ndarray_write,
   .destroy      = _mrc_ndarray_destroy,
 };

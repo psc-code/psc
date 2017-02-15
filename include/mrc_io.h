@@ -38,6 +38,7 @@ void mrc_io_write_field2d(struct mrc_io *io, float scale, struct mrc_fld *fld,
 			  int outtype, float sheet);
 void mrc_io_write_field_slice(struct mrc_io *io, float scale, struct mrc_fld *fld,
 			      int outtype, float sheet);
+void mrc_io_write_ndarray(struct mrc_io *io, const char *path, struct mrc_ndarray *nd);
 
 void mrc_io_read_attr(struct mrc_io *io, const char *path, int type, const char *name,
 		      union param_u *pv);
