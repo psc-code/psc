@@ -68,6 +68,26 @@ struct mrc_ndarray_access {
 
 #define MRC_NDARRAY(nd, type, i0,i1,i2,i3,i4) __MRC_NDARRAY(&(nd)->nd_acc, type, i0,i1,i2,i3,i4)
 
+#define MRC_S1(nd, i0) MRC_NDARRAY(nd, float, i0,0,0,0,0)
+#define MRC_D1(nd, i0) MRC_NDARRAY(nd, double, i0,0,0,0,0)
+#define MRC_I1(nd, i0) MRC_NDARRAY(nd, int, i0,0,0,0,0)
+
+#define MRC_S2(nd, i0,i1) MRC_NDARRAY(nd, float, i0,i1,0,0,0)
+#define MRC_D2(nd, i0,i1) MRC_NDARRAY(nd, double, i0,i1,0,0,0)
+#define MRC_I2(nd, i0,i1) MRC_NDARRAY(nd, int, i0,i1,0,0,0)
+
+#define MRC_S3(nd, i0,i1,i2) MRC_NDARRAY(nd, float, i0,i1,i2,0,0)
+#define MRC_D3(nd, i0,i1,i2) MRC_NDARRAY(nd, double, i0,i1,i2,0,0)
+#define MRC_I3(nd, i0,i1,i2) MRC_NDARRAY(nd, int, i0,i1,i2,0,0)
+
+#define MRC_S4(nd, i0,i1,i2,i3) MRC_NDARRAY(nd, float, i0,i1,i2,i3,0)
+#define MRC_D4(nd, i0,i1,i2,i3) MRC_NDARRAY(nd, double, i0,i1,i2,i3,0)
+#define MRC_I4(nd, i0,i1,i2,i3) MRC_NDARRAY(nd, int, i0,i1,i2,i3,0)
+
+#define MRC_S5(nd, i0,i1,i2,i3,i4) MRC_NDARRAY(nd, float, i0,i1,i2,i3,i4)
+#define MRC_D5(nd, i0,i1,i2,i3,i4) MRC_NDARRAY(nd, double, i0,i1,i2,i3,i4)
+#define MRC_I5(nd, i0,i1,i2,i3,i4) MRC_NDARRAY(nd, int, i0,i1,i2,i3,i4)
+
 // ----------------------------------------------------------------------
 // struct mrc_ndarray
 

@@ -163,26 +163,6 @@ mrc_fld_spatial_sw(struct mrc_fld *x)
 
 #define MRC_FLD(fld, type, i0,i1,i2,i3,i4) MRC_NDARRAY(fld, type, i0,i1,i2,i3,i4)
 
-#define MRC_S1(fld, i0) MRC_FLD(fld, float, i0,0,0,0,0)
-#define MRC_D1(fld, i0) MRC_FLD(fld, double, i0,0,0,0,0)
-#define MRC_I1(fld, i0) MRC_FLD(fld, int, i0,0,0,0,0)
-
-#define MRC_S2(fld, i0,i1) MRC_FLD(fld, float, i0,i1,0,0,0)
-#define MRC_D2(fld, i0,i1) MRC_FLD(fld, double, i0,i1,0,0,0)
-#define MRC_I2(fld, i0,i1) MRC_FLD(fld, int, i0,i1,0,0,0)
-
-#define MRC_S3(fld, i0,i1,i2) MRC_FLD(fld, float, i0,i1,i2,0,0)
-#define MRC_D3(fld, i0,i1,i2) MRC_FLD(fld, double, i0,i1,i2,0,0)
-#define MRC_I3(fld, i0,i1,i2) MRC_FLD(fld, int, i0,i1,i2,0,0)
-
-#define MRC_S4(fld, i0,i1,i2,i3) MRC_FLD(fld, float, i0,i1,i2,i3,0)
-#define MRC_D4(fld, i0,i1,i2,i3) MRC_FLD(fld, double, i0,i1,i2,i3,0)
-#define MRC_I4(fld, i0,i1,i2,i3) MRC_FLD(fld, int, i0,i1,i2,i3,0)
-
-#define MRC_S5(fld, i0,i1,i2,i3,i4) MRC_FLD(fld, float, i0,i1,i2,i3,i4)
-#define MRC_D5(fld, i0,i1,i2,i3,i4) MRC_FLD(fld, double, i0,i1,i2,i3,i4)
-#define MRC_I5(fld, i0,i1,i2,i3,i4) MRC_FLD(fld, int, i0,i1,i2,i3,i4)
-
 #define mrc_fld_foreach(fld, ix,iy,iz, l,r) do {			\
   const int *_offs = mrc_fld_spatial_offs(fld);				\
   const int *_dims = mrc_fld_spatial_dims(fld);				\
