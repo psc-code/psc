@@ -37,6 +37,15 @@ mrc_fld_len(struct mrc_fld *fld)
 }
 
 // ----------------------------------------------------------------------
+// mrc_fld_create
+
+static void
+_mrc_fld_create(struct mrc_fld *fld)
+{
+  fld->_nd = mrc_ndarray_create(mrc_fld_comm(fld));
+}
+
+// ----------------------------------------------------------------------
 // mrc_fld_destroy
 
 static void
@@ -55,6 +64,8 @@ _mrc_fld_destroy(struct mrc_fld *fld)
     free(fld->_patches);
     fld->_patches = NULL;
   }
+
+  mrc_ndarray_destroy(fld->_nd);
 }
 
 // ----------------------------------------------------------------------
@@ -129,7 +140,6 @@ setup_ndarray(struct mrc_fld *fld)
     mrc_ndarray_set_param_int_array(nd, "view_offs", n_dims, view_ghost_offs);
   }
 
-  //mrc_fld_setup_member_objs(fld); // FIXME?, does same as the next line
   mrc_ndarray_setup(nd);
   fld->nd_acc = *mrc_ndarray_access(nd);
 }
@@ -262,6 +272,11 @@ _mrc_fld_read(struct mrc_fld *fld, struct mrc_io *io)
   // If the fld has a domain and we don't run a minimal setup
   // the metadata can't be trusted.
   // This will overwrite the obsolete read-in metadata
+
+  // FIXME, this looks rather similar to _setup(), but also
+  // there's the question why we shouldn't trust what we're reading?
+  // (I guess if were to read on a different number of procs, but that's
+  //  hard work)
   if (fld->_domain) {
     if (fld->_patches) free(fld->_patches);
     int nr_patches;
@@ -283,8 +298,9 @@ _mrc_fld_read(struct mrc_fld *fld, struct mrc_io *io)
   if (fld->_sw.nr_vals == 0) {
     mrc_fld_set_param_int_array(fld, "sw", fld->_dims.nr_vals, NULL);
   }
-  // read back our _nd member, though that won't read the actual data
-  mrc_fld_read_member_objs(fld, io);
+  // we're not reading back ndarray, rather we're creating a new one
+  fld->_nd = mrc_ndarray_create(mrc_fld_comm(fld));
+  setup_ndarray(fld);
   fld->nd_acc = *mrc_ndarray_access(fld->_nd);
 
   setup_ghost_dims_offs(fld);
@@ -1052,7 +1068,9 @@ static struct param mrc_fld_descr[] = {
   { "nr_comps"        , VAR(_nr_comps)       , PARAM_INT(1)          },
   { "nr_ghosts"       , VAR(_nr_ghosts)      , PARAM_INT(0)          },
 
-  { "nd"              , VAR(_nd)             , MRC_VAR_OBJ(mrc_ndarray) },
+  // FIXME, if _nd is listed as member obj, we can't prevent it being written,
+  // but usually, we want to write the data ourselves, and don't write nd
+  //  { "nd"              , VAR(_nd)             , MRC_VAR_OBJ(mrc_ndarray) },
   { "aos"             , VAR(_aos)            , PARAM_BOOL(false)     },
   { "c_order"         , VAR(_c_order)        , PARAM_BOOL(false)     },
   {},
@@ -1083,6 +1101,7 @@ struct mrc_class_mrc_fld mrc_class_mrc_fld = {
   .param_descr  = mrc_fld_descr,
   .methods      = mrc_fld_methods,
   .init         = mrc_fld_init,
+  .create       = _mrc_fld_create,
   .destroy      = _mrc_fld_destroy,
   .setup        = _mrc_fld_setup,
   .read         = _mrc_fld_read,
