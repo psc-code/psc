@@ -300,27 +300,16 @@ mrctest_crds_compare(struct mrc_crds *crds1, struct mrc_crds *crds2)
 
   assert(strcmp(mrc_crds_type(crds1), mrc_crds_type(crds2)) == 0);
   for (int d = 0; d < 3; d++) {
-    if (crds1->crd[d]) {
+    mrc_m1_foreach_patch(crds1->crd[d], p) {
       float diff = 0.;
-      mrc_f1_foreach(crds1->crd[d], ix, sw, sw) {
-	diff = fmaxf(diff, fabsf(MRC_CRD(crds1, d, ix) - MRC_CRD(crds2, d, ix)));
+      mrc_m1_foreach(crds1->crd[d], ix, sw, sw) {
+	diff = fmaxf(diff, fabsf(MRC_M1(crds1->crd[d], 0, ix, p) - MRC_M1(crds2->crd[d], 0, ix, p)));
 	if (diff > 0.) {
-	  mprintf("mrctest_crds_compare: ix = %d diff = %g\n", ix, diff);
+	  mprintf("mrctest_crds_compare: ix = %d diff = %g %g/%g\n", ix, diff,
+		  MRC_M1(crds1->crd[d], 0, ix, p), MRC_M1(crds2->crd[d], 0, ix, p));
 	  assert(0);
 	}
-      } mrc_f1_foreach_end;
-    } else {
-      mrc_m1_foreach_patch(crds1->crd[d], p) {
-	float diff = 0.;
-	mrc_m1_foreach(crds1->crd[d], ix, sw, sw) {
-	  diff = fmaxf(diff, fabsf(MRC_M1(crds1->crd[d], 0, ix, p) - MRC_M1(crds2->crd[d], 0, ix, p)));
-	  if (diff > 0.) {
-	    mprintf("mrctest_crds_compare: ix = %d diff = %g %g/%g\n", ix, diff,
-		    MRC_M1(crds1->crd[d], 0, ix, p), MRC_M1(crds2->crd[d], 0, ix, p));
-	    assert(0);
-	  }
-	} mrc_m1_foreach_end;
-      }
+      } mrc_m1_foreach_end;
     }
   }
 }
