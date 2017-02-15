@@ -1152,9 +1152,9 @@ ds_xdmf_read_m1(struct mrc_io *io, const char *path, struct mrc_fld *m1)
 }
 
 static hid_t
-get_h5_datatype(struct mrc_fld *fld)
+get_h5_datatype(int data_type)
 {
-  switch (mrc_fld_data_type(fld)) {
+  switch (data_type) {
   case MRC_NT_FLOAT : return H5T_NATIVE_FLOAT;
   case MRC_NT_DOUBLE: return H5T_NATIVE_DOUBLE;
   case MRC_NT_INT   : return H5T_NATIVE_INT;
@@ -1175,7 +1175,7 @@ ds_xdmf_read_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
     hdims[d] = mrc_fld_ghost_dims(fld)[fld->_dims.nr_vals - 1 - d];
   }
   hid_t filespace = H5Screate_simple(fld->_dims.nr_vals, hdims, NULL);
-  hid_t datatype = get_h5_datatype(fld);
+  hid_t datatype = get_h5_datatype(mrc_fld_data_type(fld));
   hid_t dset = H5Dopen(group0, "fld", H5P_DEFAULT); H5_CHK(dset);
   ierr = H5Dread(dset, datatype, H5S_ALL, filespace, H5P_DEFAULT, fld->_nd->arr); CE;
   ierr = H5Dclose(dset); CE;
@@ -1202,7 +1202,7 @@ ds_xdmf_write_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
     hdims[d] = mrc_fld_ghost_dims(fld)[fld->_dims.nr_vals - 1 - d];
   }
   hid_t filespace = H5Screate_simple(fld->_dims.nr_vals, hdims, NULL); H5_CHK(filespace);
-  hid_t datatype = get_h5_datatype(fld); H5_CHK(datatype);
+  hid_t datatype = get_h5_datatype(mrc_fld_data_type(fld)); H5_CHK(datatype);
   hid_t dset = H5Dcreate(group0, "fld", datatype, filespace, H5P_DEFAULT,
 			 H5P_DEFAULT, H5P_DEFAULT); H5_CHK(dset);
   ierr = H5Dwrite(dset, datatype, H5S_ALL, filespace, H5P_DEFAULT, fld->_nd->arr); CE;
