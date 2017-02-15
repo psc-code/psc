@@ -1024,7 +1024,7 @@ collective_send_fld_end(struct collective_m3_ctx *ctx, struct mrc_io *io,
 
 static void
 collective_recv_fld_begin(struct collective_m3_ctx *ctx,
-			  struct mrc_io *io, struct mrc_fld *fld,
+			  struct mrc_io *io, struct mrc_ndarray *nd,
 			  struct mrc_fld *m3)
 {
   // find out who's sending, OPT: this way is not very scalable
@@ -1045,7 +1045,7 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
     }
     int ilo[3], ihi[3];
     int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
-					     mrc_fld_ghost_offs(fld), mrc_fld_ghost_dims(fld));
+					     mrc_ndarray_offs(nd), mrc_ndarray_dims(nd));
     if (!has_intersection) {
       continue;
     }
@@ -1093,7 +1093,7 @@ collective_recv_fld_begin(struct collective_m3_ctx *ctx,
 
 static void
 collective_recv_fld_end(struct collective_m3_ctx *ctx,
-			struct mrc_io *io, struct mrc_fld *fld,
+			struct mrc_io *io, struct mrc_ndarray *nd,
 			struct mrc_fld *m3, int m)
 {
   MPI_Waitall(io->size, ctx->recv_reqs, MPI_STATUSES_IGNORE);
@@ -1119,7 +1119,7 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
     // OPT, could be cached 2nd(?) and 3rd time
     int ilo[3], ihi[3];
     int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
-					     mrc_fld_ghost_offs(fld), mrc_fld_ghost_dims(fld));
+					     mrc_ndarray_offs(nd), mrc_ndarray_dims(nd));
     if (!has_intersection) {
       continue;
     }
@@ -1131,7 +1131,7 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
     {
       float *buf_ptr = (float *) ctx->recv_bufs[info.rank] + buf_sizes[info.rank];
       BUFLOOP(ix, iy, iz, ilo, ihi) {
-      	MRC_S4(fld, ix,iy,iz, 0) = *buf_ptr++;
+      	MRC_S4(nd, ix,iy,iz, 0) = *buf_ptr++;
       } BUFLOOP_END
       break;
     }
@@ -1139,7 +1139,7 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
     {
       double *buf_ptr = (double *) ctx->recv_bufs[info.rank] + buf_sizes[info.rank];
       BUFLOOP(ix, iy, iz, ilo, ihi) {
-      	MRC_D4(fld, ix,iy,iz, 0) = *buf_ptr++;
+      	MRC_D4(nd, ix,iy,iz, 0) = *buf_ptr++;
       } BUFLOOP_END
       break;     
     }
@@ -1147,7 +1147,7 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
     {
      int *buf_ptr = (int *) ctx->recv_bufs[info.rank] + buf_sizes[info.rank];
       BUFLOOP(ix, iy, iz, ilo, ihi) {
-      	MRC_I4(fld, ix,iy,iz, 0) = *buf_ptr++;
+      	MRC_I4(nd, ix,iy,iz, 0) = *buf_ptr++;
       } BUFLOOP_END
       break;
     }
@@ -1173,7 +1173,7 @@ collective_recv_fld_end(struct collective_m3_ctx *ctx,
 
 static void
 collective_recv_fld_local(struct collective_m3_ctx *ctx,
-			  struct mrc_io *io, struct mrc_fld *fld,
+			  struct mrc_io *io, struct mrc_ndarray *nd,
 			  struct mrc_fld *m3, int m)
 {
   int nr_patches;
@@ -1185,7 +1185,7 @@ collective_recv_fld_local(struct collective_m3_ctx *ctx,
 
     int ilo[3], ihi[3];
     bool has_intersection =
-      find_intersection(ilo, ihi, off, ldims, mrc_fld_ghost_offs(fld), mrc_fld_ghost_dims(fld));
+      find_intersection(ilo, ihi, off, ldims, mrc_ndarray_offs(nd), mrc_ndarray_dims(nd));
     if (!has_intersection) {
       continue;
     }
@@ -1193,7 +1193,7 @@ collective_recv_fld_local(struct collective_m3_ctx *ctx,
     case MRC_NT_FLOAT:
     {
       BUFLOOP(ix, iy, iz, ilo, ihi) {
-        MRC_S4(fld, ix,iy,iz, 0) =
+        MRC_S4(nd, ix,iy,iz, 0) =
           MRC_S5(m3, ix - off[0], iy - off[1], iz - off[2], m, p);
       } BUFLOOP_END
       break;
@@ -1201,7 +1201,7 @@ collective_recv_fld_local(struct collective_m3_ctx *ctx,
     case MRC_NT_DOUBLE:
     {
       BUFLOOP(ix, iy, iz, ilo, ihi) {
-        MRC_D4(fld, ix,iy,iz, 0) =
+        MRC_D4(nd, ix,iy,iz, 0) =
           MRC_D5(m3, ix - off[0], iy - off[1], iz - off[2], m, p);
       } BUFLOOP_END
       break;     
@@ -1209,7 +1209,7 @@ collective_recv_fld_local(struct collective_m3_ctx *ctx,
     case MRC_NT_INT:
     {
       BUFLOOP(ix, iy, iz, ilo, ihi) {
-        MRC_I4(fld, ix,iy,iz, 0) =
+        MRC_I4(nd, ix,iy,iz, 0) =
           MRC_I5(m3, ix - off[0], iy - off[1], iz - off[2], m, p);
       } BUFLOOP_END
       break;
@@ -1229,7 +1229,7 @@ collective_recv_fld_local(struct collective_m3_ctx *ctx,
 
 static void
 collective_write_fld(struct collective_m3_ctx *ctx, struct mrc_io *io,
-		    const char *path, struct mrc_fld *fld, int m,
+		    const char *path, struct mrc_ndarray *nd, int m,
 		    struct mrc_fld *m3, struct xdmf_spatial *xs, hid_t group0)
 {
   int ierr;
@@ -1257,13 +1257,13 @@ collective_write_fld(struct collective_m3_ctx *ctx, struct mrc_io *io,
   hsize_t fdims[3] = { ctx->slab_dims[2], ctx->slab_dims[1], ctx->slab_dims[0] };
   hid_t filespace = H5Screate_simple(3, fdims, NULL); H5_CHK(filespace);
   hid_t dtype;
-  switch (mrc_fld_data_type(fld)) {
+  switch (mrc_ndarray_data_type(nd)) {
   case MRC_NT_FLOAT: dtype = H5T_NATIVE_FLOAT; break;
   case MRC_NT_DOUBLE: dtype = H5T_NATIVE_DOUBLE; break;
   case MRC_NT_INT: dtype = H5T_NATIVE_INT; break;
   default: assert(0);
   }
-  assert(!fld->_aos);
+
   hid_t dset = H5Dcreate(group, "3d", dtype, filespace, H5P_DEFAULT,
 			 H5P_DEFAULT, H5P_DEFAULT); H5_CHK(dset);
   hid_t dxpl = H5Pcreate(H5P_DATASET_XFER); H5_CHK(dxpl);
@@ -1275,7 +1275,7 @@ collective_write_fld(struct collective_m3_ctx *ctx, struct mrc_io *io,
     ierr = H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE); CE;
   }
 #endif
-  const int *im = mrc_fld_ghost_dims(fld), *ib = mrc_fld_ghost_offs(fld);
+  const int *im = mrc_ndarray_dims(nd), *ib = mrc_ndarray_offs(nd);
   hsize_t mdims[3] = { im[2], im[1], im[0] };
   hsize_t foff[3] = { ib[2] - ctx->slab_off[2],
 		      ib[1] - ctx->slab_off[1],
@@ -1284,7 +1284,7 @@ collective_write_fld(struct collective_m3_ctx *ctx, struct mrc_io *io,
   ierr = H5Sselect_hyperslab(filespace, H5S_SELECT_SET, foff, NULL,
 			     mdims, NULL); CE;
 
-  ierr = H5Dwrite(dset, dtype, memspace, filespace, dxpl, fld->_nd->arr); CE;
+  ierr = H5Dwrite(dset, dtype, memspace, filespace, dxpl, nd->arr); CE;
   
   ierr = H5Dclose(dset); CE;
   ierr = H5Sclose(memspace); CE;
@@ -1336,18 +1336,18 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
     /* 	    writer_off[0], writer_off[1], writer_off[2], */
     /* 	    writer_dims[0], writer_dims[1], writer_dims[2]); */
 
-    struct mrc_fld *fld = mrc_fld_create(MPI_COMM_NULL);
+    struct mrc_ndarray *nd = mrc_ndarray_create(MPI_COMM_NULL);
     switch (mrc_fld_data_type(m3)) {
-    case MRC_NT_FLOAT: mrc_fld_set_type(fld, "float"); break;
-    case MRC_NT_DOUBLE: mrc_fld_set_type(fld, "double"); break;
-    case MRC_NT_INT: mrc_fld_set_type(fld, "int"); break;
+    case MRC_NT_FLOAT: mrc_ndarray_set_type(nd, "float"); break;
+    case MRC_NT_DOUBLE: mrc_ndarray_set_type(nd, "double"); break;
+    case MRC_NT_INT: mrc_ndarray_set_type(nd, "int"); break;
     default: assert(0);
     }
-    mrc_fld_set_param_int_array(fld, "dims", 4,
+    mrc_ndarray_set_param_int_array(nd, "dims", 4,
 				(int[4]) { writer_dims[0], writer_dims[1], writer_dims[2], 1 });
-    mrc_fld_set_param_int_array(fld, "offs", 4,
+    mrc_ndarray_set_param_int_array(nd, "offs", 4,
 				(int[4]) { writer_off[0], writer_off[1], writer_off[2], 0 });
-    mrc_fld_setup(fld);
+    mrc_ndarray_setup(nd);
 
     hid_t group0;
     if (H5Lexists(file->h5_file, path, H5P_DEFAULT) > 0) {
@@ -1361,16 +1361,16 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3
     H5LTset_attribute_int(group0, ".", "nr_patches", &nr_1, 1);
 
     for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
-      collective_recv_fld_begin(&ctx, io, fld, m3_soa);
+      collective_recv_fld_begin(&ctx, io, nd, m3_soa);
       collective_send_fld_begin(&ctx, io, m3_soa, m);
-      collective_recv_fld_local(&ctx, io, fld, m3_soa, m);
-      collective_recv_fld_end(&ctx, io, fld, m3_soa, m);
-      collective_write_fld(&ctx, io, path, fld, m, m3, xs, group0);
+      collective_recv_fld_local(&ctx, io, nd, m3_soa, m);
+      collective_recv_fld_end(&ctx, io, nd, m3_soa, m);
+      collective_write_fld(&ctx, io, path, nd, m, m3, xs, group0);
       collective_send_fld_end(&ctx, io, m3, m);
     }
 
     H5Gclose(group0);
-    mrc_fld_destroy(fld);
+    mrc_ndarray_destroy(nd);
   } else {
     for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
       collective_send_fld_begin(&ctx, io, m3_soa, m);
