@@ -66,7 +66,7 @@ struct mrc_ndarray_access {
 
 #endif
 
-#define MRC_NDARRAY(nd, type, i0,i1,i2,i3,i4) __MRC_NDARRAY(&nd->nd_acc, type, i0,i1,i2,i3,i4)
+#define MRC_NDARRAY(nd, type, i0,i1,i2,i3,i4) __MRC_NDARRAY(&(nd)->nd_acc, type, i0,i1,i2,i3,i4)
 
 // ----------------------------------------------------------------------
 // struct mrc_ndarray

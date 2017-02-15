@@ -161,7 +161,7 @@ mrc_fld_spatial_sw(struct mrc_fld *x)
   return mrc_fld_sw(x);
 }
 
-#define MRC_FLD(fld, type, i0,i1,i2,i3,i4) __MRC_NDARRAY(&(fld)->nd_acc, type, i0,i1,i2,i3,i4)
+#define MRC_FLD(fld, type, i0,i1,i2,i3,i4) MRC_NDARRAY(fld, type, i0,i1,i2,i3,i4)
 
 #define MRC_S1(fld, i0) MRC_FLD(fld, float, i0,0,0,0,0)
 #define MRC_D1(fld, i0) MRC_FLD(fld, double, i0,0,0,0,0)
