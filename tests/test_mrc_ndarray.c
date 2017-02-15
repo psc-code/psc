@@ -1,6 +1,8 @@
 
 #include <mrc_ndarray.h>
 
+#include <mrc_io.h>
+
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
@@ -387,6 +389,43 @@ test_12()
 }
 
 // ----------------------------------------------------------------------
+// test 13
+//
+// test write / read
+
+static void
+test_13()
+{
+  struct mrc_ndarray *nd = setup_and_set_nd(NULL, (int [3]) { 3, 4, 1 }, NULL);
+
+  // write it
+  struct mrc_io *io = mrc_io_create(MPI_COMM_WORLD);
+  mrc_io_set_type(io, "hdf5_serial");
+  mrc_io_set_from_options(io);
+  mrc_io_setup(io);
+  mrc_io_open(io, "w", 0, 0.);
+  mrc_io_write_path(io, "/nd", "nd", nd);
+  mrc_io_close(io);
+  mrc_io_destroy(io);
+
+  mrc_ndarray_print_3d(nd);
+  mrc_ndarray_destroy(nd);
+
+  io = mrc_io_create(MPI_COMM_WORLD);
+  mrc_io_set_type(io, "hdf5_serial");
+  mrc_io_set_from_options(io);
+  mrc_io_setup(io);
+  mrc_io_open(io, "r", 0, 0.);
+  nd = mrc_io_read_path(io, "/nd", "nd", mrc_ndarray);
+  mrc_io_close(io);
+  mrc_io_destroy(io);
+
+  printf("read back:\n");
+  mrc_ndarray_print_3d(nd);
+  mrc_ndarray_destroy(nd);
+}
+
+// ----------------------------------------------------------------------
 // main
 
 typedef void (*test_func)(void);
@@ -405,6 +444,7 @@ static test_func tests[] = {
   [10] = test_10,
   [11] = test_11,
   [12] = test_12,
+  [13] = test_13,
 };
 
 static int n_tests = sizeof(tests)/sizeof(tests[0]);
