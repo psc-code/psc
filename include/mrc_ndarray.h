@@ -66,7 +66,7 @@ struct mrc_ndarray_access {
 
 #endif
 
-#define MRC_NDARRAY(nd, type, i0,i1,i2,i3,i4) __MRC_NDARRAY(&nd->acc, type, i0,i1,i2,i3,i4)
+#define MRC_NDARRAY(nd, type, i0,i1,i2,i3,i4) __MRC_NDARRAY(&nd->nd_acc, type, i0,i1,i2,i3,i4)
 
 // ----------------------------------------------------------------------
 // struct mrc_ndarray
@@ -75,7 +75,7 @@ struct mrc_ndarray {
   struct mrc_obj obj;
   
   // state
-  struct mrc_ndarray_access acc;
+  struct mrc_ndarray_access nd_acc;
   void *arr; //< pointer to the actual data
   int start[MRC_NDARRAY_MAXDIMS];
   int n_dims;
@@ -148,7 +148,7 @@ mrc_ndarray_it_beg_end(struct mrc_ndarray_it *it, struct mrc_ndarray *nd,
     it->end[d] = end[d];
     it->beg[d] = beg[d];
     it->idx[d] = beg[d];
-    it->stride[d] = nd->acc.stride[d] * nd->size_of_type;
+    it->stride[d] = nd->nd_acc.stride[d] * nd->size_of_type;
     it->ptr += it->idx[d] * it->stride[d];
   }
 }

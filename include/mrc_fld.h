@@ -67,7 +67,7 @@ struct mrc_fld {
 
   // state
   // these are copies from our ::nd member, replicated for fast access
-  struct mrc_ndarray_access _nd_acc;
+  struct mrc_ndarray_access nd_acc;
   
   // parameters
   struct mrc_param_int_array _dims;
@@ -161,7 +161,7 @@ mrc_fld_spatial_sw(struct mrc_fld *x)
   return mrc_fld_sw(x);
 }
 
-#define MRC_FLD(fld, type, i0,i1,i2,i3,i4) __MRC_NDARRAY(&(fld)->_nd_acc, type, i0,i1,i2,i3,i4)
+#define MRC_FLD(fld, type, i0,i1,i2,i3,i4) __MRC_NDARRAY(&(fld)->nd_acc, type, i0,i1,i2,i3,i4)
 
 #define MRC_S1(fld, i0) MRC_FLD(fld, float, i0,0,0,0,0)
 #define MRC_D1(fld, i0) MRC_FLD(fld, double, i0,0,0,0,0)

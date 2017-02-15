@@ -106,9 +106,9 @@ _mrc_ndarray_setup(struct mrc_ndarray *nd)
     // new ndarray
     for (int d = 0; d < n_dims; d++) {
       nd->start[d] = offs[d];
-      nd->acc.stride[perm[d]] = 1;
+      nd->nd_acc.stride[perm[d]] = 1;
       for (int dd = 0; dd < d; dd++) {
-	nd->acc.stride[perm[d]] *= dims[perm[dd]];
+	nd->nd_acc.stride[perm[d]] *= dims[perm[dd]];
       }
     }
   } else {
@@ -133,7 +133,7 @@ _mrc_ndarray_setup(struct mrc_ndarray *nd)
     for (int d = 0; d < n_dims; d++) {
       assert(view_offs[d] >= base_offs[d]);
       assert(view_offs[d] + dims[d] <= base_offs[d] + base_dims[d]);
-      nd->acc.stride[d] = nd_base->acc.stride[d];
+      nd->nd_acc.stride[d] = nd_base->nd_acc.stride[d];
       nd->start[d] = nd_base->start[d] - view_offs[d] + offs[d];
     }
   }
@@ -153,20 +153,20 @@ _mrc_ndarray_setup(struct mrc_ndarray *nd)
   // set up arr_off
   int off = 0;
   for (int d = 0; d < n_dims; d++) {
-    off += nd->start[d] * nd->acc.stride[d];
+    off += nd->start[d] * nd->nd_acc.stride[d];
   }
-  nd->acc.arr_off = nd->arr - off * nd->size_of_type;
+  nd->nd_acc.arr_off = nd->arr - off * nd->size_of_type;
 
   // store more info in nd_acc so we can do bounds checking
   for (int d = 0; d < n_dims; d++) {
-    nd->acc.beg[d] = offs[d];
-    nd->acc.end[d] = offs[d] + dims[d];
+    nd->nd_acc.beg[d] = offs[d];
+    nd->nd_acc.end[d] = offs[d] + dims[d];
   }
   for (int d = n_dims; d < MRC_NDARRAY_MAXDIMS; d++) {
-    nd->acc.beg[d] = 0;
-    nd->acc.end[d] = 1;
+    nd->nd_acc.beg[d] = 0;
+    nd->nd_acc.end[d] = 1;
   }
-  nd->acc.data_type = nd->data_type;
+  nd->nd_acc.data_type = nd->data_type;
 }
 
 // ----------------------------------------------------------------------
@@ -209,7 +209,7 @@ mrc_ndarray_replace_array(struct mrc_ndarray *nd, void *arr)
 struct mrc_ndarray_access *
 mrc_ndarray_access(struct mrc_ndarray *nd)
 {
-  return &nd->acc;
+  return &nd->nd_acc;
 }
 
 // ----------------------------------------------------------------------

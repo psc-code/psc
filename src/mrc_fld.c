@@ -131,7 +131,7 @@ setup_ndarray(struct mrc_fld *fld)
 
   //mrc_fld_setup_member_objs(fld); // FIXME?, does same as the next line
   mrc_ndarray_setup(nd);
-  fld->_nd_acc = *mrc_ndarray_access(nd);
+  fld->nd_acc = *mrc_ndarray_access(nd);
 }
 
 
@@ -285,7 +285,7 @@ _mrc_fld_read(struct mrc_fld *fld, struct mrc_io *io)
   }
   // read back our _nd member, though that won't read the actual data
   mrc_fld_read_member_objs(fld, io);
-  fld->_nd_acc = *mrc_ndarray_access(fld->_nd);
+  fld->nd_acc = *mrc_ndarray_access(fld->_nd);
 
   setup_ghost_dims_offs(fld);
   // FIXME: Hacky, but we are basically set up now, so we should advertise it
