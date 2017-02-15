@@ -455,14 +455,7 @@ mrc_fld_duplicate(struct mrc_fld *fld)
 void
 mrc_fld_copy(struct mrc_fld *fld_to, struct mrc_fld *fld_from)
 {
-  assert(mrc_fld_same_shape(fld_to, fld_from));
-  if (!fld_to->_view_base && !fld_from->_view_base) {
-    mrc_vec_copy(fld_to->_nd->vec, fld_from->_nd->vec);
-  } else {
-    struct mrc_fld_ops *ops = mrc_fld_ops(fld_to);
-    assert(ops && ops->copy);
-    ops->copy(fld_to, fld_from);
-  }
+  mrc_ndarray_copy(fld_to->_nd, fld_from->_nd);
 }
 
 
@@ -1016,22 +1009,6 @@ mrc_fld_int_ddc_copy_to_buf(struct mrc_fld *fld, int mb, int me, int p,
 
 #define MAKE_MRC_FLD_TYPE(NAME, type, TYPE)				\
 									\
-  static void								\
-  mrc_fld_##NAME##_copy(struct mrc_fld *fld_to, struct mrc_fld *fld_from) \
-  {									\
-    assert(!fld_to->_aos && !fld_from->_aos);				\
-    assert(strcmp(mrc_fld_type(fld_to), mrc_fld_type(fld_from)) == 0);	\
-									\
-    for (int p = 0; p < mrc_fld_nr_patches(fld_to); p++) {			\
-      mrc_fld_foreach(fld_to, ix,iy,iz, fld_to->_nr_ghosts, fld_to->_nr_ghosts) { \
-	for (int m = 0; m < fld_to->_nr_comps; m++) {			\
-	  MRC_FLD(fld_to, type, ix,iy,iz, m, p) = 			\
-	    MRC_FLD(fld_from, type, ix,iy,iz, m, p);			\
-	}								\
-      } mrc_fld_foreach_end;						\
-    }									\
-  }									\
-									\
   void mrc_fld_##NAME##_ddc_copy_from_buf(struct mrc_fld *, int, int,	\
 					  int, int[3], int[3], void *); \
   void mrc_fld_##NAME##_ddc_copy_to_buf(struct mrc_fld *, int, int,	\
@@ -1040,7 +1017,6 @@ mrc_fld_int_ddc_copy_to_buf(struct mrc_fld *fld, int mb, int me, int p,
   static struct mrc_fld_ops mrc_fld_##NAME##_ops = {			\
     .name                  = #NAME,					\
     .methods               = mrc_fld_##NAME##_methods,			\
-    .copy                  = mrc_fld_##NAME##_copy,			\
     .ddc_copy_from_buf	   = mrc_fld_##NAME##_ddc_copy_from_buf,	\
     .ddc_copy_to_buf	   = mrc_fld_##NAME##_ddc_copy_to_buf,		\
     .vec_type              = #type,					\
