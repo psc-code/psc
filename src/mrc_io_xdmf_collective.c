@@ -410,7 +410,7 @@ collective_m1_write_f1(struct mrc_io *io, const char *path, struct mrc_ndarray *
     H5Sselect_none(memspace);
     H5Sselect_none(filespace);
   }
-  ierr = H5Dwrite(dset, H5T_NATIVE_FLOAT, memspace, filespace, dxpl, &MRC_F1(nd1, 0, 0)); CE;
+  ierr = H5Dwrite(dset, H5T_NATIVE_FLOAT, memspace, filespace, dxpl, &MRC_S2(nd1, 0, 0)); CE;
   
   ierr = H5Dclose(dset); CE;
   ierr = H5Sclose(memspace); CE;
@@ -485,7 +485,7 @@ collective_m1_send_end(struct mrc_io *io, struct collective_m1_ctx *ctx)
 
 static void
 collective_m1_recv_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
-			 struct mrc_domain *domain, struct mrc_ndarray *nd, int m)
+			 struct mrc_domain *domain, struct mrc_ndarray *nd1, int m)
 {
   struct xdmf *xdmf = to_xdmf(io);
 
@@ -519,7 +519,7 @@ collective_m1_recv_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
       ie = xdmf->slab_off[dim] + xdmf->slab_dims[dim];
     }
     //mprintf("recv from %d tag %d len %d\n", info.rank, gp, ie - ib);
-    MPI_Irecv(&MRC_F1(nd, 0, ib), ie - ib, MPI_FLOAT, info.rank,
+    MPI_Irecv(&MRC_S2(nd1, ib, 0), ie - ib, MPI_FLOAT, info.rank,
 	      gp, mrc_io_comm(io), &ctx->recv_reqs[ctx->nr_recv_reqs++]);
   }
   assert(ctx->nr_recv_reqs == ctx->np[dim]);
