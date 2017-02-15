@@ -311,6 +311,26 @@ mrctest_crds_compare(struct mrc_crds *crds1, struct mrc_crds *crds2)
 	}
       } mrc_m1_foreach_end;
     }
+
+    struct mrc_ndarray *global_crd1 = crds1->global_crd[d];
+    struct mrc_ndarray *global_crd2 = crds2->global_crd[d];
+    mrc_ndarray_view(global_crd1);
+    mrc_ndarray_view(global_crd2);
+    assert(mrc_ndarray_same_shape(global_crd1, global_crd2));
+
+    struct mrc_ndarray_it it1, it2;
+    mrc_ndarray_it_all(&it1, global_crd1);
+    mrc_ndarray_it_all(&it2, global_crd2);
+#define TYPE double
+    double diff = 0.;
+    for (; !mrc_ndarray_it_done(&it1); mrc_ndarray_it_next(&it1), mrc_ndarray_it_next(&it2)) {
+      diff = fmax(diff, fabs(IT_TYPE(&it1, TYPE) - IT_TYPE(&it2, TYPE)));
+      if (diff > 0.) {
+	mprintf("mrctest_crds_compare: idx = %d:%d diff = %g %g/%g\n", it1.idx[0], it1.idx[1], diff,
+		IT_TYPE(&it1, TYPE), IT_TYPE(&it2, TYPE));
+	assert(0);
+      }
+    }
   }
 }
 
