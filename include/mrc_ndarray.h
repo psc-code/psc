@@ -129,6 +129,7 @@ void mrc_ndarray_replace_array(struct mrc_ndarray *nd, void *arr);
 int mrc_ndarray_n_dims(struct mrc_ndarray *nd);
 int *mrc_ndarray_dims(struct mrc_ndarray *nd);
 int *mrc_ndarray_offs(struct mrc_ndarray *nd);
+int mrc_ndarray_data_type(struct mrc_ndarray *nd);
 void mrc_ndarray_set(struct mrc_ndarray *nd, double val);
 
 extern struct mrc_ndarray_ops mrc_ndarray_float_ops;

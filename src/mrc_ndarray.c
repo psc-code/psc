@@ -240,6 +240,15 @@ mrc_ndarray_offs(struct mrc_ndarray *nd)
 }
 
 // ----------------------------------------------------------------------
+// mrc_ndarray_data_type
+
+int
+mrc_ndarray_data_type(struct mrc_ndarray *nd)
+{
+  return nd->data_type;
+}
+
+// ----------------------------------------------------------------------
 // mrc_ndarray_set
 
 void
