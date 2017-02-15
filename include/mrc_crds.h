@@ -20,7 +20,7 @@ struct mrc_crds {
   struct mrc_fld *crd_nc[3];
   struct mrc_fld *dcrd_nc[3];
 
-  struct mrc_fld *global_crd[3];
+  struct mrc_ndarray *global_crd[3];
 
   struct mrc_crds_gen *crds_gen[3];
 };

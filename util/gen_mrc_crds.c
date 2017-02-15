@@ -17,7 +17,7 @@ main(int argc, char **argv)
   char hgrid2_fname[MAX_STRLEN];
   struct mrc_domain *mrc_domain;
   struct mrc_crds *mrc_crds;
-  struct mrc_fld *fld;
+  struct mrc_ndarray *nd;
   FILE *fout1;
   FILE *fout2;
 
@@ -40,15 +40,15 @@ main(int argc, char **argv)
   fout1 = fopen(grid2_fname, "w");
   fout2 = fopen(hgrid2_fname, "w");
   for (int d=0; d < 3; d++) {
-    fld = mrc_crds->global_crd[d];
+    nd = mrc_crds->global_crd[d];
     
-    fprintf(fout1, "%d\n", fld->_dims.vals[0]);
-    fprintf(fout2, "%d\n", fld->_dims.vals[0]);
+    fprintf(fout1, "%d\n", nd->dims.vals[0]);
+    fprintf(fout2, "%d\n", nd->dims.vals[0]);
 
-    mrc_f1_foreach(fld, i, 0, 0) {
-      fprintf(fout1, "%16.10g\n", MRC_D2(fld, i, 0));
-      fprintf(fout2, "%16.10g\n", MRC_D2(fld, i, 1));
-    } mrc_f1_foreach_end;
+    for (int i = nd->nd_acc.beg[0]; i < nd->nd_acc.end[0]; i++) {
+      fprintf(fout1, "%16.10g\n", MRC_D2(nd, i, 0));
+      fprintf(fout2, "%16.10g\n", MRC_D2(nd, i, 1));
+    }
   }
   fclose(fout1);
   fclose(fout2);

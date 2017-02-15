@@ -4,6 +4,7 @@
 #include <mrc_crds_gen.h>
 #include <mrc_params.h>
 #include <mrc_domain.h>
+#include <mrc_ndarray.h>
 #include <mrc_io.h>
 
 #include <stdlib.h>
@@ -42,9 +43,9 @@ _mrc_crds_create(struct mrc_crds *crds)
     sprintf(s, "dcrd_nc[%d]", d);
     mrc_fld_set_name(crds->dcrd_nc[d], s);
 
-    crds->global_crd[d] = mrc_fld_create(mrc_crds_comm(crds));
+    crds->global_crd[d] = mrc_ndarray_create(mrc_crds_comm(crds));
     sprintf(s, "global_crd[%d]", d);
-    mrc_fld_set_name(crds->global_crd[d], s);
+    mrc_ndarray_set_name(crds->global_crd[d], s);
 
     sprintf(s, "crds_gen_%c", 'x' + d);
     mrc_crds_gen_set_name(crds->crds_gen[d], s);
@@ -72,9 +73,9 @@ _mrc_crds_read(struct mrc_crds *crds, struct mrc_io *io)
     crds->crd_nc[1] = mrc_io_read_ref(io, crds, "crd_nc[1]", mrc_fld);
     crds->crd_nc[2] = mrc_io_read_ref(io, crds, "crd_nc[2]", mrc_fld);
 
-    crds->global_crd[0] = mrc_io_read_ref(io, crds, "global_crd[0]", mrc_fld);
-    crds->global_crd[1] = mrc_io_read_ref(io, crds, "global_crd[1]", mrc_fld);
-    crds->global_crd[2] = mrc_io_read_ref(io, crds, "global_crd[2]", mrc_fld);    
+    crds->global_crd[0] = mrc_io_read_ref(io, crds, "global_crd[0]", mrc_ndarray);
+    crds->global_crd[1] = mrc_io_read_ref(io, crds, "global_crd[1]", mrc_ndarray);
+    crds->global_crd[2] = mrc_io_read_ref(io, crds, "global_crd[2]", mrc_ndarray);    
   }
 }
 
@@ -123,8 +124,8 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
     // this is a carbon copy on all nodes that run the crd_gen, so this
     // write is only for checkpointing
     for (int d = 0; d < 3; d++) {
-      struct mrc_fld *global_crd = crds->global_crd[d];
-      mrc_io_write_ref(io, crds, mrc_fld_name(global_crd), global_crd);
+      struct mrc_ndarray *global_crd = crds->global_crd[d];
+      mrc_io_write_ref(io, crds, mrc_ndarray_name(global_crd), global_crd);
     }
   }
 }
@@ -206,10 +207,10 @@ mrc_crds_setup_alloc_global_array(struct mrc_crds *crds)
   mrc_domain_get_global_dims(crds->domain, gdims);
   
   for (int d = 0; d < 3; d++) {
-    mrc_fld_set_type(crds->global_crd[d], "double");
-    mrc_fld_set_param_int_array(crds->global_crd[d], "dims", 2, (int[2]) { gdims[d], 2 });
-    mrc_fld_set_param_int_array(crds->global_crd[d], "sw"  , 2, (int[2]) { crds->sw, 0 });
-    mrc_fld_setup(crds->global_crd[d]);
+    mrc_ndarray_set_type(crds->global_crd[d], "double");
+    mrc_ndarray_set_param_int_array(crds->global_crd[d], "dims", 2, (int[2]) { gdims[d] + 2 * crds->sw, 2 });
+    mrc_ndarray_set_param_int_array(crds->global_crd[d], "offs"  , 2, (int[2]) { -crds->sw, 0 });
+    mrc_ndarray_setup(crds->global_crd[d]);
   }
 }
 
@@ -233,7 +234,7 @@ _mrc_crds_setup(struct mrc_crds *crds)
   int sw = crds->sw;
 
   for (int d = 0; d < 3; d ++) {
-    struct mrc_fld *x = crds->global_crd[d];
+    struct mrc_ndarray *x = crds->global_crd[d];
 
     struct mrc_crds_gen *gen = crds->crds_gen[d];
     mrc_crds_get_param_double3(gen->crds, "l", xl);
@@ -274,7 +275,7 @@ static void
 _mrc_crds_destroy(struct mrc_crds *crds)
 {
   for (int d = 0; d < 3; d++) {
-    mrc_fld_destroy(crds->global_crd[d]);
+    mrc_ndarray_destroy(crds->global_crd[d]);
     mrc_fld_destroy(crds->crd_nc[d]);
   }
 }
