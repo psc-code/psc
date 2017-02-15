@@ -249,6 +249,28 @@ mrc_ndarray_data_type(struct mrc_ndarray *nd)
 }
 
 // ----------------------------------------------------------------------
+// mrc_ndarray_same_shape
+//
+// This function checks whether the two ndarrays have compatible shape,
+// ie., same number of elements in each dimension, but it doesn't care about
+// offsets
+
+bool
+mrc_ndarray_same_shape(struct mrc_ndarray *nd1, struct mrc_ndarray *nd2)
+{
+  if (nd1->n_dims != nd2->n_dims) {
+    return false;
+  }
+
+  for (int d = 0; d < nd1->n_dims; d++) {
+    if (nd1->dims.vals[d] != nd2->dims.vals[d]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// ----------------------------------------------------------------------
 // mrc_ndarray_set
 
 void

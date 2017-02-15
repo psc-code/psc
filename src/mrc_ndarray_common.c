@@ -39,7 +39,7 @@ static void
 mrc_ndarray_sub_copy(struct mrc_ndarray *to, struct mrc_ndarray *from)
 {
   assert(mrc_ndarray_data_type(to) == mrc_ndarray_data_type(from));
-  // FIXME, check for same shape
+  assert(mrc_ndarray_same_shape(to, from));
   // FIXME, optimize if both arrays are contiguous
   struct mrc_ndarray_it it_to, it_from;
 
