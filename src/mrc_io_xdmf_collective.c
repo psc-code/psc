@@ -410,7 +410,7 @@ collective_m1_write_f1(struct mrc_io *io, const char *path, struct mrc_ndarray *
     H5Sselect_none(memspace);
     H5Sselect_none(filespace);
   }
-  ierr = H5Dwrite(dset, H5T_NATIVE_FLOAT, memspace, filespace, dxpl, &MRC_S2(nd1, 0, 0)); CE;
+  ierr = H5Dwrite(dset, H5T_NATIVE_FLOAT, memspace, filespace, dxpl, &MRC_S1(nd1, 0)); CE;
   
   ierr = H5Dclose(dset); CE;
   ierr = H5Sclose(memspace); CE;
@@ -485,7 +485,7 @@ collective_m1_send_end(struct mrc_io *io, struct collective_m1_ctx *ctx)
 
 static void
 collective_m1_recv_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
-			 struct mrc_domain *domain, struct mrc_ndarray *nd1, int m)
+			 struct mrc_domain *domain, struct mrc_ndarray *nd1)
 {
   struct xdmf *xdmf = to_xdmf(io);
 
@@ -519,7 +519,7 @@ collective_m1_recv_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
       ie = xdmf->slab_off[dim] + xdmf->slab_dims[dim];
     }
     //mprintf("recv from %d tag %d len %d\n", info.rank, gp, ie - ib);
-    MPI_Irecv(&MRC_S2(nd1, ib, 0), ie - ib, MPI_FLOAT, info.rank,
+    MPI_Irecv(&MRC_S1(nd1, ib), ie - ib, MPI_FLOAT, info.rank,
 	      gp, mrc_io_comm(io), &ctx->recv_reqs[ctx->nr_recv_reqs++]);
   }
   assert(ctx->nr_recv_reqs == ctx->np[dim]);
@@ -569,13 +569,13 @@ xdmf_collective_write_m1(struct mrc_io *io, const char *path, struct mrc_fld *m1
     // we're creating the nd1 on all writers, but only fill and actually write
     // it on writers[0]
     struct mrc_ndarray *nd1 = mrc_ndarray_create(MPI_COMM_SELF);
-    mrc_ndarray_set_param_int_array(nd1, "dims", 2, (int [2]) { xdmf->slab_dims[dim], 1 });
-    mrc_ndarray_set_param_int_array(nd1, "offs", 2, (int [2]) { xdmf->slab_off[dim] , 0 });
+    mrc_ndarray_set_param_int_array(nd1, "dims", 1, (int [1]) { xdmf->slab_dims[dim] });
+    mrc_ndarray_set_param_int_array(nd1, "offs", 1, (int [1]) { xdmf->slab_off[dim]  });
     mrc_ndarray_setup(nd1);
 
     hid_t group0 = H5Gopen(file->h5_file, path, H5P_DEFAULT); H5_CHK(group0);
     for (int m = 0; m < nr_comps; m++) {
-      collective_m1_recv_begin(io, &ctx, m1->_domain, nd1, m);
+      collective_m1_recv_begin(io, &ctx, m1->_domain, nd1);
       collective_m1_send_begin(io, &ctx, m1, m);
       collective_m1_recv_end(io, &ctx);
       collective_m1_write_f1(io, path, nd1, 0, mrc_fld_comp_name(m1, m), group0);
