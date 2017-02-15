@@ -390,6 +390,18 @@ mrc_io_write_ndarray(struct mrc_io *io, const char *path, struct mrc_ndarray *nd
 }
 
 // ----------------------------------------------------------------------
+// mrc_io_read_ndarray
+
+void
+mrc_io_read_ndarray(struct mrc_io *io, const char *path, struct mrc_ndarray *nd)
+{
+  struct mrc_io_ops *ops = mrc_io_ops(io);
+  assert(ops && ops->read_ndarray);
+
+  ops->read_ndarray(io, path, nd);
+}
+
+// ----------------------------------------------------------------------
 // mrc_io_read_attr
 
 void

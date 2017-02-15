@@ -181,6 +181,9 @@ _mrc_ndarray_read(struct mrc_ndarray *nd, struct mrc_io *io)
 
   nd->vec = mrc_vec_create(mrc_ndarray_comm(nd));
   mrc_ndarray_setup(nd);
+
+  // Now we can actually read the data
+  mrc_io_read_ndarray(io, mrc_io_obj_path(io, nd), nd);
 }
 
 // ----------------------------------------------------------------------

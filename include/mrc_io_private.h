@@ -44,6 +44,7 @@ struct mrc_io_ops {
   void (*write_field2d)(struct mrc_io *, float scale, struct mrc_fld *fld,
 			int outtype, float sheet);
   void (*write_ndarray)(struct mrc_io *, const char *path, struct mrc_ndarray *nd);
+  void (*read_ndarray)(struct mrc_io *, const char *path, struct mrc_ndarray *nd);
   void (*read_attr)(struct mrc_io *io, const char *path, int type,
 		    const char *name, union param_u *pv);
   void (*write_attr)(struct mrc_io *io, const char *path, int type,
