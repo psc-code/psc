@@ -57,6 +57,7 @@ TESTS = \
 	test_io_read_multi_1.sh \
 	test_ddc_0.sh \
 	test_mrc_domain_simple_0.sh \
+	test_mrc_domain_simple_1.sh \
 	test_mrc_domain_multi_0.sh \
 	test_mrc_domain_mb_0.sh \
 	test_mrc_ndarray_0.sh \

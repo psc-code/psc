@@ -170,6 +170,7 @@ AC_CONFIG_FILES([Makefile
 		 tests/test_io_2d.sh
 		 tests/test_io_read_multi_1.sh
 		 tests/test_mrc_domain_simple_0.sh
+		 tests/test_mrc_domain_simple_1.sh
 		 tests/test_mrc_domain_multi_0.sh
 		 tests/test_mrc_domain_mb_0.sh
 		 tests/test_mrc_ndarray_0.sh
