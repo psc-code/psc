@@ -196,11 +196,11 @@ ggcm_mhd_step_gkeyll_lua_setup(void **lua_state_ptr, const char *script,
   lua_pushboolean(L, nonuniform);
   lua_setglobal(L, "nonuniform");
 
-  lua_pushlightuserdata(L, crds->dcrd_nc[0]->_arr);
+  lua_pushlightuserdata(L, crds->dcrd_nc[0]->_nd->arr);
   lua_setglobal(L, "crdx");
-  lua_pushlightuserdata(L, crds->dcrd_nc[1]->_arr);
+  lua_pushlightuserdata(L, crds->dcrd_nc[1]->_nd->arr);
   lua_setglobal(L, "crdy");
-  lua_pushlightuserdata(L, crds->dcrd_nc[2]->_arr);
+  lua_pushlightuserdata(L, crds->dcrd_nc[2]->_nd->arr);
   lua_setglobal(L, "crdz");
 
   double ll[3], lh[3];
