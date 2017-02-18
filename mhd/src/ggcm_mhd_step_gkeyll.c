@@ -31,7 +31,6 @@ struct ggcm_mhd_step_gkeyll {
 static void
 ggcm_mhd_step_gkeyll_setup_flds(struct ggcm_mhd_step *step)
 {
-  struct ggcm_mhd_step_gkeyll *sub = ggcm_mhd_step_gkeyll(step);
   struct ggcm_mhd *mhd = step->mhd;
 
   mrc_fld_set_type(mhd->fld, FLD_TYPE);

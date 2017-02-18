@@ -120,7 +120,6 @@ convert_primitive_5m_point_comove(float vals[], int nr_fluids, int nr_moments,
     vals[idx[s] + G5M_RVXS] = rr * mass_ratios[s] * vx;
     vals[idx[s] + G5M_RVYS] = rr * mass_ratios[s] * vy;
     vals[idx[s] + G5M_RVZS] = rr * mass_ratios[s] * vz;
-    float pps = pp * pressure_ratios[s];
     vals[idx[s] + G5M_UUS ] = pp * pressure_ratios[s] / (gamm - 1.)
       + .5 * (sqr(vals[idx[s] + G5M_RVXS])
             + sqr(vals[idx[s] + G5M_RVYS])
