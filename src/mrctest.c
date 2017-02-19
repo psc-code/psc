@@ -293,9 +293,11 @@ mrctest_crds_compare(struct mrc_crds *crds1, struct mrc_crds *crds2)
   int sw = crds1->sw;
 
   assert(crds1->sw == crds2->sw);
+  const double *lo1 = mrc_crds_lo(crds1), *lo2 = mrc_crds_lo(crds2);
+  const double *hi1 = mrc_crds_hi(crds1), *hi2 = mrc_crds_hi(crds2);
   for (int d = 0; d < 3; d++) {
-    assert(crds1->xl[d] == crds2->xl[d]);
-    assert(crds1->xh[d] == crds2->xh[d]);
+    assert(lo1[d] == lo2[d]);
+    assert(hi1[d] == hi2[d]);
   }
 
   assert(strcmp(mrc_crds_type(crds1), mrc_crds_type(crds2)) == 0);

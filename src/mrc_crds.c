@@ -146,9 +146,10 @@ mrc_crds_get_dx_base(struct mrc_crds *crds, double dx[3])
 {
   if (strcmp(mrc_crds_type(crds), "amr_uniform") == 0) {
     int lm[3];
+    const double *lo = mrc_crds_lo(crds), *hi = mrc_crds_hi(crds);
     mrc_domain_get_param_int3(crds->domain, "m", lm);
     for (int d = 0; d < 3; d++) {
-      dx[d] = (crds->xh[d] - crds->xl[d]) / lm[d];
+      dx[d] = (hi[d] - lo[d]) / lm[d];
     }
   } else {
     assert(strcmp(mrc_crds_type(crds), "uniform") == 0);
@@ -280,6 +281,23 @@ _mrc_crds_destroy(struct mrc_crds *crds)
   }
 }
 
+// ----------------------------------------------------------------------
+// mrc_crds_lo
+
+const double *
+mrc_crds_lo(struct mrc_crds *crds)
+{
+  return crds->xl;
+}
+
+// ----------------------------------------------------------------------
+// mrc_crds_hi
+
+const double *
+mrc_crds_hi(struct mrc_crds *crds)
+{
+  return crds->xh;
+}
 
 // ======================================================================
 // mrc_crds_uniform
@@ -318,7 +336,7 @@ mrc_crds_amr_uniform_setup(struct mrc_crds *crds)
 
   int gdims[3];
   mrc_domain_get_global_dims(crds->domain, gdims);
-  double *xl = crds->xl, *xh = crds->xh;
+  const double *lo = mrc_crds_lo(crds), *hi = mrc_crds_hi(crds);
 
   for (int d = 0; d < 3; d++) {
     struct mrc_fld *mcrd = crds->crd[d];
@@ -331,7 +349,7 @@ mrc_crds_amr_uniform_setup(struct mrc_crds *crds)
       double dx = (xe - xb) / info.ldims[d];
 
       mrc_m1_foreach_bnd(mcrd, i) {
-        MRC_D3(dcrd,i, 0, p) = xl[d] + (xb + (i + .5) * dx) / gdims[d] * (xh[d] - xl[d]);
+        MRC_D3(dcrd,i, 0, p) = lo[d] + (xb + (i + .5) * dx) / gdims[d] * (hi[d] - lo[d]);
         MRC_M1(mcrd,0, i, p) = (float)MRC_D3(dcrd,i, 0, p);
       } mrc_m1_foreach_end;
     }

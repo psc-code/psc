@@ -45,9 +45,10 @@ ggcm_mhd_ic_ot_setup(struct ggcm_mhd_ic *ic)
 {
   struct ggcm_mhd_ic_ot *sub = ggcm_mhd_ic_ot(ic);
   struct mrc_crds *crds = mrc_domain_get_crds(ic->mhd->domain);
+  const double *lo = mrc_crds_lo(crds), *hi = mrc_crds_hi(crds);
   
-  sub->kx = 2. * M_PI / (crds->xh[0] - crds->xl[0]);
-  sub->ky = 2. * M_PI / (crds->xh[1] - crds->xl[1]);
+  sub->kx = 2. * M_PI / (hi[0] - lo[0]);
+  sub->ky = 2. * M_PI / (hi[1] - lo[1]);
 }
 
 // ----------------------------------------------------------------------

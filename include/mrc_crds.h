@@ -59,6 +59,9 @@ struct mrc_crds {
 
 MRC_CLASS_DECLARE(mrc_crds, struct mrc_crds);
 
+// get coordinate limits lo, hi (per dimension) in code units
+const double *mrc_crds_lo(struct mrc_crds *crds);
+const double *mrc_crds_hi(struct mrc_crds *crds);
 void mrc_crds_get_dx_base(struct mrc_crds *crds, double dx[3]);
 void mrc_crds_get_dx(struct mrc_crds *crds, int p, double dx[3]);
 
