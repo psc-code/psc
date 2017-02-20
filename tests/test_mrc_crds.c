@@ -10,6 +10,9 @@
 #include <string.h>
 #include <assert.h>
 
+// ----------------------------------------------------------------------
+// print_x_crds
+
 static void
 print_x_crds(struct mrc_crds *crds)
 {
@@ -43,12 +46,40 @@ norm_test(double norm_length, double norm_length_scale)
   mrc_domain_set_param_int3(domain, "m", (int [3]) { 8, 8, 8 });
 			  
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
+  mrc_crds_set_type(crds, "uniform");
   mrc_crds_set_param_double3(crds, "l", (double [3]) { -1., -2., -3. });
   mrc_crds_set_param_double3(crds, "h", (double [3]) {  1.,  2.,  3. });
   mrc_crds_set_param_double(crds, "norm_length", norm_length);
   mrc_crds_set_param_double(crds, "norm_length_scale", norm_length_scale);
 
-  mrc_crds_set_type(crds, "uniform");
+  mrc_domain_setup(domain);
+  mrc_domain_view(domain);
+
+  print_x_crds(crds);
+
+  mrc_domain_destroy(domain);
+}
+
+// ----------------------------------------------------------------------
+// norm_test_non_uniform
+
+static void
+norm_test_non_uniform(double norm_length, double norm_length_scale)
+{
+  struct mrc_domain *domain = mrc_domain_create(MPI_COMM_WORLD);
+  mrc_domain_set_type(domain, "simple");
+  mrc_domain_set_param_int3(domain, "m", (int [3]) { 8, 8, 8 });
+			  
+  struct mrc_crds *crds = mrc_domain_get_crds(domain);
+  mrc_crds_set_type(crds, "rectilinear");
+  mrc_crds_set_param_double3(crds, "l", (double [3]) { -1., -2., -3. });
+  mrc_crds_set_param_double3(crds, "h", (double [3]) {  1.,  2.,  3. });
+  mrc_crds_set_param_double(crds, "norm_length", norm_length);
+  mrc_crds_set_param_double(crds, "norm_length_scale", norm_length_scale);
+  struct mrc_crds_gen *gen_x = crds->crds_gen[0];
+  mrc_crds_gen_set_type(gen_x, "ggcm_yz");
+  mrc_crds_gen_set_param_double(gen_x, "center_spacing", .2);
+
   mrc_domain_setup(domain);
   mrc_domain_view(domain);
 
@@ -83,13 +114,24 @@ test_1()
 // test_2
 //
 // test basic coordinates where the "l", "h" are now in R_E,
-// but code units are normalized to R_E
+// but code units are normalized to R_E, too
 
 static void
 test_2()
 {
   const double R_E = 6370e3;
   norm_test(R_E, R_E);
+}
+
+// ----------------------------------------------------------------------
+// test_3
+//
+// test non-unform coordinates
+
+static void
+test_3()
+{
+  norm_test_non_uniform(1., 1.);
 }
 
 // ----------------------------------------------------------------------
@@ -101,6 +143,7 @@ static test_func tests[] = {
   [0] = test_0,
   [1] = test_1,
   [2] = test_2,
+  [3] = test_3,
 };
 
 static int n_tests = sizeof(tests)/sizeof(tests[0]);
