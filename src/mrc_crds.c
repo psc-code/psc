@@ -225,7 +225,6 @@ static void
 _mrc_crds_setup(struct mrc_crds *crds)
 {
   int gdims[3];
-  double xl[3], xh[3];
   int nr_patches;
   struct mrc_patch *patches;
 
@@ -248,13 +247,11 @@ _mrc_crds_setup(struct mrc_crds *crds)
     struct mrc_ndarray *x = crds->global_crd[d];
 
     struct mrc_crds_gen *gen = crds->crds_gen[d];
-    mrc_crds_get_param_double3(gen->crds, "l", xl);
-    mrc_crds_get_param_double3(gen->crds, "h", xh);
 
     mrc_crds_gen_set_param_int(gen, "n", gdims[d]);
     mrc_crds_gen_set_param_int(gen, "sw", gen->crds->sw);
-    mrc_crds_gen_set_param_double(gen, "xl", xl[d]);
-    mrc_crds_gen_set_param_double(gen, "xh", xh[d]);
+    mrc_crds_gen_set_param_double(gen, "xl", crds->lo_code[d]);
+    mrc_crds_gen_set_param_double(gen, "xh", crds->hi_code[d]);
     mrc_crds_gen_run(gen, &MRC_D2(x, 0, 0), &MRC_D2(x, 0, 1));
 
     mrc_fld_foreach_patch(crds->crd[d], p) {

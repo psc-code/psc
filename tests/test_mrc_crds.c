@@ -69,12 +69,24 @@ test_0()
 }
 
 // ----------------------------------------------------------------------
+// test_1
+//
+// test basic coordinates where the "l", "h" are now in "km".
+
+static void
+test_1()
+{
+  norm_test(1., 1000.);
+}
+
+// ----------------------------------------------------------------------
 // tests
 
 typedef void (*test_func)(void);
 
 static test_func tests[] = {
   [0] = test_0,
+  [1] = test_1,
 };
 
 static int n_tests = sizeof(tests)/sizeof(tests[0]);
