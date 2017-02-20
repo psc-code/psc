@@ -80,6 +80,19 @@ test_1()
 }
 
 // ----------------------------------------------------------------------
+// test_2
+//
+// test basic coordinates where the "l", "h" are now in R_E,
+// but code units are normalized to R_E
+
+static void
+test_2()
+{
+  const double R_E = 6370e3;
+  norm_test(R_E, R_E);
+}
+
+// ----------------------------------------------------------------------
 // tests
 
 typedef void (*test_func)(void);
@@ -87,6 +100,7 @@ typedef void (*test_func)(void);
 static test_func tests[] = {
   [0] = test_0,
   [1] = test_1,
+  [2] = test_2,
 };
 
 static int n_tests = sizeof(tests)/sizeof(tests[0]);
