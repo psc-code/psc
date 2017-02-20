@@ -1807,7 +1807,21 @@ GROUP "/" {
          (0): 1, 1, 1
          }
       }
+      ATTRIBUTE "hi_code" {
+         DATATYPE  H5T_IEEE_F64LE
+         DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+         DATA {
+         (0): 1, 1, 1
+         }
+      }
       ATTRIBUTE "l" {
+         DATATYPE  H5T_IEEE_F64LE
+         DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+         DATA {
+         (0): 0, 0, 0
+         }
+      }
+      ATTRIBUTE "lo_code" {
          DATATYPE  H5T_IEEE_F64LE
          DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
          DATA {

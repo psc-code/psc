@@ -8,11 +8,15 @@
 struct mrc_crds {
   struct mrc_obj obj;
   // parameters
-  double xl[3];
-  double xh[3];
+  // domain limits in I/O units
+  double l[3];
+  double h[3];
   int sw;
 
   // state
+  // domain limits in code units
+  double lo_code[3];
+  double hi_code[3];
   struct mrc_domain *domain;
   struct mrc_fld *crd[3];
   struct mrc_fld *dcrd[3]; // Double version of the coordinates

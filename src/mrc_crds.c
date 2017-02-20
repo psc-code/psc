@@ -77,6 +77,9 @@ _mrc_crds_read(struct mrc_crds *crds, struct mrc_io *io)
     crds->global_crd[1] = mrc_io_read_ref(io, crds, "global_crd[1]", mrc_ndarray);
     crds->global_crd[2] = mrc_io_read_ref(io, crds, "global_crd[2]", mrc_ndarray);    
   }
+
+  // FIXME, shouldn't the generic read() take care of this?
+  crds->obj.is_setup = true;
 }
 
 // ----------------------------------------------------------------------
@@ -226,6 +229,11 @@ _mrc_crds_setup(struct mrc_crds *crds)
   int nr_patches;
   struct mrc_patch *patches;
 
+  for (int d = 0; d < 3; d ++) {
+    crds->lo_code[d] = crds->l[d];
+    crds->hi_code[d] = crds->h[d];
+  }
+  
   mrc_crds_setup_alloc_only(crds);
   mrc_crds_setup_alloc_global_array(crds);
 
@@ -287,7 +295,8 @@ _mrc_crds_destroy(struct mrc_crds *crds)
 const double *
 mrc_crds_lo(struct mrc_crds *crds)
 {
-  return crds->xl;
+  assert(crds->obj.is_setup);
+  return crds->lo_code;
 }
 
 // ----------------------------------------------------------------------
@@ -296,7 +305,8 @@ mrc_crds_lo(struct mrc_crds *crds)
 const double *
 mrc_crds_hi(struct mrc_crds *crds)
 {
-  return crds->xh;
+  assert(crds->obj.is_setup);
+  return crds->hi_code;
 }
 
 // ======================================================================
@@ -474,10 +484,13 @@ mrc_crds_init()
 
 #define VAR(x) (void *)offsetof(struct mrc_crds, x)
 static struct param mrc_crds_params_descr[] = {
-  { "l"              , VAR(xl)            , PARAM_DOUBLE3(0., 0., 0.) },
-  { "h"              , VAR(xh)            , PARAM_DOUBLE3(1., 1., 1.) },
+  { "l"              , VAR(l)             , PARAM_DOUBLE3(0., 0., 0.) },
+  { "h"              , VAR(h)             , PARAM_DOUBLE3(1., 1., 1.) },
   { "sw"             , VAR(sw)            , PARAM_INT(0)             },
   { "domain"         , VAR(domain)        , PARAM_OBJ(mrc_domain)    },
+
+  { "lo_code"        , VAR(lo_code)       , MRC_VAR_DOUBLE3          },
+  { "hi_code"        , VAR(hi_code)       , MRC_VAR_DOUBLE3          },
 
   { "crd[0]"         , VAR(crd[0])        , MRC_VAR_OBJ(mrc_fld)     },
   { "crd[1]"         , VAR(crd[1])        , MRC_VAR_OBJ(mrc_fld)     },
