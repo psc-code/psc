@@ -159,6 +159,7 @@ xdmf_write_attr(struct mrc_io *io, const char *path, int type,
     break;
 
   case PT_DOUBLE3:
+  case MRC_VAR_DOUBLE3:
     ierr = H5LTset_attribute_double(group, ".", name, pv->u_double3, 3); CE;
     break;
   case PT_INT_ARRAY: {

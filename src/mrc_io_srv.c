@@ -336,6 +336,7 @@ diagc_combined_write_attr(struct mrc_io *io, const char *path, int type,
 	       ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD);
       break;
     case PT_DOUBLE3:
+    case MRC_VAR_DOUBLE3:
       MPI_Send(pv->u_double3, 3, MPI_DOUBLE, par->rank_diagsrv,
 	       ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD);
       break;
@@ -982,10 +983,10 @@ static struct param diagsrv_params_descr[] = {
 	  MPI_Recv(&val.u_float, 1, MPI_FLOAT, 0, ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD,
 		   MPI_STATUS_IGNORE);
 	  break;
-  case PT_DOUBLE:
-    MPI_Recv(&val.u_double, 1, MPI_DOUBLE, 0, ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD,
-       MPI_STATUS_IGNORE);
-    break;
+	case PT_DOUBLE:
+	  MPI_Recv(&val.u_double, 1, MPI_DOUBLE, 0, ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD,
+		   MPI_STATUS_IGNORE);
+	  break;
 	case PT_STRING: ;
 	  char str[100];
 	  MPI_Recv(str, 100, MPI_CHAR, 0, ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD,
@@ -1001,6 +1002,7 @@ static struct param diagsrv_params_descr[] = {
 		   MPI_STATUS_IGNORE);
 	  break;
 	case PT_DOUBLE3:
+	case MRC_VAR_DOUBLE3:
 	  MPI_Recv(val.u_double3, 3, MPI_DOUBLE, 0, ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD,
 		   MPI_STATUS_IGNORE);
 	  break;

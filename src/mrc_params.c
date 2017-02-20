@@ -761,6 +761,7 @@ mrc_params_set_default(void *p, struct param *params)
     case MRC_VAR_BOOL:
     case MRC_VAR_FLOAT:
     case MRC_VAR_DOUBLE:
+    case MRC_VAR_DOUBLE3:
     case MRC_VAR_OBJ:
       break;
     default:
@@ -1076,6 +1077,7 @@ mrc_params_parse_nodefault(void *p, struct param *params, const char *title,
     case MRC_VAR_BOOL:
     case MRC_VAR_FLOAT:
     case MRC_VAR_DOUBLE:
+    case MRC_VAR_DOUBLE3:
     case MRC_VAR_OBJ:
       break;
     default:
@@ -1136,6 +1138,7 @@ mrc_params_parse_pfx(void *p, struct param *params, const char *title,
     case MRC_VAR_BOOL:
     case MRC_VAR_FLOAT:
     case MRC_VAR_DOUBLE:
+    case MRC_VAR_DOUBLE3:
     case MRC_VAR_OBJ:
       break;
     default:
@@ -1225,6 +1228,7 @@ mrc_params_print_one(void *p, struct param *prm, MPI_Comm comm)
   case MRC_VAR_BOOL:
   case MRC_VAR_FLOAT:
   case MRC_VAR_DOUBLE:
+  case MRC_VAR_DOUBLE3:
   case MRC_VAR_OBJ:
     break;
   default:
