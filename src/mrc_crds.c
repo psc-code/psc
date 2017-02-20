@@ -229,9 +229,11 @@ _mrc_crds_setup(struct mrc_crds *crds)
   int nr_patches;
   struct mrc_patch *patches;
 
+  crds->xnorm = crds->norm_length / crds->norm_length_scale;
+
   for (int d = 0; d < 3; d ++) {
-    crds->lo_code[d] = crds->l[d];
-    crds->hi_code[d] = crds->h[d];
+    crds->lo_code[d] = crds->l[d] / crds->xnorm;
+    crds->hi_code[d] = crds->h[d] / crds->xnorm;
   }
   
   mrc_crds_setup_alloc_only(crds);
@@ -484,11 +486,14 @@ mrc_crds_init()
 
 #define VAR(x) (void *)offsetof(struct mrc_crds, x)
 static struct param mrc_crds_params_descr[] = {
-  { "l"              , VAR(l)             , PARAM_DOUBLE3(0., 0., 0.) },
-  { "h"              , VAR(h)             , PARAM_DOUBLE3(1., 1., 1.) },
-  { "sw"             , VAR(sw)            , PARAM_INT(0)             },
-  { "domain"         , VAR(domain)        , PARAM_OBJ(mrc_domain)    },
+  { "l"                , VAR(l)                , PARAM_DOUBLE3(0., 0., 0.) },
+  { "h"                , VAR(h)                , PARAM_DOUBLE3(1., 1., 1.) },
+  { "sw"               , VAR(sw)               , PARAM_INT(0)              },
+  { "norm_length"      , VAR(norm_length)      , PARAM_DOUBLE(1.)          },
+  { "norm_length_scale", VAR(norm_length_scale), PARAM_DOUBLE(1.)          },
+  { "domain"           , VAR(domain)           , PARAM_OBJ(mrc_domain)     },
 
+  { "xnorm"          , VAR(xnorm)         , MRC_VAR_DOUBLE           },
   { "lo_code"        , VAR(lo_code)       , MRC_VAR_DOUBLE3          },
   { "hi_code"        , VAR(hi_code)       , MRC_VAR_DOUBLE3          },
 

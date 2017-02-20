@@ -12,12 +12,21 @@ struct mrc_crds {
   double l[3];
   double h[3];
   int sw;
+  // normalization factors
+  // typically, this might work like:
+  // length input is in units of "cm".
+  // then norm_length_scale transforms that back to the base SI units,
+  // and norm_length transforms it into normalized units.
+  // output will be scaled back into terms of "cm".
+  double norm_length_scale;
+  double norm_length;
+  struct mrc_domain *domain;
 
   // state
   // domain limits in code units
+  double xnorm;
   double lo_code[3];
   double hi_code[3];
-  struct mrc_domain *domain;
   struct mrc_fld *crd[3];
   struct mrc_fld *dcrd[3]; // Double version of the coordinates
                            // not fully supported in io yet
