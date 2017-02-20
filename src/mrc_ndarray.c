@@ -293,7 +293,9 @@ mrc_ndarray_f_contiguous(struct mrc_ndarray *nd)
 {
   int stride = 1;
   for (int d = 0; d < nd->n_dims; d++) {
-    if (nd->nd_acc.stride[d] != stride) {
+    // if the number of elements in a given dimension is 1, the corresponding
+    // stride for that dimension does not matter, so we don't need to check
+    if (nd->dims.vals[d] != 1 && nd->nd_acc.stride[d] != stride) {
       return false;
     }
     stride *= nd->dims.vals[d];
