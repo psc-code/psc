@@ -211,6 +211,11 @@ static void
 ggcm_mhd_setup_gk_norm(struct ggcm_mhd *mhd)
 {
   if (mhd->par.gk_norm) {
+    if (mhd->par.d_i == 0.) {
+      // FIXME, seems it'd be better to not call this if we aren't using a gkeyll stepper
+      mpi_printf(ggcm_mhd_comm(mhd), "WARNING: ggcm_mhd_setup_gk_norm(): d_i == 0\n");
+      return;
+    }
     double mu0 = 1.;
     double e = 1.;
     double rr_e = mhd->par.gk_norm_rr / (1. + mhd->par.gk_norm_mi_over_me);
