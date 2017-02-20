@@ -258,13 +258,11 @@ diagcxyz(struct ggcm_mhd_diag *diag, struct mrc_fld *fld, int itdia,
   int gdims[3];
   mrc_domain_get_global_dims(mhd->domain, gdims);
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-  double xl[3], xh[3];
-  mrc_crds_get_param_double3(crds, "l", xl);
-  mrc_crds_get_param_double3(crds, "h", xh);
+  const double *lo = mrc_crds_lo(crds), *hi = mrc_crds_hi(crds);
 
   for (int i = 0; i < sub->nr_planes[d]; i++) {
     float plane = sub->planes[d][i];
-    if (plane < xl[d] || plane > xh[d])
+    if (plane < lo[d] || plane > hi[d])
       continue;
 
     struct mrc_io *io = get_mrc_io(diag, diag_type, plane)->io;
