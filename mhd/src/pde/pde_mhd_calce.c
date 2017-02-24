@@ -325,9 +325,7 @@ patch_calc_e(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
   fld3d_setup_tmp_compat(&p_resis, 1, _RESIS);
 
   if (s_opt_hall != OPT_HALL_NONE || s_magdiffu == MAGDIFFU_CONST) {
-    if (!fld3d_is_setup(s_p_aux.Jcc)) {
-      fld3d_setup_tmp(&s_p_aux.Jcc, 3);
-    }
+    fld3d_setup_tmp(&s_p_aux.Jcc, 3);
     patch_calc_current_cc(s_p_aux.Jcc, p_U, p_zmask);
   }
 

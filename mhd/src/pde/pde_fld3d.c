@@ -26,6 +26,10 @@ fld3d_setup(fld3d_t *f, struct mrc_fld *fld)
 static inline void
 fld3d_setup_tmp(fld3d_t *f, int n_comps)
 {
+  if (f->arr_off) {
+    // already set up
+    return;
+  }
   f->mrc_fld = NULL;
   f->arr_off = calloc(s_lgdims[0] * s_lgdims[1] * s_lgdims[2] * n_comps,
 		      sizeof(*f->arr_off));
