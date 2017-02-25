@@ -610,6 +610,19 @@ ts_ggcm_mhd_step_get_dt(void *ctx, struct mrc_ts *ts, struct mrc_obj *_x)
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_setup_ts
+
+void
+ggcm_mhd_setup_ts(struct ggcm_mhd *mhd, struct mrc_ts *ts)
+{
+  mrc_ts_set_context(ts, ggcm_mhd_to_mrc_obj(mhd));
+  mrc_ts_set_solution(ts, mrc_fld_to_mrc_obj(mhd->fld));
+  mrc_ts_set_rhs_function(ts, ts_ggcm_mhd_step_calc_rhs, mhd);
+  mrc_ts_set_step_function(ts, ts_ggcm_mhd_step_run, mhd);
+  mrc_ts_set_get_dt_function(ts, ts_ggcm_mhd_step_get_dt, mhd);
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_main
 //
 // Helper function that does most of the work of actually running a
@@ -647,7 +660,6 @@ ggcm_mhd_main(int *argc, char ***argv)
   } else {
     mrc_ts_set_type(ts, "step");
   }
-  mrc_ts_set_context(ts, ggcm_mhd_to_mrc_obj(mhd));
 
   struct mrc_ts_monitor *mon_output =
     mrc_ts_monitor_create(mrc_ts_comm(ts));
@@ -664,10 +676,7 @@ ggcm_mhd_main(int *argc, char ***argv)
   }
 
   mrc_ts_set_dt(ts, 1e-6);
-  mrc_ts_set_solution(ts, mrc_fld_to_mrc_obj(mhd->fld));
-  mrc_ts_set_get_dt_function(ts, ts_ggcm_mhd_step_get_dt, mhd);
-  mrc_ts_set_rhs_function(ts, ts_ggcm_mhd_step_calc_rhs, mhd);
-  mrc_ts_set_step_function(ts, ts_ggcm_mhd_step_run, mhd);
+  ggcm_mhd_setup_ts(mhd, ts);
   mrc_ts_set_from_options(ts);
   mrc_ts_view(ts);
   mrc_ts_setup(ts);

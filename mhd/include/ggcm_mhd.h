@@ -43,6 +43,8 @@ void ggcm_mhd_fld_put_as(struct mrc_fld *fld, struct mrc_fld *fld_base,
 struct mrc_fld *ggcm_mhd_get_fld_as_fortran(struct mrc_fld *fld_base);
 void ggcm_mhd_put_fld_as_fortran(struct mrc_fld *fld, struct mrc_fld *fld_base);
 
+void ggcm_mhd_setup_ts(struct ggcm_mhd *mhd, struct mrc_ts *ts);
+
 // primitive fluid variables, face-centered B
 #define MT_PRIMITIVE (0)
 // primitive fluid variables, cell-centered B
@@ -65,11 +67,6 @@ void ggcm_mhd_put_fld_as_fortran(struct mrc_fld *fld, struct mrc_fld *fld_base);
 // wrappers / helpers
 
 void ggcm_mhd_wrongful_death(struct ggcm_mhd *mhd, struct mrc_fld *x, int errcode);
-
-double ts_ggcm_mhd_step_get_dt(void *ctx, struct mrc_ts *ts, struct mrc_obj *_x);
-void ts_ggcm_mhd_step_calc_rhs(void *ctx, struct mrc_obj *_rhs, float time,
-			       struct mrc_obj *_x);
-void ts_ggcm_mhd_step_run(void *ctx, struct mrc_ts *ts, struct mrc_obj *_x);
 
 int ggcm_mhd_main(int *argc, char ***argv);
 
