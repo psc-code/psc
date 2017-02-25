@@ -622,6 +622,19 @@ ts_ggcm_mhd_step_get_dt(void *ctx, struct mrc_ts *ts, struct mrc_obj *_x)
 }
 
 // ----------------------------------------------------------------------
+// ts_ggcm_mhd_ggcm_pre_step
+//
+// mrc_ts wrapper for pre_step
+
+static void
+ts_ggcm_mhd_ggcm_pre_step(void *ctx, struct mrc_ts *ts, struct mrc_obj *_x)
+{
+  struct ggcm_mhd *mhd = ctx;
+  struct mrc_fld *x = (struct mrc_fld *) _x;
+  ggcm_mhd_pre_step(mhd, ts, x);
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_setup_ts
 
 void
@@ -632,6 +645,7 @@ ggcm_mhd_setup_ts(struct ggcm_mhd *mhd, struct mrc_ts *ts)
   mrc_ts_set_rhs_function(ts, ts_ggcm_mhd_step_calc_rhs, mhd);
   mrc_ts_set_step_function(ts, ts_ggcm_mhd_step_run, mhd);
   mrc_ts_set_get_dt_function(ts, ts_ggcm_mhd_step_get_dt, mhd);
+  mrc_ts_set_pre_step_function(ts, ts_ggcm_mhd_ggcm_pre_step, mhd);
 }
 
 // ----------------------------------------------------------------------
