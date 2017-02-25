@@ -483,9 +483,6 @@ static struct param ggcm_mhd_descr[] = {
   { "timla"           , VAR(timla)           , MRC_VAR_FLOAT         },
   { "dacttime"        , VAR(dacttime)        , MRC_VAR_DOUBLE        },
 
-  // FIXME, some times magically used for mrc_ts::max_time (in mrc_ts_solve())
-  { "max_time"        , VAR(max_time)        , PARAM_FLOAT(1000000.f)},
-  
   { "domain"          , VAR(domain)          , MRC_VAR_OBJ(mrc_domain)        },
   { "fld"             , VAR(fld)             , MRC_VAR_OBJ(mrc_fld)           },
   // FIXME, need to checkpoint b0, but only if !NULL
