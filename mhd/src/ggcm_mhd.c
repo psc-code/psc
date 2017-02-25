@@ -119,7 +119,7 @@ ggcm_mhd_get_state(struct ggcm_mhd *mhd)
 // ----------------------------------------------------------------------
 // ggcm_mhd_set_state
 //
-// updated Fortran common blocks from C ggcm_mhd state
+// update Fortran common blocks from C ggcm_mhd state
 
 void
 ggcm_mhd_set_state(struct ggcm_mhd *mhd)
@@ -127,6 +127,18 @@ ggcm_mhd_set_state(struct ggcm_mhd *mhd)
   struct ggcm_mhd_ops *ops = ggcm_mhd_ops(mhd);
   if (ops->set_state) {
     ops->set_state(mhd);
+  }
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_pre_step
+
+void
+ggcm_mhd_pre_step(struct ggcm_mhd *mhd, struct mrc_ts *ts, struct mrc_fld *fld)
+{
+  struct ggcm_mhd_ops *ops = ggcm_mhd_ops(mhd);
+  if (ops->pre_step) {
+    ops->pre_step(mhd, ts, fld);
   }
 }
 
