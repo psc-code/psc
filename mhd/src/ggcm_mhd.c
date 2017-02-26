@@ -578,7 +578,7 @@ ts_ggcm_mhd_step_calc_rhs(void *ctx, struct mrc_obj *_rhs, float time, struct mr
   struct mrc_fld *rhs = (struct mrc_fld *) _rhs;
   struct mrc_fld *fld = (struct mrc_fld *) _fld;
   
-  mhd->time = time;
+  mhd->time = time * mhd->tnorm;
   ggcm_mhd_step_calc_rhs(mhd->step, rhs, fld);
 }
 
@@ -592,8 +592,8 @@ ts_ggcm_mhd_step_run(void *ctx, struct mrc_ts *ts, struct mrc_obj *_x)
 {
   struct ggcm_mhd *mhd = ctx;
   struct mrc_fld *x = (struct mrc_fld *) _x;
-  
-  mhd->time = mrc_ts_time(ts);
+
+  mhd->time = mrc_ts_time(ts) * mhd->tnorm;
   mhd->dt = mrc_ts_dt(ts);
   mhd->istep = mrc_ts_step_number(ts);
 
@@ -613,7 +613,7 @@ ts_ggcm_mhd_step_get_dt(void *ctx, struct mrc_ts *ts, struct mrc_obj *_x)
   struct ggcm_mhd *mhd = ctx;
   struct mrc_fld *x = (struct mrc_fld *) _x;
   
-  mhd->time = mrc_ts_time(ts);
+  mhd->time = mrc_ts_time(ts) * mhd->tnorm;
   mhd->dt = mrc_ts_dt(ts);
   mhd->istep = mrc_ts_step_number(ts);
 
