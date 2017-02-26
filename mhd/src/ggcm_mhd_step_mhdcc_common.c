@@ -211,7 +211,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, mrc_fld_data_t time_c
   struct ggcm_mhd_step_mhdcc *sub = ggcm_mhd_step_mhdcc(step);
   struct ggcm_mhd *mhd = step->mhd;
 
-  ggcm_mhd_fill_ghosts(mhd, x_curr, 0, time_curr * mhd->tnorm);
+  ggcm_mhd_fill_ghosts(mhd, x_curr, 0, time_curr);
 
   fld3d_t x, _x_next, ymask, fluxes[3];
   fld3d_setup(&x, x_curr);

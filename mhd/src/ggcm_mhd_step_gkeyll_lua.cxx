@@ -73,7 +73,7 @@ static int ggcm_mhd_fill_ghosts_lua (lua_State *L) {
   double bntim = lua_tonumber(L, -1);
   struct mrc_fld *fld = (struct mrc_fld *) lua_touserdata(L, -2);
   struct ggcm_mhd *mhd = (struct ggcm_mhd *) lua_touserdata(L, -3);
-  ggcm_mhd_fill_ghosts(mhd, fld, 0, bntim * mhd->tnorm); // starting from 0?
+  ggcm_mhd_fill_ghosts(mhd, fld, 0, bntim); // starting from 0?
   return 0;
 }
 

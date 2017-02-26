@@ -269,8 +269,10 @@ _ggcm_mhd_setup(struct ggcm_mhd *mhd)
 }
 
 void
-ggcm_mhd_fill_ghosts(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m, float bntim)
+ggcm_mhd_fill_ghosts(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m, float bntim_code)
 {
+  // FIXME, should go to I/O units further down in ggcm_mhd_bnd_fill_ghosts()
+  float bntim = bntim_code * mhd->tnorm;
   if (mhd->amr == 0) {
     // FIXME, this really should be done in a cleaner way (pass mb, me, probably)
     int mhd_type;

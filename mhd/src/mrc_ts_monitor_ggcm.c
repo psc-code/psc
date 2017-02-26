@@ -27,7 +27,7 @@ mrc_ts_monitor_ggcm_run(struct mrc_ts_monitor *mon, struct mrc_ts *ts)
   struct ggcm_mhd *mhd = (struct ggcm_mhd *) ts->ctx_obj;
 
   mhd->time_code = ts->time;
-  ggcm_mhd_fill_ghosts(mhd, mhd->fld, 0, mhd->time_code * mhd->tnorm);
+  ggcm_mhd_fill_ghosts(mhd, mhd->fld, 0, mhd->time_code);
   ggcm_mhd_diag_run_now(mhd->diag, mhd->fld, DIAG_TYPE_3D, out->nr++);
 }
 

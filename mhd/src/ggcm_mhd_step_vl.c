@@ -159,7 +159,7 @@ ggcm_mhd_step_vl_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
   // PREDICTOR
 
-  ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time_code * mhd->tnorm);
+  ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time_code);
 
   if (sub->debug_dump) {
     static struct ggcm_mhd_diag *diag;
@@ -173,7 +173,7 @@ ggcm_mhd_step_vl_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
       ggcm_mhd_diag_setup(diag);
       ggcm_mhd_diag_view(diag);
     }
-    ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time_code * mhd->tnorm);
+    ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time_code);
     ggcm_mhd_diag_run_now(diag, x, DIAG_TYPE_3D, cnt++);
   }
 
@@ -204,7 +204,7 @@ ggcm_mhd_step_vl_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
   // CORRECTOR
 
-  ggcm_mhd_fill_ghosts(mhd, x_half, 0, mhd->time_code * mhd->tnorm);
+  ggcm_mhd_fill_ghosts(mhd, x_half, 0, mhd->time_code);
   fluxes_corr(step, flux, x);
   ggcm_mhd_correct_fluxes(mhd, flux);
   for (int p = 0; p < mrc_fld_nr_patches(x); p++) {

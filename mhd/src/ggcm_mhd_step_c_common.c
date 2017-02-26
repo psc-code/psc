@@ -121,10 +121,10 @@ ggcm_mhd_step_c_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   // time at the beginning of the whole step, rather than the time of the current state
   s_mhd_time = mhd->time_code * mhd->tnorm; 
 
-  ggcm_mhd_fill_ghosts(mhd, x, _RR1, mhd->time_code * mhd->tnorm);
+  ggcm_mhd_fill_ghosts(mhd, x, _RR1, mhd->time_code);
   pde_mhd_pushstage(x, .5f * mhd->dt_code, 0);
 
-  ggcm_mhd_fill_ghosts(mhd, x, _RR2, (mhd->time_code + mhd->bndt_code) * mhd->tnorm);
+  ggcm_mhd_fill_ghosts(mhd, x, _RR2, mhd->time_code + mhd->bndt_code);
   pde_mhd_pushstage(x, mhd->dt_code, 1);
 }
 

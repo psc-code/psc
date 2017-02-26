@@ -336,7 +336,7 @@ ggcm_mhd_diag_c_run(struct ggcm_mhd_diag *diag)
   if (!(output2d || output3d))
     return;
 
-  ggcm_mhd_fill_ghosts(mhd, mhd->fld, 0, mhd->time_code * mhd->tnorm);
+  ggcm_mhd_fill_ghosts(mhd, mhd->fld, 0, mhd->time_code);
 
   if (output3d) {
     ggcm_mhd_diag_run_now(diag, mhd->fld, DIAG_TYPE_3D, itdia3d);
