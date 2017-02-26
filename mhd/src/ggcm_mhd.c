@@ -461,7 +461,6 @@ static struct param ggcm_mhd_descr[] = {
   { "timelo"          , VAR(par.timelo)      , PARAM_FLOAT(0.f)      },
   { "d_i"             , VAR(par.d_i)         , PARAM_FLOAT(0.f)      },
   { "dtmin"           , VAR(par.dtmin)       , PARAM_FLOAT(.0002f)   },
-  { "dbasetime"       , VAR(par.dbasetime)   , PARAM_DOUBLE(0.)      },
   { "modnewstep"      , VAR(par.modnewstep)  , PARAM_INT(1)          },
   { "magdiffu"        , VAR(par.magdiffu)    , PARAM_SELECT(MAGDIFFU_NL1,
 							    magdiffu_descr) },

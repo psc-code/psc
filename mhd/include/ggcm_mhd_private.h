@@ -36,7 +36,6 @@ struct ggcm_mhd_params {
   int diff_obnd;
   float d_i;
   float dtmin;
-  double dbasetime;
   int modnewstep;
   int magdiffu;
   bool do_badval_checks; // check for NaN or negative density / pressure
