@@ -102,7 +102,6 @@ struct ggcm_mhd {
   float qqnorm;
 
   float time_code; // current time in code (normalized) units
-  float xtime; // current time
   float dt_code; // current timestep in code (normalized) units
   int istep;
   float timla;
