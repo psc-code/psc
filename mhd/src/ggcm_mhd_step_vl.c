@@ -155,7 +155,7 @@ ggcm_mhd_step_vl_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 			      ggcm_mhd_get_3d_fld(mhd, 5),
 			      ggcm_mhd_get_3d_fld(mhd, 5), };
 
-  mrc_fld_data_t dt = mhd->dt;
+  mrc_fld_data_t dt = mhd->dt_code;
 
   // PREDICTOR
 

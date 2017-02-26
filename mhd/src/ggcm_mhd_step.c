@@ -27,25 +27,25 @@ ggcm_mhd_step_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
   struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
   if (!ops->get_dt) {
-    return mhd->dt;
+    return mhd->dt_code;
   }
 
   if (!step->legacy_dt_handling) {
-    mhd->dt = ops->get_dt(step, x);
+    mhd->dt_code = ops->get_dt(step, x);
   } else { // legacy_dt_handling
     if (step->dtn) {
       step->dtn = fminf(1.f, step->dtn);
       
-      if (step->dtn > 1.02f * mhd->dt || step->dtn < mhd->dt / 1.01f) {
-	mpi_printf(ggcm_mhd_comm(mhd), "switched dt %g <- %g\n", step->dtn, mhd->dt);
+      if (step->dtn > 1.02f * mhd->dt_code || step->dtn < mhd->dt_code / 1.01f) {
+	mpi_printf(ggcm_mhd_comm(mhd), "switched dt %g <- %g\n", step->dtn, mhd->dt_code);
 	
 	if (mhd->istep > 5 &&
-	    (step->dtn < 0.5 * mhd->dt || step->dtn > 2.0 * mhd->dt)) {            
+	    (step->dtn < 0.5 * mhd->dt_code || step->dtn > 2.0 * mhd->dt_code)) {            
 	  mpi_printf(ggcm_mhd_comm(mhd), "!!! dt changed by > a factor of 2. "
 		     "Dying now!\n");
 	  ggcm_mhd_wrongful_death(mhd, mhd->fld, 2);
 	}
-	mhd->dt = step->dtn;
+	mhd->dt_code = step->dtn;
       }
 
       step->dtn = 0;
@@ -56,7 +56,7 @@ ggcm_mhd_step_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
     }
   }
 
-  return mhd->dt;
+  return mhd->dt_code;
 }
 
 // ----------------------------------------------------------------------
@@ -131,7 +131,7 @@ ggcm_mhd_step_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   if (modtty && mhd->istep % modtty == 0) {
     double cpu = MPI_Wtime();
     mpi_printf(ggcm_mhd_comm(mhd), " cp=%8.3f st=%7d ti=%10.3f dt=%10.3f\n",
-	       cpul ? cpu - cpul : 0., mhd->istep, mhd->time + mhd->dt * mhd->tnorm, mhd->dt * mhd->tnorm);
+	       cpul ? cpu - cpul : 0., mhd->istep, mhd->time + mhd->dt_code * mhd->tnorm, mhd->dt_code * mhd->tnorm);
     cpul = cpu;
   }
   

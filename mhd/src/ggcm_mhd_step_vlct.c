@@ -433,7 +433,7 @@ ggcm_mhd_step_vlct_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   // FIXME, this is done in get_dt, and redoing it could be avoided
   ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
 
-  mrc_fld_data_t dt = mhd->dt;
+  mrc_fld_data_t dt = mhd->dt_code;
 
   // resistivity
 

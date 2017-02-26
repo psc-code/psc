@@ -102,12 +102,12 @@ struct ggcm_mhd {
   float qqnorm;
 
   float time; // current time
-  float dt;   // current timestep (parameter to pred/corr, so can be .5 dt)
+  float dt_code; // current timestep in code (normalized) units
   int istep;
   float timla;
   double dacttime;
 
-  float bndt_code; // .5 * current timestep in code units
+  float bndt_code; // .5 * current timestep in code (normalized) units
 
   // for easy access, cached from ::domain
   int im[3];  // local domain excl ghost points

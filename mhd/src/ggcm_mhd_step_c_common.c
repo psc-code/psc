@@ -122,10 +122,10 @@ ggcm_mhd_step_c_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   s_mhd_time = mhd->time; 
 
   ggcm_mhd_fill_ghosts(mhd, x, _RR1, mhd->time);
-  pde_mhd_pushstage(x, .5f * mhd->dt, 0);
+  pde_mhd_pushstage(x, .5f * mhd->dt_code, 0);
 
   ggcm_mhd_fill_ghosts(mhd, x, _RR2, mhd->time + mhd->bndt_code * mhd->tnorm);
-  pde_mhd_pushstage(x, mhd->dt, 1);
+  pde_mhd_pushstage(x, mhd->dt_code, 1);
 }
 
 // ----------------------------------------------------------------------

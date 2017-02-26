@@ -490,7 +490,7 @@ static struct param ggcm_mhd_descr[] = {
   { "tnorm"           , VAR(tnorm)           , MRC_VAR_FLOAT         },
 
   { "time"            , VAR(time)            , MRC_VAR_FLOAT         },
-  { "dt"              , VAR(dt)              , MRC_VAR_FLOAT         },
+  { "dt_code"         , VAR(dt_code)         , MRC_VAR_FLOAT         },
   { "istep"           , VAR(istep)           , MRC_VAR_INT           },
   { "timla"           , VAR(timla)           , MRC_VAR_FLOAT         },
   { "dacttime"        , VAR(dacttime)        , MRC_VAR_DOUBLE        },
@@ -594,12 +594,12 @@ ts_ggcm_mhd_step_run(void *ctx, struct mrc_ts *ts, struct mrc_obj *_x)
   struct mrc_fld *x = (struct mrc_fld *) _x;
 
   mhd->time = mrc_ts_time(ts) * mhd->tnorm;
-  mhd->dt = mrc_ts_dt(ts);
+  mhd->dt_code = mrc_ts_dt(ts);
   mhd->istep = mrc_ts_step_number(ts);
 
   ggcm_mhd_step_run(mhd->step, x);
 
-  mrc_ts_set_dt(ts, mhd->dt);
+  mrc_ts_set_dt(ts, mhd->dt_code);
 }
 
 // ----------------------------------------------------------------------
@@ -614,7 +614,7 @@ ts_ggcm_mhd_step_get_dt(void *ctx, struct mrc_ts *ts, struct mrc_obj *_x)
   struct mrc_fld *x = (struct mrc_fld *) _x;
   
   mhd->time = mrc_ts_time(ts) * mhd->tnorm;
-  mhd->dt = mrc_ts_dt(ts);
+  mhd->dt_code = mrc_ts_dt(ts);
   mhd->istep = mrc_ts_step_number(ts);
 
   double dt = ggcm_mhd_step_get_dt(mhd->step, x);

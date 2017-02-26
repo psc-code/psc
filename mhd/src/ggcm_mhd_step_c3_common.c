@@ -399,11 +399,11 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *f_U)
   // set f_Uhalf = f_U
   mrc_fld_copy(f_Uhalf, f_U);
   ggcm_mhd_fill_ghosts(mhd, f_U, 0, mhd->time);
-  pushstage(step, f_Uhalf, .5f * mhd->dt, f_U, f_W, 0);
+  pushstage(step, f_Uhalf, .5f * mhd->dt_code, f_U, f_W, 0);
 
   // f_U += dt * rhs(f_Uhalf)
   ggcm_mhd_fill_ghosts(mhd, f_Uhalf, 0, mhd->time + mhd->bndt_code * mhd->tnorm);
-  pushstage(step, f_U, mhd->dt, f_Uhalf, f_W, 1);
+  pushstage(step, f_U, mhd->dt_code, f_Uhalf, f_W, 1);
 }
 
 // ----------------------------------------------------------------------
@@ -437,7 +437,7 @@ ggcm_mhd_step_c3_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
 
     patch_prim_from_cons(p_W, p_U, 2);
     patch_calc_zmask(p_zmask, p_U, p_ymask);
-    patch_calc_e(p_E, mhd->dt, p_U, p_W, p_zmask, p_rmask);
+    patch_calc_e(p_E, mhd->dt_code, p_U, p_W, p_zmask, p_rmask);
 
     fld3d_put_list(p, get_e_ec_patches);
     pde_mhd_p_aux_put(p);

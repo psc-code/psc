@@ -307,7 +307,7 @@ ggcm_mhd_step_gkeyll_lua_run(void *lua_state,
   if (!lua_state) return;
   Lucee::LuaState L = *((Lucee::LuaState *)lua_state);
   lua_getglobal(L, "runTimeStep");
-  lua_pushnumber(L, mhd->dt);
+  lua_pushnumber(L, mhd->dt_code);
   lua_pushnumber(L, mhd->time);
   lua_pushinteger(L, mhd->istep);
   lua_pushlightuserdata(L, fld->_nd->arr);
@@ -319,10 +319,10 @@ ggcm_mhd_step_gkeyll_lua_run(void *lua_state,
     std::cerr << err << std::endl;
     exit(1);
   }
-  mhd->dt = lua_tonumber(L,-1);
+  mhd->dt_code = lua_tonumber(L,-1);
 
-  float myDt = mhd->dt;
-  MPI_Allreduce(&myDt, &mhd->dt, 1, MPI_FLOAT, MPI_MIN, mrc_domain_comm(mhd->domain));
+  float myDt = mhd->dt_code;
+  MPI_Allreduce(&myDt, &mhd->dt_code, 1, MPI_FLOAT, MPI_MIN, mrc_domain_comm(mhd->domain));
 
   lua_pop(L,1);
 }

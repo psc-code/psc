@@ -410,19 +410,19 @@ ggcm_mhd_step_mhdcc_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 {
   struct ggcm_mhd *mhd = step->mhd;
 
-  mhd_divb_glm_source(x, .5f * mhd->dt);
+  mhd_divb_glm_source(x, .5f * mhd->dt_code);
 
   if (s_opt_time_integrator == OPT_TIME_INTEGRATOR_EULER) {
-    ggcm_mhd_step_euler(step, x, mhd->dt);
+    ggcm_mhd_step_euler(step, x, mhd->dt_code);
   } else if (s_opt_time_integrator == OPT_TIME_INTEGRATOR_PREDCORR) {
-    ggcm_mhd_step_predcorr(step, x, mhd->dt);
+    ggcm_mhd_step_predcorr(step, x, mhd->dt_code);
   } else if (s_opt_time_integrator == OPT_TIME_INTEGRATOR_TVD_RK2) {
-    ggcm_mhd_step_tvd_rk2(step, x, mhd->dt);
+    ggcm_mhd_step_tvd_rk2(step, x, mhd->dt_code);
   } else {
     assert(0);
   }
 
-  mhd_divb_glm_source(x, .5f * mhd->dt);
+  mhd_divb_glm_source(x, .5f * mhd->dt_code);
 }
 
 // ----------------------------------------------------------------------

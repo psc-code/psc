@@ -205,11 +205,11 @@ ggcm_mhd_step_c2_run(struct ggcm_mhd_step *step, struct mrc_fld *f_U)
   mrc_fld_copy(f_Uhalf, f_U);
   // then advance f_Uhalf += .5f * dt * rhs(f_U)
   ggcm_mhd_fill_ghosts(mhd, f_U, 0, mhd->time);
-  pushstage(f_Uhalf, .5f * mhd->dt, f_U, f_ymask, f_zmask, f_E, 0);
+  pushstage(f_Uhalf, .5f * mhd->dt_code, f_U, f_ymask, f_zmask, f_E, 0);
 
   // f_U += dt * rhs(f_Uhalf)
   ggcm_mhd_fill_ghosts(mhd, f_Uhalf, 0, mhd->time + mhd->bndt_code * mhd->tnorm);
-  pushstage(f_U, mhd->dt, f_Uhalf, f_ymask, f_zmask, f_E, 1);
+  pushstage(f_U, mhd->dt_code, f_Uhalf, f_ymask, f_zmask, f_E, 1);
 }
 
 // ----------------------------------------------------------------------
