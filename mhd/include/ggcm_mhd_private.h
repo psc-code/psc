@@ -107,7 +107,7 @@ struct ggcm_mhd {
   float timla;
   double dacttime;
 
-  float bndt; // .5 * current timestep in sec, not alfven times
+  float bndt_code; // .5 * current timestep in code units
 
   // for easy access, cached from ::domain
   int im[3];  // local domain excl ghost points
