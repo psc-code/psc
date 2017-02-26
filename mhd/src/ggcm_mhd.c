@@ -129,6 +129,18 @@ ggcm_mhd_pre_step(struct ggcm_mhd *mhd, struct mrc_ts *ts, struct mrc_fld *fld)
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_post_step
+
+void
+ggcm_mhd_post_step(struct ggcm_mhd *mhd, struct mrc_ts *ts, struct mrc_fld *fld)
+{
+  struct ggcm_mhd_ops *ops = ggcm_mhd_ops(mhd);
+  if (ops->post_step) {
+    ops->post_step(mhd, ts, fld);
+  }
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_setup_internal
 
 static void
@@ -628,6 +640,20 @@ ts_ggcm_mhd_pre_step(void *ctx, struct mrc_ts *ts, struct mrc_obj *_x)
 }
 
 // ----------------------------------------------------------------------
+// ts_ggcm_mhd_post_step
+//
+// mrc_ts wrapper for post_step
+
+static void
+ts_ggcm_mhd_post_step(void *ctx, struct mrc_ts *ts, struct mrc_obj *_x)
+{
+  struct ggcm_mhd *mhd = ctx;
+  struct mrc_fld *x = (struct mrc_fld *) _x;
+
+  ggcm_mhd_post_step(mhd, ts, x);
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_setup_ts
 
 void
@@ -639,6 +665,7 @@ ggcm_mhd_setup_ts(struct ggcm_mhd *mhd, struct mrc_ts *ts)
   mrc_ts_set_step_function(ts, ts_ggcm_mhd_step_run, mhd);
   mrc_ts_set_get_dt_function(ts, ts_ggcm_mhd_step_get_dt, mhd);
   mrc_ts_set_pre_step_function(ts, ts_ggcm_mhd_pre_step, mhd);
+  mrc_ts_set_post_step_function(ts, ts_ggcm_mhd_post_step, mhd);
 }
 
 // ----------------------------------------------------------------------
