@@ -45,9 +45,21 @@ mrc_ts_step_number(struct mrc_ts *ts)
 }
 
 void
+mrc_ts_set_time(struct mrc_ts *ts, float time)
+{
+  ts->time = time;
+}
+
+void
 mrc_ts_set_dt(struct mrc_ts *ts, float dt)
 {
   ts->dt = dt;
+}
+
+void
+mrc_ts_set_step_number(struct mrc_ts *ts, int n)
+{
+  ts->n = n;
 }
 
 void
