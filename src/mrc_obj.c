@@ -1381,6 +1381,15 @@ mrc_obj_get_var_obj(struct mrc_obj *obj, const char *name)
   return pv->u_obj;
 }
 
+void
+mrc_obj_get_var_double(struct mrc_obj *obj, const char *name, double *pval)
+{
+  union param_u *pv;
+  mrc_obj_get_var_type(obj, name, MRC_VAR_DOUBLE, &pv);
+  assert(pv);
+  *pval = pv->u_double;
+}
+
 mrc_void_func_t
 mrc_obj_get_method(struct mrc_obj *obj, const char *name)
 {
