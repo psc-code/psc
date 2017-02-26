@@ -211,7 +211,7 @@ pushstage_c(struct ggcm_mhd_step *step, mrc_fld_data_t dt, mrc_fld_data_t time_c
   struct ggcm_mhd_step_mhdcc *sub = ggcm_mhd_step_mhdcc(step);
   struct ggcm_mhd *mhd = step->mhd;
 
-  ggcm_mhd_fill_ghosts(mhd, x_curr, 0, time_curr);
+  ggcm_mhd_fill_ghosts(mhd, x_curr, 0, time_curr * mhd->tnorm);
 
   fld3d_t x, _x_next, ymask, fluxes[3];
   fld3d_setup(&x, x_curr);
@@ -339,7 +339,7 @@ ggcm_mhd_step_euler(struct ggcm_mhd_step *step, struct mrc_fld *x, double dt)
   }
 
   prof_start(pr_A);
-  pushstage_c(step, dt, mhd->time_code * mhd->tnorm, x, x);
+  pushstage_c(step, dt, mhd->time_code, x, x);
   prof_stop(pr_A);
 }
 
@@ -363,14 +363,14 @@ ggcm_mhd_step_predcorr(struct ggcm_mhd_step *step, struct mrc_fld *x, double dt)
   prof_start(pr_A);
   // set x* = x^n, then advance to n+1/2
   mrc_fld_copy(x_star, x);
-  pushstage_c(step, .5f * dt, mhd->time_code * mhd->tnorm, x, x_star);
+  pushstage_c(step, .5f * dt, mhd->time_code, x, x_star);
   // now x^* = x^n + .5 * dt rhs(x^n)
   prof_stop(pr_A);
 
   // --- CORRECTOR
   prof_start(pr_B);
   // x^{n+1} = x^n + dt rhs(x_star)
-  pushstage_c(step, dt, (mhd->time_code + mhd->bndt_code) * mhd->tnorm, x_star, x);
+  pushstage_c(step, dt, mhd->time_code + mhd->bndt_code, x_star, x);
   prof_stop(pr_B);
 }
 
@@ -389,12 +389,12 @@ ggcm_mhd_step_tvd_rk2(struct ggcm_mhd_step *step, struct mrc_fld *x, double dt)
 
   // stage 1
   // advance x*
-  pushstage_c(step, dt, mhd->time_code * mhd->tnorm, x_star, x_star);
+  pushstage_c(step, dt, mhd->time_code, x_star, x_star);
   // now x* = x^n + dt rhs(x^n)
   
   // stage 2
   // advance x* again (now called x**)
-  pushstage_c(step, dt, (mhd->time_code + 2. * mhd->bndt_code) * mhd->tnorm, x_star, x_star);
+  pushstage_c(step, dt, mhd->time_code + 2. * mhd->bndt_code, x_star, x_star);
   // now x** = x* + dt rhs(x*)
   
   // finally advance x^{n+1} = .5 * x** + .5 * x^n;
