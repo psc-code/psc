@@ -103,20 +103,6 @@ _ggcm_mhd_create(struct ggcm_mhd *mhd)
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_get_state
-//
-// update C ggcm_mhd state from Fortran common blocks
-
-void
-ggcm_mhd_get_state(struct ggcm_mhd *mhd)
-{
-  struct ggcm_mhd_ops *ops = ggcm_mhd_ops(mhd);
-  if (ops->get_state) {
-    ops->get_state(mhd);
-  }
-}
-
-// ----------------------------------------------------------------------
 // ggcm_mhd_set_state
 //
 // update Fortran common blocks from C ggcm_mhd state

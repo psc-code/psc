@@ -116,7 +116,6 @@ struct ggcm_mhd {
 
 struct ggcm_mhd_ops {
   MRC_SUBCLASS_OPS(struct ggcm_mhd);
-  void (*get_state)(struct ggcm_mhd *mhd);
   void (*set_state)(struct ggcm_mhd *mhd);
   void (*pre_step)(struct ggcm_mhd *mhd, struct mrc_ts *ts, struct mrc_fld *fld);
 };
