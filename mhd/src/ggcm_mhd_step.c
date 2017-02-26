@@ -117,7 +117,7 @@ ggcm_mhd_step_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
       ggcm_mhd_diag_setup(diag);
       ggcm_mhd_diag_view(diag);
     }
-    ggcm_mhd_fill_ghosts(mhd, mhd->fld, 0, mhd->time);
+    ggcm_mhd_fill_ghosts(mhd, mhd->fld, 0, mhd->time_code * mhd->tnorm);
     ggcm_mhd_diag_run_now(diag, mhd->fld, DIAG_TYPE_3D, cnt++);
   }
 
@@ -131,11 +131,11 @@ ggcm_mhd_step_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   if (modtty && mhd->istep % modtty == 0) {
     double cpu = MPI_Wtime();
     mpi_printf(ggcm_mhd_comm(mhd), " cp=%8.3f st=%7d ti=%10.3f dt=%10.3f\n",
-	       cpul ? cpu - cpul : 0., mhd->istep, mhd->time + mhd->dt_code * mhd->tnorm, mhd->dt_code * mhd->tnorm);
+	       cpul ? cpu - cpul : 0., mhd->istep, (mhd->time_code + mhd->dt_code) * mhd->tnorm, mhd->dt_code * mhd->tnorm);
     cpul = cpu;
   }
   
-  mhd->timla = mhd->time;
+  mhd->timla = mhd->time_code * mhd->tnorm;
   
   // FIXME, this should be done by mrc_ts
   if ((mhd->istep % step->profile_every) == 0) {

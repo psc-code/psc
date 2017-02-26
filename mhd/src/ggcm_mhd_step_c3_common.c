@@ -151,7 +151,7 @@ ggcm_mhd_step_c3_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
   // FIXME, the fill_ghosts is necessary (should be in other steps, too)
   // if we do it here, we should avoid doing it again in run() -- but note
   // we're only doing it here if do_nwst is true.
-  ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
+  ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time_code * mhd->tnorm);
   return pde_mhd_get_dt_scons(mhd, x, mhd->ymask);
 }
 
@@ -394,15 +394,15 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *f_U)
 
   struct mrc_fld *f_Uhalf = sub->f_Uhalf, *f_W = sub->f_W;
 
-  s_mhd_time = mhd->time; 
+  s_mhd_time = mhd->time_code * mhd->tnorm; 
 
   // set f_Uhalf = f_U
   mrc_fld_copy(f_Uhalf, f_U);
-  ggcm_mhd_fill_ghosts(mhd, f_U, 0, mhd->time);
+  ggcm_mhd_fill_ghosts(mhd, f_U, 0, mhd->time_code * mhd->tnorm);
   pushstage(step, f_Uhalf, .5f * mhd->dt_code, f_U, f_W, 0);
 
   // f_U += dt * rhs(f_Uhalf)
-  ggcm_mhd_fill_ghosts(mhd, f_Uhalf, 0, mhd->time + mhd->bndt_code * mhd->tnorm);
+  ggcm_mhd_fill_ghosts(mhd, f_Uhalf, 0, (mhd->time_code + mhd->bndt_code) * mhd->tnorm);
   pushstage(step, f_U, mhd->dt_code, f_Uhalf, f_W, 1);
 }
 
@@ -429,7 +429,7 @@ ggcm_mhd_step_c3_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
   fld3d_setup(&p_rmask, sub->f_rmask);
   pde_mhd_p_aux_setup_b0(mhd->b0);
 
-  ggcm_mhd_fill_ghosts(mhd, f_U, 0, mhd->time);
+  ggcm_mhd_fill_ghosts(mhd, f_U, 0, mhd->time_code * mhd->tnorm);
   pde_for_each_patch(p) {
     fld3d_t *get_e_ec_patches[] = { &p_E, &p_U, &p_W, &p_ymask, &p_zmask, &p_rmask, NULL };
     fld3d_get_list(p, get_e_ec_patches);

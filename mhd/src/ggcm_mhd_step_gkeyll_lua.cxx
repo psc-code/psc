@@ -308,7 +308,7 @@ ggcm_mhd_step_gkeyll_lua_run(void *lua_state,
   Lucee::LuaState L = *((Lucee::LuaState *)lua_state);
   lua_getglobal(L, "runTimeStep");
   lua_pushnumber(L, mhd->dt_code);
-  lua_pushnumber(L, mhd->time);
+  lua_pushnumber(L, mhd->time_code * mhd->tnorm);
   lua_pushinteger(L, mhd->istep);
   lua_pushlightuserdata(L, fld->_nd->arr);
 

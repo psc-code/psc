@@ -89,8 +89,9 @@ mrc_ts_monitor_conservation_run(struct mrc_ts_monitor *mon, struct mrc_ts *ts)
   mpi_printf(mrc_ts_monitor_comm(mon), "Monitoring conservation (time = %g)\n",
 	     ts->time);
 
-  mhd->time = ts->time;
-  ggcm_mhd_fill_ghosts(mhd, mhd->fld, 0, mhd->time);
+  mhd->xtime = ts->time * mhd->tnorm;
+  mhd->time_code = ts->time;
+  ggcm_mhd_fill_ghosts(mhd, mhd->fld, 0, mhd->time_code * mhd->tnorm);
 
   double vals[5];
   ggcm_mhd_calc_integrals(mhd, vals);

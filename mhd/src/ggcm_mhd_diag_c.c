@@ -237,7 +237,7 @@ diagc3(struct ggcm_mhd_diag *diag, struct mrc_fld *fld, int itdia,
   struct ggcm_mhd *mhd = diag->mhd;
 
   struct mrc_io *io = get_mrc_io(diag, DIAG_TYPE_3D, -1)->io;
-  mrc_io_open(io, "w", itdia, mhd->time);
+  mrc_io_open(io, "w", itdia, mhd->time_code * mhd->tnorm);
   ggcm_diag_lib_write_openggcm_attrs(io, time_str);
   write_fields(diag, fld, io, DIAG_TYPE_3D, -1);
   mrc_io_close(io);
@@ -268,7 +268,7 @@ diagcxyz(struct ggcm_mhd_diag *diag, struct mrc_fld *fld, int itdia,
       continue;
 
     struct mrc_io *io = get_mrc_io(diag, diag_type, plane)->io;
-    mrc_io_open(io, "w", itdia, mhd->time);
+    mrc_io_open(io, "w", itdia, mhd->time_code * mhd->tnorm);
     ggcm_diag_lib_write_openggcm_attrs(io, time_str);
     write_fields(diag, fld, io, diag_type, plane);
     mrc_io_close(io);
@@ -287,7 +287,7 @@ ggcm_mhd_diag_c_run_now(struct ggcm_mhd_diag *diag, struct mrc_fld *fld,
 
   char time_str[80] = "TIME";
   if (sub->make_time_string) {
-    sub->make_time_string(time_str, mhd->time, mhd->dacttime);
+    sub->make_time_string(time_str, mhd->time_code * mhd->tnorm, mhd->dacttime);
   }
 
   switch (diag_type) {
@@ -336,7 +336,7 @@ ggcm_mhd_diag_c_run(struct ggcm_mhd_diag *diag)
   if (!(output2d || output3d))
     return;
 
-  ggcm_mhd_fill_ghosts(mhd, mhd->fld, 0, mhd->time);
+  ggcm_mhd_fill_ghosts(mhd, mhd->fld, 0, mhd->time_code * mhd->tnorm);
 
   if (output3d) {
     ggcm_mhd_diag_run_now(diag, mhd->fld, DIAG_TYPE_3D, itdia3d);
