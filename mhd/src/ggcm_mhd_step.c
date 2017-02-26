@@ -42,6 +42,10 @@ ggcm_mhd_step_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
     
     mhd->dt = dtn;
   } else { // legacy_dt_handling
+    if (step->dtn) {
+      mhd->dt = step->dtn;
+      step->dtn = 0;
+    }
     if (step->do_nwst) {
       step->dtn = ops->get_dt(step, x);
       // yes, mhd->dt isn't set to dtn until the end of the step... this
@@ -80,31 +84,31 @@ ggcm_mhd_step_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *E,
 // ggcm_mhd_step_legacy_dt_post
 
 void
-ggcm_mhd_step_legacy_dt_post(struct ggcm_mhd_step *step, float dtn)
+ggcm_mhd_step_legacy_dt_post(struct ggcm_mhd_step *step)
 {
   struct ggcm_mhd *mhd = step->mhd;
 
   // dtn is the global new timestep
-  if (dtn <= mhd->par.dtmin) {
+  if (step->dtn <= mhd->par.dtmin) {
     mpi_printf(ggcm_mhd_comm(mhd), "!!! dt < dtmin. Dying now!\n");
     mpi_printf(ggcm_mhd_comm(mhd), "!!! dt %g -> %g, dtmin = %g\n",
-	       mhd->dt, dtn, mhd->par.dtmin);   
+	       mhd->dt, step->dtn, mhd->par.dtmin);   
     ggcm_mhd_wrongful_death(mhd, mhd->fld, -1);
   }
 
-  dtn = fminf(1.f, dtn);
+  step->dtn = fminf(1.f, step->dtn);
   
-  if (dtn > 1.02f * mhd->dt || dtn < mhd->dt / 1.01f) {
-    mpi_printf(ggcm_mhd_comm(mhd), "switched dt %g <- %g\n", dtn, mhd->dt);
+  if (step->dtn > 1.02f * mhd->dt || step->dtn < mhd->dt / 1.01f) {
+    mpi_printf(ggcm_mhd_comm(mhd), "switched dt %g <- %g\n", step->dtn, mhd->dt);
     
     if (mhd->istep > 0 &&
-	(dtn < 0.5 * mhd->dt || dtn > 2.0 * mhd->dt)) {            
+	(step->dtn < 0.5 * mhd->dt || step->dtn > 2.0 * mhd->dt)) {            
       mpi_printf(ggcm_mhd_comm(mhd), "!!! dt changed by > a factor of 2. "
 		 "Dying now!\n");
       ggcm_mhd_wrongful_death(mhd, mhd->fld, 2);
     }
-    
-    mhd->dt = dtn;
+  } else {
+    step->dtn = 0.;
   }
 }
 
@@ -146,7 +150,7 @@ ggcm_mhd_step_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   prof_stop(pr);
 
   if (step->legacy_dt_handling && ops->get_dt) {
-    ggcm_mhd_step_legacy_dt_post(step, step->dtn);
+    ggcm_mhd_step_legacy_dt_post(step);
   }
 
   // FIXME, this should be done by mrc_ts
