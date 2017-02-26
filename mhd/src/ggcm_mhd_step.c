@@ -31,16 +31,7 @@ ggcm_mhd_step_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
   }
 
   if (!step->legacy_dt_handling) {
-    double dtn = ops->get_dt(step, x);
-
-    if (dtn < mhd->par.dtmin) {
-      mpi_printf(ggcm_mhd_comm(mhd), "!!! dt < dtmin. Dying now!\n");
-      mpi_printf(ggcm_mhd_comm(mhd), "!!! dt = %g (was %g), dtmin = %g\n",
-		 dtn, mhd->dt, mhd->par.dtmin);
-      ggcm_mhd_wrongful_death(mhd, mhd->fld, -1);
-    }
-    
-    mhd->dt = dtn;
+    mhd->dt = ops->get_dt(step, x);
   } else { // legacy_dt_handling
     if (step->dtn) {
       step->dtn = fminf(1.f, step->dtn);
