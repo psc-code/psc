@@ -66,7 +66,8 @@ ggcm_mhd_dipole_sub_vect_pot(struct ggcm_mhd_dipole *mhd_dipole, int m,
 
   double x[3];
   if (mhd_type == MT_PRIMITIVE_CC ||
-      mhd_type == MT_FULLY_CONSERVATIVE_CC) { // cell-centered B
+      mhd_type == MT_FULLY_CONSERVATIVE_CC ||
+      mhd_type == MT_GKEYLL ) { // cell-centered B
     mrc_dcrds_at_cc(crds, ix,iy,iz, p, x);
   } else {
     mrc_dcrds_at_ec(crds, ix,iy,iz, p, m, x);
@@ -110,7 +111,8 @@ ggcm_mhd_dipole_sub_add_dipole(struct ggcm_mhd_dipole *mhd_dipole, struct mrc_fl
   // B = keep * B + curl A
 
   if (mhd_type == MT_PRIMITIVE_CC ||
-      mhd_type == MT_FULLY_CONSERVATIVE_CC) { // cell-centered B
+      mhd_type == MT_FULLY_CONSERVATIVE_CC ||
+      mhd_type == MT_GKEYLL ) { // cell-centered B
     for (int p = 0; p < mrc_fld_nr_patches(b); p++) {
       float *fd1x = ggcm_mhd_crds_get_crd_p(mhd->crds, 0, FD1, p);
       float *fd1y = ggcm_mhd_crds_get_crd_p(mhd->crds, 1, FD1, p);
