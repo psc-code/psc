@@ -90,13 +90,19 @@ void
 ggcm_mhd_step_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 {
   struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
+  struct ggcm_mhd *mhd = step->mhd;
   static int pr;
   if (!pr) {
     pr = prof_register("ggcm_mhd_step_run", 0, 0, 0.);
   }
 
+  // FIXME, make it a parameter
+  static int modtty;
+  if (!modtty) {
+    mrc_params_get_option_int("modtty", &modtty);
+  }
+
   if (step->debug_dump) {
-    struct ggcm_mhd *mhd = step->mhd;
     static struct ggcm_mhd_diag *diag;
     static int cnt;
     if (!diag) {
@@ -120,8 +126,18 @@ ggcm_mhd_step_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   ops->run(step, x);
   prof_stop(pr);
 
+  // print progress information FIXME, static is not nice
+  static double cpul;
+  if (modtty && mhd->istep % modtty == 0) {
+    double cpu = MPI_Wtime();
+    mpi_printf(ggcm_mhd_comm(mhd), " cp=%8.3f st=%7d ti=%10.3f dt=%10.3f\n",
+	       cpul ? cpu - cpul : 0., mhd->istep, mhd->time + mhd->dt * mhd->tnorm, mhd->dt * mhd->tnorm);
+    cpul = cpu;
+  }
+  
+  mhd->timla = mhd->time;
+  
   // FIXME, this should be done by mrc_ts
-  struct ggcm_mhd *mhd = step->mhd;
   if ((mhd->istep % step->profile_every) == 0) {
     prof_print_mpi(ggcm_mhd_comm(mhd));
   }
