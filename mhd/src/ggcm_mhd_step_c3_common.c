@@ -402,7 +402,7 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *f_U)
   pushstage(step, f_Uhalf, .5f * mhd->dt_code, f_U, f_W, 0);
 
   // f_U += dt * rhs(f_Uhalf)
-  ggcm_mhd_fill_ghosts(mhd, f_Uhalf, 0, mhd->time_code + mhd->bndt_code);
+  ggcm_mhd_fill_ghosts(mhd, f_Uhalf, 0, mhd->time_code + .5 * mhd->dt_code);
   pushstage(step, f_U, mhd->dt_code, f_Uhalf, f_W, 1);
 }
 
