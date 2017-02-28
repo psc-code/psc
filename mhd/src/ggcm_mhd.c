@@ -228,15 +228,15 @@ ggcm_mhd_setup_gk_norm(struct ggcm_mhd *mhd)
       return;
     }
     double mu0 = 1.;
-    double rr_e = mhd->par.gk_norm_rr / (1. + mhd->par.gk_norm_mi_over_me);
-    double rr_i = mhd->par.gk_norm_rr - rr_e;
+    double rr_e = mhd->par.gk_norm_rr / mhd->rrnorm / (1. + mhd->par.gk_norm_mi_over_me);
+    double rr_i = mhd->par.gk_norm_rr / mhd->rrnorm - rr_e;
     assert(mhd->par.d_i > 0.);
     double ion_mass = 1.;
     double electron_mass = ion_mass / mhd->par.gk_norm_mi_over_me;
     double e = ion_mass / mhd->par.d_i / sqrt(mu0 * rr_i);
     double pressure_ratio = mhd->par.gk_norm_ppi_over_ppe;
     
-    ggcm_mhd_set_param_double(mhd, "gk_speed_of_light", mhd->par.gk_norm_speed_of_light);
+    ggcm_mhd_set_param_double(mhd, "gk_speed_of_light", mhd->par.gk_norm_speed_of_light / mhd->vvnorm);
     ggcm_mhd_set_param_float_array(mhd, "gk_charge", 2, (float[2]) { -e, e });
     ggcm_mhd_set_param_float_array(mhd, "gk_mass", 2, (float[2]) { electron_mass, ion_mass });
     ggcm_mhd_set_param_float_array(mhd, "gk_pressure_ratios", 2, 
@@ -530,10 +530,10 @@ static struct param ggcm_mhd_descr[] = {
   { "gk_pressure_ratios", VAR(par.gk_pressure_ratios), PARAM_FLOAT_ARRAY(2, 1.f)      },
 
   { "gk_norm"                , VAR(par.gk_norm)                , PARAM_BOOL(false)    },
-  { "gk_norm_speed_of_light" , VAR(par.gk_norm_speed_of_light) , PARAM_DOUBLE(20.)    },
+  { "gk_norm_speed_of_light" , VAR(par.gk_norm_speed_of_light) , PARAM_DOUBLE(20.)    }, // in units of vvnorm0
   { "gk_norm_mi_over_me"     , VAR(par.gk_norm_mi_over_me)     , PARAM_DOUBLE(25.)    },
   { "gk_norm_ppi_over_ppe"   , VAR(par.gk_norm_ppi_over_ppe)   , PARAM_DOUBLE(1.)     },
-  { "gk_norm_rr"             , VAR(par.gk_norm_rr)             , PARAM_DOUBLE(1.)     },
+  { "gk_norm_rr"             , VAR(par.gk_norm_rr)             , PARAM_DOUBLE(1.)     }, // in units of rrnorm0
 
   {},
 };
