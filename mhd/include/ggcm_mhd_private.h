@@ -59,6 +59,15 @@ struct ggcm_mhd_params {
   // total pressure onto species
   struct mrc_param_float_array gk_pressure_ratios;
 
+  // derived quantities reusable to handle gkeyll data
+  // first index of all species
+  // holding five species at max
+  int gk_idx[5];
+  // relative mass ratios of all species
+  float gk_mass_ratios[5];
+  // q/m ratios of all species
+  float gk_q_m[5];
+
   bool gk_norm;
   double gk_norm_speed_of_light;
   double gk_norm_mi_over_me;
