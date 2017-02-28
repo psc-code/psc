@@ -228,12 +228,12 @@ ggcm_mhd_setup_gk_norm(struct ggcm_mhd *mhd)
       return;
     }
     double mu0 = 1.;
-    double e = 1.;
     double rr_e = mhd->par.gk_norm_rr / (1. + mhd->par.gk_norm_mi_over_me);
     double rr_i = mhd->par.gk_norm_rr - rr_e;
     assert(mhd->par.d_i > 0.);
-    double ion_mass = mhd->par.d_i * sqrt(mu0 * rr_i * sqr(e));
+    double ion_mass = 1.;
     double electron_mass = ion_mass / mhd->par.gk_norm_mi_over_me;
+    double e = ion_mass / mhd->par.d_i / sqrt(mu0 * rr_i);
     double pressure_ratio = mhd->par.gk_norm_ppi_over_ppe;
     
     ggcm_mhd_set_param_double(mhd, "gk_speed_of_light", mhd->par.gk_norm_speed_of_light);
