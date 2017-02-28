@@ -38,6 +38,8 @@ float *ggcm_mhd_gkeyll_pressure_ratios(struct ggcm_mhd *mhd);
 int ggcm_mhd_gkeyll_fluid_species_index(struct ggcm_mhd *mhd, int species);
 void ggcm_mhd_gkeyll_fluid_species_index_all(struct ggcm_mhd *mhd, int indices[]);
 int ggcm_mhd_gkeyll_em_fields_index(struct ggcm_mhd *mhd);
+void ggcm_mhd_gkeyll_fluid_species_q_m_all(struct ggcm_mhd *mhd, float q_m[]);
+void ggcm_mhd_gkeyll_fluid_species_mass_ratios_all(struct ggcm_mhd *mhd, float mass_weight[]);
 
 // FIMXE: better place to declare the convert_primitive funcs
 void

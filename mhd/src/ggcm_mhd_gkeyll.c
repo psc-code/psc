@@ -78,6 +78,24 @@ ggcm_mhd_gkeyll_em_fields_index(struct ggcm_mhd *mhd)
   return ggcm_mhd_gkeyll_nr_moments(mhd) * ggcm_mhd_gkeyll_nr_fluids(mhd);
 }
 
+void
+ggcm_mhd_gkeyll_fluid_species_q_m_all(struct ggcm_mhd *mhd, float q_m[])
+{
+  for (int sp = 0; sp < mhd->par.gk_nr_fluids; sp++)
+    q_m[sp] = mhd->par.gk_charge.vals[sp] / mhd->par.gk_mass.vals[sp];
+}
+
+void
+ggcm_mhd_gkeyll_fluid_species_mass_ratios_all(struct ggcm_mhd *mhd, float mass_weight[])
+{
+  float mass_total = 0.;
+  for (int sp = 0; sp < mhd->par.gk_nr_fluids; sp++)
+    mass_total += mhd->par.gk_mass.vals[sp];
+
+  for (int sp = 0; sp < mhd->par.gk_nr_fluids; sp++)
+    mass_weight[sp] = mhd->par.gk_mass.vals[sp] / mass_total;
+}
+
 // ----------------------------------------------------------------------	
 // convert_primitive_5m_point_comove
 
