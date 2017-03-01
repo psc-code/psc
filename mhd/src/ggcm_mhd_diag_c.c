@@ -367,6 +367,40 @@ ggcm_mhd_diag_c_shutdown(struct ggcm_mhd_diag *diag)
 }
 
 // ----------------------------------------------------------------------
+// diagsrv_one_c
+
+static void
+diagsrv_one_c(struct mrc_mod *mod, void *arg)
+{
+  int rc;
+
+  const char *outputmode, *diagsc_srv;
+  rc = mrc_params_get_option_string("outputmode", &outputmode);
+  assert(rc == 0);
+  rc = mrc_params_get_option_string("diagsc_srv", &diagsc_srv);
+  assert(rc == 0);
+  int n_mhd_procs = (unsigned long) arg;
+
+  mrc_io_server(outputmode, diagsc_srv, n_mhd_procs);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_diag_c_mod_register
+
+static void
+ggcm_mhd_diag_c_mod_register(struct ggcm_mhd_diag *mhd_diag, struct mrc_mod *mod)
+{
+  const char *outputmode = NULL;
+  mrc_params_get_option_string("outputmode", &outputmode);
+
+  if (strcmp(outputmode, "xdmf") != 0 &&
+      strcmp(outputmode, "xdmf_collective") != 0) {
+    int n_mhd_procs = mrc_mod_get_nr_procs(mod, "MHD");
+    mrc_mod_register(mod, "DIAGSC", 1, diagsrv_one_c, (void *)(unsigned long) n_mhd_procs);
+  }
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_diag c subclass description
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_diag_c, x)
@@ -386,13 +420,14 @@ static struct param ggcm_mhd_diag_c_descr[] = {
 // ggcm_mhd_diag subclass "c"
 
 struct ggcm_mhd_diag_ops ggcm_mhd_diag_c_ops = {
-  .name        = "c",
-  .size        = sizeof(struct ggcm_mhd_diag_c),
-  .param_descr = ggcm_mhd_diag_c_descr,
-  .create      = ggcm_mhd_diag_c_create,
-  .setup       = ggcm_mhd_diag_c_setup,
-  .read        = ggcm_mhd_diag_c_read,
-  .run         = ggcm_mhd_diag_c_run,
-  .run_now     = ggcm_mhd_diag_c_run_now,
-  .shutdown    = ggcm_mhd_diag_c_shutdown,
+  .name         = "c",
+  .size         = sizeof(struct ggcm_mhd_diag_c),
+  .param_descr  = ggcm_mhd_diag_c_descr,
+  .create       = ggcm_mhd_diag_c_create,
+  .setup        = ggcm_mhd_diag_c_setup,
+  .read         = ggcm_mhd_diag_c_read,
+  .run          = ggcm_mhd_diag_c_run,
+  .run_now      = ggcm_mhd_diag_c_run_now,
+  .shutdown     = ggcm_mhd_diag_c_shutdown,
+  .mod_register = ggcm_mhd_diag_c_mod_register,
 };
