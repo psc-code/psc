@@ -9,7 +9,6 @@
 #include "ggcm_mhd_diag.h"
 #include "ggcm_mhd_bnd.h"
 #include "ggcm_mhd_ic.h"
-#include "ggcm_mhd_gkeyll.h"
 
 #include <mrc_domain.h>
 #include <mrc_ddc.h>
@@ -244,20 +243,6 @@ ggcm_mhd_setup_gk_norm(struct ggcm_mhd *mhd)
   }
 }
 
-static void
-ggcm_mhd_setup_gk_extra(struct ggcm_mhd *mhd) {
-  ggcm_mhd_gkeyll_fluid_species_index_all(mhd, mhd->par.gk_idx);
-  ggcm_mhd_gkeyll_fluid_species_q_m_all(mhd, mhd->par.gk_q_m);
-  ggcm_mhd_gkeyll_fluid_species_mass_ratios_all(mhd, mhd->par.gk_mass_ratios);
-
-  //re-normalize pressure ratios
-  float pressure_total = 0.;
-  for (int sp = 0; sp < mhd->par.gk_nr_fluids; sp++)
-    pressure_total += mhd->par.gk_pressure_ratios.vals[sp];
-  for (int sp = 0; sp < mhd->par.gk_nr_fluids; sp++)
-    mhd->par.gk_pressure_ratios.vals[sp] /= pressure_total;
-}
-
 // ----------------------------------------------------------------------
 // ggcm_mhd_setup
 
@@ -266,7 +251,6 @@ _ggcm_mhd_setup(struct ggcm_mhd *mhd)
 {
   ggcm_mhd_setup_normalization(mhd);
   ggcm_mhd_setup_gk_norm(mhd);
-  ggcm_mhd_setup_gk_extra(mhd);
 
   ggcm_mhd_step_setup_flds(mhd->step);
   for (int m = 0; m < mrc_fld_nr_comps(mhd->fld); m++) {

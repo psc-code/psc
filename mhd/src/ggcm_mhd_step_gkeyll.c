@@ -42,6 +42,20 @@ ggcm_mhd_step_gkeyll_setup_flds(struct ggcm_mhd_step *step)
 
 }
 
+static void
+ggcm_mhd_setup_gk_extra(struct ggcm_mhd *mhd) {
+  ggcm_mhd_gkeyll_fluid_species_index_all(mhd, mhd->par.gk_idx);
+  ggcm_mhd_gkeyll_fluid_species_q_m_all(mhd, mhd->par.gk_q_m);
+  ggcm_mhd_gkeyll_fluid_species_mass_ratios_all(mhd, mhd->par.gk_mass_ratios);
+
+  //re-normalize pressure ratios
+  float pressure_total = 0.;
+  for (int sp = 0; sp < mhd->par.gk_nr_fluids; sp++)
+    pressure_total += mhd->par.gk_pressure_ratios.vals[sp];
+  for (int sp = 0; sp < mhd->par.gk_nr_fluids; sp++)
+    mhd->par.gk_pressure_ratios.vals[sp] /= pressure_total;
+}
+
 // ----------------------------------------------------------------------
 // ggcm_mhd_step_gkeyll_setup
 
@@ -50,6 +64,8 @@ ggcm_mhd_step_gkeyll_setup(struct ggcm_mhd_step *step)
 {
   struct ggcm_mhd_step_gkeyll *sub = ggcm_mhd_step_gkeyll(step);
   struct ggcm_mhd *mhd = step->mhd;
+
+  ggcm_mhd_setup_gk_extra(mhd);
 
   if (sub->has_ymask) {
     mhd->ymask = ggcm_mhd_get_3d_fld(mhd, 1);
