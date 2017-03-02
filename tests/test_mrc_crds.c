@@ -78,7 +78,6 @@ norm_test_non_uniform_ggcm_yz(double norm_length, double norm_length_scale)
   mrc_crds_set_param_double(crds, "norm_length_scale", norm_length_scale);
   struct mrc_crds_gen *gen_x = crds->crds_gen[0];
   mrc_crds_gen_set_type(gen_x, "ggcm_yz");
-  mrc_crds_gen_set_param_double(gen_x, "center_spacing", .2);
 
   mrc_domain_setup(domain);
   mrc_domain_view(domain);
@@ -106,13 +105,6 @@ norm_test_non_uniform_ggcm_x_tanh(double norm_length, double norm_length_scale)
   mrc_crds_set_param_double(crds, "norm_length_scale", norm_length_scale);
   struct mrc_crds_gen *gen_x = crds->crds_gen[0];
   mrc_crds_gen_set_type(gen_x, "ggcm_x_tanh");
-  mrc_crds_gen_set_param_double(gen_x, "x1", -26.);
-  mrc_crds_gen_set_param_double(gen_x, "x3", 10.);
-  mrc_crds_gen_set_param_double(gen_x, "dmm", 8.);
-  mrc_crds_gen_set_param_double(gen_x, "x5", 80.);
-  mrc_crds_gen_set_param_double(gen_x, "b1", .15);
-  mrc_crds_gen_set_param_double(gen_x, "b2", .025);
-  mrc_crds_gen_set_param_double(gen_x, "b3", .3);
 
   mrc_domain_setup(domain);
   mrc_domain_view(domain);
