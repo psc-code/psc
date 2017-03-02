@@ -123,6 +123,33 @@ norm_test_non_uniform_ggcm_x_tanh(double norm_length, double norm_length_scale)
 }
 
 // ----------------------------------------------------------------------
+// norm_test_non_uniform_ggcm_x_cubic
+
+static void
+norm_test_non_uniform_ggcm_x_cubic(double norm_length, double norm_length_scale)
+{
+  struct mrc_domain *domain = mrc_domain_create(MPI_COMM_WORLD);
+  mrc_domain_set_type(domain, "simple");
+  mrc_domain_set_param_int3(domain, "m", (int [3]) { 8, 8, 8 });
+			  
+  struct mrc_crds *crds = mrc_domain_get_crds(domain);
+  mrc_crds_set_type(crds, "rectilinear");
+  mrc_crds_set_param_double3(crds, "l", (double [3]) {  -20., -2., -3. });
+  mrc_crds_set_param_double3(crds, "h", (double [3]) {  200.,  2.,  3. });
+  mrc_crds_set_param_double(crds, "norm_length", norm_length);
+  mrc_crds_set_param_double(crds, "norm_length_scale", norm_length_scale);
+  struct mrc_crds_gen *gen_x = crds->crds_gen[0];
+  mrc_crds_gen_set_type(gen_x, "ggcm_x_cubic");
+
+  mrc_domain_setup(domain);
+  mrc_domain_view(domain);
+
+  print_x_crds(crds);
+
+  mrc_domain_destroy(domain);
+}
+
+// ----------------------------------------------------------------------
 // test_0
 //
 // test basic coordinates without scaling
@@ -202,6 +229,28 @@ test_6()
 }
 
 // ----------------------------------------------------------------------
+// test_7
+//
+// test non-unform coordinates ggcm_x_cubic
+
+static void
+test_7()
+{
+  norm_test_non_uniform_ggcm_x_cubic(1., 1.);
+}
+
+// ----------------------------------------------------------------------
+// test_8
+//
+// test non-unform coordinates ggcm_x_cubic with rescaling
+
+static void
+test_8()
+{
+  norm_test_non_uniform_ggcm_x_cubic(1., 1000.);
+}
+
+// ----------------------------------------------------------------------
 // tests
 
 typedef void (*test_func)(void);
@@ -214,6 +263,8 @@ static test_func tests[] = {
   [4] = test_4,
   [5] = test_5,
   [6] = test_6,
+  [7] = test_7,
+  [8] = test_8,
 };
 
 static int n_tests = sizeof(tests)/sizeof(tests[0]);

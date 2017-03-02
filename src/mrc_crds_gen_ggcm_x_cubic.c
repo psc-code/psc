@@ -2,6 +2,8 @@
 #include "mrc_ggcm_gridx_gen.h"
 
 #include <mrc_params.h>
+#include <mrc_crds.h>
+
 #include <math.h>
 #include <assert.h>
 
@@ -41,11 +43,13 @@ fsm3(double xx, double a, double b)
 static double
 f_fsm(struct mrc_crds_gen *gen, double x, double fak)
 {
-  double dx;
-  struct mrc_crds_gen_ggcm_x_cubic *par = mrc_crds_gen_ggcm_x_cubic(gen);
-  dx = par->w0;
-  dx += par->w1 * fsm3(x, par->a1, par->b1);
-  dx += par->w2 * fsm3(x, par->a2, par->b2);
+  struct mrc_crds_gen_ggcm_x_cubic *sub = mrc_crds_gen_ggcm_x_cubic(gen);
+  double xnorm = gen->crds->xnorm;
+  double w0 = sub->w0 / xnorm;
+  double w1 = sub->w1 / xnorm, a1 = sub->a1 / xnorm, b1 = sub->b1 / xnorm;
+  double w2 = sub->w2 / xnorm, a2 = sub->a2 / xnorm, b2 = sub->b2 / xnorm;
+
+  double dx = w0 + w1 * fsm3(x, a1, b1) + w2 * fsm3(x, a2, b2);
   return fak * dx;
 }
 
