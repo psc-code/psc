@@ -191,6 +191,17 @@ test_5()
 }
 
 // ----------------------------------------------------------------------
+// test_6
+//
+// test non-unform coordinates ggcm_x_tanh with rescaling
+
+static void
+test_6()
+{
+  norm_test_non_uniform_ggcm_x_tanh(1., 1000.);
+}
+
+// ----------------------------------------------------------------------
 // tests
 
 typedef void (*test_func)(void);
@@ -202,6 +213,7 @@ static test_func tests[] = {
   [3] = test_3,
   [4] = test_4,
   [5] = test_5,
+  [6] = test_6,
 };
 
 static int n_tests = sizeof(tests)/sizeof(tests[0]);
