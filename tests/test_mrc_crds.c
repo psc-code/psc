@@ -61,10 +61,11 @@ norm_test(double norm_length, double norm_length_scale)
 }
 
 // ----------------------------------------------------------------------
-// norm_test_non_uniform_ggcm_yz
+// norm_test_non_uniform
 
 static void
-norm_test_non_uniform_ggcm_yz(double norm_length, double norm_length_scale)
+norm_test_non_uniform(double norm_length, double norm_length_scale,
+		      const char *crds_gen_type, double xl, double xh)
 {
   struct mrc_domain *domain = mrc_domain_create(MPI_COMM_WORLD);
   mrc_domain_set_type(domain, "simple");
@@ -72,66 +73,12 @@ norm_test_non_uniform_ggcm_yz(double norm_length, double norm_length_scale)
 			  
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   mrc_crds_set_type(crds, "rectilinear");
-  mrc_crds_set_param_double3(crds, "l", (double [3]) { -1., -2., -3. });
-  mrc_crds_set_param_double3(crds, "h", (double [3]) {  1.,  2.,  3. });
+  mrc_crds_set_param_double3(crds, "l", (double [3]) { xl, -2., -3. });
+  mrc_crds_set_param_double3(crds, "h", (double [3]) { xh,  2.,  3. });
   mrc_crds_set_param_double(crds, "norm_length", norm_length);
   mrc_crds_set_param_double(crds, "norm_length_scale", norm_length_scale);
   struct mrc_crds_gen *gen_x = crds->crds_gen[0];
-  mrc_crds_gen_set_type(gen_x, "ggcm_yz");
-
-  mrc_domain_setup(domain);
-  mrc_domain_view(domain);
-
-  print_x_crds(crds);
-
-  mrc_domain_destroy(domain);
-}
-
-// ----------------------------------------------------------------------
-// norm_test_non_uniform_ggcm_x_tanh
-
-static void
-norm_test_non_uniform_ggcm_x_tanh(double norm_length, double norm_length_scale)
-{
-  struct mrc_domain *domain = mrc_domain_create(MPI_COMM_WORLD);
-  mrc_domain_set_type(domain, "simple");
-  mrc_domain_set_param_int3(domain, "m", (int [3]) { 8, 8, 8 });
-			  
-  struct mrc_crds *crds = mrc_domain_get_crds(domain);
-  mrc_crds_set_type(crds, "rectilinear");
-  mrc_crds_set_param_double3(crds, "l", (double [3]) {  -20., -2., -3. });
-  mrc_crds_set_param_double3(crds, "h", (double [3]) {  200.,  2.,  3. });
-  mrc_crds_set_param_double(crds, "norm_length", norm_length);
-  mrc_crds_set_param_double(crds, "norm_length_scale", norm_length_scale);
-  struct mrc_crds_gen *gen_x = crds->crds_gen[0];
-  mrc_crds_gen_set_type(gen_x, "ggcm_x_tanh");
-
-  mrc_domain_setup(domain);
-  mrc_domain_view(domain);
-
-  print_x_crds(crds);
-
-  mrc_domain_destroy(domain);
-}
-
-// ----------------------------------------------------------------------
-// norm_test_non_uniform_ggcm_x_cubic
-
-static void
-norm_test_non_uniform_ggcm_x_cubic(double norm_length, double norm_length_scale)
-{
-  struct mrc_domain *domain = mrc_domain_create(MPI_COMM_WORLD);
-  mrc_domain_set_type(domain, "simple");
-  mrc_domain_set_param_int3(domain, "m", (int [3]) { 8, 8, 8 });
-			  
-  struct mrc_crds *crds = mrc_domain_get_crds(domain);
-  mrc_crds_set_type(crds, "rectilinear");
-  mrc_crds_set_param_double3(crds, "l", (double [3]) {  -20., -2., -3. });
-  mrc_crds_set_param_double3(crds, "h", (double [3]) {  200.,  2.,  3. });
-  mrc_crds_set_param_double(crds, "norm_length", norm_length);
-  mrc_crds_set_param_double(crds, "norm_length_scale", norm_length_scale);
-  struct mrc_crds_gen *gen_x = crds->crds_gen[0];
-  mrc_crds_gen_set_type(gen_x, "ggcm_x_cubic");
+  mrc_crds_gen_set_type(gen_x, crds_gen_type);
 
   mrc_domain_setup(domain);
   mrc_domain_view(domain);
@@ -184,7 +131,7 @@ test_2()
 static void
 test_3()
 {
-  norm_test_non_uniform_ggcm_yz(1., 1.);
+  norm_test_non_uniform(1., 1., "ggcm_yz", -1., 1.);
 }
 
 // ----------------------------------------------------------------------
@@ -195,7 +142,7 @@ test_3()
 static void
 test_4()
 {
-  norm_test_non_uniform_ggcm_yz(1., 1000.);
+  norm_test_non_uniform(1., 1000., "ggcm_yz", -1., 1.);
 }
 
 // ----------------------------------------------------------------------
@@ -206,7 +153,7 @@ test_4()
 static void
 test_5()
 {
-  norm_test_non_uniform_ggcm_x_tanh(1., 1.);
+  norm_test_non_uniform(1., 1., "ggcm_x_tanh", -20., 200.);
 }
 
 // ----------------------------------------------------------------------
@@ -217,7 +164,7 @@ test_5()
 static void
 test_6()
 {
-  norm_test_non_uniform_ggcm_x_tanh(1., 1000.);
+  norm_test_non_uniform(1., 1000., "ggcm_x_tanh", -20., 200.);
 }
 
 // ----------------------------------------------------------------------
@@ -228,7 +175,7 @@ test_6()
 static void
 test_7()
 {
-  norm_test_non_uniform_ggcm_x_cubic(1., 1.);
+  norm_test_non_uniform(1., 1., "ggcm_x_cubic", -20., 200.);
 }
 
 // ----------------------------------------------------------------------
@@ -239,7 +186,7 @@ test_7()
 static void
 test_8()
 {
-  norm_test_non_uniform_ggcm_x_cubic(1., 1000.);
+  norm_test_non_uniform(1., 1000., "ggcm_x_cubic", -20., 200.);
 }
 
 // ----------------------------------------------------------------------
