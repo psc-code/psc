@@ -22,6 +22,8 @@ static double
 ggcm_mhd_dipole_sub_vector_potential(struct ggcm_mhd_dipole *mhd_dipole, int m,
 				     double x[3], float x0[3], float moment[3], float xmir)
 {
+  mrc_fld_data_t r1lim = mhd_dipole->r1lim / mhd_dipole->mhd->xxnorm;
+  
   // find x_prime (x - x0), and r3i (1 / r**3)
   mrc_fld_data_t x_prime[3], r2 = 0.0;
   for (int j = 0; j < 3; j++) {
@@ -32,7 +34,7 @@ ggcm_mhd_dipole_sub_vector_potential(struct ggcm_mhd_dipole *mhd_dipole, int m,
   mrc_fld_data_t r3i = powf(r2, -1.5f); // r3i = 1 / r**3
 
   // set A = 0 inside of r1lim
-  if (r2 <= sqr(mhd_dipole->r1lim)) {
+  if (r2 <= sqr(r1lim)) {
     return 0.;
   }
 
@@ -87,6 +89,8 @@ ggcm_mhd_dipole_sub_add_dipole(struct ggcm_mhd_dipole *mhd_dipole, struct mrc_fl
   assert(mhd);
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
 
+  mrc_fld_data_t r1lim = mhd_dipole->r1lim / mhd->xxnorm;
+  
   int mhd_type;
   mrc_fld_get_param_int(mhd->fld, "mhd_type", &mhd_type);
 
@@ -130,7 +134,7 @@ ggcm_mhd_dipole_sub_add_dipole(struct ggcm_mhd_dipole *mhd_dipole, struct mrc_fl
 	mrc_crds_at_cc(crds, ix,iy,iz, p, crd_cc);
 	float r = sqrtf(sqr(crd_cc[0]) + sqr(crd_cc[1]) + sqr(crd_cc[2]));
 	// only set B outside of r1lim
-	if (r >= mhd_dipole->r1lim) {
+	if (r >= r1lim) {
 	  for (int d = 0; d < 3; d++){
 	    M3(b, d, ix,iy,iz, p) = keep * M3(b, d, ix,iy,iz, p) + curl_a[d];
 	  }
@@ -167,7 +171,7 @@ ggcm_mhd_dipole_sub_add_dipole(struct ggcm_mhd_dipole *mhd_dipole, struct mrc_fl
 	    
 	    // only set B outside of r1lim
 	    float r = sqrtf(sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]));
-	    if (r >= mhd_dipole->r1lim) {
+	    if (r >= r1lim) {
 	      M3(b, d, ix,iy,iz, p) = keep * M3(b, d, ix,iy,iz, p) + curl_a[d];
 	    }
 	  }

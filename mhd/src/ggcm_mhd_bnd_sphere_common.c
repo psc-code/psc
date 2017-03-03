@@ -52,8 +52,10 @@ ggcm_mhd_bnd_sphere_setup(struct ggcm_mhd_bnd *bnd)
 {
   struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
   struct ggcm_mhd_bnd_sphere_map *map = &sub->map;
+  double xxnorm = bnd->mhd->xxnorm;
 
-  ggcm_mhd_bnd_sphere_map_setup(map, bnd->mhd, sub->radius, sub->dr, sub->extra_dr);
+  ggcm_mhd_bnd_sphere_map_setup(map, bnd->mhd, sub->radius / xxnorm,
+				sub->dr / xxnorm, sub->extra_dr / xxnorm);
   ggcm_mhd_bnd_sphere_map_setup_flds(map);
   ggcm_mhd_bnd_setup_member_objs_sub(bnd);
   ggcm_mhd_bnd_sphere_map_setup_cc(map);
