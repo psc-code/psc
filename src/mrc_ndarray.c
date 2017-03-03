@@ -326,6 +326,17 @@ mrc_ndarray_copy(struct mrc_ndarray *to, struct mrc_ndarray *from)
 }
 
 // ----------------------------------------------------------------------
+// mrc_ndarray_scale
+
+void
+mrc_ndarray_scale(struct mrc_ndarray *nd, double val)
+{
+  struct mrc_ndarray_ops *ops = mrc_ndarray_ops(nd);
+  assert(ops && ops->scale);
+  ops->scale(nd, val);
+}
+
+// ----------------------------------------------------------------------
 // mrc_ndarray_init
 
 static void

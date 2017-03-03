@@ -119,6 +119,7 @@ struct mrc_ndarray_ops {
   MRC_SUBCLASS_OPS(struct mrc_ndarray);
   void (*set)(struct mrc_ndarray *nd, double val);
   void (*copy)(struct mrc_ndarray *to, struct mrc_ndarray *from);
+  void (*scale)(struct mrc_ndarray *nd, double val);
 };
 
 #define mrc_ndarray_ops(nd) ((struct mrc_ndarray_ops *) (nd)->obj.ops)
@@ -136,6 +137,7 @@ bool mrc_ndarray_f_contiguous(struct mrc_ndarray *nd);
 
 void mrc_ndarray_set(struct mrc_ndarray *nd, double val);
 void mrc_ndarray_copy(struct mrc_ndarray *to, struct mrc_ndarray *from);
+void mrc_ndarray_scale(struct mrc_ndarray *nd, double val);
 
 extern struct mrc_ndarray_ops mrc_ndarray_float_ops;
 extern struct mrc_ndarray_ops mrc_ndarray_double_ops;

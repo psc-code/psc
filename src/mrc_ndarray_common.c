@@ -58,6 +58,27 @@ mrc_ndarray_sub_copy(struct mrc_ndarray *to, struct mrc_ndarray *from)
 }
 
 // ----------------------------------------------------------------------
+// mrc_ndarray_sub_scale
+
+static void
+mrc_ndarray_sub_scale(struct mrc_ndarray *nd, double _val)
+{
+  TYPE val = (TYPE) _val;
+
+  // OPT, there'd be a point in choosing an iterator that proceeds
+  // according to the underlying layout (right now, the standard iterator
+  // will do fortran order)
+  // also, if the underlying data is contiguous, we could dispatch to vec,
+  // or use a faster iterator
+  struct mrc_ndarray_it it;
+
+  mrc_ndarray_it_all(&it, nd);
+  for (; !mrc_ndarray_it_done(&it); mrc_ndarray_it_next(&it)) {
+    IT_TYPE(&it, TYPE) *= val;
+  }
+}
+
+// ----------------------------------------------------------------------
 // mrc_ndarray_sub_ops
 
 struct mrc_ndarray_ops mrc_ndarray_sub_ops = {
@@ -65,5 +86,6 @@ struct mrc_ndarray_ops mrc_ndarray_sub_ops = {
   .create                = mrc_ndarray_sub_create,
   .set                   = mrc_ndarray_sub_set,
   .copy                  = mrc_ndarray_sub_copy,
+  .scale                 = mrc_ndarray_sub_scale,
 };
 
