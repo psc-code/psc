@@ -53,6 +53,5 @@ mpirun -n 8 ~/src/openggcm/target-build/csrc/libmrc/mhd/tests/mhd_mirdip \
     --ggcm_mhd_norm_length ${RG} \
     --ggcm_mhd_norm_B ${dipolestrength}e-9 \
     --ggcm_mhd_norm_density 40e6 \
-    --ggcm_mhd_earth_mag_moment 0.13725e21 \
     \
     2>&1 | tee log
