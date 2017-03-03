@@ -66,7 +66,8 @@ struct ggcm_mhd_bnd_sphere_map {
 };
 
 void ggcm_mhd_bnd_sphere_map_setup(struct ggcm_mhd_bnd_sphere_map *map,
-				   struct ggcm_mhd *mhd, double radius);
+				   struct ggcm_mhd *mhd, double radius,
+				   double dr, double extra_dr);
 void ggcm_mhd_bnd_sphere_map_setup_flds(struct ggcm_mhd_bnd_sphere_map *map);
 void ggcm_mhd_bnd_sphere_map_setup_cc(struct ggcm_mhd_bnd_sphere_map *map);
 void ggcm_mhd_bnd_sphere_map_setup_ec(struct ggcm_mhd_bnd_sphere_map *map);

@@ -33,6 +33,7 @@ struct ggcm_mhd_bnd_sphere {
   double bnvals[FIXED_NR];  // constant values to set
   int test; // for testing, set to != 0
   int radial_velocity; // 0 : float, 1: reflect, 2: reflect if outflow
+  double dr, extra_dr; // parameters for determining ghost points
 
   bool const_rr;
   bool const_pp;
@@ -52,7 +53,7 @@ ggcm_mhd_bnd_sphere_setup(struct ggcm_mhd_bnd *bnd)
   struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
   struct ggcm_mhd_bnd_sphere_map *map = &sub->map;
 
-  ggcm_mhd_bnd_sphere_map_setup(map, bnd->mhd, sub->radius);
+  ggcm_mhd_bnd_sphere_map_setup(map, bnd->mhd, sub->radius, sub->dr, sub->extra_dr);
   ggcm_mhd_bnd_sphere_map_setup_flds(map);
   ggcm_mhd_bnd_setup_member_objs_sub(bnd);
   ggcm_mhd_bnd_sphere_map_setup_cc(map);
@@ -748,11 +749,13 @@ static struct param ggcm_mhd_bnd_sphere_descr[] = {
   { "bx"              , VAR(bnvals[FIXED_BX]), PARAM_DOUBLE(0.)          },
   { "by"              , VAR(bnvals[FIXED_BY]), PARAM_DOUBLE(0.)          },
   { "bz"              , VAR(bnvals[FIXED_BZ]), PARAM_DOUBLE(0.)          },
-  { "test"            , VAR(test),             PARAM_INT(0)              },
-  { "radial_velocity" , VAR(radial_velocity),  PARAM_INT(0)              },
+  { "test"            , VAR(test)            , PARAM_INT(0)              },
+  { "radial_velocity" , VAR(radial_velocity) , PARAM_INT(0)              },
+  { "dr"              , VAR(dr)              , PARAM_DOUBLE(.01)         },
+  { "extra_dr"        , VAR(extra_dr)        , PARAM_DOUBLE(0.)          },
 
-  { "dr"              , VAR(map.dr)          , PARAM_DOUBLE(.01)         },
-  { "extra_dr"        , VAR(map.extra_dr)    , PARAM_DOUBLE(0.)          },
+  { "map_dr"          , VAR(map.dr)          , MRC_VAR_DOUBLE            },
+  { "map_extra_dr"    , VAR(map.extra_dr)    , MRC_VAR_DOUBLE            },
   { "min_dr"          , VAR(map.min_dr)      , MRC_VAR_DOUBLE            },
   { "map_radius"      , VAR(map.radius)      , MRC_VAR_DOUBLE            },
   { "r1"              , VAR(map.r1)          , MRC_VAR_DOUBLE            },
