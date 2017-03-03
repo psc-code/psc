@@ -85,6 +85,15 @@ norm_test_non_uniform(double norm_length, double norm_length_scale,
 
   print_x_crds(crds);
 
+  struct mrc_io *io = mrc_io_create(MPI_COMM_WORLD);
+  mrc_io_set_type(io, "xdmf_collective");
+  mrc_io_set_from_options(io);
+  mrc_io_setup(io);
+  mrc_io_open(io, "w", 0, 0.);
+  mrc_io_write_path(io, "/crds", "crds", crds);
+  mrc_io_close(io);
+  mrc_io_destroy(io);
+
   mrc_domain_destroy(domain);
 }
 
@@ -190,6 +199,32 @@ test_8()
 }
 
 // ----------------------------------------------------------------------
+// test_9
+//
+// test non-unform coordinates ggcm_x_cubic with
+// internal units R_E, I/O units R_E
+
+static void
+test_9()
+{
+  const double R_E = 6370e3;
+  norm_test_non_uniform(R_E, R_E, "ggcm_x_cubic", -20., 200.);
+}
+
+// ----------------------------------------------------------------------
+// test_10
+//
+// test non-unform coordinates ggcm_x_cubic with
+// internal units R_E, I/O units R_E
+
+static void
+test_10()
+{
+  const double R_E = 6370e3;
+  norm_test_non_uniform(1., R_E, "ggcm_x_cubic", -20., 200.);
+}
+
+// ----------------------------------------------------------------------
 // tests
 
 typedef void (*test_func)(void);
@@ -204,6 +239,8 @@ static test_func tests[] = {
   [6] = test_6,
   [7] = test_7,
   [8] = test_8,
+  [9] = test_9,
+  [10] = test_10,
 };
 
 static int n_tests = sizeof(tests)/sizeof(tests[0]);

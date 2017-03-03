@@ -173,6 +173,7 @@ mrc_crds_setup_alloc_only(struct mrc_crds *crds)
     mrc_fld_set_param_int(crds->crd[d], "dim", d);
     mrc_fld_set_param_int(crds->crd[d], "nr_ghosts", crds->sw);
     mrc_fld_set_comp_name(crds->crd[d], 0, mrc_fld_name(crds->crd[d]));
+    mrc_fld_dict_add_double(crds->crd[d], "io_scale", crds->xnorm);
     mrc_fld_setup(crds->crd[d]);
 
     // double version of coords
@@ -190,6 +191,7 @@ mrc_crds_setup_alloc_only(struct mrc_crds *crds)
     mrc_fld_set_param_int(crds->crd_nc[d], "dim", d);
     mrc_fld_set_param_int(crds->crd_nc[d], "nr_ghosts", crds->sw + 1);
     mrc_fld_set_comp_name(crds->crd_nc[d], 0, mrc_fld_name(crds->crd_nc[d]));
+    mrc_fld_dict_add_double(crds->crd_nc[d], "io_scale", crds->xnorm);
     mrc_fld_setup(crds->crd_nc[d]);
 
     // node-centered coords
