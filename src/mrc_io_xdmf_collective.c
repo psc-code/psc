@@ -381,6 +381,11 @@ collective_m1_write_f1(struct mrc_io *io, const char *path, struct mrc_ndarray *
   struct xdmf *xdmf = to_xdmf(io);
   int ierr;
 
+  double io_scale;
+  int rc = mrc_ndarray_get_var_double(nd1, "io_scale", &io_scale);
+  if (rc == 0) {
+    mrc_ndarray_scale(nd1, io_scale);
+  }
   assert(mrc_ndarray_data_type(nd1) == MRC_NT_FLOAT);
   hid_t group_fld = H5Gcreate(group0, name, H5P_DEFAULT,
 			      H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group_fld);
@@ -573,6 +578,12 @@ xdmf_collective_write_m1(struct mrc_io *io, const char *path, struct mrc_fld *m1
     mrc_ndarray_set_param_int_array(nd1, "dims", 1, (int [1]) { xdmf->slab_dims[dim] });
     mrc_ndarray_set_param_int_array(nd1, "offs", 1, (int [1]) { xdmf->slab_off[dim]  });
     mrc_ndarray_setup(nd1);
+
+    double io_scale;
+    int rc = mrc_fld_get_var_double(m1, "io_scale", &io_scale);
+    if (rc == 0) {
+      mrc_ndarray_dict_add_double(nd1, "io_scale", io_scale);
+    }
 
     hid_t group0 = H5Gopen(file->h5_file, path, H5P_DEFAULT); H5_CHK(group0);
     for (int m = 0; m < nr_comps; m++) {
