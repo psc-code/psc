@@ -30,7 +30,6 @@ struct ggcm_mhd_params {
   // units, mu0norm = mu0. In the case of SI-SI, or normalized-normalized,
   // it's equal to 1
   float norm_mu0;
-  float norm_amu;
   // This is the mu0 we're using in the actual equations we're solving
   // (traditionally, we're using normalized units, so mu0_code = 1)
   float mu0_code;

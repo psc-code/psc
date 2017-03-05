@@ -54,7 +54,6 @@ mpirun -n 8 ~/src/openggcm/target-build/csrc/libmrc/mhd/tests/mhd_mirdip \
     --ggcm_mhd_norm_B 1. \
     --ggcm_mhd_norm_density 1. \
     --ggcm_mhd_norm_mu0 1. \
-    --ggcm_mhd_norm_amu 1. \
     --ggcm_mhd_mu0_code 1.2566370E-06 \
     --ggcm_mhd_xxnorm0 ${RG} \
     --ggcm_mhd_rrnorm0 1.6605655E-21 \

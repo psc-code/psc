@@ -2,6 +2,7 @@
 
 RG=2634100.
 dipolestrength=711.29
+# norm_density is 40e6 / m^3 * amu
 
 mpirun -n 8 ~/src/openggcm/target-build/csrc/libmrc/mhd/tests/mhd_mirdip \
     --mrc_crds_type rectilinear \
@@ -53,7 +54,7 @@ mpirun -n 8 ~/src/openggcm/target-build/csrc/libmrc/mhd/tests/mhd_mirdip \
     --ggcm_mhd_norm_length ${RG} \
     --ggcm_mhd_xxnorm0 ${RG} \
     --ggcm_mhd_norm_B ${dipolestrength}e-9 \
-    --ggcm_mhd_norm_density 40e6 \
+    --ggcm_mhd_norm_density 6.642262e-20 \
     --ggcm_mhd_dipole_moment_distance ${RG} \
     --ggcm_mhd_dipole_dipolestrength ${dipolestrength} \
     \
