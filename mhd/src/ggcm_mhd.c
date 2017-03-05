@@ -222,6 +222,17 @@ ggcm_mhd_setup_normalization(struct ggcm_mhd *mhd)
   mhd->resnorm /= mhd->par.resnorm0;
   mhd->tnorm /= mhd->par.tnorm0;
   mhd->qqnorm /= mhd->par.qqnorm0;
+
+  mpi_printf(comm, "NORMALIZATION: int. xxnorm  = %g\n", mhd->xxnorm);
+  mpi_printf(comm, "NORMALIZATION: int. bbnorm  = %g\n", mhd->bbnorm);
+  mpi_printf(comm, "NORMALIZATION: int. rrnorm  = %g\n", mhd->rrnorm);
+  mpi_printf(comm, "NORMALIZATION: int. vvnorm  = %g\n", mhd->vvnorm);
+  mpi_printf(comm, "NORMALIZATION: int. ppnorm  = %g\n", mhd->ppnorm);
+  mpi_printf(comm, "NORMALIZATION: int. ccnorm  = %g\n", mhd->ccnorm);
+  mpi_printf(comm, "NORMALIZATION: int. eenorm  = %g\n", mhd->eenorm);
+  mpi_printf(comm, "NORMALIZATION: int. resnorm = %g\n", mhd->resnorm);
+  mpi_printf(comm, "NORMALIZATION: int. tnorm   = %g\n", mhd->tnorm);
+  mpi_printf(comm, "NORMALIZATION: int. qqnorm  = %g\n", mhd->qqnorm);
 }
 
 // ----------------------------------------------------------------------
