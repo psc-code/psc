@@ -465,6 +465,7 @@ static struct param ggcm_mhd_descr[] = {
   { "eenorm0"         , VAR(par.eenorm0)     , PARAM_FLOAT(1.)       },
   { "resnorm0"        , VAR(par.resnorm0)    , PARAM_FLOAT(1.)       },
   { "tnorm0"          , VAR(par.tnorm0)      , PARAM_FLOAT(1.)       },
+  { "qqnorm0"         , VAR(par.qqnorm0)     , PARAM_FLOAT(1.)       },
 
   { "norm_length"           , VAR(par.norm_length)           , PARAM_FLOAT(1.)            },
   { "norm_B"                , VAR(par.norm_B)                , PARAM_FLOAT(1.)            },
