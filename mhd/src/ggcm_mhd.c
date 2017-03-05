@@ -16,6 +16,7 @@
 #include <mrc_ts_monitor.h>
 #include <mrc_io.h>
 #include <mrc_profile.h>
+#include <mrc_physics.h>
 
 #include <assert.h>
 #include <string.h>
@@ -459,8 +460,8 @@ static struct param ggcm_mhd_descr[] = {
   { "norm_length"           , VAR(par.norm_length)           , PARAM_FLOAT(1.)            },
   { "norm_B"                , VAR(par.norm_B)                , PARAM_FLOAT(1.)            },
   { "norm_density"          , VAR(par.norm_density)          , PARAM_FLOAT(1.)            },
-  { "norm_mu0"              , VAR(par.norm_mu0)              , PARAM_FLOAT(1.2566370E-06) },
-  { "norm_amu"              , VAR(par.norm_amu)              , PARAM_FLOAT(1.6605655E-27) },
+  { "norm_mu0"              , VAR(par.norm_mu0)              , PARAM_FLOAT(C_MU0)         },
+  { "norm_amu"              , VAR(par.norm_amu)              , PARAM_FLOAT(C_AMU)         },
   { "mu0_code"              , VAR(par.mu0_code)              , PARAM_FLOAT(1.)            },
 
   { "diffconstant"    , VAR(par.diffco)      , PARAM_FLOAT(.03f)     },
