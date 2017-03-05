@@ -18,6 +18,7 @@ struct ggcm_mhd_params {
   float gamm;
   float rrmin;
 
+  float xxnorm0;
   float bbnorm0, vvnorm0, rrnorm0, ppnorm0;
   float ccnorm0, eenorm0, resnorm0, tnorm0;
   float qqnorm0;
@@ -105,6 +106,7 @@ struct ggcm_mhd {
   // multiplying the internal normalized quantities by these will produce
   // physical values in SI units, but with a prefix given by the corresponding
   // XXnorm0 parameter
+  float xxnorm;
   float bbnorm, vvnorm, rrnorm, ppnorm;
   float ccnorm, eenorm, resnorm, tnorm;
   float qqnorm;

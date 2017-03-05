@@ -177,6 +177,7 @@ ggcm_mhd_setup_normalization(struct ggcm_mhd *mhd)
   float x0 = mhd->par.norm_length;
   float b0 = mhd->par.norm_B;
   float n0 = mhd->par.norm_density;
+  mhd->xxnorm = x0;
   mhd->bbnorm = b0;
   mhd->rrnorm = n0;
   mhd->vvnorm = b0 / sqrt(mhd->par.mu0 * n0 * mhd->par.amu);
@@ -193,6 +194,7 @@ ggcm_mhd_setup_normalization(struct ggcm_mhd *mhd)
   mpi_printf(comm, "NORMALIZATION:          n0 = %g 1/m^3\n", mhd->par.norm_density);
   mpi_printf(comm, "NORMALIZATION:          mu0 = %g N/A^2\n", mhd->par.mu0);
   mpi_printf(comm, "NORMALIZATION:          amu = %g kg\n", mhd->par.amu);
+  mpi_printf(comm, "NORMALIZATION: xxnorm  = %g m\n", mhd->xxnorm);
   mpi_printf(comm, "NORMALIZATION: bbnorm  = %g T\n", mhd->bbnorm);
   mpi_printf(comm, "NORMALIZATION: rrnorm  = %g 1/m^3\n", mhd->rrnorm);
   mpi_printf(comm, "NORMALIZATION: vvnorm  = %g m/s\n", mhd->vvnorm);
@@ -203,6 +205,7 @@ ggcm_mhd_setup_normalization(struct ggcm_mhd *mhd)
   mpi_printf(comm, "NORMALIZATION: tnorm   = %g s\n", mhd->tnorm);
   mpi_printf(comm, "NORMALIZATION: qqnorm  = %g C\n", mhd->qqnorm);
 
+  mhd->xxnorm /= mhd->par.xxnorm0;
   mhd->bbnorm /= mhd->par.bbnorm0;
   mhd->rrnorm /= mhd->par.rrnorm0;
   mhd->vvnorm /= mhd->par.vvnorm0;
@@ -436,6 +439,7 @@ static struct param ggcm_mhd_descr[] = {
   { "gamma"           , VAR(par.gamm)        , PARAM_FLOAT(1.66667f) },
   { "rrmin"           , VAR(par.rrmin)       , PARAM_FLOAT(.1f)      },
 
+  { "xxnorm0"         , VAR(par.xxnorm0)     , PARAM_FLOAT(1.)       },
   { "bbnorm0"         , VAR(par.bbnorm0)     , PARAM_FLOAT(1.)       },
   { "vvnorm0"         , VAR(par.vvnorm0)     , PARAM_FLOAT(1.)       },
   { "rrnorm0"         , VAR(par.rrnorm0)     , PARAM_FLOAT(1.)       },
@@ -479,6 +483,7 @@ static struct param ggcm_mhd_descr[] = {
   { "amr_grid_file"   , VAR(amr_grid_file)   , PARAM_STRING("amr_grid.txt")   },
   { "amr"             , VAR(amr)             , PARAM_INT(0)                   },
 
+  { "xxnorm"          , VAR(xxnorm)          , MRC_VAR_FLOAT         },
   { "bbnorm"          , VAR(bbnorm)          , MRC_VAR_FLOAT         },
   { "vvnorm"          , VAR(vvnorm)          , MRC_VAR_FLOAT         },
   { "rrnorm"          , VAR(rrnorm)          , MRC_VAR_FLOAT         },
