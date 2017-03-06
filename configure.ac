@@ -97,25 +97,6 @@ AS_IF([test "x$with_gkeyll" != "xno"],
   ])
 AM_CONDITIONAL([HAVE_GKEYLL], [test "$have_gkeyll" != "no"])
 
-# check for PAPI
-AC_ARG_WITH([papi],AS_HELP_STRING([--without-papi], [Disable PAPI]))
-
-have_papi=no
-AS_IF([test "x$with_papi" != "xno"],
-  [AC_CHECK_HEADER([papi.h],
-     [AC_CHECK_LIB([papi], [PAPI_library_init],
-        [have_papi=yes
-         AC_DEFINE([HAVE_LIBPAPI], [], [we have PAPI library + headers])
-         LIBS="-lpapi $LIBS"])
-     ])
-  ])
-
-AS_IF([test "x$have_papi" != "xyes"],
-  [AS_IF([test "x$with_papi" = "xyes"],
-     [AC_MSG_ERROR([PAPI requested but not found.])])
-  ])
-
-
 MRC_CHECK_PETSC(3.4.0)
 CFLAGS="$PETSC_CFLAGS $CFLAGS"
 LIBS="$PETSC_LIBS $LIBS"
