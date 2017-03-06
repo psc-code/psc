@@ -102,6 +102,15 @@ XFAIL_TESTS = \
 	test_mrc_f3_2.sh \
 	test_mrc_fld_io_ascii.sh
 
+if !HAVE_HDF5_PARALLEL
+XFAIL_TESTS += \
+	test_io_2.sh \
+	test_io_2d.sh \
+	test_mrc_m3_4.sh \
+	test_mrc_m3_6.sh
+
+endif !HAVE_HDF5_PARALLEL
+
 if !HAVE_PETSC
 XFAIL_TESTS += \
 	test_mrc_domain_mb_0.sh
