@@ -109,16 +109,20 @@ static double
 ggcm_mhd_ic_mirdip_primitive(struct ggcm_mhd_ic *ic, int m, double crd[3])
 {
   struct ggcm_mhd_ic_mirdip *sub = ggcm_mhd_ic_mirdip(ic);
-
+  double xxnorm = ic->mhd->xxnorm;
+  
   double xx = crd[0], yy = crd[1], zz = crd[2];
-
+  double xxx1 = sub->xxx1 / xxnorm;
+  double xxx2 = sub->xxx2 / xxnorm;
+  double xmir = sub->xmir / xxnorm;
+ 
   double *vals = sub->bnvals_code;
-  mrc_fld_data_t tmplam = lmbda(xx, -sub->xxx1, -sub->xxx2);
+  mrc_fld_data_t tmplam = lmbda(xx, -xxx1, -xxx2);
 
   switch (m) {
   case RR: return tmplam * vals[SW_RR] + (1.f - tmplam) * sub->rrini_code;
   case PP: return tmplam * vals[SW_PP] + (1.f - tmplam) * sub->prat * vals[SW_PP];
-  case VX: return vxsta1(xx, yy, zz, vals[SW_VX], sub->xxx2, sub->xxx1, sub->stretch_tail, sub->xmir);
+  case VX: return vxsta1(xx, yy, zz, vals[SW_VX], xxx2, xxx1, sub->stretch_tail, xmir);
   case VY: return 0.;
   case VZ: return 0.;
   default: return 0.;
@@ -170,16 +174,19 @@ static double
 ggcm_mhd_ic_mirdip_vector_potential(struct ggcm_mhd_ic *ic, int m, double x[3])
 {
   struct ggcm_mhd_ic_mirdip *sub = ggcm_mhd_ic_mirdip(ic);
+  double xxnorm = ic->mhd->xxnorm;
 
+  double xmir = sub->xmir / xxnorm;
+  
   // get main dipole vector potential
   double A = ggcm_mhd_dipole_vector_potential(sub->mhd_dipole, m, x, (float [3]) { 0.f, 0.f, 0.f },
-					      sub->dipole_moment, sub->xmir);
+					      sub->dipole_moment, xmir);
 
-  if (sub->xmir != 0.0) {
+  if (xmir != 0.0) {
     // add mirror dipole vector potential
     sub->dipole_moment[0] *= -1.f;
-    A += ggcm_mhd_dipole_vector_potential(sub->mhd_dipole, m, x, (float [3]) { 2.f * sub->xmir, 0.f, 0.f },
-					  sub->dipole_moment, sub->xmir);
+    A += ggcm_mhd_dipole_vector_potential(sub->mhd_dipole, m, x, (float [3]) { 2.f * xmir, 0.f, 0.f },
+					  sub->dipole_moment, xmir);
     sub->dipole_moment[0] *= -1.f;
   }
 
