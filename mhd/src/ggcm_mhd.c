@@ -182,8 +182,8 @@ ggcm_mhd_setup_normalization(struct ggcm_mhd *mhd)
   mhd->xxnorm = x0;
   mhd->bbnorm = b0;
   mhd->rrnorm = n0;
-  mhd->vvnorm = b0 / sqrt(mu00 * n0 * mhd->par.amu);
-  mhd->ppnorm = sqr(mhd->vvnorm) * (n0 * mhd->par.amu);
+  mhd->vvnorm = b0 / sqrt(mu00 * n0 * mhd->par.norm_amu);
+  mhd->ppnorm = sqr(mhd->vvnorm) * (n0 * mhd->par.norm_amu);
   mhd->ccnorm = b0 / (x0 * mu00);
   mhd->eenorm = mhd->vvnorm * b0;
   mhd->resnorm = mhd->eenorm / mhd->ccnorm;
@@ -195,7 +195,7 @@ ggcm_mhd_setup_normalization(struct ggcm_mhd *mhd)
   mpi_printf(comm, "NORMALIZATION:          B0 = %g T\n", mhd->par.norm_B);
   mpi_printf(comm, "NORMALIZATION:          n0 = %g 1/m^3\n", mhd->par.norm_density);
   mpi_printf(comm, "NORMALIZATION:        mu00 = %g N/A^2\n", mhd->par.norm_mu0);
-  mpi_printf(comm, "NORMALIZATION:         amu = %g kg\n", mhd->par.amu);
+  mpi_printf(comm, "NORMALIZATION:         amu = %g kg\n", mhd->par.norm_amu);
   mpi_printf(comm, "NORMALIZATION:    mu0_code = %g N/A^2\n", mhd->par.mu0_code);
   mpi_printf(comm, "NORMALIZATION: xxnorm  = %g m\n", mhd->xxnorm);
   mpi_printf(comm, "NORMALIZATION: bbnorm  = %g T\n", mhd->bbnorm);
@@ -406,7 +406,7 @@ ggcm_mhd_default_box(struct ggcm_mhd *mhd)
 {
   // use normalize units
   mhd->par.norm_mu0 = 1.f;
-  mhd->par.amu = 1.f;
+  mhd->par.norm_amu = 1.f;
 
   mhd->par.diffco = 0.f;
   mhd->par.r_db_dt = 0.f;
@@ -460,8 +460,8 @@ static struct param ggcm_mhd_descr[] = {
   { "norm_B"                , VAR(par.norm_B)                , PARAM_FLOAT(1.)            },
   { "norm_density"          , VAR(par.norm_density)          , PARAM_FLOAT(1.)            },
   { "norm_mu0"              , VAR(par.norm_mu0)              , PARAM_FLOAT(1.2566370E-06) },
+  { "norm_amu"              , VAR(par.norm_amu)              , PARAM_FLOAT(1.6605655E-27) },
   { "mu0_code"              , VAR(par.mu0_code)              , PARAM_FLOAT(1.)            },
-  { "amu"                   , VAR(par.amu)                   , PARAM_FLOAT(1.6605655E-27) },
 
   { "diffconstant"    , VAR(par.diffco)      , PARAM_FLOAT(.03f)     },
   { "diffthreshold"   , VAR(par.diffth)      , PARAM_FLOAT(.75f)     },

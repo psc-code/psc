@@ -51,9 +51,9 @@ mpirun -n 8 ~/src/openggcm/target-build/csrc/libmrc/mhd/tests/mhd_mirdip \
     --ggcm_mhd_magdiffu const --ggcm_mhd_diffconstant 0e4. --ggcm_mhd_diff_obnd 4 --ggcm_mhd_diffsphere .8 \
     \
     --ggcm_mhd_norm_length ${RG} \
+    --ggcm_mhd_xxnorm0 ${RG} \
     --ggcm_mhd_norm_B ${dipolestrength}e-9 \
     --ggcm_mhd_norm_density 40e6 \
-    --ggcm_mhd_xxnorm0 ${RG} \
     --ggcm_mhd_dipole_moment_distance ${RG} \
     --ggcm_mhd_dipole_dipolestrength ${dipolestrength} \
     \
