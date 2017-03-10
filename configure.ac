@@ -161,6 +161,7 @@ AC_CONFIG_FILES([Makefile
 		 tests/test_mrc_crds_0.sh
 		 tests/test_mrc_crds_1.sh
 		 tests/test_mrc_crds_2.sh
+		 tests/test_mrc_crds_3.sh
 		 tests/test_mrc_ndarray_0.sh
 		 tests/test_mrc_fld.sh
 		 tests/test_mrc_fld_io_xdmf_collective.sh
