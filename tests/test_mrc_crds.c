@@ -72,13 +72,17 @@ norm_test_write(double norm_length, double norm_length_scale,
   mrc_domain_set_param_int3(domain, "m", (int [3]) { 8, 8, 8 });
 			  
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
-  mrc_crds_set_type(crds, "rectilinear");
   mrc_crds_set_param_double3(crds, "l", (double [3]) { xl, -2., -3. });
   mrc_crds_set_param_double3(crds, "h", (double [3]) { xh,  2.,  3. });
   mrc_crds_set_param_double(crds, "norm_length", norm_length);
   mrc_crds_set_param_double(crds, "norm_length_scale", norm_length_scale);
-  struct mrc_crds_gen *gen_x = crds->crds_gen[0];
-  mrc_crds_gen_set_type(gen_x, crds_gen_type);
+  if (crds_gen_type) {
+    mrc_crds_set_type(crds, "rectilinear");
+    struct mrc_crds_gen *gen_x = crds->crds_gen[0];
+    mrc_crds_gen_set_type(gen_x, crds_gen_type);
+  } else {
+    mrc_crds_set_type(crds, "uniform");
+  }
 
   mrc_domain_setup(domain);
   mrc_domain_view(domain);
@@ -228,6 +232,17 @@ test_10()
 }
 
 // ----------------------------------------------------------------------
+// test_11
+//
+// test non-unform coordinates with rescaled coordinates
+
+static void
+test_11()
+{
+  norm_test_write(1., 1000., NULL, -1., 1.);
+}
+
+// ----------------------------------------------------------------------
 // tests
 
 typedef void (*test_func)(void);
@@ -244,6 +259,7 @@ static test_func tests[] = {
   [8] = test_8,
   [9] = test_9,
   [10] = test_10,
+  [11] = test_11,
 };
 
 static int n_tests = sizeof(tests)/sizeof(tests[0]);
