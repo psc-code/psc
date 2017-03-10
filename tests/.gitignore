@@ -1,8 +1,8 @@
 *.sh
 *.trs
 *.log
-run.000000_p000000.h5
-run.000000_p000000.h5.dump
+/run.000000_p000000.h5
+/run.000000_p000000.h5.dump
 test_rmhd
 test_kdv
 test_kdv_simple
@@ -35,6 +35,6 @@ test_spherical_harmonics
 test_fdtd_amr
 test_mrc_mat
 *.asc
-run*.xdmf
-run*.h5
+/run*.xdmf
+/run*.h5
 

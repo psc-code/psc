@@ -90,7 +90,10 @@ norm_test_non_uniform(double norm_length, double norm_length_scale,
   mrc_io_set_from_options(io);
   mrc_io_setup(io);
   mrc_io_open(io, "w", 0, 0.);
-  mrc_io_write_path(io, "/crds", "crds", crds);
+  struct mrc_fld *fld = mrc_domain_fld_create(domain, 2, "m0:m1");
+  mrc_fld_setup(fld);
+  mrc_io_write_path(io, "/info", "fld", fld);
+  mrc_fld_destroy(fld);
   mrc_io_close(io);
   mrc_io_destroy(io);
 
