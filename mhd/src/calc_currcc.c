@@ -11,10 +11,10 @@
 #include <string.h>
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_calc_curcc_sc_ggcm
+// ggcm_mhd_calc_curcc_fc_ggcm
 
 static void
-ggcm_mhd_calc_currcc_sc_ggcm(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
+ggcm_mhd_calc_currcc_fc_ggcm(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
 			     struct mrc_fld *currcc)
 {
   int gdims[3];
@@ -69,11 +69,11 @@ ggcm_mhd_calc_currcc_sc_ggcm(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_calc_curcc_fc_cc
+// ggcm_mhd_calc_curcc_cc
 
 static void
-ggcm_mhd_calc_currcc_fc_cc(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
-			     struct mrc_fld *currcc)
+ggcm_mhd_calc_currcc_cc(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
+			struct mrc_fld *currcc)
 {
   int gdims[3];
   mrc_domain_get_global_dims(fld->_domain, gdims);
@@ -143,6 +143,9 @@ ggcm_mhd_calc_currcc_gkeyll(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
   mrc_fld_put_as(f, fld);
 }
 
+// ----------------------------------------------------------------------
+// ggcm_mhd_calc_currcc
+
 void
 ggcm_mhd_calc_currcc(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
 		     struct mrc_fld *currcc)
@@ -150,16 +153,16 @@ ggcm_mhd_calc_currcc(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
   int mhd_type;
   mrc_fld_get_param_int(fld, "mhd_type", &mhd_type);
 
-  switch (mhd_type) {
-  case MT_GKEYLL:
-    ggcm_mhd_calc_currcc_gkeyll(mhd, fld, m, currcc);
-    break;
-  case MT_FULLY_CONSERVATIVE_CC:
-    ggcm_mhd_calc_currcc_fc_cc(mhd, fld, m, currcc);
-    break;
-  case MT_SEMI_CONSERVATIVE_GGCM:
-  default:
-    ggcm_mhd_calc_currcc_sc_ggcm(mhd, fld, m, currcc);
-    break;
+  if (MT_FORMULATION(mhd_type) == MT_FORMULATION_GKEYLL) {
+    return ggcm_mhd_calc_currcc_gkeyll(mhd, fld, m, currcc);
+  } else { // MHD
+    switch (MT_BGRID(mhd_type)) {
+    case MT_BGRID_CC:
+      return ggcm_mhd_calc_currcc_cc(mhd, fld, m, currcc);
+    case MT_BGRID_FC_GGCM:
+      return ggcm_mhd_calc_currcc_fc_ggcm(mhd, fld, m, currcc);
+    }
   }
+
+  assert(0);
 }
