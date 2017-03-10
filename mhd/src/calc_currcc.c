@@ -13,6 +13,7 @@
 #include "pde/pde_defs.h"
 
 #define OPT_FLD1D OPT_FLD1D_C_ARRAY
+#define OPT_STAGGER OPT_STAGGER_GGCM
 
 #include "pde/pde_mhd_calc_current.c"
 
@@ -23,47 +24,18 @@ static void
 ggcm_mhd_calc_currcc_bgrid_fc_ggcm(struct ggcm_mhd *mhd, struct mrc_fld *f, int m,
 				   struct mrc_fld *c)
 {
-  int gdims[3];
-  mrc_domain_get_global_dims(f->_domain, gdims);
-  int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
+  fld3d_t p_U, p_J;
+  fld3d_setup(&p_U, f);
+  fld3d_setup(&p_J, c);
+    
+  for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
+    pde_patch_set(p);
+    fld3d_get(&p_U, p);
+    fld3d_get(&p_J, p);
+    fld3d_t p_B = fld3d_make_view(p_U, m);
 
-  struct mrc_fld *t = mrc_fld_duplicate(c);
-  
-  for (int p = 0; p < mrc_fld_nr_patches(t); p++) {
-    float *bd4x = ggcm_mhd_crds_get_crd_p(mhd->crds, 0, BD4, p);
-    float *bd4y = ggcm_mhd_crds_get_crd_p(mhd->crds, 1, BD4, p);
-    float *bd4z = ggcm_mhd_crds_get_crd_p(mhd->crds, 2, BD4, p);
-
-    mrc_fld_foreach(t,ix,iy,iz, 1, 1) {
-      // compute current on edge first
-      M3(t,0,ix,iy,iz, p) =
-	(M3(f, m+2, ix,iy+dy,iz, p) - M3(f, m+2, ix,iy,iz, p)) * bd4y[iy] -
-	(M3(f, m+1, ix,iy,iz+dz, p) - M3(f, m+1, ix,iy,iz, p)) * bd4z[iz];
-      M3(t,1,ix,iy,iz, p) =
-	(M3(f, m  , ix,iy,iz+dz, p) - M3(f, m  , ix,iy,iz, p)) * bd4z[iz] -
-	(M3(f, m+2, ix+dx,iy,iz, p) - M3(f, m+2, ix,iy,iz, p)) * bd4x[ix];
-      M3(t,2, ix,iy,iz, p) =
-	(M3(f,m+1 , ix+dx,iy,iz, p) - M3(f, m+1, ix,iy,iz, p)) * bd4x[ix] -
-	(M3(f,m   , ix,iy+dy,iz, p) - M3(f, m  , ix,iy,iz, p)) * bd4y[iy];
-    } mrc_fld_foreach_end;
+    patch_calc_current_cc_bgrid_fc(p_J, p_B);
   }
-
-  for (int p = 0; p < mrc_fld_nr_patches(c); p++) {
-    mrc_fld_foreach(c, ix,iy,iz, 1, 1) {
-      // average to the center
-      M3(c, 0, ix,iy,iz, p) = 0.25f *
-	(M3(t, 0, ix,iy,iz   , p) + M3(t, 0, ix,iy-dy,iz   , p) +
-	 M3(t, 0, ix,iy,iz-dz, p) + M3(t, 0, ix,iy-dy,iz-dz, p));
-      M3(c, 1, ix,iy,iz, p) = 0.25f *
-	(M3(t, 1, ix,iy,iz   , p) + M3(t, 1, ix-dx,iy,iz   , p) +
-	 M3(t, 1, ix,iy,iz-dz, p) + M3(t, 1, ix-dx,iy,iz-dz, p));
-      M3(c, 2, ix,iy,iz, p) = 0.25f *
-	(M3(t, 2, ix,iy   ,iz, p) + M3(t, 2, ix-dx,iy   ,iz, p) +
-	 M3(t, 2, ix,iy-dy,iz, p) + M3(t, 2, ix-dx,iy-dy,iz, p));
-    } mrc_fld_foreach_end;
-  }
-
-  mrc_fld_destroy(t); 
 }
 
 // ----------------------------------------------------------------------
