@@ -23,6 +23,13 @@ ggcm_mhd_dipole_sub_vector_potential(struct ggcm_mhd_dipole *mhd_dipole, int m,
 				     double x[3], float x0[3], float moment[3], float xmir)
 {
   mrc_fld_data_t r1lim = mhd_dipole->r1lim / mhd_dipole->mhd->xxnorm;
+  struct ggcm_mhd *mhd = mhd_dipole->mhd;
+  // dipolestrength is given in terms of external B field units,
+  // so let's get it in B field code units first
+  mrc_fld_data_t dipolestrength_code = mhd_dipole->dipolestrength / mhd->bbnorm;
+  // get the equatorial distance in code units
+  mrc_fld_data_t dipolestrength_r_code = mhd_dipole->dipolestrength_r / mhd->xxnorm;
+  mrc_fld_data_t alpha = dipolestrength_code * pow(dipolestrength_r_code, 3.);
   
   // find x_prime (x - x0), and r3i (1 / r**3)
   mrc_fld_data_t x_prime[3], r2 = 0.0;
@@ -45,9 +52,9 @@ ggcm_mhd_dipole_sub_vector_potential(struct ggcm_mhd_dipole *mhd_dipole, int m,
 
   // A = m x r / r**3
   switch (m) {
-  case 0: return (moment[1] * x_prime[2] - moment[2] * x_prime[1]) * r3i;
-  case 1: return (moment[2] * x_prime[0] - moment[0] * x_prime[2]) * r3i;
-  case 2: return (moment[0] * x_prime[1] - moment[1] * x_prime[0]) * r3i;
+  case 0: return alpha * (moment[1] * x_prime[2] - moment[2] * x_prime[1]) * r3i;
+  case 1: return alpha * (moment[2] * x_prime[0] - moment[0] * x_prime[2]) * r3i;
+  case 2: return alpha * (moment[0] * x_prime[1] - moment[1] * x_prime[0]) * r3i;
   default: assert(0);
   }
 }

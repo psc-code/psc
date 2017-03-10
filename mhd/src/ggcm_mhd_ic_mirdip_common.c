@@ -21,7 +21,7 @@ struct ggcm_mhd_ic_mirdip {
   float prat; // determines initial interior pressure as a fraction of solar wind pressure
   float stretch_tail; // vx == 0 is stretched by this factor on the tail side
 
-  float dipole_moment[3];
+  float dipole_moment[3]; // not actually, the dipole moment, just the direction
 
   // solar wind values to use if there is no "bndsw" object around
   double bnvals[SW_NR];

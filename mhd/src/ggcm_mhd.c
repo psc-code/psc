@@ -177,12 +177,14 @@ ggcm_mhd_setup_normalization(struct ggcm_mhd *mhd)
   float x0 = mhd->par.norm_length;
   float b0 = mhd->par.norm_B;
   float n0 = mhd->par.norm_density;
+  float mu00 = mhd->par.norm_mu0;
+  
   mhd->xxnorm = x0;
   mhd->bbnorm = b0;
   mhd->rrnorm = n0;
-  mhd->vvnorm = b0 / sqrt(mhd->par.mu0 * n0 * mhd->par.amu);
+  mhd->vvnorm = b0 / sqrt(mu00 * n0 * mhd->par.amu);
   mhd->ppnorm = sqr(mhd->vvnorm) * (n0 * mhd->par.amu);
-  mhd->ccnorm = b0 / (x0 * mhd->par.mu0);
+  mhd->ccnorm = b0 / (x0 * mu00);
   mhd->eenorm = mhd->vvnorm * b0;
   mhd->resnorm = mhd->eenorm / mhd->ccnorm;
   mhd->tnorm = x0 / mhd->vvnorm;
@@ -192,8 +194,9 @@ ggcm_mhd_setup_normalization(struct ggcm_mhd *mhd)
   mpi_printf(comm, "NORMALIZATION: based on x0 = %g m\n", mhd->par.norm_length);
   mpi_printf(comm, "NORMALIZATION:          B0 = %g T\n", mhd->par.norm_B);
   mpi_printf(comm, "NORMALIZATION:          n0 = %g 1/m^3\n", mhd->par.norm_density);
-  mpi_printf(comm, "NORMALIZATION:          mu0 = %g N/A^2\n", mhd->par.mu0);
-  mpi_printf(comm, "NORMALIZATION:          amu = %g kg\n", mhd->par.amu);
+  mpi_printf(comm, "NORMALIZATION:        mu00 = %g N/A^2\n", mhd->par.norm_mu0);
+  mpi_printf(comm, "NORMALIZATION:         amu = %g kg\n", mhd->par.amu);
+  mpi_printf(comm, "NORMALIZATION:    mu0_code = %g N/A^2\n", mhd->par.mu0_code);
   mpi_printf(comm, "NORMALIZATION: xxnorm  = %g m\n", mhd->xxnorm);
   mpi_printf(comm, "NORMALIZATION: bbnorm  = %g T\n", mhd->bbnorm);
   mpi_printf(comm, "NORMALIZATION: rrnorm  = %g 1/m^3\n", mhd->rrnorm);
@@ -204,6 +207,10 @@ ggcm_mhd_setup_normalization(struct ggcm_mhd *mhd)
   mpi_printf(comm, "NORMALIZATION: resnorm = %g \n", mhd->resnorm);
   mpi_printf(comm, "NORMALIZATION: tnorm   = %g s\n", mhd->tnorm);
   mpi_printf(comm, "NORMALIZATION: qqnorm  = %g C\n", mhd->qqnorm);
+
+  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
+  mrc_crds_set_param_double(crds, "norm_length", mhd->xxnorm);
+  mrc_crds_set_param_double(crds, "norm_length_scale", mhd->par.xxnorm0);
 
   mhd->xxnorm /= mhd->par.xxnorm0;
   mhd->bbnorm /= mhd->par.bbnorm0;
@@ -398,7 +405,7 @@ void
 ggcm_mhd_default_box(struct ggcm_mhd *mhd)
 {
   // use normalize units
-  mhd->par.mu0 = 1.f;
+  mhd->par.norm_mu0 = 1.f;
   mhd->par.amu = 1.f;
 
   mhd->par.diffco = 0.f;
@@ -449,11 +456,12 @@ static struct param ggcm_mhd_descr[] = {
   { "resnorm0"        , VAR(par.resnorm0)    , PARAM_FLOAT(1.)       },
   { "tnorm0"          , VAR(par.tnorm0)      , PARAM_FLOAT(1.)       },
 
-  { "norm_length"     , VAR(par.norm_length) , PARAM_FLOAT(1.)       },
-  { "norm_B"          , VAR(par.norm_B)      , PARAM_FLOAT(1.)       },
-  { "norm_density"    , VAR(par.norm_density), PARAM_FLOAT(1.)       },
-  { "mu0"             , VAR(par.mu0)         , PARAM_FLOAT(1.2566370E-06) },
-  { "amu"             , VAR(par.amu)         , PARAM_FLOAT(1.6605655E-27) },
+  { "norm_length"           , VAR(par.norm_length)           , PARAM_FLOAT(1.)            },
+  { "norm_B"                , VAR(par.norm_B)                , PARAM_FLOAT(1.)            },
+  { "norm_density"          , VAR(par.norm_density)          , PARAM_FLOAT(1.)            },
+  { "norm_mu0"              , VAR(par.norm_mu0)              , PARAM_FLOAT(1.2566370E-06) },
+  { "mu0_code"              , VAR(par.mu0_code)              , PARAM_FLOAT(1.)            },
+  { "amu"                   , VAR(par.amu)                   , PARAM_FLOAT(1.6605655E-27) },
 
   { "diffconstant"    , VAR(par.diffco)      , PARAM_FLOAT(.03f)     },
   { "diffthreshold"   , VAR(par.diffth)      , PARAM_FLOAT(.75f)     },

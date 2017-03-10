@@ -27,7 +27,7 @@ mpirun -n 8 ~/src/openggcm/target-build/csrc/libmrc/mhd/tests/mhd_mirdip \
     --ggcm_mhd_ic_rr  56. --ggcm_mhd_ic_pp  3800. --ggcm_mhd_ic_vx  140. --ggcm_mhd_ic_bz  -77. \
     --ggcm_mhd_ic_rrini 56. --ggcm_mhd_ic_xmir -2.578125 --ggcm_mhd_ic_prat 1. \
     --ggcm_mhd_ic_xxx1 2.5 --ggcm_mhd_ic_xxx2 2. --ggcm_mhd_ic_stretch_tail 1. \
-    --xggcm_mhd_ic_dipole_momentx 0. --xggcm_mhd_ic_dipole_momenty 0. --xggcm_mhd_ic_dipole_momentz 0. \
+    --ggcm_mhd_ic_dipole_momentx 0. --ggcm_mhd_ic_dipole_momenty 0. --ggcm_mhd_ic_dipole_momentz -1. \
     --ggcm_mhd_dipole_r1lim .5 \
     \
     --ggcm_mhd_step_type mhdcc_double \
@@ -50,9 +50,15 @@ mpirun -n 8 ~/src/openggcm/target-build/csrc/libmrc/mhd/tests/mhd_mirdip \
     --ggcm_mhd_d_i 0. \
     --ggcm_mhd_magdiffu const --ggcm_mhd_diffconstant 0e4. --ggcm_mhd_diff_obnd 4 --ggcm_mhd_diffsphere .8 \
     \
-    --ggcm_mhd_norm_length ${RG} \
+    --ggcm_mhd_norm_length 1. \
+    --ggcm_mhd_norm_B 1. \
+    --ggcm_mhd_norm_density 1. \
+    --ggcm_mhd_norm_mu0 1. \
+    --ggcm_mhd_amu 1. \
+    --ggcm_mhd_mu0_code 1.2566370E-06 \
     --ggcm_mhd_xxnorm0 ${RG} \
-    --ggcm_mhd_norm_B ${dipolestrength}e-9 \
-    --ggcm_mhd_norm_density 40e6 \
+    --ggcm_mhd_rrnorm0 1.6605655E-21 \
+    --ggcm_mhd_dipole_moment_distance ${RG} \
+    --ggcm_mhd_dipole_dipolestrength ${dipolestrength} \
     \
     2>&1 | tee log

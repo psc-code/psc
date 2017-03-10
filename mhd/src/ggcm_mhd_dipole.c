@@ -113,6 +113,8 @@ ggcm_mhd_dipole_init()
 static struct param ggcm_mhd_dipole_descr[] = {
   { "mhd"                , VAR(mhd)                , PARAM_OBJ(ggcm_mhd)    },
   { "r1lim"              , VAR(r1lim)              , PARAM_DOUBLE(1.5)      },
+  { "dipolestrength"     , VAR(dipolestrength)     , PARAM_DOUBLE(30574.)   },
+  { "dipolestrength_r"   , VAR(dipolestrength_r)   , PARAM_DOUBLE(1.)       },
   {},
 };
 #undef VAR
