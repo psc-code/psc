@@ -61,11 +61,11 @@ norm_test(double norm_length, double norm_length_scale)
 }
 
 // ----------------------------------------------------------------------
-// norm_test_non_uniform
+// norm_test_write
 
 static void
-norm_test_non_uniform(double norm_length, double norm_length_scale,
-		      const char *crds_gen_type, double xl, double xh)
+norm_test_write(double norm_length, double norm_length_scale,
+		const char *crds_gen_type, double xl, double xh)
 {
   struct mrc_domain *domain = mrc_domain_create(MPI_COMM_WORLD);
   mrc_domain_set_type(domain, "simple");
@@ -143,7 +143,7 @@ test_2()
 static void
 test_3()
 {
-  norm_test_non_uniform(1., 1., "ggcm_yz", -1., 1.);
+  norm_test_write(1., 1., "ggcm_yz", -1., 1.);
 }
 
 // ----------------------------------------------------------------------
@@ -154,7 +154,7 @@ test_3()
 static void
 test_4()
 {
-  norm_test_non_uniform(1., 1000., "ggcm_yz", -1., 1.);
+  norm_test_write(1., 1000., "ggcm_yz", -1., 1.);
 }
 
 // ----------------------------------------------------------------------
@@ -165,7 +165,7 @@ test_4()
 static void
 test_5()
 {
-  norm_test_non_uniform(1., 1., "ggcm_x_tanh", -20., 200.);
+  norm_test_write(1., 1., "ggcm_x_tanh", -20., 200.);
 }
 
 // ----------------------------------------------------------------------
@@ -176,7 +176,7 @@ test_5()
 static void
 test_6()
 {
-  norm_test_non_uniform(1., 1000., "ggcm_x_tanh", -20., 200.);
+  norm_test_write(1., 1000., "ggcm_x_tanh", -20., 200.);
 }
 
 // ----------------------------------------------------------------------
@@ -187,7 +187,7 @@ test_6()
 static void
 test_7()
 {
-  norm_test_non_uniform(1., 1., "ggcm_x_cubic", -20., 200.);
+  norm_test_write(1., 1., "ggcm_x_cubic", -20., 200.);
 }
 
 // ----------------------------------------------------------------------
@@ -198,7 +198,7 @@ test_7()
 static void
 test_8()
 {
-  norm_test_non_uniform(1., 1000., "ggcm_x_cubic", -20., 200.);
+  norm_test_write(1., 1000., "ggcm_x_cubic", -20., 200.);
 }
 
 // ----------------------------------------------------------------------
@@ -211,7 +211,7 @@ static void
 test_9()
 {
   const double R_E = 6370e3;
-  norm_test_non_uniform(R_E, R_E, "ggcm_x_cubic", -20., 200.);
+  norm_test_write(R_E, R_E, "ggcm_x_cubic", -20., 200.);
 }
 
 // ----------------------------------------------------------------------
@@ -224,7 +224,7 @@ static void
 test_10()
 {
   const double R_E = 6370e3;
-  norm_test_non_uniform(1., R_E, "ggcm_x_cubic", -20., 200.);
+  norm_test_write(1., R_E, "ggcm_x_cubic", -20., 200.);
 }
 
 // ----------------------------------------------------------------------
