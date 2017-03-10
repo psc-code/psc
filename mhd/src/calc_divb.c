@@ -39,7 +39,7 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
   int mhd_type;
   mrc_fld_get_param_int(fld, "mhd_type", &mhd_type);
 
-  if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM) {
+  if (MT_BGRID(mhd_type) == MT_BGRID_FC_GGCM) {
     for (int p = 0; p < mrc_fld_nr_patches(divb); p++) {
       struct mrc_patch_info info;
       mrc_domain_get_local_patch_info(fld->_domain, p, &info);
@@ -60,8 +60,7 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
 	max = mrc_fld_max(max, mrc_fld_abs(M3(d,0, ix,iy,iz, p)));
       } mrc_fld_foreach_end;
     }
-  } else if (mhd_type == MT_SEMI_CONSERVATIVE ||
-	     mhd_type == MT_FULLY_CONSERVATIVE) {
+  } else if (MT_BGRID(mhd_type) == MT_BGRID_FC) {
     for (int p = 0; p < mrc_fld_nr_patches(divb); p++) {
       float *bd3x = ggcm_mhd_crds_get_crd_p(mhd->crds, 0, BD3, p);
       float *bd3y = ggcm_mhd_crds_get_crd_p(mhd->crds, 1, BD3, p);
@@ -78,7 +77,7 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
 	max = mrc_fld_max(max, mrc_fld_abs(M3(d,0, ix,iy,iz, p)));
       } mrc_fld_foreach_end;
     }
-  } else if (mhd_type == MT_FULLY_CONSERVATIVE_CC) {
+  } else if (MT_BGRID(mhd_type) == MT_BGRID_CC) {
     for (int p = 0; p < mrc_fld_nr_patches(divb); p++) {
       float *fd1x = ggcm_mhd_crds_get_crd_p(mhd->crds, 0, FD1, p);
       float *fd1y = ggcm_mhd_crds_get_crd_p(mhd->crds, 1, FD1, p);
