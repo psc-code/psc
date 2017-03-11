@@ -51,8 +51,11 @@ dnl echo HAVE_LIBHDF5 $ac_cv_lib_hdf5_H5Gcreate2
          ])
 
    AS_IF([test "$have_hdf5" = "yes"],
-   	 [AC_CHECK_LIB([hdf5], [H5Pset_dxpl_mpio],
-	       [have_hdf5_parallel="yes"])
+   	 [save_LIBS="$LIBS"
+          LIBS="$H5_LIBS $LIBS"
+	  AC_CHECK_LIB([hdf5], [H5Pset_dxpl_mpio],
+	               [have_hdf5_parallel="yes"])
+	  LIBS="$save_LIBS"
          ])
 
 ])
