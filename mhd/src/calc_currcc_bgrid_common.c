@@ -10,13 +10,14 @@
 #endif
 
 #include "pde/pde_mhd_calc_current.c"
+#include "pde/pde_mhd_divb.c"
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_calc_curcc_bgrid
+// ggcm_mhd_calc_curcc_bgrid_*
 
 void
-ggcm_mhd_calc_currcc_bgrid(struct ggcm_mhd *mhd, struct mrc_fld *f, int m,
-			   struct mrc_fld *c)
+BGRID_SFX(ggcm_mhd_calc_currcc)(struct ggcm_mhd *mhd, struct mrc_fld *f, int m,
+				struct mrc_fld *c)
 {
   static bool is_setup = false;
   if (!is_setup) {
@@ -39,6 +40,41 @@ ggcm_mhd_calc_currcc_bgrid(struct ggcm_mhd *mhd, struct mrc_fld *f, int m,
     patch_calc_current_cc_bgrid_cc(p_J, p_B);
 #elif MT == MT_BGRID_FC || MT == MT_BGRID_FC_GGCM
     patch_calc_current_cc_bgrid_fc(p_J, p_B);
+#else
+#error unknown MT
+#endif
+  }
+
+  if (0) {
+    pde_free();
+  }
+}
+
+void
+BGRID_SFX(ggcm_mhd_calc_divb)(struct ggcm_mhd *mhd, struct mrc_fld *f, struct mrc_fld *divB)
+{
+  static bool is_setup = false;
+  if (!is_setup) {
+    pde_setup(f);
+    pde_mhd_setup(mhd);
+    is_setup = true;
+  }
+  
+  fld3d_t p_U, p_divB;
+  fld3d_setup(&p_U, f);
+  fld3d_setup(&p_divB, divB);
+
+  for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
+    pde_patch_set(p);
+    fld3d_get(&p_U, p);
+    fld3d_get(&p_divB, p);
+
+#if MT == MT_BGRID_CC
+    patch_calc_divb_bgrid_cc(p_divB, fld3d_make_view(p_U, BX));
+#elif MT == MT_BGRID_FC
+    patch_calc_divb_bgrid_fc(p_divB, fld3d_make_view(p_U, BX));
+#elif MT == MT_BGRID_FC_GGCM
+    patch_calc_divb_bgrid_fc_ggcm(p_divB, fld3d_make_view(p_U, BX));
 #else
 #error unknown MT
 #endif
