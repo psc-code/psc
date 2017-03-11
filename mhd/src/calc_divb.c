@@ -66,11 +66,6 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
   if (gdims[2] == 1) hz = 0.;
   int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
 
-  struct mrc_fld *ymask = NULL;
-  if (mhd->ymask) {
-    ymask = mrc_fld_get_as(mhd->ymask, FLD_TYPE);
-  }
-
   if (MT_BGRID(mhd_type) == MT_BGRID_FC_GGCM) {
     for (int p = 0; p < mrc_fld_nr_patches(divb); p++) {
       struct mrc_patch_info info;
@@ -104,9 +99,15 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
     assert(0);
   }
 
+#if 0
+  // FIXME, do we want to keep this?
+  // If so, needs mrc_fld_mul() (pointwise multiplication)
   if (mhd->ymask) {
+    struct mrc_fld *ymask = mrc_fld_get_as(mhd->ymask, FLD_TYPE);
+    mrc_fld_mul(divb, ymask);
     mrc_fld_put_as(ymask, mhd->ymask);
   }
+#endif
 
  out: ;
   double max_divb = mrc_fld_norm(d);
