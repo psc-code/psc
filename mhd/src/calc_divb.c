@@ -66,13 +66,10 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
   if (gdims[2] == 1) hz = 0.;
   int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
 
-
   struct mrc_fld *ymask = NULL;
   if (mhd->ymask) {
     ymask = mrc_fld_get_as(mhd->ymask, FLD_TYPE);
   }
-
-  mrc_fld_data_t max = 0.;
 
   if (MT_BGRID(mhd_type) == MT_BGRID_FC_GGCM) {
     for (int p = 0; p < mrc_fld_nr_patches(divb); p++) {
@@ -88,11 +85,6 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
 	  (BX_(f, ix,iy,iz, p) - BX_(f, ix-dx,iy,iz, p)) * bd3x[ix] +
 	  (BY_(f, ix,iy,iz, p) - BY_(f, ix,iy-dy,iz, p)) * bd3y[iy] +
 	  (BZ_(f, ix,iy,iz, p) - BZ_(f, ix,iy,iz-dz, p)) * bd3z[iz];
- 	
-	// the incoming solar wind won't match and hence divb != 0 here
-	if ((info.off[0] == 0 && ix <= 0) || M3(ymask, 0, ix,iy,iz, p) == 0)
-	  continue;
-	max = mrc_fld_max(max, mrc_fld_abs(M3(d,0, ix,iy,iz, p)));
       } mrc_fld_foreach_end;
     }
   } else if (MT_BGRID(mhd_type) == MT_BGRID_FC) {
@@ -106,10 +98,6 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
 	  (BX_(f, ix+dx,iy,iz, p) - BX_(f, ix,iy,iz, p)) * hx * bd3x[ix] +
 	  (BY_(f, ix,iy+dy,iz, p) - BY_(f, ix,iy,iz, p)) * hy * bd3y[iy] +
 	  (BZ_(f, ix,iy,iz+dz, p) - BZ_(f, ix,iy,iz, p)) * hz * bd3z[iz];
-
-	if (M3(ymask, 0, ix,iy,iz, p) == 0)
-	  continue;
-	max = mrc_fld_max(max, mrc_fld_abs(M3(d,0, ix,iy,iz, p)));
       } mrc_fld_foreach_end;
     }
   } else {
@@ -120,11 +108,10 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
     mrc_fld_put_as(ymask, mhd->ymask);
   }
 
-  mrc_fld_data_t max_divb;
-  MPI_Allreduce(&max, &max_divb, 1, MPI_MRC_FLD_DATA_T, MPI_MAX, ggcm_mhd_comm(mhd));
+ out: ;
+  double max_divb = mrc_fld_norm(d);
   mpi_printf(ggcm_mhd_comm(mhd), "max divb = %g\n", max_divb);
 
- out:
   mrc_fld_put_as(f, fld);
   mrc_fld_put_as(d, divb);
 
