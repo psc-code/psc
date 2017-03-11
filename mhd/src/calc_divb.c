@@ -50,6 +50,22 @@ ggcm_mhd_calc_divb_bgrid_fc(struct ggcm_mhd *mhd, struct mrc_fld *f, struct mrc_
   }
 }
 
+static void
+ggcm_mhd_calc_divb_bgrid_fc_ggcm(struct ggcm_mhd *mhd, struct mrc_fld *f, struct mrc_fld *divB)
+{
+  fld3d_t p_U, p_divB;
+  fld3d_setup(&p_U, f);
+  fld3d_setup(&p_divB, divB);
+
+  for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
+    pde_patch_set(p);
+    fld3d_get(&p_U, p);
+    fld3d_get(&p_divB, p);
+
+    patch_calc_divb_bgrid_fc_ggcm(p_divB, fld3d_make_view(p_U, BX));
+  }
+}
+
 // ----------------------------------------------------------------------
 // ggcm_mhd_calc_divb
 
@@ -71,40 +87,14 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
 
   if (MT_BGRID(mhd_type) == MT_BGRID_CC) {
     ggcm_mhd_calc_divb_bgrid_cc(mhd, f, d);
-    goto out;
   } else if (MT_BGRID(mhd_type) == MT_BGRID_FC) {
     ggcm_mhd_calc_divb_bgrid_fc(mhd, f, d);
-    goto out;
-  }
-  
-  mrc_fld_data_t hx = 1., hy = 1., hz = 1.;
-  int gdims[3];
-  mrc_domain_get_global_dims(fld->_domain, gdims);
-  if (gdims[0] == 1) hx = 0.;
-  if (gdims[1] == 1) hy = 0.;
-  if (gdims[2] == 1) hz = 0.;
-  int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
-
-  if (MT_BGRID(mhd_type) == MT_BGRID_FC_GGCM) {
-    for (int p = 0; p < mrc_fld_nr_patches(divb); p++) {
-      struct mrc_patch_info info;
-      mrc_domain_get_local_patch_info(fld->_domain, p, &info);
-  
-      float *bd3x = ggcm_mhd_crds_get_crd_p(mhd->crds, 0, BD3, p);
-      float *bd3y = ggcm_mhd_crds_get_crd_p(mhd->crds, 1, BD3, p);
-      float *bd3z = ggcm_mhd_crds_get_crd_p(mhd->crds, 2, BD3, p);
-
-      mrc_fld_foreach(divb, ix,iy,iz, 0, 0) {
-	M3(d,0, ix,iy,iz, p) =
-	  (BX_(f, ix,iy,iz, p) - BX_(f, ix-dx,iy,iz, p)) * bd3x[ix] +
-	  (BY_(f, ix,iy,iz, p) - BY_(f, ix,iy-dy,iz, p)) * bd3y[iy] +
-	  (BZ_(f, ix,iy,iz, p) - BZ_(f, ix,iy,iz-dz, p)) * bd3z[iz];
-      } mrc_fld_foreach_end;
-    }
+  } else if (MT_BGRID(mhd_type) == MT_BGRID_FC_GGCM) {
+    ggcm_mhd_calc_divb_bgrid_fc_ggcm(mhd, f, d);
   } else {
     assert(0);
   }
-
+  
 #if 0
   // FIXME, do we want to keep this?
   // If so, needs mrc_fld_mul() (pointwise multiplication)
@@ -115,7 +105,6 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
   }
 #endif
 
- out: ;
   double max_divb = mrc_fld_norm(d);
   mpi_printf(ggcm_mhd_comm(mhd), "max divb = %g\n", max_divb);
 
