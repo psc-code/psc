@@ -71,10 +71,8 @@ BGRID_SFX(ggcm_mhd_calc_divb)(struct ggcm_mhd *mhd, struct mrc_fld *f, struct mr
 
 #if MT == MT_BGRID_CC
     patch_calc_divb_bgrid_cc(p_divB, fld3d_make_view(p_U, BX));
-#elif MT == MT_BGRID_FC
+#elif MT == MT_BGRID_FC || MT == MT_BGRID_FC_GGCM
     patch_calc_divb_bgrid_fc(p_divB, fld3d_make_view(p_U, BX));
-#elif MT == MT_BGRID_FC_GGCM
-    patch_calc_divb_bgrid_fc_ggcm(p_divB, fld3d_make_view(p_U, BX));
 #else
 #error unknown MT
 #endif
