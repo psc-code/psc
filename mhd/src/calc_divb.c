@@ -19,7 +19,7 @@
 #include "pde/pde_mhd_divb.c"
 
 static void
-ggcm_mhd_calc_divb_cc(struct ggcm_mhd *mhd, struct mrc_fld *f, struct mrc_fld *divB)
+ggcm_mhd_calc_divb_bgrid_cc(struct ggcm_mhd *mhd, struct mrc_fld *f, struct mrc_fld *divB)
 {
   fld3d_t p_U, p_divB;
   fld3d_setup(&p_U, f);
@@ -31,6 +31,22 @@ ggcm_mhd_calc_divb_cc(struct ggcm_mhd *mhd, struct mrc_fld *f, struct mrc_fld *d
     fld3d_get(&p_divB, p);
 
     patch_calc_divb_bgrid_cc(p_divB, fld3d_make_view(p_U, BX));
+  }
+}
+
+static void
+ggcm_mhd_calc_divb_bgrid_fc(struct ggcm_mhd *mhd, struct mrc_fld *f, struct mrc_fld *divB)
+{
+  fld3d_t p_U, p_divB;
+  fld3d_setup(&p_U, f);
+  fld3d_setup(&p_divB, divB);
+
+  for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
+    pde_patch_set(p);
+    fld3d_get(&p_U, p);
+    fld3d_get(&p_divB, p);
+
+    patch_calc_divb_bgrid_fc(p_divB, fld3d_make_view(p_U, BX));
   }
 }
 
@@ -54,7 +70,10 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
   struct mrc_fld *d = mrc_fld_get_as(divb, FLD_TYPE);
 
   if (MT_BGRID(mhd_type) == MT_BGRID_CC) {
-    ggcm_mhd_calc_divb_cc(mhd, f, d);
+    ggcm_mhd_calc_divb_bgrid_cc(mhd, f, d);
+    goto out;
+  } else if (MT_BGRID(mhd_type) == MT_BGRID_FC) {
+    ggcm_mhd_calc_divb_bgrid_fc(mhd, f, d);
     goto out;
   }
   
@@ -80,19 +99,6 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
 	  (BX_(f, ix,iy,iz, p) - BX_(f, ix-dx,iy,iz, p)) * bd3x[ix] +
 	  (BY_(f, ix,iy,iz, p) - BY_(f, ix,iy-dy,iz, p)) * bd3y[iy] +
 	  (BZ_(f, ix,iy,iz, p) - BZ_(f, ix,iy,iz-dz, p)) * bd3z[iz];
-      } mrc_fld_foreach_end;
-    }
-  } else if (MT_BGRID(mhd_type) == MT_BGRID_FC) {
-    for (int p = 0; p < mrc_fld_nr_patches(divb); p++) {
-      float *bd3x = ggcm_mhd_crds_get_crd_p(mhd->crds, 0, BD3, p);
-      float *bd3y = ggcm_mhd_crds_get_crd_p(mhd->crds, 1, BD3, p);
-      float *bd3z = ggcm_mhd_crds_get_crd_p(mhd->crds, 2, BD3, p);
-
-      mrc_fld_foreach(divb, ix,iy,iz, 0, 0) {
-	M3(d,0, ix,iy,iz, p) =
-	  (BX_(f, ix+dx,iy,iz, p) - BX_(f, ix,iy,iz, p)) * hx * bd3x[ix] +
-	  (BY_(f, ix,iy+dy,iz, p) - BY_(f, ix,iy,iz, p)) * hy * bd3y[iy] +
-	  (BZ_(f, ix,iy,iz+dz, p) - BZ_(f, ix,iy,iz, p)) * hz * bd3z[iz];
       } mrc_fld_foreach_end;
     }
   } else {
