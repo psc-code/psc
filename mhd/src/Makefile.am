@@ -57,11 +57,11 @@ libmhd_la_SOURCES = \
 	ggcm_mhd_diag_item_e.c \
 	ggcm_mhd_diag_item_gkeyll_5m.c \
 	ggcm_mhd_diag_item_misc.c \
-	calc_currcc.c \
-	calc_currcc_bgrid_fc_ggcm.c \
-	calc_currcc_bgrid_fc.c \
-	calc_currcc_bgrid_cc.c \
-	calc_divb.c \
+	\
+	ggcm_mhd_bgrid.c \
+	ggcm_mhd_bgrid_fc_ggcm.c \
+	ggcm_mhd_bgrid_fc.c \
+	ggcm_mhd_bgrid_cc.c \
 	\
 	ggcm_mhd_dipole.c \
 	ggcm_mhd_dipole_none.c \

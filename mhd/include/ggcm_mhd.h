@@ -46,17 +46,6 @@ void ggcm_mhd_put_fld_as_fortran(struct mrc_fld *fld, struct mrc_fld *fld_base);
 
 void ggcm_mhd_setup_ts(struct ggcm_mhd *mhd, struct mrc_ts *ts);
 
-void ggcm_mhd_calc_currcc_bgrid_fc_ggcm(struct ggcm_mhd *mhd, struct mrc_fld *f, int m,
-					struct mrc_fld *c);
-void ggcm_mhd_calc_currcc_bgrid_fc(struct ggcm_mhd *mhd, struct mrc_fld *f, int m,
-				   struct mrc_fld *c);
-void ggcm_mhd_calc_currcc_bgrid_cc(struct ggcm_mhd *mhd, struct mrc_fld *f, int m,
-				   struct mrc_fld *c);
-void ggcm_mhd_calc_divb_bgrid_fc_ggcm(struct ggcm_mhd *mhd, struct mrc_fld *f, struct mrc_fld *d);
-void ggcm_mhd_calc_divb_bgrid_fc(struct ggcm_mhd *mhd, struct mrc_fld *f, struct mrc_fld *d);
-void ggcm_mhd_calc_divb_bgrid_cc(struct ggcm_mhd *mhd, struct mrc_fld *f, struct mrc_fld *d);
-
-
 #define MT_FORMULATION_MASK 3
 #define MT_FORMULATION_PRIMITIVE 0
 #define MT_FORMULATION_SCONS 1

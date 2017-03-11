@@ -139,6 +139,16 @@ extern struct ggcm_mhd_ops ggcm_mhd_ops_box;
 
 // ----------------------------------------------------------------------
 
+void ggcm_mhd_calc_currcc_bgrid_fc_ggcm(struct ggcm_mhd *mhd, struct mrc_fld *f, int m,
+					struct mrc_fld *c);
+void ggcm_mhd_calc_currcc_bgrid_fc(struct ggcm_mhd *mhd, struct mrc_fld *f, int m,
+				   struct mrc_fld *c);
+void ggcm_mhd_calc_currcc_bgrid_cc(struct ggcm_mhd *mhd, struct mrc_fld *f, int m,
+				   struct mrc_fld *c);
+void ggcm_mhd_calc_divb_bgrid_fc_ggcm(struct ggcm_mhd *mhd, struct mrc_fld *f, struct mrc_fld *d);
+void ggcm_mhd_calc_divb_bgrid_fc(struct ggcm_mhd *mhd, struct mrc_fld *f, struct mrc_fld *d);
+void ggcm_mhd_calc_divb_bgrid_cc(struct ggcm_mhd *mhd, struct mrc_fld *f, struct mrc_fld *d);
+
 // helpers for subclasses to use
 
 struct mrc_fld *ggcm_mhd_get_3d_fld(struct ggcm_mhd *mhd, int nr_comps);

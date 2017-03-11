@@ -7,4 +7,4 @@
 #define MT MT_BGRID_FC_GGCM
 #define BGRID_SFX(x) x ## _bgrid_fc_ggcm
 
-#include "calc_currcc_bgrid_common.c"
+#include "ggcm_mhd_bgrid_common.c"
