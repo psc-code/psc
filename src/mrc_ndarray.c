@@ -337,6 +337,21 @@ mrc_ndarray_scale(struct mrc_ndarray *nd, double val)
 }
 
 // ----------------------------------------------------------------------
+// mrc_ndarray_norm
+//
+// Note: This returns the local norm, ie., it's not aware of what happens
+// on other processors.
+// FIXME: should we enforce the mrc_ndarray has size(comm) == 1?
+
+double
+mrc_ndarray_norm(struct mrc_ndarray *nd)
+{
+  struct mrc_ndarray_ops *ops = mrc_ndarray_ops(nd);
+  assert(ops && ops->norm);
+  return ops->norm(nd);
+}
+
+// ----------------------------------------------------------------------
 // mrc_ndarray_init
 
 static void

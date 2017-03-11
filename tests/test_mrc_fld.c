@@ -376,6 +376,27 @@ test_make_view(int sw)
   mrc_fld_destroy(fld);
 }
   
+static void
+test_norm(const char *type)
+{
+  struct mrc_fld *fld = mrc_fld_create(MPI_COMM_WORLD);
+  int sw = 2;
+  mrc_fld_set_type(fld, type);
+  mrc_fld_set_param_int_array(fld, "offs", 4, (int []) { 1, 2, 3, 0 });
+  mrc_fld_set_param_int_array(fld, "dims", 4, (int []) { 2, 3, 4, 2 });
+  mrc_fld_set_param_int_array(fld, "sw", 4, (int []) { sw, sw, sw, 0 });
+  mrc_fld_set_from_options(fld);
+  mrc_fld_setup(fld);
+  mrc_fld_view(fld);
+
+  mrc_fld_set(fld, 3.);
+  
+  float norm = mrc_fld_norm(fld);
+  assert(norm == 3.);
+  
+  mrc_fld_destroy(fld);  
+}
+
 // ----------------------------------------------------------------------
 // main
 
@@ -412,6 +433,9 @@ main(int argc, char **argv)
   case 21: test_waxpy("double"); break;
   case 22: test_waxpy("int"); break;
   case 23: test_make_view(0); break;
+  case 24: test_norm("float"); break;
+  case 25: test_norm("double"); break;
+  case 26: test_norm("int"); break;
   default: assert(0);
   }
 

@@ -525,38 +525,10 @@ mrc_fld_axpby(struct mrc_fld *y, double a, struct mrc_fld *x, double b)
 float
 mrc_fld_norm(struct mrc_fld *fld)
 {
-  float res = 0.;
-  double (*vec_norm)(struct mrc_vec *);
-  vec_norm = (double (*)(struct mrc_vec *)) mrc_vec_get_method(fld->_nd->vec, "norm");
-  if (vec_norm) {
-    res = (float) vec_norm(fld->_nd->vec);
-    return res;
-  }
-  struct mrc_fld *x = mrc_fld_get_as(fld, "float");  
-  assert(mrc_fld_data_type(x) == MRC_NT_FLOAT);
-  int nr_comps = mrc_fld_nr_comps(x);
-  
-  if (x->_dims.nr_vals == 4) {
-    for (int m = 0; m < nr_comps; m++) {
-      mrc_fld_foreach(x, ix, iy, iz, 0, 0) {
-	res = fmaxf(res, fabsf(MRC_F3(x,m, ix,iy,iz)));
-      } mrc_fld_foreach_end;
-    }
-  } else if (x->_dims.nr_vals == 3) {
-    for (int m = 0; m < nr_comps; m++) {
-      mrc_m1_foreach_patch(x, p) {
-	mrc_m1_foreach(x, ix, 0, 0) {
-	  res = fmaxf(res, fabsf(MRC_M1(x,m, ix, p)));
-	} mrc_m1_foreach_end;
-      }
-    }
-  } else {
-    assert(0);
-  }
-  mrc_fld_put_as(x, fld);
+  double norm = mrc_ndarray_norm(fld->_nd);
 
-  MPI_Allreduce(MPI_IN_PLACE, &res, 1, MPI_FLOAT, MPI_MAX, mrc_fld_comm(x));
-  return res;
+  MPI_Allreduce(MPI_IN_PLACE, &norm, 1, MPI_FLOAT, MPI_MAX, mrc_fld_comm(fld));
+  return norm;
 }
 
 // ----------------------------------------------------------------------

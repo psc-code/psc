@@ -3,6 +3,8 @@
 
 #include <mrc_vec.h>
 
+#include <math.h>
+
 // ----------------------------------------------------------------------
 // mrc_ndarray_sub_create
 
@@ -79,6 +81,29 @@ mrc_ndarray_sub_scale(struct mrc_ndarray *nd, double _val)
 }
 
 // ----------------------------------------------------------------------
+// mrc_ndarray_sub_norm
+
+static double
+mrc_ndarray_sub_norm(struct mrc_ndarray *nd)
+{
+  TYPE norm = 0;
+
+  // OPT, there'd be a point in choosing an iterator that proceeds
+  // according to the underlying layout (right now, the standard iterator
+  // will do fortran order)
+  // also, if the underlying data is contiguous, we could dispatch to vec,
+  // or use a faster iterator
+  struct mrc_ndarray_it it;
+
+  mrc_ndarray_it_all(&it, nd);
+  for (; !mrc_ndarray_it_done(&it); mrc_ndarray_it_next(&it)) {
+    norm = mrc_fld_max(norm, mrc_fld_abs(IT_TYPE(&it, TYPE)));
+  }
+
+  return norm;
+}
+
+// ----------------------------------------------------------------------
 // mrc_ndarray_sub_ops
 
 struct mrc_ndarray_ops mrc_ndarray_sub_ops = {
@@ -87,5 +112,6 @@ struct mrc_ndarray_ops mrc_ndarray_sub_ops = {
   .set                   = mrc_ndarray_sub_set,
   .copy                  = mrc_ndarray_sub_copy,
   .scale                 = mrc_ndarray_sub_scale,
+  .norm                  = mrc_ndarray_sub_norm,
 };
 
