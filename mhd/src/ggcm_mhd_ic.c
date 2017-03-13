@@ -10,6 +10,8 @@
 #include <mrc_ddc.h>
 #include <mrc_fld_as_double.h>
 
+#include "ggcm_mhd_convert.h"
+
 #include <assert.h>
 
 // ======================================================================
@@ -233,24 +235,19 @@ ggcm_mhd_ic_hydro_from_primitive_semi(struct ggcm_mhd_ic *ic, struct mrc_fld *fl
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
   struct ggcm_mhd_ic_ops *ops = ggcm_mhd_ic_ops(ic);
 
-  mrc_fld_data_t gamma_m1 = mhd->par.gamm - 1.;
-
   for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
     mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
       double dcrd_cc[3];
       mrc_dcrds_at_cc(crds, ix,iy,iz, p, dcrd_cc);
       
-      mrc_fld_data_t prim[5];
+      mrc_fld_data_t prim[8], state[8];
       for (int m = 0; m < 5; m++) {
 	prim[m] = ops->primitive(ic, m, dcrd_cc);
       }
-      
-      RR_ (fld, ix,iy,iz, p) = prim[RR];
-      RVX_(fld, ix,iy,iz, p) = prim[RR] * prim[VX];
-      RVY_(fld, ix,iy,iz, p) = prim[RR] * prim[VY];
-      RVZ_(fld, ix,iy,iz, p) = prim[RR] * prim[VZ];
-      UU_ (fld, ix,iy,iz, p) = prim[PP] / gamma_m1
-	+ .5f * prim[RR] * (sqr(prim[VX]) + sqr(prim[VY]) + sqr(prim[VZ]));
+      convert_state_from_prim_scons(state, prim);
+      for (int m = 0; m < 5; m++) {
+	M3(fld, m, ix,iy,iz, p) = state[m];
+      }
     } mrc_fld_foreach_end;    
   }
 }
@@ -267,8 +264,6 @@ ggcm_mhd_ic_hydro_from_primitive_fully(struct ggcm_mhd_ic *ic, struct mrc_fld *f
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
   struct ggcm_mhd_ic_ops *ops = ggcm_mhd_ic_ops(ic);
 
-  mrc_fld_data_t gamma_m1 = mhd->par.gamm - 1.;
-
   int gdims[3];
   mrc_domain_get_global_dims(fld->_domain, gdims);
   int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
@@ -278,20 +273,19 @@ ggcm_mhd_ic_hydro_from_primitive_fully(struct ggcm_mhd_ic *ic, struct mrc_fld *f
       double dcrd_cc[3];
       mrc_dcrds_at_cc(crds, ix,iy,iz, p, dcrd_cc);
       
-      mrc_fld_data_t prim[5];
+      mrc_fld_data_t prim[8], state[8];
       for (int m = 0; m < 5; m++) {
 	prim[m] = ops->primitive(ic, m, dcrd_cc);
       }
-      
-      RR_ (fld, ix,iy,iz, p) = prim[RR];
-      RVX_(fld, ix,iy,iz, p) = prim[RR] * prim[VX];
-      RVY_(fld, ix,iy,iz, p) = prim[RR] * prim[VY];
-      RVZ_(fld, ix,iy,iz, p) = prim[RR] * prim[VZ];
-      EE_ (fld, ix,iy,iz, p) = prim[PP] / gamma_m1
-	+ .5f * prim[RR] * (sqr(prim[VX]) + sqr(prim[VY]) + sqr(prim[VZ]))
-	+ .5f * (sqr(.5f * (BX_(fld, ix,iy,iz, p) + BX_(fld, ix+dx,iy,iz, p))) +
-		 sqr(.5f * (BY_(fld, ix,iy,iz, p) + BY_(fld, ix,iy+dy,iz, p))) +
-		 sqr(.5f * (BZ_(fld, ix,iy,iz, p) + BZ_(fld, ix,iy,iz+dz, p))));
+      prim[BX] = .5f * (BX_(fld, ix,iy,iz, p) + BX_(fld, ix+dx,iy,iz, p));
+      prim[BY] = .5f * (BY_(fld, ix,iy,iz, p) + BY_(fld, ix,iy+dy,iz, p));
+      prim[BZ] = .5f * (BZ_(fld, ix,iy,iz, p) + BZ_(fld, ix,iy,iz+dz, p));
+
+      convert_state_from_prim_fcons(state, prim);
+
+      for (int m = 0; m < 5; m++) {
+	M3(fld, m, ix,iy,iz, p) = state[m];
+      }
     } mrc_fld_foreach_end;    
   }
 }
@@ -308,27 +302,24 @@ ggcm_mhd_ic_hydro_from_primitive_fully_cc(struct ggcm_mhd_ic *ic, struct mrc_fld
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
   struct ggcm_mhd_ic_ops *ops = ggcm_mhd_ic_ops(ic);
 
-  mrc_fld_data_t gamma_m1 = mhd->par.gamm - 1.;
-
   for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
     mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
       double dcrd_cc[3];
       mrc_dcrds_at_cc(crds, ix,iy,iz, p, dcrd_cc);
       
-      mrc_fld_data_t prim[5];
+      mrc_fld_data_t prim[8], state[8];
       for (int m = 0; m < 5; m++) {
 	prim[m] = ops->primitive(ic, m, dcrd_cc);
       }
+      prim[BX] = BX_(fld, ix,iy,iz, p);
+      prim[BY] = BY_(fld, ix,iy,iz, p);
+      prim[BZ] = BZ_(fld, ix,iy,iz, p);
       
-      RR_ (fld, ix,iy,iz, p) = prim[RR];
-      RVX_(fld, ix,iy,iz, p) = prim[RR] * prim[VX];
-      RVY_(fld, ix,iy,iz, p) = prim[RR] * prim[VY];
-      RVZ_(fld, ix,iy,iz, p) = prim[RR] * prim[VZ];
-      EE_ (fld, ix,iy,iz, p) = prim[PP] / gamma_m1
-	+ .5f * prim[RR] * (sqr(prim[VX]) + sqr(prim[VY]) + sqr(prim[VZ]))
-	+ .5f * (sqr(BX_(fld, ix,iy,iz, p)) +
-		 sqr(BY_(fld, ix,iy,iz, p)) +
-		 sqr(BZ_(fld, ix,iy,iz, p)));
+      convert_state_from_prim_fcons(state, prim);
+
+      for (int m = 0; m < 5; m++) {
+	M3(fld, m, ix,iy,iz, p) = state[m];
+      }
     } mrc_fld_foreach_end;    
   }
 }
@@ -478,6 +469,8 @@ ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic)
   assert(mhd);
   struct ggcm_mhd_ic_ops *ops = ggcm_mhd_ic_ops(ic);
 
+  ggcm_mhd_convert_setup(mhd);
+  
   struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
   int mhd_type;
   mrc_fld_get_param_int(mhd->fld, "mhd_type", &mhd_type);
