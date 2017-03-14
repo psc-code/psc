@@ -149,6 +149,10 @@ void ggcm_mhd_calc_divb_bgrid_fc_ggcm(struct ggcm_mhd *mhd, struct mrc_fld *f, s
 void ggcm_mhd_calc_divb_bgrid_fc(struct ggcm_mhd *mhd, struct mrc_fld *f, struct mrc_fld *d);
 void ggcm_mhd_calc_divb_bgrid_cc(struct ggcm_mhd *mhd, struct mrc_fld *f, struct mrc_fld *d);
 
+void ggcm_mhd_calc_pp_scons(struct ggcm_mhd *mhd, struct mrc_fld *pp, struct mrc_fld *fld);
+void ggcm_mhd_calc_pp_fcons_fc(struct ggcm_mhd *mhd, struct mrc_fld *pp, struct mrc_fld *fld);
+void ggcm_mhd_calc_pp_fcons_cc(struct ggcm_mhd *mhd, struct mrc_fld *pp, struct mrc_fld *fld);
+
 // helpers for subclasses to use
 
 struct mrc_fld *ggcm_mhd_get_3d_fld(struct ggcm_mhd *mhd, int nr_comps);

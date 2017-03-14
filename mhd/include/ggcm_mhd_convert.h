@@ -2,6 +2,8 @@
 #ifndef GGCM_MHD_CONVERT_H
 #define GGCM_MHD_CONVERT_H
 
+#include "ggcm_mhd_defs.h"
+
 static mrc_fld_data_t cvt_gamma;
 static mrc_fld_data_t cvt_gamma_m1;
 static mrc_fld_data_t cvt_gamma_m1_inv;
