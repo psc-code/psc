@@ -9,6 +9,8 @@
 #include <mrc_bits.h>
 #include <math.h>
 
+#include "ggcm_mhd_convert.h"
+
 enum {
   FIXED_RR,
   FIXED_VX,
@@ -73,7 +75,11 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld, int m)
   struct ggcm_mhd_bnd_sphere_map *map = &sub->map;
   struct ggcm_mhd *mhd = bnd->mhd;
 
-  double gamm = mhd->par.gamm;
+  static bool is_setup = false;
+  if (!is_setup) {
+    ggcm_mhd_convert_setup(mhd);
+  }
+
   int nr_comps = fld->_nr_comps;
   float bnvals[nr_comps];
   bnvals[FIXED_RR] = sub->bnvals[FIXED_RR] / mhd->rrnorm;
@@ -114,57 +120,47 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld, int m)
     }
 
   } else {
-
-    double rrbn = bnvals[FIXED_RR];
-    double rvx = rrbn * bnvals[FIXED_VX];
-    double rvy = rrbn * bnvals[FIXED_VY];
-    double rvz = rrbn * bnvals[FIXED_VZ];
-
-    double vvbn = sqr(bnvals[FIXED_VX]) + sqr(bnvals[FIXED_VY]) + sqr(bnvals[FIXED_VZ]);
-    double uubn = .5f * (rrbn*vvbn) + bnvals[FIXED_PP] / (gamm - 1.f);
-    double b2bn = sqr(bnvals[FIXED_BX]) + sqr(bnvals[FIXED_BY]) + sqr(bnvals[FIXED_BZ]);
-    double eebn = uubn + .5 * b2bn;
-
     for (int i = 0; i < map->cc_n_map; i++) {
       int ix = MRC_I2(map->cc_imap, 0, i);
       int iy = MRC_I2(map->cc_imap, 1, i);
       int iz = MRC_I2(map->cc_imap, 2, i);
       int p  = MRC_I2(map->cc_imap, 3, i);
 
-      M3 (fld, m + RR,  ix,iy,iz, p) = rrbn;
-      M3 (fld, m + RVX, ix,iy,iz, p) = rvx;
-      M3 (fld, m + RVY, ix,iy,iz, p) = rvy;
-      M3 (fld, m + RVZ, ix,iy,iz, p) = rvz;
+      mrc_fld_data_t prim[8], state[8];
+      prim[RR] = bnvals[FIXED_RR];
+      prim[VX] = bnvals[FIXED_VX];
+      prim[VY] = bnvals[FIXED_VY];
+      prim[VZ] = bnvals[FIXED_VZ];
+      prim[PP] = bnvals[FIXED_PP];
+      prim[BX] = bnvals[FIXED_BX];
+      prim[BY] = bnvals[FIXED_BY];
+      prim[BZ] = bnvals[FIXED_BZ];
 
-#if 0
       // FIXME, this is still kinda specific / hacky to ganymede
       // to avoid cutting off the initial perturbation from e.g., the mirror dipole,
-      // let's just keep B untouched
+      // let's just keep B as-is, rather than using the fixed values above
       if (MT == MT_FCONS_CC) {
-        M3(fld, m + BX , ix,iy,iz, p) = bnvals[FIXED_BX];
-        M3(fld, m + BY , ix,iy,iz, p) = bnvals[FIXED_BY];
-        M3(fld, m + BZ , ix,iy,iz, p) = bnvals[FIXED_BZ];
-      } else {
-        // we'd need to have a face-centered map to do this right,
-        // but for now we'll do E field instead, anyway...
+        prim[BX] = M3(fld, m + BX , ix,iy,iz, p);
+        prim[BY] = M3(fld, m + BY , ix,iy,iz, p);
+        prim[BZ] = M3(fld, m + BZ , ix,iy,iz, p);
       }
-#endif
-
+      
       if (MT_FORMULATION(MT) == MT_FORMULATION_SCONS) {
-        M3(fld, m + UU , ix,iy,iz, p) = uubn;
+	convert_state_from_prim_scons(state, prim);
       } else if (MT_FORMULATION(MT) == MT_FORMULATION_FCONS) {
-	if (MT_BGRID(MT) == MT_BGRID_FC) {
-	  M3(fld, m + EE , ix,iy,iz, p) = eebn;
-	} else if (MT_BGRID(MT) == MT_BGRID_CC) {
-	  M3(fld, m + EE , ix,iy,iz, p) = uubn
-	    + .5 * (sqr(M3(fld, m + BX, ix,iy,iz, p)) +
-		    sqr(M3(fld, m + BY, ix,iy,iz, p)) +
-		    sqr(M3(fld, m + BZ, ix,iy,iz, p)));
-	} else {
-	  assert(0);
+	convert_state_from_prim_fcons(state, prim);
+      }
+
+      if (MT_BGRID(MT) == MT_BGRID_CC) {
+	for (int mm = 0; mm < 8; mm++) {
+	  M3 (fld, m + mm,  ix,iy,iz, p) = state[mm];
 	}
       } else {
-        assert(0);
+	// to set B, we'd need a face-centered map, but anyway, our boundary condition is evolved
+	// using E = -v x B to update B
+	for (int mm = 0; mm < 5; mm++) {
+	  M3 (fld, m + mm,  ix,iy,iz, p) = state[mm];
+	}
       }
     }
   }
