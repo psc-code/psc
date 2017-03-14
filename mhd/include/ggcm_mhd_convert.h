@@ -14,7 +14,7 @@ static inline void ggcm_mhd_convert_setup(struct ggcm_mhd *mhd)
 }
 
 static inline void
-convert_state_from_prim_scons(mrc_fld_data_t state[8], mrc_fld_data_t prim[8])
+convert_state_from_prim_scons(mrc_fld_data_t state[5], mrc_fld_data_t prim[5])
 {
   assert(cvt_gamma);
   
@@ -27,7 +27,21 @@ convert_state_from_prim_scons(mrc_fld_data_t state[8], mrc_fld_data_t prim[8])
 }
       
 static inline void
-convert_state_from_prim_fcons(mrc_fld_data_t state[8], mrc_fld_data_t prim[8])
+convert_prim_from_state_scons(mrc_fld_data_t prim[5], mrc_fld_data_t state[5])
+{
+  assert(cvt_gamma);
+  
+  prim[RR] = state[RR];
+  mrc_fld_data_t rri = 1.f / state[RR];
+  prim[VX] = rri * state[RVX];
+  prim[VY] = rri * state[RVY];
+  prim[VZ] = rri * state[RVZ];
+  prim[PP] = cvt_gamma_m1 * (state[UU] 
+			     - .5f * prim[RR] * (sqr(prim[VX]) + sqr(prim[VY]) + sqr(prim[VZ])));
+}
+      
+static inline void
+convert_state_from_prim_fcons(mrc_fld_data_t state[5], mrc_fld_data_t prim[8])
 {
   assert(cvt_gamma);
 
@@ -40,4 +54,19 @@ convert_state_from_prim_fcons(mrc_fld_data_t state[8], mrc_fld_data_t prim[8])
     + .5f * (sqr(prim[BX]) + sqr(prim[BY]) + sqr(prim[BZ]));
 }
 
+static inline void
+convert_prim_from_state_fcons(mrc_fld_data_t prim[5], mrc_fld_data_t state[8])
+{
+  assert(cvt_gamma);
+  
+  prim[RR] = state[RR];
+  mrc_fld_data_t rri = 1.f / state[RR];
+  prim[VX] = rri * state[RVX];
+  prim[VY] = rri * state[RVY];
+  prim[VZ] = rri * state[RVZ];
+  prim[PP] = cvt_gamma_m1 * (state[UU] 
+			     - .5f * prim[RR] * (sqr(prim[VX]) + sqr(prim[VY]) + sqr(prim[VZ]))
+			     - .5f * (sqr(state[BX]) + sqr(state[BY]) + sqr(state[BZ])));
+}
+      
 #endif

@@ -13,6 +13,8 @@
 
 #include "mhd_3d.c"
 
+#include "ggcm_mhd_convert.h"
+
 // ======================================================================
 // ggcm_mhd_diag_item subclass "v"
 
@@ -166,6 +168,11 @@ ggcm_mhd_diag_item_pp_run(struct ggcm_mhd_diag_item *item,
 {
   struct ggcm_mhd *mhd = item->diag->mhd;
 
+  static bool is_setup = false;
+  if (!is_setup) {
+    ggcm_mhd_convert_setup(mhd);
+  }
+  
   int gdims[3];
   mrc_domain_get_global_dims(fld->_domain, gdims);
   int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
@@ -179,47 +186,53 @@ ggcm_mhd_diag_item_pp_run(struct ggcm_mhd_diag_item *item,
   mrc_fld_set_type(fld_r, FLD_TYPE);
   mrc_fld_setup(fld_r);
 
-  mrc_fld_data_t gamm = mhd->par.gamm;
-
   struct mrc_fld *r = mrc_fld_get_as(fld_r, FLD_TYPE);
   struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
 
   if (MT_FORMULATION(mhd_type) == MT_FORMULATION_SCONS) {
     for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
       mrc_fld_foreach(f, ix,iy,iz, bnd, bnd) {
-	mrc_fld_data_t rvv = (sqr(RVX_(f, ix,iy,iz, p)) +
-			      sqr(RVY_(f, ix,iy,iz, p)) +
-			      sqr(RVZ_(f, ix,iy,iz, p))) / RR_(f, ix,iy,iz, p);
-	M3(r,0, ix,iy,iz, p) = (gamm - 1.f) * (UU_(f, ix,iy,iz, p) - .5f * rvv);
+	mrc_fld_data_t prim[5], state[5];
+	for (int m = 0; m < 5; m++) {
+	  state[m] = M3(f, m, ix,iy,iz, p);
+	}
+	convert_prim_from_state_scons(prim, state);
+	M3(r,0, ix,iy,iz, p) = prim[PP];
       } mrc_fld_foreach_end;
     }
   } else if (MT_FORMULATION(mhd_type) == MT_FORMULATION_FCONS) {
     if (MT_BGRID(mhd_type) == MT_BGRID_FC) {
       for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
 	mrc_fld_foreach(f, ix,iy,iz, bnd, bnd) {
-	  mrc_fld_data_t rvv = (sqr(RVX_(f, ix,iy,iz, p)) +
-				sqr(RVY_(f, ix,iy,iz, p)) +
-				sqr(RVZ_(f, ix,iy,iz, p))) / RR_(f, ix,iy,iz, p);
-	  mrc_fld_data_t b2  = (sqr(.5f * (BX_(f, ix,iy,iz, p) + BX_(f, ix+dx,iy   ,iz   , p))) +
-				sqr(.5f * (BY_(f, ix,iy,iz, p) + BY_(f, ix   ,iy+dy,iz   , p))) +
-				sqr(.5f * (BZ_(f, ix,iy,iz, p) + BZ_(f, ix   ,iy   ,iz+dz, p))));
-	  M3(r,0, ix,iy,iz, p) = (gamm - 1.f) * (EE_(f, ix,iy,iz, p) - .5f * rvv - .5f * b2);
+	  mrc_fld_data_t prim[5], state[8];
+	  for (int m = 0; m < 5; m++) {
+	    state[m] = M3(f, m, ix,iy,iz, p);
+	  }
+	  state[BX] = .5f * (BX_(f, ix,iy,iz, p) + BX_(f, ix+dx,iy   ,iz   , p));
+	  state[BY] = .5f * (BY_(f, ix,iy,iz, p) + BY_(f, ix   ,iy+dy,iz   , p));
+	  state[BZ] = .5f * (BZ_(f, ix,iy,iz, p) + BZ_(f, ix   ,iy   ,iz+dz, p));
+	  convert_prim_from_state_fcons(prim, state);
+	  M3(r,0, ix,iy,iz, p) = prim[PP];
 	} mrc_fld_foreach_end;
       }
     } else if (MT_BGRID(mhd_type) == MT_BGRID_CC) {
       for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
 	mrc_fld_foreach(f, ix,iy,iz, bnd, bnd) {
-	  mrc_fld_data_t rvv = (sqr(RVX_(f, ix,iy,iz, p)) +
-				sqr(RVY_(f, ix,iy,iz, p)) +
-				sqr(RVZ_(f, ix,iy,iz, p))) / RR_(f, ix,iy,iz, p);
-	  mrc_fld_data_t b2  = (sqr(BX_(f, ix,iy,iz, p)) +
-				sqr(BY_(f, ix,iy,iz, p)) +
-				sqr(BZ_(f, ix,iy,iz, p)));
-	  M3(r,0, ix,iy,iz, p) = (gamm - 1.f) * (EE_(f, ix,iy,iz, p) - .5f * rvv - .5f * b2);
+	  mrc_fld_data_t prim[5], state[8];
+	  for (int m = 0; m < 5; m++) {
+	    state[m] = M3(f, m, ix,iy,iz, p);
+	  }
+	  state[BX] = BX_(f, ix,iy,iz, p);
+	  state[BY] = BY_(f, ix,iy,iz, p);
+	  state[BZ] = BZ_(f, ix,iy,iz, p);
+	  convert_prim_from_state_fcons(prim, state);
+	  M3(r,0, ix,iy,iz, p) = prim[PP];
 	} mrc_fld_foreach_end;
       }
     }
   } else if (MT_FORMULATION(mhd_type) == MT_FORMULATION_GKEYLL) {
+    mrc_fld_data_t gamm = mhd->par.gamm;
+
     int nr_fluids = mhd->par.gk_nr_fluids;
     int nr_moments = mhd->par.gk_nr_moments;
 
