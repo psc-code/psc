@@ -70,5 +70,17 @@ convert_prim_from_state_fcons(mrc_fld_data_t prim[5], mrc_fld_data_t state[8])
 			     - .5f * prim[RR] * (sqr(prim[VX]) + sqr(prim[VY]) + sqr(prim[VZ]))
 			     - .5f * (sqr(state[BX]) + sqr(state[BY]) + sqr(state[BZ])));
 }
+
+static inline void
+convert_prim_from_state(mrc_fld_data_t prim[8], mrc_fld_data_t state[8])
+{
+#if MT_FORMULATION(MT) == MT_FORMULATION_SCONS
+  convert_prim_from_state_scons(prim, state);
+#elif MT_FORMULATION(MT) == MT_FORMULATION_FCONS
+  convert_prim_from_state_fcons(prim, state);
+#else
+  assert(0);
+#endif
+}
       
 #endif

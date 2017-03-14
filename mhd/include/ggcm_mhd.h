@@ -25,6 +25,7 @@ void ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld,
 			struct mrc_fld *divb);
 void ggcm_mhd_calc_currcc(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
 			struct mrc_fld *currcc);
+void ggcm_mhd_calc_pp(struct ggcm_mhd *mhd, struct mrc_fld *pp, struct mrc_fld *fld);
 void ggcm_mhd_set_state(struct ggcm_mhd *mhd);
 void ggcm_mhd_pre_step(struct ggcm_mhd *mhd, struct mrc_ts *ts, struct mrc_fld *fld);
 void ggcm_mhd_post_step(struct ggcm_mhd *mhd, struct mrc_ts *ts, struct mrc_fld *fld);

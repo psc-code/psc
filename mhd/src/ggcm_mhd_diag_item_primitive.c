@@ -168,60 +168,11 @@ ggcm_mhd_diag_item_pp_run(struct ggcm_mhd_diag_item *item,
 {
   struct ggcm_mhd *mhd = item->diag->mhd;
 
-  static bool is_setup = false;
-  if (!is_setup) {
-    ggcm_mhd_convert_setup(mhd);
-  }
-  
-  int mhd_type;
-  mrc_fld_get_param_int(fld, "mhd_type", &mhd_type);
-
-  int bnd = fld->_nr_ghosts - 1;
-
-  struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, bnd + 1, "pp");
+  struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, fld->_nr_ghosts, "pp");
   mrc_fld_set_type(fld_r, FLD_TYPE);
   mrc_fld_setup(fld_r);
 
-  struct mrc_fld *r = mrc_fld_get_as(fld_r, FLD_TYPE);
-  struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
-
-  if (MT_FORMULATION(mhd_type) == MT_FORMULATION_SCONS) {
-    ggcm_mhd_calc_pp_scons(mhd, r, f);
-  } else if (MT_FORMULATION(mhd_type) == MT_FORMULATION_FCONS) {
-    if (MT_BGRID(mhd_type) == MT_BGRID_FC) {
-      ggcm_mhd_calc_pp_fcons_fc(mhd, r, f);
-    } else if (MT_BGRID(mhd_type) == MT_BGRID_CC) {
-      ggcm_mhd_calc_pp_fcons_cc(mhd, r, f);
-    }
-  } else if (MT_FORMULATION(mhd_type) == MT_FORMULATION_GKEYLL) {
-    mrc_fld_data_t gamm = mhd->par.gamm;
-
-    int nr_fluids = mhd->par.gk_nr_fluids;
-    int nr_moments = mhd->par.gk_nr_moments;
-
-    assert(nr_moments == 5);
-    int idx[nr_fluids];
-    ggcm_mhd_gkeyll_fluid_species_index_all(mhd, idx);
-
-    for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
-      mrc_fld_foreach(f, ix,iy,iz, bnd, bnd) {
-        M3(r, 0, ix,iy,iz, p) = 0.;
-        for (int s = 0; s < nr_fluids; s++) {
-          M3(r, 0, ix,iy,iz, p) += 
-            (gamm-1.) * ( M3(f, idx[s]+G5M_UUS, ix,iy,iz, p)
-            - .5 * (sqr(M3(f, idx[s]+G5M_RVXS, ix,iy,iz, p))
-                  + sqr(M3(f, idx[s]+G5M_RVYS, ix,iy,iz, p))
-                  + sqr(M3(f, idx[s]+G5M_RVZS, ix,iy,iz, p)))
-                  / M3(f, idx[s]+G5M_RRS, ix,iy,iz, p));
-        }
-      } mrc_fld_foreach_end;
-    }
-  } else {
-    assert(0);
-  }
-
-  mrc_fld_put_as(r, fld_r);
-  mrc_fld_put_as(f, fld);
+  ggcm_mhd_calc_pp(mhd, fld_r, fld);
 
   ggcm_mhd_diag_c_write_one_field(io, fld_r, 0, "pp", mhd->ppnorm, diag_type, plane);
 
