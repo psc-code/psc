@@ -16,7 +16,7 @@ static inline void ggcm_mhd_convert_setup(struct ggcm_mhd *mhd)
 }
 
 static inline void
-convert_state_from_prim_scons(mrc_fld_data_t state[5], mrc_fld_data_t prim[5])
+convert_state_from_prim_scons(mrc_fld_data_t state[8], mrc_fld_data_t prim[8])
 {
   assert(cvt_gamma);
   
@@ -26,10 +26,13 @@ convert_state_from_prim_scons(mrc_fld_data_t state[5], mrc_fld_data_t prim[5])
   state[RVZ] = prim[RR] * prim[VZ];
   state[UU ] = prim[PP] * cvt_gamma_m1_inv +
     + .5f * prim[RR] * (sqr(prim[VX]) + sqr(prim[VY]) + sqr(prim[VZ]));
+  state[BX ] = prim[BX];
+  state[BY ] = prim[BY];
+  state[BZ ] = prim[BZ];
 }
       
 static inline void
-convert_prim_from_state_scons(mrc_fld_data_t prim[5], mrc_fld_data_t state[5])
+convert_prim_from_state_scons(mrc_fld_data_t prim[8], mrc_fld_data_t state[8])
 {
   assert(cvt_gamma);
   
@@ -40,10 +43,13 @@ convert_prim_from_state_scons(mrc_fld_data_t prim[5], mrc_fld_data_t state[5])
   prim[VZ] = rri * state[RVZ];
   prim[PP] = cvt_gamma_m1 * (state[UU] 
 			     - .5f * prim[RR] * (sqr(prim[VX]) + sqr(prim[VY]) + sqr(prim[VZ])));
+  prim[BX] = state[BX];
+  prim[BY] = state[BY];
+  prim[BZ] = state[BZ];
 }
       
 static inline void
-convert_state_from_prim_fcons(mrc_fld_data_t state[5], mrc_fld_data_t prim[8])
+convert_state_from_prim_fcons(mrc_fld_data_t state[8], mrc_fld_data_t prim[8])
 {
   assert(cvt_gamma);
 
@@ -54,10 +60,13 @@ convert_state_from_prim_fcons(mrc_fld_data_t state[5], mrc_fld_data_t prim[8])
   state[EE ] = prim[PP] * cvt_gamma_m1_inv
     + .5f * prim[RR] * (sqr(prim[VX]) + sqr(prim[VY]) + sqr(prim[VZ]))
     + .5f * (sqr(prim[BX]) + sqr(prim[BY]) + sqr(prim[BZ]));
+  state[BX ] = prim[BX];
+  state[BY ] = prim[BY];
+  state[BZ ] = prim[BZ];
 }
 
 static inline void
-convert_prim_from_state_fcons(mrc_fld_data_t prim[5], mrc_fld_data_t state[8])
+convert_prim_from_state_fcons(mrc_fld_data_t prim[8], mrc_fld_data_t state[8])
 {
   assert(cvt_gamma);
   
@@ -69,6 +78,9 @@ convert_prim_from_state_fcons(mrc_fld_data_t prim[5], mrc_fld_data_t state[8])
   prim[PP] = cvt_gamma_m1 * (state[UU] 
 			     - .5f * prim[RR] * (sqr(prim[VX]) + sqr(prim[VY]) + sqr(prim[VZ]))
 			     - .5f * (sqr(state[BX]) + sqr(state[BY]) + sqr(state[BZ])));
+  prim[BX] = state[BX];
+  prim[BY] = state[BY];
+  prim[BZ] = state[BZ];
 }
 
 static inline void
