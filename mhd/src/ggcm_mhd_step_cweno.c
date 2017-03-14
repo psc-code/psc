@@ -123,7 +123,7 @@ ggcm_mhd_step_cweno_setup_flds(struct ggcm_mhd_step *step)
 #if SEMICONSV
   mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_SCONS_FC);
 #else
-  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_FULLY_CONSERVATIVE);
+  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_FCONS_FC);
 #endif
   mrc_fld_set_param_int(mhd->fld, "nr_comps", _NR_FLDS);
 }

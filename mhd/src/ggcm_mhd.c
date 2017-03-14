@@ -314,7 +314,7 @@ ggcm_mhd_fill_ghosts(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m, float bnt
     int mhd_type;
     mrc_fld_get_param_int(fld, "mhd_type", &mhd_type);
     if (mhd_type == MT_GKEYLL ||
-	mhd_type == MT_FULLY_CONSERVATIVE ||
+	mhd_type == MT_FCONS_FC ||
 	mhd_type == MT_FULLY_CONSERVATIVE_CC) {
       int nr_comps = mrc_fld_nr_comps(fld);
       mrc_ddc_fill_ghosts_fld(mrc_domain_get_ddc(mhd->domain), m, m + nr_comps, fld);

@@ -299,7 +299,7 @@ ggcm_mhd_convert_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_base)
 
   if (mhd_type == MT_SCONS_FC_GGCM) {
     return ggcm_mhd_convert_sc_ggcm_from_primitive(mhd, fld_base);
-  } else if (mhd_type == MT_FULLY_CONSERVATIVE) {
+  } else if (mhd_type == MT_FCONS_FC) {
     return ggcm_mhd_convert_fc_from_primitive(mhd, fld_base);
   } else if (mhd_type == MT_SCONS_FC) {
     return ggcm_mhd_convert_sc_from_primitive(mhd, fld_base);
@@ -392,7 +392,7 @@ ggcm_mhd_fld_get_as(struct mrc_fld *fld_base, const char *type,
     }
     mrc_fld_put_as(fld, fld_base);
     return fld2;
-  } else if (mhd_type_base == MT_FULLY_CONSERVATIVE && mhd_type == MT_SCONS_FC_GGCM) {
+  } else if (mhd_type_base == MT_FCONS_FC && mhd_type == MT_SCONS_FC_GGCM) {
     if (strcmp(type, "float") == 0) {
       copy_fc_to_sc_ggcm_float(fld, fld2, mb, me);
     } else if (strcmp(type, "double") == 0) {
@@ -402,7 +402,7 @@ ggcm_mhd_fld_get_as(struct mrc_fld *fld_base, const char *type,
     }
     mrc_fld_put_as(fld, fld_base);
     return fld2;
-  } else if (mhd_type_base == MT_FULLY_CONSERVATIVE && mhd_type == MT_SCONS_FC) {
+  } else if (mhd_type_base == MT_FCONS_FC && mhd_type == MT_SCONS_FC) {
     if (strcmp(type, "float") == 0) {
       copy_fc_to_sc_float(fld, fld2, mb, me);
     } else if (strcmp(type, "double") == 0) {
@@ -446,7 +446,7 @@ ggcm_mhd_fld_put_as(struct mrc_fld *fld, struct mrc_fld *fld_base, int mb, int m
       assert(0);
     }
     mrc_fld_destroy(fld);
-  } else if (mhd_type_base == MT_FULLY_CONSERVATIVE && mhd_type == MT_SCONS_FC_GGCM) {
+  } else if (mhd_type_base == MT_FCONS_FC && mhd_type == MT_SCONS_FC_GGCM) {
     if (strcmp(mrc_fld_type(fld), "float") == 0) {
       copy_sc_ggcm_to_fc_float(fld, fld_base, mb, me);
     } else if (strcmp(mrc_fld_type(fld), "double") == 0) {
@@ -455,7 +455,7 @@ ggcm_mhd_fld_put_as(struct mrc_fld *fld, struct mrc_fld *fld_base, int mb, int m
       assert(0);
     }
     mrc_fld_destroy(fld);
-  } else if (mhd_type_base == MT_FULLY_CONSERVATIVE && mhd_type == MT_SCONS_FC) {
+  } else if (mhd_type_base == MT_FCONS_FC && mhd_type == MT_SCONS_FC) {
     if (strcmp(mrc_fld_type(fld), "float") == 0) {
       copy_sc_to_fc_float(fld, fld_base, mb, me);
     } else if (strcmp(mrc_fld_type(fld), "double") == 0) {
