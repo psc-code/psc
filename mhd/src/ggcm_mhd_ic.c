@@ -142,14 +142,12 @@ ggcm_mhd_ic_B_from_vector_potential(struct ggcm_mhd_ic *ic, struct mrc_fld *b,
   struct ggcm_mhd *mhd = ic->mhd;
   int mhd_type;
   mrc_fld_get_param_int(mhd->fld, "mhd_type", &mhd_type);
-  
-  if (mhd_type == MT_FULLY_CONSERVATIVE ||
-      mhd_type == MT_SEMI_CONSERVATIVE) {
+
+  if (MT_BGRID(mhd_type) == MT_BGRID_FC) {
     ggcm_mhd_ic_B_from_vector_potential_fc(ic, b, vector_potential, 0);
-  } else if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM) {
+  } else if (MT_BGRID(mhd_type) == MT_BGRID_FC_GGCM) {
     ggcm_mhd_ic_B_from_vector_potential_fc(ic, b, vector_potential, 1);
-  } else if (mhd_type == MT_FULLY_CONSERVATIVE_CC ||
-	     mhd_type == MT_GKEYLL) {
+  } else if (MT_BGRID(mhd_type) == MT_BGRID_CC) {
     ggcm_mhd_ic_B_from_vector_potential_cc(ic, b, vector_potential);
   } else {
     mprintf("mhd_type %d unhandled\n", mhd_type);
