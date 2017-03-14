@@ -57,11 +57,6 @@ void ggcm_mhd_setup_ts(struct ggcm_mhd *mhd, struct mrc_ts *ts);
 #define MT_BGRID_CC 4
 #define MT_BGRID_FC_GGCM 8
 
-// primitive fluid variables, face-centered B
-#define MT_PRIMITIVE (MT_FORMULATION_PRIMITIVE | MT_BGRID_FC)
-// primitive fluid variables, cell-centered B
-#define MT_PRIMITIVE_CC (MT_FORMULATION_PRIMITIVE | MT_BGRID_CC)
-
 // the following has B staggered the openggcm way: [-1..mx[
 #define MT_SEMI_CONSERVATIVE_GGCM (MT_FORMULATION_SCONS | MT_BGRID_FC_GGCM)
 
