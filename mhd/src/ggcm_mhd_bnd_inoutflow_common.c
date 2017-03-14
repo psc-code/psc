@@ -45,7 +45,7 @@ struct ggcm_mhd_bnd_sub {
 #define _BY(f, mm, ix,iy,iz, p) M3(f, mm+BY, ix,iy+SHIFT,iz, p)
 #define _BZ(f, mm, ix,iy,iz, p) M3(f, mm+BZ, ix,iy,iz+SHIFT, p)
 
-#if MT == MT_FULLY_CONSERVATIVE_CC
+#if MT == MT_FCONS_CC
 // maybe this should use fd1 to be more explicit, but that's identical to bd3, anyway
 
 #define BNDDIV_BY_L(ix, iy, iz, p)					\
@@ -516,7 +516,7 @@ obndra_mhd(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim)
 	assert(0);
       }
     }
-    if (MT == MT_FULLY_CONSERVATIVE_CC) {
+    if (MT == MT_FCONS_CC) {
       assert(mm == 0);
       obndra_xh_open_cc(mhd, f, sw, ldims, p);
 
@@ -803,7 +803,7 @@ obndrb(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm)
   struct ggcm_mhd *mhd = bnd->mhd;
 
   const int *sw = mrc_fld_spatial_sw(f), *ldims = mrc_fld_spatial_dims(f);
-#if MT == MT_FULLY_CONSERVATIVE_CC
+#if MT == MT_FCONS_CC
   // tangential
   int m_t[3] = { ldims[0], ldims[1], ldims[2] }; // number of points
   int s_t[3] = { sw[0] - 1, sw[1] - 1, sw[2] - 1 }; // number of ghost points to fill

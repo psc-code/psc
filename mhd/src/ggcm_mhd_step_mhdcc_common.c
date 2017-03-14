@@ -102,7 +102,7 @@ ggcm_mhd_step_mhdcc_setup(struct ggcm_mhd_step *step)
   }
 
   sub->x_star = ggcm_mhd_get_3d_fld(mhd, s_n_comps);
-  mrc_fld_dict_add_int(sub->x_star, "mhd_type", MT_FULLY_CONSERVATIVE_CC);
+  mrc_fld_dict_add_int(sub->x_star, "mhd_type", MT_FCONS_CC);
 
   for (int d = 0; d < 3; d++) {
     sub->fluxes[d] = ggcm_mhd_get_3d_fld(mhd, s_n_comps);
@@ -161,7 +161,7 @@ ggcm_mhd_step_mhdcc_setup_flds(struct ggcm_mhd_step *step)
 
   mrc_fld_set_type(mhd->fld, FLD_TYPE);
   mrc_fld_set_param_int(mhd->fld, "nr_ghosts", 2);
-  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_FULLY_CONSERVATIVE_CC);
+  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_FCONS_CC);
   mrc_fld_set_param_int(mhd->fld, "nr_comps", n_comps);
 }
 

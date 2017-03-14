@@ -146,7 +146,7 @@ ggcm_mhd_diag_item_ee1_run(struct ggcm_mhd_diag_item *item,
   struct mrc_fld *r = mrc_fld_get_as(fld_r, FLD_TYPE);
   struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
 
-  if (mhd_type == MT_FULLY_CONSERVATIVE_CC) {
+  if (mhd_type == MT_FCONS_CC) {
     for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
       mrc_fld_foreach(f, ix,iy,iz, bnd - 1, bnd - 1) {
 	M3(r, 0, ix,iy,iz, p) = EE_(f, ix,iy,iz, p);

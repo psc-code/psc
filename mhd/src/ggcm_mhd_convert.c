@@ -303,7 +303,7 @@ ggcm_mhd_convert_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_base)
     return ggcm_mhd_convert_fc_from_primitive(mhd, fld_base);
   } else if (mhd_type == MT_SCONS_FC) {
     return ggcm_mhd_convert_sc_from_primitive(mhd, fld_base);
-  } else if (mhd_type == MT_FULLY_CONSERVATIVE_CC) {
+  } else if (mhd_type == MT_FCONS_CC) {
     return ggcm_mhd_convert_fc_cc_from_primitive(mhd, fld_base);
   } else if (mhd_type == MT_GKEYLL) {
     return ggcm_mhd_convert_gkeyll_from_primitive(mhd, fld_base);

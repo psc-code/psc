@@ -249,7 +249,7 @@ ggcm_mhd_bnd_open_x_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld,
 
   if (mhd_type == MT_SCONS_FC) {
     ggcm_mhd_bnd_open_x_fill_ghosts_scons(bnd, fld, m, bntim);
-  } else if (mhd_type == MT_FULLY_CONSERVATIVE_CC) {
+  } else if (mhd_type == MT_FCONS_CC) {
     ggcm_mhd_bnd_open_x_fill_ghosts_fcons_cc(bnd, fld, m, bntim);
   } else {
     assert(0);

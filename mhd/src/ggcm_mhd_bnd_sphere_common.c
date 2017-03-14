@@ -140,7 +140,7 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld, int m)
       // FIXME, this is still kinda specific / hacky to ganymede
       // to avoid cutting off the initial perturbation from e.g., the mirror dipole,
       // let's just keep B untouched
-      if (MT == MT_FULLY_CONSERVATIVE_CC) {
+      if (MT == MT_FCONS_CC) {
         M3(fld, m + BX , ix,iy,iz, p) = bnvals[FIXED_BX];
         M3(fld, m + BY , ix,iy,iz, p) = bnvals[FIXED_BY];
         M3(fld, m + BZ , ix,iy,iz, p) = bnvals[FIXED_BZ];

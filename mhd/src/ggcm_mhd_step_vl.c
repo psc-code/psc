@@ -150,7 +150,7 @@ ggcm_mhd_step_vl_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   ldims[2] = mrc_fld_spatial_dims(x)[2];
 
   struct mrc_fld *x_half = ggcm_mhd_get_3d_fld(mhd, 8);
-  mrc_fld_dict_add_int(x_half, "mhd_type", MT_FULLY_CONSERVATIVE_CC); // FIXME
+  mrc_fld_dict_add_int(x_half, "mhd_type", MT_FCONS_CC); // FIXME
   struct mrc_fld *flux[3] = { ggcm_mhd_get_3d_fld(mhd, 5),
 			      ggcm_mhd_get_3d_fld(mhd, 5),
 			      ggcm_mhd_get_3d_fld(mhd, 5), };
@@ -243,7 +243,7 @@ ggcm_mhd_step_vl_setup_flds(struct ggcm_mhd_step *step)
 
   mrc_fld_set_type(mhd->fld, FLD_TYPE);
   mrc_fld_set_param_int(mhd->fld, "nr_ghosts", 2);
-  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_FULLY_CONSERVATIVE_CC);  // FIXME
+  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_FCONS_CC);  // FIXME
   mrc_fld_set_param_int(mhd->fld, "nr_comps", 8); // FIXME, should be 5, but needs testing
 }
 

@@ -74,7 +74,7 @@ ggcm_mhd_dipole_sub_vect_pot(struct ggcm_mhd_dipole *mhd_dipole, int m,
   mrc_fld_get_param_int(mhd->fld, "mhd_type", &mhd_type);
 
   double x[3];
-  if (mhd_type == MT_FULLY_CONSERVATIVE_CC ||
+  if (mhd_type == MT_FCONS_CC ||
       mhd_type == MT_GKEYLL ) { // cell-centered B
     mrc_dcrds_at_cc(crds, ix,iy,iz, p, x);
   } else {
