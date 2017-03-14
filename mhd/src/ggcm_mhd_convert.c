@@ -297,7 +297,7 @@ ggcm_mhd_convert_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_base)
   int mhd_type;
   mrc_fld_get_param_int(fld_base, "mhd_type", &mhd_type);
 
-  if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM) {
+  if (mhd_type == MT_SCONS_FC_GGCM) {
     return ggcm_mhd_convert_sc_ggcm_from_primitive(mhd, fld_base);
   } else if (mhd_type == MT_FULLY_CONSERVATIVE) {
     return ggcm_mhd_convert_fc_from_primitive(mhd, fld_base);
@@ -374,7 +374,7 @@ ggcm_mhd_fld_get_as(struct mrc_fld *fld_base, const char *type,
   mrc_fld_dict_add_int(fld2, "mhd_type", mhd_type);
   mrc_fld_setup(fld2);
 
-  if (mhd_type_base == MT_SEMI_CONSERVATIVE_GGCM && mhd_type == MT_SEMI_CONSERVATIVE) {
+  if (mhd_type_base == MT_SCONS_FC_GGCM && mhd_type == MT_SEMI_CONSERVATIVE) {
     if (strcmp(type, "float") == 0) {
       copy_sc_ggcm_to_sc_float(fld, fld2, mb, me);
     } else {
@@ -382,7 +382,7 @@ ggcm_mhd_fld_get_as(struct mrc_fld *fld_base, const char *type,
     }
     mrc_fld_put_as(fld, fld_base);
     return fld2;
-  } else if (mhd_type_base == MT_SEMI_CONSERVATIVE && mhd_type == MT_SEMI_CONSERVATIVE_GGCM) {
+  } else if (mhd_type_base == MT_SEMI_CONSERVATIVE && mhd_type == MT_SCONS_FC_GGCM) {
     if (strcmp(type, "float") == 0) {
       copy_sc_to_sc_ggcm_float(fld, fld2, mb, me);
     } else if (strcmp(type, "double") == 0) {
@@ -392,7 +392,7 @@ ggcm_mhd_fld_get_as(struct mrc_fld *fld_base, const char *type,
     }
     mrc_fld_put_as(fld, fld_base);
     return fld2;
-  } else if (mhd_type_base == MT_FULLY_CONSERVATIVE && mhd_type == MT_SEMI_CONSERVATIVE_GGCM) {
+  } else if (mhd_type_base == MT_FULLY_CONSERVATIVE && mhd_type == MT_SCONS_FC_GGCM) {
     if (strcmp(type, "float") == 0) {
       copy_fc_to_sc_ggcm_float(fld, fld2, mb, me);
     } else if (strcmp(type, "double") == 0) {
@@ -437,7 +437,7 @@ ggcm_mhd_fld_put_as(struct mrc_fld *fld, struct mrc_fld *fld_base, int mb, int m
     return;
   }
 
-  if (mhd_type_base == MT_SEMI_CONSERVATIVE && mhd_type == MT_SEMI_CONSERVATIVE_GGCM) {
+  if (mhd_type_base == MT_SEMI_CONSERVATIVE && mhd_type == MT_SCONS_FC_GGCM) {
     if (strcmp(mrc_fld_type(fld), "float") == 0) {
       copy_sc_ggcm_to_sc_float(fld, fld_base, mb, me);
     } else if (strcmp(mrc_fld_type(fld), "double") == 0) {
@@ -446,7 +446,7 @@ ggcm_mhd_fld_put_as(struct mrc_fld *fld, struct mrc_fld *fld_base, int mb, int m
       assert(0);
     }
     mrc_fld_destroy(fld);
-  } else if (mhd_type_base == MT_FULLY_CONSERVATIVE && mhd_type == MT_SEMI_CONSERVATIVE_GGCM) {
+  } else if (mhd_type_base == MT_FULLY_CONSERVATIVE && mhd_type == MT_SCONS_FC_GGCM) {
     if (strcmp(mrc_fld_type(fld), "float") == 0) {
       copy_sc_ggcm_to_fc_float(fld, fld_base, mb, me);
     } else if (strcmp(mrc_fld_type(fld), "double") == 0) {
@@ -492,7 +492,7 @@ ggcm_mhd_get_fld_as_fortran(struct mrc_fld *fld_base)
     free(strs);
   }
 #endif
-  return ggcm_mhd_fld_get_as(fld_base, "float", MT_SEMI_CONSERVATIVE_GGCM, 0, _NR_FLDS);
+  return ggcm_mhd_fld_get_as(fld_base, "float", MT_SCONS_FC_GGCM, 0, _NR_FLDS);
 }
 
 // ----------------------------------------------------------------------

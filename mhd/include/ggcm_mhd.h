@@ -58,7 +58,7 @@ void ggcm_mhd_setup_ts(struct ggcm_mhd *mhd, struct mrc_ts *ts);
 #define MT_BGRID_FC_GGCM 8
 
 // the following has B staggered the openggcm way: [-1..mx[
-#define MT_SEMI_CONSERVATIVE_GGCM (MT_FORMULATION_SCONS | MT_BGRID_FC_GGCM)
+#define MT_SCONS_FC_GGCM (MT_FORMULATION_SCONS | MT_BGRID_FC_GGCM)
 
 // the following have B staggered the "normal" way: [0..mx]
 #define MT_SEMI_CONSERVATIVE (MT_FORMULATION_SCONS | MT_BGRID_FC)
