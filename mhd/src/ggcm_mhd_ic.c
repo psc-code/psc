@@ -453,14 +453,17 @@ ggcm_mhd_ic_hydro_from_primitive(struct ggcm_mhd_ic *ic, struct mrc_fld *fld)
   int mhd_type;
   mrc_fld_get_param_int(mhd->fld, "mhd_type", &mhd_type);
 
-  if (mhd_type == MT_SEMI_CONSERVATIVE ||
-      mhd_type == MT_SEMI_CONSERVATIVE_GGCM) {
+  if (MT_FORMULATION(mhd_type) == MT_FORMULATION_SCONS) {
     ggcm_mhd_ic_hydro_from_primitive_semi(ic, fld);
-  } else if (mhd_type == MT_FULLY_CONSERVATIVE) {
-    ggcm_mhd_ic_hydro_from_primitive_fully(ic, fld);
-  } else if (mhd_type == MT_FULLY_CONSERVATIVE_CC) {
-    ggcm_mhd_ic_hydro_from_primitive_fully_cc(ic, fld);
-  } else if (mhd_type == MT_GKEYLL) {
+  } else if (MT_FORMULATION(mhd_type) == MT_FORMULATION_FCONS) {
+    if (MT_BGRID(mhd_type) == MT_BGRID_FC) {
+      ggcm_mhd_ic_hydro_from_primitive_fully(ic, fld);
+    } else if (MT_BGRID(mhd_type) == MT_BGRID_CC) {
+      ggcm_mhd_ic_hydro_from_primitive_fully_cc(ic, fld);
+    } else {
+      assert(0);
+    }
+  } else if (MT_FORMULATION(mhd_type) == MT_FORMULATION_GKEYLL) {
     ggcm_mhd_ic_hydro_from_primitive_gkeyll(ic, fld);
   } else {
     assert(0);
@@ -483,12 +486,10 @@ ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic)
 
   // FIXME, this should probably go somewhere where it's reusable
   int idx_BX;
-  if (mhd_type == MT_SEMI_CONSERVATIVE ||
-      mhd_type == MT_SEMI_CONSERVATIVE_GGCM ||
-      mhd_type == MT_FULLY_CONSERVATIVE ||
-      mhd_type == MT_FULLY_CONSERVATIVE_CC) {
+  if (MT_FORMULATION(mhd_type) == MT_FORMULATION_SCONS ||
+      MT_FORMULATION(mhd_type) == MT_FORMULATION_FCONS) {
     idx_BX = BX;
-  } else if (mhd_type == MT_GKEYLL) {
+  } else if (MT_FORMULATION(mhd_type) == MT_FORMULATION_GKEYLL) {
     int idx_em = ggcm_mhd_gkeyll_em_fields_index(mhd);
     idx_BX = idx_em + GK_BX;
   } else {

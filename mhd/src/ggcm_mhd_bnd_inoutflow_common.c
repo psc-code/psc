@@ -206,16 +206,14 @@ obndra_mhd_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float b
 	M3(f, mm + RVX, ix,iy,iz, p) = bn[SW_RR] * bn[SW_VX];
 	M3(f, mm + RVY, ix,iy,iz, p) = bn[SW_RR] * bn[SW_VY];
 	M3(f, mm + RVZ, ix,iy,iz, p) = bn[SW_RR] * bn[SW_VZ];
-	if (MT == MT_SEMI_CONSERVATIVE ||
-	    MT == MT_SEMI_CONSERVATIVE_GGCM) {
+	if (MT_FORMULATION(MT) == MT_FORMULATION_SCONS) {
 	  M3(f, mm + UU , ix,iy,iz, p) = uubn;
-	} else if (MT == MT_FULLY_CONSERVATIVE ||
-		   MT == MT_FULLY_CONSERVATIVE_CC) {
+	} else if (MT_FORMULATION(MT) == MT_FORMULATION_FCONS) {
 	  M3(f, mm + EE , ix,iy,iz, p) = uubn + .5 * b2bn;
 	} else {
 	  assert(0);
 	}
-	if (MT == MT_FULLY_CONSERVATIVE_CC) {
+	if (MT_BGRID(MT) == MT_BGRID_CC) {
 	  M3(f, mm + BX , ix,iy,iz, p) = b[0];
 	  M3(f, mm + BY , ix,iy,iz, p) = b[1];
 	  M3(f, mm + BZ , ix,iy,iz, p) = b[2];

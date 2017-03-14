@@ -75,7 +75,7 @@ ggcm_mhd_diag_item_e_cc_run(struct ggcm_mhd_diag_item *item,
   ggcm_mhd_step_get_e_ec(mhd->step, Eec, f);
 
   // average ec -> cc
-  if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM) {
+  if (MT_BGRID(mhd_type) == MT_BGRID_FC_GGCM) {
     for (int p = 0; p < mrc_fld_nr_patches(Ecc); p++) {
       mrc_fld_foreach(Eec, ix,iy,iz, SW_2 - 1, SW_2) {
 	M3(Ecc, 0, ix, iy, iz, p) =
@@ -89,8 +89,7 @@ ggcm_mhd_diag_item_e_cc_run(struct ggcm_mhd_diag_item *item,
 		   M3(Eec, 2, ix  , iy-dy, iz   , p) + M3(Eec, 2, ix-dx, iy-dy, iz   , p));
       } mrc_fld_foreach_end;
     }
-  } else if (mhd_type == MT_SEMI_CONSERVATIVE ||
-             mhd_type == MT_FULLY_CONSERVATIVE) {
+  } else if (MT_BGRID(mhd_type) == MT_BGRID_FC) {
     for (int p = 0; p < mrc_fld_nr_patches(Ecc); p++) {
       mrc_fld_foreach(Eec, ix,iy,iz, SW_2, SW_2 - 1) {
 	M3(Ecc, 0, ix, iy, iz, p) =
@@ -104,6 +103,8 @@ ggcm_mhd_diag_item_e_cc_run(struct ggcm_mhd_diag_item *item,
 		   M3(Eec, 2, ix  , iy+dy, iz   , p) + M3(Eec, 2, ix+dx, iy+dy, iz   , p));
       } mrc_fld_foreach_end;
     }
+  } else {
+    assert(0);
   }
 
   ggcm_mhd_diag_c_write_one_field(io, Ecc, 0, "ex_cc", scale_ee, diag_type, plane);

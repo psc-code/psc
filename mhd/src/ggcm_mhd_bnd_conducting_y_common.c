@@ -222,7 +222,7 @@ GGCM_MHD_BND_CONDUCTING_Y_FILL_GHOST(struct ggcm_mhd_bnd *bnd,
   struct mrc_fld *x = mrc_fld_get_as(fld_base, FLD_TYPE);
   int mhd_type;
   mrc_fld_get_param_int(x, "mhd_type", &mhd_type);
-  assert(mhd_type != MT_SEMI_CONSERVATIVE_GGCM);  // written for C staggering only
+  assert(MT_BGRID(mhd_type) != MT_BGRID_FC_GGCM);  // written for C staggering only
 
   const int *dims = mrc_fld_spatial_dims(x);
   int nx = dims[0], ny = dims[1], nz = dims[2];

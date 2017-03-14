@@ -120,8 +120,7 @@ ggcm_mhd_dipole_sub_add_dipole(struct ggcm_mhd_dipole *mhd_dipole, struct mrc_fl
   
   // B = keep * B + curl A
 
-  if (mhd_type == MT_FULLY_CONSERVATIVE_CC ||
-      mhd_type == MT_GKEYLL ) { // cell-centered B
+  if (MT_BGRID(mhd_type) == MT_BGRID_CC) { // cell-centered B
     for (int p = 0; p < mrc_fld_nr_patches(b); p++) {
       float *fd1x = ggcm_mhd_crds_get_crd_p(mhd->crds, 0, FD1, p);
       float *fd1y = ggcm_mhd_crds_get_crd_p(mhd->crds, 1, FD1, p);
@@ -161,14 +160,13 @@ ggcm_mhd_dipole_sub_add_dipole(struct ggcm_mhd_dipole *mhd_dipole, struct mrc_fl
 	curl_a[2] = ((M3(a, 1, ix+1,iy,iz, p) - M3(a, 1, ix,iy,iz, p)) * bd3x[ix] -
 		     (M3(a, 0, ix,iy+1,iz, p) - M3(a, 0, ix,iy,iz, p)) * bd3y[iy]);
 	
-	switch (mhd_type) {
-	case MT_SEMI_CONSERVATIVE_GGCM:
+	switch (MT_BGRID(mhd_type)) {
+	case MT_BGRID_FC_GGCM:
 	  M3(b, 0, ix-1,iy,iz, p) = keep * M3(b, 0, ix-1,iy,iz, p) + curl_a[0];
 	  M3(b, 1, ix,iy-1,iz, p) = keep * M3(b, 1, ix,iy-1,iz, p) + curl_a[1];
 	  M3(b, 2, ix,iy,iz-1, p) = keep * M3(b, 2, ix,iy,iz-1, p) + curl_a[2];
 	  break;
-	case MT_SEMI_CONSERVATIVE:
-	case MT_FULLY_CONSERVATIVE:
+	case MT_BGRID_FC:
 	  for (int d = 0; d < 3; d++){
 	    float crd_fc[3];
 	    mrc_crds_at_fc(crds, ix,iy,iz, p, d, crd_fc);

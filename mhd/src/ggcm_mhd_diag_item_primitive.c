@@ -184,8 +184,7 @@ ggcm_mhd_diag_item_pp_run(struct ggcm_mhd_diag_item *item,
   struct mrc_fld *r = mrc_fld_get_as(fld_r, FLD_TYPE);
   struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
 
-  if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM ||
-      mhd_type == MT_SEMI_CONSERVATIVE) {
+  if (MT_FORMULATION(mhd_type) == MT_FORMULATION_SCONS) {
     for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
       mrc_fld_foreach(f, ix,iy,iz, bnd, bnd) {
 	mrc_fld_data_t rvv = (sqr(RVX_(f, ix,iy,iz, p)) +
@@ -194,31 +193,33 @@ ggcm_mhd_diag_item_pp_run(struct ggcm_mhd_diag_item *item,
 	M3(r,0, ix,iy,iz, p) = (gamm - 1.f) * (UU_(f, ix,iy,iz, p) - .5f * rvv);
       } mrc_fld_foreach_end;
     }
-  } else if (mhd_type == MT_FULLY_CONSERVATIVE) {
-    for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
-      mrc_fld_foreach(f, ix,iy,iz, bnd, bnd) {
-	mrc_fld_data_t rvv = (sqr(RVX_(f, ix,iy,iz, p)) +
-			      sqr(RVY_(f, ix,iy,iz, p)) +
-			      sqr(RVZ_(f, ix,iy,iz, p))) / RR_(f, ix,iy,iz, p);
-	mrc_fld_data_t b2  = (sqr(.5f * (BX_(f, ix,iy,iz, p) + BX_(f, ix+dx,iy   ,iz   , p))) +
-			      sqr(.5f * (BY_(f, ix,iy,iz, p) + BY_(f, ix   ,iy+dy,iz   , p))) +
-			      sqr(.5f * (BZ_(f, ix,iy,iz, p) + BZ_(f, ix   ,iy   ,iz+dz, p))));
-	M3(r,0, ix,iy,iz, p) = (gamm - 1.f) * (EE_(f, ix,iy,iz, p) - .5f * rvv - .5f * b2);
-      } mrc_fld_foreach_end;
+  } else if (MT_FORMULATION(mhd_type) == MT_FORMULATION_FCONS) {
+    if (MT_BGRID(mhd_type) == MT_BGRID_FC) {
+      for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
+	mrc_fld_foreach(f, ix,iy,iz, bnd, bnd) {
+	  mrc_fld_data_t rvv = (sqr(RVX_(f, ix,iy,iz, p)) +
+				sqr(RVY_(f, ix,iy,iz, p)) +
+				sqr(RVZ_(f, ix,iy,iz, p))) / RR_(f, ix,iy,iz, p);
+	  mrc_fld_data_t b2  = (sqr(.5f * (BX_(f, ix,iy,iz, p) + BX_(f, ix+dx,iy   ,iz   , p))) +
+				sqr(.5f * (BY_(f, ix,iy,iz, p) + BY_(f, ix   ,iy+dy,iz   , p))) +
+				sqr(.5f * (BZ_(f, ix,iy,iz, p) + BZ_(f, ix   ,iy   ,iz+dz, p))));
+	  M3(r,0, ix,iy,iz, p) = (gamm - 1.f) * (EE_(f, ix,iy,iz, p) - .5f * rvv - .5f * b2);
+	} mrc_fld_foreach_end;
+      }
+    } else if (MT_BGRID(mhd_type) == MT_BGRID_CC) {
+      for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
+	mrc_fld_foreach(f, ix,iy,iz, bnd, bnd) {
+	  mrc_fld_data_t rvv = (sqr(RVX_(f, ix,iy,iz, p)) +
+				sqr(RVY_(f, ix,iy,iz, p)) +
+				sqr(RVZ_(f, ix,iy,iz, p))) / RR_(f, ix,iy,iz, p);
+	  mrc_fld_data_t b2  = (sqr(BX_(f, ix,iy,iz, p)) +
+				sqr(BY_(f, ix,iy,iz, p)) +
+				sqr(BZ_(f, ix,iy,iz, p)));
+	  M3(r,0, ix,iy,iz, p) = (gamm - 1.f) * (EE_(f, ix,iy,iz, p) - .5f * rvv - .5f * b2);
+	} mrc_fld_foreach_end;
+      }
     }
-  } else if (mhd_type == MT_FULLY_CONSERVATIVE_CC) {
-    for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
-      mrc_fld_foreach(f, ix,iy,iz, bnd, bnd) {
-	mrc_fld_data_t rvv = (sqr(RVX_(f, ix,iy,iz, p)) +
-			      sqr(RVY_(f, ix,iy,iz, p)) +
-			      sqr(RVZ_(f, ix,iy,iz, p))) / RR_(f, ix,iy,iz, p);
-	mrc_fld_data_t b2  = (sqr(BX_(f, ix,iy,iz, p)) +
-			      sqr(BY_(f, ix,iy,iz, p)) +
-			      sqr(BZ_(f, ix,iy,iz, p)));
-	M3(r,0, ix,iy,iz, p) = (gamm - 1.f) * (EE_(f, ix,iy,iz, p) - .5f * rvv - .5f * b2);
-      } mrc_fld_foreach_end;
-    }
-  } else if (mhd_type == MT_GKEYLL) {
+  } else if (MT_FORMULATION(mhd_type) == MT_FORMULATION_GKEYLL) {
     int nr_fluids = mhd->par.gk_nr_fluids;
     int nr_moments = mhd->par.gk_nr_moments;
 
@@ -284,7 +285,7 @@ ggcm_mhd_diag_item_b_run(struct ggcm_mhd_diag_item *item,
 
   struct mrc_fld *r = mrc_fld_get_as(fld_r, FLD_TYPE);
   struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
-  if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM) {
+  if (MT_BGRID(mhd_type) == MT_BGRID_FC_GGCM) {
     for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
       mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
 	M3(r, 0, ix,iy,iz, p) = .5f * (BX_(f, ix,iy,iz, p) + BX_(f, ix-1,iy,iz, p));
@@ -292,10 +293,9 @@ ggcm_mhd_diag_item_b_run(struct ggcm_mhd_diag_item *item,
 	M3(r, 2, ix,iy,iz, p) = .5f * (BZ_(f, ix,iy,iz, p) + BZ_(f, ix,iy,iz-1, p));
       } mrc_fld_foreach_end;
     }
-  } else if (mhd_type == MT_SEMI_CONSERVATIVE ||
-	     mhd_type == MT_FULLY_CONSERVATIVE) {
+  } else if (MT_BGRID(mhd_type) == MT_BGRID_FC) {
     compute_Bt_cc(mhd, fld_r, f, 1, 1);
-  } else if (mhd_type == MT_FULLY_CONSERVATIVE_CC) {
+  } else if (MT_BGRID(mhd_type) == MT_BGRID_CC) {
     struct mrc_fld *b0 = mhd->b0;
     for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
       mrc_fld_foreach(f, ix,iy,iz, 1, 1) {

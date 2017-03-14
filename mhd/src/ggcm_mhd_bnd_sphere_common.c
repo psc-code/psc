@@ -150,16 +150,19 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld, int m)
       }
 #endif
 
-      if (MT == MT_SEMI_CONSERVATIVE ||
-          MT == MT_SEMI_CONSERVATIVE_GGCM) {
+      if (MT_FORMULATION(MT) == MT_FORMULATION_SCONS) {
         M3(fld, m + UU , ix,iy,iz, p) = uubn;
-      } else if (MT == MT_FULLY_CONSERVATIVE) {
-        M3(fld, m + EE , ix,iy,iz, p) = eebn;
-      } else if (MT == MT_FULLY_CONSERVATIVE_CC) {
-        M3(fld, m + EE , ix,iy,iz, p) = uubn
-    + .5 * (sqr(M3(fld, m + BX, ix,iy,iz, p)) +
-      sqr(M3(fld, m + BY, ix,iy,iz, p)) +
-      sqr(M3(fld, m + BZ, ix,iy,iz, p)));
+      } else if (MT_FORMULATION(MT) == MT_FORMULATION_FCONS) {
+	if (MT_BGRID(MT) == MT_BGRID_FC) {
+	  M3(fld, m + EE , ix,iy,iz, p) = eebn;
+	} else if (MT_BGRID(MT) == MT_BGRID_CC) {
+	  M3(fld, m + EE , ix,iy,iz, p) = uubn
+	    + .5 * (sqr(M3(fld, m + BX, ix,iy,iz, p)) +
+		    sqr(M3(fld, m + BY, ix,iy,iz, p)) +
+		    sqr(M3(fld, m + BZ, ix,iy,iz, p)));
+	} else {
+	  assert(0);
+	}
       } else {
         assert(0);
       }
@@ -527,9 +530,7 @@ sphere_fill_ghosts_test_4(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld, int m)
       mrc_fld_data_t by_ = by;
       mrc_fld_data_t bz_ = bz;
 
-      if (MT == MT_SEMI_CONSERVATIVE ||
-          MT == MT_SEMI_CONSERVATIVE_GGCM) {
-
+      if (MT_FORMULATION(MT) == MT_FORMULATION_SCONS) {
         mrc_fld_data_t pp = (gamm -1.) * (bn[UU]
             - .5 * ( sqr(rvx ) + sqr(rvy ) + sqr(rvz ) ) / rr);
         mrc_fld_data_t pp_ = sub->const_pp? pp : ppbn;
@@ -537,8 +538,7 @@ sphere_fill_ghosts_test_4(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld, int m)
         M3(fld, m + UU , ix,iy,iz, p)= pp_ / (gamm - 1.)
           + .5 * ( sqr(rvx_) + sqr(rvy_) + sqr(rvz_) ) / rr_;
 
-      } else if (MT == MT_FULLY_CONSERVATIVE ||
-          MT == MT_FULLY_CONSERVATIVE_CC) {
+      } else if (MT_FORMULATION(MT) == MT_FORMULATION_FCONS) {
 
         mrc_fld_data_t pp = (gamm -1.) * (bn[EE]
             - .5 * ( sqr(bx  ) + sqr(by  ) + sqr(bz  )) // /mu0

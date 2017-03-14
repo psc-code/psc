@@ -194,7 +194,7 @@ ggcm_mhd_diag_item_bdipcc_run(struct ggcm_mhd_diag_item *item,
 
   int mhd_type;
   mrc_fld_get_param_int(mhd->fld, "mhd_type", &mhd_type);
-  if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM) {
+  if (MT_BGRID(mhd_type) == MT_BGRID_FC_GGCM) {
     for (int p = 0; p < mrc_fld_nr_patches(r); p++) {
       mrc_fld_foreach(r, ix,iy,iz, 0, 0) {
 	M3(r, 0, ix,iy,iz, p) = .5f * (M3(bdip, 0, ix,iy,iz, p) + M3(bdip, 0, ix-1,iy,iz, p));
@@ -202,8 +202,7 @@ ggcm_mhd_diag_item_bdipcc_run(struct ggcm_mhd_diag_item *item,
 	M3(r, 2, ix,iy,iz, p) = .5f * (M3(bdip, 2, ix,iy,iz, p) + M3(bdip, 2, ix,iy,iz-1, p));
       } mrc_fld_foreach_end;
     }
-  } else if (mhd_type == MT_SEMI_CONSERVATIVE ||
-	     mhd_type == MT_FULLY_CONSERVATIVE) {
+  } else if (MT_BGRID(mhd_type) == MT_BGRID_FC) {
     for (int p = 0; p < mrc_fld_nr_patches(r); p++) {
       mrc_fld_foreach(r, ix,iy,iz, 0, 0) {
 	M3(r, 0, ix,iy,iz, p) = .5f * (M3(bdip, 0, ix,iy,iz, p) + M3(bdip, 0, ix+1,iy,iz, p));
