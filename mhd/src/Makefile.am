@@ -141,7 +141,6 @@ EXTRA_libmhd_la_SOURCES = \
 	ggcm_mhd_step_c2_common.c \
 	ggcm_mhd_step_c3_common.c \
 	ggcm_mhd_step_c_common.c \
-	ggcm_mhd_step_legacy.c \
 	mhd_1d.c \
 	mhd_3d.c \
 	mhd_reconstruct_pcm_common.c \
