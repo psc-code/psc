@@ -211,11 +211,9 @@ ggcm_mhd_ic_B_from_primitive(struct ggcm_mhd_ic *ic, struct mrc_fld *b, primitiv
   int mhd_type;
   mrc_fld_get_param_int(mhd->fld, "mhd_type", &mhd_type);
   
-  if (mhd_type == MT_FULLY_CONSERVATIVE ||
-      mhd_type == MT_SEMI_CONSERVATIVE) {
+  if (MT_BGRID(mhd_type) == MT_BGRID_FC) {
     ggcm_mhd_ic_B_from_primitive_fc(ic, b, primitive);
-  } else if (mhd_type == MT_FULLY_CONSERVATIVE_CC ||
-	     mhd_type == MT_GKEYLL) {
+  } else if (MT_BGRID(mhd_type) == MT_BGRID_CC) {
     ggcm_mhd_ic_B_from_primitive_cc(ic, b, primitive);
   } else {
     mprintf("mhd_type %d unhandled\n", mhd_type);

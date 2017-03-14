@@ -61,7 +61,7 @@ void ggcm_mhd_setup_ts(struct ggcm_mhd *mhd, struct mrc_ts *ts);
 #define MT_SCONS_FC_GGCM (MT_FORMULATION_SCONS | MT_BGRID_FC_GGCM)
 
 // the following have B staggered the "normal" way: [0..mx]
-#define MT_SEMI_CONSERVATIVE (MT_FORMULATION_SCONS | MT_BGRID_FC)
+#define MT_SCONS_FC (MT_FORMULATION_SCONS | MT_BGRID_FC)
 #define MT_FULLY_CONSERVATIVE (MT_FORMULATION_FCONS | MT_BGRID_FC)
 
 // cell-centered fully conservative MHD

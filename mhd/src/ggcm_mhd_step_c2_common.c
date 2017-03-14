@@ -59,7 +59,7 @@ ggcm_mhd_step_c2_setup_flds(struct ggcm_mhd_step *step)
   pde_mhd_set_options(mhd, &sub->opt);
   mrc_fld_set_type(mhd->fld, FLD_TYPE);
   mrc_fld_set_param_int(mhd->fld, "nr_ghosts", 2);
-  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_SEMI_CONSERVATIVE);
+  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_SCONS_FC);
   mrc_fld_set_param_int(mhd->fld, "nr_comps", 8);
 }
 
@@ -82,7 +82,7 @@ ggcm_mhd_step_c2_setup(struct ggcm_mhd_step *step)
   sub->f_zmask = ggcm_mhd_get_3d_fld(mhd, 1);
 
   sub->f_Uhalf = ggcm_mhd_get_3d_fld(mhd, 8);
-  mrc_fld_dict_add_int(sub->f_Uhalf, "mhd_type", MT_SEMI_CONSERVATIVE);
+  mrc_fld_dict_add_int(sub->f_Uhalf, "mhd_type", MT_SCONS_FC);
 
   sub->f_E = ggcm_mhd_get_3d_fld(mhd, 3);
 
