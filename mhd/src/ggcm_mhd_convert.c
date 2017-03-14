@@ -7,6 +7,8 @@
 #include <mrc_domain.h>
 #include <mrc_fld_as_double.h>
 
+#include "ggcm_mhd_convert.h"
+
 #include <string.h>
 #include <stdlib.h>
 #include <execinfo.h>
@@ -20,22 +22,23 @@
 static void
 ggcm_mhd_convert_sc_ggcm_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_base)
 {
-  mrc_fld_data_t gamma_m1 = mhd->par.gamm - 1.;
+  static bool is_setup = false;
+  if (!is_setup) {
+    ggcm_mhd_convert_setup(mhd);
+  }
 
   struct mrc_fld *fld = mrc_fld_get_as(fld_base, FLD_TYPE);
 
   for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
     mrc_fld_foreach(fld, ix,iy,iz, 0, 1) {
-      RVX_(fld, ix,iy,iz, p) = RR_(fld, ix,iy,iz, p) * VX_(fld, ix,iy,iz, p);
-      RVY_(fld, ix,iy,iz, p) = RR_(fld, ix,iy,iz, p) * VY_(fld, ix,iy,iz, p);
-      RVZ_(fld, ix,iy,iz, p) = RR_(fld, ix,iy,iz, p) * VZ_(fld, ix,iy,iz, p);
-      UU_ (fld, ix,iy,iz, p) = PP_(fld, ix,iy,iz, p) / gamma_m1
-	+ .5f*(sqr(RVX_(fld, ix,iy,iz, p)) +
-	       sqr(RVY_(fld, ix,iy,iz, p)) +
-	       sqr(RVZ_(fld, ix,iy,iz, p))) / RR_(fld, ix,iy,iz, p);
-      BX_(fld, ix-1,iy,iz, p) = BX_(fld, ix,iy,iz, p);
-      BY_(fld, ix,iy-1,iz, p) = BY_(fld, ix,iy,iz, p);
-      BZ_(fld, ix,iy,iz-1, p) = BZ_(fld, ix,iy,iz, p);
+      mrc_fld_data_t prim[8], state[8];
+      for (int m = 0; m < 8; m++) {
+	prim[m] = M3(fld, m, ix,iy,iz, p);
+      }
+      convert_state_from_prim_scons(state, prim);
+      for (int m = 0; m < 5; m++) {
+	M3(fld, m, ix,iy,iz, p) = state[m];
+      }
     } mrc_fld_foreach_end;
   }
   
@@ -51,19 +54,23 @@ ggcm_mhd_convert_sc_ggcm_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fl
 static void
 ggcm_mhd_convert_sc_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_base)
 {
-  mrc_fld_data_t gamma_m1 = mhd->par.gamm - 1.;
+  static bool is_setup = false;
+  if (!is_setup) {
+    ggcm_mhd_convert_setup(mhd);
+  }
 
   struct mrc_fld *fld = mrc_fld_get_as(fld_base, FLD_TYPE);
 
   for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
     mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
-      RVX_(fld, ix,iy,iz, p) = RR_(fld, ix,iy,iz, p) * VX_(fld, ix,iy,iz, p);
-      RVY_(fld, ix,iy,iz, p) = RR_(fld, ix,iy,iz, p) * VY_(fld, ix,iy,iz, p);
-      RVZ_(fld, ix,iy,iz, p) = RR_(fld, ix,iy,iz, p) * VZ_(fld, ix,iy,iz, p);
-      UU_ (fld, ix,iy,iz, p) = PP_(fld, ix,iy,iz, p) / gamma_m1
-	+ .5*(sqr(RVX_(fld, ix,iy,iz, p)) +
-	      sqr(RVY_(fld, ix,iy,iz, p)) +
-	      sqr(RVZ_(fld, ix,iy,iz, p))) / RR_(fld, ix,iy,iz, p);
+      mrc_fld_data_t prim[8], state[8];
+      for (int m = 0; m < 8; m++) {
+	prim[m] = M3(fld, m, ix,iy,iz, p);
+      }
+      convert_state_from_prim_scons(state, prim);
+      for (int m = 0; m < 5; m++) {
+	M3(fld, m, ix,iy,iz, p) = state[m];
+      }
     } mrc_fld_foreach_end;
   }
   
@@ -80,7 +87,10 @@ ggcm_mhd_convert_sc_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_bas
 static void
 ggcm_mhd_convert_fc_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_base)
 {
-  mrc_fld_data_t gamma_m1 = mhd->par.gamm - 1.;
+  static bool is_setup = false;
+  if (!is_setup) {
+    ggcm_mhd_convert_setup(mhd);
+  }
 
   struct mrc_fld *fld = mrc_fld_get_as(fld_base, FLD_TYPE);
 
@@ -93,16 +103,17 @@ ggcm_mhd_convert_fc_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_bas
 
   for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
     mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
-      RVX_(fld, ix,iy,iz, p) = RR_(fld, ix,iy,iz, p) * VX_(fld, ix,iy,iz, p);
-      RVY_(fld, ix,iy,iz, p) = RR_(fld, ix,iy,iz, p) * VY_(fld, ix,iy,iz, p);
-      RVZ_(fld, ix,iy,iz, p) = RR_(fld, ix,iy,iz, p) * VZ_(fld, ix,iy,iz, p);
-      UU_ (fld, ix,iy,iz, p) = PP_(fld, ix,iy,iz, p) / gamma_m1
-	+ .5*(sqr(.5*(BX_(fld, ix,iy,iz, p) + BX_(fld, ix+dx,iy,iz, p))) +
-	      sqr(.5*(BY_(fld, ix,iy,iz, p) + BY_(fld, ix,iy+dy,iz, p))) +
-	      sqr(.5*(BZ_(fld, ix,iy,iz, p) + BZ_(fld, ix,iy,iz+dz, p))))
-	+ .5*(sqr(RVX_(fld, ix,iy,iz, p)) +
-	      sqr(RVY_(fld, ix,iy,iz, p)) +
-	      sqr(RVZ_(fld, ix,iy,iz, p))) / RR_(fld, ix,iy,iz, p);
+      mrc_fld_data_t prim[8], state[8];
+      for (int m = 0; m < 5; m++) {
+	prim[m] = M3(fld, m, ix,iy,iz, p);
+      }
+      prim[BX] = .5f*(BX_(fld, ix,iy,iz, p) + BX_(fld, ix+dx,iy,iz, p));
+      prim[BY] = .5f*(BY_(fld, ix,iy,iz, p) + BY_(fld, ix,iy+dy,iz, p));
+      prim[BZ] = .5f*(BZ_(fld, ix,iy,iz, p) + BZ_(fld, ix,iy,iz+dz, p));
+      convert_state_from_prim_fcons(state, prim);
+      for (int m = 0; m < 5; m++) {
+	M3(fld, m, ix,iy,iz, p) = state[m];
+      }
     } mrc_fld_foreach_end;
   }
 
@@ -119,7 +130,10 @@ ggcm_mhd_convert_fc_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_bas
 static void
 ggcm_mhd_convert_fc_cc_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_base)
 {
-  mrc_fld_data_t gamma_m1 = mhd->par.gamm - 1.;
+  static bool is_setup = false;
+  if (!is_setup) {
+    ggcm_mhd_convert_setup(mhd);
+  }
 
   struct mrc_fld *fld = mrc_fld_get_as(fld_base, FLD_TYPE);
 
@@ -132,19 +146,17 @@ ggcm_mhd_convert_fc_cc_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_
 
   for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
     mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
-      RVX_(fld, ix,iy,iz, p) = RR_(fld, ix,iy,iz, p) * VX_(fld, ix,iy,iz, p);
-      RVY_(fld, ix,iy,iz, p) = RR_(fld, ix,iy,iz, p) * VY_(fld, ix,iy,iz, p);
-      RVZ_(fld, ix,iy,iz, p) = RR_(fld, ix,iy,iz, p) * VZ_(fld, ix,iy,iz, p);
-      BX_ (fld, ix,iy,iz, p) = .5*(BX_(fld, ix,iy,iz, p) + BX_(fld, ix+dx,iy,iz, p));
-      BY_ (fld, ix,iy,iz, p) = .5*(BY_(fld, ix,iy,iz, p) + BY_(fld, ix,iy+dy,iz, p));
-      BZ_ (fld, ix,iy,iz, p) = .5*(BZ_(fld, ix,iy,iz, p) + BZ_(fld, ix,iy,iz+dz, p));
-      EE_ (fld, ix,iy,iz, p) = PP_(fld, ix,iy,iz, p) / gamma_m1
-	+ .5*(sqr(BX_(fld, ix,iy,iz, p)) +
-	      sqr(BY_(fld, ix,iy,iz, p)) +
-	      sqr(BZ_(fld, ix,iy,iz, p)))
-	+ .5*(sqr(RVX_(fld, ix,iy,iz, p)) +
-	      sqr(RVY_(fld, ix,iy,iz, p)) +
-	      sqr(RVZ_(fld, ix,iy,iz, p))) / RR_(fld, ix,iy,iz, p);
+      mrc_fld_data_t prim[8], state[8];
+      for (int m = 0; m < 5; m++) {
+	prim[m] = M3(fld, m, ix,iy,iz, p);
+      }
+      prim[BX] = .5f*(BX_(fld, ix,iy,iz, p) + BX_(fld, ix+dx,iy,iz, p));
+      prim[BY] = .5f*(BY_(fld, ix,iy,iz, p) + BY_(fld, ix,iy+dy,iz, p));
+      prim[BZ] = .5f*(BZ_(fld, ix,iy,iz, p) + BZ_(fld, ix,iy,iz+dz, p));
+      convert_state_from_prim_fcons(state, prim);
+      for (int m = 0; m < 8; m++) {
+	M3(fld, m, ix,iy,iz, p) = state[m];
+      }
     } mrc_fld_foreach_end;
   }
 
