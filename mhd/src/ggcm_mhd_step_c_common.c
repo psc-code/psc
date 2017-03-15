@@ -116,16 +116,27 @@ ggcm_mhd_step_c_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   struct ggcm_mhd *mhd = step->mhd;
 
   assert(x == mhd->fld);
+  int mhd_type;
+  mrc_fld_get_param_int(x, "mhd_type", &mhd_type);
+
+  struct mrc_fld *x_n = mrc_fld_make_view(x, _RR1, _RR1 + 8);
+  mrc_fld_dict_add_int(x_n, "mhd_type", mhd_type);
+
+  struct mrc_fld *x_star = mrc_fld_make_view(x, _RR2, _RR2 + 8);
+  mrc_fld_dict_add_int(x_star, "mhd_type", mhd_type);
 
   // FIXME? It's not going to make a difference, but this is the
   // time at the beginning of the whole step, rather than the time of the current state
   s_mhd_time = mhd->time_code * mhd->tnorm; 
 
-  ggcm_mhd_fill_ghosts(mhd, x, _RR1, mhd->time_code);
+  ggcm_mhd_fill_ghosts(mhd, x_n, 0, mhd->time_code);
   pde_mhd_pushstage(x, .5f * mhd->dt_code, 0);
 
-  ggcm_mhd_fill_ghosts(mhd, x, _RR2, mhd->time_code + .5 * mhd->dt_code);
+  ggcm_mhd_fill_ghosts(mhd, x_star, 0, mhd->time_code + .5 * mhd->dt_code);
   pde_mhd_pushstage(x, mhd->dt_code, 1);
+
+  mrc_fld_destroy(x_n);
+  mrc_fld_destroy(x_star);
 }
 
 // ----------------------------------------------------------------------
