@@ -22,9 +22,9 @@ bcthy3f(mrc_fld_data_t s1, mrc_fld_data_t s2)
   return 0.f;
 }
 
-#define ID(XX) ((XX)==0)
-#define JD(XX) ((XX)==1)
-#define KD(XX) ((XX)==2)
+#define ID(XX) (di*((XX)==0))
+#define JD(XX) (dj*((XX)==1))
+#define KD(XX) (dk*((XX)==2))
 
 #define F3S_P(XX, p_f, m, i,j,k) F3S(p_f, m, i+ID(XX),j+JD(XX),k+KD(XX))
 #define F3S_M(XX, p_f, m, i,j,k) F3S(p_f, m, i-ID(XX),j-JD(XX),k-KD(XX))

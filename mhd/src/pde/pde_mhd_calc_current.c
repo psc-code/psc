@@ -16,12 +16,12 @@ static void _mrc_unused
 patch_calc_current_ec(fld3d_t p_J, fld3d_t p_B)
 {
   fld3d_foreach(i,j,k, 2, 1) {
-    F3S(p_J, 0, i,j,k) = ((F3S(p_B, 2, i,j+1,k) - F3S(p_B, 2, i,j,k)) * PDE_INV_DYF(j+1) -
-			  (F3S(p_B, 1, i,j,k+1) - F3S(p_B, 1, i,j,k)) * PDE_INV_DZF(k+1));
-    F3S(p_J, 1, i,j,k) = ((F3S(p_B, 0, i,j,k+1) - F3S(p_B, 0, i,j,k)) * PDE_INV_DZF(k+1) -
-			  (F3S(p_B, 2, i+1,j,k) - F3S(p_B, 2, i,j,k)) * PDE_INV_DXF(i+1));
-    F3S(p_J, 2, i,j,k) = ((F3S(p_B, 1, i+1,j,k) - F3S(p_B, 1, i,j,k)) * PDE_INV_DXF(i+1) -
-			  (F3S(p_B, 0, i,j+1,k) - F3S(p_B, 0, i,j,k)) * PDE_INV_DYF(j+1));
+    F3S(p_J, 0, i,j,k) = ((F3S(p_B, 2, i,j+dj,k) - F3S(p_B, 2, i,j,k)) * PDE_INV_DYF(j+1) -
+			  (F3S(p_B, 1, i,j,k+dk) - F3S(p_B, 1, i,j,k)) * PDE_INV_DZF(k+1));
+    F3S(p_J, 1, i,j,k) = ((F3S(p_B, 0, i,j,k+dk) - F3S(p_B, 0, i,j,k)) * PDE_INV_DZF(k+1) -
+			  (F3S(p_B, 2, i+di,j,k) - F3S(p_B, 2, i,j,k)) * PDE_INV_DXF(i+1));
+    F3S(p_J, 2, i,j,k) = ((F3S(p_B, 1, i+di,j,k) - F3S(p_B, 1, i,j,k)) * PDE_INV_DXF(i+1) -
+			  (F3S(p_B, 0, i,j+dj,k) - F3S(p_B, 0, i,j,k)) * PDE_INV_DYF(j+1));
   } fld3d_foreach_end;
 }
 
@@ -31,12 +31,12 @@ static void
 patch_calc_current_ec(fld3d_t p_J, fld3d_t p_B)
 {
   fld3d_foreach(i,j,k, 1, 2) {
-    F3S(p_J, 0, i,j,k) = ((F3S(p_B, 2, i,j,k) - F3S(p_B, 2, i,j-1,k)) * PDE_INV_DYF(j) -
-			  (F3S(p_B, 1, i,j,k) - F3S(p_B, 1, i,j,k-1)) * PDE_INV_DZF(k));
-    F3S(p_J, 1, i,j,k) = ((F3S(p_B, 0, i,j,k) - F3S(p_B, 0, i,j,k-1)) * PDE_INV_DZF(k) -
-			  (F3S(p_B, 2, i,j,k) - F3S(p_B, 2, i-1,j,k)) * PDE_INV_DXF(i));
-    F3S(p_J, 2, i,j,k) = ((F3S(p_B, 1, i,j,k) - F3S(p_B, 1, i-1,j,k)) * PDE_INV_DXF(i) -
-			  (F3S(p_B, 0, i,j,k) - F3S(p_B, 0, i,j-1,k)) * PDE_INV_DYF(j));
+    F3S(p_J, 0, i,j,k) = ((F3S(p_B, 2, i,j,k) - F3S(p_B, 2, i,j-dj,k)) * PDE_INV_DYF(j) -
+			  (F3S(p_B, 1, i,j,k) - F3S(p_B, 1, i,j,k-dk)) * PDE_INV_DZF(k));
+    F3S(p_J, 1, i,j,k) = ((F3S(p_B, 0, i,j,k) - F3S(p_B, 0, i,j,k-dk)) * PDE_INV_DZF(k) -
+			  (F3S(p_B, 2, i,j,k) - F3S(p_B, 2, i-di,j,k)) * PDE_INV_DXF(i));
+    F3S(p_J, 2, i,j,k) = ((F3S(p_B, 1, i,j,k) - F3S(p_B, 1, i-di,j,k)) * PDE_INV_DXF(i) -
+			  (F3S(p_B, 0, i,j,k) - F3S(p_B, 0, i,j-dj,k)) * PDE_INV_DYF(j));
   } fld3d_foreach_end;
 }
 
