@@ -11,11 +11,26 @@ typedef struct {
 
 //#define F3S(f, m, i,j,k) M3((f).mrc_fld, m, i,j,k, (f).p)
 
-#define F3S(f, m, i,j,k)						\
+#define _F3S(f, m, i,j,k)						\
   (((f).arr_off)[((((m)) * s_lgdims[2] +				\
 		   (k)) * s_lgdims[1] +					\
 		  (j)) * s_lgdims[0] +					\
 		 (i)])
+
+#ifdef BOUNDS_CHECK
+
+#define F3S(f, m, i,j,k) (*({					\
+	assert(i >= -s_sw[0] && i < s_sw[0] + s_lgdims[0]);	\
+	assert(j >= -s_sw[1] && j < s_sw[1] + s_lgdims[1]);	\
+	assert(k >= -s_sw[2] && k < s_sw[2] + s_lgdims[2]);	\
+	&_F3S(f, m, i,j,k);					\
+      }))
+
+#else
+
+#define F3S(f, m, i,j,k) _F3S(f, m, i,j,k)
+
+#endif
 
 static inline void
 fld3d_setup(fld3d_t *f, struct mrc_fld *fld)
