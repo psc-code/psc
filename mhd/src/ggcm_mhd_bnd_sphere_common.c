@@ -69,7 +69,7 @@ ggcm_mhd_bnd_sphere_setup(struct ggcm_mhd_bnd *bnd)
 // sphere_fill_ghosts
 
 static void
-sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld, int m)
+sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
 {
   struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
   struct ggcm_mhd_bnd_sphere_map *map = &sub->map;
@@ -140,9 +140,9 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld, int m)
       // to avoid cutting off the initial perturbation from e.g., the mirror dipole,
       // let's just keep B as-is, rather than using the fixed values above
       if (MT == MT_FCONS_CC) {
-        prim[BX] = M3(fld, m + BX , ix,iy,iz, p);
-        prim[BY] = M3(fld, m + BY , ix,iy,iz, p);
-        prim[BZ] = M3(fld, m + BZ , ix,iy,iz, p);
+        prim[BX] = M3(fld, BX, ix,iy,iz, p);
+        prim[BY] = M3(fld, BY, ix,iy,iz, p);
+        prim[BZ] = M3(fld, BZ, ix,iy,iz, p);
       }
       
       if (MT_FORMULATION(MT) == MT_FORMULATION_SCONS) {
@@ -152,14 +152,14 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld, int m)
       }
 
       if (MT_BGRID(MT) == MT_BGRID_CC) {
-	for (int mm = 0; mm < 8; mm++) {
-	  M3 (fld, m + mm,  ix,iy,iz, p) = state[mm];
+	for (int m = 0; m < 8; m++) {
+	  M3 (fld, m, ix,iy,iz, p) = state[m];
 	}
       } else {
 	// to set B, we'd need a face-centered map, but anyway, our boundary condition is evolved
 	// using E = -v x B to update B
-	for (int mm = 0; mm < 5; mm++) {
-	  M3 (fld, m + mm,  ix,iy,iz, p) = state[mm];
+	for (int m = 0; m < 5; m++) {
+	  M3 (fld, m, ix,iy,iz, p) = state[m];
 	}
       }
     }
@@ -167,7 +167,7 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld, int m)
 }
 
 static void
-sphere_fill_ghosts_test_1(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld, int m)
+sphere_fill_ghosts_test_1(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
 {
   struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
   struct ggcm_mhd_bnd_sphere_map *map = &sub->map;
@@ -209,7 +209,7 @@ sphere_fill_ghosts_test_1(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld, int m)
 }
 
 static void
-sphere_fill_ghosts_test_2(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld, int m)
+sphere_fill_ghosts_test_2(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
 {
   struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
   struct ggcm_mhd_bnd_sphere_map *map = &sub->map;
@@ -284,7 +284,7 @@ sphere_fill_ghosts_test_2(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld, int m)
 // sphere_fill_ghosts_3
 
 static void
-sphere_fill_ghosts_test_3(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld, int m)
+sphere_fill_ghosts_test_3(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
 {
   struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
   struct ggcm_mhd_bnd_sphere_map *map = &sub->map;
@@ -342,7 +342,7 @@ sphere_fill_ghosts_test_3(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld, int m)
 // and to radially reflect momentum
 
 static void
-sphere_fill_ghosts_test_4(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld, int m)
+sphere_fill_ghosts_test_4(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
 {
   struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
   struct ggcm_mhd_bnd_sphere_map *map = &sub->map;
@@ -513,10 +513,10 @@ sphere_fill_ghosts_test_4(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld, int m)
       mrc_fld_data_t rvy_ = rvy - 2*rv_dot_r*y*ir2;
       mrc_fld_data_t rvz_ = rvz - 2*rv_dot_r*z*ir2;
 
-      M3 (fld, m + RR,  ix,iy,iz, p) = rr_;
-      M3 (fld, m + RVX, ix,iy,iz, p) = rvx_;
-      M3 (fld, m + RVY, ix,iy,iz, p) = rvy_;
-      M3 (fld, m + RVZ, ix,iy,iz, p) = rvz_;
+      M3(fld, RR,  ix,iy,iz, p) = rr_;
+      M3(fld, RVX, ix,iy,iz, p) = rvx_;
+      M3(fld, RVY, ix,iy,iz, p) = rvy_;
+      M3(fld, RVZ, ix,iy,iz, p) = rvz_;
 
       mrc_fld_data_t bx = bn[BX];
       mrc_fld_data_t by = bn[BY];
@@ -531,17 +531,16 @@ sphere_fill_ghosts_test_4(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld, int m)
             - .5 * ( sqr(rvx ) + sqr(rvy ) + sqr(rvz ) ) / rr);
         mrc_fld_data_t pp_ = sub->const_pp? pp : ppbn;
 
-        M3(fld, m + UU , ix,iy,iz, p)= pp_ / (gamm - 1.)
+        M3(fld, UU, ix,iy,iz, p) = pp_ / (gamm - 1.)
           + .5 * ( sqr(rvx_) + sqr(rvy_) + sqr(rvz_) ) / rr_;
 
       } else if (MT_FORMULATION(MT) == MT_FORMULATION_FCONS) {
-
         mrc_fld_data_t pp = (gamm -1.) * (bn[EE]
             - .5 * ( sqr(bx  ) + sqr(by  ) + sqr(bz  )) // /mu0
             - .5 * ( sqr(rvx ) + sqr(rvy ) + sqr(rvz )) / rr);
         mrc_fld_data_t pp_ = sub->const_pp? pp : ppbn;
 
-        M3(fld, m + EE , ix,iy,iz, p) = pp_ / (gamm - 1.)
+        M3(fld, EE, ix,iy,iz, p) = pp_ / (gamm - 1.)
           - .5 * ( sqr(bx_ ) + sqr(by_ ) + sqr(bz_ )) // /mu0
           + .5 * ( sqr(rvx_) + sqr(rvy_) + sqr(rvz_)) / rr_;
       } else {
@@ -556,7 +555,7 @@ sphere_fill_ghosts_test_4(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld, int m)
 
 static void
 ggcm_mhd_bnd_sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld_base,
-			      int m, float bntim)
+				float bntim)
 {
   struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
   struct ggcm_mhd_bnd_sphere_map *map = &sub->map;
@@ -568,21 +567,20 @@ ggcm_mhd_bnd_sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld_ba
   int mhd_type;
   mrc_fld_get_param_int(fld_base, "mhd_type", &mhd_type);
   assert(mhd_type == MT);
-  assert(m == 0 || m == 8);
 
   struct mrc_fld *fld = mrc_fld_get_as(fld_base, FLD_TYPE);
   if (mhd_type == MT_GKEYLL)
     assert(fld->_aos && fld->_c_order);
   if (sub->test == 0) {
-    sphere_fill_ghosts(bnd, fld, m);
+    sphere_fill_ghosts(bnd, fld);
   } else if (sub->test == 1) {
-    sphere_fill_ghosts_test_1(bnd, fld, m);
+    sphere_fill_ghosts_test_1(bnd, fld);
   } else if (sub->test == 2) {
-    sphere_fill_ghosts_test_2(bnd, fld, m);
+    sphere_fill_ghosts_test_2(bnd, fld);
   } else if (sub->test == 3) {
-    sphere_fill_ghosts_test_3(bnd, fld, m);
+    sphere_fill_ghosts_test_3(bnd, fld);
   } else if (sub->test == 4) {
-    sphere_fill_ghosts_test_4(bnd, fld, m);
+    sphere_fill_ghosts_test_4(bnd, fld);
   } else {
     assert(0);
   }

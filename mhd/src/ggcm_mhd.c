@@ -317,8 +317,8 @@ ggcm_mhd_fill_ghosts(struct ggcm_mhd *mhd, struct mrc_fld *fld, float bntim_code
     mrc_ddc_amr_apply(mhd->ddc_amr_cc, fld);
     // ggcm_mhd_amr_fill_ghosts_b(mhd, fld); // has been taken over by ddc_amr_cc
   }
-  ggcm_mhd_bnd_fill_ghosts(mhd->bnd, fld, 0, bntim);
-  ggcm_mhd_bnd_fill_ghosts(mhd->bnd1, fld, 0, bntim);
+  ggcm_mhd_bnd_fill_ghosts(mhd->bnd, fld, bntim);
+  ggcm_mhd_bnd_fill_ghosts(mhd->bnd1, fld, bntim);
 }
 
 void

@@ -12,7 +12,7 @@ struct ggcm_mhd_bnd {
 struct ggcm_mhd_bnd_ops {
   MRC_SUBCLASS_OPS(struct ggcm_mhd_bnd);
   void (*fill_ghosts)(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld,
-		      int m, float bntim);
+		      float bntim);
   void (*fill_ghosts_E)(struct ggcm_mhd_bnd *bnd, struct mrc_fld *E);
   void (*fill_ghosts_reconstr)(struct ggcm_mhd_bnd *bnd, struct mrc_fld *U_l[],
 			       struct mrc_fld *U_r[], int p);

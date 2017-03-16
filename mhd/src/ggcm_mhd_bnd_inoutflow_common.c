@@ -51,70 +51,70 @@ struct ggcm_mhd_bnd_sub {
 // maybe this should use fd1 to be more explicit, but that's identical to bd3, anyway
 
 #define BNDDIV_BY_L(ix, iy, iz, p)					\
-  (_BY(f, mm, ix,iy+2,iz, p) +						\
-   bdx3[ix]/bdy3[iy+1] * (_BX(f, mm, ix+1,iy+1,iz  , p) -		\
-			  _BX(f, mm, ix-1,iy+1,iz  , p)) +		\
-   bdz3[iz]/bdy3[iy+1] * (_BZ(f, mm, ix  ,iy+1,iz+1, p) -		\
-			  _BZ(f, mm, ix  ,iy+1,iz-1, p)))
+  (_BY(f, 0, ix,iy+2,iz, p) +						\
+   bdx3[ix]/bdy3[iy+1] * (_BX(f, 0, ix+1,iy+1,iz  , p) -		\
+			  _BX(f, 0, ix-1,iy+1,iz  , p)) +		\
+   bdz3[iz]/bdy3[iy+1] * (_BZ(f, 0, ix  ,iy+1,iz+1, p) -		\
+			  _BZ(f, 0, ix  ,iy+1,iz-1, p)))
 #define BNDDIV_BZ_L(ix, iy, iz, p)					\
-  (_BZ(f, mm, ix,iy,iz+2, p) +						\
-   bdx3[ix]/bdz3[iz+1] * (_BX(f, mm, ix+1,iy  ,iz+1, p) -		\
-			  _BX(f, mm, ix-1,iy  ,iz+1, p)) +		\
-   bdy3[iy]/bdz3[iz+1] * (_BY(f, mm, ix  ,iy+1,iz+1, p) -		\
-			  _BY(f, mm, ix  ,iy-1,iz+1, p)))
+  (_BZ(f, 0, ix,iy,iz+2, p) +						\
+   bdx3[ix]/bdz3[iz+1] * (_BX(f, 0, ix+1,iy  ,iz+1, p) -		\
+			  _BX(f, 0, ix-1,iy  ,iz+1, p)) +		\
+   bdy3[iy]/bdz3[iz+1] * (_BY(f, 0, ix  ,iy+1,iz+1, p) -		\
+			  _BY(f, 0, ix  ,iy-1,iz+1, p)))
 
 #define BNDDIV_BX_H(ix, iy, iz, p)					\
-  (_BX(f, mm, ix-2,iy,iz, p) -						\
-   bdy3[iy]/bdx3[ix-1] * (_BY(f, mm, ix-1,iy+1,iz  , p) -		\
-			  _BY(f, mm, ix-1,iy-1,iz  , p)) -		\
-   bdz3[iz]/bdx3[ix-1] * (_BZ(f, mm, ix-1,iy  ,iz+1, p) -		\
-			  _BZ(f, mm, ix-1,iy  ,iz-1, p)))
+  (_BX(f, 0, ix-2,iy,iz, p) -						\
+   bdy3[iy]/bdx3[ix-1] * (_BY(f, 0, ix-1,iy+1,iz  , p) -		\
+			  _BY(f, 0, ix-1,iy-1,iz  , p)) -		\
+   bdz3[iz]/bdx3[ix-1] * (_BZ(f, 0, ix-1,iy  ,iz+1, p) -		\
+			  _BZ(f, 0, ix-1,iy  ,iz-1, p)))
 #define BNDDIV_BY_H(ix, iy, iz, p)					\
-  (_BY(f, mm, ix,iy-2,iz, p) -						\
-   bdx3[ix]/bdy3[iy-1] * (_BX(f, mm, ix+1,iy-1,iz  , p) -		\
-			  _BX(f, mm, ix-1,iy-1,iz  , p)) -		\
-   bdz3[iz]/bdy3[iy-1] * (_BZ(f, mm, ix  ,iy-1,iz+1, p) -		\
-			  _BZ(f, mm, ix  ,iy-1,iz-1, p)))
+  (_BY(f, 0, ix,iy-2,iz, p) -						\
+   bdx3[ix]/bdy3[iy-1] * (_BX(f, 0, ix+1,iy-1,iz  , p) -		\
+			  _BX(f, 0, ix-1,iy-1,iz  , p)) -		\
+   bdz3[iz]/bdy3[iy-1] * (_BZ(f, 0, ix  ,iy-1,iz+1, p) -		\
+			  _BZ(f, 0, ix  ,iy-1,iz-1, p)))
 #define BNDDIV_BZ_H(ix, iy, iz, p)					\
-  (_BZ(f, mm, ix,iy,iz-2, p) -						\
-   bdx3[ix]/bdz3[iz-1] * (_BX(f, mm, ix+1,iy  ,iz-1, p) -		\
-			  _BX(f, mm, ix-1,iy  ,iz-1, p)) -		\
-   bdy3[iy]/bdz3[iz-1] * (_BY(f, mm, ix  ,iy+1,iz-1, p) -		\
-			  _BY(f, mm, ix  ,iy-1,iz-1, p)))
+  (_BZ(f, 0, ix,iy,iz-2, p) -						\
+   bdx3[ix]/bdz3[iz-1] * (_BX(f, 0, ix+1,iy  ,iz-1, p) -		\
+			  _BX(f, 0, ix-1,iy  ,iz-1, p)) -		\
+   bdy3[iy]/bdz3[iz-1] * (_BY(f, 0, ix  ,iy+1,iz-1, p) -		\
+			  _BY(f, 0, ix  ,iy-1,iz-1, p)))
 
 #else
 
 #define BNDDIV_BY_L(ix, iy, iz, p)					\
-  (_BY(f, mm, ix,iy+1,iz, p) +						\
-   bdx3[ix]/bdy3[iy] * (_BX(f, mm, ix+1,iy,iz  , p) -			\
-			_BX(f, mm, ix  ,iy,iz  , p)) +			\
-   bdz3[iz]/bdy3[iy] * (_BZ(f, mm, ix  ,iy,iz+1, p) -			\
-			_BZ(f, mm, ix  ,iy,iz  , p)))
+  (_BY(f, 0, ix,iy+1,iz, p) +						\
+   bdx3[ix]/bdy3[iy] * (_BX(f, 0, ix+1,iy,iz  , p) -			\
+			_BX(f, 0, ix  ,iy,iz  , p)) +			\
+   bdz3[iz]/bdy3[iy] * (_BZ(f, 0, ix  ,iy,iz+1, p) -			\
+			_BZ(f, 0, ix  ,iy,iz  , p)))
 #define BNDDIV_BZ_L(ix, iy, iz, p)					\
-  (_BZ(f, mm, ix,iy,iz+1, p) +						\
-   bdx3[ix]/bdz3[iz] * (_BX(f, mm, ix+1,iy  ,iz, p) -			\
-			_BX(f, mm, ix  ,iy  ,iz, p)) +			\
-   bdy3[iy]/bdz3[iz] * (_BY(f, mm, ix  ,iy+1,iz, p) -			\
-			_BY(f, mm, ix  ,iy  ,iz, p)))
+  (_BZ(f, 0, ix,iy,iz+1, p) +						\
+   bdx3[ix]/bdz3[iz] * (_BX(f, 0, ix+1,iy  ,iz, p) -			\
+			_BX(f, 0, ix  ,iy  ,iz, p)) +			\
+   bdy3[iy]/bdz3[iz] * (_BY(f, 0, ix  ,iy+1,iz, p) -			\
+			_BY(f, 0, ix  ,iy  ,iz, p)))
 
 #define BNDDIV_BX_H(ix, iy, iz, p)					\
-  (_BX(f, mm, ix-1,iy,iz, p) -						\
-   bdy3[iy]/bdx3[ix-1] * (_BY(f, mm, ix-1,iy+1,iz  , p) -		\
-			  _BY(f, mm, ix-1,iy  ,iz  , p)) -		\
-   bdz3[iz]/bdx3[ix-1] * (_BZ(f, mm, ix-1,iy  ,iz+1, p) -		\
-			  _BZ(f, mm, ix-1,iy  ,iz  , p)))
+  (_BX(f, 0, ix-1,iy,iz, p) -						\
+   bdy3[iy]/bdx3[ix-1] * (_BY(f, 0, ix-1,iy+1,iz  , p) -		\
+			  _BY(f, 0, ix-1,iy  ,iz  , p)) -		\
+   bdz3[iz]/bdx3[ix-1] * (_BZ(f, 0, ix-1,iy  ,iz+1, p) -		\
+			  _BZ(f, 0, ix-1,iy  ,iz  , p)))
 #define BNDDIV_BY_H(ix, iy, iz, p)					\
-  (_BY(f, mm, ix,iy-1,iz, p) -						\
-   bdx3[ix]/bdy3[iy-1] * (_BX(f, mm, ix+1,iy-1,iz  , p) -		\
-			  _BX(f, mm, ix  ,iy-1,iz  , p)) -		\
-   bdz3[iz]/bdy3[iy-1] * (_BZ(f, mm, ix  ,iy-1,iz+1, p) -		\
-			  _BZ(f, mm, ix  ,iy-1,iz  , p)))
+  (_BY(f, 0, ix,iy-1,iz, p) -						\
+   bdx3[ix]/bdy3[iy-1] * (_BX(f, 0, ix+1,iy-1,iz  , p) -		\
+			  _BX(f, 0, ix  ,iy-1,iz  , p)) -		\
+   bdz3[iz]/bdy3[iy-1] * (_BZ(f, 0, ix  ,iy-1,iz+1, p) -		\
+			  _BZ(f, 0, ix  ,iy-1,iz  , p)))
 #define BNDDIV_BZ_H(ix, iy, iz, p)					\
-  (_BZ(f, mm, ix,iy,iz-1, p) -						\
-   bdx3[ix]/bdz3[iz-1] * (_BX(f, mm, ix+1,iy  ,iz-1, p) -		\
-			  _BX(f, mm, ix  ,iy  ,iz-1, p)) -		\
-   bdy3[iy]/bdz3[iz-1] * (_BY(f, mm, ix  ,iy+1,iz-1, p) -		\
-			  _BY(f, mm, ix  ,iy  ,iz-1, p)))
+  (_BZ(f, 0, ix,iy,iz-1, p) -						\
+   bdx3[ix]/bdz3[iz-1] * (_BX(f, 0, ix+1,iy  ,iz-1, p) -		\
+			  _BX(f, 0, ix  ,iy  ,iz-1, p)) -		\
+   bdy3[iy]/bdz3[iz-1] * (_BY(f, 0, ix  ,iy+1,iz-1, p) -		\
+			  _BY(f, 0, ix  ,iy  ,iz-1, p)))
 
 #endif
 
@@ -177,7 +177,7 @@ bnd_sw(struct ggcm_mhd_bnd *bnd, int ix, int iy, int iz, int p, float bn[SW_NR],
 // set inflow fluid boundary conditions at x-low boundary for MHD fields
 
 static void
-obndra_mhd_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim, int p)
+obndra_mhd_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim, int p)
 {
   struct ggcm_mhd *mhd = bnd->mhd;
   struct mrc_fld *b0 = mhd->b0;
@@ -216,19 +216,19 @@ obndra_mhd_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float b
 	}
 
 	for (int m = 0; m < 5; m++) {
-	  M3(f, mm + m, ix,iy,iz, p) = state[m];
+	  M3(f, m, ix,iy,iz, p) = state[m];
 	}
 	if (MT_BGRID(MT) == MT_BGRID_CC) {
-	  M3(f, mm + BX , ix,iy,iz, p) = state[BX];
-	  M3(f, mm + BY , ix,iy,iz, p) = state[BY];
-	  M3(f, mm + BZ , ix,iy,iz, p) = state[BZ];
+	  M3(f, BX, ix,iy,iz, p) = state[BX];
+	  M3(f, BY, ix,iy,iz, p) = state[BY];
+	  M3(f, BZ, ix,iy,iz, p) = state[BZ];
 	} else {
-	  _BX(f, mm, ix+1,iy,iz, p) = state[BX];
+	  _BX(f, 0, ix+1,iy,iz, p) = state[BX];
 	  if (iy > -swy) {
-	    _BY(f, mm, ix,iy,iz, p) = state[BY];
+	    _BY(f, 0, ix,iy,iz, p) = state[BY];
 	  }
 	  if (iz > -swz) {
-	    _BZ(f, mm, ix,iy,iz, p) = state[BZ];
+	    _BZ(f, 0, ix,iy,iz, p) = state[BZ];
 	  }
 	}
       }
@@ -240,25 +240,25 @@ obndra_mhd_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float b
 // obndra_yl_open
 
 static void
-obndra_yl_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
+obndra_yl_open(struct ggcm_mhd *mhd, struct mrc_fld *f,
 	       const int sw[3], const int ldims[3], int b, int p)
 {
   if (mrc_domain_at_boundary_lo(mhd->domain, 1, p)) {
     for (int iz = -sw[2]; iz < ldims[2] + sw[2]; iz++) {
       for (int ix = -sw[0]; ix < ldims[0] + sw[0]; ix++) {
 	for (int iy = 0; iy < sw[1]; iy++) {
-	  for (int m = mm; m < mm + 5; m++) {
-	    M3(f,m, ix,b-iy,iz, p) = M3(f,m, ix,b+1+iy,iz, p);
+	  for (int m = 0; m < 5; m++) {
+	    M3(f, m, ix,b-iy,iz, p) = M3(f, m, ix,b+1+iy,iz, p);
 	  }
 	  if (ix > -sw[0]) {
-	    _BX(f, mm, ix,b-iy,iz, p) = _BX(f, mm, ix,b+1+iy,iz, p);
+	    _BX(f, 0, ix,b-iy,iz, p) = _BX(f, 0, ix,b+1+iy,iz, p);
 	  }
 	  if (iz > -sw[2]) {
-	    _BZ(f, mm, ix,b-iy,iz, p) = _BZ(f, mm, ix,b+1+iy,iz, p);
+	    _BZ(f, 0, ix,b-iy,iz, p) = _BZ(f, 0, ix,b+1+iy,iz, p);
 	  }
 	}
 	for (int iy = 1; iy < sw[1]; iy++) {
-	  _BY(f, mm, ix,-iy,iz, p) = _BY(f, mm, ix,iy,iz, p);
+	  _BY(f, 0, ix,-iy,iz, p) = _BY(f, 0, ix,iy,iz, p);
 	}
       }
     }
@@ -269,25 +269,25 @@ obndra_yl_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
 // obndra_zl_open
 
 static void
-obndra_zl_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
+obndra_zl_open(struct ggcm_mhd *mhd, struct mrc_fld *f,
 	       const int sw[3], const int ldims[3], int b, int p)
 {
   if (mrc_domain_at_boundary_lo(mhd->domain, 2, p)) {
     for (int iy = -sw[1]; iy < ldims[1] + sw[1]; iy++) {
       for (int ix = -sw[0]; ix < ldims[0] + sw[0]; ix++) {
 	for (int iz = 0; iz < sw[2]; iz++) {
-	  for (int m = mm; m < mm + 5; m++) {
-	    M3(f,m, ix,iy,b-iz, p) = M3(f,m, ix,iy,b+1+iz, p);
+	  for (int m = 0; m < 5; m++) {
+	    M3(f, m, ix,iy,b-iz, p) = M3(f, m, ix,iy,b+1+iz, p);
 	  }
 	  if (ix > -sw[0]) {
-	    _BX(f, mm, ix,iy,b-iz, p) = _BX(f, mm, ix,iy,b+1+iz, p);
+	    _BX(f, 0, ix,iy,b-iz, p) = _BX(f, 0, ix,iy,b+1+iz, p);
 	  }
 	  if (iy > -sw[1]) {
-	    _BY(f, mm, ix,iy,b-iz, p) = _BY(f, mm, ix,iy,b+1+iz, p);
+	    _BY(f, 0, ix,iy,b-iz, p) = _BY(f, 0, ix,iy,b+1+iz, p);
 	  }
 	}
 	for (int iz = 1; iz < sw[2]; iz++) {
-	  _BZ(f, mm, ix,iy,-iz, p) = _BZ(f, mm, ix,iy,iz, p);
+	  _BZ(f, 0, ix,iy,-iz, p) = _BZ(f, 0, ix,iy,iz, p);
 	}
       }
     }
@@ -298,7 +298,7 @@ obndra_zl_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
 // obndra_xh_open
 
 static void
-obndra_xh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
+obndra_xh_open(struct ggcm_mhd *mhd, struct mrc_fld *f,
 	       const int sw[3], const int ldims[3], int b, int p)
 {
   if (mrc_domain_at_boundary_hi(mhd->domain, 0, p)) {
@@ -306,18 +306,18 @@ obndra_xh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
     for (int iz = -sw[2]; iz < ldims[2] + sw[2]; iz++) {
       for (int iy = -sw[1]; iy < ldims[1] + sw[1]; iy++) {
 	for (int ix = 0; ix < sw[0]; ix++) {
-	  for (int m = mm; m < mm + 5; m++) {
-	    M3(f,m, b+ix,iy,iz, p) = M3(f,m, b-ix-1,iy,iz, p);
+	  for (int m = 0; m < 5; m++) {
+	    M3(f, m, b+ix,iy,iz, p) = M3(f, m, b-ix-1,iy,iz, p);
 	  }
 	  if (iy > -sw[1]) {
-	    _BY(f, mm, b+ix,iy,iz, p) = _BY(f, mm, b-ix-1,iy,iz, p);
+	    _BY(f, 0, b+ix,iy,iz, p) = _BY(f, 0, b-ix-1,iy,iz, p);
 	  }
 	  if (iz > -sw[2]) {
-	    _BZ(f, mm, b+ix,iy,iz, p) = _BZ(f, mm, b-ix-1,iy,iz, p);
+	    _BZ(f, 0, b+ix,iy,iz, p) = _BZ(f, 0, b-ix-1,iy,iz, p);
 	  }
 	}
 	for (int ix = 1; ix < sw[0]; ix++) {
-	  _BX(f, mm, mx+ix,iy,iz, p) = _BX(f, mm, mx-ix,iy,iz, p);
+	  _BX(f, 0, mx+ix,iy,iz, p) = _BX(f, 0, mx-ix,iy,iz, p);
 	}
       }
     }
@@ -328,7 +328,7 @@ obndra_xh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
 // obndra_yh_open
 
 static void
-obndra_yh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
+obndra_yh_open(struct ggcm_mhd *mhd, struct mrc_fld *f,
 	       const int sw[3], const int ldims[3], int b, int p)
 {
   if (mrc_domain_at_boundary_hi(mhd->domain, 1, p)) {
@@ -336,18 +336,18 @@ obndra_yh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
     for (int iz = -sw[2]; iz < ldims[2] + sw[2]; iz++) {
       for (int ix = -sw[0]; ix < ldims[0] + sw[0]; ix++) {
 	for (int iy = 0; iy < sw[1]; iy++) {
-	  for (int m = mm; m < mm + 5; m++) {
-	    M3(f,m, ix,b+iy,iz, p) = M3(f,m, ix,b-iy-1,iz, p);
+	  for (int m = 0; m < 5; m++) {
+	    M3(f, m, ix,b+iy,iz, p) = M3(f,m, ix,b-iy-1,iz, p);
 	  }
 	  if (ix > -sw[0]) {
-	    _BX(f, mm, ix,b+iy,iz, p) = _BX(f, mm, ix,b-iy-1,iz, p);
+	    _BX(f, 0, ix,b+iy,iz, p) = _BX(f, 0, ix,b-iy-1,iz, p);
 	  }
 	  if (iz > -sw[2]) {
-	    _BZ(f, mm, ix,b+iy,iz, p) = _BZ(f, mm, ix,b-iy-1,iz, p);
+	    _BZ(f, 0, ix,b+iy,iz, p) = _BZ(f, 0, ix,b-iy-1,iz, p);
 	  }
 	}
 	for (int iy = 1; iy < sw[1]; iy++) {
-	  _BY(f, mm, ix,my+iy,iz, p) = _BY(f, mm, ix,my-iy-1,iz, p);
+	  _BY(f, 0, ix,my+iy,iz, p) = _BY(f, 0, ix,my-iy-1,iz, p);
 	}
       }
     }
@@ -358,7 +358,7 @@ obndra_yh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
 // obndra_zh_open
 
 static void
-obndra_zh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
+obndra_zh_open(struct ggcm_mhd *mhd, struct mrc_fld *f,
 	       const int sw[3], const int ldims[3], int b, int p)
 {
   if (mrc_domain_at_boundary_hi(mhd->domain, 2, p)) {
@@ -366,18 +366,18 @@ obndra_zh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
     for (int iy = -sw[1]; iy < ldims[1] + sw[1]; iy++) {
       for (int ix = -sw[0]; ix < ldims[0] + sw[0]; ix++) {
 	for (int iz = 0; iz < sw[2]; iz++) {
-	  for (int m = mm; m < mm + 5; m++) {
-	    M3(f,m, ix,iy,b+iz, p) = M3(f,m, ix,iy,b-iz-1, p);
+	  for (int m = 0; m < 5; m++) {
+	    M3(f, m, ix,iy,b+iz, p) = M3(f, m, ix,iy,b-iz-1, p);
 	  }
 	  if (ix > -sw[0]) {
-	    _BX(f, mm, ix,iy,b+iz, p) = _BX(f, mm, ix,iy,b-iz-1, p);
+	    _BX(f, 0, ix,iy,b+iz, p) = _BX(f, 0, ix,iy,b-iz-1, p);
 	  }
 	  if (iy > -sw[1]) {
-	    _BY(f, mm, ix,iy,b+iz, p) = _BY(f, mm, ix,iy,b-iz-1, p);
+	    _BY(f, 0, ix,iy,b+iz, p) = _BY(f, 0, ix,iy,b-iz-1, p);
 	  }
 	}
 	for (int iz = 1; iz < sw[2]; iz++) {
-	  _BZ(f, mm, ix,iy,mz+iz, p) = _BZ(f, mm, ix,iy,mz-iz, p);
+	  _BZ(f, 0, ix,iy,mz+iz, p) = _BZ(f, 0, ix,iy,mz-iz, p);
 	}
       }
     }
@@ -496,7 +496,7 @@ obndra_zh_open_cc(struct ggcm_mhd *mhd, struct mrc_fld *f,
 // set open fluid boundary conditions for MHD fields
 
 static void
-obndra_mhd(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim)
+obndra_mhd(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim)
 {
   struct ggcm_mhd_bnd_sub *sub = ggcm_mhd_bnd_sub(bnd);
   struct ggcm_mhd *mhd = bnd->mhd;
@@ -516,13 +516,12 @@ obndra_mhd(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim)
   for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
     if (mrc_domain_at_boundary_lo(mhd->domain, 0, p)) {
       if (sub->apply_bndsw) {
-	obndra_mhd_xl_bndsw(bnd, f, mm, bntim, p);
+	obndra_mhd_xl_bndsw(bnd, f, bntim, p);
       } else {
 	assert(0);
       }
     }
     if (MT == MT_FCONS_CC) {
-      assert(mm == 0);
       obndra_xh_open_cc(mhd, f, sw, ldims, p);
 
       obndra_yl_open_cc(mhd, f, sw, ldims, p);
@@ -531,13 +530,13 @@ obndra_mhd(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim)
       obndra_zl_open_cc(mhd, f, sw, ldims, p);
       obndra_zh_open_cc(mhd, f, sw, ldims, p);
     } else {
-      obndra_xh_open(mhd, f, mm, sw, ldims, bh[0], p);
+      obndra_xh_open(mhd, f, sw, ldims, bh[0], p);
 
-      obndra_yl_open(mhd, f, mm, sw, ldims, bl[1], p);
-      obndra_yh_open(mhd, f, mm, sw, ldims, bh[1], p);
+      obndra_yl_open(mhd, f, sw, ldims, bl[1], p);
+      obndra_yh_open(mhd, f, sw, ldims, bh[1], p);
 
-      obndra_zl_open(mhd, f, mm, sw, ldims, bl[2], p);
-      obndra_zh_open(mhd, f, mm, sw, ldims, bh[2], p);
+      obndra_zl_open(mhd, f, sw, ldims, bl[2], p);
+      obndra_zh_open(mhd, f, sw, ldims, bh[2], p);
     }
   }
 }
@@ -548,7 +547,7 @@ obndra_mhd(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim)
 // set inflow boundary conditions at x-low for 5/10 moment fields
 
 static void
-obndra_gkeyll_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim, int p)
+obndra_gkeyll_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim, int p)
 {
   struct ggcm_mhd *mhd = bnd->mhd;
   struct mrc_fld *b0 = mrc_fld_get_as(mhd->b0, FLD_TYPE); // FIXME needed?
@@ -602,7 +601,7 @@ obndra_gkeyll_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, floa
 // set open boundary conditions at x-low for 5/10 moment fields
 
 static void
-obndra_gkeyll_xl_open(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim, int p)
+obndra_gkeyll_xl_open(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim, int p)
 {
   int nr_comps = mrc_fld_nr_comps(f);
   const int *sw = mrc_fld_spatial_sw(f), *dims = mrc_fld_spatial_dims(f);
@@ -612,8 +611,8 @@ obndra_gkeyll_xl_open(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float
   for (int iz = -swz; iz < mz + swz; iz++) {
     for (int iy = -swy; iy < my + swy; iy++) {
       for (int ix = 0; ix > -swx; ix--) {
-	for (int m = mm; m < mm + nr_comps; m++) {
-	  M3(f,m, ix-1,iy,iz, p) = M3(f,m, ix,iy,iz, p);
+	for (int m = 0; m < nr_comps; m++) {
+	  M3(f, m, ix-1,iy,iz, p) = M3(f, m, ix,iy,iz, p);
 	}
       }
     }
@@ -626,7 +625,7 @@ obndra_gkeyll_xl_open(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float
 // set fluid boundary conditions at inflow boundary for 5/10 moment fields
 
 static void
-obndra_gkeyll(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim)
+obndra_gkeyll(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim)
 {
   struct ggcm_mhd_bnd_sub *sub = ggcm_mhd_bnd_sub(bnd);
   struct ggcm_mhd *mhd = bnd->mhd;
@@ -639,17 +638,17 @@ obndra_gkeyll(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim)
   for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
     if (mrc_domain_at_boundary_lo(mhd->domain, 0, p)) {
       if (sub->apply_bndsw) {
-	obndra_gkeyll_xl_bndsw(bnd, f, mm, bntim, p);
+	obndra_gkeyll_xl_bndsw(bnd, f, bntim, p);
       } else {
-	obndra_gkeyll_xl_open(bnd, f, mm, bntim, p);
+	obndra_gkeyll_xl_open(bnd, f, bntim, p);
       }
     }
     if (mrc_domain_at_boundary_lo(mhd->domain, 1, p)) {
       for (int iz = -swz; iz < mz + swz; iz++) {
 	for (int ix = -swx; ix < mx + swx; ix++) {
 	  for (int iy = 0; iy > -swy; iy--) {
-	    for (int m = mm; m < mm + nr_comps; m++) {
-	      M3(f,m, ix,iy-1,iz, p) = M3(f,m, ix,iy,iz, p);
+	    for (int m = 0; m < nr_comps; m++) {
+	      M3(f, m, ix,iy-1,iz, p) = M3(f, m, ix,iy,iz, p);
 	    }
 	  }
 	}
@@ -659,8 +658,8 @@ obndra_gkeyll(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim)
       for (int iy = -swy; iy < my + swy; iy++) {
 	for (int ix = -swx; ix < mx + swx; ix++) {
 	  for (int iz = 0; iz > -swz; iz--) {
-	    for (int m = mm; m < mm + nr_comps; m++) {
-	      M3(f,m, ix,iy,iz-1, p) = M3(f,m, ix,iy,iz, p);
+	    for (int m = 0; m < nr_comps; m++) {
+	      M3(f, m, ix,iy,iz-1, p) = M3(f, m, ix,iy,iz, p);
 	    }
 	  }
 	}
@@ -671,8 +670,8 @@ obndra_gkeyll(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim)
       for (int iz = -swz; iz < mz + swz; iz++) {
 	for (int iy = -swy; iy < my + swy; iy++) {
 	  for (int ix = mx; ix < mx + swx; ix++) {
-	    for (int m = mm; m < mm + nr_comps; m++) {
-	      M3(f,m, ix,iy,iz, p) = M3(f,m, ix-1,iy,iz, p);
+	    for (int m = 0; m < nr_comps; m++) {
+	      M3(f, m, ix,iy,iz, p) = M3(f, m, ix-1,iy,iz, p);
 	    }
 	  }
 	}
@@ -682,8 +681,8 @@ obndra_gkeyll(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim)
       for (int iz = -swz; iz < mz + swz; iz++) {
 	for (int ix = -swx; ix < mx + swx; ix++) {
 	  for (int iy = my; iy < my + swy; iy++) {
-	    for (int m = mm; m < mm + nr_comps; m++) {
-	      M3(f,m, ix,iy,iz, p) = M3(f,m, ix,iy-1,iz, p);
+	    for (int m = 0; m < nr_comps; m++) {
+	      M3(f, m, ix,iy,iz, p) = M3(f, m, ix,iy-1,iz, p);
 	    }
 	  }
 	}
@@ -693,8 +692,8 @@ obndra_gkeyll(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim)
       for (int iy = -swy; iy < my + swy; iy++) {
 	for (int ix = -swx; ix < mx + swx; ix++) {
 	  for (int iz = mz; iz < mz + swz; iz++) {
-	    for (int m = mm; m < mm + nr_comps; m++) {
-	      M3(f,m, ix,iy,iz, p) = M3(f,m, ix,iy,iz-1, p);
+	    for (int m = 0; m < nr_comps; m++) {
+	      M3(f, m, ix,iy,iz, p) = M3(f, m, ix,iy,iz-1, p);
 	    }
 	  }
 	}
@@ -707,7 +706,7 @@ obndra_gkeyll(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float bntim)
 // obndrb_yl_open
 
 static void
-obndrb_yl_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
+obndrb_yl_open(struct ggcm_mhd *mhd, struct mrc_fld *f,
 	       int m_t[3], int s_t[3], int l_n[3], int s_n[3], int p,
 	       float *bdx3, float *bdy3, float *bdz3)
 {
@@ -715,7 +714,7 @@ obndrb_yl_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
     for (int iz = -s_t[2]; iz < m_t[2] + s_t[2]; iz++) {
       for (int ix = -s_t[0]; ix < m_t[0] + s_t[0]; ix++) {
 	for (int iy = l_n[1]; iy > l_n[1] - s_n[1]; iy--) {
-	  _BY(f, mm, ix,iy,iz, p) = BNDDIV_BY_L(ix,iy,iz, p);
+	  _BY(f, 0, ix,iy,iz, p) = BNDDIV_BY_L(ix,iy,iz, p);
 	}
       }
     }
@@ -726,7 +725,7 @@ obndrb_yl_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
 // obndrb_zl_open
 
 static void
-obndrb_zl_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
+obndrb_zl_open(struct ggcm_mhd *mhd, struct mrc_fld *f,
 	       int m_t[3], int s_t[3], int l_n[3], int s_n[3], int p,
 	       float *bdx3, float *bdy3, float *bdz3)
 {
@@ -734,7 +733,7 @@ obndrb_zl_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
     for (int iy = -s_t[1]; iy < m_t[1] + s_t[1]; iy++) {
       for (int ix = -s_t[0]; ix < m_t[0] + s_t[0]; ix++) {
 	for (int iz = l_n[2]; iz > l_n[2] - s_n[2]; iz--) {
-	  _BZ(f, mm, ix,iy,iz, p) = BNDDIV_BZ_L(ix,iy,iz, p);
+	  _BZ(f, 0, ix,iy,iz, p) = BNDDIV_BZ_L(ix,iy,iz, p);
 	}
       }
     }
@@ -745,7 +744,7 @@ obndrb_zl_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
 // obndrb_xh_open
 
 static void
-obndrb_xh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
+obndrb_xh_open(struct ggcm_mhd *mhd, struct mrc_fld *f,
 	       int m_t[3], int s_t[3], int r_n[3], int s_n[3], int p,
 	       float *bdx3, float *bdy3, float *bdz3)
 {
@@ -753,7 +752,7 @@ obndrb_xh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
     for (int iz = -s_t[2]; iz < m_t[2] + s_t[2]; iz++) {
       for (int iy = -s_t[1]; iy < m_t[1] + s_t[1]; iy++) {
 	for (int ix = r_n[0]; ix < r_n[0] + s_n[0]; ix++) {
-	  _BX(f, mm, ix,iy,iz, p) = BNDDIV_BX_H(ix,iy,iz, p);
+	  _BX(f, 0, ix,iy,iz, p) = BNDDIV_BX_H(ix,iy,iz, p);
 	}
       }
     }
@@ -764,7 +763,7 @@ obndrb_xh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
 // obndrb_yh_open
 
 static void
-obndrb_yh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
+obndrb_yh_open(struct ggcm_mhd *mhd, struct mrc_fld *f,
 	       int m_t[3], int s_t[3], int r_n[3], int s_n[3], int p,
 	       float *bdx3, float *bdy3, float *bdz3)
 {
@@ -772,7 +771,7 @@ obndrb_yh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
     for (int iz = -s_t[2]; iz < m_t[2] + s_t[2]; iz++) {
       for (int ix = -s_t[0]; ix < m_t[0] + s_t[0]; ix++) {
 	for (int iy = r_n[1]; iy < r_n[1] + s_n[1]; iy++) {
-	  _BY(f, mm, ix,iy,iz, p) = BNDDIV_BY_H(ix,iy,iz, p);
+	  _BY(f, 0, ix,iy,iz, p) = BNDDIV_BY_H(ix,iy,iz, p);
 	}
       }
     }
@@ -783,7 +782,7 @@ obndrb_yh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
 // obndrb_zh_open
 
 static void
-obndrb_zh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
+obndrb_zh_open(struct ggcm_mhd *mhd, struct mrc_fld *f,
 	       int m_t[3], int s_t[3], int r_n[3], int s_n[3], int p,
 	       float *bdx3, float *bdy3, float *bdz3)
 {
@@ -791,7 +790,7 @@ obndrb_zh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
     for (int iy = -s_t[1]; iy < m_t[1] + s_t[1]; iy++) {
       for (int ix = -s_t[0]; ix < m_t[0] + s_t[0]; ix++) {
 	for (int iz = r_n[2]; iz < r_n[2] + s_n[2]; iz++) {
-	  _BZ(f, mm, ix,iy,iz, p) = BNDDIV_BZ_H(ix,iy,iz, p);
+	  _BZ(f, 0, ix,iy,iz, p) = BNDDIV_BZ_H(ix,iy,iz, p);
 	}
       }
     }
@@ -802,7 +801,7 @@ obndrb_zh_open(struct ggcm_mhd *mhd, struct mrc_fld *f, int mm,
 // obndrb
 
 static void
-obndrb(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm)
+obndrb(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f)
 {
   struct ggcm_mhd_bnd_sub *sub = ggcm_mhd_bnd_sub(bnd);
   struct ggcm_mhd *mhd = bnd->mhd;
@@ -833,20 +832,20 @@ obndrb(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm)
 
     // assumes x1 bnd = fix, others = open
     if (!sub->do_legacy) {
-      obndrb_yl_open(mhd, f, mm, m_t, s_t, l_n, s_n, p, bdx3, bdy3, bdz3);
-      obndrb_yh_open(mhd, f, mm, m_t, s_t, r_n, s_n, p, bdx3, bdy3, bdz3);
+      obndrb_yl_open(mhd, f, m_t, s_t, l_n, s_n, p, bdx3, bdy3, bdz3);
+      obndrb_yh_open(mhd, f, m_t, s_t, r_n, s_n, p, bdx3, bdy3, bdz3);
       
-      obndrb_zl_open(mhd, f, mm, m_t, s_t, l_n, s_n, p, bdx3, bdy3, bdz3);
-      obndrb_zh_open(mhd, f, mm, m_t, s_t, r_n, s_n, p, bdx3, bdy3, bdz3);
+      obndrb_zl_open(mhd, f, m_t, s_t, l_n, s_n, p, bdx3, bdy3, bdz3);
+      obndrb_zh_open(mhd, f, m_t, s_t, r_n, s_n, p, bdx3, bdy3, bdz3);
       
-      obndrb_xh_open(mhd, f, mm, m_t, s_t, r_n, s_n, p, bdx3, bdy3, bdz3);
+      obndrb_xh_open(mhd, f, m_t, s_t, r_n, s_n, p, bdx3, bdy3, bdz3);
     } else {
-      obndrb_yl_open(mhd, f, mm, m_t, s_t, l_n, s_n, p, bdx3, bdy3, bdz3);
-      obndrb_zl_open(mhd, f, mm, m_t, s_t, l_n, s_n, p, bdx3, bdy3, bdz3);
+      obndrb_yl_open(mhd, f, m_t, s_t, l_n, s_n, p, bdx3, bdy3, bdz3);
+      obndrb_zl_open(mhd, f, m_t, s_t, l_n, s_n, p, bdx3, bdy3, bdz3);
 
-      obndrb_xh_open(mhd, f, mm, m_t, s_t, r_n, s_n, p, bdx3, bdy3, bdz3);
-      obndrb_yh_open(mhd, f, mm, m_t, s_t, r_n, s_n, p, bdx3, bdy3, bdz3);
-      obndrb_zh_open(mhd, f, mm, m_t, s_t, r_n, s_n, p, bdx3, bdy3, bdz3);
+      obndrb_xh_open(mhd, f, m_t, s_t, r_n, s_n, p, bdx3, bdy3, bdz3);
+      obndrb_yh_open(mhd, f, m_t, s_t, r_n, s_n, p, bdx3, bdy3, bdz3);
+      obndrb_zh_open(mhd, f, m_t, s_t, r_n, s_n, p, bdx3, bdy3, bdz3);
     }
   }
 }
@@ -856,7 +855,7 @@ obndrb(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm)
 
 static void
 ggcm_mhd_bnd_sub_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld,
-			     int m, float bntim)
+			     float bntim)
 {
   struct ggcm_mhd *mhd = bnd->mhd;
   assert(mhd);
@@ -870,15 +869,14 @@ ggcm_mhd_bnd_sub_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld,
   int mhd_type;
   mrc_fld_get_param_int(fld, "mhd_type", &mhd_type);
   assert(mhd_type == MT);
-  assert(m == 0 || m == 8);
-
+ 
   struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
   if (MT == MT_GKEYLL) {
-     assert(f->_aos && f->_c_order);
-    obndra_gkeyll(bnd, f, m, bntim);
+    assert(f->_aos && f->_c_order);
+    obndra_gkeyll(bnd, f, bntim);
   } else {
-    obndra_mhd(bnd, f, m, bntim);
-    obndrb(bnd, f, m);
+    obndra_mhd(bnd, f, bntim);
+    obndrb(bnd, f);
   }
   mrc_fld_put_as(f, fld);
 

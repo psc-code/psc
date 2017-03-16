@@ -15,11 +15,11 @@
 
 void
 ggcm_mhd_bnd_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld,
-			 int m, float bntim)
+			 float bntim)
 {
   struct ggcm_mhd_bnd_ops *ops = ggcm_mhd_bnd_ops(bnd);
   assert(ops && ops->fill_ghosts);
-  ops->fill_ghosts(bnd, fld, m, bntim);
+  ops->fill_ghosts(bnd, fld, bntim);
 }
 
 // ----------------------------------------------------------------------

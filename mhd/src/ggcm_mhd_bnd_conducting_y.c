@@ -15,19 +15,19 @@
 // prototypes for type specific implementations... there must
 // be a better way than this
 void ggcm_mhd_bnd_conducting_y_fill_ghost_float(struct ggcm_mhd_bnd *bnd,
-                                     struct mrc_fld *fld_base,
-                                     int m, float bntim);
+						struct mrc_fld *fld_base,
+						float bntim);
 void ggcm_mhd_bnd_conducting_y_fill_ghost_double(struct ggcm_mhd_bnd *bnd,
-                                      struct mrc_fld *fld_base,
-                                      int m, float bntim);
+						 struct mrc_fld *fld_base,
+						 float bntim);
 void ggcm_mhd_bnd_conducting_y_fill_ghost_gkeyll(struct ggcm_mhd_bnd *bnd,
-                                          struct mrc_fld *fld_base,
-                                          int m, float bntim);
+						 struct mrc_fld *fld_base,
+						 float bntim);
 
 struct ggcm_mhd_bnd_conducting_y {
   void (*conducting_y_fill_ghosts)(struct ggcm_mhd_bnd *bnd,
-                                    struct mrc_fld *fld_base,
-                                    int m, float bntim);
+				   struct mrc_fld *fld_base,
+				   float bntim);
 };
 #define ggcm_mhd_bnd_conducting_y(bnd) mrc_to_subobj(bnd, struct ggcm_mhd_bnd_conducting_y)
 
@@ -59,11 +59,11 @@ ggcm_mhd_bnd_conducting_y_setup(struct ggcm_mhd_bnd *bnd)
 
 static void
 _ggcm_mhd_bnd_conducting_y_fill_ghosts(struct ggcm_mhd_bnd *bnd,
-                          struct mrc_fld *fld_base,
-                          int m, float bntim)
+				       struct mrc_fld *fld_base,
+				       float bntim)
 {
   struct ggcm_mhd_bnd_conducting_y *sub = ggcm_mhd_bnd_conducting_y(bnd);
-  sub->conducting_y_fill_ghosts(bnd, fld_base, m, bntim);
+  sub->conducting_y_fill_ghosts(bnd, fld_base, bntim);
 }
 
 
