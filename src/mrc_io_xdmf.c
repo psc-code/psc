@@ -761,10 +761,21 @@ ds_xdmf_read_attr(struct mrc_io *io, const char *path, int type,
     ierr = H5LTget_attribute_int(group, ".", name, pv->u_int_array.vals); CE;
     break;
   }
+  case PT_FLOAT_ARRAY: {
+    hid_t attr = H5Aopen(group, name, H5P_DEFAULT); H5_CHK(attr);
+    H5A_info_t ainfo;
+    ierr = H5Aget_info(attr, &ainfo); CE;
+    ierr = H5Aclose(attr); CE;
+    pv->u_float_array.nr_vals = ainfo.data_size / sizeof(float);
+    pv->u_float_array.vals = calloc(pv->u_float_array.nr_vals, sizeof(float));
+    ierr = H5LTget_attribute_float(group, ".", name, pv->u_float_array.vals); CE;
+    break;
+  }
   case PT_PTR:
     mpi_printf(mrc_io_comm(io), "WARNING: not reading back pointer attribute\n");
     break;
   default:
+    mpi_printf(mrc_io_comm(io), "unhandled type %d\n", type);
     assert(0);
   }
   ierr = H5Gclose(group); CE;
@@ -833,6 +844,20 @@ ds_xdmf_write_attr(struct mrc_io *io, const char *path, int type,
     ierr = H5Aclose(attr_id); CE;
     break;
   }
+  case PT_FLOAT_ARRAY: {
+    hsize_t dims = pv->u_float_array.nr_vals;
+    hid_t dataspace_id = H5Screate_simple(1, &dims, NULL); H5_CHK(dataspace_id);
+    hid_t attr_id = H5Acreate(group, name, H5T_NATIVE_FLOAT, dataspace_id,
+			      H5P_DEFAULT, H5P_DEFAULT); H5_CHK(attr_id);
+    if (dims > 0) {
+      ierr = H5Awrite(attr_id, H5T_NATIVE_FLOAT, pv->u_float_array.vals); CE;
+    }
+    ierr = H5Sclose(dataspace_id); CE;
+    ierr = H5Aclose(attr_id); CE;
+    break;
+  }
+  default:
+    mpi_printf(mrc_io_comm(io), "WARNING: not writing unhandled attr type %d\n", type);
   }
   ierr = H5Gclose(group); CE;
 }
