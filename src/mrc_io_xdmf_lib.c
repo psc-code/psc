@@ -290,7 +290,7 @@ xdmf_spatial_create_m3_parallel(list_t *xdmf_spatial_list, const char *name,
   if (strcmp(mrc_crds_type(crds), "amr_uniform") == 0 ||
       strcmp(mrc_crds_type(crds), "uniform") == 0) {
     xs->uniform = true;
-    double *xl = mrc_crds_lo(crds);
+    const double *xl = mrc_crds_lo(crds);
     double dx[3];
     mrc_crds_get_dx(crds, 0, dx);
 
