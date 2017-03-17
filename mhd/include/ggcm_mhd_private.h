@@ -27,7 +27,7 @@ struct ggcm_mhd_params {
   float norm_density; // normalizing density (in 1/m^3)
   // norm_mu0, sort of like the other quantities, is the ratio between
   // code unit and external unit. In particular, for Alfven-normalized
-  // units, mu0norm = mu0. In the case of SI-SI, or normalized-normalized,
+  // units, norm_mu0 = mu0. In the case of SI-SI, or normalized-normalized,
   // it's equal to 1
   float norm_mu0;
   // This is the mu0 we're using in the actual equations we're solving

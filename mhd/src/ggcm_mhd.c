@@ -223,6 +223,9 @@ ggcm_mhd_setup_normalization(struct ggcm_mhd *mhd)
   mhd->tnorm /= mhd->par.tnorm0;
   mhd->qqnorm /= mhd->par.qqnorm0;
 
+  mpi_printf(comm, "NORMALIZATION: the following are the internally used scale factors\n"
+	     "to convert code units to external units, including prefix. So, e.g., \n"
+	     "internal (normalized) B to external B in nT\n");
   mpi_printf(comm, "NORMALIZATION: int. xxnorm  = %g\n", mhd->xxnorm);
   mpi_printf(comm, "NORMALIZATION: int. bbnorm  = %g\n", mhd->bbnorm);
   mpi_printf(comm, "NORMALIZATION: int. rrnorm  = %g\n", mhd->rrnorm);
