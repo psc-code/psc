@@ -274,7 +274,7 @@ pde_mhd_get_dt_fcons_ct(struct ggcm_mhd *mhd, struct mrc_fld *x)
   mrc_fld_data_t d_i = mhd->par.d_i;
 
   struct mrc_fld *Bcc = ggcm_mhd_get_3d_fld(mhd, 3);
-  ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time_code);
+  ggcm_mhd_fill_ghosts(mhd, x, mhd->time_code);
   compute_B_cc(Bcc, x, 0, 0);
 
   mrc_fld_data_t max_dti_x = 0., max_dti_y = 0., max_dti_z = 0.;

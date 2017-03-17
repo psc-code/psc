@@ -90,7 +90,7 @@ mrc_ts_monitor_conservation_run(struct mrc_ts_monitor *mon, struct mrc_ts *ts)
 	     ts->time);
 
   mhd->time_code = ts->time;
-  ggcm_mhd_fill_ghosts(mhd, mhd->fld, 0, mhd->time_code);
+  ggcm_mhd_fill_ghosts(mhd, mhd->fld, mhd->time_code);
 
   double vals[5];
   ggcm_mhd_calc_integrals(mhd, vals);

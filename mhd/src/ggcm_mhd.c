@@ -305,29 +305,20 @@ _ggcm_mhd_setup(struct ggcm_mhd *mhd)
 }
 
 void
-ggcm_mhd_fill_ghosts(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m, float bntim_code)
+ggcm_mhd_fill_ghosts(struct ggcm_mhd *mhd, struct mrc_fld *fld, float bntim_code)
 {
   // FIXME, should go to I/O units further down in ggcm_mhd_bnd_fill_ghosts()
   float bntim = bntim_code * mhd->tnorm;
   if (mhd->amr == 0) {
     // FIXME, this really should be done in a cleaner way (pass mb, me, probably)
-    int mhd_type;
-    mrc_fld_get_param_int(fld, "mhd_type", &mhd_type);
-    if (mhd_type == MT_GKEYLL ||
-	mhd_type == MT_FCONS_FC ||
-	mhd_type == MT_FCONS_CC) {
-      int nr_comps = mrc_fld_nr_comps(fld);
-      mrc_ddc_fill_ghosts_fld(mrc_domain_get_ddc(mhd->domain), m, m + nr_comps, fld);
-    } else {
-      mrc_ddc_fill_ghosts_fld(mrc_domain_get_ddc(mhd->domain), m, m + 8, fld);
-    }
+    int nr_comps = mrc_fld_nr_comps(fld);
+    mrc_ddc_fill_ghosts_fld(mrc_domain_get_ddc(mhd->domain), 0, nr_comps, fld);
   } else {
-    assert(m == 0);
     mrc_ddc_amr_apply(mhd->ddc_amr_cc, fld);
     // ggcm_mhd_amr_fill_ghosts_b(mhd, fld); // has been taken over by ddc_amr_cc
   }
-  ggcm_mhd_bnd_fill_ghosts(mhd->bnd, fld, m, bntim);
-  ggcm_mhd_bnd_fill_ghosts(mhd->bnd1, fld, m, bntim);
+  ggcm_mhd_bnd_fill_ghosts(mhd->bnd, fld, 0, bntim);
+  ggcm_mhd_bnd_fill_ghosts(mhd->bnd1, fld, 0, bntim);
 }
 
 void
@@ -583,7 +574,7 @@ ggcm_mhd_wrongful_death(struct ggcm_mhd *mhd, struct mrc_fld *x, int errcode)
   
   mpi_printf(ggcm_mhd_comm(mhd), "Something bad happened. Dumping state then "
              "keeling over.\n");
-  // ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);  // is this needed?
+  // ggcm_mhd_fill_ghosts(mhd, x, mhd->time);  // is this needed?
   ggcm_mhd_diag_run_now(diag, x, DIAG_TYPE_3D, cnt++);
   ggcm_mhd_diag_shutdown(diag);
   
