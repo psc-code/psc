@@ -84,6 +84,18 @@ convert_prim_from_state_fcons(mrc_fld_data_t prim[8], mrc_fld_data_t state[8])
 }
 
 static inline void
+convert_state_from_prim(mrc_fld_data_t state[8], mrc_fld_data_t prim[8])
+{
+#if MT_FORMULATION(MT) == MT_FORMULATION_SCONS
+  convert_state_from_prim_scons(state, prim);
+#elif MT_FORMULATION(MT) == MT_FORMULATION_FCONS
+  convert_state_from_prim_fcons(state, prim);
+#else
+  assert(0);
+#endif
+}
+      
+static inline void
 convert_prim_from_state(mrc_fld_data_t prim[8], mrc_fld_data_t state[8])
 {
 #if MT_FORMULATION(MT) == MT_FORMULATION_SCONS
