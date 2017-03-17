@@ -14,19 +14,14 @@
 // ggcm_mhd_calc_curcc_fc_ggcm
 
 static void
-ggcm_mhd_calc_currcc_fc_ggcm(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
-			     struct mrc_fld *currcc)
+ggcm_mhd_calc_currcc_fc_ggcm(struct ggcm_mhd *mhd, struct mrc_fld *f, int m,
+			     struct mrc_fld *c)
 {
   int gdims[3];
-  mrc_domain_get_global_dims(fld->_domain, gdims);
+  mrc_domain_get_global_dims(f->_domain, gdims);
   int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
 
-  struct mrc_fld *tmp = mrc_fld_duplicate(currcc);
-
-  struct mrc_fld *f = ggcm_mhd_fld_get_as(fld, FLD_TYPE, MT_SEMI_CONSERVATIVE_GGCM,
-					  BX, BX + 3);
-  struct mrc_fld *t = mrc_fld_get_as(tmp, FLD_TYPE);
-  struct mrc_fld *c = mrc_fld_get_as(currcc, FLD_TYPE);
+  struct mrc_fld *t = mrc_fld_duplicate(c);
   
   for (int p = 0; p < mrc_fld_nr_patches(t); p++) {
     float *bd4x = ggcm_mhd_crds_get_crd_p(mhd->crds, 0, BD4, p);
@@ -62,26 +57,20 @@ ggcm_mhd_calc_currcc_fc_ggcm(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
     } mrc_fld_foreach_end;
   }
 
-  mrc_fld_put_as(c, currcc);
-  mrc_fld_put_as(t, tmp);
-  ggcm_mhd_fld_put_as(f, fld, 0, 0);
-  mrc_fld_destroy(tmp); 
+  mrc_fld_destroy(t); 
 }
 
 // ----------------------------------------------------------------------
 // ggcm_mhd_calc_curcc_cc
 
 static void
-ggcm_mhd_calc_currcc_cc(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
-			struct mrc_fld *currcc)
+ggcm_mhd_calc_currcc_cc(struct ggcm_mhd *mhd, struct mrc_fld *f, int m,
+			struct mrc_fld *c)
 {
   int gdims[3];
-  mrc_domain_get_global_dims(fld->_domain, gdims);
+  mrc_domain_get_global_dims(f->_domain, gdims);
   int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
 
-  struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
-  struct mrc_fld *c = mrc_fld_get_as(currcc, FLD_TYPE);
-  
   for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
     float *fd1x = ggcm_mhd_crds_get_crd_p(mhd->crds, 0, FD1, p);
     float *fd1y = ggcm_mhd_crds_get_crd_p(mhd->crds, 1, FD1, p);
@@ -99,21 +88,15 @@ ggcm_mhd_calc_currcc_cc(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
 	(M3(f, m+0, ix,iy+dy,iz, p) - M3(f, m+0, ix,iy-dy,iz, p)) * .5f*fd1y[iy];
     } mrc_fld_foreach_end;
   }
-
-  mrc_fld_put_as(c, currcc);
-  mrc_fld_put_as(f, fld);
 }
 
 // ----------------------------------------------------------------------
 // ggcm_mhd_calc_curcc_gkeyll
 
 static void
-ggcm_mhd_calc_currcc_gkeyll(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
-			     struct mrc_fld *currcc)
+ggcm_mhd_calc_currcc_gkeyll(struct ggcm_mhd *mhd, struct mrc_fld *f, int m,
+			    struct mrc_fld *c)
 {
-  struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
-  struct mrc_fld *c = mrc_fld_get_as(currcc, FLD_TYPE);
-
   int nr_fluids = mhd->par.gk_nr_fluids;
   int nr_moments = mhd->par.gk_nr_moments;
   float *mass = mhd->par.gk_mass.vals;
@@ -138,31 +121,36 @@ ggcm_mhd_calc_currcc_gkeyll(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
       }
     } mrc_fld_foreach_end;
   }
-
-  mrc_fld_put_as(c, currcc);
-  mrc_fld_put_as(f, fld);
 }
 
 // ----------------------------------------------------------------------
 // ggcm_mhd_calc_currcc
 
 void
-ggcm_mhd_calc_currcc(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
-		     struct mrc_fld *currcc)
+ggcm_mhd_calc_currcc(struct ggcm_mhd *mhd, struct mrc_fld *_fld, int m,
+		     struct mrc_fld *_currcc)
 {
   int mhd_type;
-  mrc_fld_get_param_int(fld, "mhd_type", &mhd_type);
+  mrc_fld_get_param_int(_fld, "mhd_type", &mhd_type);
 
+  struct mrc_fld *fld = mrc_fld_get_as(_fld, FLD_TYPE);
+  struct mrc_fld *currcc = mrc_fld_get_as(_currcc, FLD_TYPE);
+  
   if (MT_FORMULATION(mhd_type) == MT_FORMULATION_GKEYLL) {
     return ggcm_mhd_calc_currcc_gkeyll(mhd, fld, m, currcc);
   } else { // MHD
     switch (MT_BGRID(mhd_type)) {
     case MT_BGRID_CC:
-      return ggcm_mhd_calc_currcc_cc(mhd, fld, m, currcc);
+      ggcm_mhd_calc_currcc_cc(mhd, fld, m, currcc);
+      break;
     case MT_BGRID_FC_GGCM:
-      return ggcm_mhd_calc_currcc_fc_ggcm(mhd, fld, m, currcc);
+      ggcm_mhd_calc_currcc_fc_ggcm(mhd, fld, m, currcc);
+      break;
+    default:
+      assert(0);
     }
   }
 
-  assert(0);
+  mrc_fld_put_as(fld, _fld);
+  mrc_fld_put_as(currcc, _currcc);
 }
