@@ -66,4 +66,22 @@ patch_calc_current_cc(fld3d_t p_Jcc, fld3d_t p_U, fld3d_t p_zmask)
   } fld3d_foreach_end;
 }
 
+// ----------------------------------------------------------------------
+// patch_calc_current_cc_bgrid_cc
+//
+// calculate cell-centered J from cell-centered B
+
+static void _mrc_unused
+patch_calc_current_cc_bgrid_cc(fld3d_t p_J, fld3d_t p_B)
+{
+  fld3d_foreach(i,j,k, 1, 1) {
+    F3S(p_J, 0, i,j,k) = ((F3S(p_B, 2, i,j+dj,k) - F3S(p_B, 2, i,j-dj,k)) * .5f * PDE_INV_DY(j) -
+			  (F3S(p_B, 1, i,j,k+dk) - F3S(p_B, 1, i,j,k-dk)) * .5f * PDE_INV_DZ(k));
+    F3S(p_J, 1, i,j,k) = ((F3S(p_B, 0, i,j,k+dk) - F3S(p_B, 0, i,j,k-dk)) * .5f * PDE_INV_DZ(k) -
+			  (F3S(p_B, 2, i+di,j,k) - F3S(p_B, 2, i-di,j,k)) * .5f * PDE_INV_DX(i));
+    F3S(p_J, 2, i,j,k) = ((F3S(p_B, 1, i+di,j,k) - F3S(p_B, 1, i-di,j,k)) * .5f * PDE_INV_DX(i) -
+			  (F3S(p_B, 0, i,j+dj,k) - F3S(p_B, 0, i,j-dj,k)) * .5f * PDE_INV_DY(j));
+  } fld3d_foreach_end;
+}
+
 #endif

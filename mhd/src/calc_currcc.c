@@ -10,12 +10,18 @@
 #include <math.h>
 #include <string.h>
 
+#include "pde/pde_defs.h"
+
+#define OPT_FLD1D OPT_FLD1D_C_ARRAY
+
+#include "pde/pde_mhd_calc_current.c"
+
 // ----------------------------------------------------------------------
-// ggcm_mhd_calc_curcc_fc_ggcm
+// ggcm_mhd_calc_curcc_bgrid_fc_ggcm
 
 static void
-ggcm_mhd_calc_currcc_fc_ggcm(struct ggcm_mhd *mhd, struct mrc_fld *f, int m,
-			     struct mrc_fld *c)
+ggcm_mhd_calc_currcc_bgrid_fc_ggcm(struct ggcm_mhd *mhd, struct mrc_fld *f, int m,
+				   struct mrc_fld *c)
 {
   int gdims[3];
   mrc_domain_get_global_dims(f->_domain, gdims);
@@ -61,32 +67,23 @@ ggcm_mhd_calc_currcc_fc_ggcm(struct ggcm_mhd *mhd, struct mrc_fld *f, int m,
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_calc_curcc_cc
+// ggcm_mhd_calc_curcc_cc_bgrid_cc
 
 static void
-ggcm_mhd_calc_currcc_cc(struct ggcm_mhd *mhd, struct mrc_fld *f, int m,
-			struct mrc_fld *c)
+ggcm_mhd_calc_currcc_bgrid_cc(struct ggcm_mhd *mhd, struct mrc_fld *f, int m,
+			      struct mrc_fld *c)
 {
-  int gdims[3];
-  mrc_domain_get_global_dims(f->_domain, gdims);
-  int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
-
+  fld3d_t p_U, p_J;
+  fld3d_setup(&p_U, f);
+  fld3d_setup(&p_J, c);
+    
   for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
-    float *fd1x = ggcm_mhd_crds_get_crd_p(mhd->crds, 0, FD1, p);
-    float *fd1y = ggcm_mhd_crds_get_crd_p(mhd->crds, 1, FD1, p);
-    float *fd1z = ggcm_mhd_crds_get_crd_p(mhd->crds, 2, FD1, p);
+    pde_patch_set(p);
+    fld3d_get(&p_U, p);
+    fld3d_get(&p_J, p);
+    fld3d_t p_B = fld3d_make_view(p_U, m);
 
-    mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
-      M3(c, 0, ix,iy,iz, p) =
-	(M3(f, m+2, ix,iy+dy,iz, p) - M3(f, m+2, ix,iy-dy,iz, p)) * .5f*fd1y[iy] -
-	(M3(f, m+1, ix,iy,iz+dz, p) - M3(f, m+1, ix,iy,iz-dz, p)) * .5f*fd1z[iz];
-      M3(c, 1, ix,iy,iz, p) =
-	(M3(f, m+0, ix,iy,iz+dz, p) - M3(f, m+0, ix,iy,iz-dz, p)) * .5f*fd1z[iz] -
-	(M3(f, m+2, ix+dx,iy,iz, p) - M3(f, m+2, ix-dx,iy,iz, p)) * .5f*fd1x[ix];
-      M3(c, 2, ix,iy,iz, p) =
-	(M3(f, m+1, ix+dx,iy,iz, p) - M3(f, m+1, ix-dx,iy,iz, p)) * .5f*fd1x[ix] -
-	(M3(f, m+0, ix,iy+dy,iz, p) - M3(f, m+0, ix,iy-dy,iz, p)) * .5f*fd1y[iy];
-    } mrc_fld_foreach_end;
+    patch_calc_current_cc_bgrid_cc(p_J, p_B);
   }
 }
 
@@ -130,6 +127,13 @@ void
 ggcm_mhd_calc_currcc(struct ggcm_mhd *mhd, struct mrc_fld *_fld, int m,
 		     struct mrc_fld *_currcc)
 {
+  static bool is_setup = false;
+  if (!is_setup) {
+    pde_setup(_fld);
+    pde_mhd_setup(mhd);
+    is_setup = true;
+  }
+  
   int mhd_type;
   mrc_fld_get_param_int(_fld, "mhd_type", &mhd_type);
 
@@ -137,14 +141,14 @@ ggcm_mhd_calc_currcc(struct ggcm_mhd *mhd, struct mrc_fld *_fld, int m,
   struct mrc_fld *currcc = mrc_fld_get_as(_currcc, FLD_TYPE);
   
   if (MT_FORMULATION(mhd_type) == MT_FORMULATION_GKEYLL) {
-    return ggcm_mhd_calc_currcc_gkeyll(mhd, fld, m, currcc);
+    ggcm_mhd_calc_currcc_gkeyll(mhd, fld, m, currcc);
   } else { // MHD
     switch (MT_BGRID(mhd_type)) {
     case MT_BGRID_CC:
-      ggcm_mhd_calc_currcc_cc(mhd, fld, m, currcc);
+      ggcm_mhd_calc_currcc_bgrid_cc(mhd, fld, m, currcc);
       break;
     case MT_BGRID_FC_GGCM:
-      ggcm_mhd_calc_currcc_fc_ggcm(mhd, fld, m, currcc);
+      ggcm_mhd_calc_currcc_bgrid_fc_ggcm(mhd, fld, m, currcc);
       break;
     default:
       assert(0);
@@ -153,4 +157,8 @@ ggcm_mhd_calc_currcc(struct ggcm_mhd *mhd, struct mrc_fld *_fld, int m,
 
   mrc_fld_put_as(fld, _fld);
   mrc_fld_put_as(currcc, _currcc);
+
+  if (0) {
+    pde_free();
+  }
 }
