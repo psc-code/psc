@@ -24,8 +24,8 @@ static void
 ggcm_mhd_mirdip_create(struct ggcm_mhd *mhd)
 {
   // normalization based on RE, equitorial field, ionospheric density
-  mhd->par.norm_length = 6371040.; // earth radius in m
-  mhd->par.norm_B = 3.0574001e-05; // equitorial dipole field in T
+  mhd->par.norm_length = C_RE; // earth radius in m
+  mhd->par.norm_B = C_DIPOLESTRENGTH; // equitorial dipole field in T
   mhd->par.norm_density = 1e10 * C_AMU; // approximate ionospheric density in kg/m^3
 
   // select output / input unit prefixes as in OpenGGCM
