@@ -489,7 +489,7 @@ obndra_zh_open_cc(struct ggcm_mhd *mhd, struct mrc_fld *f,
 //
 // set open fluid boundary conditions for MHD fields
 
-static void
+static void _mrc_unused
 obndra_mhd(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim)
 {
   struct ggcm_mhd_bnd_sub *sub = ggcm_mhd_bnd_sub(bnd);
@@ -535,6 +535,8 @@ obndra_mhd(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim)
   }
 }
 
+#if MT_FORMULATION(MT) == MT_FORMULATION_GKEYLL
+
 // ----------------------------------------------------------------------	
 // obndra_gkeyll_xl_bndsw
 //
@@ -561,11 +563,15 @@ obndra_gkeyll_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim,
   for (int iz = -swz; iz < mz + swz; iz++) {
     for (int iy = -swy; iy < my + swy; iy++) {
       for (int ix = -swx; ix < 0; ix++) {
-        float bn[SW_NR], state[cvt_n_state];
+        float bn[SW_NR];
         bnd_sw(bnd, ix, iy, iz, p, bn, bntim);
 
+	mrc_fld_data_t bnvals[SW_NR], state[cvt_n_state];
+	for (int m = 0; m < SW_NR; m++) {
+	  bnvals[m] = bn[m];
+	}
         if (nr_moments == 5) {
-          convert_primitive_5m_point_comove(state, bn, nr_fluids, nr_moments,
+          convert_primitive_5m_point_comove(state, bnvals, nr_fluids, nr_moments,
               mass, charge, pressure_ratios, mhd->par.gamm);
         } else if (nr_moments == 10) {
           // TODO
@@ -696,6 +702,8 @@ obndra_gkeyll(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim)
   }
 }
 
+#endif
+
 // ----------------------------------------------------------------------
 // obndrb_yl_open
 
@@ -794,7 +802,7 @@ obndrb_zh_open(struct ggcm_mhd *mhd, struct mrc_fld *f,
 // ----------------------------------------------------------------------
 // obndrb
 
-static void
+static void _mrc_unused
 obndrb(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f)
 {
   struct ggcm_mhd_bnd_sub *sub = ggcm_mhd_bnd_sub(bnd);
@@ -865,13 +873,13 @@ ggcm_mhd_bnd_sub_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld,
   assert(mhd_type == MT);
  
   struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
-  if (MT == MT_GKEYLL) {
-    assert(f->_aos && f->_c_order);
-    obndra_gkeyll(bnd, f, bntim);
-  } else {
-    obndra_mhd(bnd, f, bntim);
-    obndrb(bnd, f);
-  }
+#if MT_FORMULATION(MT) == MT_FORMULATION_GKEYLL
+  assert(f->_aos && f->_c_order);
+  obndra_gkeyll(bnd, f, bntim);
+#else
+  obndra_mhd(bnd, f, bntim);
+  obndrb(bnd, f);
+#endif
   mrc_fld_put_as(f, fld);
 
   prof_stop(PR);

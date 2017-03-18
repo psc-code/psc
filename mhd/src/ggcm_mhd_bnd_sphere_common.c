@@ -80,8 +80,7 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
     ggcm_mhd_convert_setup(mhd);
   }
 
-  int nr_comps = fld->_nr_comps;
-  float bnvals[FIXED_NR], state[cvt_n_state];
+  mrc_fld_data_t bnvals[FIXED_NR];
   bnvals[FIXED_RR] = sub->bnvals[FIXED_RR] / mhd->rrnorm;
   bnvals[FIXED_VX] = sub->bnvals[FIXED_VX] / mhd->vvnorm;
   bnvals[FIXED_VY] = sub->bnvals[FIXED_VY] / mhd->vvnorm;
@@ -91,7 +90,7 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
   bnvals[FIXED_BY] = sub->bnvals[FIXED_BY] / mhd->bbnorm;
   bnvals[FIXED_BZ] = sub->bnvals[FIXED_BZ] / mhd->bbnorm;
 
-  if (MT == MT_GKEYLL) {
+#if MT_FORMULATION(MT) == MT_FORMULATION_GKEYLL
     int nr_fluids = mhd->par.gk_nr_fluids;
     int nr_moments = mhd->par.gk_nr_moments;
     assert(mhd->par.gk_nr_moments == 5);
@@ -100,6 +99,8 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
     float *charge = mhd->par.gk_charge.vals;
     float *pressure_ratios = mhd->par.gk_pressure_ratios.vals;
 
+    int nr_comps = fld->_nr_comps; // FIXME
+    mrc_fld_data_t state[cvt_n_state];
     if (nr_moments == 5) {
       convert_primitive_5m_point_comove(state, bnvals, nr_fluids, nr_moments,
           mass, charge, pressure_ratios, mhd->par.gamm);
@@ -117,7 +118,7 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
         M3(fld, c, ix,iy,iz, p) = state[c];
     }
 
-  } else {
+#else
     for (int i = 0; i < map->cc_n_map; i++) {
       int ix = MRC_I2(map->cc_imap, 0, i);
       int iy = MRC_I2(map->cc_imap, 1, i);
@@ -156,7 +157,7 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
 	}
       }
     }
-  }
+#endif
 }
 
 static void
@@ -279,16 +280,16 @@ sphere_fill_ghosts_test_2(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
 static void
 sphere_fill_ghosts_test_3(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
 {
+#if MT == MT_GKEYLL
   struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
   struct ggcm_mhd_bnd_sphere_map *map = &sub->map;
   struct ggcm_mhd *mhd = bnd->mhd;
 
-  double gamm = mhd->par.gamm;
-  double rrbn = sub->bnvals[FIXED_RR] / mhd->rrnorm;
-  double ppbn = sub->bnvals[FIXED_PP] / mhd->ppnorm;
+  mrc_fld_data_t gamm = mhd->par.gamm;
+  mrc_fld_data_t rrbn = sub->bnvals[FIXED_RR] / mhd->rrnorm;
+  mrc_fld_data_t ppbn = sub->bnvals[FIXED_PP] / mhd->ppnorm;
 
-  int nr_comps = fld->_nr_comps;
-  float bn[FIXED_NR], state[cvt_n_state];
+  mrc_fld_data_t bn[FIXED_NR];
   bn[RR] = rrbn;
   bn[VX] = 0.;
   bn[VY] = 0.;
@@ -297,36 +298,34 @@ sphere_fill_ghosts_test_3(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
   bn[BX] = 0.;
   bn[BY] = 0.;
   bn[BZ] = 0.;
-
-  if (MT == MT_GKEYLL) {
-    int nr_fluids = mhd->par.gk_nr_fluids;
-    int nr_moments = mhd->par.gk_nr_moments;
-
-    float *mass = mhd->par.gk_mass.vals;
-    float *charge = mhd->par.gk_charge.vals;
-    float *pressure_ratios = mhd->par.gk_pressure_ratios.vals;
-
-    if (nr_moments == 5) {
-      convert_primitive_5m_point_comove(state, bn, nr_fluids, nr_moments,
-          mass, charge, pressure_ratios, gamm);
-    } else if (nr_moments == 10) {
-      // TODO
-    } else {
-      assert(false);
-    }
-
-    for (int i = 0; i < map->cc_n_map; i++) {
-      int ix = MRC_I2(map->cc_imap, 0, i);
-      int iy = MRC_I2(map->cc_imap, 1, i);
-      int iz = MRC_I2(map->cc_imap, 2, i);
-      int p  = MRC_I2(map->cc_imap, 3, i);
-
-      for (int c = 0; c < nr_comps; c++)
-        M3(fld, c, ix,iy,iz, p) = state[c];
-    }
+    
+  int nr_fluids = mhd->par.gk_nr_fluids;
+  int nr_moments = mhd->par.gk_nr_moments;
+  
+  float *mass = mhd->par.gk_mass.vals;
+  float *charge = mhd->par.gk_charge.vals;
+  float *pressure_ratios = mhd->par.gk_pressure_ratios.vals;
+  
+  mrc_fld_data_t state[cvt_n_state];
+  if (nr_moments == 5) {
+    convert_primitive_5m_point_comove(state, bn, nr_fluids, nr_moments,
+				      mass, charge, pressure_ratios, gamm);
   } else {
-    assert(0);
+    assert(false);
   }
+
+  for (int i = 0; i < map->cc_n_map; i++) {
+    int ix = MRC_I2(map->cc_imap, 0, i);
+    int iy = MRC_I2(map->cc_imap, 1, i);
+    int iz = MRC_I2(map->cc_imap, 2, i);
+    int p  = MRC_I2(map->cc_imap, 3, i);
+    
+    for (int m = 0; m < cvt_n_state; m++)
+      M3(fld, m, ix,iy,iz, p) = state[m];
+  }
+#else
+  assert(0);
+#endif
 }
 
 // ----------------------------------------------------------------------

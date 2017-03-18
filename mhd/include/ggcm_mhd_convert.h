@@ -106,6 +106,61 @@ convert_prim_from_state_fcons(mrc_fld_data_t prim[8], mrc_fld_data_t state[8])
 }
 
 #if MT_FORMULATION(MT) == MT_FORMULATION_GKEYLL
+// ----------------------------------------------------------------------	
+// convert_primitive_5m_point_comove
+
+static inline void
+convert_primitive_5m_point_comove(mrc_fld_data_t state[], mrc_fld_data_t vals[], int nr_fluids, int nr_moments,
+    float mass[], float charge[], float pressure_ratios[], float gamm)
+{
+  mrc_fld_data_t mass_ratios[nr_fluids];
+  mrc_fld_data_t mass_total = 0.;
+  int idx[nr_fluids];
+
+  for (int s = 0; s < nr_fluids; s++) {
+    mass_total += mass[s];
+    idx[s] = s * nr_moments;
+  }
+  for (int s = 0; s < nr_fluids; s++)
+    mass_ratios[s] = mass[s] / mass_total;
+
+  int idx_em = nr_fluids * nr_moments;
+
+  mrc_fld_data_t rr = vals[RR];
+  mrc_fld_data_t vx = vals[VX];
+  mrc_fld_data_t vy = vals[VY];
+  mrc_fld_data_t vz = vals[VZ];
+  mrc_fld_data_t pp = vals[PP];
+  mrc_fld_data_t bx = vals[BX];
+  mrc_fld_data_t by = vals[BY];
+  mrc_fld_data_t bz = vals[BZ];
+
+  for (int s = 0; s < nr_fluids; s++) {
+    state[idx[s] + G5M_RRS ] = rr * mass_ratios[s];
+    state[idx[s] + G5M_RVXS] = rr * mass_ratios[s] * vx;
+    state[idx[s] + G5M_RVYS] = rr * mass_ratios[s] * vy;
+    state[idx[s] + G5M_RVZS] = rr * mass_ratios[s] * vz;
+    state[idx[s] + G5M_UUS ] = pp * pressure_ratios[s] / (gamm - 1.)
+      + .5 * (sqr(state[idx[s] + G5M_RVXS])
+            + sqr(state[idx[s] + G5M_RVYS])
+            + sqr(state[idx[s] + G5M_RVZS])) / state[idx[s] + G5M_RRS];
+  }
+
+  state[idx_em + GK_EX] = - vy * bz + vz * by;
+  state[idx_em + GK_EY] = - vz * bx + vx * bz;
+  state[idx_em + GK_EZ] = - vx * by + vy * bx;
+
+  state[idx_em + GK_BX] = bx;
+  state[idx_em + GK_BY] = by;
+  state[idx_em + GK_BZ] = bz;
+
+  state[idx_em + GK_PHI] = 0.;
+  state[idx_em + GK_PSI] = 0.;
+}
+
+// ----------------------------------------------------------------------
+// convert_state_from_prim_gkeyll
+
 static inline void
 convert_state_from_prim_gkeyll(mrc_fld_data_t state[], mrc_fld_data_t prim[8])
 {
@@ -113,7 +168,7 @@ convert_state_from_prim_gkeyll(mrc_fld_data_t state[], mrc_fld_data_t prim[8])
   
   for (int sp = 0; sp < cvt_gk_nr_fluids; sp++) {
     mrc_fld_data_t *state_sp = state + cvt_gk_idx[sp];
-    float rrs = prim[RR] * cvt_gk_mass_ratios[sp];
+    mrc_fld_data_t rrs = prim[RR] * cvt_gk_mass_ratios[sp];
     state_sp[G5M_RRS ] = rrs;
     state_sp[G5M_RVXS] = rrs * prim[VX];
     state_sp[G5M_RVYS] = rrs * prim[VY];
@@ -122,6 +177,9 @@ convert_state_from_prim_gkeyll(mrc_fld_data_t state[], mrc_fld_data_t prim[8])
       + .5f * rrs * (sqr(prim[VX]) + sqr(prim[VY]) + sqr(prim[VZ]));
   }
 }
+
+// ----------------------------------------------------------------------
+// convert_prim_from_state_gkeyll
 
 static inline void
 convert_prim_from_state_gkeyll(mrc_fld_data_t prim[8], mrc_fld_data_t state[])
