@@ -3,16 +3,32 @@
 #define GGCM_MHD_CONVERT_H
 
 #include "ggcm_mhd_defs.h"
+#include "ggcm_mhd_defs_extra.h"
 
 static mrc_fld_data_t cvt_gamma;
 static mrc_fld_data_t cvt_gamma_m1;
 static mrc_fld_data_t cvt_gamma_m1_inv;
+static int cvt_n_state;
+#if MT_FORMULATION(MT) == MT_FORMULATION_GKEYLL
+static int cvt_gk_nr_fluids;
+static int *cvt_gk_idx;
+#endif
 
 static inline void ggcm_mhd_convert_setup(struct ggcm_mhd *mhd)
 {
   cvt_gamma = mhd->par.gamm;
   cvt_gamma_m1 = cvt_gamma - 1.f;
   cvt_gamma_m1_inv = 1.f / cvt_gamma_m1;
+  cvt_n_state = mrc_fld_nr_comps(mhd->fld);
+  // FIXME, hacky as usual, to deal with the legacy all-in-one big array
+  if (cvt_n_state == _NR_FLDS) {
+    cvt_n_state = 8;
+  }
+
+#if MT_FORMULATION(MT) == MT_FORMULATION_GKEYLL
+  cvt_gk_nr_fluids = mhd->par.gk_nr_fluids;
+  cvt_gk_idx = mhd->par.gk_idx;
+#endif
 }
 
 static inline void
@@ -83,6 +99,31 @@ convert_prim_from_state_fcons(mrc_fld_data_t prim[8], mrc_fld_data_t state[8])
   prim[BZ] = state[BZ];
 }
 
+#if MT_FORMULATION(MT) == MT_FORMULATION_GKEYLL
+static inline void
+convert_prim_from_state_gkeyll(mrc_fld_data_t prim[8], mrc_fld_data_t state[])
+{
+  prim[RR] = 0.f;
+  prim[VX] = prim[VY] = prim[VZ] = 0.f;
+  prim[PP] = 0.f;
+  for (int sp = 0; sp < cvt_gk_nr_fluids; sp++) {
+    mrc_fld_data_t *state_sp = state + cvt_gk_idx[sp];
+    mrc_fld_data_t rrs = state_sp[G5M_RRS];
+    prim[RR] += rrs;
+    prim[VX] += state_sp[G5M_RVXS];
+    prim[VY] += state_sp[G5M_RVYS];
+    prim[VZ] += state_sp[G5M_RVZS];
+    mrc_fld_data_t rvvs = (sqr(state_sp[G5M_RVXS]) +
+			   sqr(state_sp[G5M_RVYS]) +
+			   sqr(state_sp[G5M_RVZS])) / rrs;
+    prim[PP] += cvt_gamma_m1 * (state_sp[G5M_UUS] - .5f * rvvs);
+  }
+  prim[VX] /= prim[RR];
+  prim[VY] /= prim[RR];
+  prim[VZ] /= prim[RR];
+}
+#endif
+
 static inline void
 convert_state_from_prim(mrc_fld_data_t state[8], mrc_fld_data_t prim[8])
 {
@@ -102,6 +143,8 @@ convert_prim_from_state(mrc_fld_data_t prim[8], mrc_fld_data_t state[8])
   convert_prim_from_state_scons(prim, state);
 #elif MT_FORMULATION(MT) == MT_FORMULATION_FCONS
   convert_prim_from_state_fcons(prim, state);
+#elif MT_FORMULATION(MT) == MT_FORMULATION_GKEYLL
+  convert_prim_from_state_gkeyll(prim, state);
 #else
   assert(0);
 #endif
