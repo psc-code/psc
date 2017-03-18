@@ -107,6 +107,23 @@ convert_prim_from_state_fcons(mrc_fld_data_t prim[8], mrc_fld_data_t state[8])
 
 #if MT_FORMULATION(MT) == MT_FORMULATION_GKEYLL
 static inline void
+convert_state_from_prim_gkeyll(mrc_fld_data_t state[], mrc_fld_data_t prim[8])
+{
+  // FIXME: partitioning of mhd quantities between species is probably too rough
+  
+  for (int sp = 0; sp < cvt_gk_nr_fluids; sp++) {
+    mrc_fld_data_t *state_sp = state + cvt_gk_idx[sp];
+    float rrs = prim[RR] * cvt_gk_mass_ratios[sp];
+    state_sp[G5M_RRS ] = rrs;
+    state_sp[G5M_RVXS] = rrs * prim[VX];
+    state_sp[G5M_RVYS] = rrs * prim[VY];
+    state_sp[G5M_RVZS] = rrs * prim[VZ];
+    state_sp[G5M_UUS ] = (prim[PP] * cvt_gk_pressure_ratios[sp]) * cvt_gamma_m1_inv
+      + .5f * rrs * (sqr(prim[VX]) + sqr(prim[VY]) + sqr(prim[VZ]));
+  }
+}
+
+static inline void
 convert_prim_from_state_gkeyll(mrc_fld_data_t prim[8], mrc_fld_data_t state[])
 {
   prim[RR] = 0.f;
@@ -137,6 +154,8 @@ convert_state_from_prim(mrc_fld_data_t state[8], mrc_fld_data_t prim[8])
   convert_state_from_prim_scons(state, prim);
 #elif MT_FORMULATION(MT) == MT_FORMULATION_FCONS
   convert_state_from_prim_fcons(state, prim);
+#elif MT_FORMULATION(MT) == MT_FORMULATION_GKEYLL
+  convert_state_from_prim_gkeyll(state, prim);
 #else
   assert(0);
 #endif
