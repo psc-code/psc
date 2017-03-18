@@ -29,6 +29,7 @@ static inline void ggcm_mhd_convert_setup(struct ggcm_mhd *mhd)
   }
 
 #if MT_FORMULATION(MT) == MT_FORMULATION_GKEYLL
+  assert(ggcm_mhd_gkeyll_nr_moments(mhd) == 5);
   cvt_gk_nr_fluids = mhd->par.gk_nr_fluids;
   cvt_gk_idx = mhd->par.gk_idx;
   cvt_gk_idx_em = ggcm_mhd_gkeyll_em_fields_index(mhd);

@@ -91,14 +91,8 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
   bnvals[FIXED_BZ] = sub->bnvals[FIXED_BZ] / mhd->bbnorm;
 
 #if MT_FORMULATION(MT) == MT_FORMULATION_GKEYLL
-    int nr_moments = mhd->par.gk_nr_moments;
-
     mrc_fld_data_t state[cvt_n_state];
-    if (nr_moments == 5) {
-      convert_primitive_5m_point_comove(state, bnvals);
-    } else {
-      assert(false);
-    }
+    convert_primitive_5m_point_comove(state, bnvals);
 
     for (int i = 0; i < map->cc_n_map; i++) {
       int ix = MRC_I2(map->cc_imap, 0, i);
@@ -281,14 +275,8 @@ sphere_fill_ghosts_test_3(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
   bnvals[RR] = sub->bnvals[FIXED_RR] / mhd->rrnorm;
   bnvals[PP] = sub->bnvals[FIXED_PP] / mhd->ppnorm;;
 
-  int nr_moments = mhd->par.gk_nr_moments;
-  
   mrc_fld_data_t state[cvt_n_state];
-  if (nr_moments == 5) {
-    convert_primitive_5m_point_comove(state, bnvals);
-  } else {
-    assert(false);
-  }
+  convert_primitive_5m_point_comove(state, bnvals);
 
   for (int i = 0; i < map->cc_n_map; i++) {
     int ix = MRC_I2(map->cc_imap, 0, i);

@@ -552,8 +552,6 @@ obndra_gkeyll_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim,
   int swx = sw[0], swy = sw[1], swz = sw[2];
   int my = dims[1], mz = dims[2];
 
-  int nr_moments = ggcm_mhd_gkeyll_nr_moments(mhd);
-
   for (int iz = -swz; iz < mz + swz; iz++) {
     for (int iy = -swy; iy < my + swy; iy++) {
       for (int ix = -swx; ix < 0; ix++) {
@@ -564,11 +562,7 @@ obndra_gkeyll_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim,
 	for (int m = 0; m < SW_NR; m++) {
 	  bnvals[m] = bn[m];
 	}
-        if (nr_moments == 5) {
-          convert_primitive_5m_point_comove(state, bnvals);
-        } else {
-          assert(false);
-        }
+	convert_primitive_5m_point_comove(state, bnvals);
 
         for (int m = 0; m < cvt_n_state; m++)
           M3(f, m, ix,iy,iz, p) = state[m];
