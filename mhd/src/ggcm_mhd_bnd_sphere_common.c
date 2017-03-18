@@ -95,21 +95,18 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
     mrc_fld_data_t state[cvt_n_state];
 #if MT_FORMULATION(MT) == MT_FORMULATION_GKEYLL
       convert_primitive_5m_point_comove(state, bnvals);
-      convert_put_state_to_3d(state, fld, ix,iy,iz, p);
 #else
       convert_state_from_prim(state, bnvals);
-      convert_put_fluid_state_to_3d(state, fld, ix,iy,iz, p);
-
-      if (MT_BGRID(MT) == MT_BGRID_CC) {
-	// We only set B if it's cell-centered.  Otherwise, we'd need
-	// a face-centered map and things are much more complicated,
-	// but fortunately, our boundary condition is evolved using E
-	// = -v x B to update B anyway
-	for (int m = BX; m < BX + 3; m++) {
-	  M3(fld, m, ix,iy,iz, p) = state[m];
-	}
-      }
 #endif
+      if (MT_BGRID(MT) == MT_BGRID_CC) {
+	convert_put_state_to_3d(state, fld, ix,iy,iz, p);
+      } else {
+	// If B is not cell-centered, we don't set it at all, just the
+	// fluid quantities. We'd need a face-centered map and things
+	// are much more complicated, but fortunately, our boundary
+	// condition is evolved using E = -v x B to update B anyway.
+	convert_put_fluid_state_to_3d(state, fld, ix,iy,iz, p);
+      }
   }
 }
 

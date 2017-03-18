@@ -72,7 +72,7 @@ convert_prim_from_state_scons(mrc_fld_data_t prim[8], mrc_fld_data_t state[8])
 }
       
 static inline void
-convert_state_from_prim_fcons(mrc_fld_data_t state[8], mrc_fld_data_t prim[8])
+convert_state_from_prim_fcons(mrc_fld_data_t state[], mrc_fld_data_t prim[8])
 {
   assert(cvt_gamma);
 
@@ -86,10 +86,13 @@ convert_state_from_prim_fcons(mrc_fld_data_t state[8], mrc_fld_data_t prim[8])
   state[BX ] = prim[BX];
   state[BY ] = prim[BY];
   state[BZ ] = prim[BZ];
+  if (cvt_n_state == 9) {
+    state[PSI] = 0.f;
+  }
 }
 
 static inline void
-convert_prim_from_state_fcons(mrc_fld_data_t prim[8], mrc_fld_data_t state[8])
+convert_prim_from_state_fcons(mrc_fld_data_t prim[8], mrc_fld_data_t state[])
 {
   assert(cvt_gamma);
   
