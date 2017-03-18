@@ -545,15 +545,13 @@ obndra_gkeyll_xl_open(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim, 
 
 #endif
 
-#if MT_FORMULATION(MT) != MT_FORMULATION_GKEYLL
-
 // ----------------------------------------------------------------------
-// obndra_mhd
+// obndra
 //
-// set open fluid boundary conditions for MHD fields
+// set open fluid boundary conditions
 
 static void
-obndra_mhd(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim)
+obndra(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim)
 {
   struct ggcm_mhd_bnd_sub *sub = ggcm_mhd_bnd_sub(bnd);
   struct ggcm_mhd *mhd = bnd->mhd;
@@ -569,16 +567,84 @@ obndra_mhd(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim)
       bh[d] = ldims[d] - 1;
     }
   }
-
+  
   for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
     if (mrc_domain_at_boundary_lo(mhd->domain, 0, p)) {
       if (sub->apply_bndsw) {
+#if MT_FORMULATION(MT) != MT_FORMULATION_GKEYLL
 	obndra_mhd_xl_bndsw(bnd, f, bntim, p);
+#else
+	obndra_gkeyll_xl_bndsw(bnd, f, bntim, p);
+#endif
       } else {
+#if MT_FORMULATION(MT) != MT_FORMULATION_GKEYLL
 	assert(0);
+#else
+	obndra_gkeyll_xl_open(bnd, f, bntim, p);
+#endif
       }
     }
-    if (MT == MT_FCONS_CC) {
+
+    if (MT == MT_GKEYLL) {
+#if MT_FORMULATION(MT) == MT_FORMULATION_GKEYLL
+      if (mrc_domain_at_boundary_lo(mhd->domain, 1, p)) {
+	for (int iz = -sw[2]; iz < ldims[2] + sw[2]; iz++) {
+	  for (int ix = -sw[0]; ix < ldims[0] + sw[0]; ix++) {
+	    for (int iy = 0; iy > -sw[1]; iy--) {
+	      for (int m = 0; m < cvt_n_state; m++) {
+		M3(f, m, ix,iy-1,iz, p) = M3(f, m, ix,iy,iz, p);
+	      }
+	    }
+	  }
+	}
+      }
+      if (mrc_domain_at_boundary_lo(mhd->domain, 2, p)) {
+	for (int iy = -sw[1]; iy < ldims[1] + sw[1]; iy++) {
+	  for (int ix = -sw[0]; ix < ldims[0] + sw[0]; ix++) {
+	    for (int iz = 0; iz > -sw[2]; iz--) {
+	      for (int m = 0; m < cvt_n_state; m++) {
+		M3(f, m, ix,iy,iz-1, p) = M3(f, m, ix,iy,iz, p);
+	      }
+	    }
+	  }
+	}
+      }
+      
+      if (mrc_domain_at_boundary_hi(mhd->domain, 0, p)) {
+	for (int iz = -sw[2]; iz < ldims[2] + sw[2]; iz++) {
+	  for (int iy = -sw[1]; iy < ldims[1] + sw[1]; iy++) {
+	    for (int ix = ldims[0]; ix < ldims[0] + sw[0]; ix++) {
+	      for (int m = 0; m < cvt_n_state; m++) {
+		M3(f, m, ix,iy,iz, p) = M3(f, m, ix-1,iy,iz, p);
+	      }
+	    }
+	  }
+	}
+      }
+      if (mrc_domain_at_boundary_hi(mhd->domain, 1, p)) {
+	for (int iz = -sw[2]; iz < ldims[2] + sw[2]; iz++) {
+	  for (int ix = -sw[0]; ix < ldims[0] + sw[0]; ix++) {
+	    for (int iy = ldims[1]; iy < ldims[1] + sw[1]; iy++) {
+	      for (int m = 0; m < cvt_n_state; m++) {
+		M3(f, m, ix,iy,iz, p) = M3(f, m, ix,iy-1,iz, p);
+	      }
+	    }
+	  }
+	}
+      }
+      if (mrc_domain_at_boundary_hi(mhd->domain, 2, p)) {
+	for (int iy = -sw[1]; iy < ldims[1] + sw[1]; iy++) {
+	  for (int ix = -sw[0]; ix < ldims[0] + sw[0]; ix++) {
+	    for (int iz = ldims[2]; iz < ldims[2] + sw[2]; iz++) {
+	      for (int m = 0; m < cvt_n_state; m++) {
+		M3(f, m, ix,iy,iz, p) = M3(f, m, ix,iy,iz-1, p);
+	      }
+	    }
+	  }
+	}
+      }
+#endif     
+    } else if (MT == MT_FCONS_CC) {
       obndra_xh_open_cc(mhd, f, sw, ldims, p);
 
       obndra_yl_open_cc(mhd, f, sw, ldims, p);
@@ -598,92 +664,6 @@ obndra_mhd(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim)
   }
 }
 
-#else
-
-// ----------------------------------------------------------------------	
-// obndra_gkeyll
-//
-// set fluid boundary conditions at inflow boundary for 5/10 moment fields
-
-static void
-obndra_gkeyll(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim)
-{
-  struct ggcm_mhd_bnd_sub *sub = ggcm_mhd_bnd_sub(bnd);
-  struct ggcm_mhd *mhd = bnd->mhd;
-
-  int nr_comps = mrc_fld_nr_comps(f);
-  const int *sw = mrc_fld_spatial_sw(f), *dims = mrc_fld_spatial_dims(f);
-  int swx = sw[0], swy = sw[1], swz = sw[2];
-  int mx = dims[0], my = dims[1], mz = dims[2];
-
-  for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
-    if (mrc_domain_at_boundary_lo(mhd->domain, 0, p)) {
-      if (sub->apply_bndsw) {
-	obndra_gkeyll_xl_bndsw(bnd, f, bntim, p);
-      } else {
-	obndra_gkeyll_xl_open(bnd, f, bntim, p);
-      }
-    }
-    if (mrc_domain_at_boundary_lo(mhd->domain, 1, p)) {
-      for (int iz = -swz; iz < mz + swz; iz++) {
-	for (int ix = -swx; ix < mx + swx; ix++) {
-	  for (int iy = 0; iy > -swy; iy--) {
-	    for (int m = 0; m < nr_comps; m++) {
-	      M3(f, m, ix,iy-1,iz, p) = M3(f, m, ix,iy,iz, p);
-	    }
-	  }
-	}
-      }
-    }
-    if (mrc_domain_at_boundary_lo(mhd->domain, 2, p)) {
-      for (int iy = -swy; iy < my + swy; iy++) {
-	for (int ix = -swx; ix < mx + swx; ix++) {
-	  for (int iz = 0; iz > -swz; iz--) {
-	    for (int m = 0; m < nr_comps; m++) {
-	      M3(f, m, ix,iy,iz-1, p) = M3(f, m, ix,iy,iz, p);
-	    }
-	  }
-	}
-      }
-    }
-    
-    if (mrc_domain_at_boundary_hi(mhd->domain, 0, p)) {
-      for (int iz = -swz; iz < mz + swz; iz++) {
-	for (int iy = -swy; iy < my + swy; iy++) {
-	  for (int ix = mx; ix < mx + swx; ix++) {
-	    for (int m = 0; m < nr_comps; m++) {
-	      M3(f, m, ix,iy,iz, p) = M3(f, m, ix-1,iy,iz, p);
-	    }
-	  }
-	}
-      }
-    }
-    if (mrc_domain_at_boundary_hi(mhd->domain, 1, p)) {
-      for (int iz = -swz; iz < mz + swz; iz++) {
-	for (int ix = -swx; ix < mx + swx; ix++) {
-	  for (int iy = my; iy < my + swy; iy++) {
-	    for (int m = 0; m < nr_comps; m++) {
-	      M3(f, m, ix,iy,iz, p) = M3(f, m, ix,iy-1,iz, p);
-	    }
-	  }
-	}
-      }
-    }
-    if (mrc_domain_at_boundary_hi(mhd->domain, 2, p)) {
-      for (int iy = -swy; iy < my + swy; iy++) {
-	for (int ix = -swx; ix < mx + swx; ix++) {
-	  for (int iz = mz; iz < mz + swz; iz++) {
-	    for (int m = 0; m < nr_comps; m++) {
-	      M3(f, m, ix,iy,iz, p) = M3(f, m, ix,iy,iz-1, p);
-	    }
-	  }
-	}
-      }
-    }
-  }
-}
-
-#endif
 
 // ----------------------------------------------------------------------
 // obndrb_yl_open
@@ -854,11 +834,10 @@ ggcm_mhd_bnd_sub_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld,
   assert(mhd_type == MT);
  
   struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
+  obndra(bnd, f, bntim);
 #if MT_FORMULATION(MT) == MT_FORMULATION_GKEYLL
   assert(f->_aos && f->_c_order);
-  obndra_gkeyll(bnd, f, bntim);
 #else
-  obndra_mhd(bnd, f, bntim);
   obndrb(bnd, f);
 #endif
   mrc_fld_put_as(f, fld);
