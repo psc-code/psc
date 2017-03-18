@@ -477,57 +477,6 @@ obndra_zh_open_cc(struct ggcm_mhd *mhd, struct mrc_fld *f,
   }
 }
 
-// ----------------------------------------------------------------------
-// obndra_mhd
-//
-// set open fluid boundary conditions for MHD fields
-
-static void _mrc_unused
-obndra_mhd(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim)
-{
-  struct ggcm_mhd_bnd_sub *sub = ggcm_mhd_bnd_sub(bnd);
-  struct ggcm_mhd *mhd = bnd->mhd;
-
-  const int *sw = mrc_fld_spatial_sw(f), *ldims = mrc_fld_spatial_dims(f);
-  int bl[3], bh[3];
-  for (int d = 0; d < 3; d++) {
-    if (sub->do_legacy) {
-      bl[d] = -1;
-      bh[d] = ldims[d];
-    } else {
-      bl[d] = 0;
-      bh[d] = ldims[d] - 1;
-    }
-  }
-
-  for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
-    if (mrc_domain_at_boundary_lo(mhd->domain, 0, p)) {
-      if (sub->apply_bndsw) {
-	obndra_mhd_xl_bndsw(bnd, f, bntim, p);
-      } else {
-	assert(0);
-      }
-    }
-    if (MT == MT_FCONS_CC) {
-      obndra_xh_open_cc(mhd, f, sw, ldims, p);
-
-      obndra_yl_open_cc(mhd, f, sw, ldims, p);
-      obndra_yh_open_cc(mhd, f, sw, ldims, p);
-
-      obndra_zl_open_cc(mhd, f, sw, ldims, p);
-      obndra_zh_open_cc(mhd, f, sw, ldims, p);
-    } else {
-      obndra_xh_open(mhd, f, sw, ldims, bh[0], p);
-
-      obndra_yl_open(mhd, f, sw, ldims, bl[1], p);
-      obndra_yh_open(mhd, f, sw, ldims, bh[1], p);
-
-      obndra_zl_open(mhd, f, sw, ldims, bl[2], p);
-      obndra_zh_open(mhd, f, sw, ldims, bh[2], p);
-    }
-  }
-}
-
 #if MT_FORMULATION(MT) == MT_FORMULATION_GKEYLL
 
 // ----------------------------------------------------------------------	
@@ -593,6 +542,63 @@ obndra_gkeyll_xl_open(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim, 
     }
   }
 }
+
+#endif
+
+#if MT_FORMULATION(MT) != MT_FORMULATION_GKEYLL
+
+// ----------------------------------------------------------------------
+// obndra_mhd
+//
+// set open fluid boundary conditions for MHD fields
+
+static void
+obndra_mhd(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim)
+{
+  struct ggcm_mhd_bnd_sub *sub = ggcm_mhd_bnd_sub(bnd);
+  struct ggcm_mhd *mhd = bnd->mhd;
+
+  const int *sw = mrc_fld_spatial_sw(f), *ldims = mrc_fld_spatial_dims(f);
+  int bl[3], bh[3];
+  for (int d = 0; d < 3; d++) {
+    if (sub->do_legacy) {
+      bl[d] = -1;
+      bh[d] = ldims[d];
+    } else {
+      bl[d] = 0;
+      bh[d] = ldims[d] - 1;
+    }
+  }
+
+  for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
+    if (mrc_domain_at_boundary_lo(mhd->domain, 0, p)) {
+      if (sub->apply_bndsw) {
+	obndra_mhd_xl_bndsw(bnd, f, bntim, p);
+      } else {
+	assert(0);
+      }
+    }
+    if (MT == MT_FCONS_CC) {
+      obndra_xh_open_cc(mhd, f, sw, ldims, p);
+
+      obndra_yl_open_cc(mhd, f, sw, ldims, p);
+      obndra_yh_open_cc(mhd, f, sw, ldims, p);
+
+      obndra_zl_open_cc(mhd, f, sw, ldims, p);
+      obndra_zh_open_cc(mhd, f, sw, ldims, p);
+    } else {
+      obndra_xh_open(mhd, f, sw, ldims, bh[0], p);
+
+      obndra_yl_open(mhd, f, sw, ldims, bl[1], p);
+      obndra_yh_open(mhd, f, sw, ldims, bh[1], p);
+
+      obndra_zl_open(mhd, f, sw, ldims, bl[2], p);
+      obndra_zh_open(mhd, f, sw, ldims, bh[2], p);
+    }
+  }
+}
+
+#else
 
 // ----------------------------------------------------------------------	
 // obndra_gkeyll
