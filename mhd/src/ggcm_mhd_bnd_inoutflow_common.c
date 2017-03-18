@@ -386,7 +386,7 @@ obndra_xh_open_cc(struct ggcm_mhd *mhd, struct mrc_fld *f,
     for (int iz = -sw[2]; iz < ldims[2] + sw[2]; iz++) {
       for (int iy = -sw[1]; iy < ldims[1] + sw[1]; iy++) {
 	for (int ix = 0; ix < sw[0]; ix++) {
-	  for (int m = 0; m < 8; m++) {
+	  for (int m = 0; m < cvt_n_state; m++) {
 	    M3(f,m, mx+ix,iy,iz, p) = M3(f,m, mx-ix-1,iy,iz, p);
 	  }
 	}
@@ -406,7 +406,7 @@ obndra_yl_open_cc(struct ggcm_mhd *mhd, struct mrc_fld *f,
     for (int iz = -sw[2]; iz < ldims[2] + sw[2]; iz++) {
       for (int ix = -sw[0]; ix < ldims[0] + sw[0]; ix++) {
 	for (int iy = 0; iy < sw[1]; iy++) {
-	  for (int m = 0; m < 8; m++) {
+	  for (int m = 0; m < cvt_n_state; m++) {
 	    M3(f,m, ix,-1-iy,iz, p) = M3(f,m, ix,iy,iz, p);
 	  }
 	}
@@ -427,7 +427,7 @@ obndra_yh_open_cc(struct ggcm_mhd *mhd, struct mrc_fld *f,
     for (int iz = -sw[2]; iz < ldims[2] + sw[2]; iz++) {
       for (int ix = -sw[0]; ix < ldims[0] + sw[0]; ix++) {
 	for (int iy = 0; iy < sw[1]; iy++) {
-	  for (int m = 0; m < 8; m++) {
+	  for (int m = 0; m < cvt_n_state; m++) {
 	    M3(f,m, ix,my+iy,iz, p) = M3(f,m, ix,my-iy-1,iz, p);
 	  }
 	}
@@ -447,7 +447,7 @@ obndra_zl_open_cc(struct ggcm_mhd *mhd, struct mrc_fld *f,
     for (int iy = -sw[1]; iy < ldims[1] + sw[1]; iy++) {
       for (int ix = -sw[0]; ix < ldims[0] + sw[0]; ix++) {
 	for (int iz = 0; iz < sw[2]; iz++) {
-	  for (int m = 0; m < 8; m++) {
+	  for (int m = 0; m < cvt_n_state; m++) {
 	    M3(f,m, ix,iy,-1-iz, p) = M3(f,m, ix,iy,iz, p);
 	  }
 	}
@@ -468,7 +468,7 @@ obndra_zh_open_cc(struct ggcm_mhd *mhd, struct mrc_fld *f,
     for (int iy = -sw[1]; iy < ldims[1] + sw[1]; iy++) {
       for (int ix = -sw[0]; ix < ldims[0] + sw[0]; ix++) {
 	for (int iz = 0; iz < sw[2]; iz++) {
-	  for (int m = 0; m < 8; m++) {
+	  for (int m = 0; m < cvt_n_state; m++) {
 	    M3(f,m, ix,iy,mz+iz, p) = M3(f,m, ix,iy,mz-iz-1, p);
 	  }
 	}
@@ -585,65 +585,16 @@ obndra(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim)
       }
     }
 
+    // FIXME, the following two could be merged under
+    // (MT_BGRID(MT) == MT_BGRID_CC)
+    // if we're sure that the order doesn't matter
     if (MT == MT_GKEYLL) {
-#if MT_FORMULATION(MT) == MT_FORMULATION_GKEYLL
-      if (mrc_domain_at_boundary_lo(mhd->domain, 1, p)) {
-	for (int iz = -sw[2]; iz < ldims[2] + sw[2]; iz++) {
-	  for (int ix = -sw[0]; ix < ldims[0] + sw[0]; ix++) {
-	    for (int iy = 0; iy > -sw[1]; iy--) {
-	      for (int m = 0; m < cvt_n_state; m++) {
-		M3(f, m, ix,iy-1,iz, p) = M3(f, m, ix,iy,iz, p);
-	      }
-	    }
-	  }
-	}
-      }
-      if (mrc_domain_at_boundary_lo(mhd->domain, 2, p)) {
-	for (int iy = -sw[1]; iy < ldims[1] + sw[1]; iy++) {
-	  for (int ix = -sw[0]; ix < ldims[0] + sw[0]; ix++) {
-	    for (int iz = 0; iz > -sw[2]; iz--) {
-	      for (int m = 0; m < cvt_n_state; m++) {
-		M3(f, m, ix,iy,iz-1, p) = M3(f, m, ix,iy,iz, p);
-	      }
-	    }
-	  }
-	}
-      }
+      obndra_yl_open_cc(mhd, f, sw, ldims, p);
+      obndra_zl_open_cc(mhd, f, sw, ldims, p);
       
-      if (mrc_domain_at_boundary_hi(mhd->domain, 0, p)) {
-	for (int iz = -sw[2]; iz < ldims[2] + sw[2]; iz++) {
-	  for (int iy = -sw[1]; iy < ldims[1] + sw[1]; iy++) {
-	    for (int ix = ldims[0]; ix < ldims[0] + sw[0]; ix++) {
-	      for (int m = 0; m < cvt_n_state; m++) {
-		M3(f, m, ix,iy,iz, p) = M3(f, m, ix-1,iy,iz, p);
-	      }
-	    }
-	  }
-	}
-      }
-      if (mrc_domain_at_boundary_hi(mhd->domain, 1, p)) {
-	for (int iz = -sw[2]; iz < ldims[2] + sw[2]; iz++) {
-	  for (int ix = -sw[0]; ix < ldims[0] + sw[0]; ix++) {
-	    for (int iy = ldims[1]; iy < ldims[1] + sw[1]; iy++) {
-	      for (int m = 0; m < cvt_n_state; m++) {
-		M3(f, m, ix,iy,iz, p) = M3(f, m, ix,iy-1,iz, p);
-	      }
-	    }
-	  }
-	}
-      }
-      if (mrc_domain_at_boundary_hi(mhd->domain, 2, p)) {
-	for (int iy = -sw[1]; iy < ldims[1] + sw[1]; iy++) {
-	  for (int ix = -sw[0]; ix < ldims[0] + sw[0]; ix++) {
-	    for (int iz = ldims[2]; iz < ldims[2] + sw[2]; iz++) {
-	      for (int m = 0; m < cvt_n_state; m++) {
-		M3(f, m, ix,iy,iz, p) = M3(f, m, ix,iy,iz-1, p);
-	      }
-	    }
-	  }
-	}
-      }
-#endif     
+      obndra_xh_open_cc(mhd, f, sw, ldims, p);
+      obndra_yh_open_cc(mhd, f, sw, ldims, p);
+      obndra_zh_open_cc(mhd, f, sw, ldims, p);
     } else if (MT == MT_FCONS_CC) {
       obndra_xh_open_cc(mhd, f, sw, ldims, p);
 
