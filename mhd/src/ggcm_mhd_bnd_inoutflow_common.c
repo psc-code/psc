@@ -561,11 +561,11 @@ obndra_gkeyll_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim,
   for (int iz = -swz; iz < mz + swz; iz++) {
     for (int iy = -swy; iy < my + swy; iy++) {
       for (int ix = -swx; ix < 0; ix++) {
-        float bn[nr_comps];
+        float bn[SW_NR], state[cvt_n_state];
         bnd_sw(bnd, ix, iy, iz, p, bn, bntim);
 
         if (nr_moments == 5) {
-          convert_primitive_5m_point_comove(bn, nr_fluids, nr_moments,
+          convert_primitive_5m_point_comove(state, bn, nr_fluids, nr_moments,
               mass, charge, pressure_ratios, mhd->par.gamm);
         } else if (nr_moments == 10) {
           // TODO
@@ -574,7 +574,7 @@ obndra_gkeyll_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim,
         }
 
         for (int c = 0; c < nr_comps; c++)
-          M3(f, c, ix,iy,iz, p) = bn[c];
+          M3(f, c, ix,iy,iz, p) = state[c];
 
         if (b0) {
           int idx_em = nr_fluids * nr_moments;

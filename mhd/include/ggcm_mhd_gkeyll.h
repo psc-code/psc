@@ -49,6 +49,6 @@ ggcm_mhd_convert_primitive_gkeyll_5m_point(struct mrc_fld *fld, int nr_fluids,
     int ix, int iy, int iz, int p);
 
 void
-convert_primitive_5m_point_comove(float vals[], int nr_fluids, int nr_moments,
+convert_primitive_5m_point_comove(float state[], float vals[], int nr_fluids, int nr_moments,
     float mass[], float charge[], float pressure_ratios[], float gamm);
 

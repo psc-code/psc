@@ -81,7 +81,7 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
   }
 
   int nr_comps = fld->_nr_comps;
-  float bnvals[nr_comps];
+  float bnvals[FIXED_NR], state[cvt_n_state];
   bnvals[FIXED_RR] = sub->bnvals[FIXED_RR] / mhd->rrnorm;
   bnvals[FIXED_VX] = sub->bnvals[FIXED_VX] / mhd->vvnorm;
   bnvals[FIXED_VY] = sub->bnvals[FIXED_VY] / mhd->vvnorm;
@@ -94,17 +94,15 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
   if (MT == MT_GKEYLL) {
     int nr_fluids = mhd->par.gk_nr_fluids;
     int nr_moments = mhd->par.gk_nr_moments;
-    assert(nr_comps == nr_fluids * nr_moments + 8);
+    assert(mhd->par.gk_nr_moments == 5);
 
     float *mass = mhd->par.gk_mass.vals;
     float *charge = mhd->par.gk_charge.vals;
     float *pressure_ratios = mhd->par.gk_pressure_ratios.vals;
 
     if (nr_moments == 5) {
-      convert_primitive_5m_point_comove(bnvals, nr_fluids, nr_moments,
+      convert_primitive_5m_point_comove(state, bnvals, nr_fluids, nr_moments,
           mass, charge, pressure_ratios, mhd->par.gamm);
-    } else if (nr_moments == 10) {
-      // TODO
     } else {
       assert(false);
     }
@@ -116,7 +114,7 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
       int p  = MRC_I2(map->cc_imap, 3, i);
 
       for (int c = 0; c < nr_comps; c++)
-        M3(fld, c, ix,iy,iz, p) = bnvals[c];
+        M3(fld, c, ix,iy,iz, p) = state[c];
     }
 
   } else {
@@ -290,7 +288,7 @@ sphere_fill_ghosts_test_3(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
   double ppbn = sub->bnvals[FIXED_PP] / mhd->ppnorm;
 
   int nr_comps = fld->_nr_comps;
-  float bn[nr_comps];
+  float bn[FIXED_NR], state[cvt_n_state];
   bn[RR] = rrbn;
   bn[VX] = 0.;
   bn[VY] = 0.;
@@ -309,7 +307,7 @@ sphere_fill_ghosts_test_3(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
     float *pressure_ratios = mhd->par.gk_pressure_ratios.vals;
 
     if (nr_moments == 5) {
-      convert_primitive_5m_point_comove(bn, nr_fluids, nr_moments,
+      convert_primitive_5m_point_comove(state, bn, nr_fluids, nr_moments,
           mass, charge, pressure_ratios, gamm);
     } else if (nr_moments == 10) {
       // TODO
@@ -324,7 +322,7 @@ sphere_fill_ghosts_test_3(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
       int p  = MRC_I2(map->cc_imap, 3, i);
 
       for (int c = 0; c < nr_comps; c++)
-        M3(fld, c, ix,iy,iz, p) = bn[c];
+        M3(fld, c, ix,iy,iz, p) = state[c];
     }
   } else {
     assert(0);

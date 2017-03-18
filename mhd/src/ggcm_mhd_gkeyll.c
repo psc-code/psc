@@ -100,7 +100,7 @@ ggcm_mhd_gkeyll_fluid_species_mass_ratios_all(struct ggcm_mhd *mhd, float mass_w
 // convert_primitive_5m_point_comove
 
 void
-convert_primitive_5m_point_comove(float vals[], int nr_fluids, int nr_moments,
+convert_primitive_5m_point_comove(float state[], float vals[], int nr_fluids, int nr_moments,
     float mass[], float charge[], float pressure_ratios[], float gamm)
 {
   float mass_ratios[nr_fluids];
@@ -125,26 +125,26 @@ convert_primitive_5m_point_comove(float vals[], int nr_fluids, int nr_moments,
   float by = vals[BY];
   float bz = vals[BZ];
 
-  vals[idx_em + GK_EX] = - vy * bz + vz * by;
-  vals[idx_em + GK_EY] = - vz * bx + vx * bz;
-  vals[idx_em + GK_EZ] = - vx * by + vy * bx;
+  state[idx_em + GK_EX] = - vy * bz + vz * by;
+  state[idx_em + GK_EY] = - vz * bx + vx * bz;
+  state[idx_em + GK_EZ] = - vx * by + vy * bx;
 
-  vals[idx_em + GK_BX] = bx;
-  vals[idx_em + GK_BY] = by;
-  vals[idx_em + GK_BZ] = bz;
+  state[idx_em + GK_BX] = bx;
+  state[idx_em + GK_BY] = by;
+  state[idx_em + GK_BZ] = bz;
 
   for (int s = 0; s < nr_fluids; s++) {
-    vals[idx[s] + G5M_RRS ] = rr * mass_ratios[s];
-    vals[idx[s] + G5M_RVXS] = rr * mass_ratios[s] * vx;
-    vals[idx[s] + G5M_RVYS] = rr * mass_ratios[s] * vy;
-    vals[idx[s] + G5M_RVZS] = rr * mass_ratios[s] * vz;
-    vals[idx[s] + G5M_UUS ] = pp * pressure_ratios[s] / (gamm - 1.)
-      + .5 * (sqr(vals[idx[s] + G5M_RVXS])
-            + sqr(vals[idx[s] + G5M_RVYS])
-            + sqr(vals[idx[s] + G5M_RVZS])) / vals[idx[s] + G5M_RRS];
+    state[idx[s] + G5M_RRS ] = rr * mass_ratios[s];
+    state[idx[s] + G5M_RVXS] = rr * mass_ratios[s] * vx;
+    state[idx[s] + G5M_RVYS] = rr * mass_ratios[s] * vy;
+    state[idx[s] + G5M_RVZS] = rr * mass_ratios[s] * vz;
+    state[idx[s] + G5M_UUS ] = pp * pressure_ratios[s] / (gamm - 1.)
+      + .5 * (sqr(state[idx[s] + G5M_RVXS])
+            + sqr(state[idx[s] + G5M_RVYS])
+            + sqr(state[idx[s] + G5M_RVZS])) / state[idx[s] + G5M_RRS];
   }
 
-  vals[idx_em + GK_PHI] = 0.;
-  vals[idx_em + GK_PSI] = 0.;
+  state[idx_em + GK_PHI] = 0.;
+  state[idx_em + GK_PSI] = 0.;
 } 
 
