@@ -1,4 +1,6 @@
 
+#define BOUNDS_CHECK
+
 #include "ggcm_mhd_bndsw.h"
 #include "ggcm_mhd_crds.h"
 #include "mrc_domain.h"
@@ -172,42 +174,53 @@ bnd_sw(struct ggcm_mhd_bnd *bnd, int ix, int iy, int iz, int p, float bn[], floa
 }
 
 // ----------------------------------------------------------------------
-// obndra_mhd_xl_bndsw
+// obndra_xl_bndsw
 //
-// set inflow fluid boundary conditions at x-low boundary for MHD fields
+// set inflow fluid boundary conditions at x-low boundary
 
 static void
-obndra_mhd_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim, int p)
+obndra_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim, int p)
 {
   struct ggcm_mhd *mhd = bnd->mhd;
-  struct mrc_fld *b0 = mhd->b0;
-
+  struct mrc_fld *b0 = NULL;
+  if (mhd->b0) {
+    b0 = mrc_fld_get_as(mhd->b0, FLD_TYPE); // FIXME needed?
+  }
   const int *sw = mrc_fld_spatial_sw(f), *dims = mrc_fld_spatial_dims(f);
+
   int swx = sw[0], swy = sw[1], swz = sw[2];
   int my = dims[1], mz = dims[2];
 
   for (int iz = -swz; iz < mz + swz; iz++) {
     for (int iy = -swy; iy < my + swy; iy++) {
       for (int ix = -swx; ix < 0; ix++) {
-	float bn[N_PRIMITIVE];
-	bnd_sw(bnd, ix, iy, iz, p, bn, bntim);
+        float bn[N_PRIMITIVE];
+        bnd_sw(bnd, ix, iy, iz, p, bn, bntim);
 
+#if MT_FORMULATION(MT) != MT_FORMULATION_GKEYLL
 	// subtract background field if used
 	if (b0) {
 	  for (int d = 0; d < 3; d++) {
 	    bn[BX + d] -= M3(b0, d, ix,iy,iz, p);
 	  }
 	}
+#endif
 	
 	mrc_fld_data_t prim[N_PRIMITIVE], state[cvt_n_state];
 	for (int m = 0; m < N_PRIMITIVE; m++) {
 	  prim[m] = bn[m];
 	}
-
 	convert_state_from_prim(state, prim);
-	
+
 	if (MT_BGRID(MT) == MT_BGRID_CC) {
 	  convert_put_state_to_3d(state, f, ix,iy,iz, p);
+#if MT_FORMULATION(MT) == MT_FORMULATION_GKEYLL
+	  if (b0) {
+	    for (int d = 0; d < 3; d++) {
+	      M3(f, cvt_gk_idx_em + GK_BX + d, ix,iy,iz, p) -= M3(b0, d, ix,iy,iz, p);
+	    }
+	  }
+#endif
 	} else {
 	  convert_put_fluid_state_to_3d(state, f, ix,iy,iz, p);
 	  _BX(f, ix+1,iy,iz, p) = state[BX];
@@ -221,7 +234,12 @@ obndra_mhd_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim, in
       }
     }
   }
+
+  if (mhd->b0) {
+    mrc_fld_put_as(b0, mhd->b0);
+  }
 }
+
 
 // ----------------------------------------------------------------------
 // obndra_yl_open
@@ -497,50 +515,6 @@ obndra_zh_open_cc(struct ggcm_mhd *mhd, struct mrc_fld *f,
   }
 }
 
-#if MT_FORMULATION(MT) == MT_FORMULATION_GKEYLL
-
-// ----------------------------------------------------------------------	
-// obndra_gkeyll_xl_bndsw
-//
-// set inflow boundary conditions at x-low for 5/10 moment fields
-
-static void
-obndra_gkeyll_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim, int p)
-{
-  struct ggcm_mhd *mhd = bnd->mhd;
-  struct mrc_fld *b0 = mrc_fld_get_as(mhd->b0, FLD_TYPE); // FIXME needed?
-
-  const int *sw = mrc_fld_spatial_sw(f), *dims = mrc_fld_spatial_dims(f);
-  int swx = sw[0], swy = sw[1], swz = sw[2];
-  int my = dims[1], mz = dims[2];
-
-  for (int iz = -swz; iz < mz + swz; iz++) {
-    for (int iy = -swy; iy < my + swy; iy++) {
-      for (int ix = -swx; ix < 0; ix++) {
-        float bn[N_PRIMITIVE];
-        bnd_sw(bnd, ix, iy, iz, p, bn, bntim);
-
-	mrc_fld_data_t bnvals[N_PRIMITIVE], state[cvt_n_state];
-	for (int m = 0; m < N_PRIMITIVE; m++) {
-	  bnvals[m] = bn[m];
-	}
-	convert_state_from_prim(state, bnvals);
-	convert_put_state_to_3d(state, f, ix,iy,iz, p);
-
-        if (b0) {
-          for (int d = 0; d < 3; d++) {
-            M3(f, cvt_gk_idx_em + GK_BX + d, ix,iy,iz, p)-= M3(b0, d, ix,iy,iz, p);
-          }
-        }
-      }
-    }
-  }
-
-  mrc_fld_put_as(b0, mhd->b0);
-}
-
-#endif
-
 // ----------------------------------------------------------------------
 // obndra
 //
@@ -567,11 +541,7 @@ obndra(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim)
   for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
     if (mrc_domain_at_boundary_lo(mhd->domain, 0, p)) {
       if (sub->apply_bndsw) {
-#if MT_FORMULATION(MT) != MT_FORMULATION_GKEYLL
-	obndra_mhd_xl_bndsw(bnd, f, bntim, p);
-#else
-	obndra_gkeyll_xl_bndsw(bnd, f, bntim, p);
-#endif
+	obndra_xl_bndsw(bnd, f, bntim, p);
       } else {
 	if (MT_BGRID(MT) == MT_BGRID_CC) {
 	  obndra_xl_open_cc(bnd, f, sw, ldims, p);
