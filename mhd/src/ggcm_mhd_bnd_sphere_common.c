@@ -11,19 +11,6 @@
 
 #include "ggcm_mhd_convert.h"
 
-enum {
-  FIXED_RR,
-  FIXED_VX,
-  FIXED_VY,
-  FIXED_VZ,
-  FIXED_PP,
-  FIXED_BX,
-  FIXED_BY,
-  FIXED_BZ,
-  FIXED_NR,
-};
-
-
 // FIXME, consolidate with ggcm_mhd_iono
 
 // ======================================================================
@@ -32,7 +19,7 @@ enum {
 struct ggcm_mhd_bnd_sphere {
   // params
   double radius;
-  double bnvals[FIXED_NR];  // constant values to set
+  double bnvals[N_PRIMITIVE];  // constant values to set
   int test; // for testing, set to != 0
   int radial_velocity; // 0 : float, 1: reflect, 2: reflect if outflow
   double dr, extra_dr; // parameters for determining ghost points
@@ -80,15 +67,15 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
     ggcm_mhd_convert_setup(mhd);
   }
 
-  mrc_fld_data_t bnvals[FIXED_NR];
-  bnvals[FIXED_RR] = sub->bnvals[FIXED_RR] / mhd->rrnorm;
-  bnvals[FIXED_VX] = sub->bnvals[FIXED_VX] / mhd->vvnorm;
-  bnvals[FIXED_VY] = sub->bnvals[FIXED_VY] / mhd->vvnorm;
-  bnvals[FIXED_VZ] = sub->bnvals[FIXED_VZ] / mhd->vvnorm;
-  bnvals[FIXED_PP] = sub->bnvals[FIXED_PP] / mhd->ppnorm;
-  bnvals[FIXED_BX] = sub->bnvals[FIXED_BX] / mhd->bbnorm;
-  bnvals[FIXED_BY] = sub->bnvals[FIXED_BY] / mhd->bbnorm;
-  bnvals[FIXED_BZ] = sub->bnvals[FIXED_BZ] / mhd->bbnorm;
+  mrc_fld_data_t bnvals[N_PRIMITIVE];
+  bnvals[RR] = sub->bnvals[RR] / mhd->rrnorm;
+  bnvals[VX] = sub->bnvals[VX] / mhd->vvnorm;
+  bnvals[VY] = sub->bnvals[VY] / mhd->vvnorm;
+  bnvals[VZ] = sub->bnvals[VZ] / mhd->vvnorm;
+  bnvals[PP] = sub->bnvals[PP] / mhd->ppnorm;
+  bnvals[BX] = sub->bnvals[BX] / mhd->bbnorm;
+  bnvals[BY] = sub->bnvals[BY] / mhd->bbnorm;
+  bnvals[BZ] = sub->bnvals[BZ] / mhd->bbnorm;
 
 #if MT_FORMULATION(MT) == MT_FORMULATION_GKEYLL
     mrc_fld_data_t state[cvt_n_state];
@@ -111,26 +98,18 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
       int iz = MRC_I2(map->cc_imap, 2, i);
       int p  = MRC_I2(map->cc_imap, 3, i);
 
-      mrc_fld_data_t prim[8], state[cvt_n_state];
-      prim[RR] = bnvals[FIXED_RR];
-      prim[VX] = bnvals[FIXED_VX];
-      prim[VY] = bnvals[FIXED_VY];
-      prim[VZ] = bnvals[FIXED_VZ];
-      prim[PP] = bnvals[FIXED_PP];
-      prim[BX] = bnvals[FIXED_BX];
-      prim[BY] = bnvals[FIXED_BY];
-      prim[BZ] = bnvals[FIXED_BZ];
+      mrc_fld_data_t state[cvt_n_state];
 
       // FIXME, this is still kinda specific / hacky to ganymede
       // to avoid cutting off the initial perturbation from e.g., the mirror dipole,
       // let's just keep B as-is, rather than using the fixed values above
       if (MT == MT_FCONS_CC) {
-        prim[BX] = M3(fld, BX, ix,iy,iz, p);
-        prim[BY] = M3(fld, BY, ix,iy,iz, p);
-        prim[BZ] = M3(fld, BZ, ix,iy,iz, p);
+        bnvals[BX] = M3(fld, BX, ix,iy,iz, p);
+        bnvals[BY] = M3(fld, BY, ix,iy,iz, p);
+        bnvals[BZ] = M3(fld, BZ, ix,iy,iz, p);
       }
       
-      convert_state_from_prim(state, prim);
+      convert_state_from_prim(state, bnvals);
       convert_put_fluid_state_to_3d(state, fld, ix,iy,iz, p);
 
       if (MT_BGRID(MT) == MT_BGRID_CC) {
@@ -271,9 +250,9 @@ sphere_fill_ghosts_test_3(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
   struct ggcm_mhd_bnd_sphere_map *map = &sub->map;
   struct ggcm_mhd *mhd = bnd->mhd;
 
-  mrc_fld_data_t bnvals[FIXED_NR] = {};
-  bnvals[RR] = sub->bnvals[FIXED_RR] / mhd->rrnorm;
-  bnvals[PP] = sub->bnvals[FIXED_PP] / mhd->ppnorm;;
+  mrc_fld_data_t bnvals[N_PRIMITIVE] = {};
+  bnvals[RR] = sub->bnvals[RR] / mhd->rrnorm;
+  bnvals[PP] = sub->bnvals[PP] / mhd->ppnorm;;
 
   mrc_fld_data_t state[cvt_n_state];
   convert_primitive_5m_point_comove(state, bnvals);
@@ -306,8 +285,8 @@ sphere_fill_ghosts_test_4(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
 
   mrc_fld_data_t gamm = mhd->par.gamm;
 
-  mrc_fld_data_t rrbn = sub->bnvals[FIXED_RR] / mhd->rrnorm;
-  mrc_fld_data_t ppbn = sub->bnvals[FIXED_PP] / mhd->ppnorm;
+  mrc_fld_data_t rrbn = sub->bnvals[RR] / mhd->rrnorm;
+  mrc_fld_data_t ppbn = sub->bnvals[PP] / mhd->ppnorm;
 
   struct mrc_fld *ymask = mrc_fld_get_as(mhd->ymask, FLD_TYPE);
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
@@ -693,14 +672,14 @@ ggcm_mhd_bnd_sphere_fill_ghosts_reconstr(struct ggcm_mhd_bnd *bnd, struct mrc_fl
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_bnd_sphere, x)
 static struct param ggcm_mhd_bnd_sphere_descr[] = {
   { "radius"          , VAR(radius)          , PARAM_DOUBLE(1.)          },
-  { "rr"              , VAR(bnvals[FIXED_RR]), PARAM_DOUBLE(1.)          },
-  { "pp"              , VAR(bnvals[FIXED_PP]), PARAM_DOUBLE(1.)          },
-  { "vx"              , VAR(bnvals[FIXED_VX]), PARAM_DOUBLE(0.)          },
-  { "vy"              , VAR(bnvals[FIXED_VY]), PARAM_DOUBLE(0.)          },
-  { "vz"              , VAR(bnvals[FIXED_VZ]), PARAM_DOUBLE(0.)          },
-  { "bx"              , VAR(bnvals[FIXED_BX]), PARAM_DOUBLE(0.)          },
-  { "by"              , VAR(bnvals[FIXED_BY]), PARAM_DOUBLE(0.)          },
-  { "bz"              , VAR(bnvals[FIXED_BZ]), PARAM_DOUBLE(0.)          },
+  { "rr"              , VAR(bnvals[RR])      , PARAM_DOUBLE(1.)          },
+  { "pp"              , VAR(bnvals[PP])      , PARAM_DOUBLE(1.)          },
+  { "vx"              , VAR(bnvals[VX])      , PARAM_DOUBLE(0.)          },
+  { "vy"              , VAR(bnvals[VY])      , PARAM_DOUBLE(0.)          },
+  { "vz"              , VAR(bnvals[VZ])      , PARAM_DOUBLE(0.)          },
+  { "bx"              , VAR(bnvals[BX])      , PARAM_DOUBLE(0.)          },
+  { "by"              , VAR(bnvals[BY])      , PARAM_DOUBLE(0.)          },
+  { "bz"              , VAR(bnvals[BZ])      , PARAM_DOUBLE(0.)          },
   { "test"            , VAR(test)            , PARAM_INT(0)              },
   { "radial_velocity" , VAR(radial_velocity) , PARAM_INT(0)              },
   { "dr"              , VAR(dr)              , PARAM_DOUBLE(.01)         },
