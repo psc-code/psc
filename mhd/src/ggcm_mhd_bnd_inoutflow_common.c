@@ -205,13 +205,11 @@ obndra_mhd_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim, in
 	}
 
 	convert_state_from_prim(state, prim);
-	convert_put_fluid_state_to_3d(state, f, ix,iy,iz, p);
-
+	
 	if (MT_BGRID(MT) == MT_BGRID_CC) {
-	  M3(f, BX, ix,iy,iz, p) = state[BX];
-	  M3(f, BY, ix,iy,iz, p) = state[BY];
-	  M3(f, BZ, ix,iy,iz, p) = state[BZ];
+	  convert_put_state_to_3d(state, f, ix,iy,iz, p);
 	} else {
+	  convert_put_fluid_state_to_3d(state, f, ix,iy,iz, p);
 	  _BX(f, ix+1,iy,iz, p) = state[BX];
 	  if (iy > -swy) {
 	    _BY(f, ix,iy,iz, p) = state[BY];
@@ -557,7 +555,7 @@ obndra_gkeyll_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim,
 	for (int m = 0; m < N_PRIMITIVE; m++) {
 	  bnvals[m] = bn[m];
 	}
-	convert_primitive_5m_point_comove(state, bnvals);
+	convert_state_from_prim(state, bnvals);
 	convert_put_state_to_3d(state, f, ix,iy,iz, p);
 
         if (b0) {

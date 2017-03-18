@@ -93,11 +93,7 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
     }
       
     mrc_fld_data_t state[cvt_n_state];
-#if MT_FORMULATION(MT) == MT_FORMULATION_GKEYLL
-      convert_primitive_5m_point_comove(state, bnvals);
-#else
       convert_state_from_prim(state, bnvals);
-#endif
       if (MT_BGRID(MT) == MT_BGRID_CC) {
 	convert_put_state_to_3d(state, fld, ix,iy,iz, p);
       } else {
@@ -240,7 +236,7 @@ sphere_fill_ghosts_test_3(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
   bnvals[PP] = sub->bnvals[PP] / mhd->ppnorm;;
 
   mrc_fld_data_t state[cvt_n_state];
-  convert_primitive_5m_point_comove(state, bnvals);
+  convert_state_from_prim(state, bnvals);
 
   for (int i = 0; i < map->cc_n_map; i++) {
     int ix = MRC_I2(map->cc_imap, 0, i);

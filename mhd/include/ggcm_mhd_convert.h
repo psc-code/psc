@@ -110,45 +110,6 @@ convert_prim_from_state_fcons(mrc_fld_data_t prim[8], mrc_fld_data_t state[])
 }
 
 #if MT_FORMULATION(MT) == MT_FORMULATION_GKEYLL
-// ----------------------------------------------------------------------	
-// convert_primitive_5m_point_comove
-
-static inline void
-convert_primitive_5m_point_comove(mrc_fld_data_t state[], mrc_fld_data_t vals[])
-{
-  mrc_fld_data_t rr = vals[RR];
-  mrc_fld_data_t vx = vals[VX];
-  mrc_fld_data_t vy = vals[VY];
-  mrc_fld_data_t vz = vals[VZ];
-  mrc_fld_data_t pp = vals[PP];
-  mrc_fld_data_t bx = vals[BX];
-  mrc_fld_data_t by = vals[BY];
-  mrc_fld_data_t bz = vals[BZ];
-
-  for (int s = 0; s < cvt_gk_nr_fluids; s++) {
-    mrc_fld_data_t *state_sp = state + cvt_gk_idx[s];
-    state_sp[G5M_RRS ] = rr * cvt_gk_mass_ratios[s];
-    state_sp[G5M_RVXS] = rr * cvt_gk_mass_ratios[s] * vx;
-    state_sp[G5M_RVYS] = rr * cvt_gk_mass_ratios[s] * vy;
-    state_sp[G5M_RVZS] = rr * cvt_gk_mass_ratios[s] * vz;
-    state_sp[G5M_UUS ] = pp * cvt_gk_pressure_ratios[s] * cvt_gamma_m1_inv
-      + .5 * (sqr(state_sp[G5M_RVXS]) + 
-	      sqr(state_sp[G5M_RVYS]) + 
-	      sqr(state_sp[G5M_RVZS])) / state_sp[G5M_RRS];
-  }
-
-  mrc_fld_data_t *state_em = state + cvt_gk_idx_em;
-  state_em[GK_EX] = - vy * bz + vz * by;
-  state_em[GK_EY] = - vz * bx + vx * bz;
-  state_em[GK_EZ] = - vx * by + vy * bx;
-
-  state_em[GK_BX] = bx;
-  state_em[GK_BY] = by;
-  state_em[GK_BZ] = bz;
-
-  state_em[GK_PHI] = 0.;
-  state_em[GK_PSI] = 0.;
-}
 
 // ----------------------------------------------------------------------
 // convert_state_from_prim_gkeyll
@@ -156,18 +117,28 @@ convert_primitive_5m_point_comove(mrc_fld_data_t state[], mrc_fld_data_t vals[])
 static inline void
 convert_state_from_prim_gkeyll(mrc_fld_data_t state[], mrc_fld_data_t prim[8])
 {
-  // FIXME: partitioning of mhd quantities between species is probably too rough
-  
-  for (int sp = 0; sp < cvt_gk_nr_fluids; sp++) {
-    mrc_fld_data_t *state_sp = state + cvt_gk_idx[sp];
-    mrc_fld_data_t rrs = prim[RR] * cvt_gk_mass_ratios[sp];
+  for (int s = 0; s < cvt_gk_nr_fluids; s++) {
+    mrc_fld_data_t *state_sp = state + cvt_gk_idx[s];
+    mrc_fld_data_t rrs = prim[RR] * cvt_gk_mass_ratios[s];
     state_sp[G5M_RRS ] = rrs;
     state_sp[G5M_RVXS] = rrs * prim[VX];
     state_sp[G5M_RVYS] = rrs * prim[VY];
     state_sp[G5M_RVZS] = rrs * prim[VZ];
-    state_sp[G5M_UUS ] = (prim[PP] * cvt_gk_pressure_ratios[sp]) * cvt_gamma_m1_inv
+    state_sp[G5M_UUS ] = (prim[PP] * cvt_gk_pressure_ratios[s]) * cvt_gamma_m1_inv
       + .5f * rrs * (sqr(prim[VX]) + sqr(prim[VY]) + sqr(prim[VZ]));
   }
+
+  mrc_fld_data_t *state_em = state + cvt_gk_idx_em;
+  state_em[GK_EX] = - prim[VY] * prim[BZ] + prim[VZ] * prim[BY];
+  state_em[GK_EY] = - prim[VZ] * prim[BX] + prim[VX] * prim[BZ];
+  state_em[GK_EZ] = - prim[VX] * prim[BY] + prim[VY] * prim[BX];
+
+  state_em[GK_BX] = prim[BX];
+  state_em[GK_BY] = prim[BY];
+  state_em[GK_BZ] = prim[BZ];
+
+  state_em[GK_PHI] = 0.;
+  state_em[GK_PSI] = 0.;
 }
 
 // ----------------------------------------------------------------------
