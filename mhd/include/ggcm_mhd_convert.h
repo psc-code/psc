@@ -12,6 +12,9 @@ static int cvt_n_state;
 #if MT_FORMULATION(MT) == MT_FORMULATION_GKEYLL
 static int cvt_gk_nr_fluids;
 static int *cvt_gk_idx;
+static int cvt_gk_idx_em;
+static float *cvt_gk_mass_ratios;
+static float *cvt_gk_pressure_ratios;
 #endif
 
 static inline void ggcm_mhd_convert_setup(struct ggcm_mhd *mhd)
@@ -28,6 +31,9 @@ static inline void ggcm_mhd_convert_setup(struct ggcm_mhd *mhd)
 #if MT_FORMULATION(MT) == MT_FORMULATION_GKEYLL
   cvt_gk_nr_fluids = mhd->par.gk_nr_fluids;
   cvt_gk_idx = mhd->par.gk_idx;
+  cvt_gk_idx_em = ggcm_mhd_gkeyll_em_fields_index(mhd);
+  cvt_gk_mass_ratios = mhd->par.gk_mass_ratios;
+  cvt_gk_pressure_ratios = mhd->par.gk_pressure_ratios.vals;
 #endif
 }
 
