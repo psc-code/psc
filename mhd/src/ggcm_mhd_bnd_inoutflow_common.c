@@ -4,6 +4,8 @@
 #include "mrc_domain.h"
 #include "ggcm_mhd_gkeyll.h"
 
+#include "ggcm_mhd_convert.h"
+
 struct ggcm_mhd_bnd_sub {
   double bnvals[SW_NR];
   bool apply_bndsw;
@@ -189,41 +191,44 @@ obndra_mhd_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, int mm, float b
       for (int ix = -swx; ix < 0; ix++) {
 	float bn[SW_NR];
 	bnd_sw(bnd, ix, iy, iz, p, bn, bntim);
-	float b[3] = { bn[SW_BX], bn[SW_BY], bn[SW_BZ] };
 
 	// subtract background field if used
 	if (b0) {
 	  for (int d = 0; d < 3; d++) {
-	    b[d] -= M3(b0, d, ix,iy,iz, p);
+	    bn[SW_BX + d] -= M3(b0, d, ix,iy,iz, p);
 	  }
 	}
 	
-	float vvbn  = sqr(bn[SW_VX]) + sqr(bn[SW_VY]) + sqr(bn[SW_VZ]);
-	float uubn  = .5f * (bn[SW_RR]*vvbn) + bn[SW_PP] / (mhd->par.gamm - 1.f);
-	float b2bn  = sqr(b[0]) + sqr(b[1]) + sqr(b[2]);
-	
-	M3(f, mm + RR , ix,iy,iz, p) = bn[SW_RR];
-	M3(f, mm + RVX, ix,iy,iz, p) = bn[SW_RR] * bn[SW_VX];
-	M3(f, mm + RVY, ix,iy,iz, p) = bn[SW_RR] * bn[SW_VY];
-	M3(f, mm + RVZ, ix,iy,iz, p) = bn[SW_RR] * bn[SW_VZ];
+	mrc_fld_data_t prim[8], state[8];
+	prim[RR] = bn[SW_RR];
+	prim[VX] = bn[SW_VX];
+	prim[VY] = bn[SW_VY];
+	prim[VZ] = bn[SW_VZ];
+	prim[PP] = bn[SW_PP];
+	prim[BX] = bn[SW_BX];
+	prim[BY] = bn[SW_BY];
+	prim[BZ] = bn[SW_BZ];
+
 	if (MT_FORMULATION(MT) == MT_FORMULATION_SCONS) {
-	  M3(f, mm + UU , ix,iy,iz, p) = uubn;
+	  convert_state_from_prim_scons(state, prim);
 	} else if (MT_FORMULATION(MT) == MT_FORMULATION_FCONS) {
-	  M3(f, mm + EE , ix,iy,iz, p) = uubn + .5 * b2bn;
-	} else {
-	  assert(0);
+	  convert_state_from_prim_fcons(state, prim);
+	}
+
+	for (int m = 0; m < 5; m++) {
+	  M3(f, mm + m, ix,iy,iz, p) = state[m];
 	}
 	if (MT_BGRID(MT) == MT_BGRID_CC) {
-	  M3(f, mm + BX , ix,iy,iz, p) = b[0];
-	  M3(f, mm + BY , ix,iy,iz, p) = b[1];
-	  M3(f, mm + BZ , ix,iy,iz, p) = b[2];
+	  M3(f, mm + BX , ix,iy,iz, p) = state[BX];
+	  M3(f, mm + BY , ix,iy,iz, p) = state[BY];
+	  M3(f, mm + BZ , ix,iy,iz, p) = state[BZ];
 	} else {
-	  _BX(f, mm, ix+1,iy,iz, p) = b[0];
+	  _BX(f, mm, ix+1,iy,iz, p) = state[BX];
 	  if (iy > -swy) {
-	    _BY(f, mm, ix,iy,iz, p) = b[1];
+	    _BY(f, mm, ix,iy,iz, p) = state[BY];
 	  }
 	  if (iz > -swz) {
-	    _BZ(f, mm, ix,iy,iz, p) = b[2];
+	    _BZ(f, mm, ix,iy,iz, p) = state[BZ];
 	  }
 	}
       }
@@ -921,6 +926,8 @@ ggcm_mhd_bnd_sub_setup(struct ggcm_mhd_bnd *bnd)
   }
 
   mrc_fld_put_as(bnd_mask, mhd->bnd_mask);
+
+  ggcm_mhd_convert_setup(mhd);
 }
 
 // ----------------------------------------------------------------------
