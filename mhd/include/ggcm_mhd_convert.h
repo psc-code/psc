@@ -111,15 +111,13 @@ convert_prim_from_state_fcons(mrc_fld_data_t prim[8], mrc_fld_data_t state[8])
 
 static inline void
 convert_primitive_5m_point_comove(mrc_fld_data_t state[], mrc_fld_data_t vals[], int nr_fluids, int nr_moments,
-    float mass[], float charge[], float pressure_ratios[], float gamm)
+    float mass[], float charge[], float pressure_ratios[])
 {
   mrc_fld_data_t mass_ratios[nr_fluids];
   mrc_fld_data_t mass_total = 0.;
-  int idx[nr_fluids];
 
   for (int s = 0; s < nr_fluids; s++) {
     mass_total += mass[s];
-    idx[s] = s * nr_moments;
   }
   for (int s = 0; s < nr_fluids; s++)
     mass_ratios[s] = mass[s] / mass_total;
@@ -136,14 +134,15 @@ convert_primitive_5m_point_comove(mrc_fld_data_t state[], mrc_fld_data_t vals[],
   mrc_fld_data_t bz = vals[BZ];
 
   for (int s = 0; s < nr_fluids; s++) {
-    state[idx[s] + G5M_RRS ] = rr * mass_ratios[s];
-    state[idx[s] + G5M_RVXS] = rr * mass_ratios[s] * vx;
-    state[idx[s] + G5M_RVYS] = rr * mass_ratios[s] * vy;
-    state[idx[s] + G5M_RVZS] = rr * mass_ratios[s] * vz;
-    state[idx[s] + G5M_UUS ] = pp * pressure_ratios[s] / (gamm - 1.)
-      + .5 * (sqr(state[idx[s] + G5M_RVXS])
-            + sqr(state[idx[s] + G5M_RVYS])
-            + sqr(state[idx[s] + G5M_RVZS])) / state[idx[s] + G5M_RRS];
+    mrc_fld_data_t *state_sp = state + cvt_gk_idx[s];
+    state_sp[G5M_RRS ] = rr * mass_ratios[s];
+    state_sp[G5M_RVXS] = rr * mass_ratios[s] * vx;
+    state_sp[G5M_RVYS] = rr * mass_ratios[s] * vy;
+    state_sp[G5M_RVZS] = rr * mass_ratios[s] * vz;
+    state_sp[G5M_UUS ] = pp * pressure_ratios[s] * cvt_gamma_m1_inv
+      + .5 * (sqr(state_sp[G5M_RVXS]) + 
+	      sqr(state_sp[G5M_RVYS]) + 
+	      sqr(state_sp[G5M_RVZS])) / state_sp[G5M_RRS];
   }
 
   state[idx_em + GK_EX] = - vy * bz + vz * by;

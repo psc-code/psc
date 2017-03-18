@@ -572,7 +572,7 @@ obndra_gkeyll_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim,
 	}
         if (nr_moments == 5) {
           convert_primitive_5m_point_comove(state, bnvals, nr_fluids, nr_moments,
-              mass, charge, pressure_ratios, mhd->par.gamm);
+              mass, charge, pressure_ratios);
         } else if (nr_moments == 10) {
           // TODO
         } else {

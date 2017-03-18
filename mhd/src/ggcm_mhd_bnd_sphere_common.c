@@ -103,7 +103,7 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
     mrc_fld_data_t state[cvt_n_state];
     if (nr_moments == 5) {
       convert_primitive_5m_point_comove(state, bnvals, nr_fluids, nr_moments,
-          mass, charge, pressure_ratios, mhd->par.gamm);
+          mass, charge, pressure_ratios);
     } else {
       assert(false);
     }
@@ -285,20 +285,13 @@ sphere_fill_ghosts_test_3(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
   struct ggcm_mhd_bnd_sphere_map *map = &sub->map;
   struct ggcm_mhd *mhd = bnd->mhd;
 
-  mrc_fld_data_t gamm = mhd->par.gamm;
   mrc_fld_data_t rrbn = sub->bnvals[FIXED_RR] / mhd->rrnorm;
   mrc_fld_data_t ppbn = sub->bnvals[FIXED_PP] / mhd->ppnorm;
 
-  mrc_fld_data_t bn[FIXED_NR];
+  mrc_fld_data_t bn[FIXED_NR] = {};
   bn[RR] = rrbn;
-  bn[VX] = 0.;
-  bn[VY] = 0.;
-  bn[VZ] = 0.;
   bn[PP] = ppbn;
-  bn[BX] = 0.;
-  bn[BY] = 0.;
-  bn[BZ] = 0.;
-    
+
   int nr_fluids = mhd->par.gk_nr_fluids;
   int nr_moments = mhd->par.gk_nr_moments;
   
@@ -309,7 +302,7 @@ sphere_fill_ghosts_test_3(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
   mrc_fld_data_t state[cvt_n_state];
   if (nr_moments == 5) {
     convert_primitive_5m_point_comove(state, bn, nr_fluids, nr_moments,
-				      mass, charge, pressure_ratios, gamm);
+				      mass, charge, pressure_ratios);
   } else {
     assert(false);
   }
