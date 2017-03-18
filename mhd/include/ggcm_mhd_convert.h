@@ -193,4 +193,48 @@ convert_get_state_from_3d(mrc_fld_data_t state[], struct mrc_fld *f,
   }
 }
 
+// ----------------------------------------------------------------------
+// convert_put_fluid_state_to_3d_mhd
+
+static inline void
+convert_put_fluid_state_to_3d_mhd(mrc_fld_data_t state[], struct mrc_fld *f,
+				  int i, int j, int k, int p)
+{
+  for (int m = 0; m < 5; m ++) {
+    M3(f, m, i,j,k, p) = state[m];
+  }
+}
+
+#if MT_FORMULATION(MT) == MT_FORMULATION_GKEYLL
+// ----------------------------------------------------------------------
+// convert_put_fluid_state_to_3d_gkeyll
+
+static inline void
+convert_put_fluid_state_to_3d_gkeyll(mrc_fld_data_t state[], struct mrc_fld *f,
+				     int i, int j, int k, int p)
+{
+  for (int sp = 0; sp < cvt_gk_nr_fluids; sp++) {
+    for (int m = cvt_gk_idx[sp]; m < cvt_gk_idx[sp] + G5M_NRS; m++) {
+      M3(f, m, i,j,k, p) = state[m];
+    }
+  }
+}
+#endif
+
+// ----------------------------------------------------------------------
+// convert_put_fluid_state_to_3d
+
+static inline void
+convert_put_fluid_state_to_3d(mrc_fld_data_t state[], struct mrc_fld *f,
+			      int i, int j, int k, int p)
+{
+#if MT_FORMULATION(MT) == MT_FORMULATION_SCONS || MT_FORMULATION(MT) == MT_FORMULATION_FCONS
+  convert_put_fluid_state_to_3d_mhd(state, f, i,j,k, p);
+#elif MT_FORMULATION(MT) == MT_FORMULATION_GKEYLL
+  convert_put_fluid_state_to_3d_gkeyll(state, f, i,j,k, p);
+#else
+  assert(0);
+#endif
+}
+
 #endif
