@@ -77,28 +77,17 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
   bnvals[BY] = sub->bnvals[BY] / mhd->bbnorm;
   bnvals[BZ] = sub->bnvals[BZ] / mhd->bbnorm;
 
-#if MT_FORMULATION(MT) == MT_FORMULATION_GKEYLL
+  for (int i = 0; i < map->cc_n_map; i++) {
+    int ix = MRC_I2(map->cc_imap, 0, i);
+    int iy = MRC_I2(map->cc_imap, 1, i);
+    int iz = MRC_I2(map->cc_imap, 2, i);
+    int p  = MRC_I2(map->cc_imap, 3, i);
+    
     mrc_fld_data_t state[cvt_n_state];
-    convert_primitive_5m_point_comove(state, bnvals);
-
-    for (int i = 0; i < map->cc_n_map; i++) {
-      int ix = MRC_I2(map->cc_imap, 0, i);
-      int iy = MRC_I2(map->cc_imap, 1, i);
-      int iz = MRC_I2(map->cc_imap, 2, i);
-      int p  = MRC_I2(map->cc_imap, 3, i);
-
+#if MT_FORMULATION(MT) == MT_FORMULATION_GKEYLL
+      convert_primitive_5m_point_comove(state, bnvals);
       convert_put_state_to_3d(state, fld, ix,iy,iz, p);
-    }
-
 #else
-    for (int i = 0; i < map->cc_n_map; i++) {
-      int ix = MRC_I2(map->cc_imap, 0, i);
-      int iy = MRC_I2(map->cc_imap, 1, i);
-      int iz = MRC_I2(map->cc_imap, 2, i);
-      int p  = MRC_I2(map->cc_imap, 3, i);
-
-      mrc_fld_data_t state[cvt_n_state];
-
       // FIXME, this is still kinda specific / hacky to ganymede
       // to avoid cutting off the initial perturbation from e.g., the mirror dipole,
       // let's just keep B as-is, rather than using the fixed values above
@@ -120,8 +109,8 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
 	  M3(fld, m, ix,iy,iz, p) = state[m];
 	}
       }
-    }
 #endif
+  }
 }
 
 static void
