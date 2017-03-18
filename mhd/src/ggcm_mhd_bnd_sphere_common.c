@@ -83,20 +83,20 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
     int iz = MRC_I2(map->cc_imap, 2, i);
     int p  = MRC_I2(map->cc_imap, 3, i);
     
+    // FIXME, this is still kinda specific / hacky to ganymede
+    // to avoid cutting off the initial perturbation from e.g., the mirror dipole,
+    // let's just keep B as-is, rather than using the fixed values above
+    if (MT == MT_FCONS_CC) {
+      bnvals[BX] = M3(fld, BX, ix,iy,iz, p);
+      bnvals[BY] = M3(fld, BY, ix,iy,iz, p);
+      bnvals[BZ] = M3(fld, BZ, ix,iy,iz, p);
+    }
+      
     mrc_fld_data_t state[cvt_n_state];
 #if MT_FORMULATION(MT) == MT_FORMULATION_GKEYLL
       convert_primitive_5m_point_comove(state, bnvals);
       convert_put_state_to_3d(state, fld, ix,iy,iz, p);
 #else
-      // FIXME, this is still kinda specific / hacky to ganymede
-      // to avoid cutting off the initial perturbation from e.g., the mirror dipole,
-      // let's just keep B as-is, rather than using the fixed values above
-      if (MT == MT_FCONS_CC) {
-        bnvals[BX] = M3(fld, BX, ix,iy,iz, p);
-        bnvals[BY] = M3(fld, BY, ix,iy,iz, p);
-        bnvals[BZ] = M3(fld, BZ, ix,iy,iz, p);
-      }
-      
       convert_state_from_prim(state, bnvals);
       convert_put_fluid_state_to_3d(state, fld, ix,iy,iz, p);
 
