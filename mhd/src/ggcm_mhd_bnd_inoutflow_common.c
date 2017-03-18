@@ -197,6 +197,13 @@ obndra_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim, int p)
         float bn[N_PRIMITIVE];
         bnd_sw(bnd, ix, iy, iz, p, bn, bntim);
 
+	// FIXME, the background field handling is no good.
+	// There are two competing objectives: convert_state_from_prim() needs to know the B_1
+	// in the fully conservative case to calculate internal energy correctly. OTOH, it needs to
+	// know the full B = B_0 + B_1 to calculate the E = - v x B correctly in the gkeyll case.
+	// Both cases are covered below, but obviously that's not pretty.
+	// I think the solution is to pass B and B_0, and have the conversion do the right thing.
+	
 #if MT_FORMULATION(MT) != MT_FORMULATION_GKEYLL
 	// subtract background field if used
 	if (b0) {
@@ -205,7 +212,7 @@ obndra_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim, int p)
 	  }
 	}
 #endif
-	
+
 	mrc_fld_data_t prim[N_PRIMITIVE], state[cvt_n_state];
 	for (int m = 0; m < N_PRIMITIVE; m++) {
 	  prim[m] = bn[m];
@@ -214,6 +221,7 @@ obndra_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim, int p)
 
 	if (MT_BGRID(MT) == MT_BGRID_CC) {
 	  convert_put_state_to_3d(state, f, ix,iy,iz, p);
+
 #if MT_FORMULATION(MT) == MT_FORMULATION_GKEYLL
 	  if (b0) {
 	    for (int d = 0; d < 3; d++) {
@@ -221,7 +229,7 @@ obndra_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim, int p)
 	    }
 	  }
 #endif
-	} else {
+	} else { // staggered B
 	  convert_put_fluid_state_to_3d(state, f, ix,iy,iz, p);
 	  _BX(f, ix+1,iy,iz, p) = state[BX];
 	  if (iy > -swy) {
