@@ -147,6 +147,9 @@ convert_prim_from_state_gkeyll(mrc_fld_data_t prim[8], mrc_fld_data_t state[])
 }
 #endif
 
+// ----------------------------------------------------------------------
+// convert_state_from_prim
+      
 static inline void
 convert_state_from_prim(mrc_fld_data_t state[8], mrc_fld_data_t prim[8])
 {
@@ -161,6 +164,9 @@ convert_state_from_prim(mrc_fld_data_t state[8], mrc_fld_data_t prim[8])
 #endif
 }
       
+// ----------------------------------------------------------------------
+// convert_prim_from_state
+      
 static inline void
 convert_prim_from_state(mrc_fld_data_t prim[8], mrc_fld_data_t state[8])
 {
@@ -174,5 +180,17 @@ convert_prim_from_state(mrc_fld_data_t prim[8], mrc_fld_data_t state[8])
   assert(0);
 #endif
 }
+
+// ----------------------------------------------------------------------
+// convert_get_state_from_3d
       
+static inline void
+convert_get_state_from_3d(mrc_fld_data_t state[], struct mrc_fld *f,
+			  int i, int j, int k, int p)
+{
+  for (int m = 0; m < cvt_n_state; m++) {
+    state[m] = M3(f, m, i,j,k, p);
+  }
+}
+
 #endif
