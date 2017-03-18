@@ -374,6 +374,26 @@ obndra_zh_open(struct ggcm_mhd *mhd, struct mrc_fld *f,
 // ======================================================================
 // cell-centered
 
+// ----------------------------------------------------------------------	
+// obndra_xl_open_cc
+//
+// set open boundary conditions at x-low for 5/10 moment fields
+
+static void
+obndra_xl_open_cc(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f,
+		  const int sw[3], const int ldims[3], int p)
+{
+  for (int iz = -sw[2]; iz < ldims[2] + sw[2]; iz++) {
+    for (int iy = -sw[1]; iy < ldims[1] + sw[1]; iy++) {
+      for (int ix = 0; ix > -sw[0]; ix--) {
+	for (int m = 0; m < cvt_n_state; m++) {
+	  M3(f, m, ix-1,iy,iz, p) = M3(f, m, ix,iy,iz, p);
+	}
+      }
+    }
+  }
+}
+
 // ----------------------------------------------------------------------
 // obndra_xh_open_cc
 
@@ -519,30 +539,6 @@ obndra_gkeyll_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim,
   mrc_fld_put_as(b0, mhd->b0);
 }
 
-// ----------------------------------------------------------------------	
-// obndra_gkeyll_xl_open
-//
-// set open boundary conditions at x-low for 5/10 moment fields
-
-static void
-obndra_gkeyll_xl_open(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim, int p)
-{
-  int nr_comps = mrc_fld_nr_comps(f);
-  const int *sw = mrc_fld_spatial_sw(f), *dims = mrc_fld_spatial_dims(f);
-  int swx = sw[0], swy = sw[1], swz = sw[2];
-  int my = dims[1], mz = dims[2];
-
-  for (int iz = -swz; iz < mz + swz; iz++) {
-    for (int iy = -swy; iy < my + swy; iy++) {
-      for (int ix = 0; ix > -swx; ix--) {
-	for (int m = 0; m < nr_comps; m++) {
-	  M3(f, m, ix-1,iy,iz, p) = M3(f, m, ix,iy,iz, p);
-	}
-      }
-    }
-  }
-}
-
 #endif
 
 // ----------------------------------------------------------------------
@@ -577,11 +573,11 @@ obndra(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim)
 	obndra_gkeyll_xl_bndsw(bnd, f, bntim, p);
 #endif
       } else {
-#if MT_FORMULATION(MT) != MT_FORMULATION_GKEYLL
-	assert(0);
-#else
-	obndra_gkeyll_xl_open(bnd, f, bntim, p);
-#endif
+	if (MT_BGRID(MT) == MT_BGRID_CC) {
+	  obndra_xl_open_cc(bnd, f, sw, ldims, p);
+	} else {
+	  assert(0);
+	}
       }
     }
 
