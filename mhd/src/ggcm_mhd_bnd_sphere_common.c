@@ -87,8 +87,7 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
       int iz = MRC_I2(map->cc_imap, 2, i);
       int p  = MRC_I2(map->cc_imap, 3, i);
 
-      for (int m = 0; m < cvt_n_state; m++)
-        M3(fld, m, ix,iy,iz, p) = state[m];
+      convert_put_state_to_3d(state, fld, ix,iy,iz, p);
     }
 
 #else
@@ -262,9 +261,8 @@ sphere_fill_ghosts_test_3(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
     int iy = MRC_I2(map->cc_imap, 1, i);
     int iz = MRC_I2(map->cc_imap, 2, i);
     int p  = MRC_I2(map->cc_imap, 3, i);
-    
-    for (int m = 0; m < cvt_n_state; m++)
-      M3(fld, m, ix,iy,iz, p) = state[m];
+
+    convert_put_state_to_3d(state, fld, ix,iy,iz, p);
   }
 #else
   assert(0);

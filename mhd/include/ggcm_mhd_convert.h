@@ -284,4 +284,15 @@ convert_put_fluid_state_to_3d(mrc_fld_data_t state[], struct mrc_fld *f,
 #endif
 }
 
+// ----------------------------------------------------------------------
+// convert_put_state_to_3d
+
+static inline void
+convert_put_state_to_3d(mrc_fld_data_t state[], struct mrc_fld *f,
+			int i, int j, int k, int p)
+{
+  for (int m = 0; m < cvt_n_state; m++)
+    M3(f, m, i,j,k, p) = state[m];
+}
+
 #endif

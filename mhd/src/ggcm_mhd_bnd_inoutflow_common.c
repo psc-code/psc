@@ -558,9 +558,7 @@ obndra_gkeyll_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim,
 	  bnvals[m] = bn[m];
 	}
 	convert_primitive_5m_point_comove(state, bnvals);
-
-        for (int m = 0; m < cvt_n_state; m++)
-          M3(f, m, ix,iy,iz, p) = state[m];
+	convert_put_state_to_3d(state, f, ix,iy,iz, p);
 
         if (b0) {
           for (int d = 0; d < 3; d++) {
