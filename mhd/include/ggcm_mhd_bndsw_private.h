@@ -13,8 +13,8 @@ struct ggcm_mhd_bndsw {
 struct ggcm_mhd_bndsw_ops {
   MRC_SUBCLASS_OPS(struct ggcm_mhd_bndsw);
   void (*at)(struct ggcm_mhd_bndsw *bndsw, float bntim, float xx[3],
-	     float vals[SW_NR]);
-  void (*get_initial)(struct ggcm_mhd_bndsw *bndsw, float vals[SW_NR]);
+	     float vals[]);
+  void (*get_initial)(struct ggcm_mhd_bndsw *bndsw, float vals[]);
   void (*new_step)(struct ggcm_mhd_bndsw *bndsw);
 };
 

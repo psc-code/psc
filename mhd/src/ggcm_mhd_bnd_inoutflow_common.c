@@ -7,7 +7,7 @@
 #include "ggcm_mhd_convert.h"
 
 struct ggcm_mhd_bnd_sub {
-  double bnvals[SW_NR];
+  double bnvals[N_PRIMITIVE];
   bool apply_bndsw;
   bool do_legacy;
 };
@@ -140,7 +140,7 @@ mrc_domain_at_boundary_hi(struct mrc_domain *domain, int d, int p)
 // bnd_sw
 
 static void
-bnd_sw(struct ggcm_mhd_bnd *bnd, int ix, int iy, int iz, int p, float bn[SW_NR], float bntim)
+bnd_sw(struct ggcm_mhd_bnd *bnd, int ix, int iy, int iz, int p, float bn[], float bntim)
 {
   struct ggcm_mhd_bnd_sub *sub = ggcm_mhd_bnd_sub(bnd);
   struct ggcm_mhd *mhd = bnd->mhd;
@@ -160,14 +160,14 @@ bnd_sw(struct ggcm_mhd_bnd *bnd, int ix, int iy, int iz, int p, float bn[SW_NR],
 
     ggcm_mhd_bndsw_at(bndsw, bntim, xx, bn);
   } else {
-    bn[SW_RR] = sub->bnvals[SW_RR] / mhd->rrnorm;
-    bn[SW_VX] = sub->bnvals[SW_VX] / mhd->vvnorm;
-    bn[SW_VY] = sub->bnvals[SW_VY] / mhd->vvnorm;
-    bn[SW_VZ] = sub->bnvals[SW_VZ] / mhd->vvnorm;
-    bn[SW_PP] = sub->bnvals[SW_PP] / mhd->ppnorm;
-    bn[SW_BX] = sub->bnvals[SW_BX] / mhd->bbnorm;
-    bn[SW_BY] = sub->bnvals[SW_BY] / mhd->bbnorm;
-    bn[SW_BZ] = sub->bnvals[SW_BZ] / mhd->bbnorm;
+    bn[RR] = sub->bnvals[RR] / mhd->rrnorm;
+    bn[VX] = sub->bnvals[VX] / mhd->vvnorm;
+    bn[VY] = sub->bnvals[VY] / mhd->vvnorm;
+    bn[VZ] = sub->bnvals[VZ] / mhd->vvnorm;
+    bn[PP] = sub->bnvals[PP] / mhd->ppnorm;
+    bn[BX] = sub->bnvals[BX] / mhd->bbnorm;
+    bn[BY] = sub->bnvals[BY] / mhd->bbnorm;
+    bn[BZ] = sub->bnvals[BZ] / mhd->bbnorm;
   }
 }
 
@@ -189,25 +189,20 @@ obndra_mhd_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim, in
   for (int iz = -swz; iz < mz + swz; iz++) {
     for (int iy = -swy; iy < my + swy; iy++) {
       for (int ix = -swx; ix < 0; ix++) {
-	float bn[SW_NR];
+	float bn[N_PRIMITIVE];
 	bnd_sw(bnd, ix, iy, iz, p, bn, bntim);
 
 	// subtract background field if used
 	if (b0) {
 	  for (int d = 0; d < 3; d++) {
-	    bn[SW_BX + d] -= M3(b0, d, ix,iy,iz, p);
+	    bn[BX + d] -= M3(b0, d, ix,iy,iz, p);
 	  }
 	}
 	
-	mrc_fld_data_t prim[8], state[cvt_n_state];
-	prim[RR] = bn[SW_RR];
-	prim[VX] = bn[SW_VX];
-	prim[VY] = bn[SW_VY];
-	prim[VZ] = bn[SW_VZ];
-	prim[PP] = bn[SW_PP];
-	prim[BX] = bn[SW_BX];
-	prim[BY] = bn[SW_BY];
-	prim[BZ] = bn[SW_BZ];
+	mrc_fld_data_t prim[N_PRIMITIVE], state[cvt_n_state];
+	for (int m = 0; m < N_PRIMITIVE; m++) {
+	  prim[m] = bn[m];
+	}
 
 	convert_state_from_prim(state, prim);
 	convert_put_fluid_state_to_3d(state, f, ix,iy,iz, p);
@@ -555,11 +550,11 @@ obndra_gkeyll_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim,
   for (int iz = -swz; iz < mz + swz; iz++) {
     for (int iy = -swy; iy < my + swy; iy++) {
       for (int ix = -swx; ix < 0; ix++) {
-        float bn[SW_NR];
+        float bn[N_PRIMITIVE];
         bnd_sw(bnd, ix, iy, iz, p, bn, bntim);
 
-	mrc_fld_data_t bnvals[SW_NR], state[cvt_n_state];
-	for (int m = 0; m < SW_NR; m++) {
+	mrc_fld_data_t bnvals[N_PRIMITIVE], state[cvt_n_state];
+	for (int m = 0; m < N_PRIMITIVE; m++) {
 	  bnvals[m] = bn[m];
 	}
 	convert_primitive_5m_point_comove(state, bnvals);
@@ -919,16 +914,16 @@ ggcm_mhd_bnd_sub_setup(struct ggcm_mhd_bnd *bnd)
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_bnd_sub, x)
 static struct param ggcm_mhd_bnd_sub_descr[] = {
-  { "rr"           , VAR(bnvals[SW_RR])           , PARAM_DOUBLE(1.) },
-  { "pp"           , VAR(bnvals[SW_PP])           , PARAM_DOUBLE(1.) },
-  { "vx"           , VAR(bnvals[SW_VX])           , PARAM_DOUBLE(0.) },
-  { "vy"           , VAR(bnvals[SW_VY])           , PARAM_DOUBLE(0.) },
-  { "vz"           , VAR(bnvals[SW_VZ])           , PARAM_DOUBLE(0.) },
-  { "bx"           , VAR(bnvals[SW_BX])           , PARAM_DOUBLE(0.) },
-  { "by"           , VAR(bnvals[SW_BY])           , PARAM_DOUBLE(0.) },
-  { "bz"           , VAR(bnvals[SW_BZ])           , PARAM_DOUBLE(0.) },
-  { "apply_bndsw"  , VAR(apply_bndsw)             , PARAM_BOOL(true) },
-  { "do_legacy"    , VAR(do_legacy)               , PARAM_BOOL(false)},
+  { "rr"           , VAR(bnvals[RR])        , PARAM_DOUBLE(1.) },
+  { "pp"           , VAR(bnvals[PP])        , PARAM_DOUBLE(1.) },
+  { "vx"           , VAR(bnvals[VX])        , PARAM_DOUBLE(0.) },
+  { "vy"           , VAR(bnvals[VY])        , PARAM_DOUBLE(0.) },
+  { "vz"           , VAR(bnvals[VZ])        , PARAM_DOUBLE(0.) },
+  { "bx"           , VAR(bnvals[BX])        , PARAM_DOUBLE(0.) },
+  { "by"           , VAR(bnvals[BY])        , PARAM_DOUBLE(0.) },
+  { "bz"           , VAR(bnvals[BZ])        , PARAM_DOUBLE(0.) },
+  { "apply_bndsw"  , VAR(apply_bndsw)       , PARAM_BOOL(true) },
+  { "do_legacy"    , VAR(do_legacy)         , PARAM_BOOL(false)},
 
   {},
 };
