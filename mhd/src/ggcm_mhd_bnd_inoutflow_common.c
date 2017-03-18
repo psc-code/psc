@@ -553,12 +553,6 @@ obndra_gkeyll_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim,
   int my = dims[1], mz = dims[2];
 
   int nr_moments = ggcm_mhd_gkeyll_nr_moments(mhd);
-  int nr_fluids = ggcm_mhd_gkeyll_nr_fluids(mhd);
-  int nr_comps = nr_fluids * nr_moments + 8;
-
-  float *mass = ggcm_mhd_gkeyll_mass(mhd);
-  float *charge = ggcm_mhd_gkeyll_charge(mhd);
-  float *pressure_ratios = ggcm_mhd_gkeyll_pressure_ratios(mhd);
 
   for (int iz = -swz; iz < mz + swz; iz++) {
     for (int iy = -swy; iy < my + swy; iy++) {
@@ -571,21 +565,17 @@ obndra_gkeyll_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim,
 	  bnvals[m] = bn[m];
 	}
         if (nr_moments == 5) {
-          convert_primitive_5m_point_comove(state, bnvals, nr_fluids, nr_moments,
-              mass, charge, pressure_ratios);
-        } else if (nr_moments == 10) {
-          // TODO
+          convert_primitive_5m_point_comove(state, bnvals);
         } else {
           assert(false);
         }
 
-        for (int c = 0; c < nr_comps; c++)
-          M3(f, c, ix,iy,iz, p) = state[c];
+        for (int m = 0; m < cvt_n_state; m++)
+          M3(f, m, ix,iy,iz, p) = state[m];
 
         if (b0) {
-          int idx_em = nr_fluids * nr_moments;
           for (int d = 0; d < 3; d++) {
-            M3(f, idx_em+GK_BX+d, ix,iy,iz, p)-= M3(b0, d, ix,iy,iz, p);
+            M3(f, cvt_gk_idx_em + GK_BX + d, ix,iy,iz, p)-= M3(b0, d, ix,iy,iz, p);
           }
         }
       }

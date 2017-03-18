@@ -110,20 +110,8 @@ convert_prim_from_state_fcons(mrc_fld_data_t prim[8], mrc_fld_data_t state[8])
 // convert_primitive_5m_point_comove
 
 static inline void
-convert_primitive_5m_point_comove(mrc_fld_data_t state[], mrc_fld_data_t vals[], int nr_fluids, int nr_moments,
-    float mass[], float charge[], float pressure_ratios[])
+convert_primitive_5m_point_comove(mrc_fld_data_t state[], mrc_fld_data_t vals[])
 {
-  mrc_fld_data_t mass_ratios[nr_fluids];
-  mrc_fld_data_t mass_total = 0.;
-
-  for (int s = 0; s < nr_fluids; s++) {
-    mass_total += mass[s];
-  }
-  for (int s = 0; s < nr_fluids; s++)
-    mass_ratios[s] = mass[s] / mass_total;
-
-  int idx_em = nr_fluids * nr_moments;
-
   mrc_fld_data_t rr = vals[RR];
   mrc_fld_data_t vx = vals[VX];
   mrc_fld_data_t vy = vals[VY];
@@ -133,28 +121,29 @@ convert_primitive_5m_point_comove(mrc_fld_data_t state[], mrc_fld_data_t vals[],
   mrc_fld_data_t by = vals[BY];
   mrc_fld_data_t bz = vals[BZ];
 
-  for (int s = 0; s < nr_fluids; s++) {
+  for (int s = 0; s < cvt_gk_nr_fluids; s++) {
     mrc_fld_data_t *state_sp = state + cvt_gk_idx[s];
-    state_sp[G5M_RRS ] = rr * mass_ratios[s];
-    state_sp[G5M_RVXS] = rr * mass_ratios[s] * vx;
-    state_sp[G5M_RVYS] = rr * mass_ratios[s] * vy;
-    state_sp[G5M_RVZS] = rr * mass_ratios[s] * vz;
-    state_sp[G5M_UUS ] = pp * pressure_ratios[s] * cvt_gamma_m1_inv
+    state_sp[G5M_RRS ] = rr * cvt_gk_mass_ratios[s];
+    state_sp[G5M_RVXS] = rr * cvt_gk_mass_ratios[s] * vx;
+    state_sp[G5M_RVYS] = rr * cvt_gk_mass_ratios[s] * vy;
+    state_sp[G5M_RVZS] = rr * cvt_gk_mass_ratios[s] * vz;
+    state_sp[G5M_UUS ] = pp * cvt_gk_pressure_ratios[s] * cvt_gamma_m1_inv
       + .5 * (sqr(state_sp[G5M_RVXS]) + 
 	      sqr(state_sp[G5M_RVYS]) + 
 	      sqr(state_sp[G5M_RVZS])) / state_sp[G5M_RRS];
   }
 
-  state[idx_em + GK_EX] = - vy * bz + vz * by;
-  state[idx_em + GK_EY] = - vz * bx + vx * bz;
-  state[idx_em + GK_EZ] = - vx * by + vy * bx;
+  mrc_fld_data_t *state_em = state + cvt_gk_idx_em;
+  state_em[GK_EX] = - vy * bz + vz * by;
+  state_em[GK_EY] = - vz * bx + vx * bz;
+  state_em[GK_EZ] = - vx * by + vy * bx;
 
-  state[idx_em + GK_BX] = bx;
-  state[idx_em + GK_BY] = by;
-  state[idx_em + GK_BZ] = bz;
+  state_em[GK_BX] = bx;
+  state_em[GK_BY] = by;
+  state_em[GK_BZ] = bz;
 
-  state[idx_em + GK_PHI] = 0.;
-  state[idx_em + GK_PSI] = 0.;
+  state_em[GK_PHI] = 0.;
+  state_em[GK_PSI] = 0.;
 }
 
 // ----------------------------------------------------------------------
