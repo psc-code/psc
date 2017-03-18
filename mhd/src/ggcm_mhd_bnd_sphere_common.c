@@ -126,7 +126,7 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
       int iz = MRC_I2(map->cc_imap, 2, i);
       int p  = MRC_I2(map->cc_imap, 3, i);
 
-      mrc_fld_data_t prim[8], state[8];
+      mrc_fld_data_t prim[8], state[cvt_n_state];
       prim[RR] = bnvals[FIXED_RR];
       prim[VX] = bnvals[FIXED_VX];
       prim[VY] = bnvals[FIXED_VY];
@@ -145,21 +145,16 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
         prim[BZ] = M3(fld, BZ, ix,iy,iz, p);
       }
       
-      if (MT_FORMULATION(MT) == MT_FORMULATION_SCONS) {
-	convert_state_from_prim_scons(state, prim);
-      } else if (MT_FORMULATION(MT) == MT_FORMULATION_FCONS) {
-	convert_state_from_prim_fcons(state, prim);
-      }
+      convert_state_from_prim(state, prim);
+      convert_put_fluid_state_to_3d(state, fld, ix,iy,iz, p);
 
       if (MT_BGRID(MT) == MT_BGRID_CC) {
-	for (int m = 0; m < 8; m++) {
-	  M3 (fld, m, ix,iy,iz, p) = state[m];
-	}
-      } else {
-	// to set B, we'd need a face-centered map, but anyway, our boundary condition is evolved
-	// using E = -v x B to update B
-	for (int m = 0; m < 5; m++) {
-	  M3 (fld, m, ix,iy,iz, p) = state[m];
+	// We only set B if it's cell-centered.  Otherwise, we'd need
+	// a face-centered map and things are much more complicated,
+	// but fortunately, our boundary condition is evolved using E
+	// = -v x B to update B anyway
+	for (int m = BX; m < BX + 3; m++) {
+	  M3(fld, m, ix,iy,iz, p) = state[m];
 	}
       }
     }

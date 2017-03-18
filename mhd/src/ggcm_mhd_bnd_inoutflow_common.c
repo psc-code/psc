@@ -199,7 +199,7 @@ obndra_mhd_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim, in
 	  }
 	}
 	
-	mrc_fld_data_t prim[8], state[8];
+	mrc_fld_data_t prim[8], state[cvt_n_state];
 	prim[RR] = bn[SW_RR];
 	prim[VX] = bn[SW_VX];
 	prim[VY] = bn[SW_VY];
@@ -209,15 +209,9 @@ obndra_mhd_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim, in
 	prim[BY] = bn[SW_BY];
 	prim[BZ] = bn[SW_BZ];
 
-	if (MT_FORMULATION(MT) == MT_FORMULATION_SCONS) {
-	  convert_state_from_prim_scons(state, prim);
-	} else if (MT_FORMULATION(MT) == MT_FORMULATION_FCONS) {
-	  convert_state_from_prim_fcons(state, prim);
-	}
+	convert_state_from_prim(state, prim);
+	convert_put_fluid_state_to_3d(state, f, ix,iy,iz, p);
 
-	for (int m = 0; m < 5; m++) {
-	  M3(f, m, ix,iy,iz, p) = state[m];
-	}
 	if (MT_BGRID(MT) == MT_BGRID_CC) {
 	  M3(f, BX, ix,iy,iz, p) = state[BX];
 	  M3(f, BY, ix,iy,iz, p) = state[BY];
