@@ -81,7 +81,7 @@ ggcm_mhd_step_mhdcc_setup(struct ggcm_mhd_step *step)
   assert(mhd);
 
   pde_setup(mhd->fld, mrc_fld_nr_comps(mhd->fld));
-  pde_mhd_setup(mhd);
+  pde_mhd_setup(mhd, mrc_fld_nr_comps(mhd->fld));
 
   fld1d_state_setup(&sub->U);
   fld1d_state_setup(&sub->U_l);

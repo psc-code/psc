@@ -616,7 +616,7 @@ pde_mhd_set_options(struct ggcm_mhd *mhd, struct mhd_options *opt)
 // pde_mhd_setup
 
 static void
-pde_mhd_setup(struct ggcm_mhd *mhd)
+pde_mhd_setup(struct ggcm_mhd *mhd, int n_comps)
 {
   // general (x)mhd params
   s_gamma = mhd->par.gamm;

@@ -73,7 +73,7 @@ ggcm_mhd_step_c2_setup(struct ggcm_mhd_step *step)
   struct ggcm_mhd *mhd = step->mhd;
 
   pde_setup(mhd->fld, mrc_fld_nr_comps(mhd->fld));
-  pde_mhd_setup(mhd);
+  pde_mhd_setup(mhd, mrc_fld_nr_comps(mhd->fld));
   pde_mhd_compat_setup(mhd);
 
   mhd->ymask = ggcm_mhd_get_3d_fld(mhd, 1);
