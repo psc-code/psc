@@ -1,8 +1,6 @@
 
 #include "pde/pde_defs.h"
 
-#define OPT_FLD1D OPT_FLD1D_C_ARRAY
-
 #if MT == MT_GRID_FC_GGCM
 #define OPT_STAGGER OPT_STAGGER_GGCM
 #else
