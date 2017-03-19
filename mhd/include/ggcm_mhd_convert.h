@@ -6,6 +6,12 @@
 #include "ggcm_mhd_defs_extra.h"
 #include "ggcm_mhd_gkeyll.h"
 
+#include "pde/pde_defs.h"
+
+#define OPT_FLD1D OPT_FLD1D_C_ARRAY
+
+#include "pde/pde_mhd_setup.c"
+
 static mrc_fld_data_t cvt_gamma;
 static mrc_fld_data_t cvt_gamma_m1;
 static mrc_fld_data_t cvt_gamma_m1_inv;
@@ -16,7 +22,8 @@ static int cvt_gk_idx_em;
 static float *cvt_gk_mass_ratios;
 static float *cvt_gk_pressure_ratios;
 
-static inline void ggcm_mhd_convert_setup(struct ggcm_mhd *mhd)
+static void
+ggcm_mhd_convert_setup(struct ggcm_mhd *mhd)
 {
   cvt_gamma = mhd->par.gamm;
   cvt_gamma_m1 = cvt_gamma - 1.f;
@@ -33,6 +40,15 @@ static inline void ggcm_mhd_convert_setup(struct ggcm_mhd *mhd)
   cvt_gk_idx_em = ggcm_mhd_gkeyll_em_fields_index(mhd);
   cvt_gk_mass_ratios = mhd->par.gk_mass_ratios;
   cvt_gk_pressure_ratios = mhd->par.gk_pressure_ratios.vals;
+
+  pde_setup(mhd->fld);
+  pde_mhd_setup(mhd);
+}
+
+static inline void // FIXME, not inline to get warning
+ggcm_mhd_convert_free(void)
+{
+  pde_free();
 }
 
 static inline void

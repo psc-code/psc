@@ -13,8 +13,6 @@
 
 #include "mhd_3d.c"
 
-#include "ggcm_mhd_convert.h"
-
 // ======================================================================
 // ggcm_mhd_diag_item subclass "v"
 
