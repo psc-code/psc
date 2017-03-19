@@ -12,19 +12,19 @@
 // convert_state_from_prim_scons
 
 static inline void
-convert_state_from_prim_scons(mrc_fld_data_t state[8], mrc_fld_data_t prim[8])
+convert_state_from_prim_scons(mrc_fld_data_t u[], mrc_fld_data_t w[])
 {
   assert(s_gamma);
   
-  state[RR ] = prim[RR];
-  state[RVX] = prim[RR] * prim[VX];
-  state[RVY] = prim[RR] * prim[VY];
-  state[RVZ] = prim[RR] * prim[VZ];
-  state[UU ] = prim[PP] * s_gamma_m1_inv +
-    + .5f * prim[RR] * (sqr(prim[VX]) + sqr(prim[VY]) + sqr(prim[VZ]));
-  state[BX ] = prim[BX];
-  state[BY ] = prim[BY];
-  state[BZ ] = prim[BZ];
+  u[RR ] = w[RR];
+  u[RVX] = w[RR] * w[VX];
+  u[RVY] = w[RR] * w[VY];
+  u[RVZ] = w[RR] * w[VZ];
+  u[UU ] = w[PP] * s_gamma_m1_inv +
+    .5f * w[RR] * (sqr(w[VX]) + sqr(w[VY]) + sqr(w[VZ]));
+  u[BX ] = w[BX];
+  u[BY ] = w[BY];
+  u[BZ ] = w[BZ];
 }
       
 // ----------------------------------------------------------------------
@@ -46,20 +46,20 @@ mhd_pt_scons_from_prim(mrc_fld_data_t u[], mrc_fld_data_t w[])
 // convert_prim_from_state_scons
 
 static inline void
-convert_prim_from_state_scons(mrc_fld_data_t prim[8], mrc_fld_data_t state[8])
+convert_prim_from_state_scons(mrc_fld_data_t w[], mrc_fld_data_t u[])
 {
   assert(s_gamma);
   
-  prim[RR] = state[RR];
-  mrc_fld_data_t rri = 1.f / state[RR];
-  prim[VX] = rri * state[RVX];
-  prim[VY] = rri * state[RVY];
-  prim[VZ] = rri * state[RVZ];
-  prim[PP] = s_gamma_m1 * (state[UU] 
-			   - .5f * prim[RR] * (sqr(prim[VX]) + sqr(prim[VY]) + sqr(prim[VZ])));
-  prim[BX] = state[BX];
-  prim[BY] = state[BY];
-  prim[BZ] = state[BZ];
+  w[RR] = u[RR];
+  mrc_fld_data_t rri = 1.f / u[RR];
+  w[VX] = rri * u[RVX];
+  w[VY] = rri * u[RVY];
+  w[VZ] = rri * u[RVZ];
+  w[PP] = s_gamma_m1 * (u[UU] 
+			- .5f * w[RR] * (sqr(w[VX]) + sqr(w[VY]) + sqr(w[VZ])));
+  w[BX] = u[BX];
+  w[BY] = u[BY];
+  w[BZ] = u[BZ];
 }
       
 // ----------------------------------------------------------------------
@@ -82,22 +82,22 @@ mhd_pt_prim_from_scons(mrc_fld_data_t w[], mrc_fld_data_t u[])
 // convert_state_from_prim_fcons
 
 static inline void
-convert_state_from_prim_fcons(mrc_fld_data_t state[], mrc_fld_data_t prim[8])
+convert_state_from_prim_fcons(mrc_fld_data_t u[], mrc_fld_data_t w[])
 {
   assert(s_gamma);
 
-  state[RR ] = prim[RR];
-  state[RVX] = prim[RR] * prim[VX];
-  state[RVY] = prim[RR] * prim[VY];
-  state[RVZ] = prim[RR] * prim[VZ];
-  state[EE ] = prim[PP] * s_gamma_m1_inv
-    + .5f * prim[RR] * (sqr(prim[VX]) + sqr(prim[VY]) + sqr(prim[VZ]))
-    + .5f * (sqr(prim[BX]) + sqr(prim[BY]) + sqr(prim[BZ]));
-  state[BX ] = prim[BX];
-  state[BY ] = prim[BY];
-  state[BZ ] = prim[BZ];
+  u[RR ] = w[RR];
+  u[RVX] = w[RR] * w[VX];
+  u[RVY] = w[RR] * w[VY];
+  u[RVZ] = w[RR] * w[VZ];
+  u[EE ] = w[PP] * s_gamma_m1_inv
+    + .5f * w[RR] * (sqr(w[VX]) + sqr(w[VY]) + sqr(w[VZ]))
+    + .5f * (sqr(w[BX]) + sqr(w[BY]) + sqr(w[BZ]));
+  u[BX ] = w[BX];
+  u[BY ] = w[BY];
+  u[BZ ] = w[BZ];
   if (s_n_state == 9) {
-    state[PSI] = 0.f;
+    u[PSI] = 0.f;
   }
 }
 
@@ -127,21 +127,21 @@ mhd_pt_fcons_from_prim(mrc_fld_data_t u[], mrc_fld_data_t w[])
 // convert_prim_from_state_fcons
 
 static inline void
-convert_prim_from_state_fcons(mrc_fld_data_t prim[8], mrc_fld_data_t state[])
+convert_prim_from_state_fcons(mrc_fld_data_t w[], mrc_fld_data_t u[])
 {
   assert(s_gamma);
   
-  prim[RR] = state[RR];
-  mrc_fld_data_t rri = 1.f / state[RR];
-  prim[VX] = rri * state[RVX];
-  prim[VY] = rri * state[RVY];
-  prim[VZ] = rri * state[RVZ];
-  prim[PP] = s_gamma_m1 * (state[UU] 
-			   - .5f * prim[RR] * (sqr(prim[VX]) + sqr(prim[VY]) + sqr(prim[VZ]))
-			   - .5f * (sqr(state[BX]) + sqr(state[BY]) + sqr(state[BZ])));
-  prim[BX] = state[BX];
-  prim[BY] = state[BY];
-  prim[BZ] = state[BZ];
+  w[RR] = u[RR];
+  mrc_fld_data_t rri = 1.f / u[RR];
+  w[VX] = rri * u[RVX];
+  w[VY] = rri * u[RVY];
+  w[VZ] = rri * u[RVZ];
+  w[PP] = s_gamma_m1 * (u[UU] 
+			- .5f * w[RR] * (sqr(w[VX]) + sqr(w[VY]) + sqr(w[VZ]))
+			- .5f *         (sqr(u[BX]) + sqr(u[BY]) + sqr(u[BZ])));
+  w[BX] = u[BX];
+  w[BY] = u[BY];
+  w[BZ] = u[BZ];
 }
 
 // ----------------------------------------------------------------------
