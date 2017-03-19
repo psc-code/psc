@@ -92,7 +92,7 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
       bnvals[BZ] = M3(fld, BZ, ix,iy,iz, p);
     }
       
-    mrc_fld_data_t state[cvt_n_state];
+    mrc_fld_data_t state[s_n_state];
       convert_state_from_prim(state, bnvals);
       if (MT_BGRID(MT) == MT_BGRID_CC) {
 	convert_put_state_to_3d(state, fld, ix,iy,iz, p);
@@ -235,7 +235,7 @@ sphere_fill_ghosts_test_3(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
   bnvals[RR] = sub->bnvals[RR] / mhd->rrnorm;
   bnvals[PP] = sub->bnvals[PP] / mhd->ppnorm;;
 
-  mrc_fld_data_t state[cvt_n_state];
+  mrc_fld_data_t state[s_n_state];
   convert_state_from_prim(state, bnvals);
 
   for (int i = 0; i < map->cc_n_map; i++) {

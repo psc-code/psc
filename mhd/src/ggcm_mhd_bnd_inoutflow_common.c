@@ -213,7 +213,7 @@ obndra_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim, int p)
 	}
 #endif
 
-	mrc_fld_data_t prim[N_PRIMITIVE], state[cvt_n_state];
+	mrc_fld_data_t prim[N_PRIMITIVE], state[s_n_state];
 	for (int m = 0; m < N_PRIMITIVE; m++) {
 	  prim[m] = bn[m];
 	}
@@ -412,7 +412,7 @@ obndra_xl_open_cc(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f,
   for (int iz = -sw[2]; iz < ldims[2] + sw[2]; iz++) {
     for (int iy = -sw[1]; iy < ldims[1] + sw[1]; iy++) {
       for (int ix = 0; ix > -sw[0]; ix--) {
-	for (int m = 0; m < cvt_n_state; m++) {
+	for (int m = 0; m < s_n_state; m++) {
 	  M3(f, m, ix-1,iy,iz, p) = M3(f, m, ix,iy,iz, p);
 	}
       }
@@ -432,7 +432,7 @@ obndra_xh_open_cc(struct ggcm_mhd *mhd, struct mrc_fld *f,
     for (int iz = -sw[2]; iz < ldims[2] + sw[2]; iz++) {
       for (int iy = -sw[1]; iy < ldims[1] + sw[1]; iy++) {
 	for (int ix = 0; ix < sw[0]; ix++) {
-	  for (int m = 0; m < cvt_n_state; m++) {
+	  for (int m = 0; m < s_n_state; m++) {
 	    M3(f,m, mx+ix,iy,iz, p) = M3(f,m, mx-ix-1,iy,iz, p);
 	  }
 	}
@@ -452,7 +452,7 @@ obndra_yl_open_cc(struct ggcm_mhd *mhd, struct mrc_fld *f,
     for (int iz = -sw[2]; iz < ldims[2] + sw[2]; iz++) {
       for (int ix = -sw[0]; ix < ldims[0] + sw[0]; ix++) {
 	for (int iy = 0; iy < sw[1]; iy++) {
-	  for (int m = 0; m < cvt_n_state; m++) {
+	  for (int m = 0; m < s_n_state; m++) {
 	    M3(f,m, ix,-1-iy,iz, p) = M3(f,m, ix,iy,iz, p);
 	  }
 	}
@@ -473,7 +473,7 @@ obndra_yh_open_cc(struct ggcm_mhd *mhd, struct mrc_fld *f,
     for (int iz = -sw[2]; iz < ldims[2] + sw[2]; iz++) {
       for (int ix = -sw[0]; ix < ldims[0] + sw[0]; ix++) {
 	for (int iy = 0; iy < sw[1]; iy++) {
-	  for (int m = 0; m < cvt_n_state; m++) {
+	  for (int m = 0; m < s_n_state; m++) {
 	    M3(f,m, ix,my+iy,iz, p) = M3(f,m, ix,my-iy-1,iz, p);
 	  }
 	}
@@ -493,7 +493,7 @@ obndra_zl_open_cc(struct ggcm_mhd *mhd, struct mrc_fld *f,
     for (int iy = -sw[1]; iy < ldims[1] + sw[1]; iy++) {
       for (int ix = -sw[0]; ix < ldims[0] + sw[0]; ix++) {
 	for (int iz = 0; iz < sw[2]; iz++) {
-	  for (int m = 0; m < cvt_n_state; m++) {
+	  for (int m = 0; m < s_n_state; m++) {
 	    M3(f,m, ix,iy,-1-iz, p) = M3(f,m, ix,iy,iz, p);
 	  }
 	}
@@ -514,7 +514,7 @@ obndra_zh_open_cc(struct ggcm_mhd *mhd, struct mrc_fld *f,
     for (int iy = -sw[1]; iy < ldims[1] + sw[1]; iy++) {
       for (int ix = -sw[0]; ix < ldims[0] + sw[0]; ix++) {
 	for (int iz = 0; iz < sw[2]; iz++) {
-	  for (int m = 0; m < cvt_n_state; m++) {
+	  for (int m = 0; m < s_n_state; m++) {
 	    M3(f,m, ix,iy,mz+iz, p) = M3(f,m, ix,iy,mz-iz-1, p);
 	  }
 	}

@@ -12,7 +12,6 @@
 
 #include "pde/pde_mhd_setup.c"
 
-static int cvt_n_state;
 static int cvt_gk_nr_fluids;
 static int *cvt_gk_idx;
 static int cvt_gk_idx_em;
@@ -22,12 +21,6 @@ static float *cvt_gk_pressure_ratios;
 static void
 ggcm_mhd_convert_setup(struct ggcm_mhd *mhd)
 {
-  cvt_n_state = mrc_fld_nr_comps(mhd->fld);
-  // FIXME, hacky as usual, to deal with the legacy all-in-one big array
-  if (cvt_n_state == _NR_FLDS) {
-    cvt_n_state = 8;
-  }
-
   assert(ggcm_mhd_gkeyll_nr_moments(mhd) == 5);
   cvt_gk_nr_fluids = mhd->par.gk_nr_fluids;
   cvt_gk_idx = mhd->par.gk_idx;
@@ -93,7 +86,7 @@ convert_state_from_prim_fcons(mrc_fld_data_t state[], mrc_fld_data_t prim[8])
   state[BX ] = prim[BX];
   state[BY ] = prim[BY];
   state[BZ ] = prim[BZ];
-  if (cvt_n_state == 9) {
+  if (s_n_state == 9) {
     state[PSI] = 0.f;
   }
 }
@@ -217,7 +210,7 @@ static inline void
 convert_get_state_from_3d(mrc_fld_data_t state[], struct mrc_fld *f,
 			  int i, int j, int k, int p)
 {
-  for (int m = 0; m < cvt_n_state; m++) {
+  for (int m = 0; m < s_n_state; m++) {
     state[m] = M3(f, m, i,j,k, p);
   }
 }
@@ -276,7 +269,7 @@ static inline void
 convert_put_state_to_3d(mrc_fld_data_t state[], struct mrc_fld *f,
 			int i, int j, int k, int p)
 {
-  for (int m = 0; m < cvt_n_state; m++)
+  for (int m = 0; m < s_n_state; m++)
     M3(f, m, i,j,k, p) = state[m];
 }
 

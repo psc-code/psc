@@ -2,6 +2,8 @@
 #ifndef PDE_MHD_SETUP_C
 #define PDE_MHD_SETUP_C
 
+#include "ggcm_mhd_defs_extra.h"
+
 #include "pde/pde_setup.c"
 
 // ======================================================================
@@ -13,6 +15,10 @@ static mrc_fld_data_t s_gamma_m1_inv;  // 1 / (adiabatic exponent - 1)
 static mrc_fld_data_t s_eta;    // (constant) resistivity 
 static mrc_fld_data_t s_d_i;    // ion skin depth
 static mrc_fld_data_t s_cfl;    // CFL number
+
+// s_n_state is mostly the same as s_n_comps, except for legacy ggcm which
+// has the one field with so many components
+static int s_n_state; // number of components in the state vector
 
 static int s_magdiffu;
 static mrc_fld_data_t s_diffco; // same as s_eta, but not normalized
@@ -612,6 +618,12 @@ pde_mhd_setup(struct ggcm_mhd *mhd)
   s_eta   = mhd->par.diffco / mhd->resnorm;
   s_d_i   = mhd->par.d_i;
   s_cfl   = mhd->par.thx;
+
+  s_n_state = mrc_fld_nr_comps(mhd->fld);
+  // FIXME, hacky as usual, to deal with the legacy all-in-one big array
+  if (s_n_state == _NR_FLDS) {
+    s_n_state = 8;
+  }
 
   // openggcm specific params
   s_magdiffu = mhd->par.magdiffu;
