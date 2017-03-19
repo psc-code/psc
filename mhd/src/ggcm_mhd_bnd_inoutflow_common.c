@@ -6,7 +6,8 @@
 #include "mrc_domain.h"
 #include "ggcm_mhd_gkeyll.h"
 
-#include "ggcm_mhd_convert.h"
+#include "pde/pde_defs.h"
+#include "pde/pde_mhd_convert.c"
 
 struct ggcm_mhd_bnd_sub {
   double bnvals[N_PRIMITIVE];

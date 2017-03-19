@@ -2,7 +2,8 @@
 #include <mrc_domain.h>
 #include <mrc_common.h>
 
-#include "ggcm_mhd_convert.h"
+#include "pde/pde_defs.h"
+#include "pde/pde_mhd_convert.c"
 
 void
 SFX(ggcm_mhd_calc_pp)(struct ggcm_mhd *mhd, struct mrc_fld *pp, struct mrc_fld *fld)

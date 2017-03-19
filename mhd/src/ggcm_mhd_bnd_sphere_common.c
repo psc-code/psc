@@ -9,7 +9,8 @@
 #include <mrc_bits.h>
 #include <math.h>
 
-#include "ggcm_mhd_convert.h"
+#include "pde/pde_defs.h"
+#include "pde/pde_mhd_convert.c"
 
 // FIXME, consolidate with ggcm_mhd_iono
 

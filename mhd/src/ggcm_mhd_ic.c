@@ -10,7 +10,8 @@
 #include <mrc_ddc.h>
 #include <mrc_fld_as_double.h>
 
-#include "ggcm_mhd_convert.h"
+#include "pde/pde_defs.h"
+#include "pde/pde_mhd_convert.c"
 
 #include <assert.h>
 
