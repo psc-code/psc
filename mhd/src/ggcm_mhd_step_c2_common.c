@@ -72,7 +72,6 @@ ggcm_mhd_step_c2_setup(struct ggcm_mhd_step *step)
   struct ggcm_mhd_step_c2 *sub = ggcm_mhd_step_c2(step);
   struct ggcm_mhd *mhd = step->mhd;
 
-  pde_setup(mhd->fld, mrc_fld_nr_comps(mhd->fld));
   pde_mhd_setup(mhd, mrc_fld_nr_comps(mhd->fld));
   pde_mhd_compat_setup(mhd);
 

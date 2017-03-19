@@ -618,6 +618,8 @@ pde_mhd_set_options(struct ggcm_mhd *mhd, struct mhd_options *opt)
 static void
 pde_mhd_setup(struct ggcm_mhd *mhd, int n_comps)
 {
+  pde_setup(mhd->fld, n_comps);
+  
   // general (x)mhd params
   s_gamma = mhd->par.gamm;
   s_gamma_m1 = s_gamma - 1.f;

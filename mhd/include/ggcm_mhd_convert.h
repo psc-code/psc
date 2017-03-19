@@ -15,7 +15,6 @@
 static void
 ggcm_mhd_convert_setup(struct ggcm_mhd *mhd)
 {
-  pde_setup(mhd->fld, mrc_fld_nr_comps(mhd->fld));
   pde_mhd_setup(mhd, mrc_fld_nr_comps(mhd->fld));
 }
 
