@@ -1,4 +1,7 @@
 
+#ifndef GGCM_MHD_GKEYLL_H
+#define GGCM_MHD_GKEYLL_H
+
 #include <ggcm_mhd_private.h>
 #include <ggcm_mhd_defs.h>
 
@@ -48,3 +51,4 @@ ggcm_mhd_convert_primitive_gkeyll_5m_point(struct mrc_fld *fld, int nr_fluids,
     float pressure_ratios[], float gamma_m1, int idx_em, int dx, int dy, int dz,
     int ix, int iy, int iz, int p);
 
+#endif
