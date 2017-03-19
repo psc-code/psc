@@ -12,9 +12,6 @@
 
 #include "pde/pde_mhd_setup.c"
 
-static mrc_fld_data_t cvt_gamma;
-static mrc_fld_data_t cvt_gamma_m1;
-static mrc_fld_data_t cvt_gamma_m1_inv;
 static int cvt_n_state;
 static int cvt_gk_nr_fluids;
 static int *cvt_gk_idx;
@@ -25,9 +22,6 @@ static float *cvt_gk_pressure_ratios;
 static void
 ggcm_mhd_convert_setup(struct ggcm_mhd *mhd)
 {
-  cvt_gamma = mhd->par.gamm;
-  cvt_gamma_m1 = cvt_gamma - 1.f;
-  cvt_gamma_m1_inv = 1.f / cvt_gamma_m1;
   cvt_n_state = mrc_fld_nr_comps(mhd->fld);
   // FIXME, hacky as usual, to deal with the legacy all-in-one big array
   if (cvt_n_state == _NR_FLDS) {
@@ -54,13 +48,13 @@ ggcm_mhd_convert_free(void)
 static inline void
 convert_state_from_prim_scons(mrc_fld_data_t state[8], mrc_fld_data_t prim[8])
 {
-  assert(cvt_gamma);
+  assert(s_gamma);
   
   state[RR ] = prim[RR];
   state[RVX] = prim[RR] * prim[VX];
   state[RVY] = prim[RR] * prim[VY];
   state[RVZ] = prim[RR] * prim[VZ];
-  state[UU ] = prim[PP] * cvt_gamma_m1_inv +
+  state[UU ] = prim[PP] * s_gamma_m1_inv +
     + .5f * prim[RR] * (sqr(prim[VX]) + sqr(prim[VY]) + sqr(prim[VZ]));
   state[BX ] = prim[BX];
   state[BY ] = prim[BY];
@@ -70,15 +64,15 @@ convert_state_from_prim_scons(mrc_fld_data_t state[8], mrc_fld_data_t prim[8])
 static inline void
 convert_prim_from_state_scons(mrc_fld_data_t prim[8], mrc_fld_data_t state[8])
 {
-  assert(cvt_gamma);
+  assert(s_gamma);
   
   prim[RR] = state[RR];
   mrc_fld_data_t rri = 1.f / state[RR];
   prim[VX] = rri * state[RVX];
   prim[VY] = rri * state[RVY];
   prim[VZ] = rri * state[RVZ];
-  prim[PP] = cvt_gamma_m1 * (state[UU] 
-			     - .5f * prim[RR] * (sqr(prim[VX]) + sqr(prim[VY]) + sqr(prim[VZ])));
+  prim[PP] = s_gamma_m1 * (state[UU] 
+			   - .5f * prim[RR] * (sqr(prim[VX]) + sqr(prim[VY]) + sqr(prim[VZ])));
   prim[BX] = state[BX];
   prim[BY] = state[BY];
   prim[BZ] = state[BZ];
@@ -87,13 +81,13 @@ convert_prim_from_state_scons(mrc_fld_data_t prim[8], mrc_fld_data_t state[8])
 static inline void
 convert_state_from_prim_fcons(mrc_fld_data_t state[], mrc_fld_data_t prim[8])
 {
-  assert(cvt_gamma);
+  assert(s_gamma);
 
   state[RR ] = prim[RR];
   state[RVX] = prim[RR] * prim[VX];
   state[RVY] = prim[RR] * prim[VY];
   state[RVZ] = prim[RR] * prim[VZ];
-  state[EE ] = prim[PP] * cvt_gamma_m1_inv
+  state[EE ] = prim[PP] * s_gamma_m1_inv
     + .5f * prim[RR] * (sqr(prim[VX]) + sqr(prim[VY]) + sqr(prim[VZ]))
     + .5f * (sqr(prim[BX]) + sqr(prim[BY]) + sqr(prim[BZ]));
   state[BX ] = prim[BX];
@@ -107,16 +101,16 @@ convert_state_from_prim_fcons(mrc_fld_data_t state[], mrc_fld_data_t prim[8])
 static inline void
 convert_prim_from_state_fcons(mrc_fld_data_t prim[8], mrc_fld_data_t state[])
 {
-  assert(cvt_gamma);
+  assert(s_gamma);
   
   prim[RR] = state[RR];
   mrc_fld_data_t rri = 1.f / state[RR];
   prim[VX] = rri * state[RVX];
   prim[VY] = rri * state[RVY];
   prim[VZ] = rri * state[RVZ];
-  prim[PP] = cvt_gamma_m1 * (state[UU] 
-			     - .5f * prim[RR] * (sqr(prim[VX]) + sqr(prim[VY]) + sqr(prim[VZ]))
-			     - .5f * (sqr(state[BX]) + sqr(state[BY]) + sqr(state[BZ])));
+  prim[PP] = s_gamma_m1 * (state[UU] 
+			   - .5f * prim[RR] * (sqr(prim[VX]) + sqr(prim[VY]) + sqr(prim[VZ]))
+			   - .5f * (sqr(state[BX]) + sqr(state[BY]) + sqr(state[BZ])));
   prim[BX] = state[BX];
   prim[BY] = state[BY];
   prim[BZ] = state[BZ];
@@ -135,7 +129,7 @@ convert_state_from_prim_gkeyll(mrc_fld_data_t state[], mrc_fld_data_t prim[8])
     state_sp[G5M_RVXS] = rrs * prim[VX];
     state_sp[G5M_RVYS] = rrs * prim[VY];
     state_sp[G5M_RVZS] = rrs * prim[VZ];
-    state_sp[G5M_UUS ] = (prim[PP] * cvt_gk_pressure_ratios[s]) * cvt_gamma_m1_inv
+    state_sp[G5M_UUS ] = (prim[PP] * cvt_gk_pressure_ratios[s]) * s_gamma_m1_inv
       + .5f * rrs * (sqr(prim[VX]) + sqr(prim[VY]) + sqr(prim[VZ]));
   }
 
@@ -171,7 +165,7 @@ convert_prim_from_state_gkeyll(mrc_fld_data_t prim[8], mrc_fld_data_t state[])
     mrc_fld_data_t rvvs = (sqr(state_sp[G5M_RVXS]) +
 			   sqr(state_sp[G5M_RVYS]) +
 			   sqr(state_sp[G5M_RVZS])) / rrs;
-    prim[PP] += cvt_gamma_m1 * (state_sp[G5M_UUS] - .5f * rvvs);
+    prim[PP] += s_gamma_m1 * (state_sp[G5M_UUS] - .5f * rvvs);
   }
   prim[VX] /= prim[RR];
   prim[VY] /= prim[RR];

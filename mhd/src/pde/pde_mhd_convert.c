@@ -14,8 +14,6 @@
 static void
 mhd_prim_from_fcons(fld1d_state_t W, fld1d_state_t U, int ib, int ie)
 {
-  mrc_fld_data_t gamma_minus_1 = s_gamma - 1.f;
-
   for (int i = ib; i < ie; i++) {
     mrc_fld_data_t *w = &F1S(W, 0, i), *u = &F1S(U, 0, i);
 
@@ -24,10 +22,10 @@ mhd_prim_from_fcons(fld1d_state_t W, fld1d_state_t U, int ib, int ie)
     w[VX] = u[RVX] * rri;
     w[VY] = u[RVY] * rri;
     w[VZ] = u[RVZ] * rri;
-    w[PP] = gamma_minus_1 * (u[EE] 
-			     - .5 * (sqr(u[RVX]) + sqr(u[RVY]) + sqr(u[RVZ])) * rri
-			     - .5 * (sqr(u[BX]) + sqr(u[BY]) + sqr(u[BZ])));
-    w[PP] = fmax(w[PP], TINY_NUMBER);
+    w[PP] = s_gamma_m1 * (u[EE] 
+			  - .5 * (sqr(u[RVX]) + sqr(u[RVY]) + sqr(u[RVZ])) * rri
+			  - .5 * (sqr(u[BX]) + sqr(u[BY]) + sqr(u[BZ])));
+    w[PP] = mrc_fld_max(w[PP], TINY_NUMBER);
     w[BX] = u[BX];
     w[BY] = u[BY];
     w[BZ] = u[BZ];
@@ -43,8 +41,6 @@ mhd_prim_from_fcons(fld1d_state_t W, fld1d_state_t U, int ib, int ie)
 static void _mrc_unused
 mhd_fcons_from_prim(fld1d_state_t U, fld1d_state_t W, int ib, int ie)
 {
-  mrc_fld_data_t gamma_minus_1 = s_gamma - 1.f;
-
   for (int i = ib; i < ie; i++) {
     mrc_fld_data_t *u = &F1S(U, 0, i), *w = &F1S(W, 0, i);
 
@@ -53,10 +49,9 @@ mhd_fcons_from_prim(fld1d_state_t U, fld1d_state_t W, int ib, int ie)
     u[RVX] = rr * w[VX];
     u[RVY] = rr * w[VY];
     u[RVZ] = rr * w[VZ];
-    u[EE ] = 
-      w[PP] / gamma_minus_1 +
-      + .5 * (sqr(w[VX]) + sqr(w[VY]) + sqr(w[VZ])) * rr
-      + .5 * (sqr(w[BX]) + sqr(w[BY]) + sqr(w[BZ]));
+    u[EE ] = w[PP] * s_gamma_m1_inv +
+      .5f * (sqr(w[VX]) + sqr(w[VY]) + sqr(w[VZ])) * rr +
+      .5f * (sqr(w[BX]) + sqr(w[BY]) + sqr(w[BZ]));
     u[BX ] = w[BX];
     u[BY ] = w[BY];
     u[BZ ] = w[BZ];
@@ -72,8 +67,6 @@ mhd_fcons_from_prim(fld1d_state_t U, fld1d_state_t W, int ib, int ie)
 static void
 mhd_prim_from_scons(fld1d_state_t W, fld1d_state_t U, int ib, int ie)
 {
-  mrc_fld_data_t gamma_minus_1 = s_gamma - 1.f;
-
   for (int i = ib; i < ie; i++) {
     mrc_fld_data_t *w = &F1S(W, 0, i), *u = &F1S(U, 0, i);
 
@@ -83,7 +76,7 @@ mhd_prim_from_scons(fld1d_state_t W, fld1d_state_t U, int ib, int ie)
     w[VY] = rri * u[RVY];
     w[VZ] = rri * u[RVZ];
     mrc_fld_data_t rvv = (sqr(u[RVX]) + sqr(u[RVY]) + sqr(u[RVZ])) * rri;
-    w[PP] = gamma_minus_1 * (u[UU] - .5 * rvv);
+    w[PP] = s_gamma_m1 * (u[UU] - .5 * rvv);
     w[PP] = mrc_fld_max(w[PP], TINY_NUMBER);
   }
 }
@@ -94,8 +87,6 @@ mhd_prim_from_scons(fld1d_state_t W, fld1d_state_t U, int ib, int ie)
 static void _mrc_unused
 mhd_scons_from_prim(fld1d_state_t U, fld1d_state_t W, int ib, int ie)
 {
-  mrc_fld_data_t gamma_minus_1 = s_gamma - 1.f;
-
   for (int i = ib; i < ie; i++) {
     mrc_fld_data_t *u = &F1S(U, 0, i), *w = &F1S(W, 0, i);
 
@@ -104,9 +95,8 @@ mhd_scons_from_prim(fld1d_state_t U, fld1d_state_t W, int ib, int ie)
     u[RVX] = rr * w[VX];
     u[RVY] = rr * w[VY];
     u[RVZ] = rr * w[VZ];
-    u[UU ] = 
-      w[PP] / gamma_minus_1 +
-      + .5 * (sqr(w[VX]) + sqr(w[VY]) + sqr(w[VZ])) * rr;
+    u[UU ] = w[PP] * s_gamma_m1_inv +
+      .5 * (sqr(w[VX]) + sqr(w[VY]) + sqr(w[VZ])) * rr;
   }
 }
 
@@ -173,8 +163,6 @@ patch_prim_from_cons(fld3d_t p_W, fld3d_t p_U, int sw)
 static void _mrc_unused
 patch_prim_from_cons_v2(fld3d_t p_W, fld3d_t p_U, int sw)
 {
-  mrc_fld_data_t gamma_m1 = s_gamma - 1.f;
-
   fld3d_foreach(i,j,k, sw, sw) {
     F3S(p_W, RR, i,j,k) = F3S(p_U, RR, i,j,k);
     mrc_fld_data_t rri  = 1.f / F3S(p_U, RR, i,j,k);
@@ -185,7 +173,7 @@ patch_prim_from_cons_v2(fld3d_t p_W, fld3d_t p_U, int sw)
       F3S(p_W, VX, i,j,k) * F3S(p_U, RVX, i,j,k) +
       F3S(p_W, VY, i,j,k) * F3S(p_U, RVY, i,j,k) +
       F3S(p_W, VZ, i,j,k) * F3S(p_U, RVZ, i,j,k);
-    F3S(p_W, PP, i,j,k) = gamma_m1 * (F3S(p_U, UU, i,j,k) - .5f * rvv);
+    F3S(p_W, PP, i,j,k) = s_gamma_m1 * (F3S(p_U, UU, i,j,k) - .5f * rvv);
   } fld3d_foreach_end;
 }
 

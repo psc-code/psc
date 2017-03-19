@@ -8,6 +8,8 @@
 // MHD parameters, we keep these around statically
 
 static mrc_fld_data_t s_gamma;  // adiabatic exponent
+static mrc_fld_data_t s_gamma_m1;  // adiabatic exponent - 1
+static mrc_fld_data_t s_gamma_m1_inv;  // 1 / (adiabatic exponent - 1)
 static mrc_fld_data_t s_eta;    // (constant) resistivity 
 static mrc_fld_data_t s_d_i;    // ion skin depth
 static mrc_fld_data_t s_cfl;    // CFL number
@@ -604,6 +606,8 @@ pde_mhd_setup(struct ggcm_mhd *mhd)
 {
   // general (x)mhd params
   s_gamma = mhd->par.gamm;
+  s_gamma_m1 = s_gamma - 1.f;
+  s_gamma_m1_inv = 1.f / s_gamma_m1;
   // FIXME, this isn't really a good place to normalize
   s_eta   = mhd->par.diffco / mhd->resnorm;
   s_d_i   = mhd->par.d_i;
