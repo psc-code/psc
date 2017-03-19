@@ -392,6 +392,32 @@ convert_get_state_from_3d(mrc_fld_data_t state[], struct mrc_fld *f,
   }
 }
 
+static inline void
+convert_get_cc_state_from_3d(mrc_fld_data_t state[], struct mrc_fld *fld,
+			     int i, int j, int k, int p)
+{
+#if MT_FORMULATION(MT) == MT_FORMULATION_GKEYLL
+  convert_get_state_from_3d(state, fld, i,j,k, p);
+#else
+  for (int m = 0; m < 5; m++) {
+    state[m] = M3(fld, m, i,j,k, p);
+  }
+#if MT_BGRID(MT) == MT_BGRID_FC
+  state[BX] = .5f * (BX_(fld, i,j,k, p) + BX_(fld, i+di,j   ,k   , p));
+  state[BY] = .5f * (BY_(fld, i,j,k, p) + BY_(fld, i   ,j+dj,k   , p));
+  state[BZ] = .5f * (BZ_(fld, i,j,k, p) + BZ_(fld, i   ,j   ,k+dk, p));
+#elif MT_BGRID(MT) == MT_BGRID_FC_GGCM
+  state[BX] = .5f * (BX_(fld, i,j,k, p) + BX_(fld, i-di,j   ,k   , p));
+  state[BY] = .5f * (BY_(fld, i,j,k, p) + BY_(fld, i   ,j-dj,k   , p));
+  state[BZ] = .5f * (BZ_(fld, i,j,k, p) + BZ_(fld, i   ,j   ,k-dk, p));
+#elif MT_BGRID(MT) == MT_BGRID_CC
+  state[BX] = BX_(fld, i,j,k, p);
+  state[BY] = BY_(fld, i,j,k, p);
+  state[BZ] = BZ_(fld, i,j,k, p);
+#endif
+#endif
+}
+
 // ----------------------------------------------------------------------
 // convert_put_fluid_state_to_3d_mhd
 
