@@ -3,6 +3,7 @@
 #define PDE_MHD_SETUP_C
 
 #include "ggcm_mhd_defs_extra.h"
+#include "ggcm_mhd_gkeyll.h"
 
 #include "pde/pde_setup.c"
 
@@ -15,6 +16,13 @@ static mrc_fld_data_t s_gamma_m1_inv;  // 1 / (adiabatic exponent - 1)
 static mrc_fld_data_t s_eta;    // (constant) resistivity 
 static mrc_fld_data_t s_d_i;    // ion skin depth
 static mrc_fld_data_t s_cfl;    // CFL number
+
+static int cvt_gk_nr_fluids;
+static int *cvt_gk_idx;
+static int cvt_gk_idx_em;
+// FIXME, this should be changed to mrc_fld_data_t
+static float *cvt_gk_mass_ratios;
+static float *cvt_gk_pressure_ratios;
 
 // s_n_state is mostly the same as s_n_comps, except for legacy ggcm which
 // has the one field with so many components
@@ -624,6 +632,14 @@ pde_mhd_setup(struct ggcm_mhd *mhd)
   if (s_n_state == _NR_FLDS) {
     s_n_state = 8;
   }
+
+  // gkeyll parameters
+  assert(ggcm_mhd_gkeyll_nr_moments(mhd) == 5);
+  cvt_gk_nr_fluids = mhd->par.gk_nr_fluids;
+  cvt_gk_idx = mhd->par.gk_idx;
+  cvt_gk_idx_em = ggcm_mhd_gkeyll_em_fields_index(mhd);
+  cvt_gk_mass_ratios = mhd->par.gk_mass_ratios;
+  cvt_gk_pressure_ratios = mhd->par.gk_pressure_ratios.vals;
 
   // openggcm specific params
   s_magdiffu = mhd->par.magdiffu;
