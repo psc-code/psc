@@ -61,44 +61,22 @@ ggcm_mhd_diag_item_rr_run(struct ggcm_mhd_diag_item *item,
 {
   struct ggcm_mhd *mhd = item->diag->mhd;
 
-  mrc_fld_data_t scale_rr = mhd->rrnorm;
-
   int mhd_type;
   mrc_fld_get_param_int(fld, "mhd_type", &mhd_type);
 
   if (mhd_type == MT_GKEYLL) {
-    int bnd = fld->_nr_ghosts - 1;
-
-    struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, bnd + 1, "rr");
+    struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, fld->_nr_ghosts, "rr");
     mrc_fld_set_type(fld_r, FLD_TYPE);
     mrc_fld_setup(fld_r);
-
-    struct mrc_fld *r = mrc_fld_get_as(fld_r, FLD_TYPE);
-    struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
-
-    int nr_fluids = mhd->par.gk_nr_fluids;
-    int nr_moments = mhd->par.gk_nr_moments;
-
-    assert(nr_moments == 5);
-    int idx[nr_fluids];
-    ggcm_mhd_gkeyll_fluid_species_index_all(mhd, idx);
-
-    for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
-      mrc_fld_foreach(f, ix,iy,iz, bnd, bnd) {
-        M3(r, 0, ix,iy,iz, p) = 0.;
-        for (int s = 0; s < nr_fluids; s++)
-          M3(r, 0, ix,iy,iz, p) += M3(f, idx[s]+G5M_RRS, ix,iy,iz, p);
-      } mrc_fld_foreach_end;
-    }
-
-    mrc_fld_put_as(r, fld_r);
-    mrc_fld_put_as(f, fld);
-
-    ggcm_mhd_diag_c_write_one_field(io, r, 0, "rr", scale_rr, diag_type, plane);
-  
+    
+    ggcm_mhd_calc_rr(mhd, fld_r, fld);
+    
+    ggcm_mhd_diag_c_write_one_field(io, fld_r, 0, "rr", mhd->rrnorm, diag_type, plane);
+    
     mrc_fld_destroy(fld_r);
   } else {
-    ggcm_mhd_diag_c_write_one_field(io, fld, RR, "rr", scale_rr, diag_type, plane);
+    // the above would work, too, but this is simpler
+    ggcm_mhd_diag_c_write_one_field(io, fld, RR, "rr", mhd->rrnorm, diag_type, plane);
   }
 }
 
