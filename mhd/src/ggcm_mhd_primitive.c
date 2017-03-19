@@ -3,12 +3,6 @@
 
 #include <mrc_fld_as_double.h>
 
-#include "pde/pde_defs.h"
-#include "pde/pde_mhd_convert.c"
-
-void ggcm_mhd_calc_pp_gkeyll(struct ggcm_mhd *mhd, struct mrc_fld *pp_base,
-			     struct mrc_fld *fld_base);
-
 // ----------------------------------------------------------------------
 // ggcm_mhd_calc_pp
 
@@ -40,31 +34,3 @@ ggcm_mhd_calc_pp(struct ggcm_mhd *mhd, struct mrc_fld *pp_base,
   mrc_fld_put_as(fld, fld_base);
 }
 
-
-#include "ggcm_mhd_gkeyll.h"
-
-// ----------------------------------------------------------------------
-// ggcm_mhd_calc_pp_gkeyll
-
-void
-ggcm_mhd_calc_pp_gkeyll(struct ggcm_mhd *mhd, struct mrc_fld *pp,
-			struct mrc_fld *fld)
-{
-  static bool is_setup = false;
-  if (!is_setup) {
-    pde_mhd_setup(mhd, mrc_fld_nr_comps(mhd->fld));
-  }
-  
-  for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
-    mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
-      mrc_fld_data_t state[s_n_state], prim[8];
-      convert_get_state_from_3d(state, fld, ix,iy,iz, p);
-      convert_prim_from_gkeyll(prim, state);
-      M3(pp, 0, ix,iy,iz, p) = prim[PP];
-    } mrc_fld_foreach_end;
-  }
-
-  if (0) { // FIXME, this one just kills the warning
-    pde_free();
-  }
-}

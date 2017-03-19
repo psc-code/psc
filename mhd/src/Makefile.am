@@ -62,6 +62,7 @@ libmhd_la_SOURCES = \
 	ggcm_mhd_primitive_scons.c \
 	ggcm_mhd_primitive_fcons_fc.c \
 	ggcm_mhd_primitive_fcons_cc.c \
+	ggcm_mhd_primitive_gkeyll.c \
 	\
 	ggcm_mhd_bgrid.c \
 	ggcm_mhd_bgrid_fc_ggcm.c \

@@ -152,6 +152,7 @@ void ggcm_mhd_calc_divb_bgrid_cc(struct ggcm_mhd *mhd, struct mrc_fld *f, struct
 void ggcm_mhd_calc_pp_scons(struct ggcm_mhd *mhd, struct mrc_fld *pp, struct mrc_fld *fld);
 void ggcm_mhd_calc_pp_fcons_fc(struct ggcm_mhd *mhd, struct mrc_fld *pp, struct mrc_fld *fld);
 void ggcm_mhd_calc_pp_fcons_cc(struct ggcm_mhd *mhd, struct mrc_fld *pp, struct mrc_fld *fld);
+void ggcm_mhd_calc_pp_gkeyll(struct ggcm_mhd *mhd, struct mrc_fld *pp, struct mrc_fld *fld);
 
 // helpers for subclasses to use
 

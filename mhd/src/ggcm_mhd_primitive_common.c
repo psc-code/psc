@@ -19,7 +19,10 @@ SFX(ggcm_mhd_calc_pp)(struct ggcm_mhd *mhd, struct mrc_fld *pp, struct mrc_fld *
 
   for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
     mrc_fld_foreach(fld, i,j,k, 0, 0) {
-      mrc_fld_data_t prim[8], state[8];
+      mrc_fld_data_t state[s_n_state], prim[8];
+#if MT_FORMULATION(MT) == MT_FORMULATION_GKEYLL
+      convert_get_state_from_3d(state, fld, i,j,k, p);
+#else
       for (int m = 0; m < 5; m++) {
 	state[m] = M3(fld, m, i,j,k, p);
       }
@@ -32,9 +35,9 @@ SFX(ggcm_mhd_calc_pp)(struct ggcm_mhd *mhd, struct mrc_fld *pp, struct mrc_fld *
       state[BY] = BY_(fld, i,j,k, p);
       state[BZ] = BZ_(fld, i,j,k, p);
 #endif
+#endif
       convert_prim_from_state(prim, state);
-
-      M3(pp,0, i,j,k, p) = prim[PP];
+      M3(pp, 0, i,j,k, p) = prim[PP];
     } mrc_fld_foreach_end;
   }
 
@@ -42,4 +45,3 @@ SFX(ggcm_mhd_calc_pp)(struct ggcm_mhd *mhd, struct mrc_fld *pp, struct mrc_fld *
     pde_free();
   }
 }
-
