@@ -154,6 +154,11 @@ void ggcm_mhd_calc_pp_fcons_fc(struct ggcm_mhd *mhd, struct mrc_fld *pp, struct 
 void ggcm_mhd_calc_pp_fcons_cc(struct ggcm_mhd *mhd, struct mrc_fld *pp, struct mrc_fld *fld);
 void ggcm_mhd_calc_pp_gkeyll(struct ggcm_mhd *mhd, struct mrc_fld *pp, struct mrc_fld *fld);
 
+void ggcm_mhd_calc_v_scons(struct ggcm_mhd *mhd, struct mrc_fld *v, struct mrc_fld *fld);
+void ggcm_mhd_calc_v_fcons_fc(struct ggcm_mhd *mhd, struct mrc_fld *v, struct mrc_fld *fld);
+void ggcm_mhd_calc_v_fcons_cc(struct ggcm_mhd *mhd, struct mrc_fld *v, struct mrc_fld *fld);
+void ggcm_mhd_calc_v_gkeyll(struct ggcm_mhd *mhd, struct mrc_fld *v, struct mrc_fld *fld);
+
 // helpers for subclasses to use
 
 struct mrc_fld *ggcm_mhd_get_3d_fld(struct ggcm_mhd *mhd, int nr_comps);
