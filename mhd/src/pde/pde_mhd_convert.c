@@ -174,29 +174,89 @@ convert_prim_from_state(mrc_fld_data_t prim[8], mrc_fld_data_t state[8])
 #endif
 
 // ----------------------------------------------------------------------
+// mhd_pt_prim_from_fcons
+
+static inline void
+mhd_pt_prim_from_fcons(mrc_fld_data_t w[], mrc_fld_data_t u[])
+{
+  mrc_fld_data_t rri = 1.f / u[RR];
+  w[RR] = u[RR];
+  w[VX] = u[RVX] * rri;
+  w[VY] = u[RVY] * rri;
+  w[VZ] = u[RVZ] * rri;
+  w[PP] = s_gamma_m1 * (u[EE] 
+			- .5 * (sqr(u[RVX]) + sqr(u[RVY]) + sqr(u[RVZ])) * rri
+			- .5 * (sqr(u[BX]) + sqr(u[BY]) + sqr(u[BZ])));
+  w[PP] = mrc_fld_max(w[PP], TINY_NUMBER);
+  w[BX] = u[BX];
+  w[BY] = u[BY];
+  w[BZ] = u[BZ];
+  if (s_opt_divb == OPT_DIVB_GLM) {
+    w[PSI] = u[PSI];
+  }
+}
+
+// ----------------------------------------------------------------------
+// mhd_pt_fcons_from_prim
+
+static inline void
+mhd_pt_fcons_from_prim(mrc_fld_data_t u[], mrc_fld_data_t w[])
+{
+  mrc_fld_data_t rr = w[RR];
+  u[RR ] = rr;
+  u[RVX] = rr * w[VX];
+  u[RVY] = rr * w[VY];
+  u[RVZ] = rr * w[VZ];
+  u[EE ] = w[PP] * s_gamma_m1_inv +
+    .5f * (sqr(w[VX]) + sqr(w[VY]) + sqr(w[VZ])) * rr +
+    .5f * (sqr(w[BX]) + sqr(w[BY]) + sqr(w[BZ]));
+  u[BX ] = w[BX];
+  u[BY ] = w[BY];
+  u[BZ ] = w[BZ];
+  if (s_opt_divb == OPT_DIVB_GLM) {
+    u[PSI] = w[PSI];
+  }
+}
+
+// ----------------------------------------------------------------------
+// mhd_pt_prim_from_scons
+
+static inline void
+mhd_pt_prim_from_scons(mrc_fld_data_t w[], mrc_fld_data_t u[])
+{
+  mrc_fld_data_t rri = 1.f / u[RR];
+  w[RR] = u[RR];
+  w[VX] = rri * u[RVX];
+  w[VY] = rri * u[RVY];
+  w[VZ] = rri * u[RVZ];
+  mrc_fld_data_t rvv = (sqr(u[RVX]) + sqr(u[RVY]) + sqr(u[RVZ])) * rri;
+  w[PP] = s_gamma_m1 * (u[UU] - .5 * rvv);
+  w[PP] = mrc_fld_max(w[PP], TINY_NUMBER);
+}
+
+// ----------------------------------------------------------------------
+// mhd_pt_scons_from_prim
+
+static inline void
+mhd_pt_scons_from_prim(mrc_fld_data_t u[], mrc_fld_data_t w[])
+{
+  mrc_fld_data_t rr = w[RR];
+  u[RR ] = rr;
+  u[RVX] = rr * w[VX];
+  u[RVY] = rr * w[VY];
+  u[RVZ] = rr * w[VZ];
+  u[UU ] = w[PP] * s_gamma_m1_inv +
+    .5 * (sqr(w[VX]) + sqr(w[VY]) + sqr(w[VZ])) * rr;
+}
+
+// ----------------------------------------------------------------------
 // mhd_prim_from_fcons
 
 static void
 mhd_prim_from_fcons(fld1d_state_t W, fld1d_state_t U, int ib, int ie)
 {
   for (int i = ib; i < ie; i++) {
-    mrc_fld_data_t *w = &F1S(W, 0, i), *u = &F1S(U, 0, i);
-
-    mrc_fld_data_t rri = 1.f / u[RR];
-    w[RR] = u[RR];
-    w[VX] = u[RVX] * rri;
-    w[VY] = u[RVY] * rri;
-    w[VZ] = u[RVZ] * rri;
-    w[PP] = s_gamma_m1 * (u[EE] 
-			  - .5 * (sqr(u[RVX]) + sqr(u[RVY]) + sqr(u[RVZ])) * rri
-			  - .5 * (sqr(u[BX]) + sqr(u[BY]) + sqr(u[BZ])));
-    w[PP] = mrc_fld_max(w[PP], TINY_NUMBER);
-    w[BX] = u[BX];
-    w[BY] = u[BY];
-    w[BZ] = u[BZ];
-    if (s_opt_divb == OPT_DIVB_GLM) {
-      w[PSI] = u[PSI];
-    }
+    mhd_pt_prim_from_fcons(&F1S(W, 0, i), &F1S(U, 0, i));
   }
 }
 
@@ -207,22 +267,7 @@ static void _mrc_unused
 mhd_fcons_from_prim(fld1d_state_t U, fld1d_state_t W, int ib, int ie)
 {
   for (int i = ib; i < ie; i++) {
-    mrc_fld_data_t *u = &F1S(U, 0, i), *w = &F1S(W, 0, i);
-
-    mrc_fld_data_t rr = w[RR];
-    u[RR ] = rr;
-    u[RVX] = rr * w[VX];
-    u[RVY] = rr * w[VY];
-    u[RVZ] = rr * w[VZ];
-    u[EE ] = w[PP] * s_gamma_m1_inv +
-      .5f * (sqr(w[VX]) + sqr(w[VY]) + sqr(w[VZ])) * rr +
-      .5f * (sqr(w[BX]) + sqr(w[BY]) + sqr(w[BZ]));
-    u[BX ] = w[BX];
-    u[BY ] = w[BY];
-    u[BZ ] = w[BZ];
-    if (s_opt_divb == OPT_DIVB_GLM) {
-      u[PSI] = w[PSI];
-    }
+    mhd_pt_fcons_from_prim(&F1S(U, 0, i), &F1S(W, 0, i));
   }
 }
 
@@ -233,16 +278,7 @@ static void
 mhd_prim_from_scons(fld1d_state_t W, fld1d_state_t U, int ib, int ie)
 {
   for (int i = ib; i < ie; i++) {
-    mrc_fld_data_t *w = &F1S(W, 0, i), *u = &F1S(U, 0, i);
-
-    mrc_fld_data_t rri = 1.f / u[RR];
-    w[RR] = u[RR];
-    w[VX] = rri * u[RVX];
-    w[VY] = rri * u[RVY];
-    w[VZ] = rri * u[RVZ];
-    mrc_fld_data_t rvv = (sqr(u[RVX]) + sqr(u[RVY]) + sqr(u[RVZ])) * rri;
-    w[PP] = s_gamma_m1 * (u[UU] - .5 * rvv);
-    w[PP] = mrc_fld_max(w[PP], TINY_NUMBER);
+    mhd_pt_prim_from_scons(&F1S(W, 0, i), &F1S(U, 0, i));
   }
 }
 
@@ -253,15 +289,7 @@ static void _mrc_unused
 mhd_scons_from_prim(fld1d_state_t U, fld1d_state_t W, int ib, int ie)
 {
   for (int i = ib; i < ie; i++) {
-    mrc_fld_data_t *u = &F1S(U, 0, i), *w = &F1S(W, 0, i);
-
-    mrc_fld_data_t rr = w[RR];
-    u[RR ] = rr;
-    u[RVX] = rr * w[VX];
-    u[RVY] = rr * w[VY];
-    u[RVZ] = rr * w[VZ];
-    u[UU ] = w[PP] * s_gamma_m1_inv +
-      .5 * (sqr(w[VX]) + sqr(w[VY]) + sqr(w[VZ])) * rr;
+    mhd_pt_scons_from_prim(&F1S(U, 0, i), &F1S(W, 0, i));
   }
 }
 
