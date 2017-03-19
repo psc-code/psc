@@ -149,15 +149,20 @@ void ggcm_mhd_calc_divb_bgrid_fc_ggcm(struct ggcm_mhd *mhd, struct mrc_fld *f, s
 void ggcm_mhd_calc_divb_bgrid_fc(struct ggcm_mhd *mhd, struct mrc_fld *f, struct mrc_fld *d);
 void ggcm_mhd_calc_divb_bgrid_cc(struct ggcm_mhd *mhd, struct mrc_fld *f, struct mrc_fld *d);
 
-void ggcm_mhd_calc_pp_scons(struct ggcm_mhd *mhd, struct mrc_fld *pp, struct mrc_fld *fld);
-void ggcm_mhd_calc_pp_fcons_fc(struct ggcm_mhd *mhd, struct mrc_fld *pp, struct mrc_fld *fld);
-void ggcm_mhd_calc_pp_fcons_cc(struct ggcm_mhd *mhd, struct mrc_fld *pp, struct mrc_fld *fld);
-void ggcm_mhd_calc_pp_gkeyll(struct ggcm_mhd *mhd, struct mrc_fld *pp, struct mrc_fld *fld);
+void ggcm_mhd_calc_rr_scons(struct ggcm_mhd *mhd, struct mrc_fld *rr, struct mrc_fld *fld);
+void ggcm_mhd_calc_rr_fcons_fc(struct ggcm_mhd *mhd, struct mrc_fld *rr, struct mrc_fld *fld);
+void ggcm_mhd_calc_rr_fcons_cc(struct ggcm_mhd *mhd, struct mrc_fld *rr, struct mrc_fld *fld);
+void ggcm_mhd_calc_rr_gkeyll(struct ggcm_mhd *mhd, struct mrc_fld *rr, struct mrc_fld *fld);
 
 void ggcm_mhd_calc_v_scons(struct ggcm_mhd *mhd, struct mrc_fld *v, struct mrc_fld *fld);
 void ggcm_mhd_calc_v_fcons_fc(struct ggcm_mhd *mhd, struct mrc_fld *v, struct mrc_fld *fld);
 void ggcm_mhd_calc_v_fcons_cc(struct ggcm_mhd *mhd, struct mrc_fld *v, struct mrc_fld *fld);
 void ggcm_mhd_calc_v_gkeyll(struct ggcm_mhd *mhd, struct mrc_fld *v, struct mrc_fld *fld);
+
+void ggcm_mhd_calc_pp_scons(struct ggcm_mhd *mhd, struct mrc_fld *pp, struct mrc_fld *fld);
+void ggcm_mhd_calc_pp_fcons_fc(struct ggcm_mhd *mhd, struct mrc_fld *pp, struct mrc_fld *fld);
+void ggcm_mhd_calc_pp_fcons_cc(struct ggcm_mhd *mhd, struct mrc_fld *pp, struct mrc_fld *fld);
+void ggcm_mhd_calc_pp_gkeyll(struct ggcm_mhd *mhd, struct mrc_fld *pp, struct mrc_fld *fld);
 
 // helpers for subclasses to use
 
