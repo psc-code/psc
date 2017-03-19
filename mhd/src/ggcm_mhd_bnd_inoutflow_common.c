@@ -816,6 +816,16 @@ ggcm_mhd_bnd_sub_setup(struct ggcm_mhd_bnd *bnd)
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_bnd_sub_destroy
+
+static void
+ggcm_mhd_bnd_sub_destroy(struct ggcm_mhd_bnd *bnd)
+{
+  pde_free();
+}
+
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_bnd inflow description
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_bnd_sub, x)
@@ -843,6 +853,7 @@ struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_inoutflow = {
   .size             = sizeof(struct ggcm_mhd_bnd_sub),
   .param_descr      = ggcm_mhd_bnd_sub_descr,
   .setup            = ggcm_mhd_bnd_sub_setup,
+  .destroy          = ggcm_mhd_bnd_sub_destroy,
   .fill_ghosts      = ggcm_mhd_bnd_sub_fill_ghosts,
 };
 

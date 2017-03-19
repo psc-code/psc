@@ -469,8 +469,6 @@ ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic)
   assert(mhd);
   struct ggcm_mhd_ic_ops *ops = ggcm_mhd_ic_ops(ic);
 
-  pde_mhd_setup(mhd, mrc_fld_nr_comps(mhd->fld));
-  
   struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
   int mhd_type;
   mrc_fld_get_param_int(mhd->fld, "mhd_type", &mhd_type);
@@ -529,6 +527,25 @@ ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic)
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_ic_setup
+
+static void
+_ggcm_mhd_ic_setup(struct ggcm_mhd_ic *ic)
+{
+  struct ggcm_mhd *mhd = ic->mhd;
+  pde_mhd_setup(mhd, mrc_fld_nr_comps(mhd->fld));
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_ic_destroy
+
+static void
+_ggcm_mhd_ic_destroy(struct ggcm_mhd_ic *ic)
+{
+  pde_free();
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_ic_init
 
 static void
@@ -557,5 +574,7 @@ struct mrc_class_ggcm_mhd_ic mrc_class_ggcm_mhd_ic = {
   .size             = sizeof(struct ggcm_mhd_ic),
   .param_descr      = ggcm_mhd_ic_descr,
   .init             = ggcm_mhd_ic_init,
+  .setup            = _ggcm_mhd_ic_setup,
+  .destroy          = _ggcm_mhd_ic_destroy,
 };
 

@@ -43,6 +43,8 @@ ggcm_mhd_bnd_sphere_setup(struct ggcm_mhd_bnd *bnd)
   struct ggcm_mhd_bnd_sphere_map *map = &sub->map;
   double xxnorm = bnd->mhd->xxnorm;
 
+  pde_mhd_setup(bnd->mhd, mrc_fld_nr_comps(bnd->mhd->fld));
+
   ggcm_mhd_bnd_sphere_map_setup(map, bnd->mhd, sub->radius / xxnorm,
 				sub->dr / xxnorm, sub->extra_dr / xxnorm);
   ggcm_mhd_bnd_sphere_map_setup_flds(map);
@@ -50,6 +52,15 @@ ggcm_mhd_bnd_sphere_setup(struct ggcm_mhd_bnd *bnd)
   ggcm_mhd_bnd_sphere_map_setup_cc(map);
   ggcm_mhd_bnd_sphere_map_setup_ec(map);
   ggcm_mhd_bnd_sphere_map_setup_fc(map);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_bnd_sphere_destroy
+
+static void
+ggcm_mhd_bnd_sphere_destroy(struct ggcm_mhd_bnd *bnd)
+{
+  pde_free();
 }
 
 // ----------------------------------------------------------------------
@@ -61,11 +72,6 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
   struct ggcm_mhd_bnd_sphere *sub = ggcm_mhd_bnd_sphere(bnd);
   struct ggcm_mhd_bnd_sphere_map *map = &sub->map;
   struct ggcm_mhd *mhd = bnd->mhd;
-
-  static bool is_setup = false;
-  if (!is_setup) {
-    pde_mhd_setup(mhd, mrc_fld_nr_comps(mhd->fld));
-  }
 
   mrc_fld_data_t bnvals[N_PRIMITIVE];
   bnvals[RR] = sub->bnvals[RR] / mhd->rrnorm;
@@ -699,6 +705,7 @@ struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_sphere = {
   .size             = sizeof(struct ggcm_mhd_bnd_sphere),
   .param_descr      = ggcm_mhd_bnd_sphere_descr,
   .setup            = ggcm_mhd_bnd_sphere_setup,
+  .destroy          = ggcm_mhd_bnd_sphere_destroy,
   .fill_ghosts      = ggcm_mhd_bnd_sphere_fill_ghosts,
   //  .fill_ghosts_E    = ggcm_mhd_bnd_sphere_fill_ghosts_E,
   .fill_ghosts_reconstr = ggcm_mhd_bnd_sphere_fill_ghosts_reconstr,

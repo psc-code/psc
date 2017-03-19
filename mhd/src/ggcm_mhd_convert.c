@@ -516,3 +516,12 @@ ggcm_mhd_put_fld_as_fortran(struct mrc_fld *fld, struct mrc_fld *fld_base)
   return ggcm_mhd_fld_put_as(fld, fld_base, 0, _NR_FLDS);
 }
 
+// ----------------------------------------------------------------------
+// ggcm_mhd_convert_free
+
+// FIXME, never actually called
+void
+ggcm_mhd_convert_free(void)
+{
+  pde_free();
+}

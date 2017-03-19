@@ -36,5 +36,9 @@ SFX(ggcm_mhd_calc_pp)(struct ggcm_mhd *mhd, struct mrc_fld *pp, struct mrc_fld *
       M3(pp,0, i,j,k, p) = prim[PP];
     } mrc_fld_foreach_end;
   }
+
+  if (0) { // FIXME, this one just kills the warning
+    pde_free();
+  }
 }
 

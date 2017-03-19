@@ -44,6 +44,8 @@ ggcm_mhd_ic_mirdip_setup(struct ggcm_mhd_ic *ic)
   struct ggcm_mhd_ic_mirdip *sub = ggcm_mhd_ic_mirdip(ic);
   struct ggcm_mhd *mhd = ic->mhd;
 
+  ggcm_mhd_ic_setup_super(ic);
+
   sub->bnvals_code[RR] = sub->bnvals[RR] / mhd->rrnorm;
   sub->bnvals_code[VX] = sub->bnvals[VX] / mhd->vvnorm;
   sub->bnvals_code[VY] = sub->bnvals[VY] / mhd->vvnorm;

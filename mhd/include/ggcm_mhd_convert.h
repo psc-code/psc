@@ -12,12 +12,6 @@
 
 #include "pde/pde_mhd_setup.c"
 
-static inline void // FIXME, not inline to get warning
-ggcm_mhd_convert_free(void)
-{
-  pde_free();
-}
-
 static inline void
 convert_state_from_prim_scons(mrc_fld_data_t state[8], mrc_fld_data_t prim[8])
 {
