@@ -21,7 +21,7 @@ BGRID_SFX(ggcm_mhd_calc_currcc)(struct ggcm_mhd *mhd, struct mrc_fld *f, int m,
 {
   static bool is_setup = false;
   if (!is_setup) {
-    pde_setup(f);
+    pde_setup(f, mrc_fld_nr_comps(f));
     pde_mhd_setup(mhd);
     is_setup = true;
   }
@@ -55,7 +55,7 @@ BGRID_SFX(ggcm_mhd_calc_divb)(struct ggcm_mhd *mhd, struct mrc_fld *f, struct mr
 {
   static bool is_setup = false;
   if (!is_setup) {
-    pde_setup(f);
+    pde_setup(f, mrc_fld_nr_comps(f));
     pde_mhd_setup(mhd);
     is_setup = true;
   }

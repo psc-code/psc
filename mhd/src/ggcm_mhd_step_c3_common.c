@@ -84,9 +84,7 @@ ggcm_mhd_step_c3_setup(struct ggcm_mhd_step *step)
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
 
-  pde_setup(mhd->fld);
-  // FIXME, very hacky way of making the 1d state fields 5-component
-  s_n_comps = 5;
+  pde_setup(mhd->fld, 5);
   pde_mhd_setup(mhd);
   pde_mhd_compat_setup(mhd);
 

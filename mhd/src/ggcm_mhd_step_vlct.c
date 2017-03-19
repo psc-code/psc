@@ -252,7 +252,7 @@ ggcm_mhd_step_vlct_setup(struct ggcm_mhd_step *step)
   struct ggcm_mhd_step_vlct *sub = ggcm_mhd_step_vlct(step);
   struct ggcm_mhd *mhd = step->mhd;
 
-  pde_setup(mhd->fld);
+  pde_setup(mhd->fld, mrc_fld_nr_comps(mhd->fld));
   pde_mhd_setup(mhd);
 
   fld1d_state_setup(&sub->U);
