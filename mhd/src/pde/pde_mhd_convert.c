@@ -33,13 +33,12 @@ convert_scons_from_prim(mrc_fld_data_t u[], mrc_fld_data_t w[])
 static inline void
 mhd_pt_scons_from_prim(mrc_fld_data_t u[], mrc_fld_data_t w[])
 {
-  mrc_fld_data_t rr = w[RR];
-  u[RR ] = rr;
-  u[RVX] = rr * w[VX];
-  u[RVY] = rr * w[VY];
-  u[RVZ] = rr * w[VZ];
+  u[RR ] = w[RR];
+  u[RVX] = w[RR] * w[VX];
+  u[RVY] = w[RR] * w[VY];
+  u[RVZ] = w[RR] * w[VZ];
   u[UU ] = w[PP] * s_gamma_m1_inv +
-    .5 * (sqr(w[VX]) + sqr(w[VY]) + sqr(w[VZ])) * rr;
+    .5 * (sqr(w[VX]) + sqr(w[VY]) + sqr(w[VZ])) * w[RR];
 }
 
 // ----------------------------------------------------------------------
@@ -55,8 +54,8 @@ convert_prim_from_scons(mrc_fld_data_t w[], mrc_fld_data_t u[])
   w[VX] = rri * u[RVX];
   w[VY] = rri * u[RVY];
   w[VZ] = rri * u[RVZ];
-  w[PP] = s_gamma_m1 * (u[UU] 
-			- .5f * w[RR] * (sqr(w[VX]) + sqr(w[VY]) + sqr(w[VZ])));
+  mrc_fld_data_t rvv = (sqr(u[RVX]) + sqr(u[RVY]) + sqr(u[RVZ])) * rri;
+  w[PP] = s_gamma_m1 * (u[UU] - .5f * rvv);
   w[BX] = u[BX];
   w[BY] = u[BY];
   w[BZ] = u[BZ];
@@ -68,13 +67,13 @@ convert_prim_from_scons(mrc_fld_data_t w[], mrc_fld_data_t u[])
 static inline void
 mhd_pt_prim_from_scons(mrc_fld_data_t w[], mrc_fld_data_t u[])
 {
-  mrc_fld_data_t rri = 1.f / u[RR];
   w[RR] = u[RR];
+  mrc_fld_data_t rri = 1.f / u[RR];
   w[VX] = rri * u[RVX];
   w[VY] = rri * u[RVY];
   w[VZ] = rri * u[RVZ];
   mrc_fld_data_t rvv = (sqr(u[RVX]) + sqr(u[RVY]) + sqr(u[RVZ])) * rri;
-  w[PP] = s_gamma_m1 * (u[UU] - .5 * rvv);
+  w[PP] = s_gamma_m1 * (u[UU] - .5f * rvv);
   w[PP] = mrc_fld_max(w[PP], TINY_NUMBER);
 }
 
@@ -90,9 +89,9 @@ convert_fcons_from_prim(mrc_fld_data_t u[], mrc_fld_data_t w[])
   u[RVX] = w[RR] * w[VX];
   u[RVY] = w[RR] * w[VY];
   u[RVZ] = w[RR] * w[VZ];
-  u[EE ] = w[PP] * s_gamma_m1_inv
-    + .5f * w[RR] * (sqr(w[VX]) + sqr(w[VY]) + sqr(w[VZ]))
-    + .5f * (sqr(w[BX]) + sqr(w[BY]) + sqr(w[BZ]));
+  u[EE ] = w[PP] * s_gamma_m1_inv +
+    .5f * (sqr(w[VX]) + sqr(w[VY]) + sqr(w[VZ])) * w[RR] +
+    .5f * (sqr(w[BX]) + sqr(w[BY]) + sqr(w[BZ]));
   u[BX ] = w[BX];
   u[BY ] = w[BY];
   u[BZ ] = w[BZ];
@@ -107,13 +106,12 @@ convert_fcons_from_prim(mrc_fld_data_t u[], mrc_fld_data_t w[])
 static inline void
 mhd_pt_fcons_from_prim(mrc_fld_data_t u[], mrc_fld_data_t w[])
 {
-  mrc_fld_data_t rr = w[RR];
-  u[RR ] = rr;
-  u[RVX] = rr * w[VX];
-  u[RVY] = rr * w[VY];
-  u[RVZ] = rr * w[VZ];
+  u[RR ] = w[RR];
+  u[RVX] = w[RR] * w[VX];
+  u[RVY] = w[RR] * w[VY];
+  u[RVZ] = w[RR] * w[VZ];
   u[EE ] = w[PP] * s_gamma_m1_inv +
-    .5f * (sqr(w[VX]) + sqr(w[VY]) + sqr(w[VZ])) * rr +
+    .5f * (sqr(w[VX]) + sqr(w[VY]) + sqr(w[VZ])) * w[RR] +
     .5f * (sqr(w[BX]) + sqr(w[BY]) + sqr(w[BZ]));
   u[BX ] = w[BX];
   u[BY ] = w[BY];
@@ -131,14 +129,14 @@ convert_prim_from_fcons(mrc_fld_data_t w[], mrc_fld_data_t u[])
 {
   assert(s_gamma);
   
-  w[RR] = u[RR];
   mrc_fld_data_t rri = 1.f / u[RR];
-  w[VX] = rri * u[RVX];
-  w[VY] = rri * u[RVY];
-  w[VZ] = rri * u[RVZ];
-  w[PP] = s_gamma_m1 * (u[UU] 
-			- .5f * w[RR] * (sqr(w[VX]) + sqr(w[VY]) + sqr(w[VZ]))
-			- .5f *         (sqr(u[BX]) + sqr(u[BY]) + sqr(u[BZ])));
+  w[RR] = u[RR];
+  w[VX] = u[RVX] * rri;
+  w[VY] = u[RVY] * rri;
+  w[VZ] = u[RVZ] * rri;
+  w[PP] = s_gamma_m1 * (u[EE] 
+			- .5f * (sqr(u[RVX]) + sqr(u[RVY]) + sqr(u[RVZ])) * rri
+			- .5f * (sqr(u[BX] ) + sqr(u[BY] ) + sqr(u[BZ] )));
   w[BX] = u[BX];
   w[BY] = u[BY];
   w[BZ] = u[BZ];
@@ -156,8 +154,8 @@ mhd_pt_prim_from_fcons(mrc_fld_data_t w[], mrc_fld_data_t u[])
   w[VY] = u[RVY] * rri;
   w[VZ] = u[RVZ] * rri;
   w[PP] = s_gamma_m1 * (u[EE] 
-			- .5 * (sqr(u[RVX]) + sqr(u[RVY]) + sqr(u[RVZ])) * rri
-			- .5 * (sqr(u[BX]) + sqr(u[BY]) + sqr(u[BZ])));
+			- .5f * (sqr(u[RVX]) + sqr(u[RVY]) + sqr(u[RVZ])) * rri
+			- .5f * (sqr(u[BX] ) + sqr(u[BY] ) + sqr(u[BZ] )));
   w[PP] = mrc_fld_max(w[PP], TINY_NUMBER);
   w[BX] = u[BX];
   w[BY] = u[BY];
