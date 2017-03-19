@@ -9,10 +9,10 @@
 #define TINY_NUMBER 1.0e-20 // FIXME
 
 // ----------------------------------------------------------------------
-// convert_state_from_prim_scons
+// convert_scons_from_prim
 
 static inline void
-convert_state_from_prim_scons(mrc_fld_data_t u[], mrc_fld_data_t w[])
+convert_scons_from_prim(mrc_fld_data_t u[], mrc_fld_data_t w[])
 {
   assert(s_gamma);
   
@@ -43,10 +43,10 @@ mhd_pt_scons_from_prim(mrc_fld_data_t u[], mrc_fld_data_t w[])
 }
 
 // ----------------------------------------------------------------------
-// convert_prim_from_state_scons
+// convert_prim_from_scons
 
 static inline void
-convert_prim_from_state_scons(mrc_fld_data_t w[], mrc_fld_data_t u[])
+convert_prim_from_scons(mrc_fld_data_t w[], mrc_fld_data_t u[])
 {
   assert(s_gamma);
   
@@ -79,10 +79,10 @@ mhd_pt_prim_from_scons(mrc_fld_data_t w[], mrc_fld_data_t u[])
 }
 
 // ----------------------------------------------------------------------
-// convert_state_from_prim_fcons
+// convert_fcons_from_prim
 
 static inline void
-convert_state_from_prim_fcons(mrc_fld_data_t u[], mrc_fld_data_t w[])
+convert_fcons_from_prim(mrc_fld_data_t u[], mrc_fld_data_t w[])
 {
   assert(s_gamma);
 
@@ -124,10 +124,10 @@ mhd_pt_fcons_from_prim(mrc_fld_data_t u[], mrc_fld_data_t w[])
 }
 
 // ----------------------------------------------------------------------
-// convert_prim_from_state_fcons
+// convert_prim_from_fcons
 
 static inline void
-convert_prim_from_state_fcons(mrc_fld_data_t w[], mrc_fld_data_t u[])
+convert_prim_from_fcons(mrc_fld_data_t w[], mrc_fld_data_t u[])
 {
   assert(s_gamma);
   
@@ -168,10 +168,10 @@ mhd_pt_prim_from_fcons(mrc_fld_data_t w[], mrc_fld_data_t u[])
 }
 
 // ----------------------------------------------------------------------
-// convert_state_from_prim_gkeyll
+// convert_gkeyll_from_prim
 
 static inline void
-convert_state_from_prim_gkeyll(mrc_fld_data_t state[], mrc_fld_data_t prim[8])
+convert_gkeyll_from_prim(mrc_fld_data_t state[], mrc_fld_data_t prim[8])
 {
   for (int s = 0; s < cvt_gk_nr_fluids; s++) {
     mrc_fld_data_t *state_sp = state + cvt_gk_idx[s];
@@ -198,10 +198,10 @@ convert_state_from_prim_gkeyll(mrc_fld_data_t state[], mrc_fld_data_t prim[8])
 }
 
 // ----------------------------------------------------------------------
-// convert_prim_from_state_gkeyll
+// convert_prim_from_gkeyll
 
 static inline void
-convert_prim_from_state_gkeyll(mrc_fld_data_t prim[8], mrc_fld_data_t state[])
+convert_prim_from_gkeyll(mrc_fld_data_t prim[8], mrc_fld_data_t state[])
 {
   prim[RR] = 0.f;
   prim[VX] = prim[VY] = prim[VZ] = 0.f;
@@ -229,14 +229,14 @@ convert_prim_from_state_gkeyll(mrc_fld_data_t prim[8], mrc_fld_data_t state[])
 // convert_state_from_prim
       
 static inline void
-convert_state_from_prim(mrc_fld_data_t state[8], mrc_fld_data_t prim[8])
+convert_state_from_prim(mrc_fld_data_t state[], mrc_fld_data_t prim[])
 {
   if (MT_FORMULATION(MT) == MT_FORMULATION_SCONS) {
-    convert_state_from_prim_scons(state, prim);
+    convert_scons_from_prim(state, prim);
   } else if (MT_FORMULATION(MT) == MT_FORMULATION_FCONS) {
-    convert_state_from_prim_fcons(state, prim);
+    convert_fcons_from_prim(state, prim);
   } else if (MT_FORMULATION(MT) == MT_FORMULATION_GKEYLL) {
-    convert_state_from_prim_gkeyll(state, prim);
+    convert_gkeyll_from_prim(state, prim);
   } else {
     assert(0);
   }
@@ -246,14 +246,14 @@ convert_state_from_prim(mrc_fld_data_t state[8], mrc_fld_data_t prim[8])
 // convert_prim_from_state
       
 static inline void
-convert_prim_from_state(mrc_fld_data_t prim[8], mrc_fld_data_t state[8])
+convert_prim_from_state(mrc_fld_data_t prim[], mrc_fld_data_t state[])
 {
   if (MT_FORMULATION(MT) == MT_FORMULATION_SCONS) {
-    convert_prim_from_state_scons(prim, state);
+    convert_prim_from_scons(prim, state);
   } else if (MT_FORMULATION(MT) == MT_FORMULATION_FCONS) {
-    convert_prim_from_state_fcons(prim, state);
+    convert_prim_from_fcons(prim, state);
   } else if (MT_FORMULATION(MT) == MT_FORMULATION_GKEYLL) {
-    convert_prim_from_state_gkeyll(prim, state);
+    convert_prim_from_gkeyll(prim, state);
   } else {
     assert(0);
   }

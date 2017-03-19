@@ -36,7 +36,7 @@ ggcm_mhd_convert_sc_ggcm_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fl
       for (int m = 0; m < 8; m++) {
 	prim[m] = M3(fld, m, ix,iy,iz, p);
       }
-      convert_state_from_prim_scons(state, prim);
+      convert_scons_from_prim(state, prim);
       for (int m = 0; m < 5; m++) {
 	M3(fld, m, ix,iy,iz, p) = state[m];
       }
@@ -68,7 +68,7 @@ ggcm_mhd_convert_sc_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_bas
       for (int m = 0; m < 8; m++) {
 	prim[m] = M3(fld, m, ix,iy,iz, p);
       }
-      convert_state_from_prim_scons(state, prim);
+      convert_scons_from_prim(state, prim);
       for (int m = 0; m < 5; m++) {
 	M3(fld, m, ix,iy,iz, p) = state[m];
       }
@@ -111,7 +111,7 @@ ggcm_mhd_convert_fc_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_bas
       prim[BX] = .5f*(BX_(fld, ix,iy,iz, p) + BX_(fld, ix+dx,iy,iz, p));
       prim[BY] = .5f*(BY_(fld, ix,iy,iz, p) + BY_(fld, ix,iy+dy,iz, p));
       prim[BZ] = .5f*(BZ_(fld, ix,iy,iz, p) + BZ_(fld, ix,iy,iz+dz, p));
-      convert_state_from_prim_fcons(state, prim);
+      convert_fcons_from_prim(state, prim);
       for (int m = 0; m < 5; m++) {
 	M3(fld, m, ix,iy,iz, p) = state[m];
       }
@@ -154,7 +154,7 @@ ggcm_mhd_convert_fc_cc_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_
       prim[BX] = .5f*(BX_(fld, ix,iy,iz, p) + BX_(fld, ix+dx,iy,iz, p));
       prim[BY] = .5f*(BY_(fld, ix,iy,iz, p) + BY_(fld, ix,iy+dy,iz, p));
       prim[BZ] = .5f*(BZ_(fld, ix,iy,iz, p) + BZ_(fld, ix,iy,iz+dz, p));
-      convert_state_from_prim_fcons(state, prim);
+      convert_fcons_from_prim(state, prim);
       for (int m = 0; m < 8; m++) {
 	M3(fld, m, ix,iy,iz, p) = state[m];
       }

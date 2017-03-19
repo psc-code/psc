@@ -245,7 +245,7 @@ ggcm_mhd_ic_hydro_from_primitive_semi(struct ggcm_mhd_ic *ic, struct mrc_fld *fl
       for (int m = 0; m < 5; m++) {
 	prim[m] = ops->primitive(ic, m, dcrd_cc);
       }
-      convert_state_from_prim_scons(state, prim);
+      convert_scons_from_prim(state, prim);
       for (int m = 0; m < 5; m++) {
 	M3(fld, m, ix,iy,iz, p) = state[m];
       }
@@ -282,7 +282,7 @@ ggcm_mhd_ic_hydro_from_primitive_fully(struct ggcm_mhd_ic *ic, struct mrc_fld *f
       prim[BY] = .5f * (BY_(fld, ix,iy,iz, p) + BY_(fld, ix,iy+dy,iz, p));
       prim[BZ] = .5f * (BZ_(fld, ix,iy,iz, p) + BZ_(fld, ix,iy,iz+dz, p));
 
-      convert_state_from_prim_fcons(state, prim);
+      convert_fcons_from_prim(state, prim);
 
       for (int m = 0; m < 5; m++) {
 	M3(fld, m, ix,iy,iz, p) = state[m];
@@ -316,7 +316,7 @@ ggcm_mhd_ic_hydro_from_primitive_fully_cc(struct ggcm_mhd_ic *ic, struct mrc_fld
       prim[BY] = BY_(fld, ix,iy,iz, p);
       prim[BZ] = BZ_(fld, ix,iy,iz, p);
       
-      convert_state_from_prim_fcons(state, prim);
+      convert_fcons_from_prim(state, prim);
 
       for (int m = 0; m < 5; m++) {
 	M3(fld, m, ix,iy,iz, p) = state[m];
