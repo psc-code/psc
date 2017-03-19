@@ -9,7 +9,7 @@ SFX(ggcm_mhd_calc_pp)(struct ggcm_mhd *mhd, struct mrc_fld *pp, struct mrc_fld *
 {
   static bool is_setup = false;
   if (!is_setup) {
-    ggcm_mhd_convert_setup(mhd);
+    pde_mhd_setup(mhd, mrc_fld_nr_comps(mhd->fld));
   }
   
   int gdims[3];

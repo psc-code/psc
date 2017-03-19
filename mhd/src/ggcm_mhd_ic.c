@@ -469,7 +469,7 @@ ggcm_mhd_ic_run(struct ggcm_mhd_ic *ic)
   assert(mhd);
   struct ggcm_mhd_ic_ops *ops = ggcm_mhd_ic_ops(ic);
 
-  ggcm_mhd_convert_setup(mhd);
+  pde_mhd_setup(mhd, mrc_fld_nr_comps(mhd->fld));
   
   struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
   int mhd_type;

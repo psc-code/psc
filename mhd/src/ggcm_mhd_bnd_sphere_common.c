@@ -64,7 +64,7 @@ sphere_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld)
 
   static bool is_setup = false;
   if (!is_setup) {
-    ggcm_mhd_convert_setup(mhd);
+    pde_mhd_setup(mhd, mrc_fld_nr_comps(mhd->fld));
   }
 
   mrc_fld_data_t bnvals[N_PRIMITIVE];

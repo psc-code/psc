@@ -12,12 +12,6 @@
 
 #include "pde/pde_mhd_setup.c"
 
-static void
-ggcm_mhd_convert_setup(struct ggcm_mhd *mhd)
-{
-  pde_mhd_setup(mhd, mrc_fld_nr_comps(mhd->fld));
-}
-
 static inline void // FIXME, not inline to get warning
 ggcm_mhd_convert_free(void)
 {

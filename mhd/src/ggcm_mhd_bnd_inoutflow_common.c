@@ -778,6 +778,8 @@ ggcm_mhd_bnd_sub_setup(struct ggcm_mhd_bnd *bnd)
 {
   struct ggcm_mhd *mhd = bnd->mhd;
 
+  pde_mhd_setup(mhd, mrc_fld_nr_comps(mhd->fld));
+
   if (!mhd->bnd_mask) {
     return;
   }
@@ -811,8 +813,6 @@ ggcm_mhd_bnd_sub_setup(struct ggcm_mhd_bnd *bnd)
   }
 
   mrc_fld_put_as(bnd_mask, mhd->bnd_mask);
-
-  ggcm_mhd_convert_setup(mhd);
 }
 
 // ----------------------------------------------------------------------

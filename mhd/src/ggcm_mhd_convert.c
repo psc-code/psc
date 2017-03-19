@@ -24,7 +24,7 @@ ggcm_mhd_convert_sc_ggcm_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fl
 {
   static bool is_setup = false;
   if (!is_setup) {
-    ggcm_mhd_convert_setup(mhd);
+    pde_mhd_setup(mhd, mrc_fld_nr_comps(mhd->fld));
   }
 
   struct mrc_fld *fld = mrc_fld_get_as(fld_base, FLD_TYPE);
@@ -56,7 +56,7 @@ ggcm_mhd_convert_sc_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_bas
 {
   static bool is_setup = false;
   if (!is_setup) {
-    ggcm_mhd_convert_setup(mhd);
+    pde_mhd_setup(mhd, mrc_fld_nr_comps(mhd->fld));
   }
 
   struct mrc_fld *fld = mrc_fld_get_as(fld_base, FLD_TYPE);
@@ -89,7 +89,7 @@ ggcm_mhd_convert_fc_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_bas
 {
   static bool is_setup = false;
   if (!is_setup) {
-    ggcm_mhd_convert_setup(mhd);
+    pde_mhd_setup(mhd, mrc_fld_nr_comps(mhd->fld));
   }
 
   struct mrc_fld *fld = mrc_fld_get_as(fld_base, FLD_TYPE);
@@ -132,7 +132,7 @@ ggcm_mhd_convert_fc_cc_from_primitive(struct ggcm_mhd *mhd, struct mrc_fld *fld_
 {
   static bool is_setup = false;
   if (!is_setup) {
-    ggcm_mhd_convert_setup(mhd);
+    pde_mhd_setup(mhd, mrc_fld_nr_comps(mhd->fld));
   }
 
   struct mrc_fld *fld = mrc_fld_get_as(fld_base, FLD_TYPE);
