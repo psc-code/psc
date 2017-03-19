@@ -26,54 +26,11 @@ ggcm_mhd_diag_item_v_run(struct ggcm_mhd_diag_item *item,
 {
   struct ggcm_mhd *mhd = item->diag->mhd;
 
-  int mhd_type;
-  mrc_fld_get_param_int(fld, "mhd_type", &mhd_type);
-
-  int bnd = fld->_nr_ghosts;
-
-  struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, bnd, "vx:vy:vz");
+  struct mrc_fld *fld_r = mrc_domain_fld_create(mhd->domain, fld->_nr_ghosts, "vx:vy:vz");
   mrc_fld_set_type(fld_r, FLD_TYPE);
   mrc_fld_setup(fld_r);
 
-  struct mrc_fld *r = mrc_fld_get_as(fld_r, FLD_TYPE);
-  struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
-
-  if (mhd_type == MT_GKEYLL) {
-    int nr_fluids = mhd->par.gk_nr_fluids;
-    int nr_moments = mhd->par.gk_nr_moments;
-
-    assert(nr_moments == 5);
-    int idx[nr_fluids];
-    ggcm_mhd_gkeyll_fluid_species_index_all(mhd, idx);
-
-    for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
-      mrc_fld_foreach(f, ix,iy,iz, bnd, bnd) {
-        M3(r, 0, ix,iy,iz, p) = 0.;
-        mrc_fld_data_t rr = 0.;
-        for (int s = 0; s < nr_fluids; s++) {
-          M3(r, 0, ix,iy,iz, p) += M3(f, idx[s]+G5M_RVXS, ix,iy,iz, p);
-          M3(r, 1, ix,iy,iz, p) += M3(f, idx[s]+G5M_RVYS, ix,iy,iz, p);
-          M3(r, 2, ix,iy,iz, p) += M3(f, idx[s]+G5M_RVZS, ix,iy,iz, p);
-          rr += M3(f, idx[s]+G5M_RRS, ix,iy,iz, p);
-        }
-        for (int d = 0; d < 3; d++) {
-          M3(r, d, ix,iy,iz, p) /= rr;
-        }
-      } mrc_fld_foreach_end;
-    }
-  } else {
-    for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
-      mrc_fld_foreach(f, ix,iy,iz, bnd, bnd) {
-        mrc_fld_data_t rri = 1.f / RR_(f, ix,iy,iz, p);
-        M3(r, 0, ix,iy,iz, p) = rri * RVX_(f, ix,iy,iz, p);
-        M3(r, 1, ix,iy,iz, p) = rri * RVY_(f, ix,iy,iz, p);
-        M3(r, 2, ix,iy,iz, p) = rri * RVZ_(f, ix,iy,iz, p);
-      } mrc_fld_foreach_end;
-    }
-  }
-
-  mrc_fld_put_as(r, fld_r);
-  mrc_fld_put_as(f, fld);
+  ggcm_mhd_calc_v(mhd, fld_r, fld);
 
   mrc_fld_data_t scale_vv = mhd->vvnorm;
   ggcm_mhd_diag_c_write_one_field(io, fld_r, 0, "vx", scale_vv, diag_type, plane);
