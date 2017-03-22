@@ -171,18 +171,18 @@ mhd_pt_prim_from_fcons(mrc_fld_data_t w[], mrc_fld_data_t u[])
 static inline void
 convert_gkeyll_from_prim(mrc_fld_data_t state[], mrc_fld_data_t prim[8])
 {
-  for (int s = 0; s < cvt_gk_nr_fluids; s++) {
-    mrc_fld_data_t *state_sp = state + cvt_gk_idx[s];
-    mrc_fld_data_t rrs = prim[RR] * cvt_gk_mass_ratios[s];
+  for (int s = 0; s < s_gk_nr_fluids; s++) {
+    mrc_fld_data_t *state_sp = state + s_gk_idx[s];
+    mrc_fld_data_t rrs = prim[RR] * s_gk_mass_ratios[s];
     state_sp[G5M_RRS ] = rrs;
     state_sp[G5M_RVXS] = rrs * prim[VX];
     state_sp[G5M_RVYS] = rrs * prim[VY];
     state_sp[G5M_RVZS] = rrs * prim[VZ];
-    state_sp[G5M_UUS ] = (prim[PP] * cvt_gk_pressure_ratios[s]) * s_gamma_m1_inv
+    state_sp[G5M_UUS ] = (prim[PP] * s_gk_pressure_ratios[s]) * s_gamma_m1_inv
       + .5f * rrs * (sqr(prim[VX]) + sqr(prim[VY]) + sqr(prim[VZ]));
   }
 
-  mrc_fld_data_t *state_em = state + cvt_gk_idx_em;
+  mrc_fld_data_t *state_em = state + s_gk_idx_em;
   state_em[GK_EX] = - prim[VY] * prim[BZ] + prim[VZ] * prim[BY];
   state_em[GK_EY] = - prim[VZ] * prim[BX] + prim[VX] * prim[BZ];
   state_em[GK_EZ] = - prim[VX] * prim[BY] + prim[VY] * prim[BX];
@@ -204,8 +204,8 @@ convert_prim_from_gkeyll(mrc_fld_data_t prim[8], mrc_fld_data_t state[])
   prim[RR] = 0.f;
   prim[VX] = prim[VY] = prim[VZ] = 0.f;
   prim[PP] = 0.f;
-  for (int sp = 0; sp < cvt_gk_nr_fluids; sp++) {
-    mrc_fld_data_t *state_sp = state + cvt_gk_idx[sp];
+  for (int sp = 0; sp < s_gk_nr_fluids; sp++) {
+    mrc_fld_data_t *state_sp = state + s_gk_idx[sp];
     mrc_fld_data_t rrs = state_sp[G5M_RRS];
     prim[RR] += rrs;
     prim[VX] += state_sp[G5M_RVXS];
@@ -437,8 +437,8 @@ static inline void
 convert_put_fluid_state_to_3d_gkeyll(mrc_fld_data_t state[], struct mrc_fld *f,
 				     int i, int j, int k, int p)
 {
-  for (int sp = 0; sp < cvt_gk_nr_fluids; sp++) {
-    for (int m = cvt_gk_idx[sp]; m < cvt_gk_idx[sp] + G5M_NRS; m++) {
+  for (int sp = 0; sp < s_gk_nr_fluids; sp++) {
+    for (int m = s_gk_idx[sp]; m < s_gk_idx[sp] + G5M_NRS; m++) {
       M3(f, m, i,j,k, p) = state[m];
     }
   }

@@ -226,7 +226,7 @@ obndra_xl_bndsw(struct ggcm_mhd_bnd *bnd, struct mrc_fld *f, float bntim, int p)
 #if MT_FORMULATION(MT) == MT_FORMULATION_GKEYLL
 	  if (b0) {
 	    for (int d = 0; d < 3; d++) {
-	      M3(f, cvt_gk_idx_em + GK_BX + d, ix,iy,iz, p) -= M3(b0, d, ix,iy,iz, p);
+	      M3(f, s_gk_idx_em + GK_BX + d, ix,iy,iz, p) -= M3(b0, d, ix,iy,iz, p);
 	    }
 	  }
 #endif
