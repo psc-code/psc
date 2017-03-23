@@ -175,10 +175,10 @@ _ggcm_mhd_read(struct ggcm_mhd *mhd, struct mrc_io *io)
 static void
 ggcm_mhd_setup_normalization(struct ggcm_mhd *mhd)
 {
-  float x0 = mhd->par.norm_length;
-  float b0 = mhd->par.norm_B;
-  float rr0 = mhd->par.norm_density;
-  float mu00 = mhd->par.norm_mu0;
+  double x0 = mhd->par.norm_length;
+  double b0 = mhd->par.norm_B;
+  double rr0 = mhd->par.norm_density;
+  double mu00 = mhd->par.norm_mu0;
   
   mhd->xxnorm = x0;
   mhd->bbnorm = b0;
@@ -450,22 +450,22 @@ static struct param ggcm_mhd_descr[] = {
   { "gamma"           , VAR(par.gamm)        , PARAM_FLOAT(1.66667f) },
   { "rrmin"           , VAR(par.rrmin)       , PARAM_FLOAT(.1f)      },
 
-  { "xxnorm0"         , VAR(par.xxnorm0)     , PARAM_FLOAT(1.)       },
-  { "bbnorm0"         , VAR(par.bbnorm0)     , PARAM_FLOAT(1.)       },
-  { "vvnorm0"         , VAR(par.vvnorm0)     , PARAM_FLOAT(1.)       },
-  { "rrnorm0"         , VAR(par.rrnorm0)     , PARAM_FLOAT(1.)       },
-  { "ppnorm0"         , VAR(par.ppnorm0)     , PARAM_FLOAT(1.)       },
-  { "ccnorm0"         , VAR(par.ccnorm0)     , PARAM_FLOAT(1.)       },
-  { "eenorm0"         , VAR(par.eenorm0)     , PARAM_FLOAT(1.)       },
-  { "resnorm0"        , VAR(par.resnorm0)    , PARAM_FLOAT(1.)       },
-  { "tnorm0"          , VAR(par.tnorm0)      , PARAM_FLOAT(1.)       },
-  { "qqnorm0"         , VAR(par.qqnorm0)     , PARAM_FLOAT(1.)       },
+  { "xxnorm0"         , VAR(par.xxnorm0)     , PARAM_DOUBLE(1.)       },
+  { "bbnorm0"         , VAR(par.bbnorm0)     , PARAM_DOUBLE(1.)       },
+  { "vvnorm0"         , VAR(par.vvnorm0)     , PARAM_DOUBLE(1.)       },
+  { "rrnorm0"         , VAR(par.rrnorm0)     , PARAM_DOUBLE(1.)       },
+  { "ppnorm0"         , VAR(par.ppnorm0)     , PARAM_DOUBLE(1.)       },
+  { "ccnorm0"         , VAR(par.ccnorm0)     , PARAM_DOUBLE(1.)       },
+  { "eenorm0"         , VAR(par.eenorm0)     , PARAM_DOUBLE(1.)       },
+  { "resnorm0"        , VAR(par.resnorm0)    , PARAM_DOUBLE(1.)       },
+  { "tnorm0"          , VAR(par.tnorm0)      , PARAM_DOUBLE(1.)       },
+  { "qqnorm0"         , VAR(par.qqnorm0)     , PARAM_DOUBLE(1.)       },
 
-  { "norm_length"           , VAR(par.norm_length)           , PARAM_FLOAT(1.)            },
-  { "norm_B"                , VAR(par.norm_B)                , PARAM_FLOAT(1.)            },
-  { "norm_density"          , VAR(par.norm_density)          , PARAM_FLOAT(1.)            },
-  { "norm_mu0"              , VAR(par.norm_mu0)              , PARAM_FLOAT(C_MU0)         },
-  { "mu0_code"              , VAR(par.mu0_code)              , PARAM_FLOAT(1.)            },
+  { "norm_length"     , VAR(par.norm_length) , PARAM_DOUBLE(1.)       },
+  { "norm_B"          , VAR(par.norm_B)      , PARAM_DOUBLE(1.)       },
+  { "norm_density"    , VAR(par.norm_density), PARAM_DOUBLE(1.)       },
+  { "norm_mu0"        , VAR(par.norm_mu0)    , PARAM_DOUBLE(C_MU0)    },
+  { "mu0_code"        , VAR(par.mu0_code)    , PARAM_DOUBLE(1.)       },
 
   { "diffconstant"    , VAR(par.diffco)      , PARAM_FLOAT(.03f)     },
   { "diffthreshold"   , VAR(par.diffth)      , PARAM_FLOAT(.75f)     },
@@ -495,15 +495,15 @@ static struct param ggcm_mhd_descr[] = {
   { "amr_grid_file"   , VAR(amr_grid_file)   , PARAM_STRING("amr_grid.txt")   },
   { "amr"             , VAR(amr)             , PARAM_INT(0)                   },
 
-  { "xxnorm"          , VAR(xxnorm)          , MRC_VAR_FLOAT         },
-  { "bbnorm"          , VAR(bbnorm)          , MRC_VAR_FLOAT         },
-  { "vvnorm"          , VAR(vvnorm)          , MRC_VAR_FLOAT         },
-  { "rrnorm"          , VAR(rrnorm)          , MRC_VAR_FLOAT         },
-  { "ppnorm"          , VAR(ppnorm)          , MRC_VAR_FLOAT         },
-  { "ccnorm"          , VAR(ccnorm)          , MRC_VAR_FLOAT         },
-  { "eenorm"          , VAR(eenorm)          , MRC_VAR_FLOAT         },
-  { "resnorm"         , VAR(resnorm)         , MRC_VAR_FLOAT         },
-  { "tnorm"           , VAR(tnorm)           , MRC_VAR_FLOAT         },
+  { "xxnorm"          , VAR(xxnorm)          , MRC_VAR_DOUBLE         },
+  { "bbnorm"          , VAR(bbnorm)          , MRC_VAR_DOUBLE         },
+  { "vvnorm"          , VAR(vvnorm)          , MRC_VAR_DOUBLE         },
+  { "rrnorm"          , VAR(rrnorm)          , MRC_VAR_DOUBLE         },
+  { "ppnorm"          , VAR(ppnorm)          , MRC_VAR_DOUBLE         },
+  { "ccnorm"          , VAR(ccnorm)          , MRC_VAR_DOUBLE         },
+  { "eenorm"          , VAR(eenorm)          , MRC_VAR_DOUBLE         },
+  { "resnorm"         , VAR(resnorm)         , MRC_VAR_DOUBLE         },
+  { "tnorm"           , VAR(tnorm)           , MRC_VAR_DOUBLE         },
 
   { "time_code"       , VAR(time_code)       , MRC_VAR_FLOAT         },
   { "dt_code"         , VAR(dt_code)         , MRC_VAR_FLOAT         },

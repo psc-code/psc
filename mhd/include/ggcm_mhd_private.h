@@ -18,21 +18,21 @@ struct ggcm_mhd_params {
   float gamm;
   float rrmin;
 
-  float xxnorm0;
-  float bbnorm0, vvnorm0, rrnorm0, ppnorm0;
-  float ccnorm0, eenorm0, resnorm0, tnorm0;
-  float qqnorm0;
-  float norm_length; // normalizing length (in m)
-  float norm_B; // normalizing magnetic field (in T)
-  float norm_density; // normalizing density (in 1/m^3)
+  double xxnorm0;
+  double bbnorm0, vvnorm0, rrnorm0, ppnorm0;
+  double ccnorm0, eenorm0, resnorm0, tnorm0;
+  double qqnorm0;
+  double norm_length; // normalizing length (in m)
+  double norm_B; // normalizing magnetic field (in T)
+  double norm_density; // normalizing density (in 1/m^3)
   // norm_mu0, sort of like the other quantities, is the ratio between
   // code unit and external unit. In particular, for Alfven-normalized
   // units, norm_mu0 = mu0. In the case of SI-SI, or normalized-normalized,
   // it's equal to 1
-  float norm_mu0;
+  double norm_mu0;
   // This is the mu0 we're using in the actual equations we're solving
   // (traditionally, we're using normalized units, so mu0_code = 1)
-  float mu0_code;
+  double mu0_code;
 
   float diffco, diffth;
   float diffsphere;
@@ -112,10 +112,10 @@ struct ggcm_mhd {
   // multiplying the internal normalized quantities by these will produce
   // physical values in SI units, but with a prefix given by the corresponding
   // XXnorm0 parameter
-  float xxnorm;
-  float bbnorm, vvnorm, rrnorm, ppnorm;
-  float ccnorm, eenorm, resnorm, tnorm;
-  float qqnorm;
+  double xxnorm;
+  double bbnorm, vvnorm, rrnorm, ppnorm;
+  double ccnorm, eenorm, resnorm, tnorm;
+  double qqnorm;
 
   float time_code; // current time in code (normalized) units
   float dt_code; // current timestep in code (normalized) units
