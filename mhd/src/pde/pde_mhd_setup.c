@@ -16,6 +16,8 @@ static mrc_fld_data_t s_gamma_m1_inv;  // 1 / (adiabatic exponent - 1)
 static mrc_fld_data_t s_eta;    // (constant) resistivity 
 static mrc_fld_data_t s_d_i;    // ion skin depth
 static mrc_fld_data_t s_cfl;    // CFL number
+static mrc_fld_data_t s_mu0;    // mu0 (in code units)
+static mrc_fld_data_t s_mu0_inv;// 1 /mu0 (in code units)
 
 static int s_gk_nr_fluids;
 static int *s_gk_idx;
@@ -628,6 +630,8 @@ pde_mhd_setup(struct ggcm_mhd *mhd, int n_comps)
   s_eta   = mhd->par.diffco / mhd->resnorm;
   s_d_i   = mhd->par.d_i;
   s_cfl   = mhd->par.thx;
+  s_mu0   = mhd->par.mu0_code;
+  s_mu0_inv = 1.f / s_mu0;
 
   s_n_state = mrc_fld_nr_comps(mhd->fld);
   // FIXME, hacky as usual, to deal with the legacy all-in-one big array

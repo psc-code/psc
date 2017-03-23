@@ -91,7 +91,7 @@ convert_fcons_from_prim(mrc_fld_data_t u[], mrc_fld_data_t w[])
   u[RVZ] = w[RR] * w[VZ];
   u[EE ] = w[PP] * s_gamma_m1_inv +
     .5f * (sqr(w[VX]) + sqr(w[VY]) + sqr(w[VZ])) * w[RR] +
-    .5f * (sqr(w[BX]) + sqr(w[BY]) + sqr(w[BZ]));
+    .5f * (sqr(w[BX]) + sqr(w[BY]) + sqr(w[BZ])) * s_mu0_inv;
   u[BX ] = w[BX];
   u[BY ] = w[BY];
   u[BZ ] = w[BZ];
@@ -112,7 +112,7 @@ mhd_pt_fcons_from_prim(mrc_fld_data_t u[], mrc_fld_data_t w[])
   u[RVZ] = w[RR] * w[VZ];
   u[EE ] = w[PP] * s_gamma_m1_inv +
     .5f * (sqr(w[VX]) + sqr(w[VY]) + sqr(w[VZ])) * w[RR] +
-    .5f * (sqr(w[BX]) + sqr(w[BY]) + sqr(w[BZ]));
+    .5f * (sqr(w[BX]) + sqr(w[BY]) + sqr(w[BZ])) * s_mu0_inv;
   u[BX ] = w[BX];
   u[BY ] = w[BY];
   u[BZ ] = w[BZ];
@@ -136,7 +136,7 @@ convert_prim_from_fcons(mrc_fld_data_t w[], mrc_fld_data_t u[])
   w[VZ] = u[RVZ] * rri;
   w[PP] = s_gamma_m1 * (u[EE] 
 			- .5f * (sqr(u[RVX]) + sqr(u[RVY]) + sqr(u[RVZ])) * rri
-			- .5f * (sqr(u[BX] ) + sqr(u[BY] ) + sqr(u[BZ] )));
+			- .5f * (sqr(u[BX] ) + sqr(u[BY] ) + sqr(u[BZ] )) * s_mu0_inv);
   w[BX] = u[BX];
   w[BY] = u[BY];
   w[BZ] = u[BZ];
@@ -155,7 +155,7 @@ mhd_pt_prim_from_fcons(mrc_fld_data_t w[], mrc_fld_data_t u[])
   w[VZ] = u[RVZ] * rri;
   w[PP] = s_gamma_m1 * (u[EE] 
 			- .5f * (sqr(u[RVX]) + sqr(u[RVY]) + sqr(u[RVZ])) * rri
-			- .5f * (sqr(u[BX] ) + sqr(u[BY] ) + sqr(u[BZ] )));
+			- .5f * (sqr(u[BX] ) + sqr(u[BY] ) + sqr(u[BZ] )) * s_mu0_inv);
   w[PP] = mrc_fld_max(w[PP], TINY_NUMBER);
   w[BX] = u[BX];
   w[BY] = u[BY];

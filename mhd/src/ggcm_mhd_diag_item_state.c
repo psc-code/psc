@@ -77,7 +77,7 @@ ggcm_mhd_diag_item_uu1_run(struct ggcm_mhd_diag_item *item,
 	  float b2  = (sqr(.5f * (BX_(f, ix,iy,iz, p) + BX_(f, ix+dx,iy   ,iz   , p))) +
 		       sqr(.5f * (BY_(f, ix,iy,iz, p) + BY_(f, ix   ,iy+dy,iz   , p))) +
 		       sqr(.5f * (BZ_(f, ix,iy,iz, p) + BZ_(f, ix   ,iy   ,iz+dz, p))));
-	  M3(r, 0, ix,iy,iz, p) = EE_(f, ix,iy,iz, p) -.5f * b2;
+	  M3(r, 0, ix,iy,iz, p) = EE_(f, ix,iy,iz, p) -.5f * b2 / mhd->par.mu0_code;
 	} mrc_fld_foreach_end;
       }
     } else if (MT_BGRID(mhd_type) == MT_BGRID_CC) {
@@ -86,7 +86,7 @@ ggcm_mhd_diag_item_uu1_run(struct ggcm_mhd_diag_item *item,
 	  float b2  = (sqr(BX_(f, ix,iy,iz, p)) +
 		       sqr(BY_(f, ix,iy,iz, p)) +
 		       sqr(BZ_(f, ix,iy,iz, p)));
-	  M3(r, 0, ix,iy,iz, p) = EE_(f, ix,iy,iz, p) -.5f * b2;
+	  M3(r, 0, ix,iy,iz, p) = EE_(f, ix,iy,iz, p) -.5f * b2 / mhd->par.mu0_code;
 	} mrc_fld_foreach_end;
       }
     } else {
