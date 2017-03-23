@@ -23,7 +23,7 @@ mrc_ts_monitor_ggcm_run(struct mrc_ts_monitor *mon, struct mrc_ts *ts)
   struct mrc_ts_monitor_ggcm *out = mrc_ts_monitor_ggcm(mon);
 
   mpi_printf(mrc_ts_monitor_comm(mon), "Writing output %d (time = %g)\n",
-	     out->nr, ts->time);
+	     out->nr, ts->time * ts->tnorm);
   struct ggcm_mhd *mhd = (struct ggcm_mhd *) ts->ctx_obj;
 
   mhd->time_code = ts->time;
