@@ -737,6 +737,9 @@ ggcm_mhd_main(int *argc, char ***argv)
     mrc_ts_add_monitor(ts, mon_conservation);
   }
 
+  mrc_ts_set_param_double(ts, "norm_time", mhd->tnorm);
+  mrc_ts_set_param_double(ts, "norm_time_scale", mhd->par.tnorm0);
+
   mrc_ts_set_dt(ts, 1e-6);
   ggcm_mhd_setup_ts(mhd, ts);
   mrc_ts_set_from_options(ts);

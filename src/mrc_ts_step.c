@@ -19,8 +19,8 @@ mrc_ts_step_step(struct mrc_ts *ts)
   ts->stepf(ts->stepf_ctx, ts, ts->x);
 
   // FIXME, this should go -> mrc_ts_step(), and be optional
-  mpi_printf(mrc_ts_comm(ts), "step=%i time=%g dt=%e\n",
-	     ts->n + 1, ts->time + ts->dt, ts->dt);
+  mpi_printf(mrc_ts_comm(ts), "step=%d time=%g dt=%g\n",
+	     ts->n + 1, ts->tnorm * (ts->time + ts->dt), ts->tnorm * ts->dt);
 }
 
 // ----------------------------------------------------------------------
