@@ -194,7 +194,7 @@ ggcm_mhd_setup_normalization(struct ggcm_mhd *mhd)
   MPI_Comm comm = ggcm_mhd_comm(mhd);
   mpi_printf(comm, "NORMALIZATION: based on x0 = %g m\n", x0);
   mpi_printf(comm, "NORMALIZATION:          B0 = %g T\n", b0);
-  mpi_printf(comm, "NORMALIZATION:         rr0 = %g 1/m^3\n", rr0);
+  mpi_printf(comm, "NORMALIZATION:         rr0 = %g kg/m^3\n", rr0);
   mpi_printf(comm, "NORMALIZATION:        mu00 = %g N/A^2\n", mu00);
   mpi_printf(comm, "NORMALIZATION:    mu0_code = %g N/A^2\n", mhd->par.mu0_code);
   mpi_printf(comm, "NORMALIZATION: xxnorm  = %g m\n", mhd->xxnorm);
