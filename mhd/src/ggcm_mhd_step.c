@@ -37,7 +37,8 @@ ggcm_mhd_step_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
       step->dtn = fminf(1.f, step->dtn);
       
       if (step->dtn > 1.02f * mhd->dt_code || step->dtn < mhd->dt_code / 1.01f) {
-	mpi_printf(ggcm_mhd_comm(mhd), "switched dt %g <- %g\n", step->dtn, mhd->dt_code);
+	mpi_printf(ggcm_mhd_comm(mhd), "switched dt %g <- %g\n",
+		   step->dtn * mhd->tnorm, mhd->dt_code * mhd->tnorm);
 	
 	if (mhd->istep > 5 &&
 	    (step->dtn < 0.5 * mhd->dt_code || step->dtn > 2.0 * mhd->dt_code)) {            

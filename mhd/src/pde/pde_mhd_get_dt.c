@@ -34,7 +34,7 @@ patch_get_dt_scons_c(fld3d_t p_U, fld3d_t p_ymask)
     mrc_fld_data_t hh = mrc_fld_max(mrc_fld_max(FD1X(i), FD1Y(j)), FD1Z(k));
     mrc_fld_data_t rri = 1.f / mrc_fld_abs(F3S(p_W, RR, i,j,k)); // FIME abs necessary?
     mrc_fld_data_t bb = sqr(F3S(p_bcc, 0, i,j,k)) + sqr(F3S(p_bcc, 1, i,j,k)) + sqr(F3S(p_bcc, 2, i,j,k));
-    mrc_fld_data_t vA = mrc_fld_min(mrc_fld_sqrt(bb * rri), splim);
+    mrc_fld_data_t vA = mrc_fld_min(mrc_fld_sqrt(s_mu0_inv * bb * rri), splim);
     mrc_fld_data_t pp = F3S(p_W, PP, i,j,k);
     mrc_fld_data_t cs = mrc_fld_sqrt(s_gamma * mrc_fld_max(0.f, pp) * rri);
     mrc_fld_data_t vv3 = mrc_fld_sqrt(sqr(F3S(p_W, VX, i,j,k)) + sqr(F3S(p_W, VY, i,j,k)) + sqr(F3S(p_W, VZ, i,j,k)));
