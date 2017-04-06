@@ -28,6 +28,7 @@ ggcm_mhd_diag_init()
 {
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_diag_item, &ggcm_mhd_diag_item_ops_rr1);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_diag_item, &ggcm_mhd_diag_item_ops_uu1);
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_diag_item, &ggcm_mhd_diag_item_ops_ee1);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_diag_item, &ggcm_mhd_diag_item_ops_rv1);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_diag_item, &ggcm_mhd_diag_item_ops_b1);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_diag_item, &ggcm_mhd_diag_item_ops_rr);
@@ -43,6 +44,11 @@ ggcm_mhd_diag_init()
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_diag_item, &ggcm_mhd_diag_item_ops_gkeyll_i);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_diag_item, &ggcm_mhd_diag_item_ops_gkeyll_em);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_diag_item, &ggcm_mhd_diag_item_ops_ymask);
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_diag_item, &ggcm_mhd_diag_item_ops_zmask);
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_diag_item, &ggcm_mhd_diag_item_ops_bnd_mask);
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_diag_item, &ggcm_mhd_diag_item_ops_rmask);
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_diag_item, &ggcm_mhd_diag_item_ops_b0);
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_diag_item, &ggcm_mhd_diag_item_ops_psi);
 }
 
 // ----------------------------------------------------------------------

@@ -18,6 +18,8 @@ struct mrc_crds {
   struct mrc_fld *dcrd[3]; // Double version of the coordinates
                            // not fully supported in io yet
   struct mrc_fld *crd_nc[3];
+  struct mrc_fld *dcrd_nc[3];
+
   struct mrc_fld *global_crd[3];
 
   struct mrc_crds_gen *crds_gen[3];
@@ -44,6 +46,16 @@ struct mrc_crds {
 #define MRC_DMCRDY(crds, iy, p) MRC_DMCRD(crds, 1, iy, p)
 #define MRC_DMCRDZ(crds, iz, p) MRC_DMCRD(crds, 2, iz, p)
 
+#define MRC_MCRD_NC(crds, d, ix, p) MRC_M1((crds)->crd_nc[d], 0, ix, p)
+#define MRC_MCRDX_NC(crds, ix, p) MRC_MCRD_NC(crds, 0, ix, p)
+#define MRC_MCRDY_NC(crds, iy, p) MRC_MCRD_NC(crds, 1, iy, p)
+#define MRC_MCRDZ_NC(crds, iz, p) MRC_MCRD_NC(crds, 2, iz, p)
+
+#define MRC_DMCRD_NC(crds, d, ix, p) MRC_D3((crds)->dcrd_nc[d], ix, 0, p)
+#define MRC_DMCRDX_NC(crds, ix, p) MRC_DMCRD_NC(crds, 0, ix, p)
+#define MRC_DMCRDY_NC(crds, iy, p) MRC_DMCRD_NC(crds, 1, iy, p)
+#define MRC_DMCRDZ_NC(crds, iz, p) MRC_DMCRD_NC(crds, 2, iz, p)
+
 
 MRC_CLASS_DECLARE(mrc_crds, struct mrc_crds);
 
@@ -53,6 +65,169 @@ void mrc_crds_get_dx(struct mrc_crds *crds, int p, double dx[3]);
 struct mrc_crds_ops {
   MRC_SUBCLASS_OPS(struct mrc_crds);
 };
+
+// ----------------------------------------------------------------------
+// mrc_crds_at_cc
+
+static inline void
+mrc_crds_at_cc(struct mrc_crds *crds, int ix, int iy, int iz, int p,
+	       float crd_cc[3])
+{
+  crd_cc[0] = MRC_MCRDX(crds, ix, p);
+  crd_cc[1] = MRC_MCRDY(crds, iy, p);
+  crd_cc[2] = MRC_MCRDZ(crds, iz, p);
+}
+
+// ----------------------------------------------------------------------
+// mrc_crds_at_nc
+
+static inline void
+mrc_crds_at_nc(struct mrc_crds *crds, int ix, int iy, int iz, int p,
+	       float crd_nc[3])
+{
+  crd_nc[0] = MRC_MCRDX_NC(crds, ix, p);
+  crd_nc[1] = MRC_MCRDY_NC(crds, iy, p);
+  crd_nc[2] = MRC_MCRDZ_NC(crds, iz, p);
+}
+
+// ----------------------------------------------------------------------
+// mrc_crds_at_fc
+
+static inline void
+mrc_crds_at_fc(struct mrc_crds *crds, int ix, int iy, int iz, int p,
+	       int d, float crd_fc[3])
+{
+  if (d == 0) {
+    // Bx located at i, j+.5, k+.5
+    crd_fc[0] = MRC_MCRDX_NC(crds, ix, p);
+    crd_fc[1] = MRC_MCRDY   (crds, iy, p);
+    crd_fc[2] = MRC_MCRDZ   (crds, iz, p);
+  } else if (d == 1) {
+    // By located at i+.5, j, k+.5
+    crd_fc[0] = MRC_MCRDX   (crds, ix, p);
+    crd_fc[1] = MRC_MCRDY_NC(crds, iy, p);
+    crd_fc[2] = MRC_MCRDZ   (crds, iz, p);
+  } else if (d == 2) {
+    // Bz located at i+.5, j+.5, k
+    crd_fc[0] = MRC_MCRDX   (crds, ix, p);
+    crd_fc[1] = MRC_MCRDY   (crds, iy, p);
+    crd_fc[2] = MRC_MCRDZ_NC(crds, iz, p);
+  } else {
+    assert(0);
+  }
+}
+
+// ----------------------------------------------------------------------
+// mrc_crds_at_ec
+
+static inline void
+mrc_crds_at_ec(struct mrc_crds *crds, int ix, int iy, int iz, int p,
+	       int d, float crd_ec[3])
+{
+  if (d == 0) {
+    // Ex located at i+.5, j, k
+    crd_ec[0] = MRC_MCRDX   (crds, ix, p);
+    crd_ec[1] = MRC_MCRDY_NC(crds, iy, p);
+    crd_ec[2] = MRC_MCRDZ_NC(crds, iz, p);
+  } else if (d == 1) {
+    // Ey located at i, j+.5, k
+    crd_ec[0] = MRC_MCRDX_NC(crds, ix, p);
+    crd_ec[1] = MRC_MCRDY   (crds, iy, p);
+    crd_ec[2] = MRC_MCRDZ_NC(crds, iz, p);
+  } else if (d == 2) {
+    // Ez located at i, j, k+.5
+    crd_ec[0] = MRC_MCRDX_NC(crds, ix, p);
+    crd_ec[1] = MRC_MCRDY_NC(crds, iy, p);
+    crd_ec[2] = MRC_MCRDZ   (crds, iz, p);
+  } else {
+    assert(0);
+  }
+}
+
+// ======================================================================
+// and now everything repeated in double precision
+//
+// FIXME, this can probably be done more nicely using the "mrc_fld_as_double.h"
+// mechanism...
+
+
+// ----------------------------------------------------------------------
+// mrc_dcrds_at_cc
+
+static inline void
+mrc_dcrds_at_cc(struct mrc_crds *crds, int ix, int iy, int iz, int p,
+	       double crd_cc[3])
+{
+  crd_cc[0] = MRC_DMCRDX(crds, ix, p);
+  crd_cc[1] = MRC_DMCRDY(crds, iy, p);
+  crd_cc[2] = MRC_DMCRDZ(crds, iz, p);
+}
+
+// ----------------------------------------------------------------------
+// mrc_dcrds_at_nc
+
+static inline void
+mrc_dcrds_at_nc(struct mrc_crds *crds, int ix, int iy, int iz, int p,
+	       double crd_nc[3])
+{
+  crd_nc[0] = MRC_DMCRDX_NC(crds, ix, p);
+  crd_nc[1] = MRC_DMCRDY_NC(crds, iy, p);
+  crd_nc[2] = MRC_DMCRDZ_NC(crds, iz, p);
+}
+
+// ----------------------------------------------------------------------
+// mrc_dcrds_at_fc
+
+static inline void
+mrc_dcrds_at_fc(struct mrc_crds *crds, int ix, int iy, int iz, int p,
+	       int d, double crd_fc[3])
+{
+  if (d == 0) {
+    // Bx located at i, j+.5, k+.5
+    crd_fc[0] = MRC_DMCRDX_NC(crds, ix, p);
+    crd_fc[1] = MRC_DMCRDY   (crds, iy, p);
+    crd_fc[2] = MRC_DMCRDZ   (crds, iz, p);
+  } else if (d == 1) {
+    // By located at i+.5, j, k+.5
+    crd_fc[0] = MRC_DMCRDX   (crds, ix, p);
+    crd_fc[1] = MRC_DMCRDY_NC(crds, iy, p);
+    crd_fc[2] = MRC_DMCRDZ   (crds, iz, p);
+  } else if (d == 2) {
+    // Bz located at i+.5, j+.5, k
+    crd_fc[0] = MRC_DMCRDX   (crds, ix, p);
+    crd_fc[1] = MRC_DMCRDY   (crds, iy, p);
+    crd_fc[2] = MRC_DMCRDZ_NC(crds, iz, p);
+  } else {
+    assert(0);
+  }
+}
+
+// ----------------------------------------------------------------------
+// mrc_dcrds_at_ec
+
+static inline void
+mrc_dcrds_at_ec(struct mrc_crds *crds, int ix, int iy, int iz, int p,
+	       int d, double crd_ec[3])
+{
+  if (d == 0) {
+    // Ex located at i+.5, j, k
+    crd_ec[0] = MRC_DMCRDX   (crds, ix, p);
+    crd_ec[1] = MRC_DMCRDY_NC(crds, iy, p);
+    crd_ec[2] = MRC_DMCRDZ_NC(crds, iz, p);
+  } else if (d == 1) {
+    // Ey located at i, j+.5, k
+    crd_ec[0] = MRC_DMCRDX_NC(crds, ix, p);
+    crd_ec[1] = MRC_DMCRDY   (crds, iy, p);
+    crd_ec[2] = MRC_DMCRDZ_NC(crds, iz, p);
+  } else if (d == 2) {
+    // Ez located at i, j, k+.5
+    crd_ec[0] = MRC_DMCRDX_NC(crds, ix, p);
+    crd_ec[1] = MRC_DMCRDY_NC(crds, iy, p);
+    crd_ec[2] = MRC_DMCRDZ   (crds, iz, p);
+  } else {
+    assert(0);
+  }
+}
 
 #endif
 

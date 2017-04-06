@@ -10,20 +10,16 @@
 #include <string.h>
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_calc_curcc
-// FIXME: "clearncurr"which toggles dipole field subtraction is not implemented 
-// default in input.defines is false, and that is what is done here. 
+// ggcm_mhd_calc_curcc_sc_ggcm
 
-void
-ggcm_mhd_calc_currcc(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
-		     struct mrc_fld *currcc)
+static void
+ggcm_mhd_calc_currcc_sc_ggcm(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
+			     struct mrc_fld *currcc)
 {
   int gdims[3];
   mrc_domain_get_global_dims(fld->_domain, gdims);
   int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
 
-  struct mrc_patch_info info;
-  mrc_domain_get_local_patch_info(mhd->domain, 0, &info);
   struct mrc_fld *tmp = mrc_fld_duplicate(currcc);
 
   struct mrc_fld *f = ggcm_mhd_fld_get_as(fld, FLD_TYPE, MT_SEMI_CONSERVATIVE_GGCM,
@@ -71,3 +67,56 @@ ggcm_mhd_calc_currcc(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
   mrc_fld_destroy(tmp); 
 }
 
+// ----------------------------------------------------------------------
+// ggcm_mhd_calc_curcc_fc_cc
+
+static void
+ggcm_mhd_calc_currcc_fc_cc(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
+			     struct mrc_fld *currcc)
+{
+  int gdims[3];
+  mrc_domain_get_global_dims(fld->_domain, gdims);
+  int dx = (gdims[0] > 1), dy = (gdims[1] > 1), dz = (gdims[2] > 1);
+
+  struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
+  struct mrc_fld *c = mrc_fld_get_as(currcc, FLD_TYPE);
+  
+  for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
+    float *fd1x = ggcm_mhd_crds_get_crd_p(mhd->crds, 0, FD1, p);
+    float *fd1y = ggcm_mhd_crds_get_crd_p(mhd->crds, 1, FD1, p);
+    float *fd1z = ggcm_mhd_crds_get_crd_p(mhd->crds, 2, FD1, p);
+
+    mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
+      M3(c, 0, ix,iy,iz, p) =
+	(M3(f, m+2, ix,iy+dy,iz, p) - M3(f, m+2, ix,iy-dy,iz, p)) * .5f*fd1y[iy] -
+	(M3(f, m+1, ix,iy,iz+dz, p) - M3(f, m+1, ix,iy,iz-dz, p)) * .5f*fd1z[iz];
+      M3(c, 1, ix,iy,iz, p) =
+	(M3(f, m+0, ix,iy,iz+dz, p) - M3(f, m+0, ix,iy,iz-dz, p)) * .5f*fd1z[iz] -
+	(M3(f, m+2, ix+dx,iy,iz, p) - M3(f, m+2, ix-dx,iy,iz, p)) * .5f*fd1x[ix];
+      M3(c, 2, ix,iy,iz, p) =
+	(M3(f, m+1, ix+dx,iy,iz, p) - M3(f, m+1, ix-dx,iy,iz, p)) * .5f*fd1x[ix] -
+	(M3(f, m+0, ix,iy+dy,iz, p) - M3(f, m+0, ix,iy-dy,iz, p)) * .5f*fd1y[iy];
+    } mrc_fld_foreach_end;
+  }
+
+  mrc_fld_put_as(c, currcc);
+  mrc_fld_put_as(f, fld);
+}
+
+void
+ggcm_mhd_calc_currcc(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m,
+		     struct mrc_fld *currcc)
+{
+  int mhd_type;
+  mrc_fld_get_param_int(fld, "mhd_type", &mhd_type);
+
+  switch (mhd_type) {
+  case MT_FULLY_CONSERVATIVE_CC:
+    ggcm_mhd_calc_currcc_fc_cc(mhd, fld, m, currcc);
+    break;
+  case MT_SEMI_CONSERVATIVE_GGCM:
+  default:
+    ggcm_mhd_calc_currcc_sc_ggcm(mhd, fld, m, currcc);
+    break;
+  }
+}

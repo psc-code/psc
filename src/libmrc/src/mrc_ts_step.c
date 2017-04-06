@@ -16,7 +16,7 @@ static void
 mrc_ts_step_step(struct mrc_ts *ts)
 {
   assert(ts->stepf);
-  ts->stepf(ts->rhsf_ctx, ts, ts->x);
+  ts->stepf(ts->stepf_ctx, ts, ts->x);
 
   // FIXME, this should go -> mrc_ts_step(), and be optional
   mpi_printf(mrc_ts_comm(ts), "step=%i time=%g dt=%e\n",

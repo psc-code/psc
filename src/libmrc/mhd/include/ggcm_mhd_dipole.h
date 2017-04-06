@@ -14,6 +14,8 @@
 
 MRC_CLASS_DECLARE(ggcm_mhd_dipole, struct ggcm_mhd_dipole);
 
+double ggcm_mhd_dipole_vector_potential(struct ggcm_mhd_dipole *mhd_dipole, int m,
+					double x[3], float x0[3], float moment[3], float xmir);
 void ggcm_mhd_dipole_add_dipole(struct ggcm_mhd_dipole *mhd_dipole, struct mrc_fld *b,
 				float x0[3], float moment[3], float xmir, float keep);
 void ggcm_mhd_dipole_set_b_field(struct ggcm_mhd_dipole *mhd_dipole,

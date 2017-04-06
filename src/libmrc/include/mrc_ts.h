@@ -17,6 +17,10 @@ void mrc_ts_set_dt(struct mrc_ts *ts, float dt);
 void mrc_ts_set_solution(struct mrc_ts *ts, struct mrc_obj *x);
 void mrc_ts_add_monitor(struct mrc_ts *ts, struct mrc_ts_monitor *mon);
 void mrc_ts_set_context(struct mrc_ts *ts, struct mrc_obj *ctx_obj);
+void mrc_ts_set_get_dt_function(struct mrc_ts *ts,
+				double (*get_dt_f)(void *ctx, struct mrc_ts *ts,
+						   struct mrc_obj *x),
+				void *ctx);
 void mrc_ts_set_rhs_function(struct mrc_ts *ts,
 			     void (*rhsf)(void *ctx, struct mrc_obj *x, float time,
 					  struct mrc_obj *rhs),

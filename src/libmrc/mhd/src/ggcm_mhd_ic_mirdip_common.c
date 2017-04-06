@@ -18,16 +18,58 @@ struct ggcm_mhd_ic_mirdip {
   float xxx2;
   float xmir;
   float rrini;
-  float r1lim;
   float prat; // determines initial interior pressure as a fraction of solar wind pressure
+  float stretch_tail; // vx == 0 is stretched by this factor on the tail side
 
   float dipole_moment[3];
 
-  // solar wind values to use if there is not "bndsw" object around
+  // solar wind values to use if there is no "bndsw" object around
   double bnvals[SW_NR];
+
+  // state
+  double bnvals_code[SW_NR]; // normalized to code units
+  double rrini_code;
+
+  struct ggcm_mhd_dipole *mhd_dipole;
 };
 
 #define ggcm_mhd_ic_mirdip(ic) mrc_to_subobj(ic, struct ggcm_mhd_ic_mirdip)
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_ic_mirdip_setup
+
+static void
+ggcm_mhd_ic_mirdip_setup(struct ggcm_mhd_ic *ic)
+{
+  struct ggcm_mhd_ic_mirdip *sub = ggcm_mhd_ic_mirdip(ic);
+  struct ggcm_mhd *mhd = ic->mhd;
+
+  sub->bnvals_code[SW_RR] = sub->bnvals[SW_RR] / mhd->rrnorm;
+  sub->bnvals_code[SW_VX] = sub->bnvals[SW_VX] / mhd->vvnorm;
+  sub->bnvals_code[SW_VY] = sub->bnvals[SW_VY] / mhd->vvnorm;
+  sub->bnvals_code[SW_VZ] = sub->bnvals[SW_VZ] / mhd->vvnorm;
+  sub->bnvals_code[SW_PP] = sub->bnvals[SW_PP] / mhd->ppnorm;
+  sub->bnvals_code[SW_BX] = sub->bnvals[SW_BX] / mhd->bbnorm;
+  sub->bnvals_code[SW_BY] = sub->bnvals[SW_BY] / mhd->bbnorm;
+  sub->bnvals_code[SW_BZ] = sub->bnvals[SW_BZ] / mhd->bbnorm;
+
+  sub->rrini_code = sub->rrini / mhd->rrnorm;
+
+  // need a mhd_dipole object that'll take care of setting the dipole(s) involved
+  sub->mhd_dipole = ggcm_mhd_get_var_obj(ic->mhd, "mhd_dipole");
+  if (sub->mhd_dipole) {
+    // if run as openggcm, ggcm_mhd has a mhd_dipole member, so use that
+    ggcm_mhd_dipole_get(sub->mhd_dipole);
+  } else {
+    // otherwise, we gotta make our own
+    sub->mhd_dipole = ggcm_mhd_dipole_create(ggcm_mhd_ic_comm(ic));
+    ggcm_mhd_dipole_set_type(sub->mhd_dipole, FLD_TYPE);
+    ggcm_mhd_dipole_set_from_options(sub->mhd_dipole);
+    ggcm_mhd_dipole_set_param_obj(sub->mhd_dipole, "mhd", ic->mhd);
+    ggcm_mhd_dipole_setup(sub->mhd_dipole);
+    ggcm_mhd_dipole_view(sub->mhd_dipole);
+  }
+}
 
 // ----------------------------------------------------------------------
 // lmbda
@@ -36,9 +78,7 @@ static inline mrc_fld_data_t
 lmbda(mrc_fld_data_t XX, mrc_fld_data_t R1, mrc_fld_data_t R2)
 {
   mrc_fld_data_t LL = (XX - R2) / (R1 - R2);
-  LL = fmax(LL, 0.);
-  LL = fmin(LL, 1.);
-  return LL;
+  return fmin(fmax(LL, 0.f), 1.f);
 }
 
 // ----------------------------------------------------------------------
@@ -54,9 +94,8 @@ vxsta1(mrc_fld_data_t x, mrc_fld_data_t y, mrc_fld_data_t z, mrc_fld_data_t v0,
   }
   mrc_fld_data_t r = sqrt(sqr(xx) + sqr(y) + sqr(z));
   mrc_fld_data_t s = (r - r1) / (r2 - r1);
-  s = fmax(s, 0.);
-  s = fmin(s, 1.);
-  if (x < xmir) {
+  s = fmin(fmax(s, 0.), 1.f);
+  if (xmir != 0. && x < xmir) {
     return v0;
   } else {
     return v0 * s;
@@ -64,163 +103,100 @@ vxsta1(mrc_fld_data_t x, mrc_fld_data_t y, mrc_fld_data_t z, mrc_fld_data_t v0,
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_ic_mirdip_ini1
+// ggcm_mhd_ic_mirdip_primitive
 
-static void
-ggcm_mhd_ic_mirdip_ini1(struct ggcm_mhd_ic *ic, float vals[])
+static double
+ggcm_mhd_ic_mirdip_primitive(struct ggcm_mhd_ic *ic, int m, double crd[3])
 {
   struct ggcm_mhd_ic_mirdip *sub = ggcm_mhd_ic_mirdip(ic);
-  struct ggcm_mhd *mhd = ic->mhd;
-  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-  struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
 
-  mrc_fld_data_t xxx1 = sub->xxx1, xxx2 = sub->xxx2, xmir = sub->xmir;
-  mrc_fld_data_t rrini = sub->rrini;
+  double xx = crd[0], yy = crd[1], zz = crd[2];
 
-  for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
-    mrc_fld_foreach(fld, ix,iy,iz, 2, 2) {
-      mrc_fld_data_t tmplam = lmbda(MRC_MCRDX(crds, ix, p), -xxx1, -xxx2);
-      RR_(fld, ix,iy,iz, p) = 
-	tmplam * vals[SW_RR] + (1. - tmplam) * (rrini / mhd->par.rrnorm);
-      
-      VX_(fld, ix,iy,iz, p) = vxsta1(MRC_MCRDX(crds, ix, p), MRC_MCRDY(crds, iy, p), MRC_MCRDZ(crds, iz, p),
-				     vals[SW_VX], xxx2, xxx1, 2., xmir);
-      VY_(fld, ix,iy,iz, p) = 0.;
-      VZ_(fld, ix,iy,iz, p) = 0.;
-      
-      mrc_fld_data_t ppmin = sub->prat * vals[SW_PP];
-      PP_(fld, ix,iy,iz, p) = vals[SW_PP] * tmplam + (1. - tmplam) * ppmin;
-    } mrc_fld_foreach_end;
+  double *vals = sub->bnvals_code;
+  mrc_fld_data_t tmplam = lmbda(xx, -sub->xxx1, -sub->xxx2);
+
+  switch (m) {
+  case RR: return tmplam * vals[SW_RR] + (1.f - tmplam) * sub->rrini_code;
+  case PP: return tmplam * vals[SW_PP] + (1.f - tmplam) * sub->prat * vals[SW_PP];
+  case VX: return vxsta1(xx, yy, zz, vals[SW_VX], sub->xxx2, sub->xxx1, sub->stretch_tail, sub->xmir);
+  case VY: return 0.;
+  case VZ: return 0.;
+  default: return 0.;
   }
-
-  mrc_fld_put_as(fld, mhd->fld);
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_ic_mirdip_ini_b
+// ggcm_mhd_ic_mirdip_vector_potential_bg
 
-static void
-ggcm_mhd_ic_mirdip_ini_b(struct ggcm_mhd_ic *ic, float b_sw[3])
+static double
+ggcm_mhd_ic_mirdip_vector_potential_bg(struct ggcm_mhd_ic *ic, int m, double x[3])
 {
   struct ggcm_mhd_ic_mirdip *sub = ggcm_mhd_ic_mirdip(ic);
-  struct ggcm_mhd *mhd = ic->mhd;
-  struct ggcm_mhd_dipole *mhd_dipole = ggcm_mhd_get_var_obj(mhd, "mhd_dipole");
-  if (mhd_dipole) {
-    ggcm_mhd_dipole_get(mhd_dipole);
-  } else {
-    mhd_dipole = ggcm_mhd_dipole_create(ggcm_mhd_ic_comm(ic));
-    ggcm_mhd_dipole_set_type(mhd_dipole, FLD_TYPE);
-    ggcm_mhd_dipole_set_from_options(mhd_dipole);
-    ggcm_mhd_dipole_set_param_obj(mhd_dipole, "mhd", mhd);
-    ggcm_mhd_dipole_setup(mhd_dipole);
+
+  // FIXME
+  // It's rather ugly to do this here, but in setup() it's too early, because
+  // bndsw isn't set up yet at the time...
+  static bool first_time = true;
+  if (first_time) {
+    struct ggcm_mhd_bndsw *bndsw = ggcm_mhd_get_var_obj(ic->mhd, "bndsw");
+    if (bndsw) {
+      float bnvals[SW_NR];
+      ggcm_mhd_bndsw_get_initial(bndsw, bnvals);
+      for (int m = 0; m < SW_NR; m++) {
+	sub->bnvals_code[m] = bnvals[m];
+      }
+    }
+    first_time = false;
   }
 
-  float x0[3] = {0.0, 0.0, 0.0};
+  // get main dipole vector potential
+  double A = ggcm_mhd_dipole_vector_potential(sub->mhd_dipole, m, x, (float [3]) { 0.f, 0.f, 0.f },
+					      sub->dipole_moment, 0.);
 
-  mprintf("mirdip_ini_b dipole moment: %f %f %f\n", sub->dipole_moment[0],
-  	  sub->dipole_moment[1], sub->dipole_moment[2]);
+  // add IMF vector potential
+  double *vals = sub->bnvals_code;
+  switch (m) {
+  case 1: A += vals[SW_BZ] * x[0]; break;
+  case 2: A += vals[SW_BX] * x[1] - vals[SW_BY] * x[0]; break;
+  }
 
-  struct mrc_fld *b_base = mrc_fld_make_view(mhd->fld, BX, BX + 3);
-  ggcm_mhd_dipole_add_dipole(mhd_dipole, b_base, x0, sub->dipole_moment, sub->xmir, 0.);
+  return A;
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_ic_mirdip_vector_potential
+
+static double
+ggcm_mhd_ic_mirdip_vector_potential(struct ggcm_mhd_ic *ic, int m, double x[3])
+{
+  struct ggcm_mhd_ic_mirdip *sub = ggcm_mhd_ic_mirdip(ic);
+
+  // get main dipole vector potential
+  double A = ggcm_mhd_dipole_vector_potential(sub->mhd_dipole, m, x, (float [3]) { 0.f, 0.f, 0.f },
+					      sub->dipole_moment, sub->xmir);
 
   if (sub->xmir != 0.0) {
-    x0[0] = 2.0 * sub->xmir;
-    sub->dipole_moment[0] *= -1.0;
-    ggcm_mhd_dipole_add_dipole(mhd_dipole, b_base, x0, sub->dipole_moment, sub->xmir, 1.);
-    sub->dipole_moment[0] *= -1.0;
+    // add mirror dipole vector potential
+    sub->dipole_moment[0] *= -1.f;
+    A += ggcm_mhd_dipole_vector_potential(sub->mhd_dipole, m, x, (float [3]) { 2.f * sub->xmir, 0.f, 0.f },
+					  sub->dipole_moment, sub->xmir);
+    sub->dipole_moment[0] *= -1.f;
   }
 
-  mrc_fld_destroy(b_base);
-
-  struct mrc_fld *f = mrc_fld_get_as(mhd->fld, FLD_TYPE);
-
-  // finish up
-  for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
-    mrc_fld_foreach(f, ix,iy,iz, 0, 1) {
-      for (int d = 0; d < 3; d++){
-	float crd_fc[3];
-	ggcm_mhd_get_crds_fc(mhd, ix,iy,iz, p, d, crd_fc);
-	
-	// zero B if inside r1lim
-	float r = sqrtf(sqr(crd_fc[0]) + sqr(crd_fc[1]) + sqr(crd_fc[2]));
-	if (r < sub->r1lim) {
-	  M3(f, BX + d, ix,iy,iz, p) = 0.0;
-	}
-	
-	// add B_IMF
-	M3(f, BX + d, ix,iy,iz, p) += b_sw[d];
-      }
-    } mrc_fld_foreach_end;
+  // add IMF vector potential
+  double *vals = sub->bnvals_code;
+  switch (m) {
+  case 1: A += vals[SW_BZ] * x[0]; break;
+  case 2: A += vals[SW_BX] * x[1] - vals[SW_BY] * x[0]; break;
   }
 
-  mrc_fld_put_as(f, mhd->fld);
+  // subtract out B0-vector potential
+  // this is somewhat odd, as in, why are we adding the main dipole and then subtract it here again,
+  // but the main dipole field is actually not cut-off at xmir, whereas this one here is, so they
+  // different
+  A -= ggcm_mhd_ic_mirdip_vector_potential_bg(ic, m, x);
 
-  ggcm_mhd_dipole_put(mhd_dipole);
-}
-
-// ----------------------------------------------------------------------
-// ggcm_mhd_mirdip_ic_run
-
-static void
-ggcm_mhd_ic_mirdip_run(struct ggcm_mhd_ic *ic)
-{
-  struct ggcm_mhd_ic_mirdip *sub = ggcm_mhd_ic_mirdip(ic);
-  struct ggcm_mhd *mhd = ic->mhd;
-
-  // ini_b is done when we still have the primitive variables stored in
-  // mhd->fld, so it needs to use the right ("regular") staggering because
-  // the convert_from_primitive() will fix up the staggering to whatever
-  // we really need in the end.
-  int mhd_type;
-  mrc_fld_get_param_int(ic->mhd->fld, "mhd_type", &mhd_type);
-  mrc_fld_set_param_int(ic->mhd->fld, "mhd_type", MT_PRIMITIVE);
-
-  float vals[SW_NR];
-  struct ggcm_mhd_bndsw *bndsw = ggcm_mhd_get_var_obj(mhd, "bndsw");
-  if (bndsw) {
-    ggcm_mhd_bndsw_get_initial(bndsw, vals);
-  } else {
-    vals[SW_RR] = sub->bnvals[SW_RR] / mhd->par.rrnorm;
-    vals[SW_VX] = sub->bnvals[SW_VX] / mhd->par.vvnorm;
-    vals[SW_VY] = sub->bnvals[SW_VY] / mhd->par.vvnorm;
-    vals[SW_VZ] = sub->bnvals[SW_VZ] / mhd->par.vvnorm;
-    vals[SW_PP] = sub->bnvals[SW_PP] / mhd->par.ppnorm;
-    vals[SW_BX] = sub->bnvals[SW_BX] / mhd->par.bbnorm;
-    vals[SW_BY] = sub->bnvals[SW_BY] / mhd->par.bbnorm;
-    vals[SW_BZ] = sub->bnvals[SW_BZ] / mhd->par.bbnorm;
-  }
-  ggcm_mhd_ic_mirdip_ini1(ic, vals);
-  ggcm_mhd_ic_mirdip_ini_b(ic, &vals[SW_BX]);
-
-  mrc_fld_set_param_int(ic->mhd->fld, "mhd_type", mhd_type);
-  ggcm_mhd_convert_from_primitive(ic->mhd, ic->mhd->fld);
-}
-
-// ----------------------------------------------------------------------
-// ggcm_mhd_mirdip_ic_init_ymask
-
-static void
-ggcm_mhd_ic_mirdip_init_ymask(struct ggcm_mhd_ic *ic, struct mrc_fld *ymask_base)
-{
-  struct ggcm_mhd *mhd = ic->mhd;
-  struct mrc_fld *ymask = mrc_fld_get_as(ymask_base, FLD_TYPE);
-  mrc_fld_data_t isphere2 = sqr(mhd->par.isphere);
-
-  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);  
-
-  for (int p = 0; p < mrc_fld_nr_patches(ymask); p++) {
-    mrc_fld_foreach(ymask, ix,iy,iz, 2, 2) {
-      mrc_fld_data_t val = 1.f;
-      if (sqr(MRC_MCRDX(crds, ix, p)) +
-	  sqr(MRC_MCRDY(crds, iy, p)) +
-	  sqr(MRC_MCRDZ(crds, iz, p)) < isphere2) {
-	val = 0.f;
-      }
-      M3(ymask, 0, ix,iy,iz, p) = val;
-    } mrc_fld_foreach_end;
-  }
-
-  mrc_fld_put_as(ymask, ymask_base);
+  return A;
 }
 
 // ----------------------------------------------------------------------
@@ -232,8 +208,8 @@ static struct param ggcm_mhd_ic_mirdip_descr[] = {
   { "xxx2"         , VAR(xxx2)         , PARAM_FLOAT(12.0)         },
   { "xmir"         , VAR(xmir)         , PARAM_FLOAT(-15.0)        },  // off if == 0.0
   { "rrini"        , VAR(rrini)        , PARAM_FLOAT(3.0)          },
-  { "r1lim"        , VAR(r1lim)        , PARAM_FLOAT(1.5)          },
   { "prat"         , VAR(prat)         , PARAM_FLOAT(.5)           },
+  { "stretch_tail" , VAR(stretch_tail) , PARAM_FLOAT(2.)           },
 
   { "dipole_moment", VAR(dipole_moment), PARAM_FLOAT3(0., 0., -1.) },
 
@@ -253,9 +229,11 @@ static struct param ggcm_mhd_ic_mirdip_descr[] = {
 // ggcm_mhd_ic subclass "mirdip"
 
 struct ggcm_mhd_ic_ops ggcm_mhd_ic_mirdip_ops = {
-  .name             = ggcm_mhd_ic_mirdip_name,
-  .size             = sizeof(struct ggcm_mhd_ic_mirdip),
-  .param_descr      = ggcm_mhd_ic_mirdip_descr,
-  .run              = ggcm_mhd_ic_mirdip_run,
-  .init_ymask       = ggcm_mhd_ic_mirdip_init_ymask,
+  .name                = ggcm_mhd_ic_mirdip_name,
+  .size                = sizeof(struct ggcm_mhd_ic_mirdip),
+  .param_descr         = ggcm_mhd_ic_mirdip_descr,
+  .setup               = ggcm_mhd_ic_mirdip_setup,
+  .primitive           = ggcm_mhd_ic_mirdip_primitive,
+  .vector_potential    = ggcm_mhd_ic_mirdip_vector_potential,
+  .vector_potential_bg = ggcm_mhd_ic_mirdip_vector_potential_bg,
 };

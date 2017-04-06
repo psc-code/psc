@@ -24,7 +24,7 @@ ggcm_mhd_diag_item_e_ec_run(struct ggcm_mhd_diag_item *item,
                             int diag_type, float plane)
 {
   struct ggcm_mhd *mhd = item->diag->mhd;
-  float scale_ee = mhd->par.eenorm;
+  float scale_ee = mhd->eenorm;
   struct mrc_fld *E = mrc_domain_fld_create(mhd->domain, SW_2, "ex_ec:ey_ec:ez_ec");
   mrc_fld_set_type(E, FLD_TYPE);
   mrc_fld_setup(E);
@@ -64,7 +64,7 @@ ggcm_mhd_diag_item_e_cc_run(struct ggcm_mhd_diag_item *item,
   mrc_fld_get_param_int(f, "mhd_type", &mhd_type);
 
   struct ggcm_mhd *mhd = item->diag->mhd;
-  float scale_ee = mhd->par.eenorm;
+  float scale_ee = mhd->eenorm;
   struct mrc_fld *Eec = mrc_domain_fld_create(mhd->domain, SW_2, "ex_ec:ey_ec:ez_ec");
   struct mrc_fld *Ecc = mrc_domain_fld_create(mhd->domain, SW_2, "ex_cc:ey_cc:ez_cc");
   mrc_fld_set_type(Eec, FLD_TYPE);

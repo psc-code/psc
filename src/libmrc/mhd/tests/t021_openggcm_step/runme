@@ -1,0 +1,516 @@
+#!/bin/csh
+setenv OPENGGCMDIR $HOME/src/openggcm
+$OPENGGCMDIR/bin/script.runme `pwd` `basename $0` 0; exit
+
+#DESCRIPTION storm again, this time with lower Phi boundary
+
+
+#---------------------------------------------------------------
+#  precompilation actions and basic switches
+#---------------------------------------------------------------
+RUN              default  
+OUTDIR           default  
+TARGETDIR        ./       
+DOSMF            1        
+DOINP            1        
+DOGRD            1        
+KEEPTMP          1        
+GGCMDIR          default  
+TARGET           local
+#TARGETHOST       trillian
+#TUSER            kai
+TARGETPREP       default 
+RUNTIME          120:00:00  
+CLASS            default  
+PRECISION        default  
+MHDCOORD         MHD     
+MHD              default 
+SATOUT           default  
+TIMELO           0 #!!!500
+CALCE_ASPECT_LOW  default 
+LIMIT_ASPECT_LOW  false
+DO_LIMIT2        default 
+DO_LIMIT3        false    
+DO_LEGACY        false   
+CONF_ARGS        default 
+CMDLINE_ARGS     default  
+
+#---------------------------------------------------------------
+#------------- profiling and debugging -------------------------
+#---------------------------------------------------------------
+LOCALF77         gfortran # the local f77 compiler (def=pgf77 -fast)
+MPIF77           default  # The name of the MPI F77 compiler on the target machine. (def=mpif77)
+MPIF77_FLAGS     default  # Flags to pass to mpif77. (def= $mpif77opt )
+MPIF90           default  # The name of the MPI F90 compiler on the target machine. (def=mpif90)
+MPIF90_FLAGS     default  # Flags to pass to mpif90. (def=none)
+MPICC            default  # The name of the MPI C compiler on the target machine. (def=mpicc)
+MPICC_FLAGS      default  # Flags to pass to mpicc. (def=none)
+MPIF77OPT        default  # mpif77 options, deprecated -- use mpif77flags. (def=none)
+DEBUG_LEVEL      default  #  (def=0)
+CHECK_MHDVAR     false    # (WDC:false,JR:false) Check mhd variables for sane values every step. (def=false)
+CHECKSUMS        default  # Print out checksums to verify code changes. (def=false)
+TIMEOUT_WARN     default  # Warn after a communication waits for XX secs (def=1800)
+TIMEOUT_ERROR    default  # Kill the run after a communication waits for XX secs (def=3600)
+
+#---------------------------------------------------------------
+#------ the input source files
+#---------------------------------------------------------------
+GLOBU            default  # code input (utilities) (def="$ggcmdir/src/" . `$ggcmdir/bin/script.latest glob-util*for`)
+GRIDA            default  # grid/x-grid generation (def="$ggcmdir/src/" . `$ggcmdir/bin/script.latest mhd-grida*for`)
+GRIDB            default  # grid/partitioning (def="$ggcmdir/src/" . `$ggcmdir/bin/script.latest mhd-gridb*for`)
+GRIDC            default  # grid/mapping coefficients (def="$ggcmdir/src/" . `$ggcmdir/bin/script.latest mhd-gridc*for`)
+MHDSC            default  # constants and definitions (def="$ggcmdir/src/" . `$ggcmdir/bin/script.latest mhd-scon*for`)
+COTR1            default  # coord. transf. and time routines (def="$ggcmdir/src/" . `$ggcmdir/bin/script.latest mhd-cotr*for`)
+MINVA            default  # minimum variance program (def="$ggcmdir/src/" . `$ggcmdir/bin/script.latest sw-minvar*for`)
+CTIM             1.0.10   # ctim version (1.0.10) or "none" for sigaa2 sigma computation 
+
+#---------------------------------------------------------------
+#------  grid definition
+#---------------------------------------------------------------
+NPX              2        # nx must be divisible by this (def=1)
+NPY              1        # 2*ny must be divisible by this (def=1)
+NPZ              2        # 2*nz must be divisible by this (def=1)
+NX               128      #  (def=100)
+NY               64      #  (def=32)
+NZ               64       #  (def=32)
+DY0              0.50    # (WDC:0.25,JR:0.25) minimum cell size in y (def=0.5)
+DZ0              0.50    # (WDC:0.25,JR:0.25) minimum cell size in z (def=0.5)
+XX1              -30.   # sunward extension of box (def=-21.01)
+XX2              250.  # anti-sunward extension of box (def=250.01)
+YY2              40.    # box size in +-y (def=36.01)
+ZZ2              40.    # box size in +-z (def=36.01)
+
+# switching this to 1 means the runme will try to build libmrc on the host
+# machine and generate the mrc grid at runme time
+RUNMEGEN_MRC_CRDS  default  #  (def=1)
+# this is how one overrides x grid shape if crds_gen_type is fortran
+# the cubic grid is: 1.0+150.0*fsm3(x,4.0,400.0)+2.0*fsm3(x,-8.0,-30.0)
+# to use tanh parameters with the cubic grid: 
+# hmm+(h0-hm)*fsm3(x,x1+4./b1,x1-4./b1)+(hn-hm)*fsm3(x,x5-4./b2,x5+4./b2)+
+# (hm-hmm)*(fsm3(x,x3-dmm+4./b3,x3-dmm-4./b3)+fsm3(x,x3+dmm-4./b3,x3+dmm+4./b3))
+# old grid:
+#     f = fak*(hm + (h0-hm)*tanhm(b1*(x-x1)) + (hn-hm)*tanhp(b2*(x-x5))
+#    *  - (hm-hmm)*(#one-tanhm(b3*(x-(x3-dmm)))-tanhp(b3*(x-(x3+dmm)))) )
+# new grid defined by dxfunc
+#     fsm3: x=xx-0.5*(b+a); x=2.0*x/(b-a); if(x.gt.0.0) then; y=1.0+(x-1.0)**3; else; y=-1.0+(x+1.0)**3; endif; y=max(-1.0,min(1.0,y)); fsm3=0.5*(1.0+y);
+#DXFUNC           default  #  (def= hm+(h0-hm)*tanhm(b1*(x-x1))+(hn-hm)*tanhp(b2*(x-x5))-(hm-hmm)*(1.0-tanhm(b3*(x-(x3-dmm)))-tanhp(b3*(x-(x3+dmm)))) )
+#DXFUNC           1.0+150.0*fsm3(x,4.0,400.0)+2.0*fsm3(x,-8.0,-30.0)  # 
+DXFUNC           1.5+1.5*fsm3(x,0.0,-44.0)+1300.0*fsm3(x,0.0,600.0)  # 
+# this is how one can set the x grid shape at run time:
+# choose "ggcm_x_tanh" or "ggcm_x_cubic" in x direction,
+# "ggcm_yz" in y/z directions
+CRDS_GEN_X_TYPE  default  #  (def=fortran)
+# if setting the CRDS_GEN_X_TYPE to ggcm_x_cubic, these are the same parameters as DXFUNC above
+crds_gen_x_w0 1.5
+crds_gen_x_w1 1.5
+crds_gen_x_a1 0.
+crds_gen_x_b1 -44.
+crds_gen_x_w2 1300.
+crds_gen_x_a2 0.
+crds_gen_x_b2 600.
+CRDS_GEN_Y_TYPE  default  #  (def=fortran)
+CRDS_GEN_Z_TYPE  default  #  (def=fortran)
+GGCM_MHD_CRDS_LEGACY_FD1  true  # when turned on, use the dx func for fd1 crds instead of 1/0.5(x_i+1 - x_i-1), only use this if you want to compare with old fortran crds behavior (def=0)
+
+#.... how the x-grid is defined 
+#
+# tanh:    f = fak*(hm + (h0-hm)*tanhm(b1*(x-x1)) + (hn-hm)*tanhp(b2*(x-x5))
+#              - (hm-hmm)*(#one-tanhm(b3*(x-(x3-dmm)))-tanhp(b3*(x-(x3+dmm)))) )
+#
+# cubic:   f = w0 + w1 * fsm(x, a1, b1) + w2 * fsm(x, a2, b2)
+#
+# !! IMPORTANT NOTE !!
+# these variables (x1, x3, dmm, etc.) are put into in.$RUN, and prefixed with crds_gen_x_
+# Keep in mind that one should set all ggx variables when changing crds_gen_x_type... so
+# if you put something like b1 in ggx1 and don't set ggx4, the default from ggx4 will
+# be used... people are definately going to stub their toes on this one.
+# However, it is always respected if you use the bare "crds_gen_x_dmm  15" in your runme
+# since those go at the beginning of in.$RUN
+#GGX1             default  # n:NX, x0:minx, xn:maxx (def= $v="-n   $NX     -x0 $XX1     -xn $XX2 " )
+#GGX2             default  # x1:center of sunward curve, x3:midpoint of secondary curves, dmm:distance of secondary curves from midpoint, x5:center of tailward curve (def= $v="-x1  -26     -x3   -4     -dmm  16    -x5   80 "  )
+#GGX3             default  # h0:height of sunward curve above hm, hn:height of tailward curve above hm, hm:height of secondary curves above hmm, hmm:minimum curve height (def= $v="-h0  2.0     -hn   20     -hm 1.00   -hmm 0.60 " )
+#GGX4             default  # b1:controls sunward curve width, b2:controls tailward curve width, b3:controls secondary curve widths (def= $v="-b1  0.15    -b2  0.025   -b3  0.3 " )
+GGX1              $v="-n   $NX     -x0 $XX1     -xn $XX2 "
+GGX2              $v="-x1  -22     -x3    -5      -dmm  20    -x5   120  "
+GGX3              $v="-h0  3.0     -hn   600   -hm 1.5    -hmm 1.5 "
+GGX4              $v="-b1  0.13    -b2  0.033  -b3  0.2 "
+#.... how the x/z-grids are defined
+# y / z parameters can be tweaked individually by just putting
+# something like "crds_gen_y_xm  0.6" into your runme for instance
+GGYZ1            default  #  (def= $v="-xn 2.0  -xm 0.5 " )
+
+#---------------------------------------------------------------
+#-------------- mirror dipole ----------------------------------
+#---------------------------------------------------------------
+XPOS_MIR         default  #  (def=-15.)
+MIRDIP           default  #  (def=true)
+XXX1             default  # initial magnetosphere transition max (def=14.0)
+XXX2             default  # initial magnetosphere transition min (def=12.0)
+RRINI            default  # initial density inside magnetosphere (def=3.0)
+R1LIM            default  # set initial condition down to this radius (def=1.5)
+
+#---------------------------------------------------------------
+#-------------- resistivity ------------------------------------
+#---------------------------------------------------------------
+MAGDIFFU         const      # (WDC:const,JR:nl1) Resistivity model res1/nl1/const (def=nl1)
+DIFFTHRESHOLD    0.75     # (WDC:0.75,JR:0.60) Resistivity threshold value (used for nl1) (def=0.80)
+DIFFCONSTANT     0.03     # (WDC:5e3,JR:0.03) Resistivity constant; ohm-m for const, resnorm (approx. 53.5848e6) ohm-m for nl1 and res1 (def=0.05)
+DIFFSPHERE       default  # No resistivity inside of this (def=6)
+DIFF_TIMELO      default  # No NL1 resistivity before this time (def=600.)
+DIFF_SWBND       default  # No NL1 resistivity to the left of this (def=-15.)
+DIFF_OBND        default  # No NL1 resisitvity this close to the boundaries (def=4)
+D_I              default  # ion skin depth (def=0.)
+
+#---------------------------------------------------------------
+#-------------- output unit normalizations ---------------------
+#-------------- note: works only with diags=diagsc -------------
+#---------------------------------------------------------------
+BBNORM0          default  # Output units will be bbnorm0 T, ie nT by default  (def=1e-9)
+VVNORM0          default  # Output units will be vvnorm0 m/s, ie km/s by default  (def=1e3)
+RRNORM0          default  # Output units will be rrnorm0 1/m**3, ie 1/cm**3 by default  (def=1e6)
+PPNORM0          default  # Output units will be ppnorm0 Pa, ie pPa by default (def=1e-12)
+CCNORM0          default  # Output units will be ccnorm0 A/m**2, ie muA/m**2 by default (def=1e-6)
+EENORM0          default  # Output units will be eenorm0 V/m, ie mV/m by default (def=1e-3)
+RESNORM0         default  # Output units will be resnorm0 V*m/A, ie V*m/A by default (def=1.0)
+
+#---------------------------------------------------------------
+#---------- output control -------------------------------------
+#---------------------------------------------------------------
+DIAGS            diagsc   # Diagnostics, choose diags2 or diagsc or fdiag2. (def=diags2)
+OUTPUTMODE       xdmf_serial # Diagnostics, choose "single" or "combined" for diags2, or one of "jr", "cdf", "xdmf_serial", "star", "ascii" for diagsc. (def=combined)
+DIAGSC_SRV       default  # (WDC:cache) C diag: type of diag srver: nocache,cache (def=nocache)
+HDF5_DIR         default  # Directory where to find HDF5 incl/lib (def= $ENV'HDF5_DIR')
+CDF_DIR          default  # Directory where to find cdf include/ and lib/ (def=)
+DIAG_MAXFLD      default  # Number of 3d fields to cache (def=23)
+NPDIAG           default  # Number of diag servers to create (def=1)
+OUTTIMERUN       -1200000  # When to create runtime graphics. (def=-60)
+OUTTIME2D        -60      # When to output 2d MHD fields. (def=-60)
+OUTTIMEIO        -60      # When to output ionosphere fields. (def=-60)
+OUTTIME3D        -3600  # When to output 3d MHD fields. (def=-60)
+OUTTIMEEX        14400:999999:6  # A:B:C.. increase output cadence by C between A and B (def=0)
+OUTPLANEX        0        # X-output planes. (def=0)
+OUTPLANEY        0        # Y-output planes. (def=0)
+OUTPLANEZ        0        # Z-output planes. (def=0)
+ORBIT_DT         60       # output interval for direct orbit output (sec). (def=10)
+ORBITFILE        orbits.txt  # File containing orbit data. (def=none)
+MODTTY           default  # Every how many time steps to write one output line. (def=1)
+
+#---------------------------------------------------------------
+#---------- checkpoint/restart ---------------------------------
+#---------------------------------------------------------------
+CHECKPOINT       default  # When to write checkpoint files (negative for cadence). (def=0) NOTE: currently kills master
+RESTART          default  # Restart from this checkpoint number. Start up regularly if 0 (default). (def=0)
+
+#---------------------------------------------------------------
+#---------- time step control ----------------------------------
+#---------------------------------------------------------------
+RRMIN            default  # (WDC:0.10,JR:0.15) minimum permitted number density in cm**-3 (def=0.20)
+SPEEDLIMIT       default  # maximum permitted Alfven speed in km/s  (def=1500.0)
+THX              default  # (WDC:0.40,JR:0.40) cfl time step factor (def=0.35)
+MODNEWSTEP       default  # (WDC:50) recalculate cfl limit every 'modnewstep' step (def=1)
+DTMIN            default  # minimum allowed timestep (def=.0002)
+
+#---------------------------------------------------------------
+#---------- Times, Solar Wind / IMF ----------------------------
+#---------------------------------------------------------------
+STARTTIME        2015:08:28:00:00:00.000 
+ENDTIME          2015:08:28:18:00:00.000 
+DIPOLTIME        2015:08:28:18:00:00.000 
+ALPHAFAK         1.10     # (WDC:1.10,JR:1.10) Density factor to account for SW alphas (def=1.00)
+SWMON            omni     # Solar wind monitor sc (wi/ac/i8/ge/fi), use 'fi' if none. (def=fi)
+SWFILE           minvar   # File with SW/IMF. This can also be "auto" or "minvar", in which case the input file is automatically generated. These options require that the following variables are set and that the corresponding raw data are available. (def= $v="./swdata"; )
+SETIMFBX         5.0      # For automatic generation, specifies the IMF Bx if necessary (for "auto"). (def=none)
+INPAVE           default  # (WDC:30,JR:30) averaging interval for input files, seconds (def=60)
+IDATA            ../20150828  # 
+F107             110
+MOX              20
+MOY              0
+MOZ              0
+SWTURB1          default  # Add turbulence to solar wind input. (def=false)
+SWTURB_VV        default  # SW turbulence velocity perturbation. (def=0.0)
+SWTURB_RR        default  # SW turbulence density perturbation. (def=0.0)
+
+#---------------------------------------------------------------
+#--------------------- Dipole Rotation -------------------------
+#---------------------------------------------------------------
+DO_DIPROTATE     default  # Rotate the dipole, 0=off, 1=on (def=0)
+MODDIPCOEFF      default  # (JR:200) update mapping coefficients every moddipcoeff steps (def=100)
+MODDIPFIELD      default  # (JR:20) updipole field every "moddipfield" steps (def=1)
+
+#---------------------------------------------------------------
+#-------------- MI coupling and ionosphere ---------------------
+#---------------------------------------------------------------
+ISPHERE          3.0      # (JR:3.2) inner boundary radius (RE) (def=3.0)
+IONODT           default  # do iono every ionodt secs (def=30.0)
+IO_SHIELD_LAT    30.0     # ionosphere shielding latitude (boundary where pot=0) (def=50.0)
+BND_IO_RR        default  # (WDC:1.0) density at inner boundary in cc (def=2.0)
+BND_IO_TT        400      # (WDC:400,JR:400) temperature at inner bndry in eV (def=50)
+NTHETA           default  # ionosphere grid latitude points (def=361)
+NPHI             default  # ionosphere grid longitude points (def=121)
+NIOX             default  # no of panels in theta for one hemisphere (def=40)
+NIOY             default  # no of modes in phi (def=8)
+NIOGO            default  # order of gauss legendre integration (def=4)
+NJSLIDE          default  # fac sliding time averages (def=2)
+SIGMATRANS       15000    # (WDC:15000,JR:15000) After which timestep begin transition to self-consistent sigmas (needs time to adjust). Use a very large value for constant conductivity. (def=5000000)
+SIGMAFAK         default  # factor to multiply all ionosphere conductances. (def=1.0)
+MAPE1            default  # MI coupling factor for mapped E (def=1.0)
+FAC_FILT         2        # (WDC:2,JR:2) how often to spatially filter FAC (def=4)
+SIG_FLOOR        3.0      # minimum sigmas (sigh uses 0.5*sig_floor; nightside not actually zero: stars and moon contribute EUV; need to set to avoid model problems) (def=0.5)
+SIG_FLOOR_START  default  # minimum sigmas for startup, sigh uses 0.5*sig_floor_const (def=3.0)
+SIG_FLOOR_TRANS  default  # After which timestep begin transition from sig_floor_const to sig_floor (def=0)
+FAK_FAC_DYN      default  # factor for dynamo currents (only w/ctim)  (def=1.0)
+FAK_FAC_RCM      default  # factor for rcm fac when blending with mhd (def=1.0)
+SIG_SMOOTH       default  # spatially smoothing sigmas (def=2)
+SIG_CONST        default  # (WDC:3.00,JR:3.00) constant sigma (S) for startup  (def=5.0)
+SIG_H_BACK       default  # nightside P background conductance (def=0.3)
+SIG_P_BACK       default  # nightside P background conductance (def=0.5)
+SIG_TI_TE        default  # ion-to-electron temperature ratio for precipitation (def=7.8)
+SIGFAC_FAK       default  # fudge factor for discrete e-flux (def=1.0)
+SIGFAC_FAK2      default  # fudge factor for discrete e-mean energy (def=1.0)
+SIGDIF_FAK       default  # fudge factor for diffuse e-flux (mhd) (def=1.0)
+SIGDIF_FAK2      default  # fudge factor for diffuse e-mean energy (mhd) (def=1.0)
+SIGDIF_FAK_RCM   default  # fudge factor for diffuse e-flux (rcm) (def=1.0)
+SIGDIF_FAK2_RCM  default  # fudge factor for diffuse e-mean energy (rcm) (def=1.0)
+MHD_IONO_IGNORE_INVALID_MAPPING  default  # accept grid points near the isphere boundary that are actually inside earth (or ganymede...) (def=false)
+
+#---------------------------------------------------------------
+#-------------- normalization constants ------------------------
+#---------------------------------------------------------------
+RE               default  # earth radius (def=6371040.0)
+DIPOLESTRENGTH   default  # dipole strength (def=30574.0)
+EARTH_MAG_MOMENT  default  # earth magnetic moment (def=0.79064817E+23)
+
+#---------------------------------------------------------------
+#-------------- memory management ------------------------------
+#---------------------------------------------------------------
+BIGDIM           default  # Size of global global memory array. Should not matter because this is determined self-consistently in the pre-compilation process. (def=12000000)
+
+#---------------------------------------------------------------
+#-------------- CTIM specific inputs ---------------------------
+#---------------------------------------------------------------
+CTIM_IN          default  # dir containing ctim input data files (def="./ctim-indata")
+CTIM_START_TIME  default  # CTIM start time in seconds (def=300.0)
+CTIM_DELTA_T     default  # CTIM calling frequency in seconds (def=60.0)
+CTIM_POTFAK      1.0      # factor for driving ctim potential (def=1.0)
+CTIM_F_PRSXXXX   default  # This is either an ascii file that contains everything included in the 'prs', 'mmm', and 'vel' files (in which case ctim_f_mmmxxxx and ctim_f_velxxxx are not used), or the binary 'prs' file. (def="$CTIM_IN/inp_ctim.fields.20000921000.asc")
+CTIM_F_MMMXXXX   default  #  (def="$CTIM_IN/inp_ctim.mmm20000921000")
+CTIM_F_VELXXXX   default  #  (def="$CTIM_IN/inp_ctim.vel20000921000")
+CTIM_F_BMAGFLD   default  #  (def="$CTIM_IN/inp_ctim.bmagfld")
+CTIM_F_SUBSTORM  default  #  (def="$CTIM_IN/inp_ctim.substorm")
+CTIM_F_CORMAG    default  #  (def="$CTIM_IN/inp_ctim.cormag")
+CTIM_F_DATAM     default  #  (def="$CTIM_IN/inp_ctim.datam")
+CTIM_F_LEVPI     default  #  (def="$CTIM_IN/inp_ctim.levpi")
+CTIM_F_GWATTS    default  #  (def="$CTIM_IN/inp_ctim.gwatts")
+CTIM_F_CPCPD     default  #  (def="$CTIM_IN/inp_ctim.cpcpd")
+CTIM_F_IONPROF   default  #  (def="$CTIM_IN/inp_ctim.ionprof")
+CTIM_F_PROF2     default  #  (def="$CTIM_IN/inp_ctim.prof2")
+CTIM_F_DMSP      default  #  (def="$CTIM_IN/inp_ctim.dmsp")
+CTIM_F_HOLT      default  #  (def="$CTIM_IN/inp_ctim.holt")
+CTIM_F_DMSPMOD   default  #  (def="$CTIM_IN/inp_ctim.dmspmod")
+CTIM_F_RICE91    default  #  (def="$CTIM_IN/inp_ctim.rice91")
+CTIM_F_RICEPROF  default  #  (def="$CTIM_IN/inp_ctim.riceprof")
+CTIM_F_HPROF     default  #  (def="$CTIM_IN/inp_ctim.hprof")
+CTIM_F_HOUGH     default  #  (def="$CTIM_IN/inp_ctim.hough")
+CTIM_F_INSHAUN   default  #  (def="$CTIM_IN/inp_ctim.d1d2")
+CTIM_I10         default  # I10 is the smothing frequency. (def=5)
+CTIM_I5          default  #  i5 is mwt calling frequency. (def=1)
+CTIM_I8          default  #  i8 is shaun frequency. (def=6)
+CTIM_WINDMX      default  # maximum wind (def=1000.0)
+CTIM_TMPMIN      default  # minimum temperature (def=130.0)
+CTIM_AMPL22      default  # amplitudes of the tidal model (def=608.0)
+CTIM_AMPL23      default  #  (def=500.0)
+CTIM_AMPL24      default  #  (def=138.0)
+CTIM_AMPL25      default  #  (def=138.0)
+CTIM_AMPL11      default  #  (def=200.0)
+CTIM_PHASE22     default  # Phases of tidal model. (def=9.6)
+CTIM_PHASE23     default  #  (def=4.6)
+CTIM_PHASE24     default  #  (def=1.2)
+CTIM_PHASE25     default  #  (def=2.2)
+CTIM_PHASE11     default  #  (def=12.0)
+CTIM_KP          default  # kp index (def=3)
+CTIM_XX          default  # global setting??? (def=91)
+CTIM_AMP         default  # ratio of E foster field to real E field. (def=1.3)
+CTIM_SWITCH_1    default  # ctim boolean switches (def=1)
+CTIM_SWITCH_2    default  #  (def=1)
+CTIM_SWITCH_3    default  #  (def=0)
+CTIM_SWITCH_4    default  #  (def=1)
+CTIM_SWITCH_5    default  #  (def=0)
+CTIM_SWITCH_6    default  #  (def=0)
+CTIM_SWITCH_7    default  #  (def=1)
+CTIM_SWITCH_8    default  #  (def=1)
+CTIM_SWITCH_9    default  #  (def=1)
+CTIM_SWITCH_10   default  #  (def=1)
+CTIM_SWITCH_11   default  #  (def=0)
+CTIM_SWITCH_12   default  #  (def=0)
+CTIM_SWITCH_13   default  #  (def=1)
+CTIM_SWITCH_14   default  #  (def=1)
+CTIM_SWITCH_15   default  #  (def=1)
+CTIM_SWITCH_16   default  #  (def=1)
+CTIM_SWITCH_17   default  #  (def=0)
+CTIM_SWITCH_18   default  #  (def=0)
+CTIM_SWITCH_19   default  #  (def=0)
+CTIM_SWITCH_20   default  #  (def=0)
+CTIM_SWITCH_21   default  #  (def=0)
+CTIM_SWITCH_22   default  #  (def=0)
+CTIM_SWITCH_23   default  #  (def=0)
+CTIM_SWITCH_24   default  #  (def=1)
+CTIM_SWITCH_25   default  #  (def=1)
+CTIM_SWITCH_26   default  #  (def=1)
+CTIM_SWITCH_27   default  #  (def=1)
+CTIM_SWITCH_28   default  #  (def=1)
+CTIM_SWITCH_30   default  #  (def=0)
+CTIM_SWITCH_31   default  #  (def=0)
+CTIM_SWITCH_32   default  #  (def=1)
+CTIM_SWITCH_33   default  #  (def=0)
+CTIM_SWITCH_34   default  #  (def=0)
+CTIM_SWITCH_35   default  #  (def=0)
+CTIM_SWITCH_37   default  #  (def=1)
+
+#---------------------------------------------------------------
+
+#---------------------------------------------------------------
+#-------- Inner magnetosphere specific inputs ------------------
+#--------           (RCM, CRCM)               ------------------
+#---------------------------------------------------------------
+RCMCODE          none     #  rice, crcm (def=none)
+
+#---------------------------------------------------------------
+# --- variables for file tmp.rcm.in -- These are RCM (rice) specific
+#---------------------------------------------------------------
+# recommended settings for RCM use (WDC):
+#   important: ISPHERE=2.0, SIGMATRANS=15000, SIG_FLOOR=3.0, 
+#              RCM_SUNSPOT_NUM=(actual), 
+#              DXFUNC=1.5+1.5*fsm3(x,0.0,-44.0)+1300.0*fsm3(x,0.0,600.0)
+#   optional(?): DO_LIMIT3=false, DIFFTHRESHOLD=0.60, DIFFCONSTANT=0.03
+#                BND_IO_TT=400, FAC_FILT=2
+#   output: RCM_IDEBUG=0 (produce extra rcm data files)
+#           RCM_DIAG=1 (add rcm rr,pp,fbmask to 3d files)
+RCM_ITIMEI       default  # start time (def=0)
+RCM_ITIMEF       default  # end time (def=345600)
+RCM_IRDR         default  # record num to read in (def=1)
+RCM_IRDW         default  # record num to write out (def=2)
+RCM_IDEBUG       default  # if 0, produce extra rcm data files (def=1)
+RCM_IDT          default  # basic time step in program (def=2)
+RCM_IDT1         60       # (WDC:60) [sec] how often to call RCM, output to rcm files (if rcm_idebug=1) (def=60)
+RCM_IDT2         300      # [sec] t-step for writing formatted output (def=($RCM_IDT1)*5)
+RCM_IDT3         60000    # (WDC:60000) t-step for edge cleanup (invoking ADD & ZAP) (def=600000)
+RCM_IMIN         default  # i-value of poleward bndy (def=1)
+RCM_IPOT         default  # (WDC:5) which potential solver to use: 3-nonintg grid, otherwise-use v specified by ibnd (def=4)
+RCM_IWIND        default  # only used if rcm_ipot=3; 0 is no neutral winds, 1:tarpley-type wind, 2:roble sq winds (def=0)
+RCM_IVOPTN       default  # 1 is euler time derivs in vcalc, 2--runge-kutta (def=1)
+RCM_IBND         default  # only used if ipot!=3; type of bndy (1-ellipse in eq.p, 2-ellipse in iono w/ Heppner-Maynard, 3-L=6.6 in mag eq. plane, 4-read from file created by GGCM data (no boundary): vext.dat) (def=4)
+RCM_IPCP_TYPE    default  # subtype of bndy ((ibnd=2) 1-7-Heppner-Maynard pattern, (ibnd=1,3) 11-?, 13-Maynard-Chen 75 (def=13)
+RCM_NSMTHI       default  # How much to smooth cond in I (def=0)
+RCM_NSMTHJ       default  # How much to smooth cond in J (def=0)
+RCM_ICOND        default  # values only used if ipot=3; 1:active conductances, 2:use Hardy statistical model, 3:quiet (def=3)
+RCM_IFLOOR       default  # floor for eflux? (def=.TRUE.)
+RCM_ICORRECT     default  # latitude correction (def=.TRUE.)
+RCM_DSTMIN       default  # min allowed dist. between adjacent pnts (def=1.5)
+RCM_DSTMAX       default  # max allowed dist. between adjacent pnts (def=3.1)
+RCM_RHOMAX       default  # max correction factor in adding inner edge tracer points (def=0.5)
+RCM_VMFACT       default  # flux tube volume factor in adding inner edge tracer points (def=0.1)
+RCM_EPSLON       default  # correct motion at inner edge; in MODULE rcm_mod_edgpt (def=0.0001)
+RCM_DLIM         default  # min tail thickness for FMRWIF (def=0.25)
+RCM_CMAX         default  # courant number; in rcm_mod_balgn (def=3.0)
+RCM_EETA_CUTOFF  default  # as a fraction (def=0.05)
+RCM_TOL_GMRES    default  # Potential solver GMRESM tolerance (def=1.0e-5)
+RCM_ITYPE_BF     default  # (WDC:2) B-field type: 1-interpolate for HV, 2-friction code, 3-do nothing (def=2)
+RCM_I_ADVECT     default  # advance eta dist. ; 1-interpolate, 2-CLAWPACK/inter, 3-CLAWPACK, 4-CLAWPACK v2 (def=3)
+RCM_I_ETA_BC     default  # eta on boundary; 1-overwrite from file each timestep, 2-do not overwrite (def=2)
+RCM_KILL_FUDGE   default  # (WDC:.FALSE.) remove fudge factors for Vpara calc; .true. means no loss (def=.FALSE.)
+RCM_I_BIRK       default  # compute field-aligned current density; 1-birk, 2-birk from recontouring (def=1)
+RCM_DKTIME       default  # use charge exchange decay time from dktable file (def=.TRUE.)
+RCM_SUNSPOT_NUMBER  100                                                                          # calc chex loss rate from this (also using dktable vals) (def=96)
+
+# --- other variables
+RCM_DEBUG        default  # if fdiag2, write pp, rr, fbmask to outplane files (def=false)
+RCM_DEBUG_LEVEL  default  # if >0 write iono exchange info to RCM.in file (def=0)
+RCM_FB_PRECON    default  # (WDC:5400) time for first call to rcm (def=5400.0)
+RCM_IONO         default  # ionosphere altitude km (def=120.0)
+
+# --- variables which influence rcm boundary location
+RCM_XX1          default  # sunward boundary of rcm domain (def=-10.0)
+RCM_XX2          default  # anti-sunward boundary of rcm domain (def=20.0)
+RCM_YY1          default  # +- y boundary of rcm domain (def=20.0)
+RCM_ZZ1          default  # +- z boundary of rcm domain (def=20.0)
+RCM_MIN_B        default  # if positive, consider fieldlines with |B| < rcm_min_b to be open for the purposes of the rcmcode (def=30.0)
+RCM_MAX_BETA     default  # maximum allowed beta in equitorial plane for feedback. negative values represent infinity. (def=-1.)
+
+# --- variables which influence (MHD) feedback
+RCM_PP_RR_FEEDBACK      default  # pressure and density feedback (def=yes)
+RCM_FB_STRENGTH         default  # (WDC:0.25) Strength factor for rcm feedback nudging (def=1.0)
+RCM_FB_KICKIN_TIME      default  # (WDC:7200) at this time feedback starts to kick in the case where rcm_pp_rr_feedback is yes (def=7200.0)
+RCM_FB_RAMP_UP          default  # (WDC:3600) ramp up the rcm feedback over this many seconds (def=3600.0)
+RCM_FEEDBACK_BND        default  # (WDC:10.0) If positive, feedback only to this radial L shell (def=10.0)
+RCM_FB_MIN_B            default  # if positive, don't feedback on fieldlines where |B| < rcm_fb_min_b (def="$RCM_MIN_B")
+RCM_FB_B_CEIL           default  # partially limit feedback up to |B| = rcm_fb_b_ceil (def=100.)
+RCM_PLASMASPHERE        default  # Use a primitive model for the plasmasphere. (def=.FALSE.)
+RCM_PLSFAC              default  # multiply plasmaspheric density by this factor (if rcm_plasmasphere is .TRUE.) (def=0.01)
+RCM_SERIAL_FB_TRACER    default  # Use serial feedback tracer, (even if parallel_tracer is true) (def=false)
+RCM_SERIAL_TRACER       default  # Use serial forward tracer, (even if parallel_tracer is true) (def=false)
+RCM_MAKE_NEW_FAC        default  # (WDC:no) overwrite MHD FAC with RCM FAC if RCM FAC is not zero (def=false)
+RCM_MAKE_NEW_PRECIP     default  # overwrite MHD diffuse precip with RCM precip (def=true)
+RCM_RFLMAX              default  # (WDC:80.0) max allowed field line length (def=80.0)
+RCM_RMAX                default  # field line is considered open if farther than this (def=15.0)
+RCM_FLSTEPSIZE          default  # (WDC:0.05) stepsize to take when calculating fieldline -- old default was 0.01 which is just too small. (def=0.05)
+RCM_RMIN_DIP_MHD_BLEND  default  # (WDC: {"$ISPHERE"}) lower boundary for dipole-mhd blend -- below this is only dipole (def=4.5)
+RCM_RMAX_DIP_MHD_BLEND  default  # (WDC:3.6) upper boundary for dipole-mhd blend -- beyond this is only mhd (def=6.5)
+DO_RCM_INPUT_DIAG       default  # Write the fieldline tracer output to a file as a diagnostic (def=false)
+RCM_DIAG                1        # (WDC:1) write diagnostics for rcm feedback in the 3d output files; pp, rr, mask (def=0)
+
+#---------------------------------------------------------------
+#------  Fieldline Tracer Module -------------------------------
+#---------------------------------------------------------------
+PARALLEL_TRACER  default  # Use parallel fieldline tracing module (def=false)
+NPAR_TRACE       default  # Use npar_trace processes for tracing. Only used if parallel_tracer is true (def=0)
+PAR_TRACE_DEBUG  default  # print verbose debugging messages for parallel tracer (def=false)
+FL_USE_COTR      default  # use cotr to get dipole field instead of coordinate independent (analytic) formula for dipole (def=false)
+FL_HUEN          default  # Use (2nd order) huen method for fieldline tracing (instead of 1st order Euler) (def=.false.)
+
+#---------------------------------------------------------------
+#---- Comprehensive Ring Current Model (CRCM) specific inputs --
+#---------------------------------------------------------------
+CRCM_WRITE_N_TIMESTEPS  default  # at how many crcm_delta_t intervals to write down the CRCM flux, etc... (def=1.0)
+
+CRCM_SPECIES     default  # 1=electrons; 2=protons (def=2)
+CRCM_TIME_INIT_COND  default  # [sec] until that time artificial potential Volland-Stern will be used (or mixed - see crcm_mixed_potential) (def=172800.0)
+CRCM_START_TIME  default  # [sec] when to actually start CRCM (def=0.0)
+CRCM_DELTA_T     default  # [sec] how often to call CRCM (def=120.0)
+CRCM_WRITE_TIME  default  # [sec] the time interval defined approximately as (crcm_write_time) x (crcm_delta_t) at which to write down the CRCM flux, etc... (def=1.0)
+CRCM_IONO        default  # [km] ionosphere in km in CRCM (def=120.0)
+CRCM_PP_RR_FEEDBACK  default  # [yes,no] pressure and density feedback (def=yes)
+CRCM_FB_KICKIN_TIME  default  # [sec] at this time feedback starts to kick in in case crcm_pp_rr_feedback=yes (def=300.0)
+
+# --- at least one of the two 'make_new_fac' options should be 'no'. Otherwise the 'rc' option will simply add/overwrite
+CRCM_MAKE_NEW_FAC_W_PC  default  # [yes,no] FAC feedback overwrite MHD FAC with MHD integrated parallel FAC. (crcm_make_new_fac_w_rc must be no, otherwise will overwrite) (def=yes)
+CRCM_MAKE_NEW_FAC_W_RC  default  # [yes,no] FAC feedback overwrite MHD FAC with CRCM FAC if CRCM FAC is not zero (takes precedence over crcm_make_new_fac_w_pc) (def=no)
+CRCM_NEW_FAC_SMOOTH  default  # [integer] average the new FAC (CRCMs/integrated + MHDs) over this number of grid cells - basic smoothing. Zero does nothing. (def=2)
+CRCM_INTGRD_FAC_SMOOTH  default  # [integer] average the integrated parallel FAC over this number of grid cells - basic smoothing. Matters if crcm_make_new_fac_pc=yes (def=4)
+CRCM_CRCM_FAC_SMOOTH  default  # [integer] average the CRCM FAC over this number of grid cells - basic smoothing. Matters if crcm_make_new_fac_rc=yes (def=4)
+CRCM_MIXED_POTENTIAL  default  # [yes,no] create mixed half MHD half VS potential for the specified crcm_time_init_cond (> 0) (def=yes)
+CRCM_MIXED_POT_FACTOR  default  # factor multiplier for the mixed potential (if yes) (def=1.0)
+CRCM_LOWBNDRY_CONDITION  default  # set lower boundary density, temperature, potential for CRCM (def=yes)
+CRCM_FAC_LOWBND_LAT  default  # [deg] lower boundary condition latitude if crcm_lowbndry_condition is yes (def=54.0)
+CRCM_MAKEFAC_LOWBND_LAT  default  # [deg] lower boundary condition (merging FACs control) latitude if crcm_lowbndry_condition is yes (def=63.0)
+CRCM_NULL_ISPHERE_VARS  default  # set CRCM feedback pressure and density zero inside ISPHERE (otherwise stability issues?) (def=yes)
+
+# --- Factoring of the Input/Output stuff for CRCM and MHD------
+CRCM_MHD_POT_FACTOR  default  # factor the mhd potential before input in crcm if wanted (def=1.0)
+CRCM_MHD_DENS_FACTOR  default  # factor the mhd density before input in crcm if wanted (def=1.0)
+CRCM_MHD_TEMP_FACTOR  default  # factor the mhd temperature before input in crcm if wanted (def=1.0)
+CRCM_TO_MHD_PRES_FACTOR  default  # factor the crcm pressure before feedback in mhd if wanted (def=1.0)
+CRCM_TO_MHD_DENS_FACTOR  default  # factor the crcm density before feedback in mhd if wanted (def=1.0)
+CRCM_PP_RR_SCALE_LENGTH  default  # [RE] scale the pressure and density from 0 at ishpere to 1 at isphere+crcm_pp_rr_scale_length with a sin^2 to reduce the gradient jump before passing them to the MHD grid (def=0.5)
+CRCM_PP_OUT_SMOOTH  default  # [integer] smooth CRCM output pressure before passing it to the MHD grid. No smoothing if zero (def=0)
+CRCM_RR_OUT_SMOOTH  default  # [integer] smooth CRCM output density before passing it to the MHD grid. No smoothing if zero (def=0)
+
+# --- Field-line tracer stuff for CRCM -------------------------
+CRCM_MAX_LAT_GRID_LIMIT  default  # [degrees] max latutide on the crcm ionosphere grid - 69.458 degrees is default - do not go less that that. Go only higher than that. (def=69.458)
+CRCM_RFLMAX      default  # [RE] max allowed field line length (def=1000.0)
+CRCM_RMAX        default  # [RE] field line is considered open if farther than this - this basically controls how far is the outer CRCM boudary in the equatorial plane (def=7.0)
+CRCM_RMIN_DIP_MHD_BLEND  default  # [RE] lower boundary for dipole-mhd blend - below this is only dipole (def=2.5)
+CRCM_RMAX_DIP_MHD_BLEND  default  # [RE] upper boundary for dipole-mhd blend - beyond this is only mhd (def=8.0)
+
+# --- debug
+CRCM_DEBUG       default  # [yes,no] write more output for debug (def=no)
+

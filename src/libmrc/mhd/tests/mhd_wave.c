@@ -382,12 +382,12 @@ ggcm_mhd_ic_sound_run(struct ggcm_mhd_ic *ic)
       xrot = c1 * c2 * r[0] + c2 * s1 * r[1] - s2 * r[2];
       pert = sin(kmag * xrot);
 
-      RR(f, ix,iy,iz) = sub->rho0 + rho_pert * pert;
-      PP(f, ix,iy,iz) = sub->p0 + p_pert * pert;
+      RR_(f, ix,iy,iz, p) = sub->rho0 + rho_pert * pert;
+      PP_(f, ix,iy,iz, p) = sub->p0 + p_pert * pert;
 
-      VX(f, ix,iy,iz) = (sub->v_par + v_pert * pert) * kunit[0];
-      VY(f, ix,iy,iz) = (sub->v_par + v_pert * pert) * kunit[1];
-      VZ(f, ix,iy,iz) = (sub->v_par + v_pert * pert) * kunit[2];
+      VX_(f, ix,iy,iz, p) = (sub->v_par + v_pert * pert) * kunit[0];
+      VY_(f, ix,iy,iz, p) = (sub->v_par + v_pert * pert) * kunit[1];
+      VZ_(f, ix,iy,iz, p) = (sub->v_par + v_pert * pert) * kunit[2];
     } mrc_fld_foreach_end;
   }
 

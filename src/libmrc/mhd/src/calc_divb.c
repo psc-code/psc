@@ -18,8 +18,6 @@
 void
 ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *divb)
 {
-  int bnd = fld->_nr_ghosts - 1;
-
   mrc_fld_data_t hx = 1., hy = 1., hz = 1.;
   int gdims[3];
   mrc_domain_get_global_dims(fld->_domain, gdims);
@@ -50,17 +48,14 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
       float *bd3y = ggcm_mhd_crds_get_crd_p(mhd->crds, 1, BD3, p);
       float *bd3z = ggcm_mhd_crds_get_crd_p(mhd->crds, 2, BD3, p);
 
-      mrc_fld_foreach(divb, ix,iy,iz, bnd, bnd) {
+      mrc_fld_foreach(divb, ix,iy,iz, 0, 0) {
 	M3(d,0, ix,iy,iz, p) =
 	  (BX_(f, ix,iy,iz, p) - BX_(f, ix-dx,iy,iz, p)) * bd3x[ix] +
 	  (BY_(f, ix,iy,iz, p) - BY_(f, ix,iy-dy,iz, p)) * bd3y[iy] +
 	  (BZ_(f, ix,iy,iz, p) - BZ_(f, ix,iy,iz-dz, p)) * bd3z[iz];
-	if (ymask) {
-	  M3(d,0, ix,iy,iz, p) *= M3(ymask, 0, ix,iy,iz, p);
-	}
-	
+ 	
 	// the incoming solar wind won't match and hence divb != 0 here
-	if (info.off[0] == 0 && ix <= 0)
+	if ((info.off[0] == 0 && ix <= 0) || M3(ymask, 0, ix,iy,iz, p) == 0)
 	  continue;
 	max = mrc_fld_max(max, mrc_fld_abs(M3(d,0, ix,iy,iz, p)));
       } mrc_fld_foreach_end;
@@ -72,15 +67,31 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
       float *bd3y = ggcm_mhd_crds_get_crd_p(mhd->crds, 1, BD3, p);
       float *bd3z = ggcm_mhd_crds_get_crd_p(mhd->crds, 2, BD3, p);
 
-      mrc_fld_foreach(divb, ix,iy,iz, 0*bnd, 0*bnd) {
+      mrc_fld_foreach(divb, ix,iy,iz, 0, 0) {
 	M3(d,0, ix,iy,iz, p) =
 	  (BX_(f, ix+dx,iy,iz, p) - BX_(f, ix,iy,iz, p)) * hx * bd3x[ix] +
 	  (BY_(f, ix,iy+dy,iz, p) - BY_(f, ix,iy,iz, p)) * hy * bd3y[iy] +
 	  (BZ_(f, ix,iy,iz+dz, p) - BZ_(f, ix,iy,iz, p)) * hz * bd3z[iz];
-	if (ymask) {
-	  M3(d,0, ix,iy,iz, p) *= M3(ymask, 0, ix,iy,iz, p);
-	}
+
+	if (M3(ymask, 0, ix,iy,iz, p) == 0)
+	  continue;
+	max = mrc_fld_max(max, mrc_fld_abs(M3(d,0, ix,iy,iz, p)));
+      } mrc_fld_foreach_end;
+    }
+  } else if (mhd_type == MT_FULLY_CONSERVATIVE_CC) {
+    for (int p = 0; p < mrc_fld_nr_patches(divb); p++) {
+      float *fd1x = ggcm_mhd_crds_get_crd_p(mhd->crds, 0, FD1, p);
+      float *fd1y = ggcm_mhd_crds_get_crd_p(mhd->crds, 1, FD1, p);
+      float *fd1z = ggcm_mhd_crds_get_crd_p(mhd->crds, 2, FD1, p);
+
+      mrc_fld_foreach(divb, ix,iy,iz, 0, 0) {
+	M3(d,0, ix,iy,iz, p) =
+	  (BX_(f, ix+dx,iy,iz, p) - BX_(f, ix-dx,iy,iz, p)) * hx * .5f*fd1x[ix] +
+	  (BY_(f, ix,iy+dy,iz, p) - BY_(f, ix,iy-dy,iz, p)) * hy * .5f*fd1y[iy] +
+	  (BZ_(f, ix,iy,iz+dz, p) - BZ_(f, ix,iy,iz-dz, p)) * hz * .5f*fd1z[iz];
 	
+	if (M3(ymask, 0, ix,iy,iz, p) == 0)
+	  continue;
 	max = mrc_fld_max(max, mrc_fld_abs(M3(d,0, ix,iy,iz, p)));
       } mrc_fld_foreach_end;
     }
@@ -94,6 +105,8 @@ ggcm_mhd_calc_divb(struct ggcm_mhd *mhd, struct mrc_fld *fld, struct mrc_fld *di
     mrc_fld_put_as(ymask, mhd->ymask);
   }
 
-  mprintf("max divb = %g\n", max);
+  mrc_fld_data_t max_divb;
+  MPI_Allreduce(&max, &max_divb, 1, MPI_MRC_FLD_DATA_T, MPI_MAX, ggcm_mhd_comm(mhd));
+  mpi_printf(ggcm_mhd_comm(mhd), "max divb = %g\n", max_divb);
 }
 
