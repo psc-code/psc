@@ -2,15 +2,33 @@
 #ifndef PDE_MHD_SETUP_C
 #define PDE_MHD_SETUP_C
 
+#include "ggcm_mhd_defs_extra.h"
+#include "ggcm_mhd_gkeyll.h"
+
 #include "pde/pde_setup.c"
 
 // ======================================================================
 // MHD parameters, we keep these around statically
 
 static mrc_fld_data_t s_gamma;  // adiabatic exponent
+static mrc_fld_data_t s_gamma_m1;  // adiabatic exponent - 1
+static mrc_fld_data_t s_gamma_m1_inv;  // 1 / (adiabatic exponent - 1)
 static mrc_fld_data_t s_eta;    // (constant) resistivity 
 static mrc_fld_data_t s_d_i;    // ion skin depth
 static mrc_fld_data_t s_cfl;    // CFL number
+static mrc_fld_data_t s_mu0;    // mu0 (in code units)
+static mrc_fld_data_t s_mu0_inv;// 1 /mu0 (in code units)
+
+static int s_gk_nr_fluids;
+static int *s_gk_idx;
+static int s_gk_idx_em;
+// FIXME, this should be changed to mrc_fld_data_t
+static float *s_gk_mass_ratios;
+static float *s_gk_pressure_ratios;
+
+// s_n_state is mostly the same as s_n_comps, except for legacy ggcm which
+// has the one field with so many components
+static int s_n_state; // number of components in the state vector
 
 static int s_magdiffu;
 static mrc_fld_data_t s_diffco; // same as s_eta, but not normalized
@@ -600,14 +618,34 @@ pde_mhd_set_options(struct ggcm_mhd *mhd, struct mhd_options *opt)
 // pde_mhd_setup
 
 static void
-pde_mhd_setup(struct ggcm_mhd *mhd)
+pde_mhd_setup(struct ggcm_mhd *mhd, int n_comps)
 {
+  pde_setup(mhd->fld, n_comps);
+  
   // general (x)mhd params
   s_gamma = mhd->par.gamm;
+  s_gamma_m1 = s_gamma - 1.f;
+  s_gamma_m1_inv = 1.f / s_gamma_m1;
   // FIXME, this isn't really a good place to normalize
   s_eta   = mhd->par.diffco / mhd->resnorm;
   s_d_i   = mhd->par.d_i;
   s_cfl   = mhd->par.thx;
+  s_mu0   = mhd->par.mu0_code;
+  s_mu0_inv = 1.f / s_mu0;
+
+  s_n_state = mrc_fld_nr_comps(mhd->fld);
+  // FIXME, hacky as usual, to deal with the legacy all-in-one big array
+  if (s_n_state == _NR_FLDS) {
+    s_n_state = 8;
+  }
+
+  // gkeyll parameters
+  assert(ggcm_mhd_gkeyll_nr_moments(mhd) == 5);
+  s_gk_nr_fluids = mhd->par.gk_nr_fluids;
+  s_gk_idx = mhd->par.gk_idx;
+  s_gk_idx_em = ggcm_mhd_gkeyll_em_fields_index(mhd);
+  s_gk_mass_ratios = mhd->par.gk_mass_ratios;
+  s_gk_pressure_ratios = mhd->par.gk_pressure_ratios.vals;
 
   // openggcm specific params
   s_magdiffu = mhd->par.magdiffu;

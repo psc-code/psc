@@ -2,6 +2,8 @@
 #ifndef PDE_MHD_LINE_C
 #define PDE_MHD_LINE_C
 
+#include "pde/pde_mhd_setup.c"
+
 // ----------------------------------------------------------------------
 // mhd_get_line_state_fcons
 

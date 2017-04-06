@@ -64,30 +64,33 @@ ggcm_mhd_diag_item_uu1_run(struct ggcm_mhd_diag_item *item,
   struct mrc_fld *r = mrc_fld_get_as(fld_r, FLD_TYPE);
   struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
 
-  if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM ||
-      mhd_type == MT_SEMI_CONSERVATIVE) {
+  if (MT_FORMULATION(mhd_type) == MT_FORMULATION_SCONS) {
     for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
       mrc_fld_foreach(f, ix,iy,iz, bnd, bnd) {
 	M3(r, 0, ix,iy,iz, p) = UU_(f, ix,iy,iz, p);
       } mrc_fld_foreach_end;
     }
-  } else if (mhd_type == MT_FULLY_CONSERVATIVE) {
-    for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
-      mrc_fld_foreach(f, ix,iy,iz, bnd - 1, bnd - 1) {
-	float b2  = (sqr(.5f * (BX_(f, ix,iy,iz, p) + BX_(f, ix+dx,iy   ,iz   , p))) +
-		     sqr(.5f * (BY_(f, ix,iy,iz, p) + BY_(f, ix   ,iy+dy,iz   , p))) +
-		     sqr(.5f * (BZ_(f, ix,iy,iz, p) + BZ_(f, ix   ,iy   ,iz+dz, p))));
-	M3(r, 0, ix,iy,iz, p) = EE_(f, ix,iy,iz, p) -.5f * b2;
-      } mrc_fld_foreach_end;
-    }
-  } else if (mhd_type == MT_FULLY_CONSERVATIVE_CC) {
-    for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
-      mrc_fld_foreach(f, ix,iy,iz, bnd - 1, bnd - 1) {
-	float b2  = (sqr(BX_(f, ix,iy,iz, p)) +
-		     sqr(BY_(f, ix,iy,iz, p)) +
-		     sqr(BZ_(f, ix,iy,iz, p)));
-	M3(r, 0, ix,iy,iz, p) = EE_(f, ix,iy,iz, p) -.5f * b2;
-      } mrc_fld_foreach_end;
+  } else if (MT_FORMULATION(mhd_type) == MT_FORMULATION_FCONS) {
+    if (MT_BGRID(mhd_type) == MT_BGRID_FC) {
+      for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
+	mrc_fld_foreach(f, ix,iy,iz, bnd - 1, bnd - 1) {
+	  float b2  = (sqr(.5f * (BX_(f, ix,iy,iz, p) + BX_(f, ix+dx,iy   ,iz   , p))) +
+		       sqr(.5f * (BY_(f, ix,iy,iz, p) + BY_(f, ix   ,iy+dy,iz   , p))) +
+		       sqr(.5f * (BZ_(f, ix,iy,iz, p) + BZ_(f, ix   ,iy   ,iz+dz, p))));
+	  M3(r, 0, ix,iy,iz, p) = EE_(f, ix,iy,iz, p) -.5f * b2 / mhd->par.mu0_code;
+	} mrc_fld_foreach_end;
+      }
+    } else if (MT_BGRID(mhd_type) == MT_BGRID_CC) {
+      for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
+	mrc_fld_foreach(f, ix,iy,iz, bnd - 1, bnd - 1) {
+	  float b2  = (sqr(BX_(f, ix,iy,iz, p)) +
+		       sqr(BY_(f, ix,iy,iz, p)) +
+		       sqr(BZ_(f, ix,iy,iz, p)));
+	  M3(r, 0, ix,iy,iz, p) = EE_(f, ix,iy,iz, p) -.5f * b2 / mhd->par.mu0_code;
+	} mrc_fld_foreach_end;
+      }
+    } else {
+      assert(0);
     }
   } else {
     assert(0);
@@ -143,7 +146,7 @@ ggcm_mhd_diag_item_ee1_run(struct ggcm_mhd_diag_item *item,
   struct mrc_fld *r = mrc_fld_get_as(fld_r, FLD_TYPE);
   struct mrc_fld *f = mrc_fld_get_as(fld, FLD_TYPE);
 
-  if (mhd_type == MT_FULLY_CONSERVATIVE_CC) {
+  if (mhd_type == MT_FCONS_CC) {
     for (int p = 0; p < mrc_fld_nr_patches(f); p++) {
       mrc_fld_foreach(f, ix,iy,iz, bnd - 1, bnd - 1) {
 	M3(r, 0, ix,iy,iz, p) = EE_(f, ix,iy,iz, p);

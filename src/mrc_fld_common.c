@@ -2,7 +2,7 @@
 #include <mrc_ddc.h>
 
 // This file is included multiple times to generate versions for various
-// TYPE's (e.g., float, double, float_aos, ...)
+// TYPE's (e.g., float, double, ...)
 
 // ----------------------------------------------------------------------
 // mrc_fld_TYPE_ddc_copy_to_buf

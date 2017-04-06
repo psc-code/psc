@@ -138,7 +138,7 @@ mrc_ddc_amr_apply(struct mrc_ddc *ddc, struct mrc_fld *fld)
 {
   struct mrc_ddc_amr *sub = mrc_ddc_amr(ddc);
 
-  mrc_mat_apply_in_place(sub->mat, fld->_vec);
+  mrc_mat_apply_in_place(sub->mat, fld->_nd->vec);
 }
 
 // ----------------------------------------------------------------------

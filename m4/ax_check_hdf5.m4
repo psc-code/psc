@@ -3,6 +3,8 @@
 # checks for HDF5 lib
 
 AC_DEFUN([AX_CHECK_HDF5],
+  have_hdf5=no
+  have_hdf5_parallel=no
   [AC_ARG_WITH(
     [hdf5],
     [AS_HELP_STRING([--with-hdf5=[ARG]],[use hdf5 in directory ARG])],
@@ -31,7 +33,6 @@ dnl echo HAVE_HDF5_H $ac_cv_header_hdf5_h
           LIBS="$H5_LPATH $LIBS"
           AC_CHECK_LIB([hdf5], [H5Gcreate2])
           LIBS="$save_LIBS"
-          LDFLAGS="$save_LDFLAGS"
          ])
 
 dnl echo HAVE_LIBHDF5 $ac_cv_lib_hdf5_H5Gcreate2
@@ -42,13 +43,20 @@ dnl echo HAVE_LIBHDF5 $ac_cv_lib_hdf5_H5Gcreate2
           LIBS="$H5_LIBS $LIBS"
       	  AC_CHECK_LIB([hdf5_hl], [H5LTmake_dataset_float])
 	  LIBS="$save_LIBS"
-	  LDFLAGS="$save_LDFLAGS"
          ])
 
    AS_IF([test "$ac_cv_lib_hdf5_hl_H5LTmake_dataset_float" = "yes"],
    	 [H5_LIBS="$H5_LPATH -lhdf5_hl -lhdf5"
 	  have_hdf5="yes"
-         ],
-	 [have_hdf5="no"])
+         ])
+
+   AS_IF([test "$have_hdf5" = "yes"],
+   	 [save_LIBS="$LIBS"
+          LIBS="$H5_LIBS $LIBS"
+	  AC_CHECK_LIB([hdf5], [H5Pset_dxpl_mpio],
+	               [have_hdf5_parallel="yes"])
+	  LIBS="$save_LIBS"
+         ])
+
 ])
 

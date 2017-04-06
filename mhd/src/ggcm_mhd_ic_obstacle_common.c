@@ -21,7 +21,7 @@ struct ggcm_mhd_ic_obstacle {
   float r2; // radius where velocity ramp down starts
 
   // solar wind values
-  double bnvals[SW_NR];
+  double bnvals[N_PRIMITIVE];
 };
 
 #define ggcm_mhd_ic_obstacle(ic) mrc_to_subobj(ic, struct ggcm_mhd_ic_obstacle)
@@ -35,14 +35,14 @@ get_solar_wind(struct ggcm_mhd_ic *ic, mrc_fld_data_t vals[])
   struct ggcm_mhd_ic_obstacle *sub = ggcm_mhd_ic_obstacle(ic);
   struct ggcm_mhd *mhd = ic->mhd;
 
-  vals[SW_RR] = sub->bnvals[SW_RR] / mhd->rrnorm;
-  vals[SW_VX] = sub->bnvals[SW_VX] / mhd->vvnorm;
-  vals[SW_VY] = sub->bnvals[SW_VY] / mhd->vvnorm;
-  vals[SW_VZ] = sub->bnvals[SW_VZ] / mhd->vvnorm;
-  vals[SW_PP] = sub->bnvals[SW_PP] / mhd->ppnorm;
-  vals[SW_BX] = sub->bnvals[SW_BX] / mhd->bbnorm;
-  vals[SW_BY] = sub->bnvals[SW_BY] / mhd->bbnorm;
-  vals[SW_BZ] = sub->bnvals[SW_BZ] / mhd->bbnorm;
+  vals[RR] = sub->bnvals[RR] / mhd->rrnorm;
+  vals[VX] = sub->bnvals[VX] / mhd->vvnorm;
+  vals[VY] = sub->bnvals[VY] / mhd->vvnorm;
+  vals[VZ] = sub->bnvals[VZ] / mhd->vvnorm;
+  vals[PP] = sub->bnvals[PP] / mhd->ppnorm;
+  vals[BX] = sub->bnvals[BX] / mhd->bbnorm;
+  vals[BY] = sub->bnvals[BY] / mhd->bbnorm;
+  vals[BZ] = sub->bnvals[BZ] / mhd->bbnorm;
 }
 
 // ----------------------------------------------------------------------
@@ -66,17 +66,17 @@ ggcm_mhd_ic_obstacle_primitive(struct ggcm_mhd_ic *ic, int m, double crd[3])
 {
   struct ggcm_mhd_ic_obstacle *sub = ggcm_mhd_ic_obstacle(ic);
 
-  mrc_fld_data_t vals[SW_NR];
+  mrc_fld_data_t vals[N_PRIMITIVE];
   get_solar_wind(ic, vals);
 
   double xx = crd[0], yy = crd[1], zz = crd[2];
 
   switch (m) {
-  case RR: return vals[SW_RR];
-  case PP: return vals[SW_PP];
-  case VX: return vxsta1(xx, yy, zz, vals[SW_VX], sub->r1, sub->r2);
-  case VY: return vxsta1(xx, yy, zz, vals[SW_VY], sub->r1, sub->r2);
-  case VZ: return vxsta1(xx, yy, zz, vals[SW_VZ], sub->r1, sub->r2);
+  case RR: return vals[RR];
+  case PP: return vals[PP];
+  case VX: return vxsta1(xx, yy, zz, vals[VX], sub->r1, sub->r2);
+  case VY: return vxsta1(xx, yy, zz, vals[VY], sub->r1, sub->r2);
+  case VZ: return vxsta1(xx, yy, zz, vals[VZ], sub->r1, sub->r2);
   default: return 0.;
   }
 }
@@ -87,13 +87,13 @@ ggcm_mhd_ic_obstacle_primitive(struct ggcm_mhd_ic *ic, int m, double crd[3])
 static double
 ggcm_mhd_ic_obstacle_primitive_bg(struct ggcm_mhd_ic *ic, int m, double crd[3])
 {
-  mrc_fld_data_t vals[SW_NR];
+  mrc_fld_data_t vals[N_PRIMITIVE];
   get_solar_wind(ic, vals);
 
   switch (m) {
-  case BX: return vals[SW_BX];
-  case BY: return vals[SW_BY];
-  case BZ: return vals[SW_BZ];
+  case BX: return vals[BX];
+  case BY: return vals[BY];
+  case BZ: return vals[BZ];
   default: return 0.;
   }
 }
@@ -106,14 +106,14 @@ ggcm_mhd_ic_obstacle_primitive_bg(struct ggcm_mhd_ic *ic, int m, double crd[3])
 static double
 ggcm_mhd_ic_obstacle_vector_potential_bg(struct ggcm_mhd_ic *ic, int m, double crd[3])
 {
-  mrc_fld_data_t vals[SW_NR];
+  mrc_fld_data_t vals[N_PRIMITIVE];
   get_solar_wind(ic, vals);
 
   double xx = crd[0], yy = crd[1];
 
   switch (m) {
-  case 1: return vals[SW_BZ] * xx;
-  case 2: return vals[SW_BX] * yy - vals[SW_BY] * xx;
+  case 1: return vals[BZ] * xx;
+  case 2: return vals[BX] * yy - vals[BY] * xx;
   default: return 0.;
   }
 }
@@ -128,14 +128,14 @@ static struct param ggcm_mhd_ic_obstacle_descr[] = {
   { "r1"           , VAR(r1)           , PARAM_FLOAT(1.)           },
   { "r2"           , VAR(r2)           , PARAM_FLOAT(2.)           },
 
-  { "rr"           , VAR(bnvals[SW_RR]), PARAM_DOUBLE(1.)          },
-  { "pp"           , VAR(bnvals[SW_PP]), PARAM_DOUBLE(1.)          },
-  { "vx"           , VAR(bnvals[SW_VX]), PARAM_DOUBLE(0.)          },
-  { "vy"           , VAR(bnvals[SW_VY]), PARAM_DOUBLE(0.)          },
-  { "vz"           , VAR(bnvals[SW_VZ]), PARAM_DOUBLE(0.)          },
-  { "bx"           , VAR(bnvals[SW_BX]), PARAM_DOUBLE(0.)          },
-  { "by"           , VAR(bnvals[SW_BY]), PARAM_DOUBLE(0.)          },
-  { "bz"           , VAR(bnvals[SW_BZ]), PARAM_DOUBLE(0.)          },
+  { "rr"           , VAR(bnvals[RR])   , PARAM_DOUBLE(1.)          },
+  { "pp"           , VAR(bnvals[PP])   , PARAM_DOUBLE(1.)          },
+  { "vx"           , VAR(bnvals[VX])   , PARAM_DOUBLE(0.)          },
+  { "vy"           , VAR(bnvals[VY])   , PARAM_DOUBLE(0.)          },
+  { "vz"           , VAR(bnvals[VZ])   , PARAM_DOUBLE(0.)          },
+  { "bx"           , VAR(bnvals[BX])   , PARAM_DOUBLE(0.)          },
+  { "by"           , VAR(bnvals[BY])   , PARAM_DOUBLE(0.)          },
+  { "bz"           , VAR(bnvals[BZ])   , PARAM_DOUBLE(0.)          },
   {},
 };
 #undef VAR

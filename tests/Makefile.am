@@ -15,9 +15,10 @@ check_PROGRAMS = \
 	test_mrc_domain_multi \
 	test_mrc_domain_amr \
 	test_mrc_domain_mb \
+	test_mrc_crds \
+	test_mrc_ndarray \
 	test_mrc_fld \
 	test_mrc_fld_io \
-	test_mrc_fld_view \
 	test_mrc_f3 \
 	test_mrc_m1 \
 	test_mrc_m3 \
@@ -57,8 +58,13 @@ TESTS = \
 	test_io_read_multi_1.sh \
 	test_ddc_0.sh \
 	test_mrc_domain_simple_0.sh \
+	test_mrc_domain_simple_1.sh \
 	test_mrc_domain_multi_0.sh \
 	test_mrc_domain_mb_0.sh \
+	test_mrc_crds_0.sh \
+	test_mrc_crds_1.sh \
+	test_mrc_crds_2.sh \
+	test_mrc_ndarray_0.sh \
 	test_mrc_fld.sh \
 	test_mrc_fld_io_hdf5_parallel.sh \
 	test_mrc_fld_io_hdf5_serial.sh \
@@ -99,6 +105,15 @@ XFAIL_TESTS = \
 	test_mrc_m3_5.sh \
 	test_mrc_f3_2.sh \
 	test_mrc_fld_io_ascii.sh
+
+if !HAVE_HDF5_PARALLEL
+XFAIL_TESTS += \
+	test_io_2.sh \
+	test_io_2d.sh \
+	test_mrc_m3_4.sh \
+	test_mrc_m3_6.sh
+
+endif !HAVE_HDF5_PARALLEL
 
 if !HAVE_PETSC
 XFAIL_TESTS += \

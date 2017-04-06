@@ -14,7 +14,6 @@ include_HEADERS = \
 	ggcm_mhd_diag_private.h	\
 	ggcm_mhd_gkeyll.h \
 	ggcm_mhd.h \
-	ggcm_mhd_ic_gkeyll_lua.h \
 	ggcm_mhd_ic.h \
 	ggcm_mhd_ic_private.h \
 	ggcm_mhd_private.h \

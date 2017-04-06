@@ -12,7 +12,7 @@ struct ggcm_mhd_bnd {
 struct ggcm_mhd_bnd_ops {
   MRC_SUBCLASS_OPS(struct ggcm_mhd_bnd);
   void (*fill_ghosts)(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld,
-		      int m, float bntim);
+		      float bntim);
   void (*fill_ghosts_E)(struct ggcm_mhd_bnd *bnd, struct mrc_fld *E);
   void (*fill_ghosts_reconstr)(struct ggcm_mhd_bnd *bnd, struct mrc_fld *U_l[],
 			       struct mrc_fld *U_r[], int p);
@@ -24,8 +24,6 @@ extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_inoutflow_sc_ggcm_double;
 extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_inoutflow_sc_float;
 extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_inoutflow_sc_double;
 extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_inoutflow_fc_double;
-extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_inoutflow_sc_double_aos;
-extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_inoutflow_fc_double_aos;
 extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_inoutflow_fc_cc_double;
 extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_inoutflow_gkeyll;
 extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_sphere_sc_float;
@@ -33,9 +31,8 @@ extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_sphere_fc_float;
 extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_sphere_sc_double;
 extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_sphere_sc_ggcm_double;
 extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_sphere_fc_double;
-extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_sphere_sc_double_aos;
-extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_sphere_fc_double_aos;
 extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_sphere_fc_cc_double;
+extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_sphere_gkeyll;
 
 #define ggcm_mhd_bnd_ops(bnd) ((struct ggcm_mhd_bnd_ops *)((bnd)->obj.ops))
 
@@ -69,7 +66,8 @@ struct ggcm_mhd_bnd_sphere_map {
 };
 
 void ggcm_mhd_bnd_sphere_map_setup(struct ggcm_mhd_bnd_sphere_map *map,
-				   struct ggcm_mhd *mhd, double radius);
+				   struct ggcm_mhd *mhd, double radius,
+				   double dr, double extra_dr);
 void ggcm_mhd_bnd_sphere_map_setup_flds(struct ggcm_mhd_bnd_sphere_map *map);
 void ggcm_mhd_bnd_sphere_map_setup_cc(struct ggcm_mhd_bnd_sphere_map *map);
 void ggcm_mhd_bnd_sphere_map_setup_ec(struct ggcm_mhd_bnd_sphere_map *map);

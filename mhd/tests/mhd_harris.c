@@ -33,6 +33,11 @@ struct ggcm_mhd_ic_harris {
   // for testing: add a background field of this amount, but subtract in the perturbation,
   // so the total B field will be the same, anyway
   double B_0_bg;
+
+  // gkeyll params
+  double mass_ratio;
+  double pressure_ratio;
+  double d_i0;
 };
 
 #define ggcm_mhd_ic_harris(ic) mrc_to_subobj(ic, struct ggcm_mhd_ic_harris)
@@ -49,11 +54,9 @@ ggcm_mhd_ic_harris_primitive(struct ggcm_mhd_ic *ic, int m, double crd[3])
   double pert = sub->pert, cs_width = sub->cs_width;
   double xx = crd[0], yy = crd[1];
 
-  double xl[3], xh[3];
-  mrc_crds_get_param_double3(crds, "l", xl);
-  mrc_crds_get_param_double3(crds, "h", xh);
-  double lx = xh[0] - xl[0];
-  double ly = xh[1] - xl[1];
+  const double *lo = mrc_crds_lo(crds), *hi = mrc_crds_hi(crds);
+  double lx = hi[0] - lo[0];
+  double ly = hi[1] - lo[1];
 
   // FIXME, only right if cs_width == .5 (constant factor) ?
   double rr = sub->n_inf + sub->n_0 / sqr(cosh(yy/cs_width));
@@ -81,11 +84,9 @@ ggcm_mhd_ic_harris_vector_potential(struct ggcm_mhd_ic *ic, int m, double crd[3]
   double pert = sub->pert, cs_width = sub->cs_width;
   double xx = crd[0], yy = crd[1];
 
-  double xl[3], xh[3];
-  mrc_crds_get_param_double3(crds, "l", xl);
-  mrc_crds_get_param_double3(crds, "h", xh);
-  double lx = xh[0] - xl[0];
-  double ly = xh[1] - xl[1];
+  const double *lo = mrc_crds_lo(crds), *hi = mrc_crds_hi(crds);
+  double lx = hi[0] - lo[0];
+  double ly = hi[1] - lo[1];
 
   switch (m) {
   case 2: return pert * cos(2*M_PI*xx/lx) * cos(M_PI*yy/ly) + sub->B_0 * cs_width * log(cosh(yy/cs_width))
@@ -135,6 +136,9 @@ static struct param ggcm_mhd_ic_harris_descr[] = {
   { "pert"            , VAR(pert)            , PARAM_DOUBLE(0.1)         },
   { "pert_halfwidth"  , VAR(pert_halfwidth)  , PARAM_DOUBLE(6.4)         },
   { "B_0_bg"          , VAR(B_0_bg)          , PARAM_DOUBLE(0.)          },
+  { "mass_ratio"      , VAR(mass_ratio)      , PARAM_DOUBLE(25.)         },
+  { "pressure_ratio"  , VAR(pressure_ratio)  , PARAM_DOUBLE(1.)          },
+  { "d_i0"            , VAR(d_i0)            , PARAM_DOUBLE(0.05)        },
   {},
 };
 #undef VAR
@@ -204,11 +208,9 @@ ggcm_mhd_ic_harris_asym_vector_potential(struct ggcm_mhd_ic *ic, int m, double c
   double pert = sub->pert, B0 = sub->B0, B1 = sub->B1;
   double xx = crd[0], yy = crd[1];
 
-  double xl[3], xh[3];
-  mrc_crds_get_param_double3(crds, "l", xl);
-  mrc_crds_get_param_double3(crds, "h", xh);
-  double lx = xh[0] - xl[0];
-  double ly = xh[1] - xl[1];
+  const double *lo = mrc_crds_lo(crds), *hi = mrc_crds_hi(crds);
+  double lx = hi[0] - lo[0];
+  double ly = hi[1] - lo[1];
 
   switch (m) {
   case 2: return pert * cos(2*M_PI*xx/lx) * cos(M_PI*yy/ly) + 
@@ -290,13 +292,11 @@ ggcm_mhd_ic_asymharris_run(struct ggcm_mhd_ic *ic)
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
   double cs_width = ic_asymharris->cs_width;
 
-  double xl[3], xh[3];
-  mrc_crds_get_param_double3(crds, "l", xl);
-  mrc_crds_get_param_double3(crds, "h", xh);
-  double x0 = xl[0];
-  double y0 = xl[1];
-  double lx = (double)xh[0] - x0;
-  double ly = (double)xh[1] - y0;
+  const double *lo = mrc_crds_lo(crds), *hi = mrc_crds_hi(crds);
+  double lx = hi[0] - lo[0];
+  double ly = hi[1] - lo[1];
+  double x0 = lo[0];
+  double y0 = lo[1];
   double kx = 2.0 * M_PI / lx;
   double ky = M_PI / ly;
   double bmax = fmax(ic_asymharris->B01, ic_asymharris->B02);
@@ -305,7 +305,7 @@ ggcm_mhd_ic_asymharris_run(struct ggcm_mhd_ic *ic)
   double n02 = ic_asymharris->n02;
 
   if (ic_asymharris->pert_halfwidth == 0.0) {
-    ic_asymharris->pert_halfwidth = 0.5 * (xh[1] - xl[1]);
+    ic_asymharris->pert_halfwidth = 0.5 * ly;
   }
   
   struct mrc_fld *fld_psi = mrc_domain_fld_create(fld->_domain, SW_2, "psi");
@@ -386,7 +386,7 @@ static struct param ggcm_mhd_ic_asymharris_descr[] = {
 #undef VAR
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_ic_ot_ops
+// ggcm_mhd_ic_asymharris_ops
 
 struct ggcm_mhd_ic_ops ggcm_mhd_ic_asymharris_ops = {
   .name        = "asymharris",

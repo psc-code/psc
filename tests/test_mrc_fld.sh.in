@@ -24,3 +24,7 @@ set -e
 @MPIRUN@ -n 1 ./test_mrc_fld --case 20
 @MPIRUN@ -n 1 ./test_mrc_fld --case 21
 @MPIRUN@ -n 1 ./test_mrc_fld --case 22
+@MPIRUN@ -n 1 ./test_mrc_fld --case 23
+@MPIRUN@ -n 1 ./test_mrc_fld --case 24
+@MPIRUN@ -n 1 ./test_mrc_fld --case 25
+@MPIRUN@ -n 1 ./test_mrc_fld --case 26

@@ -1,6 +1,20 @@
 HDF5 "run.000001_p000000.h5" {
 GROUP "/" {
    GROUP "crd[0]-uid" {
+      ATTRIBUTE "aos" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
+         }
+      }
+      ATTRIBUTE "c_order" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
+         }
+      }
       ATTRIBUTE "comp_name_0" {
          DATATYPE  H5T_STRING {
             STRSIZE 7;
@@ -39,11 +53,11 @@ GROUP "/" {
          (0): "mrc_domain-uid"
          }
       }
-      ATTRIBUTE "len" {
-         DATATYPE  H5T_STD_I32LE
+      ATTRIBUTE "io_scale" {
+         DATATYPE  H5T_IEEE_F64LE
          DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
          DATA {
-         (0): 30
+         (0): 1
          }
       }
       ATTRIBUTE "mrc_obj_class" {
@@ -62,7 +76,26 @@ GROUP "/" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
          DATA {
-         (0): 0
+         (0): 1
+         }
+      }
+      ATTRIBUTE "mrc_obj_dict_name_0" {
+         DATATYPE  H5T_STRING {
+            STRSIZE 9;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+         DATA {
+         (0): "io_scale"
+         }
+      }
+      ATTRIBUTE "mrc_obj_dict_type_0" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 4
          }
       }
       ATTRIBUTE "mrc_obj_name" {
@@ -124,30 +157,11 @@ GROUP "/" {
          (0): 0, 0, 0
          }
       }
-      ATTRIBUTE "size_of_type" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 4
-         }
-      }
       ATTRIBUTE "sw" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
          DATA {
          (0): 2, 0, 0
-         }
-      }
-      ATTRIBUTE "vec" {
-         DATATYPE  H5T_STRING {
-            STRSIZE 27;
-            STRPAD H5T_STR_NULLTERM;
-            CSET H5T_CSET_ASCII;
-            CTYPE H5T_C_S1;
-         }
-         DATASPACE  SCALAR
-         DATA {
-         (0): "mrc_vec-uid"
          }
       }
       GROUP "crd[0]" {
@@ -195,6 +209,20 @@ GROUP "/" {
       }
    }
    GROUP "crd[1]-uid" {
+      ATTRIBUTE "aos" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
+         }
+      }
+      ATTRIBUTE "c_order" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
+         }
+      }
       ATTRIBUTE "comp_name_0" {
          DATATYPE  H5T_STRING {
             STRSIZE 7;
@@ -233,11 +261,11 @@ GROUP "/" {
          (0): "mrc_domain-uid"
          }
       }
-      ATTRIBUTE "len" {
-         DATATYPE  H5T_STD_I32LE
+      ATTRIBUTE "io_scale" {
+         DATATYPE  H5T_IEEE_F64LE
          DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
          DATA {
-         (0): 40
+         (0): 1
          }
       }
       ATTRIBUTE "mrc_obj_class" {
@@ -256,7 +284,26 @@ GROUP "/" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
          DATA {
-         (0): 0
+         (0): 1
+         }
+      }
+      ATTRIBUTE "mrc_obj_dict_name_0" {
+         DATATYPE  H5T_STRING {
+            STRSIZE 9;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+         DATA {
+         (0): "io_scale"
+         }
+      }
+      ATTRIBUTE "mrc_obj_dict_type_0" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 4
          }
       }
       ATTRIBUTE "mrc_obj_name" {
@@ -318,30 +365,11 @@ GROUP "/" {
          (0): 0, 0, 0
          }
       }
-      ATTRIBUTE "size_of_type" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 4
-         }
-      }
       ATTRIBUTE "sw" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
          DATA {
          (0): 2, 0, 0
-         }
-      }
-      ATTRIBUTE "vec" {
-         DATATYPE  H5T_STRING {
-            STRSIZE 27;
-            STRPAD H5T_STR_NULLTERM;
-            CSET H5T_CSET_ASCII;
-            CTYPE H5T_C_S1;
-         }
-         DATASPACE  SCALAR
-         DATA {
-         (0): "mrc_vec-uid"
          }
       }
       GROUP "crd[1]" {
@@ -393,6 +421,20 @@ GROUP "/" {
       }
    }
    GROUP "crd[2]-uid" {
+      ATTRIBUTE "aos" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
+         }
+      }
+      ATTRIBUTE "c_order" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
+         }
+      }
       ATTRIBUTE "comp_name_0" {
          DATATYPE  H5T_STRING {
             STRSIZE 7;
@@ -431,11 +473,11 @@ GROUP "/" {
          (0): "mrc_domain-uid"
          }
       }
-      ATTRIBUTE "len" {
-         DATATYPE  H5T_STD_I32LE
+      ATTRIBUTE "io_scale" {
+         DATATYPE  H5T_IEEE_F64LE
          DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
          DATA {
-         (0): 72
+         (0): 1
          }
       }
       ATTRIBUTE "mrc_obj_class" {
@@ -454,7 +496,26 @@ GROUP "/" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
          DATA {
-         (0): 0
+         (0): 1
+         }
+      }
+      ATTRIBUTE "mrc_obj_dict_name_0" {
+         DATATYPE  H5T_STRING {
+            STRSIZE 9;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+         DATA {
+         (0): "io_scale"
+         }
+      }
+      ATTRIBUTE "mrc_obj_dict_type_0" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 4
          }
       }
       ATTRIBUTE "mrc_obj_name" {
@@ -516,30 +577,11 @@ GROUP "/" {
          (0): 0, 0, 0
          }
       }
-      ATTRIBUTE "size_of_type" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 4
-         }
-      }
       ATTRIBUTE "sw" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
          DATA {
          (0): 2, 0, 0
-         }
-      }
-      ATTRIBUTE "vec" {
-         DATATYPE  H5T_STRING {
-            STRSIZE 27;
-            STRPAD H5T_STR_NULLTERM;
-            CSET H5T_CSET_ASCII;
-            CTYPE H5T_C_S1;
-         }
-         DATASPACE  SCALAR
-         DATA {
-         (0): "mrc_vec-uid"
          }
       }
       GROUP "crd[2]" {
@@ -873,6 +915,20 @@ GROUP "/" {
       }
    }
    GROUP "dcrd[0]-uid" {
+      ATTRIBUTE "aos" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
+         }
+      }
+      ATTRIBUTE "c_order" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
+         }
+      }
       ATTRIBUTE "comp_name_0" {
          DATATYPE  H5T_STRING {
             STRSIZE 8;
@@ -909,13 +965,6 @@ GROUP "/" {
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_domain-uid"
-         }
-      }
-      ATTRIBUTE "len" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 30
          }
       }
       ATTRIBUTE "mrc_obj_class" {
@@ -989,34 +1038,29 @@ GROUP "/" {
          (0): 0, 0, 0
          }
       }
-      ATTRIBUTE "size_of_type" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 8
-         }
-      }
       ATTRIBUTE "sw" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
          DATA {
          (0): 2, 0, 0
-         }
-      }
-      ATTRIBUTE "vec" {
-         DATATYPE  H5T_STRING {
-            STRSIZE 27;
-            STRPAD H5T_STR_NULLTERM;
-            CSET H5T_CSET_ASCII;
-            CTYPE H5T_C_S1;
-         }
-         DATASPACE  SCALAR
-         DATA {
-         (0): "mrc_vec-uid"
          }
       }
    }
    GROUP "dcrd[1]-uid" {
+      ATTRIBUTE "aos" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
+         }
+      }
+      ATTRIBUTE "c_order" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
+         }
+      }
       ATTRIBUTE "comp_name_0" {
          DATATYPE  H5T_STRING {
             STRSIZE 8;
@@ -1055,13 +1099,6 @@ GROUP "/" {
          (0): "mrc_domain-uid"
          }
       }
-      ATTRIBUTE "len" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 40
-         }
-      }
       ATTRIBUTE "mrc_obj_class" {
          DATATYPE  H5T_STRING {
             STRSIZE 8;
@@ -1133,13 +1170,6 @@ GROUP "/" {
          (0): 0, 0, 0
          }
       }
-      ATTRIBUTE "size_of_type" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 8
-         }
-      }
       ATTRIBUTE "sw" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
@@ -1147,20 +1177,22 @@ GROUP "/" {
          (0): 2, 0, 0
          }
       }
-      ATTRIBUTE "vec" {
-         DATATYPE  H5T_STRING {
-            STRSIZE 27;
-            STRPAD H5T_STR_NULLTERM;
-            CSET H5T_CSET_ASCII;
-            CTYPE H5T_C_S1;
-         }
-         DATASPACE  SCALAR
-         DATA {
-         (0): "mrc_vec-uid"
-         }
-      }
    }
    GROUP "dcrd[2]-uid" {
+      ATTRIBUTE "aos" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
+         }
+      }
+      ATTRIBUTE "c_order" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
+         }
+      }
       ATTRIBUTE "comp_name_0" {
          DATATYPE  H5T_STRING {
             STRSIZE 8;
@@ -1197,13 +1229,6 @@ GROUP "/" {
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_domain-uid"
-         }
-      }
-      ATTRIBUTE "len" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 72
          }
       }
       ATTRIBUTE "mrc_obj_class" {
@@ -1277,13 +1302,6 @@ GROUP "/" {
          (0): 0, 0, 0
          }
       }
-      ATTRIBUTE "size_of_type" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 8
-         }
-      }
       ATTRIBUTE "sw" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
@@ -1291,20 +1309,22 @@ GROUP "/" {
          (0): 2, 0, 0
          }
       }
-      ATTRIBUTE "vec" {
-         DATATYPE  H5T_STRING {
-            STRSIZE 27;
-            STRPAD H5T_STR_NULLTERM;
-            CSET H5T_CSET_ASCII;
-            CTYPE H5T_C_S1;
-         }
-         DATASPACE  SCALAR
-         DATA {
-         (0): "mrc_vec-uid"
-         }
-      }
    }
    GROUP "dcrd_nc[0]-uid" {
+      ATTRIBUTE "aos" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
+         }
+      }
+      ATTRIBUTE "c_order" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
+         }
+      }
       ATTRIBUTE "comp_name_0" {
          DATATYPE  H5T_STRING {
             STRSIZE 11;
@@ -1343,13 +1363,6 @@ GROUP "/" {
          (0): "mrc_domain-uid"
          }
       }
-      ATTRIBUTE "len" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 34
-         }
-      }
       ATTRIBUTE "mrc_obj_class" {
          DATATYPE  H5T_STRING {
             STRSIZE 8;
@@ -1421,13 +1434,6 @@ GROUP "/" {
          (0): 0, 0, 0
          }
       }
-      ATTRIBUTE "size_of_type" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 8
-         }
-      }
       ATTRIBUTE "sw" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
@@ -1435,20 +1441,22 @@ GROUP "/" {
          (0): 3, 0, 0
          }
       }
-      ATTRIBUTE "vec" {
-         DATATYPE  H5T_STRING {
-            STRSIZE 27;
-            STRPAD H5T_STR_NULLTERM;
-            CSET H5T_CSET_ASCII;
-            CTYPE H5T_C_S1;
-         }
-         DATASPACE  SCALAR
-         DATA {
-         (0): "mrc_vec-uid"
-         }
-      }
    }
    GROUP "dcrd_nc[1]-uid" {
+      ATTRIBUTE "aos" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
+         }
+      }
+      ATTRIBUTE "c_order" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
+         }
+      }
       ATTRIBUTE "comp_name_0" {
          DATATYPE  H5T_STRING {
             STRSIZE 11;
@@ -1487,13 +1495,6 @@ GROUP "/" {
          (0): "mrc_domain-uid"
          }
       }
-      ATTRIBUTE "len" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 44
-         }
-      }
       ATTRIBUTE "mrc_obj_class" {
          DATATYPE  H5T_STRING {
             STRSIZE 8;
@@ -1565,13 +1566,6 @@ GROUP "/" {
          (0): 0, 0, 0
          }
       }
-      ATTRIBUTE "size_of_type" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 8
-         }
-      }
       ATTRIBUTE "sw" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
@@ -1579,20 +1573,22 @@ GROUP "/" {
          (0): 3, 0, 0
          }
       }
-      ATTRIBUTE "vec" {
-         DATATYPE  H5T_STRING {
-            STRSIZE 27;
-            STRPAD H5T_STR_NULLTERM;
-            CSET H5T_CSET_ASCII;
-            CTYPE H5T_C_S1;
-         }
-         DATASPACE  SCALAR
-         DATA {
-         (0): "mrc_vec-uid"
-         }
-      }
    }
    GROUP "dcrd_nc[2]-uid" {
+      ATTRIBUTE "aos" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
+         }
+      }
+      ATTRIBUTE "c_order" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
+         }
+      }
       ATTRIBUTE "comp_name_0" {
          DATATYPE  H5T_STRING {
             STRSIZE 11;
@@ -1629,13 +1625,6 @@ GROUP "/" {
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_domain-uid"
-         }
-      }
-      ATTRIBUTE "len" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 76
          }
       }
       ATTRIBUTE "mrc_obj_class" {
@@ -1709,30 +1698,11 @@ GROUP "/" {
          (0): 0, 0, 0
          }
       }
-      ATTRIBUTE "size_of_type" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 8
-         }
-      }
       ATTRIBUTE "sw" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
          DATA {
          (0): 3, 0, 0
-         }
-      }
-      ATTRIBUTE "vec" {
-         DATATYPE  H5T_STRING {
-            STRSIZE 27;
-            STRPAD H5T_STR_NULLTERM;
-            CSET H5T_CSET_ASCII;
-            CTYPE H5T_C_S1;
-         }
-         DATASPACE  SCALAR
-         DATA {
-         (0): "mrc_vec-uid"
          }
       }
    }
@@ -1914,7 +1884,21 @@ GROUP "/" {
          (0): 1, 1, 1
          }
       }
+      ATTRIBUTE "hi_code" {
+         DATATYPE  H5T_IEEE_F64LE
+         DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+         DATA {
+         (0): 1, 1, 1
+         }
+      }
       ATTRIBUTE "l" {
+         DATATYPE  H5T_IEEE_F64LE
+         DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+         DATA {
+         (0): 0, 0, 0
+         }
+      }
+      ATTRIBUTE "lo_code" {
          DATATYPE  H5T_IEEE_F64LE
          DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
          DATA {
@@ -1964,11 +1948,32 @@ GROUP "/" {
          (0): "uniform"
          }
       }
+      ATTRIBUTE "norm_length" {
+         DATATYPE  H5T_IEEE_F64LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 1
+         }
+      }
+      ATTRIBUTE "norm_length_scale" {
+         DATATYPE  H5T_IEEE_F64LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 1
+         }
+      }
       ATTRIBUTE "sw" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
          DATA {
          (0): 2
+         }
+      }
+      ATTRIBUTE "xnorm" {
+         DATATYPE  H5T_IEEE_F64LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 1
          }
       }
    }
@@ -2183,6 +2188,20 @@ GROUP "/" {
       }
    }
    GROUP "test_m3-uid" {
+      ATTRIBUTE "aos" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
+         }
+      }
+      ATTRIBUTE "c_order" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
+         }
+      }
       ATTRIBUTE "comp_name_0" {
          DATATYPE  H5T_STRING {
             STRSIZE 5;
@@ -2231,13 +2250,6 @@ GROUP "/" {
          DATASPACE  SCALAR
          DATA {
          (0): "mrc_domain-uid"
-         }
-      }
-      ATTRIBUTE "len" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 22528
          }
       }
       ATTRIBUTE "mrc_obj_class" {
@@ -2318,30 +2330,11 @@ GROUP "/" {
          (0): 0, 0, 0, 0, 0
          }
       }
-      ATTRIBUTE "size_of_type" {
-         DATATYPE  H5T_STD_I32LE
-         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
-         DATA {
-         (0): 4
-         }
-      }
       ATTRIBUTE "sw" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 5 ) / ( 5 ) }
          DATA {
          (0): 0, 0, 0, 0, 0
-         }
-      }
-      ATTRIBUTE "vec" {
-         DATATYPE  H5T_STRING {
-            STRSIZE 27;
-            STRPAD H5T_STR_NULLTERM;
-            CSET H5T_CSET_ASCII;
-            CTYPE H5T_C_S1;
-         }
-         DATASPACE  SCALAR
-         DATA {
-         (0): "mrc_vec-uid"
          }
       }
       GROUP "fld0" {

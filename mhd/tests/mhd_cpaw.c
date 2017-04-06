@@ -48,8 +48,9 @@ ggcm_mhd_ic_cpaw_setup(struct ggcm_mhd_ic *ic)
 
   sub->cA = sub->B0 / sqrt(sub->rr0);
   sub->cs = sqrt(mhd->par.gamm * sub->pp0 / sub->rr0);
-  double lambdax = crds->xh[0] - crds->xl[0];
-  double lambday = crds->xh[1] - crds->xl[1];
+  const double *lo = mrc_crds_lo(crds), *hi = mrc_crds_hi(crds);
+  double lambdax = hi[0] - lo[0];
+  double lambday = hi[1] - lo[1];
   sub->kx = 2. * M_PI / lambdax;
   sub->ky = 2. * M_PI / lambday;
 

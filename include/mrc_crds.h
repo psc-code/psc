@@ -8,19 +8,32 @@
 struct mrc_crds {
   struct mrc_obj obj;
   // parameters
-  double xl[3];
-  double xh[3];
+  // domain limits in I/O units
+  double l[3];
+  double h[3];
   int sw;
+  // normalization factors
+  // typically, this might work like:
+  // length input is in units of "cm".
+  // then norm_length_scale transforms that back to the base SI units,
+  // and norm_length transforms it into normalized units.
+  // output will be scaled back into terms of "cm".
+  double norm_length_scale;
+  double norm_length;
+  struct mrc_domain *domain;
 
   // state
-  struct mrc_domain *domain;
+  // domain limits in code units
+  double xnorm;
+  double lo_code[3];
+  double hi_code[3];
   struct mrc_fld *crd[3];
   struct mrc_fld *dcrd[3]; // Double version of the coordinates
                            // not fully supported in io yet
   struct mrc_fld *crd_nc[3];
   struct mrc_fld *dcrd_nc[3];
 
-  struct mrc_fld *global_crd[3];
+  struct mrc_ndarray *global_crd[3];
 
   struct mrc_crds_gen *crds_gen[3];
 };
@@ -59,6 +72,9 @@ struct mrc_crds {
 
 MRC_CLASS_DECLARE(mrc_crds, struct mrc_crds);
 
+// get coordinate limits lo, hi (per dimension) in code units
+const double *mrc_crds_lo(struct mrc_crds *crds);
+const double *mrc_crds_hi(struct mrc_crds *crds);
 void mrc_crds_get_dx_base(struct mrc_crds *crds, double dx[3]);
 void mrc_crds_get_dx(struct mrc_crds *crds, int p, double dx[3]);
 

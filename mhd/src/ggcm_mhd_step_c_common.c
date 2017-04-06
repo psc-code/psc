@@ -61,9 +61,9 @@ ggcm_mhd_step_c_setup_flds(struct ggcm_mhd_step *step)
   mrc_fld_set_type(mhd->fld, FLD_TYPE);
   mrc_fld_set_param_int(mhd->fld, "nr_ghosts", 2);
 #if OPT_STAGGER == OPT_STAGGER_GGCM
-  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_SEMI_CONSERVATIVE_GGCM);
+  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_SCONS_FC_GGCM);
 #else
-  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_SEMI_CONSERVATIVE);
+  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_SCONS_FC);
 #endif
   mrc_fld_set_param_int(mhd->fld, "nr_comps", _NR_FLDS);
 }
@@ -76,8 +76,7 @@ ggcm_mhd_step_c_setup(struct ggcm_mhd_step *step)
 {
   struct ggcm_mhd *mhd = step->mhd;
 
-  pde_setup(mhd->fld);
-  pde_mhd_setup(mhd);
+  pde_mhd_setup(mhd, 5);
   pde_mhd_compat_setup(mhd);
 
   mhd->ymask = mrc_fld_make_view(mhd->fld, _YMASK, _YMASK + 1);
@@ -116,16 +115,27 @@ ggcm_mhd_step_c_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   struct ggcm_mhd *mhd = step->mhd;
 
   assert(x == mhd->fld);
+  int mhd_type;
+  mrc_fld_get_param_int(x, "mhd_type", &mhd_type);
+
+  struct mrc_fld *x_n = mrc_fld_make_view(x, _RR1, _RR1 + 8);
+  mrc_fld_dict_add_int(x_n, "mhd_type", mhd_type);
+
+  struct mrc_fld *x_star = mrc_fld_make_view(x, _RR2, _RR2 + 8);
+  mrc_fld_dict_add_int(x_star, "mhd_type", mhd_type);
 
   // FIXME? It's not going to make a difference, but this is the
   // time at the beginning of the whole step, rather than the time of the current state
-  s_mhd_time = mhd->time; 
+  s_mhd_time = mhd->time_code * mhd->tnorm; 
 
-  ggcm_mhd_fill_ghosts(mhd, x, _RR1, mhd->time);
-  pde_mhd_pushstage(x, .5f * mhd->dt, 0);
+  ggcm_mhd_fill_ghosts(mhd, x_n, mhd->time_code);
+  pde_mhd_pushstage(x, .5f * mhd->dt_code, 0);
 
-  ggcm_mhd_fill_ghosts(mhd, x, _RR2, mhd->time + mhd->bndt);
-  pde_mhd_pushstage(x, mhd->dt, 1);
+  ggcm_mhd_fill_ghosts(mhd, x_star, mhd->time_code + .5 * mhd->dt_code);
+  pde_mhd_pushstage(x, mhd->dt_code, 1);
+
+  mrc_fld_destroy(x_n);
+  mrc_fld_destroy(x_star);
 }
 
 // ----------------------------------------------------------------------

@@ -115,6 +115,7 @@ void mrc_obj_set_param_int3(struct mrc_obj *obj, const char *name, const int val
 void mrc_obj_set_param_float3(struct mrc_obj *obj, const char *name, const float val[3]);
 void mrc_obj_set_param_double3(struct mrc_obj *obj, const char *name, const double val[3]);
 void mrc_obj_set_param_int_array(struct mrc_obj *obj, const char *name, int nr_vals, const int val[]);
+void mrc_obj_set_param_float_array(struct mrc_obj *obj, const char *name, int nr_vals, const float val[]);
 void mrc_obj_set_param_ptr(struct mrc_obj *obj, const char *name, void* val);
 void mrc_obj_set_param_obj(struct mrc_obj *obj, const char *name, void* val);
 int mrc_obj_get_param_bool(struct mrc_obj *obj, const char *name, bool *pval);
@@ -130,7 +131,8 @@ int mrc_obj_get_param_ptr(struct mrc_obj *obj, const char *name, void **pval);
 int mrc_obj_get_param_float_array_nr_vals(struct mrc_obj *obj, const char *name, int *nr_vals);
 int mrc_obj_get_param_float_array(struct mrc_obj *obj, const char *name, float *pval);
 
-void mrc_obj_get_var(struct mrc_obj *obj, const char *name, union param_u **pv);
+int mrc_obj_get_var(struct mrc_obj *obj, const char *name, union param_u **pv);
+int mrc_obj_get_var_double(struct mrc_obj *obj, const char *name, double *pval);
 struct mrc_obj *mrc_obj_get_var_obj(struct mrc_obj *obj, const char *name);
 
 void mrc_obj_dict_add(struct mrc_obj *obj, int type, const char *name,
@@ -299,6 +301,13 @@ int mrc_obj_print_class_info(int verbosity);
   }                                                                     \
                                                                         \
   static inline void                                                    \
+  pfx ## _set_param_float_array(obj_type *obj, const char *name,	\
+				int nr_vals, const float val[])		\
+  {                                                                     \
+    mrc_obj_set_param_float_array((struct mrc_obj *)obj, name, nr_vals, val); \
+  }                                                                     \
+                                                                        \
+  static inline void                                                    \
   pfx ## _set_param_ptr(obj_type *obj, const char *name, void* val)     \
   {                                                                     \
     mrc_obj_set_param_ptr((struct mrc_obj *)obj, name, val);            \
@@ -384,10 +393,16 @@ int mrc_obj_print_class_info(int verbosity);
   {                                                                    \
     return mrc_obj_get_param_ptr((struct mrc_obj *)obj, name, pval);    \
   }                                                                     \
-  static inline void                                                    \
+  static inline int                                                     \
   pfx ## _get_var(obj_type *obj, const char *name, union param_u **pv)  \
   {                                                                     \
-    mrc_obj_get_var((struct mrc_obj *)obj, name, pv);                   \
+    return mrc_obj_get_var((struct mrc_obj *)obj, name, pv);            \
+  }                                                                     \
+                                                                        \
+  static inline int							\
+  pfx ## _get_var_double(obj_type *obj, const char *name, double *pval)	\
+  {                                                                     \
+    return mrc_obj_get_var_double((struct mrc_obj *)obj, name, pval);	\
   }                                                                     \
                                                                         \
   /* we should return a subtype of mrc_obj, but that's not */           \

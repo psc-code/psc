@@ -62,7 +62,7 @@ ggcm_mhd_step_cweno_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
 
   calc_ct_rhs(mhd, rhs, flux);
   struct mrc_fld *r = mrc_fld_get_as(rhs, "float");
-  assert(mhd->fld->_data_type == MRC_NT_FLOAT);
+  assert(mrc_fld_data_type(mhd->fld) == MRC_NT_FLOAT);
   struct mrc_fld *f = mrc_fld_get_as(mhd->fld, mrc_fld_type(mhd->fld));
 
   mrc_fld_foreach(f, ix,iy,iz, 1, 1) {
@@ -121,9 +121,9 @@ ggcm_mhd_step_cweno_setup_flds(struct ggcm_mhd_step *step)
   mrc_fld_set_type(mhd->fld, "float");
   mrc_fld_set_param_int(mhd->fld, "nr_ghosts", 2);
 #if SEMICONSV
-  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_SEMI_CONSERVATIVE);
+  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_SCONS_FC);
 #else
-  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_FULLY_CONSERVATIVE);
+  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_FCONS_FC);
 #endif
   mrc_fld_set_param_int(mhd->fld, "nr_comps", _NR_FLDS);
 }

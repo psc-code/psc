@@ -590,10 +590,10 @@ mrc_ddc_multi_fill_ghosts_fld(struct mrc_ddc *ddc, int mb, int me,
     sub->fill_ghosts[nr_ghosts] = calloc(1, sizeof(*sub->fill_ghosts[0]));
     mrc_ddc_multi_setup_pattern2(ddc, sub->fill_ghosts[nr_ghosts],
 				 ddc_init_inside, ddc_init_outside,
-				 &fld->_sw.vals[fld->_is_aos]);
+				 fld->_sw.vals);
   }
 
-  ddc->size_of_type = fld->_size_of_type;
+  ddc->size_of_type = fld->_nd->size_of_type;
   mrc_ddc_multi_set_mpi_type(ddc);
   mrc_ddc_multi_alloc_buffers(ddc, sub->fill_ghosts[nr_ghosts], me - mb);
   ddc_run(ddc, sub->fill_ghosts[nr_ghosts], mb, me, fld,

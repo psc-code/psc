@@ -1,6 +1,7 @@
 
 #include <mrc_params.h>
 #include <mrc_domain.h>
+#include <mrc_crds_gen.h>
 #include <mrc_fld.h>
 #include <mrc_io.h>
 #include <mrctest.h>
@@ -43,7 +44,10 @@ main(int argc, char **argv)
 
   struct mrc_domain *domain = mrc_domain_create(MPI_COMM_WORLD);
   mrc_domain_set_type(domain, "simple");
+			  
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
+  mrc_crds_set_param_double3(crds, "l", (double [3]) { -1., -2., -3. });
+  mrc_crds_set_param_double3(crds, "h", (double [3]) {  1.,  2.,  3. });
 
   int testcase = 1;
   mrc_params_get_option_int("case", &testcase);
@@ -57,10 +61,11 @@ main(int argc, char **argv)
     break;
   case 2: ;
     mrc_crds_set_type(crds, "rectilinear");
+    struct mrc_crds_gen *gen_x = crds->crds_gen[0];
+    mrc_crds_gen_set_type(gen_x, "ggcm_yz");
     mrc_crds_set_param_int(crds, "sw", 2);
     mrc_domain_set_from_options(domain);
     mrc_domain_setup(domain);
-    mrctest_set_crds_rectilinear_1(domain);
     test_read_write(domain);
     break;
   }

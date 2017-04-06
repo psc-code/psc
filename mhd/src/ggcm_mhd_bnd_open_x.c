@@ -28,7 +28,7 @@ enum {
 
 static void
 ggcm_mhd_bnd_open_x_fill_ghosts_scons(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld,
-				      int m, float bntim)
+				      float bntim)
 {
   struct ggcm_mhd *mhd = bnd->mhd;
 
@@ -192,7 +192,7 @@ ggcm_mhd_bnd_open_x_fill_ghosts_scons(struct ggcm_mhd_bnd *bnd, struct mrc_fld *
 
 static void
 ggcm_mhd_bnd_open_x_fill_ghosts_fcons_cc(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld,
-					 int m, float bntim)
+					 float bntim)
 {
   struct ggcm_mhd *mhd = bnd->mhd;
 
@@ -238,7 +238,7 @@ ggcm_mhd_bnd_open_x_fill_ghosts_fcons_cc(struct ggcm_mhd_bnd *bnd, struct mrc_fl
 
 static void
 ggcm_mhd_bnd_open_x_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld,
-				      int m, float bntim)
+				float bntim)
 {
   int mhd_type;
   mrc_fld_get_param_int(fld, "mhd_type", &mhd_type);
@@ -247,10 +247,10 @@ ggcm_mhd_bnd_open_x_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld,
   mrc_domain_get_param_int(bnd->mhd->domain, "bcx", &bcx);
   assert(bcx == BC_NONE);
 
-  if (mhd_type == MT_SEMI_CONSERVATIVE) {
-    ggcm_mhd_bnd_open_x_fill_ghosts_scons(bnd, fld, m, bntim);
-  } else if (mhd_type == MT_FULLY_CONSERVATIVE_CC) {
-    ggcm_mhd_bnd_open_x_fill_ghosts_fcons_cc(bnd, fld, m, bntim);
+  if (mhd_type == MT_SCONS_FC) {
+    ggcm_mhd_bnd_open_x_fill_ghosts_scons(bnd, fld, bntim);
+  } else if (mhd_type == MT_FCONS_CC) {
+    ggcm_mhd_bnd_open_x_fill_ghosts_fcons_cc(bnd, fld, bntim);
   } else {
     assert(0);
   }

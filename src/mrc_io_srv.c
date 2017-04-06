@@ -272,7 +272,7 @@ diagc_combined_write_field2d(struct mrc_io *io, float scale, struct mrc_fld *fld
   }
 
   int iw[6] = { -1, };
-  if (fld->_len) { // part of the slice?
+  if (mrc_fld_len(fld)) { // part of the slice?
     int *off = iw, *dims = iw + 3; // off, then dims
     int nr_patches;
     struct mrc_patch *patches = mrc_domain_get_patches(fld->_domain, &nr_patches);
@@ -286,7 +286,7 @@ diagc_combined_write_field2d(struct mrc_io *io, float scale, struct mrc_fld *fld
 
     MPI_Send(iw, 6, MPI_INT, par->rank_diagsrv, ID_DIAGS_SUBDOMAIN, MPI_COMM_WORLD);
     struct mrc_fld *f = mrc_fld_get_as(fld, "float");
-    MPI_Send(fld->_arr, fld->_len, MPI_FLOAT, par->rank_diagsrv, ID_DIAGS_2DDATA, MPI_COMM_WORLD);
+    MPI_Send(fld->_nd->arr, mrc_fld_len(fld), MPI_FLOAT, par->rank_diagsrv, ID_DIAGS_2DDATA, MPI_COMM_WORLD);
     mrc_fld_put_as(f, fld);
   } else {
     MPI_Send(iw, 6, MPI_INT, par->rank_diagsrv, ID_DIAGS_SUBDOMAIN, MPI_COMM_WORLD);
@@ -307,6 +307,7 @@ diagc_combined_write_attr(struct mrc_io *io, const char *path, int type,
     MPI_Send((char *)name, strlen(name) + 1, MPI_CHAR, par->rank_diagsrv,
 	     ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD);
     switch (type) {
+    case PT_BOOL:
     case PT_INT:
     case PT_SELECT:
     case MRC_VAR_INT:
@@ -319,6 +320,7 @@ diagc_combined_write_attr(struct mrc_io *io, const char *path, int type,
 	       ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD);
       break;
     case PT_DOUBLE:
+    case MRC_VAR_DOUBLE:
       MPI_Send(&pv->u_double, 1, MPI_DOUBLE, par->rank_diagsrv,
          ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD);
       break;
@@ -335,6 +337,7 @@ diagc_combined_write_attr(struct mrc_io *io, const char *path, int type,
 	       ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD);
       break;
     case PT_DOUBLE3:
+    case MRC_VAR_DOUBLE3:
       MPI_Send(pv->u_double3, 3, MPI_DOUBLE, par->rank_diagsrv,
 	       ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD);
       break;
@@ -969,6 +972,7 @@ static struct param diagsrv_params_descr[] = {
 		 MPI_STATUS_IGNORE);
 	union param_u val;
 	switch (type) {
+	case PT_BOOL:
 	case PT_INT:
 	case PT_SELECT:
 	case MRC_VAR_INT:
@@ -980,10 +984,11 @@ static struct param diagsrv_params_descr[] = {
 	  MPI_Recv(&val.u_float, 1, MPI_FLOAT, 0, ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD,
 		   MPI_STATUS_IGNORE);
 	  break;
-  case PT_DOUBLE:
-    MPI_Recv(&val.u_double, 1, MPI_DOUBLE, 0, ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD,
-       MPI_STATUS_IGNORE);
-    break;
+	case PT_DOUBLE:
+	case MRC_VAR_DOUBLE:
+	  MPI_Recv(&val.u_double, 1, MPI_DOUBLE, 0, ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD,
+		   MPI_STATUS_IGNORE);
+	  break;
 	case PT_STRING: ;
 	  char str[100];
 	  MPI_Recv(str, 100, MPI_CHAR, 0, ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD,
@@ -999,6 +1004,7 @@ static struct param diagsrv_params_descr[] = {
 		   MPI_STATUS_IGNORE);
 	  break;
 	case PT_DOUBLE3:
+	case MRC_VAR_DOUBLE3:
 	  MPI_Recv(val.u_double3, 3, MPI_DOUBLE, 0, ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD,
 		   MPI_STATUS_IGNORE);
 	  break;
@@ -1066,7 +1072,7 @@ static struct param diagsrv_params_descr[] = {
 	    mrc_fld_set_array(lfld2, w2);
 	    mrc_fld_setup(lfld2);
 	    struct mrc_fld *_lfld2 = mrc_fld_get_as(lfld2, "float");
-	    MPI_Recv(_lfld2->_arr, lfld2->_len, MPI_FLOAT, k, ID_DIAGS_2DDATA, MPI_COMM_WORLD,
+	    MPI_Recv(_lfld2->_nd->arr, mrc_fld_len(lfld2), MPI_FLOAT, k, ID_DIAGS_2DDATA, MPI_COMM_WORLD,
 		     MPI_STATUS_IGNORE);
 	    mrc_fld_put_as(_lfld2, lfld2);
 	    add_to_field_2d(gfld2, lfld2, (int [2]) { off[i0], off[i1] });
@@ -1090,7 +1096,7 @@ static struct param diagsrv_params_descr[] = {
 	    mrc_fld_set_array(lfld3, w2);
 	    mrc_fld_setup(lfld3);
 	    struct mrc_fld *_lfld3 = mrc_fld_get_as(lfld3, "float");
-	    MPI_Recv(lfld3->_arr, lfld3->_len, MPI_FLOAT, k, ID_DIAGS_DATA, MPI_COMM_WORLD,
+	    MPI_Recv(lfld3->_nd->arr, mrc_fld_len(lfld3), MPI_FLOAT, k, ID_DIAGS_DATA, MPI_COMM_WORLD,
 		     MPI_STATUS_IGNORE);
 	    mrc_fld_put_as(_lfld3, lfld3);
 	    add_to_field_3d(gfld3, lfld3, off);

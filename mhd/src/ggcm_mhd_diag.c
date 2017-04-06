@@ -54,6 +54,19 @@ ggcm_mhd_diag_init()
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_diag_mod_register
+
+void
+ggcm_mhd_diag_mod_register(struct ggcm_mhd_diag *mhd_diag, struct mrc_mod *mod)
+{
+  struct ggcm_mhd_diag_ops *ops = ggcm_mhd_diag_ops(mhd_diag);
+
+  if (ops && ops->mod_register) {
+    ops->mod_register(mhd_diag, mod);
+  }
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_diag description
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_diag, x)
