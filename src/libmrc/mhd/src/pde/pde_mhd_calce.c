@@ -22,9 +22,9 @@ bcthy3f(mrc_fld_data_t s1, mrc_fld_data_t s2)
   return 0.f;
 }
 
-#define ID(XX) ((XX)==0)
-#define JD(XX) ((XX)==1)
-#define KD(XX) ((XX)==2)
+#define ID(XX) (di*((XX)==0))
+#define JD(XX) (dj*((XX)==1))
+#define KD(XX) (dk*((XX)==2))
 
 #define F3S_P(XX, p_f, m, i,j,k) F3S(p_f, m, i+ID(XX),j+JD(XX),k+KD(XX))
 #define F3S_M(XX, p_f, m, i,j,k) F3S(p_f, m, i-ID(XX),j-JD(XX),k-KD(XX))
@@ -325,9 +325,7 @@ patch_calc_e(fld3d_t p_E, mrc_fld_data_t dt, fld3d_t p_U, fld3d_t p_W,
   fld3d_setup_tmp_compat(&p_resis, 1, _RESIS);
 
   if (s_opt_hall != OPT_HALL_NONE || s_magdiffu == MAGDIFFU_CONST) {
-    if (!fld3d_is_setup(s_p_aux.Jcc)) {
-      fld3d_setup_tmp(&s_p_aux.Jcc, 3);
-    }
+    fld3d_setup_tmp(&s_p_aux.Jcc, 3);
     patch_calc_current_cc(s_p_aux.Jcc, p_U, p_zmask);
   }
 

@@ -59,7 +59,7 @@ ggcm_mhd_step_c2_setup_flds(struct ggcm_mhd_step *step)
   pde_mhd_set_options(mhd, &sub->opt);
   mrc_fld_set_type(mhd->fld, FLD_TYPE);
   mrc_fld_set_param_int(mhd->fld, "nr_ghosts", 2);
-  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_SEMI_CONSERVATIVE);
+  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_SCONS_FC);
   mrc_fld_set_param_int(mhd->fld, "nr_comps", 8);
 }
 
@@ -72,8 +72,7 @@ ggcm_mhd_step_c2_setup(struct ggcm_mhd_step *step)
   struct ggcm_mhd_step_c2 *sub = ggcm_mhd_step_c2(step);
   struct ggcm_mhd *mhd = step->mhd;
 
-  pde_setup(mhd->fld);
-  pde_mhd_setup(mhd);
+  pde_mhd_setup(mhd, mrc_fld_nr_comps(mhd->fld));
   pde_mhd_compat_setup(mhd);
 
   mhd->ymask = ggcm_mhd_get_3d_fld(mhd, 1);
@@ -82,7 +81,7 @@ ggcm_mhd_step_c2_setup(struct ggcm_mhd_step *step)
   sub->f_zmask = ggcm_mhd_get_3d_fld(mhd, 1);
 
   sub->f_Uhalf = ggcm_mhd_get_3d_fld(mhd, 8);
-  mrc_fld_dict_add_int(sub->f_Uhalf, "mhd_type", MT_SEMI_CONSERVATIVE);
+  mrc_fld_dict_add_int(sub->f_Uhalf, "mhd_type", MT_SCONS_FC);
 
   sub->f_E = ggcm_mhd_get_3d_fld(mhd, 3);
 
@@ -199,17 +198,17 @@ ggcm_mhd_step_c2_run(struct ggcm_mhd_step *step, struct mrc_fld *f_U)
 
   // FIXME? It's not going to make a difference, but this is the
   // time at the beginning of the whole step, rather than the time of the current state
-  s_mhd_time = mhd->time; 
+  s_mhd_time = mhd->time_code * mhd->tnorm; 
 
   // set f_Uhalf = f_U
   mrc_fld_copy(f_Uhalf, f_U);
   // then advance f_Uhalf += .5f * dt * rhs(f_U)
-  ggcm_mhd_fill_ghosts(mhd, f_U, 0, mhd->time);
-  pushstage(f_Uhalf, .5f * mhd->dt, f_U, f_ymask, f_zmask, f_E, 0);
+  ggcm_mhd_fill_ghosts(mhd, f_U, mhd->time_code);
+  pushstage(f_Uhalf, .5f * mhd->dt_code, f_U, f_ymask, f_zmask, f_E, 0);
 
   // f_U += dt * rhs(f_Uhalf)
-  ggcm_mhd_fill_ghosts(mhd, f_Uhalf, 0, mhd->time + mhd->bndt);
-  pushstage(f_U, mhd->dt, f_Uhalf, f_ymask, f_zmask, f_E, 1);
+  ggcm_mhd_fill_ghosts(mhd, f_Uhalf, mhd->time_code +.5f *  mhd->dt_code);
+  pushstage(f_U, mhd->dt_code, f_Uhalf, f_ymask, f_zmask, f_E, 1);
 }
 
 // ----------------------------------------------------------------------

@@ -20,15 +20,13 @@ libmhd_la_SOURCES = \
 	ggcm_mhd_bnd_conducting_y.c \
 	ggcm_mhd_bnd_conducting_y_float.c \
 	ggcm_mhd_bnd_conducting_y_double.c \
-	ggcm_mhd_bnd_conducting_y_double_aos.c \
+	ggcm_mhd_bnd_conducting_y_gkeyll.c \
 	ggcm_mhd_bnd_open_x.c \
 	ggcm_mhd_bnd_inoutflow_sc_ggcm_float.c \
 	ggcm_mhd_bnd_inoutflow_sc_ggcm_double.c \
 	ggcm_mhd_bnd_inoutflow_sc_float.c \
 	ggcm_mhd_bnd_inoutflow_sc_double.c \
 	ggcm_mhd_bnd_inoutflow_fc_double.c \
-	ggcm_mhd_bnd_inoutflow_sc_double_aos.c \
-	ggcm_mhd_bnd_inoutflow_fc_double_aos.c \
 	ggcm_mhd_bnd_inoutflow_fc_cc_double.c \
 	ggcm_mhd_bnd_inoutflow_gkeyll.c \
 	ggcm_mhd_bnd_sphere_map.c \
@@ -37,9 +35,8 @@ libmhd_la_SOURCES = \
 	ggcm_mhd_bnd_sphere_sc_float.c \
 	ggcm_mhd_bnd_sphere_sc_double.c \
 	ggcm_mhd_bnd_sphere_sc_ggcm_double.c \
-	ggcm_mhd_bnd_sphere_sc_double_aos.c \
-	ggcm_mhd_bnd_sphere_fc_double_aos.c \
 	ggcm_mhd_bnd_sphere_fc_cc_double.c \
+	ggcm_mhd_bnd_sphere_gkeyll.c \
 	\
 	ggcm_mhd_bndsw.c \
 	ggcm_mhd_bndsw_none.c \
@@ -60,8 +57,17 @@ libmhd_la_SOURCES = \
 	ggcm_mhd_diag_item_e.c \
 	ggcm_mhd_diag_item_gkeyll_5m.c \
 	ggcm_mhd_diag_item_misc.c \
-	calc_currcc.c \
-	calc_divb.c \
+	\
+	ggcm_mhd_primitive.c \
+	ggcm_mhd_primitive_scons.c \
+	ggcm_mhd_primitive_fcons_fc.c \
+	ggcm_mhd_primitive_fcons_cc.c \
+	ggcm_mhd_primitive_gkeyll.c \
+	\
+	ggcm_mhd_bgrid.c \
+	ggcm_mhd_bgrid_fc_ggcm.c \
+	ggcm_mhd_bgrid_fc.c \
+	ggcm_mhd_bgrid_cc.c \
 	\
 	ggcm_mhd_dipole.c \
 	ggcm_mhd_dipole_none.c \
@@ -115,8 +121,6 @@ AM_CPPFLAGS += \
 	-I$(GKSOFTWARE)/eigen/include/eigen3
 
 libmhd_la_SOURCES += \
-	ggcm_mhd_ic_gkeyll.c \
-	ggcm_mhd_ic_gkeyll_lua.cxx \
 	ggcm_mhd_step_gkeyll.c \
 	ggcm_mhd_step_gkeyll_lua.cxx \
 	LcRegisterModules.cpp
@@ -143,7 +147,6 @@ EXTRA_libmhd_la_SOURCES = \
 	ggcm_mhd_step_c2_common.c \
 	ggcm_mhd_step_c3_common.c \
 	ggcm_mhd_step_c_common.c \
-	ggcm_mhd_step_legacy.c \
 	mhd_1d.c \
 	mhd_3d.c \
 	mhd_reconstruct_pcm_common.c \

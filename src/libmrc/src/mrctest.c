@@ -293,33 +293,44 @@ mrctest_crds_compare(struct mrc_crds *crds1, struct mrc_crds *crds2)
   int sw = crds1->sw;
 
   assert(crds1->sw == crds2->sw);
+  const double *lo1 = mrc_crds_lo(crds1), *lo2 = mrc_crds_lo(crds2);
+  const double *hi1 = mrc_crds_hi(crds1), *hi2 = mrc_crds_hi(crds2);
   for (int d = 0; d < 3; d++) {
-    assert(crds1->xl[d] == crds2->xl[d]);
-    assert(crds1->xh[d] == crds2->xh[d]);
+    assert(lo1[d] == lo2[d]);
+    assert(hi1[d] == hi2[d]);
   }
 
   assert(strcmp(mrc_crds_type(crds1), mrc_crds_type(crds2)) == 0);
   for (int d = 0; d < 3; d++) {
-    if (crds1->crd[d]) {
+    mrc_m1_foreach_patch(crds1->crd[d], p) {
       float diff = 0.;
-      mrc_f1_foreach(crds1->crd[d], ix, sw, sw) {
-	diff = fmaxf(diff, fabsf(MRC_CRD(crds1, d, ix) - MRC_CRD(crds2, d, ix)));
+      mrc_m1_foreach(crds1->crd[d], ix, sw, sw) {
+	diff = fmaxf(diff, fabsf(MRC_M1(crds1->crd[d], 0, ix, p) - MRC_M1(crds2->crd[d], 0, ix, p)));
 	if (diff > 0.) {
-	  mprintf("mrctest_crds_compare: ix = %d diff = %g\n", ix, diff);
+	  mprintf("mrctest_crds_compare: ix = %d diff = %g %g/%g\n", ix, diff,
+		  MRC_M1(crds1->crd[d], 0, ix, p), MRC_M1(crds2->crd[d], 0, ix, p));
 	  assert(0);
 	}
-      } mrc_f1_foreach_end;
-    } else {
-      mrc_m1_foreach_patch(crds1->crd[d], p) {
-	float diff = 0.;
-	mrc_m1_foreach(crds1->crd[d], ix, sw, sw) {
-	  diff = fmaxf(diff, fabsf(MRC_M1(crds1->crd[d], 0, ix, p) - MRC_M1(crds2->crd[d], 0, ix, p)));
-	  if (diff > 0.) {
-	    mprintf("mrctest_crds_compare: ix = %d diff = %g %g/%g\n", ix, diff,
-		    MRC_M1(crds1->crd[d], 0, ix, p), MRC_M1(crds2->crd[d], 0, ix, p));
-	    assert(0);
-	  }
-	} mrc_m1_foreach_end;
+      } mrc_m1_foreach_end;
+    }
+
+    struct mrc_ndarray *global_crd1 = crds1->global_crd[d];
+    struct mrc_ndarray *global_crd2 = crds2->global_crd[d];
+    mrc_ndarray_view(global_crd1);
+    mrc_ndarray_view(global_crd2);
+    assert(mrc_ndarray_same_shape(global_crd1, global_crd2));
+
+    struct mrc_ndarray_it it1, it2;
+    mrc_ndarray_it_all(&it1, global_crd1);
+    mrc_ndarray_it_all(&it2, global_crd2);
+#define TYPE double
+    double diff = 0.;
+    for (; !mrc_ndarray_it_done(&it1); mrc_ndarray_it_next(&it1), mrc_ndarray_it_next(&it2)) {
+      diff = fmax(diff, fabs(IT_TYPE(&it1, TYPE) - IT_TYPE(&it2, TYPE)));
+      if (diff > 0.) {
+	mprintf("mrctest_crds_compare: idx = %d:%d diff = %g %g/%g\n", it1.idx[0], it1.idx[1], diff,
+		IT_TYPE(&it1, TYPE), IT_TYPE(&it2, TYPE));
+	assert(0);
       }
     }
   }

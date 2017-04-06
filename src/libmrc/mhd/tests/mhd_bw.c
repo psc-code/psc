@@ -32,12 +32,10 @@ ggcm_mhd_ic_bw_run(struct ggcm_mhd_ic *ic)
   struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);  
 
-  double xl[3], xh[3];
+  const double *lo = mrc_crds_lo(crds), *hi = mrc_crds_hi(crds);
   float L[3], r[3];
-  mrc_crds_get_param_double3(crds, "l", xl);
-  mrc_crds_get_param_double3(crds, "h", xh);
   for(int i = 0; i < 3; i++){
-    L[i] = xh[i] - xl[i];
+    L[i] = hi[i] - lo[i];
   }
 
   for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {

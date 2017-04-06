@@ -40,7 +40,7 @@ enum {
 
 static void
 ggcm_mhd_bnd_conducting_x_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld,
-				      int m, float bntim)
+				      float bntim)
 {
   struct ggcm_mhd *mhd = bnd->mhd;
 

@@ -53,8 +53,8 @@ vgfluu_c(fld3d_t p_F, fld3d_t p_W)
   fld3d_foreach(i,j,k, 2, 2) {
     mrc_fld_data_t ep = s * F3S(p_W, PP, i,j,k) +
       .5f * F3S(p_W, RR, i,j,k) * (sqr(F3S(p_W, VX, i,j,k)) + 
-				      sqr(F3S(p_W, VY, i,j,k)) + 
-				      sqr(F3S(p_W, VZ, i,j,k)));
+				   sqr(F3S(p_W, VY, i,j,k)) + 
+				   sqr(F3S(p_W, VZ, i,j,k)));
     F3S(p_F, 0, i,j,k) = ep * F3S(p_W, VX, i,j,k);
     F3S(p_F, 1, i,j,k) = ep * F3S(p_W, VY, i,j,k);
     F3S(p_F, 2, i,j,k) = ep * F3S(p_W, VZ, i,j,k);
@@ -81,14 +81,14 @@ fluxl_c(fld3d_t p_Ffc, fld3d_t p_Fcc, fld3d_t p_cmsv, fld3d_t p_U, int m)
     mrc_fld_data_t aa = F3S(p_U, m, i,j,k);
     mrc_fld_data_t cmsv = F3S(p_cmsv, 0, i,j,k);
     F3S(p_Ffc, 0, i,j,k) =
-      .5f * ((F3S(p_Fcc, 0, i  ,j,k) + F3S(p_Fcc, 0, i+1,j,k)) -
-	     .5f * (F3S(p_cmsv, 0, i+1,j,k) + cmsv) * (F3S(p_U, m, i+1,j,k) - aa));
+      .5f * ((F3S(p_Fcc, 0, i,j,k) + F3S(p_Fcc, 0, i+di,j,k)) -
+	     .5f * (F3S(p_cmsv, 0, i+di,j,k) + cmsv) * (F3S(p_U, m, i+di,j,k) - aa));
     F3S(p_Ffc, 1, i,j,k) =
-      .5f * ((F3S(p_Fcc, 1, i,j  ,k) + F3S(p_Fcc, 1, i,j+1,k)) -
-	     .5f * (F3S(p_cmsv, 0, i,j+1,k) + cmsv) * (F3S(p_U, m, i,j+1,k) - aa));
+      .5f * ((F3S(p_Fcc, 1, i,j,k) + F3S(p_Fcc, 1, i,j+dj,k)) -
+	     .5f * (F3S(p_cmsv, 0, i,j+dj,k) + cmsv) * (F3S(p_U, m, i,j+dj,k) - aa));
     F3S(p_Ffc, 2, i,j,k) =
-      .5f * ((F3S(p_Fcc, 2, i,j,k  ) + F3S(p_Fcc, 2, i,j,k+1)) -
-	     .5f * (F3S(p_cmsv, 0, i,j,k+1) + cmsv) * (F3S(p_U, m, i,j,k+1) - aa));
+      .5f * ((F3S(p_Fcc, 2, i,j,k) + F3S(p_Fcc, 2, i,j,k+dk)) -
+	     .5f * (F3S(p_cmsv, 0, i,j,k+dk) + cmsv) * (F3S(p_U, m, i,j,k+dk) - aa));
   } fld3d_foreach_end;
 }
 
@@ -99,24 +99,24 @@ fluxb_c(fld3d_t p_Ffc, fld3d_t p_Fcc, fld3d_t p_cmsv, fld3d_t p_U, int m, fld3d_
   mrc_fld_data_t s7 = 7.f * s1;
 
   fld3d_foreach(i,j,k, 1, 0) {
-    mrc_fld_data_t fhx = (s7 * (F3S(p_Fcc, 0, i  ,j,k) + F3S(p_Fcc, 0, i+1,j,k)) -
-		 s1 * (F3S(p_Fcc, 0, i-1,j,k) + F3S(p_Fcc, 0, i+2,j,k)));
-    mrc_fld_data_t fhy = (s7 * (F3S(p_Fcc, 1, i,j  ,k) + F3S(p_Fcc, 1, i,j+1,k)) -
-		 s1 * (F3S(p_Fcc, 1, i,j-1,k) + F3S(p_Fcc, 1, i,j+2,k)));
-    mrc_fld_data_t fhz = (s7 * (F3S(p_Fcc, 2, i,j,k  ) + F3S(p_Fcc, 2, i,j,k+1)) -
-		 s1 * (F3S(p_Fcc, 2, i,j,k-1) + F3S(p_Fcc, 2, i,j,k+2)));
+    mrc_fld_data_t fhx = (s7 * (F3S(p_Fcc, 0, i,j,k) + F3S(p_Fcc, 0, i+di,j,k)) -
+		 s1 * (F3S(p_Fcc, 0, i-di,j,k) + F3S(p_Fcc, 0, i+2*di,j,k)));
+    mrc_fld_data_t fhy = (s7 * (F3S(p_Fcc, 1, i,j,k) + F3S(p_Fcc, 1, i,j+dj,k)) -
+		 s1 * (F3S(p_Fcc, 1, i,j-dj,k) + F3S(p_Fcc, 1, i,j+2*dj,k)));
+    mrc_fld_data_t fhz = (s7 * (F3S(p_Fcc, 2, i,j,k) + F3S(p_Fcc, 2, i,j,k+dk)) -
+		 s1 * (F3S(p_Fcc, 2, i,j,k-dk) + F3S(p_Fcc, 2, i,j,k+2*dk)));
 
     mrc_fld_data_t aa = F3S(p_U, m, i,j,k);
     mrc_fld_data_t cmsv = F3S(p_cmsv, 0, i,j,k);
     mrc_fld_data_t flx =
-      .5f * ((F3S(p_Fcc, 0, i  ,j,k) + F3S(p_Fcc, 0, i+1,j,k)) -
-	     .5f * (F3S(p_cmsv, 0, i+1,j,k) + cmsv) * (F3S(p_U, m, i+1,j,k) - aa));
+      .5f * ((F3S(p_Fcc, 0, i,j,k) + F3S(p_Fcc, 0, i+di,j,k)) -
+	     .5f * (F3S(p_cmsv, 0, i+di,j,k) + cmsv) * (F3S(p_U, m, i+di,j,k) - aa));
     mrc_fld_data_t fly =
-      .5f * ((F3S(p_Fcc, 1, i,j  ,k) + F3S(p_Fcc, 1, i,j+1,k)) -
-	     .5f * (F3S(p_cmsv, 0, i,j+1,k) + cmsv) * (F3S(p_U, m, i,j+1,k) - aa));
+      .5f * ((F3S(p_Fcc, 1, i,j ,k) + F3S(p_Fcc, 1, i,j+dj,k)) -
+	     .5f * (F3S(p_cmsv, 0, i,j+dj,k) + cmsv) * (F3S(p_U, m, i,j+dj,k) - aa));
     mrc_fld_data_t flz = 
-      .5f * ((F3S(p_Fcc, 2, i,j,k  ) + F3S(p_Fcc, 2, i,j,k+1)) -
-	     .5f * (F3S(p_cmsv, 0, i,j,k+1) + cmsv) * (F3S(p_U, m, i,j,k+1) - aa));
+      .5f * ((F3S(p_Fcc, 2, i,j,k) + F3S(p_Fcc, 2, i,j,k+dk)) -
+	     .5f * (F3S(p_cmsv, 0, i,j,k+dk) + cmsv) * (F3S(p_U, m, i,j,k+dk) - aa));
 
     mrc_fld_data_t cx = F3S(p_C, 0, i,j,k);
     F3S(p_Ffc, 0, i,j,k) = cx * flx + (1.f - cx) * fhx;
@@ -134,17 +134,17 @@ pushn_c(fld3d_t p_Unext, fld3d_t p_Uprev, fld3d_t p_F, fld3d_t p_ymask, int m, m
     fld3d_foreach(i,j,k, 0, 0) {
       mrc_fld_data_t s = dt * F3S(p_ymask, 0, i,j,k);
       F3S(p_Unext, m, i,j,k) += 
-	- s * (FD1X(i) * (F3S(p_F, 0, i,j,k) - F3S(p_F, 0, i-1,j,k)) +
-	       FD1Y(j) * (F3S(p_F, 1, i,j,k) - F3S(p_F, 1, i,j-1,k)) +
-	       FD1Z(k) * (F3S(p_F, 2, i,j,k) - F3S(p_F, 2, i,j,k-1)));
+	- s * (FD1X(i) * (F3S(p_F, 0, i,j,k) - F3S(p_F, 0, i-di,j,k)) +
+	       FD1Y(j) * (F3S(p_F, 1, i,j,k) - F3S(p_F, 1, i,j-dj,k)) +
+	       FD1Z(k) * (F3S(p_F, 2, i,j,k) - F3S(p_F, 2, i,j,k-dk)));
     } fld3d_foreach_end;
   } else {
     fld3d_foreach(i,j,k, 0, 0) {
       mrc_fld_data_t s = dt * F3S(p_ymask, 0, i,j,k);
       F3S(p_Unext, m, i,j,k) = F3S(p_Uprev, m, i,j,k)
-	- s * (FD1X(i) * (F3S(p_F, 0, i,j,k) - F3S(p_F, 0, i-1,j,k)) +
-	       FD1Y(j) * (F3S(p_F, 1, i,j,k) - F3S(p_F, 1, i,j-1,k)) +
-	       FD1Z(k) * (F3S(p_F, 2, i,j,k) - F3S(p_F, 2, i,j,k-1)));
+	- s * (FD1X(i) * (F3S(p_F, 0, i,j,k) - F3S(p_F, 0, i-di,j,k)) +
+	       FD1Y(j) * (F3S(p_F, 1, i,j,k) - F3S(p_F, 1, i,j-dj,k)) +
+	       FD1Z(k) * (F3S(p_F, 2, i,j,k) - F3S(p_F, 2, i,j,k-dk)));
     } fld3d_foreach_end;
   }
 }
@@ -190,7 +190,7 @@ limit1a(fld3d_t p_U, int m, int i, int j, int k, int I, int J, int K, fld3d_t p_
   r3 = r3 * r3;
   r3 = r3 * r3;
   r3 = mrc_fld_min(2.f * r3, 1.);
-  F3S(p_C, C, i   ,j   ,k   ) = mrc_fld_max(F3S(p_C, C, i   ,j   ,k   ), r3);
+  F3S(p_C, C, i  ,j  ,k  ) = mrc_fld_max(F3S(p_C, C, i  ,j  ,k  ), r3);
   F3S(p_C, C, i-I,j-J,k-K) = mrc_fld_max(F3S(p_C, C, i-I,j-J,k-K), r3);
 }
 
@@ -209,9 +209,9 @@ limit1_c(fld3d_t p_U, int m, fld3d_t p_C)
     assert(!s_limit_aspect_low);
 /* .if (limit_aspect_low) then */
 /* .call lowmask(0,0,0,tl1) */
-    limit1a(p_U, m, i,j,k, 1,0,0, p_C, 0);
-    limit1a(p_U, m, i,j,k, 0,1,0, p_C, 1);
-    limit1a(p_U, m, i,j,k, 0,0,1, p_C, 2);
+    limit1a(p_U, m, i,j,k, di,0,0, p_C, 0);
+    limit1a(p_U, m, i,j,k, 0,dj,0, p_C, 1);
+    limit1a(p_U, m, i,j,k, 0,0,dk, p_C, 2);
   } fld3d_foreach_end;
 }
 

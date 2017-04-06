@@ -5,6 +5,7 @@
 #include <mrc_obj.h>
 
 #include <mrc_fld.h>
+#include <mrc_mod.h>
 
 // ======================================================================
 // ggcm_mhd_diag
@@ -25,5 +26,8 @@ void ggcm_mhd_diag_run_now(struct ggcm_mhd_diag *diag, struct mrc_fld *fld,
 
 // Shutdown the output server (if any).
 void ggcm_mhd_diag_shutdown(struct ggcm_mhd_diag *diag);
+
+// register mrc_mod for actual diag server
+void ggcm_mhd_diag_mod_register(struct ggcm_mhd_diag *mhd_diag, struct mrc_mod *mod);
 
 #endif

@@ -27,29 +27,37 @@ ggcm_mhd_step_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
   struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
   if (!ops->get_dt) {
-    return mhd->dt;
+    return mhd->dt_code;
   }
 
   if (!step->legacy_dt_handling) {
-    double dtn = ops->get_dt(step, x);
-
-    if (dtn < mhd->par.dtmin) {
-      mpi_printf(ggcm_mhd_comm(mhd), "!!! dt < dtmin. Dying now!\n");
-      mpi_printf(ggcm_mhd_comm(mhd), "!!! dt = %g (was %g), dtmin = %g\n",
-		 dtn, mhd->dt, mhd->par.dtmin);
-      ggcm_mhd_wrongful_death(mhd, mhd->fld, -1);
-    }
-    
-    mhd->dt = dtn;
+    mhd->dt_code = ops->get_dt(step, x);
   } else { // legacy_dt_handling
+    if (step->dtn) {
+      step->dtn = fminf(1.f, step->dtn);
+      
+      if (step->dtn > 1.02f * mhd->dt_code || step->dtn < mhd->dt_code / 1.01f) {
+	mpi_printf(ggcm_mhd_comm(mhd), "switched dt %g <- %g\n",
+		   step->dtn * mhd->tnorm, mhd->dt_code * mhd->tnorm);
+	
+	if (mhd->istep > 5 &&
+	    (step->dtn < 0.5 * mhd->dt_code || step->dtn > 2.0 * mhd->dt_code)) {            
+	  mpi_printf(ggcm_mhd_comm(mhd), "!!! dt changed by > a factor of 2. "
+		     "Dying now!\n");
+	  ggcm_mhd_wrongful_death(mhd, mhd->fld, 2);
+	}
+	mhd->dt_code = step->dtn;
+      }
+
+      step->dtn = 0;
+    }
     if (step->do_nwst) {
+      // we save dtn, but we'll only actually apply it at the beginning of the next step
       step->dtn = ops->get_dt(step, x);
-      // yes, mhd->dt isn't set to dtn until the end of the step... this
-      // is what the fortran code did
     }
   }
 
-  return mhd->dt;
+  return mhd->dt_code;
 }
 
 // ----------------------------------------------------------------------
@@ -77,51 +85,25 @@ ggcm_mhd_step_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *E,
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_step_legacy_dt_post
-
-void
-ggcm_mhd_step_legacy_dt_post(struct ggcm_mhd_step *step, float dtn)
-{
-  struct ggcm_mhd *mhd = step->mhd;
-
-  // dtn is the global new timestep
-  if (dtn <= mhd->par.dtmin) {
-    mpi_printf(ggcm_mhd_comm(mhd), "!!! dt < dtmin. Dying now!\n");
-    mpi_printf(ggcm_mhd_comm(mhd), "!!! dt %g -> %g, dtmin = %g\n",
-	       mhd->dt, dtn, mhd->par.dtmin);   
-    ggcm_mhd_wrongful_death(mhd, mhd->fld, -1);
-  }
-
-  dtn = fminf(1.f, dtn);
-  
-  if (dtn > 1.02f * mhd->dt || dtn < mhd->dt / 1.01f) {
-    mpi_printf(ggcm_mhd_comm(mhd), "switched dt %g <- %g\n", dtn, mhd->dt);
-    
-    if (mhd->istep > 0 &&
-	(dtn < 0.5 * mhd->dt || dtn > 2.0 * mhd->dt)) {            
-      mpi_printf(ggcm_mhd_comm(mhd), "!!! dt changed by > a factor of 2. "
-		 "Dying now!\n");
-      ggcm_mhd_wrongful_death(mhd, mhd->fld, 2);
-    }
-    
-    mhd->dt = dtn;
-  }
-}
-
-// ----------------------------------------------------------------------
 // ggcm_mhd_step_run
 
 void
 ggcm_mhd_step_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 {
   struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
+  struct ggcm_mhd *mhd = step->mhd;
   static int pr;
   if (!pr) {
     pr = prof_register("ggcm_mhd_step_run", 0, 0, 0.);
   }
 
+  // FIXME, make it a parameter
+  static int modtty;
+  if (!modtty) {
+    mrc_params_get_option_int("modtty", &modtty);
+  }
+
   if (step->debug_dump) {
-    struct ggcm_mhd *mhd = step->mhd;
     static struct ggcm_mhd_diag *diag;
     static int cnt;
     if (!diag) {
@@ -136,7 +118,7 @@ ggcm_mhd_step_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
       ggcm_mhd_diag_setup(diag);
       ggcm_mhd_diag_view(diag);
     }
-    ggcm_mhd_fill_ghosts(mhd, mhd->fld, 0, mhd->time);
+    ggcm_mhd_fill_ghosts(mhd, mhd->fld, mhd->time_code);
     ggcm_mhd_diag_run_now(diag, mhd->fld, DIAG_TYPE_3D, cnt++);
   }
 
@@ -145,12 +127,18 @@ ggcm_mhd_step_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   ops->run(step, x);
   prof_stop(pr);
 
-  if (step->legacy_dt_handling && ops->get_dt) {
-    ggcm_mhd_step_legacy_dt_post(step, step->dtn);
+  // print progress information FIXME, static is not nice
+  static double cpul;
+  if (modtty && mhd->istep % modtty == 0) {
+    double cpu = MPI_Wtime();
+    mpi_printf(ggcm_mhd_comm(mhd), " cp=%8.3f st=%7d ti=%10.3f dt=%10.3f\n",
+	       cpul ? cpu - cpul : 0., mhd->istep, (mhd->time_code + mhd->dt_code) * mhd->tnorm, mhd->dt_code * mhd->tnorm);
+    cpul = cpu;
   }
-
+  
+  mhd->timla = mhd->time_code * mhd->tnorm;
+  
   // FIXME, this should be done by mrc_ts
-  struct ggcm_mhd *mhd = step->mhd;
   if ((mhd->istep % step->profile_every) == 0) {
     prof_print_mpi(ggcm_mhd_comm(mhd));
   }

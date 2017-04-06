@@ -13,15 +13,37 @@
 #include <assert.h>
 #include <execinfo.h>
 
-// Don't like dirtying main libmrc code in this way
-#ifdef HAVE_PETSC
-#include <petscconf.h>
-#endif
-
 // ======================================================================
 // mrc_fld
 
 #define mrc_fld_ops(fld) ((struct mrc_fld_ops *) (fld)->obj.ops)
+
+// ----------------------------------------------------------------------
+// mrc_fld_data_type
+
+int
+mrc_fld_data_type(struct mrc_fld *fld)
+{
+  return fld->_nd->data_type;
+}
+
+// ----------------------------------------------------------------------
+// mrc_fld_len
+
+int
+mrc_fld_len(struct mrc_fld *fld)
+{
+  return fld->_nd->len;
+}
+
+// ----------------------------------------------------------------------
+// mrc_fld_create
+
+static void
+_mrc_fld_create(struct mrc_fld *fld)
+{
+  fld->_nd = mrc_ndarray_create(mrc_fld_comm(fld));
+}
 
 // ----------------------------------------------------------------------
 // mrc_fld_destroy
@@ -29,11 +51,6 @@
 static void
 _mrc_fld_destroy(struct mrc_fld *fld)
 {
-  if (fld->_arr) {
-    mrc_vec_put_array(fld->_vec, fld->_arr);
-    fld->_arr = NULL;
-  }
-
   for (int m = 0; m < fld->_nr_allocated_comp_name; m++) {
     free(fld->_comp_name[m]);
   }
@@ -47,97 +64,84 @@ _mrc_fld_destroy(struct mrc_fld *fld)
     free(fld->_patches);
     fld->_patches = NULL;
   }
-}
 
-
-static inline void
-dispatch_vec_type(struct mrc_fld *fld)
-{
-  const char *vec_type = mrc_fld_ops(fld)->vec_type;
-  // The dispatch is actually slightly prettier with the ops->vec_type
-  // method, but still ugly
-#if defined(PETSC_USE_REAL_SINGLE) && !defined(PETSC_USE_COMPLEX)
-  if (strcmp(vec_type, "float")==0) {
-    vec_type = "petsc";
-    mrc_fld_ops(fld)->vec_type = "petsc";
-  }
-#endif
-#if defined(PETSC_USE_REAL_DOUBLE) && !defined(PETSC_USE_COMPLEX)
-  if (strcmp(vec_type, "double")==0) {
-    vec_type = "petsc";
-    mrc_fld_ops(fld)->vec_type = "petsc";
-  }
-#endif
-  mrc_vec_set_type(fld->_vec, vec_type);
-  if (fld->_is_aos && (strcmp(vec_type, "petsc")==0)){
-    mrc_vec_set_param_int(fld->_vec, "block_size", fld->_nr_comps);
-  }  
+  mrc_ndarray_destroy(fld->_nd);
 }
 
 // ----------------------------------------------------------------------
-// mrc_fld_setup_vec
+// setup_ghost_dims_offs
 
-void
-mrc_fld_setup_vec(struct mrc_fld *fld)
+static void
+setup_ghost_dims_offs(struct mrc_fld *fld)
 {
-  assert(fld->_dims.nr_vals == fld->_offs.nr_vals &&
-	 fld->_dims.nr_vals == fld->_sw.nr_vals);
-  assert(fld->_dims.nr_vals <= MRC_FLD_MAXDIMS);
+  int n_dims = fld->_dims.nr_vals;
+  assert(n_dims == fld->_offs.nr_vals);
+  assert(n_dims == fld->_sw.nr_vals);
+  assert(n_dims <= MRC_FLD_MAXDIMS);
 
-  fld->_len = 1;
   for (int d = 0; d < MRC_FLD_MAXDIMS; d++) {
-    if (d < fld->_dims.nr_vals) {
+    if (d < n_dims) {
       fld->_ghost_offs[d] = fld->_offs.vals[d] - fld->_sw.vals[d];
       fld->_ghost_dims[d] = fld->_dims.vals[d] + 2 * fld->_sw.vals[d];
     } else {
       fld->_ghost_dims[d] = 1;
     }
-    fld->_len *= fld->_ghost_dims[d];
   }
+}
 
-  if (fld->_view_base) {
-    mrc_fld_set_array(fld, fld->_view_base->_arr);
-  }
+// ----------------------------------------------------------------------
+// setup_ndarray
 
-  const char *vec_type = mrc_fld_ops(fld)->vec_type;
-  assert(vec_type);
-  dispatch_vec_type(fld);
-  mrc_vec_set_param_int(fld->_vec, "len", fld->_len);
-  mrc_fld_setup_member_objs(fld); // sets up our .vec member
-  fld->_arr = mrc_vec_get_array(fld->_vec);
-  assert(fld->_arr);
-
+static void
+setup_ndarray(struct mrc_fld *fld)
+{
+  setup_ghost_dims_offs(fld);
+  
+  assert(MRC_FLD_MAXDIMS == 5);
+  int *perm;
   if (!fld->_view_base) {
     // This is a field with its own storage
-    for (int d = 0; d < MRC_FLD_MAXDIMS; d++) {
-      fld->_start[d]  = fld->_ghost_offs[d];
-      fld->_stride[d] = 1;
-      for (int dd = 0; dd < d; dd++) {
-	fld->_stride[d] *= fld->_ghost_dims[dd];
-      }
+
+    if (!fld->_aos && !fld->_c_order) {
+      // original order
+      perm = (int[5]) { 0, 1, 2, 3, 4 };
+    } else if (fld->_aos && !fld->_c_order) {
+      // x,y,z,m,p to m,x,y,z,p
+      perm = (int[5]) { 3, 0, 1, 2, 4 };
+    } else if (fld->_aos && fld->_c_order) {
+      // x,y,z,m,p to m,z,y,x,p
+      perm = (int[5]) { 3, 2, 1, 0, 4 };
+    } else if (!fld->_aos && fld->_c_order) {
+      // x,y,z,m,p to z,y,x,m,p
+      perm = (int[5]) { 2, 1, 0, 3, 4 };
     }
   } else {
+    perm = (int[5]) { 0, 1, 2, 3, 4 };
+  }
+      
+  struct mrc_ndarray *nd = fld->_nd;
+  int n_dims = fld->_dims.nr_vals;
+  mrc_ndarray_set_type(nd, mrc_fld_ops(fld)->vec_type);
+  mrc_ndarray_set_param_int_array(nd, "dims", n_dims, fld->_ghost_dims);
+  mrc_ndarray_set_param_int_array(nd, "offs", n_dims, fld->_ghost_offs);
+  mrc_ndarray_set_param_int_array(nd, "perm", n_dims, perm);
+
+  if (fld->_view_base) {
     // In this case, this field is just a view and has not
     // allocated its own storage
-    int nr_dims = fld->_dims.nr_vals;
     struct mrc_fld *view_base = fld->_view_base;
-    int *view_offs = fld->_view_offs, *sw = fld->_sw.vals;
-    int *dims = fld->_dims.vals, *offs = fld->_offs.vals;
-    for (int d = 0; d < nr_dims; d++) {
-      assert(view_offs[d] - sw[d] >= view_base->_ghost_offs[d]);
-      assert(view_offs[d] + dims[d] + sw[d] <=
-	     view_base->_ghost_offs[d] + view_base->_ghost_dims[d]);
-      fld->_stride[d] = view_base->_stride[d];
-      fld->_start[d] = view_base->_start[d] - view_offs[d] + offs[d];
+    struct mrc_ndarray *nd_base = view_base->_nd;
+    assert(nd_base->n_dims == n_dims);
+    int view_ghost_offs[MRC_FLD_MAXDIMS];
+    for (int d = 0; d < n_dims; d++) {
+      view_ghost_offs[d] = fld->_view_offs[d] - fld->_sw.vals[d];
     }
+    mrc_ndarray_set_param_obj(nd, "view_base", view_base->_nd);
+    mrc_ndarray_set_param_int_array(nd, "view_offs", n_dims, view_ghost_offs);
   }
 
-  // set up _arr_off
-  int off = 0;
-  for (int d = 0; d < MRC_FLD_MAXDIMS; d++) {
-    off += fld->_start[d] * fld->_stride[d];
-  }
-  fld->_arr_off = fld->_arr - off * fld->_size_of_type;
+  mrc_ndarray_setup(nd);
+  fld->nd_acc = *mrc_ndarray_access(nd);
 }
 
 
@@ -167,17 +171,10 @@ setup_3d_from_domain(struct mrc_fld *fld, int *ldims, int nr_patches, struct mrc
     }
   }
   
-  if (fld->_is_aos) {
-    mrc_fld_set_param_int_array(fld, "dims", 5,
-				(int[5]) { fld->_nr_comps, ldims[0], ldims[1], ldims[2], nr_patches });
-    mrc_fld_set_param_int_array(fld, "sw", fld->_dims.nr_vals,
-				(int[5]) { 0, sw[0], sw[1], sw[2], 0 });
-  } else {
-    mrc_fld_set_param_int_array(fld, "dims", 5,
-				(int[5]) { ldims[0], ldims[1], ldims[2], fld->_nr_comps, nr_patches });
-    mrc_fld_set_param_int_array(fld, "sw", fld->_dims.nr_vals,
-				(int[5]) { sw[0], sw[1], sw[2], 0, 0 });
-  }
+  mrc_fld_set_param_int_array(fld, "dims", 5,
+      (int[5]) { ldims[0], ldims[1], ldims[2], fld->_nr_comps, nr_patches });
+  mrc_fld_set_param_int_array(fld, "sw", fld->_dims.nr_vals,
+      (int[5]) { sw[0], sw[1], sw[2], 0, 0 });
   
 }
 
@@ -236,7 +233,7 @@ _mrc_fld_setup(struct mrc_fld *fld)
     mrc_fld_set_param_int_array(fld, "sw", fld->_dims.nr_vals, NULL);
   }
 
-  mrc_fld_setup_vec(fld);
+  setup_ndarray(fld);
 }
 
 // ----------------------------------------------------------------------
@@ -245,7 +242,7 @@ _mrc_fld_setup(struct mrc_fld *fld)
 void
 mrc_fld_set_array(struct mrc_fld *fld, void *arr)
 {
-  mrc_vec_set_array(fld->_vec, arr);
+  mrc_ndarray_set_array(fld->_nd, arr);
 }
 
 // ----------------------------------------------------------------------
@@ -254,7 +251,7 @@ mrc_fld_set_array(struct mrc_fld *fld, void *arr)
 void
 mrc_fld_replace_array(struct mrc_fld *fld, void *arr)
 {
-  mrc_vec_replace_array(fld->_vec, arr);
+  mrc_ndarray_replace_array(fld->_nd, arr);
 }
 
 // ----------------------------------------------------------------------
@@ -275,6 +272,11 @@ _mrc_fld_read(struct mrc_fld *fld, struct mrc_io *io)
   // If the fld has a domain and we don't run a minimal setup
   // the metadata can't be trusted.
   // This will overwrite the obsolete read-in metadata
+
+  // FIXME, this looks rather similar to _setup(), but also
+  // there's the question why we shouldn't trust what we're reading?
+  // (I guess if were to read on a different number of procs, but that's
+  //  hard work)
   if (fld->_domain) {
     if (fld->_patches) free(fld->_patches);
     int nr_patches;
@@ -296,12 +298,12 @@ _mrc_fld_read(struct mrc_fld *fld, struct mrc_io *io)
   if (fld->_sw.nr_vals == 0) {
     mrc_fld_set_param_int_array(fld, "sw", fld->_dims.nr_vals, NULL);
   }
+  // we're not reading back ndarray, rather we're creating a new one
+  fld->_nd = mrc_ndarray_create(mrc_fld_comm(fld));
+  setup_ndarray(fld);
+  fld->nd_acc = *mrc_ndarray_access(fld->_nd);
 
-  // instead of reading back fld->_vec (which doesn't contain anything useful,
-  // anyway, since mrc_fld saves/restores the data rather than mrc_vec),
-  // we make a new one, so at least we're sure that with_array won't be honored
-  fld->_vec = mrc_vec_create(mrc_fld_comm(fld));
-  mrc_fld_setup_vec(fld);
+  setup_ghost_dims_offs(fld);
   // FIXME: Hacky, but we are basically set up now, so we should advertise it
   fld->obj.is_setup = true;
 
@@ -457,6 +459,8 @@ mrc_fld_duplicate(struct mrc_fld *fld)
     mrc_fld_set_param_int_array(fld_new, "offs", fld->_offs.nr_vals, fld->_offs.vals);
     mrc_fld_set_param_int_array(fld_new, "sw", fld->_sw.nr_vals, fld->_sw.vals);
   }
+  mrc_fld_set_param_bool(fld_new, "aos", fld->_aos);
+  mrc_fld_set_param_bool(fld_new, "c_order", fld->_c_order);
   mrc_fld_setup(fld_new);
   return fld_new;
 }
@@ -467,14 +471,7 @@ mrc_fld_duplicate(struct mrc_fld *fld)
 void
 mrc_fld_copy(struct mrc_fld *fld_to, struct mrc_fld *fld_from)
 {
-  assert(mrc_fld_same_shape(fld_to, fld_from));
-  if (!fld_to->_view_base && !fld_from->_view_base) {
-    mrc_vec_copy(fld_to->_vec, fld_from->_vec);
-  } else {
-    struct mrc_fld_ops *ops = mrc_fld_ops(fld_to);
-    assert(ops && ops->copy);
-    ops->copy(fld_to, fld_from);
-  }
+  mrc_ndarray_copy(fld_to->_nd, fld_from->_nd);
 }
 
 
@@ -489,7 +486,7 @@ void
 mrc_fld_axpy(struct mrc_fld *y, float alpha, struct mrc_fld *x)
 {
   assert(mrc_fld_same_shape(x, y));
-  mrc_vec_axpy(y->_vec, (double) alpha, x->_vec);
+  mrc_vec_axpy(y->_nd->vec, (double) alpha, x->_nd->vec);
 }
 
 // ----------------------------------------------------------------------
@@ -501,7 +498,7 @@ mrc_fld_waxpy(struct mrc_fld *w, float alpha, struct mrc_fld *x, struct mrc_fld 
 {
   assert(mrc_fld_same_shape(x, y));
   assert(mrc_fld_same_shape(x, w));
-  mrc_vec_waxpy(w->_vec, (double) alpha, x->_vec, y->_vec);
+  mrc_vec_waxpy(w->_nd->vec, (double) alpha, x->_nd->vec, y->_nd->vec);
 }
 
 // ----------------------------------------------------------------------
@@ -518,7 +515,7 @@ mrc_fld_axpby(struct mrc_fld *y, double a, struct mrc_fld *x, double b)
   }
 
   assert(mrc_fld_same_shape(x, y));
-  mrc_vec_axpby(y->_vec, a, x->_vec, b);
+  mrc_vec_axpby(y->_nd->vec, a, x->_nd->vec, b);
 }
 
 // ----------------------------------------------------------------------
@@ -528,38 +525,10 @@ mrc_fld_axpby(struct mrc_fld *y, double a, struct mrc_fld *x, double b)
 float
 mrc_fld_norm(struct mrc_fld *fld)
 {
-  float res = 0.;
-  double (*vec_norm)(struct mrc_vec *);
-  vec_norm = (double (*)(struct mrc_vec *)) mrc_vec_get_method(fld->_vec, "norm");
-  if (vec_norm) {
-    res = (float) vec_norm(fld->_vec);
-    return res;
-  }
-  struct mrc_fld *x = mrc_fld_get_as(fld, "float");  
-  assert(x->_data_type == MRC_NT_FLOAT);
-  int nr_comps = mrc_fld_nr_comps(x);
-  
-  if (x->_dims.nr_vals == 4) {
-    for (int m = 0; m < nr_comps; m++) {
-      mrc_fld_foreach(x, ix, iy, iz, 0, 0) {
-	res = fmaxf(res, fabsf(MRC_F3(x,m, ix,iy,iz)));
-      } mrc_fld_foreach_end;
-    }
-  } else if (x->_dims.nr_vals == 3) {
-    for (int m = 0; m < nr_comps; m++) {
-      mrc_m1_foreach_patch(x, p) {
-	mrc_m1_foreach(x, ix, 0, 0) {
-	  res = fmaxf(res, fabsf(MRC_M1(x,m, ix, p)));
-	} mrc_m1_foreach_end;
-      }
-    }
-  } else {
-    assert(0);
-  }
-  mrc_fld_put_as(x, fld);
+  double norm = mrc_ndarray_norm(fld->_nd);
 
-  MPI_Allreduce(MPI_IN_PLACE, &res, 1, MPI_FLOAT, MPI_MAX, mrc_fld_comm(x));
-  return res;
+  MPI_Allreduce(MPI_IN_PLACE, &norm, 1, MPI_FLOAT, MPI_MAX, mrc_fld_comm(fld));
+  return norm;
 }
 
 // ----------------------------------------------------------------------
@@ -569,7 +538,7 @@ mrc_fld_norm(struct mrc_fld *fld)
 float
 mrc_fld_norm_comp(struct mrc_fld *x, int m)
 {
-  assert(x->_data_type == MRC_NT_FLOAT);
+  assert(mrc_fld_data_type(x) == MRC_NT_FLOAT);
   float res = 0.;
   if (x->_dims.nr_vals == 3) {
     mrc_m1_foreach_patch(x, p) {
@@ -591,16 +560,7 @@ mrc_fld_norm_comp(struct mrc_fld *x, int m)
 void
 mrc_fld_set(struct mrc_fld *fld, float val)
 {
-  // FIXME, there are probably many places like this, where we
-  // hand things off to _vec, or use _arr directly, which break
-  // fields that are just views
-  if (!fld->_view_base) {
-    mrc_vec_set(fld->_vec, (double) val);
-  } else {
-    struct mrc_fld_ops *ops = mrc_fld_ops(fld);
-    assert(ops && ops->set);
-    ops->set(fld, val);
-  }
+  mrc_ndarray_set(fld->_nd, val);
 }
 
 // ----------------------------------------------------------------------
@@ -669,73 +629,17 @@ mrc_fld_make_view(struct mrc_fld *fld, int mb, int me)
   mrc_fld_set_param_int(fld_new, "nr_comps", me - mb);
   mrc_fld_set_param_int(fld_new, "nr_ghosts", fld->_nr_ghosts);
   mrc_fld_set_param_int(fld_new, "dim", fld->_dim);
+  mrc_fld_set_param_bool(fld_new, "aos", fld->_aos);
+  mrc_fld_set_param_bool(fld_new, "c_order", fld->_c_order);
 
   fld_new->_view_base = fld;
   int offs[MRC_FLD_MAXDIMS] = {};
-  offs[fld->_is_aos ? 0 : 3] = mb;
+  offs[3] = mb;
   fld_new->_view_offs = offs;
   mrc_fld_setup(fld_new);
   fld_new->_view_offs = NULL; // so we don't keep a dangling pointer around
 
   return fld_new;
-}
-
-// ----------------------------------------------------------------------
-// mrc_fld_create_view_ext
-//
-// This is the most flexible and hence rather complex version of
-// creating a view.
-// The parameters dims and offs will define the subset of the original field that
-// will comprise the view -- extended by 'sw'.
-// By default, the view will have all index bounds now start 0 (extended by 'sw'),
-// though if that's not desired, they can be shifted by passing new_offs.
-// dims has to be present, NULL is accepted for offs, sw, new_offs, in which case
-// they'll be assumed to be all zeros.
-
-struct mrc_fld *
-mrc_fld_create_view_ext(struct mrc_fld *fld, int nr_dims, int *dims, int *offs, int *sw,
-			int *new_offs)
-{
-  assert(mrc_fld_is_setup(fld));
-  struct mrc_fld *fld_new = mrc_fld_create(mrc_fld_comm(fld));
-  mrc_fld_set_type(fld_new, mrc_fld_type(fld));
-  if (!offs) {
-    offs = (int [MRC_FLD_MAXDIMS]) {};
-  }
-  if (!sw) {
-    sw = (int [MRC_FLD_MAXDIMS]) {};
-  }
-  if (!new_offs) {
-    new_offs = (int [MRC_FLD_MAXDIMS]) {};
-  }
-  if (fld->_domain) {
-    // FIXME, to be revisited
-    assert(0);
-  } else {
-    mrc_fld_set_param_int_array(fld_new, "dims", nr_dims, dims);
-    mrc_fld_set_param_int_array(fld_new, "offs", nr_dims, new_offs);
-    mrc_fld_set_param_int_array(fld_new, "sw"  , nr_dims, sw);
-    fld_new->_view_base = fld;
-    fld_new->_view_offs = offs;
-    mrc_fld_setup(fld_new);
-    fld_new->_view_offs = NULL; // so we don't keep a dangling pointer around
-  }
-  // FIXME, we should link back to the original mrc_fld to make sure
-  // that doesn't get destroyed while we still have this view
-  return fld_new;
-}
-
-// ----------------------------------------------------------------------
-// mrc_fld_create_view
-//
-// This function provides a simpler interface to creating a view, where only
-// dims and offs are needed. The view will have the same sw as the original
-// field, and indices will start at 0 in the view.
-
-struct mrc_fld *
-mrc_fld_create_view(struct mrc_fld *fld, int nr_dims, int *dims, int *offs)
-{
-  return mrc_fld_create_view_ext(fld, nr_dims, dims, offs, fld->_sw.vals, NULL);
 }
 
 // ----------------------------------------------------------------------
@@ -773,6 +677,8 @@ mrc_fld_get_as(struct mrc_fld *fld_base, const char *type)
 
   struct mrc_fld *fld = mrc_fld_create(mrc_fld_comm(fld_base));
   mrc_fld_set_type(fld, type);
+  mrc_fld_set_param_bool(fld, "aos", fld_base->_aos);
+  mrc_fld_set_param_bool(fld, "c_order", fld_base->_c_order);
   if (fld_base->_domain) {
     // if we're based on a domain, dims/offs/sw will be set by setup()
     mrc_fld_set_param_obj(fld, "domain", fld_base->_domain);
@@ -905,7 +811,7 @@ mrc_fld_set_petsc_vec(struct mrc_fld *fld, Vec petsc_vec)
   if ( strcmp(mrc_fld_ops(fld)->vec_type, "petsc")!=0 ){
     fprintf(stderr, "Cannot set petsc vec for fld type %s", mrc_fld_type(fld));
     fprintf(stderr, " (petsc element size: %zu B, mrc_fld element size: %d B)\n",
-	    sizeof(PetscScalar), fld->_size_of_type);
+	    sizeof(PetscScalar), fld->_nd->size_of_type);
     assert(0);
   }
   void (*vec_set_petsc)( struct mrc_vec *, Vec); 
@@ -981,8 +887,8 @@ static void
 mrc_fld_float_copy_from_double(struct mrc_fld *to, struct mrc_fld *from)
 {
   assert(mrc_fld_same_shape(to, from));
-  assert(to->_data_type == MRC_NT_FLOAT);
-  assert(from->_data_type == MRC_NT_DOUBLE);
+  assert(mrc_fld_data_type(to) == MRC_NT_FLOAT);
+  assert(mrc_fld_data_type(from) == MRC_NT_DOUBLE);
 
   if (to->_dims.nr_vals == 5) {
     for (int i4 = to->_ghost_offs[4]; i4 < to->_ghost_offs[4] + to->_ghost_dims[4]; i4++) {
@@ -1018,8 +924,8 @@ static void
 mrc_fld_float_copy_to_double(struct mrc_fld *from, struct mrc_fld *to)
 {
   assert(mrc_fld_same_shape(to, from));
-  assert(to->_data_type == MRC_NT_DOUBLE);
-  assert(from->_data_type == MRC_NT_FLOAT);
+  assert(mrc_fld_data_type(to) == MRC_NT_DOUBLE);
+  assert(mrc_fld_data_type(from) == MRC_NT_FLOAT);
 
   if (to->_dims.nr_vals == 5) {
     for (int i4 = to->_ghost_offs[4]; i4 < to->_ghost_offs[4] + to->_ghost_dims[4]; i4++) {
@@ -1059,170 +965,6 @@ static struct mrc_obj_method mrc_fld_float_methods[] = {
 };
 
 // ----------------------------------------------------------------------
-// mrc_fld_float_aos_copy_from_double_aos
-
-static void
-mrc_fld_float_aos_copy_from_double_aos(struct mrc_fld *fld_float,
-				       struct mrc_fld *fld_double)
-{
-  assert(mrc_fld_same_shape(fld_float, fld_double));
-  assert(fld_float->_data_type == MRC_NT_FLOAT);
-  assert(fld_double->_data_type == MRC_NT_DOUBLE);
-  float *f_arr = fld_float->_arr;
-  double *d_arr = fld_double->_arr;
-  for (int i = 0; i < fld_float->_len; i++) {
-    f_arr[i] = d_arr[i];
-  }
-}
-
-// ----------------------------------------------------------------------
-// mrc_fld_float_aos_copy_to_double_aos
-
-static void
-mrc_fld_float_aos_copy_to_double_aos(struct mrc_fld *fld_float,
-				     struct mrc_fld *fld_double)
-{
-  assert(mrc_fld_same_shape(fld_float, fld_double));
-  assert(fld_float->_data_type == MRC_NT_FLOAT);
-  assert(fld_double->_data_type == MRC_NT_DOUBLE);
-  float *f_arr = fld_float->_arr;
-  double *d_arr = fld_double->_arr;
-  for (int i = 0; i < fld_float->_len; i++) {
-    d_arr[i] = f_arr[i];
-  }
-}
-
-// ----------------------------------------------------------------------
-// mrc_fld_float_aos_copy_from_float
-
-static void
-mrc_fld_float_aos_copy_from_float(struct mrc_fld *fld_float_aos,
-          struct mrc_fld *fld_float)
-{
-  assert(fld_float->_data_type == MRC_NT_FLOAT);
-  assert(fld_float_aos->_data_type == MRC_NT_FLOAT);
-  for (int p = 0; p < mrc_fld_nr_patches(fld_float); p++) {
-    mrc_fld_foreach(fld_float, ix,iy,iz, fld_float->_nr_ghosts, fld_float->_nr_ghosts) {
-      for (int m = 0; m < fld_float->_nr_comps; m++) {
-  MRC_S5(fld_float_aos, m, ix,iy,iz, p) = MRC_S5(fld_float, ix,iy,iz,m, p);
-      }
-    } mrc_fld_foreach_end;
-  }
-}
-
-// ----------------------------------------------------------------------
-// mrc_fld_float_aos_copy_to_float
-
-static void
-mrc_fld_float_aos_copy_to_float(struct mrc_fld *fld_float_aos,
-          struct mrc_fld *fld_float)
-{
-  assert(fld_float->_data_type == MRC_NT_FLOAT);
-  assert(fld_float_aos->_data_type == MRC_NT_FLOAT);
-  for (int p = 0; p < mrc_fld_nr_patches(fld_float); p++) {
-    mrc_fld_foreach(fld_float, ix,iy,iz, fld_float->_nr_ghosts, fld_float->_nr_ghosts) {
-      for (int m = 0; m < fld_float->_nr_comps; m++) {
-  MRC_S5(fld_float, ix,iy,iz, m, p) = MRC_S5(fld_float_aos, m, ix,iy,iz, p);
-      }
-    } mrc_fld_foreach_end;
-  }
-}
-
-// ----------------------------------------------------------------------
-// mrc_fld "float_aos" methods
-
-static struct mrc_obj_method mrc_fld_float_aos_methods[] = {
-  MRC_OBJ_METHOD("copy_to_double_aos",   mrc_fld_float_aos_copy_to_double_aos),
-  MRC_OBJ_METHOD("copy_from_double_aos", mrc_fld_float_aos_copy_from_double_aos),
-  MRC_OBJ_METHOD("copy_to_float", mrc_fld_float_aos_copy_to_float),
-  MRC_OBJ_METHOD("copy_from_float", mrc_fld_float_aos_copy_from_float),
-  {}
-};
-
-// ----------------------------------------------------------------------
-// mrc_fld_double_aos_copy_from_float
-
-static void
-mrc_fld_double_aos_copy_from_float(struct mrc_fld *fld_double,
-				   struct mrc_fld *fld_float)
-{
-  assert(fld_float->_data_type == MRC_NT_FLOAT);
-  assert(fld_double->_data_type == MRC_NT_DOUBLE);
-  for (int p = 0; p < mrc_fld_nr_patches(fld_float); p++) {
-    mrc_fld_foreach(fld_float, ix,iy,iz, fld_float->_nr_ghosts, fld_float->_nr_ghosts) {
-      for (int m = 0; m < fld_float->_nr_comps; m++) {
-	MRC_D5(fld_double, m, ix,iy,iz, p) = MRC_S5(fld_float, ix,iy,iz, m, p);
-      }
-    } mrc_fld_foreach_end;
-  }
-}
-
-// ----------------------------------------------------------------------
-// mrc_fld_double_aos_copy_from_double
-
-static void
-mrc_fld_double_aos_copy_from_double(struct mrc_fld *fld_double_aos,
-				    struct mrc_fld *fld_double)
-{
-  assert(fld_double->_data_type == MRC_NT_DOUBLE);
-  assert(fld_double_aos->_data_type == MRC_NT_DOUBLE);
-  for (int p = 0; p < mrc_fld_nr_patches(fld_double); p++) {
-    mrc_fld_foreach(fld_double, ix,iy,iz, fld_double->_nr_ghosts, fld_double->_nr_ghosts) {
-      for (int m = 0; m < fld_double->_nr_comps; m++) {
-	MRC_D5(fld_double_aos, m, ix,iy,iz, p) = MRC_D5(fld_double, ix,iy,iz, m, p);
-      }
-    } mrc_fld_foreach_end;
-  }
-}
-
-// ----------------------------------------------------------------------
-// mrc_fld_double_aos_copy_to_float
-
-static void
-mrc_fld_double_aos_copy_to_float(struct mrc_fld *fld_double,
-				 struct mrc_fld *fld_float)
-{
-  assert(fld_float->_data_type == MRC_NT_FLOAT);
-  assert(fld_double->_data_type == MRC_NT_DOUBLE);
-  for (int p = 0; p < mrc_fld_nr_patches(fld_float); p++) {
-    mrc_fld_foreach(fld_float, ix,iy,iz, fld_float->_nr_ghosts, fld_float->_nr_ghosts) {
-      for (int m = 0; m < fld_float->_nr_comps; m++) {
-	MRC_S5(fld_float, ix,iy,iz, m, p) = MRC_D5(fld_double, m, ix,iy,iz, p);
-      }
-    } mrc_fld_foreach_end;
-  }
-}
-
-// ----------------------------------------------------------------------
-// mrc_fld_double_aos_copy_to_double
-
-static void
-mrc_fld_double_aos_copy_to_double(struct mrc_fld *fld_double_aos,
-          struct mrc_fld *fld_double)
-{
-  assert(fld_double->_data_type == MRC_NT_DOUBLE);
-  assert(fld_double_aos->_data_type == MRC_NT_DOUBLE);
-  for (int p = 0; p < mrc_fld_nr_patches(fld_double); p++) {
-    mrc_fld_foreach(fld_double, ix,iy,iz, fld_double->_nr_ghosts, fld_double->_nr_ghosts) {
-      for (int m = 0; m < fld_double->_nr_comps; m++) {
-  MRC_D5(fld_double, ix,iy,iz, m, p) = MRC_D5(fld_double_aos, m, ix,iy,iz, p);
-      }
-    } mrc_fld_foreach_end;
-  }
-}
-
-// ----------------------------------------------------------------------
-// mrc_fld "double_aos" methods
-
-static struct mrc_obj_method mrc_fld_double_aos_methods[] = {
-  MRC_OBJ_METHOD("copy_to_float",   mrc_fld_double_aos_copy_to_float),
-  MRC_OBJ_METHOD("copy_from_float", mrc_fld_double_aos_copy_from_float),
-  MRC_OBJ_METHOD("copy_to_double",   mrc_fld_double_aos_copy_to_double),
-  MRC_OBJ_METHOD("copy_from_double", mrc_fld_double_aos_copy_from_double),
-  {}
-};
-
-// ----------------------------------------------------------------------
 // mrc_fld_*_methods
 
 static struct mrc_obj_method mrc_fld_double_methods[] = {
@@ -1253,51 +995,7 @@ mrc_fld_int_ddc_copy_to_buf(struct mrc_fld *fld, int mb, int me, int p,
 // ----------------------------------------------------------------------
 // create float, double, int subclasses
 
-#define MAKE_MRC_FLD_TYPE(NAME, type, TYPE, IS_AOS)			\
-									\
-  static void								\
-  mrc_fld_##NAME##_create(struct mrc_fld *fld)				\
-  {									\
-    fld->_data_type = MRC_NT_##TYPE;					\
-    fld->_size_of_type = sizeof(type);					\
-    fld->_is_aos = IS_AOS;						\
-  }									\
-  static void								\
-  mrc_fld_##NAME##_read(struct mrc_fld *fld, struct mrc_io *io)		\
-  {									\
-    mrc_fld_##NAME##_create(fld);					\
-    _mrc_fld_read(fld, io);						\
-  }									\
-  									\
-  static void								\
-  mrc_fld_##NAME##_set(struct mrc_fld *fld, float val)			\
-  {									\
-    assert(!fld->_is_aos);						\
-									\
-    for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {			\
-      mrc_fld_foreach(fld, ix,iy,iz, fld->_nr_ghosts, fld->_nr_ghosts) { \
-	for (int m = 0; m < fld->_nr_comps; m++) {			\
-	  MRC_FLD(fld, type, ix,iy,iz, m, p) = val;			\
-	}								\
-      } mrc_fld_foreach_end;						\
-    }									\
-  }									\
-									\
-  static void								\
-  mrc_fld_##NAME##_copy(struct mrc_fld *fld_to, struct mrc_fld *fld_from) \
-  {									\
-    assert(!fld_to->_is_aos && !fld_from->_is_aos);			\
-    assert(strcmp(mrc_fld_type(fld_to), mrc_fld_type(fld_from)) == 0);	\
-									\
-    for (int p = 0; p < mrc_fld_nr_patches(fld_to); p++) {			\
-      mrc_fld_foreach(fld_to, ix,iy,iz, fld_to->_nr_ghosts, fld_to->_nr_ghosts) { \
-	for (int m = 0; m < fld_to->_nr_comps; m++) {			\
-	  MRC_FLD(fld_to, type, ix,iy,iz, m, p) = 			\
-	    MRC_FLD(fld_from, type, ix,iy,iz, m, p);			\
-	}								\
-      } mrc_fld_foreach_end;						\
-    }									\
-  }									\
+#define MAKE_MRC_FLD_TYPE(NAME, type, TYPE)				\
 									\
   void mrc_fld_##NAME##_ddc_copy_from_buf(struct mrc_fld *, int, int,	\
 					  int, int[3], int[3], void *); \
@@ -1307,20 +1005,14 @@ mrc_fld_int_ddc_copy_to_buf(struct mrc_fld *fld, int mb, int me, int p,
   static struct mrc_fld_ops mrc_fld_##NAME##_ops = {			\
     .name                  = #NAME,					\
     .methods               = mrc_fld_##NAME##_methods,			\
-    .create                = mrc_fld_##NAME##_create,			\
-    .read                  = mrc_fld_##NAME##_read,			\
-    .set                   = mrc_fld_##NAME##_set,			\
-    .copy                  = mrc_fld_##NAME##_copy,			\
     .ddc_copy_from_buf	   = mrc_fld_##NAME##_ddc_copy_from_buf,	\
     .ddc_copy_to_buf	   = mrc_fld_##NAME##_ddc_copy_to_buf,		\
     .vec_type              = #type,					\
   };									\
 
-MAKE_MRC_FLD_TYPE(float, float, FLOAT, false)
-MAKE_MRC_FLD_TYPE(float_aos, float, FLOAT, true)
-MAKE_MRC_FLD_TYPE(double, double, DOUBLE, false)
-MAKE_MRC_FLD_TYPE(double_aos, double, DOUBLE, true)
-MAKE_MRC_FLD_TYPE(int, int, INT, false)
+MAKE_MRC_FLD_TYPE(float, float, FLOAT)
+MAKE_MRC_FLD_TYPE(double, double, DOUBLE)
+MAKE_MRC_FLD_TYPE(int, int, INT)
 
 // ----------------------------------------------------------------------
 // mrc_fld_init
@@ -1329,9 +1021,7 @@ static void
 mrc_fld_init()
 {
   mrc_class_register_subclass(&mrc_class_mrc_fld, &mrc_fld_float_ops);
-  mrc_class_register_subclass(&mrc_class_mrc_fld, &mrc_fld_float_aos_ops);
   mrc_class_register_subclass(&mrc_class_mrc_fld, &mrc_fld_double_ops);
-  mrc_class_register_subclass(&mrc_class_mrc_fld, &mrc_fld_double_aos_ops);
   mrc_class_register_subclass(&mrc_class_mrc_fld, &mrc_fld_int_ops);
 }
 
@@ -1350,9 +1040,11 @@ static struct param mrc_fld_descr[] = {
   { "nr_comps"        , VAR(_nr_comps)       , PARAM_INT(1)          },
   { "nr_ghosts"       , VAR(_nr_ghosts)      , PARAM_INT(0)          },
 
-  { "size_of_type"    , VAR(_size_of_type)   , MRC_VAR_INT           },
-  { "len"             , VAR(_len)            , MRC_VAR_INT           },
-  { "vec"             , VAR(_vec)            , MRC_VAR_OBJ(mrc_vec)  },
+  // FIXME, if _nd is listed as member obj, we can't prevent it being written,
+  // but usually, we want to write the data ourselves, and don't write nd
+  //  { "nd"              , VAR(_nd)             , MRC_VAR_OBJ(mrc_ndarray) },
+  { "aos"             , VAR(_aos)            , PARAM_BOOL(false)     },
+  { "c_order"         , VAR(_c_order)        , PARAM_BOOL(false)     },
   {},
 };
 #undef VAR
@@ -1381,8 +1073,10 @@ struct mrc_class_mrc_fld mrc_class_mrc_fld = {
   .param_descr  = mrc_fld_descr,
   .methods      = mrc_fld_methods,
   .init         = mrc_fld_init,
+  .create       = _mrc_fld_create,
   .destroy      = _mrc_fld_destroy,
   .setup        = _mrc_fld_setup,
+  .read         = _mrc_fld_read,
   .write        = _mrc_fld_write,
 };
 

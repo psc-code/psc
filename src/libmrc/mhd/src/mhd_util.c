@@ -6,7 +6,7 @@
 #include <mrc_domain.h>
 #include <mrc_crds.h>
 #include <mrc_bits.h>
-#include <mrc_fld_as_double_aos.h> // FIXME
+#include <mrc_fld_as_double.h> // FIXME
 
 void
 setup_mrc_fld_3d(struct mrc_fld *f, struct mrc_fld *f_tmpl, int nr_comps)

@@ -28,6 +28,7 @@ enum param_type {
   MRC_VAR_FLOAT,
   MRC_VAR_DOUBLE,
   MRC_VAR_OBJ,
+  MRC_VAR_DOUBLE3,
 };
 
 #define PARAM_INT(x)      PT_INT,    .u = { .ini_int = (x), }

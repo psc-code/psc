@@ -21,13 +21,13 @@ struct ggcm_mhd_ic_mirdip {
   float prat; // determines initial interior pressure as a fraction of solar wind pressure
   float stretch_tail; // vx == 0 is stretched by this factor on the tail side
 
-  float dipole_moment[3];
+  float dipole_moment[3]; // not actually, the dipole moment, just the direction
 
   // solar wind values to use if there is no "bndsw" object around
-  double bnvals[SW_NR];
+  double bnvals[N_PRIMITIVE];
 
   // state
-  double bnvals_code[SW_NR]; // normalized to code units
+  double bnvals_code[N_PRIMITIVE]; // normalized to code units
   double rrini_code;
 
   struct ggcm_mhd_dipole *mhd_dipole;
@@ -44,14 +44,16 @@ ggcm_mhd_ic_mirdip_setup(struct ggcm_mhd_ic *ic)
   struct ggcm_mhd_ic_mirdip *sub = ggcm_mhd_ic_mirdip(ic);
   struct ggcm_mhd *mhd = ic->mhd;
 
-  sub->bnvals_code[SW_RR] = sub->bnvals[SW_RR] / mhd->rrnorm;
-  sub->bnvals_code[SW_VX] = sub->bnvals[SW_VX] / mhd->vvnorm;
-  sub->bnvals_code[SW_VY] = sub->bnvals[SW_VY] / mhd->vvnorm;
-  sub->bnvals_code[SW_VZ] = sub->bnvals[SW_VZ] / mhd->vvnorm;
-  sub->bnvals_code[SW_PP] = sub->bnvals[SW_PP] / mhd->ppnorm;
-  sub->bnvals_code[SW_BX] = sub->bnvals[SW_BX] / mhd->bbnorm;
-  sub->bnvals_code[SW_BY] = sub->bnvals[SW_BY] / mhd->bbnorm;
-  sub->bnvals_code[SW_BZ] = sub->bnvals[SW_BZ] / mhd->bbnorm;
+  ggcm_mhd_ic_setup_super(ic);
+
+  sub->bnvals_code[RR] = sub->bnvals[RR] / mhd->rrnorm;
+  sub->bnvals_code[VX] = sub->bnvals[VX] / mhd->vvnorm;
+  sub->bnvals_code[VY] = sub->bnvals[VY] / mhd->vvnorm;
+  sub->bnvals_code[VZ] = sub->bnvals[VZ] / mhd->vvnorm;
+  sub->bnvals_code[PP] = sub->bnvals[PP] / mhd->ppnorm;
+  sub->bnvals_code[BX] = sub->bnvals[BX] / mhd->bbnorm;
+  sub->bnvals_code[BY] = sub->bnvals[BY] / mhd->bbnorm;
+  sub->bnvals_code[BZ] = sub->bnvals[BZ] / mhd->bbnorm;
 
   sub->rrini_code = sub->rrini / mhd->rrnorm;
 
@@ -109,16 +111,20 @@ static double
 ggcm_mhd_ic_mirdip_primitive(struct ggcm_mhd_ic *ic, int m, double crd[3])
 {
   struct ggcm_mhd_ic_mirdip *sub = ggcm_mhd_ic_mirdip(ic);
-
+  double xxnorm = ic->mhd->xxnorm;
+  
   double xx = crd[0], yy = crd[1], zz = crd[2];
-
+  double xxx1 = sub->xxx1 / xxnorm;
+  double xxx2 = sub->xxx2 / xxnorm;
+  double xmir = sub->xmir / xxnorm;
+ 
   double *vals = sub->bnvals_code;
-  mrc_fld_data_t tmplam = lmbda(xx, -sub->xxx1, -sub->xxx2);
+  mrc_fld_data_t tmplam = lmbda(xx, -xxx1, -xxx2);
 
   switch (m) {
-  case RR: return tmplam * vals[SW_RR] + (1.f - tmplam) * sub->rrini_code;
-  case PP: return tmplam * vals[SW_PP] + (1.f - tmplam) * sub->prat * vals[SW_PP];
-  case VX: return vxsta1(xx, yy, zz, vals[SW_VX], sub->xxx2, sub->xxx1, sub->stretch_tail, sub->xmir);
+  case RR: return tmplam * vals[RR] + (1.f - tmplam) * sub->rrini_code;
+  case PP: return tmplam * vals[PP] + (1.f - tmplam) * sub->prat * vals[PP];
+  case VX: return vxsta1(xx, yy, zz, vals[VX], xxx2, xxx1, sub->stretch_tail, xmir);
   case VY: return 0.;
   case VZ: return 0.;
   default: return 0.;
@@ -140,9 +146,9 @@ ggcm_mhd_ic_mirdip_vector_potential_bg(struct ggcm_mhd_ic *ic, int m, double x[3
   if (first_time) {
     struct ggcm_mhd_bndsw *bndsw = ggcm_mhd_get_var_obj(ic->mhd, "bndsw");
     if (bndsw) {
-      float bnvals[SW_NR];
+      float bnvals[N_PRIMITIVE];
       ggcm_mhd_bndsw_get_initial(bndsw, bnvals);
-      for (int m = 0; m < SW_NR; m++) {
+      for (int m = 0; m < N_PRIMITIVE; m++) {
 	sub->bnvals_code[m] = bnvals[m];
       }
     }
@@ -156,8 +162,8 @@ ggcm_mhd_ic_mirdip_vector_potential_bg(struct ggcm_mhd_ic *ic, int m, double x[3
   // add IMF vector potential
   double *vals = sub->bnvals_code;
   switch (m) {
-  case 1: A += vals[SW_BZ] * x[0]; break;
-  case 2: A += vals[SW_BX] * x[1] - vals[SW_BY] * x[0]; break;
+  case 1: A += vals[BZ] * x[0]; break;
+  case 2: A += vals[BX] * x[1] - vals[BY] * x[0]; break;
   }
 
   return A;
@@ -170,24 +176,27 @@ static double
 ggcm_mhd_ic_mirdip_vector_potential(struct ggcm_mhd_ic *ic, int m, double x[3])
 {
   struct ggcm_mhd_ic_mirdip *sub = ggcm_mhd_ic_mirdip(ic);
+  double xxnorm = ic->mhd->xxnorm;
 
+  double xmir = sub->xmir / xxnorm;
+  
   // get main dipole vector potential
   double A = ggcm_mhd_dipole_vector_potential(sub->mhd_dipole, m, x, (float [3]) { 0.f, 0.f, 0.f },
-					      sub->dipole_moment, sub->xmir);
+					      sub->dipole_moment, xmir);
 
-  if (sub->xmir != 0.0) {
+  if (xmir != 0.0) {
     // add mirror dipole vector potential
     sub->dipole_moment[0] *= -1.f;
-    A += ggcm_mhd_dipole_vector_potential(sub->mhd_dipole, m, x, (float [3]) { 2.f * sub->xmir, 0.f, 0.f },
-					  sub->dipole_moment, sub->xmir);
+    A += ggcm_mhd_dipole_vector_potential(sub->mhd_dipole, m, x, (float [3]) { 2.f * xmir, 0.f, 0.f },
+					  sub->dipole_moment, xmir);
     sub->dipole_moment[0] *= -1.f;
   }
 
   // add IMF vector potential
   double *vals = sub->bnvals_code;
   switch (m) {
-  case 1: A += vals[SW_BZ] * x[0]; break;
-  case 2: A += vals[SW_BX] * x[1] - vals[SW_BY] * x[0]; break;
+  case 1: A += vals[BZ] * x[0]; break;
+  case 2: A += vals[BX] * x[1] - vals[BY] * x[0]; break;
   }
 
   // subtract out B0-vector potential
@@ -213,14 +222,14 @@ static struct param ggcm_mhd_ic_mirdip_descr[] = {
 
   { "dipole_moment", VAR(dipole_moment), PARAM_FLOAT3(0., 0., -1.) },
 
-  { "rr"           , VAR(bnvals[SW_RR]), PARAM_DOUBLE(1.)          },
-  { "pp"           , VAR(bnvals[SW_PP]), PARAM_DOUBLE(1.)          },
-  { "vx"           , VAR(bnvals[SW_VX]), PARAM_DOUBLE(0.)          },
-  { "vy"           , VAR(bnvals[SW_VY]), PARAM_DOUBLE(0.)          },
-  { "vz"           , VAR(bnvals[SW_VZ]), PARAM_DOUBLE(0.)          },
-  { "bx"           , VAR(bnvals[SW_BX]), PARAM_DOUBLE(0.)          },
-  { "by"           , VAR(bnvals[SW_BY]), PARAM_DOUBLE(0.)          },
-  { "bz"           , VAR(bnvals[SW_BZ]), PARAM_DOUBLE(0.)          },
+  { "rr"           , VAR(bnvals[RR])   , PARAM_DOUBLE(1.)          },
+  { "pp"           , VAR(bnvals[PP])   , PARAM_DOUBLE(1.)          },
+  { "vx"           , VAR(bnvals[VX])   , PARAM_DOUBLE(0.)          },
+  { "vy"           , VAR(bnvals[VY])   , PARAM_DOUBLE(0.)          },
+  { "vz"           , VAR(bnvals[VZ])   , PARAM_DOUBLE(0.)          },
+  { "bx"           , VAR(bnvals[BX])   , PARAM_DOUBLE(0.)          },
+  { "by"           , VAR(bnvals[BY])   , PARAM_DOUBLE(0.)          },
+  { "bz"           , VAR(bnvals[BZ])   , PARAM_DOUBLE(0.)          },
   {},
 };
 #undef VAR

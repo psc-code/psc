@@ -486,7 +486,8 @@ MB_GetFld(struct mrc_domain *domain, int bs, int sw, struct mrc_fld *fld, char *
 {
   // FIXME: There's no reason these have to be double_aos, as far as I can
   // tell, but until I'm sure I'm going to leave them this way.
-  mrc_fld_set_type(fld, "double_aos");
+  mrc_fld_set_type(fld, "double");
+  mrc_fld_set_param_bool(fld, "aos", true);
   mrc_fld_set_name(fld, name);
   mrc_fld_set_param_obj(fld, "domain", domain);
   mrc_fld_set_param_int(fld, "nr_spatial_dims", 3);

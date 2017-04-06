@@ -40,6 +40,8 @@ static void
 mrc_crds_gen_ggcm_yz_run(struct mrc_crds_gen *gen, double *xx, double *dx)
 {
   struct mrc_crds_gen_ggcm_yz *sub = mrc_crds_gen_ggcm_yz(gen);
+  double xshift_code = sub->xshift / gen->crds->xnorm;
+  double dx0_code = sub->dx0 / gen->crds->xnorm;
 
   // FIXME, maybe we should calculate xx2, xshift from this...
   assert(gen->xl == -gen->xh);
@@ -47,18 +49,17 @@ mrc_crds_gen_ggcm_yz_run(struct mrc_crds_gen *gen, double *xx, double *dx)
 
   int nx2 = gen->n / 2;
   int nx1 = 1 - gen->n / 2;
-  double a = acoff(nx2, xx2, sub->xm, sub->xn, sub->dx0);
+  double a = acoff(nx2, xx2, sub->xm, sub->xn, dx0_code);
   //  printf("gridyz: n = %d nx12 = %d, %d a = %g\n", gen->n, nx1, nx2, a);
 
   for (int i = -gen->sw; i < gen->n + gen->sw; i++) {
     double x = i + nx1 - .5;
-    double d0 = sub->dx0;
     double xn = sub->xn;
     double xm = sub->xm;
     double s = 1 + a*(pow(x, (2.*xn)));
     double sm = pow(s, xm);
-    double dg = d0 * (sm + xm*x*2.*xn*a*(pow(x, (2.*xn-1.))) * sm / s);
-    double g = d0 * x * sm - sub->xshift;
+    double dg = dx0_code * (sm + xm*x*2.*xn*a*(pow(x, (2.*xn-1.))) * sm / s);
+    double g = dx0_code * x * sm - xshift_code;
     xx[i] = g;
     dx[i] = dg;
   }

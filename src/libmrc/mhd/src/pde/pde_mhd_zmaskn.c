@@ -13,11 +13,11 @@ patch_calc_zmask_c(fld3d_t p_zmask, fld3d_t p_U, fld3d_t p_ymask)
   fld3d_t p_B = fld3d_make_view(p_U, BX);
 
   mrc_fld_data_t va02i = 1.f / sqr(s_speedlimit_code);
-  mrc_fld_data_t eps = 1e-15f;
+  mrc_fld_data_t eps = 1e-30f;
 
   fld3d_foreach(i,j,k, 1, 1) {
     float bb = (sqr(BTXcc(p_B, i,j,k)) + sqr(BTYcc(p_B, i,j,k)) + sqr(BTZcc(p_B, i,j,k)));
-    float rrm = mrc_fld_max(eps, bb * va02i);
+    float rrm = mrc_fld_max(eps, s_mu0_inv * bb * va02i);
     F3S(p_zmask, 0, i,j,k) = F3S(p_ymask, 0, i,j,k) * 
       mrc_fld_min(1.f, F3S(p_U, RR, i,j,k) / rrm);
   } fld3d_foreach_end;
@@ -33,13 +33,13 @@ static void
 patch_zmaskn_c(fld3d_t p_zmask, fld3d_t p_W, fld3d_t p_bcc, fld3d_t p_ymask)
 {
   mrc_fld_data_t va02i = 1.f / sqr(s_speedlimit_code);
-  mrc_fld_data_t eps = 1e-15f;
+  mrc_fld_data_t eps = 1e-30f;
 
   fld3d_foreach(i,j,k, 2, 2) {
     float bb = (sqr(F3S(p_bcc, 0, i,j,k)) + 
 		sqr(F3S(p_bcc, 1, i,j,k)) +
 		sqr(F3S(p_bcc, 2, i,j,k)));
-    float rrm = mrc_fld_max(eps, bb * va02i);
+    float rrm = mrc_fld_max(eps, s_mu0_inv * bb * va02i);
     F3S(p_zmask, 0, i,j,k) = F3S(p_ymask, 0, i,j,k) * 
       mrc_fld_min(1.f, F3S(p_W, RR, i,j,k) / rrm);
   } fld3d_foreach_end;

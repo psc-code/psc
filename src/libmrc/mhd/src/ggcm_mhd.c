@@ -16,6 +16,7 @@
 #include <mrc_ts_monitor.h>
 #include <mrc_io.h>
 #include <mrc_profile.h>
+#include <mrc_physics.h>
 
 #include <assert.h>
 #include <string.h>
@@ -103,23 +104,9 @@ _ggcm_mhd_create(struct ggcm_mhd *mhd)
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_get_state
-//
-// update C ggcm_mhd state from Fortran common blocks
-
-void
-ggcm_mhd_get_state(struct ggcm_mhd *mhd)
-{
-  struct ggcm_mhd_ops *ops = ggcm_mhd_ops(mhd);
-  if (ops->get_state) {
-    ops->get_state(mhd);
-  }
-}
-
-// ----------------------------------------------------------------------
 // ggcm_mhd_set_state
 //
-// updated Fortran common blocks from C ggcm_mhd state
+// update Fortran common blocks from C ggcm_mhd state
 
 void
 ggcm_mhd_set_state(struct ggcm_mhd *mhd)
@@ -127,6 +114,30 @@ ggcm_mhd_set_state(struct ggcm_mhd *mhd)
   struct ggcm_mhd_ops *ops = ggcm_mhd_ops(mhd);
   if (ops->set_state) {
     ops->set_state(mhd);
+  }
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_pre_step
+
+void
+ggcm_mhd_pre_step(struct ggcm_mhd *mhd, struct mrc_ts *ts, struct mrc_fld *fld)
+{
+  struct ggcm_mhd_ops *ops = ggcm_mhd_ops(mhd);
+  if (ops->pre_step) {
+    ops->pre_step(mhd, ts, fld);
+  }
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_post_step
+
+void
+ggcm_mhd_post_step(struct ggcm_mhd *mhd, struct mrc_ts *ts, struct mrc_fld *fld)
+{
+  struct ggcm_mhd_ops *ops = ggcm_mhd_ops(mhd);
+  if (ops->post_step) {
+    ops->post_step(mhd, ts, fld);
   }
 }
 
@@ -139,8 +150,6 @@ ggcm_mhd_setup_internal(struct ggcm_mhd *mhd)
   const int *ghost_dims = mrc_fld_ghost_dims(mhd->fld);
   const int *dims = mrc_fld_dims(mhd->fld);
   int shift = 0;
-  if (mhd->fld->_nr_spatial_dims == 3 
-   && mhd->fld->_is_aos) shift = 1;
   for (int d = 0; d < 3; d++) {
     // local domain size
     mhd->im[d] = dims[d+shift];
@@ -166,25 +175,29 @@ _ggcm_mhd_read(struct ggcm_mhd *mhd, struct mrc_io *io)
 static void
 ggcm_mhd_setup_normalization(struct ggcm_mhd *mhd)
 {
-  float x0 = mhd->par.norm_length;
-  float b0 = mhd->par.norm_B;
-  float n0 = mhd->par.norm_density;
+  double x0 = mhd->par.norm_length;
+  double b0 = mhd->par.norm_B;
+  double rr0 = mhd->par.norm_density;
+  double mu00 = mhd->par.norm_mu0;
+  
+  mhd->xxnorm = x0;
   mhd->bbnorm = b0;
-  mhd->rrnorm = n0;
-  mhd->vvnorm = b0 / sqrt(mhd->par.mu0 * n0 * mhd->par.amu);
-  mhd->ppnorm = sqr(mhd->vvnorm) * (n0 * mhd->par.amu);
-  mhd->ccnorm = b0 / (x0 * mhd->par.mu0);
+  mhd->rrnorm = rr0;
+  mhd->vvnorm = b0 / sqrt(mu00 * rr0);
+  mhd->ppnorm = sqr(mhd->vvnorm) * rr0;
+  mhd->ccnorm = b0 / (x0 * mu00);
   mhd->eenorm = mhd->vvnorm * b0;
   mhd->resnorm = mhd->eenorm / mhd->ccnorm;
   mhd->tnorm = x0 / mhd->vvnorm;
   mhd->qqnorm = mhd->ccnorm / (mhd->rrnorm * mhd->vvnorm);
 
   MPI_Comm comm = ggcm_mhd_comm(mhd);
-  mpi_printf(comm, "NORMALIZATION: based on x0 = %g m\n", mhd->par.norm_length);
-  mpi_printf(comm, "NORMALIZATION:          B0 = %g T\n", mhd->par.norm_B);
-  mpi_printf(comm, "NORMALIZATION:          n0 = %g 1/m^3\n", mhd->par.norm_density);
-  mpi_printf(comm, "NORMALIZATION:          mu0 = %g N/A^2\n", mhd->par.mu0);
-  mpi_printf(comm, "NORMALIZATION:          amu = %g kg\n", mhd->par.amu);
+  mpi_printf(comm, "NORMALIZATION: based on x0 = %g m\n", x0);
+  mpi_printf(comm, "NORMALIZATION:          B0 = %g T\n", b0);
+  mpi_printf(comm, "NORMALIZATION:         rr0 = %g kg/m^3\n", rr0);
+  mpi_printf(comm, "NORMALIZATION:        mu00 = %g N/A^2\n", mu00);
+  mpi_printf(comm, "NORMALIZATION:    mu0_code = %g N/A^2\n", mhd->par.mu0_code);
+  mpi_printf(comm, "NORMALIZATION: xxnorm  = %g m\n", mhd->xxnorm);
   mpi_printf(comm, "NORMALIZATION: bbnorm  = %g T\n", mhd->bbnorm);
   mpi_printf(comm, "NORMALIZATION: rrnorm  = %g 1/m^3\n", mhd->rrnorm);
   mpi_printf(comm, "NORMALIZATION: vvnorm  = %g m/s\n", mhd->vvnorm);
@@ -195,6 +208,11 @@ ggcm_mhd_setup_normalization(struct ggcm_mhd *mhd)
   mpi_printf(comm, "NORMALIZATION: tnorm   = %g s\n", mhd->tnorm);
   mpi_printf(comm, "NORMALIZATION: qqnorm  = %g C\n", mhd->qqnorm);
 
+  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
+  mrc_crds_set_param_double(crds, "norm_length", mhd->xxnorm);
+  mrc_crds_set_param_double(crds, "norm_length_scale", mhd->par.xxnorm0);
+
+  mhd->xxnorm /= mhd->par.xxnorm0;
   mhd->bbnorm /= mhd->par.bbnorm0;
   mhd->rrnorm /= mhd->par.rrnorm0;
   mhd->vvnorm /= mhd->par.vvnorm0;
@@ -204,6 +222,49 @@ ggcm_mhd_setup_normalization(struct ggcm_mhd *mhd)
   mhd->resnorm /= mhd->par.resnorm0;
   mhd->tnorm /= mhd->par.tnorm0;
   mhd->qqnorm /= mhd->par.qqnorm0;
+
+  mpi_printf(comm, "NORMALIZATION: the following are the internally used scale factors\n"
+	     "to convert code units to external units, including prefix. So, e.g., \n"
+	     "internal (normalized) B to external B in nT\n");
+  mpi_printf(comm, "NORMALIZATION: int. xxnorm  = %g\n", mhd->xxnorm);
+  mpi_printf(comm, "NORMALIZATION: int. bbnorm  = %g\n", mhd->bbnorm);
+  mpi_printf(comm, "NORMALIZATION: int. rrnorm  = %g\n", mhd->rrnorm);
+  mpi_printf(comm, "NORMALIZATION: int. vvnorm  = %g\n", mhd->vvnorm);
+  mpi_printf(comm, "NORMALIZATION: int. ppnorm  = %g\n", mhd->ppnorm);
+  mpi_printf(comm, "NORMALIZATION: int. ccnorm  = %g\n", mhd->ccnorm);
+  mpi_printf(comm, "NORMALIZATION: int. eenorm  = %g\n", mhd->eenorm);
+  mpi_printf(comm, "NORMALIZATION: int. resnorm = %g\n", mhd->resnorm);
+  mpi_printf(comm, "NORMALIZATION: int. tnorm   = %g\n", mhd->tnorm);
+  mpi_printf(comm, "NORMALIZATION: int. qqnorm  = %g\n", mhd->qqnorm);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_setup_gk_norm
+
+static void
+ggcm_mhd_setup_gk_norm(struct ggcm_mhd *mhd)
+{
+  if (mhd->par.gk_norm) {
+    if (mhd->par.d_i == 0.) {
+      // FIXME, seems it'd be better to not call this if we aren't using a gkeyll stepper
+      mpi_printf(ggcm_mhd_comm(mhd), "WARNING: ggcm_mhd_setup_gk_norm(): d_i == 0\n");
+      return;
+    }
+    double mu0 = 1.;
+    double rr_e = mhd->par.gk_norm_rr / mhd->rrnorm / (1. + mhd->par.gk_norm_mi_over_me);
+    double rr_i = mhd->par.gk_norm_rr / mhd->rrnorm - rr_e;
+    assert(mhd->par.d_i > 0.);
+    double ion_mass = 1.;
+    double electron_mass = ion_mass / mhd->par.gk_norm_mi_over_me;
+    double e = ion_mass / mhd->par.d_i / sqrt(mu0 * rr_i);
+    double pressure_ratio = mhd->par.gk_norm_ppi_over_ppe;
+    
+    ggcm_mhd_set_param_double(mhd, "gk_speed_of_light", mhd->par.gk_norm_speed_of_light / mhd->vvnorm);
+    ggcm_mhd_set_param_float_array(mhd, "gk_charge", 2, (float[2]) { -e, e });
+    ggcm_mhd_set_param_float_array(mhd, "gk_mass", 2, (float[2]) { electron_mass, ion_mass });
+    ggcm_mhd_set_param_float_array(mhd, "gk_pressure_ratios", 2, 
+				   (float[2]) { 1./(1.+pressure_ratio), 1./(1.+1./pressure_ratio) });
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -213,6 +274,7 @@ static void
 _ggcm_mhd_setup(struct ggcm_mhd *mhd)
 {
   ggcm_mhd_setup_normalization(mhd);
+  ggcm_mhd_setup_gk_norm(mhd);
 
   ggcm_mhd_step_setup_flds(mhd->step);
   for (int m = 0; m < mrc_fld_nr_comps(mhd->fld); m++) {
@@ -243,27 +305,20 @@ _ggcm_mhd_setup(struct ggcm_mhd *mhd)
 }
 
 void
-ggcm_mhd_fill_ghosts(struct ggcm_mhd *mhd, struct mrc_fld *fld, int m, float bntim)
+ggcm_mhd_fill_ghosts(struct ggcm_mhd *mhd, struct mrc_fld *fld, float bntim_code)
 {
+  // FIXME, should go to I/O units further down in ggcm_mhd_bnd_fill_ghosts()
+  float bntim = bntim_code * mhd->tnorm;
   if (mhd->amr == 0) {
     // FIXME, this really should be done in a cleaner way (pass mb, me, probably)
-    int mhd_type;
-    mrc_fld_get_param_int(fld, "mhd_type", &mhd_type);
-    if (mhd_type == MT_GKEYLL ||
-	mhd_type == MT_FULLY_CONSERVATIVE ||
-	mhd_type == MT_FULLY_CONSERVATIVE_CC) {
-      int nr_comps = mrc_fld_nr_comps(fld);
-      mrc_ddc_fill_ghosts_fld(mrc_domain_get_ddc(mhd->domain), m, m + nr_comps, fld);
-    } else {
-      mrc_ddc_fill_ghosts_fld(mrc_domain_get_ddc(mhd->domain), m, m + 8, fld);
-    }
+    int nr_comps = mrc_fld_nr_comps(fld);
+    mrc_ddc_fill_ghosts_fld(mrc_domain_get_ddc(mhd->domain), 0, nr_comps, fld);
   } else {
-    assert(m == 0);
     mrc_ddc_amr_apply(mhd->ddc_amr_cc, fld);
     // ggcm_mhd_amr_fill_ghosts_b(mhd, fld); // has been taken over by ddc_amr_cc
   }
-  ggcm_mhd_bnd_fill_ghosts(mhd->bnd, fld, m, bntim);
-  ggcm_mhd_bnd_fill_ghosts(mhd->bnd1, fld, m, bntim);
+  ggcm_mhd_bnd_fill_ghosts(mhd->bnd, fld, bntim);
+  ggcm_mhd_bnd_fill_ghosts(mhd->bnd1, fld, bntim);
 }
 
 void
@@ -327,6 +382,8 @@ ggcm_mhd_get_3d_fld(struct ggcm_mhd *mhd, int nr_comps)
   mrc_fld_set_param_int(f, "nr_spatial_dims", 3);
   mrc_fld_set_param_int(f, "nr_comps", nr_comps);
   mrc_fld_set_param_int(f, "nr_ghosts", mhd->fld->_nr_ghosts);
+  mrc_fld_set_param_bool(f, "aos", mhd->fld->_aos);
+  mrc_fld_set_param_bool(f, "c_order", mhd->fld->_c_order);
   mrc_fld_setup(f);
 
   return f;
@@ -352,9 +409,8 @@ ggcm_mhd_put_3d_fld(struct ggcm_mhd *mhd, struct mrc_fld *f)
 void
 ggcm_mhd_default_box(struct ggcm_mhd *mhd)
 {
-  // use normalize units
-  mhd->par.mu0 = 1.f;
-  mhd->par.amu = 1.f;
+  // use normalized units
+  mhd->par.norm_mu0 = 1.f;
 
   mhd->par.diffco = 0.f;
   mhd->par.r_db_dt = 0.f;
@@ -369,6 +425,8 @@ ggcm_mhd_default_box(struct ggcm_mhd *mhd)
   mrc_domain_set_param_int(mhd->domain, "bcx", BC_PERIODIC);
   mrc_domain_set_param_int(mhd->domain, "bcy", BC_PERIODIC);
   mrc_domain_set_param_int(mhd->domain, "bcz", BC_PERIODIC);
+
+  mhd->par.gk_norm = true;
 }
 
 // ======================================================================
@@ -392,20 +450,22 @@ static struct param ggcm_mhd_descr[] = {
   { "gamma"           , VAR(par.gamm)        , PARAM_FLOAT(1.66667f) },
   { "rrmin"           , VAR(par.rrmin)       , PARAM_FLOAT(.1f)      },
 
-  { "bbnorm0"         , VAR(par.bbnorm0)     , PARAM_FLOAT(1.)       },
-  { "vvnorm0"         , VAR(par.vvnorm0)     , PARAM_FLOAT(1.)       },
-  { "rrnorm0"         , VAR(par.rrnorm0)     , PARAM_FLOAT(1.)       },
-  { "ppnorm0"         , VAR(par.ppnorm0)     , PARAM_FLOAT(1.)       },
-  { "ccnorm0"         , VAR(par.ccnorm0)     , PARAM_FLOAT(1.)       },
-  { "eenorm0"         , VAR(par.eenorm0)     , PARAM_FLOAT(1.)       },
-  { "resnorm0"        , VAR(par.resnorm0)    , PARAM_FLOAT(1.)       },
-  { "tnorm0"          , VAR(par.tnorm0)      , PARAM_FLOAT(1.)       },
+  { "xxnorm0"         , VAR(par.xxnorm0)     , PARAM_DOUBLE(1.)       },
+  { "bbnorm0"         , VAR(par.bbnorm0)     , PARAM_DOUBLE(1.)       },
+  { "vvnorm0"         , VAR(par.vvnorm0)     , PARAM_DOUBLE(1.)       },
+  { "rrnorm0"         , VAR(par.rrnorm0)     , PARAM_DOUBLE(1.)       },
+  { "ppnorm0"         , VAR(par.ppnorm0)     , PARAM_DOUBLE(1.)       },
+  { "ccnorm0"         , VAR(par.ccnorm0)     , PARAM_DOUBLE(1.)       },
+  { "eenorm0"         , VAR(par.eenorm0)     , PARAM_DOUBLE(1.)       },
+  { "resnorm0"        , VAR(par.resnorm0)    , PARAM_DOUBLE(1.)       },
+  { "tnorm0"          , VAR(par.tnorm0)      , PARAM_DOUBLE(1.)       },
+  { "qqnorm0"         , VAR(par.qqnorm0)     , PARAM_DOUBLE(1.)       },
 
-  { "norm_length"     , VAR(par.norm_length) , PARAM_FLOAT(1.)       },
-  { "norm_B"          , VAR(par.norm_B)      , PARAM_FLOAT(1.)       },
-  { "norm_density"    , VAR(par.norm_density), PARAM_FLOAT(1.)       },
-  { "mu0"             , VAR(par.mu0)         , PARAM_FLOAT(1.2566370E-06) },
-  { "amu"             , VAR(par.amu)         , PARAM_FLOAT(1.6605655E-27) },
+  { "norm_length"     , VAR(par.norm_length) , PARAM_DOUBLE(1.)       },
+  { "norm_B"          , VAR(par.norm_B)      , PARAM_DOUBLE(1.)       },
+  { "norm_density"    , VAR(par.norm_density), PARAM_DOUBLE(1.)       },
+  { "norm_mu0"        , VAR(par.norm_mu0)    , PARAM_DOUBLE(C_MU0)    },
+  { "mu0_code"        , VAR(par.mu0_code)    , PARAM_DOUBLE(1.)       },
 
   { "diffconstant"    , VAR(par.diffco)      , PARAM_FLOAT(.03f)     },
   { "diffthreshold"   , VAR(par.diffth)      , PARAM_FLOAT(.75f)     },
@@ -417,7 +477,6 @@ static struct param ggcm_mhd_descr[] = {
   { "timelo"          , VAR(par.timelo)      , PARAM_FLOAT(0.f)      },
   { "d_i"             , VAR(par.d_i)         , PARAM_FLOAT(0.f)      },
   { "dtmin"           , VAR(par.dtmin)       , PARAM_FLOAT(.0002f)   },
-  { "dbasetime"       , VAR(par.dbasetime)   , PARAM_DOUBLE(0.)      },
   { "modnewstep"      , VAR(par.modnewstep)  , PARAM_INT(1)          },
   { "magdiffu"        , VAR(par.magdiffu)    , PARAM_SELECT(MAGDIFFU_NL1,
 							    magdiffu_descr) },
@@ -436,24 +495,22 @@ static struct param ggcm_mhd_descr[] = {
   { "amr_grid_file"   , VAR(amr_grid_file)   , PARAM_STRING("amr_grid.txt")   },
   { "amr"             , VAR(amr)             , PARAM_INT(0)                   },
 
-  { "bbnorm"          , VAR(bbnorm)          , MRC_VAR_FLOAT         },
-  { "vvnorm"          , VAR(vvnorm)          , MRC_VAR_FLOAT         },
-  { "rrnorm"          , VAR(rrnorm)          , MRC_VAR_FLOAT         },
-  { "ppnorm"          , VAR(ppnorm)          , MRC_VAR_FLOAT         },
-  { "ccnorm"          , VAR(ccnorm)          , MRC_VAR_FLOAT         },
-  { "eenorm"          , VAR(eenorm)          , MRC_VAR_FLOAT         },
-  { "resnorm"         , VAR(resnorm)         , MRC_VAR_FLOAT         },
-  { "tnorm"           , VAR(tnorm)           , MRC_VAR_FLOAT         },
+  { "xxnorm"          , VAR(xxnorm)          , MRC_VAR_DOUBLE         },
+  { "bbnorm"          , VAR(bbnorm)          , MRC_VAR_DOUBLE         },
+  { "vvnorm"          , VAR(vvnorm)          , MRC_VAR_DOUBLE         },
+  { "rrnorm"          , VAR(rrnorm)          , MRC_VAR_DOUBLE         },
+  { "ppnorm"          , VAR(ppnorm)          , MRC_VAR_DOUBLE         },
+  { "ccnorm"          , VAR(ccnorm)          , MRC_VAR_DOUBLE         },
+  { "eenorm"          , VAR(eenorm)          , MRC_VAR_DOUBLE         },
+  { "resnorm"         , VAR(resnorm)         , MRC_VAR_DOUBLE         },
+  { "tnorm"           , VAR(tnorm)           , MRC_VAR_DOUBLE         },
 
-  { "time"            , VAR(time)            , MRC_VAR_FLOAT         },
-  { "dt"              , VAR(dt)              , MRC_VAR_FLOAT         },
+  { "time_code"       , VAR(time_code)       , MRC_VAR_FLOAT         },
+  { "dt_code"         , VAR(dt_code)         , MRC_VAR_FLOAT         },
   { "istep"           , VAR(istep)           , MRC_VAR_INT           },
   { "timla"           , VAR(timla)           , MRC_VAR_FLOAT         },
   { "dacttime"        , VAR(dacttime)        , MRC_VAR_DOUBLE        },
 
-  // FIXME, some times magically used for mrc_ts::max_time (in mrc_ts_solve())
-  { "max_time"        , VAR(max_time)        , PARAM_FLOAT(1000000.f)},
-  
   { "domain"          , VAR(domain)          , MRC_VAR_OBJ(mrc_domain)        },
   { "fld"             , VAR(fld)             , MRC_VAR_OBJ(mrc_fld)           },
   // FIXME, need to checkpoint b0, but only if !NULL
@@ -464,6 +521,20 @@ static struct param ggcm_mhd_descr[] = {
   { "bnd"             , VAR(bnd)             , MRC_VAR_OBJ(ggcm_mhd_bnd)      },
   { "bnd1"            , VAR(bnd1)            , MRC_VAR_OBJ(ggcm_mhd_bnd)      },
   { "ic"              , VAR(ic)              , MRC_VAR_OBJ(ggcm_mhd_ic)       },
+
+  // gkeyll parameters // FIXME, use SI defaults
+  { "gk_speed_of_light" , VAR(par.gk_speed_of_light) , PARAM_DOUBLE(1.f)              },
+  { "gk_nr_fluids"      , VAR(par.gk_nr_fluids)      , PARAM_INT(2)                   },
+  { "gk_nr_moments"     , VAR(par.gk_nr_moments)     , PARAM_INT(5)                   },
+  { "gk_charge"         , VAR(par.gk_charge)         , PARAM_FLOAT_ARRAY(2, 1.f)      },
+  { "gk_mass"           , VAR(par.gk_mass)           , PARAM_FLOAT_ARRAY(2, 1.f)      },
+  { "gk_pressure_ratios", VAR(par.gk_pressure_ratios), PARAM_FLOAT_ARRAY(2, 1.f)      },
+
+  { "gk_norm"                , VAR(par.gk_norm)                , PARAM_BOOL(false)    },
+  { "gk_norm_speed_of_light" , VAR(par.gk_norm_speed_of_light) , PARAM_DOUBLE(20.)    }, // in units of vvnorm0
+  { "gk_norm_mi_over_me"     , VAR(par.gk_norm_mi_over_me)     , PARAM_DOUBLE(25.)    },
+  { "gk_norm_ppi_over_ppe"   , VAR(par.gk_norm_ppi_over_ppe)   , PARAM_DOUBLE(1.)     },
+  { "gk_norm_rr"             , VAR(par.gk_norm_rr)             , PARAM_DOUBLE(1.)     }, // in units of rrnorm0
 
   {},
 };
@@ -503,7 +574,7 @@ ggcm_mhd_wrongful_death(struct ggcm_mhd *mhd, struct mrc_fld *x, int errcode)
   
   mpi_printf(ggcm_mhd_comm(mhd), "Something bad happened. Dumping state then "
              "keeling over.\n");
-  // ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);  // is this needed?
+  // ggcm_mhd_fill_ghosts(mhd, x, mhd->time);  // is this needed?
   ggcm_mhd_diag_run_now(diag, x, DIAG_TYPE_3D, cnt++);
   ggcm_mhd_diag_shutdown(diag);
   
@@ -522,8 +593,8 @@ ts_ggcm_mhd_step_calc_rhs(void *ctx, struct mrc_obj *_rhs, float time, struct mr
   struct ggcm_mhd *mhd = ctx;
   struct mrc_fld *rhs = (struct mrc_fld *) _rhs;
   struct mrc_fld *fld = (struct mrc_fld *) _fld;
-  
-  mhd->time = time;
+
+  mhd->time_code = time;
   ggcm_mhd_step_calc_rhs(mhd->step, rhs, fld);
 }
 
@@ -537,14 +608,14 @@ ts_ggcm_mhd_step_run(void *ctx, struct mrc_ts *ts, struct mrc_obj *_x)
 {
   struct ggcm_mhd *mhd = ctx;
   struct mrc_fld *x = (struct mrc_fld *) _x;
-  
-  mhd->time = mrc_ts_time(ts);
-  mhd->dt = mrc_ts_dt(ts);
+
+  mhd->time_code = mrc_ts_time(ts);
+  mhd->dt_code = mrc_ts_dt(ts);
   mhd->istep = mrc_ts_step_number(ts);
 
   ggcm_mhd_step_run(mhd->step, x);
 
-  mrc_ts_set_dt(ts, mhd->dt);
+  mrc_ts_set_dt(ts, mhd->dt_code);
 }
 
 // ----------------------------------------------------------------------
@@ -557,13 +628,60 @@ ts_ggcm_mhd_step_get_dt(void *ctx, struct mrc_ts *ts, struct mrc_obj *_x)
 {
   struct ggcm_mhd *mhd = ctx;
   struct mrc_fld *x = (struct mrc_fld *) _x;
-  
-  mhd->time = mrc_ts_time(ts);
-  mhd->dt = mrc_ts_dt(ts);
+
+  mhd->time_code = mrc_ts_time(ts);
+  mhd->dt_code = mrc_ts_dt(ts);
   mhd->istep = mrc_ts_step_number(ts);
 
   double dt = ggcm_mhd_step_get_dt(mhd->step, x);
   return dt;
+}
+
+// ----------------------------------------------------------------------
+// ts_ggcm_mhd_pre_step
+//
+// mrc_ts wrapper for pre_step
+
+static void
+ts_ggcm_mhd_pre_step(void *ctx, struct mrc_ts *ts, struct mrc_obj *_x)
+{
+  struct ggcm_mhd *mhd = ctx;
+  struct mrc_fld *x = (struct mrc_fld *) _x;
+
+  mhd->time_code = mrc_ts_time(ts);
+  mhd->dt_code = mrc_ts_dt(ts);
+  mhd->istep = mrc_ts_step_number(ts);
+
+  ggcm_mhd_pre_step(mhd, ts, x);
+}
+
+// ----------------------------------------------------------------------
+// ts_ggcm_mhd_post_step
+//
+// mrc_ts wrapper for post_step
+
+static void
+ts_ggcm_mhd_post_step(void *ctx, struct mrc_ts *ts, struct mrc_obj *_x)
+{
+  struct ggcm_mhd *mhd = ctx;
+  struct mrc_fld *x = (struct mrc_fld *) _x;
+
+  ggcm_mhd_post_step(mhd, ts, x);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_setup_ts
+
+void
+ggcm_mhd_setup_ts(struct ggcm_mhd *mhd, struct mrc_ts *ts)
+{
+  mrc_ts_set_context(ts, ggcm_mhd_to_mrc_obj(mhd));
+  mrc_ts_set_solution(ts, mrc_fld_to_mrc_obj(mhd->fld));
+  mrc_ts_set_rhs_function(ts, ts_ggcm_mhd_step_calc_rhs, mhd);
+  mrc_ts_set_step_function(ts, ts_ggcm_mhd_step_run, mhd);
+  mrc_ts_set_get_dt_function(ts, ts_ggcm_mhd_step_get_dt, mhd);
+  mrc_ts_set_pre_step_function(ts, ts_ggcm_mhd_pre_step, mhd);
+  mrc_ts_set_post_step_function(ts, ts_ggcm_mhd_post_step, mhd);
 }
 
 // ----------------------------------------------------------------------
@@ -604,7 +722,6 @@ ggcm_mhd_main(int *argc, char ***argv)
   } else {
     mrc_ts_set_type(ts, "step");
   }
-  mrc_ts_set_context(ts, ggcm_mhd_to_mrc_obj(mhd));
 
   struct mrc_ts_monitor *mon_output =
     mrc_ts_monitor_create(mrc_ts_comm(ts));
@@ -620,11 +737,11 @@ ggcm_mhd_main(int *argc, char ***argv)
     mrc_ts_add_monitor(ts, mon_conservation);
   }
 
+  mrc_ts_set_param_double(ts, "norm_time", mhd->tnorm);
+  mrc_ts_set_param_double(ts, "norm_time_scale", mhd->par.tnorm0);
+
   mrc_ts_set_dt(ts, 1e-6);
-  mrc_ts_set_solution(ts, mrc_fld_to_mrc_obj(mhd->fld));
-  mrc_ts_set_get_dt_function(ts, ts_ggcm_mhd_step_get_dt, mhd);
-  mrc_ts_set_rhs_function(ts, ts_ggcm_mhd_step_calc_rhs, mhd);
-  mrc_ts_set_step_function(ts, ts_ggcm_mhd_step_run, mhd);
+  ggcm_mhd_setup_ts(mhd, ts);
   mrc_ts_set_from_options(ts);
   mrc_ts_view(ts);
   mrc_ts_setup(ts);

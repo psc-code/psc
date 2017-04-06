@@ -33,5 +33,6 @@ ref
 *.png
 *.mp4
 *.log
+*.sh
 old
 

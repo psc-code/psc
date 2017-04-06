@@ -6,6 +6,7 @@
 #include <ggcm_mhd_step.h>
 
 #include <mrc_domain.h>
+#include <mrc_physics.h>
 
 #include <math.h>
 #include <string.h>
@@ -23,14 +24,14 @@ static void
 ggcm_mhd_mirdip_create(struct ggcm_mhd *mhd)
 {
   // normalization based on RE, equitorial field, ionospheric density
-  mhd->par.norm_length = 6371040.; // earth radius in m
-  mhd->par.norm_B = 3.0574001e-05; // equitorial dipole field in T
-  mhd->par.norm_density = 1e10; // approximate ionospheric density in 1/m^3
+  mhd->par.norm_length = C_RE; // earth radius in m
+  mhd->par.norm_B = C_DIPOLESTRENGTH; // equitorial dipole field in T
+  mhd->par.norm_density = 1e10 * C_AMU; // approximate ionospheric density in kg/m^3
 
   // select output / input unit prefixes as in OpenGGCM
   mhd->par.bbnorm0  = 1e-9;  // uT
   mhd->par.vvnorm0  = 1e3;   // km/s
-  mhd->par.rrnorm0  = 1e6;   // 1/cm^3
+  mhd->par.rrnorm0  = 1e6 * C_AMU; // amu/cm^3
   mhd->par.ppnorm0  = 1e-12; // pPa
   mhd->par.ccnorm0  = 1e-6;  // uA/m^2
   mhd->par.eenorm0  = 1e-3;  // mV/m

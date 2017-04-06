@@ -47,8 +47,6 @@ if HAVE_GKEYLL
 AM_CFLAGS = -Bdynamic
 AM_CXXFLAGS = -Bdynamic
 
-check_PROGRAMS += mhd_gkeyll
-
 nodist_EXTRA_mhd_cpaw_SOURCES = dummy.cxx
 nodist_EXTRA_mhd_mirdip_SOURCES = dummy.cxx
 nodist_EXTRA_mhd_fadeev_SOURCES = dummy.cxx
@@ -66,7 +64,6 @@ nodist_EXTRA_mhd_mhdblast_SOURCES = dummy.cxx
 nodist_EXTRA_mhd_wave_SOURCES = dummy.cxx
 nodist_EXTRA_test_ggcm_mhd_crds_SOURCES = dummy.cxx
 nodist_EXTRA_test_ggcm_mhd_SOURCES = dummy.cxx
-nodist_EXTRA_mhd_gkeyll_SOURCES = dummy.cxx
 
 endif
 

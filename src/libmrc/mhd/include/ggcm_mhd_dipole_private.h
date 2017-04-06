@@ -10,6 +10,10 @@ struct ggcm_mhd_dipole {
   // params
   struct ggcm_mhd *mhd;
   double r1lim;
+  // dipole strength is given as equatorial B field <dipolestrength>
+  // at distance <dipolestrength_r>, e.g., 30574 (nT) at 1 (RE)
+  double dipolestrength;
+  double dipolestrength_r;
 
   // state
   struct mrc_fld *bdip;

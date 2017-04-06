@@ -10,7 +10,7 @@ mpirun -n 1 ../../../mhd_gkeyll \
     --mrc_domain_mz 32 --mrc_domain_bcz none \
     --mrc_domain_npx 2 --mrc_domain_npy 2 --mrc_domain_npz 1 \
     \
-    --ggcm_mhd_bnd_type inoutflow_fc_double_aos \
+    --ggcm_mhd_bnd_type inoutflow_fc_gkeyll \
     --ggcm_mhd_bnd_rr 0.01 \
     --ggcm_mhd_bnd_pp 0.0015 \
     --ggcm_mhd_bnd_vx 1.0 \

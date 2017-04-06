@@ -252,8 +252,7 @@ ggcm_mhd_step_vlct_setup(struct ggcm_mhd_step *step)
   struct ggcm_mhd_step_vlct *sub = ggcm_mhd_step_vlct(step);
   struct ggcm_mhd *mhd = step->mhd;
 
-  pde_setup(mhd->fld);
-  pde_mhd_setup(mhd);
+  pde_mhd_setup(mhd, mrc_fld_nr_comps(mhd->fld));
 
   fld1d_state_setup(&sub->U);
   fld1d_state_setup(&sub->U_l);
@@ -431,9 +430,9 @@ ggcm_mhd_step_vlct_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 			      ggcm_mhd_get_3d_fld(mhd, 8), };
 
   // FIXME, this is done in get_dt, and redoing it could be avoided
-  ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
+  ggcm_mhd_fill_ghosts(mhd, x, mhd->time_code);
 
-  mrc_fld_data_t dt = mhd->dt;
+  mrc_fld_data_t dt = mhd->dt_code;
 
   // resistivity
 
@@ -444,7 +443,7 @@ ggcm_mhd_step_vlct_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
       compute_Ediffu_const(step, E_ec, x, B_cc);
       ggcm_mhd_fill_ghosts_E(mhd, E_ec);
       update_ct_uniform(mhd, x, E_ec, dt, 0, 0, false);
-      ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
+      ggcm_mhd_fill_ghosts(mhd, x, mhd->time_code);
       compute_B_cc(B_cc, x, 3, 3);
     }
   } else {
@@ -466,7 +465,7 @@ ggcm_mhd_step_vlct_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
       ggcm_mhd_diag_setup(diag);
       ggcm_mhd_diag_view(diag);
     }
-    ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
+    ggcm_mhd_fill_ghosts(mhd, x, mhd->time_code);
     ggcm_mhd_diag_run_now(diag, x, DIAG_TYPE_3D, cnt++);
   }
 
@@ -548,7 +547,7 @@ ggcm_mhd_step_vlct_setup_flds(struct ggcm_mhd_step *step)
 
   mrc_fld_set_type(mhd->fld, FLD_TYPE);
   mrc_fld_set_param_int(mhd->fld, "nr_ghosts", 4);
-  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_FULLY_CONSERVATIVE);
+  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_FCONS_FC);
   mrc_fld_set_param_int(mhd->fld, "nr_comps", 8);
 }
 

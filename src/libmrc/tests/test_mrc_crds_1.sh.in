@@ -1,0 +1,17 @@
+#! /bin/sh
+
+set -e
+
+@MPIRUN@ -n 1 ./test_mrc_crds --case 9
+
+TEST=mrc_crds_1
+
+while getopts ":u:" Option
+do
+    source templates/update_xdmf_ref
+    source templates/update_hdf5_ref
+done
+    
+
+source templates/check_xdmf_ref
+source templates/check_hdf5_ref
