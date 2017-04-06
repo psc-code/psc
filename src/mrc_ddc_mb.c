@@ -538,9 +538,8 @@ mrc_ddc_mb_global_to_local_fld(struct mrc_ddc *ddc, struct mrc_fld *gfld, struct
   // a get_param_int_array
   assert(lfld->_sw.nr_vals == 5);
   int sw[3];
-  int dshift = (int) lfld->_is_aos;
   for(int d = 0; d < 3; d++) {
-    sw[d] = lfld->_sw.vals[d + dshift];
+    sw[d] = lfld->_sw.vals[d];
   }
 
   ierr = getGtoL(ddc, mrc_fld_nr_comps(lfld), sw, &gtol); CE;
@@ -721,9 +720,8 @@ mrc_ddc_mb_fill_ghost_edges_fld(struct mrc_ddc *ddc, int mb, int me,
   // FIXME: shouldn't have to access private var to get nr_ghosts
   assert(x->_sw.nr_vals == 5);
   int sw[3];
-  int dshift = (int) x->_is_aos;
   for(int d = 0; d < 3; d++) {
-    sw[d] = x->_sw.vals[d + dshift];
+    sw[d] = x->_sw.vals[d];
   }  
   ierr = getLtoL_Edge(ddc, mrc_fld_nr_comps(x), sw, &ltol); CE;
 

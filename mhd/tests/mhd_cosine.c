@@ -44,12 +44,10 @@ ggcm_mhd_ic_cosine_run(struct ggcm_mhd_ic *ic)
   mrc_fld_set_type(fld_psi, FLD_TYPE);
   mrc_fld_setup(fld_psi);
 
-  double xl[3], xh[3];
+  const double *lo = mrc_crds_lo(crds), *hi = mrc_crds_hi(crds);
   float L[3], r[3];
-  mrc_crds_get_param_double3(crds, "l", xl);
-  mrc_crds_get_param_double3(crds, "h", xh);
   for(int i = 0; i < 3; i++){
-    L[i] = xh[i] - xl[i];
+    L[i] = hi[i] - lo[i];
   }
   float kx = 2.*M_PI / L[0] ; 
   float ky = 2.*M_PI / L[1] ; 

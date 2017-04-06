@@ -761,6 +761,7 @@ mrc_params_set_default(void *p, struct param *params)
     case MRC_VAR_BOOL:
     case MRC_VAR_FLOAT:
     case MRC_VAR_DOUBLE:
+    case MRC_VAR_DOUBLE3:
     case MRC_VAR_OBJ:
       break;
     default:
@@ -941,6 +942,20 @@ mrc_params_get_type(void *p, struct param *params, const char *name,
     case PT_OBJ:
       pval->u_obj = pv->u_obj;
       break;
+    case PT_FLOAT_ARRAY:
+      {
+  pval->u_float_array.nr_vals = pv->u_float_array.nr_vals;
+  pval->u_float_array.vals = calloc(pval->u_float_array.nr_vals, sizeof(float));
+  if (!pval->u_float_array.vals) {
+    break;
+  }
+  for (int d = 0; d < pval->u_float_array.nr_vals; d++) {
+    // FIXME?, abuse of u_float3
+    pval->u_float_array.vals[d] = pv->u_float_array.vals[d];
+  }
+      }
+      break;      
+
     default:
       assert(0);
     }
@@ -1062,6 +1077,7 @@ mrc_params_parse_nodefault(void *p, struct param *params, const char *title,
     case MRC_VAR_BOOL:
     case MRC_VAR_FLOAT:
     case MRC_VAR_DOUBLE:
+    case MRC_VAR_DOUBLE3:
     case MRC_VAR_OBJ:
       break;
     default:
@@ -1122,6 +1138,7 @@ mrc_params_parse_pfx(void *p, struct param *params, const char *title,
     case MRC_VAR_BOOL:
     case MRC_VAR_FLOAT:
     case MRC_VAR_DOUBLE:
+    case MRC_VAR_DOUBLE3:
     case MRC_VAR_OBJ:
       break;
     default:
@@ -1211,6 +1228,7 @@ mrc_params_print_one(void *p, struct param *prm, MPI_Comm comm)
   case MRC_VAR_BOOL:
   case MRC_VAR_FLOAT:
   case MRC_VAR_DOUBLE:
+  case MRC_VAR_DOUBLE3:
   case MRC_VAR_OBJ:
     break;
   default:

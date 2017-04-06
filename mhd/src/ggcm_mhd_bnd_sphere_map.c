@@ -174,10 +174,12 @@ ggcm_mhd_bnd_sphere_map_find_r1(struct ggcm_mhd_bnd_sphere_map *map)
 
 void
 ggcm_mhd_bnd_sphere_map_setup(struct ggcm_mhd_bnd_sphere_map *map, struct ggcm_mhd *mhd,
-			      double radius)
+			      double radius, double dr, double extra_dr)
 {
   map->mhd = mhd;
   map->radius = radius;
+  map->dr = dr;
+  map->extra_dr = extra_dr;
   ggcm_mhd_bnd_sphere_map_find_dr(map, &map->min_dr);
   ggcm_mhd_bnd_sphere_map_find_r1(map);
 

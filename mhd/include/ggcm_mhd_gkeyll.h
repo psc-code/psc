@@ -1,5 +1,9 @@
 
+#ifndef GGCM_MHD_GKEYLL_H
+#define GGCM_MHD_GKEYLL_H
+
 #include <ggcm_mhd_private.h>
+#include <ggcm_mhd_defs.h>
 
 // shifts for a species in a five-moment fluid
 enum {
@@ -27,27 +31,24 @@ enum {
 
 void ggcm_mhd_gkeyll_set_nr_moments(struct ggcm_mhd *mhd, int nr_moments);
 void ggcm_mhd_gkeyll_set_nr_fluids(struct ggcm_mhd *mhd, int nr_fluids);
-void ggcm_mhd_gkeyll_set_mass_ratios(struct ggcm_mhd *mhd,
-    double mass_ratios_in[]);
-void ggcm_mhd_gkeyll_set_momentum_ratios(struct ggcm_mhd *mhd,
-    double momentum_ratios_in[]);
-void ggcm_mhd_gkeyll_set_pressure_ratios(struct ggcm_mhd *mhd,
-    double pressure_ratios_in[]);
 
 int ggcm_mhd_gkeyll_nr_moments(struct ggcm_mhd *mhd);
 int ggcm_mhd_gkeyll_nr_fluids(struct ggcm_mhd *mhd);
-double *ggcm_mhd_gkeyll_mass_ratios(struct ggcm_mhd *mhd);
-double *ggcm_mhd_gkeyll_momentum_ratios(struct ggcm_mhd *mhd);
-double *ggcm_mhd_gkeyll_pressure_ratios(struct ggcm_mhd *mhd);
+float *ggcm_mhd_gkeyll_mass(struct ggcm_mhd *mhd);
+float *ggcm_mhd_gkeyll_charge(struct ggcm_mhd *mhd);
+float *ggcm_mhd_gkeyll_pressure_ratios(struct ggcm_mhd *mhd);
 
 int ggcm_mhd_gkeyll_fluid_species_index(struct ggcm_mhd *mhd, int species);
 void ggcm_mhd_gkeyll_fluid_species_index_all(struct ggcm_mhd *mhd, int indices[]);
 int ggcm_mhd_gkeyll_em_fields_index(struct ggcm_mhd *mhd);
+void ggcm_mhd_gkeyll_fluid_species_q_m_all(struct ggcm_mhd *mhd, float q_m[]);
+void ggcm_mhd_gkeyll_fluid_species_mass_ratios_all(struct ggcm_mhd *mhd, float mass_weight[]);
 
 // FIMXE: better place to declare the convert_primitive funcs
 void
 ggcm_mhd_convert_primitive_gkeyll_5m_point(struct mrc_fld *fld, int nr_fluids,
-    int idx[], double mass_ratios[], double momentum_ratios[],
-    double pressure_ratios[], float gamma_m1, int idx_em, int dx, int dy, int dz,
+    int idx[], float mass_ratios[], float momentum_ratios[],
+    float pressure_ratios[], float gamma_m1, int idx_em, int dx, int dy, int dz,
     int ix, int iy, int iz, int p);
 
+#endif

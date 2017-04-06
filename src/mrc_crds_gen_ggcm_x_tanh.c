@@ -2,6 +2,7 @@
 #include "mrc_ggcm_gridx_gen.h"
 
 #include <mrc_params.h>
+#include <mrc_crds.h>
 #include <math.h>
 #include <assert.h>
 
@@ -39,13 +40,19 @@ tanhm(double x)
 static double
 f_tanh(struct mrc_crds_gen *gen, double x, double fak)
 {
-  struct mrc_crds_gen_ggcm_x_tanh *par = mrc_crds_gen_ggcm_x_tanh(gen);
+  struct mrc_crds_gen_ggcm_x_tanh *sub = mrc_crds_gen_ggcm_x_tanh(gen);
+  double xnorm = gen->crds->xnorm;
+  double x1 = sub->x1 / xnorm, x3 = sub->x3 / xnorm, x5 = sub->x3 / xnorm;
+  double dmm = sub->dmm / xnorm;
+  double b1 = sub->b1 * xnorm, b2 = sub->b2 * xnorm, b3 = sub->b3 * xnorm;
+  double hm = sub->hm / xnorm, h0 = sub->h0 / xnorm, hn = sub->hn / xnorm;
+  double hmm = sub->hmm / xnorm;
 
-  return fak * (par->hm +
-         (par->h0 - par->hm) * tanhm(par->b1 * (x - par->x1)) +
-         (par->hn - par->hm) * tanhp(par->b2 * (x - par->x5)) +
-         (par->hmm - par->hm) * (1.0 - tanhm(par->b3 * (x - (par->x3 - par->dmm)))
-                 - tanhp(par->b3 * (x - (par->x3 + par->dmm)))));
+  return fak * (hm +
+         (h0 - hm) * tanhm(b1 * (x - x1)) +
+         (hn - hm) * tanhp(b2 * (x - x5)) +
+         (hmm - hm) * (1. - tanhm(b3 * (x - (x3 - dmm)))
+		       - tanhp(b3 * (x - (x3 + dmm)))));
 }
 
 static void

@@ -9,7 +9,7 @@
 
 #include <assert.h>
 
-#define MT MT_FULLY_CONSERVATIVE
+#define MT MT_FCONS_FC
 #define SHIFT 0
 
 #define ggcm_mhd_bnd_ops_inoutflow ggcm_mhd_bnd_ops_inoutflow_fc_double

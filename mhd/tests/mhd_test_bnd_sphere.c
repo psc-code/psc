@@ -115,7 +115,7 @@ main(int argc, char **argv)
   ggcm_mhd_view(mhd);
 
   ggcm_mhd_ic_run(mhd->ic);
-  ggcm_mhd_bnd_fill_ghosts(mhd->bnd, mhd->fld, 0, 0.);
+  ggcm_mhd_bnd_fill_ghosts(mhd->bnd, mhd->fld, 0.);
   ggcm_mhd_diag_run_now(mhd->diag, mhd->fld, DIAG_TYPE_3D, 0);
 
   ggcm_mhd_destroy(mhd);

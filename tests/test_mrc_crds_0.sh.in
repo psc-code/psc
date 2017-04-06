@@ -1,0 +1,6 @@
+#! /bin/sh
+
+set -e
+
+@MPIRUN@ -n 1 ./test_mrc_crds > test_mrc_crds_0.log
+diff -u $srcdir/reference_results/test_mrc_crds/test_mrc_crds_0.log test_mrc_crds_0.log

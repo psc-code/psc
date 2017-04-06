@@ -53,10 +53,12 @@ destroy_member_objs(void *p, struct param *descr)
     if (descr[i].type == PT_INT_ARRAY) { 
       union param_u *pv = p + (unsigned long) descr[i].var;
       free(pv->u_int_array.vals);
+      pv->u_int_array.nr_vals = 0;
     }
     if (descr[i].type == PT_FLOAT_ARRAY) { 
       union param_u *pv = p + (unsigned long) descr[i].var;
       free(pv->u_float_array.vals);
+      pv->u_float_array.nr_vals = 0;
     }
   }
 }
@@ -289,6 +291,10 @@ mrc_obj_put(struct mrc_obj *obj)
       list_entry(obj->dict_list.next, struct mrc_dict_entry, entry);
     if (p->prm.type == PT_STRING) {
       free((char *)p->val.u_string);
+    } else if (p->prm.type == PT_INT_ARRAY) {
+      if (p->val.u_int_array.vals) {
+        free((int *)p->val.u_int_array.vals);
+      }
     } else if (p->prm.type == PT_FLOAT_ARRAY) {
       if (p->val.u_float_array.vals) {
         free((float *)p->val.u_float_array.vals);
@@ -640,6 +646,14 @@ mrc_obj_set_param_int_array(struct mrc_obj *obj, const char *name,
 {
   union param_u uval = { .u_int_array = { nr_vals, (int *) val } };
   mrc_obj_set_param_type(obj, name, PT_INT_ARRAY, &uval);
+}
+
+void
+mrc_obj_set_param_float_array(struct mrc_obj *obj, const char *name,
+                            int nr_vals, const float val[])
+{
+  union param_u uval = { .u_float_array = { nr_vals, (float *) val } };
+  mrc_obj_set_param_type(obj, name, PT_FLOAT_ARRAY, &uval);
 }
 
 void
@@ -1318,7 +1332,7 @@ get_var(void *p, struct param *descr, const char *name, int type, union param_u 
   *pv = NULL;
 }
 
-static void
+static int
 mrc_obj_get_var_type(struct mrc_obj *obj, const char *name, int type,
                      union param_u **pv)
 {
@@ -1327,7 +1341,7 @@ mrc_obj_get_var_type(struct mrc_obj *obj, const char *name, int type,
     char *p = (char *) obj + obj->cls->param_offset;
     get_var(p, obj->cls->param_descr, name, type, pv);
     if (*pv)
-      return;
+      return 0;
   }
 
   // try to find variable 'name' in the subclass
@@ -1335,7 +1349,7 @@ mrc_obj_get_var_type(struct mrc_obj *obj, const char *name, int type,
     char *p = (char *) obj->subctx + obj->ops->param_offset;
     get_var(p, obj->ops->param_descr, name, type, pv);
     if (*pv)
-      return;
+      return 0;
   }
   
   // finally, try the dict
@@ -1343,17 +1357,18 @@ mrc_obj_get_var_type(struct mrc_obj *obj, const char *name, int type,
   __list_for_each_entry(e, &obj->dict_list, entry, struct mrc_dict_entry) {
     if (strcmp(e->prm.name, name) == 0) {
       *pv = &e->val;
-      return;
+      return 0;
     }
   }
   mprintf("WARNING: var '%s' not found!\n", name);
   *pv = NULL;
+  return -1;
 }
 
-void
+int
 mrc_obj_get_var(struct mrc_obj *obj, const char *name, union param_u **pv)
 {
-  mrc_obj_get_var_type(obj, name, -1, pv);
+  return mrc_obj_get_var_type(obj, name, -1, pv);
 }
 
 struct mrc_obj *
@@ -1365,6 +1380,18 @@ mrc_obj_get_var_obj(struct mrc_obj *obj, const char *name)
     return NULL;
 
   return pv->u_obj;
+}
+
+int
+mrc_obj_get_var_double(struct mrc_obj *obj, const char *name, double *pval)
+{
+  union param_u *pv;
+  int rc = mrc_obj_get_var_type(obj, name, MRC_VAR_DOUBLE, &pv);
+  if (rc) {
+    return rc;
+  }
+  *pval = pv->u_double;
+  return 0;
 }
 
 mrc_void_func_t

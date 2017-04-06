@@ -237,7 +237,7 @@ diagc3(struct ggcm_mhd_diag *diag, struct mrc_fld *fld, int itdia,
   struct ggcm_mhd *mhd = diag->mhd;
 
   struct mrc_io *io = get_mrc_io(diag, DIAG_TYPE_3D, -1)->io;
-  mrc_io_open(io, "w", itdia, mhd->time);
+  mrc_io_open(io, "w", itdia, mhd->time_code * mhd->tnorm);
   ggcm_diag_lib_write_openggcm_attrs(io, time_str);
   write_fields(diag, fld, io, DIAG_TYPE_3D, -1);
   mrc_io_close(io);
@@ -258,17 +258,15 @@ diagcxyz(struct ggcm_mhd_diag *diag, struct mrc_fld *fld, int itdia,
   int gdims[3];
   mrc_domain_get_global_dims(mhd->domain, gdims);
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-  double xl[3], xh[3];
-  mrc_crds_get_param_double3(crds, "l", xl);
-  mrc_crds_get_param_double3(crds, "h", xh);
+  const double *lo = mrc_crds_lo(crds), *hi = mrc_crds_hi(crds);
 
   for (int i = 0; i < sub->nr_planes[d]; i++) {
     float plane = sub->planes[d][i];
-    if (plane < xl[d] || plane > xh[d])
+    if (plane < lo[d] || plane > hi[d])
       continue;
 
     struct mrc_io *io = get_mrc_io(diag, diag_type, plane)->io;
-    mrc_io_open(io, "w", itdia, mhd->time);
+    mrc_io_open(io, "w", itdia, mhd->time_code * mhd->tnorm);
     ggcm_diag_lib_write_openggcm_attrs(io, time_str);
     write_fields(diag, fld, io, diag_type, plane);
     mrc_io_close(io);
@@ -287,7 +285,7 @@ ggcm_mhd_diag_c_run_now(struct ggcm_mhd_diag *diag, struct mrc_fld *fld,
 
   char time_str[80] = "TIME";
   if (sub->make_time_string) {
-    sub->make_time_string(time_str, mhd->time, mhd->dacttime);
+    sub->make_time_string(time_str, mhd->time_code * mhd->tnorm, mhd->dacttime);
   }
 
   switch (diag_type) {
@@ -336,7 +334,7 @@ ggcm_mhd_diag_c_run(struct ggcm_mhd_diag *diag)
   if (!(output2d || output3d))
     return;
 
-  ggcm_mhd_fill_ghosts(mhd, mhd->fld, 0, mhd->time);
+  ggcm_mhd_fill_ghosts(mhd, mhd->fld, mhd->time_code);
 
   if (output3d) {
     ggcm_mhd_diag_run_now(diag, mhd->fld, DIAG_TYPE_3D, itdia3d);
@@ -367,6 +365,40 @@ ggcm_mhd_diag_c_shutdown(struct ggcm_mhd_diag *diag)
 }
 
 // ----------------------------------------------------------------------
+// diagsrv_one_c
+
+static void
+diagsrv_one_c(struct mrc_mod *mod, void *arg)
+{
+  int rc;
+
+  const char *outputmode, *diagsc_srv;
+  rc = mrc_params_get_option_string("outputmode", &outputmode);
+  assert(rc == 0);
+  rc = mrc_params_get_option_string("diagsc_srv", &diagsc_srv);
+  assert(rc == 0);
+  int n_mhd_procs = (unsigned long) arg;
+
+  mrc_io_server(outputmode, diagsc_srv, n_mhd_procs);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_diag_c_mod_register
+
+static void
+ggcm_mhd_diag_c_mod_register(struct ggcm_mhd_diag *mhd_diag, struct mrc_mod *mod)
+{
+  const char *outputmode = NULL;
+  mrc_params_get_option_string("outputmode", &outputmode);
+
+  if (strcmp(outputmode, "xdmf") != 0 &&
+      strcmp(outputmode, "xdmf_collective") != 0) {
+    int n_mhd_procs = mrc_mod_get_nr_procs(mod, "MHD");
+    mrc_mod_register(mod, "DIAGSC", 1, diagsrv_one_c, (void *)(unsigned long) n_mhd_procs);
+  }
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_diag c subclass description
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_diag_c, x)
@@ -386,13 +418,14 @@ static struct param ggcm_mhd_diag_c_descr[] = {
 // ggcm_mhd_diag subclass "c"
 
 struct ggcm_mhd_diag_ops ggcm_mhd_diag_c_ops = {
-  .name        = "c",
-  .size        = sizeof(struct ggcm_mhd_diag_c),
-  .param_descr = ggcm_mhd_diag_c_descr,
-  .create      = ggcm_mhd_diag_c_create,
-  .setup       = ggcm_mhd_diag_c_setup,
-  .read        = ggcm_mhd_diag_c_read,
-  .run         = ggcm_mhd_diag_c_run,
-  .run_now     = ggcm_mhd_diag_c_run_now,
-  .shutdown    = ggcm_mhd_diag_c_shutdown,
+  .name         = "c",
+  .size         = sizeof(struct ggcm_mhd_diag_c),
+  .param_descr  = ggcm_mhd_diag_c_descr,
+  .create       = ggcm_mhd_diag_c_create,
+  .setup        = ggcm_mhd_diag_c_setup,
+  .read         = ggcm_mhd_diag_c_read,
+  .run          = ggcm_mhd_diag_c_run,
+  .run_now      = ggcm_mhd_diag_c_run_now,
+  .shutdown     = ggcm_mhd_diag_c_shutdown,
+  .mod_register = ggcm_mhd_diag_c_mod_register,
 };

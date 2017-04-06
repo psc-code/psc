@@ -91,7 +91,7 @@ ggcm_mhd_create_amr_ddc_flux(struct ggcm_mhd *mhd, int d)
   struct mrc_ddc *ddc = mrc_ddc_create(mrc_domain_comm(mhd->domain));
   mrc_ddc_set_type(ddc, "amr");
   mrc_ddc_set_domain(ddc, mhd->domain);
-  mrc_ddc_set_param_int(ddc, "size_of_type", mhd->fld->_size_of_type);
+  mrc_ddc_set_param_int(ddc, "size_of_type", mhd->fld->_nd->size_of_type);
   mrc_ddc_set_param_int3(ddc, "sw", mrc_fld_spatial_sw(mhd->fld));
   // FIXME!!!
   int n_comp;
@@ -236,7 +236,7 @@ ggcm_mhd_create_amr_ddc(struct ggcm_mhd *mhd)
   struct mrc_ddc *ddc = mrc_ddc_create(mrc_domain_comm(mhd->domain));
   mrc_ddc_set_type(ddc, "amr");
   mrc_ddc_set_domain(ddc, mhd->domain);
-  mrc_ddc_set_param_int(ddc, "size_of_type", mhd->fld->_size_of_type);
+  mrc_ddc_set_param_int(ddc, "size_of_type", mhd->fld->_nd->size_of_type);
   mrc_ddc_set_param_int3(ddc, "sw", mrc_fld_spatial_sw(mhd->fld));
   mrc_ddc_set_param_int(ddc, "n_comp", mhd->fld->_nr_comps);
   mrc_ddc_setup(ddc);
@@ -322,7 +322,7 @@ ggcm_mhd_create_amr_ddc_E(struct ggcm_mhd *mhd)
   struct mrc_ddc *ddc = mrc_ddc_create(mrc_domain_comm(mhd->domain));
   mrc_ddc_set_type(ddc, "amr");
   mrc_ddc_set_domain(ddc, mhd->domain);
-  mrc_ddc_set_param_int(ddc, "size_of_type", mhd->fld->_size_of_type);
+  mrc_ddc_set_param_int(ddc, "size_of_type", mhd->fld->_nd->size_of_type);
   mrc_ddc_set_param_int3(ddc, "sw", mrc_fld_spatial_sw(mhd->fld));
   mrc_ddc_set_param_int(ddc, "n_comp", 3);
   mrc_ddc_setup(ddc);

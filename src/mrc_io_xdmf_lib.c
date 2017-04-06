@@ -290,13 +290,14 @@ xdmf_spatial_create_m3_parallel(list_t *xdmf_spatial_list, const char *name,
   if (strcmp(mrc_crds_type(crds), "amr_uniform") == 0 ||
       strcmp(mrc_crds_type(crds), "uniform") == 0) {
     xs->uniform = true;
-    double xl[3];
+    const double *xl = mrc_crds_lo(crds);
     double dx[3];
-    mrc_crds_get_param_double3(crds, "l", xl);
     mrc_crds_get_dx(crds, 0, dx);
+
     for (int d = 0; d < 3; d++) {
-      xs->xl[d][0] = xl[d] + slab_off[d] * dx[d];
-      xs->dx[d][0] = dx[d];
+      double xnorm = crds->xnorm;
+      xs->xl[d][0] = (xl[d] + slab_off[d] * dx[d]) * xnorm;
+      xs->dx[d][0] = dx[d] * xnorm;
     }
   } else {
     for (int d = 0; d < 3; d++) {

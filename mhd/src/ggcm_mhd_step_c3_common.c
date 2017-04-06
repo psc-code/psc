@@ -71,7 +71,7 @@ ggcm_mhd_step_c3_setup_flds(struct ggcm_mhd_step *step)
   pde_mhd_set_options(mhd, &sub->opt);
   mrc_fld_set_type(mhd->fld, FLD_TYPE);
   mrc_fld_set_param_int(mhd->fld, "nr_ghosts", 2);
-  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_SEMI_CONSERVATIVE);
+  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_SCONS_FC);
   mrc_fld_set_param_int(mhd->fld, "nr_comps", 8);
 }
 
@@ -84,10 +84,7 @@ ggcm_mhd_step_c3_setup(struct ggcm_mhd_step *step)
   struct ggcm_mhd_step_c3 *sub = ggcm_mhd_step_c3(step);
   struct ggcm_mhd *mhd = step->mhd;
 
-  pde_setup(mhd->fld);
-  // FIXME, very hacky way of making the 1d state fields 5-component
-  s_n_comps = 5;
-  pde_mhd_setup(mhd);
+  pde_mhd_setup(mhd, 5);
   pde_mhd_compat_setup(mhd);
 
   fld1d_state_setup(&l_U);
@@ -109,7 +106,7 @@ ggcm_mhd_step_c3_setup(struct ggcm_mhd_step *step)
 
   sub->f_W = ggcm_mhd_get_3d_fld(mhd, s_n_comps);
   sub->f_Uhalf = ggcm_mhd_get_3d_fld(mhd, 8);
-  mrc_fld_dict_add_int(sub->f_Uhalf, "mhd_type", MT_SEMI_CONSERVATIVE);
+  mrc_fld_dict_add_int(sub->f_Uhalf, "mhd_type", MT_SCONS_FC);
   for (int d = 0; d < 3; d++) {
     sub->f_F[d] = ggcm_mhd_get_3d_fld(mhd, s_n_comps);
   }
@@ -141,7 +138,7 @@ ggcm_mhd_step_c3_destroy(struct ggcm_mhd_step *step)
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_step_c3_gt_dt
+// ggcm_mhd_step_c3_get_dt
 
 static double
 ggcm_mhd_step_c3_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
@@ -151,7 +148,7 @@ ggcm_mhd_step_c3_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
   // FIXME, the fill_ghosts is necessary (should be in other steps, too)
   // if we do it here, we should avoid doing it again in run() -- but note
   // we're only doing it here if do_nwst is true.
-  ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
+  ggcm_mhd_fill_ghosts(mhd, x, mhd->time_code);
   return pde_mhd_get_dt_scons(mhd, x, mhd->ymask);
 }
 
@@ -394,16 +391,16 @@ ggcm_mhd_step_c3_run(struct ggcm_mhd_step *step, struct mrc_fld *f_U)
 
   struct mrc_fld *f_Uhalf = sub->f_Uhalf, *f_W = sub->f_W;
 
-  s_mhd_time = mhd->time; 
+  s_mhd_time = mhd->time_code * mhd->tnorm; 
 
   // set f_Uhalf = f_U
   mrc_fld_copy(f_Uhalf, f_U);
-  ggcm_mhd_fill_ghosts(mhd, f_U, 0, mhd->time);
-  pushstage(step, f_Uhalf, .5f * mhd->dt, f_U, f_W, 0);
+  ggcm_mhd_fill_ghosts(mhd, f_U, mhd->time_code);
+  pushstage(step, f_Uhalf, .5f * mhd->dt_code, f_U, f_W, 0);
 
   // f_U += dt * rhs(f_Uhalf)
-  ggcm_mhd_fill_ghosts(mhd, f_Uhalf, 0, mhd->time + mhd->bndt);
-  pushstage(step, f_U, mhd->dt, f_Uhalf, f_W, 1);
+  ggcm_mhd_fill_ghosts(mhd, f_Uhalf, mhd->time_code + .5 * mhd->dt_code);
+  pushstage(step, f_U, mhd->dt_code, f_Uhalf, f_W, 1);
 }
 
 // ----------------------------------------------------------------------
@@ -429,7 +426,7 @@ ggcm_mhd_step_c3_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
   fld3d_setup(&p_rmask, sub->f_rmask);
   pde_mhd_p_aux_setup_b0(mhd->b0);
 
-  ggcm_mhd_fill_ghosts(mhd, f_U, 0, mhd->time);
+  ggcm_mhd_fill_ghosts(mhd, f_U, mhd->time_code);
   pde_for_each_patch(p) {
     fld3d_t *get_e_ec_patches[] = { &p_E, &p_U, &p_W, &p_ymask, &p_zmask, &p_rmask, NULL };
     fld3d_get_list(p, get_e_ec_patches);
@@ -437,7 +434,7 @@ ggcm_mhd_step_c3_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
 
     patch_prim_from_cons(p_W, p_U, 2);
     patch_calc_zmask(p_zmask, p_U, p_ymask);
-    patch_calc_e(p_E, mhd->dt, p_U, p_W, p_zmask, p_rmask);
+    patch_calc_e(p_E, mhd->dt_code, p_U, p_W, p_zmask, p_rmask);
 
     fld3d_put_list(p, get_e_ec_patches);
     pde_mhd_p_aux_put(p);

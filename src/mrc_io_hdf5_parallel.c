@@ -343,7 +343,7 @@ hdf5_parallel_write_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld
   hid_t memspace = H5Screate_simple(nr_file_dims, mdims, NULL);
 
   hid_t datatype;
-  switch (fld->_data_type) {
+  switch (mrc_fld_data_type(fld)) {
   case MRC_NT_FLOAT:
     datatype = H5T_NATIVE_FLOAT;
     break;
@@ -389,8 +389,7 @@ hdf5_parallel_write_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld
   H5Sselect_hyperslab(memspace, H5S_SELECT_SET, moff, NULL, mcount, NULL);
 
   
-  H5Dwrite(dset, datatype, memspace, filespace, dxpl,
-	   fld->_arr);
+  H5Dwrite(dset, datatype, memspace, filespace, dxpl, fld->_nd->arr);
   
   H5Sclose(memspace);
   H5Dclose(dset);
@@ -448,7 +447,7 @@ hdf5_parallel_read_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
   hid_t memspace = H5Screate_simple(nr_file_dims, mdims, NULL);
 
   hid_t datatype;
-  switch (fld->_data_type) {
+  switch (mrc_fld_data_type(fld)) {
   case MRC_NT_FLOAT:
     datatype = H5T_NATIVE_FLOAT;
     break;
@@ -504,9 +503,7 @@ hdf5_parallel_read_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
   H5Sselect_hyperslab(filespace, H5S_SELECT_SET, foff, NULL, mcount, NULL);
   H5Sselect_hyperslab(memspace, H5S_SELECT_SET, moff, NULL, mcount, NULL);
 
-  
-  H5Dread(dset, datatype, memspace, filespace, dxpl,
-	   fld->_arr);
+  H5Dread(dset, datatype, memspace, filespace, dxpl, fld->_nd->arr);
   
   H5Sclose(memspace);
   H5Dclose(dset);

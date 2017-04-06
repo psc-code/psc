@@ -80,8 +80,12 @@ AX_CHECK_HDF5
 CFLAGS="$H5_CFLAGS $CFLAGS"
 LIBS="$H5_LIBS $LIBS"
 AS_IF([test "$have_hdf5" != "no"],
-      [AC_DEFINE([HAVE_HDF5], [], [we have HDF5 library + headers])])
+      [AC_DEFINE([HAVE_HDF5], [1], [we have HDF5 library + headers])])
 AM_CONDITIONAL([HAVE_HDF5], [test "$have_hdf5" != "no"])
+
+AS_IF([test "$have_hdf5_parallel" != "no"],
+      [AC_DEFINE([HAVE_HDF5_PARALLEL], [1], [we have parallel HDF5])])
+AM_CONDITIONAL([HAVE_HDF5_PARALLEL], [test "$have_hdf5_parallel" != "no"])
 
 # check for gkeyll
 
@@ -96,25 +100,6 @@ AS_IF([test "x$with_gkeyll" != "xno"],
    AC_DEFINE([HAVE_GKEYLL], [], [we have GKEYLL library + headers])
   ])
 AM_CONDITIONAL([HAVE_GKEYLL], [test "$have_gkeyll" != "no"])
-
-# check for PAPI
-AC_ARG_WITH([papi],AS_HELP_STRING([--without-papi], [Disable PAPI]))
-
-have_papi=no
-AS_IF([test "x$with_papi" != "xno"],
-  [AC_CHECK_HEADER([papi.h],
-     [AC_CHECK_LIB([papi], [PAPI_library_init],
-        [have_papi=yes
-         AC_DEFINE([HAVE_LIBPAPI], [], [we have PAPI library + headers])
-         LIBS="-lpapi $LIBS"])
-     ])
-  ])
-
-AS_IF([test "x$have_papi" != "xyes"],
-  [AS_IF([test "x$with_papi" = "xyes"],
-     [AC_MSG_ERROR([PAPI requested but not found.])])
-  ])
-
 
 MRC_CHECK_PETSC(3.4.0)
 CFLAGS="$PETSC_CFLAGS $CFLAGS"
@@ -170,8 +155,14 @@ AC_CONFIG_FILES([Makefile
 		 tests/test_io_2d.sh
 		 tests/test_io_read_multi_1.sh
 		 tests/test_mrc_domain_simple_0.sh
+		 tests/test_mrc_domain_simple_1.sh
 		 tests/test_mrc_domain_multi_0.sh
 		 tests/test_mrc_domain_mb_0.sh
+		 tests/test_mrc_crds_0.sh
+		 tests/test_mrc_crds_1.sh
+		 tests/test_mrc_crds_2.sh
+		 tests/test_mrc_crds_3.sh
+		 tests/test_mrc_ndarray_0.sh
 		 tests/test_mrc_fld.sh
 		 tests/test_mrc_fld_io_xdmf_collective.sh
 		 tests/test_mrc_fld_io_xdmf_serial.sh

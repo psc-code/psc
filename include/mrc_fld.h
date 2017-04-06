@@ -6,6 +6,7 @@
 
 #include <mrc_common.h>
 #include <mrc_obj.h>
+#include <mrc_ndarray.h>
 
 #include <stdbool.h>
 #include <assert.h>
@@ -50,14 +51,7 @@ struct mrc_io;
 // contiguous anymore, but rather just a view into an originally allocated
 // contiguous field.
 
-enum {
-  MRC_NT_FLOAT,
-  MRC_NT_DOUBLE,
-  MRC_NT_INT,
-  MRC_NT_NR,
-};
-
-#define MRC_FLD_MAXDIMS (5)
+#define MRC_FLD_MAXDIMS MRC_NDARRAY_MAXDIMS
 
 // for mrc_m3 emulation
 struct mrc_fld_patch {
@@ -65,8 +59,16 @@ struct mrc_fld_patch {
   struct mrc_fld *_fld;
 };
 
+// ----------------------------------------------------------------------
+// struct mrc_fld
+
 struct mrc_fld {
   struct mrc_obj obj;
+
+  // state
+  // these are copies from our ::nd member, replicated for fast access
+  struct mrc_ndarray_access nd_acc;
+  
   // parameters
   struct mrc_param_int_array _dims;
   struct mrc_param_int_array _offs;
@@ -80,21 +82,15 @@ struct mrc_fld {
   int _nr_ghosts; //< number of ghostpoints in non-invariant (dim > 1) directions
 
   // state
-  int _stride[MRC_FLD_MAXDIMS];
-  int _start[MRC_FLD_MAXDIMS];
+  struct mrc_ndarray *_nd;
   int _ghost_offs[MRC_FLD_MAXDIMS];
   int _ghost_dims[MRC_FLD_MAXDIMS];
-  int _data_type;
-  int _size_of_type;
-  void *_arr;
-  void *_arr_off; //< same as _arr, but contains precalculated offset for faster/simpler access
-  int _len;
-  struct mrc_vec *_vec; //< underlying mrc_vec that manages memory alloc/free (could be petsc)
   struct mrc_fld *_view_base; //< if this mrc_fld is a view, this is the field it's derived from
   int *_view_offs;
   int _nr_allocated_comp_name;
   char **_comp_name;
-  bool _is_aos; //< indicates whether the layout (w.r.t to domain) is array-of-struct
+  bool _aos; //< indicates whether the layout (w.r.t to domain) is array-of-struct
+  bool _c_order; //< indicates whether the layout is C (row-major) order (default false)
   // for mrc_m3 emulation (FIXME, should be eliminated eventually (?))
   struct mrc_fld_patch *_patches;
 };
@@ -113,14 +109,14 @@ const int *mrc_fld_dims(struct mrc_fld *x);
 const int *mrc_fld_sw(struct mrc_fld *x);
 const int *mrc_fld_ghost_offs(struct mrc_fld *x);
 const int *mrc_fld_ghost_dims(struct mrc_fld *x);
+int mrc_fld_data_type(struct mrc_fld *fld);
+int mrc_fld_len(struct mrc_fld *fld);
 struct mrc_fld *mrc_fld_duplicate(struct mrc_fld *fld);
-struct mrc_fld *mrc_fld_create_view(struct mrc_fld *fld, int nr_dims, int *dims, int *offs);
-struct mrc_fld *mrc_fld_create_view_ext(struct mrc_fld *fld, int nr_dims, int *dims, int *offs, int *sw,
-					int *new_offs);
 struct mrc_fld *mrc_fld_make_view(struct mrc_fld *fld, int mb, int me);
 void mrc_fld_copy(struct mrc_fld *fld_to, struct mrc_fld *fld_from);
 void mrc_fld_axpy(struct mrc_fld *y, float alpha, struct mrc_fld *x);
 void mrc_fld_axpby(struct mrc_fld *y, double alpha, struct mrc_fld *x, double beta);
+float mrc_fld_norm(struct mrc_fld *fld);
 void mrc_fld_write_comps(struct mrc_fld *fld, struct mrc_io *io, int mm[]);
 void mrc_fld_dump(struct mrc_fld *fld, const char *basename, int n);
 // for multi-patch mrc_fld only (former mrc_m3)
@@ -151,86 +147,22 @@ mrc_fld_same_shape(struct mrc_fld *fld_1, struct mrc_fld *fld_2)
 static inline const int *
 mrc_fld_spatial_dims(struct mrc_fld *x)
 {
-  return mrc_fld_dims(x) + x->_is_aos;
+  return mrc_fld_dims(x);
 }
 
 static inline const int *
 mrc_fld_spatial_offs(struct mrc_fld *x)
 {
-  return mrc_fld_offs(x) + x->_is_aos;
+  return mrc_fld_offs(x);
 }
 
 static inline const int *
 mrc_fld_spatial_sw(struct mrc_fld *x)
 {
-  return mrc_fld_sw(x) + x->_is_aos;
+  return mrc_fld_sw(x);
 }
 
-#if 0 // slower, not using _arr_off
-
-#define __MRC_FLD(fld, type, i0,i1,i2,i3,i4)				\
-  (((type *) (fld)->_arr)[((i4) - (fld)->_start[4]) * (fld)->_stride[4] + \
-			  ((i3) - (fld)->_start[3]) * (fld)->_stride[3] + \
-			  ((i2) - (fld)->_start[2]) * (fld)->_stride[2] + \
-			  ((i1) - (fld)->_start[1]) * (fld)->_stride[1] + \
-			  ((i0) - (fld)->_start[0]) * (fld)->_stride[0]])
-
-#else // same, but faster because of precalc offset
-
-#define __MRC_FLD(fld, type, i0,i1,i2,i3,i4)				\
-  (((type *) (fld)->_arr_off)[(i4) * (fld)->_stride[4] +		\
-			      (i3) * (fld)->_stride[3] +		\
-			      (i2) * (fld)->_stride[2] +		\
-			      (i1) * (fld)->_stride[1] +		\
-			      (i0) * (fld)->_stride[0]])
-
-
-#endif
-
-
-#ifdef BOUNDS_CHECK
-
-#include <string.h>
-
-#define MRC_FLD(fld, type, i0,i1,i2,i3,i4)				\
-  (*({									\
-      if (strcmp(#type, "float") == 0) assert(fld->_data_type == MRC_NT_FLOAT);	\
-      if (strcmp(#type, "double") == 0) assert(fld->_data_type == MRC_NT_DOUBLE); \
-      if (strcmp(#type, "int") == 0) assert(fld->_data_type == MRC_NT_INT); \
-      assert(i0 >= (fld)->_ghost_offs[0] && i0 < (fld)->_ghost_offs[0] + (fld)->_ghost_dims[0]); \
-      assert(i1 >= (fld)->_ghost_offs[1] && i1 < (fld)->_ghost_offs[1] + (fld)->_ghost_dims[1]); \
-      assert(i2 >= (fld)->_ghost_offs[2] && i2 < (fld)->_ghost_offs[2] + (fld)->_ghost_dims[2]); \
-      assert(i3 >= (fld)->_ghost_offs[3] && i3 < (fld)->_ghost_offs[3] + (fld)->_ghost_dims[3]); \
-      assert(i4 >= (fld)->_ghost_offs[4] && i4 < (fld)->_ghost_offs[4] + (fld)->_ghost_dims[4]); \
-      assert((fld)->_arr_off);						\
-      type *_p = &__MRC_FLD(fld, type, i0,i1,i2,i3,i4);			\
-      _p; }))
-
-#else
-
-#define MRC_FLD(fld, type, i0,i1,i2,i3,i4) __MRC_FLD(fld, type, i0,i1,i2,i3,i4)
-
-#endif
-
-#define MRC_S1(fld, i0) MRC_FLD(fld, float, i0,0,0,0,0)
-#define MRC_D1(fld, i0) MRC_FLD(fld, double, i0,0,0,0,0)
-#define MRC_I1(fld, i0) MRC_FLD(fld, int, i0,0,0,0,0)
-
-#define MRC_S2(fld, i0,i1) MRC_FLD(fld, float, i0,i1,0,0,0)
-#define MRC_D2(fld, i0,i1) MRC_FLD(fld, double, i0,i1,0,0,0)
-#define MRC_I2(fld, i0,i1) MRC_FLD(fld, int, i0,i1,0,0,0)
-
-#define MRC_S3(fld, i0,i1,i2) MRC_FLD(fld, float, i0,i1,i2,0,0)
-#define MRC_D3(fld, i0,i1,i2) MRC_FLD(fld, double, i0,i1,i2,0,0)
-#define MRC_I3(fld, i0,i1,i2) MRC_FLD(fld, int, i0,i1,i2,0,0)
-
-#define MRC_S4(fld, i0,i1,i2,i3) MRC_FLD(fld, float, i0,i1,i2,i3,0)
-#define MRC_D4(fld, i0,i1,i2,i3) MRC_FLD(fld, double, i0,i1,i2,i3,0)
-#define MRC_I4(fld, i0,i1,i2,i3) MRC_FLD(fld, int, i0,i1,i2,i3,0)
-
-#define MRC_S5(fld, i0,i1,i2,i3,i4) MRC_FLD(fld, float, i0,i1,i2,i3,i4)
-#define MRC_D5(fld, i0,i1,i2,i3,i4) MRC_FLD(fld, double, i0,i1,i2,i3,i4)
-#define MRC_I5(fld, i0,i1,i2,i3,i4) MRC_FLD(fld, int, i0,i1,i2,i3,i4)
+#define MRC_FLD(fld, type, i0,i1,i2,i3,i4) MRC_NDARRAY(fld, type, i0,i1,i2,i3,i4)
 
 #define mrc_fld_foreach(fld, ix,iy,iz, l,r) do {			\
   const int *_offs = mrc_fld_spatial_offs(fld);				\
@@ -318,8 +250,6 @@ mrc_fld_patch_put(struct mrc_fld *fld)
 struct mrc_fld_ops {
   MRC_SUBCLASS_OPS(struct mrc_fld);
   const char *vec_type;
-  void (*set)(struct mrc_fld *fld, float val);
-  void (*copy)(struct mrc_fld *fld_to, struct mrc_fld *fld_from);
   void (*ddc_copy_to_buf)(struct mrc_fld *fld, int mb, int me, int p,
 			  int ilo[3], int ihi[3], void *buf);
   void (*ddc_copy_from_buf)(struct mrc_fld *fld, int mb, int me, int p,

@@ -159,12 +159,21 @@ xdmf_write_attr(struct mrc_io *io, const char *path, int type,
     break;
 
   case PT_DOUBLE3:
+  case MRC_VAR_DOUBLE3:
     ierr = H5LTset_attribute_double(group, ".", name, pv->u_double3, 3); CE;
     break;
-  case PT_INT_ARRAY:
-    ierr = H5LTset_attribute_int(group, ".", name, pv->u_int_array.vals,
-         pv->u_int_array.nr_vals); CE;
+  case PT_INT_ARRAY: {
+    hsize_t dims = pv->u_int_array.nr_vals;
+    hid_t dataspace_id = H5Screate_simple(1, &dims, NULL); H5_CHK(dataspace_id);
+    hid_t attr_id = H5Acreate(group, name, H5T_NATIVE_INT, dataspace_id,
+			      H5P_DEFAULT, H5P_DEFAULT); H5_CHK(attr_id);
+    if (dims > 0) {
+      ierr = H5Awrite(attr_id, H5T_NATIVE_INT, pv->u_int_array.vals); CE;
+    }
+    ierr = H5Sclose(dataspace_id); CE;
+    ierr = H5Aclose(attr_id); CE;
     break;
+  }
   case PT_PTR:
     break;
   default:
@@ -351,8 +360,8 @@ xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3_any)
 
   // If we have an aos field, we need to get it as soa
   struct mrc_fld *m3 = m3_any;
-  if (m3_any->_is_aos) {
-    switch (m3_any->_data_type) {
+  if (m3_any->_aos) {
+    switch (mrc_fld_data_type(m3_any)) {
       case MRC_NT_FLOAT: m3 = mrc_fld_get_as(m3_any, "float"); break;
       case MRC_NT_DOUBLE: m3 = mrc_fld_get_as(m3_any, "double"); break;
       case MRC_NT_INT: m3 = mrc_fld_get_as(m3_any, "int"); break;
@@ -388,7 +397,7 @@ xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3_any)
       compname = (const char *) default_name;
     }
 
-    xdmf_spatial_save_fld_info(xs, strdup(compname), strdup(path), false, m3->_data_type);
+    xdmf_spatial_save_fld_info(xs, strdup(compname), strdup(path), false, mrc_fld_data_type(m3));
 
     hid_t group_fld = H5Gcreate(group0, compname, H5P_DEFAULT,
         H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group_fld);
@@ -422,7 +431,7 @@ xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3_any)
 
       hid_t dtype;
       void *arr;
-      switch (m3->_data_type) {
+      switch (mrc_fld_data_type(m3)) {
         case MRC_NT_FLOAT: {
           arr = (void *) &MRC_S5((m3p)->_fld, m3->_ghost_offs[0], m3->_ghost_offs[1], m3->_ghost_offs[2], m, (m3p)->_p);
           dtype = H5T_NATIVE_FLOAT; 
@@ -453,7 +462,7 @@ xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3_any)
 
   H5Gclose(group0);
 
-  if (m3_any->_is_aos) {
+  if (m3_any->_aos) {
     mrc_fld_put_as(m3, m3_any);
   }
 
@@ -508,7 +517,7 @@ read_m3_cb(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
 
     hid_t dtype;
     void *arr;
-    switch (m3->_data_type) {
+    switch (mrc_fld_data_type(m3)) {
       case MRC_NT_FLOAT: {
         arr = (void *) &MRC_S5((m3p)->_fld, m3->_ghost_offs[0], m3->_ghost_offs[1], m3->_ghost_offs[2], m, (m3p)->_p);
         dtype = H5T_NATIVE_FLOAT; 
@@ -547,8 +556,8 @@ xdmf_read_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3_any)
 
   // If we have an aos field, we need to get it as soa
   struct mrc_fld *m3 = m3_any;
-  if (m3_any->_is_aos) {
-    switch (m3_any->_data_type) {
+  if (m3_any->_aos) {
+    switch (mrc_fld_data_type(m3_any)) {
       case MRC_NT_FLOAT: m3 = mrc_fld_get_as(m3_any, "float"); break;
       case MRC_NT_DOUBLE: m3 = mrc_fld_get_as(m3_any, "double"); break;
       case MRC_NT_INT: m3 = mrc_fld_get_as(m3_any, "int"); break;
@@ -582,7 +591,7 @@ xdmf_read_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3_any)
 
   H5Gclose(group0);
 
-  if (m3_any->_is_aos) {
+  if (m3_any->_aos) {
     mrc_fld_put_as(m3, m3_any);
   }
 
@@ -597,8 +606,8 @@ xdmf_write_m1(struct mrc_io *io, const char *path, struct mrc_fld *m1_any)
 
   // If we have an aos field, we need to get it as soa
   struct mrc_fld *m1 = m1_any;
-  if (m1_any->_is_aos) {
-    switch (m1_any->_data_type) {
+  if (m1_any->_aos) {
+    switch (mrc_fld_data_type(m1_any)) {
       case MRC_NT_FLOAT: m1 = mrc_fld_get_as(m1_any, "float"); break;
       case MRC_NT_DOUBLE: m1 = mrc_fld_get_as(m1_any, "double"); break;
       case MRC_NT_INT: m1 = mrc_fld_get_as(m1_any, "int"); break;
@@ -665,7 +674,7 @@ xdmf_write_m1(struct mrc_io *io, const char *path, struct mrc_fld *m1_any)
 
       hid_t dtype;
       void *arr;
-      switch (m1->_data_type) {
+      switch (mrc_fld_data_type(m1)) {
         case MRC_NT_FLOAT: {
           arr = (void *) &MRC_S3((m1p)->_fld, m1->_ghost_offs[0], m, (m1p)->_p);
           dtype = H5T_NATIVE_FLOAT; 
@@ -695,7 +704,7 @@ xdmf_write_m1(struct mrc_io *io, const char *path, struct mrc_fld *m1_any)
   }
 
   H5Gclose(group0);
-  if (m1_any->_is_aos) {
+  if (m1_any->_aos) {
     mrc_fld_put_as(m1, m1_any);
   }
 
@@ -746,7 +755,7 @@ read_m1_cb(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
 
     hid_t dtype;
     void *arr;
-    switch (m1->_data_type) {
+    switch (mrc_fld_data_type(m1)) {
       case MRC_NT_FLOAT: {
         arr = (void *) &MRC_S3((m1p)->_fld, m1->_ghost_offs[0], m, (m1p)->_p);
         dtype = H5T_NATIVE_FLOAT; 
@@ -785,8 +794,8 @@ xdmf_read_m1(struct mrc_io *io, const char *path, struct mrc_fld *m1_any)
 
   // If we have an aos field, we need to get it as soa
   struct mrc_fld *m1 = m1_any;
-  if (m1_any->_is_aos) {
-    switch (m1_any->_data_type) {
+  if (m1_any->_aos) {
+    switch (mrc_fld_data_type(m1_any)) {
       case MRC_NT_FLOAT: m1 = mrc_fld_get_as(m1_any, "float"); break;
       case MRC_NT_DOUBLE: m1 = mrc_fld_get_as(m1_any, "double"); break;
       case MRC_NT_INT: m1 = mrc_fld_get_as(m1_any, "int"); break;
@@ -820,7 +829,7 @@ xdmf_read_m1(struct mrc_io *io, const char *path, struct mrc_fld *m1_any)
 
   H5Gclose(group0);
 
-  if (m1_any->_is_aos) {
+  if (m1_any->_aos) {
     mrc_fld_put_as(m1, m1_any);
   }
 
@@ -1195,7 +1204,7 @@ xdmf_parallel_write_m3(struct mrc_io *io, const char *path, struct mrc_fld *m3)
 		mrc_domain_comm(m3->_domain));
 
   for (int m = 0; m < mrc_fld_nr_comps(m3); m++) {
-    xdmf_spatial_save_fld_info(xs, strdup(mrc_fld_comp_name(m3, m)), strdup(path), false, m3->_data_type);
+    xdmf_spatial_save_fld_info(xs, strdup(mrc_fld_comp_name(m3, m)), strdup(path), false, mrc_fld_data_type(m3));
 
     hid_t group_fld = H5Gcreate(group0, mrc_fld_comp_name(m3, m), H5P_DEFAULT,
 				H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group_fld);

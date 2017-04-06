@@ -11,10 +11,13 @@ struct mrc_ts {
   // parameters
   int max_steps;
   float max_time;
+  double norm_time;
+  double norm_time_scale;
 
   int n; // current timestep number
   float time; // current integration time
   float dt; // current dt
+  double tnorm; // normalization factor to get I/O units
   struct mrc_obj *x; // current state vector
   struct mrc_obj *ctx_obj;
   void *get_dt_f_ctx;

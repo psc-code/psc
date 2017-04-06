@@ -1,0 +1,10 @@
+#! /bin/sh
+
+set -e
+
+@MPIRUN@ -n 1 ./test_mrc_domain_simple --mrc_io_type hdf5_serial --case 1
+@MPIRUN@ -n 1 ./test_mrc_domain_simple --mrc_io_type hdf5_serial --case 2
+@MPIRUN@ -n 2 ./test_mrc_domain_simple --mrc_io_type hdf5_serial --case 2 \
+    --npx 2
+@MPIRUN@ -n 2 ./test_mrc_domain_simple --mrc_io_type hdf5_serial --case 2 \
+    --npx 2 --nr_writers 2

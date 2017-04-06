@@ -104,10 +104,10 @@ pde_patch_set(int p)
 // pde_setup
 
 static void
-pde_setup(struct mrc_fld *fld)
+pde_setup(struct mrc_fld *fld, int n_comps)
 {
   s_n_ghosts = fld->_nr_ghosts;
-  s_n_comps = mrc_fld_nr_comps(fld);
+  s_n_comps = n_comps;
 
   mrc_domain_get_global_dims(fld->_domain, s_gdims);
   int n_dims = 3;

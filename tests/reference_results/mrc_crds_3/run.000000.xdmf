@@ -1,0 +1,28 @@
+<?xml version='1.0' ?>
+<Xdmf xmlns:xi='http://www.w3.org/2001/XInclude' Version='2.0'>
+<Domain>
+   <Grid Name="patch-mrc_domain-0" GridType="Uniform">
+<Time Type="Single" Value="0" />
+     <Topology TopologyType="3DCoRectMesh" Dimensions="9 9 9"/>
+     <Geometry GeometryType="Origin_DxDyDz">
+     <DataItem Name="Origin" DataType="Float" Dimensions="3" Format="XML">
+        -3 -2 -1
+     </DataItem>
+     <DataItem Name="DxDyDz" DataType="Float" Dimensions="3" Format="XML">
+        0.75 0.5 0.25
+     </DataItem>
+     </Geometry>
+
+     <Attribute Name="m0" AttributeType="Scalar" Center="Cell">
+       <DataItem Dimensions="8 8 8" NumberType="Float" Precision="4" Format="HDF">
+        run.000000_p000000.h5:/mrc_fld-uid/m0/p0/3d
+       </DataItem>
+     </Attribute>
+     <Attribute Name="m1" AttributeType="Scalar" Center="Cell">
+       <DataItem Dimensions="8 8 8" NumberType="Float" Precision="4" Format="HDF">
+        run.000000_p000000.h5:/mrc_fld-uid/m1/p0/3d
+       </DataItem>
+     </Attribute>
+   </Grid>
+</Domain>
+</Xdmf>

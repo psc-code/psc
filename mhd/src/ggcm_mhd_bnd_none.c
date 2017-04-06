@@ -9,7 +9,7 @@
 
 static void
 ggcm_mhd_bnd_none_fill_ghosts(struct ggcm_mhd_bnd *bnd, struct mrc_fld *fld,
-			      int m, float bntim)
+			      float bntim)
 {
 }
 

@@ -3,15 +3,15 @@
 // defaults for which implementation to use for the various fld1d_*_t
 
 #ifndef OPT_FLD1D
-#define OPT_FLD1D OPT_FLD1D_MRC_FLD
+#define OPT_FLD1D OPT_FLD1D_C_ARRAY
 #endif
 
 #ifndef OPT_FLD1D_STATE
-#define OPT_FLD1D_STATE OPT_FLD1D_MRC_FLD
+#define OPT_FLD1D_STATE OPT_FLD1D_PTR_ARRAY
 #endif
 
 #ifndef OPT_FLD1D_VEC
-#define OPT_FLD1D_VEC OPT_FLD1D_MRC_FLD
+#define OPT_FLD1D_VEC OPT_FLD1D_PTR_ARRAY
 #endif
 
 

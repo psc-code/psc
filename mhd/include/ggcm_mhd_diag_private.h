@@ -17,6 +17,8 @@ struct ggcm_mhd_diag_ops {
   void (*run_now)(struct ggcm_mhd_diag *diag, struct mrc_fld *fld,
 		  int diag_type, int itdia);
   void (*shutdown)(struct ggcm_mhd_diag *);
+
+  void (*mod_register)(struct ggcm_mhd_diag *mhd_diag, struct mrc_mod *mod);
 };
 
 void ggcm_mhd_diag_c_write_one_field(struct mrc_io *io, struct mrc_fld *f, int m,

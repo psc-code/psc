@@ -104,8 +104,7 @@ ggcm_mhd_step_vl_setup(struct ggcm_mhd_step *step)
   struct ggcm_mhd_step_vl *sub = ggcm_mhd_step_vl(step);
   struct ggcm_mhd *mhd = step->mhd;
 
-  pde_setup(mhd->fld);
-  pde_mhd_setup(mhd);
+  pde_mhd_setup(mhd, mrc_fld_nr_comps(mhd->fld));
 
   fld1d_state_setup(&sub->U);
   fld1d_state_setup(&sub->U_l);
@@ -150,16 +149,16 @@ ggcm_mhd_step_vl_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   ldims[2] = mrc_fld_spatial_dims(x)[2];
 
   struct mrc_fld *x_half = ggcm_mhd_get_3d_fld(mhd, 8);
-  mrc_fld_dict_add_int(x_half, "mhd_type", MT_FULLY_CONSERVATIVE_CC); // FIXME
+  mrc_fld_dict_add_int(x_half, "mhd_type", MT_FCONS_CC); // FIXME
   struct mrc_fld *flux[3] = { ggcm_mhd_get_3d_fld(mhd, 5),
 			      ggcm_mhd_get_3d_fld(mhd, 5),
 			      ggcm_mhd_get_3d_fld(mhd, 5), };
 
-  mrc_fld_data_t dt = mhd->dt;
+  mrc_fld_data_t dt = mhd->dt_code;
 
   // PREDICTOR
 
-  ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
+  ggcm_mhd_fill_ghosts(mhd, x, mhd->time_code);
 
   if (sub->debug_dump) {
     static struct ggcm_mhd_diag *diag;
@@ -173,7 +172,7 @@ ggcm_mhd_step_vl_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
       ggcm_mhd_diag_setup(diag);
       ggcm_mhd_diag_view(diag);
     }
-    ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
+    ggcm_mhd_fill_ghosts(mhd, x, mhd->time_code);
     ggcm_mhd_diag_run_now(diag, x, DIAG_TYPE_3D, cnt++);
   }
 
@@ -204,7 +203,7 @@ ggcm_mhd_step_vl_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 
   // CORRECTOR
 
-  ggcm_mhd_fill_ghosts(mhd, x_half, 0, mhd->time);
+  ggcm_mhd_fill_ghosts(mhd, x_half, mhd->time_code);
   fluxes_corr(step, flux, x);
   ggcm_mhd_correct_fluxes(mhd, flux);
   for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
@@ -243,7 +242,7 @@ ggcm_mhd_step_vl_setup_flds(struct ggcm_mhd_step *step)
 
   mrc_fld_set_type(mhd->fld, FLD_TYPE);
   mrc_fld_set_param_int(mhd->fld, "nr_ghosts", 2);
-  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_FULLY_CONSERVATIVE_CC);  // FIXME
+  mrc_fld_dict_add_int(mhd->fld, "mhd_type", MT_FCONS_CC);  // FIXME
   mrc_fld_set_param_int(mhd->fld, "nr_comps", 8); // FIXME, should be 5, but needs testing
 }
 
