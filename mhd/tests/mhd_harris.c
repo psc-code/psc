@@ -3,7 +3,6 @@
 #include <ggcm_mhd_step.h>
 #include <ggcm_mhd_ic_private.h>
 #include <ggcm_mhd_crds_private.h>
-#include <ggcm_mhd_crds_gen.h>
 #include <ggcm_mhd_bnd.h>
 #include <ggcm_mhd_diag.h>
 
@@ -30,86 +29,98 @@ struct ggcm_mhd_ic_harris {
   double pert; // strength of \psi perturbation (flux function)
   double pert_halfwidth; // half width of perturbation; if 0.0, set
                          // to 0.5 * (xh[1] - xl[1])
+  
+  // for testing: add a background field of this amount, but subtract in the perturbation,
+  // so the total B field will be the same, anyway
+  double B_0_bg;
 };
 
-// ----------------------------------------------------------------------
-// ggcm_mhd_ic_harris_run
+#define ggcm_mhd_ic_harris(ic) mrc_to_subobj(ic, struct ggcm_mhd_ic_harris)
 
-static void
-ggcm_mhd_ic_harris_run(struct ggcm_mhd_ic *ic)
+// ----------------------------------------------------------------------
+// ggcm_mhd_ic_harris_primitive
+
+static double
+ggcm_mhd_ic_harris_primitive(struct ggcm_mhd_ic *ic, int m, double crd[3])
 {
-  struct ggcm_mhd_ic_harris *ic_harris = mrc_to_subobj(ic, struct ggcm_mhd_ic_harris);
+  struct ggcm_mhd_ic_harris *sub = ggcm_mhd_ic_harris(ic);
   struct ggcm_mhd *mhd = ic->mhd;
-  struct mrc_fld *fld = mrc_fld_get_as(mhd->fld, FLD_TYPE);
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-  double cs_width = ic_harris->cs_width;
+  double pert = sub->pert, cs_width = sub->cs_width;
+  double xx = crd[0], yy = crd[1];
 
   double xl[3], xh[3];
   mrc_crds_get_param_double3(crds, "l", xl);
   mrc_crds_get_param_double3(crds, "h", xh);
-  double x0 = xl[0];
-  double y0 = xl[1];
-  double lx = (double)xh[0] - x0;
-  double ly = (double)xh[1] - y0;
-  double kx = 2.0 * M_PI / lx;
-  double ky = M_PI / ly;
-  // u_th = constant thermal energy density (p / n)
-  double u_th = sqr(ic_harris->B_0) / (2.0 * ic_harris->n_0);
-  
-  if (ic_harris->pert_halfwidth == 0.0) {
-    ic_harris->pert_halfwidth = 0.5 * (xh[1] - xl[1]);
+  double lx = xh[0] - xl[0];
+  double ly = xh[1] - xl[1];
+
+  // FIXME, only right if cs_width == .5 (constant factor) ?
+  double rr = sub->n_inf + sub->n_0 / sqr(cosh(yy/cs_width));
+
+  switch (m) {
+  case RR: return rr;
+  case PP: return .5 * rr;
+  // B here won't actually be used because the vector potential takes preference
+  case BX: return -pert * (   M_PI/ly) * cos(2*M_PI*xx/lx) * sin(M_PI*yy/ly) + sub->B_0 * tanh(yy/cs_width)
+      - sub->B_0_bg;
+  case BY: return -pert * (2.*M_PI/lx) * sin(2*M_PI*xx/lx) * cos(M_PI*yy/ly);
+  default: return 0.;
   }
+}
 
-  struct mrc_fld *fld_psi = mrc_domain_fld_create(fld->_domain, SW_2, "psi");
-  mrc_fld_set_type(fld_psi, FLD_TYPE);
-  mrc_fld_setup(fld_psi);
-  
-  for (int p = 0; p < mrc_fld_nr_patches(fld_psi); p++) {
-    mrc_fld_foreach(fld_psi, ix,iy,iz, 2, 2) {
-      mrc_fld_data_t x = MRC_MCRDX(crds, ix, p);
-      mrc_fld_data_t y = MRC_MCRDY(crds, iy, p);
+// ----------------------------------------------------------------------
+// ggcm_mhd_ic_harris_vector_potential
 
-      //    A[2] = lx / (4*pi) * (1 - cos(2*kx*X)) * cos(ky*Y)
-      // F3(fld_psi, 0, ix,iy,iz) = ic_harris->pert * ly / (4. * M_PI) * (1. - cos(2*ky*(y - y0))) * cos(kx*(x - x0));
-      // taken from Birn et. al. 2001
-      if (fabs(y) < ic_harris->pert_halfwidth) {
-        M3(fld_psi, 0, ix,iy,iz, p) = (ic_harris->pert *
-                                       cos(ky*(y - y0 - ic_harris->pert_halfwidth)) *
-                                       cos(kx*(x - x0 - lx/2.0)));
-      } else {
-        M3(fld_psi, 0, ix,iy,iz, p) = 0.0;
-      }
-    } mrc_fld_foreach_end;
+static double
+ggcm_mhd_ic_harris_vector_potential(struct ggcm_mhd_ic *ic, int m, double crd[3])
+{
+  struct ggcm_mhd_ic_harris *sub = ggcm_mhd_ic_harris(ic);
+  struct ggcm_mhd *mhd = ic->mhd;
+  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
+  double pert = sub->pert, cs_width = sub->cs_width;
+  double xx = crd[0], yy = crd[1];
+
+  double xl[3], xh[3];
+  mrc_crds_get_param_double3(crds, "l", xl);
+  mrc_crds_get_param_double3(crds, "h", xh);
+  double lx = xh[0] - xl[0];
+  double ly = xh[1] - xl[1];
+
+  switch (m) {
+  case 2: return pert * cos(2*M_PI*xx/lx) * cos(M_PI*yy/ly) + sub->B_0 * cs_width * log(cosh(yy/cs_width))
+      - sub->B_0_bg * yy;
+  default: return 0.;
   }
+}
 
-  for (int p = 0; p < mrc_fld_nr_patches(fld); p++) {
-    mrc_fld_foreach(fld, ix,iy,iz, 2, 1) {
-      mrc_fld_data_t y = MRC_MCRDY(crds, iy, p);
-      // eqilibrium
-      RR_(fld, ix,iy,iz, p) = ic_harris->n_inf + \
-                              ic_harris->n_0 / (sqr(cosh((y - y0 - ly/2.0) / cs_width)));
-      PP_(fld, ix,iy,iz, p) = u_th * RR(fld, ix,iy,iz);
-      BX_(fld, ix,iy,iz, p) = ic_harris->B_0 * tanh((y - y0 - ly/2.0) / cs_width);
-      BY_(fld, ix,iy,iz, p) = 0.0;
-      BZ_(fld, ix,iy,iz, p) = 0.0;
-      VX_(fld, ix,iy,iz, p) = 0.0;
-      VY_(fld, ix,iy,iz, p) = 0.0;
-      VZ_(fld, ix,iy,iz, p) = 0.0;
+// ----------------------------------------------------------------------
+// ggcm_mhd_ic_harris_primitive_bg
 
-      // perturbation, B = -z_hat cross grad psi
-      BX_(fld, ix,iy,iz, p) +=
-        (M3(fld_psi, 0, ix,iy+1,iz, p) - M3(fld_psi, 0, ix,iy,iz, p)) /
-        (MRC_MCRDY(crds,iy+1, p) - MRC_MCRDY(crds, iy, p));
-      BY_(fld, ix,iy,iz, p) -=
-        (M3(fld_psi, 0, ix+1,iy,iz, p) - M3(fld_psi, 0, ix,iy,iz, p)) /
-        (MRC_MCRDX(crds,ix+1, p) - MRC_MCRDX(crds, ix, p));
-    } mrc_fld_foreach_end;
+static double
+ggcm_mhd_ic_harris_primitive_bg(struct ggcm_mhd_ic *ic, int m, double crd[3])
+{
+  struct ggcm_mhd_ic_harris *sub = ggcm_mhd_ic_harris(ic);
+
+  switch (m) {
+  case BX: return sub->B_0_bg;
+  default: return 0.;
   }
+}
 
-  mrc_fld_destroy(fld_psi);
-  mrc_fld_put_as(fld, mhd->fld);
+// ----------------------------------------------------------------------
+// ggcm_mhd_ic_harris_vector_potential_bg
 
-  ggcm_mhd_convert_from_primitive(mhd, mhd->fld);
+static double
+ggcm_mhd_ic_harris_vector_potential_bg(struct ggcm_mhd_ic *ic, int m, double crd[3])
+{
+  struct ggcm_mhd_ic_harris *sub = ggcm_mhd_ic_harris(ic);
+  double yy = crd[1];
+
+  switch (m) {
+  case 2: return sub->B_0_bg * yy;
+  default: return 0.;
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -122,19 +133,134 @@ static struct param ggcm_mhd_ic_harris_descr[] = {
   { "B_0"             , VAR(B_0)             , PARAM_DOUBLE(1.0)         },
   { "cs_width"        , VAR(cs_width)        , PARAM_DOUBLE(0.5)         },
   { "pert"            , VAR(pert)            , PARAM_DOUBLE(0.1)         },
-  { "pert_width"      , VAR(pert)            , PARAM_DOUBLE(6.4)         },
+  { "pert_halfwidth"  , VAR(pert_halfwidth)  , PARAM_DOUBLE(6.4)         },
+  { "B_0_bg"          , VAR(B_0_bg)          , PARAM_DOUBLE(0.)          },
   {},
 };
 #undef VAR
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_ic_ot_ops
+// ggcm_mhd_ic_harris_ops
 
 struct ggcm_mhd_ic_ops ggcm_mhd_ic_harris_ops = {
-  .name        = "harris",
-  .size        = sizeof(struct ggcm_mhd_ic_harris),
-  .param_descr = ggcm_mhd_ic_harris_descr,
-  .run         = ggcm_mhd_ic_harris_run,
+  .name                = "harris",
+  .size                = sizeof(struct ggcm_mhd_ic_harris),
+  .param_descr         = ggcm_mhd_ic_harris_descr,
+  .primitive           = ggcm_mhd_ic_harris_primitive,
+  .vector_potential    = ggcm_mhd_ic_harris_vector_potential,
+  .primitive_bg        = ggcm_mhd_ic_harris_primitive_bg,
+  .vector_potential_bg = ggcm_mhd_ic_harris_vector_potential_bg,
+};
+
+// ======================================================================
+// ggcm_mhd_ic subclass "harris_asym"
+
+struct ggcm_mhd_ic_harris_asym {
+  // parameters
+  double n0;
+  double n1;
+  double B0;
+  double B1;
+  double lambda;
+  double Ti_over_Te;
+  double pert; // strength of \psi perturbation (flux function)
+
+  // state
+  double nc;
+  double Te, Ti;
+};
+
+#define ggcm_mhd_ic_harris_asym(ic) mrc_to_subobj(ic, struct ggcm_mhd_ic_harris_asym)
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_ic_harris_asym_primitive
+
+static double
+ggcm_mhd_ic_harris_asym_primitive(struct ggcm_mhd_ic *ic, int m, double crd[3])
+{
+  struct ggcm_mhd_ic_harris_asym *sub = ggcm_mhd_ic_harris_asym(ic);
+  double n0 = sub->n0, n1 = sub->n1, nc = sub->nc, Te = sub->Te, Ti = sub->Ti;
+  double yy = crd[1];
+  
+  double rr = (n0 + n1) / 2. + (n0 - n1) / 2. * tanh(2.*yy) + nc / sqr(cosh(2.*yy));
+
+  switch (m) {
+  case RR: return rr;
+  case PP: return (Te + Ti) * rr;
+  // B is set through vector potential
+  default: return 0.;
+  }
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_ic_harris_asym_vector_potential
+
+static double
+ggcm_mhd_ic_harris_asym_vector_potential(struct ggcm_mhd_ic *ic, int m, double crd[3])
+{
+  struct ggcm_mhd_ic_harris_asym *sub = ggcm_mhd_ic_harris_asym(ic);
+  struct ggcm_mhd *mhd = ic->mhd;
+  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
+  double pert = sub->pert, B0 = sub->B0, B1 = sub->B1;
+  double xx = crd[0], yy = crd[1];
+
+  double xl[3], xh[3];
+  mrc_crds_get_param_double3(crds, "l", xl);
+  mrc_crds_get_param_double3(crds, "h", xh);
+  double lx = xh[0] - xl[0];
+  double ly = xh[1] - xl[1];
+
+  switch (m) {
+  case 2: return pert * cos(2*M_PI*xx/lx) * cos(M_PI*yy/ly) + 
+      (B1 - B0) / 2. * yy - (B1 + B0) / 2. * .5 * log(cosh(2.*yy));
+  default: return 0.;
+  }
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_ic_harris_asym_setup
+
+static void
+ggcm_mhd_ic_harris_asym_setup(struct ggcm_mhd_ic *ic)
+{
+  struct ggcm_mhd_ic_harris_asym *sub = ggcm_mhd_ic_harris_asym(ic);
+
+  sub->Te = (sqr(sub->B1) - sqr(sub->B0)) / (2. * (sub->n0 - sub->n1) * (sub->Ti_over_Te + 1.));
+  sub->nc = sqr(.5 * (sub->B1 + sub->B0)) / (2. * (sub->Ti_over_Te + 1.) * sub->Te);
+  sub->Ti = sub->Ti_over_Te * sub->Te;
+
+  MPI_Comm comm = ggcm_mhd_ic_comm(ic);
+  mpi_printf(comm, "i.c. harris_asym: Te = %g\n", sub->Te);
+  mpi_printf(comm, "i.c. harris_asym: Ti = %g\n", sub->Ti);
+  mpi_printf(comm, "i.c. harris_asym: nc = %g\n", sub->nc);
+}
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_ic_harris_asym_descr
+
+#define VAR(x) (void *)offsetof(struct ggcm_mhd_ic_harris_asym, x)
+static struct param ggcm_mhd_ic_harris_asym_descr[] = {
+  { "n0"              , VAR(n0)              , PARAM_DOUBLE(1.)          },
+  { "n1"              , VAR(n1)              , PARAM_DOUBLE(1./8.)       },
+  { "B0"              , VAR(B0)              , PARAM_DOUBLE(1.)          },
+  { "B1"              , VAR(B1)              , PARAM_DOUBLE(1.37)        },
+  { "lambda"          , VAR(lambda)          , PARAM_DOUBLE(0.2)         },
+  { "Ti_over_Te"      , VAR(Ti_over_Te)      , PARAM_DOUBLE(2.)          },
+  { "pert"            , VAR(pert)            , PARAM_DOUBLE(0.1)         },
+  {},
+};
+#undef VAR
+
+// ----------------------------------------------------------------------
+// ggcm_mhd_ic_harris_asym_ops
+
+struct ggcm_mhd_ic_ops ggcm_mhd_ic_harris_asym_ops = {
+  .name                = "harris_asym",
+  .size                = sizeof(struct ggcm_mhd_ic_harris_asym),
+  .param_descr         = ggcm_mhd_ic_harris_asym_descr,
+  .setup               = ggcm_mhd_ic_harris_asym_setup,
+  .primitive           = ggcm_mhd_ic_harris_asym_primitive,
+  .vector_potential    = ggcm_mhd_ic_harris_asym_vector_potential,
 };
 
 // ======================================================================
@@ -191,7 +317,7 @@ ggcm_mhd_ic_asymharris_run(struct ggcm_mhd_ic *ic)
       double y = MRC_MCRDY(crds, iy, p);
 
       //    A[2] = lx / (4*pi) * (1 - cos(2*kx*X)) * cos(ky*Y)
-      // F3(fld_psi, 0, ix,iy,iz) = ic_harris->pert * ly / (4. * M_PI) * (1. - cos(2*ky*(y - y0))) * cos(kx*(x - x0));
+      // M3(fld_psi, 0, ix,iy,iz, p) = ic_harris->pert * ly / (4. * M_PI) * (1. - cos(2*ky*(y - y0))) * cos(kx*(x - x0));
       // taken from Birn et. al. 2001
       if (fabs(y) < ic_asymharris->pert_halfwidth) {
         M3(fld_psi, 0, ix,iy,iz, p) = (ic_asymharris->pert *
@@ -221,7 +347,7 @@ ggcm_mhd_ic_asymharris_run(struct ggcm_mhd_ic *ic)
       BZ_(fld, ix,iy,iz, p) = 0.0;
       RR_(fld, ix,iy,iz, p) = (0.5 * (n01 + n02) +
                                0.5 * (n01 - n02) * tanh(yprime / cs_width));
-      PP_(fld, ix,iy,iz, p) = c - (0.5 * sqr(BX(fld, ix,iy,iz)));
+      PP_(fld, ix,iy,iz, p) = c - (0.5 * sqr(BX_(fld, ix,iy,iz, p)));
       VX_(fld, ix,iy,iz, p) = 0.0;
       VY_(fld, ix,iy,iz, p) = 0.0;
       VZ_(fld, ix,iy,iz, p) = 0.0;
@@ -271,10 +397,10 @@ struct ggcm_mhd_ic_ops ggcm_mhd_ic_asymharris_ops = {
 
 
 // ======================================================================
-// ggcm_mhd subclass "ot"
+// ggcm_mhd subclass "harris"
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_ot_create
+// ggcm_mhd_harris_create
 
 static void
 ggcm_mhd_harris_create(struct ggcm_mhd *mhd)
@@ -295,11 +421,10 @@ ggcm_mhd_harris_create(struct ggcm_mhd *mhd)
   mrc_domain_set_param_int(mhd->domain, "bcz", BC_PERIODIC);
 
   ggcm_mhd_ic_set_type(mhd->ic, "harris");
-  ggcm_mhd_step_set_type(mhd->step, "c2_double");
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_ot_ops
+// ggcm_mhd_harris_ops
 
 static struct ggcm_mhd_ops ggcm_mhd_harris_ops = {
   .name             = "harris",
@@ -317,6 +442,7 @@ main(int argc, char **argv)
   mrc_class_register_subclass(&mrc_class_ggcm_mhd, &ggcm_mhd_harris_ops);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_diag, &ggcm_mhd_diag_c_ops);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_harris_ops);
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_harris_asym_ops);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_asymharris_ops);
 
   return ggcm_mhd_main(&argc, &argv);

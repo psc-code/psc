@@ -1,6 +1,6 @@
 #!/bin/sh 
 
-mpirun -n 4  ../../../mhd_gkeyll \
+mpirun -n 4  ../../../mhd_ot \
     --mrc_crds_lx 0.  --mrc_crds_hx 1. \
     --mrc_crds_ly 0.  --mrc_crds_hy 1. \
     --mrc_crds_lz 0.  --mrc_crds_hz 1. \
@@ -17,6 +17,10 @@ mpirun -n 4  ../../../mhd_gkeyll \
     --ggcm_mhd_ic_type ot \
     --ggcm_mhd_ic_script ../../init.lua \
     --ggcm_mhd_ic_script_common ../common.lua \
+    --ggcm_mhd_ic_B0 1. \
+    --ggcm_mhd_ic_rr0 2.777777777777 \
+    --ggcm_mhd_ic_v0 1. \
+    --ggcm_mhd_ic_pp0 1.66667 \
     \
     --mrc_ts_dt 0.1 \
     --mrc_ts_max_time .5 \

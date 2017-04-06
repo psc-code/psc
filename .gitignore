@@ -4,6 +4,7 @@
 *.lo
 *.a
 *.la
+*.dSYM
 .libs
 Makefile
 Makefile.in

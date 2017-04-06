@@ -31,6 +31,13 @@ mrc_vec_waxpy(struct mrc_vec *w, double alpha, struct mrc_vec *x, struct mrc_vec
 }
 
 void 
+mrc_vec_axpby(struct mrc_vec *y, double alpha, struct mrc_vec *x, double beta)
+{
+  assert(mrc_vec_ops(y)->axpby);
+  mrc_vec_ops(y)->axpby(y, alpha, x, beta);
+}
+
+void 
 mrc_vec_set(struct mrc_vec *x, double alpha)
 {
   assert(mrc_vec_ops(x)->set);
@@ -228,6 +235,18 @@ mrc_vec_size_of_type(struct mrc_vec *x)
   }									\
 									\
   static void								\
+  mrc_vec_##type##_axpby(struct mrc_vec *y, double alpha, struct mrc_vec *x, double beta) \
+  {									\
+    assert(y->len == x->len);						\
+    assert(strcmp(mrc_vec_type(y), mrc_vec_type(x)) == 0);		\
+    type *y_arr = y->arr, *x_arr =  x->arr;				\
+    type talpha = (type) alpha, tbeta = (type) beta;			\
+    for (int i = 0; i < y->len; i++) {					\
+      y_arr[i] = talpha * x_arr[i] + tbeta * y_arr[i];			\
+     }									\
+  }									\
+									\
+  static void								\
   mrc_vec_##type##_set(struct mrc_vec *x, double val)			\
   {									\
     type *arr = x->arr;							\
@@ -263,6 +282,7 @@ mrc_vec_size_of_type(struct mrc_vec *x)
     .put_array             = mrc_vec_sub_put_array,			\
     .axpy                  = mrc_vec_##type##_axpy,			\
     .waxpy                 = mrc_vec_##type##_waxpy,			\
+    .axpby                 = mrc_vec_##type##_axpby,			\
     .set                   = mrc_vec_##type##_set,			\
     .copy                  = mrc_vec_##type##_copy,			\
   };

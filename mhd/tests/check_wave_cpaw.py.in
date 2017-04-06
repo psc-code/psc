@@ -38,7 +38,7 @@ def main():
         deltaUsq += (np.sum(final - initial))**2
     L1error = np.abs(np.sqrt(deltaUsq))
     
-    return int(L1error != 0.0)
+    return int(L1error > 1e-6)
 
 if __name__ == "__main__":
     sys.exit(main())

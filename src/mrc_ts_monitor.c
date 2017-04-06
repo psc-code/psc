@@ -14,12 +14,15 @@ mrc_ts_monitor_run(struct mrc_ts_monitor *mon, struct mrc_ts *ts)
 {
   assert(mrc_ts_monitor_ops(mon)->run);
 
-  // FIXME, make into while loop...
   if ((mon->every_steps > 0 && ts->n >= mon->next_step) ||
       (mon->every_time > 0. && ts->time >= mon->next_time)) {
     mrc_ts_monitor_ops(mon)->run(mon, ts);
     mon->next_step = ts->n + mon->every_steps;
-    mon->next_time = ts->time + mon->every_time;
+    while (mon->next_time <= ts->time) {
+      mon->next_time += mon->every_time;
+    }
+  } else if (ts->time >= ts->max_time) {
+    mrc_ts_monitor_ops(mon)->run(mon, ts);
   }
 }
 

@@ -6,13 +6,13 @@
      <Topology TopologyType="3DRectMesh" Dimensions="33 33 33"/>
      <Geometry GeometryType="VXVYVZ">
      <DataItem Name="VX" DataType="Float" Dimensions="33" Format="HDF">
-        run.000000_p000000.h5:/crd0_nc-uid/crd0_nc/p0/1d
+        run.000000_p000000.h5:/crd_nc[0]-uid/crd_nc[0]/p0/1d
      </DataItem>
      <DataItem Name="VY" DataType="Float" Dimensions="33" Format="HDF">
-        run.000000_p000000.h5:/crd1_nc-uid/crd1_nc/p0/1d
+        run.000000_p000000.h5:/crd_nc[1]-uid/crd_nc[1]/p0/1d
      </DataItem>
      <DataItem Name="VZ" DataType="Float" Dimensions="33" Format="HDF">
-        run.000000_p000000.h5:/crd2_nc-uid/crd2_nc/p0/1d
+        run.000000_p000000.h5:/crd_nc[2]-uid/crd_nc[2]/p0/1d
      </DataItem>
      </Geometry>
 

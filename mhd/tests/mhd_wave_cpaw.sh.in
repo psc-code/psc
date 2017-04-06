@@ -106,6 +106,7 @@ ${cmd}                                                                       \
   --cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc \
   --ccccccccccccccccccccc  "TIMESTEP"                                        \
   --ggcm_mhd_step_do_nwst      1                                             \
+  --ggcm_mhd_step_legacy_dt_handling false                                   \
   --ggcm_mhd_thx               0.4                                           \
   --dtmin                      5e-5                                          \
   --mrc_ts_max_time            1.04                                          \

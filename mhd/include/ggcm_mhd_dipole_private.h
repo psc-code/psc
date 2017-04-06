@@ -46,6 +46,8 @@ struct ggcm_mhd_dipole_ops {
 		      float moment[3], double diptime);
   void (*update_b_field)(struct ggcm_mhd_dipole *mhd_dipole, struct mrc_fld *bdip,
 			 struct mrc_fld *x, double dacttime);
+  double (*vector_potential)(struct ggcm_mhd_dipole *mhd_dipole, int m, double x[3],
+			     float x0[3], float moment[3], float xmir);
 };
 
 extern struct ggcm_mhd_dipole_ops ggcm_mhd_dipole_float_ops;

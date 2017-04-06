@@ -2,7 +2,6 @@
 #include "ggcm_mhd_private.h"
 
 #include "ggcm_mhd_crds_private.h"
-#include "ggcm_mhd_crds_gen.h"
 
 #include <mrc_domain.h>
 
@@ -28,8 +27,6 @@ ggcm_mhd_box_create(struct ggcm_mhd *mhd)
   mrc_crds_set_type(crds, "uniform");
   mrc_crds_set_param_int(crds, "sw", 2);
 
-  // generate MHD solver grid from mrc_crds
-  ggcm_mhd_crds_gen_set_type(mhd->crds->crds_gen, "mrc");
   ggcm_mhd_set_param_float(mhd, "isphere", 0.);
   ggcm_mhd_set_param_float(mhd, "diffsphere", 0.);
   ggcm_mhd_set_param_float(mhd, "speedlimit", 1e9);

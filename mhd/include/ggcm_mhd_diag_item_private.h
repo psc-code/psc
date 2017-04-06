@@ -18,6 +18,7 @@ struct ggcm_mhd_diag_item_ops {
 
 extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_rr1;
 extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_uu1;
+extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_ee1;
 extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_rv1;
 extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_b1;
 extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_rr;
@@ -33,5 +34,10 @@ extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_gkeyll_e;
 extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_gkeyll_i;
 extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_gkeyll_em;
 extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_ymask;
+extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_zmask;
+extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_rmask;
+extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_bnd_mask;
+extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_b0;
+extern struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_psi;
 
 #endif

@@ -55,6 +55,18 @@ ggcm_mhd_dipole_add_dipole(struct ggcm_mhd_dipole *mhd_dipole, struct mrc_fld *b
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_dipole_vector_potential
+
+double
+ggcm_mhd_dipole_vector_potential(struct ggcm_mhd_dipole *mhd_dipole, int m,
+				 double x[3], float x0[3], float moment[3], float xmir)
+{
+  struct ggcm_mhd_dipole_ops *ops = ggcm_mhd_dipole_ops(mhd_dipole);
+  assert(ops && ops->vector_potential);
+  return ops->vector_potential(mhd_dipole, m, x, x0, moment, xmir);
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_dipole_set_b_field
 
 void
@@ -178,18 +190,22 @@ ggcm_mhd_diag_item_bdipcc_run(struct ggcm_mhd_diag_item *item,
   int mhd_type;
   mrc_fld_get_param_int(mhd->fld, "mhd_type", &mhd_type);
   if (mhd_type == MT_SEMI_CONSERVATIVE_GGCM) {
-    mrc_fld_foreach(r, ix,iy,iz, 0, 0) {
-      F3(r, 0, ix,iy,iz) = .5f * (F3(bdip, 0, ix,iy,iz) + F3(bdip, 0, ix-1,iy,iz));
-      F3(r, 1, ix,iy,iz) = .5f * (F3(bdip, 1, ix,iy,iz) + F3(bdip, 1, ix,iy-1,iz));
-      F3(r, 2, ix,iy,iz) = .5f * (F3(bdip, 2, ix,iy,iz) + F3(bdip, 2, ix,iy,iz-1));
-    } mrc_fld_foreach_end;
+    for (int p = 0; p < mrc_fld_nr_patches(r); p++) {
+      mrc_fld_foreach(r, ix,iy,iz, 0, 0) {
+	M3(r, 0, ix,iy,iz, p) = .5f * (M3(bdip, 0, ix,iy,iz, p) + M3(bdip, 0, ix-1,iy,iz, p));
+	M3(r, 1, ix,iy,iz, p) = .5f * (M3(bdip, 1, ix,iy,iz, p) + M3(bdip, 1, ix,iy-1,iz, p));
+	M3(r, 2, ix,iy,iz, p) = .5f * (M3(bdip, 2, ix,iy,iz, p) + M3(bdip, 2, ix,iy,iz-1, p));
+      } mrc_fld_foreach_end;
+    }
   } else if (mhd_type == MT_SEMI_CONSERVATIVE ||
 	     mhd_type == MT_FULLY_CONSERVATIVE) {
-    mrc_fld_foreach(r, ix,iy,iz, 0, 0) {
-      F3(r, 0, ix,iy,iz) = .5f * (F3(bdip, 0, ix,iy,iz) + F3(bdip, 0, ix+1,iy,iz));
-      F3(r, 1, ix,iy,iz) = .5f * (F3(bdip, 1, ix,iy,iz) + F3(bdip, 1, ix,iy+1,iz));
-      F3(r, 2, ix,iy,iz) = .5f * (F3(bdip, 2, ix,iy,iz) + F3(bdip, 2, ix,iy,iz+1));
-    } mrc_fld_foreach_end;
+    for (int p = 0; p < mrc_fld_nr_patches(r); p++) {
+      mrc_fld_foreach(r, ix,iy,iz, 0, 0) {
+	M3(r, 0, ix,iy,iz, p) = .5f * (M3(bdip, 0, ix,iy,iz, p) + M3(bdip, 0, ix+1,iy,iz, p));
+	M3(r, 1, ix,iy,iz, p) = .5f * (M3(bdip, 1, ix,iy,iz, p) + M3(bdip, 1, ix,iy+1,iz, p));
+	M3(r, 2, ix,iy,iz, p) = .5f * (M3(bdip, 2, ix,iy,iz, p) + M3(bdip, 2, ix,iy,iz+1, p));
+      } mrc_fld_foreach_end;
+    }
   } else {
     assert(0);
   }

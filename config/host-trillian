@@ -5,15 +5,15 @@ if test -z "$CC"; then
 fi
 
 if test -z "$F77"; then
-   F77="ftn"
+   F77="ftn -dynamic"
 fi
 
 if test -z "$FC"; then
-   FC="ftn"
+   FC="ftn -dynamic"
 fi
 
 if test -z "$CXX"; then
-   CXX="CC"
+   CXX="CC -dynamic"
 fi
 
 if test -z "$FLIBS"; then

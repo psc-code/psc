@@ -68,7 +68,7 @@ generate_ggcm_x_grid(struct mrc_crds_gen *gen, double *xx, double *dx,
     //    printf("%d: fak=%g xn1=%g xn=%g\n", k, fak, xn1, gen->xh);
 
     if (xn1 > gen->xh) {
-      if (fabs(xn1 - gen->xh) < 1e-8)
+      if (fabs(xn1 - gen->xh) < 1e-6)
 	      break;
       fak -= s;
       s *= 0.1;

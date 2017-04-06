@@ -4,8 +4,6 @@
 #include <ggcm_mhd_private.h>
 #include <ggcm_mhd_defs.h>
 #include <ggcm_mhd_diag.h>
-#include <mhd_riemann.h>
-#include <mhd_reconstruct.h>
 
 #include <mrc_domain.h>
 #include <mrc_ddc.h>
@@ -13,9 +11,27 @@
 #include <mrc_io.h>
 
 #include <mrc_fld_as_double.h>
-#define F1(f, m, i) MRC_D2(f, m, i)
 
-#include "mhd_1d.c"
+#include "pde/pde_defs.h"
+
+#define OPT_EQN OPT_EQN_MHD_FCONS
+#define OPT_BACKGROUND false
+#define OPT_GET_DT OPT_GET_DT_MHD_CT
+
+// FIXME, temp hack that should be done as not compile-time regular
+// option some time
+#define OPT_DIVB_CT
+
+#include "pde/pde_setup.c"
+#include "pde/pde_mhd_setup.c"
+#include "pde/pde_mhd_line.c"
+#include "pde/pde_mhd_convert.c"
+#include "pde/pde_mhd_reconstruct.c"
+#include "pde/pde_mhd_divb_glm.c"
+#include "pde/pde_mhd_riemann.c"
+#include "pde/pde_mhd_stage.c"
+#include "pde/pde_mhd_get_dt.c"
+
 #include "mhd_3d.c"
 
 
@@ -29,20 +45,18 @@ static int ldims[3];
 // ggcm_mhd_step subclass "vlct"
 
 struct ggcm_mhd_step_vlct {
+  struct mhd_options opt;
+
   bool debug_dump;
 
-  struct mhd_reconstruct *reconstruct_pred;
-  struct mhd_reconstruct *reconstruct_corr;
-  struct mhd_riemann *riemann;
-
-  struct mrc_fld *U_1d;
-  struct mrc_fld *U_l;
-  struct mrc_fld *U_r;
-  struct mrc_fld *W_1d;
-  struct mrc_fld *W_l;
-  struct mrc_fld *W_r;
-  struct mrc_fld *F_1d;
-  struct mrc_fld *Bxi;
+  fld1d_state_t U;
+  fld1d_state_t U_l;
+  fld1d_state_t U_r;
+  fld1d_state_t W;
+  fld1d_state_t W_l;
+  fld1d_state_t W_r;
+  fld1d_state_t F;
+  fld1d_t bx;
 };
 
 #define ggcm_mhd_step_vlct(step) mrc_to_subobj(step, struct ggcm_mhd_step_vlct)
@@ -184,50 +198,49 @@ compute_E(struct ggcm_mhd_step *step, struct mrc_fld *E,
 }
 
 static void
-flux_pred(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld *x, struct mrc_fld *B_cc,
-	  int ldim, int nghost, int j, int k, int dir, int p)
+fluxes_pred(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld *x, struct mrc_fld *B_cc)
 {
   struct ggcm_mhd_step_vlct *sub = ggcm_mhd_step_vlct(step);
-  struct mrc_fld *U_1d = sub->U_1d, *U_l = sub->U_l, *U_r = sub->U_r;
-  struct mrc_fld *W_1d = sub->W_1d, *W_l = sub->W_l, *W_r = sub->W_r;
-  struct mrc_fld *F_1d = sub->F_1d, *Bxi = sub->Bxi;
+  fld1d_state_t U = sub->U, U_l = sub->U_l, U_r = sub->U_r;
+  fld1d_state_t W = sub->W, W_l = sub->W_l, W_r = sub->W_r;
+  fld1d_state_t F = sub->F;
+  fld1d_t bx = sub->bx;
 
-  pick_line_fc(U_1d, Bxi, x, B_cc, ldim, nghost, nghost, j, k, dir, p);
-  mhd_prim_from_fc(step->mhd, W_1d, U_1d, ldim, nghost, nghost);
-  mhd_reconstruct_run(sub->reconstruct_pred, U_l, U_r, W_l, W_r, W_1d, Bxi,
-		      ldim, nghost - 1, nghost, dir);
-  mhd_riemann_run(sub->riemann, F_1d, U_l, U_r, W_l, W_r, ldim, nghost - 1, nghost, dir);
-  put_line_fc(flux[dir], F_1d, ldim, nghost - 1, nghost, j, k, dir, p);
+  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+    pde_for_each_dir(dir) {
+      int ldim = s_ldims[dir];
+      pde_for_each_line(dir, j, k, nghost) {
+	mhd_get_line_state_fcons_ct(U, bx, x, B_cc, j, k, dir, p, -nghost, ldim + nghost);
+	mhd_prim_from_cons(W, U, -nghost, ldim + nghost);
+	mhd_reconstruct_pcm(U_l, U_r, W_l, W_r, W, bx, -(nghost - 1), ldim + nghost);
+	mhd_riemann(F, U_l, U_r, W_l, W_r, -(nghost - 1), ldim + nghost);
+	mhd_put_line_state_fcons_ct(flux[dir], F, j, k, dir, p, -(nghost - 1), ldim + nghost);
+      }
+    }
+  }
 }
 
 static void
-flux_corr(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld *x, struct mrc_fld *B_cc,
-	  int ldim, int nghost, int j, int k, int dir, int p)
+fluxes_corr(struct ggcm_mhd_step *step, struct mrc_fld *flux[3], struct mrc_fld *x, struct mrc_fld *B_cc)
 {
   struct ggcm_mhd_step_vlct *sub = ggcm_mhd_step_vlct(step);
-  struct mrc_fld *U_1d = sub->U_1d, *U_l = sub->U_l, *U_r = sub->U_r;
-  struct mrc_fld *W_1d = sub->W_1d, *W_l = sub->W_l, *W_r = sub->W_r;
-  struct mrc_fld *F_1d = sub->F_1d, *Bxi = sub->Bxi;
+  fld1d_state_t U = sub->U, U_l = sub->U_l, U_r = sub->U_r;
+  fld1d_state_t W = sub->W, W_l = sub->W_l, W_r = sub->W_r;
+  fld1d_state_t F = sub->F;
+  fld1d_t bx = sub->bx;
 
-  pick_line_fc(U_1d, Bxi, x, B_cc, ldim, nghost - 1, nghost - 1, j, k, dir, p);
-  mhd_prim_from_fc(step->mhd, W_1d, U_1d, ldim, nghost - 1, nghost - 1);
-  mhd_reconstruct_run(sub->reconstruct_corr, U_l, U_r, W_l, W_r, W_1d, Bxi,
-		      ldim, 99, 99, dir);
-  mhd_riemann_run(sub->riemann, F_1d, U_l, U_r, W_l, W_r, ldim, 0, 1, dir);
-  put_line_fc(flux[dir], F_1d, ldim, 0, 1, j, k, dir, p);
-}
-
-// ----------------------------------------------------------------------
-// ggcm_mhd_step_vlct_create
-
-static void
-ggcm_mhd_step_vlct_create(struct ggcm_mhd_step *step)
-{
-  struct ggcm_mhd_step_vlct *sub = ggcm_mhd_step_vlct(step);
-
-  mhd_reconstruct_set_type(sub->reconstruct_pred, "pcm_double");
-  mhd_reconstruct_set_type(sub->reconstruct_corr, "plm_double");
-  mhd_riemann_set_type(sub->riemann, "hll");
+  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+    pde_for_each_dir(dir) {
+      int ldim = s_ldims[dir];
+      pde_for_each_line(dir, j, k, 1) {
+	mhd_get_line_state_fcons_ct(U, bx, x, B_cc, j, k, dir, p, - (nghost - 1), ldim + (nghost - 1));
+	mhd_prim_from_cons(W, U, - (nghost - 1), ldim + (nghost - 1));
+	mhd_reconstruct(U_l, U_r, W_l, W_r, W, bx, 0, ldim + 1);
+	mhd_riemann(F, U_l, U_r, W_l, W_r, 0, ldim + 1);
+	mhd_put_line_state_fcons_ct(flux[dir], F, j, k, dir, p, 0, ldim + 1);
+      }
+    }
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -239,20 +252,20 @@ ggcm_mhd_step_vlct_setup(struct ggcm_mhd_step *step)
   struct ggcm_mhd_step_vlct *sub = ggcm_mhd_step_vlct(step);
   struct ggcm_mhd *mhd = step->mhd;
 
-  mhd_reconstruct_set_param_obj(sub->reconstruct_pred, "mhd", mhd);
-  mhd_reconstruct_set_param_obj(sub->reconstruct_corr, "mhd", mhd);
-  mhd_riemann_set_param_obj(sub->riemann, "mhd", mhd);
+  pde_setup(mhd->fld);
+  pde_mhd_setup(mhd);
 
-  setup_mrc_fld_1d(sub->U_1d, mhd->fld, 8);
-  setup_mrc_fld_1d(sub->U_l , mhd->fld, 8);
-  setup_mrc_fld_1d(sub->U_r , mhd->fld, 8);
-  setup_mrc_fld_1d(sub->W_1d, mhd->fld, 8);
-  setup_mrc_fld_1d(sub->W_l , mhd->fld, 8);
-  setup_mrc_fld_1d(sub->W_r , mhd->fld, 8);
-  setup_mrc_fld_1d(sub->F_1d, mhd->fld, 8);
-  setup_mrc_fld_1d(sub->Bxi, mhd->fld, 1);
+  fld1d_state_setup(&sub->U);
+  fld1d_state_setup(&sub->U_l);
+  fld1d_state_setup(&sub->U_r);
+  fld1d_state_setup(&sub->W);
+  fld1d_state_setup(&sub->W_l);
+  fld1d_state_setup(&sub->W_r);
+  fld1d_state_setup(&sub->F);
+  fld1d_setup(&sub->bx);
 
   mhd->ymask = ggcm_mhd_get_3d_fld(mhd, 1);
+  mrc_fld_set(mhd->ymask, 1.);
 
   ggcm_mhd_step_setup_member_objs_sub(step);
 }
@@ -266,6 +279,8 @@ ggcm_mhd_step_vlct_destroy(struct ggcm_mhd_step *step)
   struct ggcm_mhd *mhd = step->mhd;
 
   ggcm_mhd_put_3d_fld(mhd, mhd->ymask);
+
+  pde_free();
 }
 
 // ----------------------------------------------------------------------
@@ -323,7 +338,7 @@ compute_Ediffu_const(struct ggcm_mhd_step *step, struct mrc_fld *E_ec,
     } mrc_fld_foreach_end;
   }
 
-  mrc_fld_data_t eta = mhd->par.diffco / mhd->par.resnorm;
+  mrc_fld_data_t eta = mhd->par.diffco / mhd->resnorm;
   mrc_fld_data_t d_i = mhd->par.d_i;
 
   for (int p = 0; p < mrc_fld_nr_patches(E_ec); p++) {
@@ -387,103 +402,12 @@ compute_Ediffu_const(struct ggcm_mhd_step *step, struct mrc_fld *E_ec,
 }
 
 // ----------------------------------------------------------------------
-// newstep_fc
+// ggcm_mhd_step_vlct_get_dt
 
-// FIXME, take into account resistivity
-// FIXME, rework
-
-static mrc_fld_data_t
-newstep_fc(struct ggcm_mhd *mhd, struct mrc_fld *x, struct mrc_fld *Bcc)
+static double
+ggcm_mhd_step_vlct_get_dt(struct ggcm_mhd_step *step, struct mrc_fld *x)
 {
-  mrc_fld_data_t qsq,asq,cf1sq,cf2sq,cf3sq;
-  mrc_fld_data_t b1,b2,b3,bsq,tsum,tdif;
-  mrc_fld_data_t max_v1=0.0,max_v2=0.0,max_v3=0.0,max_dti = 0.0;
-
-  mrc_fld_data_t gamma = mhd->par.gamm;
-  mrc_fld_data_t gamma_minus_1 = gamma - 1.;
-  
-  mrc_fld_data_t d_i = mhd->par.d_i;
-
-  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-
-  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
-    double dx[3]; mrc_crds_get_dx(crds, p, dx);
-
-    mrc_fld_foreach(x, i,j,k, 0, 0) {
-      mrc_fld_data_t rri = 1.f / RR_(x, i,j,k, p);
-      mrc_fld_data_t vx = RVX_(x, i,j,k, p) * rri;
-      mrc_fld_data_t vy = RVY_(x, i,j,k, p) * rri;
-      mrc_fld_data_t vz = RVZ_(x, i,j,k, p) * rri;
-      qsq = sqr(vx) + sqr(vy) + sqr(vz);
-      
-      /* Use maximum of face-centered fields (always larger than cell-centered B) */
-      b1 = M3(Bcc, 0, i,j,k, p) + fabs(BX_(x, i,j,k, p) - M3(Bcc, 0, i,j,k, p));
-      b2 = M3(Bcc, 1, i,j,k, p) + fabs(BY_(x, i,j,k, p) - M3(Bcc, 1, i,j,k, p));
-      b3 = M3(Bcc, 2, i,j,k, p) + fabs(BZ_(x, i,j,k, p) - M3(Bcc, 2, i,j,k, p));
-      bsq = sqr(b1) + sqr(b2) + sqr(b3);
-      /* compute sound speed squared */
-      mrc_fld_data_t pp = fmax(gamma_minus_1*(EE_(x, i,j,k, p) - .5f*RR_(x, i,j,k, p)*qsq
-					      - .5f*bsq), TINY_NUMBER);
-      asq = gamma * pp * rri;
-      
-      /* compute fast magnetosonic speed squared in each direction */
-      tsum = bsq * rri + asq;
-      tdif = bsq * rri - asq;
-      cf1sq = 0.5*(tsum + sqrt(tdif*tdif + 4.0*asq*(b2*b2+b3*b3) * rri));
-      cf2sq = 0.5*(tsum + sqrt(tdif*tdif + 4.0*asq*(b1*b1+b3*b3) * rri));
-      cf3sq = 0.5*(tsum + sqrt(tdif*tdif + 4.0*asq*(b1*b1+b2*b2) * rri));
-      
-      /* compute maximum inverse dt (corresponding to minimum dt) */
-      max_v1 = fmax(max_v1, (fabs(vx) + sqrt(cf1sq)) / dx[0]);
-      max_v2 = fmax(max_v2, (fabs(vy) + sqrt(cf2sq)) / dx[1]);
-      max_v3 = fmax(max_v3, (fabs(vz) + sqrt(cf3sq)) / dx[2]);
-    } mrc_fld_foreach_end;
-  }
-
-  int gdims[3];
-  mrc_domain_get_global_dims(x->_domain, gdims);
-
-  if (gdims[0] > 1) max_dti = fmax(max_dti, max_v1);
-  if (gdims[1] > 1) max_dti = fmax(max_dti, max_v2);
-  if (gdims[2] > 1) max_dti = fmax(max_dti, max_v3);
-
-  mrc_fld_data_t cfl = mhd->par.thx;
-  mrc_fld_data_t local_dt = cfl / max_dti;
-  mrc_fld_data_t global_dt;
-  MPI_Allreduce(&local_dt, &global_dt, 1, MPI_MRC_FLD_DATA_T, MPI_MIN, ggcm_mhd_comm(mhd));
-
-  // FOR diffusive portion of everything
-  if (d_i > 0.0) {
-    mrc_fld_data_t local_diff_dt, global_diff_dt;
-    mrc_fld_data_t max_dti_diff = 0.0;
-
-    for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
-      double dx[3]; mrc_crds_get_dx(crds, p, dx);
-
-      mrc_fld_foreach(x, i,j,k, 0, 0) {
-	mrc_fld_data_t dxmin, dti_hall;
-
-	dxmin = mrc_fld_min(dx[0], mrc_fld_min(dx[1], dx[2]));
-	
-	// FIXME: this could be streamlined by using the loop above, but
-	//        keeping them separate is exactly analogous to athena
-	/* Use maximum of face-centered fields (always larger than cell-centered B) */
-	b1 = M3(Bcc, 0, i,j,k, p) + fabs(BX_(x, i,j,k, p) - M3(Bcc, 0, i,j,k, p));
-	b2 = M3(Bcc, 1, i,j,k, p) + fabs(BY_(x, i,j,k, p) - M3(Bcc, 1, i,j,k, p));
-	b3 = M3(Bcc, 2, i,j,k, p) + fabs(BZ_(x, i,j,k, p) - M3(Bcc, 2, i,j,k, p));
-	bsq = sqr(b1) + sqr(b2) + sqr(b3);
-	
-	// FIXME? in athena it was (dxmin**2 / 6), but i don't think that's right?
-	dti_hall = (d_i * bsq / RR_(x, i,j,k, p)) / (sqr(dxmin) / 16.0);
-	max_dti_diff = mrc_fld_max(max_dti_diff, dti_hall);
-      } mrc_fld_foreach_end;
-    }
-    local_diff_dt = cfl / max_dti_diff;
-    MPI_Allreduce(&local_diff_dt, &global_diff_dt, 1, MPI_MRC_FLD_DATA_T, MPI_MIN, ggcm_mhd_comm(mhd));
-    global_dt = mrc_fld_min(global_dt, global_diff_dt);
-  }
-
-  return global_dt;
+  return pde_mhd_get_dt(step->mhd, x);
 }
 
 // ----------------------------------------------------------------------
@@ -506,42 +430,15 @@ ggcm_mhd_step_vlct_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 			      ggcm_mhd_get_3d_fld(mhd, 8),
 			      ggcm_mhd_get_3d_fld(mhd, 8), };
 
-  // CFL CONDITION
-
+  // FIXME, this is done in get_dt, and redoing it could be avoided
   ggcm_mhd_fill_ghosts(mhd, x, 0, mhd->time);
-
-  compute_B_cc(B_cc, x, 3, 3);
-  if (step->do_nwst) {
-    double old_dt = mhd->dt;
-    mhd->dt = newstep_fc(mhd, x, B_cc);
-    if (mhd->dt != old_dt) {
-      mpi_printf(ggcm_mhd_comm(mhd), "switched dt %g <- %g\n", mhd->dt, old_dt);
-      
-      // FIXME: determining when to die on a bad dt should be generalized, since
-      //        there's another hiccup if refining dt for actual AMR
-      bool first_step = mhd->istep <= 1;
-      bool last_step = mhd->time + mhd->dt > (1.0 - 1e-5) * mhd->max_time;
-      
-      if (!first_step && !last_step && mhd->dt < mhd->par.dtmin) {
-        mpi_printf(ggcm_mhd_comm(mhd), "!!! dt < dtmin. Dying now!\n");
-        mpi_printf(ggcm_mhd_comm(mhd), "!!! dt %g -> %g, dtmin = %g\n",
-                   old_dt, mhd->dt, mhd->par.dtmin);
-        ggcm_mhd_wrongful_death(mhd, mhd->fld, -1);
-      }
-
-      if (!first_step && !last_step &&
-          (mhd->dt < 0.5 * old_dt || mhd->dt > 2.0 * old_dt)) {
-        mpi_printf(ggcm_mhd_comm(mhd), "!!! dt changed by > a factor of 2. "
-                   "Dying now!\n");
-        ggcm_mhd_wrongful_death(mhd, mhd->fld, 2);
-      }
-    }
-  }
 
   mrc_fld_data_t dt = mhd->dt;
 
   // resistivity
 
+  // FIXME, this is done in get_dt, and redoing it could be avoided
+  compute_B_cc(B_cc, x, 3, 3);
   if (mhd->par.magdiffu == MAGDIFFU_CONST) {
     if (mhd->par.diffco > 0.) {
       compute_Ediffu_const(step, E_ec, x, B_cc);
@@ -573,9 +470,32 @@ ggcm_mhd_step_vlct_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
     ggcm_mhd_diag_run_now(diag, x, DIAG_TYPE_3D, cnt++);
   }
 
+  fld3d_t _x_half, _x, ymask, _flux[3];
+  fld3d_setup(&_x_half, x_half);
+  fld3d_setup(&_x, x);
+  fld3d_setup(&ymask, mhd->ymask);
+  for (int d = 0; d < 3; d++) {
+    fld3d_setup(&_flux[d], flux[d]);
+  }
+
   mrc_fld_copy_range(x_half, x, 0, 8);
-  mhd_fluxes(step, flux, x, B_cc, nghost, nghost, flux_pred);
-  update_finite_volume_uniform(mhd, x_half, flux, mhd->ymask, .5 * dt, nghost - 1, nghost - 1, false);
+  fluxes_pred(step, flux, x, B_cc);
+  for (int p = 0; p < mrc_fld_nr_patches(x_half); p++) {
+    pde_patch_set(p);
+    fld3d_get(&_x_half, p);
+    fld3d_get(&ymask, p);
+    for (int d = 0; d < 3; d++) {
+      fld3d_get(&_flux[d], p);
+    }
+
+    mhd_update_finite_volume(mhd, _x_half, _flux, ymask, .5 * dt, nghost - 1, nghost - 1);
+
+    fld3d_put(&_x_half, p);
+    fld3d_put(&ymask, p);
+    for (int d = 0; d < 3; d++) {
+      fld3d_get(&_flux[d], p);
+    }
+  }
   compute_E(step, E_ec, x, B_cc, flux, 4);
   ggcm_mhd_fill_ghosts_E(mhd, E_ec);
   update_ct_uniform(mhd, x_half, E_ec, .5 * dt, nghost - 1, nghost - 1, false);
@@ -583,8 +503,24 @@ ggcm_mhd_step_vlct_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
   // CORRECTOR
 
   compute_B_cc(B_cc, x_half, nghost - 1, nghost - 1);
-  mhd_fluxes(step, flux, x_half, B_cc, 1, nghost, flux_corr);
-  update_finite_volume_uniform(mhd, x, flux, mhd->ymask, dt, 0, 0, true);
+  fluxes_corr(step, flux, x_half, B_cc);
+  ggcm_mhd_correct_fluxes(mhd, flux);
+  for (int p = 0; p < mrc_fld_nr_patches(x); p++) {
+    pde_patch_set(p);
+    fld3d_get(&_x, p);
+    fld3d_get(&ymask, p);
+    for (int d = 0; d < 3; d++) {
+      fld3d_get(&_flux[d], p);
+    }
+
+    mhd_update_finite_volume(mhd, _x, _flux, ymask, dt, 0, 0);
+
+    fld3d_put(&_x, p);
+    fld3d_put(&ymask, p);
+    for (int d = 0; d < 3; d++) {
+      fld3d_put(&_flux[d], p);
+    }
+  }
   compute_E(step, E_ec, x_half, B_cc, flux, 4);
   ggcm_mhd_fill_ghosts_E(mhd, E_ec);
   update_ct_uniform(mhd, x, E_ec, dt, 0, 0, true);
@@ -605,7 +541,10 @@ ggcm_mhd_step_vlct_run(struct ggcm_mhd_step *step, struct mrc_fld *x)
 static void
 ggcm_mhd_step_vlct_setup_flds(struct ggcm_mhd_step *step)
 {
+  struct ggcm_mhd_step_vlct *sub = ggcm_mhd_step_vlct(step);
   struct ggcm_mhd *mhd = step->mhd;
+
+  pde_mhd_set_options(mhd, &sub->opt);
 
   mrc_fld_set_type(mhd->fld, FLD_TYPE);
   mrc_fld_set_param_int(mhd->fld, "nr_ghosts", 4);
@@ -654,7 +593,7 @@ ggcm_mhd_step_vlct_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
   }
 
   // Do convective term using the apprepriate fluxes to go cc -> ec
-  mhd_fluxes(step, flux, x, B_cc, nghost, nghost, flux_pred);
+  fluxes_pred(step, flux, x, B_cc);
   compute_E(step, Econv, x, B_cc, flux, 2);
 
   // add both electric fields together (glue the operators together)
@@ -684,20 +623,17 @@ ggcm_mhd_step_vlct_get_e_ec(struct ggcm_mhd_step *step, struct mrc_fld *Eout,
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_step_vlct, x)
 static struct param ggcm_mhd_step_vlct_descr[] = {
-  { "debug_dump"      , VAR(debug_dump)      , PARAM_BOOL(false)            },
+  { "eqn"                , VAR(opt.eqn)            , PARAM_SELECT(OPT_EQN,
+								  opt_eqn_descr)                },
+  { "limiter"            , VAR(opt.limiter)        , PARAM_SELECT(OPT_LIMITER_GMINMOD,
+								  opt_limiter_descr)            },
+  { "riemann"            , VAR(opt.riemann)        , PARAM_SELECT(OPT_RIEMANN_HLL,
+								  opt_riemann_descr)            },
+  { "get_dt"             , VAR(opt.get_dt)         , PARAM_SELECT(OPT_GET_DT,
+								  opt_get_dt_descr)             },
+  { "background"         , VAR(opt.background)     , PARAM_BOOL(false)                          },
 
-  { "reconstruct_pred", VAR(reconstruct_pred), MRC_VAR_OBJ(mhd_reconstruct) },
-  { "reconstruct_corr", VAR(reconstruct_corr), MRC_VAR_OBJ(mhd_reconstruct) },
-  { "riemann"         , VAR(riemann)         , MRC_VAR_OBJ(mhd_riemann)     },
-
-  { "U_1d"            , VAR(U_1d)            , MRC_VAR_OBJ(mrc_fld)         },
-  { "U_l"             , VAR(U_l)             , MRC_VAR_OBJ(mrc_fld)         },
-  { "U_r"             , VAR(U_r)             , MRC_VAR_OBJ(mrc_fld)         },
-  { "W_1d"            , VAR(W_1d)            , MRC_VAR_OBJ(mrc_fld)         },
-  { "W_l"             , VAR(W_l)             , MRC_VAR_OBJ(mrc_fld)         },
-  { "W_r"             , VAR(W_r)             , MRC_VAR_OBJ(mrc_fld)         },
-  { "F_1d"            , VAR(F_1d)            , MRC_VAR_OBJ(mrc_fld)         },
-  { "Bxi"             , VAR(Bxi)             , MRC_VAR_OBJ(mrc_fld)         },
+  { "debug_dump"         , VAR(debug_dump)         , PARAM_BOOL(false)                          },
   {},
 };
 #undef VAR
@@ -709,11 +645,11 @@ struct ggcm_mhd_step_ops ggcm_mhd_step_vlct_ops = {
   .name             = "vlct",
   .size             = sizeof(struct ggcm_mhd_step_vlct),
   .param_descr      = ggcm_mhd_step_vlct_descr,
-  .create           = ggcm_mhd_step_vlct_create,
   .setup            = ggcm_mhd_step_vlct_setup,
   .destroy          = ggcm_mhd_step_vlct_destroy,
   .run              = ggcm_mhd_step_vlct_run,
   .setup_flds       = ggcm_mhd_step_vlct_setup_flds,
   .get_e_ec         = ggcm_mhd_step_vlct_get_e_ec,
+  .get_dt           = ggcm_mhd_step_vlct_get_dt,
 };
 

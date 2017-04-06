@@ -17,6 +17,8 @@ struct mrc_ts {
   float dt; // current dt
   struct mrc_obj *x; // current state vector
   struct mrc_obj *ctx_obj;
+  void *get_dt_f_ctx;
+  double (*get_dt_f)(void *ctx, struct mrc_ts *ts, struct mrc_obj *x);
   void *rhsf_ctx;
   void (*rhsf)(void *ctx, struct mrc_obj *rhs, float time, struct mrc_obj *x);
   struct mrc_obj *stepf_ctx;

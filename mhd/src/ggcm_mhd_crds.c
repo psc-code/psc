@@ -3,7 +3,6 @@
 
 #include "ggcm_mhd_defs.h"
 #include "ggcm_mhd_private.h"
-#include "ggcm_mhd_crds_gen.h"
 
 #include <mrc_fld.h>
 #include <mrc_domain.h>
@@ -48,6 +47,71 @@ _ggcm_mhd_crds_create(struct ggcm_mhd_crds *crds)
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_crds_set_from_mrc_crds
+//
+// initializes the ggcm_mhd_crds arrays form mrc_crds
+
+void
+ggcm_mhd_crds_set_from_mrc_crds(struct ggcm_mhd_crds *crds)
+{
+  struct mrc_crds *mrc_crds = mrc_domain_get_crds(crds->domain);
+
+  for (int p = 0; p < mrc_domain_nr_patches(crds->domain); p++) {
+    struct mrc_patch_info info;
+    mrc_domain_get_local_patch_info(crds->domain, p, &info);
+    int *ldims = info.ldims;
+    for (int d = 0; d < 3; d++) {
+      // yes, these are labeled with 'x', but we loop over all dimensions here
+      float *fxx1 = ggcm_mhd_crds_get_crd_p(crds, d, FX1, p);
+      float *fdx1 = ggcm_mhd_crds_get_crd_p(crds, d, FD1, p);
+      float *fxx2 = ggcm_mhd_crds_get_crd_p(crds, d, FX2, p);
+      float *bdx1 = ggcm_mhd_crds_get_crd_p(crds, d, BD1, p);
+      float *bdx2 = ggcm_mhd_crds_get_crd_p(crds, d, BD2, p);
+      float *bdx3 = ggcm_mhd_crds_get_crd_p(crds, d, BD3, p);
+      float *bdx4 = ggcm_mhd_crds_get_crd_p(crds, d, BD4, p);
+      int sw = mrc_crds->sw;
+      
+      for (int i = -sw; i < ldims[d] + sw; i++) {
+	fxx1[i] = MRC_DMCRD(mrc_crds, d, i, p);
+      }
+      
+      // have to move one in on both sides
+      for (int i = -sw + 1; i < ldims[d] + sw - 1; i++) {
+	if (crds->legacy_fd1) {
+	  int off = info.off[d];
+	  fdx1[i] = 1.f / MRC_D2(mrc_crds->global_crd[d], i + off, 1);
+	} else {
+	  fdx1[i] = 1.f / (.5f * (MRC_DMCRD(mrc_crds, d, i+1, p) - MRC_DMCRD(mrc_crds, d, i-1, p)));
+	}
+      }
+
+      for (int i = -sw; i < ldims[d] + sw; i++) {
+	fxx2[i] = sqr(MRC_DMCRD(mrc_crds, d, i, p));
+      }
+
+      for (int i = -sw; i < ldims[d] + sw - 1; i++) {
+	bdx1[i] = 1.f / (MRC_DMCRD(mrc_crds, d, i+1, p) - MRC_DMCRD(mrc_crds, d, i, p));
+	bdx4[i] = 1.f / (MRC_DMCRD(mrc_crds, d, i+1, p) - MRC_DMCRD(mrc_crds, d, i, p));
+      }
+
+      for (int i = -sw; i < ldims[d] + sw; i++) {
+	bdx2[i] = MRC_DMCRD_NC(mrc_crds, d, i+1, p) - MRC_DMCRD_NC(mrc_crds, d, i, p);
+	bdx3[i] = 1.f / bdx2[i];
+      }
+    }
+  }
+
+  if (strcmp(mrc_domain_type(crds->domain), "simple") == 0) {
+    for (int d = 0; d < 3; d++) {
+      struct mrc_fld *global_x = crds->global_f1[d];
+      mrc_f1_foreach(global_x, i, 1, 1) {
+	MRC_F1(global_x, 0, i) = MRC_D2(mrc_crds->global_crd[d], i, 0);
+      } mrc_f1_foreach_end;
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_crds_setup
 
 static void
@@ -68,34 +132,18 @@ _ggcm_mhd_crds_setup(struct ggcm_mhd_crds *crds)
     }
     mrc_fld_setup(crds->f1[d]);
 
+    // global crds
     mrc_fld_set_param_int_array(crds->global_f1[d], "dims", 1, (int[1]) { gdims[d] });
-    mrc_fld_set_param_int_array(crds->global_f1[d], "sw"  , 1, (int[1]) { mrc_crds->sw });
+    // because the corresponding Fortran array has 1 ghost point, this one is the same
+    mrc_fld_set_param_int_array(crds->global_f1[d], "sw", 1, (int[1]) { 1 });
     mrc_fld_setup(crds->global_f1[d]);
   }
 
-  // set up values for Fortran coordinate arrays
-  assert(crds->crds_gen);
-  ggcm_mhd_crds_gen_run(crds->crds_gen, crds);
+  // set values from mrc_crds
+  ggcm_mhd_crds_set_from_mrc_crds(crds);
 
   if (strcmp(mrc_crds_type(mrc_crds), "amr_uniform") == 0) {
-    mprintf("WARNING: ggcm_mhd_crds doesn't handle 'amr' domains yet!!!\n");
-    return;
-  }
-  if (mrc_fld_nr_patches(mrc_crds->crd[0]) != 1) {
-    mprintf("WARNING: ggcm_mhd_crds doesn't handle 'multi' domains yet!!!\n");
-    return;
-  }
-
-  // set up mrc_crds
-  struct mrc_patch_info info;
-  mrc_domain_get_local_patch_info(crds->domain, 0, &info);
-  
-  for (int d = 0; d < 3; d++) {
-    memcpy(mrc_crds->crd[d]->_arr, ggcm_mhd_crds_get_crd(crds, d, FX1) - mrc_crds->sw,
-	   mrc_crds->crd[d]->_len * sizeof(float));
-    
-    memcpy(mrc_crds->global_crd[d]->_arr, ggcm_mhd_crds_get_global_crd(crds, d) - mrc_crds->sw,
-	   mrc_crds->crd[d]->_len * sizeof(float));
+    mprintf("WARNING: ggcm_mhd_crds doesn't handle 'amr' global coord arrays!!!\n");
   }
 }
 
@@ -198,9 +246,8 @@ ggcm_mhd_crds_init()
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_crds, x)
 static struct param ggcm_mhd_crds_descr[] = {
+  { "legacy_fd1"      , VAR(legacy_fd1)     , PARAM_BOOL(false)              },
   { "domain"          , VAR(domain)         , PARAM_OBJ(mrc_domain)          },
-
-  { "crds_gen"        , VAR(crds_gen)       , MRC_VAR_OBJ(ggcm_mhd_crds_gen) },
   {},
 };
 #undef VAR
