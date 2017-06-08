@@ -37,7 +37,7 @@ struct psc_push_particles_ops psc_push_particles_1vb_4x4_cuda_ops = {
   /* psc_push_particles: subclass "1vbec3d_BYxBZ_MEM_cuda"    	     */	\
   									\
   static void								\
-  psc_push_particles_1vbec3d_ ##BY## x ##BZ## ##MEM## _cuda_push_mprts_yz \
+  psc_push_particles_1vbec3d_ ##BY## x ##BZ## MEM## _cuda_push_mprts_yz \
   (struct psc_push_particles *push, struct psc_mparticles *mprts,	\
    struct psc_mfields *mflds_base)					\
   {									\
@@ -54,9 +54,9 @@ struct psc_push_particles_ops psc_push_particles_1vb_4x4_cuda_ops = {
   /* psc_push_particles: subclass "1vbec3d_BYxBZ_MEM_cuda"           */ \
 									\
   struct psc_push_particles_ops						\
-  psc_push_particles_1vbec3d_ ##BY## x ##BZ## ##MEM## _cuda_ops = {	\
+  psc_push_particles_1vbec3d_ ##BY## x ##BZ## MEM## _cuda_ops = {	\
     .name                  = "1vbec3d_" #BY "x" #BZ #MEM "_cuda",	\
-    .push_mprts_yz         = psc_push_particles_1vbec3d_ ##BY## x ##BZ## ##MEM## _cuda_push_mprts_yz, \
+    .push_mprts_yz         = psc_push_particles_1vbec3d_ ##BY## x ##BZ## MEM## _cuda_push_mprts_yz, \
     .mp_flags              = MP_NEED_BLOCK_OFFSETS | MP_BS | MP_NO_CHECKERBOARD, \
   };
 

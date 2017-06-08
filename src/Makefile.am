@@ -30,7 +30,9 @@ bin_PROGRAMS = \
 
 LDADD = libpsc/libpsc.la libmrc/src/libmrc.la
 
-# HACK to have automake use the CXX linker 
+# HACK to have automake use the CXX linker
+nodist_EXTRA_psc_shear_SOURCES = dummy.cxx
+nodist_EXTRA_psc_turbulence_SOURCES = dummy.cxx
 nodist_EXTRA_psc_es1_SOURCES = dummy.cxx
 nodist_EXTRA_psc_em_wave_SOURCES = dummy.cxx
 nodist_EXTRA_psc_shocks_SOURCES = dummy.cxx
@@ -51,5 +53,6 @@ nodist_EXTRA_psc_test_twoparticles_SOURCES = dummy.cxx
 nodist_EXTRA_psc_test_heating_SOURCES = dummy.cxx
 nodist_EXTRA_psc_test_fdtd_SOURCES = dummy.cxx
 nodist_EXTRA_psc_test_lb_SOURCES = dummy.cxx
+nodist_EXTRA_psc_test_open_SOURCES = dummy.cxx
 
 

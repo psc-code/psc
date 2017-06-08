@@ -47,8 +47,8 @@ do_rho_run(int p, struct psc_fields *pf, struct psc_particles *prts)
 #endif
 
 static void
-rho_run_patches(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-		struct psc_mparticles *mprts_base, struct psc_mfields *mres_base)
+rho_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
+	    struct psc_mparticles *mprts_base, struct psc_mfields *mres_base)
 {
   struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, "cuda", 0);
   struct psc_mfields *mres = psc_mfields_get_as(mres_base, "cuda", 0, 0);
@@ -67,7 +67,7 @@ struct psc_output_fields_item_ops psc_output_fields_item_rho_1st_nc_cuda_ops = {
   .name               = "rho_1st_nc_cuda",
   .nr_comp            = 1,
   .fld_names          = { "rho_nc_cuda" }, // FIXME
-  .run_patches        = rho_run_patches,
+  .run_all            = rho_run_all,
   .flags              = POFI_ADD_GHOSTS,
 };
 

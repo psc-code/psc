@@ -1040,7 +1040,7 @@ __fields_cuda_fill_ghosts_setup(struct psc_mfields *mflds, struct mrc_ddc *ddc)
   int nr_patches = mflds->nr_patches;
 
   if (!mflds_cuda->h_nei_patch) {
-    struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
+    struct mrc_ddc_multi *multi = mrc_ddc_multi(ddc);
     struct mrc_ddc_pattern2 *patt2 = &multi->fill_ghosts2;
     struct mrc_ddc_rank_info *ri = patt2->ri;
 

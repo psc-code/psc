@@ -117,4 +117,6 @@ struct mrc_ddc_multi {
   struct mrc_ddc_pattern2 *fill_ghosts[MAX_NR_GHOSTS + 1];
 };
 
+#define mrc_ddc_multi(ddc) mrc_to_subobj(ddc, struct mrc_ddc_multi)
+
 #endif
