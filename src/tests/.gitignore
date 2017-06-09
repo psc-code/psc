@@ -11,4 +11,6 @@ test_part_yz_a
 test_part_yz_b
 test_part_z
 test_sort
+test_cuda_mparticles
+thrust1
 *.trs

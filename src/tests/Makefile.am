@@ -23,6 +23,22 @@ noinst_PROGRAMS = \
 	test_exchange_particles \
 	test_sort
 
+if USE_CUDA
+
+noinst_PROGRAMS += \
+	test_cuda_mparticles \
+	thrust1
+
+test_cuda_mparticles_SOURCES =
+test_cuda_mparticles_LDADD = test_cuda_mparticles.lo
+nodist_EXTRA_test_cuda_mparticles_SOURCES = dummy.cxx
+
+thrust1_SOURCES =
+thrust1_LDADD = thrust1.lo
+nodist_EXTRA_thrust1_SOURCES = dummy.cxx
+
+endif
+
 TESTS = test_part_yz_fortran.sh \
 	test_part_yz_generic_c.sh \
 	test_part_yz_1st.sh \
@@ -50,6 +66,16 @@ if USE_SSE2
 TESTS += \
 	test_part_yz_sse2.sh
 endif
+
+CUDACC_FLAGS = -g --ptxas-options=-v --use_fast_math
+
+%.lo: %.cu $(CUDA_DEPS)
+	@echo "Tricking libtool"
+	echo "void lotrickdummy() {}" > dummy.c
+	$(LTCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ dummy.c
+	rm ${@:.lo=.o}
+	rm dummy.c
+	$(CUDACC) $(CUDACC_FLAGS) -c $< -o ${@:.lo=.o} || rm -f $@
 
 # HACK to have automake use the CXX linker 
 nodist_EXTRA_test_psc_mparticles_SOURCES = dummy.cxx
