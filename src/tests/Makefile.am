@@ -30,7 +30,7 @@ noinst_PROGRAMS += \
 	thrust1
 
 test_cuda_mparticles_SOURCES =
-test_cuda_mparticles_LDADD = test_cuda_mparticles.lo
+test_cuda_mparticles_LDADD = test_cuda_mparticles.lo cuda_mparticles.lo
 nodist_EXTRA_test_cuda_mparticles_SOURCES = dummy.cxx
 
 thrust1_SOURCES =
@@ -67,7 +67,8 @@ TESTS += \
 	test_part_yz_sse2.sh
 endif
 
-CUDACC_FLAGS = -g --ptxas-options=-v --use_fast_math
+CUDA_DEPS = cuda_mparticles.h
+CUDACC_FLAGS = -g --ptxas-options=-v --use_fast_math -arch=sm_30
 
 %.lo: %.cu $(CUDA_DEPS)
 	@echo "Tricking libtool"
