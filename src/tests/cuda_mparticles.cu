@@ -22,8 +22,9 @@ cuda_mparticles_set_domain_info(struct cuda_mparticles *cuda_mprts,
     cuda_mprts->dx[d] = info->dx[d];
     cuda_mprts->b_dxi[d] = 1.f / (info->bs[d] * info->dx[d]);
   }
-  cuda_mprts->nr_blocks = info->nr_patches *
+  cuda_mprts->nr_blocks_per_patch =
     cuda_mprts->b_mx[0] * cuda_mprts->b_mx[1] * cuda_mprts->b_mx[2];
+  cuda_mprts->nr_blocks = info->nr_patches * cuda_mprts->nr_blocks_per_patch;
 }
 
 // ----------------------------------------------------------------------

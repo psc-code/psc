@@ -31,6 +31,7 @@ struct cuda_mparticles {
   unsigned int nr_prts;     // total # of particles in all patches
   unsigned int nr_alloced;  // arrays are alloced for this # of particles
   unsigned int nr_patches;
+  unsigned int nr_blocks_per_patch;
   unsigned int nr_blocks;
   int mx[3];      // number of cells per direction in each patch
   int b_mx[3];    // number of blocks per direction in each patch
