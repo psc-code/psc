@@ -205,6 +205,7 @@ cuda_mparticles_find_block_indices_ids_total(struct cuda_mparticles *cuda_mprts,
 							    cuda_mprts->d_bidx,
 							    cuda_mprts->d_id,
 							    cuda_mprts->nr_patches);
+  cuda_sync_if_enabled();
   cuda_params_free(&prm);
 }
 
@@ -255,6 +256,7 @@ cuda_mparticles_reorder_and_offsets(struct cuda_mparticles *cuda_mprts)
 						   cuda_mprts->d_alt_xi4, cuda_mprts->d_alt_pxi4,
 						   cuda_mprts->d_bidx, cuda_mprts->d_id,
 						   cuda_mprts->d_off, cuda_mprts->nr_blocks);
+  cuda_sync_if_enabled();
 
   cuda_mparticles_swap_alt(cuda_mprts);
 }

@@ -8,6 +8,12 @@
     assert(ierr == cudaSuccess);					\
   } while(0)
 
+#define cuda_sync_if_enabled() do {					\
+    if (1) {								\
+      cudaError_t ierr = cudaThreadSynchronize(); cudaCheck(ierr);	\
+    }									\
+  } while(0)
+
 // ----------------------------------------------------------------------
 // cuda_domain_info
 
