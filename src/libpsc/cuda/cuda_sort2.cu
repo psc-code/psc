@@ -1,17 +1,17 @@
 
-#undef _GLIBCXX_USE_INT128
-
-#include "cuda_sort2.h"
-#include "cuda_sort2_spine.h"
-#include "particles_cuda.h"
-
-#include <mrc_profile.h>
-
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
 #include <thrust/sequence.h>
 #include <thrust/scan.h>
 #include <thrust/sort.h>
+
+//#undef _GLIBCXX_USE_INT128
+
+#include "cuda_sort2.h"
+//#include "cuda_sort2_spine.h"
+#include "particles_cuda.h"
+
+#include <mrc_profile.h>
 
 #if 0
 
