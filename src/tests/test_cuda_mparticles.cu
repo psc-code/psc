@@ -51,7 +51,7 @@ cuda_mparticles_add_particles_test_1(struct cuda_mparticles *cuda_mprts,
 }
 
 static int
-get_block_idx(struct cuda_mparticles *cuda_mprts, int n)
+get_block_idx(struct cuda_mparticles *cuda_mprts, int n, int p)
 {
   thrust::device_ptr<float4> d_xi4(cuda_mprts->d_xi4);
   float *b_dxi = cuda_mprts->b_dxi;
@@ -65,7 +65,7 @@ get_block_idx(struct cuda_mparticles *cuda_mprts, int n)
   if (block_pos_y >= b_mx[1] || block_pos_z >= b_mx[2]) {
     bidx = -1;
   } else {
-    bidx = block_pos_z * b_mx[1] + block_pos_y;
+    bidx = (p * b_mx[2] + block_pos_z) * b_mx[1] + block_pos_y;
   }
 
   return bidx;
@@ -78,8 +78,28 @@ cuda_mparticles_check_in_patch_unordered(struct cuda_mparticles *cuda_mprts,
   unsigned int off = 0;
   for (int p = 0; p < cuda_mprts->nr_patches; p++) {
     for (int n = 0; n < nr_prts_by_patch[p]; n++) {
-      int bidx = get_block_idx(cuda_mprts, off + n);
-      assert(bidx >= 0 && bidx <= cuda_mprts->nr_blocks_per_patch);
+      int bidx = get_block_idx(cuda_mprts, off + n, p);
+      assert(bidx >= 0 && bidx <= cuda_mprts->nr_blocks);
+    }
+    off += nr_prts_by_patch[p];
+  }
+
+  assert(off == cuda_mprts->nr_prts);
+}
+
+static void
+cuda_mparticles_check_bidx_id_unordered(struct cuda_mparticles *cuda_mprts,
+					unsigned int *nr_prts_by_patch)
+{
+  thrust::device_ptr<unsigned int> d_bidx(cuda_mprts->d_bidx);
+  thrust::device_ptr<unsigned int> d_id(cuda_mprts->d_id);
+
+  unsigned int off = 0;
+  for (int p = 0; p < cuda_mprts->nr_patches; p++) {
+    for (int n = 0; n < nr_prts_by_patch[p]; n++) {
+      int bidx = get_block_idx(cuda_mprts, off + n, p);
+      assert(bidx == d_bidx[off+n]);
+      assert(off+n == d_id[off+n]);
     }
     off += nr_prts_by_patch[p];
   }
@@ -105,6 +125,7 @@ main(void)
   cuda_mparticles_find_block_indices_ids_total(cuda_mprts, nr_prts_by_patch);
   printf("find bidx, id\n");
   cuda_mparticles_dump(cuda_mprts);
+  cuda_mparticles_check_bidx_id_unordered(cuda_mprts, nr_prts_by_patch);
 
   thrust::device_ptr<unsigned int> d_bidx(cuda_mprts->d_bidx);
   thrust::device_ptr<unsigned int> d_id(cuda_mprts->d_id);
