@@ -13,7 +13,6 @@ typedef float particle_cuda_real_t;
 
 struct psc_particles_cuda {
   int *h_n_prts;
-  int *d_n_prts;
   int nr_blocks;               // number of blocks
   int b_mx[3];                 // number of blocks by direction
   int blocksize[3];            // dimensions of sub blocks in a patch

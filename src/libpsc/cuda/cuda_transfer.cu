@@ -216,7 +216,6 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
     struct psc_particles_cuda *prts_cuda = psc_particles_cuda(prts);
 
     prts_cuda->h_n_prts = &mprts_cuda->h_n_prts[p];
-    prts_cuda->d_n_prts = &mprts_cuda->d_n_prts[p];
   }
 }
 
