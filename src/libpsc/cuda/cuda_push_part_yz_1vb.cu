@@ -175,8 +175,8 @@ psc_mparticles_cuda_copy_to_dev(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
 
-  check(cudaMemcpy(mprts_cuda->d_dev, mprts_cuda->h_dev,
-		   mprts->nr_patches * sizeof(*mprts_cuda->d_dev),
+  check(cudaMemcpy(mprts_cuda->d_n_prts, mprts_cuda->h_n_prts,
+		   mprts->nr_patches * sizeof(int),
 		   cudaMemcpyHostToDevice));
 }
 

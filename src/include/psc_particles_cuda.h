@@ -11,13 +11,9 @@ typedef float particle_cuda_real_t;
 
 #define MPI_PARTICLES_CUDA_REAL MPI_FLOAT
 
-typedef struct {
-  int n_part;     // # of particles in this patch
-} particles_cuda_dev_t;
-
 struct psc_particles_cuda {
-  particles_cuda_dev_t *h_dev; // info that we also keep on the device, but this is on the host
-  particles_cuda_dev_t *d_dev; // this one actually lives in device mem
+  int *h_n_prts;
+  int *d_n_prts;
   int nr_blocks;               // number of blocks
   int b_mx[3];                 // number of blocks by direction
   int blocksize[3];            // dimensions of sub blocks in a patch
@@ -36,8 +32,8 @@ struct psc_particles_cuda {
 
 struct psc_mparticles_cuda {
   struct cuda_mparticles *cmprts;
-  particles_cuda_dev_t *h_dev; // particles_cuda_dev_t array for all patches
-  particles_cuda_dev_t *d_dev; // same, living in device memory
+  int *h_n_prts; // particles_cuda_dev_t array for all patches
+  int *d_n_prts; // same, living in device memory
   unsigned int nr_prts;     // total # of particles in all patches
   unsigned int nr_alloced;  // arrays are alloced for this # of particles
 

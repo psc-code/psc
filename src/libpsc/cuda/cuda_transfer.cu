@@ -182,9 +182,9 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
   mprts_cuda->nr_blocks = mprts_cuda->b_mx[0] * mprts_cuda->b_mx[1] * mprts_cuda->b_mx[2];
   mprts_cuda->nr_total_blocks = mprts->nr_patches * mprts_cuda->nr_blocks;
 
-  mprts_cuda->h_dev = new particles_cuda_dev_t[mprts->nr_patches];
-  check(cudaMalloc(&mprts_cuda->d_dev,
-		   mprts->nr_patches * sizeof(*mprts_cuda->d_dev)));
+  mprts_cuda->h_n_prts = new int[mprts->nr_patches];
+  check(cudaMalloc(&mprts_cuda->d_n_prts,
+		   mprts->nr_patches * sizeof(int)));
 
   mprts_cuda->nr_prts = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
@@ -215,8 +215,8 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *prts_cuda = psc_particles_cuda(prts);
 
-    prts_cuda->h_dev = &mprts_cuda->h_dev[p];
-    prts_cuda->d_dev = &mprts_cuda->d_dev[p];
+    prts_cuda->h_n_prts = &mprts_cuda->h_n_prts[p];
+    prts_cuda->d_n_prts = &mprts_cuda->d_n_prts[p];
   }
 }
 
@@ -227,7 +227,7 @@ __psc_mparticles_cuda_free(struct psc_mparticles *mprts)
   struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
   assert(cmprts);
 
-  delete[] mprts_cuda->h_dev;
+  delete[] mprts_cuda->h_n_prts;
   delete[] mprts_cuda->h_bnd_cnt;
 
   cuda_mparticles_dealloc(cmprts);
@@ -240,7 +240,7 @@ __psc_mparticles_cuda_free(struct psc_mparticles *mprts)
   check(cudaFree(mprts_cuda->d_bnd_spine_cnts));
   check(cudaFree(mprts_cuda->d_bnd_spine_sums));
 
-  check(cudaFree(mprts_cuda->d_dev));
+  check(cudaFree(mprts_cuda->d_n_prts));
 
   cuda_mparticles_destroy(cmprts);
   mprts_cuda->cmprts = NULL;
