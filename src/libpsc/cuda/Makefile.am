@@ -49,6 +49,7 @@ libsubdir_la_LIBADD = \
 CUDACC_FLAGS = -g --ptxas-options=-v --maxrregcount=32 --use_fast_math $(filter-out -fopenmp -msse2 -msse4.1 -Wall -ffast-math,$(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) $(CFLAGS) $(AM_CFLAGS)) $(CUDAMPIFLAGS) $(CUDACFLAGS)
 
 CUDA_DEPS = \
+        cuda_mparticles.h \
         psc_cuda.h \
         constants.c \
         common.c \

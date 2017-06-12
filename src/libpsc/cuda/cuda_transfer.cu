@@ -1,4 +1,6 @@
 
+#include "cuda_mparticles.h"
+
 #include "psc_cuda.h"
 #include "particles_cuda.h"
 
@@ -89,15 +91,17 @@ __particles_cuda_to_device(struct psc_particles *prts, float4 *xi4, float4 *pxi4
   struct psc_mparticles *mprts = cuda->mprts;
   assert(mprts);
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  assert(cmprts);
   unsigned int off = 0;
   for (int p = 0; p < prts->p; p++) {
     off += psc_mparticles_get_patch(mprts, p)->n_part;
   }
   int n_part = prts->n_part;
 
-  check(cudaMemcpy(mprts_cuda->d_xi4 + off, xi4, n_part * sizeof(*xi4),
+  check(cudaMemcpy(cmprts->d_xi4 + off, xi4, n_part * sizeof(*xi4),
 		   cudaMemcpyHostToDevice));
-  check(cudaMemcpy(mprts_cuda->d_pxi4 + off, pxi4, n_part * sizeof(*pxi4),
+  check(cudaMemcpy(cmprts->d_pxi4 + off, pxi4, n_part * sizeof(*pxi4),
 		   cudaMemcpyHostToDevice));
 }
 
@@ -108,15 +112,17 @@ __particles_cuda_from_device(struct psc_particles *prts, float4 *xi4, float4 *px
   struct psc_mparticles *mprts = cuda->mprts;
   assert(mprts);
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  assert(cmprts);
   unsigned int off = 0;
   for (int p = 0; p < prts->p; p++) {
     off += psc_mparticles_get_patch(mprts, p)->n_part;
   }
   int n_part = prts->n_part;
 
-  check(cudaMemcpy(xi4, mprts_cuda->d_xi4 + off, n_part * sizeof(*xi4),
+  check(cudaMemcpy(xi4, cmprts->d_xi4 + off, n_part * sizeof(*xi4),
 		   cudaMemcpyDeviceToHost));
-  check(cudaMemcpy(pxi4, mprts_cuda->d_pxi4 + off, n_part * sizeof(*pxi4),
+  check(cudaMemcpy(pxi4, cmprts->d_pxi4 + off, n_part * sizeof(*pxi4),
 		   cudaMemcpyDeviceToHost));
 }
 
@@ -140,6 +146,8 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
   psc_cuda_init();
 
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct cuda_mparticles *cmprts = (struct cuda_mparticles *) calloc(1, sizeof(*cmprts));
+  mprts_cuda->cmprts = cmprts;
 
   if (mprts->nr_patches == 0) {
     return;
@@ -189,8 +197,8 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
   unsigned int nr_alloced = mprts_cuda->nr_prts * 1.4;
   mprts_cuda->nr_alloced = nr_alloced;
 
-  check(cudaMalloc((void **) &mprts_cuda->d_xi4, nr_alloced * sizeof(float4)));
-  check(cudaMalloc((void **) &mprts_cuda->d_pxi4, nr_alloced * sizeof(float4)));
+  check(cudaMalloc((void **) &cmprts->d_xi4, nr_alloced * sizeof(float4)));
+  check(cudaMalloc((void **) &cmprts->d_pxi4, nr_alloced * sizeof(float4)));
   check(cudaMalloc((void **) &mprts_cuda->d_alt_xi4, nr_alloced * sizeof(float4)));
   check(cudaMalloc((void **) &mprts_cuda->d_alt_pxi4, nr_alloced * sizeof(float4)));
   check(cudaMalloc((void **) &mprts_cuda->d_bidx, nr_alloced * sizeof(unsigned int)));
@@ -218,12 +226,14 @@ void
 __psc_mparticles_cuda_free(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  assert(cmprts);
 
   delete[] mprts_cuda->h_dev;
   delete[] mprts_cuda->h_bnd_cnt;
 
-  check(cudaFree(mprts_cuda->d_xi4));
-  check(cudaFree(mprts_cuda->d_pxi4));
+  check(cudaFree(cmprts->d_xi4));
+  check(cudaFree(cmprts->d_pxi4));
   check(cudaFree(mprts_cuda->d_alt_xi4));
   check(cudaFree(mprts_cuda->d_alt_pxi4));
   check(cudaFree(mprts_cuda->d_bidx));
@@ -235,6 +245,9 @@ __psc_mparticles_cuda_free(struct psc_mparticles *mprts)
   check(cudaFree(mprts_cuda->d_bnd_spine_sums));
 
   check(cudaFree(mprts_cuda->d_dev));
+
+  free(cmprts);
+  mprts_cuda->cmprts = NULL;
 }
 
 // ======================================================================

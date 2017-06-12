@@ -1,6 +1,8 @@
 
 #undef _GLIBCXX_USE_INT128
 
+#include "cuda_mparticles.h"
+
 #include <thrust/functional.h>
 #include <thrust/transform_scan.h>
 #include <thrust/count.h>
@@ -118,23 +120,27 @@ void
 cuda_mprts_reorder_send_by_id(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  assert(cmprts);
   
   int dimGrid = (mprts_cuda->nr_prts_send + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
   mprts_reorder_send_by_id<<<dimGrid, THREADS_PER_BLOCK>>>
     (mprts_cuda->nr_prts_send, mprts_cuda->d_ids + mprts_cuda->nr_prts - mprts_cuda->nr_prts_send,
-     mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
-     mprts_cuda->d_xi4 + mprts_cuda->nr_prts, mprts_cuda->d_pxi4 + mprts_cuda->nr_prts);
+     cmprts->d_xi4, cmprts->d_pxi4,
+     cmprts->d_xi4 + mprts_cuda->nr_prts, cmprts->d_pxi4 + mprts_cuda->nr_prts);
 }
 
 void
 cuda_mprts_reorder_send_by_id_gold(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  assert(cmprts);
   
   thrust::device_ptr<unsigned int> d_ids(mprts_cuda->d_ids);
-  thrust::device_ptr<float4> d_xi4(mprts_cuda->d_xi4);
-  thrust::device_ptr<float4> d_pxi4(mprts_cuda->d_pxi4);
+  thrust::device_ptr<float4> d_xi4(cmprts->d_xi4);
+  thrust::device_ptr<float4> d_pxi4(cmprts->d_pxi4);
   thrust::host_vector<unsigned int> h_ids(d_ids, d_ids + mprts_cuda->nr_prts);
   thrust::host_vector<float4> h_xi4(d_xi4, d_xi4 + mprts_cuda->nr_prts + mprts_cuda->nr_prts_send);
   thrust::host_vector<float4> h_pxi4(d_pxi4, d_pxi4 + mprts_cuda->nr_prts + mprts_cuda->nr_prts_send);

@@ -1,4 +1,5 @@
 
+#include "cuda_mparticles.h"
 #include "psc_cuda.h"
 #include "particles_cuda.h"
 
@@ -132,6 +133,8 @@ static void
 rho_1st_nc_cuda_run_patches_no_reorder(struct psc_mparticles *mprts, struct psc_mfields *mres)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  assert(cmprts);
   struct psc_mfields_cuda *mres_cuda = psc_mfields_cuda(mres);
 
   struct cuda_params prm;
@@ -146,7 +149,7 @@ rho_1st_nc_cuda_run_patches_no_reorder(struct psc_mparticles *mprts, struct psc_
 
   rho_1st_nc_cuda_run<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER>
     <<<dimGrid, THREADS_PER_BLOCK>>>
-    (0, prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
+    (0, prm, cmprts->d_xi4, cmprts->d_pxi4,
      mprts_cuda->d_off,
      mprts_cuda->nr_total_blocks, mprts_cuda->d_ids,
      mres_cuda->d_flds, fld_size);

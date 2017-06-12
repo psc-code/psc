@@ -1,6 +1,8 @@
 
 #undef _GLIBCXX_USE_INT128
 
+#include "cuda_mparticles.h"
+
 #include "cuda_sort2.h"
 #include "particles_cuda.h"
 #include "psc_bnd_cuda.h"
@@ -112,6 +114,8 @@ EXTERN_C void
 cuda_mprts_find_block_indices_2_total(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  assert(cmprts);
 
   if (mprts->nr_patches == 0) {
     return;
@@ -124,7 +128,7 @@ cuda_mprts_find_block_indices_2_total(struct psc_mparticles *mprts)
   int dimGrid[2]  = { prm.b_mx[1], prm.b_mx[2] * mprts->nr_patches };
   
   RUN_KERNEL(dimGrid, dimBlock,
-	     mprts_find_block_indices_2_total, (prm, mprts_cuda->d_xi4, mprts_cuda->d_off,
+	     mprts_find_block_indices_2_total, (prm, cmprts->d_xi4, mprts_cuda->d_off,
 						mprts_cuda->d_bidx, mprts->nr_patches));
   free_params(&prm);
 }
@@ -169,6 +173,8 @@ EXTERN_C void
 cuda_mprts_find_block_keys(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  assert(cmprts);
 
   if (mprts->nr_patches == 0) {
     return;
@@ -181,7 +187,7 @@ cuda_mprts_find_block_keys(struct psc_mparticles *mprts)
   int dimGrid[2]  = { mprts_cuda->nr_total_blocks, 1 };
   
   RUN_KERNEL(dimGrid, dimBlock,
-	     mprts_find_block_keys, (prm, mprts_cuda->d_xi4, mprts_cuda->d_off,
+	     mprts_find_block_keys, (prm, cmprts->d_xi4, mprts_cuda->d_off,
 				     mprts_cuda->d_bidx, mprts_cuda->nr_total_blocks));
   free_params(&prm);
 }
@@ -221,6 +227,8 @@ EXTERN_C void
 cuda_mprts_find_block_indices_ids_total(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  assert(cmprts);
 
   if (mprts->nr_patches == 0) {
     return;
@@ -249,7 +257,7 @@ cuda_mprts_find_block_indices_ids_total(struct psc_mparticles *mprts)
   int dimGrid[2]  = { (max_n_part + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
 
   RUN_KERNEL(dimGrid, dimBlock,
-	     mprts_find_block_indices_ids_total, (prm, mprts_cuda->d_xi4, 
+	     mprts_find_block_indices_ids_total, (prm, cmprts->d_xi4, 
 						  psc_mparticles_cuda(mprts)->d_dev,
 						  mprts_cuda->d_bidx,
 						  mprts_cuda->d_ids,
@@ -310,11 +318,14 @@ EXTERN_C void
 cuda_mprts_reorder_send_buf_total(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  assert(cmprts);
+
   if (mprts->nr_patches == 0)
     return;
 
-  float4 *xchg_xi4 = mprts_cuda->d_xi4 + mprts_cuda->nr_prts;
-  float4 *xchg_pxi4 = mprts_cuda->d_pxi4 + mprts_cuda->nr_prts;
+  float4 *xchg_xi4 = cmprts->d_xi4 + mprts_cuda->nr_prts;
+  float4 *xchg_pxi4 = cmprts->d_pxi4 + mprts_cuda->nr_prts;
   assert(mprts_cuda->nr_prts + mprts_cuda->nr_prts_send < mprts_cuda->nr_alloced);
   
   int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
@@ -323,7 +334,7 @@ cuda_mprts_reorder_send_buf_total(struct psc_mparticles *mprts)
   RUN_KERNEL(dimGrid, dimBlock,
 	     mprts_reorder_send_buf_total, (mprts_cuda->nr_prts, mprts_cuda->nr_total_blocks,
 					    mprts_cuda->d_bidx, mprts_cuda->d_sums,
-					    mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
+					    cmprts->d_xi4, cmprts->d_pxi4,
 					    xchg_xi4, xchg_pxi4));
 }
 
@@ -334,12 +345,15 @@ static void
 psc_mparticles_cuda_swap_alt(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  assert(cmprts);
+
   float4 *tmp_xi4 = mprts_cuda->d_alt_xi4;
   float4 *tmp_pxi4 = mprts_cuda->d_alt_pxi4;
-  mprts_cuda->d_alt_xi4 = mprts_cuda->d_xi4;
-  mprts_cuda->d_alt_pxi4 = mprts_cuda->d_pxi4;
-  mprts_cuda->d_xi4 = tmp_xi4;
-  mprts_cuda->d_pxi4 = tmp_pxi4;
+  mprts_cuda->d_alt_xi4 = cmprts->d_xi4;
+  mprts_cuda->d_alt_pxi4 = cmprts->d_pxi4;
+  cmprts->d_xi4 = tmp_xi4;
+  cmprts->d_pxi4 = tmp_pxi4;
 }
 
 // ======================================================================
@@ -363,12 +377,14 @@ void
 cuda_mprts_reorder(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  assert(cmprts);
 
   int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
   int dimGrid[2]  = { (mprts_cuda->nr_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
   RUN_KERNEL(dimGrid, dimBlock,
 	     mprts_reorder, (mprts_cuda->nr_prts, mprts_cuda->d_ids,
-			     mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
+			     cmprts->d_xi4, cmprts->d_pxi4,
 			     mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4));
   
   psc_mparticles_cuda_swap_alt(mprts);
@@ -411,6 +427,8 @@ void
 cuda_mprts_reorder_and_offsets(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  assert(cmprts);
 
   if (mprts->nr_patches == 0) {
     return;
@@ -420,7 +438,7 @@ cuda_mprts_reorder_and_offsets(struct psc_mparticles *mprts)
   int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
   int dimGrid[2]  = { (mprts_cuda->nr_prts + 1 + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
   RUN_KERNEL(dimGrid, dimBlock,
-	     mprts_reorder_and_offsets, (mprts_cuda->nr_prts, mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
+	     mprts_reorder_and_offsets, (mprts_cuda->nr_prts, cmprts->d_xi4, cmprts->d_pxi4,
 					 mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4,
 					 mprts_cuda->d_bidx, mprts_cuda->d_ids,
 					 mprts_cuda->d_off, mprts->nr_patches * nr_blocks));
@@ -436,6 +454,8 @@ void
 cuda_mprts_copy_from_dev(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  assert(cmprts);
 
   if (mprts->nr_patches == 0) {
     return;
@@ -444,9 +464,9 @@ cuda_mprts_copy_from_dev(struct psc_mparticles *mprts)
   mprts_cuda->h_bnd_xi4 = new float4[mprts_cuda->nr_prts_send];
   mprts_cuda->h_bnd_pxi4 = new float4[mprts_cuda->nr_prts_send];
 
-  check(cudaMemcpy(mprts_cuda->h_bnd_xi4, mprts_cuda->d_xi4 + mprts_cuda->nr_prts,
+  check(cudaMemcpy(mprts_cuda->h_bnd_xi4, cmprts->d_xi4 + mprts_cuda->nr_prts,
 		   mprts_cuda->nr_prts_send * sizeof(float4), cudaMemcpyDeviceToHost));
-  check(cudaMemcpy(mprts_cuda->h_bnd_pxi4, mprts_cuda->d_pxi4 + mprts_cuda->nr_prts,
+  check(cudaMemcpy(mprts_cuda->h_bnd_pxi4, cmprts->d_pxi4 + mprts_cuda->nr_prts,
 		   mprts_cuda->nr_prts_send * sizeof(float4), cudaMemcpyDeviceToHost));
 }
 
@@ -494,9 +514,11 @@ void
 cuda_mprts_copy_to_dev(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  assert(cmprts);
 
-  float4 *d_xi4 = mprts_cuda->d_xi4;
-  float4 *d_pxi4 = mprts_cuda->d_pxi4;
+  float4 *d_xi4 = cmprts->d_xi4;
+  float4 *d_pxi4 = cmprts->d_pxi4;
 
   unsigned int nr_recv = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
