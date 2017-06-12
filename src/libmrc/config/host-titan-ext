@@ -33,8 +33,10 @@ fi
 CUDACC=nvcc
 #CUDAMPIFLAGS="-I/opt/cray/mpt/5.6.0/gni/mpich2-gnu/47/include"
 #CUDAMPIFLAGS="-I/opt/cray/mpt/5.5.5/gni/mpich2-intel/120/include"
-CUDAMPIFLAGS="-I/opt/cray/mpt/default/gni/mpich2-gnu/48/include"
-CUDACFLAGS="-ccbin /opt/gcc/4.6.1/bin -arch sm_30 $CUDAMPIFLAGS"
+#CUDAMPIFLAGS="-I/opt/cray/mpt/default/gni/mpich2-gnu/48/include"
+CUDAMPIFLAGS="-I/opt/cray/mpt/default/gni/mpich-gnu/4.9/include"
+#CUDACFLAGS="-ccbin /opt/gcc/4.6.1/bin -arch sm_30 $CUDAMPIFLAGS"
+CUDACFLAGS="-ccbin /opt/gcc/4.9.3/bin -arch sm_30 $CUDAMPIFLAGS"
 
 
 #if test -z "$HDF5_DIR"; then
