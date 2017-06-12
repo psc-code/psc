@@ -348,10 +348,10 @@ psc_mparticles_cuda_swap_alt(struct psc_mparticles *mprts)
   struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
   assert(cmprts);
 
-  float4 *tmp_xi4 = mprts_cuda->d_alt_xi4;
-  float4 *tmp_pxi4 = mprts_cuda->d_alt_pxi4;
-  mprts_cuda->d_alt_xi4 = cmprts->d_xi4;
-  mprts_cuda->d_alt_pxi4 = cmprts->d_pxi4;
+  float4 *tmp_xi4 = cmprts->d_alt_xi4;
+  float4 *tmp_pxi4 = cmprts->d_alt_pxi4;
+  cmprts->d_alt_xi4 = cmprts->d_xi4;
+  cmprts->d_alt_pxi4 = cmprts->d_pxi4;
   cmprts->d_xi4 = tmp_xi4;
   cmprts->d_pxi4 = tmp_pxi4;
 }
@@ -385,7 +385,7 @@ cuda_mprts_reorder(struct psc_mparticles *mprts)
   RUN_KERNEL(dimGrid, dimBlock,
 	     mprts_reorder, (mprts_cuda->nr_prts, mprts_cuda->d_ids,
 			     cmprts->d_xi4, cmprts->d_pxi4,
-			     mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4));
+			     cmprts->d_alt_xi4, cmprts->d_alt_pxi4));
   
   psc_mparticles_cuda_swap_alt(mprts);
 }
@@ -439,7 +439,7 @@ cuda_mprts_reorder_and_offsets(struct psc_mparticles *mprts)
   int dimGrid[2]  = { (mprts_cuda->nr_prts + 1 + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
   RUN_KERNEL(dimGrid, dimBlock,
 	     mprts_reorder_and_offsets, (mprts_cuda->nr_prts, cmprts->d_xi4, cmprts->d_pxi4,
-					 mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4,
+					 cmprts->d_alt_xi4, cmprts->d_alt_pxi4,
 					 mprts_cuda->d_bidx, mprts_cuda->d_ids,
 					 mprts_cuda->d_off, mprts->nr_patches * nr_blocks));
 

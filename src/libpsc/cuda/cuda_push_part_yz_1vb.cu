@@ -956,10 +956,10 @@ psc_mparticles_cuda_swap_alt(struct psc_mparticles *mprts)
   struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
   assert(cmprts);
 
-  float4 *tmp_xi4 = mprts_cuda->d_alt_xi4;
-  float4 *tmp_pxi4 = mprts_cuda->d_alt_pxi4;
-  mprts_cuda->d_alt_xi4 = cmprts->d_xi4;
-  mprts_cuda->d_alt_pxi4 = cmprts->d_pxi4;
+  float4 *tmp_xi4 = cmprts->d_alt_xi4;
+  float4 *tmp_pxi4 = cmprts->d_alt_pxi4;
+  cmprts->d_alt_xi4 = cmprts->d_xi4;
+  cmprts->d_alt_pxi4 = cmprts->d_pxi4;
   cmprts->d_xi4 = tmp_xi4;
   cmprts->d_pxi4 = tmp_pxi4;
 }
@@ -1092,7 +1092,7 @@ cuda_push_mprts_a_reorder(struct psc_mparticles *mprts, struct psc_mfields *mfld
   push_mprts_a_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
     <<<dimGrid, THREADS_PER_BLOCK>>>
     (prm, mprts_cuda->d_ids, cmprts->d_xi4, cmprts->d_pxi4,
-     mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4, mprts_cuda->d_off,
+     cmprts->d_alt_xi4, cmprts->d_alt_pxi4, mprts_cuda->d_off,
      mflds_cuda->d_flds, size);
   cuda_sync_if_enabled();
   
@@ -1138,7 +1138,7 @@ cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 		    SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> >
 	<<<dimGrid, THREADS_PER_BLOCK>>>
       (block_start, prm, cmprts->d_xi4, cmprts->d_pxi4,
-       mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4, mprts_cuda->d_off,
+       cmprts->d_alt_xi4, cmprts->d_alt_pxi4, mprts_cuda->d_off,
        mprts_cuda->nr_total_blocks, mprts_cuda->d_ids, mprts_cuda->d_bidx,
        mflds_cuda->d_flds, fld_size);
       cuda_sync_if_enabled();
@@ -1148,7 +1148,7 @@ cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
     		  GCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> >
       <<<dimGrid, THREADS_PER_BLOCK>>>
       (0, prm, cmprts->d_xi4, cmprts->d_pxi4,
-       mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4, mprts_cuda->d_off,
+       cmprts->d_alt_xi4, cmprts->d_alt_pxi4, mprts_cuda->d_off,
        mprts_cuda->nr_total_blocks, mprts_cuda->d_ids, mprts_cuda->d_bidx,
        mflds_cuda->d_flds, fld_size);
     cuda_sync_if_enabled();

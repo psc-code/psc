@@ -199,8 +199,8 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
 
   check(cudaMalloc((void **) &cmprts->d_xi4, nr_alloced * sizeof(float4)));
   check(cudaMalloc((void **) &cmprts->d_pxi4, nr_alloced * sizeof(float4)));
-  check(cudaMalloc((void **) &mprts_cuda->d_alt_xi4, nr_alloced * sizeof(float4)));
-  check(cudaMalloc((void **) &mprts_cuda->d_alt_pxi4, nr_alloced * sizeof(float4)));
+  check(cudaMalloc((void **) &cmprts->d_alt_xi4, nr_alloced * sizeof(float4)));
+  check(cudaMalloc((void **) &cmprts->d_alt_pxi4, nr_alloced * sizeof(float4)));
   check(cudaMalloc((void **) &mprts_cuda->d_bidx, nr_alloced * sizeof(unsigned int)));
   check(cudaMalloc((void **) &mprts_cuda->d_alt_bidx, nr_alloced * sizeof(unsigned int)));
   check(cudaMalloc((void **) &mprts_cuda->d_ids, nr_alloced * sizeof(unsigned int)));
@@ -234,8 +234,8 @@ __psc_mparticles_cuda_free(struct psc_mparticles *mprts)
 
   check(cudaFree(cmprts->d_xi4));
   check(cudaFree(cmprts->d_pxi4));
-  check(cudaFree(mprts_cuda->d_alt_xi4));
-  check(cudaFree(mprts_cuda->d_alt_pxi4));
+  check(cudaFree(cmprts->d_alt_xi4));
+  check(cudaFree(cmprts->d_alt_pxi4));
   check(cudaFree(mprts_cuda->d_bidx));
   check(cudaFree(mprts_cuda->d_alt_bidx));
   check(cudaFree(mprts_cuda->d_ids));
