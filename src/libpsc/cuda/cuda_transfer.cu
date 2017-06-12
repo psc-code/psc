@@ -149,6 +149,8 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
   struct cuda_mparticles *cmprts = cuda_mparticles_create();
   mprts_cuda->cmprts = cmprts;
 
+  cmprts->n_patches = mprts->nr_patches;
+
   if (mprts->nr_patches == 0) {
     return;
   }
