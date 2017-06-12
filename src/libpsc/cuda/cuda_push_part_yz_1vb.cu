@@ -946,25 +946,6 @@ push_mprts_ab(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_
 }
 
 // ----------------------------------------------------------------------
-// psc_mparticles_cuda_swap_alt
-// FIXME, duplicated
-
-static void
-psc_mparticles_cuda_swap_alt(struct psc_mparticles *mprts)
-{
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
-  assert(cmprts);
-
-  float4 *tmp_xi4 = cmprts->d_alt_xi4;
-  float4 *tmp_pxi4 = cmprts->d_alt_pxi4;
-  cmprts->d_alt_xi4 = cmprts->d_xi4;
-  cmprts->d_alt_pxi4 = cmprts->d_pxi4;
-  cmprts->d_xi4 = tmp_xi4;
-  cmprts->d_pxi4 = tmp_pxi4;
-}
-
-// ----------------------------------------------------------------------
 // zero_currents
 
 static void
@@ -1096,7 +1077,7 @@ cuda_push_mprts_a_reorder(struct psc_mparticles *mprts, struct psc_mfields *mfld
      mflds_cuda->d_flds, size);
   cuda_sync_if_enabled();
   
-  psc_mparticles_cuda_swap_alt(mprts);
+  cuda_mparticles_swap_alt(cmprts);
     
   free_params(&prm);
 }
@@ -1157,7 +1138,7 @@ cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
   }
 
   if (REORDER) {
-    psc_mparticles_cuda_swap_alt(mprts);
+    cuda_mparticles_swap_alt(cmprts);
   }
 
   free_params(&prm);

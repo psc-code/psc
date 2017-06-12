@@ -7,4 +7,6 @@ struct cuda_mparticles {
   float4 *d_alt_xi4, *d_alt_pxi4; // storage for out-of-place reordering of particle data
 };
   
+void cuda_mparticles_swap_alt(struct cuda_mparticles *cmprts);
+
 #endif
