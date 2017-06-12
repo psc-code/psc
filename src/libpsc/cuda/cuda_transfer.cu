@@ -210,13 +210,6 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
 		   (1 + mprts_cuda->nr_total_blocks * (CUDA_BND_STRIDE + 1)) * sizeof(unsigned int)));
   check(cudaMalloc((void **) &mprts_cuda->d_bnd_spine_sums,
 		   (1 + mprts_cuda->nr_total_blocks * (CUDA_BND_STRIDE + 1)) * sizeof(unsigned int)));
-
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_particles_cuda *prts_cuda = psc_particles_cuda(prts);
-
-    prts_cuda->h_n_prts = &mprts_cuda->h_n_prts[p];
-  }
 }
 
 void
