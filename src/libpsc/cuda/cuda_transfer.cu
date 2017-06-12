@@ -146,7 +146,7 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
   psc_cuda_init();
 
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = (struct cuda_mparticles *) calloc(1, sizeof(*cmprts));
+  struct cuda_mparticles *cmprts = cuda_mparticles_create();
   mprts_cuda->cmprts = cmprts;
 
   if (mprts->nr_patches == 0) {
@@ -197,10 +197,8 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
   unsigned int nr_alloced = mprts_cuda->nr_prts * 1.4;
   mprts_cuda->nr_alloced = nr_alloced;
 
-  check(cudaMalloc((void **) &cmprts->d_xi4, nr_alloced * sizeof(float4)));
-  check(cudaMalloc((void **) &cmprts->d_pxi4, nr_alloced * sizeof(float4)));
-  check(cudaMalloc((void **) &cmprts->d_alt_xi4, nr_alloced * sizeof(float4)));
-  check(cudaMalloc((void **) &cmprts->d_alt_pxi4, nr_alloced * sizeof(float4)));
+  cuda_mparticles_alloc(cmprts, nr_alloced);
+
   check(cudaMalloc((void **) &mprts_cuda->d_bidx, nr_alloced * sizeof(unsigned int)));
   check(cudaMalloc((void **) &mprts_cuda->d_alt_bidx, nr_alloced * sizeof(unsigned int)));
   check(cudaMalloc((void **) &mprts_cuda->d_ids, nr_alloced * sizeof(unsigned int)));
@@ -232,10 +230,8 @@ __psc_mparticles_cuda_free(struct psc_mparticles *mprts)
   delete[] mprts_cuda->h_dev;
   delete[] mprts_cuda->h_bnd_cnt;
 
-  check(cudaFree(cmprts->d_xi4));
-  check(cudaFree(cmprts->d_pxi4));
-  check(cudaFree(cmprts->d_alt_xi4));
-  check(cudaFree(cmprts->d_alt_pxi4));
+  cuda_mparticles_dealloc(cmprts);
+
   check(cudaFree(mprts_cuda->d_bidx));
   check(cudaFree(mprts_cuda->d_alt_bidx));
   check(cudaFree(mprts_cuda->d_ids));
@@ -246,7 +242,7 @@ __psc_mparticles_cuda_free(struct psc_mparticles *mprts)
 
   check(cudaFree(mprts_cuda->d_dev));
 
-  free(cmprts);
+  cuda_mparticles_destroy(cmprts);
   mprts_cuda->cmprts = NULL;
 }
 
