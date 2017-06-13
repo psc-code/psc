@@ -85,23 +85,6 @@ psc_cuda_init(void)
 #define MAX_BND_COMPONENTS (3)
 
 EXTERN_C void
-__particles_cuda_to_device(struct psc_particles *prts, float4 *xi4, float4 *pxi4)
-{
-  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-  struct psc_mparticles *mprts = cuda->mprts;
-  assert(mprts);
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
-  assert(cmprts);
-  unsigned int off = 0;
-  for (int p = 0; p < prts->p; p++) {
-    off += psc_mparticles_get_patch(mprts, p)->n_part;
-  }
-
-  cuda_mparticles_to_device(cmprts, xi4, pxi4, prts->n_part, off);
-}
-
-EXTERN_C void
 __particles_cuda_from_device(struct psc_particles *prts, float4 *xi4, float4 *pxi4)
 {
   struct psc_particles_cuda *cuda = psc_particles_cuda(prts);

@@ -72,8 +72,6 @@ struct d_particle {
     d_p.pxi4[n].w = (pp).qni_wni;					\
 } while (0)
 
-EXTERN_C void __particles_cuda_to_device(struct psc_particles *prts,
-					 float4 *xi, float4 *pxi);
 EXTERN_C void __particles_cuda_from_device(struct psc_particles *prts,
 					   float4 *xi4, float4 *pxi4);
 

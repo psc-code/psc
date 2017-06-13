@@ -7,6 +7,8 @@
 #include "psc_particles_single.h"
 #include "psc_particles_cuda.h"
 
+#include "../cuda/cuda_mparticles.h"
+
 #include <stdlib.h>
 
 // ======================================================================
@@ -237,6 +239,21 @@ psc_particles_cuda2_copy_from_single(struct psc_particles *prts_base,
 
 #include "../cuda/psc_cuda.h"
 
+static void
+particles_cuda_to_device(struct psc_particles *prts, float4 *xi4, float4 *pxi4)
+{
+  struct psc_mparticles *mprts = psc_particles_cuda(prts)->mprts;
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+
+  unsigned int off = 0;
+  for (int p = 0; p < prts->p; p++) {
+    off += psc_mparticles_get_patch(mprts, p)->n_part;
+  }
+
+  cuda_mparticles_to_device(cmprts, xi4, pxi4, prts->n_part, off);
+}
+
 // ----------------------------------------------------------------------
 // psc_particles_cuda2_copy_to_cuda
 
@@ -266,7 +283,7 @@ psc_particles_cuda2_copy_to_cuda(struct psc_particles *prts,
     pxi4[n].w = prt.qni_wni;
   }
   
-  __particles_cuda_to_device(prts_cuda, xi4, pxi4);
+  particles_cuda_to_device(prts_cuda, xi4, pxi4);
   
   free(xi4);
   free(pxi4);

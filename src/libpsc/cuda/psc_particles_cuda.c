@@ -168,6 +168,21 @@ blockIdx_to_blockCrd(struct psc_patch *patch, struct cell_map *map,
   }
 }
 
+static void
+particles_cuda_to_device(struct psc_particles *prts, float4 *xi4, float4 *pxi4)
+{
+  struct psc_mparticles *mprts = psc_particles_cuda(prts)->mprts;
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+
+  unsigned int off = 0;
+  for (int p = 0; p < prts->p; p++) {
+    off += psc_mparticles_get_patch(mprts, p)->n_part;
+  }
+
+  cuda_mparticles_to_device(cmprts, xi4, pxi4, prts->n_part, off);
+}
+
 // ======================================================================
 // conversion to "c"
 
@@ -249,8 +264,8 @@ psc_particles_cuda_copy_from_c(struct psc_particles *prts_cuda,
       // bit, so we can do the checkerboard passes
     }
   }
-  
-  __particles_cuda_to_device(prts_cuda, xi4, pxi4);
+
+  particles_cuda_to_device(prts_cuda, xi4, pxi4);
   
   free(xi4);
   free(pxi4);
@@ -352,7 +367,7 @@ psc_particles_cuda_copy_from_single(struct psc_particles *prts_cuda,
     xi4[n].z = xi[2];
   }
   
-  __particles_cuda_to_device(prts_cuda, xi4, pxi4);
+  particles_cuda_to_device(prts_cuda, xi4, pxi4);
   
   free(xi4);
   free(pxi4);
@@ -449,7 +464,7 @@ psc_particles_cuda_copy_from_double(struct psc_particles *prts_cuda,
     xi4[n].z = xi[2];
   }
   
-  __particles_cuda_to_device(prts_cuda, xi4, pxi4);
+  particles_cuda_to_device(prts_cuda, xi4, pxi4);
   
   free(xi4);
   free(pxi4);
@@ -571,7 +586,7 @@ psc_mparticles_cuda_read(struct psc_mparticles *mprts, struct mrc_io *io)
       ierr = H5LTread_dataset_float(group, "xi4", (float *) xi4); CE;
       ierr = H5LTread_dataset_float(group, "pxi4", (float *) pxi4); CE;
       
-      __particles_cuda_to_device(prts, xi4, pxi4);
+      particles_cuda_to_device(prts, xi4, pxi4);
       
       free(xi4);
       free(pxi4);
