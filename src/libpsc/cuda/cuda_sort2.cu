@@ -242,7 +242,7 @@ cuda_mprts_sort_initial(struct psc_mparticles *mprts)
     n_prts_by_patch[p] = prts->n_part;
   }
 
-  cuda_mparticles_find_block_indices_ids(mprts, n_prts_by_patch);
+  cuda_mparticles_find_block_indices_ids(cmprts, n_prts_by_patch);
   thrust::device_ptr<unsigned int> d_bidx(cmprts->d_bidx);
   thrust::device_ptr<unsigned int> d_id(cmprts->d_id);
   thrust::stable_sort_by_key(d_bidx, d_bidx + cmprts->n_prts, d_id);
