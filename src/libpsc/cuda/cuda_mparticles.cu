@@ -43,6 +43,8 @@ cuda_mparticles_alloc(struct cuda_mparticles *cmprts, int nr_alloced)
   ierr = cudaMalloc((void **) &cmprts->d_pxi4, nr_alloced * sizeof(float4)); cudaCheck(ierr);
   ierr = cudaMalloc((void **) &cmprts->d_alt_xi4, nr_alloced * sizeof(float4)); cudaCheck(ierr);
   ierr = cudaMalloc((void **) &cmprts->d_alt_pxi4, nr_alloced * sizeof(float4)); cudaCheck(ierr);
+  ierr = cudaMalloc((void **) &cmprts->d_bidx, nr_alloced * sizeof(unsigned int)); cudaCheck(ierr);
+  ierr = cudaMalloc((void **) &cmprts->d_id, nr_alloced * sizeof(unsigned int)); cudaCheck(ierr);
 }
 
 // ----------------------------------------------------------------------
@@ -57,6 +59,8 @@ cuda_mparticles_dealloc(struct cuda_mparticles *cmprts)
   ierr = cudaFree(cmprts->d_pxi4); cudaCheck(ierr);
   ierr = cudaFree(cmprts->d_alt_xi4); cudaCheck(ierr);
   ierr = cudaFree(cmprts->d_alt_pxi4); cudaCheck(ierr);
+  ierr = cudaFree(cmprts->d_bidx); cudaCheck(ierr);
+  ierr = cudaFree(cmprts->d_id); cudaCheck(ierr);
 }
 
 // ----------------------------------------------------------------------

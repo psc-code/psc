@@ -35,9 +35,7 @@ struct psc_mparticles_cuda {
   unsigned int nr_prts;     // total # of particles in all patches
   unsigned int nr_alloced;  // arrays are alloced for this # of particles
 
-  unsigned int *d_bidx;
   unsigned int *d_alt_bidx;
-  unsigned int *d_ids;
   unsigned int *d_sums; // FIXME, too many arrays, consolidation would be good
   unsigned int nr_prts_send;
   unsigned int nr_prts_recv;

@@ -1,4 +1,6 @@
 
+#include "cuda_mparticles.h"
+
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
 #include <thrust/sequence.h>
@@ -232,10 +234,11 @@ void
 cuda_mprts_sort_initial(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
 
   cuda_mprts_find_block_indices_ids_total(mprts);
-  thrust::device_ptr<unsigned int> d_bidx(mprts_cuda->d_bidx);
-  thrust::device_ptr<unsigned int> d_ids(mprts_cuda->d_ids);
-  thrust::stable_sort_by_key(d_bidx, d_bidx + mprts_cuda->nr_prts, d_ids);
+  thrust::device_ptr<unsigned int> d_bidx(cmprts->d_bidx);
+  thrust::device_ptr<unsigned int> d_id(cmprts->d_id);
+  thrust::stable_sort_by_key(d_bidx, d_bidx + mprts_cuda->nr_prts, d_id);
   cuda_mprts_reorder_and_offsets(mprts);
 }
