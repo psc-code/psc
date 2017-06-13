@@ -32,7 +32,6 @@ struct psc_mparticles_cuda {
   struct cuda_mparticles *cmprts;
   int *h_n_prts; // particles_cuda_dev_t array for all patches
   int *d_n_prts; // same, living in device memory
-  unsigned int nr_prts;     // total # of particles in all patches
   unsigned int nr_alloced;  // arrays are alloced for this # of particles
 
   unsigned int *d_alt_bidx;

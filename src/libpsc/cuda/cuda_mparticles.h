@@ -9,7 +9,8 @@ struct cuda_mparticles {
   unsigned int *d_bidx;           // block index (incl patch) per particle
   unsigned int *d_id;             // particle id for sorting
 
-  int n_patches;
+  int n_patches;                  // # of patches
+  unsigned int n_prts;            // total # of particles across all patches
 };
 
 struct cuda_mparticles *cuda_mparticles_create(void);

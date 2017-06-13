@@ -188,15 +188,15 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
   check(cudaMalloc(&mprts_cuda->d_n_prts,
 		   mprts->nr_patches * sizeof(int)));
 
-  mprts_cuda->nr_prts = 0;
+  cmprts->n_prts = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *prts_cuda = psc_particles_cuda(prts);
-    mprts_cuda->nr_prts += prts->n_part;
+    cmprts->n_prts += prts->n_part;
     prts_cuda->mprts = mprts;
   }
   mprts_cuda->h_bnd_cnt = new unsigned int[mprts_cuda->nr_total_blocks];
-  unsigned int nr_alloced = mprts_cuda->nr_prts * 1.4;
+  unsigned int nr_alloced = cmprts->n_prts * 1.4;
   mprts_cuda->nr_alloced = nr_alloced;
 
   cuda_mparticles_alloc(cmprts, nr_alloced);
