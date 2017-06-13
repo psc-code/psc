@@ -327,7 +327,7 @@ cuda_mprts_reorder_send_buf_total(struct psc_mparticles *mprts)
 
   float4 *xchg_xi4 = cmprts->d_xi4 + cmprts->n_prts;
   float4 *xchg_pxi4 = cmprts->d_pxi4 + cmprts->n_prts;
-  assert(cmprts->n_prts + mprts_cuda->nr_prts_send < mprts_cuda->nr_alloced);
+  assert(cmprts->n_prts + mprts_cuda->nr_prts_send < cmprts->n_alloced);
   
   int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
   int dimGrid[2]  = { (cmprts->n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
@@ -509,7 +509,7 @@ cuda_mprts_copy_to_dev(struct psc_mparticles *mprts)
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
     nr_recv += cuda->bnd_n_recv;
   }
-  assert(cmprts->n_prts + nr_recv <= mprts_cuda->nr_alloced);
+  assert(cmprts->n_prts + nr_recv <= cmprts->n_alloced);
 
   check(cudaMemcpy(d_xi4 + cmprts->n_prts, mprts_cuda->h_bnd_xi4,
 		   nr_recv * sizeof(*d_xi4),

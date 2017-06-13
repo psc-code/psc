@@ -196,13 +196,13 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
     prts_cuda->mprts = mprts;
   }
   mprts_cuda->h_bnd_cnt = new unsigned int[mprts_cuda->nr_total_blocks];
-  unsigned int nr_alloced = cmprts->n_prts * 1.4;
-  mprts_cuda->nr_alloced = nr_alloced;
+  unsigned int n_alloced = cmprts->n_prts * 1.4;
+  cmprts->n_alloced = n_alloced;
 
-  cuda_mparticles_alloc(cmprts, nr_alloced);
+  cuda_mparticles_alloc(cmprts, n_alloced);
 
-  check(cudaMalloc((void **) &mprts_cuda->d_alt_bidx, nr_alloced * sizeof(unsigned int)));
-  check(cudaMalloc((void **) &mprts_cuda->d_sums, nr_alloced * sizeof(unsigned int)));
+  check(cudaMalloc((void **) &mprts_cuda->d_alt_bidx, n_alloced * sizeof(unsigned int)));
+  check(cudaMalloc((void **) &mprts_cuda->d_sums, n_alloced * sizeof(unsigned int)));
 
   check(cudaMalloc((void **) &mprts_cuda->d_off, 
 		   (mprts_cuda->nr_total_blocks + 1) * sizeof(*mprts_cuda->d_off)));

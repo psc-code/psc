@@ -11,6 +11,7 @@ struct cuda_mparticles {
 
   int n_patches;                  // # of patches
   unsigned int n_prts;            // total # of particles across all patches
+  unsigned int n_alloced;         // size of particle-related arrays as allocated
 };
 
 struct cuda_mparticles *cuda_mparticles_create(void);
