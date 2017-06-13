@@ -353,7 +353,6 @@ cuda_mprts_reorder_and_offsets(struct psc_mparticles *mprts)
 					 cmprts->d_off, cmprts->n_blocks));
 
   cuda_mparticles_swap_alt(cmprts);
-  psc_mparticles_cuda_copy_to_dev(mprts);
 }
 
 // ======================================================================
