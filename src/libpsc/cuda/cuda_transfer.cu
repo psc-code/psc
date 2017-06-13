@@ -185,8 +185,6 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
   mprts_cuda->nr_total_blocks = mprts->nr_patches * mprts_cuda->nr_blocks;
 
   mprts_cuda->h_n_prts = new int[mprts->nr_patches];
-  check(cudaMalloc(&mprts_cuda->d_n_prts,
-		   mprts->nr_patches * sizeof(int)));
 
   mprts_cuda->h_bnd_cnt = new unsigned int[mprts_cuda->nr_total_blocks];
 
@@ -232,8 +230,6 @@ __psc_mparticles_cuda_free(struct psc_mparticles *mprts)
   check(cudaFree(mprts_cuda->d_off));
   check(cudaFree(mprts_cuda->d_bnd_spine_cnts));
   check(cudaFree(mprts_cuda->d_bnd_spine_sums));
-
-  check(cudaFree(mprts_cuda->d_n_prts));
 
   cuda_mparticles_destroy(cmprts);
   mprts_cuda->cmprts = NULL;

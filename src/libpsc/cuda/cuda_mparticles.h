@@ -9,6 +9,9 @@ struct cuda_mparticles {
   unsigned int *d_bidx;           // block index (incl patch) per particle
   unsigned int *d_id;             // particle id for sorting
 
+  // per patch
+  int *d_n_prts_by_patch;         // # of particles per batch
+
   int n_patches;                  // # of patches
   unsigned int n_prts;            // total # of particles across all patches
   unsigned int n_alloced;         // size of particle-related arrays as allocated
