@@ -50,5 +50,6 @@ void cuda_mparticles_dealloc(struct cuda_mparticles *cmprts);
 void cuda_mparticles_swap_alt(struct cuda_mparticles *cmprts);
 void cuda_mparticles_find_block_indices_ids(struct cuda_mparticles *cmprts,
 					    unsigned int *n_prts_by_patch);
+void cuda_mparticles_reorder_and_offsets(struct cuda_mparticles *cmprts);
 
 #endif

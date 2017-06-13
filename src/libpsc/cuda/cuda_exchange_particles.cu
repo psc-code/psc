@@ -301,61 +301,6 @@ cuda_mprts_reorder(struct psc_mparticles *mprts)
 }
 
 // ======================================================================
-// reorder_and_offsets
-
-__global__ static void
-mprts_reorder_and_offsets(int nr_prts, float4 *xi4, float4 *pxi4, float4 *alt_xi4, float4 *alt_pxi4,
-			  unsigned int *d_bidx, unsigned int *d_ids, unsigned int *d_off, int last_block)
-{
-  int i = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
-
-  if (i > nr_prts)
-    return;
-
-  int block, prev_block;
-  if (i < nr_prts) {
-    alt_xi4[i] = xi4[d_ids[i]];
-    alt_pxi4[i] = pxi4[d_ids[i]];
-    
-    block = d_bidx[i];
-  } else { // needed if there is no particle in the last block
-    block = last_block;
-  }
-
-  // OPT: d_bidx[i-1] could use shmem
-  // create offsets per block into particle array
-  prev_block = -1;
-  if (i > 0) {
-    prev_block = d_bidx[i-1];
-  }
-  for (int b = prev_block + 1; b <= block; b++) {
-    d_off[b] = i;
-  }
-}
-
-void
-cuda_mprts_reorder_and_offsets(struct psc_mparticles *mprts)
-{
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
-  assert(cmprts);
-
-  if (cmprts->n_patches == 0) {
-    return;
-  }
-
-  int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
-  int dimGrid[2]  = { (cmprts->n_prts + 1 + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
-  RUN_KERNEL(dimGrid, dimBlock,
-	     mprts_reorder_and_offsets, (cmprts->n_prts, cmprts->d_xi4, cmprts->d_pxi4,
-					 cmprts->d_alt_xi4, cmprts->d_alt_pxi4,
-					 cmprts->d_bidx, cmprts->d_id,
-					 cmprts->d_off, cmprts->n_blocks));
-
-  cuda_mparticles_swap_alt(cmprts);
-}
-
-// ======================================================================
 // cuda_mprts_copy_from_dev
 
 void

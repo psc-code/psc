@@ -246,5 +246,5 @@ cuda_mprts_sort_initial(struct psc_mparticles *mprts)
   thrust::device_ptr<unsigned int> d_bidx(cmprts->d_bidx);
   thrust::device_ptr<unsigned int> d_id(cmprts->d_id);
   thrust::stable_sort_by_key(d_bidx, d_bidx + cmprts->n_prts, d_id);
-  cuda_mprts_reorder_and_offsets(mprts);
+  cuda_mparticles_reorder_and_offsets(cmprts);
 }
