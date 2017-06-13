@@ -47,6 +47,9 @@ void cuda_mparticles_set_domain_info(struct cuda_mparticles *cuda_mprts,
 				     const struct cuda_domain_info *info);
 void cuda_mparticles_alloc(struct cuda_mparticles *cmprts, unsigned int *n_prts_by_patch);
 void cuda_mparticles_dealloc(struct cuda_mparticles *cmprts);
+void cuda_mparticles_to_device(struct cuda_mparticles *cmprts, float4 *xi4, float4 *pxi4,
+			       unsigned int n_prts, unsigned int off);
+
 void cuda_mparticles_swap_alt(struct cuda_mparticles *cmprts);
 void cuda_mparticles_find_block_indices_ids(struct cuda_mparticles *cmprts,
 					    unsigned int *n_prts_by_patch);

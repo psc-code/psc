@@ -108,6 +108,21 @@ cuda_mparticles_dealloc(struct cuda_mparticles *cmprts)
 }
 
 // ----------------------------------------------------------------------
+// cuda_mparticles_to_device
+
+void
+cuda_mparticles_to_device(struct cuda_mparticles *cmprts, float4 *xi4, float4 *pxi4,
+			  unsigned int n_prts, unsigned int off)
+{
+  cudaError_t ierr;
+
+  ierr = cudaMemcpy(cmprts->d_xi4 + off, xi4, n_prts * sizeof(*xi4),
+		    cudaMemcpyHostToDevice); cudaCheck(ierr);
+  ierr = cudaMemcpy(cmprts->d_pxi4 + off, pxi4, n_prts * sizeof(*pxi4),
+		    cudaMemcpyHostToDevice); cudaCheck(ierr);
+}
+
+// ----------------------------------------------------------------------
 // cuda_mparticles_swap_alt
 
 void

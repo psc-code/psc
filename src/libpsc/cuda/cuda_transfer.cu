@@ -97,12 +97,8 @@ __particles_cuda_to_device(struct psc_particles *prts, float4 *xi4, float4 *pxi4
   for (int p = 0; p < prts->p; p++) {
     off += psc_mparticles_get_patch(mprts, p)->n_part;
   }
-  int n_part = prts->n_part;
 
-  check(cudaMemcpy(cmprts->d_xi4 + off, xi4, n_part * sizeof(*xi4),
-		   cudaMemcpyHostToDevice));
-  check(cudaMemcpy(cmprts->d_pxi4 + off, pxi4, n_part * sizeof(*pxi4),
-		   cudaMemcpyHostToDevice));
+  cuda_mparticles_to_device(cmprts, xi4, pxi4, prts->n_part, off);
 }
 
 EXTERN_C void
