@@ -1010,7 +1010,7 @@ cuda_push_mprts_a(struct psc_mparticles *mprts, struct psc_mfields *mflds)
   
   push_mprts_a<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
     <<<dimGrid, THREADS_PER_BLOCK>>>
-    (prm, cmprts->d_xi4, cmprts->d_pxi4, mprts_cuda->d_off,
+    (prm, cmprts->d_xi4, cmprts->d_pxi4, cmprts->d_off,
      mflds_cuda->d_flds, size, prm.b_mx[1], prm.b_mx[2]);
   cuda_sync_if_enabled();
   
@@ -1041,7 +1041,7 @@ cuda_push_mprts_aq(struct psc_mparticles *mprts, struct psc_mfields *mflds)
   for (int block_start = 0; block_start < 4; block_start++) {
     push_mprts_aq<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
       <<<dimGrid, THREADS_PER_BLOCK>>>
-      (block_start, prm, cmprts->d_xi4, cmprts->d_pxi4, mprts_cuda->d_off,
+      (block_start, prm, cmprts->d_xi4, cmprts->d_pxi4, cmprts->d_off,
        mflds_cuda->d_flds, size);
     cuda_sync_if_enabled();
   }
@@ -1074,7 +1074,7 @@ cuda_push_mprts_a_reorder(struct psc_mparticles *mprts, struct psc_mfields *mfld
   push_mprts_a_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
     <<<dimGrid, THREADS_PER_BLOCK>>>
     (prm, cmprts->d_id, cmprts->d_xi4, cmprts->d_pxi4,
-     cmprts->d_alt_xi4, cmprts->d_alt_pxi4, mprts_cuda->d_off,
+     cmprts->d_alt_xi4, cmprts->d_alt_pxi4, cmprts->d_off,
      mflds_cuda->d_flds, size);
   cuda_sync_if_enabled();
   
@@ -1095,7 +1095,7 @@ cuda_push_mprts_b(struct psc_mparticles *mprts, struct psc_mfields *mflds)
   for (int block_start = 0; block_start < 4; block_start++) {
     push_mprts_b<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> >
       <<<dimGrid, THREADS_PER_BLOCK>>>
-      (block_start, prm, cmprts->d_xi4, cmprts->d_pxi4, mprts_cuda->d_off,
+      (block_start, prm, cmprts->d_xi4, cmprts->d_pxi4, cmprts->d_off,
        cmprts->n_blocks, cmprts->d_bidx,
        mflds_cuda->d_flds, fld_size);
     cuda_sync_if_enabled();
@@ -1120,7 +1120,7 @@ cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 		    SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> >
 	<<<dimGrid, THREADS_PER_BLOCK>>>
       (block_start, prm, cmprts->d_xi4, cmprts->d_pxi4,
-       cmprts->d_alt_xi4, cmprts->d_alt_pxi4, mprts_cuda->d_off,
+       cmprts->d_alt_xi4, cmprts->d_alt_pxi4, cmprts->d_off,
        cmprts->n_blocks, cmprts->d_id, cmprts->d_bidx,
        mflds_cuda->d_flds, fld_size);
       cuda_sync_if_enabled();
@@ -1130,7 +1130,7 @@ cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
     		  GCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> >
       <<<dimGrid, THREADS_PER_BLOCK>>>
       (0, prm, cmprts->d_xi4, cmprts->d_pxi4,
-       cmprts->d_alt_xi4, cmprts->d_alt_pxi4, mprts_cuda->d_off,
+       cmprts->d_alt_xi4, cmprts->d_alt_pxi4, cmprts->d_off,
        cmprts->n_blocks, cmprts->d_id, cmprts->d_bidx,
        mflds_cuda->d_flds, fld_size);
     cuda_sync_if_enabled();

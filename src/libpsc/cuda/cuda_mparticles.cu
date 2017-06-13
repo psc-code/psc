@@ -79,6 +79,8 @@ cuda_mparticles_alloc(struct cuda_mparticles *cmprts, unsigned int *n_prts_by_pa
   ierr = cudaMalloc((void **) &cmprts->d_id, n_alloced * sizeof(unsigned int)); cudaCheck(ierr);
 
   ierr = cudaMalloc(&cmprts->d_n_prts_by_patch, cmprts->n_patches * sizeof(unsigned int)); cudaCheck(ierr);
+
+  ierr = cudaMalloc(&cmprts->d_off, (cmprts->n_blocks + 1) * sizeof(*cmprts->d_off)); cudaCheck(ierr);
 }
 
 // ----------------------------------------------------------------------
@@ -97,6 +99,8 @@ cuda_mparticles_dealloc(struct cuda_mparticles *cmprts)
   ierr = cudaFree(cmprts->d_id); cudaCheck(ierr);
 
   ierr = cudaFree(cmprts->d_n_prts_by_patch); cudaCheck(ierr);
+
+  ierr = cudaFree(cmprts->d_off); cudaCheck(ierr);
 }
 
 // ----------------------------------------------------------------------

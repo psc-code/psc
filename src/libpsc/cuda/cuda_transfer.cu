@@ -209,8 +209,6 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
   check(cudaMalloc((void **) &mprts_cuda->d_alt_bidx, cmprts->n_alloced * sizeof(unsigned int)));
   check(cudaMalloc((void **) &mprts_cuda->d_sums, cmprts->n_alloced * sizeof(unsigned int)));
 
-  check(cudaMalloc((void **) &mprts_cuda->d_off, 
-		   (cmprts->n_blocks + 1) * sizeof(*mprts_cuda->d_off)));
   check(cudaMalloc((void **) &mprts_cuda->d_bnd_spine_cnts,
 		   (1 + cmprts->n_blocks * (CUDA_BND_STRIDE + 1)) * sizeof(unsigned int)));
   check(cudaMalloc((void **) &mprts_cuda->d_bnd_spine_sums,
@@ -231,7 +229,6 @@ __psc_mparticles_cuda_free(struct psc_mparticles *mprts)
 
   check(cudaFree(mprts_cuda->d_alt_bidx));
   check(cudaFree(mprts_cuda->d_sums));
-  check(cudaFree(mprts_cuda->d_off));
   check(cudaFree(mprts_cuda->d_bnd_spine_cnts));
   check(cudaFree(mprts_cuda->d_bnd_spine_sums));
 

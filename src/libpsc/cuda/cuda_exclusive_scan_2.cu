@@ -169,7 +169,7 @@ cuda_mprts_scan_send_buf_total_gold(struct psc_mparticles *mprts)
 
   thrust::device_ptr<unsigned int> d_bidx(cmprts->d_bidx);
   thrust::device_ptr<unsigned int> d_sums(mprts_cuda->d_sums);
-  thrust::device_ptr<unsigned int> d_off(mprts_cuda->d_off);
+  thrust::device_ptr<unsigned int> d_off(cmprts->d_off);
   thrust::device_ptr<unsigned int> d_spine_sums(mprts_cuda->d_bnd_spine_sums);
   thrust::host_vector<unsigned int> h_off(d_off, d_off + n_blocks + 1);
   thrust::host_vector<unsigned int> h_bidx(d_bidx, d_bidx + cmprts->n_prts);
@@ -217,7 +217,7 @@ cuda_mprts_scan_send_buf_total(struct psc_mparticles *mprts)
 		       8, 8> 
       <<<n_blocks, B40C_RADIXSORT_THREADS>>>
       (mprts_cuda->d_bnd_spine_sums, cmprts->d_bidx,
-       cmprts->d_id, mprts_cuda->d_off, n_blocks);
+       cmprts->d_id, cmprts->d_off, n_blocks);
   } else if (b_mx[0] == 1 && b_mx[1] == 16 && b_mx[2] == 16) {
     ScanScatterDigits4<K, V, 0, RADIX_BITS, 0,
 		       NopFunctor<K>,
@@ -225,7 +225,7 @@ cuda_mprts_scan_send_buf_total(struct psc_mparticles *mprts)
 		       16, 16> 
       <<<n_blocks, B40C_RADIXSORT_THREADS>>>
       (mprts_cuda->d_bnd_spine_sums, cmprts->d_bidx,
-       cmprts->d_id, mprts_cuda->d_off, n_blocks);
+       cmprts->d_id, cmprts->d_off, n_blocks);
   } else if (b_mx[0] == 1 && b_mx[1] == 32 && b_mx[2] == 32) {
     ScanScatterDigits4<K, V, 0, RADIX_BITS, 0,
 		       NopFunctor<K>,
@@ -233,7 +233,7 @@ cuda_mprts_scan_send_buf_total(struct psc_mparticles *mprts)
 		       32, 32> 
       <<<n_blocks, B40C_RADIXSORT_THREADS>>>
       (mprts_cuda->d_bnd_spine_sums, cmprts->d_bidx,
-       cmprts->d_id, mprts_cuda->d_off, n_blocks);
+       cmprts->d_id, cmprts->d_off, n_blocks);
   } else if (b_mx[0] == 1 && b_mx[1] == 64 && b_mx[2] == 64) {
     ScanScatterDigits4<K, V, 0, RADIX_BITS, 0,
 		       NopFunctor<K>,
@@ -241,7 +241,7 @@ cuda_mprts_scan_send_buf_total(struct psc_mparticles *mprts)
 		       64, 64> 
       <<<n_blocks, B40C_RADIXSORT_THREADS>>>
       (mprts_cuda->d_bnd_spine_sums, cmprts->d_bidx,
-       cmprts->d_id, mprts_cuda->d_off, n_blocks);
+       cmprts->d_id, cmprts->d_off, n_blocks);
   } else if (b_mx[0] == 1 && b_mx[1] == 128 && b_mx[2] == 128) {
     ScanScatterDigits4<K, V, 0, RADIX_BITS, 0,
                        NopFunctor<K>,
@@ -249,7 +249,7 @@ cuda_mprts_scan_send_buf_total(struct psc_mparticles *mprts)
                        128, 128>
       <<<n_blocks, B40C_RADIXSORT_THREADS>>>
       (mprts_cuda->d_bnd_spine_sums, cmprts->d_bidx,
-       cmprts->d_id, mprts_cuda->d_off, n_blocks);
+       cmprts->d_id, cmprts->d_off, n_blocks);
   } else {
     mprintf("no support for b_mx %d x %d x %d!\n", b_mx[0], b_mx[1], b_mx[2]);
     assert(0);

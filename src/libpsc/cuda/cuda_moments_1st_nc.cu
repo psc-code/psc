@@ -150,7 +150,7 @@ rho_1st_nc_cuda_run_patches_no_reorder(struct psc_mparticles *mprts, struct psc_
   rho_1st_nc_cuda_run<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER>
     <<<dimGrid, THREADS_PER_BLOCK>>>
     (0, prm, cmprts->d_xi4, cmprts->d_pxi4,
-     mprts_cuda->d_off,
+     cmprts->d_off,
      cmprts->n_blocks, cmprts->d_id,
      mres_cuda->d_flds, fld_size);
   cuda_sync_if_enabled();
