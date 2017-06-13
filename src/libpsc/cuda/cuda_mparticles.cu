@@ -1,6 +1,10 @@
 
 #include "cuda_mparticles.h"
 
+#include <thrust/host_vector.h>
+#include <thrust/device_vector.h>
+#include <thrust/sort.h>
+
 #include <cstdio>
 #include <cassert>
 
@@ -259,4 +263,16 @@ cuda_mparticles_reorder_and_offsets(struct cuda_mparticles *cmprts)
   cuda_mparticles_swap_alt(cmprts);
 }
 
+// ----------------------------------------------------------------------
+// cuda_mparticles_sort_initial
 
+void
+cuda_mparticles_sort_initial(struct cuda_mparticles *cmprts,
+			     unsigned int *n_prts_by_patch)
+{
+  cuda_mparticles_find_block_indices_ids(cmprts, n_prts_by_patch);
+  thrust::device_ptr<unsigned int> d_bidx(cmprts->d_bidx);
+  thrust::device_ptr<unsigned int> d_id(cmprts->d_id);
+  thrust::stable_sort_by_key(d_bidx, d_bidx + cmprts->n_prts, d_id);
+  cuda_mparticles_reorder_and_offsets(cmprts);
+}

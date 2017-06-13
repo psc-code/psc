@@ -589,7 +589,13 @@ psc_mparticles_cuda_setup_internals(struct psc_mparticles *mprts)
   assert((mprts->flags & MP_NEED_BLOCK_OFFSETS) &&
 	 !(mprts->flags & MP_NEED_CELL_OFFSETS));
 
-  cuda_mprts_sort_initial(mprts);
+  unsigned int n_prts_by_patch[mprts->nr_patches];
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    n_prts_by_patch[p] = prts->n_part;
+  }
+
+  cuda_mprts_sort_initial(mprts, n_prts_by_patch);
 }
 
 // ======================================================================
