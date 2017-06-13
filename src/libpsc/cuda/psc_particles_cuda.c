@@ -169,21 +169,6 @@ blockIdx_to_blockCrd(struct psc_patch *patch, struct cell_map *map,
 }
 
 static void
-particles_cuda_to_device(struct psc_particles *prts, float4 *xi4, float4 *pxi4)
-{
-  struct psc_mparticles *mprts = psc_particles_cuda(prts)->mprts;
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
-
-  unsigned int off = 0;
-  for (int p = 0; p < prts->p; p++) {
-    off += psc_mparticles_get_patch(mprts, p)->n_part;
-  }
-
-  cuda_mparticles_to_device(cmprts, xi4, pxi4, prts->n_part, off);
-}
-
-static void
 copy_from(struct psc_particles *prts_cuda, struct psc_particles *prts,
 	  void (*get_particle)(struct cuda_mparticles_prt *prt, int n, struct psc_particles *prts))
 {
@@ -495,6 +480,7 @@ psc_mparticles_cuda_read(struct psc_mparticles *mprts, struct mrc_io *io)
   long h5_file;
   mrc_io_get_h5_file(io, &h5_file);
 
+  unsigned int off = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = mprts->prts[p];
     if (prts->n_part > 0) {
@@ -510,12 +496,16 @@ psc_mparticles_cuda_read(struct psc_mparticles *mprts, struct mrc_io *io)
       ierr = H5LTread_dataset_float(group, "xi4", (float *) xi4); CE;
       ierr = H5LTread_dataset_float(group, "pxi4", (float *) pxi4); CE;
       
-      particles_cuda_to_device(prts, xi4, pxi4);
+      struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+      struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+      
+      cuda_mparticles_to_device(cmprts, xi4, pxi4, prts->n_part, off);
       
       free(xi4);
       free(pxi4);
       ierr = H5Gclose(group); CE;
     }
+    off += prts->n_part;
   }
 
   psc_mparticles_setup_internals(mprts);
