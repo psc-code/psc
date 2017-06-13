@@ -20,6 +20,14 @@
     }									\
   } while(0)
 
+static inline float
+cuda_int_as_float(int i)
+{
+  union { int i; float f; } u;
+  u.i = i;
+  return u.f;
+};
+
 // ----------------------------------------------------------------------
 // cuda_mparticles_create
 
@@ -291,3 +299,51 @@ cuda_mparticles_sort_initial(struct cuda_mparticles *cmprts,
   thrust::stable_sort_by_key(d_bidx, d_bidx + cmprts->n_prts, d_id);
   cuda_mparticles_reorder_and_offsets(cmprts);
 }
+
+// ----------------------------------------------------------------------
+// cuda_mparticles_set_particles
+
+void
+cuda_mparticles_set_particles(struct cuda_mparticles *cmprts, unsigned int n_prts, unsigned int off,
+			      void (*get_particle)(struct cuda_mparticles_prt *prt, int n, void *ctx),
+			      void *ctx)
+{
+  float4 *xi4  = new float4[n_prts];
+  float4 *pxi4 = new float4[n_prts];
+  
+  for (int n = 0; n < n_prts; n++) {
+    struct cuda_mparticles_prt prt;
+    get_particle(&prt, n, ctx);
+
+    for (int d = 0; d < 3; d++) {
+      int bi = floorf(prt.xi[d] * cmprts->b_dxi[d]); // FIXME, consolidate the fint stuff
+      if (bi < 0 || bi >= cmprts->b_mx[d]) {
+	printf("XXX xi %g %g %g\n", prt.xi[0], prt.xi[1], prt.xi[2]);
+	printf("XXX n %d d %d xi4[n] %g biy %d // %d\n",
+	       n, d, prt.xi[d], bi, cmprts->b_mx[d]);
+	if (bi < 0) {
+	  prt.xi[d] = 0.f;
+	} else {
+	  prt.xi[d] *= (1. - 1e-6);
+	}
+      }
+      bi = floorf(prt.xi[d] * cmprts->b_dxi[d]);
+      assert(bi >= 0 && bi < cmprts->b_mx[d]);
+    }
+
+    xi4[n].x  = prt.xi[0];
+    xi4[n].y  = prt.xi[1];
+    xi4[n].z  = prt.xi[2];
+    xi4[n].w  = cuda_int_as_float(prt.kind);
+    pxi4[n].x = prt.pxi[0];
+    pxi4[n].y = prt.pxi[1];
+    pxi4[n].z = prt.pxi[2];
+    pxi4[n].w = prt.qni_wni;
+  }
+
+  cuda_mparticles_to_device(cmprts, xi4, pxi4, n_prts, off);
+  
+  delete[] xi4;
+  delete[] pxi4;
+}
+
