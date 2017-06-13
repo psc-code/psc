@@ -32,6 +32,25 @@ cuda_mparticles_destroy(struct cuda_mparticles *cmprts)
 }
 
 // ----------------------------------------------------------------------
+// cuda_mparticles_set_domain_info
+
+void
+cuda_mparticles_set_domain_info(struct cuda_mparticles *cuda_mprts,
+				const struct cuda_domain_info *info)
+{
+  cuda_mprts->n_patches = info->n_patches;
+  for (int d = 0; d < 3; d++) {
+    cuda_mprts->mx[d] = info->mx[d];
+    cuda_mprts->b_mx[d] = info->mx[d] / info->bs[d];
+    cuda_mprts->dx[d] = info->dx[d];
+    cuda_mprts->b_dxi[d] = 1.f / (info->bs[d] * info->dx[d]);
+  }
+  // cuda_mprts->nr_blocks_per_patch =
+  //   cuda_mprts->b_mx[0] * cuda_mprts->b_mx[1] * cuda_mprts->b_mx[2];
+  // cuda_mprts->nr_blocks = info->nr_patches * cuda_mprts->nr_blocks_per_patch;
+}
+
+// ----------------------------------------------------------------------
 // cuda_mparticles_alloc
 
 void

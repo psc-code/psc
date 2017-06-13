@@ -149,8 +149,6 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
   struct cuda_mparticles *cmprts = cuda_mparticles_create();
   mprts_cuda->cmprts = cmprts;
 
-  cmprts->n_patches = mprts->nr_patches;
-
   if (mprts->nr_patches == 0) {
     return;
   }
@@ -183,6 +181,14 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
   }
   mprts_cuda->nr_blocks = mprts_cuda->b_mx[0] * mprts_cuda->b_mx[1] * mprts_cuda->b_mx[2];
   mprts_cuda->nr_total_blocks = mprts->nr_patches * mprts_cuda->nr_blocks;
+
+  struct cuda_domain_info domain_info = {
+    .n_patches = mprts->nr_patches,
+    .mx        = { ldims[0], ldims[1], ldims[2] },
+    .bs        = { bs[0], bs[1], bs[2] },
+    .dx        = { ppsc->patch[0].dx[0], ppsc->patch[0].dx[1], ppsc->patch[0].dx[2] },
+  };
+  cuda_mparticles_set_domain_info(cmprts, &domain_info);
 
   mprts_cuda->h_n_prts = new int[mprts->nr_patches];
 

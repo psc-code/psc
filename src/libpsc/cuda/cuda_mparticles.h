@@ -2,6 +2,19 @@
 #ifndef CUDA_MPARTICLES_H
 #define CUDA_MPARTICLES_H
 
+// ----------------------------------------------------------------------
+// cuda_domain_info
+
+struct cuda_domain_info {
+  int n_patches;
+  int mx[3]; // number of cells per patch
+  int bs[3]; // size of each block / super-cell
+  double dx[3]; // size of a single cell
+};
+
+// ----------------------------------------------------------------------
+// cuda_mparticles
+
 struct cuda_mparticles {
   // per particle
   float4 *d_xi4, *d_pxi4;         // current particle data
@@ -15,10 +28,17 @@ struct cuda_mparticles {
   int n_patches;                  // # of patches
   unsigned int n_prts;            // total # of particles across all patches
   unsigned int n_alloced;         // size of particle-related arrays as allocated
+
+  int mx[3];                      // number of cells per direction in each patch
+  int b_mx[3];                    // number of blocks per direction in each patch
+  float dx[3];                    // cell size (in actual length units)
+  float b_dxi[3];                 // inverse of block size (in actual length units)
 };
 
 struct cuda_mparticles *cuda_mparticles_create(void);
 void cuda_mparticles_destroy(struct cuda_mparticles *cmprts);
+void cuda_mparticles_set_domain_info(struct cuda_mparticles *cuda_mprts,
+				     const struct cuda_domain_info *info);
 void cuda_mparticles_alloc(struct cuda_mparticles *cmprts, unsigned int *n_prts_by_patch);
 void cuda_mparticles_dealloc(struct cuda_mparticles *cmprts);
 void cuda_mparticles_swap_alt(struct cuda_mparticles *cmprts);
