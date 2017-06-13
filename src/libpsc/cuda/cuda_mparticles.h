@@ -16,7 +16,7 @@ struct cuda_mparticles {
 
 struct cuda_mparticles *cuda_mparticles_create(void);
 void cuda_mparticles_destroy(struct cuda_mparticles *cmprts);
-void cuda_mparticles_alloc(struct cuda_mparticles *cmprts, int n_alloced);
+void cuda_mparticles_alloc(struct cuda_mparticles *cmprts, unsigned int *n_prts_by_patch);
 void cuda_mparticles_dealloc(struct cuda_mparticles *cmprts);
 void cuda_mparticles_swap_alt(struct cuda_mparticles *cmprts);
 

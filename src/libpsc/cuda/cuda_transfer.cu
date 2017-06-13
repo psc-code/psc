@@ -188,21 +188,24 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
   check(cudaMalloc(&mprts_cuda->d_n_prts,
 		   mprts->nr_patches * sizeof(int)));
 
-  cmprts->n_prts = 0;
+  mprts_cuda->h_bnd_cnt = new unsigned int[mprts_cuda->nr_total_blocks];
+
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *prts_cuda = psc_particles_cuda(prts);
-    cmprts->n_prts += prts->n_part;
     prts_cuda->mprts = mprts;
   }
-  mprts_cuda->h_bnd_cnt = new unsigned int[mprts_cuda->nr_total_blocks];
-  unsigned int n_alloced = cmprts->n_prts * 1.4;
-  cmprts->n_alloced = n_alloced;
 
-  cuda_mparticles_alloc(cmprts, n_alloced);
+  unsigned int n_prts_by_patch[cmprts->n_patches];
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    n_prts_by_patch[p] = prts->n_part;
+  }
 
-  check(cudaMalloc((void **) &mprts_cuda->d_alt_bidx, n_alloced * sizeof(unsigned int)));
-  check(cudaMalloc((void **) &mprts_cuda->d_sums, n_alloced * sizeof(unsigned int)));
+  cuda_mparticles_alloc(cmprts, n_prts_by_patch);
+
+  check(cudaMalloc((void **) &mprts_cuda->d_alt_bidx, cmprts->n_alloced * sizeof(unsigned int)));
+  check(cudaMalloc((void **) &mprts_cuda->d_sums, cmprts->n_alloced * sizeof(unsigned int)));
 
   check(cudaMalloc((void **) &mprts_cuda->d_off, 
 		   (mprts_cuda->nr_total_blocks + 1) * sizeof(*mprts_cuda->d_off)));

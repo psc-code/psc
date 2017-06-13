@@ -35,16 +35,24 @@ cuda_mparticles_destroy(struct cuda_mparticles *cmprts)
 // cuda_mparticles_alloc
 
 void
-cuda_mparticles_alloc(struct cuda_mparticles *cmprts, int nr_alloced)
+cuda_mparticles_alloc(struct cuda_mparticles *cmprts, unsigned int *n_prts_by_patch)
 {
   cudaError_t ierr;
 
-  ierr = cudaMalloc((void **) &cmprts->d_xi4, nr_alloced * sizeof(float4)); cudaCheck(ierr);
-  ierr = cudaMalloc((void **) &cmprts->d_pxi4, nr_alloced * sizeof(float4)); cudaCheck(ierr);
-  ierr = cudaMalloc((void **) &cmprts->d_alt_xi4, nr_alloced * sizeof(float4)); cudaCheck(ierr);
-  ierr = cudaMalloc((void **) &cmprts->d_alt_pxi4, nr_alloced * sizeof(float4)); cudaCheck(ierr);
-  ierr = cudaMalloc((void **) &cmprts->d_bidx, nr_alloced * sizeof(unsigned int)); cudaCheck(ierr);
-  ierr = cudaMalloc((void **) &cmprts->d_id, nr_alloced * sizeof(unsigned int)); cudaCheck(ierr);
+  cmprts->n_prts = 0;
+  for (int p = 0; p < cmprts->n_patches; p++) {
+    cmprts->n_prts += n_prts_by_patch[p];
+  }
+
+  cmprts->n_alloced = cmprts->n_prts * 1.4;
+  unsigned int n_alloced = cmprts->n_alloced;
+
+  ierr = cudaMalloc((void **) &cmprts->d_xi4, n_alloced * sizeof(float4)); cudaCheck(ierr);
+  ierr = cudaMalloc((void **) &cmprts->d_pxi4, n_alloced * sizeof(float4)); cudaCheck(ierr);
+  ierr = cudaMalloc((void **) &cmprts->d_alt_xi4, n_alloced * sizeof(float4)); cudaCheck(ierr);
+  ierr = cudaMalloc((void **) &cmprts->d_alt_pxi4, n_alloced * sizeof(float4)); cudaCheck(ierr);
+  ierr = cudaMalloc((void **) &cmprts->d_bidx, n_alloced * sizeof(unsigned int)); cudaCheck(ierr);
+  ierr = cudaMalloc((void **) &cmprts->d_id, n_alloced * sizeof(unsigned int)); cudaCheck(ierr);
 }
 
 // ----------------------------------------------------------------------
