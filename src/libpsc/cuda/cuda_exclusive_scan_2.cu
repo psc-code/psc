@@ -75,6 +75,7 @@ void
 cuda_mprts_find_n_send(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
 
   int nr_total_blocks = mprts_cuda->nr_total_blocks;
 
@@ -90,7 +91,7 @@ cuda_mprts_find_n_send(struct psc_mparticles *mprts)
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
 
-    unsigned int n_send = h_spine_sums[(p + 1) * mprts_cuda->nr_blocks];
+    unsigned int n_send = h_spine_sums[(p + 1) * cmprts->n_blocks_per_patch];
     cuda->bnd_n_send = n_send - off;
     off = n_send;
   }

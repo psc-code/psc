@@ -179,8 +179,8 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
     // assumes no AMR
     mprts_cuda->b_dxi[d] = 1.f / (mprts_cuda->blocksize[d] * ppsc->patch[0].dx[d]);
   }
-  mprts_cuda->nr_blocks = mprts_cuda->b_mx[0] * mprts_cuda->b_mx[1] * mprts_cuda->b_mx[2];
-  mprts_cuda->nr_total_blocks = mprts->nr_patches * mprts_cuda->nr_blocks;
+  cmprts->n_blocks_per_patch = mprts_cuda->b_mx[0] * mprts_cuda->b_mx[1] * mprts_cuda->b_mx[2];
+  mprts_cuda->nr_total_blocks = mprts->nr_patches * cmprts->n_blocks_per_patch;
 
   struct cuda_domain_info domain_info = {
     .n_patches = mprts->nr_patches,

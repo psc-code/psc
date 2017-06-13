@@ -45,7 +45,6 @@ struct psc_mparticles_cuda {
   unsigned int *h_bnd_idx;
   unsigned int *h_bnd_off;
   unsigned int *h_bnd_cnt;
-  int nr_blocks;                 // number of blocks per patch
   int nr_total_blocks;           // number of blocks in all patches in mprts
   int b_mx[3];                   // number of blocks by direction
   int blocksize[3];              // dimensions of sub blocks in a patch

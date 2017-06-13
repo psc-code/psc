@@ -85,7 +85,7 @@ cuda_mprts_bidx_to_key_gold(struct psc_mparticles *mprts)
   struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
 
   unsigned int nr_total_blocks = mprts_cuda->nr_total_blocks;
-  unsigned int nr_blocks = mprts_cuda->nr_blocks;
+  unsigned int n_blocks_per_patch = cmprts->n_blocks_per_patch;
 
   thrust::device_ptr<unsigned int> d_bidx(cmprts->d_bidx);
   thrust::device_ptr<unsigned int> d_off(mprts_cuda->d_off);
@@ -96,9 +96,9 @@ cuda_mprts_bidx_to_key_gold(struct psc_mparticles *mprts)
   int *b_mx = mprts_cuda->b_mx;
 
   for (int bid = 0; bid < nr_total_blocks; bid++) {
-    int p = bid / nr_blocks;
+    int p = bid / n_blocks_per_patch;
     for (int n = h_off[bid]; n < h_off[bid+1]; n++) {
-      assert((h_bidx[n] >= p * nr_blocks && h_bidx[n] < (p+1) * nr_blocks) ||
+      assert((h_bidx[n] >= p * n_blocks_per_patch && h_bidx[n] < (p+1) * n_blocks_per_patch) ||
 	     (h_bidx[n] == nr_total_blocks));
       int bidx;
       if (h_bidx[n] == mprts_cuda->nr_total_blocks) {
@@ -315,7 +315,7 @@ cuda_mprts_spine_reduce_gold(struct psc_mparticles *mprts)
   struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
 
   unsigned int nr_total_blocks = mprts_cuda->nr_total_blocks;
-  unsigned int nr_blocks = mprts_cuda->nr_blocks;
+  unsigned int n_blocks_per_patch = cmprts->n_blocks_per_patch;
   int *b_mx = mprts_cuda->b_mx;
 
   thrust::device_ptr<unsigned int> d_spine_cnts(mprts_cuda->d_bnd_spine_cnts);
@@ -331,8 +331,8 @@ cuda_mprts_spine_reduce_gold(struct psc_mparticles *mprts)
 
   
   for (int p = 0; p < mprts->nr_patches; p++) {
-    for (int b = 0; b < nr_blocks; b++) {
-      unsigned int bid = b + p * nr_blocks;
+    for (int b = 0; b < n_blocks_per_patch; b++) {
+      unsigned int bid = b + p * n_blocks_per_patch;
       for (int n = h_off[bid]; n < h_off[bid+1]; n++) {
 	unsigned int key = h_bidx[n];
 	if (key < 9) {
@@ -344,7 +344,7 @@ cuda_mprts_spine_reduce_gold(struct psc_mparticles *mprts)
 	  unsigned int bbz = bz + 1 - dz;
 	  unsigned int bb = bbz * b_mx[1] + bby;
 	  if (bby < b_mx[1] && bbz < b_mx[2]) {
-	    h_spine_cnts[(bb + p * nr_blocks) * 10 + key]++;
+	    h_spine_cnts[(bb + p * n_blocks_per_patch) * 10 + key]++;
 	  } else {
 	    assert(0);
 	  }
@@ -453,7 +453,7 @@ cuda_mprts_sort_pairs_gold(struct psc_mparticles *mprts)
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
   struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
 
-  int nr_blocks = mprts_cuda->nr_blocks;
+  unsigned int n_blocks_per_patch = cmprts->n_blocks_per_patch;
   int nr_total_blocks = mprts_cuda->nr_total_blocks;
   int *b_mx = mprts_cuda->b_mx;
 
@@ -479,8 +479,8 @@ cuda_mprts_sort_pairs_gold(struct psc_mparticles *mprts)
   thrust::copy(h_spine_sums.begin(), h_spine_sums.end(), d_spine_sums);
 
   for (int bid = 0; bid < nr_total_blocks; bid++) {
-    int b = bid % nr_blocks;
-    int p = bid / nr_blocks;
+    int b = bid % n_blocks_per_patch;
+    int p = bid / n_blocks_per_patch;
     for (int n = h_off[bid]; n < h_off[bid+1]; n++) {
       unsigned int key = h_bidx[n];
       if (key < 9) {
@@ -492,7 +492,7 @@ cuda_mprts_sort_pairs_gold(struct psc_mparticles *mprts)
 	unsigned int bbz = bz + 1 - dz;
 	assert(bby < b_mx[1] && bbz < b_mx[2]);
 	unsigned int bb = bbz * b_mx[1] + bby;
-	int nn = h_spine_sums[(bb + p * nr_blocks) * 10 + key]++;
+	int nn = h_spine_sums[(bb + p * n_blocks_per_patch) * 10 + key]++;
 	h_id[nn] = n;
       } else { // OOB
 	assert(0);
