@@ -180,7 +180,7 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
     mprts_cuda->b_dxi[d] = 1.f / (mprts_cuda->blocksize[d] * ppsc->patch[0].dx[d]);
   }
   cmprts->n_blocks_per_patch = mprts_cuda->b_mx[0] * mprts_cuda->b_mx[1] * mprts_cuda->b_mx[2];
-  mprts_cuda->nr_total_blocks = mprts->nr_patches * cmprts->n_blocks_per_patch;
+  cmprts->n_blocks = cmprts->n_patches * cmprts->n_blocks_per_patch;
 
   struct cuda_domain_info domain_info = {
     .n_patches = mprts->nr_patches,
@@ -192,7 +192,7 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
 
   mprts_cuda->h_n_prts = new int[mprts->nr_patches];
 
-  mprts_cuda->h_bnd_cnt = new unsigned int[mprts_cuda->nr_total_blocks];
+  mprts_cuda->h_bnd_cnt = new unsigned int[cmprts->n_blocks];
 
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
@@ -212,11 +212,11 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
   check(cudaMalloc((void **) &mprts_cuda->d_sums, cmprts->n_alloced * sizeof(unsigned int)));
 
   check(cudaMalloc((void **) &mprts_cuda->d_off, 
-		   (mprts_cuda->nr_total_blocks + 1) * sizeof(*mprts_cuda->d_off)));
+		   (cmprts->n_blocks + 1) * sizeof(*mprts_cuda->d_off)));
   check(cudaMalloc((void **) &mprts_cuda->d_bnd_spine_cnts,
-		   (1 + mprts_cuda->nr_total_blocks * (CUDA_BND_STRIDE + 1)) * sizeof(unsigned int)));
+		   (1 + cmprts->n_blocks * (CUDA_BND_STRIDE + 1)) * sizeof(unsigned int)));
   check(cudaMalloc((void **) &mprts_cuda->d_bnd_spine_sums,
-		   (1 + mprts_cuda->nr_total_blocks * (CUDA_BND_STRIDE + 1)) * sizeof(unsigned int)));
+		   (1 + cmprts->n_blocks * (CUDA_BND_STRIDE + 1)) * sizeof(unsigned int)));
 }
 
 void
@@ -1393,5 +1393,17 @@ fields_device_pack3_yz(struct psc_mfields *mflds, int mb, int me)
 
   thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
 #endif
+}
+
+// ----------------------------------------------------------------------
+// cuda_mparticles_zero_h_bnd_cnt
+
+void
+cuda_mparticles_zero_h_bnd_cnt(struct psc_mparticles *mprts)
+{
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  memset(mprts_cuda->h_bnd_cnt, 0,
+	 cmprts->n_blocks * sizeof(*mprts_cuda->h_bnd_cnt));
 }
 

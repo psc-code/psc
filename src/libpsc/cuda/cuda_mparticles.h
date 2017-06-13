@@ -25,10 +25,11 @@ struct cuda_mparticles {
   // per patch
   int *d_n_prts_by_patch;         // # of particles per batch
 
-  unsigned int n_patches;         // # of patches
   unsigned int n_prts;            // total # of particles across all patches
   unsigned int n_alloced;         // size of particle-related arrays as allocated
+  unsigned int n_patches;         // # of patches
   unsigned int n_blocks_per_patch;// number of blocks per patch
+  unsigned int n_blocks;          // number of blocks in all patches in mprts
 
   int mx[3];                      // number of cells per direction in each patch
   int b_mx[3];                    // number of blocks per direction in each patch

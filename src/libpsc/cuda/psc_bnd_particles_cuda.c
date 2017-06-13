@@ -133,8 +133,7 @@ mprts_convert_to_cuda(struct psc_bnd_particles *bnd, struct psc_mparticles *mprt
   mprts_cuda->h_bnd_idx  = malloc(nr_recv * sizeof(*mprts_cuda->h_bnd_idx));
   mprts_cuda->h_bnd_off  = malloc(nr_recv * sizeof(*mprts_cuda->h_bnd_off));
 
-  memset(mprts_cuda->h_bnd_cnt, 0,
-	 mprts_cuda->nr_total_blocks * sizeof(*mprts_cuda->h_bnd_cnt));
+  cuda_mparticles_zero_h_bnd_cnt(mprts);
 
   unsigned int off = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {

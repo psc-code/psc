@@ -184,11 +184,11 @@ cuda_mprts_find_block_keys(struct psc_mparticles *mprts)
   set_params(&prm, ppsc, mprts, NULL);
     
   int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
-  int dimGrid[2]  = { mprts_cuda->nr_total_blocks, 1 };
+  int dimGrid[2]  = { cmprts->n_blocks, 1 };
   
   RUN_KERNEL(dimGrid, dimBlock,
 	     mprts_find_block_keys, (prm, cmprts->d_xi4, mprts_cuda->d_off,
-				     cmprts->d_bidx, mprts_cuda->nr_total_blocks));
+				     cmprts->d_bidx, cmprts->n_blocks));
   free_params(&prm);
 }
 
@@ -210,9 +210,9 @@ cuda_mprts_find_block_indices_3(struct psc_mparticles *mprts)
 		   nr_recv * sizeof(*cmprts->d_bidx),
 		   cudaMemcpyHostToDevice));
   // slight abuse of the now unused last part of spine_cnts
-  check(cudaMemcpy(mprts_cuda->d_bnd_spine_cnts + 10 * mprts_cuda->nr_total_blocks,
+  check(cudaMemcpy(mprts_cuda->d_bnd_spine_cnts + 10 * cmprts->n_blocks,
 		   mprts_cuda->h_bnd_cnt,
-		   mprts_cuda->nr_total_blocks * sizeof(*mprts_cuda->d_bnd_spine_cnts),
+		   cmprts->n_blocks * sizeof(*mprts_cuda->d_bnd_spine_cnts),
 		   cudaMemcpyHostToDevice));
   check(cudaMemcpy(mprts_cuda->d_alt_bidx + nr_prts_prev, mprts_cuda->h_bnd_off,
 		   nr_recv * sizeof(*mprts_cuda->d_alt_bidx),
@@ -260,7 +260,7 @@ cuda_mprts_reorder_send_buf_total(struct psc_mparticles *mprts)
   int dimGrid[2]  = { (cmprts->n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
   
   RUN_KERNEL(dimGrid, dimBlock,
-	     mprts_reorder_send_buf_total, (cmprts->n_prts, mprts_cuda->nr_total_blocks,
+	     mprts_reorder_send_buf_total, (cmprts->n_prts, cmprts->n_blocks,
 					    cmprts->d_bidx, mprts_cuda->d_sums,
 					    cmprts->d_xi4, cmprts->d_pxi4,
 					    xchg_xi4, xchg_pxi4));

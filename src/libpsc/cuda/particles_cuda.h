@@ -53,4 +53,6 @@ EXTERN_C void cuda_mprts_sort_pairs_device(struct psc_mparticles *mprts);
 EXTERN_C void __psc_mparticles_cuda_setup(struct psc_mparticles *mprts);
 EXTERN_C void __psc_mparticles_cuda_free(struct psc_mparticles *mprts);
 
+EXTERN_C void cuda_mparticles_zero_h_bnd_cnt(struct psc_mparticles *mprts);
+
 #endif
