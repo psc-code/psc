@@ -49,6 +49,8 @@ EXTERN_C void cuda_mprts_reorder(struct psc_mparticles *mprts);
 EXTERN_C void cuda_mprts_check_ordered_total(struct psc_mparticles *mprts);
 EXTERN_C void cuda_mprts_sort_pairs_device(struct psc_mparticles *mprts);
 
+EXTERN_C void cuda_mparticles_find_block_indices_ids(struct psc_mparticles *mprts);
+
 // FIXME, resolve this header mess eventually
 
 EXTERN_C void __psc_mparticles_cuda_setup(struct psc_mparticles *mprts);
