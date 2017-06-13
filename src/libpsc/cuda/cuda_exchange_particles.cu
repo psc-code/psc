@@ -234,20 +234,27 @@ cuda_mprts_find_block_indices_ids_total(struct psc_mparticles *mprts)
     return;
   }
 
-  int max_n_part = 0;
-  int nr_prts = 0;
   mprts_cuda->nr_prts_send = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
     mprts_cuda->nr_prts_send += cuda->bnd_n_send;
+  }
+  
+  int max_n_part = 0;
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     if (prts->n_part > max_n_part) {
       max_n_part = prts->n_part;
     }
-    mprts_cuda->h_n_prts[p] = prts->n_part;
-    nr_prts += prts->n_part;
   }
-  cmprts->n_prts = nr_prts;
+
+  cmprts->n_prts = 0;
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    mprts_cuda->h_n_prts[p] = prts->n_part;
+    cmprts->n_prts += prts->n_part;
+  }
   psc_mparticles_cuda_copy_to_dev(mprts);
 
   struct cuda_params prm;
