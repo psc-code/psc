@@ -190,34 +190,33 @@ struct cuda_mparticles_prt {
   float qni_wni;
 };
 
-static void
-copy_from(struct psc_particles *prts_cuda, struct psc_particles *prts,
-	  void (*get_particle)(struct cuda_mparticles_prt *prt, struct psc_particles *prts, int n))
+void
+cuda_mparticles_set_particles(struct cuda_mparticles *cmprts, unsigned int n_prts, unsigned int off,
+			      void (*get_particle)(struct cuda_mparticles_prt *prt, int n, void *ctx),
+			      void *ctx)
 {
-  struct psc_particles_cuda *cuda = psc_particles_cuda(prts_cuda);
-
-  float4 *xi4  = calloc(prts->n_part, sizeof(float4));
-  float4 *pxi4 = calloc(prts->n_part, sizeof(float4));
+  float4 *xi4  = calloc(n_prts, sizeof(float4));
+  float4 *pxi4 = calloc(n_prts, sizeof(float4));
   
-  for (int n = 0; n < prts->n_part; n++) {
+  for (int n = 0; n < n_prts; n++) {
     struct cuda_mparticles_prt prt;
-    get_particle(&prt, prts, n);
+    get_particle(&prt, n, ctx);
 
     for (int d = 0; d < 3; d++) {
-      int bi = particle_single_real_fint(prt.xi[d] * cuda->b_dxi[d]);
-      if (bi < 0 || bi >= cuda->b_mx[d]) {
+      int bi = particle_single_real_fint(prt.xi[d] * cmprts->b_dxi[d]);
+      if (bi < 0 || bi >= cmprts->b_mx[d]) {
 	MHERE;
-	mprintf("XXX p %d xi %g %g %g\n", prts->p, prt.xi[0], prt.xi[1], prt.xi[2]);
-	mprintf("XXX p %d n %d d %d xi4[n] %g biy %d // %d\n",
-		prts->p, n, d, prt.xi[d], bi, cuda->b_mx[d]);
+	mprintf("XXX xi %g %g %g\n", prt.xi[0], prt.xi[1], prt.xi[2]);
+	mprintf("XXX n %d d %d xi4[n] %g biy %d // %d\n",
+		n, d, prt.xi[d], bi, cmprts->b_mx[d]);
 	if (bi < 0) {
 	  prt.xi[d] = 0.f;
 	} else {
 	  prt.xi[d] *= (1. - 1e-6);
 	}
       }
-      bi = particle_single_real_fint(prt.xi[d] * cuda->b_dxi[d]);
-      assert(bi >= 0 && bi < cuda->b_mx[d]);
+      bi = particle_single_real_fint(prt.xi[d] * cmprts->b_dxi[d]);
+      assert(bi >= 0 && bi < cmprts->b_mx[d]);
     }
 
     xi4[n].x  = prt.xi[0];
@@ -230,10 +229,28 @@ copy_from(struct psc_particles *prts_cuda, struct psc_particles *prts,
     pxi4[n].w = prt.qni_wni;
   }
 
-  particles_cuda_to_device(prts_cuda, xi4, pxi4);
+  cuda_mparticles_to_device(cmprts, xi4, pxi4, n_prts, off);
   
   free(xi4);
   free(pxi4);
+}
+
+static void
+copy_from(struct psc_particles *prts_cuda, struct psc_particles *prts,
+	  void (*get_particle)(struct cuda_mparticles_prt *prt, int n, struct psc_particles *prts))
+{
+  struct psc_mparticles *mprts = psc_particles_cuda(prts_cuda)->mprts;
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+
+  unsigned int off = 0;
+  for (int p = 0; p < prts->p; p++) {
+    off += psc_mparticles_get_patch(mprts, p)->n_part;
+  }
+
+  cuda_mparticles_set_particles(cmprts, prts->n_part, off,
+				(void (*)(struct cuda_mparticles_prt *, int, void *)) get_particle,
+				prts);
 }
 
 // ======================================================================
@@ -250,7 +267,7 @@ calc_vxi(particle_c_real_t vxi[3], particle_c_t *part)
 }
 
 static void
-get_particle_c(struct cuda_mparticles_prt *prt, struct psc_particles *prts, int n)
+get_particle_c(struct cuda_mparticles_prt *prt, int n, struct psc_particles *prts)
 {
   particle_single_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
   // don't shift in invariant directions
@@ -336,7 +353,7 @@ psc_particles_cuda_copy_to_c(struct psc_particles *prts_cuda,
 // conversion to "single"
 
 static void
-get_particle_single(struct cuda_mparticles_prt *prt, struct psc_particles *prts, int n)
+get_particle_single(struct cuda_mparticles_prt *prt, int n, struct psc_particles *prts)
 {
   particle_single_t *part = particles_single_get_one(prts, n);
 
@@ -406,7 +423,7 @@ psc_particles_cuda_copy_to_single(struct psc_particles *prts_cuda,
 // conversion to "double"
 
 static void
-get_particle_double(struct cuda_mparticles_prt *prt, struct psc_particles *prts, int n)
+get_particle_double(struct cuda_mparticles_prt *prt, int n, struct psc_particles *prts)
 {
   particle_double_t *part = particles_double_get_one(prts, n);
 
