@@ -8,6 +8,8 @@
 #include "psc_push_particles.h"
 #include "particles_cuda.h"
 
+#include "cuda_mparticles.h"
+
 #include <mrc_io.h>
 
 EXTERN_C void cuda_init(int rank);
@@ -586,6 +588,9 @@ psc_mparticles_cuda_read(struct psc_mparticles *mprts, struct mrc_io *io)
 static void
 psc_mparticles_cuda_setup_internals(struct psc_mparticles *mprts)
 {
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+
   assert((mprts->flags & MP_NEED_BLOCK_OFFSETS) &&
 	 !(mprts->flags & MP_NEED_CELL_OFFSETS));
 
@@ -595,7 +600,7 @@ psc_mparticles_cuda_setup_internals(struct psc_mparticles *mprts)
     n_prts_by_patch[p] = prts->n_part;
   }
 
-  cuda_mprts_sort_initial(mprts, n_prts_by_patch);
+  cuda_mparticles_sort_initial(cmprts, n_prts_by_patch);
 }
 
 // ======================================================================

@@ -230,11 +230,3 @@ sort_pairs_device_2(void *_sp, unsigned int *d_bidx, unsigned int *d_alt_ids,
 
 #endif
 
-void
-cuda_mprts_sort_initial(struct psc_mparticles *mprts, unsigned int *n_prts_by_patch)
-{
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
-
-  cuda_mparticles_sort_initial(cmprts, n_prts_by_patch);
-}
