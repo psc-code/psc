@@ -8,6 +8,8 @@
 #define EXTERN_C
 #endif
 
+EXTERN_C void cuda_base_init(void);
+
 // ----------------------------------------------------------------------
 // cuda_domain_info
 

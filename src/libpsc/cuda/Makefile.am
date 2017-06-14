@@ -34,6 +34,7 @@ libsubdir_la_SOURCES = \
 	psc_cuda.h
 
 libsubdir_la_LIBADD = \
+	cuda_base.lo \
 	cuda_mparticles.lo \
 	cuda_transfer.lo \
 	cuda_find_indices.lo \
