@@ -430,7 +430,13 @@ struct psc_particles_ops psc_particles_cuda_ops = {
 static void
 psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
 {
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+
   psc_mparticles_setup_super(mprts);
+
+  cuda_base_init();
+
+  mprts_cuda->cmprts = cuda_mparticles_create();
   __psc_mparticles_cuda_setup(mprts);
 }
 

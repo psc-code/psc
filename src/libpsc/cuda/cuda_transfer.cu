@@ -49,11 +49,8 @@ cuda_copy_bidx_to_dev(struct psc_particles *prts, unsigned int *d_bidx, unsigned
 void
 __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
 {
-  cuda_base_init();
-
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = cuda_mparticles_create();
-  mprts_cuda->cmprts = cmprts;
+  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
 
   if (mprts->nr_patches == 0) {
     return;
