@@ -432,13 +432,12 @@ cuda_mprts_check_ordered_total(struct psc_mparticles *mprts)
   unsigned int off = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
 
     unsigned int *bidx = new unsigned int[prts->n_part];
     cuda_copy_bidx_from_dev(prts, bidx, cmprts->d_bidx + off);
     
     for (int n = 0; n < prts->n_part; n++) {
-      if (!(bidx[n] >= last && bidx[n] < mprts->nr_patches * cuda->nr_blocks)) {
+      if (!(bidx[n] >= last && bidx[n] < cmprts->n_blocks)) {
 	mprintf("p = %d, n = %d bidx = %d last = %d\n", p, n, bidx[n], last);
 	assert(0);
       }

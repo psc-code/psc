@@ -6,6 +6,7 @@
 #include "particles_cuda.h"
 #include "psc_particles_as_single.h"
 #include "../psc_bnd/ddc_particles.h"
+#include "cuda_mparticles.h"
 
 #include <mrc_profile.h>
 
@@ -119,6 +120,7 @@ static void
 mprts_convert_to_cuda(struct psc_bnd_particles *bnd, struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
 
   unsigned int nr_recv = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
@@ -177,8 +179,8 @@ mprts_convert_to_cuda(struct psc_bnd_particles *bnd, struct psc_mparticles *mprt
 	assert(b_pos[d] >= 0 && b_pos[d] < cuda->b_mx[d]);
       }
       unsigned int b = (b_pos[2] * cuda->b_mx[1] + b_pos[1]) * cuda->b_mx[0] + b_pos[0];
-      assert(b < cuda->nr_blocks);
-      b += p * cuda->nr_blocks;
+      assert(b < cmprts->n_blocks_per_patch);
+      b += p * cmprts->n_blocks_per_patch;
       h_bnd_idx[n] = b;
       h_bnd_off[n] = mprts_cuda->h_bnd_cnt[b]++;
     }
