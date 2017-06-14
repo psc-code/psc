@@ -1336,6 +1336,10 @@ fields_device_pack3_yz(struct psc_mfields *mflds, int mb, int me)
     assert(0);
   }
 
+  if (nr_map == 0) {
+    return;
+  }
+  
 #if 1
   dim3 dimGrid((nr_map + (THREADS_PER_BLOCK - 1)) / THREADS_PER_BLOCK);
   dim3 dimBlock(THREADS_PER_BLOCK);

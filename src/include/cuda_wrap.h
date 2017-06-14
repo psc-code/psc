@@ -127,8 +127,9 @@ static bool CUDA_SYNC = true;
 static inline void
 cuda_sync_if_enabled()
 {
+  check(cudaGetLastError());
   if (CUDA_SYNC) {
-    check(cudaThreadSynchronize());
+    check(cudaDeviceSynchronize());
   }
 }
 

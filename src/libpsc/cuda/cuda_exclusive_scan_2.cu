@@ -123,13 +123,18 @@ cuda_mprts_reorder_send_by_id(struct psc_mparticles *mprts)
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
   struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
   assert(cmprts);
-  
+
+  if (mprts_cuda->nr_prts_send == 0) {
+    return;
+  }
+
   int dimGrid = (mprts_cuda->nr_prts_send + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
   mprts_reorder_send_by_id<<<dimGrid, THREADS_PER_BLOCK>>>
     (mprts_cuda->nr_prts_send, cmprts->d_id + cmprts->n_prts - mprts_cuda->nr_prts_send,
      cmprts->d_xi4, cmprts->d_pxi4,
      cmprts->d_xi4 + cmprts->n_prts, cmprts->d_pxi4 + cmprts->n_prts);
+  cuda_sync_if_enabled();
 }
 
 void

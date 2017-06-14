@@ -14,9 +14,12 @@
     assert(ierr == cudaSuccess);					\
   } while(0)
 
+static bool CUDA_SYNC = true;
+
 #define cuda_sync_if_enabled() do {					\
-    if (1) {								\
-      cudaError_t ierr = cudaThreadSynchronize(); cudaCheck(ierr);	\
+    cudaError ierr = cudaGetLastError(); cudaCheck(ierr);		\
+    if (CUDA_SYNC) {							\
+      cudaError_t ierr = cudaDeviceSynchronize(); cudaCheck(ierr);	\
     }									\
   } while(0)
 

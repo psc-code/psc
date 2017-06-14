@@ -76,6 +76,7 @@ cuda_mprts_bidx_to_key(struct psc_mparticles *mprts)
     mprintf("no support for b_mx %d x %d x %d!\n", b_mx[0], b_mx[1], b_mx[2]);
     assert(0);
   }
+  cuda_sync_if_enabled();
 }
 
 void
@@ -212,6 +213,11 @@ cuda_mprts_scan_scatter_received(struct psc_mparticles *mprts)
   struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
 
   int nr_recv = mprts_cuda->nr_prts_recv;
+
+  if (nr_recv == 0) {
+    return;
+  }
+  
   int nr_prts_prev = cmprts->n_prts - nr_recv;
 
   int dimGrid = (nr_recv + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
@@ -219,6 +225,7 @@ cuda_mprts_scan_scatter_received(struct psc_mparticles *mprts)
   mprts_scan_scatter_received<<<dimGrid, THREADS_PER_BLOCK>>>
     (nr_recv, nr_prts_prev, mprts_cuda->d_bnd_spine_sums, mprts_cuda->d_alt_bidx,
      cmprts->d_bidx, cmprts->d_id);
+  cuda_sync_if_enabled();
 }
 
 void
@@ -533,6 +540,7 @@ cuda_mprts_update_offsets(struct psc_mparticles *mprts)
 
   mprts_update_offsets<<<dimGrid, THREADS_PER_BLOCK>>>
     (n_blocks, cmprts->d_off, mprts_cuda->d_bnd_spine_sums);
+  cuda_sync_if_enabled();
 }
 
 void
