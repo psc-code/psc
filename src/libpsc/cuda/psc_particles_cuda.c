@@ -41,10 +41,9 @@ psc_particles_cuda_setup(struct psc_particles *prts)
     if (ppsc->domain.gdims[d] == 1) {
       bs[d] = 1;
     }
-    cuda->blocksize[d] = bs[d];
     assert(patch->ldims[d] % bs[d] == 0); // not sure what breaks if not
     cuda->b_mx[d] = (patch->ldims[d] + bs[d] - 1) / bs[d];
-    cuda->b_dxi[d] = 1.f / (cuda->blocksize[d] * ppsc->patch[prts->p].dx[d]);
+    cuda->b_dxi[d] = 1.f / (bs[d] * ppsc->patch[prts->p].dx[d]);
   }
   cuda->nr_blocks = cuda->b_mx[0] * cuda->b_mx[1] * cuda->b_mx[2];
 

@@ -14,7 +14,6 @@ typedef float particle_cuda_real_t;
 struct psc_particles_cuda {
   int nr_blocks;               // number of blocks
   int b_mx[3];                 // number of blocks by direction
-  int blocksize[3];            // dimensions of sub blocks in a patch
   particle_cuda_real_t b_dxi[3];
   struct cell_map map;         // maps 3d block pos to 1d block index
 
