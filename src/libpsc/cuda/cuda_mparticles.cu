@@ -70,6 +70,7 @@ cuda_mparticles_set_domain_info(struct cuda_mparticles *cmprts,
   cmprts->n_patches = info->n_patches;
   for (int d = 0; d < 3; d++) {
     cmprts->mx[d] = info->mx[d];
+    assert(info->mx[d] % info->bs[d] == 0);
     cmprts->b_mx[d] = info->mx[d] / info->bs[d];
     cmprts->dx[d] = info->dx[d];
     cmprts->b_dxi[d] = 1.f / (info->bs[d] * info->dx[d]);

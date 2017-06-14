@@ -152,11 +152,7 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
     if (ppsc->domain.gdims[d] == 1) {
       bs[d] = 1;
     }
-    mprts_cuda->blocksize[d] = bs[d];
     assert(ldims[d] % bs[d] == 0); // FIXME not sure what breaks if not
-    mprts_cuda->b_mx[d] = (ldims[d] + bs[d] - 1) / bs[d];
-    // assumes no AMR
-    mprts_cuda->b_dxi[d] = 1.f / (mprts_cuda->blocksize[d] * ppsc->patch[0].dx[d]);
   }
 
   struct cuda_domain_info domain_info = {

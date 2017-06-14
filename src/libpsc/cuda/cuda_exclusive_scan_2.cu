@@ -204,7 +204,7 @@ cuda_mprts_scan_send_buf_total(struct psc_mparticles *mprts)
   struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
 
   unsigned int n_blocks = cmprts->n_blocks;
-  int *b_mx = mprts_cuda->b_mx;
+  int *b_mx = cmprts->b_mx;
 
   // OPT, we could do this from the beginning and adapt find_n_send()
   thrust::device_ptr<unsigned int> d_spine_cnts(mprts_cuda->d_bnd_spine_cnts);

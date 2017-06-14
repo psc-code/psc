@@ -68,7 +68,7 @@ cuda_mprts_bidx_to_key(struct psc_mparticles *mprts)
 
   unsigned int n_blocks = cmprts->n_blocks;
   
-  int *b_mx = mprts_cuda->b_mx;
+  int *b_mx = cmprts->b_mx;
   if (b_mx[0] == 1 && b_mx[1] == 8 && b_mx[2] == 8) {
     mprts_bidx_to_key<1, 8, 8><<<n_blocks, THREADS_PER_BLOCK>>>
       (n_blocks, cmprts->d_off, cmprts->d_bidx);
@@ -94,7 +94,7 @@ cuda_mprts_bidx_to_key_gold(struct psc_mparticles *mprts)
   thrust::host_vector<unsigned int> h_bidx(d_bidx, d_bidx + cmprts->n_prts);
   thrust::host_vector<unsigned int> h_off(d_off, d_off + n_blocks + 1);
 
-  int *b_mx = mprts_cuda->b_mx;
+  int *b_mx = cmprts->b_mx;
 
   for (int bid = 0; bid < n_blocks; bid++) {
     int p = bid / n_blocks_per_patch;
@@ -266,7 +266,7 @@ cuda_mprts_spine_reduce(struct psc_mparticles *mprts)
   struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
 
   unsigned int n_blocks = cmprts->n_blocks;
-  int *b_mx = mprts_cuda->b_mx;
+  int *b_mx = cmprts->b_mx;
 
   thrust::device_ptr<unsigned int> d_spine_cnts(mprts_cuda->d_bnd_spine_cnts);
   thrust::device_ptr<unsigned int> d_spine_sums(mprts_cuda->d_bnd_spine_sums);
@@ -324,7 +324,7 @@ cuda_mprts_spine_reduce_gold(struct psc_mparticles *mprts)
 
   unsigned int n_blocks = cmprts->n_blocks;
   unsigned int n_blocks_per_patch = cmprts->n_blocks_per_patch;
-  int *b_mx = mprts_cuda->b_mx;
+  int *b_mx = cmprts->b_mx;
 
   thrust::device_ptr<unsigned int> d_spine_cnts(mprts_cuda->d_bnd_spine_cnts);
   thrust::device_ptr<unsigned int> d_spine_sums(mprts_cuda->d_bnd_spine_sums);
@@ -404,7 +404,7 @@ cuda_mprts_sort_pairs_device(struct psc_mparticles *mprts)
   prof_stop(pr_C);
 
   prof_start(pr_D);
-  int *b_mx = mprts_cuda->b_mx;
+  int *b_mx = cmprts->b_mx;
   if (b_mx[0] == 1 && b_mx[1] == 8 && b_mx[2] == 8) {
     ScanScatterDigits3x<K, V, 0, RADIX_BITS, 0,
 			NopFunctor<K>,
@@ -463,7 +463,7 @@ cuda_mprts_sort_pairs_gold(struct psc_mparticles *mprts)
 
   unsigned int n_blocks_per_patch = cmprts->n_blocks_per_patch;
   unsigned int n_blocks = cmprts->n_blocks;
-  int *b_mx = mprts_cuda->b_mx;
+  int *b_mx = cmprts->b_mx;
 
   thrust::device_ptr<unsigned int> d_bidx(cmprts->d_bidx);
   thrust::device_ptr<unsigned int> d_id(cmprts->d_id);
