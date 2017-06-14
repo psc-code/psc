@@ -130,6 +130,7 @@ psc_particles_cuda_read(struct psc_particles *prts, struct mrc_io *io)
 
 // FIXME, should go away and always be done within cuda for consistency
 
+#if 0
 static inline int
 find_cellIdx(struct psc_patch *patch, struct cell_map *map,
 	     struct psc_particles *pp, int n)
@@ -165,14 +166,14 @@ blockIdx_to_blockCrd(struct psc_patch *patch, struct cell_map *map,
     bi[d] /= blocksize[d];
   }
 }
+#endif
 
 static void
 copy_from(struct psc_particles *prts_cuda, struct psc_particles *prts,
 	  void (*get_particle)(struct cuda_mparticles_prt *prt, int n, struct psc_particles *prts))
 {
   struct psc_mparticles *mprts = psc_particles_cuda(prts_cuda)->mprts;
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   assert(prts_cuda->n_part == prts->n_part);
 
@@ -190,40 +191,17 @@ static void
 copy_to(struct psc_particles *prts_cuda, struct psc_particles *prts,
 	void (*put_particle)(struct cuda_mparticles_prt *prt, int n, struct psc_particles *prts))
 {
-  struct psc_particles_cuda *cuda = psc_particles_cuda(prts_cuda);
+  struct psc_mparticles *mprts = psc_particles_cuda(prts_cuda)->mprts;
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
-  float4 *xi4  = calloc(prts_cuda->n_part, sizeof(float4));
-  float4 *pxi4 = calloc(prts_cuda->n_part, sizeof(float4));
-  
-  __particles_cuda_from_device(prts_cuda, xi4, pxi4);
-  
-  for (int n = 0; n < prts->n_part; n++) {
-    struct cuda_mparticles_prt prt;
-    prt.xi[0]   = xi4[n].x;
-    prt.xi[1]   = xi4[n].y;
-    prt.xi[2]   = xi4[n].z;
-    prt.kind    = cuda_float_as_int(xi4[n].w);
-    prt.pxi[0]  = pxi4[n].x;
-    prt.pxi[1]  = pxi4[n].y;
-    prt.pxi[2]  = pxi4[n].z;
-    prt.qni_wni = pxi4[n].w;
-
-    put_particle(&prt, n, prts);
-
-    for (int d = 0; d < 3; d++) {
-      int bi = particle_single_real_fint(prt.xi[d] * cuda->b_dxi[d]);
-      if (bi < 0 || bi >= cuda->b_mx[d]) {
-	MHERE;
-	mprintf("XXX p %d xi %.10g %.10g %.10g\n", prts->p, prt.xi[0], prt.xi[1], prt.xi[2]);
-	mprintf("XXX p %d n %d d %d xi %.10g b_dxi %.10g bi %d // %d\n",
-		prts->p, n, d, prt.xi[d] * cuda->b_dxi[d], cuda->b_dxi[d], bi, cuda->b_mx[d]);
-      }
-    }
-
+  unsigned int off = 0;
+  for (int p = 0; p < prts_cuda->p; p++) {
+    off += psc_mparticles_get_patch(mprts, p)->n_part;
   }
 
-  free(xi4);
-  free(pxi4);
+  cuda_mparticles_get_particles(cmprts, prts_cuda->n_part, off,
+				(void (*)(struct cuda_mparticles_prt *, int, void *)) put_particle,
+				prts);
 }
 
 // ======================================================================

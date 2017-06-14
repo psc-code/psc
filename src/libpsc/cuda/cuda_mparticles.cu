@@ -31,6 +31,14 @@ cuda_int_as_float(int i)
   return u.f;
 };
 
+static inline int
+cuda_float_as_int(float f)
+{
+  union { int i; float f; } u;
+  u.f = f;
+  return u.i;
+};
+
 // ----------------------------------------------------------------------
 // cuda_mparticles_create
 
@@ -131,6 +139,21 @@ cuda_mparticles_to_device(struct cuda_mparticles *cmprts, float4 *xi4, float4 *p
 		    cudaMemcpyHostToDevice); cudaCheck(ierr);
   ierr = cudaMemcpy(cmprts->d_pxi4 + off, pxi4, n_prts * sizeof(*pxi4),
 		    cudaMemcpyHostToDevice); cudaCheck(ierr);
+}
+
+// ----------------------------------------------------------------------
+// cuda_mparticles_from_device
+
+void
+cuda_mparticles_from_device(struct cuda_mparticles *cmprts, float4 *xi4, float4 *pxi4,
+			    unsigned int n_prts, unsigned int off)
+{
+  cudaError_t ierr;
+
+  ierr = cudaMemcpy(xi4, cmprts->d_xi4 + off, n_prts * sizeof(*xi4),
+		    cudaMemcpyDeviceToHost); cudaCheck(ierr);
+  ierr = cudaMemcpy(pxi4, cmprts->d_pxi4 + off, n_prts * sizeof(*pxi4),
+		    cudaMemcpyDeviceToHost); cudaCheck(ierr);
 }
 
 // ----------------------------------------------------------------------
@@ -420,5 +443,48 @@ cuda_mparticles_set_particles(struct cuda_mparticles *cmprts, unsigned int n_prt
   
   delete[] xi4;
   delete[] pxi4;
+}
+
+// ----------------------------------------------------------------------
+// cuda_mparticles_get_particles
+
+void
+cuda_mparticles_get_particles(struct cuda_mparticles *cmprts, unsigned int n_prts, unsigned int off,
+			      void (*put_particle)(struct cuda_mparticles_prt *, int, void *),
+			      void *ctx)
+{
+  float4 *xi4  = new float4[n_prts];
+  float4 *pxi4 = new float4[n_prts];
+
+  cuda_mparticles_from_device(cmprts, xi4, pxi4, n_prts, off);
+  
+  for (int n = 0; n < n_prts; n++) {
+    struct cuda_mparticles_prt prt;
+    prt.xi[0]   = xi4[n].x;
+    prt.xi[1]   = xi4[n].y;
+    prt.xi[2]   = xi4[n].z;
+    prt.kind    = cuda_float_as_int(xi4[n].w);
+    prt.pxi[0]  = pxi4[n].x;
+    prt.pxi[1]  = pxi4[n].y;
+    prt.pxi[2]  = pxi4[n].z;
+    prt.qni_wni = pxi4[n].w;
+
+    put_particle(&prt, n, ctx);
+
+#if 0
+    for (int d = 0; d < 3; d++) {
+      int bi = particle_single_real_fint(prt.xi[d] * cmprts->b_dxi[d]);
+      if (bi < 0 || bi >= cmprts->b_mx[d]) {
+	MHERE;
+	mprintf("XXX xi %.10g %.10g %.10g\n", prt.xi[0], prt.xi[1], prt.xi[2]);
+	mprintf("XXX n %d d %d xi %.10g b_dxi %.10g bi %d // %d\n",
+		n, d, prt.xi[d] * cmprts->b_dxi[d], cmprts->b_dxi[d], bi, cmprts->b_mx[d]);
+      }
+    }
+#endif
+  }
+
+  delete[] (xi4);
+  delete[] (pxi4);
 }
 
