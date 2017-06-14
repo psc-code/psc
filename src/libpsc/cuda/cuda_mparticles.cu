@@ -290,13 +290,85 @@ cuda_mparticles_reorder_and_offsets(struct cuda_mparticles *cmprts)
 }
 
 // ----------------------------------------------------------------------
+// get_block_idx
+
+static int
+get_block_idx(struct cuda_mparticles *cmprts, int n, int p)
+{
+  thrust::device_ptr<float4> d_xi4(cmprts->d_xi4);
+  float *b_dxi = cmprts->b_dxi;
+  int *b_mx = cmprts->b_mx;
+  
+  float4 xi4 = d_xi4[n];
+  unsigned int block_pos_y = (int) floorf(xi4.y * b_dxi[1]);
+  unsigned int block_pos_z = (int) floorf(xi4.z * b_dxi[2]);
+
+  int bidx;
+  if (block_pos_y >= b_mx[1] || block_pos_z >= b_mx[2]) {
+    bidx = -1;
+  } else {
+    bidx = (p * b_mx[2] + block_pos_z) * b_mx[1] + block_pos_y;
+  }
+
+  return bidx;
+}
+
+// ----------------------------------------------------------------------
+// cuda_mparticles_check_in_patch_unordered_slow
+
+void
+cuda_mparticles_check_in_patch_unordered_slow(struct cuda_mparticles *cmprts,
+					      unsigned int *nr_prts_by_patch)
+{
+  unsigned int off = 0;
+  for (int p = 0; p < cmprts->n_patches; p++) {
+    for (int n = 0; n < nr_prts_by_patch[p]; n++) {
+      int bidx = get_block_idx(cmprts, off + n, p);
+      assert(bidx >= 0 && bidx <= cmprts->n_blocks);
+    }
+    off += nr_prts_by_patch[p];
+  }
+
+  assert(off == cmprts->n_prts);
+  printf("PASS: cuda_mparticles_check_in_patch_unordered_slow()\n");
+}
+
+// ----------------------------------------------------------------------
+// cuda_mparticles_check_bix_id_unordered_slow
+
+void
+cuda_mparticles_check_bidx_id_unordered_slow(struct cuda_mparticles *cmprts,
+					     unsigned int *n_prts_by_patch)
+{
+  thrust::device_ptr<unsigned int> d_bidx(cmprts->d_bidx);
+  thrust::device_ptr<unsigned int> d_id(cmprts->d_id);
+
+  unsigned int off = 0;
+  for (int p = 0; p < cmprts->n_patches; p++) {
+    for (int n = 0; n < n_prts_by_patch[p]; n++) {
+      int bidx = get_block_idx(cmprts, off + n, p);
+      assert(bidx == d_bidx[off+n]);
+      assert(off+n == d_id[off+n]);
+    }
+    off += n_prts_by_patch[p];
+  }
+
+  assert(off == cmprts->n_prts);
+  printf("PASS: cuda_mparticles_check_bidx_id_unordered_slow()\n");
+}
+
+// ----------------------------------------------------------------------
 // cuda_mparticles_sort_initial
 
 void
 cuda_mparticles_sort_initial(struct cuda_mparticles *cmprts,
 			     unsigned int *n_prts_by_patch)
 {
+  //  cuda_mparticles_check_in_patch_unordered_slow(cmprts, n_prts_by_patch);
+
   cuda_mparticles_find_block_indices_ids(cmprts, n_prts_by_patch);
+  //  cuda_mparticles_check_bidx_id_unordered_slow(cmprts, n_prts_by_patch);
+
   thrust::device_ptr<unsigned int> d_bidx(cmprts->d_bidx);
   thrust::device_ptr<unsigned int> d_id(cmprts->d_id);
   thrust::stable_sort_by_key(d_bidx, d_bidx + cmprts->n_prts, d_id);
