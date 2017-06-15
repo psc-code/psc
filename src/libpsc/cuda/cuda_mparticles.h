@@ -10,18 +10,6 @@
 #define EXTERN_C
 #endif
 
-EXTERN_C void cuda_base_init(void);
-
-// ----------------------------------------------------------------------
-// cuda_domain_info
-
-struct cuda_domain_info {
-  int n_patches;
-  int ldims[3]; // number of cells per patch
-  int bs[3];    // size of each block (a.k.a. super-cell)
-  double dx[3]; // size of a single cell
-};
-
 // ----------------------------------------------------------------------
 // cuda_mparticles_prt
 
@@ -61,8 +49,6 @@ struct cuda_mparticles {
   float b_dxi[3];                 // inverse of block size (in actual length units)
 };
 
-EXTERN_C void cuda_mparticles_set_domain_info(struct cuda_mparticles *cuda_mprts,
-					      const struct cuda_domain_info *info);
 EXTERN_C void cuda_mparticles_alloc(struct cuda_mparticles *cmprts, unsigned int *n_prts_by_patch);
 EXTERN_C void cuda_mparticles_dealloc(struct cuda_mparticles *cmprts);
 EXTERN_C void cuda_mparticles_dump(struct cuda_mparticles *cuda_mprts);

@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <assert.h>
 
-#if 0
 void
 cuda_domain_info_set_test_1(struct cuda_domain_info *info)
 {
@@ -14,6 +13,7 @@ cuda_domain_info_set_test_1(struct cuda_domain_info *info)
   info->dx[0] = 1.; info->dx[1] = 10.; info->dx[2] = 10.;
 };
 
+#if 0
 void
 cuda_mparticles_add_particles_test_1(struct cuda_mparticles *cmprts,
 				     unsigned int *n_prts_by_patch)
@@ -107,11 +107,11 @@ main(void)
 {
   struct cuda_mparticles *cmprts = cuda_mparticles_create();
 
-#if 0
   struct cuda_domain_info info;
   cuda_domain_info_set_test_1(&info);
 
   cuda_mparticles_set_domain_info(cmprts, &info);
+#if 0
   unsigned int n_prts_by_patch[cmprts->n_patches];
   cuda_mparticles_add_particles_test_1(cmprts, n_prts_by_patch);
   printf("added particles\n");
