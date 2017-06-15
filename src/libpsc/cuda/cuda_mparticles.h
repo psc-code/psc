@@ -15,8 +15,8 @@ EXTERN_C void cuda_base_init(void);
 
 struct cuda_domain_info {
   int n_patches;
-  int mx[3]; // number of cells per patch
-  int bs[3]; // size of each block / super-cell
+  int ldims[3]; // number of cells per patch
+  int bs[3];    // size of each block (a.k.a. super-cell)
   double dx[3]; // size of a single cell
 };
 
@@ -53,7 +53,7 @@ struct cuda_mparticles {
   unsigned int n_blocks_per_patch;// number of blocks per patch
   unsigned int n_blocks;          // number of blocks in all patches in mprts
 
-  int mx[3];                      // number of cells per direction in each patch
+  int ldims[3];                   // number of cells per direction in each patch
   int b_mx[3];                    // number of blocks per direction in each patch
   float dx[3];                    // cell size (in actual length units)
   float b_dxi[3];                 // inverse of block size (in actual length units)

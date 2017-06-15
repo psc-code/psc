@@ -456,7 +456,7 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
   int *ldims = ppsc->patch[0].ldims;
   double *dx = ppsc->patch[0].dx;
 
-  // all patches must have equal size
+  // check that all patches≈ have equal size
   for (int p = 1; p < mprts->nr_patches; p++) {
     for (int d = 0; d < 3; d++) {
       assert(ppsc->patch[p].ldims[d] == ldims[d]);
@@ -480,9 +480,9 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
       bs[d] = 1;
     }
     assert(ldims[d] % bs[d] == 0); // FIXME not sure what breaks if not
-    domain_info.mx[d] = ldims[d];
-    domain_info.bs[d] = bs[d];
-    domain_info.dx[d] = dx[d];
+    domain_info.ldims[d] = ldims[d];
+    domain_info.bs[d]    = bs[d];
+    domain_info.dx[d]    = dx[d];
   }
 
   cuda_mparticles_set_domain_info(cmprts, &domain_info);
