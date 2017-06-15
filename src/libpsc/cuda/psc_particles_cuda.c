@@ -430,13 +430,71 @@ struct psc_particles_ops psc_particles_cuda_ops = {
 static void
 psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-
   psc_mparticles_setup_super(mprts);
+
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles_cuda *prts_cuda = psc_particles_cuda(prts);
+    prts_cuda->mprts = mprts;
+  }
 
   cuda_base_init();
 
-  mprts_cuda->cmprts = cuda_mparticles_create();
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct cuda_mparticles *cmprts = cuda_mparticles_create();
+  mprts_cuda->cmprts = cmprts;
+
+  if (mprts->nr_patches == 0) {
+    return;
+  }
+  
+  if (!mprts->flags) {
+    // FIXME, they get set too late, so auto-dispatch "1vb" doesn't work
+    mprts->flags = MP_NEED_BLOCK_OFFSETS | MP_BLOCKSIZE_4X4X4 | MP_NO_CHECKERBOARD;
+  }
+
+  int *ldims = ppsc->patch[0].ldims;
+  double *dx = ppsc->patch[0].dx;
+
+  // all patches must have equal size
+  for (int p = 1; p < mprts->nr_patches; p++) {
+    for (int d = 0; d < 3; d++) {
+      assert(ppsc->patch[p].ldims[d] == ldims[d]);
+      assert(ppsc->patch[p].dx[d] == dx[d]);
+    }
+  }
+
+  struct cuda_domain_info domain_info;
+
+  domain_info.n_patches = mprts->nr_patches;
+  int bs[3];
+  for (int d = 0; d < 3; d++) {
+    switch (mprts->flags & MP_BLOCKSIZE_MASK) {
+    case MP_BLOCKSIZE_1X1X1: bs[d] = 1; break;
+    case MP_BLOCKSIZE_2X2X2: bs[d] = 2; break;
+    case MP_BLOCKSIZE_4X4X4: bs[d] = 4; break;
+    case MP_BLOCKSIZE_8X8X8: bs[d] = 8; break;
+    default: assert(0);
+    }
+    if (ppsc->domain.gdims[d] == 1) {
+      bs[d] = 1;
+    }
+    assert(ldims[d] % bs[d] == 0); // FIXME not sure what breaks if not
+    domain_info.mx[d] = ldims[d];
+    domain_info.bs[d] = bs[d];
+    domain_info.dx[d] = dx[d];
+  }
+
+  cuda_mparticles_set_domain_info(cmprts, &domain_info);
+
+  unsigned int n_prts_by_patch[cmprts->n_patches];
+  for (int p = 0; p < cmprts->n_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    n_prts_by_patch[p] = prts->n_part;
+  }
+
+  cuda_mparticles_alloc(cmprts, n_prts_by_patch);
+
   __psc_mparticles_cuda_setup(mprts);
 }
 
@@ -446,7 +504,15 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
 static void
 psc_mparticles_cuda_destroy(struct psc_mparticles *mprts)
 {
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  assert(cmprts);
+  
   __psc_mparticles_cuda_free(mprts);
+
+  cuda_mparticles_dealloc(cmprts);
+  cuda_mparticles_destroy(cmprts);
+  mprts_cuda->cmprts = NULL;
 }
 
 // ----------------------------------------------------------------------

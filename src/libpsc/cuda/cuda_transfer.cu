@@ -52,58 +52,8 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
   struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
 
-  if (mprts->nr_patches == 0) {
-    return;
-  }
-  
-  // FIXME we assume that every patch will have those same dims
-  int *ldims = ppsc->patch[0].ldims;
-
-  if (!mprts->flags) {
-    // FIXME, they get set too late, so auto-dispatch "1vb" doesn't work
-    mprts->flags = MP_NEED_BLOCK_OFFSETS | MP_BLOCKSIZE_4X4X4 | MP_NO_CHECKERBOARD;
-  }
-
-  int bs[3];
-  for (int d = 0; d < 3; d++) {
-    switch (mprts->flags & MP_BLOCKSIZE_MASK) {
-    case MP_BLOCKSIZE_1X1X1: bs[d] = 1; break;
-    case MP_BLOCKSIZE_2X2X2: bs[d] = 2; break;
-    case MP_BLOCKSIZE_4X4X4: bs[d] = 4; break;
-    case MP_BLOCKSIZE_8X8X8: bs[d] = 8; break;
-    default: assert(0);
-    }
-    if (ppsc->domain.gdims[d] == 1) {
-      bs[d] = 1;
-    }
-    assert(ldims[d] % bs[d] == 0); // FIXME not sure what breaks if not
-  }
-
-  struct cuda_domain_info domain_info = {
-    .n_patches = mprts->nr_patches,
-    .mx        = { ldims[0], ldims[1], ldims[2] },
-    .bs        = { bs[0], bs[1], bs[2] },
-    .dx        = { ppsc->patch[0].dx[0], ppsc->patch[0].dx[1], ppsc->patch[0].dx[2] },
-  };
-  cuda_mparticles_set_domain_info(cmprts, &domain_info);
-
   mprts_cuda->h_n_prts = new int[mprts->nr_patches];
-
   mprts_cuda->h_bnd_cnt = new unsigned int[cmprts->n_blocks];
-
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_particles_cuda *prts_cuda = psc_particles_cuda(prts);
-    prts_cuda->mprts = mprts;
-  }
-
-  unsigned int n_prts_by_patch[cmprts->n_patches];
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    n_prts_by_patch[p] = prts->n_part;
-  }
-
-  cuda_mparticles_alloc(cmprts, n_prts_by_patch);
 
   check(cudaMalloc((void **) &mprts_cuda->d_alt_bidx, cmprts->n_alloced * sizeof(unsigned int)));
   check(cudaMalloc((void **) &mprts_cuda->d_sums, cmprts->n_alloced * sizeof(unsigned int)));
@@ -118,21 +68,14 @@ void
 __psc_mparticles_cuda_free(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
-  assert(cmprts);
 
   delete[] mprts_cuda->h_n_prts;
   delete[] mprts_cuda->h_bnd_cnt;
-
-  cuda_mparticles_dealloc(cmprts);
 
   check(cudaFree(mprts_cuda->d_alt_bidx));
   check(cudaFree(mprts_cuda->d_sums));
   check(cudaFree(mprts_cuda->d_bnd_spine_cnts));
   check(cudaFree(mprts_cuda->d_bnd_spine_sums));
-
-  cuda_mparticles_destroy(cmprts);
-  mprts_cuda->cmprts = NULL;
 }
 
 // ======================================================================
