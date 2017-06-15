@@ -207,8 +207,6 @@ psc_bnd_particles_sub_exchange_mprts_prep(struct psc_bnd_particles *bnd,
     pr_F = prof_register("xchg_pre", 1., 0, 0);
   }
 
-  psc_mparticles_cuda_copy_to_dev(mprts);
-
   //prof_start(pr_A);
   //cuda_mprts_find_block_keys(mprts);
   //prof_stop(pr_A);

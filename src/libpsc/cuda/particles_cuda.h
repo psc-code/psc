@@ -2,10 +2,6 @@
 #ifndef PARTICLES_CUDA_H
 #define PARTICLES_CUDA_H
 
-// FIXME, eventually this should probably be part of psc_particles_cuda_private.h
-
-EXTERN_C void psc_mparticles_cuda_copy_to_dev(struct psc_mparticles *mprts);
-
 #define MAX_KINDS (4)
 
 struct cuda_params {

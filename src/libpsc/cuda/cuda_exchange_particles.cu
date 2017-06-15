@@ -414,7 +414,6 @@ cuda_mprts_sort(struct psc_mparticles *mprts)
     mprts_cuda->h_n_prts[p] = prts->n_part;
   }
   cmprts->n_prts -= mprts_cuda->nr_prts_send;
-  psc_mparticles_cuda_copy_to_dev(mprts);
 }
 
 // ======================================================================

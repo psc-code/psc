@@ -167,8 +167,6 @@ rho_1st_nc_cuda_run_patches(struct psc_mparticles *mprts, struct psc_mfields *mr
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
     
-  psc_mparticles_cuda_copy_to_dev(mprts);
-  
   if (!mprts_cuda->need_reorder) {
     rho_1st_nc_cuda_run_patches_no_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, false>(mprts, mres);
   } else {

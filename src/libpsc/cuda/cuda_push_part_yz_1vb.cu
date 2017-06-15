@@ -169,19 +169,6 @@ free_params(struct cuda_params *prm)
 }
 
 // ======================================================================
-
-void
-psc_mparticles_cuda_copy_to_dev(struct psc_mparticles *mprts)
-{
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
-
-  check(cudaMemcpy(cmprts->d_n_prts_by_patch, mprts_cuda->h_n_prts,
-		   mprts->nr_patches * sizeof(unsigned int),
-		   cudaMemcpyHostToDevice));
-}
-
-// ======================================================================
 // field caching
 
 #define F3_CACHE(fld_cache, m, jy, jz)					\
@@ -1064,8 +1051,6 @@ cuda_push_mprts_a_reorder(struct psc_mparticles *mprts, struct psc_mfields *mfld
   set_params(&prm, ppsc, mprts, mflds);
   set_consts(&prm);
 
-  psc_mparticles_cuda_copy_to_dev(mprts);
-
   unsigned int size = mflds->nr_fields *
     mflds_cuda->im[0] * mflds_cuda->im[1] * mflds_cuda->im[2];
   
@@ -1155,8 +1140,6 @@ yz4x4_1vb_cuda_push_mprts_separate(struct psc_mparticles *mprts, struct psc_mfie
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
 
-  psc_mparticles_cuda_copy_to_dev(mprts);
-
   if (!mprts_cuda->need_reorder) {
     MHERE;
     cuda_push_mprts_aq<1, 4, 4>(mprts, mflds);
@@ -1177,8 +1160,6 @@ yz_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
     
-  psc_mparticles_cuda_copy_to_dev(mprts);
-  
   if (!mprts_cuda->need_reorder) {
     MHERE;
     cuda_push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, false, IP, DEPOSIT, CURRMEM>(mprts, mflds);
