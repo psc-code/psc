@@ -48,6 +48,13 @@ libsubdir_la_LIBADD = \
 	cuda_push_part_yz_1vb.lo \
 	cuda_moments_1st_nc.lo
 
+check_PROGRAMS = \
+	tests/test_cuda_mparticles
+
+tests_test_cuda_mparticles_SOURCES =
+tests_test_cuda_mparticles_LDADD = tests/test_cuda_mparticles.o cuda_mparticles.lo
+nodist_EXTRA_tests_test_cuda_mparticles_SOURCES = dummy.cxx
+
 CUDACC_FLAGS = -g --ptxas-options=-v --maxrregcount=32 --use_fast_math $(filter-out -fopenmp -msse2 -msse4.1 -Wall -ffast-math,$(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) $(CFLAGS) $(AM_CFLAGS)) $(CUDAMPIFLAGS) $(CUDACFLAGS)
 
 CUDA_DEPS = \
@@ -90,6 +97,9 @@ cuda_spine.lo: particles_cuda.h ../../include/psc_particles_cuda.h b40c/radixsor
 	rm ${@:.lo=.o}
 	rm dummy.c
 	$(CUDACC) $(CUDACC_FLAGS) -c $< -o ${@:.lo=.o} || rm -f $@
+
+%.o: %.cu 
+	$(CUDACC) $(CUDACC_FLAGS) -c $< -o $@
 
 CLEANFILES = *.fatbin.c *.cudafe1.c *.cudafe2.c *.stub.c *.cubin *.i *.ii *.ptx *.hash *.fatbin *.cudafe1.cpp *.cudafe1.gpu *.cudafe2.gpu *.cu.cpp
 
