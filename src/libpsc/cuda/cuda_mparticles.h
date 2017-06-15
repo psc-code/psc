@@ -65,6 +65,7 @@ EXTERN_C void cuda_mparticles_set_domain_info(struct cuda_mparticles *cuda_mprts
 					      const struct cuda_domain_info *info);
 EXTERN_C void cuda_mparticles_alloc(struct cuda_mparticles *cmprts, unsigned int *n_prts_by_patch);
 EXTERN_C void cuda_mparticles_dealloc(struct cuda_mparticles *cmprts);
+EXTERN_C void cuda_mparticles_dump(struct cuda_mparticles *cuda_mprts);
 EXTERN_C void cuda_mparticles_to_device(struct cuda_mparticles *cmprts, float4 *xi4, float4 *pxi4,
 					unsigned int n_prts, unsigned int off);
 EXTERN_C void cuda_mparticles_from_device(struct cuda_mparticles *cmprts, float4 *xi4, float4 *pxi4,

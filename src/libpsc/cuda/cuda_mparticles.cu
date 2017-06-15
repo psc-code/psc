@@ -158,6 +158,35 @@ cuda_mparticles_from_device(struct cuda_mparticles *cmprts, float4 *xi4, float4 
 }
 
 // ----------------------------------------------------------------------
+// cuda_mparticles_dump
+
+void
+cuda_mparticles_dump(struct cuda_mparticles *cuda_mprts)
+{
+  int n_prts = cuda_mprts->n_prts;
+  
+  thrust::device_ptr<float4> d_xi4(cuda_mprts->d_xi4);
+  thrust::device_ptr<float4> d_pxi4(cuda_mprts->d_pxi4);
+  thrust::device_ptr<unsigned int> d_bidx(cuda_mprts->d_bidx);
+  thrust::device_ptr<unsigned int> d_id(cuda_mprts->d_id);
+  thrust::device_ptr<unsigned int> d_off(cuda_mprts->d_off);
+
+  printf("cuda_mparticles_dump: n_prts = %d\n", n_prts); 
+  for (int n = 0; n < n_prts; n++) {
+    float4 xi4 = d_xi4[n], pxi4 = d_pxi4[n];
+    unsigned int bidx = d_bidx[n], id = d_id[n];
+    printf("cuda_mparticles_dump: [%d] %g %g %g // %g // %g %g %g // %g || bidx %d id %d\n",
+	   n, xi4.x, xi4.y, xi4.z, xi4.w, pxi4.x, pxi4.y, pxi4.z, pxi4.w,
+	   bidx, id);
+  }
+
+  for (int b = 0; b <= cuda_mprts->n_blocks; b++) {
+    unsigned int off = d_off[b];
+    printf("cuda_mparticles_dump: off[%d] = %d\n", b, off);
+  }
+}
+
+// ----------------------------------------------------------------------
 // cuda_mparticles_swap_alt
 
 void
