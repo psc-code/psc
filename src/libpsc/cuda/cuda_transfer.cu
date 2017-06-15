@@ -52,7 +52,6 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
   struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
 
-  mprts_cuda->h_n_prts = new int[mprts->nr_patches];
   mprts_cuda->h_bnd_cnt = new unsigned int[cmprts->n_blocks];
 
   check(cudaMalloc((void **) &mprts_cuda->d_alt_bidx, cmprts->n_alloced * sizeof(unsigned int)));
@@ -69,7 +68,6 @@ __psc_mparticles_cuda_free(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
 
-  delete[] mprts_cuda->h_n_prts;
   delete[] mprts_cuda->h_bnd_cnt;
 
   check(cudaFree(mprts_cuda->d_alt_bidx));

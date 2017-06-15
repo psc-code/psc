@@ -28,7 +28,6 @@ struct psc_particles_cuda {
 
 struct psc_mparticles_cuda {
   struct cuda_mparticles *cmprts;
-  int *h_n_prts; // particles_cuda_dev_t array for all patches
 
   unsigned int *d_alt_bidx;
   unsigned int *d_sums; // FIXME, too many arrays, consolidation would be good

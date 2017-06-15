@@ -411,7 +411,6 @@ cuda_mprts_sort(struct psc_mparticles *mprts)
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
 
     prts->n_part += cuda->bnd_n_recv - cuda->bnd_n_send;
-    mprts_cuda->h_n_prts[p] = prts->n_part;
   }
   cmprts->n_prts -= mprts_cuda->nr_prts_send;
 }
