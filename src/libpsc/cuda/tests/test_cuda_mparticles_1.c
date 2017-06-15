@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include <assert.h>
 
+// ----------------------------------------------------------------------
+// cuda_domain_info_set_test_1
+
 void
 cuda_domain_info_set_test_1(struct cuda_domain_info *info)
 {
@@ -13,37 +16,54 @@ cuda_domain_info_set_test_1(struct cuda_domain_info *info)
   info->dx[0] = 1.; info->dx[1] = 10.; info->dx[2] = 10.;
 };
 
-#if 0
+// ----------------------------------------------------------------------
+// cuda_mparticles_add_particles_test_1
+//
+// add 1 particle at the center of each cell, in the "wrong" order in each
+// patch (C order, but to get them ordered by block, they need to be reordered
+// into Fortran order, a.k.a., this will exercise the initial sorting
+
+static void
+get_particle_test_1(struct cuda_mparticles_prt *prt, int n, void *ctx)
+{
+  struct cuda_domain_info *info = ctx;
+
+  int k = n % info->ldims[2];
+  n /= info->ldims[2];
+  int j = n % info->ldims[1];
+  n /= info->ldims[1];
+  int i = n;
+
+  prt->xi[0] = info->dx[0] * (i + .5f);
+  prt->xi[1] = info->dx[1] * (j + .5f);
+  prt->xi[2] = info->dx[2] * (k + .5f);
+  prt->pxi[0] = i;
+  prt->pxi[1] = j;
+  prt->pxi[2] = k;
+  prt->kind = 0;
+  prt->qni_wni = 1.;
+}
+
 void
 cuda_mparticles_add_particles_test_1(struct cuda_mparticles *cmprts,
+				     struct cuda_domain_info *info,
 				     unsigned int *n_prts_by_patch)
 {
-  for (int p = 0; p < cmprts->n_patches; p++) {
-    n_prts_by_patch[p] = cmprts->ldims[0] * cmprts->ldims[1] * cmprts->ldims[2];
+  for (int p = 0; p < info->n_patches; p++) {
+    n_prts_by_patch[p] = info->ldims[0] * info->ldims[1] * info->ldims[2];
   }
 
   cuda_mparticles_alloc(cmprts, n_prts_by_patch);
-  
-  thrust::device_ptr<float4> d_xi4(cmprts->d_xi4);
-  thrust::device_ptr<float4> d_pxi4(cmprts->d_pxi4);
 
-  int *ldims = cmprts->ldims;
-  float *dx = cmprts->dx;
-  
-  int n = 0;
-  for (int i = 0; i < ldims[0]; i++) {
-    for (int j = 0; j < ldims[1]; j++) {
-      for (int k = 0; k < ldims[2]; k++) {
-	d_xi4[n] = (float4) { dx[0] * (i + .5f),
-			      dx[1] * (j + .5f),
-			      dx[1] * (k + .5f), 1. };
-	d_pxi4[n] = (float4) { i, j, k, 2. };
-	n++;
-      }
-    }
+  unsigned int off = 0;
+  for (int p = 0; p < info->n_patches; p++) {
+    cuda_mparticles_set_particles(cmprts, n_prts_by_patch[p], off,
+				  get_particle_test_1, info);
+    off += n_prts_by_patch[p];
   }
 }
 
+#if 0
 static int
 get_block_idx(struct cuda_mparticles *cmprts, int n, int p)
 {
@@ -109,13 +129,13 @@ main(void)
 
   struct cuda_domain_info info;
   cuda_domain_info_set_test_1(&info);
-
   cuda_mparticles_set_domain_info(cmprts, &info);
-#if 0
-  unsigned int n_prts_by_patch[cmprts->n_patches];
-  cuda_mparticles_add_particles_test_1(cmprts, n_prts_by_patch);
+
+  unsigned int n_prts_by_patch[info.n_patches];
+  cuda_mparticles_add_particles_test_1(cmprts, &info, n_prts_by_patch);
   printf("added particles\n");
   cuda_mparticles_dump(cmprts);
+#if 0
   cuda_mparticles_check_in_patch_unordered(cmprts, n_prts_by_patch);
 
   cuda_mparticles_find_block_indices_ids(cmprts, n_prts_by_patch);

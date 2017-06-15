@@ -11,16 +11,6 @@
 #endif
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_prt
-
-struct cuda_mparticles_prt {
-  float xi[3];
-  float pxi[3];
-  int kind;
-  float qni_wni;
-};
-
-// ----------------------------------------------------------------------
 // cuda_mparticles
 
 struct cuda_mparticles {
@@ -49,21 +39,10 @@ struct cuda_mparticles {
   float b_dxi[3];                 // inverse of block size (in actual length units)
 };
 
-EXTERN_C void cuda_mparticles_alloc(struct cuda_mparticles *cmprts, unsigned int *n_prts_by_patch);
-EXTERN_C void cuda_mparticles_dealloc(struct cuda_mparticles *cmprts);
-EXTERN_C void cuda_mparticles_dump(struct cuda_mparticles *cuda_mprts);
 EXTERN_C void cuda_mparticles_to_device(struct cuda_mparticles *cmprts, float4 *xi4, float4 *pxi4,
 					unsigned int n_prts, unsigned int off);
 EXTERN_C void cuda_mparticles_from_device(struct cuda_mparticles *cmprts, float4 *xi4, float4 *pxi4,
 					  unsigned int n_prts, unsigned int off);
-EXTERN_C void cuda_mparticles_sort_initial(struct cuda_mparticles *cmprts,
-					   unsigned int *n_prts_by_patch);
-EXTERN_C void cuda_mparticles_set_particles(struct cuda_mparticles *cmprts, unsigned int n_prts, unsigned int off,
-					    void (*get_particle)(struct cuda_mparticles_prt *prt, int n, void *ctx),
-					    void *ctx);
-EXTERN_C void cuda_mparticles_get_particles(struct cuda_mparticles *cmprts, unsigned int n_prts, unsigned int off,
-					    void (*put_particle)(struct cuda_mparticles_prt *, int, void *),
-					    void *ctx);
   
 void cuda_mparticles_swap_alt(struct cuda_mparticles *cmprts);
 void cuda_mparticles_find_block_indices_ids(struct cuda_mparticles *cmprts,
