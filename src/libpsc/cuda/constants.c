@@ -16,18 +16,15 @@ __constant__ static struct d_consts d_consts;
 EXTERN_C void
 PFX(set_constants)(struct psc_particles *prts, struct psc_fields *pf)
 {
-  struct d_consts consts = {
-    .dt     = ppsc->dt,
-    .dxi    = { 1.f / ppsc->patch[pf->p].dx[0],
-		1.f / ppsc->patch[pf->p].dx[1],
-		1.f / ppsc->patch[pf->p].dx[2] },
-    .dqs    = .5f * ppsc->coeff.eta * ppsc->dt,
-  };
+  struct d_consts consts;
+  consts.dt     = ppsc->dt;
+  consts.dqs    = .5f * ppsc->coeff.eta * ppsc->dt;
   consts.fnqs   = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   consts.fnqys  = ppsc->patch[pf->p].dx[1] * consts.fnqs / ppsc->dt;
   consts.fnqzs  = ppsc->patch[pf->p].dx[2] * consts.fnqs / ppsc->dt;
   for (int d = 0; d < 3; d++) {
-    consts.mx[d] = pf->im[d];
+    consts.dxi[d] = 1.f / ppsc->patch[pf->p].dx[d];
+    consts.mx[d]  = pf->im[d];
     consts.ilg[d] = pf->ib[d];
     consts.ilo[d] = pf->ib[d] + ppsc->ibn[d];
   }
