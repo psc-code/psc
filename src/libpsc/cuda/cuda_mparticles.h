@@ -2,6 +2,8 @@
 #ifndef CUDA_MPARTICLES_H
 #define CUDA_MPARTICLES_H
 
+#include "cuda_iface.h"
+
 #ifdef __cplusplus
 #define EXTERN_C extern "C"
 #else
@@ -59,8 +61,6 @@ struct cuda_mparticles {
   float b_dxi[3];                 // inverse of block size (in actual length units)
 };
 
-EXTERN_C struct cuda_mparticles *cuda_mparticles_create(void);
-EXTERN_C void cuda_mparticles_destroy(struct cuda_mparticles *cmprts);
 EXTERN_C void cuda_mparticles_set_domain_info(struct cuda_mparticles *cuda_mprts,
 					      const struct cuda_domain_info *info);
 EXTERN_C void cuda_mparticles_alloc(struct cuda_mparticles *cmprts, unsigned int *n_prts_by_patch);
