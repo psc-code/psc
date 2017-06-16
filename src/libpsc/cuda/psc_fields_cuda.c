@@ -1,5 +1,6 @@
 
 #include "psc.h"
+#include "cuda_iface.h"
 #include "psc_fields_cuda.h"
 #include "psc_fields_c.h"
 #include "psc_fields_single.h"
@@ -217,6 +218,13 @@ static void
 psc_mfields_cuda_setup(struct psc_mfields *mflds)
 {
   psc_mfields_setup_super(mflds);
+
+  cuda_base_init();
+
+  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
+  struct cuda_mfields *cmflds = cuda_mfields_create();
+  mflds_cuda->cmflds = cmflds;
+
   __psc_mfields_cuda_setup(mflds);
 }
 
@@ -226,7 +234,13 @@ psc_mfields_cuda_setup(struct psc_mfields *mflds)
 static void
 psc_mfields_cuda_destroy(struct psc_mfields *mflds)
 {
+  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
+  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
+
   __psc_mfields_cuda_destroy(mflds);
+
+  cuda_mfields_destroy(cmflds);
+  mflds_cuda->cmflds = NULL;
 }
 
 #ifdef HAVE_LIBHDF5_HL

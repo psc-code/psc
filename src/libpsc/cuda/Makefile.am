@@ -36,6 +36,7 @@ libsubdir_la_SOURCES = \
 libsubdir_la_LIBADD = \
 	cuda_base.lo \
 	cuda_mparticles.lo \
+	cuda_mfields.lo \
 	cuda_transfer.lo \
 	cuda_find_indices.lo \
 	cuda_spine.lo \

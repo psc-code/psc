@@ -54,6 +54,15 @@ void cuda_mparticles_set_particles(struct cuda_mparticles *cmprts, unsigned int 
 void cuda_mparticles_get_particles(struct cuda_mparticles *cmprts, unsigned int n_prts, unsigned int off,
 				   void (*put_particle)(struct cuda_mparticles_prt *, int, void *),
 				   void *ctx);
+
+// ----------------------------------------------------------------------
+// cuda_mfields
+
+struct cuda_mfields;
+
+struct cuda_mfields *cuda_mfields_create(void);
+void cuda_mfields_destroy(struct cuda_mfields *cmflds);
+
 #if 0
 {
 #endif
