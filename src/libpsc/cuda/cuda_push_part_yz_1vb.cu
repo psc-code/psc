@@ -124,7 +124,7 @@ set_consts(struct cuda_params *prm)
 
 void
 set_params(struct cuda_params *prm, struct psc *psc,
-	   struct cuda_mparticles *cmprts, struct psc_mfields *mflds)
+	   struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
 {
   prm->dt = psc->dt;
   for (int d = 0; d < 3; d++) {
@@ -148,9 +148,7 @@ set_params(struct cuda_params *prm, struct psc *psc,
     }
   }
 
-  if (mflds) {
-    struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
-    struct cuda_mfields *cmflds = mflds_cuda->cmflds;
+  if (cmflds) {
     for (int d = 0; d < 3; d++) {
       prm->mx[d] = cmflds->im[d];
       prm->ilg[d] = cmflds->ib[d];
@@ -950,15 +948,11 @@ zero_currents(struct psc_mfields *mflds)
 }
 
 #define CUDA_PUSH_MPRTS_TOP(CURRMEM)					\
-  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);	\
-  struct cuda_mfields *cmflds = mflds_cuda->cmflds;			\
-									\
   struct cuda_params prm;						\
-  set_params(&prm, ppsc, cmprts, mflds);				\
+  set_params(&prm, ppsc, cmprts, cmflds);				\
   set_consts(&prm);							\
 									\
-  unsigned int fld_size = mflds->nr_fields *				\
-    cmflds->im[0] * cmflds->im[1] * cmflds->im[2];			\
+  unsigned int fld_size = cmflds->n_fields * cmflds->n_cells_per_patch;	\
 									\
   zero_currents(mflds);							\
   									\
@@ -977,17 +971,13 @@ zero_currents(struct psc_mfields *mflds)
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 static void
-cuda_push_mprts_a(struct cuda_mparticles *cmprts, struct psc_mfields *mflds)
+cuda_push_mprts_a(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
 {
-  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
-  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
-
   struct cuda_params prm;
-  set_params(&prm, ppsc, cmprts, mflds);
+  set_params(&prm, ppsc, cmprts, cmflds);
   set_consts(&prm);
 
-  unsigned int size = mflds->nr_fields *
-    cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
+  unsigned int size = cmflds->n_fields * cmflds->n_cells_per_patch;
   
   dim3 dimGrid(prm.b_mx[1], prm.b_mx[2] * cmprts->n_patches);
   
@@ -1005,17 +995,13 @@ cuda_push_mprts_a(struct cuda_mparticles *cmprts, struct psc_mfields *mflds)
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 static void
-cuda_push_mprts_aq(struct cuda_mparticles *cmprts, struct psc_mfields *mflds)
+cuda_push_mprts_aq(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
 {
-  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
-  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
-
   struct cuda_params prm;
-  set_params(&prm, ppsc, cmprts, mflds);
+  set_params(&prm, ppsc, cmprts, cmflds);
   set_consts(&prm);
 
-  unsigned int size = mflds->nr_fields *
-    cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
+  unsigned int size = cmflds->n_fields * cmflds->n_cells_per_patch;
   
   dim3 dimGrid((prm.b_mx[1] + 1) / 2, ((prm.b_mx[2] + 1) / 2) * cmprts->n_patches);
   
@@ -1034,17 +1020,13 @@ cuda_push_mprts_aq(struct cuda_mparticles *cmprts, struct psc_mfields *mflds)
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 static void
-cuda_push_mprts_a_reorder(struct cuda_mparticles *cmprts, struct psc_mfields *mflds)
+cuda_push_mprts_a_reorder(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
 {
-  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
-  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
-
   struct cuda_params prm;
-  set_params(&prm, ppsc, cmprts, mflds);
+  set_params(&prm, ppsc, cmprts, cmflds);
   set_consts(&prm);
 
-  unsigned int size = mflds->nr_fields *
-    cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
+  unsigned int size = cmflds->n_fields * cmflds->n_cells_per_patch;
   
   dim3 dimGrid(prm.b_mx[1], prm.b_mx[2] * cmprts->n_patches);
 
@@ -1067,6 +1049,8 @@ template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 static void
 cuda_push_mprts_b(struct cuda_mparticles *cmprts, struct psc_mfields *mflds)
 {
+  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
+  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
   CUDA_PUSH_MPRTS_TOP(CURRMEM_SHARED);
 
   for (int block_start = 0; block_start < 4; block_start++) {
@@ -1089,6 +1073,8 @@ template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER,
 static void
 cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct psc_mfields *mflds)
 {
+  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
+  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
   CUDA_PUSH_MPRTS_TOP(CURRMEM);
 
   if (CURRMEM == CURRMEM_SHARED) {
@@ -1131,12 +1117,13 @@ EXTERN_C void
 yz4x4_1vb_cuda_push_mprts_separate(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
 
   if (!cmprts->need_reorder) {
     MHERE;
-    cuda_push_mprts_aq<1, 4, 4>(cmprts, mflds);
+    cuda_push_mprts_aq<1, 4, 4>(cmprts, cmflds);
   } else {
-    cuda_push_mprts_a_reorder<1, 4, 4>(cmprts, mflds);
+    cuda_push_mprts_a_reorder<1, 4, 4>(cmprts, cmflds);
     cmprts->need_reorder = false;
   }
   cuda_push_mprts_b<1, 4, 4>(cmprts, mflds);
