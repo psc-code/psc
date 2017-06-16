@@ -138,7 +138,7 @@ rho_1st_nc_cuda_run_patches_no_reorder(struct psc_mparticles *mprts, struct psc_
   struct psc_mfields_cuda *mres_cuda = psc_mfields_cuda(mres);
 
   struct cuda_params prm;
-  set_params(&prm, ppsc, mprts, mres);
+  set_params(&prm, ppsc, cmprts, mres);
 
   unsigned int fld_size = mres->nr_fields *
     mres_cuda->im[0] * mres_cuda->im[1] * mres_cuda->im[2];
