@@ -82,40 +82,65 @@ __psc_mparticles_cuda_free(struct psc_mparticles *mprts)
 // fields
 
 void
+cuda_mfields_alloc(struct cuda_mfields *cmflds, int ib[3], int im[3],
+		   int n_fields, int n_patches)
+{
+  cmflds->n_patches = n_patches;
+  cmflds->n_fields = n_fields;
+  
+  for (int d = 0; d < 3; d++) {
+    cmflds->im[d] = im[d];
+    cmflds->ib[d] = ib[d];
+  }
+
+  cmflds->n_cells_per_patch = im[0] * im[1] * im[2];
+  cmflds->n_cells = n_patches * cmflds->n_cells_per_patch;
+
+  mprintf("n_fields %d n_cells %d\n", n_fields, cmflds->n_cells);
+  check(cudaMalloc((void **) &cmflds->d_flds,
+		   n_fields * cmflds->n_cells * sizeof(*cmflds->d_flds)));
+}
+
+void
+cuda_mfields_dealloc(struct cuda_mfields *cmflds)
+{
+  check(cudaFree(cmflds->d_flds));
+}
+
+void
 __psc_mfields_cuda_setup(struct psc_mfields *mflds)
 {
   assert(!ppsc->domain.use_pml);
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
   struct cuda_mfields *cmflds = mflds_cuda->cmflds;
 
-  unsigned int total_size = 0;
-  unsigned int buf_size = 0;
+  int im[3], ib[3];
   for (int p = 0; p < mflds->nr_patches; p++) {
     struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
     if (p == 0) {
       for (int d = 0; d < 3; d++) {
-	cmflds->im[d] = flds->im[d];
-	cmflds->ib[d] = flds->ib[d];
+	im[d] = flds->im[d];
+	ib[d] = flds->ib[d];
       }
     } else {
       for (int d = 0; d < 3; d++) {
-	assert(cmflds->im[d] == flds->im[d]);
-	assert(cmflds->ib[d] == flds->ib[d]);
+	assert(im[d] == flds->im[d]);
+	assert(ib[d] == flds->ib[d]);
       }
     }
-    unsigned int size = flds->im[0] * flds->im[1] * flds->im[2];
-    total_size += size;
-    if (flds->im[0] == 1) {;// + 2*BND) {
+  }
+
+  cuda_mfields_alloc(cmflds, ib, im, mflds->nr_fields, mflds->nr_patches);
+
+  unsigned int buf_size = 0;
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    if (im[0] == 1) {;// + 2*BND) {
       int B = 2*BND;
-      buf_size = 2*B * (flds->im[1] + flds->im[2] - 2*B);
+      buf_size = 2*B * (im[1] + im[2] - 2*B);
     } else {
       assert(0);
     }
   }
-
-  mprintf("nr_fields %d tsize %d\n", mflds->nr_fields, total_size);
-  check(cudaMalloc((void **) &cmflds->d_flds,
-		   mflds->nr_fields * total_size * sizeof(*cmflds->d_flds)));
   check(cudaMalloc((void **) &mflds_cuda->d_bnd_buf,
 		   MAX_BND_COMPONENTS * buf_size * mflds->nr_patches * sizeof(float)));
   mflds_cuda->h_bnd_buf = new float[MAX_BND_COMPONENTS * mflds->nr_patches * buf_size];
@@ -155,7 +180,8 @@ __psc_mfields_cuda_destroy(struct psc_mfields *mflds)
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
   struct cuda_mfields *cmflds = mflds_cuda->cmflds;
 
-  check(cudaFree(cmflds->d_flds));
+  cuda_mfields_dealloc(cmflds);
+
   check(cudaFree(mflds_cuda->d_bnd_buf));
   check(cudaFree(mflds_cuda->d_nei_patch));
   check(cudaFree(mflds_cuda->d_map_out));

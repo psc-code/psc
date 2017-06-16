@@ -19,6 +19,10 @@ typedef float fields_cuda_real_t;
 struct cuda_mfields {
   fields_cuda_real_t *d_flds;
   int ib[3], im[3]; // FIXME, should be called off, ldims
+  int n_patches;
+  int n_fields;
+  int n_cells_per_patch;
+  int n_cells;
 };
 
 #endif
