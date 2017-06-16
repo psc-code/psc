@@ -166,8 +166,9 @@ static void
 rho_1st_nc_cuda_run_patches(struct psc_mparticles *mprts, struct psc_mfields *mres)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
     
-  if (!mprts_cuda->need_reorder) {
+  if (!cmprts->need_reorder) {
     rho_1st_nc_cuda_run_patches_no_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, false>(mprts, mres);
   } else {
     assert(0);

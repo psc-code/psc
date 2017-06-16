@@ -1124,15 +1124,14 @@ cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct psc_mfields *mflds)
 EXTERN_C void
 yz4x4_1vb_cuda_push_mprts_separate(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
-  if (!mprts_cuda->need_reorder) {
+  if (!cmprts->need_reorder) {
     MHERE;
     cuda_push_mprts_aq<1, 4, 4>(cmprts, mflds);
   } else {
     cuda_push_mprts_a_reorder<1, 4, 4>(cmprts, mflds);
-    mprts_cuda->need_reorder = false;
+    cmprts->need_reorder = false;
   }
   cuda_push_mprts_b<1, 4, 4>(cmprts, mflds);
 }
@@ -1145,15 +1144,14 @@ template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, enum IP IP, enum DEP
 static void
 yz_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
     
-  if (!mprts_cuda->need_reorder) {
+  if (!cmprts->need_reorder) {
     MHERE;
     cuda_push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, false, IP, DEPOSIT, CURRMEM>(cmprts, mflds);
   } else {
     cuda_push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, true, IP, DEPOSIT, CURRMEM>(cmprts, mflds);
-    mprts_cuda->need_reorder = false;
+    cmprts->need_reorder = false;
   }
 }
 

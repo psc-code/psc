@@ -39,7 +39,6 @@ struct psc_mparticles_cuda {
   unsigned int *h_bnd_idx;
   unsigned int *h_bnd_off;
   unsigned int *h_bnd_cnt;
-  bool need_reorder;
 };
 
 #define psc_mparticles_cuda(prts) mrc_to_subobj(prts, struct psc_mparticles_cuda)

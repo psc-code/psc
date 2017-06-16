@@ -37,6 +37,8 @@ struct cuda_mparticles {
   int b_mx[3];                    // number of blocks per direction in each patch
   float dx[3];                    // cell size (in actual length units)
   float b_dxi[3];                 // inverse of block size (in actual length units)
+
+  bool need_reorder;              // particles haven't yet been put into their sorted order
 };
 
 EXTERN_C void cuda_mparticles_to_device(struct cuda_mparticles *cmprts, float4 *xi4, float4 *pxi4,

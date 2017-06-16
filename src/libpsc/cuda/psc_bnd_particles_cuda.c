@@ -244,6 +244,7 @@ psc_bnd_particles_sub_exchange_mprts_post(struct psc_bnd_particles *bnd,
 					  struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
 
   static int pr_A, pr_B, pr_C, pr_D, pr_E, pr_D1;
   if (!pr_A) {
@@ -282,7 +283,7 @@ psc_bnd_particles_sub_exchange_mprts_post(struct psc_bnd_particles *bnd,
   prof_stop(pr_E);
   //  cuda_mprts_check_ordered_total(mprts);
 #else
-  mprts_cuda->need_reorder = true;
+  cmprts->need_reorder = true;
 #endif
   
 }

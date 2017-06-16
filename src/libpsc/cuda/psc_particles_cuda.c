@@ -608,10 +608,10 @@ struct psc_mparticles_ops psc_mparticles_cuda_ops = {
 void
 psc_mparticles_cuda_reorder(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
-  if (mprts_cuda->need_reorder) {
+  if (cmprts->need_reorder) {
     cuda_mprts_reorder(mprts);
-    mprts_cuda->need_reorder = false;
+    cmprts->need_reorder = false;
   }
 }
