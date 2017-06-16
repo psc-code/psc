@@ -65,6 +65,7 @@ CUDACC_FLAGS = -g --ptxas-options=-v --maxrregcount=32 --use_fast_math $(filter-
 CUDA_DEPS = \
 	cuda_iface.h \
         cuda_mparticles.h \
+        cuda_mfields.h \
         psc_cuda.h \
         constants.c \
         common.c \

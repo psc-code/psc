@@ -1,5 +1,6 @@
 
 #include "cuda_mparticles.h"
+#include "cuda_mfields.h"
 #include "psc_cuda.h"
 #include "particles_cuda.h"
 
@@ -977,6 +978,7 @@ static void
 cuda_push_mprts_a(struct cuda_mparticles *cmprts, struct psc_mfields *mflds)
 {
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
+  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
 
   struct cuda_params prm;
   set_params(&prm, ppsc, cmprts, mflds);
@@ -990,7 +992,7 @@ cuda_push_mprts_a(struct cuda_mparticles *cmprts, struct psc_mfields *mflds)
   push_mprts_a<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
     <<<dimGrid, THREADS_PER_BLOCK>>>
     (prm, cmprts->d_xi4, cmprts->d_pxi4, cmprts->d_off,
-     mflds_cuda->d_flds, size, prm.b_mx[1], prm.b_mx[2]);
+     cmflds->d_flds, size, prm.b_mx[1], prm.b_mx[2]);
   cuda_sync_if_enabled();
   
   free_params(&prm);
@@ -1004,6 +1006,7 @@ static void
 cuda_push_mprts_aq(struct cuda_mparticles *cmprts, struct psc_mfields *mflds)
 {
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
+  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
 
   struct cuda_params prm;
   set_params(&prm, ppsc, cmprts, mflds);
@@ -1018,7 +1021,7 @@ cuda_push_mprts_aq(struct cuda_mparticles *cmprts, struct psc_mfields *mflds)
     push_mprts_aq<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
       <<<dimGrid, THREADS_PER_BLOCK>>>
       (block_start, prm, cmprts->d_xi4, cmprts->d_pxi4, cmprts->d_off,
-       mflds_cuda->d_flds, size);
+       cmflds->d_flds, size);
     cuda_sync_if_enabled();
   }
   free_params(&prm);
@@ -1032,6 +1035,7 @@ static void
 cuda_push_mprts_a_reorder(struct cuda_mparticles *cmprts, struct psc_mfields *mflds)
 {
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
+  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
 
   struct cuda_params prm;
   set_params(&prm, ppsc, cmprts, mflds);
@@ -1046,7 +1050,7 @@ cuda_push_mprts_a_reorder(struct cuda_mparticles *cmprts, struct psc_mfields *mf
     <<<dimGrid, THREADS_PER_BLOCK>>>
     (prm, cmprts->d_id, cmprts->d_xi4, cmprts->d_pxi4,
      cmprts->d_alt_xi4, cmprts->d_alt_pxi4, cmprts->d_off,
-     mflds_cuda->d_flds, size);
+     cmflds->d_flds, size);
   cuda_sync_if_enabled();
   
   cuda_mparticles_swap_alt(cmprts);
@@ -1062,13 +1066,14 @@ static void
 cuda_push_mprts_b(struct cuda_mparticles *cmprts, struct psc_mfields *mflds)
 {
   CUDA_PUSH_MPRTS_TOP(CURRMEM_SHARED);
+  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
 
   for (int block_start = 0; block_start < 4; block_start++) {
     push_mprts_b<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> >
       <<<dimGrid, THREADS_PER_BLOCK>>>
       (block_start, prm, cmprts->d_xi4, cmprts->d_pxi4, cmprts->d_off,
        cmprts->n_blocks, cmprts->d_bidx,
-       mflds_cuda->d_flds, fld_size);
+       cmflds->d_flds, fld_size);
     cuda_sync_if_enabled();
   }
   
@@ -1084,6 +1089,7 @@ static void
 cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct psc_mfields *mflds)
 {
   CUDA_PUSH_MPRTS_TOP(CURRMEM);
+  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
 
   if (CURRMEM == CURRMEM_SHARED) {
     for (int block_start = 0; block_start < 4; block_start++) {
@@ -1093,7 +1099,7 @@ cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct psc_mfields *mflds)
       (block_start, prm, cmprts->d_xi4, cmprts->d_pxi4,
        cmprts->d_alt_xi4, cmprts->d_alt_pxi4, cmprts->d_off,
        cmprts->n_blocks, cmprts->d_id, cmprts->d_bidx,
-       mflds_cuda->d_flds, fld_size);
+       cmflds->d_flds, fld_size);
       cuda_sync_if_enabled();
     }
   } else if (CURRMEM == CURRMEM_GLOBAL) {
@@ -1103,7 +1109,7 @@ cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct psc_mfields *mflds)
       (0, prm, cmprts->d_xi4, cmprts->d_pxi4,
        cmprts->d_alt_xi4, cmprts->d_alt_pxi4, cmprts->d_off,
        cmprts->n_blocks, cmprts->d_id, cmprts->d_bidx,
-       mflds_cuda->d_flds, fld_size);
+       cmflds->d_flds, fld_size);
     cuda_sync_if_enabled();
   } else {
     assert(0);

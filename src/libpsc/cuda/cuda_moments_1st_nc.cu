@@ -1,5 +1,6 @@
 
 #include "cuda_mparticles.h"
+#include "cuda_mfields.h"
 #include "psc_cuda.h"
 #include "particles_cuda.h"
 
@@ -136,6 +137,7 @@ rho_1st_nc_cuda_run_patches_no_reorder(struct psc_mparticles *mprts, struct psc_
   struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
   assert(cmprts);
   struct psc_mfields_cuda *mres_cuda = psc_mfields_cuda(mres);
+  struct cuda_mfields *cmres = mres_cuda->cmflds;
 
   struct cuda_params prm;
   set_params(&prm, ppsc, cmprts, mres);
@@ -152,7 +154,7 @@ rho_1st_nc_cuda_run_patches_no_reorder(struct psc_mparticles *mprts, struct psc_
     (0, prm, cmprts->d_xi4, cmprts->d_pxi4,
      cmprts->d_off,
      cmprts->n_blocks, cmprts->d_id,
-     mres_cuda->d_flds, fld_size);
+     cmres->d_flds, fld_size);
   cuda_sync_if_enabled();
 
   free_params(&prm);

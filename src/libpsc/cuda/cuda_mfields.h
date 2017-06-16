@@ -10,10 +10,14 @@
 #define EXTERN_C
 #endif
 
+// FIXME, better call it cuda_mfields_real_t
+typedef float fields_cuda_real_t;
+
 // ----------------------------------------------------------------------
 // cuda_mfields
 
 struct cuda_mfields {
+  fields_cuda_real_t *d_flds;
 };
 
 #endif

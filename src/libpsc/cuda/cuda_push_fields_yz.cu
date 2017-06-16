@@ -1,4 +1,5 @@
 
+#include "cuda_mfields.h"
 #include "psc_cuda.h"
 
 // the loops include 2 levels of ghost cells
@@ -125,6 +126,7 @@ cuda_push_fields_E_yz(struct psc_mfields *mflds)
   }
 
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
+  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
   struct psc_patch *patch = &ppsc->patch[0];
 
   real dt = ppsc->dt;
@@ -143,7 +145,7 @@ cuda_push_fields_E_yz(struct psc_mfields *mflds)
   int dimGrid[2] = { grid[0], grid[1] * mflds->nr_patches };
 
   RUN_KERNEL(dimGrid, dimBlock,
-	     push_fields_E_yz, (mflds_cuda->d_flds, dt, cny, cnz, my, mz,
+	     push_fields_E_yz, (cmflds->d_flds, dt, cny, cnz, my, mz,
 				size, grid[1]));
 }
 
@@ -155,6 +157,7 @@ cuda_push_fields_H_yz(struct psc_mfields *mflds)
   }
 
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
+  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
   struct psc_patch *patch = &ppsc->patch[0];
 
   real cny = .5f * ppsc->dt / patch->dx[1];
@@ -171,7 +174,7 @@ cuda_push_fields_H_yz(struct psc_mfields *mflds)
   int dimGrid[2] = { grid[0], grid[1] * mflds->nr_patches };
 
   RUN_KERNEL(dimGrid, dimBlock,
-	     push_fields_H_yz, (mflds_cuda->d_flds, cny, cnz, my, mz,
+	     push_fields_H_yz, (cmflds->d_flds, cny, cnz, my, mz,
 				size, grid[1]));
 }
 
@@ -252,7 +255,9 @@ cuda_marder_correct_yz(struct psc_mfields *mflds, struct psc_mfields *mf,
   }
 
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
+  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
   struct psc_mfields_cuda *mf_cuda = psc_mfields_cuda(mf);
+  struct cuda_mfields *cmf = mf_cuda->cmflds;
   struct psc_patch *patch = &ppsc->patch[p];
 
   unsigned int size = mflds_cuda->im[0] * mflds_cuda->im[1] * mflds_cuda->im[2];
@@ -265,8 +270,8 @@ cuda_marder_correct_yz(struct psc_mfields *mflds, struct psc_mfields *mf,
   int dimGrid[2] = { grid[0], grid[1] };
 
   RUN_KERNEL(dimGrid, dimBlock,
-	     marder_correct_yz, (mflds_cuda->d_flds + p * size * mflds->nr_fields,
-				 mf_cuda->d_flds + p * size * mf->nr_fields, fac[1], fac[2],
+	     marder_correct_yz, (cmflds->d_flds + p * size * mflds->nr_fields,
+				 cmf->d_flds + p * size * mf->nr_fields, fac[1], fac[2],
 				 ly[1], ly[2], ry[1], ry[2],
 				 lz[1], lz[2], rz[1], rz[2], my, mz));
 }
