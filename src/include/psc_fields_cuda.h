@@ -29,7 +29,6 @@ struct psc_mfields_cuda {
   struct cuda_mfields *cmflds;
   fields_cuda_real_t *d_bnd_buf;
   fields_cuda_real_t *h_bnd_buf;
-  int ib[3], im[3];
   int *h_nei_patch;
   int *d_nei_patch;
   int *h_map_out; // maps thread id to a particular offset for ghosts in the flds array 

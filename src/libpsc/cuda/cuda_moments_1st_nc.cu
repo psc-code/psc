@@ -135,7 +135,6 @@ rho_1st_nc_cuda_run_patches_no_reorder(struct psc_mparticles *mprts, struct psc_
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
   struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
-  assert(cmprts);
   struct psc_mfields_cuda *mres_cuda = psc_mfields_cuda(mres);
   struct cuda_mfields *cmres = mres_cuda->cmflds;
 
@@ -143,7 +142,7 @@ rho_1st_nc_cuda_run_patches_no_reorder(struct psc_mparticles *mprts, struct psc_
   set_params(&prm, ppsc, cmprts, mres);
 
   unsigned int fld_size = mres->nr_fields *
-    mres_cuda->im[0] * mres_cuda->im[1] * mres_cuda->im[2];
+    cmres->im[0] * cmres->im[1] * cmres->im[2];
 
   int gx = prm.b_mx[1];
   int gy = prm.b_mx[2] * mprts->nr_patches;

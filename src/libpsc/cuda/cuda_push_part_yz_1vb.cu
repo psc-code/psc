@@ -150,13 +150,14 @@ set_params(struct cuda_params *prm, struct psc *psc,
 
   if (mflds) {
     struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
+    struct cuda_mfields *cmflds = mflds_cuda->cmflds;
     for (int d = 0; d < 3; d++) {
-      prm->mx[d] = mflds_cuda->im[d];
-      prm->ilg[d] = mflds_cuda->ib[d];
+      prm->mx[d] = cmflds->im[d];
+      prm->ilg[d] = cmflds->ib[d];
       if (d > 0) {
-	assert(mflds_cuda->ib[d] == -BND);
+	assert(cmflds->ib[d] == -BND);
       } else {
-	assert(mflds_cuda->im[d] == 1);// + 2*BND);
+	assert(cmflds->im[d] == 1);// + 2*BND);
       }
     }
   }
@@ -950,13 +951,14 @@ zero_currents(struct psc_mfields *mflds)
 
 #define CUDA_PUSH_MPRTS_TOP(CURRMEM)					\
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);	\
+  struct cuda_mfields *cmflds = mflds_cuda->cmflds;			\
 									\
   struct cuda_params prm;						\
   set_params(&prm, ppsc, cmprts, mflds);				\
   set_consts(&prm);							\
 									\
   unsigned int fld_size = mflds->nr_fields *				\
-    mflds_cuda->im[0] * mflds_cuda->im[1] * mflds_cuda->im[2];		\
+    cmflds->im[0] * cmflds->im[1] * cmflds->im[2];			\
 									\
   zero_currents(mflds);							\
   									\
@@ -985,7 +987,7 @@ cuda_push_mprts_a(struct cuda_mparticles *cmprts, struct psc_mfields *mflds)
   set_consts(&prm);
 
   unsigned int size = mflds->nr_fields *
-    mflds_cuda->im[0] * mflds_cuda->im[1] * mflds_cuda->im[2];
+    cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
   
   dim3 dimGrid(prm.b_mx[1], prm.b_mx[2] * cmprts->n_patches);
   
@@ -1013,7 +1015,7 @@ cuda_push_mprts_aq(struct cuda_mparticles *cmprts, struct psc_mfields *mflds)
   set_consts(&prm);
 
   unsigned int size = mflds->nr_fields *
-    mflds_cuda->im[0] * mflds_cuda->im[1] * mflds_cuda->im[2];
+    cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
   
   dim3 dimGrid((prm.b_mx[1] + 1) / 2, ((prm.b_mx[2] + 1) / 2) * cmprts->n_patches);
   
@@ -1042,7 +1044,7 @@ cuda_push_mprts_a_reorder(struct cuda_mparticles *cmprts, struct psc_mfields *mf
   set_consts(&prm);
 
   unsigned int size = mflds->nr_fields *
-    mflds_cuda->im[0] * mflds_cuda->im[1] * mflds_cuda->im[2];
+    cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
   
   dim3 dimGrid(prm.b_mx[1], prm.b_mx[2] * cmprts->n_patches);
 
@@ -1066,7 +1068,6 @@ static void
 cuda_push_mprts_b(struct cuda_mparticles *cmprts, struct psc_mfields *mflds)
 {
   CUDA_PUSH_MPRTS_TOP(CURRMEM_SHARED);
-  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
 
   for (int block_start = 0; block_start < 4; block_start++) {
     push_mprts_b<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> >
@@ -1089,7 +1090,6 @@ static void
 cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct psc_mfields *mflds)
 {
   CUDA_PUSH_MPRTS_TOP(CURRMEM);
-  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
 
   if (CURRMEM == CURRMEM_SHARED) {
     for (int block_start = 0; block_start < 4; block_start++) {

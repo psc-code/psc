@@ -135,9 +135,9 @@ cuda_push_fields_E_yz(struct psc_mfields *mflds)
   assert(patch->ldims[0] == 1);
 
   unsigned int size = mflds->nr_fields *
-    mflds_cuda->im[0] * mflds_cuda->im[1] * mflds_cuda->im[2];
-  int my = mflds_cuda->im[1];
-  int mz = mflds_cuda->im[2];
+    cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
+  int my = cmflds->im[1];
+  int mz = cmflds->im[2];
 
   int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
   int grid[2]  = { (patch->ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
@@ -164,9 +164,9 @@ cuda_push_fields_H_yz(struct psc_mfields *mflds)
   real cnz = .5f * ppsc->dt / patch->dx[2];
 
   unsigned int size = mflds->nr_fields *
-    mflds_cuda->im[0] * mflds_cuda->im[1] * mflds_cuda->im[2];
-  int my = mflds_cuda->im[1];
-  int mz = mflds_cuda->im[2];
+    cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
+  int my = cmflds->im[1];
+  int mz = cmflds->im[2];
 
   int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
   int grid[2]  = { (patch->ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
@@ -260,9 +260,9 @@ cuda_marder_correct_yz(struct psc_mfields *mflds, struct psc_mfields *mf,
   struct cuda_mfields *cmf = mf_cuda->cmflds;
   struct psc_patch *patch = &ppsc->patch[p];
 
-  unsigned int size = mflds_cuda->im[0] * mflds_cuda->im[1] * mflds_cuda->im[2];
-  int my = mflds_cuda->im[1];
-  int mz = mflds_cuda->im[2];
+  unsigned int size = cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
+  int my = cmflds->im[1];
+  int mz = cmflds->im[2];
 
   int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
   int grid[2]  = { (patch->ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,

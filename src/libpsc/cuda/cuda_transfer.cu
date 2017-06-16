@@ -94,13 +94,13 @@ __psc_mfields_cuda_setup(struct psc_mfields *mflds)
     struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
     if (p == 0) {
       for (int d = 0; d < 3; d++) {
-	mflds_cuda->im[d] = flds->im[d];
-	mflds_cuda->ib[d] = flds->ib[d];
+	cmflds->im[d] = flds->im[d];
+	cmflds->ib[d] = flds->ib[d];
       }
     } else {
       for (int d = 0; d < 3; d++) {
-	assert(mflds_cuda->im[d] == flds->im[d]);
-	assert(mflds_cuda->ib[d] == flds->ib[d]);
+	assert(cmflds->im[d] == flds->im[d]);
+	assert(cmflds->ib[d] == flds->ib[d]);
       }
     }
     unsigned int size = flds->im[0] * flds->im[1] * flds->im[2];
@@ -370,8 +370,8 @@ fields_device_pack_yz(struct psc_mfields *mflds, int mb, int me)
 {
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
   struct cuda_mfields *cmflds = mflds_cuda->cmflds;
-  unsigned int size = mflds_cuda->im[0] * mflds_cuda->im[1] * mflds_cuda->im[2];
-  int gmy = mflds_cuda->im[1], gmz = mflds_cuda->im[2];
+  unsigned int size = cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
+  int gmy = cmflds->im[1], gmz = cmflds->im[2];
   unsigned int buf_size = 2*B * (gmy + gmz - 2*B);
   int n_threads = buf_size * (me - mb) * mflds->nr_patches;
 
@@ -403,7 +403,7 @@ fields_device_pack2_yz(struct psc_mfields *mflds, int mb, int me)
   const int NR_COMPONENTS = 3;
   assert(me - mb == NR_COMPONENTS);
 
-  int *im = mflds_cuda->im;
+  int *im = cmflds->im;
   assert(im[0] == 1);
   int nr_fields = mflds->nr_fields;
   int nr_patches = mflds->nr_patches;
@@ -427,7 +427,7 @@ __fields_cuda_fill_ghosts_local(struct psc_mfields *mflds, int mb, int me)
   struct cuda_mfields *cmflds = mflds_cuda->cmflds;
   const int B = 2;
 
-  int *im = mflds_cuda->im;
+  int *im = cmflds->im;
   assert(im[0] == 1);
   int nr_fields = mflds->nr_fields;
   int nr_patches = mflds->nr_patches;
@@ -480,7 +480,9 @@ static void
 fields_host_pack_yz(struct psc_mfields *mflds, int mb, int me)
 {
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
-  int gmy = mflds_cuda->im[1], gmz = mflds_cuda->im[2];
+  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
+
+  int gmy = cmflds->im[1], gmz = cmflds->im[2];
   unsigned int buf_size = 2*B * (gmy + gmz - 2*B);
 
   for (int p = 0; p < mflds->nr_patches; p++) {
@@ -558,7 +560,9 @@ static void
 fields_host_pack3_yz(struct psc_mfields *mflds, int mb, int me)
 {
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
-  int *im = mflds_cuda->im;
+  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
+
+  int *im = cmflds->im;
   int nr_fields = mflds->nr_fields;
 
   real *h_buf = mflds_cuda->h_bnd_buf;
@@ -602,12 +606,14 @@ __fields_cuda_from_device_yz(struct psc_mfields *mflds, int mb, int me)
   }
     
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
-  int gmy = mflds_cuda->im[1], gmz = mflds_cuda->im[2];
+  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
+
+  int gmy = cmflds->im[1], gmz = cmflds->im[2];
   unsigned int buf_size = 2*B * (gmy + gmz - 2*B);
   assert(me - mb <= MAX_BND_COMPONENTS);
-  assert(mflds_cuda->ib[1] == -BND);
-  assert(mflds_cuda->im[1] >= 2 * B);
-  assert(mflds_cuda->im[2] >= 2 * B);
+  assert(cmflds->ib[1] == -BND);
+  assert(cmflds->im[1] >= 2 * B);
+  assert(cmflds->im[2] >= 2 * B);
 
   prof_start(pr1);
   fields_device_pack_yz<B, PACK>(mflds, mb, me);
@@ -637,12 +643,14 @@ __fields_cuda_to_device_yz(struct psc_mfields *mflds, int mb, int me)
   }
   
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
-  int gmy = mflds_cuda->im[1], gmz = mflds_cuda->im[2];
+  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
+
+  int gmy = cmflds->im[1], gmz = cmflds->im[2];
   unsigned int buf_size = 2*B * (gmy + gmz - 2*B);
   assert(me - mb <= MAX_BND_COMPONENTS);
-  assert(mflds_cuda->ib[1] == -BND);
-  assert(mflds_cuda->im[1] >= 2 * B);
-  assert(mflds_cuda->im[2] >= 2 * B);
+  assert(cmflds->ib[1] == -BND);
+  assert(cmflds->im[1] >= 2 * B);
+  assert(cmflds->im[2] >= 2 * B);
 
   prof_start(pr1);
   fields_host_pack_yz<B, PACK>(mflds, mb, me);
@@ -675,10 +683,12 @@ __fields_cuda_from_device3_yz(struct psc_mfields *mflds, int mb, int me)
   }
     
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
+  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
+
   assert(me - mb <= MAX_BND_COMPONENTS);
-  assert(mflds_cuda->ib[1] == -BND);
-  assert(mflds_cuda->im[1] >= 2 * B);
-  assert(mflds_cuda->im[2] >= 2 * B);
+  assert(cmflds->ib[1] == -BND);
+  assert(cmflds->im[1] >= 2 * B);
+  assert(cmflds->im[2] >= 2 * B);
 
   int nr_map;
   if (B == 4) {
@@ -715,10 +725,12 @@ __fields_cuda_to_device3_yz(struct psc_mfields *mflds, int mb, int me)
   }
   
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
+  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
+
   assert(me - mb <= MAX_BND_COMPONENTS);
-  assert(mflds_cuda->ib[1] == -BND);
-  assert(mflds_cuda->im[1] >= 2 * B);
-  assert(mflds_cuda->im[2] >= 2 * B);
+  assert(cmflds->ib[1] == -BND);
+  assert(cmflds->im[1] >= 2 * B);
+  assert(cmflds->im[2] >= 2 * B);
 
   int nr_map;
   if (B == 2) {
@@ -748,7 +760,9 @@ EXTERN_C void
 __fields_cuda_from_device_inside(struct psc_mfields *mflds, int mb, int me)
 {
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
-  if (mflds_cuda->im[0] == 2 * -mflds_cuda->ib[0] + 1) {
+  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
+
+  if (cmflds->im[0] == 2 * -cmflds->ib[0] + 1) {
     __fields_cuda_from_device_yz<2*BND>(mflds, mb, me);
   } else {
     for (int p = 0; p < mflds->nr_patches; p++) {
@@ -767,7 +781,9 @@ EXTERN_C void
 __fields_cuda_from_device_inside_only(struct psc_mfields *mflds, int mb, int me)
 {
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
-  if (mflds_cuda->im[0] == 2 * -mflds_cuda->ib[0] + 1) {
+  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
+
+  if (cmflds->im[0] == 2 * -cmflds->ib[0] + 1) {
     __fields_cuda_from_device3_yz<2*BND>(mflds, mb, me);
   } else {
     for (int p = 0; p < mflds->nr_patches; p++) {
@@ -786,7 +802,9 @@ EXTERN_C void
 __fields_cuda_to_device_outside(struct psc_mfields *mflds, int mb, int me)
 {
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
-  if (mflds_cuda->im[0] == 2 * -mflds_cuda->ib[0] + 1) {
+  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
+
+  if (cmflds->im[0] == 2 * -cmflds->ib[0] + 1) {
     __fields_cuda_to_device3_yz<BND>(mflds, mb, me);
   } else {
     for (int p = 0; p < mflds->nr_patches; p++) {
@@ -805,7 +823,9 @@ EXTERN_C void
 __fields_cuda_to_device_inside(struct psc_mfields *mflds, int mb, int me)
 {
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
-  if (mflds_cuda->im[0] == 2 * -mflds_cuda->ib[0] + 1) {
+  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
+
+  if (cmflds->im[0] == 2 * -cmflds->ib[0] + 1) {
     __fields_cuda_to_device_yz<2*BND>(mflds, mb, me);
   } else {
     for (int p = 0; p < mflds->nr_patches; p++) {
@@ -880,7 +900,9 @@ EXTERN_C void
 __fields_cuda_fill_ghosts_setup(struct psc_mfields *mflds, struct mrc_ddc *ddc)
 {
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
-  int *im = mflds_cuda->im;
+  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
+
+  int *im = cmflds->im;
   assert(im[0] == 1);
   int nr_patches = mflds->nr_patches;
 
@@ -979,8 +1001,10 @@ static void
 fields_create_map_out_yz(struct psc_mfields *mflds, int B, int *p_nr_map, int **p_h_map)
 {
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
+  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
+
   bool remote_only = true;
-  int *im = mflds_cuda->im;
+  int *im = cmflds->im;
   int nr_patches = mflds->nr_patches;
   int nr_fields = mflds->nr_fields;
 
@@ -1054,8 +1078,10 @@ static void
 fields_create_map_in_yz(struct psc_mfields *mflds, int B, int *p_nr_map, int **p_h_map)
 {
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
+  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
+
   bool remote_only = true;
-  int *im = mflds_cuda->im;
+  int *im = cmflds->im;
   int ldims[3] = { 1, im[1] - 2*2, im[2] - 2*2 };
   int nr_patches = mflds->nr_patches;
   int nr_fields = mflds->nr_fields;
@@ -1189,7 +1215,7 @@ fields_device_pack3_yz(struct psc_mfields *mflds, int mb, int me)
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
   struct cuda_mfields *cmflds = mflds_cuda->cmflds;
 
-  int *im = mflds_cuda->im;
+  int *im = cmflds->im;
   assert(im[0] == 1);
   int nr_patches = mflds->nr_patches;
   int nr_map;
