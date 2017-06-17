@@ -18,7 +18,9 @@ psc_push_particles_1vb_4x4_cuda_push_mprts_yz(struct psc_push_particles *push,
   assert(strcmp(psc_mparticles_type(mprts), "cuda") == 0);
 
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "cuda", EX, EX + 6);
-  yz4x4_1vb_cuda_push_mprts(mprts, mflds);
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
+  yz4x4_1vb_cuda_push_mprts(cmprts, cmflds);
   psc_mfields_put_as(mflds, mflds_base, JXI, JXI + 3);
 }
 
@@ -46,7 +48,9 @@ struct psc_push_particles_ops psc_push_particles_1vb_4x4_cuda_ops = {
 									\
   struct psc_mfields *mflds =						\
     psc_mfields_get_as(mflds_base, "cuda", EX, EX + 6);			\
-  yz##BY##x##BZ##_1vbec3d ##MEM## _cuda_push_mprts(mprts, mflds);	\
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;	\
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;	\
+  yz##BY##x##BZ##_1vbec3d ##MEM## _cuda_push_mprts(cmprts, cmflds);	\
   psc_mfields_put_as(mflds, mflds_base, JXI, JXI + 3);			\
   }									\
 									\

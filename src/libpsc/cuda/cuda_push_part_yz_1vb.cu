@@ -1143,44 +1143,36 @@ yz_cuda_push_mprts(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
 // ----------------------------------------------------------------------
 // yz4x4_1vb_cuda_push_mprts
 
-EXTERN_C void
-yz4x4_1vb_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds)
+void
+yz4x4_1vb_cuda_push_mprts(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
 {
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
   yz_cuda_push_mprts<1, 4, 4, IP_STD, DEPOSIT_VB_2D, CURRMEM_SHARED>(cmprts, cmflds);
 }
 
 // ----------------------------------------------------------------------
 // yz2x2_1vbec3d_cuda_push_mprts
 
-EXTERN_C void
-yz2x2_1vbec3d_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds)
+void
+yz2x2_1vbec3d_cuda_push_mprts(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
 {
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
   yz_cuda_push_mprts<1, 2, 2, IP_EC, DEPOSIT_VB_3D, CURRMEM_SHARED>(cmprts, cmflds);
 }
 
 // ----------------------------------------------------------------------
 // yz4x4_1vbec3d_cuda_push_mprts
 
-EXTERN_C void
-yz4x4_1vbec3d_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds)
+void
+yz4x4_1vbec3d_cuda_push_mprts(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
 {
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
   yz_cuda_push_mprts<1, 4, 4, IP_EC, DEPOSIT_VB_3D, CURRMEM_SHARED>(cmprts, cmflds);
 }
 
 // ----------------------------------------------------------------------
 // yz8x8_1vbec3d_cuda_push_mprts
 
-EXTERN_C void
-yz8x8_1vbec3d_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds)
+void
+yz8x8_1vbec3d_cuda_push_mprts(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
 {
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
   yz_cuda_push_mprts<1, 8, 8, IP_EC, DEPOSIT_VB_3D, CURRMEM_SHARED>(cmprts, cmflds);
 }
 
@@ -1188,33 +1180,27 @@ yz8x8_1vbec3d_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *
 // ----------------------------------------------------------------------
 // yz2x2_1vbec3d_gmem_cuda_push_mprts
 
-EXTERN_C void
-yz2x2_1vbec3d_gmem_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds)
+void
+yz2x2_1vbec3d_gmem_cuda_push_mprts(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
 {
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
   yz_cuda_push_mprts<1, 2, 2, IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL>(cmprts, cmflds);
 }
 
 // ----------------------------------------------------------------------
 // yz4x4_1vbec3d_gmem_cuda_push_mprts
 
-EXTERN_C void
-yz4x4_1vbec3d_gmem_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds)
+void
+yz4x4_1vbec3d_gmem_cuda_push_mprts(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
 {
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
   yz_cuda_push_mprts<1, 4, 4, IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL>(cmprts, cmflds);
 }
 
 // ----------------------------------------------------------------------
 // yz8x8_1vbec3d_gmem_cuda_push_mprts
 
-EXTERN_C void
-yz8x8_1vbec3d_gmem_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds)
+void
+yz8x8_1vbec3d_gmem_cuda_push_mprts(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
 {
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
   yz_cuda_push_mprts<1, 8, 8, IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL>(cmprts, cmflds);
 }
 
