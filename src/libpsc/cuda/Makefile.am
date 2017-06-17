@@ -37,6 +37,7 @@ libsubdir_la_LIBADD = \
 	cuda_base.lo \
 	cuda_mparticles.lo \
 	cuda_mfields.lo \
+	cuda_push_mprts_yz.lo \
 	cuda_transfer.lo \
 	cuda_find_indices.lo \
 	cuda_spine.lo \
@@ -66,6 +67,7 @@ CUDA_DEPS = \
 	cuda_iface.h \
         cuda_mparticles.h \
         cuda_mfields.h \
+	cuda_bits.h \
         psc_cuda.h \
         constants.c \
         common.c \
