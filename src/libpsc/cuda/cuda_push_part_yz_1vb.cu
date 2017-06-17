@@ -1141,66 +1141,44 @@ yz_cuda_push_mprts(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
 }
 
 // ----------------------------------------------------------------------
-// yz4x4_1vb_cuda_push_mprts
+// cuda_push_mprts_yz
 
 void
-yz4x4_1vb_cuda_push_mprts(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
+cuda_push_mprts_yz(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds,
+		   int bs[3], bool ip_ec, bool deposit_vb_3d, bool currmem_global)
 {
-  yz_cuda_push_mprts<1, 4, 4, IP_STD, DEPOSIT_VB_2D, CURRMEM_SHARED>(cmprts, cmflds);
-}
+  if (!ip_ec && !deposit_vb_3d && !currmem_global) {
+    if (bs[0] == 1 && bs[1] == 4 && bs[2] == 4) {
+      return yz_cuda_push_mprts<1, 4, 4, IP_STD, DEPOSIT_VB_2D, CURRMEM_SHARED>(cmprts, cmflds);
+    }
+  }
 
-// ----------------------------------------------------------------------
-// yz2x2_1vbec3d_cuda_push_mprts
+  if (ip_ec && deposit_vb_3d && !currmem_global) {
+    if (bs[0] == 1 && bs[1] == 2 && bs[2] == 2) {
+      return yz_cuda_push_mprts<1, 4, 4, IP_EC, DEPOSIT_VB_3D, CURRMEM_SHARED>(cmprts, cmflds);
+    }
+    if (bs[0] == 1 && bs[1] == 4 && bs[2] == 4) {
+      return yz_cuda_push_mprts<1, 4, 4, IP_EC, DEPOSIT_VB_3D, CURRMEM_SHARED>(cmprts, cmflds);
+    }
+    if (bs[0] == 1 && bs[1] == 8 && bs[2] == 8) {
+      return yz_cuda_push_mprts<1, 8, 8, IP_EC, DEPOSIT_VB_3D, CURRMEM_SHARED>(cmprts, cmflds);
+    }
+  }
 
-void
-yz2x2_1vbec3d_cuda_push_mprts(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
-{
-  yz_cuda_push_mprts<1, 2, 2, IP_EC, DEPOSIT_VB_3D, CURRMEM_SHARED>(cmprts, cmflds);
-}
+  if (ip_ec && deposit_vb_3d && currmem_global) {
+    if (bs[0] == 1 && bs[1] == 2 && bs[2] == 2) {
+      return yz_cuda_push_mprts<1, 4, 4, IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL>(cmprts, cmflds);
+    }
+    if (bs[0] == 1 && bs[1] == 4 && bs[2] == 4) {
+      return yz_cuda_push_mprts<1, 4, 4, IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL>(cmprts, cmflds);
+    }
+    if (bs[0] == 1 && bs[1] == 8 && bs[2] == 8) {
+      return yz_cuda_push_mprts<1, 8, 8, IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL>(cmprts, cmflds);
+    }
+  }
 
-// ----------------------------------------------------------------------
-// yz4x4_1vbec3d_cuda_push_mprts
-
-void
-yz4x4_1vbec3d_cuda_push_mprts(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
-{
-  yz_cuda_push_mprts<1, 4, 4, IP_EC, DEPOSIT_VB_3D, CURRMEM_SHARED>(cmprts, cmflds);
-}
-
-// ----------------------------------------------------------------------
-// yz8x8_1vbec3d_cuda_push_mprts
-
-void
-yz8x8_1vbec3d_cuda_push_mprts(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
-{
-  yz_cuda_push_mprts<1, 8, 8, IP_EC, DEPOSIT_VB_3D, CURRMEM_SHARED>(cmprts, cmflds);
-}
-
-
-// ----------------------------------------------------------------------
-// yz2x2_1vbec3d_gmem_cuda_push_mprts
-
-void
-yz2x2_1vbec3d_gmem_cuda_push_mprts(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
-{
-  yz_cuda_push_mprts<1, 2, 2, IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL>(cmprts, cmflds);
-}
-
-// ----------------------------------------------------------------------
-// yz4x4_1vbec3d_gmem_cuda_push_mprts
-
-void
-yz4x4_1vbec3d_gmem_cuda_push_mprts(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
-{
-  yz_cuda_push_mprts<1, 4, 4, IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL>(cmprts, cmflds);
-}
-
-// ----------------------------------------------------------------------
-// yz8x8_1vbec3d_gmem_cuda_push_mprts
-
-void
-yz8x8_1vbec3d_gmem_cuda_push_mprts(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
-{
-  yz_cuda_push_mprts<1, 8, 8, IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL>(cmprts, cmflds);
+  printf("bs %d:%d:%d ip_ec %d deposit_vb_3d %d currmem_global %d is not supported!\n",
+	 bs[0], bs[1], bs[2], ip_ec, deposit_vb_3d, currmem_global);
+  assert(0);
 }
 

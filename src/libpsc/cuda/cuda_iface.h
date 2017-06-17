@@ -2,6 +2,8 @@
 #ifndef CUDA_IFACE_H
 #define CUDA_IFACE_H
 
+#include <stdbool.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -62,6 +64,13 @@ struct cuda_mfields;
 
 struct cuda_mfields *cuda_mfields_create(void);
 void cuda_mfields_destroy(struct cuda_mfields *cmflds);
+
+// ----------------------------------------------------------------------
+// cuda_push_mprts_yz
+
+void cuda_push_mprts_yz(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds,
+			int bs[3], bool ip_ec, bool deposit_vb_3d, bool currmem_global);
+
 
 #if 0
 {

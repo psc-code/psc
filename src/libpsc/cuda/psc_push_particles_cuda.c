@@ -1,4 +1,5 @@
 
+#include "cuda_iface.h"
 #include "psc_push_particles_private.h"
 #include "psc_cuda.h"
 #include "psc_fields.h"
@@ -20,7 +21,8 @@ psc_push_particles_1vb_4x4_cuda_push_mprts_yz(struct psc_push_particles *push,
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "cuda", EX, EX + 6);
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
   struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
-  yz4x4_1vb_cuda_push_mprts(cmprts, cmflds);
+  int bs[3] = { 1, 4, 4 };
+  cuda_push_mprts_yz(cmprts, cmflds, bs, false, false, false);
   psc_mfields_put_as(mflds, mflds_base, JXI, JXI + 3);
 }
 
@@ -33,7 +35,7 @@ struct psc_push_particles_ops psc_push_particles_1vb_4x4_cuda_ops = {
   .mp_flags              = MP_NEED_BLOCK_OFFSETS | MP_BLOCKSIZE_4X4X4 | MP_NO_CHECKERBOARD,
 };
 
-#define MAKE_1VBEC3D_YZ(BY, BZ, MP_BS, MEM)				\
+#define MAKE_1VBEC3D_YZ(BY, BZ, MP_BS, CURRMEM_GLOBAL, MEM)		\
 									\
   /* =============================================================== */ \
   /* psc_push_particles: subclass "1vbec3d_BYxBZ_MEM_cuda"    	     */	\
@@ -50,7 +52,8 @@ struct psc_push_particles_ops psc_push_particles_1vb_4x4_cuda_ops = {
     psc_mfields_get_as(mflds_base, "cuda", EX, EX + 6);			\
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;	\
   struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;	\
-  yz##BY##x##BZ##_1vbec3d ##MEM## _cuda_push_mprts(cmprts, cmflds);	\
+  int bs[3] = { 1, BY, BZ };						\
+  cuda_push_mprts_yz(cmprts, cmflds, bs, true, true, CURRMEM_GLOBAL);	\
   psc_mfields_put_as(mflds, mflds_base, JXI, JXI + 3);			\
   }									\
 									\
@@ -64,10 +67,10 @@ struct psc_push_particles_ops psc_push_particles_1vb_4x4_cuda_ops = {
     .mp_flags              = MP_NEED_BLOCK_OFFSETS | MP_BS | MP_NO_CHECKERBOARD, \
   };
 
-MAKE_1VBEC3D_YZ(2, 2, MP_BLOCKSIZE_2X2X2, );
-MAKE_1VBEC3D_YZ(4, 4, MP_BLOCKSIZE_4X4X4, );
-MAKE_1VBEC3D_YZ(8, 8, MP_BLOCKSIZE_8X8X8, );
-MAKE_1VBEC3D_YZ(2, 2, MP_BLOCKSIZE_2X2X2, _gmem);
-MAKE_1VBEC3D_YZ(4, 4, MP_BLOCKSIZE_4X4X4, _gmem);
-MAKE_1VBEC3D_YZ(8, 8, MP_BLOCKSIZE_8X8X8, _gmem);
+MAKE_1VBEC3D_YZ(2, 2, MP_BLOCKSIZE_2X2X2, false, );
+MAKE_1VBEC3D_YZ(4, 4, MP_BLOCKSIZE_4X4X4, false, );
+MAKE_1VBEC3D_YZ(8, 8, MP_BLOCKSIZE_8X8X8, false, );
+MAKE_1VBEC3D_YZ(2, 2, MP_BLOCKSIZE_2X2X2, true, _gmem);
+MAKE_1VBEC3D_YZ(4, 4, MP_BLOCKSIZE_4X4X4, true, _gmem);
+MAKE_1VBEC3D_YZ(8, 8, MP_BLOCKSIZE_8X8X8, true, _gmem);
 
