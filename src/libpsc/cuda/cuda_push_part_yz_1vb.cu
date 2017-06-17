@@ -935,15 +935,13 @@ push_mprts_ab(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_
 // zero_currents
 
 static void
-zero_currents(struct psc_mfields *mflds)
+zero_currents(struct cuda_mfields *cmflds)
 {
-  // FIXME, one memset should do OPT
-  for (int p = 0; p < mflds->nr_patches; p++) {
-    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-    struct psc_fields_cuda *flds_cuda = psc_fields_cuda(flds);
-    unsigned int size = flds->im[0] * flds->im[1] * flds->im[2];
-    check(cudaMemset(flds_cuda->d_flds + JXI * size, 0,
-		     3 * size * sizeof(*flds_cuda->d_flds)));
+  // OPT: j as separate field, so we can use a single memset?
+  for (int p = 0; p < cmflds->n_patches; p++) {
+    unsigned int size = cmflds->n_cells_per_patch;
+    check(cudaMemset(cmflds->d_flds + p * size * cmflds->n_fields + JXI * size, 0,
+		     3 * size * sizeof(*cmflds->d_flds)));
   }
 }
 
@@ -954,7 +952,7 @@ zero_currents(struct psc_mfields *mflds)
 									\
   unsigned int fld_size = cmflds->n_fields * cmflds->n_cells_per_patch;	\
 									\
-  zero_currents(mflds);							\
+  zero_currents(cmflds);							\
   									\
   int gx, gy;								\
   if (CURRMEM == CURRMEM_SHARED) {					\
@@ -1047,10 +1045,8 @@ cuda_push_mprts_a_reorder(struct cuda_mparticles *cmprts, struct cuda_mfields *c
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 static void
-cuda_push_mprts_b(struct cuda_mparticles *cmprts, struct psc_mfields *mflds)
+cuda_push_mprts_b(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
 {
-  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
-  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
   CUDA_PUSH_MPRTS_TOP(CURRMEM_SHARED);
 
   for (int block_start = 0; block_start < 4; block_start++) {
@@ -1071,10 +1067,8 @@ cuda_push_mprts_b(struct cuda_mparticles *cmprts, struct psc_mfields *mflds)
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER,
 	 enum IP IP, enum DEPOSIT DEPOSIT, enum CURRMEM CURRMEM>
 static void
-cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct psc_mfields *mflds)
+cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
 {
-  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
-  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
   CUDA_PUSH_MPRTS_TOP(CURRMEM);
 
   if (CURRMEM == CURRMEM_SHARED) {
@@ -1126,7 +1120,7 @@ yz4x4_1vb_cuda_push_mprts_separate(struct psc_mparticles *mprts, struct psc_mfie
     cuda_push_mprts_a_reorder<1, 4, 4>(cmprts, cmflds);
     cmprts->need_reorder = false;
   }
-  cuda_push_mprts_b<1, 4, 4>(cmprts, mflds);
+  cuda_push_mprts_b<1, 4, 4>(cmprts, cmflds);
 }
 
 // ----------------------------------------------------------------------
@@ -1138,12 +1132,13 @@ static void
 yz_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
     
   if (!cmprts->need_reorder) {
     MHERE;
-    cuda_push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, false, IP, DEPOSIT, CURRMEM>(cmprts, mflds);
+    cuda_push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, false, IP, DEPOSIT, CURRMEM>(cmprts, cmflds);
   } else {
-    cuda_push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, true, IP, DEPOSIT, CURRMEM>(cmprts, mflds);
+    cuda_push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, true, IP, DEPOSIT, CURRMEM>(cmprts, cmflds);
     cmprts->need_reorder = false;
   }
 }
