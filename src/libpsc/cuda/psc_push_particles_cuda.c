@@ -1,11 +1,10 @@
 
 #include "cuda_iface.h"
 #include "psc_push_particles_private.h"
-#include "psc_cuda.h"
-#include "psc_fields.h"
+#include "psc_particles_cuda.h"
+#include "psc_fields_cuda.h"
 
-#include <mrc_profile.h>
-#include <math.h>
+#include <string.h>
 
 // ======================================================================
 // psc_push_particles: "1vb_4x4_cuda"
