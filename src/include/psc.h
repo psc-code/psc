@@ -97,7 +97,9 @@ struct psc_param {
   double cfl;   ///<CFL number to be used for determining timestep
   int nicell;	///<number of particles per gridpoint to represent a normalised density of 1 
   int nr_populations;  ///< nr of different particle populations (defaults to nr_kinds)
+  int neutralizing_population;  ///< the initial number of particles in a cell for this population will be st so that it achieves neutrality
   bool seed_by_time;
+  bool fractional_n_particles_per_cell;
   bool const_num_particles_per_cell;
   bool fortran_particle_weight_hack;
   bool initial_momentum_gamma_correction;

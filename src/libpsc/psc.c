@@ -114,12 +114,17 @@ static struct param psc_descr[] = {
     .help = "number of particle populations in the initial condition. "
     "init_npt() will be called this many times. By default, nr_populations "
     "will be set the the number of particle kinds." },
+  { "neutralizing_population", VAR(prm.neutralizing_population)  , PARAM_INT(-1),
+    .help = "this population will get density set to achieve neutrality "
+    "in a given cell." },
   { "seed_by_time"  , VAR(prm.seed_by_time)    , PARAM_BOOL(false)          },
   // by default, we put the # of particles per cell according to the
   // density, using the weights (~ 1) only to fine-tune to the
   // right density.
   // if this parameter is set, we always use nicell particles / cell,
   // and adjust to the right density via the weights.
+  { "fractional_n_particles_per_cell"
+                    , VAR(prm.fractional_n_particles_per_cell), PARAM_BOOL(0)  },
   { "const_num_particles_per_cell"
                     , VAR(prm.const_num_particles_per_cell), PARAM_BOOL(0)  },
   // a hack which allows to set the particle weight equal the density,
@@ -727,6 +732,15 @@ get_n_in_cell(struct psc *psc, struct psc_particle_npt *npt)
   if (npt->particles_per_cell) {
     return npt->n * npt->particles_per_cell + .5;
   }
+  if (psc->prm.fractional_n_particles_per_cell) {
+    int n_prts = npt->n / psc->coeff.cori;
+    float rmndr = npt->n / psc->coeff.cori - n_prts;
+    float ran = random() / ((float) RAND_MAX + 1);
+    if (ran < rmndr) {
+      n_prts++;
+    }
+    return n_prts;
+  }
   return npt->n / psc->coeff.cori + .5;
 }
 
@@ -776,15 +790,19 @@ psc_setup_partition(struct psc *psc, int *nr_particles_by_patch,
     return;
   }
 
+  if (psc->prm.nr_populations < 0) {
+    psc->prm.nr_populations = psc->nr_kinds;
+  }
+  if (psc->prm.neutralizing_population < 0) {
+    psc->prm.neutralizing_population = psc->prm.nr_populations - 1;
+  }
+
   int np_total = 0;
   psc_foreach_patch(psc, p) {
     int ilo[3], ihi[3];
     pml_find_bounds(psc, p, ilo, ihi);
 
     int np = 0;
-    if (psc->prm.nr_populations < 0) {
-      psc->prm.nr_populations = psc->nr_kinds;
-    }
     int nr_pop = psc->prm.nr_populations;
     for (int kind = 0; kind < nr_pop; kind++) {
       for (int jz = ilo[2]; jz < ihi[2]; jz++) {
@@ -812,6 +830,9 @@ psc_setup_partition(struct psc *psc, int *nr_particles_by_patch,
 	    psc_ops(psc)->init_npt(psc, kind, xx, &npt);
 
 	    int n_in_cell = get_n_in_cell(psc, &npt);
+	    if (psc->prm.fractional_n_particles_per_cell) {
+	      n_in_cell++; // we may get an extra particle
+	    }
 	    np += n_in_cell;
 	  }
 	}
@@ -908,19 +929,20 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
   
     int i = 0;
     int nr_pop = psc->prm.nr_populations;
-    for (int kind = 0; kind < nr_pop; kind++) {
-      for (int jz = ilo[2]; jz < ihi[2]; jz++) {
-	for (int jy = ilo[1]; jy < ihi[1]; jy++) {
-	  for (int jx = ilo[0]; jx < ihi[0]; jx++) {
-	    double xx[3] = { .5 * (CRDX(p, jx) + CRDX(p, jx+1)),
+    for (int jz = ilo[2]; jz < ihi[2]; jz++) {
+      for (int jy = ilo[1]; jy < ihi[1]; jy++) {
+	for (int jx = ilo[0]; jx < ihi[0]; jx++) {
+	  double xx[3] = { .5 * (CRDX(p, jx) + CRDX(p, jx+1)),
 			     .5 * (CRDY(p, jy) + CRDY(p, jy+1)),
-			     .5 * (CRDZ(p, jz) + CRDZ(p, jz+1)) };
-	    // FIXME, the issue really is that (2nd order) particle pushers
-	    // don't handle the invariant dim right
-	    if (psc->domain.gdims[0] == 1) xx[0] = CRDX(p, jx);
-	    if (psc->domain.gdims[1] == 1) xx[1] = CRDY(p, jy);
-	    if (psc->domain.gdims[2] == 1) xx[2] = CRDZ(p, jz);
-
+			   .5 * (CRDZ(p, jz) + CRDZ(p, jz+1)) };
+	  // FIXME, the issue really is that (2nd order) particle pushers
+	  // don't handle the invariant dim right
+	  if (psc->domain.gdims[0] == 1) xx[0] = CRDX(p, jx);
+	  if (psc->domain.gdims[1] == 1) xx[1] = CRDY(p, jy);
+	  if (psc->domain.gdims[2] == 1) xx[2] = CRDZ(p, jz);
+	  
+	  int n_q_in_cell = 0;
+	  for (int kind = 0; kind < nr_pop; kind++) {
 	    struct psc_particle_npt npt = {};
 	    if (kind < psc->nr_kinds) {
 	      npt.kind = kind;
@@ -932,14 +954,24 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 	      npt.T[2] = psc->kinds[kind].T;
 	    };
 	    psc_ops(psc)->init_npt(psc, kind, xx, &npt);
-	    
-	    int n_in_cell = get_n_in_cell(psc, &npt);
+
+	    int n_in_cell;
+	    if (kind != psc->prm.neutralizing_population) {
+	      n_in_cell = get_n_in_cell(psc, &npt);
+	      n_q_in_cell += npt.q * n_in_cell;
+	    } else {
+	      // FIXME, should handle the case where not the last population is neutralizing
+	      assert(psc->prm.neutralizing_population == nr_pop - 1);
+	      n_in_cell = -n_q_in_cell / npt.q;
+	    }
 	    for (int cnt = 0; cnt < n_in_cell; cnt++) {
 	      particle_t *prt = particles_get_one(prts, i++);
 	      
 	      psc_setup_particle(psc, prt, &npt, p, xx);
 	      //p->lni = particle_label_offset + 1;
-	      if (psc->prm.fortran_particle_weight_hack) {
+	      if (psc->prm.fractional_n_particles_per_cell) {
+		prt->qni_wni = psc->kinds[prt->kind].q;
+	      } else if (psc->prm.fortran_particle_weight_hack) {
 		prt->qni_wni = psc->kinds[prt->kind].q * npt.n;
 	      } else {
 		prt->qni_wni = psc->kinds[prt->kind].q * npt.n / (n_in_cell * psc->coeff.cori);
@@ -950,7 +982,9 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
       }
     }
     prts->n_part = i;
-    assert(prts->n_part == nr_particles_by_patch[p]);
+    if (!psc->prm.fractional_n_particles_per_cell) {
+      assert(prts->n_part == nr_particles_by_patch[p]);
+    }
   }
   psc_mparticles_put_as(mprts, psc->particles, 0);
 }
