@@ -13,34 +13,54 @@ struct psc_flatfoil {
   double BB;
   /* double TTe; */
   /* double TTi; */
-  double n_bg;
-  double Te_bg;
-  double Ti_bg;
   double Zi;
   double LLf;
   double LLz;
   double LLy;
 
+  double background_n;
+  double background_Te;
+  double background_Ti;
+
+  double target_yl;
+  double target_yh;
+  double target_zwidth; // this is given in d_i
+  double target_n;
+  double target_Te;
+  double target_Ti;
+
   // state
   double LLs;
   double LLn;
+  double target_zl;
+  double target_zh;
 };
 
 #define to_psc_flatfoil(psc) mrc_to_subobj(psc, struct psc_flatfoil)
 
 #define VAR(x) (void *)offsetof(struct psc_flatfoil, x)
 static struct param psc_flatfoil_descr[] = {
-  { "BB"              , VAR(BB)              , PARAM_DOUBLE(.0)     },
-  { "n_bg"            , VAR(n_bg)            , PARAM_DOUBLE(.002)   },
-  { "Te_bg"           , VAR(Te_bg)           , PARAM_DOUBLE(.001)   },
-  { "Ti_bg"           , VAR(Ti_bg)           , PARAM_DOUBLE(.001)   },
-  { "Zi"              , VAR(Zi)              , PARAM_DOUBLE(1.)     },
-  { "LLf"             , VAR(LLf)             , PARAM_DOUBLE(25.)    },
-  { "LLz"             , VAR(LLz)             , PARAM_DOUBLE(400.*4) },
-  { "LLy"             , VAR(LLy)             , PARAM_DOUBLE(400.)   },
+  { "BB"              , VAR(BB)              , PARAM_DOUBLE(.0)       },
+  { "Zi"              , VAR(Zi)              , PARAM_DOUBLE(1.)       },
+  { "LLf"             , VAR(LLf)             , PARAM_DOUBLE(25.)      },
+  { "LLz"             , VAR(LLz)             , PARAM_DOUBLE(400.*4)   },
+  { "LLy"             , VAR(LLy)             , PARAM_DOUBLE(400.)     },
 
-  { "LLs"             , VAR(LLs)             , MRC_VAR_DOUBLE       },
-  { "LLn"             , VAR(LLn)             , MRC_VAR_DOUBLE       },
+  { "background_n"    , VAR(background_n)    , PARAM_DOUBLE(.002)     },
+  { "background_Te"   , VAR(background_Te)   , PARAM_DOUBLE(.001)     },
+  { "background_Ti"   , VAR(background_Ti)   , PARAM_DOUBLE(.001)     },
+
+  { "target_yl"       , VAR(target_yl)       , PARAM_DOUBLE(-100000.) },
+  { "target_yh"       , VAR(target_yh)       , PARAM_DOUBLE( 100000.) },
+  { "target_zwidth"   , VAR(target_zwidth)   , PARAM_DOUBLE(1.)       },
+  { "target_n"        , VAR(target_n)        , PARAM_DOUBLE(1.)       },
+  { "target_Te"       , VAR(target_Te)       , PARAM_DOUBLE(.001)     },
+  { "target_Ti"       , VAR(target_Ti)       , PARAM_DOUBLE(.001)     },
+
+  { "LLs"             , VAR(LLs)             , MRC_VAR_DOUBLE         },
+  { "LLn"             , VAR(LLn)             , MRC_VAR_DOUBLE         },
+  { "target_zl"       , VAR(target_zl)       , MRC_VAR_DOUBLE         },
+  { "target_zh"       , VAR(target_zh)       , MRC_VAR_DOUBLE         },
   {},
 };
 #undef VAR
@@ -111,14 +131,22 @@ psc_flatfoil_setup(struct psc *psc)
   // last population is neutralizing
   psc->kinds[MY_ELECTRON].q = -1.;
   psc->kinds[MY_ELECTRON].m = 1.;
+  psc->kinds[MY_ELECTRON].name = "ee";
 
   psc->kinds[MY_ION     ].q = sub->Zi;
   psc->kinds[MY_ION     ].m = 100. * sub->Zi;  // FIXME, hardcoded mass ratio 100
+  psc->kinds[MY_ELECTRON].name = "ii";
+
+  // set target z limits from target_zwidth, which needs to be converted from d_i -> d_e
+  double d_i = sqrt(psc->kinds[MY_ION].m / psc->kinds[MY_ION].q);
+  sub->target_zl = - sub->target_zwidth * d_i;
+  sub->target_zh =   sub->target_zwidth * d_i;
 
   psc_setup_super(psc);
 
   MPI_Comm comm = psc_comm(psc);
-  mpi_printf(comm, "lambda_De_bg = %g\n", sqrt(sub->Te_bg));
+  mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., d_i);
+  mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(sub->background_Te));
 }
 
 // ----------------------------------------------------------------------
@@ -160,16 +188,41 @@ psc_flatfoil_init_npt(struct psc *psc, int pop, double x[3],
 
   switch (pop) {
   case MY_ION:
-    npt->n    = sub->n_bg;
-    npt->T[0] = sub->Ti_bg;
-    npt->T[1] = sub->Ti_bg;
-    npt->T[2] = sub->Ti_bg;
+    npt->n    = sub->background_n;
+    npt->T[0] = sub->background_Ti;
+    npt->T[1] = sub->background_Ti;
+    npt->T[2] = sub->background_Ti;
     break;
   case MY_ELECTRON:
-    npt->n    = sub->n_bg;
-    npt->T[0] = sub->Te_bg;
-    npt->T[1] = sub->Te_bg;
-    npt->T[2] = sub->Te_bg;
+    npt->n    = sub->background_n;
+    npt->T[0] = sub->background_Te;
+    npt->T[1] = sub->background_Te;
+    npt->T[2] = sub->background_Te;
+    break;
+  default:
+    assert(0);
+  }
+
+  bool in_target = (x[1] >= sub->target_yl && x[1] <= sub->target_yh &&
+		    x[2] >= sub->target_zl && x[2] <= sub->target_zh);
+
+  if (!in_target)
+    return;
+
+  // replace values above by target values
+
+  switch (pop) {
+  case MY_ION:
+    npt->n    = sub->target_n;
+    npt->T[0] = sub->target_Ti;
+    npt->T[1] = sub->target_Ti;
+    npt->T[2] = sub->target_Ti;
+    break;
+  case MY_ELECTRON:
+    npt->n    = sub->target_n;
+    npt->T[0] = sub->target_Te;
+    npt->T[1] = sub->target_Te;
+    npt->T[2] = sub->target_Te;
     break;
   default:
     assert(0);
