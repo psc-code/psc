@@ -323,6 +323,8 @@ struct psc_ops {
   struct mrc_domain *(*setup_mrc_domain)(struct psc *psc, int nr_patches);
 };
 
+#define psc_ops(psc) ((struct psc_ops *)((psc)->obj.ops))
+
 /*!
 Enumerates all grid points of patch p
 

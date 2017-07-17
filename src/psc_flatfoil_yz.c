@@ -2,12 +2,17 @@
 #include <psc.h>
 #include <psc_push_fields.h>
 #include <psc_bnd_fields.h>
-#include <psc_sort.h>
-#include <psc_balance.h>
+#include <psc_event_generator_private.h>
+
+#include <psc_particles_as_single.h> // FIXME
 
 #include <mrc_params.h>
 
 #include <math.h>
+#include <stdlib.h>
+
+// ======================================================================
+// psc subclass "flatfoil"
 
 struct psc_flatfoil {
   double BB;
@@ -29,6 +34,8 @@ struct psc_flatfoil {
   double target_Te;
   double target_Ti;
 
+  int tmt_accum_every;
+
   // state
   double LLs;
   double LLn;
@@ -36,7 +43,7 @@ struct psc_flatfoil {
   double target_zh;
 };
 
-#define to_psc_flatfoil(psc) mrc_to_subobj(psc, struct psc_flatfoil)
+#define psc_flatfoil(psc) mrc_to_subobj(psc, struct psc_flatfoil)
 
 #define VAR(x) (void *)offsetof(struct psc_flatfoil, x)
 static struct param psc_flatfoil_descr[] = {
@@ -56,6 +63,8 @@ static struct param psc_flatfoil_descr[] = {
   { "target_n"        , VAR(target_n)        , PARAM_DOUBLE(1.)       },
   { "target_Te"       , VAR(target_Te)       , PARAM_DOUBLE(.001)     },
   { "target_Ti"       , VAR(target_Ti)       , PARAM_DOUBLE(.001)     },
+
+  { "tmt_accum_every" , VAR(tmt_accum_every) , PARAM_INT(20)          },
 
   { "LLs"             , VAR(LLs)             , MRC_VAR_DOUBLE         },
   { "LLn"             , VAR(LLn)             , MRC_VAR_DOUBLE         },
@@ -106,6 +115,8 @@ psc_flatfoil_create(struct psc *psc)
   struct psc_bnd_fields *bnd_fields = 
     psc_push_fields_get_bnd_fields(psc->push_fields);
   psc_bnd_fields_set_type(bnd_fields, "none");
+
+  psc_event_generator_set_type(psc->event_generator, "flatfoil");
 }
 
 // ----------------------------------------------------------------------
@@ -114,7 +125,7 @@ psc_flatfoil_create(struct psc *psc)
 static void
 psc_flatfoil_setup(struct psc *psc)
 {
-  struct psc_flatfoil *sub = to_psc_flatfoil(psc);
+  struct psc_flatfoil *sub = psc_flatfoil(psc);
 
   sub->LLs = 4. * sub->LLf;
   sub->LLn = .5 * sub->LLf;
@@ -131,11 +142,11 @@ psc_flatfoil_setup(struct psc *psc)
   // last population is neutralizing
   psc->kinds[MY_ELECTRON].q = -1.;
   psc->kinds[MY_ELECTRON].m = 1.;
-  psc->kinds[MY_ELECTRON].name = "ee";
+  psc->kinds[MY_ELECTRON].name = "e";
 
   psc->kinds[MY_ION     ].q = sub->Zi;
   psc->kinds[MY_ION     ].m = 100. * sub->Zi;  // FIXME, hardcoded mass ratio 100
-  psc->kinds[MY_ELECTRON].name = "ii";
+  psc->kinds[MY_ION     ].name = "i";
 
   // set target z limits from target_zwidth, which needs to be converted from d_i -> d_e
   double d_i = sqrt(psc->kinds[MY_ION].m / psc->kinds[MY_ION].q);
@@ -164,7 +175,7 @@ psc_flatfoil_read(struct psc *psc, struct mrc_io *io)
 static double
 psc_flatfoil_init_field(struct psc *psc, double x[3], int m)
 {
-  struct psc_flatfoil *sub = to_psc_flatfoil(psc);
+  struct psc_flatfoil *sub = psc_flatfoil(psc);
 
   double BB = sub->BB;
 
@@ -178,13 +189,25 @@ psc_flatfoil_init_field(struct psc *psc, double x[3], int m)
 }
 
 // ----------------------------------------------------------------------
+// in_target
+
+static bool
+in_target(struct psc *psc, double x[3])
+{
+  struct psc_flatfoil *sub = psc_flatfoil(psc);
+
+  return (x[1] >= sub->target_yl && x[1] <= sub->target_yh &&
+	  x[2] >= sub->target_zl && x[2] <= sub->target_zh);
+}
+
+// ----------------------------------------------------------------------
 // psc_flatfoil_init_npt
 
 static void
 psc_flatfoil_init_npt(struct psc *psc, int pop, double x[3],
 		    struct psc_particle_npt *npt)
 {
-  struct psc_flatfoil *sub = to_psc_flatfoil(psc);
+  struct psc_flatfoil *sub = psc_flatfoil(psc);
 
   switch (pop) {
   case MY_ION:
@@ -203,11 +226,9 @@ psc_flatfoil_init_npt(struct psc *psc, int pop, double x[3],
     assert(0);
   }
 
-  bool in_target = (x[1] >= sub->target_yl && x[1] <= sub->target_yh &&
-		    x[2] >= sub->target_zl && x[2] <= sub->target_zh);
-
-  if (!in_target)
+  if (!in_target(psc, x)) {
     return;
+  }
 
   // replace values above by target values
 
@@ -229,8 +250,177 @@ psc_flatfoil_init_npt(struct psc *psc, int pop, double x[3],
   }
 }
 
-// ======================================================================
-// psc_flatfoil_ops
+// ----------------------------------------------------------------------
+// do_add_particles
+
+static bool
+do_add_particles(struct psc *psc)
+{
+  struct psc_flatfoil *sub = psc_flatfoil(psc);
+  
+  return psc->timestep % sub->tmt_accum_every == 0;
+}
+
+// ----------------------------------------------------------------------
+// get_n_in_cell
+//
+// helper function for partition / particle setup FIXME duplicated
+
+static inline int
+get_n_in_cell(struct psc *psc, struct psc_particle_npt *npt)
+{
+  if (psc->prm.const_num_particles_per_cell) {
+    return psc->prm.nicell;
+  }
+  if (npt->particles_per_cell) {
+    return npt->n * npt->particles_per_cell + .5;
+  }
+  if (psc->prm.fractional_n_particles_per_cell) {
+    int n_prts = npt->n / psc->coeff.cori;
+    float rmndr = npt->n / psc->coeff.cori - n_prts;
+    float ran = random() / ((float) RAND_MAX + 1);
+    if (ran < rmndr) {
+      n_prts++;
+    }
+    return n_prts;
+  }
+  return npt->n / psc->coeff.cori + .5;
+}
+
+// FIXME duplicated
+
+static void
+_psc_setup_particle(struct psc *psc, particle_t *prt, struct psc_particle_npt *npt,
+		   int p, double xx[3])
+{
+  double beta = psc->coeff.beta;
+
+  float ran1, ran2, ran3, ran4, ran5, ran6;
+  do {
+    ran1 = random() / ((float) RAND_MAX + 1);
+    ran2 = random() / ((float) RAND_MAX + 1);
+    ran3 = random() / ((float) RAND_MAX + 1);
+    ran4 = random() / ((float) RAND_MAX + 1);
+    ran5 = random() / ((float) RAND_MAX + 1);
+    ran6 = random() / ((float) RAND_MAX + 1);
+  } while (ran1 >= 1.f || ran2 >= 1.f || ran3 >= 1.f ||
+	   ran4 >= 1.f || ran5 >= 1.f || ran6 >= 1.f);
+	      
+  double pxi = npt->p[0] +
+    sqrtf(-2.f*npt->T[0]/npt->m*sqr(beta)*logf(1.0-ran1)) * cosf(2.f*M_PI*ran2);
+  double pyi = npt->p[1] +
+    sqrtf(-2.f*npt->T[1]/npt->m*sqr(beta)*logf(1.0-ran3)) * cosf(2.f*M_PI*ran4);
+  double pzi = npt->p[2] +
+    sqrtf(-2.f*npt->T[2]/npt->m*sqr(beta)*logf(1.0-ran5)) * cosf(2.f*M_PI*ran6);
+
+  if (psc->prm.initial_momentum_gamma_correction) {
+    double gam;
+    if (sqr(pxi) + sqr(pyi) + sqr(pzi) < 1.) {
+      gam = 1. / sqrt(1. - sqr(pxi) - sqr(pyi) - sqr(pzi));
+      pxi *= gam;
+      pyi *= gam;
+      pzi *= gam;
+    }
+  }
+  
+  assert(npt->kind >= 0 && npt->kind < psc->nr_kinds);
+  prt->kind = npt->kind;
+  assert(npt->q == psc->kinds[prt->kind].q);
+  assert(npt->m == psc->kinds[prt->kind].m);
+  /* prt->qni = psc->kinds[prt->kind].q; */
+  /* prt->mni = psc->kinds[prt->kind].m; */
+  prt->xi = xx[0] - psc->patch[p].xb[0];
+  prt->yi = xx[1] - psc->patch[p].xb[1];
+  prt->zi = xx[2] - psc->patch[p].xb[2];
+  prt->pxi = pxi * cos(psc->prm.theta_xz) + pzi * sin(psc->prm.theta_xz);
+  prt->pyi = pyi;
+  prt->pzi = - pxi * sin(psc->prm.theta_xz) + pzi * cos(psc->prm.theta_xz);
+}	      
+
+// ----------------------------------------------------------------------
+// psc_flatfoil_particle_source
+//
+// FIXME mostly duplicated from psc_setup_particles
+
+static void
+psc_flatfoil_particle_source(struct psc *psc, struct psc_mparticles *mprts_base,
+			     struct psc_mfields *mflds)
+{
+  // struct psc_flatfoil *sub = psc_flatfoil(psc);
+  
+  if (!do_add_particles(psc)) {
+    return;
+  }
+
+  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
+  
+  psc_foreach_patch(psc, p) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    mprintf("A n_part = %d\n", prts->n_part);
+    int *ldims = psc->patch[p].ldims;
+    
+    int i = prts->n_part;
+    int nr_pop = psc->prm.nr_populations;
+    for (int jz = 0; jz < ldims[2]; jz++) {
+      for (int jy = 0; jy < ldims[1]; jy++) {
+	for (int jx = 0; jx < ldims[0]; jx++) {
+	  double xx[3] = { .5 * (CRDX(p, jx) + CRDX(p, jx+1)),
+			   .5 * (CRDY(p, jy) + CRDY(p, jy+1)),
+			   .5 * (CRDZ(p, jz) + CRDZ(p, jz+1)) };
+	  // FIXME, the issue really is that (2nd order) particle pushers
+	  // don't handle the invariant dim right
+	  if (psc->domain.gdims[0] == 1) xx[0] = CRDX(p, jx);
+	  if (psc->domain.gdims[1] == 1) xx[1] = CRDY(p, jy);
+	  if (psc->domain.gdims[2] == 1) xx[2] = CRDZ(p, jz);
+
+	  if (!in_target(psc, xx)) {
+	    continue;
+	  }
+
+	  int n_q_in_cell = 0;
+	  for (int kind = 0; kind < nr_pop; kind++) {
+	    struct psc_particle_npt npt = {};
+	    if (kind < psc->nr_kinds) {
+	      npt.kind = kind;
+	      npt.q    = psc->kinds[kind].q;
+	      npt.m    = psc->kinds[kind].m;
+	      npt.n    = psc->kinds[kind].n;
+	      npt.T[0] = psc->kinds[kind].T;
+	      npt.T[1] = psc->kinds[kind].T;
+	      npt.T[2] = psc->kinds[kind].T;
+	    };
+	    psc_ops(psc)->init_npt(psc, kind, xx, &npt);
+	    
+	    int n_in_cell;
+	    if (kind != psc->prm.neutralizing_population) {
+	      n_in_cell = get_n_in_cell(psc, &npt);
+	      n_q_in_cell += npt.q * n_in_cell;
+	    } else {
+	      // FIXME, should handle the case where not the last population is neutralizing
+	      assert(psc->prm.neutralizing_population == nr_pop - 1);
+	      n_in_cell = -n_q_in_cell / npt.q;
+	    }
+	    particles_realloc(prts, i + n_in_cell);
+	    for (int cnt = 0; cnt < n_in_cell; cnt++) {
+	      particle_t *prt = particles_get_one(prts, i++);
+	      
+	      _psc_setup_particle(psc, prt, &npt, p, xx);
+	      assert(psc->prm.fractional_n_particles_per_cell);
+	      prt->qni_wni = psc->kinds[prt->kind].q;
+	    }
+	  }
+	}
+      }
+    }
+    prts->n_part = i;
+    mprintf("B n_part = %d\n", prts->n_part);
+  }
+
+  psc_mparticles_put_as(mprts, mprts_base, 0);
+}
+  
+// ----------------------------------------------------------------------
+// psc_ops "flatfoil"
 
 struct psc_ops psc_flatfoil_ops = {
   .name             = "flatfoil",
@@ -244,10 +434,36 @@ struct psc_ops psc_flatfoil_ops = {
 };
 
 // ======================================================================
+// psc_event_generator subclass "flatfoil"
+
+// ----------------------------------------------------------------------
+// psc_event_generator_flatfoil_run
+
+void
+psc_event_generator_flatfoil_run(struct psc_event_generator *gen,
+				 mparticles_base_t *mprts, mfields_base_t *mflds,
+				 mphotons_t *mphotons)
+{
+  struct psc *psc = ppsc;
+  psc_flatfoil_particle_source(psc, mprts, mflds);
+}
+
+// ----------------------------------------------------------------------
+// psc_event_generator_ops "flatfoil"
+
+struct psc_event_generator_ops psc_event_generator_flatfoil_ops = {
+  .name                  = "flatfoil",
+  .run                   = psc_event_generator_flatfoil_run,
+};
+
+
+// ======================================================================
 // main
 
 int
 main(int argc, char **argv)
 {
+  mrc_class_register_subclass(&mrc_class_psc_event_generator,
+			      &psc_event_generator_flatfoil_ops);
   return psc_main(&argc, &argv, &psc_flatfoil_ops);
 }

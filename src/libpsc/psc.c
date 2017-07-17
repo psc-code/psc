@@ -191,8 +191,6 @@ static struct param psc_descr[] = {
 
 #undef VAR
 
-#define psc_ops(psc) ((struct psc_ops *)((psc)->obj.ops))
-
 // ----------------------------------------------------------------------
 // psc_create
 
@@ -933,7 +931,7 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
       for (int jy = ilo[1]; jy < ihi[1]; jy++) {
 	for (int jx = ilo[0]; jx < ihi[0]; jx++) {
 	  double xx[3] = { .5 * (CRDX(p, jx) + CRDX(p, jx+1)),
-			     .5 * (CRDY(p, jy) + CRDY(p, jy+1)),
+			   .5 * (CRDY(p, jy) + CRDY(p, jy+1)),
 			   .5 * (CRDZ(p, jz) + CRDZ(p, jz+1)) };
 	  // FIXME, the issue really is that (2nd order) particle pushers
 	  // don't handle the invariant dim right
