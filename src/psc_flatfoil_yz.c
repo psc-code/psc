@@ -3,9 +3,13 @@
 #include <psc_push_fields.h>
 #include <psc_bnd_fields.h>
 #include <psc_event_generator_private.h>
+#include <psc_output_fields_item.h>
+#include <psc_bnd.h>
 
 #include <psc_particles_as_single.h> // FIXME
+#include <psc_fields_c.h> // FIXME
 
+#include <mrc_io.h>
 #include <mrc_params.h>
 
 #include <math.h>
@@ -35,12 +39,18 @@ struct psc_flatfoil {
   double target_Ti;
 
   int tmt_accum_every;
+  int tau_part;
+  bool no_initial_target;
 
   // state
   double LLs;
   double LLn;
   double target_zl;
   double target_zh;
+
+  struct psc_mfields *mflds_n;
+  struct psc_output_fields_item *item_n;
+  struct psc_bnd *item_n_bnd;
 };
 
 #define psc_flatfoil(psc) mrc_to_subobj(psc, struct psc_flatfoil)
@@ -65,6 +75,8 @@ static struct param psc_flatfoil_descr[] = {
   { "target_Ti"       , VAR(target_Ti)       , PARAM_DOUBLE(.001)     },
 
   { "tmt_accum_every" , VAR(tmt_accum_every) , PARAM_INT(20)          },
+  { "tau_part"        , VAR(tau_part)        , PARAM_INT(40)          },
+  { "no_initial_target",VAR(no_initial_target),PARAM_BOOL(false)      },
 
   { "LLs"             , VAR(LLs)             , MRC_VAR_DOUBLE         },
   { "LLn"             , VAR(LLn)             , MRC_VAR_DOUBLE         },
@@ -158,6 +170,34 @@ psc_flatfoil_setup(struct psc *psc)
   MPI_Comm comm = psc_comm(psc);
   mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., d_i);
   mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(sub->background_Te));
+
+  // set up necessary bits for calculating / averaging density moment
+
+  sub->item_n_bnd = psc_bnd_create(psc_comm(psc));
+  psc_bnd_set_type(sub->item_n_bnd, "single");
+  psc_bnd_set_psc(sub->item_n_bnd, psc);
+  psc_bnd_setup(sub->item_n_bnd);
+
+  sub->item_n = psc_output_fields_item_create(psc_comm(psc));
+  psc_output_fields_item_set_type(sub->item_n, "n_1st_single");
+  psc_output_fields_item_set_psc_bnd(sub->item_n, sub->item_n_bnd);
+  psc_output_fields_item_setup(sub->item_n);
+
+  sub->mflds_n = psc_output_fields_item_create_mfields(sub->item_n);
+  psc_mfields_set_name(sub->mflds_n, "mflds_n");
+}
+
+// ----------------------------------------------------------------------
+// psc_flatfoil_destroy
+
+static void
+psc_flatfoil_destroy(struct psc *psc)
+{
+  struct psc_flatfoil *sub = psc_flatfoil(psc);
+
+  psc_mfields_destroy(sub->mflds_n);
+  psc_output_fields_item_destroy(sub->item_n);
+  psc_bnd_destroy(sub->item_n_bnd);
 }
 
 // ----------------------------------------------------------------------
@@ -230,6 +270,10 @@ psc_flatfoil_init_npt(struct psc *psc, int pop, double x[3],
     return;
   }
 
+  if (sub->no_initial_target && psc->timestep == 0) {
+    return;
+  }
+
   // replace values above by target values
 
   switch (pop) {
@@ -248,6 +292,70 @@ psc_flatfoil_init_npt(struct psc *psc, int pop, double x[3],
   default:
     assert(0);
   }
+}
+
+// ----------------------------------------------------------------------
+// debug_dump
+
+static void
+copy_to_mrc_fld(struct mrc_fld *m3, struct psc_mfields *mflds)
+{
+  psc_foreach_patch(ppsc, p) {
+    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+    struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, p);
+    mrc_fld_foreach(m3, ix,iy,iz, 0,0) {
+      for (int m = 0; m < mflds->nr_fields; m++) {
+	MRC_M3(m3p, m, ix,iy,iz) = F3_C(flds, m, ix,iy,iz);
+      }
+    } mrc_fld_foreach_end;
+    mrc_fld_patch_put(m3);
+  }
+}
+
+static void _mrc_unused
+debug_dump(struct mrc_io *io, struct psc_mfields *mflds)
+{
+  /* if (ppsc->timestep % debug_every_step != 0) { */
+  /*   return; */
+  /* } */
+
+  struct mrc_fld *mrc_fld = mrc_domain_m3_create(ppsc->mrc_domain);
+  mrc_fld_set_name(mrc_fld, psc_mfields_name(mflds));
+  mrc_fld_set_param_int(mrc_fld, "nr_ghosts", 2);
+  mrc_fld_set_param_int(mrc_fld, "nr_comps", mflds->nr_fields);
+  mrc_fld_setup(mrc_fld);
+  for (int m = 0; m < mflds->nr_fields; m++) {
+    mrc_fld_set_comp_name(mrc_fld, m, psc_mfields_comp_name(mflds, m));
+  }
+  copy_to_mrc_fld(mrc_fld, mflds);
+  mrc_fld_write(mrc_fld, io);
+  mrc_fld_destroy(mrc_fld);
+}
+
+// ----------------------------------------------------------------------
+// calc_n
+
+static void
+calc_n(struct psc *psc, struct psc_mparticles *mprts_base,
+	struct psc_mfields *mflds_base)
+{
+  struct psc_flatfoil *sub = psc_flatfoil(psc);
+
+  psc_output_fields_item_run(sub->item_n, mflds_base, mprts_base, sub->mflds_n);
+#if 0
+  static struct mrc_io *io;
+  if (!io) {
+    io = mrc_io_create(psc_comm(ppsc));
+    mrc_io_set_type(io, "xdmf_collective");
+    mrc_io_set_param_string(io, "basename", "flatfoil");
+    mrc_io_set_from_options(io);
+    mrc_io_setup(io);
+  }
+
+  mrc_io_open(io, "w", psc->timestep, psc->timestep * psc->dt);
+  debug_dump(io, sub->mflds_n);
+  mrc_io_close(io);
+#endif
 }
 
 // ----------------------------------------------------------------------
@@ -346,17 +454,20 @@ static void
 psc_flatfoil_particle_source(struct psc *psc, struct psc_mparticles *mprts_base,
 			     struct psc_mfields *mflds)
 {
-  // struct psc_flatfoil *sub = psc_flatfoil(psc);
-  
+  struct psc_flatfoil *sub = psc_flatfoil(psc);
+
   if (!do_add_particles(psc)) {
     return;
   }
 
+  calc_n(psc, mprts_base, mflds);
+  
   struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
   
   psc_foreach_patch(psc, p) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    mprintf("A n_part = %d\n", prts->n_part);
+    struct psc_fields *flds_n = psc_mfields_get_patch(sub->mflds_n, p);
+    //    mprintf("A n_part = %d\n", prts->n_part);
     int *ldims = psc->patch[p].ldims;
     
     int i = prts->n_part;
@@ -393,7 +504,20 @@ psc_flatfoil_particle_source(struct psc *psc, struct psc_mparticles *mprts_base,
 	    
 	    int n_in_cell;
 	    if (kind != psc->prm.neutralizing_population) {
-	      n_in_cell = get_n_in_cell(psc, &npt);
+	      if (psc->timestep >= 0) {
+		npt.n -= F3_C(flds_n, MY_ELECTRON, jx,jy,jz);
+		if (npt.n < 0) {
+		  n_in_cell = 0;
+		} else {
+		  // this rounds down rather than trying to get fractional particles
+		  // statistically right...
+		  n_in_cell = npt.n / psc->coeff.cori *
+		    (sub->tmt_accum_every * psc->dt / sub->tau_part) /
+		    (1. + sub->tmt_accum_every * psc->dt / sub->tau_part);
+		}
+	      } else {
+		n_in_cell = get_n_in_cell(psc, &npt);
+	      }
 	      n_q_in_cell += npt.q * n_in_cell;
 	    } else {
 	      // FIXME, should handle the case where not the last population is neutralizing
@@ -413,7 +537,7 @@ psc_flatfoil_particle_source(struct psc *psc, struct psc_mparticles *mprts_base,
       }
     }
     prts->n_part = i;
-    mprintf("B n_part = %d\n", prts->n_part);
+    //    mprintf("B n_part = %d\n", prts->n_part);
   }
 
   psc_mparticles_put_as(mprts, mprts_base, 0);
@@ -428,6 +552,7 @@ struct psc_ops psc_flatfoil_ops = {
   .param_descr      = psc_flatfoil_descr,
   .create           = psc_flatfoil_create,
   .setup            = psc_flatfoil_setup,
+  .destroy          = psc_flatfoil_destroy,
   .read             = psc_flatfoil_read,
   .init_field       = psc_flatfoil_init_field,
   .init_npt         = psc_flatfoil_init_npt,
