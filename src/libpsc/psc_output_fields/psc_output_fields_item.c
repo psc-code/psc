@@ -75,6 +75,7 @@ psc_output_fields_item_run(struct psc_output_fields_item *item,
     }
   }
   if (ops->flags & POFI_ADD_GHOSTS) {
+    assert(item->bnd);
     psc_bnd_add_ghosts(item->bnd, res, 0, res->nr_fields);
   }
 }
