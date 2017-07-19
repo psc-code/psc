@@ -41,8 +41,19 @@ struct psc_flatfoil {
   int tmt_accum_every;
   int tau_part;
   bool no_initial_target;
+  bool do_inject;
+
+  double heating_zl; // in terms of d_i
+  double heating_zh;
+  double heating_xc;
+  double heating_rH;
+  int heating_tb; // in terms of step number (FIXME!)
+  int heating_te;
+  double heating_T;
+  int heating_every;
 
   // state
+  double d_i;
   double LLs;
   double LLn;
   double target_zl;
@@ -77,6 +88,16 @@ static struct param psc_flatfoil_descr[] = {
   { "tmt_accum_every" , VAR(tmt_accum_every) , PARAM_INT(20)          },
   { "tau_part"        , VAR(tau_part)        , PARAM_INT(40)          },
   { "no_initial_target",VAR(no_initial_target),PARAM_BOOL(false)      },
+  { "do_inject"       , VAR(do_inject)       , PARAM_BOOL(true)       },
+
+  { "heating_zl"      , VAR(heating_zl)      , PARAM_DOUBLE(-1.)      },
+  { "heating_zh"      , VAR(heating_zh)      , PARAM_DOUBLE(1.)       },
+  { "heating_xc"      , VAR(heating_xc)      , PARAM_DOUBLE(0.)       },
+  { "heating_rH"      , VAR(heating_rH)      , PARAM_DOUBLE(3.)       },
+  { "heating_tb"      , VAR(heating_tb)      , PARAM_INT(0.)          },
+  { "heating_te"      , VAR(heating_te)      , PARAM_INT(0.)          },
+  { "heating_T"       , VAR(heating_T)       , PARAM_DOUBLE(.04)      },
+  { "heating_every"   , VAR(heating_every)   , PARAM_INT(20)          },
 
   { "LLs"             , VAR(LLs)             , MRC_VAR_DOUBLE         },
   { "LLn"             , VAR(LLn)             , MRC_VAR_DOUBLE         },
@@ -161,14 +182,14 @@ psc_flatfoil_setup(struct psc *psc)
   psc->kinds[MY_ION     ].name = "i";
 
   // set target z limits from target_zwidth, which needs to be converted from d_i -> d_e
-  double d_i = sqrt(psc->kinds[MY_ION].m / psc->kinds[MY_ION].q);
-  sub->target_zl = - sub->target_zwidth * d_i;
-  sub->target_zh =   sub->target_zwidth * d_i;
+  sub->d_i = sqrt(psc->kinds[MY_ION].m / psc->kinds[MY_ION].q);
+  sub->target_zl = - sub->target_zwidth * sub->d_i;
+  sub->target_zh =   sub->target_zwidth * sub->d_i;
 
   psc_setup_super(psc);
 
   MPI_Comm comm = psc_comm(psc);
-  mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., d_i);
+  mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., sub->d_i);
   mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(sub->background_Te));
 
   // set up necessary bits for calculating / averaging density moment
@@ -366,7 +387,7 @@ do_add_particles(struct psc *psc)
 {
   struct psc_flatfoil *sub = psc_flatfoil(psc);
   
-  return psc->timestep % sub->tmt_accum_every == 0;
+  return sub->do_inject && psc->timestep % sub->tmt_accum_every == 0;
 }
 
 // ----------------------------------------------------------------------
@@ -452,7 +473,7 @@ _psc_setup_particle(struct psc *psc, particle_t *prt, struct psc_particle_npt *n
 
 static void
 psc_flatfoil_particle_source(struct psc *psc, struct psc_mparticles *mprts_base,
-			     struct psc_mfields *mflds)
+			     struct psc_mfields *mflds_base)
 {
   struct psc_flatfoil *sub = psc_flatfoil(psc);
 
@@ -460,7 +481,7 @@ psc_flatfoil_particle_source(struct psc *psc, struct psc_mparticles *mprts_base,
     return;
   }
 
-  calc_n(psc, mprts_base, mflds);
+  calc_n(psc, mprts_base, mflds_base);
   
   struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
   
@@ -542,7 +563,110 @@ psc_flatfoil_particle_source(struct psc *psc, struct psc_mparticles *mprts_base,
 
   psc_mparticles_put_as(mprts, mprts_base, 0);
 }
+
+// ----------------------------------------------------------------------
+// get_H
+
+static particle_real_t
+get_H(struct psc *psc, particle_real_t *xx, int p)
+{
+  struct psc_flatfoil *sub = psc_flatfoil(psc);
+
+  particle_real_t zl = sub->heating_zl * sub->d_i;
+  particle_real_t zh = sub->heating_zh * sub->d_i;
+  particle_real_t xc = sub->heating_xc * sub->d_i;
+  particle_real_t rH = sub->heating_rH * sub->d_i;
+  particle_real_t width = zh - zl;
+  particle_real_t T = sub->heating_T;
+  struct psc_patch *patch = &psc->patch[p];
+  particle_real_t x = xx[0] + patch->xb[0];
+  particle_real_t y = xx[1] + patch->xb[1];
+  particle_real_t z = xx[2] + patch->xb[2];
+
+  if (z <= zl || z >= zh) {
+    return 0;
+  }
+
+  return (8.f * pow(T, 1.5)) / (sqrt(psc->kinds[MY_ION].m) * width)
+    * exp(-(sqr(x-xc) + sqr(y)) / sqr(rH));
+}
   
+// ----------------------------------------------------------------------
+// particle_kick
+
+static void
+particle_kick(struct psc *psc, particle_t *prt, particle_real_t H)
+{
+  struct psc_flatfoil *sub = psc_flatfoil(psc);
+
+  particle_real_t heating_dt = sub->heating_every * psc->dt;
+
+  float ran1, ran2, ran3, ran4, ran5, ran6;
+  do {
+    ran1 = random() / ((float) RAND_MAX + 1);
+    ran2 = random() / ((float) RAND_MAX + 1);
+    ran3 = random() / ((float) RAND_MAX + 1);
+    ran4 = random() / ((float) RAND_MAX + 1);
+    ran5 = random() / ((float) RAND_MAX + 1);
+    ran6 = random() / ((float) RAND_MAX + 1);
+  } while (ran1 >= 1.f || ran2 >= 1.f || ran3 >= 1.f ||
+	   ran4 >= 1.f || ran5 >= 1.f || ran6 >= 1.f);
+
+  particle_real_t ranx = sqrtf(-2.f*logf(1.0-ran1)) * cosf(2.f*M_PI*ran2);
+  particle_real_t rany = sqrtf(-2.f*logf(1.0-ran3)) * cosf(2.f*M_PI*ran4);
+  particle_real_t ranz = sqrtf(-2.f*logf(1.0-ran5)) * cosf(2.f*M_PI*ran6);
+
+  particle_real_t Dpxi = sqrtf(H * heating_dt);
+  particle_real_t Dpyi = sqrtf(H * heating_dt);
+  particle_real_t Dpzi = sqrtf(H * heating_dt);
+
+  prt->pxi += Dpxi * ranx;
+  prt->pyi += Dpyi * rany;
+  prt->pzi += Dpzi * ranz;
+}
+
+// ----------------------------------------------------------------------
+// psc_flatfoil_particle_heating
+
+static void
+psc_flatfoil_particle_heating(struct psc *psc, struct psc_mparticles *mprts_base,
+			     struct psc_mfields *mflds_base)
+{
+  struct psc_flatfoil *sub = psc_flatfoil(psc);
+
+  // only heating between heating_tb and heating_te
+  if (psc->timestep < sub->heating_tb) {
+    return;
+  }
+
+  if (psc->timestep >= sub->heating_te) {
+    return;
+  }
+
+  if (psc->timestep % sub->heating_every != 0) {
+    return;
+  }
+
+  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
+  
+  psc_foreach_patch(psc, p) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    for (int n = 0; n < prts->n_part; n++) {
+      particle_t *prt = particles_get_one(prts, n++);
+      if (particle_kind(prt) != MY_ELECTRON) {
+	continue;
+      }
+
+      double H = get_H(psc, &particle_x(prt), p);
+      if (H > 0) {
+	particle_kick(psc, prt, H);
+      }
+    }
+  }
+
+  psc_mparticles_put_as(mprts, mprts_base, 0);
+}
+
 // ----------------------------------------------------------------------
 // psc_ops "flatfoil"
 
@@ -569,8 +693,9 @@ psc_event_generator_flatfoil_run(struct psc_event_generator *gen,
 				 mparticles_base_t *mprts, mfields_base_t *mflds,
 				 mphotons_t *mphotons)
 {
-  struct psc *psc = ppsc;
+  struct psc *psc = ppsc; // FIXME
   psc_flatfoil_particle_source(psc, mprts, mflds);
+  psc_flatfoil_particle_heating(psc, mprts, mflds);
 }
 
 // ----------------------------------------------------------------------
