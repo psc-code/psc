@@ -44,12 +44,23 @@ struct psc_heating {
   double zl; // in terms of d_i
   double zh;
   double xc;
+  double yc;
   double rH;
   int tb; // in terms of step number (FIXME!)
   int te;
   double T;
   int every_step; // heat every so many steps
+
+  // state
+  double zl_int; // in internal units (d_e)
+  double zh_int;
+  double xc_int;
+  double yc_int;
+  double rH_int;
+  double fac;
 };
+
+static void psc_heating_setup(struct psc *psc);
 
 struct psc_flatfoil {
   double BB;
@@ -202,6 +213,8 @@ psc_flatfoil_setup(struct psc *psc)
   sub->d_i = sqrt(psc->kinds[MY_ION].m / psc->kinds[MY_ION].q);
   sub->target.zl = - sub->target.zwidth * sub->d_i;
   sub->target.zh =   sub->target.zwidth * sub->d_i;
+
+  psc_heating_setup(psc);
 
   psc_setup_super(psc);
 
@@ -580,30 +593,44 @@ psc_flatfoil_particle_source(struct psc *psc, struct psc_mparticles *mprts_base,
 }
 
 // ----------------------------------------------------------------------
-// get_H
+// psc_heating_setup
 
-static particle_real_t
-get_H(struct psc *psc, particle_real_t *xx, int p)
+static void
+psc_heating_setup(struct psc *psc)
 {
   struct psc_flatfoil *sub = psc_flatfoil(psc);
+  struct psc_heating *heating = &sub->heating;
+  double d_i = sub->d_i;
 
-  particle_real_t zl = sub->heating.zl * sub->d_i;
-  particle_real_t zh = sub->heating.zh * sub->d_i;
-  particle_real_t xc = sub->heating.xc * sub->d_i;
-  particle_real_t rH = sub->heating.rH * sub->d_i;
-  particle_real_t width = zh - zl;
-  particle_real_t T = sub->heating.T;
-  struct psc_patch *patch = &psc->patch[p];
-  particle_real_t x = xx[0] + patch->xb[0];
-  particle_real_t y = xx[1] + patch->xb[1];
-  particle_real_t z = xx[2] + patch->xb[2];
+  heating->zl_int = heating->zl * d_i;
+  heating->zh_int = heating->zh * d_i;
+  heating->xc_int = heating->xc * d_i;
+  heating->yc_int = heating->yc * d_i;
+  heating->rH_int = heating->rH * d_i;
+
+  double width = heating->zh_int - heating->zl_int;
+  heating->fac = (8.f * pow(heating->T, 1.5)) / (sqrt(psc->kinds[MY_ION].m) * width);
+}
+
+// ----------------------------------------------------------------------
+// psc_heating_get_H
+
+static particle_real_t
+psc_heating_get_H(struct psc_heating *heating, particle_real_t *xx)
+{
+  particle_real_t zl = heating->zl_int;
+  particle_real_t zh = heating->zh_int;
+  particle_real_t xc = heating->xc_int;
+  particle_real_t yc = heating->yc_int;
+  particle_real_t rH = heating->rH_int;
+  particle_real_t fac = heating->fac;
+  particle_real_t x = xx[0], y = xx[1], z = xx[2];
 
   if (z <= zl || z >= zh) {
     return 0;
   }
 
-  return (8.f * pow(T, 1.5)) / (sqrt(psc->kinds[MY_ION].m) * width)
-    * exp(-(sqr(x-xc) + sqr(y)) / sqr(rH));
+  return fac * exp(-(sqr(x-xc) + sqr(y-yc)) / sqr(rH));
 }
   
 // ----------------------------------------------------------------------
@@ -648,13 +675,14 @@ psc_flatfoil_particle_heating(struct psc *psc, struct psc_mparticles *mprts_base
 			     struct psc_mfields *mflds_base)
 {
   struct psc_flatfoil *sub = psc_flatfoil(psc);
+  struct psc_heating *heating = &sub->heating;
 
   // only heating between heating_tb and heating_te
-  if (psc->timestep < sub->heating.tb || psc->timestep >= sub->heating.te) {
+  if (psc->timestep < heating->tb || psc->timestep >= heating->te) {
     return;
   }
 
-  if (psc->timestep % sub->heating.every_step != 0) {
+  if (psc->timestep % heating->every_step != 0) {
     return;
   }
 
@@ -662,13 +690,20 @@ psc_flatfoil_particle_heating(struct psc *psc, struct psc_mparticles *mprts_base
   
   psc_foreach_patch(psc, p) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_patch *patch = &psc->patch[p];
     for (int n = 0; n < prts->n_part; n++) {
       particle_t *prt = particles_get_one(prts, n++);
       if (particle_kind(prt) != MY_ELECTRON) {
 	continue;
       }
+      
+      particle_real_t xx[3] = {
+	(&particle_x(prt))[0] + patch->xb[0],
+	(&particle_x(prt))[1] + patch->xb[1],
+	(&particle_x(prt))[2] + patch->xb[2],
+      };
 
-      double H = get_H(psc, &particle_x(prt), p);
+      double H = psc_heating_get_H(heating, xx);
       if (H > 0) {
 	particle_kick(psc, prt, H);
       }
