@@ -6,33 +6,16 @@
 
 struct psc_target {
   struct mrc_obj obj;
-  
-  // params
-  double yl;
-  double yh;
-  double zl;
-  double zh;
-  double n;
-  double Te;
-  double Ti;
-  int kind_ion;
-  int kind_electron;
 };
 
-#define VAR(x) (void *)offsetof(struct psc_target, x)
-static struct param psc_target_descr[] _mrc_unused = {
-  { "yl"           , VAR(yl)           , PARAM_DOUBLE(0.)       },
-  { "yh"           , VAR(yh)           , PARAM_DOUBLE(0.)       },
-  { "zl"           , VAR(zl)           , PARAM_DOUBLE(0.)       },
-  { "zh"           , VAR(zh)           , PARAM_DOUBLE(0.)       },
-  { "n"            , VAR(n)            , PARAM_DOUBLE(1.)       },
-  { "Te"           , VAR(Te)           , PARAM_DOUBLE(.001)     },
-  { "Ti"           , VAR(Ti)           , PARAM_DOUBLE(.001)     },
-  { "kind_ion"     , VAR(kind_ion)     , PARAM_INT(-1)          },
-  { "kind_electron", VAR(kind_electron), PARAM_INT(-1)          },
-  {},
+struct psc_target_ops {
+  MRC_SUBCLASS_OPS(struct psc_target);
+  bool (*is_inside)(struct psc_target *target, double x[3]);
+  void (*init_npt)(struct psc_target *target, int pop, double x[3],
+		   struct psc_particle_npt *npt);
 };
-#undef VAR
+
+#define psc_target_ops(target) ((struct psc_target_ops *)((target)->obj.ops))
 
 #endif
 
