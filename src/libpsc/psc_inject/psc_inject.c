@@ -243,7 +243,7 @@ psc_inject_run(struct psc_inject *inject, struct psc_mparticles *mprts_base,
 	      npt.T[1] = psc->kinds[kind].T;
 	      npt.T[2] = psc->kinds[kind].T;
 	    };
-	    psc_ops(psc)->init_npt(psc, kind, xx, &npt);
+	    psc_target_init_npt(inject->target, kind, xx, &npt);
 	    
 	    int n_in_cell;
 	    if (kind != psc->prm.neutralizing_population) {

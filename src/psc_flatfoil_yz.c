@@ -161,6 +161,8 @@ psc_flatfoil_setup(struct psc *psc)
   psc_target_set_param_double(sub->target, "yh", sub->target_yh * sub->d_i);
   psc_target_set_param_double(sub->target, "zl", - sub->target_zwidth * sub->d_i);
   psc_target_set_param_double(sub->target, "zh",   sub->target_zwidth * sub->d_i);
+  psc_target_set_param_int(sub->target, "kind_electron", MY_ELECTRON);
+  psc_target_set_param_int(sub->target, "kind_ion", MY_ION);
 
   psc_inject_set_param_int(sub->inject, "kind_n", MY_ELECTRON);
   psc_inject_set_param_obj(sub->inject, "target", sub->target);
@@ -214,7 +216,7 @@ psc_flatfoil_init_field(struct psc *psc, double x[3], int m)
 
 static void
 psc_flatfoil_init_npt(struct psc *psc, int pop, double x[3],
-		    struct psc_particle_npt *npt)
+		      struct psc_particle_npt *npt)
 {
   struct psc_flatfoil *sub = psc_flatfoil(psc);
   struct psc_target *target = sub->target;
@@ -236,31 +238,13 @@ psc_flatfoil_init_npt(struct psc *psc, int pop, double x[3],
     assert(0);
   }
 
-  if (!psc_target_is_inside(target, x)) {
+  if (sub->no_initial_target) {
     return;
   }
 
-  if (sub->no_initial_target && psc->timestep == 0) {
-    return;
-  }
-
-  // replace values above by target values
-
-  switch (pop) {
-  case MY_ION:
-    npt->n    = target->n;
-    npt->T[0] = target->Ti;
-    npt->T[1] = target->Ti;
-    npt->T[2] = target->Ti;
-    break;
-  case MY_ELECTRON:
-    npt->n    = target->n;
-    npt->T[0] = target->Te;
-    npt->T[1] = target->Te;
-    npt->T[2] = target->Te;
-    break;
-  default:
-    assert(0);
+  if (psc_target_is_inside(target, x)) {
+    // replace values above by target values
+    psc_target_init_npt(target, pop, x, npt);
   }
 }
 
