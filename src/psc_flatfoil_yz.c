@@ -398,18 +398,6 @@ calc_n(struct psc *psc, struct psc_mparticles *mprts_base,
 }
 
 // ----------------------------------------------------------------------
-// do_add_particles
-
-static bool
-do_add_particles(struct psc *psc)
-{
-  struct psc_flatfoil *sub = psc_flatfoil(psc);
-  struct psc_inject *inject = sub->inject;
-  
-  return inject->do_inject && psc->timestep % inject->every_step == 0;
-}
-
-// ----------------------------------------------------------------------
 // get_n_in_cell
 //
 // helper function for partition / particle setup FIXME duplicated
@@ -495,13 +483,13 @@ psc_flatfoil_particle_source(struct psc *psc, struct psc_mparticles *mprts_base,
 			     struct psc_mfields *mflds_base)
 {
   struct psc_flatfoil *sub = psc_flatfoil(psc);
-
-  if (!do_add_particles(psc)) {
+  struct psc_inject *inject = sub->inject;
+  struct psc_target *target = sub->target;
+  
+  if (!inject->do_inject ||
+      psc->timestep % inject->every_step != 0) {
     return;
   }
-
-  struct psc_target *target = sub->target;
-  struct psc_inject *inject = sub->inject;
 
   calc_n(psc, mprts_base, mflds_base);
   
