@@ -20,7 +20,8 @@
 
 MRC_CLASS_DECLARE(psc_heating, struct psc_heating);
 
-//void psc_heating_setup(struct psc_heating *heating);
+void psc_heating_run(struct psc_heating *heating, struct psc_mparticles *mprts_base,
+		     struct psc_mfields *mflds_base);
 
 // ----------------------------------------------------------------------
 // private
@@ -29,7 +30,7 @@ struct psc_heating {
   struct mrc_obj obj;
 
   // params
-  double zl; // in terms of d_i
+  double zl; // in internal units (d_e)
   double zh;
   double xc;
   double yc;
@@ -37,18 +38,143 @@ struct psc_heating {
   int tb; // in terms of step number (FIXME!)
   int te;
   double T;
+  double Mi;
+  int kind; // the kind of particle to be heated;
   int every_step; // heat every so many steps
 
   // state
-  double zl_int; // in internal units (d_e)
-  double zh_int;
-  double xc_int;
-  double yc_int;
-  double rH_int;
   double fac;
 };
 
-static void _psc_heating_setup(struct psc_heating *heating);
+#define VAR(x) (void *)offsetof(struct psc_heating, x)
+static struct param psc_heating_descr[] = {
+  { "zl"                , VAR(zl)                , PARAM_DOUBLE(0.)       },
+  { "zh"                , VAR(zh)                , PARAM_DOUBLE(0.)       },
+  { "xc"                , VAR(xc)                , PARAM_DOUBLE(0.)       },
+  { "yc"                , VAR(yc)                , PARAM_DOUBLE(0.)       },
+  { "rH"                , VAR(rH)                , PARAM_DOUBLE(0.)       },
+  { "tb"                , VAR(tb)                , PARAM_INT(0.)          },
+  { "te"                , VAR(te)                , PARAM_INT(0.)          },
+  { "T"                 , VAR(T)                 , PARAM_DOUBLE(.04)      },
+  { "Mi"                , VAR(Mi)                , PARAM_DOUBLE(1.)       },
+  { "kind"              , VAR(kind)              , PARAM_INT(-1)          },
+  { "every_step"        , VAR(every_step)        , PARAM_INT(20)          },
+  {},
+};
+#undef VAR
+
+// ----------------------------------------------------------------------
+// _psc_heating_setup
+
+static void
+_psc_heating_setup(struct psc_heating *heating)
+{
+  double width = heating->zh - heating->zl;
+  heating->fac = (8.f * pow(heating->T, 1.5)) / (sqrt(heating->Mi) * width);
+  // FIXME, I don't understand the sqrt(Mi) in here
+}
+
+// ----------------------------------------------------------------------
+// psc_heating_get_H
+
+static particle_real_t
+psc_heating_get_H(struct psc_heating *heating, particle_real_t *xx)
+{
+  particle_real_t zl = heating->zl;
+  particle_real_t zh = heating->zh;
+  particle_real_t xc = heating->xc;
+  particle_real_t yc = heating->yc;
+  particle_real_t rH = heating->rH;
+  particle_real_t fac = heating->fac;
+  particle_real_t x = xx[0], y = xx[1], z = xx[2];
+
+  if (z <= zl || z >= zh) {
+    return 0;
+  }
+
+  return fac * exp(-(sqr(x-xc) + sqr(y-yc)) / sqr(rH));
+}
+  
+// ----------------------------------------------------------------------
+// psc_heating_particle_kick
+
+static void
+psc_heating_particle_kick(struct psc_heating *heating, particle_t *prt, particle_real_t H)
+{
+  struct psc *psc = ppsc;
+
+  particle_real_t heating_dt = heating->every_step * psc->dt;
+
+  float ran1, ran2, ran3, ran4, ran5, ran6;
+  do {
+    ran1 = random() / ((float) RAND_MAX + 1);
+    ran2 = random() / ((float) RAND_MAX + 1);
+    ran3 = random() / ((float) RAND_MAX + 1);
+    ran4 = random() / ((float) RAND_MAX + 1);
+    ran5 = random() / ((float) RAND_MAX + 1);
+    ran6 = random() / ((float) RAND_MAX + 1);
+  } while (ran1 >= 1.f || ran2 >= 1.f || ran3 >= 1.f ||
+	   ran4 >= 1.f || ran5 >= 1.f || ran6 >= 1.f);
+
+  particle_real_t ranx = sqrtf(-2.f*logf(1.0-ran1)) * cosf(2.f*M_PI*ran2);
+  particle_real_t rany = sqrtf(-2.f*logf(1.0-ran3)) * cosf(2.f*M_PI*ran4);
+  particle_real_t ranz = sqrtf(-2.f*logf(1.0-ran5)) * cosf(2.f*M_PI*ran6);
+
+  particle_real_t Dpxi = sqrtf(H * heating_dt);
+  particle_real_t Dpyi = sqrtf(H * heating_dt);
+  particle_real_t Dpzi = sqrtf(H * heating_dt);
+
+  prt->pxi += Dpxi * ranx;
+  prt->pyi += Dpyi * rany;
+  prt->pzi += Dpzi * ranz;
+}
+
+// ----------------------------------------------------------------------
+// psc_heating_run
+
+void
+psc_heating_run(struct psc_heating *heating, struct psc_mparticles *mprts_base,
+		struct psc_mfields *mflds_base)
+{
+  struct psc *psc = ppsc;
+
+  // only heating between heating_tb and heating_te
+  if (psc->timestep < heating->tb || psc->timestep >= heating->te) {
+    return;
+  }
+
+  if (psc->timestep % heating->every_step != 0) {
+    return;
+  }
+
+  int kind = heating->kind;
+
+  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
+  
+  psc_foreach_patch(psc, p) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_patch *patch = &psc->patch[p];
+    for (int n = 0; n < prts->n_part; n++) {
+      particle_t *prt = particles_get_one(prts, n++);
+      if (particle_kind(prt) != kind) {
+	continue;
+      }
+      
+      particle_real_t xx[3] = {
+	(&particle_x(prt))[0] + patch->xb[0],
+	(&particle_x(prt))[1] + patch->xb[1],
+	(&particle_x(prt))[2] + patch->xb[2],
+      };
+
+      double H = psc_heating_get_H(heating, xx);
+      if (H > 0) {
+	psc_heating_particle_kick(heating, prt, H);
+      }
+    }
+  }
+
+  psc_mparticles_put_as(mprts, mprts_base, 0);
+}
 
 // ----------------------------------------------------------------------
 // psc_heating class
@@ -56,6 +182,7 @@ static void _psc_heating_setup(struct psc_heating *heating);
 struct mrc_class_psc_heating mrc_class_psc_heating = {
   .name             = "psc_heating",
   .size             = sizeof(struct psc_heating),
+  .param_descr      = psc_heating_descr,
   .setup            = _psc_heating_setup,
 };
 
@@ -99,7 +226,12 @@ struct psc_flatfoil {
 
   bool no_initial_target; // for testing, the target can be turned off in the initial condition
 
-  struct psc_heating heating;
+  double heating_zl; // this is ugly as these are used to set the corresponding
+  double heating_zh; // quantities in psc_heating, but having them here we can rescale
+  double heating_xc; // them from d_i to internal (d_e) units
+  double heating_yc;
+  double heating_rH;
+  struct psc_heating *heating;
   
   // state
   double d_i;
@@ -141,17 +273,15 @@ static struct param psc_flatfoil_descr[] = {
   { "inject_every_step" , VAR(inject.every_step) , PARAM_INT(20)          },
   { "inject_tau"        , VAR(inject.tau)        , PARAM_INT(40)          },
 
-  { "heating_zl"        , VAR(heating.zl)        , PARAM_DOUBLE(-1.)      },
-  { "heating_zh"        , VAR(heating.zh)        , PARAM_DOUBLE(1.)       },
-  { "heating_xc"        , VAR(heating.xc)        , PARAM_DOUBLE(0.)       },
-  { "heating_rH"        , VAR(heating.rH)        , PARAM_DOUBLE(3.)       },
-  { "heating_tb"        , VAR(heating.tb)        , PARAM_INT(0.)          },
-  { "heating_te"        , VAR(heating.te)        , PARAM_INT(0.)          },
-  { "heating_T"         , VAR(heating.T)         , PARAM_DOUBLE(.04)      },
-  { "heating_every_step", VAR(heating.every_step), PARAM_INT(20)          },
+  { "heating_zl"        , VAR(heating_zl)        , PARAM_DOUBLE(-1.)      },
+  { "heating_zh"        , VAR(heating_zh)        , PARAM_DOUBLE(1.)       },
+  { "heating_xc"        , VAR(heating_xc)        , PARAM_DOUBLE(0.)       },
+  { "heating_yc"        , VAR(heating_yc)        , PARAM_DOUBLE(0.)       },
+  { "heating_rH"        , VAR(heating_rH)        , PARAM_DOUBLE(3.)       },
 
-  { "LLs"             , VAR(LLs)             , MRC_VAR_DOUBLE         },
-  { "LLn"             , VAR(LLn)             , MRC_VAR_DOUBLE         },
+  { "LLs"             , VAR(LLs)             , MRC_VAR_DOUBLE           },
+  { "LLn"             , VAR(LLn)             , MRC_VAR_DOUBLE           },
+  { "heating"         , VAR(heating)         , MRC_VAR_OBJ(psc_heating) },
   {},
 };
 #undef VAR
@@ -235,9 +365,16 @@ psc_flatfoil_setup(struct psc *psc)
   sub->target.zl = - sub->target.zwidth * sub->d_i;
   sub->target.zh =   sub->target.zwidth * sub->d_i;
 
-  _psc_heating_setup(&sub->heating);
+  psc_heating_set_param_double(sub->heating, "zl", sub->heating_zl * sub->d_i);
+  psc_heating_set_param_double(sub->heating, "zh", sub->heating_zh * sub->d_i);
+  psc_heating_set_param_double(sub->heating, "xc", sub->heating_xc * sub->d_i);
+  psc_heating_set_param_double(sub->heating, "yc", sub->heating_yc * sub->d_i);
+  psc_heating_set_param_double(sub->heating, "rH", sub->heating_rH * sub->d_i);
+  psc_heating_set_param_double(sub->heating, "Mi", psc->kinds[MY_ION].m);
+  psc_heating_set_param_int(sub->heating, "kind", MY_ELECTRON);
 
   psc_setup_super(psc);
+  psc_setup_member_objs_sub(psc);
 
   MPI_Comm comm = psc_comm(psc);
   mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., sub->d_i);
@@ -614,127 +751,6 @@ psc_flatfoil_particle_source(struct psc *psc, struct psc_mparticles *mprts_base,
 }
 
 // ----------------------------------------------------------------------
-// psc_heating_setup
-
-static void
-_psc_heating_setup(struct psc_heating *heating)
-{
-  struct psc *psc = ppsc;
-  struct psc_flatfoil *sub = psc_flatfoil(psc);
-  double d_i = sub->d_i;
-
-  heating->zl_int = heating->zl * d_i;
-  heating->zh_int = heating->zh * d_i;
-  heating->xc_int = heating->xc * d_i;
-  heating->yc_int = heating->yc * d_i;
-  heating->rH_int = heating->rH * d_i;
-
-  double width = heating->zh_int - heating->zl_int;
-  heating->fac = (8.f * pow(heating->T, 1.5)) / (sqrt(psc->kinds[MY_ION].m) * width);
-}
-
-// ----------------------------------------------------------------------
-// psc_heating_get_H
-
-static particle_real_t
-psc_heating_get_H(struct psc_heating *heating, particle_real_t *xx)
-{
-  particle_real_t zl = heating->zl_int;
-  particle_real_t zh = heating->zh_int;
-  particle_real_t xc = heating->xc_int;
-  particle_real_t yc = heating->yc_int;
-  particle_real_t rH = heating->rH_int;
-  particle_real_t fac = heating->fac;
-  particle_real_t x = xx[0], y = xx[1], z = xx[2];
-
-  if (z <= zl || z >= zh) {
-    return 0;
-  }
-
-  return fac * exp(-(sqr(x-xc) + sqr(y-yc)) / sqr(rH));
-}
-  
-// ----------------------------------------------------------------------
-// particle_kick
-
-static void
-particle_kick(struct psc *psc, particle_t *prt, particle_real_t H)
-{
-  struct psc_flatfoil *sub = psc_flatfoil(psc);
-
-  particle_real_t heating_dt = sub->heating.every_step * psc->dt;
-
-  float ran1, ran2, ran3, ran4, ran5, ran6;
-  do {
-    ran1 = random() / ((float) RAND_MAX + 1);
-    ran2 = random() / ((float) RAND_MAX + 1);
-    ran3 = random() / ((float) RAND_MAX + 1);
-    ran4 = random() / ((float) RAND_MAX + 1);
-    ran5 = random() / ((float) RAND_MAX + 1);
-    ran6 = random() / ((float) RAND_MAX + 1);
-  } while (ran1 >= 1.f || ran2 >= 1.f || ran3 >= 1.f ||
-	   ran4 >= 1.f || ran5 >= 1.f || ran6 >= 1.f);
-
-  particle_real_t ranx = sqrtf(-2.f*logf(1.0-ran1)) * cosf(2.f*M_PI*ran2);
-  particle_real_t rany = sqrtf(-2.f*logf(1.0-ran3)) * cosf(2.f*M_PI*ran4);
-  particle_real_t ranz = sqrtf(-2.f*logf(1.0-ran5)) * cosf(2.f*M_PI*ran6);
-
-  particle_real_t Dpxi = sqrtf(H * heating_dt);
-  particle_real_t Dpyi = sqrtf(H * heating_dt);
-  particle_real_t Dpzi = sqrtf(H * heating_dt);
-
-  prt->pxi += Dpxi * ranx;
-  prt->pyi += Dpyi * rany;
-  prt->pzi += Dpzi * ranz;
-}
-
-// ----------------------------------------------------------------------
-// psc_flatfoil_particle_heating
-
-static void
-psc_flatfoil_particle_heating(struct psc *psc, struct psc_mparticles *mprts_base,
-			     struct psc_mfields *mflds_base)
-{
-  struct psc_flatfoil *sub = psc_flatfoil(psc);
-  struct psc_heating *heating = &sub->heating;
-
-  // only heating between heating_tb and heating_te
-  if (psc->timestep < heating->tb || psc->timestep >= heating->te) {
-    return;
-  }
-
-  if (psc->timestep % heating->every_step != 0) {
-    return;
-  }
-
-  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
-  
-  psc_foreach_patch(psc, p) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_patch *patch = &psc->patch[p];
-    for (int n = 0; n < prts->n_part; n++) {
-      particle_t *prt = particles_get_one(prts, n++);
-      if (particle_kind(prt) != MY_ELECTRON) {
-	continue;
-      }
-      
-      particle_real_t xx[3] = {
-	(&particle_x(prt))[0] + patch->xb[0],
-	(&particle_x(prt))[1] + patch->xb[1],
-	(&particle_x(prt))[2] + patch->xb[2],
-      };
-
-      double H = psc_heating_get_H(heating, xx);
-      if (H > 0) {
-	particle_kick(psc, prt, H);
-      }
-    }
-  }
-
-  psc_mparticles_put_as(mprts, mprts_base, 0);
-}
-
-// ----------------------------------------------------------------------
 // psc_ops "flatfoil"
 
 struct psc_ops psc_flatfoil_ops = {
@@ -761,8 +777,10 @@ psc_event_generator_flatfoil_run(struct psc_event_generator *gen,
 				 mphotons_t *mphotons)
 {
   struct psc *psc = ppsc; // FIXME
+  struct psc_flatfoil *sub = psc_flatfoil(psc);
+
   psc_flatfoil_particle_source(psc, mprts, mflds);
-  psc_flatfoil_particle_heating(psc, mprts, mflds);
+  psc_heating_run(sub->heating, mprts, mflds);
 }
 
 // ----------------------------------------------------------------------
