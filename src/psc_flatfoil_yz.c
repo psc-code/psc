@@ -20,11 +20,34 @@
 // ======================================================================
 // psc_inject
 
+MRC_CLASS_DECLARE(psc_inject, struct psc_inject);
+
 struct psc_inject {
+  struct mrc_obj obj;
+
   // params
   bool do_inject; // whether to inject particles at all
   int every_step; // inject every so many steps
   int tau; // in steps
+};
+
+#define VAR(x) (void *)offsetof(struct psc_inject, x)
+static struct param psc_inject_descr[] _mrc_unused = {
+  { "do_inject"  , VAR(do_inject)  , PARAM_BOOL(true)         },
+  { "every_step" , VAR(every_step) , PARAM_INT(20)            },
+  { "tau"        , VAR(tau)        , PARAM_INT(40)            },
+
+  {},
+};
+#undef VAR
+
+// ----------------------------------------------------------------------
+// psc_inject class
+
+struct mrc_class_psc_inject mrc_class_psc_inject = {
+  .name             = "psc_inject",
+  .size             = sizeof(struct psc_inject),
+  .param_descr      = psc_inject_descr,
 };
 
 // ======================================================================
@@ -48,7 +71,7 @@ struct psc_flatfoil {
   double target_zwidth;
   struct psc_target *target;
 
-  struct psc_inject inject;
+  struct psc_inject *inject;
 
   double heating_zl; // this is ugly as these are used to set the corresponding
   double heating_zh; // quantities in psc_heating, but having them here we can rescale
@@ -87,10 +110,6 @@ static struct param psc_flatfoil_descr[] = {
 
   { "no_initial_target" , VAR(no_initial_target) , PARAM_BOOL(false)        },
 
-  { "inject_do_inject"  , VAR(inject.do_inject)  , PARAM_BOOL(true)         },
-  { "inject_every_step" , VAR(inject.every_step) , PARAM_INT(20)            },
-  { "inject_tau"        , VAR(inject.tau)        , PARAM_INT(40)            },
-
   { "heating_zl"        , VAR(heating_zl)        , PARAM_DOUBLE(-1.)        },
   { "heating_zh"        , VAR(heating_zh)        , PARAM_DOUBLE(1.)         },
   { "heating_xc"        , VAR(heating_xc)        , PARAM_DOUBLE(0.)         },
@@ -100,6 +119,7 @@ static struct param psc_flatfoil_descr[] = {
   { "LLs"               , VAR(LLs)               , MRC_VAR_DOUBLE           },
   { "LLn"               , VAR(LLn)               , MRC_VAR_DOUBLE           },
   { "target"            , VAR(target)            , MRC_VAR_OBJ(psc_target)  },
+  { "inject"            , VAR(inject)            , MRC_VAR_OBJ(psc_inject)  },
   { "heating"           , VAR(heating)           , MRC_VAR_OBJ(psc_heating) },
   {},
 };
@@ -384,8 +404,9 @@ static bool
 do_add_particles(struct psc *psc)
 {
   struct psc_flatfoil *sub = psc_flatfoil(psc);
+  struct psc_inject *inject = sub->inject;
   
-  return sub->inject.do_inject && psc->timestep % sub->inject.every_step == 0;
+  return inject->do_inject && psc->timestep % inject->every_step == 0;
 }
 
 // ----------------------------------------------------------------------
@@ -480,6 +501,7 @@ psc_flatfoil_particle_source(struct psc *psc, struct psc_mparticles *mprts_base,
   }
 
   struct psc_target *target = sub->target;
+  struct psc_inject *inject = sub->inject;
 
   calc_n(psc, mprts_base, mflds_base);
   
@@ -532,8 +554,8 @@ psc_flatfoil_particle_source(struct psc *psc, struct psc_mparticles *mprts_base,
 		  // this rounds down rather than trying to get fractional particles
 		  // statistically right...
 		  n_in_cell = npt.n / psc->coeff.cori *
-		    (sub->inject.every_step * psc->dt / sub->inject.tau) /
-		    (1. + sub->inject.every_step * psc->dt / sub->inject.tau);
+		    (inject->every_step * psc->dt / inject->tau) /
+		    (1. + inject->every_step * psc->dt / inject->tau);
 		}
 	      } else {
 		n_in_cell = get_n_in_cell(psc, &npt);
