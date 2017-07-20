@@ -253,6 +253,7 @@ AC_CONFIG_FILES([Makefile
                  src/libpsc/psc_sort/Makefile
                  src/libpsc/psc_checks/Makefile
                  src/libpsc/psc_heating/Makefile
+                 src/libpsc/psc_inject/Makefile
                  src/libpsc/fortran/Makefile
                  src/libpsc/sse2/Makefile
                  src/libpsc/cuda/Makefile

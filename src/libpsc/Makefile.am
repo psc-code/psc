@@ -23,6 +23,7 @@ SUBDIRS = \
 	psc_sort \
 	psc_checks \
 	psc_heating \
+	psc_inject \
 	fortran \
 	sse2 \
 	cuda \
@@ -53,6 +54,7 @@ libpsc_la_LIBADD = \
 	psc_sort/libsubdir.la \
 	psc_checks/libsubdir.la \
 	psc_heating/libsubdir.la \
+	psc_inject/libsubdir.la \
 	cuda2/libsubdir.la
 
 if USE_SSE2

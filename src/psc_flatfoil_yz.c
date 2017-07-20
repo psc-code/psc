@@ -4,6 +4,7 @@
 #include <psc_bnd_fields.h>
 #include <psc_event_generator_private.h>
 #include <psc_heating.h>
+#include <psc_target_private.h>
 #include <psc_output_fields_item.h>
 #include <psc_bnd.h>
 
@@ -17,28 +18,17 @@
 #include <stdlib.h>
 
 // ======================================================================
-// psc subclass "flatfoil"
+// psc_inject
 
-struct psc_target {
-  // params
-  double yl;
-  double yh;
-  double zwidth; // this is given in d_i
-  double n;
-  double Te;
-  double Ti;
-
-  // state
-  double zl;
-  double zh;
-};
-
-struct psc_target_inject {
+struct psc_inject {
   // params
   bool do_inject; // whether to inject particles at all
   int every_step; // inject every so many steps
   int tau; // in steps
 };
+
+// ======================================================================
+// psc subclass "flatfoil"
 
 struct psc_flatfoil {
   double BB;
@@ -51,10 +41,14 @@ struct psc_flatfoil {
   double background_Te;
   double background_Ti;
 
-  struct psc_target target;
-  struct psc_target_inject inject;
-
   bool no_initial_target; // for testing, the target can be turned off in the initial condition
+
+  double target_yl;
+  double target_yh;
+  double target_zwidth;
+  struct psc_target *target;
+
+  struct psc_inject inject;
 
   double heating_zl; // this is ugly as these are used to set the corresponding
   double heating_zh; // quantities in psc_heating, but having them here we can rescale
@@ -77,41 +71,36 @@ struct psc_flatfoil {
 
 #define VAR(x) (void *)offsetof(struct psc_flatfoil, x)
 static struct param psc_flatfoil_descr[] = {
-  { "BB"              , VAR(BB)              , PARAM_DOUBLE(.0)       },
-  { "Zi"              , VAR(Zi)              , PARAM_DOUBLE(1.)       },
-  { "LLf"             , VAR(LLf)             , PARAM_DOUBLE(25.)      },
-  { "LLz"             , VAR(LLz)             , PARAM_DOUBLE(400.*4)   },
-  { "LLy"             , VAR(LLy)             , PARAM_DOUBLE(400.)     },
+  { "BB"                , VAR(BB)                , PARAM_DOUBLE(.0)         },
+  { "Zi"                , VAR(Zi)                , PARAM_DOUBLE(1.)         },
+  { "LLf"               , VAR(LLf)               , PARAM_DOUBLE(25.)        },
+  { "LLz"               , VAR(LLz)               , PARAM_DOUBLE(400.*4)     },
+  { "LLy"               , VAR(LLy)               , PARAM_DOUBLE(400.)       },
 
-  { "background_n"    , VAR(background_n)    , PARAM_DOUBLE(.002)     },
-  { "background_Te"   , VAR(background_Te)   , PARAM_DOUBLE(.001)     },
-  { "background_Ti"   , VAR(background_Ti)   , PARAM_DOUBLE(.001)     },
+  { "background_n"      , VAR(background_n)      , PARAM_DOUBLE(.002)       },
+  { "background_Te"     , VAR(background_Te)     , PARAM_DOUBLE(.001)       },
+  { "background_Ti"     , VAR(background_Ti)     , PARAM_DOUBLE(.001)       },
 
-  { "target_yl"         , VAR(target.yl)         , PARAM_DOUBLE(-100000.) },
-  { "target_yh"         , VAR(target.yh)         , PARAM_DOUBLE( 100000.) },
-  { "target_zwidth"     , VAR(target.zwidth)     , PARAM_DOUBLE(1.)       },
-  { "target_n"          , VAR(target.n)          , PARAM_DOUBLE(1.)       },
-  { "target_Te"         , VAR(target.Te)         , PARAM_DOUBLE(.001)     },
-  { "target_Ti"         , VAR(target.Ti)         , PARAM_DOUBLE(.001)     },
+  { "target_yl"         , VAR(target_yl)         , PARAM_DOUBLE(-100000.)   },
+  { "target_yh"         , VAR(target_yh)         , PARAM_DOUBLE( 100000.)   },
+  { "target_zwidth"     , VAR(target_zwidth)     , PARAM_DOUBLE(1.)         },
 
-  { "target_zl"         , VAR(target.zl)         , MRC_VAR_DOUBLE         },
-  { "target_zh"         , VAR(target.zh)         , MRC_VAR_DOUBLE         },
+  { "no_initial_target" , VAR(no_initial_target) , PARAM_BOOL(false)        },
 
-  { "no_initial_target" , VAR(no_initial_target) , PARAM_BOOL(false)      },
+  { "inject_do_inject"  , VAR(inject.do_inject)  , PARAM_BOOL(true)         },
+  { "inject_every_step" , VAR(inject.every_step) , PARAM_INT(20)            },
+  { "inject_tau"        , VAR(inject.tau)        , PARAM_INT(40)            },
 
-  { "inject_do_inject"  , VAR(inject.do_inject)  , PARAM_BOOL(true)       },
-  { "inject_every_step" , VAR(inject.every_step) , PARAM_INT(20)          },
-  { "inject_tau"        , VAR(inject.tau)        , PARAM_INT(40)          },
+  { "heating_zl"        , VAR(heating_zl)        , PARAM_DOUBLE(-1.)        },
+  { "heating_zh"        , VAR(heating_zh)        , PARAM_DOUBLE(1.)         },
+  { "heating_xc"        , VAR(heating_xc)        , PARAM_DOUBLE(0.)         },
+  { "heating_yc"        , VAR(heating_yc)        , PARAM_DOUBLE(0.)         },
+  { "heating_rH"        , VAR(heating_rH)        , PARAM_DOUBLE(3.)         },
 
-  { "heating_zl"        , VAR(heating_zl)        , PARAM_DOUBLE(-1.)      },
-  { "heating_zh"        , VAR(heating_zh)        , PARAM_DOUBLE(1.)       },
-  { "heating_xc"        , VAR(heating_xc)        , PARAM_DOUBLE(0.)       },
-  { "heating_yc"        , VAR(heating_yc)        , PARAM_DOUBLE(0.)       },
-  { "heating_rH"        , VAR(heating_rH)        , PARAM_DOUBLE(3.)       },
-
-  { "LLs"             , VAR(LLs)             , MRC_VAR_DOUBLE           },
-  { "LLn"             , VAR(LLn)             , MRC_VAR_DOUBLE           },
-  { "heating"         , VAR(heating)         , MRC_VAR_OBJ(psc_heating) },
+  { "LLs"               , VAR(LLs)               , MRC_VAR_DOUBLE           },
+  { "LLn"               , VAR(LLn)               , MRC_VAR_DOUBLE           },
+  { "target"            , VAR(target)            , MRC_VAR_OBJ(psc_target)  },
+  { "heating"           , VAR(heating)           , MRC_VAR_OBJ(psc_heating) },
   {},
 };
 #undef VAR
@@ -190,10 +179,12 @@ psc_flatfoil_setup(struct psc *psc)
   psc->kinds[MY_ION     ].m = 100. * sub->Zi;  // FIXME, hardcoded mass ratio 100
   psc->kinds[MY_ION     ].name = "i";
 
-  // set target z limits from target_zwidth, which needs to be converted from d_i -> d_e
   sub->d_i = sqrt(psc->kinds[MY_ION].m / psc->kinds[MY_ION].q);
-  sub->target.zl = - sub->target.zwidth * sub->d_i;
-  sub->target.zh =   sub->target.zwidth * sub->d_i;
+
+  psc_target_set_param_double(sub->target, "yl", sub->target_yl * sub->d_i);
+  psc_target_set_param_double(sub->target, "yh", sub->target_yh * sub->d_i);
+  psc_target_set_param_double(sub->target, "zl", - sub->target_zwidth * sub->d_i);
+  psc_target_set_param_double(sub->target, "zh",   sub->target_zwidth * sub->d_i);
 
   psc_heating_set_param_double(sub->heating, "zl", sub->heating_zl * sub->d_i);
   psc_heating_set_param_double(sub->heating, "zh", sub->heating_zh * sub->d_i);
@@ -268,18 +259,6 @@ psc_flatfoil_init_field(struct psc *psc, double x[3], int m)
 }
 
 // ----------------------------------------------------------------------
-// in_target
-
-static bool
-in_target(struct psc *psc, double x[3])
-{
-  struct psc_flatfoil *sub = psc_flatfoil(psc);
-
-  return (x[1] >= sub->target.yl && x[1] <= sub->target.yh &&
-	  x[2] >= sub->target.zl && x[2] <= sub->target.zh);
-}
-
-// ----------------------------------------------------------------------
 // psc_flatfoil_init_npt
 
 static void
@@ -287,6 +266,7 @@ psc_flatfoil_init_npt(struct psc *psc, int pop, double x[3],
 		    struct psc_particle_npt *npt)
 {
   struct psc_flatfoil *sub = psc_flatfoil(psc);
+  struct psc_target *target = sub->target;
 
   switch (pop) {
   case MY_ION:
@@ -305,7 +285,7 @@ psc_flatfoil_init_npt(struct psc *psc, int pop, double x[3],
     assert(0);
   }
 
-  if (!in_target(psc, x)) {
+  if (!psc_target_is_inside(target, x)) {
     return;
   }
 
@@ -317,16 +297,16 @@ psc_flatfoil_init_npt(struct psc *psc, int pop, double x[3],
 
   switch (pop) {
   case MY_ION:
-    npt->n    = sub->target.n;
-    npt->T[0] = sub->target.Ti;
-    npt->T[1] = sub->target.Ti;
-    npt->T[2] = sub->target.Ti;
+    npt->n    = target->n;
+    npt->T[0] = target->Ti;
+    npt->T[1] = target->Ti;
+    npt->T[2] = target->Ti;
     break;
   case MY_ELECTRON:
-    npt->n    = sub->target.n;
-    npt->T[0] = sub->target.Te;
-    npt->T[1] = sub->target.Te;
-    npt->T[2] = sub->target.Te;
+    npt->n    = target->n;
+    npt->T[0] = target->Te;
+    npt->T[1] = target->Te;
+    npt->T[2] = target->Te;
     break;
   default:
     assert(0);
@@ -499,6 +479,8 @@ psc_flatfoil_particle_source(struct psc *psc, struct psc_mparticles *mprts_base,
     return;
   }
 
+  struct psc_target *target = sub->target;
+
   calc_n(psc, mprts_base, mflds_base);
   
   struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
@@ -522,7 +504,7 @@ psc_flatfoil_particle_source(struct psc *psc, struct psc_mparticles *mprts_base,
 	  if (psc->domain.gdims[1] == 1) xx[1] = CRDY(p, jy);
 	  if (psc->domain.gdims[2] == 1) xx[2] = CRDZ(p, jz);
 
-	  if (!in_target(psc, xx)) {
+	  if (!psc_target_is_inside(target, xx)) {
 	    continue;
 	  }
 
