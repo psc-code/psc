@@ -29,17 +29,63 @@ struct psc_inject {
   bool do_inject; // whether to inject particles at all
   int every_step; // inject every so many steps
   int tau; // in steps
+  struct psc_target *target;
+
+  // state
+  struct psc_mfields *mflds_n;
+  struct psc_output_fields_item *item_n;
+  struct psc_bnd *item_n_bnd;
 };
 
 #define VAR(x) (void *)offsetof(struct psc_inject, x)
 static struct param psc_inject_descr[] _mrc_unused = {
-  { "do_inject"  , VAR(do_inject)  , PARAM_BOOL(true)         },
-  { "every_step" , VAR(every_step) , PARAM_INT(20)            },
-  { "tau"        , VAR(tau)        , PARAM_INT(40)            },
+  { "do_inject"  , VAR(do_inject)  , PARAM_BOOL(true)                    },
+  { "every_step" , VAR(every_step) , PARAM_INT(20)                       },
+  { "tau"        , VAR(tau)        , PARAM_INT(40)                       },
+  { "target"     , VAR(target)     , PARAM_OBJ(psc_target)               },
+
+  { "item_n_bnd" , VAR(item_n_bnd) , MRC_VAR_OBJ(psc_bnd)                },
+  { "item_n"     , VAR(item_n)     , MRC_VAR_OBJ(psc_output_fields_item) },
 
   {},
 };
 #undef VAR
+
+// ----------------------------------------------------------------------
+// _psc_inject_create
+
+static void
+_psc_inject_create(struct psc_inject *inject)
+{
+  psc_bnd_set_type(inject->item_n_bnd, "single");
+  psc_bnd_set_psc(inject->item_n_bnd, ppsc);
+
+  psc_output_fields_item_set_type(inject->item_n, "n_1st_single");
+  psc_output_fields_item_set_psc_bnd(inject->item_n, inject->item_n_bnd);
+}
+
+// ----------------------------------------------------------------------
+// _psc_inject_setup
+
+static void
+_psc_inject_setup(struct psc_inject *inject)
+{
+  // set up necessary bits for calculating / averaging density moment
+
+  psc_inject_setup_member_objs(inject);
+
+  inject->mflds_n = psc_output_fields_item_create_mfields(inject->item_n);
+  psc_mfields_set_name(inject->mflds_n, "mflds_n");
+}
+
+// ----------------------------------------------------------------------
+// _psc_inject_destroy
+
+static void
+_psc_inject_destroy(struct psc_inject *inject)
+{
+  psc_mfields_destroy(inject->mflds_n);
+}
 
 // ----------------------------------------------------------------------
 // psc_inject class
@@ -48,6 +94,9 @@ struct mrc_class_psc_inject mrc_class_psc_inject = {
   .name             = "psc_inject",
   .size             = sizeof(struct psc_inject),
   .param_descr      = psc_inject_descr,
+  .create           = _psc_inject_create,
+  .setup            = _psc_inject_setup,
+  .destroy          = _psc_inject_destroy,
 };
 
 // ======================================================================
@@ -84,10 +133,6 @@ struct psc_flatfoil {
   double d_i;
   double LLs;
   double LLn;
-
-  struct psc_mfields *mflds_n;
-  struct psc_output_fields_item *item_n;
-  struct psc_bnd *item_n_bnd;
 };
 
 #define psc_flatfoil(psc) mrc_to_subobj(psc, struct psc_flatfoil)
@@ -206,6 +251,8 @@ psc_flatfoil_setup(struct psc *psc)
   psc_target_set_param_double(sub->target, "zl", - sub->target_zwidth * sub->d_i);
   psc_target_set_param_double(sub->target, "zh",   sub->target_zwidth * sub->d_i);
 
+  psc_inject_set_param_obj(sub->inject, "target", sub->target);
+
   psc_heating_set_param_double(sub->heating, "zl", sub->heating_zl * sub->d_i);
   psc_heating_set_param_double(sub->heating, "zh", sub->heating_zh * sub->d_i);
   psc_heating_set_param_double(sub->heating, "xc", sub->heating_xc * sub->d_i);
@@ -220,34 +267,6 @@ psc_flatfoil_setup(struct psc *psc)
   MPI_Comm comm = psc_comm(psc);
   mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., sub->d_i);
   mpi_printf(comm, "lambda_De (background) = %g\n", sqrt(sub->background_Te));
-
-  // set up necessary bits for calculating / averaging density moment
-
-  sub->item_n_bnd = psc_bnd_create(psc_comm(psc));
-  psc_bnd_set_type(sub->item_n_bnd, "single");
-  psc_bnd_set_psc(sub->item_n_bnd, psc);
-  psc_bnd_setup(sub->item_n_bnd);
-
-  sub->item_n = psc_output_fields_item_create(psc_comm(psc));
-  psc_output_fields_item_set_type(sub->item_n, "n_1st_single");
-  psc_output_fields_item_set_psc_bnd(sub->item_n, sub->item_n_bnd);
-  psc_output_fields_item_setup(sub->item_n);
-
-  sub->mflds_n = psc_output_fields_item_create_mfields(sub->item_n);
-  psc_mfields_set_name(sub->mflds_n, "mflds_n");
-}
-
-// ----------------------------------------------------------------------
-// psc_flatfoil_destroy
-
-static void
-psc_flatfoil_destroy(struct psc *psc)
-{
-  struct psc_flatfoil *sub = psc_flatfoil(psc);
-
-  psc_mfields_destroy(sub->mflds_n);
-  psc_output_fields_item_destroy(sub->item_n);
-  psc_bnd_destroy(sub->item_n_bnd);
 }
 
 // ----------------------------------------------------------------------
@@ -375,24 +394,22 @@ debug_dump(struct mrc_io *io, struct psc_mfields *mflds)
 // calc_n
 
 static void
-calc_n(struct psc *psc, struct psc_mparticles *mprts_base,
-	struct psc_mfields *mflds_base)
+calc_n(struct psc_inject *inject, struct psc_mparticles *mprts_base,
+       struct psc_mfields *mflds_base)
 {
-  struct psc_flatfoil *sub = psc_flatfoil(psc);
-
-  psc_output_fields_item_run(sub->item_n, mflds_base, mprts_base, sub->mflds_n);
+  psc_output_fields_item_run(inject->item_n, mflds_base, mprts_base, inject->mflds_n);
 #if 0
   static struct mrc_io *io;
   if (!io) {
     io = mrc_io_create(psc_comm(ppsc));
     mrc_io_set_type(io, "xdmf_collective");
-    mrc_io_set_param_string(io, "basename", "flatfoil");
+    mrc_io_set_param_string(io, "basename", "calc_n");
     mrc_io_set_from_options(io);
     mrc_io_setup(io);
   }
 
   mrc_io_open(io, "w", psc->timestep, psc->timestep * psc->dt);
-  debug_dump(io, sub->mflds_n);
+  debug_dump(io, inject->mflds_n);
   mrc_io_close(io);
 #endif
 }
@@ -474,30 +491,31 @@ _psc_setup_particle(struct psc *psc, particle_t *prt, struct psc_particle_npt *n
 }	      
 
 // ----------------------------------------------------------------------
-// psc_flatfoil_particle_source
+// psc_inject_run
 //
 // FIXME mostly duplicated from psc_setup_particles
 
 static void
-psc_flatfoil_particle_source(struct psc *psc, struct psc_mparticles *mprts_base,
-			     struct psc_mfields *mflds_base)
+psc_inject_run(struct psc_inject *inject, struct psc_mparticles *mprts_base,
+	       struct psc_mfields *mflds_base)
 {
-  struct psc_flatfoil *sub = psc_flatfoil(psc);
-  struct psc_inject *inject = sub->inject;
-  struct psc_target *target = sub->target;
+  struct psc *psc = ppsc;
   
   if (!inject->do_inject ||
       psc->timestep % inject->every_step != 0) {
     return;
   }
 
-  calc_n(psc, mprts_base, mflds_base);
+  particle_real_t fac = 1. / psc->coeff.cori * 
+    (inject->every_step * psc->dt / inject->tau) /
+    (1. + inject->every_step * psc->dt / inject->tau);
+  calc_n(inject, mprts_base, mflds_base);
   
   struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
   
   psc_foreach_patch(psc, p) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_fields *flds_n = psc_mfields_get_patch(sub->mflds_n, p);
+    struct psc_fields *flds_n = psc_mfields_get_patch(inject->mflds_n, p);
     int *ldims = psc->patch[p].ldims;
     
     int i = prts->n_part;
@@ -514,7 +532,7 @@ psc_flatfoil_particle_source(struct psc *psc, struct psc_mparticles *mprts_base,
 	  if (psc->domain.gdims[1] == 1) xx[1] = CRDY(p, jy);
 	  if (psc->domain.gdims[2] == 1) xx[2] = CRDZ(p, jz);
 
-	  if (!psc_target_is_inside(target, xx)) {
+	  if (!psc_target_is_inside(inject->target, xx)) {
 	    continue;
 	  }
 
@@ -541,10 +559,7 @@ psc_flatfoil_particle_source(struct psc *psc, struct psc_mparticles *mprts_base,
 		} else {
 		  // this rounds down rather than trying to get fractional particles
 		  // statistically right...
-		  n_in_cell = npt.n / psc->coeff.cori *
-		    (inject->every_step * psc->dt / inject->tau) /
-		    (1. + inject->every_step * psc->dt / inject->tau);
-		}
+		  n_in_cell = npt.n *fac;		}
 	      } else {
 		n_in_cell = get_n_in_cell(psc, &npt);
 	      }
@@ -581,7 +596,6 @@ struct psc_ops psc_flatfoil_ops = {
   .param_descr      = psc_flatfoil_descr,
   .create           = psc_flatfoil_create,
   .setup            = psc_flatfoil_setup,
-  .destroy          = psc_flatfoil_destroy,
   .read             = psc_flatfoil_read,
   .init_field       = psc_flatfoil_init_field,
   .init_npt         = psc_flatfoil_init_npt,
@@ -601,7 +615,7 @@ psc_event_generator_flatfoil_run(struct psc_event_generator *gen,
   struct psc *psc = ppsc; // FIXME
   struct psc_flatfoil *sub = psc_flatfoil(psc);
 
-  psc_flatfoil_particle_source(psc, mprts, mflds);
+  psc_inject_run(sub->inject, mprts, mflds);
   psc_heating_run(sub->heating, mprts, mflds);
 }
 
