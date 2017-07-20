@@ -161,8 +161,6 @@ psc_flatfoil_setup(struct psc *psc)
   psc_target_set_param_double(sub->target, "yh", sub->target_yh * sub->d_i);
   psc_target_set_param_double(sub->target, "zl", - sub->target_zwidth * sub->d_i);
   psc_target_set_param_double(sub->target, "zh",   sub->target_zwidth * sub->d_i);
-  psc_target_set_param_int(sub->target, "kind_electron", MY_ELECTRON);
-  psc_target_set_param_int(sub->target, "kind_ion", MY_ION);
 
   psc_inject_set_param_int(sub->inject, "kind_n", MY_ELECTRON);
   psc_inject_set_param_obj(sub->inject, "target", sub->target);
@@ -301,8 +299,6 @@ struct psc_target_slab {
   double n;
   double Te;
   double Ti;
-  int kind_ion;
-  int kind_electron;
 };
 
 #define psc_target_slab(target) mrc_to_subobj(target, struct psc_target_slab)
@@ -316,8 +312,6 @@ static struct param psc_target_slab_descr[] _mrc_unused = {
   { "n"            , VAR(n)            , PARAM_DOUBLE(1.)       },
   { "Te"           , VAR(Te)           , PARAM_DOUBLE(.001)     },
   { "Ti"           , VAR(Ti)           , PARAM_DOUBLE(.001)     },
-  { "kind_ion"     , VAR(kind_ion)     , PARAM_INT(-1)          },
-  { "kind_electron", VAR(kind_electron), PARAM_INT(-1)          },
   {},
 };
 #undef VAR
@@ -348,17 +342,20 @@ psc_target_slab_init_npt(struct psc_target *target, int pop, double x[3],
     return;
   }
 
-  if (pop == sub->kind_ion) {
+  switch (pop) {
+  case MY_ION:
     npt->n    = sub->n;
     npt->T[0] = sub->Ti;
     npt->T[1] = sub->Ti;
     npt->T[2] = sub->Ti;
-  } else if (pop == sub->kind_electron) {
+    break;
+  case MY_ELECTRON:
     npt->n    = sub->n;
     npt->T[0] = sub->Te;
     npt->T[1] = sub->Te;
     npt->T[2] = sub->Te;
-  } else {
+    break;
+  default:
     assert(0);
   }
 }
