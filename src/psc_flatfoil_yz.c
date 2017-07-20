@@ -16,6 +16,50 @@
 #include <stdlib.h>
 
 // ======================================================================
+// psc_heating
+
+MRC_CLASS_DECLARE(psc_heating, struct psc_heating);
+
+//void psc_heating_setup(struct psc_heating *heating);
+
+// ----------------------------------------------------------------------
+// private
+
+struct psc_heating {
+  struct mrc_obj obj;
+
+  // params
+  double zl; // in terms of d_i
+  double zh;
+  double xc;
+  double yc;
+  double rH;
+  int tb; // in terms of step number (FIXME!)
+  int te;
+  double T;
+  int every_step; // heat every so many steps
+
+  // state
+  double zl_int; // in internal units (d_e)
+  double zh_int;
+  double xc_int;
+  double yc_int;
+  double rH_int;
+  double fac;
+};
+
+static void _psc_heating_setup(struct psc_heating *heating);
+
+// ----------------------------------------------------------------------
+// psc_heating class
+
+struct mrc_class_psc_heating mrc_class_psc_heating = {
+  .name             = "psc_heating",
+  .size             = sizeof(struct psc_heating),
+  .setup            = _psc_heating_setup,
+};
+
+// ======================================================================
 // psc subclass "flatfoil"
 
 struct psc_target {
@@ -38,29 +82,6 @@ struct psc_target_inject {
   int every_step; // inject every so many steps
   int tau; // in steps
 };
-
-struct psc_heating {
-  // params
-  double zl; // in terms of d_i
-  double zh;
-  double xc;
-  double yc;
-  double rH;
-  int tb; // in terms of step number (FIXME!)
-  int te;
-  double T;
-  int every_step; // heat every so many steps
-
-  // state
-  double zl_int; // in internal units (d_e)
-  double zh_int;
-  double xc_int;
-  double yc_int;
-  double rH_int;
-  double fac;
-};
-
-static void psc_heating_setup(struct psc *psc);
 
 struct psc_flatfoil {
   double BB;
@@ -214,7 +235,7 @@ psc_flatfoil_setup(struct psc *psc)
   sub->target.zl = - sub->target.zwidth * sub->d_i;
   sub->target.zh =   sub->target.zwidth * sub->d_i;
 
-  psc_heating_setup(psc);
+  _psc_heating_setup(&sub->heating);
 
   psc_setup_super(psc);
 
@@ -596,10 +617,10 @@ psc_flatfoil_particle_source(struct psc *psc, struct psc_mparticles *mprts_base,
 // psc_heating_setup
 
 static void
-psc_heating_setup(struct psc *psc)
+_psc_heating_setup(struct psc_heating *heating)
 {
+  struct psc *psc = ppsc;
   struct psc_flatfoil *sub = psc_flatfoil(psc);
-  struct psc_heating *heating = &sub->heating;
   double d_i = sub->d_i;
 
   heating->zl_int = heating->zl * d_i;
