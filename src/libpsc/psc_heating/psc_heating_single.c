@@ -9,24 +9,6 @@
 // psc_heating subclass "single"
 
 // ----------------------------------------------------------------------
-// psc_heating_single_setup
-
-static void
-psc_heating_single_setup(struct psc_heating *heating)
-{
-  psc_heating_setup_super(heating);
-}
-
-// ----------------------------------------------------------------------
-// psc_heating_get_H
-
-static double
-psc_heating_get_H(struct psc_heating *heating, double *xx)
-{
-  return psc_heating_spot_get_H(heating->spot, xx);
-}
-  
-// ----------------------------------------------------------------------
 // psc_heating_particle_kick
 
 static void
@@ -97,7 +79,7 @@ psc_heating_single_run(struct psc_heating *heating, struct psc_mparticles *mprts
 	(&particle_x(prt))[2] + patch->xb[2],
       };
 
-      double H = psc_heating_get_H(heating, xx);
+      double H = psc_heating_spot_get_H(heating->spot, xx);
       if (H > 0) {
 	psc_heating_particle_kick(heating, prt, H);
       }
@@ -112,7 +94,6 @@ psc_heating_single_run(struct psc_heating *heating, struct psc_mparticles *mprts
 
 struct psc_heating_ops psc_heating_ops_single = {
   .name                = "single",
-  .setup               = psc_heating_single_setup,
   .run                 = psc_heating_single_run,
 };
 
