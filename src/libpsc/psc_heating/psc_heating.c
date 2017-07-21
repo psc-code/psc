@@ -9,35 +9,15 @@
 // psc_heating
 
 // ----------------------------------------------------------------------
-// _psc_heating_setup
-
-static void
-_psc_heating_setup(struct psc_heating *heating)
-{
-  double width = heating->zh - heating->zl;
-  heating->fac = (8.f * pow(heating->T, 1.5)) / (sqrt(heating->Mi) * width);
-  // FIXME, I don't understand the sqrt(Mi) in here
-}
-
-// ----------------------------------------------------------------------
 // psc_heating_get_H
 
-static particle_real_t
-psc_heating_get_H(struct psc_heating *heating, particle_real_t *xx)
+static double
+psc_heating_get_H(struct psc_heating *heating, double *xx)
 {
-  particle_real_t zl = heating->zl;
-  particle_real_t zh = heating->zh;
-  particle_real_t xc = heating->xc;
-  particle_real_t yc = heating->yc;
-  particle_real_t rH = heating->rH;
-  particle_real_t fac = heating->fac;
-  particle_real_t x = xx[0], y = xx[1], z = xx[2];
+  struct psc_heating_ops *ops = psc_heating_ops(heating);
 
-  if (z <= zl || z >= zh) {
-    return 0;
-  }
-
-  return fac * exp(-(sqr(x-xc) + sqr(y-yc)) / sqr(rH));
+  assert(ops && ops->get_H);
+  return ops->get_H(heating, xx);
 }
   
 // ----------------------------------------------------------------------
@@ -105,7 +85,7 @@ psc_heating_run(struct psc_heating *heating, struct psc_mparticles *mprts_base,
 	continue;
       }
       
-      particle_real_t xx[3] = {
+      double xx[3] = {
 	(&particle_x(prt))[0] + patch->xb[0],
 	(&particle_x(prt))[1] + patch->xb[1],
 	(&particle_x(prt))[2] + patch->xb[2],
@@ -128,6 +108,7 @@ struct mrc_class_psc_heating mrc_class_psc_heating = {
   .name             = "psc_heating",
   .size             = sizeof(struct psc_heating),
   .param_descr      = psc_heating_descr,
-  .setup            = _psc_heating_setup,
 };
+
+
 

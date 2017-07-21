@@ -2,7 +2,7 @@
 #include <psc.h>
 #include <psc_push_fields.h>
 #include <psc_bnd_fields.h>
-#include <psc_heating.h>
+#include <psc_heating_private.h>
 #include <psc_inject.h>
 #include <psc_target_private.h>
 #include <psc_event_generator_private.h>
@@ -372,6 +372,87 @@ static struct psc_target_ops psc_target_ops_slab = {
 };
 
 // ======================================================================
+// psc_heating subclass "foil"
+
+struct psc_heating_foil {
+  // params
+  double zl; // in internal units (d_e)
+  double zh;
+  double xc;
+  double yc;
+  double rH;
+  double T;
+  double Mi;
+
+  // state
+  double fac;
+};
+
+#define psc_heating_foil(heating) mrc_to_subobj(heating, struct psc_heating_foil)
+
+// ----------------------------------------------------------------------
+// psc_heating_foil_setup
+
+static void
+psc_heating_foil_setup(struct psc_heating *heating)
+{
+  struct psc_heating_foil *sub = psc_heating_foil(heating);
+  
+  double width = sub->zh - sub->zl;
+  sub->fac = (8.f * pow(sub->T, 1.5)) / (sqrt(sub->Mi) * width);
+  // FIXME, I don't understand the sqrt(Mi) in here
+
+  psc_heating_setup_super(heating);
+}
+
+// ----------------------------------------------------------------------
+// psc_heating_foil_get_H
+
+static double
+psc_heating_foil_get_H(struct psc_heating *heating, double *xx)
+{
+  struct psc_heating_foil *sub = psc_heating_foil(heating);
+  
+  double zl = sub->zl;
+  double zh = sub->zh;
+  double xc = sub->xc;
+  double yc = sub->yc;
+  double rH = sub->rH;
+  double fac = sub->fac;
+  double x = xx[0], y = xx[1], z = xx[2];
+
+  if (z <= zl || z >= zh) {
+    return 0;
+  }
+
+  return fac * exp(-(sqr(x-xc) + sqr(y-yc)) / sqr(rH));
+}
+  
+#define VAR(x) (void *)offsetof(struct psc_heating_foil, x)
+static struct param psc_heating_foil_descr[] _mrc_unused = {
+  { "zl"                , VAR(zl)                , PARAM_DOUBLE(0.)       },
+  { "zh"                , VAR(zh)                , PARAM_DOUBLE(0.)       },
+  { "xc"                , VAR(xc)                , PARAM_DOUBLE(0.)       },
+  { "yc"                , VAR(yc)                , PARAM_DOUBLE(0.)       },
+  { "rH"                , VAR(rH)                , PARAM_DOUBLE(0.)       },
+  { "T"                 , VAR(T)                 , PARAM_DOUBLE(.04)      },
+  { "Mi"                , VAR(Mi)                , PARAM_DOUBLE(1.)       },
+  {},
+};
+#undef VAR
+
+// ----------------------------------------------------------------------
+// psc_heating "foil"
+
+static struct psc_heating_ops psc_heating_ops_foil = {
+  .name                = "foil",
+  .size                = sizeof(struct psc_heating_foil),
+  .param_descr         = psc_heating_foil_descr,
+  .setup               = psc_heating_foil_setup,
+  .get_H               = psc_heating_foil_get_H,
+};
+
+// ======================================================================
 // main
 
 int
@@ -381,5 +462,7 @@ main(int argc, char **argv)
 			      &psc_event_generator_flatfoil_ops);
   mrc_class_register_subclass(&mrc_class_psc_target,
 			      &psc_target_ops_slab);
+  mrc_class_register_subclass(&mrc_class_psc_heating,
+			      &psc_heating_ops_foil);
   return psc_main(&argc, &argv, &psc_flatfoil_ops);
 }
