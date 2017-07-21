@@ -9,15 +9,21 @@
 // psc_heating
 
 // ----------------------------------------------------------------------
+// psc_heating_get_spot
+
+struct psc_heating_spot *
+psc_heating_get_spot(struct psc_heating *heating)
+{
+  return heating->spot;
+}
+
+// ----------------------------------------------------------------------
 // psc_heating_get_H
 
 static double
 psc_heating_get_H(struct psc_heating *heating, double *xx)
 {
-  struct psc_heating_ops *ops = psc_heating_ops(heating);
-
-  assert(ops && ops->get_H);
-  return ops->get_H(heating, xx);
+  return psc_heating_spot_get_H(heating->spot, xx);
 }
   
 // ----------------------------------------------------------------------
