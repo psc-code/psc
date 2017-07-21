@@ -288,9 +288,9 @@ struct psc_event_generator_ops psc_event_generator_flatfoil_ops = {
 
 
 // ======================================================================
-// psc_target subclass "slab"
+// psc_target subclass "foil"
 
-struct psc_target_slab {
+struct psc_target_foil {
   // params
   double yl;
   double yh;
@@ -301,10 +301,10 @@ struct psc_target_slab {
   double Ti;
 };
 
-#define psc_target_slab(target) mrc_to_subobj(target, struct psc_target_slab)
+#define psc_target_foil(target) mrc_to_subobj(target, struct psc_target_foil)
 
-#define VAR(x) (void *)offsetof(struct psc_target_slab, x)
-static struct param psc_target_slab_descr[] _mrc_unused = {
+#define VAR(x) (void *)offsetof(struct psc_target_foil, x)
+static struct param psc_target_foil_descr[] _mrc_unused = {
   { "yl"           , VAR(yl)           , PARAM_DOUBLE(0.)       },
   { "yh"           , VAR(yh)           , PARAM_DOUBLE(0.)       },
   { "zl"           , VAR(zl)           , PARAM_DOUBLE(0.)       },
@@ -317,27 +317,27 @@ static struct param psc_target_slab_descr[] _mrc_unused = {
 #undef VAR
 
 // ----------------------------------------------------------------------
-// psc_target_slab_is_inside
+// psc_target_foil_is_inside
 
 static bool
-psc_target_slab_is_inside(struct psc_target *target, double x[3])
+psc_target_foil_is_inside(struct psc_target *target, double x[3])
 {
-  struct psc_target_slab *sub = psc_target_slab(target);
+  struct psc_target_foil *sub = psc_target_foil(target);
   
   return (x[1] >= sub->yl && x[1] <= sub->yh &&
 	  x[2] >= sub->zl && x[2] <= sub->zh);
 }
 
 // ----------------------------------------------------------------------
-// psc_target_slab_init_npt
+// psc_target_foil_init_npt
 
 static void
-psc_target_slab_init_npt(struct psc_target *target, int pop, double x[3],
+psc_target_foil_init_npt(struct psc_target *target, int pop, double x[3],
 			 struct psc_particle_npt *npt)
 {
-  struct psc_target_slab *sub = psc_target_slab(target);
+  struct psc_target_foil *sub = psc_target_foil(target);
 
-  if (!psc_target_slab_is_inside(target, x)) {
+  if (!psc_target_foil_is_inside(target, x)) {
     npt->n = 0;
     return;
   }
@@ -361,14 +361,14 @@ psc_target_slab_init_npt(struct psc_target *target, int pop, double x[3],
 }
 
 // ----------------------------------------------------------------------
-// psc_target "slab"
+// psc_target "foil"
 
-static struct psc_target_ops psc_target_ops_slab = {
-  .name                = "slab",
-  .size                = sizeof(struct psc_target_slab),
-  .param_descr         = psc_target_slab_descr,
-  .is_inside           = psc_target_slab_is_inside,
-  .init_npt            = psc_target_slab_init_npt,
+static struct psc_target_ops psc_target_ops_foil = {
+  .name                = "foil",
+  .size                = sizeof(struct psc_target_foil),
+  .param_descr         = psc_target_foil_descr,
+  .is_inside           = psc_target_foil_is_inside,
+  .init_npt            = psc_target_foil_init_npt,
 };
 
 // ======================================================================
@@ -461,7 +461,7 @@ main(int argc, char **argv)
   mrc_class_register_subclass(&mrc_class_psc_event_generator,
 			      &psc_event_generator_flatfoil_ops);
   mrc_class_register_subclass(&mrc_class_psc_target,
-			      &psc_target_ops_slab);
+			      &psc_target_ops_foil);
   mrc_class_register_subclass(&mrc_class_psc_heating,
 			      &psc_heating_ops_foil);
   return psc_main(&argc, &argv, &psc_flatfoil_ops);
