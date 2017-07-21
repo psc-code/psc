@@ -33,8 +33,12 @@ static struct param psc_heating_descr[] _mrc_unused = {
 
 struct psc_heating_ops {
   MRC_SUBCLASS_OPS(struct psc_heating);
+  void (*run)(struct psc_heating *heating, struct psc_mparticles *mprts_base,
+	      struct psc_mfields *mflds_base);
 };
 
 #define psc_heating_ops(heating) ((struct psc_heating_ops *)((heating)->obj.ops))
+
+extern struct psc_heating_ops psc_heating_ops_single;
 
 #endif
