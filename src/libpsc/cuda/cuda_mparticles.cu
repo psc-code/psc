@@ -41,6 +41,7 @@ cuda_mparticles_set_domain_info(struct cuda_mparticles *cmprts,
   cmprts->xb_by_patch = new float_3[cmprts->n_patches];
   for (int d = 0; d < 3; d++) {
     cmprts->ldims[d] = info->ldims[d];
+    cmprts->bs[d] = info->bs[d];
     assert(info->ldims[d] % info->bs[d] == 0);
     cmprts->b_mx[d] = info->ldims[d] / info->bs[d];
     cmprts->dx[d] = info->dx[d];

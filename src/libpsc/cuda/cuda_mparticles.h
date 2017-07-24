@@ -40,6 +40,7 @@ struct cuda_mparticles {
 
   int ldims[3];                   // number of cells per direction in each patch
   int b_mx[3];                    // number of blocks per direction in each patch
+  int bs[3];
   float dx[3];                    // cell size (in actual length units)
   float b_dxi[3];                 // inverse of block size (in actual length units)
   float_3 *xb_by_patch;            // lower left corner for each patch

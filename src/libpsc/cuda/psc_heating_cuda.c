@@ -44,7 +44,7 @@ psc_heating_cuda_setup(struct psc_heating *heating)
 
 void
 psc_heating_cuda_run(struct psc_heating *heating, struct psc_mparticles *mprts_base,
-		       struct psc_mfields *mflds_base)
+		     struct psc_mfields *mflds_base)
 {
   struct psc *psc = ppsc;
 

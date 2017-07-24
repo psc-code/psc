@@ -33,7 +33,7 @@ cuda_mparticles_add_particles_test_2(struct cuda_mparticles *cmprts,
 				     unsigned int *n_prts_by_patch)
 {
   for (int p = 0; p < cmprts->n_patches; p++) {
-    n_prts_by_patch[p] = cmprts->ldims[0] * cmprts->ldims[1] * cmprts->ldims[2];
+    n_prts_by_patch[p] = 2 * cmprts->ldims[0] * cmprts->ldims[1] * cmprts->ldims[2];
   }
 
   cuda_mparticles_alloc(cmprts, n_prts_by_patch);
@@ -55,9 +55,11 @@ cuda_mparticles_add_particles_test_2(struct cuda_mparticles *cmprts,
 	  for (int d = 0; d < 3; d++) {
 	    x[d] = dx[d] * (ijk[d] + .5 );
 	  }
-	  d_xi4[n + off] = (float4) { x[0], x[1], x[2], cuda_int_as_float(1) };
-	  d_pxi4[n + off] = (float4) { ijk[0], ijk[1], ijk[2], 2. };
-	  n++;
+	  for (int kind = 0; kind < 2; kind++) {
+	    d_xi4[n + off] = (float4) { x[0], x[1], x[2], cuda_int_as_float(kind) };
+	    d_pxi4[n + off] = (float4) { ijk[0], ijk[1], ijk[2], 99. };
+	    n++;
+	  }
 	}
       }
     }
@@ -164,10 +166,15 @@ main(void)
   foil.Mi = 100.f;
   foil.kind = 1;
   foil.heating_dt = .1;
-  
+
+  printf("setup_foil\n");
   cuda_heating_setup_foil(&foil);
+  printf("run_foil\n");
   cuda_heating_run_foil(cmprts);
-  
+
+  printf("after heating_run_foil\n");
+  cuda_mparticles_dump(cmprts);
+
   cuda_mparticles_dealloc(cmprts);
   cuda_mparticles_destroy(cmprts);
 }
