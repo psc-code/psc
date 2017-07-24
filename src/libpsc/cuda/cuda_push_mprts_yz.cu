@@ -829,25 +829,6 @@ zero_currents(struct cuda_mfields *cmflds)
   }
 }
 
-#define CUDA_PUSH_MPRTS_TOP(CURRMEM)					\
-  struct cuda_params prm;						\
-  set_params(&prm, ppsc, cmprts, cmflds);				\
-  set_consts(&prm);							\
-									\
-  unsigned int fld_size = cmflds->n_fields * cmflds->n_cells_per_patch;	\
-									\
-  zero_currents(cmflds);						\
-  									\
-  int gx, gy;								\
-  if (CURRMEM == CURRMEM_SHARED) {					\
-    gx =  (prm.b_mx[1] + 1) / 2;					\
-    gy = ((prm.b_mx[2] + 1) / 2) * cmprts->n_patches;			\
-  } else if (CURRMEM == CURRMEM_GLOBAL) {				\
-    gx = prm.b_mx[1];							\
-    gy = prm.b_mx[2] * cmprts->n_patches;				\
-  }									\
-  dim3 dimGrid(gx, gy);							\
-
 // ----------------------------------------------------------------------
 // cuda_push_mprts_ab
 
@@ -856,7 +837,23 @@ template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER,
 static void
 cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
 {
-  CUDA_PUSH_MPRTS_TOP(CURRMEM);
+  struct cuda_params prm;
+  set_params(&prm, ppsc, cmprts, cmflds);
+  set_consts(&prm);
+
+  unsigned int fld_size = cmflds->n_fields * cmflds->n_cells_per_patch;
+
+  zero_currents(cmflds);
+
+  int gx, gy;
+  if (CURRMEM == CURRMEM_SHARED) {
+    gx =  (prm.b_mx[1] + 1) / 2;
+    gy = ((prm.b_mx[2] + 1) / 2) * cmprts->n_patches;
+  } else if (CURRMEM == CURRMEM_GLOBAL) {
+    gx = prm.b_mx[1];
+    gy = prm.b_mx[2] * cmprts->n_patches;
+  }
+  dim3 dimGrid(gx, gy);
 
   if (CURRMEM == CURRMEM_SHARED) {
     for (int block_start = 0; block_start < 4; block_start++) {
