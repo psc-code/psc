@@ -11,6 +11,11 @@
 #endif
 
 // ----------------------------------------------------------------------
+// float_3
+
+typedef float float_3[3];
+
+// ----------------------------------------------------------------------
 // cuda_mparticles
 
 struct cuda_mparticles {
@@ -37,6 +42,7 @@ struct cuda_mparticles {
   int b_mx[3];                    // number of blocks per direction in each patch
   float dx[3];                    // cell size (in actual length units)
   float b_dxi[3];                 // inverse of block size (in actual length units)
+  float_3 *xb_by_patch;            // lower left corner for each patch
 
   bool need_reorder;              // particles haven't yet been put into their sorted order
 };

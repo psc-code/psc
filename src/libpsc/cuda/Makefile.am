@@ -16,6 +16,7 @@ libsubdir_la_SOURCES = \
 	psc_bnd_fields_cuda.c \
 	psc_output_fields_item_flds_cuda.c \
 	psc_output_fields_item_moments_1st_nc_cuda.c \
+	psc_heating_cuda.c \
 	b40c/kernel_utils.h \
 	b40c/radixsort_kernel_common.h \
 	b40c/radixsort_key_conversion.h \
@@ -38,6 +39,7 @@ libsubdir_la_LIBADD = \
 	cuda_mparticles.lo \
 	cuda_mfields.lo \
 	cuda_push_mprts_yz.lo \
+	cuda_heating.lo \
 	cuda_transfer.lo \
 	cuda_find_indices.lo \
 	cuda_spine.lo \
@@ -52,7 +54,8 @@ libsubdir_la_LIBADD = \
 
 check_PROGRAMS = \
 	tests/test_cuda_mparticles \
-	tests/test_cuda_mparticles_1
+	tests/test_cuda_mparticles_1 \
+	tests/test_cuda_heating
 
 tests_test_cuda_mparticles_SOURCES =
 tests_test_cuda_mparticles_LDADD = tests/test_cuda_mparticles.o cuda_mparticles.lo
@@ -60,6 +63,10 @@ nodist_EXTRA_tests_test_cuda_mparticles_SOURCES = dummy.cxx
 
 tests_test_cuda_mparticles_1_LDADD = cuda_mparticles.lo
 nodist_EXTRA_tests_test_cuda_mparticles_1_SOURCES = dummy.cxx
+
+tests_test_cuda_heating_SOURCES = 
+tests_test_cuda_heating_LDADD = tests/test_cuda_heating.o cuda_mparticles.lo cuda_heating.lo
+nodist_EXTRA_tests_test_cuda_heating_SOURCES = dummy.cxx
 
 CUDACC_FLAGS = -g --ptxas-options=-v --maxrregcount=32 --use_fast_math $(filter-out -fopenmp -msse2 -msse4.1 -Wall -ffast-math,$(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) $(CFLAGS) $(AM_CFLAGS)) $(CUDAMPIFLAGS) $(CUDACFLAGS)
 

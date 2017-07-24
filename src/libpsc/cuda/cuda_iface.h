@@ -17,6 +17,11 @@ extern "C" {
 void cuda_base_init(void);
 
 // ----------------------------------------------------------------------
+// double3
+
+typedef double double_3[3];
+
+// ----------------------------------------------------------------------
 // cuda_domain_info
   
 struct cuda_domain_info {
@@ -24,6 +29,7 @@ struct cuda_domain_info {
   int ldims[3]; // number of cells per patch
   int bs[3];    // size of each block (a.k.a. super-cell)
   double dx[3]; // size of a single cell
+  double_3 *xb_by_patch;
 };
   
 // ----------------------------------------------------------------------
@@ -48,6 +54,7 @@ void cuda_mparticles_set_domain_info(struct cuda_mparticles *cuda_mprts,
 void cuda_mparticles_alloc(struct cuda_mparticles *cmprts, unsigned int *n_prts_by_patch);
 void cuda_mparticles_dealloc(struct cuda_mparticles *cmprts);
 void cuda_mparticles_dump(struct cuda_mparticles *cuda_mprts);
+void cuda_mparticles_dump_by_patch(struct cuda_mparticles *cuda_mprts, unsigned int *n_prts_by_patch);
 void cuda_mparticles_sort_initial(struct cuda_mparticles *cmprts,
 				  unsigned int *n_prts_by_patch);
 void cuda_mparticles_set_particles(struct cuda_mparticles *cmprts, unsigned int n_prts, unsigned int off,
@@ -70,6 +77,28 @@ void cuda_mfields_destroy(struct cuda_mfields *cmflds);
 
 void cuda_push_mprts_yz(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds,
 			int bs[3], bool ip_ec, bool deposit_vb_3d, bool currmem_global);
+
+// ----------------------------------------------------------------------
+// cuda_heating_run_foil
+
+struct cuda_heating_foil {
+  // params
+  float zl;
+  float zh;
+  float xc;
+  float yc;
+  float rH;
+  float T;
+  float Mi;
+  int kind;
+
+  // state (FIXME, shouldn't be part of the interface)
+  float fac;
+  float heating_dt;
+};
+
+void cuda_heating_setup_foil(struct cuda_heating_foil *foil);
+void cuda_heating_run_foil(struct cuda_mparticles *cmprts);
 
 
 #if 0

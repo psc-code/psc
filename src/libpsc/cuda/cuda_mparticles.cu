@@ -15,8 +15,7 @@
 struct cuda_mparticles *
 cuda_mparticles_create()
 {
-  struct cuda_mparticles *cmprts = 
-    (struct cuda_mparticles *) calloc(1, sizeof(*cmprts));
+  struct cuda_mparticles *cmprts = new cuda_mparticles;
 
   return cmprts;
 }
@@ -27,7 +26,8 @@ cuda_mparticles_create()
 void
 cuda_mparticles_destroy(struct cuda_mparticles *cmprts)
 {
-  free(cmprts);
+  delete[] cmprts->xb_by_patch;
+  delete cmprts;
 }
 
 // ----------------------------------------------------------------------
@@ -38,12 +38,18 @@ cuda_mparticles_set_domain_info(struct cuda_mparticles *cmprts,
 				const struct cuda_domain_info *info)
 {
   cmprts->n_patches = info->n_patches;
+  cmprts->xb_by_patch = new float_3[cmprts->n_patches];
   for (int d = 0; d < 3; d++) {
     cmprts->ldims[d] = info->ldims[d];
     assert(info->ldims[d] % info->bs[d] == 0);
     cmprts->b_mx[d] = info->ldims[d] / info->bs[d];
     cmprts->dx[d] = info->dx[d];
     cmprts->b_dxi[d] = 1.f / (info->bs[d] * info->dx[d]);
+
+    assert(info->xb_by_patch);
+    for (int p = 0; p < cmprts->n_patches; p++) {
+      cmprts->xb_by_patch[p][d] = info->xb_by_patch[p][d];
+    }
   }
   cmprts->n_blocks_per_patch = cmprts->b_mx[0] * cmprts->b_mx[1] * cmprts->b_mx[2];
   cmprts->n_blocks = cmprts->n_patches * cmprts->n_blocks_per_patch;
@@ -128,31 +134,63 @@ cuda_mparticles_from_device(struct cuda_mparticles *cmprts, float4 *xi4, float4 
 }
 
 // ----------------------------------------------------------------------
+// cuda_mparticles_dump_by_patch
+
+void
+cuda_mparticles_dump_by_patch(struct cuda_mparticles *cmprts, unsigned int *n_prts_by_patch)
+{
+  thrust::device_ptr<float4> d_xi4(cmprts->d_xi4);
+  thrust::device_ptr<float4> d_pxi4(cmprts->d_pxi4);
+  thrust::device_ptr<unsigned int> d_bidx(cmprts->d_bidx);
+  thrust::device_ptr<unsigned int> d_id(cmprts->d_id);
+
+  printf("cuda_mparticles_dump_by_patch: n_prts = %d\n", cmprts->n_prts);
+  unsigned int off = 0;
+  for (int p = 0; p < cmprts->n_patches; p++) {
+    float *xb = &cmprts->xb_by_patch[p][0];
+    for (int n = 0; n < n_prts_by_patch[p]; n++) {
+      float4 xi4 = d_xi4[n + off], pxi4 = d_pxi4[n + off];
+      unsigned int bidx = d_bidx[n + off], id = d_id[n + off];
+      printf("cuda_mparticles_dump_by_patch: [%d/%d] %g %g %g // %d // %g %g %g // %g b_idx %d id %d\n",
+	     p, n, xi4.x + xb[0], xi4.y + xb[1], xi4.z + xb[2],
+	     cuda_float_as_int(xi4.w),
+	     pxi4.x, pxi4.y, pxi4.z, pxi4.w,
+	     bidx, id);
+    }
+    off += n_prts_by_patch[p];
+  }
+}
+
+// ----------------------------------------------------------------------
 // cuda_mparticles_dump
 
 void
-cuda_mparticles_dump(struct cuda_mparticles *cuda_mprts)
+cuda_mparticles_dump(struct cuda_mparticles *cmprts)
 {
-  int n_prts = cuda_mprts->n_prts;
+  int n_prts = cmprts->n_prts;
   
-  thrust::device_ptr<float4> d_xi4(cuda_mprts->d_xi4);
-  thrust::device_ptr<float4> d_pxi4(cuda_mprts->d_pxi4);
-  thrust::device_ptr<unsigned int> d_bidx(cuda_mprts->d_bidx);
-  thrust::device_ptr<unsigned int> d_id(cuda_mprts->d_id);
-  thrust::device_ptr<unsigned int> d_off(cuda_mprts->d_off);
+  thrust::device_ptr<float4> d_xi4(cmprts->d_xi4);
+  thrust::device_ptr<float4> d_pxi4(cmprts->d_pxi4);
+  thrust::device_ptr<unsigned int> d_bidx(cmprts->d_bidx);
+  thrust::device_ptr<unsigned int> d_id(cmprts->d_id);
+  thrust::device_ptr<unsigned int> d_off(cmprts->d_off);
 
-  printf("cuda_mparticles_dump: n_prts = %d\n", n_prts); 
-  for (int n = 0; n < n_prts; n++) {
-    float4 xi4 = d_xi4[n], pxi4 = d_pxi4[n];
-    unsigned int bidx = d_bidx[n], id = d_id[n];
-    printf("cuda_mparticles_dump: [%d] %g %g %g // %g // %g %g %g // %g || bidx %d id %d\n",
-	   n, xi4.x, xi4.y, xi4.z, xi4.w, pxi4.x, pxi4.y, pxi4.z, pxi4.w,
-	   bidx, id);
-  }
-
-  for (int b = 0; b <= cuda_mprts->n_blocks; b++) {
-    unsigned int off = d_off[b];
-    printf("cuda_mparticles_dump: off[%d] = %d\n", b, off);
+  printf("cuda_mparticles_dump: n_prts = %d\n", n_prts);
+  unsigned int off = 0;
+  for (int b = 0; b < cmprts->n_blocks; b++) {
+    unsigned int off_b = d_off[b], off_e = d_off[b+1];
+    int p = b / cmprts->n_blocks_per_patch;
+    printf("cuda_mparticles_dump: block %d: %d -> %d (patch %d)\n", b, off_b, off_e, p);
+    assert(d_off[b] == off);
+    for (int n = d_off[b]; n < d_off[b+1]; n++) {
+      float4 xi4 = d_xi4[n], pxi4 = d_pxi4[n];
+      unsigned int bidx = d_bidx[n], id = d_id[n];
+      printf("cuda_mparticles_dump: [%d] %g %g %g // %d // %g %g %g // %g || bidx %d id %d\n",
+	     n, xi4.x, xi4.y, xi4.z, cuda_float_as_int(xi4.w), pxi4.x, pxi4.y, pxi4.z, pxi4.w,
+	     bidx, id);
+      assert(b == bidx);
+    }
+    off += off_e - off_b;
   }
 }
 
