@@ -731,7 +731,7 @@ yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
   
   float x1 = x[1] * idiff[1];
   float x2 = x[2] * idiff[2];
-  int d_first = (abs(dx[2]) * (.5f - x1) >= abs(dx[1]) * (.5f - x2));
+  int d_first = (fabsf(dx[2]) * (.5f - x1) >= fabsf(dx[1]) * (.5f - x2));
 
   int off[3];
   if (d_first == 0) {
