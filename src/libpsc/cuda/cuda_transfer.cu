@@ -202,6 +202,11 @@ __psc_mfields_cuda_destroy(struct psc_mfields *mflds)
 EXTERN_C void
 __fields_cuda_to_device(struct psc_fields *pf, real *h_flds, int mb, int me)
 {
+  if (mb == me) {
+    return;
+  }
+  assert(mb < me);
+
   struct psc_fields_cuda *pfc = psc_fields_cuda(pf);
   unsigned int size = pf->im[0] * pf->im[1] * pf->im[2];
   check(cudaMemcpy(pfc->d_flds + mb * size,
@@ -410,11 +415,16 @@ fields_device_pack_yz(struct psc_mfields *mflds, int mb, int me)
     k_fields_device_pack_yz<B, pack, 3> <<<dimGrid, dimBlock>>>
       (d_bnd_buf, d_flds, gmy, gmz, mflds->nr_patches,
        mflds->nr_fields);
+  } else if (me - mb == 2) {
+    k_fields_device_pack_yz<B, pack, 2> <<<dimGrid, dimBlock>>>
+      (d_bnd_buf, d_flds, gmy, gmz, mflds->nr_patches,
+       mflds->nr_fields);
   } else if (me - mb == 1) {
     k_fields_device_pack_yz<B, pack, 1> <<<dimGrid, dimBlock>>>
       (d_bnd_buf, d_flds, gmy, gmz, mflds->nr_patches,
        mflds->nr_fields);
   } else {
+    mprintf("mb %d me %d\n", mb, me);
     assert(0);
   }
   cuda_sync_if_enabled();

@@ -176,7 +176,13 @@ copy_from(struct psc_particles *prts_cuda, struct psc_particles *prts,
   struct psc_mparticles *mprts = psc_particles_cuda(prts_cuda)->mprts;
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
-  assert(prts_cuda->n_part == prts->n_part);
+  //mprintf("cuda %d prts %d\n", prts_cuda->n_part, prts->n_part);
+  assert(prts_cuda->n_part >= prts->n_part);
+  prts_cuda->n_part = prts->n_part; // FIXME, this is an ugly hack to get
+  // fractional particles to work. In that case, n_part is initially set to the maximum
+  // number of particles that may be added to a patch, though in practice, depending on random numbers,
+  // fewer get added. When copying those back to cuda, things go wrong...
+  // FIXME: The initialization should probably not even use the get_as/put_as mechanism...
 
   unsigned int off = 0;
   for (int p = 0; p < prts->p; p++) {
@@ -465,9 +471,11 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
     }
   }
 
-  struct cuda_domain_info domain_info;
+  struct cuda_domain_info domain_info = {};
 
   domain_info.n_patches = mprts->nr_patches;
+  domain_info.xb_by_patch = calloc(domain_info.n_patches, sizeof(*domain_info.xb_by_patch));
+
   int bs[3];
   for (int d = 0; d < 3; d++) {
     switch (mprts->flags & MP_BLOCKSIZE_MASK) {
@@ -484,9 +492,17 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
     domain_info.ldims[d] = ldims[d];
     domain_info.bs[d]    = bs[d];
     domain_info.dx[d]    = dx[d];
+
+    for (int p = 0; p < domain_info.n_patches; p++) {
+      domain_info.xb_by_patch[p][0] = ppsc->patch[p].xb[0];
+      domain_info.xb_by_patch[p][1] = ppsc->patch[p].xb[1];
+      domain_info.xb_by_patch[p][2] = ppsc->patch[p].xb[2];
+    }
   }
 
   cuda_mparticles_set_domain_info(cmprts, &domain_info);
+
+  free(domain_info.xb_by_patch);
 
   unsigned int n_prts_by_patch[cmprts->n_patches];
   for (int p = 0; p < cmprts->n_patches; p++) {
@@ -583,11 +599,15 @@ psc_mparticles_cuda_setup_internals(struct psc_mparticles *mprts)
   assert((mprts->flags & MP_NEED_BLOCK_OFFSETS) &&
 	 !(mprts->flags & MP_NEED_CELL_OFFSETS));
 
+  unsigned int n_prts = 0;
   unsigned int n_prts_by_patch[mprts->nr_patches];
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     n_prts_by_patch[p] = prts->n_part;
+    n_prts += n_prts_by_patch[p];
   }
+  cmprts->n_prts = n_prts; // another hack to deal with copy_from having
+  // updated n_part for the patches
 
   cuda_mparticles_sort_initial(cmprts, n_prts_by_patch);
 }

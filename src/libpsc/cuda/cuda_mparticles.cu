@@ -347,6 +347,7 @@ cuda_mparticles_reorder_and_offsets(struct cuda_mparticles *cmprts)
 						   cmprts->d_alt_xi4, cmprts->d_alt_pxi4,
 						   cmprts->d_bidx, cmprts->d_id,
 						   cmprts->d_off, cmprts->n_blocks);
+  cuda_sync_if_enabled();
 
   cuda_mparticles_swap_alt(cmprts);
 }
@@ -355,13 +356,12 @@ cuda_mparticles_reorder_and_offsets(struct cuda_mparticles *cmprts)
 // get_block_idx
 
 static int
-get_block_idx(struct cuda_mparticles *cmprts, int n, int p)
+get_block_idx(struct cuda_mparticles *cmprts, float4 xi4, int p)
 {
   thrust::device_ptr<float4> d_xi4(cmprts->d_xi4);
   float *b_dxi = cmprts->b_dxi;
   int *b_mx = cmprts->b_mx;
   
-  float4 xi4 = d_xi4[n];
   unsigned int block_pos_y = (int) floorf(xi4.y * b_dxi[1]);
   unsigned int block_pos_z = (int) floorf(xi4.z * b_dxi[2]);
 
@@ -382,10 +382,12 @@ void
 cuda_mparticles_check_in_patch_unordered_slow(struct cuda_mparticles *cmprts,
 					      unsigned int *nr_prts_by_patch)
 {
+  thrust::device_ptr<float4> d_xi4(cmprts->d_xi4);
+
   unsigned int off = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
     for (int n = 0; n < nr_prts_by_patch[p]; n++) {
-      int bidx = get_block_idx(cmprts, off + n, p);
+      int bidx = get_block_idx(cmprts, d_xi4[off + n], p);
       assert(bidx >= 0 && bidx <= cmprts->n_blocks);
     }
     off += nr_prts_by_patch[p];
@@ -402,13 +404,14 @@ void
 cuda_mparticles_check_bidx_id_unordered_slow(struct cuda_mparticles *cmprts,
 					     unsigned int *n_prts_by_patch)
 {
+  thrust::device_ptr<float4> d_xi4(cmprts->d_xi4);
   thrust::device_ptr<unsigned int> d_bidx(cmprts->d_bidx);
   thrust::device_ptr<unsigned int> d_id(cmprts->d_id);
 
   unsigned int off = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
     for (int n = 0; n < n_prts_by_patch[p]; n++) {
-      int bidx = get_block_idx(cmprts, off + n, p);
+      int bidx = get_block_idx(cmprts, d_xi4[off + n], p);
       assert(bidx == d_bidx[off+n]);
       assert(off+n == d_id[off+n]);
     }
@@ -417,6 +420,50 @@ cuda_mparticles_check_bidx_id_unordered_slow(struct cuda_mparticles *cmprts,
 
   assert(off == cmprts->n_prts);
   printf("PASS: cuda_mparticles_check_bidx_id_unordered_slow()\n");
+}
+
+// ----------------------------------------------------------------------
+// cuda_mparticles_check_ordered
+
+void
+cuda_mparticles_check_ordered(struct cuda_mparticles *cmprts)
+{
+  bool need_reorder = cmprts->need_reorder;
+  
+  thrust::device_ptr<float4> d_xi4(cmprts->d_xi4);
+  thrust::device_ptr<float4> d_pxi4(cmprts->d_pxi4);
+  thrust::device_ptr<unsigned int> d_off(cmprts->d_off);
+  thrust::device_ptr<unsigned int> d_id(cmprts->d_id);
+
+  unsigned int off = 0;
+  for (int b = 0; b < cmprts->n_blocks; b++) {
+    int p = b / cmprts->n_blocks_per_patch;
+    unsigned int off_b = d_off[b], off_e = d_off[b+1];
+    assert(off_e >= off_b);
+    //printf("cuda_mparticles_check_ordered: block %d: %d -> %d (patch %d)\n", b, off_b, off_e, p);
+    assert(d_off[b] == off);
+    for (int n = d_off[b]; n < d_off[b+1]; n++) {
+      float4 xi4;
+      if (need_reorder) {
+	xi4 = d_xi4[d_id[n]];
+      } else {
+	xi4 = d_xi4[n];
+      }
+      unsigned int bidx = get_block_idx(cmprts, xi4, p);
+      if (b != bidx) {
+	printf("b %d bidx %d n %d p %d xi4 %g %g %g\n",
+	       b, bidx, n, p, xi4.x, xi4.y, xi4.z);
+	unsigned int block_pos_y = (int) floorf(xi4.y * cmprts->b_dxi[1]);
+	unsigned int block_pos_z = (int) floorf(xi4.z * cmprts->b_dxi[2]);
+	printf("block_pos %d %d %g %g\n", block_pos_y, block_pos_z, xi4.y * cmprts->b_dxi[1],
+	       xi4.z * cmprts->b_dxi[2]);
+      }
+      assert(b == bidx);
+    }
+    off += off_e - off_b;
+  }
+  assert(off == cmprts->n_prts);
+  printf("cuda_mparticles_check_ordered: PASS\n");
 }
 
 // ----------------------------------------------------------------------
@@ -435,6 +482,8 @@ cuda_mparticles_sort_initial(struct cuda_mparticles *cmprts,
   thrust::device_ptr<unsigned int> d_id(cmprts->d_id);
   thrust::stable_sort_by_key(d_bidx, d_bidx + cmprts->n_prts, d_id);
   cuda_mparticles_reorder_and_offsets(cmprts);
+
+  cuda_mparticles_check_ordered(cmprts);
 }
 
 // ----------------------------------------------------------------------

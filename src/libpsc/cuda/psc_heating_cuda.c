@@ -31,8 +31,11 @@ psc_heating_cuda_setup(struct psc_heating *heating)
   foil.yc = val;
   psc_heating_spot_get_param_double(heating->spot, "rH", &val);
   foil.rH = val;
-
-  psc_heating_get_param_int(heating, "kind", &foil.kind);
+  psc_heating_spot_get_param_double(heating->spot, "T", &val);
+  foil.T = val;
+  psc_heating_spot_get_param_double(heating->spot, "Mi", &val);
+  foil.Mi = val;
+  foil.kind = heating->kind;
 
   foil.heating_dt = heating->every_step * ppsc->dt;
 

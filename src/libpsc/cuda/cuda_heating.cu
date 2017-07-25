@@ -100,8 +100,8 @@ bm_normal2(void)
   } while (u1 <= 0.f);
 
   float2 rv;
-  rv.x = sqrtf(-2.0 * logf(u1)) * cosf(2.f * M_PI * u2);
-  rv.y = sqrtf(-2.0 * logf(u1)) * sinf(2.f * M_PI * u2);
+  rv.x = sqrtf(-2.f * logf(u1)) * cosf(2.f * M_PI * u2);
+  rv.y = sqrtf(-2.f * logf(u1)) * sinf(2.f * M_PI * u2);
   return rv;
 }
 
@@ -128,16 +128,13 @@ __device__ static void
 d_particle_kick(float4 *pxi4, float H, curandState *state)
 {
   float2 r01 = curand_normal2(state);
-  float2 r23 = curand_normal2(state);
-
-  // pxi4->w = r01.x;
-  // return;
+  float r2 = curand_normal(state);
 
   float Dp = sqrtf(H * d_foil.heating_dt);
 
   pxi4->x += Dp * r01.x;
   pxi4->y += Dp * r01.y;
-  pxi4->z += Dp * r23.x;
+  pxi4->z += Dp * r2;
 }
 
 // ----------------------------------------------------------------------
@@ -170,10 +167,10 @@ cuda_heating_run_foil_gold(struct cuda_mparticles *cmprts)
       };
 
       float H = foil_get_H(xx);
-      float4 pxi4 = d_pxi4[n];
-      printf("%s xx = %g %g %g H = %g px = %g %g %g\n", (H > 0) ? "H" : " ",
-	     xx[0], xx[1], xx[2], H,
-	     pxi4.x, pxi4.y, pxi4.z);
+      // float4 pxi4 = d_pxi4[n];
+      // printf("%s xx = %g %g %g H = %g px = %g %g %g\n", (H > 0) ? "H" : " ",
+      // 	     xx[0], xx[1], xx[2], H,
+      // 	     pxi4.x, pxi4.y, pxi4.z);
       // pxi4.w = H;
       // d_pxi4[n] = pxi4;
       if (H > 0) {
@@ -261,6 +258,8 @@ k_heating_run_foil(struct cuda_heating_params prm, float4 *d_xi4, float4 *d_pxi4
       d_pxi4[n] = pxi4;
     }
   }
+
+  d_curand_states[id] = local_state;
 }
 
 // ----------------------------------------------------------------------
@@ -272,7 +271,7 @@ k_curand_setup(curandState *d_curand_states, int b_my)
   int bid = blockIdx.y * b_my + blockIdx.x;
   int id = threadIdx.x + bid * THREADS_PER_BLOCK;
 
-  curand_init(1234, id, 0, &d_curand_states[id]);
+  curand_init(1234, id % 1024, 0, &d_curand_states[id]); // FIXME, % 1024 hack
 }
 
 // ----------------------------------------------------------------------
@@ -289,6 +288,38 @@ heating_run_foil(struct cuda_mparticles *cmprts, curandState *d_curand_states)
       (h_prm, cmprts->d_xi4, cmprts->d_pxi4, cmprts->d_off,
        d_curand_states);
   cuda_sync_if_enabled();
+}
+
+// ======================================================================
+// cmprts_reorder
+//
+// FIXME, shouldn't be here, duplicates the one in cuda_exchange_particles.cu
+
+__global__ static void
+k_cuda_mparticles_reorder(int nr_prts, unsigned int *d_ids,
+		 float4 *xi4, float4 *pxi4,
+		 float4 *alt_xi4, float4 *alt_pxi4)
+{
+  int i = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
+
+  if (i < nr_prts) {
+    int j = d_ids[i];
+    alt_xi4[i] = xi4[j];
+    alt_pxi4[i] = pxi4[j];
+  }
+}
+
+static void
+cuda_mparticles_reorder(struct cuda_mparticles *cmprts)
+{
+  dim3 dimGrid((cmprts->n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK);
+  
+  k_cuda_mparticles_reorder<<<dimGrid, THREADS_PER_BLOCK>>>
+    (cmprts->n_prts, cmprts->d_id,
+     cmprts->d_xi4, cmprts->d_pxi4,
+     cmprts->d_alt_xi4, cmprts->d_alt_pxi4);
+  
+  cuda_mparticles_swap_alt(cmprts);
 }
 
 // ----------------------------------------------------------------------
@@ -335,9 +366,19 @@ cuda_heating_run_foil(struct cuda_mparticles *cmprts)
     first_time = false;
   }
 
-  assert(cmprts->bs[0] == 1 && cmprts->bs[1] == 2 && cmprts->bs[2] == 2);
-  heating_run_foil<1, 2, 2>(cmprts, d_curand_states);
+  if (cmprts->need_reorder) { 
+    cuda_mparticles_reorder(cmprts);
+    cmprts->need_reorder = false;
+  }
 
+  if (cmprts->bs[0] == 1 && cmprts->bs[1] == 2 && cmprts->bs[2] == 2) {
+    heating_run_foil<1, 2, 2>(cmprts, d_curand_states);
+  } else if (cmprts->bs[0] == 1 && cmprts->bs[1] == 4 && cmprts->bs[2] == 4) {
+    heating_run_foil<1, 4, 4>(cmprts, d_curand_states);
+  } else {
+    assert(0);
+  }
+  
   if (0) {
     cuda_heating_params_free();
     

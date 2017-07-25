@@ -841,6 +841,7 @@ psc_setup_partition(struct psc *psc, int *nr_particles_by_patch,
   }
 
   // calculate global particle label offset for unique numbering
+  // FIXME, won't work with fractional particles
   *particle_label_offset = 0; // necessary on proc 0
   MPI_Exscan(&np_total, particle_label_offset, 1, MPI_INT, MPI_SUM,
 	     MPI_COMM_WORLD);
