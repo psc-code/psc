@@ -68,7 +68,7 @@ psc_heating_single_run(struct psc_heating *heating, struct psc_mparticles *mprts
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_patch *patch = &psc->patch[p];
     for (int n = 0; n < prts->n_part; n++) {
-      particle_t *prt = particles_get_one(prts, n++);
+      particle_t *prt = particles_get_one(prts, n);
       if (particle_kind(prt) != kind) {
 	continue;
       }
