@@ -351,6 +351,13 @@ push_part_one(struct d_particle *prt, int n, unsigned int *d_ids, float4 *d_xi4,
     INTERP_FIELD_1ST(cached_flds, hyq, HY, g, h);
     INTERP_FIELD_1ST(cached_flds, hzq, HZ, h, g);
   } else if (IP == IP_EC) {
+#if 1
+    if (lg[1] < -2 || lg[1] >= BLOCKSIZE_Y + 1) {
+      printf("lg[1] %d\n", lg[1]);
+    }
+    if (lg[2] < -2 || lg[2] >= BLOCKSIZE_Z + 1) {
+      printf("lg[2] %d\n", lg[2]);
+    }
     exq = ((1.f - og[1]) * (1.f - og[2]) * F3_CACHE(fld_cache, EX, lg[1]+0, lg[2]+0) +
 	   (      og[1]) * (1.f - og[2]) * F3_CACHE(fld_cache, EX, lg[1]+1, lg[2]+0) +
 	   (1.f - og[1]) * (      og[2]) * F3_CACHE(fld_cache, EX, lg[1]+0, lg[2]+1) +
@@ -364,6 +371,7 @@ push_part_one(struct d_particle *prt, int n, unsigned int *d_ids, float4 *d_xi4,
 	   (      og[1]) * F3_CACHE(fld_cache, HY, lg[1]+1, lg[2]  ));
     hzq = ((1.f - og[2]) * F3_CACHE(fld_cache, HZ, lg[1]  , lg[2]+0) +
 	   (      og[2]) * F3_CACHE(fld_cache, HZ, lg[1]  , lg[2]+1));
+#endif
   } else {
     assert(0);
   }
