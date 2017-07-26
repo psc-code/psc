@@ -13,6 +13,8 @@ LIST_HEAD(psc_mfields_base_list);
 
 double *psc_balance_comp_time_by_patch;
 
+int psc_balance_generation_cnt;
+
 static double
 capability_default(int p)
 {
@@ -865,6 +867,7 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   psc_bnd_particles_check_domain(psc->bnd_particles);
   psc_bnd_check_domain(psc->bnd);
   psc_output_fields_check_bnd = true;
+  psc_balance_generation_cnt++;
   
   mrc_domain_destroy(domain_old);
 

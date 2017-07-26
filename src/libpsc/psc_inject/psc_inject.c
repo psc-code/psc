@@ -1,6 +1,7 @@
 
 #include "psc_inject_private.h"
 
+#include <psc_balance.h>
 #include <psc_particles_as_single.h> // FIXME
 #include <psc_fields_c.h> // FIXME
 
@@ -91,6 +92,12 @@ static void
 calc_n(struct psc_inject *inject, struct psc_mparticles *mprts_base,
        struct psc_mfields *mflds_base)
 {
+  if (psc_balance_generation_cnt != inject->balance_generation_cnt) {
+    mprintf("generation %d %d\n", psc_balance_generation_cnt,
+	    inject->balance_generation_cnt);
+    inject->balance_generation_cnt = psc_balance_generation_cnt;
+    psc_bnd_check_domain(inject->item_n_bnd);
+  }
   psc_output_fields_item_run(inject->item_n, mflds_base, mprts_base, inject->mflds_n);
 #if 0
   static struct mrc_io *io;

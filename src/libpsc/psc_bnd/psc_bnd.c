@@ -59,7 +59,7 @@ _psc_bnd_read(struct psc_bnd *bnd, struct mrc_io *io)
 }
 
 // ----------------------------------------------------------------------
-// check_domain
+// psc_bnd_check_domain
 //
 // check if the underlying mrc_domain changed since setup(),
 // which might happen, e.g., through rebalancing.
