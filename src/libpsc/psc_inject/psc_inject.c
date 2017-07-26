@@ -93,8 +93,6 @@ calc_n(struct psc_inject *inject, struct psc_mparticles *mprts_base,
        struct psc_mfields *mflds_base)
 {
   if (psc_balance_generation_cnt != inject->balance_generation_cnt) {
-    mprintf("generation %d %d\n", psc_balance_generation_cnt,
-	    inject->balance_generation_cnt);
     inject->balance_generation_cnt = psc_balance_generation_cnt;
     psc_bnd_check_domain(inject->item_n_bnd);
   }
