@@ -18,7 +18,10 @@ void psc_bnd_check_domain(struct psc_bnd *bnd); // FIXME
 static void
 psc_inject_single_create(struct psc_inject *inject)
 {
-  psc_bnd_set_type(inject->item_n_bnd, "single");
+  // it looks like n_1st_single takes "single" particles, but makes
+  // moment fields of type "c", so let's use those "c" fields.
+  psc_bnd_set_name(inject->item_n_bnd, "inject_item_n_bnd");
+  psc_bnd_set_type(inject->item_n_bnd, "c");
   psc_bnd_set_psc(inject->item_n_bnd, ppsc);
 
   psc_output_fields_item_set_type(inject->item_n, "n_1st_single");
@@ -123,10 +126,11 @@ psc_inject_single_run(struct psc_inject *inject, struct psc_mparticles *mprts_ba
   int kind_n = inject->kind_n;
   
   struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
+  struct psc_mfields *mflds_n = psc_mfields_get_as(inject->mflds_n, FIELDS_TYPE, kind_n, kind_n+1);
   
   psc_foreach_patch(psc, p) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_fields *flds_n = psc_mfields_get_patch(inject->mflds_n, p);
+    struct psc_fields *flds_n = psc_mfields_get_patch(mflds_n, p);
     int *ldims = psc->patch[p].ldims;
     
     int i = prts->n_part;
@@ -164,7 +168,7 @@ psc_inject_single_run(struct psc_inject *inject, struct psc_mparticles *mprts_ba
 	    int n_in_cell;
 	    if (kind != psc->prm.neutralizing_population) {
 	      if (psc->timestep >= 0) {
-		npt.n -= F3_C(flds_n, kind_n, jx,jy,jz);
+		npt.n -= F3(flds_n, kind_n, jx,jy,jz);
 		if (npt.n < 0) {
 		  n_in_cell = 0;
 		} else {
@@ -196,6 +200,7 @@ psc_inject_single_run(struct psc_inject *inject, struct psc_mparticles *mprts_ba
   }
 
   psc_mparticles_put_as(mprts, mprts_base, 0);
+  psc_mfields_put_as(mflds_n, inject->mflds_n, 0, 0);
 }
 
 // ----------------------------------------------------------------------
