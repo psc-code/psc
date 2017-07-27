@@ -96,7 +96,7 @@ cuda_mfields_alloc(struct cuda_mfields *cmflds, int ib[3], int im[3],
   cmflds->n_cells_per_patch = im[0] * im[1] * im[2];
   cmflds->n_cells = n_patches * cmflds->n_cells_per_patch;
 
-  mprintf("n_fields %d n_cells %d\n", n_fields, cmflds->n_cells);
+  //mprintf("n_fields %d n_cells %d\n", n_fields, cmflds->n_cells);
   check(cudaMalloc((void **) &cmflds->d_flds,
 		   n_fields * cmflds->n_cells * sizeof(*cmflds->d_flds)));
 }
