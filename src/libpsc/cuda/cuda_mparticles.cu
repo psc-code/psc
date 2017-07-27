@@ -485,7 +485,11 @@ cuda_mparticles_sort_initial(struct cuda_mparticles *cmprts,
   thrust::stable_sort_by_key(d_bidx, d_bidx + cmprts->n_prts, d_id);
   cuda_mparticles_reorder_and_offsets(cmprts);
 
-  cuda_mparticles_check_ordered(cmprts);
+  static int first_time = true;
+  if (first_time) {
+    cuda_mparticles_check_ordered(cmprts);
+    first_time = false;
+  }
 }
 
 // ----------------------------------------------------------------------
