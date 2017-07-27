@@ -352,6 +352,7 @@ cuda_mparticles_reorder_and_offsets(struct cuda_mparticles *cmprts)
   cuda_sync_if_enabled();
 
   cuda_mparticles_swap_alt(cmprts);
+  cmprts->need_reorder = false;
 }
 
 // ----------------------------------------------------------------------
