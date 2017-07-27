@@ -829,7 +829,7 @@ psc_bnd_particles_sub_exchange_particles(struct psc_bnd_particles *bnd, mparticl
   struct psc *psc = bnd->psc;
 
   mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
-  struct psc_mfields *mflds = psc_mfields_get_as(psc->flds, "c", JXI, JXI + 3);
+  //struct psc_mfields *mflds = psc_mfields_get_as(psc->flds, "c", JXI, JXI + 3);
 
   static int pr_A, pr_B, pr_C;
   if (!pr_A) {
@@ -866,9 +866,9 @@ psc_bnd_particles_sub_exchange_particles(struct psc_bnd_particles *bnd, mparticl
   }
   prof_stop(pr_C);
 
-  psc_bnd_particles_open_boundary(bnd, particles, mflds);
+  //psc_bnd_particles_open_boundary(bnd, particles, mflds);
 
   psc_mparticles_put_cf(particles, particles_base, 0);
-  psc_mfields_put_as(mflds, psc->flds, JXI, JXI + 3);
+  //psc_mfields_put_as(mflds, psc->flds, JXI, JXI + 3);
 }
 
