@@ -1,6 +1,7 @@
 
 #include "cuda_mparticles.h"
 #include "cuda_mfields.h"
+
 #include "psc_cuda.h"
 #include "particles_cuda.h"
 
@@ -12,6 +13,24 @@
 
 #include "cuda_common.h"
 
+#define MAX_KINDS (4)
+
+__constant__ float c_q_inv[MAX_KINDS];
+
+static void
+set_constants()
+{
+  struct psc *psc = ppsc;
+  
+  assert(psc->nr_kinds <= MAX_KINDS);
+  float q_inv[MAX_KINDS];
+  for (int k = 0; k < psc->nr_kinds; k++) {
+    q_inv[k] = 1.f / psc->kinds[k].q;
+  }
+
+  check(cudaMemcpyToSymbol(c_q_inv, q_inv, MAX_KINDS * sizeof(*q_inv)));
+}
+  
 // FIXME/TODO: we could do this w/o prior reordering, but currently the
 // generic moment calculation code first reorders anyway (which it shouldn't)
 
@@ -127,6 +146,55 @@ rho_1st_nc_cuda_run(int block_start, struct cuda_params prm, float4 *d_xi4, floa
 }
 
 // ----------------------------------------------------------------------
+// n_1st_cuda_run
+
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER>
+__global__ static void
+__launch_bounds__(THREADS_PER_BLOCK, 3)
+n_1st_cuda_run(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
+	       unsigned int *d_off, int nr_total_blocks, unsigned int *d_ids,
+	       float *d_flds0, unsigned int size)
+{
+  int block_pos[3];
+  int p = find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+    (prm, block_pos);
+  int bid = find_bid(prm);
+  int block_begin = d_off[bid];
+  int block_end = d_off[bid + 1];
+
+  GCurr scurr(d_flds0 + p * size);
+
+  __syncthreads();
+  for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
+    if (n < block_begin) {
+      continue;
+    }
+    struct d_particle prt;
+    if (REORDER) {
+      unsigned int id = d_ids[n];
+      LOAD_PARTICLE_POS_(prt, d_xi4, id);
+      LOAD_PARTICLE_MOM_(prt, d_pxi4, id);
+    } else {
+      LOAD_PARTICLE_POS_(prt, d_xi4, n);
+      LOAD_PARTICLE_MOM_(prt, d_pxi4, n);
+    }
+
+    int kind = __float_as_int(prt.kind_as_float);
+    real wni = prt.qni_wni * c_q_inv[kind];
+    real fnq = wni * prm.fnqs;
+    
+    int lf[3];
+    real of[3];
+    find_idx_off_1st(prt.xi, lf, of, real(-.5), prm);
+
+    scurr.add(kind, lf[1]  , lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnq, prm);
+    scurr.add(kind, lf[1]+1, lf[2]  , (      of[1]) * (1.f - of[2]) * fnq, prm);
+    scurr.add(kind, lf[1]  , lf[2]+1, (1.f - of[1]) * (      of[2]) * fnq, prm);
+    scurr.add(kind, lf[1]+1, lf[2]+1, (      of[1]) * (      of[2]) * fnq, prm);
+  }
+}
+
+// ----------------------------------------------------------------------
 // rho_1st_nc_cuda_run_patches_no_reorder
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER>
@@ -160,6 +228,39 @@ rho_1st_nc_cuda_run_patches_no_reorder(struct psc_mparticles *mprts, struct psc_
 }
 
 // ----------------------------------------------------------------------
+// n_1st_cuda_run_patches_no_reorder
+
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER>
+static void
+n_1st_cuda_run_patches_no_reorder(struct psc_mparticles *mprts, struct psc_mfields *mres)
+{
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  struct psc_mfields_cuda *mres_cuda = psc_mfields_cuda(mres);
+  struct cuda_mfields *cmres = mres_cuda->cmflds;
+
+  struct cuda_params prm;
+  set_params(&prm, ppsc, cmprts, cmres);
+
+  unsigned int fld_size = mres->nr_fields *
+    cmres->im[0] * cmres->im[1] * cmres->im[2];
+
+  int gx = prm.b_mx[1];
+  int gy = prm.b_mx[2] * mprts->nr_patches;
+  dim3 dimGrid(gx, gy);
+
+  n_1st_cuda_run<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER>
+    <<<dimGrid, THREADS_PER_BLOCK>>>
+    (0, prm, cmprts->d_xi4, cmprts->d_pxi4,
+     cmprts->d_off,
+     cmprts->n_blocks, cmprts->d_id,
+     cmres->d_flds, fld_size);
+  cuda_sync_if_enabled();
+
+  free_params(&prm);
+}
+
+// ----------------------------------------------------------------------
 // rho_1st_nc_cuda_run_patches
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
@@ -177,17 +278,42 @@ rho_1st_nc_cuda_run_patches(struct psc_mparticles *mprts, struct psc_mfields *mr
 }
 
 // ----------------------------------------------------------------------
+// n_1st_cuda_run_patches
+
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
+static void
+n_1st_cuda_run_patches(struct psc_mparticles *mprts, struct psc_mfields *mres)
+{
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+    
+  if (!cmprts->need_reorder) {
+    n_1st_cuda_run_patches_no_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, false>(mprts, mres);
+  } else {
+    assert(0);
+  }
+}
+
+// ----------------------------------------------------------------------
 // yz_moments_rho_1st_nc_cuda_run_patches
 
 void
 yz_moments_rho_1st_nc_cuda_run_patches(struct psc_mparticles *mprts, struct psc_mfields *mres)
 {
   rho_1st_nc_cuda_run_patches<1, 4, 4>(mprts, mres);
-#if 0
-  // FIXME, make sure is reordered -- or handle if not
-  for (int p = 0; p < mres->nr_patches; p++) {
-    do_rho_run(p, psc_mfields_get_patch(mres, p), psc_mparticles_get_patch(mprts, p));
+}
+
+// ----------------------------------------------------------------------
+// yz_moments_n_1st_cuda_run_patches
+
+void
+yz_moments_n_1st_cuda_run_patches(struct psc_mparticles *mprts, struct psc_mfields *mres)
+{
+  static bool first_time = true;
+  if (first_time) {
+    set_constants();
+    first_time = false;
   }
-#endif
+  n_1st_cuda_run_patches<1, 4, 4>(mprts, mres);
 }
 
