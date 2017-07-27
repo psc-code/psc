@@ -113,6 +113,7 @@ cuda_mparticles_to_device(struct cuda_mparticles *cmprts, float4 *xi4, float4 *p
 {
   cudaError_t ierr;
 
+  assert(off + n_prts <= cmprts->n_alloced);
   ierr = cudaMemcpy(cmprts->d_xi4 + off, xi4, n_prts * sizeof(*xi4),
 		    cudaMemcpyHostToDevice); cudaCheck(ierr);
   ierr = cudaMemcpy(cmprts->d_pxi4 + off, pxi4, n_prts * sizeof(*pxi4),
@@ -128,6 +129,7 @@ cuda_mparticles_from_device(struct cuda_mparticles *cmprts, float4 *xi4, float4 
 {
   cudaError_t ierr;
 
+  assert(off + n_prts <= cmprts->n_alloced);
   ierr = cudaMemcpy(xi4, cmprts->d_xi4 + off, n_prts * sizeof(*xi4),
 		    cudaMemcpyDeviceToHost); cudaCheck(ierr);
   ierr = cudaMemcpy(pxi4, cmprts->d_pxi4 + off, n_prts * sizeof(*pxi4),

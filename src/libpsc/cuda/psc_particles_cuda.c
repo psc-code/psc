@@ -177,7 +177,9 @@ copy_from(struct psc_particles *prts_cuda, struct psc_particles *prts,
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   //mprintf("cuda %d prts %d\n", prts_cuda->n_part, prts->n_part);
-  assert(prts_cuda->n_part >= prts->n_part);
+  //  assert(prts_cuda->n_part >= prts->n_part);
+  // FIXME, basically, we allow the number of particles per patch to change in between
+  // get_as and put_as now
   prts_cuda->n_part = prts->n_part; // FIXME, this is an ugly hack to get
   // fractional particles to work. In that case, n_part is initially set to the maximum
   // number of particles that may be added to a patch, though in practice, depending on random numbers,
