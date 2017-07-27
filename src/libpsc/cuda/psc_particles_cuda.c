@@ -614,6 +614,42 @@ psc_mparticles_cuda_setup_internals(struct psc_mparticles *mprts)
   cuda_mparticles_sort_initial(cmprts, n_prts_by_patch);
 }
 
+// ----------------------------------------------------------------------
+// psc_mparticles_cuda_inject
+
+#include <psc_particles_as_single.h> // FIXME
+
+void
+psc_mparticles_cuda_inject(struct psc_mparticles *mprts_base, struct cuda_mparticles_prt *buf,
+			   unsigned int *buf_n_by_patch)
+{
+  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
+
+  unsigned buf_n = 0;
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    
+    int i = prts->n_part;
+    particles_realloc(prts, i + buf_n_by_patch[p]);
+    for (int cnt = 0; cnt < buf_n_by_patch[p]; cnt++) {
+      particle_t *prt = particles_get_one(prts, i++);
+      
+      prt->xi = buf[buf_n + cnt].xi[0];
+      prt->yi = buf[buf_n + cnt].xi[1];
+      prt->zi = buf[buf_n + cnt].xi[2];
+      prt->pxi = buf[buf_n + cnt].pxi[0];
+      prt->pyi = buf[buf_n + cnt].pxi[1];
+      prt->pzi = buf[buf_n + cnt].pxi[2];
+      prt->kind = buf[buf_n + cnt].kind;
+      prt->qni_wni = buf[buf_n + cnt].qni_wni;
+    }
+    buf_n += buf_n_by_patch[p];
+    prts->n_part = i;
+  }
+
+  psc_mparticles_put_as(mprts, mprts_base, 0);
+}
+
 // ======================================================================
 // psc_mparticles: subclass "cuda"
   

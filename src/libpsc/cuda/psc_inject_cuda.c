@@ -2,8 +2,9 @@
 #include <psc_inject_private.h>
 #include <psc_balance.h>
 
-#include <psc_particles_as_single.h>
 #include <psc_fields_as_single.h>
+
+#include <cuda_iface.h>
 
 #include <stdlib.h>
 
@@ -55,8 +56,8 @@ get_n_in_cell(struct psc *psc, struct psc_particle_npt *npt)
 // FIXME duplicated
 
 static void
-_psc_setup_particle(struct psc *psc, particle_t *prt, struct psc_particle_npt *npt,
-		   int p, double xx[3])
+_psc_setup_particle(struct psc *psc, struct cuda_mparticles_prt *cprt,
+		    struct psc_particle_npt *npt, int p, double xx[3])
 {
   double beta = psc->coeff.beta;
 
@@ -89,29 +90,32 @@ _psc_setup_particle(struct psc *psc, particle_t *prt, struct psc_particle_npt *n
   }
   
   assert(npt->kind >= 0 && npt->kind < psc->nr_kinds);
-  prt->kind = npt->kind;
-  assert(npt->q == psc->kinds[prt->kind].q);
-  assert(npt->m == psc->kinds[prt->kind].m);
-  /* prt->qni = psc->kinds[prt->kind].q; */
-  /* prt->mni = psc->kinds[prt->kind].m; */
-  prt->xi = xx[0] - psc->patch[p].xb[0];
-  prt->yi = xx[1] - psc->patch[p].xb[1];
-  prt->zi = xx[2] - psc->patch[p].xb[2];
-  prt->pxi = pxi * cos(psc->prm.theta_xz) + pzi * sin(psc->prm.theta_xz);
-  prt->pyi = pyi;
-  prt->pzi = - pxi * sin(psc->prm.theta_xz) + pzi * cos(psc->prm.theta_xz);
+  assert(npt->q == psc->kinds[npt->kind].q);
+  assert(npt->m == psc->kinds[npt->kind].m);
+
+  cprt->xi[0] = xx[0] - psc->patch[p].xb[0];
+  cprt->xi[1] = xx[1] - psc->patch[p].xb[1];
+  cprt->xi[2] = xx[2] - psc->patch[p].xb[2];
+  cprt->pxi[0] = pxi;
+  cprt->pxi[1] = pyi;
+  cprt->pxi[2] = pzi;
+  cprt->kind = npt->kind;
+  cprt->qni_wni = psc->kinds[npt->kind].q;
 }	      
 
 // ----------------------------------------------------------------------
 // psc_inject_cuda_run
+
+void psc_mparticles_cuda_inject(struct psc_mparticles *mprts_base, struct cuda_mparticles_prt *buf,
+				unsigned int *buf_n_by_patch); // FIXME
 
 static void
 psc_inject_cuda_run(struct psc_inject *inject, struct psc_mparticles *mprts_base,
 		    struct psc_mfields *mflds_base)
 {
   struct psc *psc = ppsc;
-    
-  particle_real_t fac = 1. / psc->coeff.cori * 
+
+  float fac = 1. / psc->coeff.cori * 
     (inject->every_step * psc->dt / inject->tau) /
     (1. + inject->every_step * psc->dt / inject->tau);
 
@@ -123,15 +127,22 @@ psc_inject_cuda_run(struct psc_inject *inject, struct psc_mparticles *mprts_base
 
   int kind_n = inject->kind_n;
   
-  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
   struct psc_mfields *mflds_n = psc_mfields_get_as(inject->mflds_n, FIELDS_TYPE, kind_n, kind_n+1);
-  
+
+  static struct cuda_mparticles_prt *buf;
+  static unsigned int buf_n_alloced;
+  if (!buf) {
+    buf_n_alloced = 1000;
+    buf = calloc(buf_n_alloced, sizeof(*buf));
+  }
+  unsigned int buf_n_by_patch[psc->nr_patches];
+
+  unsigned int buf_n = 0;
   psc_foreach_patch(psc, p) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    buf_n_by_patch[p] = 0;
     struct psc_fields *flds_n = psc_mfields_get_patch(mflds_n, p);
     int *ldims = psc->patch[p].ldims;
     
-    int i = prts->n_part;
     int nr_pop = psc->prm.nr_populations;
     for (int jz = 0; jz < ldims[2]; jz++) {
       for (int jy = 0; jy < ldims[1]; jy++) {
@@ -182,23 +193,26 @@ psc_inject_cuda_run(struct psc_inject *inject, struct psc_mparticles *mprts_base
 	      assert(psc->prm.neutralizing_population == nr_pop - 1);
 	      n_in_cell = -n_q_in_cell / npt.q;
 	    }
-	    particles_realloc(prts, i + n_in_cell);
-	    for (int cnt = 0; cnt < n_in_cell; cnt++) {
-	      particle_t *prt = particles_get_one(prts, i++);
-	      
-	      _psc_setup_particle(psc, prt, &npt, p, xx);
-	      assert(psc->prm.fractional_n_particles_per_cell);
-	      prt->qni_wni = psc->kinds[prt->kind].q;
+
+	    if (buf_n + n_in_cell > buf_n_alloced) {
+	      buf_n_alloced = 2 * (buf_n + n_in_cell);
+	      buf = realloc(buf, buf_n_alloced * sizeof(*buf));
 	    }
+	    for (int cnt = 0; cnt < n_in_cell; cnt++) {
+	      _psc_setup_particle(psc, &buf[buf_n + cnt], &npt, p, xx);
+	      assert(psc->prm.fractional_n_particles_per_cell);
+	    }
+	    buf_n += n_in_cell;
+	    buf_n_by_patch[p] += n_in_cell;
 	  }
 	}
       }
     }
-    prts->n_part = i;
   }
 
-  psc_mparticles_put_as(mprts, mprts_base, 0);
   psc_mfields_put_as(mflds_n, inject->mflds_n, 0, 0);
+
+  psc_mparticles_cuda_inject(mprts_base, buf, buf_n_by_patch);
 }
 
 // ----------------------------------------------------------------------
