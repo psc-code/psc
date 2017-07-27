@@ -105,6 +105,9 @@ static void
 psc_inject_init(void)
 {
   mrc_class_register_subclass(&mrc_class_psc_inject, &psc_inject_ops_single);
+#ifdef USE_CUDA
+  mrc_class_register_subclass(&mrc_class_psc_inject, &psc_inject_ops_cuda);
+#endif
 }
 
 // ----------------------------------------------------------------------
