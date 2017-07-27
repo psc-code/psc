@@ -22,7 +22,11 @@ psc_output_fields_item_create_mfields(struct psc_output_fields_item *item)
 {
   struct psc_output_fields_item_ops *ops = psc_output_fields_item_ops(item);
   mfields_c_t *flds = psc_mfields_create(psc_output_fields_item_comm(item));
-  psc_mfields_set_type(flds, "c");
+  if (strcmp(psc_output_fields_item_type(item), "n_1st_cuda") == 0) { // FIXME
+    psc_mfields_set_type(flds, "cuda");
+  } else {
+    psc_mfields_set_type(flds, "c");
+  }
   psc_mfields_set_domain(flds, ppsc->mrc_domain);
   int nr_comp;
   if (ops->flags & POFI_BY_KIND) {
