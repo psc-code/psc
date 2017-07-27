@@ -581,7 +581,7 @@ void
 cuda_mparticles_sort_initial(struct cuda_mparticles *cmprts,
 			     unsigned int *n_prts_by_patch)
 {
-  static int first_time = true;
+  static int first_time = false;
   if (first_time) {
     cuda_mparticles_check_in_patch_unordered_slow(cmprts, n_prts_by_patch);
   }
