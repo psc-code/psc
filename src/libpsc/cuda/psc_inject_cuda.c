@@ -3,7 +3,7 @@
 #include <psc_balance.h>
 
 #include <psc_particles_as_single.h>
-#include <psc_fields_as_c.h>
+#include <psc_fields_as_single.h>
 
 #include <stdlib.h>
 
@@ -18,13 +18,11 @@ void psc_bnd_check_domain(struct psc_bnd *bnd); // FIXME
 static void
 psc_inject_cuda_create(struct psc_inject *inject)
 {
-  // it looks like n_1st_single takes "single" particles, but makes
-  // moment fields of type "c", so let's use those "c" fields.
   psc_bnd_set_name(inject->item_n_bnd, "inject_item_n_bnd");
-  psc_bnd_set_type(inject->item_n_bnd, "c");
+  psc_bnd_set_type(inject->item_n_bnd, "cuda");
   psc_bnd_set_psc(inject->item_n_bnd, ppsc);
 
-  psc_output_fields_item_set_type(inject->item_n, "n_1st_single");
+  psc_output_fields_item_set_type(inject->item_n, "n_1st_cuda");
   psc_output_fields_item_set_psc_bnd(inject->item_n, inject->item_n_bnd);
 }
 
