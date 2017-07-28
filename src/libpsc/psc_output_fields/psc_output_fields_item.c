@@ -66,6 +66,7 @@ psc_output_fields_item_run(struct psc_output_fields_item *item,
   if (strcmp(psc_mparticles_type(particles), "cuda") == 0) {
       extern void psc_mparticles_cuda_reorder(struct psc_mparticles *);
       psc_mparticles_cuda_reorder(particles);
+      psc_mparticles_update_n_part(particles);
   }
 #endif
   if (ops->run_all) {
