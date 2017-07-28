@@ -19,7 +19,7 @@ struct psc_output_fields_item_ops psc_output_fields_item_n_2nd_nc_double_ops = {
   .name               = "n_2nd_nc_double",
   .nr_comp            = 1,
   .fld_names          = { "n_nc" },
-  .run                = n_run,
+  .run_all            = n_run_all,
   .flags              = POFI_ADD_GHOSTS | POFI_BY_KIND,
 };
 
@@ -30,7 +30,7 @@ struct psc_output_fields_item_ops psc_output_fields_item_rho_2nd_nc_double_ops =
   .name               = "rho_2nd_nc_double",
   .nr_comp            = 1,
   .fld_names          = { "rho_nc" },
-  .run                = rho_run,
+  .run_all            = rho_run_all,
   .flags              = POFI_ADD_GHOSTS,
 };
 

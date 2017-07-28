@@ -7,10 +7,27 @@
 
 // ======================================================================
 
+static void
+run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
+	struct psc_mparticles *mprts_base, struct psc_mfields *mres,
+	void (*do_run)(int p, struct psc_fields *flds, struct psc_particles *prts))
+{
+  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
+
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_fields *res = psc_mfields_get_patch(mres, p);
+    psc_fields_zero_range(res, 0, res->nr_comp);
+    do_run(res->p, res, prts);
+  }
+
+  psc_mparticles_put_as(mprts, mprts_base, MP_DONT_COPY);
+}
+
 typedef fields_c_real_t creal;
 
 static void
-do_n_2nd_nc_run(fields_t *pf, struct psc_particles *prts)
+do_n_2nd_nc_run(int p, fields_t *pf, struct psc_particles *prts)
 {
   struct psc_patch *patch = &ppsc->patch[prts->p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
@@ -93,19 +110,16 @@ do_n_2nd_nc_run(fields_t *pf, struct psc_particles *prts)
 }
 
 static void
-n_2nd_nc_run(struct psc_output_fields_item *item, struct psc_fields *flds,
-	     struct psc_particles *prts_base, struct psc_fields *res)
+n_2nd_nc_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
+		 struct psc_mparticles *mprts_base, struct psc_mfields *mres)
 {
-  struct psc_particles *prts = psc_particles_get_as(prts_base, PARTICLE_TYPE, 0);
-  psc_fields_zero_range(res, 0, res->nr_comp);
-  do_n_2nd_nc_run(res, prts);
-  psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
+  run_all(item, mflds, mprts_base, mres, do_n_2nd_nc_run);
 }
 
 // FIXME too much duplication, specialize 2d/1d
 
 static void
-do_v_2nd_nc_run(fields_t *pf, struct psc_particles *prts)
+do_v_2nd_nc_run(int p, fields_t *pf, struct psc_particles *prts)
 {
   struct psc_patch *patch = &ppsc->patch[prts->p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
@@ -191,17 +205,14 @@ do_v_2nd_nc_run(fields_t *pf, struct psc_particles *prts)
 }
 
 static void
-v_2nd_nc_run(struct psc_output_fields_item *item, struct psc_fields *flds,
-	     struct psc_particles *prts_base, struct psc_fields *res)
+v_2nd_nc_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
+		 struct psc_mparticles *mprts_base, struct psc_mfields *mres)
 {
-  struct psc_particles *prts = psc_particles_get_as(prts_base, PARTICLE_TYPE, 0);
-  psc_fields_zero_range(res, 0, res->nr_comp);
-  do_v_2nd_nc_run(res, prts);
-  psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
+  run_all(item, mflds, mprts_base, mres, do_v_2nd_nc_run);
 }
 
 static void
-do_vv_2nd_nc_run(fields_t *pf, struct psc_particles *prts)
+do_vv_2nd_nc_run(int p, fields_t *pf, struct psc_particles *prts)
 {
   struct psc_patch *patch = &ppsc->patch[prts->p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
@@ -287,14 +298,12 @@ do_vv_2nd_nc_run(fields_t *pf, struct psc_particles *prts)
 }
 
 static void
-vv_2nd_nc_run(struct psc_output_fields_item *item, struct psc_fields *flds,
-	      struct psc_particles *prts_base, struct psc_fields *res)
+vv_2nd_nc_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
+		 struct psc_mparticles *mprts_base, struct psc_mfields *mres)
 {
-  struct psc_particles *prts = psc_particles_get_as(prts_base, PARTICLE_TYPE, 0);
-  psc_fields_zero_range(res, 0, res->nr_comp);
-  do_vv_2nd_nc_run(res, prts);
-  psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
+  run_all(item, mflds, mprts_base, mres, do_vv_2nd_nc_run);
 }
+
 
 // ======================================================================
 // psc_output_fields_item: subclass "n_2nd_nc"
@@ -303,7 +312,7 @@ struct psc_output_fields_item_ops psc_output_fields_item_n_2nd_nc_ops = {
   .name               = "n",
   .nr_comp            = 3,
   .fld_names          = { "ne", "ni", "nn" },
-  .run                = n_2nd_nc_run,
+  .run_all            = n_2nd_nc_run_all,
   .flags              = POFI_ADD_GHOSTS,
 };
 
@@ -315,7 +324,7 @@ struct psc_output_fields_item_ops psc_output_fields_item_v_2nd_nc_ops = {
   .nr_comp            = 6,
   .fld_names          = { "vex", "vey", "vez",
 			  "vix", "viy", "viz" },
-  .run                = v_2nd_nc_run,
+  .run_all            = v_2nd_nc_run_all,
   .flags              = POFI_ADD_GHOSTS,
 };
 
@@ -327,7 +336,7 @@ struct psc_output_fields_item_ops psc_output_fields_item_vv_2nd_nc_ops = {
   .nr_comp            = 6,
   .fld_names          = { "vexvex", "veyvey", "vezvez",
 			  "vixvix", "viyviy", "vizviz" },
-  .run                = vv_2nd_nc_run,
+  .run_all            = vv_2nd_nc_run_all,
   .flags              = POFI_ADD_GHOSTS,
 };
 
