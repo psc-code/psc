@@ -5,6 +5,24 @@
 
 #include "common_moments.c"
 
+static void
+run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
+	struct psc_mparticles *mprts_base, struct psc_mfields *mres,
+	void (*do_run)(int p, struct psc_fields *flds, struct psc_particles *prts))
+{
+  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
+
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_fields *res = psc_mfields_get_patch(mres, p);
+    psc_particles_reorder(prts); // FIXME
+    psc_fields_zero_range(res, 0, res->nr_comp);
+    do_run(res->p, res, prts);
+  }
+
+  psc_mparticles_put_as(mprts, mprts_base, MP_DONT_COPY);
+}
+
 // ======================================================================
 // n
 
@@ -23,13 +41,10 @@ do_n_run(int p, fields_t *pf, struct psc_particles *prts)
 }
 
 static void
-n_run(struct psc_output_fields_item *item, struct psc_fields *flds,
-      struct psc_particles *prts_base, struct psc_fields *res)
+n_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
+	  struct psc_mparticles *mprts_base, struct psc_mfields *mres)
 {
-  struct psc_particles *prts = psc_particles_get_as(prts_base, PARTICLE_TYPE, 0);
-  psc_fields_zero_range(res, 0, res->nr_comp);
-  do_n_run(res->p, res, prts);
-  psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
+  run_all(item, mflds, mprts_base, mres, do_n_run);
 }
 
 // ======================================================================
@@ -50,16 +65,9 @@ do_rho_run(int p, fields_t *pf, struct psc_particles *prts)
 }
 
 static void
-rho_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
-	    struct psc_mparticles *mprts_base, struct psc_mfields *mres_base)
+rho_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
+	  struct psc_mparticles *mprts_base, struct psc_mfields *mres)
 {
-  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
-  struct psc_mfields *mres = psc_mfields_get_as(mres_base, FIELDS_TYPE, 0, 0);
-  psc_mfields_zero_range(mres, 0, mres->nr_fields);
-  for (int p = 0; p < mres->nr_patches; p++) {
-    do_rho_run(p, psc_mfields_get_patch(mres, p), psc_mparticles_get_patch(mprts, p));
-  }
-  psc_mparticles_put_as(mprts, mprts_base, MP_DONT_COPY);
-  psc_mfields_put_as(mres, mres_base, 0, 1);
+  run_all(item, mflds, mprts_base, mres, do_rho_run);
 }
 
