@@ -497,7 +497,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd, str
   }
 }
 
-static void
+static void _mrc_unused
 psc_bnd_particles_sub_open_calc_moments(struct psc_bnd_particles *bnd,
 					struct psc_mparticles *mprts_base)
 {
@@ -739,7 +739,7 @@ inject_particles_z(struct psc_particles *prts, struct psc_fields *flds,
 
 #endif
 
-static void
+static void _mrc_unused
 psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparticles *mprts,
 				struct psc_mfields *mflds)
 {
