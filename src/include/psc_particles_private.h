@@ -4,9 +4,13 @@
 
 #include "psc_particles.h"
 
+// FIXME, hack to aid getting rid of ::n_part member
+#define N_PART n_part
+
 struct psc_particles {
   struct mrc_obj obj;
-  int n_part;
+  struct psc_mparticles *mprts;
+  int N_PART;
   int p; //< patch number
   unsigned int flags;
 };

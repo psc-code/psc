@@ -9,6 +9,18 @@
 
 // ======================================================================
 
+// ----------------------------------------------------------------------
+// psc_mparticles_set_nr_particles
+
+void
+psc_mparticles_set_nr_particles(struct psc_mparticles *mprts, int *n_prts_by_patch)
+{
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    prts->n_part = n_prts_by_patch[p];
+  }
+}
+
 void
 psc_mparticles_set_domain_nr_particles(struct psc_mparticles *mparticles,
 				       struct mrc_domain *domain,
@@ -36,6 +48,7 @@ _psc_mparticles_setup(struct psc_mparticles *mparticles)
     char name[20];
     sprintf(name, "prts%d", p);
     psc_particles_set_name(prts, name);
+    prts->mprts = mparticles;
     prts->n_part = mparticles->nr_particles_by_patch[p];
     prts->flags = mparticles->flags;
     prts->p = p;

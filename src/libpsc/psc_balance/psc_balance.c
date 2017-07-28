@@ -46,9 +46,8 @@ psc_get_loads(struct psc *psc, double *loads)
 {
   psc_foreach_patch(psc, p) {
     if (psc->balance->factor_fields >= 0.) {
-      struct psc_particles *prts = psc_mparticles_get_patch(psc->particles, p);
       int *ldims = psc->patch[p].ldims;
-      loads[p] = prts->n_part +
+      loads[p] = psc_mparticles_nr_particles_by_patch(psc->particles, p) +
 	psc->balance->factor_fields * ldims[0] * ldims[1] * ldims[2];
       //mprintf("loads p %d %g %g ratio %g\n", p, loads[p], comp_time, loads[p] / comp_time);
     } else {

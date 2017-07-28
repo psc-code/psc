@@ -88,6 +88,7 @@ extern struct psc_mparticles_ops psc_mparticles_single_by_block_ops;
 void psc_mparticles_set_domain_nr_particles(struct psc_mparticles *mparticles,
 					    struct mrc_domain *domain,
 					    int *nr_particles_by_patch);
+void psc_mparticles_set_nr_particles(struct psc_mparticles *mprts, int *n_prts_by_patch);
 int  psc_mparticles_nr_particles(struct psc_mparticles *mparticles);
 int  psc_mparticles_nr_particles_by_patch(struct psc_mparticles *mparticles, int p);
 void psc_mparticles_setup_internals(struct psc_mparticles *mparticles);
