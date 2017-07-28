@@ -8,7 +8,7 @@
 
 static void
 psc_collision_none_run(struct psc_collision *collision,
-		       struct psc_particles *prts_base)
+		       struct psc_mparticles *mprts_base)
 {
 }
 

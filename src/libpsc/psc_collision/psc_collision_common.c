@@ -469,7 +469,7 @@ psc_collision_sub_destroy(struct psc_collision *collision)
 
 static void
 psc_collision_sub_run(struct psc_collision *collision,
-		      struct psc_particles *prts_base)
+		      struct psc_mparticles *mprts_base)
 {
   struct psc_collision_sub *coll = psc_collision_sub(collision);
 
@@ -484,43 +484,47 @@ psc_collision_sub_run(struct psc_collision *collision,
     return;
   }
 
+  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
+
   prof_start(pr);
+
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
   
-  struct psc_particles *prts = psc_particles_get_as(prts_base, PARTICLE_TYPE, 0);
-
-  int *ldims = ppsc->patch[prts->p].ldims;
-  int nr_cells = ldims[0] * ldims[1] * ldims[2];
-  int *offsets = calloc(nr_cells + 1, sizeof(*offsets));
-  struct psc_collision_stats stats_total = {};
-  
-  find_cell_offsets(offsets, prts);
-
-  struct psc_fields *flds = psc_mfields_get_patch(coll->mflds, prts->p);
-  psc_foreach_3d(ppsc, prts->p, ix, iy, iz, 0, 0) {
-    int c = (iz * ldims[1] + iy) * ldims[0] + ix;
-    randomize_in_cell(prts, offsets[c], offsets[c+1]);
-
-    struct psc_collision_stats stats = {};
-    collide_in_cell(collision, prts, offsets[c], offsets[c+1], &stats);
-
-    for (int s = 0; s < NR_STATS; s++) {
-      F3(flds, s, ix,iy,iz) = stats.s[s];
-      stats_total.s[s] += stats.s[s];
-    }
-  } psc_foreach_3d_end;
-
-  mprintf("p%d: min %g med %g max %g nlarge %g ncoll %g\n", prts->p,
-	  stats_total.s[STATS_MIN] / nr_cells,
-	  stats_total.s[STATS_MED] / nr_cells,
-	  stats_total.s[STATS_MAX] / nr_cells,
-	  stats_total.s[STATS_NLARGE] / nr_cells,
-	  stats_total.s[STATS_NCOLL] / nr_cells);
-
-  free(offsets);
-
+    int *ldims = ppsc->patch[p].ldims;
+    int nr_cells = ldims[0] * ldims[1] * ldims[2];
+    int *offsets = calloc(nr_cells + 1, sizeof(*offsets));
+    struct psc_collision_stats stats_total = {};
+    
+    find_cell_offsets(offsets, prts);
+    
+    struct psc_fields *flds = psc_mfields_get_patch(coll->mflds, p);
+    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
+      int c = (iz * ldims[1] + iy) * ldims[0] + ix;
+      randomize_in_cell(prts, offsets[c], offsets[c+1]);
+      
+      struct psc_collision_stats stats = {};
+      collide_in_cell(collision, prts, offsets[c], offsets[c+1], &stats);
+      
+      for (int s = 0; s < NR_STATS; s++) {
+	F3(flds, s, ix,iy,iz) = stats.s[s];
+	stats_total.s[s] += stats.s[s];
+      }
+    } psc_foreach_3d_end;
+    
+    mprintf("p%d: min %g med %g max %g nlarge %g ncoll %g\n", p,
+	    stats_total.s[STATS_MIN] / nr_cells,
+	    stats_total.s[STATS_MED] / nr_cells,
+	    stats_total.s[STATS_MAX] / nr_cells,
+	    stats_total.s[STATS_NLARGE] / nr_cells,
+	    stats_total.s[STATS_NCOLL] / nr_cells);
+    
+    free(offsets);
+  }
+    
   prof_stop(pr);
-
-  psc_particles_put_as(prts, prts_base, 0);
+    
+  psc_mparticles_put_as(mprts, mprts_base, 0);
 }
 
 // ======================================================================

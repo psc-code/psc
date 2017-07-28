@@ -10,7 +10,7 @@ struct psc_collision {
 
 struct psc_collision_ops {
   MRC_SUBCLASS_OPS(struct psc_collision);
-  void (*run)(struct psc_collision *collision, struct psc_particles *prts);
+  void (*run)(struct psc_collision *collision, struct psc_mparticles *mprts);
 };
 
 // ======================================================================
