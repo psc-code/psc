@@ -5,13 +5,11 @@
 #include <math.h>
 
 static void
-do_particle_energy(struct psc *psc, struct psc_particles *prts_base, double *result)
+do_particle_energy(struct psc *psc, struct psc_particles *prts, double *result)
 {
-  struct psc_particles *prts = psc_particles_get_as(prts_base, "c", 0);
-  
   double fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
 
-  struct psc_patch *patch = &psc->patch[prts_base->p];
+  struct psc_patch *patch = &psc->patch[prts->p];
   double fac = patch->dx[0] * patch->dx[1] * patch->dx[2];
   for (int n = 0; n < prts->n_part; n++) {
     particle_c_t *part = particles_c_get_one(prts, n);
@@ -26,17 +24,19 @@ do_particle_energy(struct psc *psc, struct psc_particles *prts_base, double *res
       assert(0);
     }
   }
-
-  psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
 }
 
 static void
 psc_diag_item_particle_energy_run(struct psc_diag_item *item,
 				  struct psc *psc, double *result)
 {
-  psc_foreach_patch(psc, p) {
-    do_particle_energy(psc, psc_mparticles_get_patch(psc->particles, p), result);
+  struct psc_mparticles *mprts = psc_mparticles_get_as(psc->particles, "c", 0);
+
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    do_particle_energy(psc, psc_mparticles_get_patch(mprts, p), result);
   }
+
+  psc_mparticles_put_as(mprts, psc->particles, MP_DONT_COPY);
 }
 
 // ======================================================================
