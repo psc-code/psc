@@ -236,6 +236,10 @@ psc_mfields_get_as(struct psc_mfields *mflds_base, const char *type,
   }
   prof_start(pr);
 
+  /* static int cnt; */
+  /* mprintf("get_as %s (%s) %d %d\n", type, psc_mfields_type(mflds_base), mb, me); */
+  /* if (cnt++ == 10) assert(0); */
+  
   struct psc_mfields *mflds = psc_mfields_create(psc_mfields_comm(mflds_base));
   psc_mfields_set_type(mflds, type);
   psc_mfields_set_domain(mflds, mflds_base->domain);

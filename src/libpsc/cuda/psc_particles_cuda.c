@@ -606,9 +606,7 @@ psc_mparticles_cuda_update_n_part(struct psc_mparticles *mprts)
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     prts->n_part = n_prts_by_patch[p];
     n_prts += prts->n_part;
-    mprintf("XXX %p: %d: %d\n", mprts, p, prts->n_part);
   }
-  mprintf("YYY %d %d\n", cmprts->n_prts, n_prts);
   assert(cmprts->n_prts == n_prts);
 }
 

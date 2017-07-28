@@ -317,6 +317,8 @@ cuda_mprts_copy_from_dev(struct psc_mparticles *mprts)
   mprts_cuda->h_bnd_xi4 = new float4[mprts_cuda->nr_prts_send];
   mprts_cuda->h_bnd_pxi4 = new float4[mprts_cuda->nr_prts_send];
 
+  assert(cmprts->n_prts + mprts_cuda->nr_prts_send < cmprts->n_alloced);
+
   check(cudaMemcpy(mprts_cuda->h_bnd_xi4, cmprts->d_xi4 + cmprts->n_prts,
 		   mprts_cuda->nr_prts_send * sizeof(float4), cudaMemcpyDeviceToHost));
   check(cudaMemcpy(mprts_cuda->h_bnd_pxi4, cmprts->d_pxi4 + cmprts->n_prts,
