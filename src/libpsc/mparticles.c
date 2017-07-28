@@ -95,6 +95,12 @@ _psc_mparticles_read(struct psc_mparticles *mparticles, struct mrc_io *io)
 int
 psc_mparticles_nr_particles(struct psc_mparticles *mparticles)
 {
+  struct psc_mparticles_ops *ops = psc_mparticles_ops(mparticles);
+
+  if (ops->get_nr_particles) {
+    return ops->get_nr_particles(mparticles);
+  }
+  
   int nr_part = 0;
   for (int p = 0; p < mparticles->nr_patches; p++) {
     nr_part += psc_mparticles_nr_particles_by_patch(mparticles, p);
@@ -107,6 +113,15 @@ psc_mparticles_nr_particles_by_patch(struct psc_mparticles *mparticles, int p)
 {
   struct psc_particles *prts = psc_mparticles_get_patch(mparticles, p);
   return prts->n_part;
+}
+
+void
+psc_mparticles_update_n_part(struct psc_mparticles *mprts)
+{
+  struct psc_mparticles_ops *ops = psc_mparticles_ops(mprts);
+  if (ops->update_n_part) {
+    ops->update_n_part(mprts);
+  }
 }
 
 void
@@ -133,6 +148,8 @@ psc_mparticles_get_as(struct psc_mparticles *mp_base, const char *type,
   }
   prof_start(pr);
 
+  //  mprintf("get_as %s -> %s\n", psc_mparticles_type(mp_base), type);
+  psc_mparticles_update_n_part(mp_base);
   int *nr_particles_by_patch = malloc(mp_base->nr_patches * sizeof(int));
   for (int p = 0; p < mp_base->nr_patches; p++) {
     nr_particles_by_patch[p] = psc_mparticles_nr_particles_by_patch(mp_base, p);

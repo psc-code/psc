@@ -35,6 +35,8 @@ MRC_CLASS_DECLARE(psc_mparticles, struct psc_mparticles);
 struct psc_mparticles_ops {
   MRC_SUBCLASS_OPS(struct psc_mparticles);
   void (*setup_internals)(struct psc_mparticles *mprts);
+  unsigned int (*get_nr_particles)(struct psc_mparticles *mprts);
+  void (*update_n_part)(struct psc_mparticles *mprts);
 };
 
 #define psc_mparticles_ops(mp) ((struct psc_mparticles_ops *) ((mp)->obj.ops))
@@ -89,6 +91,7 @@ void psc_mparticles_set_domain_nr_particles(struct psc_mparticles *mparticles,
 int  psc_mparticles_nr_particles(struct psc_mparticles *mparticles);
 int  psc_mparticles_nr_particles_by_patch(struct psc_mparticles *mparticles, int p);
 void psc_mparticles_setup_internals(struct psc_mparticles *mparticles);
+void psc_mparticles_update_n_part(struct psc_mparticles *mparticles);
 struct psc_mparticles *psc_mparticles_get_as(struct psc_mparticles *mparticles_base,
 					     const char *type,
 					     unsigned int flags);

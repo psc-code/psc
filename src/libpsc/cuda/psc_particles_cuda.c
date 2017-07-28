@@ -590,6 +590,29 @@ psc_mparticles_cuda_read(struct psc_mparticles *mprts, struct mrc_io *io)
 }
 
 // ----------------------------------------------------------------------
+// psc_mparticles_cuda_update_n_part
+
+static void
+psc_mparticles_cuda_update_n_part(struct psc_mparticles *mprts)
+{
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+
+  unsigned int n_prts_by_patch[cmprts->n_patches];
+  cuda_mparticles_get_n_prts_by_patch(cmprts, n_prts_by_patch);
+
+  unsigned int n_prts = 0;
+  for (int p = 0; p < cmprts->n_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    prts->n_part = n_prts_by_patch[p];
+    n_prts += prts->n_part;
+    mprintf("XXX %p: %d: %d\n", mprts, p, prts->n_part);
+  }
+  mprintf("YYY %d %d\n", cmprts->n_prts, n_prts);
+  assert(cmprts->n_prts == n_prts);
+}
+
+// ----------------------------------------------------------------------
 // psc_mparticles_cuda_setup_internals
 
 static void
@@ -615,6 +638,18 @@ psc_mparticles_cuda_setup_internals(struct psc_mparticles *mprts)
 }
 
 // ----------------------------------------------------------------------
+// psc_mparticles_cuda_get_nr_particles
+
+static unsigned int
+psc_mparticles_cuda_get_nr_particles(struct psc_mparticles *mprts)
+{
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+
+  return cmprts->n_prts;
+}
+
+// ----------------------------------------------------------------------
 // psc_mparticles_cuda_inject
 
 #include <psc_particles_as_single.h> // FIXME
@@ -623,6 +658,13 @@ void
 psc_mparticles_cuda_inject(struct psc_mparticles *mprts_base, struct cuda_mparticles_prt *buf,
 			   unsigned int *buf_n_by_patch)
 {
+  assert(strcmp(psc_mparticles_type(mprts_base), "cuda") == 0);
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts_base);
+  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+
+#if 1
+  cuda_mparticles_inject(cmprts, buf, buf_n_by_patch);
+#else
   struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
 
   unsigned buf_n = 0;
@@ -648,6 +690,7 @@ psc_mparticles_cuda_inject(struct psc_mparticles *mprts_base, struct cuda_mparti
   }
 
   psc_mparticles_put_as(mprts, mprts_base, 0);
+#endif
 }
 
 // ======================================================================
@@ -660,7 +703,9 @@ struct psc_mparticles_ops psc_mparticles_cuda_ops = {
   .destroy                 = psc_mparticles_cuda_destroy,
   .read                    = psc_mparticles_cuda_read,
   //  .write                   = psc_mparticles_cuda_write,
+  .update_n_part           = psc_mparticles_cuda_update_n_part,
   .setup_internals         = psc_mparticles_cuda_setup_internals,
+  .get_nr_particles        = psc_mparticles_cuda_get_nr_particles,
 };
 
 void
