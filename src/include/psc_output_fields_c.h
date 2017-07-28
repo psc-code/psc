@@ -29,6 +29,7 @@ struct psc_output_fields_c {
   int pfield_first, tfield_first;
   int pfield_step, tfield_step;
   int tfield_length;
+  int tfield_every;
   int rn[3];
   int rx[3];
 	
