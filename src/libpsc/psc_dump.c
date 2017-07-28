@@ -56,14 +56,15 @@ ascii_dump_field(mfields_base_t *flds_base, int m, const char *fname)
 }
 
 static void
-ascii_dump_particles(mparticles_base_t *particles_base, const char *fname)
+ascii_dump_particles(mparticles_base_t *mprts_base, const char *fname)
 {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
+  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, "c", 0);
+  
   psc_foreach_patch(ppsc, p) {
-    struct psc_particles *prts_base = psc_mparticles_get_patch(particles_base, p);
-    struct psc_particles *prts = psc_particles_get_as(prts_base, "c", 0);
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     char *filename = malloc(strlen(fname) + 20);
     sprintf(filename, "%s-p%d-p%d.asc", fname, rank, p);
     mpi_printf(MPI_COMM_WORLD, "ascii_dump_particles: '%s'\n", filename);
@@ -78,8 +79,9 @@ ascii_dump_particles(mparticles_base_t *particles_base, const char *fname)
     }
     fclose(file);
     free(filename);
-    psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
   }
+
+  psc_mparticles_put_as(mprts, mprts_base, MP_DONT_COPY);
 }
 
 void
