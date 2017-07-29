@@ -30,7 +30,7 @@ static struct param psc_output_particles_ascii_descr[] = {
 
 static void
 psc_output_particles_ascii_run(struct psc_output_particles *out,
-			       mparticles_base_t *particles_base)
+			       mparticles_base_t *mprts_base)
 {
   struct psc_output_particles_ascii *asc = to_psc_output_particles_ascii(out);
 
@@ -45,10 +45,11 @@ psc_output_particles_ascii_run(struct psc_output_particles *out,
   sprintf(filename, "%s/%s.%06d_p%06d.asc", asc->data_dir,
 	  asc->basename, ppsc->timestep, rank);
 
+  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, "c", 0);
+
   FILE *file = fopen(filename, "w");
-  for (int p = 0; p < particles_base->nr_patches; p++) {
-    struct psc_particles *prts_base = psc_mparticles_get_patch(particles_base, p);
-    struct psc_particles *prts = psc_particles_get_as(prts_base, "c", 0);
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     for (int n = 0; n < prts->n_part; n++) {
       particle_c_t *part = particles_c_get_one(prts, n);
       fprintf(file, "%d %g %g %g %g %g %g %g %g %g\n",
@@ -56,8 +57,10 @@ psc_output_particles_ascii_run(struct psc_output_particles *out,
 	      part->pxi, part->pyi, part->pzi,
 	      part->qni, part->mni, part->wni);
     }
-    psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
   }
+
+  psc_mparticles_put_as(mprts, mprts_base, MP_DONT_COPY);
+  
   fclose(file);
 }
 
