@@ -8,7 +8,7 @@
 
 static void
 psc_randomize_none_run(struct psc_randomize *randomize,
-		       struct psc_particles *prts_base)
+		       struct psc_mparticles *mprts_base)
 {
 }
 

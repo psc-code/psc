@@ -5,7 +5,7 @@
 // forward to subclass
 
 void
-psc_randomize_run(struct psc_randomize *randomize, mparticles_base_t *particles)
+psc_randomize_run(struct psc_randomize *randomize, struct psc_mparticles *mprts)
 {
   static int st_time_randomize;
   if (!st_time_randomize) {
@@ -13,11 +13,11 @@ psc_randomize_run(struct psc_randomize *randomize, mparticles_base_t *particles)
   }
 
   psc_stats_start(st_time_randomize);
+
   struct psc_randomize_ops *ops = psc_randomize_ops(randomize);
   assert(ops->run);
-  for (int p = 0; p < particles->nr_patches; p++) {
-    ops->run(randomize, psc_mparticles_get_patch(particles, p));
-  }
+  ops->run(randomize, mprts);
+
   psc_stats_stop(st_time_randomize);
 }
 
