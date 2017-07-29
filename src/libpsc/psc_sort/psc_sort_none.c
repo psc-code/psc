@@ -7,7 +7,7 @@
 // psc_sort_none_run
 
 static void
-psc_sort_none_run(struct psc_sort *sort, struct psc_particles *prts_base)
+psc_sort_none_run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
 {
 }
 

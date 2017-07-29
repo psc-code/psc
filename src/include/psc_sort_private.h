@@ -11,13 +11,12 @@ struct psc_sort {
 
 struct psc_sort_ops {
   MRC_SUBCLASS_OPS(struct psc_sort);
-  void (*run)(struct psc_sort *sort, struct psc_particles *prts);
+  void (*run)(struct psc_sort *sort, struct psc_mparticles *mprts);
 };
 
 // ======================================================================
 
 extern struct psc_sort_ops psc_sort_none_ops;
-extern struct psc_sort_ops psc_sort_fortran_ops;
 extern struct psc_sort_ops psc_sort_qsort_ops;
 extern struct psc_sort_ops psc_sort_countsort_ops;
 extern struct psc_sort_ops psc_sort_countsort2_ops;
