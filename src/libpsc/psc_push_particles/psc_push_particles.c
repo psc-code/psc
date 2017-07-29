@@ -14,92 +14,25 @@ extern int pr_time_step_no_comm;
 extern double *psc_balance_comp_time_by_patch;
 
 static void
-psc_push_particles_run_patch_yz(struct psc_push_particles *push,
-				struct psc_particles *prts_base,
-				struct psc_fields *flds_base)
-{
-  struct psc_push_particles_ops *ops = psc_push_particles_ops(push);
-  assert(ops->push_a_yz);
-
-  psc_balance_comp_time_by_patch[prts_base->p] -= MPI_Wtime();
-
-  struct psc_particles *prts;
-  if (ops->particles_type) {
-    prts = psc_particles_get_as(prts_base, ops->particles_type, 0);
-  } else {
-    prts = prts_base;
-  }
-  struct psc_fields *flds;
-  if (ops->fields_type) {
-    flds = psc_fields_get_as(flds_base, ops->fields_type, EX, EX + 6);
-  } else {
-    flds = flds_base;
-  }
-
-  ops->push_a_yz(push, prts, flds);
-
-  if (ops->particles_type) {
-    psc_particles_put_as(prts, prts_base, 0);
-  }
-  if (ops->fields_type) {
-    psc_fields_put_as(flds, flds_base, JXI, JXI + 3);
-  }
-
-  psc_balance_comp_time_by_patch[prts_base->p] += MPI_Wtime();
-}
-
-static void
-psc_push_particles_run_patch_xyz(struct psc_push_particles *push,
-				 struct psc_particles *prts_base,
-				 struct psc_fields *flds_base)
-{
-  struct psc_push_particles_ops *ops = psc_push_particles_ops(push);
-  assert(ops->push_a_xyz);
-
-  psc_balance_comp_time_by_patch[prts_base->p] -= MPI_Wtime();
-
-  struct psc_particles *prts;
-  if (ops->particles_type) {
-    prts = psc_particles_get_as(prts_base, ops->particles_type, 0);
-  } else {
-    prts = prts_base;
-  }
-  struct psc_fields *flds;
-  if (ops->fields_type) {
-    flds = psc_fields_get_as(flds_base, ops->fields_type, EX, EX + 6);
-  } else {
-    flds = flds_base;
-  }
-
-  ops->push_a_xyz(push, prts, flds);
-
-  if (ops->particles_type) {
-    psc_particles_put_as(prts, prts_base, 0);
-  }
-  if (ops->fields_type) {
-    psc_fields_put_as(flds, flds_base, JXI, JXI + 3);
-  }
-
-  psc_balance_comp_time_by_patch[prts_base->p] += MPI_Wtime();
-}
-
-static void
 psc_push_particles_run_yz(struct psc_push_particles *push, struct psc_mparticles *mprts,
 			  struct psc_mfields *mflds)
 {
   struct psc_push_particles_ops *ops = psc_push_particles_ops(push);
 
-  prof_restart(pr_time_step_no_comm);
   if (ops->push_mprts_yz) {
     ops->push_mprts_yz(push, mprts, mflds);
   } else {
+    assert(ops->push_a_yz);
 #pragma omp parallel for
     for (int p = 0; p < mprts->nr_patches; p++) {
-      psc_push_particles_run_patch_yz(push, psc_mparticles_get_patch(mprts, p),
-				      psc_mfields_get_patch(mflds, p));
+      struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+      struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+
+      psc_balance_comp_time_by_patch[p] -= MPI_Wtime();
+      ops->push_a_yz(push, prts, flds);
+      psc_balance_comp_time_by_patch[p] += MPI_Wtime();
     }
   }
-  prof_stop(pr_time_step_no_comm);
 }
 
 static void
@@ -108,31 +41,50 @@ psc_push_particles_run_xyz(struct psc_push_particles *push, struct psc_mparticle
 {
   struct psc_push_particles_ops *ops = psc_push_particles_ops(push);
 
-  prof_restart(pr_time_step_no_comm);
   if (ops->push_mprts_xyz) {
     ops->push_mprts_xyz(push, mprts, mflds);
   } else {
+    assert(ops->push_a_xyz);
 #pragma omp parallel for
     for (int p = 0; p < mprts->nr_patches; p++) {
-      psc_push_particles_run_patch_xyz(push, psc_mparticles_get_patch(mprts, p),
-				       psc_mfields_get_patch(mflds, p));
+      struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+      struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+
+      psc_balance_comp_time_by_patch[p] -= MPI_Wtime();
+      ops->push_a_xyz(push, prts, flds);
+      psc_balance_comp_time_by_patch[p] += MPI_Wtime();
     }
   }
-  prof_stop(pr_time_step_no_comm);
 }
 
 void
 psc_push_particles_run(struct psc_push_particles *push,
-		       mparticles_base_t *mprts, mfields_base_t *mflds)
+		       struct psc_mparticles *mprts_base, struct psc_mfields *mflds_base)
 {
   static int pr;
   if (!pr) {
     pr = prof_register("push_particles_run", 1., 0, 0);
   }  
 
-  prof_start(pr);
-  psc_stats_start(st_time_particle);
   struct psc_push_particles_ops *ops = psc_push_particles_ops(push);
+
+  struct psc_mparticles *mprts;
+  if (ops->particles_type) {
+    mprts = psc_mparticles_get_as(mprts_base, ops->particles_type, 0);
+  } else {
+    mprts = mprts_base;
+  }
+  struct psc_mfields *mflds;
+  if (ops->fields_type) {
+    mflds = psc_mfields_get_as(mflds_base, ops->fields_type, EX, EX + 6);
+  } else {
+    mflds = mflds_base;
+  }
+  
+  prof_start(pr);
+  prof_restart(pr_time_step_no_comm);
+  psc_stats_start(st_time_particle);
+
   int *im = ppsc->domain.gdims;
 
   if (im[0] == 1 && im[1] > 1 && im[2] > 1) { // yz
@@ -163,7 +115,15 @@ psc_push_particles_run(struct psc_push_particles *push,
   }
 
   psc_stats_stop(st_time_particle);
+  prof_stop(pr_time_step_no_comm);
   prof_stop(pr);
+
+  if (ops->particles_type) {
+    psc_mparticles_put_as(mprts, mprts_base, 0);
+  }
+  if (ops->fields_type) {
+    psc_mfields_put_as(mflds, mflds_base, JXI, JXI + 3);
+  }
 }
 
 void
