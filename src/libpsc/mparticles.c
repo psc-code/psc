@@ -259,14 +259,15 @@ psc_mparticles_put_as(struct psc_mparticles *mp, struct psc_mparticles *mp_base,
 }
 
 void
-psc_mparticles_check(mparticles_base_t *particles_base)
+psc_mparticles_check(struct psc_mparticles *mprts_base)
 {
   int fail_cnt = 0;
 
+  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, "c", 0);
+  
   psc_foreach_patch(ppsc, p) {
     struct psc_patch *patch = &ppsc->patch[p];
-    struct psc_particles *prts_base = psc_mparticles_get_patch(particles_base, p);
-    struct psc_particles *prts = psc_particles_get_as(prts_base, "c", 0);
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
 
     f_real xb[3], xe[3];
     
@@ -288,9 +289,10 @@ psc_mparticles_check(mparticles_base_t *particles_base)
 	}
       }
     }
-    psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
   }
   assert(fail_cnt == 0);
+
+  psc_mparticles_put_as(mprts, mprts_base, 0);
 }
 
 #define MAKE_MPARTICLES_GET_PUT(type)					\
