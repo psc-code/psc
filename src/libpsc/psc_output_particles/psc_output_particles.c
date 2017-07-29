@@ -28,10 +28,6 @@ psc_output_particles_init()
                               &psc_output_particles_hdf5_single_ops);
   mrc_class_register_subclass(&mrc_class_psc_output_particles,
                               &psc_output_particles_hdf5_double_ops);
-  mrc_class_register_subclass(&mrc_class_psc_output_particles,
-                              &psc_output_particles_xdmf_compact_ops);
-  mrc_class_register_subclass(&mrc_class_psc_output_particles,
-                              &psc_output_particles_xdmf_spread_ops);
 #endif
   mrc_class_register_subclass(&mrc_class_psc_output_particles,
 			      &psc_output_particles_none_ops);
