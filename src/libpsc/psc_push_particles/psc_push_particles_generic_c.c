@@ -13,4 +13,6 @@ struct psc_push_particles_ops psc_push_particles_generic_c_ops = {
   .push_a_xz             = psc_push_particles_generic_c_push_a_xz,
   .push_a_yz             = psc_push_particles_generic_c_push_a_yz,
   .push_a_xyz            = psc_push_particles_generic_c_push_a_xyz,
+  .particles_type        = "c",
+  .fields_type           = "c",
 };

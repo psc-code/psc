@@ -147,24 +147,18 @@ do_push_part_1st_yz(int p, fields_t *pf, struct psc_particles *pp)
 
 void
 psc_push_particles_1st_push_a_yz(struct psc_push_particles *push,
-				 struct psc_particles *prts_base,
-				 struct psc_fields *flds_base)
+				 struct psc_particles *prts,
+				 struct psc_fields *flds)
 {
   static int pr;
   if (!pr) {
     pr = prof_register("1st_part_yz", 1., 0, 0);
   }
 
-  struct psc_particles *prts = psc_particles_get_as(prts_base, PARTICLE_TYPE, 0);
-  struct psc_fields *flds = psc_fields_get_as(flds_base, FIELDS_TYPE, EX, EX + 6);
-
   prof_start(pr);
   params_1vb_set(ppsc, NULL, NULL);
   psc_fields_zero_range(flds, JXI, JXI + 3);
   do_push_part_1st_yz(prts->p, flds, prts);
   prof_stop(pr);
-
-  psc_particles_put_as(prts, prts_base, 0);
-  psc_fields_put_as(flds, flds_base, JXI, JXI + 3);
 }
 

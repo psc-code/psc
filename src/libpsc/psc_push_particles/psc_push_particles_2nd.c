@@ -11,5 +11,7 @@
 struct psc_push_particles_ops psc_push_particles_2nd_double_ops = {
   .name                  = "2nd_double",
   .push_a_yz             = psc_push_particles_2nd_double_push_a_yz,
+  .particles_type        = "double",
+  .fields_type           = "c",
 };
 

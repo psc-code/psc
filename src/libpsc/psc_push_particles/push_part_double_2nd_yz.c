@@ -311,19 +311,13 @@ cache_fields_to_j(struct psc_fields *fld, fields_t *pf)
 
 void
 psc_push_particles_2nd_double_push_a_yz(struct psc_push_particles *push,
-					struct psc_particles *prts_base,
-					struct psc_fields *flds_base)
+					struct psc_particles *prts,
+					struct psc_fields *flds)
 {
-  struct psc_particles *prts = psc_particles_get_as(prts_base, PARTICLE_TYPE, 0);
-  struct psc_fields *flds = psc_fields_get_as(flds_base, FIELDS_TYPE, EX, EX + 6);
-
   psc_fields_zero_range(flds, JXI, JXI + 3);
   struct psc_fields *flds_cache = cache_fields_from_em(flds);
   do_push_part_yz(prts->p, flds_cache, prts);
   cache_fields_to_j(flds_cache, flds);
   psc_fields_destroy(flds_cache);
-
-  psc_particles_put_as(prts, prts_base, 0);
-  psc_fields_put_as(flds, flds_base, JXI, JXI + 3);
 }
 
