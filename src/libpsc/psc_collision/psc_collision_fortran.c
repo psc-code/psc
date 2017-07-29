@@ -27,7 +27,7 @@ psc_collision_fortran_run(struct psc_collision *collision,
 
   prof_stop(pr);
 
-  psc_particles_put_as(prts, prts_base, 0);
+  psc_mparticles_put_as(mprts, mprts_base, 0);
 }
 
 // ======================================================================
