@@ -155,8 +155,6 @@ count_sort(struct psc_mparticles *mprts, int **off, int **map)
     int nr_indices = ldims[0] * ldims[1] * ldims[2] * nr_kinds;
     off[p] = calloc(nr_indices + 1, sizeof(*off[p]));
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    /* struct psc_particles *prts_base = psc_mparticles_get_patch(particles_base, p); */
-    /* struct psc_particles *prts = psc_particles_get_as(prts_base, PARTICLE_TYPE, 0); */
 
     // counting sort to get map 
     for (int n = 0; n < prts->n_part; n++) {
@@ -245,10 +243,6 @@ make_local_particle_array(struct psc_output_particles *out,
   int nn = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-#if 0
-    struct psc_particles *prts_base = psc_mparticles_get_patch(particles_base, p);
-    struct psc_particles *prts = psc_particles_get_as(prts_base, PARTICLE_TYPE, 0);
-#endif
     mrc_domain_get_local_patch_info(ppsc->mrc_domain, p, &info);
     int ilo[3], ihi[3], ld[3], sz;
     find_patch_bounds(hdf5, &info, ilo, ihi, ld, &sz);
