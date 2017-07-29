@@ -40,9 +40,7 @@ include_HEADERS = \
 	psc_output_fields_collection.h \
 	psc_output_fields_collection_private.h \
 	psc_output_particles.h \
-	psc_output_particles_custom_binary.h \
 	psc_output_particles_private.h \
-	psc_output_particles_xdmf.h \
 	psc_output_photons.h \
 	psc_output_photons_private.h \
 	psc_output_photons_xdmf.h \
