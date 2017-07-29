@@ -195,16 +195,14 @@ ip_fields_from_em(int p, fields_ip_t *fld, fields_t *pf)
 
 void
 psc_push_particles_1vb_ps_push_a_yz(struct psc_push_particles *push,
-				    struct psc_particles *prts_base,
-				    struct psc_fields *flds_base)
+				    struct psc_particles *prts,
+				    struct psc_fields *flds)
 {
   static int pr;
   if (!pr) {
     pr = prof_register("ps_1vb_push_yz", 1., 0, 0);
   }
 
-  struct psc_particles *prts = psc_particles_get_as(prts_base, "single", 0);
-  struct psc_fields *flds = psc_fields_get_as(flds_base, FIELDS_TYPE, EX, EX + 6);
   struct psc_particles_single *sngl = psc_particles_single(prts);
   assert(!sngl->need_reorder);
 
@@ -232,9 +230,6 @@ psc_push_particles_1vb_ps_push_a_yz(struct psc_push_particles *push,
   ip_fields_to_j(prts->p, &fld_ip, flds);
   fields_ip_free(&fld_ip);
   prof_stop(pr);
-
-  psc_particles_put_as(prts, prts_base, 0);
-  psc_fields_put_as(flds, flds_base, JXI, JXI + 3);
 }
 
 // ======================================================================
@@ -244,17 +239,15 @@ psc_push_particles_1vb_ps_push_a_yz(struct psc_push_particles *push,
 
 void
 psc_push_particles_1vb_ps2_push_a_yz(struct psc_push_particles *push,
-				     struct psc_particles *prts_base,
-				     struct psc_fields *flds_base)
+				     struct psc_particles *prts,
+				     struct psc_fields *flds)
 {
   static int pr;
   if (!pr) {
     pr = prof_register("ps_1vb_push_yz", 1., 0, 0);
   }
 
-  struct psc_particles *prts = psc_particles_get_as(prts_base, "single", 0);
   struct psc_particles_single *sngl = psc_particles_single(prts);
-  struct psc_fields *flds = psc_fields_get_as(flds_base, FIELDS_TYPE, EX, EX + 6);
 
   if (!sngl->need_reorder) {
     MHERE;
@@ -287,8 +280,5 @@ psc_push_particles_1vb_ps2_push_a_yz(struct psc_push_particles *push,
   ip_fields_to_j(prts->p, &fld_ip, flds);
   fields_ip_free(&fld_ip);
   prof_stop(pr);
-
-  psc_particles_put_as(prts, prts_base, 0);
-  psc_fields_put_as(flds, flds_base, JXI, JXI + 3);
 }
 
