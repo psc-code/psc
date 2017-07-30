@@ -180,7 +180,6 @@ count_sort(struct psc_mparticles *mprts, int **off, int **map)
       map[p][off2[si]++] = n;
     }
     free(off2);
-    //    psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
   }  
 }
 
@@ -274,7 +273,6 @@ make_local_particle_array(struct psc_output_particles *out,
 	}
       }
     }
-    //    psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
   }
 
   *p_n_write = n_write;

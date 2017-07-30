@@ -10,12 +10,6 @@
 
 MRC_CLASS_DECLARE(psc_particles, struct psc_particles);
 
-struct psc_particles *psc_particles_get_as(struct psc_particles *prts_base,
-					   const char *type,
-					   unsigned int flags);
-void psc_particles_put_as(struct psc_particles *prts,
-			  struct psc_particles *prts_base,
-			  unsigned int flags);
 void psc_particles_reorder(struct psc_particles *prts);
 
 // ----------------------------------------------------------------------
