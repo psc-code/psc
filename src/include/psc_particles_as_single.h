@@ -31,5 +31,7 @@ typedef mparticles_single_t mparticles_t;
 
 #define PSC_PARTICLES_AS_SINGLE 1
 
+#include "particle_iter.h"
+
 #endif
 

@@ -29,5 +29,7 @@ typedef mparticles_c_t mparticles_t;
 #define MPI_PARTICLES_REAL          MPI_PARTICLES_C_REAL
 #define PARTICLE_TYPE               "c"
 
+#include "particle_iter.h"
+
 #endif
 

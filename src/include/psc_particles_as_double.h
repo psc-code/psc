@@ -29,5 +29,7 @@ typedef mparticles_double_t mparticles_t;
 #define MPI_PARTICLES_REAL          MPI_PARTICLES_DOUBLE_REAL
 #define PARTICLE_TYPE               "double"
 
+#include "particle_iter.h"
+
 #endif
 
