@@ -80,10 +80,11 @@ psc_photon_test_init_npt(struct psc *psc, int kind, double x[3],
 static void
 psc_event_generator_emission(struct psc *psc)
 {
+  struct psc_mparticles *mprts = psc_mparticles_get_as(psc->particles, "c", 0);
+  
   psc_foreach_patch(psc, p) {
     // get array of particles on this patch
-    struct psc_particles *prts_base = psc_mparticles_get_patch(psc->particles, p);
-    struct psc_particles *prts = psc_particles_get_as(prts_base, "c", 0);
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
   
     photons_t *photons = &psc->mphotons->p[p];
     // and iterative over all particles in the array
@@ -107,8 +108,8 @@ psc_event_generator_emission(struct psc *psc)
 	part->pxi /= 2.;
       }
     }
-    psc_particles_put_as(prts, prts_base, 0);
   }
+  psc_mparticles_put_as(mprts, psc->particles, 0);
 }
 
 static void

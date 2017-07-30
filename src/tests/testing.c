@@ -79,16 +79,17 @@ psc_save_particles_ref(struct psc *psc, mparticles_base_t *particles)
 					   nr_particles_by_patch);
     psc_mparticles_setup(particles_ref);
   }
+
+  struct psc_mparticles *mprts = psc_mparticles_get_as(particles, "c", 0);
   psc_foreach_patch(psc, p) {
-    struct psc_particles *prts_base = psc_mparticles_get_patch(particles, p);
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles *prts_ref = psc_mparticles_get_patch(particles_ref, p);
-    struct psc_particles *prts = psc_particles_get_as(prts_base, "c", 0);
     prts_ref->n_part = prts->n_part;
     for (int i = 0; i < prts->n_part; i++) {
       *particles_get_one(prts_ref, i) = *particles_get_one(prts, i);
     }
-    psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
   }
+  psc_mparticles_put_as(mprts, particles, MP_DONT_COPY);
 }
 
 // ----------------------------------------------------------------------
@@ -136,11 +137,11 @@ psc_check_particles_ref(struct psc *psc, mparticles_base_t *particles_base,
   }
 
   assert(particles_ref);
+  struct psc_mparticles *mprts = psc_mparticles_get_as(particles_base, "c", 0);
   particle_real_t xi = 0., yi = 0., zi = 0., pxi = 0., pyi = 0., pzi = 0.;
   psc_foreach_patch(psc, p) {
-    struct psc_particles *prts_base = psc_mparticles_get_patch(particles_base, p);
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles *prts_ref = psc_mparticles_get_patch(particles_ref, p);
-    struct psc_particles *prts = psc_particles_get_as(prts_base, "c", 0);
   
     assert(prts->n_part == prts_ref->n_part);
     for (int i = 0; i < prts->n_part; i++) {
@@ -160,8 +161,8 @@ psc_check_particles_ref(struct psc *psc, mparticles_base_t *particles_base,
       assert_equal(part->pyi, part_ref->pyi, thres);
       assert_equal(part->pzi, part_ref->pzi, thres);
     }
-    psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
   }
+  psc_mparticles_put_as(mprts, particles_base, MP_DONT_COPY);
 
   if (opt_checks_verbose) {
     mprintf("max delta: (%s)\n", test_str);
@@ -300,11 +301,11 @@ psc_check_particles_sorted(struct psc *psc, mparticles_base_t *particles_base)
 {
   int last = INT_MIN;
 
+  struct psc_mparticles *mprts = psc_mparticles_get_as(particles_base, "c", 0);
   int *ibn = psc->ibn;
   psc_foreach_patch(psc, p) {
     struct psc_patch *patch = &psc->patch[p];
-    struct psc_particles *prts_base = psc_mparticles_get_patch(particles_base, p);
-    struct psc_particles *prts = psc_particles_get_as(prts_base, "c", 0);
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
 
     particle_real_t dxi = 1.f / patch->dx[0];
     particle_real_t dyi = 1.f / patch->dx[1];
@@ -330,8 +331,8 @@ psc_check_particles_sorted(struct psc *psc, mparticles_base_t *particles_base)
       assert(cni >= last);
       last = cni;
     }
-    psc_particles_put_as(prts, prts_base, 0);
   }
+  psc_mparticles_put_as(mprts, particles_base, 0);
 }
 
 // ======================================================================

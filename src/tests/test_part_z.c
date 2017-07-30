@@ -31,8 +31,8 @@ static void
 add_particle(double xi, double yi, double zi, double pxi, double pyi, double pzi,
 	     double qni, double mni)
 {
-  struct psc_particles *prts_base = psc_mparticles_get_patch(ppsc->particles, 0);
-  struct psc_particles *prts = psc_particles_get_as(prts_base, "c", 0);
+  struct psc_mparticles *mprts = psc_mparticles_get_as(psc->particles, "c", 0);
+  struct psc_particles *prts = psc_mparticles_get_patch(mprts, 0);
 
   int n = prts->n_part++;
   particle_t *part = particles_get_one(prts, n);
@@ -46,7 +46,7 @@ add_particle(double xi, double yi, double zi, double pxi, double pyi, double pzi
   part->mni = mni;
   part->wni = ppsc->prm.nicell; // FIXME, better set nicell to 1 or get rid of it altogether
 
-  psc_particles_put_as(prts, prts_base, 0);
+  psc_mparticles_put_as(mprts, psc->particles, 0);
 }
 
 static struct psc_case *
@@ -59,10 +59,10 @@ create_test_base(const char *s_push_particles)
 
   ppsc->dt = ppsc->dx[2];
 
-  struct psc_particles *prts_base = psc_mparticles_get_patch(ppsc->particles, 0);
-  struct psc_particles *prts = psc_particles_get_as(prts_base, "c", MP_DONT_COPY);
+  struct psc_mparticles *mprts = psc_mparticles_get_as(psc->particles, "c", 0);
+  struct psc_particles *prts = psc_mparticles_get_patch(mprts, 0);
   prts->n_part = 0;
-  psc_particles_put_as(prts, prts_base, 0);
+  psc_mparticles_put_as(mprts, psc->particles, 0);
   return _case;
 }
 

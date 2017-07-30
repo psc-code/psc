@@ -29,11 +29,10 @@ main(int argc, char **argv)
   struct psc *psc = psc_testing_create_test_yz("fortran", 0);// moments "1st";
   psc_setup(psc);
   psc_testing_save_ref(psc);
-  for (int p = 0; p < psc->nr_patches; p++) {
-    struct psc_particles *prts =
-      psc_particles_get_as(psc_mparticles_get_patch(psc->particles, p), s_type, flags);
-    psc_particles_put_as(prts, psc_mparticles_get_patch(psc->particles, p), 0);
-  }
+
+  struct psc_mparticles *mprts = psc_mparticles_get_as(psc->particles, s_type, flags);
+  psc_mparticles_put_as(mprts, psc->particles, 0);
+
   psc_check_particles_ref(psc, psc->particles, eps_particles, "mparticles");
   psc_destroy(psc);
 
