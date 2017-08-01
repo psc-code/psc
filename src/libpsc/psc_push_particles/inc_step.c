@@ -51,10 +51,10 @@ typedef struct { float4 *xi4; float4 *pxi4; } mprts_array_t;
 
 #else
 
-typedef struct psc_particles * mprts_array_t;
+typedef particle_iter_t mprts_array_t;
 
 #define PARTICLE_LOAD(prt, mprts_arr, n)	\
-  prt = particles_get_one(mprts_arr, n)
+  prt = particle_iter_at(mprts_arr, n)
 
 #define PARTICLE_STORE(prt, mprts_arr, n) do {} while (0)
 
@@ -89,9 +89,10 @@ ext_prepare_sort_before(struct psc_particles *prts)
 }
 
 static inline void
-ext_prepare_sort(struct psc_particles *prts, int n, particle_t *prt,
+ext_prepare_sort(struct psc_particles *_prts, int n, particle_t *prt,
 		 int *b_pos)
 {
+  particle_range_t prts = particle_range_prts(_prts);
   /* FIXME, only if blocksize == 1! */
   int *b_mx = prts_sub->b_mx;
   if (b_pos[1] >= 0 && b_pos[1] < b_mx[1] &&
@@ -101,7 +102,7 @@ ext_prepare_sort(struct psc_particles *prts, int n, particle_t *prt,
     prts_sub->b_idx[n] = prts_sub->nr_blocks;
     assert(prts_sub->b_cnt[prts_sub->nr_blocks] < prts_sub->n_alloced);
     /* append to back */
-    *particles_get_one(prts, prts->n_part + prts_sub->b_cnt[prts_sub->nr_blocks]) = *prt;
+    *particle_iter_at(prts.begin, _prts->n_part + prts_sub->b_cnt[prts_sub->nr_blocks]) = *prt;
   }
   prts_sub->b_cnt[prts_sub->b_idx[n]]++;
 }

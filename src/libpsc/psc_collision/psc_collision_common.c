@@ -97,16 +97,18 @@ find_cell_index(particle_t *prt, particle_real_t *dxi, int ldims[3])
 // find_cell_offsets
 
 static void
-find_cell_offsets(int offsets[], struct psc_particles *prts)
+find_cell_offsets(int offsets[], struct psc_particles *_prts)
 {
-  particle_real_t dxi[3] = { 1.f / ppsc->patch[prts->p].dx[0],
-			     1.f / ppsc->patch[prts->p].dx[1],
-			     1.f / ppsc->patch[prts->p].dx[2] };
-  int *ldims = ppsc->patch[prts->p].ldims;
+  particle_range_t prts = particle_range_prts(_prts);
+
+  particle_real_t dxi[3] = { 1.f / ppsc->patch[_prts->p].dx[0],
+			     1.f / ppsc->patch[_prts->p].dx[1],
+			     1.f / ppsc->patch[_prts->p].dx[2] };
+  int *ldims = ppsc->patch[_prts->p].ldims;
   int last = 0;
   offsets[last] = 0;
-  for (int n = 0; n < prts->n_part; n++) {
-    particle_t *prt = particles_get_one(prts, n);
+  for (int n = 0; n < _prts->n_part; n++) {
+    particle_t *prt = particle_iter_at(prts.begin, n);
     int cell_index = find_cell_index(prt, dxi, ldims);
     assert(cell_index >= last);
     while (last < cell_index) {
@@ -114,7 +116,7 @@ find_cell_offsets(int offsets[], struct psc_particles *prts)
     }
   }
   while (last < ldims[0] * ldims[1] * ldims[2]) {
-    offsets[++last] = prts->n_part;
+    offsets[++last] = _prts->n_part;
   }
 }
 
@@ -122,16 +124,17 @@ find_cell_offsets(int offsets[], struct psc_particles *prts)
 // randomize_in_cell
 
 static void
-randomize_in_cell(struct psc_particles *prts, int n_start, int n_end)
+randomize_in_cell(struct psc_particles *_prts, int n_start, int n_end)
 {
+  particle_range_t prts = particle_range_prts(_prts);
   int nn = n_end - n_start;
   for (int n = 0; n < nn - 1; n++) {
     int n_partner = n + random() % (nn - n);
     if (n != n_partner) {
       // swap n, n_partner
-      particle_t tmp = *particles_get_one(prts, n_start + n);
-      *particles_get_one(prts, n_start + n) = *particles_get_one(prts, n_start + n_partner);    
-      *particles_get_one(prts, n_start + n_partner) = tmp;
+      particle_t tmp = *particle_iter_at(prts.begin, n_start + n);
+      *particle_iter_at(prts.begin, n_start + n) = *particle_iter_at(prts.begin, n_start + n_partner);    
+      *particle_iter_at(prts.begin, n_start + n_partner) = tmp;
     }
   }
 }
@@ -140,8 +143,9 @@ randomize_in_cell(struct psc_particles *prts, int n_start, int n_end)
 // bc
 
 static particle_real_t
-bc(struct psc_particles *prts, particle_real_t nudt1, int n1, int n2)
+bc(struct psc_particles *_prts, particle_real_t nudt1, int n1, int n2)
 {
+  particle_range_t prts = particle_range_prts(_prts);
   particle_real_t nudt;
     
   particle_real_t pn1,pn2,pn3,pn4;
@@ -169,8 +173,8 @@ bc(struct psc_particles *prts, particle_real_t nudt1, int n1, int n2)
   particle_real_t m12,q12;
   particle_real_t ran1,ran2;
     
-  particle_t *prt1 = particles_get_one(prts, n1);
-  particle_t *prt2 = particles_get_one(prts, n2);
+  particle_t *prt1 = particle_iter_at(prts.begin, n1);
+  particle_t *prt2 = particle_iter_at(prts.begin, n2);
   
   
   px1=prt1->pxi;
@@ -398,10 +402,11 @@ bc(struct psc_particles *prts, particle_real_t nudt1, int n1, int n2)
 
 static void
 collide_in_cell(struct psc_collision *collision,
-		struct psc_particles *prts, int n_start, int n_end,
+		struct psc_particles *_prts, int n_start, int n_end,
 		struct psc_collision_stats *stats)
 {
   struct psc_collision_sub *coll = psc_collision_sub(collision);
+  particle_range_t prts = particle_range_prts(_prts);
 
   int nn = n_end - n_start;
   
@@ -411,20 +416,20 @@ collide_in_cell(struct psc_collision *collision,
   }
 
   // all particles need to have same weight!
-  particle_real_t wni = particle_wni(particles_get_one(prts, n_start));
+  particle_real_t wni = particle_wni(particle_iter_at(prts.begin, n_start));
   particle_real_t nudt1 = wni / ppsc->prm.nicell * nn * coll->every * ppsc->dt * coll->nu;
 
   particle_real_t *nudts = malloc((nn / 2 + 2) * sizeof(*nudts));
   int cnt = 0;
 
   if (nn % 2 == 1) { // odd # of particles: do 3-collision
-    nudts[cnt++] = bc(prts, .5 * nudt1, n_start    , n_start + 1);
-    nudts[cnt++] = bc(prts, .5 * nudt1, n_start    , n_start + 2);
-    nudts[cnt++] = bc(prts, .5 * nudt1, n_start + 1, n_start + 2);
+    nudts[cnt++] = bc(_prts, .5 * nudt1, n_start    , n_start + 1);
+    nudts[cnt++] = bc(_prts, .5 * nudt1, n_start    , n_start + 2);
+    nudts[cnt++] = bc(_prts, .5 * nudt1, n_start + 1, n_start + 2);
     n = 3;
   }
   for (; n < nn;  n += 2) { // do remaining particles as pair
-    nudts[cnt++] = bc(prts, nudt1, n_start + n, n_start + n + 1);
+    nudts[cnt++] = bc(_prts, nudt1, n_start + n, n_start + n + 1);
   }
 
   calc_stats(stats, nudts, cnt);

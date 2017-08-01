@@ -16,7 +16,7 @@
 #include "inc_push.c"
 
 static void
-do_push_part_1st_yz(int p, fields_t *pf, struct psc_particles *pp)
+do_push_part_1st_yz(int p, fields_t *pf, particle_range_t prts)
 {
 #define S0Y(off) s0y[off+1]
 #define S0Z(off) s0z[off+1]
@@ -31,8 +31,8 @@ do_push_part_1st_yz(int p, fields_t *pf, struct psc_particles *pp)
   particle_real_t fnqys = ppsc->patch[p].dx[1] * fnqs / dt;
   particle_real_t fnqzs = ppsc->patch[p].dx[2] * fnqs / dt;
 
-  for (int n = 0; n < pp->n_part; n++) {
-    particle_t *part = particles_get_one(pp, n);
+  PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
+    particle_t *part = particle_iter_deref(prt_iter);
     particle_real_t vxi[3];
 
     // x^n, p^n -> x^(n+.5), p^n
@@ -147,7 +147,7 @@ do_push_part_1st_yz(int p, fields_t *pf, struct psc_particles *pp)
 
 void
 psc_push_particles_1st_push_a_yz(struct psc_push_particles *push,
-				 struct psc_particles *prts,
+				 struct psc_particles *_prts,
 				 struct psc_fields *flds)
 {
   static int pr;
@@ -158,7 +158,8 @@ psc_push_particles_1st_push_a_yz(struct psc_push_particles *push,
   prof_start(pr);
   params_1vb_set(ppsc, NULL, NULL);
   psc_fields_zero_range(flds, JXI, JXI + 3);
-  do_push_part_1st_yz(prts->p, flds, prts);
+  particle_range_t prts = particle_range_prts(_prts);
+  do_push_part_1st_yz(_prts->p, flds, prts);
   prof_stop(pr);
 }
 

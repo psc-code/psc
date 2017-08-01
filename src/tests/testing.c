@@ -85,8 +85,12 @@ psc_save_particles_ref(struct psc *psc, mparticles_base_t *particles)
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles *prts_ref = psc_mparticles_get_patch(particles_ref, p);
     prts_ref->n_part = prts->n_part;
-    for (int i = 0; i < prts->n_part; i++) {
-      *particles_get_one(prts_ref, i) = *particles_get_one(prts, i);
+    particle_range_t _prts = particle_range_prts(prts);
+    particle_range_t _prts_ref = particle_range_prts(prts_ref);
+    for (particle_iter_t prt_iter = _prts.begin, prt_ref_iter = _prts_ref.end;
+	 !particle_iter_equal(prt_iter, _prts.end);
+	 prt_iter = particle_iter_next(prt_iter), prt_ref_iter = particle_iter_next(prt_ref_iter)) {
+      *particle_iter_deref(prt_ref_iter) = *particle_iter_deref(prt_iter);
     }
   }
   psc_mparticles_put_as(mprts, particles, MP_DONT_COPY);
@@ -144,9 +148,14 @@ psc_check_particles_ref(struct psc *psc, mparticles_base_t *particles_base,
     struct psc_particles *prts_ref = psc_mparticles_get_patch(particles_ref, p);
   
     assert(prts->n_part == prts_ref->n_part);
-    for (int i = 0; i < prts->n_part; i++) {
-      particle_t *part = particles_get_one(prts, i);
-      particle_t *part_ref = particles_get_one(prts_ref, i);
+    particle_range_t _prts = particle_range_prts(prts);
+    particle_range_t _prts_ref = particle_range_prts(prts_ref);
+    for (particle_iter_t prt_iter = _prts.begin, prt_ref_iter = _prts_ref.end;
+	 !particle_iter_equal(prt_iter, _prts.end);
+	 prt_iter = particle_iter_next(prt_iter), prt_ref_iter = particle_iter_next(prt_ref_iter)) {
+      *particle_iter_deref(prt_ref_iter) = *particle_iter_deref(prt_iter);
+      particle_t *part = particle_iter_deref(prt_iter);
+      particle_t *part_ref = particle_iter_deref(prt_ref_iter);
       //    printf("i = %d\n", i);
       xi  = fmax(xi , fabs(part->xi  - part_ref->xi));
       yi  = fmax(yi , fabs(part->yi  - part_ref->yi));
@@ -306,15 +315,16 @@ psc_check_particles_sorted(struct psc *psc, mparticles_base_t *particles_base)
   psc_foreach_patch(psc, p) {
     struct psc_patch *patch = &psc->patch[p];
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-
+    particle_range_t _prts = particle_range_prts(prts);
     particle_real_t dxi = 1.f / patch->dx[0];
     particle_real_t dyi = 1.f / patch->dx[1];
     particle_real_t dzi = 1.f / patch->dx[2];
 
     int *ldims = patch->ldims;
-    for (int n = 0; n < prts->n_part; n++) {
+
+    PARTICLE_ITER_LOOP(prt_iter, _prts.begin, _prts.end) {
+      particle_t *part = particle_iter_deref(prt_iter);
       // FIXME, duplicated
-      particle_t *part = particles_get_one(prts, n);
 
       particle_real_t u = part->xi * dxi;
       particle_real_t v = part->yi * dyi;

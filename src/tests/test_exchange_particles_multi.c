@@ -21,6 +21,8 @@ psc_test_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool count
  
     int i = 0;
     if (p == 0 && rank == 0) { // initially, only particles on first patch
+      particle_range_t prts = particle_range_prts(psc_mparticles_get_patch(psc->particles, p));
+      particle_iter_t prt_iter = prts.begin;
       int *ilo = patch->off;
       int ihi[3] = { patch->off[0] + patch->ldims[0],
 		     patch->off[1] + patch->ldims[1],
@@ -29,23 +31,22 @@ psc_test_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool count
 	for (int iy = ilo[1]; iy < ihi[1]; iy++) { // xz only !!!
 	  for (int ix = ilo[0]-1; ix < ihi[0]+1; ix++) {
 	    if (!count_only) {
-	      struct psc_particles *pp = psc_mparticles_get_patch(psc->particles, p);
-	      particle_t *p;
-	      p = particles_get_one(pp, i);
+	      particle_t *p = particle_iter_deref(prt_iter);
 	      memset(p, 0, sizeof(*p));
 	      p->qni = -1.; p->mni = 1.; p->wni = 1.;
 	      p->xi = (ix + .5) * patch->dx[0];
 	      p->yi = (iy + .5) * patch->dx[1];
 	      p->zi = (iz + .5) * patch->dx[2];
+	      prt_iter = particle_iter_next(prt_iter);
 	      
-	      p = particles_get_one(pp, i + 1);
+	      p = particle_iter_deref(prt_iter);
 	      memset(p, 0, sizeof(*p));
 	      p->qni = 1.; p->mni = 100.; p->wni = 1.;
 	      p->xi = (ix + .5) * patch->dx[0];
 	      p->yi = (iy + .5) * patch->dx[1];
 	      p->zi = (iz + .5) * patch->dx[2];
+	      prt_iter = particle_iter_next(prt_iter);
 	    }
-	    i += 2;
 	  }
 	}
       }

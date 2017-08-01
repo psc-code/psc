@@ -172,8 +172,9 @@ ranf()
 
 static void
 psc_es1_init_species(struct psc *psc, int kind, struct psc_es1_species *s,
-		     struct psc_particles *prts, int *p_il1)
+		     struct psc_particles *_prts, int *p_il1)
 {
+  particle_range_t prts = particle_range_prts(_prts);
   int p = 0;
   int il1 = *p_il1;
   int *ldims = psc->patch[p].ldims;
@@ -298,9 +299,9 @@ psc_es1_init_species(struct psc *psc, int kind, struct psc_es1_species *s,
     vx[i] += s->v1 * sin(theta + s->thetav);
   }
 
-  // copy to PSC data structure
+  // copy to PSC data structure≈
   for (int i = 0; i < n; i++) {
-    particle_t *p = particles_get_one(prts, il1 + i);
+    particle_t *p = particle_iter_at(prts.begin, il1 + i);
     if (x[i] < 0.) x[i] += l;
     if (x[i] >= l) x[i] -= l;
     p->zi  = x[i];

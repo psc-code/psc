@@ -10,7 +10,8 @@
 static void
 run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 	struct psc_mparticles *mprts_base, struct psc_mfields *mres,
-	void (*do_run)(int p, struct psc_fields *flds, struct psc_particles *prts))
+	void (*do_run)(int p, struct psc_fields *flds, particle_iter_t prt_begin,
+		       particle_iter_t prt_end))
 {
   struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
 
@@ -18,7 +19,7 @@ run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_fields *res = psc_mfields_get_patch(mres, p);
     psc_fields_zero_range(res, 0, res->nr_comp);
-    do_run(res->p, res, prts);
+    do_run(res->p, res, particle_iter_begin_prts(prts), particle_iter_end_prts(prts));
   }
 
   psc_mparticles_put_as(mprts, mprts_base, MP_DONT_COPY);
@@ -27,18 +28,18 @@ run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 typedef fields_c_real_t creal;
 
 static void
-do_n_2nd_nc_run(int p, fields_t *pf, struct psc_particles *prts)
+do_n_2nd_nc_run(int p, fields_t *pf, particle_iter_t prt_begin, particle_iter_t prt_end)
 {
-  struct psc_patch *patch = &ppsc->patch[prts->p];
+  struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
-  for (int n = 0; n < prts->n_part; n++) {
-    particle_t *part = particles_get_one(prts, n);
+  PARTICLE_ITER_LOOP(prt_iter, prt_begin, prt_end) {
+    particle_t *prt = particle_iter_deref(prt_iter);
       
-    creal u = part->xi * dxi;
-    creal v = part->yi * dyi;
-    creal w = part->zi * dzi;
+    creal u = prt->xi * dxi;
+    creal v = prt->yi * dyi;
+    creal w = prt->zi * dzi;
     int j1 = particle_real_nint(u);
     int j2 = particle_real_nint(v);
     int j3 = particle_real_nint(w);
@@ -69,14 +70,14 @@ do_n_2nd_nc_run(int p, fields_t *pf, struct psc_particles *prts)
 
     creal fnq;
     int m;
-    if (part->qni < 0.) {
-      fnq = part->qni * part->wni * fnqs;
+    if (prt->qni < 0.) {
+      fnq = prt->qni * prt->wni * fnqs;
       m = 0;
-    } else if (part->qni > 0.) {
-      fnq = part->qni * part->wni * fnqs;
+    } else if (prt->qni > 0.) {
+      fnq = prt->qni * prt->wni * fnqs;
       m = 1;
     } else {
-      fnq = part->wni * fnqs;
+      fnq = prt->wni * fnqs;
       m = 2;
     }
     F3(pf, m, j1-j1d,j2-j2d,j3-j3d) += fnq*gmx*gmy*gmz;
@@ -119,18 +120,18 @@ n_2nd_nc_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
 // FIXME too much duplication, specialize 2d/1d
 
 static void
-do_v_2nd_nc_run(int p, fields_t *pf, struct psc_particles *prts)
+do_v_2nd_nc_run(int p, fields_t *pf, particle_iter_t prt_begin, particle_iter_t prt_end)
 {
-  struct psc_patch *patch = &ppsc->patch[prts->p];
+  struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
-  for (int n = 0; n < prts->n_part; n++) {
-    particle_t *part = particles_get_one(prts, n);
+  PARTICLE_ITER_LOOP(prt_iter, prt_begin, prt_end) {
+    particle_t *prt = particle_iter_deref(prt_iter);
 
-    creal u = part->xi * dxi;
-    creal v = part->yi * dyi;
-    creal w = part->zi * dzi;
+    creal u = prt->xi * dxi;
+    creal v = prt->yi * dyi;
+    creal w = prt->zi * dzi;
     int j1 = particle_real_nint(u);
     int j2 = particle_real_nint(v);
     int j3 = particle_real_nint(w);
@@ -158,16 +159,16 @@ do_v_2nd_nc_run(int p, fields_t *pf, struct psc_particles *prts)
       j3 = 0; gmz = 0.; g0z = 1.; g1z = 0.;
     }
     
-    creal pxi = part->pxi;
-    creal pyi = part->pyi;
-    creal pzi = part->pzi;
+    creal pxi = prt->pxi;
+    creal pyi = prt->pyi;
+    creal pzi = prt->pzi;
     creal root = 1.0/sqrt(1.0+pxi*pxi+pyi*pyi+pzi*pzi);
     creal vv[3] = { pxi*root, pyi*root, pzi*root };
-    creal fnq = part->wni * fnqs;
+    creal fnq = prt->wni * fnqs;
     int mm;
-    if (part->qni < 0.) {
+    if (prt->qni < 0.) {
       mm = 0; // electrons
-    } else if (part->qni > 0.) {
+    } else if (prt->qni > 0.) {
       mm = 3; // ions
     } else {
       assert(0);
@@ -212,18 +213,18 @@ v_2nd_nc_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
 }
 
 static void
-do_vv_2nd_nc_run(int p, fields_t *pf, struct psc_particles *prts)
+do_vv_2nd_nc_run(int p, fields_t *pf, particle_iter_t prt_begin, particle_iter_t prt_end)
 {
-  struct psc_patch *patch = &ppsc->patch[prts->p];
+  struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
-  for (int n = 0; n < prts->n_part; n++) {
-    particle_t *part = particles_get_one(prts, n);
+  PARTICLE_ITER_LOOP(prt_iter, prt_begin, prt_end) {
+    particle_t *prt = particle_iter_deref(prt_iter);
 
-    creal u = part->xi * dxi;
-    creal v = part->yi * dyi;
-    creal w = part->zi * dzi;
+    creal u = prt->xi * dxi;
+    creal v = prt->yi * dyi;
+    creal w = prt->zi * dzi;
     int j1 = particle_real_nint(u);
     int j2 = particle_real_nint(v);
     int j3 = particle_real_nint(w);
@@ -251,16 +252,16 @@ do_vv_2nd_nc_run(int p, fields_t *pf, struct psc_particles *prts)
       j3 = 0; gmz = 0.; g0z = 1.; g1z = 0.;
     }
     
-    creal pxi = part->pxi;
-    creal pyi = part->pyi;
-    creal pzi = part->pzi;
+    creal pxi = prt->pxi;
+    creal pyi = prt->pyi;
+    creal pzi = prt->pzi;
     creal root = 1.0/sqrt(1.0+pxi*pxi+pyi*pyi+pzi*pzi);
     creal vv[3] = { pxi*root, pyi*root, pzi*root };
-    creal fnq = part->wni * fnqs;
+    creal fnq = prt->wni * fnqs;
     int mm;
-    if (part->qni < 0.) {
+    if (prt->qni < 0.) {
       mm = 0; // electrons
-    } else if (part->qni > 0.) {
+    } else if (prt->qni > 0.) {
       mm = 3; // ions
     } else {
       assert(0);

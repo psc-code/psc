@@ -17,15 +17,16 @@
 #ifdef PUSHER_BY_BLOCK
 
 static void
-do_push_part_1vb_yz(struct psc_fields *flds, struct psc_particles *prts)
+do_push_part_1vb_yz(struct psc_fields *flds, struct psc_particles *_prts)
 {
 #ifdef PSC_PARTICLES_AS_SINGLE_BY_BLOCK
-  struct psc_particles_single_by_block *sub = psc_particles_single_by_block(prts);
+  struct psc_particles_single_by_block *sub = psc_particles_single_by_block(_prts);
 #endif
 
+  particle_range_t prts = particle_range_prts(_prts);
   for (int b = 0; b < sub->nr_blocks; b++) {
     for (int n = sub->b_off[b]; n < sub->b_off[b+1]; n++) {
-      push_one(prts, n, flds, flds);
+      push_one(prts.begin, n, flds, flds);
     }
   }
 }
@@ -33,10 +34,11 @@ do_push_part_1vb_yz(struct psc_fields *flds, struct psc_particles *prts)
 #else
 
 static void
-do_push_part_1vb_yz(struct psc_fields *flds, struct psc_particles *prts)
+do_push_part_1vb_yz(struct psc_fields *flds, struct psc_particles *_prts)
 {
-  for (int n = 0; n < prts->n_part; n++) {
-    push_one(prts, n, flds, flds);
+  particle_range_t prts = particle_range_prts(_prts);
+  for (int n = 0; n < _prts->n_part; n++) {
+    push_one(prts.begin, n, flds, flds);
   }
 }
 

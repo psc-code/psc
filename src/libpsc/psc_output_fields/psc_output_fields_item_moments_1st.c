@@ -97,8 +97,7 @@ add_ghosts_boundary(struct psc_fields *res, int mb, int me)
 static void
 run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 	struct psc_mparticles *mprts_base, struct psc_mfields *mres,
-	void (*do_run)(int p, struct psc_fields *flds,
-		       particle_iter_t prt_begin, particle_iter_t prt_end))
+	void (*do_run)(int p, struct psc_fields *flds, particle_range_t prts))
 {
   struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
 
@@ -107,7 +106,7 @@ run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
     struct psc_fields *res = psc_mfields_get_patch(mres, p);
     psc_particles_reorder(prts); // FIXME
     psc_fields_zero_range(res, 0, res->nr_comp);
-    do_run(res->p, res, particle_iter_begin_prts(prts), particle_iter_end_prts(prts));
+    do_run(res->p, res, particle_range_prts(prts));
     add_ghosts_boundary(res, 0, res->nr_comp);
   }
 
@@ -118,14 +117,14 @@ run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 // n_1st
 
 static void
-do_n_1st_run(int p, fields_t *pf, particle_iter_t prt_begin, particle_iter_t prt_end)
+do_n_1st_run(int p, fields_t *pf, particle_range_t prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
 
-  PARTICLE_ITER_LOOP(prt_iter, prt_begin, prt_end) {
+  PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
     int m = particle_kind(prt);
     DEPOSIT_TO_GRID_1ST_CC(prt, pf, m, 1.f);
@@ -143,13 +142,13 @@ n_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_bas
 // v_1st
 
 static void
-do_v_1st_run(int p, fields_t *pf, particle_iter_t prt_begin, particle_iter_t prt_end)
+do_v_1st_run(int p, fields_t *pf, particle_range_t prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
-  PARTICLE_ITER_LOOP(prt_iter, prt_begin, prt_end) {
+  PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
     int mm = particle_kind(prt) * 3;
 
@@ -173,13 +172,13 @@ v_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_bas
 // p_1st
 
 static void
-do_p_1st_run(int p, fields_t *pf, particle_iter_t prt_begin, particle_iter_t prt_end)
+do_p_1st_run(int p, fields_t *pf, particle_range_t prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
-  PARTICLE_ITER_LOOP(prt_iter, prt_begin, prt_end) {
+  PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
     int mm = particle_kind(prt) * 3;
     particle_real_t *pxi = &prt->pxi;
@@ -201,13 +200,13 @@ p_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_bas
 // vv_1st
 
 static void
-do_vv_1st_run(int p, fields_t *pf, particle_iter_t prt_begin, particle_iter_t prt_end)
+do_vv_1st_run(int p, fields_t *pf, particle_range_t prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
-  PARTICLE_ITER_LOOP(prt_iter, prt_begin, prt_end) {
+  PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
     int mm = particle_kind(prt) * 3;
 
@@ -231,13 +230,13 @@ vv_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_ba
 // T_1st
 
 static void
-do_T_1st_run(int p, fields_t *pf, particle_iter_t prt_begin, particle_iter_t prt_end)
+do_T_1st_run(int p, fields_t *pf, particle_range_t prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
-  PARTICLE_ITER_LOOP(prt_iter, prt_begin, prt_end) {
+  PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
     int mm = particle_kind(prt) * 6;
 
@@ -274,13 +273,13 @@ T_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_bas
 // Tvv_1st
 
 static void
-do_Tvv_1st_run(int p, fields_t *pf, particle_iter_t prt_begin, particle_iter_t prt_end)
+do_Tvv_1st_run(int p, fields_t *pf, particle_range_t prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
-  PARTICLE_ITER_LOOP(prt_iter, prt_begin, prt_end) {
+  PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
     int mm = particle_kind(prt) * 6;
 
@@ -306,13 +305,13 @@ Tvv_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_b
 // nvt_1st
 
 static void
-do_nvt_a_1st_run(int p, fields_t *pf, particle_iter_t prt_begin, particle_iter_t prt_end)
+do_nvt_a_1st_run(int p, fields_t *pf, particle_range_t prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
-  PARTICLE_ITER_LOOP(prt_iter, prt_begin, prt_end) {
+  PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
     int mm = particle_kind(prt) * 10;
 
@@ -329,13 +328,13 @@ do_nvt_a_1st_run(int p, fields_t *pf, particle_iter_t prt_begin, particle_iter_t
 }
 
 static void
-do_nvt_b_1st_run(int p, fields_t *pf, particle_iter_t prt_begin, particle_iter_t prt_end)
+do_nvt_b_1st_run(int p, fields_t *pf, particle_range_t prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
-  PARTICLE_ITER_LOOP(prt_iter, prt_begin, prt_end) {
+  PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
     int mm = particle_kind(prt) * 10;
 
@@ -397,17 +396,17 @@ do_nvt_b_1st_run(int p, fields_t *pf, particle_iter_t prt_begin, particle_iter_t
 }
 
 static void
-do_nvp_1st_run(int p, fields_t *pf, struct psc_particles *prts)
+do_nvp_1st_run(int p, fields_t *pf, particle_range_t prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
-  for (int n = 0; n < prts->n_part; n++) {
-    particle_t *part = particles_get_one(prts, n);
-    int mm = particle_kind(part) * 10;
+  PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
+    particle_t *prt = particle_iter_deref(prt_iter);
+    int mm = particle_kind(prt) * 10;
 
-    particle_real_t *xi = &part->xi;					\
+    particle_real_t *xi = &prt->xi;					\
     particle_real_t u = xi[0] * dxi - .5;				\
     particle_real_t v = xi[1] * dyi - .5;				\
     particle_real_t w = xi[2] * dzi - .5;				\
@@ -420,22 +419,22 @@ do_nvp_1st_run(int p, fields_t *pf, struct psc_particles *prts)
     assert(jz >= -1 && jz < patch->ldims[2]);				\
     									\
     particle_real_t vxi[3];
-    particle_calc_vxi(part, vxi);
+    particle_calc_vxi(prt, vxi);
     particle_real_t *pxi = vxi;
     // density
-    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm, 1.f);
+    DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm, 1.f);
     // velocity
     for (int m = 0; m < 3; m++) {
-      DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + m + 1, vxi[m]);
+      DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm + m + 1, vxi[m]);
     }
     // pi * vj
     // FIXME, this is really vxi * vxi, etc
-    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 4 + 0, pxi[0] * vxi[0]);
-    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 4 + 1, pxi[1] * vxi[1]);
-    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 4 + 2, pxi[2] * vxi[2]);
-    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 4 + 3, pxi[0] * vxi[1]);
-    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 4 + 4, pxi[1] * vxi[2]);
-    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 4 + 5, pxi[2] * vxi[0]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm + 4 + 0, pxi[0] * vxi[0]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm + 4 + 1, pxi[1] * vxi[1]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm + 4 + 2, pxi[2] * vxi[2]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm + 4 + 3, pxi[0] * vxi[1]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm + 4 + 4, pxi[1] * vxi[2]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm + 4 + 5, pxi[2] * vxi[0]);
   }
 }
 
@@ -449,8 +448,7 @@ nvt_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
     struct psc_fields *res = psc_mfields_get_patch(mres, p);
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     psc_fields_zero_range(res, 0, res->nr_comp);
-    do_nvt_a_1st_run(res->p, res, particle_iter_begin_prts(prts),
-		     particle_iter_end_prts(prts));
+    do_nvt_a_1st_run(res->p, res, particle_range_prts(prts));
     add_ghosts_boundary(res, 0, res->nr_comp);
   }
 
@@ -480,8 +478,7 @@ nvt_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
     }
 
     // calculate <(v-U)(v-U)> moments
-    do_nvt_b_1st_run(res->p, res, particle_iter_begin_prts(prts),
-		     particle_iter_end_prts(prts));
+    do_nvt_b_1st_run(res->p, res, particle_range_prts(prts));
   }
 
   psc_mparticles_put_as(mprts, mprts_base, MP_DONT_COPY);
@@ -502,7 +499,7 @@ nvp_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
     struct psc_fields *res = psc_mfields_get_patch(mres, p);
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     psc_fields_zero_range(res, 0, res->nr_comp);
-    do_nvp_1st_run(res->p, res, prts);
+    do_nvp_1st_run(res->p, res, particle_range_prts(prts));
     add_ghosts_boundary(res, 0, res->nr_comp);
   }
 

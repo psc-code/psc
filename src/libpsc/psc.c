@@ -924,7 +924,8 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
   psc_foreach_patch(psc, p) {
     int ilo[3], ihi[3];
     pml_find_bounds(psc, p, ilo, ihi);
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
+    particle_range_t prts = particle_range_prts(_prts);
   
     int i = 0;
     int nr_pop = psc->prm.nr_populations;
@@ -964,7 +965,7 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 	      n_in_cell = -n_q_in_cell / npt.q;
 	    }
 	    for (int cnt = 0; cnt < n_in_cell; cnt++) {
-	      particle_t *prt = particles_get_one(prts, i++);
+	      particle_t *prt = particle_iter_at(prts.begin, i++);
 	      
 	      psc_setup_particle(psc, prt, &npt, p, xx);
 	      //p->lni = particle_label_offset + 1;
@@ -980,9 +981,9 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 	}
       }
     }
-    prts->n_part = i;
+    _prts->n_part = i;
     if (!psc->prm.fractional_n_particles_per_cell) {
-      assert(prts->n_part == nr_particles_by_patch[p]);
+      assert(_prts->n_part == nr_particles_by_patch[p]);
     }
   }
   psc_mparticles_put_as(mprts, psc->particles, 0);

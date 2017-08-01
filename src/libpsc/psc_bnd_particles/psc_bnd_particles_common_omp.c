@@ -18,8 +18,9 @@ static void *
 ddcp_particles_get_addr(void *_ctx, int p, int n)
 {
   mparticles_t *particles = _ctx;
-  struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
-  return particles_get_one(prts, n);
+  struct psc_particles *_prts = psc_mparticles_get_patch(particles, p);
+  particle_range_t prts = particle_range_prts(_prts);
+  return particle_iter_at(prts.begin, n);
 }
 
 // ----------------------------------------------------------------------
@@ -61,15 +62,16 @@ find_block_position(int b_pos[3], particle_real_t xi[3], particle_real_t b_dxi[3
 // psc_bnd_particles_sub_exchange_particles_prep
 
 static void
-psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd, struct psc_particles *prts)
+psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd, struct psc_particles *_prts)
 {
   struct ddc_particles *ddcp = bnd->ddcp;
   struct psc *psc = bnd->psc;
+  particle_range_t prts = particle_range_prts(_prts);
 
   // New-style boundary requirements.
   // These will need revisiting when it comes to non-periodic domains.
 
-  struct psc_patch *ppatch = &psc->patch[prts->p];
+  struct psc_patch *ppatch = &psc->patch[_prts->p];
   particle_real_t b_dxi[3] = { 1.f / ppatch->dx[0], 1.f / ppatch->dx[1], 1.f / ppatch->dx[2] };
   particle_real_t xm[3];
   int b_mx[3];
@@ -84,13 +86,13 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd, str
     xm[d] = b_mx[d] * ppatch->dx[d];
   }
   
-  struct ddcp_patch *patch = &ddcp->patches[prts->p];
+  struct ddcp_patch *patch = &ddcp->patches[_prts->p];
   patch->head = 0;
   for (int dir1 = 0; dir1 < N_DIR; dir1++) {
     patch->nei[dir1].n_send = 0;
   }
-  for (int i = 0; i < prts->n_part; i++) {
-    particle_t *part = particles_get_one(prts, i);
+  for (int i = 0; i < _prts->n_part; i++) {
+    particle_t *part = particle_iter_at(prts.begin, i);
     particle_real_t *xi = &part->xi; // slightly hacky relies on xi, yi, zi to be contiguous in the struct. FIXME
     
     int b_pos[3];
@@ -101,7 +103,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd, str
 	b_pos[2] >= 0 && b_pos[2] < b_mx[2]) {
       // fast path
       // inside domain: move into right position
-      *particles_get_one(prts, patch->head++) = *part;
+      *particle_iter_at(prts.begin, patch->head++) = *part;
     } else {
       // slow path
       bool drop = false;
@@ -173,7 +175,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd, str
       }
       if (!drop) {
 	if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
-	  *particles_get_one(prts, patch->head++) = *part;
+	  *particle_iter_at(prts.begin, patch->head++) = *part;
 	} else {
 	  ddc_particles_queue(ddcp, patch, dir, part);
 	}

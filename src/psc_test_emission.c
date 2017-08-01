@@ -84,12 +84,13 @@ psc_event_generator_emission(struct psc *psc)
   
   psc_foreach_patch(psc, p) {
     // get array of particles on this patch
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
+    particle_range_t prts = particle_range_prts(_prts);
   
     photons_t *photons = &psc->mphotons->p[p];
     // and iterative over all particles in the array
-    for (int n = 0; n < prts->n_part; n++) {
-      particle_t *part = particles_get_one(prts, n);
+    PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
+      particle_t *part = particle_iter_deref(prt_iter);
 
       if (part->qni >= 0. || part->pxi < 1.5) {
 	continue;
@@ -109,6 +110,7 @@ psc_event_generator_emission(struct psc *psc)
       }
     }
   }
+
   psc_mparticles_put_as(mprts, psc->particles, 0);
 }
 

@@ -36,8 +36,9 @@ psc_balance_sub_communicate_particles(struct psc_balance *bal, struct communicat
     for (int pi = 0; pi < recv->nr_patches; pi++) {
       int p = recv->pi_to_patch[pi];
       struct psc_particles *pp_new = psc_mparticles_get_patch(mprts_new, p);
+      particle_range_t prts_new = particle_range_prts(pp_new);
       int nn = psc_mparticles_nr_particles_by_patch(mprts_new, p) * (sizeof(particle_t)  / sizeof(particle_real_t));
-      MPI_Irecv(particles_get_one(pp_new, 0), nn, MPI_PARTICLES_REAL, recv->rank,
+      MPI_Irecv(particle_iter_deref(prts_new.begin), nn, MPI_PARTICLES_REAL, recv->rank,
 		pi, ctx->comm, &recv_reqs[nr_recv_reqs++]);
     }
   }
@@ -57,9 +58,10 @@ psc_balance_sub_communicate_particles(struct psc_balance *bal, struct communicat
     for (int pi = 0; pi < send->nr_patches; pi++) {
       int p = send->pi_to_patch[pi];
       struct psc_particles *pp_old = psc_mparticles_get_patch(mprts_old, p);
+      particle_range_t prts_old = particle_range_prts(pp_old);
       int nn = psc_mparticles_nr_particles_by_patch(mprts_old, p) * (sizeof(particle_t)  / sizeof(particle_real_t));
       //mprintf("A send -> %d tag %d (patch %d)\n", send->rank, pi, p);
-      MPI_Isend(particles_get_one(pp_old, 0), nn, MPI_PARTICLES_REAL, send->rank,
+      MPI_Isend(particle_iter_deref(prts_old.begin), nn, MPI_PARTICLES_REAL, send->rank,
       		pi, ctx->comm, &send_reqs[nr_send_reqs++]);
     }
   }
@@ -75,11 +77,13 @@ psc_balance_sub_communicate_particles(struct psc_balance *bal, struct communicat
 
     struct psc_particles *pp_old = psc_mparticles_get_patch(mprts_old, ctx->recv_info[p].patch);
     struct psc_particles *pp_new = psc_mparticles_get_patch(mprts_new, p);
+    particle_range_t prts_old = particle_range_prts(pp_old);
+    particle_range_t prts_new = particle_range_prts(pp_new);
     assert(psc_mparticles_nr_particles_by_patch(mprts_old, ctx->recv_info[p].patch) ==
 	   psc_mparticles_nr_particles_by_patch(mprts_new, p));
 #if 1
     for (int n = 0; n < psc_mparticles_nr_particles_by_patch(mprts_new, p); n++) {
-      *particles_get_one(pp_new, n) = *particles_get_one(pp_old, n);
+      *particle_iter_at(prts_new.begin, n) = *particle_iter_at(prts_old.begin, n);
     }
 #else
     // FIXME, this needs at least a proper interface -- if not separately alloc'ed, bad things

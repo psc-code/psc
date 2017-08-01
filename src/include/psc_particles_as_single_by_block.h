@@ -30,5 +30,7 @@ typedef particle_single_by_block_t particle_t;
 
 #define PSC_PARTICLES_AS_SINGLE_BY_BLOCK 1
 
+#include "particle_iter.h"
+
 #endif
 

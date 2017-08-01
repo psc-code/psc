@@ -154,14 +154,16 @@ psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
   struct psc_mparticles *mprts = psc_mparticles_get_as(psc->particles, "c", MP_DONT_COPY);
 
   psc_foreach_patch(psc, p) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
+    particle_range_t prts = particle_range_prts(_prts);
 
     int il1 = 0;
+    particle_iter_t prt_iter = prts.begin;
     for (int kind = 0; kind < psc->nr_kinds; kind++) {
       struct psc_es1_species *s = &es1->species[kind];
       int n = 1;
       for (int i = 0; i < n; i++) {
-	particle_t *p = particles_get_one(prts, il1++);
+	particle_t *p = particle_iter_deref(prt_iter);
 	double z0 = l/2.;
 	
 	p->zi = z0;
@@ -169,10 +171,12 @@ psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 	p->qni = s->q;
 	p->mni = s->m;
 	p->wni = 1.;
+
+	prt_iter = particle_iter_next(prt_iter);
       } 
     }
-    prts->n_part = il1;
-    assert(prts->n_part == nr_particles_by_patch[p]);
+    _prts->n_part = il1;
+    assert(_prts->n_part == nr_particles_by_patch[p]);
   }
 
   psc_mparticles_put_as(mprts, psc->particles, 0);

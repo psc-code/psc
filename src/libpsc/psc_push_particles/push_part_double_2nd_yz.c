@@ -13,7 +13,7 @@
 // FIXME, this really should share almost all code with its generic_c counterpart
 
 static void
-do_push_part_yz(int p, struct psc_fields *pf, struct psc_particles *pp)
+do_push_part_yz(int p, struct psc_fields *pf, particle_range_t prts)
 {
 #define S0Y(off) s0y[off+2]
 #define S0Z(off) s0z[off+2]
@@ -33,8 +33,8 @@ do_push_part_yz(int p, struct psc_fields *pf, struct psc_particles *pp)
 
   //int *ldims = ppsc->patch[p].ldims;
 
-  for (int n = 0; n < pp->n_part; n++) {
-    particle_t *part = particles_get_one(pp, n);
+  PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
+    particle_t *part = particle_iter_deref(prt_iter);
 
     // x^n, p^n -> x^(n+.5), p^n
 
@@ -311,12 +311,13 @@ cache_fields_to_j(struct psc_fields *fld, fields_t *pf)
 
 void
 psc_push_particles_2nd_double_push_a_yz(struct psc_push_particles *push,
-					struct psc_particles *prts,
+					struct psc_particles *_prts,
 					struct psc_fields *flds)
 {
   psc_fields_zero_range(flds, JXI, JXI + 3);
   struct psc_fields *flds_cache = cache_fields_from_em(flds);
-  do_push_part_yz(prts->p, flds_cache, prts);
+  particle_range_t prts = particle_range_prts(_prts);
+  do_push_part_yz(_prts->p, flds_cache, prts);
   cache_fields_to_j(flds_cache, flds);
   psc_fields_destroy(flds_cache);
 }

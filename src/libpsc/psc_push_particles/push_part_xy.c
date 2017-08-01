@@ -7,7 +7,7 @@
 #include <string.h>
 
 static void
-do_genc_push_part_xy(int p, fields_t *pf, struct psc_particles *pp)
+do_genc_push_part_xy(int p, fields_t *pf, particle_range_t prts)
 {
 #define S0X(off) s0x[off+2]
 #define S0Y(off) s0y[off+2]
@@ -26,9 +26,8 @@ do_genc_push_part_xy(int p, fields_t *pf, struct psc_particles *pp)
   creal dxi = 1.f / ppsc->patch[p].dx[0];
   creal dyi = 1.f / ppsc->patch[p].dx[1];
 
-  int n_part = pp->n_part;
-  for (int n = 0; n < n_part; n++) {
-    particle_t *part = particles_get_one(pp, n);
+  PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
+    particle_t *part = particle_iter_deref(prt_iter);
 
     // x^n, p^n -> x^(n+.5), p^n
 
@@ -256,7 +255,7 @@ do_genc_push_part_xy(int p, fields_t *pf, struct psc_particles *pp)
 
 void
 psc_push_particles_generic_c_push_a_xy(struct psc_push_particles *push,
-				       struct psc_particles *prts,
+				       struct psc_particles *_prts,
 				       struct psc_fields *flds)
 {
   static int pr;
@@ -266,7 +265,8 @@ psc_push_particles_generic_c_push_a_xy(struct psc_push_particles *push,
   
   prof_start(pr);
   psc_fields_zero_range(flds, JXI, JXI + 3);
-  do_genc_push_part_xy(prts->p, flds, prts);
+  particle_range_t prts = particle_range_prts(_prts);
+  do_genc_push_part_xy(_prts->p, flds, prts);
   prof_stop(pr);
 }
 

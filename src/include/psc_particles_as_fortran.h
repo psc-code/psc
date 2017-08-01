@@ -18,5 +18,7 @@ typedef mparticles_fortran_t mparticles_t;
 
 #define MPI_PARTICLES_REAL            MPI_PARTICLES_FORTRAN_REAL
 
+#include "particle_iter.h"
+
 #endif
 

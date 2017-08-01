@@ -154,11 +154,12 @@ count_sort(struct psc_mparticles *mprts, int **off, int **map)
     int *ldims = ppsc->patch[p].ldims;
     int nr_indices = ldims[0] * ldims[1] * ldims[2] * nr_kinds;
     off[p] = calloc(nr_indices + 1, sizeof(*off[p]));
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
+    particle_range_t prts = particle_range_prts(_prts);
 
     // counting sort to get map 
-    for (int n = 0; n < prts->n_part; n++) {
-      particle_t *part = particles_get_one(prts, n);
+    PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
+      particle_t *part = particle_iter_deref(prt_iter);
       int si = get_sort_index(p, part);
       off[p][si]++;
     }
@@ -173,9 +174,12 @@ count_sort(struct psc_mparticles *mprts, int **off, int **map)
     }
 
     // sort a map only, not the actual particles
-    map[p] = malloc(prts->n_part * sizeof(*map[p]));
-    for (int n = 0; n < prts->n_part; n++) {
-      particle_t *part = particles_get_one(prts, n);
+    map[p] = malloc(_prts->n_part * sizeof(*map[p]));
+    int n = 0;
+    for (particle_iter_t prt_iter = prts.begin;
+	 !particle_iter_equal(prt_iter, prts.end);
+	 prt_iter = particle_iter_next(prt_iter), n++) {
+      particle_t *part = particle_iter_deref(prt_iter);
       int si = get_sort_index(p, part);
       map[p][off2[si]++] = n;
     }
@@ -241,7 +245,8 @@ make_local_particle_array(struct psc_output_particles *out,
   // copy particles to be written into temp array
   int nn = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
+    particle_range_t prts = particle_range_prts(_prts);
     mrc_domain_get_local_patch_info(ppsc->mrc_domain, p, &info);
     int ilo[3], ihi[3], ld[3], sz;
     find_patch_bounds(hdf5, &info, ilo, ihi, ld, &sz);
@@ -258,7 +263,7 @@ make_local_particle_array(struct psc_output_particles *out,
 	    idx[p][jj     ] = nn + n_off;
 	    idx[p][jj + sz] = nn + n_off + off[p][si+1] - off[p][si];
 	    for (int n = off[p][si]; n < off[p][si+1]; n++, nn++) {
-	      particle_t *part = particles_get_one(prts, map[p][n]);
+	      particle_t *part = particle_iter_at(prts.begin, map[p][n]);
 	      arr[nn].x  = part->xi + patch->xb[0];
 	      arr[nn].y  = part->yi + patch->xb[1];
 	      arr[nn].z  = part->zi + patch->xb[2];
