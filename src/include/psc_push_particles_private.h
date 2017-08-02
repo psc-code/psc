@@ -22,8 +22,6 @@ struct psc_push_particles_ops {
 		    struct psc_particles *prts, struct psc_fields *flds);
   void (*push_a_yz)(struct psc_push_particles *push_particles,
 		    struct psc_particles *prts, struct psc_fields *flds);
-  void (*push_b_yz)(struct psc_push_particles *push_particles,
-		    struct psc_particles *prts, struct psc_fields *flds);
   void (*push_a_xyz)(struct psc_push_particles *push_particles,
 		     struct psc_particles *prts, struct psc_fields *flds);
 

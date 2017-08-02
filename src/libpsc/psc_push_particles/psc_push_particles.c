@@ -126,31 +126,6 @@ psc_push_particles_run(struct psc_push_particles *push,
   }
 }
 
-void
-psc_push_particles_run_b(struct psc_push_particles *push,
-			 mparticles_base_t *particles, mfields_base_t *mflds)
-{
-  psc_stats_start(st_time_particle);
-  struct psc_push_particles_ops *ops = psc_push_particles_ops(push);
-  int *im = ppsc->domain.gdims;
-#pragma omp parallel for
-  for (int p = 0; p < particles->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
-    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-    if (im[0] > 1 && im[1] > 1 && im[2] > 1) { // xyz
-    } else if (im[0] > 1 && im[2] > 1) { // xz
-    } else if (im[0] > 1 && im[1] > 1) { // xy
-    } else if (im[1] > 1 && im[2] > 1) { // yz
-      if (ops->push_b_yz) {
-	ops->push_b_yz(push, prts, flds);
-      }
-    } else if (im[2] > 1) { // z
-    } else {
-    }
-  }
-  psc_stats_stop(st_time_particle);
-}
-
 unsigned int
 psc_push_particles_get_mp_flags(struct psc_push_particles *push)
 {

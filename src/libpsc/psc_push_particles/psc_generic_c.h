@@ -32,8 +32,5 @@ void psc_push_particles_generic_c_push_a_xyz(struct psc_push_particles *push,
 void psc_push_particles_generic_c_push_yz_a(struct psc_push_particles *push,
 					    mparticles_base_t *particles_base,
 					    mfields_base_t *flds_base);
-void psc_push_particles_generic_c_push_yz_b(struct psc_push_particles *push,
-					    mparticles_base_t *particles_base,
-					    mfields_base_t *flds_base);
 
 #endif

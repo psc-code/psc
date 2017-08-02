@@ -126,7 +126,6 @@ psc_step(struct psc *psc)
   psc_push_fields_step_b1(psc->push_fields, psc->flds);
 
   psc_bnd_particles_exchange(psc->bnd_particles, psc->particles);
-  psc_push_particles_run_b(psc->push_particles, psc->particles, psc->flds);
   
   psc_push_photons_run(psc->mphotons);
   psc_bnd_photons_exchange(psc->bnd_photons, psc->mphotons);
