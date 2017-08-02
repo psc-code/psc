@@ -547,17 +547,20 @@ struct psc_collision_ops psc_collision_sub_ops = {
 // ======================================================================
 
 static void
-copy_stats(struct psc_output_fields_item *item, struct psc_fields *flds_base,
-	   struct psc_particles *prts, struct psc_fields *f)
+copy_stats(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
+	   struct psc_mparticles *mprts_base, struct psc_mfields *mres)
 {
   struct psc_collision *collision = ppsc->collision;
   assert(psc_collision_ops(collision) == &psc_collision_c_ops);
 
   struct psc_collision_sub *coll = psc_collision_sub(collision);
 
-  // FIXME, copy could be avoided (?)
-  for (int m = 0; m < NR_STATS; m++) {
-    psc_fields_copy_comp(f, m, psc_mfields_get_patch(coll->mflds, f->p), m);
+  for (int p = 0; p < mres->nr_patches; p++) {
+    // FIXME, copy could be avoided (?)
+    for (int m = 0; m < NR_STATS; m++) {
+      psc_fields_copy_comp(psc_mfields_get_patch(mres, p), m,
+			   psc_mfields_get_patch(coll->mflds, p), m);
+    }
   }
 }
 
@@ -569,6 +572,6 @@ struct psc_output_fields_item_ops psc_output_fields_item_coll_stats_ops = {
   .nr_comp   = NR_STATS,
   .fld_names = { "coll_nudt_min", "coll_nudt_med", "coll_nudt_max",
 		 "coll_nudt_large", "coll_ncoll" },
-  .run       = copy_stats,
+  .run_all   = copy_stats,
 };
 

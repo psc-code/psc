@@ -69,16 +69,8 @@ psc_output_fields_item_run(struct psc_output_fields_item *item,
       psc_mparticles_update_n_part(particles);
   }
 #endif
-  if (ops->run_all) {
-    ops->run_all(item, flds, particles, res);
-  } else {
-    assert(ops->run);
-    for (int p = 0; p < res->nr_patches; p++) {
-      ops->run(item, psc_mfields_get_patch(flds, p),
-	       psc_mparticles_get_patch(particles, p),
-	       psc_mfields_get_patch(res, p));
-    }
-  }
+  assert(ops->run_all);
+  ops->run_all(item, flds, particles, res);
   if (ops->flags & POFI_ADD_GHOSTS) {
     assert(item->bnd);
     psc_bnd_add_ghosts(item->bnd, res, 0, res->nr_fields);
@@ -106,9 +98,6 @@ psc_output_fields_item_init()
   mrc_class_register_subclass(&mrc_class_psc_output_fields_item, &psc_output_fields_item_h2_ops);
   mrc_class_register_subclass(&mrc_class_psc_output_fields_item, &psc_output_fields_item_divb_ops);
   mrc_class_register_subclass(&mrc_class_psc_output_fields_item, &psc_output_fields_item_divj_ops);
-  mrc_class_register_subclass(&mrc_class_psc_output_fields_item, &psc_output_fields_item_n_1st_ops);
-  mrc_class_register_subclass(&mrc_class_psc_output_fields_item, &psc_output_fields_item_v_1st_ops);
-  mrc_class_register_subclass(&mrc_class_psc_output_fields_item, &psc_output_fields_item_vv_1st_ops);
   mrc_class_register_subclass(&mrc_class_psc_output_fields_item, &psc_output_fields_item_n_1st_c_ops);
   mrc_class_register_subclass(&mrc_class_psc_output_fields_item, &psc_output_fields_item_p_1st_c_ops);
   mrc_class_register_subclass(&mrc_class_psc_output_fields_item, &psc_output_fields_item_T_1st_c_ops);

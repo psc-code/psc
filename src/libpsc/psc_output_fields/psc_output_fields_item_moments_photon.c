@@ -81,11 +81,14 @@ do_n_photon_run(int p, fields_t *pf, photons_t *photons)
 }
 
 static void
-n_photon_run(struct psc_output_fields_item *item, struct psc_fields *flds,
-	     struct psc_particles *prts_base, struct psc_fields *res)
+n_photon_run(struct psc_output_fields_item *item, struct psc_mfields *mflds,
+	     struct psc_mparticles *mprts_base, struct psc_mfields *mres)
 {
-  psc_fields_zero_range(res, 0, res->nr_comp);
-  do_n_photon_run(res->p, res, &ppsc->mphotons->p[res->p]);
+  for (int p = 0; p < mres->nr_patches; p++) {
+    struct psc_fields *res = psc_mfields_get_patch(mres, p);
+    psc_fields_zero_range(res, 0, res->nr_comp);
+    do_n_photon_run(p, res, &ppsc->mphotons->p[p]);
+  }
 }
 
 // ======================================================================
@@ -95,7 +98,7 @@ struct psc_output_fields_item_ops psc_output_fields_item_n_photon_ops = {
   .name               = "n_photon",
   .nr_comp            = 1,
   .fld_names          = { "n_photon" },
-  .run                = n_photon_run,
+  .run_all            = n_photon_run,
   .flags              = POFI_ADD_GHOSTS,
 };
 

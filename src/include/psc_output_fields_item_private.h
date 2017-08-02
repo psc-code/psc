@@ -18,9 +18,6 @@ enum {
 
 struct psc_output_fields_item_ops {
   MRC_SUBCLASS_OPS(struct psc_output_fields_item);
-  void (*run)(struct psc_output_fields_item *item,
-	      struct psc_fields *flds, struct psc_particles *prts,
-	      struct psc_fields *res);
   void (*run_all)(struct psc_output_fields_item *item,
 		  struct psc_mfields *mflds, struct psc_mparticles *mprts,
 		  struct psc_mfields *mres);
@@ -49,9 +46,7 @@ extern struct psc_output_fields_item_ops psc_output_fields_item_e2_ops;
 extern struct psc_output_fields_item_ops psc_output_fields_item_h2_ops;
 extern struct psc_output_fields_item_ops psc_output_fields_item_divb_ops;
 extern struct psc_output_fields_item_ops psc_output_fields_item_divj_ops;
-extern struct psc_output_fields_item_ops psc_output_fields_item_n_1st_ops;
-extern struct psc_output_fields_item_ops psc_output_fields_item_v_1st_ops;
-extern struct psc_output_fields_item_ops psc_output_fields_item_vv_1st_ops;
+
 extern struct psc_output_fields_item_ops psc_output_fields_item_n_1st_c_ops;
 extern struct psc_output_fields_item_ops psc_output_fields_item_p_1st_c_ops;
 extern struct psc_output_fields_item_ops psc_output_fields_item_T_1st_c_ops;
