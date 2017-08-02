@@ -286,17 +286,16 @@ average_in_time(struct psc_bnd_particles *bnd,
 static void
 ddcp_particles_realloc(void *_ctx, int p, int new_n_particles)
 {
-  mparticles_t *particles = _ctx;
-  struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
+  mparticles_t *mprts = _ctx;
+  struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
   particles_realloc(prts, new_n_particles);
 }
 
 static void *
 ddcp_particles_get_addr(void *_ctx, int p, int n)
 {
-  mparticles_t *particles = _ctx;
-  struct psc_particles *_prts = psc_mparticles_get_patch(particles, p);
-  particle_range_t prts = particle_range_prts(_prts);
+  mparticles_t *mprts = _ctx;
+  particle_range_t prts = particle_range_mprts(mprts, p);
   return particle_iter_at(prts.begin, n);
 }
 
@@ -375,9 +374,11 @@ find_block_position(int b_pos[3], particle_real_t xi[3], particle_real_t b_dxi[3
 // psc_bnd_particles_sub_exchange_particles_prep
 
 static void
-psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd, struct psc_particles *_prts)
+psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
+					      struct psc_mparticles *mprts, int p)
 {
-  particle_range_t prts = particle_range_prts(_prts);
+  struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
+  particle_range_t prts = particle_range_mprts(mprts, p);
   struct ddc_particles *ddcp = bnd->ddcp;
   struct psc *psc = bnd->psc;
 
@@ -592,12 +593,13 @@ enum {
 };
 
 static inline double
-inject_particles(struct psc_particles *_prts, struct psc_fields *flds, 
+inject_particles(int p, struct psc_mparticles *mprts, struct psc_fields *flds, 
 		 struct psc_fields *flds_nvt_av, int ix, int iy, int iz,
 		 double ninjo, int kind, double pos[3], double dir,
 		 int X, int Y, int Z)
 {
-  particle_range_t prts = particle_range_prts(_prts);
+  struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
+  particle_range_t prts = particle_range_mprts(mprts, p);
 
   double n     =         F3_C(flds_nvt_av, 10*kind + NVT_N     , ix,iy,iz);
   double v[3]  = {       F3_C(flds_nvt_av, 10*kind + NVT_VX, ix,iy,iz),
@@ -617,7 +619,6 @@ inject_particles(struct psc_particles *_prts, struct psc_fields *flds,
   double W[6];
   calc_W(W, vv);
 
-  int p = _prts->p;
   double c=1.0;
   double vsz = sqrt(2. * vv[ZZ]);
   double gs0 = exp(-sqr(v[Z]) / sqr(vsz)) - exp(-sqr(c - v[Z]) / sqr(vsz))
@@ -724,20 +725,20 @@ inject_particles(struct psc_particles *_prts, struct psc_fields *flds,
 }
 
 static double
-inject_particles_y(struct psc_particles *prts, struct psc_fields *flds, 
+inject_particles_y(int p, struct psc_mparticles *mprts, struct psc_fields *flds, 
 		   struct psc_fields *flds_nvt_av, int ix, int iy, int iz,
 		   double ninjo, int kind, double pos[3], double dir)
 {
-  return inject_particles(prts, flds, flds_nvt_av, ix, iy, iz, ninjo, kind, pos, dir,
+  return inject_particles(p, mprts, flds, flds_nvt_av, ix, iy, iz, ninjo, kind, pos, dir,
 			  2, 0, 1);
 }
 
 static double
-inject_particles_z(struct psc_particles *prts, struct psc_fields *flds, 
+inject_particles_z(int p, struct psc_mparticles *mprts, struct psc_fields *flds, 
 		   struct psc_fields *flds_nvt_av, int ix, int iy, int iz,
 		   double ninjo, int kind, double pos[3], double dir)
 {
-  return inject_particles(prts, flds, flds_nvt_av, ix, iy, iz, ninjo, kind, pos, dir,
+  return inject_particles(p, mprts, flds, flds_nvt_av, ix, iy, iz, ninjo, kind, pos, dir,
 			  0, 1, 2);
 }
 
@@ -761,7 +762,6 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
     struct psc_fields *flds_nvt_av = psc_mfields_get_patch(bnd->mflds_nvt_av, p);
     struct psc_fields *flds_n_in = psc_mfields_get_patch(bnd->mflds_n_in, p);
     struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
 
     for (int m = 0; m < nr_kinds; m++) {
       // inject at y lo
@@ -771,7 +771,7 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
 	  double ninjo = F3_C(flds_n_in, m, 0,iy,iz);
 	  double pos[3] = { 0., 0., iz * ppatch->dx[2], };
 	  F3_C(flds_n_in, m, 0,iy,iz) =
-	    inject_particles_y(prts, flds, flds_nvt_av, 0,iy,iz, ninjo, m, pos, +1.);
+	    inject_particles_y(p, mprts, flds, flds_nvt_av, 0,iy,iz, ninjo, m, pos, +1.);
 	}
       }
       // inject at y hi
@@ -781,7 +781,7 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
 	  double ninjo = F3_C(flds_n_in, m, 0,iy,iz);
 	  double pos[3] = { 0., (iy + 1) * (1-1e-6) * ppatch->dx[1], iz * ppatch->dx[2] };
 	  F3_C(flds_n_in, m, 0,iy,iz) =
-	    inject_particles_y(prts, flds, flds_nvt_av, 0,iy,iz, ninjo, m, pos, -1.);
+	    inject_particles_y(p, mprts, flds, flds_nvt_av, 0,iy,iz, ninjo, m, pos, -1.);
 	}
       }
       // inject at z lo
@@ -791,7 +791,7 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
 	  double ninjo = F3_C(flds_n_in, m, 0,iy,iz);
 	  double pos[3] = { 0., iy * ppatch->dx[1], 0. };
 	  F3_C(flds_n_in, m, 0,iy,iz) =
-	    inject_particles_z(prts, flds, flds_nvt_av, 0,iy,iz, ninjo, m, pos, +1.);
+	    inject_particles_z(p, mprts, flds, flds_nvt_av, 0,iy,iz, ninjo, m, pos, +1.);
 	}
       }
       // inject at z hi
@@ -801,7 +801,7 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
 	  double ninjo = F3_C(flds_n_in, m, 0,iy,iz);
 	  double pos[3] = { 0., iy * ppatch->dx[1], (iz + 1) * (1-1e-6) * ppatch->dx[2] };
 	  F3_C(flds_n_in, m, 0,iy,iz) =
-	    inject_particles_z(prts, flds, flds_nvt_av, 0,iy,iz, ninjo, m, pos, -1.);
+	    inject_particles_z(p, mprts, flds, flds_nvt_av, 0,iy,iz, ninjo, m, pos, -1.);
 	}
       }
     }
@@ -853,7 +853,7 @@ psc_bnd_particles_sub_exchange_particles(struct psc_bnd_particles *bnd, mparticl
 #pragma omp parallel for
   psc_foreach_patch(psc, p) {
     psc_balance_comp_time_by_patch[p] -= MPI_Wtime();
-    psc_bnd_particles_sub_exchange_particles_prep(bnd, psc_mparticles_get_patch(particles, p));
+    psc_bnd_particles_sub_exchange_particles_prep(bnd, particles, p);
     psc_balance_comp_time_by_patch[p] += MPI_Wtime();
   }
   prof_stop(pr_time_step_no_comm);

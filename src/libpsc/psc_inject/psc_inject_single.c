@@ -130,7 +130,7 @@ psc_inject_single_run(struct psc_inject *inject, struct psc_mparticles *mprts_ba
   
   psc_foreach_patch(psc, p) {
     struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
-    particle_range_t prts = particle_range_prts(_prts);
+    particle_range_t prts = particle_range_mprts(mprts, p);
     struct psc_fields *flds_n = psc_mfields_get_patch(mflds_n, p);
     int *ldims = psc->patch[p].ldims;
     

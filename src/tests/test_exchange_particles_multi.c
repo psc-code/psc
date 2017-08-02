@@ -21,7 +21,7 @@ psc_test_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool count
  
     int i = 0;
     if (p == 0 && rank == 0) { // initially, only particles on first patch
-      particle_range_t prts = particle_range_prts(psc_mparticles_get_patch(psc->particles, p));
+      particle_range_t prts = particle_range_mprts(psc->particles, p);
       particle_iter_t prt_iter = prts.begin;
       int *ilo = patch->off;
       int ihi[3] = { patch->off[0] + patch->ldims[0],

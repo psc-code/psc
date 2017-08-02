@@ -155,7 +155,7 @@ psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 
   psc_foreach_patch(psc, p) {
     struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
-    particle_range_t prts = particle_range_prts(_prts);
+    particle_range_t prts = particle_range_mprts(mprts, p);
 
     int il1 = 0;
     particle_iter_t prt_iter = prts.begin;

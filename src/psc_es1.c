@@ -172,9 +172,8 @@ ranf()
 
 static void
 psc_es1_init_species(struct psc *psc, int kind, struct psc_es1_species *s,
-		     struct psc_particles *_prts, int *p_il1)
+		     particle_range_t prts, int *p_il1)
 {
-  particle_range_t prts = particle_range_prts(_prts);
   int p = 0;
   int il1 = *p_il1;
   int *ldims = psc->patch[p].ldims;
@@ -343,14 +342,14 @@ psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
   struct psc_mparticles *mprts = psc_mparticles_get_as(psc->particles, "c", MP_DONT_COPY);
   assert(mprts->nr_patches == 1);
   psc_foreach_patch(psc, p) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-  
+    struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
+    particle_range_t prts = particle_range_mprts(mprts, p);
     int il1 = 0;
     for (int kind = 0; kind < psc->nr_kinds; kind++) {
       psc_es1_init_species(psc, kind, &es1->species[kind], prts, &il1);
     }
-    prts->n_part = il1;
-    assert(prts->n_part == nr_particles_by_patch[p]);
+    _prts->n_part = il1;
+    assert(_prts->n_part == nr_particles_by_patch[p]);
   }
   psc_mparticles_put_as(mprts, psc->particles, 0);
 }

@@ -179,10 +179,11 @@ struct psc_ops psc_bohm_ops = {
 // particle seeding
 
 static void
-seed_patch(struct psc *psc, int p, struct psc_particles *pp)
+seed_patch(struct psc *psc, struct psc_mparticles *mprts, int p)
 {
   struct psc_bohm *bohm = to_psc_bohm(psc);
-  particle_range_t prts = particle_range_prts(pp);
+  struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
+  particle_range_t prts = particle_range_mprts(mprts, p);
   
   psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
 
@@ -211,7 +212,7 @@ seed_patch(struct psc *psc, int p, struct psc_particles *pp)
       q-= f;
     }
 
-    particles_realloc(pp, pp->n_part + 2*N_new);
+    particles_realloc(_prts, _prts->n_part + 2*N_new);
 
     struct psc_particle_npt npt = {};
     particle_t *prt;
@@ -219,7 +220,7 @@ seed_patch(struct psc *psc, int p, struct psc_particles *pp)
     for (int n=0; n < N_new; n++) {
 
       // electrons
-      prt = particle_iter_at(prts.begin, pp->n_part++);
+      prt = particle_iter_at(prts.begin, _prts->n_part++);
       prt->wni = 1.;
       npt.q = -1.;
       npt.m = 1.;
@@ -230,7 +231,7 @@ seed_patch(struct psc *psc, int p, struct psc_particles *pp)
       psc_setup_particle(psc, prt, &npt, p, xx);
       
       // ions
-      prt = particle_iter_at(prts.begin, pp->n_part++);
+      prt = particle_iter_at(prts.begin, _prts->n_part++);
       prt->wni = 1.;
       npt.q = 1.;
       npt.m = bohm->mi_over_me;
@@ -246,11 +247,11 @@ seed_patch(struct psc *psc, int p, struct psc_particles *pp)
 
 void
 psc_event_generator_bohm_run(struct psc_event_generator *gen,
-			     mparticles_base_t *mparticles, mfields_base_t *mflds,
+			     mparticles_base_t *mprts, mfields_base_t *mflds,
 			     mphotons_t *mphotons)
 {
   psc_foreach_patch(ppsc, p) {
-    seed_patch(ppsc, p, psc_mparticles_get_patch(mparticles, p));
+    seed_patch(ppsc, mprts, p);
   }
 }
 

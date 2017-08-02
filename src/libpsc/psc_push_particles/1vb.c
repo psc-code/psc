@@ -17,13 +17,14 @@
 #ifdef PUSHER_BY_BLOCK
 
 static void
-do_push_part_1vb_yz(struct psc_fields *flds, struct psc_particles *_prts)
+do_push_part_1vb_yz(struct psc_fields *flds, struct psc_mparticles *mprts, int p)
 {
 #ifdef PSC_PARTICLES_AS_SINGLE_BY_BLOCK
+  struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
   struct psc_particles_single_by_block *sub = psc_particles_single_by_block(_prts);
 #endif
 
-  particle_range_t prts = particle_range_prts(_prts);
+  particle_range_t prts = particle_range_mprts(mprts, p);
   for (int b = 0; b < sub->nr_blocks; b++) {
     for (int n = sub->b_off[b]; n < sub->b_off[b+1]; n++) {
       push_one(prts.begin, n, flds, flds);
@@ -34,9 +35,11 @@ do_push_part_1vb_yz(struct psc_fields *flds, struct psc_particles *_prts)
 #else
 
 static void
-do_push_part_1vb_yz(struct psc_fields *flds, struct psc_particles *_prts)
+do_push_part_1vb_yz(struct psc_fields *flds, struct psc_mparticles *mprts, int p)
 {
-  particle_range_t prts = particle_range_prts(_prts);
+  struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
+  particle_range_t prts = particle_range_mprts(mprts, p);
+
   for (int n = 0; n < _prts->n_part; n++) {
     push_one(prts.begin, n, flds, flds);
   }
@@ -52,11 +55,11 @@ SFX(psc_push_particles_push_mprts)(struct psc_push_particles *push,
   params_1vb_set(ppsc, NULL, NULL);
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
 
     psc_fields_zero_range(flds, JXI, JXI + 3);
-    ext_prepare_sort_before(prts);
-    do_push_part_1vb_yz(flds, prts);
+    ext_prepare_sort_before(_prts);
+    do_push_part_1vb_yz(flds, mprts, p);
   }
 }
 

@@ -35,8 +35,7 @@ psc_balance_sub_communicate_particles(struct psc_balance *bal, struct communicat
 
     for (int pi = 0; pi < recv->nr_patches; pi++) {
       int p = recv->pi_to_patch[pi];
-      struct psc_particles *pp_new = psc_mparticles_get_patch(mprts_new, p);
-      particle_range_t prts_new = particle_range_prts(pp_new);
+      particle_range_t prts_new = particle_range_mprts(mprts_new, p);
       int nn = psc_mparticles_nr_particles_by_patch(mprts_new, p) * (sizeof(particle_t)  / sizeof(particle_real_t));
       MPI_Irecv(particle_iter_deref(prts_new.begin), nn, MPI_PARTICLES_REAL, recv->rank,
 		pi, ctx->comm, &recv_reqs[nr_recv_reqs++]);
@@ -57,8 +56,7 @@ psc_balance_sub_communicate_particles(struct psc_balance *bal, struct communicat
 
     for (int pi = 0; pi < send->nr_patches; pi++) {
       int p = send->pi_to_patch[pi];
-      struct psc_particles *pp_old = psc_mparticles_get_patch(mprts_old, p);
-      particle_range_t prts_old = particle_range_prts(pp_old);
+      particle_range_t prts_old = particle_range_mprts(mprts_old, p);
       int nn = psc_mparticles_nr_particles_by_patch(mprts_old, p) * (sizeof(particle_t)  / sizeof(particle_real_t));
       //mprintf("A send -> %d tag %d (patch %d)\n", send->rank, pi, p);
       MPI_Isend(particle_iter_deref(prts_old.begin), nn, MPI_PARTICLES_REAL, send->rank,
@@ -75,10 +73,8 @@ psc_balance_sub_communicate_particles(struct psc_balance *bal, struct communicat
       continue;
     }
 
-    struct psc_particles *pp_old = psc_mparticles_get_patch(mprts_old, ctx->recv_info[p].patch);
-    struct psc_particles *pp_new = psc_mparticles_get_patch(mprts_new, p);
-    particle_range_t prts_old = particle_range_prts(pp_old);
-    particle_range_t prts_new = particle_range_prts(pp_new);
+    particle_range_t prts_old = particle_range_mprts(mprts_old, ctx->recv_info[p].patch);
+    particle_range_t prts_new = particle_range_mprts(mprts_new, p);
     assert(psc_mparticles_nr_particles_by_patch(mprts_old, ctx->recv_info[p].patch) ==
 	   psc_mparticles_nr_particles_by_patch(mprts_new, p));
 #if 1

@@ -97,14 +97,15 @@ find_cell_index(particle_t *prt, particle_real_t *dxi, int ldims[3])
 // find_cell_offsets
 
 static void
-find_cell_offsets(int offsets[], struct psc_particles *_prts)
+find_cell_offsets(int offsets[], struct psc_mparticles *mprts, int p)
 {
-  particle_range_t prts = particle_range_prts(_prts);
+  struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
+  particle_range_t prts = particle_range_mprts(mprts, p);
 
-  particle_real_t dxi[3] = { 1.f / ppsc->patch[_prts->p].dx[0],
-			     1.f / ppsc->patch[_prts->p].dx[1],
-			     1.f / ppsc->patch[_prts->p].dx[2] };
-  int *ldims = ppsc->patch[_prts->p].ldims;
+  particle_real_t dxi[3] = { 1.f / ppsc->patch[p].dx[0],
+			     1.f / ppsc->patch[p].dx[1],
+			     1.f / ppsc->patch[p].dx[2] };
+  int *ldims = ppsc->patch[p].ldims;
   int last = 0;
   offsets[last] = 0;
   for (int n = 0; n < _prts->n_part; n++) {
@@ -124,9 +125,8 @@ find_cell_offsets(int offsets[], struct psc_particles *_prts)
 // randomize_in_cell
 
 static void
-randomize_in_cell(struct psc_particles *_prts, int n_start, int n_end)
+randomize_in_cell(particle_range_t prts, int n_start, int n_end)
 {
-  particle_range_t prts = particle_range_prts(_prts);
   int nn = n_end - n_start;
   for (int n = 0; n < nn - 1; n++) {
     int n_partner = n + random() % (nn - n);
@@ -143,9 +143,8 @@ randomize_in_cell(struct psc_particles *_prts, int n_start, int n_end)
 // bc
 
 static particle_real_t
-bc(struct psc_particles *_prts, particle_real_t nudt1, int n1, int n2)
+bc(particle_range_t prts, particle_real_t nudt1, int n1, int n2)
 {
-  particle_range_t prts = particle_range_prts(_prts);
   particle_real_t nudt;
     
   particle_real_t pn1,pn2,pn3,pn4;
@@ -402,11 +401,10 @@ bc(struct psc_particles *_prts, particle_real_t nudt1, int n1, int n2)
 
 static void
 collide_in_cell(struct psc_collision *collision,
-		struct psc_particles *_prts, int n_start, int n_end,
+		particle_range_t prts, int n_start, int n_end,
 		struct psc_collision_stats *stats)
 {
   struct psc_collision_sub *coll = psc_collision_sub(collision);
-  particle_range_t prts = particle_range_prts(_prts);
 
   int nn = n_end - n_start;
   
@@ -423,13 +421,13 @@ collide_in_cell(struct psc_collision *collision,
   int cnt = 0;
 
   if (nn % 2 == 1) { // odd # of particles: do 3-collision
-    nudts[cnt++] = bc(_prts, .5 * nudt1, n_start    , n_start + 1);
-    nudts[cnt++] = bc(_prts, .5 * nudt1, n_start    , n_start + 2);
-    nudts[cnt++] = bc(_prts, .5 * nudt1, n_start + 1, n_start + 2);
+    nudts[cnt++] = bc(prts, .5 * nudt1, n_start    , n_start + 1);
+    nudts[cnt++] = bc(prts, .5 * nudt1, n_start    , n_start + 2);
+    nudts[cnt++] = bc(prts, .5 * nudt1, n_start + 1, n_start + 2);
     n = 3;
   }
   for (; n < nn;  n += 2) { // do remaining particles as pair
-    nudts[cnt++] = bc(_prts, nudt1, n_start + n, n_start + n + 1);
+    nudts[cnt++] = bc(prts, nudt1, n_start + n, n_start + n + 1);
   }
 
   calc_stats(stats, nudts, cnt);
@@ -494,14 +492,14 @@ psc_collision_sub_run(struct psc_collision *collision,
   prof_start(pr);
 
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    particle_range_t prts = particle_range_mprts(mprts, p);
   
     int *ldims = ppsc->patch[p].ldims;
     int nr_cells = ldims[0] * ldims[1] * ldims[2];
     int *offsets = calloc(nr_cells + 1, sizeof(*offsets));
     struct psc_collision_stats stats_total = {};
     
-    find_cell_offsets(offsets, prts);
+    find_cell_offsets(offsets, mprts, p);
     
     struct psc_fields *flds = psc_mfields_get_patch(coll->mflds, p);
     psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {

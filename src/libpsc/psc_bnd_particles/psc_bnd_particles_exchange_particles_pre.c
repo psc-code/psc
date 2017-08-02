@@ -1,30 +1,31 @@
 
 static void
-exchange_particles_pre(struct psc_bnd_particles *bnd, struct psc_particles *prts)
+exchange_particles_pre(struct psc_bnd_particles *bnd, struct psc_mparticles *mprts, int p)
 {
+  struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
   struct psc *psc = bnd->psc;
   struct ddc_particles *ddcp = bnd->ddcp;
 
-  int n_send = get_n_send(prts);
-  struct psc_patch *patch = &psc->patch[prts->p];
+  int n_send = get_n_send(_prts);
+  struct psc_patch *patch = &psc->patch[_prts->p];
   particle_real_t xm[3];
   for (int d = 0; d < 3; d++) {
     xm[d] = patch->ldims[d] * patch->dx[d];
   }
-  particle_real_t *b_dxi = get_b_dxi(prts);
-  int *b_mx = get_b_mx(prts);
+  particle_real_t *b_dxi = get_b_dxi(_prts);
+  int *b_mx = get_b_mx(_prts);
   
   // FIXME we should make sure (assert) we don't quietly drop particle which left
   // in the invariant direction
 
-  struct ddcp_patch *ddcp_patch = &ddcp->patches[prts->p];
-  ddcp_patch->head = get_head(prts);
+  struct ddcp_patch *ddcp_patch = &ddcp->patches[_prts->p];
+  ddcp_patch->head = get_head(_prts);
   for (int dir1 = 0; dir1 < N_DIR; dir1++) {
     ddcp_patch->nei[dir1].n_send = 0;
   }
   int n_end = ddcp_patch->head + n_send;
   for (int n = ddcp_patch->head; n < n_end; n++) {
-    particle_t *prt = xchg_get_one(prts, n);
+    particle_t *prt = xchg_get_one(mprts, p, n);
     particle_real_t *xi = &prt->xi;
     particle_real_t *pxi = &prt->pxi;
     
@@ -97,7 +98,7 @@ exchange_particles_pre(struct psc_bnd_particles *bnd, struct psc_particles *prts
     }
     if (!drop) {
       if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
-	xchg_append(prts, ddcp_patch, prt);
+	xchg_append(mprts, p, ddcp_patch, prt);
       } else {
 	ddc_particles_queue(ddcp, ddcp_patch, dir, prt);
       }

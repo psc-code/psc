@@ -106,7 +106,7 @@ run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
     struct psc_fields *res = psc_mfields_get_patch(mres, p);
     psc_particles_reorder(prts); // FIXME
     psc_fields_zero_range(res, 0, res->nr_comp);
-    do_run(res->p, res, particle_range_prts(prts));
+    do_run(res->p, res, particle_range_mprts(mprts, p));
     add_ghosts_boundary(res, 0, res->nr_comp);
   }
 
@@ -446,9 +446,8 @@ nvt_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
 
   for (int p = 0; p < mres->nr_patches; p++) {
     struct psc_fields *res = psc_mfields_get_patch(mres, p);
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     psc_fields_zero_range(res, 0, res->nr_comp);
-    do_nvt_a_1st_run(res->p, res, particle_range_prts(prts));
+    do_nvt_a_1st_run(res->p, res, particle_range_mprts(mprts, p));
     add_ghosts_boundary(res, 0, res->nr_comp);
   }
 
@@ -457,7 +456,6 @@ nvt_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
 
   for (int p = 0; p < mres->nr_patches; p++) {
     struct psc_fields *res = psc_mfields_get_patch(mres, p);
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
 
     // fix up zero density cells
     for (int m = 0; m < ppsc->nr_kinds; m++) {
@@ -478,7 +476,7 @@ nvt_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
     }
 
     // calculate <(v-U)(v-U)> moments
-    do_nvt_b_1st_run(res->p, res, particle_range_prts(prts));
+    do_nvt_b_1st_run(res->p, res, particle_range_mprts(mprts, p));
   }
 
   psc_mparticles_put_as(mprts, mprts_base, MP_DONT_COPY);
@@ -497,9 +495,8 @@ nvp_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
 
   for (int p = 0; p < mres->nr_patches; p++) {
     struct psc_fields *res = psc_mfields_get_patch(mres, p);
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     psc_fields_zero_range(res, 0, res->nr_comp);
-    do_nvp_1st_run(res->p, res, particle_range_prts(prts));
+    do_nvp_1st_run(res->p, res, particle_range_mprts(mprts, p));
     add_ghosts_boundary(res, 0, res->nr_comp);
   }
 

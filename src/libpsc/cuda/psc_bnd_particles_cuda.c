@@ -59,16 +59,18 @@ psc_bnd_particles_sub_unsetup(struct psc_bnd_particles *bnd)
 // xchg_append helper
 
 static void
-xchg_append(struct psc_particles *prts, struct ddcp_patch *ddcp_patch, particle_t *prt)
+xchg_append(struct psc_mparticles *mprts, int p, struct ddcp_patch *ddcp_patch, particle_t *prt)
 {
-  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+  struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
+  struct psc_particles_cuda *cuda = psc_particles_cuda(_prts);
   cuda->bnd_prts[ddcp_patch->head++] = *prt;
 }
 
 static inline particle_t *
-xchg_get_one(struct psc_particles *prts, int n)
+xchg_get_one(struct psc_mparticles *mprts, int p, int n)
 {
-  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+  struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
+  struct psc_particles_cuda *cuda = psc_particles_cuda(_prts);
   return &cuda->bnd_prts[n];
 }
 
@@ -108,8 +110,7 @@ static void
 mprts_exchange_particles_pre(struct psc_bnd_particles *bnd, struct psc_mparticles *mprts)
 {
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    exchange_particles_pre(bnd, prts);
+    exchange_particles_pre(bnd, mprts, p);
   }
 }
 

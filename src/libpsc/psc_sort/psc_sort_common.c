@@ -3,11 +3,6 @@
 // ======================================================================
 // quicksort
 
-static void
-find_cell_indices(int p, struct psc_particles *pp)
-{
-}
-
 static inline int
 get_cell_index(int p, const particle_t *part)
 {
@@ -77,8 +72,7 @@ psc_sort_qsort_run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
   prof_start(pr);
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
-    particle_range_t prts = particle_range_prts(_prts);
-    find_cell_indices(p, _prts);
+    particle_range_t prts = particle_range_mprts(mprts, p);
     qsort(particle_iter_deref(prts.begin), _prts->n_part,
 	  sizeof(*particle_iter_deref(prts.begin)), compare);
   }
@@ -104,8 +98,7 @@ psc_sort_countsort_run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_patch *patch = &ppsc->patch[p];
     struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
-    particle_range_t prts = particle_range_prts(_prts);
-    find_cell_indices(p, _prts);
+    particle_range_t prts = particle_range_mprts(mprts, p);
     
     int N = 1;
     for (int d = 0; d < 3; d++) {
@@ -185,7 +178,7 @@ psc_sort_countsort2_run(struct psc_sort *sort, struct psc_mparticles *mprts_base
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_patch *patch = &ppsc->patch[p];
     struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
-    particle_range_t prts = particle_range_prts(_prts);
+    particle_range_t prts = particle_range_mprts(mprts, p);
 
     unsigned int mask = cs2->mask;
     struct cell_map map;

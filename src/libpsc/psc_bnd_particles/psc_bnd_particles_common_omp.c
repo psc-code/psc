@@ -9,17 +9,16 @@
 static void
 ddcp_particles_realloc(void *_ctx, int p, int new_n_particles)
 {
-  mparticles_t *particles = _ctx;
-  struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
+  mparticles_t *mprts = _ctx;
+  struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
   particles_realloc(prts, new_n_particles);
 }
 
 static void *
 ddcp_particles_get_addr(void *_ctx, int p, int n)
 {
-  mparticles_t *particles = _ctx;
-  struct psc_particles *_prts = psc_mparticles_get_patch(particles, p);
-  particle_range_t prts = particle_range_prts(_prts);
+  mparticles_t *mprts = _ctx;
+  particle_range_t prts = particle_range_mprts(mprts, p);
   return particle_iter_at(prts.begin, n);
 }
 
@@ -62,11 +61,13 @@ find_block_position(int b_pos[3], particle_real_t xi[3], particle_real_t b_dxi[3
 // psc_bnd_particles_sub_exchange_particles_prep
 
 static void
-psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd, struct psc_particles *_prts)
+psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
+					      struct psc_mparticles *mprts, int p)
 {
   struct ddc_particles *ddcp = bnd->ddcp;
   struct psc *psc = bnd->psc;
-  particle_range_t prts = particle_range_prts(_prts);
+  struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
+  particle_range_t prts = particle_range_mprts(mprts, p);
 
   // New-style boundary requirements.
   // These will need revisiting when it comes to non-periodic domains.
@@ -225,7 +226,7 @@ psc_bnd_particles_sub_exchange_particles(struct psc_bnd_particles *bnd, mparticl
   prof_restart(pr_time_step_no_comm);
   psc_foreach_patch(psc, p) {
     psc_balance_comp_time_by_patch[p] -= MPI_Wtime();
-    psc_bnd_particles_sub_exchange_particles_prep(bnd, psc_mparticles_get_patch(particles, p));
+    psc_bnd_particles_sub_exchange_particles_prep(bnd, particles, p);
     psc_balance_comp_time_by_patch[p] += MPI_Wtime();
   }
   prof_stop(pr_time_step_no_comm);
