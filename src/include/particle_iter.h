@@ -7,24 +7,6 @@ typedef struct {
   const struct psc_particles *prts;
 } particle_iter_t;
 
-static inline particle_iter_t
-particle_iter_begin_prts(const struct psc_particles *prts)
-{
-  return (particle_iter_t) {
-    .n    = 0,
-    .prts = prts,
-  };
-}
-
-static inline particle_iter_t
-particle_iter_end_prts(const struct psc_particles *prts)
-{
-  return (particle_iter_t) {
-    .n    = prts->n_part,
-    .prts = prts,
-  };
-}
-
 static inline bool
 particle_iter_equal(particle_iter_t iter, particle_iter_t iter2)
 {
@@ -73,7 +55,7 @@ particle_range_mprts(struct psc_mparticles *mprts, int p)
 {
   struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
   return (particle_range_t) {
-    .begin = particle_iter_begin_prts(prts),
-    .end = particle_iter_end_prts(prts),
+    .begin = { .n = 0           , .prts = prts },
+    .end   = { .n = prts->n_part, .prts = prts },
   };
 }
