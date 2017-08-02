@@ -10,7 +10,7 @@
 #define CALC_J CALC_J_1VB_2D
 #define INTERPOLATE_1ST INTERPOLATE_1ST_STD
 
-#define psc_push_particles_push_a_yz psc_push_particles_1vb_double_push_a_yz
+#define psc_push_particles_push_mprts_yz psc_push_particles_1vb_double_push_mprts_yz
 
 #include "1vb.c"
 
@@ -19,7 +19,7 @@
 
 struct psc_push_particles_ops psc_push_particles_1vb_double_ops = {
   .name                  = "1vb_double",
-  .push_a_yz             = psc_push_particles_1vb_double_push_a_yz,
+  .push_mprts_yz         = psc_push_particles_push_mprts_yz,
   .particles_type        = PARTICLE_TYPE,
   .fields_type           = FIELDS_TYPE,
 };

@@ -310,15 +310,19 @@ cache_fields_to_j(struct psc_fields *fld, fields_t *pf)
 }
 
 void
-psc_push_particles_2nd_double_push_a_yz(struct psc_push_particles *push,
-					struct psc_particles *_prts,
-					struct psc_fields *flds)
+psc_push_particles_2nd_double_push_mprts_yz(struct psc_push_particles *push,
+					    struct psc_mparticles *mprts,
+					    struct psc_mfields *mflds)
 {
-  psc_fields_zero_range(flds, JXI, JXI + 3);
-  struct psc_fields *flds_cache = cache_fields_from_em(flds);
-  particle_range_t prts = particle_range_prts(_prts);
-  do_push_part_yz(_prts->p, flds_cache, prts);
-  cache_fields_to_j(flds_cache, flds);
-  psc_fields_destroy(flds_cache);
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+    particle_range_t prts = particle_range_mprts(mprts, p);
+
+    psc_fields_zero_range(flds, JXI, JXI + 3);
+    struct psc_fields *flds_cache = cache_fields_from_em(flds);
+    do_push_part_yz(p, flds_cache, prts);
+    cache_fields_to_j(flds_cache, flds);
+    psc_fields_destroy(flds_cache);
+  }
 }
 

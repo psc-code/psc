@@ -146,9 +146,9 @@ do_push_part_1st_yz(int p, fields_t *pf, particle_range_t prts)
 }
 
 void
-psc_push_particles_1st_push_a_yz(struct psc_push_particles *push,
-				 struct psc_particles *_prts,
-				 struct psc_fields *flds)
+psc_push_particles_1st_push_mprts_yz(struct psc_push_particles *push,
+				     struct psc_mparticles *mprts,
+				     struct psc_mfields *mflds)
 {
   static int pr;
   if (!pr) {
@@ -157,9 +157,13 @@ psc_push_particles_1st_push_a_yz(struct psc_push_particles *push,
 
   prof_start(pr);
   params_1vb_set(ppsc, NULL, NULL);
-  psc_fields_zero_range(flds, JXI, JXI + 3);
-  particle_range_t prts = particle_range_prts(_prts);
-  do_push_part_1st_yz(_prts->p, flds, prts);
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+    particle_range_t prts = particle_range_mprts(mprts, p);
+
+    psc_fields_zero_range(flds, JXI, JXI + 3);
+    do_push_part_1st_yz(p, flds, prts);
+  }
   prof_stop(pr);
 }
 

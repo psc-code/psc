@@ -36,14 +36,14 @@ psc_push_particles_1vb_setup(struct psc_push_particles *push)
 }
 
 static void
-psc_push_particles_1vb_push_a_yz(struct psc_push_particles *push,
-				 struct psc_particles *prts_base,
-				 struct psc_fields *flds_base)
+psc_push_particles_1vb_push_mprts_yz(struct psc_push_particles *push,
+				     struct psc_mparticles *mprts,
+				     struct psc_mfields *mflds)
 {
   struct sub *sub = sub(push);
   struct psc_push_particles_ops *ops = psc_push_particles_ops(sub->fwd);
-  assert(ops->push_a_yz);
-  ops->push_a_yz(sub->fwd, prts_base, flds_base);
+  assert(ops->push_mprts_yz);
+  ops->push_mprts_yz(sub->fwd, mprts, mflds);
 }
 
 // ======================================================================
@@ -53,6 +53,6 @@ struct psc_push_particles_ops psc_push_particles_1vb_ops = {
   .name                  = "1vb",
   .size                  = sizeof(struct sub),
   .setup                 = psc_push_particles_1vb_setup,
-  .push_a_yz             = psc_push_particles_1vb_push_a_yz,
+  .push_mprts_yz         = psc_push_particles_1vb_push_mprts_yz,
 };
 

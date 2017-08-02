@@ -13,50 +13,6 @@
 extern int pr_time_step_no_comm;
 extern double *psc_balance_comp_time_by_patch;
 
-static void
-psc_push_particles_run_yz(struct psc_push_particles *push, struct psc_mparticles *mprts,
-			  struct psc_mfields *mflds)
-{
-  struct psc_push_particles_ops *ops = psc_push_particles_ops(push);
-
-  if (ops->push_mprts_yz) {
-    ops->push_mprts_yz(push, mprts, mflds);
-  } else {
-    assert(ops->push_a_yz);
-#pragma omp parallel for
-    for (int p = 0; p < mprts->nr_patches; p++) {
-      struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-      struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-
-      psc_balance_comp_time_by_patch[p] -= MPI_Wtime();
-      ops->push_a_yz(push, prts, flds);
-      psc_balance_comp_time_by_patch[p] += MPI_Wtime();
-    }
-  }
-}
-
-static void
-psc_push_particles_run_xyz(struct psc_push_particles *push, struct psc_mparticles *mprts,
-			   struct psc_mfields *mflds)
-{
-  struct psc_push_particles_ops *ops = psc_push_particles_ops(push);
-
-  if (ops->push_mprts_xyz) {
-    ops->push_mprts_xyz(push, mprts, mflds);
-  } else {
-    assert(ops->push_a_xyz);
-#pragma omp parallel for
-    for (int p = 0; p < mprts->nr_patches; p++) {
-      struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-      struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-
-      psc_balance_comp_time_by_patch[p] -= MPI_Wtime();
-      ops->push_a_xyz(push, prts, flds);
-      psc_balance_comp_time_by_patch[p] += MPI_Wtime();
-    }
-  }
-}
-
 void
 psc_push_particles_run(struct psc_push_particles *push,
 		       struct psc_mparticles *mprts_base, struct psc_mfields *mflds_base)
@@ -88,9 +44,11 @@ psc_push_particles_run(struct psc_push_particles *push,
   int *im = ppsc->domain.gdims;
 
   if (im[0] == 1 && im[1] > 1 && im[2] > 1) { // yz
-    psc_push_particles_run_yz(push, mprts, mflds);
+    assert(ops->push_mprts_yz);
+    ops->push_mprts_yz(push, mprts, mflds);
   } else if (im[0] > 1 && im[1] > 1 && im[2] > 1) { // xyz
-    psc_push_particles_run_xyz(push, mprts, mflds);
+    assert(ops->push_mprts_xyz);
+    ops->push_mprts_xyz(push, mprts, mflds);
   } else {
 #pragma omp parallel for
     for (int p = 0; p < mprts->nr_patches; p++) {

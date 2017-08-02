@@ -76,3 +76,13 @@ particle_range_prts(struct psc_particles *prts)
     .end = particle_iter_end_prts(prts),
   };
 }
+
+static inline particle_range_t
+particle_range_mprts(struct psc_mparticles *mprts, int p)
+{
+  struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+  return (particle_range_t) {
+    .begin = particle_iter_begin_prts(prts),
+    .end = particle_iter_end_prts(prts),
+  };
+}

@@ -45,14 +45,18 @@ do_push_part_1vb_yz(struct psc_fields *flds, struct psc_particles *_prts)
 #endif
 
 void
-SFX(psc_push_particles_push_a)(struct psc_push_particles *push,
-			       struct psc_particles *prts,
-			       struct psc_fields *flds)
+SFX(psc_push_particles_push_mprts)(struct psc_push_particles *push,
+				   struct psc_mparticles *mprts,
+				   struct psc_mfields *mflds)
 {
-  psc_fields_zero_range(flds, JXI, JXI + 3);
-
   params_1vb_set(ppsc, NULL, NULL);
-  ext_prepare_sort_before(prts);
-  do_push_part_1vb_yz(flds, prts);
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+
+    psc_fields_zero_range(flds, JXI, JXI + 3);
+    ext_prepare_sort_before(prts);
+    do_push_part_1vb_yz(flds, prts);
+  }
 }
 

@@ -6,7 +6,7 @@
 #include "psc_fields_as_c.h"
 #include "psc_particles_as_c.h"
 
-void psc_push_particles_1p5_c_push_a_yz(struct psc_push_particles *push,
-					struct psc_particles *particles_base,
-					struct psc_fields *flds_base);
+void psc_push_particles_1p5_c_push_mprts_yz(struct psc_push_particles *push,
+					    struct psc_mparticles *mprts,
+					    struct psc_mfields *mflds);
 #endif
