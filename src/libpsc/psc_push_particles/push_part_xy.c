@@ -254,9 +254,9 @@ do_genc_push_part_xy(int p, fields_t *pf, particle_range_t prts)
 }
 
 void
-psc_push_particles_generic_c_push_a_xy(struct psc_push_particles *push,
-				       struct psc_particles *_prts,
-				       struct psc_fields *flds)
+psc_push_particles_generic_c_push_mprts_xy(struct psc_push_particles *push,
+					   struct psc_mparticles *mprts,
+					   struct psc_mfields *mflds)
 {
   static int pr;
   if (!pr) {
@@ -264,9 +264,12 @@ psc_push_particles_generic_c_push_a_xy(struct psc_push_particles *push,
   }
   
   prof_start(pr);
-  psc_fields_zero_range(flds, JXI, JXI + 3);
-  particle_range_t prts = particle_range_prts(_prts);
-  do_genc_push_part_xy(_prts->p, flds, prts);
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+    particle_range_t prts = particle_range_mprts(mprts, p);
+    psc_fields_zero_range(flds, JXI, JXI + 3);
+    do_genc_push_part_xy(p, flds, prts);
+  }
   prof_stop(pr);
 }
 
