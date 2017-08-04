@@ -276,57 +276,84 @@ psc_particles_single_by_block_read(struct psc_particles *prts, struct mrc_io *io
 
 #endif
 
-// ======================================================================
-
 static void
-psc_mparticles_single_by_block_copy_to_single(int p, struct psc_mparticles *mprts,
-					      struct psc_mparticles *mprts_single,
-					      unsigned int flags)
+copy_from(int p, struct psc_mparticles *mprts,
+	  struct psc_mparticles *mprts_dbl, unsigned int flags,
+	  void (*get_particle)(particle_single_by_block_t *prt, int n, struct psc_particles *prts))
 {
-  struct psc_particles *prts_single = psc_mparticles_get_patch(mprts_single, p);
   struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-  int n_prts = psc_particles_size(prts);
-  psc_particles_resize(prts_single, n_prts);
+  struct psc_particles *prts_dbl = psc_mparticles_get_patch(mprts_dbl, p);
+  int n_prts = psc_particles_size(prts_dbl);
+  psc_particles_resize(prts, n_prts);
   for (int n = 0; n < n_prts; n++) {
     particle_single_by_block_t *prt = particles_single_by_block_get_one(prts, n);
-    particle_single_t *prt_single = particles_single_get_one(prts_single, n);
-    
-    prt_single->xi      = prt->xi;
-    prt_single->yi      = prt->yi;
-    prt_single->zi      = prt->zi;
-    prt_single->pxi     = prt->pxi;
-    prt_single->pyi     = prt->pyi;
-    prt_single->pzi     = prt->pzi;
-    prt_single->qni_wni = prt->qni_wni;
-    prt_single->kind    = prt->kind;
+    get_particle(prt, n, prts_dbl);
   }
 }
 
 static void
-psc_mparticles_single_by_block_copy_from_single(int p, struct psc_mparticles *mprts,
-						struct psc_mparticles *mprts_single,
-						unsigned int flags)
+copy_to(int p, struct psc_mparticles *mprts,
+	struct psc_mparticles *mprts_c, unsigned int flags,
+	void (*put_particle)(particle_single_by_block_t *prt, int n, struct psc_particles *prts))
 {
-  struct psc_particles *prts_single = psc_mparticles_get_patch(mprts_single, p);
   struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-  int n_prts = psc_particles_size(prts_single);
-  psc_particles_resize(prts, n_prts);
+  struct psc_particles *prts_c = psc_mparticles_get_patch(mprts_c, p);
+  int n_prts = psc_particles_size(prts);
+  psc_particles_resize(prts_c, n_prts);
   for (int n = 0; n < n_prts; n++) {
     particle_single_by_block_t *prt = particles_single_by_block_get_one(prts, n);
-    particle_single_t *prt_single = particles_single_get_one(prts_single, n);
-    
-    prt->xi      = prt_single->xi;
-    prt->yi      = prt_single->yi;
-    prt->zi      = prt_single->zi;
-    prt->pxi     = prt_single->pxi;
-    prt->pyi     = prt_single->pyi;
-    prt->pzi     = prt_single->pzi;
-    prt->qni_wni = prt_single->qni_wni;
-    prt->kind    = prt_single->kind;
+    put_particle(prt, n, prts_c);
   }
+}
 
-  psc_particles_single_by_block_sort(prts);
-  psc_particles_single_by_block_check(prts);
+
+// ======================================================================
+// conversion to/from "single"
+
+static void
+put_particle_single(particle_single_by_block_t *prt, int n, struct psc_particles *prts_dbl)
+{
+  particle_single_t *prt_dbl = particles_single_get_one(prts_dbl, n);
+  
+  prt_dbl->xi      = prt->xi;
+  prt_dbl->yi      = prt->yi;
+  prt_dbl->zi      = prt->zi;
+  prt_dbl->pxi     = prt->pxi;
+  prt_dbl->pyi     = prt->pyi;
+  prt_dbl->pzi     = prt->pzi;
+  prt_dbl->qni_wni = prt->qni_wni;
+  prt_dbl->kind    = prt->kind;
+}
+
+static void
+get_particle_single(particle_single_by_block_t *prt, int n, struct psc_particles *prts_dbl)
+{
+  particle_single_t *prt_dbl = particles_single_get_one(prts_dbl, n);
+
+  prt->xi      = prt_dbl->xi;
+  prt->yi      = prt_dbl->yi;
+  prt->zi      = prt_dbl->zi;
+  prt->pxi     = prt_dbl->pxi;
+  prt->pyi     = prt_dbl->pyi;
+  prt->pzi     = prt_dbl->pzi;
+  prt->qni_wni = prt_dbl->qni_wni;
+  prt->kind    = prt_dbl->kind;
+}
+
+static void
+psc_mparticles_single_by_block_copy_to_single(int p, struct psc_mparticles *mprts,
+				    struct psc_mparticles *mprts_dbl, unsigned int flags)
+{
+  copy_to(p, mprts, mprts_dbl, flags, put_particle_single);
+}
+
+static void
+psc_mparticles_single_by_block_copy_from_single(int p, struct psc_mparticles *mprts,
+				       struct psc_mparticles *mprts_dbl, unsigned int flags)
+{
+  copy_from(p, mprts, mprts_dbl, flags, get_particle_single);
+  psc_particles_single_by_block_sort(psc_mparticles_get_patch(mprts, p));
+  psc_particles_single_by_block_check(psc_mparticles_get_patch(mprts, p));
 }
 
 // ======================================================================
