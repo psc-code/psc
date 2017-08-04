@@ -511,8 +511,7 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
 
   unsigned int n_prts_by_patch[cmprts->n_patches];
   for (int p = 0; p < cmprts->n_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    n_prts_by_patch[p] = psc_particles_size(prts);
+    n_prts_by_patch[p] = psc_mparticles_n_prts_by_patch(mprts, p);
   }
 
   cuda_mparticles_alloc(cmprts, n_prts_by_patch);

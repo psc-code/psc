@@ -1,6 +1,8 @@
 
 #include "psc.h"
 
+#include "psc_particles_as_c.h" // only for checking...
+
 #include <mrc_profile.h>
 #include <mrc_params.h>
 #include <mrc_io.h>
@@ -116,15 +118,15 @@ psc_mparticles_nr_particles(struct psc_mparticles *mparticles)
   
   int nr_part = 0;
   for (int p = 0; p < mparticles->nr_patches; p++) {
-    nr_part += psc_mparticles_nr_particles_by_patch(mparticles, p);
+    nr_part += psc_mparticles_n_prts_by_patch(mparticles, p);
   }
   return nr_part;
 }
 
 int
-psc_mparticles_nr_particles_by_patch(struct psc_mparticles *mparticles, int p)
+psc_mparticles_n_prts_by_patch(struct psc_mparticles *mprts, int p)
 {
-  struct psc_particles *prts = psc_mparticles_get_patch(mparticles, p);
+  struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
   return psc_particles_size(prts);
 }
 
@@ -165,7 +167,7 @@ psc_mparticles_get_as(struct psc_mparticles *mp_base, const char *type,
   psc_mparticles_update_n_part(mp_base);
   int *nr_particles_by_patch = malloc(mp_base->nr_patches * sizeof(int));
   for (int p = 0; p < mp_base->nr_patches; p++) {
-    nr_particles_by_patch[p] = psc_mparticles_nr_particles_by_patch(mp_base, p);
+    nr_particles_by_patch[p] = psc_mparticles_n_prts_by_patch(mp_base, p);
   }
   struct psc_mparticles *mp =
     psc_mparticles_create(psc_mparticles_comm(mp_base));
@@ -267,7 +269,7 @@ psc_mparticles_check(struct psc_mparticles *mprts_base)
   
   psc_foreach_patch(ppsc, p) {
     struct psc_patch *patch = &ppsc->patch[p];
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    particle_range_t prts = particle_range_mprts(mprts, p);
 
     f_real xb[3], xe[3];
     
@@ -278,9 +280,9 @@ psc_mparticles_check(struct psc_mparticles *mprts_base)
       xb[d] = patch->xb[d];
       xe[d] = patch->xb[d] + patch->ldims[d] * patch->dx[d];
     }
-    
-    for (int i = 0; i < psc_particles_size(prts); i++) {
-      particle_c_t *part = particles_c_get_one(prts, i);
+
+    PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
+      particle_t *part = particle_iter_deref(prt_iter);
       if (part->xi < 0.f || part->xi >= xe[0] - xb[0] || // FIXME xz only!
 	  part->zi < 0.f || part->zi >= xe[2] - xb[2]) {
 	if (fail_cnt++ < 10) {

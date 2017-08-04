@@ -1,6 +1,7 @@
 
 #include "psc_testing.h"
 #include <mrc_params.h>
+#include <psc_particles_as_c.h>
 
 #include <string.h>
 
@@ -16,8 +17,10 @@ psc_test_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool count
 
   struct psc_particles *pp = psc_mparticles_get_patch(psc->particles, 0);
   psc_particles_resize(pp, nr_particles_by_patch[0]);
-  for (int i = 0; i < psc_particles_size(pp); i++) {
-    particle_c_t *prt = particles_c_get_one(pp, 0);
+  particle_range_t prts = particle_range_mprts(psc->particles, 0);
+
+  PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
+    particle_t *prt = particle_iter_deref(prt_iter);
     prt->qni = 1.; prt->mni = 1.; prt->wni = 1.;
     prt->yi = prt->zi = .5;
   }
