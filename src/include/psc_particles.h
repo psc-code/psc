@@ -54,29 +54,20 @@ typedef void (*psc_particles_copy_from_func_t)(struct psc_particles *,
 
 typedef struct psc_mparticles mparticles_base_t;
 
-#define MAKE_MPARTICLES_TYPE(type)					\
-typedef struct psc_mparticles mparticles_##type##_t;			\
-									\
-extern struct psc_mparticles_ops psc_mparticles_##type##_ops;		\
-
 static inline struct psc_particles *
 psc_mparticles_get_patch(struct psc_mparticles *mp, int p)
 {
   return mp->prts[p];
 }
 
-MAKE_MPARTICLES_TYPE(fortran)
-MAKE_MPARTICLES_TYPE(c)
-MAKE_MPARTICLES_TYPE(single)
-MAKE_MPARTICLES_TYPE(double)
-MAKE_MPARTICLES_TYPE(mix)
-#ifdef xUSE_SSE2
-MAKE_MPARTICLES_TYPE(sse2)
-#endif
-MAKE_MPARTICLES_TYPE(cbe)
-#ifdef USE_CUDA
-MAKE_MPARTICLES_TYPE(cuda)
-#endif
+extern struct psc_mparticles_ops psc_mparticles_fortran_ops;
+extern struct psc_mparticles_ops psc_mparticles_c_ops;
+extern struct psc_mparticles_ops psc_mparticles_single_ops;
+extern struct psc_mparticles_ops psc_mparticles_double_ops;
+extern struct psc_mparticles_ops psc_mparticles_mix_ops;
+extern struct psc_mparticles_ops psc_mparticles_sse2_ops;
+extern struct psc_mparticles_ops psc_mparticles_cbe_ops;
+extern struct psc_mparticles_ops psc_mparticles_cuda_ops;
 extern struct psc_mparticles_ops psc_mparticles_single_by_block_ops;
 
 void psc_mparticles_set_domain_nr_particles(struct psc_mparticles *mparticles,

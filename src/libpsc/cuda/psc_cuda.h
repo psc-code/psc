@@ -111,7 +111,7 @@ EXTERN_C void my_sort_check(struct psc_particles *prts, int *keys, int *ids_ref)
 
 #define CUDA2_STRIPE_SIZE THREADS_PER_BLOCK
 
-EXTERN_C void psc_mparticles_cuda_get_cuda_2(mparticles_cuda_t *particles,
+EXTERN_C void psc_mparticles_cuda_get_cuda_2(struct psc_mparticles *particles,
 					     void *particles_base,
 					     unsigned int flags);
 

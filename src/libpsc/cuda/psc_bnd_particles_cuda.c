@@ -304,7 +304,7 @@ psc_bnd_particles_sub_exchange_mprts_post(struct psc_bnd_particles *bnd,
 
 static void
 psc_bnd_particles_sub_exchange_particles_serial_periodic(struct psc_bnd_particles *psc_bnd_particles,
-						mparticles_cuda_t *particles)
+						struct psc_mparticles *particles)
 {
   assert(0);
 #if 0
@@ -345,7 +345,7 @@ psc_bnd_particles_sub_exchange_particles_serial_periodic(struct psc_bnd_particle
 
 static void
 psc_bnd_particles_sub_exchange_particles_general(struct psc_bnd_particles *bnd,
-				       mparticles_cuda_t *particles)
+						 struct psc_mparticles *particles)
 {
   struct ddc_particles *ddcp = bnd->ddcp;
 
@@ -384,7 +384,7 @@ psc_bnd_particles_sub_exchange_particles(struct psc_bnd_particles *bnd,
   // not in the right patch in the first place.
 
   assert(strcmp(psc_mparticles_type(particles_base), "cuda") == 0);
-  mparticles_cuda_t *particles = particles_base;
+  struct psc_mparticles *particles = particles_base;
 
   if (size == 1 && ppsc->nr_patches == 1 && // FIXME !!!
       ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
