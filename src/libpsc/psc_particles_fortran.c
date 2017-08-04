@@ -46,7 +46,6 @@ psc_mparticles_fortran_copy_to_c(int p, struct psc_mparticles *mprts_base,
   struct psc_particles *prts_c = psc_mparticles_get_patch(mprts_c, p);
   int n_prts = psc_particles_size(prts_base);
   psc_particles_resize(prts_c, n_prts);
-  assert(n_prts <= prts_c->n_alloced);
   for (int n = 0; n < n_prts; n++) {
     particle_fortran_t *part_base = particles_fortran_get_one(prts_base, n);
     particle_c_t *part = particles_c_get_one(prts_c, n);
@@ -71,7 +70,6 @@ psc_mparticles_fortran_copy_from_c(int p, struct psc_mparticles *mprts_base,
   struct psc_particles *prts_c = psc_mparticles_get_patch(mprts_c, p);
   int n_prts = psc_particles_size(prts_c);
   psc_particles_resize(prts_base, n_prts);
-  assert(n_prts <= prts_base->n_alloced);
   for (int n = 0; n < n_prts; n++) {
     particle_fortran_t *part_base = particles_fortran_get_one(prts_base, n);
     particle_c_t *part = particles_c_get_one(prts_c, n);
@@ -114,7 +112,6 @@ psc_mparticles_fortran_copy_to_double(int p, struct psc_mparticles *mprts_fortra
 
   int n_prts = psc_particles_size(prts_fortran);
   psc_particles_resize(prts_dbl, n_prts);
-  assert(n_prts <= prts_dbl->n_alloced);
   for (int n = 0; n < n_prts; n++) {
     particle_double_t *part_dbl = particles_double_get_one(prts_dbl, n);
     particle_fortran_t *part_fortran = particles_fortran_get_one(prts_fortran, n);
@@ -159,7 +156,6 @@ psc_mparticles_fortran_copy_from_double(int p, struct psc_mparticles *mprts_fort
 
   int n_prts = psc_particles_size(prts_dbl);
   psc_particles_resize(prts_fortran, n_prts);
-  assert(n_prts <= prts_fortran->n_alloced);
   for (int n = 0; n < n_prts; n++) {
     particle_double_t *part_dbl = particles_double_get_one(prts_dbl, n);
     particle_fortran_t *part_fortran = particles_fortran_get_one(prts_fortran, n);

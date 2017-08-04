@@ -25,9 +25,16 @@ psc_particles_size(struct psc_particles *prts)
 static inline void
 psc_particles_resize(struct psc_particles *prts, int n_prts)
 {
+  assert(n_prts <= prts->n_alloced);
   prts->N_PART = n_prts;
 }
 
+static inline void
+psc_particles_set_n_prts(struct psc_particles *prts, int n_prts)
+{
+  // FIXME, same as above w/o the assert, should go away...
+  prts->N_PART = n_prts;
+}
 
 struct psc_particles_ops {
   MRC_SUBCLASS_OPS(struct psc_particles);

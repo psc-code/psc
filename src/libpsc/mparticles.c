@@ -51,7 +51,7 @@ _psc_mparticles_setup(struct psc_mparticles *mparticles)
     sprintf(name, "prts%d", p);
     psc_particles_set_name(prts, name);
     prts->mprts = mparticles;
-    psc_particles_resize(prts, mparticles->nr_particles_by_patch[p]);
+    psc_particles_set_n_prts(prts, mparticles->nr_particles_by_patch[p]);
     prts->flags = mparticles->flags;
     prts->p = p;
     psc_particles_setup(prts);

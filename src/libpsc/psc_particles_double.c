@@ -135,7 +135,6 @@ psc_mparticles_double_copy_to_c(int p, struct psc_mparticles *mprts_base,
 
   int n_prts = psc_particles_size(prts_base);
   psc_particles_resize(prts_c, n_prts);
-  assert(n_prts <= prts_c->n_alloced);
   for (int n = 0; n < n_prts; n++) {
     particle_double_t *part_base = particles_double_get_one(prts_base, n);
     particle_c_t *part = particles_c_get_one(prts_c, n);
@@ -175,7 +174,6 @@ psc_mparticles_double_copy_from_c(int p, struct psc_mparticles *mprts_base,
 
   int n_prts = psc_particles_size(prts_c);
   psc_particles_resize(prts_base, n_prts);
-  assert(n_prts <= prts_base->n_alloced);
   for (int n = 0; n < n_prts; n++) {
     particle_double_t *part_base = particles_double_get_one(prts_base, n);
     particle_c_t *part = particles_c_get_one(prts_c, n);

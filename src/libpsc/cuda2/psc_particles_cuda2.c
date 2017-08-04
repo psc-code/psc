@@ -190,7 +190,6 @@ psc_particles_cuda2_copy_to_single(struct psc_particles *prts_base,
 
   int n_prts = psc_particles_size(prts_base);
   psc_particles_resize(prts, n_prts);
-  assert(n_prts <= prts->n_alloced);
   for (int n = 0; n < n_prts; n++) {
     particle_cuda2_t prt_base;
     PARTICLE_CUDA2_LOAD_POS(prt_base, sub->h_xi4, n);
@@ -219,7 +218,6 @@ psc_particles_cuda2_copy_from_single(struct psc_particles *prts_base,
 
   int n_prts = psc_particles_size(prts);
   psc_particles_resize(prts_base, n_prts);
-  assert(n_prts <= prts->n_alloced);
   for (int n = 0; n < n_prts; n++) {
     particle_cuda2_t prt_base;
     particle_single_t *part = particles_single_get_one(prts, n);
@@ -301,7 +299,6 @@ psc_particles_cuda2_copy_from_cuda(struct psc_particles *prts,
 
   int n_prts = psc_particles_size(prts_cuda);
   psc_particles_resize(prts, n_prts);
-  assert(n_prts <= prts->n_alloced);
   
   float4 *xi4  = calloc(n_prts, sizeof(float4));
   float4 *pxi4 = calloc(n_prts, sizeof(float4));

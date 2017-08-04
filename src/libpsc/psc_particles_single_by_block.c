@@ -287,7 +287,6 @@ psc_mparticles_single_by_block_copy_to_single(int p, struct psc_mparticles *mprt
   struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
   int n_prts = psc_particles_size(prts);
   psc_particles_resize(prts_single, n_prts);
-  assert(n_prts <= prts_single->n_alloced);
   for (int n = 0; n < n_prts; n++) {
     particle_single_by_block_t *prt = particles_single_by_block_get_one(prts, n);
     particle_single_t *prt_single = particles_single_get_one(prts_single, n);
@@ -312,7 +311,6 @@ psc_mparticles_single_by_block_copy_from_single(int p, struct psc_mparticles *mp
   struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
   int n_prts = psc_particles_size(prts_single);
   psc_particles_resize(prts, n_prts);
-  assert(n_prts <= prts->n_alloced);
   for (int n = 0; n < n_prts; n++) {
     particle_single_by_block_t *prt = particles_single_by_block_get_one(prts, n);
     particle_single_t *prt_single = particles_single_get_one(prts_single, n);
