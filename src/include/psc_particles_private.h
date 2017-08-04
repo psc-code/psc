@@ -5,7 +5,7 @@
 #include "psc_particles.h"
 
 // FIXME, hack to aid getting rid of ::n_part member
-#define N_PART n_part
+#define N_PART _n_part
 
 struct psc_particles {
   struct mrc_obj obj;
@@ -14,6 +14,19 @@ struct psc_particles {
   int p; //< patch number
   unsigned int flags;
 };
+
+static inline int
+psc_particles_size(struct psc_particles *prts)
+{
+  return prts->N_PART;
+}
+
+static inline void
+psc_particles_resize(struct psc_particles *prts, int n_prts)
+{
+  prts->N_PART = n_prts;
+}
+
 
 struct psc_particles_ops {
   MRC_SUBCLASS_OPS(struct psc_particles);

@@ -17,7 +17,7 @@ psc_particles_single_setup(struct psc_particles *prts)
 {
   struct psc_particles_single *sub = psc_particles_single(prts);
 
-  sub->n_alloced = prts->n_part * 1.2;
+  sub->n_alloced = psc_particles_size(prts) * 1.2;
   sub->particles = calloc(sub->n_alloced, sizeof(*sub->particles));
   sub->particles_alt = calloc(sub->n_alloced, sizeof(*sub->particles_alt));
   sub->b_idx = calloc(sub->n_alloced, sizeof(*sub->b_idx));
@@ -52,7 +52,7 @@ psc_particles_single_reorder(struct psc_particles *prts)
     return;
   }
 
-  for (int n = 0; n < prts->n_part; n++) {
+  for (int n = 0; n < psc_particles_size(prts); n++) {
     sub->particles_alt[n] = sub->particles[sub->b_ids[n]];
   }
   
@@ -108,11 +108,12 @@ psc_particles_single_write(struct psc_particles *prts, struct mrc_io *io)
   hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, prts), H5P_DEFAULT); H5_CHK(group);
   // save/restore n_alloced, too?
   ierr = H5LTset_attribute_int(group, ".", "p", &prts->p, 1); CE;
-  ierr = H5LTset_attribute_int(group, ".", "n_part", &prts->n_part, 1); CE;
+  int n_prts = psc_particles_size(prts);
+  ierr = H5LTset_attribute_int(group, ".", "n_part", &n_prts, 1); CE;
   ierr = H5LTset_attribute_uint(group, ".", "flags", &prts->flags, 1); CE;
-  if (prts->n_part > 0) {
+  if (n_prts > 0) {
     // in a rather ugly way, we write the int "kind" member as a float
-    hsize_t hdims[2] = { prts->n_part, 8 };
+    hsize_t hdims[2] = { n_prts, 8 };
     ierr = H5LTmake_dataset_float(group, "particles_single", 2, hdims,
 				  (float *) particles_single_get_one(prts, 0)); CE;
   }
@@ -131,10 +132,12 @@ psc_particles_single_read(struct psc_particles *prts, struct mrc_io *io)
 
   hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, prts), H5P_DEFAULT); H5_CHK(group);
   ierr = H5LTget_attribute_int(group, ".", "p", &prts->p); CE;
-  ierr = H5LTget_attribute_int(group, ".", "n_part", &prts->n_part); CE;
+  int n_prts;
+  ierr = H5LTget_attribute_int(group, ".", "n_part", &n_prts); CE;
+  psc_particles_resize(prts, n_prts);
   ierr = H5LTget_attribute_uint(group, ".", "flags", &prts->flags); CE;
   psc_particles_setup(prts);
-  if (prts->n_part > 0) {
+  if (n_prts > 0) {
     ierr = H5LTread_dataset_float(group, "particles_single",
 				  (float *) particles_single_get_one(prts, 0)); CE;
   }
@@ -167,9 +170,10 @@ psc_particles_single_copy_to_c(struct psc_particles *prts_base,
     }
   }
 
-  prts_c->n_part = prts_base->n_part;
-  assert(prts_c->n_part <= psc_particles_c(prts_c)->n_alloced);
-  for (int n = 0; n < prts_base->n_part; n++) {
+  int n_prts = psc_particles_size(prts_base);
+  psc_particles_resize(prts_c, n_prts);
+  assert(n_prts <= psc_particles_c(prts_c)->n_alloced);
+  for (int n = 0; n < n_prts; n++) {
     particle_single_t *part_base = particles_single_get_one(prts_base, n);
     particle_c_t *part = particles_c_get_one(prts_c, n);
     
@@ -205,9 +209,10 @@ psc_particles_single_copy_from_c(struct psc_particles *prts_base,
   }
 
   struct psc_particles_single *sub = psc_particles_single(prts_base);
-  prts_base->n_part = prts_c->n_part;
-  assert(prts_base->n_part <= sub->n_alloced);
-  for (int n = 0; n < prts_base->n_part; n++) {
+  int n_prts = psc_particles_size(prts_c);
+  psc_particles_resize(prts_base, n_prts);
+  assert(n_prts <= sub->n_alloced);
+  for (int n = 0; n < n_prts; n++) {
     particle_single_t *part_base = particles_single_get_one(prts_base, n);
     particle_c_t *part = particles_c_get_one(prts_c, n);
     
@@ -242,9 +247,10 @@ static void
 psc_particles_single_copy_to_double(struct psc_particles *prts_base,
 				    struct psc_particles *prts, unsigned int flags)
 {
-  prts->n_part = prts_base->n_part;
-  assert(prts->n_part <= psc_particles_double(prts)->n_alloced);
-  for (int n = 0; n < prts_base->n_part; n++) {
+  int n_prts = psc_particles_size(prts_base);
+  psc_particles_resize(prts, n_prts);
+  assert(n_prts <= psc_particles_double(prts)->n_alloced);
+  for (int n = 0; n < n_prts; n++) {
     particle_single_t *part_base = particles_single_get_one(prts_base, n);
     particle_double_t *part = particles_double_get_one(prts, n);
     
@@ -267,9 +273,10 @@ psc_particles_single_copy_from_double(struct psc_particles *prts_base,
 				      struct psc_particles *prts, unsigned int flags)
 {
   struct psc_particles_single *sub = psc_particles_single(prts_base);
-  prts_base->n_part = prts->n_part;
-  assert(prts_base->n_part <= sub->n_alloced);
-  for (int n = 0; n < prts_base->n_part; n++) {
+  int n_prts = psc_particles_size(prts);
+  psc_particles_resize(prts_base, n_prts);
+  assert(n_prts <= sub->n_alloced);
+  for (int n = 0; n < n_prts; n++) {
     particle_single_t *part_base = particles_single_get_one(prts_base, n);
     particle_double_t *part = particles_double_get_one(prts, n);
 

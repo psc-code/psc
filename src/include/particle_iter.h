@@ -55,8 +55,8 @@ particle_range_mprts(struct psc_mparticles *mprts, int p)
 {
   struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
   return (particle_range_t) {
-    .begin = { .n = 0           , .prts = prts },
-    .end   = { .n = prts->n_part, .prts = prts },
+    .begin = { .n = 0                       , .prts = prts },
+    .end   = { .n = psc_particles_size(prts), .prts = prts },
   };
 }
 
@@ -70,6 +70,6 @@ static inline void
 particle_range_resize(particle_range_t *prts, unsigned int n)
 {
   struct psc_particles *_prts = (struct psc_particles *) prts->end.prts;
-  _prts->n_part = n;
+  psc_particles_resize(_prts, n);
   prts->end.n = n;
 }

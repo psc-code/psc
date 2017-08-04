@@ -18,7 +18,7 @@ psc_particles_single_by_block_setup(struct psc_particles *prts)
 {
   struct psc_particles_single_by_block *sub = psc_particles_single_by_block(prts);
 
-  sub->n_alloced = prts->n_part * 1.2;
+  sub->n_alloced = psc_particles_size(prts) * 1.2;
   sub->particles = calloc(sub->n_alloced, sizeof(*sub->particles));
   sub->particles_alt = calloc(sub->n_alloced, sizeof(*sub->particles_alt));
   sub->b_idx = calloc(sub->n_alloced, sizeof(*sub->b_idx));
@@ -55,7 +55,7 @@ psc_particles_single_by_block_reorder(struct psc_particles *prts)
     return;
   }
 
-  for (int n = 0; n < prts->n_part; n++) {
+  for (int n = 0; n < psc_particles_size(prts); n++) {
     sub->particles_alt[n] = sub->particles[sub->b_ids[n]];
   }
   
@@ -136,10 +136,10 @@ psc_particles_single_by_block_check(struct psc_particles *prts)
 {
   struct psc_particles_single_by_block *sub = psc_particles_single_by_block(prts);
 
-  assert(prts->n_part <= sub->n_alloced);
+  assert(psc_particles_size(prts) <= sub->n_alloced);
 
   int block = 0;
-  for (int n = 0; n < prts->n_part; n++) {
+  for (int n = 0; n < psc_particles_size(prts); n++) {
     while (n >= sub->b_off[block + 1]) {
       block++;
       assert(block < sub->nr_blocks);
@@ -172,7 +172,8 @@ psc_particles_single_by_block_sort(struct psc_particles *prts)
   }
 
   // calculate block indices for each particle and count
-  for (int n = 0; n < prts->n_part; n++) {
+  int n_prts = psc_particles_size(prts);
+  for (int n = 0; n < n_prts; n++) {
     unsigned int b_idx = psc_particles_single_by_block_get_b_idx(prts, n);
     assert(b_idx < sub->nr_blocks);
     sub->b_idx[n] = b_idx;
@@ -191,14 +192,14 @@ psc_particles_single_by_block_sort(struct psc_particles *prts)
   }
 
   // find target position for each particle
-  for (int n = 0; n < prts->n_part; n++) {
+  for (int n = 0; n < n_prts; n++) {
     unsigned int b_idx = sub->b_idx[n];
     sub->b_ids[n] = sub->b_cnt[b_idx]++;
   }
 
   // reorder into alt particle array
   // WARNING: This is reversed to what reorder() does!
-  for (int n = 0; n < prts->n_part; n++) {
+  for (int n = 0; n < n_prts; n++) {
     sub->particles_alt[sub->b_ids[n]] = sub->particles[n];
   }
   
@@ -237,11 +238,12 @@ psc_particles_single_by_block_write(struct psc_particles *prts, struct mrc_io *i
   hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, prts), H5P_DEFAULT); H5_CHK(group);
   // save/restore n_alloced, too?
   ierr = H5LTset_attribute_int(group, ".", "p", &prts->p, 1); CE;
-  ierr = H5LTset_attribute_int(group, ".", "n_part", &prts->n_part, 1); CE;
+  int n_prts = psc_particles_size(prts);
+  ierr = H5LTset_attribute_int(group, ".", "n_part", &n_prts, 1); CE;
   ierr = H5LTset_attribute_uint(group, ".", "flags", &prts->flags, 1); CE;
-  if (prts->n_part > 0) {
+  if (n_prts > 0) {
     // in a rather ugly way, we write the int "kind" member as a float
-    hsize_t hdims[2] = { prts->n_part, 8 };
+    hsize_t hdims[2] = { n_prts, 8 };
     ierr = H5LTmake_dataset_float(group, "particles_single_by_block", 2, hdims,
 				  (float *) particles_single_by_block_get_one(prts, 0)); CE;
   }
@@ -260,10 +262,12 @@ psc_particles_single_by_block_read(struct psc_particles *prts, struct mrc_io *io
 
   hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, prts), H5P_DEFAULT); H5_CHK(group);
   ierr = H5LTget_attribute_int(group, ".", "p", &prts->p); CE;
-  ierr = H5LTget_attribute_int(group, ".", "n_part", &prts->n_part); CE;
+  int n_prts;
+  ierr = H5LTget_attribute_int(group, ".", "n_part", &n_prts); CE;
+  psc_particles_resize(prts, n_prts);
   ierr = H5LTget_attribute_uint(group, ".", "flags", &prts->flags); CE;
   psc_particles_setup(prts);
-  if (prts->n_part > 0) {
+  if (n_prts > 0) {
     ierr = H5LTread_dataset_float(group, "particles_single_by_block",
 				  (float *) particles_single_by_block_get_one(prts, 0)); CE;
   }
@@ -279,9 +283,10 @@ psc_particles_single_by_block_copy_to_single(struct psc_particles *prts,
 					     struct psc_particles *prts_single,
 					     unsigned int flags)
 {
-  prts_single->n_part = prts->n_part;
-  assert(prts_single->n_part <= psc_particles_single(prts_single)->n_alloced);
-  for (int n = 0; n < prts->n_part; n++) {
+  int n_prts = psc_particles_size(prts);
+  psc_particles_resize(prts_single, n_prts);
+  assert(n_prts <= psc_particles_single(prts_single)->n_alloced);
+  for (int n = 0; n < n_prts; n++) {
     particle_single_by_block_t *prt = particles_single_by_block_get_one(prts, n);
     particle_single_t *prt_single = particles_single_get_one(prts_single, n);
     
@@ -301,9 +306,10 @@ psc_particles_single_by_block_copy_from_single(struct psc_particles *prts,
 					       struct psc_particles *prts_single,
 					       unsigned int flags)
 {
-  prts->n_part = prts_single->n_part;
-  assert(prts->n_part <= psc_particles_single_by_block(prts)->n_alloced);
-  for (int n = 0; n < prts->n_part; n++) {
+  int n_prts = psc_particles_size(prts_single);
+  psc_particles_resize(prts, n_prts);
+  assert(n_prts <= psc_particles_single_by_block(prts)->n_alloced);
+  for (int n = 0; n < n_prts; n++) {
     particle_single_by_block_t *prt = particles_single_by_block_get_one(prts, n);
     particle_single_t *prt_single = particles_single_get_one(prts_single, n);
     

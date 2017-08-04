@@ -15,8 +15,8 @@ psc_test_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool count
   }
 
   struct psc_particles *pp = psc_mparticles_get_patch(psc->particles, 0);
-  pp->n_part = nr_particles_by_patch[0];
-  for (int i = 0; i < pp->n_part; i++) {
+  psc_particles_resize(pp, nr_particles_by_patch[0]);
+  for (int i = 0; i < psc_particles_size(pp); i++) {
     particle_c_t *prt = particles_c_get_one(pp, 0);
     prt->qni = 1.; prt->mni = 1.; prt->wni = 1.;
     prt->yi = prt->zi = .5;

@@ -142,8 +142,6 @@ psc_check_particles_ref(struct psc *psc, mparticles_base_t *particles_base,
   struct psc_mparticles *mprts = psc_mparticles_get_as(particles_base, "c", 0);
   particle_real_t xi = 0., yi = 0., zi = 0., pxi = 0., pyi = 0., pzi = 0.;
   psc_foreach_patch(psc, p) {
-    struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_particles *_prts_ref = psc_mparticles_get_patch(particles_ref, p);
     particle_range_t prts = particle_range_mprts(mprts, p);
     particle_range_t prts_ref = particle_range_mprts(particles_ref, p);
   

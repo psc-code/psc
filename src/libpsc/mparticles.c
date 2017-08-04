@@ -17,7 +17,7 @@ psc_mparticles_set_nr_particles(struct psc_mparticles *mprts, int *n_prts_by_pat
 {
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    prts->n_part = n_prts_by_patch[p];
+    psc_particles_resize(prts, n_prts_by_patch[p]);
   }
 }
 
@@ -49,7 +49,7 @@ _psc_mparticles_setup(struct psc_mparticles *mparticles)
     sprintf(name, "prts%d", p);
     psc_particles_set_name(prts, name);
     prts->mprts = mparticles;
-    prts->n_part = mparticles->nr_particles_by_patch[p];
+    psc_particles_resize(prts, mparticles->nr_particles_by_patch[p]);
     prts->flags = mparticles->flags;
     prts->p = p;
     psc_particles_setup(prts);
@@ -125,7 +125,7 @@ int
 psc_mparticles_nr_particles_by_patch(struct psc_mparticles *mparticles, int p)
 {
   struct psc_particles *prts = psc_mparticles_get_patch(mparticles, p);
-  return prts->n_part;
+  return psc_particles_size(prts);
 }
 
 void
@@ -279,7 +279,7 @@ psc_mparticles_check(struct psc_mparticles *mprts_base)
       xe[d] = patch->xb[d] + patch->ldims[d] * patch->dx[d];
     }
     
-    for (int i = 0; i < prts->n_part; i++) {
+    for (int i = 0; i < psc_particles_size(prts); i++) {
       particle_c_t *part = particles_c_get_one(prts, i);
       if (part->xi < 0.f || part->xi >= xe[0] - xb[0] || // FIXME xz only!
 	  part->zi < 0.f || part->zi >= xe[2] - xb[2]) {

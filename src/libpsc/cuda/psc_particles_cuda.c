@@ -91,15 +91,16 @@ psc_particles_cuda_write(struct psc_particles *prts, struct mrc_io *io)
   hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, prts), H5P_DEFAULT); H5_CHK(group);
   // save/restore n_alloced, too?
   ierr = H5LTset_attribute_int(group, ".", "p", &prts->p, 1); CE;
-  ierr = H5LTset_attribute_int(group, ".", "n_part", &prts->n_part, 1); CE;
+  int n_prts = psc_particles_size(prts);
+  ierr = H5LTset_attribute_int(group, ".", "n_part", &n_prts, 1); CE;
   ierr = H5LTset_attribute_uint(group, ".", "flags", &prts->flags, 1); CE;
-  if (prts->n_part > 0) {
-    float4 *xi4  = calloc(prts->n_part, sizeof(float4));
-    float4 *pxi4 = calloc(prts->n_part, sizeof(float4));
+  if (n_prts > 0) {
+    float4 *xi4  = calloc(n_prts, sizeof(float4));
+    float4 *pxi4 = calloc(n_prts, sizeof(float4));
   
     __particles_cuda_from_device(prts, xi4, pxi4);
   
-    hsize_t hdims[2] = { prts->n_part, 4 };
+    hsize_t hdims[2] = { n_prts, 4 };
     ierr = H5LTmake_dataset_float(group, "xi4", 2, hdims, (float *) xi4); CE;
     ierr = H5LTmake_dataset_float(group, "pxi4", 2, hdims, (float *) pxi4); CE;
 
@@ -121,7 +122,9 @@ psc_particles_cuda_read(struct psc_particles *prts, struct mrc_io *io)
 
   hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, prts), H5P_DEFAULT); H5_CHK(group);
   ierr = H5LTget_attribute_int(group, ".", "p", &prts->p); CE;
-  ierr = H5LTget_attribute_int(group, ".", "n_part", &prts->n_part); CE;
+  int n_prts;
+  ierr = H5LTget_attribute_int(group, ".", "n_part", &n_prts); CE;
+  psc_particles_resize(prts, n_prts);
   ierr = H5LTget_attribute_uint(group, ".", "flags", &prts->flags); CE;
   psc_particles_setup(prts);
   ierr = H5Gclose(group); CE;
@@ -180,7 +183,8 @@ copy_from(struct psc_particles *prts_cuda, struct psc_particles *prts,
   //  assert(prts_cuda->n_part >= prts->n_part);
   // FIXME, basically, we allow the number of particles per patch to change in between
   // get_as and put_as now
-  prts_cuda->n_part = prts->n_part; // FIXME, this is an ugly hack to get
+  psc_particles_resize(prts_cuda, psc_particles_size(prts));
+  // FIXME, this is an ugly hack to get
   // fractional particles to work. In that case, n_part is initially set to the maximum
   // number of particles that may be added to a patch, though in practice, depending on random numbers,
   // fewer get added. When copying those back to cuda, things go wrong...
@@ -188,10 +192,10 @@ copy_from(struct psc_particles *prts_cuda, struct psc_particles *prts,
 
   unsigned int off = 0;
   for (int p = 0; p < prts->p; p++) {
-    off += psc_mparticles_get_patch(mprts, p)->n_part;
+    off += psc_particles_size(psc_mparticles_get_patch(mprts, p));
   }
 
-  cuda_mparticles_set_particles(cmprts, prts->n_part, off,
+  cuda_mparticles_set_particles(cmprts, psc_particles_size(prts), off,
 				(void (*)(struct cuda_mparticles_prt *, int, void *)) get_particle,
 				prts);
 }
@@ -205,10 +209,10 @@ copy_to(struct psc_particles *prts_cuda, struct psc_particles *prts,
 
   unsigned int off = 0;
   for (int p = 0; p < prts_cuda->p; p++) {
-    off += psc_mparticles_get_patch(mprts, p)->n_part;
+    off += psc_particles_size(psc_mparticles_get_patch(mprts, p));
   }
 
-  cuda_mparticles_get_particles(cmprts, prts_cuda->n_part, off,
+  cuda_mparticles_get_particles(cmprts, psc_particles_size(prts_cuda), off,
 				(void (*)(struct cuda_mparticles_prt *, int, void *)) put_particle,
 				prts);
 }
@@ -297,8 +301,8 @@ psc_particles_cuda_copy_to_c(struct psc_particles *prts_cuda,
 			     struct psc_particles *prts, unsigned int flags)
 {
   struct psc_particles_c *c = psc_particles_c(prts);
-  prts->n_part = prts_cuda->n_part;
-  assert(prts->n_part <= c->n_alloced);
+  psc_particles_resize(prts, psc_particles_size(prts_cuda));
+  assert(psc_particles_size(prts) <= c->n_alloced);
   
   copy_to(prts_cuda, prts, put_particle_c);
 }
@@ -348,8 +352,8 @@ psc_particles_cuda_copy_to_single(struct psc_particles *prts_cuda,
 				  struct psc_particles *prts, unsigned int flags)
 {
   struct psc_particles_single *sngl = psc_particles_single(prts);
-  prts->n_part = prts_cuda->n_part;
-  assert(prts->n_part <= sngl->n_alloced);
+  psc_particles_resize(prts, psc_particles_size(prts_cuda));
+  assert(psc_particles_size(prts) <= sngl->n_alloced);
   
   copy_to(prts_cuda, prts, put_particle_single);
 }
@@ -399,8 +403,8 @@ psc_particles_cuda_copy_to_double(struct psc_particles *prts_cuda,
 				  struct psc_particles *prts, unsigned int flags)
 {
   struct psc_particles_double *dbl = psc_particles_double(prts);
-  prts->n_part = prts_cuda->n_part;
-  assert(prts->n_part <= dbl->n_alloced);
+  psc_particles_resize(prts, psc_particles_size(prts_cuda));
+  assert(psc_particles_size(prts) <= dbl->n_alloced);
   
   copy_to(prts_cuda, prts, put_particle_double);
 }
@@ -509,7 +513,7 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
   unsigned int n_prts_by_patch[cmprts->n_patches];
   for (int p = 0; p < cmprts->n_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    n_prts_by_patch[p] = prts->n_part;
+    n_prts_by_patch[p] = psc_particles_size(prts);
   }
 
   cuda_mparticles_alloc(cmprts, n_prts_by_patch);
@@ -550,7 +554,7 @@ psc_mparticles_cuda_read(struct psc_mparticles *mprts, struct mrc_io *io)
   for (int p = 0; p < mprts->nr_patches; p++) {
     char name[20]; sprintf(name, "prts%d", p);
     mprts->prts[p] = mrc_io_read_ref(io, mprts, name, psc_particles); // doesn't actually read data
-    mprts->nr_particles_by_patch[p] = mprts->prts[p]->n_part;
+    mprts->nr_particles_by_patch[p] = psc_particles_size(mprts->prts[p]);
   }
 
   psc_mparticles_setup(mprts);
@@ -561,15 +565,16 @@ psc_mparticles_cuda_read(struct psc_mparticles *mprts, struct mrc_io *io)
   unsigned int off = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = mprts->prts[p];
-    if (prts->n_part > 0) {
+    int n_prts = psc_particles_size(prts);
+    if (n_prts > 0) {
       int ierr;
       char name[20]; sprintf(name, "prts%d", p);
       char *path;
       mrc_io_read_attr_string(io, mrc_io_obj_path(io, mprts), name, &path);
       hid_t group = H5Gopen(h5_file, path, H5P_DEFAULT); H5_CHK(group);
       free(path);
-      float4 *xi4  = calloc(prts->n_part, sizeof(float4));
-      float4 *pxi4 = calloc(prts->n_part, sizeof(float4));
+      float4 *xi4  = calloc(n_prts, sizeof(float4));
+      float4 *pxi4 = calloc(n_prts, sizeof(float4));
       
       ierr = H5LTread_dataset_float(group, "xi4", (float *) xi4); CE;
       ierr = H5LTread_dataset_float(group, "pxi4", (float *) pxi4); CE;
@@ -577,13 +582,13 @@ psc_mparticles_cuda_read(struct psc_mparticles *mprts, struct mrc_io *io)
       struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
       struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
       
-      cuda_mparticles_to_device(cmprts, xi4, pxi4, prts->n_part, off);
+      cuda_mparticles_to_device(cmprts, xi4, pxi4, n_prts, off);
       
       free(xi4);
       free(pxi4);
       ierr = H5Gclose(group); CE;
     }
-    off += prts->n_part;
+    off += n_prts;
   }
 
   psc_mparticles_setup_internals(mprts);
@@ -604,8 +609,8 @@ psc_mparticles_cuda_update_n_part(struct psc_mparticles *mprts)
   unsigned int n_prts = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    prts->n_part = n_prts_by_patch[p];
-    n_prts += prts->n_part;
+    psc_particles_resize(prts, n_prts_by_patch[p]);
+    n_prts += n_prts_by_patch[p];
   }
   assert(cmprts->n_prts == n_prts);
 }
@@ -626,7 +631,7 @@ psc_mparticles_cuda_setup_internals(struct psc_mparticles *mprts)
   unsigned int n_prts_by_patch[mprts->nr_patches];
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    n_prts_by_patch[p] = prts->n_part;
+    n_prts_by_patch[p] = psc_particles_size(prts);
     n_prts += n_prts_by_patch[p];
   }
   cmprts->n_prts = n_prts; // another hack to deal with copy_from having
@@ -669,7 +674,7 @@ psc_mparticles_cuda_inject(struct psc_mparticles *mprts_base, struct cuda_mparti
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     
-    int i = prts->n_part;
+    int i = psc_particles_size(prts);
     particles_realloc(prts, i + buf_n_by_patch[p]);
     for (int cnt = 0; cnt < buf_n_by_patch[p]; cnt++) {
       particle_t *prt = particles_get_one(prts, i++);
@@ -684,7 +689,7 @@ psc_mparticles_cuda_inject(struct psc_mparticles *mprts_base, struct cuda_mparti
       prt->qni_wni = buf[buf_n + cnt].qni_wni;
     }
     buf_n += buf_n_by_patch[p];
-    prts->n_part = i;
+    psc_particles_resize(prts, i);
   }
 
   psc_mparticles_put_as(mprts, mprts_base, 0);

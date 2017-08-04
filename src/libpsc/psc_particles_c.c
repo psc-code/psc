@@ -14,7 +14,7 @@ psc_particles_c_setup(struct psc_particles *prts)
 {
   struct psc_particles_c *c = psc_particles_c(prts);
 
-  c->n_alloced = prts->n_part * 1.2;
+  c->n_alloced = psc_particles_size(prts) * 1.2;
   c->particles = calloc(c->n_alloced, sizeof(*c->particles));
 }
 
@@ -66,11 +66,12 @@ psc_particles_c_write(struct psc_particles *prts, struct mrc_io *io)
   hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, prts), H5P_DEFAULT); H5_CHK(group);
   // save/restore n_alloced, too?
   ierr = H5LTset_attribute_int(group, ".", "p", &prts->p, 1); CE;
-  ierr = H5LTset_attribute_int(group, ".", "n_part", &prts->n_part, 1); CE;
+  int n_prts = psc_particles_size(prts);
+  ierr = H5LTset_attribute_int(group, ".", "n_part", &n_prts, 1); CE;
   ierr = H5LTset_attribute_uint(group, ".", "flags", &prts->flags, 1); CE;
-  if (prts->n_part > 0) {
+  if (n_prts > 0) {
     // in a rather ugly way, we write the long "kind" member as a double
-    hsize_t hdims[2] = { prts->n_part, 10 };
+    hsize_t hdims[2] = { n_prts, 10 };
     ierr = H5LTmake_dataset_double(group, "particles_c", 2, hdims,
 				   (double *) particles_c_get_one(prts, 0)); CE;
   }
@@ -89,10 +90,12 @@ psc_particles_c_read(struct psc_particles *prts, struct mrc_io *io)
 
   hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, prts), H5P_DEFAULT); H5_CHK(group);
   ierr = H5LTget_attribute_int(group, ".", "p", &prts->p); CE;
-  ierr = H5LTget_attribute_int(group, ".", "n_part", &prts->n_part); CE;
+  int n_prts;
+  ierr = H5LTget_attribute_int(group, ".", "n_part", &n_prts); CE;
+  psc_particles_resize(prts, n_prts);
   ierr = H5LTget_attribute_uint(group, ".", "flags", &prts->flags); CE;
   psc_particles_setup(prts);
-  if (prts->n_part > 0) {
+  if (n_prts > 0) {
     ierr = H5LTread_dataset_double(group, "particles_c",
 				   (double *) particles_c_get_one(prts, 0)); CE;
   }

@@ -108,7 +108,8 @@ psc_particles_cuda2_sort(struct psc_particles *prts)
   }
 
   // calculate block indices for each particle and count
-  for (int n = 0; n < prts->n_part; n++) {
+  int n_prts = psc_particles_size(prts);
+  for (int n = 0; n < n_prts; n++) {
     unsigned int b_idx = psc_particles_cuda2_get_b_idx(prts, n);
     assert(b_idx < sub->nr_blocks);
     sub->b_idx[n] = b_idx;
@@ -128,14 +129,14 @@ psc_particles_cuda2_sort(struct psc_particles *prts)
   sub->b_off[sub->nr_blocks + 1] = sum;
 
   // find target position for each particle
-  for (int n = 0; n < prts->n_part; n++) {
+  for (int n = 0; n < n_prts; n++) {
     unsigned int b_idx = sub->b_idx[n];
     sub->b_ids[n] = sub->b_cnt[b_idx]++;
   }
 
   // reorder into alt particle array
   // WARNING: This is reversed to what reorder() does!
-  for (int n = 0; n < prts->n_part; n++) {
+  for (int n = 0; n < n_prts; n++) {
     sub->h_xi4_alt [sub->b_ids[n]] = sub->h_xi4 [n];
     sub->h_pxi4_alt[sub->b_ids[n]] = sub->h_pxi4[n];
   }
@@ -162,10 +163,10 @@ psc_particles_cuda2_check(struct psc_particles *prts)
 {
   struct psc_particles_cuda2 *sub = psc_particles_cuda2(prts);
 
-  assert(prts->n_part <= sub->n_alloced);
+  assert(psc_particles_size(prts) <= sub->n_alloced);
 
   int block = 0;
-  for (int n = 0; n < prts->n_part; n++) {
+  for (int n = 0; n < psc_particles_size(prts); n++) {
     while (n >= sub->b_off[block + 1]) {
       block++;
       assert(block < sub->nr_blocks);
@@ -187,9 +188,10 @@ psc_particles_cuda2_copy_to_single(struct psc_particles *prts_base,
 {
   struct psc_particles_cuda2 *sub = psc_particles_cuda2(prts_base);
 
-  prts->n_part = prts_base->n_part;
-  assert(prts->n_part <= psc_particles_single(prts)->n_alloced);
-  for (int n = 0; n < prts_base->n_part; n++) {
+  int n_prts = psc_particles_size(prts_base);
+  psc_particles_resize(prts, n_prts);
+  assert(n_prts <= psc_particles_single(prts)->n_alloced);
+  for (int n = 0; n < n_prts; n++) {
     particle_cuda2_t prt_base;
     PARTICLE_CUDA2_LOAD_POS(prt_base, sub->h_xi4, n);
     PARTICLE_CUDA2_LOAD_MOM(prt_base, sub->h_pxi4, n);
@@ -215,9 +217,10 @@ psc_particles_cuda2_copy_from_single(struct psc_particles *prts_base,
 {
   struct psc_particles_cuda2 *sub = psc_particles_cuda2(prts_base);
 
-  prts_base->n_part = prts->n_part;
-  assert(prts_base->n_part <= sub->n_alloced);
-  for (int n = 0; n < prts_base->n_part; n++) {
+  int n_prts = psc_particles_size(prts);
+  psc_particles_resize(prts_base, n_prts);
+  assert(n_prts <= sub->n_alloced);
+  for (int n = 0; n < n_prts; n++) {
     particle_cuda2_t prt_base;
     particle_single_t *part = particles_single_get_one(prts, n);
 
@@ -248,10 +251,10 @@ particles_cuda_to_device(struct psc_particles *prts, float4 *xi4, float4 *pxi4)
 
   unsigned int off = 0;
   for (int p = 0; p < prts->p; p++) {
-    off += psc_mparticles_get_patch(mprts, p)->n_part;
+    off += psc_particles_size(psc_mparticles_get_patch(mprts, p));
   }
 
-  cuda_mparticles_to_device(cmprts, xi4, pxi4, prts->n_part, off);
+  cuda_mparticles_to_device(cmprts, xi4, pxi4, psc_particles_size(prts), off);
 }
 
 // ----------------------------------------------------------------------
@@ -263,12 +266,13 @@ psc_particles_cuda2_copy_to_cuda(struct psc_particles *prts,
 {
   struct psc_particles_cuda2 *sub = psc_particles_cuda2(prts);
 
-  assert(prts_cuda->n_part == prts->n_part);
+  int n_prts = psc_particles_size(prts);
+  assert(psc_particles_size(prts_cuda) == n_prts);
   
-  float4 *xi4  = calloc(prts->n_part, sizeof(float4));
-  float4 *pxi4 = calloc(prts->n_part, sizeof(float4));
+  float4 *xi4  = calloc(n_prts, sizeof(float4));
+  float4 *pxi4 = calloc(n_prts, sizeof(float4));
   
-  for (int n = 0; n < prts->n_part; n++) {
+  for (int n = 0; n < n_prts; n++) {
     particle_cuda2_t prt;
     PARTICLE_CUDA2_LOAD_POS(prt, sub->h_xi4, n);
     PARTICLE_CUDA2_LOAD_MOM(prt, sub->h_pxi4, n);
@@ -295,15 +299,16 @@ psc_particles_cuda2_copy_from_cuda(struct psc_particles *prts,
 {
   struct psc_particles_cuda2 *sub = psc_particles_cuda2(prts);
 
-  prts->n_part = prts_cuda->n_part;
-  assert(prts->n_part <= sub->n_alloced);
+  int n_prts = psc_particles_size(prts_cuda);
+  psc_particles_resize(prts, n_prts);
+  assert(n_prts <= sub->n_alloced);
   
-  float4 *xi4  = calloc(prts_cuda->n_part, sizeof(float4));
-  float4 *pxi4 = calloc(prts_cuda->n_part, sizeof(float4));
+  float4 *xi4  = calloc(n_prts, sizeof(float4));
+  float4 *pxi4 = calloc(n_prts, sizeof(float4));
   
   __particles_cuda_from_device(prts_cuda, xi4, pxi4);
   
-  for (int n = 0; n < prts->n_part; n++) {
+  for (int n = 0; n < n_prts; n++) {
     particle_cuda2_t prt;
 
     prt.xi[0]         = xi4[n].x;
@@ -385,7 +390,7 @@ psc_mparticles_cuda2_setup(struct psc_mparticles *mprts)
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
 
-    sub->n_part_total += prts->n_part;
+    sub->n_part_total += psc_particles_size(prts);
   }
   sub->n_alloced_total = sub->n_part_total * 1.2;
 
@@ -407,7 +412,7 @@ psc_mparticles_cuda2_setup(struct psc_mparticles *mprts)
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda2 *prts_sub = psc_particles_cuda2(prts);
 
-    prts_sub->n_alloced = prts->n_part;
+    prts_sub->n_alloced = psc_particles_size(prts);
 
     for (int d = 0; d < 3; d++) {
       prts_sub->dxi[d] = sub->dxi[d];
@@ -420,10 +425,11 @@ psc_mparticles_cuda2_setup(struct psc_mparticles *mprts)
     prts_sub->h_pxi4 = h_pxi4;
     prts_sub->h_xi4_alt = h_xi4_alt;
     prts_sub->h_pxi4_alt = h_pxi4_alt;
-    h_xi4 += prts->n_part;
-    h_pxi4 += prts->n_part;
-    h_xi4_alt += prts->n_part;
-    h_pxi4_alt += prts->n_part;
+    int n_prts = psc_particles_size(prts);
+    h_xi4 += n_prts;
+    h_pxi4 += n_prts;
+    h_xi4_alt += n_prts;
+    h_pxi4_alt += n_prts;
 
     prts_sub->b_idx = calloc(prts_sub->n_alloced, sizeof(*prts_sub->b_idx));
     prts_sub->b_ids = calloc(prts_sub->n_alloced, sizeof(*prts_sub->b_ids));
@@ -525,7 +531,7 @@ psc_mparticles_cuda2_setup_internals(struct psc_mparticles *mprts)
     for (int b = 0; b < nr_blocks; b++) {
       sub->h_b_off[p * nr_blocks + b] = prts_sub->b_off[b] + n_part;
     }
-    n_part += prts->n_part;
+    n_part += psc_particles_size(prts);
   }
   sub->h_b_off[sub->nr_blocks_total] = sub->n_part_total;
   sub->h_b_off[sub->nr_blocks_total + 1] = sub->n_part_total;
