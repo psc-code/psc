@@ -37,14 +37,14 @@ void particles_cbe_free(particles_cbe_t *pp)
 }
 
 void
-psc_mparticles_cbe_get_cbe(mparticles_cbe_t *particles, void *_particles_base)
+psc_mparticles_cbe_get_cbe(struct psc_mparticles *particles, void *_particles_base)
 {
-  mparticles_cbe_t *particles_base = _particles_base;
+  struct psc_mparticles *particles_base = _particles_base;
   *particles = *particles_base;
 }
 
 void
-psc_mparticles_cbe_put_cbe(mparticles_cbe_t *particles, void *particles_base)
+psc_mparticles_cbe_put_cbe(struct psc_mparticles *particles, void *particles_base)
 {
 }
 
@@ -53,7 +53,7 @@ static bool __gotten;
 #endif
 
 void
-psc_mparticles_c_get_cbe(mparticles_cbe_t *particles, void *_particles_base)
+psc_mparticles_c_get_cbe(struct psc_mparticles *particles, void *_particles_base)
 {
 #if 0
   static int pr;
@@ -106,7 +106,7 @@ psc_mparticles_c_get_cbe(mparticles_cbe_t *particles, void *_particles_base)
 
 
 void
-psc_mparticles_c_cbe_put_cbe(mparticles_cbe_t *particles, void *_particles_base)
+psc_mparticles_c_cbe_put_cbe(struct psc_mparticles *particles, void *_particles_base)
 {
 #if 0
   assert(__gotten);
