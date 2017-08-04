@@ -54,15 +54,6 @@ psc_particles_cuda_setup(struct psc_particles *prts)
       bs[d] = (patch->ldims[d] == 1) ? 1 : 2;
     }
   }
-  cell_map_init(&cuda->map, cuda->b_mx, bs);
-}
-
-static void
-psc_particles_cuda_destroy(struct psc_particles *prts)
-{
-  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-
-  cell_map_free(&cuda->map);
 }
 
 #ifdef HAVE_LIBHDF5_HL
@@ -438,7 +429,6 @@ struct psc_particles_ops psc_particles_cuda_ops = {
   .name                    = "cuda",
   .size                    = sizeof(struct psc_particles_cuda),
   .setup                   = psc_particles_cuda_setup,
-  .destroy                 = psc_particles_cuda_destroy,
 #ifdef HAVE_LIBHDF5_HL
   .read                    = psc_particles_cuda_read,
   .write                   = psc_particles_cuda_write,
