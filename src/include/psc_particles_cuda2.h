@@ -26,7 +26,6 @@ struct psc_particles_cuda2 {
   unsigned int *b_cnt;
   unsigned int *b_off;
 
-  int n_alloced;
   particle_cuda2_real_t dxi[3];
   int b_mx[3];
   int nr_blocks;

@@ -17,11 +17,11 @@ psc_particles_single_setup(struct psc_particles *prts)
 {
   struct psc_particles_single *sub = psc_particles_single(prts);
 
-  sub->n_alloced = psc_particles_size(prts) * 1.2;
-  sub->particles = calloc(sub->n_alloced, sizeof(*sub->particles));
-  sub->particles_alt = calloc(sub->n_alloced, sizeof(*sub->particles_alt));
-  sub->b_idx = calloc(sub->n_alloced, sizeof(*sub->b_idx));
-  sub->b_ids = calloc(sub->n_alloced, sizeof(*sub->b_ids));
+  prts->n_alloced = psc_particles_size(prts) * 1.2;
+  sub->particles = calloc(prts->n_alloced, sizeof(*sub->particles));
+  sub->particles_alt = calloc(prts->n_alloced, sizeof(*sub->particles_alt));
+  sub->b_idx = calloc(prts->n_alloced, sizeof(*sub->b_idx));
+  sub->b_ids = calloc(prts->n_alloced, sizeof(*sub->b_ids));
 
   for (int d = 0; d < 3; d++) {
     sub->b_mx[d] = ppsc->patch[prts->p].ldims[d];
@@ -68,15 +68,15 @@ particles_single_realloc(struct psc_particles *prts, int new_n_part)
 {
   struct psc_particles_single *sub = psc_particles_single(prts);
 
-  if (new_n_part <= sub->n_alloced)
+  if (new_n_part <= prts->n_alloced)
     return;
 
-  sub->n_alloced = new_n_part * 1.2;
-  sub->particles = realloc(sub->particles, sub->n_alloced * sizeof(*sub->particles));
-  sub->b_idx = realloc(sub->b_idx, sub->n_alloced * sizeof(*sub->b_idx));
-  sub->b_ids = realloc(sub->b_ids, sub->n_alloced * sizeof(*sub->b_ids));
+  prts->n_alloced = new_n_part * 1.2;
+  sub->particles = realloc(sub->particles, prts->n_alloced * sizeof(*sub->particles));
+  sub->b_idx = realloc(sub->b_idx, prts->n_alloced * sizeof(*sub->b_idx));
+  sub->b_ids = realloc(sub->b_ids, prts->n_alloced * sizeof(*sub->b_ids));
   free(sub->particles_alt);
-  sub->particles_alt = malloc(sub->n_alloced * sizeof(*sub->particles_alt));
+  sub->particles_alt = malloc(prts->n_alloced * sizeof(*sub->particles_alt));
 }
 
 // ======================================================================
@@ -174,7 +174,7 @@ psc_mparticles_single_copy_to_c(int p, struct psc_mparticles *mprts_base,
 
   int n_prts = psc_particles_size(prts_base);
   psc_particles_resize(prts_c, n_prts);
-  assert(n_prts <= psc_particles_c(prts_c)->n_alloced);
+  assert(n_prts <= prts_c->n_alloced);
   for (int n = 0; n < n_prts; n++) {
     particle_single_t *part_base = particles_single_get_one(prts_base, n);
     particle_c_t *part = particles_c_get_one(prts_c, n);
@@ -212,10 +212,9 @@ psc_mparticles_single_copy_from_c(int p, struct psc_mparticles *mprts_base,
     }
   }
 
-  struct psc_particles_single *sub = psc_particles_single(prts_base);
   int n_prts = psc_particles_size(prts_c);
   psc_particles_resize(prts_base, n_prts);
-  assert(n_prts <= sub->n_alloced);
+  assert(n_prts <= prts_base->n_alloced);
   for (int n = 0; n < n_prts; n++) {
     particle_single_t *part_base = particles_single_get_one(prts_base, n);
     particle_c_t *part = particles_c_get_one(prts_c, n);
@@ -255,7 +254,7 @@ psc_mparticles_single_copy_to_double(int p, struct psc_mparticles *mprts_base,
   struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
   int n_prts = psc_particles_size(prts_base);
   psc_particles_resize(prts, n_prts);
-  assert(n_prts <= psc_particles_double(prts)->n_alloced);
+  assert(n_prts <= prts->n_alloced);
   for (int n = 0; n < n_prts; n++) {
     particle_single_t *part_base = particles_single_get_one(prts_base, n);
     particle_double_t *part = particles_double_get_one(prts, n);
@@ -280,10 +279,9 @@ psc_mparticles_single_copy_from_double(int p, struct psc_mparticles *mprts_base,
 {
   struct psc_particles *prts_base = psc_mparticles_get_patch(mprts_base, p);
   struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-  struct psc_particles_single *sub = psc_particles_single(prts_base);
   int n_prts = psc_particles_size(prts);
   psc_particles_resize(prts_base, n_prts);
-  assert(n_prts <= sub->n_alloced);
+  assert(n_prts <= prts->n_alloced);
   for (int n = 0; n < n_prts; n++) {
     particle_single_t *part_base = particles_single_get_one(prts_base, n);
     particle_double_t *part = particles_double_get_one(prts, n);

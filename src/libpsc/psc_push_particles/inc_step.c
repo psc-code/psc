@@ -101,7 +101,6 @@ ext_prepare_sort(struct psc_mparticles *mprts, int p, int n, particle_t *prt,
     prts_sub->b_idx[n] = b_pos[2] * b_mx[1] + b_pos[1];
   } else { /* out of bounds */
     prts_sub->b_idx[n] = prts_sub->nr_blocks;
-    assert(prts_sub->b_cnt[prts_sub->nr_blocks] < prts_sub->n_alloced);
     /* append to back */
     *particle_iter_at(prts.begin, n_prts + prts_sub->b_cnt[prts_sub->nr_blocks]) = *prt;
   }

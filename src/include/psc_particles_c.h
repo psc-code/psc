@@ -21,7 +21,6 @@ typedef struct psc_particle_c {
 
 struct psc_particles_c {
   particle_c_t *particles;
-  int n_alloced;
 };
 
 #define psc_particles_c(prts) mrc_to_subobj(prts, struct psc_particles_c)

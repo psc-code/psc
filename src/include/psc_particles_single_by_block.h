@@ -20,7 +20,6 @@ typedef struct psc_particle_single_by_block {
 struct psc_particles_single_by_block {
   particle_single_by_block_t *particles;
   particle_single_by_block_t *particles_alt;
-  int n_alloced;
   int b_mx[3];
   int nr_blocks;
   particle_single_by_block_real_t b_dxi[3];

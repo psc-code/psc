@@ -22,7 +22,6 @@ typedef struct psc_particle_fortran {
 
 struct psc_particles_fortran {
   struct psc_particle_fortran *particles;
-  int n_alloced;
 };
 
 #define psc_particles_fortran(prts) mrc_to_subobj(prts, struct psc_particles_fortran)

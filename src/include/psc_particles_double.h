@@ -17,7 +17,6 @@ typedef struct psc_particle_double {
 
 struct psc_particles_double {
   particle_double_t *particles;
-  int n_alloced;
 };
 
 #define psc_particles_double(prts) mrc_to_subobj(prts, struct psc_particles_double)

@@ -27,7 +27,6 @@ struct psc_particles_acc {
   unsigned int *b_cnt;
   unsigned int *b_off;
 
-  int n_alloced;
   particle_acc_real_t dxi[3];
   int b_mx[3];
   int nr_blocks;

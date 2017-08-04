@@ -104,7 +104,6 @@ find_block_indices_count_reorder(struct psc_mparticles *mprts, int p)
       sngl->b_idx[i] = (b_pos[2] * b_mx[1] + b_pos[1]) * b_mx[0] + b_pos[0];
     } else { // out of bounds
       sngl->b_idx[i] = sngl->nr_blocks;
-      assert(cnt < sngl->n_alloced);
       *particle_iter_at(prts.begin, cnt) = *part;
       cnt++;
     }
@@ -124,7 +123,6 @@ count_and_reorder_to_back(struct psc_mparticles *mprts, int p)
   unsigned int cnt = n_prts;
   for (int i = 0; i < n_prts; i++) {
     if (sngl->b_idx[i] == sngl->nr_blocks) {
-      assert(cnt < sngl->n_alloced);
       *particle_iter_at(prts.begin, cnt) = *particle_iter_at(prts.begin, i);
       cnt++;
     }
@@ -143,7 +141,6 @@ reorder_to_back(struct psc_mparticles *mprts, int p)
   unsigned int cnt = n_prts;
   for (int i = 0; i < n_prts; i++) {
     if (sngl->b_idx[i] == sngl->nr_blocks) {
-      assert(cnt < sngl->n_alloced);
       *particle_iter_at(prts.begin, cnt) = *particle_iter_at(prts.begin, i);
       cnt++;
     }

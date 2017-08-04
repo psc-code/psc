@@ -293,9 +293,8 @@ psc_particles_cuda_copy_to_c(int p, struct psc_mparticles *mprts_cuda,
 			     struct psc_mparticles *mprts, unsigned int flags)
 {
   struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-  struct psc_particles_c *c = psc_particles_c(prts);
   psc_particles_resize(prts, psc_mparticles_n_prts_by_patch(mprts_cuda, p));
-  assert(psc_mparticles_n_prts_by_patch(mprts, p) <= c->n_alloced);
+  assert(psc_mparticles_n_prts_by_patch(mprts, p) <= prts->n_alloced);
   
   copy_to(p, mprts_cuda, mprts, put_particle_c);
 }
@@ -345,9 +344,8 @@ psc_particles_cuda_copy_to_single(int p, struct psc_mparticles *mprts_cuda,
 				  struct psc_mparticles *mprts, unsigned int flags)
 {
   struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-  struct psc_particles_single *sngl = psc_particles_single(prts);
   psc_particles_resize(prts, psc_mparticles_n_prts_by_patch(mprts_cuda, p));
-  assert(psc_mparticles_n_prts_by_patch(mprts, p) <= sngl->n_alloced);
+  assert(psc_mparticles_n_prts_by_patch(mprts, p) <= prts->n_alloced);
   
   copy_to(p, mprts_cuda, mprts, put_particle_single);
 }
@@ -397,9 +395,8 @@ psc_particles_cuda_copy_to_double(int p, struct psc_mparticles *mprts_cuda,
 				  struct psc_mparticles *mprts, unsigned int flags)
 {
   struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-  struct psc_particles_double *dbl = psc_particles_double(prts);
   psc_particles_resize(prts, psc_mparticles_n_prts_by_patch(mprts_cuda, p));
-  assert(psc_mparticles_n_prts_by_patch(mprts, p) <= dbl->n_alloced);
+  assert(psc_mparticles_n_prts_by_patch(mprts, p) <= prts->n_alloced);
   
   copy_to(p, mprts_cuda, mprts, put_particle_double);
 }

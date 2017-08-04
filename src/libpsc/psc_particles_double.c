@@ -16,8 +16,8 @@ psc_particles_double_setup(struct psc_particles *prts)
 {
   struct psc_particles_double *sub = psc_particles_double(prts);
 
-  sub->n_alloced = psc_particles_size(prts) * 1.2 + 1000000;
-  sub->particles = calloc(sub->n_alloced, sizeof(*sub->particles));
+  prts->n_alloced = psc_particles_size(prts) * 1.2 + 1000000;
+  sub->particles = calloc(prts->n_alloced, sizeof(*sub->particles));
 }
 
 static void
@@ -33,11 +33,11 @@ particles_double_realloc(struct psc_particles *prts, int new_n_part)
 {
   struct psc_particles_double *sub = psc_particles_double(prts);
 
-  if (new_n_part <= sub->n_alloced)
+  if (new_n_part <= prts->n_alloced)
     return;
 
-  sub->n_alloced = new_n_part * 1.2;
-  sub->particles = realloc(sub->particles, sub->n_alloced * sizeof(*sub->particles));
+  prts->n_alloced = new_n_part * 1.2;
+  sub->particles = realloc(sub->particles, prts->n_alloced * sizeof(*sub->particles));
 }
 
 static inline void
@@ -135,7 +135,7 @@ psc_mparticles_double_copy_to_c(int p, struct psc_mparticles *mprts_base,
 
   int n_prts = psc_particles_size(prts_base);
   psc_particles_resize(prts_c, n_prts);
-  assert(n_prts <= psc_particles_c(prts_c)->n_alloced);
+  assert(n_prts <= prts_c->n_alloced);
   for (int n = 0; n < n_prts; n++) {
     particle_double_t *part_base = particles_double_get_one(prts_base, n);
     particle_c_t *part = particles_c_get_one(prts_c, n);
@@ -173,10 +173,9 @@ psc_mparticles_double_copy_from_c(int p, struct psc_mparticles *mprts_base,
     }
   }
 
-  struct psc_particles_double *sub = psc_particles_double(prts_base);
   int n_prts = psc_particles_size(prts_c);
   psc_particles_resize(prts_base, n_prts);
-  assert(n_prts <= sub->n_alloced);
+  assert(n_prts <= prts_base->n_alloced);
   for (int n = 0; n < n_prts; n++) {
     particle_double_t *part_base = particles_double_get_one(prts_base, n);
     particle_c_t *part = particles_c_get_one(prts_c, n);

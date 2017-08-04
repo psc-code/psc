@@ -11,6 +11,7 @@ struct psc_particles {
   struct mrc_obj obj;
   struct psc_mparticles *mprts;
   int N_PART;
+  int n_alloced;
   int p; //< patch number
   unsigned int flags;
 };

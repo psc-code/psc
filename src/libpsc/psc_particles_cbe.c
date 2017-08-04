@@ -8,31 +8,31 @@
 #include <assert.h>
 
 void
-particles_cbe_alloc(particles_cbe_t *pp, int n_part)
+particles_cbe_alloc(struct psc_particles *prts, particles_cbe_t *pp, int n_part)
 {
   void * m;
-  pp->n_alloced = n_part * 1.2;
- int ierr = posix_memalign(&m, 16, pp->n_alloced * sizeof(*pp->particles));
+  prts->n_alloced = n_part * 1.2;
+  int ierr = posix_memalign(&m, 16, prts->n_alloced * sizeof(*pp->particles));
   assert(ierr == 0);
   pp->particles = (particle_cbe_t *) m;
 }
 
-void particles_cbe_realloc(particles_cbe_t *pp, int new_n_part)
+void particles_cbe_realloc(struct psc_particles *prts, particles_cbe_t *pp, int new_n_part)
 {
-  if (pp->n_alloced >= new_n_part)
+  if (prts->n_alloced >= new_n_part)
     return;
   void * m; 
-  pp->n_alloced = new_n_part * 1.2;
+  prts->n_alloced = new_n_part * 1.2;
   free(pp->particles);
-  int ierr = posix_memalign(&m, 16, pp->n_alloced * sizeof(*pp->particles));
+  int ierr = posix_memalign(&m, 16, prts->n_alloced * sizeof(*pp->particles));
   assert(ierr == 0);
   pp->particles = (particle_cbe_t *) m;
 }
 
-void particles_cbe_free(particles_cbe_t *pp)
+void particles_cbe_free(struct psc_particles *prts, particles_cbe_t *pp)
 {
   free(pp->particles);
-  pp->n_alloced = 0;
+  prts->n_alloced = 0;
   pp->particles = NULL;
 }
 
