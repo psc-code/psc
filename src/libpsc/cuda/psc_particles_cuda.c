@@ -164,11 +164,12 @@ blockIdx_to_blockCrd(struct psc_patch *patch, struct cell_map *map,
 #endif
 
 static void
-copy_from(struct psc_particles *prts_cuda, struct psc_particles *prts,
+copy_from(int p, struct psc_mparticles *mprts_cuda, struct psc_mparticles *mprts,
 	  void (*get_particle)(struct cuda_mparticles_prt *prt, int n, struct psc_particles *prts))
 {
-  struct psc_mparticles *mprts = prts_cuda->mprts;
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
+  struct psc_particles *prts_cuda = psc_mparticles_get_patch(mprts_cuda, p);
+  struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts_cuda)->cmprts;
 
   //mprintf("cuda %d prts %d\n", prts_cuda->n_part, prts->n_part);
   //  assert(prts_cuda->n_part >= prts->n_part);
@@ -182,28 +183,28 @@ copy_from(struct psc_particles *prts_cuda, struct psc_particles *prts,
   // FIXME: The initialization should probably not even use the get_as/put_as mechanism...
 
   unsigned int off = 0;
-  for (int p = 0; p < prts->p; p++) {
-    off += psc_particles_size(psc_mparticles_get_patch(mprts, p));
+  for (int pp = 0; pp < p; pp++) {
+    off += psc_mparticles_n_prts_by_patch(mprts_cuda, pp);
   }
 
-  cuda_mparticles_set_particles(cmprts, psc_particles_size(prts), off,
+  cuda_mparticles_set_particles(cmprts, psc_mparticles_n_prts_by_patch(mprts, p), off,
 				(void (*)(struct cuda_mparticles_prt *, int, void *)) get_particle,
 				prts);
 }
 
 static void
-copy_to(struct psc_particles *prts_cuda, struct psc_particles *prts,
+copy_to(int p, struct psc_mparticles *mprts_cuda, struct psc_mparticles *mprts,
 	void (*put_particle)(struct cuda_mparticles_prt *prt, int n, struct psc_particles *prts))
 {
-  struct psc_mparticles *mprts = prts_cuda->mprts;
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
+  struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts_cuda)->cmprts;
 
   unsigned int off = 0;
-  for (int p = 0; p < prts_cuda->p; p++) {
-    off += psc_particles_size(psc_mparticles_get_patch(mprts, p));
+  for (int pp = 0; pp < p; pp++) {
+    off += psc_mparticles_n_prts_by_patch(mprts_cuda, pp);
   }
 
-  cuda_mparticles_get_particles(cmprts, psc_particles_size(prts_cuda), off,
+  cuda_mparticles_get_particles(cmprts, psc_mparticles_n_prts_by_patch(mprts_cuda, p), off,
 				(void (*)(struct cuda_mparticles_prt *, int, void *)) put_particle,
 				prts);
 }
@@ -284,22 +285,19 @@ static void
 psc_particles_cuda_copy_from_c(int p, struct psc_mparticles *mprts_cuda,
 			       struct psc_mparticles *mprts, unsigned int flags)
 {
-  struct psc_particles *prts_cuda = psc_mparticles_get_patch(mprts_cuda, p);
-  struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-  copy_from(prts_cuda, prts, get_particle_c);
+  copy_from(p, mprts_cuda, mprts, get_particle_c);
 }
 
 static void
 psc_particles_cuda_copy_to_c(int p, struct psc_mparticles *mprts_cuda,
 			     struct psc_mparticles *mprts, unsigned int flags)
 {
-  struct psc_particles *prts_cuda = psc_mparticles_get_patch(mprts_cuda, p);
   struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
   struct psc_particles_c *c = psc_particles_c(prts);
-  psc_particles_resize(prts, psc_particles_size(prts_cuda));
-  assert(psc_particles_size(prts) <= c->n_alloced);
+  psc_particles_resize(prts, psc_mparticles_n_prts_by_patch(mprts_cuda, p));
+  assert(psc_mparticles_n_prts_by_patch(mprts, p) <= c->n_alloced);
   
-  copy_to(prts_cuda, prts, put_particle_c);
+  copy_to(p, mprts_cuda, mprts, put_particle_c);
 }
 
 // ======================================================================
@@ -339,22 +337,19 @@ static void
 psc_particles_cuda_copy_from_single(int p, struct psc_mparticles *mprts_cuda,
 				    struct psc_mparticles *mprts, unsigned int flags)
 {
-  struct psc_particles *prts_cuda = psc_mparticles_get_patch(mprts_cuda, p);
-  struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-  copy_from(prts_cuda, prts, get_particle_single);
+  copy_from(p, mprts_cuda, mprts, get_particle_single);
 }
 
 static void
 psc_particles_cuda_copy_to_single(int p, struct psc_mparticles *mprts_cuda,
 				  struct psc_mparticles *mprts, unsigned int flags)
 {
-  struct psc_particles *prts_cuda = psc_mparticles_get_patch(mprts_cuda, p);
   struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
   struct psc_particles_single *sngl = psc_particles_single(prts);
-  psc_particles_resize(prts, psc_particles_size(prts_cuda));
-  assert(psc_particles_size(prts) <= sngl->n_alloced);
+  psc_particles_resize(prts, psc_mparticles_n_prts_by_patch(mprts_cuda, p));
+  assert(psc_mparticles_n_prts_by_patch(mprts, p) <= sngl->n_alloced);
   
-  copy_to(prts_cuda, prts, put_particle_single);
+  copy_to(p, mprts_cuda, mprts, put_particle_single);
 }
 
 // ======================================================================
@@ -394,22 +389,19 @@ static void
 psc_particles_cuda_copy_from_double(int p, struct psc_mparticles *mprts_cuda,
 				    struct psc_mparticles *mprts, unsigned int flags)
 {
-  struct psc_particles *prts_cuda = psc_mparticles_get_patch(mprts_cuda, p);
-  struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-  copy_from(prts_cuda, prts, get_particle_double);
+  copy_from(p, mprts_cuda, mprts, get_particle_double);
 }
 
 static void
 psc_particles_cuda_copy_to_double(int p, struct psc_mparticles *mprts_cuda,
 				  struct psc_mparticles *mprts, unsigned int flags)
 {
-  struct psc_particles *prts_cuda = psc_mparticles_get_patch(mprts_cuda, p);
   struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
   struct psc_particles_double *dbl = psc_particles_double(prts);
-  psc_particles_resize(prts, psc_particles_size(prts_cuda));
-  assert(psc_particles_size(prts) <= dbl->n_alloced);
+  psc_particles_resize(prts, psc_mparticles_n_prts_by_patch(mprts_cuda, p));
+  assert(psc_mparticles_n_prts_by_patch(mprts, p) <= dbl->n_alloced);
   
-  copy_to(prts_cuda, prts, put_particle_double);
+  copy_to(p, mprts_cuda, mprts, put_particle_double);
 }
 
 // ======================================================================
