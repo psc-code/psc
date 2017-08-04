@@ -1,6 +1,7 @@
 
 #include "psc.h"
-#include "psc_particles_double.h"
+#include "psc_particles_as_double.h"
+#include "psc_particles_inc.h"
 #include "psc_particles_c.h"
 
 #include <mrc_io.h>
@@ -107,37 +108,6 @@ psc_particles_double_read(struct psc_particles *prts, struct mrc_io *io)
 
 #endif
 
-static void
-copy_from(int p, struct psc_mparticles *mprts,
-	  struct psc_mparticles *mprts_dbl, unsigned int flags,
-	  void (*get_particle)(particle_double_t *prt, int n, struct psc_particles *prts))
-{
-  struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-  struct psc_particles *prts_dbl = psc_mparticles_get_patch(mprts_dbl, p);
-  int n_prts = psc_particles_size(prts_dbl);
-  psc_particles_resize(prts, n_prts);
-  for (int n = 0; n < n_prts; n++) {
-    particle_double_t *prt = particles_double_get_one(prts, n);
-    get_particle(prt, n, prts_dbl);
-  }
-}
-
-static void
-copy_to(int p, struct psc_mparticles *mprts,
-	struct psc_mparticles *mprts_dbl, unsigned int flags,
-	void (*put_particle)(particle_double_t *prt, int n, struct psc_particles *prts))
-{
-  struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-  struct psc_particles *prts_dbl = psc_mparticles_get_patch(mprts_dbl, p);
-  int n_prts = psc_particles_size(prts);
-  psc_particles_resize(prts_dbl, n_prts);
-  for (int n = 0; n < n_prts; n++) {
-    particle_double_t *prt = particles_double_get_one(prts, n);
-    put_particle(prt, n, prts_dbl);
-  }
-}
-
-
 // ======================================================================
 // conversion to/from "c"
 
@@ -216,14 +186,14 @@ static void
 psc_mparticles_double_copy_to_c(int p, struct psc_mparticles *mprts,
 				struct psc_mparticles *mprts_c, unsigned int flags)
 {
-  copy_to(p, mprts, mprts_c, flags, put_particle_c);
+  psc_mparticles_copy_to(p, mprts, mprts_c, flags, put_particle_c);
 }
 
 static void
 psc_mparticles_double_copy_from_c(int p, struct psc_mparticles *mprts,
 				  struct psc_mparticles *mprts_c, unsigned int flags)
 {
-  copy_from(p, mprts, mprts_c, flags, get_particle_c);
+  psc_mparticles_copy_from(p, mprts, mprts_c, flags, get_particle_c);
 }
 
 // ======================================================================
