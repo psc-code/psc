@@ -297,32 +297,6 @@ psc_mparticles_check(struct psc_mparticles *mprts_base)
   psc_mparticles_put_as(mprts, mprts_base, 0);
 }
 
-#define MAKE_MPARTICLES_GET_PUT(type)					\
-									\
-mparticles_##type##_t *							\
-psc_mparticles_get_##type(struct psc_mparticles *particles_base,	\
-			  unsigned int flags)				\
-{									\
-  return psc_mparticles_get_as(particles_base, #type, flags);		\
-}									\
-									\
-void									\
-psc_mparticles_put_##type(mparticles_##type##_t *particles,		\
-			  struct psc_mparticles *particles_base,	\
-			  unsigned int flags)				\
-{									\
-  psc_mparticles_put_as(particles, particles_base, flags);		\
-}									\
-
-MAKE_MPARTICLES_GET_PUT(c)
-MAKE_MPARTICLES_GET_PUT(single)
-MAKE_MPARTICLES_GET_PUT(double)
-MAKE_MPARTICLES_GET_PUT(fortran)
-MAKE_MPARTICLES_GET_PUT(mix)
-#ifdef USE_CUDA
-MAKE_MPARTICLES_GET_PUT(cuda)
-#endif
-
 // ======================================================================
 
 static void

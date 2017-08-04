@@ -58,13 +58,6 @@ typedef struct psc_mparticles mparticles_base_t;
 typedef struct psc_mparticles mparticles_##type##_t;			\
 									\
 extern struct psc_mparticles_ops psc_mparticles_##type##_ops;		\
-									\
-struct psc_mparticles *						        \
-psc_mparticles_get_##type(struct psc_mparticles *mp_base,		\
-			  unsigned int flags);				\
-void psc_mparticles_put_##type(struct psc_mparticles *mp,		\
-			       struct psc_mparticles *mp_base,		\
-			       unsigned int flags);			\
 
 static inline struct psc_particles *
 psc_mparticles_get_patch(struct psc_mparticles *mp, int p)
