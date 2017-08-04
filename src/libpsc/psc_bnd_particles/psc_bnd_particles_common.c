@@ -527,7 +527,7 @@ psc_bnd_particles_sub_open_calc_moments(struct psc_bnd_particles *bnd,
     mrc_io_open(io, "w", ppsc->timestep, ppsc->timestep * ppsc->dt);
   }
 
-  struct psc_mparticles *mprts = psc_mparticles_get_cf(mprts_base, 0);
+  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
   struct psc_mfields *mflds_nvt = psc_output_fields_item_create_mfields(bnd->item_nvt);
 
   prof_start(pr_B);
@@ -547,7 +547,7 @@ psc_bnd_particles_sub_open_calc_moments(struct psc_bnd_particles *bnd,
 
   bnd->first_time = false;
 
-  psc_mparticles_put_cf(mprts, mprts_base, MP_DONT_COPY);
+  psc_mparticles_put_as(mprts, mprts_base, MP_DONT_COPY);
 
   if (ppsc->timestep % debug_every_step == 0) {
     mrc_io_close(io);
@@ -836,7 +836,7 @@ psc_bnd_particles_sub_exchange_particles(struct psc_bnd_particles *bnd, mparticl
 {
   struct psc *psc = bnd->psc;
 
-  mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
+  mparticles_t *particles = psc_mparticles_get_as(particles_base, PARTICLE_TYPE, 0);
   //struct psc_mfields *mflds = psc_mfields_get_as(psc->flds, "c", JXI, JXI + 3);
 
   static int pr_A, pr_B, pr_C;
@@ -876,7 +876,7 @@ psc_bnd_particles_sub_exchange_particles(struct psc_bnd_particles *bnd, mparticl
 
   //psc_bnd_particles_open_boundary(bnd, particles, mflds);
 
-  psc_mparticles_put_cf(particles, particles_base, 0);
+  psc_mparticles_put_as(particles, particles_base, 0);
   //psc_mfields_put_as(mflds, psc->flds, JXI, JXI + 3);
 }
 

@@ -7,8 +7,6 @@
 typedef particle_single_by_block_real_t particle_real_t;
 typedef particle_single_by_block_t particle_t;
 
-#define psc_mparticles_get_cf       psc_mparticles_get_single_by_block
-#define psc_mparticles_put_cf       psc_mparticles_put_single_by_block
 #define particles_get_one           particles_single_by_block_get_one
 #define particles_realloc           particles_single_by_block_realloc
 #define particle_qni_div_mni        particle_single_by_block_qni_div_mni
