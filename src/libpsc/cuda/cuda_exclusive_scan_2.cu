@@ -35,8 +35,7 @@ EXTERN_C int
 cuda_exclusive_scan_2(struct psc_particles *prts, unsigned int *_d_vals,
 		      unsigned int *_d_sums)
 {
-  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(cuda->mprts)->cmprts;
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(prts->mprts)->cmprts;
   thrust::device_ptr<unsigned int> d_vals(_d_vals);
   thrust::device_ptr<unsigned int> d_sums(_d_sums);
   int n_prts = psc_particles_size(prts);
@@ -54,8 +53,7 @@ EXTERN_C int
 _cuda_exclusive_scan_2(struct psc_particles *prts, unsigned int *d_bidx,
 		       unsigned int *d_sums)
 {
-  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(cuda->mprts)->cmprts;
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(prts->mprts)->cmprts;
   int n_prts = psc_particles_size(prts);
   unsigned int *bidx = new unsigned int[n_prts];
   unsigned int *sums = new unsigned int[n_prts];

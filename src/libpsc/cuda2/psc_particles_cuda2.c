@@ -245,7 +245,7 @@ psc_particles_cuda2_copy_from_single(struct psc_particles *prts_base,
 static void
 particles_cuda_to_device(struct psc_particles *prts, float4 *xi4, float4 *pxi4)
 {
-  struct psc_mparticles *mprts = psc_particles_cuda(prts)->mprts;
+  struct psc_mparticles *mprts = prts->mprts;
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
   struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
 

@@ -21,7 +21,6 @@ struct psc_particles_cuda {
   int bnd_n_recv;
   int bnd_n_send;
   void *sort_ctx; // for sorting / particle xchg
-  struct psc_mparticles *mprts; // parent containing this patch of particles
 };
 
 #define psc_particles_cuda(prts) mrc_to_subobj(prts, struct psc_particles_cuda)

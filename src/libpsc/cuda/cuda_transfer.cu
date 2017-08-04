@@ -14,8 +14,7 @@
 EXTERN_C void
 __particles_cuda_from_device(struct psc_particles *prts, float4 *xi4, float4 *pxi4)
 {
-  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-  struct psc_mparticles *mprts = cuda->mprts;
+  struct psc_mparticles *mprts = prts->mprts;
   assert(mprts);
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
   struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
