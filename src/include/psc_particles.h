@@ -52,8 +52,6 @@ typedef void (*psc_particles_copy_from_func_t)(struct psc_particles *,
 #define MP_BLOCKSIZE_8X8X8    (0x4000)
 #define MP_NO_CHECKERBOARD    (0x10000)
 
-typedef struct psc_mparticles mparticles_base_t;
-
 static inline struct psc_particles *
 psc_mparticles_get_patch(struct psc_mparticles *mp, int p)
 {

@@ -63,7 +63,7 @@ psc_test_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool count
 
 // FIXME, make generic
 static int
-get_total_num_particles(mparticles_base_t *particles_base)
+get_total_num_particles(struct psc_mparticles *particles_base)
 {
   int nr_part = psc_mparticles_nr_particles(particles_base);
   int total_nr_part;

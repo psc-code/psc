@@ -5,4 +5,4 @@
 
 MRC_CLASS_DECLARE(psc_randomize, struct psc_randomize);
 
-void psc_randomize_run(struct psc_randomize *randomize, mparticles_base_t *particles);
+void psc_randomize_run(struct psc_randomize *randomize, struct psc_mparticles *particles);

@@ -12,7 +12,7 @@ struct psc_output_fields {
 struct psc_output_fields_ops {
   MRC_SUBCLASS_OPS(struct psc_output_fields);
   void (*run)(struct psc_output_fields *output_fields,
-	      mfields_base_t *flds, mparticles_base_t *particles);
+	      mfields_base_t *flds, struct psc_mparticles *particles);
 };
 
 // ======================================================================

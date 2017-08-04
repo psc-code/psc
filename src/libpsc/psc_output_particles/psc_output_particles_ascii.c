@@ -30,7 +30,7 @@ static struct param psc_output_particles_ascii_descr[] = {
 
 static void
 psc_output_particles_ascii_run(struct psc_output_particles *out,
-			       mparticles_base_t *mprts_base)
+			       struct psc_mparticles *mprts_base)
 {
   struct psc_output_particles_ascii *asc = to_psc_output_particles_ascii(out);
 

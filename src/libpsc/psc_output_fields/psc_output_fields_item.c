@@ -58,7 +58,7 @@ psc_output_fields_item_create_mfields(struct psc_output_fields_item *item)
 
 void
 psc_output_fields_item_run(struct psc_output_fields_item *item,
-			   mfields_base_t *flds, mparticles_base_t *particles,
+			   mfields_base_t *flds, struct psc_mparticles *particles,
 			   mfields_c_t *res)
 {
   struct psc_output_fields_item_ops *ops = psc_output_fields_item_ops(item);

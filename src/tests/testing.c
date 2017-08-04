@@ -67,7 +67,7 @@ static struct psc_mfields *flds_ref;
 // save current particle data as reference solution
 
 void
-psc_save_particles_ref(struct psc *psc, mparticles_base_t *mprts_base)
+psc_save_particles_ref(struct psc *psc, struct psc_mparticles *mprts_base)
 {
   if (!particles_ref) {
     int nr_particles_by_patch[psc->nr_patches];
@@ -131,7 +131,7 @@ psc_save_fields_ref(struct psc *psc, mfields_base_t *flds_base)
 // check current particle data agains previously saved reference solution
 
 void
-psc_check_particles_ref(struct psc *psc, mparticles_base_t *particles_base,
+psc_check_particles_ref(struct psc *psc, struct psc_mparticles *particles_base,
 			double thres, const char *test_str)
 {
   if (!opt_testing_check_particles) {
@@ -302,7 +302,7 @@ psc_testing_check_densities_ref(struct psc *psc, struct psc_mparticles *particle
 // checks particles are sorted by cell index
 
 void
-psc_check_particles_sorted(struct psc *psc, mparticles_base_t *particles_base)
+psc_check_particles_sorted(struct psc *psc, struct psc_mparticles *particles_base)
 {
   int last = INT_MIN;
 

@@ -12,7 +12,7 @@
 
 #if 0
 void
-setup_particles(mparticles_base_t *particles_base)
+setup_particles(struct psc_mparticles *particles_base)
 {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -60,7 +60,7 @@ setup_particles(mparticles_base_t *particles_base)
 }
 
 static void
-check_particles_old_xz(mparticles_base_t *particles_base)
+check_particles_old_xz(struct psc_mparticles *particles_base)
 {
   struct psc_particles *prts_base = psc_mparticles_get_patch(particles_base, 0);
 
@@ -100,7 +100,7 @@ check_particles_old_xz(mparticles_base_t *particles_base)
 }
 
 static void
-check_particles(mparticles_base_t *particles_base)
+check_particles(struct psc_mparticles *particles_base)
 {
   struct psc_particles *prts_base = psc_mparticles_get_patch(particles_base, 0);
 
@@ -136,7 +136,7 @@ check_particles(mparticles_base_t *particles_base)
 }
 
 static int
-get_total_num_particles(mparticles_base_t *particles_base)
+get_total_num_particles(struct psc_mparticles *particles_base)
 {
   struct psc_particles *prts_base = psc_mparticles_get_patch(particles_base, 0);
 
@@ -161,7 +161,7 @@ main(int argc, char **argv)
   psc_bnd_set_type(ppsc->bnd, "fortran");
   psc_case_setup(_case);
 
-  mparticles_base_t *particles = ppsc->particles;
+  struct psc_mparticles *particles = ppsc->particles;
   setup_particles(particles);
   //  psc_dump_particles("part-0");
   int total_num_particles_before = get_total_num_particles(particles);

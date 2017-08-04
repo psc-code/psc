@@ -278,7 +278,7 @@ struct psc_ops psc_flatfoil_ops = {
 
 void
 psc_event_generator_flatfoil_run(struct psc_event_generator *gen,
-				 mparticles_base_t *mprts, mfields_base_t *mflds,
+				 struct psc_mparticles *mprts, mfields_base_t *mflds,
 				 mphotons_t *mphotons)
 {
   struct psc *psc = ppsc; // FIXME

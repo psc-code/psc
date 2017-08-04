@@ -37,7 +37,7 @@ event_generator_run_patch(int p, photons_t *photons)
 
 static void
 psc_event_generator_demo_run(struct psc_event_generator *gen,
-			  mparticles_base_t *mparticles_base,
+			     struct psc_mparticles *mparticles_base,
 			  mfields_base_t *mflds_base,
 			  mphotons_t *mphotons)
 {

@@ -267,7 +267,7 @@ struct psc {
   double dt;	///< timestep in physical units
   ///@}
 
-  mparticles_base_t *particles;	///< All the particles, indexed by their containing patch
+  struct psc_mparticles *particles;	///< All the particles, indexed by their containing patch
   mfields_base_t *flds;	///< The fields.
   mphotons_t *mphotons;
 
@@ -443,7 +443,7 @@ struct mrc_domain *psc_setup_mrc_domain(struct psc *psc, int nr_patches);
 void psc_setup_patches(struct psc *psc, struct mrc_domain *domain);
 void psc_output_default(struct psc *psc);
 
-void psc_dump_particles(mparticles_base_t *particles, const char *fname);
+void psc_dump_particles(struct psc_mparticles *particles, const char *fname);
 void psc_dump_field(mfields_base_t *flds, int m, const char *fname);
 
 struct psc *psc_read_checkpoint(MPI_Comm comm, int n);

@@ -6,7 +6,7 @@
 
 void
 psc_output_particles_run(struct psc_output_particles *output_particles,
-			 mparticles_base_t *particles)
+			 struct psc_mparticles *particles)
 {
   struct psc_output_particles_ops *ops = psc_output_particles_ops(output_particles);
   assert(ops->run);

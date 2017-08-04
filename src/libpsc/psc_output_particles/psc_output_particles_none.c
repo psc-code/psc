@@ -9,7 +9,7 @@
 
 static void
 psc_output_particles_none_run(struct psc_output_particles *out,
-				 mparticles_base_t *particles_base)
+				 struct psc_mparticles *particles_base)
 {
 }
 

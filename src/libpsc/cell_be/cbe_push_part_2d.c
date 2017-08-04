@@ -10,7 +10,7 @@
 
 void
 psc_push_particles_cbe_push_xy(struct psc_push_particles *push, 
-			       mparticles_base_t *particles_base,
+			       struct psc_mparticles *particles_base,
 			       mfields_base_t *flds_base)
 {
   

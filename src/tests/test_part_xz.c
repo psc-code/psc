@@ -16,7 +16,7 @@ main(int argc, char **argv)
   struct psc_case *_case = psc_create_test_xz();
   psc_push_particles_set_type(ppsc->push_particles, "fortran");
   psc_case_setup(_case);
-  mparticles_base_t *particles = ppsc->particles;
+  struct psc_mparticles *particles = ppsc->particles;
   //  psc_dump_particles("part-0");
   psc_push_particles_run(ppsc->push_particles, particles, ppsc->flds);
   //  psc_dump_particles("part-1");

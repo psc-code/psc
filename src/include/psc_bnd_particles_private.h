@@ -23,7 +23,7 @@ struct psc_bnd_particles_ops {
   MRC_SUBCLASS_OPS(struct psc_bnd_particles);
 
   void (*unsetup)(struct psc_bnd_particles *bnd);
-  void (*exchange_particles)(struct psc_bnd_particles *bnd, mparticles_base_t *particles);
+  void (*exchange_particles)(struct psc_bnd_particles *bnd, struct psc_mparticles *particles);
   void (*exchange_mprts_prep)(struct psc_bnd_particles *bnd, struct psc_mparticles *mprts);
   void (*exchange_mprts_post)(struct psc_bnd_particles *bnd, struct psc_mparticles *mprts);
   void (*open_calc_moments)(struct psc_bnd_particles *bnd, struct psc_mparticles *mprts);

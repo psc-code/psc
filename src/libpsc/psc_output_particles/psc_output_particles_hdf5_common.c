@@ -350,7 +350,7 @@ write_idx(struct psc_output_particles *out, int *gidx_begin, int *gidx_end,
 
 static void
 psc_output_particles_hdf5_run(struct psc_output_particles *out,
-			      mparticles_base_t *mprts_base)
+			      struct psc_mparticles *mprts_base)
 {
   // OPT: this is not optimal in that it will convert particles to PARTICLE_TYPE twice,
   // though that only matters if particle type isn't PARTICLE_TYPE to start with.

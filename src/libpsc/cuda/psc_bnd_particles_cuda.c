@@ -374,7 +374,7 @@ psc_bnd_particles_sub_exchange_particles_general(struct psc_bnd_particles *bnd,
 
 static void
 psc_bnd_particles_sub_exchange_particles(struct psc_bnd_particles *bnd,
-			       mparticles_base_t *particles_base)
+			       struct psc_mparticles *particles_base)
 {
   int size;
   MPI_Comm_size(psc_bnd_particles_comm(bnd), &size);

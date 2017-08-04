@@ -6,7 +6,7 @@
 
 void
 psc_event_generator_run(struct psc_event_generator *gen,
-			mparticles_base_t *mparticles, mfields_base_t *mflds,
+			struct psc_mparticles *mparticles, mfields_base_t *mflds,
 			mphotons_t *mphotons)
 {
   struct psc_event_generator_ops *ops = psc_event_generator_ops(gen);

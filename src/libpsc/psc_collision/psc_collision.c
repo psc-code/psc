@@ -5,7 +5,7 @@
 // forward to subclass
 
 void
-psc_collision_run(struct psc_collision *collision, mparticles_base_t *particles)
+psc_collision_run(struct psc_collision *collision, struct psc_mparticles *particles)
 {
   static int st_time_collision;
   if (!st_time_collision) {

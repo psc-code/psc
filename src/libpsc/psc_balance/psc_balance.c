@@ -741,7 +741,7 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   // alloc new particles
   struct psc_balance_ops *ops = psc_balance_ops(bal);
 
-  mparticles_base_t *mprts_base_new = 
+  struct psc_mparticles *mprts_base_new = 
     psc_mparticles_create(mrc_domain_comm(domain_new));
   psc_mparticles_set_type(mprts_base_new, psc->prm.particles_base);
   psc_mparticles_set_domain_nr_particles(mprts_base_new, domain_new,

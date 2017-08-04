@@ -206,7 +206,7 @@ extern double *psc_balance_comp_time_by_patch;
 extern int pr_time_step_no_comm;
 
 static void
-psc_bnd_particles_sub_exchange_particles(struct psc_bnd_particles *bnd, mparticles_base_t *particles_base)
+psc_bnd_particles_sub_exchange_particles(struct psc_bnd_particles *bnd, struct psc_mparticles *particles_base)
 {
   struct psc *psc = bnd->psc;
 
