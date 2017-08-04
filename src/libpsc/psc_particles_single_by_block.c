@@ -279,10 +279,12 @@ psc_particles_single_by_block_read(struct psc_particles *prts, struct mrc_io *io
 // ======================================================================
 
 static void
-psc_particles_single_by_block_copy_to_single(struct psc_particles *prts,
-					     struct psc_particles *prts_single,
-					     unsigned int flags)
+psc_mparticles_single_by_block_copy_to_single(int p, struct psc_mparticles *mprts,
+					      struct psc_mparticles *mprts_single,
+					      unsigned int flags)
 {
+  struct psc_particles *prts_single = psc_mparticles_get_patch(mprts_single, p);
+  struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
   int n_prts = psc_particles_size(prts);
   psc_particles_resize(prts_single, n_prts);
   assert(n_prts <= psc_particles_single(prts_single)->n_alloced);
@@ -302,10 +304,12 @@ psc_particles_single_by_block_copy_to_single(struct psc_particles *prts,
 }
 
 static void
-psc_particles_single_by_block_copy_from_single(struct psc_particles *prts,
-					       struct psc_particles *prts_single,
-					       unsigned int flags)
+psc_mparticles_single_by_block_copy_from_single(int p, struct psc_mparticles *mprts,
+						struct psc_mparticles *mprts_single,
+						unsigned int flags)
 {
+  struct psc_particles *prts_single = psc_mparticles_get_patch(mprts_single, p);
+  struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
   int n_prts = psc_particles_size(prts_single);
   psc_particles_resize(prts, n_prts);
   assert(n_prts <= psc_particles_single_by_block(prts)->n_alloced);
@@ -330,12 +334,6 @@ psc_particles_single_by_block_copy_from_single(struct psc_particles *prts,
 // ======================================================================
 // psc_particles: subclass "single"
 
-static struct mrc_obj_method psc_particles_single_by_block_methods[] = {
-  MRC_OBJ_METHOD("copy_to_single"  , psc_particles_single_by_block_copy_to_single),
-  MRC_OBJ_METHOD("copy_from_single", psc_particles_single_by_block_copy_from_single),
-  {}
-};
-
 struct psc_particles_ops psc_particles_single_by_block_ops = {
   .name                    = "single_by_block",
   .size                    = sizeof(struct psc_particles_single_by_block),
@@ -351,6 +349,12 @@ struct psc_particles_ops psc_particles_single_by_block_ops = {
 // ======================================================================
 // psc_mparticles: subclass "single_by_block"
   
+static struct mrc_obj_method psc_particles_single_by_block_methods[] = {
+  MRC_OBJ_METHOD("copy_to_single"  , psc_mparticles_single_by_block_copy_to_single),
+  MRC_OBJ_METHOD("copy_from_single", psc_mparticles_single_by_block_copy_from_single),
+  {}
+};
+
 struct psc_mparticles_ops psc_mparticles_single_by_block_ops = {
   .name                    = "single_by_block",
   .methods                 = psc_particles_single_by_block_methods,

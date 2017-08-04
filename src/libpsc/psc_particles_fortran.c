@@ -39,9 +39,11 @@ particles_fortran_realloc(struct psc_particles *prts, int new_n_part)
 }
 
 static void
-psc_particles_fortran_copy_to_c(struct psc_particles *prts_base,
-				struct psc_particles *prts_c, unsigned int flags)
+psc_mparticles_fortran_copy_to_c(int p, struct psc_mparticles *mprts_base,
+				 struct psc_mparticles *mprts_c, unsigned int flags)
 {
+  struct psc_particles *prts_base = psc_mparticles_get_patch(mprts_base, p);
+  struct psc_particles *prts_c = psc_mparticles_get_patch(mprts_c, p);
   struct psc_particles_c *c = psc_particles_c(prts_c);
   int n_prts = psc_particles_size(prts_base);
   psc_particles_resize(prts_c, n_prts);
@@ -63,9 +65,11 @@ psc_particles_fortran_copy_to_c(struct psc_particles *prts_base,
 }
 
 static void
-psc_particles_fortran_copy_from_c(struct psc_particles *prts_base,
-				  struct psc_particles *prts_c, unsigned int flags)
+psc_mparticles_fortran_copy_from_c(int p, struct psc_mparticles *mprts_base,
+				   struct psc_mparticles *mprts_c, unsigned int flags)
 {
+  struct psc_particles *prts_base = psc_mparticles_get_patch(mprts_base, p);
+  struct psc_particles *prts_c = psc_mparticles_get_patch(mprts_c, p);
   struct psc_particles_fortran *fort = psc_particles_fortran(prts_base);
   int n_prts = psc_particles_size(prts_c);
   psc_particles_resize(prts_base, n_prts);
@@ -97,9 +101,11 @@ calc_vxi(particle_double_real_t vxi[3], particle_double_t *part)
 }
 
 static void
-psc_particles_fortran_copy_to_double(struct psc_particles *prts_fortran,
-				     struct psc_particles *prts_dbl, unsigned int flags)
+psc_mparticles_fortran_copy_to_double(int p, struct psc_mparticles *mprts_fortran,
+				      struct psc_mparticles *mprts_dbl, unsigned int flags)
 {
+  struct psc_particles *prts_fortran = psc_mparticles_get_patch(mprts_fortran, p);
+  struct psc_particles *prts_dbl = psc_mparticles_get_patch(mprts_dbl, p);
   particle_double_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
   // don't shift in invariant directions
   for (int d = 0; d < 3; d++) {
@@ -141,9 +147,11 @@ psc_particles_fortran_copy_to_double(struct psc_particles *prts_fortran,
 }
 
 static void
-psc_particles_fortran_copy_from_double(struct psc_particles *prts_fortran,
-				       struct psc_particles *prts_dbl, unsigned int flags)
+psc_mparticles_fortran_copy_from_double(int p, struct psc_mparticles *mprts_fortran,
+					struct psc_mparticles *mprts_dbl, unsigned int flags)
 {
+  struct psc_particles *prts_fortran = psc_mparticles_get_patch(mprts_fortran, p);
+  struct psc_particles *prts_dbl = psc_mparticles_get_patch(mprts_dbl, p);
   particle_double_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
   // don't shift in invariant directions
   for (int d = 0; d < 3; d++) {
@@ -180,14 +188,6 @@ psc_particles_fortran_copy_from_double(struct psc_particles *prts_fortran,
 // ======================================================================
 // psc_particles: subclass "fortran"
 
-static struct mrc_obj_method psc_particles_fortran_methods[] = {
-  MRC_OBJ_METHOD("copy_to_c"       , psc_particles_fortran_copy_to_c),
-  MRC_OBJ_METHOD("copy_from_c"     , psc_particles_fortran_copy_from_c),
-  MRC_OBJ_METHOD("copy_to_double"  , psc_particles_fortran_copy_to_double),
-  MRC_OBJ_METHOD("copy_from_double", psc_particles_fortran_copy_from_double),
-  {}
-};
-
 struct psc_particles_ops psc_particles_fortran_ops = {
   .name                    = "fortran",
   .size                    = sizeof(struct psc_particles_fortran),
@@ -198,6 +198,14 @@ struct psc_particles_ops psc_particles_fortran_ops = {
 // ======================================================================
 // psc_mparticles: subclass "fortran"
   
+static struct mrc_obj_method psc_particles_fortran_methods[] = {
+  MRC_OBJ_METHOD("copy_to_c"       , psc_mparticles_fortran_copy_to_c),
+  MRC_OBJ_METHOD("copy_from_c"     , psc_mparticles_fortran_copy_from_c),
+  MRC_OBJ_METHOD("copy_to_double"  , psc_mparticles_fortran_copy_to_double),
+  MRC_OBJ_METHOD("copy_from_double", psc_mparticles_fortran_copy_from_double),
+  {}
+};
+
 struct psc_mparticles_ops psc_mparticles_fortran_ops = {
   .name                    = "fortran",
   .methods                 = psc_particles_fortran_methods,

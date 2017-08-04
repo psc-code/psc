@@ -120,9 +120,11 @@ psc_particles_double_read(struct psc_particles *prts, struct mrc_io *io)
 // ======================================================================
 
 static void
-psc_particles_double_copy_to_c(struct psc_particles *prts_base,
-			       struct psc_particles *prts_c, unsigned int flags)
+psc_mparticles_double_copy_to_c(int p, struct psc_mparticles *mprts_base,
+				struct psc_mparticles *mprts_c, unsigned int flags)
 {
+  struct psc_particles *prts_base = psc_mparticles_get_patch(mprts_base, p);
+  struct psc_particles *prts_c = psc_mparticles_get_patch(mprts_c, p);
   particle_double_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
   // don't shift in invariant directions
   for (int d = 0; d < 3; d++) {
@@ -158,9 +160,11 @@ psc_particles_double_copy_to_c(struct psc_particles *prts_base,
 }
 
 static void
-psc_particles_double_copy_from_c(struct psc_particles *prts_base,
-				 struct psc_particles *prts_c, unsigned int flags)
+psc_mparticles_double_copy_from_c(int p, struct psc_mparticles *mprts_base,
+				  struct psc_mparticles *mprts_c, unsigned int flags)
 {
+  struct psc_particles *prts_base = psc_mparticles_get_patch(mprts_base, p);
+  struct psc_particles *prts_c = psc_mparticles_get_patch(mprts_c, p);
   particle_double_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
   // don't shift in invariant directions
   for (int d = 0; d < 3; d++) {
@@ -204,12 +208,6 @@ psc_particles_double_copy_from_c(struct psc_particles *prts_base,
 // ======================================================================
 // psc_particles: subclass "double"
 
-static struct mrc_obj_method psc_particles_double_methods[] = {
-  MRC_OBJ_METHOD("copy_to_c",   psc_particles_double_copy_to_c),
-  MRC_OBJ_METHOD("copy_from_c", psc_particles_double_copy_from_c),
-  {}
-};
-
 struct psc_particles_ops psc_particles_double_ops = {
   .name                    = "double",
   .size                    = sizeof(struct psc_particles_double),
@@ -224,6 +222,12 @@ struct psc_particles_ops psc_particles_double_ops = {
 // ======================================================================
 // psc_mparticles: subclass "double"
   
+static struct mrc_obj_method psc_particles_double_methods[] = {
+  MRC_OBJ_METHOD("copy_to_c",   psc_mparticles_double_copy_to_c),
+  MRC_OBJ_METHOD("copy_from_c", psc_mparticles_double_copy_from_c),
+  {}
+};
+
 struct psc_mparticles_ops psc_mparticles_double_ops = {
   .name                    = "double",
   .methods                 = psc_particles_double_methods,
