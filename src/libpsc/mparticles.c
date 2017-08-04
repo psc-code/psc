@@ -131,6 +131,13 @@ psc_mparticles_n_prts_by_patch(struct psc_mparticles *mprts, int p)
 }
 
 void
+psc_mparticles_resize_patch(struct psc_mparticles *mprts, int p, int n_prts)
+{
+  struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+  psc_particles_resize(prts, n_prts);
+}
+
+void
 psc_mparticles_update_n_part(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_ops *ops = psc_mparticles_ops(mprts);
