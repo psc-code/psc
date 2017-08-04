@@ -346,7 +346,6 @@ static struct mrc_obj_method psc_particles_cuda2_methods[] = {
 struct psc_particles_ops psc_particles_cuda2_ops = {
   .name                    = "cuda2",
   .size                    = sizeof(struct psc_particles_cuda2),
-  .methods                 = psc_particles_cuda2_methods,
 #if 0
 #ifdef HAVE_LIBHDF5_HL
   .read                    = psc_particles_cuda2_read,
@@ -545,6 +544,7 @@ psc_mparticles_cuda2_setup_internals(struct psc_mparticles *mprts)
 struct psc_mparticles_ops psc_mparticles_cuda2_ops = {
   .name                    = "cuda2",
   .size                    = sizeof(struct psc_mparticles_cuda2),
+  .methods                 = psc_particles_cuda2_methods,
   .setup                   = psc_mparticles_cuda2_setup,
   .destroy                 = psc_mparticles_cuda2_destroy,
   .setup_internals         = psc_mparticles_cuda2_setup_internals,

@@ -202,13 +202,6 @@ psc_particles_double_copy_from_c(struct psc_particles *prts_base,
 }
 
 // ======================================================================
-// psc_mparticles: subclass "double"
-  
-struct psc_mparticles_ops psc_mparticles_double_ops = {
-  .name                    = "double",
-};
-
-// ======================================================================
 // psc_particles: subclass "double"
 
 static struct mrc_obj_method psc_particles_double_methods[] = {
@@ -220,7 +213,6 @@ static struct mrc_obj_method psc_particles_double_methods[] = {
 struct psc_particles_ops psc_particles_double_ops = {
   .name                    = "double",
   .size                    = sizeof(struct psc_particles_double),
-  .methods                 = psc_particles_double_methods,
   .setup                   = psc_particles_double_setup,
   .destroy                 = psc_particles_double_destroy,
 #ifdef HAVE_LIBHDF5_HL
@@ -228,3 +220,12 @@ struct psc_particles_ops psc_particles_double_ops = {
   .write                   = psc_particles_double_write,
 #endif
 };
+
+// ======================================================================
+// psc_mparticles: subclass "double"
+  
+struct psc_mparticles_ops psc_mparticles_double_ops = {
+  .name                    = "double",
+  .methods                 = psc_particles_double_methods,
+};
+

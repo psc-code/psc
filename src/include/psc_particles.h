@@ -35,6 +35,13 @@ struct psc_mparticles_ops {
 
 #define psc_mparticles_ops(mp) ((struct psc_mparticles_ops *) ((mp)->obj.ops))
 
+typedef void (*psc_particles_copy_to_func_t)(struct psc_particles *,
+					     struct psc_particles *,
+					     unsigned int);
+typedef void (*psc_particles_copy_from_func_t)(struct psc_particles *,
+					       struct psc_particles *,
+					       unsigned int);
+
 #define MP_DONT_COPY (0x1)
 #define MP_NEED_BLOCK_OFFSETS (0x0100)
 #define MP_NEED_CELL_OFFSETS  (0x0200)

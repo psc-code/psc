@@ -188,13 +188,13 @@ psc_mparticles_get_as(struct psc_mparticles *mp_base, const char *type,
       struct psc_particles *prts = psc_mparticles_get_patch(mp, p);
       char s[strlen(type) + 12]; sprintf(s, "copy_to_%s", type);
       psc_particles_copy_to_func_t copy_to = (psc_particles_copy_to_func_t)
-	psc_particles_get_method(prts_base, s);
+	psc_mparticles_get_method(mp_base, s);
       if (copy_to) {
 	copy_to(prts_base, prts, flags);
       } else {
 	sprintf(s, "copy_from_%s", type_base);
 	psc_particles_copy_to_func_t copy_from = (psc_particles_copy_from_func_t)
-	  psc_particles_get_method(prts, s);
+	  psc_mparticles_get_method(mp, s);
 	if (copy_from) {
 	  copy_from(prts, prts_base, flags);
 	} else {
@@ -234,13 +234,13 @@ psc_mparticles_put_as(struct psc_mparticles *mp, struct psc_mparticles *mp_base,
       struct psc_particles *prts = psc_mparticles_get_patch(mp, p);
       char s[strlen(type) + 12]; sprintf(s, "copy_from_%s", type);
       psc_particles_copy_from_func_t copy_from = (psc_particles_copy_from_func_t)
-	psc_particles_get_method(prts_base, s);
+	psc_mparticles_get_method(mp_base, s);
       if (copy_from) {
 	copy_from(prts_base, prts, MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
       } else {
 	sprintf(s, "copy_to_%s", type_base);
 	psc_particles_copy_from_func_t copy_to = (psc_particles_copy_from_func_t)
-	  psc_particles_get_method(prts, s);
+	  psc_mparticles_get_method(mp, s);
 	if (copy_to) {
 	  copy_to(prts, prts_base, MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
 	} else {

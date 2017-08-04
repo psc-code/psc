@@ -328,13 +328,6 @@ psc_particles_single_by_block_copy_from_single(struct psc_particles *prts,
 }
 
 // ======================================================================
-// psc_mparticles: subclass "single_by_block"
-  
-struct psc_mparticles_ops psc_mparticles_single_by_block_ops = {
-  .name                    = "single_by_block",
-};
-
-// ======================================================================
 // psc_particles: subclass "single"
 
 static struct mrc_obj_method psc_particles_single_by_block_methods[] = {
@@ -346,7 +339,6 @@ static struct mrc_obj_method psc_particles_single_by_block_methods[] = {
 struct psc_particles_ops psc_particles_single_by_block_ops = {
   .name                    = "single_by_block",
   .size                    = sizeof(struct psc_particles_single_by_block),
-  .methods                 = psc_particles_single_by_block_methods,
   .setup                   = psc_particles_single_by_block_setup,
   .destroy                 = psc_particles_single_by_block_destroy,
 #ifdef HAVE_LIBHDF5_HL
@@ -355,3 +347,12 @@ struct psc_particles_ops psc_particles_single_by_block_ops = {
 #endif
   .reorder                 = psc_particles_single_by_block_reorder,
 };
+
+// ======================================================================
+// psc_mparticles: subclass "single_by_block"
+  
+struct psc_mparticles_ops psc_mparticles_single_by_block_ops = {
+  .name                    = "single_by_block",
+  .methods                 = psc_particles_single_by_block_methods,
+};
+

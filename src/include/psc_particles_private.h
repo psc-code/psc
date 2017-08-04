@@ -35,13 +35,6 @@ struct psc_particles_ops {
 
 #define psc_particles_ops(prts) ((struct psc_particles_ops *) ((prts)->obj.ops))
 
-typedef void (*psc_particles_copy_to_func_t)(struct psc_particles *,
-					     struct psc_particles *,
-					     unsigned int);
-typedef void (*psc_particles_copy_from_func_t)(struct psc_particles *,
-					       struct psc_particles *,
-					       unsigned int);
-
 // ======================================================================
 
 extern struct psc_particles_ops psc_particles_c_ops;

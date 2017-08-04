@@ -178,13 +178,6 @@ psc_particles_fortran_copy_from_double(struct psc_particles *prts_fortran,
 }
 
 // ======================================================================
-// psc_mparticles: subclass "fortran"
-  
-struct psc_mparticles_ops psc_mparticles_fortran_ops = {
-  .name                    = "fortran",
-};
-
-// ======================================================================
 // psc_particles: subclass "fortran"
 
 static struct mrc_obj_method psc_particles_fortran_methods[] = {
@@ -198,7 +191,15 @@ static struct mrc_obj_method psc_particles_fortran_methods[] = {
 struct psc_particles_ops psc_particles_fortran_ops = {
   .name                    = "fortran",
   .size                    = sizeof(struct psc_particles_fortran),
-  .methods                 = psc_particles_fortran_methods,
   .setup                   = psc_particles_fortran_setup,
   .destroy                 = psc_particles_fortran_destroy,
 };
+
+// ======================================================================
+// psc_mparticles: subclass "fortran"
+  
+struct psc_mparticles_ops psc_mparticles_fortran_ops = {
+  .name                    = "fortran",
+  .methods                 = psc_particles_fortran_methods,
+};
+
