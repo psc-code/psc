@@ -6,7 +6,6 @@
 
 typedef particle_cbe_t particle_t;
 typedef particles_cbe_t particles_t;
-typedef mparticles_cbe_t mparticles_t;
 
 #define psc_mparticles_get_from    psc_mparticles_cbe_get_from
 #define psc_mparticles_put_to      psc_mparticles_cbe_put_to

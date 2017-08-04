@@ -6,7 +6,6 @@
 
 typedef particle_double_real_t particle_real_t;
 typedef particle_double_t particle_t;
-typedef mparticles_double_t mparticles_t;
 
 #define particles_get_one           particles_double_get_one
 #define particles_realloc           particles_double_realloc

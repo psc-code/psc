@@ -9,7 +9,7 @@
 static void
 ddcp_particles_realloc(void *_ctx, int p, int new_n_particles)
 {
-  mparticles_t *mprts = _ctx;
+  struct psc_mparticles *mprts = _ctx;
   struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
   particles_realloc(prts, new_n_particles);
 }
@@ -17,7 +17,7 @@ ddcp_particles_realloc(void *_ctx, int p, int new_n_particles)
 static void *
 ddcp_particles_get_addr(void *_ctx, int p, int n)
 {
-  mparticles_t *mprts = _ctx;
+  struct psc_mparticles *mprts = _ctx;
   particle_range_t prts = particle_range_mprts(mprts, p);
   return particle_iter_at(prts.begin, n);
 }
@@ -302,7 +302,7 @@ psc_bnd_particles_sub_exchange_particles(struct psc_bnd_particles *bnd, mparticl
   }
   
   struct ddc_particles *ddcp = bnd->ddcp;
-  mparticles_t *particles = psc_mparticles_get_as(particles_base, PARTICLE_TYPE, 0);
+  struct psc_mparticles *particles = psc_mparticles_get_as(particles_base, PARTICLE_TYPE, 0);
 
   prof_start(pr_A);
   prof_restart(pr_time_step_no_comm);

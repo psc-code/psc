@@ -58,7 +58,7 @@ __assert_equal(double x, double y, const char *xs, const char *ys, double thres)
   }
 }
 
-static mparticles_t *particles_ref;
+static struct psc_mparticles *particles_ref;
 static struct psc_mfields *flds_ref;
 
 // ----------------------------------------------------------------------
