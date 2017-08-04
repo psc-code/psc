@@ -19,7 +19,7 @@ exchange_particles_pre(struct psc_bnd_particles *bnd, struct psc_mparticles *mpr
   // in the invariant direction
 
   struct ddcp_patch *ddcp_patch = &ddcp->patches[_prts->p];
-  ddcp_patch->head = get_head(_prts);
+  ddcp_patch->head = get_head(mprts, p);
   for (int dir1 = 0; dir1 < N_DIR; dir1++) {
     ddcp_patch->nei[dir1].n_send = 0;
   }

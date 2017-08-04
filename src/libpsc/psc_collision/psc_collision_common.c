@@ -99,7 +99,6 @@ find_cell_index(particle_t *prt, particle_real_t *dxi, int ldims[3])
 static void
 find_cell_offsets(int offsets[], struct psc_mparticles *mprts, int p)
 {
-  struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
   particle_range_t prts = particle_range_mprts(mprts, p);
 
   particle_real_t dxi[3] = { 1.f / ppsc->patch[p].dx[0],
@@ -108,7 +107,7 @@ find_cell_offsets(int offsets[], struct psc_mparticles *mprts, int p)
   int *ldims = ppsc->patch[p].ldims;
   int last = 0;
   offsets[last] = 0;
-  for (int n = 0; n < _prts->n_part; n++) {
+  for (int n = 0; n < particle_range_size(prts); n++) {
     particle_t *prt = particle_iter_at(prts.begin, n);
     int cell_index = find_cell_index(prt, dxi, ldims);
     assert(cell_index >= last);
@@ -117,7 +116,7 @@ find_cell_offsets(int offsets[], struct psc_mparticles *mprts, int p)
     }
   }
   while (last < ldims[0] * ldims[1] * ldims[2]) {
-    offsets[++last] = _prts->n_part;
+    offsets[++last] = particle_range_size(prts);
   }
 }
 

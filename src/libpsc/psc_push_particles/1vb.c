@@ -37,10 +37,10 @@ do_push_part_1vb_yz(struct psc_fields *flds, struct psc_mparticles *mprts, int p
 static void
 do_push_part_1vb_yz(struct psc_fields *flds, struct psc_mparticles *mprts, int p)
 {
-  struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
   particle_range_t prts = particle_range_mprts(mprts, p);
-
-  for (int n = 0; n < _prts->n_part; n++) {
+  unsigned int n_prts = particle_range_size(prts);
+  
+  for (int n = 0; n < n_prts; n++) {
     push_one(prts.begin, n, flds, flds);
   }
 }

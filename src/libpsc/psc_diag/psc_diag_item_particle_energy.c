@@ -1,18 +1,19 @@
 
 #include "psc_diag_item_private.h"
-#include "psc_particles_c.h"
+#include "psc_particles_as_c.h"
 
 #include <math.h>
 
 static void
-do_particle_energy(struct psc *psc, struct psc_particles *prts, double *result)
+do_particle_energy(struct psc *psc, struct psc_mparticles *mprts, int p, double *result)
 {
+  particle_range_t prts = particle_range_mprts(mprts, p);
   double fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
 
-  struct psc_patch *patch = &psc->patch[prts->p];
+  struct psc_patch *patch = &psc->patch[p];
   double fac = patch->dx[0] * patch->dx[1] * patch->dx[2];
-  for (int n = 0; n < prts->n_part; n++) {
-    particle_c_t *part = particles_c_get_one(prts, n);
+  for (int n = 0; n < particle_range_size(prts); n++) {
+    particle_c_t *part = particle_iter_at(prts.begin, n);
       
     double gamma = sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
     double Ekin = (gamma - 1.) * part->mni * part->wni * fnqs;
@@ -33,7 +34,7 @@ psc_diag_item_particle_energy_run(struct psc_diag_item *item,
   struct psc_mparticles *mprts = psc_mparticles_get_as(psc->particles, "c", 0);
 
   for (int p = 0; p < mprts->nr_patches; p++) {
-    do_particle_energy(psc, psc_mparticles_get_patch(mprts, p), result);
+    do_particle_energy(psc, mprts, p, result);
   }
 
   psc_mparticles_put_as(mprts, psc->particles, MP_DONT_COPY);

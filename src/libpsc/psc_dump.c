@@ -64,7 +64,6 @@ ascii_dump_particles(mparticles_base_t *mprts_base, const char *fname)
   struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, "c", 0);
   
   psc_foreach_patch(ppsc, p) {
-    struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
     particle_range_t prts = particle_range_mprts(mprts, p);
     char *filename = malloc(strlen(fname) + 20);
     sprintf(filename, "%s-p%d-p%d.asc", fname, rank, p);
@@ -72,7 +71,7 @@ ascii_dump_particles(mparticles_base_t *mprts_base, const char *fname)
     
     FILE *file = fopen(filename, "w");
     fprintf(file, "i\txi\tyi\tzi\tpxi\tpyi\tpzi\tqni\tmni\twni\n");
-    for (int i = 0; i < _prts->n_part; i++) {
+    for (int i = 0; i < particle_range_size(prts); i++) {
       particle_t *p = particle_iter_at(prts.begin, i);
       fprintf(file, "%d\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\n",
 	      i, p->xi, p->yi, p->zi,

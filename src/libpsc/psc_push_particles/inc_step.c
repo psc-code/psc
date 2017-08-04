@@ -92,8 +92,8 @@ static inline void
 ext_prepare_sort(struct psc_mparticles *mprts, int p, int n, particle_t *prt,
 		 int *b_pos)
 {
-  struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
   particle_range_t prts = particle_range_mprts(mprts, p);
+  unsigned int n_prts = particle_range_size(prts);
   /* FIXME, only if blocksize == 1! */
   int *b_mx = prts_sub->b_mx;
   if (b_pos[1] >= 0 && b_pos[1] < b_mx[1] &&
@@ -103,7 +103,7 @@ ext_prepare_sort(struct psc_mparticles *mprts, int p, int n, particle_t *prt,
     prts_sub->b_idx[n] = prts_sub->nr_blocks;
     assert(prts_sub->b_cnt[prts_sub->nr_blocks] < prts_sub->n_alloced);
     /* append to back */
-    *particle_iter_at(prts.begin, _prts->n_part + prts_sub->b_cnt[prts_sub->nr_blocks]) = *prt;
+    *particle_iter_at(prts.begin, n_prts + prts_sub->b_cnt[prts_sub->nr_blocks]) = *prt;
   }
   prts_sub->b_cnt[prts_sub->b_idx[n]]++;
 }

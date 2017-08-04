@@ -71,9 +71,8 @@ psc_sort_qsort_run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
 
   prof_start(pr);
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
     particle_range_t prts = particle_range_mprts(mprts, p);
-    qsort(particle_iter_deref(prts.begin), _prts->n_part,
+    qsort(particle_iter_deref(prts.begin), particle_range_size(prts),
 	  sizeof(*particle_iter_deref(prts.begin)), compare);
   }
   prof_stop(pr);
@@ -97,8 +96,8 @@ psc_sort_countsort_run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
   prof_start(pr);
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_patch *patch = &ppsc->patch[p];
-    struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
     particle_range_t prts = particle_range_mprts(mprts, p);
+    unsigned int n_prts = particle_range_size(prts);
     
     int N = 1;
     for (int d = 0; d < 3; d++) {
@@ -121,10 +120,10 @@ psc_sort_countsort_run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
       cnts[i] = cur;
     cur += n;
     }
-    assert(cur == _prts->n_part);
+    assert(cur == n_prts);
     
     // move into new position
-    particle_t *particles2 = malloc(_prts->n_part * sizeof(*particles2));
+    particle_t *particles2 = malloc(n_prts * sizeof(*particles2));
     PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
       unsigned int cni = get_cell_index(0, particle_iter_deref(prt_iter));
       memcpy(&particles2[cnts[cni]], particle_iter_deref(prt_iter), sizeof(*particles2));
@@ -132,7 +131,7 @@ psc_sort_countsort_run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
     }
     
     // back to in-place
-    memcpy(particle_iter_deref(prts.begin), particles2, _prts->n_part * sizeof(*particles2));
+    memcpy(particle_iter_deref(prts.begin), particles2, n_prts * sizeof(*particles2));
     
     free(particles2);
     free(cnts);
@@ -177,14 +176,14 @@ psc_sort_countsort2_run(struct psc_sort *sort, struct psc_mparticles *mprts_base
   prof_start(pr);
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_patch *patch = &ppsc->patch[p];
-    struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
     particle_range_t prts = particle_range_mprts(mprts, p);
+    unsigned int n_prts = particle_range_size(prts);
 
     unsigned int mask = cs2->mask;
     struct cell_map map;
     int N = cell_map_init(&map, patch->ldims, cs2->blocksize);
-    
-    unsigned int *cnis = malloc(_prts->n_part * sizeof(*cnis));
+
+    unsigned int *cnis = malloc(n_prts * sizeof(*cnis));
     int i = 0;
     for (particle_iter_t prt_iter = prts.begin;
 	 !particle_iter_equal(prt_iter, prts.end);
@@ -215,7 +214,7 @@ psc_sort_countsort2_run(struct psc_sort *sort, struct psc_mparticles *mprts_base
     memset(cnts, 0, N * sizeof(*cnts));
     
     // count
-    for (int i = 0; i < _prts->n_part; i++) {
+    for (int i = 0; i < n_prts; i++) {
       unsigned int cni = cnis[i];
       cnts[cni]++;
     }
@@ -227,14 +226,14 @@ psc_sort_countsort2_run(struct psc_sort *sort, struct psc_mparticles *mprts_base
       cnts[i] = cur;
       cur += n;
     }
-    assert(cur == _prts->n_part);
+    assert(cur == n_prts);
     
     // move into new position
-    particle_t *particles2 = malloc(_prts->n_part * sizeof(*particles2));
-    for (int i = 0; i < _prts->n_part; i++) {
+    particle_t *particles2 = malloc(n_prts * sizeof(*particles2));
+    for (int i = 0; i < n_prts; i++) {
       unsigned int cni = cnis[i];
       int n = 1;
-      while (i+n < _prts->n_part && cnis[i+n] == cni) {
+      while (i+n < n_prts && cnis[i+n] == cni) {
 	n++;
       }
       memcpy(&particles2[cnts[cni]], particle_iter_at(prts.begin, i), n * sizeof(*particles2));
@@ -243,7 +242,7 @@ psc_sort_countsort2_run(struct psc_sort *sort, struct psc_mparticles *mprts_base
     }
     
     // back to in-place
-    memcpy(particle_iter_deref(prts.begin), particles2, _prts->n_part * sizeof(*particles2));
+    memcpy(particle_iter_deref(prts.begin), particles2, n_prts * sizeof(*particles2));
     
     free(particles2);
     free(cnis);

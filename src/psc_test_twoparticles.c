@@ -154,7 +154,6 @@ psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
   struct psc_mparticles *mprts = psc_mparticles_get_as(psc->particles, "c", MP_DONT_COPY);
 
   psc_foreach_patch(psc, p) {
-    struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
     particle_range_t prts = particle_range_mprts(mprts, p);
 
     int il1 = 0;
@@ -175,8 +174,8 @@ psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 	prt_iter = particle_iter_next(prt_iter);
       } 
     }
-    _prts->n_part = il1;
-    assert(_prts->n_part == nr_particles_by_patch[p]);
+    particle_range_resize(&prts, il1);
+    assert(il1 == nr_particles_by_patch[p]);
   }
 
   psc_mparticles_put_as(mprts, psc->particles, 0);

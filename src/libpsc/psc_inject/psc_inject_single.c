@@ -134,7 +134,7 @@ psc_inject_single_run(struct psc_inject *inject, struct psc_mparticles *mprts_ba
     struct psc_fields *flds_n = psc_mfields_get_patch(mflds_n, p);
     int *ldims = psc->patch[p].ldims;
     
-    int i = _prts->n_part;
+    int i = particle_range_size(prts);
     int nr_pop = psc->prm.nr_populations;
     for (int jz = 0; jz < ldims[2]; jz++) {
       for (int jy = 0; jy < ldims[1]; jy++) {
@@ -197,7 +197,7 @@ psc_inject_single_run(struct psc_inject *inject, struct psc_mparticles *mprts_ba
 	}
       }
     }
-    _prts->n_part = i;
+    particle_range_resize(&prts, i);
   }
 
   psc_mparticles_put_as(mprts, mprts_base, 0);

@@ -154,8 +154,8 @@ count_sort(struct psc_mparticles *mprts, int **off, int **map)
     int *ldims = ppsc->patch[p].ldims;
     int nr_indices = ldims[0] * ldims[1] * ldims[2] * nr_kinds;
     off[p] = calloc(nr_indices + 1, sizeof(*off[p]));
-    struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
     particle_range_t prts = particle_range_mprts(mprts, p);
+    unsigned int n_prts = particle_range_size(prts);
 
     // counting sort to get map 
     PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
@@ -174,7 +174,7 @@ count_sort(struct psc_mparticles *mprts, int **off, int **map)
     }
 
     // sort a map only, not the actual particles
-    map[p] = malloc(_prts->n_part * sizeof(*map[p]));
+    map[p] = malloc(n_prts * sizeof(*map[p]));
     int n = 0;
     for (particle_iter_t prt_iter = prts.begin;
 	 !particle_iter_equal(prt_iter, prts.end);

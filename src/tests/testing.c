@@ -67,12 +67,12 @@ static struct psc_mfields *flds_ref;
 // save current particle data as reference solution
 
 void
-psc_save_particles_ref(struct psc *psc, mparticles_base_t *particles)
+psc_save_particles_ref(struct psc *psc, mparticles_base_t *mprts_base)
 {
   if (!particles_ref) {
     int nr_particles_by_patch[psc->nr_patches];
     psc_foreach_patch(psc, p) {
-      nr_particles_by_patch[p] = psc_mparticles_get_patch(particles, p)->n_part;
+      nr_particles_by_patch[p] = particle_range_size(particle_range_mprts(mprts_base, p));
     }
     particles_ref = psc_mparticles_create(MPI_COMM_WORLD);
     psc_mparticles_set_domain_nr_particles(particles_ref, psc->mrc_domain,
@@ -80,20 +80,18 @@ psc_save_particles_ref(struct psc *psc, mparticles_base_t *particles)
     psc_mparticles_setup(particles_ref);
   }
 
-  struct psc_mparticles *mprts = psc_mparticles_get_as(particles, "c", 0);
+  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, "c", 0);
   psc_foreach_patch(psc, p) {
-    struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_particles *_prts_ref = psc_mparticles_get_patch(particles_ref, p);
-    _prts_ref->n_part = _prts->n_part;
     particle_range_t prts = particle_range_mprts(mprts, p);
     particle_range_t prts_ref = particle_range_mprts(particles_ref, p);
+    particle_range_resize(&prts_ref, particle_range_size(prts));
     for (particle_iter_t prt_iter = prts.begin, prt_ref_iter = prts_ref.end;
 	 !particle_iter_equal(prt_iter, prts.end);
 	 prt_iter = particle_iter_next(prt_iter), prt_ref_iter = particle_iter_next(prt_ref_iter)) {
       *particle_iter_deref(prt_ref_iter) = *particle_iter_deref(prt_iter);
     }
   }
-  psc_mparticles_put_as(mprts, particles, MP_DONT_COPY);
+  psc_mparticles_put_as(mprts, mprts_base, MP_DONT_COPY);
 }
 
 // ----------------------------------------------------------------------
@@ -149,7 +147,7 @@ psc_check_particles_ref(struct psc *psc, mparticles_base_t *particles_base,
     particle_range_t prts = particle_range_mprts(mprts, p);
     particle_range_t prts_ref = particle_range_mprts(particles_ref, p);
   
-    assert(_prts->n_part == _prts_ref->n_part);
+    assert(particle_range_size(prts) == particle_range_size(prts_ref));
     for (particle_iter_t prt_iter = prts.begin, prt_ref_iter = prts_ref.end;
 	 !particle_iter_equal(prt_iter, prts.end);
 	 prt_iter = particle_iter_next(prt_iter), prt_ref_iter = particle_iter_next(prt_ref_iter)) {

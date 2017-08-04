@@ -92,7 +92,8 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
   for (int dir1 = 0; dir1 < N_DIR; dir1++) {
     patch->nei[dir1].n_send = 0;
   }
-  for (int i = 0; i < _prts->n_part; i++) {
+  unsigned int n_prts = particle_range_size(prts);
+  for (int i = 0; i < n_prts; i++) {
     particle_t *part = particle_iter_at(prts.begin, i);
     particle_real_t *xi = &part->xi; // slightly hacky relies on xi, yi, zi to be contiguous in the struct. FIXME
     
@@ -189,11 +190,13 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 // psc_bnd_particles_sub_exchange_particles_post
 
 static void
-psc_bnd_particles_sub_exchange_particles_post(struct psc_bnd_particles *bnd, struct psc_particles *prts)
+psc_bnd_particles_sub_exchange_particles_post(struct psc_bnd_particles *bnd,
+					      struct psc_mparticles *mprts, int p)
 {
   struct ddc_particles *ddcp = bnd->ddcp;
-  struct ddcp_patch *patch = &ddcp->patches[prts->p];
-  prts->n_part = patch->head;
+  struct ddcp_patch *patch = &ddcp->patches[p];
+  particle_range_t prts = particle_range_mprts(mprts, p);
+  particle_range_resize(&prts, patch->head);
 }
 
 // ----------------------------------------------------------------------
@@ -239,7 +242,7 @@ psc_bnd_particles_sub_exchange_particles(struct psc_bnd_particles *bnd, mparticl
 
   prof_start(pr_C);
   for (int p = 0; p < particles->nr_patches; p++) {
-    psc_bnd_particles_sub_exchange_particles_post(bnd, psc_mparticles_get_patch(particles, p));
+    psc_bnd_particles_sub_exchange_particles_post(bnd, particles, p);
   }
   prof_stop(pr_C);
 

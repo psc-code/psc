@@ -59,3 +59,17 @@ particle_range_mprts(struct psc_mparticles *mprts, int p)
     .end   = { .n = prts->n_part, .prts = prts },
   };
 }
+
+static inline unsigned int
+particle_range_size(particle_range_t prts)
+{
+  return prts.end.n - prts.begin.n;
+}
+
+static inline void
+particle_range_resize(particle_range_t *prts, unsigned int n)
+{
+  struct psc_particles *_prts = (struct psc_particles *) prts->end.prts;
+  _prts->n_part = n;
+  prts->end.n = n;
+}

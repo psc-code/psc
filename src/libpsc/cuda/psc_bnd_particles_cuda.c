@@ -96,7 +96,7 @@ get_n_send(struct psc_particles *prts)
 }
 
 static inline int
-get_head(struct psc_particles *prts)
+get_head(struct psc_mparticles *mprts, int p)
 {
   return 0;
 }
