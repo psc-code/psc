@@ -8,7 +8,6 @@
 #include <mrc_ddc_private.h>
 #include <mrc_profile.h>
 
-	   
 // FIXME, hardcoding is bad, needs to be consistent, etc...
 #define MAX_BND_COMPONENTS (3)
 
@@ -23,9 +22,10 @@ __particles_cuda_from_device(struct psc_particles *prts, float4 *xi4, float4 *px
   assert(cmprts);
   unsigned int off = 0;
   for (int p = 0; p < prts->p; p++) {
-    off += psc_mparticles_get_patch(mprts, p)->n_part;
+    struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
+    off += psc_particles_size(_prts);
   }
-  int n_part = prts->n_part;
+  int n_part = psc_particles_size(prts);
 
   check(cudaMemcpy(xi4, cmprts->d_xi4 + off, n_part * sizeof(*xi4),
 		   cudaMemcpyDeviceToHost));
@@ -36,14 +36,14 @@ __particles_cuda_from_device(struct psc_particles *prts, float4 *xi4, float4 *px
 EXTERN_C void
 cuda_copy_bidx_from_dev(struct psc_particles *prts, unsigned int *h_bidx, unsigned int *d_bidx)
 {
-  check(cudaMemcpy(h_bidx, d_bidx, prts->n_part * sizeof(*h_bidx),
+  check(cudaMemcpy(h_bidx, d_bidx, psc_particles_size(prts) * sizeof(*h_bidx),
 		   cudaMemcpyDeviceToHost));
 }
 
 EXTERN_C void
 cuda_copy_bidx_to_dev(struct psc_particles *prts, unsigned int *d_bidx, unsigned int *h_bidx)
 {
-  check(cudaMemcpy(d_bidx, h_bidx, prts->n_part * sizeof(*d_bidx),
+  check(cudaMemcpy(d_bidx, h_bidx, psc_particles_size(prts) * sizeof(*d_bidx),
 		   cudaMemcpyHostToDevice));
 }
 

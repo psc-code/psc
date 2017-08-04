@@ -39,13 +39,14 @@ cuda_exclusive_scan_2(struct psc_particles *prts, unsigned int *_d_vals,
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(cuda->mprts)->cmprts;
   thrust::device_ptr<unsigned int> d_vals(_d_vals);
   thrust::device_ptr<unsigned int> d_sums(_d_sums);
-
+  int n_prts = psc_particles_size(prts);
+  
   count_if_equal unary_op(cmprts->n_blocks_per_patch);
-  thrust::transform_exclusive_scan(d_vals, d_vals + prts->n_part, d_sums, unary_op,
+  thrust::transform_exclusive_scan(d_vals, d_vals + n_prts, d_sums, unary_op,
 				   0, thrust::plus<unsigned int>());
 
   // OPT, don't mv to host
-  int sum = d_sums[prts->n_part - 1] + (d_vals[prts->n_part - 1] == cmprts->n_blocks_per_patch);
+  int sum = d_sums[n_prts - 1] + (d_vals[n_prts - 1] == cmprts->n_blocks_per_patch);
   return sum;
 }
 
@@ -55,18 +56,19 @@ _cuda_exclusive_scan_2(struct psc_particles *prts, unsigned int *d_bidx,
 {
   struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(cuda->mprts)->cmprts;
-  unsigned int *bidx = new unsigned int[prts->n_part];
-  unsigned int *sums = new unsigned int[prts->n_part];
-  check(cudaMemcpy(bidx, d_bidx, prts->n_part * sizeof(*bidx),
+  int n_prts = psc_particles_size(prts);
+  unsigned int *bidx = new unsigned int[n_prts];
+  unsigned int *sums = new unsigned int[n_prts];
+  check(cudaMemcpy(bidx, d_bidx, n_prts * sizeof(*bidx),
 		   cudaMemcpyDeviceToHost));
 
   unsigned int sum = 0;
-  for (int i = 0; i < prts->n_part; i++) {
+  for (int i = 0; i < n_prts; i++) {
     sums[i] = sum;
     sum += (bidx[i] == cmprts->n_blocks_per_patch ? 1 : 0);
   }
 
-  check(cudaMemcpy(d_sums, sums, prts->n_part * sizeof(*d_sums),
+  check(cudaMemcpy(d_sums, sums, n_prts * sizeof(*d_sums),
 		   cudaMemcpyHostToDevice));
   delete[] sums;
   delete[] bidx;
