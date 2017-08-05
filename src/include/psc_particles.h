@@ -61,9 +61,6 @@ psc_mparticles_get_patch(struct psc_mparticles *mp, int p)
   return mp->prts[p];
 }
 
-int psc_mparticles_n_alloced(struct psc_mparticles *mprts, int p);
-void psc_mparticles_set_n_alloced(struct psc_mparticles *mprts, int p, int n_alloced);
-
 extern struct psc_mparticles_ops psc_mparticles_fortran_ops;
 extern struct psc_mparticles_ops psc_mparticles_c_ops;
 extern struct psc_mparticles_ops psc_mparticles_single_ops;
@@ -80,9 +77,13 @@ void psc_mparticles_set_domain_nr_particles(struct psc_mparticles *mparticles,
 void psc_mparticles_set_nr_particles(struct psc_mparticles *mprts, int *n_prts_by_patch);
 int  psc_mparticles_nr_particles(struct psc_mparticles *mparticles);
 int  psc_mparticles_n_prts_by_patch(struct psc_mparticles *mparticles, int p);
+void psc_mparticles_set_n_prts_by_patch(struct psc_mparticles *mprts, int p, int n_prts);
 void psc_mparticles_resize_patch(struct psc_mparticles *mparticles, int p, int n_prts);
 void psc_mparticles_setup_internals(struct psc_mparticles *mparticles);
 void psc_mparticles_update_n_part(struct psc_mparticles *mparticles);
+int psc_mparticles_n_alloced(struct psc_mparticles *mprts, int p);
+void psc_mparticles_set_n_alloced(struct psc_mparticles *mprts, int p, int n_alloced);
+
 struct psc_mparticles *psc_mparticles_get_as(struct psc_mparticles *mparticles_base,
 					     const char *type,
 					     unsigned int flags);

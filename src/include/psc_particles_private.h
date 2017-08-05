@@ -18,21 +18,19 @@ struct psc_particles {
 static inline int
 psc_particles_size(struct psc_particles *prts)
 {
-  return prts->N_PART;
+  return psc_mparticles_n_prts_by_patch(prts->mprts, prts->p);
 }
 
 static inline void
 psc_particles_resize(struct psc_particles *prts, int n_prts)
 {
-  assert(n_prts <= psc_mparticles_n_alloced(prts->mprts, prts->p));
-  prts->N_PART = n_prts;
+  psc_mparticles_resize_patch(prts->mprts, prts->p, n_prts);
 }
 
 static inline void
 psc_particles_set_n_prts(struct psc_particles *prts, int n_prts)
 {
-  // FIXME, same as above w/o the assert, should go away...
-  prts->N_PART = n_prts;
+  psc_mparticles_set_n_prts_by_patch(prts->mprts, prts->p, n_prts);
 }
 
 struct psc_particles_ops {
