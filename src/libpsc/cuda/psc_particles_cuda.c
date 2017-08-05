@@ -190,7 +190,7 @@ copy_to(int p, struct psc_mparticles *mprts_cuda, struct psc_mparticles *mprts,
   struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts_cuda)->cmprts;
 
-  psc_particles_resize(prts, psc_mparticles_n_prts_by_patch(mprts_cuda, p));
+  psc_mparticles_resize_patch(mprts, p, psc_mparticles_n_prts_by_patch(mprts_cuda, p));
 
   unsigned int off = 0;
   for (int pp = 0; pp < p; pp++) {
@@ -653,7 +653,7 @@ psc_mparticles_cuda_inject(struct psc_mparticles *mprts_base, struct cuda_mparti
       prt->qni_wni = buf[buf_n + cnt].qni_wni;
     }
     buf_n += buf_n_by_patch[p];
-    psc_particles_resize(prts, i);
+    psc_mparticles_resize_patch(mprts, p, i);
   }
 
   psc_mparticles_put_as(mprts, mprts_base, 0);

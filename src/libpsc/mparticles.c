@@ -18,8 +18,7 @@ void
 psc_mparticles_set_nr_particles(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    psc_particles_resize(prts, n_prts_by_patch[p]);
+    psc_mparticles_resize_patch(mprts, p, n_prts_by_patch[p]);
   }
 }
 
