@@ -81,73 +81,6 @@ particles_single_realloc(struct psc_particles *prts, int new_n_part)
 }
 
 // ======================================================================
-
-#ifdef HAVE_LIBHDF5_HL
-
-// FIXME. This is a rather bad break of proper layering, HDF5 should be all
-// mrc_io business. OTOH, it could be called flexibility...
-
-#include <hdf5.h>
-#include <hdf5_hl.h>
-
-#define H5_CHK(ierr) assert(ierr >= 0)
-#define CE assert(ierr == 0)
-
-// ----------------------------------------------------------------------
-// psc_particles_single_write
-
-static void
-psc_particles_single_write(struct psc_particles *prts, struct mrc_io *io)
-{
-  int ierr;
-  assert(sizeof(particle_single_t) / sizeof(particle_single_real_t) == 8);
-  assert(sizeof(particle_single_real_t) == sizeof(float));
-
-  long h5_file;
-  mrc_io_get_h5_file(io, &h5_file);
-
-  hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, prts), H5P_DEFAULT); H5_CHK(group);
-  // save/restore n_alloced, too?
-  ierr = H5LTset_attribute_int(group, ".", "p", &prts->p, 1); CE;
-  int n_prts = psc_particles_size(prts);
-  ierr = H5LTset_attribute_int(group, ".", "n_part", &n_prts, 1); CE;
-  ierr = H5LTset_attribute_uint(group, ".", "flags", &prts->flags, 1); CE;
-  if (n_prts > 0) {
-    // in a rather ugly way, we write the int "kind" member as a float
-    hsize_t hdims[2] = { n_prts, 8 };
-    ierr = H5LTmake_dataset_float(group, "particles_single", 2, hdims,
-				  (float *) particles_single_get_one(prts, 0)); CE;
-  }
-  ierr = H5Gclose(group); CE;
-}
-
-// ----------------------------------------------------------------------
-// psc_particles_single_read
-
-static void
-psc_particles_single_read(struct psc_particles *prts, struct mrc_io *io)
-{
-  int ierr;
-  long h5_file;
-  mrc_io_get_h5_file(io, &h5_file);
-
-  hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, prts), H5P_DEFAULT); H5_CHK(group);
-  ierr = H5LTget_attribute_int(group, ".", "p", &prts->p); CE;
-  int n_prts;
-  ierr = H5LTget_attribute_int(group, ".", "n_part", &n_prts); CE;
-  psc_particles_resize(prts, n_prts);
-  ierr = H5LTget_attribute_uint(group, ".", "flags", &prts->flags); CE;
-  psc_particles_setup(prts);
-  if (n_prts > 0) {
-    ierr = H5LTread_dataset_float(group, "particles_single",
-				  (float *) particles_single_get_one(prts, 0)); CE;
-  }
-  ierr = H5Gclose(group); CE;
-}
-
-#endif
-
-// ======================================================================
 // conversion to/from "c"
 
 static inline void
@@ -290,17 +223,112 @@ struct psc_particles_ops psc_particles_single_ops = {
   .size                    = sizeof(struct psc_particles_single),
   .setup                   = psc_particles_single_setup,
   .destroy                 = psc_particles_single_destroy,
-#ifdef HAVE_LIBHDF5_HL
-  .read                    = psc_particles_single_read,
-  .write                   = psc_particles_single_write,
-#endif
   .reorder                 = psc_particles_single_reorder,
 };
 
 // ======================================================================
 // psc_mparticles: subclass "single"
+
+#ifdef HAVE_LIBHDF5_HL
+
+// FIXME. This is a rather bad break of proper layering, HDF5 should be all
+// mrc_io business. OTOH, it could be called flexibility...
+
+#include <hdf5.h>
+#include <hdf5_hl.h>
+
+#define H5_CHK(ierr) assert(ierr >= 0)
+#define CE assert(ierr == 0)
+
+// ----------------------------------------------------------------------
+// psc_mparticles_single_write
+
+static void
+psc_mparticles_single_write(struct psc_mparticles *mprts, struct mrc_io *io)
+{
+  int ierr;
+  assert(sizeof(particle_t) / sizeof(particle_real_t) == 8);
+  assert(sizeof(particle_real_t) == sizeof(float));
+
+  long h5_file;
+  mrc_io_get_h5_file(io, &h5_file);
+
+  hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, mprts), H5P_DEFAULT); H5_CHK(group);
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
+    particle_range_t prts = particle_range_mprts(mprts, p);
+    char pname[10];
+    sprintf(pname, "p%d", p);
+    hid_t pgroup = H5Gcreate(group, pname, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT); H5_CHK(pgroup);
+    // save/restore n_alloced, too?
+    ierr = H5LTset_attribute_uint(pgroup, ".", "flags", &_prts->flags, 1); CE;
+    int n_prts = psc_mparticles_n_prts_by_patch(mprts, p);
+    ierr = H5LTset_attribute_int(pgroup, ".", "n_prts", &n_prts, 1); CE;
+    if (n_prts > 0) {
+      // in a rather ugly way, we write the int "kind" member as a float
+      hsize_t hdims[2] = { n_prts, 8 };
+      ierr = H5LTmake_dataset_float(pgroup, "data", 2, hdims,
+				    (float *) particle_iter_deref(prts.begin)); CE;
+    }
+    ierr = H5Gclose(pgroup); CE;
+  }
+  ierr = H5Gclose(group); CE;
+}
+
+// ----------------------------------------------------------------------
+// psc_mparticles_single_read
+
+static void
+psc_mparticles_single_read(struct psc_mparticles *mprts, struct mrc_io *io)
+{
+  int ierr;
+  long h5_file;
+  mrc_io_get_h5_file(io, &h5_file);
+
+  hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, mprts), H5P_DEFAULT); H5_CHK(group);
+  // FIXME those should be superclass bits
+  mprts->domain = mrc_io_read_ref(io, mprts, "domain", mrc_domain);
+  mrc_domain_get_patches(mprts->domain, &mprts->nr_patches);
+  mrc_io_read_int(io, mprts, "flags", (int *) &mprts->flags);
+
+  mprts->prts = calloc(mprts->nr_patches, sizeof(*mprts->prts));
+  /* mprts->nr_particles_by_patch = */
+  /*   calloc(mprts->nr_patches, sizeof(*mprts->nr_particles_by_patch)); */
+
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    char name[20]; sprintf(name, "prts%d", p);
+    struct psc_particles *_prts = psc_particles_create(MPI_COMM_NULL);
+    psc_particles_set_type(_prts, "single");
+    psc_particles_set_name(_prts, name);
+    _prts->p = p;
+    mprts->prts[p] = _prts;
+
+    particle_range_t prts = particle_range_mprts(mprts, p);
+    char pname[10];
+    sprintf(pname, "p%d", p);
+    hid_t pgroup = H5Gopen(group, pname, H5P_DEFAULT); H5_CHK(pgroup);
+    ierr = H5LTget_attribute_uint(pgroup, ".", "flags", &_prts->flags); CE;
+    int n_prts;
+    ierr = H5LTget_attribute_int(pgroup, ".", "n_prts", &n_prts); CE;
+    psc_particles_set_n_prts(_prts, n_prts);
+    psc_particles_setup(_prts);
+    
+    if (n_prts > 0) {
+      ierr = H5LTread_dataset_float(pgroup, "data",
+				    (float *) particle_iter_deref(prts.begin)); CE;
+    }
+    ierr = H5Gclose(pgroup); CE;
+  }
+  ierr = H5Gclose(group); CE;
+  psc_mparticles_view(mprts);
+}
+
+#endif
+
+// ----------------------------------------------------------------------
+// psc_mparticles subclass "single"
   
-static struct mrc_obj_method psc_particles_single_methods[] = {
+static struct mrc_obj_method psc_mparticles_single_methods[] = {
   MRC_OBJ_METHOD("copy_to_c"       , psc_mparticles_single_copy_to_c),
   MRC_OBJ_METHOD("copy_from_c"     , psc_mparticles_single_copy_from_c),
   MRC_OBJ_METHOD("copy_to_double"  , psc_mparticles_single_copy_to_double),
@@ -310,6 +338,10 @@ static struct mrc_obj_method psc_particles_single_methods[] = {
 
 struct psc_mparticles_ops psc_mparticles_single_ops = {
   .name                    = "single",
-  .methods                 = psc_particles_single_methods,
+  .methods                 = psc_mparticles_single_methods,
+#ifdef HAVE_LIBHDF5_HL
+  .write                   = psc_mparticles_single_write,
+  .read                    = psc_mparticles_single_read,
+#endif
 };
 
