@@ -412,7 +412,7 @@ cuda_mprts_sort(struct psc_mparticles *mprts)
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
 
-    psc_particles_resize(prts, psc_particles_size(prts) + cuda->bnd_n_recv - cuda->bnd_n_send);
+    psc_particles_set_n_prts(prts, psc_particles_size(prts) + cuda->bnd_n_recv - cuda->bnd_n_send);
   }
   cmprts->n_prts -= mprts_cuda->nr_prts_send;
 }
