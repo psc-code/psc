@@ -13,7 +13,6 @@ struct psc_particles {
   int N_PART;
   int n_alloced;
   int p; //< patch number
-  unsigned int flags;
 };
 
 static inline int

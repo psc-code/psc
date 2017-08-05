@@ -168,13 +168,9 @@ psc_mparticles_double_write(struct psc_mparticles *mprts, struct mrc_io *io)
 
   hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, mprts), H5P_DEFAULT); H5_CHK(group);
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
     particle_range_t prts = particle_range_mprts(mprts, p);
-    char pname[10];
-    sprintf(pname, "p%d", p);
+    char pname[10]; sprintf(pname, "p%d", p);
     hid_t pgroup = H5Gcreate(group, pname, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT); H5_CHK(pgroup);
-    // save/restore n_alloced, too?
-    ierr = H5LTset_attribute_uint(pgroup, ".", "flags", &_prts->flags, 1); CE;
     int n_prts = psc_mparticles_n_prts_by_patch(mprts, p);
     ierr = H5LTset_attribute_int(pgroup, ".", "n_prts", &n_prts, 1); CE;
     if (n_prts > 0) {
@@ -216,10 +212,8 @@ psc_mparticles_double_read(struct psc_mparticles *mprts, struct mrc_io *io)
     mprts->prts[p]->p = p;
 
     particle_range_t prts = particle_range_mprts(mprts, p);
-    char pname[10];
-    sprintf(pname, "p%d", p);
+    char pname[10]; sprintf(pname, "p%d", p);
     hid_t pgroup = H5Gopen(group, pname, H5P_DEFAULT); H5_CHK(pgroup);
-    ierr = H5LTget_attribute_uint(pgroup, ".", "flags", &mprts->prts[p]->flags); CE;
     int n_prts;
     ierr = H5LTget_attribute_int(pgroup, ".", "n_prts", &n_prts); CE;
     psc_particles_set_n_prts(mprts->prts[p], n_prts);

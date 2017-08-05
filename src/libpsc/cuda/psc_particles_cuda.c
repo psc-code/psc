@@ -25,14 +25,14 @@ psc_particles_cuda_setup(struct psc_particles *prts)
 
   struct psc_patch *patch = &ppsc->patch[prts->p];
 
-  if (!prts->flags) {
-    // FIXME, they get set too early, so auto-dispatch "1vb" doesn't work
-    prts->flags = MP_NEED_BLOCK_OFFSETS | MP_BLOCKSIZE_4X4X4 | MP_NO_CHECKERBOARD;
+  unsigned int flags = prts->mprts->flags; // FIXME, the whole flags crap...
+  if (!flags) {
+    flags = MP_NEED_BLOCK_OFFSETS | MP_BLOCKSIZE_4X4X4 | MP_NO_CHECKERBOARD;
   }
 
   int bs[3];
   for (int d = 0; d < 3; d++) {
-    switch (prts->flags & MP_BLOCKSIZE_MASK) {
+    switch (flags & MP_BLOCKSIZE_MASK) {
     case MP_BLOCKSIZE_1X1X1: bs[d] = 1; break;
     case MP_BLOCKSIZE_2X2X2: bs[d] = 2; break;
     case MP_BLOCKSIZE_4X4X4: bs[d] = 4; break;
@@ -45,14 +45,6 @@ psc_particles_cuda_setup(struct psc_particles *prts)
     assert(patch->ldims[d] % bs[d] == 0); // not sure what breaks if not
     cuda->b_mx[d] = (patch->ldims[d] + bs[d] - 1) / bs[d];
     cuda->b_dxi[d] = 1.f / (bs[d] * ppsc->patch[prts->p].dx[d]);
-  }
-
-  for (int d = 0; d < 3; d++) {
-    if (prts->flags & MP_NO_CHECKERBOARD) {
-      bs[d] = 1;
-    } else {
-      bs[d] = (patch->ldims[d] == 1) ? 1 : 2;
-    }
   }
 }
 
@@ -472,7 +464,6 @@ psc_mparticles_cuda_write(struct psc_mparticles *mprts, struct mrc_io *io)
     char pname[10];
     sprintf(pname, "p%d", p);
     hid_t pgroup = H5Gcreate(group, pname, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT); H5_CHK(pgroup);
-    ierr = H5LTset_attribute_uint(pgroup, ".", "flags", &_prts->flags, 1); CE;
     int n_prts = psc_mparticles_n_prts_by_patch(mprts, p);
     ierr = H5LTset_attribute_int(pgroup, ".", "n_prts", &n_prts, 1); CE;
     if (n_prts > 0) {
@@ -522,7 +513,6 @@ psc_mparticles_cuda_read(struct psc_mparticles *mprts, struct mrc_io *io)
     char pname[10];
     sprintf(pname, "p%d", p);
     hid_t pgroup = H5Gopen(group, pname, H5P_DEFAULT); H5_CHK(pgroup);
-    ierr = H5LTget_attribute_uint(pgroup, ".", "flags", &mprts->prts[p]->flags); CE;
     int n_prts;
     ierr = H5LTget_attribute_int(pgroup, ".", "n_prts", &n_prts); CE;
     mprts->nr_particles_by_patch[p] = n_prts;
