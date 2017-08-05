@@ -37,27 +37,25 @@ psc_mparticles_set_domain_nr_particles(struct psc_mparticles *mparticles,
 }
 
 static void
-_psc_mparticles_setup(struct psc_mparticles *mparticles)
+_psc_mparticles_setup(struct psc_mparticles *mprts)
 {
-  assert(mparticles->nr_particles_by_patch);
-  struct psc_mparticles_ops *ops = psc_mparticles_ops(mparticles);
+  assert(mprts->nr_particles_by_patch);
+  struct psc_mparticles_ops *ops = psc_mparticles_ops(mprts);
 
-  mparticles->prts = calloc(mparticles->nr_patches, sizeof(*mparticles->prts));
-  for (int p = 0; p < mparticles->nr_patches; p++) {
-    struct psc_particles *prts = psc_particles_create(MPI_COMM_NULL);
-    psc_particles_set_type(prts, ops->name);
-    char name[20];
-    sprintf(name, "prts%d", p);
-    psc_particles_set_name(prts, name);
-    prts->mprts = mparticles;
-    psc_particles_set_n_prts(prts, mparticles->nr_particles_by_patch[p]);
-    prts->p = p;
-    psc_particles_setup(prts);
-    mparticles->prts[p] = prts;
+  mprts->prts = calloc(mprts->nr_patches, sizeof(*mprts->prts));
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    mprts->prts[p] = psc_particles_create(MPI_COMM_NULL);
+    psc_particles_set_type(mprts->prts[p], ops->name);
+    char name[20]; sprintf(name, "prts%d", p);
+    psc_particles_set_name(mprts->prts[p], name);
+    mprts->prts[p]->mprts = mprts;
+    mprts->prts[p]->p = p;
+    psc_particles_set_n_prts(mprts->prts[p], mprts->nr_particles_by_patch[p]);
+    psc_particles_setup(mprts->prts[p]);
   }
 
-  free(mparticles->nr_particles_by_patch);
-  mparticles->nr_particles_by_patch = NULL;
+  free(mprts->nr_particles_by_patch);
+  mprts->nr_particles_by_patch = NULL;
 }
 
 static void
@@ -156,12 +154,14 @@ psc_mparticles_setup_internals(struct psc_mparticles *mprts)
 int
 psc_mparticles_n_alloced(struct psc_mparticles *mprts, int p)
 {
+  assert(mprts);
   return mprts->prts[p]->N_ALLOCED;
 }
 
 void
 psc_mparticles_set_n_alloced(struct psc_mparticles *mprts, int p, int n_alloced)
 {
+  assert(mprts);
   mprts->prts[p]->N_ALLOCED = n_alloced;
 }
 
