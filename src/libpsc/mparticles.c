@@ -43,6 +43,7 @@ _psc_mparticles_setup(struct psc_mparticles *mprts)
   struct psc_mparticles_ops *ops = psc_mparticles_ops(mprts);
 
   mprts->prts = calloc(mprts->nr_patches, sizeof(*mprts->prts));
+  mprts->mpatch = calloc(mprts->nr_patches, sizeof(*mprts->mpatch));
   for (int p = 0; p < mprts->nr_patches; p++) {
     mprts->prts[p] = psc_particles_create(MPI_COMM_NULL);
     psc_particles_set_type(mprts->prts[p], ops->name);
@@ -65,6 +66,7 @@ _psc_mparticles_destroy(struct psc_mparticles *mparticles)
     psc_particles_destroy(mparticles->prts[p]);
   }
   free(mparticles->prts);
+  free(mparticles->mpatch);
 }
 
 static void
@@ -94,6 +96,7 @@ _psc_mparticles_read(struct psc_mparticles *mparticles, struct mrc_io *io)
   mrc_io_read_int(io, mparticles, "flags", (int *) &mparticles->flags);
 
   mparticles->prts = calloc(mparticles->nr_patches, sizeof(*mparticles->prts));
+  mparticles->mpatch = calloc(mparticles->nr_patches, sizeof(*mparticles->mpatch));
   mparticles->nr_particles_by_patch =
     calloc(mparticles->nr_patches, sizeof(*mparticles->nr_particles_by_patch));
   for (int p = 0; p < mparticles->nr_patches; p++) {
@@ -154,15 +157,15 @@ psc_mparticles_setup_internals(struct psc_mparticles *mprts)
 int
 psc_mparticles_n_alloced(struct psc_mparticles *mprts, int p)
 {
-  assert(mprts);
-  return mprts->prts[p]->N_ALLOCED;
+  assert(mprts && mprts->mpatch);
+  return mprts->mpatch[p].n_alloced;
 }
 
 void
 psc_mparticles_set_n_alloced(struct psc_mparticles *mprts, int p, int n_alloced)
 {
-  assert(mprts);
-  mprts->prts[p]->N_ALLOCED = n_alloced;
+  assert(mprts && mprts->mpatch);
+  mprts->mpatch[p].n_alloced = n_alloced;
 }
 
 

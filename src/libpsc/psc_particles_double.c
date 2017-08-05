@@ -203,8 +203,7 @@ psc_mparticles_double_read(struct psc_mparticles *mprts, struct mrc_io *io)
   mrc_io_read_int(io, mprts, "flags", (int *) &mprts->flags);
 
   mprts->prts = calloc(mprts->nr_patches, sizeof(*mprts->prts));
-  /* mprts->nr_particles_by_patch = */
-  /*   calloc(mprts->nr_patches, sizeof(*mprts->nr_particles_by_patch)); */
+  mprts->mpatch = calloc(mprts->nr_patches, sizeof(*mprts->mpatch));
 
   for (int p = 0; p < mprts->nr_patches; p++) {
     char name[20]; sprintf(name, "prts%d", p);

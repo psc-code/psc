@@ -13,9 +13,14 @@ MRC_CLASS_DECLARE(psc_particles, struct psc_particles);
 // ----------------------------------------------------------------------
 // psc_mparticles class
 
+struct mprts_patch {
+  int n_alloced;
+};
+
 struct psc_mparticles {
   struct mrc_obj obj;
   struct psc_particles **prts;
+  struct mprts_patch *mpatch;
   int nr_patches;
   struct mrc_domain *domain;
   int *nr_particles_by_patch;
