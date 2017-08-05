@@ -6,17 +6,6 @@
 #include <string.h>
 
 // ======================================================================
-// psc_particles_reorder
-
-void
-psc_particles_reorder(struct psc_particles *prts)
-{
-  if (psc_particles_ops(prts)->reorder) {
-    psc_particles_ops(prts)->reorder(prts);
-  }
-}
-
-// ======================================================================
 // psc_particles_init
 
 static void

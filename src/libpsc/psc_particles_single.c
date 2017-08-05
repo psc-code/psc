@@ -44,7 +44,7 @@ psc_particles_single_destroy(struct psc_particles *prts)
   free(sub->b_cnt);
 }
 
-static void
+static void _mrc_unused // FIXME
 psc_particles_single_reorder(struct psc_particles *prts)
 {
   struct psc_particles_single *sub = psc_particles_single(prts);
@@ -223,7 +223,6 @@ struct psc_particles_ops psc_particles_single_ops = {
   .size                    = sizeof(struct psc_particles_single),
   .setup                   = psc_particles_single_setup,
   .destroy                 = psc_particles_single_destroy,
-  .reorder                 = psc_particles_single_reorder,
 };
 
 // ======================================================================

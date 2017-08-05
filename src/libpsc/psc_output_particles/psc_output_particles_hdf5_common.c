@@ -371,10 +371,6 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
   }
 
   struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    psc_particles_reorder(prts);
-  }
 
   prof_start(pr_A);
   int rank, size;

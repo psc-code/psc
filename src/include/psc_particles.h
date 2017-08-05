@@ -10,8 +10,6 @@
 
 MRC_CLASS_DECLARE(psc_particles, struct psc_particles);
 
-void psc_particles_reorder(struct psc_particles *prts);
-
 // ----------------------------------------------------------------------
 // psc_mparticles class
 

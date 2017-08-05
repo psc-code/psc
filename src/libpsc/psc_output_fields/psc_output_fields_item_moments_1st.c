@@ -102,9 +102,7 @@ run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
   struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
 
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_fields *res = psc_mfields_get_patch(mres, p);
-    psc_particles_reorder(prts); // FIXME
     psc_fields_zero_range(res, 0, res->nr_comp);
     do_run(res->p, res, particle_range_mprts(mprts, p));
     add_ghosts_boundary(res, 0, res->nr_comp);
