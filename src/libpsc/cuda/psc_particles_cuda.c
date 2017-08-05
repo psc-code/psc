@@ -43,7 +43,6 @@ psc_particles_cuda_setup(struct psc_particles *prts)
       bs[d] = 1;
     }
     assert(patch->ldims[d] % bs[d] == 0); // not sure what breaks if not
-    cuda->b_mx[d] = (patch->ldims[d] + bs[d] - 1) / bs[d];
     cuda->b_dxi[d] = 1.f / (bs[d] * ppsc->patch[prts->p].dx[d]);
   }
 }
@@ -381,6 +380,7 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
       bs[d] = 1;
     }
     assert(ldims[d] % bs[d] == 0); // FIXME not sure what breaks if not
+    mprts_cuda->b_mx[d]  = ldims[d] / bs[d];
     domain_info.ldims[d] = ldims[d];
     domain_info.bs[d]    = bs[d];
     domain_info.dx[d]    = dx[d];

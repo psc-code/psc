@@ -30,9 +30,9 @@ PFX(set_constants)(struct psc_particles *prts, struct psc_fields *pf)
   }
 
   if (prts) {
-    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+    struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(prts->mprts);
     for (int d = 0; d < 3; d++) {
-      consts.b_mx[d] = cuda->b_mx[d];
+      consts.b_mx[d] = mprts_cuda->b_mx[d];
     }
   }
 

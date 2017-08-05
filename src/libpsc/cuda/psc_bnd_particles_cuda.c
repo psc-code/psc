@@ -77,8 +77,8 @@ xchg_get_one(struct psc_mparticles *mprts, int p, int n)
 static inline int *
 get_b_mx(struct psc_particles *prts)
 {
-  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-  return cuda->b_mx;
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(prts->mprts);
+  return mprts_cuda->b_mx;
 }
 
 static inline particle_real_t *
@@ -166,10 +166,10 @@ mprts_convert_to_cuda(struct psc_bnd_particles *bnd, struct psc_mparticles *mprt
       for (int d = 0; d < 3; d++) {
 	float *xi = &h_bnd_xi4[n].x;
 	b_pos[d] = particle_real_fint(xi[d] * cuda->b_dxi[d]);
-	if (b_pos[d] < 0 || b_pos[d] >= cuda->b_mx[d]) {
+	if (b_pos[d] < 0 || b_pos[d] >= mprts_cuda->b_mx[d]) {
 	  printf("!!! xi %g %g %g\n", xi[0], xi[1], xi[2]);
 	  printf("!!! d %d xi4[n] %g biy %d // %d\n",
-		 d, xi[d], b_pos[d], cuda->b_mx[d]);
+		 d, xi[d], b_pos[d], mprts_cuda->b_mx[d]);
 	  if (b_pos[d] < 0) {
 	    xi[d] = 0.f;
 	  } else {
@@ -177,9 +177,9 @@ mprts_convert_to_cuda(struct psc_bnd_particles *bnd, struct psc_mparticles *mprt
 	  }
 	}
 	b_pos[d] = particle_real_fint(xi[d] * cuda->b_dxi[d]);
-	assert(b_pos[d] >= 0 && b_pos[d] < cuda->b_mx[d]);
+	assert(b_pos[d] >= 0 && b_pos[d] < mprts_cuda->b_mx[d]);
       }
-      unsigned int b = (b_pos[2] * cuda->b_mx[1] + b_pos[1]) * cuda->b_mx[0] + b_pos[0];
+      unsigned int b = (b_pos[2] * mprts_cuda->b_mx[1] + b_pos[1]) * mprts_cuda->b_mx[0] + b_pos[0];
       assert(b < cmprts->n_blocks_per_patch);
       b += p * cmprts->n_blocks_per_patch;
       h_bnd_idx[n] = b;
