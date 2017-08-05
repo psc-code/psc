@@ -459,8 +459,8 @@ psc_mparticles_cuda_write(struct psc_mparticles *mprts, struct mrc_io *io)
   mrc_io_get_h5_file(io, &h5_file);
 
   hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, mprts), H5P_DEFAULT); H5_CHK(group);
+  unsigned int off = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
     char pname[10];
     sprintf(pname, "p%d", p);
     hid_t pgroup = H5Gcreate(group, pname, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT); H5_CHK(pgroup);
@@ -470,7 +470,7 @@ psc_mparticles_cuda_write(struct psc_mparticles *mprts, struct mrc_io *io)
       float4 *xi4  = calloc(n_prts, sizeof(float4));
       float4 *pxi4 = calloc(n_prts, sizeof(float4));
       
-      __particles_cuda_from_device(_prts, xi4, pxi4);
+      __particles_cuda_from_device(mprts, xi4, pxi4, off, n_prts);
       
       hsize_t hdims[2] = { n_prts, 4 };
       ierr = H5LTmake_dataset_float(pgroup, "xi4", 2, hdims, (float *) xi4); CE;
@@ -480,6 +480,7 @@ psc_mparticles_cuda_write(struct psc_mparticles *mprts, struct mrc_io *io)
       free(pxi4);
     }
     ierr = H5Gclose(pgroup); CE;
+    off += n_prts;
   }
   ierr = H5Gclose(group); CE;
 }

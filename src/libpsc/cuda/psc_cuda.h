@@ -65,8 +65,9 @@ struct d_particle {
     d_p.pxi4[n].w = (pp).qni_wni;					\
 } while (0)
 
-EXTERN_C void __particles_cuda_from_device(struct psc_particles *prts,
-					   float4 *xi4, float4 *pxi4);
+EXTERN_C void __particles_cuda_from_device(struct psc_mparticles *mprts,
+					   float4 *xi4, float4 *pxi4, unsigned int off,
+					   unsigned int n_prts);
 
 EXTERN_C void __psc_mfields_cuda_setup(struct psc_mfields *mflds);
 EXTERN_C void __psc_mfields_cuda_destroy(struct psc_mfields *mflds);
@@ -93,7 +94,8 @@ EXTERN_C void cuda_find_block_indices_enc_ids(int p, struct psc_particles *prts,
 EXTERN_C int  cuda_exclusive_scan(int p, struct psc_particles *prts, unsigned int *d_vals,
 				  unsigned int *d_sums);
 EXTERN_C void cuda_reorder_and_offsets(struct psc_particles *prts, unsigned int *d_bidx, unsigned int *d_ids);
-EXTERN_C void cuda_copy_bidx_from_dev(struct psc_particles *prts, unsigned int *h_bidx, unsigned int *d_bidx);
+EXTERN_C void cuda_copy_bidx_from_dev(struct psc_particles *prts, unsigned int *h_bidx, unsigned int *d_bidx,
+				      unsigned int n_prts);
 
 EXTERN_C void cuda_sort_patch(int p, struct psc_particles *prts);
 EXTERN_C void cuda_sort_patch_by_cell(int p, struct psc_particles *prts);

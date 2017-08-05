@@ -12,37 +12,32 @@
 #define MAX_BND_COMPONENTS (3)
 
 EXTERN_C void
-__particles_cuda_from_device(struct psc_particles *prts, float4 *xi4, float4 *pxi4)
+__particles_cuda_from_device(struct psc_mparticles *mprts, float4 *xi4, float4 *pxi4,
+			     unsigned int off, unsigned int n_prts)
 {
-  struct psc_mparticles *mprts = prts->mprts;
-  assert(mprts);
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
   struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
   assert(cmprts);
-  unsigned int off = 0;
-  for (int p = 0; p < prts->p; p++) {
-    struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
-    off += psc_particles_size(_prts);
-  }
-  int n_part = psc_particles_size(prts);
 
-  check(cudaMemcpy(xi4, cmprts->d_xi4 + off, n_part * sizeof(*xi4),
+  check(cudaMemcpy(xi4, cmprts->d_xi4 + off, n_prts * sizeof(*xi4),
 		   cudaMemcpyDeviceToHost));
-  check(cudaMemcpy(pxi4, cmprts->d_pxi4 + off, n_part * sizeof(*pxi4),
+  check(cudaMemcpy(pxi4, cmprts->d_pxi4 + off, n_prts * sizeof(*pxi4),
 		   cudaMemcpyDeviceToHost));
 }
 
 EXTERN_C void
-cuda_copy_bidx_from_dev(struct psc_particles *prts, unsigned int *h_bidx, unsigned int *d_bidx)
+cuda_copy_bidx_from_dev(struct psc_particles *prts, unsigned int *h_bidx, unsigned int *d_bidx,
+			unsigned int n_prts)
 {
-  check(cudaMemcpy(h_bidx, d_bidx, psc_particles_size(prts) * sizeof(*h_bidx),
+  check(cudaMemcpy(h_bidx, d_bidx, n_prts * sizeof(*h_bidx),
 		   cudaMemcpyDeviceToHost));
 }
 
 EXTERN_C void
-cuda_copy_bidx_to_dev(struct psc_particles *prts, unsigned int *d_bidx, unsigned int *h_bidx)
+cuda_copy_bidx_to_dev(struct psc_particles *prts, unsigned int *d_bidx, unsigned int *h_bidx,
+		      unsigned int n_prts)
 {
-  check(cudaMemcpy(d_bidx, h_bidx, psc_particles_size(prts) * sizeof(*d_bidx),
+  check(cudaMemcpy(d_bidx, h_bidx, n_prts * sizeof(*d_bidx),
 		   cudaMemcpyHostToDevice));
 }
 

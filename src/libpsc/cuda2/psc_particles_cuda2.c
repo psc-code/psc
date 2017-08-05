@@ -299,11 +299,15 @@ psc_particles_cuda2_copy_from_cuda(struct psc_particles *prts,
 
   int n_prts = psc_particles_size(prts_cuda);
   psc_particles_resize(prts, n_prts);
+  unsigned int off = 0;
+  for (int p = 0; p < prts->p; p++) {
+    off += psc_mparticles_n_prts_by_patch(prts_cuda->mprts, p);
+  }
   
   float4 *xi4  = calloc(n_prts, sizeof(float4));
   float4 *pxi4 = calloc(n_prts, sizeof(float4));
   
-  __particles_cuda_from_device(prts_cuda, xi4, pxi4);
+  __particles_cuda_from_device(prts_cuda->mprts, xi4, pxi4, off, n_prts);
   
   for (int n = 0; n < n_prts; n++) {
     particle_cuda2_t prt;

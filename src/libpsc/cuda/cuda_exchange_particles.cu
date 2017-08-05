@@ -401,7 +401,7 @@ cuda_mprts_copy_to_dev(struct psc_mparticles *mprts)
 // cuda_mprts_sort
 
 void
-cuda_mprts_sort(struct psc_mparticles *mprts)
+cuda_mprts_sort(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
   struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
@@ -412,7 +412,7 @@ cuda_mprts_sort(struct psc_mparticles *mprts)
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
 
-    psc_particles_set_n_prts(prts, psc_particles_size(prts) + cuda->bnd_n_recv - cuda->bnd_n_send);
+    n_prts_by_patch[p] += cuda->bnd_n_recv - cuda->bnd_n_send;
   }
   cmprts->n_prts -= mprts_cuda->nr_prts_send;
 }
@@ -421,7 +421,7 @@ cuda_mprts_sort(struct psc_mparticles *mprts)
 // cuda_mprts_check_ordered_total
 
 void
-cuda_mprts_check_ordered_total(struct psc_mparticles *mprts)
+cuda_mprts_check_ordered_total(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
   struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
@@ -432,9 +432,9 @@ cuda_mprts_check_ordered_total(struct psc_mparticles *mprts)
   unsigned int off = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    int n_prts = psc_particles_size(prts);
+    int n_prts = n_prts_by_patch[p];
     unsigned int *bidx = new unsigned int[n_prts];
-    cuda_copy_bidx_from_dev(prts, bidx, cmprts->d_bidx + off);
+    cuda_copy_bidx_from_dev(prts, bidx, cmprts->d_bidx + off, n_prts);
     
     for (int n = 0; n < n_prts; n++) {
       if (!(bidx[n] >= last && bidx[n] < cmprts->n_blocks)) {
