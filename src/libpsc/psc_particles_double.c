@@ -210,21 +210,20 @@ psc_mparticles_double_read(struct psc_mparticles *mprts, struct mrc_io *io)
 
   for (int p = 0; p < mprts->nr_patches; p++) {
     char name[20]; sprintf(name, "prts%d", p);
-    struct psc_particles *_prts = psc_particles_create(MPI_COMM_NULL);
-    psc_particles_set_type(_prts, "double");
-    psc_particles_set_name(_prts, name);
-    _prts->p = p;
-    mprts->prts[p] = _prts;
+    mprts->prts[p] = psc_particles_create(MPI_COMM_NULL);
+    psc_particles_set_type(mprts->prts[p], "double");
+    psc_particles_set_name(mprts->prts[p], name);
+    mprts->prts[p]->p = p;
 
     particle_range_t prts = particle_range_mprts(mprts, p);
     char pname[10];
     sprintf(pname, "p%d", p);
     hid_t pgroup = H5Gopen(group, pname, H5P_DEFAULT); H5_CHK(pgroup);
-    ierr = H5LTget_attribute_uint(pgroup, ".", "flags", &_prts->flags); CE;
+    ierr = H5LTget_attribute_uint(pgroup, ".", "flags", &mprts->prts[p]->flags); CE;
     int n_prts;
     ierr = H5LTget_attribute_int(pgroup, ".", "n_prts", &n_prts); CE;
-    psc_particles_set_n_prts(_prts, n_prts);
-    psc_particles_setup(_prts);
+    psc_particles_set_n_prts(mprts->prts[p], n_prts);
+    psc_particles_setup(mprts->prts[p]);
     
     if (n_prts > 0) {
       ierr = H5LTread_dataset_double(pgroup, "data",

@@ -56,73 +56,6 @@ psc_particles_cuda_setup(struct psc_particles *prts)
   }
 }
 
-#ifdef HAVE_LIBHDF5_HL
-
-// FIXME. This is a rather bad break of proper layering, HDF5 should be all
-// mrc_io business. OTOH, it could be called flexibility...
-
-#include <hdf5.h>
-#include <hdf5_hl.h>
-
-#define H5_CHK(ierr) assert(ierr >= 0)
-#define CE assert(ierr == 0)
-
-// ----------------------------------------------------------------------
-// psc_particles_cuda_write
-
-static void
-psc_particles_cuda_write(struct psc_particles *prts, struct mrc_io *io)
-{
-  int ierr;
-  assert(sizeof(particle_cuda_real_t) == sizeof(float));
-
-  long h5_file;
-  mrc_io_get_h5_file(io, &h5_file);
-
-  hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, prts), H5P_DEFAULT); H5_CHK(group);
-  // save/restore n_alloced, too?
-  ierr = H5LTset_attribute_int(group, ".", "p", &prts->p, 1); CE;
-  int n_prts = psc_particles_size(prts);
-  ierr = H5LTset_attribute_int(group, ".", "n_part", &n_prts, 1); CE;
-  ierr = H5LTset_attribute_uint(group, ".", "flags", &prts->flags, 1); CE;
-  if (n_prts > 0) {
-    float4 *xi4  = calloc(n_prts, sizeof(float4));
-    float4 *pxi4 = calloc(n_prts, sizeof(float4));
-  
-    __particles_cuda_from_device(prts, xi4, pxi4);
-  
-    hsize_t hdims[2] = { n_prts, 4 };
-    ierr = H5LTmake_dataset_float(group, "xi4", 2, hdims, (float *) xi4); CE;
-    ierr = H5LTmake_dataset_float(group, "pxi4", 2, hdims, (float *) pxi4); CE;
-
-    free(xi4);
-    free(pxi4);
-  }
-  ierr = H5Gclose(group); CE;
-}
-
-// ----------------------------------------------------------------------
-// psc_particles_cuda_read
-
-static void
-psc_particles_cuda_read(struct psc_particles *prts, struct mrc_io *io)
-{
-  int ierr;
-  long h5_file;
-  mrc_io_get_h5_file(io, &h5_file);
-
-  hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, prts), H5P_DEFAULT); H5_CHK(group);
-  ierr = H5LTget_attribute_int(group, ".", "p", &prts->p); CE;
-  int n_prts;
-  ierr = H5LTget_attribute_int(group, ".", "n_part", &n_prts); CE;
-  psc_particles_set_n_prts(prts, n_prts);
-  ierr = H5LTget_attribute_uint(group, ".", "flags", &prts->flags); CE;
-  psc_particles_setup(prts);
-  ierr = H5Gclose(group); CE;
-}
-
-#endif
-
 // FIXME, should go away and always be done within cuda for consistency
 
 #if 0
@@ -399,10 +332,6 @@ struct psc_particles_ops psc_particles_cuda_ops = {
   .name                    = "cuda",
   .size                    = sizeof(struct psc_particles_cuda),
   .setup                   = psc_particles_cuda_setup,
-#ifdef HAVE_LIBHDF5_HL
-  .read                    = psc_particles_cuda_read,
-  .write                   = psc_particles_cuda_write,
-#endif
 };
 
 // ======================================================================
@@ -503,45 +432,118 @@ psc_mparticles_cuda_destroy(struct psc_mparticles *mprts)
 }
 
 // ----------------------------------------------------------------------
+// psc_mparticls_cuda_reorder
+
+void
+psc_mparticles_cuda_reorder(struct psc_mparticles *mprts)
+{
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
+
+  if (cmprts->need_reorder) {
+    cuda_mprts_reorder(mprts);
+    cmprts->need_reorder = false;
+  }
+}
+#ifdef HAVE_LIBHDF5_HL
+
+// FIXME. This is a rather bad break of proper layering, HDF5 should be all
+// mrc_io business. OTOH, it could be called flexibility...
+
+#include <hdf5.h>
+#include <hdf5_hl.h>
+
+#define H5_CHK(ierr) assert(ierr >= 0)
+#define CE assert(ierr == 0)
+
+// ----------------------------------------------------------------------
+// psc_mparticles_cuda_write
+
+static void
+psc_mparticles_cuda_write(struct psc_mparticles *mprts, struct mrc_io *io)
+{
+  int ierr;
+  
+  long h5_file;
+  mrc_io_get_h5_file(io, &h5_file);
+
+  hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, mprts), H5P_DEFAULT); H5_CHK(group);
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
+    char pname[10];
+    sprintf(pname, "p%d", p);
+    hid_t pgroup = H5Gcreate(group, pname, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT); H5_CHK(pgroup);
+    ierr = H5LTset_attribute_uint(pgroup, ".", "flags", &_prts->flags, 1); CE;
+    int n_prts = psc_mparticles_n_prts_by_patch(mprts, p);
+    ierr = H5LTset_attribute_int(pgroup, ".", "n_prts", &n_prts, 1); CE;
+    if (n_prts > 0) {
+      float4 *xi4  = calloc(n_prts, sizeof(float4));
+      float4 *pxi4 = calloc(n_prts, sizeof(float4));
+      
+      __particles_cuda_from_device(_prts, xi4, pxi4);
+      
+      hsize_t hdims[2] = { n_prts, 4 };
+      ierr = H5LTmake_dataset_float(pgroup, "xi4", 2, hdims, (float *) xi4); CE;
+      ierr = H5LTmake_dataset_float(pgroup, "pxi4", 2, hdims, (float *) pxi4); CE;
+      
+      free(xi4);
+      free(pxi4);
+    }
+    ierr = H5Gclose(pgroup); CE;
+  }
+  ierr = H5Gclose(group); CE;
+}
+
+// ----------------------------------------------------------------------
 // psc_mparticles_cuda_read
 
 static void
 psc_mparticles_cuda_read(struct psc_mparticles *mprts, struct mrc_io *io)
 {
   mprts->domain = mrc_io_read_ref(io, mprts, "domain", mrc_domain);
-  mrc_domain_get_patches(mprts->domain, &mprts->nr_patches);
   mrc_io_read_int(io, mprts, "flags", (int *) &mprts->flags);
-  
+  mrc_domain_get_patches(mprts->domain, &mprts->nr_patches);
+
+  int ierr;
+  long h5_file;
+  mrc_io_get_h5_file(io, &h5_file);
+
+  hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, mprts), H5P_DEFAULT); H5_CHK(group);
   mprts->nr_particles_by_patch =
     calloc(mprts->nr_patches, sizeof(*mprts->nr_particles_by_patch));
   mprts->prts = calloc(mprts->nr_patches, sizeof(*mprts->prts));
+
   for (int p = 0; p < mprts->nr_patches; p++) {
     char name[20]; sprintf(name, "prts%d", p);
-    mprts->prts[p] = mrc_io_read_ref(io, mprts, name, psc_particles); // doesn't actually read data
-    mprts->nr_particles_by_patch[p] = psc_particles_size(mprts->prts[p]);
+    mprts->prts[p] = psc_particles_create(MPI_COMM_NULL);
+    psc_particles_set_type(mprts->prts[p], "cuda");
+    psc_particles_set_name(mprts->prts[p], name);
+    mprts->prts[p]->p = p;
+
+    char pname[10];
+    sprintf(pname, "p%d", p);
+    hid_t pgroup = H5Gopen(group, pname, H5P_DEFAULT); H5_CHK(pgroup);
+    ierr = H5LTget_attribute_uint(pgroup, ".", "flags", &mprts->prts[p]->flags); CE;
+    int n_prts;
+    ierr = H5LTget_attribute_int(pgroup, ".", "n_prts", &n_prts); CE;
+    mprts->nr_particles_by_patch[p] = n_prts;
+
+    ierr = H5Gclose(pgroup); CE;
   }
 
   psc_mparticles_setup(mprts);
 
-  long h5_file;
-  mrc_io_get_h5_file(io, &h5_file);
-
   unsigned int off = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = mprts->prts[p];
-    int n_prts = psc_particles_size(prts);
+    char pname[10];
+    sprintf(pname, "p%d", p);
+    hid_t pgroup = H5Gopen(group, pname, H5P_DEFAULT); H5_CHK(pgroup);
+    int n_prts = psc_mparticles_n_prts_by_patch(mprts, p);
     if (n_prts > 0) {
-      int ierr;
-      char name[20]; sprintf(name, "prts%d", p);
-      char *path;
-      mrc_io_read_attr_string(io, mrc_io_obj_path(io, mprts), name, &path);
-      hid_t group = H5Gopen(h5_file, path, H5P_DEFAULT); H5_CHK(group);
-      free(path);
       float4 *xi4  = calloc(n_prts, sizeof(float4));
       float4 *pxi4 = calloc(n_prts, sizeof(float4));
       
-      ierr = H5LTread_dataset_float(group, "xi4", (float *) xi4); CE;
-      ierr = H5LTread_dataset_float(group, "pxi4", (float *) pxi4); CE;
+      ierr = H5LTread_dataset_float(pgroup, "xi4", (float *) xi4); CE;
+      ierr = H5LTread_dataset_float(pgroup, "pxi4", (float *) pxi4); CE;
       
       struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
       struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
@@ -550,13 +552,17 @@ psc_mparticles_cuda_read(struct psc_mparticles *mprts, struct mrc_io *io)
       
       free(xi4);
       free(pxi4);
-      ierr = H5Gclose(group); CE;
     }
+
+    ierr = H5Gclose(pgroup); CE;
     off += n_prts;
   }
 
+  ierr = H5Gclose(group); CE;
   psc_mparticles_setup_internals(mprts);
 }
+
+#endif
 
 // ----------------------------------------------------------------------
 // psc_mparticles_cuda_update_n_part
@@ -660,7 +666,7 @@ psc_mparticles_cuda_inject(struct psc_mparticles *mprts_base, struct cuda_mparti
 #endif
 }
 
-// ======================================================================
+// ----------------------------------------------------------------------
 // psc_mparticles: subclass "cuda"
   
 struct psc_mparticles_ops psc_mparticles_cuda_ops = {
@@ -670,19 +676,9 @@ struct psc_mparticles_ops psc_mparticles_cuda_ops = {
   .setup                   = psc_mparticles_cuda_setup,
   .destroy                 = psc_mparticles_cuda_destroy,
   .read                    = psc_mparticles_cuda_read,
-  //  .write                   = psc_mparticles_cuda_write,
+  .write                   = psc_mparticles_cuda_write,
   .update_n_part           = psc_mparticles_cuda_update_n_part,
   .setup_internals         = psc_mparticles_cuda_setup_internals,
   .get_nr_particles        = psc_mparticles_cuda_get_nr_particles,
 };
 
-void
-psc_mparticles_cuda_reorder(struct psc_mparticles *mprts)
-{
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-
-  if (cmprts->need_reorder) {
-    cuda_mprts_reorder(mprts);
-    cmprts->need_reorder = false;
-  }
-}
