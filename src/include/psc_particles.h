@@ -56,6 +56,9 @@ psc_mparticles_get_patch(struct psc_mparticles *mp, int p)
   return mp->prts[p];
 }
 
+int psc_mparticles_n_alloced(struct psc_mparticles *mprts, int p);
+void psc_mparticles_set_n_alloced(struct psc_mparticles *mprts, int p, int n_alloced);
+
 extern struct psc_mparticles_ops psc_mparticles_fortran_ops;
 extern struct psc_mparticles_ops psc_mparticles_c_ops;
 extern struct psc_mparticles_ops psc_mparticles_single_ops;

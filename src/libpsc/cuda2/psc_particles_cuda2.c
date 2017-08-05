@@ -163,7 +163,7 @@ psc_particles_cuda2_check(struct psc_particles *prts)
 {
   struct psc_particles_cuda2 *sub = psc_particles_cuda2(prts);
 
-  assert(psc_particles_size(prts) <= prts->n_alloced);
+  assert(psc_particles_size(prts) <= psc_mparticles_n_alloced(prts->mprts, prts->p));
 
   int block = 0;
   for (int n = 0; n < psc_particles_size(prts); n++) {
@@ -401,7 +401,8 @@ psc_mparticles_cuda2_setup(struct psc_mparticles *mprts)
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda2 *prts_sub = psc_particles_cuda2(prts);
 
-    prts->n_alloced = psc_particles_size(prts);
+    int n_alloced = psc_particles_size(prts);
+    psc_mparticles_set_n_alloced(mprts, p, n_alloced);
 
     for (int d = 0; d < 3; d++) {
       prts_sub->dxi[d] = sub->dxi[d];
@@ -420,8 +421,8 @@ psc_mparticles_cuda2_setup(struct psc_mparticles *mprts)
     h_xi4_alt += n_prts;
     h_pxi4_alt += n_prts;
 
-    prts_sub->b_idx = calloc(prts->n_alloced, sizeof(*prts_sub->b_idx));
-    prts_sub->b_ids = calloc(prts->n_alloced, sizeof(*prts_sub->b_ids));
+    prts_sub->b_idx = calloc(n_alloced, sizeof(*prts_sub->b_idx));
+    prts_sub->b_ids = calloc(n_alloced, sizeof(*prts_sub->b_ids));
     prts_sub->b_cnt = calloc(prts_sub->nr_blocks + 1, sizeof(*prts_sub->b_cnt));
     prts_sub->b_off = calloc(prts_sub->nr_blocks + 2, sizeof(*prts_sub->b_off));
   }

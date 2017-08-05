@@ -153,6 +153,19 @@ psc_mparticles_setup_internals(struct psc_mparticles *mprts)
   }
 }
 
+int
+psc_mparticles_n_alloced(struct psc_mparticles *mprts, int p)
+{
+  return mprts->prts[p]->N_ALLOCED;
+}
+
+void
+psc_mparticles_set_n_alloced(struct psc_mparticles *mprts, int p, int n_alloced)
+{
+  mprts->prts[p]->N_ALLOCED = n_alloced;
+}
+
+
 struct psc_mparticles *
 psc_mparticles_get_as(struct psc_mparticles *mp_base, const char *type,
 		      unsigned int flags)

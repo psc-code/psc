@@ -15,8 +15,9 @@ psc_particles_fortran_setup(struct psc_particles *prts)
 {
   struct psc_particles_fortran *fort = psc_particles_fortran(prts);
 
-  prts->n_alloced = psc_particles_size(prts) * 1.2;
-  fort->particles = calloc(prts->n_alloced, sizeof(*fort->particles));
+  int n_alloced = psc_particles_size(prts) * 1.2;
+  psc_mparticles_set_n_alloced(prts->mprts, prts->p, n_alloced);
+  fort->particles = calloc(n_alloced, sizeof(*fort->particles));
 }
 
 static void
@@ -32,11 +33,12 @@ particles_fortran_realloc(struct psc_particles *prts, int new_n_part)
 {
   struct psc_particles_fortran *fort = psc_particles_fortran(prts);
 
-  if (new_n_part <= prts->n_alloced)
+  if (new_n_part <= psc_mparticles_n_alloced(prts->mprts, prts->p))
     return;
 
-  prts->n_alloced = new_n_part * 1.2;
-  fort->particles = realloc(fort->particles, prts->n_alloced * sizeof(*fort->particles));
+  int n_alloced = new_n_part * 1.2;
+  psc_mparticles_set_n_alloced(prts->mprts, prts->p, n_alloced);
+  fort->particles = realloc(fort->particles, n_alloced * sizeof(*fort->particles));
 }
 
 // ======================================================================

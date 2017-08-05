@@ -14,8 +14,9 @@ psc_particles_c_setup(struct psc_particles *prts)
 {
   struct psc_particles_c *c = psc_particles_c(prts);
 
-  prts->n_alloced = psc_particles_size(prts) * 1.2;
-  c->particles = calloc(prts->n_alloced, sizeof(*c->particles));
+  int n_alloced = psc_particles_size(prts) * 1.2;
+  psc_mparticles_set_n_alloced(prts->mprts, prts->p, n_alloced);
+  c->particles = calloc(n_alloced, sizeof(*c->particles));
 }
 
 static void
@@ -30,11 +31,12 @@ void
 particles_c_realloc(struct psc_particles *prts, int new_n_part)
 {
   struct psc_particles_c *c = psc_particles_c(prts);
-  if (new_n_part <= prts->n_alloced)
+  if (new_n_part <= psc_mparticles_n_alloced(prts->mprts, prts->p))
     return;
 
-  prts->n_alloced = new_n_part * 1.2;
-  c->particles = realloc(c->particles, prts->n_alloced * sizeof(*c->particles));
+  int n_alloced = new_n_part * 1.2;
+  psc_mparticles_set_n_alloced(prts->mprts, prts->p, n_alloced);
+  c->particles = realloc(c->particles, n_alloced * sizeof(*c->particles));
 }
 
 // ======================================================================

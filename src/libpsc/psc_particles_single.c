@@ -18,11 +18,12 @@ psc_particles_single_setup(struct psc_particles *prts)
 {
   struct psc_particles_single *sub = psc_particles_single(prts);
 
-  prts->n_alloced = psc_particles_size(prts) * 1.2;
-  sub->particles = calloc(prts->n_alloced, sizeof(*sub->particles));
-  sub->particles_alt = calloc(prts->n_alloced, sizeof(*sub->particles_alt));
-  sub->b_idx = calloc(prts->n_alloced, sizeof(*sub->b_idx));
-  sub->b_ids = calloc(prts->n_alloced, sizeof(*sub->b_ids));
+  int n_alloced = psc_particles_size(prts) * 1.2;
+  psc_mparticles_set_n_alloced(prts->mprts, prts->p, n_alloced);
+  sub->particles = calloc(n_alloced, sizeof(*sub->particles));
+  sub->particles_alt = calloc(n_alloced, sizeof(*sub->particles_alt));
+  sub->b_idx = calloc(n_alloced, sizeof(*sub->b_idx));
+  sub->b_ids = calloc(n_alloced, sizeof(*sub->b_ids));
 
   for (int d = 0; d < 3; d++) {
     sub->b_mx[d] = ppsc->patch[prts->p].ldims[d];
@@ -69,15 +70,16 @@ particles_single_realloc(struct psc_particles *prts, int new_n_part)
 {
   struct psc_particles_single *sub = psc_particles_single(prts);
 
-  if (new_n_part <= prts->n_alloced)
+  if (new_n_part <= psc_mparticles_n_alloced(prts->mprts, prts->p))
     return;
 
-  prts->n_alloced = new_n_part * 1.2;
-  sub->particles = realloc(sub->particles, prts->n_alloced * sizeof(*sub->particles));
-  sub->b_idx = realloc(sub->b_idx, prts->n_alloced * sizeof(*sub->b_idx));
-  sub->b_ids = realloc(sub->b_ids, prts->n_alloced * sizeof(*sub->b_ids));
+  int n_alloced = new_n_part * 1.2;
+  psc_mparticles_set_n_alloced(prts->mprts, prts->p, n_alloced);
+  sub->particles = realloc(sub->particles, n_alloced * sizeof(*sub->particles));
+  sub->b_idx = realloc(sub->b_idx, n_alloced * sizeof(*sub->b_idx));
+  sub->b_ids = realloc(sub->b_ids, n_alloced * sizeof(*sub->b_ids));
   free(sub->particles_alt);
-  sub->particles_alt = malloc(prts->n_alloced * sizeof(*sub->particles_alt));
+  sub->particles_alt = malloc(n_alloced * sizeof(*sub->particles_alt));
 }
 
 // ======================================================================

@@ -6,12 +6,13 @@
 
 // FIXME, hack to aid getting rid of ::n_part member
 #define N_PART _n_part
+#define N_ALLOCED _n_alloced
 
 struct psc_particles {
   struct mrc_obj obj;
   struct psc_mparticles *mprts;
   int N_PART;
-  int n_alloced;
+  int N_ALLOCED;
   int p; //< patch number
 };
 
@@ -24,7 +25,7 @@ psc_particles_size(struct psc_particles *prts)
 static inline void
 psc_particles_resize(struct psc_particles *prts, int n_prts)
 {
-  assert(n_prts <= prts->n_alloced);
+  assert(n_prts <= prts->N_ALLOCED);
   prts->N_PART = n_prts;
 }
 
