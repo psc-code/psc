@@ -343,13 +343,6 @@ static struct mrc_obj_method psc_particles_cuda2_methods[] = {
 struct psc_particles_ops psc_particles_cuda2_ops = {
   .name                    = "cuda2",
   .size                    = sizeof(struct psc_particles_cuda2),
-#if 0
-#ifdef HAVE_LIBHDF5_HL
-  .read                    = psc_particles_cuda2_read,
-  .write                   = psc_particles_cuda2_write,
-#endif
-  .reorder                 = psc_particles_cuda2_reorder,
-#endif
 };
 
 // ======================================================================

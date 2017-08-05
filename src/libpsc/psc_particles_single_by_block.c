@@ -209,73 +209,6 @@ psc_particles_single_by_block_sort(struct psc_particles *prts)
 }
 
 // ======================================================================
-
-#ifdef HAVE_LIBHDF5_HL
-
-// FIXME. This is a rather bad break of proper layering, HDF5 should be all
-// mrc_io business. OTOH, it could be called flexibility...
-
-#include <hdf5.h>
-#include <hdf5_hl.h>
-
-#define H5_CHK(ierr) assert(ierr >= 0)
-#define CE assert(ierr == 0)
-
-// ----------------------------------------------------------------------
-// psc_particles_single_by_block_write
-
-static void
-psc_particles_single_by_block_write(struct psc_particles *prts, struct mrc_io *io)
-{
-  int ierr;
-  assert(sizeof(particle_single_by_block_t) / sizeof(particle_single_by_block_real_t) == 8);
-  assert(sizeof(particle_single_by_block_real_t) == sizeof(float));
-
-  long h5_file;
-  mrc_io_get_h5_file(io, &h5_file);
-
-  hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, prts), H5P_DEFAULT); H5_CHK(group);
-  // save/restore n_alloced, too?
-  ierr = H5LTset_attribute_int(group, ".", "p", &prts->p, 1); CE;
-  int n_prts = psc_particles_size(prts);
-  ierr = H5LTset_attribute_int(group, ".", "n_part", &n_prts, 1); CE;
-  ierr = H5LTset_attribute_uint(group, ".", "flags", &prts->flags, 1); CE;
-  if (n_prts > 0) {
-    // in a rather ugly way, we write the int "kind" member as a float
-    hsize_t hdims[2] = { n_prts, 8 };
-    ierr = H5LTmake_dataset_float(group, "particles_single_by_block", 2, hdims,
-				  (float *) particles_single_by_block_get_one(prts, 0)); CE;
-  }
-  ierr = H5Gclose(group); CE;
-}
-
-// ----------------------------------------------------------------------
-// psc_particles_single_by_block_by_block_read
-
-static void
-psc_particles_single_by_block_read(struct psc_particles *prts, struct mrc_io *io)
-{
-  int ierr;
-  long h5_file;
-  mrc_io_get_h5_file(io, &h5_file);
-
-  hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, prts), H5P_DEFAULT); H5_CHK(group);
-  ierr = H5LTget_attribute_int(group, ".", "p", &prts->p); CE;
-  int n_prts;
-  ierr = H5LTget_attribute_int(group, ".", "n_part", &n_prts); CE;
-  psc_particles_resize(prts, n_prts);
-  ierr = H5LTget_attribute_uint(group, ".", "flags", &prts->flags); CE;
-  psc_particles_setup(prts);
-  if (n_prts > 0) {
-    ierr = H5LTread_dataset_float(group, "particles_single_by_block",
-				  (float *) particles_single_by_block_get_one(prts, 0)); CE;
-  }
-  ierr = H5Gclose(group); CE;
-}
-
-#endif
-
-// ======================================================================
 // conversion to/from "single"
 
 static void
@@ -332,10 +265,6 @@ struct psc_particles_ops psc_particles_single_by_block_ops = {
   .size                    = sizeof(struct psc_particles_single_by_block),
   .setup                   = psc_particles_single_by_block_setup,
   .destroy                 = psc_particles_single_by_block_destroy,
-#ifdef HAVE_LIBHDF5_HL
-  .read                    = psc_particles_single_by_block_read,
-  .write                   = psc_particles_single_by_block_write,
-#endif
   .reorder                 = psc_particles_single_by_block_reorder,
 };
 
