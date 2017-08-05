@@ -115,7 +115,7 @@ psc_particles_cuda_read(struct psc_particles *prts, struct mrc_io *io)
   ierr = H5LTget_attribute_int(group, ".", "p", &prts->p); CE;
   int n_prts;
   ierr = H5LTget_attribute_int(group, ".", "n_part", &n_prts); CE;
-  psc_particles_resize(prts, n_prts);
+  psc_particles_set_n_prts(prts, n_prts);
   ierr = H5LTget_attribute_uint(group, ".", "flags", &prts->flags); CE;
   psc_particles_setup(prts);
   ierr = H5Gclose(group); CE;
