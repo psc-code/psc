@@ -12,6 +12,10 @@
 
 #define PFX(x) psc_particles_single_ ## x
 
+#elif PSC_PARTICLES_AS_C
+
+#define PFX(x) psc_particles_c_ ## x
+
 #endif
 
 // ======================================================================
@@ -54,6 +58,18 @@ PFX(setup)(struct psc_particles *prts)
   sub->b_cnt = calloc(sub->nr_blocks + 1, sizeof(*sub->b_cnt));
 }
 
+#elif PSC_PARTICLES_AS_C
+
+static void
+PFX(setup)(struct psc_particles *prts)
+{
+  struct psc_particles_c *c = psc_particles_c(prts);
+
+  int n_alloced = psc_particles_size(prts) * 1.2;
+  psc_mparticles_set_n_alloced(prts->mprts, prts->p, n_alloced);
+  c->particles = calloc(n_alloced, sizeof(*c->particles));
+}
+
 #endif
 
 // ----------------------------------------------------------------------
@@ -81,6 +97,16 @@ PFX(destroy)(struct psc_particles *prts)
   free(sub->b_idx);
   free(sub->b_ids);
   free(sub->b_cnt);
+}
+
+#elif PSC_PARTICLES_AS_C
+
+static void
+PFX(destroy)(struct psc_particles *prts)
+{
+  struct psc_particles_c *c = psc_particles_c(prts);
+
+  free(c->particles);
 }
 
 #endif

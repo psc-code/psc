@@ -26,6 +26,8 @@ typedef particle_c_t particle_t;
 #define MPI_PARTICLES_REAL          MPI_PARTICLES_C_REAL
 #define PARTICLE_TYPE               "c"
 
+#define PSC_PARTICLES_AS_C 1
+
 #include "particle_iter.h"
 
 #endif
