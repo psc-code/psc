@@ -50,22 +50,25 @@ find_idx_off_1st_rel(particle_real_t xi[3], int lg[3], particle_real_t og[3], pa
 static unsigned int
 psc_particles_single_by_block_get_b_idx(struct psc_particles *prts, int n)
 {
-  struct psc_particles_single_by_block *sub = psc_particles_single_by_block(prts);
-
+  struct psc_mparticles *mprts = prts->mprts;
+  int p = prts->p;
+  struct psc_mparticles_single_by_block *msub = psc_mparticles_single_by_block(mprts);
+  struct psc_mparticles_single_by_block_patch *patch = &msub->patch[p];
+  
   particle_single_by_block_t *prt = particles_single_by_block_get_one(prts, n);
   particle_real_t of[3];
-  int b_pos[3], *b_mx = sub->b_mx;
-  find_idx_off_1st_rel(&prt->xi, b_pos, of, 0.f, sub->b_dxi);
+  int b_pos[3], *b_mx = patch->b_mx;
+  find_idx_off_1st_rel(&prt->xi, b_pos, of, 0.f, patch->b_dxi);
 
   // FIXME, only if blocksize == 1, 3D!!!
   if (b_pos[0] >= 0 && b_pos[0] < b_mx[0] &&
       b_pos[1] >= 0 && b_pos[1] < b_mx[1] &&
       b_pos[2] >= 0 && b_pos[2] < b_mx[2]) {
     unsigned int b_idx = (b_pos[2] * b_mx[1] + b_pos[1]) * b_mx[0] + b_pos[0];
-    assert(b_idx < sub->nr_blocks);
+    assert(b_idx < patch->nr_blocks);
     return b_idx;
   } else { // out of bounds
-    return sub->nr_blocks;
+    return patch->nr_blocks;
   }
 }
 
@@ -80,20 +83,23 @@ psc_particles_single_by_block_get_b_idx(struct psc_particles *prts, int n)
 static void
 psc_particles_single_by_block_check(struct psc_particles *prts)
 {
-  struct psc_particles_single_by_block *sub = psc_particles_single_by_block(prts);
+  struct psc_mparticles *mprts = prts->mprts;
+  int p = prts->p;
+  struct psc_mparticles_single_by_block *msub = psc_mparticles_single_by_block(mprts);
+  struct psc_mparticles_single_by_block_patch *patch = &msub->patch[p];
 
   assert(psc_particles_size(prts) <= psc_mparticles_n_alloced(prts->mprts, prts->p));
 
   int block = 0;
   for (int n = 0; n < psc_particles_size(prts); n++) {
-    while (n >= sub->b_off[block + 1]) {
+    while (n >= patch->b_off[block + 1]) {
       block++;
-      assert(block < sub->nr_blocks);
+      assert(block < patch->nr_blocks);
     }
-    assert(n >= sub->b_off[block] && n < sub->b_off[block + 1]);
-    assert(block < sub->nr_blocks);
+    assert(n >= patch->b_off[block] && n < patch->b_off[block + 1]);
+    assert(block < patch->nr_blocks);
     unsigned int b_idx = psc_particles_single_by_block_get_b_idx(prts, n);
-    assert(b_idx < sub->nr_blocks);
+    assert(b_idx < patch->nr_blocks);
     assert(b_idx == block);
   }
 }

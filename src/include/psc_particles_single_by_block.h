@@ -17,8 +17,9 @@ typedef struct psc_particle_single_by_block {
   int kind;
 } particle_single_by_block_t;
 
-struct psc_particles_single_by_block {
-  particle_single_by_block_t *particles_alt;
+struct psc_mparticles_single_by_block_patch {
+  particle_single_by_block_t *prt_array;
+  particle_single_by_block_t *prt_array_alt;
   int b_mx[3];
   int nr_blocks;
   particle_single_by_block_real_t b_dxi[3];
@@ -26,15 +27,7 @@ struct psc_particles_single_by_block {
   unsigned int *b_ids;
   unsigned int *b_cnt;
   unsigned int *b_off;
-  unsigned int n_send;
-  unsigned int n_part_save;
   bool need_reorder;
-};
-
-#define psc_particles_single_by_block(prts) mrc_to_subobj(prts, struct psc_particles_single_by_block)
-
-struct psc_mparticles_single_by_block_patch {
-  particle_single_by_block_t *prt_array;
 };
 
 struct psc_mparticles_single_by_block {
