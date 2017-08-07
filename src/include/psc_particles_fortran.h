@@ -26,8 +26,6 @@ struct psc_particles_fortran {
 
 #define psc_particles_fortran(prts) mrc_to_subobj(prts, struct psc_particles_fortran)
 
-void psc_particles_fortran_realloc(struct psc_particles *prts, int new_n_part);
-
 static inline particle_fortran_t *
 particles_fortran_get_one(struct psc_particles *prts, int n)
 {

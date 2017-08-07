@@ -8,7 +8,6 @@ typedef particle_single_real_t particle_real_t;
 typedef particle_single_t particle_t;
 
 #define particles_get_one           particles_single_get_one
-#define particles_realloc           psc_particles_single_realloc
 #define particle_qni_div_mni        particle_single_qni_div_mni
 #define particle_qni_wni            particle_single_qni_wni
 #define particle_qni                particle_single_qni

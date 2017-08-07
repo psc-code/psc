@@ -10,8 +10,7 @@ static void
 ddcp_particles_realloc(void *_ctx, int p, int new_n_particles)
 {
   struct psc_mparticles *mprts = _ctx;
-  struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-  particles_realloc(prts, new_n_particles);
+  psc_mparticles_realloc(mprts, p, new_n_particles);
 }
 
 static void *

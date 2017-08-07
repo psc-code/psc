@@ -129,7 +129,6 @@ psc_inject_single_run(struct psc_inject *inject, struct psc_mparticles *mprts_ba
   struct psc_mfields *mflds_n = psc_mfields_get_as(inject->mflds_n, FIELDS_TYPE, kind_n, kind_n+1);
   
   psc_foreach_patch(psc, p) {
-    struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
     particle_range_t prts = particle_range_mprts(mprts, p);
     struct psc_fields *flds_n = psc_mfields_get_patch(mflds_n, p);
     int *ldims = psc->patch[p].ldims;
@@ -185,7 +184,7 @@ psc_inject_single_run(struct psc_inject *inject, struct psc_mparticles *mprts_ba
 	      assert(psc->prm.neutralizing_population == nr_pop - 1);
 	      n_in_cell = -n_q_in_cell / npt.q;
 	    }
-	    particles_realloc(_prts, i + n_in_cell);
+	    psc_mparticles_realloc(mprts, p, i + n_in_cell);
 	    for (int cnt = 0; cnt < n_in_cell; cnt++) {
 	      particle_t *prt = particle_iter_at(prts.begin, i++);
 	      

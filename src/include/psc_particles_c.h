@@ -25,8 +25,6 @@ struct psc_particles_c {
 
 #define psc_particles_c(prts) mrc_to_subobj(prts, struct psc_particles_c)
 
-void psc_particles_c_realloc(struct psc_particles *prts, int new_n_part);
-
 static inline particle_c_t *
 particles_c_get_one(struct psc_particles *prts, int n)
 {

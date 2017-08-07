@@ -8,7 +8,6 @@ typedef particle_single_by_block_real_t particle_real_t;
 typedef particle_single_by_block_t particle_t;
 
 #define particles_get_one           particles_single_by_block_get_one
-#define particles_realloc           particles_single_by_block_realloc
 #define particle_qni_div_mni        particle_single_by_block_qni_div_mni
 #define particle_qni_wni            particle_single_by_block_qni_wni
 #define particle_qni                particle_single_by_block_qni

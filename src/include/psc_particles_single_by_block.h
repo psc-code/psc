@@ -34,8 +34,6 @@ struct psc_particles_single_by_block {
 
 #define psc_particles_single_by_block(prts) mrc_to_subobj(prts, struct psc_particles_single_by_block)
 
-void particles_single_by_block_realloc(struct psc_particles *prts, int new_n_part);
-
 static inline particle_single_by_block_t *
 particles_single_by_block_get_one(struct psc_particles *prts, int n)
 {

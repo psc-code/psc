@@ -599,35 +599,7 @@ psc_mparticles_cuda_inject(struct psc_mparticles *mprts_base, struct cuda_mparti
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts_base);
   struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
 
-#if 1
   cuda_mparticles_inject(cmprts, buf, buf_n_by_patch);
-#else
-  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
-
-  unsigned buf_n = 0;
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    
-    int i = psc_particles_size(prts);
-    particles_realloc(prts, i + buf_n_by_patch[p]);
-    for (int cnt = 0; cnt < buf_n_by_patch[p]; cnt++) {
-      particle_t *prt = particles_get_one(prts, i++);
-      
-      prt->xi = buf[buf_n + cnt].xi[0];
-      prt->yi = buf[buf_n + cnt].xi[1];
-      prt->zi = buf[buf_n + cnt].xi[2];
-      prt->pxi = buf[buf_n + cnt].pxi[0];
-      prt->pyi = buf[buf_n + cnt].pxi[1];
-      prt->pzi = buf[buf_n + cnt].pxi[2];
-      prt->kind = buf[buf_n + cnt].kind;
-      prt->qni_wni = buf[buf_n + cnt].qni_wni;
-    }
-    buf_n += buf_n_by_patch[p];
-    psc_mparticles_resize_patch(mprts, p, i);
-  }
-
-  psc_mparticles_put_as(mprts, mprts_base, 0);
-#endif
 }
 
 // ----------------------------------------------------------------------
