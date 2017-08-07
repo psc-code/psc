@@ -5,8 +5,6 @@
 #include "psc_particles_c.h"
 #include "psc_particles_double.h"
 
-#include "psc_particles_common.c"
-
 static void _mrc_unused // FIXME
 psc_particles_single_reorder(struct psc_particles *prts)
 {
@@ -28,6 +26,9 @@ psc_particles_single_reorder(struct psc_particles *prts)
 }
 
 // ======================================================================
+// psc_mparticles: subclass "single"
+
+// ----------------------------------------------------------------------
 // conversion to/from "c"
 
 static inline void
@@ -115,7 +116,7 @@ psc_mparticles_single_copy_from_c(int p, struct psc_mparticles *mprts,
   psc_mparticles_copy_from(p, mprts, mprts_c, flags, get_particle_c);
 }
 
-// ======================================================================
+// ----------------------------------------------------------------------
 // conversion to/from "double"
 
 static void
@@ -162,8 +163,15 @@ psc_mparticles_single_copy_from_double(int p, struct psc_mparticles *mprts,
   psc_mparticles_copy_from(p, mprts, mprts_dbl, flags, get_particle_double);
 }
 
-// ======================================================================
-// psc_mparticles: subclass "single"
+static struct mrc_obj_method psc_mparticles_single_methods[] = {
+  MRC_OBJ_METHOD("copy_to_c"       , psc_mparticles_single_copy_to_c),
+  MRC_OBJ_METHOD("copy_from_c"     , psc_mparticles_single_copy_from_c),
+  MRC_OBJ_METHOD("copy_to_double"  , psc_mparticles_single_copy_to_double),
+  MRC_OBJ_METHOD("copy_from_double", psc_mparticles_single_copy_from_double),
+  {}
+};
+
+#include "psc_particles_common.c"
 
 #ifdef HAVE_LIBHDF5_HL
 
@@ -257,14 +265,6 @@ psc_mparticles_single_read(struct psc_mparticles *mprts, struct mrc_io *io)
 // ----------------------------------------------------------------------
 // psc_mparticles subclass "single"
   
-static struct mrc_obj_method psc_mparticles_single_methods[] = {
-  MRC_OBJ_METHOD("copy_to_c"       , psc_mparticles_single_copy_to_c),
-  MRC_OBJ_METHOD("copy_from_c"     , psc_mparticles_single_copy_from_c),
-  MRC_OBJ_METHOD("copy_to_double"  , psc_mparticles_single_copy_to_double),
-  MRC_OBJ_METHOD("copy_from_double", psc_mparticles_single_copy_from_double),
-  {}
-};
-
 struct psc_mparticles_ops psc_mparticles_single_ops = {
   .name                    = "single",
   .methods                 = psc_mparticles_single_methods,

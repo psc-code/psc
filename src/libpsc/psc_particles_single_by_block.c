@@ -4,8 +4,6 @@
 #include "psc_particles_inc.h"
 #include "psc_particles_single.h"
 
-#include "psc_particles_common.c"
-
 static void _mrc_unused // FIXME
 psc_particles_single_by_block_reorder(struct psc_particles *prts)
 {
@@ -154,6 +152,9 @@ psc_particles_single_by_block_sort(struct psc_particles *prts)
 }
 
 // ======================================================================
+// psc_mparticles: subclass "single_by_block"
+  
+// ----------------------------------------------------------------------
 // conversion to/from "single"
 
 static void
@@ -202,14 +203,13 @@ psc_mparticles_single_by_block_copy_from_single(int p, struct psc_mparticles *mp
   psc_particles_single_by_block_check(psc_mparticles_get_patch(mprts, p));
 }
 
-// ======================================================================
-// psc_mparticles: subclass "single_by_block"
-  
 static struct mrc_obj_method psc_particles_single_by_block_methods[] = {
   MRC_OBJ_METHOD("copy_to_single"  , psc_mparticles_single_by_block_copy_to_single),
   MRC_OBJ_METHOD("copy_from_single", psc_mparticles_single_by_block_copy_from_single),
   {}
 };
+
+#include "psc_particles_common.c"
 
 struct psc_mparticles_ops psc_mparticles_single_by_block_ops = {
   .name                    = "single_by_block",

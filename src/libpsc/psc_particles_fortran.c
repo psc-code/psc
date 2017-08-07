@@ -5,9 +5,10 @@
 #include "psc_particles_c.h"
 #include "psc_particles_double.h"
 
-#include "psc_particles_common.c"
-
 // ======================================================================
+// psc_mparticles: subclass "fortran"
+  
+// ----------------------------------------------------------------------
 // conversion to/from "c"
 
 static void
@@ -56,7 +57,7 @@ psc_mparticles_fortran_copy_from_c(int p, struct psc_mparticles *mprts,
   psc_mparticles_copy_from(p, mprts, mprts_c, flags, get_particle_c);
 }
 
-// ======================================================================
+// ----------------------------------------------------------------------
 // conversion to/from "double"
 
 static inline void
@@ -143,9 +144,6 @@ psc_mparticles_fortran_copy_from_double(int p, struct psc_mparticles *mprts_fort
   psc_mparticles_copy_from(p, mprts_fortran, mprts_dbl, flags, get_particle_double);
 }
 
-// ======================================================================
-// psc_mparticles: subclass "fortran"
-  
 static struct mrc_obj_method psc_particles_fortran_methods[] = {
   MRC_OBJ_METHOD("copy_to_c"       , psc_mparticles_fortran_copy_to_c),
   MRC_OBJ_METHOD("copy_from_c"     , psc_mparticles_fortran_copy_from_c),
@@ -153,6 +151,8 @@ static struct mrc_obj_method psc_particles_fortran_methods[] = {
   MRC_OBJ_METHOD("copy_from_double", psc_mparticles_fortran_copy_from_double),
   {}
 };
+
+#include "psc_particles_common.c"
 
 struct psc_mparticles_ops psc_mparticles_fortran_ops = {
   .name                    = "fortran",

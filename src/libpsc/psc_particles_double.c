@@ -4,9 +4,10 @@
 #include "psc_particles_inc.h"
 #include "psc_particles_c.h"
 
-#include "psc_particles_common.c"
-
 // ======================================================================
+// psc_mparticles: subclass "double"
+  
+// ----------------------------------------------------------------------
 // conversion to/from "c"
 
 static inline void
@@ -94,9 +95,14 @@ psc_mparticles_double_copy_from_c(int p, struct psc_mparticles *mprts,
   psc_mparticles_copy_from(p, mprts, mprts_c, flags, get_particle_c);
 }
 
-// ======================================================================
-// psc_mparticles: subclass "double"
-  
+static struct mrc_obj_method psc_particles_double_methods[] = {
+  MRC_OBJ_METHOD("copy_to_c",   psc_mparticles_double_copy_to_c),
+  MRC_OBJ_METHOD("copy_from_c", psc_mparticles_double_copy_from_c),
+  {}
+};
+
+#include "psc_particles_common.c"
+
 #ifdef HAVE_LIBHDF5_HL
 
 // FIXME. This is a rather bad break of proper layering, HDF5 should be all
@@ -184,12 +190,6 @@ psc_mparticles_double_read(struct psc_mparticles *mprts, struct mrc_io *io)
 }
 
 #endif
-
-static struct mrc_obj_method psc_particles_double_methods[] = {
-  MRC_OBJ_METHOD("copy_to_c",   psc_mparticles_double_copy_to_c),
-  MRC_OBJ_METHOD("copy_from_c", psc_mparticles_double_copy_from_c),
-  {}
-};
 
 struct psc_mparticles_ops psc_mparticles_double_ops = {
   .name                    = "double",
