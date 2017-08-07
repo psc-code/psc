@@ -4,14 +4,15 @@
 
 typedef struct {
   int n;
-  const struct psc_particles *prts;
+  int p;
+  const struct psc_mparticles *mprts;
 } particle_iter_t;
 
 static inline bool
 particle_iter_equal(particle_iter_t iter, particle_iter_t iter2)
 {
-  assert(iter.prts == iter2.prts);
-  return iter.n == iter2.n;
+  assert(iter.mprts == iter2.mprts);
+  return iter.n == iter2.n && iter.p == iter2.p;
 }
 
 static inline particle_iter_t
@@ -19,7 +20,8 @@ particle_iter_next(particle_iter_t iter)
 {
   return (particle_iter_t) {
     .n    = iter.n + 1,
-    .prts = iter.prts,
+    .p    = iter.p,
+    .mprts = iter.mprts,
   };
 }
 
@@ -27,14 +29,16 @@ static inline particle_t *
 particle_iter_deref(particle_iter_t iter)
 {
   // FIXME, shouldn't have to cast away const
-  return particles_get_one((struct psc_particles *) iter.prts, iter.n);
+  struct psc_particles *prts = psc_mparticles_get_patch((struct psc_mparticles *) iter.mprts, iter.p);
+  return particles_get_one(prts, iter.n);
 }
 
 static inline particle_t *
 particle_iter_at(particle_iter_t iter, int m)
 {
   // FIXME, shouldn't have to cast away const
-  return particles_get_one((struct psc_particles *) iter.prts, iter.n + m);
+  struct psc_particles *prts = psc_mparticles_get_patch((struct psc_mparticles *) iter.mprts, iter.p);
+  return particles_get_one(prts, iter.n + m);
 }
 
 #define PARTICLE_ITER_LOOP(prt_iter, prt_begin, prt_end)	      \
@@ -53,10 +57,9 @@ typedef struct {
 static inline particle_range_t
 particle_range_mprts(struct psc_mparticles *mprts, int p)
 {
-  struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
   return (particle_range_t) {
-    .begin = { .n = 0                       , .prts = prts },
-    .end   = { .n = psc_particles_size(prts), .prts = prts },
+    .begin = { .n = 0                                       , .p = p, .mprts = mprts },
+    .end   = { .n = psc_mparticles_n_prts_by_patch(mprts, p), .p = p, .mprts = mprts },
   };
 }
 
@@ -69,7 +72,7 @@ particle_range_size(particle_range_t prts)
 static inline void
 particle_range_resize(particle_range_t *prts, unsigned int n)
 {
-  struct psc_particles *_prts = (struct psc_particles *) prts->end.prts;
-  psc_particles_resize(_prts, n);
+  struct psc_mparticles *mprts = (struct psc_mparticles *) prts->end.mprts;
+  psc_mparticles_resize_patch(mprts, prts->end.p, n);
   prts->end.n = n;
 }
