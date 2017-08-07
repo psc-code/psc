@@ -12,8 +12,6 @@ typedef float particle_cuda_real_t;
 #define MPI_PARTICLES_CUDA_REAL MPI_FLOAT
 
 struct psc_particles_cuda {
-  particle_cuda_real_t b_dxi[3];
-
   // for bnd exchange
   particle_single_t *bnd_prts;
   int bnd_n_recv;
@@ -38,6 +36,7 @@ struct psc_mparticles_cuda {
   unsigned int *h_bnd_cnt;
 
   int b_mx[3];                 // number of blocks by direction
+  particle_cuda_real_t b_dxi[3];
 };
 
 #define psc_mparticles_cuda(prts) mrc_to_subobj(prts, struct psc_mparticles_cuda)

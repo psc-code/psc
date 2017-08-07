@@ -84,8 +84,8 @@ get_b_mx(struct psc_particles *prts)
 static inline particle_real_t *
 get_b_dxi(struct psc_particles *prts)
 {
-  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-  return cuda->b_dxi;
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(prts->mprts);
+  return mprts_cuda->b_dxi;
 }
 
 static inline int
@@ -165,7 +165,7 @@ mprts_convert_to_cuda(struct psc_bnd_particles *bnd, struct psc_mparticles *mprt
       int b_pos[3];
       for (int d = 0; d < 3; d++) {
 	float *xi = &h_bnd_xi4[n].x;
-	b_pos[d] = particle_real_fint(xi[d] * cuda->b_dxi[d]);
+	b_pos[d] = particle_real_fint(xi[d] * mprts_cuda->b_dxi[d]);
 	if (b_pos[d] < 0 || b_pos[d] >= mprts_cuda->b_mx[d]) {
 	  printf("!!! xi %g %g %g\n", xi[0], xi[1], xi[2]);
 	  printf("!!! d %d xi4[n] %g biy %d // %d\n",
@@ -176,7 +176,7 @@ mprts_convert_to_cuda(struct psc_bnd_particles *bnd, struct psc_mparticles *mprt
 	    xi[d] *= (1. - 1e-6);
 	  }
 	}
-	b_pos[d] = particle_real_fint(xi[d] * cuda->b_dxi[d]);
+	b_pos[d] = particle_real_fint(xi[d] * mprts_cuda->b_dxi[d]);
 	assert(b_pos[d] >= 0 && b_pos[d] < mprts_cuda->b_mx[d]);
       }
       unsigned int b = (b_pos[2] * mprts_cuda->b_mx[1] + b_pos[1]) * mprts_cuda->b_mx[0] + b_pos[0];

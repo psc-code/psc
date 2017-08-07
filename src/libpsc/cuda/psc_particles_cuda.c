@@ -18,35 +18,6 @@ EXTERN_C void cuda_init(int rank);
 // ======================================================================
 // psc_particles "cuda"
 
-static void
-psc_particles_cuda_setup(struct psc_particles *prts)
-{
-  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-
-  struct psc_patch *patch = &ppsc->patch[prts->p];
-
-  unsigned int flags = prts->mprts->flags; // FIXME, the whole flags crap...
-  if (!flags) {
-    flags = MP_NEED_BLOCK_OFFSETS | MP_BLOCKSIZE_4X4X4 | MP_NO_CHECKERBOARD;
-  }
-
-  int bs[3];
-  for (int d = 0; d < 3; d++) {
-    switch (flags & MP_BLOCKSIZE_MASK) {
-    case MP_BLOCKSIZE_1X1X1: bs[d] = 1; break;
-    case MP_BLOCKSIZE_2X2X2: bs[d] = 2; break;
-    case MP_BLOCKSIZE_4X4X4: bs[d] = 4; break;
-    case MP_BLOCKSIZE_8X8X8: bs[d] = 8; break;
-    default: assert(0);
-    }
-    if (ppsc->domain.gdims[d] == 1) {
-      bs[d] = 1;
-    }
-    assert(patch->ldims[d] % bs[d] == 0); // not sure what breaks if not
-    cuda->b_dxi[d] = 1.f / (bs[d] * ppsc->patch[prts->p].dx[d]);
-  }
-}
-
 // FIXME, should go away and always be done within cuda for consistency
 
 #if 0
@@ -322,7 +293,6 @@ static struct mrc_obj_method psc_particles_cuda_methods[] = {
 struct psc_particles_ops psc_particles_cuda_ops = {
   .name                    = "cuda",
   .size                    = sizeof(struct psc_particles_cuda),
-  .setup                   = psc_particles_cuda_setup,
 };
 
 // ======================================================================
@@ -381,6 +351,7 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
     }
     assert(ldims[d] % bs[d] == 0); // FIXME not sure what breaks if not
     mprts_cuda->b_mx[d]  = ldims[d] / bs[d];
+    mprts_cuda->b_dxi[d] = 1.f / (bs[d] * dx[d]);
     domain_info.ldims[d] = ldims[d];
     domain_info.bs[d]    = bs[d];
     domain_info.dx[d]    = dx[d];
