@@ -35,7 +35,7 @@ add_particle(double xi, double yi, double zi, double pxi, double pyi, double pzi
   struct psc_particles *prts = psc_mparticles_get_patch(mprts, 0);
 
   int n = prts->n_part++;
-  particle_t *part = particles_get_one(prts, n);
+  particle_t *part = mparticles_get_one(mprts, 0, n);
   part->xi = xi;
   part->yi = yi;
   part->zi = zi;

@@ -55,10 +55,9 @@ SFX(psc_push_particles_push_mprts)(struct psc_push_particles *push,
   params_1vb_set(ppsc, NULL, NULL);
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-    struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
 
     psc_fields_zero_range(flds, JXI, JXI + 3);
-    ext_prepare_sort_before(_prts);
+    ext_prepare_sort_before(mprts, p);
     do_push_part_1vb_yz(flds, mprts, p);
   }
 }

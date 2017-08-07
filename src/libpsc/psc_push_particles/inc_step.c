@@ -76,10 +76,8 @@ typedef struct psc_fields * flds_em_t;
 #ifdef EXT_PREPARE_SORT
 
 static inline void
-ext_prepare_sort_before(struct psc_particles *prts)
+ext_prepare_sort_before(struct psc_mparticles *mprts, int p)
 {
-  struct psc_mparticles *mprts = prts->mprts;
-  int p = prts->p;
   struct psc_mparticles_single *sub = psc_mparticles_single(mprts);
   struct psc_mparticles_single_patch *patch = &sub->patch[p];
   
@@ -110,7 +108,7 @@ ext_prepare_sort(struct psc_mparticles *mprts, int p, int n, particle_t *prt,
 #else
 
 static inline void
-ext_prepare_sort_before(struct psc_particles *prts)
+ext_prepare_sort_before(struct psc_mparticles *mprts, int p)
 {
 }
 

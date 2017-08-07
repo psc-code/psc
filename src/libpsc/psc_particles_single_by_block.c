@@ -7,23 +7,23 @@
 #if 0
 
 static void _mrc_unused // FIXME
-psc_particles_single_by_block_reorder(struct psc_particles *prts)
+psc_particles_single_by_block_reorder(struct psc_mparticles *mprts, int p)
 {
-  struct psc_particles_single_by_block *sub = psc_particles_single_by_block(prts);
+  struct psc_mparticles_single_by_block *sub = psc_mparticles_single_by_block(mprts);
 
-  if (!sub->need_reorder) {
+  if (!patch->need_reorder) {
     return;
   }
 
-  for (int n = 0; n < psc_particles_size(prts); n++) {
-    sub->particles_alt[n] = sub->particles[sub->b_ids[n]];
+  for (int n = 0; n < psc_mparticles_n_prts_by_patch(mprts, p); n++) {
+    patch->prt_array_alt[n] = patch->prt_array[patch->b_ids[n]];
   }
   
   // swap in alt array
-  particle_single_by_block_t *tmp = sub->particles;
-  sub->particles = sub->particles_alt;
-  sub->particles_alt = tmp;
-  sub->need_reorder = false;
+  particle_single_by_block_t *tmp = patch->particles;
+  patch->particles = patch->particles_alt;
+  patch->particles_alt = tmp;
+  patch->need_reorder = false;
 }
 
 #endif
@@ -48,10 +48,8 @@ find_idx_off_1st_rel(particle_real_t xi[3], int lg[3], particle_real_t og[3], pa
 // psc_particles_single_by_block_get_b_idx
 
 static unsigned int
-psc_particles_single_by_block_get_b_idx(struct psc_particles *prts, int n)
+psc_particles_single_by_block_get_b_idx(struct psc_mparticles *mprts, int p, int n)
 {
-  struct psc_mparticles *mprts = prts->mprts;
-  int p = prts->p;
   struct psc_mparticles_single_by_block *msub = psc_mparticles_single_by_block(mprts);
   struct psc_mparticles_single_by_block_patch *patch = &msub->patch[p];
   
@@ -81,24 +79,23 @@ psc_particles_single_by_block_get_b_idx(struct psc_particles *prts, int n)
 // particles in each block.
 
 static void
-psc_particles_single_by_block_check(struct psc_particles *prts)
+psc_particles_single_by_block_check(struct psc_mparticles *mprts, int p)
 {
-  struct psc_mparticles *mprts = prts->mprts;
-  int p = prts->p;
   struct psc_mparticles_single_by_block *msub = psc_mparticles_single_by_block(mprts);
   struct psc_mparticles_single_by_block_patch *patch = &msub->patch[p];
 
-  assert(psc_particles_size(prts) <= psc_mparticles_n_alloced(prts->mprts, prts->p));
+  int n_prts = psc_mparticles_n_prts_by_patch(mprts, p);
+  assert(n_prts <= psc_mparticles_n_alloced(mprts, p));
 
   int block = 0;
-  for (int n = 0; n < psc_particles_size(prts); n++) {
+  for (int n = 0; n < n_prts; n++) {
     while (n >= patch->b_off[block + 1]) {
       block++;
       assert(block < patch->nr_blocks);
     }
     assert(n >= patch->b_off[block] && n < patch->b_off[block + 1]);
     assert(block < patch->nr_blocks);
-    unsigned int b_idx = psc_particles_single_by_block_get_b_idx(prts, n);
+    unsigned int b_idx = psc_particles_single_by_block_get_b_idx(mprts, p, n);
     assert(b_idx < patch->nr_blocks);
     assert(b_idx == block);
   }
@@ -115,7 +112,7 @@ psc_particles_single_by_block_check(struct psc_particles *prts)
 // (they shouldn't be needed for anything, either)
 
 static void
-psc_particles_single_by_block_sort(struct psc_particles *prts)
+psc_particles_single_by_block_sort(struct psc_mparticles *mprts, int p)
 {
   assert(0);
 #if 0
@@ -212,8 +209,8 @@ psc_mparticles_single_by_block_copy_from_single(int p, struct psc_mparticles *mp
 				       struct psc_mparticles *mprts_dbl, unsigned int flags)
 {
   psc_mparticles_copy_from(p, mprts, mprts_dbl, flags, get_particle_single);
-  psc_particles_single_by_block_sort(psc_mparticles_get_patch(mprts, p));
-  psc_particles_single_by_block_check(psc_mparticles_get_patch(mprts, p));
+  psc_particles_single_by_block_sort(mprts, p);
+  psc_particles_single_by_block_check(mprts, p);
 }
 
 static struct mrc_obj_method psc_mparticles_single_by_block_methods[] = {
