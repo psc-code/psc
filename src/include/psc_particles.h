@@ -36,6 +36,8 @@ struct psc_mparticles_ops {
   unsigned int (*get_nr_particles)(struct psc_mparticles *mprts);
   void (*update_n_part)(struct psc_mparticles *mprts);
   void (*realloc)(struct psc_mparticles *mprts, int p, int n_prts);
+  int (*get_n_alloced)(struct psc_mparticles *mprts, int p);
+  void (*set_n_alloced)(struct psc_mparticles *mprts, int p, int n_prts);
 };
 
 #define psc_mparticles_ops(mp) ((struct psc_mparticles_ops *) ((mp)->obj.ops))
