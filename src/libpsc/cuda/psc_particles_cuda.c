@@ -292,7 +292,6 @@ static struct mrc_obj_method psc_particles_cuda_methods[] = {
 
 struct psc_particles_ops psc_particles_cuda_ops = {
   .name                    = "cuda",
-  .size                    = sizeof(struct psc_particles_cuda),
 };
 
 // ======================================================================

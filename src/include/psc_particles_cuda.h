@@ -11,11 +11,6 @@ typedef float particle_cuda_real_t;
 
 #define MPI_PARTICLES_CUDA_REAL MPI_FLOAT
 
-struct psc_particles_cuda {
-};
-
-#define psc_particles_cuda(prts) mrc_to_subobj(prts, struct psc_particles_cuda)
-
 struct cuda_bnd {
   particle_single_t *prts;
   int n_recv;
