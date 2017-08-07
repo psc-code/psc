@@ -7,19 +7,6 @@
 
 #include "psc_particles_common.c"
 
-void
-particles_fortran_realloc(struct psc_particles *prts, int new_n_part)
-{
-  struct psc_particles_fortran *fort = psc_particles_fortran(prts);
-
-  if (new_n_part <= psc_mparticles_n_alloced(prts->mprts, prts->p))
-    return;
-
-  int n_alloced = new_n_part * 1.2;
-  psc_mparticles_set_n_alloced(prts->mprts, prts->p, n_alloced);
-  fort->particles = realloc(fort->particles, n_alloced * sizeof(*fort->particles));
-}
-
 // ======================================================================
 // conversion to/from "c"
 

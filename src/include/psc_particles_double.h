@@ -21,7 +21,7 @@ struct psc_particles_double {
 
 #define psc_particles_double(prts) mrc_to_subobj(prts, struct psc_particles_double)
 
-void particles_double_realloc(struct psc_particles *prts, int new_n_part);
+void psc_particles_double_realloc(struct psc_particles *prts, int new_n_part);
 
 #include <math.h>
 #include "psc.h"

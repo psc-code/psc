@@ -4,18 +4,6 @@
 
 #include "psc_particles_common.c"
 
-void
-particles_c_realloc(struct psc_particles *prts, int new_n_part)
-{
-  struct psc_particles_c *c = psc_particles_c(prts);
-  if (new_n_part <= psc_mparticles_n_alloced(prts->mprts, prts->p))
-    return;
-
-  int n_alloced = new_n_part * 1.2;
-  psc_mparticles_set_n_alloced(prts->mprts, prts->p, n_alloced);
-  c->particles = realloc(c->particles, n_alloced * sizeof(*c->particles));
-}
-
 // ======================================================================
 // psc_mparticles: subclass "c"
   

@@ -100,3 +100,33 @@ PFX(destroy)(struct psc_particles *prts)
 #endif
 }
 
+// ----------------------------------------------------------------------
+// psc_particles_sub_realloc
+
+void
+PFX(realloc)(struct psc_particles *prts, int new_n_part)
+{
+  struct psc_particles_sub *sub = psc_particles_sub(prts);
+
+  if (new_n_part <= psc_mparticles_n_alloced(prts->mprts, prts->p))
+    return;
+
+  int n_alloced = new_n_part * 1.2;
+  psc_mparticles_set_n_alloced(prts->mprts, prts->p, n_alloced);
+  sub->particles = realloc(sub->particles, n_alloced * sizeof(*sub->particles));
+
+#if PSC_PARTICLES_AS_SINGLE
+  sub->b_idx = realloc(sub->b_idx, n_alloced * sizeof(*sub->b_idx));
+  sub->b_ids = realloc(sub->b_ids, n_alloced * sizeof(*sub->b_ids));
+  free(sub->particles_alt);
+  sub->particles_alt = malloc(n_alloced * sizeof(*sub->particles_alt));
+#endif
+
+#if PSC_PARTICLES_AS_SINGLE_BY_BLOCK
+  sub->b_idx = realloc(sub->b_idx, n_alloced * sizeof(*sub->b_idx));
+  sub->b_ids = realloc(sub->b_ids, n_alloced * sizeof(*sub->b_ids));
+  free(sub->particles_alt);
+  sub->particles_alt = malloc(n_alloced * sizeof(*sub->particles_alt));
+#endif
+}
+

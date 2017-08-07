@@ -26,23 +26,6 @@ psc_particles_single_by_block_reorder(struct psc_particles *prts)
   sub->need_reorder = false;
 }
 
-void
-particles_single_by_block_realloc(struct psc_particles *prts, int new_n_part)
-{
-  struct psc_particles_single_by_block *sub = psc_particles_single_by_block(prts);
-
-  if (new_n_part <= psc_mparticles_n_alloced(prts->mprts, prts->p))
-    return;
-
-  int n_alloced = new_n_part * 1.2;
-  psc_mparticles_set_n_alloced(prts->mprts, prts->p, n_alloced);
-  sub->particles = realloc(sub->particles, n_alloced * sizeof(*sub->particles));
-  sub->b_idx = realloc(sub->b_idx, n_alloced * sizeof(*sub->b_idx));
-  sub->b_ids = realloc(sub->b_ids, n_alloced * sizeof(*sub->b_ids));
-  free(sub->particles_alt);
-  sub->particles_alt = malloc(n_alloced * sizeof(*sub->particles_alt));
-}
-
 // ----------------------------------------------------------------------
 // find_idx_off_1st_rel
 //

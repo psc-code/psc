@@ -6,19 +6,6 @@
 
 #include "psc_particles_common.c"
 
-void
-particles_double_realloc(struct psc_particles *prts, int new_n_part)
-{
-  struct psc_particles_double *sub = psc_particles_double(prts);
-
-  if (new_n_part <= psc_mparticles_n_alloced(prts->mprts, prts->p))
-    return;
-
-  int n_alloced = new_n_part * 1.2;
-  psc_mparticles_set_n_alloced(prts->mprts, prts->p, n_alloced);
-  sub->particles = realloc(sub->particles, n_alloced * sizeof(*sub->particles));
-}
-
 // ======================================================================
 // conversion to/from "c"
 
