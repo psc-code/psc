@@ -29,16 +29,24 @@ static inline particle_t *
 particle_iter_deref(particle_iter_t iter)
 {
   // FIXME, shouldn't have to cast away const
+#ifdef mparticles_get_one
+  return mparticles_get_one((struct psc_mparticles *) iter.mprts, iter.p, iter.n);
+#else
   struct psc_particles *prts = psc_mparticles_get_patch((struct psc_mparticles *) iter.mprts, iter.p);
   return particles_get_one(prts, iter.n);
+#endif
 }
 
 static inline particle_t *
 particle_iter_at(particle_iter_t iter, int m)
 {
   // FIXME, shouldn't have to cast away const
+#ifdef mparticles_get_one
+  return mparticles_get_one((struct psc_mparticles *) iter.mprts, iter.p, iter.n + m);
+#else
   struct psc_particles *prts = psc_mparticles_get_patch((struct psc_mparticles *) iter.mprts, iter.p);
   return particles_get_one(prts, iter.n + m);
+#endif
 }
 
 #define PARTICLE_ITER_LOOP(prt_iter, prt_begin, prt_end)	      \

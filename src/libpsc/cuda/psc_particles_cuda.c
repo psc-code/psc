@@ -189,7 +189,7 @@ static void
 get_particle_single(struct cuda_mparticles_prt *prt, int n, void *ctx)
 {
   struct psc_particles *prts = ctx;
-  particle_single_t *part = particles_single_get_one(prts, n);
+  particle_single_t *part = psc_mparticles_single_get_one(prts->mprts, prts->p, n);
 
   prt->xi[0]   = part->xi;
   prt->xi[1]   = part->yi;
@@ -205,7 +205,7 @@ static void
 put_particle_single(struct cuda_mparticles_prt *prt, int n, void *ctx)
 {
   struct psc_particles *prts = ctx;
-  particle_single_t *part = particles_single_get_one(prts, n);
+  particle_single_t *part = psc_mparticles_single_get_one(prts->mprts, prts->p, n);
   
   part->xi      = prt->xi[0];
   part->yi      = prt->xi[1];

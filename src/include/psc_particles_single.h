@@ -38,11 +38,8 @@ struct psc_mparticles_single {
 #define psc_mparticles_single(mprts) mrc_to_subobj(mprts, struct psc_mparticles_single)
 
 static inline particle_single_t *
-particles_single_get_one(struct psc_particles *prts, int n)
+psc_mparticles_single_get_one(struct psc_mparticles *mprts, int p, int n)
 {
-  struct psc_mparticles *mprts = prts->mprts;
-  int p = prts->p;
-  
   assert(psc_mparticles_ops(mprts) == &psc_mparticles_single_ops);
   return &psc_mparticles_single(mprts)->patch[p].prt_array[n];
 }

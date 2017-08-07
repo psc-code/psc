@@ -171,33 +171,33 @@ psc_particles_single_by_block_sort(struct psc_particles *prts)
 // conversion to/from "single"
 
 static void
-put_particle_single(particle_single_by_block_t *prt, int n, struct psc_particles *prts_dbl)
+put_particle_single(particle_single_by_block_t *prt, int n, struct psc_particles *prts_sngl)
 {
-  particle_single_t *prt_dbl = particles_single_get_one(prts_dbl, n);
+  particle_single_t *prt_sngl = psc_mparticles_single_get_one(prts_sngl->mprts, prts_sngl->p, n);
   
-  prt_dbl->xi      = prt->xi;
-  prt_dbl->yi      = prt->yi;
-  prt_dbl->zi      = prt->zi;
-  prt_dbl->pxi     = prt->pxi;
-  prt_dbl->pyi     = prt->pyi;
-  prt_dbl->pzi     = prt->pzi;
-  prt_dbl->qni_wni = prt->qni_wni;
-  prt_dbl->kind    = prt->kind;
+  prt_sngl->xi      = prt->xi;
+  prt_sngl->yi      = prt->yi;
+  prt_sngl->zi      = prt->zi;
+  prt_sngl->pxi     = prt->pxi;
+  prt_sngl->pyi     = prt->pyi;
+  prt_sngl->pzi     = prt->pzi;
+  prt_sngl->qni_wni = prt->qni_wni;
+  prt_sngl->kind    = prt->kind;
 }
 
 static void
-get_particle_single(particle_single_by_block_t *prt, int n, struct psc_particles *prts_dbl)
+get_particle_single(particle_single_by_block_t *prt, int n, struct psc_particles *prts_sngl)
 {
-  particle_single_t *prt_dbl = particles_single_get_one(prts_dbl, n);
+  particle_single_t *prt_sngl = psc_mparticles_single_get_one(prts_sngl->mprts, prts_sngl->p, n);
 
-  prt->xi      = prt_dbl->xi;
-  prt->yi      = prt_dbl->yi;
-  prt->zi      = prt_dbl->zi;
-  prt->pxi     = prt_dbl->pxi;
-  prt->pyi     = prt_dbl->pyi;
-  prt->pzi     = prt_dbl->pzi;
-  prt->qni_wni = prt_dbl->qni_wni;
-  prt->kind    = prt_dbl->kind;
+  prt->xi      = prt_sngl->xi;
+  prt->yi      = prt_sngl->yi;
+  prt->zi      = prt_sngl->zi;
+  prt->pxi     = prt_sngl->pxi;
+  prt->pyi     = prt_sngl->pyi;
+  prt->pzi     = prt_sngl->pzi;
+  prt->qni_wni = prt_sngl->qni_wni;
+  prt->kind    = prt_sngl->kind;
 }
 
 static void

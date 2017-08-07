@@ -194,7 +194,7 @@ psc_particles_cuda2_copy_to_single(struct psc_particles *prts_base,
     particle_cuda2_t prt_base;
     PARTICLE_CUDA2_LOAD_POS(prt_base, sub->h_xi4, n);
     PARTICLE_CUDA2_LOAD_MOM(prt_base, sub->h_pxi4, n);
-    particle_single_t *part = particles_single_get_one(prts, n);
+    particle_single_t *part = psc_mparticles_single_get_one(prts->mprts, prts->p, n);
     
     part->xi      = prt_base.xi[0];
     part->yi      = prt_base.xi[1];
@@ -220,7 +220,7 @@ psc_particles_cuda2_copy_from_single(struct psc_particles *prts_base,
   psc_particles_resize(prts_base, n_prts);
   for (int n = 0; n < n_prts; n++) {
     particle_cuda2_t prt_base;
-    particle_single_t *part = particles_single_get_one(prts, n);
+    particle_single_t *part = psc_mparticles_single_get_one(prts->mprts, prts->p, n);
 
     prt_base.xi[0]         = part->xi;
     prt_base.xi[1]         = part->yi;
