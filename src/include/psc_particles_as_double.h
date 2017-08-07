@@ -26,6 +26,8 @@ typedef particle_double_t particle_t;
 #define MPI_PARTICLES_REAL          MPI_PARTICLES_DOUBLE_REAL
 #define PARTICLE_TYPE               "double"
 
+#define PSC_PARTICLES_AS_DOUBLE 1
+
 #include "particle_iter.h"
 
 #endif

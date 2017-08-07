@@ -4,31 +4,7 @@
 #include "psc_particles_inc.h"
 #include "psc_particles_c.h"
 
-#include <mrc_io.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <math.h>
-
-// ======================================================================
-// psc_particles "double"
-
-static void
-psc_particles_double_setup(struct psc_particles *prts)
-{
-  struct psc_particles_double *sub = psc_particles_double(prts);
-
-  int n_alloced = psc_particles_size(prts) * 1.2 + 1000000;
-  psc_mparticles_set_n_alloced(prts->mprts, prts->p, n_alloced);
-  sub->particles = calloc(n_alloced, sizeof(*sub->particles));
-}
-
-static void
-psc_particles_double_destroy(struct psc_particles *prts)
-{
-  struct psc_particles_double *sub = psc_particles_double(prts);
-
-  free(sub->particles);
-}
+#include "psc_particles_common.c"
 
 void
 particles_double_realloc(struct psc_particles *prts, int new_n_part)
