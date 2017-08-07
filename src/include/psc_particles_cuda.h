@@ -12,8 +12,6 @@ typedef float particle_cuda_real_t;
 #define MPI_PARTICLES_CUDA_REAL MPI_FLOAT
 
 struct psc_particles_cuda {
-  // for bnd exchange
-  void *sort_ctx; // for sorting / particle xchg
 };
 
 #define psc_particles_cuda(prts) mrc_to_subobj(prts, struct psc_particles_cuda)
