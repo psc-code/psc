@@ -7,27 +7,37 @@
 #if PSC_PARTICLES_AS_DOUBLE
 
 #define PFX(x) psc_particles_double_ ## x
+#define MPFX(x) psc_mparticles_double_ ## x
 #define psc_particles_sub psc_particles_double
+#define psc_mparticles_sub psc_mparticles_double
 
 #elif PSC_PARTICLES_AS_SINGLE
 
 #define PFX(x) psc_particles_single_ ## x
+#define MPFX(x) psc_mparticles_single_ ## x
 #define psc_particles_sub psc_particles_single
+#define psc_mparticles_sub psc_mparticles_single
 
 #elif PSC_PARTICLES_AS_SINGLE_BY_BLOCK
 
 #define PFX(x) psc_particles_single_by_block_ ## x
+#define MPFX(x) psc_mparticles_single_by_block_ ## x
 #define psc_particles_sub psc_particles_single_by_block
+#define psc_mparticles_sub psc_mparticles_single_by_block
 
 #elif PSC_PARTICLES_AS_C
 
 #define PFX(x) psc_particles_c_ ## x
+#define MPFX(x) psc_mparticles_c_ ## x
 #define psc_particles_sub psc_particles_c
+#define psc_mparticles_sub psc_mparticles_c
 
 #elif PSC_PARTICLES_AS_FORTRAN
 
 #define PFX(x) psc_particles_fortran_ ## x
+#define MPFX(x) psc_mparticles_fortran_ ## x
 #define psc_particles_sub psc_particles_fortran
+#define psc_mparticles_sub psc_mparticles_fortran
 
 #endif
 
@@ -139,4 +149,61 @@ struct psc_particles_ops PFX(ops) = {
   .setup                   = PFX(setup),
   .destroy                 = PFX(destroy),
 };
+
+// ======================================================================
+// psc_mparticles
+
+#if PSC_PARTICLES_AS_DOUBLE || PSC_PARTICLES_AS_SINGLE
+
+#ifdef HAVE_LIBHDF5_HL
+
+// FIXME. This is a rather bad break of proper layering, HDF5 should be all
+// mrc_io business. OTOH, it could be called flexibility...
+
+#include <hdf5.h>
+#include <hdf5_hl.h>
+
+#define H5_CHK(ierr) assert(ierr >= 0)
+#define CE assert(ierr == 0)
+
+// ----------------------------------------------------------------------
+// psc_mparticles_sub_write
+
+static void
+MPFX(write)(struct psc_mparticles *mprts, struct mrc_io *io)
+{
+  int ierr;
+  assert(sizeof(particle_t) / sizeof(particle_real_t) == 8);
+
+  long h5_file;
+  mrc_io_get_h5_file(io, &h5_file);
+
+  hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, mprts), H5P_DEFAULT); H5_CHK(group);
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    particle_range_t prts = particle_range_mprts(mprts, p);
+    char pname[10]; sprintf(pname, "p%d", p);
+    hid_t pgroup = H5Gcreate(group, pname, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT); H5_CHK(pgroup);
+    int n_prts = psc_mparticles_n_prts_by_patch(mprts, p);
+    ierr = H5LTset_attribute_int(pgroup, ".", "n_prts", &n_prts, 1); CE;
+    if (n_prts > 0) {
+      // in a rather ugly way, we write the int "kind" member as a float / double
+      hsize_t hdims[2] = { n_prts, 8 };
+#if PSC_PARTICLES_AS_DOUBLE
+      ierr = H5LTmake_dataset_double(pgroup, "data", 2, hdims,
+				    (double *) particle_iter_deref(prts.begin)); CE;
+#elif PSC_PARTICLES_AS_SINGLE
+      ierr = H5LTmake_dataset_float(pgroup, "data", 2, hdims,
+				    (float *) particle_iter_deref(prts.begin)); CE;
+#else
+      assert(0);
+#endif
+    }
+    ierr = H5Gclose(pgroup); CE;
+  }
+  ierr = H5Gclose(group); CE;
+}
+
+#endif
+
+#endif
 
