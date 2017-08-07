@@ -15,7 +15,6 @@ MRC_CLASS_DECLARE(psc_particles, struct psc_particles);
 
 struct mprts_patch {
   int n_prts;
-  int n_alloced;
 };
 
 struct psc_mparticles {
