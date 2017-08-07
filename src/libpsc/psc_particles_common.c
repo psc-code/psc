@@ -45,15 +45,19 @@
 // psc_particles "single" / "double" / "c"
 
 // ----------------------------------------------------------------------
-// psc_particles_sub_setup
+// psc_mparticles_sub_setup_patch
 
 static void
-PFX(setup)(struct psc_particles *prts)
+MPFX(setup_patch)(struct psc_mparticles *mprts, int p)
 {
-  int n_alloced = psc_particles_size(prts) * 1.2;
-  psc_mparticles_set_n_alloced(prts->mprts, prts->p, n_alloced);
+  struct psc_mparticles_sub *msub = psc_mparticles_sub(mprts);
+
+  int n_alloced = psc_mparticles_n_prts_by_patch(mprts, p) * 1.2;
+  psc_mparticles_set_n_alloced(mprts, p, n_alloced);
+  msub->patch[p].prt_array = calloc(n_alloced, sizeof(*msub->patch[p].prt_array));
 
 #if PSC_PARTICLES_AS_SINGLE
+  struct psc_particles *prts = mprts->prts[p];
   struct psc_particles_sub *sub = psc_particles_sub(prts);
   sub->particles_alt = calloc(n_alloced, sizeof(*sub->particles_alt));
   sub->b_idx = calloc(n_alloced, sizeof(*sub->b_idx));
@@ -68,6 +72,7 @@ PFX(setup)(struct psc_particles *prts)
 #endif
 
 #if PSC_PARTICLES_AS_SINGLE_BY_BLOCK
+  struct psc_particles *prts = mprts->prts[p];
   struct psc_particles_sub *sub = psc_particles_sub(prts);
   sub->particles_alt = calloc(n_alloced, sizeof(*sub->particles_alt));
   sub->b_idx = calloc(n_alloced, sizeof(*sub->b_idx));
@@ -143,10 +148,8 @@ MPFX(setup)(struct psc_mparticles *mprts)
     mprts->prts[p]->mprts = mprts;
     mprts->prts[p]->p = p;
     psc_mparticles_set_n_prts_by_patch(mprts, p, mprts->nr_particles_by_patch[p]);
-    PFX(setup)(mprts->prts[p]);
 
-    int n_alloced = psc_mparticles_n_alloced(mprts, p);
-    sub->patch[p].prt_array = calloc(n_alloced, sizeof(*sub->patch[p].prt_array));
+    MPFX(setup_patch)(mprts, p);
   }
 
   free(mprts->nr_particles_by_patch);
@@ -236,7 +239,7 @@ MPFX(read)(struct psc_mparticles *mprts, struct mrc_io *io)
     int n_prts;
     ierr = H5LTget_attribute_int(pgroup, ".", "n_prts", &n_prts); CE;
     psc_particles_set_n_prts(mprts->prts[p], n_prts);
-    PFX(setup)(mprts->prts[p]);
+    MPFX(setup_patch)(mprts, p);
     
     if (n_prts > 0) {
 #if PSC_PARTICLES_AS_SINGLE
