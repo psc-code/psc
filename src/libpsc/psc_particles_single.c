@@ -5,6 +5,7 @@
 #include "psc_particles_c.h"
 #include "psc_particles_double.h"
 
+#if 0
 static void _mrc_unused // FIXME
 psc_particles_single_reorder(struct psc_particles *prts)
 {
@@ -24,6 +25,7 @@ psc_particles_single_reorder(struct psc_particles *prts)
   sub->particles_alt = tmp;
   sub->need_reorder = false;
 }
+#endif
 
 // ======================================================================
 // psc_mparticles: subclass "single"
