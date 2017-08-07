@@ -21,6 +21,7 @@ typedef struct psc_particle_c {
 
 struct psc_mparticles_c_patch {
   particle_c_t *prt_array;
+  int n_alloced;
 };
 
 struct psc_mparticles_c {

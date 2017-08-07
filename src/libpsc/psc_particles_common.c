@@ -316,13 +316,17 @@ MPFX(destroy)(struct psc_mparticles *mprts)
 static void
 MPFX(set_n_alloced)(struct psc_mparticles *mprts, int p, int n_alloced)
 {
-  mprts->mpatch[p].n_alloced = n_alloced;
+  struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
+
+  sub->patch[p].n_alloced = n_alloced;
 }
 
 static int
 MPFX(get_n_alloced)(struct psc_mparticles *mprts, int p)
 {
-  return mprts->mpatch[p].n_alloced;
+  struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
+
+  return sub->patch[p].n_alloced;
 }
 
 // ----------------------------------------------------------------------
