@@ -71,24 +71,24 @@ xchg_get_one(struct psc_mparticles *mprts, int p, int n)
 }
 
 static inline int *
-get_b_mx(struct psc_particles *prts)
+get_b_mx(struct psc_mparticles *mprts, int p)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(prts->mprts);
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
   return mprts_cuda->b_mx;
 }
 
 static inline particle_real_t *
-get_b_dxi(struct psc_particles *prts)
+get_b_dxi(struct psc_mparticles *mprts, int p)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(prts->mprts);
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
   return mprts_cuda->b_dxi;
 }
 
 static inline int
-get_n_send(struct psc_particles *prts)
+get_n_send(struct psc_mparticles *mprts, int p)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(prts->mprts);
-  return mprts_cuda->bnd[prts->p].n_send;
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  return mprts_cuda->bnd[p].n_send;
 }
 
 static inline int
@@ -121,9 +121,8 @@ mprts_convert_to_cuda(struct psc_bnd_particles *bnd, struct psc_mparticles *mprt
 
   unsigned int nr_recv = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct ddc_particles *ddcp = bnd->ddcp;
-    struct ddcp_patch *patch = &ddcp->patches[prts->p];
+    struct ddcp_patch *patch = &ddcp->patches[p];
     nr_recv += patch->head;
   }
 

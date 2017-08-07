@@ -58,11 +58,15 @@ blockIdx_to_blockCrd(struct psc_patch *patch, struct cell_map *map,
 }
 #endif
 
+struct copy_ctx {
+  struct psc_mparticles *mprts;
+  int p;
+};
+
 static void
 copy_from(int p, struct psc_mparticles *mprts_cuda, struct psc_mparticles *mprts,
 	  void (*get_particle)(struct cuda_mparticles_prt *prt, int n, void *ctx))
 {
-  struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts_cuda)->cmprts;
 
   int n_prts = psc_mparticles_n_prts_by_patch(mprts, p);
@@ -73,14 +77,14 @@ copy_from(int p, struct psc_mparticles *mprts_cuda, struct psc_mparticles *mprts
     off += psc_mparticles_n_prts_by_patch(mprts_cuda, pp);
   }
 
-  cuda_mparticles_set_particles(cmprts, n_prts, off, get_particle, prts);
+  struct copy_ctx ctx = { .mprts = mprts, .p = p };
+  cuda_mparticles_set_particles(cmprts, n_prts, off, get_particle, &ctx);
 }
 
 static void
 copy_to(int p, struct psc_mparticles *mprts_cuda, struct psc_mparticles *mprts,
 	void (*put_particle)(struct cuda_mparticles_prt *prt, int n, void *ctx))
 {
-  struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts_cuda)->cmprts;
 
   int n_prts = psc_mparticles_n_prts_by_patch(mprts, p);
@@ -91,7 +95,8 @@ copy_to(int p, struct psc_mparticles *mprts_cuda, struct psc_mparticles *mprts,
     off += psc_mparticles_n_prts_by_patch(mprts_cuda, pp);
   }
 
-  cuda_mparticles_get_particles(cmprts, n_prts, off, put_particle, prts);
+  struct copy_ctx ctx = { .mprts = mprts, .p = p };
+  cuda_mparticles_get_particles(cmprts, n_prts, off, put_particle, &ctx);
 }
 
 // ======================================================================
@@ -108,9 +113,9 @@ calc_vxi(particle_c_real_t vxi[3], particle_c_t *part)
 }
 
 static void
-get_particle_c(struct cuda_mparticles_prt *prt, int n, void *ctx)
+get_particle_c(struct cuda_mparticles_prt *prt, int n, void *_ctx)
 {
-  struct psc_particles *prts_c = ctx;
+  struct copy_ctx *ctx = _ctx;
   particle_single_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
   // don't shift in invariant directions
   for (int d = 0; d < 3; d++) {
@@ -119,7 +124,7 @@ get_particle_c(struct cuda_mparticles_prt *prt, int n, void *ctx)
     }
   }
   
-  particle_c_t *prt_c = psc_mparticles_c_get_one(prts_c->mprts, prts_c->p, n);
+  particle_c_t *prt_c = psc_mparticles_c_get_one(ctx->mprts, ctx->p, n);
 
   particle_c_real_t vxi[3];
   calc_vxi(vxi, prt_c);
@@ -135,9 +140,9 @@ get_particle_c(struct cuda_mparticles_prt *prt, int n, void *ctx)
 }
 
 static void
-put_particle_c(struct cuda_mparticles_prt *prt, int n, void *ctx)
+put_particle_c(struct cuda_mparticles_prt *prt, int n, void *_ctx)
 {
-  struct psc_particles *prts_c = ctx;
+  struct copy_ctx *ctx = _ctx;
   particle_single_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
   // don't shift in invariant directions
   for (int d = 0; d < 3; d++) {
@@ -149,7 +154,7 @@ put_particle_c(struct cuda_mparticles_prt *prt, int n, void *ctx)
   particle_c_real_t qni_wni = prt->qni_wni;
   unsigned int kind = prt->kind;
   
-  particle_c_t *prt_c = psc_mparticles_c_get_one(prts_c->mprts, prts_c->p, n);
+  particle_c_t *prt_c = psc_mparticles_c_get_one(ctx->mprts, ctx->p, n);
   prt_c->xi  = prt->xi[0];
   prt_c->yi  = prt->xi[1];
   prt_c->zi  = prt->xi[2];
@@ -186,10 +191,10 @@ psc_particles_cuda_copy_to_c(int p, struct psc_mparticles *mprts_cuda,
 // conversion to "single"
 
 static void
-get_particle_single(struct cuda_mparticles_prt *prt, int n, void *ctx)
+get_particle_single(struct cuda_mparticles_prt *prt, int n, void *_ctx)
 {
-  struct psc_particles *prts = ctx;
-  particle_single_t *part = psc_mparticles_single_get_one(prts->mprts, prts->p, n);
+  struct copy_ctx *ctx = _ctx;
+  particle_single_t *part = psc_mparticles_single_get_one(ctx->mprts, ctx->p, n);
 
   prt->xi[0]   = part->xi;
   prt->xi[1]   = part->yi;
@@ -202,10 +207,10 @@ get_particle_single(struct cuda_mparticles_prt *prt, int n, void *ctx)
 }
 
 static void
-put_particle_single(struct cuda_mparticles_prt *prt, int n, void *ctx)
+put_particle_single(struct cuda_mparticles_prt *prt, int n, void *_ctx)
 {
-  struct psc_particles *prts = ctx;
-  particle_single_t *part = psc_mparticles_single_get_one(prts->mprts, prts->p, n);
+  struct copy_ctx *ctx = _ctx;
+  particle_single_t *part = psc_mparticles_single_get_one(ctx->mprts, ctx->p, n);
   
   part->xi      = prt->xi[0];
   part->yi      = prt->xi[1];
@@ -235,10 +240,10 @@ psc_particles_cuda_copy_to_single(int p, struct psc_mparticles *mprts_cuda,
 // conversion to "double"
 
 static void
-get_particle_double(struct cuda_mparticles_prt *prt, int n, void *ctx)
+get_particle_double(struct cuda_mparticles_prt *prt, int n, void *_ctx)
 {
-  struct psc_particles *prts = ctx;
-  particle_double_t *part = psc_mparticles_double_get_one(prts->mprts, prts->p, n);
+  struct copy_ctx *ctx = _ctx;
+  particle_double_t *part = psc_mparticles_double_get_one(ctx->mprts, ctx->p, n);
 
   prt->xi[0]   = part->xi;
   prt->xi[1]   = part->yi;
@@ -251,10 +256,10 @@ get_particle_double(struct cuda_mparticles_prt *prt, int n, void *ctx)
 }
 
 static void
-put_particle_double(struct cuda_mparticles_prt *prt, int n, void *ctx)
+put_particle_double(struct cuda_mparticles_prt *prt, int n, void *_ctx)
 {
-  struct psc_particles *prts = ctx;
-  particle_double_t *part = psc_mparticles_double_get_one(prts->mprts, prts->p, n);
+  struct copy_ctx *ctx = _ctx;
+  particle_double_t *part = psc_mparticles_double_get_one(ctx->mprts, ctx->p, n);
   
   part->xi      = prt->xi[0];
   part->yi      = prt->xi[1];

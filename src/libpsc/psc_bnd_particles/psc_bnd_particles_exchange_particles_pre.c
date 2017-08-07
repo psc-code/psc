@@ -2,23 +2,22 @@
 static void
 exchange_particles_pre(struct psc_bnd_particles *bnd, struct psc_mparticles *mprts, int p)
 {
-  struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
   struct psc *psc = bnd->psc;
   struct ddc_particles *ddcp = bnd->ddcp;
 
-  int n_send = get_n_send(_prts);
-  struct psc_patch *patch = &psc->patch[_prts->p];
+  int n_send = get_n_send(mprts, p);
+  struct psc_patch *patch = &psc->patch[p];
   particle_real_t xm[3];
   for (int d = 0; d < 3; d++) {
     xm[d] = patch->ldims[d] * patch->dx[d];
   }
-  particle_real_t *b_dxi = get_b_dxi(_prts);
-  int *b_mx = get_b_mx(_prts);
+  particle_real_t *b_dxi = get_b_dxi(mprts, p);
+  int *b_mx = get_b_mx(mprts, p);
   
   // FIXME we should make sure (assert) we don't quietly drop particle which left
   // in the invariant direction
 
-  struct ddcp_patch *ddcp_patch = &ddcp->patches[_prts->p];
+  struct ddcp_patch *ddcp_patch = &ddcp->patches[p];
   ddcp_patch->head = get_head(mprts, p);
   for (int dir1 = 0; dir1 < N_DIR; dir1++) {
     ddcp_patch->nei[dir1].n_send = 0;

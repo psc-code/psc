@@ -72,14 +72,13 @@ MPFX(setup_patch)(struct psc_mparticles *mprts, int p)
 #endif
 
 #if PSC_PARTICLES_AS_SINGLE_BY_BLOCK
-  struct psc_particles *prts = mprts->prts[p];
   patch->prt_array_alt = calloc(n_alloced, sizeof(*patch->prt_array_alt));
   patch->b_idx = calloc(n_alloced, sizeof(*patch->b_idx));
   patch->b_ids = calloc(n_alloced, sizeof(*patch->b_ids));
 
   for (int d = 0; d < 3; d++) {
-    patch->b_mx[d] = ppsc->patch[prts->p].ldims[d];
-    patch->b_dxi[d] = 1.f / ppsc->patch[prts->p].dx[d];
+    patch->b_mx[d] = ppsc->patch[p].ldims[d];
+    patch->b_dxi[d] = 1.f / ppsc->patch[p].dx[d];
   }
   patch->nr_blocks = patch->b_mx[0] * patch->b_mx[1] * patch->b_mx[2];
   patch->b_cnt = calloc(patch->nr_blocks + 1, sizeof(*patch->b_cnt));

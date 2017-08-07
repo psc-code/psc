@@ -204,28 +204,26 @@ xchg_append(struct psc_mparticles *mprts, int p, void *patch_ctx, particle_t *pr
 }
 
 static inline int *
-get_b_mx(struct psc_particles *prts)
+get_b_mx(struct psc_mparticles *mprts, int p)
 {
-  return ppsc->patch[prts->p].ldims;
+  return ppsc->patch[p].ldims;
 }
 
 static inline particle_real_t *
-get_b_dxi(struct psc_particles *prts)
+get_b_dxi(struct psc_mparticles *mprts, int p)
 {
   static particle_real_t b_dxi[3];
   if (!b_dxi[0]) {
     for (int d = 0; d < 3; d++) {
-      b_dxi[d] = 1.f / ppsc->patch[prts->p].dx[d];
+      b_dxi[d] = 1.f / ppsc->patch[p].dx[d];
     }
   }
   return b_dxi;
 }
 
 static inline int
-get_n_send(struct psc_particles *prts)
+get_n_send(struct psc_mparticles *mprts, int p)
 {
-  struct psc_mparticles *mprts = prts->mprts;
-  int p = prts->p;
   struct psc_mparticles_single *sub = psc_mparticles_single(mprts);
   return sub->patch[p].n_send;
 }
