@@ -85,7 +85,7 @@ psc_particles_single_by_block_check(struct psc_mparticles *mprts, int p)
   struct psc_mparticles_single_by_block_patch *patch = &msub->patch[p];
 
   int n_prts = psc_mparticles_n_prts_by_patch(mprts, p);
-  assert(n_prts <= psc_mparticles_n_alloced(mprts, p));
+  assert(n_prts <= patch->n_alloced);
 
   int block = 0;
   for (int n = 0; n < n_prts; n++) {

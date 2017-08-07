@@ -54,7 +54,7 @@ MPFX(setup_patch)(struct psc_mparticles *mprts, int p)
   struct MPFX(patch) *patch = &msub->patch[p];
 
   int n_alloced = psc_mparticles_n_prts_by_patch(mprts, p) * 1.2;
-  psc_mparticles_set_n_alloced(mprts, p, n_alloced);
+  patch->n_alloced = n_alloced;
   patch->prt_array = calloc(n_alloced, sizeof(*patch->prt_array));
 
 #if PSC_PARTICLES_AS_SINGLE
@@ -119,14 +119,14 @@ MPFX(destroy_patch)(struct psc_mparticles *mprts, int p)
 static void
 MPFX(realloc_patch)(struct psc_mparticles *mprts, int p, int new_n_prts)
 {
-  if (new_n_prts <= psc_mparticles_n_alloced(mprts, p))
+  struct psc_mparticles_sub *msub = psc_mparticles_sub(mprts);
+  struct MPFX(patch) *patch = &msub->patch[p];
+
+  if (new_n_prts <= patch->n_alloced)
     return;
 
   int n_alloced = new_n_prts * 1.2;
-  psc_mparticles_set_n_alloced(mprts, p, n_alloced);
-
-  struct psc_mparticles_sub *msub = psc_mparticles_sub(mprts);
-  struct MPFX(patch) *patch = &msub->patch[p];
+  patch->n_alloced = n_alloced;
 
   patch->prt_array = realloc(patch->prt_array, n_alloced * sizeof(*patch->prt_array));
 
