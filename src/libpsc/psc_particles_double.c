@@ -95,20 +95,11 @@ psc_mparticles_double_copy_from_c(int p, struct psc_mparticles *mprts,
   psc_mparticles_copy_from(p, mprts, mprts_c, flags, get_particle_c);
 }
 
-static struct mrc_obj_method psc_particles_double_methods[] = {
+static struct mrc_obj_method psc_mparticles_double_methods[] = {
   MRC_OBJ_METHOD("copy_to_c",   psc_mparticles_double_copy_to_c),
   MRC_OBJ_METHOD("copy_from_c", psc_mparticles_double_copy_from_c),
   {}
 };
 
 #include "psc_particles_common.c"
-
-struct psc_mparticles_ops psc_mparticles_double_ops = {
-  .name                    = "double",
-  .methods                 = psc_particles_double_methods,
-#ifdef HAVE_LIBHDF5_HL
-  .write                   = psc_mparticles_double_write,
-  .read                    = psc_mparticles_double_read,
-#endif
-};
 

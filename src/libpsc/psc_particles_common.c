@@ -153,9 +153,7 @@ struct psc_particles_ops PFX(ops) = {
 // ======================================================================
 // psc_mparticles
 
-#if PSC_PARTICLES_AS_DOUBLE || PSC_PARTICLES_AS_SINGLE
-
-#ifdef HAVE_LIBHDF5_HL
+#if (PSC_PARTICLES_AS_DOUBLE || PSC_PARTICLES_AS_SINGLE) && HAVE_LIBHDF5_HL
 
 // FIXME. This is a rather bad break of proper layering, HDF5 should be all
 // mrc_io business. OTOH, it could be called flexibility...
@@ -253,7 +251,26 @@ MPFX(read)(struct psc_mparticles *mprts, struct mrc_io *io)
   ierr = H5Gclose(group); CE;
 }
 
-#endif
+#else
+
+static void
+MPFX(write)(struct psc_mparticles *mprts, struct mrc_io *io)
+{
+  assert(0);
+}
+
+static void
+MPFX(read)(struct psc_mparticles *mprts, struct mrc_io *io)
+{
+  assert(0);
+}
 
 #endif
+
+struct psc_mparticles_ops MPFX(ops) = {
+  .name                    = PARTICLE_TYPE,
+  .methods                 = MPFX(methods),
+  .write                   = MPFX(write),
+  .read                    = MPFX(read),
+};
 

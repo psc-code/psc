@@ -5,9 +5,9 @@
 // ======================================================================
 // psc_mparticles: subclass "c"
   
-#include "psc_particles_common.c"
-
-struct psc_mparticles_ops psc_mparticles_c_ops = {
-  .name                    = "c",
+static struct mrc_obj_method psc_mparticles_c_methods[] = {
+  {}
 };
+
+#include "psc_particles_common.c"
 

@@ -203,16 +203,11 @@ psc_mparticles_single_by_block_copy_from_single(int p, struct psc_mparticles *mp
   psc_particles_single_by_block_check(psc_mparticles_get_patch(mprts, p));
 }
 
-static struct mrc_obj_method psc_particles_single_by_block_methods[] = {
+static struct mrc_obj_method psc_mparticles_single_by_block_methods[] = {
   MRC_OBJ_METHOD("copy_to_single"  , psc_mparticles_single_by_block_copy_to_single),
   MRC_OBJ_METHOD("copy_from_single", psc_mparticles_single_by_block_copy_from_single),
   {}
 };
 
 #include "psc_particles_common.c"
-
-struct psc_mparticles_ops psc_mparticles_single_by_block_ops = {
-  .name                    = "single_by_block",
-  .methods                 = psc_particles_single_by_block_methods,
-};
 

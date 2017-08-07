@@ -173,15 +173,3 @@ static struct mrc_obj_method psc_mparticles_single_methods[] = {
 
 #include "psc_particles_common.c"
 
-// ----------------------------------------------------------------------
-// psc_mparticles subclass "single"
-  
-struct psc_mparticles_ops psc_mparticles_single_ops = {
-  .name                    = "single",
-  .methods                 = psc_mparticles_single_methods,
-#ifdef HAVE_LIBHDF5_HL
-  .write                   = psc_mparticles_single_write,
-  .read                    = psc_mparticles_single_read,
-#endif
-};
-

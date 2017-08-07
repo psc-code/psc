@@ -144,7 +144,7 @@ psc_mparticles_fortran_copy_from_double(int p, struct psc_mparticles *mprts_fort
   psc_mparticles_copy_from(p, mprts_fortran, mprts_dbl, flags, get_particle_double);
 }
 
-static struct mrc_obj_method psc_particles_fortran_methods[] = {
+static struct mrc_obj_method psc_mparticles_fortran_methods[] = {
   MRC_OBJ_METHOD("copy_to_c"       , psc_mparticles_fortran_copy_to_c),
   MRC_OBJ_METHOD("copy_from_c"     , psc_mparticles_fortran_copy_from_c),
   MRC_OBJ_METHOD("copy_to_double"  , psc_mparticles_fortran_copy_to_double),
@@ -153,9 +153,4 @@ static struct mrc_obj_method psc_particles_fortran_methods[] = {
 };
 
 #include "psc_particles_common.c"
-
-struct psc_mparticles_ops psc_mparticles_fortran_ops = {
-  .name                    = "fortran",
-  .methods                 = psc_particles_fortran_methods,
-};
 
