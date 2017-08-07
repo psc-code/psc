@@ -24,6 +24,11 @@
 #define PFX(x) psc_particles_c_ ## x
 #define psc_particles_sub psc_particles_c
 
+#elif PSC_PARTICLES_AS_FORTRAN
+
+#define PFX(x) psc_particles_fortran_ ## x
+#define psc_particles_sub psc_particles_fortran
+
 #endif
 
 // ======================================================================

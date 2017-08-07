@@ -5,28 +5,7 @@
 #include "psc_particles_c.h"
 #include "psc_particles_double.h"
 
-#include <stdlib.h>
-
-// ======================================================================
-// psc_particles "fortran"
-
-static void
-psc_particles_fortran_setup(struct psc_particles *prts)
-{
-  struct psc_particles_fortran *fort = psc_particles_fortran(prts);
-
-  int n_alloced = psc_particles_size(prts) * 1.2;
-  psc_mparticles_set_n_alloced(prts->mprts, prts->p, n_alloced);
-  fort->particles = calloc(n_alloced, sizeof(*fort->particles));
-}
-
-static void
-psc_particles_fortran_destroy(struct psc_particles *prts)
-{
-  struct psc_particles_fortran *fort = psc_particles_fortran(prts);
-
-  free(fort->particles);
-}
+#include "psc_particles_common.c"
 
 void
 particles_fortran_realloc(struct psc_particles *prts, int new_n_part)
