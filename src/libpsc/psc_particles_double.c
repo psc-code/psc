@@ -95,16 +95,6 @@ psc_mparticles_double_copy_from_c(int p, struct psc_mparticles *mprts,
 }
 
 // ======================================================================
-// psc_particles: subclass "double"
-
-struct psc_particles_ops psc_particles_double_ops = {
-  .name                    = "double",
-  .size                    = sizeof(struct psc_particles_double),
-  .setup                   = psc_particles_double_setup,
-  .destroy                 = psc_particles_double_destroy,
-};
-
-// ======================================================================
 // psc_mparticles: subclass "double"
   
 #ifdef HAVE_LIBHDF5_HL

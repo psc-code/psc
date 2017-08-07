@@ -130,3 +130,13 @@ PFX(realloc)(struct psc_particles *prts, int new_n_part)
 #endif
 }
 
+// ----------------------------------------------------------------------
+// psc_particles: subclass ops
+
+struct psc_particles_ops PFX(ops) = {
+  .name                    = PARTICLE_TYPE,
+  .size                    = sizeof(struct psc_particles_sub),
+  .setup                   = PFX(setup),
+  .destroy                 = PFX(destroy),
+};
+

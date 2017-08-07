@@ -163,16 +163,6 @@ psc_mparticles_single_copy_from_double(int p, struct psc_mparticles *mprts,
 }
 
 // ======================================================================
-// psc_particles: subclass "single"
-
-struct psc_particles_ops psc_particles_single_ops = {
-  .name                    = "single",
-  .size                    = sizeof(struct psc_particles_single),
-  .setup                   = psc_particles_single_setup,
-  .destroy                 = psc_particles_single_destroy,
-};
-
-// ======================================================================
 // psc_mparticles: subclass "single"
 
 #ifdef HAVE_LIBHDF5_HL

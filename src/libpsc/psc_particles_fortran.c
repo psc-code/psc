@@ -144,16 +144,6 @@ psc_mparticles_fortran_copy_from_double(int p, struct psc_mparticles *mprts_fort
 }
 
 // ======================================================================
-// psc_particles: subclass "fortran"
-
-struct psc_particles_ops psc_particles_fortran_ops = {
-  .name                    = "fortran",
-  .size                    = sizeof(struct psc_particles_fortran),
-  .setup                   = psc_particles_fortran_setup,
-  .destroy                 = psc_particles_fortran_destroy,
-};
-
-// ======================================================================
 // psc_mparticles: subclass "fortran"
   
 static struct mrc_obj_method psc_particles_fortran_methods[] = {

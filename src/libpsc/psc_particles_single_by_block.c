@@ -203,16 +203,6 @@ psc_mparticles_single_by_block_copy_from_single(int p, struct psc_mparticles *mp
 }
 
 // ======================================================================
-// psc_particles: subclass "single"
-
-struct psc_particles_ops psc_particles_single_by_block_ops = {
-  .name                    = "single_by_block",
-  .size                    = sizeof(struct psc_particles_single_by_block),
-  .setup                   = psc_particles_single_by_block_setup,
-  .destroy                 = psc_particles_single_by_block_destroy,
-};
-
-// ======================================================================
 // psc_mparticles: subclass "single_by_block"
   
 static struct mrc_obj_method psc_particles_single_by_block_methods[] = {
