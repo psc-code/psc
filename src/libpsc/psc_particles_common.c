@@ -146,7 +146,6 @@ PFX(realloc)(struct psc_particles *prts, int new_n_part)
 struct psc_particles_ops PFX(ops) = {
   .name                    = PARTICLE_TYPE,
   .size                    = sizeof(struct psc_particles_sub),
-  .setup                   = PFX(setup),
   .destroy                 = PFX(destroy),
 };
 
@@ -169,12 +168,10 @@ MPFX(setup)(struct psc_mparticles *mprts)
   for (int p = 0; p < mprts->nr_patches; p++) {
     mprts->prts[p] = psc_particles_create(MPI_COMM_NULL);
     psc_particles_set_type(mprts->prts[p], PARTICLE_TYPE);
-    char name[20]; sprintf(name, "prts%d", p);
-    psc_particles_set_name(mprts->prts[p], name);
     mprts->prts[p]->mprts = mprts;
     mprts->prts[p]->p = p;
     psc_mparticles_set_n_prts_by_patch(mprts, p, mprts->nr_particles_by_patch[p]);
-    psc_particles_setup(mprts->prts[p]);
+    PFX(setup)(mprts->prts[p]);
   }
 
   free(mprts->nr_particles_by_patch);
@@ -264,7 +261,7 @@ MPFX(read)(struct psc_mparticles *mprts, struct mrc_io *io)
     int n_prts;
     ierr = H5LTget_attribute_int(pgroup, ".", "n_prts", &n_prts); CE;
     psc_particles_set_n_prts(mprts->prts[p], n_prts);
-    psc_particles_setup(mprts->prts[p]);
+    PFX(setup)(mprts->prts[p]);
     
     if (n_prts > 0) {
 #if PSC_PARTICLES_AS_SINGLE
