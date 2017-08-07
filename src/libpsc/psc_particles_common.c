@@ -153,6 +153,37 @@ struct psc_particles_ops PFX(ops) = {
 // ======================================================================
 // psc_mparticles
 
+// ----------------------------------------------------------------------
+// psc_mparticles_sub_setup
+//
+// FIXME does deliberately not call old-style setup_super(), rather duplicates
+// that code
+
+static void
+MPFX(setup)(struct psc_mparticles *mprts)
+{
+  assert(mprts->nr_particles_by_patch);
+
+  mprts->prts = calloc(mprts->nr_patches, sizeof(*mprts->prts));
+  mprts->mpatch = calloc(mprts->nr_patches, sizeof(*mprts->mpatch));
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    mprts->prts[p] = psc_particles_create(MPI_COMM_NULL);
+    psc_particles_set_type(mprts->prts[p], PARTICLE_TYPE);
+    char name[20]; sprintf(name, "prts%d", p);
+    psc_particles_set_name(mprts->prts[p], name);
+    mprts->prts[p]->mprts = mprts;
+    mprts->prts[p]->p = p;
+    psc_mparticles_set_n_prts_by_patch(mprts, p, mprts->nr_particles_by_patch[p]);
+    psc_particles_setup(mprts->prts[p]);
+  }
+
+  free(mprts->nr_particles_by_patch);
+  mprts->nr_particles_by_patch = NULL;
+}
+
+// ----------------------------------------------------------------------
+// psc_mparticls_sub_write/read
+  
 #if (PSC_PARTICLES_AS_DOUBLE || PSC_PARTICLES_AS_SINGLE) && HAVE_LIBHDF5_HL
 
 // FIXME. This is a rather bad break of proper layering, HDF5 should be all
@@ -270,6 +301,7 @@ MPFX(read)(struct psc_mparticles *mprts, struct mrc_io *io)
 struct psc_mparticles_ops MPFX(ops) = {
   .name                    = PARTICLE_TYPE,
   .methods                 = MPFX(methods),
+  .setup                   = MPFX(setup),
   .write                   = MPFX(write),
   .read                    = MPFX(read),
 };

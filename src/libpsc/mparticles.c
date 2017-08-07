@@ -51,7 +51,7 @@ _psc_mparticles_setup(struct psc_mparticles *mprts)
     psc_particles_set_name(mprts->prts[p], name);
     mprts->prts[p]->mprts = mprts;
     mprts->prts[p]->p = p;
-    psc_particles_set_n_prts(mprts->prts[p], mprts->nr_particles_by_patch[p]);
+    psc_mparticles_set_n_prts_by_patch(mprts, p, mprts->nr_particles_by_patch[p]);
     psc_particles_setup(mprts->prts[p]);
   }
 
