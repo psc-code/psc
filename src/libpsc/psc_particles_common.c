@@ -59,19 +59,16 @@ MPFX(setup_patch)(struct psc_mparticles *mprts, int p)
 
 #if PSC_PARTICLES_AS_SINGLE
   patch->prt_array_alt = calloc(n_alloced, sizeof(*patch->prt_array_alt));
-
-  struct psc_particles *prts = mprts->prts[p];
-  struct psc_particles_sub *sub = psc_particles_sub(prts);
-  sub->b_idx = calloc(n_alloced, sizeof(*sub->b_idx));
-  sub->b_ids = calloc(n_alloced, sizeof(*sub->b_ids));
+  patch->b_idx = calloc(n_alloced, sizeof(*patch->b_idx));
+  patch->b_ids = calloc(n_alloced, sizeof(*patch->b_ids));
 
   int *b_mx = patch->b_mx;
   for (int d = 0; d < 3; d++) {
-    b_mx[d] = ppsc->patch[prts->p].ldims[d];
-    patch->b_dxi[d] = 1.f / ppsc->patch[prts->p].dx[d];
+    b_mx[d] = ppsc->patch[p].ldims[d];
+    patch->b_dxi[d] = 1.f / ppsc->patch[p].dx[d];
   }
   patch->nr_blocks = b_mx[0] * b_mx[1] * b_mx[2];
-  sub->b_cnt = calloc(patch->nr_blocks + 1, sizeof(*sub->b_cnt));
+  patch->b_cnt = calloc(patch->nr_blocks + 1, sizeof(*patch->b_cnt));
 #endif
 
 #if PSC_PARTICLES_AS_SINGLE_BY_BLOCK
@@ -104,11 +101,9 @@ MPFX(destroy_patch)(struct psc_mparticles *mprts, int p)
 
 #if PSC_PARTICLES_AS_SINGLE
   free(patch->prt_array_alt);
-  struct psc_particles *prts = mprts->prts[p];
-  struct psc_particles_sub *sub = psc_particles_sub(prts);
-  free(sub->b_idx);
-  free(sub->b_ids);
-  free(sub->b_cnt);
+  free(patch->b_idx);
+  free(patch->b_ids);
+  free(patch->b_cnt);
 #endif
 
 #if PSC_PARTICLES_AS_SINGLE_BY_BLOCK
@@ -127,7 +122,7 @@ MPFX(destroy_patch)(struct psc_mparticles *mprts, int p)
 
 struct psc_particles_ops PFX(ops) = {
   .name                    = PARTICLE_TYPE,
-#if (PSC_PARTICLES_AS_SINGLE || PSC_PARTICLES_AS_SINGLE_BY_BLOCK)
+#if (PSC_PARTICLES_AS_SINGLE_BY_BLOCK)
   .size                    = sizeof(struct psc_particles_sub),
 #endif
 };
@@ -295,15 +290,15 @@ MPFX(realloc)(struct psc_mparticles *mprts, int p, int new_n_prts)
   psc_mparticles_set_n_alloced(mprts, p, n_alloced);
 
   struct psc_mparticles_sub *msub = psc_mparticles_sub(mprts);
-  msub->patch[p].prt_array = realloc(msub->patch[p].prt_array, n_alloced * sizeof(*msub->patch[p].prt_array));
+  struct MPFX(patch) *patch = &msub->patch[p];
+
+  patch->prt_array = realloc(patch->prt_array, n_alloced * sizeof(*patch->prt_array));
 
 #if PSC_PARTICLES_AS_SINGLE
-  free(msub->patch[p].prt_array_alt);
-  msub->patch[p].prt_array_alt = malloc(n_alloced * sizeof(*msub->patch[p].prt_array_alt));
-  struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-  struct psc_particles_sub *sub = psc_particles_sub(prts);
-  sub->b_idx = realloc(sub->b_idx, n_alloced * sizeof(*sub->b_idx));
-  sub->b_ids = realloc(sub->b_ids, n_alloced * sizeof(*sub->b_ids));
+  free(patch->prt_array_alt);
+  patch->prt_array_alt = malloc(n_alloced * sizeof(*patch->prt_array_alt));
+  patch->b_idx = realloc(patch->b_idx, n_alloced * sizeof(*patch->b_idx));
+  patch->b_ids = realloc(patch->b_ids, n_alloced * sizeof(*patch->b_ids));
 #endif
 
 #if PSC_PARTICLES_AS_SINGLE_BY_BLOCK

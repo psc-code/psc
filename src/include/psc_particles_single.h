@@ -17,23 +17,18 @@ typedef struct psc_particle_single {
   int kind;
 } particle_single_t;
 
-struct psc_particles_single {
-  unsigned int *b_idx;
-  unsigned int *b_ids;
-  unsigned int *b_cnt;
-  unsigned int n_send;
-  unsigned int n_part_save;
-  bool need_reorder;
-};
-
-#define psc_particles_single(prts) mrc_to_subobj(prts, struct psc_particles_single)
-
 struct psc_mparticles_single_patch {
   particle_single_t *prt_array;
   particle_single_t *prt_array_alt;
   int b_mx[3];
   int nr_blocks;
   particle_single_real_t b_dxi[3];
+  unsigned int *b_idx;
+  unsigned int *b_ids;
+  unsigned int *b_cnt;
+  unsigned int n_send;
+  unsigned int n_part_save;
+  bool need_reorder;
 };
 
 struct psc_mparticles_single {
