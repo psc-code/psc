@@ -168,9 +168,9 @@ psc_particles_single_by_block_sort(struct psc_mparticles *mprts, int p)
 // conversion to/from "single"
 
 static void
-put_particle_single(particle_single_by_block_t *prt, int n, struct psc_particles *prts_sngl)
+put_particle_single(particle_single_by_block_t *prt, int n, struct psc_mparticles *mprts_sngl, int p)
 {
-  particle_single_t *prt_sngl = psc_mparticles_single_get_one(prts_sngl->mprts, prts_sngl->p, n);
+  particle_single_t *prt_sngl = psc_mparticles_single_get_one(mprts_sngl, p, n);
   
   prt_sngl->xi      = prt->xi;
   prt_sngl->yi      = prt->yi;
@@ -183,9 +183,9 @@ put_particle_single(particle_single_by_block_t *prt, int n, struct psc_particles
 }
 
 static void
-get_particle_single(particle_single_by_block_t *prt, int n, struct psc_particles *prts_sngl)
+get_particle_single(particle_single_by_block_t *prt, int n, struct psc_mparticles *mprts_sngl, int p)
 {
-  particle_single_t *prt_sngl = psc_mparticles_single_get_one(prts_sngl->mprts, prts_sngl->p, n);
+  particle_single_t *prt_sngl = psc_mparticles_single_get_one(mprts_sngl, p, n);
 
   prt->xi      = prt_sngl->xi;
   prt->yi      = prt_sngl->yi;

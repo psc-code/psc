@@ -12,9 +12,9 @@
 // conversion to/from "c"
 
 static void
-put_particle_c(particle_fortran_t *prt, int n, struct psc_particles *prts_c)
+put_particle_c(particle_fortran_t *prt, int n, struct psc_mparticles *mprts_c, int p)
 {
-  particle_c_t *prt_c = psc_mparticles_c_get_one(prts_c->mprts, prts_c->p, n);
+  particle_c_t *prt_c = psc_mparticles_c_get_one(mprts_c, p, n);
   
   prt_c->xi      = prt->xi;
   prt_c->yi      = prt->yi;
@@ -28,9 +28,9 @@ put_particle_c(particle_fortran_t *prt, int n, struct psc_particles *prts_c)
 }
 
 static void
-get_particle_c(particle_fortran_t *prt, int n, struct psc_particles *prts_c)
+get_particle_c(particle_fortran_t *prt, int n, struct psc_mparticles *mprts_c, int p)
 {
-  particle_c_t *prt_c = psc_mparticles_c_get_one(prts_c->mprts, prts_c->p, n);
+  particle_c_t *prt_c = psc_mparticles_c_get_one(mprts_c, p, n);
 
   prt->xi      = prt_c->xi;
   prt->yi      = prt_c->yi;
@@ -71,7 +71,7 @@ calc_vxi(particle_fortran_real_t vxi[3], particle_fortran_t *part)
 }
 
 static void
-put_particle_double(particle_fortran_t *prt, int n, struct psc_particles *prts_dbl)
+put_particle_double(particle_fortran_t *prt, int n, struct psc_mparticles *mprts_dbl, int p)
 {
   particle_fortran_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
   // don't shift in invariant directions
@@ -81,7 +81,7 @@ put_particle_double(particle_fortran_t *prt, int n, struct psc_particles *prts_d
     }
   }
   
-  particle_double_t *prt_dbl = psc_mparticles_double_get_one(prts_dbl->mprts, prts_dbl->p, n);
+  particle_double_t *prt_dbl = psc_mparticles_double_get_one(mprts_dbl, p, n);
 
   particle_double_real_t vxi[3];
   calc_vxi(vxi, prt);
@@ -97,7 +97,7 @@ put_particle_double(particle_fortran_t *prt, int n, struct psc_particles *prts_d
 }
 
 static void
-get_particle_double(particle_fortran_t *prt, int n, struct psc_particles *prts_dbl)
+get_particle_double(particle_fortran_t *prt, int n, struct psc_mparticles *mprts_dbl, int p)
 {
   particle_fortran_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
   // don't shift in invariant directions
@@ -107,7 +107,7 @@ get_particle_double(particle_fortran_t *prt, int n, struct psc_particles *prts_d
     }
   }
   
-  particle_double_t *prt_dbl = psc_mparticles_double_get_one(prts_dbl->mprts, prts_dbl->p, n);
+  particle_double_t *prt_dbl = psc_mparticles_double_get_one(mprts_dbl, p, n);
 
   particle_fortran_real_t qni = ppsc->kinds[prt_dbl->kind].q;
   particle_fortran_real_t mni = ppsc->kinds[prt_dbl->kind].m;

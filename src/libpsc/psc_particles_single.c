@@ -44,7 +44,7 @@ calc_vxi(particle_single_real_t vxi[3], particle_single_t *part)
 }
 
 static void
-get_particle_c(particle_single_t *prt, int n, struct psc_particles *prts_c)
+get_particle_c(particle_single_t *prt, int n, struct psc_mparticles *mprts_c, int p)
 {
   particle_single_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
   // don't shift in invariant directions
@@ -54,7 +54,7 @@ get_particle_c(particle_single_t *prt, int n, struct psc_particles *prts_c)
     }
   }
   
-  particle_c_t *prt_c = psc_mparticles_c_get_one(prts_c->mprts, prts_c->p, n);
+  particle_c_t *prt_c = psc_mparticles_c_get_one(mprts_c, p, n);
 
   prt->xi      = prt_c->xi;
   prt->yi      = prt_c->yi;
@@ -73,7 +73,7 @@ get_particle_c(particle_single_t *prt, int n, struct psc_particles *prts_c)
 }
 
 static void
-put_particle_c(particle_single_t *prt, int n, struct psc_particles *prts_c)
+put_particle_c(particle_single_t *prt, int n, struct psc_mparticles *mprts_c, int p)
 {
   particle_single_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
   // don't shift in invariant directions
@@ -86,7 +86,7 @@ put_particle_c(particle_single_t *prt, int n, struct psc_particles *prts_c)
   particle_single_real_t vxi[3];
   calc_vxi(vxi, prt);
 
-  particle_c_t *prt_c = psc_mparticles_c_get_one(prts_c->mprts, prts_c->p, n);
+  particle_c_t *prt_c = psc_mparticles_c_get_one(mprts_c, p, n);
 
   particle_c_real_t qni = ppsc->kinds[prt->kind].q;
   particle_c_real_t mni = ppsc->kinds[prt->kind].m;
@@ -122,9 +122,9 @@ psc_mparticles_single_copy_from_c(int p, struct psc_mparticles *mprts,
 // conversion to/from "double"
 
 static void
-put_particle_double(particle_single_t *prt, int n, struct psc_particles *prts_dbl)
+put_particle_double(particle_single_t *prt, int n, struct psc_mparticles *mprts_dbl, int p)
 {
-  particle_double_t *prt_dbl = psc_mparticles_double_get_one(prts_dbl->mprts, prts_dbl->p, n);
+  particle_double_t *prt_dbl = psc_mparticles_double_get_one(mprts_dbl, p, n);
   
   prt_dbl->xi      = prt->xi;
   prt_dbl->yi      = prt->yi;
@@ -137,9 +137,9 @@ put_particle_double(particle_single_t *prt, int n, struct psc_particles *prts_db
 }
 
 static void
-get_particle_double(particle_single_t *prt, int n, struct psc_particles *prts_dbl)
+get_particle_double(particle_single_t *prt, int n, struct psc_mparticles *mprts_dbl, int p)
 {
-  particle_double_t *prt_dbl = psc_mparticles_double_get_one(prts_dbl->mprts, prts_dbl->p, n);
+  particle_double_t *prt_dbl = psc_mparticles_double_get_one(mprts_dbl, p, n);
 
   prt->xi      = prt_dbl->xi;
   prt->yi      = prt_dbl->yi;
