@@ -343,9 +343,9 @@ cuda_mprts_convert_from_cuda(struct psc_mparticles *mprts)
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
 
-    cuda->bnd_prts = new particle_single_t[cuda->bnd_n_send];
+    mprts_cuda->bnd[p].prts = new particle_single_t[cuda->bnd_n_send];
     for (int n = 0; n < cuda->bnd_n_send; n++) {
-      particle_single_t *prt = &cuda->bnd_prts[n];
+      particle_single_t *prt = &mprts_cuda->bnd[p].prts[n];
       prt->xi      = bnd_xi4[n].x;
       prt->yi      = bnd_xi4[n].y;
       prt->zi      = bnd_xi4[n].z;

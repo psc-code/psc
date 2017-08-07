@@ -17,20 +17,18 @@ static void
 ddcp_particles_realloc(void *_ctx, int p, int new_n_particles)
 {
   struct psc_mparticles *mprts = _ctx;
-  struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
 
-  cuda->bnd_prts = realloc(cuda->bnd_prts, new_n_particles * sizeof(*cuda->bnd_prts));
+  mprts_cuda->bnd[p].prts = realloc(mprts_cuda->bnd[p].prts, new_n_particles * sizeof(*mprts_cuda->bnd[p].prts));
 }
 
 static void *
 ddcp_particles_get_addr(void *_ctx, int p, int n)
 {
   struct psc_mparticles *mprts = _ctx;
-  struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
 
-  return &cuda->bnd_prts[n];
+  return &mprts_cuda->bnd[p].prts[n];
 }
 
 // ----------------------------------------------------------------------
@@ -61,17 +59,15 @@ psc_bnd_particles_sub_unsetup(struct psc_bnd_particles *bnd)
 static void
 xchg_append(struct psc_mparticles *mprts, int p, struct ddcp_patch *ddcp_patch, particle_t *prt)
 {
-  struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
-  struct psc_particles_cuda *cuda = psc_particles_cuda(_prts);
-  cuda->bnd_prts[ddcp_patch->head++] = *prt;
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  mprts_cuda->bnd[p].prts[ddcp_patch->head++] = *prt;
 }
 
 static inline particle_t *
 xchg_get_one(struct psc_mparticles *mprts, int p, int n)
 {
-  struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
-  struct psc_particles_cuda *cuda = psc_particles_cuda(_prts);
-  return &cuda->bnd_prts[n];
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  return &mprts_cuda->bnd[p].prts[n];
 }
 
 static inline int *
@@ -152,7 +148,7 @@ mprts_convert_to_cuda(struct psc_bnd_particles *bnd, struct psc_mparticles *mprt
     unsigned int *h_bnd_idx = mprts_cuda->h_bnd_idx + off;
     unsigned int *h_bnd_off = mprts_cuda->h_bnd_off + off;
     for (int n = 0; n < n_recv; n++) {
-      particle_single_t *prt = &cuda->bnd_prts[n];
+      particle_single_t *prt = &mprts_cuda->bnd[p].prts[n];
       h_bnd_xi4[n].x  = prt->xi;
       h_bnd_xi4[n].y  = prt->yi;
       h_bnd_xi4[n].z  = prt->zi;
@@ -185,7 +181,7 @@ mprts_convert_to_cuda(struct psc_bnd_particles *bnd, struct psc_mparticles *mprt
       h_bnd_idx[n] = b;
       h_bnd_off[n] = mprts_cuda->h_bnd_cnt[b]++;
     }
-    free(cuda->bnd_prts);
+    free(mprts_cuda->bnd[p].prts);
     off += n_recv;
   }
 }

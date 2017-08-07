@@ -375,6 +375,8 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
   cuda_mparticles_alloc(cmprts, n_prts_by_patch);
 
   __psc_mparticles_cuda_setup(mprts);
+
+  mprts_cuda->bnd = calloc(mprts->nr_patches, sizeof(*mprts_cuda->bnd));
 }
 
 // ----------------------------------------------------------------------

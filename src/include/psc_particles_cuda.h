@@ -13,13 +13,16 @@ typedef float particle_cuda_real_t;
 
 struct psc_particles_cuda {
   // for bnd exchange
-  particle_single_t *bnd_prts;
   int bnd_n_recv;
   int bnd_n_send;
   void *sort_ctx; // for sorting / particle xchg
 };
 
 #define psc_particles_cuda(prts) mrc_to_subobj(prts, struct psc_particles_cuda)
+
+struct cuda_bnd {
+  particle_single_t *prts;
+};
 
 struct psc_mparticles_cuda {
   struct cuda_mparticles *cmprts;
@@ -37,6 +40,7 @@ struct psc_mparticles_cuda {
 
   int b_mx[3];                 // number of blocks by direction
   particle_cuda_real_t b_dxi[3];
+  struct cuda_bnd *bnd;
 };
 
 #define psc_mparticles_cuda(prts) mrc_to_subobj(prts, struct psc_mparticles_cuda)
