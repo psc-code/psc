@@ -87,8 +87,8 @@ get_b_dxi(struct psc_particles *prts)
 static inline int
 get_n_send(struct psc_particles *prts)
 {
-  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-  return cuda->bnd_n_send;
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(prts->mprts);
+  return mprts_cuda->bnd[prts->p].n_send;
 }
 
 static inline int
@@ -136,12 +136,10 @@ mprts_convert_to_cuda(struct psc_bnd_particles *bnd, struct psc_mparticles *mprt
 
   unsigned int off = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
     struct ddc_particles *ddcp = bnd->ddcp;
-    struct ddcp_patch *patch = &ddcp->patches[prts->p];
+    struct ddcp_patch *patch = &ddcp->patches[p];
     int n_recv = patch->head;
-    cuda->bnd_n_recv = n_recv;
+    mprts_cuda->bnd[p].n_recv = n_recv;
     
     float4 *h_bnd_xi4 = mprts_cuda->h_bnd_xi4 + off;
     float4 *h_bnd_pxi4 = mprts_cuda->h_bnd_pxi4 + off;

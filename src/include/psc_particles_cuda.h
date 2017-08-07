@@ -13,8 +13,6 @@ typedef float particle_cuda_real_t;
 
 struct psc_particles_cuda {
   // for bnd exchange
-  int bnd_n_recv;
-  int bnd_n_send;
   void *sort_ctx; // for sorting / particle xchg
 };
 
@@ -22,6 +20,8 @@ struct psc_particles_cuda {
 
 struct cuda_bnd {
   particle_single_t *prts;
+  int n_recv;
+  int n_send;
 };
 
 struct psc_mparticles_cuda {

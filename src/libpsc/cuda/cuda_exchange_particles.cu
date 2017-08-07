@@ -341,10 +341,9 @@ cuda_mprts_convert_from_cuda(struct psc_mparticles *mprts)
   float4 *bnd_pxi4 = mprts_cuda->h_bnd_pxi4;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
 
-    mprts_cuda->bnd[p].prts = new particle_single_t[cuda->bnd_n_send];
-    for (int n = 0; n < cuda->bnd_n_send; n++) {
+    mprts_cuda->bnd[p].prts = new particle_single_t[mprts_cuda->bnd[p].n_send];
+    for (int n = 0; n < mprts_cuda->bnd[p].n_send; n++) {
       particle_single_t *prt = &mprts_cuda->bnd[p].prts[n];
       prt->xi      = bnd_xi4[n].x;
       prt->yi      = bnd_xi4[n].y;
@@ -355,8 +354,8 @@ cuda_mprts_convert_from_cuda(struct psc_mparticles *mprts)
       prt->pzi     = bnd_pxi4[n].z;
       prt->qni_wni = bnd_pxi4[n].w;
     }
-    bnd_xi4 += cuda->bnd_n_send;
-    bnd_pxi4 += cuda->bnd_n_send;
+    bnd_xi4 += mprts_cuda->bnd[p].n_send;
+    bnd_pxi4 += mprts_cuda->bnd[p].n_send;
   }
   delete[] mprts_cuda->h_bnd_xi4;
   delete[] mprts_cuda->h_bnd_pxi4;
@@ -377,9 +376,7 @@ cuda_mprts_copy_to_dev(struct psc_mparticles *mprts)
 
   unsigned int nr_recv = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-    nr_recv += cuda->bnd_n_recv;
+    nr_recv += mprts_cuda->bnd[p].n_recv;
   }
   assert(cmprts->n_prts + nr_recv <= cmprts->n_alloced);
 
@@ -409,10 +406,7 @@ cuda_mprts_sort(struct psc_mparticles *mprts, int *n_prts_by_patch)
   cuda_mprts_sort_pairs_device(mprts);
 
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-
-    n_prts_by_patch[p] += cuda->bnd_n_recv - cuda->bnd_n_send;
+    n_prts_by_patch[p] += mprts_cuda->bnd[p].n_recv - mprts_cuda->bnd[p].n_send;
   }
   cmprts->n_prts -= mprts_cuda->nr_prts_send;
 }
