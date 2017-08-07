@@ -15,11 +15,15 @@ typedef struct psc_particle_double {
   int kind;
 } particle_double_t;
 
-struct psc_particles_double {
-  particle_double_t *particles;
+struct psc_mparticles_double_patch {
+  particle_double_t *prt_array;
 };
 
-#define psc_particles_double(prts) mrc_to_subobj(prts, struct psc_particles_double)
+struct psc_mparticles_double {
+  struct psc_mparticles_double_patch *patch;
+};
+
+#define psc_mparticles_double(prts) mrc_to_subobj(prts, struct psc_mparticles_double)
 
 #include <math.h>
 #include "psc.h"
@@ -27,8 +31,11 @@ struct psc_particles_double {
 static inline particle_double_t *
 particles_double_get_one(struct psc_particles *prts, int n)
 {
-  assert(psc_particles_ops(prts) == &psc_particles_double_ops);
-  return &psc_particles_double(prts)->particles[n];
+  struct psc_mparticles *mprts = prts->mprts;
+  int p = prts->p;
+  
+  assert(psc_mparticles_ops(mprts) == &psc_mparticles_double_ops);
+  return &psc_mparticles_double(mprts)->patch[p].prt_array[n];
 }
 
 // can't do this as inline function since struct psc isn't known yet

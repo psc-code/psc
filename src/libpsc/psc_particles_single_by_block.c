@@ -4,6 +4,8 @@
 #include "psc_particles_inc.h"
 #include "psc_particles_single.h"
 
+#if 0
+
 static void _mrc_unused // FIXME
 psc_particles_single_by_block_reorder(struct psc_particles *prts)
 {
@@ -23,6 +25,8 @@ psc_particles_single_by_block_reorder(struct psc_particles *prts)
   sub->particles_alt = tmp;
   sub->need_reorder = false;
 }
+
+#endif
 
 // ----------------------------------------------------------------------
 // find_idx_off_1st_rel
@@ -107,6 +111,8 @@ psc_particles_single_by_block_check(struct psc_particles *prts)
 static void
 psc_particles_single_by_block_sort(struct psc_particles *prts)
 {
+  assert(0);
+#if 0
   struct psc_particles_single_by_block *sub = psc_particles_single_by_block(prts);
 
   for (int b = 0; b < sub->nr_blocks; b++) {
@@ -149,6 +155,7 @@ psc_particles_single_by_block_sort(struct psc_particles *prts)
   particle_single_by_block_t *tmp = sub->particles;
   sub->particles = sub->particles_alt;
   sub->particles_alt = tmp;
+#endif
 }
 
 // ======================================================================

@@ -18,7 +18,6 @@ typedef struct psc_particle_single_by_block {
 } particle_single_by_block_t;
 
 struct psc_particles_single_by_block {
-  particle_single_by_block_t *particles;
   particle_single_by_block_t *particles_alt;
   int b_mx[3];
   int nr_blocks;
@@ -34,11 +33,24 @@ struct psc_particles_single_by_block {
 
 #define psc_particles_single_by_block(prts) mrc_to_subobj(prts, struct psc_particles_single_by_block)
 
+struct psc_mparticles_single_by_block_patch {
+  particle_single_by_block_t *prt_array;
+};
+
+struct psc_mparticles_single_by_block {
+  struct psc_mparticles_single_by_block_patch *patch;
+};
+
+#define psc_mparticles_single_by_block(prts) mrc_to_subobj(prts, struct psc_mparticles_single_by_block)
+
 static inline particle_single_by_block_t *
 particles_single_by_block_get_one(struct psc_particles *prts, int n)
 {
-  assert(psc_particles_ops(prts) == &psc_particles_single_by_block_ops);
-  return &psc_particles_single_by_block(prts)->particles[n];
+  struct psc_mparticles *mprts = prts->mprts;
+  int p = prts->p;
+  
+  assert(psc_mparticles_ops(mprts) == &psc_mparticles_single_by_block_ops);
+  return &psc_mparticles_single_by_block(mprts)->patch[p].prt_array[n];
 }
 
 // can't do this as inline function since struct psc isn't known yet

@@ -19,17 +19,26 @@ typedef struct psc_particle_c {
   long long         kind; // 64 bits to match the other members, for bnd exchange
 } particle_c_t;
 
-struct psc_particles_c {
-  particle_c_t *particles;
+#define psc_particles_c(prts) mrc_to_subobj(prts, struct psc_particles_c)
+
+struct psc_mparticles_c_patch {
+  particle_c_t *prt_array;
 };
 
-#define psc_particles_c(prts) mrc_to_subobj(prts, struct psc_particles_c)
+struct psc_mparticles_c {
+  struct psc_mparticles_c_patch *patch;
+};
+
+#define psc_mparticles_c(prts) mrc_to_subobj(prts, struct psc_mparticles_c)
 
 static inline particle_c_t *
 particles_c_get_one(struct psc_particles *prts, int n)
 {
-  assert(psc_particles_ops(prts) == &psc_particles_c_ops);
-  return &psc_particles_c(prts)->particles[n];
+  struct psc_mparticles *mprts = prts->mprts;
+  int p = prts->p;
+  
+  assert(psc_mparticles_ops(mprts) == &psc_mparticles_c_ops);
+  return &psc_mparticles_c(mprts)->patch[p].prt_array[n];
 }
 
 static inline particle_c_real_t
