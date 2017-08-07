@@ -83,26 +83,33 @@ static struct psc_particles_single *prts_sub;
 static inline void
 ext_prepare_sort_before(struct psc_particles *prts)
 {
+  struct psc_mparticles *mprts = prts->mprts;
+  int p = prts->p;
+  struct psc_mparticles_single *sub = psc_mparticles_single(mprts);
+  struct psc_mparticles_single_patch *patch = &sub->patch[p];
+  
   prts_sub = psc_particles_single(prts);
   memset(prts_sub->b_cnt, 0,
-	 (prts_sub->nr_blocks + 1) * sizeof(*prts_sub->b_cnt));
+	 (patch->nr_blocks + 1) * sizeof(*prts_sub->b_cnt));
 }
 
 static inline void
 ext_prepare_sort(struct psc_mparticles *mprts, int p, int n, particle_t *prt,
 		 int *b_pos)
 {
+  struct psc_mparticles_single *sub = psc_mparticles_single(mprts);
+  struct psc_mparticles_single_patch *patch = &sub->patch[p];
   particle_range_t prts = particle_range_mprts(mprts, p);
   unsigned int n_prts = particle_range_size(prts);
   /* FIXME, only if blocksize == 1! */
-  int *b_mx = prts_sub->b_mx;
+  int *b_mx = patch->b_mx;
   if (b_pos[1] >= 0 && b_pos[1] < b_mx[1] &&
       b_pos[2] >= 0 && b_pos[2] < b_mx[2]) {
     prts_sub->b_idx[n] = b_pos[2] * b_mx[1] + b_pos[1];
   } else { /* out of bounds */
-    prts_sub->b_idx[n] = prts_sub->nr_blocks;
+    prts_sub->b_idx[n] = patch->nr_blocks;
     /* append to back */
-    *particle_iter_at(prts.begin, n_prts + prts_sub->b_cnt[prts_sub->nr_blocks]) = *prt;
+    *particle_iter_at(prts.begin, n_prts + prts_sub->b_cnt[patch->nr_blocks]) = *prt;
   }
   prts_sub->b_cnt[prts_sub->b_idx[n]]++;
 }
