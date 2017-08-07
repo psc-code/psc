@@ -7,45 +7,36 @@
 #if PSC_PARTICLES_AS_DOUBLE
 
 #define PFX(x) psc_particles_double_ ## x
+#define psc_particles_sub psc_particles_double
 
 #elif PSC_PARTICLES_AS_SINGLE
 
 #define PFX(x) psc_particles_single_ ## x
+#define psc_particles_sub psc_particles_single
 
 #elif PSC_PARTICLES_AS_C
 
 #define PFX(x) psc_particles_c_ ## x
+#define psc_particles_sub psc_particles_c
 
 #endif
 
 // ======================================================================
-// psc_particles "single" / "double"
+// psc_particles "single" / "double" / "c"
 
 // ----------------------------------------------------------------------
 // psc_particles_sub_setup
 
-#if PSC_PARTICLES_AS_DOUBLE
-
 static void
 PFX(setup)(struct psc_particles *prts)
 {
-  struct psc_particles_double *sub = psc_particles_double(prts);
-
-  int n_alloced = psc_particles_size(prts) * 1.2 + 1000000;
-  psc_mparticles_set_n_alloced(prts->mprts, prts->p, n_alloced);
-  sub->particles = calloc(n_alloced, sizeof(*sub->particles));
-}
-
-#elif PSC_PARTICLES_AS_SINGLE
-
-static void
-PFX(setup)(struct psc_particles *prts)
-{
-  struct psc_particles_single *sub = psc_particles_single(prts);
+  struct psc_particles_sub *sub = psc_particles_sub(prts);
 
   int n_alloced = psc_particles_size(prts) * 1.2;
   psc_mparticles_set_n_alloced(prts->mprts, prts->p, n_alloced);
   sub->particles = calloc(n_alloced, sizeof(*sub->particles));
+
+#if PSC_PARTICLES_AS_SINGLE
   sub->particles_alt = calloc(n_alloced, sizeof(*sub->particles_alt));
   sub->b_idx = calloc(n_alloced, sizeof(*sub->b_idx));
   sub->b_ids = calloc(n_alloced, sizeof(*sub->b_ids));
@@ -56,57 +47,24 @@ PFX(setup)(struct psc_particles *prts)
   }
   sub->nr_blocks = sub->b_mx[0] * sub->b_mx[1] * sub->b_mx[2];
   sub->b_cnt = calloc(sub->nr_blocks + 1, sizeof(*sub->b_cnt));
-}
-
-#elif PSC_PARTICLES_AS_C
-
-static void
-PFX(setup)(struct psc_particles *prts)
-{
-  struct psc_particles_c *c = psc_particles_c(prts);
-
-  int n_alloced = psc_particles_size(prts) * 1.2;
-  psc_mparticles_set_n_alloced(prts->mprts, prts->p, n_alloced);
-  c->particles = calloc(n_alloced, sizeof(*c->particles));
-}
-
 #endif
+}
 
 // ----------------------------------------------------------------------
 // psc_particles_sub_destroy
 
-#if PSC_PARTICLES_AS_DOUBLE
-
 static void
 PFX(destroy)(struct psc_particles *prts)
 {
-  struct psc_particles_double *sub = psc_particles_double(prts);
+  struct psc_particles_sub *sub = psc_particles_sub(prts);
 
   free(sub->particles);
-}
 
-#elif PSC_PARTICLES_AS_SINGLE
-
-static void
-PFX(destroy)(struct psc_particles *prts)
-{
-  struct psc_particles_single *sub = psc_particles_single(prts);
-
-  free(sub->particles);
+#if PSC_PARTICLES_AS_SINGLE
   free(sub->particles_alt);
   free(sub->b_idx);
   free(sub->b_ids);
   free(sub->b_cnt);
-}
-
-#elif PSC_PARTICLES_AS_C
-
-static void
-PFX(destroy)(struct psc_particles *prts)
-{
-  struct psc_particles_c *c = psc_particles_c(prts);
-
-  free(c->particles);
-}
-
 #endif
+}
+
