@@ -544,8 +544,7 @@ psc_mparticles_cuda_update_n_part(struct psc_mparticles *mprts)
 
   unsigned int n_prts = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    psc_particles_set_n_prts(prts, n_prts_by_patch[p]);
+    psc_mparticles_set_n_prts_by_patch(mprts, p, n_prts_by_patch[p]);
     n_prts += n_prts_by_patch[p];
   }
   assert(cmprts->n_prts == n_prts);
@@ -566,8 +565,7 @@ psc_mparticles_cuda_setup_internals(struct psc_mparticles *mprts)
   unsigned int n_prts = 0;
   unsigned int n_prts_by_patch[mprts->nr_patches];
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    n_prts_by_patch[p] = psc_particles_size(prts);
+    n_prts_by_patch[p] = psc_mparticles_n_prts_by_patch(mprts, p);
     n_prts += n_prts_by_patch[p];
   }
   cmprts->n_prts = n_prts; // another hack to deal with copy_from having
