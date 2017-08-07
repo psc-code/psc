@@ -31,7 +31,7 @@ get_particle_c(particle_double_t *prt, int n, struct psc_particles *prts_c)
     }
   }
   
-  particle_c_t *prt_c = particles_c_get_one(prts_c, n);
+  particle_c_t *prt_c = psc_mparticles_c_get_one(prts_c->mprts, prts_c->p, n);
 
   prt->xi      = prt_c->xi;
   prt->yi      = prt_c->yi;
@@ -63,8 +63,8 @@ put_particle_c(particle_double_t *prt, int n, struct psc_particles *prts_c)
   particle_double_real_t vxi[3];
   calc_vxi(vxi, prt);
 
-  particle_c_t *prt_c = particles_c_get_one(prts_c, n);
-
+  particle_c_t *prt_c = psc_mparticles_c_get_one(prts_c->mprts, prts_c->p, n);
+  
   particle_c_real_t qni = ppsc->kinds[prt->kind].q;
   particle_c_real_t mni = ppsc->kinds[prt->kind].m;
   particle_c_real_t wni = prt->qni_wni / qni;

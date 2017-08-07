@@ -110,7 +110,7 @@ calc_vxi(particle_c_real_t vxi[3], particle_c_t *part)
 static void
 get_particle_c(struct cuda_mparticles_prt *prt, int n, void *ctx)
 {
-  struct psc_particles *prts = ctx;
+  struct psc_particles *prts_c = ctx;
   particle_single_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
   // don't shift in invariant directions
   for (int d = 0; d < 3; d++) {
@@ -119,25 +119,25 @@ get_particle_c(struct cuda_mparticles_prt *prt, int n, void *ctx)
     }
   }
   
-  particle_c_t *part = particles_c_get_one(prts, n);
+  particle_c_t *prt_c = psc_mparticles_c_get_one(prts_c->mprts, prts_c->p, n);
 
   particle_c_real_t vxi[3];
-  calc_vxi(vxi, part);
+  calc_vxi(vxi, prt_c);
 
-  prt->xi[0]   = part->xi + dth[0] * vxi[0];
-  prt->xi[1]   = part->yi + dth[1] * vxi[1];
-  prt->xi[2]   = part->zi + dth[2] * vxi[2];
-  prt->pxi[0]  = part->pxi;
-  prt->pxi[1]  = part->pyi;
-  prt->pxi[2]  = part->pzi;
-  prt->kind    = part->kind;
-  prt->qni_wni = part->qni * part->wni;
+  prt->xi[0]   = prt_c->xi + dth[0] * vxi[0];
+  prt->xi[1]   = prt_c->yi + dth[1] * vxi[1];
+  prt->xi[2]   = prt_c->zi + dth[2] * vxi[2];
+  prt->pxi[0]  = prt_c->pxi;
+  prt->pxi[1]  = prt_c->pyi;
+  prt->pxi[2]  = prt_c->pzi;
+  prt->kind    = prt_c->kind;
+  prt->qni_wni = prt_c->qni * prt_c->wni;
 }
 
 static void
 put_particle_c(struct cuda_mparticles_prt *prt, int n, void *ctx)
 {
-  struct psc_particles *prts = ctx;
+  struct psc_particles *prts_c = ctx;
   particle_single_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
   // don't shift in invariant directions
   for (int d = 0; d < 3; d++) {
@@ -149,23 +149,23 @@ put_particle_c(struct cuda_mparticles_prt *prt, int n, void *ctx)
   particle_c_real_t qni_wni = prt->qni_wni;
   unsigned int kind = prt->kind;
   
-  particle_c_t *part = particles_c_get_one(prts, n);
-  part->xi  = prt->xi[0];
-  part->yi  = prt->xi[1];
-  part->zi  = prt->xi[2];
-  part->pxi = prt->pxi[0];
-  part->pyi = prt->pxi[1];
-  part->pzi = prt->pxi[2];
-  part->qni = ppsc->kinds[kind].q;
-  part->mni = ppsc->kinds[kind].m;
-  part->wni = qni_wni / part->qni;
-  part->kind = kind;
+  particle_c_t *prt_c = psc_mparticles_c_get_one(prts_c->mprts, prts_c->p, n);
+  prt_c->xi  = prt->xi[0];
+  prt_c->yi  = prt->xi[1];
+  prt_c->zi  = prt->xi[2];
+  prt_c->pxi = prt->pxi[0];
+  prt_c->pyi = prt->pxi[1];
+  prt_c->pzi = prt->pxi[2];
+  prt_c->qni = ppsc->kinds[kind].q;
+  prt_c->mni = ppsc->kinds[kind].m;
+  prt_c->wni = qni_wni / prt_c->qni;
+  prt_c->kind = kind;
   
   particle_c_real_t vxi[3];
-  calc_vxi(vxi, part);
-  part->xi -= dth[0] * vxi[0];
-  part->yi -= dth[1] * vxi[1];
-  part->zi -= dth[2] * vxi[2];
+  calc_vxi(vxi, prt_c);
+  prt_c->xi -= dth[0] * vxi[0];
+  prt_c->yi -= dth[1] * vxi[1];
+  prt_c->zi -= dth[2] * vxi[2];
 }
 
 static void
@@ -238,7 +238,7 @@ static void
 get_particle_double(struct cuda_mparticles_prt *prt, int n, void *ctx)
 {
   struct psc_particles *prts = ctx;
-  particle_double_t *part = particles_double_get_one(prts, n);
+  particle_double_t *part = psc_mparticles_double_get_one(prts->mprts, prts->p, n);
 
   prt->xi[0]   = part->xi;
   prt->xi[1]   = part->yi;
@@ -254,7 +254,7 @@ static void
 put_particle_double(struct cuda_mparticles_prt *prt, int n, void *ctx)
 {
   struct psc_particles *prts = ctx;
-  particle_double_t *part = particles_double_get_one(prts, n);
+  particle_double_t *part = psc_mparticles_double_get_one(prts->mprts, prts->p, n);
   
   part->xi      = prt->xi[0];
   part->yi      = prt->xi[1];

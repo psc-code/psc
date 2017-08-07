@@ -7,7 +7,7 @@
 typedef particle_fortran_real_t particle_real_t;
 typedef particle_fortran_t particle_t;
 
-#define particles_get_one             particles_fortran_get_one
+#define mparticles_get_one            psc_mparticles_fortran_get_one
 #define particle_real_fint            particle_fortran_real_fint
 
 #define MPI_PARTICLES_REAL            MPI_PARTICLES_FORTRAN_REAL

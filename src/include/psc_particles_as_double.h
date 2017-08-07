@@ -7,7 +7,7 @@
 typedef particle_double_real_t particle_real_t;
 typedef particle_double_t particle_t;
 
-#define particles_get_one           particles_double_get_one
+#define mparticles_get_one          psc_mparticles_double_get_one
 #define particle_qni_div_mni        particle_double_qni_div_mni
 #define particle_qni_wni            particle_double_qni_wni
 #define particle_qni                particle_double_qni

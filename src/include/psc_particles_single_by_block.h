@@ -37,11 +37,8 @@ struct psc_mparticles_single_by_block {
 #define psc_mparticles_single_by_block(prts) mrc_to_subobj(prts, struct psc_mparticles_single_by_block)
 
 static inline particle_single_by_block_t *
-particles_single_by_block_get_one(struct psc_particles *prts, int n)
+psc_mparticles_single_by_block_get_one(struct psc_mparticles *mprts, int p, int n)
 {
-  struct psc_mparticles *mprts = prts->mprts;
-  int p = prts->p;
-  
   assert(psc_mparticles_ops(mprts) == &psc_mparticles_single_by_block_ops);
   return &psc_mparticles_single_by_block(mprts)->patch[p].prt_array[n];
 }
