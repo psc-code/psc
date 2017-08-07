@@ -177,6 +177,13 @@ psc_mparticles_set_n_alloced(struct psc_mparticles *mprts, int p, int n_alloced)
   mprts->mpatch[p].n_alloced = n_alloced;
 }
 
+void
+psc_mparticles_realloc(struct psc_mparticles *mprts, int p, int n_prts)
+{
+  struct psc_mparticles_ops *ops = psc_mparticles_ops(mprts);
+  assert(ops && ops->realloc);
+  ops->realloc(mprts, p, n_prts);
+}
 
 struct psc_mparticles *
 psc_mparticles_get_as(struct psc_mparticles *mp_base, const char *type,

@@ -295,11 +295,24 @@ MPFX(read)(struct psc_mparticles *mprts, struct mrc_io *io)
 
 #endif
 
+// ----------------------------------------------------------------------
+// psc_mparticles_realloc
+
+static void
+MPFX(realloc)(struct psc_mparticles *mprts, int p, int n_prts)
+{
+  PFX(realloc)(mprts->prts[p], n_prts);
+}
+
+// ----------------------------------------------------------------------
+// psc_mparticles_ops
+
 struct psc_mparticles_ops MPFX(ops) = {
   .name                    = PARTICLE_TYPE,
   .methods                 = MPFX(methods),
   .setup                   = MPFX(setup),
   .write                   = MPFX(write),
   .read                    = MPFX(read),
+  .realloc                 = MPFX(realloc),
 };
 
