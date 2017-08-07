@@ -89,12 +89,16 @@ MPFX(setup_patch)(struct psc_mparticles *mprts, int p)
 }
 
 // ----------------------------------------------------------------------
-// psc_particles_sub_destroy
+// psc_mparticles_sub_destroy_patch
 
 static void
-PFX(destroy)(struct psc_particles *prts)
+MPFX(destroy_patch)(struct psc_mparticles *mprts, int p)
 {
+  struct psc_mparticles_sub *msub = psc_mparticles_sub(mprts);
+  free(msub->patch[p].prt_array);
+
 #if PSC_PARTICLES_AS_SINGLE
+  struct psc_particles *prts = mprts->prts[p];
   struct psc_particles_sub *sub = psc_particles_sub(prts);
   free(sub->particles_alt);
   free(sub->b_idx);
@@ -103,6 +107,7 @@ PFX(destroy)(struct psc_particles *prts)
 #endif
 
 #if PSC_PARTICLES_AS_SINGLE_BY_BLOCK
+  struct psc_particles *prts = mprts->prts[p];
   struct psc_particles_sub *sub = psc_particles_sub(prts);
   free(sub->particles_alt);
   free(sub->b_idx);
@@ -120,7 +125,6 @@ struct psc_particles_ops PFX(ops) = {
 #if (PSC_PARTICLES_AS_SINGLE || PSC_PARTICLES_AS_SINGLE_BY_BLOCK)
   .size                    = sizeof(struct psc_particles_sub),
 #endif
-  .destroy                 = PFX(destroy),
 };
 
 // ======================================================================
@@ -307,6 +311,17 @@ MPFX(realloc)(struct psc_mparticles *mprts, int p, int new_n_prts)
 #endif
 }
 
+static void
+MPFX(destroy)(struct psc_mparticles *mprts)
+{
+  struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
+
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    MPFX(destroy_patch)(mprts, p);
+  }
+  free(sub->patch);
+}
+
 // ----------------------------------------------------------------------
 // psc_mparticles_ops
 
@@ -315,6 +330,7 @@ struct psc_mparticles_ops MPFX(ops) = {
   .size                    = sizeof(struct psc_mparticles_sub),
   .methods                 = MPFX(methods),
   .setup                   = MPFX(setup),
+  .destroy                 = MPFX(destroy),
   .write                   = MPFX(write),
   .read                    = MPFX(read),
   .realloc                 = MPFX(realloc),
