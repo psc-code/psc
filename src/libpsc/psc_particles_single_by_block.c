@@ -4,47 +4,7 @@
 #include "psc_particles_inc.h"
 #include "psc_particles_single.h"
 
-#include <mrc_io.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <math.h>
-
-// ======================================================================
-// psc_particles "single_by_block"
-
-static void
-psc_particles_single_by_block_setup(struct psc_particles *prts)
-{
-  struct psc_particles_single_by_block *sub = psc_particles_single_by_block(prts);
-
-  int n_alloced = psc_particles_size(prts) * 1.2;
-  psc_mparticles_set_n_alloced(prts->mprts, prts->p, n_alloced);
-  sub->particles = calloc(n_alloced, sizeof(*sub->particles));
-  sub->particles_alt = calloc(n_alloced, sizeof(*sub->particles_alt));
-  sub->b_idx = calloc(n_alloced, sizeof(*sub->b_idx));
-  sub->b_ids = calloc(n_alloced, sizeof(*sub->b_ids));
-
-  for (int d = 0; d < 3; d++) {
-    sub->b_mx[d] = ppsc->patch[prts->p].ldims[d];
-    sub->b_dxi[d] = 1.f / ppsc->patch[prts->p].dx[d];
-  }
-  sub->nr_blocks = sub->b_mx[0] * sub->b_mx[1] * sub->b_mx[2];
-  sub->b_cnt = calloc(sub->nr_blocks + 1, sizeof(*sub->b_cnt));
-  sub->b_off = calloc(sub->nr_blocks + 2, sizeof(*sub->b_off));
-}
-
-static void
-psc_particles_single_by_block_destroy(struct psc_particles *prts)
-{
-  struct psc_particles_single_by_block *sub = psc_particles_single_by_block(prts);
-
-  free(sub->particles);
-  free(sub->particles_alt);
-  free(sub->b_idx);
-  free(sub->b_ids);
-  free(sub->b_cnt);
-  free(sub->b_off);
-}
+#include "psc_particles_common.c"
 
 static void _mrc_unused // FIXME
 psc_particles_single_by_block_reorder(struct psc_particles *prts)
