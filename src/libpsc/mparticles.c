@@ -37,17 +37,23 @@ psc_mparticles_set_domain_nr_particles(struct psc_mparticles *mparticles,
 }
 
 static void
+_psc_mparticles_view(struct psc_mparticles *mprts)
+{
+  MPI_Comm comm = psc_mparticles_comm(mprts);
+  mpi_printf(comm, "  n_patches = %d\n", mprts->nr_patches);
+
+  int n_prts_by_patch[mprts->nr_patches];
+  psc_mparticles_n_prts_all(mprts, n_prts_by_patch);
+
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    mpi_printf(comm, "  p %d : n_prts = %d\n", p, n_prts_by_patch[p]);
+  }  
+}
+
+static void
 _psc_mparticles_setup(struct psc_mparticles *mprts)
 {
-  assert(mprts->nr_particles_by_patch);
-
   mprts->mpatch = calloc(mprts->nr_patches, sizeof(*mprts->mpatch));
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    psc_mparticles_set_n_prts_by_patch(mprts, p, mprts->nr_particles_by_patch[p]);
-  }
-
-  free(mprts->nr_particles_by_patch);
-  mprts->nr_particles_by_patch = NULL;
 }
 
 static void
@@ -146,6 +152,14 @@ psc_mparticles_setup_internals(struct psc_mparticles *mprts)
 }
 
 void
+psc_mparticles_alloc(struct psc_mparticles *mprts, int *n_prts_by_patch)
+{
+  struct psc_mparticles_ops *ops = psc_mparticles_ops(mprts);
+  assert(ops && ops->alloc);
+  ops->alloc(mprts, n_prts_by_patch);
+}
+
+void
 psc_mparticles_realloc(struct psc_mparticles *mprts, int p, int n_prts)
 {
   struct psc_mparticles_ops *ops = psc_mparticles_ops(mprts);
@@ -178,6 +192,7 @@ psc_mparticles_get_as(struct psc_mparticles *mp_base, const char *type,
   psc_mparticles_set_domain_nr_particles(mp, mp_base->domain, nr_particles_by_patch);
   psc_mparticles_set_param_int(mp, "flags", flags);
   psc_mparticles_setup(mp);
+  psc_mparticles_alloc(mp, nr_particles_by_patch);
 
   if (!(flags & MP_DONT_COPY)) {
     psc_mparticles_copy_to_func_t copy_to, copy_from;
@@ -332,6 +347,7 @@ struct mrc_class_psc_mparticles mrc_class_psc_mparticles = {
   .size             = sizeof(struct psc_mparticles),
   .param_descr      = psc_mparticles_descr,
   .init             = psc_mparticles_init,
+  .view             = _psc_mparticles_view,
   .setup            = _psc_mparticles_setup,
   .destroy          = _psc_mparticles_destroy,
   .read             = _psc_mparticles_read,

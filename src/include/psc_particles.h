@@ -26,6 +26,7 @@ struct psc_mparticles_ops {
   MRC_SUBCLASS_OPS(struct psc_mparticles);
   void (*setup_internals)(struct psc_mparticles *mprts);
   unsigned int (*get_nr_particles)(struct psc_mparticles *mprts);
+  void (*alloc)(struct psc_mparticles *mprts, int *n_prts_by_patch);
   void (*realloc)(struct psc_mparticles *mprts, int p, int n_prts);
   void (*resize_patch)(struct psc_mparticles *mprts, int p, int n_prts);
   void (*get_n_prts_all)(struct psc_mparticles *mprts, int *n_prts_by_patch);
@@ -74,6 +75,7 @@ void psc_mparticles_n_prts_all(struct psc_mparticles *mparticles, int *n_prts_by
 void psc_mparticles_set_n_prts_by_patch(struct psc_mparticles *mprts, int p, int n_prts);
 void psc_mparticles_resize_patch(struct psc_mparticles *mparticles, int p, int n_prts);
 void psc_mparticles_setup_internals(struct psc_mparticles *mparticles);
+void psc_mparticles_alloc(struct psc_mparticles *mprts, int *n_prts_by_patch);
 void psc_mparticles_realloc(struct psc_mparticles *mprts, int p, int n_prts);
 
 struct psc_mparticles *psc_mparticles_get_as(struct psc_mparticles *mparticles_base,

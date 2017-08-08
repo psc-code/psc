@@ -111,25 +111,14 @@ MPFX(realloc_patch)(struct psc_mparticles *mprts, int p, int new_n_prts)
 
 // ----------------------------------------------------------------------
 // psc_mparticles_sub_setup
-//
-// FIXME does deliberately not call old-style setup_super(), rather duplicates
-// that code
 
 static void
 MPFX(setup)(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
-  
-  assert(mprts->nr_particles_by_patch);
 
-  mprts->mpatch = calloc(mprts->nr_patches, sizeof(*mprts->mpatch));
+  psc_mparticles_setup_super(mprts);
   sub->patch = calloc(mprts->nr_patches, sizeof(*sub->patch));
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    MPFX(setup_patch)(mprts, p, mprts->nr_particles_by_patch[p]);
-  }
-
-  free(mprts->nr_particles_by_patch);
-  mprts->nr_particles_by_patch = NULL;
 }
 
 // ----------------------------------------------------------------------
@@ -199,7 +188,7 @@ MPFX(read)(struct psc_mparticles *mprts, struct mrc_io *io)
   mrc_domain_get_patches(mprts->domain, &mprts->nr_patches);
   mrc_io_read_int(io, mprts, "flags", (int *) &mprts->flags);
 
-  mprts->mpatch = calloc(mprts->nr_patches, sizeof(*mprts->mpatch));
+  psc_mparticles_setup_super(mprts);
 
   for (int p = 0; p < mprts->nr_patches; p++) {
     particle_range_t prts = particle_range_mprts(mprts, p);
@@ -253,6 +242,20 @@ MPFX(destroy)(struct psc_mparticles *mprts)
 }
 
 static void
+MPFX(alloc)(struct psc_mparticles *mprts, int *n_prts_by_patch)
+{
+  assert(mprts->nr_particles_by_patch);
+
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    assert(n_prts_by_patch[p] == mprts->nr_particles_by_patch[p]);
+    MPFX(setup_patch)(mprts, p, n_prts_by_patch[p]);
+  }
+
+  free(mprts->nr_particles_by_patch);
+  mprts->nr_particles_by_patch = NULL;
+}
+
+static void
 MPFX(resize_patch)(struct psc_mparticles *mprts, int p, int n_prts)
 {
   struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
@@ -298,6 +301,7 @@ struct psc_mparticles_ops MPFX(ops) = {
   .destroy                 = MPFX(destroy),
   .write                   = MPFX(write),
   .read                    = MPFX(read),
+  .alloc                   = MPFX(alloc),
   .realloc                 = MPFX(realloc_patch),
   .resize_patch            = MPFX(resize_patch),
   .set_n_prts              = MPFX(set_n_prts),

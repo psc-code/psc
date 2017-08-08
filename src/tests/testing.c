@@ -78,6 +78,7 @@ psc_save_particles_ref(struct psc *psc, struct psc_mparticles *mprts_base)
     psc_mparticles_set_domain_nr_particles(particles_ref, psc->mrc_domain,
 					   nr_particles_by_patch);
     psc_mparticles_setup(particles_ref);
+    psc_mparticles_alloc(particles_ref, nr_particles_by_patch);
   }
 
   struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, "c", 0);

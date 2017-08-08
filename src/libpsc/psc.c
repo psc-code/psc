@@ -512,6 +512,7 @@ psc_setup_partition_and_particles(struct psc *psc)
   }
   psc_mparticles_set_param_int(psc->particles, "flags", psc->prm.particles_base_flags);
   psc_mparticles_setup(psc->particles);
+  psc_mparticles_alloc(psc->particles, nr_particles_by_patch);
 
   psc_setup_particles(psc, nr_particles_by_patch, particle_label_offset);
   free(nr_particles_by_patch);

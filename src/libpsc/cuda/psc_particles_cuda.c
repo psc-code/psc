@@ -307,15 +307,14 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
   cuda_base_init();
 
   mprts_cuda->n_prts_by_patch = calloc(mprts->nr_patches, sizeof(*mprts_cuda->n_prts_by_patch));
-
-  psc_mparticles_setup_super(mprts);
+  mprts_cuda->bnd = calloc(mprts->nr_patches, sizeof(*mprts_cuda->bnd));
 
   struct cuda_mparticles *cmprts = cuda_mparticles_create();
   mprts_cuda->cmprts = cmprts;
 
-  if (mprts->nr_patches == 0) {
-    return;
-  }
+  psc_mparticles_setup_super(mprts);
+
+  assert(mprts->nr_patches != 0);
   
   if (!mprts->flags) {
     // FIXME, they get set too late, so auto-dispatch "1vb" doesn't work
@@ -367,18 +366,6 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
   cuda_mparticles_set_domain_info(cmprts, &domain_info);
 
   free(domain_info.xb_by_patch);
-
-  // FIXME, copy only because of signed -> unsigned
-  unsigned int n_prts_by_patch[cmprts->n_patches];
-  for (int p = 0; p < cmprts->n_patches; p++) {
-    n_prts_by_patch[p] = mprts_cuda->n_prts_by_patch[p];
-  }
-
-  cuda_mparticles_alloc(cmprts, n_prts_by_patch);
-
-  __psc_mparticles_cuda_setup(mprts);
-
-  mprts_cuda->bnd = calloc(mprts->nr_patches, sizeof(*mprts_cuda->bnd));
 }
 
 // ----------------------------------------------------------------------
@@ -398,6 +385,34 @@ psc_mparticles_cuda_destroy(struct psc_mparticles *mprts)
   mprts_cuda->cmprts = NULL;
 
   free(mprts_cuda->n_prts_by_patch);
+  free(mprts_cuda->bnd);
+}
+
+// ----------------------------------------------------------------------
+// psc_mparticles_cuda_alloc
+
+static void
+psc_mparticles_cuda_alloc(struct psc_mparticles *mprts, int *_n_prts_by_patch)
+{
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+
+  assert(mprts->nr_particles_by_patch);
+
+  // FIXME, copy only because of signed -> unsigned
+  unsigned int n_prts_by_patch[cmprts->n_patches];
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    assert(mprts->nr_particles_by_patch[p] == _n_prts_by_patch[p]);
+    mprts_cuda->n_prts_by_patch[p] = _n_prts_by_patch[p];
+    n_prts_by_patch[p] = _n_prts_by_patch[p];
+  }
+
+  free(mprts->nr_particles_by_patch);
+  mprts->nr_particles_by_patch = NULL;
+  
+  cuda_mparticles_alloc(cmprts, n_prts_by_patch);
+
+  __psc_mparticles_cuda_setup(mprts);
 }
 
 // ----------------------------------------------------------------------
@@ -495,6 +510,7 @@ psc_mparticles_cuda_read(struct psc_mparticles *mprts, struct mrc_io *io)
   }
 
   psc_mparticles_setup(mprts);
+  psc_mparticles_alloc(mprts, mprts->nr_particles_by_patch);
 
   unsigned int off = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
@@ -649,6 +665,7 @@ struct psc_mparticles_ops psc_mparticles_cuda_ops = {
   .read                    = psc_mparticles_cuda_read,
   .write                   = psc_mparticles_cuda_write,
   .setup_internals         = psc_mparticles_cuda_setup_internals,
+  .alloc                   = psc_mparticles_cuda_alloc,
   .get_nr_particles        = psc_mparticles_cuda_get_nr_particles,
   .set_n_prts              = psc_mparticles_cuda_set_n_prts,
   .get_n_prts              = psc_mparticles_cuda_get_n_prts,
