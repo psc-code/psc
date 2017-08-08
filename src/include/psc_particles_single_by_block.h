@@ -8,22 +8,6 @@
 #include "psc_particles_common.h"
 #undef PTYPE
 
-struct psc_mparticles_single_by_block_patch {
-  particle_single_by_block_t *prt_array;
-  int n_prts;
-  int n_alloced;
-
-  particle_single_by_block_t *prt_array_alt;
-  int b_mx[3];
-  int nr_blocks;
-  particle_single_by_block_real_t b_dxi[3];
-  unsigned int *b_idx;
-  unsigned int *b_ids;
-  unsigned int *b_cnt;
-  unsigned int *b_off;
-  bool need_reorder;
-};
-
 struct psc_mparticles_single_by_block {
   struct psc_mparticles_single_by_block_patch *patch;
 };

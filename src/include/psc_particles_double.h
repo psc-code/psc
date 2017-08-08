@@ -8,12 +8,6 @@
 #include "psc_particles_common.h"
 #undef PTYPE
 
-struct psc_mparticles_double_patch {
-  particle_double_t *prt_array;
-  int n_prts;
-  int n_alloced;
-};
-
 struct psc_mparticles_double {
   struct psc_mparticles_double_patch *patch;
 };
