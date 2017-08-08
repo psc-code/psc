@@ -192,7 +192,6 @@ psc_mparticles_get_as(struct psc_mparticles *mp_base, const char *type,
   prof_start(pr);
 
   //  mprintf("get_as %s -> %s\n", psc_mparticles_type(mp_base), type);
-  psc_mparticles_update_n_part(mp_base);
   int nr_particles_by_patch[mp_base->nr_patches];
   psc_mparticles_n_prts_all(mp_base, nr_particles_by_patch);
 

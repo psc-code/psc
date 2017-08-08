@@ -597,6 +597,7 @@ psc_mparticles_cuda_get_n_prts_all(struct psc_mparticles *mprts, int *n_prts_by_
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
 
+  psc_mparticles_cuda_update_n_part(mprts);
   for (int p = 0; p < mprts->nr_patches; p++) {
     n_prts_by_patch[p] = mprts_cuda->n_prts_by_patch[p];
   }
