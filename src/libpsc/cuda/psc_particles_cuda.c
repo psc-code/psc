@@ -397,19 +397,13 @@ psc_mparticles_cuda_alloc(struct psc_mparticles *mprts, int *_n_prts_by_patch)
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
   struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
 
-  assert(mprts->nr_particles_by_patch);
-
   // FIXME, copy only because of signed -> unsigned
   unsigned int n_prts_by_patch[cmprts->n_patches];
   for (int p = 0; p < mprts->nr_patches; p++) {
-    assert(mprts->nr_particles_by_patch[p] == _n_prts_by_patch[p]);
     mprts_cuda->n_prts_by_patch[p] = _n_prts_by_patch[p];
     n_prts_by_patch[p] = _n_prts_by_patch[p];
   }
 
-  free(mprts->nr_particles_by_patch);
-  mprts->nr_particles_by_patch = NULL;
-  
   cuda_mparticles_alloc(cmprts, n_prts_by_patch);
 
   __psc_mparticles_cuda_setup(mprts);
@@ -486,15 +480,14 @@ static void
 psc_mparticles_cuda_read(struct psc_mparticles *mprts, struct mrc_io *io)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  mprts->domain = mrc_io_read_ref(io, mprts, "domain", mrc_domain);
-  mrc_io_read_int(io, mprts, "flags", (int *) &mprts->flags);
-  mrc_domain_get_patches(mprts->domain, &mprts->nr_patches);
+
+  psc_mparticles_read_super(mprts, io);
 
   int ierr;
   long h5_file;
   mrc_io_get_h5_file(io, &h5_file);
-
   hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, mprts), H5P_DEFAULT); H5_CHK(group);
+
   mprts->nr_particles_by_patch =
     calloc(mprts->nr_patches, sizeof(*mprts->nr_particles_by_patch));
 

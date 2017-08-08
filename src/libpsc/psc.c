@@ -505,8 +505,7 @@ psc_setup_partition_and_particles(struct psc *psc)
     psc_mparticles_create(mrc_domain_comm(psc->mrc_domain));
   psc_mparticles_set_type(psc->particles, psc->prm.particles_base);
   psc_mparticles_set_name(psc->particles, "mparticles");
-  psc_mparticles_set_domain_nr_particles(psc->particles, psc->mrc_domain,
-					 nr_particles_by_patch);
+  psc_mparticles_set_domain(psc->particles, psc->mrc_domain);
   if (psc->prm.particles_base_flags == 0) {
     psc->prm.particles_base_flags = psc_push_particles_get_mp_flags(ppsc->push_particles);
   }

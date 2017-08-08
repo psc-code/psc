@@ -179,16 +179,11 @@ static void
 MPFX(read)(struct psc_mparticles *mprts, struct mrc_io *io)
 {
   int ierr;
+  psc_mparticles_read_super(mprts, io);
+
   long h5_file;
   mrc_io_get_h5_file(io, &h5_file);
-
   hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, mprts), H5P_DEFAULT); H5_CHK(group);
-  // FIXME those should be superclass bits
-  mprts->domain = mrc_io_read_ref(io, mprts, "domain", mrc_domain);
-  mrc_domain_get_patches(mprts->domain, &mprts->nr_patches);
-  mrc_io_read_int(io, mprts, "flags", (int *) &mprts->flags);
-
-  psc_mparticles_setup_super(mprts);
 
   for (int p = 0; p < mprts->nr_patches; p++) {
     particle_range_t prts = particle_range_mprts(mprts, p);
@@ -244,15 +239,9 @@ MPFX(destroy)(struct psc_mparticles *mprts)
 static void
 MPFX(alloc)(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
-  assert(mprts->nr_particles_by_patch);
-
   for (int p = 0; p < mprts->nr_patches; p++) {
-    assert(n_prts_by_patch[p] == mprts->nr_particles_by_patch[p]);
     MPFX(setup_patch)(mprts, p, n_prts_by_patch[p]);
   }
-
-  free(mprts->nr_particles_by_patch);
-  mprts->nr_particles_by_patch = NULL;
 }
 
 static void

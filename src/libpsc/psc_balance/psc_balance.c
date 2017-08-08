@@ -745,8 +745,7 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   struct psc_mparticles *mprts_base_new = 
     psc_mparticles_create(mrc_domain_comm(domain_new));
   psc_mparticles_set_type(mprts_base_new, psc->prm.particles_base);
-  psc_mparticles_set_domain_nr_particles(mprts_base_new, domain_new,
-					 nr_particles_by_patch);
+  psc_mparticles_set_domain(mprts_base_new, domain_new);
   unsigned int mp_flags;
   psc_mparticles_get_param_int(psc->particles, "flags", (int *) &mp_flags);
   psc_mparticles_set_param_int(mprts_base_new, "flags", mp_flags);

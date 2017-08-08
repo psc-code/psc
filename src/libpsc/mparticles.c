@@ -22,18 +22,13 @@ psc_mparticles_set_nr_particles(struct psc_mparticles *mprts, int *n_prts_by_pat
   }
 }
 
+// FIXME, do we need this at all, and if so, could be a PARAM_OBJ
 void
-psc_mparticles_set_domain_nr_particles(struct psc_mparticles *mparticles,
-				       struct mrc_domain *domain,
-				       int *nr_particles_by_patch)
+psc_mparticles_set_domain(struct psc_mparticles *mparticles,
+			  struct mrc_domain *domain)
 {
   mparticles->domain = domain;
   mrc_domain_get_patches(domain, &mparticles->nr_patches);
-  int *np = malloc(mparticles->nr_patches * sizeof(*np));
-  for (int p = 0; p < mparticles->nr_patches; p++) {
-    np[p] = nr_particles_by_patch[p];
-  }
-  mparticles->nr_particles_by_patch = np;
 }
 
 static void
@@ -83,9 +78,7 @@ _psc_mparticles_read(struct psc_mparticles *mparticles, struct mrc_io *io)
   mrc_domain_get_patches(mparticles->domain, &mparticles->nr_patches);
   mrc_io_read_int(io, mparticles, "flags", (int *) &mparticles->flags);
 
-  mparticles->mpatch = calloc(mparticles->nr_patches, sizeof(*mparticles->mpatch));
-  mparticles->nr_particles_by_patch =
-    calloc(mparticles->nr_patches, sizeof(*mparticles->nr_particles_by_patch));
+  _psc_mparticles_setup(mparticles);
 }
 
 int
@@ -189,7 +182,7 @@ psc_mparticles_get_as(struct psc_mparticles *mp_base, const char *type,
   struct psc_mparticles *mp =
     psc_mparticles_create(psc_mparticles_comm(mp_base));
   psc_mparticles_set_type(mp, type);
-  psc_mparticles_set_domain_nr_particles(mp, mp_base->domain, nr_particles_by_patch);
+  psc_mparticles_set_domain(mp, mp_base->domain);
   psc_mparticles_set_param_int(mp, "flags", flags);
   psc_mparticles_setup(mp);
   psc_mparticles_alloc(mp, nr_particles_by_patch);
