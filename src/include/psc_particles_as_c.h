@@ -22,6 +22,8 @@ typedef particle_c_t particle_t;
 #define particle_real_sqrt          particle_c_real_sqrt
 #define particle_real_abs           particle_c_real_abs
 
+#define particle_iter_t             psc_particle_c_iter_t
+
 #define MPI_PARTICLES_REAL          MPI_PARTICLES_C_REAL
 #define PARTICLE_TYPE               "c"
 

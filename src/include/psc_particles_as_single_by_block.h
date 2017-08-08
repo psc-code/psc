@@ -22,6 +22,8 @@ typedef particle_single_by_block_t particle_t;
 #define particle_real_abs           particle_single_by_block_real_abs
 #define particle_real_sqrt          particle_single_by_block_real_sqrt
 
+#define particle_iter_t             psc_particle_single_by_block_iter_t
+
 #define MPI_PARTICLES_REAL          MPI_PARTICLES_SINGLE_BY_BLOCK_REAL
 #define PARTICLE_TYPE               "single_by_block"
 

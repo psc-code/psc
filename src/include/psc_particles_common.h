@@ -14,6 +14,7 @@
 #define psc_mparticles_PTYPE psc_mparticles_single
 #define psc_mparticles_PTYPE_ops psc_mparticles_single_ops
 #define psc_mparticles_PTYPE_get_one psc_mparticles_single_get_one
+#define psc_particle_PTYPE_iter_t psc_particle_single_iter_t
 
 #elif PTYPE == PTYPE_DOUBLE
 
@@ -24,6 +25,7 @@
 #define psc_mparticles_PTYPE psc_mparticles_double
 #define psc_mparticles_PTYPE_ops psc_mparticles_double_ops
 #define psc_mparticles_PTYPE_get_one psc_mparticles_double_get_one
+#define psc_particle_PTYPE_iter_t psc_particle_double_iter_t
 
 #elif PTYPE == PTYPE_SINGLE_BY_BLOCK
 
@@ -34,6 +36,7 @@
 #define psc_mparticles_PTYPE psc_mparticles_single_by_block
 #define psc_mparticles_PTYPE_ops psc_mparticles_single_by_block_ops
 #define psc_mparticles_PTYPE_get_one psc_mparticles_single_by_block_get_one
+#define psc_particle_PTYPE_iter_t psc_particle_single_by_block_iter_t
 
 #elif PTYPE == PTYPE_C
 
@@ -44,6 +47,7 @@
 #define psc_mparticles_PTYPE psc_mparticles_c
 #define psc_mparticles_PTYPE_ops psc_mparticles_c_ops
 #define psc_mparticles_PTYPE_get_one psc_mparticles_c_get_one
+#define psc_particle_PTYPE_iter_t psc_particle_c_iter_t
 
 #elif PTYPE == PTYPE_FORTRAN
 
@@ -54,6 +58,7 @@
 #define psc_mparticles_PTYPE psc_mparticles_fortran
 #define psc_mparticles_PTYPE_ops psc_mparticles_fortran_ops
 #define psc_mparticles_PTYPE_get_one psc_mparticles_fortran_get_one
+#define psc_particle_PTYPE_iter_t psc_particle_fortran_iter_t
 
 #endif
 
@@ -190,19 +195,13 @@ psc_mparticles_PTYPE_get_one(struct psc_mparticles *mprts, int p, int n)
 }
 
 // ----------------------------------------------------------------------
-//
+// psc_particle_PTYPE_iter_t
 
-#if PTYPE == PTYPE_SINGLE
-
-#elif PTYPE == PTYPE_DOUBLE
-
-#elif PTYPE == PTYPE_SINGLE_BY_BLOCK
-
-#elif PTYPE == PTYPE_C
-
-#elif PTYPE == PTYPE_FORTRAN
-
-#endif
+typedef struct {
+  int n;
+  int p;
+  const struct psc_mparticles *mprts;
+} psc_particle_PTYPE_iter_t;
 
 
 
@@ -215,3 +214,4 @@ psc_mparticles_PTYPE_get_one(struct psc_mparticles *mprts, int p, int n)
 #undef psc_mparticles_PTYPE
 #undef psc_mparticles_PTYPE_ops
 #undef psc_mparticles_PTYPE_get_one
+#undef psc_particle_PTYPE_iter_t

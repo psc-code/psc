@@ -2,12 +2,6 @@
 // ======================================================================
 // particle_iter_t
 
-typedef struct {
-  int n;
-  int p;
-  const struct psc_mparticles *mprts;
-} particle_iter_t;
-
 static inline bool
 particle_iter_equal(particle_iter_t iter, particle_iter_t iter2)
 {
