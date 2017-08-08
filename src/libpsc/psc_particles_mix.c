@@ -33,10 +33,6 @@ psc_mparticles_mix_setup(struct psc_mparticles *mprts)
 					 mprts->nr_particles_by_patch);
   mprts->nr_particles_by_patch = NULL;
   psc_mparticles_setup_children(mprts);
-  mprts->prts = calloc(mprts->nr_patches, sizeof(*mprts->prts));
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    mprts->prts[p] = psc_particles_get(mix->sub->prts[p]);
-  }
 }
 
 // ----------------------------------------------------------------------

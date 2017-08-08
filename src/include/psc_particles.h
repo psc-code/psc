@@ -18,7 +18,6 @@ struct mprts_patch {
 
 struct psc_mparticles {
   struct mrc_obj obj;
-  struct psc_particles **prts;
   struct mprts_patch *mpatch;
   int nr_patches;
   struct mrc_domain *domain;

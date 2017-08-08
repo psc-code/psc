@@ -41,14 +41,9 @@ _psc_mparticles_setup(struct psc_mparticles *mprts)
 {
   assert(mprts->nr_particles_by_patch);
 
-  mprts->prts = calloc(mprts->nr_patches, sizeof(*mprts->prts));
   mprts->mpatch = calloc(mprts->nr_patches, sizeof(*mprts->mpatch));
   for (int p = 0; p < mprts->nr_patches; p++) {
-    mprts->prts[p] = psc_particles_create(MPI_COMM_NULL);
-    mprts->prts[p]->mprts = mprts;
-    mprts->prts[p]->p = p;
     psc_mparticles_set_n_prts_by_patch(mprts, p, mprts->nr_particles_by_patch[p]);
-    psc_particles_setup(mprts->prts[p]);
   }
 
   free(mprts->nr_particles_by_patch);
@@ -58,10 +53,6 @@ _psc_mparticles_setup(struct psc_mparticles *mprts)
 static void
 _psc_mparticles_destroy(struct psc_mparticles *mparticles)
 {
-  for (int p = 0; p < mparticles->nr_patches; p++) {
-    psc_particles_destroy(mparticles->prts[p]);
-  }
-  free(mparticles->prts);
   free(mparticles->mpatch);
 }
 
@@ -77,11 +68,6 @@ _psc_mparticles_write(struct psc_mparticles *mparticles, struct mrc_io *io)
 
   mrc_io_write_ref(io, mparticles, "domain", mparticles->domain);
   mrc_io_write_int(io, mparticles, "flags", mparticles->flags);
-  
-  for (int p = 0; p < mparticles->nr_patches; p++) {
-    char name[20]; sprintf(name, "prts%d", p);
-    mrc_io_write_ref(io, mparticles, name, mparticles->prts[p]);
-  }
 }
 
 static void
@@ -91,15 +77,9 @@ _psc_mparticles_read(struct psc_mparticles *mparticles, struct mrc_io *io)
   mrc_domain_get_patches(mparticles->domain, &mparticles->nr_patches);
   mrc_io_read_int(io, mparticles, "flags", (int *) &mparticles->flags);
 
-  mparticles->prts = calloc(mparticles->nr_patches, sizeof(*mparticles->prts));
   mparticles->mpatch = calloc(mparticles->nr_patches, sizeof(*mparticles->mpatch));
   mparticles->nr_particles_by_patch =
     calloc(mparticles->nr_patches, sizeof(*mparticles->nr_particles_by_patch));
-  for (int p = 0; p < mparticles->nr_patches; p++) {
-    char name[20]; sprintf(name, "prts%d", p);
-    mparticles->prts[p] = mrc_io_read_ref_comm(io, mparticles, name, psc_particles,
-					       MPI_COMM_NULL);
-  }
 }
 
 int

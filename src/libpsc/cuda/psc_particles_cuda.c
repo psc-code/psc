@@ -476,12 +476,8 @@ psc_mparticles_cuda_read(struct psc_mparticles *mprts, struct mrc_io *io)
   hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, mprts), H5P_DEFAULT); H5_CHK(group);
   mprts->nr_particles_by_patch =
     calloc(mprts->nr_patches, sizeof(*mprts->nr_particles_by_patch));
-  mprts->prts = calloc(mprts->nr_patches, sizeof(*mprts->prts));
 
   for (int p = 0; p < mprts->nr_patches; p++) {
-    mprts->prts[p] = psc_particles_create(MPI_COMM_NULL);
-    mprts->prts[p]->p = p;
-
     char pname[10];
     sprintf(pname, "p%d", p);
     hid_t pgroup = H5Gopen(group, pname, H5P_DEFAULT); H5_CHK(pgroup);

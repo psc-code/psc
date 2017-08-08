@@ -122,14 +122,9 @@ MPFX(setup)(struct psc_mparticles *mprts)
   
   assert(mprts->nr_particles_by_patch);
 
-  mprts->prts = calloc(mprts->nr_patches, sizeof(*mprts->prts));
   mprts->mpatch = calloc(mprts->nr_patches, sizeof(*mprts->mpatch));
   sub->patch = calloc(mprts->nr_patches, sizeof(*sub->patch));
   for (int p = 0; p < mprts->nr_patches; p++) {
-    mprts->prts[p] = psc_particles_create(MPI_COMM_NULL);
-    mprts->prts[p]->mprts = mprts;
-    mprts->prts[p]->p = p;
-
     MPFX(setup_patch)(mprts, p, mprts->nr_particles_by_patch[p]);
   }
 
@@ -204,16 +199,9 @@ MPFX(read)(struct psc_mparticles *mprts, struct mrc_io *io)
   mrc_domain_get_patches(mprts->domain, &mprts->nr_patches);
   mrc_io_read_int(io, mprts, "flags", (int *) &mprts->flags);
 
-  mprts->prts = calloc(mprts->nr_patches, sizeof(*mprts->prts));
   mprts->mpatch = calloc(mprts->nr_patches, sizeof(*mprts->mpatch));
 
   for (int p = 0; p < mprts->nr_patches; p++) {
-    char name[20]; sprintf(name, "prts%d", p);
-    mprts->prts[p] = psc_particles_create(MPI_COMM_NULL);
-    psc_particles_set_type(mprts->prts[p], PARTICLE_TYPE);
-    psc_particles_set_name(mprts->prts[p], name);
-    mprts->prts[p]->p = p;
-
     particle_range_t prts = particle_range_mprts(mprts, p);
     char pname[10]; sprintf(pname, "p%d", p);
     hid_t pgroup = H5Gopen(group, pname, H5P_DEFAULT); H5_CHK(pgroup);
