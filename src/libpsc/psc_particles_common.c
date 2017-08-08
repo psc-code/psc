@@ -48,11 +48,12 @@
 // psc_mparticles_sub_setup_patch
 
 static void
-MPFX(setup_patch)(struct psc_mparticles *mprts, int p)
+MPFX(setup_patch)(struct psc_mparticles *mprts, int p, int n_prts)
 {
   struct psc_mparticles_sub *msub = psc_mparticles_sub(mprts);
   struct MPFX(patch) *patch = &msub->patch[p];
 
+  patch->n_prts = n_prts;
   int n_alloced = psc_mparticles_n_prts_by_patch(mprts, p) * 1.2;
   patch->n_alloced = n_alloced;
   patch->prt_array = calloc(n_alloced, sizeof(*patch->prt_array));
@@ -177,9 +178,7 @@ MPFX(setup)(struct psc_mparticles *mprts)
     mprts->prts[p]->mprts = mprts;
     mprts->prts[p]->p = p;
 
-    struct MPFX(patch) *patch = &sub->patch[p];
-    patch->n_prts = mprts->nr_particles_by_patch[p];
-    MPFX(setup_patch)(mprts, p);
+    MPFX(setup_patch)(mprts, p, mprts->nr_particles_by_patch[p]);
   }
 
   free(mprts->nr_particles_by_patch);
@@ -243,8 +242,6 @@ MPFX(write)(struct psc_mparticles *mprts, struct mrc_io *io)
 static void
 MPFX(read)(struct psc_mparticles *mprts, struct mrc_io *io)
 {
-  struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
-  
   int ierr;
   long h5_file;
   mrc_io_get_h5_file(io, &h5_file);
@@ -270,9 +267,7 @@ MPFX(read)(struct psc_mparticles *mprts, struct mrc_io *io)
     hid_t pgroup = H5Gopen(group, pname, H5P_DEFAULT); H5_CHK(pgroup);
     int n_prts;
     ierr = H5LTget_attribute_int(pgroup, ".", "n_prts", &n_prts); CE;
-    struct MPFX(patch) *patch = &sub->patch[p];
-    patch->n_prts = n_prts;
-    MPFX(setup_patch)(mprts, p);
+    MPFX(setup_patch)(mprts, p, n_prts);
     
     if (n_prts > 0) {
 #if PSC_PARTICLES_AS_SINGLE
