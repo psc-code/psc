@@ -10,30 +10,35 @@
 #define particle_real_t particle_single_real_t
 #define particle_t particle_single_t
 #define psc_particle psc_particle_single
+#define psc_mparticles_patch psc_mparticles_single_patch
 
 #elif PTYPE == PTYPE_DOUBLE
 
 #define particle_real_t particle_double_real_t
 #define particle_t particle_double_t
 #define psc_particle psc_particle_double
+#define psc_mparticles_patch psc_mparticles_double_patch
 
 #elif PTYPE == PTYPE_SINGLE_BY_BLOCK
 
 #define particle_real_t particle_single_by_block_real_t
 #define particle_t particle_single_by_block_t
 #define psc_particle psc_particle_single_by_block
+#define psc_mparticles_patch psc_mparticles_single_by_block_patch
 
 #elif PTYPE == PTYPE_C
 
 #define particle_real_t particle_c_real_t
 #define particle_t particle_c_t
 #define psc_particle psc_particle_c
+#define psc_mparticles_patch psc_mparticles_c_patch
 
 #elif PTYPE == PTYPE_FORTRAN
 
 #define particle_real_t particle_fortran_real_t
 #define particle_t particle_fortran_t
 #define psc_particle psc_particle_fortran
+#define psc_mparticles_patch psc_mparticles_fortran_patch
 
 #endif
 
@@ -116,68 +121,37 @@ typedef struct psc_particle {
 // ----------------------------------------------------------------------
 // psc_mparticles_patch
 
-#if PTYPE == PTYPE_SINGLE
-
-struct psc_mparticles_single_patch {
-  particle_single_t *prt_array;
+struct psc_mparticles_patch {
+  particle_t *prt_array;
   int n_prts;
   int n_alloced;
 
-  particle_single_t *prt_array_alt;
+#if PTYPE == PTYPE_SINGLE
+  particle_t *prt_array_alt;
   int b_mx[3];
   int nr_blocks;
-  particle_single_real_t b_dxi[3];
+  particle_real_t b_dxi[3];
   unsigned int *b_idx;
   unsigned int *b_ids;
   unsigned int *b_cnt;
   unsigned int n_send;
   unsigned int n_part_save;
   bool need_reorder;
-};
-
-#elif PTYPE == PTYPE_DOUBLE
-
-struct psc_mparticles_double_patch {
-  particle_double_t *prt_array;
-  int n_prts;
-  int n_alloced;
-};
-
-#elif PTYPE == PTYPE_SINGLE_BY_BLOCK
-
-struct psc_mparticles_single_by_block_patch {
-  particle_single_by_block_t *prt_array;
-  int n_prts;
-  int n_alloced;
-
-  particle_single_by_block_t *prt_array_alt;
+#endif
+  
+#if PTYPE == PTYPE_SINGLE_BY_BLOCK
+  particle_t *prt_array_alt;
   int b_mx[3];
   int nr_blocks;
-  particle_single_by_block_real_t b_dxi[3];
+  particle_real_t b_dxi[3];
   unsigned int *b_idx;
   unsigned int *b_ids;
   unsigned int *b_cnt;
   unsigned int *b_off;
   bool need_reorder;
-};
-
-#elif PTYPE == PTYPE_C
-
-struct psc_mparticles_c_patch {
-  particle_c_t *prt_array;
-  int n_prts;
-  int n_alloced;
-};
-
-#elif PTYPE == PTYPE_FORTRAN
-
-struct psc_mparticles_fortran_patch {
-  particle_fortran_t *prt_array;
-  int n_prts;
-  int n_alloced;
-};
-
 #endif
+};
+
 
 // ----------------------------------------------------------------------
 //
@@ -202,3 +176,4 @@ struct psc_mparticles_fortran_patch {
 #undef particle_real_t
 #undef particle_t
 #undef psc_particle
+#undef psc_mparticles_patch
