@@ -6,11 +6,6 @@
 #include <assert.h>
 
 // ----------------------------------------------------------------------
-// psc_particles class
-
-MRC_CLASS_DECLARE(psc_particles, struct psc_particles);
-
-// ----------------------------------------------------------------------
 // psc_mparticles class
 
 struct mprts_patch {

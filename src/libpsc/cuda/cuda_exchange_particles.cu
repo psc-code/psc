@@ -340,8 +340,6 @@ cuda_mprts_convert_from_cuda(struct psc_mparticles *mprts)
   float4 *bnd_xi4 = mprts_cuda->h_bnd_xi4;
   float4 *bnd_pxi4 = mprts_cuda->h_bnd_pxi4;
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-
     mprts_cuda->bnd[p].prts = new particle_single_t[mprts_cuda->bnd[p].n_send];
     for (int n = 0; n < mprts_cuda->bnd[p].n_send; n++) {
       particle_single_t *prt = &mprts_cuda->bnd[p].prts[n];
@@ -414,6 +412,8 @@ cuda_mprts_sort(struct psc_mparticles *mprts, int *n_prts_by_patch)
 // ======================================================================
 // cuda_mprts_check_ordered_total
 
+#if 0
+
 void
 cuda_mprts_check_ordered_total(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
@@ -444,3 +444,4 @@ cuda_mprts_check_ordered_total(struct psc_mparticles *mprts, int *n_prts_by_patc
   }
 }
 
+#endif

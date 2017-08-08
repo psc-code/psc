@@ -2,7 +2,6 @@
 #include "psc_sort_private.h"
 #include "psc_particles_as_double.h"
 
-#include "psc_glue.h"
 #include <mrc_profile.h>
 #include <mrc_params.h>
 

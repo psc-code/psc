@@ -1,9 +1,6 @@
 
 #include "psc_output_particles_private.h"
 
-#include "psc_glue.h"
-#include <mrc_profile.h>
-
 // ----------------------------------------------------------------------
 // psc_output_particles_none_run
 

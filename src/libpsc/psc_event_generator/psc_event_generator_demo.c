@@ -1,6 +1,5 @@
 
 #include "psc_event_generator_private.h"
-#include "psc_glue.h"
 
 #include <mrc_profile.h>
 #include <stdlib.h>

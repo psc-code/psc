@@ -43,9 +43,6 @@ struct psc_mparticles_cuda {
 #define CUDA_BND_S_OOB (10)
 #define CUDA_BND_STRIDE (10)
 
-EXTERN_C void particles_cuda_get(struct psc_particles *pp);
-EXTERN_C void particles_cuda_put(struct psc_particles *pp);
-
 static inline int
 particle_cuda_real_nint(particle_cuda_real_t x)
 {

@@ -31,6 +31,8 @@ struct count_if_equal : public thrust::unary_function<unsigned int, unsigned int
   }
 };
 
+#if 0
+
 EXTERN_C int
 cuda_exclusive_scan_2(struct psc_particles *prts, unsigned int *_d_vals,
 		      unsigned int *_d_sums, int n_prts)
@@ -70,6 +72,8 @@ _cuda_exclusive_scan_2(struct psc_particles *prts, unsigned int *d_bidx,
   delete[] bidx;
   return sum;
 }
+
+#endif
 
 void
 cuda_mprts_find_n_send(struct psc_mparticles *mprts)

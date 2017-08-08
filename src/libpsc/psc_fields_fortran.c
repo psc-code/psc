@@ -2,7 +2,6 @@
 #include "psc.h"
 #include "psc_fields_fortran.h"
 #include "psc_fields_c.h"
-#include "psc_glue.h"
 
 #include <mrc_params.h>
 #include <stdlib.h>

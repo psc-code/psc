@@ -1,10 +1,6 @@
 
 #include "psc_bnd_fields_private.h"
 
-#include "psc.h"
-#include "psc_glue.h"
-#include <mrc_profile.h>
-
 // FIXME, this is useful at most for testing and maybe should go away
 
 // ======================================================================

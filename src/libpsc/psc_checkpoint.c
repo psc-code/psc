@@ -1,6 +1,5 @@
 
 #include "psc.h"
-#include "psc_glue.h"
 
 #include "mrc_io.h"
 
