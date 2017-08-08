@@ -488,8 +488,7 @@ psc_mparticles_cuda_read(struct psc_mparticles *mprts, struct mrc_io *io)
   mrc_io_get_h5_file(io, &h5_file);
   hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, mprts), H5P_DEFAULT); H5_CHK(group);
 
-  mprts->nr_particles_by_patch =
-    calloc(mprts->nr_patches, sizeof(*mprts->nr_particles_by_patch));
+  int n_prts_by_patch[mprts->nr_patches];
 
   for (int p = 0; p < mprts->nr_patches; p++) {
     char pname[10];
@@ -497,13 +496,12 @@ psc_mparticles_cuda_read(struct psc_mparticles *mprts, struct mrc_io *io)
     hid_t pgroup = H5Gopen(group, pname, H5P_DEFAULT); H5_CHK(pgroup);
     int n_prts;
     ierr = H5LTget_attribute_int(pgroup, ".", "n_prts", &n_prts); CE;
-    mprts->nr_particles_by_patch[p] = n_prts;
-
+    n_prts_by_patch[p] = n_prts;
     ierr = H5Gclose(pgroup); CE;
   }
 
   psc_mparticles_setup(mprts);
-  psc_mparticles_alloc(mprts, mprts->nr_particles_by_patch);
+  psc_mparticles_alloc(mprts, n_prts_by_patch);
 
   unsigned int off = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
