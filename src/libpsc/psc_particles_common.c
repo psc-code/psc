@@ -13,8 +13,8 @@
 static void
 MPFX(setup_patch)(struct psc_mparticles *mprts, int p, int n_prts)
 {
-  struct psc_mparticles_sub *msub = psc_mparticles_sub(mprts);
-  struct MPFX(patch) *patch = &msub->patch[p];
+  struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
+  struct MPFX(patch) *patch = &sub->patch[p];
 
   patch->n_prts = n_prts;
   int n_alloced = psc_mparticles_n_prts_by_patch(mprts, p) * 1.2;
@@ -56,8 +56,8 @@ MPFX(setup_patch)(struct psc_mparticles *mprts, int p, int n_prts)
 static void
 MPFX(destroy_patch)(struct psc_mparticles *mprts, int p)
 {
-  struct psc_mparticles_sub *msub = psc_mparticles_sub(mprts);
-  struct MPFX(patch) *patch = &msub->patch[p];
+  struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
+  struct MPFX(patch) *patch = &sub->patch[p];
 
   free(patch->prt_array);
 
@@ -83,8 +83,8 @@ MPFX(destroy_patch)(struct psc_mparticles *mprts, int p)
 static void
 MPFX(realloc_patch)(struct psc_mparticles *mprts, int p, int new_n_prts)
 {
-  struct psc_mparticles_sub *msub = psc_mparticles_sub(mprts);
-  struct MPFX(patch) *patch = &msub->patch[p];
+  struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
+  struct MPFX(patch) *patch = &sub->patch[p];
 
   if (new_n_prts <= patch->n_alloced)
     return;
