@@ -57,7 +57,6 @@ extern struct psc_mparticles_ops psc_mparticles_fortran_ops;
 extern struct psc_mparticles_ops psc_mparticles_c_ops;
 extern struct psc_mparticles_ops psc_mparticles_single_ops;
 extern struct psc_mparticles_ops psc_mparticles_double_ops;
-extern struct psc_mparticles_ops psc_mparticles_mix_ops;
 extern struct psc_mparticles_ops psc_mparticles_sse2_ops;
 extern struct psc_mparticles_ops psc_mparticles_cbe_ops;
 extern struct psc_mparticles_ops psc_mparticles_cuda_ops;

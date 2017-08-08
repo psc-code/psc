@@ -99,7 +99,6 @@ libpsc_la_SOURCES = \
 	psc_particles_single.c \
 	psc_particles_double.c \
 	psc_particles_single_by_block.c \
-	psc_particles_mix.c \
 	psc_photons.c \
 	psc.c \
 	integrate.c \
