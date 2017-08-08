@@ -642,7 +642,7 @@ inject_particles(int p, struct psc_mparticles *mprts, struct psc_fields *flds,
     }
     for (int n = 0; n < ninjc; n++) {
       unsigned int i = particle_range_size(prts);
-      particle_range_resize(&prts, i + 1);
+      psc_mparticles_resize_patch(mprts, p, i + 1);
       particle_t *prt = particle_iter_at(prts.begin, i); 
       prt->kind = kind;
       prt->qni_wni = ppsc->kinds[kind].q;
@@ -819,8 +819,7 @@ psc_bnd_particles_sub_exchange_particles_post(struct psc_bnd_particles *bnd,
 {
   struct ddc_particles *ddcp = bnd->ddcp;
   struct ddcp_patch *patch = &ddcp->patches[p];
-  particle_range_t prts = particle_range_mprts(mprts, p);
-  particle_range_resize(&prts,  patch->head);
+  psc_mparticles_resize_patch(mprts, p, patch->head);
 }
 
 // ----------------------------------------------------------------------

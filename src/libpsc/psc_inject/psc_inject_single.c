@@ -196,7 +196,7 @@ psc_inject_single_run(struct psc_inject *inject, struct psc_mparticles *mprts_ba
 	}
       }
     }
-    particle_range_resize(&prts, i);
+    psc_mparticles_resize_patch(mprts, p, i);
   }
 
   psc_mparticles_put_as(mprts, mprts_base, 0);

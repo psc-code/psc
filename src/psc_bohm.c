@@ -220,7 +220,7 @@ seed_patch(struct psc *psc, struct psc_mparticles *mprts, int p)
 
       // electrons
       int i = particle_range_size(prts);
-      particle_range_resize(&prts, i + 1);
+      psc_mparticles_resize_patch(mprts, p, i + 1);
       prt = particle_iter_at(prts.begin, i);
       prt->wni = 1.;
       npt.q = -1.;
@@ -233,7 +233,7 @@ seed_patch(struct psc *psc, struct psc_mparticles *mprts, int p)
       
       // ions
       i = particle_range_size(prts);
-      particle_range_resize(&prts, i + 1);
+      psc_mparticles_resize_patch(mprts, p, i + 1);
       prt = particle_iter_at(prts.begin, i);
       prt->wni = 1.;
       npt.q = 1.;

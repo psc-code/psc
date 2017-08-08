@@ -980,7 +980,7 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 	}
       }
     }
-    particle_range_resize(&prts, i);
+    psc_mparticles_resize_patch(mprts, p, i);
     if (!psc->prm.fractional_n_particles_per_cell) {
       assert(i == nr_particles_by_patch[p]);
     }
