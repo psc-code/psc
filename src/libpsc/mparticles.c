@@ -99,15 +99,6 @@ psc_mparticles_nr_particles(struct psc_mparticles *mprts)
   return n_part;
 }
 
-int
-psc_mparticles_n_prts_by_patch(struct psc_mparticles *mprts, int p)
-{
-  struct psc_mparticles_ops *ops = psc_mparticles_ops(mprts);
-  assert(ops->get_n_prts);
-
-  return ops->get_n_prts(mprts, p);
-}
-
 void
 psc_mparticles_n_prts_all(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {

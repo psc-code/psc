@@ -593,17 +593,6 @@ psc_mparticles_cuda_get_nr_particles(struct psc_mparticles *mprts)
 }
 
 // ----------------------------------------------------------------------
-// psc_mparticles_cuda_get_n_prts
-
-static int
-psc_mparticles_cuda_get_n_prts(struct psc_mparticles *mprts, int p)
-{
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-
-  return mprts_cuda->n_prts_by_patch[p];
-}
-
-// ----------------------------------------------------------------------
 // psc_mparticles_cuda_get_n_prts_all
 
 static void
@@ -659,7 +648,6 @@ struct psc_mparticles_ops psc_mparticles_cuda_ops = {
   .alloc                   = psc_mparticles_cuda_alloc,
   .get_nr_particles        = psc_mparticles_cuda_get_nr_particles,
   .set_n_prts              = psc_mparticles_cuda_set_n_prts,
-  .get_n_prts              = psc_mparticles_cuda_get_n_prts,
   .get_n_prts_all          = psc_mparticles_cuda_get_n_prts_all,
 };
 

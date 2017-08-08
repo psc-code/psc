@@ -211,7 +211,7 @@ seed_patch(struct psc *psc, struct psc_mparticles *mprts, int p)
       q-= f;
     }
 
-    psc_mparticles_realloc(mprts, p, psc_mparticles_n_prts_by_patch(mprts, p) + 2*N_new);
+    psc_mparticles_realloc(mprts, p, particle_range_size(prts) + 2*N_new);
 
     struct psc_particle_npt npt = {};
     particle_t *prt;

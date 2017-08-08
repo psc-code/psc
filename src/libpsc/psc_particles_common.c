@@ -286,7 +286,6 @@ struct psc_mparticles_ops PFX(ops) = {
   .realloc                 = PFX(realloc_patch),
   .resize_patch            = PFX(resize_patch),
   .set_n_prts              = PFX(set_n_prts),
-  .get_n_prts              = PFX(get_n_prts),
   .get_n_prts_all          = PFX(get_n_prts_all),
 };
 
