@@ -69,16 +69,13 @@ copy_from(struct psc_mparticles *mprts, struct psc_mparticles *mprts_from,
 {
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
+  unsigned int off = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
     int n_prts = psc_mparticles_n_prts_by_patch(mprts, p);
-    
-    unsigned int off = 0;
-    for (int pp = 0; pp < p; pp++) {
-      off += psc_mparticles_n_prts_by_patch(mprts, pp);
-    }
-    
     struct copy_ctx ctx = { .mprts = mprts_from, .p = p };
     cuda_mparticles_set_particles(cmprts, n_prts, off, get_particle, &ctx);
+
+    off += n_prts;
   }
 }
 
@@ -87,17 +84,14 @@ copy_to(struct psc_mparticles *mprts, struct psc_mparticles *mprts_to,
 	void (*put_particle)(struct cuda_mparticles_prt *prt, int n, void *ctx))
 {
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-
+  
+  unsigned int off = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
     int n_prts = psc_mparticles_n_prts_by_patch(mprts, p);
-    
-    unsigned int off = 0;
-    for (int pp = 0; pp < p; pp++) {
-      off += psc_mparticles_n_prts_by_patch(mprts, pp);
-    }
-
     struct copy_ctx ctx = { .mprts = mprts_to, .p = p };
     cuda_mparticles_get_particles(cmprts, n_prts, off, put_particle, &ctx);
+
+    off += n_prts;
   }
 }
 
