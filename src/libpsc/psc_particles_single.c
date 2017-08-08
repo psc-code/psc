@@ -7,7 +7,7 @@
 
 #if 0
 static void _mrc_unused // FIXME
-psc_particles_single_reorder(struct psc_particles *prts)
+psc_particles_single_reorder(struct psc_mparticles *mprts)
 {
   struct psc_particles_single *sub = psc_particles_single(prts);
 

@@ -16,7 +16,7 @@
 // cases for now:
 // - cuda2/acc particles provide the mprts-based array, so n
 //   includes the patch offset
-// - otherwise, we provide psc_particles, so n is the patch-local
+// - otherwise, we provide per-patch particles, so n is the patch-local
 //   particle number
 
 #if PSC_PARTICLES_AS_CUDA2 || PSC_PARTICLES_AS_ACC
@@ -126,7 +126,7 @@ ext_prepare_sort(struct psc_mparticles *mprts, int p, int n, particle_t *prt,
 // push_one
 //
 // as opposed to what the name implies, mprts_arr may actually be the
-// per-patch psc_particles, in which case n needs to be the patch-local
+// per-patch particles, in which case n needs to be the patch-local
 // patch number (see also above)
 //
 // the cuda2 version is very similar to the generic one, except

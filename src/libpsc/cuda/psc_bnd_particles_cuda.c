@@ -319,9 +319,6 @@ psc_bnd_particles_sub_exchange_particles_serial_periodic(struct psc_bnd_particle
 
   // sort
   for (int p = 0; p < particles->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
-    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-
     prof_start(pr_F);
     cuda_find_block_indices(prts, cuda->h_dev->bidx);
     prof_stop(pr_F);

@@ -16,14 +16,14 @@
 EXTERN_C void cuda_init(int rank);
 
 // ======================================================================
-// psc_particles "cuda"
+// psc_mparticles "cuda"
 
 // FIXME, should go away and always be done within cuda for consistency
 
 #if 0
 static inline int
 find_cellIdx(struct psc_patch *patch, struct cell_map *map,
-	     struct psc_particles *pp, int n)
+	     struct psc_mparticles *mprts, int p, int n)
 {
   particle_c_t *p = particles_c_get_one(pp, n);
   particle_c_real_t dxi = 1.f / patch->dx[0];
@@ -40,7 +40,7 @@ find_cellIdx(struct psc_patch *patch, struct cell_map *map,
 
 static inline int
 find_blockIdx(struct psc_patch *patch, struct cell_map *map,
-	      struct psc_particles *pp, int n, int blocksize[3])
+	      struct psc_mparticles *mprts, int p, int n, int blocksize[3])
 {
   int cell_idx = find_cellIdx(patch, map, pp, n);
   return cell_idx / (blocksize[0] * blocksize[1] * blocksize[2]);
@@ -170,14 +170,14 @@ put_particle_c(struct cuda_mparticles_prt *prt, int n, void *_ctx)
 }
 
 static void
-psc_particles_cuda_copy_from_c(struct psc_mparticles *mprts_cuda,
+psc_mparticles_cuda_copy_from_c(struct psc_mparticles *mprts_cuda,
 			       struct psc_mparticles *mprts, unsigned int flags)
 {
   copy_from(mprts_cuda, mprts, get_particle_c);
 }
 
 static void
-psc_particles_cuda_copy_to_c(struct psc_mparticles *mprts_cuda,
+psc_mparticles_cuda_copy_to_c(struct psc_mparticles *mprts_cuda,
 			     struct psc_mparticles *mprts, unsigned int flags)
 {
   copy_to(mprts_cuda, mprts, put_particle_c);
@@ -219,14 +219,14 @@ put_particle_single(struct cuda_mparticles_prt *prt, int n, void *_ctx)
 }
 
 static void
-psc_particles_cuda_copy_from_single(struct psc_mparticles *mprts_cuda,
+psc_mparticles_cuda_copy_from_single(struct psc_mparticles *mprts_cuda,
 				    struct psc_mparticles *mprts, unsigned int flags)
 {
   copy_from(mprts_cuda, mprts, get_particle_single);
 }
 
 static void
-psc_particles_cuda_copy_to_single(struct psc_mparticles *mprts_cuda,
+psc_mparticles_cuda_copy_to_single(struct psc_mparticles *mprts_cuda,
 				  struct psc_mparticles *mprts, unsigned int flags)
 {
   copy_to(mprts_cuda, mprts, put_particle_single);
@@ -268,29 +268,29 @@ put_particle_double(struct cuda_mparticles_prt *prt, int n, void *_ctx)
 }
 
 static void
-psc_particles_cuda_copy_from_double(struct psc_mparticles *mprts_cuda,
+psc_mparticles_cuda_copy_from_double(struct psc_mparticles *mprts_cuda,
 				    struct psc_mparticles *mprts, unsigned int flags)
 {
   copy_from(mprts_cuda, mprts, get_particle_double);
 }
 
 static void
-psc_particles_cuda_copy_to_double(struct psc_mparticles *mprts_cuda,
+psc_mparticles_cuda_copy_to_double(struct psc_mparticles *mprts_cuda,
 				  struct psc_mparticles *mprts, unsigned int flags)
 {
   copy_to(mprts_cuda, mprts, put_particle_double);
 }
 
 // ======================================================================
-// psc_particles: subclass "cuda"
+// psc_mparticles: subclass "cuda"
 
-static struct mrc_obj_method psc_particles_cuda_methods[] = {
-  MRC_OBJ_METHOD("copy_to_c"       , psc_particles_cuda_copy_to_c),
-  MRC_OBJ_METHOD("copy_from_c"     , psc_particles_cuda_copy_from_c),
-  MRC_OBJ_METHOD("copy_to_single"  , psc_particles_cuda_copy_to_single),
-  MRC_OBJ_METHOD("copy_from_single", psc_particles_cuda_copy_from_single),
-  MRC_OBJ_METHOD("copy_to_double"  , psc_particles_cuda_copy_to_double),
-  MRC_OBJ_METHOD("copy_from_double", psc_particles_cuda_copy_from_double),
+static struct mrc_obj_method psc_mparticles_cuda_methods[] = {
+  MRC_OBJ_METHOD("copy_to_c"       , psc_mparticles_cuda_copy_to_c),
+  MRC_OBJ_METHOD("copy_from_c"     , psc_mparticles_cuda_copy_from_c),
+  MRC_OBJ_METHOD("copy_to_single"  , psc_mparticles_cuda_copy_to_single),
+  MRC_OBJ_METHOD("copy_from_single", psc_mparticles_cuda_copy_from_single),
+  MRC_OBJ_METHOD("copy_to_double"  , psc_mparticles_cuda_copy_to_double),
+  MRC_OBJ_METHOD("copy_from_double", psc_mparticles_cuda_copy_from_double),
   {}
 };
 
@@ -636,7 +636,7 @@ psc_mparticles_cuda_inject(struct psc_mparticles *mprts_base, struct cuda_mparti
 struct psc_mparticles_ops psc_mparticles_cuda_ops = {
   .name                    = "cuda",
   .size                    = sizeof(struct psc_mparticles_cuda),
-  .methods                 = psc_particles_cuda_methods,
+  .methods                 = psc_mparticles_cuda_methods,
   .setup                   = psc_mparticles_cuda_setup,
   .destroy                 = psc_mparticles_cuda_destroy,
   .read                    = psc_mparticles_cuda_read,

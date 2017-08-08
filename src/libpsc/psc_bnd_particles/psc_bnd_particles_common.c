@@ -376,7 +376,6 @@ static void
 psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 					      struct psc_mparticles *mprts, int p)
 {
-  struct psc_particles *_prts = psc_mparticles_get_patch(mprts, p);
   particle_range_t prts = particle_range_mprts(mprts, p);
   struct ddc_particles *ddcp = bnd->ddcp;
   struct psc *psc = bnd->psc;
@@ -384,14 +383,14 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
   // New-style boundary requirements.
   // These will need revisiting when it comes to non-periodic domains.
 
-  struct psc_patch *ppatch = &psc->patch[_prts->p];
+  struct psc_patch *ppatch = &psc->patch[p];
   particle_real_t b_dxi[3] = { 1.f / ppatch->dx[0], 1.f / ppatch->dx[1], 1.f / ppatch->dx[2] };
   particle_real_t xm[3];
   int b_mx[3];
   for (int d = 0; d < 3; d++ ) {
     if (psc->domain.bnd_part_hi[d] == BND_PART_REFLECTING &&
 	!psc->prm.gdims_in_terms_of_cells &&
-	at_hi_boundary(_prts->p, d)) {
+	at_hi_boundary(p, d)) {
       b_mx[d] = ppatch->ldims[d] - 1;
     } else {
       b_mx[d] = ppatch->ldims[d];
@@ -399,7 +398,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
     xm[d] = b_mx[d] * ppatch->dx[d];
   }
   
-  struct ddcp_patch *patch = &ddcp->patches[_prts->p];
+  struct ddcp_patch *patch = &ddcp->patches[p];
   patch->head = 0;
   for (int dir1 = 0; dir1 < N_DIR; dir1++) {
     patch->nei[dir1].n_send = 0;
@@ -424,7 +423,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
       int dir[3];
       for (int d = 0; d < 3; d++) {
 	if (b_pos[d] < 0) {
-	  if (!at_lo_boundary(_prts->p, d) ||
+	  if (!at_lo_boundary(p, d) ||
 	      psc->domain.bnd_part_lo[d] == BND_PART_PERIODIC) {
 	    xi[d] += xm[d];
 	    dir[d] = -1;
@@ -449,7 +448,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 	    }
 	  }
 	} else if (b_pos[d] >= b_mx[d]) {
-	  if (!at_hi_boundary(_prts->p, d) ||
+	  if (!at_hi_boundary(p, d) ||
 	      psc->domain.bnd_part_hi[d] == BND_PART_PERIODIC) {
 	    xi[d] -= xm[d];
 	    dir[d] = +1;

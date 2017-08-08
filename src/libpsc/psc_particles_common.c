@@ -5,7 +5,7 @@
 #include <math.h>
 
 // ======================================================================
-// psc_particles "single" / "double" / "c"
+// psc_mparticles "single" / "double" / "c"
 
 // ----------------------------------------------------------------------
 // psc_mparticles_sub_setup_patch
