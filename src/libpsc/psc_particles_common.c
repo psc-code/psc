@@ -176,8 +176,9 @@ MPFX(setup)(struct psc_mparticles *mprts)
     psc_particles_set_type(mprts->prts[p], PARTICLE_TYPE);
     mprts->prts[p]->mprts = mprts;
     mprts->prts[p]->p = p;
-    psc_mparticles_set_n_prts_by_patch(mprts, p, mprts->nr_particles_by_patch[p]);
 
+    struct MPFX(patch) *patch = &sub->patch[p];
+    patch->n_prts = mprts->nr_particles_by_patch[p];
     MPFX(setup_patch)(mprts, p);
   }
 
@@ -242,6 +243,8 @@ MPFX(write)(struct psc_mparticles *mprts, struct mrc_io *io)
 static void
 MPFX(read)(struct psc_mparticles *mprts, struct mrc_io *io)
 {
+  struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
+  
   int ierr;
   long h5_file;
   mrc_io_get_h5_file(io, &h5_file);
@@ -267,7 +270,8 @@ MPFX(read)(struct psc_mparticles *mprts, struct mrc_io *io)
     hid_t pgroup = H5Gopen(group, pname, H5P_DEFAULT); H5_CHK(pgroup);
     int n_prts;
     ierr = H5LTget_attribute_int(pgroup, ".", "n_prts", &n_prts); CE;
-    psc_particles_set_n_prts(mprts->prts[p], n_prts);
+    struct MPFX(patch) *patch = &sub->patch[p];
+    patch->n_prts = n_prts;
     MPFX(setup_patch)(mprts, p);
     
     if (n_prts > 0) {

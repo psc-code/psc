@@ -556,7 +556,7 @@ psc_mparticles_cuda_update_n_part(struct psc_mparticles *mprts)
 
   unsigned int n_prts = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
-    psc_mparticles_set_n_prts_by_patch(mprts, p, n_prts_by_patch[p]);
+    mprts_cuda->n_prts_by_patch[p] = n_prts_by_patch[p];
     n_prts += n_prts_by_patch[p];
   }
   assert(cmprts->n_prts == n_prts);
