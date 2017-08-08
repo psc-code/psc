@@ -8,13 +8,6 @@
 #include "psc_particles_common.h"
 #undef PTYPE
 
-static inline particle_c_t *
-psc_mparticles_c_get_one(struct psc_mparticles *mprts, int p, int n)
-{
-  assert(psc_mparticles_ops(mprts) == &psc_mparticles_c_ops);
-  return &psc_mparticles_c(mprts)->patch[p].prt_array[n];
-}
-
 static inline particle_c_real_t
 particle_c_qni_div_mni(particle_c_t *p)
 {

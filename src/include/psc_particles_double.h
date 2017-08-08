@@ -11,13 +11,6 @@
 #include <math.h>
 #include "psc.h"
 
-static inline particle_double_t *
-psc_mparticles_double_get_one(struct psc_mparticles *mprts, int p, int n)
-{
-  assert(psc_mparticles_ops(mprts) == &psc_mparticles_double_ops);
-  return &psc_mparticles_double(mprts)->patch[p].prt_array[n];
-}
-
 // can't do this as inline function since struct psc isn't known yet
 #define particle_double_qni_div_mni(p) ({			\
       particle_double_real_t rv;				\

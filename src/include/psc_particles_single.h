@@ -10,13 +10,6 @@
 #include "psc_particles_common.h"
 #undef PTYPE
 
-static inline particle_single_t *
-psc_mparticles_single_get_one(struct psc_mparticles *mprts, int p, int n)
-{
-  assert(psc_mparticles_ops(mprts) == &psc_mparticles_single_ops);
-  return &psc_mparticles_single(mprts)->patch[p].prt_array[n];
-}
-
 // can't do this as inline function since struct psc isn't known yet
 #define particle_single_qni_div_mni(p) ({			\
       particle_single_real_t rv;				\
