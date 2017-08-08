@@ -354,7 +354,9 @@ psc_mparticles_init()
   mrc_class_register_subclass(&mrc_class_psc_mparticles, &psc_mparticles_cuda_ops);
   mrc_class_register_subclass(&mrc_class_psc_mparticles, &psc_mparticles_mix_ops);
 #endif
+#ifdef USE_CUDA2
   mrc_class_register_subclass(&mrc_class_psc_mparticles, &psc_mparticles_cuda2_ops);
+#endif
 #ifdef USE_ACC
   mrc_class_register_subclass(&mrc_class_psc_mparticles, &psc_mparticles_acc_ops);
 #endif
