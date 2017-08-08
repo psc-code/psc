@@ -641,7 +641,6 @@ struct psc_mparticles_ops psc_mparticles_cuda_ops = {
   .destroy                 = psc_mparticles_cuda_destroy,
   .read                    = psc_mparticles_cuda_read,
   .write                   = psc_mparticles_cuda_write,
-  .update_n_part           = psc_mparticles_cuda_update_n_part,
   .setup_internals         = psc_mparticles_cuda_setup_internals,
   .get_nr_particles        = psc_mparticles_cuda_get_nr_particles,
   .set_n_prts              = psc_mparticles_cuda_set_n_prts,
