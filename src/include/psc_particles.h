@@ -28,6 +28,7 @@ struct psc_mparticles_ops {
   unsigned int (*get_nr_particles)(struct psc_mparticles *mprts);
   void (*realloc)(struct psc_mparticles *mprts, int p, int n_prts);
   int (*get_n_alloced)(struct psc_mparticles *mprts, int p);
+  void (*resize_patch)(struct psc_mparticles *mprts, int p, int n_prts);
   void (*get_n_prts_all)(struct psc_mparticles *mprts, int *n_prts_by_patch);
   int (*get_n_prts)(struct psc_mparticles *mprts, int p);
   void (*set_n_prts)(struct psc_mparticles *mprts, int p, int n_prts);
