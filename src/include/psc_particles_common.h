@@ -8,22 +8,32 @@
 #if PTYPE == PTYPE_SINGLE
 
 #define particle_real_t particle_single_real_t
+#define particle_t particle_single_t
+#define psc_particle psc_particle_single
 
 #elif PTYPE == PTYPE_DOUBLE
 
 #define particle_real_t particle_double_real_t
+#define particle_t particle_double_t
+#define psc_particle psc_particle_double
 
 #elif PTYPE == PTYPE_SINGLE_BY_BLOCK
 
 #define particle_real_t particle_single_by_block_real_t
+#define particle_t particle_single_by_block_t
+#define psc_particle psc_particle_single_by_block
 
 #elif PTYPE == PTYPE_C
 
 #define particle_real_t particle_c_real_t
+#define particle_t particle_c_t
+#define psc_particle psc_particle_c
 
 #elif PTYPE == PTYPE_FORTRAN
 
 #define particle_real_t particle_fortran_real_t
+#define particle_t particle_fortran_t
+#define psc_particle psc_particle_fortran
 
 #endif
 
@@ -69,55 +79,37 @@ typedef double particle_real_t;
 // ----------------------------------------------------------------------
 //
 
-#if PTYPE == PTYPE_SINGLE
+#if PTYPE == PTYPE_SINGLE || PTYPE == PTYPE_SINGLE_BY_BLOCK || PTYPE == PTYPE_DOUBLE
 
-typedef struct psc_particle_single {
-  particle_single_real_t xi, yi, zi;
-  particle_single_real_t qni_wni;
-  particle_single_real_t pxi, pyi, pzi;
+typedef struct psc_particle {
+  particle_real_t xi, yi, zi;
+  particle_real_t qni_wni;
+  particle_real_t pxi, pyi, pzi;
   int kind;
-} particle_single_t;
-
-#elif PTYPE == PTYPE_DOUBLE
-
-typedef struct psc_particle_double {
-  particle_double_real_t xi, yi, zi;
-  particle_double_real_t qni_wni;
-  particle_double_real_t pxi, pyi, pzi;
-  int kind;
-} particle_double_t;
-
-#elif PTYPE == PTYPE_SINGLE_BY_BLOCK
-
-typedef struct psc_particle_single_by_block {
-  particle_single_by_block_real_t xi, yi, zi;
-  particle_single_by_block_real_t qni_wni;
-  particle_single_by_block_real_t pxi, pyi, pzi;
-  int kind;
-} particle_single_by_block_t;
+} particle_t;
 
 #elif PTYPE == PTYPE_C
 
-typedef struct psc_particle_c {
-  particle_c_real_t xi, yi, zi;
-  particle_c_real_t pxi, pyi, pzi;
-  particle_c_real_t qni;
-  particle_c_real_t mni;
-  particle_c_real_t wni;
-  long long         kind; // 64 bits to match the other members, for bnd exchange
-} particle_c_t;
+typedef struct psc_particle {
+  particle_real_t xi, yi, zi;
+  particle_real_t pxi, pyi, pzi;
+  particle_real_t qni;
+  particle_real_t mni;
+  particle_real_t wni;
+  long long kind; // 64 bits to match the other members, for bnd exchange
+} particle_t;
 
 #elif PTYPE == PTYPE_FORTRAN
 
-typedef struct psc_particle_fortran {
-  particle_fortran_real_t xi, yi, zi;
-  particle_fortran_real_t pxi, pyi, pzi;
-  particle_fortran_real_t qni;
-  particle_fortran_real_t mni;
-  particle_fortran_real_t cni;
-  particle_fortran_real_t lni;
-  particle_fortran_real_t wni;
-} particle_fortran_t;
+typedef struct psc_particle {
+  particle_real_t xi, yi, zi;
+  particle_real_t pxi, pyi, pzi;
+  particle_real_t qni;
+  particle_real_t mni;
+  particle_real_t cni;
+  particle_real_t lni;
+  particle_real_t wni;
+} particle_t;
 
 #endif
 
@@ -127,3 +119,5 @@ typedef struct psc_particle_fortran {
 #include <math.h>
 
 #undef particle_real_t
+#undef particle_t
+#undef psc_particle
