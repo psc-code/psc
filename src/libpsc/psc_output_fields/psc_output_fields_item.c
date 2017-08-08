@@ -62,14 +62,8 @@ psc_output_fields_item_run(struct psc_output_fields_item *item,
 			   mfields_c_t *res)
 {
   struct psc_output_fields_item_ops *ops = psc_output_fields_item_ops(item);
-#ifdef USE_CUDA
-  if (strcmp(psc_mparticles_type(particles), "cuda") == 0) {
-      extern void psc_mparticles_cuda_reorder(struct psc_mparticles *);
-      psc_mparticles_cuda_reorder(particles);
-      psc_mparticles_update_n_part(particles);
-  }
-#endif
   assert(ops->run_all);
+
   ops->run_all(item, flds, particles, res);
   if (ops->flags & POFI_ADD_GHOSTS) {
     assert(item->bnd);
