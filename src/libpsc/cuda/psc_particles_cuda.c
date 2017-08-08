@@ -311,11 +311,14 @@ struct psc_particles_ops psc_particles_cuda_ops = {
 static void
 psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
 {
-  psc_mparticles_setup_super(mprts);
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
 
   cuda_base_init();
 
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  mprts_cuda->n_prts_by_patch = calloc(mprts->nr_patches, sizeof(*mprts_cuda->n_prts_by_patch));
+
+  psc_mparticles_setup_super(mprts);
+
   struct cuda_mparticles *cmprts = cuda_mparticles_create();
   mprts_cuda->cmprts = cmprts;
 
@@ -374,6 +377,8 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
 
   free(domain_info.xb_by_patch);
 
+  MHERE;
+
   unsigned int n_prts_by_patch[cmprts->n_patches];
   for (int p = 0; p < cmprts->n_patches; p++) {
     n_prts_by_patch[p] = psc_mparticles_n_prts_by_patch(mprts, p);
@@ -401,6 +406,8 @@ psc_mparticles_cuda_destroy(struct psc_mparticles *mprts)
   cuda_mparticles_dealloc(cmprts);
   cuda_mparticles_destroy(cmprts);
   mprts_cuda->cmprts = NULL;
+
+  free(mprts_cuda->n_prts_by_patch);
 }
 
 // ----------------------------------------------------------------------
@@ -592,6 +599,28 @@ psc_mparticles_cuda_get_nr_particles(struct psc_mparticles *mprts)
 }
 
 // ----------------------------------------------------------------------
+// psc_mparticles_cuda_get_n_prts
+
+static int
+psc_mparticles_cuda_get_n_prts(struct psc_mparticles *mprts, int p)
+{
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+
+  return mprts_cuda->n_prts_by_patch[p];
+}
+
+// ----------------------------------------------------------------------
+// psc_mparticles_cuda_set_n_prts
+
+static void
+psc_mparticles_cuda_set_n_prts(struct psc_mparticles *mprts, int p, int n_prts)
+{
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+
+  mprts_cuda->n_prts_by_patch[p] = n_prts;
+}
+
+// ----------------------------------------------------------------------
 // psc_mparticles_cuda_inject
 
 #include <psc_particles_as_single.h> // FIXME
@@ -621,5 +650,7 @@ struct psc_mparticles_ops psc_mparticles_cuda_ops = {
   .update_n_part           = psc_mparticles_cuda_update_n_part,
   .setup_internals         = psc_mparticles_cuda_setup_internals,
   .get_nr_particles        = psc_mparticles_cuda_get_nr_particles,
+  .get_n_prts              = psc_mparticles_cuda_get_n_prts,
+  .set_n_prts              = psc_mparticles_cuda_set_n_prts,
 };
 

@@ -19,6 +19,7 @@ typedef struct psc_particle_single {
 
 struct psc_mparticles_single_patch {
   particle_single_t *prt_array;
+  int n_prts;
   int n_alloced;
 
   particle_single_t *prt_array_alt;

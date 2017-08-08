@@ -22,6 +22,7 @@ typedef struct psc_particle_fortran {
 
 struct psc_mparticles_fortran_patch {
   particle_fortran_t *prt_array;
+  int n_prts;
   int n_alloced;
 };
 

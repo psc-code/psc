@@ -125,24 +125,26 @@ psc_mparticles_nr_particles(struct psc_mparticles *mparticles)
 int
 psc_mparticles_n_prts_by_patch(struct psc_mparticles *mprts, int p)
 {
-  assert(mprts && mprts->mpatch);
-  return mprts->mpatch[p].n_prts;
-}
+  struct psc_mparticles_ops *ops = psc_mparticles_ops(mprts);
+  assert(ops->get_n_prts);
 
-void
-psc_mparticles_resize_patch(struct psc_mparticles *mprts, int p, int n_prts)
-{
-  assert(mprts && mprts->mpatch);
-  assert(n_prts <= psc_mparticles_n_alloced(mprts, p));
-  mprts->mpatch[p].n_prts = n_prts;
+  return ops->get_n_prts(mprts, p);
 }
 
 void
 psc_mparticles_set_n_prts_by_patch(struct psc_mparticles *mprts, int p, int n_prts)
 {
-  assert(mprts && mprts->mpatch);
-  // FIXME, same as above w/o the assert, should go away maybe...
-  mprts->mpatch[p].n_prts = n_prts;
+  struct psc_mparticles_ops *ops = psc_mparticles_ops(mprts);
+  assert(ops->set_n_prts);
+
+  return ops->set_n_prts(mprts, p, n_prts);
+}
+
+void
+psc_mparticles_resize_patch(struct psc_mparticles *mprts, int p, int n_prts)
+{
+  assert(n_prts <= psc_mparticles_n_alloced(mprts, p));
+  psc_mparticles_set_n_prts_by_patch(mprts, p, n_prts);
 }
 
 void
