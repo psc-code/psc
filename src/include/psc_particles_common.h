@@ -11,6 +11,7 @@
 #define particle_t particle_single_t
 #define psc_particle psc_particle_single
 #define psc_mparticles_patch psc_mparticles_single_patch
+#define psc_mparticles psc_mparticles_single
 
 #elif PTYPE == PTYPE_DOUBLE
 
@@ -18,6 +19,7 @@
 #define particle_t particle_double_t
 #define psc_particle psc_particle_double
 #define psc_mparticles_patch psc_mparticles_double_patch
+#define psc_mparticles psc_mparticles_double
 
 #elif PTYPE == PTYPE_SINGLE_BY_BLOCK
 
@@ -25,6 +27,7 @@
 #define particle_t particle_single_by_block_t
 #define psc_particle psc_particle_single_by_block
 #define psc_mparticles_patch psc_mparticles_single_by_block_patch
+#define psc_mparticles psc_mparticles_single_by_block
 
 #elif PTYPE == PTYPE_C
 
@@ -32,6 +35,7 @@
 #define particle_t particle_c_t
 #define psc_particle psc_particle_c
 #define psc_mparticles_patch psc_mparticles_c_patch
+#define psc_mparticles psc_mparticles_c
 
 #elif PTYPE == PTYPE_FORTRAN
 
@@ -39,11 +43,12 @@
 #define particle_t particle_fortran_t
 #define psc_particle psc_particle_fortran
 #define psc_mparticles_patch psc_mparticles_fortran_patch
+#define psc_mparticles psc_mparticles_fortran
 
 #endif
 
 // ----------------------------------------------------------------------
-// particle_real_t
+// particle_PYTPE_real_t
 
 #if PTYPE == PTYPE_SINGLE || PTYPE == PTYPE_SINGLE_BY_BLOCK
 
@@ -56,33 +61,38 @@ typedef double particle_real_t;
 #endif
 
 // ----------------------------------------------------------------------
-// MPI_PARTICLES_REAL
+// MPI_PARTICLES_PTYPE_REAL
 // annoying, but need to use a macro, which means we can't consolidate float/double
 
 #if PTYPE == PTYPE_SINGLE
 
 #define MPI_PARTICLES_SINGLE_REAL MPI_FLOAT
+#define psc_mparticles_single(mprts) mrc_to_subobj(mprts, struct psc_mparticles_single)
 
 #elif PTYPE == PTYPE_DOUBLE
 
 #define MPI_PARTICLES_DOUBLE_REAL MPI_DOUBLE
+#define psc_mparticles_double(prts) mrc_to_subobj(prts, struct psc_mparticles_double)
 
 #elif PTYPE == PTYPE_SINGLE_BY_BLOCK
 
 #define MPI_PARTICLES_SINGLE_REAL MPI_FLOAT
+#define psc_mparticles_single_by_block(prts) mrc_to_subobj(prts, struct psc_mparticles_single_by_block)
 
 #elif PTYPE == PTYPE_C
 
 #define MPI_PARTICLES_C_REAL MPI_DOUBLE
+#define psc_mparticles_c(prts) mrc_to_subobj(prts, struct psc_mparticles_c)
 
 #elif PTYPE == PTYPE_FORTRAN
 
 #define MPI_PARTICLES_FORTRAN_REAL MPI_DOUBLE
+#define psc_mparticles_fortran(prts) mrc_to_subobj(prts, struct psc_mparticles_fortran)
 
 #endif
 
 // ----------------------------------------------------------------------
-// particle_t
+// particle_PTYPE_t
 
 #if PTYPE == PTYPE_SINGLE || PTYPE == PTYPE_SINGLE_BY_BLOCK || PTYPE == PTYPE_DOUBLE
 
@@ -119,7 +129,7 @@ typedef struct psc_particle {
 #endif
 
 // ----------------------------------------------------------------------
-// psc_mparticles_patch
+// psc_mparticles_PTYPE_patch
 
 struct psc_mparticles_patch {
   particle_t *prt_array;
@@ -152,6 +162,12 @@ struct psc_mparticles_patch {
 #endif
 };
 
+// ----------------------------------------------------------------------
+// psc_mparticles_PTYPE
+
+struct psc_mparticles {
+  struct psc_mparticles_patch *patch;
+};
 
 // ----------------------------------------------------------------------
 //
@@ -177,3 +193,4 @@ struct psc_mparticles_patch {
 #undef particle_t
 #undef psc_particle
 #undef psc_mparticles_patch
+#undef psc_mparticles

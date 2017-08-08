@@ -8,12 +8,6 @@
 #include "psc_particles_common.h"
 #undef PTYPE
 
-struct psc_mparticles_fortran {
-  struct psc_mparticles_fortran_patch *patch;
-};
-
-#define psc_mparticles_fortran(prts) mrc_to_subobj(prts, struct psc_mparticles_fortran)
-
 static inline particle_fortran_t *
 psc_mparticles_fortran_get_one(struct psc_mparticles *mprts, int p, int n)
 {

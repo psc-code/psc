@@ -10,12 +10,6 @@
 #include "psc_particles_common.h"
 #undef PTYPE
 
-struct psc_mparticles_single {
-  struct psc_mparticles_single_patch *patch;
-};
-
-#define psc_mparticles_single(mprts) mrc_to_subobj(mprts, struct psc_mparticles_single)
-
 static inline particle_single_t *
 psc_mparticles_single_get_one(struct psc_mparticles *mprts, int p, int n)
 {

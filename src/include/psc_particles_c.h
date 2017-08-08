@@ -8,12 +8,6 @@
 #include "psc_particles_common.h"
 #undef PTYPE
 
-struct psc_mparticles_c {
-  struct psc_mparticles_c_patch *patch;
-};
-
-#define psc_mparticles_c(prts) mrc_to_subobj(prts, struct psc_mparticles_c)
-
 static inline particle_c_t *
 psc_mparticles_c_get_one(struct psc_mparticles *mprts, int p, int n)
 {

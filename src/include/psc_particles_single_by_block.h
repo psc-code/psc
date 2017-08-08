@@ -8,12 +8,6 @@
 #include "psc_particles_common.h"
 #undef PTYPE
 
-struct psc_mparticles_single_by_block {
-  struct psc_mparticles_single_by_block_patch *patch;
-};
-
-#define psc_mparticles_single_by_block(prts) mrc_to_subobj(prts, struct psc_mparticles_single_by_block)
-
 static inline particle_single_by_block_t *
 psc_mparticles_single_by_block_get_one(struct psc_mparticles *mprts, int p, int n)
 {
