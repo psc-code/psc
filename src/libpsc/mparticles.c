@@ -143,15 +143,6 @@ psc_mparticles_setup_internals(struct psc_mparticles *mprts)
   }
 }
 
-int
-psc_mparticles_n_alloced(struct psc_mparticles *mprts, int p)
-{
-  struct psc_mparticles_ops *ops = psc_mparticles_ops(mprts);
-  assert(ops && ops->get_n_alloced);
-
-  return ops->get_n_alloced(mprts, p);
-}
-
 void
 psc_mparticles_realloc(struct psc_mparticles *mprts, int p, int n_prts)
 {

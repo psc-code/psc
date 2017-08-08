@@ -252,14 +252,6 @@ MPFX(destroy)(struct psc_mparticles *mprts)
   free(sub->patch);
 }
 
-static int
-MPFX(get_n_alloced)(struct psc_mparticles *mprts, int p)
-{
-  struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
-
-  return sub->patch[p].n_alloced;
-}
-
 static void
 MPFX(resize_patch)(struct psc_mparticles *mprts, int p, int n_prts)
 {
@@ -307,7 +299,6 @@ struct psc_mparticles_ops MPFX(ops) = {
   .write                   = MPFX(write),
   .read                    = MPFX(read),
   .realloc                 = MPFX(realloc_patch),
-  .get_n_alloced           = MPFX(get_n_alloced),
   .resize_patch            = MPFX(resize_patch),
   .set_n_prts              = MPFX(set_n_prts),
   .get_n_prts              = MPFX(get_n_prts),
