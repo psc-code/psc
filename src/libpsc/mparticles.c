@@ -108,6 +108,15 @@ psc_mparticles_n_prts_by_patch(struct psc_mparticles *mprts, int p)
 }
 
 void
+psc_mparticles_n_prts_all(struct psc_mparticles *mprts, int *n_prts_by_patch)
+{
+  struct psc_mparticles_ops *ops = psc_mparticles_ops(mprts);
+  assert(ops->get_n_prts_all);
+
+  return ops->get_n_prts_all(mprts, n_prts_by_patch);
+}
+
+void
 psc_mparticles_set_n_prts_by_patch(struct psc_mparticles *mprts, int p, int n_prts)
 {
   struct psc_mparticles_ops *ops = psc_mparticles_ops(mprts);
@@ -184,17 +193,15 @@ psc_mparticles_get_as(struct psc_mparticles *mp_base, const char *type,
 
   //  mprintf("get_as %s -> %s\n", psc_mparticles_type(mp_base), type);
   psc_mparticles_update_n_part(mp_base);
-  int *nr_particles_by_patch = malloc(mp_base->nr_patches * sizeof(int));
-  for (int p = 0; p < mp_base->nr_patches; p++) {
-    nr_particles_by_patch[p] = psc_mparticles_n_prts_by_patch(mp_base, p);
-  }
+  int nr_particles_by_patch[mp_base->nr_patches];
+  psc_mparticles_n_prts_all(mp_base, nr_particles_by_patch);
+
   struct psc_mparticles *mp =
     psc_mparticles_create(psc_mparticles_comm(mp_base));
   psc_mparticles_set_type(mp, type);
   psc_mparticles_set_domain_nr_particles(mp, mp_base->domain, nr_particles_by_patch);
   psc_mparticles_set_param_int(mp, "flags", flags);
   psc_mparticles_setup(mp);
-  free(nr_particles_by_patch);
 
   if (!(flags & MP_DONT_COPY)) {
     psc_mparticles_copy_to_func_t copy_to, copy_from;

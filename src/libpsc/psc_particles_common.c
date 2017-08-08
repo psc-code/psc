@@ -284,6 +284,16 @@ MPFX(get_n_prts)(struct psc_mparticles *mprts, int p)
   return sub->patch[p].n_prts;
 }
 
+static void
+MPFX(get_n_prts_all)(struct psc_mparticles *mprts, int *n_prts_by_patch)
+{
+  struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
+
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    n_prts_by_patch[p] = sub->patch[p].n_prts;
+  }
+}
+
 // ----------------------------------------------------------------------
 // psc_mparticles_ops
 
@@ -300,5 +310,6 @@ struct psc_mparticles_ops MPFX(ops) = {
   .get_n_alloced           = MPFX(get_n_alloced),
   .set_n_prts              = MPFX(set_n_prts),
   .get_n_prts              = MPFX(get_n_prts),
+  .get_n_prts_all          = MPFX(get_n_prts_all),
 };
 
