@@ -4,9 +4,9 @@
 
 #include "psc_particles_private.h"
 
-typedef double particle_double_real_t;
-
-#define MPI_PARTICLES_DOUBLE_REAL MPI_DOUBLE
+#define PTYPE PTYPE_DOUBLE
+#include "psc_particles_common.h"
+#undef PTYPE
 
 typedef struct psc_particle_double {
   particle_double_real_t xi, yi, zi;

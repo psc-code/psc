@@ -4,11 +4,11 @@
 
 #include "psc_particles_private.h"
 
-#include "psc.h"
+#include <psc.h>
 
-typedef float particle_single_real_t;
-
-#define MPI_PARTICLES_SINGLE_REAL MPI_FLOAT
+#define PTYPE PTYPE_SINGLE
+#include "psc_particles_common.h"
+#undef PTYPE
 
 typedef struct psc_particle_single {
   particle_single_real_t xi, yi, zi;

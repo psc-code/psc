@@ -4,11 +4,9 @@
 
 #include "psc_particles_private.h"
 
-// this matches the Fortran particle data structure
-
-typedef double particle_fortran_real_t;
-
-#define MPI_PARTICLES_FORTRAN_REAL MPI_DOUBLE
+#define PTYPE PTYPE_FORTRAN
+#include "psc_particles_common.h"
+#undef PTYPE
 
 typedef struct psc_particle_fortran {
   particle_fortran_real_t xi, yi, zi;

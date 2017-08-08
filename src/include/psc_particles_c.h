@@ -4,11 +4,9 @@
 
 #include "psc_particles_private.h"
 
-#include <math.h>
-
-typedef double particle_c_real_t;
-
-#define MPI_PARTICLES_C_REAL MPI_DOUBLE
+#define PTYPE PTYPE_C
+#include "psc_particles_common.h"
+#undef PTYPE
 
 typedef struct psc_particle_c {
   particle_c_real_t xi, yi, zi;
