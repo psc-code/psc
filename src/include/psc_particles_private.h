@@ -10,24 +10,6 @@ struct psc_particles {
   int p; //< patch number
 };
 
-static inline int
-psc_particles_size(struct psc_particles *prts)
-{
-  return psc_mparticles_n_prts_by_patch(prts->mprts, prts->p);
-}
-
-static inline void
-psc_particles_resize(struct psc_particles *prts, int n_prts)
-{
-  psc_mparticles_resize_patch(prts->mprts, prts->p, n_prts);
-}
-
-static inline void
-psc_particles_set_n_prts(struct psc_particles *prts, int n_prts)
-{
-  psc_mparticles_set_n_prts_by_patch(prts->mprts, prts->p, n_prts);
-}
-
 struct psc_particles_ops {
   MRC_SUBCLASS_OPS(struct psc_particles);
 };

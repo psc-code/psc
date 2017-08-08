@@ -123,7 +123,7 @@ psc_particles_single_by_block_sort(struct psc_mparticles *mprts, int p)
   }
 
   // calculate block indices for each particle and count
-  int n_prts = psc_particles_size(prts);
+  int n_prts = psc_mparticles_n_prts_by_patch(mprts, p)
   for (int n = 0; n < n_prts; n++) {
     unsigned int b_idx = psc_particles_single_by_block_get_b_idx(prts, n);
     assert(b_idx < sub->nr_blocks);
