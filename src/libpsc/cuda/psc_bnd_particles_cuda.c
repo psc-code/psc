@@ -265,7 +265,7 @@ psc_bnd_particles_sub_exchange_mprts_post(struct psc_bnd_particles *bnd,
   prof_start(pr_D);
   int n_prts_by_patch[mprts->nr_patches];
   for (int p = 0; p < mprts->nr_patches; p++) {
-    n_prts_by_patch[p] = psc_mparticles_n_prts_by_patch(mprts, p);
+    n_prts_by_patch[p] = mprts_cuda->n_prts_by_patch[p];
   }
   cuda_mprts_sort(mprts, n_prts_by_patch);
   for (int p = 0; p < mprts->nr_patches; p++) {
@@ -326,7 +326,7 @@ psc_bnd_particles_sub_exchange_particles_serial_periodic(struct psc_bnd_particle
     prof_start(pr_G);
     sort_pairs_device_2(cuda->sort_ctx, cuda->h_dev->bidx,
 			cuda->h_dev->alt_ids,
-			psc_mparticles_n_prts_by_patch(particles, p),
+			mprts_cuda->n_prts_by_patch[p],
 			cuda->h_dev->offsets);
     prof_stop(pr_G);
 

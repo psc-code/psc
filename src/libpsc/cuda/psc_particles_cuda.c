@@ -67,11 +67,12 @@ static void
 copy_from(struct psc_mparticles *mprts, struct psc_mparticles *mprts_from,
 	  void (*get_particle)(struct cuda_mparticles_prt *prt, int n, void *ctx))
 {
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   unsigned int off = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
-    int n_prts = psc_mparticles_n_prts_by_patch(mprts, p);
+    int n_prts = mprts_cuda->n_prts_by_patch[p];
     struct copy_ctx ctx = { .mprts = mprts_from, .p = p };
     cuda_mparticles_set_particles(cmprts, n_prts, off, get_particle, &ctx);
 
@@ -83,11 +84,12 @@ static void
 copy_to(struct psc_mparticles *mprts, struct psc_mparticles *mprts_to,
 	void (*put_particle)(struct cuda_mparticles_prt *prt, int n, void *ctx))
 {
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
   
   unsigned int off = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
-    int n_prts = psc_mparticles_n_prts_by_patch(mprts, p);
+    int n_prts = mprts_cuda->n_prts_by_patch[p];
     struct copy_ctx ctx = { .mprts = mprts_to, .p = p };
     cuda_mparticles_get_particles(cmprts, n_prts, off, put_particle, &ctx);
 
@@ -366,9 +368,10 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
 
   free(domain_info.xb_by_patch);
 
+  // FIXME, copy only because of signed -> unsigned
   unsigned int n_prts_by_patch[cmprts->n_patches];
   for (int p = 0; p < cmprts->n_patches; p++) {
-    n_prts_by_patch[p] = psc_mparticles_n_prts_by_patch(mprts, p);
+    n_prts_by_patch[p] = mprts_cuda->n_prts_by_patch[p];
   }
 
   cuda_mparticles_alloc(cmprts, n_prts_by_patch);
@@ -427,6 +430,7 @@ psc_mparticles_cuda_reorder(struct psc_mparticles *mprts)
 static void
 psc_mparticles_cuda_write(struct psc_mparticles *mprts, struct mrc_io *io)
 {
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
   int ierr;
   
   long h5_file;
@@ -438,7 +442,8 @@ psc_mparticles_cuda_write(struct psc_mparticles *mprts, struct mrc_io *io)
     char pname[10];
     sprintf(pname, "p%d", p);
     hid_t pgroup = H5Gcreate(group, pname, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT); H5_CHK(pgroup);
-    int n_prts = psc_mparticles_n_prts_by_patch(mprts, p);
+    // FIXME, make sure n_prts_by_patch is uptodate
+    int n_prts = mprts_cuda->n_prts_by_patch[p];
     ierr = H5LTset_attribute_int(pgroup, ".", "n_prts", &n_prts, 1); CE;
     if (n_prts > 0) {
       float4 *xi4  = calloc(n_prts, sizeof(float4));
@@ -465,6 +470,7 @@ psc_mparticles_cuda_write(struct psc_mparticles *mprts, struct mrc_io *io)
 static void
 psc_mparticles_cuda_read(struct psc_mparticles *mprts, struct mrc_io *io)
 {
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
   mprts->domain = mrc_io_read_ref(io, mprts, "domain", mrc_domain);
   mrc_io_read_int(io, mprts, "flags", (int *) &mprts->flags);
   mrc_domain_get_patches(mprts->domain, &mprts->nr_patches);
@@ -495,7 +501,7 @@ psc_mparticles_cuda_read(struct psc_mparticles *mprts, struct mrc_io *io)
     char pname[10];
     sprintf(pname, "p%d", p);
     hid_t pgroup = H5Gopen(group, pname, H5P_DEFAULT); H5_CHK(pgroup);
-    int n_prts = psc_mparticles_n_prts_by_patch(mprts, p);
+    int n_prts = mprts_cuda->n_prts_by_patch[p];
     if (n_prts > 0) {
       float4 *xi4  = calloc(n_prts, sizeof(float4));
       float4 *pxi4 = calloc(n_prts, sizeof(float4));
@@ -554,10 +560,11 @@ psc_mparticles_cuda_setup_internals(struct psc_mparticles *mprts)
   assert((mprts->flags & MP_NEED_BLOCK_OFFSETS) &&
 	 !(mprts->flags & MP_NEED_CELL_OFFSETS));
 
-  unsigned int n_prts = 0;
   unsigned int n_prts_by_patch[mprts->nr_patches];
+
+  unsigned int n_prts = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
-    n_prts_by_patch[p] = psc_mparticles_n_prts_by_patch(mprts, p);
+    n_prts_by_patch[p] = mprts_cuda->n_prts_by_patch[p];
     n_prts += n_prts_by_patch[p];
   }
   cmprts->n_prts = n_prts; // another hack to deal with copy_from having
