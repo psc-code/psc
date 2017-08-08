@@ -261,14 +261,6 @@ PFX(set_n_prts)(struct psc_mparticles *mprts, int p, int n_prts)
   sub->patch[p].n_prts = n_prts;
 }
 
-static int
-PFX(get_n_prts)(struct psc_mparticles *mprts, int p)
-{
-  struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
-
-  return sub->patch[p].n_prts;
-}
-
 static void
 PFX(get_n_prts_all)(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
