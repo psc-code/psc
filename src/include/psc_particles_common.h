@@ -312,8 +312,8 @@ static inline psc_particle_PTYPE_range_t
 psc_particle_PTYPE_range_mprts(struct psc_mparticles *mprts, int p)
 {
   return (psc_particle_PTYPE_range_t) {
-    .begin = { .n = 0                                       , .p = p, .mprts = mprts },
-    .end   = { .n = psc_mparticles_n_prts_by_patch(mprts, p), .p = p, .mprts = mprts },
+    .begin = { .n = 0                                        , .p = p, .mprts = mprts },
+    .end   = { .n = psc_mparticles_PTYPE_get_n_prts(mprts, p), .p = p, .mprts = mprts },
   };
 }
 
