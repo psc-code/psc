@@ -44,10 +44,14 @@ psc_get_loads_initial(struct psc *psc, double *loads, int *nr_particles_by_patch
 static void
 psc_get_loads(struct psc *psc, double *loads)
 {
+  struct psc_mparticles *mprts = psc->particles;
+  
+  int n_prts_by_patch[mprts->nr_patches];
+  psc_mparticles_n_prts_all(mprts, n_prts_by_patch);
   psc_foreach_patch(psc, p) {
     if (psc->balance->factor_fields >= 0.) {
       int *ldims = psc->patch[p].ldims;
-      loads[p] = psc_mparticles_n_prts_by_patch(psc->particles, p) +
+      loads[p] = n_prts_by_patch[p] +
 	psc->balance->factor_fields * ldims[0] * ldims[1] * ldims[2];
       //mprintf("loads p %d %g %g ratio %g\n", p, loads[p], comp_time, loads[p] / comp_time);
     } else {
@@ -729,10 +733,7 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
 
   prof_start(pr_bal_prts_A);
   int *nr_particles_by_patch = calloc(nr_patches, sizeof(*nr_particles_by_patch));
-  for (int p = 0; p < nr_patches; p++) {
-    nr_particles_by_patch[p] =
-      psc_mparticles_n_prts_by_patch(psc->particles, p);
-  }
+  psc_mparticles_n_prts_all(psc->particles, nr_particles_by_patch);
   prof_stop(pr_bal_prts_A);
 
   communicate_new_nr_particles(ctx, &nr_particles_by_patch);

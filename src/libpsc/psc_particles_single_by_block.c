@@ -15,7 +15,7 @@ psc_particles_single_by_block_reorder(struct psc_mparticles *mprts, int p)
     return;
   }
 
-  for (int n = 0; n < psc_mparticles_n_prts_by_patch(mprts, p); n++) {
+  for (int n = 0; n < patch->n_prts; n++) {
     patch->prt_array_alt[n] = patch->prt_array[patch->b_ids[n]];
   }
   
@@ -84,7 +84,7 @@ psc_particles_single_by_block_check(struct psc_mparticles *mprts, int p)
   struct psc_mparticles_single_by_block *msub = psc_mparticles_single_by_block(mprts);
   struct psc_mparticles_single_by_block_patch *patch = &msub->patch[p];
 
-  int n_prts = psc_mparticles_n_prts_by_patch(mprts, p);
+  int n_prts = patch->n_prts;
   assert(n_prts <= patch->n_alloced);
 
   int block = 0;
@@ -123,7 +123,7 @@ psc_particles_single_by_block_sort(struct psc_mparticles *mprts, int p)
   }
 
   // calculate block indices for each particle and count
-  int n_prts = psc_mparticles_n_prts_by_patch(mprts, p)
+  int n_prts = patch->n_prts;
   for (int n = 0; n < n_prts; n++) {
     unsigned int b_idx = psc_particles_single_by_block_get_b_idx(prts, n);
     assert(b_idx < sub->nr_blocks);

@@ -14,8 +14,8 @@ psc_particles_single_reorder(struct psc_mparticles *mprts)
   if (!sub->need_reorder) {
     return;
   }
-
-  int n_prts = psc_mparticles_n_prts_by_patch(mprts, p)
+f
+  int n_prts = patch->n_prts;
   for (int n = 0; n < n_prts; n++) {
     sub->particles_alt[n] = sub->particles[sub->b_ids[n]];
   }

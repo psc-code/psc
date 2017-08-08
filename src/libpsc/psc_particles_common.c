@@ -17,7 +17,7 @@ MPFX(setup_patch)(struct psc_mparticles *mprts, int p, int n_prts)
   struct MPFX(patch) *patch = &sub->patch[p];
 
   patch->n_prts = n_prts;
-  int n_alloced = psc_mparticles_n_prts_by_patch(mprts, p) * 1.2;
+  int n_alloced = n_prts * 1.2;
   patch->n_alloced = n_alloced;
   patch->prt_array = calloc(n_alloced, sizeof(*patch->prt_array));
 
@@ -163,7 +163,7 @@ MPFX(write)(struct psc_mparticles *mprts, struct mrc_io *io)
     particle_range_t prts = particle_range_mprts(mprts, p);
     char pname[10]; sprintf(pname, "p%d", p);
     hid_t pgroup = H5Gcreate(group, pname, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT); H5_CHK(pgroup);
-    int n_prts = psc_mparticles_n_prts_by_patch(mprts, p);
+    int n_prts = particle_range_size(prts);
     ierr = H5LTset_attribute_int(pgroup, ".", "n_prts", &n_prts, 1); CE;
     if (n_prts > 0) {
       // in a rather ugly way, we write the int "kind" member as a float / double
