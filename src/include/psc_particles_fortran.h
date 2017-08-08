@@ -8,16 +8,6 @@
 #include "psc_particles_common.h"
 #undef PTYPE
 
-typedef struct psc_particle_fortran {
-  particle_fortran_real_t xi, yi, zi;
-  particle_fortran_real_t pxi, pyi, pzi;
-  particle_fortran_real_t qni;
-  particle_fortran_real_t mni;
-  particle_fortran_real_t cni;
-  particle_fortran_real_t lni;
-  particle_fortran_real_t wni;
-} particle_fortran_t;
-
 struct psc_mparticles_fortran_patch {
   particle_fortran_t *prt_array;
   int n_prts;

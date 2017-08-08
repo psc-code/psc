@@ -10,13 +10,6 @@
 #include "psc_particles_common.h"
 #undef PTYPE
 
-typedef struct psc_particle_single {
-  particle_single_real_t xi, yi, zi;
-  particle_single_real_t qni_wni;
-  particle_single_real_t pxi, pyi, pzi;
-  int kind;
-} particle_single_t;
-
 struct psc_mparticles_single_patch {
   particle_single_t *prt_array;
   int n_prts;

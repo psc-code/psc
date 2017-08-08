@@ -8,15 +8,6 @@
 #include "psc_particles_common.h"
 #undef PTYPE
 
-typedef struct psc_particle_c {
-  particle_c_real_t xi, yi, zi;
-  particle_c_real_t pxi, pyi, pzi;
-  particle_c_real_t qni;
-  particle_c_real_t mni;
-  particle_c_real_t wni;
-  long long         kind; // 64 bits to match the other members, for bnd exchange
-} particle_c_t;
-
 struct psc_mparticles_c_patch {
   particle_c_t *prt_array;
   int n_prts;

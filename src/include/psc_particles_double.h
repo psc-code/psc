@@ -8,13 +8,6 @@
 #include "psc_particles_common.h"
 #undef PTYPE
 
-typedef struct psc_particle_double {
-  particle_double_real_t xi, yi, zi;
-  particle_double_real_t qni_wni;
-  particle_double_real_t pxi, pyi, pzi;
-  int kind;
-} particle_double_t;
-
 struct psc_mparticles_double_patch {
   particle_double_t *prt_array;
   int n_prts;

@@ -8,13 +8,6 @@
 #include "psc_particles_common.h"
 #undef PTYPE
 
-typedef struct psc_particle_single_by_block {
-  particle_single_by_block_real_t xi, yi, zi;
-  particle_single_by_block_real_t qni_wni;
-  particle_single_by_block_real_t pxi, pyi, pzi;
-  int kind;
-} particle_single_by_block_t;
-
 struct psc_mparticles_single_by_block_patch {
   particle_single_by_block_t *prt_array;
   int n_prts;
