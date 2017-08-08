@@ -105,17 +105,17 @@ put_particle_c(particle_single_t *prt, int n, struct psc_mparticles *mprts_c, in
 }
 
 static void
-psc_mparticles_single_copy_to_c(int p, struct psc_mparticles *mprts,
+psc_mparticles_single_copy_to_c(struct psc_mparticles *mprts,
 				struct psc_mparticles *mprts_c, unsigned int flags)
 {
-  psc_mparticles_copy_to(p, mprts, mprts_c, flags, put_particle_c);
+  psc_mparticles_copy_to(mprts, mprts_c, flags, put_particle_c);
 }
 
 static void
-psc_mparticles_single_copy_from_c(int p, struct psc_mparticles *mprts,
+psc_mparticles_single_copy_from_c(struct psc_mparticles *mprts,
 				  struct psc_mparticles *mprts_c, unsigned int flags)
 {
-  psc_mparticles_copy_from(p, mprts, mprts_c, flags, get_particle_c);
+  psc_mparticles_copy_from(mprts, mprts_c, flags, get_particle_c);
 }
 
 // ----------------------------------------------------------------------
@@ -152,17 +152,17 @@ get_particle_double(particle_single_t *prt, int n, struct psc_mparticles *mprts_
 }
 
 static void
-psc_mparticles_single_copy_to_double(int p, struct psc_mparticles *mprts,
+psc_mparticles_single_copy_to_double(struct psc_mparticles *mprts,
 				    struct psc_mparticles *mprts_dbl, unsigned int flags)
 {
-  psc_mparticles_copy_to(p, mprts, mprts_dbl, flags, put_particle_double);
+  psc_mparticles_copy_to(mprts, mprts_dbl, flags, put_particle_double);
 }
 
 static void
-psc_mparticles_single_copy_from_double(int p, struct psc_mparticles *mprts,
+psc_mparticles_single_copy_from_double(struct psc_mparticles *mprts,
 				       struct psc_mparticles *mprts_dbl, unsigned int flags)
 {
-  psc_mparticles_copy_from(p, mprts, mprts_dbl, flags, get_particle_double);
+  psc_mparticles_copy_from(mprts, mprts_dbl, flags, get_particle_double);
 }
 
 static struct mrc_obj_method psc_mparticles_single_methods[] = {

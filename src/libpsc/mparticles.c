@@ -248,13 +248,9 @@ psc_mparticles_get_as(struct psc_mparticles *mp_base, const char *type,
     }
 
     if (copy_to) {
-      for (int p = 0; p < mp_base->nr_patches; p++) {
-	copy_to(p, mp_base, mp, flags);
-      }
+      copy_to(mp_base, mp, flags);
     } else {
-      for (int p = 0; p < mp_base->nr_patches; p++) {
-	copy_from(p, mp, mp_base, flags);
-      }
+      copy_from(mp, mp_base, flags);
     }
     psc_mparticles_setup_internals(mp);
   }
@@ -300,13 +296,9 @@ psc_mparticles_put_as(struct psc_mparticles *mp, struct psc_mparticles *mp_base,
     }
     
     if (copy_from) {
-      for (int p = 0; p < mp_base->nr_patches; p++) {
-	copy_from(p, mp_base, mp, MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
-      }
+      copy_from(mp_base, mp, MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
     } else {
-      for (int p = 0; p < mp_base->nr_patches; p++) {
-	copy_to(p, mp, mp_base, MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
-      }
+      copy_to(mp, mp_base, MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
     }
     psc_mparticles_setup_internals(mp_base);
   }

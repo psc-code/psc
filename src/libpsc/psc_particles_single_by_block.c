@@ -198,19 +198,21 @@ get_particle_single(particle_single_by_block_t *prt, int n, struct psc_mparticle
 }
 
 static void
-psc_mparticles_single_by_block_copy_to_single(int p, struct psc_mparticles *mprts,
+psc_mparticles_single_by_block_copy_to_single(struct psc_mparticles *mprts,
 				    struct psc_mparticles *mprts_dbl, unsigned int flags)
 {
-  psc_mparticles_copy_to(p, mprts, mprts_dbl, flags, put_particle_single);
+  psc_mparticles_copy_to(mprts, mprts_dbl, flags, put_particle_single);
 }
 
 static void
-psc_mparticles_single_by_block_copy_from_single(int p, struct psc_mparticles *mprts,
+psc_mparticles_single_by_block_copy_from_single(struct psc_mparticles *mprts,
 				       struct psc_mparticles *mprts_dbl, unsigned int flags)
 {
-  psc_mparticles_copy_from(p, mprts, mprts_dbl, flags, get_particle_single);
-  psc_particles_single_by_block_sort(mprts, p);
-  psc_particles_single_by_block_check(mprts, p);
+  psc_mparticles_copy_from(mprts, mprts_dbl, flags, get_particle_single);
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    psc_particles_single_by_block_sort(mprts, p);
+    psc_particles_single_by_block_check(mprts, p);
+  }
 }
 
 static struct mrc_obj_method psc_mparticles_single_by_block_methods[] = {
