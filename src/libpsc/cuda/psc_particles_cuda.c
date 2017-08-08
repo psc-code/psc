@@ -64,38 +64,36 @@ struct copy_ctx {
 };
 
 static void
-copy_from(int p, struct psc_mparticles *mprts_cuda, struct psc_mparticles *mprts,
+copy_from(int p, struct psc_mparticles *mprts, struct psc_mparticles *mprts_from,
 	  void (*get_particle)(struct cuda_mparticles_prt *prt, int n, void *ctx))
 {
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts_cuda)->cmprts;
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   int n_prts = psc_mparticles_n_prts_by_patch(mprts, p);
-  psc_mparticles_set_n_prts_by_patch(mprts_cuda, p, n_prts);
 
   unsigned int off = 0;
   for (int pp = 0; pp < p; pp++) {
-    off += psc_mparticles_n_prts_by_patch(mprts_cuda, pp);
+    off += psc_mparticles_n_prts_by_patch(mprts, pp);
   }
 
-  struct copy_ctx ctx = { .mprts = mprts, .p = p };
+  struct copy_ctx ctx = { .mprts = mprts_from, .p = p };
   cuda_mparticles_set_particles(cmprts, n_prts, off, get_particle, &ctx);
 }
 
 static void
-copy_to(int p, struct psc_mparticles *mprts_cuda, struct psc_mparticles *mprts,
+copy_to(int p, struct psc_mparticles *mprts, struct psc_mparticles *mprts_to,
 	void (*put_particle)(struct cuda_mparticles_prt *prt, int n, void *ctx))
 {
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts_cuda)->cmprts;
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   int n_prts = psc_mparticles_n_prts_by_patch(mprts, p);
-  psc_mparticles_resize_patch(mprts, p, n_prts);
 
   unsigned int off = 0;
   for (int pp = 0; pp < p; pp++) {
-    off += psc_mparticles_n_prts_by_patch(mprts_cuda, pp);
+    off += psc_mparticles_n_prts_by_patch(mprts, pp);
   }
 
-  struct copy_ctx ctx = { .mprts = mprts, .p = p };
+  struct copy_ctx ctx = { .mprts = mprts_to, .p = p };
   cuda_mparticles_get_particles(cmprts, n_prts, off, put_particle, &ctx);
 }
 
