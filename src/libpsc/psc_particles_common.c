@@ -110,16 +110,6 @@ MPFX(realloc_patch)(struct psc_mparticles *mprts, int p, int new_n_prts)
 }
 
 // ----------------------------------------------------------------------
-// psc_particles: subclass ops
-
-struct psc_particles_ops PFX(ops) = {
-  .name                    = PARTICLE_TYPE,
-};
-
-// ======================================================================
-// psc_mparticles
-
-// ----------------------------------------------------------------------
 // psc_mparticles_sub_setup
 //
 // FIXME does deliberately not call old-style setup_super(), rather duplicates
@@ -137,7 +127,6 @@ MPFX(setup)(struct psc_mparticles *mprts)
   sub->patch = calloc(mprts->nr_patches, sizeof(*sub->patch));
   for (int p = 0; p < mprts->nr_patches; p++) {
     mprts->prts[p] = psc_particles_create(MPI_COMM_NULL);
-    psc_particles_set_type(mprts->prts[p], PARTICLE_TYPE);
     mprts->prts[p]->mprts = mprts;
     mprts->prts[p]->p = p;
 

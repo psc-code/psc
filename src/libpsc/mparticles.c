@@ -40,15 +40,11 @@ static void
 _psc_mparticles_setup(struct psc_mparticles *mprts)
 {
   assert(mprts->nr_particles_by_patch);
-  struct psc_mparticles_ops *ops = psc_mparticles_ops(mprts);
 
   mprts->prts = calloc(mprts->nr_patches, sizeof(*mprts->prts));
   mprts->mpatch = calloc(mprts->nr_patches, sizeof(*mprts->mpatch));
   for (int p = 0; p < mprts->nr_patches; p++) {
     mprts->prts[p] = psc_particles_create(MPI_COMM_NULL);
-    psc_particles_set_type(mprts->prts[p], ops->name);
-    char name[20]; sprintf(name, "prts%d", p);
-    psc_particles_set_name(mprts->prts[p], name);
     mprts->prts[p]->mprts = mprts;
     mprts->prts[p]->p = p;
     psc_mparticles_set_n_prts_by_patch(mprts, p, mprts->nr_particles_by_patch[p]);

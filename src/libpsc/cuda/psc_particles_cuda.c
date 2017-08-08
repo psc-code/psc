@@ -281,8 +281,8 @@ psc_mparticles_cuda_copy_to_double(struct psc_mparticles *mprts_cuda,
   copy_to(mprts_cuda, mprts, put_particle_double);
 }
 
-// ======================================================================
-// psc_mparticles: subclass "cuda"
+// ----------------------------------------------------------------------
+// psc_mparticles_cuda_methods
 
 static struct mrc_obj_method psc_mparticles_cuda_methods[] = {
   MRC_OBJ_METHOD("copy_to_c"       , psc_mparticles_cuda_copy_to_c),
@@ -293,13 +293,6 @@ static struct mrc_obj_method psc_mparticles_cuda_methods[] = {
   MRC_OBJ_METHOD("copy_from_double", psc_mparticles_cuda_copy_from_double),
   {}
 };
-
-struct psc_particles_ops psc_particles_cuda_ops = {
-  .name                    = "cuda",
-};
-
-// ======================================================================
-// psc_mparticles "cuda"
 
 // ----------------------------------------------------------------------
 // psc_mparticles_cuda_setup
@@ -486,10 +479,7 @@ psc_mparticles_cuda_read(struct psc_mparticles *mprts, struct mrc_io *io)
   mprts->prts = calloc(mprts->nr_patches, sizeof(*mprts->prts));
 
   for (int p = 0; p < mprts->nr_patches; p++) {
-    char name[20]; sprintf(name, "prts%d", p);
     mprts->prts[p] = psc_particles_create(MPI_COMM_NULL);
-    psc_particles_set_type(mprts->prts[p], "cuda");
-    psc_particles_set_name(mprts->prts[p], name);
     mprts->prts[p]->p = p;
 
     char pname[10];

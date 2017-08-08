@@ -339,7 +339,7 @@ psc_particles_cuda2_copy_from_cuda(struct psc_particles *prts,
 #endif
 
 // ----------------------------------------------------------------------
-// psc_particles: subclass "cuda2"
+// psc_particles_cuda2_methods
 
 static struct mrc_obj_method psc_particles_cuda2_methods[] = {
   MRC_OBJ_METHOD("copy_to_single"  , psc_particles_cuda2_copy_to_single),
@@ -351,14 +351,6 @@ static struct mrc_obj_method psc_particles_cuda2_methods[] = {
   {}
 };
 
-struct psc_particles_ops psc_particles_cuda2_ops = {
-  .name                    = "cuda2",
-  .size                    = sizeof(struct psc_particles_cuda2),
-};
-
-// ======================================================================
-// psc_mparticles: subclass "cuda2"
-  
 // ----------------------------------------------------------------------
 // psc_mparticles_cuda2_setup
 

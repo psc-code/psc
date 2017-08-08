@@ -240,19 +240,6 @@ static struct mrc_obj_method psc_particles_acc_methods[] = {
   {}
 };
 
-struct psc_particles_ops psc_particles_acc_ops = {
-  .name                    = "acc",
-  .size                    = sizeof(struct psc_particles_acc),
-  .methods                 = psc_particles_acc_methods,
-#if 0
-#ifdef HAVE_LIBHDF5_HL
-  .read                    = psc_particles_acc_read,
-  .write                   = psc_particles_acc_write,
-#endif
-  .reorder                 = psc_particles_acc_reorder,
-#endif
-};
-
 // ======================================================================
 // psc_mparticles: subclass "acc"
   
