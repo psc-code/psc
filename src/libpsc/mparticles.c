@@ -199,11 +199,6 @@ psc_mparticles_get_as(struct psc_mparticles *mp_base, const char *type,
     }
 #endif
 
-    for (int p = 0; p < mp_base->nr_patches; p++) {
-      int n_prts = psc_mparticles_n_prts_by_patch(mp_base, p);
-      psc_mparticles_resize_patch(mp, p, n_prts);
-    }
-
     if (copy_to) {
       copy_to(mp_base, mp, flags);
     } else {
