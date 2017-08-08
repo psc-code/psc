@@ -19,6 +19,9 @@
 #define psc_particle_PTYPE_iter_next psc_particle_single_iter_next 
 #define psc_particle_PTYPE_iter_deref psc_particle_single_iter_deref 
 #define psc_particle_PTYPE_iter_at psc_particle_single_iter_at 
+#define psc_particle_PTYPE_range_t psc_particle_single_range_t
+#define psc_particle_PTYPE_range_mprts psc_particle_single_range_mprts
+#define psc_particle_PTYPE_range_size psc_particle_single_range_size
 
 #elif PTYPE == PTYPE_DOUBLE
 
@@ -34,6 +37,9 @@
 #define psc_particle_PTYPE_iter_next psc_particle_double_iter_next 
 #define psc_particle_PTYPE_iter_deref psc_particle_double_iter_deref 
 #define psc_particle_PTYPE_iter_at psc_particle_double_iter_at 
+#define psc_particle_PTYPE_range_t psc_particle_double_range_t 
+#define psc_particle_PTYPE_range_mprts psc_particle_double_range_mprts 
+#define psc_particle_PTYPE_range_size psc_particle_double_range_size 
 
 #elif PTYPE == PTYPE_SINGLE_BY_BLOCK
 
@@ -49,6 +55,9 @@
 #define psc_particle_PTYPE_iter_next psc_particle_single_by_block_iter_next 
 #define psc_particle_PTYPE_iter_deref psc_particle_single_by_block_iter_deref 
 #define psc_particle_PTYPE_iter_at psc_particle_single_by_block_iter_at 
+#define psc_particle_PTYPE_range_t psc_particle_single_by_block_range_t 
+#define psc_particle_PTYPE_range_mprts psc_particle_single_by_block_range_mprts 
+#define psc_particle_PTYPE_range_size psc_particle_single_by_block_range_size 
 
 #elif PTYPE == PTYPE_C
 
@@ -64,6 +73,9 @@
 #define psc_particle_PTYPE_iter_next psc_particle_c_iter_next 
 #define psc_particle_PTYPE_iter_deref psc_particle_c_iter_deref 
 #define psc_particle_PTYPE_iter_at psc_particle_c_iter_at 
+#define psc_particle_PTYPE_range_t psc_particle_c_range_t 
+#define psc_particle_PTYPE_range_mprts psc_particle_c_range_mprts 
+#define psc_particle_PTYPE_range_size psc_particle_c_range_size 
 
 #elif PTYPE == PTYPE_FORTRAN
 
@@ -79,6 +91,9 @@
 #define psc_particle_PTYPE_iter_next psc_particle_fortran_iter_next 
 #define psc_particle_PTYPE_iter_deref psc_particle_fortran_iter_deref 
 #define psc_particle_PTYPE_iter_at psc_particle_fortran_iter_at 
+#define psc_particle_PTYPE_range_t psc_particle_fortran_range_t 
+#define psc_particle_PTYPE_range_mprts psc_particle_fortran_range_mprts 
+#define psc_particle_PTYPE_range_size psc_particle_fortran_range_size 
 
 #endif
 
@@ -266,6 +281,34 @@ psc_particle_PTYPE_iter_at(psc_particle_PTYPE_iter_t iter, int m)
   return psc_mparticles_PTYPE_get_one((struct psc_mparticles *) iter.mprts, iter.p, iter.n + m);
 }
 
+// ----------------------------------------------------------------------
+// psc_particle_PTYPE_range_t
+
+typedef struct {
+  psc_particle_PTYPE_iter_t begin;
+  psc_particle_PTYPE_iter_t end;
+} psc_particle_PTYPE_range_t;
+
+// ----------------------------------------------------------------------
+// psc_particle_PTYPE_range_mprts
+
+static inline psc_particle_PTYPE_range_t
+psc_particle_PTYPE_range_mprts(struct psc_mparticles *mprts, int p)
+{
+  return (psc_particle_PTYPE_range_t) {
+    .begin = { .n = 0                                       , .p = p, .mprts = mprts },
+    .end   = { .n = psc_mparticles_n_prts_by_patch(mprts, p), .p = p, .mprts = mprts },
+  };
+}
+
+// ----------------------------------------------------------------------
+// psc_particle_PTYPE_range_size
+
+static inline unsigned int
+psc_particle_PTYPE_range_size(psc_particle_PTYPE_range_t prts)
+{
+  return prts.end.n - prts.begin.n;
+}
 
 #include <math.h>
 
@@ -281,3 +324,6 @@ psc_particle_PTYPE_iter_at(psc_particle_PTYPE_iter_t iter, int m)
 #undef psc_particle_PTYPE_iter_next 
 #undef psc_particle_PTYPE_iter_deref 
 #undef psc_particle_PTYPE_iter_at 
+#undef psc_particle_PTYPE_range_t 
+#undef psc_particle_PTYPE_range_mprts 
+#undef psc_particle_PTYPE_range_size 

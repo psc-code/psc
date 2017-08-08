@@ -27,6 +27,9 @@ typedef particle_double_t particle_t;
 #define particle_iter_next          psc_particle_double_iter_next 
 #define particle_iter_deref         psc_particle_double_iter_deref 
 #define particle_iter_at            psc_particle_double_iter_at
+#define particle_range_t            psc_particle_double_range_t
+#define particle_range_mprts        psc_particle_double_range_mprts
+#define particle_range_size         psc_particle_double_range_size
 
 #define MPI_PARTICLES_REAL          MPI_PARTICLES_DOUBLE_REAL
 #define PARTICLE_TYPE               "double"
