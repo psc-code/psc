@@ -11,10 +11,10 @@
 // psc_mparticles_sub_setup_patch
 
 static void
-MPFX(setup_patch)(struct psc_mparticles *mprts, int p, int n_prts)
+PFX(setup_patch)(struct psc_mparticles *mprts, int p, int n_prts)
 {
   struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
-  struct MPFX(patch) *patch = &sub->patch[p];
+  struct PFX(patch) *patch = &sub->patch[p];
 
   patch->n_prts = n_prts;
   int n_alloced = n_prts * 1.2;
@@ -54,10 +54,10 @@ MPFX(setup_patch)(struct psc_mparticles *mprts, int p, int n_prts)
 // psc_mparticles_sub_destroy_patch
 
 static void
-MPFX(destroy_patch)(struct psc_mparticles *mprts, int p)
+PFX(destroy_patch)(struct psc_mparticles *mprts, int p)
 {
   struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
-  struct MPFX(patch) *patch = &sub->patch[p];
+  struct PFX(patch) *patch = &sub->patch[p];
 
   free(patch->prt_array);
 
@@ -81,10 +81,10 @@ MPFX(destroy_patch)(struct psc_mparticles *mprts, int p)
 // psc_mparticles_sub_realloc_patch
 
 static void
-MPFX(realloc_patch)(struct psc_mparticles *mprts, int p, int new_n_prts)
+PFX(realloc_patch)(struct psc_mparticles *mprts, int p, int new_n_prts)
 {
   struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
-  struct MPFX(patch) *patch = &sub->patch[p];
+  struct PFX(patch) *patch = &sub->patch[p];
 
   if (new_n_prts <= patch->n_alloced)
     return;
@@ -113,7 +113,7 @@ MPFX(realloc_patch)(struct psc_mparticles *mprts, int p, int new_n_prts)
 // psc_mparticles_sub_setup
 
 static void
-MPFX(setup)(struct psc_mparticles *mprts)
+PFX(setup)(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
 
@@ -139,7 +139,7 @@ MPFX(setup)(struct psc_mparticles *mprts)
 // psc_mparticles_sub_write
 
 static void
-MPFX(write)(struct psc_mparticles *mprts, struct mrc_io *io)
+PFX(write)(struct psc_mparticles *mprts, struct mrc_io *io)
 {
   int ierr;
   assert(sizeof(particle_t) / sizeof(particle_real_t) == 8);
@@ -176,7 +176,7 @@ MPFX(write)(struct psc_mparticles *mprts, struct mrc_io *io)
 // psc_mparticles_sub_read
 
 static void
-MPFX(read)(struct psc_mparticles *mprts, struct mrc_io *io)
+PFX(read)(struct psc_mparticles *mprts, struct mrc_io *io)
 {
   int ierr;
   psc_mparticles_read_super(mprts, io);
@@ -191,7 +191,7 @@ MPFX(read)(struct psc_mparticles *mprts, struct mrc_io *io)
     hid_t pgroup = H5Gopen(group, pname, H5P_DEFAULT); H5_CHK(pgroup);
     int n_prts;
     ierr = H5LTget_attribute_int(pgroup, ".", "n_prts", &n_prts); CE;
-    MPFX(setup_patch)(mprts, p, n_prts);
+    PFX(setup_patch)(mprts, p, n_prts);
     
     if (n_prts > 0) {
 #if PSC_PARTICLES_AS_SINGLE
@@ -212,13 +212,13 @@ MPFX(read)(struct psc_mparticles *mprts, struct mrc_io *io)
 #else
 
 static void
-MPFX(write)(struct psc_mparticles *mprts, struct mrc_io *io)
+PFX(write)(struct psc_mparticles *mprts, struct mrc_io *io)
 {
   assert(0);
 }
 
 static void
-MPFX(read)(struct psc_mparticles *mprts, struct mrc_io *io)
+PFX(read)(struct psc_mparticles *mprts, struct mrc_io *io)
 {
   assert(0);
 }
@@ -226,26 +226,26 @@ MPFX(read)(struct psc_mparticles *mprts, struct mrc_io *io)
 #endif
 
 static void
-MPFX(destroy)(struct psc_mparticles *mprts)
+PFX(destroy)(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
 
   for (int p = 0; p < mprts->nr_patches; p++) {
-    MPFX(destroy_patch)(mprts, p);
+    PFX(destroy_patch)(mprts, p);
   }
   free(sub->patch);
 }
 
 static void
-MPFX(alloc)(struct psc_mparticles *mprts, int *n_prts_by_patch)
+PFX(alloc)(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
   for (int p = 0; p < mprts->nr_patches; p++) {
-    MPFX(setup_patch)(mprts, p, n_prts_by_patch[p]);
+    PFX(setup_patch)(mprts, p, n_prts_by_patch[p]);
   }
 }
 
 static void
-MPFX(resize_patch)(struct psc_mparticles *mprts, int p, int n_prts)
+PFX(resize_patch)(struct psc_mparticles *mprts, int p, int n_prts)
 {
   struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
 
@@ -254,7 +254,7 @@ MPFX(resize_patch)(struct psc_mparticles *mprts, int p, int n_prts)
 }
 
 static void
-MPFX(set_n_prts)(struct psc_mparticles *mprts, int p, int n_prts)
+PFX(set_n_prts)(struct psc_mparticles *mprts, int p, int n_prts)
 {
   struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
 
@@ -262,7 +262,7 @@ MPFX(set_n_prts)(struct psc_mparticles *mprts, int p, int n_prts)
 }
 
 static int
-MPFX(get_n_prts)(struct psc_mparticles *mprts, int p)
+PFX(get_n_prts)(struct psc_mparticles *mprts, int p)
 {
   struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
 
@@ -270,7 +270,7 @@ MPFX(get_n_prts)(struct psc_mparticles *mprts, int p)
 }
 
 static void
-MPFX(get_n_prts_all)(struct psc_mparticles *mprts, int *n_prts_by_patch)
+PFX(get_n_prts_all)(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
   struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
 
@@ -282,19 +282,19 @@ MPFX(get_n_prts_all)(struct psc_mparticles *mprts, int *n_prts_by_patch)
 // ----------------------------------------------------------------------
 // psc_mparticles_ops
 
-struct psc_mparticles_ops MPFX(ops) = {
+struct psc_mparticles_ops PFX(ops) = {
   .name                    = PARTICLE_TYPE,
   .size                    = sizeof(struct psc_mparticles_sub),
-  .methods                 = MPFX(methods),
-  .setup                   = MPFX(setup),
-  .destroy                 = MPFX(destroy),
-  .write                   = MPFX(write),
-  .read                    = MPFX(read),
-  .alloc                   = MPFX(alloc),
-  .realloc                 = MPFX(realloc_patch),
-  .resize_patch            = MPFX(resize_patch),
-  .set_n_prts              = MPFX(set_n_prts),
-  .get_n_prts              = MPFX(get_n_prts),
-  .get_n_prts_all          = MPFX(get_n_prts_all),
+  .methods                 = PFX(methods),
+  .setup                   = PFX(setup),
+  .destroy                 = PFX(destroy),
+  .write                   = PFX(write),
+  .read                    = PFX(read),
+  .alloc                   = PFX(alloc),
+  .realloc                 = PFX(realloc_patch),
+  .resize_patch            = PFX(resize_patch),
+  .set_n_prts              = PFX(set_n_prts),
+  .get_n_prts              = PFX(get_n_prts),
+  .get_n_prts_all          = PFX(get_n_prts_all),
 };
 
