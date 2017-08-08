@@ -1,6 +1,7 @@
 
 #include "psc.h"
 #include "psc_particles_as_c.h"
+#include "psc_particles_inc.h"
 
 // ======================================================================
 // psc_mparticles: subclass "c"
