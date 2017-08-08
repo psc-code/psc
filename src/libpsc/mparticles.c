@@ -221,6 +221,20 @@ psc_mparticles_get_as(struct psc_mparticles *mp_base, const char *type,
   free(nr_particles_by_patch);
 
   if (!(flags & MP_DONT_COPY)) {
+    psc_mparticles_copy_to_func_t copy_to, copy_from;
+    char s[strlen(type) + 12]; sprintf(s, "copy_to_%s", type);
+    copy_to = (psc_mparticles_copy_to_func_t) psc_mparticles_get_method(mp_base, s);
+    if (!copy_to) {
+      sprintf(s, "copy_from_%s", type_base);
+      copy_from = (psc_mparticles_copy_from_func_t) psc_mparticles_get_method(mp, s);
+    }
+    if (!copy_to && !copy_from) {
+      fprintf(stderr, "ERROR: no 'copy_to_%s' in psc_mparticles '%s' and "
+	      "no 'copy_from_%s' in '%s'!\n",
+	      type, psc_mparticles_type(mp_base), type_base, psc_mparticles_type(mp));
+      assert(0);
+    }
+    
 #ifdef USE_CUDA
     if (strcmp(type_base, "cuda") == 0) { // FIXME
       extern void psc_mparticles_cuda_reorder(struct psc_mparticles *);
@@ -228,26 +242,13 @@ psc_mparticles_get_as(struct psc_mparticles *mp_base, const char *type,
     }
 #endif
 
-    for (int p = 0; p < mp_base->nr_patches; p++) {
-      struct psc_particles *prts_base = psc_mparticles_get_patch(mp_base, p);
-      struct psc_particles *prts = psc_mparticles_get_patch(mp, p);
-      char s[strlen(type) + 12]; sprintf(s, "copy_to_%s", type);
-      psc_mparticles_copy_to_func_t copy_to = (psc_mparticles_copy_to_func_t)
-	psc_mparticles_get_method(mp_base, s);
-      if (copy_to) {
+    if (copy_to) {
+      for (int p = 0; p < mp_base->nr_patches; p++) {
 	copy_to(p, mp_base, mp, flags);
-      } else {
-	sprintf(s, "copy_from_%s", type_base);
-	psc_mparticles_copy_to_func_t copy_from = (psc_mparticles_copy_from_func_t)
-	  psc_mparticles_get_method(mp, s);
-	if (copy_from) {
-	  copy_from(p, mp, mp_base, flags);
-	} else {
-	  fprintf(stderr, "ERROR: no 'copy_to_%s' in psc_particles '%s' and "
-		  "no 'copy_from_%s' in '%s'!\n",
-		  type, psc_particles_type(prts_base), type_base, psc_particles_type(prts));
-	  assert(0);
-	}
+      }
+    } else {
+      for (int p = 0; p < mp_base->nr_patches; p++) {
+	copy_from(p, mp, mp_base, flags);
       }
     }
     psc_mparticles_setup_internals(mp);
@@ -274,26 +275,27 @@ psc_mparticles_put_as(struct psc_mparticles *mp, struct psc_mparticles *mp_base,
   prof_start(pr);
 
   if (!(flags & MP_DONT_COPY)) {
-    for (int p = 0; p < mp_base->nr_patches; p++) {
-      struct psc_particles *prts_base = psc_mparticles_get_patch(mp_base, p);
-      struct psc_particles *prts = psc_mparticles_get_patch(mp, p);
-      char s[strlen(type) + 12]; sprintf(s, "copy_from_%s", type);
-      psc_mparticles_copy_from_func_t copy_from = (psc_mparticles_copy_from_func_t)
-	psc_mparticles_get_method(mp_base, s);
-      if (copy_from) {
+    psc_mparticles_copy_from_func_t copy_from, copy_to;
+    char s[strlen(type) + 12]; sprintf(s, "copy_from_%s", type);
+    copy_from = (psc_mparticles_copy_from_func_t) psc_mparticles_get_method(mp_base, s);
+    if (!copy_from) {
+      sprintf(s, "copy_to_%s", type_base);
+      copy_to = (psc_mparticles_copy_from_func_t) psc_mparticles_get_method(mp, s);
+    }
+    if (!copy_from && !copy_to) {
+      fprintf(stderr, "ERROR: no 'copy_from_%s' in psc_mparticles '%s' and "
+	      "no 'copy_to_%s' in '%s'!\n",
+	      type, psc_mparticles_type(mp_base), type_base, psc_mparticles_type(mp));
+      assert(0);
+    }
+
+    if (copy_from) {
+      for (int p = 0; p < mp_base->nr_patches; p++) {
 	copy_from(p, mp_base, mp, MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
-      } else {
-	sprintf(s, "copy_to_%s", type_base);
-	psc_mparticles_copy_from_func_t copy_to = (psc_mparticles_copy_from_func_t)
-	  psc_mparticles_get_method(mp, s);
-	if (copy_to) {
-	  copy_to(p, mp, mp_base, MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
-	} else {
-	  fprintf(stderr, "ERROR: no 'copy_from_%s' in psc_particles '%s' and "
-		  "no 'copy_to_%s' in '%s'!\n",
-		  type, psc_particles_type(prts_base), type_base, psc_particles_type(prts));
-	  assert(0);
-	}
+      }
+    } else {
+      for (int p = 0; p < mp_base->nr_patches; p++) {
+	copy_to(p, mp, mp_base, MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
       }
     }
     psc_mparticles_setup_internals(mp_base);
