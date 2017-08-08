@@ -23,6 +23,10 @@ typedef particle_double_t particle_t;
 #define particle_real_sqrt          particle_double_real_sqrt
 
 #define particle_iter_t             psc_particle_double_iter_t
+#define particle_iter_equal         psc_particle_double_iter_equal
+#define particle_iter_next          psc_particle_double_iter_next 
+#define particle_iter_deref         psc_particle_double_iter_deref 
+#define particle_iter_at            psc_particle_double_iter_at
 
 #define MPI_PARTICLES_REAL          MPI_PARTICLES_DOUBLE_REAL
 #define PARTICLE_TYPE               "double"

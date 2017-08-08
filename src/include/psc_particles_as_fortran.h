@@ -11,6 +11,10 @@ typedef particle_fortran_t particle_t;
 #define particle_real_fint            particle_fortran_real_fint
 
 #define particle_iter_t               psc_particle_fortran_iter_t
+#define particle_iter_equal           psc_particle_fortran_iter_equal
+#define particle_iter_next            psc_particle_fortran_iter_next 
+#define particle_iter_deref           psc_particle_fortran_iter_deref 
+#define particle_iter_at              psc_particle_fortran_iter_at
 
 #define MPI_PARTICLES_REAL            MPI_PARTICLES_FORTRAN_REAL
 #define PARTICLE_TYPE                 "fortran"

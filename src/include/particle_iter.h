@@ -1,38 +1,4 @@
 
-// ======================================================================
-// particle_iter_t
-
-static inline bool
-particle_iter_equal(particle_iter_t iter, particle_iter_t iter2)
-{
-  assert(iter.mprts == iter2.mprts);
-  return iter.n == iter2.n && iter.p == iter2.p;
-}
-
-static inline particle_iter_t
-particle_iter_next(particle_iter_t iter)
-{
-  return (particle_iter_t) {
-    .n    = iter.n + 1,
-    .p    = iter.p,
-    .mprts = iter.mprts,
-  };
-}
-
-static inline particle_t *
-particle_iter_deref(particle_iter_t iter)
-{
-  // FIXME, shouldn't have to cast away const
-  return mparticles_get_one((struct psc_mparticles *) iter.mprts, iter.p, iter.n);
-}
-
-static inline particle_t *
-particle_iter_at(particle_iter_t iter, int m)
-{
-  // FIXME, shouldn't have to cast away const
-  return mparticles_get_one((struct psc_mparticles *) iter.mprts, iter.p, iter.n + m);
-}
-
 #define PARTICLE_ITER_LOOP(prt_iter, prt_begin, prt_end)	      \
   for (particle_iter_t prt_iter = prt_begin;			      \
        !particle_iter_equal(prt_iter, prt_end);			      \

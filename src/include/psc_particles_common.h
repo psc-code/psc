@@ -15,6 +15,10 @@
 #define psc_mparticles_PTYPE_ops psc_mparticles_single_ops
 #define psc_mparticles_PTYPE_get_one psc_mparticles_single_get_one
 #define psc_particle_PTYPE_iter_t psc_particle_single_iter_t
+#define psc_particle_PTYPE_iter_equal psc_particle_single_iter_equal
+#define psc_particle_PTYPE_iter_next psc_particle_single_iter_next 
+#define psc_particle_PTYPE_iter_deref psc_particle_single_iter_deref 
+#define psc_particle_PTYPE_iter_at psc_particle_single_iter_at 
 
 #elif PTYPE == PTYPE_DOUBLE
 
@@ -26,6 +30,10 @@
 #define psc_mparticles_PTYPE_ops psc_mparticles_double_ops
 #define psc_mparticles_PTYPE_get_one psc_mparticles_double_get_one
 #define psc_particle_PTYPE_iter_t psc_particle_double_iter_t
+#define psc_particle_PTYPE_iter_equal psc_particle_double_iter_equal
+#define psc_particle_PTYPE_iter_next psc_particle_double_iter_next 
+#define psc_particle_PTYPE_iter_deref psc_particle_double_iter_deref 
+#define psc_particle_PTYPE_iter_at psc_particle_double_iter_at 
 
 #elif PTYPE == PTYPE_SINGLE_BY_BLOCK
 
@@ -37,6 +45,10 @@
 #define psc_mparticles_PTYPE_ops psc_mparticles_single_by_block_ops
 #define psc_mparticles_PTYPE_get_one psc_mparticles_single_by_block_get_one
 #define psc_particle_PTYPE_iter_t psc_particle_single_by_block_iter_t
+#define psc_particle_PTYPE_iter_equal psc_particle_single_by_block_iter_equal
+#define psc_particle_PTYPE_iter_next psc_particle_single_by_block_iter_next 
+#define psc_particle_PTYPE_iter_deref psc_particle_single_by_block_iter_deref 
+#define psc_particle_PTYPE_iter_at psc_particle_single_by_block_iter_at 
 
 #elif PTYPE == PTYPE_C
 
@@ -48,6 +60,10 @@
 #define psc_mparticles_PTYPE_ops psc_mparticles_c_ops
 #define psc_mparticles_PTYPE_get_one psc_mparticles_c_get_one
 #define psc_particle_PTYPE_iter_t psc_particle_c_iter_t
+#define psc_particle_PTYPE_iter_equal psc_particle_c_iter_equal
+#define psc_particle_PTYPE_iter_next psc_particle_c_iter_next 
+#define psc_particle_PTYPE_iter_deref psc_particle_c_iter_deref 
+#define psc_particle_PTYPE_iter_at psc_particle_c_iter_at 
 
 #elif PTYPE == PTYPE_FORTRAN
 
@@ -59,6 +75,10 @@
 #define psc_mparticles_PTYPE_ops psc_mparticles_fortran_ops
 #define psc_mparticles_PTYPE_get_one psc_mparticles_fortran_get_one
 #define psc_particle_PTYPE_iter_t psc_particle_fortran_iter_t
+#define psc_particle_PTYPE_iter_equal psc_particle_fortran_iter_equal
+#define psc_particle_PTYPE_iter_next psc_particle_fortran_iter_next 
+#define psc_particle_PTYPE_iter_deref psc_particle_fortran_iter_deref 
+#define psc_particle_PTYPE_iter_at psc_particle_fortran_iter_at 
 
 #endif
 
@@ -203,6 +223,48 @@ typedef struct {
   const struct psc_mparticles *mprts;
 } psc_particle_PTYPE_iter_t;
 
+// ----------------------------------------------------------------------
+// psc_particle_PTYPE_iter_equal
+
+static inline bool
+psc_particle_PTYPE_iter_equal(psc_particle_PTYPE_iter_t iter, psc_particle_PTYPE_iter_t iter2)
+{
+  assert(iter.mprts == iter2.mprts && iter.p == iter2.p);
+  return iter.n == iter2.n;
+}
+
+// ----------------------------------------------------------------------
+// psc_particle_PTYPE_iter_next
+
+static inline psc_particle_PTYPE_iter_t
+psc_particle_PTYPE_iter_next(psc_particle_PTYPE_iter_t iter)
+{
+  return (psc_particle_PTYPE_iter_t) {
+    .n    = iter.n + 1,
+    .p    = iter.p,
+    .mprts = iter.mprts,
+  };
+}
+
+// ----------------------------------------------------------------------
+// psc_particle_PTYPE_iter_deref
+
+static inline particle_PTYPE_t *
+psc_particle_PTYPE_iter_deref(psc_particle_PTYPE_iter_t iter)
+{
+  // FIXME, shouldn't have to cast away const
+  return psc_mparticles_PTYPE_get_one((struct psc_mparticles *) iter.mprts, iter.p, iter.n);
+}
+
+// ----------------------------------------------------------------------
+// psc_particle_PTYPE_iter_at
+
+static inline particle_PTYPE_t *
+psc_particle_PTYPE_iter_at(psc_particle_PTYPE_iter_t iter, int m)
+{
+  // FIXME, shouldn't have to cast away const
+  return psc_mparticles_PTYPE_get_one((struct psc_mparticles *) iter.mprts, iter.p, iter.n + m);
+}
 
 
 #include <math.h>
@@ -215,3 +277,7 @@ typedef struct {
 #undef psc_mparticles_PTYPE_ops
 #undef psc_mparticles_PTYPE_get_one
 #undef psc_particle_PTYPE_iter_t
+#undef psc_particle_PTYPE_iter_equal
+#undef psc_particle_PTYPE_iter_next 
+#undef psc_particle_PTYPE_iter_deref 
+#undef psc_particle_PTYPE_iter_at 
