@@ -389,10 +389,10 @@ psc_mparticles_cuda_destroy(struct psc_mparticles *mprts)
 }
 
 // ----------------------------------------------------------------------
-// psc_mparticles_cuda_alloc
+// psc_mparticles_cuda_reserve
 
 static void
-psc_mparticles_cuda_alloc(struct psc_mparticles *mprts, int *_n_prts_by_patch)
+psc_mparticles_cuda_reserve(struct psc_mparticles *mprts, int *_n_prts_by_patch)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
   struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
@@ -501,7 +501,7 @@ psc_mparticles_cuda_read(struct psc_mparticles *mprts, struct mrc_io *io)
   }
 
   psc_mparticles_setup(mprts);
-  psc_mparticles_alloc(mprts, n_prts_by_patch);
+  psc_mparticles_reserve(mprts, n_prts_by_patch);
 
   unsigned int off = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
@@ -645,7 +645,7 @@ struct psc_mparticles_ops psc_mparticles_cuda_ops = {
   .read                    = psc_mparticles_cuda_read,
   .write                   = psc_mparticles_cuda_write,
   .setup_internals         = psc_mparticles_cuda_setup_internals,
-  .alloc                   = psc_mparticles_cuda_alloc,
+  .reserve                 = psc_mparticles_cuda_reserve,
   .get_nr_particles        = psc_mparticles_cuda_get_nr_particles,
   .set_n_prts              = psc_mparticles_cuda_set_n_prts,
   .get_n_prts_all          = psc_mparticles_cuda_get_n_prts_all,

@@ -136,11 +136,11 @@ psc_mparticles_setup_internals(struct psc_mparticles *mprts)
 }
 
 void
-psc_mparticles_alloc(struct psc_mparticles *mprts, int *n_prts_by_patch)
+psc_mparticles_reserve(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
   struct psc_mparticles_ops *ops = psc_mparticles_ops(mprts);
-  assert(ops && ops->alloc);
-  ops->alloc(mprts, n_prts_by_patch);
+  assert(ops && ops->reserve);
+  ops->reserve(mprts, n_prts_by_patch);
 }
 
 struct psc_mparticles *
@@ -168,7 +168,7 @@ psc_mparticles_get_as(struct psc_mparticles *mp_base, const char *type,
   psc_mparticles_set_domain(mp, mp_base->domain);
   psc_mparticles_set_param_int(mp, "flags", flags);
   psc_mparticles_setup(mp);
-  psc_mparticles_alloc(mp, nr_particles_by_patch);
+  psc_mparticles_reserve(mp, nr_particles_by_patch);
 
   if (!(flags & MP_DONT_COPY)) {
     psc_mparticles_copy_to_func_t copy_to, copy_from;
