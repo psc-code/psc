@@ -174,7 +174,7 @@ psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 	prt_iter = particle_iter_next(prt_iter);
       } 
     }
-    psc_mparticles_resize_patch(mprts, p, il1);
+    psc_mparticles_patch_resize(mprts, p, il1);
     assert(il1 == nr_particles_by_patch[p]);
   }
 

@@ -55,7 +55,7 @@ psc_test_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool count
     if (count_only) {
       nr_particles_by_patch[p] = i;
     } else {
-      psc_mparticles_resize_patch(psc->particles, p, i);
+      psc_mparticles_patch_resize(psc->particles, p, i);
     }
   }
 }

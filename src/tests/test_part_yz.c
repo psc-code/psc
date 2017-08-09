@@ -15,7 +15,7 @@ psc_test_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool count
     return;
   }
 
-  psc_mparticles_resize_patch(psc->particles, 0, nr_particles_by_patch[0]);
+  psc_mparticles_patch_resize(psc->particles, 0, nr_particles_by_patch[0]);
   particle_range_t prts = particle_range_mprts(psc->particles, 0);
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {

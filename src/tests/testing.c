@@ -84,7 +84,7 @@ psc_save_particles_ref(struct psc *psc, struct psc_mparticles *mprts_base)
   psc_foreach_patch(psc, p) {
     particle_range_t prts = particle_range_mprts(mprts, p);
     particle_range_t prts_ref = particle_range_mprts(particles_ref, p);
-    psc_mparticles_resize_patch(particles_ref, p, particle_range_size(prts));
+    psc_mparticles_patch_resize(particles_ref, p, particle_range_size(prts));
     for (particle_iter_t prt_iter = prts.begin, prt_ref_iter = prts_ref.end;
 	 !particle_iter_equal(prt_iter, prts.end);
 	 prt_iter = particle_iter_next(prt_iter), prt_ref_iter = particle_iter_next(prt_ref_iter)) {

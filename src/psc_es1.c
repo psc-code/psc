@@ -347,7 +347,7 @@ psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
     for (int kind = 0; kind < psc->nr_kinds; kind++) {
       psc_es1_init_species(psc, kind, &es1->species[kind], prts, &il1);
     }
-    psc_mparticles_resize_patch(mprts, p, il1);
+    psc_mparticles_patch_resize(mprts, p, il1);
     assert(il1 == nr_particles_by_patch[p]);
   }
   psc_mparticles_put_as(mprts, psc->particles, 0);

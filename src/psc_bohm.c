@@ -229,7 +229,7 @@ seed_patch(struct psc *psc, struct psc_mparticles *mprts, int p)
       psc_setup_particle(psc, &prt, &npt, p, xx);
 
       int i = particle_range_size(prts);
-      psc_mparticles_resize_patch(mprts, p, i + 1);
+      psc_mparticles_patch_resize(mprts, p, i + 1);
       *particle_iter_at(prts.begin, i) = prt;
 
       // ions
@@ -243,7 +243,7 @@ seed_patch(struct psc *psc, struct psc_mparticles *mprts, int p)
       psc_setup_particle(psc, &prt, &npt, p, xx);
 
       i = particle_range_size(prts);
-      psc_mparticles_resize_patch(mprts, p, i + 1);
+      psc_mparticles_patch_resize(mprts, p, i + 1);
       *particle_iter_at(prts.begin, i) = prt;
     }
   } foreach_3d_end;

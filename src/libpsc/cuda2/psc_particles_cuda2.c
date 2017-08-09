@@ -196,7 +196,7 @@ psc_particles_cuda2_copy_to_single(struct psc_particles *prts_base,
   struct psc_particles_cuda2 *sub = psc_particles_cuda2(prts_base);
 
   int n_prts = psc_mparticles_n_prts_by_patch(prts_base->mprts, p);
-  psc_mparticles_resize_patch(mprts, p, n_prts);
+  psc_mparticles_patch_resize(mprts, p, n_prts);
   for (int n = 0; n < n_prts; n++) {
     particle_cuda2_t prt_base;
     PARTICLE_CUDA2_LOAD_POS(prt_base, sub->h_xi4, n);
@@ -224,7 +224,7 @@ psc_particles_cuda2_copy_from_single(struct psc_particles *prts_base,
   struct psc_particles_cuda2 *sub = psc_particles_cuda2(prts_base);
 
   int n_prts = psc_mparticles_n_prts_by_patch(prts->mprts, prts->p);
-  psc_mparticles_resize_patch(prts_base->mprts, prts_base->p, n_prts);
+  psc_mparticles_patch_resize(prts_base->mprts, prts_base->p, n_prts);
   for (int n = 0; n < n_prts; n++) {
     particle_cuda2_t prt_base;
     particle_single_t *part = psc_mparticles_single_get_one(prts->mprts, prts->p, n);
@@ -305,7 +305,7 @@ psc_particles_cuda2_copy_from_cuda(struct psc_particles *prts,
   struct psc_particles_cuda2 *sub = psc_particles_cuda2(prts);
 
   int n_prts = psc_mparticles_n_prts_by_patch(prts_cuda->mprts, prts_cuda->p);
-  psc_mparticles_resize_patch(prts->mprts, prts->p, n_prts);
+  psc_mparticles_patch_resize(prts->mprts, prts->p, n_prts);
   unsigned int off = 0;
   for (int p = 0; p < prts->p; p++) {
     off += psc_mparticles_n_prts_by_patch(prts_cuda->mprts, p);

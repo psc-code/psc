@@ -193,7 +193,7 @@ psc_bnd_particles_sub_exchange_particles_post(struct psc_bnd_particles *bnd,
 {
   struct ddc_particles *ddcp = bnd->ddcp;
   struct ddcp_patch *patch = &ddcp->patches[p];
-  psc_mparticles_resize_patch(mprts, p, patch->head);
+  psc_mparticles_patch_resize(mprts, p, patch->head);
 }
 
 // ----------------------------------------------------------------------

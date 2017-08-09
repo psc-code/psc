@@ -157,7 +157,7 @@ copy_from(int p, struct psc_mparticles *mprts,
   struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
   struct psc_particles *prts_acc = psc_mparticles_get_patch(mprts_acc, p);
   int n_prts = psc_particles_size(prts_acc);
-  psc_mparticles_resize_patch(mprts, p, n_prts);
+  psc_mparticles_patch_resize(mprts, p, n_prts);
   for (int n = 0; n < n_prts; n++) {
     particle_acc_t prt;
     get_particle(&prt, n, prts_acc);
@@ -174,7 +174,7 @@ copy_to(int p, struct psc_mparticles *mprts,
   struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
   struct psc_particles *prts_acc = psc_mparticles_get_patch(mprts_acc, p);
   int n_prts = psc_particles_size(prts);
-  psc_mparticles_resize_patch(mprts_acc, p, n_prts);
+  psc_mparticles_patch_resize(mprts_acc, p, n_prts);
   for (int n = 0; n < n_prts; n++) {
     particle_acc_t prt;
     PARTICLE_ACC_LOAD_POS(prt, sub->xi4, n);
