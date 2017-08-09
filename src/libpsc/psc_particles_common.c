@@ -11,13 +11,12 @@
 // psc_mparticles_sub_setup_patch
 
 static void
-PFX(setup_patch)(struct psc_mparticles *mprts, int p, int n_prts)
+PFX(setup_patch)(struct psc_mparticles *mprts, int p, int n_alloced)
 {
   struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
   struct PFX(patch) *patch = &sub->patch[p];
 
-  patch->n_prts = n_prts;
-  int n_alloced = n_prts * 1.2;
+  patch->n_prts = 0;
   patch->n_alloced = n_alloced;
   patch->prt_array = calloc(n_alloced, sizeof(*patch->prt_array));
 
