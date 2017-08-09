@@ -612,6 +612,28 @@ cuda_mparticles_sort_initial(struct cuda_mparticles *cmprts,
 }
 
 // ----------------------------------------------------------------------
+// cuda_mparticles_set_n_prts_by_patch
+
+void
+cuda_mparticles_set_n_prts_by_patch(struct cuda_mparticles *cmprts,
+				    const unsigned int *n_prts_by_patch)
+{
+  thrust::device_ptr<unsigned int> d_off(cmprts->d_off);
+  thrust::host_vector<unsigned int> h_off(cmprts->n_blocks + 1);
+
+  unsigned int off = 0;
+  for (int p = 0; p < cmprts->n_patches; p++) {
+    h_off[p * cmprts->n_blocks_per_patch] = off;
+    off += n_prts_by_patch[p];
+    // printf("set_n_prts p%d: %d\n", p, n_prts_by_patch[p]);
+  }
+  h_off[cmprts->n_blocks] = off;
+  cmprts->n_prts = off;
+
+  thrust::copy(h_off.begin(), h_off.end(), d_off);
+}
+
+// ----------------------------------------------------------------------
 // cuda_mparticles_get_n_prts_by_patch
 
 void

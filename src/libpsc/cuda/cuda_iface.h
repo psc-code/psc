@@ -58,6 +58,7 @@ void cuda_mparticles_dump_by_patch(struct cuda_mparticles *cuda_mprts, unsigned 
 void cuda_mparticles_sort_initial(struct cuda_mparticles *cmprts,
 				  unsigned int *n_prts_by_patch);
 void cuda_mparticles_get_n_prts_by_patch(struct cuda_mparticles *cmprts, unsigned int *n_prts_by_patch);
+void cuda_mparticles_set_n_prts_by_patch(struct cuda_mparticles *cmprts, const unsigned int *n_prts_by_patch);
 void cuda_mparticles_set_particles(struct cuda_mparticles *cmprts, unsigned int n_prts, unsigned int off,
 				   void (*get_particle)(struct cuda_mparticles_prt *prt, int n, void *ctx),
 				   void *ctx);
