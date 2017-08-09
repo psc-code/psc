@@ -443,6 +443,7 @@ psc_mparticles_cuda_write(struct psc_mparticles *mprts, struct mrc_io *io)
 
   hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, mprts), H5P_DEFAULT); H5_CHK(group);
   unsigned int off = 0;
+  // FIXME, reorder first if necessary
   for (int p = 0; p < mprts->nr_patches; p++) {
     char pname[10];
     sprintf(pname, "p%d", p);

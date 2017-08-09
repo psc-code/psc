@@ -49,13 +49,6 @@ _psc_mparticles_destroy(struct psc_mparticles *mparticles)
 static void
 _psc_mparticles_write(struct psc_mparticles *mparticles, struct mrc_io *io)
 {
-#ifdef USE_CUDA
-  if (strcmp(psc_mparticles_type(mparticles), "cuda") == 0) { // FIXME
-    extern void psc_mparticles_cuda_reorder(struct psc_mparticles *);
-    psc_mparticles_cuda_reorder(mparticles);
-  }
-#endif
-
   mrc_io_write_ref(io, mparticles, "domain", mparticles->domain);
   mrc_io_write_int(io, mparticles, "flags", mparticles->flags);
 }
