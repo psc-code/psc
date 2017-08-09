@@ -75,8 +75,7 @@ psc_save_particles_ref(struct psc *psc, struct psc_mparticles *mprts_base)
       nr_particles_by_patch[p] = particle_range_size(particle_range_mprts(mprts_base, p));
     }
     particles_ref = psc_mparticles_create(MPI_COMM_WORLD);
-    psc_mparticles_set_domain_nr_particles(particles_ref, psc->mrc_domain,
-					   nr_particles_by_patch);
+    psc_mparticles_set_domain(particles_ref, psc->mrc_domain);
     psc_mparticles_setup(particles_ref);
     psc_mparticles_alloc(particles_ref, nr_particles_by_patch);
   }
@@ -85,7 +84,7 @@ psc_save_particles_ref(struct psc *psc, struct psc_mparticles *mprts_base)
   psc_foreach_patch(psc, p) {
     particle_range_t prts = particle_range_mprts(mprts, p);
     particle_range_t prts_ref = particle_range_mprts(particles_ref, p);
-    psc_mparticle_resize_patch(particles_ref, p, particle_range_size(prts));
+    psc_mparticles_resize_patch(particles_ref, p, particle_range_size(prts));
     for (particle_iter_t prt_iter = prts.begin, prt_ref_iter = prts_ref.end;
 	 !particle_iter_equal(prt_iter, prts.end);
 	 prt_iter = particle_iter_next(prt_iter), prt_ref_iter = particle_iter_next(prt_ref_iter)) {
