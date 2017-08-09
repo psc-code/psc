@@ -224,7 +224,7 @@ PFX(resize_all)(struct psc_mparticles *mprts, int *n_prts_by_patch)
 }
 
 static void
-PFX(get_n_prts_all)(struct psc_mparticles *mprts, int *n_prts_by_patch)
+PFX(get_size_all)(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
   struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
 
@@ -247,6 +247,6 @@ struct psc_mparticles_ops PFX(ops) = {
   .read                    = PFX(read),
   .reserve_all             = PFX(reserve_all),
   .resize_all              = PFX(resize_all),
-  .get_n_prts_all          = PFX(get_n_prts_all),
+  .get_size_all            = PFX(get_size_all),
 };
 

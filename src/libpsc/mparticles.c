@@ -27,7 +27,7 @@ _psc_mparticles_view(struct psc_mparticles *mprts)
   mpi_printf(comm, "  n_patches = %d\n", mprts->nr_patches);
 
   int n_prts_by_patch[mprts->nr_patches];
-  psc_mparticles_n_prts_all(mprts, n_prts_by_patch);
+  psc_mparticles_get_size_all(mprts, n_prts_by_patch);
 
   for (int p = 0; p < mprts->nr_patches; p++) {
     mpi_printf(comm, "  p %d : n_prts = %d\n", p, n_prts_by_patch[p]);
@@ -80,7 +80,7 @@ psc_mparticles_nr_particles(struct psc_mparticles *mprts)
   }
 
   int n_prts_by_patch[mprts->nr_patches];
-  psc_mparticles_n_prts_all(mprts, n_prts_by_patch);
+  psc_mparticles_get_size_all(mprts, n_prts_by_patch);
   int n_part = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
     n_part += n_prts_by_patch[p];
@@ -89,12 +89,12 @@ psc_mparticles_nr_particles(struct psc_mparticles *mprts)
 }
 
 void
-psc_mparticles_n_prts_all(struct psc_mparticles *mprts, int *n_prts_by_patch)
+psc_mparticles_get_size_all(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
   struct psc_mparticles_ops *ops = psc_mparticles_ops(mprts);
-  assert(ops->get_n_prts_all);
+  assert(ops->get_size_all);
 
-  return ops->get_n_prts_all(mprts, n_prts_by_patch);
+  return ops->get_size_all(mprts, n_prts_by_patch);
 }
 
 void
@@ -140,7 +140,7 @@ psc_mparticles_get_as(struct psc_mparticles *mp_base, const char *type,
 
   //  mprintf("get_as %s -> %s\n", psc_mparticles_type(mp_base), type);
   int nr_particles_by_patch[mp_base->nr_patches];
-  psc_mparticles_n_prts_all(mp_base, nr_particles_by_patch);
+  psc_mparticles_get_size_all(mp_base, nr_particles_by_patch);
 
   struct psc_mparticles *mp =
     psc_mparticles_create(psc_mparticles_comm(mp_base));
@@ -216,7 +216,7 @@ psc_mparticles_put_as(struct psc_mparticles *mp, struct psc_mparticles *mp_base,
     }
 
     int n_prts_by_patch[mp->nr_patches];
-    psc_mparticles_n_prts_all(mp, n_prts_by_patch);
+    psc_mparticles_get_size_all(mp, n_prts_by_patch);
     psc_mparticles_resize_all(mp_base, n_prts_by_patch);
     
     if (copy_from) {
