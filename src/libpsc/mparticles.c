@@ -24,13 +24,14 @@ static void
 _psc_mparticles_view(struct psc_mparticles *mprts)
 {
   MPI_Comm comm = psc_mparticles_comm(mprts);
-  mpi_printf(comm, "  n_patches = %d\n", mprts->nr_patches);
+  mpi_printf(comm, "  n_patches    = %d\n", mprts->nr_patches);
+  mpi_printf(comm, "  n_prts_total = %d\n", psc_mparticles_nr_particles(mprts));
 
   int n_prts_by_patch[mprts->nr_patches];
   psc_mparticles_get_size_all(mprts, n_prts_by_patch);
 
   for (int p = 0; p < mprts->nr_patches; p++) {
-    mpi_printf(comm, "  p %d : n_prts = %d\n", p, n_prts_by_patch[p]);
+    mpi_printf(comm, "  p %d: n_prts = %d\n", p, n_prts_by_patch[p]);
   }  
 }
 
@@ -161,7 +162,8 @@ psc_mparticles_get_as(struct psc_mparticles *mprts_from, const char *type,
   }
   prof_start(pr);
 
-  //  mprintf("get_as %s -> %s\n", type_from, type);
+  //  mprintf("get_as %s -> %s from\n", type_from, type);
+  //  psc_mparticles_view(mprts_from);
 
   struct psc_mparticles *mprts = psc_mparticles_create(psc_mparticles_comm(mprts_from));
   psc_mparticles_set_type(mprts, type);
@@ -172,11 +174,14 @@ psc_mparticles_get_as(struct psc_mparticles *mprts_from, const char *type,
   int nr_particles_by_patch[mprts_from->nr_patches];
   psc_mparticles_get_size_all(mprts_from, nr_particles_by_patch);
   psc_mparticles_reserve_all(mprts, nr_particles_by_patch);
-  //psc_mparticles_resize_all(mprts, nr_particles_by_patch);
+  psc_mparticles_resize_all(mprts, nr_particles_by_patch);
 
   if (!(flags & MP_DONT_COPY)) {
     copy(mprts_from, mprts, type_from, type, flags);
   }
+
+  //  mprintf("get_as %s -> %s to\n", type_from, type);
+  //  psc_mparticles_view(mprts);
 
   prof_stop(pr);
   return mprts;
@@ -199,6 +204,9 @@ psc_mparticles_put_as(struct psc_mparticles *mprts, struct psc_mparticles *mprts
   }
   prof_start(pr);
 
+  //  mprintf("put_as %s -> %s from\n", type, type_to);
+  //  psc_mparticles_view(mprts);
+  
   if (!(flags & MP_DONT_COPY)) {
     int n_prts_by_patch[mprts->nr_patches];
     psc_mparticles_get_size_all(mprts, n_prts_by_patch);
@@ -208,6 +216,8 @@ psc_mparticles_put_as(struct psc_mparticles *mprts, struct psc_mparticles *mprts
   }
   psc_mparticles_destroy(mprts);
 
+  //  mprintf("put_as %s -> %s to\n", type, type_to);
+  //  psc_mparticles_view(mprts_to);
   prof_stop(pr);
 }
 

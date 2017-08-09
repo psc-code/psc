@@ -67,12 +67,14 @@ cuda_mparticles_alloc(struct cuda_mparticles *cmprts, unsigned int *n_prts_by_pa
   thrust::host_vector<unsigned int> h_off(cmprts->n_blocks + 1);
   cmprts->n_prts = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
-    h_off[p * cmprts->n_blocks_per_patch] = cmprts->n_prts;
+    h_off[p * cmprts->n_blocks_per_patch] = 0;//cmprts->n_prts;
     cmprts->n_prts += n_prts_by_patch[p];
   }
   h_off[cmprts->n_blocks] = cmprts->n_prts;
 
   cmprts->n_alloced = cmprts->n_prts * 1.4;
+  cmprts->n_prts = 0;//
+  h_off[cmprts->n_blocks] = cmprts->n_prts;//
   unsigned int n_alloced = cmprts->n_alloced;
 
   ierr = cudaMalloc((void **) &cmprts->d_xi4, n_alloced * sizeof(float4)); cudaCheck(ierr);

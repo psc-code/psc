@@ -400,7 +400,7 @@ psc_mparticles_cuda_reserve_all(struct psc_mparticles *mprts, int *_n_prts_by_pa
   // FIXME, copy only because of signed -> unsigned
   unsigned int n_prts_by_patch[cmprts->n_patches];
   for (int p = 0; p < mprts->nr_patches; p++) {
-    mprts_cuda->n_prts_by_patch[p] = _n_prts_by_patch[p];
+    mprts_cuda->n_prts_by_patch[p] = 0;_n_prts_by_patch[p];
     n_prts_by_patch[p] = _n_prts_by_patch[p];
   }
 
