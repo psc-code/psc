@@ -409,15 +409,6 @@ psc_mparticles_cuda_reserve_all(struct psc_mparticles *mprts, int *_n_prts_by_pa
   __psc_mparticles_cuda_setup(mprts);
 }
 
-// ----------------------------------------------------------------------
-// psc_mparticls_cuda_reorder
-
-void
-psc_mparticles_cuda_reorder(struct psc_mparticles *mprts)
-{
-  cuda_mprts_reorder(mprts);
-}
-
 #ifdef HAVE_LIBHDF5_HL
 
 // FIXME. This is a rather bad break of proper layering, HDF5 should be all

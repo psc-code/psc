@@ -25,9 +25,6 @@ EXTERN_C void cuda_calc_dive_yz(struct psc_fields *flds, struct psc_fields *f);
 EXTERN_C void yz_moments_rho_1st_nc_cuda_run_patches(struct psc_mparticles *mprts, struct psc_mfields *mres);
 EXTERN_C void yz_moments_n_1st_cuda_run_patches(struct psc_mparticles *mprts, struct psc_mfields *mres);
 
-EXTERN_C void psc_mparticles_cuda_reorder(struct psc_mparticles *mprts);
-
-
 /* EXTERN_C void yz_a_set_constants(struct psc_particles *prts, struct psc_fields *pf); */
 /* EXTERN_C void yz_b_set_constants(struct psc_particles *prts, struct psc_fields *pf); */
 /* EXTERN_C void __cuda_push_part_yz_a(struct psc_particles *prts, struct psc_fields *pf); */
