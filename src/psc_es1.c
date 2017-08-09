@@ -172,9 +172,8 @@ ranf()
 
 static void
 psc_es1_init_species(struct psc *psc, int kind, struct psc_es1_species *s,
-		     particle_range_t prts, int *p_il1)
+		     struct psc_mparticles *mprts, int p, int *p_il1)
 {
-  int p = 0;
   int il1 = *p_il1;
   int *ldims = psc->patch[p].ldims;
   int n = ldims[0] * ldims[1] * ldims[2] * psc->prm.nicell; // FIXME
@@ -298,24 +297,23 @@ psc_es1_init_species(struct psc *psc, int kind, struct psc_es1_species *s,
     vx[i] += s->v1 * sin(theta + s->thetav);
   }
 
-  // copy to PSC data structure≈
+  // copy to PSC data structure
   for (int i = 0; i < n; i++) {
-    particle_t *p = particle_iter_at(prts.begin, il1 + i);
     if (x[i] < 0.) x[i] += l;
     if (x[i] >= l) x[i] -= l;
-    p->zi  = x[i];
-    p->pzi = vx[i] / psc->prm.cc;
-    p->qni = s->q;
-    p->mni = s->m;
-    p->wni = 1.;
-    p->kind = kind;
+
+    particle_t prt = {};
+    prt.zi  = x[i];
+    prt.pzi = vx[i] / psc->prm.cc;
+    prt.qni = s->q;
+    prt.mni = s->m;
+    prt.wni = 1.;
+    prt.kind = kind;
+    mparticles_patch_push_back(mprts, p, prt);
   }
 
   free(x);
   free(vx);
-
-  il1 += n;
-  *p_il1 = il1;
 }
 
 // ----------------------------------------------------------------------
@@ -342,13 +340,10 @@ psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
   struct psc_mparticles *mprts = psc_mparticles_get_as(psc->particles, "c", MP_DONT_COPY);
   assert(mprts->nr_patches == 1);
   psc_foreach_patch(psc, p) {
-    particle_range_t prts = particle_range_mprts(mprts, p);
     int il1 = 0;
     for (int kind = 0; kind < psc->nr_kinds; kind++) {
-      psc_es1_init_species(psc, kind, &es1->species[kind], prts, &il1);
+      psc_es1_init_species(psc, kind, &es1->species[kind], mprts, p, &il1);
     }
-    psc_mparticles_patch_resize(mprts, p, il1);
-    assert(il1 == nr_particles_by_patch[p]);
   }
   psc_mparticles_put_as(mprts, psc->particles, 0);
 }

@@ -70,25 +70,20 @@ void
 psc_save_particles_ref(struct psc *psc, struct psc_mparticles *mprts_base)
 {
   if (!particles_ref) {
-    int nr_particles_by_patch[psc->nr_patches];
-    psc_foreach_patch(psc, p) {
-      nr_particles_by_patch[p] = particle_range_size(particle_range_mprts(mprts_base, p));
-    }
+    int n_prts_by_patch[psc->nr_patches];
+    psc_mparticles_n_prts_all(mprts_base, n_prts_by_patch);
+
     particles_ref = psc_mparticles_create(MPI_COMM_WORLD);
     psc_mparticles_set_domain(particles_ref, psc->mrc_domain);
     psc_mparticles_setup(particles_ref);
-    psc_mparticles_reserve(particles_ref, nr_particles_by_patch);
+    psc_mparticles_reserve(particles_ref, n_prts_by_patch);
   }
 
   struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, "c", 0);
   psc_foreach_patch(psc, p) {
-    particle_range_t prts = particle_range_mprts(mprts, p);
-    particle_range_t prts_ref = particle_range_mprts(particles_ref, p);
-    psc_mparticles_patch_resize(particles_ref, p, particle_range_size(prts));
-    for (particle_iter_t prt_iter = prts.begin, prt_ref_iter = prts_ref.end;
-	 !particle_iter_equal(prt_iter, prts.end);
-	 prt_iter = particle_iter_next(prt_iter), prt_ref_iter = particle_iter_next(prt_ref_iter)) {
-      *particle_iter_deref(prt_ref_iter) = *particle_iter_deref(prt_iter);
+    int n_prts = mparticles_get_n_prts(mprts, p);
+    for (int n = 0; n < n_prts; n++) {
+      mparticles_patch_push_back(particles_ref, p, *mparticles_get_one(mprts, p, n));
     }
   }
   psc_mparticles_put_as(mprts, mprts_base, MP_DONT_COPY);

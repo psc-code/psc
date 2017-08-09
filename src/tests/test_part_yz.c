@@ -15,13 +15,11 @@ psc_test_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool count
     return;
   }
 
-  psc_mparticles_patch_resize(psc->particles, 0, nr_particles_by_patch[0]);
-  particle_range_t prts = particle_range_mprts(psc->particles, 0);
-
-  PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
-    particle_t *prt = particle_iter_deref(prt_iter);
-    prt->qni = 1.; prt->mni = 1.; prt->wni = 1.;
-    prt->yi = prt->zi = .5;
+  for (int n = 0; n < nr_particles_by_patch[0]; n++) {
+    particle_t prt;
+    prt.qni = 1.; prt.mni = 1.; prt.wni = 1.;
+    prt.yi = prt.zi = .5;
+    mparticles_patch_push_back(psc->particles, 0, prt);
   }
 }
 

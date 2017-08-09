@@ -227,10 +227,7 @@ seed_patch(struct psc *psc, struct psc_mparticles *mprts, int p)
       npt.T[2] = bohm->Te_;
       npt.kind = KIND_ELECTRON;
       psc_setup_particle(psc, &prt, &npt, p, xx);
-
-      int i = particle_range_size(prts);
-      psc_mparticles_patch_resize(mprts, p, i + 1);
-      *particle_iter_at(prts.begin, i) = prt;
+      mparticles_patch_push_back(mprts, p, prt);
 
       // ions
       prt.wni = 1.;
@@ -241,10 +238,7 @@ seed_patch(struct psc *psc, struct psc_mparticles *mprts, int p)
       npt.T[2] = bohm->Ti_;
       npt.kind = KIND_ION;
       psc_setup_particle(psc, &prt, &npt, p, xx);
-
-      i = particle_range_size(prts);
-      psc_mparticles_patch_resize(mprts, p, i + 1);
-      *particle_iter_at(prts.begin, i) = prt;
+      mparticles_patch_push_back(mprts, p, prt);
     }
   } foreach_3d_end;
 

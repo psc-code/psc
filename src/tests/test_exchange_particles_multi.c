@@ -21,8 +21,6 @@ psc_test_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool count
  
     int i = 0;
     if (p == 0 && rank == 0) { // initially, only particles on first patch
-      particle_range_t prts = particle_range_mprts(psc->particles, p);
-      particle_iter_t prt_iter = prts.begin;
       int *ilo = patch->off;
       int ihi[3] = { patch->off[0] + patch->ldims[0],
 		     patch->off[1] + patch->ldims[1],
@@ -30,22 +28,20 @@ psc_test_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool count
       for (int iz = ilo[2]-1; iz < ihi[2]+1; iz++) {
 	for (int iy = ilo[1]; iy < ihi[1]; iy++) { // xz only !!!
 	  for (int ix = ilo[0]-1; ix < ihi[0]+1; ix++) {
+	    i += 2;
 	    if (!count_only) {
-	      particle_t *p = particle_iter_deref(prt_iter);
-	      memset(p, 0, sizeof(*p));
-	      p->qni = -1.; p->mni = 1.; p->wni = 1.;
-	      p->xi = (ix + .5) * patch->dx[0];
-	      p->yi = (iy + .5) * patch->dx[1];
-	      p->zi = (iz + .5) * patch->dx[2];
-	      prt_iter = particle_iter_next(prt_iter);
+	      particle_t prt = {};
+	      prt.qni = -1.; prt.mni = 1.; prt.wni = 1.;
+	      prt.xi = (ix + .5) * patch->dx[0];
+	      prt.yi = (iy + .5) * patch->dx[1];
+	      prt.zi = (iz + .5) * patch->dx[2];
+	      mparticles_patch_push_back(psc->particles, p, prt);
 	      
-	      p = particle_iter_deref(prt_iter);
-	      memset(p, 0, sizeof(*p));
-	      p->qni = 1.; p->mni = 100.; p->wni = 1.;
-	      p->xi = (ix + .5) * patch->dx[0];
-	      p->yi = (iy + .5) * patch->dx[1];
-	      p->zi = (iz + .5) * patch->dx[2];
-	      prt_iter = particle_iter_next(prt_iter);
+	      prt.qni = 1.; prt.mni = 100.; prt.wni = 1.;
+	      prt.xi = (ix + .5) * patch->dx[0];
+	      prt.yi = (iy + .5) * patch->dx[1];
+	      prt.zi = (iz + .5) * patch->dx[2];
+	      mparticles_patch_push_back(psc->particles, p, prt);
 	    }
 	  }
 	}
@@ -54,8 +50,6 @@ psc_test_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool count
 
     if (count_only) {
       nr_particles_by_patch[p] = i;
-    } else {
-      psc_mparticles_patch_resize(psc->particles, p, i);
     }
   }
 }
