@@ -267,46 +267,6 @@ cuda_mprts_reorder_send_buf_total(struct psc_mparticles *mprts)
 }
 
 // ======================================================================
-// cuda_mprts_reorder
-
-__global__ static void
-mprts_reorder(int nr_prts, unsigned int *d_ids,
-	      float4 *xi4, float4 *pxi4,
-	      float4 *alt_xi4, float4 *alt_pxi4)
-{
-  int i = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
-
-  if (i < nr_prts) {
-    int j = d_ids[i];
-    alt_xi4[i] = xi4[j];
-    alt_pxi4[i] = pxi4[j];
-  }
-}
-
-void
-cuda_mprts_reorder(struct psc_mparticles *mprts)
-{
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
-  assert(cmprts);
-
-  if (!cmprts->need_reorder) {
-    return;
-  }
-  
-  int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
-  int dimGrid[2]  = { (cmprts->n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
-  RUN_KERNEL(dimGrid, dimBlock,
-	     mprts_reorder, (cmprts->n_prts, cmprts->d_id,
-			     cmprts->d_xi4, cmprts->d_pxi4,
-			     cmprts->d_alt_xi4, cmprts->d_alt_pxi4));
-  
-  cuda_mparticles_swap_alt(cmprts);
-
-  cmprts->need_reorder = false;
-}
-
-// ======================================================================
 // cuda_mprts_copy_from_dev
 
 void

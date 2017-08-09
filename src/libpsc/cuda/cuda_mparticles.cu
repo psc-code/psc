@@ -627,8 +627,6 @@ cuda_mparticles_get_n_prts_by_patch(struct cuda_mparticles *cmprts,
 
 // ----------------------------------------------------------------------
 // cuda_mparticles_reorder
-//
-// FIXME, shouldn't be here, duplicates the one in cuda_exchange_particles.cu
 
 __global__ static void
 k_cuda_mparticles_reorder(int nr_prts, unsigned int *d_ids,
