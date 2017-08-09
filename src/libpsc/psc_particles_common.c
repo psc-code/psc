@@ -213,15 +213,6 @@ PFX(reserve)(struct psc_mparticles *mprts, int *n_prts_by_patch)
 }
 
 static void
-PFX(patch_resize)(struct psc_mparticles *mprts, int p, int n_prts)
-{
-  struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
-
-  assert(n_prts <= sub->patch[p].n_alloced);
-  sub->patch[p].n_prts = n_prts;
-}
-
-static void
 PFX(set_n_prts)(struct psc_mparticles *mprts, int p, int n_prts)
 {
   struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);

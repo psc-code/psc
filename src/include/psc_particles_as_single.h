@@ -11,6 +11,7 @@ typedef particle_single_t particle_t;
 #define mparticles_get_n_prts       psc_mparticles_single_get_n_prts
 #define mparticles_patch_reserve    psc_mparticles_single_patch_reserve
 #define mparticles_patch_push_back  psc_mparticles_single_patch_push_back
+#define mparticles_patch_resize     psc_mparticles_single_patch_resize
 
 #define particle_qni_div_mni        particle_single_qni_div_mni
 #define particle_qni_wni            particle_single_qni_wni
