@@ -107,6 +107,15 @@ psc_mparticles_patch_resize(struct psc_mparticles *mprts, int p, int n_prts)
 }
 
 void
+psc_mparticles_resize_all(struct psc_mparticles *mprts, int *n_prts_by_patch)
+{
+  struct psc_mparticles_ops *ops = psc_mparticles_ops(mprts);
+  assert(ops->resize_all);
+
+  return ops->resize_all(mprts, n_prts_by_patch);
+}
+
+void
 psc_mparticles_setup_internals(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_ops *ops = psc_mparticles_ops(mprts);
@@ -217,9 +226,7 @@ psc_mparticles_put_as(struct psc_mparticles *mp, struct psc_mparticles *mp_base,
 
     int n_prts_by_patch[mp->nr_patches];
     psc_mparticles_n_prts_all(mp, n_prts_by_patch);
-    for (int p = 0; p < mp_base->nr_patches; p++) {
-      psc_mparticles_patch_resize(mp_base, p, n_prts_by_patch[p]);
-    }
+    psc_mparticles_resize_all(mp_base, n_prts_by_patch);
     
     if (copy_from) {
       copy_from(mp_base, mp, MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
