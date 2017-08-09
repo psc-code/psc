@@ -124,89 +124,89 @@ psc_mparticles_reserve_all(struct psc_mparticles *mprts, int *n_prts_by_patch)
 }
 
 static void
-copy(struct psc_mparticles *mprts_base, struct psc_mparticles *mprts,
-     const char *type_base, const char *type,
+copy(struct psc_mparticles *mprts_from, struct psc_mparticles *mprts_to,
+     const char *type_from, const char *type_to,
      unsigned int flags)
 {
   psc_mparticles_copy_func_t copy_to, copy_from;
 
-  char s[strlen(type) + 12];
-  sprintf(s, "copy_to_%s", type);
-  copy_to = (psc_mparticles_copy_func_t) psc_mparticles_get_method(mprts_base, s);
+  char s[strlen(type_to) + 12];
+  sprintf(s, "copy_to_%s", type_to);
+  copy_to = (psc_mparticles_copy_func_t) psc_mparticles_get_method(mprts_from, s);
   if (!copy_to) {
-    sprintf(s, "copy_from_%s", type_base);
-    copy_from = (psc_mparticles_copy_func_t) psc_mparticles_get_method(mprts, s);
+    sprintf(s, "copy_from_%s", type_from);
+    copy_from = (psc_mparticles_copy_func_t) psc_mparticles_get_method(mprts_to, s);
   }
   if (!copy_to && !copy_from) {
     fprintf(stderr, "ERROR: no 'copy_to_%s' in psc_mparticles '%s' and "
 	    "no 'copy_from_%s' in '%s'!\n",
-	    type, psc_mparticles_type(mprts_base), type_base, psc_mparticles_type(mprts));
+	    type_to, psc_mparticles_type(mprts_from), type_from, psc_mparticles_type(mprts_to));
     assert(0);
   }
 
   if (copy_to) {
-    copy_to(mprts_base, mprts, flags);
+    copy_to(mprts_from, mprts_to, flags);
   } else {
-    copy_from(mprts, mprts_base, flags);
+    copy_from(mprts_to, mprts_from, flags);
   }
-  
+  psc_mparticles_setup_internals(mprts_to);
 }
 
 struct psc_mparticles *
-psc_mparticles_get_as(struct psc_mparticles *mp_base, const char *type,
+psc_mparticles_get_as(struct psc_mparticles *mprts_from, const char *type,
 		      unsigned int flags)
 {
-  const char *type_base = psc_mparticles_type(mp_base);
+  const char *type_from = psc_mparticles_type(mprts_from);
   // If we're already the subtype, nothing to be done
-  if (strcmp(type_base, type) == 0)
-    return mp_base;
-
+  if (strcmp(type_from, type) == 0) {
+    return mprts_from;
+  }
+  
   static int pr;
   if (!pr) {
     pr = prof_register("mparticles_get_as", 1., 0, 0);
   }
   prof_start(pr);
 
-  //  mprintf("get_as %s -> %s\n", psc_mparticles_type(mp_base), type);
+  //  mprintf("get_as %s -> %s\n", type_from, type);
 
-  struct psc_mparticles *mp =
-    psc_mparticles_create(psc_mparticles_comm(mp_base));
-  psc_mparticles_set_type(mp, type);
-  psc_mparticles_set_domain(mp, mp_base->domain);
-  psc_mparticles_set_param_int(mp, "flags", flags);
-  psc_mparticles_setup(mp);
+  struct psc_mparticles *mprts = psc_mparticles_create(psc_mparticles_comm(mprts_from));
+  psc_mparticles_set_type(mprts, type);
+  psc_mparticles_set_domain(mprts, mprts_from->domain);
+  psc_mparticles_set_param_int(mprts, "flags", flags);
+  psc_mparticles_setup(mprts);
 
-  int nr_particles_by_patch[mp_base->nr_patches];
-  psc_mparticles_get_size_all(mp_base, nr_particles_by_patch);
-  psc_mparticles_reserve_all(mp, nr_particles_by_patch);
-  //psc_mparticles_resize_all(mp, nr_particles_by_patch);
+  int nr_particles_by_patch[mprts_from->nr_patches];
+  psc_mparticles_get_size_all(mprts_from, nr_particles_by_patch);
+  psc_mparticles_reserve_all(mprts, nr_particles_by_patch);
+  //psc_mparticles_resize_all(mprts, nr_particles_by_patch);
 
   if (!(flags & MP_DONT_COPY)) {
     
 #ifdef USE_CUDA
-    if (strcmp(type_base, "cuda") == 0) { // FIXME
+    if (strcmp(type_from, "cuda") == 0) { // FIXME
       extern void psc_mparticles_cuda_reorder(struct psc_mparticles *);
-      psc_mparticles_cuda_reorder(mp_base);
+      psc_mparticles_cuda_reorder(mprts_from);
     }
 #endif
 
-    copy(mp_base, mp, type_base, type, flags);
-    psc_mparticles_setup_internals(mp);
+    copy(mprts_from, mprts, type_from, type, flags);
   }
 
   prof_stop(pr);
-  return mp;
+  return mprts;
 }
 
 void
-psc_mparticles_put_as(struct psc_mparticles *mp, struct psc_mparticles *mp_base,
+psc_mparticles_put_as(struct psc_mparticles *mprts, struct psc_mparticles *mprts_to,
 		      unsigned int flags)
 {
   // If we're already the subtype, nothing to be done
-  const char *type = psc_mparticles_type(mp);
-  const char *type_base = psc_mparticles_type(mp_base);
-  if (strcmp(type_base, type) == 0)
+  const char *type = psc_mparticles_type(mprts);
+  const char *type_to = psc_mparticles_type(mprts_to);
+  if (strcmp(type_to, type) == 0) {
     return;
+  }
 
   static int pr;
   if (!pr) {
@@ -215,14 +215,13 @@ psc_mparticles_put_as(struct psc_mparticles *mp, struct psc_mparticles *mp_base,
   prof_start(pr);
 
   if (!(flags & MP_DONT_COPY)) {
-    int n_prts_by_patch[mp->nr_patches];
-    psc_mparticles_get_size_all(mp, n_prts_by_patch);
-    psc_mparticles_resize_all(mp_base, n_prts_by_patch);
+    int n_prts_by_patch[mprts->nr_patches];
+    psc_mparticles_get_size_all(mprts, n_prts_by_patch);
+    psc_mparticles_resize_all(mprts_to, n_prts_by_patch);
     
-    copy(mp, mp_base, type, type_base, flags);
-    psc_mparticles_setup_internals(mp_base);
+    copy(mprts, mprts_to, type, type_to, flags);
   }
-  psc_mparticles_destroy(mp);
+  psc_mparticles_destroy(mprts);
 
   prof_stop(pr);
 }
