@@ -626,7 +626,7 @@ cuda_mparticles_get_n_prts_by_patch(struct cuda_mparticles *cmprts,
 }
 
 // ======================================================================
-// cmprts_reorder
+// cuda_mparticles_reorder
 //
 // FIXME, shouldn't be here, duplicates the one in cuda_exchange_particles.cu
 
@@ -647,6 +647,10 @@ k_cuda_mparticles_reorder(int nr_prts, unsigned int *d_ids,
 static void
 cuda_mparticles_reorder(struct cuda_mparticles *cmprts)
 {
+  if (!cmprts->need_reorder) {
+    return;
+  }
+  
   dim3 dimGrid((cmprts->n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK);
   
   k_cuda_mparticles_reorder<<<dimGrid, THREADS_PER_BLOCK>>>
@@ -655,6 +659,8 @@ cuda_mparticles_reorder(struct cuda_mparticles *cmprts)
      cmprts->d_alt_xi4, cmprts->d_alt_pxi4);
   
   cuda_mparticles_swap_alt(cmprts);
+
+  cmprts->need_reorder = false;
 }
 
 

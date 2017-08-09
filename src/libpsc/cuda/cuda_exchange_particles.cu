@@ -290,6 +290,10 @@ cuda_mprts_reorder(struct psc_mparticles *mprts)
   struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
   assert(cmprts);
 
+  if (!cmprts->need_reorder) {
+    return;
+  }
+  
   int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
   int dimGrid[2]  = { (cmprts->n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
   RUN_KERNEL(dimGrid, dimBlock,
@@ -298,6 +302,8 @@ cuda_mprts_reorder(struct psc_mparticles *mprts)
 			     cmprts->d_alt_xi4, cmprts->d_alt_pxi4));
   
   cuda_mparticles_swap_alt(cmprts);
+
+  cmprts->need_reorder = false;
 }
 
 // ======================================================================
