@@ -143,14 +143,6 @@ psc_mparticles_alloc(struct psc_mparticles *mprts, int *n_prts_by_patch)
   ops->alloc(mprts, n_prts_by_patch);
 }
 
-void
-psc_mparticles_realloc(struct psc_mparticles *mprts, int p, int n_prts)
-{
-  struct psc_mparticles_ops *ops = psc_mparticles_ops(mprts);
-  assert(ops && ops->realloc);
-  ops->realloc(mprts, p, n_prts);
-}
-
 struct psc_mparticles *
 psc_mparticles_get_as(struct psc_mparticles *mp_base, const char *type,
 		      unsigned int flags)

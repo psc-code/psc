@@ -8,8 +8,11 @@ typedef particle_fortran_real_t particle_real_t;
 typedef particle_fortran_t particle_t;
 
 #define mparticles_get_one            psc_mparticles_fortran_get_one
-#define particle_real_fint            particle_fortran_real_fint
+#define mparticles_get_n_prts         psc_mparticles_fortran_get_n_prts
+#define mparticles_patch_reserve      psc_mparticles_fortran_patch_reserve
+#define mparticles_patch_push_back    psc_mparticles_fortran_patch_push_back
 
+#define particle_real_fint            particle_fortran_real_fint
 #define particle_iter_t               psc_particle_fortran_iter_t
 #define particle_iter_equal           psc_particle_fortran_iter_equal
 #define particle_iter_next            psc_particle_fortran_iter_next 
