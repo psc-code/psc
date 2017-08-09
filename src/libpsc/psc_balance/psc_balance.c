@@ -755,7 +755,7 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
 
   prof_start(pr_bal_prts_B1);
   psc_mparticles_setup(mprts_base_new);
-  psc_mparticles_reserve(mprts_base_new, nr_particles_by_patch);
+  psc_mparticles_reserve_all(mprts_base_new, nr_particles_by_patch);
   prof_stop(pr_bal_prts_B1);
 
   struct psc_mparticles *mprts_new = psc_mparticles_get_as(mprts_base_new, ops->mprts_type, MP_DONT_COPY);

@@ -204,7 +204,7 @@ PFX(destroy)(struct psc_mparticles *mprts)
 }
 
 static void
-PFX(reserve)(struct psc_mparticles *mprts, int *n_prts_by_patch)
+PFX(reserve_all)(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
   for (int p = 0; p < mprts->nr_patches; p++) {
     PFX(setup_patch)(mprts, p, n_prts_by_patch[p]);
@@ -245,7 +245,7 @@ struct psc_mparticles_ops PFX(ops) = {
   .destroy                 = PFX(destroy),
   .write                   = PFX(write),
   .read                    = PFX(read),
-  .reserve                 = PFX(reserve),
+  .reserve_all             = PFX(reserve_all),
   .resize_all              = PFX(resize_all),
   .get_n_prts_all          = PFX(get_n_prts_all),
 };
