@@ -129,11 +129,9 @@ psc_inject_single_run(struct psc_inject *inject, struct psc_mparticles *mprts_ba
   struct psc_mfields *mflds_n = psc_mfields_get_as(inject->mflds_n, FIELDS_TYPE, kind_n, kind_n+1);
   
   psc_foreach_patch(psc, p) {
-    particle_range_t prts = particle_range_mprts(mprts, p);
     struct psc_fields *flds_n = psc_mfields_get_patch(mflds_n, p);
     int *ldims = psc->patch[p].ldims;
     
-    int i = particle_range_size(prts);
     int nr_pop = psc->prm.nr_populations;
     for (int jz = 0; jz < ldims[2]; jz++) {
       for (int jy = 0; jy < ldims[1]; jy++) {
@@ -184,17 +182,14 @@ psc_inject_single_run(struct psc_inject *inject, struct psc_mparticles *mprts_ba
 	      assert(psc->prm.neutralizing_population == nr_pop - 1);
 	      n_in_cell = -n_q_in_cell / npt.q;
 	    }
-	    int n = particle_range_size(particle_range_mprts(mprts, p));
-	    psc_mparticles_realloc(mprts, p, n + n_in_cell);
+	    psc_mparticles_realloc(mprts, p, mparticles_get_n_prts(mprts, p) + n_in_cell);
 	    for (int cnt = 0; cnt < n_in_cell; cnt++) {
 	      assert(psc->prm.fractional_n_particles_per_cell);
-	      particle_t _prt;
-	      _psc_setup_particle(psc, &_prt, &npt, p, xx);
-	      _prt.qni_wni = psc->kinds[_prt.kind].q; // ??? FIXME
-	      
-	      int n = particle_range_size(particle_range_mprts(mprts, p));
-	      *particle_iter_at(prts.begin, n) = _prt;
-	      psc_mparticles_resize_patch(mprts, p, n + 1);
+	      particle_t prt;
+	      _psc_setup_particle(psc, &prt, &npt, p, xx);
+	      prt.qni_wni = psc->kinds[prt.kind].q; // ??? FIXME
+
+	      mparticles_push_back(mprts, p, prt);
 	    }
 	  }
 	}
