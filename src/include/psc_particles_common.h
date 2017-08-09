@@ -1,4 +1,8 @@
 
+#include <mrc_bits.h>
+
+#include <stdlib.h>
+
 #define PTYPE_SINGLE          1
 #define PTYPE_DOUBLE          2
 #define PTYPE_SINGLE_BY_BLOCK 3
@@ -15,6 +19,7 @@
 #define psc_mparticles_PTYPE_ops psc_mparticles_single_ops
 #define psc_mparticles_PTYPE_get_one psc_mparticles_single_get_one
 #define psc_mparticles_PTYPE_get_n_prts psc_mparticles_single_get_n_prts
+#define psc_mparticles_PTYPE_patch_reserve psc_mparticles_single_patch_reserve
 #define psc_mparticles_PTYPE_push_back psc_mparticles_single_push_back
 #define psc_particle_PTYPE_iter_t psc_particle_single_iter_t
 #define psc_particle_PTYPE_iter_equal psc_particle_single_iter_equal
@@ -35,6 +40,7 @@
 #define psc_mparticles_PTYPE_ops psc_mparticles_double_ops
 #define psc_mparticles_PTYPE_get_one psc_mparticles_double_get_one
 #define psc_mparticles_PTYPE_get_n_prts psc_mparticles_double_get_n_prts
+#define psc_mparticles_PTYPE_patch_reserve psc_mparticles_double_patch_reserve
 #define psc_mparticles_PTYPE_push_back psc_mparticles_double_push_back
 #define psc_particle_PTYPE_iter_t psc_particle_double_iter_t
 #define psc_particle_PTYPE_iter_equal psc_particle_double_iter_equal
@@ -55,6 +61,7 @@
 #define psc_mparticles_PTYPE_ops psc_mparticles_single_by_block_ops
 #define psc_mparticles_PTYPE_get_one psc_mparticles_single_by_block_get_one
 #define psc_mparticles_PTYPE_get_n_prts psc_mparticles_single_by_block_get_n_prts
+#define psc_mparticles_PTYPE_patch_reserve psc_mparticles_single_by_block_patch_reserve
 #define psc_mparticles_PTYPE_push_back psc_mparticles_single_by_block_push_back
 #define psc_particle_PTYPE_iter_t psc_particle_single_by_block_iter_t
 #define psc_particle_PTYPE_iter_equal psc_particle_single_by_block_iter_equal
@@ -75,6 +82,7 @@
 #define psc_mparticles_PTYPE_ops psc_mparticles_c_ops
 #define psc_mparticles_PTYPE_get_one psc_mparticles_c_get_one
 #define psc_mparticles_PTYPE_get_n_prts psc_mparticles_c_get_n_prts
+#define psc_mparticles_PTYPE_patch_reserve psc_mparticles_c_patch_reserve
 #define psc_mparticles_PTYPE_push_back psc_mparticles_c_push_back
 #define psc_particle_PTYPE_iter_t psc_particle_c_iter_t
 #define psc_particle_PTYPE_iter_equal psc_particle_c_iter_equal
@@ -95,6 +103,7 @@
 #define psc_mparticles_PTYPE_ops psc_mparticles_fortran_ops
 #define psc_mparticles_PTYPE_get_one psc_mparticles_fortran_get_one
 #define psc_mparticles_PTYPE_get_n_prts psc_mparticles_fortran_get_n_prts
+#define psc_mparticles_PTYPE_patch_reserve psc_mparticles_fortran_patch_reserve
 #define psc_mparticles_PTYPE_push_back psc_mparticles_fortran_push_back
 #define psc_particle_PTYPE_iter_t psc_particle_fortran_iter_t
 #define psc_particle_PTYPE_iter_equal psc_particle_fortran_iter_equal
@@ -251,6 +260,38 @@ psc_mparticles_PTYPE_get_n_prts(struct psc_mparticles *mprts, int p)
 }
 
 // ----------------------------------------------------------------------
+// psc_mparticles_PTYPE_patch_reserve
+
+static inline void
+psc_mparticles_PTYPE_patch_reserve(struct psc_mparticles *mprts, int p, int new_capacity)
+{
+  struct psc_mparticles_PTYPE *sub = psc_mparticles_PTYPE(mprts);
+  struct psc_mparticles_PTYPE_patch *patch = &sub->patch[p];
+
+  if (new_capacity <= patch->n_alloced)
+    return;
+
+  int n_alloced = MAX(new_capacity, patch->n_alloced * 2);
+  patch->n_alloced = n_alloced;
+
+  patch->prt_array = realloc(patch->prt_array, n_alloced * sizeof(*patch->prt_array));
+
+#if PTYPE == PTYPE_SINGLE
+  free(patch->prt_array_alt);
+  patch->prt_array_alt = malloc(n_alloced * sizeof(*patch->prt_array_alt));
+  patch->b_idx = realloc(patch->b_idx, n_alloced * sizeof(*patch->b_idx));
+  patch->b_ids = realloc(patch->b_ids, n_alloced * sizeof(*patch->b_ids));
+#endif
+
+#if PTYPE == PTYPE_SINGLE_BY_BLOCK
+  free(patch->prt_array_alt);
+  patch->prt_array_alt = malloc(n_alloced * sizeof(*patch->prt_array_alt));
+  patch->b_idx = realloc(patch->b_idx, n_alloced * sizeof(*patch->b_idx));
+  patch->b_ids = realloc(patch->b_ids, n_alloced * sizeof(*patch->b_ids));
+#endif
+}
+
+// ----------------------------------------------------------------------
 // psc_mparticles_PTYPE_push_back
 
 static inline void
@@ -262,7 +303,7 @@ psc_mparticles_PTYPE_push_back(struct psc_mparticles *mprts, int p,
   
   int n = patch->n_prts;
   if (n == patch->n_alloced) {
-    psc_mparticles_realloc(mprts, p, n + 1);
+    psc_mparticles_PTYPE_patch_reserve(mprts, p, n + 1);
   }
   patch->prt_array[n++] = prt;
   patch->n_prts = n;
@@ -359,6 +400,7 @@ psc_particle_PTYPE_range_size(psc_particle_PTYPE_range_t prts)
 #undef psc_mparticles_PTYPE_ops
 #undef psc_mparticles_PTYPE_get_one
 #undef psc_mparticles_PTYPE_get_n_prts
+#undef psc_mparticles_PTYPE_patch_reserve
 #undef psc_mparticles_PTYPE_push_back
 #undef psc_particle_PTYPE_iter_t
 #undef psc_particle_PTYPE_iter_equal

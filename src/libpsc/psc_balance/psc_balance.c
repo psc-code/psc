@@ -170,8 +170,6 @@ find_best_mapping(struct psc_balance *bal, struct mrc_domain *domain,
   return nr_patches_new;
 }
 
-#define MAX(x,y) (x > y ? x : y)
-
 static double *
 gather_loads(struct mrc_domain *domain, double *loads, int nr_patches,
 	     int *p_nr_global_patches)
