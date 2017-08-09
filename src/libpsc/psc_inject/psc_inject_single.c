@@ -189,7 +189,7 @@ psc_inject_single_run(struct psc_inject *inject, struct psc_mparticles *mprts_ba
 	      _psc_setup_particle(psc, &prt, &npt, p, xx);
 	      prt.qni_wni = psc->kinds[prt.kind].q; // ??? FIXME
 
-	      mparticles_push_back(mprts, p, prt);
+	      mparticles_patch_push_back(mprts, p, prt);
 	    }
 	  }
 	}
