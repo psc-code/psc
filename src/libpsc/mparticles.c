@@ -182,14 +182,6 @@ psc_mparticles_get_as(struct psc_mparticles *mprts_from, const char *type,
   //psc_mparticles_resize_all(mprts, nr_particles_by_patch);
 
   if (!(flags & MP_DONT_COPY)) {
-    
-#ifdef USE_CUDA
-    if (strcmp(type_from, "cuda") == 0) { // FIXME
-      extern void psc_mparticles_cuda_reorder(struct psc_mparticles *);
-      psc_mparticles_cuda_reorder(mprts_from);
-    }
-#endif
-
     copy(mprts_from, mprts, type_from, type, flags);
   }
 

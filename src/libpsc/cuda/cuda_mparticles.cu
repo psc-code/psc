@@ -811,6 +811,7 @@ cuda_mparticles_get_particles(struct cuda_mparticles *cmprts, unsigned int n_prt
   float4 *xi4  = new float4[n_prts];
   float4 *pxi4 = new float4[n_prts];
 
+  cuda_mparticles_reorder(cmprts);
   cuda_mparticles_from_device(cmprts, xi4, pxi4, n_prts, off);
   
   for (int n = 0; n < n_prts; n++) {
