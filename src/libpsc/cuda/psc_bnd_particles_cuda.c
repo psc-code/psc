@@ -263,14 +263,11 @@ psc_bnd_particles_sub_exchange_mprts_post(struct psc_bnd_particles *bnd,
   prof_stop(pr_C);
   
   prof_start(pr_D);
-  int n_prts_by_patch[mprts->nr_patches];
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    n_prts_by_patch[p] = mprts_cuda->n_prts_by_patch[p];
-  }
-  cuda_mprts_sort(mprts, n_prts_by_patch);
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    mprts_cuda->n_prts_by_patch[p] = n_prts_by_patch[p];
-  }
+  unsigned int n_prts_by_patch[mprts->nr_patches];
+  cuda_mparticles_get_n_prts_by_patch(cmprts, n_prts_by_patch);
+  cuda_mprts_sort(mprts, (int *) n_prts_by_patch); // FIXME cast
+  // FIXME, is this necessary, or doesn't update_offsets() do this, too?
+  cuda_mparticles_set_n_prts_by_patch(cmprts, n_prts_by_patch);
   prof_stop(pr_D);
 
   prof_start(pr_D1);

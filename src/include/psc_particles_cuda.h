@@ -19,7 +19,6 @@ struct cuda_bnd {
 
 struct psc_mparticles_cuda {
   struct cuda_mparticles *cmprts;
-  int *n_prts_by_patch;
   
   unsigned int *d_alt_bidx;
   unsigned int *d_sums; // FIXME, too many arrays, consolidation would be good
