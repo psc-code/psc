@@ -290,38 +290,6 @@ heating_run_foil(struct cuda_mparticles *cmprts, curandState *d_curand_states)
   cuda_sync_if_enabled();
 }
 
-// ======================================================================
-// cmprts_reorder
-//
-// FIXME, shouldn't be here, duplicates the one in cuda_exchange_particles.cu
-
-__global__ static void
-k_cuda_mparticles_reorder(int nr_prts, unsigned int *d_ids,
-		 float4 *xi4, float4 *pxi4,
-		 float4 *alt_xi4, float4 *alt_pxi4)
-{
-  int i = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
-
-  if (i < nr_prts) {
-    int j = d_ids[i];
-    alt_xi4[i] = xi4[j];
-    alt_pxi4[i] = pxi4[j];
-  }
-}
-
-static void
-cuda_mparticles_reorder(struct cuda_mparticles *cmprts)
-{
-  dim3 dimGrid((cmprts->n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK);
-  
-  k_cuda_mparticles_reorder<<<dimGrid, THREADS_PER_BLOCK>>>
-    (cmprts->n_prts, cmprts->d_id,
-     cmprts->d_xi4, cmprts->d_pxi4,
-     cmprts->d_alt_xi4, cmprts->d_alt_pxi4);
-  
-  cuda_mparticles_swap_alt(cmprts);
-}
-
 // ----------------------------------------------------------------------
 // cuda_heating_setup_foil
 

@@ -625,7 +625,7 @@ cuda_mparticles_get_n_prts_by_patch(struct cuda_mparticles *cmprts,
   }
 }
 
-// ======================================================================
+// ----------------------------------------------------------------------
 // cuda_mparticles_reorder
 //
 // FIXME, shouldn't be here, duplicates the one in cuda_exchange_particles.cu
@@ -644,7 +644,7 @@ k_cuda_mparticles_reorder(int nr_prts, unsigned int *d_ids,
   }
 }
 
-static void
+void
 cuda_mparticles_reorder(struct cuda_mparticles *cmprts)
 {
   if (!cmprts->need_reorder) {
@@ -662,7 +662,6 @@ cuda_mparticles_reorder(struct cuda_mparticles *cmprts)
 
   cmprts->need_reorder = false;
 }
-
 
 // ----------------------------------------------------------------------
 // cuda_mparticles_inject
