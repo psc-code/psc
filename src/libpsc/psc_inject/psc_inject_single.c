@@ -184,19 +184,22 @@ psc_inject_single_run(struct psc_inject *inject, struct psc_mparticles *mprts_ba
 	      assert(psc->prm.neutralizing_population == nr_pop - 1);
 	      n_in_cell = -n_q_in_cell / npt.q;
 	    }
-	    psc_mparticles_realloc(mprts, p, i + n_in_cell);
+	    int n = particle_range_size(particle_range_mprts(mprts, p));
+	    psc_mparticles_realloc(mprts, p, n + n_in_cell);
 	    for (int cnt = 0; cnt < n_in_cell; cnt++) {
-	      particle_t *prt = particle_iter_at(prts.begin, i++);
-	      
-	      _psc_setup_particle(psc, prt, &npt, p, xx);
 	      assert(psc->prm.fractional_n_particles_per_cell);
-	      prt->qni_wni = psc->kinds[prt->kind].q;
+	      particle_t _prt;
+	      _psc_setup_particle(psc, &_prt, &npt, p, xx);
+	      _prt.qni_wni = psc->kinds[_prt.kind].q; // ??? FIXME
+	      
+	      int n = particle_range_size(particle_range_mprts(mprts, p));
+	      *particle_iter_at(prts.begin, n) = _prt;
+	      psc_mparticles_resize_patch(mprts, p, n + 1);
 	    }
 	  }
 	}
       }
     }
-    psc_mparticles_resize_patch(mprts, p, i);
   }
 
   psc_mparticles_put_as(mprts, mprts_base, 0);
