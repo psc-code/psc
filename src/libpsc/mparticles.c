@@ -98,15 +98,6 @@ psc_mparticles_n_prts_all(struct psc_mparticles *mprts, int *n_prts_by_patch)
 }
 
 void
-psc_mparticles_patch_resize(struct psc_mparticles *mprts, int p, int n_prts)
-{
-  struct psc_mparticles_ops *ops = psc_mparticles_ops(mprts);
-  assert(ops->patch_resize);
-
-  return ops->patch_resize(mprts, p, n_prts);
-}
-
-void
 psc_mparticles_resize_all(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
   struct psc_mparticles_ops *ops = psc_mparticles_ops(mprts);

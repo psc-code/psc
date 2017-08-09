@@ -28,7 +28,6 @@ struct psc_mparticles_ops {
   void (*reserve)(struct psc_mparticles *mprts, int *n_prts_by_patch);
   void (*resize_all)(struct psc_mparticles *mprts, int *n_prts_by_patch);
   void (*get_n_prts_all)(struct psc_mparticles *mprts, int *n_prts_by_patch);
-  void (*patch_resize)(struct psc_mparticles *mprts, int p, int n_prts);
 };
 
 #define psc_mparticles_ops(mp) ((struct psc_mparticles_ops *) ((mp)->obj.ops))
@@ -65,7 +64,6 @@ extern struct psc_mparticles_ops psc_mparticles_acc_ops;
 void psc_mparticles_set_domain(struct psc_mparticles *mparticles, struct mrc_domain *domain);
 int  psc_mparticles_nr_particles(struct psc_mparticles *mparticles);
 void psc_mparticles_n_prts_all(struct psc_mparticles *mparticles, int *n_prts_by_patch);
-void psc_mparticles_patch_resize(struct psc_mparticles *mprts, int p, int n_prts);
 void psc_mparticles_setup_internals(struct psc_mparticles *mparticles);
 void psc_mparticles_reserve(struct psc_mparticles *mprts, int *n_prts_by_patch);
 void psc_mparticles_resize_all(struct psc_mparticles *mprts, int *n_prts_by_patch);

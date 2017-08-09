@@ -247,7 +247,6 @@ struct psc_mparticles_ops PFX(ops) = {
   .read                    = PFX(read),
   .reserve                 = PFX(reserve),
   .resize_all              = PFX(resize_all),
-  .patch_resize            = PFX(patch_resize),
   .get_n_prts_all          = PFX(get_n_prts_all),
 };
 
