@@ -279,13 +279,13 @@ psc_mparticles_PTYPE_patch_reserve(struct psc_mparticles *mprts, int p, int new_
   int n_alloced = MAX(new_capacity, patch->n_alloced * 2);
   patch->n_alloced = n_alloced;
 
-  patch->prt_array = realloc(patch->prt_array, n_alloced * sizeof(*patch->prt_array));
+  patch->prt_array = (particle_PTYPE_t *) realloc(patch->prt_array, n_alloced * sizeof(*patch->prt_array));
 
 #if PTYPE == PTYPE_SINGLE
   free(patch->prt_array_alt);
-  patch->prt_array_alt = malloc(n_alloced * sizeof(*patch->prt_array_alt));
-  patch->b_idx = realloc(patch->b_idx, n_alloced * sizeof(*patch->b_idx));
-  patch->b_ids = realloc(patch->b_ids, n_alloced * sizeof(*patch->b_ids));
+  patch->prt_array_alt = (particle_PTYPE_t *) malloc(n_alloced * sizeof(*patch->prt_array_alt));
+  patch->b_idx = (unsigned int *) realloc(patch->b_idx, n_alloced * sizeof(*patch->b_idx));
+  patch->b_ids = (unsigned int *) realloc(patch->b_ids, n_alloced * sizeof(*patch->b_ids));
 #endif
 
 #if PTYPE == PTYPE_SINGLE_BY_BLOCK
@@ -352,11 +352,12 @@ psc_particle_PTYPE_iter_equal(psc_particle_PTYPE_iter_t iter, psc_particle_PTYPE
 static inline psc_particle_PTYPE_iter_t
 psc_particle_PTYPE_iter_next(psc_particle_PTYPE_iter_t iter)
 {
-  return (psc_particle_PTYPE_iter_t) {
-    .n    = iter.n + 1,
-    .p    = iter.p,
-    .mprts = iter.mprts,
-  };
+  psc_particle_PTYPE_iter_t rv;
+  rv.n     = iter.n + 1;
+  rv.p     = iter.p;
+  rv.mprts = iter.mprts;
+
+  return rv;
 }
 
 // ----------------------------------------------------------------------
@@ -393,10 +394,15 @@ typedef struct {
 static inline psc_particle_PTYPE_range_t
 psc_particle_PTYPE_range_mprts(struct psc_mparticles *mprts, int p)
 {
-  return (psc_particle_PTYPE_range_t) {
-    .begin = { .n = 0                                        , .p = p, .mprts = mprts },
-    .end   = { .n = psc_mparticles_PTYPE_get_n_prts(mprts, p), .p = p, .mprts = mprts },
-  };
+  psc_particle_PTYPE_range_t rv;
+  rv.begin.n     = 0;
+  rv.begin.p     = p;
+  rv.begin.mprts = mprts;
+  rv.end.n       = psc_mparticles_PTYPE_get_n_prts(mprts, p);
+  rv.end.p       = p;
+  rv.end.mprts   = mprts;
+
+  return rv;
 }
 
 // ----------------------------------------------------------------------
