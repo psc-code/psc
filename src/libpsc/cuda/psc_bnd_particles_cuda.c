@@ -269,7 +269,7 @@ psc_bnd_particles_sub_exchange_mprts_post(struct psc_bnd_particles *bnd,
   }
   cuda_mprts_sort(mprts, n_prts_by_patch);
   for (int p = 0; p < mprts->nr_patches; p++) {
-    psc_mparticles_set_n_prts_by_patch(mprts, p, n_prts_by_patch[p]);
+    mprts_cuda->n_prts_by_patch[p] = n_prts_by_patch[p];
   }
   prof_stop(pr_D);
 
