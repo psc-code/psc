@@ -11,17 +11,6 @@
 
 // ======================================================================
 
-// ----------------------------------------------------------------------
-// psc_mparticles_set_nr_particles
-
-void
-psc_mparticles_set_nr_particles(struct psc_mparticles *mprts, int *n_prts_by_patch)
-{
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    psc_mparticles_patch_resize(mprts, p, n_prts_by_patch[p]);
-  }
-}
-
 // FIXME, do we need this at all, and if so, could be a PARAM_OBJ
 void
 psc_mparticles_set_domain(struct psc_mparticles *mparticles,
