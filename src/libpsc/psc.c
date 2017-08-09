@@ -924,9 +924,7 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
   psc_foreach_patch(psc, p) {
     int ilo[3], ihi[3];
     pml_find_bounds(psc, p, ilo, ihi);
-    particle_range_t prts = particle_range_mprts(mprts, p);
   
-    int i = 0;
     int nr_pop = psc->prm.nr_populations;
     for (int jz = ilo[2]; jz < ihi[2]; jz++) {
       for (int jy = ilo[1]; jy < ihi[1]; jy++) {
@@ -964,25 +962,24 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 	      n_in_cell = -n_q_in_cell / npt.q;
 	    }
 	    for (int cnt = 0; cnt < n_in_cell; cnt++) {
-	      particle_t *prt = particle_iter_at(prts.begin, i++);
-	      
-	      psc_setup_particle(psc, prt, &npt, p, xx);
+	      particle_t prt;
+	      psc_setup_particle(psc, &prt, &npt, p, xx);
 	      //p->lni = particle_label_offset + 1;
 	      if (psc->prm.fractional_n_particles_per_cell) {
-		prt->qni_wni = psc->kinds[prt->kind].q;
+		prt.qni_wni = psc->kinds[prt.kind].q;
 	      } else if (psc->prm.fortran_particle_weight_hack) {
-		prt->qni_wni = psc->kinds[prt->kind].q * npt.n;
+		prt.qni_wni = psc->kinds[prt.kind].q * npt.n;
 	      } else {
-		prt->qni_wni = psc->kinds[prt->kind].q * npt.n / (n_in_cell * psc->coeff.cori);
+		prt.qni_wni = psc->kinds[prt.kind].q * npt.n / (n_in_cell * psc->coeff.cori);
 	      }
+	      mparticles_patch_push_back(mprts, p, prt);
 	    }
 	  }
 	}
       }
     }
-    psc_mparticles_patch_resize(mprts, p, i);
     if (!psc->prm.fractional_n_particles_per_cell) {
-      assert(i == nr_particles_by_patch[p]);
+      assert(mparticles_get_n_prts(mprts, p) == nr_particles_by_patch[p]);
     }
   }
   psc_mparticles_put_as(mprts, psc->particles, 0);

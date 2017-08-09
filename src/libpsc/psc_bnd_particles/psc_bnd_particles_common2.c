@@ -254,8 +254,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
   }
   patch->n_part_save = particle_range_size(prts);
   patch->n_send = patch->b_cnt[patch->nr_blocks];
-  psc_mparticles_patch_resize
-    (mprts, p, particle_range_size(prts) + patch->n_send);
+  mparticles_patch_resize(mprts, p, mparticles_get_n_prts(mprts, p) + patch->n_send);
 
   exchange_particles_pre(bnd, mprts, p);
 }
@@ -273,13 +272,13 @@ psc_bnd_particles_sub_exchange_particles_post(struct psc_bnd_particles *bnd,
   particle_range_t prts = particle_range_mprts(mprts, p);
   struct ddcp_patch *dpatch = &ddcp->patches[p];
 
-  psc_mparticles_patch_resize(mprts, p, dpatch->head);
+  mparticles_patch_resize(mprts, p, dpatch->head);
   
   find_block_indices_count(patch->b_idx, patch->b_cnt, mprts, p, patch->n_part_save);
   exclusive_scan(patch->b_cnt, patch->nr_blocks + 1);
   sort_indices(patch->b_idx, patch->b_cnt, patch->b_ids, particle_range_size(prts));
   
-  psc_mparticles_patch_resize(mprts, p, patch->b_cnt[patch->nr_blocks - 1]);
+  mparticles_patch_resize(mprts, p, patch->b_cnt[patch->nr_blocks - 1]);
   patch->need_reorder = true; // FIXME, need to honor before get()/put()
 }
 
