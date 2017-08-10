@@ -70,7 +70,7 @@ copy_from(struct psc_mparticles *mprts, struct psc_mparticles *mprts_from,
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   unsigned int n_prts_by_patch[cmprts->n_patches];
-  cuda_mparticles_get_n_prts_by_patch(cmprts, n_prts_by_patch);
+  cuda_mparticles_get_size_all(cmprts, n_prts_by_patch);
   
   unsigned int off = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
@@ -89,7 +89,7 @@ copy_to(struct psc_mparticles *mprts, struct psc_mparticles *mprts_to,
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
   
   unsigned int n_prts_by_patch[cmprts->n_patches];
-  cuda_mparticles_get_n_prts_by_patch(cmprts, n_prts_by_patch);
+  cuda_mparticles_get_size_all(cmprts, n_prts_by_patch);
   
   unsigned int off = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
@@ -427,7 +427,7 @@ psc_mparticles_cuda_write(struct psc_mparticles *mprts, struct mrc_io *io)
   mrc_io_get_h5_file(io, &h5_file);
 
   unsigned int n_prts_by_patch[cmprts->n_patches];
-  cuda_mparticles_get_n_prts_by_patch(cmprts, n_prts_by_patch);
+  cuda_mparticles_get_size_all(cmprts, n_prts_by_patch);
 
   hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, mprts), H5P_DEFAULT); H5_CHK(group);
   unsigned int off = 0;
@@ -546,12 +546,7 @@ psc_mparticles_cuda_get_size_all(struct psc_mparticles *mprts, int *n_prts_by_pa
 {
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
-  unsigned int _n_prts_by_patch[cmprts->n_patches];
-  cuda_mparticles_get_n_prts_by_patch(cmprts, _n_prts_by_patch);
-
-  for (int p = 0; p < cmprts->n_patches; p++) {
-    n_prts_by_patch[p] = _n_prts_by_patch[p];
-  }
+  cuda_mparticles_get_size_all(cmprts, (unsigned int *) n_prts_by_patch);
 }
 
 // ----------------------------------------------------------------------
@@ -562,12 +557,7 @@ psc_mparticles_cuda_resize_all(struct psc_mparticles *mprts, int *n_prts_by_patc
 {
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
-  unsigned int _n_prts_by_patch[cmprts->n_patches];
-  // FIXME, we should check and only handle the case of all zero size
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    _n_prts_by_patch[p] = n_prts_by_patch[p];
-  }
-  cuda_mparticles_set_n_prts_by_patch(cmprts, _n_prts_by_patch);
+  cuda_mparticles_resize_all(cmprts, (unsigned int *) n_prts_by_patch);
 }
 
 // ----------------------------------------------------------------------
