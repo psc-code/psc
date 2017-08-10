@@ -36,7 +36,7 @@ cuda_mparticles_add_particles_test_2(struct cuda_mparticles *cmprts,
     n_prts_by_patch[p] = 2 * cmprts->ldims[0] * cmprts->ldims[1] * cmprts->ldims[2];
   }
 
-  cuda_mparticles_alloc(cmprts, n_prts_by_patch);
+  cuda_mparticles_reserve(cmprts, n_prts_by_patch);
   
   thrust::device_ptr<float4> d_xi4(cmprts->d_xi4);
   thrust::device_ptr<float4> d_pxi4(cmprts->d_pxi4);

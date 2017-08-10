@@ -405,7 +405,7 @@ psc_mparticles_cuda_reserve_all(struct psc_mparticles *mprts, int *_n_prts_by_pa
     n_prts_by_patch[p] = _n_prts_by_patch[p];
   }
 
-  cuda_mparticles_alloc(cmprts, n_prts_by_patch);
+  cuda_mparticles_reserve(cmprts, n_prts_by_patch);
 
   __psc_mparticles_cuda_setup(mprts);
 }

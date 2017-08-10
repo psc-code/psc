@@ -57,25 +57,31 @@ cuda_mparticles_set_domain_info(struct cuda_mparticles *cmprts,
 }
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_alloc
+// cuda_mparticles_reserve
 
 void
-cuda_mparticles_alloc(struct cuda_mparticles *cmprts, unsigned int *n_prts_by_patch)
+cuda_mparticles_reserve(struct cuda_mparticles *cmprts, unsigned int *n_prts_by_patch)
 {
   cudaError_t ierr;
 
-  thrust::host_vector<unsigned int> h_off(cmprts->n_blocks + 1);
-  cmprts->n_prts = 0;
+  unsigned int size = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
-    h_off[p * cmprts->n_blocks_per_patch] = 0;//cmprts->n_prts;
-    cmprts->n_prts += n_prts_by_patch[p];
+    size += n_prts_by_patch[p];
   }
-  h_off[cmprts->n_blocks] = cmprts->n_prts;
 
-  cmprts->n_alloced = cmprts->n_prts * 1.4;
-  cmprts->n_prts = 0;//
-  h_off[cmprts->n_blocks] = cmprts->n_prts;//
-  unsigned int n_alloced = cmprts->n_alloced;
+  if (size <= cmprts->n_alloced) {
+    return;
+  }
+
+  unsigned int n_alloced = max(size, 2 * cmprts->n_alloced);
+  cmprts->n_alloced = n_alloced;
+
+  ierr = cudaFree(cmprts->d_xi4); cudaCheck(ierr);
+  ierr = cudaFree(cmprts->d_pxi4); cudaCheck(ierr);
+  ierr = cudaFree(cmprts->d_alt_xi4); cudaCheck(ierr);
+  ierr = cudaFree(cmprts->d_alt_pxi4); cudaCheck(ierr);
+  ierr = cudaFree(cmprts->d_bidx); cudaCheck(ierr);
+  ierr = cudaFree(cmprts->d_id); cudaCheck(ierr);
 
   ierr = cudaMalloc((void **) &cmprts->d_xi4, n_alloced * sizeof(float4)); cudaCheck(ierr);
   ierr = cudaMalloc((void **) &cmprts->d_pxi4, n_alloced * sizeof(float4)); cudaCheck(ierr);
@@ -88,6 +94,7 @@ cuda_mparticles_alloc(struct cuda_mparticles *cmprts, unsigned int *n_prts_by_pa
 
   ierr = cudaMalloc(&cmprts->d_off, (cmprts->n_blocks + 1) * sizeof(*cmprts->d_off)); cudaCheck(ierr);
 
+  thrust::host_vector<unsigned int> h_off(cmprts->n_blocks + 1);
   thrust::device_ptr<unsigned int> d_off(cmprts->d_off);
   thrust::copy(h_off.begin(), h_off.end(), d_off);
 }
