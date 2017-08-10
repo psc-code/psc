@@ -11,20 +11,15 @@
 // psc_mparticles_sub_setup_patch
 
 static void
-PFX(setup_patch)(struct psc_mparticles *mprts, int p, int n_alloced)
+PFX(setup_patch)(struct psc_mparticles *mprts, int p, int _n_alloced)
 {
   struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
   struct PFX(patch) *patch = &sub->patch[p];
 
   patch->n_prts = 0;
-  patch->n_alloced = n_alloced;
-  patch->prt_array = calloc(n_alloced, sizeof(*patch->prt_array));
+  patch->n_alloced = 0;
 
 #if PSC_PARTICLES_AS_SINGLE
-  patch->prt_array_alt = calloc(n_alloced, sizeof(*patch->prt_array_alt));
-  patch->b_idx = calloc(n_alloced, sizeof(*patch->b_idx));
-  patch->b_ids = calloc(n_alloced, sizeof(*patch->b_ids));
-
   int *b_mx = patch->b_mx;
   for (int d = 0; d < 3; d++) {
     b_mx[d] = ppsc->patch[p].ldims[d];
@@ -35,10 +30,6 @@ PFX(setup_patch)(struct psc_mparticles *mprts, int p, int n_alloced)
 #endif
 
 #if PSC_PARTICLES_AS_SINGLE_BY_BLOCK
-  patch->prt_array_alt = calloc(n_alloced, sizeof(*patch->prt_array_alt));
-  patch->b_idx = calloc(n_alloced, sizeof(*patch->b_idx));
-  patch->b_ids = calloc(n_alloced, sizeof(*patch->b_ids));
-
   for (int d = 0; d < 3; d++) {
     patch->b_mx[d] = ppsc->patch[p].ldims[d];
     patch->b_dxi[d] = 1.f / ppsc->patch[p].dx[d];
@@ -46,6 +37,31 @@ PFX(setup_patch)(struct psc_mparticles *mprts, int p, int n_alloced)
   patch->nr_blocks = patch->b_mx[0] * patch->b_mx[1] * patch->b_mx[2];
   patch->b_cnt = calloc(patch->nr_blocks + 1, sizeof(*patch->b_cnt));
   patch->b_off = calloc(patch->nr_blocks + 2, sizeof(*patch->b_off));
+#endif
+}
+
+// ----------------------------------------------------------------------
+// psc_mparticles_sub_reserve_patch
+
+static void
+PFX(reserve_patch)(struct psc_mparticles *mprts, int p, int n_alloced)
+{
+  struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
+  struct PFX(patch) *patch = &sub->patch[p];
+
+  patch->n_alloced = n_alloced;
+  patch->prt_array = calloc(n_alloced, sizeof(*patch->prt_array));
+
+#if PSC_PARTICLES_AS_SINGLE
+  patch->prt_array_alt = calloc(n_alloced, sizeof(*patch->prt_array_alt));
+  patch->b_idx = calloc(n_alloced, sizeof(*patch->b_idx));
+  patch->b_ids = calloc(n_alloced, sizeof(*patch->b_ids));
+#endif
+
+#if PSC_PARTICLES_AS_SINGLE_BY_BLOCK
+  patch->prt_array_alt = calloc(n_alloced, sizeof(*patch->prt_array_alt));
+  patch->b_idx = calloc(n_alloced, sizeof(*patch->b_idx));
+  patch->b_ids = calloc(n_alloced, sizeof(*patch->b_ids));
 #endif
 }
 
@@ -159,6 +175,7 @@ PFX(read)(struct psc_mparticles *mprts, struct mrc_io *io)
     int n_prts;
     ierr = H5LTget_attribute_int(pgroup, ".", "n_prts", &n_prts); CE;
     PFX(setup_patch)(mprts, p, n_prts);
+    PFX(reserve_patch)(mprts, p, n_prts);
     
     if (n_prts > 0) {
 #if PSC_PARTICLES_AS_SINGLE
@@ -208,6 +225,7 @@ PFX(reserve_all)(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
   for (int p = 0; p < mprts->nr_patches; p++) {
     PFX(setup_patch)(mprts, p, n_prts_by_patch[p]);
+    PFX(reserve_patch)(mprts, p, n_prts_by_patch[p]);
   }
 }
 
