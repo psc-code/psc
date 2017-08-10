@@ -11,7 +11,7 @@
 // psc_mparticles_sub_setup_patch
 
 static void
-PFX(setup_patch)(struct psc_mparticles *mprts, int p, int _n_alloced)
+PFX(setup_patch)(struct psc_mparticles *mprts, int p)
 {
   struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
   struct PFX(patch) *patch = &sub->patch[p];
@@ -102,6 +102,10 @@ PFX(setup)(struct psc_mparticles *mprts)
 
   psc_mparticles_setup_super(mprts);
   sub->patch = calloc(mprts->nr_patches, sizeof(*sub->patch));
+
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    PFX(setup_patch)(mprts, p);
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -164,6 +168,8 @@ PFX(read)(struct psc_mparticles *mprts, struct mrc_io *io)
   int ierr;
   psc_mparticles_read_super(mprts, io);
 
+  PFX(setup)(mprts);
+  
   long h5_file;
   mrc_io_get_h5_file(io, &h5_file);
   hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, mprts), H5P_DEFAULT); H5_CHK(group);
@@ -174,7 +180,6 @@ PFX(read)(struct psc_mparticles *mprts, struct mrc_io *io)
     hid_t pgroup = H5Gopen(group, pname, H5P_DEFAULT); H5_CHK(pgroup);
     int n_prts;
     ierr = H5LTget_attribute_int(pgroup, ".", "n_prts", &n_prts); CE;
-    PFX(setup_patch)(mprts, p, n_prts);
     PFX(reserve_patch)(mprts, p, n_prts);
     
     if (n_prts > 0) {
@@ -224,7 +229,6 @@ static void
 PFX(reserve_all)(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
   for (int p = 0; p < mprts->nr_patches; p++) {
-    PFX(setup_patch)(mprts, p, n_prts_by_patch[p]);
     PFX(reserve_patch)(mprts, p, n_prts_by_patch[p]);
   }
 }
