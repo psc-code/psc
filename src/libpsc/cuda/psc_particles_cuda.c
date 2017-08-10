@@ -9,8 +9,6 @@
 #include "psc_push_particles.h"
 #include "particles_cuda.h"
 
-#include "cuda_mparticles.h"
-
 #include <mrc_io.h>
 
 EXTERN_C void cuda_init(int rank);
@@ -69,7 +67,7 @@ copy_from(struct psc_mparticles *mprts, struct psc_mparticles *mprts_from,
 {
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
-  unsigned int n_prts_by_patch[cmprts->n_patches];
+  unsigned int n_prts_by_patch[mprts->nr_patches];
   cuda_mparticles_get_size_all(cmprts, n_prts_by_patch);
   
   unsigned int off = 0;
@@ -88,7 +86,7 @@ copy_to(struct psc_mparticles *mprts, struct psc_mparticles *mprts_to,
 {
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
   
-  unsigned int n_prts_by_patch[cmprts->n_patches];
+  unsigned int n_prts_by_patch[mprts->nr_patches];
   cuda_mparticles_get_size_all(cmprts, n_prts_by_patch);
   
   unsigned int off = 0;
@@ -426,7 +424,7 @@ psc_mparticles_cuda_write(struct psc_mparticles *mprts, struct mrc_io *io)
   long h5_file;
   mrc_io_get_h5_file(io, &h5_file);
 
-  unsigned int n_prts_by_patch[cmprts->n_patches];
+  unsigned int n_prts_by_patch[mprts->nr_patches];
   cuda_mparticles_get_size_all(cmprts, n_prts_by_patch);
 
   hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, mprts), H5P_DEFAULT); H5_CHK(group);
@@ -492,8 +490,8 @@ psc_mparticles_cuda_read(struct psc_mparticles *mprts, struct mrc_io *io)
     hid_t pgroup = H5Gopen(group, pname, H5P_DEFAULT); H5_CHK(pgroup);
     int n_prts = n_prts_by_patch[p];
     if (n_prts > 0) {
-      float4 *xi4  = calloc(n_prts, sizeof(float4));
-      float4 *pxi4 = calloc(n_prts, sizeof(float4));
+      float_4 *xi4  = calloc(n_prts, sizeof(float4));
+      float_4 *pxi4 = calloc(n_prts, sizeof(float4));
       
       ierr = H5LTread_dataset_float(pgroup, "xi4", (float *) xi4); CE;
       ierr = H5LTread_dataset_float(pgroup, "pxi4", (float *) pxi4); CE;
@@ -562,8 +560,6 @@ psc_mparticles_cuda_resize_all(struct psc_mparticles *mprts, int *n_prts_by_patc
 
 // ----------------------------------------------------------------------
 // psc_mparticles_cuda_inject
-
-#include <psc_particles_as_single.h> // FIXME
 
 void
 psc_mparticles_cuda_inject(struct psc_mparticles *mprts, struct cuda_mparticles_prt *buf,
