@@ -54,9 +54,9 @@ void cuda_mparticles_set_domain_info(struct cuda_mparticles *cuda_mprts,
 				     const struct cuda_domain_info *info);
 void cuda_mparticles_reserve_all(struct cuda_mparticles *cmprts, unsigned int *n_prts_by_patch);
 void cuda_mparticles_dump(struct cuda_mparticles *cuda_mprts);
-void cuda_mparticles_dump_by_patch(struct cuda_mparticles *cuda_mprts, unsigned int *n_prts_by_patch);
-void cuda_mparticles_sort_initial(struct cuda_mparticles *cmprts,
-				  unsigned int *n_prts_by_patch);
+void cuda_mparticles_dump_by_patch(struct cuda_mparticles *cmprts, unsigned int *n_prts_by_patch);
+void cuda_mparticles_setup_internals(struct cuda_mparticles *cmprts);
+unsigned int cuda_mparticles_get_n_prts(struct cuda_mparticles *cmprts);
 void cuda_mparticles_get_n_prts_by_patch(struct cuda_mparticles *cmprts, unsigned int *n_prts_by_patch);
 void cuda_mparticles_set_n_prts_by_patch(struct cuda_mparticles *cmprts, const unsigned int *n_prts_by_patch);
 void cuda_mparticles_set_particles(struct cuda_mparticles *cmprts, unsigned int n_prts, unsigned int off,

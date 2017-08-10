@@ -625,6 +625,17 @@ cuda_mparticles_sort_initial(struct cuda_mparticles *cmprts,
 }
 
 // ----------------------------------------------------------------------
+// cuda_mparticles_setup_internals
+
+void
+cuda_mparticles_setup_internals(struct cuda_mparticles *cmprts)
+{
+  unsigned int n_prts_by_patch[cmprts->n_patches];
+  cuda_mparticles_get_n_prts_by_patch(cmprts, n_prts_by_patch);
+  cuda_mparticles_sort_initial(cmprts, n_prts_by_patch);
+}
+
+// ----------------------------------------------------------------------
 // cuda_mparticles_set_n_prts_by_patch
 
 void
@@ -644,6 +655,15 @@ cuda_mparticles_set_n_prts_by_patch(struct cuda_mparticles *cmprts,
   cmprts->n_prts = off;
 
   thrust::copy(h_off.begin(), h_off.end(), d_off);
+}
+
+// ----------------------------------------------------------------------
+// cuda_mparticles_get_n_prts
+
+unsigned int
+cuda_mparticles_get_n_prts(struct cuda_mparticles *cmprts)
+{
+  return cmprts->n_prts;
 }
 
 // ----------------------------------------------------------------------

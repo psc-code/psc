@@ -2,19 +2,36 @@
 #include "cuda_iface.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <assert.h>
 
 // ----------------------------------------------------------------------
-// cuda_domain_info_set_test_1
+// cuda_domain_info_ctor_test_1
 
 void
-cuda_domain_info_set_test_1(struct cuda_domain_info *info)
+cuda_domain_info_ctor_test_1(struct cuda_domain_info *info)
 {
   info->n_patches = 1;
   info->ldims[0] = 1; info->ldims[1] = 4; info->ldims[2] = 2;
   info->bs[0] = 1; info->bs[1] = 1; info->bs[2] = 1;
   info->dx[0] = 1.; info->dx[1] = 10.; info->dx[2] = 10.;
+
+  info->xb_by_patch = calloc(info->n_patches, sizeof(*info->xb_by_patch));
+  for (int p = 0; p < info->n_patches; p++) {
+    info->xb_by_patch[p][0] = 0.;
+    info->xb_by_patch[p][1] = 0.;
+    info->xb_by_patch[p][2] = 0.;
+  }
 };
+
+// ----------------------------------------------------------------------
+// cuda_domain_info_dtor
+
+void
+cuda_domain_info_dtor(struct cuda_domain_info *info)
+{
+  free(info->xb_by_patch);
+}
 
 // ----------------------------------------------------------------------
 // cuda_mparticles_add_particles_test_1
@@ -54,7 +71,8 @@ cuda_mparticles_add_particles_test_1(struct cuda_mparticles *cmprts,
   }
 
   cuda_mparticles_reserve_all(cmprts, n_prts_by_patch);
-
+  cuda_mparticles_set_n_prts_by_patch(cmprts, n_prts_by_patch);
+  
   unsigned int off = 0;
   for (int p = 0; p < info->n_patches; p++) {
     cuda_mparticles_set_particles(cmprts, n_prts_by_patch[p], off,
@@ -97,16 +115,19 @@ main(void)
   struct cuda_mparticles *cmprts = cuda_mparticles_create();
 
   struct cuda_domain_info info;
-  cuda_domain_info_set_test_1(&info);
+  cuda_domain_info_ctor_test_1(&info);
   cuda_mparticles_set_domain_info(cmprts, &info);
+  cuda_domain_info_dtor(&info);
+
+  cuda_mparticles_setup(cmprts);
 
   unsigned int n_prts_by_patch[info.n_patches];
   cuda_mparticles_add_particles_test_1(cmprts, &info, n_prts_by_patch);
   printf("added particles\n");
-  cuda_mparticles_dump(cmprts);
+  cuda_mparticles_dump_by_patch(cmprts, n_prts_by_patch);
 
-  cuda_mparticles_sort_initial(cmprts, n_prts_by_patch);
-  printf("sorted initially\n");
+  cuda_mparticles_setup_internals(cmprts);
+  printf("set up internals\n");
   cuda_mparticles_dump(cmprts);
 
   printf("get_particles_test\n");
