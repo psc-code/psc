@@ -16,6 +16,7 @@ struct cuda_mparticles *
 cuda_mparticles_create()
 {
   struct cuda_mparticles *cmprts = new cuda_mparticles;
+  std::memset(cmprts, 0, sizeof(*cmprts));
 
   return cmprts;
 }
