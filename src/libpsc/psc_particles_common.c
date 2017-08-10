@@ -234,6 +234,19 @@ PFX(get_size_all)(struct psc_mparticles *mprts, int *n_prts_by_patch)
   }
 }
 
+static unsigned int
+PFX(get_nr_particles)(struct psc_mparticles *mprts)
+{
+  struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
+
+  int n_prts = 0;
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct PFX(patch) *patch = &sub->patch[p];
+    n_prts += patch->n_prts;
+  }
+  return n_prts;
+}
+
 // ----------------------------------------------------------------------
 // psc_mparticles_ops
 
@@ -248,5 +261,6 @@ struct psc_mparticles_ops PFX(ops) = {
   .reserve_all             = PFX(reserve_all),
   .resize_all              = PFX(resize_all),
   .get_size_all            = PFX(get_size_all),
+  .get_nr_particles        = PFX(get_nr_particles),
 };
 

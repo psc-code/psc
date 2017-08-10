@@ -31,18 +31,9 @@ int
 psc_mparticles_nr_particles(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_ops *ops = psc_mparticles_ops(mprts);
+  assert(ops->get_nr_particles);
 
-  if (ops->get_nr_particles) {
-    return ops->get_nr_particles(mprts);
-  }
-
-  int n_prts_by_patch[mprts->nr_patches];
-  psc_mparticles_get_size_all(mprts, n_prts_by_patch);
-  int n_part = 0;
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    n_part += n_prts_by_patch[p];
-  }
-  return n_part;
+  return ops->get_nr_particles(mprts);
 }
 
 void
