@@ -27,21 +27,6 @@ _psc_mparticles_view(struct psc_mparticles *mprts)
   }  
 }
 
-static void
-_psc_mparticles_write(struct psc_mparticles *mparticles, struct mrc_io *io)
-{
-  // FIXME, aren't those written automatically?
-  mrc_io_write_int(io, mparticles, "nr_patches", mparticles->nr_patches);
-  mrc_io_write_int(io, mparticles, "flags", mparticles->flags);
-}
-
-static void
-_psc_mparticles_read(struct psc_mparticles *mparticles, struct mrc_io *io)
-{
-  mrc_io_read_int(io, mparticles, "nr_patches", (int *) &mparticles->nr_patches);
-  mrc_io_read_int(io, mparticles, "flags", (int *) &mparticles->flags);
-}
-
 int
 psc_mparticles_nr_particles(struct psc_mparticles *mprts)
 {
@@ -271,7 +256,5 @@ struct mrc_class_psc_mparticles mrc_class_psc_mparticles = {
   .param_descr      = psc_mparticles_descr,
   .init             = psc_mparticles_init,
   .view             = _psc_mparticles_view,
-  .read             = _psc_mparticles_read,
-  .write            = _psc_mparticles_write,
 };
 
