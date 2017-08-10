@@ -21,16 +21,6 @@ cuda_mparticles_create()
 }
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_destroy
-
-void
-cuda_mparticles_destroy(struct cuda_mparticles *cmprts)
-{
-  delete[] cmprts->xb_by_patch;
-  delete cmprts;
-}
-
-// ----------------------------------------------------------------------
 // cuda_mparticles_set_domain_info
 
 void
@@ -57,6 +47,52 @@ cuda_mparticles_set_domain_info(struct cuda_mparticles *cmprts,
 }
 
 // ----------------------------------------------------------------------
+// cuda_mparticles_setup
+
+void
+cuda_mparticles_setup(struct cuda_mparticles *cmprts)
+{
+  cudaError_t ierr;
+
+  ierr = cudaMalloc(&cmprts->d_n_prts_by_patch, cmprts->n_patches * sizeof(unsigned int)); cudaCheck(ierr);
+  ierr = cudaMalloc(&cmprts->d_off, (cmprts->n_blocks + 1) * sizeof(*cmprts->d_off)); cudaCheck(ierr);
+  ierr = cudaMemset(cmprts->d_off, 0, (cmprts->n_blocks + 1) * sizeof(*cmprts->d_off)); cudaCheck(ierr);
+}
+
+// ----------------------------------------------------------------------
+// cuda_mparticles_free_particle_mem
+
+static void
+cuda_mparticles_free_particle_mem(struct cuda_mparticles *cmprts)
+{
+  cudaError_t ierr;
+
+  ierr = cudaFree(cmprts->d_xi4); cudaCheck(ierr);
+  ierr = cudaFree(cmprts->d_pxi4); cudaCheck(ierr);
+  ierr = cudaFree(cmprts->d_alt_xi4); cudaCheck(ierr);
+  ierr = cudaFree(cmprts->d_alt_pxi4); cudaCheck(ierr);
+  ierr = cudaFree(cmprts->d_bidx); cudaCheck(ierr);
+  ierr = cudaFree(cmprts->d_id); cudaCheck(ierr);
+}
+
+// ----------------------------------------------------------------------
+// cuda_mparticles_destroy
+
+void
+cuda_mparticles_destroy(struct cuda_mparticles *cmprts)
+{
+  cudaError_t ierr;
+
+  ierr = cudaFree(cmprts->d_n_prts_by_patch); cudaCheck(ierr);
+  ierr = cudaFree(cmprts->d_off); cudaCheck(ierr);
+
+  cuda_mparticles_free_particle_mem(cmprts);
+
+  delete[] cmprts->xb_by_patch;
+  delete cmprts;
+}
+
+// ----------------------------------------------------------------------
 // cuda_mparticles_reserve
 
 void
@@ -74,14 +110,11 @@ cuda_mparticles_reserve(struct cuda_mparticles *cmprts, unsigned int *n_prts_by_
   }
 
   unsigned int n_alloced = max(size, 2 * cmprts->n_alloced);
-  cmprts->n_alloced = n_alloced;
 
-  ierr = cudaFree(cmprts->d_xi4); cudaCheck(ierr);
-  ierr = cudaFree(cmprts->d_pxi4); cudaCheck(ierr);
-  ierr = cudaFree(cmprts->d_alt_xi4); cudaCheck(ierr);
-  ierr = cudaFree(cmprts->d_alt_pxi4); cudaCheck(ierr);
-  ierr = cudaFree(cmprts->d_bidx); cudaCheck(ierr);
-  ierr = cudaFree(cmprts->d_id); cudaCheck(ierr);
+  if (cmprts->n_alloced > 0) {
+    cuda_mparticles_free_particle_mem(cmprts);
+  }
+  cmprts->n_alloced = n_alloced;
 
   ierr = cudaMalloc((void **) &cmprts->d_xi4, n_alloced * sizeof(float4)); cudaCheck(ierr);
   ierr = cudaMalloc((void **) &cmprts->d_pxi4, n_alloced * sizeof(float4)); cudaCheck(ierr);
@@ -89,34 +122,6 @@ cuda_mparticles_reserve(struct cuda_mparticles *cmprts, unsigned int *n_prts_by_
   ierr = cudaMalloc((void **) &cmprts->d_alt_pxi4, n_alloced * sizeof(float4)); cudaCheck(ierr);
   ierr = cudaMalloc((void **) &cmprts->d_bidx, n_alloced * sizeof(unsigned int)); cudaCheck(ierr);
   ierr = cudaMalloc((void **) &cmprts->d_id, n_alloced * sizeof(unsigned int)); cudaCheck(ierr);
-
-  ierr = cudaMalloc(&cmprts->d_n_prts_by_patch, cmprts->n_patches * sizeof(unsigned int)); cudaCheck(ierr);
-
-  ierr = cudaMalloc(&cmprts->d_off, (cmprts->n_blocks + 1) * sizeof(*cmprts->d_off)); cudaCheck(ierr);
-
-  thrust::host_vector<unsigned int> h_off(cmprts->n_blocks + 1);
-  thrust::device_ptr<unsigned int> d_off(cmprts->d_off);
-  thrust::copy(h_off.begin(), h_off.end(), d_off);
-}
-
-// ----------------------------------------------------------------------
-// cuda_mparticles_dealloc
-
-void
-cuda_mparticles_dealloc(struct cuda_mparticles *cmprts)
-{
-  cudaError_t ierr;
-
-  ierr = cudaFree(cmprts->d_xi4); cudaCheck(ierr);
-  ierr = cudaFree(cmprts->d_pxi4); cudaCheck(ierr);
-  ierr = cudaFree(cmprts->d_alt_xi4); cudaCheck(ierr);
-  ierr = cudaFree(cmprts->d_alt_pxi4); cudaCheck(ierr);
-  ierr = cudaFree(cmprts->d_bidx); cudaCheck(ierr);
-  ierr = cudaFree(cmprts->d_id); cudaCheck(ierr);
-
-  ierr = cudaFree(cmprts->d_n_prts_by_patch); cudaCheck(ierr);
-
-  ierr = cudaFree(cmprts->d_off); cudaCheck(ierr);
 }
 
 // ----------------------------------------------------------------------

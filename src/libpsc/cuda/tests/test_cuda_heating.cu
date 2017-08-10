@@ -175,6 +175,5 @@ main(void)
   printf("after heating_run_foil\n");
   cuda_mparticles_dump(cmprts);
 
-  cuda_mparticles_dealloc(cmprts);
   cuda_mparticles_destroy(cmprts);
 }

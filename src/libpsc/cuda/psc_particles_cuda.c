@@ -367,8 +367,9 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
   }
 
   cuda_mparticles_set_domain_info(cmprts, &domain_info);
-
   free(domain_info.xb_by_patch);
+
+  cuda_mparticles_setup(cmprts);
 }
 
 // ----------------------------------------------------------------------
@@ -378,12 +379,11 @@ static void
 psc_mparticles_cuda_destroy(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
   assert(cmprts);
   
   __psc_mparticles_cuda_free(mprts);
 
-  cuda_mparticles_dealloc(cmprts);
   cuda_mparticles_destroy(cmprts);
   mprts_cuda->cmprts = NULL;
 
@@ -396,8 +396,7 @@ psc_mparticles_cuda_destroy(struct psc_mparticles *mprts)
 static void
 psc_mparticles_cuda_reserve_all(struct psc_mparticles *mprts, int *_n_prts_by_patch)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   // FIXME, copy only because of signed -> unsigned
   unsigned int n_prts_by_patch[cmprts->n_patches];
@@ -427,8 +426,7 @@ psc_mparticles_cuda_reserve_all(struct psc_mparticles *mprts, int *_n_prts_by_pa
 static void
 psc_mparticles_cuda_write(struct psc_mparticles *mprts, struct mrc_io *io)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
   int ierr;
   
   long h5_file;
@@ -506,8 +504,7 @@ psc_mparticles_cuda_read(struct psc_mparticles *mprts, struct mrc_io *io)
       ierr = H5LTread_dataset_float(pgroup, "xi4", (float *) xi4); CE;
       ierr = H5LTread_dataset_float(pgroup, "pxi4", (float *) pxi4); CE;
       
-      struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-      struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+      struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
       
       cuda_mparticles_to_device(cmprts, xi4, pxi4, n_prts, off);
       
@@ -531,8 +528,7 @@ psc_mparticles_cuda_read(struct psc_mparticles *mprts, struct mrc_io *io)
 static void
 psc_mparticles_cuda_setup_internals(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   assert((mprts->flags & MP_NEED_BLOCK_OFFSETS) &&
 	 !(mprts->flags & MP_NEED_CELL_OFFSETS));
@@ -548,8 +544,7 @@ psc_mparticles_cuda_setup_internals(struct psc_mparticles *mprts)
 static unsigned int
 psc_mparticles_cuda_get_nr_particles(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   return cmprts->n_prts;
 }
@@ -560,8 +555,7 @@ psc_mparticles_cuda_get_nr_particles(struct psc_mparticles *mprts)
 static void
 psc_mparticles_cuda_get_size_all(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   unsigned int _n_prts_by_patch[cmprts->n_patches];
   cuda_mparticles_get_n_prts_by_patch(cmprts, _n_prts_by_patch);
@@ -577,8 +571,7 @@ psc_mparticles_cuda_get_size_all(struct psc_mparticles *mprts, int *n_prts_by_pa
 static void
 psc_mparticles_cuda_resize_all(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   unsigned int _n_prts_by_patch[cmprts->n_patches];
   // FIXME, we should check and only handle the case of all zero size
@@ -594,12 +587,11 @@ psc_mparticles_cuda_resize_all(struct psc_mparticles *mprts, int *n_prts_by_patc
 #include <psc_particles_as_single.h> // FIXME
 
 void
-psc_mparticles_cuda_inject(struct psc_mparticles *mprts_base, struct cuda_mparticles_prt *buf,
+psc_mparticles_cuda_inject(struct psc_mparticles *mprts, struct cuda_mparticles_prt *buf,
 			   unsigned int *buf_n_by_patch)
 {
-  assert(strcmp(psc_mparticles_type(mprts_base), "cuda") == 0);
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts_base);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  assert(strcmp(psc_mparticles_type(mprts), "cuda") == 0);
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   cuda_mparticles_inject(cmprts, buf, buf_n_by_patch);
 }

@@ -132,6 +132,5 @@ main(void)
   cuda_mparticles_reorder_and_offsets(cmprts);
   cuda_mparticles_dump(cmprts);
   
-  cuda_mparticles_dealloc(cmprts);
   cuda_mparticles_destroy(cmprts);
 }
