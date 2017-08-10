@@ -39,19 +39,20 @@ libsubdir_la_LIBADD = \
 	cuda_base.lo \
 	cuda_mparticles.lo \
 	cuda_mfields.lo \
-	cuda_push_mprts_yz.lo \
-	cuda_heating.lo \
 	cuda_transfer.lo \
-	cuda_find_indices.lo \
-	cuda_spine.lo \
-	cuda_sort.lo \
-	cuda_sort2.lo \
-	cuda_exchange_particles.lo \
-	cuda_bnd.lo \
-	cuda_exclusive_scan_2.lo \
-	cuda_push_fields_yz.lo \
+	cuda_push_mprts_yz.lo \
 	cuda_push_part_yz_1vb.lo \
+	cuda_push_fields_yz.lo \
+	cuda_bnd.lo \
+	cuda_spine.lo \
+	cuda_exclusive_scan_2.lo \
+	cuda_exchange_particles.lo \
+	cuda_heating.lo \
 	cuda_moments_1st_nc.lo
+
+#	cuda_find_indices.lo \
+	cuda_sort.lo \
+	cuda_sort2.lo
 
 check_PROGRAMS = \
 	tests/test_cuda_mparticles \
