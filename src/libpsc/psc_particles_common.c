@@ -41,31 +41,6 @@ PFX(setup_patch)(struct psc_mparticles *mprts, int p)
 }
 
 // ----------------------------------------------------------------------
-// psc_mparticles_sub_reserve_patch
-
-static void
-PFX(reserve_patch)(struct psc_mparticles *mprts, int p, int n_alloced)
-{
-  struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
-  struct PFX(patch) *patch = &sub->patch[p];
-
-  patch->n_alloced = n_alloced;
-  patch->prt_array = calloc(n_alloced, sizeof(*patch->prt_array));
-
-#if PSC_PARTICLES_AS_SINGLE
-  patch->prt_array_alt = calloc(n_alloced, sizeof(*patch->prt_array_alt));
-  patch->b_idx = calloc(n_alloced, sizeof(*patch->b_idx));
-  patch->b_ids = calloc(n_alloced, sizeof(*patch->b_ids));
-#endif
-
-#if PSC_PARTICLES_AS_SINGLE_BY_BLOCK
-  patch->prt_array_alt = calloc(n_alloced, sizeof(*patch->prt_array_alt));
-  patch->b_idx = calloc(n_alloced, sizeof(*patch->b_idx));
-  patch->b_ids = calloc(n_alloced, sizeof(*patch->b_ids));
-#endif
-}
-
-// ----------------------------------------------------------------------
 // psc_mparticles_sub_destroy_patch
 
 static void
@@ -74,6 +49,7 @@ PFX(destroy_patch)(struct psc_mparticles *mprts, int p)
   struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
   struct PFX(patch) *patch = &sub->patch[p];
 
+  // need to free structures created in ::patch_setup and ::patch_reserve
   free(patch->prt_array);
 
 #if PSC_PARTICLES_AS_SINGLE
@@ -180,7 +156,7 @@ PFX(read)(struct psc_mparticles *mprts, struct mrc_io *io)
     hid_t pgroup = H5Gopen(group, pname, H5P_DEFAULT); H5_CHK(pgroup);
     int n_prts;
     ierr = H5LTget_attribute_int(pgroup, ".", "n_prts", &n_prts); CE;
-    PFX(reserve_patch)(mprts, p, n_prts);
+    PFX(patch_reserve)(mprts, p, n_prts);
     
     if (n_prts > 0) {
 #if PSC_PARTICLES_AS_SINGLE
@@ -229,7 +205,7 @@ static void
 PFX(reserve_all)(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
   for (int p = 0; p < mprts->nr_patches; p++) {
-    PFX(reserve_patch)(mprts, p, n_prts_by_patch[p]);
+    PFX(patch_reserve)(mprts, p, n_prts_by_patch[p]);
   }
 }
 
