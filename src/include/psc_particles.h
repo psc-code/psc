@@ -15,7 +15,6 @@ struct psc_mparticles {
   struct mrc_obj obj;
   struct mprts_patch *mpatch;
   int nr_patches;
-  struct mrc_domain *domain;
   unsigned int flags;          // flags, like MP_NEED_CELL_OFFSETS, ...
 };
 
@@ -58,7 +57,6 @@ extern struct psc_mparticles_ops psc_mparticles_cuda2_ops;
 extern struct psc_mparticles_ops psc_mparticles_acc_ops;
 
 
-void psc_mparticles_set_domain(struct psc_mparticles *mparticles, struct mrc_domain *domain);
 int  psc_mparticles_nr_particles(struct psc_mparticles *mparticles);
 void psc_mparticles_get_size_all(struct psc_mparticles *mparticles, int *n_prts_by_patch);
 void psc_mparticles_setup_internals(struct psc_mparticles *mparticles);

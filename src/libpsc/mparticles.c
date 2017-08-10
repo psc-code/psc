@@ -10,15 +10,7 @@
 #include <string.h>
 
 // ======================================================================
-
-// FIXME, do we need this at all, and if so, could be a PARAM_OBJ
-void
-psc_mparticles_set_domain(struct psc_mparticles *mparticles,
-			  struct mrc_domain *domain)
-{
-  mparticles->domain = domain;
-  mrc_domain_get_patches(domain, &mparticles->nr_patches);
-}
+// psc_mparticles base class
 
 static void
 _psc_mparticles_view(struct psc_mparticles *mprts)
@@ -50,15 +42,15 @@ _psc_mparticles_destroy(struct psc_mparticles *mparticles)
 static void
 _psc_mparticles_write(struct psc_mparticles *mparticles, struct mrc_io *io)
 {
-  mrc_io_write_ref(io, mparticles, "domain", mparticles->domain);
+  // FIXME, aren't those written automatically?
+  mrc_io_write_int(io, mparticles, "nr_patches", mparticles->nr_patches);
   mrc_io_write_int(io, mparticles, "flags", mparticles->flags);
 }
 
 static void
 _psc_mparticles_read(struct psc_mparticles *mparticles, struct mrc_io *io)
 {
-  mparticles->domain = mrc_io_read_ref(io, mparticles, "domain", mrc_domain);
-  mrc_domain_get_patches(mparticles->domain, &mparticles->nr_patches);
+  mrc_io_read_int(io, mparticles, "nr_patches", (int *) &mparticles->nr_patches);
   mrc_io_read_int(io, mparticles, "flags", (int *) &mparticles->flags);
 
   _psc_mparticles_setup(mparticles);
@@ -167,7 +159,7 @@ psc_mparticles_get_as(struct psc_mparticles *mprts_from, const char *type,
 
   struct psc_mparticles *mprts = psc_mparticles_create(psc_mparticles_comm(mprts_from));
   psc_mparticles_set_type(mprts, type);
-  psc_mparticles_set_domain(mprts, mprts_from->domain);
+  psc_mparticles_set_param_int(mprts, "nr_patches", mprts_from->nr_patches);
   psc_mparticles_set_param_int(mprts, "flags", flags);
   psc_mparticles_setup(mprts);
 
@@ -281,6 +273,7 @@ psc_mparticles_init()
 
 #define VAR(x) (void *)offsetof(struct psc_mparticles, x)
 static struct param psc_mparticles_descr[] = {
+  { "nr_patches"        , VAR(nr_patches)      , PARAM_INT(0)       },
   { "flags"             , VAR(flags)           , PARAM_INT(0)       },
   {},
 };
