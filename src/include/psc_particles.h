@@ -8,12 +8,8 @@
 // ----------------------------------------------------------------------
 // psc_mparticles class
 
-struct mprts_patch {
-};
-
 struct psc_mparticles {
   struct mrc_obj obj;
-  struct mprts_patch *mpatch;
   int nr_patches;
   unsigned int flags;          // flags, like MP_NEED_CELL_OFFSETS, ...
 };

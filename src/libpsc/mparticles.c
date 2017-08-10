@@ -28,18 +28,6 @@ _psc_mparticles_view(struct psc_mparticles *mprts)
 }
 
 static void
-_psc_mparticles_setup(struct psc_mparticles *mprts)
-{
-  mprts->mpatch = calloc(mprts->nr_patches, sizeof(*mprts->mpatch));
-}
-
-static void
-_psc_mparticles_destroy(struct psc_mparticles *mparticles)
-{
-  free(mparticles->mpatch);
-}
-
-static void
 _psc_mparticles_write(struct psc_mparticles *mparticles, struct mrc_io *io)
 {
   // FIXME, aren't those written automatically?
@@ -52,8 +40,6 @@ _psc_mparticles_read(struct psc_mparticles *mparticles, struct mrc_io *io)
 {
   mrc_io_read_int(io, mparticles, "nr_patches", (int *) &mparticles->nr_patches);
   mrc_io_read_int(io, mparticles, "flags", (int *) &mparticles->flags);
-
-  _psc_mparticles_setup(mparticles);
 }
 
 int
@@ -285,8 +271,6 @@ struct mrc_class_psc_mparticles mrc_class_psc_mparticles = {
   .param_descr      = psc_mparticles_descr,
   .init             = psc_mparticles_init,
   .view             = _psc_mparticles_view,
-  .setup            = _psc_mparticles_setup,
-  .destroy          = _psc_mparticles_destroy,
   .read             = _psc_mparticles_read,
   .write            = _psc_mparticles_write,
 };
