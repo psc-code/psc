@@ -94,10 +94,10 @@ cuda_mparticles_destroy(struct cuda_mparticles *cmprts)
 }
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_reserve
+// cuda_mparticles_reserve_all
 
 void
-cuda_mparticles_reserve(struct cuda_mparticles *cmprts, unsigned int *n_prts_by_patch)
+cuda_mparticles_reserve_all(struct cuda_mparticles *cmprts, unsigned int *n_prts_by_patch)
 {
   cudaError_t ierr;
 
