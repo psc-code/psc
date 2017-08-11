@@ -62,12 +62,4 @@ struct ddc_particles {
   struct mrc_domain *domain;
 };
 
-struct ddc_particles *ddc_particles_create(struct mrc_domain *domain, int size_of_particle,
-					   int size_of_real, MPI_Datatype mpi_type_real,
-					   void (*realloc)(void *, int, int),
-					   void *(*get_addr)(void *, int, int));
-void ddc_particles_destroy(struct ddc_particles *ddcp);
-void ddc_particles_comm(struct ddc_particles *ddcp, void *particles);
-
-
 #endif

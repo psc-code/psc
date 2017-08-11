@@ -9,9 +9,8 @@ libsubdir_la_SOURCES = \
 	psc_bnd_fld_c.c \
 	psc_bnd_fld_single.c \
 	psc_bnd_fld_mix.c \
-	psc_bnd_c.c ddc_particles.c \
+	psc_bnd_c.c \
 	psc_bnd_single.c \
-	ddc_particles.h \
 	psc_bnd_fld.h
 
 if USE_CUDA
