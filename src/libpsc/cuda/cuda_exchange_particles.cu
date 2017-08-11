@@ -201,7 +201,7 @@ cuda_mprts_find_block_indices_3(struct psc_mparticles *mprts)
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
   struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
 
-  unsigned int nr_recv = mprts_cuda->nr_prts_recv;
+  unsigned int nr_recv = cmprts->bnd.n_prts_recv;
   unsigned int nr_prts_prev = cmprts->n_prts - nr_recv;
 
   // for consistency, use same block indices that we counted earlier
@@ -254,7 +254,7 @@ cuda_mprts_reorder_send_buf_total(struct psc_mparticles *mprts)
 
   float4 *xchg_xi4 = cmprts->d_xi4 + cmprts->n_prts;
   float4 *xchg_pxi4 = cmprts->d_pxi4 + cmprts->n_prts;
-  assert(cmprts->n_prts + mprts_cuda->nr_prts_send < cmprts->n_alloced);
+  assert(cmprts->n_prts + cmprts->bnd.n_prts_send < cmprts->n_alloced);
   
   int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
   int dimGrid[2]  = { (cmprts->n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
@@ -280,15 +280,15 @@ cuda_mprts_copy_from_dev(struct psc_mparticles *mprts)
     return;
   }
 
-  cmprts->bnd.h_bnd_xi4 = new float4[mprts_cuda->nr_prts_send];
-  cmprts->bnd.h_bnd_pxi4 = new float4[mprts_cuda->nr_prts_send];
+  cmprts->bnd.h_bnd_xi4 = new float4[cmprts->bnd.n_prts_send];
+  cmprts->bnd.h_bnd_pxi4 = new float4[cmprts->bnd.n_prts_send];
 
-  assert(cmprts->n_prts + mprts_cuda->nr_prts_send < cmprts->n_alloced);
+  assert(cmprts->n_prts + cmprts->bnd.n_prts_send < cmprts->n_alloced);
 
   check(cudaMemcpy(cmprts->bnd.h_bnd_xi4, cmprts->d_xi4 + cmprts->n_prts,
-		   mprts_cuda->nr_prts_send * sizeof(float4), cudaMemcpyDeviceToHost));
+		   cmprts->bnd.n_prts_send * sizeof(float4), cudaMemcpyDeviceToHost));
   check(cudaMemcpy(cmprts->bnd.h_bnd_pxi4, cmprts->d_pxi4 + cmprts->n_prts,
-		   mprts_cuda->nr_prts_send * sizeof(float4), cudaMemcpyDeviceToHost));
+		   cmprts->bnd.n_prts_send * sizeof(float4), cudaMemcpyDeviceToHost));
 }
 
 //======================================================================
@@ -355,7 +355,7 @@ cuda_mprts_copy_to_dev(struct psc_mparticles *mprts)
   free(cmprts->bnd.h_bnd_xi4);
   free(cmprts->bnd.h_bnd_pxi4);
 
-  mprts_cuda->nr_prts_recv = nr_recv;
+  cmprts->bnd.n_prts_recv = nr_recv;
   cmprts->n_prts += nr_recv;
 }
 
@@ -373,7 +373,7 @@ cuda_mprts_sort(struct psc_mparticles *mprts, int *n_prts_by_patch)
   for (int p = 0; p < mprts->nr_patches; p++) {
     n_prts_by_patch[p] += mprts_cuda->bnd[p].n_recv - mprts_cuda->bnd[p].n_send;
   }
-  cmprts->n_prts -= mprts_cuda->nr_prts_send;
+  cmprts->n_prts -= cmprts->bnd.n_prts_send;
 }
 
 // ======================================================================

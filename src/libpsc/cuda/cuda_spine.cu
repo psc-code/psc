@@ -180,7 +180,7 @@ cuda_mprts_count_received_v1(struct psc_mparticles *mprts)
 
   thrust::copy(d_bidx, d_bidx + cmprts->n_prts, h_bidx.begin());
   thrust::copy(d_spine_cnts, d_spine_cnts + 1 + n_blocks * (10 + 1), h_spine_cnts.begin());
-  for (int n = cmprts->n_prts - mprts_cuda->nr_prts_recv; n < cmprts->n_prts; n++) {
+  for (int n = cmprts->n_prts - cmprts->bnd.n_prts_recv; n < cmprts->n_prts; n++) {
     assert(h_bidx[n] < n_blocks);
     h_spine_cnts[h_bidx[n] * 10 + CUDA_BND_S_NEW]++;
   }
@@ -212,7 +212,7 @@ cuda_mprts_scan_scatter_received(struct psc_mparticles *mprts)
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
   struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
 
-  int nr_recv = mprts_cuda->nr_prts_recv;
+  int nr_recv = cmprts->bnd.n_prts_recv;
 
   if (nr_recv == 0) {
     return;
@@ -249,7 +249,7 @@ cuda_mprts_scan_scatter_received_gold(struct psc_mparticles *mprts)
   thrust::copy(d_spine_sums, d_spine_sums + n_blocks * 11, h_spine_sums.begin());
   thrust::copy(d_bidx, d_bidx + cmprts->n_prts, h_bidx.begin());
   thrust::copy(d_alt_bidx, d_alt_bidx + cmprts->n_prts, h_alt_bidx.begin());
-  for (int n = cmprts->n_prts - mprts_cuda->nr_prts_recv; n < cmprts->n_prts; n++) {
+  for (int n = cmprts->n_prts - cmprts->bnd.n_prts_recv; n < cmprts->n_prts; n++) {
     int nn = h_spine_sums[h_bidx[n] * 10 + CUDA_BND_S_NEW] + h_alt_bidx[n];
     h_id[nn] = n;
   }
@@ -478,7 +478,7 @@ cuda_mprts_sort_pairs_gold(struct psc_mparticles *mprts)
 
   thrust::host_vector<unsigned int> h_spine_sums(1 + n_blocks * (10 + 1));
 
-  for (int n = cmprts->n_prts - mprts_cuda->nr_prts_recv; n < cmprts->n_prts; n++) {
+  for (int n = cmprts->n_prts - cmprts->bnd.n_prts_recv; n < cmprts->n_prts; n++) {
     assert(h_bidx[n] < n_blocks);
     h_spine_cnts[h_bidx[n] * 10 + CUDA_BND_S_NEW]++;
   }
@@ -507,7 +507,7 @@ cuda_mprts_sort_pairs_gold(struct psc_mparticles *mprts)
       }
     }
   }
-  for (int n = cmprts->n_prts - mprts_cuda->nr_prts_recv; n < cmprts->n_prts; n++) {
+  for (int n = cmprts->n_prts - cmprts->bnd.n_prts_recv; n < cmprts->n_prts; n++) {
       int nn = h_spine_sums[h_bidx[n] * 10 + CUDA_BND_S_NEW]++;
       h_id[nn] = n;
   }

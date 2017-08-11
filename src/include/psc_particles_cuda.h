@@ -20,9 +20,6 @@ struct cuda_bnd {
 struct psc_mparticles_cuda {
   struct cuda_mparticles *cmprts;
   
-  unsigned int nr_prts_send;
-  unsigned int nr_prts_recv;
-
   struct cuda_bnd *bnd;
 };
 

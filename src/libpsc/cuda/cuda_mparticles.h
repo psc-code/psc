@@ -22,6 +22,9 @@ struct cuda_mparticles_bnd {
   unsigned int *d_alt_bidx;
   unsigned int *d_sums; // FIXME, too many arrays, consolidation would be good
 
+  unsigned int n_prts_send;
+  unsigned int n_prts_recv;
+
   unsigned int *d_bnd_spine_cnts;
   unsigned int *d_bnd_spine_sums;
 
