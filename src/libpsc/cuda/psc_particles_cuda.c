@@ -350,9 +350,6 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
     if (ppsc->domain.gdims[d] == 1) {
       bs[d] = 1;
     }
-    assert(ldims[d] % bs[d] == 0); // FIXME not sure what breaks if not
-    mprts_cuda->b_mx[d]  = ldims[d] / bs[d];
-    mprts_cuda->b_dxi[d] = 1.f / (bs[d] * dx[d]);
     domain_info.ldims[d] = ldims[d];
     domain_info.bs[d]    = bs[d];
     domain_info.dx[d]    = dx[d];

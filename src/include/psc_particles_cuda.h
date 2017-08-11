@@ -31,8 +31,6 @@ struct psc_mparticles_cuda {
   unsigned int *h_bnd_off;
   unsigned int *h_bnd_cnt;
 
-  int b_mx[3];                 // number of blocks by direction
-  particle_cuda_real_t b_dxi[3];
   struct cuda_bnd *bnd;
 };
 
