@@ -43,6 +43,11 @@ struct cuda_mparticles_bnd {
   struct cuda_bnd *bpatch;
 };
 
+void cuda_mparticles_bnd_setup(struct cuda_mparticles *cmprts);
+void cuda_mparticles_bnd_destroy(struct cuda_mparticles *cmprts);
+void cuda_mparticles_bnd_reserve_all(struct cuda_mparticles *cmprts);
+void cuda_mparticles_bnd_free_particle_mem(struct cuda_mparticles *cmprts);
+
 // ----------------------------------------------------------------------
 // cuda_mparticles
 
