@@ -113,9 +113,7 @@ mprts_find_block_indices_2_total(struct cuda_params prm, float4 *d_xi4,
 EXTERN_C void
 cuda_mprts_find_block_indices_2_total(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
-  assert(cmprts);
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   if (mprts->nr_patches == 0) {
     return;
@@ -172,9 +170,7 @@ mprts_find_block_keys(struct cuda_params prm, float4 *d_xi4,
 EXTERN_C void
 cuda_mprts_find_block_keys(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
-  assert(cmprts);
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   if (mprts->nr_patches == 0) {
     return;
@@ -198,8 +194,7 @@ cuda_mprts_find_block_keys(struct psc_mparticles *mprts)
 EXTERN_C void
 cuda_mprts_find_block_indices_3(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   unsigned int nr_recv = cmprts->bnd.n_prts_recv;
   unsigned int nr_prts_prev = cmprts->n_prts - nr_recv;
@@ -245,9 +240,7 @@ mprts_reorder_send_buf_total(int nr_prts, int nr_total_blocks,
 EXTERN_C void
 cuda_mprts_reorder_send_buf_total(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
-  assert(cmprts);
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   if (mprts->nr_patches == 0)
     return;
@@ -272,9 +265,7 @@ cuda_mprts_reorder_send_buf_total(struct psc_mparticles *mprts)
 void
 cuda_mprts_copy_from_dev(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
-  assert(cmprts);
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   if (mprts->nr_patches == 0) {
     return;
@@ -331,9 +322,7 @@ cuda_mprts_convert_from_cuda(struct psc_mparticles *mprts)
 void
 cuda_mprts_copy_to_dev(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
-  assert(cmprts);
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   float4 *d_xi4 = cmprts->d_xi4;
   float4 *d_pxi4 = cmprts->d_pxi4;
@@ -364,8 +353,7 @@ cuda_mprts_copy_to_dev(struct psc_mparticles *mprts)
 void
 cuda_mprts_sort(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   cuda_mprts_sort_pairs_device(mprts);
 
@@ -383,8 +371,7 @@ cuda_mprts_sort(struct psc_mparticles *mprts, int *n_prts_by_patch)
 void
 cuda_mprts_check_ordered_total(struct psc_mparticles *mprts, int *n_prts_by_patch)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   cuda_mprts_find_block_indices_2_total(mprts);
 

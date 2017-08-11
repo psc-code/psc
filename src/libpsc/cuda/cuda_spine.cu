@@ -63,8 +63,7 @@ mprts_bidx_to_key(int nr_total_blocks, unsigned int *d_off, unsigned int *d_bidx
 void
 cuda_mprts_bidx_to_key(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   unsigned int n_blocks = cmprts->n_blocks;
   
@@ -82,8 +81,7 @@ cuda_mprts_bidx_to_key(struct psc_mparticles *mprts)
 void
 cuda_mprts_bidx_to_key_gold(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   unsigned int n_blocks = cmprts->n_blocks;
   unsigned int n_blocks_per_patch = cmprts->n_blocks_per_patch;
@@ -134,8 +132,7 @@ mprts_count_received(int nr_total_blocks, unsigned int *d_alt_bidx, unsigned int
 void
 cuda_mprts_count_received(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   unsigned int n_blocks = cmprts->n_blocks;
   
@@ -146,8 +143,7 @@ cuda_mprts_count_received(struct psc_mparticles *mprts)
 void
 cuda_mprts_count_received_gold(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   int n_blocks = cmprts->n_blocks;
 
@@ -167,8 +163,7 @@ cuda_mprts_count_received_gold(struct psc_mparticles *mprts)
 void
 cuda_mprts_count_received_v1(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   int n_blocks = cmprts->n_blocks;
 
@@ -209,8 +204,7 @@ mprts_scan_scatter_received(unsigned int nr_recv, unsigned int nr_prts_prev,
 void
 cuda_mprts_scan_scatter_received(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   int nr_recv = cmprts->bnd.n_prts_recv;
 
@@ -231,8 +225,7 @@ cuda_mprts_scan_scatter_received(struct psc_mparticles *mprts)
 void
 cuda_mprts_scan_scatter_received_gold(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   unsigned int n_blocks = cmprts->n_blocks;
 
@@ -262,8 +255,7 @@ cuda_mprts_scan_scatter_received_gold(struct psc_mparticles *mprts)
 void
 cuda_mprts_spine_reduce(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   unsigned int n_blocks = cmprts->n_blocks;
   int *b_mx = cmprts->b_mx;
@@ -319,8 +311,7 @@ cuda_mprts_spine_reduce(struct psc_mparticles *mprts)
 void
 cuda_mprts_spine_reduce_gold(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   unsigned int n_blocks = cmprts->n_blocks;
   unsigned int n_blocks_per_patch = cmprts->n_blocks_per_patch;
@@ -383,8 +374,7 @@ cuda_mprts_sort_pairs_device(struct psc_mparticles *mprts)
     pr_D = prof_register("xchg_bottom_scan", 1., 0, 0);
   }
 
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   unsigned int n_blocks = cmprts->n_blocks;
 
@@ -458,8 +448,7 @@ cuda_mprts_sort_pairs_device(struct psc_mparticles *mprts)
 void
 cuda_mprts_sort_pairs_gold(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   unsigned int n_blocks_per_patch = cmprts->n_blocks_per_patch;
   unsigned int n_blocks = cmprts->n_blocks;
@@ -532,8 +521,7 @@ mprts_update_offsets(int nr_total_blocks, unsigned int *d_off, unsigned int *d_s
 void
 cuda_mprts_update_offsets(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   unsigned int n_blocks = cmprts->n_blocks;
   int dimGrid = (n_blocks + 1 + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
@@ -546,8 +534,7 @@ cuda_mprts_update_offsets(struct psc_mparticles *mprts)
 void
 cuda_mprts_update_offsets_gold(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   unsigned int n_blocks = cmprts->n_blocks;
 

@@ -78,8 +78,7 @@ _cuda_exclusive_scan_2(struct psc_particles *prts, unsigned int *d_bidx,
 void
 cuda_mprts_find_n_send(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   unsigned int n_blocks = cmprts->n_blocks;
 
@@ -121,9 +120,7 @@ mprts_reorder_send_by_id(unsigned int nr_prts_send, unsigned int *d_xchg_ids,
 void
 cuda_mprts_reorder_send_by_id(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
-  assert(cmprts);
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   if (cmprts->bnd.n_prts_send == 0) {
     return;
@@ -141,9 +138,7 @@ cuda_mprts_reorder_send_by_id(struct psc_mparticles *mprts)
 void
 cuda_mprts_reorder_send_by_id_gold(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
-  assert(cmprts);
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
   
   thrust::device_ptr<unsigned int> d_id(cmprts->d_id);
   thrust::device_ptr<float4> d_xi4(cmprts->d_xi4);
@@ -168,8 +163,7 @@ cuda_mprts_reorder_send_by_id_gold(struct psc_mparticles *mprts)
 void
 cuda_mprts_scan_send_buf_total_gold(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   unsigned int n_blocks = cmprts->n_blocks;
 
@@ -199,8 +193,7 @@ cuda_mprts_scan_send_buf_total_gold(struct psc_mparticles *mprts)
 void
 cuda_mprts_scan_send_buf_total(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   unsigned int n_blocks = cmprts->n_blocks;
   int *b_mx = cmprts->b_mx;

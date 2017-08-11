@@ -15,9 +15,7 @@ EXTERN_C void
 __particles_cuda_from_device(struct psc_mparticles *mprts, float4 *xi4, float4 *pxi4,
 			     unsigned int off, unsigned int n_prts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
-  assert(cmprts);
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   check(cudaMemcpy(xi4, cmprts->d_xi4 + off, n_prts * sizeof(*xi4),
 		   cudaMemcpyDeviceToHost));
@@ -44,8 +42,7 @@ cuda_copy_bidx_to_dev(struct psc_particles *prts, unsigned int *d_bidx, unsigned
 void
 __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   cmprts->bnd.h_bnd_cnt = new unsigned int[cmprts->n_blocks];
 
@@ -1303,8 +1300,7 @@ fields_device_pack3_yz(struct psc_mfields *mflds, int mb, int me)
 void
 cuda_mparticles_zero_h_bnd_cnt(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
   memset(cmprts->bnd.h_bnd_cnt, 0,
 	 cmprts->n_blocks * sizeof(*cmprts->bnd.h_bnd_cnt));
 }
