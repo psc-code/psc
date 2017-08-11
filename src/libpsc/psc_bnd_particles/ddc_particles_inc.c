@@ -5,6 +5,34 @@
 
 #define N_DIR (27)
 
+struct send_buf {
+  void *data;
+  unsigned int capacity;
+};
+
+static void
+send_buf_ctor(struct send_buf *buf)
+{
+  buf->capacity = 8;
+  buf->data = malloc(buf->capacity * sizeof(particle_t));
+}
+
+static void
+send_buf_dtor(struct send_buf *buf)
+{
+  free(buf->data);
+}
+
+static void
+send_buf_reserve(struct send_buf *buf, unsigned int new_capacity)
+{
+  if (new_capacity > buf->capacity) {
+    // reallocate a larger buffer, at least doubling buffer size each time
+    buf->capacity = MAX(new_capacity, 2 * buf->capacity);
+    buf->data = realloc(buf->data, buf->capacity * sizeof(particle_t));
+  }
+}
+
 struct ddcp_info_by_rank {
   struct ddcp_send_entry {
     int patch; // source patch (source rank is this rank)
@@ -30,12 +58,11 @@ struct ddcp_info_by_rank {
 };
 
 struct ddcp_nei {
-  void *send_buf;
+  struct send_buf send_buf;
   int n_send;
   int n_recv;
   int rank;
   int patch;
-  int send_buf_size;
 };
 
 struct ddcp_patch {
@@ -76,9 +103,8 @@ ddc_particles_create(struct mrc_domain *domain)
 	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
 	  int dir1 = mrc_ddc_dir2idx(dir);
 	  struct ddcp_nei *nei = &patch->nei[dir1];
-	  
-	  nei->send_buf_size = 8;
-	  nei->send_buf = malloc(nei->send_buf_size * sizeof(particle_t));
+
+	  send_buf_ctor(&nei->send_buf);
 	  nei->n_send = 0;
 
 	  if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
@@ -282,7 +308,7 @@ ddc_particles_destroy(struct ddc_particles *ddcp)
 	  int dir1 = mrc_ddc_dir2idx(dir);
 	  struct ddcp_nei *nei = &patch->nei[dir1];
 
-	  free(nei->send_buf);
+	  send_buf_dtor(&nei->send_buf);
 	}
       }
     }
@@ -317,14 +343,8 @@ ddc_particles_queue(struct ddc_particles *ddcp, struct ddcp_patch *patch,
 {
   struct ddcp_nei *nei = &patch->nei[mrc_ddc_dir2idx(dir)];
 
-  if (nei->n_send == nei->send_buf_size) {
-    // reallocate a larger buffer, doubling buffer size each time
-    assert(nei->send_buf_size > 0);
-    nei->send_buf_size *= 2;
-    nei->send_buf = realloc(nei->send_buf, 
-			    nei->send_buf_size * sizeof(particle_t));
-  }
-  memcpy(nei->send_buf + nei->n_send * sizeof(particle_t), p,
+  send_buf_reserve(&nei->send_buf, nei->n_send + 1);
+  memcpy(nei->send_buf.data + nei->n_send * sizeof(particle_t), p,
 	 sizeof(particle_t));
   nei->n_send++;
 }
@@ -457,7 +477,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
       struct ddcp_send_entry *se = &cinfo[r].send_entry[i];
       struct ddcp_patch *patch = &ddcp->patches[se->patch];
       struct ddcp_nei *nei = &patch->nei[se->dir1];
-      memcpy(p, nei->send_buf, cinfo[r].send_cnts[i] * sizeof(particle_t));
+      memcpy(p, nei->send_buf.data, cinfo[r].send_cnts[i] * sizeof(particle_t));
       p += cinfo[r].send_cnts[i] * sizeof(particle_t);
     }
     MPI_Isend(p0, sz * cinfo[r].n_send, MPI_PARTICLES_REAL,
@@ -492,7 +512,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
 	  }
 	  void *addr = ddcp_particles_get_addr(particles, p, patch->head);
 	  struct ddcp_nei *nei_send = &ddcp->patches[nei->patch].nei[dir1neg];
-	  memcpy(addr, nei_send->send_buf, nei_send->n_send * sizeof(particle_t));
+	  memcpy(addr, nei_send->send_buf.data, nei_send->n_send * sizeof(particle_t));
 	  patch->head += nei_send->n_send;
 	}
       }
