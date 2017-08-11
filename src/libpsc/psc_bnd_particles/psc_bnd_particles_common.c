@@ -358,16 +358,6 @@ psc_bnd_particles_sub_unsetup(struct psc_bnd_particles *bnd)
 
 // ======================================================================
 //
-// ----------------------------------------------------------------------
-// find_block_position
-
-static inline void
-find_block_position(int b_pos[3], particle_real_t xi[3], particle_real_t b_dxi[3])
-{
-  for (int d = 0; d < 3; d++) {
-    b_pos[d] = particle_real_fint(xi[d] * b_dxi[d]);
-  }
-}
 
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub_exchange_particles_prep
@@ -407,10 +397,10 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
   for (int i = 0; i < n_prts; i++) {
     particle_t *part = particle_iter_at(prts.begin, i);
     particle_real_t *xi = &part->xi; // slightly hacky relies on xi, yi, zi to be contiguous in the struct. FIXME
+    particle_real_t *pxi = &part->pxi;
     
     int b_pos[3];
-    find_block_position(b_pos, xi, b_dxi);
-    particle_real_t *pxi = &part->pxi;
+    particle_xi_get_block_pos(xi, b_dxi, b_pos);
     if (b_pos[0] >= 0 && b_pos[0] < b_mx[0] &&
 	b_pos[1] >= 0 && b_pos[1] < b_mx[1] &&
 	b_pos[2] >= 0 && b_pos[2] < b_mx[2]) {
