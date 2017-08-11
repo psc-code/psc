@@ -210,12 +210,12 @@ cuda_mprts_find_block_indices_3(struct psc_mparticles *mprts)
 		   nr_recv * sizeof(*cmprts->d_bidx),
 		   cudaMemcpyHostToDevice));
   // slight abuse of the now unused last part of spine_cnts
-  check(cudaMemcpy(mprts_cuda->d_bnd_spine_cnts + 10 * cmprts->n_blocks,
+  check(cudaMemcpy(cmprts->bnd.d_bnd_spine_cnts + 10 * cmprts->n_blocks,
 		   cmprts->bnd.h_bnd_cnt,
-		   cmprts->n_blocks * sizeof(*mprts_cuda->d_bnd_spine_cnts),
+		   cmprts->n_blocks * sizeof(*cmprts->bnd.d_bnd_spine_cnts),
 		   cudaMemcpyHostToDevice));
-  check(cudaMemcpy(mprts_cuda->d_alt_bidx + nr_prts_prev, cmprts->bnd.h_bnd_off,
-		   nr_recv * sizeof(*mprts_cuda->d_alt_bidx),
+  check(cudaMemcpy(cmprts->bnd.d_alt_bidx + nr_prts_prev, cmprts->bnd.h_bnd_off,
+		   nr_recv * sizeof(*cmprts->bnd.d_alt_bidx),
 		   cudaMemcpyHostToDevice));
 
   free(cmprts->bnd.h_bnd_idx);
@@ -261,7 +261,7 @@ cuda_mprts_reorder_send_buf_total(struct psc_mparticles *mprts)
   
   RUN_KERNEL(dimGrid, dimBlock,
 	     mprts_reorder_send_buf_total, (cmprts->n_prts, cmprts->n_blocks,
-					    cmprts->d_bidx, mprts_cuda->d_sums,
+					    cmprts->d_bidx, cmprts->bnd.d_sums,
 					    cmprts->d_xi4, cmprts->d_pxi4,
 					    xchg_xi4, xchg_pxi4));
 }

@@ -19,6 +19,12 @@ typedef float float_3[3];
 // cuda_mparticles_bnd
 
 struct cuda_mparticles_bnd {
+  unsigned int *d_alt_bidx;
+  unsigned int *d_sums; // FIXME, too many arrays, consolidation would be good
+
+  unsigned int *d_bnd_spine_cnts;
+  unsigned int *d_bnd_spine_sums;
+
   float4 *h_bnd_xi4, *h_bnd_pxi4;
   unsigned int *h_bnd_idx;
   unsigned int *h_bnd_off;

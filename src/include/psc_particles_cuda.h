@@ -20,12 +20,8 @@ struct cuda_bnd {
 struct psc_mparticles_cuda {
   struct cuda_mparticles *cmprts;
   
-  unsigned int *d_alt_bidx;
-  unsigned int *d_sums; // FIXME, too many arrays, consolidation would be good
   unsigned int nr_prts_send;
   unsigned int nr_prts_recv;
-  unsigned int *d_bnd_spine_cnts;
-  unsigned int *d_bnd_spine_sums;
 
   struct cuda_bnd *bnd;
 };
