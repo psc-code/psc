@@ -297,7 +297,6 @@ cuda_mprts_copy_from_dev(struct psc_mparticles *mprts)
 void
 cuda_mprts_convert_from_cuda(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   if (mprts->nr_patches == 0) {
@@ -307,9 +306,9 @@ cuda_mprts_convert_from_cuda(struct psc_mparticles *mprts)
   float4 *bnd_xi4 = cmprts->bnd.h_bnd_xi4;
   float4 *bnd_pxi4 = cmprts->bnd.h_bnd_pxi4;
   for (int p = 0; p < mprts->nr_patches; p++) {
-    mprts_cuda->bnd[p].prts = new particle_single_t[mprts_cuda->bnd[p].n_send];
-    for (int n = 0; n < mprts_cuda->bnd[p].n_send; n++) {
-      particle_single_t *prt = &mprts_cuda->bnd[p].prts[n];
+    cmprts->bnd.bpatch[p].prts = new particle_single_t[cmprts->bnd.bpatch[p].n_send];
+    for (int n = 0; n < cmprts->bnd.bpatch[p].n_send; n++) {
+      particle_single_t *prt = &cmprts->bnd.bpatch[p].prts[n];
       prt->xi      = bnd_xi4[n].x;
       prt->yi      = bnd_xi4[n].y;
       prt->zi      = bnd_xi4[n].z;
@@ -319,8 +318,8 @@ cuda_mprts_convert_from_cuda(struct psc_mparticles *mprts)
       prt->pzi     = bnd_pxi4[n].z;
       prt->qni_wni = bnd_pxi4[n].w;
     }
-    bnd_xi4 += mprts_cuda->bnd[p].n_send;
-    bnd_pxi4 += mprts_cuda->bnd[p].n_send;
+    bnd_xi4 += cmprts->bnd.bpatch[p].n_send;
+    bnd_pxi4 += cmprts->bnd.bpatch[p].n_send;
   }
   delete[] cmprts->bnd.h_bnd_xi4;
   delete[] cmprts->bnd.h_bnd_pxi4;
@@ -341,7 +340,7 @@ cuda_mprts_copy_to_dev(struct psc_mparticles *mprts)
 
   unsigned int nr_recv = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
-    nr_recv += mprts_cuda->bnd[p].n_recv;
+    nr_recv += cmprts->bnd.bpatch[p].n_recv;
   }
   assert(cmprts->n_prts + nr_recv <= cmprts->n_alloced);
 
@@ -371,7 +370,7 @@ cuda_mprts_sort(struct psc_mparticles *mprts, int *n_prts_by_patch)
   cuda_mprts_sort_pairs_device(mprts);
 
   for (int p = 0; p < mprts->nr_patches; p++) {
-    n_prts_by_patch[p] += mprts_cuda->bnd[p].n_recv - mprts_cuda->bnd[p].n_send;
+    n_prts_by_patch[p] += cmprts->bnd.bpatch[p].n_recv - cmprts->bnd.bpatch[p].n_send;
   }
   cmprts->n_prts -= cmprts->bnd.n_prts_send;
 }

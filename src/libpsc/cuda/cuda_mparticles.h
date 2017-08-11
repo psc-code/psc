@@ -32,6 +32,8 @@ struct cuda_mparticles_bnd {
   unsigned int *h_bnd_idx;
   unsigned int *h_bnd_off;
   unsigned int *h_bnd_cnt;
+
+  struct cuda_bnd *bpatch;
 };
 
 // ----------------------------------------------------------------------

@@ -93,7 +93,7 @@ cuda_mprts_find_n_send(struct psc_mparticles *mprts)
   unsigned int off = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
     unsigned int n_send = h_spine_sums[(p + 1) * cmprts->n_blocks_per_patch];
-    mprts_cuda->bnd[p].n_send = n_send - off;
+    cmprts->bnd.bpatch[p].n_send = n_send - off;
     off = n_send;
   }
   cmprts->bnd.n_prts_send = off;

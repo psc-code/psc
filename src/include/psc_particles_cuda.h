@@ -19,8 +19,6 @@ struct cuda_bnd {
 
 struct psc_mparticles_cuda {
   struct cuda_mparticles *cmprts;
-  
-  struct cuda_bnd *bnd;
 };
 
 #define psc_mparticles_cuda(prts) mrc_to_subobj(prts, struct psc_mparticles_cuda)

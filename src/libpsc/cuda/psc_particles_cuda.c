@@ -9,6 +9,8 @@
 #include "psc_push_particles.h"
 #include "particles_cuda.h"
 
+#include "cuda_mparticles.h" // FIXME
+
 #include <mrc_io.h>
 
 EXTERN_C void cuda_init(int rank);
@@ -308,11 +310,11 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
 
   cuda_base_init();
 
-  mprts_cuda->bnd = calloc(mprts->nr_patches, sizeof(*mprts_cuda->bnd));
-
   struct cuda_mparticles *cmprts = cuda_mparticles_create();
   mprts_cuda->cmprts = cmprts;
 
+  cmprts->bnd.bpatch = calloc(mprts->nr_patches, sizeof(*cmprts->bnd.bpatch));
+  
   psc_mparticles_setup_super(mprts);
 
   assert(mprts->nr_patches != 0);
@@ -382,7 +384,7 @@ psc_mparticles_cuda_destroy(struct psc_mparticles *mprts)
   cuda_mparticles_destroy(cmprts);
   mprts_cuda->cmprts = NULL;
 
-  free(mprts_cuda->bnd);
+  free(cmprts->bnd.bpatch);
 }
 
 // ----------------------------------------------------------------------
