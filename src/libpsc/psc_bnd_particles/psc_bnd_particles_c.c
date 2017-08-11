@@ -1,6 +1,5 @@
 
 #include "psc_bnd_particles_private.h"
-#include "../psc_bnd/ddc_particles.h"
 #include "psc_particles_as_c.h"
 
 #define NO_OPEN_BC

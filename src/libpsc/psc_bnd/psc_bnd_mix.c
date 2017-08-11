@@ -1,7 +1,6 @@
 
 #include "psc_bnd_private.h"
 #include "psc_bnd_fld.h"
-#include "ddc_particles.h"
 #include "psc_particles_mix.h"
 #include "psc_particles_single.h"
 #include "psc_particles_cuda.h"

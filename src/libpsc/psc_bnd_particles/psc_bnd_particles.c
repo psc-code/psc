@@ -1,8 +1,6 @@
 
 #include <psc_bnd_particles_private.h>
 
-#include "../psc_bnd/ddc_particles.h"
-
 #include <mrc_io.h>
 #include <mrc_ddc.h>
 #include <mrc_profile.h>
