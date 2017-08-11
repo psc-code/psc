@@ -379,8 +379,6 @@ psc_mparticles_cuda_destroy(struct psc_mparticles *mprts)
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
   assert(cmprts);
   
-  __psc_mparticles_cuda_free(mprts);
-
   cuda_mparticles_destroy(cmprts);
   mprts_cuda->cmprts = NULL;
 
@@ -396,8 +394,6 @@ psc_mparticles_cuda_reserve_all(struct psc_mparticles *mprts, int *n_prts_by_pat
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   cuda_mparticles_reserve_all(cmprts, (unsigned int *) n_prts_by_patch);
-
-  __psc_mparticles_cuda_setup(mprts);
 }
 
 #ifdef HAVE_LIBHDF5_HL

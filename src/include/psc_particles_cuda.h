@@ -23,10 +23,6 @@ struct psc_mparticles_cuda {
 
 #define psc_mparticles_cuda(prts) mrc_to_subobj(prts, struct psc_mparticles_cuda)
 
-#define CUDA_BND_S_NEW (9)
-#define CUDA_BND_S_OOB (10)
-#define CUDA_BND_STRIDE (10)
-
 static inline int
 particle_cuda_real_nint(particle_cuda_real_t x)
 {

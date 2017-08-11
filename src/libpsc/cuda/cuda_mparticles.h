@@ -15,6 +15,13 @@
 
 typedef float float_3[3];
 
+// ======================================================================
+// bnd
+
+#define CUDA_BND_S_NEW (9)
+#define CUDA_BND_S_OOB (10)
+#define CUDA_BND_STRIDE (10)
+
 // ----------------------------------------------------------------------
 // cuda_mparticles_bnd
 

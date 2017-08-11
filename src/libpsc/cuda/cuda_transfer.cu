@@ -39,35 +39,6 @@ cuda_copy_bidx_to_dev(struct psc_particles *prts, unsigned int *d_bidx, unsigned
 		   cudaMemcpyHostToDevice));
 }
 
-void
-__psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
-{
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-
-  cmprts->bnd.h_bnd_cnt = new unsigned int[cmprts->n_blocks];
-
-  check(cudaMalloc((void **) &cmprts->bnd.d_alt_bidx, cmprts->n_alloced * sizeof(unsigned int)));
-  check(cudaMalloc((void **) &cmprts->bnd.d_sums, cmprts->n_alloced * sizeof(unsigned int)));
-
-  check(cudaMalloc((void **) &cmprts->bnd.d_bnd_spine_cnts,
-		   (1 + cmprts->n_blocks * (CUDA_BND_STRIDE + 1)) * sizeof(unsigned int)));
-  check(cudaMalloc((void **) &cmprts->bnd.d_bnd_spine_sums,
-		   (1 + cmprts->n_blocks * (CUDA_BND_STRIDE + 1)) * sizeof(unsigned int)));
-}
-
-void
-__psc_mparticles_cuda_free(struct psc_mparticles *mprts)
-{
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-
-  delete[] cmprts->bnd.h_bnd_cnt;
-
-  check(cudaFree(cmprts->bnd.d_alt_bidx));
-  check(cudaFree(cmprts->bnd.d_sums));
-  check(cudaFree(cmprts->bnd.d_bnd_spine_cnts));
-  check(cudaFree(cmprts->bnd.d_bnd_spine_sums));
-}
-
 // ======================================================================
 // ======================================================================
 // fields
