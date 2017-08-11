@@ -432,10 +432,10 @@ psc_mparticles_cuda_write(struct psc_mparticles *mprts, struct mrc_io *io)
     int n_prts = n_prts_by_patch[p];
     ierr = H5LTset_attribute_int(pgroup, ".", "n_prts", &n_prts, 1); CE;
     if (n_prts > 0) {
-      float4 *xi4  = calloc(n_prts, sizeof(float4));
-      float4 *pxi4 = calloc(n_prts, sizeof(float4));
+      float_4 *xi4  = calloc(n_prts, sizeof(*xi4));
+      float_4 *pxi4 = calloc(n_prts, sizeof(*pxi4));
       
-      __particles_cuda_from_device(mprts, xi4, pxi4, off, n_prts);
+      cuda_mparticles_from_device(cmprts, xi4, pxi4, n_prts, off);
       
       hsize_t hdims[2] = { n_prts, 4 };
       ierr = H5LTmake_dataset_float(pgroup, "xi4", 2, hdims, (float *) xi4); CE;

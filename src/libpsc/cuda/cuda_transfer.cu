@@ -12,18 +12,6 @@
 #define MAX_BND_COMPONENTS (3)
 
 EXTERN_C void
-__particles_cuda_from_device(struct psc_mparticles *mprts, float4 *xi4, float4 *pxi4,
-			     unsigned int off, unsigned int n_prts)
-{
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-
-  check(cudaMemcpy(xi4, cmprts->d_xi4 + off, n_prts * sizeof(*xi4),
-		   cudaMemcpyDeviceToHost));
-  check(cudaMemcpy(pxi4, cmprts->d_pxi4 + off, n_prts * sizeof(*pxi4),
-		   cudaMemcpyDeviceToHost));
-}
-
-EXTERN_C void
 cuda_copy_bidx_from_dev(struct psc_particles *prts, unsigned int *h_bidx, unsigned int *d_bidx,
 			unsigned int n_prts)
 {

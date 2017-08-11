@@ -65,10 +65,6 @@ struct d_particle {
     d_p.pxi4[n].w = (pp).qni_wni;					\
 } while (0)
 
-EXTERN_C void __particles_cuda_from_device(struct psc_mparticles *mprts,
-					   float4 *xi4, float4 *pxi4, unsigned int off,
-					   unsigned int n_prts);
-
 EXTERN_C void __psc_mfields_cuda_setup(struct psc_mfields *mflds);
 EXTERN_C void __psc_mfields_cuda_destroy(struct psc_mfields *mflds);
 EXTERN_C void __fields_cuda_to_device(struct psc_fields *pf, real *h_flds, int mb, int me);
