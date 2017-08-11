@@ -126,10 +126,10 @@ mprts_convert_to_cuda(struct psc_bnd_particles *bnd, struct psc_mparticles *mprt
     nr_recv += patch->head;
   }
 
-  mprts_cuda->h_bnd_xi4  = malloc(nr_recv * sizeof(*mprts_cuda->h_bnd_xi4));
-  mprts_cuda->h_bnd_pxi4 = malloc(nr_recv * sizeof(*mprts_cuda->h_bnd_pxi4));
-  mprts_cuda->h_bnd_idx  = malloc(nr_recv * sizeof(*mprts_cuda->h_bnd_idx));
-  mprts_cuda->h_bnd_off  = malloc(nr_recv * sizeof(*mprts_cuda->h_bnd_off));
+  cmprts->bnd.h_bnd_xi4  = malloc(nr_recv * sizeof(*cmprts->bnd.h_bnd_xi4));
+  cmprts->bnd.h_bnd_pxi4 = malloc(nr_recv * sizeof(*cmprts->bnd.h_bnd_pxi4));
+  cmprts->bnd.h_bnd_idx  = malloc(nr_recv * sizeof(*cmprts->bnd.h_bnd_idx));
+  cmprts->bnd.h_bnd_off  = malloc(nr_recv * sizeof(*cmprts->bnd.h_bnd_off));
 
   cuda_mparticles_zero_h_bnd_cnt(mprts);
 
@@ -140,10 +140,10 @@ mprts_convert_to_cuda(struct psc_bnd_particles *bnd, struct psc_mparticles *mprt
     int n_recv = patch->head;
     mprts_cuda->bnd[p].n_recv = n_recv;
     
-    float4 *h_bnd_xi4 = mprts_cuda->h_bnd_xi4 + off;
-    float4 *h_bnd_pxi4 = mprts_cuda->h_bnd_pxi4 + off;
-    unsigned int *h_bnd_idx = mprts_cuda->h_bnd_idx + off;
-    unsigned int *h_bnd_off = mprts_cuda->h_bnd_off + off;
+    float4 *h_bnd_xi4 = cmprts->bnd.h_bnd_xi4 + off;
+    float4 *h_bnd_pxi4 = cmprts->bnd.h_bnd_pxi4 + off;
+    unsigned int *h_bnd_idx = cmprts->bnd.h_bnd_idx + off;
+    unsigned int *h_bnd_off = cmprts->bnd.h_bnd_off + off;
     for (int n = 0; n < n_recv; n++) {
       particle_single_t *prt = &mprts_cuda->bnd[p].prts[n];
       h_bnd_xi4[n].x  = prt->xi;
@@ -176,7 +176,7 @@ mprts_convert_to_cuda(struct psc_bnd_particles *bnd, struct psc_mparticles *mprt
       assert(b < cmprts->n_blocks_per_patch);
       b += p * cmprts->n_blocks_per_patch;
       h_bnd_idx[n] = b;
-      h_bnd_off[n] = mprts_cuda->h_bnd_cnt[b]++;
+      h_bnd_off[n] = cmprts->bnd.h_bnd_cnt[b]++;
     }
     free(mprts_cuda->bnd[p].prts);
     off += n_recv;
