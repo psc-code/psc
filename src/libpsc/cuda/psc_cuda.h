@@ -90,8 +90,6 @@ EXTERN_C void cuda_conducting_wall_J_lo_hi_y(int p, struct psc_fields *pf);
 /* EXTERN_C int  cuda_exclusive_scan(int p, struct psc_particles *prts, unsigned int *d_vals, */
 /* 				  unsigned int *d_sums); */
 /* EXTERN_C void cuda_reorder_and_offsets(struct psc_particles *prts, unsigned int *d_bidx, unsigned int *d_ids); */
-/* EXTERN_C void cuda_copy_bidx_from_dev(struct psc_particles *prts, unsigned int *h_bidx, unsigned int *d_bidx, */
-/* 				      unsigned int n_prts); */
 
 /* EXTERN_C void cuda_sort_patch(int p, struct psc_particles *prts); */
 /* EXTERN_C void cuda_sort_patch_by_cell(int p, struct psc_particles *prts); */

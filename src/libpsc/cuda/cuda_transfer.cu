@@ -11,22 +11,6 @@
 // FIXME, hardcoding is bad, needs to be consistent, etc...
 #define MAX_BND_COMPONENTS (3)
 
-EXTERN_C void
-cuda_copy_bidx_from_dev(struct psc_particles *prts, unsigned int *h_bidx, unsigned int *d_bidx,
-			unsigned int n_prts)
-{
-  check(cudaMemcpy(h_bidx, d_bidx, n_prts * sizeof(*h_bidx),
-		   cudaMemcpyDeviceToHost));
-}
-
-EXTERN_C void
-cuda_copy_bidx_to_dev(struct psc_particles *prts, unsigned int *d_bidx, unsigned int *h_bidx,
-		      unsigned int n_prts)
-{
-  check(cudaMemcpy(d_bidx, h_bidx, n_prts * sizeof(*d_bidx),
-		   cudaMemcpyHostToDevice));
-}
-
 // ======================================================================
 // ======================================================================
 // fields
@@ -1251,16 +1235,5 @@ fields_device_pack3_yz(struct psc_mfields *mflds, int mb, int me)
 
   thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
 #endif
-}
-
-// ----------------------------------------------------------------------
-// cuda_mparticles_zero_h_bnd_cnt
-
-void
-cuda_mparticles_zero_h_bnd_cnt(struct psc_mparticles *mprts)
-{
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-  memset(cmprts->bnd.h_bnd_cnt, 0,
-	 cmprts->n_blocks * sizeof(*cmprts->bnd.h_bnd_cnt));
 }
 

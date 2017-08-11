@@ -43,6 +43,4 @@ EXTERN_C void cuda_mprts_sort_pairs_device(struct psc_mparticles *mprts);
 
 // FIXME, resolve this header mess eventually
 
-EXTERN_C void cuda_mparticles_zero_h_bnd_cnt(struct psc_mparticles *mprts);
-
 #endif

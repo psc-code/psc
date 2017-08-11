@@ -363,38 +363,3 @@ cuda_mprts_sort(struct psc_mparticles *mprts, int *n_prts_by_patch)
   cmprts->n_prts -= cmprts->bnd.n_prts_send;
 }
 
-// ======================================================================
-// cuda_mprts_check_ordered_total
-
-#if 0
-
-void
-cuda_mprts_check_ordered_total(struct psc_mparticles *mprts, int *n_prts_by_patch)
-{
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-
-  cuda_mprts_find_block_indices_2_total(mprts);
-
-  unsigned int last = 0;
-  unsigned int off = 0;
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    int n_prts = n_prts_by_patch[p];
-    unsigned int *bidx = new unsigned int[n_prts];
-    cuda_copy_bidx_from_dev(prts, bidx, cmprts->d_bidx + off, n_prts);
-    
-    for (int n = 0; n < n_prts; n++) {
-      if (!(bidx[n] >= last && bidx[n] < cmprts->n_blocks)) {
-	mprintf("p = %d, n = %d bidx = %d last = %d\n", p, n, bidx[n], last);
-	assert(0);
-      }
-      last = bidx[n];
-    }
-
-    delete[] bidx;
-
-    off += n_prts;
-  }
-}
-
-#endif
