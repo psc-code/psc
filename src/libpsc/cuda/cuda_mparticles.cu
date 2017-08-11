@@ -55,7 +55,6 @@ cuda_mparticles_setup(struct cuda_mparticles *cmprts)
 {
   cudaError_t ierr;
 
-  ierr = cudaMalloc(&cmprts->d_n_prts_by_patch, cmprts->n_patches * sizeof(unsigned int)); cudaCheck(ierr);
   ierr = cudaMalloc(&cmprts->d_off, (cmprts->n_blocks + 1) * sizeof(*cmprts->d_off)); cudaCheck(ierr);
   ierr = cudaMemset(cmprts->d_off, 0, (cmprts->n_blocks + 1) * sizeof(*cmprts->d_off)); cudaCheck(ierr);
 }
@@ -84,7 +83,6 @@ cuda_mparticles_destroy(struct cuda_mparticles *cmprts)
 {
   cudaError_t ierr;
 
-  ierr = cudaFree(cmprts->d_n_prts_by_patch); cudaCheck(ierr);
   ierr = cudaFree(cmprts->d_off); cudaCheck(ierr);
 
   cuda_mparticles_free_particle_mem(cmprts);
@@ -317,6 +315,9 @@ cuda_mparticles_find_block_indices_ids(struct cuda_mparticles *cmprts)
     return;
   }
 
+  // OPT: if we didn't need max_n_prts, we wouldn't have to get the
+  // sizes / offsets at all, and it seems likely we could do a better
+  // job here in general
   unsigned int n_prts_by_patch[cmprts->n_patches];
   cuda_mparticles_get_size_all(cmprts, n_prts_by_patch);
   

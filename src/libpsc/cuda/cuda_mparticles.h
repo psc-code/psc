@@ -25,9 +25,6 @@ struct cuda_mparticles {
   unsigned int *d_bidx;           // block index (incl patch) per particle
   unsigned int *d_id;             // particle id for sorting
 
-  // per patch
-  int *d_n_prts_by_patch;         // # of particles per batch
-
   // per block
   unsigned int *d_off;            // particles per block
                                   // are at indices [offsets[block] .. offsets[block+1]-1[
