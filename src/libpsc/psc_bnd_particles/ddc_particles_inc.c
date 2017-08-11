@@ -8,7 +8,7 @@
 
 static struct ddc_particles *
 ddc_particles_create(struct mrc_domain *domain, int size_of_particle,
-		     int size_of_real, MPI_Datatype mpi_type_real,
+		     MPI_Datatype mpi_type_real,
 		     void  (*realloc)(void *, int, int),
 		     void *(*get_addr)(void *, int, int))
 {
@@ -18,7 +18,6 @@ ddc_particles_create(struct mrc_domain *domain, int size_of_particle,
   ddcp->domain = domain;
   mrc_domain_get_patches(domain, &ddcp->nr_patches);
   ddcp->size_of_particle = size_of_particle;
-  ddcp->size_of_real = size_of_real;
   ddcp->mpi_type_real = mpi_type_real;
   ddcp->realloc = realloc;
   ddcp->get_addr = get_addr;
@@ -302,8 +301,8 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
   MPI_Comm_size(comm, &size);
 
   // FIXME, this is assuming our struct is equiv to an array of real_type
-  assert(ddcp->size_of_particle % ddcp->size_of_real == 0);
-  int sz = ddcp->size_of_particle / ddcp->size_of_real;
+  assert(ddcp->size_of_particle % sizeof(particle_real_t) == 0);
+  int sz = ddcp->size_of_particle / sizeof(particle_real_t);
   int dir[3];
 
   struct ddcp_info_by_rank *cinfo = ddcp->cinfo;

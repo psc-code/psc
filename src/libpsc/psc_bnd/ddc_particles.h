@@ -49,7 +49,6 @@ struct ddc_particles {
   int nr_patches;
   struct ddcp_patch *patches;
   int size_of_particle;
-  int size_of_real;
   MPI_Datatype mpi_type_real;
   void  (*realloc)(void *mparticles, int p, int new_nr_particles);
   void *(*get_addr)(void *mparticles, int p, int n);
