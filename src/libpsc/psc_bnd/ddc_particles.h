@@ -48,8 +48,6 @@ struct ddcp_patch {
 struct ddc_particles {
   int nr_patches;
   struct ddcp_patch *patches;
-  void  (*realloc)(void *mparticles, int p, int new_nr_particles);
-  void *(*get_addr)(void *mparticles, int p, int n);
   struct ddcp_info_by_rank *by_rank;
   struct ddcp_info_by_rank *cinfo; // compressed info
   int n_ranks;

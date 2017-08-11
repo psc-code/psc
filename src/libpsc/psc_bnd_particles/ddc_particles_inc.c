@@ -7,17 +7,12 @@
 // ddc_particles_create
 
 static struct ddc_particles *
-ddc_particles_create(struct mrc_domain *domain,
-		     void  (*realloc)(void *, int, int),
-		     void *(*get_addr)(void *, int, int))
+ddc_particles_create(struct mrc_domain *domain)
 {
-  struct ddc_particles *ddcp = malloc(sizeof(*ddcp));
-  memset(ddcp, 0, sizeof(*ddcp));
+  struct ddc_particles *ddcp = calloc(1, sizeof(*ddcp));
 
   ddcp->domain = domain;
   mrc_domain_get_patches(domain, &ddcp->nr_patches);
-  ddcp->realloc = realloc;
-  ddcp->get_addr = get_addr;
   ddcp->patches = calloc(ddcp->nr_patches, sizeof(*ddcp->patches));
   for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
@@ -379,7 +374,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
   // realloc
   for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
-    ddcp->realloc(particles, p, patch->head + patch->n_recv);
+    ddcp_particles_realloc(particles, p, patch->head + patch->n_recv);
   }
 
   // leave room for receives (FIXME? just change order)
@@ -442,7 +437,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
 	  if (nei->rank != rank) {
 	    continue;
 	  }
-	  void *addr = ddcp->get_addr(particles, p, patch->head);
+	  void *addr = ddcp_particles_get_addr(particles, p, patch->head);
 	  struct ddcp_nei *nei_send = &ddcp->patches[nei->patch].nei[dir1neg];
 	  memcpy(addr, nei_send->send_buf, nei_send->n_send * sizeof(particle_t));
 	  patch->head += nei_send->n_send;
@@ -468,7 +463,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
     for (int i = 0; i < cinfo[r].n_recv_entries; i++) {
       struct ddcp_recv_entry *re = &cinfo[r].recv_entry[i];
       struct ddcp_patch *patch = &ddcp->patches[re->patch];
-      void *addr = ddcp->get_addr(particles, re->patch, patch->head);
+      void *addr = ddcp_particles_get_addr(particles, re->patch, patch->head);
       memcpy(addr, p, cinfo[r].recv_cnts[i] * sizeof(particle_t));
       patch->head += cinfo[r].recv_cnts[i];
       p += cinfo[r].recv_cnts[i] * sizeof(particle_t);
