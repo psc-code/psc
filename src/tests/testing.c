@@ -71,12 +71,12 @@ psc_save_particles_ref(struct psc *psc, struct psc_mparticles *mprts_base)
 {
   if (!particles_ref) {
     int n_prts_by_patch[psc->nr_patches];
-    psc_mparticles_n_prts_all(mprts_base, n_prts_by_patch);
+    psc_mparticles_get_size_all(mprts_base, n_prts_by_patch);
 
     particles_ref = psc_mparticles_create(MPI_COMM_WORLD);
-    psc_mparticles_set_domain(particles_ref, psc->mrc_domain);
+    psc_mparticles_set_param_int(particles_ref, "nr_patches", psc->nr_patches);
     psc_mparticles_setup(particles_ref);
-    psc_mparticles_reserve(particles_ref, n_prts_by_patch);
+    psc_mparticles_reserve_all(particles_ref, n_prts_by_patch);
   }
 
   struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, "c", 0);

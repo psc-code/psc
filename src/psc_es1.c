@@ -174,7 +174,6 @@ static void
 psc_es1_init_species(struct psc *psc, int kind, struct psc_es1_species *s,
 		     struct psc_mparticles *mprts, int p, int *p_il1)
 {
-  int il1 = *p_il1;
   int *ldims = psc->patch[p].ldims;
   int n = ldims[0] * ldims[1] * ldims[2] * psc->prm.nicell; // FIXME
   double l = psc->domain.length[2];
