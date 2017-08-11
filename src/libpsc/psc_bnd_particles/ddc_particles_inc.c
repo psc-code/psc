@@ -5,32 +5,56 @@
 
 #define N_DIR (27)
 
-struct send_buf {
+struct particle_buf {
   void *data;
+  unsigned int size;
   unsigned int capacity;
 };
 
 static void
-send_buf_ctor(struct send_buf *buf)
+particle_buf_ctor(struct particle_buf *buf)
 {
   buf->capacity = 8;
   buf->data = malloc(buf->capacity * sizeof(particle_t));
+  buf->size = 0;
 }
 
 static void
-send_buf_dtor(struct send_buf *buf)
+particle_buf_dtor(struct particle_buf *buf)
 {
   free(buf->data);
 }
 
+static unsigned int
+particle_buf_size(struct particle_buf *buf)
+{
+  return buf->size;
+}
+
 static void
-send_buf_reserve(struct send_buf *buf, unsigned int new_capacity)
+particle_buf_resize(struct particle_buf *buf, unsigned int size)
+{
+  assert(size <= buf->capacity);
+  buf->size = size;
+}
+
+static void
+particle_buf_reserve(struct particle_buf *buf, unsigned int new_capacity)
 {
   if (new_capacity > buf->capacity) {
     // reallocate a larger buffer, at least doubling buffer size each time
     buf->capacity = MAX(new_capacity, 2 * buf->capacity);
     buf->data = realloc(buf->data, buf->capacity * sizeof(particle_t));
   }
+}
+
+static void
+particle_buf_push_back(struct particle_buf *buf, void *p)
+{
+  particle_buf_reserve(buf, buf->size + 1);
+  memcpy(buf->data + buf->size * sizeof(particle_t), p,
+	 sizeof(particle_t));
+  buf->size++;
 }
 
 struct ddcp_info_by_rank {
@@ -58,8 +82,7 @@ struct ddcp_info_by_rank {
 };
 
 struct ddcp_nei {
-  struct send_buf send_buf;
-  int n_send;
+  struct particle_buf send_buf;
   int n_recv;
   int rank;
   int patch;
@@ -104,8 +127,7 @@ ddc_particles_create(struct mrc_domain *domain)
 	  int dir1 = mrc_ddc_dir2idx(dir);
 	  struct ddcp_nei *nei = &patch->nei[dir1];
 
-	  send_buf_ctor(&nei->send_buf);
-	  nei->n_send = 0;
+	  particle_buf_ctor(&nei->send_buf);
 
 	  if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
 	    // use this one as buffer for particles that stay in the same patch
@@ -308,7 +330,7 @@ ddc_particles_destroy(struct ddc_particles *ddcp)
 	  int dir1 = mrc_ddc_dir2idx(dir);
 	  struct ddcp_nei *nei = &patch->nei[dir1];
 
-	  send_buf_dtor(&nei->send_buf);
+	  particle_buf_dtor(&nei->send_buf);
 	}
       }
     }
@@ -343,10 +365,7 @@ ddc_particles_queue(struct ddc_particles *ddcp, struct ddcp_patch *patch,
 {
   struct ddcp_nei *nei = &patch->nei[mrc_ddc_dir2idx(dir)];
 
-  send_buf_reserve(&nei->send_buf, nei->n_send + 1);
-  memcpy(nei->send_buf.data + nei->n_send * sizeof(particle_t), p,
-	 sizeof(particle_t));
-  nei->n_send++;
+  particle_buf_push_back(&nei->send_buf, p);
 }
 
 // ----------------------------------------------------------------------
@@ -383,8 +402,9 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
       struct ddcp_send_entry *se = &cinfo[r].send_entry[i];
       struct ddcp_patch *patch = &ddcp->patches[se->patch];
       struct ddcp_nei *nei = &patch->nei[se->dir1];
-      cinfo[r].send_cnts[i] = nei->n_send;
-      cinfo[r].n_send += nei->n_send;
+      unsigned int n_send = particle_buf_size(&nei->send_buf);
+      cinfo[r].send_cnts[i] = n_send;
+      cinfo[r].n_send += n_send;
     }
     MPI_Isend(cinfo[r].send_cnts, cinfo[r].n_send_entries,
 	      MPI_INT, cinfo[r].rank, 222, comm, &ddcp->send_reqs[r]);
@@ -404,7 +424,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
 	  }
 	  int dir1neg = mrc_ddc_dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
 	  struct ddcp_nei *nei_send = &ddcp->patches[nei->patch].nei[dir1neg];
-	  patch->n_recv += nei_send->n_send;
+	  patch->n_recv += particle_buf_size(&nei_send->send_buf);
 	}
       }
     }
@@ -512,8 +532,9 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
 	  }
 	  void *addr = ddcp_particles_get_addr(particles, p, patch->head);
 	  struct ddcp_nei *nei_send = &ddcp->patches[nei->patch].nei[dir1neg];
-	  memcpy(addr, nei_send->send_buf.data, nei_send->n_send * sizeof(particle_t));
-	  patch->head += nei_send->n_send;
+	  int n_send_nei = particle_buf_size(&nei_send->send_buf);
+	  memcpy(addr, nei_send->send_buf.data, n_send_nei * sizeof(particle_t));
+	  patch->head += n_send_nei;
 	}
       }
     }

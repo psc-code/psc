@@ -80,7 +80,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
   struct ddcp_patch *patch = &ddcp->patches[p];
   patch->head = 0;
   for (int dir1 = 0; dir1 < N_DIR; dir1++) {
-    patch->nei[dir1].n_send = 0;
+    particle_buf_resize(&patch->nei[dir1].send_buf, 0);
   }
   unsigned int n_prts = particle_range_size(prts);
   for (int i = 0; i < n_prts; i++) {

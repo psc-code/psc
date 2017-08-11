@@ -20,7 +20,7 @@ exchange_particles_pre(struct psc_bnd_particles *bnd, struct psc_mparticles *mpr
   struct ddcp_patch *ddcp_patch = &ddcp->patches[p];
   ddcp_patch->head = get_head(mprts, p);
   for (int dir1 = 0; dir1 < N_DIR; dir1++) {
-    ddcp_patch->nei[dir1].n_send = 0;
+    particle_buf_resize(&ddcp_patch->nei[dir1].send_buf, 0);
   }
   int n_end = ddcp_patch->head + n_send;
   for (int n = ddcp_patch->head; n < n_end; n++) {
