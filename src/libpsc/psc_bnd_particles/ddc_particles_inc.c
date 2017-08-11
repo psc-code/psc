@@ -5,56 +5,61 @@
 
 #define N_DIR (27)
 
-struct particle_buf {
-  void *data;
-  unsigned int size;
-  unsigned int capacity;
-};
+typedef struct {
+  particle_t *m_data;
+  unsigned int m_size;
+  unsigned int m_capacity;
+} particle_buf_t;
 
 static void
-particle_buf_ctor(struct particle_buf *buf)
+particle_buf_ctor(particle_buf_t *buf)
 {
-  buf->capacity = 8;
-  buf->data = malloc(buf->capacity * sizeof(particle_t));
-  buf->size = 0;
+  buf->m_capacity = 8;
+  buf->m_data = malloc(buf->m_capacity * sizeof(*buf->m_data));
+  buf->m_size = 0;
 }
 
 static void
-particle_buf_dtor(struct particle_buf *buf)
+particle_buf_dtor(particle_buf_t *buf)
 {
-  free(buf->data);
+  free(buf->m_data);
 }
 
 static unsigned int
-particle_buf_size(struct particle_buf *buf)
+particle_buf_size(particle_buf_t *buf)
 {
-  return buf->size;
+  return buf->m_size;
 }
 
 static void
-particle_buf_resize(struct particle_buf *buf, unsigned int size)
+particle_buf_resize(particle_buf_t *buf, unsigned int size)
 {
-  assert(size <= buf->capacity);
-  buf->size = size;
+  assert(size <= buf->m_capacity);
+  buf->m_size = size;
 }
 
 static void
-particle_buf_reserve(struct particle_buf *buf, unsigned int new_capacity)
+particle_buf_reserve(particle_buf_t *buf, unsigned int new_capacity)
 {
-  if (new_capacity > buf->capacity) {
+  if (new_capacity > buf->m_capacity) {
     // reallocate a larger buffer, at least doubling buffer size each time
-    buf->capacity = MAX(new_capacity, 2 * buf->capacity);
-    buf->data = realloc(buf->data, buf->capacity * sizeof(particle_t));
+    buf->m_capacity = MAX(new_capacity, 2 * buf->m_capacity);
+    buf->m_data = realloc(buf->m_data, buf->m_capacity * sizeof(*buf->m_data));
   }
 }
 
 static void
-particle_buf_push_back(struct particle_buf *buf, void *p)
+particle_buf_push_back(particle_buf_t *buf, particle_t *p)
 {
-  particle_buf_reserve(buf, buf->size + 1);
-  memcpy(buf->data + buf->size * sizeof(particle_t), p,
-	 sizeof(particle_t));
-  buf->size++;
+  particle_buf_reserve(buf, buf->m_size + 1);
+  buf->m_data[buf->m_size] = *p;
+  buf->m_size++;
+}
+
+static particle_t *
+particle_buf_begin(particle_buf_t *buf)
+{
+  return buf->m_data;
 }
 
 struct ddcp_info_by_rank {
@@ -82,7 +87,7 @@ struct ddcp_info_by_rank {
 };
 
 struct ddcp_nei {
-  struct particle_buf send_buf;
+  particle_buf_t send_buf;
   int n_recv;
   int rank;
   int patch;
@@ -486,37 +491,41 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
   }
   
   // post sends
-  void *send_buf = malloc(n_send * sizeof(particle_t));
-  void *p = send_buf;
+  particle_buf_t send_buf;
+  particle_buf_ctor(&send_buf);
+  particle_buf_reserve(&send_buf, n_send);
+  particle_t *it = particle_buf_begin(&send_buf);
   for (int r = 0; r < ddcp->n_ranks; r++) {
     if (cinfo[r].n_send == 0)
       continue;
 
-    void *p0 = p;
+    particle_t *it0 = it;
     for (int i = 0; i < cinfo[r].n_send_entries; i++) {
       struct ddcp_send_entry *se = &cinfo[r].send_entry[i];
       struct ddcp_patch *patch = &ddcp->patches[se->patch];
       struct ddcp_nei *nei = &patch->nei[se->dir1];
-      memcpy(p, nei->send_buf.data, cinfo[r].send_cnts[i] * sizeof(particle_t));
-      p += cinfo[r].send_cnts[i] * sizeof(particle_t);
+      memcpy(it, particle_buf_begin(&nei->send_buf), cinfo[r].send_cnts[i] * sizeof(particle_t));
+      it += cinfo[r].send_cnts[i];
     }
-    MPI_Isend(p0, sz * cinfo[r].n_send, MPI_PARTICLES_REAL,
+    MPI_Isend(it0, sz * cinfo[r].n_send, MPI_PARTICLES_REAL,
 	      cinfo[r].rank, 1, comm, &ddcp->send_reqs[r]);
   }
-  assert(p == send_buf + n_send * sizeof(particle_t));
+  assert(it == particle_buf_begin(&send_buf) + n_send);
 
   // post receives
-  void *recv_buf = malloc(n_recv * sizeof(particle_t));
-  p = recv_buf;
+  particle_buf_t recv_buf;
+  particle_buf_ctor(&recv_buf);
+  particle_buf_reserve(&recv_buf, n_recv);
+  it = particle_buf_begin(&recv_buf);
   for (int r = 0; r < ddcp->n_ranks; r++) {
     if (cinfo[r].n_recv == 0)
       continue;
 
-    MPI_Irecv(p, sz * cinfo[r].n_recv, MPI_PARTICLES_REAL,
+    MPI_Irecv(it, sz * cinfo[r].n_recv, MPI_PARTICLES_REAL,
 	      cinfo[r].rank, 1, comm, &ddcp->recv_reqs[r]);
-    p += cinfo[r].n_recv * sizeof(particle_t);
+    it += cinfo[r].n_recv;
   }
-  assert(p == recv_buf + n_recv * sizeof(particle_t));
+  assert(it == particle_buf_begin(&recv_buf) + n_recv);
 
   // overlap: copy particles from local proc
   for (int p = 0; p < ddcp->nr_patches; p++) {
@@ -533,7 +542,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
 	  void *addr = ddcp_particles_get_addr(particles, p, patch->head);
 	  struct ddcp_nei *nei_send = &ddcp->patches[nei->patch].nei[dir1neg];
 	  int n_send_nei = particle_buf_size(&nei_send->send_buf);
-	  memcpy(addr, nei_send->send_buf.data, n_send_nei * sizeof(particle_t));
+	  memcpy(addr, particle_buf_begin(&nei_send->send_buf), n_send_nei * sizeof(particle_t));
 	  patch->head += n_send_nei;
 	}
       }
@@ -552,18 +561,18 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
     patch->head -= patch->n_recv;
   }
 
-  p = recv_buf;
+  it = particle_buf_begin(&recv_buf);
   for (int r = 0; r < ddcp->n_ranks; r++) {
     for (int i = 0; i < cinfo[r].n_recv_entries; i++) {
       struct ddcp_recv_entry *re = &cinfo[r].recv_entry[i];
       struct ddcp_patch *patch = &ddcp->patches[re->patch];
       void *addr = ddcp_particles_get_addr(particles, re->patch, patch->head);
-      memcpy(addr, p, cinfo[r].recv_cnts[i] * sizeof(particle_t));
+      memcpy(addr, it, cinfo[r].recv_cnts[i] * sizeof(particle_t));
       patch->head += cinfo[r].recv_cnts[i];
-      p += cinfo[r].recv_cnts[i] * sizeof(particle_t);
+      it += cinfo[r].recv_cnts[i];
     }
   }
-  assert(p == recv_buf + n_recv * sizeof(particle_t));
+  assert(it == particle_buf_begin(&recv_buf) + n_recv);
 
   for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
@@ -571,7 +580,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
   }
   free(old_head);
 
-  free(send_buf);
-  free(recv_buf);
+  particle_buf_dtor(&send_buf);
+  particle_buf_dtor(&recv_buf);
 }
 
