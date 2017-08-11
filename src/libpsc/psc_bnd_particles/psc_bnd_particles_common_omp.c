@@ -29,7 +29,7 @@ ddcp_particles_get_addr(void *_ctx, int p, int n)
 static void
 psc_bnd_particles_sub_setup(struct psc_bnd_particles *bnd)
 {
-  bnd->ddcp = ddc_particles_create(bnd->psc->mrc_domain, sizeof(particle_t),
+  bnd->ddcp = ddc_particles_create(bnd->psc->mrc_domain,
 				   MPI_PARTICLES_REAL,
 				   ddcp_particles_realloc,
 				   ddcp_particles_get_addr);
