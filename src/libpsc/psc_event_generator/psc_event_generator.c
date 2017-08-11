@@ -6,12 +6,11 @@
 
 void
 psc_event_generator_run(struct psc_event_generator *gen,
-			struct psc_mparticles *mparticles, mfields_base_t *mflds,
-			mphotons_t *mphotons)
+			struct psc_mparticles *mparticles, mfields_base_t *mflds)
 {
   struct psc_event_generator_ops *ops = psc_event_generator_ops(gen);
   assert(ops->run);
-  ops->run(gen, mparticles, mflds, mphotons);
+  ops->run(gen, mparticles, mflds);
 }
 
 // ======================================================================
@@ -21,7 +20,6 @@ static void
 psc_event_generator_init()
 {
   mrc_class_register_subclass(&mrc_class_psc_event_generator, &psc_event_generator_none_ops);
-  mrc_class_register_subclass(&mrc_class_psc_event_generator, &psc_event_generator_demo_ops);
 }
 
 // ======================================================================

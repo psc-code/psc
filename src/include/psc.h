@@ -27,8 +27,6 @@ int cell_map_3to1(struct cell_map *map, int i[3]);
 void cell_map_1to3(struct cell_map *map, int idx, int i[3]);
 void cell_map_free(struct cell_map *map);
 
-#include "psc_photons.h"
-
 // ----------------------------------------------------------------------
 
 #define FIELDS_FORTRAN 1
@@ -180,11 +178,6 @@ struct psc_domain {
   bool use_pml;		///<Enables or disables PML
 };
 
-// FIXME, turn into mrc_obj
-void psc_push_photons_run(mphotons_t *mphotons);
-// FIXME, turn into mrc_obj
-void psc_photon_generator_run(mphotons_t *mphotons);
-
 // ----------------------------------------------------------------------
 // general info / parameters for the code
 
@@ -235,7 +228,6 @@ struct psc {
   struct psc_push_fields *push_fields;		///< field pusher
   struct psc_bnd *bnd;				///< boundaries
   struct psc_bnd_particles *bnd_particles;	///< boundary particlesxs
-  struct psc_bnd_photons *bnd_photons;		///< boundary photons
   struct psc_collision *collision;		///< collision operator
   struct psc_randomize *randomize;		///< randomizer
   struct psc_sort *sort;			///< sort operator
@@ -243,7 +235,6 @@ struct psc {
   struct psc_diag *diag;                	///< timeseries diagnostics
   struct psc_output_fields_collection *output_fields_collection; ///< collection of psc_output_fields
   struct psc_output_particles *output_particles;///< particle output
-  struct psc_output_photons *output_photons;    ///< particle output
   struct psc_event_generator *event_generator;	///< event generator
   struct psc_balance *balance;                  ///< rebalancer
   struct psc_checks *checks;                    ///< run-time checks
@@ -268,7 +259,6 @@ struct psc {
 
   struct psc_mparticles *particles;	///< All the particles, indexed by their containing patch
   mfields_base_t *flds;	///< The fields.
-  mphotons_t *mphotons;
 
   ///The domain partitioner.
   ///
@@ -301,13 +291,6 @@ struct psc_particle_npt {
   int particles_per_cell; ///< desired number of particles per cell per unit density. If not specified, the global nicell is used.
 };
 
-struct psc_photon_np {
-  double n; ///< density
-  double k[3]; ///< wave number
-  double sigma_k[3]; ///< width of Gaussian in momentum space
-  int n_in_cell; ///< nr of quasi-particles in this cell
-};
-
 struct psc_ops {
   MRC_SUBCLASS_OPS(struct psc);
   void (*setup_particles)(struct psc *psc, int *nr_particles_by_patch, bool count_only);
@@ -315,7 +298,6 @@ struct psc_ops {
 		   struct psc_particle_npt *npt);
   void (*setup_fields)(struct psc *psc, mfields_base_t *flds);
   double (*init_field)(struct psc *psc, double x[3], int m);
-  void (*init_photon_np)(struct psc *psc, double x[3], struct psc_photon_np *np);
   void (*integrate)(struct psc *psc);
   void (*step)(struct psc *psc);
   void (*output)(struct psc *psc);

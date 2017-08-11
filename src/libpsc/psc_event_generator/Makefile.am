@@ -5,5 +5,4 @@ noinst_LTLIBRARIES = libsubdir.la
 
 libsubdir_la_SOURCES = \
 	psc_event_generator.c \
-	psc_event_generator_none.c \
-	psc_event_generator_demo.c
+	psc_event_generator_none.c

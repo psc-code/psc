@@ -246,8 +246,7 @@ seed_patch(struct psc *psc, struct psc_mparticles *mprts, int p)
 
 void
 psc_event_generator_bohm_run(struct psc_event_generator *gen,
-			     struct psc_mparticles *mprts, mfields_base_t *mflds,
-			     mphotons_t *mphotons)
+			     struct psc_mparticles *mprts, mfields_base_t *mflds)
 {
   psc_foreach_patch(ppsc, p) {
     seed_patch(ppsc, mprts, p);

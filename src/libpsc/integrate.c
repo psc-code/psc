@@ -3,14 +3,12 @@
 #include "psc_push_particles.h"
 #include "psc_push_fields.h"
 #include "psc_bnd_particles.h"
-#include "psc_bnd_photons.h"
 #include "psc_collision.h"
 #include "psc_randomize.h"
 #include "psc_sort.h"
 #include "psc_diag.h"
 #include "psc_output_fields_collection.h"
 #include "psc_output_particles.h"
-#include "psc_output_photons.h"
 #include "psc_event_generator.h"
 #include "psc_balance.h"
 #include "psc_checks.h"
@@ -59,7 +57,6 @@ psc_output_default(struct psc *psc)
   psc_diag_run(psc->diag, psc);
   psc_output_fields_collection_run(psc->output_fields_collection, psc->flds, psc->particles);
   psc_output_particles_run(psc->output_particles, psc->particles);
-  psc_output_photons_run(psc->output_photons, psc->mphotons);
 }
 
 void
@@ -116,7 +113,7 @@ psc_step(struct psc *psc)
 
   psc_checks_gauss(psc->checks, psc);
 
-  psc_bnd_particles_open_calc_moments(psc->bnd_particles, psc->particles);
+  //psc_bnd_particles_open_calc_moments(psc->bnd_particles, psc->particles);
 
   // particle propagation n*dt -> (n+1.0)*dt
   psc_checks_continuity_before_particle_push(psc->checks, psc);
@@ -127,9 +124,7 @@ psc_step(struct psc *psc)
 
   psc_bnd_particles_exchange(psc->bnd_particles, psc->particles);
   
-  psc_push_photons_run(psc->mphotons);
-  psc_bnd_photons_exchange(psc->bnd_photons, psc->mphotons);
-  psc_event_generator_run(psc->event_generator, psc->particles, psc->flds, psc->mphotons);
+  psc_event_generator_run(psc->event_generator, psc->particles, psc->flds);
   
   // field propagation (n+0.5)*dt -> (n+1.0)*dt
   psc_push_fields_step_b2(psc->push_fields, psc->flds);
@@ -151,7 +146,6 @@ psc_integrate(struct psc *psc)
   }
 
   int st_nr_particles = psc_stats_register("nr particles");
-  int st_nr_photons = psc_stats_register("nr photons");
   int st_time_step = psc_stats_register("time entire step");
 
   // generic stats categories
@@ -178,10 +172,6 @@ psc_integrate(struct psc *psc)
     prof_stop(pr);
 
     psc_stats_val[st_nr_particles] = psc_mparticles_nr_particles(psc->particles);
-    // FIXME, do a mphotons func for this
-    psc_foreach_patch(psc, p) {
-      psc_stats_val[st_nr_photons] += psc->mphotons->p[p].nr;
-    }
 
     if (psc->timestep % psc->prm.stats_every == 0) {
       psc_stats_log(psc);

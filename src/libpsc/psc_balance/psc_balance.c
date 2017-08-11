@@ -848,19 +848,6 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
 
   psc_balance_seed_patches(domain_old, domain_new);
 
-  // ----------------------------------------------------------------------
-  // photons
-  // alloc new photons
-  // FIXME, will break if there are actual photons
-  mphotons_t *mphotons_new = psc_mphotons_create(mrc_domain_comm(domain_new));
-  psc_mphotons_set_domain(mphotons_new, domain_new);
-  psc_mphotons_setup(mphotons_new);
-
-  // replace photons by redistributed ones
-  psc_mphotons_destroy(psc->mphotons);
-  psc->mphotons = mphotons_new;
-
-
   psc->mrc_domain = domain_new;
   psc_bnd_particles_check_domain(psc->bnd_particles);
   psc_bnd_check_domain(psc->bnd);

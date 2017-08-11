@@ -45,7 +45,7 @@ static void
 psc_bnd_sub_fields_create(struct psc_bnd *bnd)
 {
   struct sub *sub = sub(bnd);
-  bnd->ddc = mrc_ddc_get(sub->fwd->ddc); // this is probably needed to make photons work
+  bnd->ddc = mrc_ddc_get(sub->fwd->ddc);
   assert(bnd->ddc);
 }
 

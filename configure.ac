@@ -235,20 +235,17 @@ AC_CONFIG_FILES([Makefile
                  src/libpsc/psc_balance/Makefile
                  src/libpsc/psc_bnd/Makefile
                  src/libpsc/psc_bnd_particles/Makefile
-                 src/libpsc/psc_bnd_photons/Makefile
                  src/libpsc/psc_bnd_fields/Makefile
                  src/libpsc/psc_collision/Makefile
                  src/libpsc/psc_event_generator/Makefile
                  src/libpsc/psc_output_fields_collection/Makefile
                  src/libpsc/psc_output_fields/Makefile
                  src/libpsc/psc_output_particles/Makefile
-                 src/libpsc/psc_output_photons/Makefile
                  src/libpsc/psc_diag/Makefile
                  src/libpsc/psc_patchmanager/Makefile
                  src/libpsc/psc_pulse/Makefile
                  src/libpsc/psc_push_fields/Makefile
                  src/libpsc/psc_push_particles/Makefile
-                 src/libpsc/psc_push_photons/Makefile
                  src/libpsc/psc_randomize/Makefile
                  src/libpsc/psc_sort/Makefile
                  src/libpsc/psc_checks/Makefile

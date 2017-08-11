@@ -126,7 +126,6 @@ psc_output_fields_item_init()
   mrc_class_register_subclass(&mrc_class_psc_output_fields_item, &psc_output_fields_item_n_2nd_nc_ops);
   mrc_class_register_subclass(&mrc_class_psc_output_fields_item, &psc_output_fields_item_v_2nd_nc_ops);
   mrc_class_register_subclass(&mrc_class_psc_output_fields_item, &psc_output_fields_item_vv_2nd_nc_ops);
-  mrc_class_register_subclass(&mrc_class_psc_output_fields_item, &psc_output_fields_item_n_photon_ops);
   mrc_class_register_subclass(&mrc_class_psc_output_fields_item, &psc_output_fields_item_coll_stats_c_ops);
   mrc_class_register_subclass(&mrc_class_psc_output_fields_item, &psc_output_fields_item_coll_stats_single_ops);
 

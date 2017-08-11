@@ -4,7 +4,6 @@
 #include "psc_push_fields.h"
 #include "psc_bnd.h"
 #include "psc_bnd_particles.h"
-#include "psc_bnd_photons.h"
 #include "psc_bnd_fields.h"
 #include "psc_collision.h"
 #include "psc_randomize.h"
@@ -13,7 +12,6 @@
 #include "psc_diag.h"
 #include "psc_output_fields_collection.h"
 #include "psc_output_particles.h"
-#include "psc_output_photons.h"
 #include "psc_event_generator.h"
 #include "psc_balance.h"
 #include "psc_checks.h"
@@ -169,7 +167,6 @@ static struct param psc_descr[] = {
   { "push_fields"             , VAR(push_fields)             , MRC_VAR_OBJ(psc_push_fields) },
   { "bnd"                     , VAR(bnd)                     , MRC_VAR_OBJ(psc_bnd) },
   { "bnd_particles"           , VAR(bnd_particles)           , MRC_VAR_OBJ(psc_bnd_particles) },
-  { "bnd_photons"             , VAR(bnd_photons)             , MRC_VAR_OBJ(psc_bnd_photons) },
   { "collision"               , VAR(collision)               , MRC_VAR_OBJ(psc_collision) },
   { "randomize"               , VAR(randomize)               , MRC_VAR_OBJ(psc_randomize) },
   { "marder"                  , VAR(marder)                  , MRC_VAR_OBJ(psc_marder) },
@@ -177,7 +174,6 @@ static struct param psc_descr[] = {
   { "diag"                    , VAR(diag)                    , MRC_VAR_OBJ(psc_diag) },
   { "output_fields_collection", VAR(output_fields_collection), MRC_VAR_OBJ(psc_output_fields_collection) },
   { "output_particles"        , VAR(output_particles)        , MRC_VAR_OBJ(psc_output_particles) },
-  { "output_photons"          , VAR(output_photons)          , MRC_VAR_OBJ(psc_output_photons) },
   { "event_generator"         , VAR(event_generator)         , MRC_VAR_OBJ(psc_event_generator) },
   { "balance"                 , VAR(balance)                 , MRC_VAR_OBJ(psc_balance) },
   { "checks"                  , VAR(checks)                  , MRC_VAR_OBJ(psc_checks) },
@@ -201,7 +197,6 @@ _psc_create(struct psc *psc)
 
   psc_bnd_set_psc(psc->bnd, psc); // FIXME, do general parent interface?
   psc_bnd_particles_set_psc(psc->bnd_particles, psc);
-  psc_bnd_photons_set_psc(psc->bnd_photons, psc);
   psc_output_fields_collection_set_psc(psc->output_fields_collection, psc);
 
   psc->time_start = MPI_Wtime();
@@ -507,79 +502,6 @@ psc_setup_partition_and_particles(struct psc *psc)
 }
 
 // ----------------------------------------------------------------------
-// psc_setup_photons
-
-static void
-psc_setup_photons(struct psc *psc)
-{
-  psc->mphotons = psc_mphotons_create(psc_comm(psc));
-  psc_mphotons_set_name(psc->mphotons, "mphotons");
-  psc_mphotons_set_domain(psc->mphotons, psc->mrc_domain);
-  psc_mphotons_setup(psc->mphotons);
-
-  if (!psc_ops(psc)->init_photon_np) {
-    // if photons aren't initialized, we'll just have zero of them
-    return;
-  }
-
-  psc_foreach_patch(psc, p) {
-    photons_t *photons = &psc->mphotons->p[p];
-
-    int np = 0;
-    psc_foreach_3d(psc, p, jx, jy, jz, 0, 0) {
-      double xx[3] = { CRDX(p, jx), CRDY(p, jy), CRDZ(p, jz) };
-      struct psc_photon_np photon_np = {}; // init to all zero
-      psc_ops(psc)->init_photon_np(psc, xx, &photon_np);
-      np += photon_np.n_in_cell;
-    } psc_foreach_3d_end;
-
-    photons_alloc(photons, np);
-
-    int i = 0;
-    psc_foreach_3d(psc, p, jx, jy, jz, 0, 0) {
-      double xx[3] = { CRDX(p, jx), CRDY(p, jy), CRDZ(p, jz) };
-      struct psc_photon_np photon_np = {}; // init to all zero
-      psc_ops(psc)->init_photon_np(psc, xx, &photon_np);
-	    
-      for (int cnt = 0; cnt < photon_np.n_in_cell; cnt++) {
-	photon_t *p = photons_get_one(photons, i++);
-	      
-	float ran1, ran2, ran3, ran4, ran5, ran6;
-	do {
-	  ran1 = random() / ((float) RAND_MAX + 1);
-	  ran2 = random() / ((float) RAND_MAX + 1);
-	  ran3 = random() / ((float) RAND_MAX + 1);
-	  ran4 = random() / ((float) RAND_MAX + 1);
-	  ran5 = random() / ((float) RAND_MAX + 1);
-	  ran6 = random() / ((float) RAND_MAX + 1);
-	} while (ran1 >= 1.f || ran2 >= 1.f || ran3 >= 1.f ||
-		 ran4 >= 1.f || ran5 >= 1.f || ran6 >= 1.f);
-	
-	float kx =
-	  sqrtf(-2.f*photon_np.sigma_k[0]*logf(1.0-ran1)) * cosf(2.f*M_PI*ran2)
-	  + photon_np.k[0];
-	float ky =
-	  sqrtf(-2.f*photon_np.sigma_k[1]*logf(1.0-ran3)) * cosf(2.f*M_PI*ran4)
-	  + photon_np.k[1];
-	float kz =
-	  sqrtf(-2.f*photon_np.sigma_k[2]*logf(1.0-ran5)) * cosf(2.f*M_PI*ran6)
-	  + photon_np.k[2];
-
-	p->x[0] = xx[0];
-	p->x[1] = xx[1];
-	p->x[2] = xx[2];
-	p->p[0] = kx;
-	p->p[1] = ky;
-	p->p[2] = kz;
-	p->wni  = photon_np.n / photon_np.n_in_cell;
-      }
-    } psc_foreach_3d_end;
-
-    photons->nr = i;
-  }
-}
-
-// ----------------------------------------------------------------------
 // _psc_setup
 
 static void
@@ -595,7 +517,6 @@ _psc_setup(struct psc *psc)
 
   psc_setup_partition_and_particles(psc);
   psc_setup_fields(psc);
-  psc_setup_photons(psc);
 #ifdef USE_FORTRAN
   psc_setup_fortran(psc);
 #endif
@@ -612,7 +533,6 @@ _psc_destroy(struct psc *psc)
   psc_mfields_list_del(&psc_mfields_base_list, &psc->flds);
   psc_mfields_destroy(psc->flds);
   psc_mparticles_destroy(psc->particles);
-  psc_mphotons_destroy(psc->mphotons);
 
   mrc_domain_destroy(psc->mrc_domain);
   free(psc->patch);
@@ -657,7 +577,6 @@ _psc_write(struct psc *psc, struct mrc_io *io)
   mrc_io_write_ref(io, psc, "mrc_domain", psc->mrc_domain);
   mrc_io_write_ref(io, psc, "mparticles", psc->particles);
   mrc_io_write_ref(io, psc, "mfields", psc->flds);
-  mrc_io_write_ref(io, psc, "mphotons", psc->mphotons);
 }
 
 // ----------------------------------------------------------------------
@@ -698,7 +617,6 @@ _psc_read(struct psc *psc, struct mrc_io *io)
   psc->particles = mrc_io_read_ref(io, psc, "mparticles", psc_mparticles);
   psc->flds = mrc_io_read_ref(io, psc, "mfields", psc_mfields);
   psc_mfields_list_add(&psc_mfields_base_list, &psc->flds);
-  psc->mphotons = mrc_io_read_ref(io, psc, "mphotons", psc_mphotons);
 
   psc_read_member_objs(psc, io);
 

@@ -9,8 +9,6 @@ include_HEADERS = \
 	psc_bnd_particles.h \
 	psc_bnd_particles_private.h \
 	psc_bnd_private.h \
-	psc_bnd_photons.h \
-	psc_bnd_photons_private.h \
 	psc_collision.h \
 	psc_collision_private.h \
 	psc_diag.h \
@@ -41,9 +39,6 @@ include_HEADERS = \
 	psc_output_fields_collection_private.h \
 	psc_output_particles.h \
 	psc_output_particles_private.h \
-	psc_output_photons.h \
-	psc_output_photons_private.h \
-	psc_output_photons_xdmf.h \
 	psc_particles.h \
 	psc_particles_as_c.h \
 	psc_particles_as_cbe.h \
@@ -60,7 +55,6 @@ include_HEADERS = \
 	psc_particles_single.h \
 	psc_particles_sse2.h \
 	psc_patchmanager.h \
-	psc_photons.h \
 	psc_pulse.h \
 	psc_pulse_private.h \
 	psc_push_fields.h \
