@@ -4,12 +4,11 @@
 
 #include "psc_particles_private.h"
 #include "cuda_wrap.h"
-
 #include "psc_particles_single.h"
 
-typedef float particle_cuda_real_t;
-
-#define MPI_PARTICLES_CUDA_REAL MPI_FLOAT
+#define PTYPE PTYPE_CUDA
+#include "psc_particles_common.h"
+#undef PTYPE
 
 struct cuda_bnd {
   particle_single_t *prts;
@@ -20,8 +19,6 @@ struct cuda_bnd {
 struct psc_mparticles_cuda {
   struct cuda_mparticles *cmprts;
 };
-
-#define psc_mparticles_cuda(prts) mrc_to_subobj(prts, struct psc_mparticles_cuda)
 
 static inline int
 particle_cuda_real_nint(particle_cuda_real_t x)

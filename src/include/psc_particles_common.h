@@ -8,12 +8,13 @@
 #define PTYPE_SINGLE_BY_BLOCK 3
 #define PTYPE_C               4
 #define PTYPE_FORTRAN         5
+#define PTYPE_CUDA            6
 
 #if PTYPE == PTYPE_SINGLE
 
 #define particle_PTYPE_real_t particle_single_real_t
 #define particle_PTYPE_t particle_single_t
-#define psc_particle_PTYPE psc_particle_PTYPE_single
+#define psc_particle_PTYPE psc_particle_single
 #define psc_mparticles_PTYPE_patch psc_mparticles_single_patch
 #define psc_mparticles_PTYPE psc_mparticles_single
 #define psc_mparticles_PTYPE_ops psc_mparticles_single_ops
@@ -117,14 +118,20 @@
 #define psc_particle_PTYPE_iter_at psc_particle_fortran_iter_at 
 #define psc_particle_PTYPE_range_t psc_particle_fortran_range_t 
 #define psc_particle_PTYPE_range_mprts psc_particle_fortran_range_mprts 
-#define psc_particle_PTYPE_range_size psc_particle_fortran_range_size 
+#define psc_particle_PTYPE_range_size psc_particle_fortran_range_size
+
+#elif PTYPE == PTYPE_CUDA
+
+#define particle_PTYPE_real_t particle_cuda_real_t
+#define particle_PTYPE_t particle_cuda_t
+#define psc_particle_PTYPE psc_particle_cuda
 
 #endif
 
 // ----------------------------------------------------------------------
 // particle_PYTPE_real_t
 
-#if PTYPE == PTYPE_SINGLE || PTYPE == PTYPE_SINGLE_BY_BLOCK
+#if PTYPE == PTYPE_SINGLE || PTYPE == PTYPE_SINGLE_BY_BLOCK || PTYPE == PTYPE_CUDA
 
 typedef float particle_PTYPE_real_t;
 
@@ -163,12 +170,17 @@ typedef double particle_PTYPE_real_t;
 #define MPI_PARTICLES_FORTRAN_REAL MPI_DOUBLE
 #define psc_mparticles_fortran(prts) mrc_to_subobj(prts, struct psc_mparticles_fortran)
 
+#elif PTYPE == PTYPE_CUDA
+
+#define MPI_PARTICLES_CUDA_REAL MPI_FLOAT
+#define psc_mparticles_cuda(prts) mrc_to_subobj(prts, struct psc_mparticles_cuda)
+
 #endif
 
 // ----------------------------------------------------------------------
 // particle_PTYPE_t
 
-#if PTYPE == PTYPE_SINGLE || PTYPE == PTYPE_SINGLE_BY_BLOCK || PTYPE == PTYPE_DOUBLE
+#if PTYPE == PTYPE_SINGLE || PTYPE == PTYPE_SINGLE_BY_BLOCK || PTYPE == PTYPE_DOUBLE || PTYPE == PTYPE_CUDA
 
 typedef struct psc_particle_PTYPE {
   particle_PTYPE_real_t xi, yi, zi;
@@ -201,6 +213,8 @@ typedef struct psc_particle_PTYPE {
 } particle_PTYPE_t;
 
 #endif
+
+#if PTYPE != PTYPE_CUDA
 
 // ----------------------------------------------------------------------
 // psc_mparticles_PTYPE_patch
@@ -434,4 +448,12 @@ psc_particle_PTYPE_range_size(psc_particle_PTYPE_range_t prts)
 #undef psc_particle_PTYPE_iter_at 
 #undef psc_particle_PTYPE_range_t 
 #undef psc_particle_PTYPE_range_mprts 
-#undef psc_particle_PTYPE_range_size 
+#undef psc_particle_PTYPE_range_size
+
+#else // PTYPE_CUDA
+
+#undef particle_PTYPE_real_t
+#undef particle_PTYPE_t
+#undef psc_particle_PTYPE
+
+#endif
