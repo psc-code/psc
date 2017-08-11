@@ -603,13 +603,27 @@ void
 cuda_mparticles_sort_initial(struct cuda_mparticles *cmprts,
 			     unsigned int *n_prts_by_patch)
 {
+}
+
+// ----------------------------------------------------------------------
+// cuda_mparticles_setup_internals
+
+void
+cuda_mparticles_setup_internals(struct cuda_mparticles *cmprts)
+{
   static int first_time = false;
   if (first_time) {
+    unsigned int n_prts_by_patch[cmprts->n_patches];
+    cuda_mparticles_get_size_all(cmprts, n_prts_by_patch);
     cuda_mparticles_check_in_patch_unordered_slow(cmprts, n_prts_by_patch);
   }
 
+  unsigned int n_prts_by_patch[cmprts->n_patches];
+  cuda_mparticles_get_size_all(cmprts, n_prts_by_patch);
   cuda_mparticles_find_block_indices_ids(cmprts, n_prts_by_patch);
   if (first_time) {
+    unsigned int n_prts_by_patch[cmprts->n_patches];
+    cuda_mparticles_get_size_all(cmprts, n_prts_by_patch);
     cuda_mparticles_check_bidx_id_unordered_slow(cmprts, n_prts_by_patch);
   }
 
@@ -622,17 +636,6 @@ cuda_mparticles_sort_initial(struct cuda_mparticles *cmprts,
     cuda_mparticles_check_ordered(cmprts);
     first_time = false;
   }
-}
-
-// ----------------------------------------------------------------------
-// cuda_mparticles_setup_internals
-
-void
-cuda_mparticles_setup_internals(struct cuda_mparticles *cmprts)
-{
-  unsigned int n_prts_by_patch[cmprts->n_patches];
-  cuda_mparticles_get_size_all(cmprts, n_prts_by_patch);
-  cuda_mparticles_sort_initial(cmprts, n_prts_by_patch);
 }
 
 // ----------------------------------------------------------------------
