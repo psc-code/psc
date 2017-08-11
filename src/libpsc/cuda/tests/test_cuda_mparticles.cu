@@ -119,7 +119,7 @@ main(void)
   cuda_mparticles_dump(cmprts);
   cuda_mparticles_check_in_patch_unordered(cmprts, n_prts_by_patch);
 
-  cuda_mparticles_find_block_indices_ids(cmprts, n_prts_by_patch);
+  cuda_mparticles_find_block_indices_ids(cmprts);
   printf("find bidx, id\n");
   cuda_mparticles_dump(cmprts);
   cuda_mparticles_check_bidx_id_unordered(cmprts, n_prts_by_patch);

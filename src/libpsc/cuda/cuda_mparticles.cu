@@ -283,16 +283,17 @@ get_block_idx(struct cuda_mparticles *cmprts, float4 xi4, int p)
 // cuda_mprts_find_block_indices_ids
 
 __global__ static void
-mprts_find_block_indices_ids(struct cuda_params2 prm, float4 *d_xi4,
-			     int *d_n_prts_by_patch, unsigned int *d_bidx,
-			     unsigned int *d_ids, int nr_patches)
+mprts_find_block_indices_ids(struct cuda_params2 prm, float4 *d_xi4, unsigned int *d_off,
+			     unsigned int *d_bidx, unsigned int *d_ids, int n_patches,
+			     int n_blocks_per_patch)
 {
   int n = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
   int nr_blocks = prm.b_mx[1] * prm.b_mx[2];
 
-  unsigned int off = 0;
-  for (int p = 0; p < nr_patches; p++) {
-    if (n < d_n_prts_by_patch[p]) {
+  for (int p = 0; p < n_patches; p++) {
+    unsigned int off = d_off[p * n_blocks_per_patch];
+    unsigned int n_prts = d_off[(p + 1) * n_blocks_per_patch] - off;
+    if (n < n_prts) {
       float4 xi4 = d_xi4[n + off];
       unsigned int block_pos_y = __float2int_rd(xi4.y * prm.b_dxi[1]);
       unsigned int block_pos_z = __float2int_rd(xi4.z * prm.b_dxi[2]);
@@ -306,29 +307,25 @@ mprts_find_block_indices_ids(struct cuda_params2 prm, float4 *d_xi4,
       d_bidx[n + off] = block_idx;
       d_ids[n + off] = n + off;
     }
-    off += d_n_prts_by_patch[p];
   }
 }
 
 void
-cuda_mparticles_find_block_indices_ids(struct cuda_mparticles *cmprts,
-				       unsigned int *n_prts_by_patch)
+cuda_mparticles_find_block_indices_ids(struct cuda_mparticles *cmprts)
 {
   if (cmprts->n_patches == 0) {
     return;
   }
 
+  unsigned int n_prts_by_patch[cmprts->n_patches];
+  cuda_mparticles_get_size_all(cmprts, n_prts_by_patch);
+  
   int max_n_prts = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
     if (n_prts_by_patch[p] > max_n_prts) {
       max_n_prts = n_prts_by_patch[p];
     }
   }
-
-  cudaError_t ierr;
-  ierr = cudaMemcpy(cmprts->d_n_prts_by_patch, n_prts_by_patch,
-		    cmprts->n_patches * sizeof(unsigned int),
-		    cudaMemcpyHostToDevice); cudaCheck(ierr);
 
   struct cuda_params2 prm;
   cuda_params2_set(&prm, cmprts);
@@ -338,10 +335,11 @@ cuda_mparticles_find_block_indices_ids(struct cuda_mparticles *cmprts,
 
   mprts_find_block_indices_ids<<<dimGrid, dimBlock>>>(prm,
 						      cmprts->d_xi4, 
-						      cmprts->d_n_prts_by_patch,
+						      cmprts->d_off,
 						      cmprts->d_bidx,
 						      cmprts->d_id,
-						      cmprts->n_patches);
+						      cmprts->n_patches,
+						      cmprts->n_blocks_per_patch);
   cuda_sync_if_enabled();
   cuda_params2_free(&prm);
 }
@@ -618,9 +616,7 @@ cuda_mparticles_setup_internals(struct cuda_mparticles *cmprts)
     cuda_mparticles_check_in_patch_unordered_slow(cmprts, n_prts_by_patch);
   }
 
-  unsigned int n_prts_by_patch[cmprts->n_patches];
-  cuda_mparticles_get_size_all(cmprts, n_prts_by_patch);
-  cuda_mparticles_find_block_indices_ids(cmprts, n_prts_by_patch);
+  cuda_mparticles_find_block_indices_ids(cmprts);
   if (first_time) {
     unsigned int n_prts_by_patch[cmprts->n_patches];
     cuda_mparticles_get_size_all(cmprts, n_prts_by_patch);
@@ -780,17 +776,12 @@ cuda_mparticles_inject(struct cuda_mparticles *cmprts, struct cuda_mparticles_pr
   }
   assert(off == buf_n);
 
-  thrust::device_ptr<unsigned int> d_off(cmprts->d_off);
-  thrust::host_vector<unsigned int> h_off(d_off, d_off + cmprts->n_blocks + 1);
   unsigned int n_prts_by_patch[cmprts->n_patches];
-  for (int p = 0; p < cmprts->n_patches; p++) {
-    n_prts_by_patch[p] = h_off[(p+1) * cmprts->n_blocks_per_patch] - h_off[p * cmprts->n_blocks_per_patch];
-    //printf("p %d n_prts_by_patch %d\n", p, n_prts_by_patch[p]);
-  }
+  cuda_mparticles_get_size_all(cmprts, n_prts_by_patch);
 
   //cuda_mparticles_check_in_patch_unordered_slow(cmprts, n_prts_by_patch);
 
-  cuda_mparticles_find_block_indices_ids(cmprts, n_prts_by_patch);
+  cuda_mparticles_find_block_indices_ids(cmprts);
   //cuda_mparticles_check_bidx_id_unordered_slow(cmprts, n_prts_by_patch);
 
   thrust::device_ptr<float4> d_xi4(cmprts->d_xi4);
