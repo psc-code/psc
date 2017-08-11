@@ -40,6 +40,8 @@ ddcp_particles_get_addr(void *_ctx, int p, int n)
   return particle_iter_at(prts.begin, n);
 }
 
+#include "ddc_particles_inc.c"
+
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub_setup
 

@@ -31,6 +31,8 @@ ddcp_particles_get_addr(void *_ctx, int p, int n)
   return &cmprts->bnd.bpatch[p].prts[n];
 }
 
+#include "../psc_bnd_particles/ddc_particles_inc.c"
+
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub_setup
 

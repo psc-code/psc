@@ -67,8 +67,6 @@ struct ddc_particles *ddc_particles_create(struct mrc_domain *domain, int size_o
 					   void (*realloc)(void *, int, int),
 					   void *(*get_addr)(void *, int, int));
 void ddc_particles_destroy(struct ddc_particles *ddcp);
-void ddc_particles_queue(struct ddc_particles *ddcp, struct ddcp_patch *patch,
-			 int dir[3], void *p);
 void ddc_particles_comm(struct ddc_particles *ddcp, void *particles);
 
 

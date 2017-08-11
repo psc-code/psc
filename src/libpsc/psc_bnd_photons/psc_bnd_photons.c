@@ -29,6 +29,8 @@ ddcp_photons_get_addr(void *_particles, int p, int n)
   return &photons->photons[n];
 }
 
+#include "../psc_bnd_particles/ddc_particles_inc.c"
+
 // ----------------------------------------------------------------------
 // psc_bnd_photons_setup
 
