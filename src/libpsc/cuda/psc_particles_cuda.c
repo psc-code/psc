@@ -118,7 +118,7 @@ static void
 get_particle_c(struct cuda_mparticles_prt *prt, int n, void *_ctx)
 {
   struct copy_ctx *ctx = _ctx;
-  particle_single_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
+  particle_c_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
   // don't shift in invariant directions
   for (int d = 0; d < 3; d++) {
     if (ppsc->domain.gdims[d] == 1) {
@@ -145,7 +145,7 @@ static void
 put_particle_c(struct cuda_mparticles_prt *prt, int n, void *_ctx)
 {
   struct copy_ctx *ctx = _ctx;
-  particle_single_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
+  particle_c_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
   // don't shift in invariant directions
   for (int d = 0; d < 3; d++) {
     if (ppsc->domain.gdims[d] == 1) {

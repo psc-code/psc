@@ -146,7 +146,7 @@ mprts_convert_to_cuda(struct psc_bnd_particles *bnd, struct psc_mparticles *mprt
     unsigned int *h_bnd_idx = cmprts->bnd.h_bnd_idx + off;
     unsigned int *h_bnd_off = cmprts->bnd.h_bnd_off + off;
     for (int n = 0; n < n_recv; n++) {
-      particle_single_t *prt = &cmprts->bnd.bpatch[p].prts[n];
+      particle_t *prt = &cmprts->bnd.bpatch[p].prts[n];
       h_bnd_xi4[n].x  = prt->xi;
       h_bnd_xi4[n].y  = prt->yi;
       h_bnd_xi4[n].z  = prt->zi;

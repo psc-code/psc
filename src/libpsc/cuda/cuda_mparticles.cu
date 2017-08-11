@@ -897,7 +897,7 @@ cuda_mparticles_get_particles(struct cuda_mparticles *cmprts, unsigned int n_prt
 
 #if 0
     for (int d = 0; d < 3; d++) {
-      int bi = particle_single_real_fint(prt.xi[d] * cmprts->b_dxi[d]);
+      int bi = particle_cuda_real_fint(prt.xi[d] * cmprts->b_dxi[d]);
       if (bi < 0 || bi >= cmprts->b_mx[d]) {
 	MHERE;
 	mprintf("XXX xi %.10g %.10g %.10g\n", prt.xi[0], prt.xi[1], prt.xi[2]);
