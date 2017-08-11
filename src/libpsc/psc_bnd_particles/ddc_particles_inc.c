@@ -8,7 +8,6 @@
 
 static struct ddc_particles *
 ddc_particles_create(struct mrc_domain *domain,
-		     MPI_Datatype mpi_type_real,
 		     void  (*realloc)(void *, int, int),
 		     void *(*get_addr)(void *, int, int))
 {
@@ -17,7 +16,6 @@ ddc_particles_create(struct mrc_domain *domain,
 
   ddcp->domain = domain;
   mrc_domain_get_patches(domain, &ddcp->nr_patches);
-  ddcp->mpi_type_real = mpi_type_real;
   ddcp->realloc = realloc;
   ddcp->get_addr = get_addr;
   ddcp->patches = calloc(ddcp->nr_patches, sizeof(*ddcp->patches));
@@ -414,7 +412,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
       memcpy(p, nei->send_buf, cinfo[r].send_cnts[i] * sizeof(particle_t));
       p += cinfo[r].send_cnts[i] * sizeof(particle_t);
     }
-    MPI_Isend(p0, sz * cinfo[r].n_send, ddcp->mpi_type_real,
+    MPI_Isend(p0, sz * cinfo[r].n_send, MPI_PARTICLES_REAL,
 	      cinfo[r].rank, 1, comm, &ddcp->send_reqs[r]);
   }
   assert(p == send_buf + n_send * sizeof(particle_t));
@@ -426,7 +424,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
     if (cinfo[r].n_recv == 0)
       continue;
 
-    MPI_Irecv(p, sz * cinfo[r].n_recv, ddcp->mpi_type_real,
+    MPI_Irecv(p, sz * cinfo[r].n_recv, MPI_PARTICLES_REAL,
 	      cinfo[r].rank, 1, comm, &ddcp->recv_reqs[r]);
     p += cinfo[r].n_recv * sizeof(particle_t);
   }
