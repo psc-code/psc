@@ -75,13 +75,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
   particle_real_t xm[3];
   int b_mx[3];
   for (int d = 0; d < 3; d++ ) {
-    if (psc->domain.bnd_part_hi[d] == BND_PART_REFLECTING &&
-	!psc->prm.gdims_in_terms_of_cells &&
-	ppatch->off[d] + ppatch->ldims[d] == psc->domain.gdims[d]) {
-      b_mx[d] = ppatch->ldims[d] - 1;
-    } else {
-      b_mx[d] = ppatch->ldims[d];
-    }
+    b_mx[d] = ppatch->ldims[d];
     xm[d] = b_mx[d] * ppatch->dx[d];
   }
   

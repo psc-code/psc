@@ -57,7 +57,6 @@ psc_island_coalescence_create(struct psc *psc)
   psc->prm.nmax = 16000;
   psc->prm.nr_populations = 4;
   psc->prm.nicell = 100;
-  psc->prm.gdims_in_terms_of_cells = true;
   psc->prm.cfl = 0.98;
 
   psc->domain.gdims[0] = 1;

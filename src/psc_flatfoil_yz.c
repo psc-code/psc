@@ -100,7 +100,6 @@ psc_flatfoil_create(struct psc *psc)
 
   psc->prm.nmax = 210001;
   psc->prm.nicell = 100;
-  psc->prm.gdims_in_terms_of_cells = true;
   psc->prm.nr_populations = N_MY_KINDS;
   psc->prm.fractional_n_particles_per_cell = true;
   psc->prm.cfl = 0.75;

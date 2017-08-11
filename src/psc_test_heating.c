@@ -47,7 +47,6 @@ psc_test_heating_create(struct psc *psc)
 
   psc->prm.nmax = 16000;
   psc->prm.nicell = 50;
-  psc->prm.gdims_in_terms_of_cells = true;
   psc->prm.cfl = 0.98;
 
   psc->domain.length[0] = 1.; // no x-dependence

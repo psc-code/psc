@@ -82,7 +82,6 @@ psc_turb_create(struct psc *psc)
 
   psc->prm.nmax = 62415*3;
   psc->prm.nicell = 500;
-  psc->prm.gdims_in_terms_of_cells = true;
   psc->prm.cfl = 0.98;
 
   struct psc_kind kinds[NR_T_KINDS] = {

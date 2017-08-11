@@ -49,7 +49,6 @@ psc_shear_create(struct psc *psc)
   psc->prm.nmax = 100000;
   psc->prm.nr_populations = 2;
   psc->prm.nicell = 100;
-  psc->prm.gdims_in_terms_of_cells = true;
   psc->prm.cfl = 0.98;
 
   psc->domain.gdims[0] = 1;

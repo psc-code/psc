@@ -143,10 +143,6 @@ static struct param psc_descr[] = {
   
   { "adjust_dt_to_cycles"
                     , VAR(prm.adjust_dt_to_cycles), PARAM_BOOL(0)  },
-  { "gdims_in_terms_of_cells"
-                    , VAR(prm.gdims_in_terms_of_cells), PARAM_BOOL(false),
-    .help = "if set, the given global dimensions (gdims) will be used for "
-    "setting the number of cells, rather than the number of nodes in the grid." }, 
   { "initial_particle_shift"
                     , VAR(prm.initial_particle_shift), PARAM_DOUBLE(0.) },
   { "wallclock_limit"
@@ -367,16 +363,7 @@ psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
 {
   double dx[3];
   for (int d = 0; d < 3; d++) {
-    // FIXME, we should eventually settle on one or the other way of handling
-    // non-periodic boundaries -- use gdims to count the number of cells in the
-    // grid, or count the number of nodes (corners)
-    if (psc->domain.bnd_fld_lo[d] == BND_FLD_PERIODIC ||
-	psc->domain.gdims[d] == 1 ||
-	psc->prm.gdims_in_terms_of_cells) {
-      dx[d] = psc->domain.length[d] / psc->coeff.ld / psc->domain.gdims[d];
-    } else {
-      dx[d] = psc->domain.length[d] / psc->coeff.ld / (psc->domain.gdims[d] - 1);
-    }
+    dx[d] = psc->domain.length[d] / psc->coeff.ld / psc->domain.gdims[d];
   }
 
   double inv_sum = 0.;

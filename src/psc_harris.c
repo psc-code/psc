@@ -65,7 +65,6 @@ psc_harris_create(struct psc *psc)
 
   psc->prm.nmax = 16000;
   psc->prm.nicell = 50;
-  psc->prm.gdims_in_terms_of_cells = true;
   psc->prm.nr_populations = 4;
   psc->prm.cfl = 0.98;
 

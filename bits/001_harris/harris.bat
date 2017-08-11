@@ -15,7 +15,6 @@ aprun -n 128 ~/src/psc/src/psc_harris \
     --write_tfield no \
     --write_pfield yes --pfield_step 100 \
     --stats_every 10 \
-    --gdims_in_terms_of_cells \
     --particles_base single \
     --fields_base single \
     --psc_push_particles_type 1vbec_single \
