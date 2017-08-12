@@ -3,23 +3,9 @@
 #include <mrc_profile.h>
 #include <string.h>
 
+#define DDCP_TYPE DDCP_TYPE_COMMON2
+
 #include "ddc_particles_inc.c"
-
-// ----------------------------------------------------------------------
-// ddcp_particles helpers
-
-static void
-ddcp_particles_realloc(struct psc_mparticles *mprts, int p, int new_n_particles)
-{
-  mparticles_patch_reserve(mprts, p, new_n_particles);
-}
-
-static particle_t *
-ddcp_particles_get_addr(struct psc_mparticles *mprts, int p, int n)
-{
-  particle_range_t prts = particle_range_mprts(mprts, p);
-  return particle_iter_at(prts.begin, n);
-}
 
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub_setup

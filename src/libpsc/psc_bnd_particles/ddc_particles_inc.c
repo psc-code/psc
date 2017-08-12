@@ -1,8 +1,50 @@
 
+#define DDCP_TYPE_COMMON     1
+#define DDCP_TYPE_COMMON2    2
+#define DDCP_TYPE_COMMON_OMP 3
+#define DDCP_TYPE_CUDA       4
+
 #include <mrc_ddc.h>
 
 #include <string.h>
 
+// ----------------------------------------------------------------------
+// ddcp_buf_t
+
+#if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
+
+static void
+ddcp_particles_realloc(struct psc_mparticles *mprts, int p, int new_n_particles)
+{
+  mparticles_patch_reserve(mprts, p, new_n_particles);
+}
+
+static particle_t *
+ddcp_particles_get_addr(struct psc_mparticles *mprts, int p, int n)
+{
+  particle_range_t prts = particle_range_mprts(mprts, p);
+  return particle_iter_at(prts.begin, n);
+}
+
+#elif DDCP_TYPE == DDCP_TYPE_CUDA
+
+static void
+ddcp_particles_realloc(struct psc_mparticles *mprts, int p, int new_n_particles)
+{
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
+
+  cmprts->bnd.bpatch[p].prts = realloc(cmprts->bnd.bpatch[p].prts, new_n_particles * sizeof(*cmprts->bnd.bpatch[p].prts));
+}
+
+static particle_t *
+ddcp_particles_get_addr(struct psc_mparticles *mprts, int p, int n)
+{
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
+
+  return &cmprts->bnd.bpatch[p].prts[n];
+}
+
+#endif
 
 static void ddcp_particles_realloc(struct psc_mparticles *mprts, int p, int new_n_particles);
 static particle_t *ddcp_particles_get_addr(struct psc_mparticles *mprts, int p, int n);

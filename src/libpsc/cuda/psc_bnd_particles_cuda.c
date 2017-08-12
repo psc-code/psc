@@ -9,26 +9,9 @@
 
 #include <mrc_profile.h>
 
+#define DDCP_TYPE DDCP_TYPE_CUDA
+
 #include "../psc_bnd_particles/ddc_particles_inc.c"
-
-// ----------------------------------------------------------------------
-// ddcp_particles helpers
-
-static void
-ddcp_particles_realloc(struct psc_mparticles *mprts, int p, int new_n_particles)
-{
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-
-  cmprts->bnd.bpatch[p].prts = realloc(cmprts->bnd.bpatch[p].prts, new_n_particles * sizeof(*cmprts->bnd.bpatch[p].prts));
-}
-
-static particle_t *
-ddcp_particles_get_addr(struct psc_mparticles *mprts, int p, int n)
-{
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-
-  return &cmprts->bnd.bpatch[p].prts[n];
-}
 
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub_setup
