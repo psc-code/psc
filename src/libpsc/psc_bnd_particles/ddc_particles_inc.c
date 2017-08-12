@@ -871,7 +871,7 @@ get_head(struct psc_mparticles *mprts, int p)
 
 #endif
 
-#if DDCP_TYPE == DDCP_TYPE_COMMON2
+#if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP || DDCP_TYPE == DDCP_TYPE_COMMON2
 
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub_exchange_particles_prep
@@ -880,9 +880,11 @@ static void
 psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 					      struct psc_mparticles *mprts, int p)
 {
+  particle_range_t prts = particle_range_mprts(mprts, p);
+
+#if DDCP_TYPE == DDCP_TYPE_COMMON2
   struct psc_mparticles_single *sub = psc_mparticles_single(mprts);
   struct psc_mparticles_single_patch *patch = &sub->patch[p];
-  particle_range_t prts = particle_range_mprts(mprts, p);
   if (1) {
     //      find_block_indices_count_reorderx(prts);
     count_and_reorder_to_back(mprts, p);
@@ -892,20 +894,11 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
   mparticles_patch_resize(mprts, p, mparticles_get_n_prts(mprts, p) + patch->n_send);
 
   exchange_particles_pre(bnd, mprts, p);
-}
 
 #elif DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
 
-// ----------------------------------------------------------------------
-// psc_bnd_particles_sub_exchange_particles_prep
-
-static void
-psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
-					      struct psc_mparticles *mprts, int p)
-{
   struct ddc_particles *ddcp = bnd->ddcp;
   struct psc *psc = bnd->psc;
-  particle_range_t prts = particle_range_mprts(mprts, p);
 
   // New-style boundary requirements.
   // These will need revisiting when it comes to non-periodic domains.
@@ -1016,6 +1009,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 
     }
   }
+#endif
 }
 
 #endif
