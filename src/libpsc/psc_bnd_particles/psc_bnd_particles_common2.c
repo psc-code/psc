@@ -7,37 +7,8 @@
 
 #include "ddc_particles_inc.c"
 
-// ----------------------------------------------------------------------
-// psc_bnd_particles_sub_setup
-
-static void
-psc_bnd_particles_sub_setup(struct psc_bnd_particles *bnd)
-{
-  bnd->ddcp = ddc_particles_create(bnd->psc->mrc_domain);
-}
-
-// ----------------------------------------------------------------------
-// psc_bnd_particles_sub_unsetup
-
-static void
-psc_bnd_particles_sub_unsetup(struct psc_bnd_particles *bnd)
-{
-  ddc_particles_destroy(bnd->ddcp);
-}
-
 // ======================================================================
 //
-// ----------------------------------------------------------------------
-// find_block_position
-
-static inline void
-find_block_position(int b_pos[3], particle_real_t xi[3], particle_real_t b_dxi[3])
-{
-  for (int d = 0; d < 3; d++) {
-    b_pos[d] = particle_real_fint(xi[d] * b_dxi[d]);
-  }
-}
-
 // ----------------------------------------------------------------------
 // find_block_indices_count
 
@@ -54,7 +25,7 @@ find_block_indices_count(unsigned int *b_idx, unsigned int *b_cnts,
   for (int i = off; i < n_prts; i++) {
     particle_t *part = particle_iter_at(prts.begin, i);
     int b_pos[3];
-    find_block_position(b_pos, &part->xi, patch->b_dxi);
+    particle_xi_get_block_pos(&part->xi, patch->b_dxi, b_pos);
     assert(b_pos[0] >= 0 && b_pos[0] < b_mx[0] &&
 	   b_pos[1] >= 0 && b_pos[1] < b_mx[1] &&
 	   b_pos[2] >= 0 && b_pos[2] < b_mx[2]);
@@ -80,7 +51,7 @@ find_block_indices_count_reorder(struct psc_mparticles *mprts, int p)
   for (int i = 0; i < n_prts; i++) {
     particle_t *part = particle_iter_at(prts.begin, i);
     int b_pos[3];
-    find_block_position(b_pos, &part->xi, patch->b_dxi);
+    particle_xi_get_block_pos(&part->xi, patch->b_dxi, b_pos);
     if (b_pos[0] >= 0 && b_pos[0] < b_mx[0] &&
 	b_pos[1] >= 0 && b_pos[1] < b_mx[1] &&
 	b_pos[2] >= 0 && b_pos[2] < b_mx[2]) {

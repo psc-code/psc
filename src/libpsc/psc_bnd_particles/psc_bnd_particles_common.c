@@ -14,28 +14,6 @@
 
 #include "ddc_particles_inc.c"
 
-// ----------------------------------------------------------------------
-// psc_bnd_particles_sub_setup
-
-static void
-psc_bnd_particles_sub_setup(struct psc_bnd_particles *bnd)
-{
-  bnd->ddcp = ddc_particles_create(bnd->psc->mrc_domain);
-
-  psc_bnd_particles_open_setup(bnd);
-}
-
-// ----------------------------------------------------------------------
-// psc_bnd_particles_sub_unsetup
-
-static void
-psc_bnd_particles_sub_unsetup(struct psc_bnd_particles *bnd)
-{
-  ddc_particles_destroy(bnd->ddcp);
-
-  psc_bnd_particles_open_unsetup(bnd);
-}
-
 // ======================================================================
 //
 

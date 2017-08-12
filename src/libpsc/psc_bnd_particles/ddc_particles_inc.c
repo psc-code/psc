@@ -654,3 +654,31 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
   }
 }
 
+
+// ----------------------------------------------------------------------
+// psc_bnd_particles_sub_setup
+
+static void
+psc_bnd_particles_sub_setup(struct psc_bnd_particles *bnd)
+{
+  bnd->ddcp = ddc_particles_create(bnd->psc->mrc_domain);
+
+#if DDCP_TYPE == DDCP_TYPE_COMMON
+  psc_bnd_particles_open_setup(bnd);
+#endif
+}
+
+// ----------------------------------------------------------------------
+// psc_bnd_particles_sub_unsetup
+
+static void
+psc_bnd_particles_sub_unsetup(struct psc_bnd_particles *bnd)
+{
+  ddc_particles_destroy(bnd->ddcp);
+
+#if DDCP_TYPE == DDCP_TYPE_COMMON
+  psc_bnd_particles_open_unsetup(bnd);
+#endif
+}
+
+
