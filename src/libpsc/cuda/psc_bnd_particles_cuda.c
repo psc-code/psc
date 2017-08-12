@@ -14,52 +14,6 @@
 #include "../psc_bnd_particles/ddc_particles_inc.c"
 
 // ----------------------------------------------------------------------
-// xchg_append helper
-
-static void
-xchg_append(struct psc_mparticles *mprts, int p, struct ddcp_patch *ddcp_patch, particle_t *prt)
-{
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-  cmprts->bnd.bpatch[p].prts[ddcp_patch->head++] = *prt;
-}
-
-static inline particle_t *
-xchg_get_one(struct psc_mparticles *mprts, int p, int n)
-{
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-  return &cmprts->bnd.bpatch[p].prts[n];
-}
-
-static inline int *
-get_b_mx(struct psc_mparticles *mprts, int p)
-{
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-  return cmprts->b_mx;
-}
-
-static inline particle_real_t *
-get_b_dxi(struct psc_mparticles *mprts, int p)
-{
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-  return cmprts->b_dxi;
-}
-
-static inline int
-get_n_send(struct psc_mparticles *mprts, int p)
-{
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-  return cmprts->bnd.bpatch[p].n_send;
-}
-
-static inline int
-get_head(struct psc_mparticles *mprts, int p)
-{
-  return 0;
-}
-
-#include "../psc_bnd_particles/psc_bnd_particles_exchange_particles_pre.c"
-
-// ----------------------------------------------------------------------
 // mprts_exchange_particles_pre
 
 static void

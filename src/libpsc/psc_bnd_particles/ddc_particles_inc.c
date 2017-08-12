@@ -817,32 +817,47 @@ sort_indices(unsigned int *b_idx, unsigned int *b_sum, unsigned int *b_ids, int 
 
 // ======================================================================
 
-#if DDCP_TYPE == DDCP_TYPE_COMMON2
+#if DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_CUDA
 
 static inline particle_t *
 xchg_get_one(struct psc_mparticles *mprts, int p, int n)
 {
+#if DDCP_TYPE == DDCP_TYPE_COMMON2
   particle_range_t prts = particle_range_mprts(mprts, p);
   return particle_iter_at(prts.begin, n);
+#elif DDCP_TYPE == DDCP_TYPE_CUDA
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
+  return &cmprts->bnd.bpatch[p].prts[n];
+#endif
 }
 
-static inline void
-xchg_append(struct psc_mparticles *mprts, int p, void *patch_ctx, particle_t *prt)
+static void
+xchg_append(struct psc_mparticles *mprts, int p, struct ddcp_patch *ddcp_patch, particle_t *prt)
 {
-  struct ddcp_patch *ddcp_patch = patch_ctx;
+#if DDCP_TYPE == DDCP_TYPE_COMMON2
   particle_range_t prts = particle_range_mprts(mprts, p);
   *particle_iter_at(prts.begin, ddcp_patch->head++) = *prt;
+#elif DDCP_TYPE == DDCP_TYPE_CUDA
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
+  cmprts->bnd.bpatch[p].prts[ddcp_patch->head++] = *prt;
+#endif
 }
 
 static inline int *
 get_b_mx(struct psc_mparticles *mprts, int p)
 {
+#if DDCP_TYPE == DDCP_TYPE_COMMON2
   return ppsc->patch[p].ldims;
+#elif DDCP_TYPE == DDCP_TYPE_CUDA
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
+  return cmprts->b_mx;
+#endif
 }
 
 static inline particle_real_t *
 get_b_dxi(struct psc_mparticles *mprts, int p)
 {
+#if DDCP_TYPE == DDCP_TYPE_COMMON2
   static particle_real_t b_dxi[3];
   if (!b_dxi[0]) {
     for (int d = 0; d < 3; d++) {
@@ -850,24 +865,37 @@ get_b_dxi(struct psc_mparticles *mprts, int p)
     }
   }
   return b_dxi;
+#elif DDCP_TYPE == DDCP_TYPE_CUDA
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
+  return cmprts->b_dxi;
+#endif
 }
 
 static inline int
 get_n_send(struct psc_mparticles *mprts, int p)
 {
+#if DDCP_TYPE == DDCP_TYPE_COMMON2
   struct psc_mparticles_single *sub = psc_mparticles_single(mprts);
   return sub->patch[p].n_send;
+#elif DDCP_TYPE == DDCP_TYPE_CUDA
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
+  return cmprts->bnd.bpatch[p].n_send;
+#endif
 }
 
 static inline int
 get_head(struct psc_mparticles *mprts, int p)
 {
+#if DDCP_TYPE == DDCP_TYPE_COMMON2
   struct psc_mparticles_single *sub = psc_mparticles_single(mprts);
   particle_range_t prts = particle_range_mprts(mprts, p);
   return particle_range_size(prts) - sub->patch[p].n_send;
+#elif DDCP_TYPE == DDCP_TYPE_CUDA
+  return 0;
+#endif
 }
 
-#include "psc_bnd_particles_exchange_particles_pre.c"
+#include "../psc_bnd_particles/psc_bnd_particles_exchange_particles_pre.c"
 
 #endif
 
