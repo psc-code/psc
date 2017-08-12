@@ -843,18 +843,6 @@ xchg_append(struct psc_mparticles *mprts, int p, struct ddcp_patch *ddcp_patch, 
 #endif
 }
 
-static inline const int *
-get_b_mx(struct psc_mparticles *mprts, int p)
-{
-  return mparticles_patch_get_b_mx(mprts, p);
-}
-
-static inline const particle_real_t *
-get_b_dxi(struct psc_mparticles *mprts, int p)
-{
-  return mparticles_patch_get_b_dxi(mprts, p);
-}
-
 static inline int
 get_n_send(struct psc_mparticles *mprts, int p)
 {
