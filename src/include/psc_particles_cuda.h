@@ -11,7 +11,7 @@
 #undef PTYPE
 
 struct cuda_bnd {
-  particle_single_t *prts;
+  particle_cuda_t *prts;
   int n_recv;
   int n_send;
 };

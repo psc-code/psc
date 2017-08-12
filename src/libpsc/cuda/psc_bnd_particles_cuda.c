@@ -4,7 +4,7 @@
 #include "psc_bnd_cuda.h"
 #include "psc_cuda.h"
 #include "particles_cuda.h"
-#include "psc_particles_as_single.h"
+#include "psc_particles_as_cuda.h"
 #include "cuda_mparticles.h"
 
 #include <mrc_profile.h>

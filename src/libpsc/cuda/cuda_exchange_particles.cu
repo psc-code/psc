@@ -6,7 +6,7 @@
 #include "cuda_sort2.h"
 #include "particles_cuda.h"
 #include "psc_bnd_cuda.h"
-#include "psc_particles_as_single.h"
+#include "psc_particles_as_cuda.h"
 
 #define PFX(x) xchg_##x
 #include "constants.c"
