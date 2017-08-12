@@ -408,7 +408,7 @@ ddc_particles_destroy(struct ddc_particles *ddcp)
 
 static void
 ddc_particles_queue(struct ddc_particles *ddcp, struct ddcp_patch *patch,
-		    int dir[3], void *p)
+		    int dir[3], particle_t *p)
 {
   struct ddcp_nei *nei = &patch->nei[mrc_ddc_dir2idx(dir)];
 
@@ -424,7 +424,7 @@ ddc_particles_queue(struct ddc_particles *ddcp, struct ddcp_patch *patch,
 // OPT: make the status buffers only as large as needed?
 
 static void
-ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
+ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
 {
   MPI_Comm comm = MPI_COMM_WORLD; // FIXME
   int rank, size;
@@ -432,7 +432,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
   MPI_Comm_size(comm, &size);
 
   for (int p = 0; p < ddcp->nr_patches; p++) {
-    ddcp_buf_ctor(&ddcp->patches[p].buf, particles, p);
+    ddcp_buf_ctor(&ddcp->patches[p].buf, mprts, p);
   }
   
   // FIXME, this is assuming our struct is equiv to an array of real_type
@@ -585,10 +585,10 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
 	  if (nei->rank != rank) {
 	    continue;
 	  }
-	  particle_t *mprts_patch_it = ddcp_buf_at(&patch->buf, patch->head);
+	  particle_t *patch_it = ddcp_buf_at(&patch->buf, patch->head);
 	  particle_buf_t *nei_send_buf = &ddcp->patches[nei->patch].nei[dir1neg].send_buf;
 	  particle_buf_copy(particle_buf_begin(nei_send_buf), particle_buf_end(nei_send_buf),
-			    mprts_patch_it);
+			    patch_it);
 	  patch->head += particle_buf_size(nei_send_buf);
 	}
       }
@@ -612,8 +612,8 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
     for (int i = 0; i < cinfo[r].n_recv_entries; i++) {
       struct ddcp_recv_entry *re = &cinfo[r].recv_entry[i];
       struct ddcp_patch *patch = &ddcp->patches[re->patch];
-      particle_t *mprts_patch_it = ddcp_buf_at(&patch->buf, patch->head);
-      particle_buf_copy(it, it + cinfo[r].recv_cnts[i], mprts_patch_it);
+      particle_t *patch_it = ddcp_buf_at(&patch->buf, patch->head);
+      particle_buf_copy(it, it + cinfo[r].recv_cnts[i], patch_it);
       patch->head += cinfo[r].recv_cnts[i];
       it += cinfo[r].recv_cnts[i];
     }
