@@ -8,18 +8,6 @@
 #include <mrc_io.h>
 #include <string.h>
 
-static inline bool
-at_lo_boundary(int p, int d)
-{
-  return ppsc->patch[p].off[d] == 0;
-}
-
-static inline bool
-at_hi_boundary(int p, int d)
-{
-  return ppsc->patch[p].off[d] + ppsc->patch[p].ldims[d] == ppsc->domain.gdims[d];
-}
-
 #include "psc_bnd_particles_open.c"
 
 // ----------------------------------------------------------------------
