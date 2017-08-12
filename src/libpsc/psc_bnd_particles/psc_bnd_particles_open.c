@@ -1,18 +1,6 @@
 
 static const int debug_every_step = 10;
 
-static inline bool
-at_lo_boundary(int p, int d)
-{
-  return ppsc->patch[p].off[d] == 0;
-}
-
-static inline bool
-at_hi_boundary(int p, int d)
-{
-  return ppsc->patch[p].off[d] + ppsc->patch[p].ldims[d] == ppsc->domain.gdims[d];
-}
-
 static inline double
 random1()
 {
