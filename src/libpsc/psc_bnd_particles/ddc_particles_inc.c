@@ -17,6 +17,11 @@ ddcp_buf_ctor(ddcp_buf_t *buf, struct psc_mparticles *mprts, int p)
   buf->m_p = p;
 }
 
+static void
+ddcp_buf_dtor(ddcp_buf_t *buf)
+{
+}
+
 static particle_t *
 ddcp_buf_at(ddcp_buf_t *buf, int n)
 {
@@ -133,6 +138,7 @@ struct ddcp_patch {
   int head;
   struct ddcp_nei nei[N_DIR];
   int n_recv;
+  ddcp_buf_t buf;
 };
 
 struct ddc_particles {
@@ -425,6 +431,10 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
   MPI_Comm_rank(comm, &rank);
   MPI_Comm_size(comm, &size);
 
+  for (int p = 0; p < ddcp->nr_patches; p++) {
+    ddcp_buf_ctor(&ddcp->patches[p].buf, particles, p);
+  }
+  
   // FIXME, this is assuming our struct is equiv to an array of real_type
   assert(sizeof(particle_t) % sizeof(particle_real_t) == 0);
   int sz = sizeof(particle_t) / sizeof(particle_real_t);
@@ -508,9 +518,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
   // realloc
   for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
-    ddcp_buf_t mprts_patch;
-    ddcp_buf_ctor(&mprts_patch, particles, p);
-    ddcp_buf_reserve(&mprts_patch, patch->head + patch->n_recv);
+    ddcp_buf_reserve(&patch->buf, patch->head + patch->n_recv);
   }
 
   // leave room for receives (FIXME? just change order)
@@ -568,8 +576,6 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
   // overlap: copy particles from local proc
   for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
-    ddcp_buf_t mprts_patch;
-    ddcp_buf_ctor(&mprts_patch, particles, p);
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
 	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
@@ -579,7 +585,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
 	  if (nei->rank != rank) {
 	    continue;
 	  }
-	  particle_t *mprts_patch_it = ddcp_buf_at(&mprts_patch, patch->head);
+	  particle_t *mprts_patch_it = ddcp_buf_at(&patch->buf, patch->head);
 	  particle_buf_t *nei_send_buf = &ddcp->patches[nei->patch].nei[dir1neg].send_buf;
 	  particle_buf_copy(particle_buf_begin(nei_send_buf), particle_buf_end(nei_send_buf),
 			    mprts_patch_it);
@@ -606,9 +612,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
     for (int i = 0; i < cinfo[r].n_recv_entries; i++) {
       struct ddcp_recv_entry *re = &cinfo[r].recv_entry[i];
       struct ddcp_patch *patch = &ddcp->patches[re->patch];
-      ddcp_buf_t mprts_patch;
-      ddcp_buf_ctor(&mprts_patch, particles, re->patch);
-      particle_t *mprts_patch_it = ddcp_buf_at(&mprts_patch, patch->head);
+      particle_t *mprts_patch_it = ddcp_buf_at(&patch->buf, patch->head);
       particle_buf_copy(it, it + cinfo[r].recv_cnts[i], mprts_patch_it);
       patch->head += cinfo[r].recv_cnts[i];
       it += cinfo[r].recv_cnts[i];
@@ -624,5 +628,9 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
 
   particle_buf_dtor(&send_buf);
   particle_buf_dtor(&recv_buf);
+
+  for (int p = 0; p < ddcp->nr_patches; p++) {
+    ddcp_buf_dtor(&ddcp->patches[p].buf);
+  }
 }
 
