@@ -19,21 +19,16 @@ PFX(setup_patch)(struct psc_mparticles *mprts, int p)
   patch->n_prts = 0;
   patch->n_alloced = 0;
 
-#if PSC_PARTICLES_AS_SINGLE
-  int *b_mx = patch->b_mx;
-  for (int d = 0; d < 3; d++) {
-    b_mx[d] = ppsc->patch[p].ldims[d];
-    patch->b_dxi[d] = 1.f / ppsc->patch[p].dx[d];
-  }
-  patch->nr_blocks = b_mx[0] * b_mx[1] * b_mx[2];
-  patch->b_cnt = calloc(patch->nr_blocks + 1, sizeof(*patch->b_cnt));
-#endif
-
-#if PSC_PARTICLES_AS_SINGLE_BY_BLOCK
   for (int d = 0; d < 3; d++) {
     patch->b_mx[d] = ppsc->patch[p].ldims[d];
     patch->b_dxi[d] = 1.f / ppsc->patch[p].dx[d];
   }
+#if PSC_PARTICLES_AS_SINGLE
+  patch->nr_blocks = patch->b_mx[0] * patch->b_mx[1] * patch->b_mx[2];
+  patch->b_cnt = calloc(patch->nr_blocks + 1, sizeof(*patch->b_cnt));
+#endif
+
+#if PSC_PARTICLES_AS_SINGLE_BY_BLOCK
   patch->nr_blocks = patch->b_mx[0] * patch->b_mx[1] * patch->b_mx[2];
   patch->b_cnt = calloc(patch->nr_blocks + 1, sizeof(*patch->b_cnt));
   patch->b_off = calloc(patch->nr_blocks + 2, sizeof(*patch->b_off));

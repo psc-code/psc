@@ -23,6 +23,8 @@
 #define psc_mparticles_PTYPE_patch_reserve psc_mparticles_single_patch_reserve
 #define psc_mparticles_PTYPE_patch_push_back psc_mparticles_single_patch_push_back
 #define psc_mparticles_PTYPE_patch_resize psc_mparticles_single_patch_resize
+#define psc_mparticles_PTYPE_patch_get_b_dxi psc_mparticles_single_patch_get_b_dxi 
+#define psc_mparticles_PTYPE_patch_get_b_mx psc_mparticles_single_patch_get_b_mx
 #define psc_particle_PTYPE_iter_t psc_particle_single_iter_t
 #define psc_particle_PTYPE_iter_equal psc_particle_single_iter_equal
 #define psc_particle_PTYPE_iter_next psc_particle_single_iter_next 
@@ -45,6 +47,8 @@
 #define psc_mparticles_PTYPE_patch_reserve psc_mparticles_double_patch_reserve
 #define psc_mparticles_PTYPE_patch_push_back psc_mparticles_double_patch_push_back
 #define psc_mparticles_PTYPE_patch_resize psc_mparticles_double_patch_resize
+#define psc_mparticles_PTYPE_patch_get_b_dxi psc_mparticles_double_patch_get_b_dxi 
+#define psc_mparticles_PTYPE_patch_get_b_mx psc_mparticles_double_patch_get_b_mx
 #define psc_particle_PTYPE_iter_t psc_particle_double_iter_t
 #define psc_particle_PTYPE_iter_equal psc_particle_double_iter_equal
 #define psc_particle_PTYPE_iter_next psc_particle_double_iter_next 
@@ -67,6 +71,8 @@
 #define psc_mparticles_PTYPE_patch_reserve psc_mparticles_single_by_block_patch_reserve
 #define psc_mparticles_PTYPE_patch_push_back psc_mparticles_single_by_block_patch_push_back
 #define psc_mparticles_PTYPE_patch_resize psc_mparticles_single_by_block_patch_resize
+#define psc_mparticles_PTYPE_patch_get_b_dxi psc_mparticles_single_by_block_patch_get_b_dxi 
+#define psc_mparticles_PTYPE_patch_get_b_mx psc_mparticles_single_by_block_patch_get_b_mx
 #define psc_particle_PTYPE_iter_t psc_particle_single_by_block_iter_t
 #define psc_particle_PTYPE_iter_equal psc_particle_single_by_block_iter_equal
 #define psc_particle_PTYPE_iter_next psc_particle_single_by_block_iter_next 
@@ -89,6 +95,8 @@
 #define psc_mparticles_PTYPE_patch_reserve psc_mparticles_c_patch_reserve
 #define psc_mparticles_PTYPE_patch_push_back psc_mparticles_c_patch_push_back
 #define psc_mparticles_PTYPE_patch_resize psc_mparticles_c_patch_resize
+#define psc_mparticles_PTYPE_patch_get_b_dxi psc_mparticles_c_patch_get_b_dxi 
+#define psc_mparticles_PTYPE_patch_get_b_mx psc_mparticles_c_patch_get_b_mx
 #define psc_particle_PTYPE_iter_t psc_particle_c_iter_t
 #define psc_particle_PTYPE_iter_equal psc_particle_c_iter_equal
 #define psc_particle_PTYPE_iter_next psc_particle_c_iter_next 
@@ -111,6 +119,8 @@
 #define psc_mparticles_PTYPE_patch_reserve psc_mparticles_fortran_patch_reserve
 #define psc_mparticles_PTYPE_patch_push_back psc_mparticles_fortran_patch_push_back
 #define psc_mparticles_PTYPE_patch_resize psc_mparticles_fortran_patch_resize
+#define psc_mparticles_PTYPE_patch_get_b_dxi psc_mparticles_fortran_patch_get_b_dxi 
+#define psc_mparticles_PTYPE_patch_get_b_mx psc_mparticles_fortran_patch_get_b_mx
 #define psc_particle_PTYPE_iter_t psc_particle_fortran_iter_t
 #define psc_particle_PTYPE_iter_equal psc_particle_fortran_iter_equal
 #define psc_particle_PTYPE_iter_next psc_particle_fortran_iter_next 
@@ -125,6 +135,8 @@
 #define particle_PTYPE_real_t particle_cuda_real_t
 #define particle_PTYPE_t particle_cuda_t
 #define psc_particle_PTYPE psc_particle_cuda
+#define psc_mparticles_PTYPE_patch_get_b_dxi psc_mparticles_cuda_patch_get_b_dxi 
+#define psc_mparticles_PTYPE_patch_get_b_mx psc_mparticles_cuda_patch_get_b_mx
 
 #endif
 
@@ -224,11 +236,11 @@ struct psc_mparticles_PTYPE_patch {
   int n_prts;
   int n_alloced;
 
+  int b_mx[3];
+  particle_PTYPE_real_t b_dxi[3];
 #if PTYPE == PTYPE_SINGLE
   particle_PTYPE_t *prt_array_alt;
-  int b_mx[3];
   int nr_blocks;
-  particle_PTYPE_real_t b_dxi[3];
   unsigned int *b_idx;
   unsigned int *b_ids;
   unsigned int *b_cnt;
@@ -239,9 +251,7 @@ struct psc_mparticles_PTYPE_patch {
   
 #if PTYPE == PTYPE_SINGLE_BY_BLOCK
   particle_PTYPE_t *prt_array_alt;
-  int b_mx[3];
   int nr_blocks;
-  particle_PTYPE_real_t b_dxi[3];
   unsigned int *b_idx;
   unsigned int *b_ids;
   unsigned int *b_cnt;
@@ -342,6 +352,36 @@ psc_mparticles_PTYPE_patch_push_back(struct psc_mparticles *mprts, int p,
 }
 
 // ----------------------------------------------------------------------
+// psc_mparticles_PTYPE_patch_get_b_dxi
+
+static inline void
+psc_mparticles_PTYPE_patch_get_b_dxi(struct psc_mparticles *mprts, int p,
+				     particle_PTYPE_real_t *b_dxi)
+{
+  struct psc_mparticles_PTYPE *sub = psc_mparticles_PTYPE(mprts);
+  struct psc_mparticles_PTYPE_patch *patch = &sub->patch[p];
+
+  for (int d = 0; d < 3; d++) {
+    b_dxi[d] = patch->b_dxi[d];
+  }
+}
+
+// ----------------------------------------------------------------------
+// psc_mparticles_PTYPE_patch_get_b_mx
+
+static inline void
+psc_mparticles_PTYPE_patch_get_b_mx(struct psc_mparticles *mprts, int p,
+				    int *b_mx)
+{
+  struct psc_mparticles_PTYPE *sub = psc_mparticles_PTYPE(mprts);
+  struct psc_mparticles_PTYPE_patch *patch = &sub->patch[p];
+
+  for (int d = 0; d < 3; d++) {
+    b_mx[d] = patch->b_mx[d];
+  }
+}
+
+// ----------------------------------------------------------------------
 // psc_particle_PTYPE_iter_t
 
 typedef struct {
@@ -430,6 +470,8 @@ psc_particle_PTYPE_range_size(psc_particle_PTYPE_range_t prts)
 
 #include <math.h>
 
+#endif // PTYPE_CUDA
+
 #undef particle_PTYPE_real_t
 #undef particle_PTYPE_t
 #undef psc_particle_PTYPE
@@ -441,6 +483,8 @@ psc_particle_PTYPE_range_size(psc_particle_PTYPE_range_t prts)
 #undef psc_mparticles_PTYPE_patch_reserve
 #undef psc_mparticles_PTYPE_patch_push_back
 #undef psc_mparticles_PTYPE_patch_resize
+#undef psc_mparticles_PTYPE_patch_get_b_dxi
+#undef psc_mparticles_PTYPE_patch_get_b_mx
 #undef psc_particle_PTYPE_iter_t
 #undef psc_particle_PTYPE_iter_equal
 #undef psc_particle_PTYPE_iter_next 
@@ -450,10 +494,3 @@ psc_particle_PTYPE_range_size(psc_particle_PTYPE_range_t prts)
 #undef psc_particle_PTYPE_range_mprts 
 #undef psc_particle_PTYPE_range_size
 
-#else // PTYPE_CUDA
-
-#undef particle_PTYPE_real_t
-#undef particle_PTYPE_t
-#undef psc_particle_PTYPE
-
-#endif

@@ -860,9 +860,7 @@ get_b_dxi(struct psc_mparticles *mprts, int p)
 #if DDCP_TYPE == DDCP_TYPE_COMMON2
   static particle_real_t b_dxi[3];
   if (!b_dxi[0]) {
-    for (int d = 0; d < 3; d++) {
-      b_dxi[d] = 1.f / ppsc->patch[p].dx[d];
-    }
+    mparticles_patch_get_b_dxi(mprts, p, b_dxi);
   }
   return b_dxi;
 #elif DDCP_TYPE == DDCP_TYPE_CUDA

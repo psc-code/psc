@@ -12,6 +12,7 @@ typedef particle_double_t particle_t;
 #define mparticles_patch_reserve    psc_mparticles_double_patch_reserve
 #define mparticles_patch_push_back  psc_mparticles_double_patch_push_back
 #define mparticles_patch_resize     psc_mparticles_double_patch_resize
+#define mparticles_patch_get_b_dxi  psc_mparticles_double_patch_get_b_dxi
 
 #define particle_qni_div_mni        particle_double_qni_div_mni
 #define particle_qni_wni            particle_double_qni_wni
