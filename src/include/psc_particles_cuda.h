@@ -16,10 +16,6 @@ struct cuda_bnd {
   int n_send;
 };
 
-struct psc_mparticles_cuda {
-  struct cuda_mparticles *cmprts;
-};
-
 static inline int
 particle_cuda_real_nint(particle_cuda_real_t x)
 {

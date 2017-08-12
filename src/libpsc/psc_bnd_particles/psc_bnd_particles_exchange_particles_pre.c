@@ -11,8 +11,8 @@ exchange_particles_pre(struct psc_bnd_particles *bnd, struct psc_mparticles *mpr
   for (int d = 0; d < 3; d++) {
     xm[d] = patch->ldims[d] * patch->dx[d];
   }
-  particle_real_t *b_dxi = get_b_dxi(mprts, p);
-  int *b_mx = get_b_mx(mprts, p);
+  const particle_real_t *b_dxi = get_b_dxi(mprts, p);
+  const int *b_mx = get_b_mx(mprts, p);
   
   // FIXME we should make sure (assert) we don't quietly drop particle which left
   // in the invariant direction

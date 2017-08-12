@@ -567,6 +567,30 @@ psc_mparticles_cuda_inject(struct psc_mparticles *mprts, struct cuda_mparticles_
 }
 
 // ----------------------------------------------------------------------
+// psc_mparticles_cuda_get_b_dxi
+//
+// FIXME, why not return it?
+
+const particle_cuda_real_t *
+psc_mparticles_cuda_patch_get_b_dxi(struct psc_mparticles *mprts, int p)
+{
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
+
+  return cmprts->b_dxi;
+}
+
+// ----------------------------------------------------------------------
+// psc_mparticles_cuda_get_b_mx
+
+const int *
+psc_mparticles_cuda_patch_get_b_mx(struct psc_mparticles *mprts, int p)
+{
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
+
+  return cmprts->b_mx;
+}
+
+// ----------------------------------------------------------------------
 // psc_mparticles: subclass "cuda"
   
 struct psc_mparticles_ops psc_mparticles_cuda_ops = {

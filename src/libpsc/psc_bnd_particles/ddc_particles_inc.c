@@ -843,30 +843,16 @@ xchg_append(struct psc_mparticles *mprts, int p, struct ddcp_patch *ddcp_patch, 
 #endif
 }
 
-static inline int *
+static inline const int *
 get_b_mx(struct psc_mparticles *mprts, int p)
 {
-#if DDCP_TYPE == DDCP_TYPE_COMMON2
-  return ppsc->patch[p].ldims;
-#elif DDCP_TYPE == DDCP_TYPE_CUDA
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-  return cmprts->b_mx;
-#endif
+  return mparticles_patch_get_b_mx(mprts, p);
 }
 
-static inline particle_real_t *
+static inline const particle_real_t *
 get_b_dxi(struct psc_mparticles *mprts, int p)
 {
-#if DDCP_TYPE == DDCP_TYPE_COMMON2
-  static particle_real_t b_dxi[3];
-  if (!b_dxi[0]) {
-    mparticles_patch_get_b_dxi(mprts, p, b_dxi);
-  }
-  return b_dxi;
-#elif DDCP_TYPE == DDCP_TYPE_CUDA
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-  return cmprts->b_dxi;
-#endif
+  return mparticles_patch_get_b_dxi(mprts, p);
 }
 
 static inline int

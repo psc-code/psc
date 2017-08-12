@@ -135,6 +135,7 @@
 #define particle_PTYPE_real_t particle_cuda_real_t
 #define particle_PTYPE_t particle_cuda_t
 #define psc_particle_PTYPE psc_particle_cuda
+#define psc_mparticles_PTYPE psc_mparticles_cuda
 #define psc_mparticles_PTYPE_patch_get_b_dxi psc_mparticles_cuda_patch_get_b_dxi 
 #define psc_mparticles_PTYPE_patch_get_b_mx psc_mparticles_cuda_patch_get_b_mx
 
@@ -226,7 +227,19 @@ typedef struct psc_particle_PTYPE {
 
 #endif
 
-#if PTYPE != PTYPE_CUDA
+#if PTYPE == PTYPE_CUDA
+
+// ----------------------------------------------------------------------
+// psc_mparticles_PTYPE
+
+struct psc_mparticles_PTYPE {
+  struct cuda_mparticles *cmprts;
+};
+
+const particle_PTYPE_real_t *psc_mparticles_PTYPE_patch_get_b_dxi(struct psc_mparticles *mprts, int p);
+const int *psc_mparticles_PTYPE_patch_get_b_mx(struct psc_mparticles *mprts, int p);
+
+#else // PTYPE != PTYPE_CUDA
 
 // ----------------------------------------------------------------------
 // psc_mparticles_PTYPE_patch
@@ -352,33 +365,27 @@ psc_mparticles_PTYPE_patch_push_back(struct psc_mparticles *mprts, int p,
 }
 
 // ----------------------------------------------------------------------
-// psc_mparticles_PTYPE_patch_get_b_dxi
+// psc_mparticles_PTYPE_patch_get_b_mx
 
-static inline void
-psc_mparticles_PTYPE_patch_get_b_dxi(struct psc_mparticles *mprts, int p,
-				     particle_PTYPE_real_t *b_dxi)
+static inline const int *
+psc_mparticles_PTYPE_patch_get_b_mx(struct psc_mparticles *mprts, int p)
 {
   struct psc_mparticles_PTYPE *sub = psc_mparticles_PTYPE(mprts);
   struct psc_mparticles_PTYPE_patch *patch = &sub->patch[p];
 
-  for (int d = 0; d < 3; d++) {
-    b_dxi[d] = patch->b_dxi[d];
-  }
+  return patch->b_mx;
 }
 
 // ----------------------------------------------------------------------
-// psc_mparticles_PTYPE_patch_get_b_mx
+// psc_mparticles_PTYPE_patch_get_b_dxi
 
-static inline void
-psc_mparticles_PTYPE_patch_get_b_mx(struct psc_mparticles *mprts, int p,
-				    int *b_mx)
+static inline const particle_PTYPE_real_t *
+psc_mparticles_PTYPE_patch_get_b_dxi(struct psc_mparticles *mprts, int p)
 {
   struct psc_mparticles_PTYPE *sub = psc_mparticles_PTYPE(mprts);
   struct psc_mparticles_PTYPE_patch *patch = &sub->patch[p];
 
-  for (int d = 0; d < 3; d++) {
-    b_mx[d] = patch->b_mx[d];
-  }
+  return patch->b_dxi;
 }
 
 // ----------------------------------------------------------------------
