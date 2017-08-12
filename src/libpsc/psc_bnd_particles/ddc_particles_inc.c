@@ -62,6 +62,18 @@ particle_buf_begin(particle_buf_t *buf)
   return buf->m_data;
 }
 
+static particle_t *
+particle_buf_end(particle_buf_t *buf)
+{
+  return buf->m_data + buf->m_size;
+}
+
+static void
+particle_buf_copy(particle_t *from_begin, particle_t *from_end, particle_t *to_begin)
+{
+  memcpy(to_begin, from_begin, (from_end - from_begin) * sizeof(*to_begin));
+}
+
 struct ddcp_info_by_rank {
   struct ddcp_send_entry {
     int patch; // source patch (source rank is this rank)
@@ -503,9 +515,9 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
     for (int i = 0; i < cinfo[r].n_send_entries; i++) {
       struct ddcp_send_entry *se = &cinfo[r].send_entry[i];
       struct ddcp_patch *patch = &ddcp->patches[se->patch];
-      struct ddcp_nei *nei = &patch->nei[se->dir1];
-      memcpy(it, particle_buf_begin(&nei->send_buf), cinfo[r].send_cnts[i] * sizeof(particle_t));
-      it += cinfo[r].send_cnts[i];
+      particle_buf_t *send_buf_nei = &patch->nei[se->dir1].send_buf;
+      particle_buf_copy(particle_buf_begin(send_buf_nei), particle_buf_end(send_buf_nei), it);
+      it += particle_buf_size(send_buf_nei);
     }
     MPI_Isend(it0, sz * cinfo[r].n_send, MPI_PARTICLES_REAL,
 	      cinfo[r].rank, 1, comm, &ddcp->send_reqs[r]);
@@ -540,10 +552,10 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
 	    continue;
 	  }
 	  void *addr = ddcp_particles_get_addr(particles, p, patch->head);
-	  struct ddcp_nei *nei_send = &ddcp->patches[nei->patch].nei[dir1neg];
-	  int n_send_nei = particle_buf_size(&nei_send->send_buf);
-	  memcpy(addr, particle_buf_begin(&nei_send->send_buf), n_send_nei * sizeof(particle_t));
-	  patch->head += n_send_nei;
+	  particle_buf_t *nei_send_buf = &ddcp->patches[nei->patch].nei[dir1neg].send_buf;
+	  particle_buf_copy(particle_buf_begin(nei_send_buf), particle_buf_end(nei_send_buf),
+			    addr);
+	  patch->head += particle_buf_size(nei_send_buf);
 	}
       }
     }
@@ -567,7 +579,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
       struct ddcp_recv_entry *re = &cinfo[r].recv_entry[i];
       struct ddcp_patch *patch = &ddcp->patches[re->patch];
       void *addr = ddcp_particles_get_addr(particles, re->patch, patch->head);
-      memcpy(addr, it, cinfo[r].recv_cnts[i] * sizeof(particle_t));
+      particle_buf_copy(it, it + cinfo[r].recv_cnts[i], addr);
       patch->head += cinfo[r].recv_cnts[i];
       it += cinfo[r].recv_cnts[i];
     }
