@@ -3,6 +3,10 @@
 
 #include <string.h>
 
+
+static void ddcp_particles_realloc(struct psc_mparticles *mprts, int p, int new_n_particles);
+static particle_t *ddcp_particles_get_addr(struct psc_mparticles *mprts, int p, int n);
+
 #define N_DIR (27)
 
 typedef struct {

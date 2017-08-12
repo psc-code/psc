@@ -10,25 +10,23 @@
 
 #include "psc_bnd_particles_open.c"
 
+#include "ddc_particles_inc.c"
+
 // ----------------------------------------------------------------------
 // ddcp_particles helpers
 
 static void
-ddcp_particles_realloc(void *_ctx, int p, int new_n_particles)
+ddcp_particles_realloc(struct psc_mparticles *mprts, int p, int new_n_particles)
 {
-  struct psc_mparticles *mprts = _ctx;
   mparticles_patch_reserve(mprts, p, new_n_particles);
 }
 
-static void *
-ddcp_particles_get_addr(void *_ctx, int p, int n)
+static particle_t *
+ddcp_particles_get_addr(struct psc_mparticles *mprts, int p, int n)
 {
-  struct psc_mparticles *mprts = _ctx;
   particle_range_t prts = particle_range_mprts(mprts, p);
   return particle_iter_at(prts.begin, n);
 }
-
-#include "ddc_particles_inc.c"
 
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub_setup
