@@ -8,48 +8,10 @@
 
 #include <string.h>
 
+#define N_DIR (27)
+
 // ----------------------------------------------------------------------
 // ddcp_buf_t
-
-#if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
-
-static void
-ddcp_particles_realloc(struct psc_mparticles *mprts, int p, int new_n_particles)
-{
-  mparticles_patch_reserve(mprts, p, new_n_particles);
-}
-
-static particle_t *
-ddcp_particles_get_addr(struct psc_mparticles *mprts, int p, int n)
-{
-  particle_range_t prts = particle_range_mprts(mprts, p);
-  return particle_iter_at(prts.begin, n);
-}
-
-#elif DDCP_TYPE == DDCP_TYPE_CUDA
-
-static void
-ddcp_particles_realloc(struct psc_mparticles *mprts, int p, int new_n_particles)
-{
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-
-  cmprts->bnd.bpatch[p].prts = realloc(cmprts->bnd.bpatch[p].prts, new_n_particles * sizeof(*cmprts->bnd.bpatch[p].prts));
-}
-
-static particle_t *
-ddcp_particles_get_addr(struct psc_mparticles *mprts, int p, int n)
-{
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-
-  return &cmprts->bnd.bpatch[p].prts[n];
-}
-
-#endif
-
-static void ddcp_particles_realloc(struct psc_mparticles *mprts, int p, int new_n_particles);
-static particle_t *ddcp_particles_get_addr(struct psc_mparticles *mprts, int p, int n);
-
-#define N_DIR (27)
 
 typedef struct {
   struct psc_mparticles *m_mprts;
@@ -71,13 +33,25 @@ ddcp_buf_dtor(ddcp_buf_t *buf)
 static particle_t *
 ddcp_buf_at(ddcp_buf_t *buf, int n)
 {
-  return ddcp_particles_get_addr(buf->m_mprts, buf->m_p, n);
+#if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
+  particle_range_t prts = particle_range_mprts(buf->m_mprts, buf->m_p);
+  return particle_iter_at(prts.begin, n);
+#elif DDCP_TYPE == DDCP_TYPE_CUDA
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(buf->m_mprts)->cmprts;
+  return &cmprts->bnd.bpatch[buf->m_p].prts[n];
+#endif
 }
 
 static void
-ddcp_buf_reserve(ddcp_buf_t *buf, int n)
+ddcp_buf_reserve(ddcp_buf_t *buf, int new_capacity)
 {
-  ddcp_particles_realloc(buf->m_mprts, buf->m_p, n);
+#if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
+  mparticles_patch_reserve(buf->m_mprts, buf->m_p, new_capacity);
+#elif DDCP_TYPE == DDCP_TYPE_CUDA
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(buf->m_mprts)->cmprts;
+  cmprts->bnd.bpatch[buf->m_p].prts = realloc(cmprts->bnd.bpatch[buf->m_p].prts,
+					      new_capacity * sizeof(*cmprts->bnd.bpatch[buf->m_p].prts));
+#endif
 }
 
 typedef struct {
