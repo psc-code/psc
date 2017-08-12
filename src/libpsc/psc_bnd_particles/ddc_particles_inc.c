@@ -6,6 +6,30 @@
 #define N_DIR (27)
 
 typedef struct {
+  struct psc_mparticles *m_mprts;
+  int m_p;
+} ddcp_buf_t;
+
+static void
+ddcp_buf_ctor(ddcp_buf_t *buf, struct psc_mparticles *mprts, int p)
+{
+  buf->m_mprts = mprts;
+  buf->m_p = p;
+}
+
+static particle_t *
+ddcp_buf_at(ddcp_buf_t *buf, int n)
+{
+  return ddcp_particles_get_addr(buf->m_mprts, buf->m_p, n);
+}
+
+static void
+ddcp_buf_reserve(ddcp_buf_t *buf, int n)
+{
+  ddcp_particles_realloc(buf->m_mprts, buf->m_p, n);
+}
+
+typedef struct {
   particle_t *m_data;
   unsigned int m_size;
   unsigned int m_capacity;
@@ -484,7 +508,9 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
   // realloc
   for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
-    ddcp_particles_realloc(particles, p, patch->head + patch->n_recv);
+    ddcp_buf_t mprts_patch;
+    ddcp_buf_ctor(&mprts_patch, particles, p);
+    ddcp_buf_reserve(&mprts_patch, patch->head + patch->n_recv);
   }
 
   // leave room for receives (FIXME? just change order)
@@ -542,6 +568,8 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
   // overlap: copy particles from local proc
   for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
+    ddcp_buf_t mprts_patch;
+    ddcp_buf_ctor(&mprts_patch, particles, p);
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
 	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
@@ -551,10 +579,10 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
 	  if (nei->rank != rank) {
 	    continue;
 	  }
-	  void *addr = ddcp_particles_get_addr(particles, p, patch->head);
+	  particle_t *mprts_patch_it = ddcp_buf_at(&mprts_patch, patch->head);
 	  particle_buf_t *nei_send_buf = &ddcp->patches[nei->patch].nei[dir1neg].send_buf;
 	  particle_buf_copy(particle_buf_begin(nei_send_buf), particle_buf_end(nei_send_buf),
-			    addr);
+			    mprts_patch_it);
 	  patch->head += particle_buf_size(nei_send_buf);
 	}
       }
@@ -578,8 +606,10 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
     for (int i = 0; i < cinfo[r].n_recv_entries; i++) {
       struct ddcp_recv_entry *re = &cinfo[r].recv_entry[i];
       struct ddcp_patch *patch = &ddcp->patches[re->patch];
-      void *addr = ddcp_particles_get_addr(particles, re->patch, patch->head);
-      particle_buf_copy(it, it + cinfo[r].recv_cnts[i], addr);
+      ddcp_buf_t mprts_patch;
+      ddcp_buf_ctor(&mprts_patch, particles, re->patch);
+      particle_t *mprts_patch_it = ddcp_buf_at(&mprts_patch, patch->head);
+      particle_buf_copy(it, it + cinfo[r].recv_cnts[i], mprts_patch_it);
       patch->head += cinfo[r].recv_cnts[i];
       it += cinfo[r].recv_cnts[i];
     }
