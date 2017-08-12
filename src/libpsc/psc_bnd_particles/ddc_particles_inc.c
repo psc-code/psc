@@ -1020,7 +1020,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 
 #endif
 
-#if DDCP_TYPE == DDCP_TYPE_COMMON2
+#if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP || DDCP_TYPE == DDCP_TYPE_COMMON2
 
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub_exchange_particles_post
@@ -1030,33 +1030,22 @@ psc_bnd_particles_sub_exchange_particles_post(struct psc_bnd_particles *bnd,
 					      struct psc_mparticles *mprts, int p)
 {
   struct ddc_particles *ddcp = bnd->ddcp;
-  struct psc_mparticles_single *sub = psc_mparticles_single(mprts);
-  struct psc_mparticles_single_patch *patch = &sub->patch[p];
-  particle_range_t prts = particle_range_mprts(mprts, p);
   struct ddcp_patch *dpatch = &ddcp->patches[p];
 
   mparticles_patch_resize(mprts, p, dpatch->head);
   
+#if DDCP_TYPE == DDCP_TYPE_COMMON2
+  struct psc_mparticles_single *sub = psc_mparticles_single(mprts);
+  struct psc_mparticles_single_patch *patch = &sub->patch[p];
+  particle_range_t prts = particle_range_mprts(mprts, p);
+
   find_block_indices_count(patch->b_idx, patch->b_cnt, mprts, p, patch->n_part_save);
   exclusive_scan(patch->b_cnt, patch->nr_blocks + 1);
   sort_indices(patch->b_idx, patch->b_cnt, patch->b_ids, particle_range_size(prts));
   
   mparticles_patch_resize(mprts, p, patch->b_cnt[patch->nr_blocks - 1]);
   patch->need_reorder = true; // FIXME, need to honor before get()/put()
-}
-
-#elif DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
-
-// ----------------------------------------------------------------------
-// psc_bnd_particles_sub_exchange_particles_post
-
-static void
-psc_bnd_particles_sub_exchange_particles_post(struct psc_bnd_particles *bnd,
-					      struct psc_mparticles *mprts, int p)
-{
-  struct ddc_particles *ddcp = bnd->ddcp;
-  struct ddcp_patch *patch = &ddcp->patches[p];
-  mparticles_patch_resize(mprts, p, patch->head);
+#endif
 }
 
 #endif
