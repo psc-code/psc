@@ -89,6 +89,21 @@ ddcp_buf_resize(ddcp_buf_t *buf, int new_size)
   buf->head = new_size;
 }
 
+static void
+ddcp_buf_push_back(ddcp_buf_t *buf, particle_t *p)
+{
+  // this assert should go away in the general case,
+  // but we actually push_back into the same array we're reading from,
+  // so we better don't go beyond current capacity
+  assert(buf->head + 1 <= ddcp_buf_capacity(buf));
+  ddcp_buf_reserve(buf, buf->head + 1);
+  *ddcp_buf_at(buf, buf->head) = *p;
+  buf->head++;
+}
+
+// ----------------------------------------------------------------------
+// particle_buf_t
+
 typedef struct {
   particle_t *m_data;
   unsigned int m_size;
@@ -977,7 +992,7 @@ exchange_particles_pre(struct psc_bnd_particles *bnd, struct psc_mparticles *mpr
     }
     if (!drop) {
       if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
-	*ddcp_buf_at(&ddcp_patch->buf, ddcp_patch->buf.head++) = *prt;
+	ddcp_buf_push_back(&ddcp_patch->buf, prt);
       } else {
 	ddc_particles_queue(ddcp, ddcp_patch, dir, prt);
       }
@@ -1047,7 +1062,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 	b_pos[2] >= 0 && b_pos[2] < b_mx[2]) {
       // fast path
       // inside domain: move into right position
-      *particle_iter_at(prts.begin, patch->buf.head++) = *part;
+      ddcp_buf_push_back(&patch->buf, part);
     } else {
       // slow path
       bool drop = false;
@@ -1118,7 +1133,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
       }
       if (!drop) {
 	if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
-	  *particle_iter_at(prts.begin, patch->buf.head++) = *part;
+	  ddcp_buf_push_back(&patch->buf, part);
 	} else {
 	  ddc_particles_queue(ddcp, patch, dir, part);
 	}
