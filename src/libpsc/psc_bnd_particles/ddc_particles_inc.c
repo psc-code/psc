@@ -14,15 +14,24 @@
 // ddcp_buf_t
 
 typedef struct {
+#if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
   struct psc_mparticles *m_mprts;
   int m_p;
+#elif DDCP_TYPE == DDCP_TYPE_CUDA
+  struct cuda_bnd *m_bpatch;
+#endif
 } ddcp_buf_t;
 
 static void
 ddcp_buf_ctor(ddcp_buf_t *buf, struct psc_mparticles *mprts, int p)
 {
+#if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
   buf->m_mprts = mprts;
   buf->m_p = p;
+#elif DDCP_TYPE == DDCP_TYPE_CUDA
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
+  buf->m_bpatch = &cmprts->bnd.bpatch[p];
+#endif
 }
 
 static void
@@ -34,11 +43,9 @@ static particle_t *
 ddcp_buf_at(ddcp_buf_t *buf, int n)
 {
 #if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
-  particle_range_t prts = particle_range_mprts(buf->m_mprts, buf->m_p);
-  return particle_iter_at(prts.begin, n);
+  return mparticles_get_one(buf->m_mprts, buf->m_p, n);
 #elif DDCP_TYPE == DDCP_TYPE_CUDA
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(buf->m_mprts)->cmprts;
-  return &cmprts->bnd.bpatch[buf->m_p].prts[n];
+  return &buf->m_bpatch->prts[n];
 #endif
 }
 
@@ -48,9 +55,8 @@ ddcp_buf_reserve(ddcp_buf_t *buf, int new_capacity)
 #if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
   mparticles_patch_reserve(buf->m_mprts, buf->m_p, new_capacity);
 #elif DDCP_TYPE == DDCP_TYPE_CUDA
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(buf->m_mprts)->cmprts;
-  cmprts->bnd.bpatch[buf->m_p].prts = realloc(cmprts->bnd.bpatch[buf->m_p].prts,
-					      new_capacity * sizeof(*cmprts->bnd.bpatch[buf->m_p].prts));
+  buf->m_bpatch->prts = realloc(buf->m_bpatch->prts,
+			       new_capacity * sizeof(*buf->m_bpatch->prts));
 #endif
 }
 
@@ -823,8 +829,7 @@ static inline particle_t *
 xchg_get_one(struct psc_mparticles *mprts, int p, int n)
 {
 #if DDCP_TYPE == DDCP_TYPE_COMMON2
-  particle_range_t prts = particle_range_mprts(mprts, p);
-  return particle_iter_at(prts.begin, n);
+  return mparticles_get_one(mprts, p, n);
 #elif DDCP_TYPE == DDCP_TYPE_CUDA
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
   return &cmprts->bnd.bpatch[p].prts[n];
