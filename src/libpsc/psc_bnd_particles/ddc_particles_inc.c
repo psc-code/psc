@@ -76,6 +76,12 @@ ddcp_buf_capacity(ddcp_buf_t *buf)
 #endif
 }
 
+static unsigned int
+ddcp_buf_size(ddcp_buf_t *buf)
+{
+  return buf->head;
+}
+
 static void
 ddcp_buf_resize(ddcp_buf_t *buf, int new_size)
 {
@@ -566,7 +572,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
   // realloc
   for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
-    ddcp_buf_reserve(&patch->buf, patch->buf.head + patch->n_recv);
+    ddcp_buf_reserve(&patch->buf, ddcp_buf_size(&patch->buf) + patch->n_recv);
   }
 
   // leave room for receives (FIXME? just change order)
@@ -574,7 +580,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
     for (int i = 0; i < cinfo[r].n_recv_entries; i++) {
       struct ddcp_recv_entry *re = &cinfo[r].recv_entry[i];
       struct ddcp_patch *patch = &ddcp->patches[re->patch];
-      ddcp_buf_resize(&patch->buf, patch->buf.head + cinfo[r].recv_cnts[i]);
+      ddcp_buf_resize(&patch->buf, ddcp_buf_size(&patch->buf) + cinfo[r].recv_cnts[i]);
     }
   }
 
@@ -633,11 +639,11 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
 	  if (nei->rank != rank) {
 	    continue;
 	  }
-	  particle_t *patch_it = ddcp_buf_at(&patch->buf, patch->buf.head);
 	  particle_buf_t *nei_send_buf = &ddcp->patches[nei->patch].nei[dir1neg].send_buf;
+	  unsigned int end = ddcp_buf_size(&patch->buf);
+	  ddcp_buf_resize(&patch->buf, end + particle_buf_size(nei_send_buf));
 	  particle_buf_copy(particle_buf_begin(nei_send_buf), particle_buf_end(nei_send_buf),
-			    patch_it);
-	  patch->buf.head += particle_buf_size(nei_send_buf);
+			    ddcp_buf_at(&patch->buf, end));
 	}
       }
     }
@@ -651,8 +657,8 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
   int *old_head = malloc(ddcp->nr_patches * sizeof(*old_head));
   for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
-    old_head[p] = patch->buf.head;
-    patch->buf.head -= patch->n_recv;
+    old_head[p] = ddcp_buf_size(&patch->buf);
+    ddcp_buf_resize(&patch->buf, old_head[p] - patch->n_recv);
   }
 
   it = particle_buf_begin(&recv_buf);
