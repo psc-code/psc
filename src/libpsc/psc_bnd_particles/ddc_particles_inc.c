@@ -56,8 +56,23 @@ ddcp_buf_reserve(ddcp_buf_t *buf, int new_capacity)
 #if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
   mparticles_patch_reserve(buf->m_mprts, buf->m_p, new_capacity);
 #elif DDCP_TYPE == DDCP_TYPE_CUDA
+  if (buf->m_bpatch->capacity >= new_capacity) {
+    return;
+  }
+
+  buf->m_bpatch->capacity = MAX(new_capacity, 2 * buf->m_bpatch->capacity);
   buf->m_bpatch->prts = realloc(buf->m_bpatch->prts,
-			       new_capacity * sizeof(*buf->m_bpatch->prts));
+				buf->m_bpatch->capacity * sizeof(*buf->m_bpatch->prts));
+#endif
+}
+
+static unsigned int
+ddcp_buf_capacity(ddcp_buf_t *buf)
+{
+#if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
+  return mparticles_patch_capacity(buf->m_mprts, buf->m_p);
+#elif DDCP_TYPE == DDCP_TYPE_CUDA
+  return buf->m_bpatch->capacity;
 #endif
 }
 

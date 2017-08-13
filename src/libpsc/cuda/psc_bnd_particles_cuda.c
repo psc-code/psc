@@ -94,6 +94,7 @@ mprts_convert_to_cuda(struct psc_bnd_particles *bnd, struct psc_mparticles *mprt
       h_bnd_off[n] = cmprts->bnd.h_bnd_cnt[b]++;
     }
     free(cmprts->bnd.bpatch[p].prts);
+    cmprts->bnd.bpatch[p].capacity = 0;
     off += n_recv;
   }
 }

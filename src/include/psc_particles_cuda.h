@@ -14,6 +14,7 @@ struct cuda_bnd {
   particle_cuda_t *prts;
   int n_recv;
   int n_send;
+  int capacity;
 };
 
 static inline int
