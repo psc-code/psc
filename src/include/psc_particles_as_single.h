@@ -12,6 +12,7 @@ typedef particle_single_t particle_t;
 #define mparticles_patch_reserve    psc_mparticles_single_patch_reserve
 #define mparticles_patch_push_back  psc_mparticles_single_patch_push_back
 #define mparticles_patch_resize     psc_mparticles_single_patch_resize
+#define mparticles_patch_capacity   psc_mparticles_single_patch_capacity
 #define mparticles_patch_get_b_mx   psc_mparticles_single_patch_get_b_mx
 #define mparticles_patch_get_b_dxi  psc_mparticles_single_patch_get_b_dxi
 

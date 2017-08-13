@@ -12,6 +12,7 @@ typedef particle_fortran_t particle_t;
 #define mparticles_patch_reserve      psc_mparticles_fortran_patch_reserve
 #define mparticles_patch_push_back    psc_mparticles_fortran_patch_push_back
 #define mparticles_patch_resize       psc_mparticles_fortran_patch_resize
+#define mparticles_patch_capacity     psc_mparticles_fortran_patch_capacity
 
 #define particle_real_fint            particle_fortran_real_fint
 #define particle_iter_t               psc_particle_fortran_iter_t
