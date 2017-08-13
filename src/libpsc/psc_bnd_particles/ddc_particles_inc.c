@@ -76,6 +76,13 @@ ddcp_buf_capacity(ddcp_buf_t *buf)
 #endif
 }
 
+static void
+ddcp_buf_resize(ddcp_buf_t *buf, int new_size)
+{
+  assert(new_size <= ddcp_buf_capacity(buf));
+  buf->head = new_size;
+}
+
 typedef struct {
   particle_t *m_data;
   unsigned int m_size;
@@ -567,7 +574,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
     for (int i = 0; i < cinfo[r].n_recv_entries; i++) {
       struct ddcp_recv_entry *re = &cinfo[r].recv_entry[i];
       struct ddcp_patch *patch = &ddcp->patches[re->patch];
-      patch->buf.head += cinfo[r].recv_cnts[i];
+      ddcp_buf_resize(&patch->buf, patch->buf.head + cinfo[r].recv_cnts[i]);
     }
   }
 
