@@ -825,29 +825,6 @@ sort_indices(unsigned int *b_idx, unsigned int *b_sum, unsigned int *b_ids, int 
 
 #if DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_CUDA
 
-static inline particle_t *
-xchg_get_one(struct psc_mparticles *mprts, int p, int n)
-{
-#if DDCP_TYPE == DDCP_TYPE_COMMON2
-  return mparticles_get_one(mprts, p, n);
-#elif DDCP_TYPE == DDCP_TYPE_CUDA
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-  return &cmprts->bnd.bpatch[p].prts[n];
-#endif
-}
-
-static void
-xchg_append(struct psc_mparticles *mprts, int p, struct ddcp_patch *ddcp_patch, particle_t *prt)
-{
-#if DDCP_TYPE == DDCP_TYPE_COMMON2
-  particle_range_t prts = particle_range_mprts(mprts, p);
-  *particle_iter_at(prts.begin, ddcp_patch->head++) = *prt;
-#elif DDCP_TYPE == DDCP_TYPE_CUDA
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-  cmprts->bnd.bpatch[p].prts[ddcp_patch->head++] = *prt;
-#endif
-}
-
 static inline int
 get_n_send(struct psc_mparticles *mprts, int p)
 {
@@ -895,9 +872,10 @@ exchange_particles_pre(struct psc_bnd_particles *bnd, struct psc_mparticles *mpr
   for (int dir1 = 0; dir1 < N_DIR; dir1++) {
     particle_buf_resize(&ddcp_patch->nei[dir1].send_buf, 0);
   }
+
   int n_end = ddcp_patch->head + n_send;
   for (int n = ddcp_patch->head; n < n_end; n++) {
-    particle_t *prt = xchg_get_one(mprts, p, n);
+    particle_t *prt = ddcp_buf_at(&ddcp_patch->buf, n);
     particle_real_t *xi = &prt->xi;
     particle_real_t *pxi = &prt->pxi;
     
@@ -970,7 +948,8 @@ exchange_particles_pre(struct psc_bnd_particles *bnd, struct psc_mparticles *mpr
     }
     if (!drop) {
       if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
-	xchg_append(mprts, p, ddcp_patch, prt);
+	*ddcp_buf_at(&ddcp_patch->buf, ddcp_patch->head++) = *prt;
+	//xchg_append(mprts, p, ddcp_patch, prt);
       } else {
 	ddc_particles_queue(ddcp, ddcp_patch, dir, prt);
       }
