@@ -14,7 +14,7 @@
 // ddcp_buf_t
 
 typedef struct {
-  int head;
+  int m_size;
 #if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
   struct psc_mparticles *m_mprts;
   int m_p;
@@ -26,6 +26,7 @@ typedef struct {
 static void
 ddcp_buf_ctor(ddcp_buf_t *buf, struct psc_mparticles *mprts, int p)
 {
+  buf->m_size = 0;
 #if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
   buf->m_mprts = mprts;
   buf->m_p = p;
@@ -79,14 +80,14 @@ ddcp_buf_capacity(ddcp_buf_t *buf)
 static unsigned int
 ddcp_buf_size(ddcp_buf_t *buf)
 {
-  return buf->head;
+  return buf->m_size;
 }
 
 static void
 ddcp_buf_resize(ddcp_buf_t *buf, int new_size)
 {
   assert(new_size <= ddcp_buf_capacity(buf));
-  buf->head = new_size;
+  buf->m_size = new_size;
 }
 
 static void
@@ -95,10 +96,10 @@ ddcp_buf_push_back(ddcp_buf_t *buf, particle_t *p)
   // this assert should go away in the general case,
   // but we actually push_back into the same array we're reading from,
   // so we better don't go beyond current capacity
-  assert(buf->head + 1 <= ddcp_buf_capacity(buf));
-  ddcp_buf_reserve(buf, buf->head + 1);
-  *ddcp_buf_at(buf, buf->head) = *p;
-  buf->head++;
+  assert(buf->m_size + 1 <= ddcp_buf_capacity(buf));
+  ddcp_buf_reserve(buf, buf->m_size + 1);
+  *ddcp_buf_at(buf, buf->m_size) = *p;
+  buf->m_size++;
 }
 
 // ----------------------------------------------------------------------
@@ -500,10 +501,6 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
   MPI_Comm_rank(comm, &rank);
   MPI_Comm_size(comm, &size);
 
-  for (int p = 0; p < ddcp->nr_patches; p++) {
-    ddcp_buf_ctor(&ddcp->patches[p].buf, mprts, p);
-  }
-  
   // FIXME, this is assuming our struct is equiv to an array of real_type
   assert(sizeof(particle_t) % sizeof(particle_real_t) == 0);
   int sz = sizeof(particle_t) / sizeof(particle_real_t);
