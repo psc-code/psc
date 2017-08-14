@@ -16,8 +16,7 @@ PFX(setup_patch)(struct psc_mparticles *mprts, int p)
   struct psc_mparticles_sub *sub = psc_mparticles_sub(mprts);
   struct PFX(patch) *patch = &sub->patch[p];
 
-  patch->buf.m_size = 0;
-  patch->buf.m_capacity = 0;
+  PARTICLE_BUF(ctor)(&patch->buf);
 
   for (int d = 0; d < 3; d++) {
     patch->b_mx[d] = ppsc->patch[p].ldims[d];
@@ -211,8 +210,7 @@ PFX(resize_all)(struct psc_mparticles *mprts, int *n_prts_by_patch)
 
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct PFX(patch) *patch = &sub->patch[p];
-    assert(n_prts_by_patch[p] <= patch->buf.m_capacity);
-    patch->buf.m_size = n_prts_by_patch[p];
+    PARTICLE_BUF(resize)(&patch->buf, n_prts_by_patch[p]);
   }
 }
 

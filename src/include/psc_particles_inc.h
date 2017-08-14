@@ -3,26 +3,31 @@
 
 #define PFX(x) psc_mparticles_double_ ## x
 #define psc_mparticles_sub psc_mparticles_double
+#define PARTICLE_BUF(x) psc_particle_double_buf_ ## x
 
 #elif PSC_PARTICLES_AS_SINGLE
 
 #define PFX(x) psc_mparticles_single_ ## x
 #define psc_mparticles_sub psc_mparticles_single
+#define PARTICLE_BUF(x) psc_particle_single_buf_ ## x
 
 #elif PSC_PARTICLES_AS_SINGLE_BY_BLOCK
 
 #define PFX(x) psc_mparticles_single_by_block_ ## x
 #define psc_mparticles_sub psc_mparticles_single_by_block
+#define PARTICLE_BUF(x) psc_particle_single_by_block_buf_ ## x
 
 #elif PSC_PARTICLES_AS_C
 
 #define PFX(x) psc_mparticles_c_ ## x
 #define psc_mparticles_sub psc_mparticles_c
+#define PARTICLE_BUF(x) psc_particle_c_buf_ ## x
 
 #elif PSC_PARTICLES_AS_FORTRAN
 
 #define PFX(x) psc_mparticles_fortran_ ## x
 #define psc_mparticles_sub psc_mparticles_fortran
+#define PARTICLE_BUF(x) psc_particle_fortran_buf_ ## x
 
 #endif
 

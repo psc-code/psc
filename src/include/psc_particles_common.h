@@ -15,9 +15,14 @@
 #define particle_PTYPE_real_t particle_single_real_t
 #define particle_PTYPE_t particle_single_t
 #define psc_particle_PTYPE psc_particle_single
+
 #define psc_particle_PTYPE_buf_t psc_particle_single_buf_t
+#define psc_particle_PTYPE_buf_ctor psc_particle_single_buf_ctor
 #define psc_particle_PTYPE_buf_size psc_particle_single_buf_size
 #define psc_particle_PTYPE_buf_resize psc_particle_single_buf_resize
+#define psc_particle_PTYPE_buf_reserve psc_particle_single_buf_reserve
+#define psc_particle_PTYPE_buf_capacity psc_particle_single_buf_capacity
+
 #define psc_mparticles_PTYPE_patch psc_mparticles_single_patch
 #define psc_mparticles_PTYPE psc_mparticles_single
 #define psc_mparticles_PTYPE_ops psc_mparticles_single_ops
@@ -43,9 +48,14 @@
 #define particle_PTYPE_real_t particle_double_real_t
 #define particle_PTYPE_t particle_double_t
 #define psc_particle_PTYPE psc_particle_double
+
 #define psc_particle_PTYPE_buf_t psc_particle_double_buf_t
+#define psc_particle_PTYPE_buf_ctor psc_particle_double_buf_ctor
 #define psc_particle_PTYPE_buf_size psc_particle_double_buf_size
 #define psc_particle_PTYPE_buf_resize psc_particle_double_buf_resize
+#define psc_particle_PTYPE_buf_reserve psc_particle_double_buf_reserve
+#define psc_particle_PTYPE_buf_capacity psc_particle_double_buf_capacity
+
 #define psc_mparticles_PTYPE_patch psc_mparticles_double_patch
 #define psc_mparticles_PTYPE psc_mparticles_double
 #define psc_mparticles_PTYPE_ops psc_mparticles_double_ops
@@ -71,9 +81,14 @@
 #define particle_PTYPE_real_t particle_single_by_block_real_t
 #define particle_PTYPE_t particle_single_by_block_t
 #define psc_particle_PTYPE psc_particle_single_by_block
+
 #define psc_particle_PTYPE_buf_t psc_particle_single_by_block_buf_t
+#define psc_particle_PTYPE_buf_ctor psc_particle_single_by_block_buf_ctor
 #define psc_particle_PTYPE_buf_size psc_particle_single_by_block_buf_size
 #define psc_particle_PTYPE_buf_resize psc_particle_single_by_block_buf_resize
+#define psc_particle_PTYPE_buf_reserve psc_particle_single_by_block_buf_reserve
+#define psc_particle_PTYPE_buf_capacity psc_particle_single_by_block_buf_capacity
+
 #define psc_mparticles_PTYPE_patch psc_mparticles_single_by_block_patch
 #define psc_mparticles_PTYPE psc_mparticles_single_by_block
 #define psc_mparticles_PTYPE_ops psc_mparticles_single_by_block_ops
@@ -99,9 +114,14 @@
 #define particle_PTYPE_real_t particle_c_real_t
 #define particle_PTYPE_t particle_c_t
 #define psc_particle_PTYPE psc_particle_c
+
 #define psc_particle_PTYPE_buf_t psc_particle_c_buf_t
+#define psc_particle_PTYPE_buf_ctor psc_particle_c_buf_ctor
 #define psc_particle_PTYPE_buf_size psc_particle_c_buf_size
 #define psc_particle_PTYPE_buf_resize psc_particle_c_buf_resize
+#define psc_particle_PTYPE_buf_reserve psc_particle_c_buf_reserve
+#define psc_particle_PTYPE_buf_capacity psc_particle_c_buf_capacity
+
 #define psc_mparticles_PTYPE_patch psc_mparticles_c_patch
 #define psc_mparticles_PTYPE psc_mparticles_c
 #define psc_mparticles_PTYPE_ops psc_mparticles_c_ops
@@ -127,9 +147,14 @@
 #define particle_PTYPE_real_t particle_fortran_real_t
 #define particle_PTYPE_t particle_fortran_t
 #define psc_particle_PTYPE psc_particle_fortran
+
 #define psc_particle_PTYPE_buf_t psc_particle_fortran_buf_t
+#define psc_particle_PTYPE_buf_ctor psc_particle_fortran_buf_ctor
 #define psc_particle_PTYPE_buf_size psc_particle_fortran_buf_size
 #define psc_particle_PTYPE_buf_resize psc_particle_fortran_buf_resize
+#define psc_particle_PTYPE_buf_reserve psc_particle_fortran_buf_reserve
+#define psc_particle_PTYPE_buf_capacity psc_particle_fortran_buf_capacity
+
 #define psc_mparticles_PTYPE_patch psc_mparticles_fortran_patch
 #define psc_mparticles_PTYPE psc_mparticles_fortran
 #define psc_mparticles_PTYPE_ops psc_mparticles_fortran_ops
@@ -155,9 +180,14 @@
 #define particle_PTYPE_real_t particle_cuda_real_t
 #define particle_PTYPE_t particle_cuda_t
 #define psc_particle_PTYPE psc_particle_cuda
+
 #define psc_particle_PTYPE_buf_t psc_particle_cuda_buf_t
+#define psc_particle_PTYPE_buf_ctor psc_particle_cuda_buf_ctor
 #define psc_particle_PTYPE_buf_size psc_particle_cuda_buf_size
 #define psc_particle_PTYPE_buf_resize psc_particle_cuda_buf_resize
+#define psc_particle_PTYPE_buf_reserve psc_particle_cuda_buf_reserve
+#define psc_particle_PTYPE_buf_capacity psc_particle_cuda_buf_capacity
+
 #define psc_mparticles_PTYPE psc_mparticles_cuda
 #define psc_mparticles_PTYPE_patch_get_b_dxi psc_mparticles_cuda_patch_get_b_dxi 
 #define psc_mparticles_PTYPE_patch_get_b_mx psc_mparticles_cuda_patch_get_b_mx
@@ -253,17 +283,30 @@ typedef struct psc_particle_PTYPE {
 // ======================================================================
 // psc_particle_PTYPE_buf_t
 
+#define M_CAPACITY _m_capacity
+
 typedef struct {
   particle_PTYPE_t *m_data;
   unsigned int m_size;
-  unsigned int m_capacity;
+  unsigned int M_CAPACITY;
 } psc_particle_PTYPE_buf_t;
+
+// ----------------------------------------------------------------------
+// psc_particle_PTYPE_buf_ctor
+
+static inline void
+psc_particle_PTYPE_buf_ctor(psc_particle_PTYPE_buf_t *buf)
+{
+  buf->m_data = NULL;
+  buf->m_size = 0;
+  buf->M_CAPACITY = 0;
+}
 
 // ----------------------------------------------------------------------
 // psc_particle_PTYPE_buf_size
 
 static inline unsigned int
-psc_particle_PTYPE_buf_size(psc_particle_PTYPE_buf_t *buf)
+psc_particle_PTYPE_buf_size(const psc_particle_PTYPE_buf_t *buf)
 {
   return buf->m_size;
 }
@@ -274,7 +317,32 @@ psc_particle_PTYPE_buf_size(psc_particle_PTYPE_buf_t *buf)
 static inline void
 psc_particle_PTYPE_buf_resize(psc_particle_PTYPE_buf_t *buf, unsigned int new_size)
 {
+  assert(new_size <= buf->M_CAPACITY);
   buf->m_size = new_size;
+}
+
+// ----------------------------------------------------------------------
+// psc_particle_PTYPE_buf_reserve
+
+static inline void
+psc_particle_PTYPE_buf_reserve(psc_particle_PTYPE_buf_t *buf, unsigned int new_capacity)
+{
+  if (new_capacity <= buf->M_CAPACITY)
+    return;
+
+  new_capacity = MAX(new_capacity, buf->M_CAPACITY * 2);
+  
+  buf->m_data = (particle_PTYPE_t *) realloc(buf->m_data, new_capacity * sizeof(*buf->m_data));
+  buf->M_CAPACITY = new_capacity;
+}
+
+// ----------------------------------------------------------------------
+// psc_particle_PTYPE_buf_capacity
+
+static inline unsigned int
+psc_particle_PTYPE_buf_capacity(psc_particle_PTYPE_buf_t *buf)
+{
+  return buf->M_CAPACITY;
 }
 
 // ======================================================================
@@ -355,31 +423,32 @@ psc_mparticles_PTYPE_get_n_prts(struct psc_mparticles *mprts, int p)
 // psc_mparticles_PTYPE_patch_reserve
 
 static inline void
-psc_mparticles_PTYPE_patch_reserve(struct psc_mparticles *mprts, int p, int new_capacity)
+psc_mparticles_PTYPE_patch_reserve(struct psc_mparticles *mprts, int p,
+				   unsigned int new_capacity)
 {
   struct psc_mparticles_PTYPE *sub = psc_mparticles_PTYPE(mprts);
   struct psc_mparticles_PTYPE_patch *patch = &sub->patch[p];
 
-  if (new_capacity <= patch->buf.m_capacity)
-    return;
+  unsigned int old_capacity = psc_particle_PTYPE_buf_capacity(&patch->buf);
+  psc_particle_PTYPE_buf_reserve(&patch->buf, new_capacity);
+  new_capacity = psc_particle_PTYPE_buf_capacity(&patch->buf);
 
-  int n_alloced = MAX(new_capacity, patch->buf.m_capacity * 2);
-  patch->buf.m_capacity = n_alloced;
-  
-  patch->buf.m_data = (particle_PTYPE_t *) realloc(patch->buf.m_data, n_alloced * sizeof(*patch->buf.m_data));
+  if (new_capacity == old_capacity) {
+    return;
+  }
 
 #if PTYPE == PTYPE_SINGLE
   free(patch->prt_array_alt);
-  patch->prt_array_alt = (particle_PTYPE_t *) malloc(n_alloced * sizeof(*patch->prt_array_alt));
-  patch->b_idx = (unsigned int *) realloc(patch->b_idx, n_alloced * sizeof(*patch->b_idx));
-  patch->b_ids = (unsigned int *) realloc(patch->b_ids, n_alloced * sizeof(*patch->b_ids));
+  patch->prt_array_alt = (particle_PTYPE_t *) malloc(new_capacity * sizeof(*patch->prt_array_alt));
+  patch->b_idx = (unsigned int *) realloc(patch->b_idx, new_capacity * sizeof(*patch->b_idx));
+  patch->b_ids = (unsigned int *) realloc(patch->b_ids, new_capacity * sizeof(*patch->b_ids));
 #endif
 
 #if PTYPE == PTYPE_SINGLE_BY_BLOCK
   free(patch->prt_array_alt);
-  patch->prt_array_alt = malloc(n_alloced * sizeof(*patch->prt_array_alt));
-  patch->b_idx = realloc(patch->b_idx, n_alloced * sizeof(*patch->b_idx));
-  patch->b_ids = realloc(patch->b_ids, n_alloced * sizeof(*patch->b_ids));
+  patch->prt_array_alt = malloc(new_capacity * sizeof(*patch->prt_array_alt));
+  patch->b_idx = realloc(patch->b_idx, new_capacity * sizeof(*patch->b_idx));
+  patch->b_ids = realloc(patch->b_ids, new_capacity * sizeof(*patch->b_ids));
 #endif
 }
 
@@ -392,7 +461,6 @@ psc_mparticles_PTYPE_patch_resize(struct psc_mparticles *mprts, int p, int n_prt
   struct psc_mparticles_PTYPE *sub = psc_mparticles_PTYPE(mprts);
   struct psc_mparticles_PTYPE_patch *patch = &sub->patch[p];
 
-  assert(n_prts <= patch->buf.m_capacity);
   psc_particle_PTYPE_buf_resize(&patch->buf, n_prts);
 }
 
@@ -405,7 +473,7 @@ psc_mparticles_PTYPE_patch_capacity(struct psc_mparticles *mprts, int p)
   struct psc_mparticles_PTYPE *sub = psc_mparticles_PTYPE(mprts);
   struct psc_mparticles_PTYPE_patch *patch = &sub->patch[p];
 
-  return patch->buf.m_capacity;
+  return psc_particle_PTYPE_buf_capacity(&patch->buf);
 }
 
 // ----------------------------------------------------------------------
@@ -419,7 +487,7 @@ psc_mparticles_PTYPE_patch_push_back(struct psc_mparticles *mprts, int p,
   struct psc_mparticles_PTYPE_patch *patch = &sub->patch[p];
   
   int n = patch->buf.m_size;
-  if (n >= patch->buf.m_capacity) {
+  if (n >= patch->buf.M_CAPACITY) {
     psc_mparticles_PTYPE_patch_reserve(mprts, p, n + 1);
   }
   patch->buf.m_data[n++] = prt;
@@ -544,9 +612,14 @@ psc_particle_PTYPE_range_size(psc_particle_PTYPE_range_t prts)
 #undef particle_PTYPE_real_t
 #undef particle_PTYPE_t
 #undef psc_particle_PTYPE
+
 #undef psc_particle_PTYPE_buf_t
+#undef psc_particle_PTYPE_buf_ctor
 #undef psc_particle_PTYPE_buf_size
 #undef psc_particle_PTYPE_buf_resize
+#undef psc_particle_PTYPE_buf_reserve
+#undef psc_particle_PTYPE_buf_capacity
+
 #undef psc_mparticles_PTYPE_patch
 #undef psc_mparticles_PTYPE
 #undef psc_mparticles_PTYPE_ops
