@@ -889,9 +889,17 @@ get_head(struct psc_mparticles *mprts, int p)
 #endif
 }
 
+#endif
+
+// ----------------------------------------------------------------------
+// psc_bnd_particles_sub_exchange_particles_prep
+
 static void
-exchange_particles_pre(struct psc_bnd_particles *bnd, struct psc_mparticles *mprts, int p)
+psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
+					      struct psc_mparticles *mprts, int p)
 {
+#if DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_CUDA
+
   struct psc *psc = bnd->psc;
   struct ddc_particles *ddcp = bnd->ddcp;
 
@@ -995,20 +1003,6 @@ exchange_particles_pre(struct psc_bnd_particles *bnd, struct psc_mparticles *mpr
       }
     }
   }
-}
-
-#endif
-
-// ----------------------------------------------------------------------
-// psc_bnd_particles_sub_exchange_particles_prep
-
-static void
-psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
-					      struct psc_mparticles *mprts, int p)
-{
-#if DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_CUDA
-
-  exchange_particles_pre(bnd, mprts, p);
 
 #elif DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
   particle_range_t prts = particle_range_mprts(mprts, p);
