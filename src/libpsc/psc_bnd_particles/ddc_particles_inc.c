@@ -509,38 +509,43 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
   MPI_Waitall(ddcp->n_ranks, ddcp->recv_reqs, MPI_STATUSES_IGNORE);
   MPI_Waitall(ddcp->n_ranks, ddcp->send_reqs, MPI_STATUSES_IGNORE);
 
+  unsigned int *old_end = calloc(ddcp->nr_patches, sizeof(*old_end));
+  unsigned int *n_recv_remote = calloc(ddcp->nr_patches, sizeof(*n_recv_remote));
+  unsigned int *p_recv = malloc(ddcp->nr_patches * sizeof(*p_recv));
+
   // add remote # particles
+  int n_send = 0, n_recv = 0;
+
   for (int r = 0; r < ddcp->n_ranks; r++) {
     cinfo[r].n_recv = 0;
     for (int i = 0; i < cinfo[r].n_recv_entries; i++) {
       struct ddcp_recv_entry *re = &cinfo[r].recv_entry[i];
       struct ddcp_patch *patch = &ddcp->patches[re->patch];
+      n_recv_remote[re->patch] += cinfo[r].recv_cnts[i];
       patch->n_recv += cinfo[r].recv_cnts[i];
       cinfo[r].n_recv += cinfo[r].recv_cnts[i];
     }
-  }
-
-  // realloc
-  for (int p = 0; p < ddcp->nr_patches; p++) {
-    struct ddcp_patch *patch = &ddcp->patches[p];
-    ddcp_buf_reserve(&patch->buf, ddcp_buf_size(&patch->buf) + patch->n_recv);
-  }
-
-  // leave room for receives (FIXME? just change order)
-  for (int r = 0; r < ddcp->n_ranks; r++) {
-    for (int i = 0; i < cinfo[r].n_recv_entries; i++) {
-      struct ddcp_recv_entry *re = &cinfo[r].recv_entry[i];
-      struct ddcp_patch *patch = &ddcp->patches[re->patch];
-      ddcp_buf_resize(&patch->buf, ddcp_buf_size(&patch->buf) + cinfo[r].recv_cnts[i]);
-    }
-  }
-
-  int n_send = 0, n_recv = 0;
-  for (int r = 0; r < ddcp->n_ranks; r++) {
     n_send += cinfo[r].n_send;
     n_recv += cinfo[r].n_recv;
   }
-  
+
+  // leave room for receives (FIXME? just change order)
+  // each patch's array looks like:
+  // [........|.........|...]
+  //          ^ old_end: original buffer size
+  //                    ^ p_recv: where to copy locally exchanged particles
+  // ---------                    particles remaining in this patch
+  //          --------------      new particles go here (# = patch->n_recvs)
+  //          ----------          remote particles go here (# = n_remote_recvs)
+  //                    ----      locally exchanged particles go here
+  for (int p = 0; p < ddcp->nr_patches; p++) {
+    struct ddcp_patch *patch = &ddcp->patches[p];
+    int end = ddcp_buf_size(&patch->buf);
+    old_end[p] = end;
+    ddcp_buf_reserve(&patch->buf, end + patch->n_recv);
+    ddcp_buf_resize(&patch->buf, end + patch->n_recv);
+  }
+
   // post sends
   particle_buf_t send_buf;
   particle_buf_ctor(&send_buf);
@@ -578,7 +583,11 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
   }
   assert(it == particle_buf_begin(&recv_buf) + n_recv);
 
-  // overlap: copy particles from local proc
+  // overlap: copy particles from local proc to the end of recv range
+  for (int p = 0; p < ddcp->nr_patches; p++) {
+    p_recv[p] = old_end[p] + n_recv_remote[p];
+  }
+
   for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
@@ -591,13 +600,14 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
 	    continue;
 	  }
 	  particle_buf_t *nei_send_buf = &ddcp->patches[nei->patch].nei[dir1neg].send_buf;
-	  unsigned int end = ddcp_buf_size(&patch->buf);
-	  ddcp_buf_resize(&patch->buf, end + particle_buf_size(nei_send_buf));
+
 	  particle_buf_copy(particle_buf_begin(nei_send_buf), particle_buf_end(nei_send_buf),
-			    ddcp_buf_at(&patch->buf, end));
+			    ddcp_buf_at(&patch->buf, p_recv[p]));
+	  p_recv[p] += particle_buf_size(nei_send_buf);
 	}
       }
     }
+    assert(p_recv[p] == old_end[p] + patch->n_recv);
   }
 
   MPI_Waitall(ddcp->n_ranks, ddcp->recv_reqs, MPI_STATUSES_IGNORE);
@@ -605,11 +615,8 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
 
   // copy received particles into right place
 
-  int *old_head = malloc(ddcp->nr_patches * sizeof(*old_head));
   for (int p = 0; p < ddcp->nr_patches; p++) {
-    struct ddcp_patch *patch = &ddcp->patches[p];
-    old_head[p] = ddcp_buf_size(&patch->buf);
-    ddcp_buf_resize(&patch->buf, old_head[p] - patch->n_recv);
+    p_recv[p] = old_end[p];
   }
 
   it = particle_buf_begin(&recv_buf);
@@ -617,20 +624,17 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
     for (int i = 0; i < cinfo[r].n_recv_entries; i++) {
       struct ddcp_recv_entry *re = &cinfo[r].recv_entry[i];
       struct ddcp_patch *patch = &ddcp->patches[re->patch];
-      int end = ddcp_buf_size(&patch->buf);
-      ddcp_buf_resize(&patch->buf, end + cinfo[r].recv_cnts[i]);
+      int end = p_recv[re->patch];
       particle_buf_copy(it, it + cinfo[r].recv_cnts[i], ddcp_buf_at(&patch->buf, end));
+      p_recv[re->patch] += cinfo[r].recv_cnts[i];
       it += cinfo[r].recv_cnts[i];
     }
   }
   assert(it == particle_buf_begin(&recv_buf) + n_recv);
-
-  for (int p = 0; p < ddcp->nr_patches; p++) {
-    struct ddcp_patch *patch = &ddcp->patches[p];
-    ddcp_buf_resize(&patch->buf, old_head[p]);
-  }
-  free(old_head);
-
+  free(p_recv);
+  free(old_end); old_end = NULL;
+  free(n_recv_remote); n_recv_remote = NULL;
+  
   particle_buf_dtor(&send_buf);
   particle_buf_dtor(&recv_buf);
 
@@ -844,7 +848,6 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 
   int n_end = n_begin + n_send;
   int head = n_begin;
-  ddcp_buf_resize(&dpatch->buf, n_begin);
 
   for (int n = n_begin; n < n_end; n++) {
     particle_t *prt = ddcp_buf_at(&dpatch->buf, n);
@@ -861,7 +864,6 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
       // fast path
       // particle is still inside patch: move into right position
       *ddcp_buf_at(&dpatch->buf, head++) = *prt;
-      ddcp_buf_resize(&dpatch->buf, head);
       continue;
     }
 #endif
@@ -938,15 +940,13 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
     if (!drop) {
       if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
 	*ddcp_buf_at(&dpatch->buf, head++) = *prt;
-	ddcp_buf_resize(&dpatch->buf, head);
-	assert(ddcp_buf_size(&dpatch->buf) == head);
       } else {
 	struct ddcp_nei *nei = &dpatch->nei[mrc_ddc_dir2idx(dir)];
 	particle_buf_push_back(&nei->send_buf, *prt);
       }
     }
   }
-  assert(ddcp_buf_size(&dpatch->buf) == head);
+  ddcp_buf_resize(&dpatch->buf, head);
 }
 
 #if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP || DDCP_TYPE == DDCP_TYPE_COMMON2
