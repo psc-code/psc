@@ -766,7 +766,6 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
     int b_pos[3];
     particle_xi_get_block_pos(xi, b_dxi, b_pos);
     
-#if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
     if (b_pos[0] >= 0 && b_pos[0] < b_mx[0] && // OPT, could be optimized with casts to unsigned
 	b_pos[1] >= 0 && b_pos[1] < b_mx[1] &&
 	b_pos[2] >= 0 && b_pos[2] < b_mx[2]) {
@@ -775,7 +774,6 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
       *particle_buf_at_ptr(dpatch->m_buf, head++) = *prt;
       continue;
     }
-#endif
 
     // slow path
     // handle particles which (seemingly) left the patch
