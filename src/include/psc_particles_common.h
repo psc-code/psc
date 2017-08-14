@@ -15,6 +15,7 @@
 #define particle_PTYPE_real_t particle_single_real_t
 #define particle_PTYPE_t particle_single_t
 #define psc_particle_PTYPE psc_particle_single
+#define psc_particle_PTYPE_buf_t psc_particle_single_buf_t
 #define psc_mparticles_PTYPE_patch psc_mparticles_single_patch
 #define psc_mparticles_PTYPE psc_mparticles_single
 #define psc_mparticles_PTYPE_ops psc_mparticles_single_ops
@@ -40,6 +41,7 @@
 #define particle_PTYPE_real_t particle_double_real_t
 #define particle_PTYPE_t particle_double_t
 #define psc_particle_PTYPE psc_particle_double
+#define psc_particle_PTYPE_buf_t psc_particle_double_buf_t
 #define psc_mparticles_PTYPE_patch psc_mparticles_double_patch
 #define psc_mparticles_PTYPE psc_mparticles_double
 #define psc_mparticles_PTYPE_ops psc_mparticles_double_ops
@@ -64,7 +66,8 @@
 
 #define particle_PTYPE_real_t particle_single_by_block_real_t
 #define particle_PTYPE_t particle_single_by_block_t
-#define psc_particle_PTYPE psc_particle_PTYPE_single_by_block
+#define psc_particle_PTYPE psc_particle_single_by_block
+#define psc_particle_PTYPE_buf_t psc_particle_single_by_block_buf_t
 #define psc_mparticles_PTYPE_patch psc_mparticles_single_by_block_patch
 #define psc_mparticles_PTYPE psc_mparticles_single_by_block
 #define psc_mparticles_PTYPE_ops psc_mparticles_single_by_block_ops
@@ -89,7 +92,8 @@
 
 #define particle_PTYPE_real_t particle_c_real_t
 #define particle_PTYPE_t particle_c_t
-#define psc_particle_PTYPE psc_particle_PTYPE_c
+#define psc_particle_PTYPE psc_particle_c
+#define psc_particle_PTYPE_buf_t psc_particle_c_buf_t
 #define psc_mparticles_PTYPE_patch psc_mparticles_c_patch
 #define psc_mparticles_PTYPE psc_mparticles_c
 #define psc_mparticles_PTYPE_ops psc_mparticles_c_ops
@@ -114,7 +118,8 @@
 
 #define particle_PTYPE_real_t particle_fortran_real_t
 #define particle_PTYPE_t particle_fortran_t
-#define psc_particle_PTYPE psc_particle_PTYPE_fortran
+#define psc_particle_PTYPE psc_particle_fortran
+#define psc_particle_PTYPE_buf_t psc_particle_fortran_buf_t
 #define psc_mparticles_PTYPE_patch psc_mparticles_fortran_patch
 #define psc_mparticles_PTYPE psc_mparticles_fortran
 #define psc_mparticles_PTYPE_ops psc_mparticles_fortran_ops
@@ -140,6 +145,7 @@
 #define particle_PTYPE_real_t particle_cuda_real_t
 #define particle_PTYPE_t particle_cuda_t
 #define psc_particle_PTYPE psc_particle_cuda
+#define psc_particle_PTYPE_buf_t psc_particle_cuda_buf_t
 #define psc_mparticles_PTYPE psc_mparticles_cuda
 #define psc_mparticles_PTYPE_patch_get_b_dxi psc_mparticles_cuda_patch_get_b_dxi 
 #define psc_mparticles_PTYPE_patch_get_b_mx psc_mparticles_cuda_patch_get_b_mx
@@ -247,10 +253,17 @@ const int *psc_mparticles_PTYPE_patch_get_b_mx(struct psc_mparticles *mprts, int
 #else // PTYPE != PTYPE_CUDA
 
 // ----------------------------------------------------------------------
+// psc_particle_PTYPE_buf_t
+
+typedef struct {
+  particle_PTYPE_t *m_data;
+} psc_particle_PTYPE_buf_t;
+
+// ----------------------------------------------------------------------
 // psc_mparticles_PTYPE_patch
 
 struct psc_mparticles_PTYPE_patch {
-  particle_PTYPE_t *prt_array;
+  psc_particle_PTYPE_buf_t buf;
   int n_prts;
   int n_alloced;
 
@@ -292,7 +305,7 @@ static inline particle_PTYPE_t *
 psc_mparticles_PTYPE_get_one(struct psc_mparticles *mprts, int p, int n)
 {
   assert(psc_mparticles_ops(mprts) == &psc_mparticles_PTYPE_ops);
-  return &psc_mparticles_PTYPE(mprts)->patch[p].prt_array[n];
+  return &psc_mparticles_PTYPE(mprts)->patch[p].buf.m_data[n];
 }
 
 // ----------------------------------------------------------------------
@@ -321,7 +334,7 @@ psc_mparticles_PTYPE_patch_reserve(struct psc_mparticles *mprts, int p, int new_
   int n_alloced = MAX(new_capacity, patch->n_alloced * 2);
   patch->n_alloced = n_alloced;
 
-  patch->prt_array = (particle_PTYPE_t *) realloc(patch->prt_array, n_alloced * sizeof(*patch->prt_array));
+  patch->buf.m_data = (particle_PTYPE_t *) realloc(patch->buf.m_data, n_alloced * sizeof(*patch->buf.m_data));
 
 #if PTYPE == PTYPE_SINGLE
   free(patch->prt_array_alt);
@@ -377,7 +390,7 @@ psc_mparticles_PTYPE_patch_push_back(struct psc_mparticles *mprts, int p,
   if (n == patch->n_alloced) {
     psc_mparticles_PTYPE_patch_reserve(mprts, p, n + 1);
   }
-  patch->prt_array[n++] = prt;
+  patch->buf.m_data[n++] = prt;
   patch->n_prts = n;
 }
 
@@ -499,6 +512,7 @@ psc_particle_PTYPE_range_size(psc_particle_PTYPE_range_t prts)
 #undef particle_PTYPE_real_t
 #undef particle_PTYPE_t
 #undef psc_particle_PTYPE
+#undef psc_particle_PTYPE_buf_t
 #undef psc_mparticles_PTYPE_patch
 #undef psc_mparticles_PTYPE
 #undef psc_mparticles_PTYPE_ops
