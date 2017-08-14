@@ -120,49 +120,6 @@ ddcp_buf_push_back(ddcp_buf_t *buf, particle_t *p)
 // ----------------------------------------------------------------------
 // particle_buf_t
 
-typedef struct {
-  particle_t *m_data;
-  unsigned int m_size;
-  unsigned int m_capacity;
-} particle_buf_t;
-
-static void
-particle_buf_ctor(particle_buf_t *buf)
-{
-  buf->m_capacity = 8;
-  buf->m_data = malloc(buf->m_capacity * sizeof(*buf->m_data));
-  buf->m_size = 0;
-}
-
-static void
-particle_buf_dtor(particle_buf_t *buf)
-{
-  free(buf->m_data);
-}
-
-static unsigned int
-particle_buf_size(particle_buf_t *buf)
-{
-  return buf->m_size;
-}
-
-static void
-particle_buf_resize(particle_buf_t *buf, unsigned int size)
-{
-  assert(size <= buf->m_capacity);
-  buf->m_size = size;
-}
-
-static void
-particle_buf_reserve(particle_buf_t *buf, unsigned int new_capacity)
-{
-  if (new_capacity > buf->m_capacity) {
-    // reallocate a larger buffer, at least doubling buffer size each time
-    buf->m_capacity = MAX(new_capacity, 2 * buf->m_capacity);
-    buf->m_data = realloc(buf->m_data, buf->m_capacity * sizeof(*buf->m_data));
-  }
-}
-
 static void
 particle_buf_push_back(particle_buf_t *buf, particle_t *p)
 {

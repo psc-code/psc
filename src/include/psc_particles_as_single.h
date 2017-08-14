@@ -16,6 +16,14 @@ typedef particle_single_t particle_t;
 #define mparticles_patch_get_b_mx   psc_mparticles_single_patch_get_b_mx
 #define mparticles_patch_get_b_dxi  psc_mparticles_single_patch_get_b_dxi
 
+#define particle_buf_t              psc_particle_single_buf_t
+#define particle_buf_t              psc_particle_single_buf_t
+#define particle_buf_ctor           psc_particle_single_buf_ctor
+#define particle_buf_dtor           psc_particle_single_buf_dtor
+#define particle_buf_size           psc_particle_single_buf_size
+#define particle_buf_resize         psc_particle_single_buf_resize
+#define particle_buf_reserve        psc_particle_single_buf_reserve
+
 #define particle_qni_div_mni        particle_single_qni_div_mni
 #define particle_qni_wni            particle_single_qni_wni
 #define particle_qni                particle_single_qni
