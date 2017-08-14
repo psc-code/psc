@@ -221,7 +221,7 @@ PFX(get_size_all)(struct psc_mparticles *mprts, int *n_prts_by_patch)
 
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct PFX(patch) *patch = &sub->patch[p];
-    n_prts_by_patch[p] = patch->buf.m_size;
+    n_prts_by_patch[p] = PARTICLE_BUF(size)(&patch->buf);
   }
 }
 
@@ -233,7 +233,7 @@ PFX(get_nr_particles)(struct psc_mparticles *mprts)
   int n_prts = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct PFX(patch) *patch = &sub->patch[p];
-    n_prts += patch->buf.m_size;
+    n_prts += PARTICLE_BUF(size)(&patch->buf);
   }
   return n_prts;
 }

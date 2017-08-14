@@ -290,10 +290,11 @@ typedef struct psc_particle_PTYPE {
 // psc_particle_PTYPE_buf_t
 
 #define M_CAPACITY _m_capacity
+#define M_SIZE _m_size
 
 typedef struct {
   particle_PTYPE_t *m_data;
-  unsigned int m_size;
+  unsigned int M_SIZE;
   unsigned int M_CAPACITY;
 } psc_particle_PTYPE_buf_t;
 
@@ -304,7 +305,7 @@ static inline void
 psc_particle_PTYPE_buf_ctor(psc_particle_PTYPE_buf_t *buf)
 {
   buf->m_data = NULL;
-  buf->m_size = 0;
+  buf->M_SIZE = 0;
   buf->M_CAPACITY = 0;
 }
 
@@ -314,7 +315,7 @@ psc_particle_PTYPE_buf_ctor(psc_particle_PTYPE_buf_t *buf)
 static inline unsigned int
 psc_particle_PTYPE_buf_size(const psc_particle_PTYPE_buf_t *buf)
 {
-  return buf->m_size;
+  return buf->M_SIZE;
 }
 
 // ----------------------------------------------------------------------
@@ -324,7 +325,7 @@ static inline void
 psc_particle_PTYPE_buf_resize(psc_particle_PTYPE_buf_t *buf, unsigned int new_size)
 {
   assert(new_size <= buf->M_CAPACITY);
-  buf->m_size = new_size;
+  buf->M_SIZE = new_size;
 }
 
 // ----------------------------------------------------------------------
@@ -357,12 +358,12 @@ psc_particle_PTYPE_buf_capacity(const psc_particle_PTYPE_buf_t *buf)
 static inline void
 psc_particle_PTYPE_buf_push_back(psc_particle_PTYPE_buf_t *buf, particle_PTYPE_t prt)
 {
-  unsigned int n = buf->m_size;
+  unsigned int n = buf->M_SIZE;
   if (n >= buf->M_CAPACITY) {
     psc_particle_PTYPE_buf_reserve(buf, n + 1);
   }
   buf->m_data[n++] = prt;
-  buf->m_size = n;
+  buf->M_SIZE = n;
 }
 
 // ======================================================================
