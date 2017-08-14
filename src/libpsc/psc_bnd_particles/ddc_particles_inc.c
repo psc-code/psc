@@ -582,13 +582,11 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
   }
 
   // overlap: copy particles from local proc to the end of recv range
-  unsigned int *p_recv = malloc(ddcp->nr_patches * sizeof(*p_recv));
-  for (int p = 0; p < ddcp->nr_patches; p++) {
-    p_recv[p] = old_end[p];
-  }
-
+  particle_t **it_recv = malloc(ddcp->nr_patches * sizeof(*it_recv));
   for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
+    it_recv[p] = ddcp_buf_at(&patch->buf, old_end[p]);
+
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
 	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
@@ -601,8 +599,8 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
 	  particle_buf_t *nei_send_buf = &ddcp->patches[nei->patch].nei[dir1neg].send_buf;
 
 	  particle_buf_copy(particle_buf_begin(nei_send_buf), particle_buf_end(nei_send_buf),
-			    ddcp_buf_at(&patch->buf, p_recv[p]));
-	  p_recv[p] += particle_buf_size(nei_send_buf);
+			    it_recv[p]);
+	  it_recv[p] += particle_buf_size(nei_send_buf);
 	}
       }
     }
@@ -617,16 +615,14 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
   for (int r = 0; r < ddcp->n_ranks; r++) {
     for (int i = 0; i < cinfo[r].n_recv_entries; i++) {
       struct ddcp_recv_entry *re = &cinfo[r].recv_entry[i];
-      struct ddcp_patch *patch = &ddcp->patches[re->patch];
-      int end = p_recv[re->patch];
-      particle_buf_copy(it, it + cinfo[r].recv_cnts[i], ddcp_buf_at(&patch->buf, end));
-      p_recv[re->patch] += cinfo[r].recv_cnts[i];
+      particle_buf_copy(it, it + cinfo[r].recv_cnts[i], it_recv[re->patch]);
+      it_recv[re->patch] += cinfo[r].recv_cnts[i];
       it += cinfo[r].recv_cnts[i];
     }
   }
   assert(it == particle_buf_begin(&recv_buf) + n_recv);
-  free(p_recv);
   free(old_end);
+  free(it_recv);
   
   particle_buf_dtor(&send_buf);
   particle_buf_dtor(&recv_buf);
