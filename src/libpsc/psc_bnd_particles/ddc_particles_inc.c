@@ -30,11 +30,7 @@ at_hi_boundary(int p, int d)
 
 typedef struct {
   int m_size;
-#if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
   particle_buf_t *m_buf;
-#elif DDCP_TYPE == DDCP_TYPE_CUDA
-  struct cuda_bnd *m_bpatch;
-#endif
 } ddcp_buf_t;
 
 static void
@@ -45,7 +41,7 @@ ddcp_buf_ctor(ddcp_buf_t *buf, struct psc_mparticles *mprts, int p)
   buf->m_buf = mparticles_patch_get_buf(mprts, p);
 #elif DDCP_TYPE == DDCP_TYPE_CUDA
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-  buf->m_bpatch = &cmprts->bnd.bpatch[p];
+  buf->m_buf = &cmprts->bnd.bpatch[p].buf;
 #endif
 }
 
@@ -57,37 +53,19 @@ ddcp_buf_dtor(ddcp_buf_t *buf)
 static particle_t *
 ddcp_buf_at(ddcp_buf_t *buf, int n)
 {
-#if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
   return particle_buf_at_ptr(buf->m_buf, n);
-#elif DDCP_TYPE == DDCP_TYPE_CUDA
-  return &buf->m_bpatch->buf.m_data[n];
-#endif
 }
 
 static void
 ddcp_buf_reserve(ddcp_buf_t *buf, int new_capacity)
 {
-#if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
   particle_buf_reserve(buf->m_buf, new_capacity);
-#elif DDCP_TYPE == DDCP_TYPE_CUDA
-  if (buf->m_bpatch->buf.m_capacity >= new_capacity) {
-    return;
-  }
-
-  buf->m_bpatch->buf.m_capacity = MAX(new_capacity, 2 * buf->m_bpatch->buf.m_capacity);
-  buf->m_bpatch->buf.m_data = realloc(buf->m_bpatch->buf.m_data,
-				      buf->m_bpatch->buf.m_capacity * sizeof(*buf->m_bpatch->buf.m_data));
-#endif
 }
 
 static unsigned int
 ddcp_buf_capacity(ddcp_buf_t *buf)
 {
-#if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
   return particle_buf_capacity(buf->m_buf);
-#elif DDCP_TYPE == DDCP_TYPE_CUDA
-  return buf->m_bpatch->buf.m_capacity;
-#endif
 }
 
 static unsigned int
