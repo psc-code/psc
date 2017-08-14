@@ -876,36 +876,6 @@ sort_indices(unsigned int *b_idx, unsigned int *b_sum, unsigned int *b_ids, int 
 
 #endif
 
-// ======================================================================
-
-#if DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_CUDA
-
-static inline int
-get_n_send(struct psc_mparticles *mprts, int p)
-{
-#if DDCP_TYPE == DDCP_TYPE_COMMON2
-  struct psc_mparticles_single *sub = psc_mparticles_single(mprts);
-  return sub->patch[p].n_send;
-#elif DDCP_TYPE == DDCP_TYPE_CUDA
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-  return cmprts->bnd.bpatch[p].n_send;
-#endif
-}
-
-static inline int
-get_head(struct psc_mparticles *mprts, int p)
-{
-#if DDCP_TYPE == DDCP_TYPE_COMMON2
-  struct psc_mparticles_single *sub = psc_mparticles_single(mprts);
-  particle_range_t prts = particle_range_mprts(mprts, p);
-  return particle_range_size(prts) - sub->patch[p].n_send;
-#elif DDCP_TYPE == DDCP_TYPE_CUDA
-  return 0;
-#endif
-}
-
-#endif
-
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub_exchange_particles_prep
 
@@ -934,17 +904,24 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
     particle_buf_resize(&dpatch->nei[dir1].send_buf, 0);
   }
 
-#if DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_CUDA
-  ddcp_buf_resize(&dpatch->buf, get_head(mprts, p));
-  unsigned int n_send = get_n_send(mprts, p);
+#if DDCP_TYPE == DDCP_TYPE_COMMON2
+  struct psc_mparticles_single *sub = psc_mparticles_single(mprts);
+  int n_prts = mparticles_get_n_prts(mprts, p);
+  unsigned int n_send = sub->patch[p].n_send;
+  ddcp_buf_resize(&dpatch->buf, n_prts - n_send);
+#elif DDCP_TYPE == DDCP_TYPE_CUDA
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
+  unsigned int n_send = cmprts->bnd.bpatch[p].n_send;
+  ddcp_buf_resize(&dpatch->buf, 0);
 #elif DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
   ddcp_buf_resize(&dpatch->buf, 0);
   unsigned int n_send = mparticles_get_n_prts(mprts, p);
 #endif
 
-  int n_end = ddcp_buf_size(&dpatch->buf) + n_send;
+  int n_begin = ddcp_buf_size(&dpatch->buf);
+  int n_end = n_begin + n_send;
 
-  for (int n = ddcp_buf_size(&dpatch->buf); n < n_end; n++) {
+  for (int n = n_begin; n < n_end; n++) {
     particle_t *prt = ddcp_buf_at(&dpatch->buf, n);
     particle_real_t *xi = &prt->xi; // slightly hacky relies on xi, yi, zi to be contiguous in the struct. FIXME
     particle_real_t *pxi = &prt->pxi;
