@@ -999,8 +999,6 @@ exchange_particles_pre(struct psc_bnd_particles *bnd, struct psc_mparticles *mpr
 
 #endif
 
-#if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP || DDCP_TYPE == DDCP_TYPE_COMMON2
-
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub_exchange_particles_prep
 
@@ -1008,9 +1006,9 @@ static void
 psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 					      struct psc_mparticles *mprts, int p)
 {
+#if DDCP_TYPE == DDCP_TYPE_COMMON2
   particle_range_t prts = particle_range_mprts(mprts, p);
 
-#if DDCP_TYPE == DDCP_TYPE_COMMON2
   struct psc_mparticles_single *sub = psc_mparticles_single(mprts);
   struct psc_mparticles_single_patch *patch = &sub->patch[p];
   if (1) {
@@ -1023,7 +1021,12 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 
   exchange_particles_pre(bnd, mprts, p);
 
+#elif DDCP_TYPE == DDCP_TYPE_CUDA
+
+  exchange_particles_pre(bnd, mprts, p);
+
 #elif DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
+  particle_range_t prts = particle_range_mprts(mprts, p);
 
   struct ddc_particles *ddcp = bnd->ddcp;
   struct psc *psc = bnd->psc;
@@ -1140,8 +1143,6 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
   }
 #endif
 }
-
-#endif
 
 #if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP || DDCP_TYPE == DDCP_TYPE_COMMON2
 
@@ -1307,11 +1308,7 @@ psc_bnd_particles_sub_exchange_mprts_prep(struct psc_bnd_particles *bnd,
 #endif
   for (int p = 0; p < mprts->nr_patches; p++) {
     psc_balance_comp_time_by_patch[p] -= MPI_Wtime();
-#if DDCP_TYPE == DDCP_TYPE_CUDA
-    exchange_particles_pre(bnd, mprts, p);
-#elif DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP || DDCP_TYPE == DDCP_TYPE_COMMON2
     psc_bnd_particles_sub_exchange_particles_prep(bnd, mprts, p);
-#endif
     psc_balance_comp_time_by_patch[p] += MPI_Wtime();
   }
   prof_stop(pr_F);
