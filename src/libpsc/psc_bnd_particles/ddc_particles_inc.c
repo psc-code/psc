@@ -85,7 +85,7 @@ ddcp_buf_resize(ddcp_buf_t *buf, int new_size)
 #endif
 }
 
-static void
+static inline void
 ddcp_buf_push_back(ddcp_buf_t *buf, particle_t p)
 {
 #if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
@@ -832,18 +832,19 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
   struct psc_mparticles_single *sub = psc_mparticles_single(mprts);
   int n_prts = mparticles_get_n_prts(mprts, p);
   unsigned int n_send = sub->patch[p].n_send;
-  ddcp_buf_resize(&dpatch->buf, n_prts - n_send);
+  int n_begin = n_prts - n_send;
 #elif DDCP_TYPE == DDCP_TYPE_CUDA
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
   unsigned int n_send = cmprts->bnd.bpatch[p].n_send;
-  ddcp_buf_resize(&dpatch->buf, 0);
+  int n_begin = 0;
 #elif DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
-  ddcp_buf_resize(&dpatch->buf, 0);
   unsigned int n_send = mparticles_get_n_prts(mprts, p);
+  int n_begin = 0;
 #endif
 
-  int n_begin = ddcp_buf_size(&dpatch->buf);
   int n_end = n_begin + n_send;
+  int head = n_begin;
+  ddcp_buf_resize(&dpatch->buf, n_begin);
 
   for (int n = n_begin; n < n_end; n++) {
     particle_t *prt = ddcp_buf_at(&dpatch->buf, n);
@@ -859,7 +860,8 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 	b_pos[2] >= 0 && b_pos[2] < b_mx[2]) {
       // fast path
       // particle is still inside patch: move into right position
-      ddcp_buf_push_back(&dpatch->buf, *prt);
+      *ddcp_buf_at(&dpatch->buf, head++) = *prt;
+      ddcp_buf_resize(&dpatch->buf, head);
       continue;
     }
 #endif
@@ -935,13 +937,16 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
     }
     if (!drop) {
       if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
-	ddcp_buf_push_back(&dpatch->buf, *prt);
+	*ddcp_buf_at(&dpatch->buf, head++) = *prt;
+	ddcp_buf_resize(&dpatch->buf, head);
+	assert(ddcp_buf_size(&dpatch->buf) == head);
       } else {
 	struct ddcp_nei *nei = &dpatch->nei[mrc_ddc_dir2idx(dir)];
 	particle_buf_push_back(&nei->send_buf, *prt);
       }
     }
   }
+  assert(ddcp_buf_size(&dpatch->buf) == head);
 }
 
 #if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP || DDCP_TYPE == DDCP_TYPE_COMMON2
