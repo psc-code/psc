@@ -1176,17 +1176,6 @@ psc_bnd_particles_sub_exchange_particles_post(struct psc_bnd_particles *bnd,
 #if DDCP_TYPE == DDCP_TYPE_CUDA
 
 // ----------------------------------------------------------------------
-// mprts_exchange_particles_pre
-
-static void
-mprts_exchange_particles_pre(struct psc_bnd_particles *bnd, struct psc_mparticles *mprts)
-{
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    exchange_particles_pre(bnd, mprts, p);
-  }
-}
-
-// ----------------------------------------------------------------------
 // mprts_convert_to_cuda
 
 static void
@@ -1272,22 +1261,7 @@ static void
 psc_bnd_particles_sub_exchange_mprts_prep(struct psc_bnd_particles *bnd,
 					  struct psc_mparticles *mprts)
 {
-#if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP || DDCP_TYPE == DDCP_TYPE_COMMON2
-
   prof_restart(pr_time_step_no_comm);
-
-#if DDCP_TYPE == DDCP_TYPE_COMMON
-#pragma omp parallel for
-#endif
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    psc_balance_comp_time_by_patch[p] -= MPI_Wtime();
-    psc_bnd_particles_sub_exchange_particles_prep(bnd, mprts, p);
-    psc_balance_comp_time_by_patch[p] += MPI_Wtime();
-  }
-
-  prof_stop(pr_time_step_no_comm);
-
-#elif DDCP_TYPE == DDCP_TYPE_CUDA
 
   static int pr_A, pr_B, pr_D, pr_E, pr_F, pr_B0, pr_B1;
   if (!pr_A) {
@@ -1299,6 +1273,8 @@ psc_bnd_particles_sub_exchange_mprts_prep(struct psc_bnd_particles *bnd,
     pr_E = prof_register("xchg_cvt_from", 1., 0, 0);
     pr_F = prof_register("xchg_pre", 1., 0, 0);
   }
+
+#if DDCP_TYPE == DDCP_TYPE_CUDA
 
   //prof_start(pr_A);
   //cuda_mprts_find_block_keys(mprts);
@@ -1323,11 +1299,24 @@ psc_bnd_particles_sub_exchange_mprts_prep(struct psc_bnd_particles *bnd,
   prof_start(pr_E);
   cuda_mprts_convert_from_cuda(mprts);
   prof_stop(pr_E);
+#endif
   
   prof_start(pr_F);
-  mprts_exchange_particles_pre(bnd, mprts);
-  prof_stop(pr_F);
+#if DDCP_TYPE == DDCP_TYPE_COMMON
+#pragma omp parallel for
 #endif
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    psc_balance_comp_time_by_patch[p] -= MPI_Wtime();
+#if DDCP_TYPE == DDCP_TYPE_CUDA
+    exchange_particles_pre(bnd, mprts, p);
+#elif DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP || DDCP_TYPE == DDCP_TYPE_COMMON2
+    psc_bnd_particles_sub_exchange_particles_prep(bnd, mprts, p);
+#endif
+    psc_balance_comp_time_by_patch[p] += MPI_Wtime();
+  }
+  prof_stop(pr_F);
+
+  prof_stop(pr_time_step_no_comm);
 }
 
 // ----------------------------------------------------------------------
