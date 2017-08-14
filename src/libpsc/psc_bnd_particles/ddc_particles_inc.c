@@ -919,16 +919,16 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
   // FIXME we should make sure (assert) we don't quietly drop particle which left
   // in the invariant direction
 
-  struct ddcp_patch *ddcp_patch = &ddcp->patches[p];
-  ddcp_buf_ctor(&ddcp_patch->buf, mprts, p);
-  ddcp_buf_resize(&ddcp_patch->buf, get_head(mprts, p));
+  struct ddcp_patch *dpatch = &ddcp->patches[p];
+  ddcp_buf_ctor(&dpatch->buf, mprts, p);
+  ddcp_buf_resize(&dpatch->buf, get_head(mprts, p));
   for (int dir1 = 0; dir1 < N_DIR; dir1++) {
-    particle_buf_resize(&ddcp_patch->nei[dir1].send_buf, 0);
+    particle_buf_resize(&dpatch->nei[dir1].send_buf, 0);
   }
 
-  int n_end = ddcp_buf_size(&ddcp_patch->buf) + n_send;
-  for (int n = ddcp_buf_size(&ddcp_patch->buf); n < n_end; n++) {
-    particle_t *prt = ddcp_buf_at(&ddcp_patch->buf, n);
+  int n_end = ddcp_buf_size(&dpatch->buf) + n_send;
+  for (int n = ddcp_buf_size(&dpatch->buf); n < n_end; n++) {
+    particle_t *prt = ddcp_buf_at(&dpatch->buf, n);
     particle_real_t *xi = &prt->xi;
     particle_real_t *pxi = &prt->pxi;
     
@@ -1001,9 +1001,9 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
     }
     if (!drop) {
       if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
-	ddcp_buf_push_back(&ddcp_patch->buf, prt);
+	ddcp_buf_push_back(&dpatch->buf, prt);
       } else {
-	ddc_particles_queue(ddcp, ddcp_patch, dir, prt);
+	ddc_particles_queue(ddcp, dpatch, dir, prt);
       }
     }
   }
@@ -1011,11 +1011,11 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 #elif DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
   particle_range_t prts = particle_range_mprts(mprts, p);
 
-  struct ddcp_patch *patch = &ddcp->patches[p];
-  ddcp_buf_ctor(&patch->buf, mprts, p);
-  ddcp_buf_resize(&patch->buf, 0);
+  struct ddcp_patch *dpatch = &ddcp->patches[p];
+  ddcp_buf_ctor(&dpatch->buf, mprts, p);
+  ddcp_buf_resize(&dpatch->buf, 0);
   for (int dir1 = 0; dir1 < N_DIR; dir1++) {
-    particle_buf_resize(&patch->nei[dir1].send_buf, 0);
+    particle_buf_resize(&dpatch->nei[dir1].send_buf, 0);
   }
   unsigned int n_prts = particle_range_size(prts);
   for (int i = 0; i < n_prts; i++) {
@@ -1030,7 +1030,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 	b_pos[2] >= 0 && b_pos[2] < b_mx[2]) {
       // fast path
       // inside domain: move into right position
-      ddcp_buf_push_back(&patch->buf, part);
+      ddcp_buf_push_back(&dpatch->buf, part);
     } else {
       // slow path
       bool drop = false;
@@ -1101,9 +1101,9 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
       }
       if (!drop) {
 	if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
-	  ddcp_buf_push_back(&patch->buf, part);
+	  ddcp_buf_push_back(&dpatch->buf, part);
 	} else {
-	  ddc_particles_queue(ddcp, patch, dir, part);
+	  ddc_particles_queue(ddcp, dpatch, dir, part);
 	}
       }
 
