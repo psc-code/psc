@@ -7,6 +7,7 @@
 typedef particle_fortran_real_t particle_real_t;
 typedef particle_fortran_t particle_t;
 
+#define mparticles_patch_get_buf      psc_mparticles_fortran_patch_get_buf
 #define mparticles_get_one            psc_mparticles_fortran_get_one
 #define mparticles_get_n_prts         psc_mparticles_fortran_get_n_prts
 #define mparticles_patch_reserve      psc_mparticles_fortran_patch_reserve
@@ -23,7 +24,9 @@ typedef particle_fortran_t particle_t;
 #define particle_buf_size           psc_particle_fortran_buf_size
 #define particle_buf_resize         psc_particle_fortran_buf_resize
 #define particle_buf_reserve        psc_particle_fortran_buf_reserve
+#define particle_buf_capacity       psc_particle_fortran_buf_capacity
 #define particle_buf_push_back      psc_particle_fortran_buf_push_back
+#define particle_buf_at_ptr         psc_particle_fortran_buf_at_ptr
 
 #define particle_real_fint            particle_fortran_real_fint
 #define particle_iter_t               psc_particle_fortran_iter_t

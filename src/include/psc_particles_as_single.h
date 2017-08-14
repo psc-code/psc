@@ -7,6 +7,7 @@
 typedef particle_single_real_t particle_real_t;
 typedef particle_single_t particle_t;
 
+#define mparticles_patch_get_buf    psc_mparticles_single_patch_get_buf
 #define mparticles_get_one          psc_mparticles_single_get_one
 #define mparticles_get_n_prts       psc_mparticles_single_get_n_prts
 #define mparticles_patch_reserve    psc_mparticles_single_patch_reserve
@@ -23,7 +24,9 @@ typedef particle_single_t particle_t;
 #define particle_buf_size           psc_particle_single_buf_size
 #define particle_buf_resize         psc_particle_single_buf_resize
 #define particle_buf_reserve        psc_particle_single_buf_reserve
+#define particle_buf_capacity       psc_particle_single_buf_capacity
 #define particle_buf_push_back      psc_particle_single_buf_push_back
+#define particle_buf_at_ptr         psc_particle_single_buf_at_ptr
 
 #define particle_qni_div_mni        particle_single_qni_div_mni
 #define particle_qni_wni            particle_single_qni_wni

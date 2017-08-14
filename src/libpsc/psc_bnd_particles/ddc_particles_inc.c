@@ -31,8 +31,7 @@ at_hi_boundary(int p, int d)
 typedef struct {
   int m_size;
 #if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
-  struct psc_mparticles *m_mprts;
-  int m_p;
+  particle_buf_t *m_buf;
 #elif DDCP_TYPE == DDCP_TYPE_CUDA
   struct cuda_bnd *m_bpatch;
 #endif
@@ -43,8 +42,7 @@ ddcp_buf_ctor(ddcp_buf_t *buf, struct psc_mparticles *mprts, int p)
 {
   buf->m_size = 0;
 #if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
-  buf->m_mprts = mprts;
-  buf->m_p = p;
+  buf->m_buf = mparticles_patch_get_buf(mprts, p);
 #elif DDCP_TYPE == DDCP_TYPE_CUDA
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
   buf->m_bpatch = &cmprts->bnd.bpatch[p];
@@ -60,7 +58,7 @@ static particle_t *
 ddcp_buf_at(ddcp_buf_t *buf, int n)
 {
 #if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
-  return mparticles_get_one(buf->m_mprts, buf->m_p, n);
+  return particle_buf_at_ptr(buf->m_buf, n);
 #elif DDCP_TYPE == DDCP_TYPE_CUDA
   return &buf->m_bpatch->prts[n];
 #endif
@@ -70,7 +68,7 @@ static void
 ddcp_buf_reserve(ddcp_buf_t *buf, int new_capacity)
 {
 #if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
-  mparticles_patch_reserve(buf->m_mprts, buf->m_p, new_capacity);
+  particle_buf_reserve(buf->m_buf, new_capacity);
 #elif DDCP_TYPE == DDCP_TYPE_CUDA
   if (buf->m_bpatch->capacity >= new_capacity) {
     return;
@@ -86,7 +84,7 @@ static unsigned int
 ddcp_buf_capacity(ddcp_buf_t *buf)
 {
 #if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
-  return mparticles_patch_capacity(buf->m_mprts, buf->m_p);
+  return particle_buf_capacity(buf->m_buf);
 #elif DDCP_TYPE == DDCP_TYPE_CUDA
   return buf->m_bpatch->capacity;
 #endif
@@ -137,6 +135,9 @@ particle_buf_copy(particle_t *from_begin, particle_t *from_end, particle_t *to_b
 {
   memcpy(to_begin, from_begin, (from_end - from_begin) * sizeof(*to_begin));
 }
+
+// ----------------------------------------------------------------------
+// ddcp_info
 
 struct ddcp_info_by_rank {
   struct ddcp_send_entry {
