@@ -298,9 +298,6 @@ cuda_mprts_convert_from_cuda(struct psc_mparticles *mprts)
   float4 *bnd_xi4 = cmprts->bnd.h_bnd_xi4;
   float4 *bnd_pxi4 = cmprts->bnd.h_bnd_pxi4;
   for (int p = 0; p < mprts->nr_patches; p++) {
-    cmprts->bnd.bpatch[p].buf.m_data = new particle_t[cmprts->bnd.bpatch[p].n_send];
-    cmprts->bnd.bpatch[p].buf.m_size = 0;
-    cmprts->bnd.bpatch[p].buf.m_capacity = 0;
     for (int n = 0; n < cmprts->bnd.bpatch[p].n_send; n++) {
       particle_t *prt = &cmprts->bnd.bpatch[p].buf.m_data[n];
       prt->xi      = bnd_xi4[n].x;

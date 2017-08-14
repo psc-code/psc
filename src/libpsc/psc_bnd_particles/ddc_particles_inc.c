@@ -742,28 +742,21 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
     particle_buf_resize(&dpatch->nei[dir1].send_buf, 0);
   }
 
-#if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
+#if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
   dpatch->m_buf = mparticles_patch_get_buf(mprts, p);
+  int n_begin = 0;
+#elif DDCP_TYPE == DDCP_TYPE_COMMON2
+  dpatch->m_buf = mparticles_patch_get_buf(mprts, p);
+  struct psc_mparticles_single *sub = psc_mparticles_single(mprts);
+  int n_begin = particle_buf_size(dpatch->m_buf) - sub->patch[p].n_send;
 #elif DDCP_TYPE == DDCP_TYPE_CUDA
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
   dpatch->m_buf = &cmprts->bnd.bpatch[p].buf;
-#endif
-
-#if DDCP_TYPE == DDCP_TYPE_COMMON2
-  struct psc_mparticles_single *sub = psc_mparticles_single(mprts);
-  int n_prts = mparticles_get_n_prts(mprts, p);
-  unsigned int n_send = sub->patch[p].n_send;
-  int n_begin = n_prts - n_send;
-#elif DDCP_TYPE == DDCP_TYPE_CUDA
-  unsigned int n_send = cmprts->bnd.bpatch[p].n_send;
-  int n_begin = 0;
-#elif DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
-  unsigned int n_send = mparticles_get_n_prts(mprts, p);
   int n_begin = 0;
 #endif
 
-  int n_end = n_begin + n_send;
-  int head = n_begin;
+  unsigned int n_end = particle_buf_size(dpatch->m_buf);
+  unsigned int head = n_begin;
 
   for (int n = n_begin; n < n_end; n++) {
     particle_t *prt = particle_buf_at_ptr(dpatch->m_buf, n);
@@ -1015,7 +1008,16 @@ psc_bnd_particles_sub_exchange_mprts_prep(struct psc_bnd_particles *bnd,
   prof_start(pr_D);
   cuda_mprts_copy_from_dev(mprts);
   prof_stop(pr_D);
-  
+
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  for (int p = 0; p < cmprts->n_patches; p++) {
+    particle_buf_ctor(&cmprts->bnd.bpatch[p].buf);
+    particle_buf_reserve(&cmprts->bnd.bpatch[p].buf, cmprts->bnd.bpatch[p].n_send);
+    particle_buf_resize(&cmprts->bnd.bpatch[p].buf, cmprts->bnd.bpatch[p].n_send);
+  }
+
+  // this will set the buffers above
   prof_start(pr_E);
   cuda_mprts_convert_from_cuda(mprts);
   prof_stop(pr_E);
