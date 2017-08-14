@@ -1406,7 +1406,7 @@ psc_bnd_particles_sub_exchange_mprts_post(struct psc_bnd_particles *bnd,
 
 static void
 psc_bnd_particles_sub_exchange_particles_serial_periodic(struct psc_bnd_particles *psc_bnd_particles,
-						struct psc_mparticles *particles)
+						struct psc_mparticles *mprts)
 {
   assert(0);
 #if 0
@@ -1446,7 +1446,7 @@ psc_bnd_particles_sub_exchange_particles_serial_periodic(struct psc_bnd_particle
 
 static void
 psc_bnd_particles_sub_exchange_particles_general(struct psc_bnd_particles *bnd,
-						 struct psc_mparticles *particles)
+						 struct psc_mparticles *mprts)
 {
   // FIXME we should make sure (assert) we don't quietly drop particle which left
   // in the invariant direction
@@ -1461,15 +1461,15 @@ psc_bnd_particles_sub_exchange_particles_general(struct psc_bnd_particles *bnd,
   struct ddc_particles *ddcp = bnd->ddcp;
 
   prof_start(pr_A);
-  psc_bnd_particles_sub_exchange_mprts_prep(bnd, particles);
+  psc_bnd_particles_sub_exchange_mprts_prep(bnd, mprts);
   prof_stop(pr_A);
 
   prof_start(pr_B);
-  ddc_particles_comm(ddcp, particles);
+  ddc_particles_comm(ddcp, mprts);
   prof_stop(pr_B);
   
   prof_start(pr_C);
-  psc_bnd_particles_sub_exchange_mprts_post(bnd, particles);
+  psc_bnd_particles_sub_exchange_mprts_post(bnd, mprts);
   prof_stop(pr_C);
 
   //struct psc_mfields *mflds = psc_mfields_get_as(psc->flds, "c", JXI, JXI + 3);
@@ -1483,15 +1483,15 @@ psc_bnd_particles_sub_exchange_particles_general(struct psc_bnd_particles *bnd,
 
 static void
 psc_bnd_particles_sub_exchange_particles(struct psc_bnd_particles *bnd,
-			       struct psc_mparticles *particles_base)
+			       struct psc_mparticles *mprts_base)
 {
 #if DDCP_TYPE == DDCP_TYPE_CUDA
   // This function only makes sense if it's called for particles already being of cuda
   // type. If particles aren't in the right patches, the conversion in get_as would fail...
 
-  assert(strcmp(psc_mparticles_type(particles_base), "cuda") == 0);
+  assert(strcmp(psc_mparticles_type(mprts_base), "cuda") == 0);
 #endif
-  struct psc_mparticles *particles = psc_mparticles_get_as(particles_base, PARTICLE_TYPE, 0);
+  struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
   
 #if DDCP_TYPE == DDCP_TYPE_CUDA
   int size;
@@ -1501,13 +1501,13 @@ psc_bnd_particles_sub_exchange_particles(struct psc_bnd_particles *bnd,
       ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
       ppsc->domain.bnd_fld_lo[1] == BND_FLD_PERIODIC &&
       ppsc->domain.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
-    psc_bnd_particles_sub_exchange_particles_serial_periodic(bnd, particles);
+    psc_bnd_particles_sub_exchange_particles_serial_periodic(bnd, mprts);
   } else {
-    psc_bnd_particles_sub_exchange_particles_general(bnd, particles);
+    psc_bnd_particles_sub_exchange_particles_general(bnd, mprts);
   }
 #elif DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP || DDCP_TYPE == DDCP_TYPE_COMMON2
-  psc_bnd_particles_sub_exchange_particles_general(bnd, particles);
+  psc_bnd_particles_sub_exchange_particles_general(bnd, mprts);
 #endif
 
-  psc_mparticles_put_as(particles, particles_base, 0);
+  psc_mparticles_put_as(mprts, mprts_base, 0);
 }
