@@ -952,8 +952,20 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
     int b_pos[3];
     particle_xi_get_block_pos(xi, b_dxi, b_pos);
     
-#if DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_CUDA
+#if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
+    if (b_pos[0] >= 0 && b_pos[0] < b_mx[0] && // OPT, could be optimized with casts to unsigned
+	b_pos[1] >= 0 && b_pos[1] < b_mx[1] &&
+	b_pos[2] >= 0 && b_pos[2] < b_mx[2]) {
+      // fast path
+      // particle is still inside patch: move into right position
+      ddcp_buf_push_back(&dpatch->buf, prt);
+      continue;
+    }
+#endif
 
+    // slow path
+    // handle particles which (seemingly) left the patch
+    // (may end up in the same patch, anyway, though)
     bool drop = false;
     int dir[3];
     for (int d = 0; d < 3; d++) {
@@ -969,7 +981,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 	} else {
 	  switch (psc->domain.bnd_part_lo[d]) {
 	  case BND_PART_REFLECTING:
-	    xi[d]  = -xi[d];
+	    xi[d] =  -xi[d];
 	    pxi[d] = -pxi[d];
 	    dir[d] = 0;
 	    break;
@@ -981,7 +993,8 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 	  }
 	}
       } else if (b_pos[d] >= b_mx[d]) {
-	if (!at_hi_boundary(p, d) || psc->domain.bnd_part_hi[d] == BND_PART_PERIODIC) {
+	if (!at_hi_boundary(p, d) ||
+	    psc->domain.bnd_part_hi[d] == BND_PART_PERIODIC) {
 	  xi[d] -= xm[d];
 	  dir[d] = +1;
 	  int bi = particle_real_fint(xi[d] * b_dxi[d]);
@@ -1007,6 +1020,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 	  }
 	}
       } else {
+	// computational bnd
 	dir[d] = 0;
       }
       if (!drop) {
@@ -1025,93 +1039,6 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 	ddc_particles_queue(ddcp, dpatch, dir, prt);
       }
     }
-
-#elif DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
-
-    if (b_pos[0] >= 0 && b_pos[0] < b_mx[0] && // OPT, could be optimized with casts to unsigned
-	b_pos[1] >= 0 && b_pos[1] < b_mx[1] &&
-	b_pos[2] >= 0 && b_pos[2] < b_mx[2]) {
-      // fast path
-      // inside domain: move into right position
-      ddcp_buf_push_back(&dpatch->buf, prt);
-    } else {
-      // slow path
-      bool drop = false;
-      int dir[3];
-      for (int d = 0; d < 3; d++) {
-	if (b_pos[d] < 0) {
-	  if (!at_lo_boundary(p, d) || psc->domain.bnd_part_lo[d] == BND_PART_PERIODIC) {
-	    xi[d] += xm[d];
-	    dir[d] = -1;
-	    int bi = particle_real_fint(xi[d] * b_dxi[d]);
-	    if (bi >= b_mx[d]) {
-	      xi[d] = 0.;
-	      dir[d] = 0;
-	    }
-	  } else {
-	    switch (psc->domain.bnd_part_lo[d]) {
-	    case BND_PART_REFLECTING:
-	      xi[d] =  -xi[d];
-	      pxi[d] = -pxi[d];
-	      dir[d] = 0;
-	      break;
-	    case BND_PART_ABSORBING:
-	      drop = true;
-	      break;
-	    default:
-	      assert(0);
-	    }
-	  }
-	} else if (b_pos[d] >= b_mx[d]) {
-	  if (!at_hi_boundary(p, d) ||
-	      psc->domain.bnd_part_hi[d] == BND_PART_PERIODIC) {
-	    xi[d] -= xm[d];
-	    dir[d] = +1;
-	    int bi = particle_real_fint(xi[d] * b_dxi[d]);
-	    if (bi < 0) {
-	      xi[d] = 0.;
-	    }
-	  } else {
-	    switch (psc->domain.bnd_part_hi[d]) {
-	    case BND_PART_REFLECTING:
-	      xi[d] = 2.f * xm[d] - xi[d];
-	      pxi[d] = -pxi[d];
-	      dir[d] = 0;
-	      int bi = particle_real_fint(xi[d] * b_dxi[d]);
-	      if (bi >= b_mx[d]) {
-		xi[d] *= (1. - 1e-6);
-	      }
-	      break;
-	    case BND_PART_ABSORBING:
-	      drop = true;
-	      break;
-	    default:
-	      assert(0);
-	    }
-	  }
-	} else {
-	  // computational bnd
-	  dir[d] = 0;
-	}
-	if (!drop) {
-	  if (xi[d] < 0.f && xi[d] > -1e-6f) {
-	    //	    mprintf("d %d xi %g\n", d, xi[d]);
-	    xi[d] = 0.f;
-	  }
-	  assert(xi[d] >= 0.f);
-	  assert(xi[d] <= xm[d]);
-	}
-      }
-      if (!drop) {
-	if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
-	  ddcp_buf_push_back(&dpatch->buf, prt);
-	} else {
-	  ddc_particles_queue(ddcp, dpatch, dir, prt);
-	}
-      }
-
-    }
-#endif
   }
 }
 
