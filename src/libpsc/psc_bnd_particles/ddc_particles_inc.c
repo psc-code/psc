@@ -626,10 +626,6 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
   
   particle_buf_dtor(&send_buf);
   particle_buf_dtor(&recv_buf);
-
-  for (int p = 0; p < ddcp->nr_patches; p++) {
-    ddcp_buf_dtor(&ddcp->patches[p].buf);
-  }
 }
 
 
@@ -951,6 +947,7 @@ psc_bnd_particles_sub_exchange_particles_post(struct psc_bnd_particles *bnd,
   struct ddcp_patch *dpatch = &ddcp->patches[p];
 
   mparticles_patch_resize(mprts, p, ddcp_buf_size(&dpatch->buf));
+  ddcp_buf_dtor(&dpatch->buf);
   
 #if DDCP_TYPE == DDCP_TYPE_COMMON2
   struct psc_mparticles_single *sub = psc_mparticles_single(mprts);
@@ -1133,10 +1130,13 @@ static void
 psc_bnd_particles_sub_exchange_mprts_post(struct psc_bnd_particles *bnd,
 					  struct psc_mparticles *mprts)
 {
+  struct ddc_particles *ddcp = bnd->ddcp;
+
 #if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP || DDCP_TYPE == DDCP_TYPE_COMMON2
   for (int p = 0; p < mprts->nr_patches; p++) {
     psc_bnd_particles_sub_exchange_particles_post(bnd, mprts, p);
   }
+
 #elif DDCP_TYPE == DDCP_TYPE_CUDA
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
   struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
@@ -1183,6 +1183,10 @@ psc_bnd_particles_sub_exchange_mprts_post(struct psc_bnd_particles *bnd,
 #else
   cmprts->need_reorder = true;
 #endif
+
+  for (int p = 0; p < ddcp->nr_patches; p++) {
+    ddcp_buf_dtor(&ddcp->patches[p].buf);
+  }
 #endif
 }
 
