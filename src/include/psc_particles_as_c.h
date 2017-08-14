@@ -13,6 +13,8 @@ typedef particle_c_t particle_t;
 #define mparticles_patch_push_back  psc_mparticles_c_patch_push_back
 #define mparticles_patch_resize     psc_mparticles_c_patch_resize
 #define mparticles_patch_capacity   psc_mparticles_c_patch_capacity
+#define mparticles_patch_get_b_mx   psc_mparticles_c_patch_get_b_mx
+#define mparticles_patch_get_b_dxi  psc_mparticles_c_patch_get_b_dxi
 
 #define particle_qni_div_mni        particle_c_qni_div_mni
 #define particle_qni_wni            particle_c_qni_wni

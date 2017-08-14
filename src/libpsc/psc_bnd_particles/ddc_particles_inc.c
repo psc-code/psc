@@ -898,19 +898,23 @@ static void
 psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 					      struct psc_mparticles *mprts, int p)
 {
-#if DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_CUDA
-
-  struct psc *psc = bnd->psc;
   struct ddc_particles *ddcp = bnd->ddcp;
+  struct psc *psc = bnd->psc;
 
-  int n_send = get_n_send(mprts, p);
-  struct psc_patch *patch = &psc->patch[p];
-  particle_real_t xm[3];
-  for (int d = 0; d < 3; d++) {
-    xm[d] = patch->ldims[d] * patch->dx[d];
-  }
+  // New-style boundary requirements.
+  // These will need revisiting when it comes to non-periodic domains.
+
+  struct psc_patch *ppatch = &psc->patch[p];
   const particle_real_t *b_dxi = mparticles_patch_get_b_dxi(mprts, p);
   const int *b_mx = mparticles_patch_get_b_mx(mprts, p);
+  particle_real_t xm[3];
+  for (int d = 0; d < 3; d++ ) {
+    xm[d] = ppatch->ldims[d] * ppatch->dx[d];
+  }
+  
+#if DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_CUDA
+
+  int n_send = get_n_send(mprts, p);
   
   // FIXME we should make sure (assert) we don't quietly drop particle which left
   // in the invariant direction
@@ -934,7 +938,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
       int bi = particle_real_fint(xi[d] * b_dxi[d]);
       if (bi < 0) {
 	// FIXME, assumes every patch has same dimensions
-	if (patch->off[d] != 0 || psc->domain.bnd_part_lo[d] == BND_PART_PERIODIC) {
+	if (ppatch->off[d] != 0 || psc->domain.bnd_part_lo[d] == BND_PART_PERIODIC) {
 	  xi[d] += xm[d];
 	  dir[d] = -1;
 	  bi = particle_real_fint(xi[d] * b_dxi[d]);
@@ -957,7 +961,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 	  }
 	}
       } else if (bi >= b_mx[d]) {
-	if (patch->off[d] + patch->ldims[d] != psc->domain.gdims[d] ||
+	if (ppatch->off[d] + ppatch->ldims[d] != psc->domain.gdims[d] ||
 	    psc->domain.bnd_part_hi[d] == BND_PART_PERIODIC) {
 	  xi[d] -= xm[d];
 	  dir[d] = +1;
@@ -1007,21 +1011,6 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 #elif DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
   particle_range_t prts = particle_range_mprts(mprts, p);
 
-  struct ddc_particles *ddcp = bnd->ddcp;
-  struct psc *psc = bnd->psc;
-
-  // New-style boundary requirements.
-  // These will need revisiting when it comes to non-periodic domains.
-
-  struct psc_patch *ppatch = &psc->patch[p];
-  particle_real_t b_dxi[3] = { 1.f / ppatch->dx[0], 1.f / ppatch->dx[1], 1.f / ppatch->dx[2] };
-  particle_real_t xm[3];
-  int b_mx[3];
-  for (int d = 0; d < 3; d++ ) {
-    b_mx[d] = ppatch->ldims[d];
-    xm[d] = b_mx[d] * ppatch->dx[d];
-  }
-  
   struct ddcp_patch *patch = &ddcp->patches[p];
   ddcp_buf_ctor(&patch->buf, mprts, p);
   ddcp_buf_resize(&patch->buf, 0);
