@@ -1229,16 +1229,6 @@ psc_bnd_particles_sub_exchange_particles_general(struct psc_bnd_particles *bnd, 
   psc_mparticles_put_as(particles, particles_base, 0);
 }
 
-// ----------------------------------------------------------------------
-// psc_bnd_particles_sub_exchange_particles
-
-static void
-psc_bnd_particles_sub_exchange_particles(struct psc_bnd_particles *bnd,
-			       struct psc_mparticles *particles_base)
-{
-  psc_bnd_particles_sub_exchange_particles_general(bnd, particles_base);
-}
-
 #endif
 
 #if DDCP_TYPE == DDCP_TYPE_CUDA
@@ -1508,6 +1498,8 @@ psc_bnd_particles_sub_exchange_particles_general(struct psc_bnd_particles *bnd,
   prof_stop(pr_C);
 }
 
+#endif
+
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub_exchange_particles
 
@@ -1515,6 +1507,7 @@ static void
 psc_bnd_particles_sub_exchange_particles(struct psc_bnd_particles *bnd,
 			       struct psc_mparticles *particles_base)
 {
+#if DDCP_TYPE == DDCP_TYPE_CUDA
   int size;
   MPI_Comm_size(psc_bnd_particles_comm(bnd), &size);
 
@@ -1533,7 +1526,7 @@ psc_bnd_particles_sub_exchange_particles(struct psc_bnd_particles *bnd,
   } else {
     psc_bnd_particles_sub_exchange_particles_general(bnd, particles);
   }
-}
-
+#elif DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP || DDCP_TYPE == DDCP_TYPE_COMMON2
+  psc_bnd_particles_sub_exchange_particles_general(bnd, particles_base);
 #endif
-
+}
