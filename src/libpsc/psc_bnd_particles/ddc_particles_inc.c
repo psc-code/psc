@@ -106,27 +106,19 @@ ddcp_buf_resize(ddcp_buf_t *buf, int new_size)
 }
 
 static void
-ddcp_buf_push_back(ddcp_buf_t *buf, particle_t *p)
+ddcp_buf_push_back(ddcp_buf_t *buf, particle_t p)
 {
   // this assert should go away in the general case,
   // but we actually push_back into the same array we're reading from,
   // so we better don't go beyond current capacity
   assert(buf->m_size + 1 <= ddcp_buf_capacity(buf));
   ddcp_buf_reserve(buf, buf->m_size + 1);
-  *ddcp_buf_at(buf, buf->m_size) = *p;
+  *ddcp_buf_at(buf, buf->m_size) = p;
   buf->m_size++;
 }
 
 // ----------------------------------------------------------------------
 // particle_buf_t
-
-static void
-particle_buf_push_back(particle_buf_t *buf, particle_t *p)
-{
-  particle_buf_reserve(buf, buf->m_size + 1);
-  buf->m_data[buf->m_size] = *p;
-  buf->m_size++;
-}
 
 static particle_t *
 particle_buf_begin(particle_buf_t *buf)
@@ -880,7 +872,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 	b_pos[2] >= 0 && b_pos[2] < b_mx[2]) {
       // fast path
       // particle is still inside patch: move into right position
-      ddcp_buf_push_back(&dpatch->buf, prt);
+      ddcp_buf_push_back(&dpatch->buf, *prt);
       continue;
     }
 #endif
@@ -956,10 +948,10 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
     }
     if (!drop) {
       if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
-	ddcp_buf_push_back(&dpatch->buf, prt);
+	ddcp_buf_push_back(&dpatch->buf, *prt);
       } else {
 	struct ddcp_nei *nei = &dpatch->nei[mrc_ddc_dir2idx(dir)];
-	particle_buf_push_back(&nei->send_buf, prt);
+	particle_buf_push_back(&nei->send_buf, *prt);
       }
     }
   }

@@ -22,6 +22,7 @@ typedef particle_c_t particle_t;
 #define particle_buf_size           psc_particle_c_buf_size
 #define particle_buf_resize         psc_particle_c_buf_resize
 #define particle_buf_reserve        psc_particle_c_buf_reserve
+#define particle_buf_push_back      psc_particle_c_buf_push_back
 
 #define particle_qni_div_mni        particle_c_qni_div_mni
 #define particle_qni_wni            particle_c_qni_wni
