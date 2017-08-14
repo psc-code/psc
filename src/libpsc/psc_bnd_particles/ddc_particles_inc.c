@@ -29,15 +29,17 @@ at_hi_boundary(int p, int d)
 // ddcp_buf_t
 
 typedef struct {
+#if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
   int m_size;
+#endif
   particle_buf_t *m_buf;
 } ddcp_buf_t;
 
 static void
 ddcp_buf_ctor(ddcp_buf_t *buf, struct psc_mparticles *mprts, int p)
 {
-  buf->m_size = 0;
 #if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
+  buf->m_size = 0;
   buf->m_buf = mparticles_patch_get_buf(mprts, p);
 #elif DDCP_TYPE == DDCP_TYPE_CUDA
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
@@ -63,34 +65,40 @@ ddcp_buf_reserve(ddcp_buf_t *buf, int new_capacity)
 }
 
 static unsigned int
-ddcp_buf_capacity(ddcp_buf_t *buf)
-{
-  return particle_buf_capacity(buf->m_buf);
-}
-
-static unsigned int
 ddcp_buf_size(ddcp_buf_t *buf)
 {
+#if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
   return buf->m_size;
+#else
+  return particle_buf_size(buf->m_buf);
+#endif
 }
 
 static void
 ddcp_buf_resize(ddcp_buf_t *buf, int new_size)
 {
-  assert(new_size <= ddcp_buf_capacity(buf));
+#if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
+  assert(new_size <= particle_buf_capacity(buf->m_buf));
   buf->m_size = new_size;
+#else
+  particle_buf_resize(buf->m_buf, new_size);
+#endif
 }
 
 static void
 ddcp_buf_push_back(ddcp_buf_t *buf, particle_t p)
 {
+#if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
   // this assert should go away in the general case,
   // but we actually push_back into the same array we're reading from,
   // so we better don't go beyond current capacity
-  assert(buf->m_size + 1 <= ddcp_buf_capacity(buf));
+  assert(buf->m_size + 1 <= particle_buf_capacity(buf->m_buf));
   ddcp_buf_reserve(buf, buf->m_size + 1);
   *ddcp_buf_at(buf, buf->m_size) = p;
   buf->m_size++;
+#else
+  particle_buf_push_back(buf->m_buf, p);
+#endif
 }
 
 // ----------------------------------------------------------------------
