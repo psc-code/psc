@@ -509,9 +509,6 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
   MPI_Waitall(ddcp->n_ranks, ddcp->recv_reqs, MPI_STATUSES_IGNORE);
   MPI_Waitall(ddcp->n_ranks, ddcp->send_reqs, MPI_STATUSES_IGNORE);
 
-  unsigned int *old_end = calloc(ddcp->nr_patches, sizeof(*old_end));
-  unsigned int *n_recv_remote = calloc(ddcp->nr_patches, sizeof(*n_recv_remote));
-  unsigned int *p_recv = malloc(ddcp->nr_patches * sizeof(*p_recv));
 
   // add remote # particles
   int n_send = 0, n_recv = 0;
@@ -521,29 +518,11 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
     for (int i = 0; i < cinfo[r].n_recv_entries; i++) {
       struct ddcp_recv_entry *re = &cinfo[r].recv_entry[i];
       struct ddcp_patch *patch = &ddcp->patches[re->patch];
-      n_recv_remote[re->patch] += cinfo[r].recv_cnts[i];
       patch->n_recv += cinfo[r].recv_cnts[i];
       cinfo[r].n_recv += cinfo[r].recv_cnts[i];
     }
     n_send += cinfo[r].n_send;
     n_recv += cinfo[r].n_recv;
-  }
-
-  // leave room for receives (FIXME? just change order)
-  // each patch's array looks like:
-  // [........|.........|...]
-  //          ^ old_end: original buffer size
-  //                    ^ p_recv: where to copy locally exchanged particles
-  // ---------                    particles remaining in this patch
-  //          --------------      new particles go here (# = patch->n_recvs)
-  //          ----------          remote particles go here (# = n_remote_recvs)
-  //                    ----      locally exchanged particles go here
-  for (int p = 0; p < ddcp->nr_patches; p++) {
-    struct ddcp_patch *patch = &ddcp->patches[p];
-    int end = ddcp_buf_size(&patch->buf);
-    old_end[p] = end;
-    ddcp_buf_reserve(&patch->buf, end + patch->n_recv);
-    ddcp_buf_resize(&patch->buf, end + patch->n_recv);
   }
 
   // post sends
@@ -583,9 +562,29 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
   }
   assert(it == particle_buf_begin(&recv_buf) + n_recv);
 
-  // overlap: copy particles from local proc to the end of recv range
+  // leave room for receives (FIXME? just change order)
+  // each patch's array looks like:
+  // [........|.........|...]
+  //          ^ old_end: original buffer size
+  //                    ^ p_recv: where to copy locally exchanged particles
+  // ---------                    particles remaining in this patch
+  //          --------------      new particles go here (# = patch->n_recvs)
+  //          ----------          locally exchanged particles go here
+  //                    ----      remote particles go here
+  unsigned int *old_end = malloc(ddcp->nr_patches * sizeof(*old_end));
+
   for (int p = 0; p < ddcp->nr_patches; p++) {
-    p_recv[p] = old_end[p] + n_recv_remote[p];
+    struct ddcp_patch *patch = &ddcp->patches[p];
+    int end = ddcp_buf_size(&patch->buf);
+    old_end[p] = end;
+    ddcp_buf_reserve(&patch->buf, end + patch->n_recv);
+    ddcp_buf_resize(&patch->buf, end + patch->n_recv);
+  }
+
+  // overlap: copy particles from local proc to the end of recv range
+  unsigned int *p_recv = malloc(ddcp->nr_patches * sizeof(*p_recv));
+  for (int p = 0; p < ddcp->nr_patches; p++) {
+    p_recv[p] = old_end[p];
   }
 
   for (int p = 0; p < ddcp->nr_patches; p++) {
@@ -607,17 +606,12 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
 	}
       }
     }
-    assert(p_recv[p] == old_end[p] + patch->n_recv);
   }
 
   MPI_Waitall(ddcp->n_ranks, ddcp->recv_reqs, MPI_STATUSES_IGNORE);
   MPI_Waitall(ddcp->n_ranks, ddcp->send_reqs, MPI_STATUSES_IGNORE);
 
   // copy received particles into right place
-
-  for (int p = 0; p < ddcp->nr_patches; p++) {
-    p_recv[p] = old_end[p];
-  }
 
   it = particle_buf_begin(&recv_buf);
   for (int r = 0; r < ddcp->n_ranks; r++) {
@@ -632,8 +626,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
   }
   assert(it == particle_buf_begin(&recv_buf) + n_recv);
   free(p_recv);
-  free(old_end); old_end = NULL;
-  free(n_recv_remote); n_recv_remote = NULL;
+  free(old_end);
   
   particle_buf_dtor(&send_buf);
   particle_buf_dtor(&recv_buf);
