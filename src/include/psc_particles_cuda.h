@@ -11,10 +11,9 @@
 #undef PTYPE
 
 struct cuda_bnd {
-  particle_cuda_t *prts;
+  psc_particle_cuda_buf_t buf;
   int n_recv;
   int n_send;
-  int capacity;
 };
 
 static inline int

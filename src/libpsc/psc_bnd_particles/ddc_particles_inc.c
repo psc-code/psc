@@ -60,7 +60,7 @@ ddcp_buf_at(ddcp_buf_t *buf, int n)
 #if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
   return particle_buf_at_ptr(buf->m_buf, n);
 #elif DDCP_TYPE == DDCP_TYPE_CUDA
-  return &buf->m_bpatch->prts[n];
+  return &buf->m_bpatch->buf.m_data[n];
 #endif
 }
 
@@ -70,13 +70,13 @@ ddcp_buf_reserve(ddcp_buf_t *buf, int new_capacity)
 #if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
   particle_buf_reserve(buf->m_buf, new_capacity);
 #elif DDCP_TYPE == DDCP_TYPE_CUDA
-  if (buf->m_bpatch->capacity >= new_capacity) {
+  if (buf->m_bpatch->buf.m_capacity >= new_capacity) {
     return;
   }
 
-  buf->m_bpatch->capacity = MAX(new_capacity, 2 * buf->m_bpatch->capacity);
-  buf->m_bpatch->prts = realloc(buf->m_bpatch->prts,
-				buf->m_bpatch->capacity * sizeof(*buf->m_bpatch->prts));
+  buf->m_bpatch->buf.m_capacity = MAX(new_capacity, 2 * buf->m_bpatch->buf.m_capacity);
+  buf->m_bpatch->buf.m_data = realloc(buf->m_bpatch->buf.m_data,
+				      buf->m_bpatch->buf.m_capacity * sizeof(*buf->m_bpatch->buf.m_data));
 #endif
 }
 
@@ -86,7 +86,7 @@ ddcp_buf_capacity(ddcp_buf_t *buf)
 #if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
   return particle_buf_capacity(buf->m_buf);
 #elif DDCP_TYPE == DDCP_TYPE_CUDA
-  return buf->m_bpatch->capacity;
+  return buf->m_bpatch->buf.m_capacity;
 #endif
 }
 
@@ -1026,7 +1026,7 @@ mprts_convert_to_cuda(struct psc_bnd_particles *bnd, struct psc_mparticles *mprt
     unsigned int *h_bnd_idx = cmprts->bnd.h_bnd_idx + off;
     unsigned int *h_bnd_off = cmprts->bnd.h_bnd_off + off;
     for (int n = 0; n < n_recv; n++) {
-      particle_t *prt = &cmprts->bnd.bpatch[p].prts[n];
+      particle_t *prt = &cmprts->bnd.bpatch[p].buf.m_data[n];
       h_bnd_xi4[n].x  = prt->xi;
       h_bnd_xi4[n].y  = prt->yi;
       h_bnd_xi4[n].z  = prt->zi;
@@ -1059,8 +1059,8 @@ mprts_convert_to_cuda(struct psc_bnd_particles *bnd, struct psc_mparticles *mprt
       h_bnd_idx[n] = b;
       h_bnd_off[n] = cmprts->bnd.h_bnd_cnt[b]++;
     }
-    free(cmprts->bnd.bpatch[p].prts);
-    cmprts->bnd.bpatch[p].capacity = 0;
+    free(cmprts->bnd.bpatch[p].buf.m_data);
+    cmprts->bnd.bpatch[p].buf.m_capacity = 0;
     off += n_recv;
   }
 }
