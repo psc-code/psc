@@ -256,6 +256,7 @@ typedef struct psc_particle_PTYPE {
 typedef struct {
   particle_PTYPE_t *m_data;
   unsigned int m_size;
+  unsigned int m_capacity;
 } psc_particle_PTYPE_buf_t;
 
 // ----------------------------------------------------------------------
@@ -297,7 +298,6 @@ const int *psc_mparticles_PTYPE_patch_get_b_mx(struct psc_mparticles *mprts, int
 
 struct psc_mparticles_PTYPE_patch {
   psc_particle_PTYPE_buf_t buf;
-  int n_alloced;
 
   int b_mx[3];
   particle_PTYPE_real_t b_dxi[3];
@@ -360,12 +360,12 @@ psc_mparticles_PTYPE_patch_reserve(struct psc_mparticles *mprts, int p, int new_
   struct psc_mparticles_PTYPE *sub = psc_mparticles_PTYPE(mprts);
   struct psc_mparticles_PTYPE_patch *patch = &sub->patch[p];
 
-  if (new_capacity <= patch->n_alloced)
+  if (new_capacity <= patch->buf.m_capacity)
     return;
 
-  int n_alloced = MAX(new_capacity, patch->n_alloced * 2);
-  patch->n_alloced = n_alloced;
-
+  int n_alloced = MAX(new_capacity, patch->buf.m_capacity * 2);
+  patch->buf.m_capacity = n_alloced;
+  
   patch->buf.m_data = (particle_PTYPE_t *) realloc(patch->buf.m_data, n_alloced * sizeof(*patch->buf.m_data));
 
 #if PTYPE == PTYPE_SINGLE
@@ -392,7 +392,7 @@ psc_mparticles_PTYPE_patch_resize(struct psc_mparticles *mprts, int p, int n_prt
   struct psc_mparticles_PTYPE *sub = psc_mparticles_PTYPE(mprts);
   struct psc_mparticles_PTYPE_patch *patch = &sub->patch[p];
 
-  assert(n_prts <= patch->n_alloced);
+  assert(n_prts <= patch->buf.m_capacity);
   psc_particle_PTYPE_buf_resize(&patch->buf, n_prts);
 }
 
@@ -405,7 +405,7 @@ psc_mparticles_PTYPE_patch_capacity(struct psc_mparticles *mprts, int p)
   struct psc_mparticles_PTYPE *sub = psc_mparticles_PTYPE(mprts);
   struct psc_mparticles_PTYPE_patch *patch = &sub->patch[p];
 
-  return patch->n_alloced;
+  return patch->buf.m_capacity;
 }
 
 // ----------------------------------------------------------------------
@@ -419,7 +419,7 @@ psc_mparticles_PTYPE_patch_push_back(struct psc_mparticles *mprts, int p,
   struct psc_mparticles_PTYPE_patch *patch = &sub->patch[p];
   
   int n = patch->buf.m_size;
-  if (n == patch->n_alloced) {
+  if (n >= patch->buf.m_capacity) {
     psc_mparticles_PTYPE_patch_reserve(mprts, p, n + 1);
   }
   patch->buf.m_data[n++] = prt;
