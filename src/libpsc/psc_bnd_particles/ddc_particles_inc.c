@@ -1330,7 +1330,6 @@ psc_bnd_particles_sub_exchange_mprts_prep(struct psc_bnd_particles *bnd,
 #endif
 }
 
-#if DDCP_TYPE == DDCP_TYPE_CUDA
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub_exchange_mprts_post
 
@@ -1338,6 +1337,11 @@ static void
 psc_bnd_particles_sub_exchange_mprts_post(struct psc_bnd_particles *bnd,
 					  struct psc_mparticles *mprts)
 {
+#if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP || DDCP_TYPE == DDCP_TYPE_COMMON2
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    psc_bnd_particles_sub_exchange_particles_post(bnd, mprts, p);
+  }
+#elif DDCP_TYPE == DDCP_TYPE_CUDA
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
   struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
 
@@ -1383,9 +1387,10 @@ psc_bnd_particles_sub_exchange_mprts_post(struct psc_bnd_particles *bnd,
 #else
   cmprts->need_reorder = true;
 #endif
-  
+#endif
 }
 
+#if DDCP_TYPE == DDCP_TYPE_CUDA
 // ----------------------------------------------------------------------
 // psc_bnd_particles_sub_exchange_particles_serial_periodic
 //
@@ -1464,13 +1469,7 @@ psc_bnd_particles_sub_exchange_particles_general(struct psc_bnd_particles *bnd,
   prof_stop(pr_B);
   
   prof_start(pr_C);
-#if DDCP_TYPE == DDCP_TYPE_CUDA
   psc_bnd_particles_sub_exchange_mprts_post(bnd, particles);
-#elif DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP || DDCP_TYPE == DDCP_TYPE_COMMON2
-  for (int p = 0; p < particles->nr_patches; p++) {
-    psc_bnd_particles_sub_exchange_particles_post(bnd, particles, p);
-  }
-#endif
   prof_stop(pr_C);
 
   //struct psc_mfields *mflds = psc_mfields_get_as(psc->flds, "c", JXI, JXI + 3);
