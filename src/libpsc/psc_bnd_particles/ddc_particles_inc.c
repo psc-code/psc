@@ -11,6 +11,21 @@
 #define N_DIR (27)
 
 // ----------------------------------------------------------------------
+// at_lo/hi_boundary
+
+static inline bool
+at_lo_boundary(int p, int d)
+{
+  return ppsc->patch[p].off[d] == 0;
+}
+
+static inline bool
+at_hi_boundary(int p, int d)
+{
+  return ppsc->patch[p].off[d] + ppsc->patch[p].ldims[d] == ppsc->domain.gdims[d];
+}
+
+// ----------------------------------------------------------------------
 // ddcp_buf_t
 
 typedef struct {
@@ -930,21 +945,23 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
   int n_end = ddcp_buf_size(&dpatch->buf) + n_send;
 
   for (int n = ddcp_buf_size(&dpatch->buf); n < n_end; n++) {
-#if DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_CUDA
     particle_t *prt = ddcp_buf_at(&dpatch->buf, n);
-    particle_real_t *xi = &prt->xi;
+    particle_real_t *xi = &prt->xi; // slightly hacky relies on xi, yi, zi to be contiguous in the struct. FIXME
     particle_real_t *pxi = &prt->pxi;
     
+    int b_pos[3];
+    particle_xi_get_block_pos(xi, b_dxi, b_pos);
+    
+#if DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_CUDA
+
     bool drop = false;
     int dir[3];
     for (int d = 0; d < 3; d++) {
-      int bi = particle_real_fint(xi[d] * b_dxi[d]);
-      if (bi < 0) {
-	// FIXME, assumes every patch has same dimensions
-	if (ppatch->off[d] != 0 || psc->domain.bnd_part_lo[d] == BND_PART_PERIODIC) {
+      if (b_pos[d] < 0) {
+	if (!at_lo_boundary(p, d) || psc->domain.bnd_part_lo[d] == BND_PART_PERIODIC) {
 	  xi[d] += xm[d];
 	  dir[d] = -1;
-	  bi = particle_real_fint(xi[d] * b_dxi[d]);
+	  int bi = particle_real_fint(xi[d] * b_dxi[d]);
 	  if (bi >= b_mx[d]) {
 	    xi[d] = 0.;
 	    dir[d] = 0;
@@ -963,12 +980,11 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 	    assert(0);
 	  }
 	}
-      } else if (bi >= b_mx[d]) {
-	if (ppatch->off[d] + ppatch->ldims[d] != psc->domain.gdims[d] ||
-	    psc->domain.bnd_part_hi[d] == BND_PART_PERIODIC) {
+      } else if (b_pos[d] >= b_mx[d]) {
+	if (!at_hi_boundary(p, d) || psc->domain.bnd_part_hi[d] == BND_PART_PERIODIC) {
 	  xi[d] -= xm[d];
 	  dir[d] = +1;
-	  bi = particle_real_fint(xi[d] * b_dxi[d]);
+	  int bi = particle_real_fint(xi[d] * b_dxi[d]);
 	  if (bi < 0) {
 	    xi[d] = 0.;
 	  }
@@ -978,7 +994,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 	    xi[d] = 2.f * xm[d] - xi[d];
 	    pxi[d] = -pxi[d];
 	    dir[d] = 0;
-	    bi = particle_real_fint(xi[d] * b_dxi[d]);
+	    int bi = particle_real_fint(xi[d] * b_dxi[d]);
 	    if (bi >= b_mx[d]) {
 	      xi[d] *= (1. - 1e-6);
 	    }
@@ -1012,12 +1028,6 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 
 #elif DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
 
-    particle_t *prt = mparticles_get_one(mprts, p, n);
-    particle_real_t *xi = &prt->xi; // slightly hacky relies on xi, yi, zi to be contiguous in the struct. FIXME
-    particle_real_t *pxi = &prt->pxi;
-    
-    int b_pos[3];
-    particle_xi_get_block_pos(xi, b_dxi, b_pos);
     if (b_pos[0] >= 0 && b_pos[0] < b_mx[0] && // OPT, could be optimized with casts to unsigned
 	b_pos[1] >= 0 && b_pos[1] < b_mx[1] &&
 	b_pos[2] >= 0 && b_pos[2] < b_mx[2]) {
