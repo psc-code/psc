@@ -1006,22 +1006,7 @@ static void
 psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 					      struct psc_mparticles *mprts, int p)
 {
-#if DDCP_TYPE == DDCP_TYPE_COMMON2
-  particle_range_t prts = particle_range_mprts(mprts, p);
-
-  struct psc_mparticles_single *sub = psc_mparticles_single(mprts);
-  struct psc_mparticles_single_patch *patch = &sub->patch[p];
-  if (1) {
-    //      find_block_indices_count_reorderx(prts);
-    count_and_reorder_to_back(mprts, p);
-  }
-  patch->n_part_save = particle_range_size(prts);
-  patch->n_send = patch->b_cnt[patch->nr_blocks];
-  mparticles_patch_resize(mprts, p, mparticles_get_n_prts(mprts, p) + patch->n_send);
-
-  exchange_particles_pre(bnd, mprts, p);
-
-#elif DDCP_TYPE == DDCP_TYPE_CUDA
+#if DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_CUDA
 
   exchange_particles_pre(bnd, mprts, p);
 
@@ -1161,11 +1146,11 @@ psc_bnd_particles_sub_exchange_particles_post(struct psc_bnd_particles *bnd,
 #if DDCP_TYPE == DDCP_TYPE_COMMON2
   struct psc_mparticles_single *sub = psc_mparticles_single(mprts);
   struct psc_mparticles_single_patch *patch = &sub->patch[p];
-  particle_range_t prts = particle_range_mprts(mprts, p);
+  int n_prts = mparticles_get_n_prts(mprts, p);
 
   find_block_indices_count(patch->b_idx, patch->b_cnt, mprts, p, patch->n_part_save);
   exclusive_scan(patch->b_cnt, patch->nr_blocks + 1);
-  sort_indices(patch->b_idx, patch->b_cnt, patch->b_ids, particle_range_size(prts));
+  sort_indices(patch->b_idx, patch->b_cnt, patch->b_ids, n_prts);
   
   mparticles_patch_resize(mprts, p, patch->b_cnt[patch->nr_blocks - 1]);
   patch->need_reorder = true; // FIXME, need to honor before get()/put()
@@ -1300,6 +1285,22 @@ psc_bnd_particles_sub_exchange_mprts_prep(struct psc_bnd_particles *bnd,
   prof_start(pr_E);
   cuda_mprts_convert_from_cuda(mprts);
   prof_stop(pr_E);
+#endif
+
+#if DDCP_TYPE == DDCP_TYPE_COMMON2
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    particle_range_t prts = particle_range_mprts(mprts, p);
+    
+    struct psc_mparticles_single *sub = psc_mparticles_single(mprts);
+    struct psc_mparticles_single_patch *patch = &sub->patch[p];
+    if (1) {
+      //      find_block_indices_count_reorderx(prts);
+      count_and_reorder_to_back(mprts, p);
+    }
+    patch->n_part_save = particle_range_size(prts);
+    patch->n_send = patch->b_cnt[patch->nr_blocks];
+    mparticles_patch_resize(mprts, p, mparticles_get_n_prts(mprts, p) + patch->n_send);
+  }
 #endif
   
   prof_start(pr_F);
