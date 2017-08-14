@@ -26,82 +26,6 @@ at_hi_boundary(int p, int d)
 }
 
 // ----------------------------------------------------------------------
-// ddcp_buf_t
-
-typedef struct {
-#if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
-  int m_size;
-#endif
-  particle_buf_t *m_buf;
-} ddcp_buf_t;
-
-static void
-ddcp_buf_ctor(ddcp_buf_t *buf, struct psc_mparticles *mprts, int p)
-{
-#if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
-  buf->m_size = 0;
-  buf->m_buf = mparticles_patch_get_buf(mprts, p);
-#elif DDCP_TYPE == DDCP_TYPE_CUDA
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-  buf->m_buf = &cmprts->bnd.bpatch[p].buf;
-#endif
-}
-
-static void
-ddcp_buf_dtor(ddcp_buf_t *buf)
-{
-}
-
-static particle_t *
-ddcp_buf_at(ddcp_buf_t *buf, int n)
-{
-  return particle_buf_at_ptr(buf->m_buf, n);
-}
-
-static void
-ddcp_buf_reserve(ddcp_buf_t *buf, int new_capacity)
-{
-  particle_buf_reserve(buf->m_buf, new_capacity);
-}
-
-static unsigned int
-ddcp_buf_size(ddcp_buf_t *buf)
-{
-#if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
-  return buf->m_size;
-#else
-  return particle_buf_size(buf->m_buf);
-#endif
-}
-
-static void
-ddcp_buf_resize(ddcp_buf_t *buf, int new_size)
-{
-#if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
-  assert(new_size <= particle_buf_capacity(buf->m_buf));
-  buf->m_size = new_size;
-#else
-  particle_buf_resize(buf->m_buf, new_size);
-#endif
-}
-
-static inline void
-ddcp_buf_push_back(ddcp_buf_t *buf, particle_t p)
-{
-#if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
-  // this assert should go away in the general case,
-  // but we actually push_back into the same array we're reading from,
-  // so we better don't go beyond current capacity
-  assert(buf->m_size + 1 <= particle_buf_capacity(buf->m_buf));
-  ddcp_buf_reserve(buf, buf->m_size + 1);
-  *ddcp_buf_at(buf, buf->m_size) = p;
-  buf->m_size++;
-#else
-  particle_buf_push_back(buf->m_buf, p);
-#endif
-}
-
-// ----------------------------------------------------------------------
 // particle_buf_t
 
 static particle_t *
@@ -159,7 +83,7 @@ struct ddcp_nei {
 struct ddcp_patch {
   struct ddcp_nei nei[N_DIR];
   int n_recv;
-  ddcp_buf_t buf;
+  particle_buf_t *m_buf;
 };
 
 struct ddc_particles {
@@ -575,17 +499,17 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
 
   for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
-    int end = ddcp_buf_size(&patch->buf);
+    int end = particle_buf_size(patch->m_buf);
     old_end[p] = end;
-    ddcp_buf_reserve(&patch->buf, end + patch->n_recv);
-    ddcp_buf_resize(&patch->buf, end + patch->n_recv);
+    particle_buf_reserve(patch->m_buf, end + patch->n_recv);
+    particle_buf_resize(patch->m_buf, end + patch->n_recv);
   }
 
   // overlap: copy particles from local proc to the end of recv range
   particle_t **it_recv = malloc(ddcp->nr_patches * sizeof(*it_recv));
   for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
-    it_recv[p] = ddcp_buf_at(&patch->buf, old_end[p]);
+    it_recv[p] = particle_buf_at_ptr(patch->m_buf, old_end[p]);
 
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
@@ -811,11 +735,16 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
   }
   
   struct ddcp_patch *dpatch = &ddcp->patches[p];
-  ddcp_buf_ctor(&dpatch->buf, mprts, p);
-
   for (int dir1 = 0; dir1 < N_DIR; dir1++) {
     particle_buf_resize(&dpatch->nei[dir1].send_buf, 0);
   }
+
+#if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON2 || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
+  dpatch->m_buf = mparticles_patch_get_buf(mprts, p);
+#elif DDCP_TYPE == DDCP_TYPE_CUDA
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
+  dpatch->m_buf = &cmprts->bnd.bpatch[p].buf;
+#endif
 
 #if DDCP_TYPE == DDCP_TYPE_COMMON2
   struct psc_mparticles_single *sub = psc_mparticles_single(mprts);
@@ -823,7 +752,6 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
   unsigned int n_send = sub->patch[p].n_send;
   int n_begin = n_prts - n_send;
 #elif DDCP_TYPE == DDCP_TYPE_CUDA
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
   unsigned int n_send = cmprts->bnd.bpatch[p].n_send;
   int n_begin = 0;
 #elif DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
@@ -835,7 +763,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
   int head = n_begin;
 
   for (int n = n_begin; n < n_end; n++) {
-    particle_t *prt = ddcp_buf_at(&dpatch->buf, n);
+    particle_t *prt = particle_buf_at_ptr(dpatch->m_buf, n);
     particle_real_t *xi = &prt->xi; // slightly hacky relies on xi, yi, zi to be contiguous in the struct. FIXME
     particle_real_t *pxi = &prt->pxi;
     
@@ -848,7 +776,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 	b_pos[2] >= 0 && b_pos[2] < b_mx[2]) {
       // fast path
       // particle is still inside patch: move into right position
-      *ddcp_buf_at(&dpatch->buf, head++) = *prt;
+      *particle_buf_at_ptr(dpatch->m_buf, head++) = *prt;
       continue;
     }
 #endif
@@ -924,14 +852,14 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
     }
     if (!drop) {
       if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
-	*ddcp_buf_at(&dpatch->buf, head++) = *prt;
+	*particle_buf_at_ptr(dpatch->m_buf, head++) = *prt;
       } else {
 	struct ddcp_nei *nei = &dpatch->nei[mrc_ddc_dir2idx(dir)];
 	particle_buf_push_back(&nei->send_buf, *prt);
       }
     }
   }
-  ddcp_buf_resize(&dpatch->buf, head);
+  particle_buf_resize(dpatch->m_buf, head);
 }
 
 #if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP || DDCP_TYPE == DDCP_TYPE_COMMON2
@@ -946,8 +874,7 @@ psc_bnd_particles_sub_exchange_particles_post(struct psc_bnd_particles *bnd,
   struct ddc_particles *ddcp = bnd->ddcp;
   struct ddcp_patch *dpatch = &ddcp->patches[p];
 
-  mparticles_patch_resize(mprts, p, ddcp_buf_size(&dpatch->buf));
-  ddcp_buf_dtor(&dpatch->buf);
+  mparticles_patch_resize(mprts, p, particle_buf_size(dpatch->m_buf));
   
 #if DDCP_TYPE == DDCP_TYPE_COMMON2
   struct psc_mparticles_single *sub = psc_mparticles_single(mprts);
@@ -973,6 +900,7 @@ psc_bnd_particles_sub_exchange_particles_post(struct psc_bnd_particles *bnd,
 static void
 mprts_convert_to_cuda(struct psc_bnd_particles *bnd, struct psc_mparticles *mprts)
 {
+  struct ddc_particles *ddcp = bnd->ddcp;
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
   struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
 
@@ -980,7 +908,7 @@ mprts_convert_to_cuda(struct psc_bnd_particles *bnd, struct psc_mparticles *mprt
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct ddc_particles *ddcp = bnd->ddcp;
     struct ddcp_patch *patch = &ddcp->patches[p];
-    nr_recv += ddcp_buf_size(&patch->buf);
+    nr_recv += particle_buf_size(patch->m_buf);
   }
 
   cmprts->bnd.h_bnd_xi4  = malloc(nr_recv * sizeof(*cmprts->bnd.h_bnd_xi4));
@@ -993,9 +921,8 @@ mprts_convert_to_cuda(struct psc_bnd_particles *bnd, struct psc_mparticles *mprt
 
   unsigned int off = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct ddc_particles *ddcp = bnd->ddcp;
     struct ddcp_patch *patch = &ddcp->patches[p];
-    int n_recv = ddcp_buf_size(&patch->buf);
+    int n_recv = particle_buf_size(patch->m_buf);
     cmprts->bnd.bpatch[p].n_recv = n_recv;
     
     float4 *h_bnd_xi4 = cmprts->bnd.h_bnd_xi4 + off;
@@ -1130,8 +1057,6 @@ static void
 psc_bnd_particles_sub_exchange_mprts_post(struct psc_bnd_particles *bnd,
 					  struct psc_mparticles *mprts)
 {
-  struct ddc_particles *ddcp = bnd->ddcp;
-
 #if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP || DDCP_TYPE == DDCP_TYPE_COMMON2
   for (int p = 0; p < mprts->nr_patches; p++) {
     psc_bnd_particles_sub_exchange_particles_post(bnd, mprts, p);
@@ -1184,9 +1109,6 @@ psc_bnd_particles_sub_exchange_mprts_post(struct psc_bnd_particles *bnd,
   cmprts->need_reorder = true;
 #endif
 
-  for (int p = 0; p < ddcp->nr_patches; p++) {
-    ddcp_buf_dtor(&ddcp->patches[p].buf);
-  }
 #endif
 }
 
