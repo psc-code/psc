@@ -489,27 +489,25 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
   // leave room for receives (FIXME? just change order)
   // each patch's array looks like:
   // [........|.........|...]
-  //          ^ old_end: original buffer size
-  //                    ^ p_recv: where to copy locally exchanged particles
   // ---------                    particles remaining in this patch
   //          --------------      new particles go here (# = patch->n_recvs)
   //          ----------          locally exchanged particles go here
   //                    ----      remote particles go here
-  unsigned int *old_end = malloc(ddcp->nr_patches * sizeof(*old_end));
+  particle_t **it_recv = malloc(ddcp->nr_patches * sizeof(*it_recv));
 
   for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
-    int end = particle_buf_size(patch->m_buf);
-    old_end[p] = end;
-    particle_buf_reserve(patch->m_buf, end + patch->n_recv);
-    particle_buf_resize(patch->m_buf, end + patch->n_recv);
+    int size = particle_buf_size(patch->m_buf);
+    particle_buf_reserve(patch->m_buf, size + patch->n_recv);
+    // this is dangerous: we keep using the iterator, knowing that
+    // it won't become invalid due to a realloc since we reserved enough space...
+    it_recv[p] = particle_buf_end(patch->m_buf);
+    particle_buf_resize(patch->m_buf, size + patch->n_recv);
   }
 
   // overlap: copy particles from local proc to the end of recv range
-  particle_t **it_recv = malloc(ddcp->nr_patches * sizeof(*it_recv));
   for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
-    it_recv[p] = particle_buf_at_ptr(patch->m_buf, old_end[p]);
 
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
@@ -540,12 +538,17 @@ ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *mprts)
     for (int i = 0; i < cinfo[r].n_recv_entries; i++) {
       struct ddcp_recv_entry *re = &cinfo[r].recv_entry[i];
       particle_buf_copy(it, it + cinfo[r].recv_cnts[i], it_recv[re->patch]);
-      it_recv[re->patch] += cinfo[r].recv_cnts[i];
       it += cinfo[r].recv_cnts[i];
+      it_recv[re->patch] += cinfo[r].recv_cnts[i];
     }
   }
   assert(it == particle_buf_begin(&recv_buf) + n_recv);
-  free(old_end);
+
+  for (int p = 0; p < ddcp->nr_patches; p++) {
+    struct ddcp_patch *patch = &ddcp->patches[p];
+    assert(it_recv[p] == particle_buf_end(patch->m_buf));
+  }
+  
   free(it_recv);
   
   particle_buf_dtor(&send_buf);
@@ -963,8 +966,6 @@ mprts_convert_to_cuda(struct psc_bnd_particles *bnd, struct psc_mparticles *mprt
       h_bnd_idx[n] = b;
       h_bnd_off[n] = cmprts->bnd.h_bnd_cnt[b]++;
     }
-    free(cmprts->bnd.bpatch[p].buf.m_data);
-    cmprts->bnd.bpatch[p].buf.m_capacity = 0;
     off += n_recv;
   }
 }
@@ -1109,6 +1110,12 @@ psc_bnd_particles_sub_exchange_mprts_post(struct psc_bnd_particles *bnd,
   cmprts->need_reorder = true;
 #endif
 
+  struct ddc_particles *ddcp = bnd->ddcp;
+  for (int p = 0; p < ddcp->nr_patches; p++) {
+    struct ddcp_patch *dpatch = &ddcp->patches[p];
+    particle_buf_dtor(&cmprts->bnd.bpatch[p].buf); // FIXME if we use it temporarily, it doesn't need to be in cmprts
+    dpatch->m_buf = NULL;
+  }
 #endif
 }
 
