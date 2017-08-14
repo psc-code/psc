@@ -489,18 +489,6 @@ ddc_particles_destroy(struct ddc_particles *ddcp)
 }
 
 // ----------------------------------------------------------------------
-// ddc_particles_queue
-
-static void
-ddc_particles_queue(struct ddc_particles *ddcp, struct ddcp_patch *patch,
-		    int dir[3], particle_t *p)
-{
-  struct ddcp_nei *nei = &patch->nei[mrc_ddc_dir2idx(dir)];
-
-  particle_buf_push_back(&nei->send_buf, p);
-}
-
-// ----------------------------------------------------------------------
 // ddc_particles_comm
 //
 // OPT: could use MPI_Waitany?
@@ -1013,7 +1001,8 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
       if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
 	ddcp_buf_push_back(&dpatch->buf, prt);
       } else {
-	ddc_particles_queue(ddcp, dpatch, dir, prt);
+	struct ddcp_nei *nei = &dpatch->nei[mrc_ddc_dir2idx(dir)];
+	particle_buf_push_back(&nei->send_buf, prt);
       }
     }
   }
