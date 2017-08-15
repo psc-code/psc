@@ -865,11 +865,6 @@ static void
 psc_bnd_particles_sub_exchange_particles_post(struct psc_bnd_particles *bnd,
 					      struct psc_mparticles *mprts, int p)
 {
-  struct ddc_particles *ddcp = bnd->ddcp;
-  struct ddcp_patch *dpatch = &ddcp->patches[p];
-
-  mparticles_patch_resize(mprts, p, particle_buf_size(dpatch->m_buf));
-  
 #if DDCP_TYPE == DDCP_TYPE_COMMON2
   struct psc_mparticles_single *sub = psc_mparticles_single(mprts);
   struct psc_mparticles_single_patch *patch = &sub->patch[p];
