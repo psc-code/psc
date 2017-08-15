@@ -430,8 +430,6 @@ struct psc_mparticles_PTYPE_patch {
   unsigned int *b_idx;
   unsigned int *b_ids;
   unsigned int *b_cnt;
-  unsigned int n_send;
-  unsigned int n_part_save;
   bool need_reorder;
 #endif
   
