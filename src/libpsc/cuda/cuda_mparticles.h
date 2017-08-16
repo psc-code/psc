@@ -4,6 +4,8 @@
 
 #include "cuda_iface.h"
 
+#include "psc_particle_buf_cuda.h"
+
 #ifdef __cplusplus
 #define EXTERN_C extern "C"
 #else
@@ -21,6 +23,15 @@ typedef float float_3[3];
 #define CUDA_BND_S_NEW (9)
 #define CUDA_BND_S_OOB (10)
 #define CUDA_BND_STRIDE (10)
+
+// ----------------------------------------------------------------------
+// cuda_bnd
+
+struct cuda_bnd {
+  psc_particle_cuda_buf_t buf;
+  int n_recv;
+  int n_send;
+};
 
 // ----------------------------------------------------------------------
 // cuda_mparticles_bnd
@@ -49,6 +60,7 @@ void cuda_mparticles_bnd_reserve_all(struct cuda_mparticles *cmprts);
 void cuda_mparticles_bnd_free_particle_mem(struct cuda_mparticles *cmprts);
 
 EXTERN_C void cuda_mparticles_spine_reduce(struct cuda_mparticles *cmprts);
+EXTERN_C void cuda_mparticles_find_n_send(struct cuda_mparticles *cmprts);
 
 // ----------------------------------------------------------------------
 // cuda_mparticles

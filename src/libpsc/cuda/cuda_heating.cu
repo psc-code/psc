@@ -11,8 +11,6 @@
 
 #include <cstdio>
 
-#define sqr(x) ((x)*(x))
-
 #define THREADS_PER_BLOCK 256
 
 static cuda_heating_foil foil;

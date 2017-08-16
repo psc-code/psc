@@ -196,3 +196,27 @@ cuda_mparticles_spine_reduce_gold(struct cuda_mparticles *cmprts)
 			 d_spine_sums + n_blocks * 10);
 }
 
+// ----------------------------------------------------------------------
+// cuda_mparticles_find_n_send
+
+void
+cuda_mparticles_find_n_send(struct cuda_mparticles *cmprts)
+{
+  unsigned int n_blocks = cmprts->n_blocks;
+
+  thrust::device_ptr<unsigned int> d_spine_sums(cmprts->bnd.d_bnd_spine_sums);
+  thrust::host_vector<unsigned int> h_spine_sums(n_blocks + 1);
+
+  thrust::copy(d_spine_sums + n_blocks * 10,
+	       d_spine_sums + n_blocks * 11 + 1,
+	       h_spine_sums.begin());
+
+  unsigned int off = 0;
+  for (int p = 0; p < cmprts->n_patches; p++) {
+    unsigned int n_send = h_spine_sums[(p + 1) * cmprts->n_blocks_per_patch];
+    cmprts->bnd.bpatch[p].n_send = n_send - off;
+    off = n_send;
+  }
+  cmprts->bnd.n_prts_send = off;
+}
+

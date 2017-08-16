@@ -75,29 +75,6 @@ _cuda_exclusive_scan_2(struct psc_particles *prts, unsigned int *d_bidx,
 
 #endif
 
-void
-cuda_mprts_find_n_send(struct psc_mparticles *mprts)
-{
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-
-  unsigned int n_blocks = cmprts->n_blocks;
-
-  thrust::device_ptr<unsigned int> d_spine_sums(cmprts->bnd.d_bnd_spine_sums);
-  thrust::host_vector<unsigned int> h_spine_sums(n_blocks + 1);
-
-  thrust::copy(d_spine_sums + n_blocks * 10,
-	       d_spine_sums + n_blocks * 11 + 1,
-	       h_spine_sums.begin());
-
-  unsigned int off = 0;
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    unsigned int n_send = h_spine_sums[(p + 1) * cmprts->n_blocks_per_patch];
-    cmprts->bnd.bpatch[p].n_send = n_send - off;
-    off = n_send;
-  }
-  cmprts->bnd.n_prts_send = off;
-}
-
 // ======================================================================
 // cuda_mprts_reorder_send_by_id
 

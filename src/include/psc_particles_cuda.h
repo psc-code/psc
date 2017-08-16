@@ -12,12 +12,6 @@
 #include "psc_particles_common.h"
 #undef PTYPE
 
-struct cuda_bnd {
-  psc_particle_cuda_buf_t buf;
-  int n_recv;
-  int n_send;
-};
-
 static inline int
 particle_cuda_real_nint(particle_cuda_real_t x)
 {

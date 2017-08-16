@@ -28,7 +28,6 @@ EXTERN_C void cuda_mprts_find_block_keys(struct psc_mparticles *mprts);
 EXTERN_C void cuda_mprts_find_block_indices_ids_total(struct psc_mparticles *mprts);
 EXTERN_C void cuda_mprts_scan_send_buf(struct psc_mparticles *mprts);
 EXTERN_C void cuda_mprts_bidx_to_key(struct psc_mparticles *mprts);
-EXTERN_C void cuda_mprts_find_n_send(struct psc_mparticles *mprts);
 EXTERN_C void cuda_mprts_scan_send_buf_total(struct psc_mparticles *mprts);
 EXTERN_C void cuda_mprts_reorder_send_buf_total(struct psc_mparticles *mprts);
 EXTERN_C void cuda_mprts_copy_from_dev(struct psc_mparticles *mprts);
