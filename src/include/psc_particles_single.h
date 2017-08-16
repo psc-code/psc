@@ -7,6 +7,7 @@
 #include <psc.h>
 
 #define PTYPE PTYPE_SINGLE
+#include "psc_particle_buf_common.h"
 #include "psc_particles_common.h"
 #undef PTYPE
 

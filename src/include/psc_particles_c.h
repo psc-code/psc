@@ -5,6 +5,7 @@
 #include "psc_particles_private.h"
 
 #define PTYPE PTYPE_C
+#include "psc_particle_buf_common.h"
 #include "psc_particles_common.h"
 #undef PTYPE
 

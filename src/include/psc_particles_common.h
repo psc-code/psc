@@ -1,10 +1,4 @@
 
-#include <mrc_bits.h>
-
-#include <stdlib.h>
-
-#include "psc_particle_buf_common.h"
-
 #if PTYPE == PTYPE_SINGLE
 
 #define particle_PTYPE_real_t particle_single_real_t
