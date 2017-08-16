@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 
-#include "psc_particle_common.h"
+#include "psc_particle_buf_common.h"
 
 #if PTYPE == PTYPE_SINGLE
 
@@ -205,103 +205,6 @@
 #define psc_mparticles_PTYPE_patch_get_b_mx psc_mparticles_cuda_patch_get_b_mx
 
 #endif
-
-// ======================================================================
-// psc_particle_PTYPE_buf_t
-
-typedef struct {
-  particle_PTYPE_t *m_data;
-  unsigned int m_size;
-  unsigned int m_capacity;
-} psc_particle_PTYPE_buf_t;
-
-// ----------------------------------------------------------------------
-// psc_particle_PTYPE_buf_ctor
-
-static inline void
-psc_particle_PTYPE_buf_ctor(psc_particle_PTYPE_buf_t *buf)
-{
-  buf->m_data = NULL;
-  buf->m_size = 0;
-  buf->m_capacity = 0;
-}
-
-// ----------------------------------------------------------------------
-// psc_particle_PTYPE_buf_dtor
-
-static inline void
-psc_particle_PTYPE_buf_dtor(psc_particle_PTYPE_buf_t *buf)
-{
-  free(buf->m_data);
-}
-
-// ----------------------------------------------------------------------
-// psc_particle_PTYPE_buf_size
-
-static inline unsigned int
-psc_particle_PTYPE_buf_size(const psc_particle_PTYPE_buf_t *buf)
-{
-  return buf->m_size;
-}
-
-// ----------------------------------------------------------------------
-// psc_particle_PTYPE_buf_resize
-
-static inline void
-psc_particle_PTYPE_buf_resize(psc_particle_PTYPE_buf_t *buf, unsigned int new_size)
-{
-  assert(new_size <= buf->m_capacity);
-  buf->m_size = new_size;
-}
-
-// ----------------------------------------------------------------------
-// psc_particle_PTYPE_buf_reserve
-
-static inline void
-psc_particle_PTYPE_buf_reserve(psc_particle_PTYPE_buf_t *buf, unsigned int new_capacity)
-{
-  if (new_capacity <= buf->m_capacity)
-    return;
-
-  new_capacity = MAX(new_capacity, buf->m_capacity * 2);
-  
-  buf->m_data = (particle_PTYPE_t *) realloc(buf->m_data, new_capacity * sizeof(*buf->m_data));
-  buf->m_capacity = new_capacity;
-}
-
-// ----------------------------------------------------------------------
-// psc_particle_PTYPE_buf_capacity
-
-static inline unsigned int
-psc_particle_PTYPE_buf_capacity(const psc_particle_PTYPE_buf_t *buf)
-{
-  return buf->m_capacity;
-}
-
-// ----------------------------------------------------------------------
-// psc_particle_PTYPE_buf_push_back
-
-static inline void
-psc_particle_PTYPE_buf_push_back(psc_particle_PTYPE_buf_t *buf, particle_PTYPE_t prt)
-{
-  unsigned int n = buf->m_size;
-  if (n >= buf->m_capacity) {
-    psc_particle_PTYPE_buf_reserve(buf, n + 1);
-  }
-  buf->m_data[n++] = prt;
-  buf->m_size = n;
-}
-
-// ----------------------------------------------------------------------
-// psc_particle_PTYPE_buf_at_ptr
-
-static inline particle_PTYPE_t *
-psc_particle_PTYPE_buf_at_ptr(psc_particle_PTYPE_buf_t *buf, unsigned int n)
-{
-  // FIXME? could do bounds check here...
-  return &buf->m_data[n];
-}
-
 
 // ======================================================================
 
