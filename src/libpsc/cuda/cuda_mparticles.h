@@ -61,6 +61,7 @@ void cuda_mparticles_bnd_free_particle_mem(struct cuda_mparticles *cmprts);
 
 EXTERN_C void cuda_mparticles_spine_reduce(struct cuda_mparticles *cmprts);
 EXTERN_C void cuda_mparticles_find_n_send(struct cuda_mparticles *cmprts);
+EXTERN_C void cuda_mparticles_scan_send_buf_total(struct cuda_mparticles *cmprts);
 
 // ----------------------------------------------------------------------
 // cuda_mparticles

@@ -39,6 +39,7 @@ libsubdir_la_LIBADD = \
 	cuda_base.lo \
 	cuda_mparticles.lo \
 	cuda_mparticles_bnd.lo \
+	cuda_mparticles_bnd_scan.lo \
 	cuda_mfields.lo \
 	cuda_transfer.lo \
 	cuda_push_mprts_yz.lo \

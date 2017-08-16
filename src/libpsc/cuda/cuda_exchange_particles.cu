@@ -219,48 +219,6 @@ cuda_mprts_find_block_indices_3(struct psc_mparticles *mprts)
 }
 
 // ======================================================================
-// mprts_reorder_send_buf_total
-
-__global__ static void
-mprts_reorder_send_buf_total(int nr_prts, int nr_total_blocks,
-			     unsigned int *d_bidx, unsigned int *d_sums,
-			     float4 *d_xi4, float4 *d_pxi4,
-			     float4 *d_xchg_xi4, float4 *d_xchg_pxi4)
-{
-  int i = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
-  if (i >= nr_prts)
-    return;
-
-  if (d_bidx[i] == CUDA_BND_S_OOB) {
-    int j = d_sums[i];
-    d_xchg_xi4[j]  = d_xi4[i];
-    d_xchg_pxi4[j] = d_pxi4[i];
-  }
-}
-
-EXTERN_C void
-cuda_mprts_reorder_send_buf_total(struct psc_mparticles *mprts)
-{
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-
-  if (mprts->nr_patches == 0)
-    return;
-
-  float4 *xchg_xi4 = cmprts->d_xi4 + cmprts->n_prts;
-  float4 *xchg_pxi4 = cmprts->d_pxi4 + cmprts->n_prts;
-  assert(cmprts->n_prts + cmprts->bnd.n_prts_send < cmprts->n_alloced);
-  
-  int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
-  int dimGrid[2]  = { (cmprts->n_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
-  
-  RUN_KERNEL(dimGrid, dimBlock,
-	     mprts_reorder_send_buf_total, (cmprts->n_prts, cmprts->n_blocks,
-					    cmprts->d_bidx, cmprts->bnd.d_sums,
-					    cmprts->d_xi4, cmprts->d_pxi4,
-					    xchg_xi4, xchg_pxi4));
-}
-
-// ======================================================================
 // cuda_mprts_copy_from_dev
 
 void

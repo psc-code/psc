@@ -52,7 +52,7 @@ psc_bnd_particles_sub_exchange_mprts_prep_cuda(struct psc_bnd_particles *bnd,
   prof_stop(pr_B1);
 
   prof_start(pr_B);
-  cuda_mprts_scan_send_buf_total(mprts);
+  cuda_mparticles_scan_send_buf_total(cmprts);
   prof_stop(pr_B);
 
   prof_start(pr_D);
