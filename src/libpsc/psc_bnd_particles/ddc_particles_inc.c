@@ -591,6 +591,31 @@ psc_bnd_particles_sub_unsetup(struct psc_bnd_particles *bnd)
 }
 
 // ----------------------------------------------------------------------
+// psc_bnd_particles_sub_exchange_mprts_prep
+
+static void
+psc_bnd_particles_sub_exchange_mprts_prep(struct psc_bnd_particles *bnd,
+					  struct psc_mparticles *mprts)
+{
+#if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
+  struct ddc_particles *ddcp = bnd->ddcp;
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct ddcp_patch *dpatch = &ddcp->patches[p];
+    dpatch->m_buf = mparticles_patch_get_buf(mprts, p);
+    dpatch->m_begin = 0;
+  }
+#endif
+
+#if DDCP_TYPE == DDCP_TYPE_CUDA
+  psc_bnd_particles_sub_exchange_mprts_prep_cuda(bnd, mprts);
+#endif
+
+#if DDCP_TYPE == DDCP_TYPE_COMMON2
+  psc_bnd_particles_sub_exchange_mprts_prep_common2(bnd, mprts);
+#endif
+}
+
+// ----------------------------------------------------------------------
 // psc_bnd_particles_sub_exchange_particles_prep
 
 static void
@@ -599,10 +624,6 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
 {
   struct ddc_particles *ddcp = bnd->ddcp;
   struct psc *psc = bnd->psc;
-
-  struct ddcp_patch *dpatch = &ddcp->patches[p];
-  unsigned int n_begin = dpatch->m_begin;
-  unsigned int n_end = particle_buf_size(dpatch->m_buf);
 
   // New-style boundary requirements.
   // These will need revisiting when it comes to non-periodic domains.
@@ -615,10 +636,13 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
     xm[d] = ppatch->ldims[d] * ppatch->dx[d];
   }
   
+  struct ddcp_patch *dpatch = &ddcp->patches[p];
   for (int dir1 = 0; dir1 < N_DIR; dir1++) {
     particle_buf_resize(&dpatch->nei[dir1].send_buf, 0);
   }
 
+  unsigned int n_begin = dpatch->m_begin;
+  unsigned int n_end = particle_buf_size(dpatch->m_buf);
   unsigned int head = n_begin;
 
   for (int n = n_begin; n < n_end; n++) {
@@ -717,31 +741,6 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd,
     }
   }
   particle_buf_resize(dpatch->m_buf, head);
-}
-
-// ----------------------------------------------------------------------
-// psc_bnd_particles_sub_exchange_mprts_prep
-
-static void
-psc_bnd_particles_sub_exchange_mprts_prep(struct psc_bnd_particles *bnd,
-					  struct psc_mparticles *mprts)
-{
-#if DDCP_TYPE == DDCP_TYPE_COMMON || DDCP_TYPE == DDCP_TYPE_COMMON_OMP
-  struct ddc_particles *ddcp = bnd->ddcp;
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    struct ddcp_patch *dpatch = &ddcp->patches[p];
-    dpatch->m_buf = mparticles_patch_get_buf(mprts, p);
-    dpatch->m_begin = 0;
-  }
-#endif
-
-#if DDCP_TYPE == DDCP_TYPE_CUDA
-  psc_bnd_particles_sub_exchange_mprts_prep_cuda(bnd, mprts);
-#endif
-
-#if DDCP_TYPE == DDCP_TYPE_COMMON2
-  psc_bnd_particles_sub_exchange_mprts_prep_common2(bnd, mprts);
-#endif
 }
 
 // ----------------------------------------------------------------------

@@ -19,6 +19,63 @@ static void psc_bnd_particles_sub_exchange_mprts_post_cuda(struct psc_bnd_partic
 #include "../psc_bnd_particles/ddc_particles_inc.c"
 
 // ----------------------------------------------------------------------
+// psc_bnd_particles_sub_exchange_mprts_prep_cuda
+
+static void
+psc_bnd_particles_sub_exchange_mprts_prep_cuda(struct psc_bnd_particles *bnd,
+					       struct psc_mparticles *mprts)
+{
+  static int pr_A, pr_B, pr_D, pr_E, pr_B0, pr_B1;
+  if (!pr_A) {
+    pr_A = prof_register("xchg_bidx", 1., 0, 0);
+    pr_B0= prof_register("xchg_reduce", 1., 0, 0);
+    pr_B1= prof_register("xchg_n_send", 1., 0, 0);
+    pr_B = prof_register("xchg_scan_send", 1., 0, 0);
+    pr_D = prof_register("xchg_from_dev", 1., 0, 0);
+    pr_E = prof_register("xchg_cvt_from", 1., 0, 0);
+  }
+
+  struct ddc_particles *ddcp = bnd->ddcp;
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+
+  //prof_start(pr_A);
+  //cuda_mprts_find_block_keys(mprts);
+  //prof_stop(pr_A);
+  
+  prof_start(pr_B0);
+  cuda_mprts_spine_reduce(cmprts);
+  prof_stop(pr_B0);
+
+  prof_start(pr_B1);
+  cuda_mprts_find_n_send(mprts);
+  prof_stop(pr_B1);
+
+  prof_start(pr_B);
+  cuda_mprts_scan_send_buf_total(mprts);
+  prof_stop(pr_B);
+
+  prof_start(pr_D);
+  cuda_mprts_copy_from_dev(mprts);
+  prof_stop(pr_D);
+
+  for (int p = 0; p < cmprts->n_patches; p++) {
+    particle_buf_ctor(&cmprts->bnd.bpatch[p].buf);
+    particle_buf_reserve(&cmprts->bnd.bpatch[p].buf, cmprts->bnd.bpatch[p].n_send);
+    particle_buf_resize(&cmprts->bnd.bpatch[p].buf, cmprts->bnd.bpatch[p].n_send);
+
+    struct ddcp_patch *dpatch = &ddcp->patches[p];
+    dpatch->m_buf = &cmprts->bnd.bpatch[p].buf;
+    dpatch->m_begin = 0;
+  }
+
+  // this will fill the buffers above
+  prof_start(pr_E);
+  cuda_mprts_convert_from_cuda(mprts);
+  prof_stop(pr_E);
+}
+
+// ----------------------------------------------------------------------
 // mprts_convert_to_cuda
 
 static void
@@ -89,62 +146,6 @@ mprts_convert_to_cuda(struct psc_bnd_particles *bnd, struct psc_mparticles *mprt
     }
     off += n_recv;
   }
-}
-
-// ----------------------------------------------------------------------
-// psc_bnd_particles_sub_exchange_mprts_prep_cuda
-
-static void
-psc_bnd_particles_sub_exchange_mprts_prep_cuda(struct psc_bnd_particles *bnd,
-					       struct psc_mparticles *mprts)
-{
-  static int pr_A, pr_B, pr_D, pr_E, pr_B0, pr_B1;
-  if (!pr_A) {
-    pr_A = prof_register("xchg_bidx", 1., 0, 0);
-    pr_B0= prof_register("xchg_reduce", 1., 0, 0);
-    pr_B1= prof_register("xchg_n_send", 1., 0, 0);
-    pr_B = prof_register("xchg_scan_send", 1., 0, 0);
-    pr_D = prof_register("xchg_from_dev", 1., 0, 0);
-    pr_E = prof_register("xchg_cvt_from", 1., 0, 0);
-  }
-
-  //prof_start(pr_A);
-  //cuda_mprts_find_block_keys(mprts);
-  //prof_stop(pr_A);
-  
-  prof_start(pr_B0);
-  cuda_mprts_spine_reduce(mprts);
-  prof_stop(pr_B0);
-
-  prof_start(pr_B1);
-  cuda_mprts_find_n_send(mprts);
-  prof_stop(pr_B1);
-
-  prof_start(pr_B);
-  cuda_mprts_scan_send_buf_total(mprts);
-  prof_stop(pr_B);
-
-  prof_start(pr_D);
-  cuda_mprts_copy_from_dev(mprts);
-  prof_stop(pr_D);
-
-  struct ddc_particles *ddcp = bnd->ddcp;
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
-  for (int p = 0; p < cmprts->n_patches; p++) {
-    particle_buf_ctor(&cmprts->bnd.bpatch[p].buf);
-    particle_buf_reserve(&cmprts->bnd.bpatch[p].buf, cmprts->bnd.bpatch[p].n_send);
-    particle_buf_resize(&cmprts->bnd.bpatch[p].buf, cmprts->bnd.bpatch[p].n_send);
-
-    struct ddcp_patch *dpatch = &ddcp->patches[p];
-    dpatch->m_buf = &cmprts->bnd.bpatch[p].buf;
-    dpatch->m_begin = 0;
-  }
-
-  // this will fill the buffers above
-  prof_start(pr_E);
-  cuda_mprts_convert_from_cuda(mprts);
-  prof_stop(pr_E);
 }
 
 // ----------------------------------------------------------------------

@@ -253,10 +253,8 @@ cuda_mprts_scan_scatter_received_gold(struct psc_mparticles *mprts)
 // cuda_mprts_spine_reduce
 
 void
-cuda_mprts_spine_reduce(struct psc_mparticles *mprts)
+cuda_mprts_spine_reduce(struct cuda_mparticles *cmprts)
 {
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-
   unsigned int n_blocks = cmprts->n_blocks;
   int *b_mx = cmprts->b_mx;
 
