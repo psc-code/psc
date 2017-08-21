@@ -105,7 +105,7 @@ cuda_mprts_bidx_to_key_gold(struct psc_mparticles *mprts)
 }
 
 // ======================================================================
-// cuda_mprts_count_received
+// cuda_mparticles_count_received
 
 __global__ static void
 mprts_count_received(int nr_total_blocks, unsigned int *d_alt_bidx, unsigned int *d_spine_cnts)
@@ -118,10 +118,8 @@ mprts_count_received(int nr_total_blocks, unsigned int *d_alt_bidx, unsigned int
 }
 
 void
-cuda_mprts_count_received(struct psc_mparticles *mprts)
+cuda_mparticles_count_received(struct cuda_mparticles *cmprts)
 {
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-
   unsigned int n_blocks = cmprts->n_blocks;
   
   mprts_count_received<<<n_blocks, THREADS_PER_BLOCK>>>
@@ -129,10 +127,8 @@ cuda_mprts_count_received(struct psc_mparticles *mprts)
 }
 
 void
-cuda_mprts_count_received_gold(struct psc_mparticles *mprts)
+cuda_mparticles_count_received_gold(struct cuda_mparticles *cmprts)
 {
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-
   int n_blocks = cmprts->n_blocks;
 
   thrust::device_ptr<unsigned int> d_spine_cnts(cmprts->bnd.d_bnd_spine_cnts);
@@ -149,10 +145,8 @@ cuda_mprts_count_received_gold(struct psc_mparticles *mprts)
 }
 
 void
-cuda_mprts_count_received_v1(struct psc_mparticles *mprts)
+cuda_mparticles_count_received_v1(struct cuda_mparticles *cmprts)
 {
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-
   int n_blocks = cmprts->n_blocks;
 
   thrust::device_ptr<unsigned int> d_bidx(cmprts->d_bidx);
@@ -171,7 +165,7 @@ cuda_mprts_count_received_v1(struct psc_mparticles *mprts)
 }
 
 // ======================================================================
-// cuda_mprts_scan_scatter_received
+// cuda_mparticles_scan_scatter_received
 
 static void __global__
 mprts_scan_scatter_received(unsigned int nr_recv, unsigned int nr_prts_prev,
@@ -190,10 +184,8 @@ mprts_scan_scatter_received(unsigned int nr_recv, unsigned int nr_prts_prev,
 }
 
 void
-cuda_mprts_scan_scatter_received(struct psc_mparticles *mprts)
+cuda_mparticles_scan_scatter_received(struct cuda_mparticles *cmprts)
 {
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-
   int nr_recv = cmprts->bnd.n_prts_recv;
 
   if (nr_recv == 0) {
@@ -211,10 +203,8 @@ cuda_mprts_scan_scatter_received(struct psc_mparticles *mprts)
 }
 
 void
-cuda_mprts_scan_scatter_received_gold(struct psc_mparticles *mprts)
+cuda_mparticles_scan_scatter_received_gold(struct cuda_mparticles *cmprts)
 {
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-
   unsigned int n_blocks = cmprts->n_blocks;
 
   thrust::device_ptr<unsigned int> d_bidx(cmprts->d_bidx);
@@ -238,10 +228,10 @@ cuda_mprts_scan_scatter_received_gold(struct psc_mparticles *mprts)
 }
 
 // ======================================================================
-// cuda_mprts_sort_pairs_device
+// cuda_mparticles_sort_pairs_device
 
 void
-cuda_mprts_sort_pairs_device(struct psc_mparticles *mprts)
+cuda_mparticles_sort_pairs_device(struct cuda_mparticles *cmprts)
 {
   static int pr_A, pr_B, pr_C, pr_D;
   if (!pr_B) {
@@ -251,12 +241,10 @@ cuda_mprts_sort_pairs_device(struct psc_mparticles *mprts)
     pr_D = prof_register("xchg_bottom_scan", 1., 0, 0);
   }
 
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-
   unsigned int n_blocks = cmprts->n_blocks;
 
   prof_start(pr_A);
-  cuda_mprts_count_received(mprts);
+  cuda_mparticles_count_received(cmprts);
   prof_stop(pr_A);
 
   prof_start(pr_B);
@@ -267,7 +255,7 @@ cuda_mprts_sort_pairs_device(struct psc_mparticles *mprts)
   prof_stop(pr_B);
 
   prof_start(pr_C);
-  cuda_mprts_scan_scatter_received(mprts);
+  cuda_mparticles_scan_scatter_received(cmprts);
   prof_stop(pr_C);
 
   prof_start(pr_D);
@@ -323,10 +311,8 @@ cuda_mprts_sort_pairs_device(struct psc_mparticles *mprts)
 }
 
 void
-cuda_mprts_sort_pairs_gold(struct psc_mparticles *mprts)
+cuda_mprts_sort_pairs_gold(struct cuda_mparticles *cmprts)
 {
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-
   unsigned int n_blocks_per_patch = cmprts->n_blocks_per_patch;
   unsigned int n_blocks = cmprts->n_blocks;
   int *b_mx = cmprts->b_mx;

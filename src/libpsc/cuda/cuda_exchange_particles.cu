@@ -189,17 +189,15 @@ cuda_mprts_find_block_keys(struct psc_mparticles *mprts)
   free_params(&prm);
 }
 
-// ======================================================================
-// cuda_mprts_sort
+// ----------------------------------------------------------------------
+// cuda_mparticles_sort
 
 void
-cuda_mprts_sort(struct psc_mparticles *mprts, int *n_prts_by_patch)
+cuda_mparticles_sort(struct cuda_mparticles *cmprts, int *n_prts_by_patch)
 {
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
+  cuda_mparticles_sort_pairs_device(cmprts);
 
-  cuda_mprts_sort_pairs_device(mprts);
-
-  for (int p = 0; p < mprts->nr_patches; p++) {
+  for (int p = 0; p < cmprts->n_patches; p++) {
     n_prts_by_patch[p] += cmprts->bnd.bpatch[p].n_recv - cmprts->bnd.bpatch[p].n_send;
   }
   cmprts->n_prts -= cmprts->bnd.n_prts_send;

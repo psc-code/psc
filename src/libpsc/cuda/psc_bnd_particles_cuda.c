@@ -180,7 +180,7 @@ psc_bnd_particles_sub_exchange_mprts_post_cuda(struct psc_bnd_particles *bnd,
   prof_start(pr_D);
   unsigned int n_prts_by_patch[mprts->nr_patches];
   cuda_mparticles_get_size_all(cmprts, n_prts_by_patch);
-  cuda_mprts_sort(mprts, (int *) n_prts_by_patch); // FIXME cast
+  cuda_mparticles_sort(cmprts, (int *) n_prts_by_patch); // FIXME cast
   // FIXME, is this necessary, or doesn't update_offsets() do this, too?
   cuda_mparticles_resize_all(cmprts, n_prts_by_patch);
   prof_stop(pr_D);

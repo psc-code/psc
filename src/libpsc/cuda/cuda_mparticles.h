@@ -66,6 +66,8 @@ EXTERN_C void cuda_mparticles_copy_from_dev(struct cuda_mparticles *cmprts);
 EXTERN_C void cuda_mparticles_convert_from_cuda(struct cuda_mparticles *cmprts);
 EXTERN_C void cuda_mparticles_copy_to_dev(struct cuda_mparticles *cmprts);
 EXTERN_C void cuda_mparticles_find_block_indices_3(struct cuda_mparticles *cmprts);
+EXTERN_C void cuda_mparticles_sort(struct cuda_mparticles *cmprts, int *n_prts_by_patch);
+EXTERN_C void cuda_mparticles_sort_pairs_device(struct cuda_mparticles *cmprts);
 
 // ----------------------------------------------------------------------
 // cuda_mparticles
