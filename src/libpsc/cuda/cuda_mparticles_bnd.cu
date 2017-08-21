@@ -243,3 +243,34 @@ cuda_mparticles_copy_from_dev(struct cuda_mparticles *cmprts)
 		    cmprts->bnd.n_prts_send * sizeof(float4), cudaMemcpyDeviceToHost); cudaCheck(ierr);
 }
 
+// ----------------------------------------------------------------------
+// cuda_mparticles_convert_from_cuda
+
+void
+cuda_mparticles_convert_from_cuda(struct cuda_mparticles *cmprts)
+{
+  if (cmprts->n_patches == 0) {
+    return;
+  }
+
+  float4 *bnd_xi4 = cmprts->bnd.h_bnd_xi4;
+  float4 *bnd_pxi4 = cmprts->bnd.h_bnd_pxi4;
+  for (int p = 0; p < cmprts->n_patches; p++) {
+    for (int n = 0; n < cmprts->bnd.bpatch[p].n_send; n++) {
+      particle_cuda_t *prt = &cmprts->bnd.bpatch[p].buf.m_data[n];
+      prt->xi      = bnd_xi4[n].x;
+      prt->yi      = bnd_xi4[n].y;
+      prt->zi      = bnd_xi4[n].z;
+      prt->kind    = cuda_float_as_int(bnd_xi4[n].w);
+      prt->pxi     = bnd_pxi4[n].x;
+      prt->pyi     = bnd_pxi4[n].y;
+      prt->pzi     = bnd_pxi4[n].z;
+      prt->qni_wni = bnd_pxi4[n].w;
+    }
+    bnd_xi4 += cmprts->bnd.bpatch[p].n_send;
+    bnd_pxi4 += cmprts->bnd.bpatch[p].n_send;
+  }
+  delete[] cmprts->bnd.h_bnd_xi4;
+  delete[] cmprts->bnd.h_bnd_pxi4;
+}
+

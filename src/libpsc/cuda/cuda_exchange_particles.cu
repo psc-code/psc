@@ -218,39 +218,6 @@ cuda_mprts_find_block_indices_3(struct psc_mparticles *mprts)
   free(cmprts->bnd.h_bnd_off);
 }
 
-//======================================================================
-// cuda_mprts_convert_from_cuda
-
-void
-cuda_mprts_convert_from_cuda(struct psc_mparticles *mprts)
-{
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-
-  if (mprts->nr_patches == 0) {
-    return;
-  }
-
-  float4 *bnd_xi4 = cmprts->bnd.h_bnd_xi4;
-  float4 *bnd_pxi4 = cmprts->bnd.h_bnd_pxi4;
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    for (int n = 0; n < cmprts->bnd.bpatch[p].n_send; n++) {
-      particle_t *prt = &cmprts->bnd.bpatch[p].buf.m_data[n];
-      prt->xi      = bnd_xi4[n].x;
-      prt->yi      = bnd_xi4[n].y;
-      prt->zi      = bnd_xi4[n].z;
-      prt->kind    = cuda_float_as_int(bnd_xi4[n].w);
-      prt->pxi     = bnd_pxi4[n].x;
-      prt->pyi     = bnd_pxi4[n].y;
-      prt->pzi     = bnd_pxi4[n].z;
-      prt->qni_wni = bnd_pxi4[n].w;
-    }
-    bnd_xi4 += cmprts->bnd.bpatch[p].n_send;
-    bnd_pxi4 += cmprts->bnd.bpatch[p].n_send;
-  }
-  delete[] cmprts->bnd.h_bnd_xi4;
-  delete[] cmprts->bnd.h_bnd_pxi4;
-}
-
 // ======================================================================
 // cuda_mprts_copy_to_dev
 

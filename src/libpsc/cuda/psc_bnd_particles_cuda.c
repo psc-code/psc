@@ -71,7 +71,7 @@ psc_bnd_particles_sub_exchange_mprts_prep_cuda(struct psc_bnd_particles *bnd,
 
   // this will fill the buffers above
   prof_start(pr_E);
-  cuda_mprts_convert_from_cuda(mprts);
+  cuda_mparticles_convert_from_cuda(cmprts);
   prof_stop(pr_E);
 }
 
