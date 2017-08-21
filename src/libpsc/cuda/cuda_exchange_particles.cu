@@ -219,37 +219,6 @@ cuda_mprts_find_block_indices_3(struct psc_mparticles *mprts)
 }
 
 // ======================================================================
-// cuda_mprts_copy_to_dev
-
-void
-cuda_mprts_copy_to_dev(struct psc_mparticles *mprts)
-{
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-
-  float4 *d_xi4 = cmprts->d_xi4;
-  float4 *d_pxi4 = cmprts->d_pxi4;
-
-  unsigned int nr_recv = 0;
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    nr_recv += cmprts->bnd.bpatch[p].n_recv;
-  }
-  assert(cmprts->n_prts + nr_recv <= cmprts->n_alloced);
-
-  check(cudaMemcpy(d_xi4 + cmprts->n_prts, cmprts->bnd.h_bnd_xi4,
-		   nr_recv * sizeof(*d_xi4),
-		   cudaMemcpyHostToDevice));
-  check(cudaMemcpy(d_pxi4 + cmprts->n_prts, cmprts->bnd.h_bnd_pxi4,
-		   nr_recv * sizeof(*d_pxi4),
-		   cudaMemcpyHostToDevice));
-
-  free(cmprts->bnd.h_bnd_xi4);
-  free(cmprts->bnd.h_bnd_pxi4);
-
-  cmprts->bnd.n_prts_recv = nr_recv;
-  cmprts->n_prts += nr_recv;
-}
-
-// ======================================================================
 // cuda_mprts_sort
 
 void

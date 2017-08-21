@@ -170,7 +170,7 @@ psc_bnd_particles_sub_exchange_mprts_post_cuda(struct psc_bnd_particles *bnd,
   prof_stop(pr_A);
 
   prof_start(pr_B);
-  cuda_mprts_copy_to_dev(mprts);
+  cuda_mparticles_copy_to_dev(cmprts);
   prof_stop(pr_B);
 
   prof_start(pr_C);

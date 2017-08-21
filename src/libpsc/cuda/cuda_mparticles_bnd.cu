@@ -274,3 +274,32 @@ cuda_mparticles_convert_from_cuda(struct cuda_mparticles *cmprts)
   delete[] cmprts->bnd.h_bnd_pxi4;
 }
 
+// ----------------------------------------------------------------------
+// cuda_mparticles_copy_to_dev
+
+void
+cuda_mparticles_copy_to_dev(struct cuda_mparticles *cmprts)
+{
+  cudaError_t ierr;
+
+  float4 *d_xi4 = cmprts->d_xi4;
+  float4 *d_pxi4 = cmprts->d_pxi4;
+
+  unsigned int nr_recv = 0;
+  for (int p = 0; p < cmprts->n_patches; p++) {
+    nr_recv += cmprts->bnd.bpatch[p].n_recv;
+  }
+  assert(cmprts->n_prts + nr_recv <= cmprts->n_alloced);
+
+  ierr = cudaMemcpy(d_xi4 + cmprts->n_prts, cmprts->bnd.h_bnd_xi4,
+		    nr_recv * sizeof(*d_xi4), cudaMemcpyHostToDevice); cudaCheck(ierr);
+  ierr = cudaMemcpy(d_pxi4 + cmprts->n_prts, cmprts->bnd.h_bnd_pxi4,
+		    nr_recv * sizeof(*d_pxi4), cudaMemcpyHostToDevice); cudaCheck(ierr);
+
+  free(cmprts->bnd.h_bnd_xi4);
+  free(cmprts->bnd.h_bnd_pxi4);
+
+  cmprts->bnd.n_prts_recv = nr_recv;
+  cmprts->n_prts += nr_recv;
+}
+
