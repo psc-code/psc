@@ -190,35 +190,6 @@ cuda_mprts_find_block_keys(struct psc_mparticles *mprts)
 }
 
 // ======================================================================
-// cuda_mprts_find_block_indices_3
-
-EXTERN_C void
-cuda_mprts_find_block_indices_3(struct psc_mparticles *mprts)
-{
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-
-  unsigned int nr_recv = cmprts->bnd.n_prts_recv;
-  unsigned int nr_prts_prev = cmprts->n_prts - nr_recv;
-
-  // for consistency, use same block indices that we counted earlier
-  // OPT unneeded?
-  check(cudaMemcpy(cmprts->d_bidx + nr_prts_prev, cmprts->bnd.h_bnd_idx,
-		   nr_recv * sizeof(*cmprts->d_bidx),
-		   cudaMemcpyHostToDevice));
-  // slight abuse of the now unused last part of spine_cnts
-  check(cudaMemcpy(cmprts->bnd.d_bnd_spine_cnts + 10 * cmprts->n_blocks,
-		   cmprts->bnd.h_bnd_cnt,
-		   cmprts->n_blocks * sizeof(*cmprts->bnd.d_bnd_spine_cnts),
-		   cudaMemcpyHostToDevice));
-  check(cudaMemcpy(cmprts->bnd.d_alt_bidx + nr_prts_prev, cmprts->bnd.h_bnd_off,
-		   nr_recv * sizeof(*cmprts->bnd.d_alt_bidx),
-		   cudaMemcpyHostToDevice));
-
-  free(cmprts->bnd.h_bnd_idx);
-  free(cmprts->bnd.h_bnd_off);
-}
-
-// ======================================================================
 // cuda_mprts_sort
 
 void

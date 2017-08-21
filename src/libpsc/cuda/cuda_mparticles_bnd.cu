@@ -303,3 +303,30 @@ cuda_mparticles_copy_to_dev(struct cuda_mparticles *cmprts)
   cmprts->n_prts += nr_recv;
 }
 
+// ----------------------------------------------------------------------
+// cuda_mparticles_find_block_indices_3
+
+void
+cuda_mparticles_find_block_indices_3(struct cuda_mparticles *cmprts)
+{
+  cudaError_t ierr;
+  
+  unsigned int nr_recv = cmprts->bnd.n_prts_recv;
+  unsigned int nr_prts_prev = cmprts->n_prts - nr_recv;
+
+  // for consistency, use same block indices that we counted earlier
+  // OPT unneeded?
+  ierr = cudaMemcpy(cmprts->d_bidx + nr_prts_prev, cmprts->bnd.h_bnd_idx,
+		    nr_recv * sizeof(*cmprts->d_bidx), cudaMemcpyHostToDevice); cudaCheck(ierr);
+  // slight abuse of the now unused last part of spine_cnts
+  ierr = cudaMemcpy(cmprts->bnd.d_bnd_spine_cnts + 10 * cmprts->n_blocks,
+		    cmprts->bnd.h_bnd_cnt, cmprts->n_blocks * sizeof(*cmprts->bnd.d_bnd_spine_cnts),
+		    cudaMemcpyHostToDevice); cudaCheck(ierr);
+  ierr = cudaMemcpy(cmprts->bnd.d_alt_bidx + nr_prts_prev, cmprts->bnd.h_bnd_off,
+		    nr_recv * sizeof(*cmprts->bnd.d_alt_bidx), cudaMemcpyHostToDevice); cudaCheck(ierr);
+
+  free(cmprts->bnd.h_bnd_idx);
+  free(cmprts->bnd.h_bnd_off);
+}
+
+

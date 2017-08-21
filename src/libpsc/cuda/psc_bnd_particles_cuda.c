@@ -174,7 +174,7 @@ psc_bnd_particles_sub_exchange_mprts_post_cuda(struct psc_bnd_particles *bnd,
   prof_stop(pr_B);
 
   prof_start(pr_C);
-  cuda_mprts_find_block_indices_3(mprts);
+  cuda_mparticles_find_block_indices_3(cmprts);
   prof_stop(pr_C);
   
   prof_start(pr_D);
