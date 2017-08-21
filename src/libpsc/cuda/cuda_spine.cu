@@ -369,7 +369,7 @@ cuda_mprts_sort_pairs_gold(struct cuda_mparticles *cmprts)
 }
 
 // ======================================================================
-// cuda_mprts_update_offsets
+// cuda_mparticles_update_offsets
 
 __global__ static void
 mprts_update_offsets(int nr_total_blocks, unsigned int *d_off, unsigned int *d_spine_sums)
@@ -382,10 +382,8 @@ mprts_update_offsets(int nr_total_blocks, unsigned int *d_off, unsigned int *d_s
 }
 
 void
-cuda_mprts_update_offsets(struct psc_mparticles *mprts)
+cuda_mparticles_update_offsets(struct cuda_mparticles *cmprts)
 {
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-
   unsigned int n_blocks = cmprts->n_blocks;
   int dimGrid = (n_blocks + 1 + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
@@ -395,10 +393,8 @@ cuda_mprts_update_offsets(struct psc_mparticles *mprts)
 }
 
 void
-cuda_mprts_update_offsets_gold(struct psc_mparticles *mprts)
+cuda_mparticles_update_offsets_gold(struct cuda_mparticles *cmprts)
 {
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-
   unsigned int n_blocks = cmprts->n_blocks;
 
   thrust::device_ptr<unsigned int> d_spine_sums(cmprts->bnd.d_bnd_spine_sums);
