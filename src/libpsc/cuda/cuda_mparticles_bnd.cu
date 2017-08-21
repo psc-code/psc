@@ -9,6 +9,8 @@
 #include <b40c/radixsort_reduction_kernel.h>
 #include <b40c/radixsort_scanscatter_kernel3.h>
 
+#include "psc_particle_buf_cuda.h"
+
 #include <mrc_profile.h>
 
 #define THREADS_PER_BLOCK 256
@@ -259,9 +261,16 @@ cuda_mparticles_convert_from_cuda(struct cuda_mparticles *cmprts)
 
   float4 *bnd_xi4 = cmprts->bnd.h_bnd_xi4;
   float4 *bnd_pxi4 = cmprts->bnd.h_bnd_pxi4;
+
   for (int p = 0; p < cmprts->n_patches; p++) {
-    for (int n = 0; n < cmprts->bnd.bpatch[p].n_send; n++) {
-      particle_cuda_t *prt = &cmprts->bnd.bpatch[p].buf.m_data[n];
+    psc_particle_cuda_buf_t *buf = &cmprts->bnd.bpatch[p].buf;
+    unsigned int n_send = cmprts->bnd.bpatch[p].n_send;
+    psc_particle_cuda_buf_ctor(buf);
+    psc_particle_cuda_buf_reserve(buf, n_send);
+    psc_particle_cuda_buf_resize(buf, n_send);
+
+    for (int n = 0; n < n_send; n++) {
+      particle_cuda_t *prt = psc_particle_cuda_buf_at_ptr(buf, n);
       prt->xi      = bnd_xi4[n].x;
       prt->yi      = bnd_xi4[n].y;
       prt->zi      = bnd_xi4[n].z;
@@ -271,9 +280,10 @@ cuda_mparticles_convert_from_cuda(struct cuda_mparticles *cmprts)
       prt->pzi     = bnd_pxi4[n].z;
       prt->qni_wni = bnd_pxi4[n].w;
     }
-    bnd_xi4 += cmprts->bnd.bpatch[p].n_send;
-    bnd_pxi4 += cmprts->bnd.bpatch[p].n_send;
+    bnd_xi4 += n_send;
+    bnd_pxi4 += n_send;
   }
+
   delete[] cmprts->bnd.h_bnd_xi4;
   delete[] cmprts->bnd.h_bnd_pxi4;
 }

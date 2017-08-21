@@ -59,20 +59,15 @@ psc_bnd_particles_sub_exchange_mprts_prep_cuda(struct psc_bnd_particles *bnd,
   cuda_mparticles_copy_from_dev(cmprts);
   prof_stop(pr_D);
 
-  for (int p = 0; p < cmprts->n_patches; p++) {
-    particle_buf_ctor(&cmprts->bnd.bpatch[p].buf);
-    particle_buf_reserve(&cmprts->bnd.bpatch[p].buf, cmprts->bnd.bpatch[p].n_send);
-    particle_buf_resize(&cmprts->bnd.bpatch[p].buf, cmprts->bnd.bpatch[p].n_send);
+  prof_start(pr_E);
+  cuda_mparticles_convert_from_cuda(cmprts);
+  prof_stop(pr_E);
 
+  for (int p = 0; p < cmprts->n_patches; p++) {
     struct ddcp_patch *dpatch = &ddcp->patches[p];
     dpatch->m_buf = &cmprts->bnd.bpatch[p].buf;
     dpatch->m_begin = 0;
   }
-
-  // this will fill the buffers above
-  prof_start(pr_E);
-  cuda_mparticles_convert_from_cuda(cmprts);
-  prof_stop(pr_E);
 }
 
 // ----------------------------------------------------------------------
