@@ -220,3 +220,26 @@ cuda_mparticles_find_n_send(struct cuda_mparticles *cmprts)
   cmprts->bnd.n_prts_send = off;
 }
 
+// ----------------------------------------------------------------------
+// cuda_mparticles_copy_from_dev
+
+void
+cuda_mparticles_copy_from_dev(struct cuda_mparticles *cmprts)
+{
+  cudaError_t ierr;
+
+  if (cmprts->n_patches == 0) {
+    return;
+  }
+
+  cmprts->bnd.h_bnd_xi4 = new float4[cmprts->bnd.n_prts_send];
+  cmprts->bnd.h_bnd_pxi4 = new float4[cmprts->bnd.n_prts_send];
+
+  assert(cmprts->n_prts + cmprts->bnd.n_prts_send < cmprts->n_alloced);
+
+  ierr = cudaMemcpy(cmprts->bnd.h_bnd_xi4, cmprts->d_xi4 + cmprts->n_prts,
+		    cmprts->bnd.n_prts_send * sizeof(float4), cudaMemcpyDeviceToHost); cudaCheck(ierr);
+  ierr = cudaMemcpy(cmprts->bnd.h_bnd_pxi4, cmprts->d_pxi4 + cmprts->n_prts,
+		    cmprts->bnd.n_prts_send * sizeof(float4), cudaMemcpyDeviceToHost); cudaCheck(ierr);
+}
+

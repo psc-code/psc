@@ -19,7 +19,7 @@ using namespace b40c_thrust;
 typedef unsigned int K;
 typedef unsigned int V;
 
-static const int RADIX_BITS = 4;
+// static const int RADIX_BITS = 4;
 
 struct count_if_equal : public thrust::unary_function<unsigned int, unsigned int> {
   const unsigned int value;

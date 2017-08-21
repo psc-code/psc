@@ -56,7 +56,7 @@ psc_bnd_particles_sub_exchange_mprts_prep_cuda(struct psc_bnd_particles *bnd,
   prof_stop(pr_B);
 
   prof_start(pr_D);
-  cuda_mprts_copy_from_dev(mprts);
+  cuda_mparticles_copy_from_dev(cmprts);
   prof_stop(pr_D);
 
   for (int p = 0; p < cmprts->n_patches; p++) {
