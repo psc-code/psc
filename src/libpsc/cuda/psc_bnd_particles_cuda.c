@@ -76,17 +76,15 @@ psc_bnd_particles_sub_exchange_mprts_prep_cuda(struct psc_bnd_particles *bnd,
 }
 
 // ----------------------------------------------------------------------
-// mprts_convert_to_cuda
+// cuda_mparticles_convert_to_cuda
 
 static void
-mprts_convert_to_cuda(struct psc_bnd_particles *bnd, struct psc_mparticles *mprts)
+cuda_mparticles_convert_to_cuda(struct psc_bnd_particles *bnd, struct cuda_mparticles *cmprts)
 {
   struct ddc_particles *ddcp = bnd->ddcp;
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
 
   unsigned int nr_recv = 0;
-  for (int p = 0; p < mprts->nr_patches; p++) {
+  for (int p = 0; p < cmprts->n_patches; p++) {
     struct ddc_particles *ddcp = bnd->ddcp;
     struct ddcp_patch *patch = &ddcp->patches[p];
     nr_recv += particle_buf_size(patch->m_buf);
@@ -101,7 +99,7 @@ mprts_convert_to_cuda(struct psc_bnd_particles *bnd, struct psc_mparticles *mprt
 	 cmprts->n_blocks * sizeof(*cmprts->bnd.h_bnd_cnt));
 
   unsigned int off = 0;
-  for (int p = 0; p < mprts->nr_patches; p++) {
+  for (int p = 0; p < cmprts->n_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
     int n_recv = particle_buf_size(patch->m_buf);
     cmprts->bnd.bpatch[p].n_recv = n_recv;
@@ -155,8 +153,7 @@ static void
 psc_bnd_particles_sub_exchange_mprts_post_cuda(struct psc_bnd_particles *bnd,
 					       struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct cuda_mparticles *cmprts = mprts_cuda->cmprts;
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
   static int pr_A, pr_B, pr_C, pr_D, pr_E, pr_D1;
   if (!pr_A) {
@@ -169,7 +166,7 @@ psc_bnd_particles_sub_exchange_mprts_post_cuda(struct psc_bnd_particles *bnd,
   }
 
   prof_start(pr_A);
-  mprts_convert_to_cuda(bnd, mprts);
+  cuda_mparticles_convert_to_cuda(bnd, cmprts);
   prof_stop(pr_A);
 
   prof_start(pr_B);
