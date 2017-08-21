@@ -5,6 +5,16 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#include <mrc_profile.h>
+
+struct prof_globals prof_globals; // FIXME
+
+int
+prof_register(const char *name, float simd, int flops, int bytes)
+{
+  return 0;
+}
+
 // ----------------------------------------------------------------------
 // cuda_domain_info_ctor_test_1
 

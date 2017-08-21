@@ -8,6 +8,16 @@
 
 #include "../libpsc/cuda/cuda_mparticles.h"
 
+#include <mrc_profile.h>
+
+struct prof_globals prof_globals; // FIXME
+
+int
+prof_register(const char *name, float simd, int flops, int bytes)
+{
+  return 0;
+}
+
 void
 cuda_domain_info_set_test_1(struct cuda_domain_info *info)
 {

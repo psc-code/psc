@@ -9,6 +9,16 @@
 #include "../libpsc/cuda/cuda_mparticles.h"
 #include "../libpsc/cuda/cuda_bits.h"
 
+#include <mrc_profile.h>
+
+struct prof_globals prof_globals; // FIXME
+
+int
+prof_register(const char *name, float simd, int flops, int bytes)
+{
+  return 0;
+}
+
 // set up a domain [-40:40] x [-20:20], with 2 patches, cell size of 10
 
 void
