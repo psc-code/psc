@@ -18,7 +18,7 @@ struct psc_fields_cuda_bnd {
 
 struct psc_fields_cuda {
   fields_cuda_real_t *d_flds;
-  struct psc_fields_cuda_bnd bnd;
+  struct psc_fields_cuda_bnd _bnd;
 };
 
 #define psc_fields_cuda(pf) mrc_to_subobj(pf, struct psc_fields_cuda)
@@ -27,6 +27,7 @@ struct psc_fields_cuda {
 
 struct psc_mfields_cuda {
   struct cuda_mfields *cmflds;
+
   fields_cuda_real_t *d_bnd_buf;
   fields_cuda_real_t *h_bnd_buf;
   int *h_nei_patch;

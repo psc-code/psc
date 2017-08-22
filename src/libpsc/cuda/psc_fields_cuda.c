@@ -1,6 +1,7 @@
 
 #include "psc.h"
 #include "cuda_iface.h"
+#include "cuda_mfields.h" // FIXME
 #include "psc_fields_cuda.h"
 #include "psc_fields_c.h"
 #include "psc_fields_single.h"
@@ -217,13 +218,20 @@ struct psc_fields_ops psc_fields_cuda_ops = {
 static void
 psc_mfields_cuda_setup(struct psc_mfields *mflds)
 {
+  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
+
   psc_mfields_setup_super(mflds);
 
   cuda_base_init();
 
-  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
   struct cuda_mfields *cmflds = cuda_mfields_create();
   mflds_cuda->cmflds = cmflds;
+
+  cmflds->bnd = calloc(mflds->nr_patches, sizeof(*cmflds->bnd));
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    struct psc_fields_cuda *flds_cuda = psc_fields_cuda(psc_mfields_get_patch(mflds, p));
+    cmflds->bnd[p] = &flds_cuda->_bnd;
+  }
 
   __psc_mfields_cuda_setup(mflds);
 }
@@ -239,6 +247,7 @@ psc_mfields_cuda_destroy(struct psc_mfields *mflds)
 
   __psc_mfields_cuda_destroy(mflds);
 
+  free(cmflds->bnd);
   cuda_mfields_destroy(cmflds);
   mflds_cuda->cmflds = NULL;
 }

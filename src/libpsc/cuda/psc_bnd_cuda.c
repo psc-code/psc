@@ -3,6 +3,7 @@
 #include "psc_cuda.h"
 #include "psc_bnd_cuda_fields.h"
 #include "particles_cuda.h"
+#include "cuda_mfields.h"
 
 #include <mrc_ddc.h>
 #include <mrc_profile.h>
@@ -14,8 +15,8 @@ void
 psc_bnd_fld_cuda_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx)
 {
   struct psc_mfields *mflds = _ctx;
-  struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-  struct psc_fields_cuda_bnd *cf = &psc_fields_cuda(flds)->bnd;
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
+  struct psc_fields_cuda_bnd *cf = cmflds->bnd[p];
   fields_cuda_real_t *buf = _buf;
 
   me -= mb; // FIXME, the "mix" bnd needs this adjustment
@@ -35,8 +36,8 @@ void
 psc_bnd_fld_cuda_add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx)
 {
   struct psc_mfields *mflds = _ctx;
-  struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-  struct psc_fields_cuda_bnd *cf = &psc_fields_cuda(flds)->bnd;
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
+  struct psc_fields_cuda_bnd *cf = cmflds->bnd[p];
   fields_cuda_real_t *buf = _buf;
 
   me -= mb;
@@ -56,8 +57,8 @@ void
 psc_bnd_fld_cuda_copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx)
 {
   struct psc_mfields *mflds = _ctx;
-  struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-  struct psc_fields_cuda_bnd *cf = &psc_fields_cuda(flds)->bnd;
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
+  struct psc_fields_cuda_bnd *cf = cmflds->bnd[p];
   fields_cuda_real_t *buf = _buf;
 
   me -= mb;
