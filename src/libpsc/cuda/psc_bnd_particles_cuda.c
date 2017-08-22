@@ -74,29 +74,24 @@ psc_bnd_particles_sub_exchange_mprts_prep_cuda(struct psc_bnd_particles *bnd,
 // cuda_mparticles_convert_to_cuda
 
 static void
-cuda_mparticles_convert_to_cuda(struct psc_bnd_particles *bnd, struct cuda_mparticles *cmprts)
+cuda_mparticles_convert_to_cuda(struct cuda_mparticles *cmprts)
 {
-  struct ddc_particles *ddcp = bnd->ddcp;
-
-  unsigned int nr_recv = 0;
+  unsigned int n_recv = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
-    struct ddc_particles *ddcp = bnd->ddcp;
-    struct ddcp_patch *patch = &ddcp->patches[p];
-    nr_recv += particle_buf_size(patch->m_buf);
+    n_recv += particle_buf_size(&cmprts->bnd.bpatch[p].buf);
   }
 
-  cmprts->bnd.h_bnd_xi4  = malloc(nr_recv * sizeof(*cmprts->bnd.h_bnd_xi4));
-  cmprts->bnd.h_bnd_pxi4 = malloc(nr_recv * sizeof(*cmprts->bnd.h_bnd_pxi4));
-  cmprts->bnd.h_bnd_idx  = malloc(nr_recv * sizeof(*cmprts->bnd.h_bnd_idx));
-  cmprts->bnd.h_bnd_off  = malloc(nr_recv * sizeof(*cmprts->bnd.h_bnd_off));
+  cmprts->bnd.h_bnd_xi4  = malloc(n_recv * sizeof(*cmprts->bnd.h_bnd_xi4));
+  cmprts->bnd.h_bnd_pxi4 = malloc(n_recv * sizeof(*cmprts->bnd.h_bnd_pxi4));
+  cmprts->bnd.h_bnd_idx  = malloc(n_recv * sizeof(*cmprts->bnd.h_bnd_idx));
+  cmprts->bnd.h_bnd_off  = malloc(n_recv * sizeof(*cmprts->bnd.h_bnd_off));
 
   memset(cmprts->bnd.h_bnd_cnt, 0,
 	 cmprts->n_blocks * sizeof(*cmprts->bnd.h_bnd_cnt));
 
   unsigned int off = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
-    struct ddcp_patch *patch = &ddcp->patches[p];
-    int n_recv = particle_buf_size(patch->m_buf);
+    int n_recv = particle_buf_size(&cmprts->bnd.bpatch[p].buf);
     cmprts->bnd.bpatch[p].n_recv = n_recv;
     
     float4 *h_bnd_xi4 = cmprts->bnd.h_bnd_xi4 + off;
@@ -161,7 +156,7 @@ psc_bnd_particles_sub_exchange_mprts_post_cuda(struct psc_bnd_particles *bnd,
   }
 
   prof_start(pr_A);
-  cuda_mparticles_convert_to_cuda(bnd, cmprts);
+  cuda_mparticles_convert_to_cuda(cmprts);
   prof_stop(pr_A);
 
   prof_start(pr_B);
@@ -195,8 +190,8 @@ psc_bnd_particles_sub_exchange_mprts_post_cuda(struct psc_bnd_particles *bnd,
 
   struct ddc_particles *ddcp = bnd->ddcp;
   for (int p = 0; p < ddcp->nr_patches; p++) {
-    struct ddcp_patch *dpatch = &ddcp->patches[p];
     particle_buf_dtor(&cmprts->bnd.bpatch[p].buf); // FIXME if we use it temporarily, it doesn't need to be in cmprts
+    struct ddcp_patch *dpatch = &ddcp->patches[p];
     dpatch->m_buf = NULL;
   }
 }
