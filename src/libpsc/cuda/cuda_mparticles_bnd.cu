@@ -108,21 +108,17 @@ cuda_mparticles_find_n_send(struct cuda_mparticles *cmprts)
 void
 cuda_mparticles_copy_from_dev_and_convert(struct cuda_mparticles *cmprts)
 {
-  cudaError_t ierr;
+  thrust::device_ptr<float4> d_xi4(cmprts->d_xi4);
+  thrust::device_ptr<float4> d_pxi4(cmprts->d_pxi4);
 
-  if (cmprts->n_patches == 0) {
-    return;
-  }
+  unsigned int n_send = cmprts->bnd.n_prts_send;
+  thrust::host_vector<float4> h_bnd_xi4(n_send);
+  thrust::host_vector<float4> h_bnd_pxi4(n_send);
 
-  float4 *bnd_xi4 = new float4[cmprts->bnd.n_prts_send];
-  float4 *bnd_pxi4 = new float4[cmprts->bnd.n_prts_send];
+  assert(cmprts->n_prts + n_send < cmprts->n_alloced);
 
-  assert(cmprts->n_prts + cmprts->bnd.n_prts_send < cmprts->n_alloced);
-
-  ierr = cudaMemcpy(bnd_xi4, cmprts->d_xi4 + cmprts->n_prts,
-		    cmprts->bnd.n_prts_send * sizeof(float4), cudaMemcpyDeviceToHost); cudaCheck(ierr);
-  ierr = cudaMemcpy(bnd_pxi4, cmprts->d_pxi4 + cmprts->n_prts,
-		    cmprts->bnd.n_prts_send * sizeof(float4), cudaMemcpyDeviceToHost); cudaCheck(ierr);
+  thrust::copy(d_xi4  + cmprts->n_prts, d_xi4  + cmprts->n_prts + n_send, h_bnd_xi4.begin());
+  thrust::copy(d_pxi4 + cmprts->n_prts, d_pxi4 + cmprts->n_prts + n_send, h_bnd_pxi4.begin());
 
   unsigned int off = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
@@ -134,20 +130,17 @@ cuda_mparticles_copy_from_dev_and_convert(struct cuda_mparticles *cmprts)
 
     for (int n = 0; n < n_send; n++) {
       particle_cuda_t *prt = psc_particle_cuda_buf_at_ptr(buf, n);
-      prt->xi      = bnd_xi4[n + off].x;
-      prt->yi      = bnd_xi4[n + off].y;
-      prt->zi      = bnd_xi4[n + off].z;
-      prt->kind    = cuda_float_as_int(bnd_xi4[n + off].w);
-      prt->pxi     = bnd_pxi4[n + off].x;
-      prt->pyi     = bnd_pxi4[n + off].y;
-      prt->pzi     = bnd_pxi4[n + off].z;
-      prt->qni_wni = bnd_pxi4[n + off].w;
+      prt->xi      = h_bnd_xi4[n + off].x;
+      prt->yi      = h_bnd_xi4[n + off].y;
+      prt->zi      = h_bnd_xi4[n + off].z;
+      prt->kind    = cuda_float_as_int(h_bnd_xi4[n + off].w);
+      prt->pxi     = h_bnd_pxi4[n + off].x;
+      prt->pyi     = h_bnd_pxi4[n + off].y;
+      prt->pzi     = h_bnd_pxi4[n + off].z;
+      prt->qni_wni = h_bnd_pxi4[n + off].w;
     }
     off += n_send;
   }
-
-  delete[] bnd_xi4;
-  delete[] bnd_pxi4;
 }
 
 // ----------------------------------------------------------------------
