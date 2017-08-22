@@ -217,31 +217,26 @@ cuda_mparticles_convert_and_copy_to_dev(struct cuda_mparticles *cmprts)
 
   cudaError_t ierr;
 
-  unsigned int nr_recv = 0;
-  for (int p = 0; p < cmprts->n_patches; p++) {
-    nr_recv += cmprts->bnd.bpatch[p].n_recv;
-  }
-  assert(nr_recv == n_recv);
-  assert(cmprts->n_prts + nr_recv <= cmprts->n_alloced);
+  assert(cmprts->n_prts + n_recv <= cmprts->n_alloced);
 
   ierr = cudaMemcpy(cmprts->d_xi4 + cmprts->n_prts, h_bnd_xi4,
-		    nr_recv * sizeof(*cmprts->d_xi4), cudaMemcpyHostToDevice); cudaCheck(ierr);
+		    n_recv * sizeof(*cmprts->d_xi4), cudaMemcpyHostToDevice); cudaCheck(ierr);
   ierr = cudaMemcpy(cmprts->d_pxi4 + cmprts->n_prts, h_bnd_pxi4,
-		    nr_recv * sizeof(*cmprts->d_pxi4), cudaMemcpyHostToDevice); cudaCheck(ierr);
+		    n_recv * sizeof(*cmprts->d_pxi4), cudaMemcpyHostToDevice); cudaCheck(ierr);
 
   // for consistency, use same block indices that we counted earlier
   // OPT unneeded?
   ierr = cudaMemcpy(cmprts->d_bidx + cmprts->n_prts, h_bnd_idx,
-		    nr_recv * sizeof(*cmprts->d_bidx), cudaMemcpyHostToDevice); cudaCheck(ierr);
+		    n_recv * sizeof(*cmprts->d_bidx), cudaMemcpyHostToDevice); cudaCheck(ierr);
   // slight abuse of the now unused last part of spine_cnts
   ierr = cudaMemcpy(cmprts->bnd.d_bnd_spine_cnts + 10 * cmprts->n_blocks,
 		    cmprts->bnd.h_bnd_cnt, cmprts->n_blocks * sizeof(*cmprts->bnd.d_bnd_spine_cnts),
 		    cudaMemcpyHostToDevice); cudaCheck(ierr);
   ierr = cudaMemcpy(cmprts->bnd.d_alt_bidx + cmprts->n_prts, h_bnd_off,
-		    nr_recv * sizeof(*cmprts->bnd.d_alt_bidx), cudaMemcpyHostToDevice); cudaCheck(ierr);
+		    n_recv * sizeof(*cmprts->bnd.d_alt_bidx), cudaMemcpyHostToDevice); cudaCheck(ierr);
 
-  cmprts->n_prts += nr_recv;
-  cmprts->bnd.n_prts_recv = nr_recv;
+  cmprts->n_prts += n_recv;
+  cmprts->bnd.n_prts_recv = n_recv;
 
   delete[] h_bnd_xi4;
   delete[] h_bnd_pxi4;
