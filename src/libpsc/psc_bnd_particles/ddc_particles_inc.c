@@ -607,7 +607,16 @@ psc_bnd_particles_sub_exchange_mprts_prep(struct psc_bnd_particles *bnd,
 #endif
 
 #if DDCP_TYPE == DDCP_TYPE_CUDA
-  psc_bnd_particles_sub_exchange_mprts_prep_cuda(bnd, mprts);
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
+
+  cuda_mparticles_bnd_prep(cmprts);
+  
+  struct ddc_particles *ddcp = bnd->ddcp;
+  for (int p = 0; p < cmprts->n_patches; p++) {
+    struct ddcp_patch *dpatch = &ddcp->patches[p];
+    dpatch->m_buf = &cmprts->bnd.bpatch[p].buf;
+    dpatch->m_begin = 0;
+  }
 #endif
 
 #if DDCP_TYPE == DDCP_TYPE_COMMON2
@@ -753,7 +762,14 @@ psc_bnd_particles_sub_exchange_mprts_post(struct psc_bnd_particles *bnd,
 #if DDCP_TYPE == DDCP_TYPE_COMMON2
   psc_bnd_particles_sub_exchange_mprts_post_common2(bnd, mprts);
 #elif DDCP_TYPE == DDCP_TYPE_CUDA
-  psc_bnd_particles_sub_exchange_mprts_post_cuda(bnd, mprts);
+  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
+
+  cuda_mparticles_bnd_post(cmprts);
+
+  struct ddc_particles *ddcp = bnd->ddcp;
+  for (int p = 0; p < cmprts->n_patches; p++) {
+    ddcp->patches[p].m_buf = NULL;
+  }
 #endif
 }
 
