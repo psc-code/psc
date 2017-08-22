@@ -39,6 +39,8 @@ cuda_mparticles_bnd_setup(struct cuda_mparticles *cmprts)
 		    (1 + cmprts->n_blocks * (CUDA_BND_STRIDE + 1)) * sizeof(unsigned int)); cudaCheck(ierr);
   ierr = cudaMalloc((void **) &cmprts->bnd.d_bnd_spine_sums,
 		    (1 + cmprts->n_blocks * (CUDA_BND_STRIDE + 1)) * sizeof(unsigned int)); cudaCheck(ierr);
+
+  cmprts->bnd.bpatch = new cuda_bnd[cmprts->n_patches];
 }  
 
 // ----------------------------------------------------------------------
@@ -63,6 +65,8 @@ cuda_mparticles_bnd_destroy(struct cuda_mparticles *cmprts)
 
   ierr = cudaFree(cmprts->bnd.d_bnd_spine_cnts); cudaCheck(ierr);
   ierr = cudaFree(cmprts->bnd.d_bnd_spine_sums); cudaCheck(ierr);
+
+  delete[] cmprts->bnd.bpatch;
 }
 
 // ----------------------------------------------------------------------

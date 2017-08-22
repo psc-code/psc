@@ -9,8 +9,6 @@
 #include "psc_push_particles.h"
 #include "particles_cuda.h"
 
-#include "cuda_mparticles.h" // FIXME
-
 #include <mrc_io.h>
 
 EXTERN_C void cuda_init(int rank);
@@ -313,8 +311,6 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
   struct cuda_mparticles *cmprts = cuda_mparticles_create();
   mprts_cuda->cmprts = cmprts;
 
-  cmprts->bnd.bpatch = calloc(mprts->nr_patches, sizeof(*cmprts->bnd.bpatch));
-  
   psc_mparticles_setup_super(mprts);
 
   assert(mprts->nr_patches != 0);
@@ -381,8 +377,6 @@ psc_mparticles_cuda_destroy(struct psc_mparticles *mprts)
   
   cuda_mparticles_destroy(cmprts);
   mprts_cuda->cmprts = NULL;
-
-  free(cmprts->bnd.bpatch);
 }
 
 // ----------------------------------------------------------------------
@@ -567,27 +561,25 @@ psc_mparticles_cuda_inject(struct psc_mparticles *mprts, struct cuda_mparticles_
 }
 
 // ----------------------------------------------------------------------
-// psc_mparticles_cuda_get_b_dxi
-//
-// FIXME, why not return it?
+// psc_mparticles_cuda_patch_get_b_dxi
 
 const particle_cuda_real_t *
 psc_mparticles_cuda_patch_get_b_dxi(struct psc_mparticles *mprts, int p)
 {
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
-  return cmprts->b_dxi;
+  return cuda_mparticles_patch_get_b_dxi(cmprts, p);
 }
 
 // ----------------------------------------------------------------------
-// psc_mparticles_cuda_get_b_mx
+// psc_mparticles_cuda_patch_get_b_mx
 
 const int *
 psc_mparticles_cuda_patch_get_b_mx(struct psc_mparticles *mprts, int p)
 {
   struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
 
-  return cmprts->b_mx;
+  return cuda_mparticles_patch_get_b_mx(cmprts, p);
 }
 
 // ----------------------------------------------------------------------

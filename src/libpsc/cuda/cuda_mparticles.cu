@@ -912,3 +912,21 @@ cuda_mparticles_get_particles(struct cuda_mparticles *cmprts, unsigned int n_prt
   delete[] (pxi4);
 }
 
+// ----------------------------------------------------------------------
+// cuda_mparticles_patch_get_b_dxi
+
+const particle_cuda_real_t *
+cuda_mparticles_patch_get_b_dxi(struct cuda_mparticles *cmprts, int p)
+{
+  return cmprts->b_dxi;
+}
+
+// ----------------------------------------------------------------------
+// cuda_mparticles_patch_get_b_mx
+
+const int *
+cuda_mparticles_patch_get_b_mx(struct cuda_mparticles *cmprts, int p)
+{
+  return cmprts->b_mx;
+}
+
