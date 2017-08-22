@@ -62,14 +62,16 @@ check_PROGRAMS = \
 	tests/test_cuda_heating
 
 tests_test_cuda_mparticles_SOURCES =
-tests_test_cuda_mparticles_LDADD = tests/test_cuda_mparticles.o cuda_mparticles.lo cuda_mparticles_bnd.lo
+tests_test_cuda_mparticles_LDADD = tests/test_cuda_mparticles.o cuda_mparticles.lo \
+  cuda_mparticles_bnd.lo cuda_mparticles_bnd_scan.lo
 nodist_EXTRA_tests_test_cuda_mparticles_SOURCES = dummy.cxx
 
-tests_test_cuda_mparticles_1_LDADD = cuda_mparticles.lo cuda_mparticles_bnd.lo
+tests_test_cuda_mparticles_1_LDADD = cuda_mparticles.lo cuda_mparticles_bnd.lo cuda_mparticles_bnd_scan.lo
 nodist_EXTRA_tests_test_cuda_mparticles_1_SOURCES = dummy.cxx
 
 tests_test_cuda_heating_SOURCES = 
-tests_test_cuda_heating_LDADD = tests/test_cuda_heating.o cuda_mparticles.lo cuda_heating.lo cuda_mparticles_bnd.lo
+tests_test_cuda_heating_LDADD = tests/test_cuda_heating.o cuda_mparticles.lo cuda_heating.lo \
+  cuda_mparticles_bnd.lo cuda_mparticles_bnd_scan.lo
 nodist_EXTRA_tests_test_cuda_heating_SOURCES = dummy.cxx
 
 CUDACC_FLAGS = -g --ptxas-options=-v --maxrregcount=32 --use_fast_math $(filter-out -fopenmp -msse2 -msse4.1 -Wall -ffast-math,$(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) $(CFLAGS) $(AM_CFLAGS)) $(CUDAMPIFLAGS) $(CUDACFLAGS)

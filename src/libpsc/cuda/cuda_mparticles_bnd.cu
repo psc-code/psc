@@ -673,3 +673,153 @@ cuda_mprts_sort_pairs_gold(struct cuda_mparticles *cmprts)
   // d_ids now contains the indices to reorder by
 }
 
+// ----------------------------------------------------------------------
+// cuda_mparticles_sort
+
+void
+cuda_mparticles_sort(struct cuda_mparticles *cmprts, int *n_prts_by_patch)
+{
+  cuda_mparticles_sort_pairs_device(cmprts);
+
+  for (int p = 0; p < cmprts->n_patches; p++) {
+    n_prts_by_patch[p] += cmprts->bnd.bpatch[p].n_recv - cmprts->bnd.bpatch[p].n_send;
+  }
+  cmprts->n_prts -= cmprts->bnd.n_prts_send;
+}
+
+// ----------------------------------------------------------------------
+// cuda_mparticles_update_offsets
+
+__global__ static void
+mprts_update_offsets(int nr_total_blocks, unsigned int *d_off, unsigned int *d_spine_sums)
+{
+  int bid = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
+  
+  if (bid <= nr_total_blocks) {
+    d_off[bid] = d_spine_sums[bid * CUDA_BND_STRIDE + 0];
+  }
+}
+
+void
+cuda_mparticles_update_offsets(struct cuda_mparticles *cmprts)
+{
+  unsigned int n_blocks = cmprts->n_blocks;
+  int dimGrid = (n_blocks + 1 + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+
+  mprts_update_offsets<<<dimGrid, THREADS_PER_BLOCK>>>
+    (n_blocks, cmprts->d_off, cmprts->bnd.d_bnd_spine_sums);
+  cuda_sync_if_enabled();
+}
+
+void
+cuda_mparticles_update_offsets_gold(struct cuda_mparticles *cmprts)
+{
+  unsigned int n_blocks = cmprts->n_blocks;
+
+  thrust::device_ptr<unsigned int> d_spine_sums(cmprts->bnd.d_bnd_spine_sums);
+  thrust::device_ptr<unsigned int> d_off(cmprts->d_off);
+
+  thrust::host_vector<unsigned int> h_spine_sums(d_spine_sums, d_spine_sums + 1 + n_blocks * (10 + 1));
+  thrust::host_vector<unsigned int> h_off(n_blocks + 1);
+
+  for (int bid = 0; bid <= n_blocks; bid++) {
+    h_off[bid] = h_spine_sums[bid * 10];
+  }
+
+  thrust::copy(h_off.begin(), h_off.end(), d_off);
+}
+
+// ----------------------------------------------------------------------
+// cuda_mparticles_bnd_prep
+
+void
+cuda_mparticles_bnd_prep(struct cuda_mparticles *cmprts)
+{
+  static int pr_A, pr_B, pr_D, pr_E, pr_B0, pr_B1;
+  if (!pr_A) {
+    pr_A = prof_register("xchg_bidx", 1., 0, 0);
+    pr_B0= prof_register("xchg_reduce", 1., 0, 0);
+    pr_B1= prof_register("xchg_n_send", 1., 0, 0);
+    pr_B = prof_register("xchg_scan_send", 1., 0, 0);
+    pr_D = prof_register("xchg_from_dev", 1., 0, 0);
+    pr_E = prof_register("xchg_cvt_from", 1., 0, 0);
+  }
+
+  //prof_start(pr_A);
+  //cuda_mprts_find_block_keys(mprts);
+  //prof_stop(pr_A);
+  
+  prof_start(pr_B0);
+  cuda_mparticles_spine_reduce(cmprts);
+  prof_stop(pr_B0);
+
+  prof_start(pr_B1);
+  cuda_mparticles_find_n_send(cmprts);
+  prof_stop(pr_B1);
+
+  prof_start(pr_B);
+  cuda_mparticles_scan_send_buf_total(cmprts);
+  prof_stop(pr_B);
+
+  prof_start(pr_D);
+  cuda_mparticles_copy_from_dev(cmprts);
+  prof_stop(pr_D);
+
+  prof_start(pr_E);
+  cuda_mparticles_convert_from_cuda(cmprts);
+  prof_stop(pr_E);
+}
+
+// ----------------------------------------------------------------------
+// cuda_mparticles_bnd_post
+
+void
+cuda_mparticles_bnd_post(struct cuda_mparticles *cmprts)
+{
+  static int pr_A, pr_B, pr_C, pr_D, pr_E, pr_D1;
+  if (!pr_A) {
+    pr_A = prof_register("xchg_cvt_to", 1., 0, 0);
+    pr_B = prof_register("xchg_to_dev", 1., 0, 0);
+    pr_C = prof_register("xchg_bidx", 1., 0, 0);
+    pr_D = prof_register("xchg_sort", 1., 0, 0);
+    pr_D1= prof_register("xchg_upd_off", 1., 0, 0);
+    pr_E = prof_register("xchg_reorder", 1., 0, 0);
+  }
+
+  prof_start(pr_A);
+  cuda_mparticles_convert_to_cuda(cmprts);
+  prof_stop(pr_A);
+
+  prof_start(pr_B);
+  cuda_mparticles_copy_to_dev(cmprts);
+  prof_stop(pr_B);
+
+  prof_start(pr_C);
+  cuda_mparticles_find_block_indices_3(cmprts);
+  prof_stop(pr_C);
+  
+  prof_start(pr_D);
+  unsigned int n_prts_by_patch[cmprts->n_patches];
+  cuda_mparticles_get_size_all(cmprts, n_prts_by_patch);
+  cuda_mparticles_sort(cmprts, (int *) n_prts_by_patch); // FIXME cast
+  // FIXME, is this necessary, or doesn't update_offsets() do this, too?
+  cuda_mparticles_resize_all(cmprts, n_prts_by_patch);
+  prof_stop(pr_D);
+
+  prof_start(pr_D1);
+  cuda_mparticles_update_offsets(cmprts);
+  prof_stop(pr_D1);
+  
+  prof_start(pr_E);
+#if 0
+  cuda_mparticles_reorder(cmprts);
+  //  cuda_mprts_check_ordered_total(mprts);
+#else
+  cmprts->need_reorder = true;
+#endif
+  prof_stop(pr_E);
+
+  for (int p = 0; p < cmprts->n_patches; p++) {
+    psc_particle_cuda_buf_dtor(&cmprts->bnd.bpatch[p].buf);
+  }
+}

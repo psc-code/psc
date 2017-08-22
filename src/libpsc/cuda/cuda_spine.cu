@@ -102,45 +102,4 @@ cuda_mprts_bidx_to_key_gold(struct psc_mparticles *mprts)
   thrust::copy(h_bidx.begin(), h_bidx.end(), d_bidx);
 }
 
-// ======================================================================
-// cuda_mparticles_update_offsets
-
-__global__ static void
-mprts_update_offsets(int nr_total_blocks, unsigned int *d_off, unsigned int *d_spine_sums)
-{
-  int bid = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
-  
-  if (bid <= nr_total_blocks) {
-    d_off[bid] = d_spine_sums[bid * CUDA_BND_STRIDE + 0];
-  }
-}
-
-void
-cuda_mparticles_update_offsets(struct cuda_mparticles *cmprts)
-{
-  unsigned int n_blocks = cmprts->n_blocks;
-  int dimGrid = (n_blocks + 1 + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
-
-  mprts_update_offsets<<<dimGrid, THREADS_PER_BLOCK>>>
-    (n_blocks, cmprts->d_off, cmprts->bnd.d_bnd_spine_sums);
-  cuda_sync_if_enabled();
-}
-
-void
-cuda_mparticles_update_offsets_gold(struct cuda_mparticles *cmprts)
-{
-  unsigned int n_blocks = cmprts->n_blocks;
-
-  thrust::device_ptr<unsigned int> d_spine_sums(cmprts->bnd.d_bnd_spine_sums);
-  thrust::device_ptr<unsigned int> d_off(cmprts->d_off);
-
-  thrust::host_vector<unsigned int> h_spine_sums(d_spine_sums, d_spine_sums + 1 + n_blocks * (10 + 1));
-  thrust::host_vector<unsigned int> h_off(n_blocks + 1);
-
-  for (int bid = 0; bid <= n_blocks; bid++) {
-    h_off[bid] = h_spine_sums[bid * 10];
-  }
-
-  thrust::copy(h_off.begin(), h_off.end(), d_off);
-}
 

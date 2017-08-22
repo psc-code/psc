@@ -74,6 +74,8 @@ void cuda_mparticles_from_device(struct cuda_mparticles *cmprts, float_4 *xi4, f
 void cuda_mparticles_inject(struct cuda_mparticles *cmprts, struct cuda_mparticles_prt *buf,
 			    unsigned int *buf_n_by_patch);
 
+void cuda_mparticles_bnd_prep(struct cuda_mparticles *cmprts);
+void cuda_mparticles_bnd_post(struct cuda_mparticles *cmprts);
 
 // ----------------------------------------------------------------------
 // cuda_mfields
