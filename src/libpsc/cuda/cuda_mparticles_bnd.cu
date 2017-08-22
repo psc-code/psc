@@ -165,8 +165,8 @@ cuda_mparticles_convert_and_copy_to_dev(struct cuda_mparticles *cmprts)
     n_recv += psc_particle_cuda_buf_size(&cmprts->bnd.bpatch[p].buf);
   }
 
-  cmprts->bnd.h_bnd_xi4  = (float4 *) malloc(n_recv * sizeof(*cmprts->bnd.h_bnd_xi4));
-  cmprts->bnd.h_bnd_pxi4 = (float4 *) malloc(n_recv * sizeof(*cmprts->bnd.h_bnd_pxi4));
+  float4 *h_bnd_xi4  = new float4[n_recv];
+  float4 *h_bnd_pxi4 = new float4[n_recv];
   cmprts->bnd.h_bnd_idx  = (unsigned int *) malloc(n_recv * sizeof(*cmprts->bnd.h_bnd_idx));
   cmprts->bnd.h_bnd_off  = (unsigned int *) malloc(n_recv * sizeof(*cmprts->bnd.h_bnd_off));
 
@@ -178,24 +178,22 @@ cuda_mparticles_convert_and_copy_to_dev(struct cuda_mparticles *cmprts)
     int n_recv = psc_particle_cuda_buf_size(&cmprts->bnd.bpatch[p].buf);
     cmprts->bnd.bpatch[p].n_recv = n_recv;
     
-    float4 *h_bnd_xi4 = cmprts->bnd.h_bnd_xi4 + off;
-    float4 *h_bnd_pxi4 = cmprts->bnd.h_bnd_pxi4 + off;
-    unsigned int *h_bnd_idx = cmprts->bnd.h_bnd_idx + off;
-    unsigned int *h_bnd_off = cmprts->bnd.h_bnd_off + off;
+    unsigned int *h_bnd_idx = cmprts->bnd.h_bnd_idx;
+    unsigned int *h_bnd_off = cmprts->bnd.h_bnd_off;
     for (int n = 0; n < n_recv; n++) {
       particle_cuda_t *prt = &cmprts->bnd.bpatch[p].buf.m_data[n];
-      h_bnd_xi4[n].x  = prt->xi;
-      h_bnd_xi4[n].y  = prt->yi;
-      h_bnd_xi4[n].z  = prt->zi;
-      h_bnd_xi4[n].w  = cuda_int_as_float(prt->kind);
-      h_bnd_pxi4[n].x = prt->pxi;
-      h_bnd_pxi4[n].y = prt->pyi;
-      h_bnd_pxi4[n].z = prt->pzi;
-      h_bnd_pxi4[n].w = prt->qni_wni;
+      h_bnd_xi4[n + off].x  = prt->xi;
+      h_bnd_xi4[n + off].y  = prt->yi;
+      h_bnd_xi4[n + off].z  = prt->zi;
+      h_bnd_xi4[n + off].w  = cuda_int_as_float(prt->kind);
+      h_bnd_pxi4[n + off].x = prt->pxi;
+      h_bnd_pxi4[n + off].y = prt->pyi;
+      h_bnd_pxi4[n + off].z = prt->pzi;
+      h_bnd_pxi4[n + off].w = prt->qni_wni;
 
       int b_pos[3];
       for (int d = 0; d < 3; d++) {
-	float *xi = &h_bnd_xi4[n].x;
+	float *xi = &h_bnd_xi4[n + off].x;
 	b_pos[d] = particle_cuda_real_fint(xi[d] * cmprts->b_dxi[d]);
 	if (b_pos[d] < 0 || b_pos[d] >= cmprts->b_mx[d]) {
 	  printf("!!! xi %g %g %g\n", xi[0], xi[1], xi[2]);
@@ -213,8 +211,8 @@ cuda_mparticles_convert_and_copy_to_dev(struct cuda_mparticles *cmprts)
       unsigned int b = (b_pos[2] * cmprts->b_mx[1] + b_pos[1]) * cmprts->b_mx[0] + b_pos[0];
       assert(b < cmprts->n_blocks_per_patch);
       b += p * cmprts->n_blocks_per_patch;
-      h_bnd_idx[n] = b;
-      h_bnd_off[n] = cmprts->bnd.h_bnd_cnt[b]++;
+      h_bnd_idx[n + off] = b;
+      h_bnd_off[n + off] = cmprts->bnd.h_bnd_cnt[b]++;
     }
     off += n_recv;
   }
@@ -227,13 +225,13 @@ cuda_mparticles_convert_and_copy_to_dev(struct cuda_mparticles *cmprts)
   }
   assert(cmprts->n_prts + nr_recv <= cmprts->n_alloced);
 
-  ierr = cudaMemcpy(cmprts->d_xi4 + cmprts->n_prts, cmprts->bnd.h_bnd_xi4,
+  ierr = cudaMemcpy(cmprts->d_xi4 + cmprts->n_prts, h_bnd_xi4,
 		    nr_recv * sizeof(*cmprts->d_xi4), cudaMemcpyHostToDevice); cudaCheck(ierr);
-  ierr = cudaMemcpy(cmprts->d_pxi4 + cmprts->n_prts, cmprts->bnd.h_bnd_pxi4,
+  ierr = cudaMemcpy(cmprts->d_pxi4 + cmprts->n_prts, h_bnd_pxi4,
 		    nr_recv * sizeof(*cmprts->d_pxi4), cudaMemcpyHostToDevice); cudaCheck(ierr);
 
-  free(cmprts->bnd.h_bnd_xi4);
-  free(cmprts->bnd.h_bnd_pxi4);
+  delete[] h_bnd_xi4;
+  delete[] h_bnd_pxi4;
 
   cmprts->bnd.n_prts_recv = nr_recv;
   cmprts->n_prts += nr_recv;
