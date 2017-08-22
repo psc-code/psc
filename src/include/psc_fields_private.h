@@ -11,6 +11,7 @@ struct psc_fields {
   int nr_comp; //> nr of components
   int first_comp; // first component
   int p; // patch nr
+  struct psc_mfields *mflds;
 };
 
 struct psc_fields_ops {
