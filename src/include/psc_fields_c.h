@@ -4,8 +4,9 @@
 
 #include "psc_fields_private.h"
 
-typedef double fields_c_real_t;
-#define MPI_FIELDS_C_REAL MPI_DOUBLE
+#define FTYPE FTYPE_C
+#include "psc_fields_common.h"
+#undef FTYPE
 
 #define F3_OFF_C(pf, fldnr, jx,jy,jz)					\
   ((((((fldnr - (pf)->first_comp)					\

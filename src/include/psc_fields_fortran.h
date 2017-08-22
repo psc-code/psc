@@ -4,8 +4,9 @@
 
 #include "psc_fields_private.h"
 
-typedef double fields_fortran_real_t;
-#define MPI_FIELDS_FORTRAN_REAL MPI_DOUBLE
+#define FTYPE FTYPE_FORTRAN
+#include "psc_fields_common.h"
+#undef FTYPE
 
 #define F3_OFF_FORTRAN(pf, jx,jy,jz)			\
   (((((((jz)-(pf)->ib[2]))				\

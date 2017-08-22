@@ -5,9 +5,9 @@
 #include "psc_fields_private.h"
 #include "cuda_wrap.h"
 
-typedef float fields_cuda_real_t;
-
-#define MPI_FIELDS_CUDA_REAL MPI_FLOAT
+#define FTYPE FTYPE_CUDA
+#include "psc_fields_common.h"
+#undef FTYPE
 
 struct psc_fields_cuda_bnd {
   fields_cuda_real_t *arr_off;

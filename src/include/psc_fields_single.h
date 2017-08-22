@@ -4,8 +4,9 @@
 
 #include "psc_fields_private.h"
 
-typedef float fields_single_real_t;
-#define MPI_FIELDS_SINGLE_REAL MPI_FLOAT
+#define FTYPE FTYPE_SINGLE
+#include "psc_fields_common.h"
+#undef FTYPE
 
 // Lower bounds and dims are intentionally not called ilg, ihg, img,
 // to lessen confusion with psc.ilg, psc.ihg, etc.. These bounds may
