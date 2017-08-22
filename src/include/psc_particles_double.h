@@ -86,12 +86,6 @@ particle_double_real_nint(particle_double_real_t x)
   return floor(x + .5);
 }
 
-static inline int
-particle_double_real_fint(particle_double_real_t x)
-{
-  return floor(x);
-}
-
 static inline particle_double_real_t
 particle_double_real_sqrt(particle_double_real_t x)
 {

@@ -9,10 +9,4 @@
 #include "psc_particles_common.h"
 #undef PTYPE
 
-static inline int
-particle_fortran_real_fint(particle_fortran_real_t x)
-{
-  return (int)(x + 10.f) - 10;
-}
-
 #endif

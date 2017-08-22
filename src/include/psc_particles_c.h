@@ -63,12 +63,6 @@ particle_c_real_nint(particle_c_real_t x)
   return (int)(x + 10.5f) - 10;
 }
 
-static inline int
-particle_c_real_fint(particle_c_real_t x)
-{
-  return (int)(x + 10.f) - 10;
-}
-
 static inline particle_c_real_t
 particle_c_real_sqrt(particle_c_real_t x)
 {

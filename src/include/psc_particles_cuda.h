@@ -18,10 +18,4 @@ particle_cuda_real_nint(particle_cuda_real_t x)
   return (int)(x + 10.5f) - 10;
 }
 
-static inline int
-particle_cuda_real_fint(particle_cuda_real_t x)
-{
-  return (int)(x + 10.f) - 10;
-}
-
 #endif
