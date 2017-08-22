@@ -118,19 +118,17 @@ cuda_mparticles_copy_from_dev_and_convert(struct cuda_mparticles *cmprts)
     return;
   }
 
-  cmprts->bnd.h_bnd_xi4 = new float4[cmprts->bnd.n_prts_send];
-  cmprts->bnd.h_bnd_pxi4 = new float4[cmprts->bnd.n_prts_send];
+  float4 *bnd_xi4 = new float4[cmprts->bnd.n_prts_send];
+  float4 *bnd_pxi4 = new float4[cmprts->bnd.n_prts_send];
 
   assert(cmprts->n_prts + cmprts->bnd.n_prts_send < cmprts->n_alloced);
 
-  ierr = cudaMemcpy(cmprts->bnd.h_bnd_xi4, cmprts->d_xi4 + cmprts->n_prts,
+  ierr = cudaMemcpy(bnd_xi4, cmprts->d_xi4 + cmprts->n_prts,
 		    cmprts->bnd.n_prts_send * sizeof(float4), cudaMemcpyDeviceToHost); cudaCheck(ierr);
-  ierr = cudaMemcpy(cmprts->bnd.h_bnd_pxi4, cmprts->d_pxi4 + cmprts->n_prts,
+  ierr = cudaMemcpy(bnd_pxi4, cmprts->d_pxi4 + cmprts->n_prts,
 		    cmprts->bnd.n_prts_send * sizeof(float4), cudaMemcpyDeviceToHost); cudaCheck(ierr);
 
-  float4 *bnd_xi4 = cmprts->bnd.h_bnd_xi4;
-  float4 *bnd_pxi4 = cmprts->bnd.h_bnd_pxi4;
-
+  unsigned int off = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
     psc_particle_cuda_buf_t *buf = &cmprts->bnd.bpatch[p].buf;
     unsigned int n_send = cmprts->bnd.bpatch[p].n_send;
@@ -140,21 +138,20 @@ cuda_mparticles_copy_from_dev_and_convert(struct cuda_mparticles *cmprts)
 
     for (int n = 0; n < n_send; n++) {
       particle_cuda_t *prt = psc_particle_cuda_buf_at_ptr(buf, n);
-      prt->xi      = bnd_xi4[n].x;
-      prt->yi      = bnd_xi4[n].y;
-      prt->zi      = bnd_xi4[n].z;
-      prt->kind    = cuda_float_as_int(bnd_xi4[n].w);
-      prt->pxi     = bnd_pxi4[n].x;
-      prt->pyi     = bnd_pxi4[n].y;
-      prt->pzi     = bnd_pxi4[n].z;
-      prt->qni_wni = bnd_pxi4[n].w;
+      prt->xi      = bnd_xi4[n + off].x;
+      prt->yi      = bnd_xi4[n + off].y;
+      prt->zi      = bnd_xi4[n + off].z;
+      prt->kind    = cuda_float_as_int(bnd_xi4[n + off].w);
+      prt->pxi     = bnd_pxi4[n + off].x;
+      prt->pyi     = bnd_pxi4[n + off].y;
+      prt->pzi     = bnd_pxi4[n + off].z;
+      prt->qni_wni = bnd_pxi4[n + off].w;
     }
-    bnd_xi4 += n_send;
-    bnd_pxi4 += n_send;
+    off += n_send;
   }
 
-  delete[] cmprts->bnd.h_bnd_xi4;
-  delete[] cmprts->bnd.h_bnd_pxi4;
+  delete[] bnd_xi4;
+  delete[] bnd_pxi4;
 }
 
 // ----------------------------------------------------------------------
