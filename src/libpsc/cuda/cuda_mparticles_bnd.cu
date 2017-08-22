@@ -35,8 +35,6 @@ cuda_mparticles_bnd_setup(struct cuda_mparticles *cmprts)
 {
   cudaError_t ierr;
 
-  cmprts->bnd.h_bnd_cnt = new unsigned int[cmprts->n_blocks];
-
   ierr = cudaMalloc((void **) &cmprts->bnd.d_bnd_spine_cnts,
 		    (1 + cmprts->n_blocks * (CUDA_BND_STRIDE + 1)) * sizeof(unsigned int)); cudaCheck(ierr);
   ierr = cudaMalloc((void **) &cmprts->bnd.d_bnd_spine_sums,
@@ -62,8 +60,6 @@ void
 cuda_mparticles_bnd_destroy(struct cuda_mparticles *cmprts)
 {
   cudaError_t ierr;
-
-  delete[] cmprts->bnd.h_bnd_cnt;
 
   ierr = cudaFree(cmprts->bnd.d_bnd_spine_cnts); cudaCheck(ierr);
   ierr = cudaFree(cmprts->bnd.d_bnd_spine_sums); cudaCheck(ierr);
@@ -160,19 +156,24 @@ cuda_mparticles_copy_from_dev_and_convert(struct cuda_mparticles *cmprts)
 void
 cuda_mparticles_convert_and_copy_to_dev(struct cuda_mparticles *cmprts)
 {
+  thrust::device_ptr<float4> d_xi4(cmprts->d_xi4);
+  thrust::device_ptr<float4> d_pxi4(cmprts->d_pxi4);
+  thrust::device_ptr<unsigned int> d_bidx(cmprts->d_bidx);
+  thrust::device_ptr<unsigned int> d_alt_bidx(cmprts->bnd.d_alt_bidx);
+  thrust::device_ptr<unsigned int> d_bnd_spine_cnts(cmprts->bnd.d_bnd_spine_cnts);
+  
   unsigned int n_recv = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
     n_recv += psc_particle_cuda_buf_size(&cmprts->bnd.bpatch[p].buf);
   }
 
-  float4 *h_bnd_xi4  = new float4[n_recv];
-  float4 *h_bnd_pxi4 = new float4[n_recv];
-  unsigned int *h_bnd_idx  = new unsigned int[n_recv];
-  unsigned int *h_bnd_off  = new unsigned int[n_recv];
+  thrust::host_vector<float4> h_bnd_xi4(n_recv);
+  thrust::host_vector<float4> h_bnd_pxi4(n_recv);
+  thrust::host_vector<unsigned int> h_bnd_idx(n_recv);
+  thrust::host_vector<unsigned int> h_bnd_off(n_recv);
 
-  memset(cmprts->bnd.h_bnd_cnt, 0,
-	 cmprts->n_blocks * sizeof(*cmprts->bnd.h_bnd_cnt));
-
+  thrust::host_vector<unsigned int> h_bnd_cnt(cmprts->n_blocks, 0);
+  
   unsigned int off = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
     int n_recv = psc_particle_cuda_buf_size(&cmprts->bnd.bpatch[p].buf);
@@ -210,38 +211,26 @@ cuda_mparticles_convert_and_copy_to_dev(struct cuda_mparticles *cmprts)
       assert(b < cmprts->n_blocks_per_patch);
       b += p * cmprts->n_blocks_per_patch;
       h_bnd_idx[n + off] = b;
-      h_bnd_off[n + off] = cmprts->bnd.h_bnd_cnt[b]++;
+      h_bnd_off[n + off] = h_bnd_cnt[b]++;
     }
     off += n_recv;
   }
 
-  cudaError_t ierr;
-
   assert(cmprts->n_prts + n_recv <= cmprts->n_alloced);
 
-  ierr = cudaMemcpy(cmprts->d_xi4 + cmprts->n_prts, h_bnd_xi4,
-		    n_recv * sizeof(*cmprts->d_xi4), cudaMemcpyHostToDevice); cudaCheck(ierr);
-  ierr = cudaMemcpy(cmprts->d_pxi4 + cmprts->n_prts, h_bnd_pxi4,
-		    n_recv * sizeof(*cmprts->d_pxi4), cudaMemcpyHostToDevice); cudaCheck(ierr);
+  thrust::copy(h_bnd_xi4.begin(), h_bnd_xi4.end(), d_xi4 + cmprts->n_prts);
+  thrust::copy(h_bnd_pxi4.begin(), h_bnd_pxi4.end(), d_pxi4 + cmprts->n_prts);
 
   // for consistency, use same block indices that we counted earlier
   // OPT unneeded?
-  ierr = cudaMemcpy(cmprts->d_bidx + cmprts->n_prts, h_bnd_idx,
-		    n_recv * sizeof(*cmprts->d_bidx), cudaMemcpyHostToDevice); cudaCheck(ierr);
+  thrust::copy(h_bnd_idx.begin(), h_bnd_idx.end(), d_bidx + cmprts->n_prts);
   // slight abuse of the now unused last part of spine_cnts
-  ierr = cudaMemcpy(cmprts->bnd.d_bnd_spine_cnts + 10 * cmprts->n_blocks,
-		    cmprts->bnd.h_bnd_cnt, cmprts->n_blocks * sizeof(*cmprts->bnd.d_bnd_spine_cnts),
-		    cudaMemcpyHostToDevice); cudaCheck(ierr);
-  ierr = cudaMemcpy(cmprts->bnd.d_alt_bidx + cmprts->n_prts, h_bnd_off,
-		    n_recv * sizeof(*cmprts->bnd.d_alt_bidx), cudaMemcpyHostToDevice); cudaCheck(ierr);
+  thrust::copy(h_bnd_cnt.begin(), h_bnd_cnt.end(),
+	       d_bnd_spine_cnts + 10 * cmprts->n_blocks);
+  thrust::copy(h_bnd_off.begin(), h_bnd_off.end(), d_alt_bidx + cmprts->n_prts);
 
   cmprts->n_prts += n_recv;
   cmprts->bnd.n_prts_recv = n_recv;
-
-  delete[] h_bnd_xi4;
-  delete[] h_bnd_pxi4;
-  delete[] h_bnd_idx;
-  delete[] h_bnd_off;
 }
 
 // ----------------------------------------------------------------------
