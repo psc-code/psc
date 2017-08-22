@@ -58,7 +58,10 @@ void cuda_mparticles_bnd_setup(struct cuda_mparticles *cmprts);
 void cuda_mparticles_bnd_destroy(struct cuda_mparticles *cmprts);
 void cuda_mparticles_bnd_reserve_all(struct cuda_mparticles *cmprts);
 void cuda_mparticles_bnd_free_particle_mem(struct cuda_mparticles *cmprts);
+
 void cuda_mparticles_scan_send_buf_total(struct cuda_mparticles *cmprts);
+void cuda_mparticles_spine_reduce(struct cuda_mparticles *cmprts);
+void cuda_mparticles_sort_pairs_device(struct cuda_mparticles *cmprts);
 
 // ----------------------------------------------------------------------
 // cuda_mparticles
