@@ -155,10 +155,10 @@ cuda_mparticles_copy_from_dev_and_convert(struct cuda_mparticles *cmprts)
 }
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_convert_to_cuda
+// cuda_mparticles_convert_and_copy_to_dev
 
 void
-cuda_mparticles_convert_to_cuda(struct cuda_mparticles *cmprts)
+cuda_mparticles_convert_and_copy_to_dev(struct cuda_mparticles *cmprts)
 {
   unsigned int n_recv = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
@@ -218,18 +218,8 @@ cuda_mparticles_convert_to_cuda(struct cuda_mparticles *cmprts)
     }
     off += n_recv;
   }
-}
 
-// ----------------------------------------------------------------------
-// cuda_mparticles_copy_to_dev
-
-void
-cuda_mparticles_copy_to_dev(struct cuda_mparticles *cmprts)
-{
   cudaError_t ierr;
-
-  float4 *d_xi4 = cmprts->d_xi4;
-  float4 *d_pxi4 = cmprts->d_pxi4;
 
   unsigned int nr_recv = 0;
   for (int p = 0; p < cmprts->n_patches; p++) {
@@ -237,10 +227,10 @@ cuda_mparticles_copy_to_dev(struct cuda_mparticles *cmprts)
   }
   assert(cmprts->n_prts + nr_recv <= cmprts->n_alloced);
 
-  ierr = cudaMemcpy(d_xi4 + cmprts->n_prts, cmprts->bnd.h_bnd_xi4,
-		    nr_recv * sizeof(*d_xi4), cudaMemcpyHostToDevice); cudaCheck(ierr);
-  ierr = cudaMemcpy(d_pxi4 + cmprts->n_prts, cmprts->bnd.h_bnd_pxi4,
-		    nr_recv * sizeof(*d_pxi4), cudaMemcpyHostToDevice); cudaCheck(ierr);
+  ierr = cudaMemcpy(cmprts->d_xi4 + cmprts->n_prts, cmprts->bnd.h_bnd_xi4,
+		    nr_recv * sizeof(*cmprts->d_xi4), cudaMemcpyHostToDevice); cudaCheck(ierr);
+  ierr = cudaMemcpy(cmprts->d_pxi4 + cmprts->n_prts, cmprts->bnd.h_bnd_pxi4,
+		    nr_recv * sizeof(*cmprts->d_pxi4), cudaMemcpyHostToDevice); cudaCheck(ierr);
 
   free(cmprts->bnd.h_bnd_xi4);
   free(cmprts->bnd.h_bnd_pxi4);
@@ -373,10 +363,9 @@ cuda_mparticles_bnd_prep(struct cuda_mparticles *cmprts)
 void
 cuda_mparticles_bnd_post(struct cuda_mparticles *cmprts)
 {
-  static int pr_A, pr_B, pr_C, pr_D, pr_E, pr_D1;
+  static int pr_A, pr_C, pr_D, pr_E, pr_D1;
   if (!pr_A) {
-    pr_A = prof_register("xchg_cvt_to", 1., 0, 0);
-    pr_B = prof_register("xchg_to_dev", 1., 0, 0);
+    pr_A = prof_register("xchg_to_dev", 1., 0, 0);
     pr_C = prof_register("xchg_bidx", 1., 0, 0);
     pr_D = prof_register("xchg_sort", 1., 0, 0);
     pr_D1= prof_register("xchg_upd_off", 1., 0, 0);
@@ -384,12 +373,8 @@ cuda_mparticles_bnd_post(struct cuda_mparticles *cmprts)
   }
 
   prof_start(pr_A);
-  cuda_mparticles_convert_to_cuda(cmprts);
+  cuda_mparticles_convert_and_copy_to_dev(cmprts);
   prof_stop(pr_A);
-
-  prof_start(pr_B);
-  cuda_mparticles_copy_to_dev(cmprts);
-  prof_stop(pr_B);
 
   prof_start(pr_C);
   cuda_mparticles_find_block_indices_3(cmprts);
