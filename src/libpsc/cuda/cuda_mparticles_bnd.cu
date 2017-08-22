@@ -107,10 +107,10 @@ cuda_mparticles_find_n_send(struct cuda_mparticles *cmprts)
 }
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_copy_from_dev
+// cuda_mparticles_copy_from_dev_and_convert
 
 void
-cuda_mparticles_copy_from_dev(struct cuda_mparticles *cmprts)
+cuda_mparticles_copy_from_dev_and_convert(struct cuda_mparticles *cmprts)
 {
   cudaError_t ierr;
 
@@ -127,17 +127,6 @@ cuda_mparticles_copy_from_dev(struct cuda_mparticles *cmprts)
 		    cmprts->bnd.n_prts_send * sizeof(float4), cudaMemcpyDeviceToHost); cudaCheck(ierr);
   ierr = cudaMemcpy(cmprts->bnd.h_bnd_pxi4, cmprts->d_pxi4 + cmprts->n_prts,
 		    cmprts->bnd.n_prts_send * sizeof(float4), cudaMemcpyDeviceToHost); cudaCheck(ierr);
-}
-
-// ----------------------------------------------------------------------
-// cuda_mparticles_convert_from_cuda
-
-void
-cuda_mparticles_convert_from_cuda(struct cuda_mparticles *cmprts)
-{
-  if (cmprts->n_patches == 0) {
-    return;
-  }
 
   float4 *bnd_xi4 = cmprts->bnd.h_bnd_xi4;
   float4 *bnd_pxi4 = cmprts->bnd.h_bnd_pxi4;
@@ -351,14 +340,13 @@ cuda_mparticles_update_offsets_gold(struct cuda_mparticles *cmprts)
 void
 cuda_mparticles_bnd_prep(struct cuda_mparticles *cmprts)
 {
-  static int pr_A, pr_B, pr_D, pr_E, pr_B0, pr_B1;
+  static int pr_A, pr_B, pr_D, pr_B0, pr_B1;
   if (!pr_A) {
     pr_A = prof_register("xchg_bidx", 1., 0, 0);
     pr_B0= prof_register("xchg_reduce", 1., 0, 0);
     pr_B1= prof_register("xchg_n_send", 1., 0, 0);
     pr_B = prof_register("xchg_scan_send", 1., 0, 0);
     pr_D = prof_register("xchg_from_dev", 1., 0, 0);
-    pr_E = prof_register("xchg_cvt_from", 1., 0, 0);
   }
 
   //prof_start(pr_A);
@@ -378,12 +366,8 @@ cuda_mparticles_bnd_prep(struct cuda_mparticles *cmprts)
   prof_stop(pr_B);
 
   prof_start(pr_D);
-  cuda_mparticles_copy_from_dev(cmprts);
+  cuda_mparticles_copy_from_dev_and_convert(cmprts);
   prof_stop(pr_D);
-
-  prof_start(pr_E);
-  cuda_mparticles_convert_from_cuda(cmprts);
-  prof_stop(pr_E);
 }
 
 // ----------------------------------------------------------------------
