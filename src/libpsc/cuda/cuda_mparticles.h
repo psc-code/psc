@@ -46,9 +46,6 @@ struct cuda_mparticles_bnd {
   unsigned int *d_bnd_spine_cnts;
   unsigned int *d_bnd_spine_sums;
 
-  float4 *h_bnd_xi4, *h_bnd_pxi4;
-  unsigned int *h_bnd_idx;
-  unsigned int *h_bnd_off;
   unsigned int *h_bnd_cnt;
 
   struct cuda_bnd *bpatch;
