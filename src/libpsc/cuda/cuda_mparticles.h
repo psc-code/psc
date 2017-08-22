@@ -6,12 +6,6 @@
 
 #include "psc_particle_buf_cuda.h"
 
-#ifdef __cplusplus
-#define EXTERN_C extern "C"
-#else
-#define EXTERN_C
-#endif
-
 // ----------------------------------------------------------------------
 // float_3
 
