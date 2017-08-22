@@ -1,11 +1,8 @@
 
 #include "psc_bnd_particles_private.h"
 
-#include "psc_bnd_cuda.h"
-#include "psc_cuda.h"
-#include "particles_cuda.h"
 #include "psc_particles_as_cuda.h"
-#include "cuda_mparticles.h"
+#include "cuda_iface.h"
 
 #include <mrc_profile.h>
 

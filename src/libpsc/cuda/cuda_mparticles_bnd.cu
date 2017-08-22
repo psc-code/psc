@@ -365,3 +365,13 @@ cuda_mparticles_bnd_post(struct cuda_mparticles *cmprts)
     psc_particle_cuda_buf_dtor(&cmprts->bnd.bpatch[p].buf);
   }
 }
+
+// ----------------------------------------------------------------------
+// cuda_mparticles_bnd_get_buffer
+
+psc_particle_cuda_buf_t *
+cuda_mparticles_bnd_get_buffer(struct cuda_mparticles *cmprts, int p)
+{
+  return &cmprts->bnd.bpatch[p].buf;
+}
+
