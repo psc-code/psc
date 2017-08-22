@@ -19,8 +19,6 @@ using namespace b40c_thrust;
 typedef unsigned int K;
 typedef unsigned int V;
 
-static const int RADIX_BITS = 4;
-
 // ======================================================================
 // cuda_mprts_bidx_to_key
 
