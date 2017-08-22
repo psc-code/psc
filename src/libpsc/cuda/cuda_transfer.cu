@@ -80,15 +80,15 @@ __psc_mfields_cuda_setup(struct psc_mfields *mflds)
   mflds_cuda->h_bnd_buf = new float[MAX_BND_COMPONENTS * mflds->nr_patches * buf_size];
   float *d_flds = cmflds->d_flds;
 
+  cmflds->d_flds_by_patch = new float *[mflds->nr_patches];
   for (int p = 0; p < mflds->nr_patches; p++) {
     struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
     struct psc_fields_cuda_bnd *cf = cmflds->bnd[p];
     struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
     assert(psc_fields_ops(flds) == &psc_fields_cuda_ops);
-    struct psc_fields_cuda *flds_cuda = psc_fields_cuda(flds);
 
     unsigned int size = flds->im[0] * flds->im[1] * flds->im[2];
-    flds_cuda->d_flds = d_flds;
+    cmflds->d_flds_by_patch[p] = d_flds;
     assert(d_flds == cmflds->d_flds + p * flds->nr_comp * size);
     d_flds += flds->nr_comp * size;
     
@@ -115,6 +115,7 @@ __psc_mfields_cuda_destroy(struct psc_mfields *mflds)
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
   struct cuda_mfields *cmflds = mflds_cuda->cmflds;
 
+  delete[] cmflds->d_flds_by_patch;
   cuda_mfields_dealloc(cmflds);
 
   check(cudaFree(mflds_cuda->d_bnd_buf));
@@ -133,28 +134,32 @@ __psc_mfields_cuda_destroy(struct psc_mfields *mflds)
 }
 
 EXTERN_C void
-__fields_cuda_to_device(struct psc_fields *pf, real *h_flds, int mb, int me)
+__fields_cuda_to_device(struct psc_mfields *mflds, int p, real *h_flds, int mb, int me)
 {
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
+
   if (mb == me) {
     return;
   }
   assert(mb < me);
 
-  struct psc_fields_cuda *pfc = psc_fields_cuda(pf);
+  struct psc_fields *pf = psc_mfields_get_patch(mflds, p);
   unsigned int size = pf->im[0] * pf->im[1] * pf->im[2];
-  check(cudaMemcpy(pfc->d_flds + mb * size,
+  check(cudaMemcpy(cmflds->d_flds_by_patch[p] + mb * size,
 		   h_flds + mb * size,
 		   (me - mb) * size * sizeof(float),
 		   cudaMemcpyHostToDevice));
 }
 
 EXTERN_C void
-__fields_cuda_from_device(struct psc_fields *pf, real *h_flds, int mb, int me)
+__fields_cuda_from_device(struct psc_mfields *mflds, int p, real *h_flds, int mb, int me)
 {
-  struct psc_fields_cuda *pfc = psc_fields_cuda(pf);
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
+
+  struct psc_fields *pf = psc_mfields_get_patch(mflds, p);
   unsigned int size = pf->im[0] * pf->im[1] * pf->im[2];
   check(cudaMemcpy(h_flds + mb * size,
-		   pfc->d_flds + mb * size,
+		   cmflds->d_flds_by_patch[p] + mb * size,
 		   (me - mb) * size * sizeof(float),
 		   cudaMemcpyDeviceToHost));
 }
@@ -735,10 +740,9 @@ __fields_cuda_from_device_inside(struct psc_mfields *mflds, int mb, int me)
     for (int p = 0; p < mflds->nr_patches; p++) {
       struct psc_fields_cuda_bnd *cf = cmflds->bnd[p];
       struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-      struct psc_fields_cuda *flds_cuda = psc_fields_cuda(flds);
       unsigned int size = flds->im[0] * flds->im[1] * flds->im[2];
       check(cudaMemcpy(cf->arr,
-		       flds_cuda->d_flds + mb * size,
+		       cmflds->d_flds_by_patch[p] + mb * size,
 		       (me - mb) * size * sizeof(float),
 		       cudaMemcpyDeviceToHost));
     }
@@ -757,10 +761,9 @@ __fields_cuda_from_device_inside_only(struct psc_mfields *mflds, int mb, int me)
     for (int p = 0; p < mflds->nr_patches; p++) {
       struct psc_fields_cuda_bnd *cf = cmflds->bnd[p];
       struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-      struct psc_fields_cuda *flds_cuda = psc_fields_cuda(flds);
       unsigned int size = flds->im[0] * flds->im[1] * flds->im[2];
       check(cudaMemcpy(cf->arr,
-		       flds_cuda->d_flds + mb * size,
+		       cmflds->d_flds_by_patch[p] + mb * size,
 		       (me - mb) * size * sizeof(float),
 		       cudaMemcpyDeviceToHost));
     }
@@ -778,10 +781,9 @@ __fields_cuda_to_device_outside(struct psc_mfields *mflds, int mb, int me)
   } else {
     for (int p = 0; p < mflds->nr_patches; p++) {
       struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-      struct psc_fields_cuda *flds_cuda = psc_fields_cuda(flds);
       struct psc_fields_cuda_bnd *cf = cmflds->bnd[p];
       unsigned int size = flds->im[0] * flds->im[1] * flds->im[2];
-      check(cudaMemcpy(flds_cuda->d_flds + mb * size,
+      check(cudaMemcpy(cmflds->d_flds_by_patch[p] + mb * size,
 		       cf->arr,
 		       (me - mb) * size * sizeof(float),
 		       cudaMemcpyHostToDevice));
@@ -801,9 +803,8 @@ __fields_cuda_to_device_inside(struct psc_mfields *mflds, int mb, int me)
     for (int p = 0; p < mflds->nr_patches; p++) {
       struct psc_fields_cuda_bnd *cf = cmflds->bnd[p];
       struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-      struct psc_fields_cuda *flds_cuda = psc_fields_cuda(flds);
       unsigned int size = flds->im[0] * flds->im[1] * flds->im[2];
-      check(cudaMemcpy(flds_cuda->d_flds + mb * size,
+      check(cudaMemcpy(cmflds->d_flds_by_patch[p] + mb * size,
 		       cf->arr,
 		       (me - mb) * size * sizeof(float),
 		       cudaMemcpyHostToDevice));

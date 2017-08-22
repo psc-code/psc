@@ -190,8 +190,8 @@ cuda_marder_correct_yz_gold(struct psc_mfields *mflds, struct psc_mfields *mf,
   float *hflds = (float *) malloc(flds->nr_comp * flds->im[0] * flds->im[1] * flds->im[2] * sizeof(*hflds));
   float *hf = (float *) malloc(f->nr_comp * flds->im[0] * flds->im[1] * flds->im[2] * sizeof(*hf));
   
-  __fields_cuda_from_device(flds, hflds, EX, EX + 3);
-  __fields_cuda_from_device(f, hf, 0, 1);
+  __fields_cuda_from_device(mflds, p, hflds, EX, EX + 3);
+  __fields_cuda_from_device(mf, p, hf, 0, 1);
   
   for (int iz = -1; iz < ldims[2]; iz++) {
     for (int iy = -1; iy < ldims[1]; iy++) {
@@ -209,7 +209,7 @@ cuda_marder_correct_yz_gold(struct psc_mfields *mflds, struct psc_mfields *mf,
     }
   }
   
-  __fields_cuda_to_device(flds, hflds, EX, EX + 3);
+  __fields_cuda_to_device(mflds, p, hflds, EX, EX + 3);
   
   free(hflds);
   free(hf);
@@ -298,8 +298,10 @@ axpy_comp_yz(real *y_flds, int ym, float a, real *x_flds, int xm,
 void
 cuda_axpy_comp_yz(struct psc_fields *y, int ym, float a, struct psc_fields *x, int xm)
 {
-  struct psc_fields_cuda *y_cuda = psc_fields_cuda(y);
-  struct psc_fields_cuda *x_cuda = psc_fields_cuda(x);
+  struct cuda_mfields *cmflds_y = psc_mfields_cuda(y->mflds)->cmflds;
+  struct cuda_mfields *cmflds_x = psc_mfields_cuda(x->mflds)->cmflds;
+  assert (x->p == y->p);
+  int p = y->p;
   struct psc_patch *patch = &ppsc->patch[0];
 
   int my = y->im[1];
@@ -311,7 +313,7 @@ cuda_axpy_comp_yz(struct psc_fields *y, int ym, float a, struct psc_fields *x, i
   int dimGrid[2] = { grid[0], grid[1] };
 
   RUN_KERNEL(dimGrid, dimBlock,
-	     axpy_comp_yz, (y_cuda->d_flds, ym, a, x_cuda->d_flds, xm, my, mz));
+	     axpy_comp_yz, (cmflds_y->d_flds_by_patch[p], ym, a, cmflds_x->d_flds_by_patch[p], xm, my, mz));
 }
 
 // ======================================================================
@@ -337,7 +339,8 @@ zero_comp_yz(real *x_flds, int xm,
 void
 cuda_zero_comp_yz(struct psc_fields *x, int xm)
 {
-  struct psc_fields_cuda *x_cuda = psc_fields_cuda(x);
+  struct cuda_mfields *cmflds = psc_mfields_cuda(x->mflds)->cmflds;
+  int p = x->p;
   struct psc_patch *patch = &ppsc->patch[0];
 
   int my = x->im[1];
@@ -349,7 +352,7 @@ cuda_zero_comp_yz(struct psc_fields *x, int xm)
   int dimGrid[2] = { grid[0], grid[1] };
 
   RUN_KERNEL(dimGrid, dimBlock,
-	     zero_comp_yz, (x_cuda->d_flds, xm, my, mz));
+	     zero_comp_yz, (cmflds->d_flds_by_patch[p], xm, my, mz));
 }
 
 // ======================================================================
@@ -376,8 +379,10 @@ cuda_calc_dive_yz(struct psc_fields *flds, struct psc_fields *f)
   float dy = ppsc->patch[f->p].dx[1];
   float dz = ppsc->patch[f->p].dx[2];
 
-  struct psc_fields_cuda *flds_cuda = psc_fields_cuda(flds);
-  struct psc_fields_cuda *f_cuda = psc_fields_cuda(f);
+  struct cuda_mfields *cmflds_flds = psc_mfields_cuda(flds->mflds)->cmflds;
+  struct cuda_mfields *cmflds_f = psc_mfields_cuda(f->mflds)->cmflds;
+  assert(flds->p == f->p);
+  int p = flds->p;
   int *ldims = ppsc->patch[0].ldims;
 
   int my = f->im[1];
@@ -389,6 +394,6 @@ cuda_calc_dive_yz(struct psc_fields *flds, struct psc_fields *f)
   int dimGrid[2] = { grid[0], grid[1] };
 
   RUN_KERNEL(dimGrid, dimBlock,
-	     calc_dive_yz, (flds_cuda->d_flds, f_cuda->d_flds, dy, dz, ldims[1], ldims[2], my, mz));
+	     calc_dive_yz, (cmflds_flds->d_flds_by_patch[p], cmflds_f->d_flds_by_patch[p], dy, dz, ldims[1], ldims[2], my, mz));
 }
 

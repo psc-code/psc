@@ -24,6 +24,7 @@ struct cuda_mfields {
   int n_cells_per_patch;
   int n_cells;
   struct psc_fields_cuda_bnd **bnd;
+  fields_cuda_real_t **d_flds_by_patch;
 };
 
 #endif

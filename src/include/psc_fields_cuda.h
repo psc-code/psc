@@ -17,7 +17,6 @@ struct psc_fields_cuda_bnd {
 };
 
 struct psc_fields_cuda {
-  fields_cuda_real_t *d_flds;
   struct psc_fields_cuda_bnd _bnd;
 };
 

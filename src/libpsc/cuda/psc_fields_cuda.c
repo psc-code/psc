@@ -79,6 +79,8 @@ psc_fields_cuda_zero_comp(struct psc_fields *x, int xm)
 static void
 psc_fields_cuda_write(struct psc_fields *flds, struct mrc_io *io)
 {
+  struct psc_mfields *mflds = flds->mflds;
+  int p = flds->p;
   int ierr;
   long h5_file;
   mrc_io_get_h5_file(io, &h5_file);
@@ -90,7 +92,7 @@ psc_fields_cuda_write(struct psc_fields *flds, struct mrc_io *io)
   // write components separately instead?
   hsize_t hdims[4] = { flds->nr_comp, flds->im[2], flds->im[1], flds->im[0] };
   float *h_flds = malloc(flds->nr_comp * psc_fields_size(flds) * sizeof(*h_flds));
-  __fields_cuda_from_device(flds, h_flds, 0, flds->nr_comp);
+  __fields_cuda_from_device(mflds, p, h_flds, 0, flds->nr_comp);
   ierr = H5LTmake_dataset_float(group, "fields_cuda", 4, hdims, h_flds); CE;
   free(h_flds);
   ierr = H5Gclose(group); CE;
@@ -117,7 +119,7 @@ psc_fields_cuda_copy_from_c(struct psc_fields *flds_cuda, struct psc_fields *fld
     }
   }
 
-  __fields_cuda_to_device(flds_cuda, h_flds, mb, me);
+  __fields_cuda_to_device(flds_cuda->mflds, flds_cuda->p, h_flds, mb, me);
 
   free(h_flds);
 }
@@ -128,7 +130,7 @@ psc_fields_cuda_copy_to_c(struct psc_fields *flds_cuda, struct psc_fields *flds_
 {
   float *h_flds = malloc(flds_cuda->nr_comp * psc_fields_size(flds_cuda) * sizeof(*h_flds));
 
-  __fields_cuda_from_device(flds_cuda, h_flds, mb, me);
+  __fields_cuda_from_device(flds_cuda->mflds, flds_cuda->p, h_flds, mb, me);
   
   for (int m = mb; m < me; m++) {
     for (int jz = flds_cuda->ib[2]; jz < flds_cuda->ib[2] + flds_cuda->im[2]; jz++) {
@@ -162,7 +164,7 @@ psc_fields_cuda_copy_from_single(struct psc_fields *flds_cuda, struct psc_fields
     }
   }
 
-  __fields_cuda_to_device(flds_cuda, h_flds, mb, me);
+  __fields_cuda_to_device(flds_cuda->mflds, flds_cuda->p, h_flds, mb, me);
 
   free(h_flds);
 }
@@ -173,7 +175,7 @@ psc_fields_cuda_copy_to_single(struct psc_fields *flds_cuda, struct psc_fields *
 {
   float *h_flds = malloc(flds_cuda->nr_comp * psc_fields_size(flds_cuda) * sizeof(*h_flds));
 
-  __fields_cuda_from_device(flds_cuda, h_flds, mb, me);
+  __fields_cuda_from_device(flds_cuda->mflds, flds_cuda->p, h_flds, mb, me);
   
   for (int m = mb; m < me; m++) {
     for (int jz = flds_cuda->ib[2]; jz < flds_cuda->ib[2] + flds_cuda->im[2]; jz++) {
@@ -281,7 +283,7 @@ psc_fields_cuda_read(struct psc_fields *flds, struct mrc_io *io, const char *pat
   //  psc_fields_setup(flds);
   float *h_flds = malloc(flds->nr_comp * psc_fields_size(flds) * sizeof(*h_flds));
   ierr = H5LTread_dataset_float(group, "fields_cuda", h_flds); CE;
-  __fields_cuda_to_device(flds, h_flds, 0, flds->nr_comp);
+  __fields_cuda_to_device(flds->mflds, flds->p, h_flds, 0, flds->nr_comp);
   free(h_flds);
   ierr = H5Gclose(group); CE;
 }
