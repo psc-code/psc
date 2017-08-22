@@ -233,20 +233,10 @@ cuda_mparticles_convert_and_copy_to_dev(struct cuda_mparticles *cmprts)
   delete[] h_bnd_xi4;
   delete[] h_bnd_pxi4;
 
-  cmprts->bnd.n_prts_recv = nr_recv;
-  cmprts->n_prts += nr_recv;
-}
-
-// ----------------------------------------------------------------------
-// cuda_mparticles_find_block_indices_3
-
-void
-cuda_mparticles_find_block_indices_3(struct cuda_mparticles *cmprts)
-{
-  cudaError_t ierr;
+  unsigned int nr_prts_prev = cmprts->n_prts;
   
-  unsigned int nr_recv = cmprts->bnd.n_prts_recv;
-  unsigned int nr_prts_prev = cmprts->n_prts - nr_recv;
+  cmprts->bnd.n_prts_recv = nr_recv; // FIXME needed?
+  cmprts->n_prts += nr_recv;
 
   // for consistency, use same block indices that we counted earlier
   // OPT unneeded?
@@ -361,10 +351,9 @@ cuda_mparticles_bnd_prep(struct cuda_mparticles *cmprts)
 void
 cuda_mparticles_bnd_post(struct cuda_mparticles *cmprts)
 {
-  static int pr_A, pr_C, pr_D, pr_E, pr_D1;
+  static int pr_A, pr_D, pr_E, pr_D1;
   if (!pr_A) {
     pr_A = prof_register("xchg_to_dev", 1., 0, 0);
-    pr_C = prof_register("xchg_bidx", 1., 0, 0);
     pr_D = prof_register("xchg_sort", 1., 0, 0);
     pr_D1= prof_register("xchg_upd_off", 1., 0, 0);
     pr_E = prof_register("xchg_reorder", 1., 0, 0);
@@ -374,10 +363,6 @@ cuda_mparticles_bnd_post(struct cuda_mparticles *cmprts)
   cuda_mparticles_convert_and_copy_to_dev(cmprts);
   prof_stop(pr_A);
 
-  prof_start(pr_C);
-  cuda_mparticles_find_block_indices_3(cmprts);
-  prof_stop(pr_C);
-  
   prof_start(pr_D);
   unsigned int n_prts_by_patch[cmprts->n_patches];
   cuda_mparticles_get_size_all(cmprts, n_prts_by_patch);
