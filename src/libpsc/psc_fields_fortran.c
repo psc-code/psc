@@ -50,18 +50,3 @@ static struct mrc_obj_method psc_fields_fortran_methods[] = {
 
 #include "psc_fields_common.c"
 
-// ======================================================================
-// psc_fields: subclass "fortran"
-  
-struct psc_fields_ops psc_fields_fortran_ops = {
-  .name                  = "fortran",
-  .methods               = psc_fields_fortran_methods,
-  .setup                 = psc_fields_fortran_setup,
-  .destroy               = psc_fields_fortran_destroy,
-  .zero_comp             = psc_fields_fortran_zero_comp,
-  .set_comp              = psc_fields_fortran_set_comp,
-  .scale_comp            = psc_fields_fortran_scale_comp,
-  .copy_comp             = psc_fields_fortran_copy_comp,
-  .axpy_comp             = psc_fields_fortran_axpy_comp,
-};
-

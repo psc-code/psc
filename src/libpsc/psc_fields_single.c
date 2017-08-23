@@ -51,22 +51,3 @@ static struct mrc_obj_method psc_fields_single_methods[] = {
 
 #include "psc_fields_common.c"
 
-// ======================================================================
-// psc_fields: subclass "single"
-  
-struct psc_fields_ops psc_fields_single_ops = {
-  .name                  = "single",
-  .methods               = psc_fields_single_methods,
-  .setup                 = psc_fields_single_setup,
-  .destroy               = psc_fields_single_destroy,
-#ifdef HAVE_LIBHDF5_HL
-  .write                 = psc_fields_single_write,
-  .read                  = psc_fields_single_read,
-#endif
-  .zero_comp             = psc_fields_single_zero_comp,
-  .set_comp              = psc_fields_single_set_comp,
-  .scale_comp            = psc_fields_single_scale_comp,
-  .copy_comp             = psc_fields_single_copy_comp,
-  .axpy_comp             = psc_fields_single_axpy_comp,
-};
-

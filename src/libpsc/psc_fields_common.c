@@ -194,6 +194,25 @@ PFX(read)(struct psc_fields *flds, struct mrc_io *io)
 #endif // HAVE_LIBHDF5_HL
 
 // ----------------------------------------------------------------------
+// psc_fields: subclass ops
+  
+struct psc_fields_ops PFX(ops) = {
+  .name                  = FIELDS_TYPE,
+  .methods               = PFX(methods),
+  .setup                 = PFX(setup),
+  .destroy               = PFX(destroy),
+#if defined(HAVE_LIBHDF5_HL) && (PSC_FIELDS_AS_SINGLE || PSC_FIELDS_AS_C)
+  .write                 = PFX(write),
+  .read                  = PFX(read),
+#endif
+  .zero_comp             = PFX(zero_comp),
+  .set_comp              = PFX(set_comp),
+  .scale_comp            = PFX(scale_comp),
+  .copy_comp             = PFX(copy_comp),
+  .axpy_comp             = PFX(axpy_comp),
+};
+
+// ----------------------------------------------------------------------
 // psc_mfields: subclass ops
   
 struct psc_mfields_ops MPFX(ops) = {
