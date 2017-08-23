@@ -1,4 +1,6 @@
 
+#include <string.h>
+
 #define FTYPE_SINGLE          1
 #define FTYPE_C               2
 #define FTYPE_FORTRAN         3
@@ -9,24 +11,32 @@
 #define fields_FTYPE_real_t fields_single_real_t
 #define fields_FTYPE_t fields_single_t
 #define fields_FTYPE_t_from_psc_fields fields_single_t_from_psc_fields
+#define fields_FTYPE_t_mflds fields_single_t_mflds
+#define fields_FTYPE_t_zero_range fields_single_t_zero_range
 
 #elif FTYPE == FTYPE_C
 
 #define fields_FTYPE_real_t fields_c_real_t
 #define fields_FTYPE_t fields_c_t
 #define fields_FTYPE_t_from_psc_fields fields_c_t_from_psc_fields
+#define fields_FTYPE_t_mflds fields_c_t_mflds
+#define fields_FTYPE_t_zero_range fields_c_t_zero_range
 
 #elif FTYPE == FTYPE_FORTRAN
 
 #define fields_FTYPE_real_t fields_fortran_real_t
 #define fields_FTYPE_t fields_fortran_t
 #define fields_FTYPE_t_from_psc_fields fields_fortran_t_from_psc_fields
+#define fields_FTYPE_t_mflds fields_fortran_t_mflds
+#define fields_FTYPE_t_zero_range fields_fortran_t_zero_range
 
 #elif FTYPE == FTYPE_CUDA
 
 #define fields_FTYPE_real_t fields_cuda_real_t
 #define fields_FTYPE_t fields_cuda_t
 #define fields_FTYPE_t_from_psc_fields fields_cuda_t_from_psc_fields
+#define fields_FTYPE_t_mflds fields_cuda_t_mflds
+#define fields_FTYPE_t_zero_range fields_cuda_t_zero_range
 
 #endif
 
@@ -202,11 +212,40 @@ fields_FTYPE_t_from_psc_fields(struct psc_fields *pf)
 }
 
 // ----------------------------------------------------------------------
+// fields_t_mflds
+
+static inline fields_FTYPE_t
+fields_FTYPE_t_mflds(struct psc_mfields *mflds, int p)
+{
+  return fields_FTYPE_t_from_psc_fields(psc_mfields_get_patch(mflds, p));
+}
+
+// ----------------------------------------------------------------------
+// fields_t_zero_range
+
+static inline void
+fields_FTYPE_t_zero_range(fields_FTYPE_t flds, int mb, int me)
+{
+  for (int m = mb; m < me; m++) {
+#if FTYPE == FTYPE_SINGLE
+    memset(&_F3_S(flds, m, flds.ib[0], flds.ib[1], flds.ib[2]), 0,
+	   flds.im[0] * flds.im[1] * flds.im[2] * sizeof(fields_FTYPE_real_t));
+#elif FTYPE == FTYPE_C
+    memset(&_F3_C(flds, m, flds.ib[0], flds.ib[1], flds.ib[2]), 0,
+	   flds.im[0] * flds.im[1] * flds.im[2] * sizeof(fields_FTYPE_real_t));
+#else
+    assert(0);
+#endif
+  }
+}
+
+// ----------------------------------------------------------------------
 
 #undef fields_FTYPE_real_t
 #undef fields_FTYPE_t
 #undef fields_FTYPE_t_from_psc_fields
-
+#undef fields_FTYPE_t_mflds
+#undef fields_FTYPE_t_zero_range
 
 
 

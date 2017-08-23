@@ -10,9 +10,9 @@
 // boundary stuff FIXME, should go elsewhere...
 
 static void
-add_ghosts_reflecting_lo(struct psc_fields *pf, int d, int mb, int me)
+add_ghosts_reflecting_lo(fields_t flds, int p, int d, int mb, int me)
 {
-  struct psc_patch *patch = ppsc->patch + pf->p;
+  struct psc_patch *patch = ppsc->patch + p;
 
   int bx = patch->ldims[0] == 1 ? 0 : 1;
   if (d == 1) {
@@ -20,7 +20,7 @@ add_ghosts_reflecting_lo(struct psc_fields *pf, int d, int mb, int me)
       for (int ix = -bx; ix < patch->ldims[0] + bx; ix++) {
 	int iy = 0; {
 	  for (int m = mb; m < me; m++) {
-	    F3(pf, m, ix,iy,iz) += F3(pf, m, ix,iy-1,iz);
+	    _F3(flds, m, ix,iy,iz) += _F3(flds, m, ix,iy-1,iz);
 	  }
 	}
       }
@@ -30,7 +30,7 @@ add_ghosts_reflecting_lo(struct psc_fields *pf, int d, int mb, int me)
       for (int ix = -bx; ix < patch->ldims[0] + bx; ix++) {
 	int iz = 0; {
 	  for (int m = mb; m < me; m++) {
-	    F3(pf, m, ix,iy,iz) += F3(pf, m, ix,iy,iz-1);
+	    _F3(flds, m, ix,iy,iz) += _F3(flds, m, ix,iy,iz-1);
 	  }
 	}
       }
@@ -41,9 +41,9 @@ add_ghosts_reflecting_lo(struct psc_fields *pf, int d, int mb, int me)
 }
 
 static void
-add_ghosts_reflecting_hi(struct psc_fields *pf, int d, int mb, int me)
+add_ghosts_reflecting_hi(fields_t flds, int p, int d, int mb, int me)
 {
-  struct psc_patch *patch = ppsc->patch + pf->p;
+  struct psc_patch *patch = ppsc->patch + p;
 
   int bx = patch->ldims[0] == 1 ? 0 : 1;
   if (d == 1) {
@@ -51,7 +51,7 @@ add_ghosts_reflecting_hi(struct psc_fields *pf, int d, int mb, int me)
       for (int ix = -bx; ix < patch->ldims[0] + bx; ix++) {
 	int iy = patch->ldims[1] - 1; {
 	  for (int m = mb; m < me; m++) {
-	    F3(pf, m, ix,iy,iz) += F3(pf, m, ix,iy+1,iz);
+	    _F3(flds, m, ix,iy,iz) += _F3(flds, m, ix,iy+1,iz);
 	  }
 	}
       }
@@ -61,7 +61,7 @@ add_ghosts_reflecting_hi(struct psc_fields *pf, int d, int mb, int me)
       for (int ix = -bx; ix < patch->ldims[0] + bx; ix++) {
 	int iz = patch->ldims[2] - 1; {
 	  for (int m = mb; m < me; m++) {
-	    F3(pf, m, ix,iy,iz) += F3(pf, m, ix,iy,iz+1);
+	    _F3(flds, m, ix,iy,iz) += _F3(flds, m, ix,iy,iz+1);
 	  }
 	}
       }
@@ -72,23 +72,23 @@ add_ghosts_reflecting_hi(struct psc_fields *pf, int d, int mb, int me)
 }
 
 static void
-add_ghosts_boundary(struct psc_fields *res, int mb, int me)
+add_ghosts_boundary(fields_t f_res, int p, int mb, int me)
 {
   // lo
   for (int d = 0; d < 3; d++) {
-    if (ppsc->patch[res->p].off[d] == 0) {
+    if (ppsc->patch[p].off[d] == 0) {
       if (ppsc->domain.bnd_part_lo[d] == BND_PART_REFLECTING ||
 	  ppsc->domain.bnd_part_lo[d] == BND_PART_OPEN) {
-	add_ghosts_reflecting_lo(res, d, mb, me);
+	add_ghosts_reflecting_lo(f_res, p, d, mb, me);
       }
     }
   }
   // hi
   for (int d = 0; d < 3; d++) {
-    if (ppsc->patch[res->p].off[d] + ppsc->patch[res->p].ldims[d] == ppsc->domain.gdims[d]) {
+    if (ppsc->patch[p].off[d] + ppsc->patch[p].ldims[d] == ppsc->domain.gdims[d]) {
       if (ppsc->domain.bnd_part_hi[d] == BND_PART_REFLECTING ||
 	  ppsc->domain.bnd_part_hi[d] == BND_PART_OPEN) {
-	add_ghosts_reflecting_hi(res, d, mb, me);
+	add_ghosts_reflecting_hi(f_res, p, d, mb, me);
       }
     }
   }
@@ -97,15 +97,15 @@ add_ghosts_boundary(struct psc_fields *res, int mb, int me)
 static void
 run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 	struct psc_mparticles *mprts_base, struct psc_mfields *mres,
-	void (*do_run)(int p, struct psc_fields *flds, particle_range_t prts))
+	void (*do_run)(int p, fields_t res, particle_range_t prts))
 {
   struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
 
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_fields *res = psc_mfields_get_patch(mres, p);
-    psc_fields_zero_range(res, 0, res->nr_comp);
-    do_run(res->p, res, particle_range_mprts(mprts, p));
-    add_ghosts_boundary(res, 0, res->nr_comp);
+    fields_t f_res = fields_t_mflds(mres, p);
+    fields_t_zero_range(f_res, 0, mres->nr_fields);
+    do_run(p, f_res, particle_range_mprts(mprts, p));
+    add_ghosts_boundary(f_res, p, 0, mres->nr_fields);
   }
 
   psc_mparticles_put_as(mprts, mprts_base, MP_DONT_COPY);
@@ -115,12 +115,11 @@ run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 // n_1st
 
 static void
-do_n_1st_run(int p, struct psc_fields *pf, particle_range_t prts)
+do_n_1st_run(int p, fields_t flds, particle_range_t prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
-  fields_t flds = fields_t_from_psc_fields(pf);
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
@@ -140,12 +139,11 @@ n_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_bas
 // v_1st
 
 static void
-do_v_1st_run(int p, struct psc_fields *pf, particle_range_t prts)
+do_v_1st_run(int p, fields_t flds, particle_range_t prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
-  fields_t flds = fields_t_from_psc_fields(pf);
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
@@ -171,12 +169,11 @@ v_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_bas
 // p_1st
 
 static void
-do_p_1st_run(int p, struct psc_fields *pf, particle_range_t prts)
+do_p_1st_run(int p, fields_t flds, particle_range_t prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
-  fields_t flds = fields_t_from_psc_fields(pf);
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
@@ -200,12 +197,11 @@ p_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_bas
 // vv_1st
 
 static void
-do_vv_1st_run(int p, struct psc_fields *pf, particle_range_t prts)
+do_vv_1st_run(int p, fields_t flds, particle_range_t prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
-  fields_t flds = fields_t_from_psc_fields(pf);
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
@@ -231,12 +227,11 @@ vv_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_ba
 // T_1st
 
 static void
-do_T_1st_run(int p, struct psc_fields *pf, particle_range_t prts)
+do_T_1st_run(int p, fields_t flds, particle_range_t prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
-  fields_t flds = fields_t_from_psc_fields(pf);
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
@@ -275,12 +270,11 @@ T_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_bas
 // Tvv_1st
 
 static void
-do_Tvv_1st_run(int p, struct psc_fields *pf, particle_range_t prts)
+do_Tvv_1st_run(int p, fields_t flds, particle_range_t prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
-  fields_t flds = fields_t_from_psc_fields(pf);
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
@@ -308,12 +302,11 @@ Tvv_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_b
 // nvt_1st
 
 static void
-do_nvt_a_1st_run(int p, struct psc_fields *pf, particle_range_t prts)
+do_nvt_a_1st_run(int p, fields_t flds, particle_range_t prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
-  fields_t flds = fields_t_from_psc_fields(pf);
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
@@ -332,12 +325,11 @@ do_nvt_a_1st_run(int p, struct psc_fields *pf, particle_range_t prts)
 }
 
 static void
-do_nvt_b_1st_run(int p, struct psc_fields *pf, particle_range_t prts)
+do_nvt_b_1st_run(int p, fields_t flds, particle_range_t prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
-  fields_t flds = fields_t_from_psc_fields(pf);
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
@@ -380,14 +372,14 @@ do_nvt_b_1st_run(int p, struct psc_fields *pf, particle_range_t prts)
     particle_calc_vxi(prt, vxi);
     for (int d = 0; d < 3; d++) {
       int m = mm + 1 + d;
-      double vavg = (g0x*g0y*g0z * F3(pf, m, jx    ,jy    ,jz    ) +
-		     g1x*g0y*g0z * F3(pf, m, jx+jxd,jy    ,jz    ) +
-		     g0x*g1y*g0z * F3(pf, m, jx    ,jy+jyd,jz    ) +
-		     g1x*g1y*g0z * F3(pf, m, jx+jxd,jy+jyd,jz    ) +
-		     g0x*g0y*g1z * F3(pf, m, jx    ,jy    ,jz+jzd) +
-		     g1x*g0y*g1z * F3(pf, m, jx+jxd,jy    ,jz+jzd) +
-		     g0x*g1y*g1z * F3(pf, m, jx    ,jy+jyd,jz+jzd) +
-		     g1x*g1y*g1z * F3(pf, m, jx+jxd,jy+jyd,jz+jzd));
+      double vavg = (g0x*g0y*g0z * _F3(flds, m, jx    ,jy    ,jz    ) +
+		     g1x*g0y*g0z * _F3(flds, m, jx+jxd,jy    ,jz    ) +
+		     g0x*g1y*g0z * _F3(flds, m, jx    ,jy+jyd,jz    ) +
+		     g1x*g1y*g0z * _F3(flds, m, jx+jxd,jy+jyd,jz    ) +
+		     g0x*g0y*g1z * _F3(flds, m, jx    ,jy    ,jz+jzd) +
+		     g1x*g0y*g1z * _F3(flds, m, jx+jxd,jy    ,jz+jzd) +
+		     g0x*g1y*g1z * _F3(flds, m, jx    ,jy+jyd,jz+jzd) +
+		     g1x*g1y*g1z * _F3(flds, m, jx+jxd,jy+jyd,jz+jzd));
       vxi[d] -= vavg;
     }
     particle_real_t *pxi = vxi;
@@ -401,12 +393,11 @@ do_nvt_b_1st_run(int p, struct psc_fields *pf, particle_range_t prts)
 }
 
 static void
-do_nvp_1st_run(int p, struct psc_fields *pf, particle_range_t prts)
+do_nvp_1st_run(int p, fields_t flds, particle_range_t prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
-  fields_t flds = fields_t_from_psc_fields(pf);
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
@@ -451,22 +442,21 @@ nvt_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
   struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
 
   for (int p = 0; p < mres->nr_patches; p++) {
-    struct psc_fields *res = psc_mfields_get_patch(mres, p);
-    psc_fields_zero_range(res, 0, res->nr_comp);
-    do_nvt_a_1st_run(res->p, res, particle_range_mprts(mprts, p));
-    add_ghosts_boundary(res, 0, res->nr_comp);
+    fields_t f_res = fields_t_mflds(mres, p);
+    fields_t_zero_range(f_res, 0, mres->nr_fields);
+    do_nvt_a_1st_run(p, f_res, particle_range_mprts(mprts, p));
+    add_ghosts_boundary(f_res, p, 0, mres->nr_fields);
   }
 
   psc_bnd_add_ghosts(item->bnd, mres, 0, mres->nr_fields);
   psc_bnd_fill_ghosts(item->bnd, mres, 0, mres->nr_fields);
 
   for (int p = 0; p < mres->nr_patches; p++) {
-    struct psc_fields *res = psc_mfields_get_patch(mres, p);
-    fields_t f_res = fields_t_from_psc_fields(res);
+    fields_t f_res = fields_t_mflds(mres, p);
 
     // fix up zero density cells
     for (int m = 0; m < ppsc->nr_kinds; m++) {
-      psc_foreach_3d(ppsc, res->p, ix, iy, iz, 1, 1) {
+      psc_foreach_3d(ppsc, p, ix, iy, iz, 1, 1) {
 	if (_F3(f_res, 10*m, ix,iy,iz) == 0.0) {
 	  _F3(f_res, 10*m, ix,iy,iz) = 0.00001;
 	} psc_foreach_3d_end;
@@ -476,14 +466,14 @@ nvt_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
     // normalize v moments
     for (int m = 0; m < ppsc->nr_kinds; m++) {
       for (int mm = 0; mm < 3; mm++) {
-	psc_foreach_3d(ppsc, res->p, ix, iy, iz, 1, 1) {
+	psc_foreach_3d(ppsc, p, ix, iy, iz, 1, 1) {
 	  _F3(f_res, 10*m + mm + 1, ix,iy,iz) /= _F3(f_res, 10*m, ix,iy,iz);
 	} psc_foreach_3d_end;
       }
     }
 
     // calculate <(v-U)(v-U)> moments
-    do_nvt_b_1st_run(res->p, res, particle_range_mprts(mprts, p));
+    do_nvt_b_1st_run(p, f_res, particle_range_mprts(mprts, p));
   }
 
   psc_mparticles_put_as(mprts, mprts_base, MP_DONT_COPY);
@@ -501,10 +491,10 @@ nvp_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
   struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
 
   for (int p = 0; p < mres->nr_patches; p++) {
-    struct psc_fields *res = psc_mfields_get_patch(mres, p);
-    psc_fields_zero_range(res, 0, res->nr_comp);
-    do_nvp_1st_run(res->p, res, particle_range_mprts(mprts, p));
-    add_ghosts_boundary(res, 0, res->nr_comp);
+    fields_t f_res = fields_t_mflds(mres, p);
+    fields_t_zero_range(f_res, 0, mres->nr_fields);
+    do_nvp_1st_run(p, f_res, particle_range_mprts(mprts, p));
+    add_ghosts_boundary(f_res, p, 0, mres->nr_fields);
   }
 
   psc_bnd_add_ghosts(item->bnd, mres, 0, mres->nr_fields);
@@ -514,12 +504,11 @@ nvp_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
   const int mm2my[6] = { 0, 1, 2, 1, 2, 0 };
 
   for (int p = 0; p < mres->nr_patches; p++) {
-    struct psc_fields *res = psc_mfields_get_patch(mres, p);
-    fields_t f_res = fields_t_from_psc_fields(res);
+    fields_t f_res = fields_t_mflds(mflds, p);
 
     // fix up zero density cells
     for (int m = 0; m < ppsc->nr_kinds; m++) {
-      foreach_3d(ppsc, res->p, ix, iy, iz, 1, 1) {
+      foreach_3d(ppsc, p, ix, iy, iz, 1, 1) {
 	if (_F3(f_res, 10*m, ix,iy,iz) == 0.0) {
 	  _F3(f_res, 10*m, ix,iy,iz) = 0.00001;
 	} foreach_3d_end;
@@ -529,7 +518,7 @@ nvp_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
     // normalize v moments
     for (int m = 0; m < ppsc->nr_kinds; m++) {
       for (int mm = 0; mm < 3; mm++) {
-	foreach_3d(ppsc, res->p, ix, iy, iz, 1, 1) {
+	foreach_3d(ppsc, p, ix, iy, iz, 1, 1) {
 	  _F3(f_res, 10*m + mm + 1, ix,iy,iz) /= _F3(f_res, 10*m, ix,iy,iz);
 	} foreach_3d_end;
       }
@@ -539,7 +528,7 @@ nvp_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
     for (int m = 0; m < ppsc->nr_kinds; m++) {
       for (int mm = 0; mm < 6; mm++) {
 	int mx = mm2mx[mm], my = mm2my[mm];
-	foreach_3d(ppsc, res->p, ix, iy, iz, 1, 1) {
+	foreach_3d(ppsc, p, ix, iy, iz, 1, 1) {
 	  _F3(f_res, 10*m + 4 + mm, ix,iy,iz) =
 	    _F3(f_res, 10*m + 4 + mm, ix,iy,iz) / _F3(f_res, 10*m, ix,iy,iz) - 
 	    _F3(f_res, 10*m + 1 + mx, ix,iy,iz) * _F3(f_res, 10*m + 1 + my, ix,iy,iz);

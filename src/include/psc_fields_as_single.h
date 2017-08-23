@@ -7,6 +7,8 @@
 typedef fields_single_real_t fields_real_t;
 typedef fields_single_t      fields_t;
 #define fields_t_from_psc_fields fields_single_t_from_psc_fields
+#define fields_t_mflds           fields_single_t_mflds
+#define fields_t_zero_range      fields_single_t_zero_range
 
 #define MPI_FIELDS_REAL MPI_FIELDS_SINGLE_REAL
 
