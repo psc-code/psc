@@ -1,39 +1,15 @@
 
 #include "psc.h"
-#include "psc_fields_fortran.h"
+#include "psc_fields_as_fortran.h"
 #include "psc_fields_c.h"
 
 #include <mrc_params.h>
 #include <stdlib.h>
 #include <string.h>
 
-static void
-psc_fields_fortran_setup(struct psc_fields *pf)
-{
-  unsigned int size = 1;
-  for (int d = 0; d < 3; d++) {
-    size *= pf->im[d];
-  }
+#include "psc_fields_inc.h"
 
-  fields_fortran_real_t **flds = calloc(pf->nr_comp, sizeof(*flds));
-  flds[0] = calloc(size * pf->nr_comp, sizeof(flds[0]));
-  for (int i = 1; i < pf->nr_comp; i++) {
-    flds[i] = flds[0] + i * size;
-  }
-  pf->data = flds;
-}
-
-static void
-psc_fields_fortran_destroy(struct psc_fields *pf)
-{
-  fields_fortran_real_t **flds = pf->data;
-  free(flds[0]);
-
-  for (int i = 0; i < pf->nr_comp; i++) {
-    flds[i] = NULL;
-  }
-  free(flds);
-}
+#include "psc_fields_common.c"
 
 void
 fields_fortran_zero(struct psc_fields *pf, int m)

@@ -1,6 +1,6 @@
 
 #include "psc.h"
-#include "psc_fields_single.h"
+#include "psc_fields_as_single.h"
 #include "psc_fields_c.h"
 
 #include <mrc_params.h>
@@ -8,23 +8,11 @@
 #include <string.h>
 #include <assert.h>
 
+#include "psc_fields_inc.h"
+
+#include "psc_fields_common.c"
+
 // FIXME, very duplicated from psc_fields_c.c
-
-static void
-psc_fields_single_setup(struct psc_fields *pf)
-{
-  unsigned int size = 1;
-  for (int d = 0; d < 3; d++) {
-    size *= pf->im[d];
-  }
-  pf->data = calloc(pf->nr_comp * size, sizeof(fields_single_real_t));
-}
-
-static void
-psc_fields_single_destroy(struct psc_fields *pf)
-{
-  free(pf->data);
-}
 
 static void
 psc_fields_single_zero_comp(struct psc_fields *pf, int m)

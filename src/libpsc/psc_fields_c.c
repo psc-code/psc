@@ -1,37 +1,15 @@
 
 #include "psc.h"
-#include "psc_fields_c.h"
+#include "psc_fields_as_c.h"
 
 #include <mrc_params.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 
-static void
-psc_fields_c_setup(struct psc_fields *pf)
-{
-  unsigned int size = 1;
-  for (int d = 0; d < 3; d++) {
-    size *= pf->im[d];
-  }
-#ifdef USE_CBE
-  // The Cell processor translation can use the C fields with one modification:
-  // the data needs to be 128 byte aligned (to speed off-loading to spes). This
-  // change is roughly put in below.
-  void *m;
-  int ierr = posix_memalign(&m, 128, nr_comp * size * sizeof(*pf->flds));
-  pf->flds =  m; 
-  assert(ierr == 0);
-#else
-  pf->data = calloc(pf->nr_comp * size, sizeof(fields_c_real_t));
-#endif
-}
+#include "psc_fields_inc.h"
 
-static void
-psc_fields_c_destroy(struct psc_fields *pf)
-{
-  free(pf->data);
-}
+#include "psc_fields_common.c"
 
 static void
 psc_fields_c_zero_comp(struct psc_fields *pf, int m)

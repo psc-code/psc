@@ -16,4 +16,6 @@ typedef fields_c_real_t fields_real_t;
 #define fields_t_set_nan              double_set_nan
 #define FIELDS_TYPE                   "c"
 
+#define PSC_FIELDS_AS_C 1
+
 #endif
