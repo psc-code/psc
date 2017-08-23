@@ -357,7 +357,6 @@ psc_mfields_init()
   mrc_class_register_subclass(&mrc_class_psc_mfields, &psc_mfields_single_ops);
   mrc_class_register_subclass(&mrc_class_psc_mfields, &psc_mfields_fortran_ops);
 #ifdef USE_CUDA
-  mrc_class_register_subclass(&mrc_class_psc_mfields, &psc_mfields_mix_ops);
   mrc_class_register_subclass(&mrc_class_psc_mfields, &psc_mfields_cuda_ops);
 #endif
 #ifdef USE_CUDA2

@@ -73,7 +73,6 @@ psc_mfields_get_patch(struct psc_mfields *flds, int p)
 extern struct psc_mfields_ops psc_mfields_c_ops;
 extern struct psc_mfields_ops psc_mfields_fortran_ops;
 extern struct psc_mfields_ops psc_mfields_single_ops;
-extern struct psc_mfields_ops psc_mfields_mix_ops;
 extern struct psc_mfields_ops psc_mfields_cuda_ops;
 
 struct psc_mfields_list_entry {
