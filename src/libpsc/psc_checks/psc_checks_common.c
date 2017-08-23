@@ -83,7 +83,7 @@ psc_checks_sub_setup(struct psc_checks *checks)
 // FIXME, make diag_item?
 
 static void
-do_calc_div_j(struct psc *psc, int p, struct psc_fields *flds_base, struct psc_fields *div_j)
+do_calc_div_j(struct psc *psc, int p, struct psc_fields *flds, struct psc_fields *div_j)
 {
   define_dxdydz(dx, dy, dz);
   fields_real_t h[3];
@@ -97,9 +97,9 @@ do_calc_div_j(struct psc *psc, int p, struct psc_fields *flds_base, struct psc_f
 
   psc_foreach_3d(psc, p, jx, jy, jz, 0, 0) {
     F3(div_j,0, jx,jy,jz) =
-      (F3(flds,JXI, jx,jy,jz) - F3(flds,JXI, jx-dx,jy,jz)) * h[0] +
-      (F3(flds,JYI, jx,jy,jz) - F3(flds,JYI, jx,jy-dy,jz)) * h[1] +
-      (F3(flds,JZI, jx,jy,jz) - F3(flds,JZI, jx,jy,jz-dz)) * h[2];
+      (F3(flds, JXI, jx,jy,jz) - F3(flds, JXI, jx-dx,jy,jz)) * h[0] +
+      (F3(flds, JYI, jx,jy,jz) - F3(flds, JYI, jx,jy-dy,jz)) * h[1] +
+      (F3(flds, JZI, jx,jy,jz) - F3(flds, JZI, jx,jy,jz-dz)) * h[2];
   } psc_foreach_3d_end;
 }
 

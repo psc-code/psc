@@ -20,7 +20,7 @@ EXTERN_C void cuda_conducting_wall_J_hi_y(int p, struct psc_fields *pf);
 // psc_bnd_fields_cuda_fill_ghosts_E
 
 static void
-psc_bnd_fields_cuda_fill_ghosts_E(struct psc_bnd_fields *bnd, struct psc_fields *flds_base)
+psc_bnd_fields_cuda_fill_ghosts_E(struct psc_bnd_fields *bnd, struct psc_mfields *mflds_base)
 {
   if (ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
       ppsc->domain.bnd_fld_lo[1] == BND_FLD_PERIODIC &&
@@ -28,29 +28,31 @@ psc_bnd_fields_cuda_fill_ghosts_E(struct psc_bnd_fields *bnd, struct psc_fields 
     return;
   }
 
+  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "cuda", EX, EX + 3);
   if (ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
       ppsc->domain.bnd_fld_lo[1] == BND_FLD_CONDUCTING_WALL &&
       ppsc->domain.bnd_fld_hi[1] == BND_FLD_CONDUCTING_WALL &&
       ppsc->domain.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
-    struct psc_fields *flds = psc_fields_get_as(flds_base, "cuda", EX, EX + 3);
     int d = 1;
-    if (ppsc->patch[flds->p].off[d] == 0) {
-      cuda_conducting_wall_E_lo_y(flds->p, flds);
+    for (int p = 0; p < mflds->nr_patches; p++) {
+      if (ppsc->patch[p].off[d] == 0) {
+	cuda_conducting_wall_E_lo_y(p, psc_mfields_get_patch(mflds, p));
+      }
+      if (ppsc->patch[p].off[d] + ppsc->patch[p].ldims[d] == ppsc->domain.gdims[d]) {
+	cuda_conducting_wall_E_hi_y(p, psc_mfields_get_patch(mflds, p));
+      }
     }
-    if (ppsc->patch[flds->p].off[d] + ppsc->patch[flds->p].ldims[d] == ppsc->domain.gdims[d]) {
-      cuda_conducting_wall_E_hi_y(flds->p, flds);
-    }
-    psc_fields_put_as(flds, flds_base, EX, EX + 3);
-    return;
+  } else {
+    assert(0);
   }
-  assert(0);
+  psc_mfields_put_as(mflds, mflds_base, EX, EX + 3);
 }
 
 // ----------------------------------------------------------------------
 // psc_bnd_fields_cuda_fill_ghosts_H
 
 static void
-psc_bnd_fields_cuda_fill_ghosts_H(struct psc_bnd_fields *bnd, struct psc_fields *flds_base)
+psc_bnd_fields_cuda_fill_ghosts_H(struct psc_bnd_fields *bnd, struct psc_mfields *mflds_base)
 {
   if (ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
       ppsc->domain.bnd_fld_lo[1] == BND_FLD_PERIODIC &&
@@ -58,29 +60,32 @@ psc_bnd_fields_cuda_fill_ghosts_H(struct psc_bnd_fields *bnd, struct psc_fields 
     return;
   }
 
+  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "cuda", HX, HX + 3);
   if (ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
       ppsc->domain.bnd_fld_lo[1] == BND_FLD_CONDUCTING_WALL &&
       ppsc->domain.bnd_fld_hi[1] == BND_FLD_CONDUCTING_WALL &&
       ppsc->domain.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
-    struct psc_fields *flds = psc_fields_get_as(flds_base, "cuda", HX, HX + 3);
     int d = 1;
-    if (ppsc->patch[flds->p].off[d] == 0) {
-      cuda_conducting_wall_H_lo_y(flds->p, flds);
+    for (int p = 0; p < mflds->nr_patches; p++) {
+      if (ppsc->patch[p].off[d] == 0) {
+	cuda_conducting_wall_H_lo_y(p, psc_mfields_get_patch(mflds, p));
+      }
+      if (ppsc->patch[p].off[d] + ppsc->patch[p].ldims[d] == ppsc->domain.gdims[d]) {
+	cuda_conducting_wall_H_hi_y(p, psc_mfields_get_patch(mflds, p));
+
+      }
     }
-    if (ppsc->patch[flds->p].off[d] + ppsc->patch[flds->p].ldims[d] == ppsc->domain.gdims[d]) {
-      cuda_conducting_wall_H_hi_y(flds->p, flds);
-    }
-    psc_fields_put_as(flds, flds_base, HX, HX + 3);
-    return;
+  } else {
+    assert(0);
   }
-  assert(0);
+  psc_mfields_put_as(mflds, mflds_base, HX, HX + 3);
 }
 
 // ----------------------------------------------------------------------
 // psc_bnd_fields_cuda_add_ghosts_J
 
 static void
-psc_bnd_fields_cuda_add_ghosts_J(struct psc_bnd_fields *bnd, struct psc_fields *flds_base)
+psc_bnd_fields_cuda_add_ghosts_J(struct psc_bnd_fields *bnd, struct psc_mfields *mflds_base)
 {
   if (ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
       ppsc->domain.bnd_fld_lo[1] == BND_FLD_PERIODIC &&
@@ -88,22 +93,24 @@ psc_bnd_fields_cuda_add_ghosts_J(struct psc_bnd_fields *bnd, struct psc_fields *
     return;
   }
 
+  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "cuda", JXI, JXI + 3);
   if (ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
       ppsc->domain.bnd_fld_lo[1] == BND_FLD_CONDUCTING_WALL &&
       ppsc->domain.bnd_fld_hi[1] == BND_FLD_CONDUCTING_WALL &&
       ppsc->domain.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
-    struct psc_fields *flds = psc_fields_get_as(flds_base, "cuda", JXI, JXI + 3);
     int d = 1;
-    if (ppsc->patch[flds->p].off[d] == 0) {
-      cuda_conducting_wall_J_lo_y(flds->p, flds);
+    for (int p = 0; p < mflds->nr_patches; p++) {
+      if (ppsc->patch[p].off[d] == 0) {
+	cuda_conducting_wall_J_lo_y(p, psc_mfields_get_patch(mflds, p));
       }
-    if (ppsc->patch[flds->p].off[d] + ppsc->patch[flds->p].ldims[d] == ppsc->domain.gdims[d]) {
-      cuda_conducting_wall_J_hi_y(flds->p, flds);
+      if (ppsc->patch[p].off[d] + ppsc->patch[p].ldims[d] == ppsc->domain.gdims[d]) {
+	cuda_conducting_wall_J_hi_y(p, psc_mfields_get_patch(mflds, p));
+      }
     }
-    psc_fields_put_as(flds, flds_base, JXI, JXI + 3);
-    return;
+  } else {
+    assert(0);
   }
-  assert(0);
+  psc_mfields_put_as(mflds, mflds_base, JXI, JXI + 3);
 }
 
 // ======================================================================

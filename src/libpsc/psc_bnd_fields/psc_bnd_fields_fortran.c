@@ -10,19 +10,21 @@
 
 static void
 psc_bnd_fields_fortran_fill_ghosts_b_H(struct psc_bnd_fields *bnd,
-				       struct psc_fields *flds_base)
+				       struct psc_mfields *mflds_base)
 {
-  struct psc_fields *flds = psc_fields_get_as(flds_base, "fortran", JXI, HZ + 1);
+  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "fortran", JXI, HZ + 1);
   
   static int pr;
   if (!pr) {
     pr = prof_register("fort_fill_H_b", 1., 0, 0);
   }
   prof_start(pr);
-  PIC_fill_ghosts_h_b(ppsc, flds->p, flds);
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    PIC_fill_ghosts_h_b(ppsc, p, psc_mfields_get_patch(mflds, p));
+  }
   prof_stop(pr);
   
-  psc_fields_put_as(flds, flds_base, HX, HZ + 1);
+  psc_mfields_put_as(mflds, mflds_base, HX, HZ + 1);
 }
 
 // ======================================================================

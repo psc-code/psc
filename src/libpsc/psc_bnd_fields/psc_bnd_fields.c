@@ -145,68 +145,57 @@ psc_bnd_fields_get_pulse_z2(struct psc_bnd_fields *bnd)
 // forward to subclass
 
 void
-psc_bnd_fields_fill_ghosts_a_E(struct psc_bnd_fields *bnd, struct psc_mfields *flds)
+psc_bnd_fields_fill_ghosts_a_E(struct psc_bnd_fields *bnd, struct psc_mfields *mflds)
 {
   struct psc_bnd_fields_ops *ops = psc_bnd_fields_ops(bnd);
   if (ops->fill_ghosts_a_E) {
-    for (int p = 0; p < flds->nr_patches; p++) {
-      ops->fill_ghosts_a_E(bnd, psc_mfields_get_patch(flds, p));
-    }
+    ops->fill_ghosts_a_E(bnd, mflds);
   }
 }
 
 void
-psc_bnd_fields_fill_ghosts_a_H(struct psc_bnd_fields *bnd, struct psc_mfields *flds)
+psc_bnd_fields_fill_ghosts_a_H(struct psc_bnd_fields *bnd, struct psc_mfields *mflds)
 {
   struct psc_bnd_fields_ops *ops = psc_bnd_fields_ops(bnd);
   if (ops->fill_ghosts_a_H) {
-    for (int p = 0; p < flds->nr_patches; p++) {
-      ops->fill_ghosts_a_H(bnd, psc_mfields_get_patch(flds, p));
-    }
+    ops->fill_ghosts_a_H(bnd, mflds);
   }
 }
 
 void
-psc_bnd_fields_fill_ghosts_b_H(struct psc_bnd_fields *bnd, struct psc_mfields *flds)
+psc_bnd_fields_fill_ghosts_b_H(struct psc_bnd_fields *bnd, struct psc_mfields *mflds)
 {
   struct psc_bnd_fields_ops *ops = psc_bnd_fields_ops(bnd);
   if (ops->fill_ghosts_b_H) {
-    for (int p = 0; p < flds->nr_patches; p++) {
-      ops->fill_ghosts_b_H(bnd, psc_mfields_get_patch(flds, p));
-    }
+    ops->fill_ghosts_b_H(bnd, mflds);
   }
 }
 
 void
-psc_bnd_fields_fill_ghosts_b_E(struct psc_bnd_fields *bnd, struct psc_mfields *flds)
+psc_bnd_fields_fill_ghosts_b_E(struct psc_bnd_fields *bnd, struct psc_mfields *mflds)
 {
   struct psc_bnd_fields_ops *ops = psc_bnd_fields_ops(bnd);
   if (ops->fill_ghosts_b_E) {
-    for (int p = 0; p < flds->nr_patches; p++) {
-      ops->fill_ghosts_b_E(bnd, psc_mfields_get_patch(flds, p));
-    }
+    ops->fill_ghosts_b_E(bnd, mflds);
   }
 }
 
 void
-psc_bnd_fields_add_ghosts_J(struct psc_bnd_fields *bnd, struct psc_mfields *flds)
+psc_bnd_fields_add_ghosts_J(struct psc_bnd_fields *bnd, struct psc_mfields *mflds)
 {
   struct psc_bnd_fields_ops *ops = psc_bnd_fields_ops(bnd);
   if (ops->add_ghosts_J) {
-    for (int p = 0; p < flds->nr_patches; p++) {
-      ops->add_ghosts_J(bnd, psc_mfields_get_patch(flds, p));
-    }
+    ops->add_ghosts_J(bnd, mflds);
   }
 }
 
 void
 _psc_bnd_fields_setup_patch(struct psc_bnd_fields *bnd_fields, int p,
-			    struct psc_fields *pf_base, double t)
+			    struct psc_fields *pf, double t)
 {
   struct psc_pulse *pulse;
   struct psc *psc = ppsc;
 
-  struct psc_fields *pf = psc_fields_get_as(pf_base, FIELDS_TYPE, EX, HX + 3);
   psc_foreach_3d_g(psc, p, jx, jy, jz){
     double dx = psc->patch[p].dx[0], dy = psc->patch[p].dx[1], dz = psc->patch[p].dx[2];
     double xx = CRDX(p, jx), yy = CRDY(p, jy), zz = CRDZ(p, jz);
@@ -247,7 +236,6 @@ _psc_bnd_fields_setup_patch(struct psc_bnd_fields *bnd_fields, int p,
     F3(pf, EX, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx + .5*dx, yy        , zz        , t);
     F3(pf, HY, jx,jy,jz) += -psc_pulse_field_s(pulse, xx + .5*dx, yy        , zz + .5*dz, t);
   } psc_foreach_3d_g_end;
-  psc_fields_put_as(pf, pf_base, EX, HX + 3);
 }
 
 void
@@ -258,11 +246,13 @@ psc_bnd_fields_setup_patch(struct psc_bnd_fields *bnd_fields, int p,
 }
 
 void
-psc_bnd_fields_setup_fields(struct psc_bnd_fields *bnd_fields, struct psc_mfields *flds_base)
+psc_bnd_fields_setup_fields(struct psc_bnd_fields *bnd_fields, struct psc_mfields *mflds_base)
 {
+  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, FIELDS_TYPE, EX, HX + 3);
   psc_foreach_patch(ppsc, p) {
-    _psc_bnd_fields_setup_patch(bnd_fields, p, psc_mfields_get_patch(flds_base, p), 0.);
+    _psc_bnd_fields_setup_patch(bnd_fields, p, psc_mfields_get_patch(mflds, p), 0.);
   }
+  psc_mfields_put_as(mflds, mflds_base, EX, HX + 3);
 }
 
 // ======================================================================
