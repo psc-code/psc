@@ -109,11 +109,11 @@ psc_save_fields_ref(struct psc *psc, struct psc_mfields *mflds_base)
 
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "c", 0, me);
   psc_foreach_patch(psc, p) {
-    struct psc_fields *pf = psc_mfields_get_patch(mflds, p);
-    struct psc_fields *pf_ref = psc_mfields_get_patch(mflds_ref, p);
+    fields_t flds = fields_t_mflds(mflds, p);
+    fields_t flds_ref = fields_t_mflds(mflds_ref, p);
     for (int m = 0; m < me; m++) {
       psc_foreach_3d_g(psc, p, ix, iy, iz) {
-	F3(pf_ref, m, ix,iy,iz) = F3(pf, m, ix,iy,iz);
+	_F3(flds_ref, m, ix,iy,iz) = _F3(flds, m, ix,iy,iz);
       } psc_foreach_3d_g_end;
     }
   }
@@ -182,13 +182,13 @@ psc_check_fields_ref(struct psc *psc, struct psc_mfields *mflds_base, int *m_fld
 {
    struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "c", 0, 12);
    psc_foreach_patch(psc, p) {
-    struct psc_fields *pf = psc_mfields_get_patch(mflds, p);
-    struct psc_fields *pf_ref = psc_mfields_get_patch(mflds_ref, p);
+    fields_t flds = fields_t_mflds(mflds, p);
+    fields_t flds_ref = fields_t_mflds(mflds_ref, p);
     for (int i = 0; m_flds[i] >= 0; i++) {
       int m = m_flds[i];
       psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
 	//	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
-	assert_equal(F3(pf, m, ix,iy,iz), F3(pf_ref, m, ix,iy,iz), thres);
+	assert_equal(_F3(flds, m, ix,iy,iz), _F3(flds_ref, m, ix,iy,iz), thres);
       } psc_foreach_3d_end;
     }
   }
@@ -206,10 +206,10 @@ psc_check_currents_ref(struct psc *psc, struct psc_mfields *mflds_base, double t
 #if 0
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "c", JXI, JXI + 3);
   foreach_patch(p) {
-    struct psc_fields *pf = psc_mfields_get_patch(mflds, p);
+    fields_t flds = fields_t_mflds(mflds, p);
     for (int m = JXI; m <= JZI; m++){
       foreach_3d_g(p, ix, iy, iz) {
-	double val = F3(pf, m, ix,iy,iz);
+	double val = _F3(flds, m, ix,iy,iz);
 	if (fabs(val) > 0.) {
 	  printf("cur %s: [%d,%d,%d] = %g\n", fldname[m],
 		 ix, iy, iz, val);
@@ -229,13 +229,13 @@ psc_check_currents_ref(struct psc *psc, struct psc_mfields *mflds_base, double t
   for (int m = JXI; m <= JZI; m++){
     fields_real_t max_delta = 0.;
     psc_foreach_patch(psc, p) {
-      struct psc_fields *pf = psc_mfields_get_patch(mflds, p);
-      struct psc_fields *pf_ref = psc_mfields_get_patch(mflds_ref, p);
-      struct psc_fields *pf_diff = psc_mfields_get_patch(diff, p);
+      fields_t flds = fields_t_mflds(mflds, p);
+      fields_t flds_ref = fields_t_mflds(mflds_ref, p);
+      fields_t flds_diff = fields_t_mflds(diff, p);
       psc_foreach_3d(psc, p, ix, iy, iz, sw, sw) {
-	F3(pf_diff, 0, ix,iy,iz) =
-	  F3(pf, m, ix,iy,iz) - F3(pf_ref, m, ix,iy,iz);
-	max_delta = fmax(max_delta, fabs(F3(pf_diff, 0, ix,iy,iz)));
+	_F3(flds_diff, 0, ix,iy,iz) =
+	  _F3(flds, m, ix,iy,iz) - _F3(flds_ref, m, ix,iy,iz);
+	max_delta = fmax(max_delta, fabs(_F3(flds_diff, 0, ix,iy,iz)));
       } psc_foreach_3d_g_end;
     }
     if (opt_checks_verbose || max_delta > thres) {
@@ -275,9 +275,9 @@ psc_testing_check_densities_ref(struct psc *psc, struct psc_mparticles *particle
   for (int m = 0; m < 2; m++) {
     double max_err = 0.;
     psc_foreach_patch(psc, p) {
-      struct psc_fields *p_dens = psc_mfields_get_patch(dens, p);
+      fields_t p_dens = fields_t_mflds(dens, p);
       psc_foreach_3d(psc, p, jx, jy, jz, 0, 0) {
-	fields_c_real_t val = F3_C(p_dens,m, jx,jy,jz);
+	fields_c_real_t val = _F3(p_dens, m, jx,jy,jz);
 	max_err = fmax(max_err, fabs(val));
 	if (fabs(val) > eps) {
 	  printf("(%d,%d,%d): diff %g\n", jx, jy, jz, val);

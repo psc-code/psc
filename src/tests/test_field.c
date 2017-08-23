@@ -20,15 +20,15 @@ setup_fields(struct psc_mfields *flds_base)
 {
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "c", 0, 0);
   psc_foreach_patch(ppsc, p) {
-    struct psc_fields *pf = psc_mfields_get_patch(mflds, p);
+    fields_t flds = fields_t_mflds(mflds, p);
     psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
       int ix, iy, iz;
       psc_local_to_global_indices(ppsc, p, jx, jy, jz, &ix, &iy, &iz);
       f_real xx = 2.*M_PI * ix / ppsc->domain.gdims[0];
       f_real yy = 2.*M_PI * iy / ppsc->domain.gdims[1];
-      F3(pf, JXI, jx,jy,jz) = cos(xx) * sin(yy);
-      F3(pf, JYI, jx,jy,jz) = sin(xx) * sin(yy);
-      F3(pf, JZI, jx,jy,jz) = cos(xx) * cos(yy);
+      _F3(flds, JXI, jx,jy,jz) = cos(xx) * sin(yy);
+      _F3(flds, JYI, jx,jy,jz) = sin(xx) * sin(yy);
+      _F3(flds, JZI, jx,jy,jz) = cos(xx) * cos(yy);
     } foreach_3d_g_end;
   }
   psc_mfields_put_as(mflds, mflds_base, JXI, JXI + 3);

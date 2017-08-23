@@ -76,12 +76,12 @@ psc_diag_item_mirror_run(struct psc_diag_item *item, struct psc *psc, double *re
   psc_foreach_patch(psc, p) {
     struct psc_patch *patch = &psc->patch[p];
     double fac = patch->dx[0] * patch->dx[1] * patch->dx[2];
-    struct psc_fields *pf = psc_mfields_get_patch(mflds, p);
+    fields_c_t flds = fields_c_t_mflds(mflds, p);
     psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
       result[0] += 
-	(sqr(F3_C(pf, HX, ix,iy,iz) - HX0) +
-	 sqr(F3_C(pf, HY, ix,iy,iz) - HY0) +
-	 sqr(F3_C(pf, HZ, ix,iy,iz) - HZ0)) * fac;
+	(sqr(_F3_C(flds, HX, ix,iy,iz) - HX0) +
+	 sqr(_F3_C(flds, HY, ix,iy,iz) - HY0) +
+	 sqr(_F3_C(flds, HZ, ix,iy,iz) - HZ0)) * fac;
     } foreach_3d_end;
   }
   psc_mfields_put_as(mflds, psc->flds, 0, 0);

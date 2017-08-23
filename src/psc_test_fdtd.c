@@ -193,7 +193,7 @@ psc_bnd_amr_setup(struct psc_bnd *bnd)
 // ----------------------------------------------------------------------
 // psc_bnd_amr_unsetup
 
-static void
+static void _mrc_unused
 psc_bnd_amr_unsetup(struct psc_bnd *bnd)
 {
   // FIXME!!! this gets called after bnd_amr is already freed!
@@ -221,8 +221,8 @@ psc_bnd_amr_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds, int mb, 
 
   fields_real_t **fldp = malloc(mflds->nr_patches * sizeof(*fldp));
   for (int p = 0; p < mflds->nr_patches; p++) {
-    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-    fldp[p] = flds->data;
+    fields_t flds = fields_t_mflds(mflds, p);
+    fldp[p] = flds.data;
   }
 
   if (mb == EX && me == EX + 3) {
