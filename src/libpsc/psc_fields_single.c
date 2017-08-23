@@ -51,7 +51,7 @@ psc_mfields_single_copy_to_c(struct psc_mfields *mflds_single, struct psc_mfield
   }
 }
 
-static struct mrc_obj_method psc_fields_single_methods[] = {
+static struct mrc_obj_method psc_mfields_single_methods[] = {
   MRC_OBJ_METHOD("copy_to_c",   psc_mfields_single_copy_to_c),
   MRC_OBJ_METHOD("copy_from_c", psc_mfields_single_copy_from_c),
   {}

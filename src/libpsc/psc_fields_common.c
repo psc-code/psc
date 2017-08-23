@@ -198,7 +198,6 @@ PFX(read)(struct psc_fields *flds, struct mrc_io *io)
   
 struct psc_fields_ops PFX(ops) = {
   .name                  = FIELDS_TYPE,
-  .methods               = PFX(methods),
   .setup                 = PFX(setup),
   .destroy               = PFX(destroy),
 #if defined(HAVE_LIBHDF5_HL) && (PSC_FIELDS_AS_SINGLE || PSC_FIELDS_AS_C)
@@ -272,6 +271,7 @@ MPFX(axpy_comp)(struct psc_mfields *y, int my, double alpha,
   
 struct psc_mfields_ops MPFX(ops) = {
   .name                  = FIELDS_TYPE,
+  .methods               = MPFX(methods),
   .zero_comp             = MPFX(zero_comp),
   .set_comp              = MPFX(set_comp),
   .scale_comp            = MPFX(scale_comp),

@@ -50,7 +50,7 @@ psc_mfields_fortran_copy_from_c(struct psc_mfields *mflds_fortran, struct psc_mf
   }
 }
 
-static struct mrc_obj_method psc_fields_fortran_methods[] = {
+static struct mrc_obj_method psc_mfields_fortran_methods[] = {
   MRC_OBJ_METHOD("copy_to_c",   psc_mfields_fortran_copy_to_c),
   MRC_OBJ_METHOD("copy_from_c", psc_mfields_fortran_copy_from_c),
   {}

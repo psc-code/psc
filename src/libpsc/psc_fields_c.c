@@ -9,7 +9,7 @@
 
 #include "psc_fields_inc.h"
 
-static struct mrc_obj_method psc_fields_c_methods[] = {
+static struct mrc_obj_method psc_mfields_c_methods[] = {
   {}
 };
 

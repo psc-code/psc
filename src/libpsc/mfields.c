@@ -235,10 +235,10 @@ copy(struct psc_mfields *mflds_from, struct psc_mfields *mflds_to,
 
   char s[strlen(type_to) + 12];
   sprintf(s, "copy_to_%s", type_to);
-  copy_to = (psc_mfields_copy_func_t) psc_fields_get_method(psc_mfields_get_patch(mflds_from, 0), s);
+  copy_to = (psc_mfields_copy_func_t) psc_mfields_get_method(mflds_from, s);
   if (!copy_to) {
     sprintf(s, "copy_from_%s", type_from);
-    copy_from = (psc_mfields_copy_func_t) psc_fields_get_method(psc_mfields_get_patch(mflds_to, 0), s);
+    copy_from = (psc_mfields_copy_func_t) psc_mfields_get_method(mflds_to, s);
   }
   if (!copy_to && !copy_from) {
     fprintf(stderr, "ERROR: no 'copy_to_%s' in psc_mfields '%s' and "

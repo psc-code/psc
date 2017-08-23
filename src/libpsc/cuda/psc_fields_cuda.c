@@ -210,17 +210,8 @@ psc_mfields_cuda_copy_to_single(struct psc_mfields *mflds_cuda, struct psc_mfiel
 // ======================================================================
 // psc_fields: subclass "cuda"
   
-static struct mrc_obj_method psc_fields_cuda_methods[] = {
-  MRC_OBJ_METHOD("copy_to_c"       , psc_mfields_cuda_copy_to_c),
-  MRC_OBJ_METHOD("copy_from_c"     , psc_mfields_cuda_copy_from_c),
-  MRC_OBJ_METHOD("copy_to_single"  , psc_mfields_cuda_copy_to_single),
-  MRC_OBJ_METHOD("copy_from_single", psc_mfields_cuda_copy_from_single),
-  {}
-};
-
 struct psc_fields_ops psc_fields_cuda_ops = {
   .name                  = "cuda",
-  .methods               = psc_fields_cuda_methods,
 #ifdef HAVE_LIBHDF5_HL
   .write                 = psc_fields_cuda_write,
 #endif
@@ -356,9 +347,18 @@ psc_mfields_cuda_read(struct psc_mfields *mflds, struct mrc_io *io)
 // ======================================================================
 // psc_mfields: subclass "cuda"
   
+static struct mrc_obj_method psc_mfields_cuda_methods[] = {
+  MRC_OBJ_METHOD("copy_to_c"       , psc_mfields_cuda_copy_to_c),
+  MRC_OBJ_METHOD("copy_from_c"     , psc_mfields_cuda_copy_from_c),
+  MRC_OBJ_METHOD("copy_to_single"  , psc_mfields_cuda_copy_to_single),
+  MRC_OBJ_METHOD("copy_from_single", psc_mfields_cuda_copy_from_single),
+  {}
+};
+
 struct psc_mfields_ops psc_mfields_cuda_ops = {
   .name                  = "cuda",
   .size                  = sizeof(struct psc_mfields_cuda),
+  .methods               = psc_mfields_cuda_methods,
   .setup                 = psc_mfields_cuda_setup,
   .destroy               = psc_mfields_cuda_destroy,
 #ifdef HAVE_LIBHDF5_HL
