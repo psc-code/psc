@@ -31,13 +31,6 @@ fields_fortran_set(struct psc_fields *pf, int m, fields_fortran_real_t val)
   }
 }
 
-static void
-psc_fields_fortran_zero_comp(struct psc_fields *pf, int m)
-{
-  memset(&F3_FORTRAN(pf, m, pf->ib[0], pf->ib[1], pf->ib[2]), 0,
-	 pf->im[0] * pf->im[1] * pf->im[2] * sizeof(fields_fortran_real_t));
-}
-
 void
 fields_fortran_copy(struct psc_fields *pf, int m_to, int m_from)
 {

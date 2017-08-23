@@ -15,13 +15,6 @@
 // FIXME, very duplicated from psc_fields_c.c
 
 static void
-psc_fields_single_zero_comp(struct psc_fields *pf, int m)
-{
-  memset(&F3_S(pf, m, pf->ib[0], pf->ib[1], pf->ib[2]), 0,
-	 pf->im[0] * pf->im[1] * pf->im[2] * sizeof(fields_single_real_t));
-}
-
-static void
 psc_fields_single_set_comp(struct psc_fields *pf, int m, double _val)
 {
   fields_single_real_t val = _val;

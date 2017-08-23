@@ -30,6 +30,9 @@ PFX(setup)(struct psc_fields *pf)
 #endif
 }
 
+// ----------------------------------------------------------------------
+// psc_fields_destroy
+
 static void
 PFX(destroy)(struct psc_fields *pf)
 {
@@ -46,4 +49,13 @@ PFX(destroy)(struct psc_fields *pf)
 #endif
 }
 
+// ----------------------------------------------------------------------
+// psc_fields_zero_comp
+
+static void
+PFX(zero_comp)(struct psc_fields *pf, int m)
+{
+  memset(&F3(pf, m, pf->ib[0], pf->ib[1], pf->ib[2]), 0,
+	 pf->im[0] * pf->im[1] * pf->im[2] * sizeof(fields_real_t));
+}
 

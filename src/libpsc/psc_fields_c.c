@@ -12,13 +12,6 @@
 #include "psc_fields_common.c"
 
 static void
-psc_fields_c_zero_comp(struct psc_fields *pf, int m)
-{
-  memset(&F3_C(pf, m, pf->ib[0], pf->ib[1], pf->ib[2]), 0,
-	 pf->im[0] * pf->im[1] * pf->im[2] * sizeof(fields_c_real_t));
-}
-
-static void
 psc_fields_c_set_comp(struct psc_fields *pf, int m, double _val)
 {
   fields_c_real_t val = _val;
