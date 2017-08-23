@@ -12,13 +12,6 @@
 #include "psc_fields_common.c"
 
 // ======================================================================
-// psc_mfields: subclass "c"
-  
-struct psc_mfields_ops psc_mfields_c_ops = {
-  .name                  = "c",
-};
-
-// ======================================================================
 // psc_fields: subclass "c"
   
 struct psc_fields_ops psc_fields_c_ops = {

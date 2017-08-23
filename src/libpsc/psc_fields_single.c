@@ -52,13 +52,6 @@ static struct mrc_obj_method psc_fields_single_methods[] = {
 #include "psc_fields_common.c"
 
 // ======================================================================
-// psc_mfields: subclass "single"
-  
-struct psc_mfields_ops psc_mfields_single_ops = {
-  .name                  = "single",
-};
-
-// ======================================================================
 // psc_fields: subclass "single"
   
 struct psc_fields_ops psc_fields_single_ops = {

@@ -192,3 +192,11 @@ PFX(read)(struct psc_fields *flds, struct mrc_io *io)
 }
 
 #endif // HAVE_LIBHDF5_HL
+
+// ----------------------------------------------------------------------
+// psc_mfields: subclass ops
+  
+struct psc_mfields_ops MPFX(ops) = {
+  .name                  = FIELDS_TYPE,
+};
+
