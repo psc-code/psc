@@ -119,11 +119,11 @@ __psc_mfields_cuda_destroy(struct psc_mfields *mflds)
   cuda_mfields_dealloc(cmflds);
 
   check(cudaFree(cmflds->d_bnd_buf));
-  check(cudaFree(mflds_cuda->d_nei_patch));
+  check(cudaFree(cmflds->d_nei_patch));
   check(cudaFree(mflds_cuda->d_map_out));
   check(cudaFree(mflds_cuda->d_map_in));
   delete[] cmflds->h_bnd_buf;
-  delete[] mflds_cuda->h_nei_patch;
+  delete[] cmflds->h_nei_patch;
   delete[] mflds_cuda->h_map_out;
   delete[] mflds_cuda->h_map_in;
 
@@ -389,7 +389,7 @@ fields_device_pack2_yz(struct psc_mfields *mflds, int mb, int me)
     
   float *d_flds = cmflds->d_flds + mb * im[1] * im[2];
   k_fields_device_pack2_yz<B, pack, NR_COMPONENTS> <<<dimGrid, dimBlock>>>
-    (cmflds->d_bnd_buf, d_flds, mflds_cuda->d_nei_patch,
+    (cmflds->d_bnd_buf, d_flds, cmflds->d_nei_patch,
      im[1], im[2], nr_patches, nr_fields);
   cuda_sync_if_enabled();
 }
@@ -414,11 +414,11 @@ __fields_cuda_fill_ghosts_local(struct psc_mfields *mflds, int mb, int me)
   float *d_flds = cmflds->d_flds + mb * im[1] * im[2];
   if (me - mb == 3) {
     k_fill_ghosts_local_yz<B, 3> <<<dimGrid, dimBlock>>>
-      (d_flds, mflds_cuda->d_nei_patch, im[1], im[2],
+      (d_flds, cmflds->d_nei_patch, im[1], im[2],
        nr_fields, nr_patches);
   } else if (me - mb == 1) {
     k_fill_ghosts_local_yz<B, 1> <<<dimGrid, dimBlock>>>
-      (d_flds, mflds_cuda->d_nei_patch, im[1], im[2],
+      (d_flds, cmflds->d_nei_patch, im[1], im[2],
        nr_fields, nr_patches);
   } else {
     assert(0);
@@ -878,27 +878,27 @@ __fields_cuda_fill_ghosts_setup(struct psc_mfields *mflds, struct mrc_ddc *ddc)
   assert(im[0] == 1);
   int nr_patches = mflds->nr_patches;
 
-  if (!mflds_cuda->h_nei_patch) {
+  if (!cmflds->h_nei_patch) {
     struct mrc_ddc_multi *multi = mrc_ddc_multi(ddc);
     struct mrc_ddc_pattern2 *patt2 = &multi->fill_ghosts2;
     struct mrc_ddc_rank_info *ri = patt2->ri;
 
-    mflds_cuda->h_nei_patch = new int[9 * nr_patches];
+    cmflds->h_nei_patch = new int[9 * nr_patches];
 
     for (int p = 0; p < nr_patches; p++) {
       for (int dir1 = 0; dir1 < 9; dir1++) {
-	mflds_cuda->h_nei_patch[p * 9 + dir1] = -1;
+	cmflds->h_nei_patch[p * 9 + dir1] = -1;
       }
     }
     for (int i = 0; i < ri[multi->mpi_rank].n_recv_entries; i++) {
       struct mrc_ddc_sendrecv_entry *re = &ri[multi->mpi_rank].recv_entry[i];
-      mflds_cuda->h_nei_patch[re->patch * 9 + re->dir1 / 3] = re->nei_patch;
+      cmflds->h_nei_patch[re->patch * 9 + re->dir1 / 3] = re->nei_patch;
     }
 
-    check(cudaMalloc((void **) &mflds_cuda->d_nei_patch,
-		     9 * nr_patches * sizeof(*mflds_cuda->d_nei_patch)));
-    check(cudaMemcpy(mflds_cuda->d_nei_patch, mflds_cuda->h_nei_patch, 
-		     9 * nr_patches * sizeof(*mflds_cuda->d_nei_patch),
+    check(cudaMalloc((void **) &cmflds->d_nei_patch,
+		     9 * nr_patches * sizeof(*cmflds->d_nei_patch)));
+    check(cudaMemcpy(cmflds->d_nei_patch, cmflds->h_nei_patch, 
+		     9 * nr_patches * sizeof(*cmflds->d_nei_patch),
 		     cudaMemcpyHostToDevice));
 
     fields_create_map_out_yz(mflds, 2, &mflds_cuda->nr_map_out, &mflds_cuda->h_map_out);
@@ -988,7 +988,7 @@ fields_create_map_out_yz(struct psc_mfields *mflds, int B, int *p_nr_map, int **
 	if (dir[1] == 0 && dir[2] == 0) {
 	  continue;
 	}
-	int s_p = mflds_cuda->h_nei_patch[p*9 + 3*dir[2] + dir[1] + 4];
+	int s_p = cmflds->h_nei_patch[p*9 + 3*dir[2] + dir[1] + 4];
 	if (!remote_only || s_p < 0) {
 	  nr_map += ((dir[1] == 0 ? im[1] - 2*B : B) *
 		     (dir[2] == 0 ? im[2] - 2*B : B));
@@ -1019,7 +1019,7 @@ fields_create_map_out_yz(struct psc_mfields *mflds, int B, int *p_nr_map, int **
 	} else {
 	  diry = 1;
 	}
-	int s_p = mflds_cuda->h_nei_patch[p*9 + 3*dirz + diry + 4];
+	int s_p = cmflds->h_nei_patch[p*9 + 3*dirz + diry + 4];
 	if (!remote_only || s_p < 0) {
 	  (*p_h_map)[tid++] = ((p * nr_fields + 0) * im[2] + jz) * im[1] + jy;
 	}
@@ -1036,7 +1036,7 @@ fields_create_map_out_yz(struct psc_mfields *mflds, int B, int *p_nr_map, int **
 	  diry = 1;
 	  jy += im[1] - 2*B;
 	}
-	int s_p = mflds_cuda->h_nei_patch[p*9 + 3*dirz + diry + 4];
+	int s_p = cmflds->h_nei_patch[p*9 + 3*dirz + diry + 4];
 	if (!remote_only || s_p < 0) {
 	  (*p_h_map)[tid++] = ((p * nr_fields + 0) * im[2] + jz) * im[1] + jy;
 	}
@@ -1067,14 +1067,14 @@ fields_create_map_in_yz(struct psc_mfields *mflds, int B, int *p_nr_map, int **p
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
 	int dir1 = p*9 + 3*dir[2] + dir[1] + 4;
 	has_nei[dir1] = false;
-	int p_mm = mflds_cuda->h_nei_patch[p*9 + -1 + 3*-1 + 4];
-	int p_0m = mflds_cuda->h_nei_patch[p*9 +  0 + 3*-1 + 4];
-	int p_pm = mflds_cuda->h_nei_patch[p*9 + +1 + 3*-1 + 4];
-	int p_m0 = mflds_cuda->h_nei_patch[p*9 + -1 + 3* 0 + 4];
-	int p_p0 = mflds_cuda->h_nei_patch[p*9 + +1 + 3* 0 + 4];
-	int p_mp = mflds_cuda->h_nei_patch[p*9 + +1 + 3*+1 + 4];
-	int p_0p = mflds_cuda->h_nei_patch[p*9 +  0 + 3*+1 + 4];
-	int p_pp = mflds_cuda->h_nei_patch[p*9 + -1 + 3*+1 + 4];
+	int p_mm = cmflds->h_nei_patch[p*9 + -1 + 3*-1 + 4];
+	int p_0m = cmflds->h_nei_patch[p*9 +  0 + 3*-1 + 4];
+	int p_pm = cmflds->h_nei_patch[p*9 + +1 + 3*-1 + 4];
+	int p_m0 = cmflds->h_nei_patch[p*9 + -1 + 3* 0 + 4];
+	int p_p0 = cmflds->h_nei_patch[p*9 + +1 + 3* 0 + 4];
+	int p_mp = cmflds->h_nei_patch[p*9 + +1 + 3*+1 + 4];
+	int p_0p = cmflds->h_nei_patch[p*9 +  0 + 3*+1 + 4];
+	int p_pp = cmflds->h_nei_patch[p*9 + -1 + 3*+1 + 4];
 	if (dir[1] == 0 && dir[2] == 0) {
 	} else if (dir[1] == -1 && dir[2] == -1) {
 	  if (p_mm < 0 || p_m0 < 0 || p_0m < 0) {
@@ -1213,11 +1213,11 @@ fields_device_pack3_yz(struct psc_mfields *mflds, int mb, int me)
   float *d_flds = cmflds->d_flds + mb * im[1] * im[2];
   if (me - mb == 3) {
     k_fields_device_pack3_yz<pack> <<<dimGrid, dimBlock>>>
-      (cmflds->d_bnd_buf, d_flds, d_map, mflds_cuda->d_nei_patch,
+      (cmflds->d_bnd_buf, d_flds, d_map, cmflds->d_nei_patch,
        im[1], im[2], nr_patches, 3, nr_map);
   } else if (me - mb == 1) {
     k_fields_device_pack3_yz<pack> <<<dimGrid, dimBlock>>>
-      (cmflds->d_bnd_buf, d_flds, d_map, mflds_cuda->d_nei_patch,
+      (cmflds->d_bnd_buf, d_flds, d_map, cmflds->d_nei_patch,
        im[1], im[2], nr_patches, 1, nr_map);
   } else {
     assert(0);

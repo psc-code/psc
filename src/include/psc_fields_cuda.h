@@ -14,8 +14,6 @@
 struct psc_mfields_cuda {
   struct cuda_mfields *cmflds;
 
-  int *h_nei_patch;
-  int *d_nei_patch;
   int *h_map_out; // maps thread id to a particular offset for ghosts in the flds array 
   int *d_map_out;
   int nr_map_out; // number of entries in the map

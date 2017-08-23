@@ -39,6 +39,8 @@ struct cuda_mfields {
   struct cuda_mfields_bnd_patch *bnd_by_patch;
   fields_cuda_real_t *d_bnd_buf;
   fields_cuda_real_t *h_bnd_buf;
+  int *h_nei_patch;
+  int *d_nei_patch;
 };
 
 #endif
