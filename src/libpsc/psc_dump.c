@@ -9,7 +9,7 @@
 // debugging stuff...
 
 static void
-ascii_dump_field_yz(fields_t *pf, int m, FILE *file)
+ascii_dump_field_yz(struct psc_fields *pf, int m, FILE *file)
 {
   for (int iz = pf->ib[2]; iz < pf->ib[2] + pf->im[2]; iz++) {
     for (int iy = pf->ib[1]; iy < pf->ib[1] + pf->im[1]; iy++) {
@@ -33,8 +33,8 @@ ascii_dump_field(mfields_base_t *flds_base, int m, const char *fname)
     sprintf(filename, "%s-p%d-p%d.asc", fname, rank, p);
     mpi_printf(MPI_COMM_WORLD, "ascii_dump_field: '%s'\n", filename);
 
-    fields_t *pf_base = psc_mfields_get_patch(flds_base, p);
-    fields_t *pf = psc_fields_get_as(pf_base, "c", m, m+1);
+    struct psc_fields *pf_base = psc_mfields_get_patch(flds_base, p);
+    struct psc_fields *pf = psc_fields_get_as(pf_base, "c", m, m+1);
     FILE *file = fopen(filename, "w");
     free(filename);
     if (pf->im[0] + 2*pf->ib[0] == 1) {

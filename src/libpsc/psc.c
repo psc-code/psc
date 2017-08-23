@@ -905,8 +905,8 @@ psc_setup_fields_default(struct psc *psc)
 
   // FIXME, do we need the ghost points?
   psc_foreach_patch(psc, p) {
-    fields_t *pf_base = psc_mfields_get_patch(psc->flds, p);
-    fields_t *pf = psc_fields_get_as(pf_base, "c", 0, 0);
+    struct psc_fields *pf_base = psc_mfields_get_patch(psc->flds, p);
+    struct psc_fields *pf = psc_fields_get_as(pf_base, "c", 0, 0);
 
     psc_foreach_3d_g(psc, p, jx, jy, jz) {
       double dx = psc->patch[p].dx[0], dy = psc->patch[p].dx[1], dz = psc->patch[p].dx[2];

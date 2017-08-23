@@ -6,7 +6,7 @@
 #include "psc_fields_single.h"
 
 static struct psc_fields * _mrc_unused
-cache_fields_from_em(fields_t *pf)
+cache_fields_from_em(struct psc_fields *pf)
 {
   struct psc_fields *fld = psc_fields_create(psc_fields_comm(pf));
   psc_fields_set_type(fld, FIELDS_TYPE);
@@ -31,7 +31,7 @@ cache_fields_from_em(fields_t *pf)
 }
 
 static void _mrc_unused
-cache_fields_to_j(struct psc_fields *fld, fields_t *pf)
+cache_fields_to_j(struct psc_fields *fld, struct psc_fields *pf)
 {
   for (int iz = fld->ib[2]; iz < fld->ib[2] + fld->im[2]; iz++) {
     for (int iy = fld->ib[1]; iy < fld->ib[1] + fld->im[1]; iy++) {
@@ -53,7 +53,7 @@ cache_fields_from_em(struct psc_fields *flds)
 }
 
 static void _mrc_unused
-cache_fields_to_j(struct psc_fields *flds_cache, fields_t *flds)
+cache_fields_to_j(struct psc_fields *flds_cache, struct psc_fields *flds)
 {
 }
 

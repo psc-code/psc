@@ -108,9 +108,9 @@ psc_save_fields_ref(struct psc *psc, mfields_base_t *flds_base)
   }
 
   psc_foreach_patch(psc, p) {
-    fields_t *pf_base = psc_mfields_get_patch(flds_base, p);
-    fields_t *pf = psc_fields_get_as(pf_base, "c", 0, me);
-    fields_t *pf_ref = psc_mfields_get_patch(flds_ref, p);
+    struct psc_fields *pf_base = psc_mfields_get_patch(flds_base, p);
+    struct psc_fields *pf = psc_fields_get_as(pf_base, "c", 0, me);
+    struct psc_fields *pf_ref = psc_mfields_get_patch(flds_ref, p);
     for (int m = 0; m < me; m++) {
       psc_foreach_3d_g(psc, p, ix, iy, iz) {
 	F3(pf_ref, m, ix,iy,iz) = F3(pf, m, ix,iy,iz);
@@ -181,9 +181,9 @@ void
 psc_check_fields_ref(struct psc *psc, mfields_base_t *flds_base, int *m_flds, double thres)
 {
   psc_foreach_patch(psc, p) {
-    fields_t *pf_base = psc_mfields_get_patch(flds_base, p);
-    fields_t *pf = psc_fields_get_as(pf_base, "c", 0, 12);
-    fields_t *pf_ref = psc_mfields_get_patch(flds_ref, p);
+    struct psc_fields *pf_base = psc_mfields_get_patch(flds_base, p);
+    struct psc_fields *pf = psc_fields_get_as(pf_base, "c", 0, 12);
+    struct psc_fields *pf_ref = psc_mfields_get_patch(flds_ref, p);
     for (int i = 0; m_flds[i] >= 0; i++) {
       int m = m_flds[i];
       psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
@@ -205,8 +205,8 @@ psc_check_currents_ref(struct psc *psc, mfields_base_t *flds_base, double thres,
 {
 #if 0
   foreach_patch(p) {
-    fields_t *pf_base = psc_mfields_get_patch(flds_base, p);
-    fields_t *pf = psc_fields_get_as(pf_base, "c", JXI, JXI + 3);
+    struct psc_fields *pf_base = psc_mfields_get_patch(flds_base, p);
+    struct psc_fields *pf = psc_fields_get_as(pf_base, "c", JXI, JXI + 3);
     for (int m = JXI; m <= JZI; m++){
       foreach_3d_g(p, ix, iy, iz) {
 	double val = F3(pf, m, ix,iy,iz);
@@ -219,7 +219,7 @@ psc_check_currents_ref(struct psc *psc, mfields_base_t *flds_base, double thres,
     psc_fields_put_as(pf, pf_base, 0, 0);
   }
 #endif
-  mfields_t *diff = psc_mfields_create(psc_comm(psc));
+  struct psc_mfields *diff = psc_mfields_create(psc_comm(psc));
   psc_mfields_set_domain(diff, psc->mrc_domain);
   psc_mfields_set_param_int3(diff, "ibn", psc->ibn);
   psc_mfields_setup(diff);
@@ -228,10 +228,10 @@ psc_check_currents_ref(struct psc *psc, mfields_base_t *flds_base, double thres,
   for (int m = JXI; m <= JZI; m++){
     fields_real_t max_delta = 0.;
     psc_foreach_patch(psc, p) {
-      fields_t *pf_base = psc_mfields_get_patch(flds_base, p);
-      fields_t *pf = psc_fields_get_as(pf_base, "c", JXI, JXI + 3);
-      fields_t *pf_ref = psc_mfields_get_patch(flds_ref, p);
-      fields_t *pf_diff = psc_mfields_get_patch(diff, p);
+      struct psc_fields *pf_base = psc_mfields_get_patch(flds_base, p);
+      struct psc_fields *pf = psc_fields_get_as(pf_base, "c", JXI, JXI + 3);
+      struct psc_fields *pf_ref = psc_mfields_get_patch(flds_ref, p);
+      struct psc_fields *pf_diff = psc_mfields_get_patch(diff, p);
       psc_foreach_3d(psc, p, ix, iy, iz, sw, sw) {
 	F3(pf_diff, 0, ix,iy,iz) =
 	  F3(pf, m, ix,iy,iz) - F3(pf_ref, m, ix,iy,iz);

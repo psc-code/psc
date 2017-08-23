@@ -4,8 +4,6 @@
 
 #include "psc_fields_single.h"
 
-typedef struct psc_mfields mfields_t;
-typedef struct psc_fields fields_t;
 typedef fields_single_real_t fields_real_t;
 #define MPI_FIELDS_REAL MPI_FIELDS_SINGLE_REAL
 

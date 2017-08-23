@@ -201,7 +201,7 @@ psc_bnd_fields_add_ghosts_J(struct psc_bnd_fields *bnd, mfields_base_t *flds)
 
 void
 _psc_bnd_fields_setup_patch(struct psc_bnd_fields *bnd_fields, int p,
-			    fields_t *pf_base, double t)
+			    struct psc_fields *pf_base, double t)
 {
   struct psc_pulse *pulse;
   struct psc *psc = ppsc;

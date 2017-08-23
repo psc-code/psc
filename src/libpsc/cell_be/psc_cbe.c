@@ -228,7 +228,7 @@ update_spes_status(void)
 }
 
 
-void cell_run_patch(int p,fields_t *pf, particles_t *pp, int job) 
+void cell_run_patch(int p,struct psc_fields *pf, particles_t *pp, int job) 
 {
 
   while(active_spes == NR_SPE) {

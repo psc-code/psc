@@ -271,7 +271,7 @@ do_push_part_yz(int p, struct psc_fields *pf, particle_range_t prts)
 }
 
 static struct psc_fields *
-cache_fields_from_em(fields_t *pf)
+cache_fields_from_em(struct psc_fields *pf)
 {
   struct psc_fields *fld = psc_fields_create(MPI_COMM_NULL);
   psc_fields_set_type(fld, FIELDS_TYPE);
@@ -298,7 +298,7 @@ cache_fields_from_em(fields_t *pf)
 }
 
 static void
-cache_fields_to_j(struct psc_fields *fld, fields_t *pf)
+cache_fields_to_j(struct psc_fields *fld, struct psc_fields *pf)
 {
   for (int iz = fld->ib[2]; iz < fld->ib[2] + fld->im[2]; iz++) {
     for (int iy = fld->ib[1]; iy < fld->ib[1] + fld->im[1]; iy++) {

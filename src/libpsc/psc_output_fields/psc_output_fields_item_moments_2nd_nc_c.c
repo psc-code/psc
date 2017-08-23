@@ -26,7 +26,7 @@ run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 typedef fields_c_real_t creal;
 
 static void
-do_n_2nd_nc_run(int p, fields_t *pf, particle_range_t prts)
+do_n_2nd_nc_run(int p, struct psc_fields *pf, particle_range_t prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
@@ -118,7 +118,7 @@ n_2nd_nc_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
 // FIXME too much duplication, specialize 2d/1d
 
 static void
-do_v_2nd_nc_run(int p, fields_t *pf, particle_range_t prts)
+do_v_2nd_nc_run(int p, struct psc_fields *pf, particle_range_t prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
@@ -211,7 +211,7 @@ v_2nd_nc_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
 }
 
 static void
-do_vv_2nd_nc_run(int p, fields_t *pf, particle_range_t prts)
+do_vv_2nd_nc_run(int p, struct psc_fields *pf, particle_range_t prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;

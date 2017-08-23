@@ -125,7 +125,7 @@ psc_balance_sub_communicate_fields(struct psc_balance *bal, struct communicate_c
     if (new_rank == ctx->mpi_rank || new_rank < 0) {
       send_reqs[p] = MPI_REQUEST_NULL;
     } else {
-      fields_t *pf_old = psc_mfields_get_patch(mflds_old, p);
+      struct psc_fields *pf_old = psc_mfields_get_patch(mflds_old, p);
       int nn = psc_fields_size(pf_old) * pf_old->nr_comp;
       int *ib = pf_old->ib;
       void *addr_old = &F3(pf_old, 0, ib[0], ib[1], ib[2]);
@@ -146,7 +146,7 @@ psc_balance_sub_communicate_fields(struct psc_balance *bal, struct communicate_c
       recv_reqs[p] = MPI_REQUEST_NULL;
       //Seed new data
     } else {
-      fields_t *pf_new = psc_mfields_get_patch(mflds_new, p);
+      struct psc_fields *pf_new = psc_mfields_get_patch(mflds_new, p);
       int nn = psc_fields_size(pf_new) * pf_new->nr_comp;
       int *ib = pf_new->ib;
       void *addr_new = &F3(pf_new, 0, ib[0], ib[1], ib[2]);
@@ -170,8 +170,8 @@ psc_balance_sub_communicate_fields(struct psc_balance *bal, struct communicate_c
       continue;
     }
 
-    fields_t *pf_old = psc_mfields_get_patch(mflds_old, ctx->recv_info[p].patch);
-    fields_t *pf_new = psc_mfields_get_patch(mflds_new, p);
+    struct psc_fields *pf_old = psc_mfields_get_patch(mflds_old, ctx->recv_info[p].patch);
+    struct psc_fields *pf_new = psc_mfields_get_patch(mflds_new, p);
 
     assert(pf_old->nr_comp == pf_new->nr_comp);
     assert(psc_fields_size(pf_old) == psc_fields_size(pf_new));

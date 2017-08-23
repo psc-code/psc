@@ -9,8 +9,8 @@
 void
 psc_bnd_fld_sub_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
 {
-  mfields_t *flds = ctx;
-  fields_t *pf = psc_mfields_get_patch(flds, p);
+  struct psc_mfields *flds = ctx;
+  struct psc_fields *pf = psc_mfields_get_patch(flds, p);
   fields_real_t *buf = _buf;
 
   for (int m = mb; m < me; m++) {
@@ -27,8 +27,8 @@ psc_bnd_fld_sub_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void 
 void
 psc_bnd_fld_sub_add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
 {
-  mfields_t *flds = ctx;
-  fields_t *pf = psc_mfields_get_patch(flds, p);
+  struct psc_mfields *flds = ctx;
+  struct psc_fields *pf = psc_mfields_get_patch(flds, p);
   fields_real_t *buf = _buf;
 
   for (int m = mb; m < me; m++) {
@@ -45,8 +45,8 @@ psc_bnd_fld_sub_add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void
 void
 psc_bnd_fld_sub_copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
 {
-  mfields_t *flds = ctx;
-  fields_t *pf = psc_mfields_get_patch(flds, p);
+  struct psc_mfields *flds = ctx;
+  struct psc_fields *pf = psc_mfields_get_patch(flds, p);
   fields_real_t *buf = _buf;
 
   for (int m = mb; m < me; m++) {
@@ -87,7 +87,7 @@ psc_bnd_fld_sub_create(struct psc_bnd *bnd)
 void
 psc_bnd_fld_sub_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
 {
-  mfields_t *flds = psc_mfields_get_cf(flds_base, mb, me);
+  struct psc_mfields *flds = psc_mfields_get_cf(flds_base, mb, me);
   mrc_ddc_add_ghosts(bnd->ddc, mb, me, flds);
   psc_mfields_put_cf(flds, flds_base, mb, me);
 }
@@ -98,7 +98,7 @@ psc_bnd_fld_sub_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int m
 void
 psc_bnd_fld_sub_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
 {
-  mfields_t *flds = psc_mfields_get_cf(flds_base, mb, me);
+  struct psc_mfields *flds = psc_mfields_get_cf(flds_base, mb, me);
   // FIXME
   // I don't think we need as many points, and only stencil star
   // rather then box

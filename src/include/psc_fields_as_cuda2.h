@@ -4,8 +4,6 @@
 
 #include "psc_fields_cuda2.h"
 
-typedef struct psc_mfields mfields_t;
-typedef struct psc_fields fields_t;
 typedef fields_cuda2_real_t fields_real_t;
 #define MPI_FIELDS_REAL MPI_FIELDS_CUDA2_REAL
 

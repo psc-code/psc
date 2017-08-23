@@ -7,7 +7,7 @@
 #include <string.h>
 
 static void
-do_push_part_1st_xz(int p, fields_t *pf, particle_range_t prts)
+do_push_part_1st_xz(int p, struct psc_fields *pf, particle_range_t prts)
 {
 #define S0X(off) s0x[off+1]
 #define S0Z(off) s0z[off+1]

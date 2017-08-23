@@ -33,7 +33,7 @@ fields_ip_free(fields_ip_t *pf)
 #if SIMD_BITS == 0
 
 static void
-ip_fields_to_j(int p, fields_ip_t *fld, fields_t *pf)
+ip_fields_to_j(int p, fields_ip_t *fld, struct psc_fields *pf)
 {
   struct psc_patch *patch = ppsc->patch + p;
   
@@ -85,7 +85,7 @@ ip_fields_to_j(int p, fields_ip_t *fld, fields_t *pf)
   } while (0)							\
       
 static void
-ip_fields_to_j(int p, fields_ip_t *fld, fields_t *pf)
+ip_fields_to_j(int p, fields_ip_t *fld, struct psc_fields *pf)
 {
   struct psc_patch *patch = ppsc->patch + p;
 
@@ -140,7 +140,7 @@ ip_fields_to_j(int p, fields_ip_t *fld, fields_t *pf)
 #if SIMD_BITS == 0
 
 static void _mrc_unused
-ip_fields_from_em(int p, fields_ip_t *fld, fields_t *pf)
+ip_fields_from_em(int p, fields_ip_t *fld, struct psc_fields *pf)
 {
   struct psc_patch *patch = ppsc->patch + p;
 
@@ -163,7 +163,7 @@ ip_fields_from_em(int p, fields_ip_t *fld, fields_t *pf)
 #elif SIMD_BITS == 2
 
 static void _mrc_unused
-ip_fields_from_em(int p, fields_ip_t *fld, fields_t *pf)
+ip_fields_from_em(int p, fields_ip_t *fld, struct psc_fields *pf)
 {
   struct psc_patch *patch = ppsc->patch + p;
 

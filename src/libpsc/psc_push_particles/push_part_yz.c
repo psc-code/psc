@@ -7,7 +7,7 @@
 #include <string.h>
 
 static void
-do_genc_push_part_yz(int p, fields_t *pf, particle_range_t prts)
+do_genc_push_part_yz(int p, struct psc_fields *pf, particle_range_t prts)
 {
 #define S0Y(off) s0y[off+2]
 #define S0Z(off) s0z[off+2]
