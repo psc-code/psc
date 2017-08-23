@@ -41,6 +41,12 @@ struct cuda_mfields {
   fields_cuda_real_t *h_bnd_buf;
   int *h_nei_patch;
   int *d_nei_patch;
+  int *h_map_out; // maps thread id to a particular offset for ghosts in the flds array 
+  int *d_map_out;
+  int nr_map_out; // number of entries in the map
+  int *h_map_in; // maps thread id to a particular offset for ghosts in the flds array 
+  int *d_map_in;
+  int nr_map_in; // number of entries in the map
 };
 
 #endif

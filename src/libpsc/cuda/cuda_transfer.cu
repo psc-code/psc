@@ -120,12 +120,12 @@ __psc_mfields_cuda_destroy(struct psc_mfields *mflds)
 
   check(cudaFree(cmflds->d_bnd_buf));
   check(cudaFree(cmflds->d_nei_patch));
-  check(cudaFree(mflds_cuda->d_map_out));
-  check(cudaFree(mflds_cuda->d_map_in));
+  check(cudaFree(cmflds->d_map_out));
+  check(cudaFree(cmflds->d_map_in));
   delete[] cmflds->h_bnd_buf;
   delete[] cmflds->h_nei_patch;
-  delete[] mflds_cuda->h_map_out;
-  delete[] mflds_cuda->h_map_in;
+  delete[] cmflds->h_map_out;
+  delete[] cmflds->h_map_in;
 
   for (int p = 0; p < mflds->nr_patches; p++) {
     struct cuda_mfields_bnd_patch *cf = &cmflds->bnd_by_patch[p];
@@ -542,11 +542,11 @@ fields_host_pack3_yz(struct psc_mfields *mflds, int mb, int me)
   int nr_map;
   int *h_map;
   if (B == 2) {
-    h_map = mflds_cuda->h_map_out;
-    nr_map = mflds_cuda->nr_map_out;
+    h_map = cmflds->h_map_out;
+    nr_map = cmflds->nr_map_out;
   } else if (B == 4) {
-    h_map = mflds_cuda->h_map_in;
-    nr_map = mflds_cuda->nr_map_in;
+    h_map = cmflds->h_map_in;
+    nr_map = cmflds->nr_map_in;
   } else {
     assert(0);
   }
@@ -664,7 +664,7 @@ __fields_cuda_from_device3_yz(struct psc_mfields *mflds, int mb, int me)
 
   int nr_map;
   if (B == 4) {
-    nr_map = mflds_cuda->nr_map_in;
+    nr_map = cmflds->nr_map_in;
   } else {
     assert(0);
   }
@@ -706,7 +706,7 @@ __fields_cuda_to_device3_yz(struct psc_mfields *mflds, int mb, int me)
 
   int nr_map;
   if (B == 2) {
-    nr_map = mflds_cuda->nr_map_out;
+    nr_map = cmflds->nr_map_out;
   } else {
     assert(0);
   }
@@ -901,22 +901,22 @@ __fields_cuda_fill_ghosts_setup(struct psc_mfields *mflds, struct mrc_ddc *ddc)
 		     9 * nr_patches * sizeof(*cmflds->d_nei_patch),
 		     cudaMemcpyHostToDevice));
 
-    fields_create_map_out_yz(mflds, 2, &mflds_cuda->nr_map_out, &mflds_cuda->h_map_out);
+    fields_create_map_out_yz(mflds, 2, &cmflds->nr_map_out, &cmflds->h_map_out);
 
-    check(cudaMalloc((void **) &mflds_cuda->d_map_out,
-		     mflds_cuda->nr_map_out * sizeof(*mflds_cuda->d_map_out)));
-    check(cudaMemcpy(mflds_cuda->d_map_out, mflds_cuda->h_map_out, 
-		     mflds_cuda->nr_map_out * sizeof(*mflds_cuda->d_map_out),
+    check(cudaMalloc((void **) &cmflds->d_map_out,
+		     cmflds->nr_map_out * sizeof(*cmflds->d_map_out)));
+    check(cudaMemcpy(cmflds->d_map_out, cmflds->h_map_out, 
+		     cmflds->nr_map_out * sizeof(*cmflds->d_map_out),
 		     cudaMemcpyHostToDevice));
 
-    fields_create_map_in_yz(mflds, 2, &mflds_cuda->nr_map_in, &mflds_cuda->h_map_in);
-    mprintf("map_out %d\n", mflds_cuda->nr_map_out);
-    mprintf("map_in %d\n", mflds_cuda->nr_map_in);
+    fields_create_map_in_yz(mflds, 2, &cmflds->nr_map_in, &cmflds->h_map_in);
+    mprintf("map_out %d\n", cmflds->nr_map_out);
+    mprintf("map_in %d\n", cmflds->nr_map_in);
 
-    check(cudaMalloc((void **) &mflds_cuda->d_map_in,
-		     mflds_cuda->nr_map_in * sizeof(*mflds_cuda->d_map_in)));
-    check(cudaMemcpy(mflds_cuda->d_map_in, mflds_cuda->h_map_in, 
-		     mflds_cuda->nr_map_in * sizeof(*mflds_cuda->d_map_in),
+    check(cudaMalloc((void **) &cmflds->d_map_in,
+		     cmflds->nr_map_in * sizeof(*cmflds->d_map_in)));
+    check(cudaMemcpy(cmflds->d_map_in, cmflds->h_map_in, 
+		     cmflds->nr_map_in * sizeof(*cmflds->d_map_in),
 		     cudaMemcpyHostToDevice));
   }
 }
@@ -1193,11 +1193,11 @@ fields_device_pack3_yz(struct psc_mfields *mflds, int mb, int me)
   int nr_map;
   int *d_map;
   if (B == 2) {
-    nr_map = mflds_cuda->nr_map_out;
-    d_map = mflds_cuda->d_map_out;
+    nr_map = cmflds->nr_map_out;
+    d_map = cmflds->d_map_out;
   } else if (B == 4) {
-    nr_map = mflds_cuda->nr_map_in;
-    d_map = mflds_cuda->d_map_in;
+    nr_map = cmflds->nr_map_in;
+    d_map = cmflds->d_map_in;
   } else {
     assert(0);
   }
