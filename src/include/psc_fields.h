@@ -12,10 +12,6 @@ MRC_CLASS_DECLARE(psc_fields, struct psc_fields);
 unsigned int psc_fields_size(struct psc_fields *pf);
 void psc_fields_zero_comp(struct psc_fields *pf, int m);
 void psc_fields_zero_range(struct psc_fields *pf, int mb, int me);
-struct psc_fields *psc_fields_get_as(struct psc_fields *flds_base, const char *type,
-				     int mb, int me);
-void psc_fields_put_as(struct psc_fields *flds, struct psc_fields *flds_base,
-		       int mb, int me);
 
 // ----------------------------------------------------------------------
 // psc_mfields class
