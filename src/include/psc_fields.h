@@ -39,12 +39,8 @@ struct psc_mfields_ops {
 		    struct psc_mfields *x, int mx);
 };
 
-typedef void (*psc_mfields_copy_to_func_t)(struct psc_mfields *,
-					   struct psc_mfields *,
-					   int, int);
-typedef void (*psc_mfields_copy_from_func_t)(struct psc_mfields *,
-					     struct psc_mfields *,
-					     int, int);
+typedef void (*psc_mfields_copy_func_t)(struct psc_mfields *, struct psc_mfields *,
+					int, int);
 
 void psc_mfields_set_domain(struct psc_mfields *flds,
 			    struct mrc_domain *domain);
