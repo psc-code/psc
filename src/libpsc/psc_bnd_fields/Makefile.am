@@ -7,8 +7,7 @@ libsubdir_la_SOURCES = \
 	psc_bnd_fields.c \
 	psc_bnd_fields_none.c \
 	psc_bnd_fields_c.c \
-	psc_bnd_fields_single.c \
-	psc_bnd_fields_auto.c
+	psc_bnd_fields_single.c
 
 if USE_FORTRAN
 libsubdir_la_SOURCES += \
