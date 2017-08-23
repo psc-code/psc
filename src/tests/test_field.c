@@ -16,7 +16,7 @@
 // will **only** handle the xy plane, so I need that to be testable.
 // --steve 
 static void
-setup_fields(mfields_base_t *flds_base)
+setup_fields(struct psc_mfields *flds_base)
 {
   psc_foreach_patch(ppsc, p) {
     struct psc_fields *pf_base = psc_mfields_get_patch(flds_base, p);

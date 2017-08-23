@@ -223,7 +223,7 @@ void psc_bnd_check_domain(struct psc_bnd *bnd);
 
 static void
 psc_output_fields_c_run(struct psc_output_fields *out,
-			mfields_base_t *flds, struct psc_mparticles *particles)
+			struct psc_mfields *flds, struct psc_mparticles *particles)
 {
   struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
   struct psc *psc = out->psc;

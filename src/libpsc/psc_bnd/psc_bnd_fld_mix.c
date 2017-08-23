@@ -94,7 +94,7 @@ get_ops(struct psc_fields *pf)
 // psc_bnd_fld_mix_add_ghosts
 
 void
-psc_bnd_fld_mix_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
+psc_bnd_fld_mix_add_ghosts(struct psc_bnd *bnd, struct psc_mfields *flds_base, int mb, int me)
 {
   for (int p = 0; p < flds_base->nr_patches; p++) {
     struct psc_fields *pf = psc_mfields_get_patch(flds_base, p);
@@ -119,7 +119,7 @@ psc_bnd_fld_mix_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int m
 // psc_bnd_fld_mix_fill_ghosts
 
 void
-psc_bnd_fld_mix_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
+psc_bnd_fld_mix_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *flds_base, int mb, int me)
 {
   for (int p = 0; p < flds_base->nr_patches; p++) {
     struct psc_fields *pf = psc_mfields_get_patch(flds_base, p);

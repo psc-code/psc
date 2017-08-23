@@ -20,7 +20,7 @@ psc_push_fields_get_bnd_fields(struct psc_push_fields *push)
 // forward to subclass
 
 static void
-psc_push_fields_push_E(struct psc_push_fields *push, mfields_base_t *flds)
+psc_push_fields_push_E(struct psc_push_fields *push, struct psc_mfields *flds)
 {
   struct psc_push_fields_ops *ops = psc_push_fields_ops(push);
   static int pr;
@@ -48,7 +48,7 @@ psc_push_fields_push_E(struct psc_push_fields *push, mfields_base_t *flds)
 }
 
 static void
-psc_push_fields_push_H(struct psc_push_fields *push, mfields_base_t *flds)
+psc_push_fields_push_H(struct psc_push_fields *push, struct psc_mfields *flds)
 {
   struct psc_push_fields_ops *ops = psc_push_fields_ops(push);
   static int pr;
@@ -81,7 +81,7 @@ psc_push_fields_push_H(struct psc_push_fields *push, mfields_base_t *flds)
 // That's the traditional way of how things have been done
 
 static void
-psc_push_fields_step_a_default(struct psc_push_fields *push, mfields_base_t *flds)
+psc_push_fields_step_a_default(struct psc_push_fields *push, struct psc_mfields *flds)
 {
   psc_push_fields_push_E(push, flds);
 
@@ -97,12 +97,12 @@ psc_push_fields_step_a_default(struct psc_push_fields *push, mfields_base_t *fld
 }
 
 static void
-psc_push_fields_step_b1_default(struct psc_push_fields *push, mfields_base_t *flds)
+psc_push_fields_step_b1_default(struct psc_push_fields *push, struct psc_mfields *flds)
 {
 }
 
 static void
-psc_push_fields_step_b2_default(struct psc_push_fields *push, mfields_base_t *flds)
+psc_push_fields_step_b2_default(struct psc_push_fields *push, struct psc_mfields *flds)
 {
   psc_push_fields_push_H(push, flds);
   psc_bnd_fields_fill_ghosts_b_H(push->bnd_fields, flds);
@@ -163,7 +163,7 @@ psc_push_fields_step_b2_opt(struct psc_push_fields *push, struct psc_mfields *mf
 // ======================================================================
 
 void
-psc_push_fields_step_a(struct psc_push_fields *push, mfields_base_t *flds)
+psc_push_fields_step_a(struct psc_push_fields *push, struct psc_mfields *flds)
 {
   if (ppsc->domain.use_pml) {
     // FIXME, pml routines sehould be split into E, H push + ghost points, too
@@ -184,7 +184,7 @@ psc_push_fields_step_a(struct psc_push_fields *push, mfields_base_t *flds)
 }
 
 void
-psc_push_fields_step_b1(struct psc_push_fields *push, mfields_base_t *flds)
+psc_push_fields_step_b1(struct psc_push_fields *push, struct psc_mfields *flds)
 {
   if (ppsc->domain.use_pml) {
   } else if (push->variant == 0) {
@@ -197,7 +197,7 @@ psc_push_fields_step_b1(struct psc_push_fields *push, mfields_base_t *flds)
 }
 
 void
-psc_push_fields_step_b2(struct psc_push_fields *push, mfields_base_t *flds)
+psc_push_fields_step_b2(struct psc_push_fields *push, struct psc_mfields *flds)
 {
   if (ppsc->domain.use_pml) {
     struct psc_push_fields_ops *ops = psc_push_fields_ops(push);

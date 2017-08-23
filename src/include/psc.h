@@ -258,7 +258,7 @@ struct psc {
   ///@}
 
   struct psc_mparticles *particles;	///< All the particles, indexed by their containing patch
-  mfields_base_t *flds;	///< The fields.
+  struct psc_mfields *flds;	///< The fields.
 
   ///The domain partitioner.
   ///
@@ -296,7 +296,7 @@ struct psc_ops {
   void (*setup_particles)(struct psc *psc, int *nr_particles_by_patch, bool count_only);
   void (*init_npt)(struct psc *psc, int kind, double x[3],
 		   struct psc_particle_npt *npt);
-  void (*setup_fields)(struct psc *psc, mfields_base_t *flds);
+  void (*setup_fields)(struct psc *psc, struct psc_mfields *flds);
   double (*init_field)(struct psc *psc, double x[3], int m);
   void (*integrate)(struct psc *psc);
   void (*step)(struct psc *psc);
@@ -425,7 +425,7 @@ void psc_setup_patches(struct psc *psc, struct mrc_domain *domain);
 void psc_output_default(struct psc *psc);
 
 void psc_dump_particles(struct psc_mparticles *particles, const char *fname);
-void psc_dump_field(mfields_base_t *flds, int m, const char *fname);
+void psc_dump_field(struct psc_mfields *flds, int m, const char *fname);
 
 struct psc *psc_read_checkpoint(MPI_Comm comm, int n);
 void psc_write_checkpoint(struct psc *psc);

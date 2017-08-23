@@ -29,13 +29,13 @@ struct particle_vec{
 
 void psc_push_particles_sse2_push_yz(struct psc_push_particles *push,
 				     struct psc_mparticles *particles_base,
-				     mfields_base_t *flds_base);
+				     struct psc_mfields *flds_base);
 void psc_push_particles_sse2_push_yz_a(struct psc_push_particles *push,
 				       struct psc_mparticles *particles_base,
-				       mfields_base_t *flds_base);
+				       struct psc_mfields *flds_base);
 void psc_push_particles_sse2_push_yz_b(struct psc_push_particles *push,
 				       struct psc_mparticles *particles_base,
-				       mfields_base_t *flds_base);
+				       struct psc_mfields *flds_base);
 void init_vec_numbers(void);
 __m128i func_mul_epu32(__m128i a, __m128i b);
 

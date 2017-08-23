@@ -6,7 +6,7 @@
 
 void
 psc_event_generator_run(struct psc_event_generator *gen,
-			struct psc_mparticles *mparticles, mfields_base_t *mflds)
+			struct psc_mparticles *mparticles, struct psc_mfields *mflds)
 {
   struct psc_event_generator_ops *ops = psc_event_generator_ops(gen);
   assert(ops->run);

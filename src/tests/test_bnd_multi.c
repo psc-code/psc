@@ -11,7 +11,7 @@
 
 #if 0
 static void
-setup_jx(mfields_base_t *flds_base)
+setup_jx(struct psc_mfields *flds_base)
 {
   psc_foreach_patch(ppsc, p) {
     struct psc_fields *pf_base = psc_mfields_get_patch(flds_base, p);
@@ -26,7 +26,7 @@ setup_jx(mfields_base_t *flds_base)
 }
 
 static void
-check_jx(mfields_base_t *flds_base)
+check_jx(struct psc_mfields *flds_base)
 {
   int bc[3], gdims[3];
   mrc_domain_get_bc(ppsc->mrc_domain, bc);
@@ -101,7 +101,7 @@ main(int argc, char **argv)
   struct psc_case *_case = psc_create_test_xz();
   psc_bnd_set_type(ppsc->bnd, "c");
   psc_case_setup(_case);
-  mfields_base_t *flds = ppsc->flds;
+  struct psc_mfields *flds = ppsc->flds;
   setup_jx(flds);
   psc_bnd_fill_ghosts(ppsc->bnd, flds, JXI, JXI + 1);
   check_jx(flds);

@@ -10,9 +10,9 @@ void __assert_equal(double x, double y, const char *xs, const char *ys, double t
 
 void psc_testing_dump(struct psc *psc, const char *basename);
 void psc_save_particles_ref(struct psc *psc, struct psc_mparticles *particles);
-void psc_save_fields_ref(struct psc *psc, mfields_base_t *flds);
-void psc_check_currents_ref(struct psc *psc, mfields_base_t *flds, double thres, int sw);
-void psc_check_fields_ref(struct psc *psc, mfields_base_t *flds, int *m_flds, double thres);
+void psc_save_fields_ref(struct psc *psc, struct psc_mfields *flds);
+void psc_check_currents_ref(struct psc *psc, struct psc_mfields *flds, double thres, int sw);
+void psc_check_fields_ref(struct psc *psc, struct psc_mfields *flds, int *m_flds, double thres);
 void psc_check_particles_ref(struct psc *psc, struct psc_mparticles *particles,
 			     double thres, const char *test_str);
 void psc_check_particles_sorted(struct psc *psc, struct psc_mparticles *particles);

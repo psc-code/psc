@@ -11,7 +11,7 @@
 
 #if 0
 static void
-setup_jx(mfields_base_t *flds_base)
+setup_jx(struct psc_mfields *flds_base)
 {
   psc_foreach_patch(ppsc, p) {
     struct psc_fields *pf_base = psc_mfields_get_patch(flds_base, p);
@@ -28,7 +28,7 @@ setup_jx(mfields_base_t *flds_base)
 }
 
 static void
-setup_jx_noghost(mfields_base_t *flds_base)
+setup_jx_noghost(struct psc_mfields *flds_base)
 {
   psc_foreach_patch(ppsc, p) {
     struct psc_fields *pf_base = psc_mfields_get_patch(flds_base, p);

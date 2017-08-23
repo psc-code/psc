@@ -11,7 +11,7 @@ struct psc_event_generator {
 struct psc_event_generator_ops {
   MRC_SUBCLASS_OPS(struct psc_event_generator);
   void (*run)(struct psc_event_generator *event_generator,
-	      struct psc_mparticles *mparticles, mfields_base_t *mflds);
+	      struct psc_mparticles *mparticles, struct psc_mfields *mflds);
 };
 
 // ======================================================================

@@ -81,7 +81,7 @@ psc_bnd_check_domain(struct psc_bnd *bnd)
 // forward to subclass
 
 void
-psc_bnd_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me)
+psc_bnd_add_ghosts(struct psc_bnd *bnd, struct psc_mfields *flds, int mb, int me)
 {
   static int pr;
   if (!pr) {
@@ -102,7 +102,7 @@ psc_bnd_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me)
 }
 
 void
-psc_bnd_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me)
+psc_bnd_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *flds, int mb, int me)
 {
   static int pr;
   if (!pr) {

@@ -145,7 +145,7 @@ psc_bnd_fields_get_pulse_z2(struct psc_bnd_fields *bnd)
 // forward to subclass
 
 void
-psc_bnd_fields_fill_ghosts_a_E(struct psc_bnd_fields *bnd, mfields_base_t *flds)
+psc_bnd_fields_fill_ghosts_a_E(struct psc_bnd_fields *bnd, struct psc_mfields *flds)
 {
   struct psc_bnd_fields_ops *ops = psc_bnd_fields_ops(bnd);
   if (ops->fill_ghosts_a_E) {
@@ -156,7 +156,7 @@ psc_bnd_fields_fill_ghosts_a_E(struct psc_bnd_fields *bnd, mfields_base_t *flds)
 }
 
 void
-psc_bnd_fields_fill_ghosts_a_H(struct psc_bnd_fields *bnd, mfields_base_t *flds)
+psc_bnd_fields_fill_ghosts_a_H(struct psc_bnd_fields *bnd, struct psc_mfields *flds)
 {
   struct psc_bnd_fields_ops *ops = psc_bnd_fields_ops(bnd);
   if (ops->fill_ghosts_a_H) {
@@ -167,7 +167,7 @@ psc_bnd_fields_fill_ghosts_a_H(struct psc_bnd_fields *bnd, mfields_base_t *flds)
 }
 
 void
-psc_bnd_fields_fill_ghosts_b_H(struct psc_bnd_fields *bnd, mfields_base_t *flds)
+psc_bnd_fields_fill_ghosts_b_H(struct psc_bnd_fields *bnd, struct psc_mfields *flds)
 {
   struct psc_bnd_fields_ops *ops = psc_bnd_fields_ops(bnd);
   if (ops->fill_ghosts_b_H) {
@@ -178,7 +178,7 @@ psc_bnd_fields_fill_ghosts_b_H(struct psc_bnd_fields *bnd, mfields_base_t *flds)
 }
 
 void
-psc_bnd_fields_fill_ghosts_b_E(struct psc_bnd_fields *bnd, mfields_base_t *flds)
+psc_bnd_fields_fill_ghosts_b_E(struct psc_bnd_fields *bnd, struct psc_mfields *flds)
 {
   struct psc_bnd_fields_ops *ops = psc_bnd_fields_ops(bnd);
   if (ops->fill_ghosts_b_E) {
@@ -189,7 +189,7 @@ psc_bnd_fields_fill_ghosts_b_E(struct psc_bnd_fields *bnd, mfields_base_t *flds)
 }
 
 void
-psc_bnd_fields_add_ghosts_J(struct psc_bnd_fields *bnd, mfields_base_t *flds)
+psc_bnd_fields_add_ghosts_J(struct psc_bnd_fields *bnd, struct psc_mfields *flds)
 {
   struct psc_bnd_fields_ops *ops = psc_bnd_fields_ops(bnd);
   if (ops->add_ghosts_J) {
@@ -252,13 +252,13 @@ _psc_bnd_fields_setup_patch(struct psc_bnd_fields *bnd_fields, int p,
 
 void
 psc_bnd_fields_setup_patch(struct psc_bnd_fields *bnd_fields, int p,
-			   mfields_base_t *flds_base, double t)
+			   struct psc_mfields *flds_base, double t)
 {
   _psc_bnd_fields_setup_patch(bnd_fields, p, psc_mfields_get_patch(flds_base, p), t);
 }
 
 void
-psc_bnd_fields_setup_fields(struct psc_bnd_fields *bnd_fields, mfields_base_t *flds_base)
+psc_bnd_fields_setup_fields(struct psc_bnd_fields *bnd_fields, struct psc_mfields *flds_base)
 {
   psc_foreach_patch(ppsc, p) {
     _psc_bnd_fields_setup_patch(bnd_fields, p, psc_mfields_get_patch(flds_base, p), 0.);

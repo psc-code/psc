@@ -215,7 +215,7 @@ psc_bnd_amr_destroy(struct psc_bnd *bnd)
 // psc_bnd_amr_fill_ghosts
 
 static void
-psc_bnd_amr_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *mflds, int mb, int me)
+psc_bnd_amr_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds, int mb, int me)
 {
   struct psc_bnd_amr *bnd_amr = psc_bnd_amr(bnd);
 
@@ -239,7 +239,7 @@ psc_bnd_amr_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *mflds, int mb, int 
 // psc_bnd_amr_add_ghosts
 
 static void
-psc_bnd_amr_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
+psc_bnd_amr_add_ghosts(struct psc_bnd *bnd, struct psc_mfields *flds_base, int mb, int me)
 {
   mprintf("add mb %d me %d\n", mb, me);
 }

@@ -100,7 +100,7 @@ psc_bnd_fld_cuda_create(struct psc_bnd *bnd)
 // psc_bnd_fld_cuda_add_ghosts
 
 void
-psc_bnd_fld_cuda_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
+psc_bnd_fld_cuda_add_ghosts(struct psc_bnd *bnd, struct psc_mfields *flds_base, int mb, int me)
 {
   int size;
   MPI_Comm_size(psc_bnd_comm(bnd), &size);
@@ -135,7 +135,7 @@ psc_bnd_fld_cuda_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int 
 // psc_bnd_fld_cuda_fill_ghosts
 
 void
-psc_bnd_fld_cuda_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
+psc_bnd_fld_cuda_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *flds_base, int mb, int me)
 {
   static int pr1, pr2, pr3, pr4, pr5;
   if (!pr1) {

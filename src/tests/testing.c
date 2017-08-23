@@ -95,7 +95,7 @@ psc_save_particles_ref(struct psc *psc, struct psc_mparticles *mprts_base)
 // save current field data as reference solution
 
 void
-psc_save_fields_ref(struct psc *psc, mfields_base_t *flds_base)
+psc_save_fields_ref(struct psc *psc, struct psc_mfields *flds_base)
 {
   int me = psc->domain.use_pml ? NR_FIELDS : HZ + 1;
 
@@ -178,7 +178,7 @@ psc_check_particles_ref(struct psc *psc, struct psc_mparticles *particles_base,
 // check field data against previously saved reference solution
 
 void
-psc_check_fields_ref(struct psc *psc, mfields_base_t *flds_base, int *m_flds, double thres)
+psc_check_fields_ref(struct psc *psc, struct psc_mfields *flds_base, int *m_flds, double thres)
 {
   psc_foreach_patch(psc, p) {
     struct psc_fields *pf_base = psc_mfields_get_patch(flds_base, p);
@@ -201,7 +201,7 @@ psc_check_fields_ref(struct psc *psc, mfields_base_t *flds_base, int *m_flds, do
 // check current current density data agains previously saved reference solution
 
 void
-psc_check_currents_ref(struct psc *psc, mfields_base_t *flds_base, double thres, int sw)
+psc_check_currents_ref(struct psc *psc, struct psc_mfields *flds_base, double thres, int sw)
 {
 #if 0
   foreach_patch(p) {

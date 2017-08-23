@@ -8,4 +8,4 @@ MRC_CLASS_DECLARE(psc_output_fields_collection, struct psc_output_fields_collect
 void psc_output_fields_collection_set_psc(struct psc_output_fields_collection *output_fields_collection,
 					  struct psc *psc);
 void psc_output_fields_collection_run(struct psc_output_fields_collection *output_fields_collection,
-				      mfields_base_t *flds, struct psc_mparticles *particles);
+				      struct psc_mfields *flds, struct psc_mparticles *particles);

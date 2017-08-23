@@ -85,7 +85,6 @@ MAKE_MFIELDS_TYPE(fortran)
 MAKE_MFIELDS_TYPE(single)
 MAKE_MFIELDS_TYPE(mix)
 MAKE_MFIELDS_TYPE(cuda)
-typedef struct psc_mfields mfields_base_t;
 
 struct psc_mfields_list_entry {
   struct psc_mfields **flds_p;

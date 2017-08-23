@@ -34,7 +34,7 @@ _psc_output_fields_read(struct psc_output_fields *out, struct mrc_io *io)
 
 void
 psc_output_fields_run(struct psc_output_fields *output_fields,
-		      mfields_base_t *flds, struct psc_mparticles *particles)
+		      struct psc_mfields *flds, struct psc_mparticles *particles)
 {
   struct psc_output_fields_ops *ops = psc_output_fields_ops(output_fields);
   assert(ops->run);

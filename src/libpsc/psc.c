@@ -945,7 +945,7 @@ psc_setup_fields_default(struct psc *psc)
 static void
 psc_setup_field_pml(struct psc *psc)
 {
-  mfields_base_t *flds = psc->flds;
+  struct psc_mfields *flds = psc->flds;
 
   psc_mfields_copy_comp(flds, DX, flds, EX);
   psc_mfields_copy_comp(flds, DY, flds, EY);

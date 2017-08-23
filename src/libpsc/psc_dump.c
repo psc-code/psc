@@ -23,7 +23,7 @@ ascii_dump_field_yz(struct psc_fields *pf, int m, FILE *file)
 }
 
 static void
-ascii_dump_field(mfields_base_t *flds_base, int m, const char *fname)
+ascii_dump_field(struct psc_mfields *flds_base, int m, const char *fname)
 {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -85,7 +85,7 @@ ascii_dump_particles(struct psc_mparticles *mprts_base, const char *fname)
 }
 
 void
-psc_dump_field(mfields_base_t *flds, int m, const char *fname)
+psc_dump_field(struct psc_mfields *flds, int m, const char *fname)
 {
   ascii_dump_field(flds, m, fname);
 }

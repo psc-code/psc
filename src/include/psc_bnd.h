@@ -9,7 +9,7 @@
 MRC_CLASS_DECLARE(psc_bnd, struct psc_bnd);
 
 void psc_bnd_set_psc(struct psc_bnd *bnd, struct psc *psc);
-void psc_bnd_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me);
-void psc_bnd_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me);
+void psc_bnd_add_ghosts(struct psc_bnd *bnd, struct psc_mfields *flds, int mb, int me);
+void psc_bnd_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *flds, int mb, int me);
 
 #endif
