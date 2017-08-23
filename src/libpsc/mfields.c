@@ -324,28 +324,6 @@ psc_mfields_put_as(struct psc_mfields *mflds, struct psc_mfields *mflds_base,
   prof_stop(pr);
 }
 
-#define MAKE_MFIELDS_GET_PUT(type)					\
-									\
-struct psc_mfields *							\
-psc_mfields_get_##type(struct psc_mfields *mflds_base, int mb, int me)	\
-{									\
-  return psc_mfields_get_as(mflds_base, #type, mb, me);			\
-}									\
-									\
-void									\
-psc_mfields_put_##type(struct psc_mfields *mflds,			\
-		       struct psc_mfields *mflds_base, int mb, int me)	\
-{									\
-  psc_mfields_put_as(mflds, mflds_base, mb, me);			\
-}									\
-
-MAKE_MFIELDS_GET_PUT(c)
-MAKE_MFIELDS_GET_PUT(single)
-MAKE_MFIELDS_GET_PUT(fortran)
-#ifdef USE_CUDA
-MAKE_MFIELDS_GET_PUT(cuda)
-#endif
-
 // ======================================================================
 
 void

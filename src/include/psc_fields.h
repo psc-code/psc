@@ -70,20 +70,11 @@ psc_mfields_get_patch(struct psc_mfields *flds, int p)
   return flds->flds[p];
 }
 
-#define MAKE_MFIELDS_TYPE(type)						\
-extern struct psc_mfields_ops psc_mfields_##type##_ops;		        \
-									\
-struct psc_mfields *						        \
-psc_mfields_get_##type(struct psc_mfields *mflds_base, int mb, int me); \
-void psc_mfields_put_##type(struct psc_mfields *mflds,			\
-			    struct psc_mfields *mflds_base,		\
-			    int mb, int me);				\
-
-MAKE_MFIELDS_TYPE(c)
-MAKE_MFIELDS_TYPE(fortran)
-MAKE_MFIELDS_TYPE(single)
-MAKE_MFIELDS_TYPE(mix)
-MAKE_MFIELDS_TYPE(cuda)
+extern struct psc_mfields_ops psc_mfields_c_ops;
+extern struct psc_mfields_ops psc_mfields_fortran_ops;
+extern struct psc_mfields_ops psc_mfields_single_ops;
+extern struct psc_mfields_ops psc_mfields_mix_ops;
+extern struct psc_mfields_ops psc_mfields_cuda_ops;
 
 struct psc_mfields_list_entry {
   struct psc_mfields **flds_p;
