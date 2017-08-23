@@ -11,11 +11,11 @@
 
 #if 0
 static void
-setup_jx(struct psc_mfields *flds_base)
+setup_jx(struct psc_mfields *mflds_base)
 {
+  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "c", 0, 0);
   psc_foreach_patch(ppsc, p) {
-    struct psc_fields *pf_base = psc_mfields_get_patch(flds_base, p);
-    struct psc_fields *pf = psc_fields_get_as(pf_base, "c", 0, 0);
+    struct psc_fields *pf = psc_mfields_get_patch(mflds, p);
     psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
       int ix, iy, iz;
       psc_local_to_global_indices(ppsc, p, jx, jy, jz, &ix, &iy, &iz);
@@ -23,16 +23,16 @@ setup_jx(struct psc_mfields *flds_base)
       f_real zz = 2.*M_PI * iz / ppsc->domain.gdims[2];
       F3(pf, JXI, jx,jy,jz) = cos(xx) * sin(zz);
     } foreach_3d_g_end;
-    psc_fields_put_as(pf, pf_base, JXI, JXI + 1);
   }
+  psc_mfields_put_as(mflds, mflds_base, JXI, JXI + 1);
 }
 
 static void
-setup_jx_noghost(struct psc_mfields *flds_base)
+setup_jx_noghost(struct psc_mfields *mflds_base)
 {
+  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "c", 0, 0);
   psc_foreach_patch(ppsc, p) {
-    struct psc_fields *pf_base = psc_mfields_get_patch(flds_base, p);
-    struct psc_fields *pf = psc_fields_get_as(pf_base, "c", 0, 0);
+    struct psc_fields *pf = psc_mfields_get_patch(mflds, p);
     psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
       int ix, iy, iz;
       psc_local_to_global_indices(ppsc, p, jx, jy, jz, &ix, &iy, &iz);
@@ -40,8 +40,8 @@ setup_jx_noghost(struct psc_mfields *flds_base)
       f_real zz = 2.*M_PI * iz / ppsc->domain.gdims[2];
       F3(pf, JXI, jx,jy,jz) = cos(xx) * sin(zz);
     } foreach_3d_end;
-    psc_fields_put_as(pf, pf_base, JXI, JXI + 1);
   }
+  psc_mfields_put_as(mflds, mflds_base, JXI, JXI + 1);
 }
 #endif
 

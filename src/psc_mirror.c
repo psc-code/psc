@@ -72,19 +72,19 @@ psc_diag_item_mirror_run(struct psc_diag_item *item, struct psc *psc, double *re
   double HZ0 = B0;
   //  double HZ0 = B0 * cos(mirror->theta_0);
 
+  struct psc_mfields *mflds = psc_mfields_get_as(psc->flds, "c", HX, HX + 3);
   psc_foreach_patch(psc, p) {
     struct psc_patch *patch = &psc->patch[p];
     double fac = patch->dx[0] * patch->dx[1] * patch->dx[2];
-    struct psc_fields *pf_base = psc_mfields_get_patch(psc->flds, p);
-    struct psc_fields *pf = psc_fields_get_as(pf_base, "c", HX, HX + 3);
+    struct psc_fields *pf = psc_mfields_get_patch(mflds, p);
     psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
       result[0] += 
 	(sqr(F3_C(pf, HX, ix,iy,iz) - HX0) +
 	 sqr(F3_C(pf, HY, ix,iy,iz) - HY0) +
 	 sqr(F3_C(pf, HZ, ix,iy,iz) - HZ0)) * fac;
     } foreach_3d_end;
-    psc_fields_put_as(pf, pf_base, 0, 0);
   }
+  psc_mfields_put_as(mflds, psc->flds, 0, 0);
 }
 
 struct psc_diag_item_ops psc_diag_item_mirror_ops = {

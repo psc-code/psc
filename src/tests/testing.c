@@ -58,8 +58,8 @@ __assert_equal(double x, double y, const char *xs, const char *ys, double thres)
   }
 }
 
-static struct psc_mparticles *particles_ref;
-static struct psc_mfields *flds_ref;
+static struct psc_mparticles *mprts_ref;
+static struct psc_mfields *mflds_ref;
 
 // ----------------------------------------------------------------------
 // psc_save_particles_ref
@@ -69,21 +69,21 @@ static struct psc_mfields *flds_ref;
 void
 psc_save_particles_ref(struct psc *psc, struct psc_mparticles *mprts_base)
 {
-  if (!particles_ref) {
+  if (!mprts_ref) {
     int n_prts_by_patch[psc->nr_patches];
     psc_mparticles_get_size_all(mprts_base, n_prts_by_patch);
 
-    particles_ref = psc_mparticles_create(MPI_COMM_WORLD);
-    psc_mparticles_set_param_int(particles_ref, "nr_patches", psc->nr_patches);
-    psc_mparticles_setup(particles_ref);
-    psc_mparticles_reserve_all(particles_ref, n_prts_by_patch);
+    mprts_ref = psc_mparticles_create(MPI_COMM_WORLD);
+    psc_mparticles_set_param_int(mprts_ref, "nr_patches", psc->nr_patches);
+    psc_mparticles_setup(mprts_ref);
+    psc_mparticles_reserve_all(mprts_ref, n_prts_by_patch);
   }
 
   struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, "c", 0);
   psc_foreach_patch(psc, p) {
     int n_prts = mparticles_get_n_prts(mprts, p);
     for (int n = 0; n < n_prts; n++) {
-      mparticles_patch_push_back(particles_ref, p, *mparticles_get_one(mprts, p, n));
+      mparticles_patch_push_back(mprts_ref, p, *mparticles_get_one(mprts, p, n));
     }
   }
   psc_mparticles_put_as(mprts, mprts_base, MP_DONT_COPY);
@@ -95,29 +95,29 @@ psc_save_particles_ref(struct psc *psc, struct psc_mparticles *mprts_base)
 // save current field data as reference solution
 
 void
-psc_save_fields_ref(struct psc *psc, struct psc_mfields *flds_base)
+psc_save_fields_ref(struct psc *psc, struct psc_mfields *mflds_base)
 {
   int me = psc->domain.use_pml ? NR_FIELDS : HZ + 1;
 
-  if (!flds_ref) {
-    flds_ref = psc_mfields_create(psc_comm(psc));
-    psc_mfields_set_domain(flds_ref, psc->mrc_domain);
-    psc_mfields_set_param_int(flds_ref, "nr_fields", NR_FIELDS);
-    psc_mfields_set_param_int3(flds_ref, "ibn", psc->ibn);
-    psc_mfields_setup(flds_ref);
+  if (!mflds_ref) {
+    mflds_ref = psc_mfields_create(psc_comm(psc));
+    psc_mfields_set_domain(mflds_ref, psc->mrc_domain);
+    psc_mfields_set_param_int(mflds_ref, "nr_fields", NR_FIELDS);
+    psc_mfields_set_param_int3(mflds_ref, "ibn", psc->ibn);
+    psc_mfields_setup(mflds_ref);
   }
 
+  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "c", 0, me);
   psc_foreach_patch(psc, p) {
-    struct psc_fields *pf_base = psc_mfields_get_patch(flds_base, p);
-    struct psc_fields *pf = psc_fields_get_as(pf_base, "c", 0, me);
-    struct psc_fields *pf_ref = psc_mfields_get_patch(flds_ref, p);
+    struct psc_fields *pf = psc_mfields_get_patch(mflds, p);
+    struct psc_fields *pf_ref = psc_mfields_get_patch(mflds_ref, p);
     for (int m = 0; m < me; m++) {
       psc_foreach_3d_g(psc, p, ix, iy, iz) {
 	F3(pf_ref, m, ix,iy,iz) = F3(pf, m, ix,iy,iz);
       } psc_foreach_3d_g_end;
     }
-    psc_fields_put_as(pf, pf_base, 0, 0);
   }
+  psc_mfields_put_as(mflds, mflds_base, 0, 0);
 } 
 
 // ----------------------------------------------------------------------
@@ -133,12 +133,12 @@ psc_check_particles_ref(struct psc *psc, struct psc_mparticles *particles_base,
     return;
   }
 
-  assert(particles_ref);
+  assert(mprts_ref);
   struct psc_mparticles *mprts = psc_mparticles_get_as(particles_base, "c", 0);
   particle_real_t xi = 0., yi = 0., zi = 0., pxi = 0., pyi = 0., pzi = 0.;
   psc_foreach_patch(psc, p) {
     particle_range_t prts = particle_range_mprts(mprts, p);
-    particle_range_t prts_ref = particle_range_mprts(particles_ref, p);
+    particle_range_t prts_ref = particle_range_mprts(mprts_ref, p);
   
     assert(particle_range_size(prts) == particle_range_size(prts_ref));
     for (particle_iter_t prt_iter = prts.begin, prt_ref_iter = prts_ref.end;
@@ -178,12 +178,12 @@ psc_check_particles_ref(struct psc *psc, struct psc_mparticles *particles_base,
 // check field data against previously saved reference solution
 
 void
-psc_check_fields_ref(struct psc *psc, struct psc_mfields *flds_base, int *m_flds, double thres)
+psc_check_fields_ref(struct psc *psc, struct psc_mfields *mflds_base, int *m_flds, double thres)
 {
-  psc_foreach_patch(psc, p) {
-    struct psc_fields *pf_base = psc_mfields_get_patch(flds_base, p);
-    struct psc_fields *pf = psc_fields_get_as(pf_base, "c", 0, 12);
-    struct psc_fields *pf_ref = psc_mfields_get_patch(flds_ref, p);
+   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "c", 0, 12);
+   psc_foreach_patch(psc, p) {
+    struct psc_fields *pf = psc_mfields_get_patch(mflds, p);
+    struct psc_fields *pf_ref = psc_mfields_get_patch(mflds_ref, p);
     for (int i = 0; m_flds[i] >= 0; i++) {
       int m = m_flds[i];
       psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
@@ -191,8 +191,8 @@ psc_check_fields_ref(struct psc *psc, struct psc_mfields *flds_base, int *m_flds
 	assert_equal(F3(pf, m, ix,iy,iz), F3(pf_ref, m, ix,iy,iz), thres);
       } psc_foreach_3d_end;
     }
-    psc_fields_put_as(pf, pf_base, 0, 0);
   }
+   psc_mfields_put_as(mflds, mflds_base, 0, 0);
 }
 
 // ----------------------------------------------------------------------
@@ -201,12 +201,12 @@ psc_check_fields_ref(struct psc *psc, struct psc_mfields *flds_base, int *m_flds
 // check current current density data agains previously saved reference solution
 
 void
-psc_check_currents_ref(struct psc *psc, struct psc_mfields *flds_base, double thres, int sw)
+psc_check_currents_ref(struct psc *psc, struct psc_mfields *mflds_base, double thres, int sw)
 {
 #if 0
+  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "c", JXI, JXI + 3);
   foreach_patch(p) {
-    struct psc_fields *pf_base = psc_mfields_get_patch(flds_base, p);
-    struct psc_fields *pf = psc_fields_get_as(pf_base, "c", JXI, JXI + 3);
+    struct psc_fields *pf = psc_mfields_get_patch(mflds, p);
     for (int m = JXI; m <= JZI; m++){
       foreach_3d_g(p, ix, iy, iz) {
 	double val = F3(pf, m, ix,iy,iz);
@@ -216,8 +216,8 @@ psc_check_currents_ref(struct psc *psc, struct psc_mfields *flds_base, double th
 	} foreach_3d_g_end;
       }
     }
-    psc_fields_put_as(pf, pf_base, 0, 0);
   }
+  psc_mfields_put_as(mflds, mflds_base, 0, 0);
 #endif
   struct psc_mfields *diff = psc_mfields_create(psc_comm(psc));
   psc_mfields_set_domain(diff, psc->mrc_domain);
@@ -225,19 +225,18 @@ psc_check_currents_ref(struct psc *psc, struct psc_mfields *flds_base, double th
   psc_mfields_setup(diff);
   // FIXME, make funcs for this (waxpy, norm)
 
+  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "c", JXI, JXI + 3);
   for (int m = JXI; m <= JZI; m++){
     fields_real_t max_delta = 0.;
     psc_foreach_patch(psc, p) {
-      struct psc_fields *pf_base = psc_mfields_get_patch(flds_base, p);
-      struct psc_fields *pf = psc_fields_get_as(pf_base, "c", JXI, JXI + 3);
-      struct psc_fields *pf_ref = psc_mfields_get_patch(flds_ref, p);
+      struct psc_fields *pf = psc_mfields_get_patch(mflds, p);
+      struct psc_fields *pf_ref = psc_mfields_get_patch(mflds_ref, p);
       struct psc_fields *pf_diff = psc_mfields_get_patch(diff, p);
       psc_foreach_3d(psc, p, ix, iy, iz, sw, sw) {
 	F3(pf_diff, 0, ix,iy,iz) =
 	  F3(pf, m, ix,iy,iz) - F3(pf_ref, m, ix,iy,iz);
 	max_delta = fmax(max_delta, fabs(F3(pf_diff, 0, ix,iy,iz)));
       } psc_foreach_3d_g_end;
-      psc_fields_put_as(pf, pf_base, 0, 0);
     }
     if (opt_checks_verbose || max_delta > thres) {
       mprintf("max_delta (%s) %g / thres %g\n", fldname[m], max_delta, thres);
@@ -247,6 +246,7 @@ psc_check_currents_ref(struct psc *psc, struct psc_mfields *flds_base, double th
       assert(0);
     }
   }
+  psc_mfields_put_as(mflds, mflds_base, 0, 0);
   psc_mfields_destroy(diff);
 }
 
@@ -264,7 +264,7 @@ psc_testing_check_densities_ref(struct psc *psc, struct psc_mparticles *particle
   psc_output_fields_item_set_type(item, "n");
   psc_output_fields_item_set_psc_bnd(item, psc->bnd);
   psc_output_fields_item_setup(item);
-  psc_output_fields_item_run(item, flds_ref, particles_ref, dens_ref);
+  psc_output_fields_item_run(item, mflds_ref, mprts_ref, dens_ref);
   psc_output_fields_item_run(item, psc->flds, particles, dens);
   psc_output_fields_item_destroy(item);
 
