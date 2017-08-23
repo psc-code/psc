@@ -39,58 +39,6 @@ psc_fields_zero_range(struct psc_fields *pf, int mb, int me)
 }
 
 // ======================================================================
-// psc_fields_set_comp
-
-void
-psc_fields_set_comp(struct psc_fields *pf, int m, double alpha)
-{
-  struct psc_fields_ops *ops = psc_fields_ops(pf);
-
-  assert(ops && ops->set_comp);
-  ops->set_comp(pf, m, alpha);
-}
-
-// ======================================================================
-// psc_fields_scale_comp
-
-void
-psc_fields_scale_comp(struct psc_fields *pf, int m, double alpha)
-{
-  struct psc_fields_ops *ops = psc_fields_ops(pf);
-
-  assert(ops && ops->scale_comp);
-  ops->scale_comp(pf, m, alpha);
-}
-
-// ======================================================================
-// psc_fields_copy_comp
-
-void
-psc_fields_copy_comp(struct psc_fields *to, int mto,
-		     struct psc_fields *from, int mfrom)
-{
-  struct psc_fields_ops *ops = psc_fields_ops(to);
-  assert(ops == psc_fields_ops(from));
-
-  assert(ops && ops->copy_comp);
-  ops->copy_comp(to, mto, from, mfrom);
-}
-
-// ======================================================================
-// psc_fields_axpy_comp
-
-void
-psc_fields_axpy_comp(struct psc_fields *yf, int ym, double alpha,
-		     struct psc_fields *xf, int xm)
-{
-  struct psc_fields_ops *ops = psc_fields_ops(yf);
-  assert(ops == psc_fields_ops(xf));
-
-  assert(ops && ops->axpy_comp);
-  ops->axpy_comp(yf, ym, alpha, xf, xm);
-}
-
-// ======================================================================
 // psc_fields_get_as
 
 struct psc_fields *

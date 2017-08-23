@@ -207,8 +207,6 @@ struct psc_fields_ops psc_fields_cuda_ops = {
 #ifdef HAVE_LIBHDF5_HL
   .write                 = psc_fields_cuda_write,
 #endif
-  .axpy_comp             = psc_fields_cuda_axpy_comp,
-  .zero_comp             = psc_fields_cuda_zero_comp,
 };
 
 // ======================================================================

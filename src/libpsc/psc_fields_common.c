@@ -206,10 +206,6 @@ struct psc_fields_ops PFX(ops) = {
   .read                  = PFX(read),
 #endif
   .zero_comp             = PFX(zero_comp),
-  .set_comp              = PFX(set_comp),
-  .scale_comp            = PFX(scale_comp),
-  .copy_comp             = PFX(copy_comp),
-  .axpy_comp             = PFX(axpy_comp),
 };
 
 // ----------------------------------------------------------------------

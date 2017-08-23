@@ -552,12 +552,9 @@ copy_stats(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 
   struct psc_collision_sub *coll = psc_collision_sub(collision);
 
-  for (int p = 0; p < mres->nr_patches; p++) {
+  for (int m = 0; m < NR_STATS; m++) {
     // FIXME, copy could be avoided (?)
-    for (int m = 0; m < NR_STATS; m++) {
-      psc_fields_copy_comp(psc_mfields_get_patch(mres, p), m,
-			   psc_mfields_get_patch(coll->mflds, p), m);
-    }
+    psc_mfields_copy_comp(mres, m, coll->mflds, m);
   }
 }
 

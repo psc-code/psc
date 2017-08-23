@@ -12,12 +12,6 @@ MRC_CLASS_DECLARE(psc_fields, struct psc_fields);
 unsigned int psc_fields_size(struct psc_fields *pf);
 void psc_fields_zero_comp(struct psc_fields *pf, int m);
 void psc_fields_zero_range(struct psc_fields *pf, int mb, int me);
-void psc_fields_set_comp(struct psc_fields *pf, int m, double alpha);
-void psc_fields_scale_comp(struct psc_fields *pf, int m, double alpha);
-void psc_fields_copy_comp(struct psc_fields *to, int mto,
-			  struct psc_fields *from, int mfrom);
-void psc_fields_axpy_comp(struct psc_fields *yf, int ym, double alpha,
-			  struct psc_fields *xf, int xm);
 struct psc_fields *psc_fields_get_as(struct psc_fields *flds_base, const char *type,
 				     int mb, int me);
 void psc_fields_put_as(struct psc_fields *flds, struct psc_fields *flds_base,

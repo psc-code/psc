@@ -17,12 +17,6 @@ struct psc_fields {
 struct psc_fields_ops {
   MRC_SUBCLASS_OPS(struct psc_fields);
   void (*zero_comp)(struct psc_fields *pf, int m);
-  void (*set_comp)(struct psc_fields *pf, int m, double alpha);
-  void (*scale_comp)(struct psc_fields *pf, int m, double alpha);
-  void (*copy_comp)(struct psc_fields *to, int mto,
-		    struct psc_fields *from, int mfrom);
-  void (*axpy_comp)(struct psc_fields *yf, int ym, double alpha,
-		    struct psc_fields *xf, int xm);
 };
 
 #define psc_fields_ops(prts) ((struct psc_fields_ops *) ((prts)->obj.ops))
