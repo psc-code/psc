@@ -10,8 +10,6 @@
 
 #include "psc_fields_inc.h"
 
-#include "psc_fields_common.c"
-
 // ======================================================================
 // convert to c
 
@@ -45,7 +43,13 @@ psc_fields_single_copy_to_c(struct psc_fields *flds_single, struct psc_fields *f
   }
 }
 
-// ======================================================================
+static struct mrc_obj_method psc_fields_single_methods[] = {
+  MRC_OBJ_METHOD("copy_to_c",   psc_fields_single_copy_to_c),
+  MRC_OBJ_METHOD("copy_from_c", psc_fields_single_copy_from_c),
+  {}
+};
+
+#include "psc_fields_common.c"
 
 // ======================================================================
 // psc_mfields: subclass "single"
@@ -57,12 +61,6 @@ struct psc_mfields_ops psc_mfields_single_ops = {
 // ======================================================================
 // psc_fields: subclass "single"
   
-static struct mrc_obj_method psc_fields_single_methods[] = {
-  MRC_OBJ_METHOD("copy_to_c",   psc_fields_single_copy_to_c),
-  MRC_OBJ_METHOD("copy_from_c", psc_fields_single_copy_from_c),
-  {}
-};
-
 struct psc_fields_ops psc_fields_single_ops = {
   .name                  = "single",
   .methods               = psc_fields_single_methods,
