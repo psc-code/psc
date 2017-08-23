@@ -33,7 +33,7 @@ struct cuda_mfields {
   int n_fields;
   int n_cells_per_patch;
   int n_cells;
-  struct cuda_mfields_bnd_patch **bnd;
+  struct cuda_mfields_bnd_patch *bnd_by_patch;
   fields_cuda_real_t **d_flds_by_patch;
 };
 
