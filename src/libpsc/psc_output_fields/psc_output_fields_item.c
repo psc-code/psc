@@ -17,11 +17,11 @@ psc_output_fields_item_set_psc_bnd(struct psc_output_fields_item *item,
 // ----------------------------------------------------------------------
 // psc_output_fields_item_create_mfields
 
-mfields_c_t *
+struct psc_mfields *
 psc_output_fields_item_create_mfields(struct psc_output_fields_item *item)
 {
   struct psc_output_fields_item_ops *ops = psc_output_fields_item_ops(item);
-  mfields_c_t *flds = psc_mfields_create(psc_output_fields_item_comm(item));
+  struct psc_mfields *flds = psc_mfields_create(psc_output_fields_item_comm(item));
   if (strcmp(psc_output_fields_item_type(item), "n_1st_cuda") == 0) { // FIXME
     psc_mfields_set_type(flds, "cuda");
   } else {
@@ -59,7 +59,7 @@ psc_output_fields_item_create_mfields(struct psc_output_fields_item *item)
 void
 psc_output_fields_item_run(struct psc_output_fields_item *item,
 			   struct psc_mfields *flds, struct psc_mparticles *particles,
-			   mfields_c_t *res)
+			   struct psc_mfields *res)
 {
   struct psc_output_fields_item_ops *ops = psc_output_fields_item_ops(item);
   assert(ops->run_all);

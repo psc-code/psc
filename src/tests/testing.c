@@ -25,10 +25,10 @@ bool opt_testing_check_densities = true;
 // ----------------------------------------------------------------------
 // FIXME, should be consolidated?
 
-static mfields_c_t *
+static struct psc_mfields *
 fld_create(struct psc *psc, int nr_fields)
 {
-  mfields_c_t *fld = psc_mfields_create(psc_comm(psc));
+  struct psc_mfields *fld = psc_mfields_create(psc_comm(psc));
   psc_mfields_set_type(fld, "c");
   psc_mfields_set_domain(fld, psc->mrc_domain);
   psc_mfields_set_param_int3(fld, "ibn", psc->ibn);
@@ -257,8 +257,8 @@ void
 psc_testing_check_densities_ref(struct psc *psc, struct psc_mparticles *particles,
 				double eps)
 {
-  mfields_c_t *dens_ref = fld_create(psc, 3);
-  mfields_c_t *dens = fld_create(psc, 3);
+  struct psc_mfields *dens_ref = fld_create(psc, 3);
+  struct psc_mfields *dens = fld_create(psc, 3);
 
   struct psc_output_fields_item *item = psc_output_fields_item_create(psc_comm(psc));
   psc_output_fields_item_set_type(item, "n");

@@ -71,7 +71,6 @@ psc_mfields_get_patch(struct psc_mfields *flds, int p)
 }
 
 #define MAKE_MFIELDS_TYPE(type)						\
-typedef struct psc_mfields mfields_##type##_t;			        \
 extern struct psc_mfields_ops psc_mfields_##type##_ops;		        \
 									\
 struct psc_mfields *						        \

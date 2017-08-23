@@ -15,7 +15,7 @@
 // copy_to_mrc_fld
 
 /* static void */
-/* copy_to_mrc_fld(struct mrc_fld *m3, mfields_c_t *flds) */
+/* copy_to_mrc_fld(struct mrc_fld *m3, struct psc_mfields *flds) */
 /* { */
 /*   psc_foreach_patch(ppsc, p) { */
 /*     struct psc_fields *pf = psc_mfields_get_patch(flds, p); */
@@ -68,7 +68,7 @@ write_fields(struct psc_output_fields_c *out, struct psc_fields_list *list,
   mrc_obj_destroy(obj);
 
   for (int m = 0; m < list->nr_flds; m++) {
-    mfields_c_t *flds = list->flds[m];
+    struct psc_mfields *flds = list->flds[m];
     /* struct psc_fields *fld = psc_mfields_get_patch(flds, 0); */
     //    assert(fld->nr_comp == 1);
 
@@ -155,7 +155,7 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
     psc_output_fields_item_set_psc_bnd(item, out_c->bnd);
     psc_output_fields_item_setup(item);
     out_c->item[pfd->nr_flds] = item;
-    mfields_c_t *flds = psc_output_fields_item_create_mfields(item);
+    struct psc_mfields *flds = psc_output_fields_item_create_mfields(item);
     psc_mfields_set_name(flds, p);
     pfd->flds[pfd->nr_flds] = flds;
     // FIXME, should be del'd eventually
@@ -171,7 +171,7 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
   for (int i = 0; i < pfd->nr_flds; i++) {
     assert(psc->nr_patches > 0);
     // FIXME, shouldn't we use item_create_mfields(), too?
-    mfields_c_t *flds = psc_mfields_create(mrc_domain_comm(psc->mrc_domain));
+    struct psc_mfields *flds = psc_mfields_create(mrc_domain_comm(psc->mrc_domain));
     psc_mfields_set_type(flds, "c");
     psc_mfields_set_name(flds, psc_mfields_name(pfd->flds[i]));
     psc_mfields_set_domain(flds, psc->mrc_domain);

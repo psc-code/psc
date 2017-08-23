@@ -109,7 +109,7 @@ psc_bnd_fld_cuda_add_ghosts(struct psc_bnd *bnd, struct psc_mfields *flds_base, 
       ppsc->domain.bnd_fld_lo[1] == BND_FLD_PERIODIC &&
       ppsc->domain.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
     // double periodic single patch
-    mfields_cuda_t *flds = psc_mfields_get_cuda(flds_base, mb, me);
+    struct psc_mfields *flds = psc_mfields_get_cuda(flds_base, mb, me);
     cuda_add_ghosts_periodic_yz(0, psc_mfields_get_patch(flds, 0), mb, me);
     psc_mfields_put_cuda(flds, flds_base, mb, me);
   } else if (size == 1 && ppsc->nr_patches == 1 && // FIXME !!!
@@ -117,11 +117,11 @@ psc_bnd_fld_cuda_add_ghosts(struct psc_bnd *bnd, struct psc_mfields *flds_base, 
       ppsc->domain.bnd_fld_lo[1] != BND_FLD_PERIODIC &&
       ppsc->domain.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
     // z-periodic single patch
-    mfields_cuda_t *flds = psc_mfields_get_cuda(flds_base, mb, me);
+    struct psc_mfields *flds = psc_mfields_get_cuda(flds_base, mb, me);
     cuda_add_ghosts_periodic_z(0, psc_mfields_get_patch(flds, 0), mb, me);
     psc_mfields_put_cuda(flds, flds_base, mb, me);
   } else {
-    mfields_cuda_t *flds_cuda = psc_mfields_get_cuda(flds_base, mb, me);
+    struct psc_mfields *flds_cuda = psc_mfields_get_cuda(flds_base, mb, me);
 
     __fields_cuda_from_device_inside(flds_cuda, mb, me);
     mrc_ddc_add_ghosts(bnd->ddc, 0, me - mb, flds_cuda);
@@ -152,7 +152,7 @@ psc_bnd_fld_cuda_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *flds_base,
       ppsc->domain.bnd_fld_lo[1] == BND_FLD_PERIODIC &&
       ppsc->domain.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
     // double periodic single patch
-    mfields_cuda_t *flds = psc_mfields_get_cuda(flds_base, mb, me);
+    struct psc_mfields *flds = psc_mfields_get_cuda(flds_base, mb, me);
     cuda_fill_ghosts_periodic_yz(0, psc_mfields_get_patch(flds, 0), mb, me);
     psc_mfields_put_cuda(flds, flds_base, mb, me);
   } else if (size == 1 && ppsc->nr_patches == 1 && // FIXME !!!
@@ -160,11 +160,11 @@ psc_bnd_fld_cuda_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *flds_base,
       ppsc->domain.bnd_fld_lo[1] != BND_FLD_PERIODIC &&
       ppsc->domain.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
     // z-periodic single patch
-    mfields_cuda_t *flds = psc_mfields_get_cuda(flds_base, mb, me);
+    struct psc_mfields *flds = psc_mfields_get_cuda(flds_base, mb, me);
     cuda_fill_ghosts_periodic_z(0, psc_mfields_get_patch(flds, 0), mb, me);
     psc_mfields_put_cuda(flds, flds_base, mb, me);
   } else {
-    mfields_cuda_t *flds_cuda = psc_mfields_get_cuda(flds_base, mb, me);
+    struct psc_mfields *flds_cuda = psc_mfields_get_cuda(flds_base, mb, me);
 
     EXTERN_C void __fields_cuda_fill_ghosts_setup(struct psc_mfields *mflds, struct mrc_ddc *ddc);
     __fields_cuda_fill_ghosts_setup(flds_cuda, bnd->ddc);

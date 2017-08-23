@@ -17,7 +17,7 @@ enum {
 
 struct psc_fields_list {
   int nr_flds;
-  mfields_c_t *flds[MAX_FIELDS_LIST];
+  struct psc_mfields *flds[MAX_FIELDS_LIST];
 };
 
 struct psc_output_fields_c {
@@ -55,7 +55,7 @@ extern struct _psc_output_format_ops psc_output_format_ops_vtk_cells;
 extern struct _psc_output_format_ops psc_output_format_ops_vtk_binary;
 
 void write_fields_combine(struct psc_fields_list *list, 
-			  void (*write_field)(void *ctx, mfields_c_t *fld),
+			  void (*write_field)(void *ctx, struct psc_mfields *fld),
 			  void *ctx);
 
 
