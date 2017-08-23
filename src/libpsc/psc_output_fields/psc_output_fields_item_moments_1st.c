@@ -120,12 +120,12 @@ do_n_1st_run(int p, struct psc_fields *pf, particle_range_t prts)
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
-
+  fields_t flds = fields_t_from_psc_fields(pf);
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
     int m = particle_kind(prt);
-    DEPOSIT_TO_GRID_1ST_CC(prt, pf, m, 1.f);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, m, 1.f);
   }
 }
 
@@ -145,6 +145,7 @@ do_v_1st_run(int p, struct psc_fields *pf, particle_range_t prts)
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
+  fields_t flds = fields_t_from_psc_fields(pf);
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
@@ -154,7 +155,7 @@ do_v_1st_run(int p, struct psc_fields *pf, particle_range_t prts)
     particle_calc_vxi(prt, vxi);
 
     for (int m = 0; m < 3; m++) {
-      DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm + m, vxi[m]);
+      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + m, vxi[m]);
     }
   }
 }
@@ -175,6 +176,7 @@ do_p_1st_run(int p, struct psc_fields *pf, particle_range_t prts)
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
+  fields_t flds = fields_t_from_psc_fields(pf);
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
@@ -182,7 +184,7 @@ do_p_1st_run(int p, struct psc_fields *pf, particle_range_t prts)
     particle_real_t *pxi = &prt->pxi;
 
     for (int m = 0; m < 3; m++) {
-      DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm + m, particle_mni(prt) * pxi[m]);
+      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + m, particle_mni(prt) * pxi[m]);
     }
   }
 }
@@ -203,6 +205,7 @@ do_vv_1st_run(int p, struct psc_fields *pf, particle_range_t prts)
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
+  fields_t flds = fields_t_from_psc_fields(pf);
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
@@ -212,7 +215,7 @@ do_vv_1st_run(int p, struct psc_fields *pf, particle_range_t prts)
     particle_calc_vxi(prt, vxi);
 
     for (int m = 0; m < 3; m++) {
-      DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm + m, vxi[m] * vxi[m]);
+      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + m, vxi[m] * vxi[m]);
     }
   }
 }
@@ -233,6 +236,7 @@ do_T_1st_run(int p, struct psc_fields *pf, particle_range_t prts)
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
+  fields_t flds = fields_t_from_psc_fields(pf);
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
@@ -251,12 +255,12 @@ do_T_1st_run(int p, struct psc_fields *pf, particle_range_t prts)
       pxi[1],
       pxi[0] * sin(ppsc->prm.theta_xz) + pxi[2] * cos(ppsc->prm.theta_xz),
     };
-    DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm + 0, particle_mni(prt) * px[0] * vx[0]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm + 1, particle_mni(prt) * px[1] * vx[1]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm + 2, particle_mni(prt) * px[2] * vx[2]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm + 3, particle_mni(prt) * px[0] * vx[1]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm + 4, particle_mni(prt) * px[0] * vx[2]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm + 5, particle_mni(prt) * px[1] * vx[2]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 0, particle_mni(prt) * px[0] * vx[0]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 1, particle_mni(prt) * px[1] * vx[1]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 2, particle_mni(prt) * px[2] * vx[2]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 3, particle_mni(prt) * px[0] * vx[1]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 4, particle_mni(prt) * px[0] * vx[2]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 5, particle_mni(prt) * px[1] * vx[2]);
   }
 }
 
@@ -276,6 +280,7 @@ do_Tvv_1st_run(int p, struct psc_fields *pf, particle_range_t prts)
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
+  fields_t flds = fields_t_from_psc_fields(pf);
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
@@ -283,12 +288,12 @@ do_Tvv_1st_run(int p, struct psc_fields *pf, particle_range_t prts)
 
     particle_real_t vxi[3];
     particle_calc_vxi(prt, vxi);
-    DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm + 0, particle_mni(prt) * vxi[0] * vxi[0]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm + 1, particle_mni(prt) * vxi[1] * vxi[1]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm + 2, particle_mni(prt) * vxi[2] * vxi[2]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm + 3, particle_mni(prt) * vxi[0] * vxi[1]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm + 4, particle_mni(prt) * vxi[0] * vxi[2]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm + 5, particle_mni(prt) * vxi[1] * vxi[2]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 0, particle_mni(prt) * vxi[0] * vxi[0]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 1, particle_mni(prt) * vxi[1] * vxi[1]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 2, particle_mni(prt) * vxi[2] * vxi[2]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 3, particle_mni(prt) * vxi[0] * vxi[1]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 4, particle_mni(prt) * vxi[0] * vxi[2]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 5, particle_mni(prt) * vxi[1] * vxi[2]);
   }
 }
 
@@ -308,6 +313,7 @@ do_nvt_a_1st_run(int p, struct psc_fields *pf, particle_range_t prts)
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
+  fields_t flds = fields_t_from_psc_fields(pf);
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
@@ -317,10 +323,10 @@ do_nvt_a_1st_run(int p, struct psc_fields *pf, particle_range_t prts)
     particle_calc_vxi(prt, vxi);
 
     // density
-    DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm, 1.f);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm, 1.f);
     // velocity
     for (int m = 0; m < 3; m++) {
-      DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm + m + 1, vxi[m]);
+      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + m + 1, vxi[m]);
     }
   }
 }
@@ -331,6 +337,7 @@ do_nvt_b_1st_run(int p, struct psc_fields *pf, particle_range_t prts)
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
+  fields_t flds = fields_t_from_psc_fields(pf);
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
@@ -384,12 +391,12 @@ do_nvt_b_1st_run(int p, struct psc_fields *pf, particle_range_t prts)
       vxi[d] -= vavg;
     }
     particle_real_t *pxi = vxi;
-    DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm + 4 + 0, pxi[0] * vxi[0]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm + 4 + 1, pxi[1] * vxi[1]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm + 4 + 2, pxi[2] * vxi[2]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm + 4 + 3, pxi[0] * vxi[1]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm + 4 + 4, pxi[0] * vxi[2]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm + 4 + 5, pxi[1] * vxi[2]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 4 + 0, pxi[0] * vxi[0]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 4 + 1, pxi[1] * vxi[1]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 4 + 2, pxi[2] * vxi[2]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 4 + 3, pxi[0] * vxi[1]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 4 + 4, pxi[0] * vxi[2]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 4 + 5, pxi[1] * vxi[2]);
   }
 }
 
@@ -399,6 +406,7 @@ do_nvp_1st_run(int p, struct psc_fields *pf, particle_range_t prts)
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
+  fields_t flds = fields_t_from_psc_fields(pf);
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
@@ -420,19 +428,19 @@ do_nvp_1st_run(int p, struct psc_fields *pf, particle_range_t prts)
     particle_calc_vxi(prt, vxi);
     particle_real_t *pxi = vxi;
     // density
-    DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm, 1.f);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm, 1.f);
     // velocity
     for (int m = 0; m < 3; m++) {
-      DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm + m + 1, vxi[m]);
+      DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + m + 1, vxi[m]);
     }
     // pi * vj
     // FIXME, this is really vxi * vxi, etc
-    DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm + 4 + 0, pxi[0] * vxi[0]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm + 4 + 1, pxi[1] * vxi[1]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm + 4 + 2, pxi[2] * vxi[2]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm + 4 + 3, pxi[0] * vxi[1]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm + 4 + 4, pxi[1] * vxi[2]);
-    DEPOSIT_TO_GRID_1ST_CC(prt, pf, mm + 4 + 5, pxi[2] * vxi[0]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 4 + 0, pxi[0] * vxi[0]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 4 + 1, pxi[1] * vxi[1]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 4 + 2, pxi[2] * vxi[2]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 4 + 3, pxi[0] * vxi[1]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 4 + 4, pxi[1] * vxi[2]);
+    DEPOSIT_TO_GRID_1ST_CC(prt, flds, mm + 4 + 5, pxi[2] * vxi[0]);
   }
 }
 
@@ -454,12 +462,13 @@ nvt_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
 
   for (int p = 0; p < mres->nr_patches; p++) {
     struct psc_fields *res = psc_mfields_get_patch(mres, p);
+    fields_t f_res = fields_t_from_psc_fields(res);
 
     // fix up zero density cells
     for (int m = 0; m < ppsc->nr_kinds; m++) {
       psc_foreach_3d(ppsc, res->p, ix, iy, iz, 1, 1) {
-	if (F3(res, 10*m, ix,iy,iz) == 0.0) {
-	  F3(res, 10*m, ix,iy,iz) = 0.00001;
+	if (_F3(f_res, 10*m, ix,iy,iz) == 0.0) {
+	  _F3(f_res, 10*m, ix,iy,iz) = 0.00001;
 	} psc_foreach_3d_end;
       }
     }    
@@ -468,7 +477,7 @@ nvt_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
     for (int m = 0; m < ppsc->nr_kinds; m++) {
       for (int mm = 0; mm < 3; mm++) {
 	psc_foreach_3d(ppsc, res->p, ix, iy, iz, 1, 1) {
-	  F3(res, 10*m + mm + 1, ix,iy,iz) /= F3(res, 10*m, ix,iy,iz);
+	  _F3(f_res, 10*m + mm + 1, ix,iy,iz) /= _F3(f_res, 10*m, ix,iy,iz);
 	} psc_foreach_3d_end;
       }
     }
@@ -506,12 +515,13 @@ nvp_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
 
   for (int p = 0; p < mres->nr_patches; p++) {
     struct psc_fields *res = psc_mfields_get_patch(mres, p);
+    fields_t f_res = fields_t_from_psc_fields(res);
 
     // fix up zero density cells
     for (int m = 0; m < ppsc->nr_kinds; m++) {
       foreach_3d(ppsc, res->p, ix, iy, iz, 1, 1) {
-	if (F3(res, 10*m, ix,iy,iz) == 0.0) {
-	  F3(res, 10*m, ix,iy,iz) = 0.00001;
+	if (_F3(f_res, 10*m, ix,iy,iz) == 0.0) {
+	  _F3(f_res, 10*m, ix,iy,iz) = 0.00001;
 	} foreach_3d_end;
       }
     }    
@@ -520,7 +530,7 @@ nvp_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
     for (int m = 0; m < ppsc->nr_kinds; m++) {
       for (int mm = 0; mm < 3; mm++) {
 	foreach_3d(ppsc, res->p, ix, iy, iz, 1, 1) {
-	  F3(res, 10*m + mm + 1, ix,iy,iz) /= F3(res, 10*m, ix,iy,iz);
+	  _F3(f_res, 10*m + mm + 1, ix,iy,iz) /= _F3(f_res, 10*m, ix,iy,iz);
 	} foreach_3d_end;
       }
     }
@@ -530,9 +540,9 @@ nvp_1st_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
       for (int mm = 0; mm < 6; mm++) {
 	int mx = mm2mx[mm], my = mm2my[mm];
 	foreach_3d(ppsc, res->p, ix, iy, iz, 1, 1) {
-	  F3(res, 10*m + 4 + mm, ix,iy,iz) =
-	    F3(res, 10*m + 4 + mm, ix,iy,iz) / F3(res, 10*m, ix,iy,iz) - 
-	    F3(res, 10*m + 1 + mx, ix,iy,iz) * F3(res, 10*m + 1 + my, ix,iy,iz);
+	  _F3(f_res, 10*m + 4 + mm, ix,iy,iz) =
+	    _F3(f_res, 10*m + 4 + mm, ix,iy,iz) / _F3(f_res, 10*m, ix,iy,iz) - 
+	    _F3(f_res, 10*m + 1 + mx, ix,iy,iz) * _F3(f_res, 10*m + 1 + my, ix,iy,iz);
 	} foreach_3d_end;
       }
     }

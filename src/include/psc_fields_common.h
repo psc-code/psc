@@ -7,18 +7,26 @@
 #if FTYPE == FTYPE_SINGLE
 
 #define fields_FTYPE_real_t fields_single_real_t
+#define fields_FTYPE_t fields_single_t
+#define fields_FTYPE_t_from_psc_fields fields_single_t_from_psc_fields
 
 #elif FTYPE == FTYPE_C
 
 #define fields_FTYPE_real_t fields_c_real_t
+#define fields_FTYPE_t fields_c_t
+#define fields_FTYPE_t_from_psc_fields fields_c_t_from_psc_fields
 
 #elif FTYPE == FTYPE_FORTRAN
 
 #define fields_FTYPE_real_t fields_fortran_real_t
+#define fields_FTYPE_t fields_fortran_t
+#define fields_FTYPE_t_from_psc_fields fields_fortran_t_from_psc_fields
 
 #elif FTYPE == FTYPE_CUDA
 
 #define fields_FTYPE_real_t fields_cuda_real_t
+#define fields_FTYPE_t fields_cuda_t
+#define fields_FTYPE_t_from_psc_fields fields_cuda_t_from_psc_fields
 
 #endif
 
@@ -71,6 +79,12 @@ typedef double fields_FTYPE_real_t;
       * (pf)->im[1] + ((jy)-(pf)->ib[1]))				\
      * (pf)->im[0] + ((jx)-(pf)->ib[0]))))
 
+#define _F3_OFF_S(flds, m, i,j,k)					\
+  (((((((m) - (flds).first_comp)					\
+       * (flds).im[2] + ((k)-(flds).ib[2]))				\
+      * (flds).im[1] + ((j)-(flds).ib[1]))				\
+     * (flds).im[0] + ((i)-(flds).ib[0]))))
+
 #elif FTYPE == FTYPE_C
 
 #define F3_OFF_C(pf, fldnr, jx,jy,jz)					\
@@ -78,6 +92,12 @@ typedef double fields_FTYPE_real_t;
        * (pf)->im[2] + ((jz)-(pf)->ib[2]))				\
       * (pf)->im[1] + ((jy)-(pf)->ib[1]))				\
      * (pf)->im[0] + ((jx)-(pf)->ib[0]))))
+
+#define _F3_OFF_C(flds, m, i,j,k)					\
+  (((((((m) - (flds).first_comp)					\
+       * (flds).im[2] + ((k)-(flds).ib[2]))				\
+      * (flds).im[1] + ((j)-(flds).ib[1]))				\
+     * (flds).im[0] + ((i)-(flds).ib[0]))))
 
 #elif FTYPE == FTYPE_FORTRAN
 
@@ -95,10 +115,16 @@ typedef double fields_FTYPE_real_t;
 #define F3_S(pf, fldnr, jx,jy,jz)		\
   (((fields_single_real_t *) (pf)->data)[F3_OFF_S(pf, fldnr, jx,jy,jz)])
 
+#define _F3_S(flds, m, i,j,k)			\
+  ((flds).data[_F3_OFF_S(flds, m, i,j,k)])
+
 #elif FTYPE == FTYPE_C
 
 #define F3_C(pf, fldnr, jx,jy,jz)		\
   (((fields_c_real_t *) (pf)->data)[F3_OFF_C(pf, fldnr, jx,jy,jz)])
+
+#define _F3_C(flds, m, i,j,k)			\
+  ((flds).data[_F3_OFF_C(flds, m, i,j,k)])
 
 #elif FTYPE == FTYPE_FORTRAN
 
@@ -146,9 +172,40 @@ typedef double fields_FTYPE_real_t;
 
 #endif // BOUNDS_CHECK ------------------------------
 
+// ======================================================================
+// fields_FTYPE_t
+
+typedef struct {
+  fields_FTYPE_real_t *data;
+  int ib[3], im[3]; //> lower bounds and length per direction
+  int nr_comp; //> nr of components
+  int first_comp; // first component
+} fields_FTYPE_t;
+
+// ----------------------------------------------------------------------
+// fields_t_from_psc_fields
+
+static inline fields_FTYPE_t
+fields_FTYPE_t_from_psc_fields(struct psc_fields *pf)
+{
+  fields_FTYPE_t flds;
+
+  flds.data = pf->data;
+  for (int d = 0; d < 3; d++) {
+    flds.ib[d] = pf->ib[d];
+    flds.im[d] = pf->im[d];
+  }
+  flds.nr_comp = pf->nr_comp;
+  flds.first_comp = pf->first_comp;
+
+  return flds;
+}
+
 // ----------------------------------------------------------------------
 
 #undef fields_FTYPE_real_t
+#undef fields_FTYPE_t
+#undef fields_FTYPE_t_from_psc_fields
 
 
 
