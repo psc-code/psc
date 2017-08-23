@@ -9,8 +9,6 @@ typedef fields_single_real_t fields_real_t;
 
 #define F3(pf, fldnr, jx,jy,jz) F3_S(pf, fldnr, jx,jy,jz)
 
-#define psc_mfields_get_cf            psc_mfields_get_single
-#define psc_mfields_put_cf  	      psc_mfields_put_single
 #define fields_t_set_nan              float_set_nan
 #define FIELDS_TYPE                   "single"
 
