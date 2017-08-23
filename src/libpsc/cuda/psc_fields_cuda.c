@@ -203,7 +203,6 @@ static struct mrc_obj_method psc_fields_cuda_methods[] = {
 
 struct psc_fields_ops psc_fields_cuda_ops = {
   .name                  = "cuda",
-  .size                  = sizeof(struct psc_fields_cuda),
   .methods               = psc_fields_cuda_methods,
 #ifdef HAVE_LIBHDF5_HL
   .write                 = psc_fields_cuda_write,
@@ -231,8 +230,7 @@ psc_mfields_cuda_setup(struct psc_mfields *mflds)
 
   cmflds->bnd = calloc(mflds->nr_patches, sizeof(*cmflds->bnd));
   for (int p = 0; p < mflds->nr_patches; p++) {
-    struct psc_fields_cuda *flds_cuda = psc_fields_cuda(psc_mfields_get_patch(mflds, p));
-    cmflds->bnd[p] = &flds_cuda->_bnd;
+    cmflds->bnd[p] = calloc(1, sizeof(*cmflds->bnd[p]));
   }
 
   __psc_mfields_cuda_setup(mflds);
@@ -249,6 +247,9 @@ psc_mfields_cuda_destroy(struct psc_mfields *mflds)
 
   __psc_mfields_cuda_destroy(mflds);
 
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    free(cmflds->bnd[p]);
+  }
   free(cmflds->bnd);
   cuda_mfields_destroy(cmflds);
   mflds_cuda->cmflds = NULL;

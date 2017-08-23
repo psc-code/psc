@@ -16,12 +16,6 @@ struct psc_fields_cuda_bnd {
   fields_cuda_real_t *arr;
 };
 
-struct psc_fields_cuda {
-  struct psc_fields_cuda_bnd _bnd;
-};
-
-#define psc_fields_cuda(pf) mrc_to_subobj(pf, struct psc_fields_cuda)
-
 // ----------------------------------------------------------------------
 
 struct psc_mfields_cuda {
