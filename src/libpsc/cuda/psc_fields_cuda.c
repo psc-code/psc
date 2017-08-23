@@ -104,39 +104,47 @@ psc_fields_cuda_write(struct psc_fields *flds, struct mrc_io *io)
 // convert from/to "c"
 
 static void
-psc_fields_cuda_copy_from_c(struct psc_fields *flds_cuda, struct psc_fields *flds_c,
+psc_mfields_cuda_copy_from_c(struct psc_mfields *mflds_cuda, struct psc_mfields *mflds_c,
 			    int mb, int me)
 {
-  float *h_flds = malloc(flds_cuda->nr_comp * psc_fields_size(flds_cuda) * sizeof(*h_flds));
+  float *h_flds = malloc(mflds_cuda->nr_fields * psc_fields_size(psc_mfields_get_patch(mflds_cuda, 0)) * sizeof(*h_flds));
 
-  for (int m = mb; m < me; m++) {
-    for (int jz = flds_cuda->ib[2]; jz < flds_cuda->ib[2] + flds_cuda->im[2]; jz++) {
-      for (int jy = flds_cuda->ib[1]; jy < flds_cuda->ib[1] + flds_cuda->im[1]; jy++) {
-	for (int jx = flds_cuda->ib[0]; jx < flds_cuda->ib[0] + flds_cuda->im[0]; jx++) {
-	  F3_CUDA(flds_cuda, m, jx,jy,jz) = F3_C(flds_c, m, jx,jy,jz);
+  for (int p = 0; p < mflds_cuda->nr_patches; p++) {
+    struct psc_fields *flds_cuda = psc_mfields_get_patch(mflds_cuda, p);
+    struct psc_fields *flds_c = psc_mfields_get_patch(mflds_c, p);
+    for (int m = mb; m < me; m++) {
+      for (int jz = flds_cuda->ib[2]; jz < flds_cuda->ib[2] + flds_cuda->im[2]; jz++) {
+	for (int jy = flds_cuda->ib[1]; jy < flds_cuda->ib[1] + flds_cuda->im[1]; jy++) {
+	  for (int jx = flds_cuda->ib[0]; jx < flds_cuda->ib[0] + flds_cuda->im[0]; jx++) {
+	    F3_CUDA(flds_cuda, m, jx,jy,jz) = F3_C(flds_c, m, jx,jy,jz);
+	  }
 	}
       }
     }
+
+    __fields_cuda_to_device(mflds_cuda, p, h_flds, mb, me);
   }
-
-  __fields_cuda_to_device(flds_cuda->mflds, flds_cuda->p, h_flds, mb, me);
-
+  
   free(h_flds);
 }
 
 static void
-psc_fields_cuda_copy_to_c(struct psc_fields *flds_cuda, struct psc_fields *flds_c,
+psc_mfields_cuda_copy_to_c(struct psc_mfields *mflds_cuda, struct psc_mfields *mflds_c,
 			  int mb, int me)
 {
-  float *h_flds = malloc(flds_cuda->nr_comp * psc_fields_size(flds_cuda) * sizeof(*h_flds));
+  float *h_flds = malloc(mflds_cuda->nr_fields * psc_fields_size(psc_mfields_get_patch(mflds_cuda, 0)) * sizeof(*h_flds));
 
-  __fields_cuda_from_device(flds_cuda->mflds, flds_cuda->p, h_flds, mb, me);
+  for (int p = 0; p < mflds_cuda->nr_patches; p++) {
+    struct psc_fields *flds_cuda = psc_mfields_get_patch(mflds_cuda, p);
+    struct psc_fields *flds_c = psc_mfields_get_patch(mflds_c, p);
+    __fields_cuda_from_device(mflds_cuda, p, h_flds, mb, me);
   
-  for (int m = mb; m < me; m++) {
-    for (int jz = flds_cuda->ib[2]; jz < flds_cuda->ib[2] + flds_cuda->im[2]; jz++) {
-      for (int jy = flds_cuda->ib[1]; jy < flds_cuda->ib[1] + flds_cuda->im[1]; jy++) {
-	for (int jx = flds_cuda->ib[0]; jx < flds_cuda->ib[0] + flds_cuda->im[0]; jx++) {
-	  F3_C(flds_c, m, jx,jy,jz) = F3_CUDA(flds_cuda, m, jx,jy,jz);
+    for (int m = mb; m < me; m++) {
+      for (int jz = flds_cuda->ib[2]; jz < flds_cuda->ib[2] + flds_cuda->im[2]; jz++) {
+	for (int jy = flds_cuda->ib[1]; jy < flds_cuda->ib[1] + flds_cuda->im[1]; jy++) {
+	  for (int jx = flds_cuda->ib[0]; jx < flds_cuda->ib[0] + flds_cuda->im[0]; jx++) {
+	    F3_C(flds_c, m, jx,jy,jz) = F3_CUDA(flds_cuda, m, jx,jy,jz);
+	  }
 	}
       }
     }
@@ -149,39 +157,48 @@ psc_fields_cuda_copy_to_c(struct psc_fields *flds_cuda, struct psc_fields *flds_
 // convert from/to "single"
 
 static void
-psc_fields_cuda_copy_from_single(struct psc_fields *flds_cuda, struct psc_fields *flds_single,
-				 int mb, int me)
+psc_mfields_cuda_copy_from_single(struct psc_mfields *mflds_cuda, struct psc_mfields *mflds_single,
+				  int mb, int me)
 {
-  float *h_flds = malloc(flds_cuda->nr_comp * psc_fields_size(flds_cuda) * sizeof(*h_flds));
+  float *h_flds = malloc(mflds_cuda->nr_fields * psc_fields_size(psc_mfields_get_patch(mflds_cuda, 0)) * sizeof(*h_flds));
 
-  for (int m = mb; m < me; m++) {
-    for (int jz = flds_cuda->ib[2]; jz < flds_cuda->ib[2] + flds_cuda->im[2]; jz++) {
-      for (int jy = flds_cuda->ib[1]; jy < flds_cuda->ib[1] + flds_cuda->im[1]; jy++) {
-	for (int jx = flds_cuda->ib[0]; jx < flds_cuda->ib[0] + flds_cuda->im[0]; jx++) {
-	  F3_CUDA(flds_cuda, m, jx,jy,jz) = F3_S(flds_single, m, jx,jy,jz);
+  for (int p = 0; p < mflds_cuda->nr_patches; p++) {
+    struct psc_fields *flds_cuda = psc_mfields_get_patch(mflds_cuda, p);
+    struct psc_fields *flds_single = psc_mfields_get_patch(mflds_single, p);
+
+    for (int m = mb; m < me; m++) {
+      for (int jz = flds_cuda->ib[2]; jz < flds_cuda->ib[2] + flds_cuda->im[2]; jz++) {
+	for (int jy = flds_cuda->ib[1]; jy < flds_cuda->ib[1] + flds_cuda->im[1]; jy++) {
+	  for (int jx = flds_cuda->ib[0]; jx < flds_cuda->ib[0] + flds_cuda->im[0]; jx++) {
+	    F3_CUDA(flds_cuda, m, jx,jy,jz) = F3_S(flds_single, m, jx,jy,jz);
+	  }
 	}
       }
     }
+
+    __fields_cuda_to_device(flds_cuda->mflds, flds_cuda->p, h_flds, mb, me);
   }
-
-  __fields_cuda_to_device(flds_cuda->mflds, flds_cuda->p, h_flds, mb, me);
-
+  
   free(h_flds);
 }
 
 static void
-psc_fields_cuda_copy_to_single(struct psc_fields *flds_cuda, struct psc_fields *flds_single,
-			       int mb, int me)
+psc_mfields_cuda_copy_to_single(struct psc_mfields *mflds_cuda, struct psc_mfields *mflds_single,
+				int mb, int me)
 {
-  float *h_flds = malloc(flds_cuda->nr_comp * psc_fields_size(flds_cuda) * sizeof(*h_flds));
+  float *h_flds = malloc(mflds_cuda->nr_fields * psc_fields_size(psc_mfields_get_patch(mflds_cuda, 0)) * sizeof(*h_flds));
 
-  __fields_cuda_from_device(flds_cuda->mflds, flds_cuda->p, h_flds, mb, me);
+  for (int p = 0; p < mflds_cuda->nr_patches; p++) {
+    struct psc_fields *flds_cuda = psc_mfields_get_patch(mflds_cuda, p);
+    struct psc_fields *flds_single = psc_mfields_get_patch(mflds_single, p);
+    __fields_cuda_from_device(flds_cuda->mflds, flds_cuda->p, h_flds, mb, me);
   
-  for (int m = mb; m < me; m++) {
-    for (int jz = flds_cuda->ib[2]; jz < flds_cuda->ib[2] + flds_cuda->im[2]; jz++) {
-      for (int jy = flds_cuda->ib[1]; jy < flds_cuda->ib[1] + flds_cuda->im[1]; jy++) {
-	for (int jx = flds_cuda->ib[0]; jx < flds_cuda->ib[0] + flds_cuda->im[0]; jx++) {
-	  F3_S(flds_single, m, jx,jy,jz) = F3_CUDA(flds_cuda, m, jx,jy,jz);
+    for (int m = mb; m < me; m++) {
+      for (int jz = flds_cuda->ib[2]; jz < flds_cuda->ib[2] + flds_cuda->im[2]; jz++) {
+	for (int jy = flds_cuda->ib[1]; jy < flds_cuda->ib[1] + flds_cuda->im[1]; jy++) {
+	  for (int jx = flds_cuda->ib[0]; jx < flds_cuda->ib[0] + flds_cuda->im[0]; jx++) {
+	    F3_S(flds_single, m, jx,jy,jz) = F3_CUDA(flds_cuda, m, jx,jy,jz);
+	  }
 	}
       }
     }
@@ -194,10 +211,10 @@ psc_fields_cuda_copy_to_single(struct psc_fields *flds_cuda, struct psc_fields *
 // psc_fields: subclass "cuda"
   
 static struct mrc_obj_method psc_fields_cuda_methods[] = {
-  MRC_OBJ_METHOD("copy_to_c"       , psc_fields_cuda_copy_to_c),
-  MRC_OBJ_METHOD("copy_from_c"     , psc_fields_cuda_copy_from_c),
-  MRC_OBJ_METHOD("copy_to_single"  , psc_fields_cuda_copy_to_single),
-  MRC_OBJ_METHOD("copy_from_single", psc_fields_cuda_copy_from_single),
+  MRC_OBJ_METHOD("copy_to_c"       , psc_mfields_cuda_copy_to_c),
+  MRC_OBJ_METHOD("copy_from_c"     , psc_mfields_cuda_copy_from_c),
+  MRC_OBJ_METHOD("copy_to_single"  , psc_mfields_cuda_copy_to_single),
+  MRC_OBJ_METHOD("copy_from_single", psc_mfields_cuda_copy_from_single),
   {}
 };
 
