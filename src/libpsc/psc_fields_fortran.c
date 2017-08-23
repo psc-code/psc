@@ -125,5 +125,6 @@ struct psc_fields_ops psc_fields_fortran_ops = {
   .setup                 = psc_fields_fortran_setup,
   .destroy               = psc_fields_fortran_destroy,
   .zero_comp             = psc_fields_fortran_zero_comp,
+  .set_comp              = psc_fields_fortran_set_comp,
 };
 
