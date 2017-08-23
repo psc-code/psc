@@ -270,7 +270,6 @@ psc_bnd_fields_init()
 #endif
 #ifdef USE_CUDA
   mrc_class_register_subclass(&mrc_class_psc_bnd_fields, &psc_bnd_fields_cuda_ops);
-  mrc_class_register_subclass(&mrc_class_psc_bnd_fields, &psc_bnd_fields_mix_ops);
 #endif
 }
 
