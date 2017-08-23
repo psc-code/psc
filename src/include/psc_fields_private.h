@@ -21,13 +21,6 @@ struct psc_fields_ops {
 
 #define psc_fields_ops(prts) ((struct psc_fields_ops *) ((prts)->obj.ops))
 
-typedef void (*psc_fields_copy_to_func_t)(struct psc_fields *,
-					  struct psc_fields *,
-					  int, int);
-typedef void (*psc_fields_copy_from_func_t)(struct psc_fields *,
-					    struct psc_fields *,
-					    int, int);
-
 // ======================================================================
 
 extern struct psc_fields_ops psc_fields_c_ops;

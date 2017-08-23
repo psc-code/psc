@@ -254,29 +254,33 @@ psc_mfields_get_as(struct psc_mfields *mflds_base, const char *type,
   psc_mfields_set_param_int(mflds, "first_comp", mflds_base->first_comp);
   psc_mfields_setup(mflds);
 
-  for (int p = 0; p < mflds_base->nr_patches; p++) {
-    struct psc_fields *flds_base = psc_mfields_get_patch(mflds_base, p);
-    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-    char s[strlen(type) + strlen(type_base) + 20]; sprintf(s, "copy_to_%s", type);
-    psc_fields_copy_to_func_t copy_to = (psc_fields_copy_to_func_t)
-      psc_fields_get_method(flds_base, s);
-    if (copy_to) {
+  char s[strlen(type) + strlen(type_base) + 20]; sprintf(s, "copy_to_%s", type);
+  psc_mfields_copy_to_func_t copy_to = (psc_mfields_copy_to_func_t)
+    psc_fields_get_method(psc_mfields_get_patch(mflds_base, 0), s);
+  if (copy_to) {
+    for (int p = 0; p < mflds_base->nr_patches; p++) {
+      struct psc_fields *flds_base = psc_mfields_get_patch(mflds_base, p);
+      struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
       copy_to(flds_base, flds, mb, me);
-    } else {
-      sprintf(s, "copy_from_%s", type_base);
-      psc_fields_copy_to_func_t copy_from = (psc_fields_copy_from_func_t)
-	psc_fields_get_method(flds, s);
-      if (copy_from) {
+    }
+  } else {
+    sprintf(s, "copy_from_%s", type_base);
+    psc_mfields_copy_to_func_t copy_from = (psc_mfields_copy_from_func_t)
+      psc_fields_get_method(psc_mfields_get_patch(mflds, 0), s);
+    if (copy_from) {
+      for (int p = 0; p < mflds_base->nr_patches; p++) {
+	struct psc_fields *flds_base = psc_mfields_get_patch(mflds_base, p);
+	struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
 	copy_from(flds, flds_base, mb, me);
-      } else {
-	fprintf(stderr, "ERROR: no 'copy_to_%s' in psc_fields '%s' and "
-		"no 'copy_from_%s' in '%s'!\n",
-		type, psc_fields_type(flds_base), type_base, psc_fields_type(flds));
-	assert(0);
       }
+    } else {
+      fprintf(stderr, "ERROR: no 'copy_to_%s' in psc_fields '%s' and "
+	      "no 'copy_from_%s' in '%s'!\n",
+	      type, psc_mfields_type(mflds_base), type_base, psc_mfields_type(mflds));
+      assert(0);
     }
   }
-
+  
   prof_stop(pr);
   return mflds;
 }
@@ -297,26 +301,30 @@ psc_mfields_put_as(struct psc_mfields *mflds, struct psc_mfields *mflds_base,
   }
   prof_start(pr);
 
-  for (int p = 0; p < mflds_base->nr_patches; p++) {
-    struct psc_fields *flds_base = psc_mfields_get_patch(mflds_base, p);
-    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-    char s[strlen(type) + 12]; sprintf(s, "copy_from_%s", type);
-    psc_fields_copy_from_func_t copy_from = (psc_fields_copy_from_func_t)
-      psc_fields_get_method(flds_base, s);
-    if (copy_from) {
+  char s[strlen(type) + 12]; sprintf(s, "copy_from_%s", type);
+  psc_mfields_copy_from_func_t copy_from = (psc_mfields_copy_from_func_t)
+    psc_fields_get_method(psc_mfields_get_patch(mflds_base, 0), s);
+  if (copy_from) {
+    for (int p = 0; p < mflds_base->nr_patches; p++) {
+      struct psc_fields *flds_base = psc_mfields_get_patch(mflds_base, p);
+      struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
       copy_from(flds_base, flds, mb, me);
-    } else {
-      sprintf(s, "copy_to_%s", type_base);
-      psc_fields_copy_from_func_t copy_to = (psc_fields_copy_from_func_t)
-	psc_fields_get_method(flds, s);
-      if (copy_to) {
+    }
+  } else {
+    sprintf(s, "copy_to_%s", type_base);
+    psc_mfields_copy_from_func_t copy_to = (psc_mfields_copy_from_func_t)
+      psc_fields_get_method(psc_mfields_get_patch(mflds, 0), s);
+    if (copy_to) {
+      for (int p = 0; p < mflds_base->nr_patches; p++) {
+	struct psc_fields *flds_base = psc_mfields_get_patch(mflds_base, p);
+	struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
 	copy_to(flds, flds_base, mb, me);
-      } else {
-	fprintf(stderr, "ERROR: no 'copy_from_%s' in psc_fields '%s' and "
-		"no 'copy_to_%s' in '%s'!\n",
-		type, psc_fields_type(flds_base), type_base, psc_fields_type(flds));
-	assert(0);
       }
+    } else {
+      fprintf(stderr, "ERROR: no 'copy_from_%s' in psc_fields '%s' and "
+	      "no 'copy_to_%s' in '%s'!\n",
+	      type, psc_mfields_type(mflds_base), type_base, psc_mfields_type(mflds));
+      assert(0);
     }
   }
   psc_mfields_destroy(mflds);
