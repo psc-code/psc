@@ -11,32 +11,6 @@
 
 #include "psc_fields_common.c"
 
-static void
-psc_fields_c_copy_comp(struct psc_fields *pto, int m_to, struct psc_fields *pfrom, int m_from)
-{
-  for (int jz = pto->ib[2]; jz < pto->ib[2] + pto->im[2]; jz++) {
-    for (int jy = pto->ib[1]; jy < pto->ib[1] + pto->im[1]; jy++) {
-      for (int jx = pto->ib[0]; jx < pto->ib[0] + pto->im[0]; jx++) {
-	F3_C(pto, m_to, jx, jy, jz) = F3_C(pfrom, m_from, jx, jy, jz);
-      }
-    }
-  }
-}
-
-static void
-psc_fields_c_axpy_comp(struct psc_fields *y, int ym, double _a, struct psc_fields *x, int xm)
-{
-  fields_c_real_t a = _a;
-
-  for (int jz = y->ib[2]; jz < y->ib[2] + y->im[2]; jz++) {
-    for (int jy = y->ib[1]; jy < y->ib[1] + y->im[1]; jy++) {
-      for (int jx = y->ib[0]; jx < y->ib[0] + y->im[0]; jx++) {
-	F3_C(y, ym, jx, jy, jz) += a * F3_C(x, xm, jx, jy, jz);
-      }
-    }
-  }
-}
-
 // ======================================================================
 
 #ifdef HAVE_LIBHDF5_HL

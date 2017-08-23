@@ -127,5 +127,7 @@ struct psc_fields_ops psc_fields_fortran_ops = {
   .zero_comp             = psc_fields_fortran_zero_comp,
   .set_comp              = psc_fields_fortran_set_comp,
   .scale_comp            = psc_fields_fortran_scale_comp,
+  .copy_comp             = psc_fields_fortran_copy_comp,
+  .axpy_comp             = psc_fields_fortran_axpy_comp,
 };
 
