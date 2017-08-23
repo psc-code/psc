@@ -31,17 +31,10 @@ psc_push_fields_push_E(struct psc_push_fields *push, struct psc_mfields *flds)
   psc_stats_start(st_time_field);
   prof_start(pr);
   prof_restart(pr_time_step_no_comm);
-  if (ops->push_mflds_E) {
-    ops->push_mflds_E(push, flds);
-  } else {
-    assert(ops->push_E);
-#pragma omp parallel for
-    for (int p = 0; p < flds->nr_patches; p++) {
-      psc_balance_comp_time_by_patch[p] -= MPI_Wtime();
-      ops->push_E(push, psc_mfields_get_patch(flds, p));
-      psc_balance_comp_time_by_patch[p] += MPI_Wtime();
-    }
-  }
+
+  assert(ops->push_mflds_E);
+  ops->push_mflds_E(push, flds);
+
   prof_stop(pr_time_step_no_comm);
   prof_stop(pr);
   psc_stats_start(st_time_field);
@@ -59,17 +52,10 @@ psc_push_fields_push_H(struct psc_push_fields *push, struct psc_mfields *flds)
   psc_stats_start(st_time_field);
   prof_start(pr);
   prof_restart(pr_time_step_no_comm);
-  if (ops->push_mflds_H) {
-    ops->push_mflds_H(push, flds);
-  } else {
-    assert(ops->push_H);
-#pragma omp parallel for
-    for (int p = 0; p < flds->nr_patches; p++) {
-      psc_balance_comp_time_by_patch[p] -= MPI_Wtime();
-      ops->push_H(push, psc_mfields_get_patch(flds, p));
-      psc_balance_comp_time_by_patch[p] += MPI_Wtime();
-    }
-  }
+
+  assert(ops->push_mflds_H);
+  ops->push_mflds_H(push, flds);
+
   prof_stop(pr);
   prof_stop(pr_time_step_no_comm);
   psc_stats_start(st_time_field);

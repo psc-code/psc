@@ -76,18 +76,21 @@ psc_push_fields_sub_push_E_yz(struct psc_push_fields *push, struct psc_fields *f
 //       jx^{n+1}[-.5:.5][-1:1][-1:1]
 
 static void
-psc_push_fields_sub_push_E(struct psc_push_fields *push, struct psc_fields *flds_base)
+psc_push_fields_sub_push_mflds_E(struct psc_push_fields *push, struct psc_mfields *mflds_base)
 {
-  struct psc_fields *flds = psc_fields_get_as(flds_base, FIELDS_TYPE, JXI, HX + 3);
+  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, FIELDS_TYPE, JXI, HX + 3);
 
-  int *gdims = ppsc->domain.gdims;
-  if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) {
-    psc_push_fields_sub_push_E_yz(push, flds);
-  } else {
-    psc_push_fields_sub_push_E_gen(push, flds);
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+    int *gdims = ppsc->domain.gdims;
+    if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) {
+      psc_push_fields_sub_push_E_yz(push, flds);
+    } else {
+      psc_push_fields_sub_push_E_gen(push, flds);
+    }
   }
 
-  psc_fields_put_as(flds, flds_base, EX, EX + 3);
+  psc_mfields_put_as(mflds, mflds_base, EX, EX + 3);
 }
 
 static void
@@ -158,17 +161,20 @@ psc_push_fields_sub_push_H_yz(struct psc_push_fields *push, struct psc_fields *f
 // using Ex^{n+.5}[-.5:+.5][-1:1][-1:1]
 
 static void
-psc_push_fields_sub_push_H(struct psc_push_fields *push, struct psc_fields *flds_base)
+psc_push_fields_sub_push_mflds_H(struct psc_push_fields *push, struct psc_mfields *mflds_base)
 {
-  struct psc_fields *flds = psc_fields_get_as(flds_base, FIELDS_TYPE, EX, HX + 3);
+  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, FIELDS_TYPE, EX, HX + 3);
 
-  int *gdims = ppsc->domain.gdims;
-  if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) {
-    psc_push_fields_sub_push_H_yz(push, flds);
-  } else {
-    psc_push_fields_sub_push_H_gen(push, flds);
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    int *gdims = ppsc->domain.gdims;
+    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+    if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) {
+      psc_push_fields_sub_push_H_yz(push, flds);
+    } else {
+      psc_push_fields_sub_push_H_gen(push, flds);
+    }
   }
 
-  psc_fields_put_as(flds, flds_base, HX, HX + 3);
+  psc_mfields_put_as(mflds, mflds_base, HX, HX + 3);
 }
 
