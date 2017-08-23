@@ -65,11 +65,6 @@ _psc_mfields_write(struct psc_mfields *mflds, struct mrc_io *io)
     char name[20]; sprintf(name, "comp_name_%d", m);
     mrc_io_write_string(io, mflds, name, psc_mfields_comp_name(mflds, m));
   }
-
-  for (int p = 0; p < mflds->nr_patches; p++) {
-    char name[20]; sprintf(name, "flds%d", p);
-    mrc_io_write_ref(io, mflds, name, mflds->flds[p]);
-  }
 }
 
 static void
@@ -87,15 +82,6 @@ _psc_mfields_read(struct psc_mfields *mflds, struct mrc_io *io)
       psc_mfields_set_comp_name(mflds, m, s);
     }
   }
-
-  mflds->flds = calloc(mflds->nr_patches, sizeof(*mflds->flds));
-  mprintf("nr_p %d\n", mflds->nr_patches);
-  for (int p = 0; p < mflds->nr_patches; p++) {
-    char name[20]; sprintf(name, "flds%d", p);
-    mflds->flds[p] = mrc_io_read_ref_comm(io, mflds, name, psc_fields,
-					  MPI_COMM_NULL);
-  }
-  // FIXME mark as set up?
 }
 
 void

@@ -281,9 +281,17 @@ psc_mfields_cuda_axpy_comp(struct psc_mfields *y, int my, double alpha,
 
 #ifdef HAVE_LIBHDF5_HL
 
-// FIXME, it'd be nicer to have this a psc_fields::cuda::read() method,
-// but it would need to know the parent to ask for the allocated memory,
-// or something...
+// ----------------------------------------------------------------------
+// psc_mfields_write
+
+static void
+psc_mfields_cuda_write(struct psc_mfields *mflds, struct mrc_io *io)
+{
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    char name[20]; sprintf(name, "flds%d", p);
+    mrc_io_write_ref(io, mflds, name, mflds->flds[p]);
+  }
+}
 
 // ----------------------------------------------------------------------
 // psc_fields_cuda_read
@@ -319,19 +327,8 @@ psc_fields_cuda_read(struct psc_fields *flds, struct mrc_io *io, const char *pat
 static void
 psc_mfields_cuda_read(struct psc_mfields *mflds, struct mrc_io *io)
 {
-  mflds->domain = mrc_io_read_ref(io, mflds, "domain", mrc_domain);
-  mrc_domain_get_patches(mflds->domain, &mflds->nr_patches);
-
-  mflds->comp_name = calloc(mflds->nr_fields, sizeof(*mflds->comp_name));
-  for (int m = 0; m < mflds->nr_fields; m++) {
-    char name[20]; sprintf(name, "comp_name_%d", m);
-    char *s;
-    mrc_io_read_string(io, mflds, name, &s);
-    if (s) {
-      psc_mfields_set_comp_name(mflds, m, s);
-    }
-  }
-
+  psc_mfields_read_super(mflds, io);
+  
   psc_mfields_cuda_setup(mflds);
 
   for (int p = 0; p < mflds->nr_patches; p++) {
@@ -362,6 +359,7 @@ struct psc_mfields_ops psc_mfields_cuda_ops = {
   .setup                 = psc_mfields_cuda_setup,
   .destroy               = psc_mfields_cuda_destroy,
 #ifdef HAVE_LIBHDF5_HL
+  .write                 = psc_mfields_cuda_write,
   .read                  = psc_mfields_cuda_read,
 #endif
   .zero_comp             = psc_mfields_cuda_zero_comp,

@@ -207,6 +207,40 @@ struct psc_fields_ops PFX(ops) = {
   .zero_comp             = PFX(zero_comp),
 };
 
+#if defined(HAVE_LIBHDF5_HL) && (PSC_FIELDS_AS_SINGLE || PSC_FIELDS_AS_C)
+
+// ----------------------------------------------------------------------
+// psc_mfields_write
+
+static void
+MPFX(write)(struct psc_mfields *mflds, struct mrc_io *io)
+{
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    char name[20]; sprintf(name, "flds%d", p);
+    mrc_io_write_ref(io, mflds, name, mflds->flds[p]);
+  }
+}
+
+// ----------------------------------------------------------------------
+// psc_mfields_read
+
+static void
+MPFX(read)(struct psc_mfields *mflds, struct mrc_io *io)
+{
+  psc_mfields_read_super(mflds, io);
+  
+  mflds->flds = calloc(mflds->nr_patches, sizeof(*mflds->flds));
+  mprintf("nr_p %d\n", mflds->nr_patches);
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    char name[20]; sprintf(name, "flds%d", p);
+    mflds->flds[p] = mrc_io_read_ref_comm(io, mflds, name, psc_fields,
+					  MPI_COMM_NULL);
+  }
+  // FIXME mark as set up?
+}
+
+#endif
+
 // ----------------------------------------------------------------------
 // psc_mfields_zero_comp
 
@@ -272,6 +306,10 @@ MPFX(axpy_comp)(struct psc_mfields *y, int my, double alpha,
 struct psc_mfields_ops MPFX(ops) = {
   .name                  = FIELDS_TYPE,
   .methods               = MPFX(methods),
+#if defined(HAVE_LIBHDF5_HL) && (PSC_FIELDS_AS_SINGLE || PSC_FIELDS_AS_C)
+  .write                 = MPFX(write),
+  .read                  = MPFX(read),
+#endif
   .zero_comp             = MPFX(zero_comp),
   .set_comp              = MPFX(set_comp),
   .scale_comp            = MPFX(scale_comp),
