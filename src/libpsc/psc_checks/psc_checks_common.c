@@ -74,6 +74,18 @@ psc_checks_sub_setup(struct psc_checks *checks)
   psc_checks_setup_member_objs(checks);
 }
 
+// ----------------------------------------------------------------------
+// psc_checks_sub_read
+//
+// FIXME, this function exists to avoid a setup called twice error, but it's just a workaround
+
+static void
+psc_checks_sub_read(struct psc_checks *checks, struct mrc_io *io)
+{
+  psc_checks_read_super(checks, io);
+  psc_checks_read_member_objs(checks, io);
+}
+
 // ======================================================================
 // psc_checks: Charge Continuity 
 
@@ -325,6 +337,7 @@ struct psc_checks_ops psc_checks_sub_ops = {
   // makes, e.g., "1st_single"
   .name                            = PSC_CHECKS_ORDER "_" PARTICLE_TYPE,
   .setup                           = psc_checks_sub_setup,
+  .read                            = psc_checks_sub_read,
   .continuity_before_particle_push = psc_checks_sub_continuity_before_particle_push,
   .continuity_after_particle_push  = psc_checks_sub_continuity_after_particle_push,
   .gauss                           = psc_checks_sub_gauss,

@@ -987,7 +987,7 @@ mrc_obj_read_super(struct mrc_obj *obj, struct mrc_io *io)
     // setup
     obj->is_setup = true;
 
-    if (obj->ops && obj->ops->setup) {
+    if (obj->ops && !obj->ops->read && obj->ops->setup) {
       obj->ops->setup(obj);
     } else {
       if (cls->setup) {
