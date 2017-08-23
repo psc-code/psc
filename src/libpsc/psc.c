@@ -93,8 +93,6 @@ static struct param psc_descr[] = {
   { "bnd_particle_hi_z", VAR(domain.bnd_part_hi[2])     , PARAM_SELECT(BND_PART_PERIODIC,
 								 bnd_part_descr) },
 
-  { "use_pml",        VAR(domain.use_pml)         , PARAM_BOOL(false)    },
-
   // psc_params
   { "qq"            , VAR(prm.qq)              , PARAM_DOUBLE(1.6021e-19)   },
   { "mm"            , VAR(prm.mm)              , PARAM_DOUBLE(9.1091e-31)   },
@@ -448,12 +446,10 @@ psc_setup_domain(struct psc *psc)
       }
     }
   }
-  if (need_pml && !psc->domain.use_pml) {
+  if (need_pml) {
     fprintf(stderr,
-	    "WARNING: use_pml is disabled but pml boundary conditions requested.\n");
-    fprintf(stderr,
-	    "         I'm enabling use_pml.\n");
-    psc->domain.use_pml = true;
+	    "WARNING: pml is not supported anymore but pml boundary conditions requested.\n");
+    abort();
   }
   psc->pml.thick = 10;
   psc->pml.cushion = psc->pml.thick / 3;
@@ -940,24 +936,6 @@ psc_setup_fields_default(struct psc *psc)
 
 
 // ----------------------------------------------------------------------
-// psc_setup_field_pml helper
-
-static void
-psc_setup_field_pml(struct psc *psc)
-{
-  struct psc_mfields *flds = psc->flds;
-
-  psc_mfields_copy_comp(flds, DX, flds, EX);
-  psc_mfields_copy_comp(flds, DY, flds, EY);
-  psc_mfields_copy_comp(flds, DZ, flds, EZ);
-  psc_mfields_copy_comp(flds, BX, flds, HX);
-  psc_mfields_copy_comp(flds, BY, flds, HY);
-  psc_mfields_copy_comp(flds, BZ, flds, HZ);
-  psc_mfields_set_comp(flds, EPS, 1.);
-  psc_mfields_set_comp(flds, MU, 1.);
-}
-
-// ----------------------------------------------------------------------
 // psc_setup_fields
 
 void
@@ -978,10 +956,6 @@ psc_setup_fields(struct psc *psc)
     psc_ops(psc)->setup_fields(psc, psc->flds);
   } else {
     psc_setup_fields_default(psc);
-  }
-
-  if (psc->domain.use_pml) {
-    psc_setup_field_pml(psc);
   }
 }
 

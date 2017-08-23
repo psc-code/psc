@@ -181,7 +181,7 @@ PSC_set_domain(struct psc *psc)
   for (int d = 0; d < 3; d++) {
     imax[d] = p->gdims[d] - 1;
   }
-  int use_pml_ = p->use_pml;
+  int use_pml_ = 0;
   int ilo[3] = {};
 
   // assert(p->bnd_part_lo==p->bnd_part_hi); FIX ME

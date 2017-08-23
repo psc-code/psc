@@ -175,7 +175,6 @@ struct psc_domain {
   int bnd_fld_hi[3];	///<Boundary conditions of the fields. Can be any value of BND_FLD.
   int bnd_part_lo[3];	///<Boundary conditions of the particles. Can be any value of BND_PART.
   int bnd_part_hi[3];   ///<Boundary conditions of the particles. Can be any value of BND_PART.
-  bool use_pml;		///<Enables or disables PML
 };
 
 // ----------------------------------------------------------------------

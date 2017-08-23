@@ -44,7 +44,6 @@ cuda_mfields_dealloc(struct cuda_mfields *cmflds)
 void
 __psc_mfields_cuda_setup(struct psc_mfields *mflds)
 {
-  assert(!ppsc->domain.use_pml);
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
   struct cuda_mfields *cmflds = mflds_cuda->cmflds;
 

@@ -165,16 +165,7 @@ psc_push_fields_step_b2_opt(struct psc_push_fields *push, struct psc_mfields *mf
 void
 psc_push_fields_step_a(struct psc_push_fields *push, struct psc_mfields *flds)
 {
-  if (ppsc->domain.use_pml) {
-    // FIXME, pml routines sehould be split into E, H push + ghost points, too
-    // pml could become a separate push_fields subclass
-    struct psc_push_fields_ops *ops = psc_push_fields_ops(push);
-    assert(ops->pml_a);
-#pragma omp parallel for
-    for (int p = 0; p < flds->nr_patches; p++) {
-      ops->pml_a(push, psc_mfields_get_patch(flds, p));
-    }
-  } else if (push->variant == 0) {
+  if (push->variant == 0) {
     psc_push_fields_step_a_default(push, flds);
   } else if (push->variant == 1) {
     psc_push_fields_step_a_opt(push, flds);
@@ -186,8 +177,7 @@ psc_push_fields_step_a(struct psc_push_fields *push, struct psc_mfields *flds)
 void
 psc_push_fields_step_b1(struct psc_push_fields *push, struct psc_mfields *flds)
 {
-  if (ppsc->domain.use_pml) {
-  } else if (push->variant == 0) {
+  if (push->variant == 0) {
     psc_push_fields_step_b1_default(push, flds);
   } else if (push->variant == 1) {
     psc_push_fields_step_b1_opt(push, flds);
@@ -199,14 +189,7 @@ psc_push_fields_step_b1(struct psc_push_fields *push, struct psc_mfields *flds)
 void
 psc_push_fields_step_b2(struct psc_push_fields *push, struct psc_mfields *flds)
 {
-  if (ppsc->domain.use_pml) {
-    struct psc_push_fields_ops *ops = psc_push_fields_ops(push);
-    assert(ops->pml_b);
-#pragma omp parallel for
-    for (int p = 0; p < flds->nr_patches; p++) {
-      ops->pml_b(push, psc_mfields_get_patch(flds, p));
-    }
-  } else if (push->variant == 0) {
+  if (push->variant == 0) {
     psc_push_fields_step_b2_default(push, flds);
   } else if (push->variant == 1) {
     psc_push_fields_step_b2_opt(push, flds);

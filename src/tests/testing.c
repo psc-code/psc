@@ -97,7 +97,7 @@ psc_save_particles_ref(struct psc *psc, struct psc_mparticles *mprts_base)
 void
 psc_save_fields_ref(struct psc *psc, struct psc_mfields *mflds_base)
 {
-  int me = psc->domain.use_pml ? NR_FIELDS : HZ + 1;
+  int me = HZ + 1;
 
   if (!mflds_ref) {
     mflds_ref = psc_mfields_create(psc_comm(psc));
