@@ -18,13 +18,13 @@ calc_dive_nc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, FIELDS_TYPE, EX, EX + 3);
   struct psc_mfields *mres = psc_mfields_get_as(mres_base, FIELDS_TYPE, 0, 0);
   for (int p = 0; p < mres_base->nr_patches; p++) {
-    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-    struct psc_fields *res = psc_mfields_get_patch(mres, p);
+    fields_t flds = fields_t_mflds(mflds, p);
+    fields_t res = fields_t_mflds(mres, p);
     psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
-      F3(res, 0, ix,iy,iz) = 
-	((F3(flds, EX, ix,iy,iz) - F3(flds, EX, ix-dx,iy,iz)) / ppsc->patch[p].dx[0] +
-	 (F3(flds, EY, ix,iy,iz) - F3(flds, EY, ix,iy-dy,iz)) / ppsc->patch[p].dx[1] +
-	 (F3(flds, EZ, ix,iy,iz) - F3(flds, EZ, ix,iy,iz-dz)) / ppsc->patch[p].dx[2]);
+      _F3(res, 0, ix,iy,iz) = 
+	((_F3(flds, EX, ix,iy,iz) - _F3(flds, EX, ix-dx,iy,iz)) / ppsc->patch[p].dx[0] +
+	 (_F3(flds, EY, ix,iy,iz) - _F3(flds, EY, ix,iy-dy,iz)) / ppsc->patch[p].dx[1] +
+	 (_F3(flds, EZ, ix,iy,iz) - _F3(flds, EZ, ix,iy,iz-dz)) / ppsc->patch[p].dx[2]);
     } foreach_3d_end;
   }
   psc_mfields_put_as(mflds, mflds_base, 0, 0);
