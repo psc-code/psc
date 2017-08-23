@@ -12,20 +12,6 @@
 #include "psc_fields_common.c"
 
 static void
-psc_fields_c_scale_comp(struct psc_fields *pf, int m, double _val)
-{
-  fields_c_real_t val = _val;
-
-  for (int jz = pf->ib[2]; jz < pf->ib[2] + pf->im[2]; jz++) {
-    for (int jy = pf->ib[1]; jy < pf->ib[1] + pf->im[1]; jy++) {
-      for (int jx = pf->ib[0]; jx < pf->ib[0] + pf->im[0]; jx++) {
-	F3_C(pf, m, jx, jy, jz) *= val;
-      }
-    }
-  }
-}
-
-static void
 psc_fields_c_copy_comp(struct psc_fields *pto, int m_to, struct psc_fields *pfrom, int m_from)
 {
   for (int jz = pto->ib[2]; jz < pto->ib[2] + pto->im[2]; jz++) {
