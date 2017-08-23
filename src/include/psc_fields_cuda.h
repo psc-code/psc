@@ -9,13 +9,6 @@
 #include "psc_fields_common.h"
 #undef FTYPE
 
-struct psc_fields_cuda_bnd {
-  fields_cuda_real_t *arr_off;
-  int im[3];
-  int ib[3];
-  fields_cuda_real_t *arr;
-};
-
 // ----------------------------------------------------------------------
 
 struct psc_mfields_cuda {

@@ -14,6 +14,16 @@
 typedef float fields_cuda_real_t;
 
 // ----------------------------------------------------------------------
+// cuda_mfields_bnd_patch
+
+struct cuda_mfields_bnd_patch {
+  fields_cuda_real_t *arr_off;
+  int im[3];
+  int ib[3];
+  fields_cuda_real_t *arr;
+};
+
+// ----------------------------------------------------------------------
 // cuda_mfields
 
 struct cuda_mfields {
@@ -23,7 +33,7 @@ struct cuda_mfields {
   int n_fields;
   int n_cells_per_patch;
   int n_cells;
-  struct psc_fields_cuda_bnd **bnd;
+  struct cuda_mfields_bnd_patch **bnd;
   fields_cuda_real_t **d_flds_by_patch;
 };
 
