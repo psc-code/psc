@@ -116,6 +116,12 @@ typedef double fields_FTYPE_real_t;
       * (pf)->im[1] + ((jy)-(pf)->ib[1]))		\
      * (pf)->im[0] + ((jx)-(pf)->ib[0]))))
 
+#define _F3_OFF_FORTRAN(flds, m, i,j,k)					\
+  (((((((m) - (flds).first_comp)					\
+       * (flds).im[2] + ((k)-(flds).ib[2]))				\
+      * (flds).im[1] + ((j)-(flds).ib[1]))				\
+     * (flds).im[0] + ((i)-(flds).ib[0]))))
+
 #endif
 
 #ifndef BOUNDS_CHECK // ------------------------------
@@ -140,6 +146,9 @@ typedef double fields_FTYPE_real_t;
 
 #define F3_FORTRAN(pf, fldnr, jx,jy,jz)					\
   (((fields_fortran_real_t **) (pf)->data)[fldnr][F3_OFF_FORTRAN(pf, jx,jy,jz)])
+
+#define _F3_FORTRAN(flds, m, i, j, k)					\
+  ((flds).data[_F3_OFF_FORTRAN(flds, m, i,j,k)])
 
 #endif
 
