@@ -9,10 +9,10 @@ static void
 psc_diag_item_field_energy_run(struct psc_diag_item *item,
 			       struct psc *psc, double *EH2)
 {
+  struct psc_mfields *mflds = psc_mfields_get_as(psc->flds, "c", EX, HX + 3);
   psc_foreach_patch(psc, p) {
     double fac = psc->patch[p].dx[0] * psc->patch[p].dx[1] * psc->patch[p].dx[2];
-    struct psc_fields *pf_base = psc_mfields_get_patch(psc->flds, p);
-    struct psc_fields *pf = psc_fields_get_as(pf_base, "c", EX, HX + 3);
+    struct psc_fields *pf = psc_mfields_get_patch(mflds, p);
     // FIXME, this doesn't handle non-periodic b.c. right
     psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
       EH2[0] +=	sqr(F3_C(pf, EX, ix,iy,iz)) * fac;
@@ -22,8 +22,8 @@ psc_diag_item_field_energy_run(struct psc_diag_item *item,
       EH2[4] +=	sqr(F3_C(pf, HY, ix,iy,iz)) * fac;
       EH2[5] +=	sqr(F3_C(pf, HZ, ix,iy,iz)) * fac;
     } foreach_3d_end;
-    psc_fields_put_as(pf, pf_base, 0, 0);
   }
+  psc_mfields_put_as(mflds, psc->flds, 0, 0);
 }
 
 // ======================================================================

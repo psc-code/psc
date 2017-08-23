@@ -109,7 +109,7 @@ psc_marder_sub_destroy(struct psc_marder *marder)
 
 static void
 psc_marder_sub_correct_patch(struct psc_marder *marder,
-			     struct psc_fields *flds_base, struct psc_fields *f)
+			     struct psc_fields *flds, struct psc_fields *f)
 {
   define_dxdydz(dx, dy, dz);
 
@@ -127,8 +127,6 @@ psc_marder_sub_correct_patch(struct psc_marder *marder,
   }
   double diffusion_max = 1. / 2. / (.5 * ppsc->dt) / inv_sum;
   double diffusion     = diffusion_max * marder->diffusion;
-
-  struct psc_fields *flds = psc_fields_get_as(flds_base, FIELDS_TYPE, EX, EX + 3);
 
   int l_cc[3] = {0, 0, 0}, r_cc[3] = {0, 0, 0};
   int l_nc[3] = {0, 0, 0}, r_nc[3] = {0, 0, 0};
@@ -179,8 +177,6 @@ psc_marder_sub_correct_patch(struct psc_marder *marder,
 	* .5 * ppsc->dt * diffusion / deltaz;
     } psc_foreach_3d_more_end;
   }
-
-  psc_fields_put_as(flds, flds_base, EX, EX + 3);
 }
 
 #undef psc_foreach_3d_more
@@ -190,13 +186,17 @@ psc_marder_sub_correct_patch(struct psc_marder *marder,
 // psc_marder_sub_correct
 
 static void
-psc_marder_sub_correct(struct psc_marder *marder, struct psc_mfields *mflds,
+psc_marder_sub_correct(struct psc_marder *marder, struct psc_mfields *mflds_base,
 		       struct psc_mfields *div_e)
 {
+  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, FIELDS_TYPE, EX, EX + 3);
+
   for (int p = 0; p < div_e->nr_patches; p++) {
     psc_marder_sub_correct_patch(marder, psc_mfields_get_patch(mflds, p),
 				 psc_mfields_get_patch(div_e, p));
   }
+
+  psc_mfields_put_as(mflds, mflds_base, EX, EX + 3);
 }
 
 // ======================================================================

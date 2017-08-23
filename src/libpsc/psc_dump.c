@@ -23,18 +23,18 @@ ascii_dump_field_yz(struct psc_fields *pf, int m, FILE *file)
 }
 
 static void
-ascii_dump_field(struct psc_mfields *flds_base, int m, const char *fname)
+ascii_dump_field(struct psc_mfields *mflds_base, int m, const char *fname)
 {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  for (int p = 0; p < flds_base->nr_patches; p++) {
+  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "c", m, m+1);
+  for (int p = 0; p < mflds_base->nr_patches; p++) {
     char *filename = malloc(strlen(fname) + 20);
     sprintf(filename, "%s-p%d-p%d.asc", fname, rank, p);
     mpi_printf(MPI_COMM_WORLD, "ascii_dump_field: '%s'\n", filename);
 
-    struct psc_fields *pf_base = psc_mfields_get_patch(flds_base, p);
-    struct psc_fields *pf = psc_fields_get_as(pf_base, "c", m, m+1);
+    struct psc_fields *pf = psc_mfields_get_patch(mflds, p);
     FILE *file = fopen(filename, "w");
     free(filename);
     if (pf->im[0] + 2*pf->ib[0] == 1) {
@@ -51,8 +51,8 @@ ascii_dump_field(struct psc_mfields *flds_base, int m, const char *fname)
       }
     }
     fclose(file);
-    psc_fields_put_as(pf, pf_base, 0, 0);
   }
+  psc_mfields_put_as(mflds, mflds_base, 0, 0);
 }
 
 static void

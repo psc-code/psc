@@ -95,23 +95,23 @@ do_calc_div_j(struct psc *psc, int p, struct psc_fields *flds_base, struct psc_f
     }
   }
 
-  struct psc_fields *flds = psc_fields_get_as(flds_base, FIELDS_TYPE, JXI, JXI + 3);
   psc_foreach_3d(psc, p, jx, jy, jz, 0, 0) {
     F3(div_j,0, jx,jy,jz) =
       (F3(flds,JXI, jx,jy,jz) - F3(flds,JXI, jx-dx,jy,jz)) * h[0] +
       (F3(flds,JYI, jx,jy,jz) - F3(flds,JYI, jx,jy-dy,jz)) * h[1] +
       (F3(flds,JZI, jx,jy,jz) - F3(flds,JZI, jx,jy,jz-dz)) * h[2];
   } psc_foreach_3d_end;
-  psc_fields_put_as(flds, flds_base, 0, 0);
 }
 
 static void
-calc_div_j(struct psc *psc, struct psc_mfields *mflds, struct psc_mfields *div_j)
+calc_div_j(struct psc *psc, struct psc_mfields *mflds_base, struct psc_mfields *div_j)
 {
+  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, FIELDS_TYPE, JXI, JXI + 3);
   psc_foreach_patch(psc, p) {
     do_calc_div_j(psc, p, psc_mfields_get_patch(mflds, p),
 		  psc_mfields_get_patch(div_j, p));
   }
+  psc_mfields_put_as(mflds, mflds_base, 0, 0);
 }
 
 // ----------------------------------------------------------------------
