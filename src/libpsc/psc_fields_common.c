@@ -213,9 +213,73 @@ struct psc_fields_ops PFX(ops) = {
 };
 
 // ----------------------------------------------------------------------
+// psc_mfields_zero_comp
+
+static void
+MPFX(zero_comp)(struct psc_mfields *mflds, int m)
+{
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    PFX(zero_comp)(psc_mfields_get_patch(mflds, p), m);
+  }
+}
+
+// ----------------------------------------------------------------------
+// psc_mfields_set_comp
+
+static void
+MPFX(set_comp)(struct psc_mfields *mflds, int m, double alpha)
+{
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    PFX(set_comp)(psc_mfields_get_patch(mflds, p), m, alpha);
+  }
+}
+
+// ----------------------------------------------------------------------
+// psc_mfields_scale_comp
+
+static void
+MPFX(scale_comp)(struct psc_mfields *mflds, int m, double alpha)
+{
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    PFX(scale_comp)(psc_mfields_get_patch(mflds, p), m, alpha);
+  }
+}
+
+// ----------------------------------------------------------------------
+// psc_mfields_copy_comp
+
+static void
+MPFX(copy_comp)(struct psc_mfields *to, int mto,
+		struct psc_mfields *fr, int mfr)
+{
+  for (int p = 0; p < to->nr_patches; p++) {
+    PFX(copy_comp)(psc_mfields_get_patch(to, p), mto,
+		   psc_mfields_get_patch(fr, p), mfr);
+  }
+}
+
+// ----------------------------------------------------------------------
+// psc_mfields_axpy_comp
+
+static void
+MPFX(axpy_comp)(struct psc_mfields *y, int my, double alpha,
+		struct psc_mfields *x, int mx)
+{
+  for (int p = 0; p < y->nr_patches; p++) {
+    PFX(axpy_comp)(psc_mfields_get_patch(y, p), my, alpha,
+		   psc_mfields_get_patch(x, p), mx);
+  }
+}
+
+// ----------------------------------------------------------------------
 // psc_mfields: subclass ops
   
 struct psc_mfields_ops MPFX(ops) = {
   .name                  = FIELDS_TYPE,
+  .zero_comp             = MPFX(zero_comp),
+  .set_comp              = MPFX(set_comp),
+  .scale_comp            = MPFX(scale_comp),
+  .copy_comp             = MPFX(copy_comp),
+  .axpy_comp             = MPFX(axpy_comp),
 };
 

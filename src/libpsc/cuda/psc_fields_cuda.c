@@ -249,6 +249,30 @@ psc_mfields_cuda_destroy(struct psc_mfields *mflds)
   mflds_cuda->cmflds = NULL;
 }
 
+// ----------------------------------------------------------------------
+// psc_mfields_cuda_zero_comp
+
+static void
+psc_mfields_cuda_zero_comp(struct psc_mfields *mflds, int m)
+{
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    psc_fields_cuda_zero_comp(psc_mfields_get_patch(mflds, p), m);
+  }
+}
+
+// ----------------------------------------------------------------------
+// psc_mfields_cuda_axpy_comp
+
+static void
+psc_mfields_cuda_axpy_comp(struct psc_mfields *y, int my, double alpha,
+			   struct psc_mfields *x, int mx)
+{
+  for (int p = 0; p < y->nr_patches; p++) {
+    psc_fields_cuda_axpy_comp(psc_mfields_get_patch(y, p), my, alpha,
+			      psc_mfields_get_patch(x, p), mx);
+  }
+}
+
 #ifdef HAVE_LIBHDF5_HL
 
 // FIXME, it'd be nicer to have this a psc_fields::cuda::read() method,
@@ -325,5 +349,7 @@ struct psc_mfields_ops psc_mfields_cuda_ops = {
 #ifdef HAVE_LIBHDF5_HL
   .read                  = psc_mfields_cuda_read,
 #endif
+  .zero_comp             = psc_mfields_cuda_zero_comp,
+  .axpy_comp             = psc_mfields_cuda_axpy_comp,
 };
 

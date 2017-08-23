@@ -41,6 +41,12 @@ MRC_CLASS_DECLARE(psc_mfields, struct psc_mfields);
 
 struct psc_mfields_ops {
   MRC_SUBCLASS_OPS(struct psc_mfields);
+  void (*zero_comp)(struct psc_mfields *mflds, int m);
+  void (*set_comp)(struct psc_mfields *mflds, int m, double alpha);
+  void (*scale_comp)(struct psc_mfields *mflds, int m, double alpha);
+  void (*copy_comp)(struct psc_mfields *to, int mto, struct psc_mfields *from, int mfrom);
+  void (*axpy_comp)(struct psc_mfields *y, int my, double alpha,
+		    struct psc_mfields *x, int mx);
 };
 
 void psc_mfields_set_domain(struct psc_mfields *flds,
