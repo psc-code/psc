@@ -10,17 +10,17 @@
 // from cell-centered 1st order
 
 static void
-add_ghosts_reflecting_lo(struct psc_fields *pf, int d, int mb, int me)
+add_ghosts_reflecting_lo(int p, fields_t flds, int d, int mb, int me)
 {
-  struct psc_patch *patch = ppsc->patch + pf->p;
+  struct psc_patch *patch = ppsc->patch + p;
 
   if (d == 1) {
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
       for (int ix = 0; ix < patch->ldims[0]; ix++) {
 	int iy = 0; {
 	  for (int m = mb; m < me; m++) {
-	    F3(pf, m, ix,iy+1,iz) += F3(pf, m, ix,iy-1,iz);
-	    F3(pf, m, ix,iy-1,iz) = 0.;
+	    _F3(flds, m, ix,iy+1,iz) += _F3(flds, m, ix,iy-1,iz);
+	    _F3(flds, m, ix,iy-1,iz) = 0.;
 	  }
 	}
       }
@@ -30,8 +30,8 @@ add_ghosts_reflecting_lo(struct psc_fields *pf, int d, int mb, int me)
       for (int ix = 0; ix < patch->ldims[0]; ix++) {
 	int iz = 0; {
 	  for (int m = mb; m < me; m++) {
-	    F3(pf, m, ix,iy,iz+1) += F3(pf, m, ix,iy,iz-1);
-	    F3(pf, m, ix,iy,iz-1) = 0.;
+	    _F3(flds, m, ix,iy,iz+1) += _F3(flds, m, ix,iy,iz-1);
+	    _F3(flds, m, ix,iy,iz-1) = 0.;
 	  }
 	}
       }
@@ -42,17 +42,17 @@ add_ghosts_reflecting_lo(struct psc_fields *pf, int d, int mb, int me)
 }
 
 static void
-add_ghosts_reflecting_hi(struct psc_fields *pf, int d, int mb, int me)
+add_ghosts_reflecting_hi(int p, fields_t flds, int d, int mb, int me)
 {
-  struct psc_patch *patch = ppsc->patch + pf->p;
+  struct psc_patch *patch = ppsc->patch + p;
 
   if (d == 1) {
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
       for (int ix = 0; ix < patch->ldims[0]; ix++) {
 	int iy = patch->ldims[1]; {
 	  for (int m = mb; m < me; m++) {
-	    F3(pf, m, ix,iy-1,iz) += F3(pf, m, ix,iy+1,iz);
-	    F3(pf, m, ix,iy+1,iz) = 0.;
+	    _F3(flds, m, ix,iy-1,iz) += _F3(flds, m, ix,iy+1,iz);
+	    _F3(flds, m, ix,iy+1,iz) = 0.;
 	  }
 	}
       }
@@ -62,8 +62,8 @@ add_ghosts_reflecting_hi(struct psc_fields *pf, int d, int mb, int me)
       for (int ix = 0; ix < patch->ldims[0]; ix++) {
 	int iz = patch->ldims[2]; {
 	  for (int m = mb; m < me; m++) {
-	    F3(pf, m, ix,iy,iz-1) += F3(pf, m, ix,iy,iz+1);
-	    F3(pf, m, ix,iy,iz+1) += 0.;
+	    _F3(flds, m, ix,iy,iz-1) += _F3(flds, m, ix,iy,iz+1);
+	    _F3(flds, m, ix,iy,iz+1) += 0.;
 	  }
 	}
       }
@@ -74,21 +74,21 @@ add_ghosts_reflecting_hi(struct psc_fields *pf, int d, int mb, int me)
 }
 
 static void
-add_ghosts_boundary(struct psc_fields *res, int mb, int me)
+add_ghosts_boundary(int p, fields_t res, int mb, int me)
 {
   // lo
   for (int d = 0; d < 3; d++) {
-    if (ppsc->patch[res->p].off[d] == 0) {
+    if (ppsc->patch[p].off[d] == 0) {
       if (ppsc->domain.bnd_part_lo[d] == BND_PART_REFLECTING) {
-	add_ghosts_reflecting_lo(res, d, mb, me);
+	add_ghosts_reflecting_lo(p, res, d, mb, me);
       }
     }
   }
   // hi
   for (int d = 0; d < 3; d++) {
-    if (ppsc->patch[res->p].off[d] + ppsc->patch[res->p].ldims[d] == ppsc->domain.gdims[d]) {
+    if (ppsc->patch[p].off[d] + ppsc->patch[p].ldims[d] == ppsc->domain.gdims[d]) {
       if (ppsc->domain.bnd_part_hi[d] == BND_PART_REFLECTING) {
-	add_ghosts_reflecting_hi(res, d, mb, me);
+	add_ghosts_reflecting_hi(p, res, d, mb, me);
       }
     }
   }
@@ -97,15 +97,15 @@ add_ghosts_boundary(struct psc_fields *res, int mb, int me)
 static void
 run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 	struct psc_mparticles *mprts_base, struct psc_mfields *mres,
-	void (*do_run)(int p, struct psc_fields *flds, particle_range_t prts))
+	void (*do_run)(int p, fields_t flds, particle_range_t prts))
 {
   struct psc_mparticles *mprts = psc_mparticles_get_as(mprts_base, PARTICLE_TYPE, 0);
 
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_fields *res = psc_mfields_get_patch(mres, p);
-    psc_fields_zero_range(res, 0, res->nr_comp);
-    do_run(res->p, res, particle_range_mprts(mprts, p));
-    add_ghosts_boundary(res, 0, res->nr_comp);
+    fields_t res = fields_t_mflds(mres, p);
+    fields_t_zero_range(res, 0, mres->nr_fields);
+    do_run(p, res, particle_range_mprts(mprts, p));
+    add_ghosts_boundary(p, res, 0, mres->nr_fields);
   }
 
   psc_mparticles_put_as(mprts, mprts_base, MP_DONT_COPY);
@@ -115,7 +115,7 @@ run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 // n
 
 static void
-do_n_run(int p, struct psc_fields *pf, particle_range_t prts)
+do_n_run(int p, fields_t flds, particle_range_t prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
@@ -124,7 +124,7 @@ do_n_run(int p, struct psc_fields *pf, particle_range_t prts)
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
     int m = particle_kind(prt);
-    DEPOSIT_TO_GRID_2ND_NC(prt, pf, m, 1.f);
+    DEPOSIT_TO_GRID_2ND_NC(prt, flds, m, 1.f);
   }
 }
 
@@ -139,7 +139,7 @@ n_run_all(struct psc_output_fields_item *item, struct psc_mfields *mflds,
 // rho
 
 static void
-do_rho_run(int p, struct psc_fields *pf, particle_range_t prts)
+do_rho_run(int p, fields_t flds, particle_range_t prts)
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
@@ -148,7 +148,7 @@ do_rho_run(int p, struct psc_fields *pf, particle_range_t prts)
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *prt = particle_iter_deref(prt_iter);
     int m = particle_kind(prt);
-    DEPOSIT_TO_GRID_2ND_NC(prt, pf, 0, ppsc->kinds[m].q);
+    DEPOSIT_TO_GRID_2ND_NC(prt, flds, 0, ppsc->kinds[m].q);
   }
 }
 
