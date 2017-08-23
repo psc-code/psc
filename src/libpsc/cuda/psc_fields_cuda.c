@@ -60,46 +60,6 @@ psc_fields_cuda_zero_comp(struct psc_fields *x, int xm)
   cuda_zero_comp_yz(x, xm);
 }
 
-#ifdef HAVE_LIBHDF5_HL
-
-#include <mrc_io.h>
-
-// FIXME. This is a rather bad break of proper layering, HDF5 should be all
-// mrc_io business. OTOH, it could be called flexibility...
-
-#include <hdf5.h>
-#include <hdf5_hl.h>
-
-#define H5_CHK(ierr) assert(ierr >= 0)
-#define CE assert(ierr == 0)
-
-// ----------------------------------------------------------------------
-// psc_fields_cuda_write
-
-static void
-psc_fields_cuda_write(struct psc_fields *flds, struct mrc_io *io)
-{
-  struct psc_mfields *mflds = flds->mflds;
-  int p = flds->p;
-  int ierr;
-  long h5_file;
-  mrc_io_get_h5_file(io, &h5_file);
-  hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, flds), H5P_DEFAULT); H5_CHK(group);
-  ierr = H5LTset_attribute_int(group, ".", "p", &flds->p, 1); CE;
-  ierr = H5LTset_attribute_int(group, ".", "ib", flds->ib, 3); CE;
-  ierr = H5LTset_attribute_int(group, ".", "im", flds->im, 3); CE;
-  ierr = H5LTset_attribute_int(group, ".", "nr_comp", &flds->nr_comp, 1); CE;
-  // write components separately instead?
-  hsize_t hdims[4] = { flds->nr_comp, flds->im[2], flds->im[1], flds->im[0] };
-  float *h_flds = malloc(flds->nr_comp * psc_fields_size(flds) * sizeof(*h_flds));
-  __fields_cuda_from_device(mflds, p, h_flds, 0, flds->nr_comp);
-  ierr = H5LTmake_dataset_float(group, "fields_cuda", 4, hdims, h_flds); CE;
-  free(h_flds);
-  ierr = H5Gclose(group); CE;
-}
-
-#endif
-
 // ======================================================================
 // convert from/to "c"
 
@@ -212,9 +172,6 @@ psc_mfields_cuda_copy_to_single(struct psc_mfields *mflds_cuda, struct psc_mfiel
   
 struct psc_fields_ops psc_fields_cuda_ops = {
   .name                  = "cuda",
-#ifdef HAVE_LIBHDF5_HL
-  .write                 = psc_fields_cuda_write,
-#endif
 };
 
 // ======================================================================
@@ -281,44 +238,47 @@ psc_mfields_cuda_axpy_comp(struct psc_mfields *y, int my, double alpha,
 
 #ifdef HAVE_LIBHDF5_HL
 
+#include <mrc_io.h>
+
+// FIXME. This is a rather bad break of proper layering, HDF5 should be all
+// mrc_io business. OTOH, it could be called flexibility...
+
+#include <hdf5.h>
+#include <hdf5_hl.h>
+
+#define H5_CHK(ierr) assert(ierr >= 0)
+#define CE assert(ierr == 0)
+
 // ----------------------------------------------------------------------
 // psc_mfields_write
 
 static void
 psc_mfields_cuda_write(struct psc_mfields *mflds, struct mrc_io *io)
 {
-  for (int p = 0; p < mflds->nr_patches; p++) {
-    char name[20]; sprintf(name, "flds%d", p);
-    mrc_io_write_ref(io, mflds, name, mflds->flds[p]);
-  }
-}
-
-// ----------------------------------------------------------------------
-// psc_fields_cuda_read
-
-static void
-psc_fields_cuda_read(struct psc_fields *flds, struct mrc_io *io, const char *path)
-{
   int ierr;
   long h5_file;
   mrc_io_get_h5_file(io, &h5_file);
-  hid_t group = H5Gopen(h5_file, path, H5P_DEFAULT); H5_CHK(group);
-  int ib[3], im[3], nr_comp;
-  ierr = H5LTget_attribute_int(group, ".", "p", &flds->p); CE;
-  ierr = H5LTget_attribute_int(group, ".", "ib", ib); CE;
-  ierr = H5LTget_attribute_int(group, ".", "im", im); CE;
-  ierr = H5LTget_attribute_int(group, ".", "nr_comp", &nr_comp); CE;
-  for (int d = 0; d < 3; d++) {
-    assert(ib[d] == flds->ib[d]);
-    assert(im[d] == flds->im[d]);
+  hid_t group0 = H5Gopen(h5_file, mrc_io_obj_path(io, mflds), H5P_DEFAULT); H5_CHK(group0);
+
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+    char name[20]; sprintf(name, "flds%d", p);
+    hid_t group = H5Gcreate(group0, name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group);
+    
+    ierr = H5LTset_attribute_int(group, ".", "p", &p, 1); CE;
+    ierr = H5LTset_attribute_int(group, ".", "ib", flds->ib, 3); CE;
+    ierr = H5LTset_attribute_int(group, ".", "im", flds->im, 3); CE;
+    ierr = H5LTset_attribute_int(group, ".", "nr_comp", &flds->nr_comp, 1); CE;
+    // write components separately instead?
+    hsize_t hdims[4] = { flds->nr_comp, flds->im[2], flds->im[1], flds->im[0] };
+    float *h_flds = malloc(flds->nr_comp * psc_fields_size(flds) * sizeof(*h_flds));
+    __fields_cuda_from_device(mflds, p, h_flds, 0, flds->nr_comp);
+    ierr = H5LTmake_dataset_float(group, "fields_cuda", 4, hdims, h_flds); CE;
+    free(h_flds);
+    ierr = H5Gclose(group); CE;
   }
-  assert(nr_comp == flds->nr_comp);
-  //  psc_fields_setup(flds);
-  float *h_flds = malloc(flds->nr_comp * psc_fields_size(flds) * sizeof(*h_flds));
-  ierr = H5LTread_dataset_float(group, "fields_cuda", h_flds); CE;
-  __fields_cuda_to_device(flds->mflds, flds->p, h_flds, 0, flds->nr_comp);
-  free(h_flds);
-  ierr = H5Gclose(group); CE;
+
+  ierr = H5Gclose(group0); CE;
 }
 
 // ----------------------------------------------------------------------
@@ -331,12 +291,35 @@ psc_mfields_cuda_read(struct psc_mfields *mflds, struct mrc_io *io)
   
   psc_mfields_cuda_setup(mflds);
 
+  int ierr;
+  long h5_file;
+  mrc_io_get_h5_file(io, &h5_file);
+  hid_t group0 = H5Gopen(h5_file, mrc_io_obj_path(io, mflds), H5P_DEFAULT); H5_CHK(group0);
+
   for (int p = 0; p < mflds->nr_patches; p++) {
+    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
     char name[20]; sprintf(name, "flds%d", p);
-    char *path;
-    mrc_io_read_attr_string(io, mrc_io_obj_path(io, mflds), name, &path);
-    psc_fields_cuda_read(mflds->flds[p], io, path);
+    hid_t group = H5Gopen(group0, name, H5P_DEFAULT); H5_CHK(group);
+
+    int ib[3], im[3], nr_comp;
+    ierr = H5LTget_attribute_int(group, ".", "p", &flds->p); CE;
+    ierr = H5LTget_attribute_int(group, ".", "ib", ib); CE;
+    ierr = H5LTget_attribute_int(group, ".", "im", im); CE;
+    ierr = H5LTget_attribute_int(group, ".", "nr_comp", &nr_comp); CE;
+    for (int d = 0; d < 3; d++) {
+      assert(ib[d] == flds->ib[d]);
+      assert(im[d] == flds->im[d]);
+    }
+    assert(flds->p == p);
+    assert(nr_comp == flds->nr_comp);
+
+    float *h_flds = malloc(flds->nr_comp * psc_fields_size(flds) * sizeof(*h_flds));
+    ierr = H5LTread_dataset_float(group, "fields_cuda", h_flds); CE;
+    __fields_cuda_to_device(flds->mflds, flds->p, h_flds, 0, flds->nr_comp);
+    free(h_flds);
+    ierr = H5Gclose(group); CE;
   }
+  ierr = H5Gclose(group0); CE;
 }
 
 #endif
