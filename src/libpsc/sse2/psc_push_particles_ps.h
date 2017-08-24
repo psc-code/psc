@@ -8,12 +8,12 @@
 #include "psc_fields_as_single.h"
 
 void psc_push_particles_1vb_ps_push_a_yz(struct psc_push_particles *push,
-					 struct psc_particles *prts_base,
-					 struct psc_fields *flds_base);
+					 struct psc_mparticles *mprts_base,
+					 struct psc_mfields *mflds_base);
 
 void psc_push_particles_1vb_ps2_push_a_yz(struct psc_push_particles *push,
-					  struct psc_particles *prts_base,
-					  struct psc_fields *flds_base);
+					  struct psc_mparticles *mprts_base,
+					  struct psc_mfields *mflds_base);
 
 // ======================================================================
 
