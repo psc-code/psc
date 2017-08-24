@@ -149,10 +149,10 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
 
     // x^n, p^n -> x^(n+.5), p^n
 
-    creal root = 1.f / creal_sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
-    creal vxi = part->pxi * root;
-    creal vyi = part->pyi * root;
-    creal vzi = part->pzi * root;
+    particle_real_t root = 1.f / particle_real_sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
+    particle_real_t vxi = part->pxi * root;
+    particle_real_t vyi = part->pyi * root;
+    particle_real_t vzi = part->pzi * root;
 
 #if (DIM & DIM_X)
     part->xi += vxi * xl;
@@ -165,47 +165,47 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
 #endif
 
 #if (DIM & DIM_X)
-    creal u = part->xi * dxi;
+    particle_real_t u = part->xi * dxi;
     int lg1 = particle_real_nint(u);
-    creal h1 = lg1-u;
-    creal gmx=.5f*(.5f+h1)*(.5f+h1);
-    creal g0x=.75f-h1*h1;
-    creal g1x=.5f*(.5f-h1)*(.5f-h1);
+    particle_real_t h1 = lg1-u;
+    particle_real_t gmx=.5f*(.5f+h1)*(.5f+h1);
+    particle_real_t g0x=.75f-h1*h1;
+    particle_real_t g1x=.5f*(.5f-h1)*(.5f-h1);
 #endif
 #if (DIM & DIM_Y)
-    creal v = part->yi * dyi;
+    particle_real_t v = part->yi * dyi;
     int lg2 = particle_real_nint(v);
-    creal h2 = lg2-v;
-    creal gmy=.5f*(.5f+h2)*(.5f+h2);
-    creal g0y=.75f-h2*h2;
-    creal g1y=.5f*(.5f-h2)*(.5f-h2);
+    particle_real_t h2 = lg2-v;
+    particle_real_t gmy=.5f*(.5f+h2)*(.5f+h2);
+    particle_real_t g0y=.75f-h2*h2;
+    particle_real_t g1y=.5f*(.5f-h2)*(.5f-h2);
 #endif
 #if (DIM & DIM_Z)
-    creal w = part->zi * dzi;
+    particle_real_t w = part->zi * dzi;
     int lg3 = particle_real_nint(w);
-    creal h3 = lg3-w;
-    creal gmz=.5f*(.5f+h3)*(.5f+h3);
-    creal g0z=.75f-h3*h3;
-    creal g1z=.5f*(.5f-h3)*(.5f-h3);
+    particle_real_t h3 = lg3-w;
+    particle_real_t gmz=.5f*(.5f+h3)*(.5f+h3);
+    particle_real_t g0z=.75f-h3*h3;
+    particle_real_t g1z=.5f*(.5f-h3)*(.5f-h3);
 #endif
 
     // CHARGE DENSITY FORM FACTOR AT (n+.5)*dt 
 
 #if DIM == DIM_Y
-    S0Y(-1) = .5f*(1.5f-creal_abs(h2-1.f))*(1.5f-creal_abs(h2-1.f));
-    S0Y(+0) = .75f-creal_abs(h2)*creal_abs(h2);
-    S0Y(+1) = .5f*(1.5f-creal_abs(h2+1.f))*(1.5f-creal_abs(h2+1.f));
+    S0Y(-1) = .5f*(1.5f-particle_real_abs(h2-1.f))*(1.5f-particle_real_abs(h2-1.f));
+    S0Y(+0) = .75f-particle_real_abs(h2)*particle_real_abs(h2);
+    S0Y(+1) = .5f*(1.5f-particle_real_abs(h2+1.f))*(1.5f-particle_real_abs(h2+1.f));
 #elif DIM == DIM_Z
-    S0Z(-1) = .5f*(1.5f-creal_abs(h3-1.f))*(1.5f-creal_abs(h3-1.f));
-    S0Z(+0) = .75f-creal_abs(h3)*creal_abs(h3);
-    S0Z(+1) = .5f*(1.5f-creal_abs(h3+1.f))*(1.5f-creal_abs(h3+1.f));
+    S0Z(-1) = .5f*(1.5f-particle_real_abs(h3-1.f))*(1.5f-particle_real_abs(h3-1.f));
+    S0Z(+0) = .75f-particle_real_abs(h3)*particle_real_abs(h3);
+    S0Z(+1) = .5f*(1.5f-particle_real_abs(h3+1.f))*(1.5f-particle_real_abs(h3+1.f));
 #elif DIM == DIM_XY
-    S0X(-1) = .5f*(1.5f-creal_abs(h1-1.f))*(1.5f-creal_abs(h1-1.f));
-    S0X(+0) = .75f-creal_abs(h1)*creal_abs(h1);
-    S0X(+1) = .5f*(1.5f-creal_abs(h1+1.f))*(1.5f-creal_abs(h1+1.f));
-    S0Y(-1) = .5f*(1.5f-creal_abs(h2-1.f))*(1.5f-creal_abs(h2-1.f));
-    S0Y(+0) = .75f-creal_abs(h2)*creal_abs(h2);
-    S0Y(+1) = .5f*(1.5f-creal_abs(h2+1.f))*(1.5f-creal_abs(h2+1.f));
+    S0X(-1) = .5f*(1.5f-particle_real_abs(h1-1.f))*(1.5f-particle_real_abs(h1-1.f));
+    S0X(+0) = .75f-particle_real_abs(h1)*particle_real_abs(h1);
+    S0X(+1) = .5f*(1.5f-particle_real_abs(h1+1.f))*(1.5f-particle_real_abs(h1+1.f));
+    S0Y(-1) = .5f*(1.5f-particle_real_abs(h2-1.f))*(1.5f-particle_real_abs(h2-1.f));
+    S0Y(+0) = .75f-particle_real_abs(h2)*particle_real_abs(h2);
+    S0Y(+1) = .5f*(1.5f-particle_real_abs(h2+1.f))*(1.5f-particle_real_abs(h2+1.f));
 #elif DIM == DIM_XZ
     S0X(-1) = gmx;
     S0X(+0) = g0x;
@@ -214,22 +214,22 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
     S0Z(+0) = g0z;
     S0Z(+1) = g1z;
 #elif DIM == DIM_YZ
-    S0Y(-1) = .5f*(1.5f-creal_abs(h2-1.f))*(1.5f-creal_abs(h2-1.f));
-    S0Y(+0) = .75f-creal_abs(h2)*creal_abs(h2);
-    S0Y(+1) = .5f*(1.5f-creal_abs(h2+1.f))*(1.5f-creal_abs(h2+1.f));
-    S0Z(-1) = .5f*(1.5f-creal_abs(h3-1.f))*(1.5f-creal_abs(h3-1.f));
-    S0Z(+0) = .75f-creal_abs(h3)*creal_abs(h3);
-    S0Z(+1) = .5f*(1.5f-creal_abs(h3+1.f))*(1.5f-creal_abs(h3+1.f));
+    S0Y(-1) = .5f*(1.5f-particle_real_abs(h2-1.f))*(1.5f-particle_real_abs(h2-1.f));
+    S0Y(+0) = .75f-particle_real_abs(h2)*particle_real_abs(h2);
+    S0Y(+1) = .5f*(1.5f-particle_real_abs(h2+1.f))*(1.5f-particle_real_abs(h2+1.f));
+    S0Z(-1) = .5f*(1.5f-particle_real_abs(h3-1.f))*(1.5f-particle_real_abs(h3-1.f));
+    S0Z(+0) = .75f-particle_real_abs(h3)*particle_real_abs(h3);
+    S0Z(+1) = .5f*(1.5f-particle_real_abs(h3+1.f))*(1.5f-particle_real_abs(h3+1.f));
 #elif DIM == DIM_XYZ
-    S0X(-1) = .5f*(1.5f-creal_abs(h1-1.f))*(1.5f-creal_abs(h1-1.f));
-    S0X(+0) = .75f-creal_abs(h1)*creal_abs(h1);
-    S0X(+1) = .5f*(1.5f-creal_abs(h1+1.f))*(1.5f-creal_abs(h1+1.f));
-    S0Y(-1) = .5f*(1.5f-creal_abs(h2-1.f))*(1.5f-creal_abs(h2-1.f));
-    S0Y(+0) = .75f-creal_abs(h2)*creal_abs(h2);
-    S0Y(+1) = .5f*(1.5f-creal_abs(h2+1.f))*(1.5f-creal_abs(h2+1.f));
-    S0Z(-1) = .5f*(1.5f-creal_abs(h3-1.f))*(1.5f-creal_abs(h3-1.f));
-    S0Z(+0) = .75f-creal_abs(h3)*creal_abs(h3);
-    S0Z(+1) = .5f*(1.5f-creal_abs(h3+1.f))*(1.5f-creal_abs(h3+1.f));
+    S0X(-1) = .5f*(1.5f-particle_real_abs(h1-1.f))*(1.5f-particle_real_abs(h1-1.f));
+    S0X(+0) = .75f-particle_real_abs(h1)*particle_real_abs(h1);
+    S0X(+1) = .5f*(1.5f-particle_real_abs(h1+1.f))*(1.5f-particle_real_abs(h1+1.f));
+    S0Y(-1) = .5f*(1.5f-particle_real_abs(h2-1.f))*(1.5f-particle_real_abs(h2-1.f));
+    S0Y(+0) = .75f-particle_real_abs(h2)*particle_real_abs(h2);
+    S0Y(+1) = .5f*(1.5f-particle_real_abs(h2+1.f))*(1.5f-particle_real_abs(h2+1.f));
+    S0Z(-1) = .5f*(1.5f-particle_real_abs(h3-1.f))*(1.5f-particle_real_abs(h3-1.f));
+    S0Z(+0) = .75f-particle_real_abs(h3)*particle_real_abs(h3);
+    S0Z(+1) = .5f*(1.5f-particle_real_abs(h3+1.f))*(1.5f-particle_real_abs(h3+1.f));
 #endif
 
 #if (DIM & DIM_X)
@@ -249,50 +249,50 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
 #endif
 
 #if (DIM & DIM_X)
-    creal hmx=.5f*(.5f+h1)*(.5f+h1);
-    creal h0x=.75f-h1*h1;
-    creal h1x=.5f*(.5f-h1)*(.5f-h1);
+    particle_real_t hmx=.5f*(.5f+h1)*(.5f+h1);
+    particle_real_t h0x=.75f-h1*h1;
+    particle_real_t h1x=.5f*(.5f-h1)*(.5f-h1);
 #endif
 #if (DIM & DIM_Y)
-    creal hmy=.5f*(.5f+h2)*(.5f+h2);
-    creal h0y=.75f-h2*h2;
-    creal h1y=.5f*(.5f-h2)*(.5f-h2);
+    particle_real_t hmy=.5f*(.5f+h2)*(.5f+h2);
+    particle_real_t h0y=.75f-h2*h2;
+    particle_real_t h1y=.5f*(.5f-h2)*(.5f-h2);
 #endif
 #if (DIM & DIM_Z)
-    creal hmz=.5f*(.5f+h3)*(.5f+h3);
-    creal h0z=.75f-h3*h3;
-    creal h1z=.5f*(.5f-h3)*(.5f-h3);
+    particle_real_t hmz=.5f*(.5f+h3)*(.5f+h3);
+    particle_real_t h0z=.75f-h3*h3;
+    particle_real_t h1z=.5f*(.5f-h3)*(.5f-h3);
 #endif
 
     // FIELD INTERPOLATION
 
-    creal exq = IP_2ND(flds, EX, h, g, g);
-    creal eyq = IP_2ND(flds, EY, g, h, g);
-    creal ezq = IP_2ND(flds, EZ, g, g, h);
-    creal hxq = IP_2ND(flds, HX, g, h, h);
-    creal hyq = IP_2ND(flds, HY, h, g, h);
-    creal hzq = IP_2ND(flds, HZ, h, h, g);
+    particle_real_t exq = IP_2ND(flds, EX, h, g, g);
+    particle_real_t eyq = IP_2ND(flds, EY, g, h, g);
+    particle_real_t ezq = IP_2ND(flds, EZ, g, g, h);
+    particle_real_t hxq = IP_2ND(flds, HX, g, h, h);
+    particle_real_t hyq = IP_2ND(flds, HY, h, g, h);
+    particle_real_t hzq = IP_2ND(flds, HZ, h, h, g);
 		 
      // c x^(n+.5), p^n -> x^(n+1.0), p^(n+1.0) 
 
-    creal dq = dqs * part->qni / part->mni;
-    creal pxm = part->pxi + dq*exq;
-    creal pym = part->pyi + dq*eyq;
-    creal pzm = part->pzi + dq*ezq;
+    particle_real_t dq = dqs * part->qni / part->mni;
+    particle_real_t pxm = part->pxi + dq*exq;
+    particle_real_t pym = part->pyi + dq*eyq;
+    particle_real_t pzm = part->pzi + dq*ezq;
 
-    root = dq / creal_sqrt(1.f + pxm*pxm + pym*pym + pzm*pzm);
-    creal taux = hxq*root;
-    creal tauy = hyq*root;
-    creal tauz = hzq*root;
+    root = dq / particle_real_sqrt(1.f + pxm*pxm + pym*pym + pzm*pzm);
+    particle_real_t taux = hxq*root;
+    particle_real_t tauy = hyq*root;
+    particle_real_t tauz = hzq*root;
 
-    creal tau = 1.f / (1.f + taux*taux + tauy*tauy + tauz*tauz);
-    creal pxp = ((1.f+taux*taux-tauy*tauy-tauz*tauz)*pxm + 
+    particle_real_t tau = 1.f / (1.f + taux*taux + tauy*tauy + tauz*tauz);
+    particle_real_t pxp = ((1.f+taux*taux-tauy*tauy-tauz*tauz)*pxm + 
 		(2.f*taux*tauy+2.f*tauz)*pym + 
 		(2.f*taux*tauz-2.f*tauy)*pzm)*tau;
-    creal pyp = ((2.f*taux*tauy-2.f*tauz)*pxm +
+    particle_real_t pyp = ((2.f*taux*tauy-2.f*tauz)*pxm +
 		(1.f-taux*taux+tauy*tauy-tauz*tauz)*pym +
 		(2.f*tauy*tauz+2.f*taux)*pzm)*tau;
-    creal pzp = ((2.f*taux*tauz+2.f*tauy)*pxm +
+    particle_real_t pzp = ((2.f*taux*tauz+2.f*tauy)*pxm +
 		(2.f*tauy*tauz-2.f*taux)*pym +
 		(1.f-taux*taux-tauy*tauy+tauz*tauz)*pzm)*tau;
 
@@ -300,21 +300,21 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
     part->pyi = pyp + dq * eyq;
     part->pzi = pzp + dq * ezq;
 
-    root = 1.f / creal_sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
+    root = 1.f / particle_real_sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
     vxi = part->pxi * root;
     vyi = part->pyi * root;
     vzi = part->pzi * root;
 
 #if (DIM & DIM_X)
     part->xi += vxi * xl;
-    creal xi = part->xi + vxi * xl;
+    particle_real_t xi = part->xi + vxi * xl;
     u = xi * dxi;
     int k1 = particle_real_nint(u);
     h1 = k1 - u;
 #endif
 #if (DIM & DIM_Y)
     part->yi += vyi * yl;
-    creal yi = part->yi + vyi * yl;
+    particle_real_t yi = part->yi + vyi * yl;
     v = yi * dyi;
     int k2 = particle_real_nint(v);
     h2 = k2 - v;
@@ -322,7 +322,7 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
 #endif
 #if (DIM & DIM_Z)
     part->zi += vzi * zl;
-    creal zi = part->zi + vzi * zl;
+    particle_real_t zi = part->zi + vzi * zl;
     w = zi * dzi;
     int k3 = particle_real_nint(w);
     h3 = k3 - w;
@@ -344,20 +344,20 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
     }
 
 #if DIM == DIM_Y
-    S1Y(k2-lg2-1) = .5f*(1.5f-creal_abs(h2-1.f))*(1.5f-creal_abs(h2-1.f));
-    S1Y(k2-lg2+0) = .75f-creal_abs(h2)*creal_abs(h2);
-    S1Y(k2-lg2+1) = .5f*(1.5f-creal_abs(h2+1.f))*(1.5f-creal_abs(h2+1.f));
+    S1Y(k2-lg2-1) = .5f*(1.5f-particle_real_abs(h2-1.f))*(1.5f-particle_real_abs(h2-1.f));
+    S1Y(k2-lg2+0) = .75f-particle_real_abs(h2)*particle_real_abs(h2);
+    S1Y(k2-lg2+1) = .5f*(1.5f-particle_real_abs(h2+1.f))*(1.5f-particle_real_abs(h2+1.f));
 #elif DIM == DIM_Z
-    S1Z(k3-lg3-1) = .5f*(1.5f-creal_abs(h3-1.f))*(1.5f-creal_abs(h3-1.f));
-    S1Z(k3-lg3+0) = .75f-creal_abs(h3)*creal_abs(h3);
-    S1Z(k3-lg3+1) = .5f*(1.5f-creal_abs(h3+1.f))*(1.5f-creal_abs(h3+1.f));
+    S1Z(k3-lg3-1) = .5f*(1.5f-particle_real_abs(h3-1.f))*(1.5f-particle_real_abs(h3-1.f));
+    S1Z(k3-lg3+0) = .75f-particle_real_abs(h3)*particle_real_abs(h3);
+    S1Z(k3-lg3+1) = .5f*(1.5f-particle_real_abs(h3+1.f))*(1.5f-particle_real_abs(h3+1.f));
 #elif DIM == DIM_XY
-    S1X(k1-lg1-1) = .5f*(1.5f-creal_abs(h1-1.f))*(1.5f-creal_abs(h1-1.f));
-    S1X(k1-lg1+0) = .75f-creal_abs(h1)*creal_abs(h1);
-    S1X(k1-lg1+1) = .5f*(1.5f-creal_abs(h1+1.f))*(1.5f-creal_abs(h1+1.f));
-    S1Y(k2-lg2-1) = .5f*(1.5f-creal_abs(h2-1.f))*(1.5f-creal_abs(h2-1.f));
-    S1Y(k2-lg2+0) = .75f-creal_abs(h2)*creal_abs(h2);
-    S1Y(k2-lg2+1) = .5f*(1.5f-creal_abs(h2+1.f))*(1.5f-creal_abs(h2+1.f));
+    S1X(k1-lg1-1) = .5f*(1.5f-particle_real_abs(h1-1.f))*(1.5f-particle_real_abs(h1-1.f));
+    S1X(k1-lg1+0) = .75f-particle_real_abs(h1)*particle_real_abs(h1);
+    S1X(k1-lg1+1) = .5f*(1.5f-particle_real_abs(h1+1.f))*(1.5f-particle_real_abs(h1+1.f));
+    S1Y(k2-lg2-1) = .5f*(1.5f-particle_real_abs(h2-1.f))*(1.5f-particle_real_abs(h2-1.f));
+    S1Y(k2-lg2+0) = .75f-particle_real_abs(h2)*particle_real_abs(h2);
+    S1Y(k2-lg2+1) = .5f*(1.5f-particle_real_abs(h2+1.f))*(1.5f-particle_real_abs(h2+1.f));
 #elif DIM == DIM_XZ
     S1X(k1-lg1-1) = .5f*(.5f+h1)*(.5f+h1);
     S1X(k1-lg1+0) = .75f-h1*h1;
@@ -366,22 +366,22 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
     S1Z(k3-lg3+0) = .75f-h3*h3;
     S1Z(k3-lg3+1) = .5f*(.5f-h3)*(.5f-h3);
 #elif DIM == DIM_YZ
-    S1Y(k2-lg2-1) = .5f*(1.5f-creal_abs(h2-1.f))*(1.5f-creal_abs(h2-1.f));
-    S1Y(k2-lg2+0) = .75f-creal_abs(h2)*creal_abs(h2);
-    S1Y(k2-lg2+1) = .5f*(1.5f-creal_abs(h2+1.f))*(1.5f-creal_abs(h2+1.f));
-    S1Z(k3-lg3-1) = .5f*(1.5f-creal_abs(h3-1.f))*(1.5f-creal_abs(h3-1.f));
-    S1Z(k3-lg3+0) = .75f-creal_abs(h3)*creal_abs(h3);
-    S1Z(k3-lg3+1) = .5f*(1.5f-creal_abs(h3+1.f))*(1.5f-creal_abs(h3+1.f));
+    S1Y(k2-lg2-1) = .5f*(1.5f-particle_real_abs(h2-1.f))*(1.5f-particle_real_abs(h2-1.f));
+    S1Y(k2-lg2+0) = .75f-particle_real_abs(h2)*particle_real_abs(h2);
+    S1Y(k2-lg2+1) = .5f*(1.5f-particle_real_abs(h2+1.f))*(1.5f-particle_real_abs(h2+1.f));
+    S1Z(k3-lg3-1) = .5f*(1.5f-particle_real_abs(h3-1.f))*(1.5f-particle_real_abs(h3-1.f));
+    S1Z(k3-lg3+0) = .75f-particle_real_abs(h3)*particle_real_abs(h3);
+    S1Z(k3-lg3+1) = .5f*(1.5f-particle_real_abs(h3+1.f))*(1.5f-particle_real_abs(h3+1.f));
 #elif DIM == DIM_XYZ
-    S1X(k1-lg1-1) = .5f*(1.5f-creal_abs(h1-1.f))*(1.5f-creal_abs(h1-1.f));
-    S1X(k1-lg1+0) = .75f-creal_abs(h1)*creal_abs(h1);
-    S1X(k1-lg1+1) = .5f*(1.5f-creal_abs(h1+1.f))*(1.5f-creal_abs(h1+1.f));
-    S1Y(k2-lg2-1) = .5f*(1.5f-creal_abs(h2-1.f))*(1.5f-creal_abs(h2-1.f));
-    S1Y(k2-lg2+0) = .75f-creal_abs(h2)*creal_abs(h2);
-    S1Y(k2-lg2+1) = .5f*(1.5f-creal_abs(h2+1.f))*(1.5f-creal_abs(h2+1.f));
-    S1Z(k3-lg3-1) = .5f*(1.5f-creal_abs(h3-1.f))*(1.5f-creal_abs(h3-1.f));
-    S1Z(k3-lg3+0) = .75f-creal_abs(h3)*creal_abs(h3);
-    S1Z(k3-lg3+1) = .5f*(1.5f-creal_abs(h3+1.f))*(1.5f-creal_abs(h3+1.f));
+    S1X(k1-lg1-1) = .5f*(1.5f-particle_real_abs(h1-1.f))*(1.5f-particle_real_abs(h1-1.f));
+    S1X(k1-lg1+0) = .75f-particle_real_abs(h1)*particle_real_abs(h1);
+    S1X(k1-lg1+1) = .5f*(1.5f-particle_real_abs(h1+1.f))*(1.5f-particle_real_abs(h1+1.f));
+    S1Y(k2-lg2-1) = .5f*(1.5f-particle_real_abs(h2-1.f))*(1.5f-particle_real_abs(h2-1.f));
+    S1Y(k2-lg2+0) = .75f-particle_real_abs(h2)*particle_real_abs(h2);
+    S1Y(k2-lg2+1) = .5f*(1.5f-particle_real_abs(h2+1.f))*(1.5f-particle_real_abs(h2+1.f));
+    S1Z(k3-lg3-1) = .5f*(1.5f-particle_real_abs(h3-1.f))*(1.5f-particle_real_abs(h3-1.f));
+    S1Z(k3-lg3+0) = .75f-particle_real_abs(h3)*particle_real_abs(h3);
+    S1Z(k3-lg3+1) = .5f*(1.5f-particle_real_abs(h3+1.f))*(1.5f-particle_real_abs(h3+1.f));
 #endif
 
     // CURRENT DENSITY AT (n+1.0)*dt
@@ -435,32 +435,32 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
 #endif
 
 #if (DIM & DIM_X)
-    creal fnqx = part->qni * part->wni * fnqxs;
+    particle_real_t fnqx = part->qni * part->wni * fnqxs;
 #else
-    creal fnqxx = vxi * part->qni * part->wni * fnqs;
+    particle_real_t fnqxx = vxi * part->qni * part->wni * fnqs;
 #endif
 #if (DIM & DIM_Y)
-    creal fnqy = part->qni * part->wni * fnqys;
+    particle_real_t fnqy = part->qni * part->wni * fnqys;
 #else
-    creal fnqyy = vyi * part->qni * part->wni * fnqs;
+    particle_real_t fnqyy = vyi * part->qni * part->wni * fnqs;
 #endif
 #if (DIM & DIM_Z)
-    creal fnqz = part->qni * part->wni * fnqzs;
+    particle_real_t fnqz = part->qni * part->wni * fnqzs;
 #else
-    creal fnqzz = vzi * part->qni * part->wni * fnqs;
+    particle_real_t fnqzz = vzi * part->qni * part->wni * fnqs;
 #endif
 
 #if DIM == DIM_Y
-    creal jyh = 0.f;
+    particle_real_t jyh = 0.f;
 
     for (int l2 = l2min; l2 <= l2max; l2++) {
-      creal wx = S0Y(l2) + .5f * S1Y(l2);
-      creal wy = S1Y(l2);
-      creal wz = S0Y(l2) + .5f * S1Y(l2);
+      particle_real_t wx = S0Y(l2) + .5f * S1Y(l2);
+      particle_real_t wy = S1Y(l2);
+      particle_real_t wz = S0Y(l2) + .5f * S1Y(l2);
       
-      creal jxh = fnqxx*wx;
+      particle_real_t jxh = fnqxx*wx;
       jyh -= fnqy*wy;
-      creal jzh = fnqzz*wz;
+      particle_real_t jzh = fnqzz*wz;
 
       _F3(flds, JXI, 0,lg2+l2,0) += jxh;
       _F3(flds, JYI, 0,lg2+l2,0) += jyh;
@@ -469,14 +469,14 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
 
 #elif DIM == DIM_Z
 
-    creal jzh = 0.f;
+    particle_real_t jzh = 0.f;
     for (int l3 = l3min; l3 <= l3max; l3++) {
-      creal wx = S0Z(l3) + .5f * S1Z(l3);
-      creal wy = S0Z(l3) + .5f * S1Z(l3);
-      creal wz = S1Z(l3);
+      particle_real_t wx = S0Z(l3) + .5f * S1Z(l3);
+      particle_real_t wy = S0Z(l3) + .5f * S1Z(l3);
+      particle_real_t wz = S1Z(l3);
       
-      creal jxh = fnqxx*wx;
-      creal jyh = fnqyy*wy;
+      particle_real_t jxh = fnqxx*wx;
+      particle_real_t jyh = fnqyy*wy;
       jzh -= fnqz*wz;
       
       _F3(flds, JXI, 0,0,lg3+l3) += jxh;
@@ -487,10 +487,10 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
 #elif DIM == DIM_XY
 
     for (int l2 = l2min; l2 <= l2max; l2++) {
-      creal jxh = 0.f;
+      particle_real_t jxh = 0.f;
       for (int l1 = l1min; l1 <= l1max; l1++) {
-	creal wx = S1X(l1) * (S0Y(l2) + .5f*S1Y(l2));
-	creal wz = S0X(l1) * S0Y(l2)
+	particle_real_t wx = S1X(l1) * (S0Y(l2) + .5f*S1Y(l2));
+	particle_real_t wz = S0X(l1) * S0Y(l2)
 	  + .5f * S1X(l1) * S0Y(l2)
 	  + .5f * S0X(l1) * S1Y(l2)
 	  + (1.f/3.f) * S1X(l1) * S1Y(l2);
@@ -501,9 +501,9 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
       }
     }
     for (int l1 = l1min; l1 <= l1max; l1++) {
-      creal jyh = 0.f;
+      particle_real_t jyh = 0.f;
       for (int l2 = l2min; l2 <= l2max; l2++) {
-	creal wy = S1Y(l2) * (S0X(l1) + .5f*S1X(l1));
+	particle_real_t wy = S1Y(l2) * (S0X(l1) + .5f*S1X(l1));
 
 	jyh -= fnqy*wy;
 	_F3(flds, JYI, lg1+l1,lg2+l2,0) += jyh;
@@ -513,9 +513,9 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
 #elif DIM == DIM_XZ
 
     for (int l3 = l3min; l3 <= l3max; l3++) {
-      creal jxh = 0.f;
+      particle_real_t jxh = 0.f;
       for (int l1 = l1min; l1 < l1max; l1++) {
-	creal wx = S1X(l1) * (S0Z(l3) + .5f*S1Z(l3));
+	particle_real_t wx = S1X(l1) * (S0Z(l3) + .5f*S1Z(l3));
 	jxh -= fnqx*wx;
 	_F3(flds, JXI, lg1+l1,0,lg3+l3) += jxh;
       }
@@ -523,19 +523,19 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
 
     for (int l3 = l3min; l3 <= l3max; l3++) {
       for (int l1 = l1min; l1 <= l1max; l1++) {
-	creal wy = S0X(l1) * S0Z(l3)
+	particle_real_t wy = S0X(l1) * S0Z(l3)
 	  + .5f * S1X(l1) * S0Z(l3)
 	  + .5f * S0X(l1) * S1Z(l3)
 	  + (1.f/3.f) * S1X(l1) * S1Z(l3);
-	creal jyh = fnqyy*wy;
+	particle_real_t jyh = fnqyy*wy;
 	_F3(flds, JYI, lg1+l1,0,lg3+l3) += jyh;
       }
     }
 
     for (int l1 = l1min; l1 <= l1max; l1++) {
-      creal jzh = 0.f;
+      particle_real_t jzh = 0.f;
       for (int l3 = l3min; l3 < l3max; l3++) {
-	creal wz = S1Z(l3) * (S0X(l1) + .5f*S1X(l1));
+	particle_real_t wz = S1Z(l3) * (S0X(l1) + .5f*S1X(l1));
 	jzh -= fnqz*wz;
 	_F3(flds, JZI, lg1+l1,0,lg3+l3) += jzh;
       }
@@ -543,9 +543,9 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
 
 #elif DIM == DIM_YZ
 
-    creal jxh;
-    creal jyh;
-    creal jzh[5];
+    particle_real_t jxh;
+    particle_real_t jyh;
+    particle_real_t jzh[5];
 
 #define JZH(i) jzh[i+2]
 
@@ -555,12 +555,12 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
     for (int l3 = l3min; l3 <= l3max; l3++) {
       jyh = 0.f;
       for (int l2 = l2min; l2 <= l2max; l2++) {
-	creal wx = S0Y(l2) * S0Z(l3)
+	particle_real_t wx = S0Y(l2) * S0Z(l3)
 	  + .5f * S1Y(l2) * S0Z(l3)
 	  + .5f * S0Y(l2) * S1Z(l3)
 	  + (1.f/3.f) * S1Y(l2) * S1Z(l3);
-	creal wy = S1Y(l2) * (S0Z(l3) + .5f*S1Z(l3));
-	creal wz = S1Z(l3) * (S0Y(l2) + .5f*S1Y(l2));
+	particle_real_t wy = S1Y(l2) * (S0Z(l3) + .5f*S1Z(l3));
+	particle_real_t wz = S1Z(l3) * (S0Y(l2) + .5f*S1Y(l2));
 
 	jxh = fnqxx*wx;
 	jyh -= fnqy*wy;
@@ -575,9 +575,9 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
 #elif DIM == DIM_XYZ
     for (int l3 = l3min; l3 <= l3max; l3++) {
       for (int l2 = l2min; l2 <= l2max; l2++) {
-	creal jxh = 0.f;
+	particle_real_t jxh = 0.f;
 	for (int l1 = l1min; l1 <= l1max; l1++) {
-	  creal wx = S1X(l1)*(S0Y(l2)*S0Z(l3) +
+	  particle_real_t wx = S1X(l1)*(S0Y(l2)*S0Z(l3) +
 			      .5f * S1Y(l2)*S0Z(l3) +
 			      .5f * S0Y(l2)*S1Z(l3) +
 			      (1.f/3.f) * S1Y(l2)*S1Z(l3));
@@ -590,9 +590,9 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
 
     for (int l3 = l3min; l3 <= l3max; l3++) {
       for (int l1 = l1min; l1 <= l1max; l1++) {
-	creal jyh = 0.f;
+	particle_real_t jyh = 0.f;
 	for (int l2 = l2min; l2 <= l2max; l2++) {
-	  creal wy = S1Y(l2)*(S0X(l1)*S0Z(l3) +
+	  particle_real_t wy = S1Y(l2)*(S0X(l1)*S0Z(l3) +
 			      .5f * S1X(l1)*S0Z(l3) +
 			      .5f * S0X(l1)*S1Z(l3) +
 			      (1.f/3.f) * S1X(l1)*S1Z(l3));
@@ -605,9 +605,9 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
 
     for (int l2 = l2min; l2 <= l2max; l2++) {
       for (int l1 = l1min; l1 <= l1max; l1++) {
-	creal jzh = 0.f;
+	particle_real_t jzh = 0.f;
 	for (int l3 = l3min; l3 <= l3max; l3++) {
-	  creal wz = S1Z(l3)*(S0X(l1)*S0Y(l2) +
+	  particle_real_t wz = S1Z(l3)*(S0X(l1)*S0Y(l2) +
 			      .5f * S1X(l1)*S0Y(l2) +
 			      .5f * S0X(l1)*S1Y(l2) +
 			      (1.f/3.f) * S1X(l1)*S1Y(l2));
