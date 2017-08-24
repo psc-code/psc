@@ -24,42 +24,28 @@ do_push_part_1st_xz(int p, struct psc_fields *pf, particle_range_t prts)
     calc_v(vv, &part->pxi);
     push_x(&part->xi, vv);
 
-    int lg1;
-    particle_real_t g0x, g1x;
-    ip_coeff_1st(&lg1, &g0x, &g1x, part->xi * dxi);
-
-    int lg3;
-    particle_real_t g0z, g1z;
-    ip_coeff_1st(&lg3, &g0z, &g1z, part->zi * dzi);
-
     // CHARGE DENSITY FORM FACTOR AT (n+.5)*dt 
 
+    int lg1, lh1;
+    particle_real_t g0x, g1x, h0x, h1x;
+    ip_coeff_1st(&lg1, &g0x, &g1x, part->xi * dxi);
     set_S_1st(s0x, 0, g0x, g1x);
-    set_S_1st(s0z, 0, g0z, g1z);
-
-    int lh1;
-    particle_real_t h0x, h1x;
     ip_coeff_1st(&lh1, &h0x, &h1x, part->xi * dxi - .5f);
     
-    int lh3;
-    particle_real_t h0z, h1z;
+    int lg3, lh3;
+    particle_real_t g0z, g1z, h0z, h1z;
+    ip_coeff_1st(&lg3, &g0z, &g1z, part->zi * dzi);
+    set_S_1st(s0z, 0, g0z, g1z);
     ip_coeff_1st(&lh3, &h0z, &h1z, part->zi * dzi - .5f);
     
     // FIELD INTERPOLATION
 
-#define INTERPOLATE_FIELD(m, gx, gz)					\
-    (gz##0z*(gx##0x*F3(pf, m, l##gx##1  ,0,l##gz##3  ) +		\
-	     gx##1x*F3(pf, m, l##gx##1+1,0,l##gz##3  )) +		\
-     gz##1z*(gx##0x*F3(pf, m, l##gx##1  ,0,l##gz##3+1) +		\
-	     gx##1x*F3(pf, m, l##gx##1+1,0,l##gz##3+1)))		\
-      
-    particle_real_t exq = INTERPOLATE_FIELD(EX, h, g);
-    particle_real_t eyq = INTERPOLATE_FIELD(EY, g, g);
-    particle_real_t ezq = INTERPOLATE_FIELD(EZ, g, h);
-
-    particle_real_t hxq = INTERPOLATE_FIELD(HX, g, h);
-    particle_real_t hyq = INTERPOLATE_FIELD(HY, h, h);
-    particle_real_t hzq = INTERPOLATE_FIELD(HZ, h, g);
+    particle_real_t exq = IP_FIELD(pf, EX, h, g, g);
+    particle_real_t eyq = IP_FIELD(pf, EY, g, h, g);
+    particle_real_t ezq = IP_FIELD(pf, EZ, g, g, h);
+    particle_real_t hxq = IP_FIELD(pf, HX, g, h, h);
+    particle_real_t hyq = IP_FIELD(pf, HY, h, g, h);
+    particle_real_t hzq = IP_FIELD(pf, HZ, h, h, g);
 
      // c x^(n+.5), p^n -> x^(n+1.0), p^(n+1.0) 
 
@@ -109,7 +95,6 @@ do_push_part_1st_xz(int p, struct psc_fields *pf, particle_range_t prts)
     int k3;
     ip_coeff_1st(&k3, &g0z, &g1z, zi * dzi);
     set_S_1st(s1z, k3-lg3, g0x, g1x);
-
 
     // CURRENT DENSITY AT (n+1.0)*dt
 
