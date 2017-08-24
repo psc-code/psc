@@ -74,11 +74,11 @@ do_genc_push_part(int p, struct psc_fields *pf, particle_range_t prts)
   creal dqs = .5f * ppsc->coeff.eta * dt;
   creal fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
 
-  creal dxi = 1.f / ppsc->patch[p].dx[0];
 #if (DIM & DIM_X)
   creal s0x[5] = {}, s1x[5];
   creal xl = .5f * dt;
   creal fnqxs = ppsc->patch[p].dx[0] * fnqs / dt;
+  creal dxi = 1.f / ppsc->patch[p].dx[0];
 #endif
 #if (DIM & DIM_Y)
   creal s0y[5] = {}, s1y[5];
@@ -113,9 +113,9 @@ do_genc_push_part(int p, struct psc_fields *pf, particle_range_t prts)
     part->zi += vzi * zl;
 #endif
 
+#if (DIM & DIM_X)
     creal u = part->xi * dxi;
     int lg1 = particle_real_nint(u);
-#if (DIM & DIM_X)
     creal h1 = lg1-u;
     creal gmx=.5f*(.5f+h1)*(.5f+h1);
     creal g0x=.75f-h1*h1;
@@ -138,10 +138,6 @@ do_genc_push_part(int p, struct psc_fields *pf, particle_range_t prts)
     creal g1z=.5f*(.5f-h3)*(.5f-h3);
 #endif
 
-#if DIM == DIM_XY
-    int lg3 = 0;
-#endif
-    
     // CHARGE DENSITY FORM FACTOR AT (n+.5)*dt 
 
 #if DIM == DIM_Y
@@ -404,8 +400,8 @@ do_genc_push_part(int p, struct psc_fields *pf, particle_range_t prts)
 	  + (1.f/3.f) * S1X(l1) * S1Y(l2);
 
 	jxh -= fnqx*wx;
-	F3(pf, JXI, lg1+l1,lg2+l2,lg3) += jxh;
-	F3(pf, JZI, lg1+l1,lg2+l2,lg3) += fnqzz * wz;
+	F3(pf, JXI, lg1+l1,lg2+l2,0) += jxh;
+	F3(pf, JZI, lg1+l1,lg2+l2,0) += fnqzz * wz;
       }
     }
     for (int l1 = l1min; l1 <= l1max; l1++) {
@@ -414,7 +410,7 @@ do_genc_push_part(int p, struct psc_fields *pf, particle_range_t prts)
 	creal wy = S1Y(l2) * (S0X(l1) + .5f*S1X(l1));
 
 	jyh -= fnqy*wy;
-	F3(pf, JYI, lg1+l1,lg2+l2,lg3) += jyh;
+	F3(pf, JYI, lg1+l1,lg2+l2,0) += jyh;
       }
     }
 
@@ -474,9 +470,9 @@ do_genc_push_part(int p, struct psc_fields *pf, particle_range_t prts)
 	jyh -= fnqy*wy;
 	JZH(l2) -= fnqz*wz;
 
-	F3(pf, JXI, lg1,lg2+l2,lg3+l3) += jxh;
-	F3(pf, JYI, lg1,lg2+l2,lg3+l3) += jyh;
-	F3(pf, JZI, lg1,lg2+l2,lg3+l3) += JZH(l2);
+	F3(pf, JXI, 0,lg2+l2,lg3+l3) += jxh;
+	F3(pf, JYI, 0,lg2+l2,lg3+l3) += jyh;
+	F3(pf, JZI, 0,lg2+l2,lg3+l3) += JZH(l2);
       }
     }
 #endif
