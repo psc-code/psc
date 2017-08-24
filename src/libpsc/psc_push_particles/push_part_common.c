@@ -10,6 +10,11 @@
 #define DIM_YZ (DIM_Y | DIM_Z)
 #define DIM_XYZ (DIM_X | DIM_Y | DIM_Z)
 
+// ----------------------------------------------------------------------
+// static vars
+
+static particle_real_t xl, yl, zl;
+
 #if ORDER == ORDER_1ST
 
 
@@ -48,6 +53,23 @@ calc_v(particle_real_t *v, const particle_real_t *p)
   for (int d = 0; d < 3; d++) {
     v[d] = p[d] * root;
   }
+}
+
+// ----------------------------------------------------------------------
+// push_x
+
+static inline void
+push_x(particle_real_t *x, const particle_real_t *v)
+{
+#if (DIM & DIM_X)
+  x[0] += v[0] * xl;
+#endif
+#if (DIM & DIM_Y)
+  x[1] += v[1] * yl;
+#endif
+#if (DIM & DIM_Z)
+  x[2] += v[2] * zl;
+#endif
 }
 
 // ----------------------------------------------------------------------
@@ -163,16 +185,7 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
 
     particle_real_t vv[3];
     calc_v(vv, &part->pxi);
-
-#if (DIM & DIM_X)
-    part->xi += vv[0] * xl;
-#endif
-#if (DIM & DIM_Y)
-    part->yi += vv[1] * yl;
-#endif
-#if (DIM & DIM_Z)
-    part->zi += vv[2] * zl;
-#endif
+    push_x(&part->xi, vv);
 
 #if (DIM & DIM_X)
     particle_real_t u = part->xi * dxi;
@@ -311,16 +324,15 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
     part->pzi = pzp + dq * ezq;
 
     calc_v(vv, &part->pxi);
+    push_x(&part->xi, vv);
 
 #if (DIM & DIM_X)
-    part->xi += vv[0] * xl;
     particle_real_t xi = part->xi + vv[0] * xl;
     u = xi * dxi;
     int k1 = particle_real_nint(u);
     h1 = k1 - u;
 #endif
 #if (DIM & DIM_Y)
-    part->yi += vv[1] * yl;
     particle_real_t yi = part->yi + vv[1] * yl;
     v = yi * dyi;
     int k2 = particle_real_nint(v);
@@ -328,7 +340,6 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
 
 #endif
 #if (DIM & DIM_Z)
-    part->zi += vv[2] * zl;
     particle_real_t zi = part->zi + vv[2] * zl;
     w = zi * dzi;
     int k3 = particle_real_nint(w);

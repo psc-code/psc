@@ -22,8 +22,7 @@ do_push_part_1st_xz(int p, struct psc_fields *pf, particle_range_t prts)
 
     particle_real_t vv[3];
     calc_v(vv, &part->pxi);
-    part->xi += vv[0] * xl;
-    part->zi += vv[1] * zl;
+    push_x(&part->xi, vv);
 
     particle_real_t u = part->xi * dxi;
     particle_real_t w = part->zi * dzi;
@@ -99,8 +98,7 @@ do_push_part_1st_xz(int p, struct psc_fields *pf, particle_range_t prts)
     part->pzi = pzp + dq * ezq;
 
     calc_v(vv, &part->pxi);
-    part->xi += vv[0] * xl;
-    part->zi += vv[2] * zl;
+    push_x(&part->xi, vv);
 
     // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt 
     // x^(n+1), p^(n+1) -> x^(n+1.5f), p^(n+1)
