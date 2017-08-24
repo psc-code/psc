@@ -108,25 +108,25 @@ push_x(particle_real_t *x, const particle_real_t *v)
 #if ORDER == ORDER_1ST
 
 #define IP_FIELD(pf, m, gx, gy, gz)					\
-  (gz##0z*(gx##0x*F3(pf, m, l##gx##1  ,0,l##gz##3  ) +			\
-	   gx##1x*F3(pf, m, l##gx##1+1,0,l##gz##3  )) +			\
-   gz##1z*(gx##0x*F3(pf, m, l##gx##1  ,0,l##gz##3+1) +			\
-	   gx##1x*F3(pf, m, l##gx##1+1,0,l##gz##3+1)))			\
+  (gz##0z*(gx##0x*_F3(pf, m, l##gx##1  ,0,l##gz##3  ) +			\
+	   gx##1x*_F3(pf, m, l##gx##1+1,0,l##gz##3  )) +			\
+   gz##1z*(gx##0x*_F3(pf, m, l##gx##1  ,0,l##gz##3+1) +			\
+	   gx##1x*_F3(pf, m, l##gx##1+1,0,l##gz##3+1)))			\
 
 #else
 
 #if DIM == DIM_Y
-#define IP_2ND(flds, m, gx, gy, gz)					\
+#define IP_FIELD(flds, m, gx, gy, gz)					\
   (gy##my*_F3(flds, m, 0,l##gy##2-1,0) +				\
    gy##0y*_F3(flds, m, 0,l##gy##2  ,0) +				\
    gy##1y*_F3(flds, m, 0,l##gy##2+1,0))
 #elif DIM == DIM_Z
-#define IP_2ND(flds, m, gx, gy, gz)					\
+#define IP_FIELD(flds, m, gx, gy, gz)					\
   (gz##mz*_F3(flds, m, 0,0,l##gz##3-1) +				\
    gz##0z*_F3(flds, m, 0,0,l##gz##3  ) +				\
    gz##1z*_F3(flds, m, 0,0,l##gz##3+1))
 #elif DIM == DIM_XY
-#define IP_2ND(flds, m, gx, gy, gz)					\
+#define IP_FIELD(flds, m, gx, gy, gz)					\
   (gy##my*(gx##mx*_F3(flds, m, l##gx##1-1,l##gy##2-1,0) +		\
 	   gx##0x*_F3(flds, m, l##gx##1  ,l##gy##2-1,0) +		\
 	   gx##1x*_F3(flds, m, l##gx##1+1,l##gy##2-1,0)) +		\
@@ -137,7 +137,7 @@ push_x(particle_real_t *x, const particle_real_t *v)
 	   gx##0x*_F3(flds, m, l##gx##1  ,l##gy##2+1,0) +		\
 	   gx##1x*_F3(flds, m, l##gx##1+1,l##gy##2+1,0)))
 #elif DIM == DIM_XZ
-#define IP_2ND(flds, m, gx, gy, gz)					\
+#define IP_FIELD(flds, m, gx, gy, gz)					\
   (gz##mz*(gx##mx*_F3(flds, m, l##gx##1-1,0,l##gz##3-1) +		\
 	   gx##0x*_F3(flds, m, l##gx##1  ,0,l##gz##3-1) +		\
 	   gx##1x*_F3(flds, m, l##gx##1+1,0,l##gz##3-1)) +		\
@@ -148,7 +148,7 @@ push_x(particle_real_t *x, const particle_real_t *v)
 	   gx##0x*_F3(flds, m, l##gx##1  ,0,l##gz##3+1) +		\
 	   gx##1x*_F3(flds, m, l##gx##1+1,0,l##gz##3+1)))
 #elif DIM == DIM_YZ
-#define IP_2ND(flds, m, gx, gy, gz)					\
+#define IP_FIELD(flds, m, gx, gy, gz)					\
   (gz##mz*(gy##my*_F3(flds, m, 0,l##gy##2-1,l##gz##3-1) +		\
 	   gy##0y*_F3(flds, m, 0,l##gy##2  ,l##gz##3-1) +		\
 	   gy##1y*_F3(flds, m, 0,l##gy##2+1,l##gz##3-1)) +		\
@@ -159,7 +159,7 @@ push_x(particle_real_t *x, const particle_real_t *v)
 	   gy##0y*_F3(flds, m, 0,l##gy##2  ,l##gz##3+1) +		\
 	   gy##1y*_F3(flds, m, 0,l##gy##2+1,l##gz##3+1)))
 #elif DIM == DIM_XYZ
-#define IP_2ND(flds, m, gx, gy, gz)					\
+#define IP_FIELD(flds, m, gx, gy, gz)					\
   (gz##mz*(gy##my*(gx##mx*_F3(flds, m, l##gx##1-1,l##gy##2-1,l##gz##3-1) + \
 		   gx##0x*_F3(flds, m, l##gx##1  ,l##gy##2-1,l##gz##3-1) + \
 		   gx##1x*_F3(flds, m, l##gx##1+1,l##gy##2-1,l##gz##3-1)) + \
@@ -315,24 +315,24 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
 
     // FIELD INTERPOLATION
 
-    particle_real_t exq = IP_2ND(flds, EX, h, g, g);
-    particle_real_t eyq = IP_2ND(flds, EY, g, h, g);
-    particle_real_t ezq = IP_2ND(flds, EZ, g, g, h);
-    particle_real_t hxq = IP_2ND(flds, HX, g, h, h);
-    particle_real_t hyq = IP_2ND(flds, HY, h, g, h);
-    particle_real_t hzq = IP_2ND(flds, HZ, h, h, g);
-		 
+    particle_real_t E[3] = { IP_FIELD(flds, EX, h, g, g),
+			     IP_FIELD(flds, EY, g, h, g),
+			     IP_FIELD(flds, EZ, g, g, h), };
+    particle_real_t H[3] = { IP_FIELD(flds, HX, g, h, h),
+			     IP_FIELD(flds, HY, h, g, h),
+			     IP_FIELD(flds, HZ, h, h, g), };
+
      // c x^(n+.5), p^n -> x^(n+1.0), p^(n+1.0) 
 
     particle_real_t dq = dqs * part->qni / part->mni;
-    particle_real_t pxm = part->pxi + dq*exq;
-    particle_real_t pym = part->pyi + dq*eyq;
-    particle_real_t pzm = part->pzi + dq*ezq;
+    particle_real_t pxm = part->pxi + dq * E[0];
+    particle_real_t pym = part->pyi + dq * E[1];
+    particle_real_t pzm = part->pzi + dq * E[2];
 
     particle_real_t root = dq / particle_real_sqrt(1.f + pxm*pxm + pym*pym + pzm*pzm);
-    particle_real_t taux = hxq*root;
-    particle_real_t tauy = hyq*root;
-    particle_real_t tauz = hzq*root;
+    particle_real_t taux = H[0] * root;
+    particle_real_t tauy = H[1] * root;
+    particle_real_t tauz = H[2] * root;
 
     particle_real_t tau = 1.f / (1.f + taux*taux + tauy*tauy + tauz*tauz);
     particle_real_t pxp = ((1.f+taux*taux-tauy*tauy-tauz*tauz)*pxm + 
@@ -345,9 +345,9 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
 		(2.f*tauy*tauz-2.f*taux)*pym +
 		(1.f-taux*taux-tauy*tauy+tauz*tauz)*pzm)*tau;
 
-    part->pxi = pxp + dq * exq;
-    part->pyi = pyp + dq * eyq;
-    part->pzi = pzp + dq * ezq;
+    part->pxi = pxp + dq * E[0];
+    part->pyi = pyp + dq * E[1];
+    part->pzi = pzp + dq * E[2];
 
     calc_v(vv, &part->pxi);
     push_x(&part->xi, vv);

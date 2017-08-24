@@ -11,7 +11,7 @@
 #include "push_part_common.c"
 
 static void
-do_push_part_1st_xz(int p, struct psc_fields *pf, particle_range_t prts)
+do_push_part_1st_xz(int p, fields_t flds, particle_range_t prts)
 {
 #include "push_part_common_vars.c"
 
@@ -40,24 +40,24 @@ do_push_part_1st_xz(int p, struct psc_fields *pf, particle_range_t prts)
     
     // FIELD INTERPOLATION
 
-    particle_real_t exq = IP_FIELD(pf, EX, h, g, g);
-    particle_real_t eyq = IP_FIELD(pf, EY, g, h, g);
-    particle_real_t ezq = IP_FIELD(pf, EZ, g, g, h);
-    particle_real_t hxq = IP_FIELD(pf, HX, g, h, h);
-    particle_real_t hyq = IP_FIELD(pf, HY, h, g, h);
-    particle_real_t hzq = IP_FIELD(pf, HZ, h, h, g);
+    particle_real_t E[3] = { IP_FIELD(flds, EX, h, g, g),
+			     IP_FIELD(flds, EY, g, h, g),
+			     IP_FIELD(flds, EZ, g, g, h), };
+    particle_real_t H[3] = { IP_FIELD(flds, HX, g, h, h),
+			     IP_FIELD(flds, HY, h, g, h),
+			     IP_FIELD(flds, HZ, h, h, g), };
 
      // c x^(n+.5), p^n -> x^(n+1.0), p^(n+1.0) 
 
     particle_real_t dq = dqs * part->qni / part->mni;
-    particle_real_t pxm = part->pxi + dq*exq;
-    particle_real_t pym = part->pyi + dq*eyq;
-    particle_real_t pzm = part->pzi + dq*ezq;
+    particle_real_t pxm = part->pxi + dq*E[0];
+    particle_real_t pym = part->pyi + dq*E[1];
+    particle_real_t pzm = part->pzi + dq*E[2];
 
     particle_real_t root = dq / particle_real_sqrt(1.f + pxm*pxm + pym*pym + pzm*pzm);
-    particle_real_t taux = hxq*root;
-    particle_real_t tauy = hyq*root;
-    particle_real_t tauz = hzq*root;
+    particle_real_t taux = H[0] * root;
+    particle_real_t tauy = H[1] * root;
+    particle_real_t tauz = H[2] * root;
 
     particle_real_t tau = 1.f / (1.f + taux*taux + tauy*tauy + tauz*tauz);
     particle_real_t pxp = ((1.f+taux*taux-tauy*tauy-tauz*tauz)*pxm + 
@@ -70,9 +70,9 @@ do_push_part_1st_xz(int p, struct psc_fields *pf, particle_range_t prts)
 		(2.f*tauy*tauz-2.f*taux)*pym +
 		(1.f-taux*taux-tauy*tauy+tauz*tauz)*pzm)*tau;
     
-    part->pxi = pxp + dq * exq;
-    part->pyi = pyp + dq * eyq;
-    part->pzi = pzp + dq * ezq;
+    part->pxi = pxp + dq * E[0];
+    part->pyi = pyp + dq * E[1];
+    part->pzi = pzp + dq * E[2];
 
     calc_v(vv, &part->pxi);
     push_x(&part->xi, vv);
@@ -127,7 +127,7 @@ do_push_part_1st_xz(int p, struct psc_fields *pf, particle_range_t prts)
       for (int l1 = l1min; l1 < l1max; l1++) {
 	particle_real_t wx = S(s1x, l1) * (S(s0z, l3) + .5f*S(s1z, l3));
 	jxh -= fnqx*wx;
-	F3(pf, JXI, lg1+l1,0,lg3+l3) += jxh;
+	_F3(flds, JXI, lg1+l1,0,lg3+l3) += jxh;
       }
     }
 
@@ -139,7 +139,7 @@ do_push_part_1st_xz(int p, struct psc_fields *pf, particle_range_t prts)
 	  + .5f * S(s0x, l1) * S(s1z, l3)
 	  + (1.f/3.f) * S(s1x, l1) * S(s1z, l3);
 	particle_real_t jyh = fnqy*wy;
-	F3(pf, JYI, lg1+l1,0,lg3+l3) += jyh;
+	_F3(flds, JYI, lg1+l1,0,lg3+l3) += jyh;
       }
     }
 
@@ -149,7 +149,7 @@ do_push_part_1st_xz(int p, struct psc_fields *pf, particle_range_t prts)
       for (int l3 = l3min; l3 < l3max; l3++) {
 	particle_real_t wz = S(s1z, l3) * (S(s0x, l1) + .5f*S(s1x, l1));
 	jzh -= fnqz*wz;
-	F3(pf, JZI, lg1+l1,0,lg3+l3) += jzh;
+	_F3(flds, JZI, lg1+l1,0,lg3+l3) += jzh;
       }
     }
   }
@@ -167,9 +167,9 @@ psc_push_particles_1st_push_mprts_xz(struct psc_push_particles *push,
 
   prof_start(pr);
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
     particle_range_t prts = particle_range_mprts(mprts, p);
-    psc_fields_zero_range(flds, JXI, JXI + 3);
+    fields_t flds = fields_t_mflds(mflds, p);
+    fields_t_zero_range(flds, JXI, JXI + 3);
     do_push_part_1st_xz(p, flds, prts);
   }
   prof_stop(pr);
