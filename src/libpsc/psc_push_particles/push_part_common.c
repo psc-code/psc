@@ -9,6 +9,9 @@
 #if DIM == DIM_Y
 #define psc_push_particles_generic_c_push_mprts psc_push_particles_generic_c_push_mprts_y
 #define PROF_NAME "genc_push_mprts_y"
+#elif DIM == DIM_Z
+#define psc_push_particles_generic_c_push_mprts psc_push_particles_generic_c_push_mprts_z
+#define PROF_NAME "genc_push_mprts_z"
 #elif DIM == DIM_XY
 #define psc_push_particles_generic_c_push_mprts psc_push_particles_generic_c_push_mprts_xy
 #define PROF_NAME "genc_push_mprts_xy"
@@ -32,6 +35,11 @@
   (gy##my*F3(pf, m, 0,l##gy##2-1,0) +					\
    gy##0y*F3(pf, m, 0,l##gy##2  ,0) +					\
    gy##1y*F3(pf, m, 0,l##gy##2+1,0))
+#elif DIM == DIM_Z
+#define IP_2ND(pf, m, gx, gy, gz)					\
+  (gz##mz*F3(pf, m, 0,0,l##gz##3-1) +					\
+   gz##0z*F3(pf, m, 0,0,l##gz##3  ) +					\
+   gz##1z*F3(pf, m, 0,0,l##gz##3+1))
 #elif DIM == DIM_XY
 #define IP_2ND(pf, m, gx, gy, gz)					\
   (gy##my*(gx##mx*F3(pf, m, l##gx##1-1,l##gy##2-1,0) +			\
@@ -386,6 +394,23 @@ do_genc_push_part(int p, struct psc_fields *pf, particle_range_t prts)
       F3(pf, JXI, 0,lg2+l2,0) += jxh;
       F3(pf, JYI, 0,lg2+l2,0) += jyh;
       F3(pf, JZI, 0,lg2+l2,0) += jzh;
+    }
+
+#elif DIM == DIM_Z
+
+    creal jzh = 0.f;
+    for (int l3 = l3min; l3 <= l3max; l3++) {
+      creal wx = S0Z(l3) + .5f * S1Z(l3);
+      creal wy = S0Z(l3) + .5f * S1Z(l3);
+      creal wz = S1Z(l3);
+      
+      creal jxh = fnqxx*wx;
+      creal jyh = fnqyy*wy;
+      jzh -= fnqz*wz;
+      
+      F3(pf, JXI, 0,0,lg3+l3) += jxh;
+      F3(pf, JYI, 0,0,lg3+l3) += jyh;
+      F3(pf, JZI, 0,0,lg3+l3) += jzh;
     }
 
 #elif DIM == DIM_XY
