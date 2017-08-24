@@ -24,43 +24,34 @@ do_push_part_1st_xz(int p, struct psc_fields *pf, particle_range_t prts)
     calc_v(vv, &part->pxi);
     push_x(&part->xi, vv);
 
-    particle_real_t u = part->xi * dxi;
-    particle_real_t w = part->zi * dzi;
-    int lg1 = particle_real_fint(u);
-    int lg3 = particle_real_fint(w);
-    particle_real_t h1 = u - lg1;
-    particle_real_t h3 = w - lg3;
+    int lg1;
+    particle_real_t g0x, g1x;
+    ip_coeff_1st(&lg1, &g0x, &g1x, part->xi * dxi);
 
-    particle_real_t g0x = 1.f - h1;
-    particle_real_t g0z = 1.f - h3;
-    particle_real_t g1x = h1;
-    particle_real_t g1z = h3;
+    int lg3;
+    particle_real_t g0z, g1z;
+    ip_coeff_1st(&lg3, &g0z, &g1z, part->zi * dzi);
 
     // CHARGE DENSITY FORM FACTOR AT (n+.5)*dt 
 
-    S(s0x, 0) = g0x;
-    S(s0x, 1) = g1x;
-    S(s0z, 0) = g0z;
-    S(s0z, 1) = g1z;
+    set_S_1st(s0x, 0, g0x, g1x);
+    set_S_1st(s0z, 0, g0z, g1z);
 
-    u = part->xi * dxi - .5f;
-    w = part->zi * dzi - .5f;
-    int lh1 = particle_real_fint(u);
-    int lh3 = particle_real_fint(w);
-    h1 = u - lh1;
-    h3 = w - lh3;
-    particle_real_t h0x = 1.f - h1;
-    particle_real_t h0z = 1.f - h3;
-    particle_real_t h1x = h1;
-    particle_real_t h1z = h3;
-
+    int lh1;
+    particle_real_t h0x, h1x;
+    ip_coeff_1st(&lh1, &h0x, &h1x, part->xi * dxi - .5f);
+    
+    int lh3;
+    particle_real_t h0z, h1z;
+    ip_coeff_1st(&lh3, &h0z, &h1z, part->zi * dzi - .5f);
+    
     // FIELD INTERPOLATION
 
 #define INTERPOLATE_FIELD(m, gx, gz)					\
-    (gz##0z*(gx##0x*F3(pf, m, l##gx##1  ,0,l##gz##3  ) +			\
-	     gx##1x*F3(pf, m, l##gx##1+1,0,l##gz##3  )) +			\
-     gz##1z*(gx##0x*F3(pf, m, l##gx##1  ,0,l##gz##3+1) +			\
-	     gx##1x*F3(pf, m, l##gx##1+1,0,l##gz##3+1)))			\
+    (gz##0z*(gx##0x*F3(pf, m, l##gx##1  ,0,l##gz##3  ) +		\
+	     gx##1x*F3(pf, m, l##gx##1+1,0,l##gz##3  )) +		\
+     gz##1z*(gx##0x*F3(pf, m, l##gx##1  ,0,l##gz##3+1) +		\
+	     gx##1x*F3(pf, m, l##gx##1+1,0,l##gz##3+1)))		\
       
     particle_real_t exq = INTERPOLATE_FIELD(EX, h, g);
     particle_real_t eyq = INTERPOLATE_FIELD(EY, g, g);
@@ -103,25 +94,22 @@ do_push_part_1st_xz(int p, struct psc_fields *pf, particle_range_t prts)
     // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt 
     // x^(n+1), p^(n+1) -> x^(n+1.5f), p^(n+1)
 
-    particle_real_t xi = part->xi + vv[0] * xl;
-    particle_real_t zi = part->zi + vv[2] * zl;
-
-    u = xi * dxi;
-    w = zi * dzi;
-    int k1 = particle_real_fint(u);
-    int k3 = particle_real_fint(w);
-    h1 = u - k1;
-    h3 = w - k3;
-
     for (int i = -1; i <= 2; i++) {
       S(s1x, i) = 0.f;
       S(s1z, i) = 0.f;
     }
 
-    S(s1x, k1-lg1+0) = 1.f - h1;
-    S(s1x, k1-lg1+1) = h1;
-    S(s1z, k3-lg3+0) = 1.f - h3;
-    S(s1z, k3-lg3+1) = h3;
+    particle_real_t xi = part->xi + vv[0] * xl;
+    particle_real_t zi = part->zi + vv[2] * zl;
+
+    int k1;
+    ip_coeff_1st(&k1, &g0x, &g1x, xi * dxi);
+    set_S_1st(s1x, k1-lg1, g0x, g1x);
+
+    int k3;
+    ip_coeff_1st(&k3, &g0z, &g1z, zi * dzi);
+    set_S_1st(s1z, k3-lg3, g0x, g1x);
+
 
     // CURRENT DENSITY AT (n+1.0)*dt
 

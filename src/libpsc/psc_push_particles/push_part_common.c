@@ -168,10 +168,10 @@ push_x(particle_real_t *x, const particle_real_t *v)
 #endif
 
 // ----------------------------------------------------------------------
-// get_int_remainder
+// get_nint_remainder
 
 static inline void
-get_int_remainder(int *lg1, particle_real_t *h1, particle_real_t u)
+get_nint_remainder(int *lg1, particle_real_t *h1, particle_real_t u)
 {
   int l = particle_real_nint(u);
   *lg1 = l;
@@ -179,21 +179,71 @@ get_int_remainder(int *lg1, particle_real_t *h1, particle_real_t u)
 }
 
 // ----------------------------------------------------------------------
-// deposit_rho
+// get_fint_remainder
 
 static inline void
-deposit_rho(int *lg1, particle_real_t *h1,
-	    particle_real_t *gmx, particle_real_t *g0x, particle_real_t *g1x,
-	    particle_real_t u)
+get_fint_remainder(int *lg1, particle_real_t *h1, particle_real_t u)
+{
+  int l = particle_real_fint(u);
+  *lg1 = l;
+  *h1 = u-l;
+}
+
+// ----------------------------------------------------------------------
+// ip_coeff_2nd
+
+static inline void
+ip_coeff_2nd(int *lg1, particle_real_t *h1,
+	     particle_real_t *gmx, particle_real_t *g0x, particle_real_t *g1x,
+	     particle_real_t u)
 {
   int l;
   particle_real_t h;
-  get_int_remainder(&l, &h, u);
+  get_nint_remainder(&l, &h, u);
   *lg1 = l;
   *h1  = h;
   *gmx = .5f * (.5f+h)*(.5f+h);
   *g0x = .75f - h*h;
   *g1x = .5f * (.5f-h)*(.5f-h);
+}
+
+// ----------------------------------------------------------------------
+// ip_coeff_1st
+
+static inline void
+ip_coeff_1st(int *lg1, particle_real_t *g0x, particle_real_t *g1x,
+	     particle_real_t u)
+{
+  int l;
+  particle_real_t h;
+  get_fint_remainder(&l, &h, u);
+  *lg1 = l;
+  *g0x = 1.f - h;
+  *g1x = h;
+}
+
+// ----------------------------------------------------------------------
+// set_S_2nd
+//
+// FIXME: It appears that gm/g0/g1 can be used instead of what's calculated here
+// but it needs checking.
+
+static inline void
+set_S_2nd(particle_real_t *s0x, int shift, particle_real_t h1)
+{
+  S(s0x, shift-1) = .5f*(1.5f-particle_real_abs(h1-1.f))*(1.5f-particle_real_abs(h1-1.f));
+  S(s0x, shift  ) = .75f-particle_real_abs(h1)*particle_real_abs(h1);
+  S(s0x, shift+1) = .5f*(1.5f-particle_real_abs(h1+1.f))*(1.5f-particle_real_abs(h1+1.f));
+}
+
+// ----------------------------------------------------------------------
+// set_S_1st
+
+static inline void
+set_S_1st(particle_real_t *s0x, int shift, particle_real_t g0x, particle_real_t g1x)
+{
+  S(s0x, shift  ) = g0x;
+  S(s0x, shift+1) = g1x;
 }
 
 #if ORDER == ORDER_2ND
@@ -214,38 +264,29 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
 #if (DIM & DIM_X)
     int lg1;
     particle_real_t h1, gmx, g0x, g1x;
-    deposit_rho(&lg1, &h1, &gmx, &g0x, &g1x, part->xi * dxi);
+    ip_coeff_2nd(&lg1, &h1, &gmx, &g0x, &g1x, part->xi * dxi);
 #endif
 #if (DIM & DIM_Y)
     int lg2;
     particle_real_t h2, gmy, g0y, g1y;
-    deposit_rho(&lg2, &h2, &gmy, &g0y, &g1y, part->yi * dyi);
+    ip_coeff_2nd(&lg2, &h2, &gmy, &g0y, &g1y, part->yi * dyi);
 #endif
 #if (DIM & DIM_Z)
     int lg3;
     particle_real_t h3, gmz, g0z, g1z;
-    deposit_rho(&lg3, &h3, &gmz, &g0z, &g1z, part->zi * dzi);
+    ip_coeff_2nd(&lg3, &h3, &gmz, &g0z, &g1z, part->zi * dzi);
 #endif
 
     // CHARGE DENSITY FORM FACTOR AT (n+.5)*dt
 
-    // FIXME: It appears that gm/g0/g1 can be used instead of what's calculated here,
-    // but it needs checking.
-
 #if (DIM & DIM_X)
-    S(s0x, -1) = .5f*(1.5f-particle_real_abs(h1-1.f))*(1.5f-particle_real_abs(h1-1.f));
-    S(s0x,  0) = .75f-particle_real_abs(h1)*particle_real_abs(h1);
-    S(s0x, +1) = .5f*(1.5f-particle_real_abs(h1+1.f))*(1.5f-particle_real_abs(h1+1.f));
+    set_S_2nd(s0x, 0, h1);
 #endif
 #if (DIM & DIM_Y)
-    S(s0y, -1) = .5f*(1.5f-particle_real_abs(h2-1.f))*(1.5f-particle_real_abs(h2-1.f));
-    S(s0y,  0) = .75f-particle_real_abs(h2)*particle_real_abs(h2);
-    S(s0y, +1) = .5f*(1.5f-particle_real_abs(h2+1.f))*(1.5f-particle_real_abs(h2+1.f));
+    set_S_2nd(s0y, 0, h2);
 #endif
 #if (DIM & DIM_Z)
-    S(s0z, -1) = .5f*(1.5f-particle_real_abs(h3-1.f))*(1.5f-particle_real_abs(h3-1.f));
-    S(s0z,  0) = .75f-particle_real_abs(h3)*particle_real_abs(h3);
-    S(s0z, +1) = .5f*(1.5f-particle_real_abs(h3+1.f))*(1.5f-particle_real_abs(h3+1.f));
+    set_S_2nd(s0z, 0, h3);
 #endif
     
 #if (DIM & DIM_X)
@@ -321,22 +362,18 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
 
 #if (DIM & DIM_X)
     particle_real_t xi = part->xi + vv[0] * xl;
-    u = xi * dxi;
-    int k1 = particle_real_nint(u);
-    h1 = k1 - u;
+    int k1;
+    get_nint_remainder(&k1, &h1, xi * dxi);
 #endif
 #if (DIM & DIM_Y)
     particle_real_t yi = part->yi + vv[1] * yl;
-    v = yi * dyi;
-    int k2 = particle_real_nint(v);
-    h2 = k2 - v;
-
+    int k2;
+    get_nint_remainder(&k2, &h2, yi * dyi);
 #endif
 #if (DIM & DIM_Z)
     particle_real_t zi = part->zi + vv[2] * zl;
-    w = zi * dzi;
-    int k3 = particle_real_nint(w);
-    h3 = k3 - w;
+    int k3;
+    get_nint_remainder(&k3, &h3, zi * dzi);
 #endif
 
     // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt 
@@ -354,45 +391,14 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
 #endif
     }
 
-#if DIM == DIM_Y
-    S(s1y, k2-lg2-1) = .5f*(1.5f-particle_real_abs(h2-1.f))*(1.5f-particle_real_abs(h2-1.f));
-    S(s1y, k2-lg2+0) = .75f-particle_real_abs(h2)*particle_real_abs(h2);
-    S(s1y, k2-lg2+1) = .5f*(1.5f-particle_real_abs(h2+1.f))*(1.5f-particle_real_abs(h2+1.f));
-#elif DIM == DIM_Z
-    S(s1z, k3-lg3-1) = .5f*(1.5f-particle_real_abs(h3-1.f))*(1.5f-particle_real_abs(h3-1.f));
-    S(s1z, k3-lg3+0) = .75f-particle_real_abs(h3)*particle_real_abs(h3);
-    S(s1z, k3-lg3+1) = .5f*(1.5f-particle_real_abs(h3+1.f))*(1.5f-particle_real_abs(h3+1.f));
-#elif DIM == DIM_XY
-    S(s1x, k1-lg1-1) = .5f*(1.5f-particle_real_abs(h1-1.f))*(1.5f-particle_real_abs(h1-1.f));
-    S(s1x, k1-lg1+0) = .75f-particle_real_abs(h1)*particle_real_abs(h1);
-    S(s1x, k1-lg1+1) = .5f*(1.5f-particle_real_abs(h1+1.f))*(1.5f-particle_real_abs(h1+1.f));
-    S(s1y, k2-lg2-1) = .5f*(1.5f-particle_real_abs(h2-1.f))*(1.5f-particle_real_abs(h2-1.f));
-    S(s1y, k2-lg2+0) = .75f-particle_real_abs(h2)*particle_real_abs(h2);
-    S(s1y, k2-lg2+1) = .5f*(1.5f-particle_real_abs(h2+1.f))*(1.5f-particle_real_abs(h2+1.f));
-#elif DIM == DIM_XZ
-    S(s1x, k1-lg1-1) = .5f*(.5f+h1)*(.5f+h1);
-    S(s1x, k1-lg1+0) = .75f-h1*h1;
-    S(s1x, k1-lg1+1) = .5f*(.5f-h1)*(.5f-h1);
-    S(s1z, k3-lg3-1) = .5f*(.5f+h3)*(.5f+h3);
-    S(s1z, k3-lg3+0) = .75f-h3*h3;
-    S(s1z, k3-lg3+1) = .5f*(.5f-h3)*(.5f-h3);
-#elif DIM == DIM_YZ
-    S(s1y, k2-lg2-1) = .5f*(1.5f-particle_real_abs(h2-1.f))*(1.5f-particle_real_abs(h2-1.f));
-    S(s1y, k2-lg2+0) = .75f-particle_real_abs(h2)*particle_real_abs(h2);
-    S(s1y, k2-lg2+1) = .5f*(1.5f-particle_real_abs(h2+1.f))*(1.5f-particle_real_abs(h2+1.f));
-    S(s1z, k3-lg3-1) = .5f*(1.5f-particle_real_abs(h3-1.f))*(1.5f-particle_real_abs(h3-1.f));
-    S(s1z, k3-lg3+0) = .75f-particle_real_abs(h3)*particle_real_abs(h3);
-    S(s1z, k3-lg3+1) = .5f*(1.5f-particle_real_abs(h3+1.f))*(1.5f-particle_real_abs(h3+1.f));
-#elif DIM == DIM_XYZ
-    S(s1x, k1-lg1-1) = .5f*(1.5f-particle_real_abs(h1-1.f))*(1.5f-particle_real_abs(h1-1.f));
-    S(s1x, k1-lg1+0) = .75f-particle_real_abs(h1)*particle_real_abs(h1);
-    S(s1x, k1-lg1+1) = .5f*(1.5f-particle_real_abs(h1+1.f))*(1.5f-particle_real_abs(h1+1.f));
-    S(s1y, k2-lg2-1) = .5f*(1.5f-particle_real_abs(h2-1.f))*(1.5f-particle_real_abs(h2-1.f));
-    S(s1y, k2-lg2+0) = .75f-particle_real_abs(h2)*particle_real_abs(h2);
-    S(s1y, k2-lg2+1) = .5f*(1.5f-particle_real_abs(h2+1.f))*(1.5f-particle_real_abs(h2+1.f));
-    S(s1z, k3-lg3-1) = .5f*(1.5f-particle_real_abs(h3-1.f))*(1.5f-particle_real_abs(h3-1.f));
-    S(s1z, k3-lg3+0) = .75f-particle_real_abs(h3)*particle_real_abs(h3);
-    S(s1z, k3-lg3+1) = .5f*(1.5f-particle_real_abs(h3+1.f))*(1.5f-particle_real_abs(h3+1.f));
+#if (DIM & DIM_X)
+    set_S_2nd(s1x, k1-lg1, h1);
+#endif
+#if (DIM & DIM_Y)
+    set_S_2nd(s1y, k2-lg2, h2);
+#endif
+#if (DIM & DIM_Z)
+    set_S_2nd(s1z, k3-lg3, h3);
 #endif
 
     // CURRENT DENSITY AT (n+1.0)*dt
