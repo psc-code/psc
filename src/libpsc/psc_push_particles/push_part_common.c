@@ -87,12 +87,7 @@ push_x(particle_real_t *x, const particle_real_t *v)
 
 #endif
 
-#define S0X(off) s0x[off+S_OFF]
-#define S0Y(off) s0y[off+S_OFF]
-#define S0Z(off) s0z[off+S_OFF]
-#define S1X(off) s1x[off+S_OFF]
-#define S1Y(off) s1y[off+S_OFF]
-#define S1Z(off) s1z[off+S_OFF]
+#define S(s, off) s[off + S_OFF]
 
 // ----------------------------------------------------------------------
 // interpolation
@@ -172,6 +167,35 @@ push_x(particle_real_t *x, const particle_real_t *v)
 
 #endif
 
+// ----------------------------------------------------------------------
+// get_int_remainder
+
+static inline void
+get_int_remainder(int *lg1, particle_real_t *h1, particle_real_t u)
+{
+  int l = particle_real_nint(u);
+  *lg1 = l;
+  *h1 = l-u;
+}
+
+// ----------------------------------------------------------------------
+// deposit_rho
+
+static inline void
+deposit_rho(int *lg1, particle_real_t *h1,
+	    particle_real_t *gmx, particle_real_t *g0x, particle_real_t *g1x,
+	    particle_real_t u)
+{
+  int l;
+  particle_real_t h;
+  get_int_remainder(&l, &h, u);
+  *lg1 = l;
+  *h1  = h;
+  *gmx = .5f * (.5f+h)*(.5f+h);
+  *g0x = .75f - h*h;
+  *g1x = .5f * (.5f-h)*(.5f-h);
+}
+
 #if ORDER == ORDER_2ND
 
 static void
@@ -188,85 +212,54 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
     push_x(&part->xi, vv);
 
 #if (DIM & DIM_X)
-    particle_real_t u = part->xi * dxi;
-    int lg1 = particle_real_nint(u);
-    particle_real_t h1 = lg1-u;
-    particle_real_t gmx=.5f*(.5f+h1)*(.5f+h1);
-    particle_real_t g0x=.75f-h1*h1;
-    particle_real_t g1x=.5f*(.5f-h1)*(.5f-h1);
+    int lg1;
+    particle_real_t h1, gmx, g0x, g1x;
+    deposit_rho(&lg1, &h1, &gmx, &g0x, &g1x, part->xi * dxi);
 #endif
 #if (DIM & DIM_Y)
-    particle_real_t v = part->yi * dyi;
-    int lg2 = particle_real_nint(v);
-    particle_real_t h2 = lg2-v;
-    particle_real_t gmy=.5f*(.5f+h2)*(.5f+h2);
-    particle_real_t g0y=.75f-h2*h2;
-    particle_real_t g1y=.5f*(.5f-h2)*(.5f-h2);
+    int lg2;
+    particle_real_t h2, gmy, g0y, g1y;
+    deposit_rho(&lg2, &h2, &gmy, &g0y, &g1y, part->yi * dyi);
 #endif
 #if (DIM & DIM_Z)
-    particle_real_t w = part->zi * dzi;
-    int lg3 = particle_real_nint(w);
-    particle_real_t h3 = lg3-w;
-    particle_real_t gmz=.5f*(.5f+h3)*(.5f+h3);
-    particle_real_t g0z=.75f-h3*h3;
-    particle_real_t g1z=.5f*(.5f-h3)*(.5f-h3);
+    int lg3;
+    particle_real_t h3, gmz, g0z, g1z;
+    deposit_rho(&lg3, &h3, &gmz, &g0z, &g1z, part->zi * dzi);
 #endif
 
-    // CHARGE DENSITY FORM FACTOR AT (n+.5)*dt 
+    // CHARGE DENSITY FORM FACTOR AT (n+.5)*dt
 
-#if DIM == DIM_Y
-    S0Y(-1) = .5f*(1.5f-particle_real_abs(h2-1.f))*(1.5f-particle_real_abs(h2-1.f));
-    S0Y(+0) = .75f-particle_real_abs(h2)*particle_real_abs(h2);
-    S0Y(+1) = .5f*(1.5f-particle_real_abs(h2+1.f))*(1.5f-particle_real_abs(h2+1.f));
-#elif DIM == DIM_Z
-    S0Z(-1) = .5f*(1.5f-particle_real_abs(h3-1.f))*(1.5f-particle_real_abs(h3-1.f));
-    S0Z(+0) = .75f-particle_real_abs(h3)*particle_real_abs(h3);
-    S0Z(+1) = .5f*(1.5f-particle_real_abs(h3+1.f))*(1.5f-particle_real_abs(h3+1.f));
-#elif DIM == DIM_XY
-    S0X(-1) = .5f*(1.5f-particle_real_abs(h1-1.f))*(1.5f-particle_real_abs(h1-1.f));
-    S0X(+0) = .75f-particle_real_abs(h1)*particle_real_abs(h1);
-    S0X(+1) = .5f*(1.5f-particle_real_abs(h1+1.f))*(1.5f-particle_real_abs(h1+1.f));
-    S0Y(-1) = .5f*(1.5f-particle_real_abs(h2-1.f))*(1.5f-particle_real_abs(h2-1.f));
-    S0Y(+0) = .75f-particle_real_abs(h2)*particle_real_abs(h2);
-    S0Y(+1) = .5f*(1.5f-particle_real_abs(h2+1.f))*(1.5f-particle_real_abs(h2+1.f));
-#elif DIM == DIM_XZ
-    S0X(-1) = gmx;
-    S0X(+0) = g0x;
-    S0X(+1) = g1x;
-    S0Z(-1) = gmz;
-    S0Z(+0) = g0z;
-    S0Z(+1) = g1z;
-#elif DIM == DIM_YZ
-    S0Y(-1) = .5f*(1.5f-particle_real_abs(h2-1.f))*(1.5f-particle_real_abs(h2-1.f));
-    S0Y(+0) = .75f-particle_real_abs(h2)*particle_real_abs(h2);
-    S0Y(+1) = .5f*(1.5f-particle_real_abs(h2+1.f))*(1.5f-particle_real_abs(h2+1.f));
-    S0Z(-1) = .5f*(1.5f-particle_real_abs(h3-1.f))*(1.5f-particle_real_abs(h3-1.f));
-    S0Z(+0) = .75f-particle_real_abs(h3)*particle_real_abs(h3);
-    S0Z(+1) = .5f*(1.5f-particle_real_abs(h3+1.f))*(1.5f-particle_real_abs(h3+1.f));
-#elif DIM == DIM_XYZ
-    S0X(-1) = .5f*(1.5f-particle_real_abs(h1-1.f))*(1.5f-particle_real_abs(h1-1.f));
-    S0X(+0) = .75f-particle_real_abs(h1)*particle_real_abs(h1);
-    S0X(+1) = .5f*(1.5f-particle_real_abs(h1+1.f))*(1.5f-particle_real_abs(h1+1.f));
-    S0Y(-1) = .5f*(1.5f-particle_real_abs(h2-1.f))*(1.5f-particle_real_abs(h2-1.f));
-    S0Y(+0) = .75f-particle_real_abs(h2)*particle_real_abs(h2);
-    S0Y(+1) = .5f*(1.5f-particle_real_abs(h2+1.f))*(1.5f-particle_real_abs(h2+1.f));
-    S0Z(-1) = .5f*(1.5f-particle_real_abs(h3-1.f))*(1.5f-particle_real_abs(h3-1.f));
-    S0Z(+0) = .75f-particle_real_abs(h3)*particle_real_abs(h3);
-    S0Z(+1) = .5f*(1.5f-particle_real_abs(h3+1.f))*(1.5f-particle_real_abs(h3+1.f));
-#endif
+    // FIXME: It appears that gm/g0/g1 can be used instead of what's calculated here,
+    // but it needs checking.
 
 #if (DIM & DIM_X)
-    u = part->xi * dxi - .5f;
+    S(s0x, -1) = .5f*(1.5f-particle_real_abs(h1-1.f))*(1.5f-particle_real_abs(h1-1.f));
+    S(s0x,  0) = .75f-particle_real_abs(h1)*particle_real_abs(h1);
+    S(s0x, +1) = .5f*(1.5f-particle_real_abs(h1+1.f))*(1.5f-particle_real_abs(h1+1.f));
+#endif
+#if (DIM & DIM_Y)
+    S(s0y, -1) = .5f*(1.5f-particle_real_abs(h2-1.f))*(1.5f-particle_real_abs(h2-1.f));
+    S(s0y,  0) = .75f-particle_real_abs(h2)*particle_real_abs(h2);
+    S(s0y, +1) = .5f*(1.5f-particle_real_abs(h2+1.f))*(1.5f-particle_real_abs(h2+1.f));
+#endif
+#if (DIM & DIM_Z)
+    S(s0z, -1) = .5f*(1.5f-particle_real_abs(h3-1.f))*(1.5f-particle_real_abs(h3-1.f));
+    S(s0z,  0) = .75f-particle_real_abs(h3)*particle_real_abs(h3);
+    S(s0z, +1) = .5f*(1.5f-particle_real_abs(h3+1.f))*(1.5f-particle_real_abs(h3+1.f));
+#endif
+    
+#if (DIM & DIM_X)
+    particle_real_t u = part->xi * dxi - .5f;
     int lh1 = particle_real_nint(u);
     h1 = lh1 - u;
 #endif
 #if (DIM & DIM_Y)
-    v = part->yi * dyi - .5f;
+    particle_real_t v = part->yi * dyi - .5f;
     int lh2 = particle_real_nint(v);
     h2 = lh2 - v;
 #endif
 #if (DIM & DIM_Z)
-    w = part->zi * dzi - .5f;
+    particle_real_t w = part->zi * dzi - .5f;
     int lh3 = particle_real_nint(w);
     h3 = lh3 - w;
 #endif
@@ -351,68 +344,68 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
 
     for (int i = -2; i <= 2; i++) {
 #if (DIM & DIM_X)
-      S1X(i) = 0.f;
+      S(s1x, i) = 0.f;
 #endif
 #if (DIM & DIM_Y)
-      S1Y(i) = 0.f;
+      S(s1y, i) = 0.f;
 #endif
 #if (DIM & DIM_Z)
-      S1Z(i) = 0.f;
+      S(s1z, i) = 0.f;
 #endif
     }
 
 #if DIM == DIM_Y
-    S1Y(k2-lg2-1) = .5f*(1.5f-particle_real_abs(h2-1.f))*(1.5f-particle_real_abs(h2-1.f));
-    S1Y(k2-lg2+0) = .75f-particle_real_abs(h2)*particle_real_abs(h2);
-    S1Y(k2-lg2+1) = .5f*(1.5f-particle_real_abs(h2+1.f))*(1.5f-particle_real_abs(h2+1.f));
+    S(s1y, k2-lg2-1) = .5f*(1.5f-particle_real_abs(h2-1.f))*(1.5f-particle_real_abs(h2-1.f));
+    S(s1y, k2-lg2+0) = .75f-particle_real_abs(h2)*particle_real_abs(h2);
+    S(s1y, k2-lg2+1) = .5f*(1.5f-particle_real_abs(h2+1.f))*(1.5f-particle_real_abs(h2+1.f));
 #elif DIM == DIM_Z
-    S1Z(k3-lg3-1) = .5f*(1.5f-particle_real_abs(h3-1.f))*(1.5f-particle_real_abs(h3-1.f));
-    S1Z(k3-lg3+0) = .75f-particle_real_abs(h3)*particle_real_abs(h3);
-    S1Z(k3-lg3+1) = .5f*(1.5f-particle_real_abs(h3+1.f))*(1.5f-particle_real_abs(h3+1.f));
+    S(s1z, k3-lg3-1) = .5f*(1.5f-particle_real_abs(h3-1.f))*(1.5f-particle_real_abs(h3-1.f));
+    S(s1z, k3-lg3+0) = .75f-particle_real_abs(h3)*particle_real_abs(h3);
+    S(s1z, k3-lg3+1) = .5f*(1.5f-particle_real_abs(h3+1.f))*(1.5f-particle_real_abs(h3+1.f));
 #elif DIM == DIM_XY
-    S1X(k1-lg1-1) = .5f*(1.5f-particle_real_abs(h1-1.f))*(1.5f-particle_real_abs(h1-1.f));
-    S1X(k1-lg1+0) = .75f-particle_real_abs(h1)*particle_real_abs(h1);
-    S1X(k1-lg1+1) = .5f*(1.5f-particle_real_abs(h1+1.f))*(1.5f-particle_real_abs(h1+1.f));
-    S1Y(k2-lg2-1) = .5f*(1.5f-particle_real_abs(h2-1.f))*(1.5f-particle_real_abs(h2-1.f));
-    S1Y(k2-lg2+0) = .75f-particle_real_abs(h2)*particle_real_abs(h2);
-    S1Y(k2-lg2+1) = .5f*(1.5f-particle_real_abs(h2+1.f))*(1.5f-particle_real_abs(h2+1.f));
+    S(s1x, k1-lg1-1) = .5f*(1.5f-particle_real_abs(h1-1.f))*(1.5f-particle_real_abs(h1-1.f));
+    S(s1x, k1-lg1+0) = .75f-particle_real_abs(h1)*particle_real_abs(h1);
+    S(s1x, k1-lg1+1) = .5f*(1.5f-particle_real_abs(h1+1.f))*(1.5f-particle_real_abs(h1+1.f));
+    S(s1y, k2-lg2-1) = .5f*(1.5f-particle_real_abs(h2-1.f))*(1.5f-particle_real_abs(h2-1.f));
+    S(s1y, k2-lg2+0) = .75f-particle_real_abs(h2)*particle_real_abs(h2);
+    S(s1y, k2-lg2+1) = .5f*(1.5f-particle_real_abs(h2+1.f))*(1.5f-particle_real_abs(h2+1.f));
 #elif DIM == DIM_XZ
-    S1X(k1-lg1-1) = .5f*(.5f+h1)*(.5f+h1);
-    S1X(k1-lg1+0) = .75f-h1*h1;
-    S1X(k1-lg1+1) = .5f*(.5f-h1)*(.5f-h1);
-    S1Z(k3-lg3-1) = .5f*(.5f+h3)*(.5f+h3);
-    S1Z(k3-lg3+0) = .75f-h3*h3;
-    S1Z(k3-lg3+1) = .5f*(.5f-h3)*(.5f-h3);
+    S(s1x, k1-lg1-1) = .5f*(.5f+h1)*(.5f+h1);
+    S(s1x, k1-lg1+0) = .75f-h1*h1;
+    S(s1x, k1-lg1+1) = .5f*(.5f-h1)*(.5f-h1);
+    S(s1z, k3-lg3-1) = .5f*(.5f+h3)*(.5f+h3);
+    S(s1z, k3-lg3+0) = .75f-h3*h3;
+    S(s1z, k3-lg3+1) = .5f*(.5f-h3)*(.5f-h3);
 #elif DIM == DIM_YZ
-    S1Y(k2-lg2-1) = .5f*(1.5f-particle_real_abs(h2-1.f))*(1.5f-particle_real_abs(h2-1.f));
-    S1Y(k2-lg2+0) = .75f-particle_real_abs(h2)*particle_real_abs(h2);
-    S1Y(k2-lg2+1) = .5f*(1.5f-particle_real_abs(h2+1.f))*(1.5f-particle_real_abs(h2+1.f));
-    S1Z(k3-lg3-1) = .5f*(1.5f-particle_real_abs(h3-1.f))*(1.5f-particle_real_abs(h3-1.f));
-    S1Z(k3-lg3+0) = .75f-particle_real_abs(h3)*particle_real_abs(h3);
-    S1Z(k3-lg3+1) = .5f*(1.5f-particle_real_abs(h3+1.f))*(1.5f-particle_real_abs(h3+1.f));
+    S(s1y, k2-lg2-1) = .5f*(1.5f-particle_real_abs(h2-1.f))*(1.5f-particle_real_abs(h2-1.f));
+    S(s1y, k2-lg2+0) = .75f-particle_real_abs(h2)*particle_real_abs(h2);
+    S(s1y, k2-lg2+1) = .5f*(1.5f-particle_real_abs(h2+1.f))*(1.5f-particle_real_abs(h2+1.f));
+    S(s1z, k3-lg3-1) = .5f*(1.5f-particle_real_abs(h3-1.f))*(1.5f-particle_real_abs(h3-1.f));
+    S(s1z, k3-lg3+0) = .75f-particle_real_abs(h3)*particle_real_abs(h3);
+    S(s1z, k3-lg3+1) = .5f*(1.5f-particle_real_abs(h3+1.f))*(1.5f-particle_real_abs(h3+1.f));
 #elif DIM == DIM_XYZ
-    S1X(k1-lg1-1) = .5f*(1.5f-particle_real_abs(h1-1.f))*(1.5f-particle_real_abs(h1-1.f));
-    S1X(k1-lg1+0) = .75f-particle_real_abs(h1)*particle_real_abs(h1);
-    S1X(k1-lg1+1) = .5f*(1.5f-particle_real_abs(h1+1.f))*(1.5f-particle_real_abs(h1+1.f));
-    S1Y(k2-lg2-1) = .5f*(1.5f-particle_real_abs(h2-1.f))*(1.5f-particle_real_abs(h2-1.f));
-    S1Y(k2-lg2+0) = .75f-particle_real_abs(h2)*particle_real_abs(h2);
-    S1Y(k2-lg2+1) = .5f*(1.5f-particle_real_abs(h2+1.f))*(1.5f-particle_real_abs(h2+1.f));
-    S1Z(k3-lg3-1) = .5f*(1.5f-particle_real_abs(h3-1.f))*(1.5f-particle_real_abs(h3-1.f));
-    S1Z(k3-lg3+0) = .75f-particle_real_abs(h3)*particle_real_abs(h3);
-    S1Z(k3-lg3+1) = .5f*(1.5f-particle_real_abs(h3+1.f))*(1.5f-particle_real_abs(h3+1.f));
+    S(s1x, k1-lg1-1) = .5f*(1.5f-particle_real_abs(h1-1.f))*(1.5f-particle_real_abs(h1-1.f));
+    S(s1x, k1-lg1+0) = .75f-particle_real_abs(h1)*particle_real_abs(h1);
+    S(s1x, k1-lg1+1) = .5f*(1.5f-particle_real_abs(h1+1.f))*(1.5f-particle_real_abs(h1+1.f));
+    S(s1y, k2-lg2-1) = .5f*(1.5f-particle_real_abs(h2-1.f))*(1.5f-particle_real_abs(h2-1.f));
+    S(s1y, k2-lg2+0) = .75f-particle_real_abs(h2)*particle_real_abs(h2);
+    S(s1y, k2-lg2+1) = .5f*(1.5f-particle_real_abs(h2+1.f))*(1.5f-particle_real_abs(h2+1.f));
+    S(s1z, k3-lg3-1) = .5f*(1.5f-particle_real_abs(h3-1.f))*(1.5f-particle_real_abs(h3-1.f));
+    S(s1z, k3-lg3+0) = .75f-particle_real_abs(h3)*particle_real_abs(h3);
+    S(s1z, k3-lg3+1) = .5f*(1.5f-particle_real_abs(h3+1.f))*(1.5f-particle_real_abs(h3+1.f));
 #endif
 
     // CURRENT DENSITY AT (n+1.0)*dt
 
     for (int i = -1; i <= 1; i++) {
 #if (DIM & DIM_X)
-      S1X(i) -= S0X(i);
+      S(s1x, i) -= S(s0x, i);
 #endif
 #if (DIM & DIM_Y)
-      S1Y(i) -= S0Y(i);
+      S(s1y, i) -= S(s0y, i);
 #endif
 #if (DIM & DIM_Z)
-      S1Z(i) -= S0Z(i);
+      S(s1z, i) -= S(s0z, i);
 #endif
     }
 
@@ -472,9 +465,9 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
     particle_real_t jyh = 0.f;
 
     for (int l2 = l2min; l2 <= l2max; l2++) {
-      particle_real_t wx = S0Y(l2) + .5f * S1Y(l2);
-      particle_real_t wy = S1Y(l2);
-      particle_real_t wz = S0Y(l2) + .5f * S1Y(l2);
+      particle_real_t wx = S(s0y, l2) + .5f * S(s1y, l2);
+      particle_real_t wy = S(s1y, l2);
+      particle_real_t wz = S(s0y, l2) + .5f * S(s1y, l2);
       
       particle_real_t jxh = fnqxx*wx;
       jyh -= fnqy*wy;
@@ -489,9 +482,9 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
 
     particle_real_t jzh = 0.f;
     for (int l3 = l3min; l3 <= l3max; l3++) {
-      particle_real_t wx = S0Z(l3) + .5f * S1Z(l3);
-      particle_real_t wy = S0Z(l3) + .5f * S1Z(l3);
-      particle_real_t wz = S1Z(l3);
+      particle_real_t wx = S(s0z, l3) + .5f * S(s1z, l3);
+      particle_real_t wy = S(s0z, l3) + .5f * S(s1z, l3);
+      particle_real_t wz = S(s1z, l3);
       
       particle_real_t jxh = fnqxx*wx;
       particle_real_t jyh = fnqyy*wy;
@@ -507,11 +500,11 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
     for (int l2 = l2min; l2 <= l2max; l2++) {
       particle_real_t jxh = 0.f;
       for (int l1 = l1min; l1 <= l1max; l1++) {
-	particle_real_t wx = S1X(l1) * (S0Y(l2) + .5f*S1Y(l2));
-	particle_real_t wz = S0X(l1) * S0Y(l2)
-	  + .5f * S1X(l1) * S0Y(l2)
-	  + .5f * S0X(l1) * S1Y(l2)
-	  + (1.f/3.f) * S1X(l1) * S1Y(l2);
+	particle_real_t wx = S(s1x, l1) * (S(s0y, l2) + .5f*S(s1y, l2));
+	particle_real_t wz = S(s0x, l1) * S(s0y, l2)
+	  + .5f * S(s1x, l1) * S(s0y, l2)
+	  + .5f * S(s0x, l1) * S(s1y, l2)
+	  + (1.f/3.f) * S(s1x, l1) * S(s1y, l2);
 
 	jxh -= fnqx*wx;
 	_F3(flds, JXI, lg1+l1,lg2+l2,0) += jxh;
@@ -521,7 +514,7 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
     for (int l1 = l1min; l1 <= l1max; l1++) {
       particle_real_t jyh = 0.f;
       for (int l2 = l2min; l2 <= l2max; l2++) {
-	particle_real_t wy = S1Y(l2) * (S0X(l1) + .5f*S1X(l1));
+	particle_real_t wy = S(s1y, l2) * (S(s0x, l1) + .5f*S(s1x, l1));
 
 	jyh -= fnqy*wy;
 	_F3(flds, JYI, lg1+l1,lg2+l2,0) += jyh;
@@ -533,7 +526,7 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
     for (int l3 = l3min; l3 <= l3max; l3++) {
       particle_real_t jxh = 0.f;
       for (int l1 = l1min; l1 < l1max; l1++) {
-	particle_real_t wx = S1X(l1) * (S0Z(l3) + .5f*S1Z(l3));
+	particle_real_t wx = S(s1x, l1) * (S(s0z, l3) + .5f*S(s1z, l3));
 	jxh -= fnqx*wx;
 	_F3(flds, JXI, lg1+l1,0,lg3+l3) += jxh;
       }
@@ -541,10 +534,10 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
 
     for (int l3 = l3min; l3 <= l3max; l3++) {
       for (int l1 = l1min; l1 <= l1max; l1++) {
-	particle_real_t wy = S0X(l1) * S0Z(l3)
-	  + .5f * S1X(l1) * S0Z(l3)
-	  + .5f * S0X(l1) * S1Z(l3)
-	  + (1.f/3.f) * S1X(l1) * S1Z(l3);
+	particle_real_t wy = S(s0x, l1) * S(s0z, l3)
+	  + .5f * S(s1x, l1) * S(s0z, l3)
+	  + .5f * S(s0x, l1) * S(s1z, l3)
+	  + (1.f/3.f) * S(s1x, l1) * S(s1z, l3);
 	particle_real_t jyh = fnqyy*wy;
 	_F3(flds, JYI, lg1+l1,0,lg3+l3) += jyh;
       }
@@ -553,7 +546,7 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
     for (int l1 = l1min; l1 <= l1max; l1++) {
       particle_real_t jzh = 0.f;
       for (int l3 = l3min; l3 < l3max; l3++) {
-	particle_real_t wz = S1Z(l3) * (S0X(l1) + .5f*S1X(l1));
+	particle_real_t wz = S(s1z, l3) * (S(s0x, l1) + .5f*S(s1x, l1));
 	jzh -= fnqz*wz;
 	_F3(flds, JZI, lg1+l1,0,lg3+l3) += jzh;
       }
@@ -573,12 +566,12 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
     for (int l3 = l3min; l3 <= l3max; l3++) {
       jyh = 0.f;
       for (int l2 = l2min; l2 <= l2max; l2++) {
-	particle_real_t wx = S0Y(l2) * S0Z(l3)
-	  + .5f * S1Y(l2) * S0Z(l3)
-	  + .5f * S0Y(l2) * S1Z(l3)
-	  + (1.f/3.f) * S1Y(l2) * S1Z(l3);
-	particle_real_t wy = S1Y(l2) * (S0Z(l3) + .5f*S1Z(l3));
-	particle_real_t wz = S1Z(l3) * (S0Y(l2) + .5f*S1Y(l2));
+	particle_real_t wx = S(s0y, l2) * S(s0z, l3)
+	  + .5f * S(s1y, l2) * S(s0z, l3)
+	  + .5f * S(s0y, l2) * S(s1z, l3)
+	  + (1.f/3.f) * S(s1y, l2) * S(s1z, l3);
+	particle_real_t wy = S(s1y, l2) * (S(s0z, l3) + .5f*S(s1z, l3));
+	particle_real_t wz = S(s1z, l3) * (S(s0y, l2) + .5f*S(s1y, l2));
 
 	jxh = fnqxx*wx;
 	jyh -= fnqy*wy;
@@ -595,10 +588,10 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
       for (int l2 = l2min; l2 <= l2max; l2++) {
 	particle_real_t jxh = 0.f;
 	for (int l1 = l1min; l1 <= l1max; l1++) {
-	  particle_real_t wx = S1X(l1)*(S0Y(l2)*S0Z(l3) +
-			      .5f * S1Y(l2)*S0Z(l3) +
-			      .5f * S0Y(l2)*S1Z(l3) +
-			      (1.f/3.f) * S1Y(l2)*S1Z(l3));
+	  particle_real_t wx = S(s1x, l1) * (S(s0y, l2) * S(s0z, l3) +
+					     .5f * S(s1y, l2) * S(s0z, l3) +
+					     .5f * S(s0y, l2) * S(s1z, l3) +
+					     (1.f/3.f) * S(s1y, l2) * S(s1z, l3));
 
 	  jxh -= fnqx*wx;
 	  _F3(flds, JXI, lg1+l1,lg2+l2,lg3+l3) += jxh;
@@ -610,10 +603,10 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
       for (int l1 = l1min; l1 <= l1max; l1++) {
 	particle_real_t jyh = 0.f;
 	for (int l2 = l2min; l2 <= l2max; l2++) {
-	  particle_real_t wy = S1Y(l2)*(S0X(l1)*S0Z(l3) +
-			      .5f * S1X(l1)*S0Z(l3) +
-			      .5f * S0X(l1)*S1Z(l3) +
-			      (1.f/3.f) * S1X(l1)*S1Z(l3));
+	  particle_real_t wy = S(s1y, l2) * (S(s0x, l1) * S(s0z, l3) +
+					     .5f * S(s1x, l1) * S(s0z, l3) +
+					     .5f * S(s0x, l1) * S(s1z, l3) +
+					     (1.f/3.f) * S(s1x, l1)*S(s1z, l3));
 
 	  jyh -= fnqy*wy;
 	  _F3(flds, JYI, lg1+l1,lg2+l2,lg3+l3) += jyh;
@@ -625,10 +618,10 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
       for (int l1 = l1min; l1 <= l1max; l1++) {
 	particle_real_t jzh = 0.f;
 	for (int l3 = l3min; l3 <= l3max; l3++) {
-	  particle_real_t wz = S1Z(l3)*(S0X(l1)*S0Y(l2) +
-			      .5f * S1X(l1)*S0Y(l2) +
-			      .5f * S0X(l1)*S1Y(l2) +
-			      (1.f/3.f) * S1X(l1)*S1Y(l2));
+	  particle_real_t wz = S(s1z, l3) * (S(s0x, l1) * S(s0y, l2) +
+					     .5f * S(s1x, l1) * S(s0y, l2) +
+					     .5f * S(s0x, l1) * S(s1y, l2) +
+					     (1.f/3.f) * S(s1x, l1)*S(s1y, l2));
 
 	  jzh -= fnqz*wz;
 	  _F3(flds, JZI, lg1+l1,lg2+l2,lg3+l3) += jzh;

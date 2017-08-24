@@ -38,10 +38,10 @@ do_push_part_1st_xz(int p, struct psc_fields *pf, particle_range_t prts)
 
     // CHARGE DENSITY FORM FACTOR AT (n+.5)*dt 
 
-    S0X(+0) = g0x;
-    S0X(+1) = g1x;
-    S0Z(+0) = g0z;
-    S0Z(+1) = g1z;
+    S(s0x, 0) = g0x;
+    S(s0x, 1) = g1x;
+    S(s0z, 0) = g0z;
+    S(s0z, 1) = g1z;
 
     u = part->xi * dxi - .5f;
     w = part->zi * dzi - .5f;
@@ -114,20 +114,20 @@ do_push_part_1st_xz(int p, struct psc_fields *pf, particle_range_t prts)
     h3 = w - k3;
 
     for (int i = -1; i <= 2; i++) {
-      S1X(i) = 0.f;
-      S1Z(i) = 0.f;
+      S(s1x, i) = 0.f;
+      S(s1z, i) = 0.f;
     }
 
-    S1X(k1-lg1+0) = 1.f - h1;
-    S1X(k1-lg1+1) = h1;
-    S1Z(k3-lg3+0) = 1.f - h3;
-    S1Z(k3-lg3+1) = h3;
+    S(s1x, k1-lg1+0) = 1.f - h1;
+    S(s1x, k1-lg1+1) = h1;
+    S(s1z, k3-lg3+0) = 1.f - h3;
+    S(s1z, k3-lg3+1) = h3;
 
     // CURRENT DENSITY AT (n+1.0)*dt
 
     for (int i = 0; i <= 1; i++) {
-      S1X(i) -= S0X(i);
-      S1Z(i) -= S0Z(i);
+      S(s1x, i) -= S(s0x, i);
+      S(s1z, i) -= S(s0z, i);
     }
 
     int l1min, l3min, l1max, l3max;
@@ -152,7 +152,7 @@ do_push_part_1st_xz(int p, struct psc_fields *pf, particle_range_t prts)
     for (int l3 = l3min; l3 <= l3max; l3++) {
       particle_real_t jxh = 0.f;
       for (int l1 = l1min; l1 < l1max; l1++) {
-	particle_real_t wx = S1X(l1) * (S0Z(l3) + .5f*S1Z(l3));
+	particle_real_t wx = S(s1x, l1) * (S(s0z, l3) + .5f*S(s1z, l3));
 	jxh -= fnqx*wx;
 	F3(pf, JXI, lg1+l1,0,lg3+l3) += jxh;
       }
@@ -161,10 +161,10 @@ do_push_part_1st_xz(int p, struct psc_fields *pf, particle_range_t prts)
     particle_real_t fnqy = vv[1] * part->qni * part->wni * fnqs;
     for (int l3 = l3min; l3 <= l3max; l3++) {
       for (int l1 = l1min; l1 <= l1max; l1++) {
-	particle_real_t wy = S0X(l1) * S0Z(l3)
-	  + .5f * S1X(l1) * S0Z(l3)
-	  + .5f * S0X(l1) * S1Z(l3)
-	  + (1.f/3.f) * S1X(l1) * S1Z(l3);
+	particle_real_t wy = S(s0x, l1) * S(s0z, l3)
+	  + .5f * S(s1x, l1) * S(s0z, l3)
+	  + .5f * S(s0x, l1) * S(s1z, l3)
+	  + (1.f/3.f) * S(s1x, l1) * S(s1z, l3);
 	particle_real_t jyh = fnqy*wy;
 	F3(pf, JYI, lg1+l1,0,lg3+l3) += jyh;
       }
@@ -174,7 +174,7 @@ do_push_part_1st_xz(int p, struct psc_fields *pf, particle_range_t prts)
     for (int l1 = l1min; l1 <= l1max; l1++) {
       particle_real_t jzh = 0.f;
       for (int l3 = l3min; l3 < l3max; l3++) {
-	particle_real_t wz = S1Z(l3) * (S0X(l1) + .5f*S1X(l1));
+	particle_real_t wz = S(s1z, l3) * (S(s0x, l1) + .5f*S(s1x, l1));
 	jzh -= fnqz*wz;
 	F3(pf, JZI, lg1+l1,0,lg3+l3) += jzh;
       }
