@@ -47,32 +47,10 @@ do_push_part_1st_xz(int p, fields_t flds, particle_range_t prts)
 			     IP_FIELD(flds, HY, h, g, h),
 			     IP_FIELD(flds, HZ, h, h, g), };
 
-     // c x^(n+.5), p^n -> x^(n+1.0), p^(n+1.0) 
+     // c x^(n+.5), p^n -> x^(n+1.0), p^(n+1.0)
 
     particle_real_t dq = dqs * part->qni / part->mni;
-    particle_real_t pxm = part->pxi + dq*E[0];
-    particle_real_t pym = part->pyi + dq*E[1];
-    particle_real_t pzm = part->pzi + dq*E[2];
-
-    particle_real_t root = dq / particle_real_sqrt(1.f + pxm*pxm + pym*pym + pzm*pzm);
-    particle_real_t taux = H[0] * root;
-    particle_real_t tauy = H[1] * root;
-    particle_real_t tauz = H[2] * root;
-
-    particle_real_t tau = 1.f / (1.f + taux*taux + tauy*tauy + tauz*tauz);
-    particle_real_t pxp = ((1.f+taux*taux-tauy*tauy-tauz*tauz)*pxm + 
-		(2.f*taux*tauy+2.f*tauz)*pym + 
-		(2.f*taux*tauz-2.f*tauy)*pzm)*tau;
-    particle_real_t pyp = ((2.f*taux*tauy-2.f*tauz)*pxm +
-		(1.f-taux*taux+tauy*tauy-tauz*tauz)*pym +
-		(2.f*tauy*tauz+2.f*taux)*pzm)*tau;
-    particle_real_t pzp = ((2.f*taux*tauz+2.f*tauy)*pxm +
-		(2.f*tauy*tauz-2.f*taux)*pym +
-		(1.f-taux*taux-tauy*tauy+tauz*tauz)*pzm)*tau;
-    
-    part->pxi = pxp + dq * E[0];
-    part->pyi = pyp + dq * E[1];
-    part->pzi = pzp + dq * E[2];
+    push_p(&part->pxi, E, H, dq);
 
     calc_v(vv, &part->pxi);
     push_x(&part->xi, vv);
