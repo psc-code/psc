@@ -20,13 +20,10 @@ do_push_part_1st_xz(int p, struct psc_fields *pf, particle_range_t prts)
 
     // x^n, p^n -> x^(n+.5), p^n
 
-    particle_real_t root = 1.f / particle_real_sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
-    particle_real_t vxi = part->pxi * root;
-    particle_real_t vyi = part->pyi * root;
-    particle_real_t vzi = part->pzi * root;
-
-    part->xi += vxi * xl;
-    part->zi += vzi * zl;
+    particle_real_t vv[3];
+    calc_v(vv, &part->pxi);
+    part->xi += vv[0] * xl;
+    part->zi += vv[1] * zl;
 
     particle_real_t u = part->xi * dxi;
     particle_real_t w = part->zi * dzi;
@@ -81,7 +78,7 @@ do_push_part_1st_xz(int p, struct psc_fields *pf, particle_range_t prts)
     particle_real_t pym = part->pyi + dq*eyq;
     particle_real_t pzm = part->pzi + dq*ezq;
 
-    root = dq / particle_real_sqrt(1.f + pxm*pxm + pym*pym + pzm*pzm);
+    particle_real_t root = dq / particle_real_sqrt(1.f + pxm*pxm + pym*pym + pzm*pzm);
     particle_real_t taux = hxq*root;
     particle_real_t tauy = hyq*root;
     particle_real_t tauz = hzq*root;
@@ -101,19 +98,15 @@ do_push_part_1st_xz(int p, struct psc_fields *pf, particle_range_t prts)
     part->pyi = pyp + dq * eyq;
     part->pzi = pzp + dq * ezq;
 
-    root = 1.f / particle_real_sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
-    vxi = part->pxi * root;
-    vyi = part->pyi * root;
-    vzi = part->pzi * root;
-
-    part->xi += vxi * xl;
-    part->zi += vzi * zl;
+    calc_v(vv, &part->pxi);
+    part->xi += vv[0] * xl;
+    part->zi += vv[2] * zl;
 
     // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt 
     // x^(n+1), p^(n+1) -> x^(n+1.5f), p^(n+1)
 
-    particle_real_t xi = part->xi + vxi * xl;
-    particle_real_t zi = part->zi + vzi * zl;
+    particle_real_t xi = part->xi + vv[0] * xl;
+    particle_real_t zi = part->zi + vv[2] * zl;
 
     u = xi * dxi;
     w = zi * dzi;
@@ -167,7 +160,7 @@ do_push_part_1st_xz(int p, struct psc_fields *pf, particle_range_t prts)
       }
     }
 
-    particle_real_t fnqy = vyi * part->qni * part->wni * fnqs;
+    particle_real_t fnqy = vv[1] * part->qni * part->wni * fnqs;
     for (int l3 = l3min; l3 <= l3max; l3++) {
       for (int l1 = l1min; l1 <= l1max; l1++) {
 	particle_real_t wy = S0X(l1) * S0Z(l3)

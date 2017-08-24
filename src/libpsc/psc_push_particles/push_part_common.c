@@ -39,6 +39,18 @@
 #endif
 
 // ----------------------------------------------------------------------
+// calc_v
+
+static inline void
+calc_v(particle_real_t *v, const particle_real_t *p)
+{
+  particle_real_t root = 1.f / particle_real_sqrt(1.f + sqr(p[0]) + sqr(p[1]) + sqr(p[2]));
+  for (int d = 0; d < 3; d++) {
+    v[d] = p[d] * root;
+  }
+}
+
+// ----------------------------------------------------------------------
 // charge density 
 
 #if ORDER == ORDER_1ST
@@ -149,19 +161,17 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
 
     // x^n, p^n -> x^(n+.5), p^n
 
-    particle_real_t root = 1.f / particle_real_sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
-    particle_real_t vxi = part->pxi * root;
-    particle_real_t vyi = part->pyi * root;
-    particle_real_t vzi = part->pzi * root;
+    particle_real_t vv[3];
+    calc_v(vv, &part->pxi);
 
 #if (DIM & DIM_X)
-    part->xi += vxi * xl;
+    part->xi += vv[0] * xl;
 #endif
 #if (DIM & DIM_Y)
-    part->yi += vyi * yl;
+    part->yi += vv[1] * yl;
 #endif
 #if (DIM & DIM_Z)
-    part->zi += vzi * zl;
+    part->zi += vv[2] * zl;
 #endif
 
 #if (DIM & DIM_X)
@@ -280,7 +290,7 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
     particle_real_t pym = part->pyi + dq*eyq;
     particle_real_t pzm = part->pzi + dq*ezq;
 
-    root = dq / particle_real_sqrt(1.f + pxm*pxm + pym*pym + pzm*pzm);
+    particle_real_t root = dq / particle_real_sqrt(1.f + pxm*pxm + pym*pym + pzm*pzm);
     particle_real_t taux = hxq*root;
     particle_real_t tauy = hyq*root;
     particle_real_t tauz = hzq*root;
@@ -300,29 +310,26 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
     part->pyi = pyp + dq * eyq;
     part->pzi = pzp + dq * ezq;
 
-    root = 1.f / particle_real_sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
-    vxi = part->pxi * root;
-    vyi = part->pyi * root;
-    vzi = part->pzi * root;
+    calc_v(vv, &part->pxi);
 
 #if (DIM & DIM_X)
-    part->xi += vxi * xl;
-    particle_real_t xi = part->xi + vxi * xl;
+    part->xi += vv[0] * xl;
+    particle_real_t xi = part->xi + vv[0] * xl;
     u = xi * dxi;
     int k1 = particle_real_nint(u);
     h1 = k1 - u;
 #endif
 #if (DIM & DIM_Y)
-    part->yi += vyi * yl;
-    particle_real_t yi = part->yi + vyi * yl;
+    part->yi += vv[1] * yl;
+    particle_real_t yi = part->yi + vv[1] * yl;
     v = yi * dyi;
     int k2 = particle_real_nint(v);
     h2 = k2 - v;
 
 #endif
 #if (DIM & DIM_Z)
-    part->zi += vzi * zl;
-    particle_real_t zi = part->zi + vzi * zl;
+    part->zi += vv[2] * zl;
+    particle_real_t zi = part->zi + vv[2] * zl;
     w = zi * dzi;
     int k3 = particle_real_nint(w);
     h3 = k3 - w;
@@ -437,17 +444,17 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
 #if (DIM & DIM_X)
     particle_real_t fnqx = part->qni * part->wni * fnqxs;
 #else
-    particle_real_t fnqxx = vxi * part->qni * part->wni * fnqs;
+    particle_real_t fnqxx = vv[0] * part->qni * part->wni * fnqs;
 #endif
 #if (DIM & DIM_Y)
     particle_real_t fnqy = part->qni * part->wni * fnqys;
 #else
-    particle_real_t fnqyy = vyi * part->qni * part->wni * fnqs;
+    particle_real_t fnqyy = vv[1] * part->qni * part->wni * fnqs;
 #endif
 #if (DIM & DIM_Z)
     particle_real_t fnqz = part->qni * part->wni * fnqzs;
 #else
-    particle_real_t fnqzz = vzi * part->qni * part->wni * fnqs;
+    particle_real_t fnqzz = vv[2] * part->qni * part->wni * fnqs;
 #endif
 
 #if DIM == DIM_Y
