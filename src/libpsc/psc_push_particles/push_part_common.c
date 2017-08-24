@@ -6,6 +6,20 @@
 #define DIM_XZ (DIM_X | DIM_Z)
 #define DIM_YZ (DIM_Y | DIM_Z)
 
+#if DIM == DIM_Y
+#define psc_push_particles_generic_c_push_mprts psc_push_particles_generic_c_push_mprts_y
+#define PROF_NAME "genc_push_mprts_y"
+#elif DIM == DIM_XY
+#define psc_push_particles_generic_c_push_mprts psc_push_particles_generic_c_push_mprts_xy
+#define PROF_NAME "genc_push_mprts_xy"
+#elif DIM == DIM_XZ
+#define psc_push_particles_generic_c_push_mprts psc_push_particles_generic_c_push_mprts_xz
+#define PROF_NAME "genc_push_mprts_xz"
+#elif DIM == DIM_YZ
+#define psc_push_particles_generic_c_push_mprts psc_push_particles_generic_c_push_mprts_yz
+#define PROF_NAME "genc_push_mprts_yz"
+#endif
+
 #define S0X(off) s0x[off+2]
 #define S0Y(off) s0y[off+2]
 #define S0Z(off) s0z[off+2]
@@ -13,15 +27,20 @@
 #define S1Y(off) s1y[off+2]
 #define S1Z(off) s1z[off+2]
 
-#if DIM == DIM_XY
+#if DIM == DIM_Y
 #define IP_2ND(pf, m, gx, gy, gz)					\
-  (gx##my*(gx##mx*F3(pf, m, l##gx##1-1,l##gy##2-1,0) +			\
+  (gy##my*F3(pf, m, 0,l##gy##2-1,0) +					\
+   gy##0y*F3(pf, m, 0,l##gy##2  ,0) +					\
+   gy##1y*F3(pf, m, 0,l##gy##2+1,0))
+#elif DIM == DIM_XY
+#define IP_2ND(pf, m, gx, gy, gz)					\
+  (gy##my*(gx##mx*F3(pf, m, l##gx##1-1,l##gy##2-1,0) +			\
 	   gx##0x*F3(pf, m, l##gx##1  ,l##gy##2-1,0) +			\
 	   gx##1x*F3(pf, m, l##gx##1+1,l##gy##2-1,0)) +			\
-   gx##0y*(gx##mx*F3(pf, m, l##gx##1-1,l##gy##2  ,0) +			\
+   gy##0y*(gx##mx*F3(pf, m, l##gx##1-1,l##gy##2  ,0) +			\
 	   gx##0x*F3(pf, m, l##gx##1  ,l##gy##2  ,0) +			\
 	   gx##1x*F3(pf, m, l##gx##1+1,l##gy##2  ,0)) +			\
-   gx##1y*(gx##mx*F3(pf, m, l##gx##1-1,l##gy##2+1,0) +			\
+   gy##1y*(gx##mx*F3(pf, m, l##gx##1-1,l##gy##2+1,0) +			\
 	   gx##0x*F3(pf, m, l##gx##1  ,l##gy##2+1,0) +			\
 	   gx##1x*F3(pf, m, l##gx##1+1,l##gy##2+1,0)))
 #elif DIM == DIM_XZ
@@ -125,7 +144,11 @@ do_genc_push_part(int p, struct psc_fields *pf, particle_range_t prts)
     
     // CHARGE DENSITY FORM FACTOR AT (n+.5)*dt 
 
-#if DIM == DIM_XY
+#if DIM == DIM_Y
+    S0Y(-1) = .5f*(1.5f-creal_abs(h2-1.f))*(1.5f-creal_abs(h2-1.f));
+    S0Y(+0) = .75f-creal_abs(h2)*creal_abs(h2);
+    S0Y(+1) = .5f*(1.5f-creal_abs(h2+1.f))*(1.5f-creal_abs(h2+1.f));
+#elif DIM == DIM_XY
     S0X(-1) = .5f*(1.5f-creal_abs(h1-1.f))*(1.5f-creal_abs(h1-1.f));
     S0X(+0) = .75f-creal_abs(h1)*creal_abs(h1);
     S0X(+1) = .5f*(1.5f-creal_abs(h1+1.f))*(1.5f-creal_abs(h1+1.f));
@@ -259,7 +282,11 @@ do_genc_push_part(int p, struct psc_fields *pf, particle_range_t prts)
 #endif
     }
 
-#if DIM == DIM_XY
+#if DIM == DIM_Y
+    S1Y(k2-lg2-1) = .5f*(1.5f-creal_abs(h2-1.f))*(1.5f-creal_abs(h2-1.f));
+    S1Y(k2-lg2+0) = .75f-creal_abs(h2)*creal_abs(h2);
+    S1Y(k2-lg2+1) = .5f*(1.5f-creal_abs(h2+1.f))*(1.5f-creal_abs(h2+1.f));
+#elif DIM == DIM_XY
     S1X(k1-lg1-1) = .5f*(1.5f-creal_abs(h1-1.f))*(1.5f-creal_abs(h1-1.f));
     S1X(k1-lg1+0) = .75f-creal_abs(h1)*creal_abs(h1);
     S1X(k1-lg1+1) = .5f*(1.5f-creal_abs(h1+1.f))*(1.5f-creal_abs(h1+1.f));
@@ -348,7 +375,24 @@ do_genc_push_part(int p, struct psc_fields *pf, particle_range_t prts)
     creal fnqzz = vzi * part->qni * part->wni * fnqs;
 #endif
 
-#if DIM == DIM_XY
+#if DIM == DIM_Y
+    creal jyh = 0.f;
+
+    for (int l2 = l2min; l2 <= l2max; l2++) {
+      creal wx = S0Y(l2) + .5f * S1Y(l2);
+      creal wy = S1Y(l2);
+      creal wz = S0Y(l2) + .5f * S1Y(l2);
+      
+      creal jxh = fnqxx*wx;
+      jyh -= fnqy*wy;
+      creal jzh = fnqzz*wz;
+
+      F3(pf, JXI, 0,lg2+l2,0) += jxh;
+      F3(pf, JYI, 0,lg2+l2,0) += jyh;
+      F3(pf, JZI, 0,lg2+l2,0) += jzh;
+    }
+
+#elif DIM == DIM_XY
 
     for (int l2 = l2min; l2 <= l2max; l2++) {
       creal jxh = 0.f;
@@ -439,4 +483,26 @@ do_genc_push_part(int p, struct psc_fields *pf, particle_range_t prts)
   }
 }
 
+// ----------------------------------------------------------------------
+// psc_push_particles_generic_c_push_mprts
+
+void
+psc_push_particles_generic_c_push_mprts(struct psc_push_particles *push,
+					struct psc_mparticles *mprts,
+					struct psc_mfields *mflds)
+{
+  static int pr;
+  if (!pr) {
+    pr = prof_register(PROF_NAME, 1., 0, 0);
+  }
+  
+  prof_start(pr);
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+    particle_range_t prts = particle_range_mprts(mprts, p);
+    psc_fields_zero_range(flds, JXI, JXI + 3);
+    do_genc_push_part(p, flds, prts);
+  }
+  prof_stop(pr);
+}
 
