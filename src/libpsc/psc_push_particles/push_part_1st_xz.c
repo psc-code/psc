@@ -6,25 +6,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define DIM DIM_XZ
+#define ORDER ORDER_1ST
+#include "push_part_common.c"
+
 static void
 do_push_part_1st_xz(int p, struct psc_fields *pf, particle_range_t prts)
 {
-#define S0X(off) s0x[off+1]
-#define S0Z(off) s0z[off+1]
-#define S1X(off) s1x[off+1]
-#define S1Z(off) s1z[off+1]
-
-  particle_real_t s0x[4] = {}, s0z[4] = {}, s1x[4], s1z[4];
-
-  particle_real_t dt = ppsc->dt;
-  particle_real_t xl = .5f * dt;
-  particle_real_t zl = .5f * dt;
-  particle_real_t dqs = .5f * ppsc->coeff.eta * dt;
-  particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  particle_real_t fnqxs = ppsc->patch[p].dx[0] * fnqs / dt;
-  particle_real_t fnqzs = ppsc->patch[p].dx[2] * fnqs / dt;
-  particle_real_t dxi = 1.f / ppsc->patch[p].dx[0];
-  particle_real_t dzi = 1.f / ppsc->patch[p].dx[2];
+#include "push_part_common_vars.c"
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *part = particle_iter_deref(prt_iter);

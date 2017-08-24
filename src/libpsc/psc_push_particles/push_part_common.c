@@ -1,4 +1,7 @@
 
+#define ORDER_1ST 1
+#define ORDER_2ND 2
+
 #define DIM_X 1
 #define DIM_Y 2
 #define DIM_Z 4
@@ -6,6 +9,12 @@
 #define DIM_XZ (DIM_X | DIM_Z)
 #define DIM_YZ (DIM_Y | DIM_Z)
 #define DIM_XYZ (DIM_X | DIM_Y | DIM_Z)
+
+#if ORDER == ORDER_1ST
+
+
+
+#elif ORDER == ORDER_2ND
 
 #if DIM == DIM_Y
 #define psc_push_particles_generic_c_push_mprts psc_push_particles_generic_c_push_mprts_y
@@ -27,12 +36,32 @@
 #define PROF_NAME "genc_push_mprts_xyz"
 #endif
 
-#define S0X(off) s0x[off+2]
-#define S0Y(off) s0y[off+2]
-#define S0Z(off) s0z[off+2]
-#define S1X(off) s1x[off+2]
-#define S1Y(off) s1y[off+2]
-#define S1Z(off) s1z[off+2]
+#endif
+
+// ----------------------------------------------------------------------
+// charge density 
+
+#if ORDER == ORDER_1ST
+
+#define N_RHO 4
+#define S_OFF 1
+
+#elif ORDER == ORDER_2ND
+
+#define N_RHO 5
+#define S_OFF 2
+
+#endif
+
+#define S0X(off) s0x[off+S_OFF]
+#define S0Y(off) s0y[off+S_OFF]
+#define S0Z(off) s0z[off+S_OFF]
+#define S1X(off) s1x[off+S_OFF]
+#define S1Y(off) s1y[off+S_OFF]
+#define S1Z(off) s1z[off+S_OFF]
+
+// ----------------------------------------------------------------------
+// interpolation
 
 #if DIM == DIM_Y
 #define IP_2ND(flds, m, gx, gy, gz)					\
@@ -109,32 +138,12 @@
 
 #endif
 
+#if ORDER == ORDER_2ND
+
 static void
 do_genc_push_part(int p, fields_t flds, particle_range_t prts)
 {
-  creal dt = ppsc->dt;
-  creal dqs = .5f * ppsc->coeff.eta * dt;
-  creal fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-
-#if (DIM & DIM_X)
-  creal s0x[5] = {}, s1x[5];
-  creal xl = .5f * dt;
-  creal fnqxs = ppsc->patch[p].dx[0] * fnqs / dt;
-  creal dxi = 1.f / ppsc->patch[p].dx[0];
-#endif
-#if (DIM & DIM_Y)
-  creal s0y[5] = {}, s1y[5];
-  creal yl = .5f * dt;
-  creal fnqys = ppsc->patch[p].dx[1] * fnqs / dt;
-  creal dyi = 1.f / ppsc->patch[p].dx[1];
-#endif
-#if (DIM & DIM_Z)
-  creal s0z[5] = {}, s1z[5];
-  creal zl = .5f * dt;
-  creal fnqzs = ppsc->patch[p].dx[2] * fnqs / dt;
-  creal dzi = 1.f / ppsc->patch[p].dx[2];
-#endif
-
+#include "push_part_common_vars.c"
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *part = particle_iter_deref(prt_iter);
 
@@ -635,4 +644,6 @@ psc_push_particles_generic_c_push_mprts(struct psc_push_particles *push,
   }
   prof_stop(pr);
 }
+
+#endif // ORDER_2ND
 

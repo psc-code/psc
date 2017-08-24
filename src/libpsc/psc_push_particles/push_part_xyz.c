@@ -7,6 +7,6 @@
 #include <string.h>
 
 #define DIM DIM_XYZ
-
+#define ORDER ORDER_2ND
 #include "push_part_common.c"
 
