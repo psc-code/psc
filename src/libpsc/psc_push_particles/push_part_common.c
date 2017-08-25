@@ -346,6 +346,18 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 #endif
 }
 
+#define DEPOSIT_AND_IP_COEFFS(lg1, lh1, gx, hx, d, dxi, s0x)	\
+  int lg1, lh1;							\
+  struct ip_coeff gx, hx;					\
+  ip_coeff(&lg1, &gx, x[d] * dxi);				\
+  set_S(s0x, 0, gx);						\
+  ip_coeff(&lh1, &hx, x[d] * dxi - .5f)
+  
+#define DEPOSIT(k1, gx, d, dxi, s1x, lg1)		\
+    int k1;						\
+    ip_coeff(&k1, &gx, xn[d] * dxi);			\
+    set_S(s1x, k1-lg1, gx)
+    
 // ----------------------------------------------------------------------
 // do_push_part
 
@@ -356,37 +368,24 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *part = particle_iter_deref(prt_iter);
+    particle_real_t *x = &part->xi;
 
     // x^n, p^n -> x^(n+.5), p^n
 
     particle_real_t vv[3];
     calc_v(vv, &part->pxi);
-    push_x(&part->xi, vv);
+    push_x(x, vv);
 
     // CHARGE DENSITY FORM FACTOR AT (n+.5)*dt
 
 #if (DIM & DIM_X)
-    int lg1, lh1;
-    struct ip_coeff gx, hx;
-    ip_coeff(&lg1, &gx, part->xi * dxi);
-    set_S(s0x, 0, gx);
-    ip_coeff(&lh1, &hx, part->xi * dxi - .5f);
+    DEPOSIT_AND_IP_COEFFS(lg1, lh1, gx, hx, 0, dxi, s0x);
 #endif
-
 #if (DIM & DIM_Y)
-    int lg2, lh2;
-    struct ip_coeff gy, hy;
-    ip_coeff(&lg2, &gy, part->yi * dyi);
-    set_S(s0y, 0, gy);
-    ip_coeff(&lh2, &hy, part->yi * dyi - .5f);
+    DEPOSIT_AND_IP_COEFFS(lg2, lh2, gy, hy, 0, dyi, s0y);
 #endif
-
 #if (DIM & DIM_Z)
-    int lg3, lh3;
-    struct ip_coeff gz, hz;
-    ip_coeff(&lg3, &gz, part->zi * dzi);
-    set_S(s0z, 0, gz);
-    ip_coeff(&lh3, &hz, part->zi * dzi - .5f);
+    DEPOSIT_AND_IP_COEFFS(lg3, lh3, gz, hz, 0, dzi, s0z);
 #endif
 
     // FIELD INTERPOLATION
@@ -404,32 +403,24 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
     push_p(&part->pxi, E, H, dq);
 
     calc_v(vv, &part->pxi);
-    push_x(&part->xi, vv);
+    push_x(x, vv);
 
     // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt 
     // x^(n+1), p^(n+1) -> x^(n+1.5f), p^(n+1)
 
     ZERO_S1;
 
+    particle_real_t xn[3] = { x[0], x[1], x[2] };
+    push_x(xn, vv);
+
 #if (DIM & DIM_X)
-    particle_real_t xi = part->xi + vv[0] * xl;
-    int k1;
-    ip_coeff(&k1, &gx, xi * dxi);
-    set_S(s1x, k1-lg1, gx);
+    DEPOSIT(k1, gx, 0, dxi, s1x, lg1);
 #endif
-
 #if (DIM & DIM_Y)
-    particle_real_t yi = part->yi + vv[1] * yl;
-    int k2;
-    ip_coeff(&k2, &gy, yi * dyi);
-    set_S(s1y, k2-lg2, gy);
+    DEPOSIT(k2, gy, 1, dyi, s1y, lg2);
 #endif
-
 #if (DIM & DIM_Z)
-    particle_real_t zi = part->zi + vv[2] * zl;
-    int k3;
-    ip_coeff(&k3, &gz, zi * dzi);
-    set_S(s1z, k3-lg3, gz);
+    DEPOSIT(k3, gz, 2, dzi, s1z, lg3);
 #endif
 
     // CURRENT DENSITY AT (n+1.0)*dt
