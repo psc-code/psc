@@ -142,90 +142,98 @@ push_p(particle_real_t *p, particle_real_t *E, particle_real_t *H, particle_real
 
 #if ORDER == ORDER_1ST
 
-#define IP_FIELD(pf, m, gx, gy, gz)					\
-  (gz##0z*(gx##0x*_F3(pf, m, l##gx##1  ,0,l##gz##3  ) +			\
-	   gx##1x*_F3(pf, m, l##gx##1+1,0,l##gz##3  )) +			\
-   gz##1z*(gx##0x*_F3(pf, m, l##gx##1  ,0,l##gz##3+1) +			\
-	   gx##1x*_F3(pf, m, l##gx##1+1,0,l##gz##3+1)))			\
+#define IP_FIELD(flds, m, gx, gy, gz)					\
+  (gz##z.v0*(gx##x.v0*_F3(flds, m, l##gx##1  ,0,l##gz##3  ) +		\
+	     gx##x.v1*_F3(flds, m, l##gx##1+1,0,l##gz##3  )) +		\
+   gz##z.v1*(gx##x.v0*_F3(flds, m, l##gx##1  ,0,l##gz##3+1) +		\
+	     gx##x.v1*_F3(flds, m, l##gx##1+1,0,l##gz##3+1)))		\
 
 #else
 
 #if DIM == DIM_Y
 #define IP_FIELD(flds, m, gx, gy, gz)					\
-  (gy##my*_F3(flds, m, 0,l##gy##2-1,0) +				\
-   gy##0y*_F3(flds, m, 0,l##gy##2  ,0) +				\
-   gy##1y*_F3(flds, m, 0,l##gy##2+1,0))
+  (gy##y.vm*_F3(flds, m, 0,l##gy##2-1,0) +				\
+   gy##y.v0*_F3(flds, m, 0,l##gy##2  ,0) +				\
+   gy##y.vp*_F3(flds, m, 0,l##gy##2+1,0))
 #elif DIM == DIM_Z
 #define IP_FIELD(flds, m, gx, gy, gz)					\
-  (gz##mz*_F3(flds, m, 0,0,l##gz##3-1) +				\
-   gz##0z*_F3(flds, m, 0,0,l##gz##3  ) +				\
-   gz##1z*_F3(flds, m, 0,0,l##gz##3+1))
+  (gz##z.vm*_F3(flds, m, 0,0,l##gz##3-1) +				\
+   gz##z.v0*_F3(flds, m, 0,0,l##gz##3  ) +				\
+   gz##z.vp*_F3(flds, m, 0,0,l##gz##3+1))
 #elif DIM == DIM_XY
 #define IP_FIELD(flds, m, gx, gy, gz)					\
-  (gy##my*(gx##mx*_F3(flds, m, l##gx##1-1,l##gy##2-1,0) +		\
-	   gx##0x*_F3(flds, m, l##gx##1  ,l##gy##2-1,0) +		\
-	   gx##1x*_F3(flds, m, l##gx##1+1,l##gy##2-1,0)) +		\
-   gy##0y*(gx##mx*_F3(flds, m, l##gx##1-1,l##gy##2  ,0) +		\
-	   gx##0x*_F3(flds, m, l##gx##1  ,l##gy##2  ,0) +		\
-	   gx##1x*_F3(flds, m, l##gx##1+1,l##gy##2  ,0)) +		\
-   gy##1y*(gx##mx*_F3(flds, m, l##gx##1-1,l##gy##2+1,0) +		\
-	   gx##0x*_F3(flds, m, l##gx##1  ,l##gy##2+1,0) +		\
-	   gx##1x*_F3(flds, m, l##gx##1+1,l##gy##2+1,0)))
+  (gy##y.vm*(gx##x.vm*_F3(flds, m, l##gx##1-1,l##gy##2-1,0) +		\
+	     gx##x.v0*_F3(flds, m, l##gx##1  ,l##gy##2-1,0) +		\
+	     gx##x.vp*_F3(flds, m, l##gx##1+1,l##gy##2-1,0)) +		\
+   gy##y.v0*(gx##x.vm*_F3(flds, m, l##gx##1-1,l##gy##2  ,0) +		\
+	     gx##x.v0*_F3(flds, m, l##gx##1  ,l##gy##2  ,0) +		\
+	     gx##x.vp*_F3(flds, m, l##gx##1+1,l##gy##2  ,0)) +		\
+   gy##y.vp*(gx##x.vm*_F3(flds, m, l##gx##1-1,l##gy##2+1,0) +		\
+	     gx##x.v0*_F3(flds, m, l##gx##1  ,l##gy##2+1,0) +		\
+	     gx##x.vp*_F3(flds, m, l##gx##1+1,l##gy##2+1,0)))
 #elif DIM == DIM_XZ
 #define IP_FIELD(flds, m, gx, gy, gz)					\
-  (gz##mz*(gx##mx*_F3(flds, m, l##gx##1-1,0,l##gz##3-1) +		\
-	   gx##0x*_F3(flds, m, l##gx##1  ,0,l##gz##3-1) +		\
-	   gx##1x*_F3(flds, m, l##gx##1+1,0,l##gz##3-1)) +		\
-   gz##0z*(gx##mx*_F3(flds, m, l##gx##1-1,0,l##gz##3  ) +		\
-	   gx##0x*_F3(flds, m, l##gx##1  ,0,l##gz##3  ) +		\
-	   gx##1x*_F3(flds, m, l##gx##1+1,0,l##gz##3  )) +		\
-   gz##1z*(gx##mx*_F3(flds, m, l##gx##1-1,0,l##gz##3+1) +		\
-	   gx##0x*_F3(flds, m, l##gx##1  ,0,l##gz##3+1) +		\
-	   gx##1x*_F3(flds, m, l##gx##1+1,0,l##gz##3+1)))
+  (gz##z.vm*(gx##x.vm*_F3(flds, m, l##gx##1-1,0,l##gz##3-1) +		\
+	     gx##x.v0*_F3(flds, m, l##gx##1  ,0,l##gz##3-1) +		\
+	     gx##x.vp*_F3(flds, m, l##gx##1+1,0,l##gz##3-1)) +		\
+   gz##z.v0*(gx##x.vm*_F3(flds, m, l##gx##1-1,0,l##gz##3  ) +		\
+	     gx##x.v0*_F3(flds, m, l##gx##1  ,0,l##gz##3  ) +		\
+	     gx##x.vp*_F3(flds, m, l##gx##1+1,0,l##gz##3  )) +		\
+   gz##z.vp*(gx##x.vm*_F3(flds, m, l##gx##1-1,0,l##gz##3+1) +		\
+	     gx##x.v0*_F3(flds, m, l##gx##1  ,0,l##gz##3+1) +		\
+	     gx##x.vp*_F3(flds, m, l##gx##1+1,0,l##gz##3+1)))
 #elif DIM == DIM_YZ
 #define IP_FIELD(flds, m, gx, gy, gz)					\
-  (gz##mz*(gy##my*_F3(flds, m, 0,l##gy##2-1,l##gz##3-1) +		\
-	   gy##0y*_F3(flds, m, 0,l##gy##2  ,l##gz##3-1) +		\
-	   gy##1y*_F3(flds, m, 0,l##gy##2+1,l##gz##3-1)) +		\
-   gz##0z*(gy##my*_F3(flds, m, 0,l##gy##2-1,l##gz##3  ) +		\
-	   gy##0y*_F3(flds, m, 0,l##gy##2  ,l##gz##3  ) +		\
-	   gy##1y*_F3(flds, m, 0,l##gy##2+1,l##gz##3  )) +		\
-   gz##1z*(gy##my*_F3(flds, m, 0,l##gy##2-1,l##gz##3+1) +		\
-	   gy##0y*_F3(flds, m, 0,l##gy##2  ,l##gz##3+1) +		\
-	   gy##1y*_F3(flds, m, 0,l##gy##2+1,l##gz##3+1)))
+  (gz##z.vm*(gy##y.vm*_F3(flds, m, 0,l##gy##2-1,l##gz##3-1) +		\
+	     gy##y.v0*_F3(flds, m, 0,l##gy##2  ,l##gz##3-1) +		\
+	     gy##y.vp*_F3(flds, m, 0,l##gy##2+1,l##gz##3-1)) +		\
+   gz##z.v0*(gy##y.vm*_F3(flds, m, 0,l##gy##2-1,l##gz##3  ) +		\
+	     gy##y.v0*_F3(flds, m, 0,l##gy##2  ,l##gz##3  ) +		\
+	     gy##y.vp*_F3(flds, m, 0,l##gy##2+1,l##gz##3  )) +		\
+   gz##z.vp*(gy##y.vm*_F3(flds, m, 0,l##gy##2-1,l##gz##3+1) +		\
+	     gy##y.v0*_F3(flds, m, 0,l##gy##2  ,l##gz##3+1) +		\
+	     gy##y.vp*_F3(flds, m, 0,l##gy##2+1,l##gz##3+1)))
 #elif DIM == DIM_XYZ
 #define IP_FIELD(flds, m, gx, gy, gz)					\
-  (gz##mz*(gy##my*(gx##mx*_F3(flds, m, l##gx##1-1,l##gy##2-1,l##gz##3-1) + \
-		   gx##0x*_F3(flds, m, l##gx##1  ,l##gy##2-1,l##gz##3-1) + \
-		   gx##1x*_F3(flds, m, l##gx##1+1,l##gy##2-1,l##gz##3-1)) + \
-	   gy##0y*(gx##mx*_F3(flds, m, l##gx##1-1,l##gy##2  ,l##gz##3-1) + \
-		   gx##0x*_F3(flds, m, l##gx##1  ,l##gy##2  ,l##gz##3-1) + \
-		   gx##1x*_F3(flds, m, l##gx##1+1,l##gy##2  ,l##gz##3-1)) + \
-	   gy##1y*(gx##mx*_F3(flds, m, l##gx##1-1,l##gy##2+1,l##gz##3-1) + \
-		   gx##0x*_F3(flds, m, l##gx##1  ,l##gy##2+1,l##gz##3-1) + \
-		   gx##1x*_F3(flds, m, l##gx##1+1,l##gy##2+1,l##gz##3-1))) + \
-   gz##0z*(gy##my*(gx##mx*_F3(flds, m, l##gx##1-1,l##gy##2-1,l##gz##3  ) + \
-		   gx##0x*_F3(flds, m, l##gx##1  ,l##gy##2-1,l##gz##3  ) + \
-		   gx##1x*_F3(flds, m, l##gx##1+1,l##gy##2-1,l##gz##3  )) + \
-	   gy##0y*(gx##mx*_F3(flds, m, l##gx##1-1,l##gy##2  ,l##gz##3  ) + \
-		   gx##0x*_F3(flds, m, l##gx##1  ,l##gy##2  ,l##gz##3  ) + \
-		   gx##1x*_F3(flds, m, l##gx##1+1,l##gy##2  ,l##gz##3  )) + \
-	   gy##1y*(gx##mx*_F3(flds, m, l##gx##1-1,l##gy##2+1,l##gz##3  ) + \
-		   gx##0x*_F3(flds, m, l##gx##1  ,l##gy##2+1,l##gz##3  ) + \
-		   gx##1x*_F3(flds, m, l##gx##1+1,l##gy##2+1,l##gz##3  ))) + \
-   gz##1z*(gy##my*(gx##mx*_F3(flds, m, l##gx##1-1,l##gy##2-1,l##gz##3+1) + \
-		   gx##0x*_F3(flds, m, l##gx##1  ,l##gy##2-1,l##gz##3+1) + \
-		   gx##1x*_F3(flds, m, l##gx##1+1,l##gy##2-1,l##gz##3+1)) + \
-	   gy##0y*(gx##mx*_F3(flds, m, l##gx##1-1,l##gy##2  ,l##gz##3+1) + \
-		   gx##0x*_F3(flds, m, l##gx##1  ,l##gy##2  ,l##gz##3+1) + \
-		   gx##1x*_F3(flds, m, l##gx##1+1,l##gy##2  ,l##gz##3+1)) + \
-	   gy##1y*(gx##mx*_F3(flds, m, l##gx##1-1,l##gy##2+1,l##gz##3+1) + \
-		   gx##0x*_F3(flds, m, l##gx##1  ,l##gy##2+1,l##gz##3+1) + \
-		   gx##1x*_F3(flds, m, l##gx##1+1,l##gy##2+1,l##gz##3+1))))
+  (gz##z.vm*(gy##y.vm*(gx##x.vm*_F3(flds, m, l##gx##1-1,l##gy##2-1,l##gz##3-1) + \
+		       gx##x.v0*_F3(flds, m, l##gx##1  ,l##gy##2-1,l##gz##3-1) + \
+		       gx##x.vp*_F3(flds, m, l##gx##1+1,l##gy##2-1,l##gz##3-1)) + \
+	     gy##y.v0*(gx##x.vm*_F3(flds, m, l##gx##1-1,l##gy##2  ,l##gz##3-1) + \
+		       gx##x.v0*_F3(flds, m, l##gx##1  ,l##gy##2  ,l##gz##3-1) + \
+		       gx##x.vp*_F3(flds, m, l##gx##1+1,l##gy##2  ,l##gz##3-1)) + \
+	     gy##y.vp*(gx##x.vm*_F3(flds, m, l##gx##1-1,l##gy##2+1,l##gz##3-1) + \
+		       gx##x.v0*_F3(flds, m, l##gx##1  ,l##gy##2+1,l##gz##3-1) + \
+		       gx##x.vp*_F3(flds, m, l##gx##1+1,l##gy##2+1,l##gz##3-1))) + \
+   gz##z.v0*(gy##y.vm*(gx##x.vm*_F3(flds, m, l##gx##1-1,l##gy##2-1,l##gz##3  ) + \
+		       gx##x.v0*_F3(flds, m, l##gx##1  ,l##gy##2-1,l##gz##3  ) + \
+		       gx##x.vp*_F3(flds, m, l##gx##1+1,l##gy##2-1,l##gz##3  )) + \
+	     gy##y.v0*(gx##x.vm*_F3(flds, m, l##gx##1-1,l##gy##2  ,l##gz##3  ) + \
+		       gx##x.v0*_F3(flds, m, l##gx##1  ,l##gy##2  ,l##gz##3  ) + \
+		       gx##x.vp*_F3(flds, m, l##gx##1+1,l##gy##2  ,l##gz##3  )) + \
+	     gy##y.vp*(gx##x.vm*_F3(flds, m, l##gx##1-1,l##gy##2+1,l##gz##3  ) + \
+		       gx##x.v0*_F3(flds, m, l##gx##1  ,l##gy##2+1,l##gz##3  ) + \
+		       gx##x.vp*_F3(flds, m, l##gx##1+1,l##gy##2+1,l##gz##3  ))) + \
+   gz##z.vp*(gy##y.vm*(gx##x.vm*_F3(flds, m, l##gx##1-1,l##gy##2-1,l##gz##3+1) + \
+		       gx##x.v0*_F3(flds, m, l##gx##1  ,l##gy##2-1,l##gz##3+1) + \
+		       gx##x.vp*_F3(flds, m, l##gx##1+1,l##gy##2-1,l##gz##3+1)) + \
+	     gy##y.v0*(gx##x.vm*_F3(flds, m, l##gx##1-1,l##gy##2  ,l##gz##3+1) + \
+		       gx##x.v0*_F3(flds, m, l##gx##1  ,l##gy##2  ,l##gz##3+1) + \
+		       gx##x.vp*_F3(flds, m, l##gx##1+1,l##gy##2  ,l##gz##3+1)) + \
+	     gy##y.vp*(gx##x.vm*_F3(flds, m, l##gx##1-1,l##gy##2+1,l##gz##3+1) + \
+		       gx##x.v0*_F3(flds, m, l##gx##1  ,l##gy##2+1,l##gz##3+1) + \
+		       gx##x.vp*_F3(flds, m, l##gx##1+1,l##gy##2+1,l##gz##3+1))))
 
 #endif
 
 #endif // ORDER
+
+struct ip_coeff {
+#if ORDER == ORDER_1ST
+  particle_real_t v0, v1;
+#elif ORDER == ORDER_2ND
+  particle_real_t vm, v0, vp, h;
+#endif
+};
 
 // ----------------------------------------------------------------------
 // get_nint_remainder
@@ -250,110 +258,67 @@ get_fint_remainder(int *lg1, particle_real_t *h1, particle_real_t u)
 }
 
 // ----------------------------------------------------------------------
-// ip_coeff_2nd
+// ip_coeff
 
 static inline void
-ip_coeff_2nd(int *lg1, particle_real_t *h1,
-	     particle_real_t *gmx, particle_real_t *g0x, particle_real_t *g1x,
-	     particle_real_t u)
+ip_coeff(int *lg, struct ip_coeff *gg, particle_real_t u)
 {
   int l;
   particle_real_t h;
-  get_nint_remainder(&l, &h, u);
-  *lg1 = l;
-  *h1  = h;
-  *gmx = .5f * (.5f+h)*(.5f+h);
-  *g0x = .75f - h*h;
-  *g1x = .5f * (.5f-h)*(.5f-h);
-}
 
-// ----------------------------------------------------------------------
-// ip_coeff_1st
-
-static inline void
-ip_coeff_1st(int *lg1, particle_real_t *g0x, particle_real_t *g1x,
-	     particle_real_t u)
-{
-  int l;
-  particle_real_t h;
+#if ORDER == ORDER_1ST
   get_fint_remainder(&l, &h, u);
-  *lg1 = l;
-  *g0x = 1.f - h;
-  *g1x = h;
+  gg->v0 = 1.f - h;
+  gg->v1 = h;
+#elif ORDER == ORDER_2ND
+  get_nint_remainder(&l, &h, u);
+  gg->h  = h;
+  gg->vm = .5f * (.5f+h)*(.5f+h);
+  gg->v0 = .75f - h*h;
+  gg->vp = .5f * (.5f-h)*(.5f-h);
+#endif
+  *lg = l;
 }
 
 // ----------------------------------------------------------------------
 // ZERO_S1
 
-#if ORDER == ORDER_1ST
-
 #define ZERO_S1 do {				\
-    for (int i = -1; i <= 2; i++) {		\
+    for (int i = -S_OFF; i < -S_OFF + N_RHO; i++) {	\
       IF_DIM_X( S(s1x, i) = 0.f; );		\
       IF_DIM_Y( S(s1y, i) = 0.f; );		\
       IF_DIM_Z( S(s1z, i) = 0.f; );		\
     }						\
   } while (0)
-
-#elif ORDER == ORDER_2ND
-
-#define ZERO_S1 do {				\
-    for (int i = -2; i <= 2; i++) {		\
-      IF_DIM_X( S(s1x, i) = 0.f; );		\
-      IF_DIM_Y( S(s1y, i) = 0.f; );		\
-      IF_DIM_Z( S(s1z, i) = 0.f; );		\
-    }						\
-  } while (0)
-
-#endif
 
 // ----------------------------------------------------------------------
 // SUBTR_S1_S0
 
+#define SUBTR_S1_S0 do {			\
+    for (int i = -S_OFF + 1; i <= 1; i++) {	\
+      IF_DIM_X( S(s1x, i) -= S(s0x, i); );	\
+      IF_DIM_Y( S(s1y, i) -= S(s0y, i); );	\
+      IF_DIM_Z( S(s1z, i) -= S(s0z, i); );	\
+    }						\
+  } while (0)
+
+// ----------------------------------------------------------------------
+// set_S
+
+static inline void
+set_S(particle_real_t *s0, int shift, struct ip_coeff gg)
+{
 #if ORDER == ORDER_1ST
-
-#define SUBTR_S1_S0 do {			\
-    for (int i = 0; i <= 1; i++) {		\
-      IF_DIM_X( S(s1x, i) -= S(s0x, i); );	\
-      IF_DIM_Y( S(s1y, i) -= S(s0y, i); );	\
-      IF_DIM_Z( S(s1z, i) -= S(s0z, i); );	\
-    }						\
-  } while (0)
-
+  S(s0, shift  ) = gg.v0;
+  S(s0, shift+1) = gg.v1;
 #elif ORDER == ORDER_2ND
-
-#define SUBTR_S1_S0 do {			\
-    for (int i = -1; i <= 1; i++) {		\
-      IF_DIM_X( S(s1x, i) -= S(s0x, i); );	\
-      IF_DIM_Y( S(s1y, i) -= S(s0y, i); );	\
-      IF_DIM_Z( S(s1z, i) -= S(s0z, i); );	\
-    }						\
-  } while (0)
-
+  // FIXME: It appears that gm/g0/g1 can be used instead of what's calculated here
+  // but it needs checking.
+  particle_real_t h = gg.h;
+  S(s0, shift-1) = .5f*(1.5f-particle_real_abs(h-1.f))*(1.5f-particle_real_abs(h-1.f));
+  S(s0, shift  ) = .75f-particle_real_abs(h)*particle_real_abs(h);
+  S(s0, shift+1) = .5f*(1.5f-particle_real_abs(h+1.f))*(1.5f-particle_real_abs(h+1.f));
 #endif
-
-// ----------------------------------------------------------------------
-// set_S_2nd
-//
-// FIXME: It appears that gm/g0/g1 can be used instead of what's calculated here
-// but it needs checking.
-
-static inline void
-set_S_2nd(particle_real_t *s0x, int shift, particle_real_t h1)
-{
-  S(s0x, shift-1) = .5f*(1.5f-particle_real_abs(h1-1.f))*(1.5f-particle_real_abs(h1-1.f));
-  S(s0x, shift  ) = .75f-particle_real_abs(h1)*particle_real_abs(h1);
-  S(s0x, shift+1) = .5f*(1.5f-particle_real_abs(h1+1.f))*(1.5f-particle_real_abs(h1+1.f));
-}
-
-// ----------------------------------------------------------------------
-// set_S_1st
-
-static inline void
-set_S_1st(particle_real_t *s0x, int shift, particle_real_t g0x, particle_real_t g1x)
-{
-  S(s0x, shift  ) = g0x;
-  S(s0x, shift+1) = g1x;
 }
 
 // ----------------------------------------------------------------------
@@ -402,43 +367,26 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
 
 #if (DIM & DIM_X)
     int lg1, lh1;
-#if ORDER == ORDER_1ST
-    particle_real_t g0x, g1x, h0x, h1x;
-    ip_coeff_1st(&lg1, &g0x, &g1x, part->xi * dxi);
-    set_S_1st(s0x, 0, g0x, g1x);
-    ip_coeff_1st(&lh1, &h0x, &h1x, part->xi * dxi - .5f);
-#elif ORDER == ORDER_2ND
-    particle_real_t h1, gmx, g0x, g1x, hmx, h0x, h1x;
-    ip_coeff_2nd(&lg1, &h1, &gmx, &g0x, &g1x, part->xi * dxi);
-    set_S_2nd(s0x, 0, h1);
-    ip_coeff_2nd(&lh1, &h1, &hmx, &h0x, &h1x, part->xi * dxi - .5f);
-#endif
+    struct ip_coeff gx, hx;
+    ip_coeff(&lg1, &gx, part->xi * dxi);
+    set_S(s0x, 0, gx);
+    ip_coeff(&lh1, &hx, part->xi * dxi - .5f);
 #endif
 
 #if (DIM & DIM_Y)
     int lg2, lh2;
-#if ORDER == ORDER_1ST
-#elif ORDER == ORDER_2ND
-    particle_real_t h2, gmy, g0y, g1y, hmy, h0y, h1y;
-    ip_coeff_2nd(&lg2, &h2, &gmy, &g0y, &g1y, part->yi * dyi);
-    set_S_2nd(s0y, 0, h2);
-    ip_coeff_2nd(&lh2, &h2, &hmy, &h0y, &h1y, part->yi * dyi - .5f);
-#endif
+    struct ip_coeff gy, hy;
+    ip_coeff(&lg2, &gy, part->yi * dyi);
+    set_S(s0y, 0, gy);
+    ip_coeff(&lh2, &hy, part->yi * dyi - .5f);
 #endif
 
 #if (DIM & DIM_Z)
     int lg3, lh3;
-#if ORDER == ORDER_1ST
-    particle_real_t g0z, g1z, h0z, h1z;
-    ip_coeff_1st(&lg3, &g0z, &g1z, part->zi * dzi);
-    set_S_1st(s0z, 0, g0z, g1z);
-    ip_coeff_1st(&lh3, &h0z, &h1z, part->zi * dzi - .5f);
-#elif ORDER == ORDER_2ND
-    particle_real_t h3, gmz, g0z, g1z, hmz, h0z, h1z;
-    ip_coeff_2nd(&lg3, &h3, &gmz, &g0z, &g1z, part->zi * dzi);
-    set_S_2nd(s0z, 0, h3);
-    ip_coeff_2nd(&lh3, &h3, &hmz, &h0z, &h1z, part->zi * dzi - .5f);
-#endif
+    struct ip_coeff gz, hz;
+    ip_coeff(&lg3, &gz, part->zi * dzi);
+    set_S(s0z, 0, gz);
+    ip_coeff(&lh3, &hz, part->zi * dzi - .5f);
 #endif
 
     // FIELD INTERPOLATION
@@ -466,35 +414,22 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
 #if (DIM & DIM_X)
     particle_real_t xi = part->xi + vv[0] * xl;
     int k1;
-#if ORDER == ORDER_1ST
-    ip_coeff_1st(&k1, &g0x, &g1x, xi * dxi);
-    set_S_1st(s1x, k1-lg1, g0x, g1x);
-#elif ORDER == ORDER_2ND
-    get_nint_remainder(&k1, &h1, xi * dxi);
-    set_S_2nd(s1x, k1-lg1, h1);
-#endif
+    ip_coeff(&k1, &gx, xi * dxi);
+    set_S(s1x, k1-lg1, gx);
 #endif
 
 #if (DIM & DIM_Y)
     particle_real_t yi = part->yi + vv[1] * yl;
     int k2;
-#if ORDER == ORDER_1ST
-#elif ORDER == ORDER_2ND
-    get_nint_remainder(&k2, &h2, yi * dyi);
-    set_S_2nd(s1y, k2-lg2, h2);
-#endif
+    ip_coeff(&k2, &gy, yi * dyi);
+    set_S(s1y, k2-lg2, gy);
 #endif
 
 #if (DIM & DIM_Z)
     particle_real_t zi = part->zi + vv[2] * zl;
     int k3;
-#if ORDER == ORDER_1ST
-    ip_coeff_1st(&k3, &g0z, &g1z, zi * dzi);
-    set_S_1st(s1z, k3-lg3, g0x, g1x);
-#elif ORDER == ORDER_2ND
-    get_nint_remainder(&k3, &h3, zi * dzi);
-    set_S_2nd(s1z, k3-lg3, h3);
-#endif
+    ip_coeff(&k3, &gz, zi * dzi);
+    set_S(s1z, k3-lg3, gz);
 #endif
 
     // CURRENT DENSITY AT (n+1.0)*dt
