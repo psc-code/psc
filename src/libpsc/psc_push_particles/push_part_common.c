@@ -46,6 +46,9 @@ static particle_real_t xl, yl, zl;
 #if DIM == DIM_XZ
 #define psc_push_particles_push_mprts psc_push_particles_1st_push_mprts_xz
 #define PROF_NAME "push_mprts_1st_xz"
+#elif DIM == DIM_YZ
+#define psc_push_particles_push_mprts psc_push_particles_1st_push_mprts_yz
+#define PROF_NAME "push_mprts_1st_yz"
 #endif
 
 #elif ORDER == ORDER_2ND
@@ -628,7 +631,7 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
     calc_v(vv, &part->pxi);
     push_x(x, vv);
 
-    // CHARGE DENSITY FORM FACTOR AT (n+.5)*dt
+    // CHARGE DENSITY FORM FACTOR AT (n+.5)*dt 
 
     IF_DIM_X( DEPOSIT_AND_IP_COEFFS(lg1, lh1, gx, hx, 0, dxi, s0x); );
     IF_DIM_Y( DEPOSIT_AND_IP_COEFFS(lg2, lh2, gy, hy, 0, dyi, s0y); );
@@ -644,7 +647,7 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
 			     IP_FIELD(flds, HZ, h, h, g), };
 
     // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
-    particle_real_t dq = dqs * part->qni / part->mni;
+    particle_real_t dq = dqs * particle_qni_div_mni(part);
     push_p(&part->pxi, E, H, dq);
 
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0) 
