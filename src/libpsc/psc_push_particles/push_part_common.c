@@ -302,7 +302,25 @@ set_S_1st(particle_real_t *s0x, int shift, particle_real_t g0x, particle_real_t 
   S(s0x, shift+1) = g1x;
 }
 
+// ----------------------------------------------------------------------
+// find_l_minmax
+
+static inline void
+find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
+{
+  if (k1 == lg1) {
+    *l1min = -1; *l1max = +1;
+  } else if (k1 == lg1 - 1) {
+    *l1min = -2; *l1max = +1;
+  } else { // (k1 == lg1 + 1)
+    *l1min = -1; *l1max = +2;
+  }
+}
+
 #if ORDER == ORDER_2ND
+
+// ----------------------------------------------------------------------
+// do_genc_push_part
 
 static void
 do_genc_push_part(int p, fields_t flds, particle_range_t prts)
@@ -399,38 +417,15 @@ do_genc_push_part(int p, fields_t flds, particle_range_t prts)
 
 #if (DIM & DIM_X)
     int l1min, l1max;
-    
-    if (k1 == lg1) {
-      l1min = -1; l1max = +1;
-    } else if (k1 == lg1 - 1) {
-      l1min = -2; l1max = +1;
-    } else { // (k1 == lg1 + 1)
-      l1min = -1; l1max = +2;
-    }
+    find_l_minmax(&l1min, &l1max, k1, lg1);
 #endif
-
 #if (DIM & DIM_Y)
     int l2min, l2max;
-
-    if (k2 == lg2) {
-      l2min = -1; l2max = +1;
-    } else if (k2 == lg2 - 1) {
-      l2min = -2; l2max = +1;
-    } else { // (k2 == lg2 + 1)
-      l2min = -1; l2max = +2;
-    }
+    find_l_minmax(&l2min, &l2max, k2, lg2);
 #endif
-
 #if (DIM & DIM_Z)
     int l3min, l3max;
-    
-    if (k3 == lg3) {
-      l3min = -1; l3max = +1;
-    } else if (k3 == lg3 - 1) {
-      l3min = -2; l3max = +1;
-    } else { // (k3 == lg3 + 1)
-      l3min = -1; l3max = +2;
-    }
+    find_l_minmax(&l3min, &l3max, k3, lg3);
 #endif
 
 #if (DIM & DIM_X)
