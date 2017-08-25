@@ -6,8 +6,13 @@
 // ----------------------------------------------------------------------
 // DIM
 
-#define DIM_YZ 6
-#define DIM_XYZ 7
+#define DIM_X 1
+#define DIM_Y 2
+#define DIM_Z 4
+#define DIM_XY (DIM_X | DIM_Y)
+#define DIM_XZ (DIM_X | DIM_Z)
+#define DIM_YZ (DIM_Y | DIM_Z)
+#define DIM_XYZ (DIM_X | DIM_Y | DIM_Z)
 
 // ----------------------------------------------------------------------
 // CALC_J

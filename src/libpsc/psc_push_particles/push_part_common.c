@@ -14,20 +14,26 @@
 
 #if (DIM & DIM_X)
 #define IF_DIM_X(s) s do{} while(0)
+#define IF_NOT_DIM_X(s) do{} while(0)
 #else
 #define IF_DIM_X(s) do{} while(0)
+#define IF_NOT_DIM_X(s) s do{} while(0)
 #endif
 
 #if (DIM & DIM_Y)
 #define IF_DIM_Y(s) s do{} while(0)
+#define IF_NOT_DIM_Y(s) do{} while(0)
 #else
 #define IF_DIM_Y(s) do{} while(0)
+#define IF_NOT_DIM_Y(s) s do{} while(0)
 #endif
 
 #if (DIM & DIM_Z)
 #define IF_DIM_Z(s) s do{} while(0)
+#define IF_NOT_DIM_Z(s) do{} while(0)
 #else
 #define IF_DIM_Z(s) do{} while(0)
+#define IF_NOT_DIM_Z(s) s do{} while(0)
 #endif
 
 // ----------------------------------------------------------------------
@@ -142,11 +148,19 @@ push_p(particle_real_t *p, particle_real_t *E, particle_real_t *H, particle_real
 
 #if ORDER == ORDER_1ST
 
+#if DIM == DIM_XZ
 #define IP_FIELD(flds, m, gx, gy, gz)					\
   (gz##z.v0*(gx##x.v0*_F3(flds, m, l##gx##1  ,0,l##gz##3  ) +		\
 	     gx##x.v1*_F3(flds, m, l##gx##1+1,0,l##gz##3  )) +		\
    gz##z.v1*(gx##x.v0*_F3(flds, m, l##gx##1  ,0,l##gz##3+1) +		\
-	     gx##x.v1*_F3(flds, m, l##gx##1+1,0,l##gz##3+1)))		\
+	     gx##x.v1*_F3(flds, m, l##gx##1+1,0,l##gz##3+1)))
+#elif DIM == DIM_YZ
+#define IP_FIELD(flds, m, gx, gy, gz)					\
+  (gz##z.v0*(gy##y.v0*_F3(flds, m, 0,l##gy##2  ,l##gz##3  ) +		\
+	     gy##y.v1*_F3(flds, m, 0,l##gy##2+1,l##gz##3  )) +		\
+   gz##z.v1*(gy##y.v0*_F3(flds, m, 0,l##gy##2  ,l##gz##3+1) +		\
+	     gy##y.v1*_F3(flds, m, 0,l##gy##2+1,l##gz##3+1)))
+#endif
 
 #else
 
@@ -358,6 +372,245 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
     ip_coeff(&k1, &gx, xn[d] * dxi);			\
     set_S(s1x, k1-lg1, gx)
     
+// ======================================================================
+// current
+
+#define CURRENT_PREP_DIM(l1min, l1max, k1, lg1, fnqx, fnqxs)	\
+    int l1min, l1max; find_l_minmax(&l1min, &l1max, k1, lg1);	\
+    particle_real_t fnqx = part->qni * part->wni * fnqxs;	\
+
+#define CURRENT_PREP							\
+  IF_DIM_X( CURRENT_PREP_DIM(l1min, l1max, k1, lg1, fnqx, fnqxs); );	\
+  IF_DIM_Y( CURRENT_PREP_DIM(l2min, l2max, k2, lg2, fnqy, fnqys); );	\
+  IF_DIM_Z( CURRENT_PREP_DIM(l3min, l3max, k3, lg3, fnqz, fnqzs); );	\
+									\
+  IF_NOT_DIM_X( particle_real_t fnqxx = vv[0] * part->qni * part->wni * fnqs; ); \
+  IF_NOT_DIM_Y( particle_real_t fnqyy = vv[1] * part->qni * part->wni * fnqs; ); \
+  IF_NOT_DIM_Z( particle_real_t fnqzz = vv[2] * part->qni * part->wni * fnqs; )
+
+#define CURRENT_2ND_Y						\
+  particle_real_t jyh = 0.f;					\
+								\
+  for (int l2 = l2min; l2 <= l2max; l2++) {			\
+    particle_real_t wx = S(s0y, l2) + .5f * S(s1y, l2);		\
+    particle_real_t wy = S(s1y, l2);				\
+    particle_real_t wz = S(s0y, l2) + .5f * S(s1y, l2);		\
+    								\
+    particle_real_t jxh = fnqxx*wx;				\
+    jyh -= fnqy*wy;						\
+    particle_real_t jzh = fnqzz*wz;				\
+    								\
+    _F3(flds, JXI, 0,lg2+l2,0) += jxh;				\
+    _F3(flds, JYI, 0,lg2+l2,0) += jyh;				\
+    _F3(flds, JZI, 0,lg2+l2,0) += jzh;				\
+  }
+
+#define CURRENT_2ND_Z						\
+  particle_real_t jzh = 0.f;					\
+  for (int l3 = l3min; l3 <= l3max; l3++) {			\
+    particle_real_t wx = S(s0z, l3) + .5f * S(s1z, l3);		\
+    particle_real_t wy = S(s0z, l3) + .5f * S(s1z, l3);		\
+    particle_real_t wz = S(s1z, l3);				\
+    								\
+    particle_real_t jxh = fnqxx*wx;				\
+    particle_real_t jyh = fnqyy*wy;				\
+    jzh -= fnqz*wz;						\
+    								\
+    _F3(flds, JXI, 0,0,lg3+l3) += jxh;				\
+    _F3(flds, JYI, 0,0,lg3+l3) += jyh;				\
+    _F3(flds, JZI, 0,0,lg3+l3) += jzh;				\
+  }
+
+#define CURRENT_2ND_XY							\
+  for (int l2 = l2min; l2 <= l2max; l2++) {				\
+    particle_real_t jxh = 0.f;						\
+    for (int l1 = l1min; l1 <= l1max; l1++) {				\
+      particle_real_t wx = S(s1x, l1) * (S(s0y, l2) + .5f*S(s1y, l2));	\
+      particle_real_t wz = S(s0x, l1) * S(s0y, l2)			\
+	+ .5f * S(s1x, l1) * S(s0y, l2)					\
+	+ .5f * S(s0x, l1) * S(s1y, l2)					\
+	+ (1.f/3.f) * S(s1x, l1) * S(s1y, l2);				\
+      									\
+      jxh -= fnqx*wx;							\
+      _F3(flds, JXI, lg1+l1,lg2+l2,0) += jxh;				\
+      _F3(flds, JZI, lg1+l1,lg2+l2,0) += fnqzz * wz;			\
+    }									\
+  }									\
+  for (int l1 = l1min; l1 <= l1max; l1++) {				\
+    particle_real_t jyh = 0.f;						\
+    for (int l2 = l2min; l2 <= l2max; l2++) {				\
+      particle_real_t wy = S(s1y, l2) * (S(s0x, l1) + .5f*S(s1x, l1));	\
+      									\
+      jyh -= fnqy*wy;							\
+      _F3(flds, JYI, lg1+l1,lg2+l2,0) += jyh;				\
+    }									\
+  }
+
+#define CURRENT_XZ				\
+  for (int l3 = l3min; l3 <= l3max; l3++) {	\
+    particle_real_t jxh = 0.f;						\
+    for (int l1 = l1min; l1 < l1max; l1++) {				\
+      particle_real_t wx = S(s1x, l1) * (S(s0z, l3) + .5f*S(s1z, l3));	\
+      jxh -= fnqx*wx;							\
+      _F3(flds, JXI, lg1+l1,0,lg3+l3) += jxh;				\
+    }									\
+  }									\
+									\
+  for (int l3 = l3min; l3 <= l3max; l3++) {				\
+    for (int l1 = l1min; l1 <= l1max; l1++) {				\
+      particle_real_t wy = S(s0x, l1) * S(s0z, l3)			\
+	+ .5f * S(s1x, l1) * S(s0z, l3)					\
+	+ .5f * S(s0x, l1) * S(s1z, l3)					\
+	+ (1.f/3.f) * S(s1x, l1) * S(s1z, l3);				\
+      particle_real_t jyh = fnqyy * wy;					\
+      _F3(flds, JYI, lg1+l1,0,lg3+l3) += jyh;				\
+    }									\
+  }									\
+  for (int l1 = l1min; l1 <= l1max; l1++) {				\
+    particle_real_t jzh = 0.f;						\
+    for (int l3 = l3min; l3 < l3max; l3++) {				\
+      particle_real_t wz = S(s1z, l3) * (S(s0x, l1) + .5f*S(s1x, l1));	\
+      jzh -= fnqz*wz;							\
+      _F3(flds, JZI, lg1+l1,0,lg3+l3) += jzh;				\
+    }									\
+  }
+
+#define CURRENT_1ST_YZ							\
+  for (int l3 = l3min; l3 <= l3max; l3++) {				\
+    for (int l2 = l2min; l2 <= l2max; l2++) {				\
+      particle_real_t wx = S(s0y, l2) * S(s0z, l3)			\
+	+ .5f * S(s1y, l2) * S(s0z, l3)					\
+	+ .5f * S(s0y, l2) * S(s1z, l3)					\
+	+ (1.f/3.f) * S(s1y, l2) * S(s1z, l3);				\
+      particle_real_t jxh = fnqxx * wx;					\
+      _F3(flds, JXI, 0,lg2+l2,lg3+l3) += jxh;				\
+    }									\
+  }									\
+  									\
+  for (int l3 = l3min; l3 <= l3max; l3++) {				\
+    particle_real_t jyh = 0.f;						\
+    for (int l2 = l2min; l2 < l2max; l2++) {				\
+      particle_real_t wy = S(s1y, l2) * (S(s0z, l3) + .5f*S(s1z, l3));	\
+      jyh -= fnqy*wy;							\
+      _F3(flds, JYI, 0,lg2+l2,lg3+l3) += jyh;				\
+    }									\
+  }									\
+									\
+  for (int l2 = l2min; l2 <= l2max; l2++) {				\
+    particle_real_t jzh = 0.f;						\
+    for (int l3 = l3min; l3 < l3max; l3++) {				\
+      particle_real_t wz = S(s1z, l3) * (S(s0y, l2) + .5f*S(s1y, l2));	\
+      jzh -= fnqz*wz;							\
+      _F3(flds, JZI, 0,lg2+l2,lg3+l3) += jzh;				\
+    }									\
+  }
+
+#define JZH(i) jzh[i+2]
+#define CURRENT_2ND_YZ							\
+    particle_real_t jxh;						\
+    particle_real_t jyh;						\
+    particle_real_t jzh[5];						\
+									\
+    for (int l2 = l2min; l2 <= l2max; l2++) {				\
+      JZH(l2) = 0.f;							\
+    }									\
+    for (int l3 = l3min; l3 <= l3max; l3++) {				\
+      jyh = 0.f;							\
+      for (int l2 = l2min; l2 <= l2max; l2++) {				\
+	particle_real_t wx = S(s0y, l2) * S(s0z, l3)			\
+	  + .5f * S(s1y, l2) * S(s0z, l3)				\
+	  + .5f * S(s0y, l2) * S(s1z, l3)				\
+	+ (1.f/3.f) * S(s1y, l2) * S(s1z, l3);				\
+	particle_real_t wy = S(s1y, l2) * (S(s0z, l3) + .5f*S(s1z, l3)); \
+	particle_real_t wz = S(s1z, l3) * (S(s0y, l2) + .5f*S(s1y, l2)); \
+									\
+	jxh = fnqxx*wx;							\
+	jyh -= fnqy*wy;							\
+	JZH(l2) -= fnqz*wz;						\
+									\
+	_F3(flds, JXI, 0,lg2+l2,lg3+l3) += jxh;				\
+	_F3(flds, JYI, 0,lg2+l2,lg3+l3) += jyh;				\
+	_F3(flds, JZI, 0,lg2+l2,lg3+l3) += JZH(l2);			\
+      }									\
+    }									\
+
+#define CURRENT_2ND_XYZ							\
+  for (int l3 = l3min; l3 <= l3max; l3++) {				\
+    for (int l2 = l2min; l2 <= l2max; l2++) {				\
+      particle_real_t jxh = 0.f;					\
+      for (int l1 = l1min; l1 <= l1max; l1++) {				\
+	particle_real_t wx = S(s1x, l1) * (S(s0y, l2) * S(s0z, l3) +	\
+					   .5f * S(s1y, l2) * S(s0z, l3) + \
+					   .5f * S(s0y, l2) * S(s1z, l3) + \
+					   (1.f/3.f) * S(s1y, l2) * S(s1z, l3)); \
+									\
+	jxh -= fnqx*wx;							\
+	_F3(flds, JXI, lg1+l1,lg2+l2,lg3+l3) += jxh;			\
+      }									\
+    }									\
+  }									\
+  									\
+  for (int l3 = l3min; l3 <= l3max; l3++) {				\
+    for (int l1 = l1min; l1 <= l1max; l1++) {				\
+      particle_real_t jyh = 0.f;					\
+      for (int l2 = l2min; l2 <= l2max; l2++) {				\
+	particle_real_t wy = S(s1y, l2) * (S(s0x, l1) * S(s0z, l3) +	\
+					   .5f * S(s1x, l1) * S(s0z, l3) + \
+					   .5f * S(s0x, l1) * S(s1z, l3) + \
+					   (1.f/3.f) * S(s1x, l1)*S(s1z, l3)); \
+									\
+	jyh -= fnqy*wy;							\
+	_F3(flds, JYI, lg1+l1,lg2+l2,lg3+l3) += jyh;			\
+      }									\
+    }									\
+  }									\
+									\
+  for (int l2 = l2min; l2 <= l2max; l2++) {				\
+    for (int l1 = l1min; l1 <= l1max; l1++) {				\
+      particle_real_t jzh = 0.f;					\
+      for (int l3 = l3min; l3 <= l3max; l3++) {				\
+	particle_real_t wz = S(s1z, l3) * (S(s0x, l1) * S(s0y, l2) +	\
+					   .5f * S(s1x, l1) * S(s0y, l2) +\
+					   .5f * S(s0x, l1) * S(s1y, l2) +\
+					   (1.f/3.f) * S(s1x, l1)*S(s1y, l2)); \
+									\
+	jzh -= fnqz*wz;							\
+	_F3(flds, JZI, lg1+l1,lg2+l2,lg3+l3) += jzh;			\
+      }									\
+    }									\
+  }
+
+#if DIM == DIM_Y
+#if ORDER == ORDER_2ND
+#define CURRENT CURRENT_2ND_Y
+#endif
+#elif DIM == DIM_Z
+#if ORDER == ORDER_2ND
+#define CURRENT CURRENT_2ND_Z
+#endif
+#elif DIM == DIM_XY
+#if ORDER == ORDER_2ND
+#define CURRENT CURRENT_2ND_XY
+#endif
+#elif DIM == DIM_XZ
+#define CURRENT CURRENT_XZ
+#elif DIM == DIM_YZ
+
+#if ORDER == ORDER_1ST
+#define CURRENT CURRENT_1ST_YZ
+#elif ORDER == ORDER_2ND
+#define CURRENT CURRENT_2ND_YZ
+
+#endif
+#elif DIM == DIM_XYZ
+#if ORDER == ORDER_2ND
+#define CURRENT CURRENT_2ND_XYZ
+#endif
+#endif
+
+
+#ifdef psc_push_particles_push_mprts
+
 // ----------------------------------------------------------------------
 // do_push_part
 
@@ -371,22 +624,15 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
     particle_real_t *x = &part->xi;
 
     // x^n, p^n -> x^(n+.5), p^n
-
     particle_real_t vv[3];
     calc_v(vv, &part->pxi);
     push_x(x, vv);
 
     // CHARGE DENSITY FORM FACTOR AT (n+.5)*dt
 
-#if (DIM & DIM_X)
-    DEPOSIT_AND_IP_COEFFS(lg1, lh1, gx, hx, 0, dxi, s0x);
-#endif
-#if (DIM & DIM_Y)
-    DEPOSIT_AND_IP_COEFFS(lg2, lh2, gy, hy, 0, dyi, s0y);
-#endif
-#if (DIM & DIM_Z)
-    DEPOSIT_AND_IP_COEFFS(lg3, lh3, gz, hz, 0, dzi, s0z);
-#endif
+    IF_DIM_X( DEPOSIT_AND_IP_COEFFS(lg1, lh1, gx, hx, 0, dxi, s0x); );
+    IF_DIM_Y( DEPOSIT_AND_IP_COEFFS(lg2, lh2, gy, hy, 0, dyi, s0y); );
+    IF_DIM_Z( DEPOSIT_AND_IP_COEFFS(lg3, lh3, gz, hz, 0, dzi, s0z); );
 
     // FIELD INTERPOLATION
 
@@ -397,223 +643,30 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
 			     IP_FIELD(flds, HY, h, g, h),
 			     IP_FIELD(flds, HZ, h, h, g), };
 
-    // c x^(n+.5), p^n -> x^(n+1.0), p^(n+1.0) 
-
+    // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
     particle_real_t dq = dqs * part->qni / part->mni;
     push_p(&part->pxi, E, H, dq);
 
+    // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0) 
     calc_v(vv, &part->pxi);
     push_x(x, vv);
 
     // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt 
+
     // x^(n+1), p^(n+1) -> x^(n+1.5f), p^(n+1)
-
-    ZERO_S1;
-
     particle_real_t xn[3] = { x[0], x[1], x[2] };
     push_x(xn, vv);
 
-#if (DIM & DIM_X)
-    DEPOSIT(k1, gx, 0, dxi, s1x, lg1);
-#endif
-#if (DIM & DIM_Y)
-    DEPOSIT(k2, gy, 1, dyi, s1y, lg2);
-#endif
-#if (DIM & DIM_Z)
-    DEPOSIT(k3, gz, 2, dzi, s1z, lg3);
-#endif
+    ZERO_S1;
+    IF_DIM_X( DEPOSIT(k1, gx, 0, dxi, s1x, lg1); );
+    IF_DIM_Y( DEPOSIT(k2, gy, 1, dyi, s1y, lg2); );
+    IF_DIM_Z( DEPOSIT(k3, gz, 2, dzi, s1z, lg3); );
 
     // CURRENT DENSITY AT (n+1.0)*dt
 
     SUBTR_S1_S0;
-
-#if (DIM & DIM_X)
-    int l1min, l1max; find_l_minmax(&l1min, &l1max, k1, lg1);
-    particle_real_t fnqx = part->qni * part->wni * fnqxs;
-#else
-    particle_real_t fnqxx = vv[0] * part->qni * part->wni * fnqs;
-#endif
-#if (DIM & DIM_Y)
-    int l2min, l2max; find_l_minmax(&l2min, &l2max, k2, lg2);
-    particle_real_t fnqy = part->qni * part->wni * fnqys;
-#else
-    particle_real_t fnqyy = vv[1] * part->qni * part->wni * fnqs;
-#endif
-#if (DIM & DIM_Z)
-    int l3min, l3max; find_l_minmax(&l3min, &l3max, k3, lg3);
-    particle_real_t fnqz = part->qni * part->wni * fnqzs;
-#else
-    particle_real_t fnqzz = vv[2] * part->qni * part->wni * fnqs;
-#endif
-
-#if DIM == DIM_Y
-#if ORDER == ORDER_2ND
-    particle_real_t jyh = 0.f;
-
-    for (int l2 = l2min; l2 <= l2max; l2++) {
-      particle_real_t wx = S(s0y, l2) + .5f * S(s1y, l2);
-      particle_real_t wy = S(s1y, l2);
-      particle_real_t wz = S(s0y, l2) + .5f * S(s1y, l2);
-      
-      particle_real_t jxh = fnqxx*wx;
-      jyh -= fnqy*wy;
-      particle_real_t jzh = fnqzz*wz;
-
-      _F3(flds, JXI, 0,lg2+l2,0) += jxh;
-      _F3(flds, JYI, 0,lg2+l2,0) += jyh;
-      _F3(flds, JZI, 0,lg2+l2,0) += jzh;
-    }
-#endif
-#elif DIM == DIM_Z
-#if ORDER == ORDER_2ND
-    particle_real_t jzh = 0.f;
-    for (int l3 = l3min; l3 <= l3max; l3++) {
-      particle_real_t wx = S(s0z, l3) + .5f * S(s1z, l3);
-      particle_real_t wy = S(s0z, l3) + .5f * S(s1z, l3);
-      particle_real_t wz = S(s1z, l3);
-      
-      particle_real_t jxh = fnqxx*wx;
-      particle_real_t jyh = fnqyy*wy;
-      jzh -= fnqz*wz;
-      
-      _F3(flds, JXI, 0,0,lg3+l3) += jxh;
-      _F3(flds, JYI, 0,0,lg3+l3) += jyh;
-      _F3(flds, JZI, 0,0,lg3+l3) += jzh;
-    }
-#endif
-#elif DIM == DIM_XY
-#if ORDER == ORDER_2ND
-    for (int l2 = l2min; l2 <= l2max; l2++) {
-      particle_real_t jxh = 0.f;
-      for (int l1 = l1min; l1 <= l1max; l1++) {
-	particle_real_t wx = S(s1x, l1) * (S(s0y, l2) + .5f*S(s1y, l2));
-	particle_real_t wz = S(s0x, l1) * S(s0y, l2)
-	  + .5f * S(s1x, l1) * S(s0y, l2)
-	  + .5f * S(s0x, l1) * S(s1y, l2)
-	  + (1.f/3.f) * S(s1x, l1) * S(s1y, l2);
-
-	jxh -= fnqx*wx;
-	_F3(flds, JXI, lg1+l1,lg2+l2,0) += jxh;
-	_F3(flds, JZI, lg1+l1,lg2+l2,0) += fnqzz * wz;
-      }
-    }
-    for (int l1 = l1min; l1 <= l1max; l1++) {
-      particle_real_t jyh = 0.f;
-      for (int l2 = l2min; l2 <= l2max; l2++) {
-	particle_real_t wy = S(s1y, l2) * (S(s0x, l1) + .5f*S(s1x, l1));
-
-	jyh -= fnqy*wy;
-	_F3(flds, JYI, lg1+l1,lg2+l2,0) += jyh;
-      }
-    }
-#endif
-#elif DIM == DIM_XZ
-    for (int l3 = l3min; l3 <= l3max; l3++) {
-      particle_real_t jxh = 0.f;
-      for (int l1 = l1min; l1 < l1max; l1++) {
-	particle_real_t wx = S(s1x, l1) * (S(s0z, l3) + .5f*S(s1z, l3));
-	jxh -= fnqx*wx;
-	_F3(flds, JXI, lg1+l1,0,lg3+l3) += jxh;
-      }
-    }
-
-    for (int l3 = l3min; l3 <= l3max; l3++) {
-      for (int l1 = l1min; l1 <= l1max; l1++) {
-	particle_real_t wy = S(s0x, l1) * S(s0z, l3)
-	  + .5f * S(s1x, l1) * S(s0z, l3)
-	  + .5f * S(s0x, l1) * S(s1z, l3)
-	  + (1.f/3.f) * S(s1x, l1) * S(s1z, l3);
-	particle_real_t jyh = fnqyy * wy;
-	_F3(flds, JYI, lg1+l1,0,lg3+l3) += jyh;
-      }
-    }
-    for (int l1 = l1min; l1 <= l1max; l1++) {
-      particle_real_t jzh = 0.f;
-      for (int l3 = l3min; l3 < l3max; l3++) {
-	particle_real_t wz = S(s1z, l3) * (S(s0x, l1) + .5f*S(s1x, l1));
-	jzh -= fnqz*wz;
-	_F3(flds, JZI, lg1+l1,0,lg3+l3) += jzh;
-      }
-    }
-#elif DIM == DIM_YZ
-#if ORDER == ORDER_2ND
-    particle_real_t jxh;
-    particle_real_t jyh;
-    particle_real_t jzh[5];
-
-#define JZH(i) jzh[i+2]
-
-    for (int l2 = l2min; l2 <= l2max; l2++) {
-      JZH(l2) = 0.f;
-    }
-    for (int l3 = l3min; l3 <= l3max; l3++) {
-      jyh = 0.f;
-      for (int l2 = l2min; l2 <= l2max; l2++) {
-	particle_real_t wx = S(s0y, l2) * S(s0z, l3)
-	  + .5f * S(s1y, l2) * S(s0z, l3)
-	  + .5f * S(s0y, l2) * S(s1z, l3)
-	  + (1.f/3.f) * S(s1y, l2) * S(s1z, l3);
-	particle_real_t wy = S(s1y, l2) * (S(s0z, l3) + .5f*S(s1z, l3));
-	particle_real_t wz = S(s1z, l3) * (S(s0y, l2) + .5f*S(s1y, l2));
-
-	jxh = fnqxx*wx;
-	jyh -= fnqy*wy;
-	JZH(l2) -= fnqz*wz;
-
-	_F3(flds, JXI, 0,lg2+l2,lg3+l3) += jxh;
-	_F3(flds, JYI, 0,lg2+l2,lg3+l3) += jyh;
-	_F3(flds, JZI, 0,lg2+l2,lg3+l3) += JZH(l2);
-      }
-    }
-#endif
-#elif DIM == DIM_XYZ
-#if ORDER == ORDER_2ND
-    for (int l3 = l3min; l3 <= l3max; l3++) {
-      for (int l2 = l2min; l2 <= l2max; l2++) {
-	particle_real_t jxh = 0.f;
-	for (int l1 = l1min; l1 <= l1max; l1++) {
-	  particle_real_t wx = S(s1x, l1) * (S(s0y, l2) * S(s0z, l3) +
-					     .5f * S(s1y, l2) * S(s0z, l3) +
-					     .5f * S(s0y, l2) * S(s1z, l3) +
-					     (1.f/3.f) * S(s1y, l2) * S(s1z, l3));
-
-	  jxh -= fnqx*wx;
-	  _F3(flds, JXI, lg1+l1,lg2+l2,lg3+l3) += jxh;
-	}
-      }
-    }
-
-    for (int l3 = l3min; l3 <= l3max; l3++) {
-      for (int l1 = l1min; l1 <= l1max; l1++) {
-	particle_real_t jyh = 0.f;
-	for (int l2 = l2min; l2 <= l2max; l2++) {
-	  particle_real_t wy = S(s1y, l2) * (S(s0x, l1) * S(s0z, l3) +
-					     .5f * S(s1x, l1) * S(s0z, l3) +
-					     .5f * S(s0x, l1) * S(s1z, l3) +
-					     (1.f/3.f) * S(s1x, l1)*S(s1z, l3));
-
-	  jyh -= fnqy*wy;
-	  _F3(flds, JYI, lg1+l1,lg2+l2,lg3+l3) += jyh;
-	}
-      }
-    }
-
-    for (int l2 = l2min; l2 <= l2max; l2++) {
-      for (int l1 = l1min; l1 <= l1max; l1++) {
-	particle_real_t jzh = 0.f;
-	for (int l3 = l3min; l3 <= l3max; l3++) {
-	  particle_real_t wz = S(s1z, l3) * (S(s0x, l1) * S(s0y, l2) +
-					     .5f * S(s1x, l1) * S(s0y, l2) +
-					     .5f * S(s0x, l1) * S(s1y, l2) +
-					     (1.f/3.f) * S(s1x, l1)*S(s1y, l2));
-
-	  jzh -= fnqz*wz;
-	  _F3(flds, JZI, lg1+l1,lg2+l2,lg3+l3) += jzh;
-	}
-      }
-    }
-#endif
-#endif
+    CURRENT_PREP;
+    CURRENT;
   }
 }
 
@@ -640,3 +693,4 @@ psc_push_particles_push_mprts(struct psc_push_particles *push,
   prof_stop(pr);
 }
 
+#endif
