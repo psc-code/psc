@@ -283,6 +283,56 @@ ip_coeff_1st(int *lg1, particle_real_t *g0x, particle_real_t *g1x,
 }
 
 // ----------------------------------------------------------------------
+// ZERO_S1
+
+#if ORDER == ORDER_1ST
+
+#define ZERO_S1 do {				\
+    for (int i = -1; i <= 2; i++) {		\
+      IF_DIM_X( S(s1x, i) = 0.f; );		\
+      IF_DIM_Y( S(s1y, i) = 0.f; );		\
+      IF_DIM_Z( S(s1z, i) = 0.f; );		\
+    }						\
+  } while (0)
+
+#elif ORDER == ORDER_2ND
+
+#define ZERO_S1 do {				\
+    for (int i = -2; i <= 2; i++) {		\
+      IF_DIM_X( S(s1x, i) = 0.f; );		\
+      IF_DIM_Y( S(s1y, i) = 0.f; );		\
+      IF_DIM_Z( S(s1z, i) = 0.f; );		\
+    }						\
+  } while (0)
+
+#endif
+
+// ----------------------------------------------------------------------
+// SUBTR_S1_S0
+
+#if ORDER == ORDER_1ST
+
+#define SUBTR_S1_S0 do {			\
+    for (int i = 0; i <= 1; i++) {		\
+      IF_DIM_X( S(s1x, i) -= S(s0x, i); );	\
+      IF_DIM_Y( S(s1y, i) -= S(s0y, i); );	\
+      IF_DIM_Z( S(s1z, i) -= S(s0z, i); );	\
+    }						\
+  } while (0)
+
+#elif ORDER == ORDER_2ND
+
+#define SUBTR_S1_S0 do {			\
+    for (int i = -1; i <= 1; i++) {		\
+      IF_DIM_X( S(s1x, i) -= S(s0x, i); );	\
+      IF_DIM_Y( S(s1y, i) -= S(s0y, i); );	\
+      IF_DIM_Z( S(s1z, i) -= S(s0z, i); );	\
+    }						\
+  } while (0)
+
+#endif
+
+// ----------------------------------------------------------------------
 // set_S_2nd
 //
 // FIXME: It appears that gm/g0/g1 can be used instead of what's calculated here
@@ -312,6 +362,15 @@ set_S_1st(particle_real_t *s0x, int shift, particle_real_t g0x, particle_real_t 
 static inline void
 find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 {
+#if ORDER == ORDER_1ST
+  if (k1 == lg1) {
+    *l1min = 0; *l1max = +1;
+  } else if (k1 == lg1 - 1) {
+    *l1min = -1; *l1max = +1;
+  } else { // (k1 == lg1 + 1)
+    *l1min = 0; *l1max = +2;
+  }
+#elif ORDER == ORDER_2ND
   if (k1 == lg1) {
     *l1min = -1; *l1max = +1;
   } else if (k1 == lg1 - 1) {
@@ -319,6 +378,7 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
   } else { // (k1 == lg1 + 1)
     *l1min = -1; *l1max = +2;
   }
+#endif
 }
 
 // ----------------------------------------------------------------------
@@ -332,123 +392,6 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *part = particle_iter_deref(prt_iter);
 
-#if ORDER == ORDER_1ST
-
-    // x^n, p^n -> x^(n+.5), p^n
-
-    particle_real_t vv[3];
-    calc_v(vv, &part->pxi);
-    push_x(&part->xi, vv);
-
-    // CHARGE DENSITY FORM FACTOR AT (n+.5)*dt 
-
-    int lg1, lh1;
-    particle_real_t g0x, g1x, h0x, h1x;
-    ip_coeff_1st(&lg1, &g0x, &g1x, part->xi * dxi);
-    set_S_1st(s0x, 0, g0x, g1x);
-    ip_coeff_1st(&lh1, &h0x, &h1x, part->xi * dxi - .5f);
-    
-    int lg3, lh3;
-    particle_real_t g0z, g1z, h0z, h1z;
-    ip_coeff_1st(&lg3, &g0z, &g1z, part->zi * dzi);
-    set_S_1st(s0z, 0, g0z, g1z);
-    ip_coeff_1st(&lh3, &h0z, &h1z, part->zi * dzi - .5f);
-    
-    // FIELD INTERPOLATION
-
-    particle_real_t E[3] = { IP_FIELD(flds, EX, h, g, g),
-			     IP_FIELD(flds, EY, g, h, g),
-			     IP_FIELD(flds, EZ, g, g, h), };
-    particle_real_t H[3] = { IP_FIELD(flds, HX, g, h, h),
-			     IP_FIELD(flds, HY, h, g, h),
-			     IP_FIELD(flds, HZ, h, h, g), };
-
-     // c x^(n+.5), p^n -> x^(n+1.0), p^(n+1.0)
-
-    particle_real_t dq = dqs * part->qni / part->mni;
-    push_p(&part->pxi, E, H, dq);
-
-    calc_v(vv, &part->pxi);
-    push_x(&part->xi, vv);
-
-    // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt 
-    // x^(n+1), p^(n+1) -> x^(n+1.5f), p^(n+1)
-
-    for (int i = -1; i <= 2; i++) {
-      S(s1x, i) = 0.f;
-      S(s1z, i) = 0.f;
-    }
-
-    particle_real_t xi = part->xi + vv[0] * xl;
-    particle_real_t zi = part->zi + vv[2] * zl;
-
-    int k1;
-    ip_coeff_1st(&k1, &g0x, &g1x, xi * dxi);
-    set_S_1st(s1x, k1-lg1, g0x, g1x);
-
-    int k3;
-    ip_coeff_1st(&k3, &g0z, &g1z, zi * dzi);
-    set_S_1st(s1z, k3-lg3, g0x, g1x);
-
-    // CURRENT DENSITY AT (n+1.0)*dt
-
-    for (int i = 0; i <= 1; i++) {
-      S(s1x, i) -= S(s0x, i);
-      S(s1z, i) -= S(s0z, i);
-    }
-
-    int l1min, l3min, l1max, l3max;
-    
-    if (k1 == lg1) {
-      l1min = 0; l1max = +1;
-    } else if (k1 == lg1 - 1) {
-      l1min = -1; l1max = +1;
-    } else { // (k1 == lg1 + 1)
-      l1min = 0; l1max = +2;
-    }
-
-    if (k3 == lg3) {
-      l3min = 0; l3max = +1;
-    } else if (k3 == lg3 - 1) {
-      l3min = -1; l3max = +1;
-    } else { // (k3 == lg3 + 1)
-      l3min = 0; l3max = +2;
-    }
-
-    particle_real_t fnqx = part->qni * part->wni * fnqxs;
-    for (int l3 = l3min; l3 <= l3max; l3++) {
-      particle_real_t jxh = 0.f;
-      for (int l1 = l1min; l1 < l1max; l1++) {
-	particle_real_t wx = S(s1x, l1) * (S(s0z, l3) + .5f*S(s1z, l3));
-	jxh -= fnqx*wx;
-	_F3(flds, JXI, lg1+l1,0,lg3+l3) += jxh;
-      }
-    }
-
-    particle_real_t fnqy = vv[1] * part->qni * part->wni * fnqs;
-    for (int l3 = l3min; l3 <= l3max; l3++) {
-      for (int l1 = l1min; l1 <= l1max; l1++) {
-	particle_real_t wy = S(s0x, l1) * S(s0z, l3)
-	  + .5f * S(s1x, l1) * S(s0z, l3)
-	  + .5f * S(s0x, l1) * S(s1z, l3)
-	  + (1.f/3.f) * S(s1x, l1) * S(s1z, l3);
-	particle_real_t jyh = fnqy*wy;
-	_F3(flds, JYI, lg1+l1,0,lg3+l3) += jyh;
-      }
-    }
-
-    particle_real_t fnqz = part->qni * part->wni * fnqzs;
-    for (int l1 = l1min; l1 <= l1max; l1++) {
-      particle_real_t jzh = 0.f;
-      for (int l3 = l3min; l3 < l3max; l3++) {
-	particle_real_t wz = S(s1z, l3) * (S(s0x, l1) + .5f*S(s1x, l1));
-	jzh -= fnqz*wz;
-	_F3(flds, JZI, lg1+l1,0,lg3+l3) += jzh;
-      }
-    }
-
-#elif ORDER == ORDER_2ND
-
     // x^n, p^n -> x^(n+.5), p^n
 
     particle_real_t vv[3];
@@ -459,27 +402,43 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
 
 #if (DIM & DIM_X)
     int lg1, lh1;
+#if ORDER == ORDER_1ST
+    particle_real_t g0x, g1x, h0x, h1x;
+    ip_coeff_1st(&lg1, &g0x, &g1x, part->xi * dxi);
+    set_S_1st(s0x, 0, g0x, g1x);
+    ip_coeff_1st(&lh1, &h0x, &h1x, part->xi * dxi - .5f);
+#elif ORDER == ORDER_2ND
     particle_real_t h1, gmx, g0x, g1x, hmx, h0x, h1x;
     ip_coeff_2nd(&lg1, &h1, &gmx, &g0x, &g1x, part->xi * dxi);
     set_S_2nd(s0x, 0, h1);
-
     ip_coeff_2nd(&lh1, &h1, &hmx, &h0x, &h1x, part->xi * dxi - .5f);
 #endif
+#endif
+
 #if (DIM & DIM_Y)
     int lg2, lh2;
+#if ORDER == ORDER_1ST
+#elif ORDER == ORDER_2ND
     particle_real_t h2, gmy, g0y, g1y, hmy, h0y, h1y;
     ip_coeff_2nd(&lg2, &h2, &gmy, &g0y, &g1y, part->yi * dyi);
     set_S_2nd(s0y, 0, h2);
-
     ip_coeff_2nd(&lh2, &h2, &hmy, &h0y, &h1y, part->yi * dyi - .5f);
 #endif
+#endif
+
 #if (DIM & DIM_Z)
     int lg3, lh3;
+#if ORDER == ORDER_1ST
+    particle_real_t g0z, g1z, h0z, h1z;
+    ip_coeff_1st(&lg3, &g0z, &g1z, part->zi * dzi);
+    set_S_1st(s0z, 0, g0z, g1z);
+    ip_coeff_1st(&lh3, &h0z, &h1z, part->zi * dzi - .5f);
+#elif ORDER == ORDER_2ND
     particle_real_t h3, gmz, g0z, g1z, hmz, h0z, h1z;
     ip_coeff_2nd(&lg3, &h3, &gmz, &g0z, &g1z, part->zi * dzi);
     set_S_2nd(s0z, 0, h3);
-
     ip_coeff_2nd(&lh3, &h3, &hmz, &h0z, &h1z, part->zi * dzi - .5f);
+#endif
 #endif
 
     // FIELD INTERPOLATION
@@ -491,7 +450,7 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
 			     IP_FIELD(flds, HY, h, g, h),
 			     IP_FIELD(flds, HZ, h, h, g), };
 
-     // c x^(n+.5), p^n -> x^(n+1.0), p^(n+1.0) 
+    // c x^(n+.5), p^n -> x^(n+1.0), p^(n+1.0) 
 
     particle_real_t dq = dqs * part->qni / part->mni;
     push_p(&part->pxi, E, H, dq);
@@ -499,72 +458,70 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
     calc_v(vv, &part->pxi);
     push_x(&part->xi, vv);
 
-    for (int i = -2; i <= 2; i++) {
-      IF_DIM_X( S(s1x, i) = 0.f; );
-      IF_DIM_Y( S(s1y, i) = 0.f; );
-      IF_DIM_Z( S(s1z, i) = 0.f; );
-    }
-
     // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt 
     // x^(n+1), p^(n+1) -> x^(n+1.5f), p^(n+1)
+
+    ZERO_S1;
 
 #if (DIM & DIM_X)
     particle_real_t xi = part->xi + vv[0] * xl;
     int k1;
+#if ORDER == ORDER_1ST
+    ip_coeff_1st(&k1, &g0x, &g1x, xi * dxi);
+    set_S_1st(s1x, k1-lg1, g0x, g1x);
+#elif ORDER == ORDER_2ND
     get_nint_remainder(&k1, &h1, xi * dxi);
     set_S_2nd(s1x, k1-lg1, h1);
 #endif
+#endif
+
 #if (DIM & DIM_Y)
     particle_real_t yi = part->yi + vv[1] * yl;
     int k2;
+#if ORDER == ORDER_1ST
+#elif ORDER == ORDER_2ND
     get_nint_remainder(&k2, &h2, yi * dyi);
     set_S_2nd(s1y, k2-lg2, h2);
 #endif
+#endif
+
 #if (DIM & DIM_Z)
     particle_real_t zi = part->zi + vv[2] * zl;
     int k3;
+#if ORDER == ORDER_1ST
+    ip_coeff_1st(&k3, &g0z, &g1z, zi * dzi);
+    set_S_1st(s1z, k3-lg3, g0x, g1x);
+#elif ORDER == ORDER_2ND
     get_nint_remainder(&k3, &h3, zi * dzi);
     set_S_2nd(s1z, k3-lg3, h3);
+#endif
 #endif
 
     // CURRENT DENSITY AT (n+1.0)*dt
 
-    for (int i = -1; i <= 1; i++) {
-      IF_DIM_X( S(s1x, i) -= S(s0x, i); );
-      IF_DIM_Y( S(s1y, i) -= S(s0y, i); );
-      IF_DIM_Z( S(s1z, i) -= S(s0z, i); );
-    }
+    SUBTR_S1_S0;
 
 #if (DIM & DIM_X)
-    int l1min, l1max;
-    find_l_minmax(&l1min, &l1max, k1, lg1);
-#endif
-#if (DIM & DIM_Y)
-    int l2min, l2max;
-    find_l_minmax(&l2min, &l2max, k2, lg2);
-#endif
-#if (DIM & DIM_Z)
-    int l3min, l3max;
-    find_l_minmax(&l3min, &l3max, k3, lg3);
-#endif
-
-#if (DIM & DIM_X)
+    int l1min, l1max; find_l_minmax(&l1min, &l1max, k1, lg1);
     particle_real_t fnqx = part->qni * part->wni * fnqxs;
 #else
     particle_real_t fnqxx = vv[0] * part->qni * part->wni * fnqs;
 #endif
 #if (DIM & DIM_Y)
+    int l2min, l2max; find_l_minmax(&l2min, &l2max, k2, lg2);
     particle_real_t fnqy = part->qni * part->wni * fnqys;
 #else
     particle_real_t fnqyy = vv[1] * part->qni * part->wni * fnqs;
 #endif
 #if (DIM & DIM_Z)
+    int l3min, l3max; find_l_minmax(&l3min, &l3max, k3, lg3);
     particle_real_t fnqz = part->qni * part->wni * fnqzs;
 #else
     particle_real_t fnqzz = vv[2] * part->qni * part->wni * fnqs;
 #endif
 
 #if DIM == DIM_Y
+#if ORDER == ORDER_2ND
     particle_real_t jyh = 0.f;
 
     for (int l2 = l2min; l2 <= l2max; l2++) {
@@ -580,9 +537,9 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
       _F3(flds, JYI, 0,lg2+l2,0) += jyh;
       _F3(flds, JZI, 0,lg2+l2,0) += jzh;
     }
-
+#endif
 #elif DIM == DIM_Z
-
+#if ORDER == ORDER_2ND
     particle_real_t jzh = 0.f;
     for (int l3 = l3min; l3 <= l3max; l3++) {
       particle_real_t wx = S(s0z, l3) + .5f * S(s1z, l3);
@@ -597,9 +554,9 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
       _F3(flds, JYI, 0,0,lg3+l3) += jyh;
       _F3(flds, JZI, 0,0,lg3+l3) += jzh;
     }
-
+#endif
 #elif DIM == DIM_XY
-
+#if ORDER == ORDER_2ND
     for (int l2 = l2min; l2 <= l2max; l2++) {
       particle_real_t jxh = 0.f;
       for (int l1 = l1min; l1 <= l1max; l1++) {
@@ -623,9 +580,8 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
 	_F3(flds, JYI, lg1+l1,lg2+l2,0) += jyh;
       }
     }
-
+#endif
 #elif DIM == DIM_XZ
-
     for (int l3 = l3min; l3 <= l3max; l3++) {
       particle_real_t jxh = 0.f;
       for (int l1 = l1min; l1 < l1max; l1++) {
@@ -641,11 +597,10 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
 	  + .5f * S(s1x, l1) * S(s0z, l3)
 	  + .5f * S(s0x, l1) * S(s1z, l3)
 	  + (1.f/3.f) * S(s1x, l1) * S(s1z, l3);
-	particle_real_t jyh = fnqyy*wy;
+	particle_real_t jyh = fnqyy * wy;
 	_F3(flds, JYI, lg1+l1,0,lg3+l3) += jyh;
       }
     }
-
     for (int l1 = l1min; l1 <= l1max; l1++) {
       particle_real_t jzh = 0.f;
       for (int l3 = l3min; l3 < l3max; l3++) {
@@ -654,9 +609,8 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
 	_F3(flds, JZI, lg1+l1,0,lg3+l3) += jzh;
       }
     }
-
 #elif DIM == DIM_YZ
-
+#if ORDER == ORDER_2ND
     particle_real_t jxh;
     particle_real_t jyh;
     particle_real_t jzh[5];
@@ -685,8 +639,9 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
 	_F3(flds, JZI, 0,lg2+l2,lg3+l3) += JZH(l2);
       }
     }
-
+#endif
 #elif DIM == DIM_XYZ
+#if ORDER == ORDER_2ND
     for (int l3 = l3min; l3 <= l3max; l3++) {
       for (int l2 = l2min; l2 <= l2max; l2++) {
 	particle_real_t jxh = 0.f;
@@ -731,9 +686,8 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
 	}
       }
     }
-
 #endif
-#endif // ORDER_2ND
+#endif
   }
 }
 
