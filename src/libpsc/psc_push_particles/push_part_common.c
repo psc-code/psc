@@ -47,6 +47,8 @@ static particle_real_t xl, yl, zl;
 
 #if DIM == DIM_XZ
 #if VARIANT == VARIANT_SFF
+#define psc_push_particles_push_mprts psc_push_particles_1sff_push_mprts_xz
+#define PROF_NAME "push_mprts_1sff_xz"
 #else
 #define psc_push_particles_push_mprts psc_push_particles_1st_push_mprts_xz
 #define PROF_NAME "push_mprts_1st_xz"
@@ -627,6 +629,27 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
 {
 #include "push_part_common_vars.c"
 
+#if VARIANT == VARIANT_SFF
+  struct psc_patch *patch = &ppsc->patch[p];
+
+  // FIXME, eventually no ghost points should be needed (?)
+  fields_t flds_avg = fields_t_ctor((int[3]) { -1, 0, -1 },
+				    (int[3]) { patch->ldims[0] + 2, 1, patch->ldims[2] + 1 },
+				    6);
+
+  for (int iz = -1; iz < patch->ldims[2] + 1; iz++) {
+    for (int ix = -1; ix < patch->ldims[0] + 1; ix++) {
+      _F3(flds_avg, 0, ix,0,iz) = .5 * (_F3(flds, EX, ix,0,iz) + _F3(flds, EX, ix-1,0,iz));
+      _F3(flds_avg, 1, ix,0,iz) = _F3(flds, EY, ix,0,iz);
+      _F3(flds_avg, 2, ix,0,iz) = .5 * (_F3(flds, EZ, ix,0,iz) + _F3(flds, EZ, ix,0,iz-1));
+      _F3(flds_avg, 3, ix,0,iz) = .5 * (_F3(flds, HX, ix,0,iz) + _F3(flds, HX, ix,0,iz-1));
+      _F3(flds_avg, 4, ix,0,iz) = .25 * (_F3(flds, HY, ix  ,0,iz) + _F3(flds, HY, ix  ,0,iz-1) +
+					_F3(flds, HY, ix-1,0,iz) + _F3(flds, HY, ix-1,0,iz-1));
+      _F3(flds_avg, 5, ix,0,iz) = .5 * (_F3(flds, HZ, ix,0,iz) + _F3(flds, HZ, ix-1,0,iz));
+    }
+  }
+#endif
+  
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *part = particle_iter_deref(prt_iter);
     particle_real_t *x = &part->xi;
@@ -644,12 +667,23 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
 
     // FIELD INTERPOLATION
 
+#if VARIANT == VARIANT_SFF
+    // FIXME, we don't really need h coeffs in this case, either, though
+    // the compiler may be smart enough to figure that out
+    particle_real_t E[3] = { IP_FIELD(flds_avg, EX-EX, g, g, g),
+			     IP_FIELD(flds_avg, EY-EX, g, g, g),
+			     IP_FIELD(flds_avg, EZ-EX, g, g, g), };
+    particle_real_t H[3] = { IP_FIELD(flds_avg, HX-EX, g, g, g),
+			     IP_FIELD(flds_avg, HY-EX, g, g, g),
+			     IP_FIELD(flds_avg, HZ-EX, g, g, g), };
+#else
     particle_real_t E[3] = { IP_FIELD(flds, EX, h, g, g),
 			     IP_FIELD(flds, EY, g, h, g),
 			     IP_FIELD(flds, EZ, g, g, h), };
     particle_real_t H[3] = { IP_FIELD(flds, HX, g, h, h),
 			     IP_FIELD(flds, HY, h, g, h),
 			     IP_FIELD(flds, HZ, h, h, g), };
+#endif
 
     // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
     particle_real_t dq = dqs * particle_qni_div_mni(part);
@@ -676,6 +710,10 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
     CURRENT_PREP;
     CURRENT;
   }
+
+#if VARIANT == VARIANT_SFF
+  fields_t_dtor(&flds_avg);
+#endif
 }
 
 // ----------------------------------------------------------------------
