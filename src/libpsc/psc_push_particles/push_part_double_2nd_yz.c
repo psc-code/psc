@@ -60,21 +60,14 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
   }
 }
 
-static struct psc_fields *
+static fields_t
 cache_fields_from_em(fields_t flds)
 {
-  struct psc_fields *_fld = psc_fields_create(MPI_COMM_NULL);
-  psc_fields_set_type(_fld, FIELDS_TYPE);
+  fields_t fld = fields_t_ctor(flds.ib, flds.im, 9);
   // FIXME, can do -1 .. 2? NO!, except maybe for 1st order
   // Has to be at least -2 .. +3 because of staggering
   // FIXME, get rid of caching since it's no different from the actual
   // fields...
-  psc_fields_set_param_int3(_fld, "ib", flds.ib);
-  psc_fields_set_param_int3(_fld, "im", flds.im);
-  psc_fields_set_param_int(_fld, "nr_comp", 9); // JX .. HZ
-  //psc_fields_set_param_int(_fld, "p", flds->p);
-  psc_fields_setup(_fld);
-  fields_t fld = fields_t_from_psc_fields(_fld);
   for (int iz = fld.ib[2]; iz < fld.ib[2] + fld.im[2]; iz++) {
     for (int iy = fld.ib[1]; iy < fld.ib[1] + fld.im[1]; iy++) {
       _F3(fld, EX, 0,iy,iz) = _F3(flds, EX, 0,iy,iz);
@@ -85,7 +78,7 @@ cache_fields_from_em(fields_t flds)
       _F3(fld, HZ, 0,iy,iz) = _F3(flds, HZ, 0,iy,iz);
     }
   }
-  return _fld;
+  return fld;
 }
 
 static void
@@ -109,12 +102,12 @@ psc_push_particles_2nd_double_push_mprts_yz(struct psc_push_particles *push,
     fields_t flds = fields_t_mflds(mflds, p);
     particle_range_t prts = particle_range_mprts(mprts, p);
 
+    // FIXME, can't we just skip this and just set j when copying back?
     fields_t_zero_range(flds, JXI, JXI + 3);
-    struct psc_fields *flds_cache = cache_fields_from_em(flds);
-    fields_t f_flds_cache = fields_t_from_psc_fields(flds_cache);
-    do_push_part(p, f_flds_cache, prts);
-    cache_fields_to_j(f_flds_cache, flds);
-    psc_fields_destroy(flds_cache);
+    fields_t flds_cache = cache_fields_from_em(flds);
+    do_push_part(p, flds_cache, prts);
+    cache_fields_to_j(flds_cache, flds);
+    fields_t_dtor(&flds_cache);
   }
 }
 
