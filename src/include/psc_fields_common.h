@@ -1,5 +1,6 @@
 
 #include <string.h>
+#include <stdlib.h>
 
 #define FTYPE_SINGLE          1
 #define FTYPE_C               2
@@ -10,6 +11,8 @@
 
 #define fields_FTYPE_real_t fields_single_real_t
 #define fields_FTYPE_t fields_single_t
+#define fields_FTYPE_t_ctor fields_single_t_ctor
+#define fields_FTYPE_t_dtor fields_single_t_dtor
 #define fields_FTYPE_t_from_psc_fields fields_single_t_from_psc_fields
 #define fields_FTYPE_t_mflds fields_single_t_mflds
 #define fields_FTYPE_t_zero_range fields_single_t_zero_range
@@ -18,6 +21,8 @@
 
 #define fields_FTYPE_real_t fields_c_real_t
 #define fields_FTYPE_t fields_c_t
+#define fields_FTYPE_t_ctor fields_c_t_ctor
+#define fields_FTYPE_t_dtor fields_c_t_dtor
 #define fields_FTYPE_t_from_psc_fields fields_c_t_from_psc_fields
 #define fields_FTYPE_t_mflds fields_c_t_mflds
 #define fields_FTYPE_t_zero_range fields_c_t_zero_range
@@ -26,6 +31,8 @@
 
 #define fields_FTYPE_real_t fields_fortran_real_t
 #define fields_FTYPE_t fields_fortran_t
+#define fields_FTYPE_t_ctor fields_fortran_t_ctor
+#define fields_FTYPE_t_dtor fields_fortran_t_dtor
 #define fields_FTYPE_t_from_psc_fields fields_fortran_t_from_psc_fields
 #define fields_FTYPE_t_mflds fields_fortran_t_mflds
 #define fields_FTYPE_t_zero_range fields_fortran_t_zero_range
@@ -34,6 +41,8 @@
 
 #define fields_FTYPE_real_t fields_cuda_real_t
 #define fields_FTYPE_t fields_cuda_t
+#define fields_FTYPE_t_ctor fields_cuda_t_ctor
+#define fields_FTYPE_t_dtor fields_cuda_t_dtor
 #define fields_FTYPE_t_from_psc_fields fields_cuda_t_from_psc_fields
 #define fields_FTYPE_t_mflds fields_cuda_t_mflds
 #define fields_FTYPE_t_zero_range fields_cuda_t_zero_range
@@ -202,6 +211,37 @@ typedef struct {
 } fields_FTYPE_t;
 
 // ----------------------------------------------------------------------
+// fields_t_ctor
+
+static inline fields_FTYPE_t
+fields_FTYPE_t_ctor(int ib[3], int im[3], int n_comps)
+{
+  fields_FTYPE_t flds;
+
+  unsigned int size = 1;
+  for (int d = 0; d < 3; d++) {
+    flds.ib[d] = ib[d];
+    flds.im[d] = im[d];
+    size *= im[d];
+  }
+  flds.nr_comp = n_comps;
+  flds.first_comp = 0;
+  flds.data = (fields_FTYPE_real_t *) calloc(size * flds.nr_comp, sizeof(*flds.data));
+
+  return flds;
+}
+
+// ----------------------------------------------------------------------
+// fields_t_dtor
+
+static inline void
+fields_FTYPE_t_dtor(fields_FTYPE_t *flds)
+{
+  free(flds->data);
+  flds->data = NULL;
+}
+
+// ----------------------------------------------------------------------
 // fields_t_from_psc_fields
 
 static inline fields_FTYPE_t
@@ -209,7 +249,7 @@ fields_FTYPE_t_from_psc_fields(struct psc_fields *pf)
 {
   fields_FTYPE_t flds;
 
-  flds.data = pf->data;
+  flds.data = (fields_FTYPE_real_t *) pf->data;
   for (int d = 0; d < 3; d++) {
     flds.ib[d] = pf->ib[d];
     flds.im[d] = pf->im[d];
@@ -252,6 +292,8 @@ fields_FTYPE_t_zero_range(fields_FTYPE_t flds, int mb, int me)
 
 #undef fields_FTYPE_real_t
 #undef fields_FTYPE_t
+#undef fields_FTYPE_t_ctor
+#undef fields_FTYPE_t_dtor
 #undef fields_FTYPE_t_from_psc_fields
 #undef fields_FTYPE_t_mflds
 #undef fields_FTYPE_t_zero_range

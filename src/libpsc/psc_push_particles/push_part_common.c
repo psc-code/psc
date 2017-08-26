@@ -2,6 +2,8 @@
 #define ORDER_1ST 1
 #define ORDER_2ND 2
 
+#define VARIANT_SFF 1
+
 #define DIM_X 1
 #define DIM_Y 2
 #define DIM_Z 4
@@ -44,8 +46,11 @@ static particle_real_t xl, yl, zl;
 #if ORDER == ORDER_1ST
 
 #if DIM == DIM_XZ
+#if VARIANT == VARIANT_SFF
+#else
 #define psc_push_particles_push_mprts psc_push_particles_1st_push_mprts_xz
 #define PROF_NAME "push_mprts_1st_xz"
+#endif
 #elif DIM == DIM_YZ
 #define psc_push_particles_push_mprts psc_push_particles_1st_push_mprts_yz
 #define PROF_NAME "push_mprts_1st_yz"

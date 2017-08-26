@@ -6,8 +6,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define DIM DIM_XZ
+#define ORDER ORDER_1ST
+#define VARIANT VARIANT_SFF
+#include "push_part_common.c"
+
 static void
-do_push_part_1sff_xz(int p, struct psc_fields *pf, particle_range_t prts)
+do_push_part(int p, fields_t flds, particle_range_t prts)
 {
 #define S0X(off) s0x[off+1]
 #define S0Z(off) s0z[off+1]
@@ -28,23 +33,19 @@ do_push_part_1sff_xz(int p, struct psc_fields *pf, particle_range_t prts)
 
   struct psc_patch *patch = &ppsc->patch[p];
 
-  struct psc_fields *f_avg = psc_fields_create(psc_fields_comm(pf));
-  psc_fields_set_type(f_avg, "c");
-  // FIXME, is -1 .. 1 always enough?
-  psc_fields_set_param_int3(f_avg, "ib", (int[3]) { -2, 0, -2 });
-  psc_fields_set_param_int3(f_avg, "im", (int[3]) { patch->ldims[0] + 4, 1, patch->ldims[2] + 4 });
-  psc_fields_set_param_int(f_avg, "nr_comp", 6);
-  psc_fields_setup(f_avg);
-
+  fields_t flds_avg = fields_t_ctor((int[3]) { -2, 0, -2 },
+				    (int[3]) { patch->ldims[0] + 4, 1, patch->ldims[2] + 4 },
+				    6);
+  
   for (int iz = -1; iz < patch->ldims[2] + 1; iz++) {
     for (int ix = -1; ix < patch->ldims[0] + 1; ix++) {
-      F3_C(f_avg, 0, ix,0,iz) = .5 * (F3_C(pf, EX, ix,0,iz) + F3_C(pf, EX, ix-1,0,iz));
-      F3_C(f_avg, 1, ix,0,iz) = F3_C(pf, EY, ix,0,iz);
-      F3_C(f_avg, 2, ix,0,iz) = .5 * (F3_C(pf, EZ, ix,0,iz) + F3_C(pf, EZ, ix,0,iz-1));
-      F3_C(f_avg, 3, ix,0,iz) = .5 * (F3_C(pf, HX, ix,0,iz) + F3_C(pf, HX, ix,0,iz-1));
-      F3_C(f_avg, 4, ix,0,iz) = .25 * (F3_C(pf, HY, ix  ,0,iz) + F3_C(pf, HY, ix  ,0,iz-1) +
-					F3_C(pf, HY, ix-1,0,iz) + F3_C(pf, HY, ix-1,0,iz-1));
-      F3_C(f_avg, 5, ix,0,iz) = .5 * (F3_C(pf, HZ, ix,0,iz) + F3_C(pf, HZ, ix-1,0,iz));
+      _F3(flds_avg, 0, ix,0,iz) = .5 * (_F3(flds, EX, ix,0,iz) + _F3(flds, EX, ix-1,0,iz));
+      _F3(flds_avg, 1, ix,0,iz) = _F3(flds, EY, ix,0,iz);
+      _F3(flds_avg, 2, ix,0,iz) = .5 * (_F3(flds, EZ, ix,0,iz) + _F3(flds, EZ, ix,0,iz-1));
+      _F3(flds_avg, 3, ix,0,iz) = .5 * (_F3(flds, HX, ix,0,iz) + _F3(flds, HX, ix,0,iz-1));
+      _F3(flds_avg, 4, ix,0,iz) = .25 * (_F3(flds, HY, ix  ,0,iz) + _F3(flds, HY, ix  ,0,iz-1) +
+					_F3(flds, HY, ix-1,0,iz) + _F3(flds, HY, ix-1,0,iz-1));
+      _F3(flds_avg, 5, ix,0,iz) = .5 * (_F3(flds, HZ, ix,0,iz) + _F3(flds, HZ, ix-1,0,iz));
     }
   }
 
@@ -83,10 +84,10 @@ do_push_part_1sff_xz(int p, struct psc_fields *pf, particle_range_t prts)
     // FIELD INTERPOLATION
 
 #define INTERPOLATE_FIELD(m, gx, gz)					\
-    (gz##0z*(gx##0x*F3_C(f_avg, m-EX, l##gx##1  ,0,l##gz##3  ) +	\
-	     gx##1x*F3_C(f_avg, m-EX, l##gx##1+1,0,l##gz##3  )) +	\
-     gz##1z*(gx##0x*F3_C(f_avg, m-EX, l##gx##1  ,0,l##gz##3+1) +	\
-	     gx##1x*F3_C(f_avg, m-EX, l##gx##1+1,0,l##gz##3+1)))	\
+    (gz##0z*(gx##0x*_F3(flds_avg, m-EX, l##gx##1  ,0,l##gz##3  ) +	\
+	     gx##1x*_F3(flds_avg, m-EX, l##gx##1+1,0,l##gz##3  )) +	\
+     gz##1z*(gx##0x*_F3(flds_avg, m-EX, l##gx##1  ,0,l##gz##3+1) +	\
+	     gx##1x*_F3(flds_avg, m-EX, l##gx##1+1,0,l##gz##3+1)))	\
       
     particle_real_t exq = INTERPOLATE_FIELD(EX, g, g);
     particle_real_t eyq = INTERPOLATE_FIELD(EY, g, g);
@@ -185,7 +186,7 @@ do_push_part_1sff_xz(int p, struct psc_fields *pf, particle_range_t prts)
       for (int l1 = l1min; l1 < l1max; l1++) {
 	particle_real_t wx = S1X(l1) * (S0Z(l3) + .5f*S1Z(l3));
 	jxh -= fnqx*wx;
-	F3(pf, JXI, lg1+l1,0,lg3+l3) += jxh;
+	_F3(flds, JXI, lg1+l1,0,lg3+l3) += jxh;
       }
     }
 
@@ -197,7 +198,7 @@ do_push_part_1sff_xz(int p, struct psc_fields *pf, particle_range_t prts)
 	  + .5f * S0X(l1) * S1Z(l3)
 	  + (1.f/3.f) * S1X(l1) * S1Z(l3);
 	particle_real_t jyh = fnqy*wy;
-	F3(pf, JYI, lg1+l1,0,lg3+l3) += jyh;
+	_F3(flds, JYI, lg1+l1,0,lg3+l3) += jyh;
       }
     }
 
@@ -207,12 +208,12 @@ do_push_part_1sff_xz(int p, struct psc_fields *pf, particle_range_t prts)
       for (int l3 = l3min; l3 < l3max; l3++) {
 	particle_real_t wz = S1Z(l3) * (S0X(l1) + .5f*S1X(l1));
 	jzh -= fnqz*wz;
-	F3(pf, JZI, lg1+l1,0,lg3+l3) += jzh;
+	_F3(flds, JZI, lg1+l1,0,lg3+l3) += jzh;
       }
     }
   }
 
-  psc_fields_destroy(f_avg);
+  fields_t_dtor(&flds_avg);
 }
 
 void
@@ -227,10 +228,10 @@ psc_push_particles_1sff_push_mprts_xz(struct psc_push_particles *push,
 
   prof_start(pr);
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
     particle_range_t prts = particle_range_mprts(mprts, p);
-    psc_fields_zero_range(flds, JXI, JXI + 3);
-    do_push_part_1sff_xz(p, flds, prts);
+    fields_t flds = fields_t_mflds(mflds, p);
+    fields_t_zero_range(flds, JXI, JXI + 3);
+    do_push_part(p, flds, prts);
   }
   prof_stop(pr);
 }
