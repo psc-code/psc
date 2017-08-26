@@ -4,6 +4,10 @@
 
 #define VARIANT_SFF 1
 
+#define PRTS_STAGGERED 1
+
+#define CACHE_EM_J 1
+
 #define DIM_X 1
 #define DIM_Y 2
 #define DIM_Z 4
@@ -48,13 +52,16 @@ static particle_real_t xl, yl, zl;
 #if DIM == DIM_XZ
 #if VARIANT == VARIANT_SFF
 #define psc_push_particles_push_mprts psc_push_particles_1sff_push_mprts_xz
+#define do_push_part do_push_part_1sff_xz
 #define PROF_NAME "push_mprts_1sff_xz"
 #else
 #define psc_push_particles_push_mprts psc_push_particles_1st_push_mprts_xz
+#define do_push_part do_push_part_1st_xz
 #define PROF_NAME "push_mprts_1st_xz"
 #endif
 #elif DIM == DIM_YZ
 #define psc_push_particles_push_mprts psc_push_particles_1st_push_mprts_yz
+#define do_push_part do_push_part_1st_yz
 #define PROF_NAME "push_mprts_1st_yz"
 #endif
 
@@ -62,18 +69,23 @@ static particle_real_t xl, yl, zl;
 
 #if DIM == DIM_Y
 #define psc_push_particles_push_mprts psc_push_particles_generic_c_push_mprts_y
+#define do_push_part do_push_part_genc_y
 #define PROF_NAME "genc_push_mprts_y"
 #elif DIM == DIM_Z
 #define psc_push_particles_push_mprts psc_push_particles_generic_c_push_mprts_z
+#define do_push_part do_push_part_genc_z
 #define PROF_NAME "genc_push_mprts_z"
 #elif DIM == DIM_XY
 #define psc_push_particles_push_mprts psc_push_particles_generic_c_push_mprts_xy
+#define do_push_part do_push_part_genc_xy
 #define PROF_NAME "genc_push_mprts_xy"
 #elif DIM == DIM_XZ
 #define psc_push_particles_push_mprts psc_push_particles_generic_c_push_mprts_xz
+#define do_push_part do_push_part_genc_xz
 #define PROF_NAME "genc_push_mprts_xz"
 #elif DIM == DIM_XYZ
 #define psc_push_particles_push_mprts psc_push_particles_generic_c_push_mprts_xyz
+#define do_push_part do_push_part_genc_xyz
 #define PROF_NAME "genc_push_mprts_xyz"
 #endif
 
@@ -379,6 +391,61 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
     ip_coeff(&k1, &gx, xx[d] * dxi);			\
     set_S(s1x, k1-lg1, gx)
     
+
+// ======================================================================
+// VARIANT SFF
+
+#if VARIANT == VARIANT_SFF
+
+// FIXME, calculation of f_avg could be done at the level where we do caching, too
+// (if that survives, anyway...)
+
+#define VARIANT_SFF_PREP					\
+  struct psc_patch *patch = &ppsc->patch[p];			\
+  								\
+  /* FIXME, eventually no ghost points should be needed (?) */	\
+  fields_t flds_avg = fields_t_ctor((int[3]) { -1, 0, -1 },		\
+				    (int[3]) { patch->ldims[0] + 2, 1, patch->ldims[2] + 1 },\
+				    6);					\
+									\
+  for (int iz = -1; iz < patch->ldims[2] + 1; iz++) {			\
+    for (int ix = -1; ix < patch->ldims[0] + 1; ix++) {			\
+      _F3(flds_avg, 0, ix,0,iz) = .5 * (_F3(flds, EX, ix,0,iz) + _F3(flds, EX, ix-1,0,iz)); \
+      _F3(flds_avg, 1, ix,0,iz) = _F3(flds, EY, ix,0,iz);		\
+      _F3(flds_avg, 2, ix,0,iz) = .5 * (_F3(flds, EZ, ix,0,iz) + _F3(flds, EZ, ix,0,iz-1)); \
+      _F3(flds_avg, 3, ix,0,iz) = .5 * (_F3(flds, HX, ix,0,iz) + _F3(flds, HX, ix,0,iz-1)); \
+      _F3(flds_avg, 4, ix,0,iz) = .25 * (_F3(flds, HY, ix  ,0,iz) + _F3(flds, HY, ix  ,0,iz-1) + \
+					 _F3(flds, HY, ix-1,0,iz) + _F3(flds, HY, ix-1,0,iz-1)); \
+      _F3(flds_avg, 5, ix,0,iz) = .5 * (_F3(flds, HZ, ix,0,iz) + _F3(flds, HZ, ix-1,0,iz)); \
+    }									\
+  }
+
+#define VARIANT_SFF_POST			\
+  fields_t_dtor(&flds_avg)
+
+#define INTERPOLATE_FIELDS						\
+  /* FIXME, we don't really need h coeffs in this case, either, though	\
+   * the compiler may be smart enough to figure that out */		\
+  particle_real_t E[3] = { IP_FIELD(flds_avg, EX-EX, g, g, g),		\
+			   IP_FIELD(flds_avg, EY-EX, g, g, g),		\
+			   IP_FIELD(flds_avg, EZ-EX, g, g, g), };	\
+  particle_real_t H[3] = { IP_FIELD(flds_avg, HX-EX, g, g, g),		\
+			   IP_FIELD(flds_avg, HY-EX, g, g, g),		\
+			   IP_FIELD(flds_avg, HZ-EX, g, g, g), }
+#else
+
+#define VARIANT_SFF_PREP do {} while (0)
+#define VARIANT_SFF_POST do {} while (0)
+#define INTERPOLATE_FIELDS						\
+  particle_real_t E[3] = { IP_FIELD(flds, EX, h, g, g),			\
+			   IP_FIELD(flds, EY, g, h, g),			\
+			   IP_FIELD(flds, EZ, g, g, h), };		\
+  particle_real_t H[3] = { IP_FIELD(flds, HX, g, h, h),			\
+			   IP_FIELD(flds, HY, h, g, h),			\
+			   IP_FIELD(flds, HZ, h, h, g), }
+
+#endif
+
 // ======================================================================
 // current
 
@@ -615,47 +682,26 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 #endif
 #endif
 
-
-#ifdef psc_push_particles_push_mprts
-
-// ----------------------------------------------------------------------
-// do_push_part
+#ifdef do_push_part
 
 static void
 do_push_part(int p, fields_t flds, particle_range_t prts)
 {
 #include "push_part_common_vars.c"
 
-#if VARIANT == VARIANT_SFF
-  struct psc_patch *patch = &ppsc->patch[p];
-
-  // FIXME, eventually no ghost points should be needed (?)
-  fields_t flds_avg = fields_t_ctor((int[3]) { -1, 0, -1 },
-				    (int[3]) { patch->ldims[0] + 2, 1, patch->ldims[2] + 1 },
-				    6);
-
-  for (int iz = -1; iz < patch->ldims[2] + 1; iz++) {
-    for (int ix = -1; ix < patch->ldims[0] + 1; ix++) {
-      _F3(flds_avg, 0, ix,0,iz) = .5 * (_F3(flds, EX, ix,0,iz) + _F3(flds, EX, ix-1,0,iz));
-      _F3(flds_avg, 1, ix,0,iz) = _F3(flds, EY, ix,0,iz);
-      _F3(flds_avg, 2, ix,0,iz) = .5 * (_F3(flds, EZ, ix,0,iz) + _F3(flds, EZ, ix,0,iz-1));
-      _F3(flds_avg, 3, ix,0,iz) = .5 * (_F3(flds, HX, ix,0,iz) + _F3(flds, HX, ix,0,iz-1));
-      _F3(flds_avg, 4, ix,0,iz) = .25 * (_F3(flds, HY, ix  ,0,iz) + _F3(flds, HY, ix  ,0,iz-1) +
-					_F3(flds, HY, ix-1,0,iz) + _F3(flds, HY, ix-1,0,iz-1));
-      _F3(flds_avg, 5, ix,0,iz) = .5 * (_F3(flds, HZ, ix,0,iz) + _F3(flds, HZ, ix-1,0,iz));
-    }
-  }
-#endif
+  VARIANT_SFF_PREP;
   
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *part = particle_iter_deref(prt_iter);
     particle_real_t *x = &part->xi;
-
-    // x^n, p^n -> x^(n+.5), p^n
     particle_real_t vv[3];
+
+#if PRTS != PRTS_STAGGERED
+    // x^n, p^n -> x^(n+.5), p^n
     calc_v(vv, &part->pxi);
     push_x(x, vv);
-
+#endif
+    
     // CHARGE DENSITY FORM FACTOR AT (n+.5)*dt 
 
     IF_DIM_X( DEPOSIT_AND_IP_COEFFS(lg1, lh1, gx, hx, 0, dxi, s0x); );
@@ -664,23 +710,7 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
 
     // FIELD INTERPOLATION
 
-#if VARIANT == VARIANT_SFF
-    // FIXME, we don't really need h coeffs in this case, either, though
-    // the compiler may be smart enough to figure that out
-    particle_real_t E[3] = { IP_FIELD(flds_avg, EX-EX, g, g, g),
-			     IP_FIELD(flds_avg, EY-EX, g, g, g),
-			     IP_FIELD(flds_avg, EZ-EX, g, g, g), };
-    particle_real_t H[3] = { IP_FIELD(flds_avg, HX-EX, g, g, g),
-			     IP_FIELD(flds_avg, HY-EX, g, g, g),
-			     IP_FIELD(flds_avg, HZ-EX, g, g, g), };
-#else
-    particle_real_t E[3] = { IP_FIELD(flds, EX, h, g, g),
-			     IP_FIELD(flds, EY, g, h, g),
-			     IP_FIELD(flds, EZ, g, g, h), };
-    particle_real_t H[3] = { IP_FIELD(flds, HX, g, h, h),
-			     IP_FIELD(flds, HY, h, g, h),
-			     IP_FIELD(flds, HZ, h, h, g), };
-#endif
+    INTERPOLATE_FIELDS;
 
     // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
     particle_real_t dq = dqs * particle_qni_div_mni(part);
@@ -688,19 +718,32 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
 
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0) 
     calc_v(vv, &part->pxi);
+
+#if PRTS == PRTS_STAGGERED
+    // FIXME, inelegant way of pushing full dt
+    push_x(x, vv);
     push_x(x, vv);
 
     // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt 
+    ZERO_S1;
+    IF_DIM_X( DEPOSIT(x, k1, gx, 0, dxi, s1x, lg1); );
+    IF_DIM_Y( DEPOSIT(x, k2, gy, 1, dyi, s1y, lg2); );
+    IF_DIM_Z( DEPOSIT(x, k3, gz, 2, dzi, s1z, lg3); );
+
+#else
+    push_x(x, vv);
 
     // x^(n+1), p^(n+1) -> x^(n+1.5f), p^(n+1)
     particle_real_t xn[3] = { x[0], x[1], x[2] };
     push_x(xn, vv);
 
+    // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt 
     ZERO_S1;
     IF_DIM_X( DEPOSIT(xn, k1, gx, 0, dxi, s1x, lg1); );
     IF_DIM_Y( DEPOSIT(xn, k2, gy, 1, dyi, s1y, lg2); );
     IF_DIM_Z( DEPOSIT(xn, k3, gz, 2, dzi, s1z, lg3); );
-
+#endif
+    
     // CURRENT DENSITY AT (n+1.0)*dt
 
     SUBTR_S1_S0;
@@ -708,10 +751,51 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
     CURRENT;
   }
 
-#if VARIANT == VARIANT_SFF
-  fields_t_dtor(&flds_avg);
-#endif
+  VARIANT_SFF_POST;
 }
+
+#endif
+
+#if CACHE == CACHE_EM_J
+
+#if DIM == DIM_YZ
+static fields_t
+cache_fields_from_em(fields_t flds)
+{
+  fields_t fld = fields_t_ctor(flds.ib, flds.im, 9);
+  // FIXME, can do -1 .. 2? NO!, except maybe for 1st order
+  // Has to be at least -2 .. +3 because of staggering
+  // FIXME, get rid of caching since it's no different from the actual
+  // fields...
+  for (int iz = fld.ib[2]; iz < fld.ib[2] + fld.im[2]; iz++) {
+    for (int iy = fld.ib[1]; iy < fld.ib[1] + fld.im[1]; iy++) {
+      _F3(fld, EX, 0,iy,iz) = _F3(flds, EX, 0,iy,iz);
+      _F3(fld, EY, 0,iy,iz) = _F3(flds, EY, 0,iy,iz);
+      _F3(fld, EZ, 0,iy,iz) = _F3(flds, EZ, 0,iy,iz);
+      _F3(fld, HX, 0,iy,iz) = _F3(flds, HX, 0,iy,iz);
+      _F3(fld, HY, 0,iy,iz) = _F3(flds, HY, 0,iy,iz);
+      _F3(fld, HZ, 0,iy,iz) = _F3(flds, HZ, 0,iy,iz);
+    }
+  }
+  return fld;
+}
+
+static void
+cache_fields_to_j(fields_t fld, fields_t flds)
+{
+  for (int iz = fld.ib[2]; iz < fld.ib[2] + fld.im[2]; iz++) {
+    for (int iy = fld.ib[1]; iy < fld.ib[1] + fld.im[1]; iy++) {
+      _F3(flds, JXI, 0,iy,iz) += _F3(fld, JXI, 0,iy,iz);
+      _F3(flds, JYI, 0,iy,iz) += _F3(fld, JYI, 0,iy,iz);
+      _F3(flds, JZI, 0,iy,iz) += _F3(fld, JZI, 0,iy,iz);
+    }
+  }
+}
+#endif
+
+#endif
+
+#ifdef psc_push_particles_push_mprts
 
 // ----------------------------------------------------------------------
 // psc_push_particles_push_mprts
@@ -730,8 +814,17 @@ psc_push_particles_push_mprts(struct psc_push_particles *push,
   for (int p = 0; p < mprts->nr_patches; p++) {
     fields_t flds = fields_t_mflds(mflds, p);
     particle_range_t prts = particle_range_mprts(mprts, p);
+#if CACHE == CACHE_EM_J
+    // FIXME, can't we just skip this and just set j when copying back?
+    fields_t_zero_range(flds, JXI, JXI + 3);
+    fields_t flds_cache = cache_fields_from_em(flds);
+    do_push_part(p, flds_cache, prts);
+    cache_fields_to_j(flds_cache, flds);
+    fields_t_dtor(&flds_cache);
+#else
     fields_t_zero_range(flds, JXI, JXI + 3);
     do_push_part(p, flds, prts);
+#endif
   }
   prof_stop(pr);
 }
