@@ -72,9 +72,6 @@ static particle_real_t xl, yl, zl;
 #elif DIM == DIM_XZ
 #define psc_push_particles_push_mprts psc_push_particles_generic_c_push_mprts_xz
 #define PROF_NAME "genc_push_mprts_xz"
-#elif DIM == DIM_YZ
-#define psc_push_particles_push_mprts psc_push_particles_generic_c_push_mprts_yz
-#define PROF_NAME "genc_push_mprts_yz"
 #elif DIM == DIM_XYZ
 #define psc_push_particles_push_mprts psc_push_particles_generic_c_push_mprts_xyz
 #define PROF_NAME "genc_push_mprts_xyz"
@@ -377,9 +374,9 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
   set_S(s0x, 0, gx);						\
   ip_coeff(&lh1, &hx, x[d] * dxi - .5f)
   
-#define DEPOSIT(k1, gx, d, dxi, s1x, lg1)		\
+#define DEPOSIT(xx, k1, gx, d, dxi, s1x, lg1)		\
     int k1;						\
-    ip_coeff(&k1, &gx, xn[d] * dxi);			\
+    ip_coeff(&k1, &gx, xx[d] * dxi);			\
     set_S(s1x, k1-lg1, gx)
     
 // ======================================================================
@@ -387,16 +384,16 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 
 #define CURRENT_PREP_DIM(l1min, l1max, k1, lg1, fnqx, fnqxs)	\
     int l1min, l1max; find_l_minmax(&l1min, &l1max, k1, lg1);	\
-    particle_real_t fnqx = part->qni * part->wni * fnqxs;	\
+    particle_real_t fnqx = particle_qni_wni(part) * fnqxs;	\
 
 #define CURRENT_PREP							\
   IF_DIM_X( CURRENT_PREP_DIM(l1min, l1max, k1, lg1, fnqx, fnqxs); );	\
   IF_DIM_Y( CURRENT_PREP_DIM(l2min, l2max, k2, lg2, fnqy, fnqys); );	\
   IF_DIM_Z( CURRENT_PREP_DIM(l3min, l3max, k3, lg3, fnqz, fnqzs); );	\
 									\
-  IF_NOT_DIM_X( particle_real_t fnqxx = vv[0] * part->qni * part->wni * fnqs; ); \
-  IF_NOT_DIM_Y( particle_real_t fnqyy = vv[1] * part->qni * part->wni * fnqs; ); \
-  IF_NOT_DIM_Z( particle_real_t fnqzz = vv[2] * part->qni * part->wni * fnqs; )
+  IF_NOT_DIM_X( particle_real_t fnqxx = vv[0] * particle_qni_wni(part) * fnqs; ); \
+  IF_NOT_DIM_Y( particle_real_t fnqyy = vv[1] * particle_qni_wni(part) * fnqs; ); \
+  IF_NOT_DIM_Z( particle_real_t fnqzz = vv[2] * particle_qni_wni(part) * fnqs; )
 
 #define CURRENT_2ND_Y						\
   particle_real_t jyh = 0.f;					\
@@ -700,9 +697,9 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
     push_x(xn, vv);
 
     ZERO_S1;
-    IF_DIM_X( DEPOSIT(k1, gx, 0, dxi, s1x, lg1); );
-    IF_DIM_Y( DEPOSIT(k2, gy, 1, dyi, s1y, lg2); );
-    IF_DIM_Z( DEPOSIT(k3, gz, 2, dzi, s1z, lg3); );
+    IF_DIM_X( DEPOSIT(xn, k1, gx, 0, dxi, s1x, lg1); );
+    IF_DIM_Y( DEPOSIT(xn, k2, gy, 1, dyi, s1y, lg2); );
+    IF_DIM_Z( DEPOSIT(xn, k3, gz, 2, dzi, s1z, lg3); );
 
     // CURRENT DENSITY AT (n+1.0)*dt
 
