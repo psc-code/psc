@@ -6,26 +6,17 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define DIM DIM_YZ
+#define ORDER ORDER_2ND
+//#define psc_push_particles_push_mprts psc_push_particles_1p5_c_push_mprts_yz
+//#define do_push_part do_push_part_genc_yz
+#define PROF_NAME "push_mprts_1p5_yz"
+#include "push_part_common.c"
+
 static void
-do_1p5_push_part_yz(int p, struct psc_fields *pf, particle_range_t prts)
+do_push_part(int p, fields_t flds, particle_range_t prts)
 {
-#define S0Y(off) s0y[off+2]
-#define S0Z(off) s0z[off+2]
-#define S1Y(off) s1y[off+2]
-#define S1Z(off) s1z[off+2]
-
-  particle_real_t s0y[5] = {}, s0z[5] = {}, s1y[5], s1z[5];
-
-  particle_real_t dt = ppsc->dt;
-  particle_real_t yl = .5f * dt;
-  particle_real_t zl = .5f * dt;
-  particle_real_t dqs = .5f * ppsc->coeff.eta * dt;
-  particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  particle_real_t fnqys = ppsc->patch[p].dx[1] * fnqs / dt;
-  particle_real_t fnqzs = ppsc->patch[p].dx[2] * fnqs / dt;
-  particle_real_t dxi = 1.f / ppsc->patch[p].dx[0];
-  particle_real_t dyi = 1.f / ppsc->patch[p].dx[1];
-  particle_real_t dzi = 1.f / ppsc->patch[p].dx[2];
+#include "push_part_common_vars.c"
 
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *part = particle_iter_deref(prt_iter);
@@ -40,10 +31,8 @@ do_1p5_push_part_yz(int p, struct psc_fields *pf, particle_range_t prts)
     part->yi += vyi * yl;
     part->zi += vzi * zl;
 
-    particle_real_t u = part->xi * dxi;
     particle_real_t v = part->yi * dyi;
     particle_real_t w = part->zi * dzi;
-    int j1 = particle_real_nint(u);
     int j2 = particle_real_nint(v);
     int j3 = particle_real_nint(w);
     particle_real_t h2 = j2-v;
@@ -58,17 +47,15 @@ do_1p5_push_part_yz(int p, struct psc_fields *pf, particle_range_t prts)
 
     // CHARGE DENSITY FORM FACTOR AT (n+.5)*dt 
 
-    S0Y(-1) = .5f*(1.5f-particle_real_abs(h2-1.f))*(1.5f-particle_real_abs(h2-1.f));
-    S0Y(+0) = .75f-particle_real_abs(h2)*particle_real_abs(h2);
-    S0Y(+1) = .5f*(1.5f-particle_real_abs(h2+1.f))*(1.5f-particle_real_abs(h2+1.f));
-    S0Z(-1) = .5f*(1.5f-particle_real_abs(h3-1.f))*(1.5f-particle_real_abs(h3-1.f));
-    S0Z(+0) = .75f-particle_real_abs(h3)*particle_real_abs(h3);
-    S0Z(+1) = .5f*(1.5f-particle_real_abs(h3+1.f))*(1.5f-particle_real_abs(h3+1.f));
+    S(s0y, -1) = .5f*(1.5f-particle_real_abs(h2-1.f))*(1.5f-particle_real_abs(h2-1.f));
+    S(s0y, +0) = .75f-particle_real_abs(h2)*particle_real_abs(h2);
+    S(s0y, +1) = .5f*(1.5f-particle_real_abs(h2+1.f))*(1.5f-particle_real_abs(h2+1.f));
+    S(s0z, -1) = .5f*(1.5f-particle_real_abs(h3-1.f))*(1.5f-particle_real_abs(h3-1.f));
+    S(s0z, +0) = .75f-particle_real_abs(h3)*particle_real_abs(h3);
+    S(s0z, +1) = .5f*(1.5f-particle_real_abs(h3+1.f))*(1.5f-particle_real_abs(h3+1.f));
 
-    u = part->xi * dxi;
     v = part->yi * dyi - .5f;
     w = part->zi * dzi - .5f;
-    int l1=particle_real_nint(u);
     int l2=particle_real_nint(v);
     int l3=particle_real_nint(w);
     h2=l2-v;
@@ -110,65 +97,65 @@ do_1p5_push_part_yz(int p, struct psc_fields *pf, particle_range_t prts)
 
     // FIELD INTERPOLATION
 
-    particle_real_t exq=gmz*(gmy*F3(pf, EX, l1,j2-1,j3-1)
-		  +g0y*F3(pf, EX, l1,j2  ,j3-1)
-		  +g1y*F3(pf, EX, l1,j2+1,j3-1))
-             +g0z*(gmy*F3(pf, EX, l1,j2-1,j3  )
-    	          +g0y*F3(pf, EX, l1,j2  ,j3  )
-	          +g1y*F3(pf, EX, l1,j2+1,j3  ))
-             +g1z*(gmy*F3(pf, EX, l1,j2-1,j3+1)
-	          +g0y*F3(pf, EX, l1,j2  ,j3+1)
-	          +g1y*F3(pf, EX, l1,j2+1,j3+1));
+    particle_real_t exq=gmz*(gmy*_F3(flds, EX, 0,j2-1,j3-1)
+		  +g0y*_F3(flds, EX, 0,j2  ,j3-1)
+		  +g1y*_F3(flds, EX, 0,j2+1,j3-1))
+             +g0z*(gmy*_F3(flds, EX, 0,j2-1,j3  )
+    	          +g0y*_F3(flds, EX, 0,j2  ,j3  )
+	          +g1y*_F3(flds, EX, 0,j2+1,j3  ))
+             +g1z*(gmy*_F3(flds, EX, 0,j2-1,j3+1)
+	          +g0y*_F3(flds, EX, 0,j2  ,j3+1)
+	          +g1y*_F3(flds, EX, 0,j2+1,j3+1));
 
-    particle_real_t eyq=gmz*(hmy*F3(pf, EY, j1,l2-1,j3-1)
-                  +h0y*F3(pf, EY, j1,l2  ,j3-1)
-                  +h1y*F3(pf, EY, j1,l2+1,j3-1))
-             +g0z*(hmy*F3(pf, EY, j1,l2-1,j3  )
-                  +h0y*F3(pf, EY, j1,l2  ,j3  )
-                  +h1y*F3(pf, EY, j1,l2+1,j3  ))
-             +g1z*(hmy*F3(pf, EY, j1,l2-1,j3+1)
-                  +h0y*F3(pf, EY, j1,l2  ,j3+1)
-	          +h1y*F3(pf, EY, j1,l2+1,j3+1));
+    particle_real_t eyq=gmz*(hmy*_F3(flds, EY, 0,l2-1,j3-1)
+                  +h0y*_F3(flds, EY, 0,l2  ,j3-1)
+                  +h1y*_F3(flds, EY, 0,l2+1,j3-1))
+             +g0z*(hmy*_F3(flds, EY, 0,l2-1,j3  )
+                  +h0y*_F3(flds, EY, 0,l2  ,j3  )
+                  +h1y*_F3(flds, EY, 0,l2+1,j3  ))
+             +g1z*(hmy*_F3(flds, EY, 0,l2-1,j3+1)
+                  +h0y*_F3(flds, EY, 0,l2  ,j3+1)
+	          +h1y*_F3(flds, EY, 0,l2+1,j3+1));
 
-    particle_real_t ezq=hmz*(gmy*F3(pf, EZ, j1,j2-1,l3-1)
-		  +g0y*F3(pf, EZ, j1,j2  ,l3-1)
-                  +g1y*F3(pf, EZ, j1,j2+1,l3-1))
-             +h0z*(gmy*F3(pf, EZ, j1,j2-1,l3  )
-                  +g0y*F3(pf, EZ, j1,j2  ,l3  )
-                  +g1y*F3(pf, EZ, j1,j2+1,l3  ))
-             +h1z*(gmy*F3(pf, EZ, j1,j2-1,l3+1)
-                  +g0y*F3(pf, EZ, j1,j2  ,l3+1)
-		  +g1y*F3(pf, EZ, j1,j2+1,l3+1));
+    particle_real_t ezq=hmz*(gmy*_F3(flds, EZ, 0,j2-1,l3-1)
+		  +g0y*_F3(flds, EZ, 0,j2  ,l3-1)
+                  +g1y*_F3(flds, EZ, 0,j2+1,l3-1))
+             +h0z*(gmy*_F3(flds, EZ, 0,j2-1,l3  )
+                  +g0y*_F3(flds, EZ, 0,j2  ,l3  )
+                  +g1y*_F3(flds, EZ, 0,j2+1,l3  ))
+             +h1z*(gmy*_F3(flds, EZ, 0,j2-1,l3+1)
+                  +g0y*_F3(flds, EZ, 0,j2  ,l3+1)
+		  +g1y*_F3(flds, EZ, 0,j2+1,l3+1));
 
-    particle_real_t hxq=hmz*(hmy*F3(pf, HX, j1,l2-1,l3-1)
-                  +h0y*F3(pf, HX, j1,l2  ,l3-1)
-                  +h1y*F3(pf, HX, j1,l2+1,l3-1))
-             +h0z*(hmy*F3(pf, HX, j1,l2-1,l3  )
-                  +h0y*F3(pf, HX, j1,l2  ,l3  )
-                  +h1y*F3(pf, HX, j1,l2+1,l3  ))
-             +h1z*(hmy*F3(pf, HX, j1,l2-1,l3+1)
-                  +h0y*F3(pf, HX, j1,l2  ,l3+1)
-		  +h1y*F3(pf, HX, j1,l2+1,l3+1));
+    particle_real_t hxq=hmz*(hmy*_F3(flds, HX, 0,l2-1,l3-1)
+                  +h0y*_F3(flds, HX, 0,l2  ,l3-1)
+                  +h1y*_F3(flds, HX, 0,l2+1,l3-1))
+             +h0z*(hmy*_F3(flds, HX, 0,l2-1,l3  )
+                  +h0y*_F3(flds, HX, 0,l2  ,l3  )
+                  +h1y*_F3(flds, HX, 0,l2+1,l3  ))
+             +h1z*(hmy*_F3(flds, HX, 0,l2-1,l3+1)
+                  +h0y*_F3(flds, HX, 0,l2  ,l3+1)
+		  +h1y*_F3(flds, HX, 0,l2+1,l3+1));
 
-    particle_real_t hyq=hmz*(gmy*F3(pf, HY, l1,j2-1,l3-1)
-                  +g0y*F3(pf, HY, l1,j2  ,l3-1)
-                  +g1y*F3(pf, HY, l1,j2+1,l3-1))
-             +h0z*(gmy*F3(pf, HY, l1,j2-1,l3  )
-                  +g0y*F3(pf, HY, l1,j2  ,l3  )
-                  +g1y*F3(pf, HY, l1,j2+1,l3  ))
-             +h1z*(gmy*F3(pf, HY, l1,j2-1,l3+1)
-                  +g0y*F3(pf, HY, l1,j2  ,l3+1)
-	          +g1y*F3(pf, HY, l1,j2+1,l3+1));
+    particle_real_t hyq=hmz*(gmy*_F3(flds, HY, 0,j2-1,l3-1)
+                  +g0y*_F3(flds, HY, 0,j2  ,l3-1)
+                  +g1y*_F3(flds, HY, 0,j2+1,l3-1))
+             +h0z*(gmy*_F3(flds, HY, 0,j2-1,l3  )
+                  +g0y*_F3(flds, HY, 0,j2  ,l3  )
+                  +g1y*_F3(flds, HY, 0,j2+1,l3  ))
+             +h1z*(gmy*_F3(flds, HY, 0,j2-1,l3+1)
+                  +g0y*_F3(flds, HY, 0,j2  ,l3+1)
+	          +g1y*_F3(flds, HY, 0,j2+1,l3+1));
 
-    particle_real_t hzq=gmz*(hmy*F3(pf, HZ, l1,l2-1,j3-1)
-		  +h0y*F3(pf, HZ, l1,l2  ,j3-1)
-                  +h1y*F3(pf, HZ, l1,l2+1,j3-1))
-             +g0z*(hmy*F3(pf, HZ, l1,l2-1,j3  )
-                  +h0y*F3(pf, HZ, l1,l2  ,j3  )
-                  +h1y*F3(pf, HZ, l1,l2+1,j3  ))
-             +g1z*(hmy*F3(pf, HZ, l1,l2-1,j3+1)
-                  +h0y*F3(pf, HZ, l1,l2  ,j3+1)
-		  +h1y*F3(pf, HZ, l1,l2+1,j3+1));
+    particle_real_t hzq=gmz*(hmy*_F3(flds, HZ, 0,l2-1,j3-1)
+		  +h0y*_F3(flds, HZ, 0,l2  ,j3-1)
+                  +h1y*_F3(flds, HZ, 0,l2+1,j3-1))
+             +g0z*(hmy*_F3(flds, HZ, 0,l2-1,j3  )
+                  +h0y*_F3(flds, HZ, 0,l2  ,j3  )
+                  +h1y*_F3(flds, HZ, 0,l2+1,j3  ))
+             +g1z*(hmy*_F3(flds, HZ, 0,l2-1,j3+1)
+                  +h0y*_F3(flds, HZ, 0,l2  ,j3+1)
+		  +h1y*_F3(flds, HZ, 0,l2+1,j3+1));
 
      // c x^(n+.5), p^n -> x^(n+1.0), p^(n+1.0) 
 
@@ -219,22 +206,22 @@ do_1p5_push_part_yz(int p, struct psc_fields *pf, particle_range_t prts)
     h3 = k3 - w;
 
     for (int i = -2; i <= 2; i++) {
-      S1Y(i) = 0.f;
-      S1Z(i) = 0.f;
+      S(s1y, i) = 0.f;
+      S(s1z, i) = 0.f;
     }
 
-    S1Y(k2-j2-1) = .5f*(1.5f-particle_real_abs(h2-1.f))*(1.5f-particle_real_abs(h2-1.f));
-    S1Y(k2-j2+0) = .75f-particle_real_abs(h2)*particle_real_abs(h2);
-    S1Y(k2-j2+1) = .5f*(1.5f-particle_real_abs(h2+1.f))*(1.5f-particle_real_abs(h2+1.f));
-    S1Z(k3-j3-1) = .5f*(1.5f-particle_real_abs(h3-1.f))*(1.5f-particle_real_abs(h3-1.f));
-    S1Z(k3-j3+0) = .75f-particle_real_abs(h3)*particle_real_abs(h3);
-    S1Z(k3-j3+1) = .5f*(1.5f-particle_real_abs(h3+1.f))*(1.5f-particle_real_abs(h3+1.f));
+    S(s1y, k2-j2-1) = .5f*(1.5f-particle_real_abs(h2-1.f))*(1.5f-particle_real_abs(h2-1.f));
+    S(s1y, k2-j2+0) = .75f-particle_real_abs(h2)*particle_real_abs(h2);
+    S(s1y, k2-j2+1) = .5f*(1.5f-particle_real_abs(h2+1.f))*(1.5f-particle_real_abs(h2+1.f));
+    S(s1z, k3-j3-1) = .5f*(1.5f-particle_real_abs(h3-1.f))*(1.5f-particle_real_abs(h3-1.f));
+    S(s1z, k3-j3+0) = .75f-particle_real_abs(h3)*particle_real_abs(h3);
+    S(s1z, k3-j3+1) = .5f*(1.5f-particle_real_abs(h3+1.f))*(1.5f-particle_real_abs(h3+1.f));
 
     // CURRENT DENSITY AT (n+1.0)*dt
 
     for (int i = -1; i <= 1; i++) {
-      S1Y(i) -= S0Y(i);
-      S1Z(i) -= S0Z(i);
+      S(s1y, i) -= S(s0y, i);
+      S(s1z, i) -= S(s0z, i);
     }
 
     int l2min, l3min, l2max, l3max;
@@ -270,20 +257,20 @@ do_1p5_push_part_yz(int p, struct psc_fields *pf, particle_range_t prts)
     for (int l3 = l3min; l3 <= l3max; l3++) {
       jyh = 0.f;
       for (int l2 = l2min; l2 <= l2max; l2++) {
-	particle_real_t wx = S0Y(l2) * S0Z(l3)
-	  + .5f * S1Y(l2) * S0Z(l3)
-	  + .5f * S0Y(l2) * S1Z(l3)
-	  + (1.f/3.f) * S1Y(l2) * S1Z(l3);
-	particle_real_t wy = S1Y(l2) * (S0Z(l3) + .5f*S1Z(l3));
-	particle_real_t wz = S1Z(l3) * (S0Y(l2) + .5f*S1Y(l2));
+	particle_real_t wx = S(s0y, l2) * S(s0z, l3)
+	  + .5f * S(s1y, l2) * S(s0z, l3)
+	  + .5f * S(s0y, l2) * S(s1z, l3)
+	  + (1.f/3.f) * S(s1y, l2) * S(s1z, l3);
+	particle_real_t wy = S(s1y, l2) * (S(s0z, l3) + .5f*S(s1z, l3));
+	particle_real_t wz = S(s1z, l3) * (S(s0y, l2) + .5f*S(s1y, l2));
 
 	jxh = fnqx*wx;
 	jyh -= fnqy*wy;
 	JZH(l2) -= fnqz*wz;
 
-	F3(pf, JXI, j1,j2+l2,j3+l3) += jxh;
-	F3(pf, JYI, j1,j2+l2,j3+l3) += jyh;
-	F3(pf, JZI, j1,j2+l2,j3+l3) += JZH(l2);
+	_F3(flds, JXI, 0,j2+l2,j3+l3) += jxh;
+	_F3(flds, JYI, 0,j2+l2,j3+l3) += jyh;
+	_F3(flds, JZI, 0,j2+l2,j3+l3) += JZH(l2);
       }
     }
   }
@@ -301,11 +288,11 @@ psc_push_particles_1p5_c_push_mprts_yz(struct psc_push_particles *push,
   
   prof_start(pr);
   for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+    fields_t flds = fields_t_mflds(mflds, p);
     particle_range_t prts = particle_range_mprts(mprts, p);
 
-    psc_fields_zero_range(flds, JXI, JXI + 3);
-    do_1p5_push_part_yz(p, flds, prts);
+    fields_t_zero_range(flds, JXI, JXI + 3);
+    do_push_part(p, flds, prts);
   }
   prof_stop(pr);
 }
