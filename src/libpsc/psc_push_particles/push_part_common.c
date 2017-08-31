@@ -1,6 +1,7 @@
 
 #define ORDER_1ST 1
 #define ORDER_2ND 2
+#define ORDER_1P5 2
 
 #define VARIANT_SFF 1
 
@@ -263,7 +264,7 @@ push_p(particle_real_t *p, particle_real_t *E, particle_real_t *H, particle_real
 struct ip_coeff {
 #if ORDER == ORDER_1ST
   particle_real_t v0, v1;
-#elif ORDER == ORDER_2ND
+#elif ORDER == ORDER_2ND || ORDER == ORDER_1P5
   particle_real_t vm, v0, vp, h;
 #endif
 };
@@ -311,6 +312,45 @@ ip_coeff(int *lg, struct ip_coeff *gg, particle_real_t u)
   gg->vp = .5f * (.5f-h)*(.5f-h);
 #endif
   *lg = l;
+}
+
+// ----------------------------------------------------------------------
+// ip_coeff_g
+
+static inline void
+ip_coeff_g(int *lg, struct ip_coeff *gg, particle_real_t u)
+{
+  ip_coeff(lg, gg, u);
+}
+
+// ----------------------------------------------------------------------
+// ip_coeff_h
+
+static inline void
+ip_coeff_h(int *lh, struct ip_coeff *hh, particle_real_t u)
+{
+#if ORDER == ORDER_1ST || ORDER == ORDER_2ND
+  ip_coeff(lh, hh, u - .5f);
+#elif ORDER == ORDER_1P5
+  // 1+1/2 method from Sokolov paper
+  // FIXME, this is almost certainly buggy
+  int l;
+  particle_real_t h;
+  
+  get_nint_remainder(&l, &h, u - .5f);
+
+  if (h >= 0) { //0 FIXME???
+    hh->vm = h;
+    hh->v0 = 1.f - h;
+    hh->vp = 0;
+  } else { // h < 0
+    hh->vm = 0;
+    hh->v0 = 1.f + h;
+    hh->vp = -h;
+  }
+  *lh = l;
+  assert(0);
+#endif
 }
 
 // ----------------------------------------------------------------------
@@ -382,13 +422,13 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 #define DEPOSIT_AND_IP_COEFFS(lg1, lh1, gx, hx, d, dxi, s0x)	\
   int lg1, lh1;							\
   struct ip_coeff gx, hx;					\
-  ip_coeff(&lg1, &gx, x[d] * dxi);				\
+  ip_coeff_g(&lg1, &gx, x[d] * dxi);				\
   set_S(s0x, 0, gx);						\
-  ip_coeff(&lh1, &hx, x[d] * dxi - .5f)
+  ip_coeff_h(&lh1, &hx, x[d] * dxi)
   
 #define DEPOSIT(xx, k1, gx, d, dxi, s1x, lg1)		\
     int k1;						\
-    ip_coeff(&k1, &gx, xx[d] * dxi);			\
+    ip_coeff_g(&k1, &gx, xx[d] * dxi);			\
     set_S(s1x, k1-lg1, gx)
     
 
