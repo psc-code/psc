@@ -53,5 +53,4 @@ libsubdir_la_SOURCES += \
 endif USE_FORTRAN
 
 EXTRA_libsubdir_la_SOURCES = \
-	c_common_push.c \
 	1vb.c
