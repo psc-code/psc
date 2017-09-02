@@ -63,7 +63,7 @@ typedef particle_iter_t mprts_array_t;
 #if PSC_FIELDS_AS_CUDA2
 typedef fields_real_t * flds_em_t;
 #else
-typedef struct psc_fields * flds_em_t;
+typedef fields_t flds_em_t;
 #endif
 
 // ======================================================================

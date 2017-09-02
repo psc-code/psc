@@ -7,8 +7,8 @@
 #endif
 
 #ifndef F3_CURR
-#define F3_CURR F3
-typedef struct psc_fields *flds_curr_t;
+#define F3_CURR _F3
+typedef fields_t flds_curr_t;
 #endif
 
 // ----------------------------------------------------------------------

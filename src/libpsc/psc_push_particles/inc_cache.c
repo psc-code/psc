@@ -7,8 +7,8 @@
 #endif
 
 #ifndef F3_EM
-#define F3_EM F3
-typedef struct psc_fields *flds_em_t;
+#define F3_EM _F3
+typedef fields_t flds_em_t;
 #endif
 
 // FIXME, shared between em and curr cache currently
