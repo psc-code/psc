@@ -1,6 +1,10 @@
 
+#include "cuda_wrap.h"
+
 // ----------------------------------------------------------------------
 // c_prm: constant parameters
+
+#define MAX_NR_KINDS (10)
 
 struct const_params {
   particle_real_t dqs;
@@ -22,39 +26,6 @@ struct const_params {
 #endif
 };
 
-struct const_params c_prm;
-
-static void
-c_prm_set(struct psc *psc)
-{
-  particle_real_t dt = psc->dt;
-
-  c_prm.dqs = .5f * ppsc->coeff.eta * dt;
-  c_prm.fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
-
-  IF_DIM_X( c_prm.xl = .5f * dt; );
-  IF_DIM_Y( c_prm.yl = .5f * dt; );
-  IF_DIM_Z( c_prm.zl = .5f * dt; );
-
-  assert(psc->nr_patches > 0);
-
-  IF_DIM_X( c_prm.dxi = 1.f / psc->patch[0].dx[0]; );
-  IF_DIM_Y( c_prm.dyi = 1.f / psc->patch[0].dx[1]; );
-  IF_DIM_Z( c_prm.dzi = 1.f / psc->patch[0].dx[2]; );
-
-  IF_DIM_X( c_prm.fnqxs = ppsc->patch[0].dx[0] * c_prm.fnqs / dt; );
-  IF_DIM_Y( c_prm.fnqys = ppsc->patch[0].dx[1] * c_prm.fnqs / dt; );
-  IF_DIM_Z( c_prm.fnqzs = ppsc->patch[0].dx[2] * c_prm.fnqs / dt; );
-}
-
-// ----------------------------------------------------------------------
-// params_1vb
-
-#include "psc.h"
-#include "cuda_wrap.h"
-
-#define MAX_NR_KINDS (10)
-
 struct params_1vb {
   // particle-related
   particle_real_t dt;
@@ -68,7 +39,42 @@ struct params_1vb {
   int ilg[3];
 };
 
+CUDA_CONSTANT static struct const_params c_prm;
 CUDA_CONSTANT static struct params_1vb prm;
+
+static void
+c_prm_set(struct psc *psc)
+{
+  struct const_params prm;
+
+  particle_real_t dt = psc->dt;
+
+  prm.dqs = .5f * ppsc->coeff.eta * dt;
+  prm.fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
+
+  IF_DIM_X( prm.xl = .5f * dt; );
+  IF_DIM_Y( prm.yl = .5f * dt; );
+  IF_DIM_Z( prm.zl = .5f * dt; );
+
+  assert(psc->nr_patches > 0);
+
+  IF_DIM_X( prm.dxi = 1.f / psc->patch[0].dx[0]; );
+  IF_DIM_Y( prm.dyi = 1.f / psc->patch[0].dx[1]; );
+  IF_DIM_Z( prm.dzi = 1.f / psc->patch[0].dx[2]; );
+
+  IF_DIM_X( prm.fnqxs = ppsc->patch[0].dx[0] * prm.fnqs / dt; );
+  IF_DIM_Y( prm.fnqys = ppsc->patch[0].dx[1] * prm.fnqs / dt; );
+  IF_DIM_Z( prm.fnqzs = ppsc->patch[0].dx[2] * prm.fnqs / dt; );
+
+#ifndef __CUDACC__
+  c_prm = prm;
+#else
+  check(cudaMemcpyToSymbol(c_prm, &prm, sizeof(prm)));
+#endif
+}
+
+// ----------------------------------------------------------------------
+// params_1vb
 
 static void _mrc_unused
 params_1vb_set(struct psc *psc,
