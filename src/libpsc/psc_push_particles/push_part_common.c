@@ -461,16 +461,16 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 
 #define CURRENT_PREP_DIM(l1min, l1max, k1, lg1, fnqx, fnqxs)	\
     int l1min, l1max; find_l_minmax(&l1min, &l1max, k1, lg1);	\
-    particle_real_t fnqx = particle_qni_wni(part) * fnqxs;	\
+    particle_real_t fnqx = particle_qni_wni(part) * c_prm.fnqxs;	\
 
 #define CURRENT_PREP							\
   IF_DIM_X( CURRENT_PREP_DIM(l1min, l1max, k1, lg1, fnqx, fnqxs); );	\
   IF_DIM_Y( CURRENT_PREP_DIM(l2min, l2max, k2, lg2, fnqy, fnqys); );	\
   IF_DIM_Z( CURRENT_PREP_DIM(l3min, l3max, k3, lg3, fnqz, fnqzs); );	\
 									\
-  IF_NOT_DIM_X( particle_real_t fnqxx = vv[0] * particle_qni_wni(part) * fnqs; ); \
-  IF_NOT_DIM_Y( particle_real_t fnqyy = vv[1] * particle_qni_wni(part) * fnqs; ); \
-  IF_NOT_DIM_Z( particle_real_t fnqzz = vv[2] * particle_qni_wni(part) * fnqs; )
+  IF_NOT_DIM_X( particle_real_t fnqxx = vv[0] * particle_qni_wni(part) * c_prm.fnqs; ); \
+  IF_NOT_DIM_Y( particle_real_t fnqyy = vv[1] * particle_qni_wni(part) * c_prm.fnqs; ); \
+  IF_NOT_DIM_Z( particle_real_t fnqzz = vv[2] * particle_qni_wni(part) * c_prm.fnqs; )
 
 #define CURRENT_2ND_Y						\
   particle_real_t jyh = 0.f;					\
@@ -714,16 +714,16 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
     
     // CHARGE DENSITY FORM FACTOR AT (n+.5)*dt 
 
-    IF_DIM_X( DEPOSIT_AND_IP_COEFFS(lg1, lh1, gx, hx, 0, dxi, s0x); );
-    IF_DIM_Y( DEPOSIT_AND_IP_COEFFS(lg2, lh2, gy, hy, 0, dyi, s0y); );
-    IF_DIM_Z( DEPOSIT_AND_IP_COEFFS(lg3, lh3, gz, hz, 0, dzi, s0z); );
+    IF_DIM_X( DEPOSIT_AND_IP_COEFFS(lg1, lh1, gx, hx, 0, c_prm.dxi, s0x); );
+    IF_DIM_Y( DEPOSIT_AND_IP_COEFFS(lg2, lh2, gy, hy, 0, c_prm.dyi, s0y); );
+    IF_DIM_Z( DEPOSIT_AND_IP_COEFFS(lg3, lh3, gz, hz, 0, c_prm.dzi, s0z); );
 
     // FIELD INTERPOLATION
 
     INTERPOLATE_FIELDS;
 
     // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
-    particle_real_t dq = dqs * particle_qni_div_mni(part);
+    particle_real_t dq = c_prm.dqs * particle_qni_div_mni(part);
     push_p(&part->pxi, E, H, dq);
 
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0) 
@@ -736,9 +736,9 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
 
     // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt 
     ZERO_S1;
-    IF_DIM_X( DEPOSIT(x, k1, gx, 0, dxi, s1x, lg1); );
-    IF_DIM_Y( DEPOSIT(x, k2, gy, 1, dyi, s1y, lg2); );
-    IF_DIM_Z( DEPOSIT(x, k3, gz, 2, dzi, s1z, lg3); );
+    IF_DIM_X( DEPOSIT(x, k1, gx, 0, c_prm.dxi, s1x, lg1); );
+    IF_DIM_Y( DEPOSIT(x, k2, gy, 1, c_prm.dyi, s1y, lg2); );
+    IF_DIM_Z( DEPOSIT(x, k3, gz, 2, c_prm.dzi, s1z, lg3); );
 
 #else
     push_x(x, vv);
@@ -749,9 +749,9 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
 
     // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt 
     ZERO_S1;
-    IF_DIM_X( DEPOSIT(xn, k1, gx, 0, dxi, s1x, lg1); );
-    IF_DIM_Y( DEPOSIT(xn, k2, gy, 1, dyi, s1y, lg2); );
-    IF_DIM_Z( DEPOSIT(xn, k3, gz, 2, dzi, s1z, lg3); );
+    IF_DIM_X( DEPOSIT(xn, k1, gx, 0, c_prm.dxi, s1x, lg1); );
+    IF_DIM_Y( DEPOSIT(xn, k2, gy, 1, c_prm.dyi, s1y, lg2); );
+    IF_DIM_Z( DEPOSIT(xn, k3, gz, 2, c_prm.dzi, s1z, lg3); );
 #endif
     
     // CURRENT DENSITY AT (n+1.0)*dt

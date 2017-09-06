@@ -3,14 +3,22 @@
 // c_prm: constant parameters
 
 struct const_params {
+  particle_real_t dqs;
+  particle_real_t fnqs;
 #if (DIM & DIM_X)
   particle_real_t xl;
+  particle_real_t dxi;
+  particle_real_t fnqxs;
 #endif
 #if (DIM & DIM_Y)
   particle_real_t yl;
+  particle_real_t dyi;
+  particle_real_t fnqys;
 #endif
 #if (DIM & DIM_Z)
   particle_real_t zl;
+  particle_real_t dzi;
+  particle_real_t fnqzs;
 #endif
 };
 
@@ -21,9 +29,22 @@ c_prm_set(struct psc *psc)
 {
   particle_real_t dt = psc->dt;
 
+  c_prm.dqs = .5f * ppsc->coeff.eta * dt;
+  c_prm.fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
+
   IF_DIM_X( c_prm.xl = .5f * dt; );
   IF_DIM_Y( c_prm.yl = .5f * dt; );
   IF_DIM_Z( c_prm.zl = .5f * dt; );
+
+  assert(psc->nr_patches > 0);
+
+  IF_DIM_X( c_prm.dxi = 1.f / psc->patch[0].dx[0]; );
+  IF_DIM_Y( c_prm.dyi = 1.f / psc->patch[0].dx[1]; );
+  IF_DIM_Z( c_prm.dzi = 1.f / psc->patch[0].dx[2]; );
+
+  IF_DIM_X( c_prm.fnqxs = ppsc->patch[0].dx[0] * c_prm.fnqs / dt; );
+  IF_DIM_Y( c_prm.fnqys = ppsc->patch[0].dx[1] * c_prm.fnqs / dt; );
+  IF_DIM_Z( c_prm.fnqzs = ppsc->patch[0].dx[2] * c_prm.fnqs / dt; );
 }
 
 // ----------------------------------------------------------------------
