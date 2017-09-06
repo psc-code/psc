@@ -1,4 +1,34 @@
 
+// ----------------------------------------------------------------------
+// c_prm: constant parameters
+
+struct const_params {
+#if (DIM & DIM_X)
+  particle_real_t xl;
+#endif
+#if (DIM & DIM_Y)
+  particle_real_t yl;
+#endif
+#if (DIM & DIM_Z)
+  particle_real_t zl;
+#endif
+};
+
+struct const_params c_prm;
+
+static void
+c_prm_set(struct psc *psc)
+{
+  particle_real_t dt = psc->dt;
+
+  IF_DIM_X( c_prm.xl = .5f * dt; );
+  IF_DIM_Y( c_prm.yl = .5f * dt; );
+  IF_DIM_Z( c_prm.zl = .5f * dt; );
+}
+
+// ----------------------------------------------------------------------
+// params_1vb
+
 #include "psc.h"
 #include "cuda_wrap.h"
 
@@ -19,7 +49,7 @@ struct params_1vb {
 
 CUDA_CONSTANT static struct params_1vb prm;
 
-static void
+static void _mrc_unused
 params_1vb_set(struct psc *psc,
 	       struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
@@ -32,6 +62,7 @@ params_1vb_set(struct psc *psc,
 
   params.fnqs   = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
 #if CALC_J == CALC_J_1VB_2D
+
 #if !(DIM == DIM_YZ)
 #error inc_params.c: CALC_J_1VB_2D only works for DIM_YZ
 #endif

@@ -1,4 +1,6 @@
 
+#include "inc_defs.h"
+
 #define ORDER_1ST 1
 #define ORDER_2ND 2
 #define ORDER_1P5 2
@@ -9,59 +11,27 @@
 
 #define CACHE_EM_J 1
 
-#define DIM_X 1
-#define DIM_Y 2
-#define DIM_Z 4
-#define DIM_XY (DIM_X | DIM_Y)
-#define DIM_XZ (DIM_X | DIM_Z)
-#define DIM_YZ (DIM_Y | DIM_Z)
-#define DIM_XYZ (DIM_X | DIM_Y | DIM_Z)
+#include "inc_params.c"
 
 // ----------------------------------------------------------------------
-
-#if (DIM & DIM_X)
-#define IF_DIM_X(s) s do{} while(0)
-#define IF_NOT_DIM_X(s) do{} while(0)
-#else
-#define IF_DIM_X(s) do{} while(0)
-#define IF_NOT_DIM_X(s) s do{} while(0)
-#endif
-
-#if (DIM & DIM_Y)
-#define IF_DIM_Y(s) s do{} while(0)
-#define IF_NOT_DIM_Y(s) do{} while(0)
-#else
-#define IF_DIM_Y(s) do{} while(0)
-#define IF_NOT_DIM_Y(s) s do{} while(0)
-#endif
-
-#if (DIM & DIM_Z)
-#define IF_DIM_Z(s) s do{} while(0)
-#define IF_NOT_DIM_Z(s) do{} while(0)
-#else
-#define IF_DIM_Z(s) do{} while(0)
-#define IF_NOT_DIM_Z(s) s do{} while(0)
-#endif
-
-// ----------------------------------------------------------------------
-// static vars
-
-static particle_real_t xl, yl, zl;
 
 #if ORDER == ORDER_1ST
 
 #if DIM == DIM_XZ
 #if VARIANT == VARIANT_SFF
-#define psc_push_particles_push_mprts psc_push_particles_1sff_push_mprts_xz
+#define SFX(x) x ## _1sff_xz
+#define psc_push_particles_push_mprts
 #define do_push_part do_push_part_1sff_xz
 #define PROF_NAME "push_mprts_1sff_xz"
 #else
-#define psc_push_particles_push_mprts psc_push_particles_1st_push_mprts_xz
+#define SFX(x) x ## _1st_xz
+#define psc_push_particles_push_mprts
 #define do_push_part do_push_part_1st_xz
 #define PROF_NAME "push_mprts_1st_xz"
 #endif
 #elif DIM == DIM_YZ
-#define psc_push_particles_push_mprts psc_push_particles_1st_push_mprts_yz
+#define SFX(x) x ## _1st_yz
+#define psc_push_particles_push_mprts
 #define do_push_part do_push_part_1st_yz
 #define PROF_NAME "push_mprts_1st_yz"
 #endif
@@ -110,9 +80,9 @@ calc_v(particle_real_t *v, const particle_real_t *p)
 static inline void
 push_x(particle_real_t *x, const particle_real_t *v)
 {
-  IF_DIM_X( x[0] += v[0] * xl; );
-  IF_DIM_Y( x[1] += v[1] * yl; );
-  IF_DIM_Z( x[2] += v[2] * zl; );
+  IF_DIM_X( x[0] += v[0] * c_prm.xl; );
+  IF_DIM_Y( x[1] += v[1] * c_prm.yl; );
+  IF_DIM_Z( x[2] += v[2] * c_prm.zl; );
 }
 
 // ----------------------------------------------------------------------
@@ -841,9 +811,15 @@ cache_fields_to_j(fields_t fld, fields_t flds)
 // psc_push_particles_push_mprts
 
 void
+#ifdef SFX
+SFX(psc_push_particles_push_mprts)(struct psc_push_particles *push,
+				   struct psc_mparticles *mprts,
+				   struct psc_mfields *mflds)
+#else
 psc_push_particles_push_mprts(struct psc_push_particles *push,
 			      struct psc_mparticles *mprts,
 			      struct psc_mfields *mflds)
+#endif
 {
   static int pr;
   if (!pr) {
