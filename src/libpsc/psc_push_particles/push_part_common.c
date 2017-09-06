@@ -697,7 +697,17 @@ find_l_minmax(int *l1min, int *l1max, int k1, int lg1)
 static void
 do_push_part(int p, fields_t flds, particle_range_t prts)
 {
-#include "push_part_common_vars.c"
+#if (DIM & DIM_X)
+  particle_real_t s0x[N_RHO] = {}, s1x[N_RHO];
+#endif
+#if (DIM & DIM_Y)
+  particle_real_t s0y[N_RHO] = {}, s1y[N_RHO];
+#endif
+#if (DIM & DIM_Z)
+  particle_real_t s0z[N_RHO] = {}, s1z[N_RHO];
+#endif
+
+  c_prm_set(ppsc);
 
   VARIANT_SFF_PREP;
   
