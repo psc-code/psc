@@ -1,6 +1,17 @@
 
 #include "psc_debug.h"
 
+// ----------------------------------------------------------------------
+// interpolation
+
+struct ip_coeff {
+#if ORDER == ORDER_1ST
+  particle_real_t v0, v1;
+#elif ORDER == ORDER_2ND || ORDER == ORDER_1P5
+  particle_real_t vm, v0, vp, h;
+#endif
+};
+
 #if ORDER == ORDER_1ST
 
 #if DIM == DIM_XZ
@@ -15,6 +26,11 @@
 	     gy##y.v1*_F3(flds, m, 0,l##gy##2+1,l##gz##3  )) +		\
    gz##z.v1*(gy##y.v0*_F3(flds, m, 0,l##gy##2  ,l##gz##3+1) +		\
 	     gy##y.v1*_F3(flds, m, 0,l##gy##2+1,l##gz##3+1)))
+#define INTERPOLATE_FIELD_1ST(pf, m, gy, gz)				\
+  (gz##0z*(gy##0y*F3_CACHE(pf, m, 0,l##gy[1]  ,l##gz[2]  ) +		\
+	   gy##1y*F3_CACHE(pf, m, 0,l##gy[1]+1,l##gz[2]  )) +		\
+   gz##1z*(gy##0y*F3_CACHE(pf, m, 0,l##gy[1]  ,l##gz[2]+1) +		\
+	   gy##1y*F3_CACHE(pf, m, 0,l##gy[1]+1,l##gz[2]+1)))
 #endif
 
 #else
@@ -97,12 +113,6 @@
 #endif // ORDER
 
 #if DIM == DIM_YZ
-
-#define INTERPOLATE_FIELD_1ST(pf, m, gy, gz)				\
-  (gz##0z*(gy##0y*F3_CACHE(pf, m, 0,l##gy[1]  ,l##gz[2]  ) +		\
-	   gy##1y*F3_CACHE(pf, m, 0,l##gy[1]+1,l##gz[2]  )) +		\
-   gz##1z*(gy##0y*F3_CACHE(pf, m, 0,l##gy[1]  ,l##gz[2]+1) +		\
-	   gy##1y*F3_CACHE(pf, m, 0,l##gy[1]+1,l##gz[2]+1)))
 
 #define INTERPOLATE_1ST_STD(pf, exq, eyq, ezq, hxq, hyq, hzq)		\
   do {									\
@@ -198,3 +208,58 @@
   } while (0)
 
 #endif
+
+// ======================================================================
+// VARIANT SFF
+
+#if VARIANT == VARIANT_SFF
+
+// FIXME, calculation of f_avg could be done at the level where we do caching, too
+// (if that survives, anyway...)
+
+#define VARIANT_SFF_PREP					\
+  struct psc_patch *patch = &ppsc->patch[p];			\
+  								\
+  /* FIXME, eventually no ghost points should be needed (?) */	\
+  fields_t flds_avg = fields_t_ctor((int[3]) { -1, 0, -1 },		\
+				    (int[3]) { patch->ldims[0] + 2, 1, patch->ldims[2] + 1 },\
+				    6);					\
+									\
+  for (int iz = -1; iz < patch->ldims[2] + 1; iz++) {			\
+    for (int ix = -1; ix < patch->ldims[0] + 1; ix++) {			\
+      _F3(flds_avg, 0, ix,0,iz) = .5 * (_F3(flds, EX, ix,0,iz) + _F3(flds, EX, ix-1,0,iz)); \
+      _F3(flds_avg, 1, ix,0,iz) = _F3(flds, EY, ix,0,iz);		\
+      _F3(flds_avg, 2, ix,0,iz) = .5 * (_F3(flds, EZ, ix,0,iz) + _F3(flds, EZ, ix,0,iz-1)); \
+      _F3(flds_avg, 3, ix,0,iz) = .5 * (_F3(flds, HX, ix,0,iz) + _F3(flds, HX, ix,0,iz-1)); \
+      _F3(flds_avg, 4, ix,0,iz) = .25 * (_F3(flds, HY, ix  ,0,iz) + _F3(flds, HY, ix  ,0,iz-1) + \
+					 _F3(flds, HY, ix-1,0,iz) + _F3(flds, HY, ix-1,0,iz-1)); \
+      _F3(flds_avg, 5, ix,0,iz) = .5 * (_F3(flds, HZ, ix,0,iz) + _F3(flds, HZ, ix-1,0,iz)); \
+    }									\
+  }
+
+#define VARIANT_SFF_POST			\
+  fields_t_dtor(&flds_avg)
+
+#define INTERPOLATE_FIELDS						\
+  /* FIXME, we don't really need h coeffs in this case, either, though	\
+   * the compiler may be smart enough to figure that out */		\
+  particle_real_t E[3] = { IP_FIELD(flds_avg, EX-EX, g, g, g),		\
+			   IP_FIELD(flds_avg, EY-EX, g, g, g),		\
+			   IP_FIELD(flds_avg, EZ-EX, g, g, g), };	\
+  particle_real_t H[3] = { IP_FIELD(flds_avg, HX-EX, g, g, g),		\
+			   IP_FIELD(flds_avg, HY-EX, g, g, g),		\
+			   IP_FIELD(flds_avg, HZ-EX, g, g, g), }
+#else
+
+#define VARIANT_SFF_PREP do {} while (0)
+#define VARIANT_SFF_POST do {} while (0)
+#define INTERPOLATE_FIELDS						\
+  particle_real_t E[3] = { IP_FIELD(flds, EX, h, g, g),			\
+			   IP_FIELD(flds, EY, g, h, g),			\
+			   IP_FIELD(flds, EZ, g, g, h), };		\
+  particle_real_t H[3] = { IP_FIELD(flds, HX, g, h, h),			\
+			   IP_FIELD(flds, HY, h, g, h),			\
+			   IP_FIELD(flds, HZ, h, h, g), }
+
+#endif
+
