@@ -1,12 +1,6 @@
 
 #include "inc_defs.h"
 
-#define ORDER_1ST 1
-#define ORDER_2ND 2
-#define ORDER_1P5 2
-
-#define VARIANT_SFF 1
-
 #define PRTS_STAGGERED 1
 
 #define CACHE_EM_J 1
