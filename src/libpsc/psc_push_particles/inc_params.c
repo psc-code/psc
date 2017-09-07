@@ -10,20 +10,16 @@ struct const_params {
   particle_real_t dt; // FIXME, do we need both dt and dqs? or maybe get rid of xl/yl/zl
   particle_real_t dqs;
   particle_real_t fnqs;
+  particle_real_t fnqxs, fnqys, fnqzs;
   particle_real_t dxi[3];
 #if (DIM & DIM_X)
   particle_real_t xl;
 #endif
-#if (DIM & DIM_X || CALC_J != CALC_J_1VB_2D)
-  particle_real_t fnqxs;
-#endif
 #if (DIM & DIM_Y)
   particle_real_t yl;
-  particle_real_t fnqys;
 #endif
 #if (DIM & DIM_Z)
   particle_real_t zl;
-  particle_real_t fnqzs;
 #endif
 };
 
@@ -62,11 +58,9 @@ c_prm_set(struct psc *psc)
     prm.dxi[d] = 1.f / psc->patch[0].dx[d];
   }
 
-#if (DIM & DIM_X || CALC_J != CALC_J_1VB_2D)
   prm.fnqxs = ppsc->patch[0].dx[0] * prm.fnqs / prm.dt;
-#endif
-  IF_DIM_Y( prm.fnqys = ppsc->patch[0].dx[1] * prm.fnqs / prm.dt; );
-  IF_DIM_Z( prm.fnqzs = ppsc->patch[0].dx[2] * prm.fnqs / prm.dt; );
+  prm.fnqys = ppsc->patch[0].dx[1] * prm.fnqs / prm.dt;
+  prm.fnqzs = ppsc->patch[0].dx[2] * prm.fnqs / prm.dt;
 
 #ifndef __CUDACC__
   c_prm = prm;
