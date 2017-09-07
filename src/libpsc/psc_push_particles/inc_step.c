@@ -199,16 +199,16 @@ push_one(mprts_array_t mprts_arr, int n,
   calc_vxi(vxi, prt);
 #if CALC_J == CALC_J_1VB_2D
   // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0)
-  push_xi(prt, vxi, .5f * prm.dt);
+  push_xi(prt, vxi, .5f * c_prm.dt);
   
   // OUT OF PLANE CURRENT DENSITY AT (n+1.0)*dt
   calc_j_oop(curr_cache, prt, vxi);
   
   // x^(n+1), p^(n+1) -> x^(n+1.5), p^(n+1)
-  push_xi(prt, vxi, .5f * prm.dt);
+  push_xi(prt, vxi, .5f * c_prm.dt);
 #else
   // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0)
-  push_xi(prt, vxi, prm.dt);
+  push_xi(prt, vxi, c_prm.dt);
 #endif
   
   int lf[3];

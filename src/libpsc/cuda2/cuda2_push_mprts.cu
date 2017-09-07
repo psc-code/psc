@@ -163,6 +163,7 @@ push_mprts_loop(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 void
 SFX(cuda2_1vbec_push_mprts)(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
+  c_prm_set(ppsc);
   params_1vb_set(ppsc, mprts, mflds);
 
 #ifdef __CUDACC__

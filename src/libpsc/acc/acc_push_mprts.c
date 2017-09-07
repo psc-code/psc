@@ -35,6 +35,7 @@ push_mprts_loop(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 void
 SFX(acc_1vbec_push_mprts)(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
+  c_prm_set(ppsc);
   params_1vb_set(ppsc, mprts, mflds);
   psc_mfields_zero_range(mflds, JXI, JXI + 3);
   push_mprts_loop(mprts, mflds);

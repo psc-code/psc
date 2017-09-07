@@ -52,8 +52,8 @@ SFX(psc_push_particles_push_mprts)(struct psc_push_particles *push,
 				   struct psc_mparticles *mprts,
 				   struct psc_mfields *mflds)
 {
-  params_1vb_set(ppsc, NULL, NULL);
   c_prm_set(ppsc);
+  params_1vb_set(ppsc, NULL, NULL);
   for (int p = 0; p < mprts->nr_patches; p++) {
     fields_t flds = fields_t_mflds(mflds, p);
 

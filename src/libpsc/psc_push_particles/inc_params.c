@@ -7,6 +7,7 @@
 #define MAX_NR_KINDS (10)
 
 struct const_params {
+  particle_real_t dt; // FIXME, do we need both dt and dqs? or maybe get rid of xl/yl/zl
   particle_real_t dqs;
   particle_real_t fnqs;
 #if (DIM & DIM_X)
@@ -28,7 +29,6 @@ struct const_params {
 
 struct params_1vb {
   // particle-related
-  particle_real_t dt;
   particle_real_t fnqs, fnqxs, fnqys, fnqzs;
   particle_real_t dxi[3];
   particle_real_t dq_kind[MAX_NR_KINDS];
@@ -42,19 +42,21 @@ struct params_1vb {
 CUDA_CONSTANT static struct const_params c_prm;
 CUDA_CONSTANT static struct params_1vb prm;
 
+// ----------------------------------------------------------------------
+// c_prm_set
+
 static void
 c_prm_set(struct psc *psc)
 {
   struct const_params prm;
 
-  particle_real_t dt = psc->dt;
-
-  prm.dqs = .5f * ppsc->coeff.eta * dt;
+  prm.dt = psc->dt;
+  prm.dqs = .5f * ppsc->coeff.eta * prm.dt;
   prm.fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
 
-  IF_DIM_X( prm.xl = .5f * dt; );
-  IF_DIM_Y( prm.yl = .5f * dt; );
-  IF_DIM_Z( prm.zl = .5f * dt; );
+  IF_DIM_X( prm.xl = .5f * prm.dt; );
+  IF_DIM_Y( prm.yl = .5f * prm.dt; );
+  IF_DIM_Z( prm.zl = .5f * prm.dt; );
 
   assert(psc->nr_patches > 0);
 
@@ -62,9 +64,9 @@ c_prm_set(struct psc *psc)
   IF_DIM_Y( prm.dyi = 1.f / psc->patch[0].dx[1]; );
   IF_DIM_Z( prm.dzi = 1.f / psc->patch[0].dx[2]; );
 
-  IF_DIM_X( prm.fnqxs = ppsc->patch[0].dx[0] * prm.fnqs / dt; );
-  IF_DIM_Y( prm.fnqys = ppsc->patch[0].dx[1] * prm.fnqs / dt; );
-  IF_DIM_Z( prm.fnqzs = ppsc->patch[0].dx[2] * prm.fnqs / dt; );
+  IF_DIM_X( prm.fnqxs = ppsc->patch[0].dx[0] * prm.fnqs / prm.dt; );
+  IF_DIM_Y( prm.fnqys = ppsc->patch[0].dx[1] * prm.fnqs / prm.dt; );
+  IF_DIM_Z( prm.fnqzs = ppsc->patch[0].dx[2] * prm.fnqs / prm.dt; );
 
 #ifndef __CUDACC__
   c_prm = prm;
@@ -82,7 +84,8 @@ params_1vb_set(struct psc *psc,
 {
   struct params_1vb params;
 
-  params.dt = psc->dt;
+  particle_real_t dt = psc->dt;
+
   for (int d = 0; d < 3; d++) {
     params.dxi[d] = 1.f / ppsc->patch[0].dx[d];
   }
@@ -95,14 +98,14 @@ params_1vb_set(struct psc *psc,
 #endif
   params.fnqxs = params.fnqs;
 #else
-  params.fnqxs = ppsc->patch[0].dx[0] * params.fnqs / params.dt;
+  params.fnqxs = ppsc->patch[0].dx[0] * params.fnqs / dt;
 #endif
-  params.fnqys = ppsc->patch[0].dx[1] * params.fnqs / params.dt;
-  params.fnqzs = ppsc->patch[0].dx[2] * params.fnqs / params.dt;
+  params.fnqys = ppsc->patch[0].dx[1] * params.fnqs / dt;
+  params.fnqzs = ppsc->patch[0].dx[2] * params.fnqs / dt;
 
   assert(psc->nr_kinds <= MAX_NR_KINDS);
   for (int k = 0; k < ppsc->nr_kinds; k++) {
-    params.dq_kind[k] = .5f * ppsc->coeff.eta * params.dt * ppsc->kinds[k].q / ppsc->kinds[k].m;
+    params.dq_kind[k] = .5f * ppsc->coeff.eta * dt * ppsc->kinds[k].q / ppsc->kinds[k].m;
   }
 
   if (mprts && mprts->nr_patches > 0) {
