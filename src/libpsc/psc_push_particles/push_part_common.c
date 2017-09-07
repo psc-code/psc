@@ -62,17 +62,7 @@
 
 #endif
 
-// ----------------------------------------------------------------------
-// calc_v
-
-static inline void
-calc_v(particle_real_t *v, const particle_real_t *p)
-{
-  particle_real_t root = 1.f / particle_real_sqrt(1.f + sqr(p[0]) + sqr(p[1]) + sqr(p[2]));
-  for (int d = 0; d < 3; d++) {
-    v[d] = p[d] * root;
-  }
-}
+#include "inc_push.c"
 
 // ----------------------------------------------------------------------
 // push_x

@@ -196,7 +196,7 @@ push_one(mprts_array_t mprts_arr, int n,
   push_pxi(prt, exq, eyq, ezq, hxq, hyq, hzq, dq);
 
   particle_real_t vxi[3];
-  calc_vxi(vxi, &particle_px(prt));
+  calc_v(vxi, &particle_px(prt));
 #if CALC_J == CALC_J_1VB_2D
   // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0)
   push_xi(prt, vxi, .5f * c_prm.dt);

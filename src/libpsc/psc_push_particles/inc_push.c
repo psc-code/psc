@@ -1,19 +1,19 @@
 
 // ----------------------------------------------------------------------
-// calc_vxi
+// calc_v
 
 CUDA_DEVICE static inline void
-calc_vxi(particle_real_t vxi[3], particle_real_t px[3])
+calc_v(particle_real_t v[3], const particle_real_t p[3])
 {
 #ifdef __CUDACC__
-  particle_real_t root = rsqrt(1.f + sqr(px[0]) + sqr(px[1]) + sqr(px[2]));
+  particle_real_t root = rsqrt(1.f + sqr(p[0]) + sqr(p[1]) + sqr(p[2]));
 #else
   particle_real_t root = 1.f 
-    / particle_real_sqrt(1.f + sqr(px[0]) + sqr(px[1]) + sqr(px[2]));
+    / particle_real_sqrt(1.f + sqr(p[0]) + sqr(p[1]) + sqr(p[2]));
 #endif
-  vxi[0] = px[0] * root;
-  vxi[1] = px[1] * root;
-  vxi[2] = px[2] * root;
+  for (int d = 0; d < 3; d++) {
+    v[d] = p[d] * root;
+  }
 }
 
 // ----------------------------------------------------------------------
