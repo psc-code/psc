@@ -12,6 +12,7 @@
 #define CACHE_EM_J 1
 
 #include "inc_params.c"
+#include "inc_interpolate.c"
 
 // ----------------------------------------------------------------------
 
@@ -83,101 +84,6 @@
 
 // ----------------------------------------------------------------------
 // interpolation
-
-#if ORDER == ORDER_1ST
-
-#if DIM == DIM_XZ
-#define IP_FIELD(flds, m, gx, gy, gz)					\
-  (gz##z.v0*(gx##x.v0*_F3(flds, m, l##gx##1  ,0,l##gz##3  ) +		\
-	     gx##x.v1*_F3(flds, m, l##gx##1+1,0,l##gz##3  )) +		\
-   gz##z.v1*(gx##x.v0*_F3(flds, m, l##gx##1  ,0,l##gz##3+1) +		\
-	     gx##x.v1*_F3(flds, m, l##gx##1+1,0,l##gz##3+1)))
-#elif DIM == DIM_YZ
-#define IP_FIELD(flds, m, gx, gy, gz)					\
-  (gz##z.v0*(gy##y.v0*_F3(flds, m, 0,l##gy##2  ,l##gz##3  ) +		\
-	     gy##y.v1*_F3(flds, m, 0,l##gy##2+1,l##gz##3  )) +		\
-   gz##z.v1*(gy##y.v0*_F3(flds, m, 0,l##gy##2  ,l##gz##3+1) +		\
-	     gy##y.v1*_F3(flds, m, 0,l##gy##2+1,l##gz##3+1)))
-#endif
-
-#else
-
-#if DIM == DIM_Y
-#define IP_FIELD(flds, m, gx, gy, gz)					\
-  (gy##y.vm*_F3(flds, m, 0,l##gy##2-1,0) +				\
-   gy##y.v0*_F3(flds, m, 0,l##gy##2  ,0) +				\
-   gy##y.vp*_F3(flds, m, 0,l##gy##2+1,0))
-#elif DIM == DIM_Z
-#define IP_FIELD(flds, m, gx, gy, gz)					\
-  (gz##z.vm*_F3(flds, m, 0,0,l##gz##3-1) +				\
-   gz##z.v0*_F3(flds, m, 0,0,l##gz##3  ) +				\
-   gz##z.vp*_F3(flds, m, 0,0,l##gz##3+1))
-#elif DIM == DIM_XY
-#define IP_FIELD(flds, m, gx, gy, gz)					\
-  (gy##y.vm*(gx##x.vm*_F3(flds, m, l##gx##1-1,l##gy##2-1,0) +		\
-	     gx##x.v0*_F3(flds, m, l##gx##1  ,l##gy##2-1,0) +		\
-	     gx##x.vp*_F3(flds, m, l##gx##1+1,l##gy##2-1,0)) +		\
-   gy##y.v0*(gx##x.vm*_F3(flds, m, l##gx##1-1,l##gy##2  ,0) +		\
-	     gx##x.v0*_F3(flds, m, l##gx##1  ,l##gy##2  ,0) +		\
-	     gx##x.vp*_F3(flds, m, l##gx##1+1,l##gy##2  ,0)) +		\
-   gy##y.vp*(gx##x.vm*_F3(flds, m, l##gx##1-1,l##gy##2+1,0) +		\
-	     gx##x.v0*_F3(flds, m, l##gx##1  ,l##gy##2+1,0) +		\
-	     gx##x.vp*_F3(flds, m, l##gx##1+1,l##gy##2+1,0)))
-#elif DIM == DIM_XZ
-#define IP_FIELD(flds, m, gx, gy, gz)					\
-  (gz##z.vm*(gx##x.vm*_F3(flds, m, l##gx##1-1,0,l##gz##3-1) +		\
-	     gx##x.v0*_F3(flds, m, l##gx##1  ,0,l##gz##3-1) +		\
-	     gx##x.vp*_F3(flds, m, l##gx##1+1,0,l##gz##3-1)) +		\
-   gz##z.v0*(gx##x.vm*_F3(flds, m, l##gx##1-1,0,l##gz##3  ) +		\
-	     gx##x.v0*_F3(flds, m, l##gx##1  ,0,l##gz##3  ) +		\
-	     gx##x.vp*_F3(flds, m, l##gx##1+1,0,l##gz##3  )) +		\
-   gz##z.vp*(gx##x.vm*_F3(flds, m, l##gx##1-1,0,l##gz##3+1) +		\
-	     gx##x.v0*_F3(flds, m, l##gx##1  ,0,l##gz##3+1) +		\
-	     gx##x.vp*_F3(flds, m, l##gx##1+1,0,l##gz##3+1)))
-#elif DIM == DIM_YZ
-#define IP_FIELD(flds, m, gx, gy, gz)					\
-  (gz##z.vm*(gy##y.vm*_F3(flds, m, 0,l##gy##2-1,l##gz##3-1) +		\
-	     gy##y.v0*_F3(flds, m, 0,l##gy##2  ,l##gz##3-1) +		\
-	     gy##y.vp*_F3(flds, m, 0,l##gy##2+1,l##gz##3-1)) +		\
-   gz##z.v0*(gy##y.vm*_F3(flds, m, 0,l##gy##2-1,l##gz##3  ) +		\
-	     gy##y.v0*_F3(flds, m, 0,l##gy##2  ,l##gz##3  ) +		\
-	     gy##y.vp*_F3(flds, m, 0,l##gy##2+1,l##gz##3  )) +		\
-   gz##z.vp*(gy##y.vm*_F3(flds, m, 0,l##gy##2-1,l##gz##3+1) +		\
-	     gy##y.v0*_F3(flds, m, 0,l##gy##2  ,l##gz##3+1) +		\
-	     gy##y.vp*_F3(flds, m, 0,l##gy##2+1,l##gz##3+1)))
-#elif DIM == DIM_XYZ
-#define IP_FIELD(flds, m, gx, gy, gz)					\
-  (gz##z.vm*(gy##y.vm*(gx##x.vm*_F3(flds, m, l##gx##1-1,l##gy##2-1,l##gz##3-1) + \
-		       gx##x.v0*_F3(flds, m, l##gx##1  ,l##gy##2-1,l##gz##3-1) + \
-		       gx##x.vp*_F3(flds, m, l##gx##1+1,l##gy##2-1,l##gz##3-1)) + \
-	     gy##y.v0*(gx##x.vm*_F3(flds, m, l##gx##1-1,l##gy##2  ,l##gz##3-1) + \
-		       gx##x.v0*_F3(flds, m, l##gx##1  ,l##gy##2  ,l##gz##3-1) + \
-		       gx##x.vp*_F3(flds, m, l##gx##1+1,l##gy##2  ,l##gz##3-1)) + \
-	     gy##y.vp*(gx##x.vm*_F3(flds, m, l##gx##1-1,l##gy##2+1,l##gz##3-1) + \
-		       gx##x.v0*_F3(flds, m, l##gx##1  ,l##gy##2+1,l##gz##3-1) + \
-		       gx##x.vp*_F3(flds, m, l##gx##1+1,l##gy##2+1,l##gz##3-1))) + \
-   gz##z.v0*(gy##y.vm*(gx##x.vm*_F3(flds, m, l##gx##1-1,l##gy##2-1,l##gz##3  ) + \
-		       gx##x.v0*_F3(flds, m, l##gx##1  ,l##gy##2-1,l##gz##3  ) + \
-		       gx##x.vp*_F3(flds, m, l##gx##1+1,l##gy##2-1,l##gz##3  )) + \
-	     gy##y.v0*(gx##x.vm*_F3(flds, m, l##gx##1-1,l##gy##2  ,l##gz##3  ) + \
-		       gx##x.v0*_F3(flds, m, l##gx##1  ,l##gy##2  ,l##gz##3  ) + \
-		       gx##x.vp*_F3(flds, m, l##gx##1+1,l##gy##2  ,l##gz##3  )) + \
-	     gy##y.vp*(gx##x.vm*_F3(flds, m, l##gx##1-1,l##gy##2+1,l##gz##3  ) + \
-		       gx##x.v0*_F3(flds, m, l##gx##1  ,l##gy##2+1,l##gz##3  ) + \
-		       gx##x.vp*_F3(flds, m, l##gx##1+1,l##gy##2+1,l##gz##3  ))) + \
-   gz##z.vp*(gy##y.vm*(gx##x.vm*_F3(flds, m, l##gx##1-1,l##gy##2-1,l##gz##3+1) + \
-		       gx##x.v0*_F3(flds, m, l##gx##1  ,l##gy##2-1,l##gz##3+1) + \
-		       gx##x.vp*_F3(flds, m, l##gx##1+1,l##gy##2-1,l##gz##3+1)) + \
-	     gy##y.v0*(gx##x.vm*_F3(flds, m, l##gx##1-1,l##gy##2  ,l##gz##3+1) + \
-		       gx##x.v0*_F3(flds, m, l##gx##1  ,l##gy##2  ,l##gz##3+1) + \
-		       gx##x.vp*_F3(flds, m, l##gx##1+1,l##gy##2  ,l##gz##3+1)) + \
-	     gy##y.vp*(gx##x.vm*_F3(flds, m, l##gx##1-1,l##gy##2+1,l##gz##3+1) + \
-		       gx##x.v0*_F3(flds, m, l##gx##1  ,l##gy##2+1,l##gz##3+1) + \
-		       gx##x.vp*_F3(flds, m, l##gx##1+1,l##gy##2+1,l##gz##3+1))))
-
-#endif
-
-#endif // ORDER
 
 struct ip_coeff {
 #if ORDER == ORDER_1ST
