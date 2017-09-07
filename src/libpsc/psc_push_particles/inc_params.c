@@ -12,15 +12,6 @@ struct const_params {
   particle_real_t fnqs;
   particle_real_t fnqxs, fnqys, fnqzs;
   particle_real_t dxi[3];
-#if (DIM & DIM_X)
-  particle_real_t xl;
-#endif
-#if (DIM & DIM_Y)
-  particle_real_t yl;
-#endif
-#if (DIM & DIM_Z)
-  particle_real_t zl;
-#endif
 };
 
 struct params_1vb {
@@ -47,10 +38,6 @@ c_prm_set(struct psc *psc)
   prm.dt = psc->dt;
   prm.dqs = .5f * ppsc->coeff.eta * prm.dt;
   prm.fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
-
-  IF_DIM_X( prm.xl = .5f * prm.dt; );
-  IF_DIM_Y( prm.yl = .5f * prm.dt; );
-  IF_DIM_Z( prm.zl = .5f * prm.dt; );
 
   assert(psc->nr_patches > 0);
 

@@ -80,9 +80,9 @@ calc_v(particle_real_t *v, const particle_real_t *p)
 static inline void
 push_x(particle_real_t *x, const particle_real_t *v)
 {
-  IF_DIM_X( x[0] += v[0] * c_prm.xl; );
-  IF_DIM_Y( x[1] += v[1] * c_prm.yl; );
-  IF_DIM_Z( x[2] += v[2] * c_prm.zl; );
+  IF_DIM_X( x[0] += v[0] * .5f * c_prm.dt; );
+  IF_DIM_Y( x[1] += v[1] * .5f * c_prm.dt; );
+  IF_DIM_Z( x[2] += v[2] * .5f * c_prm.dt; );
 }
 
 // ----------------------------------------------------------------------
