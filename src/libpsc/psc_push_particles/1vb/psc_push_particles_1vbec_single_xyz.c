@@ -9,7 +9,7 @@
 #include "../inc_defs.h"
 
 #define CALC_J CALC_J_1VB_SPLIT
-#define INTERPOLATE_1ST INTERPOLATE_1ST_EC
+#define IP_VARIANT IP_VARIANT_EC
 
 #define psc_push_particles_push_mprts_xyz psc_push_particles_1vbec_single_push_mprts_xyz
 

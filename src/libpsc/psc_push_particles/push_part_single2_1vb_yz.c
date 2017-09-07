@@ -10,7 +10,6 @@
 
 #define ORDER ORDER_1ST
 #define CALC_J CALC_J_1VB_2D
-#define INTERPOLATE_1ST INTERPOLATE_1ST_STD
 #define EXT_PREPARE_SORT
 
 #include "1vb.c"

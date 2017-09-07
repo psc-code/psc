@@ -1,6 +1,12 @@
 
 #include "psc_debug.h"
 
+#if IP_VARIANT == IP_VARIANT_EC
+#define INTERPOLATE_1ST INTERPOLATE_1ST_EC
+#else
+#define INTERPOLATE_1ST INTERPOLATE_1ST_STD
+#endif
+
 // ----------------------------------------------------------------------
 // interpolation
 

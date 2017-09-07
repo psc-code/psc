@@ -39,6 +39,7 @@
 // IP_VARIANT
 
 #define IP_VARIANT_SFF 1
+#define IP_VARIANT_EC 2
 
 // ----------------------------------------------------------------------
 // CURR_CACHE
