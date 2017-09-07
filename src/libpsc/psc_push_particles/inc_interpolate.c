@@ -1,12 +1,6 @@
 
 #include "psc_debug.h"
 
-#if IP_VARIANT == IP_VARIANT_EC
-#define INTERPOLATE_1ST INTERPOLATE_1ST_EC
-#else
-#define INTERPOLATE_1ST INTERPOLATE_1ST_STD
-#endif
-
 // ----------------------------------------------------------------------
 // interpolation
 
@@ -118,37 +112,13 @@ struct ip_coeff {
 
 #endif // ORDER
 
-#if DIM == DIM_YZ
 
-#define INTERPOLATE_1ST_STD(pf, exq, eyq, ezq, hxq, hyq, hzq)		\
-  do {									\
-    particle_real_t g0y = 1.f - og[1];					\
-    particle_real_t g0z = 1.f - og[2];					\
-    particle_real_t g1y = og[1];					\
-    particle_real_t g1z = og[2];					\
-    									\
-    particle_real_t h0y = 1.f - oh[1];					\
-    particle_real_t h0z = 1.f - oh[2];					\
-    particle_real_t h1y = oh[1];					\
-    particle_real_t h1z = oh[2];					\
-    									\
-    exq = INTERPOLATE_FIELD_1ST(pf, EX, g, g);				\
-    eyq = INTERPOLATE_FIELD_1ST(pf, EY, h, g);				\
-    ezq = INTERPOLATE_FIELD_1ST(pf, EZ, g, h);				\
-    									\
-    hxq = INTERPOLATE_FIELD_1ST(pf, HX, h, h);				\
-    hyq = INTERPOLATE_FIELD_1ST(pf, HY, g, h);				\
-    hzq = INTERPOLATE_FIELD_1ST(pf, HZ, h, g);				\
-    									\
-    assert_finite(exq); assert_finite(eyq); assert_finite(ezq);		\
-    assert_finite(hxq); assert_finite(hyq); assert_finite(hzq);		\
-  } while (0)
-
-#endif
+#if ORDER == ORDER_1ST
 
 #if DIM == DIM_YZ
 
-#define INTERPOLATE_1ST_EC(pf, exq, eyq, ezq, hxq, hyq, hzq)        	\
+#if IP_VARIANT == IP_VARIANT_EC
+#define INTERPOLATE_1ST(pf, exq, eyq, ezq, hxq, hyq, hzq)        	\
   do {									\
     particle_real_t g0y = 1.f - og[1];					\
     particle_real_t g0z = 1.f - og[2];					\
@@ -173,10 +143,36 @@ struct ip_coeff {
     assert_finite(exq); assert_finite(eyq); assert_finite(ezq);		\
     assert_finite(hxq); assert_finite(hyq); assert_finite(hzq);		\
   } while (0)
+#else
+#define INTERPOLATE_1ST(pf, exq, eyq, ezq, hxq, hyq, hzq)		\
+  do {									\
+    particle_real_t g0y = 1.f - og[1];					\
+    particle_real_t g0z = 1.f - og[2];					\
+    particle_real_t g1y = og[1];					\
+    particle_real_t g1z = og[2];					\
+    									\
+    particle_real_t h0y = 1.f - oh[1];					\
+    particle_real_t h0z = 1.f - oh[2];					\
+    particle_real_t h1y = oh[1];					\
+    particle_real_t h1z = oh[2];					\
+    									\
+    exq = INTERPOLATE_FIELD_1ST(pf, EX, g, g);				\
+    eyq = INTERPOLATE_FIELD_1ST(pf, EY, h, g);				\
+    ezq = INTERPOLATE_FIELD_1ST(pf, EZ, g, h);				\
+    									\
+    hxq = INTERPOLATE_FIELD_1ST(pf, HX, h, h);				\
+    hyq = INTERPOLATE_FIELD_1ST(pf, HY, g, h);				\
+    hzq = INTERPOLATE_FIELD_1ST(pf, HZ, h, g);				\
+    									\
+    assert_finite(exq); assert_finite(eyq); assert_finite(ezq);		\
+    assert_finite(hxq); assert_finite(hyq); assert_finite(hzq);		\
+  } while (0)
+#endif
 
 #elif DIM == DIM_XYZ
 
-#define INTERPOLATE_1ST_EC(pf, exq, eyq, ezq, hxq, hyq, hzq)		\
+#if IP_VARIANT == IP_VARIANT_EC
+#define INTERPOLATE_1ST(pf, exq, eyq, ezq, hxq, hyq, hzq)		\
   do {									\
     particle_real_t g0x = 1.f - og[0];					\
     particle_real_t g0y = 1.f - og[1];					\
@@ -212,8 +208,11 @@ struct ip_coeff {
     assert_finite(exq); assert_finite(eyq); assert_finite(ezq);		\
     assert_finite(hxq); assert_finite(hyq); assert_finite(hzq);		\
   } while (0)
+#endif
 
 #endif
+
+#endif // ORDER == ORDER_1ST
 
 // ======================================================================
 // IP_VARIANT SFF

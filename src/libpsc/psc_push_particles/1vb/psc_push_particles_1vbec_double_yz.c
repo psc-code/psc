@@ -8,8 +8,9 @@
 
 #include "../inc_defs.h"
 
-#define CALC_J CALC_J_1VB_VAR1
+#define ORDER ORDER_1ST
 #define IP_VARIANT IP_VARIANT_EC
+#define CALC_J CALC_J_1VB_VAR1
 
 #define psc_push_particles_push_mprts_yz psc_push_particles_1vbec_double_push_mprts_yz
 
