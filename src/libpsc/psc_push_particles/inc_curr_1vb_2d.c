@@ -61,7 +61,7 @@ calc_j_oop(curr_cache_t curr_cache, particle_t *prt, particle_real_t *vxi)
   particle_real_t of[3];
   find_idx_off_1st_rel(&particle_x(prt), lf, of, 0.f);
 
-  particle_real_t fnqx = vxi[0] * particle_qni_wni(prt) * prm.fnqxs;
+  particle_real_t fnqx = vxi[0] * particle_qni_wni(prt) * c_prm.fnqs;
   curr_cache_add(curr_cache, JXI, 0,lf[1]  ,lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnqx);
   curr_cache_add(curr_cache, JXI, 0,lf[1]+1,lf[2]  , (      of[1]) * (1.f - of[2]) * fnqx);
   curr_cache_add(curr_cache, JXI, 0,lf[1]  ,lf[2]+1, (1.f - of[1]) * (      of[2]) * fnqx);

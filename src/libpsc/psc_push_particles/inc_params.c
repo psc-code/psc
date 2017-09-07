@@ -29,7 +29,15 @@ struct const_params {
 
 struct params_1vb {
   // particle-related
-  particle_real_t fnqxs, fnqys, fnqzs;
+#if (DIM & DIM_X || CALC_J != CALC_J_1VB_2D)
+  particle_real_t fnqxs;
+#endif
+#if (DIM & DIM_Y)
+  particle_real_t fnqys;
+#endif
+#if (DIM & DIM_Z)
+  particle_real_t fnqzs;
+#endif
   particle_real_t dxi[3];
   particle_real_t dq_kind[MAX_NR_KINDS];
   int b_mx[3];
@@ -90,17 +98,15 @@ params_1vb_set(struct psc *psc,
     params.dxi[d] = 1.f / ppsc->patch[0].dx[d];
   }
 
-#if CALC_J == CALC_J_1VB_2D
-
-#if !(DIM == DIM_YZ)
+#if CALC_J == CALC_J_1VB_2D && DIM != DIM_YZ
 #error inc_params.c: CALC_J_1VB_2D only works for DIM_YZ
 #endif
-  params.fnqxs = c_prm.fnqs;
-#else
+
+#if (DIM & DIM_X || CALC_J != CALC_J_1VB_2D)
   params.fnqxs = ppsc->patch[0].dx[0] * c_prm.fnqs / dt;
 #endif
-  params.fnqys = ppsc->patch[0].dx[1] * c_prm.fnqs / dt;
-  params.fnqzs = ppsc->patch[0].dx[2] * c_prm.fnqs / dt;
+  IF_DIM_Y( params.fnqys = ppsc->patch[0].dx[1] * c_prm.fnqs / dt; );
+  IF_DIM_Z( params.fnqzs = ppsc->patch[0].dx[2] * c_prm.fnqs / dt; );
 
   assert(psc->nr_kinds <= MAX_NR_KINDS);
   for (int k = 0; k < ppsc->nr_kinds; k++) {
