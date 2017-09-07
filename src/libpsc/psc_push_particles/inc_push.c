@@ -3,9 +3,8 @@
 // calc_vxi
 
 CUDA_DEVICE static inline void
-calc_vxi(particle_real_t vxi[3], particle_t *prt)
+calc_vxi(particle_real_t vxi[3], particle_real_t px[3])
 {
-  particle_real_t *px = &particle_px(prt);
 #ifdef __CUDACC__
   particle_real_t root = rsqrt(1.f + sqr(px[0]) + sqr(px[1]) + sqr(px[2]));
 #else
