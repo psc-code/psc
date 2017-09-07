@@ -210,14 +210,14 @@ struct ip_coeff {
 #endif
 
 // ======================================================================
-// VARIANT SFF
+// IP_VARIANT SFF
 
-#if VARIANT == VARIANT_SFF
+#if IP_VARIANT == IP_VARIANT_SFF
 
 // FIXME, calculation of f_avg could be done at the level where we do caching, too
 // (if that survives, anyway...)
 
-#define VARIANT_SFF_PREP					\
+#define IP_VARIANT_SFF_PREP					\
   struct psc_patch *patch = &ppsc->patch[p];			\
   								\
   /* FIXME, eventually no ghost points should be needed (?) */	\
@@ -237,7 +237,7 @@ struct ip_coeff {
     }									\
   }
 
-#define VARIANT_SFF_POST			\
+#define IP_VARIANT_SFF_POST			\
   fields_t_dtor(&flds_avg)
 
 #define INTERPOLATE_FIELDS						\
@@ -251,8 +251,8 @@ struct ip_coeff {
 			   IP_FIELD(flds_avg, HZ-EX, g, g, g), }
 #else
 
-#define VARIANT_SFF_PREP do {} while (0)
-#define VARIANT_SFF_POST do {} while (0)
+#define IP_VARIANT_SFF_PREP do {} while (0)
+#define IP_VARIANT_SFF_POST do {} while (0)
 #define INTERPOLATE_FIELDS						\
   particle_real_t E[3] = { IP_FIELD(flds, EX, h, g, g),			\
 			   IP_FIELD(flds, EY, g, h, g),			\

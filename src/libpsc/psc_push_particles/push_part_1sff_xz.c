@@ -8,6 +8,6 @@
 
 #define DIM DIM_XZ
 #define ORDER ORDER_1ST
-#define VARIANT VARIANT_SFF
+#define IP_VARIANT IP_VARIANT_SFF
 #include "push_part_common.c"
 

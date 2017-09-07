@@ -14,7 +14,7 @@
 #if ORDER == ORDER_1ST
 
 #if DIM == DIM_XZ
-#if VARIANT == VARIANT_SFF
+#if IP_VARIANT == IP_VARIANT_SFF
 #define SFX(x) x ## _1sff_xz
 #define psc_push_particles_push_mprts
 #define do_push_part do_push_part_1sff_xz
@@ -491,7 +491,7 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
 
   c_prm_set(ppsc);
 
-  VARIANT_SFF_PREP;
+  IP_VARIANT_SFF_PREP;
   
   PARTICLE_ITER_LOOP(prt_iter, prts.begin, prts.end) {
     particle_t *part = particle_iter_deref(prt_iter);
@@ -552,7 +552,7 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
     CURRENT;
   }
 
-  VARIANT_SFF_POST;
+  IP_VARIANT_SFF_POST;
 }
 
 #endif
