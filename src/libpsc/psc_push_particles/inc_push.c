@@ -17,34 +17,14 @@ calc_v(particle_real_t v[3], const particle_real_t p[3])
 }
 
 // ----------------------------------------------------------------------
-// push_xi
+// push_x
 
 CUDA_DEVICE static inline void
-push_xi(particle_t *prt, particle_real_t vxi[3], particle_real_t dt)
+push_x(particle_real_t x[3], const particle_real_t v[3], particle_real_t dt)
 {
-#if DIM == DIM_YZ
-
-#if PSC_PARTICLES_AS_CUDA2 || PSC_PARTICLES_AS_ACC
-  prt->xi[1] += vxi[1] * dt;
-  prt->xi[2] += vxi[2] * dt;
-#else
-  prt->yi += vxi[1] * dt;
-  prt->zi += vxi[2] * dt;
-#endif
-
-#elif DIM == DIM_XYZ
-
-#if PSC_PARTICLES_AS_CUDA2 || PSC_PARTICLES_AS_ACC
-  prt->xi[0] += vxi[0] * dt;
-  prt->xi[1] += vxi[1] * dt;
-  prt->xi[2] += vxi[2] * dt;
-#else
-  prt->xi += vxi[0] * dt;
-  prt->yi += vxi[1] * dt;
-  prt->zi += vxi[2] * dt;
-#endif
-
-#endif
+  IF_DIM_X( x[0] += v[0] * dt; );
+  IF_DIM_Y( x[1] += v[1] * dt; );
+  IF_DIM_Z( x[2] += v[2] * dt; );
 }
 
 // ----------------------------------------------------------------------
