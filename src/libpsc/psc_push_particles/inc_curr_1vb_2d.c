@@ -105,8 +105,8 @@ calc_j(curr_cache_t curr_cache, particle_real_t *xm, particle_real_t *xp,
     second_dir = 1 - first_dir;
   }
 
-  particle_real_t fnq[2] = { particle_qni_wni(prt) * prm.fnqys,
-			     particle_qni_wni(prt) * prm.fnqzs };
+  particle_real_t fnq[2] = { particle_qni_wni(prt) * c_prm.fnqys,
+			     particle_qni_wni(prt) * c_prm.fnqzs };
 
   if (first_dir >= 0) {
     off[1-first_dir] = 0;
