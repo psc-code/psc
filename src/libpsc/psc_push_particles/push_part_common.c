@@ -724,9 +724,9 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
     
     // CHARGE DENSITY FORM FACTOR AT (n+.5)*dt 
 
-    IF_DIM_X( DEPOSIT_AND_IP_COEFFS(lg1, lh1, gx, hx, 0, c_prm.dxi, s0x); );
-    IF_DIM_Y( DEPOSIT_AND_IP_COEFFS(lg2, lh2, gy, hy, 0, c_prm.dyi, s0y); );
-    IF_DIM_Z( DEPOSIT_AND_IP_COEFFS(lg3, lh3, gz, hz, 0, c_prm.dzi, s0z); );
+    IF_DIM_X( DEPOSIT_AND_IP_COEFFS(lg1, lh1, gx, hx, 0, c_prm.dxi[0], s0x); );
+    IF_DIM_Y( DEPOSIT_AND_IP_COEFFS(lg2, lh2, gy, hy, 0, c_prm.dxi[1], s0y); );
+    IF_DIM_Z( DEPOSIT_AND_IP_COEFFS(lg3, lh3, gz, hz, 0, c_prm.dxi[2], s0z); );
 
     // FIELD INTERPOLATION
 
@@ -746,9 +746,9 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
 
     // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt 
     ZERO_S1;
-    IF_DIM_X( DEPOSIT(x, k1, gx, 0, c_prm.dxi, s1x, lg1); );
-    IF_DIM_Y( DEPOSIT(x, k2, gy, 1, c_prm.dyi, s1y, lg2); );
-    IF_DIM_Z( DEPOSIT(x, k3, gz, 2, c_prm.dzi, s1z, lg3); );
+    IF_DIM_X( DEPOSIT(x, k1, gx, 0, c_prm.dxi[0], s1x, lg1); );
+    IF_DIM_Y( DEPOSIT(x, k2, gy, 1, c_prm.dxi[1], s1y, lg2); );
+    IF_DIM_Z( DEPOSIT(x, k3, gz, 2, c_prm.dxi[2], s1z, lg3); );
 
 #else
     push_x(x, vv);
@@ -759,9 +759,9 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
 
     // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt 
     ZERO_S1;
-    IF_DIM_X( DEPOSIT(xn, k1, gx, 0, c_prm.dxi, s1x, lg1); );
-    IF_DIM_Y( DEPOSIT(xn, k2, gy, 1, c_prm.dyi, s1y, lg2); );
-    IF_DIM_Z( DEPOSIT(xn, k3, gz, 2, c_prm.dzi, s1z, lg3); );
+    IF_DIM_X( DEPOSIT(xn, k1, gx, 0, c_prm.dxi[0], s1x, lg1); );
+    IF_DIM_Y( DEPOSIT(xn, k2, gy, 1, c_prm.dxi[1], s1y, lg2); );
+    IF_DIM_Z( DEPOSIT(xn, k3, gz, 2, c_prm.dxi[2], s1z, lg3); );
 #endif
     
     // CURRENT DENSITY AT (n+1.0)*dt

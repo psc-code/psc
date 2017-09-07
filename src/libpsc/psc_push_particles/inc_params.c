@@ -10,21 +10,19 @@ struct const_params {
   particle_real_t dt; // FIXME, do we need both dt and dqs? or maybe get rid of xl/yl/zl
   particle_real_t dqs;
   particle_real_t fnqs;
+  particle_real_t dxi[3];
 #if (DIM & DIM_X)
   particle_real_t xl;
-  particle_real_t dxi;
 #endif
 #if (DIM & DIM_X || CALC_J != CALC_J_1VB_2D)
   particle_real_t fnqxs;
 #endif
 #if (DIM & DIM_Y)
   particle_real_t yl;
-  particle_real_t dyi;
   particle_real_t fnqys;
 #endif
 #if (DIM & DIM_Z)
   particle_real_t zl;
-  particle_real_t dzi;
   particle_real_t fnqzs;
 #endif
 };
@@ -61,9 +59,9 @@ c_prm_set(struct psc *psc)
 
   assert(psc->nr_patches > 0);
 
-  IF_DIM_X( prm.dxi = 1.f / psc->patch[0].dx[0]; );
-  IF_DIM_Y( prm.dyi = 1.f / psc->patch[0].dx[1]; );
-  IF_DIM_Z( prm.dzi = 1.f / psc->patch[0].dx[2]; );
+  IF_DIM_X( prm.dxi[0] = 1.f / psc->patch[0].dx[0]; );
+  IF_DIM_Y( prm.dxi[1] = 1.f / psc->patch[0].dx[1]; );
+  IF_DIM_Z( prm.dxi[2] = 1.f / psc->patch[0].dx[2]; );
 
 #if (DIM & DIM_X || CALC_J != CALC_J_1VB_2D)
   prm.fnqxs = ppsc->patch[0].dx[0] * prm.fnqs / prm.dt;
