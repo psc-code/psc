@@ -65,37 +65,6 @@
 #include "inc_push.c"
 
 // ----------------------------------------------------------------------
-// push_p
-
-static inline void
-push_p(particle_real_t *p, particle_real_t *E, particle_real_t *H, particle_real_t dq)
-{
-  particle_real_t pxm = p[0] + dq * E[0];
-  particle_real_t pym = p[1] + dq * E[1];
-  particle_real_t pzm = p[2] + dq * E[2];
-
-  particle_real_t root = dq / particle_real_sqrt(1.f + pxm*pxm + pym*pym + pzm*pzm);
-  particle_real_t taux = H[0] * root;
-  particle_real_t tauy = H[1] * root;
-  particle_real_t tauz = H[2] * root;
-  
-  particle_real_t tau = 1.f / (1.f + taux*taux + tauy*tauy + tauz*tauz);
-  particle_real_t pxp = ((1.f+taux*taux-tauy*tauy-tauz*tauz)*pxm + 
-			 (2.f*taux*tauy+2.f*tauz)*pym + 
-			 (2.f*taux*tauz-2.f*tauy)*pzm)*tau;
-  particle_real_t pyp = ((2.f*taux*tauy-2.f*tauz)*pxm +
-			 (1.f-taux*taux+tauy*tauy-tauz*tauz)*pym +
-			 (2.f*tauy*tauz+2.f*taux)*pzm)*tau;
-  particle_real_t pzp = ((2.f*taux*tauz+2.f*tauy)*pxm +
-			 (2.f*tauy*tauz-2.f*taux)*pym +
-			 (1.f-taux*taux-tauy*tauy+tauz*tauz)*pzm)*tau;
-  
-  p[0] = pxp + dq * E[0];
-  p[1] = pyp + dq * E[1];
-  p[2] = pzp + dq * E[2];
-}
-
-// ----------------------------------------------------------------------
 // charge density 
 
 #if ORDER == ORDER_1ST

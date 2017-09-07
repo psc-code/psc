@@ -28,47 +28,35 @@ push_x(particle_real_t x[3], const particle_real_t v[3], particle_real_t dt)
 }
 
 // ----------------------------------------------------------------------
-// push_pxi
+// push_p
 
 CUDA_DEVICE static inline void
-push_pxi(particle_t *prt, particle_real_t exq, particle_real_t eyq, particle_real_t ezq,
-	 particle_real_t hxq, particle_real_t hyq, particle_real_t hzq, particle_real_t dq)
+push_p(particle_real_t p[3], const particle_real_t E[3], const particle_real_t H[3],
+       particle_real_t dq)
 {
-#if PSC_PARTICLES_AS_CUDA2 || PSC_PARTICLES_AS_ACC
-  particle_real_t pxm = prt->pxi[0] + dq*exq;
-  particle_real_t pym = prt->pxi[1] + dq*eyq;
-  particle_real_t pzm = prt->pxi[2] + dq*ezq;
-#else
-  particle_real_t pxm = prt->pxi + dq*exq;
-  particle_real_t pym = prt->pyi + dq*eyq;
-  particle_real_t pzm = prt->pzi + dq*ezq;
-#endif
-  
+  particle_real_t pxm = p[0] + dq * E[0];
+  particle_real_t pym = p[1] + dq * E[1];
+  particle_real_t pzm = p[2] + dq * E[2];
+
   particle_real_t root = dq / particle_real_sqrt(1.f + pxm*pxm + pym*pym + pzm*pzm);
-  particle_real_t taux = hxq*root;
-  particle_real_t tauy = hyq*root;
-  particle_real_t tauz = hzq*root;
+  particle_real_t taux = H[0] * root;
+  particle_real_t tauy = H[1] * root;
+  particle_real_t tauz = H[2] * root;
   
   particle_real_t tau = 1.f / (1.f + taux*taux + tauy*tauy + tauz*tauz);
   particle_real_t pxp = ((1.f+taux*taux-tauy*tauy-tauz*tauz)*pxm + 
-	       (2.f*taux*tauy+2.f*tauz)*pym + 
-	       (2.f*taux*tauz-2.f*tauy)*pzm)*tau;
+			 (2.f*taux*tauy+2.f*tauz)*pym + 
+			 (2.f*taux*tauz-2.f*tauy)*pzm)*tau;
   particle_real_t pyp = ((2.f*taux*tauy-2.f*tauz)*pxm +
-	       (1.f-taux*taux+tauy*tauy-tauz*tauz)*pym +
-	       (2.f*tauy*tauz+2.f*taux)*pzm)*tau;
+			 (1.f-taux*taux+tauy*tauy-tauz*tauz)*pym +
+			 (2.f*tauy*tauz+2.f*taux)*pzm)*tau;
   particle_real_t pzp = ((2.f*taux*tauz+2.f*tauy)*pxm +
-	       (2.f*tauy*tauz-2.f*taux)*pym +
-	       (1.f-taux*taux-tauy*tauy+tauz*tauz)*pzm)*tau;
+			 (2.f*tauy*tauz-2.f*taux)*pym +
+			 (1.f-taux*taux-tauy*tauy+tauz*tauz)*pzm)*tau;
   
-#if PSC_PARTICLES_AS_CUDA2 || PSC_PARTICLES_AS_ACC
-  prt->pxi[0] = pxp + dq * exq;
-  prt->pxi[1] = pyp + dq * eyq;
-  prt->pxi[2] = pzp + dq * ezq;
-#else
-  prt->pxi = pxp + dq * exq;
-  prt->pyi = pyp + dq * eyq;
-  prt->pzi = pzp + dq * ezq;
-#endif
+  p[0] = pxp + dq * E[0];
+  p[1] = pyp + dq * E[1];
+  p[2] = pzp + dq * E[2];
 }
 
 // ----------------------------------------------------------------------
