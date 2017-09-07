@@ -127,7 +127,7 @@ calc_j(curr_cache_t curr_cache, particle_real_t *xm, particle_real_t *xp,
   // deposit xm -> xp
   int idiff[3] = { 0, lf[1] - lg[1], lf[2] - lg[2] };			
   int i[3] = { 0, lg[1], lg[2] };					
-  particle_real_t dx[3] = { vxi[0] * c_prm.dt * prm.dxi[0], xp[1] - xm[1], xp[2] - xm[2] };
+  particle_real_t dx[3] = { vxi[0] * c_prm.dt * c_prm.dxi[0], xp[1] - xm[1], xp[2] - xm[2] };
   particle_real_t x[3] = { 0., xm[1] - (i[1] + .5f), xm[2] - (i[2] + .5f) }; 
 
   particle_real_t dx1[3];
