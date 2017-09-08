@@ -7,6 +7,7 @@
 
 #include "inc_params.c"
 #include "inc_push.c"
+#include "inc_cache.c"
 #include "inc_interpolate.c"
 
 // ----------------------------------------------------------------------

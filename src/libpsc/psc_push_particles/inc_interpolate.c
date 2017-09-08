@@ -22,15 +22,10 @@ struct ip_coeff {
 	     gx##x.v1*_F3(flds, m, l##gx##1+1,0,l##gz##3+1)))
 #elif DIM == DIM_YZ
 #define IP_FIELD(flds, m, gx, gy, gz)					\
-  (gz##z.v0*(gy##y.v0*_F3(flds, m, 0,l##gy##2  ,l##gz##3  ) +		\
-	     gy##y.v1*_F3(flds, m, 0,l##gy##2+1,l##gz##3  )) +		\
-   gz##z.v1*(gy##y.v0*_F3(flds, m, 0,l##gy##2  ,l##gz##3+1) +		\
-	     gy##y.v1*_F3(flds, m, 0,l##gy##2+1,l##gz##3+1)))
-#define INTERPOLATE_FIELD_1ST(flds, m, gy, gz)				\
-  (gz##0z*(gy##0y*F3_CACHE(flds, m, 0,l##gy[1]  ,l##gz[2]  ) +		\
-	   gy##1y*F3_CACHE(flds, m, 0,l##gy[1]+1,l##gz[2]  )) +		\
-   gz##1z*(gy##0y*F3_CACHE(flds, m, 0,l##gy[1]  ,l##gz[2]+1) +		\
-	   gy##1y*F3_CACHE(flds, m, 0,l##gy[1]+1,l##gz[2]+1)))
+  (gz##z.v0*(gy##y.v0*F3_CACHE(flds, m, 0,l##gy##2  ,l##gz##3  ) +	\
+	     gy##y.v1*F3_CACHE(flds, m, 0,l##gy##2+1,l##gz##3  )) +	\
+   gz##z.v1*(gy##y.v0*F3_CACHE(flds, m, 0,l##gy##2  ,l##gz##3+1) +	\
+	     gy##y.v1*F3_CACHE(flds, m, 0,l##gy##2+1,l##gz##3+1)))
 #endif
 
 #else
@@ -143,23 +138,28 @@ struct ip_coeff {
 #else
 #define INTERPOLATE_1ST(flds, E, H)					\
   do {									\
-    particle_real_t g0y = 1.f - og[1];					\
-    particle_real_t g0z = 1.f - og[2];					\
-    particle_real_t g1y = og[1];					\
-    particle_real_t g1z = og[2];					\
+    int lg2 = lg[1], lg3 = lg[2];					\
+    int lh2 = lh[1], lh3 = lh[2];					\
+									\
+    struct ip_coeff gy, gz;						\
+    gy.v0 = 1.f - og[1];						\
+    gz.v0 = 1.f - og[2];						\
+    gy.v1 = og[1];							\
+    gz.v1 = og[2];							\
     									\
-    particle_real_t h0y = 1.f - oh[1];					\
-    particle_real_t h0z = 1.f - oh[2];					\
-    particle_real_t h1y = oh[1];					\
-    particle_real_t h1z = oh[2];					\
+    struct ip_coeff hy, hz;						\
+    hy.v0 = 1.f - oh[1];						\
+    hz.v0 = 1.f - oh[2];						\
+    hy.v1 = oh[1];							\
+    hz.v1 = oh[2];							\
     									\
-    E[0] = INTERPOLATE_FIELD_1ST(flds, EX, g, g);			\
-    E[1] = INTERPOLATE_FIELD_1ST(flds, EY, h, g);			\
-    E[2] = INTERPOLATE_FIELD_1ST(flds, EZ, g, h);			\
+    E[0] = IP_FIELD(flds, EX, h, g, g);					\
+    E[1] = IP_FIELD(flds, EY, g, h, g);					\
+    E[2] = IP_FIELD(flds, EZ, g, g, h);					\
     									\
-    H[0] = INTERPOLATE_FIELD_1ST(flds, HX, h, h);			\
-    H[1] = INTERPOLATE_FIELD_1ST(flds, HY, g, h);			\
-    H[2] = INTERPOLATE_FIELD_1ST(flds, HZ, h, g);			\
+    H[0] = IP_FIELD(flds, HX, g, h, h);					\
+    H[1] = IP_FIELD(flds, HY, h, g, h);					\
+    H[2] = IP_FIELD(flds, HZ, h, h, g);					\
   } while (0)
 #endif
 
