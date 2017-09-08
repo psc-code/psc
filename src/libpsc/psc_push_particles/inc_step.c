@@ -189,7 +189,7 @@ push_one(mprts_array_t mprts_arr, int n,
   find_idx_off_1st_rel(&particle_x(prt), lh, oh, -.5f);
 
   particle_real_t E[3], H[3];
-  INTERPOLATE_1ST(em_cache, E[0], E[1], E[2], H[0], H[1], H[2]);
+  INTERPOLATE_1ST(em_cache, E, H);
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0)
   int kind = particle_kind(prt);
   particle_real_t dq = prm.dq_kind[kind];
