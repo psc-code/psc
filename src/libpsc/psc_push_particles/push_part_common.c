@@ -77,51 +77,6 @@
 #define S(s, off) s[off + S_OFF]
 
 // ----------------------------------------------------------------------
-// get_nint_remainder
-
-static inline void
-get_nint_remainder(int *lg1, particle_real_t *h1, particle_real_t u)
-{
-  int l = particle_real_nint(u);
-  *lg1 = l;
-  *h1 = l-u;
-}
-
-// ----------------------------------------------------------------------
-// get_fint_remainder
-
-static inline void
-get_fint_remainder(int *lg1, particle_real_t *h1, particle_real_t u)
-{
-  int l = particle_real_fint(u);
-  *lg1 = l;
-  *h1 = u-l;
-}
-
-// ----------------------------------------------------------------------
-// ip_coeff
-
-static inline void
-ip_coeff(int *lg, struct ip_coeff *gg, particle_real_t u)
-{
-  int l;
-  particle_real_t h;
-
-#if ORDER == ORDER_1ST
-  get_fint_remainder(&l, &h, u);
-  gg->v0 = 1.f - h;
-  gg->v1 = h;
-#elif ORDER == ORDER_2ND
-  get_nint_remainder(&l, &h, u);
-  gg->h  = h;
-  gg->vm = .5f * (.5f+h)*(.5f+h);
-  gg->v0 = .75f - h*h;
-  gg->vp = .5f * (.5f-h)*(.5f-h);
-#endif
-  *lg = l;
-}
-
-// ----------------------------------------------------------------------
 // ip_coeff_g
 
 static inline void

@@ -12,6 +12,53 @@ struct ip_coeff {
 #endif
 };
 
+// ----------------------------------------------------------------------
+// get_fint_remainder
+
+static inline void
+get_fint_remainder(int *lg, particle_real_t *h, particle_real_t u)
+{
+  int l = particle_real_fint(u);
+  *lg = l;
+  *h = u - l;
+}
+
+// ----------------------------------------------------------------------
+// get_nint_remainder
+
+static inline void
+get_nint_remainder(int *lg1, particle_real_t *h1, particle_real_t u)
+{
+  int l = particle_real_nint(u);
+  *lg1 = l;
+  *h1 = l-u;
+}
+
+// ----------------------------------------------------------------------
+// ip_coeff
+
+static inline void
+ip_coeff(int *lg, struct ip_coeff *gg, particle_real_t u)
+{
+  int l;
+  particle_real_t h;
+
+#if ORDER == ORDER_1ST
+  get_fint_remainder(&l, &h, u);
+  gg->v0 = 1.f - h;
+  gg->v1 = h;
+#elif ORDER == ORDER_2ND
+  get_nint_remainder(&l, &h, u);
+  gg->h  = h;
+  gg->vm = .5f * (.5f+h)*(.5f+h);
+  gg->v0 = .75f - h*h;
+  gg->vp = .5f * (.5f-h)*(.5f-h);
+#endif
+  *lg = l;
+}
+
+// ----------------------------------------------------------------------
+
 #if ORDER == ORDER_1ST
 
 #if DIM == DIM_XZ
@@ -115,44 +162,24 @@ struct ip_coeff {
 #if IP_VARIANT == IP_VARIANT_EC
 #define INTERPOLATE_1ST(flds, E, H)					\
   do {									\
-    particle_real_t g0y = 1.f - og[1];					\
-    particle_real_t g0z = 1.f - og[2];					\
-    particle_real_t g1y = og[1];					\
-    particle_real_t g1z = og[2];					\
+    E[0] = (gz.v0*(gy.v0*F3_CACHE(flds, EX, 0,lg2  ,lg3  ) +		\
+		   gy.v1*F3_CACHE(flds, EX, 0,lg2+1,lg3  )) +		\
+	    gz.v1*(gy.v0*F3_CACHE(flds, EX, 0,lg2  ,lg3+1) +		\
+		   gy.v1*F3_CACHE(flds, EX, 0,lg2+1,lg3+1)));		\
+    E[1] = (gz.v0*F3_CACHE(flds, EY, 0,lg2  ,lg3  ) +			\
+	    gz.v1*F3_CACHE(flds, EY, 0,lg2  ,lg3+1));			\
+    E[2] = (gy.v0*F3_CACHE(flds, EZ, 0,lg2  ,lg3  ) +			\
+	    gy.v1*F3_CACHE(flds, EZ, 0,lg2+1,lg3  ));			\
     									\
-    E[0] = (g0z*(g0y*F3_CACHE(flds, EX, 0,lg[1]  ,lg[2]  ) +		\
-		 g1y*F3_CACHE(flds, EX, 0,lg[1]+1,lg[2]  )) +		\
-	    g1z*(g0y*F3_CACHE(flds, EX, 0,lg[1]  ,lg[2]+1) +		\
-		 g1y*F3_CACHE(flds, EX, 0,lg[1]+1,lg[2]+1)));		\
-    E[1] = (g0z*F3_CACHE(flds, EY, 0,lg[1]  ,lg[2]  ) +			\
-	    g1z*F3_CACHE(flds, EY, 0,lg[1]  ,lg[2]+1));			\
-    E[2] = (g0y*F3_CACHE(flds, EZ, 0,lg[1]  ,lg[2]  ) +			\
-	    g1y*F3_CACHE(flds, EZ, 0,lg[1]+1,lg[2]  ));			\
-									\
-    H[0] = F3_CACHE(flds, HX, 0,lg[1]  ,lg[2]  );			\
-    H[1] = (g0y*F3_CACHE(flds, HY, 0,lg[1]  ,lg[2]  ) +			\
-	    g1y*F3_CACHE(flds, HY, 0,lg[1]+1,lg[2]  ));			\
-    H[2] = (g0z*F3_CACHE(flds, HZ, 0,lg[1]  ,lg[2]  ) +			\
-	    g1z*F3_CACHE(flds, HZ, 0,lg[1]  ,lg[2]+1));			\
+    H[0] = F3_CACHE(flds, HX, 0,lg2  ,lg3  );				\
+    H[1] = (gy.v0*F3_CACHE(flds, HY, 0,lg2  ,lg3  ) +			\
+	    gy.v1*F3_CACHE(flds, HY, 0,lg2+1,lg3  ));			\
+    H[2] = (gz.v0*F3_CACHE(flds, HZ, 0,lg2  ,lg3  ) +			\
+	    gz.v1*F3_CACHE(flds, HZ, 0,lg2  ,lg3+1));			\
   } while (0)
 #else
 #define INTERPOLATE_1ST(flds, E, H)					\
   do {									\
-    int lg2 = lg[1], lg3 = lg[2];					\
-    int lh2 = lh[1], lh3 = lh[2];					\
-									\
-    struct ip_coeff gy, gz;						\
-    gy.v0 = 1.f - og[1];						\
-    gz.v0 = 1.f - og[2];						\
-    gy.v1 = og[1];							\
-    gz.v1 = og[2];							\
-    									\
-    struct ip_coeff hy, hz;						\
-    hy.v0 = 1.f - oh[1];						\
-    hz.v0 = 1.f - oh[2];						\
-    hy.v1 = oh[1];							\
-    hz.v1 = oh[2];							\
-    									\
     E[0] = IP_FIELD(flds, EX, h, g, g);					\
     E[1] = IP_FIELD(flds, EY, g, h, g);					\
     E[2] = IP_FIELD(flds, EZ, g, g, h);					\
@@ -168,36 +195,29 @@ struct ip_coeff {
 #if IP_VARIANT == IP_VARIANT_EC
 #define INTERPOLATE_1ST(flds, E, H)					\
   do {									\
-    particle_real_t g0x = 1.f - og[0];					\
-    particle_real_t g0y = 1.f - og[1];					\
-    particle_real_t g0z = 1.f - og[2];					\
-    particle_real_t g1x = og[0];					\
-    particle_real_t g1y = og[1];					\
-    particle_real_t g1z = og[2];					\
+    E[0] = (gz.v0*(gy.v0*F3_CACHE(flds, EX, lg1  ,lg2  ,lg3  ) +	\
+		   gy.v1*F3_CACHE(flds, EX, lg1  ,lg2+1,lg3  )) +	\
+	    gz.v1*(gy.v0*F3_CACHE(flds, EX, lg1  ,lg2  ,lg3+1) +	\
+		   gy.v1*F3_CACHE(flds, EX, lg1  ,lg2+1,lg3+1)));	\
     									\
-    E[0] = (g0z*(g0y*F3_CACHE(flds, EX, lg[0]  ,lg[1]  ,lg[2]  ) +	\
-		 g1y*F3_CACHE(flds, EX, lg[0]  ,lg[1]+1,lg[2]  )) +	\
-	    g1z*(g0y*F3_CACHE(flds, EX, lg[0]  ,lg[1]  ,lg[2]+1) +	\
-		 g1y*F3_CACHE(flds, EX, lg[0]  ,lg[1]+1,lg[2]+1)));	\
-									\
-    E[1] = (g0x*(g0z*F3_CACHE(flds, EY, lg[0]  ,lg[1]  ,lg[2]  ) +	\
-		 g1z*F3_CACHE(flds, EY, lg[0]  ,lg[1]  ,lg[2]+1)) +	\
-	    g1x*(g0z*F3_CACHE(flds, EY, lg[0]+1,lg[1]  ,lg[2]  ) +	\
-		 g1z*F3_CACHE(flds, EY, lg[0]+1,lg[1]  ,lg[2]+1)));	\
+    E[1] = (gx.v0*(gz.v0*F3_CACHE(flds, EY, lg1  ,lg2  ,lg3  ) +	\
+		   gz.v1*F3_CACHE(flds, EY, lg1  ,lg2  ,lg3+1)) +	\
+	    gx.v1*(gz.v0*F3_CACHE(flds, EY, lg1+1,lg2  ,lg3  ) +	\
+		   gz.v1*F3_CACHE(flds, EY, lg1+1,lg2  ,lg3+1)));	\
     									\
-    E[2] = (g0y*(g0x*F3_CACHE(flds, EZ, lg[0]  ,lg[1]  ,lg[2]  ) +	\
-		 g1x*F3_CACHE(flds, EZ, lg[0]+1,lg[1]  ,lg[2]  )) +	\
-	    g1y*(g0x*F3_CACHE(flds, EZ, lg[0]  ,lg[1]+1,lg[2]  ) +	\
-		 g1x*F3_CACHE(flds, EZ, lg[0]+1,lg[1]+1,lg[2]  )));	\
+    E[2] = (gy.v0*(gx.v0*F3_CACHE(flds, EZ, lg1  ,lg2  ,lg3  ) +	\
+		   gx.v1*F3_CACHE(flds, EZ, lg1+1,lg2  ,lg3  )) +	\
+	    gy.v1*(gx.v0*F3_CACHE(flds, EZ, lg1  ,lg2+1,lg3  ) +	\
+		   gx.v1*F3_CACHE(flds, EZ, lg1+1,lg2+1,lg3  )));	\
+    									\
+    H[0] = (gx.v0*F3_CACHE(flds, HX, lg1  ,lg2  ,lg3  ) +		\
+	    gx.v1*F3_CACHE(flds, HX, lg1+1,lg2  ,lg3  ));		\
 									\
-    H[0] = (g0x*F3_CACHE(flds, HX, lg[0]  ,lg[1]  ,lg[2]  ) +		\
-	    g1x*F3_CACHE(flds, HX, lg[0]+1,lg[1]  ,lg[2]  ));		\
+    H[1] = (gy.v0*F3_CACHE(flds, HY, lg1  ,lg2  ,lg3  ) +		\
+	    gy.v1*F3_CACHE(flds, HY, lg1  ,lg2+1,lg3  ));		\
 									\
-    H[1] = (g0y*F3_CACHE(flds, HY, lg[0]  ,lg[1]  ,lg[2]  ) +		\
-	    g1y*F3_CACHE(flds, HY, lg[0]  ,lg[1]+1,lg[2]  ));		\
-									\
-    H[2] = (g0z*F3_CACHE(flds, HZ, lg[0]  ,lg[1]  ,lg[2]  ) +		\
-	    g1z*F3_CACHE(flds, HZ, lg[0]  ,lg[1]  ,lg[2]+1));		\
+    H[2] = (gz.v0*F3_CACHE(flds, HZ, lg1  ,lg2  ,lg3  ) +		\
+	    gz.v1*F3_CACHE(flds, HZ, lg1  ,lg2  ,lg3+1));		\
   } while (0)
 #endif
 
