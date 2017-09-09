@@ -197,7 +197,7 @@ push_one(mprts_array_t mprts_arr, int n,
   
   // FIELD INTERPOLATION
 
-  INTERPOLATE_1ST(em_cache, E, H);
+  INTERPOLATE_FIELDS(em_cache);
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0)
   int kind = particle_kind(prt);

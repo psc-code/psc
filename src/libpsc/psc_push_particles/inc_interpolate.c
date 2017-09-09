@@ -235,14 +235,6 @@ ip_coeff(int *lg, struct ip_coeff *gg, particle_real_t u)
 
 #endif
 
-#define INTERPOLATE_1ST(flds, E, H)					\
-  particle_real_t E[3] = { IP_FIELD_EX(flds),				\
-                           IP_FIELD_EY(flds),				\
-                           IP_FIELD_EZ(flds), };			\
-  particle_real_t H[3] = { IP_FIELD_HX(flds),				\
-                           IP_FIELD_HY(flds),				\
-                           IP_FIELD_HZ(flds), }
-
 #endif // ORDER == ORDER_1ST
 
 #else // USE_1VB
@@ -304,7 +296,9 @@ ip_coeff(int *lg, struct ip_coeff *gg, particle_real_t u)
 
 // FIXME, it's really not good to pass flds, but then possibly have it ignored and use flds_avg
 	     
-#define INTERPOLATE_FIELDS						\
+#endif // USE_1VB
+
+#define INTERPOLATE_FIELDS(flds)					\
   particle_real_t E[3] = { IP_FIELD_EX(flds),				\
                            IP_FIELD_EY(flds),				\
                            IP_FIELD_EZ(flds), };			\
@@ -312,4 +306,3 @@ ip_coeff(int *lg, struct ip_coeff *gg, particle_real_t u)
                            IP_FIELD_HY(flds),				\
                            IP_FIELD_HZ(flds), }
 
-#endif // USE_1VB

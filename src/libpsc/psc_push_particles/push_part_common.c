@@ -468,7 +468,7 @@ do_push_part(int p, fields_t flds, particle_range_t prts)
 
     // FIELD INTERPOLATION
 
-    INTERPOLATE_FIELDS;
+    INTERPOLATE_FIELDS(flds);
 
     // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
     particle_real_t dq = c_prm.dqs * particle_qni_div_mni(part);
