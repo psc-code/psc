@@ -57,6 +57,21 @@ ip_coeff(int *lg, struct ip_coeff *gg, particle_real_t u)
   *lg = l;
 }
 
+#define IP_COEFFS_G(lg1, gx, xm) \
+  int lg1;		       \
+  struct ip_coeff gx;	       \
+  ip_coeff(&lg1, &gx, xm)
+
+#if IP_VARIANT != IP_VARIANT_EC
+#define IP_COEFFS_H(lh1, hx, xm) IP_COEFFS_G(lh1, hx, xm - .5f)
+#else
+#define IP_COEFFS_H(lh1, hx, xm) do {} while (0)
+#endif
+
+#define IP_COEFFS(lg1, lh1, gx, hx, xm) \
+  IP_COEFFS_G(lg1, gx, xm);		\
+  IP_COEFFS_H(lh1, hx, xm)
+    
 // ----------------------------------------------------------------------
 
 #if ORDER == ORDER_1ST
@@ -160,40 +175,48 @@ ip_coeff(int *lg, struct ip_coeff *gg, particle_real_t u)
 #if DIM == DIM_YZ
 
 #if IP_VARIANT == IP_VARIANT_EC
+#define IP_FIELD_EX(flds)						\
+  (gz.v0*(gy.v0*F3_CACHE(flds, EX, 0,lg2  ,lg3  ) +			\
+	  gy.v1*F3_CACHE(flds, EX, 0,lg2+1,lg3  )) +			\
+   gz.v1*(gy.v0*F3_CACHE(flds, EX, 0,lg2  ,lg3+1) +			\
+	  gy.v1*F3_CACHE(flds, EX, 0,lg2+1,lg3+1)))
+#define IP_FIELD_EY(flds)						\
+  (gz.v0*F3_CACHE(flds, EY, 0,lg2  ,lg3  ) +				\
+   gz.v1*F3_CACHE(flds, EY, 0,lg2  ,lg3+1))
+#define IP_FIELD_EZ(flds)						\
+  (gy.v0*F3_CACHE(flds, EZ, 0,lg2  ,lg3  ) +				\
+   gy.v1*F3_CACHE(flds, EZ, 0,lg2+1,lg3  ))
+#define IP_FIELD_HX(flds)						\
+  (F3_CACHE(flds, HX, 0,lg2  ,lg3  ))
+#define IP_FIELD_HY(flds)						\
+  (gy.v0*F3_CACHE(flds, HY, 0,lg2  ,lg3  ) +				\
+   gy.v1*F3_CACHE(flds, HY, 0,lg2+1,lg3  ))
+#define IP_FIELD_HZ(flds)						\
+  (gz.v0*F3_CACHE(flds, HZ, 0,lg2  ,lg3  ) +				\
+   gz.v1*F3_CACHE(flds, HZ, 0,lg2  ,lg3+1))
+	     
 #define INTERPOLATE_1ST(flds, E, H)					\
-  do {									\
-    E[0] = (gz.v0*(gy.v0*F3_CACHE(flds, EX, 0,lg2  ,lg3  ) +		\
-		   gy.v1*F3_CACHE(flds, EX, 0,lg2+1,lg3  )) +		\
-	    gz.v1*(gy.v0*F3_CACHE(flds, EX, 0,lg2  ,lg3+1) +		\
-		   gy.v1*F3_CACHE(flds, EX, 0,lg2+1,lg3+1)));		\
-    E[1] = (gz.v0*F3_CACHE(flds, EY, 0,lg2  ,lg3  ) +			\
-	    gz.v1*F3_CACHE(flds, EY, 0,lg2  ,lg3+1));			\
-    E[2] = (gy.v0*F3_CACHE(flds, EZ, 0,lg2  ,lg3  ) +			\
-	    gy.v1*F3_CACHE(flds, EZ, 0,lg2+1,lg3  ));			\
-    									\
-    H[0] = F3_CACHE(flds, HX, 0,lg2  ,lg3  );				\
-    H[1] = (gy.v0*F3_CACHE(flds, HY, 0,lg2  ,lg3  ) +			\
-	    gy.v1*F3_CACHE(flds, HY, 0,lg2+1,lg3  ));			\
-    H[2] = (gz.v0*F3_CACHE(flds, HZ, 0,lg2  ,lg3  ) +			\
-	    gz.v1*F3_CACHE(flds, HZ, 0,lg2  ,lg3+1));			\
-  } while (0)
+  particle_real_t E[3] = { IP_FIELD_EX(flds),				\
+                           IP_FIELD_EY(flds),				\
+                           IP_FIELD_EZ(flds), };			\
+  particle_real_t H[3] = { IP_FIELD_HX(flds),				\
+                           IP_FIELD_HY(flds),				\
+                           IP_FIELD_HZ(flds), }
 #else
 #define INTERPOLATE_1ST(flds, E, H)					\
-  do {									\
-    E[0] = IP_FIELD(flds, EX, h, g, g);					\
-    E[1] = IP_FIELD(flds, EY, g, h, g);					\
-    E[2] = IP_FIELD(flds, EZ, g, g, h);					\
-    									\
-    H[0] = IP_FIELD(flds, HX, g, h, h);					\
-    H[1] = IP_FIELD(flds, HY, h, g, h);					\
-    H[2] = IP_FIELD(flds, HZ, h, h, g);					\
-  } while (0)
+  particle_real_t E[3] = { IP_FIELD(flds, EX, h, g, g),			\
+                           IP_FIELD(flds, EY, g, h, g),			\
+                           IP_FIELD(flds, EZ, g, g, h), };		\
+  particle_real_t H[3] = { IP_FIELD(flds, HX, g, h, h),			\
+                           IP_FIELD(flds, HY, h, g, h),			\
+                           IP_FIELD(flds, HZ, h, h, g), }
 #endif
 
 #elif DIM == DIM_XYZ
 
 #if IP_VARIANT == IP_VARIANT_EC
 #define INTERPOLATE_1ST(flds, E, H)					\
+  particle_real_t E[3], H[3];						\
   do {									\
     E[0] = (gz.v0*(gy.v0*F3_CACHE(flds, EX, lg1  ,lg2  ,lg3  ) +	\
 		   gy.v1*F3_CACHE(flds, EX, lg1  ,lg2+1,lg3  )) +	\

@@ -185,49 +185,20 @@ push_one(mprts_array_t mprts_arr, int n,
   
   // field interpolation
   particle_real_t *xi = &particle_x(prt);
-  int lg[3];
-  particle_real_t og[3], xm[3];
-  find_idx_off_pos_1st_rel(xi, lg, og, xm, 0.f);
 
-  IF_DIM_X( int lg1 = lg[0]; );
-  IF_DIM_Y( int lg2 = lg[1]; );
-  IF_DIM_Z( int lg3 = lg[2]; );
-#if (DIM & DIM_X)
-  struct ip_coeff gx;
-  gx.v0 = 1.f - og[0];
-  gx.v1 = og[0];
-#endif
-#if (DIM & DIM_Y)
-  struct ip_coeff gy;
-  gy.v0 = 1.f - og[1];
-  gy.v1 = og[1];
-#endif
-#if (DIM & DIM_Z)
-  struct ip_coeff gz;
-  gz.v0 = 1.f - og[2];
-  gz.v1 = og[2];
-#endif
+  particle_real_t xm[3];
+  for (int d = 0; d < 3; d++) {
+    xm[d] = xi[d] * c_prm.dxi[d];
+  }
+
+  IF_DIM_X( IP_COEFFS(lg1, lh1, gx, hx, xm[0]); );
+  IF_DIM_Y( IP_COEFFS(lg2, lh2, gy, hy, xm[1]); );
+  IF_DIM_Z( IP_COEFFS(lg3, lh3, gz, hz, xm[2]); );
   
-#if IP_VARIANT != IP_VARIANT_EC
-#if (DIM & DIM_X)
-  int lh1;
-  struct ip_coeff hx;
-  ip_coeff(&lh1, &hx, xi[0] * c_prm.dxi[0] - .5f);
-#endif
-#if (DIM & DIM_Y)
-  int lh2;
-  struct ip_coeff hy;
-  ip_coeff(&lh2, &hy, xi[1] * c_prm.dxi[1] - .5f);
-#endif
-#if (DIM & DIM_Z)
-  int lh3;
-  struct ip_coeff hz;
-  ip_coeff(&lh3, &hz, xi[2] * c_prm.dxi[2] - .5f);
-#endif
-#endif
+  // FIELD INTERPOLATION
 
-  particle_real_t E[3], H[3];
   INTERPOLATE_1ST(em_cache, E, H);
+
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0)
   int kind = particle_kind(prt);
   particle_real_t dq = prm.dq_kind[kind];
@@ -255,6 +226,10 @@ push_one(mprts_array_t mprts_arr, int n,
   //  ext_prepare_sort(prts, n, prt, lf);
 
   // CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
+  int lg[3];
+  IF_DIM_X( lg[0] = lg1; );
+  IF_DIM_Y( lg[1] = lg2; );
+  IF_DIM_Z( lg[2] = lg3; );
   calc_j(curr_cache, xm, xp, lf, lg, prt, vxi);
 
   PARTICLE_STORE(prt, mprts_arr, n);
