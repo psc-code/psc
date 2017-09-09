@@ -135,7 +135,7 @@ ext_prepare_sort(struct psc_mparticles *mprts, int p, int n, particle_t *prt,
 
 CUDA_DEVICE static void
 push_one(mprts_array_t mprts_arr, int n,
-	 em_cache_t em_cache, curr_cache_t curr_cache)
+	 em_cache_t flds_em, curr_cache_t curr_cache)
 {
 #if PSC_PARTICLES_AS_CUDA2
   particle_t _prt, *prt = &_prt;
@@ -149,7 +149,7 @@ push_one(mprts_array_t mprts_arr, int n,
   real og[3];
   find_idx_off_1st_rel(prt->xi, lg, og, real(0.));
 
-  INTERPOLATE_1ST(em_cache, E, H);
+  INTERPOLATE_FIELDS(flds_em);
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
   PARTICLE_CUDA2_LOAD_MOM(*prt, mprts_arr.pxi4, n);
@@ -197,7 +197,7 @@ push_one(mprts_array_t mprts_arr, int n,
   
   // FIELD INTERPOLATION
 
-  INTERPOLATE_FIELDS(em_cache);
+  INTERPOLATE_FIELDS(flds_em);
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0)
   int kind = particle_kind(prt);
