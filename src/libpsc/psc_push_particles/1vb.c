@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define USE_1VB
+
 #include "inc_params.c"
 #include "inc_cache.c"
 #include "inc_interpolate.c"

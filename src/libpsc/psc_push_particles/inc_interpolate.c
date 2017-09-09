@@ -169,6 +169,7 @@ ip_coeff(int *lg, struct ip_coeff *gg, particle_real_t u)
 
 #endif // ORDER
 
+#ifdef USE_1VB
 
 #if ORDER == ORDER_1ST
 
@@ -244,6 +245,8 @@ ip_coeff(int *lg, struct ip_coeff *gg, particle_real_t u)
 
 #endif // ORDER == ORDER_1ST
 
+#else // USE_1VB
+
 // ======================================================================
 // IP_VARIANT SFF
 
@@ -278,33 +281,35 @@ ip_coeff(int *lg, struct ip_coeff *gg, particle_real_t u)
 /* FIXME, we don't really need h coeffs in this case, either, though
  * the compiler may be smart enough to figure that out */
 
-#define XIP_FIELD_EX(flds) IP_FIELD(flds_avg, EX-EX, g, g, g)
-#define XIP_FIELD_EY(flds) IP_FIELD(flds_avg, EY-EX, g, g, g)
-#define XIP_FIELD_EZ(flds) IP_FIELD(flds_avg, EZ-EX, g, g, g)
-#define XIP_FIELD_HX(flds) IP_FIELD(flds_avg, HX-EX, g, g, g)
-#define XIP_FIELD_HY(flds) IP_FIELD(flds_avg, HY-EX, g, g, g)
-#define XIP_FIELD_HZ(flds) IP_FIELD(flds_avg, HZ-EX, g, g, g)
+#define IP_FIELD_EX(flds) IP_FIELD(flds_avg, EX-EX, g, g, g)
+#define IP_FIELD_EY(flds) IP_FIELD(flds_avg, EY-EX, g, g, g)
+#define IP_FIELD_EZ(flds) IP_FIELD(flds_avg, EZ-EX, g, g, g)
+#define IP_FIELD_HX(flds) IP_FIELD(flds_avg, HX-EX, g, g, g)
+#define IP_FIELD_HY(flds) IP_FIELD(flds_avg, HY-EX, g, g, g)
+#define IP_FIELD_HZ(flds) IP_FIELD(flds_avg, HZ-EX, g, g, g)
 
 #else
 
 #define IP_VARIANT_SFF_PREP do {} while (0)
 #define IP_VARIANT_SFF_POST do {} while (0)
 
-#define XIP_FIELD_EX(flds) IP_FIELD(flds, EX, h, g, g)
-#define XIP_FIELD_EY(flds) IP_FIELD(flds, EY, g, h, g)
-#define XIP_FIELD_EZ(flds) IP_FIELD(flds, EZ, g, g, h)
-#define XIP_FIELD_HX(flds) IP_FIELD(flds, HX, g, h, h)
-#define XIP_FIELD_HY(flds) IP_FIELD(flds, HY, h, g, h)
-#define XIP_FIELD_HZ(flds) IP_FIELD(flds, HZ, h, h, g)
+#define IP_FIELD_EX(flds) IP_FIELD(flds, EX, h, g, g)
+#define IP_FIELD_EY(flds) IP_FIELD(flds, EY, g, h, g)
+#define IP_FIELD_EZ(flds) IP_FIELD(flds, EZ, g, g, h)
+#define IP_FIELD_HX(flds) IP_FIELD(flds, HX, g, h, h)
+#define IP_FIELD_HY(flds) IP_FIELD(flds, HY, h, g, h)
+#define IP_FIELD_HZ(flds) IP_FIELD(flds, HZ, h, h, g)
 
 #endif
 
-	     // FIXME, it's really not good to pass flds, but then possibly have it ignored and use flds_avg
+// FIXME, it's really not good to pass flds, but then possibly have it ignored and use flds_avg
 	     
 #define INTERPOLATE_FIELDS						\
-  particle_real_t E[3] = { XIP_FIELD_EX(flds),				\
-                           XIP_FIELD_EY(flds),				\
-                           XIP_FIELD_EZ(flds), };			\
-  particle_real_t H[3] = { XIP_FIELD_HX(flds),				\
-                           XIP_FIELD_HY(flds),				\
-                           XIP_FIELD_HZ(flds), }
+  particle_real_t E[3] = { IP_FIELD_EX(flds),				\
+                           IP_FIELD_EY(flds),				\
+                           IP_FIELD_EZ(flds), };			\
+  particle_real_t H[3] = { IP_FIELD_HX(flds),				\
+                           IP_FIELD_HY(flds),				\
+                           IP_FIELD_HZ(flds), }
+
+#endif // USE_1VB
