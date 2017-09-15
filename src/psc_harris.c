@@ -26,8 +26,8 @@ struct psc_harris {
   double B0;
   double LLy, LLz; // in d_i
   double nb;
-  double Te, Ti;
   double mi_over_me;
+  double Ti_over_Te;
   double lambda; // in d_i
   double pert;
   double eta0;
@@ -35,6 +35,7 @@ struct psc_harris {
   // normalized quantities
   double LLL; // lambda in d_e
   double AA; // perturbation amplitude (from pert)
+  double Te, Ti;
 };
 
 #define to_psc_harris(psc) mrc_to_subobj(psc, struct psc_harris)
@@ -46,8 +47,7 @@ static struct param psc_harris_descr[] = {
   { "nb"            , VAR(nb)              , PARAM_DOUBLE(.3)     },
   { "LLy"           , VAR(LLy)             , PARAM_DOUBLE(50.)    },
   { "LLz"           , VAR(LLz)             , PARAM_DOUBLE(200.)   },
-  { "Te"            , VAR(Te)              , PARAM_DOUBLE(0.0625) },
-  { "Ti"            , VAR(Ti)              , PARAM_DOUBLE(0.0625) },
+  { "Ti_over_Te"    , VAR(Ti_over_Te)      , PARAM_DOUBLE(1.)     },
   { "lambda"        , VAR(lambda)          , PARAM_DOUBLE(2.)     },
   { "pert"          , VAR(pert)            , PARAM_DOUBLE(.025)   },
   { "eta0"          , VAR(eta0)            , PARAM_DOUBLE(.0)     },
@@ -104,6 +104,10 @@ psc_harris_setup(struct psc *psc)
 {
   struct psc_harris *harris = to_psc_harris(psc);
 
+  double T0 = sqr(harris->B0) / 2.;
+  harris->Te = T0 / (1. + harris->Ti_over_Te);
+  harris->Ti = T0 / (1. + 1./harris->Ti_over_Te);
+  
   double d_i = sqrt(harris->mi_over_me);
   psc->domain.corner[1] = -.5 * harris->LLy * d_i;
   psc->domain.length[1] = harris->LLy * d_i;
@@ -130,9 +134,17 @@ psc_harris_setup(struct psc *psc)
 	     psc->patch[0].dx[1], psc->patch[0].dx[2]);
   mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., d_i);
   mpi_printf(comm, "v_A = %g\n", harris->B0 / sqrt(harris->mi_over_me));
-  mpi_printf(comm, "om_ci = %g om_ce = %g\n", harris->B0 / harris->mi_over_me,
-	     harris->B0);
+  double om_ci = harris->B0 / harris->mi_over_me;
+  double om_ce = harris->B0;
+  mpi_printf(comm, "om_ci = %g om_ce = %g\n", om_ci, om_ce);
   mpi_printf(comm, "om_pi = %g om_pe = %g\n", 1. / sqrt(harris->mi_over_me), 1.);
+  mpi_printf(comm, "Ti = %g Te = %g\n", harris->Ti, harris->Te);
+  double vthi = sqrt(2 * harris->Ti / harris->mi_over_me);
+  double vthe = sqrt(2 * harris->Te);
+  mpi_printf(comm, "vthi = %g vthe = %g\n", vthi, vthe);
+  mpi_printf(comm, "rhoi = %g\n", vthi / om_ci);
+  mpi_printf(comm, "L / rhoi = %g\n", harris->LLL / (vthi / om_ci));
+  mpi_printf(comm, "pert A0 / (B0 d_i) = %g\n", harris->AA / (harris->B0 * d_i));
   mpi_printf(comm, "lambda_De = %g\n", sqrt(harris->Te));
 }
 
