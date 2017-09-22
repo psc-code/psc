@@ -50,47 +50,106 @@ PFX(destroy)(struct psc_fields *pf)
 }
 
 // ----------------------------------------------------------------------
+// fields_t_zero_comp
+
+static inline void
+fields_t_zero_comp(fields_t flds, int m)
+{
+  for (int jz = flds.ib[2]; jz < flds.ib[2] + flds.im[2]; jz++) {
+    for (int jy = flds.ib[1]; jy < flds.ib[1] + flds.im[1]; jy++) {
+      for (int jx = flds.ib[0]; jx < flds.ib[0] + flds.im[0]; jx++) {
+	_F3(flds, m, jx,jy,jz) = 0;
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
+// fields_t_set_comp
+
+static inline void
+fields_t_set_comp(fields_t flds, int m, fields_real_t val)
+{
+  for (int jz = flds.ib[2]; jz < flds.ib[2] + flds.im[2]; jz++) {
+    for (int jy = flds.ib[1]; jy < flds.ib[1] + flds.im[1]; jy++) {
+      for (int jx = flds.ib[0]; jx < flds.ib[0] + flds.im[0]; jx++) {
+	_F3(flds, m, jx,jy,jz) = val;
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
+// fields_t_scale_comp
+
+static inline void
+fields_t_scale_comp(fields_t flds, int m, fields_real_t val)
+{
+  for (int jz = flds.ib[2]; jz < flds.ib[2] + flds.im[2]; jz++) {
+    for (int jy = flds.ib[1]; jy < flds.ib[1] + flds.im[1]; jy++) {
+      for (int jx = flds.ib[0]; jx < flds.ib[0] + flds.im[0]; jx++) {
+	_F3(flds, m, jx, jy, jz) *= val;
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
+// fields_t_copy_comp
+
+static inline void
+fields_t_copy_comp(fields_t to, int m_to, fields_t from, int m_from)
+{
+  for (int jz = to.ib[2]; jz < to.ib[2] + to.im[2]; jz++) {
+    for (int jy = to.ib[1]; jy < to.ib[1] + to.im[1]; jy++) {
+      for (int jx = to.ib[0]; jx < to.ib[0] + to.im[0]; jx++) {
+	_F3(to, m_to, jx,jy,jz) = _F3(from, m_from, jx,jy,jz);
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
+// fields_t_axpy_comp
+
+static inline void
+fields_t_axpy_comp(fields_t y, int m_y, fields_real_t a, fields_t x, int m_x)
+{
+  for (int jz = y.ib[2]; jz < y.ib[2] + y.im[2]; jz++) {
+    for (int jy = y.ib[1]; jy < y.ib[1] + y.im[1]; jy++) {
+      for (int jx = y.ib[0]; jx < y.ib[0] + y.im[0]; jx++) {
+	_F3(y, m_y, jx,jy,jz) += a * _F3(x, m_x, jx,jy,jz);
+      }
+    }
+  }
+}
+
+
+// ----------------------------------------------------------------------
 // psc_fields_zero_comp
 
 static void
 PFX(zero_comp)(struct psc_fields *pf, int m)
 {
-  memset(&F3(pf, m, pf->ib[0], pf->ib[1], pf->ib[2]), 0,
-	 pf->im[0] * pf->im[1] * pf->im[2] * sizeof(fields_real_t));
+  fields_t_zero_comp(fields_t_from_psc_fields(pf), m);
 }
 
 // ----------------------------------------------------------------------
 // psc_fields_set_comp
 
 static void
-PFX(set_comp)(struct psc_fields *pf, int m, double _val)
+PFX(set_comp)(struct psc_fields *pf, int m, double val)
 {
-  fields_real_t val = _val;
-
-  for (int jz = pf->ib[2]; jz < pf->ib[2] + pf->im[2]; jz++) {
-    for (int jy = pf->ib[1]; jy < pf->ib[1] + pf->im[1]; jy++) {
-      for (int jx = pf->ib[0]; jx < pf->ib[0] + pf->im[0]; jx++) {
-	F3(pf, m, jx, jy, jz) = val;
-      }
-    }
-  }
+  fields_t_set_comp(fields_t_from_psc_fields(pf), m, val);
 }
 
 // ----------------------------------------------------------------------
 // psc_fields_scale_comp
 
 static void
-PFX(scale_comp)(struct psc_fields *pf, int m, double _val)
+PFX(scale_comp)(struct psc_fields *pf, int m, double val)
 {
-  fields_real_t val = _val;
-
-  for (int jz = pf->ib[2]; jz < pf->ib[2] + pf->im[2]; jz++) {
-    for (int jy = pf->ib[1]; jy < pf->ib[1] + pf->im[1]; jy++) {
-      for (int jx = pf->ib[0]; jx < pf->ib[0] + pf->im[0]; jx++) {
-	F3(pf, m, jx, jy, jz) *= val;
-      }
-    }
-  }
+  fields_t_scale_comp(fields_t_from_psc_fields(pf), m, val);
 }
 
 // ----------------------------------------------------------------------
@@ -99,30 +158,18 @@ PFX(scale_comp)(struct psc_fields *pf, int m, double _val)
 static void
 PFX(copy_comp)(struct psc_fields *pto, int m_to, struct psc_fields *pfrom, int m_from)
 {
-  for (int jz = pto->ib[2]; jz < pto->ib[2] + pto->im[2]; jz++) {
-    for (int jy = pto->ib[1]; jy < pto->ib[1] + pto->im[1]; jy++) {
-      for (int jx = pto->ib[0]; jx < pto->ib[0] + pto->im[0]; jx++) {
-	F3(pto, m_to, jx, jy, jz) = F3(pfrom, m_from, jx, jy, jz);
-      }
-    }
-  }
+  fields_t_copy_comp(fields_t_from_psc_fields(pto), m_to,
+		     fields_t_from_psc_fields(pfrom), m_from);
 }
 
 // ----------------------------------------------------------------------
 // psc_fields_axpy_comp
 
 static void
-PFX(axpy_comp)(struct psc_fields *y, int ym, double _a, struct psc_fields *x, int xm)
+PFX(axpy_comp)(struct psc_fields *y, int m_y, double a, struct psc_fields *x, int m_x)
 {
-  fields_real_t a = _a;
-
-  for (int jz = y->ib[2]; jz < y->ib[2] + y->im[2]; jz++) {
-    for (int jy = y->ib[1]; jy < y->ib[1] + y->im[1]; jy++) {
-      for (int jx = y->ib[0]; jx < y->ib[0] + y->im[0]; jx++) {
-	F3(y, ym, jx, jy, jz) += a * F3(x, xm, jx, jy, jz);
-      }
-    }
-  }
+  fields_t_axpy_comp(fields_t_from_psc_fields(y), m_y, a,
+		     fields_t_from_psc_fields(x), m_x);
 }
 
 // ----------------------------------------------------------------------
