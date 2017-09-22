@@ -7,6 +7,7 @@ struct params_push_fields {
   fields_real_t cnx;
   fields_real_t cny;
   fields_real_t cnz;
+  int ldims[3];
 };
 
 static struct params_push_fields prm;
@@ -15,14 +16,21 @@ static struct params_push_fields prm;
 // params_push_fields_set
 
 static void
-params_push_fields_set(struct psc *psc, int p)
+params_push_fields_set(struct psc *psc)
 {
-  struct psc_patch *patch = &psc->patch[p];
+  for (int p = 1; p < psc->nr_patches; p++) {
+    for (int d = 0; d < 3; d++) {
+      assert(psc->patch[0].ldims[d] == psc->patch[p].ldims[d]);
+      assert(psc->patch[0].dx[d] == psc->patch[p].dx[d]);
+    }
+  }
+
   prm.dt = psc->dt;
   prm.dth = .5f * psc->dt;
-  prm.cnx = prm.dth / patch->dx[0];
-  prm.cny = prm.dth / patch->dx[1];
-  prm.cnz = prm.dth / patch->dx[2];
+
+  prm.cnx = prm.dth / psc->patch[0].dx[0];
+  prm.cny = prm.dth / psc->patch[0].dx[1];
+  prm.cnz = prm.dth / psc->patch[0].dx[2];
 
   if (psc->domain.gdims[0] == 1) {
     prm.cnx = 0.;
@@ -32,6 +40,10 @@ params_push_fields_set(struct psc *psc, int p)
   }
   if (psc->domain.gdims[2] == 1) {
     prm.cnz = 0.;
+  }
+
+  for (int d = 0; d < 3; d++) {
+    prm.ldims[d] = psc->patch[0].ldims[d];
   }
 }
 
@@ -59,16 +71,15 @@ psc_push_fields_sub_push_E_gen(struct psc_push_fields *push, struct psc_fields *
 static void
 psc_push_fields_sub_push_E_yz(struct psc_push_fields *push, struct psc_fields *flds)
 {
-  int *ldims = ppsc->patch[flds->p].ldims;
-  for (int iz = -1; iz < ldims[2] + 2; iz++) {
-    for (int iy = -1; iy < ldims[1] + 2; iy++) {
+  for (int iz = -1; iz < prm.ldims[2] + 2; iz++) {
+    for (int iy = -1; iy < prm.ldims[1] + 2; iy++) {
       F3(flds, EX, 0,iy,iz) +=
 	prm.cny * (F3(flds, HZ, 0,iy,iz) - F3(flds, HZ, 0,iy-1,iz)) -
 	prm.cnz * (F3(flds, HY, 0,iy,iz) - F3(flds, HY, 0,iy,iz-1)) -
 	prm.dth * F3(flds, JXI, 0,iy,iz);
     }
 
-    for (int iy = -2; iy < ldims[1] + 2; iy++) {
+    for (int iy = -2; iy < prm.ldims[1] + 2; iy++) {
       F3(flds, EY, 0,iy,iz) +=
 	prm.cnz * (F3(flds, HX, 0,iy,iz) - F3(flds, HX, 0,iy,iz-1)) -
 	0 -
@@ -76,8 +87,8 @@ psc_push_fields_sub_push_E_yz(struct psc_push_fields *push, struct psc_fields *f
     }
   }
       
-  for (int iz = -2; iz < ldims[2] + 2; iz++) {
-    for (int iy = -1; iy < ldims[1] + 2; iy++) {
+  for (int iz = -2; iz < prm.ldims[2] + 2; iz++) {
+    for (int iy = -1; iy < prm.ldims[1] + 2; iy++) {
       F3(flds, EZ, 0,iy,iz) +=
 	0 -
 	prm.cny * (F3(flds, HX, 0,iy,iz) - F3(flds, HX, 0,iy-1,iz)) -
@@ -97,8 +108,8 @@ psc_push_fields_sub_push_mflds_E(struct psc_push_fields *push, struct psc_mfield
 {
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, FIELDS_TYPE, JXI, HX + 3);
 
+  params_push_fields_set(ppsc);
   for (int p = 0; p < mflds->nr_patches; p++) {
-    params_push_fields_set(ppsc, p);
     struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
     int *gdims = ppsc->domain.gdims;
     if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) {
@@ -132,23 +143,22 @@ psc_push_fields_sub_push_H_gen(struct psc_push_fields *push, struct psc_fields *
 static void
 psc_push_fields_sub_push_H_yz(struct psc_push_fields *push, struct psc_fields *flds)
 {
-  int *ldims = ppsc->patch[flds->p].ldims;
-  for (int iz = -1; iz < ldims[2] + 1; iz++) {
-    for (int iy = -1; iy < ldims[1] + 1; iy++) {
+  for (int iz = -1; iz < prm.ldims[2] + 1; iz++) {
+    for (int iy = -1; iy < prm.ldims[1] + 1; iy++) {
       F3(flds, HX, 0,iy,iz) -=
 	prm.cny * (F3(flds, EZ, 0,iy+1,iz) - F3(flds, EZ, 0,iy,iz)) -
 	prm.cnz * (F3(flds, EY, 0,iy,iz+1) - F3(flds, EY, 0,iy,iz));
     }
 
-    for (int iy = -1; iy < ldims[1] + 2; iy++) {
+    for (int iy = -1; iy < prm.ldims[1] + 2; iy++) {
       F3(flds, HY, 0,iy,iz) -=
 	prm.cnz * (F3(flds, EX, 0,iy,iz+1) - F3(flds, EX, 0,iy,iz)) -
 	0;
     }
   }
       
-  for (int iz = -1; iz < ldims[2] + 2; iz++) {
-    for (int iy = -1; iy < ldims[1] + 1; iy++) {
+  for (int iz = -1; iz < prm.ldims[2] + 2; iz++) {
+    for (int iy = -1; iy < prm.ldims[1] + 1; iy++) {
       F3(flds, HZ, 0,iy,iz) -=
 	0 -
 	prm.cny * (F3(flds, EX, 0,iy+1,iz) - F3(flds, EX, 0,iy,iz));
@@ -166,8 +176,8 @@ psc_push_fields_sub_push_mflds_H(struct psc_push_fields *push, struct psc_mfield
 {
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, FIELDS_TYPE, EX, HX + 3);
 
+  params_push_fields_set(ppsc);
   for (int p = 0; p < mflds->nr_patches; p++) {
-    params_push_fields_set(ppsc, p);
     int *gdims = ppsc->domain.gdims;
     struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
     if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) {
