@@ -129,7 +129,7 @@ psc_inject_single_run(struct psc_inject *inject, struct psc_mparticles *mprts_ba
   struct psc_mfields *mflds_n = psc_mfields_get_as(inject->mflds_n, FIELDS_TYPE, kind_n, kind_n+1);
   
   psc_foreach_patch(psc, p) {
-    struct psc_fields *flds_n = psc_mfields_get_patch(mflds_n, p);
+    fields_t flds_n = fields_t_mflds(mflds_n, p);
     int *ldims = psc->patch[p].ldims;
     
     int nr_pop = psc->prm.nr_populations;
@@ -166,7 +166,7 @@ psc_inject_single_run(struct psc_inject *inject, struct psc_mparticles *mprts_ba
 	    int n_in_cell;
 	    if (kind != psc->prm.neutralizing_population) {
 	      if (psc->timestep >= 0) {
-		npt.n -= F3(flds_n, kind_n, jx,jy,jz);
+		npt.n -= _F3(flds_n, kind_n, jx,jy,jz);
 		if (npt.n < 0) {
 		  n_in_cell = 0;
 		} else {
