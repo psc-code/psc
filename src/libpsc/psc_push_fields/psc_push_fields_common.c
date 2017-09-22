@@ -48,51 +48,51 @@ params_push_fields_set(struct psc *psc)
 }
 
 static void
-psc_push_fields_sub_push_E_gen(struct psc_push_fields *push, struct psc_fields *flds)
+psc_push_fields_sub_push_E_gen(struct psc_push_fields *push, fields_t flds)
 {
-  psc_foreach_3d(ppsc, flds->p, ix, iy, iz, 2, 2) {
-    F3(flds, EX, ix,iy,iz) +=
-      prm.cny * (F3(flds, HZ, ix,iy,iz) - F3(flds, HZ, ix,iy-1,iz)) -
-      prm.cnz * (F3(flds, HY, ix,iy,iz) - F3(flds, HY, ix,iy,iz-1)) -
-      prm.dth * F3(flds, JXI, ix,iy,iz);
+  psc_foreach_3d(ppsc, 0, ix, iy, iz, 2, 2) {
+    _F3(flds, EX, ix,iy,iz) +=
+      prm.cny * (_F3(flds, HZ, ix,iy,iz) - _F3(flds, HZ, ix,iy-1,iz)) -
+      prm.cnz * (_F3(flds, HY, ix,iy,iz) - _F3(flds, HY, ix,iy,iz-1)) -
+      prm.dth * _F3(flds, JXI, ix,iy,iz);
     
-    F3(flds, EY, ix,iy,iz) +=
-      prm.cnz * (F3(flds, HX, ix,iy,iz) - F3(flds, HX, ix,iy,iz-1)) -
-      prm.cnx * (F3(flds, HZ, ix,iy,iz) - F3(flds, HZ, ix-1,iy,iz)) -
-      prm.dth * F3(flds, JYI, ix,iy,iz);
+    _F3(flds, EY, ix,iy,iz) +=
+      prm.cnz * (_F3(flds, HX, ix,iy,iz) - _F3(flds, HX, ix,iy,iz-1)) -
+      prm.cnx * (_F3(flds, HZ, ix,iy,iz) - _F3(flds, HZ, ix-1,iy,iz)) -
+      prm.dth * _F3(flds, JYI, ix,iy,iz);
     
-    F3(flds, EZ, ix,iy,iz) +=
-      prm.cnx * (F3(flds, HY, ix,iy,iz) - F3(flds, HY, ix-1,iy,iz)) -
-      prm.cny * (F3(flds, HX, ix,iy,iz) - F3(flds, HX, ix,iy-1,iz)) -
-      prm.dth * F3(flds, JZI, ix,iy,iz);
+    _F3(flds, EZ, ix,iy,iz) +=
+      prm.cnx * (_F3(flds, HY, ix,iy,iz) - _F3(flds, HY, ix-1,iy,iz)) -
+      prm.cny * (_F3(flds, HX, ix,iy,iz) - _F3(flds, HX, ix,iy-1,iz)) -
+      prm.dth * _F3(flds, JZI, ix,iy,iz);
   } foreach_3d_end;
 }
 
 static void
-psc_push_fields_sub_push_E_yz(struct psc_push_fields *push, struct psc_fields *flds)
+psc_push_fields_sub_push_E_yz(struct psc_push_fields *push, fields_t flds)
 {
   for (int iz = -1; iz < prm.ldims[2] + 2; iz++) {
     for (int iy = -1; iy < prm.ldims[1] + 2; iy++) {
-      F3(flds, EX, 0,iy,iz) +=
-	prm.cny * (F3(flds, HZ, 0,iy,iz) - F3(flds, HZ, 0,iy-1,iz)) -
-	prm.cnz * (F3(flds, HY, 0,iy,iz) - F3(flds, HY, 0,iy,iz-1)) -
-	prm.dth * F3(flds, JXI, 0,iy,iz);
+      _F3(flds, EX, 0,iy,iz) +=
+	prm.cny * (_F3(flds, HZ, 0,iy,iz) - _F3(flds, HZ, 0,iy-1,iz)) -
+	prm.cnz * (_F3(flds, HY, 0,iy,iz) - _F3(flds, HY, 0,iy,iz-1)) -
+	prm.dth * _F3(flds, JXI, 0,iy,iz);
     }
 
     for (int iy = -2; iy < prm.ldims[1] + 2; iy++) {
-      F3(flds, EY, 0,iy,iz) +=
-	prm.cnz * (F3(flds, HX, 0,iy,iz) - F3(flds, HX, 0,iy,iz-1)) -
+      _F3(flds, EY, 0,iy,iz) +=
+	prm.cnz * (_F3(flds, HX, 0,iy,iz) - _F3(flds, HX, 0,iy,iz-1)) -
 	0 -
-	prm.dth * F3(flds, JYI, 0,iy,iz);
+	prm.dth * _F3(flds, JYI, 0,iy,iz);
     }
   }
       
   for (int iz = -2; iz < prm.ldims[2] + 2; iz++) {
     for (int iy = -1; iy < prm.ldims[1] + 2; iy++) {
-      F3(flds, EZ, 0,iy,iz) +=
+      _F3(flds, EZ, 0,iy,iz) +=
 	0 -
-	prm.cny * (F3(flds, HX, 0,iy,iz) - F3(flds, HX, 0,iy-1,iz)) -
-	prm.dth * F3(flds, JZI, 0,iy,iz);
+	prm.cny * (_F3(flds, HX, 0,iy,iz) - _F3(flds, HX, 0,iy-1,iz)) -
+	prm.dth * _F3(flds, JZI, 0,iy,iz);
     }
   }
 }
@@ -110,7 +110,7 @@ psc_push_fields_sub_push_mflds_E(struct psc_push_fields *push, struct psc_mfield
 
   params_push_fields_set(ppsc);
   for (int p = 0; p < mflds->nr_patches; p++) {
-    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+    fields_t flds = fields_t_mflds(mflds, p);
     int *gdims = ppsc->domain.gdims;
     if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) {
       psc_push_fields_sub_push_E_yz(push, flds);
@@ -123,45 +123,45 @@ psc_push_fields_sub_push_mflds_E(struct psc_push_fields *push, struct psc_mfield
 }
 
 static void
-psc_push_fields_sub_push_H_gen(struct psc_push_fields *push, struct psc_fields *flds)
+psc_push_fields_sub_push_H_gen(struct psc_push_fields *push, fields_t flds)
 {
-  psc_foreach_3d(ppsc, flds->p, ix, iy, iz, 1, 2) {
-    F3(flds, HX, ix,iy,iz) -=
-      prm.cny * (F3(flds, EZ, ix,iy+1,iz) - F3(flds, EZ, ix,iy,iz)) -
-      prm.cnz * (F3(flds, EY, ix,iy,iz+1) - F3(flds, EY, ix,iy,iz));
+  psc_foreach_3d(ppsc, 0, ix, iy, iz, 1, 2) {
+    _F3(flds, HX, ix,iy,iz) -=
+      prm.cny * (_F3(flds, EZ, ix,iy+1,iz) - _F3(flds, EZ, ix,iy,iz)) -
+      prm.cnz * (_F3(flds, EY, ix,iy,iz+1) - _F3(flds, EY, ix,iy,iz));
     
-    F3(flds, HY, ix,iy,iz) -=
-      prm.cnz * (F3(flds, EX, ix,iy,iz+1) - F3(flds, EX, ix,iy,iz)) -
-      prm.cnx * (F3(flds, EZ, ix+1,iy,iz) - F3(flds, EZ, ix,iy,iz));
+    _F3(flds, HY, ix,iy,iz) -=
+      prm.cnz * (_F3(flds, EX, ix,iy,iz+1) - _F3(flds, EX, ix,iy,iz)) -
+      prm.cnx * (_F3(flds, EZ, ix+1,iy,iz) - _F3(flds, EZ, ix,iy,iz));
     
-    F3(flds, HZ, ix,iy,iz) -=
-      prm.cnx * (F3(flds, EY, ix+1,iy,iz) - F3(flds, EY, ix,iy,iz)) -
-      prm.cny * (F3(flds, EX, ix,iy+1,iz) - F3(flds, EX, ix,iy,iz));
+    _F3(flds, HZ, ix,iy,iz) -=
+      prm.cnx * (_F3(flds, EY, ix+1,iy,iz) - _F3(flds, EY, ix,iy,iz)) -
+      prm.cny * (_F3(flds, EX, ix,iy+1,iz) - _F3(flds, EX, ix,iy,iz));
   } foreach_3d_end;
 }
 
 static void
-psc_push_fields_sub_push_H_yz(struct psc_push_fields *push, struct psc_fields *flds)
+psc_push_fields_sub_push_H_yz(struct psc_push_fields *push, fields_t flds)
 {
   for (int iz = -1; iz < prm.ldims[2] + 1; iz++) {
     for (int iy = -1; iy < prm.ldims[1] + 1; iy++) {
-      F3(flds, HX, 0,iy,iz) -=
-	prm.cny * (F3(flds, EZ, 0,iy+1,iz) - F3(flds, EZ, 0,iy,iz)) -
-	prm.cnz * (F3(flds, EY, 0,iy,iz+1) - F3(flds, EY, 0,iy,iz));
+      _F3(flds, HX, 0,iy,iz) -=
+	prm.cny * (_F3(flds, EZ, 0,iy+1,iz) - _F3(flds, EZ, 0,iy,iz)) -
+	prm.cnz * (_F3(flds, EY, 0,iy,iz+1) - _F3(flds, EY, 0,iy,iz));
     }
 
     for (int iy = -1; iy < prm.ldims[1] + 2; iy++) {
-      F3(flds, HY, 0,iy,iz) -=
-	prm.cnz * (F3(flds, EX, 0,iy,iz+1) - F3(flds, EX, 0,iy,iz)) -
+      _F3(flds, HY, 0,iy,iz) -=
+	prm.cnz * (_F3(flds, EX, 0,iy,iz+1) - _F3(flds, EX, 0,iy,iz)) -
 	0;
     }
   }
       
   for (int iz = -1; iz < prm.ldims[2] + 2; iz++) {
     for (int iy = -1; iy < prm.ldims[1] + 1; iy++) {
-      F3(flds, HZ, 0,iy,iz) -=
+      _F3(flds, HZ, 0,iy,iz) -=
 	0 -
-	prm.cny * (F3(flds, EX, 0,iy+1,iz) - F3(flds, EX, 0,iy,iz));
+	prm.cny * (_F3(flds, EX, 0,iy+1,iz) - _F3(flds, EX, 0,iy,iz));
     }
   }
 }
@@ -178,8 +178,8 @@ psc_push_fields_sub_push_mflds_H(struct psc_push_fields *push, struct psc_mfield
 
   params_push_fields_set(ppsc);
   for (int p = 0; p < mflds->nr_patches; p++) {
+    fields_t flds = fields_t_mflds(mflds, p);
     int *gdims = ppsc->domain.gdims;
-    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
     if (gdims[0] == 1 && gdims[1] > 1 && gdims[2] > 1) {
       psc_push_fields_sub_push_H_yz(push, flds);
     } else {
