@@ -162,19 +162,18 @@ MPFX(write)(struct psc_mfields *mflds, struct mrc_io *io)
   hid_t group0 = H5Gopen(h5_file, mrc_io_obj_path(io, mflds), H5P_DEFAULT); H5_CHK(group0);
 
   for (int p = 0; p < mflds->nr_patches; p++) {
-    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+    fields_t flds = fields_t_mflds(mflds, p);
     char name[20]; sprintf(name, "flds%d", p);
     hid_t group = H5Gcreate(group0, name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group);
-    ierr = H5LTset_attribute_int(group, ".", "p", &p, 1); CE;
-    ierr = H5LTset_attribute_int(group, ".", "ib", flds->ib, 3); CE;
-    ierr = H5LTset_attribute_int(group, ".", "im", flds->im, 3); CE;
-    ierr = H5LTset_attribute_int(group, ".", "nr_comp", &flds->nr_comp, 1); CE;
+    ierr = H5LTset_attribute_int(group, ".", "ib", flds.ib, 3); CE;
+    ierr = H5LTset_attribute_int(group, ".", "im", flds.im, 3); CE;
+    ierr = H5LTset_attribute_int(group, ".", "nr_comp", &flds.nr_comp, 1); CE;
     // write components separately instead?
-    hsize_t hdims[4] = { flds->nr_comp, flds->im[2], flds->im[1], flds->im[0] };
+    hsize_t hdims[4] = { flds.nr_comp, flds.im[2], flds.im[1], flds.im[0] };
 #if PSC_FIELDS_AS_SINGLE
-    ierr = H5LTmake_dataset_float(group, "fields_single", 4, hdims, flds->data); CE;
+    ierr = H5LTmake_dataset_float(group, "fields_single", 4, hdims, flds.data); CE;
 #elif PSC_FIELDS_AS_C
-    ierr = H5LTmake_dataset_double(group, "fields_c", 4, hdims, flds->data); CE;
+    ierr = H5LTmake_dataset_double(group, "fields_c", 4, hdims, flds.data); CE;
 #endif
     ierr = H5Gclose(group); CE;
   }
@@ -198,23 +197,22 @@ MPFX(read)(struct psc_mfields *mflds, struct mrc_io *io)
   hid_t group0 = H5Gopen(h5_file, mrc_io_obj_path(io, mflds), H5P_DEFAULT); H5_CHK(group0);
 
   for (int p = 0; p < mflds->nr_patches; p++) {
-    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+    fields_t flds = fields_t_mflds(mflds, p);
     char name[20]; sprintf(name, "flds%d", p);
     hid_t group = H5Gopen(group0, name, H5P_DEFAULT); H5_CHK(group);
     int ib[3], im[3], nr_comp;
-    ierr = H5LTget_attribute_int(group, ".", "p", &flds->p); CE;
     ierr = H5LTget_attribute_int(group, ".", "ib", ib); CE;
     ierr = H5LTget_attribute_int(group, ".", "im", im); CE;
     ierr = H5LTget_attribute_int(group, ".", "nr_comp", &nr_comp); CE;
     for (int d = 0; d < 3; d++) {
-      assert(ib[d] == flds->ib[d]);
-      assert(im[d] == flds->im[d]);
+      assert(ib[d] == flds.ib[d]);
+      assert(im[d] == flds.im[d]);
     }
-    assert(nr_comp == flds->nr_comp);
+    assert(nr_comp == flds.nr_comp);
 #if PSC_FIELDS_AS_SINGLE
-    ierr = H5LTread_dataset_float(group, "fields_single", flds->data); CE;
+    ierr = H5LTread_dataset_float(group, "fields_single", flds.data); CE;
 #elif PSC_FIELDS_AS_C
-    ierr = H5LTread_dataset_double(group, "fields_c", flds->data); CE;
+    ierr = H5LTread_dataset_double(group, "fields_c", flds.data); CE;
 #endif
     ierr = H5Gclose(group); CE;
   }

@@ -9,12 +9,12 @@
 // debugging stuff...
 
 static void
-ascii_dump_field_yz(struct psc_fields *pf, int m, FILE *file)
+ascii_dump_field_yz(fields_t flds, int m, FILE *file)
 {
-  for (int iz = pf->ib[2]; iz < pf->ib[2] + pf->im[2]; iz++) {
-    for (int iy = pf->ib[1]; iy < pf->ib[1] + pf->im[1]; iy++) {
+  for (int iz = flds.ib[2]; iz < flds.ib[2] + flds.im[2]; iz++) {
+    for (int iy = flds.ib[1]; iy < flds.ib[1] + flds.im[1]; iy++) {
       int ix = 0; {
-	fprintf(file, "%d %d %d %g\n", ix, iy, iz, F3(pf, m, ix,iy,iz));
+	fprintf(file, "%d %d %d %g\n", ix, iy, iz, _F3(flds, m, ix,iy,iz));
       }
     }
     fprintf(file, "\n");
@@ -34,16 +34,16 @@ ascii_dump_field(struct psc_mfields *mflds_base, int m, const char *fname)
     sprintf(filename, "%s-p%d-p%d.asc", fname, rank, p);
     mpi_printf(MPI_COMM_WORLD, "ascii_dump_field: '%s'\n", filename);
 
-    struct psc_fields *pf = psc_mfields_get_patch(mflds, p);
+    fields_t flds = fields_t_mflds(mflds, p);
     FILE *file = fopen(filename, "w");
     free(filename);
-    if (pf->im[0] + 2*pf->ib[0] == 1) {
-      ascii_dump_field_yz(pf, m, file);
+    if (flds.im[0] + 2*flds.ib[0] == 1) {
+      ascii_dump_field_yz(flds, m, file);
     } else {
-      for (int iz = pf->ib[2]; iz < pf->ib[2] + pf->im[2]; iz++) {
-	for (int iy = pf->ib[1]; iy < pf->ib[1] + pf->im[1]; iy++) {
-	  for (int ix = pf->ib[0]; ix < pf->ib[0] + pf->im[0]; ix++) {
-	    fprintf(file, "%d %d %d %g\n", ix, iy, iz, F3(pf, m, ix,iy,iz));
+      for (int iz = flds.ib[2]; iz < flds.ib[2] + flds.im[2]; iz++) {
+	for (int iy = flds.ib[1]; iy < flds.ib[1] + flds.im[1]; iy++) {
+	  for (int ix = flds.ib[0]; ix < flds.ib[0] + flds.im[0]; ix++) {
+	    fprintf(file, "%d %d %d %g\n", ix, iy, iz, _F3(flds, m, ix,iy,iz));
 	  }
 	  fprintf(file, "\n");
 	}

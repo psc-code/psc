@@ -95,7 +95,7 @@ psc_checks_sub_read(struct psc_checks *checks, struct mrc_io *io)
 // FIXME, make diag_item?
 
 static void
-do_calc_div_j(struct psc *psc, int p, struct psc_fields *flds, struct psc_fields *div_j)
+do_calc_div_j(struct psc *psc, int p, fields_t flds, fields_t div_j)
 {
   define_dxdydz(dx, dy, dz);
   fields_real_t h[3];
@@ -108,10 +108,10 @@ do_calc_div_j(struct psc *psc, int p, struct psc_fields *flds, struct psc_fields
   }
 
   psc_foreach_3d(psc, p, jx, jy, jz, 0, 0) {
-    F3(div_j,0, jx,jy,jz) =
-      (F3(flds, JXI, jx,jy,jz) - F3(flds, JXI, jx-dx,jy,jz)) * h[0] +
-      (F3(flds, JYI, jx,jy,jz) - F3(flds, JYI, jx,jy-dy,jz)) * h[1] +
-      (F3(flds, JZI, jx,jy,jz) - F3(flds, JZI, jx,jy,jz-dz)) * h[2];
+    _F3(div_j,0, jx,jy,jz) =
+      (_F3(flds, JXI, jx,jy,jz) - _F3(flds, JXI, jx-dx,jy,jz)) * h[0] +
+      (_F3(flds, JYI, jx,jy,jz) - _F3(flds, JYI, jx,jy-dy,jz)) * h[1] +
+      (_F3(flds, JZI, jx,jy,jz) - _F3(flds, JZI, jx,jy,jz-dz)) * h[2];
   } psc_foreach_3d_end;
 }
 
@@ -120,8 +120,7 @@ calc_div_j(struct psc *psc, struct psc_mfields *mflds_base, struct psc_mfields *
 {
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, FIELDS_TYPE, JXI, JXI + 3);
   psc_foreach_patch(psc, p) {
-    do_calc_div_j(psc, p, psc_mfields_get_patch(mflds, p),
-		  psc_mfields_get_patch(div_j, p));
+    do_calc_div_j(psc, p, fields_t_mflds(mflds, p), fields_t_mflds(div_j, p));
   }
   psc_mfields_put_as(mflds, mflds_base, 0, 0);
 }
@@ -149,11 +148,11 @@ psc_checks_continuity(struct psc_checks *checks, struct psc *psc,
   double eps = checks->continuity_threshold;
   double max_err = 0.;
   psc_foreach_patch(psc, p) {
-    struct psc_fields *p_d_rho = psc_mfields_get_patch(d_rho, p);
-    struct psc_fields *p_div_j = psc_mfields_get_patch(div_j, p);
+    fields_t flds_d_rho = fields_t_mflds(d_rho, p);
+    fields_t flds_div_j = fields_t_mflds(div_j, p);
     psc_foreach_3d(psc, p, jx, jy, jz, 0, 0) {
-      double d_rho = F3(p_d_rho,0, jx,jy,jz);
-      double div_j = F3(p_div_j,0, jx,jy,jz);
+      double d_rho = _F3(flds_d_rho,0, jx,jy,jz);
+      double div_j = _F3(flds_div_j,0, jx,jy,jz);
       max_err = fmax(max_err, fabs(d_rho + div_j));
       if (fabs(d_rho + div_j) > eps) {
 	mprintf("(%d,%d,%d): %g -- %g diff %g\n", jx, jy, jz,
@@ -272,8 +271,8 @@ psc_checks_sub_gauss(struct psc_checks *checks, struct psc *psc)
   double eps = checks->gauss_threshold;
   double max_err = 0.;
   psc_foreach_patch(psc, p) {
-    struct psc_fields *p_rho = psc_mfields_get_patch(rho, p);
-    struct psc_fields *p_dive = psc_mfields_get_patch(dive, p);
+    fields_t flds_rho = fields_t_mflds(rho, p);
+    fields_t flds_dive = fields_t_mflds(dive, p);
 
     int l[3] = {0, 0, 0}, r[3] = {0, 0, 0};
     for (int d = 0; d < 3; d++) {
@@ -288,8 +287,8 @@ psc_checks_sub_gauss(struct psc_checks *checks, struct psc *psc)
 	  jz >= psc->patch[p].ldims[2] - r[2]) {
 	continue;
       }
-      double v_rho = F3(p_rho,0, jx,jy,jz);
-      double v_dive = F3(p_dive,0, jx,jy,jz);
+      double v_rho = _F3(flds_rho,0, jx,jy,jz);
+      double v_dive = _F3(flds_dive,0, jx,jy,jz);
       max_err = fmax(max_err, fabs(v_dive - v_rho));
 #if 0
       if (fabs(v_dive - v_rho) > eps) {
