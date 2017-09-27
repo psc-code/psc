@@ -11,14 +11,14 @@ random1()
 }
 
 static void
-copy_to_mrc_fld(struct mrc_fld *m3, struct psc_mfields *flds)
+copy_to_mrc_fld(struct mrc_fld *m3, struct psc_mfields *mflds)
 {
   psc_foreach_patch(ppsc, p) {
-    struct psc_fields *pf = psc_mfields_get_patch(flds, p);
+    fields_t flds = fields_t_mflds(mflds, p);
     struct mrc_fld_patch *m3p = mrc_fld_patch_get(m3, p);
     mrc_fld_foreach(m3, ix,iy,iz, 0,0) {
-      for (int m = 0; m < flds->nr_fields; m++) {
-	MRC_M3(m3p,m, ix,iy,iz) = F3_C(pf,m, ix,iy,iz);
+      for (int m = 0; m < mflds->nr_fields; m++) {
+	MRC_M3(m3p, m, ix,iy,iz) = _F3(flds, m, ix,iy,iz);
       }
     } mrc_fld_foreach_end;
     mrc_fld_patch_put(m3);
@@ -51,8 +51,8 @@ average_9_point(struct psc_mfields *mflds_av, struct psc_mfields *mflds)
   const int b = 1;
   for (int p = 0; p < ppsc->nr_patches; p++) {
     struct psc_patch *ppatch = &ppsc->patch[p];
-    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-    struct psc_fields *flds_av = psc_mfields_get_patch(mflds_av, p);
+    fields_t flds = fields_t_mflds(mflds, p);
+    fields_t flds_av = fields_t_mflds(mflds_av, p);
     
     if (at_lo_boundary(p, 1) && ppsc->domain.bnd_part_lo[1] == BND_PART_OPEN) {
       for (int m = 0; m < mflds->nr_fields; m++) {
@@ -64,16 +64,16 @@ average_9_point(struct psc_mfields *mflds_av, struct psc_mfields *mflds)
 	  ize--;
 	}
 	for (int iz = izb; iz < ize; iz++) {
-	  F3_C(flds_av, m, 0,0,iz) = (F3_C(flds, m, 0,b+0,iz-1) +
-				      F3_C(flds, m, 0,b+1,iz-1) +
-				      F3_C(flds, m, 0,b+2,iz-1) +
-				      F3_C(flds, m, 0,b+0,iz  ) +
-				      F3_C(flds, m, 0,b+1,iz  ) +
-				      F3_C(flds, m, 0,b+2,iz  ) +
-				      F3_C(flds, m, 0,b+0,iz+1) +
-				      F3_C(flds, m, 0,b+1,iz+1) +
-				      F3_C(flds, m, 0,b+2,iz+1)) / 9.;
-	  //F3_C(flds_av, m, 0,0,iz) = F3_C(flds, m, 0,b,iz);
+	  _F3(flds_av, m, 0,0,iz) = (_F3(flds, m, 0,b+0,iz-1) +
+				      _F3(flds, m, 0,b+1,iz-1) +
+				      _F3(flds, m, 0,b+2,iz-1) +
+				      _F3(flds, m, 0,b+0,iz  ) +
+				      _F3(flds, m, 0,b+1,iz  ) +
+				      _F3(flds, m, 0,b+2,iz  ) +
+				      _F3(flds, m, 0,b+0,iz+1) +
+				      _F3(flds, m, 0,b+1,iz+1) +
+				      _F3(flds, m, 0,b+2,iz+1)) / 9.;
+	  //_F3(flds_av, m, 0,0,iz) = _F3(flds, m, 0,b,iz);
 	}
       }
     }
@@ -89,16 +89,16 @@ average_9_point(struct psc_mfields *mflds_av, struct psc_mfields *mflds)
 	}
 	int iy = ppatch->ldims[1] - 1;
 	for (int iz = izb; iz < ize; iz++) {
-	  F3_C(flds_av, m, 0,iy,iz) = (F3_C(flds, m, 0,iy-b-0,iz-1) +
-				       F3_C(flds, m, 0,iy-b-1,iz-1) +
-				       F3_C(flds, m, 0,iy-b-2,iz-1) +
-				       F3_C(flds, m, 0,iy-b-0,iz  ) +
-				       F3_C(flds, m, 0,iy-b-1,iz  ) +
-				       F3_C(flds, m, 0,iy-b-2,iz  ) +
-				       F3_C(flds, m, 0,iy-b-0,iz+1) +
-				       F3_C(flds, m, 0,iy-b-1,iz+1) +
-				       F3_C(flds, m, 0,iy-b-2,iz+1)) / 9.;
-	  //F3_C(flds_av, m, 0,iy,iz) = F3_C(flds, m, 0,iy-b,iz);
+	  _F3(flds_av, m, 0,iy,iz) = (_F3(flds, m, 0,iy-b-0,iz-1) +
+				       _F3(flds, m, 0,iy-b-1,iz-1) +
+				       _F3(flds, m, 0,iy-b-2,iz-1) +
+				       _F3(flds, m, 0,iy-b-0,iz  ) +
+				       _F3(flds, m, 0,iy-b-1,iz  ) +
+				       _F3(flds, m, 0,iy-b-2,iz  ) +
+				       _F3(flds, m, 0,iy-b-0,iz+1) +
+				       _F3(flds, m, 0,iy-b-1,iz+1) +
+				       _F3(flds, m, 0,iy-b-2,iz+1)) / 9.;
+	  //_F3(flds_av, m, 0,iy,iz) = _F3(flds, m, 0,iy-b,iz);
 	}
       }
     }
@@ -113,16 +113,16 @@ average_9_point(struct psc_mfields *mflds_av, struct psc_mfields *mflds)
 	  iye--;
 	}
 	for (int iy = iyb; iy < iye; iy++) {
-	  F3_C(flds_av, m, 0,iy,0) = (F3_C(flds, m, 0,iy-1,b+0) +
-				      F3_C(flds, m, 0,iy-1,b+1) +
-				      F3_C(flds, m, 0,iy-1,b+2) +
-				      F3_C(flds, m, 0,iy  ,b+0) +
-				      F3_C(flds, m, 0,iy  ,b+1) +
-				      F3_C(flds, m, 0,iy  ,b+2) +
-				      F3_C(flds, m, 0,iy+1,b+0) +
-				      F3_C(flds, m, 0,iy+1,b+1) +
-				      F3_C(flds, m, 0,iy+1,b+2)) / 9.;
-	  //	  F3_C(flds_av, m, 0,iy,0) = F3_C(flds, m, 0,iy,b);
+	  _F3(flds_av, m, 0,iy,0) = (_F3(flds, m, 0,iy-1,b+0) +
+				      _F3(flds, m, 0,iy-1,b+1) +
+				      _F3(flds, m, 0,iy-1,b+2) +
+				      _F3(flds, m, 0,iy  ,b+0) +
+				      _F3(flds, m, 0,iy  ,b+1) +
+				      _F3(flds, m, 0,iy  ,b+2) +
+				      _F3(flds, m, 0,iy+1,b+0) +
+				      _F3(flds, m, 0,iy+1,b+1) +
+				      _F3(flds, m, 0,iy+1,b+2)) / 9.;
+	  //	  _F3(flds_av, m, 0,iy,0) = _F3(flds, m, 0,iy,b);
 	}
       }
     }
@@ -138,16 +138,16 @@ average_9_point(struct psc_mfields *mflds_av, struct psc_mfields *mflds)
 	  iye--;
 	}
 	for (int iy = iyb; iy < iye; iy++) {
-	  F3_C(flds_av, m, 0,iy,iz) = (F3_C(flds, m, 0,iy-1,iz-b-0) +
-				       F3_C(flds, m, 0,iy-1,iz-b-1) +
-				       F3_C(flds, m, 0,iy-1,iz-b-2) +
-				       F3_C(flds, m, 0,iy  ,iz-b-0) +
-				       F3_C(flds, m, 0,iy  ,iz-b-1) +
-				       F3_C(flds, m, 0,iy  ,iz-b-2) +
-				       F3_C(flds, m, 0,iy+1,iz-b-0) +
-				       F3_C(flds, m, 0,iy+1,iz-b-1) +
-				       F3_C(flds, m, 0,iy+1,iz-b-2)) / 9.;
-	  //	  F3_C(flds_av, m, 0,iy,iz) = F3_C(flds, m, 0,iy,iz-b);
+	  _F3(flds_av, m, 0,iy,iz) = (_F3(flds, m, 0,iy-1,iz-b-0) +
+				       _F3(flds, m, 0,iy-1,iz-b-1) +
+				       _F3(flds, m, 0,iy-1,iz-b-2) +
+				       _F3(flds, m, 0,iy  ,iz-b-0) +
+				       _F3(flds, m, 0,iy  ,iz-b-1) +
+				       _F3(flds, m, 0,iy  ,iz-b-2) +
+				       _F3(flds, m, 0,iy+1,iz-b-0) +
+				       _F3(flds, m, 0,iy+1,iz-b-1) +
+				       _F3(flds, m, 0,iy+1,iz-b-2)) / 9.;
+	  //	  _F3(flds_av, m, 0,iy,iz) = _F3(flds, m, 0,iy,iz-b);
 	}
       }
     }
@@ -157,15 +157,15 @@ average_9_point(struct psc_mfields *mflds_av, struct psc_mfields *mflds)
       for (int m = 0; m < mflds->nr_fields; m++) {
 	int iy = 0;
 	int iz = 0;
-	F3_C(flds_av, m, 0,iy,iz) = (F3_C(flds, m, 0,iy+1,iz+1) +
-				     F3_C(flds, m, 0,iy+1,iz+2) +
-				     F3_C(flds, m, 0,iy+1,iz+3) +
-				     F3_C(flds, m, 0,iy+2,iz+1) +
-				     F3_C(flds, m, 0,iy+2,iz+2) +
-				     F3_C(flds, m, 0,iy+2,iz+3) +
-				     F3_C(flds, m, 0,iy+3,iz+1) +
-				     F3_C(flds, m, 0,iy+3,iz+2) +
-				     F3_C(flds, m, 0,iy+3,iz+3)) / 9.;
+	_F3(flds_av, m, 0,iy,iz) = (_F3(flds, m, 0,iy+1,iz+1) +
+				     _F3(flds, m, 0,iy+1,iz+2) +
+				     _F3(flds, m, 0,iy+1,iz+3) +
+				     _F3(flds, m, 0,iy+2,iz+1) +
+				     _F3(flds, m, 0,iy+2,iz+2) +
+				     _F3(flds, m, 0,iy+2,iz+3) +
+				     _F3(flds, m, 0,iy+3,iz+1) +
+				     _F3(flds, m, 0,iy+3,iz+2) +
+				     _F3(flds, m, 0,iy+3,iz+3)) / 9.;
       }
     }
 
@@ -174,15 +174,15 @@ average_9_point(struct psc_mfields *mflds_av, struct psc_mfields *mflds)
       for (int m = 0; m < mflds->nr_fields; m++) {
 	int iy = 0;
 	int iz = ppatch->ldims[2] - 1;
-	F3_C(flds_av, m, 0,iy,iz) = (F3_C(flds, m, 0,iy+1,iz-1) +
-				     F3_C(flds, m, 0,iy+1,iz-2) +
-				     F3_C(flds, m, 0,iy+1,iz-3) +
-				     F3_C(flds, m, 0,iy+2,iz-1) +
-				     F3_C(flds, m, 0,iy+2,iz-2) +
-				     F3_C(flds, m, 0,iy+2,iz-3) +
-				     F3_C(flds, m, 0,iy+3,iz-1) +
-				     F3_C(flds, m, 0,iy+3,iz-2) +
-				     F3_C(flds, m, 0,iy+3,iz-3)) / 9.;
+	_F3(flds_av, m, 0,iy,iz) = (_F3(flds, m, 0,iy+1,iz-1) +
+				     _F3(flds, m, 0,iy+1,iz-2) +
+				     _F3(flds, m, 0,iy+1,iz-3) +
+				     _F3(flds, m, 0,iy+2,iz-1) +
+				     _F3(flds, m, 0,iy+2,iz-2) +
+				     _F3(flds, m, 0,iy+2,iz-3) +
+				     _F3(flds, m, 0,iy+3,iz-1) +
+				     _F3(flds, m, 0,iy+3,iz-2) +
+				     _F3(flds, m, 0,iy+3,iz-3)) / 9.;
       }
     }
 
@@ -191,15 +191,15 @@ average_9_point(struct psc_mfields *mflds_av, struct psc_mfields *mflds)
       for (int m = 0; m < mflds->nr_fields; m++) {
 	int iy = ppatch->ldims[1] - 1;
 	int iz = 0;
-	F3_C(flds_av, m, 0,iy,iz) = (F3_C(flds, m, 0,iy-1,iz+1) +
-				     F3_C(flds, m, 0,iy-1,iz+2) +
-				     F3_C(flds, m, 0,iy-1,iz+3) +
-				     F3_C(flds, m, 0,iy-2,iz+1) +
-				     F3_C(flds, m, 0,iy-2,iz+2) +
-				     F3_C(flds, m, 0,iy-2,iz+3) +
-				     F3_C(flds, m, 0,iy-3,iz+1) +
-				     F3_C(flds, m, 0,iy-3,iz+2) +
-				     F3_C(flds, m, 0,iy-3,iz+3)) / 9.;
+	_F3(flds_av, m, 0,iy,iz) = (_F3(flds, m, 0,iy-1,iz+1) +
+				     _F3(flds, m, 0,iy-1,iz+2) +
+				     _F3(flds, m, 0,iy-1,iz+3) +
+				     _F3(flds, m, 0,iy-2,iz+1) +
+				     _F3(flds, m, 0,iy-2,iz+2) +
+				     _F3(flds, m, 0,iy-2,iz+3) +
+				     _F3(flds, m, 0,iy-3,iz+1) +
+				     _F3(flds, m, 0,iy-3,iz+2) +
+				     _F3(flds, m, 0,iy-3,iz+3)) / 9.;
       }
     }
 
@@ -208,15 +208,15 @@ average_9_point(struct psc_mfields *mflds_av, struct psc_mfields *mflds)
       for (int m = 0; m < mflds->nr_fields; m++) {
 	int iy = ppatch->ldims[1] - 1;
 	int iz = ppatch->ldims[2] - 1;
-	F3_C(flds_av, m, 0,iy,iz) = (F3_C(flds, m, 0,iy-1,iz-1) +
-				     F3_C(flds, m, 0,iy-1,iz-2) +
-				     F3_C(flds, m, 0,iy-1,iz-3) +
-				     F3_C(flds, m, 0,iy-2,iz-1) +
-				     F3_C(flds, m, 0,iy-2,iz-2) +
-				     F3_C(flds, m, 0,iy-2,iz-3) +
-				     F3_C(flds, m, 0,iy-3,iz-1) +
-				     F3_C(flds, m, 0,iy-3,iz-2) +
-				     F3_C(flds, m, 0,iy-3,iz-3)) / 9.;
+	_F3(flds_av, m, 0,iy,iz) = (_F3(flds, m, 0,iy-1,iz-1) +
+				     _F3(flds, m, 0,iy-1,iz-2) +
+				     _F3(flds, m, 0,iy-1,iz-3) +
+				     _F3(flds, m, 0,iy-2,iz-1) +
+				     _F3(flds, m, 0,iy-2,iz-2) +
+				     _F3(flds, m, 0,iy-2,iz-3) +
+				     _F3(flds, m, 0,iy-3,iz-1) +
+				     _F3(flds, m, 0,iy-3,iz-2) +
+				     _F3(flds, m, 0,iy-3,iz-3)) / 9.;
       }
     }
   }
@@ -229,32 +229,32 @@ average_in_time(struct psc_bnd_particles *bnd,
   const double R = bnd->time_relax;
   for (int p = 0; p < ppsc->nr_patches; p++) {
     struct psc_patch *ppatch = &ppsc->patch[p];
-    struct psc_fields *flds_av = psc_mfields_get_patch(mflds_av, p);
-    struct psc_fields *flds_last = psc_mfields_get_patch(mflds_last, p);
+    fields_t flds_av = fields_t_mflds(mflds_av, p);
+    fields_t flds_last = fields_t_mflds(mflds_last, p);
     
     for (int m = 0; m < mflds_av->nr_fields; m++) {
       if (bnd->first_time) {
 	for (int iz = 0; iz < ppatch->ldims[2]; iz++) {
 	  for (int iy = 0; iy < ppatch->ldims[1]; iy++) {
-	    F3_C(flds_last, m, 0,iy,iz) = F3_C(flds_av, m, 0,iy,iz);
+	    _F3(flds_last, m, 0,iy,iz) = _F3(flds_av, m, 0,iy,iz);
 	  }
 	}
       } else {
 	// at lower and upper z bnd only FIXME
 	for (int iz = 0; iz < ppatch->ldims[2]; iz += ppatch->ldims[2] + 1) {
 	  for (int iy = 0; iy < ppatch->ldims[1]; iy++) {
-	    F3_C(flds_av, m, 0,iy,iz) = 
-	      R * F3_C(flds_av, m, 0,iy,iz)
-	      + (1. - R) * F3_C(flds_last, m, 0,iy,iz);
-	    F3_C(flds_last, m, 0,iy,iz) = F3_C(flds_av, m, 0,iy,iz);
+	    _F3(flds_av, m, 0,iy,iz) = 
+	      R * _F3(flds_av, m, 0,iy,iz)
+	      + (1. - R) * _F3(flds_last, m, 0,iy,iz);
+	    _F3(flds_last, m, 0,iy,iz) = _F3(flds_av, m, 0,iy,iz);
 	  }
 	}
 	for (int iz = 1; iz < ppatch->ldims[2] - 1; iz++) {
 	  for (int iy = 0; iy < ppatch->ldims[1]; iy += ppatch->ldims[1] + 1) {
-	    F3_C(flds_av, m, 0,iy,iz) = 
-	      R * F3_C(flds_av, m, 0,iy,iz)
-	      + (1. - R) * F3_C(flds_last, m, 0,iy,iz);
-	    F3_C(flds_last, m, 0,iy,iz) = F3_C(flds_av, m, 0,iy,iz);
+	    _F3(flds_av, m, 0,iy,iz) = 
+	      R * _F3(flds_av, m, 0,iy,iz)
+	      + (1. - R) * _F3(flds_last, m, 0,iy,iz);
+	    _F3(flds_last, m, 0,iy,iz) = _F3(flds_av, m, 0,iy,iz);
 	  }
 	}
       }
@@ -405,23 +405,23 @@ enum {
 };
 
 static inline double
-inject_particles(int p, struct psc_mparticles *mprts, struct psc_fields *flds, 
-		 struct psc_fields *flds_nvt_av, int ix, int iy, int iz,
+inject_particles(int p, struct psc_mparticles *mprts, fields_t flds, 
+		 fields_t flds_nvt_av, int ix, int iy, int iz,
 		 double ninjo, int kind, double pos[3], double dir,
 		 int X, int Y, int Z)
 {
   particle_range_t prts = particle_range_mprts(mprts, p);
 
-  double n     =         F3_C(flds_nvt_av, 10*kind + NVT_N     , ix,iy,iz);
-  double v[3]  = {       F3_C(flds_nvt_av, 10*kind + NVT_VX, ix,iy,iz),
-		         F3_C(flds_nvt_av, 10*kind + NVT_VY, ix,iy,iz),
-			 F3_C(flds_nvt_av, 10*kind + NVT_VZ, ix,iy,iz), };
-  double vv[6] = {       F3_C(flds_nvt_av, 10*kind + NVT_VXVX + X, ix,iy,iz),
-			 F3_C(flds_nvt_av, 10*kind + NVT_VXVX + Y, ix,iy,iz),
-			 F3_C(flds_nvt_av, 10*kind + NVT_VXVX + Z, ix,iy,iz),
-			 F3_C(flds_nvt_av, 10*kind + NVT_VXVY + X, ix,iy,iz),
-		   dir * F3_C(flds_nvt_av, 10*kind + NVT_VXVY + Y, ix,iy,iz),
-		   dir * F3_C(flds_nvt_av, 10*kind + NVT_VXVY + Z, ix,iy,iz), };
+  double n     =         _F3(flds_nvt_av, 10*kind + NVT_N     , ix,iy,iz);
+  double v[3]  = {       _F3(flds_nvt_av, 10*kind + NVT_VX, ix,iy,iz),
+		         _F3(flds_nvt_av, 10*kind + NVT_VY, ix,iy,iz),
+			 _F3(flds_nvt_av, 10*kind + NVT_VZ, ix,iy,iz), };
+  double vv[6] = {       _F3(flds_nvt_av, 10*kind + NVT_VXVX + X, ix,iy,iz),
+			 _F3(flds_nvt_av, 10*kind + NVT_VXVX + Y, ix,iy,iz),
+			 _F3(flds_nvt_av, 10*kind + NVT_VXVX + Z, ix,iy,iz),
+			 _F3(flds_nvt_av, 10*kind + NVT_VXVY + X, ix,iy,iz),
+		   dir * _F3(flds_nvt_av, 10*kind + NVT_VXVY + Y, ix,iy,iz),
+		   dir * _F3(flds_nvt_av, 10*kind + NVT_VXVY + Z, ix,iy,iz), };
   /* n = 1.; */
   /* v[0] = 0.; v[1] = 0.; v[2] = .1; */
 
@@ -515,11 +515,11 @@ inject_particles(int p, struct psc_mparticles *mprts, struct psc_fields *flds,
 
       double Jz = prt->qni_wni * dz * ppsc->coeff.cori / ppsc->dt;
       if (Z == 2) {
-	F3_C(flds, JXI + Z, ix,iy  ,iz) += (1 - yr) * Jz;
-	F3_C(flds, JXI + Z, ix,iy+1,iz) += (    yr) * Jz;
+	_F3(flds, JXI + Z, ix,iy  ,iz) += (1 - yr) * Jz;
+	_F3(flds, JXI + Z, ix,iy+1,iz) += (    yr) * Jz;
       } else if (Z == 1) {
-	F3_C(flds, JXI + Z, ix,iy,iz  ) += (1 - xr) * Jz;
-	F3_C(flds, JXI + Z, ix,iy,iz+1) += (    xr) * Jz;
+	_F3(flds, JXI + Z, ix,iy,iz  ) += (1 - xr) * Jz;
+	_F3(flds, JXI + Z, ix,iy,iz+1) += (    xr) * Jz;
       } else {
 	assert(0);
       }
@@ -538,8 +538,8 @@ inject_particles(int p, struct psc_mparticles *mprts, struct psc_fields *flds,
 }
 
 static double
-inject_particles_y(int p, struct psc_mparticles *mprts, struct psc_fields *flds, 
-		   struct psc_fields *flds_nvt_av, int ix, int iy, int iz,
+inject_particles_y(int p, struct psc_mparticles *mprts, fields_t flds, 
+		   fields_t flds_nvt_av, int ix, int iy, int iz,
 		   double ninjo, int kind, double pos[3], double dir)
 {
   return inject_particles(p, mprts, flds, flds_nvt_av, ix, iy, iz, ninjo, kind, pos, dir,
@@ -547,8 +547,8 @@ inject_particles_y(int p, struct psc_mparticles *mprts, struct psc_fields *flds,
 }
 
 static double
-inject_particles_z(int p, struct psc_mparticles *mprts, struct psc_fields *flds, 
-		   struct psc_fields *flds_nvt_av, int ix, int iy, int iz,
+inject_particles_z(int p, struct psc_mparticles *mprts, fields_t flds, 
+		   fields_t flds_nvt_av, int ix, int iy, int iz,
 		   double ninjo, int kind, double pos[3], double dir)
 {
   return inject_particles(p, mprts, flds, flds_nvt_av, ix, iy, iz, ninjo, kind, pos, dir,
@@ -572,18 +572,18 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
 
   for (int p = 0; p < ppsc->nr_patches; p++) {
     struct psc_patch *ppatch = &ppsc->patch[p];
-    struct psc_fields *flds_nvt_av = psc_mfields_get_patch(bnd->mflds_nvt_av, p);
-    struct psc_fields *flds_n_in = psc_mfields_get_patch(bnd->mflds_n_in, p);
-    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+    fields_t flds_nvt_av = fields_t_mflds(bnd->mflds_nvt_av, p);
+    fields_t flds_n_in = fields_t_mflds(bnd->mflds_n_in, p);
+    fields_t flds = fields_t_mflds(mflds, p);
 
     for (int m = 0; m < nr_kinds; m++) {
       // inject at y lo
       if (at_lo_boundary(p, 1) && ppsc->domain.bnd_part_lo[1] == BND_PART_OPEN) {
 	int iy = 0;
 	for (int iz = 0; iz < ppatch->ldims[2]; iz++) {
-	  double ninjo = F3_C(flds_n_in, m, 0,iy,iz);
+	  double ninjo = _F3(flds_n_in, m, 0,iy,iz);
 	  double pos[3] = { 0., 0., iz * ppatch->dx[2], };
-	  F3_C(flds_n_in, m, 0,iy,iz) =
+	  _F3(flds_n_in, m, 0,iy,iz) =
 	    inject_particles_y(p, mprts, flds, flds_nvt_av, 0,iy,iz, ninjo, m, pos, +1.);
 	}
       }
@@ -591,9 +591,9 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
       if (at_hi_boundary(p, 1) && ppsc->domain.bnd_part_hi[1] == BND_PART_OPEN) {
 	int iy = ppatch->ldims[1] - 1;
 	for (int iz = 0; iz < ppatch->ldims[2]; iz++) {
-	  double ninjo = F3_C(flds_n_in, m, 0,iy,iz);
+	  double ninjo = _F3(flds_n_in, m, 0,iy,iz);
 	  double pos[3] = { 0., (iy + 1) * (1-1e-6) * ppatch->dx[1], iz * ppatch->dx[2] };
-	  F3_C(flds_n_in, m, 0,iy,iz) =
+	  _F3(flds_n_in, m, 0,iy,iz) =
 	    inject_particles_y(p, mprts, flds, flds_nvt_av, 0,iy,iz, ninjo, m, pos, -1.);
 	}
       }
@@ -601,9 +601,9 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
       if (at_lo_boundary(p, 2) && ppsc->domain.bnd_part_lo[2] == BND_PART_OPEN) {
 	int iz = 0;
 	for (int iy = 0; iy < ppatch->ldims[1]; iy++) {
-	  double ninjo = F3_C(flds_n_in, m, 0,iy,iz);
+	  double ninjo = _F3(flds_n_in, m, 0,iy,iz);
 	  double pos[3] = { 0., iy * ppatch->dx[1], 0. };
-	  F3_C(flds_n_in, m, 0,iy,iz) =
+	  _F3(flds_n_in, m, 0,iy,iz) =
 	    inject_particles_z(p, mprts, flds, flds_nvt_av, 0,iy,iz, ninjo, m, pos, +1.);
 	}
       }
@@ -611,9 +611,9 @@ psc_bnd_particles_open_boundary(struct psc_bnd_particles *bnd, struct psc_mparti
       if (at_hi_boundary(p, 2) && ppsc->domain.bnd_part_hi[2] == BND_PART_OPEN) {
 	int iz = ppatch->ldims[2] - 1;
 	for (int iy = 0; iy < ppatch->ldims[1]; iy++) {
-	  double ninjo = F3_C(flds_n_in, m, 0,iy,iz);
+	  double ninjo = _F3(flds_n_in, m, 0,iy,iz);
 	  double pos[3] = { 0., iy * ppatch->dx[1], (iz + 1) * (1-1e-6) * ppatch->dx[2] };
-	  F3_C(flds_n_in, m, 0,iy,iz) =
+	  _F3(flds_n_in, m, 0,iy,iz) =
 	    inject_particles_z(p, mprts, flds, flds_nvt_av, 0,iy,iz, ninjo, m, pos, -1.);
 	}
       }

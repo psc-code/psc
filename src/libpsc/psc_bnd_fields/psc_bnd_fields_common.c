@@ -7,67 +7,67 @@
 //#define DEBUG
 
 static void
-conducting_wall_E_lo(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
+conducting_wall_E_lo(struct psc_bnd_fields *bnd, fields_t flds, int p, int d)
 {
-  struct psc_patch *patch = ppsc->patch + pf->p;
+  struct psc_patch *patch = ppsc->patch + p;
 
   if (d == 1) {
 #ifdef DEBUG
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
       for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
-	fields_t_set_nan(&F3(pf, EX, ix, -1,iz));
-	fields_t_set_nan(&F3(pf, EX, ix, -2,iz));
-	fields_t_set_nan(&F3(pf, EY, ix, -1,iz));
-	fields_t_set_nan(&F3(pf, EY, ix, -2,iz));
-	fields_t_set_nan(&F3(pf, EZ, ix, -1,iz));
-	fields_t_set_nan(&F3(pf, EZ, ix, -2,iz));
+	fields_t_set_nan(&_F3(flds, EX, ix, -1,iz));
+	fields_t_set_nan(&_F3(flds, EX, ix, -2,iz));
+	fields_t_set_nan(&_F3(flds, EY, ix, -1,iz));
+	fields_t_set_nan(&_F3(flds, EY, ix, -2,iz));
+	fields_t_set_nan(&_F3(flds, EZ, ix, -1,iz));
+	fields_t_set_nan(&_F3(flds, EZ, ix, -2,iz));
       }
     }
 #endif
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
       // FIXME, needs to be for other dir, too, and it's ugly
-      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
-	F3(pf, EX, ix, 0,iz) =  0.;
-	F3(pf, EX, ix,-1,iz) =  F3(pf, EX, ix, 1,iz);
-	F3(pf, EX, ix,-2,iz) =  F3(pf, EX, ix, 2,iz);
-	F3(pf, EY, ix,-1,iz) = -F3(pf, EY, ix, 0,iz);
-	F3(pf, EY, ix,-2,iz) = -F3(pf, EY, ix, 1,iz);
+      for (int ix = MAX(-2, flds.ib[0]); ix < MIN(patch->ldims[0] + 2, flds.ib[0] + flds.im[0]) ; ix++) {
+	_F3(flds, EX, ix, 0,iz) =  0.;
+	_F3(flds, EX, ix,-1,iz) =  _F3(flds, EX, ix, 1,iz);
+	_F3(flds, EX, ix,-2,iz) =  _F3(flds, EX, ix, 2,iz);
+	_F3(flds, EY, ix,-1,iz) = -_F3(flds, EY, ix, 0,iz);
+	_F3(flds, EY, ix,-2,iz) = -_F3(flds, EY, ix, 1,iz);
       }
     }
 
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
-      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
-	F3(pf, EZ, ix, 0,iz) =  0.;
-	F3(pf, EZ, ix,-1,iz) =  F3(pf, EZ, ix, 1,iz);
-	F3(pf, EZ, ix,-2,iz) =  F3(pf, EZ, ix, 2,iz);
+      for (int ix = MAX(-2, flds.ib[0]); ix < MIN(patch->ldims[0] + 2, flds.ib[0] + flds.im[0]) ; ix++) {
+	_F3(flds, EZ, ix, 0,iz) =  0.;
+	_F3(flds, EZ, ix,-1,iz) =  _F3(flds, EZ, ix, 1,iz);
+	_F3(flds, EZ, ix,-2,iz) =  _F3(flds, EZ, ix, 2,iz);
       }
     }
   } else if (d == 2) {
 #ifdef DEBUG
     for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
       for (int ix = -2; ix < patch->ldims[0] + 2; ix++) {
-	fields_t_set_nan(&F3(pf, EX, ix, iy, -1));
-	fields_t_set_nan(&F3(pf, EX, ix, iy, -2));
-	fields_t_set_nan(&F3(pf, EY, ix, iy, -1));
-	fields_t_set_nan(&F3(pf, EY, ix, iy, -2));
-	fields_t_set_nan(&F3(pf, EZ, ix, iy, -1));
-	fields_t_set_nan(&F3(pf, EZ, ix, iy, -2));
+	fields_t_set_nan(&_F3(flds, EX, ix, iy, -1));
+	fields_t_set_nan(&_F3(flds, EX, ix, iy, -2));
+	fields_t_set_nan(&_F3(flds, EY, ix, iy, -1));
+	fields_t_set_nan(&_F3(flds, EY, ix, iy, -2));
+	fields_t_set_nan(&_F3(flds, EZ, ix, iy, -1));
+	fields_t_set_nan(&_F3(flds, EZ, ix, iy, -2));
       }
     }
 #endif
     for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
       for (int ix = -2; ix < patch->ldims[0] + 2; ix++) {
-	F3(pf, EX, ix, iy, 0) =  0.;
-	F3(pf, EX, ix, iy,-1) =  F3(pf, EX, ix, iy, 1);
-	F3(pf, EZ, ix, iy,-1) = -F3(pf, EZ, ix, iy, 0);
-	F3(pf, EZ, ix, iy,-2) = -F3(pf, EZ, ix, iy, 1);
+	_F3(flds, EX, ix, iy, 0) =  0.;
+	_F3(flds, EX, ix, iy,-1) =  _F3(flds, EX, ix, iy, 1);
+	_F3(flds, EZ, ix, iy,-1) = -_F3(flds, EZ, ix, iy, 0);
+	_F3(flds, EZ, ix, iy,-2) = -_F3(flds, EZ, ix, iy, 1);
       }
     }
 
     for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
       for (int ix = -2; ix < patch->ldims[0] + 2; ix++) {
-	F3(pf, EY, ix, iy, 0) =  0.;
-	F3(pf, EY, ix, iy,-1) =  F3(pf, EY, ix, iy, 1);
+	_F3(flds, EY, ix, iy, 0) =  0.;
+	_F3(flds, EY, ix, iy,-1) =  _F3(flds, EY, ix, iy, 1);
       }
     }
   } else  {
@@ -76,36 +76,36 @@ conducting_wall_E_lo(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
 }
 
 static void
-conducting_wall_E_hi(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
+conducting_wall_E_hi(struct psc_bnd_fields *bnd, fields_t flds, int p, int d)
 {
-  struct psc_patch *patch = ppsc->patch + pf->p;
+  struct psc_patch *patch = ppsc->patch + p;
 
    if (d == 1) {
     int my = patch->ldims[1];
 #ifdef DEBUG
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
-      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
- 	fields_t_set_nan(&F3(pf, EX, ix, my  , iz));
-	fields_t_set_nan(&F3(pf, EX, ix, my+1, iz));
-	fields_t_set_nan(&F3(pf, EY, ix, my  , iz));
-	fields_t_set_nan(&F3(pf, EY, ix, my+1, iz));
-	fields_t_set_nan(&F3(pf, EZ, ix, my  , iz));
-	fields_t_set_nan(&F3(pf, EZ, ix, my+1, iz));
+      for (int ix = MAX(-2, flds.ib[0]); ix < MIN(patch->ldims[0] + 2, flds.ib[0] + flds.im[0]) ; ix++) {
+ 	fields_t_set_nan(&_F3(flds, EX, ix, my  , iz));
+	fields_t_set_nan(&_F3(flds, EX, ix, my+1, iz));
+	fields_t_set_nan(&_F3(flds, EY, ix, my  , iz));
+	fields_t_set_nan(&_F3(flds, EY, ix, my+1, iz));
+	fields_t_set_nan(&_F3(flds, EZ, ix, my  , iz));
+	fields_t_set_nan(&_F3(flds, EZ, ix, my+1, iz));
       }
     }
 #endif
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
-      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
-	F3(pf, EX, ix,my  ,iz) = 0.;
-	F3(pf, EX, ix,my+1,iz) =  F3(pf, EX, ix, my-1,iz);
-	F3(pf, EY, ix,my  ,iz) = -F3(pf, EY, ix, my-1,iz);
+      for (int ix = MAX(-2, flds.ib[0]); ix < MIN(patch->ldims[0] + 2, flds.ib[0] + flds.im[0]) ; ix++) {
+	_F3(flds, EX, ix,my  ,iz) = 0.;
+	_F3(flds, EX, ix,my+1,iz) =  _F3(flds, EX, ix, my-1,iz);
+	_F3(flds, EY, ix,my  ,iz) = -_F3(flds, EY, ix, my-1,iz);
       }
     }
 
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
-      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
-	F3(pf, EZ, ix,my  ,iz) = 0.;
-	F3(pf, EZ, ix,my+1,iz) =  F3(pf, EZ, ix, my-1,iz);
+      for (int ix = MAX(-2, flds.ib[0]); ix < MIN(patch->ldims[0] + 2, flds.ib[0] + flds.im[0]) ; ix++) {
+	_F3(flds, EZ, ix,my  ,iz) = 0.;
+	_F3(flds, EZ, ix,my+1,iz) =  _F3(flds, EZ, ix, my-1,iz);
       }
     }
   } else if (d == 2) {
@@ -113,28 +113,28 @@ conducting_wall_E_hi(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
 #ifdef DEBUG
     for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
       for (int ix = -2; ix < patch->ldims[0] + 2; ix++) {
-	fields_t_set_nan(&F3(pf, EX, ix, iy, mz));
-	fields_t_set_nan(&F3(pf, EX, ix, iy, mz+1));
-	fields_t_set_nan(&F3(pf, EY, ix, iy, mz));
-	fields_t_set_nan(&F3(pf, EY, ix, iy, mz+1));
-	fields_t_set_nan(&F3(pf, EZ, ix, iy, mz));
-	fields_t_set_nan(&F3(pf, EZ, ix, iy, mz+1));
+	fields_t_set_nan(&_F3(flds, EX, ix, iy, mz));
+	fields_t_set_nan(&_F3(flds, EX, ix, iy, mz+1));
+	fields_t_set_nan(&_F3(flds, EY, ix, iy, mz));
+	fields_t_set_nan(&_F3(flds, EY, ix, iy, mz+1));
+	fields_t_set_nan(&_F3(flds, EZ, ix, iy, mz));
+	fields_t_set_nan(&_F3(flds, EZ, ix, iy, mz+1));
       }
     }
 #endif
     for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
       for (int ix = -2; ix < patch->ldims[0] + 2; ix++) {
-	F3(pf, EX, ix, iy, mz) = 0.;
-	F3(pf, EX, ix, iy, mz+1) =  F3(pf, EX, ix, iy, mz-1);
-	F3(pf, EZ, ix, iy, mz)   = -F3(pf, EZ, ix, iy, mz-1);
-	F3(pf, EZ, ix, iy, mz+1)   = -F3(pf, EZ, ix, iy, mz-2);
+	_F3(flds, EX, ix, iy, mz) = 0.;
+	_F3(flds, EX, ix, iy, mz+1) =  _F3(flds, EX, ix, iy, mz-1);
+	_F3(flds, EZ, ix, iy, mz)   = -_F3(flds, EZ, ix, iy, mz-1);
+	_F3(flds, EZ, ix, iy, mz+1)   = -_F3(flds, EZ, ix, iy, mz-2);
       }
     }
 
     for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
       for (int ix = -2; ix < patch->ldims[0] + 2; ix++) {
-	F3(pf, EY, ix, iy, mz) = 0.;
-	F3(pf, EY, ix, iy, mz+1) =  F3(pf, EY, ix, iy, mz-1);
+	_F3(flds, EY, ix, iy, mz) = 0.;
+	_F3(flds, EY, ix, iy, mz+1) =  _F3(flds, EY, ix, iy, mz-1);
       }
     }
   } else {
@@ -143,58 +143,58 @@ conducting_wall_E_hi(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
 }
 
 static void
-conducting_wall_H_lo(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
+conducting_wall_H_lo(struct psc_bnd_fields *bnd, fields_t flds, int p, int d)
 {
-  struct psc_patch *patch = ppsc->patch + pf->p;
+  struct psc_patch *patch = ppsc->patch + p;
 
   if (d == 1) {
 #ifdef DEBUG
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
-      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
-	fields_t_set_nan(&F3(pf, HX, ix, -1,iz));
-	fields_t_set_nan(&F3(pf, HX, ix, -2,iz));
-	fields_t_set_nan(&F3(pf, HY, ix, -1,iz));
-	fields_t_set_nan(&F3(pf, HY, ix, -2,iz));
-	fields_t_set_nan(&F3(pf, HZ, ix, -1,iz));
-	fields_t_set_nan(&F3(pf, HZ, ix, -2,iz));
+      for (int ix = MAX(-2, flds.ib[0]); ix < MIN(patch->ldims[0] + 2, flds.ib[0] + flds.im[0]) ; ix++) {
+	fields_t_set_nan(&_F3(flds, HX, ix, -1,iz));
+	fields_t_set_nan(&_F3(flds, HX, ix, -2,iz));
+	fields_t_set_nan(&_F3(flds, HY, ix, -1,iz));
+	fields_t_set_nan(&_F3(flds, HY, ix, -2,iz));
+	fields_t_set_nan(&_F3(flds, HZ, ix, -1,iz));
+	fields_t_set_nan(&_F3(flds, HZ, ix, -2,iz));
       }
     }
 #endif
     for (int iz = -1; iz < patch->ldims[2] + 1; iz++) {
-      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
-	F3(pf, HY, ix,-1,iz) =  F3(pf, HY, ix, 1,iz);
-	F3(pf, HX, ix,-1,iz) = -F3(pf, HX, ix, 0,iz);
+      for (int ix = MAX(-2, flds.ib[0]); ix < MIN(patch->ldims[0] + 2, flds.ib[0] + flds.im[0]) ; ix++) {
+	_F3(flds, HY, ix,-1,iz) =  _F3(flds, HY, ix, 1,iz);
+	_F3(flds, HX, ix,-1,iz) = -_F3(flds, HX, ix, 0,iz);
       }
     }
     for (int iz = -1; iz < patch->ldims[2] + 2; iz++) {
-      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
-	F3(pf, HZ, ix,-1,iz) = -F3(pf, HZ, ix, 0,iz);
+      for (int ix = MAX(-2, flds.ib[0]); ix < MIN(patch->ldims[0] + 2, flds.ib[0] + flds.im[0]) ; ix++) {
+	_F3(flds, HZ, ix,-1,iz) = -_F3(flds, HZ, ix, 0,iz);
       }
     }
   } else if (d == 2) {
 #ifdef DEBUG
     for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
       for (int ix = -2; ix < patch->ldims[0] + 2; ix++) {
-	fields_t_set_nan(&F3(pf, HX, ix, iy, -1));
-	fields_t_set_nan(&F3(pf, HX, ix, iy, -2));
-	fields_t_set_nan(&F3(pf, HY, ix, iy, -1));
-	fields_t_set_nan(&F3(pf, HY, ix, iy, -2));
-	fields_t_set_nan(&F3(pf, HZ, ix, iy, -1));
-	fields_t_set_nan(&F3(pf, HZ, ix, iy, -2));
+	fields_t_set_nan(&_F3(flds, HX, ix, iy, -1));
+	fields_t_set_nan(&_F3(flds, HX, ix, iy, -2));
+	fields_t_set_nan(&_F3(flds, HY, ix, iy, -1));
+	fields_t_set_nan(&_F3(flds, HY, ix, iy, -2));
+	fields_t_set_nan(&_F3(flds, HZ, ix, iy, -1));
+	fields_t_set_nan(&_F3(flds, HZ, ix, iy, -2));
       }
     }
 #endif
     for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
       for (int ix = -2; ix < patch->ldims[0] + 2; ix++) {
-	F3(pf, HZ, ix, iy,-1) =  F3(pf, HZ, ix, iy, 1);
-	F3(pf, HX, ix, iy,-1) = -F3(pf, HX, ix, iy, 0);
-	F3(pf, HX, ix, iy,-2) = -F3(pf, HX, ix, iy, 1);
+	_F3(flds, HZ, ix, iy,-1) =  _F3(flds, HZ, ix, iy, 1);
+	_F3(flds, HX, ix, iy,-1) = -_F3(flds, HX, ix, iy, 0);
+	_F3(flds, HX, ix, iy,-2) = -_F3(flds, HX, ix, iy, 1);
       }
     }
     for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
       for (int ix = -2; ix < patch->ldims[0] + 2; ix++) {
-	F3(pf, HY, ix, iy,-1) = -F3(pf, HY, ix, iy, 0);
-	F3(pf, HY, ix, iy,-2) = -F3(pf, HY, ix, iy, 1);
+	_F3(flds, HY, ix, iy,-1) = -_F3(flds, HY, ix, iy, 0);
+	_F3(flds, HY, ix, iy,-2) = -_F3(flds, HY, ix, iy, 1);
       }
     }
   } else {
@@ -203,34 +203,34 @@ conducting_wall_H_lo(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
 }
 
 static void
-conducting_wall_H_hi(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
+conducting_wall_H_hi(struct psc_bnd_fields *bnd, fields_t flds, int p, int d)
 {
-  struct psc_patch *patch = ppsc->patch + pf->p;
+  struct psc_patch *patch = ppsc->patch + p;
 
   if (d == 1) {
     int my = patch->ldims[1];
 #ifdef DEBUG
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
-      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
-	fields_t_set_nan(&F3(pf, HX, ix, my  , iz));
-	fields_t_set_nan(&F3(pf, HX, ix, my+1, iz));
-	fields_t_set_nan(&F3(pf, HY, ix, my+1, iz));
-	fields_t_set_nan(&F3(pf, HZ, ix, my  , iz));
-	fields_t_set_nan(&F3(pf, HZ, ix, my+1, iz));
+      for (int ix = MAX(-2, flds.ib[0]); ix < MIN(patch->ldims[0] + 2, flds.ib[0] + flds.im[0]) ; ix++) {
+	fields_t_set_nan(&_F3(flds, HX, ix, my  , iz));
+	fields_t_set_nan(&_F3(flds, HX, ix, my+1, iz));
+	fields_t_set_nan(&_F3(flds, HY, ix, my+1, iz));
+	fields_t_set_nan(&_F3(flds, HZ, ix, my  , iz));
+	fields_t_set_nan(&_F3(flds, HZ, ix, my+1, iz));
       }
     }
 #endif
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
-      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
-	F3(pf, HY, ix,my+1,iz) =  F3(pf, HY, ix, my-1,iz);
-	F3(pf, HX, ix,my  ,iz) = -F3(pf, HX, ix, my-1,iz);
-	F3(pf, HX, ix,my+1,iz) = -F3(pf, HX, ix, my-2,iz);
+      for (int ix = MAX(-2, flds.ib[0]); ix < MIN(patch->ldims[0] + 2, flds.ib[0] + flds.im[0]) ; ix++) {
+	_F3(flds, HY, ix,my+1,iz) =  _F3(flds, HY, ix, my-1,iz);
+	_F3(flds, HX, ix,my  ,iz) = -_F3(flds, HX, ix, my-1,iz);
+	_F3(flds, HX, ix,my+1,iz) = -_F3(flds, HX, ix, my-2,iz);
       }
     }
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
-      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
-	F3(pf, HZ, ix,my  ,iz) = -F3(pf, HZ, ix, my-1,iz);
-	F3(pf, HZ, ix,my+1,iz) = -F3(pf, HZ, ix, my-2,iz);
+      for (int ix = MAX(-2, flds.ib[0]); ix < MIN(patch->ldims[0] + 2, flds.ib[0] + flds.im[0]) ; ix++) {
+	_F3(flds, HZ, ix,my  ,iz) = -_F3(flds, HZ, ix, my-1,iz);
+	_F3(flds, HZ, ix,my+1,iz) = -_F3(flds, HZ, ix, my-2,iz);
       }
     }
   } else if (d == 2) {
@@ -238,25 +238,25 @@ conducting_wall_H_hi(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
 #ifdef DEBUG
     for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
       for (int ix = -2; ix < patch->ldims[0] + 2; ix++) {
-	fields_t_set_nan(&F3(pf, HX, ix, iy, mz  ));
-	fields_t_set_nan(&F3(pf, HX, ix, iy, mz+1));
-	fields_t_set_nan(&F3(pf, HY, ix, iy, mz  ));
-	fields_t_set_nan(&F3(pf, HY, ix, iy, mz+1));
-	fields_t_set_nan(&F3(pf, HZ, ix, iy, mz+1));
+	fields_t_set_nan(&_F3(flds, HX, ix, iy, mz  ));
+	fields_t_set_nan(&_F3(flds, HX, ix, iy, mz+1));
+	fields_t_set_nan(&_F3(flds, HY, ix, iy, mz  ));
+	fields_t_set_nan(&_F3(flds, HY, ix, iy, mz+1));
+	fields_t_set_nan(&_F3(flds, HZ, ix, iy, mz+1));
       }
     }
 #endif
     for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
       for (int ix = -2; ix < patch->ldims[0] + 2; ix++) {
-	F3(pf, HZ, ix, iy, mz+1) =  F3(pf, HZ, ix, iy, mz-1);
-	F3(pf, HX, ix, iy, mz) = -F3(pf, HX, ix, iy, mz-1);
-	F3(pf, HX, ix, iy, mz+1) = -F3(pf, HX, ix, iy, mz-2);
+	_F3(flds, HZ, ix, iy, mz+1) =  _F3(flds, HZ, ix, iy, mz-1);
+	_F3(flds, HX, ix, iy, mz) = -_F3(flds, HX, ix, iy, mz-1);
+	_F3(flds, HX, ix, iy, mz+1) = -_F3(flds, HX, ix, iy, mz-2);
       }
     }
     for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
       for (int ix = -2; ix < patch->ldims[0] + 2; ix++) {
-	F3(pf, HY, ix, iy, mz) = -F3(pf, HY, ix, iy, mz-1);
-	F3(pf, HY, ix, iy, mz+1) = -F3(pf, HY, ix, iy, mz-2);
+	_F3(flds, HY, ix, iy, mz) = -_F3(flds, HY, ix, iy, mz-1);
+	_F3(flds, HY, ix, iy, mz+1) = -_F3(flds, HY, ix, iy, mz-2);
       }
     }
   } else {
@@ -265,33 +265,33 @@ conducting_wall_H_hi(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
 }
 
 static void
-conducting_wall_J_lo(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
+conducting_wall_J_lo(struct psc_bnd_fields *bnd, fields_t flds, int p, int d)
 {
-  struct psc_patch *patch = ppsc->patch + pf->p;
+  struct psc_patch *patch = ppsc->patch + p;
 
   if (d == 1) {
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
-      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
-	F3(pf, JYI, ix, 1,iz) -= F3(pf, JYI, ix,-2,iz);
-	F3(pf, JYI, ix, 0,iz) -= F3(pf, JYI, ix,-1,iz);
-	F3(pf, JYI, ix,-1,iz) = 0.;
-	F3(pf, JYI, ix,-2,iz) = 0.;
-	F3(pf, JXI, ix, 1,iz) += F3(pf, JXI, ix,-1,iz);
-	F3(pf, JXI, ix,-1,iz) = 0.;
-	F3(pf, JZI, ix, 1,iz) += F3(pf, JZI, ix,-1,iz);
-	F3(pf, JZI, ix,-1,iz) = 0.;
+      for (int ix = MAX(-2, flds.ib[0]); ix < MIN(patch->ldims[0] + 2, flds.ib[0] + flds.im[0]) ; ix++) {
+	_F3(flds, JYI, ix, 1,iz) -= _F3(flds, JYI, ix,-2,iz);
+	_F3(flds, JYI, ix, 0,iz) -= _F3(flds, JYI, ix,-1,iz);
+	_F3(flds, JYI, ix,-1,iz) = 0.;
+	_F3(flds, JYI, ix,-2,iz) = 0.;
+	_F3(flds, JXI, ix, 1,iz) += _F3(flds, JXI, ix,-1,iz);
+	_F3(flds, JXI, ix,-1,iz) = 0.;
+	_F3(flds, JZI, ix, 1,iz) += _F3(flds, JZI, ix,-1,iz);
+	_F3(flds, JZI, ix,-1,iz) = 0.;
       }
     }
   } else if (d == 2) {
     for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
-      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
-	F3(pf, JZI, ix, iy, 0) -= F3(pf, JZI, ix, iy,-1);
-	F3(pf, JZI, ix, iy, 0) -= F3(pf, JZI, ix, iy,-1);
-	F3(pf, JZI, ix, iy,-1) = 0.;
-	F3(pf, JXI, ix, iy, 1) += F3(pf, JXI, ix, iy,-1);
-	F3(pf, JXI, ix, iy,-1) = 0.;
-	F3(pf, JYI, ix, iy, 1) += F3(pf, JYI, ix, iy,-1);
-	F3(pf, JYI, ix, iy,-1) = 0.;
+      for (int ix = MAX(-2, flds.ib[0]); ix < MIN(patch->ldims[0] + 2, flds.ib[0] + flds.im[0]) ; ix++) {
+	_F3(flds, JZI, ix, iy, 0) -= _F3(flds, JZI, ix, iy,-1);
+	_F3(flds, JZI, ix, iy, 0) -= _F3(flds, JZI, ix, iy,-1);
+	_F3(flds, JZI, ix, iy,-1) = 0.;
+	_F3(flds, JXI, ix, iy, 1) += _F3(flds, JXI, ix, iy,-1);
+	_F3(flds, JXI, ix, iy,-1) = 0.;
+	_F3(flds, JYI, ix, iy, 1) += _F3(flds, JYI, ix, iy,-1);
+	_F3(flds, JYI, ix, iy,-1) = 0.;
       }
     }
   } else {
@@ -300,34 +300,34 @@ conducting_wall_J_lo(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
 }
 
 static void
-conducting_wall_J_hi(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
+conducting_wall_J_hi(struct psc_bnd_fields *bnd, fields_t flds, int p, int d)
 {
-  struct psc_patch *patch = ppsc->patch + pf->p;
+  struct psc_patch *patch = ppsc->patch + p;
 
   if (d == 1) {
     int my = patch->ldims[1];
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
-      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
-	F3(pf, JYI, ix,my-2,iz) -= F3(pf, JYI, ix,my+1,iz);
-	F3(pf, JYI, ix,my-1,iz) -= F3(pf, JYI, ix,my  ,iz);
-	F3(pf, JYI, ix,my  ,iz) = 0.;
-	F3(pf, JYI, ix,my+1,iz) = 0.;
-	F3(pf, JXI, ix,my-1,iz) += F3(pf, JXI, ix,my+1,iz);
-	F3(pf, JXI, ix,my+1,iz) = 0.;
-	F3(pf, JZI, ix,my-1,iz) += F3(pf, JZI, ix,my+1,iz);
-	F3(pf, JZI, ix,my+1,iz) = 0.;
+      for (int ix = MAX(-2, flds.ib[0]); ix < MIN(patch->ldims[0] + 2, flds.ib[0] + flds.im[0]) ; ix++) {
+	_F3(flds, JYI, ix,my-2,iz) -= _F3(flds, JYI, ix,my+1,iz);
+	_F3(flds, JYI, ix,my-1,iz) -= _F3(flds, JYI, ix,my  ,iz);
+	_F3(flds, JYI, ix,my  ,iz) = 0.;
+	_F3(flds, JYI, ix,my+1,iz) = 0.;
+	_F3(flds, JXI, ix,my-1,iz) += _F3(flds, JXI, ix,my+1,iz);
+	_F3(flds, JXI, ix,my+1,iz) = 0.;
+	_F3(flds, JZI, ix,my-1,iz) += _F3(flds, JZI, ix,my+1,iz);
+	_F3(flds, JZI, ix,my+1,iz) = 0.;
       }
     }
   } else if (d == 2) {
     int mz = patch->ldims[2];
     for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
-      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
-	F3(pf, JZI, ix, iy, mz-1) -= F3(pf, JZI, ix, iy,mz);
-	F3(pf, JZI, ix, iy, mz) = 0.;
-	F3(pf, JXI, ix, iy, mz-1) += F3(pf, JXI, ix, iy,mz+1);
-	F3(pf, JXI, ix, iy, mz+1) = 0.;
-	F3(pf, JYI, ix, iy, mz-1) += F3(pf, JYI, ix, iy,mz+1);
-	F3(pf, JYI, ix, iy, mz+1) = 0.;
+      for (int ix = MAX(-2, flds.ib[0]); ix < MIN(patch->ldims[0] + 2, flds.ib[0] + flds.im[0]) ; ix++) {
+	_F3(flds, JZI, ix, iy, mz-1) -= _F3(flds, JZI, ix, iy,mz);
+	_F3(flds, JZI, ix, iy, mz) = 0.;
+	_F3(flds, JXI, ix, iy, mz-1) += _F3(flds, JXI, ix, iy,mz+1);
+	_F3(flds, JXI, ix, iy, mz+1) = 0.;
+	_F3(flds, JYI, ix, iy, mz-1) += _F3(flds, JYI, ix, iy,mz+1);
+	_F3(flds, JYI, ix, iy, mz+1) = 0.;
       }
     }
   } else {
@@ -342,66 +342,64 @@ conducting_wall_J_hi(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
 // open_H_lo
 
 static void
-open_H_lo(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
+open_H_lo(struct psc_bnd_fields *bnd, fields_t flds, int p, int d)
 {
-  struct psc_patch *patch = ppsc->patch + pf->p;
+  struct psc_patch *patch = ppsc->patch + p;
 
   if (d == 1) {
 #ifdef DEBUG
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
-      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
-	fields_t_set_nan(&F3(pf, HX, ix, -1, iz));
-	fields_t_set_nan(&F3(pf, HX, ix, -2, iz));
-	fields_t_set_nan(&F3(pf, HY, ix, -1, iz));
-	fields_t_set_nan(&F3(pf, HY, ix, -2, iz));
-	fields_t_set_nan(&F3(pf, HZ, ix, -1, iz));
-	fields_t_set_nan(&F3(pf, HZ, ix, -2, iz));
+      for (int ix = MAX(-2, flds.ib[0]); ix < MIN(patch->ldims[0] + 2, flds.ib[0] + flds.im[0]) ; ix++) {
+	fields_t_set_nan(&_F3(flds, HX, ix, -1, iz));
+	fields_t_set_nan(&_F3(flds, HX, ix, -2, iz));
+	fields_t_set_nan(&_F3(flds, HY, ix, -1, iz));
+	fields_t_set_nan(&_F3(flds, HY, ix, -2, iz));
+	fields_t_set_nan(&_F3(flds, HZ, ix, -1, iz));
+	fields_t_set_nan(&_F3(flds, HZ, ix, -2, iz));
       }
     }
 #endif
-    int p = pf->p;
     fields_real_t dt = ppsc->dt, dy = ppsc->patch[p].dx[1], dz = ppsc->patch[p].dx[2];
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
-      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
-	F3(pf, HX, ix,-1,iz) = (/* + 4.f * C_s_pulse_y1(x,y,z+0.5*dz,t) */
-				- 2.f * F3(pf, EZ, ix,0,iz)
-				/*- dt/dx * (F3(pf, HY, ix,0,iz) - F3(pf, HY, ix-1,0,iz)) */
-				- (1.f - dt/dy) * F3(pf, HX, ix,0,iz)
-				+ dt * F3(pf, JZI, ix,0,iz)) / (1.f + dt/dy);
-	F3(pf, HZ, ix,-1,iz) = (/* + 4.f * C_p_pulse_y1(x+.5*dx,y,z,t) */
-				+ 2.f * F3(pf, EX, ix,0,iz)
-				- dt/dz * (F3(pf, HY, ix,0,iz) - F3(pf, HY, ix,0,iz-1))
-				- (1.f - dt/dy) * F3(pf, HZ, ix,0,iz)
-				+ dt * F3(pf, JXI, ix,0,iz)) / (1.f + dt/dy);
+      for (int ix = MAX(-2, flds.ib[0]); ix < MIN(patch->ldims[0] + 2, flds.ib[0] + flds.im[0]) ; ix++) {
+	_F3(flds, HX, ix,-1,iz) = (/* + 4.f * C_s_pulse_y1(x,y,z+0.5*dz,t) */
+				- 2.f * _F3(flds, EZ, ix,0,iz)
+				/*- dt/dx * (_F3(flds, HY, ix,0,iz) - _F3(flds, HY, ix-1,0,iz)) */
+				- (1.f - dt/dy) * _F3(flds, HX, ix,0,iz)
+				+ dt * _F3(flds, JZI, ix,0,iz)) / (1.f + dt/dy);
+	_F3(flds, HZ, ix,-1,iz) = (/* + 4.f * C_p_pulse_y1(x+.5*dx,y,z,t) */
+				+ 2.f * _F3(flds, EX, ix,0,iz)
+				- dt/dz * (_F3(flds, HY, ix,0,iz) - _F3(flds, HY, ix,0,iz-1))
+				- (1.f - dt/dy) * _F3(flds, HZ, ix,0,iz)
+				+ dt * _F3(flds, JXI, ix,0,iz)) / (1.f + dt/dy);
       }
     }
   } else if (d == 2) {
 #ifdef DEBUG
     for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
-      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
-	fields_t_set_nan(&F3(pf, HX, ix, iy, -1));
-	fields_t_set_nan(&F3(pf, HX, ix, iy, -2));
-	fields_t_set_nan(&F3(pf, HY, ix, iy, -1));
-	fields_t_set_nan(&F3(pf, HY, ix, iy, -2));
-	fields_t_set_nan(&F3(pf, HZ, ix, iy, -1));
-	fields_t_set_nan(&F3(pf, HZ, ix, iy, -2));
+      for (int ix = MAX(-2, flds.ib[0]); ix < MIN(patch->ldims[0] + 2, flds.ib[0] + flds.im[0]) ; ix++) {
+	fields_t_set_nan(&_F3(flds, HX, ix, iy, -1));
+	fields_t_set_nan(&_F3(flds, HX, ix, iy, -2));
+	fields_t_set_nan(&_F3(flds, HY, ix, iy, -1));
+	fields_t_set_nan(&_F3(flds, HY, ix, iy, -2));
+	fields_t_set_nan(&_F3(flds, HZ, ix, iy, -1));
+	fields_t_set_nan(&_F3(flds, HZ, ix, iy, -2));
       }
     }
 #endif
-    int p = pf->p;
     fields_real_t dt = ppsc->dt, dy = ppsc->patch[p].dx[1], dz = ppsc->patch[p].dx[2];
     for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
-      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
-	F3(pf, HY, ix,iy,-1) = (/* + 4.f * C_s_pulse_z1(x+0.5*dx,y,z,t) */
-				- 2.f * F3(pf, EX, ix,iy,0)
-				- dt/dy * (F3(pf, HZ, ix,iy,0) - F3(pf, HZ, ix,iy-1,0))
-				- (1.f - dt/dz) * F3(pf, HY, ix,iy,0)
-				+ dt * F3(pf, JXI, ix,iy,0)) / (1.f + dt/dz);
-	F3(pf, HX, ix,iy,-1) = (/* - 4.f * C_p_pulse_z1(x+0.5*dx,y,z,t) */
-				+ 2.f * F3(pf, EY, ix,iy,0)
-				/*- dt/dx * (F3(pf, HZ, ix,iy,0) - F3(pf, HZ, ix-1,iy,0)) FIXME not in yz 2d */
-				- (1.f - dt/dz) * F3(pf, HY, ix,iy,0)
-				- dt * F3(pf, JYI, ix,iy,0)) / (1.f + dt/dz);
+      for (int ix = MAX(-2, flds.ib[0]); ix < MIN(patch->ldims[0] + 2, flds.ib[0] + flds.im[0]) ; ix++) {
+	_F3(flds, HY, ix,iy,-1) = (/* + 4.f * C_s_pulse_z1(x+0.5*dx,y,z,t) */
+				- 2.f * _F3(flds, EX, ix,iy,0)
+				- dt/dy * (_F3(flds, HZ, ix,iy,0) - _F3(flds, HZ, ix,iy-1,0))
+				- (1.f - dt/dz) * _F3(flds, HY, ix,iy,0)
+				+ dt * _F3(flds, JXI, ix,iy,0)) / (1.f + dt/dz);
+	_F3(flds, HX, ix,iy,-1) = (/* - 4.f * C_p_pulse_z1(x+0.5*dx,y,z,t) */
+				+ 2.f * _F3(flds, EY, ix,iy,0)
+				/*- dt/dx * (_F3(flds, HZ, ix,iy,0) - _F3(flds, HZ, ix-1,iy,0)) FIXME not in yz 2d */
+				- (1.f - dt/dz) * _F3(flds, HY, ix,iy,0)
+				- dt * _F3(flds, JYI, ix,iy,0)) / (1.f + dt/dz);
       }
     }
   } else {
@@ -410,37 +408,36 @@ open_H_lo(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
 }
 
 static void
-open_H_hi(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
+open_H_hi(struct psc_bnd_fields *bnd, fields_t flds, int p, int d)
 {
-  struct psc_patch *patch = ppsc->patch + pf->p;
+  struct psc_patch *patch = ppsc->patch + p;
 
   if (d == 1) {
     int my = patch->ldims[1];
 #ifdef DEBUG
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
-      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
-	fields_t_set_nan(&F3(pf, HX, ix, my  , iz));
-	fields_t_set_nan(&F3(pf, HX, ix, my+1, iz));
-	fields_t_set_nan(&F3(pf, HY, ix, my  , iz));
-	fields_t_set_nan(&F3(pf, HY, ix, my+1, iz));
-	fields_t_set_nan(&F3(pf, HZ, ix, my+1, iz));
+      for (int ix = MAX(-2, flds.ib[0]); ix < MIN(patch->ldims[0] + 2, flds.ib[0] + flds.im[0]) ; ix++) {
+	fields_t_set_nan(&_F3(flds, HX, ix, my  , iz));
+	fields_t_set_nan(&_F3(flds, HX, ix, my+1, iz));
+	fields_t_set_nan(&_F3(flds, HY, ix, my  , iz));
+	fields_t_set_nan(&_F3(flds, HY, ix, my+1, iz));
+	fields_t_set_nan(&_F3(flds, HZ, ix, my+1, iz));
       }
     }
 #endif
-    int p = pf->p;
     fields_real_t dt = ppsc->dt, dy = ppsc->patch[p].dx[1], dz = ppsc->patch[p].dx[2];
     for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
-      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
-	F3(pf, HX, ix,my,iz) = (/* + 4.f * C_s_pulse_y2(x,y,z+0.5*dz,t) */
-				+ 2.f * F3(pf, EZ, ix,my,iz)
-				/*+ dt/dx * (F3(pf, HY, ix,my,iz) - F3(pf, HY, ix-1,my,iz)) */
-				- (1.f - dt/dy) * F3(pf, HX, ix,my-1,iz)
-				- dt * F3(pf, JZI, ix,my,iz)) / (1.f + dt/dy);
-	F3(pf, HZ, ix,my,iz) = (/* + 4.f * C_p_pulse_y2(x+.5*dx,y,z,t) */
-				- 2.f * F3(pf, EX, ix,my,iz)
-				+ dt/dz * (F3(pf, HY, ix,my,iz) - F3(pf, HY, ix,my,iz-1))
-				- (1.f - dt/dy) * F3(pf, HZ, ix,my-1,iz)
-				- dt * F3(pf, JXI, ix,my,iz)) / (1.f + dt/dy);
+      for (int ix = MAX(-2, flds.ib[0]); ix < MIN(patch->ldims[0] + 2, flds.ib[0] + flds.im[0]) ; ix++) {
+	_F3(flds, HX, ix,my,iz) = (/* + 4.f * C_s_pulse_y2(x,y,z+0.5*dz,t) */
+				+ 2.f * _F3(flds, EZ, ix,my,iz)
+				/*+ dt/dx * (_F3(flds, HY, ix,my,iz) - _F3(flds, HY, ix-1,my,iz)) */
+				- (1.f - dt/dy) * _F3(flds, HX, ix,my-1,iz)
+				- dt * _F3(flds, JZI, ix,my,iz)) / (1.f + dt/dy);
+	_F3(flds, HZ, ix,my,iz) = (/* + 4.f * C_p_pulse_y2(x+.5*dx,y,z,t) */
+				- 2.f * _F3(flds, EX, ix,my,iz)
+				+ dt/dz * (_F3(flds, HY, ix,my,iz) - _F3(flds, HY, ix,my,iz-1))
+				- (1.f - dt/dy) * _F3(flds, HZ, ix,my-1,iz)
+				- dt * _F3(flds, JXI, ix,my,iz)) / (1.f + dt/dy);
       }
     }
   } else if (d == 2) {
@@ -448,28 +445,27 @@ open_H_hi(struct psc_bnd_fields *bnd, struct psc_fields *pf, int d)
 #ifdef DEBUG
     for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
       for (int ix = -2; ix < patch->ldims[0] + 2; ix++) {
-	fields_t_set_nan(&F3(pf, HX, ix, iy, mz  ));
-	fields_t_set_nan(&F3(pf, HX, ix, iy, mz+1));
-	fields_t_set_nan(&F3(pf, HY, ix, iy, mz  ));
-	fields_t_set_nan(&F3(pf, HY, ix, iy, mz+1));
-	fields_t_set_nan(&F3(pf, HZ, ix, iy, mz+1));
+	fields_t_set_nan(&_F3(flds, HX, ix, iy, mz  ));
+	fields_t_set_nan(&_F3(flds, HX, ix, iy, mz+1));
+	fields_t_set_nan(&_F3(flds, HY, ix, iy, mz  ));
+	fields_t_set_nan(&_F3(flds, HY, ix, iy, mz+1));
+	fields_t_set_nan(&_F3(flds, HZ, ix, iy, mz+1));
       }
     }
 #endif
-    int p = pf->p;
     fields_real_t dt = ppsc->dt, dy = ppsc->patch[p].dx[1], dz = ppsc->patch[p].dx[2];
     for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
-      for (int ix = MAX(-2, pf->ib[0]); ix < MIN(patch->ldims[0] + 2, pf->ib[0] + pf->im[0]) ; ix++) {
-	F3(pf, HY, ix,iy,mz) = (/* - 4.f * C_s_pulse_z2(x+0.5*dx,y,z,t) */
-				+ 2.f * F3(pf, EX, ix,iy,mz)
-				+ dt/dy * (F3(pf, HZ, ix,iy,mz) - F3(pf, HZ, ix,iy-1,mz))
-				- (1.f - dt/dz) * F3(pf, HY, ix,iy,mz-1)
-				- dt * F3(pf, JXI, ix,iy,mz)) / (1.f + dt/dz);
-	F3(pf, HX, ix,iy,mz) = (/* + 4.f * C_p_pulse_z2(x+0.5*dx,y,z,t) */
-				- 2.f * F3(pf, EY, ix,iy,mz)
-				/*+ dt/dx * (F3(pf, HZ, ix,iy,mz) - F3(pf, HZ, ix-1,iy,mz)) FIXME not in yz 2d*/
-				- (1.f - dt/dz) * F3(pf, HX, ix,iy,mz-1)
-				+ dt * F3(pf, JYI, ix,iy,mz)) / (1.f + dt/dz);
+      for (int ix = MAX(-2, flds.ib[0]); ix < MIN(patch->ldims[0] + 2, flds.ib[0] + flds.im[0]) ; ix++) {
+	_F3(flds, HY, ix,iy,mz) = (/* - 4.f * C_s_pulse_z2(x+0.5*dx,y,z,t) */
+				+ 2.f * _F3(flds, EX, ix,iy,mz)
+				+ dt/dy * (_F3(flds, HZ, ix,iy,mz) - _F3(flds, HZ, ix,iy-1,mz))
+				- (1.f - dt/dz) * _F3(flds, HY, ix,iy,mz-1)
+				- dt * _F3(flds, JXI, ix,iy,mz)) / (1.f + dt/dz);
+	_F3(flds, HX, ix,iy,mz) = (/* + 4.f * C_p_pulse_z2(x+0.5*dx,y,z,t) */
+				- 2.f * _F3(flds, EY, ix,iy,mz)
+				/*+ dt/dx * (_F3(flds, HZ, ix,iy,mz) - _F3(flds, HZ, ix-1,iy,mz)) FIXME not in yz 2d*/
+				- (1.f - dt/dz) * _F3(flds, HX, ix,iy,mz-1)
+				+ dt * _F3(flds, JYI, ix,iy,mz)) / (1.f + dt/dz);
       }
     }
   } else {
@@ -494,7 +490,7 @@ psc_bnd_fields_sub_fill_ghosts_E(struct psc_bnd_fields *bnd, struct psc_mfields 
 	case BND_FLD_PERIODIC:
 	  break;
 	case BND_FLD_CONDUCTING_WALL:
-	  conducting_wall_E_lo(bnd, psc_mfields_get_patch(mflds, p), d);
+	  conducting_wall_E_lo(bnd, fields_t_mflds(mflds, p), p, d);
 	break;
 	case BND_FLD_OPEN:
 	  break;
@@ -511,7 +507,7 @@ psc_bnd_fields_sub_fill_ghosts_E(struct psc_bnd_fields *bnd, struct psc_mfields 
 	case BND_FLD_PERIODIC:
 	  break;
 	case BND_FLD_CONDUCTING_WALL:
-	  conducting_wall_E_hi(bnd, psc_mfields_get_patch(mflds, p), d);
+	  conducting_wall_E_hi(bnd, fields_t_mflds(mflds, p), p, d);
 	  break;
 	case BND_FLD_OPEN:
 	  break;
@@ -541,10 +537,10 @@ psc_bnd_fields_sub_fill_ghosts_H(struct psc_bnd_fields *bnd, struct psc_mfields 
 	case BND_FLD_PERIODIC:
 	  break;
 	case BND_FLD_CONDUCTING_WALL:
-	  conducting_wall_H_lo(bnd, psc_mfields_get_patch(mflds, p), d);
+	  conducting_wall_H_lo(bnd, fields_t_mflds(mflds, p), p, d);
 	  break;
 	case BND_FLD_OPEN:
-	  open_H_lo(bnd, psc_mfields_get_patch(mflds, p), d);
+	  open_H_lo(bnd, fields_t_mflds(mflds, p), p, d);
 	  break;
 	default:
 	  assert(0);
@@ -558,10 +554,10 @@ psc_bnd_fields_sub_fill_ghosts_H(struct psc_bnd_fields *bnd, struct psc_mfields 
 	case BND_FLD_PERIODIC:
 	  break;
 	case BND_FLD_CONDUCTING_WALL:
-	  conducting_wall_H_hi(bnd, psc_mfields_get_patch(mflds, p), d);
+	  conducting_wall_H_hi(bnd, fields_t_mflds(mflds, p), p, d);
 	break;
 	case BND_FLD_OPEN:
-	  open_H_hi(bnd, psc_mfields_get_patch(mflds, p), d);
+	  open_H_hi(bnd, fields_t_mflds(mflds, p), p, d);
 	  break;
 	default:
 	assert(0);
@@ -587,7 +583,7 @@ psc_bnd_fields_sub_add_ghosts_J(struct psc_bnd_fields *bnd, struct psc_mfields *
 	case BND_FLD_OPEN:
 	  break;
 	case BND_FLD_CONDUCTING_WALL:
-	  conducting_wall_J_lo(bnd, psc_mfields_get_patch(mflds, p), d);
+	  conducting_wall_J_lo(bnd, fields_t_mflds(mflds, p), p, d);
 	  break;
 	default:
 	  assert(0);
@@ -602,7 +598,7 @@ psc_bnd_fields_sub_add_ghosts_J(struct psc_bnd_fields *bnd, struct psc_mfields *
 	case BND_FLD_OPEN:
 	  break;
 	case BND_FLD_CONDUCTING_WALL:
-	  conducting_wall_J_hi(bnd, psc_mfields_get_patch(mflds, p), d);
+	  conducting_wall_J_hi(bnd, fields_t_mflds(mflds, p), p, d);
 	  break;
 	default:
 	  assert(0);

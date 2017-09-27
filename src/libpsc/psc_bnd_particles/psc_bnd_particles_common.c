@@ -1,7 +1,7 @@
 
 #include "psc_bnd.h"
 #include "psc_output_fields_item.h"
-#include "psc_fields_c.h"
+#include "psc_fields_as_c.h"
 
 #include <mrc_domain.h>
 #include <mrc_profile.h>
