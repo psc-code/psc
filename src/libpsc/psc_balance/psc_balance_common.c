@@ -125,10 +125,10 @@ psc_balance_sub_communicate_fields(struct psc_balance *bal, struct communicate_c
     if (new_rank == ctx->mpi_rank || new_rank < 0) {
       send_reqs[p] = MPI_REQUEST_NULL;
     } else {
-      struct psc_fields *pf_old = psc_mfields_get_patch(mflds_old, p);
-      int nn = psc_fields_size(pf_old) * pf_old->nr_comp;
-      int *ib = pf_old->ib;
-      void *addr_old = &F3(pf_old, 0, ib[0], ib[1], ib[2]);
+      fields_t flds_old = fields_t_mflds(mflds_old, p);
+      int nn = fields_t_size(flds_old) * flds_old.nr_comp;
+      int *ib = flds_old.ib;
+      void *addr_old = &_F3(flds_old, 0, ib[0], ib[1], ib[2]);
       int tag = nr_patches_new_by_rank[new_rank]++;
       MPI_Isend(addr_old, nn, MPI_FIELDS_REAL, new_rank, tag, ctx->comm, &send_reqs[p]);
     }
@@ -146,10 +146,10 @@ psc_balance_sub_communicate_fields(struct psc_balance *bal, struct communicate_c
       recv_reqs[p] = MPI_REQUEST_NULL;
       //Seed new data
     } else {
-      struct psc_fields *pf_new = psc_mfields_get_patch(mflds_new, p);
-      int nn = psc_fields_size(pf_new) * pf_new->nr_comp;
-      int *ib = pf_new->ib;
-      void *addr_new = &F3(pf_new, 0, ib[0], ib[1], ib[2]);
+      fields_t flds_new = fields_t_mflds(mflds_new, p);
+      int nn = fields_t_size(flds_new) * flds_new.nr_comp;
+      int *ib = flds_new.ib;
+      void *addr_new = &_F3(flds_new, 0, ib[0], ib[1], ib[2]);
       int tag = nr_patches_old_by_rank[old_rank]++;
       MPI_Irecv(addr_new, nn, MPI_FIELDS_REAL, old_rank,
 		tag, ctx->comm, &recv_reqs[p]);
@@ -170,15 +170,15 @@ psc_balance_sub_communicate_fields(struct psc_balance *bal, struct communicate_c
       continue;
     }
 
-    struct psc_fields *pf_old = psc_mfields_get_patch(mflds_old, ctx->recv_info[p].patch);
-    struct psc_fields *pf_new = psc_mfields_get_patch(mflds_new, p);
+    fields_t flds_old = fields_t_mflds(mflds_old, ctx->recv_info[p].patch);
+    fields_t flds_new = fields_t_mflds(mflds_new, p);
 
-    assert(pf_old->nr_comp == pf_new->nr_comp);
-    assert(psc_fields_size(pf_old) == psc_fields_size(pf_new));
-    int size = psc_fields_size(pf_old) * pf_old->nr_comp;
-    int *ib = pf_new->ib;
-    void *addr_new = &F3(pf_new, 0, ib[0], ib[1], ib[2]);
-    void *addr_old = &F3(pf_old, 0, ib[0], ib[1], ib[2]);
+    assert(flds_old.nr_comp == flds_new.nr_comp);
+    assert(fields_t_size(flds_old) == fields_t_size(flds_new));
+    int size = fields_t_size(flds_old) * flds_old.nr_comp;
+    int *ib = flds_new.ib;
+    void *addr_new = &_F3(flds_new, 0, ib[0], ib[1], ib[2]);
+    void *addr_old = &_F3(flds_old, 0, ib[0], ib[1], ib[2]);
     memcpy(addr_new, addr_old, size * sizeof(fields_real_t));
   }
   prof_stop(pr);

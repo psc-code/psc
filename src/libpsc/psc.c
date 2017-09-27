@@ -902,31 +902,31 @@ psc_setup_fields_default(struct psc *psc)
   struct psc_mfields *mflds = psc_mfields_get_as(psc->flds, "c", 0, 0);
   // FIXME, do we need the ghost points?
   psc_foreach_patch(psc, p) {
-    struct psc_fields *pf = psc_mfields_get_patch(mflds, p);
+    fields_t flds = fields_t_mflds(mflds, p);
 
     psc_foreach_3d_g(psc, p, jx, jy, jz) {
       double dx = psc->patch[p].dx[0], dy = psc->patch[p].dx[1], dz = psc->patch[p].dx[2];
       double xx = CRDX(p, jx), yy = CRDY(p, jy), zz = CRDZ(p, jz);
 
-      F3(pf, HX, jx,jy,jz) +=
+      _F3(flds, HX, jx,jy,jz) +=
 	init_field(psc, (double []) { xx        , yy + .5*dy, zz + .5*dz }, HX);
-      F3(pf, HY, jx,jy,jz) +=
+      _F3(flds, HY, jx,jy,jz) +=
 	init_field(psc, (double []) { xx + .5*dx, yy        , zz + .5*dz }, HY);
-      F3(pf, HZ, jx,jy,jz) +=
+      _F3(flds, HZ, jx,jy,jz) +=
 	init_field(psc, (double []) { xx + .5*dx, yy + .5*dy, zz         }, HZ);
 
-      F3(pf, EX, jx,jy,jz) +=
+      _F3(flds, EX, jx,jy,jz) +=
 	init_field(psc, (double []) { xx + .5*dx, yy        , zz         }, EX);
-      F3(pf, EY, jx,jy,jz) +=
+      _F3(flds, EY, jx,jy,jz) +=
 	init_field(psc, (double []) { xx        , yy + .5*dy, zz         }, EY);
-      F3(pf, EZ, jx,jy,jz) +=
+      _F3(flds, EZ, jx,jy,jz) +=
 	init_field(psc, (double []) { xx        , yy        , zz + .5*dz }, EZ);
 
-      F3(pf, JXI, jx,jy,jz) +=
+      _F3(flds, JXI, jx,jy,jz) +=
 	init_field(psc, (double []) { xx + .5*dx, yy        , zz         }, JXI);
-      F3(pf, JYI, jx,jy,jz) +=
+      _F3(flds, JYI, jx,jy,jz) +=
 	init_field(psc, (double []) { xx        , yy + .5*dy, zz         }, JYI);
-      F3(pf, JZI, jx,jy,jz) +=
+      _F3(flds, JZI, jx,jy,jz) +=
 	init_field(psc, (double []) { xx        , yy        , zz + .5*dz }, JZI);
 
     } foreach_3d_g_end;

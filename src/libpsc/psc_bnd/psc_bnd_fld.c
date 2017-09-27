@@ -9,15 +9,15 @@
 void
 psc_bnd_fld_sub_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
 {
-  struct psc_mfields *flds = ctx;
-  struct psc_fields *pf = psc_mfields_get_patch(flds, p);
+  struct psc_mfields *mflds = ctx;
+  fields_t flds = fields_t_mflds(mflds, p);
   fields_real_t *buf = _buf;
 
   for (int m = mb; m < me; m++) {
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
       for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	  MRC_DDC_BUF3(buf, m - mb, ix,iy,iz) = F3(pf, m, ix,iy,iz);
+	  MRC_DDC_BUF3(buf, m - mb, ix,iy,iz) = _F3(flds, m, ix,iy,iz);
 	}
       }
     }
@@ -27,15 +27,15 @@ psc_bnd_fld_sub_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void 
 void
 psc_bnd_fld_sub_add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
 {
-  struct psc_mfields *flds = ctx;
-  struct psc_fields *pf = psc_mfields_get_patch(flds, p);
+  struct psc_mfields *mflds = ctx;
+  fields_t flds = fields_t_mflds(mflds, p);
   fields_real_t *buf = _buf;
 
   for (int m = mb; m < me; m++) {
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
       for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	  F3(pf, m, ix,iy,iz) += MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
+	  _F3(flds, m, ix,iy,iz) += MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
 	}
       }
     }
@@ -45,15 +45,15 @@ psc_bnd_fld_sub_add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void
 void
 psc_bnd_fld_sub_copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
 {
-  struct psc_mfields *flds = ctx;
-  struct psc_fields *pf = psc_mfields_get_patch(flds, p);
+  struct psc_mfields *mflds = ctx;
+  fields_t flds = fields_t_mflds(mflds, p);
   fields_real_t *buf = _buf;
 
   for (int m = mb; m < me; m++) {
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
       for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	  F3(pf, m, ix,iy,iz) = MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
+	  _F3(flds, m, ix,iy,iz) = MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
 	}
       }
     }
@@ -85,23 +85,23 @@ psc_bnd_fld_sub_create(struct psc_bnd *bnd)
 // psc_bnd_fld_sub_add_ghosts
 
 void
-psc_bnd_fld_sub_add_ghosts(struct psc_bnd *bnd, struct psc_mfields *flds_base, int mb, int me)
+psc_bnd_fld_sub_add_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, int mb, int me)
 {
-  struct psc_mfields *flds = psc_mfields_get_as(flds_base, FIELDS_TYPE, mb, me);
-  mrc_ddc_add_ghosts(bnd->ddc, mb, me, flds);
-  psc_mfields_put_as(flds, flds_base, mb, me);
+  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, FIELDS_TYPE, mb, me);
+  mrc_ddc_add_ghosts(bnd->ddc, mb, me, mflds);
+  psc_mfields_put_as(mflds, mflds_base, mb, me);
 }
 
 // ----------------------------------------------------------------------
 // psc_bnd_fld_sub_fill_ghosts
 
 void
-psc_bnd_fld_sub_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *flds_base, int mb, int me)
+psc_bnd_fld_sub_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, int mb, int me)
 {
-  struct psc_mfields *flds = psc_mfields_get_as(flds_base, FIELDS_TYPE, mb, me);
+  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, FIELDS_TYPE, mb, me);
   // FIXME
   // I don't think we need as many points, and only stencil star
   // rather then box
-  mrc_ddc_fill_ghosts(bnd->ddc, mb, me, flds);
-  psc_mfields_put_as(flds, flds_base, mb, me);
+  mrc_ddc_fill_ghosts(bnd->ddc, mb, me, mflds);
+  psc_mfields_put_as(mflds, mflds_base, mb, me);
 }

@@ -15,6 +15,7 @@
 #define fields_FTYPE_t_dtor fields_single_t_dtor
 #define fields_FTYPE_t_from_psc_fields fields_single_t_from_psc_fields
 #define fields_FTYPE_t_mflds fields_single_t_mflds
+#define fields_FTYPE_t_size fields_single_t_size
 #define fields_FTYPE_t_zero_range fields_single_t_zero_range
 
 #elif FTYPE == FTYPE_C
@@ -25,6 +26,7 @@
 #define fields_FTYPE_t_dtor fields_c_t_dtor
 #define fields_FTYPE_t_from_psc_fields fields_c_t_from_psc_fields
 #define fields_FTYPE_t_mflds fields_c_t_mflds
+#define fields_FTYPE_t_size fields_c_t_size
 #define fields_FTYPE_t_zero_range fields_c_t_zero_range
 
 #elif FTYPE == FTYPE_FORTRAN
@@ -35,6 +37,7 @@
 #define fields_FTYPE_t_dtor fields_fortran_t_dtor
 #define fields_FTYPE_t_from_psc_fields fields_fortran_t_from_psc_fields
 #define fields_FTYPE_t_mflds fields_fortran_t_mflds
+#define fields_FTYPE_t_size fields_fortran_t_size
 #define fields_FTYPE_t_zero_range fields_fortran_t_zero_range
 
 #elif FTYPE == FTYPE_CUDA
@@ -45,6 +48,7 @@
 #define fields_FTYPE_t_dtor fields_cuda_t_dtor
 #define fields_FTYPE_t_from_psc_fields fields_cuda_t_from_psc_fields
 #define fields_FTYPE_t_mflds fields_cuda_t_mflds
+#define fields_FTYPE_t_size fields_cuda_t_size
 #define fields_FTYPE_t_zero_range fields_cuda_t_zero_range
 
 #endif
@@ -270,6 +274,15 @@ fields_FTYPE_t_mflds(struct psc_mfields *mflds, int p)
 }
 
 // ----------------------------------------------------------------------
+// fields_t_size
+
+static inline unsigned int
+fields_FTYPE_t_size(fields_FTYPE_t flds)
+{
+  return flds.im[0] * flds.im[1] * flds.im[2];
+}
+
+// ----------------------------------------------------------------------
 // fields_t_zero_range
 
 static inline void
@@ -296,6 +309,7 @@ fields_FTYPE_t_zero_range(fields_FTYPE_t flds, int mb, int me)
 #undef fields_FTYPE_t_dtor
 #undef fields_FTYPE_t_from_psc_fields
 #undef fields_FTYPE_t_mflds
+#undef fields_FTYPE_t_size
 #undef fields_FTYPE_t_zero_range
 
 
