@@ -16,7 +16,6 @@ struct psc_fields {
 
 struct psc_fields_ops {
   MRC_SUBCLASS_OPS(struct psc_fields);
-  void (*zero_comp)(struct psc_fields *pf, int m);
 };
 
 #define psc_fields_ops(prts) ((struct psc_fields_ops *) ((prts)->obj.ops))

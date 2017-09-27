@@ -16,29 +16,6 @@ psc_fields_size(struct psc_fields *pf)
 }
 
 // ======================================================================
-// psc_fields_zero_comp
-
-void
-psc_fields_zero_comp(struct psc_fields *pf, int m)
-{
-  struct psc_fields_ops *ops = psc_fields_ops(pf);
-
-  assert(ops && ops->zero_comp);
-  ops->zero_comp(pf, m);
-}
-
-// ======================================================================
-// psc_fields_zero_range
-
-void
-psc_fields_zero_range(struct psc_fields *pf, int mb, int me)
-{
-  for (int m = mb; m < me; m++) {
-    psc_fields_zero_comp(pf, m);
-  }
-}
-
-// ======================================================================
 // psc_fields_descr
 
 #define VAR(x) (void *)offsetof(struct psc_fields, x)

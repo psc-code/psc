@@ -126,60 +126,12 @@ fields_t_axpy_comp(fields_t y, int m_y, fields_real_t a, fields_t x, int m_x)
 
 
 // ----------------------------------------------------------------------
-// psc_fields_zero_comp
-
-static void
-PFX(zero_comp)(struct psc_fields *pf, int m)
-{
-  fields_t_zero_comp(fields_t_from_psc_fields(pf), m);
-}
-
-// ----------------------------------------------------------------------
-// psc_fields_set_comp
-
-static void
-PFX(set_comp)(struct psc_fields *pf, int m, double val)
-{
-  fields_t_set_comp(fields_t_from_psc_fields(pf), m, val);
-}
-
-// ----------------------------------------------------------------------
-// psc_fields_scale_comp
-
-static void
-PFX(scale_comp)(struct psc_fields *pf, int m, double val)
-{
-  fields_t_scale_comp(fields_t_from_psc_fields(pf), m, val);
-}
-
-// ----------------------------------------------------------------------
-// psc_fields_copy_comp
-
-static void
-PFX(copy_comp)(struct psc_fields *pto, int m_to, struct psc_fields *pfrom, int m_from)
-{
-  fields_t_copy_comp(fields_t_from_psc_fields(pto), m_to,
-		     fields_t_from_psc_fields(pfrom), m_from);
-}
-
-// ----------------------------------------------------------------------
-// psc_fields_axpy_comp
-
-static void
-PFX(axpy_comp)(struct psc_fields *y, int m_y, double a, struct psc_fields *x, int m_x)
-{
-  fields_t_axpy_comp(fields_t_from_psc_fields(y), m_y, a,
-		     fields_t_from_psc_fields(x), m_x);
-}
-
-// ----------------------------------------------------------------------
 // psc_fields: subclass ops
   
 struct psc_fields_ops PFX(ops) = {
   .name                  = FIELDS_TYPE,
   .setup                 = PFX(setup),
   .destroy               = PFX(destroy),
-  .zero_comp             = PFX(zero_comp),
 };
 
 // ======================================================================
@@ -279,7 +231,7 @@ static void
 MPFX(zero_comp)(struct psc_mfields *mflds, int m)
 {
   for (int p = 0; p < mflds->nr_patches; p++) {
-    PFX(zero_comp)(psc_mfields_get_patch(mflds, p), m);
+    fields_t_zero_comp(fields_t_mflds(mflds, p), m);
   }
 }
 
@@ -290,7 +242,7 @@ static void
 MPFX(set_comp)(struct psc_mfields *mflds, int m, double alpha)
 {
   for (int p = 0; p < mflds->nr_patches; p++) {
-    PFX(set_comp)(psc_mfields_get_patch(mflds, p), m, alpha);
+    fields_t_set_comp(fields_t_mflds(mflds, p), m, alpha);
   }
 }
 
@@ -301,7 +253,7 @@ static void
 MPFX(scale_comp)(struct psc_mfields *mflds, int m, double alpha)
 {
   for (int p = 0; p < mflds->nr_patches; p++) {
-    PFX(scale_comp)(psc_mfields_get_patch(mflds, p), m, alpha);
+    fields_t_scale_comp(fields_t_mflds(mflds, p), m, alpha);
   }
 }
 
@@ -313,8 +265,8 @@ MPFX(copy_comp)(struct psc_mfields *to, int mto,
 		struct psc_mfields *fr, int mfr)
 {
   for (int p = 0; p < to->nr_patches; p++) {
-    PFX(copy_comp)(psc_mfields_get_patch(to, p), mto,
-		   psc_mfields_get_patch(fr, p), mfr);
+    fields_t_copy_comp(fields_t_mflds(to, p), mto,
+		       fields_t_mflds(fr, p), mfr);
   }
 }
 
@@ -326,8 +278,8 @@ MPFX(axpy_comp)(struct psc_mfields *y, int my, double alpha,
 		struct psc_mfields *x, int mx)
 {
   for (int p = 0; p < y->nr_patches; p++) {
-    PFX(axpy_comp)(psc_mfields_get_patch(y, p), my, alpha,
-		   psc_mfields_get_patch(x, p), mx);
+    fields_t_axpy_comp(fields_t_mflds(y, p), my, alpha,
+		       fields_t_mflds(x, p), mx);
   }
 }
 
