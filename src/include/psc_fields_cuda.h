@@ -13,7 +13,6 @@
 
 struct psc_mfields_cuda {
   struct cuda_mfields *cmflds;
-  void **data;
 };
 
 #define psc_mfields_cuda(pf) mrc_to_subobj(pf, struct psc_mfields_cuda)
