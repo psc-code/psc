@@ -13,6 +13,8 @@
 
 struct psc_mfields_cuda {
   struct cuda_mfields *cmflds;
+  int ib[3]; //> lower left corner for each patch (incl. ghostpoints)
+  int im[3]; //> extent for each patch (incl. ghostpoints)
 };
 
 #define psc_mfields_cuda(pf) mrc_to_subobj(pf, struct psc_mfields_cuda)

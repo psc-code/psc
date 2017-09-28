@@ -17,13 +17,13 @@
 static inline fields_cuda_t
 _fields_cuda_t_mflds(struct psc_mfields *mflds, int p, fields_cuda_real_t *h_flds)
 {
-  //struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
+  struct psc_mfields_cuda *sub = psc_mfields_cuda(mflds);
   fields_cuda_t flds;
 
   flds.data = h_flds;
   for (int d = 0; d < 3; d++) {
-    flds.ib[d] = mflds->ib[d];
-    flds.im[d] = mflds->im[d];
+    flds.ib[d] = sub->ib[d];
+    flds.im[d] = sub->im[d];
   }
   flds.nr_comp = mflds->nr_fields;
   flds.first_comp = mflds->first_comp;
@@ -37,7 +37,9 @@ _fields_cuda_t_mflds(struct psc_mfields *mflds, int p, fields_cuda_real_t *h_fld
 static unsigned int
 psc_mfields_get_patch_size(struct psc_mfields *mflds)
 {
-  return mflds->im[0] * mflds->im[1] * mflds->im[2] * mflds->nr_fields;
+  struct psc_mfields_cuda *sub = psc_mfields_cuda(mflds);
+
+  return sub->im[0] * sub->im[1] * sub->im[2] * mflds->nr_fields;
 }
 
 // ======================================================================
@@ -155,14 +157,28 @@ psc_mfields_cuda_copy_to_single(struct psc_mfields *mflds_cuda, struct psc_mfiel
 static void
 psc_mfields_cuda_setup(struct psc_mfields *mflds)
 {
-  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
+  struct psc_mfields_cuda *sub = psc_mfields_cuda(mflds);
+
+  struct mrc_patch *patches = mrc_domain_get_patches(mflds->domain,
+						     &mflds->nr_patches);
+  assert(mflds->nr_patches > 0);
+  for (int p = 1; p < mflds->nr_patches; p++) {
+    for (int d = 0; d < 3; d++) {
+      assert(patches[p].ldims[d] == patches[0].ldims[d]);
+    }
+  }
+  
+  for (int d = 0; d < 3; d++) {
+    sub->ib[d] = -mflds->ibn[d];
+    sub->im[d] = patches[0].ldims[d] + 2 * mflds->ibn[d];
+  }
 
   psc_mfields_setup_super(mflds);
 
   cuda_base_init();
 
   struct cuda_mfields *cmflds = cuda_mfields_create();
-  mflds_cuda->cmflds = cmflds;
+  sub->cmflds = cmflds;
 
   cmflds->bnd_by_patch = calloc(mflds->nr_patches, sizeof(*cmflds->bnd_by_patch));
 
@@ -303,13 +319,13 @@ psc_mfields_cuda_read(struct psc_mfields *mflds, struct mrc_io *io)
 fields_cuda_t
 psc_mfields_cuda_get_field_t(struct psc_mfields *mflds, int p)
 {
-  //struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
+  struct psc_mfields_cuda *sub = psc_mfields_cuda(mflds);
   fields_cuda_t flds;
 
   flds.data = NULL;
   for (int d = 0; d < 3; d++) {
-    flds.ib[d] = mflds->ib[d];
-    flds.im[d] = mflds->im[d];
+    flds.ib[d] = sub->ib[d];
+    flds.im[d] = sub->im[d];
   }
   flds.nr_comp = mflds->nr_fields;
   flds.first_comp = mflds->first_comp;

@@ -14,20 +14,6 @@
 static void
 _psc_mfields_setup(struct psc_mfields *mflds)
 {
-  struct mrc_patch *patches = mrc_domain_get_patches(mflds->domain,
-						     &mflds->nr_patches);
-  assert(mflds->nr_patches > 0);
-  for (int p = 1; p < mflds->nr_patches; p++) {
-    for (int d = 0; d < 3; d++) {
-      assert(patches[p].ldims[d] == patches[0].ldims[d]);
-    }
-  }
-  
-  for (int d = 0; d < 3; d++) {
-    mflds->ib[d] = -mflds->ibn[d];
-    mflds->im[d] = patches[0].ldims[d] + 2 * mflds->ibn[d];
-  }
-
   mflds->comp_name = calloc(mflds->nr_fields, sizeof(*mflds->comp_name));
 }
 

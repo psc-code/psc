@@ -80,6 +80,8 @@ fields_t_axpy_comp(fields_t y, int m_y, fields_real_t a, fields_t x, int m_x)
 
 struct MPFX(sub) {
   void **data;
+  int ib[3]; //> lower left corner for each patch (incl. ghostpoints)
+  int im[3]; //> extent for each patch (incl. ghostpoints)
 };
 
 // ----------------------------------------------------------------------
@@ -92,13 +94,24 @@ MPFX(setup)(struct psc_mfields *mflds)
 
   psc_mfields_setup_super(mflds);
 
+  struct mrc_patch *patches = mrc_domain_get_patches(mflds->domain,
+						     &mflds->nr_patches);
+  assert(mflds->nr_patches > 0);
+  for (int p = 1; p < mflds->nr_patches; p++) {
+    for (int d = 0; d < 3; d++) {
+      assert(patches[p].ldims[d] == patches[0].ldims[d]);
+    }
+  }
+  
+  unsigned int size = 1;
+  for (int d = 0; d < 3; d++) {
+    sub->ib[d] = -mflds->ibn[d];
+    sub->im[d] = patches[0].ldims[d] + 2 * mflds->ibn[d];
+    size *= sub->im[d];
+  }
+
   sub->data = calloc(mflds->nr_patches, sizeof(*sub->data));
   for (int p = 0; p < mflds->nr_patches; p++) {
-    unsigned int size = 1;
-    for (int d = 0; d < 3; d++) {
-      size *= mflds->im[d];
-    }
-    
 #if PSC_FIELDS_AS_FORTRAN
     fields_real_t **flds = calloc(mflds->nr_fields, sizeof(*flds));
     flds[0] = calloc(size * mflds->nr_fields, sizeof(flds[0]));
@@ -291,8 +304,8 @@ MPFX(get_field_t)(struct psc_mfields *mflds, int p)
 
   flds.data = (fields_real_t *) sub->data[p];
   for (int d = 0; d < 3; d++) {
-    flds.ib[d] = mflds->ib[d];
-    flds.im[d] = mflds->im[d];
+    flds.ib[d] = sub->ib[d];
+    flds.im[d] = sub->im[d];
   }
   flds.nr_comp = mflds->nr_fields;
   flds.first_comp = mflds->first_comp;
