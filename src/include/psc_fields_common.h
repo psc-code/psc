@@ -13,7 +13,6 @@
 #define fields_FTYPE_t fields_single_t
 #define fields_FTYPE_t_ctor fields_single_t_ctor
 #define fields_FTYPE_t_dtor fields_single_t_dtor
-#define fields_FTYPE_t_from_psc_fields fields_single_t_from_psc_fields
 #define fields_FTYPE_t_mflds fields_single_t_mflds
 #define fields_FTYPE_t_size fields_single_t_size
 #define fields_FTYPE_t_zero_range fields_single_t_zero_range
@@ -24,7 +23,6 @@
 #define fields_FTYPE_t fields_c_t
 #define fields_FTYPE_t_ctor fields_c_t_ctor
 #define fields_FTYPE_t_dtor fields_c_t_dtor
-#define fields_FTYPE_t_from_psc_fields fields_c_t_from_psc_fields
 #define fields_FTYPE_t_mflds fields_c_t_mflds
 #define fields_FTYPE_t_size fields_c_t_size
 #define fields_FTYPE_t_zero_range fields_c_t_zero_range
@@ -35,7 +33,6 @@
 #define fields_FTYPE_t fields_fortran_t
 #define fields_FTYPE_t_ctor fields_fortran_t_ctor
 #define fields_FTYPE_t_dtor fields_fortran_t_dtor
-#define fields_FTYPE_t_from_psc_fields fields_fortran_t_from_psc_fields
 #define fields_FTYPE_t_mflds fields_fortran_t_mflds
 #define fields_FTYPE_t_size fields_fortran_t_size
 #define fields_FTYPE_t_zero_range fields_fortran_t_zero_range
@@ -46,7 +43,6 @@
 #define fields_FTYPE_t fields_cuda_t
 #define fields_FTYPE_t_ctor fields_cuda_t_ctor
 #define fields_FTYPE_t_dtor fields_cuda_t_dtor
-#define fields_FTYPE_t_from_psc_fields fields_cuda_t_from_psc_fields
 #define fields_FTYPE_t_mflds fields_cuda_t_mflds
 #define fields_FTYPE_t_size fields_cuda_t_size
 #define fields_FTYPE_t_zero_range fields_cuda_t_zero_range
@@ -246,11 +242,13 @@ fields_FTYPE_t_dtor(fields_FTYPE_t *flds)
 }
 
 // ----------------------------------------------------------------------
-// fields_t_from_psc_fields
+// fields_t_mflds
 
 static inline fields_FTYPE_t
-fields_FTYPE_t_from_psc_fields(struct psc_fields *pf)
+fields_FTYPE_t_mflds(struct psc_mfields *mflds, int p)
 {
+  struct psc_fields *pf = psc_mfields_get_patch(mflds, p);
+
   fields_FTYPE_t flds;
 
   flds.data = (fields_FTYPE_real_t *) pf->data;
@@ -262,15 +260,6 @@ fields_FTYPE_t_from_psc_fields(struct psc_fields *pf)
   flds.first_comp = pf->first_comp;
 
   return flds;
-}
-
-// ----------------------------------------------------------------------
-// fields_t_mflds
-
-static inline fields_FTYPE_t
-fields_FTYPE_t_mflds(struct psc_mfields *mflds, int p)
-{
-  return fields_FTYPE_t_from_psc_fields(psc_mfields_get_patch(mflds, p));
 }
 
 // ----------------------------------------------------------------------
@@ -307,7 +296,6 @@ fields_FTYPE_t_zero_range(fields_FTYPE_t flds, int mb, int me)
 #undef fields_FTYPE_t
 #undef fields_FTYPE_t_ctor
 #undef fields_FTYPE_t_dtor
-#undef fields_FTYPE_t_from_psc_fields
 #undef fields_FTYPE_t_mflds
 #undef fields_FTYPE_t_size
 #undef fields_FTYPE_t_zero_range

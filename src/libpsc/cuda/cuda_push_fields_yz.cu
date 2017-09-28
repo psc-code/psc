@@ -34,20 +34,38 @@
       * (pf)->im[1] + ((jy)-(pf)->ib[1]))				\
      * (pf)->im[0] + ((jx)-(pf)->ib[0]))))
 
+#define _F3_OFF_CUDA(pf, fldnr, jx,jy,jz)				\
+  ((((((fldnr)								\
+       * (pf).im[2] + ((jz)-(pf).ib[2]))				\
+      * (pf).im[1] + ((jy)-(pf).ib[1]))					\
+     * (pf).im[0] + ((jx)-(pf).ib[0]))))
+
 #ifndef BOUNDS_CHECK
 
 #define F3_CUDA(h_flds, pf, fldnr, jx,jy,jz)	\
   (h_flds[F3_OFF_CUDA(pf, fldnr, jx,jy,jz)])
 
+#define _F3_CUDA(h_flds, pf, fldnr, jx,jy,jz)	\
+  (h_flds[_F3_OFF_CUDA(pf, fldnr, jx,jy,jz)])
+
 #else
 
-#define F3_CUDA(pf, fldnr, jx,jy,jz)				\
+#define F3_CUDA(h_flds, pf, fldnr, jx,jy,jz)				\
   (*({int off = F3_OFF_CUDA(pf, fldnr, jx,jy,jz);			\
       assert(fldnr >= 0 && fldnr < (pf)->nr_comp);			\
       assert(jx >= (pf)->ib[0] && jx < (pf)->ib[0] + (pf)->im[0]);	\
       assert(jy >= (pf)->ib[1] && jy < (pf)->ib[1] + (pf)->im[1]);	\
       assert(jz >= (pf)->ib[2] && jz < (pf)->ib[2] + (pf)->im[2]);	\
-      &(h_flds[off]);						\
+      &(h_flds[off]);							\
+    }))
+
+#define _F3_CUDA(h_flds, pf, fldnr, jx,jy,jz)				\
+  (*({int off = _F3_OFF_CUDA(pf, fldnr, jx,jy,jz);			\
+      assert(fldnr >= 0 && fldnr < (pf).nr_comp);			\
+      assert(jx >= (pf).ib[0] && jx < (pf).ib[0] + (pf).im[0]);		\
+      assert(jy >= (pf).ib[1] && jy < (pf).ib[1] + (pf).im[1]);		\
+      assert(jz >= (pf).ib[2] && jz < (pf).ib[2] + (pf).im[2]);		\
+      &(h_flds[off]);							\
     }))
 
 #endif
@@ -184,11 +202,13 @@ cuda_marder_correct_yz_gold(struct psc_mfields *mflds, struct psc_mfields *mf,
 			    int ly[3], int ry[3],
 			    int lz[3], int rz[3])
 {
-  struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-  struct psc_fields *f = psc_mfields_get_patch(mf, p);
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
+  struct cuda_mfields *cmf = psc_mfields_cuda(mf)->cmflds;
+  fields_cuda_t flds = fields_cuda_t_mflds(mflds, p);
+  fields_cuda_t f = fields_cuda_t_mflds(mf, p);
 
-  float *hflds = (float *) malloc(flds->nr_comp * flds->im[0] * flds->im[1] * flds->im[2] * sizeof(*hflds));
-  float *hf = (float *) malloc(f->nr_comp * flds->im[0] * flds->im[1] * flds->im[2] * sizeof(*hf));
+  float *hflds = (float *) malloc(cmflds->n_fields * cmflds->im[0] * cmflds->im[1] * cmflds->im[2] * sizeof(*hflds));
+  float *hf = (float *) malloc(cmf->n_fields * cmflds->im[0] * cmflds->im[1] * cmflds->im[2] * sizeof(*hf));
   
   __fields_cuda_from_device(mflds, p, hflds, EX, EX + 3);
   __fields_cuda_from_device(mf, p, hf, 0, 1);
@@ -197,14 +217,14 @@ cuda_marder_correct_yz_gold(struct psc_mfields *mflds, struct psc_mfields *mf,
     for (int iy = -1; iy < ldims[1]; iy++) {
       if (iy >= -ly[1] && iy < ry[1] &&
 	  iz >= -ly[2] && iz < ry[2]) {
-	F3_CUDA(hflds, flds, EY, 0,iy,iz) += 
-	  fac[1] * (F3_CUDA(hf, f, 0, 0,iy+1,iz) - F3_CUDA(hf, f, 0, 0,iy,iz));
+	_F3_CUDA(hflds, flds, EY, 0,iy,iz) += 
+	  fac[1] * (_F3_CUDA(hf, f, 0, 0,iy+1,iz) - _F3_CUDA(hf, f, 0, 0,iy,iz));
 	}
       
       if (iy >= -lz[1] && iy < rz[1] &&
 	  iz >= -lz[2] && iz < rz[2]) {
-	F3_CUDA(hflds, flds, EZ, 0,iy,iz) += 
-	  fac[2] * (F3_CUDA(hf, f, 0, 0,iy,iz+1) - F3_CUDA(hf, f, 0, 0,iy,iz));
+	_F3_CUDA(hflds, flds, EZ, 0,iy,iz) += 
+	  fac[2] * (_F3_CUDA(hf, f, 0, 0,iy,iz+1) - _F3_CUDA(hf, f, 0, 0,iy,iz));
       }
     }
   }

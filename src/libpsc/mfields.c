@@ -32,8 +32,6 @@ _psc_mfields_setup(struct psc_mfields *flds)
     }
     pf->nr_comp = flds->nr_fields;
     pf->first_comp = flds->first_comp;
-    pf->p = p;
-    pf->mflds = flds;
     psc_fields_setup(pf);
     flds->flds[p] = pf;
   }

@@ -25,7 +25,6 @@ static struct param psc_fields_descr[] = {
   { "im"            , VAR(im)                     , PARAM_INT3(0, 0, 0)  },
   { "nr_comp"       , VAR(nr_comp)                , PARAM_INT(1)         },
   { "first_comp"    , VAR(first_comp)             , PARAM_INT(0)         },
-  { "p"             , VAR(p)                      , PARAM_INT(0)         },
   {}
 };
 
