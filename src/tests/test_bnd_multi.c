@@ -81,7 +81,7 @@ check_jx(struct psc_mfields *mflds_base)
       if (_F3(flds, JXI, jx,jy,jz) != iz * 10000 + iy * 100 + ix) {
 	printf("ix %d %d %d jx %d %d %d\n", ix, iy, iz, jx, jy, jz);
 	printf("exp: %d actual: %g\n", iz * 10000 + iy * 100 + ix,
-	       F3(pf, JXI, jx,jy,jz));
+	       _F3(flds, JXI, jx,jy,jz));
       }
       assert(_F3(flds, JXI, jx,jy,jz) == iz * 10000 + iy * 100 + ix);
     } foreach_3d_end;

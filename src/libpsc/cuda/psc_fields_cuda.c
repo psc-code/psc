@@ -12,33 +12,6 @@
 // OPT, CUDA fields have too many ghostpoints, and 7 points in the invar direction!
 
 // ----------------------------------------------------------------------
-// macros to access C (host) versions of the fields
-
-#define _F3_OFF_CUDA(pf, fldnr, jx,jy,jz)				\
-  ((((((fldnr)								\
-       * (pf).im[2] + ((jz)-(pf).ib[2]))				\
-      * (pf).im[1] + ((jy)-(pf).ib[1]))					\
-     * (pf).im[0] + ((jx)-(pf).ib[0]))))
-
-#ifndef BOUNDS_CHECK
-
-#define _F3_CUDA(pf, fldnr, jx,jy,jz)		\
-  ((pf).data[_F3_OFF_CUDA(pf, fldnr, jx,jy,jz)])
-
-#else
-
-#define _F3_CUDA(pf, fldnr, jx,jy,jz)					\
-  (*({int off = _F3_OFF_CUDA(pf, fldnr, jx,jy,jz);			\
-      assert(fldnr >= 0 && fldnr < (pf).nr_comp);			\
-      assert(jx >= (pf).ib[0] && jx < (pf).ib[0] + (pf).im[0]);		\
-      assert(jy >= (pf).ib[1] && jy < (pf).ib[1] + (pf).im[1]);		\
-      assert(jz >= (pf).ib[2] && jz < (pf).ib[2] + (pf).im[2]);		\
-      &((pf).data[off]);						\
-    }))
-
-#endif
-
-// ----------------------------------------------------------------------
 // this really should just use fields_single_t
 
 static inline fields_cuda_t
