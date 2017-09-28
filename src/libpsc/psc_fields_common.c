@@ -103,22 +103,14 @@ MPFX(setup)(struct psc_mfields *mflds)
     }
     
 #if PSC_FIELDS_AS_FORTRAN
-    fields_real_t **flds = calloc(pf->nr_comp, sizeof(*flds));
-    flds[0] = calloc(size * pf->nr_comp, sizeof(flds[0]));
-    for (int i = 1; i < pf->nr_comp; i++) {
+    fields_real_t **flds = calloc(mflds->nr_fields, sizeof(*flds));
+    flds[0] = calloc(size * mflds->nr_fields, sizeof(flds[0]));
+    for (int i = 1; i < mflds->nr_fields; i++) {
       flds[i] = flds[0] + i * size;
     }
     pf->data = flds;
-#elif PSC_FIELDS_AS_C && defined(USE_CBE)
-    // The Cell processor translation can use the C fields with one modification:
-    // the data needs to be 128 byte aligned (to speed off-loading to spes). This
-    // change is roughly put in below.
-    void *m;
-    int ierr = posix_memalign(&m, 128, nr_comp * size * sizeof(fields_real_t));
-    assert(ierr == 0);
-    pf->flds = m; 
 #else
-    pf->data = calloc(pf->nr_comp * size, sizeof(fields_real_t));
+    pf->data = calloc(mflds->nr_fields * size, sizeof(fields_real_t));
 #endif
   }
 }
@@ -135,7 +127,7 @@ MPFX(destroy)(struct psc_mfields *mflds)
     fields_real_t **flds = pf->data;
     free(flds[0]);
     
-    for (int i = 0; i < pf->nr_comp; i++) {
+    for (int i = 0; i < mflds->nr_fields; i++) {
       flds[i] = NULL;
     }
     free(flds);

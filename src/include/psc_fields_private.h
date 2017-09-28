@@ -8,7 +8,6 @@ struct psc_fields {
   struct mrc_obj obj;
   void *data;
   int ib[3], im[3]; //> lower bounds and length per direction
-  int nr_comp; //> nr of components
 };
 
 struct psc_fields_ops {
