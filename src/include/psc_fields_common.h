@@ -253,8 +253,8 @@ fields_FTYPE_t_mflds(struct psc_mfields *mflds, int p)
 
   flds.data = (fields_FTYPE_real_t *) pf->data;
   for (int d = 0; d < 3; d++) {
-    flds.ib[d] = pf->ib[d];
-    flds.im[d] = pf->im[d];
+    flds.ib[d] = mflds->ib[d];
+    flds.im[d] = mflds->im[d];
   }
   flds.nr_comp = mflds->nr_fields;
   flds.first_comp = mflds->first_comp;

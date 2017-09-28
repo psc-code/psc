@@ -16,20 +16,28 @@ _psc_mfields_setup(struct psc_mfields *mflds)
 {
   struct psc_mfields_ops *ops = psc_mfields_ops(mflds);
 
-  mflds->comp_name = calloc(mflds->nr_fields, sizeof(*mflds->comp_name));
-
   struct mrc_patch *patches = mrc_domain_get_patches(mflds->domain,
 						     &mflds->nr_patches);
+  assert(mflds->nr_patches > 0);
+  for (int p = 1; p < mflds->nr_patches; p++) {
+    for (int d = 0; d < 3; d++) {
+      assert(patches[p].ldims[d] == patches[0].ldims[d]);
+    }
+  }
+  
+  for (int d = 0; d < 3; d++) {
+    mflds->ib[d] = -mflds->ibn[d];
+    mflds->im[d] = patches[0].ldims[d] + 2 * mflds->ibn[d];
+  }
+
+  mflds->comp_name = calloc(mflds->nr_fields, sizeof(*mflds->comp_name));
+
   mflds->flds = calloc(mflds->nr_patches, sizeof(*mflds->flds));
   for (int p = 0; p < mflds->nr_patches; p++) {
     struct psc_fields *pf = psc_fields_create(MPI_COMM_NULL);
     psc_fields_set_type(pf, ops->name);
     char name[20]; sprintf(name, "flds%d", p);
     psc_fields_set_name(pf, name);
-    for (int d = 0; d < 3; d++) {
-      pf->ib[d] = -mflds->ibn[d];
-      pf->im[d] = patches[p].ldims[d] + 2 * mflds->ibn[d];
-    }
     mflds->flds[p] = pf;
   }
 }

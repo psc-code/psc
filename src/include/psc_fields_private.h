@@ -7,7 +7,6 @@
 struct psc_fields {
   struct mrc_obj obj;
   void *data;
-  int ib[3], im[3]; //> lower bounds and length per direction
 };
 
 struct psc_fields_ops {

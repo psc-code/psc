@@ -7,26 +7,6 @@
 #include <string.h>
 
 // ======================================================================
-// psc_fields_size
-
-unsigned int
-psc_fields_size(struct psc_fields *pf)
-{
-  return pf->im[0] * pf->im[1] * pf->im[2];
-}
-
-// ======================================================================
-// psc_fields_descr
-
-#define VAR(x) (void *)offsetof(struct psc_fields, x)
-
-static struct param psc_fields_descr[] = {
-  { "ib"            , VAR(ib)                     , PARAM_INT3(0, 0, 0)  },
-  { "im"            , VAR(im)                     , PARAM_INT3(0, 0, 0)  },
-  {}
-};
-
-// ======================================================================
 // psc_fields_init
 
 static void
@@ -52,7 +32,6 @@ psc_fields_init()
 struct mrc_class_psc_fields mrc_class_psc_fields = {
   .name             = "psc_fields",
   .size             = sizeof(struct psc_fields),
-  .param_descr      = psc_fields_descr,
   .init             = psc_fields_init,
 };
 

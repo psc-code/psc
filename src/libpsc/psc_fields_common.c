@@ -99,7 +99,7 @@ MPFX(setup)(struct psc_mfields *mflds)
 
     unsigned int size = 1;
     for (int d = 0; d < 3; d++) {
-      size *= pf->im[d];
+      size *= mflds->im[d];
     }
     
 #if PSC_FIELDS_AS_FORTRAN
