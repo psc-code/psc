@@ -143,6 +143,18 @@ MPFX(setup)(struct psc_mfields *mflds)
   }
 }
 
+// ----------------------------------------------------------------------
+// psc_mfields_destroy
+
+static void
+MPFX(destroy)(struct psc_mfields *mflds)
+{
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    struct psc_fields *pf = mflds->flds[p];
+    psc_fields_destroy(pf);
+  }
+}
+
 #if defined(HAVE_LIBHDF5_HL) && (PSC_FIELDS_AS_SINGLE || PSC_FIELDS_AS_C)
 
 #include <mrc_io.h>
@@ -294,6 +306,7 @@ struct psc_mfields_ops MPFX(ops) = {
   .name                  = FIELDS_TYPE,
   .methods               = MPFX(methods),
   .setup                 = MPFX(setup),
+  .destroy               = MPFX(destroy),
 #if defined(HAVE_LIBHDF5_HL) && (PSC_FIELDS_AS_SINGLE || PSC_FIELDS_AS_C)
   .write                 = MPFX(write),
   .read                  = MPFX(read),

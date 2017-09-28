@@ -214,6 +214,10 @@ psc_mfields_cuda_destroy(struct psc_mfields *mflds)
   free(cmflds->bnd_by_patch);
   cuda_mfields_destroy(cmflds);
   mflds_cuda->cmflds = NULL;
+
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    psc_fields_destroy(mflds->flds[p]);
+  }
 }
 
 // ----------------------------------------------------------------------
