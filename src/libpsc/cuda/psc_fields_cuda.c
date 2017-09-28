@@ -186,6 +186,7 @@ psc_mfields_cuda_setup(struct psc_mfields *mflds)
 
   psc_mfields_setup_super(mflds);
 
+  mflds->data = calloc(mflds->nr_patches, sizeof(*mflds->data));
   for (int p = 0; p < mflds->nr_patches; p++) {
     psc_fields_setup(mflds->flds[p]);
   }
@@ -218,6 +219,7 @@ psc_mfields_cuda_destroy(struct psc_mfields *mflds)
   for (int p = 0; p < mflds->nr_patches; p++) {
     psc_fields_destroy(mflds->flds[p]);
   }
+  free(mflds->data);
 }
 
 // ----------------------------------------------------------------------

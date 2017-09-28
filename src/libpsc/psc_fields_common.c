@@ -93,6 +93,7 @@ MPFX(setup)(struct psc_mfields *mflds)
 {
   psc_mfields_setup_super(mflds);
 
+  mflds->data = calloc(mflds->nr_patches, sizeof(*mflds->data));
   for (int p = 0; p < mflds->nr_patches; p++) {
     struct psc_fields *pf = mflds->flds[p];
     psc_fields_setup(pf);
@@ -108,9 +109,9 @@ MPFX(setup)(struct psc_mfields *mflds)
     for (int i = 1; i < mflds->nr_fields; i++) {
       flds[i] = flds[0] + i * size;
     }
-    pf->data = flds;
+    mflds->data[p] = flds;
 #else
-    pf->data = calloc(mflds->nr_fields * size, sizeof(fields_real_t));
+    mflds->data[p] = calloc(mflds->nr_fields * size, sizeof(fields_real_t));
 #endif
   }
 }
@@ -122,9 +123,8 @@ static void
 MPFX(destroy)(struct psc_mfields *mflds)
 {
   for (int p = 0; p < mflds->nr_patches; p++) {
-    struct psc_fields *pf = mflds->flds[p];
 #if PSC_FIELDS_AS_FORTRAN
-    fields_real_t **flds = pf->data;
+    fields_real_t **flds = mflds->data[p];
     free(flds[0]);
     
     for (int i = 0; i < mflds->nr_fields; i++) {
@@ -132,9 +132,10 @@ MPFX(destroy)(struct psc_mfields *mflds)
     }
     free(flds);
 #else
-    free(pf->data);
+    free(mflds->data[p]);
 #endif
   }
+  free(mflds->data);
 }
 
 #if defined(HAVE_LIBHDF5_HL) && (PSC_FIELDS_AS_SINGLE || PSC_FIELDS_AS_C)

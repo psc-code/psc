@@ -6,7 +6,6 @@
 
 struct psc_fields {
   struct mrc_obj obj;
-  void *data;
 };
 
 struct psc_fields_ops {

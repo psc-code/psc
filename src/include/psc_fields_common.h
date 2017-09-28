@@ -247,11 +247,9 @@ fields_FTYPE_t_dtor(fields_FTYPE_t *flds)
 static inline fields_FTYPE_t
 fields_FTYPE_t_mflds(struct psc_mfields *mflds, int p)
 {
-  struct psc_fields *pf = psc_mfields_get_patch(mflds, p);
-
   fields_FTYPE_t flds;
 
-  flds.data = (fields_FTYPE_real_t *) pf->data;
+  flds.data = (fields_FTYPE_real_t *) mflds->data[p];
   for (int d = 0; d < 3; d++) {
     flds.ib[d] = mflds->ib[d];
     flds.im[d] = mflds->im[d];

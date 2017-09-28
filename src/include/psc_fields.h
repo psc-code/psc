@@ -23,6 +23,7 @@ struct psc_mfields {
   int first_comp; //> The first component in this field (normally 0)
   int ib[3]; //> lower left corner for each patch (incl. ghostpoints)
   int im[3]; //> extent for each patch (incl. ghostpoints)
+  void **data;
 };
 
 MRC_CLASS_DECLARE(psc_mfields, struct psc_mfields);
