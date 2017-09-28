@@ -256,8 +256,8 @@ fields_FTYPE_t_mflds(struct psc_mfields *mflds, int p)
     flds.ib[d] = pf->ib[d];
     flds.im[d] = pf->im[d];
   }
-  flds.nr_comp = pf->nr_comp;
-  flds.first_comp = pf->first_comp;
+  flds.nr_comp = mflds->nr_fields;
+  flds.first_comp = mflds->first_comp;
 
   return flds;
 }

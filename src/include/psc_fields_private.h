@@ -9,7 +9,6 @@ struct psc_fields {
   void *data;
   int ib[3], im[3]; //> lower bounds and length per direction
   int nr_comp; //> nr of components
-  int first_comp; // first component
 };
 
 struct psc_fields_ops {

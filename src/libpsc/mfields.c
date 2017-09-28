@@ -31,7 +31,6 @@ _psc_mfields_setup(struct psc_mfields *flds)
       pf->im[d] = patches[p].ldims[d] + 2 * flds->ibn[d];
     }
     pf->nr_comp = flds->nr_fields;
-    pf->first_comp = flds->first_comp;
     psc_fields_setup(pf);
     flds->flds[p] = pf;
   }
