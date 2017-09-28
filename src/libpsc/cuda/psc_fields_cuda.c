@@ -179,7 +179,7 @@ psc_mfields_cuda_setup(struct psc_mfields *mflds)
 
   psc_mfields_setup_super(mflds);
 
-  mflds->data = calloc(mflds->nr_patches, sizeof(*mflds->data));
+  mflds_cuda->data = calloc(mflds->nr_patches, sizeof(*mflds_cuda->data));
   
   cuda_base_init();
 
@@ -206,7 +206,7 @@ psc_mfields_cuda_destroy(struct psc_mfields *mflds)
   cuda_mfields_destroy(cmflds);
   mflds_cuda->cmflds = NULL;
 
-  free(mflds->data);
+  free(mflds_cuda->data);
 }
 
 // ----------------------------------------------------------------------
@@ -327,9 +327,10 @@ psc_mfields_cuda_read(struct psc_mfields *mflds, struct mrc_io *io)
 fields_cuda_t
 psc_mfields_cuda_get_field_t(struct psc_mfields *mflds, int p)
 {
+  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
   fields_cuda_t flds;
 
-  flds.data = (fields_cuda_real_t *) mflds->data[p];
+  flds.data = (fields_cuda_real_t *) mflds_cuda->data[p];
   for (int d = 0; d < 3; d++) {
     flds.ib[d] = mflds->ib[d];
     flds.im[d] = mflds->im[d];

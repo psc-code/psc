@@ -79,6 +79,7 @@ fields_t_axpy_comp(fields_t y, int m_y, fields_real_t a, fields_t x, int m_x)
 // psc_mfields
 
 struct MPFX(sub) {
+  void **data;
 };
 
 // ----------------------------------------------------------------------
@@ -87,9 +88,11 @@ struct MPFX(sub) {
 static void
 MPFX(setup)(struct psc_mfields *mflds)
 {
+  struct MPFX(sub) *sub = mrc_to_subobj(mflds, struct MPFX(sub));
+
   psc_mfields_setup_super(mflds);
 
-  mflds->data = calloc(mflds->nr_patches, sizeof(*mflds->data));
+  sub->data = calloc(mflds->nr_patches, sizeof(*sub->data));
   for (int p = 0; p < mflds->nr_patches; p++) {
     unsigned int size = 1;
     for (int d = 0; d < 3; d++) {
@@ -102,9 +105,9 @@ MPFX(setup)(struct psc_mfields *mflds)
     for (int i = 1; i < mflds->nr_fields; i++) {
       flds[i] = flds[0] + i * size;
     }
-    mflds->data[p] = flds;
+    sub->data[p] = flds;
 #else
-    mflds->data[p] = calloc(mflds->nr_fields * size, sizeof(fields_real_t));
+    sub->data[p] = calloc(mflds->nr_fields * size, sizeof(fields_real_t));
 #endif
   }
 }
@@ -115,9 +118,11 @@ MPFX(setup)(struct psc_mfields *mflds)
 static void
 MPFX(destroy)(struct psc_mfields *mflds)
 {
+  struct MPFX(sub) *sub = mrc_to_subobj(mflds, struct MPFX(sub));
+
   for (int p = 0; p < mflds->nr_patches; p++) {
 #if PSC_FIELDS_AS_FORTRAN
-    fields_real_t **flds = mflds->data[p];
+    fields_real_t **flds = sub->data[p];
     free(flds[0]);
     
     for (int i = 0; i < mflds->nr_fields; i++) {
@@ -125,10 +130,10 @@ MPFX(destroy)(struct psc_mfields *mflds)
     }
     free(flds);
 #else
-    free(mflds->data[p]);
+    free(sub->data[p]);
 #endif
   }
-  free(mflds->data);
+  free(sub->data);
 }
 
 #if defined(HAVE_LIBHDF5_HL) && (PSC_FIELDS_AS_SINGLE || PSC_FIELDS_AS_C)
@@ -281,9 +286,10 @@ MPFX(axpy_comp)(struct psc_mfields *y, int my, double alpha,
 fields_t
 MPFX(get_field_t)(struct psc_mfields *mflds, int p)
 {
+  struct MPFX(sub) *sub = mrc_to_subobj(mflds, struct MPFX(sub));
   fields_t flds;
 
-  flds.data = (fields_real_t *) mflds->data[p];
+  flds.data = (fields_real_t *) sub->data[p];
   for (int d = 0; d < 3; d++) {
     flds.ib[d] = mflds->ib[d];
     flds.im[d] = mflds->im[d];
