@@ -5,16 +5,10 @@
 #include <mrc_obj.h>
 
 // ----------------------------------------------------------------------
-// psc_fields class
-
-MRC_CLASS_DECLARE(psc_fields, struct psc_fields);
-
-// ----------------------------------------------------------------------
 // psc_mfields class
 
 struct psc_mfields {
   struct mrc_obj obj;
-  struct psc_fields **flds;
   int nr_patches;
   struct mrc_domain *domain;
   int nr_fields; //> number of field components
@@ -61,12 +55,6 @@ void psc_mfields_put_as(struct psc_mfields *mflds,
 			struct psc_mfields *mflds_base, int mb, int me);
 
 void psc_mfields_write_as_mrc_fld(struct psc_mfields *mflds, struct mrc_io *io);
-
-static inline struct psc_fields *
-psc_mfields_get_patch(struct psc_mfields *flds, int p)
-{
-  return flds->flds[p];
-}
 
 extern struct psc_mfields_ops psc_mfields_c_ops;
 extern struct psc_mfields_ops psc_mfields_fortran_ops;

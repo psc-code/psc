@@ -75,13 +75,6 @@ fields_t_axpy_comp(fields_t y, int m_y, fields_real_t a, fields_t x, int m_x)
 }
 
 
-// ----------------------------------------------------------------------
-// psc_fields: subclass ops
-  
-struct psc_fields_ops PFX(ops) = {
-  .name                  = FIELDS_TYPE,
-};
-
 // ======================================================================
 // psc_mfields
 
@@ -95,9 +88,6 @@ MPFX(setup)(struct psc_mfields *mflds)
 
   mflds->data = calloc(mflds->nr_patches, sizeof(*mflds->data));
   for (int p = 0; p < mflds->nr_patches; p++) {
-    struct psc_fields *pf = mflds->flds[p];
-    psc_fields_setup(pf);
-
     unsigned int size = 1;
     for (int d = 0; d < 3; d++) {
       size *= mflds->im[d];

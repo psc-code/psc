@@ -14,8 +14,6 @@
 static void
 _psc_mfields_setup(struct psc_mfields *mflds)
 {
-  struct psc_mfields_ops *ops = psc_mfields_ops(mflds);
-
   struct mrc_patch *patches = mrc_domain_get_patches(mflds->domain,
 						     &mflds->nr_patches);
   assert(mflds->nr_patches > 0);
@@ -31,15 +29,6 @@ _psc_mfields_setup(struct psc_mfields *mflds)
   }
 
   mflds->comp_name = calloc(mflds->nr_fields, sizeof(*mflds->comp_name));
-
-  mflds->flds = calloc(mflds->nr_patches, sizeof(*mflds->flds));
-  for (int p = 0; p < mflds->nr_patches; p++) {
-    struct psc_fields *pf = psc_fields_create(MPI_COMM_NULL);
-    psc_fields_set_type(pf, ops->name);
-    char name[20]; sprintf(name, "flds%d", p);
-    psc_fields_set_name(pf, name);
-    mflds->flds[p] = pf;
-  }
 }
 
 // ======================================================================
@@ -48,8 +37,6 @@ _psc_mfields_setup(struct psc_mfields *mflds)
 static void
 _psc_mfields_destroy(struct psc_mfields *mflds)
 {
-  free(mflds->flds);
-
   for (int m = 0; m < mflds->nr_fields; m++) {
     free(mflds->comp_name[m]);
   }

@@ -83,7 +83,6 @@ endif
 libpsc_la_SOURCES = \
 	mfields.c \
 	mparticles.c \
-	psc_fields.c \
 	psc_fields_fortran.c \
 	psc_fields_c.c \
 	psc_fields_single.c \

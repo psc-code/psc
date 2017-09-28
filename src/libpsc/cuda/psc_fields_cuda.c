@@ -168,13 +168,6 @@ psc_mfields_cuda_copy_to_single(struct psc_mfields *mflds_cuda, struct psc_mfiel
 }
 
 // ======================================================================
-// psc_fields: subclass "cuda"
-  
-struct psc_fields_ops psc_fields_cuda_ops = {
-  .name                  = "cuda",
-};
-
-// ======================================================================
 
 // ----------------------------------------------------------------------
 // psc_mfields_cuda_setup
@@ -187,9 +180,6 @@ psc_mfields_cuda_setup(struct psc_mfields *mflds)
   psc_mfields_setup_super(mflds);
 
   mflds->data = calloc(mflds->nr_patches, sizeof(*mflds->data));
-  for (int p = 0; p < mflds->nr_patches; p++) {
-    psc_fields_setup(mflds->flds[p]);
-  }
   
   cuda_base_init();
 
@@ -216,9 +206,6 @@ psc_mfields_cuda_destroy(struct psc_mfields *mflds)
   cuda_mfields_destroy(cmflds);
   mflds_cuda->cmflds = NULL;
 
-  for (int p = 0; p < mflds->nr_patches; p++) {
-    psc_fields_destroy(mflds->flds[p]);
-  }
   free(mflds->data);
 }
 
