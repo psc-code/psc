@@ -296,16 +296,14 @@ axpy_comp_yz(real *y_flds, int ym, float a, real *x_flds, int xm,
 }
 
 void
-cuda_axpy_comp_yz(struct psc_fields *y, int ym, float a, struct psc_fields *x, int xm)
+cuda_axpy_comp_yz(struct psc_mfields *mflds_y, int ym, float a, struct psc_mfields *mflds_x, int xm, int p)
 {
-  struct cuda_mfields *cmflds_y = psc_mfields_cuda(y->mflds)->cmflds;
-  struct cuda_mfields *cmflds_x = psc_mfields_cuda(x->mflds)->cmflds;
-  assert (x->p == y->p);
-  int p = y->p;
+  struct cuda_mfields *cmflds_y = psc_mfields_cuda(mflds_y)->cmflds;
+  struct cuda_mfields *cmflds_x = psc_mfields_cuda(mflds_x)->cmflds;
   struct psc_patch *patch = &ppsc->patch[0];
 
-  int my = y->im[1];
-  int mz = y->im[2];
+  int my = cmflds_y->im[1];
+  int mz = cmflds_y->im[2];
 
   int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
   int grid[2]  = { (patch->ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
@@ -320,8 +318,7 @@ cuda_axpy_comp_yz(struct psc_fields *y, int ym, float a, struct psc_fields *x, i
 // FIXME, this should be more easily doable by just a cudaMemset()
 
 __global__ static void
-zero_comp_yz(real *x_flds, int xm,
-	     int my, int mz)
+zero_comp_yz(real *x_flds, int xm, int my, int mz)
 {
   int iy = blockIdx.x * blockDim.x + threadIdx.x;
   int iz = blockIdx.y * blockDim.y + threadIdx.y;
@@ -337,14 +334,13 @@ zero_comp_yz(real *x_flds, int xm,
 }
 
 void
-cuda_zero_comp_yz(struct psc_fields *x, int xm)
+cuda_zero_comp_yz(struct psc_mfields *mflds_x, int xm, int p)
 {
-  struct cuda_mfields *cmflds = psc_mfields_cuda(x->mflds)->cmflds;
-  int p = x->p;
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds_x)->cmflds;
   struct psc_patch *patch = &ppsc->patch[0];
 
-  int my = x->im[1];
-  int mz = x->im[2];
+  int my = cmflds->im[1];
+  int mz = cmflds->im[2];
 
   int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
   int grid[2]  = { (patch->ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
@@ -374,19 +370,17 @@ calc_dive_yz(real *flds, real *f, float dy, float dz,
 }
 
 EXTERN_C void
-cuda_calc_dive_yz(struct psc_fields *flds, struct psc_fields *f)
+cuda_calc_dive_yz(struct psc_mfields *mflds, struct psc_mfields *mf, int p)
 {
-  float dy = ppsc->patch[f->p].dx[1];
-  float dz = ppsc->patch[f->p].dx[2];
+  float dy = ppsc->patch[p].dx[1];
+  float dz = ppsc->patch[p].dx[2];
 
-  struct cuda_mfields *cmflds_flds = psc_mfields_cuda(flds->mflds)->cmflds;
-  struct cuda_mfields *cmflds_f = psc_mfields_cuda(f->mflds)->cmflds;
-  assert(flds->p == f->p);
-  int p = flds->p;
+  struct cuda_mfields *cmflds_flds = psc_mfields_cuda(mflds)->cmflds;
+  struct cuda_mfields *cmflds_f = psc_mfields_cuda(mf)->cmflds;
   int *ldims = ppsc->patch[0].ldims;
 
-  int my = f->im[1];
-  int mz = f->im[2];
+  int my = cmflds_flds->im[1];
+  int mz = cmflds_flds->im[2];
 
   int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
   int grid[2]  = { (ldims[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
