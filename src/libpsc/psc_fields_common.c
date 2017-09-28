@@ -1,24 +1,5 @@
 
 // ----------------------------------------------------------------------
-// psc_fields_destroy
-
-static void
-PFX(destroy)(struct psc_fields *pf)
-{
-#if PSC_FIELDS_AS_FORTRAN
-  fields_real_t **flds = pf->data;
-  free(flds[0]);
-
-  for (int i = 0; i < pf->nr_comp; i++) {
-    flds[i] = NULL;
-  }
-  free(flds);
-#else
-  free(pf->data);
-#endif
-}
-
-// ----------------------------------------------------------------------
 // fields_t_zero_comp
 
 static inline void
@@ -99,7 +80,6 @@ fields_t_axpy_comp(fields_t y, int m_y, fields_real_t a, fields_t x, int m_x)
   
 struct psc_fields_ops PFX(ops) = {
   .name                  = FIELDS_TYPE,
-  .destroy               = PFX(destroy),
 };
 
 // ======================================================================
@@ -151,7 +131,17 @@ MPFX(destroy)(struct psc_mfields *mflds)
 {
   for (int p = 0; p < mflds->nr_patches; p++) {
     struct psc_fields *pf = mflds->flds[p];
-    psc_fields_destroy(pf);
+#if PSC_FIELDS_AS_FORTRAN
+    fields_real_t **flds = pf->data;
+    free(flds[0]);
+    
+    for (int i = 0; i < pf->nr_comp; i++) {
+      flds[i] = NULL;
+    }
+    free(flds);
+#else
+    free(pf->data);
+#endif
   }
 }
 
