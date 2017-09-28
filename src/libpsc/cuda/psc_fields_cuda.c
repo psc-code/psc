@@ -14,12 +14,6 @@
 // ----------------------------------------------------------------------
 // macros to access C (host) versions of the fields
 
-#define F3_OFF_CUDA(pf, fldnr, jx,jy,jz)				\
-  ((((((fldnr)								\
-       * (pf)->im[2] + ((jz)-(pf)->ib[2]))				\
-      * (pf)->im[1] + ((jy)-(pf)->ib[1]))				\
-     * (pf)->im[0] + ((jx)-(pf)->ib[0]))))
-
 #define _F3_OFF_CUDA(pf, fldnr, jx,jy,jz)				\
   ((((((fldnr)								\
        * (pf).im[2] + ((jz)-(pf).ib[2]))				\
@@ -28,22 +22,10 @@
 
 #ifndef BOUNDS_CHECK
 
-#define F3_CUDA(pf, fldnr, jx,jy,jz)		\
-  (h_flds[F3_OFF_CUDA(pf, fldnr, jx,jy,jz)])
-
 #define _F3_CUDA(pf, fldnr, jx,jy,jz)		\
   (h_flds[_F3_OFF_CUDA(pf, fldnr, jx,jy,jz)])
 
 #else
-
-#define F3_CUDA(pf, fldnr, jx,jy,jz)					\
-  (*({int off = F3_OFF_CUDA(pf, fldnr, jx,jy,jz);			\
-      assert(fldnr >= 0 && fldnr < (pf)->nr_comp);			\
-      assert(jx >= (pf)->ib[0] && jx < (pf)->ib[0] + (pf)->im[0]);	\
-      assert(jy >= (pf)->ib[1] && jy < (pf)->ib[1] + (pf)->im[1]);	\
-      assert(jz >= (pf)->ib[2] && jz < (pf)->ib[2] + (pf)->im[2]);	\
-      &(h_flds[off]);							\
-    }))
 
 #define _F3_CUDA(pf, fldnr, jx,jy,jz)					\
   (*({int off = _F3_OFF_CUDA(pf, fldnr, jx,jy,jz);			\
@@ -56,6 +38,26 @@
 
 #endif
 
+// ----------------------------------------------------------------------
+// this really should just use fields_single_t
+
+static inline fields_cuda_t
+_fields_cuda_t_mflds(struct psc_mfields *mflds, int p, fields_cuda_real_t *h_flds)
+{
+  //struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
+  fields_cuda_t flds;
+
+  flds.data = h_flds;
+  for (int d = 0; d < 3; d++) {
+    flds.ib[d] = mflds->ib[d];
+    flds.im[d] = mflds->im[d];
+  }
+  flds.nr_comp = mflds->nr_fields;
+  flds.first_comp = mflds->first_comp;
+
+  return flds;
+}
+
 // ======================================================================
 // convert from/to "c"
 
@@ -63,11 +65,11 @@ static void
 psc_mfields_cuda_copy_from_c(struct psc_mfields *mflds_cuda, struct psc_mfields *mflds_c,
 			    int mb, int me)
 {
-  unsigned int size = fields_cuda_t_size(fields_cuda_t_mflds(mflds_cuda, 0));
+  unsigned int size = fields_cuda_t_size(_fields_cuda_t_mflds(mflds_cuda, 0, NULL));
   float *h_flds = malloc(mflds_cuda->nr_fields * size * sizeof(*h_flds));
 
   for (int p = 0; p < mflds_cuda->nr_patches; p++) {
-    fields_cuda_t flds_cuda = fields_cuda_t_mflds(mflds_cuda, p);
+    fields_cuda_t flds_cuda = _fields_cuda_t_mflds(mflds_cuda, p, h_flds);
     fields_c_t flds_c = fields_c_t_mflds(mflds_c, p);
     for (int m = mb; m < me; m++) {
       for (int jz = flds_cuda.ib[2]; jz < flds_cuda.ib[2] + flds_cuda.im[2]; jz++) {
@@ -89,11 +91,11 @@ static void
 psc_mfields_cuda_copy_to_c(struct psc_mfields *mflds_cuda, struct psc_mfields *mflds_c,
 			  int mb, int me)
 {
-  unsigned int size = fields_cuda_t_size(fields_cuda_t_mflds(mflds_cuda, 0));
+  unsigned int size = fields_cuda_t_size(_fields_cuda_t_mflds(mflds_cuda, 0, NULL));
   float *h_flds = malloc(mflds_cuda->nr_fields * size * sizeof(*h_flds));
 
   for (int p = 0; p < mflds_cuda->nr_patches; p++) {
-    fields_cuda_t flds_cuda = fields_cuda_t_mflds(mflds_cuda, p);
+    fields_cuda_t flds_cuda = _fields_cuda_t_mflds(mflds_cuda, p, h_flds);
     fields_c_t flds_c = fields_c_t_mflds(mflds_c, p);
     __fields_cuda_from_device(mflds_cuda, p, h_flds, mb, me);
   
@@ -118,11 +120,11 @@ static void
 psc_mfields_cuda_copy_from_single(struct psc_mfields *mflds_cuda, struct psc_mfields *mflds_single,
 				  int mb, int me)
 {
-  unsigned int size = fields_cuda_t_size(fields_cuda_t_mflds(mflds_cuda, 0));
+  unsigned int size = fields_cuda_t_size(_fields_cuda_t_mflds(mflds_cuda, 0, NULL));
   float *h_flds = malloc(mflds_cuda->nr_fields * size * sizeof(*h_flds));
 
   for (int p = 0; p < mflds_cuda->nr_patches; p++) {
-    fields_cuda_t flds_cuda = fields_cuda_t_mflds(mflds_cuda, p);
+    fields_cuda_t flds_cuda = _fields_cuda_t_mflds(mflds_cuda, p, h_flds);
     fields_single_t flds_single = fields_single_t_mflds(mflds_single, p);
 
     for (int m = mb; m < me; m++) {
@@ -145,11 +147,11 @@ static void
 psc_mfields_cuda_copy_to_single(struct psc_mfields *mflds_cuda, struct psc_mfields *mflds_single,
 				int mb, int me)
 {
-  unsigned int size = fields_cuda_t_size(fields_cuda_t_mflds(mflds_cuda, 0));
+  unsigned int size = fields_cuda_t_size(_fields_cuda_t_mflds(mflds_cuda, 0, NULL));
   float *h_flds = malloc(mflds_cuda->nr_fields * size * sizeof(*h_flds));
 
   for (int p = 0; p < mflds_cuda->nr_patches; p++) {
-    fields_cuda_t flds_cuda = fields_cuda_t_mflds(mflds_cuda, p);
+    fields_cuda_t flds_cuda = _fields_cuda_t_mflds(mflds_cuda, p, h_flds);
     fields_single_t flds_single = fields_single_t_mflds(mflds_single, p);
     __fields_cuda_from_device(mflds_cuda, p, h_flds, mb, me);
   
@@ -255,7 +257,7 @@ psc_mfields_cuda_write(struct psc_mfields *mflds, struct mrc_io *io)
   hid_t group0 = H5Gopen(h5_file, mrc_io_obj_path(io, mflds), H5P_DEFAULT); H5_CHK(group0);
 
   for (int p = 0; p < mflds->nr_patches; p++) {
-    fields_cuda_t flds = fields_cuda_t_mflds(mflds, p);
+    fields_cuda_t flds = _fields_cuda_t_mflds(mflds, p, NULL);
     char name[20]; sprintf(name, "flds%d", p);
     hid_t group = H5Gcreate(group0, name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group);
     
@@ -290,7 +292,7 @@ psc_mfields_cuda_read(struct psc_mfields *mflds, struct mrc_io *io)
   hid_t group0 = H5Gopen(h5_file, mrc_io_obj_path(io, mflds), H5P_DEFAULT); H5_CHK(group0);
 
   for (int p = 0; p < mflds->nr_patches; p++) {
-    fields_cuda_t flds = fields_cuda_t_mflds(mflds, p);
+    fields_cuda_t flds = _fields_cuda_t_mflds(mflds, p, NULL);
     char name[20]; sprintf(name, "flds%d", p);
     hid_t group = H5Gopen(group0, name, H5P_DEFAULT); H5_CHK(group);
 
