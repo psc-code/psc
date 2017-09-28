@@ -8,10 +8,10 @@
 #include "psc_bnd_cuda.h"
 #include "psc_particles_as_cuda.h"
 
+#if 0
 #define PFX(x) xchg_##x
 #include "constants.c"
 
-#if 0
 // FIXME const mem for dims?
 // FIXME probably should do our own loop rather than use blockIdx
 

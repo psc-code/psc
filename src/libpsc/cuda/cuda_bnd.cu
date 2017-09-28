@@ -42,7 +42,7 @@ EXTERN_C void
 cuda_fill_ghosts_periodic_yz(int p, struct psc_fields *pf, int mb, int me)
 {
   struct cuda_mfields *cmflds = psc_mfields_cuda(pf->mflds)->cmflds;
-  cuda_bnd_set_constants(NULL, pf);
+  cuda_bnd_set_constants(pf->mflds, p);
 
   struct psc_patch *patch = &ppsc->patch[p];
   int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
@@ -78,7 +78,7 @@ EXTERN_C void
 cuda_fill_ghosts_periodic_z(int p, struct psc_fields *pf, int mb, int me)
 {
   struct cuda_mfields *cmflds = psc_mfields_cuda(pf->mflds)->cmflds;
-  cuda_bnd_set_constants(NULL, pf);
+  cuda_bnd_set_constants(pf->mflds, p);
 
   struct psc_patch *patch = &ppsc->patch[p];
   int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
@@ -153,7 +153,7 @@ EXTERN_C void
 cuda_add_ghosts_periodic_yz(int p, struct psc_fields *pf, int mb, int me)
 {
   struct cuda_mfields *cmflds = psc_mfields_cuda(pf->mflds)->cmflds;
-  cuda_bnd_set_constants(NULL, pf);
+  cuda_bnd_set_constants(pf->mflds, p);
 
   struct psc_patch *patch = &ppsc->patch[p];
   int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
@@ -190,7 +190,7 @@ EXTERN_C void
 cuda_add_ghosts_periodic_z(int p, struct psc_fields *pf, int mb, int me)
 {
   struct cuda_mfields *cmflds = psc_mfields_cuda(pf->mflds)->cmflds;
-  cuda_bnd_set_constants(NULL, pf);
+  cuda_bnd_set_constants(pf->mflds, p);
 
   struct psc_patch *patch = &ppsc->patch[p];
   int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
@@ -287,7 +287,7 @@ static void
 cuda_conducting_wall_H_y(int p, struct psc_fields *pf)
 {
   struct cuda_mfields *cmflds = psc_mfields_cuda(pf->mflds)->cmflds;
-  cuda_bnd_set_constants(NULL, pf);
+  cuda_bnd_set_constants(pf->mflds, p);
 
   int dimGrid  = (ppsc->patch[p].ldims[2] + 2*SW + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z;
   conducting_wall_H_y<lo, hi> <<<dimGrid, BLOCKSIZE_Z>>> (cmflds->d_flds_by_patch[p]);
@@ -299,7 +299,7 @@ static void
 cuda_conducting_wall_E_y(int p, struct psc_fields *pf)
 {
   struct cuda_mfields *cmflds = psc_mfields_cuda(pf->mflds)->cmflds;
-  cuda_bnd_set_constants(NULL, pf);
+  cuda_bnd_set_constants(pf->mflds, p);
 
   int dimGrid  = (ppsc->patch[p].ldims[2] + 2*SW + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z;
   conducting_wall_E_y<lo, hi> <<<dimGrid, BLOCKSIZE_Z>>> (cmflds->d_flds_by_patch[p]);
@@ -311,7 +311,7 @@ static void
 cuda_conducting_wall_J_y(int p, struct psc_fields *pf)
 {
   struct cuda_mfields *cmflds = psc_mfields_cuda(pf->mflds)->cmflds;
-  cuda_bnd_set_constants(NULL, pf);
+  cuda_bnd_set_constants(pf->mflds, p);
 
   int dimGrid  = (ppsc->patch[p].ldims[2] + 2*SW + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z;
   conducting_wall_J_y<lo, hi> <<<dimGrid, BLOCKSIZE_Z>>> (cmflds->d_flds_by_patch[p]);
