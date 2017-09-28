@@ -12,27 +12,26 @@
 // _psc_mfields_setup
 
 static void
-_psc_mfields_setup(struct psc_mfields *flds)
+_psc_mfields_setup(struct psc_mfields *mflds)
 {
-  struct psc_mfields_ops *ops = psc_mfields_ops(flds);
+  struct psc_mfields_ops *ops = psc_mfields_ops(mflds);
 
-  flds->comp_name = calloc(flds->nr_fields, sizeof(*flds->comp_name));
+  mflds->comp_name = calloc(mflds->nr_fields, sizeof(*mflds->comp_name));
 
-  struct mrc_patch *patches = mrc_domain_get_patches(flds->domain,
-						     &flds->nr_patches);
-  flds->flds = calloc(flds->nr_patches, sizeof(*flds->flds));
-  for (int p = 0; p < flds->nr_patches; p++) {
+  struct mrc_patch *patches = mrc_domain_get_patches(mflds->domain,
+						     &mflds->nr_patches);
+  mflds->flds = calloc(mflds->nr_patches, sizeof(*mflds->flds));
+  for (int p = 0; p < mflds->nr_patches; p++) {
     struct psc_fields *pf = psc_fields_create(MPI_COMM_NULL);
     psc_fields_set_type(pf, ops->name);
     char name[20]; sprintf(name, "flds%d", p);
     psc_fields_set_name(pf, name);
     for (int d = 0; d < 3; d++) {
-      pf->ib[d] = -flds->ibn[d];
-      pf->im[d] = patches[p].ldims[d] + 2 * flds->ibn[d];
+      pf->ib[d] = -mflds->ibn[d];
+      pf->im[d] = patches[p].ldims[d] + 2 * mflds->ibn[d];
     }
-    pf->nr_comp = flds->nr_fields;
-    psc_fields_setup(pf);
-    flds->flds[p] = pf;
+    pf->nr_comp = mflds->nr_fields;
+    mflds->flds[p] = pf;
   }
 }
 
@@ -40,18 +39,18 @@ _psc_mfields_setup(struct psc_mfields *flds)
 // psc_mfields_destroy
 
 static void
-_psc_mfields_destroy(struct psc_mfields *flds)
+_psc_mfields_destroy(struct psc_mfields *mflds)
 {
-  for (int p = 0; p < flds->nr_patches; p++) {
-    struct psc_fields *pf = flds->flds[p];
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    struct psc_fields *pf = mflds->flds[p];
     psc_fields_destroy(pf);
   }
-  free(flds->flds);
+  free(mflds->flds);
 
-  for (int m = 0; m < flds->nr_fields; m++) {
-    free(flds->comp_name[m]);
+  for (int m = 0; m < mflds->nr_fields; m++) {
+    free(mflds->comp_name[m]);
   }
-  free(flds->comp_name);
+  free(mflds->comp_name);
 }
 
 static void

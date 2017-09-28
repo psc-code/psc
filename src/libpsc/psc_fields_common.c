@@ -137,6 +137,19 @@ struct psc_fields_ops PFX(ops) = {
 // ======================================================================
 // psc_mfields
 
+// ----------------------------------------------------------------------
+// psc_mfields_setup
+
+static void
+MPFX(setup)(struct psc_mfields *mflds)
+{
+  psc_mfields_setup_super(mflds);
+
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    psc_fields_setup(mflds->flds[p]);
+  }
+}
+
 #if defined(HAVE_LIBHDF5_HL) && (PSC_FIELDS_AS_SINGLE || PSC_FIELDS_AS_C)
 
 #include <mrc_io.h>
@@ -287,6 +300,7 @@ MPFX(axpy_comp)(struct psc_mfields *y, int my, double alpha,
 struct psc_mfields_ops MPFX(ops) = {
   .name                  = FIELDS_TYPE,
   .methods               = MPFX(methods),
+  .setup                 = MPFX(setup),
 #if defined(HAVE_LIBHDF5_HL) && (PSC_FIELDS_AS_SINGLE || PSC_FIELDS_AS_C)
   .write                 = MPFX(write),
   .read                  = MPFX(read),

@@ -186,6 +186,10 @@ psc_mfields_cuda_setup(struct psc_mfields *mflds)
 
   psc_mfields_setup_super(mflds);
 
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    psc_fields_setup(mflds->flds[p]);
+  }
+  
   cuda_base_init();
 
   struct cuda_mfields *cmflds = cuda_mfields_create();
