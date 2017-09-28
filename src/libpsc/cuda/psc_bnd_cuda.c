@@ -110,7 +110,7 @@ psc_bnd_fld_cuda_add_ghosts(struct psc_bnd *bnd, struct psc_mfields *flds_base, 
       ppsc->domain.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
     // double periodic single patch
     struct psc_mfields *flds = psc_mfields_get_as(flds_base, "cuda", mb, me);
-    cuda_add_ghosts_periodic_yz(0, psc_mfields_get_patch(flds, 0), mb, me);
+    cuda_add_ghosts_periodic_yz(flds, 0, mb, me);
     psc_mfields_put_as(flds, flds_base, mb, me);
   } else if (size == 1 && ppsc->nr_patches == 1 && // FIXME !!!
       ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
@@ -118,7 +118,7 @@ psc_bnd_fld_cuda_add_ghosts(struct psc_bnd *bnd, struct psc_mfields *flds_base, 
       ppsc->domain.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
     // z-periodic single patch
     struct psc_mfields *flds = psc_mfields_get_as(flds_base, "cuda", mb, me);
-    cuda_add_ghosts_periodic_z(0, psc_mfields_get_patch(flds, 0), mb, me);
+    cuda_add_ghosts_periodic_z(flds, 0, mb, me);
     psc_mfields_put_as(flds, flds_base, mb, me);
   } else {
     struct psc_mfields *flds_cuda = psc_mfields_get_as(flds_base, "cuda", mb, me);
@@ -153,7 +153,7 @@ psc_bnd_fld_cuda_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *flds_base,
       ppsc->domain.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
     // double periodic single patch
     struct psc_mfields *flds = psc_mfields_get_as(flds_base, "cuda", mb, me);
-    cuda_fill_ghosts_periodic_yz(0, psc_mfields_get_patch(flds, 0), mb, me);
+    cuda_fill_ghosts_periodic_yz(flds, 0, mb, me);
     psc_mfields_put_as(flds, flds_base, mb, me);
   } else if (size == 1 && ppsc->nr_patches == 1 && // FIXME !!!
       ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
@@ -161,7 +161,7 @@ psc_bnd_fld_cuda_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *flds_base,
       ppsc->domain.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
     // z-periodic single patch
     struct psc_mfields *flds = psc_mfields_get_as(flds_base, "cuda", mb, me);
-    cuda_fill_ghosts_periodic_z(0, psc_mfields_get_patch(flds, 0), mb, me);
+    cuda_fill_ghosts_periodic_z(flds, 0, mb, me);
     psc_mfields_put_as(flds, flds_base, mb, me);
   } else {
     struct psc_mfields *flds_cuda = psc_mfields_get_as(flds_base, "cuda", mb, me);

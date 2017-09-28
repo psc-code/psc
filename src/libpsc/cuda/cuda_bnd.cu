@@ -39,10 +39,10 @@ fill_ghosts_periodic_yz(real *d_flds, int mb, int me)
 }
 
 EXTERN_C void
-cuda_fill_ghosts_periodic_yz(int p, struct psc_fields *pf, int mb, int me)
+cuda_fill_ghosts_periodic_yz(struct psc_mfields *mflds, int p, int mb, int me)
 {
-  struct cuda_mfields *cmflds = psc_mfields_cuda(pf->mflds)->cmflds;
-  cuda_bnd_set_constants(pf->mflds, p);
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
+  cuda_bnd_set_constants(mflds, p);
 
   struct psc_patch *patch = &ppsc->patch[p];
   int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
@@ -75,10 +75,10 @@ fill_ghosts_periodic_z(real *d_flds, int mb, int me)
 }
 
 EXTERN_C void
-cuda_fill_ghosts_periodic_z(int p, struct psc_fields *pf, int mb, int me)
+cuda_fill_ghosts_periodic_z(struct psc_mfields *mflds, int p, int mb, int me)
 {
-  struct cuda_mfields *cmflds = psc_mfields_cuda(pf->mflds)->cmflds;
-  cuda_bnd_set_constants(pf->mflds, p);
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
+  cuda_bnd_set_constants(mflds, p);
 
   struct psc_patch *patch = &ppsc->patch[p];
   int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
@@ -150,10 +150,10 @@ add_ghosts_periodic_yz(real *d_flds, int mb, int me)
 }
 
 EXTERN_C void
-cuda_add_ghosts_periodic_yz(int p, struct psc_fields *pf, int mb, int me)
+cuda_add_ghosts_periodic_yz(struct psc_mfields *mflds, int p, int mb, int me)
 {
-  struct cuda_mfields *cmflds = psc_mfields_cuda(pf->mflds)->cmflds;
-  cuda_bnd_set_constants(pf->mflds, p);
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
+  cuda_bnd_set_constants(mflds, p);
 
   struct psc_patch *patch = &ppsc->patch[p];
   int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
@@ -187,10 +187,10 @@ add_ghosts_periodic_z(real *d_flds, int mb, int me)
 }
 
 EXTERN_C void
-cuda_add_ghosts_periodic_z(int p, struct psc_fields *pf, int mb, int me)
+cuda_add_ghosts_periodic_z(struct psc_mfields *mflds, int p, int mb, int me)
 {
-  struct cuda_mfields *cmflds = psc_mfields_cuda(pf->mflds)->cmflds;
-  cuda_bnd_set_constants(pf->mflds, p);
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
+  cuda_bnd_set_constants(mflds, p);
 
   struct psc_patch *patch = &ppsc->patch[p];
   int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
@@ -284,10 +284,10 @@ conducting_wall_J_y(real *d_flds)
 
 template<bool lo, bool hi>
 static void
-cuda_conducting_wall_H_y(int p, struct psc_fields *pf)
+cuda_conducting_wall_H_y(struct psc_mfields *mflds, int p)
 {
-  struct cuda_mfields *cmflds = psc_mfields_cuda(pf->mflds)->cmflds;
-  cuda_bnd_set_constants(pf->mflds, p);
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
+  cuda_bnd_set_constants(mflds, p);
 
   int dimGrid  = (ppsc->patch[p].ldims[2] + 2*SW + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z;
   conducting_wall_H_y<lo, hi> <<<dimGrid, BLOCKSIZE_Z>>> (cmflds->d_flds_by_patch[p]);
@@ -296,10 +296,10 @@ cuda_conducting_wall_H_y(int p, struct psc_fields *pf)
 
 template<bool lo, bool hi>
 static void
-cuda_conducting_wall_E_y(int p, struct psc_fields *pf)
+cuda_conducting_wall_E_y(struct psc_mfields *mflds, int p)
 {
-  struct cuda_mfields *cmflds = psc_mfields_cuda(pf->mflds)->cmflds;
-  cuda_bnd_set_constants(pf->mflds, p);
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
+  cuda_bnd_set_constants(mflds, p);
 
   int dimGrid  = (ppsc->patch[p].ldims[2] + 2*SW + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z;
   conducting_wall_E_y<lo, hi> <<<dimGrid, BLOCKSIZE_Z>>> (cmflds->d_flds_by_patch[p]);
@@ -308,10 +308,10 @@ cuda_conducting_wall_E_y(int p, struct psc_fields *pf)
 
 template<bool lo, bool hi>
 static void
-cuda_conducting_wall_J_y(int p, struct psc_fields *pf)
+cuda_conducting_wall_J_y(struct psc_mfields *mflds, int p)
 {
-  struct cuda_mfields *cmflds = psc_mfields_cuda(pf->mflds)->cmflds;
-  cuda_bnd_set_constants(pf->mflds, p);
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
+  cuda_bnd_set_constants(mflds, p);
 
   int dimGrid  = (ppsc->patch[p].ldims[2] + 2*SW + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z;
   conducting_wall_J_y<lo, hi> <<<dimGrid, BLOCKSIZE_Z>>> (cmflds->d_flds_by_patch[p]);
@@ -319,56 +319,56 @@ cuda_conducting_wall_J_y(int p, struct psc_fields *pf)
 }
 
 EXTERN_C void
-cuda_conducting_wall_H_lo_y(int p, struct psc_fields *pf)
+cuda_conducting_wall_H_lo_y(struct psc_mfields *mflds, int p)
 {
-  cuda_conducting_wall_H_y<true, false>(p, pf);
+  cuda_conducting_wall_H_y<true, false>(mflds, p);
 }
 
 EXTERN_C void
-cuda_conducting_wall_H_hi_y(int p, struct psc_fields *pf)
+cuda_conducting_wall_H_hi_y(struct psc_mfields *mflds, int p)
 {
-  cuda_conducting_wall_H_y<false, true>(p, pf);
+  cuda_conducting_wall_H_y<false, true>(mflds, p);
 }
 
 EXTERN_C void
-cuda_conducting_wall_H_lo_hi_y(int p, struct psc_fields *pf)
+cuda_conducting_wall_H_lo_hi_y(struct psc_mfields *mflds, int p)
 {
-  cuda_conducting_wall_H_y<true, true>(p, pf);
+  cuda_conducting_wall_H_y<true, true>(mflds, p);
 }
 
 EXTERN_C void
-cuda_conducting_wall_E_lo_y(int p, struct psc_fields *pf)
+cuda_conducting_wall_E_lo_y(struct psc_mfields *mflds, int p)
 {
-  cuda_conducting_wall_E_y<true, false>(p, pf);
+  cuda_conducting_wall_E_y<true, false>(mflds, p);
 }
 
 EXTERN_C void
-cuda_conducting_wall_E_hi_y(int p, struct psc_fields *pf)
+cuda_conducting_wall_E_hi_y(struct psc_mfields *mflds, int p)
 {
-  cuda_conducting_wall_E_y<false, true>(p, pf);
+  cuda_conducting_wall_E_y<false, true>(mflds, p);
 }
 
 EXTERN_C void
-cuda_conducting_wall_E_lo_hi_y(int p, struct psc_fields *pf)
+cuda_conducting_wall_E_lo_hi_y(struct psc_mfields *mflds, int p)
 {
-  cuda_conducting_wall_E_y<true, true>(p, pf);
+  cuda_conducting_wall_E_y<true, true>(mflds, p);
 }
 
 EXTERN_C void
-cuda_conducting_wall_J_lo_y(int p, struct psc_fields *pf)
+cuda_conducting_wall_J_lo_y(struct psc_mfields *mflds, int p)
 {
-  cuda_conducting_wall_J_y<true, false>(p, pf);
+  cuda_conducting_wall_J_y<true, false>(mflds, p);
 }
 
 EXTERN_C void
-cuda_conducting_wall_J_hi_y(int p, struct psc_fields *pf)
+cuda_conducting_wall_J_hi_y(struct psc_mfields *mflds, int p)
 {
-  cuda_conducting_wall_J_y<false, true>(p, pf);
+  cuda_conducting_wall_J_y<false, true>(mflds, p);
 }
 
 EXTERN_C void
-cuda_conducting_wall_J_lo_hi_y(int p, struct psc_fields *pf)
+cuda_conducting_wall_J_lo_hi_y(struct psc_mfields *mflds, int p)
 {
-  cuda_conducting_wall_J_y<true, true>(p, pf);
+  cuda_conducting_wall_J_y<true, true>(mflds, p);
 }
 
