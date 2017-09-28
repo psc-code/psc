@@ -319,6 +319,27 @@ psc_mfields_cuda_read(struct psc_mfields *mflds, struct mrc_io *io)
 
 #endif
 
+// ----------------------------------------------------------------------
+// psc_mfields_cuda_get_field_t
+//
+// FIXME, should not exist...
+
+fields_cuda_t
+psc_mfields_cuda_get_field_t(struct psc_mfields *mflds, int p)
+{
+  fields_cuda_t flds;
+
+  flds.data = (fields_cuda_real_t *) mflds->data[p];
+  for (int d = 0; d < 3; d++) {
+    flds.ib[d] = mflds->ib[d];
+    flds.im[d] = mflds->im[d];
+  }
+  flds.nr_comp = mflds->nr_fields;
+  flds.first_comp = mflds->first_comp;
+
+  return flds;
+}
+
 // ======================================================================
 // psc_mfields: subclass "cuda"
   

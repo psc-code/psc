@@ -244,21 +244,51 @@ fields_FTYPE_t_dtor(fields_FTYPE_t *flds)
 // ----------------------------------------------------------------------
 // fields_t_mflds
 
-static inline fields_FTYPE_t
-fields_FTYPE_t_mflds(struct psc_mfields *mflds, int p)
+#if FTYPE == FTYPE_SINGLE
+
+struct psc_mfields;
+fields_single_t psc_mfields_single_get_field_t(struct psc_mfields *mflds, int p);
+
+static inline fields_single_t
+fields_single_t_mflds(struct psc_mfields *mflds, int p)
 {
-  fields_FTYPE_t flds;
-
-  flds.data = (fields_FTYPE_real_t *) mflds->data[p];
-  for (int d = 0; d < 3; d++) {
-    flds.ib[d] = mflds->ib[d];
-    flds.im[d] = mflds->im[d];
-  }
-  flds.nr_comp = mflds->nr_fields;
-  flds.first_comp = mflds->first_comp;
-
-  return flds;
+  return psc_mfields_single_get_field_t(mflds, p);
 }
+
+#elif FTYPE == FTYPE_C
+
+struct psc_mfields;
+fields_c_t psc_mfields_c_get_field_t(struct psc_mfields *mflds, int p);
+
+static inline fields_c_t
+fields_c_t_mflds(struct psc_mfields *mflds, int p)
+{
+  return psc_mfields_c_get_field_t(mflds, p);
+}
+
+#elif FTYPE == FTYPE_CUDA
+
+struct psc_mfields;
+EXTERN_C fields_cuda_t psc_mfields_cuda_get_field_t(struct psc_mfields *mflds, int p);
+
+static inline fields_cuda_t
+fields_cuda_t_mflds(struct psc_mfields *mflds, int p)
+{
+  return psc_mfields_cuda_get_field_t(mflds, p);
+}
+
+#elif FTYPE == FTYPE_FORTRAN
+
+struct psc_mfields;
+fields_fortran_t psc_mfields_fortran_get_field_t(struct psc_mfields *mflds, int p);
+
+static inline fields_fortran_t
+fields_fortran_t_mflds(struct psc_mfields *mflds, int p)
+{
+  return psc_mfields_fortran_get_field_t(mflds, p);
+}
+
+#endif
 
 // ----------------------------------------------------------------------
 // fields_t_size

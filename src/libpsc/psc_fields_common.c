@@ -78,6 +78,9 @@ fields_t_axpy_comp(fields_t y, int m_y, fields_real_t a, fields_t x, int m_x)
 // ======================================================================
 // psc_mfields
 
+struct MPFX(sub) {
+};
+
 // ----------------------------------------------------------------------
 // psc_mfields_setup
 
@@ -273,10 +276,30 @@ MPFX(axpy_comp)(struct psc_mfields *y, int my, double alpha,
 }
 
 // ----------------------------------------------------------------------
+// psc_mfields_get_field_t
+
+fields_t
+MPFX(get_field_t)(struct psc_mfields *mflds, int p)
+{
+  fields_t flds;
+
+  flds.data = (fields_real_t *) mflds->data[p];
+  for (int d = 0; d < 3; d++) {
+    flds.ib[d] = mflds->ib[d];
+    flds.im[d] = mflds->im[d];
+  }
+  flds.nr_comp = mflds->nr_fields;
+  flds.first_comp = mflds->first_comp;
+
+  return flds;
+}
+
+// ----------------------------------------------------------------------
 // psc_mfields: subclass ops
   
 struct psc_mfields_ops MPFX(ops) = {
   .name                  = FIELDS_TYPE,
+  .size                  = sizeof(struct MPFX(sub)),
   .methods               = MPFX(methods),
   .setup                 = MPFX(setup),
   .destroy               = MPFX(destroy),
