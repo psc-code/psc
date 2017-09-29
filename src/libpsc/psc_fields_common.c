@@ -79,7 +79,11 @@ fields_t_axpy_comp(fields_t y, int m_y, fields_real_t a, fields_t x, int m_x)
 // psc_mfields
 
 struct MPFX(sub) {
-  void **data;
+#if PSC_FIELDS_AS_FORTRAN
+  fields_real_t ***data;
+#else
+  fields_real_t **data;
+#endif
   int ib[3]; //> lower left corner for each patch (incl. ghostpoints)
   int im[3]; //> extent for each patch (incl. ghostpoints)
 };
@@ -302,7 +306,11 @@ MPFX(get_field_t)(struct psc_mfields *mflds, int p)
   struct MPFX(sub) *sub = mrc_to_subobj(mflds, struct MPFX(sub));
   fields_t flds;
 
-  flds.data = (fields_real_t *) sub->data[p];
+#if PSC_FIELDS_AS_FORTRAN
+  flds.data = sub->data[p][0];
+#else
+  flds.data = sub->data[p];
+#endif
   for (int d = 0; d < 3; d++) {
     flds.ib[d] = sub->ib[d];
     flds.im[d] = sub->im[d];
