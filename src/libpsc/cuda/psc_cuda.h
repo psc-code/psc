@@ -59,7 +59,7 @@ struct d_particle {
     d_p.pxi4[n].w = (pp).qni_wni;					\
 } while (0)
 
-EXTERN_C void __psc_mfields_cuda_setup(struct psc_mfields *mflds);
+EXTERN_C void __psc_mfields_cuda_setup(struct psc_mfields *mflds, struct mrc_patch *patches);
 EXTERN_C void __psc_mfields_cuda_destroy(struct psc_mfields *mflds);
 EXTERN_C void __fields_cuda_to_device(struct psc_mfields *mflds, int p, real *h_flds, int mb, int me);
 EXTERN_C void __fields_cuda_from_device(struct psc_mfields *mflds, int p, real *h_flds, int mb, int me);
@@ -156,3 +156,6 @@ EXTERN_C void psc_mparticles_cuda_get_cuda_2(struct psc_mparticles *particles,
   ((cf)->arr[F3_CF_0_OFF(cf, fldnr, jx,jy,jz)])
 
 #endif
+
+EXTERN_C fields_cuda_t _fields_cuda_t_mflds(struct psc_mfields *mflds, int p, fields_cuda_real_t *h_flds);
+

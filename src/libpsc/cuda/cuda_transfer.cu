@@ -42,27 +42,24 @@ cuda_mfields_dealloc(struct cuda_mfields *cmflds)
 }
 
 void
-__psc_mfields_cuda_setup(struct psc_mfields *mflds)
+__psc_mfields_cuda_setup(struct psc_mfields *mflds, struct mrc_patch *patches)
 {
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
   struct cuda_mfields *cmflds = mflds_cuda->cmflds;
 
   int im[3], ib[3];
+  assert(mflds->nr_patches > 0);
   for (int p = 0; p < mflds->nr_patches; p++) {
-    fields_cuda_t flds = fields_cuda_t_mflds(mflds, p);
-    if (p == 0) {
-      for (int d = 0; d < 3; d++) {
-	im[d] = flds.im[d];
-	ib[d] = flds.ib[d];
-      }
-    } else {
-      for (int d = 0; d < 3; d++) {
-	assert(im[d] == flds.im[d]);
-	assert(ib[d] == flds.ib[d]);
+    for (int d = 0; d < 3; d++) {
+      if (p == 0) {
+	ib[d] = -mflds->ibn[d];
+	im[d] = patches[0].ldims[d] + 2 * mflds->ibn[d];
+      } else {
+	assert(patches[p].ldims[d] == patches[0].ldims[d]);
       }
     }
   }
-
+  
   cuda_mfields_alloc(cmflds, ib, im, mflds->nr_fields, mflds->nr_patches);
 
   unsigned int buf_size = 0;
@@ -83,21 +80,20 @@ __psc_mfields_cuda_setup(struct psc_mfields *mflds)
   for (int p = 0; p < mflds->nr_patches; p++) {
     struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
     struct cuda_mfields_bnd_patch *cf = &cmflds->bnd_by_patch[p];
-    fields_cuda_t flds = fields_cuda_t_mflds(mflds, p);
 
-    unsigned int size = flds.im[0] * flds.im[1] * flds.im[2];
+    unsigned int size = cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
     cmflds->d_flds_by_patch[p] = d_flds;
-    assert(d_flds == cmflds->d_flds + p * flds.nr_comp * size);
-    d_flds += flds.nr_comp * size;
+    assert(d_flds == cmflds->d_flds + p * cmflds->n_fields * size);
+    d_flds += cmflds->n_fields * size;
     
     int sz = 1;
     for (int d = 0; d < 3; d++) {
-      if (flds.im[d] == 1 - 2 * flds.ib[d]) { // only 1 non-ghost point
+      if (cmflds->im[d] == 1 - 2 * cmflds->ib[d]) { // only 1 non-ghost point
 	cf->im[d] = 1;
 	cf->ib[d] = 0;
       } else {
-	cf->im[d] = flds.im[d];
-	cf->ib[d] = flds.ib[d];
+	cf->im[d] = cmflds->im[d];
+	cf->ib[d] = cmflds->ib[d];
       }
       sz *= cf->im[d];
     }
@@ -141,8 +137,7 @@ __fields_cuda_to_device(struct psc_mfields *mflds, int p, real *h_flds, int mb, 
   }
   assert(mb < me);
 
-  fields_cuda_t flds = fields_cuda_t_mflds(mflds, p);
-  unsigned int size = flds.im[0] * flds.im[1] * flds.im[2];
+  unsigned int size = cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
   check(cudaMemcpy(cmflds->d_flds_by_patch[p] + mb * size,
 		   h_flds + mb * size,
 		   (me - mb) * size * sizeof(float),
@@ -154,8 +149,7 @@ __fields_cuda_from_device(struct psc_mfields *mflds, int p, real *h_flds, int mb
 {
   struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
 
-  fields_cuda_t flds = fields_cuda_t_mflds(mflds, p);
-  unsigned int size = flds.im[0] * flds.im[1] * flds.im[2];
+  unsigned int size = cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
   check(cudaMemcpy(h_flds + mb * size,
 		   cmflds->d_flds_by_patch[p] + mb * size,
 		   (me - mb) * size * sizeof(float),

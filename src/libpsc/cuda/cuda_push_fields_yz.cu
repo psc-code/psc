@@ -28,6 +28,9 @@
 // ----------------------------------------------------------------------
 // macros to access C (host) versions of the fields
 
+// FIXME, the below really should use the standard...
+#undef _F3_CUDA
+
 #define F3_OFF_CUDA(pf, fldnr, jx,jy,jz)				\
   ((((((fldnr)								\
        * (pf)->im[2] + ((jz)-(pf)->ib[2]))				\
@@ -204,11 +207,11 @@ cuda_marder_correct_yz_gold(struct psc_mfields *mflds, struct psc_mfields *mf,
 {
   struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
   struct cuda_mfields *cmf = psc_mfields_cuda(mf)->cmflds;
-  fields_cuda_t flds = fields_cuda_t_mflds(mflds, p);
-  fields_cuda_t f = fields_cuda_t_mflds(mf, p);
 
   float *hflds = (float *) malloc(cmflds->n_fields * cmflds->im[0] * cmflds->im[1] * cmflds->im[2] * sizeof(*hflds));
   float *hf = (float *) malloc(cmf->n_fields * cmflds->im[0] * cmflds->im[1] * cmflds->im[2] * sizeof(*hf));
+  fields_cuda_t flds = _fields_cuda_t_mflds(mflds, p, hflds);
+  fields_cuda_t f = _fields_cuda_t_mflds(mf, p, hf);
   
   __fields_cuda_from_device(mflds, p, hflds, EX, EX + 3);
   __fields_cuda_from_device(mf, p, hf, 0, 1);
