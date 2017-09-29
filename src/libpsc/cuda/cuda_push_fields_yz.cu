@@ -155,16 +155,11 @@ cuda_marder_correct_yz_gold(struct psc_mfields *mflds, struct psc_mfields *mf,
 			    int ly[3], int ry[3],
 			    int lz[3], int rz[3])
 {
-  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
-  struct cuda_mfields *cmf = psc_mfields_cuda(mf)->cmflds;
-
-  float *hflds = (float *) malloc(cmflds->n_fields * cmflds->im[0] * cmflds->im[1] * cmflds->im[2] * sizeof(*hflds));
-  float *hf = (float *) malloc(cmf->n_fields * cmflds->im[0] * cmflds->im[1] * cmflds->im[2] * sizeof(*hf));
-  fields_cuda_t flds = _fields_cuda_t_mflds(mflds, hflds);
-  fields_cuda_t f = _fields_cuda_t_mflds(mf, hf);
+  fields_cuda_t flds = psc_mfields_get_host_fields(mflds);
+  fields_cuda_t f = psc_mfields_get_host_fields(mf);
   
-  __fields_cuda_from_device(mflds, p, hflds, EX, EX + 3);
-  __fields_cuda_from_device(mf, p, hf, 0, 1);
+  __fields_cuda_from_device(mflds, p, flds.data, EX, EX + 3);
+  __fields_cuda_from_device(mf, p, f.data, 0, 1);
   
   for (int iz = -1; iz < ldims[2]; iz++) {
     for (int iy = -1; iy < ldims[1]; iy++) {
@@ -182,10 +177,10 @@ cuda_marder_correct_yz_gold(struct psc_mfields *mflds, struct psc_mfields *mf,
     }
   }
   
-  __fields_cuda_to_device(mflds, p, hflds, EX, EX + 3);
+  __fields_cuda_to_device(mflds, p, flds.data, EX, EX + 3);
   
-  free(hflds);
-  free(hf);
+  free(flds.data);
+  free(f.data);
 }
 
 __global__ static void
