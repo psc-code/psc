@@ -179,8 +179,8 @@ cuda_marder_correct_yz_gold(struct psc_mfields *mflds, struct psc_mfields *mf,
   
   __fields_cuda_to_device(mflds, p, flds.data, EX, EX + 3);
   
-  free(flds.data);
-  free(f.data);
+  fields_cuda_t_dtor(&flds);
+  fields_cuda_t_dtor(&f);
 }
 
 __global__ static void

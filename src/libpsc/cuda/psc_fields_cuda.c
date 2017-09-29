@@ -12,27 +12,6 @@
 // OPT, CUDA fields have too many ghostpoints, and 7 points in the invar direction!
 
 // ----------------------------------------------------------------------
-// this really should just use fields_single_t
-
-fields_cuda_t
-_fields_cuda_t_mflds(struct psc_mfields *mflds, fields_cuda_real_t *h_flds)
-{
-  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
-
-  fields_cuda_t flds;
-
-  flds.data = h_flds;
-  for (int d = 0; d < 3; d++) {
-    flds.ib[d] = cmflds->ib[d];
-    flds.im[d] = cmflds->im[d];
-  }
-  flds.nr_comp = mflds->nr_fields;
-  flds.first_comp = mflds->first_comp;
-
-  return flds;
-}
-
-// ----------------------------------------------------------------------
 // psc_mfields_get_host_fields
 
 fields_cuda_t
@@ -40,9 +19,7 @@ psc_mfields_get_host_fields(struct psc_mfields *mflds)
 {
   struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
 
-  unsigned int size = cmflds->im[0] * cmflds->im[1] * cmflds->im[2] * mflds->nr_fields;
-  fields_cuda_real_t *h_flds = malloc(size * sizeof(*h_flds));
-  return _fields_cuda_t_mflds(mflds, h_flds);
+  return fields_cuda_t_ctor(cmflds->ib, cmflds->im, cmflds->n_fields);
 }
 
 // ======================================================================
@@ -69,7 +46,7 @@ psc_mfields_cuda_copy_from_c(struct psc_mfields *mflds_cuda, struct psc_mfields 
     __fields_cuda_to_device(mflds_cuda, p, flds.data, mb, me);
   }
   
-  free(flds.data);
+  fields_cuda_t_dtor(&flds);
 }
 
 static void
@@ -93,7 +70,7 @@ psc_mfields_cuda_copy_to_c(struct psc_mfields *mflds_cuda, struct psc_mfields *m
     }
   }
 
-  free(flds.data);
+  fields_cuda_t_dtor(&flds);
 }
 
 // ======================================================================
@@ -121,7 +98,7 @@ psc_mfields_cuda_copy_from_single(struct psc_mfields *mflds_cuda, struct psc_mfi
     __fields_cuda_to_device(mflds_cuda, p, flds.data, mb, me);
   }
   
-  free(flds.data);
+  fields_cuda_t_dtor(&flds);
 }
 
 static void
@@ -145,7 +122,7 @@ psc_mfields_cuda_copy_to_single(struct psc_mfields *mflds_cuda, struct psc_mfiel
     }
   }
 
-  free(flds.data);
+  fields_cuda_t_dtor(&flds);
 }
 
 // ======================================================================
@@ -252,7 +229,7 @@ psc_mfields_cuda_write(struct psc_mfields *mflds, struct mrc_io *io)
     ierr = H5LTmake_dataset_float(group, "fields_cuda", 4, hdims, flds.data); CE;
     ierr = H5Gclose(group); CE;
   }
-  free(flds.data);
+  fields_cuda_t_dtor(&flds);
 
   ierr = H5Gclose(group0); CE;
 }
@@ -291,7 +268,7 @@ psc_mfields_cuda_read(struct psc_mfields *mflds, struct mrc_io *io)
     __fields_cuda_to_device(mflds, p, flds.data, 0, flds.nr_comp);
     ierr = H5Gclose(group); CE;
   }
-  free(flds.data);
+  fields_cuda_t_dtor(&flds);
   ierr = H5Gclose(group0); CE;
 }
 
