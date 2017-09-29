@@ -202,17 +202,6 @@ fields_c_t_mflds(struct psc_mfields *mflds, int p)
   return psc_mfields_c_get_field_t(mflds, p);
 }
 
-#elif FTYPE == FTYPE_CUDA
-
-struct psc_mfields;
-EXTERN_C fields_cuda_t psc_mfields_cuda_get_field_t(struct psc_mfields *mflds, int p);
-
-static inline fields_cuda_t
-fields_cuda_t_mflds(struct psc_mfields *mflds, int p)
-{
-  return psc_mfields_cuda_get_field_t(mflds, p);
-}
-
 #elif FTYPE == FTYPE_FORTRAN
 
 struct psc_mfields;

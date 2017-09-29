@@ -15,7 +15,7 @@
 // this really should just use fields_single_t
 
 fields_cuda_t
-_fields_cuda_t_mflds(struct psc_mfields *mflds, int p, fields_cuda_real_t *h_flds)
+_fields_cuda_t_mflds(struct psc_mfields *mflds, fields_cuda_real_t *h_flds)
 {
   struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
 
@@ -51,9 +51,9 @@ psc_mfields_cuda_copy_from_c(struct psc_mfields *mflds_cuda, struct psc_mfields 
 			    int mb, int me)
 {
   float *h_flds = malloc(psc_mfields_get_patch_size(mflds_cuda) * sizeof(*h_flds));
+  fields_cuda_t flds_cuda = _fields_cuda_t_mflds(mflds_cuda, h_flds);
 
   for (int p = 0; p < mflds_cuda->nr_patches; p++) {
-    fields_cuda_t flds_cuda = _fields_cuda_t_mflds(mflds_cuda, p, h_flds);
     fields_c_t flds_c = fields_c_t_mflds(mflds_c, p);
     for (int m = mb; m < me; m++) {
       for (int jz = flds_cuda.ib[2]; jz < flds_cuda.ib[2] + flds_cuda.im[2]; jz++) {
@@ -76,9 +76,9 @@ psc_mfields_cuda_copy_to_c(struct psc_mfields *mflds_cuda, struct psc_mfields *m
 			  int mb, int me)
 {
   float *h_flds = malloc(psc_mfields_get_patch_size(mflds_cuda) * sizeof(*h_flds));
+  fields_cuda_t flds_cuda = _fields_cuda_t_mflds(mflds_cuda, h_flds);
 
   for (int p = 0; p < mflds_cuda->nr_patches; p++) {
-    fields_cuda_t flds_cuda = _fields_cuda_t_mflds(mflds_cuda, p, h_flds);
     fields_c_t flds_c = fields_c_t_mflds(mflds_c, p);
     __fields_cuda_from_device(mflds_cuda, p, h_flds, mb, me);
   
@@ -104,9 +104,9 @@ psc_mfields_cuda_copy_from_single(struct psc_mfields *mflds_cuda, struct psc_mfi
 				  int mb, int me)
 {
   float *h_flds = malloc(psc_mfields_get_patch_size(mflds_cuda) * sizeof(*h_flds));
+  fields_cuda_t flds_cuda = _fields_cuda_t_mflds(mflds_cuda, h_flds);
 
   for (int p = 0; p < mflds_cuda->nr_patches; p++) {
-    fields_cuda_t flds_cuda = _fields_cuda_t_mflds(mflds_cuda, p, h_flds);
     fields_single_t flds_single = fields_single_t_mflds(mflds_single, p);
 
     for (int m = mb; m < me; m++) {
@@ -130,9 +130,9 @@ psc_mfields_cuda_copy_to_single(struct psc_mfields *mflds_cuda, struct psc_mfiel
 				int mb, int me)
 {
   float *h_flds = malloc(psc_mfields_get_patch_size(mflds_cuda) * sizeof(*h_flds));
-
+  fields_cuda_t flds_cuda = _fields_cuda_t_mflds(mflds_cuda, h_flds);
+  
   for (int p = 0; p < mflds_cuda->nr_patches; p++) {
-    fields_cuda_t flds_cuda = _fields_cuda_t_mflds(mflds_cuda, p, h_flds);
     fields_single_t flds_single = fields_single_t_mflds(mflds_single, p);
     __fields_cuda_from_device(mflds_cuda, p, h_flds, mb, me);
   
@@ -240,9 +240,9 @@ psc_mfields_cuda_write(struct psc_mfields *mflds, struct mrc_io *io)
   mrc_io_get_h5_file(io, &h5_file);
   hid_t group0 = H5Gopen(h5_file, mrc_io_obj_path(io, mflds), H5P_DEFAULT); H5_CHK(group0);
 
+  float *h_flds = malloc(psc_mfields_get_patch_size(mflds) * sizeof(*h_flds));
+  fields_cuda_t flds = _fields_cuda_t_mflds(mflds, h_flds);
   for (int p = 0; p < mflds->nr_patches; p++) {
-    float *h_flds = malloc(psc_mfields_get_patch_size(mflds) * sizeof(*h_flds));
-    fields_cuda_t flds = _fields_cuda_t_mflds(mflds, p, h_flds);
     __fields_cuda_from_device(mflds, p, flds.data, 0, flds.nr_comp);
     char name[20]; sprintf(name, "flds%d", p);
     hid_t group = H5Gcreate(group0, name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group);
@@ -253,9 +253,9 @@ psc_mfields_cuda_write(struct psc_mfields *mflds, struct mrc_io *io)
     // write components separately instead?
     hsize_t hdims[4] = { flds.nr_comp, flds.im[2], flds.im[1], flds.im[0] };
     ierr = H5LTmake_dataset_float(group, "fields_cuda", 4, hdims, flds.data); CE;
-    free(h_flds);
     ierr = H5Gclose(group); CE;
   }
+  free(h_flds);
 
   ierr = H5Gclose(group0); CE;
 }
@@ -275,9 +275,9 @@ psc_mfields_cuda_read(struct psc_mfields *mflds, struct mrc_io *io)
   mrc_io_get_h5_file(io, &h5_file);
   hid_t group0 = H5Gopen(h5_file, mrc_io_obj_path(io, mflds), H5P_DEFAULT); H5_CHK(group0);
 
+  float *h_flds = malloc(psc_mfields_get_patch_size(mflds) * sizeof(*h_flds));
+  fields_cuda_t flds = _fields_cuda_t_mflds(mflds, h_flds);
   for (int p = 0; p < mflds->nr_patches; p++) {
-    float *h_flds = malloc(psc_mfields_get_patch_size(mflds) * sizeof(*h_flds));
-    fields_cuda_t flds = _fields_cuda_t_mflds(mflds, p, h_flds);
     char name[20]; sprintf(name, "flds%d", p);
     hid_t group = H5Gopen(group0, name, H5P_DEFAULT); H5_CHK(group);
 
@@ -293,9 +293,9 @@ psc_mfields_cuda_read(struct psc_mfields *mflds, struct mrc_io *io)
 
     ierr = H5LTread_dataset_float(group, "fields_cuda", flds.data); CE;
     __fields_cuda_to_device(mflds, p, flds.data, 0, flds.nr_comp);
-    free(h_flds);
     ierr = H5Gclose(group); CE;
   }
+  free(h_flds);
   ierr = H5Gclose(group0); CE;
 }
 
