@@ -4,6 +4,7 @@ AM_CPPFLAGS = -I$(srcdir)/../include
 EXTRA_DIST = reference_results
 
 bin_PROGRAMS = \
+	test_json #\
 	test_json_basic \
 	test_json_class \
 	test_json_mrc_obj

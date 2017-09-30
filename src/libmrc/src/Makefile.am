@@ -61,6 +61,9 @@ libmrc_la_SOURCES = \
 	mrc_trafo_cylindrical.c \
 	mrc_trafo_cartesian.c \
 	mrc_json.c \
+	mrc_json_parser.c \
+	json.c \
+	json-builder.c \
 	init.c \
 	hilbert.c \
 	bitfield3d.c \

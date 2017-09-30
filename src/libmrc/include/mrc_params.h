@@ -4,8 +4,6 @@
 
 // FIXME, mrc_ prefix and cleanup
 
-#include <mrc_json.h>
-
 #include <mpi.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -102,7 +100,6 @@ struct param {
     struct { struct mrc_class *cls; } mrc_obj;
   } u;
   const char *help;
-  struct mrc_json_value json;
 };
 
 void libmrc_params_init(int argc, char **argv);

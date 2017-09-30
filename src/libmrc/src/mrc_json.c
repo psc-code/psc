@@ -4,6 +4,83 @@
 #include <assert.h>
 #include <stdio.h>
 
+// ======================================================================
+// mrc_json_print
+
+static void
+print_indent(int depth)
+{
+  for (int j = 0; j < depth; j++) {
+    printf("  ");
+  }
+}
+
+static void
+mrc_json_print_object(mrc_json_t value, int depth)
+{
+  print_indent(depth);
+  printf("{\n");
+
+  int length = mrc_json_get_object_length(value);
+  for (int i = 0; i < length; i++) {
+    print_indent(depth+1);
+    printf("(name) %s :\n", mrc_json_get_object_entry_name(value, i));
+    mrc_json_print(mrc_json_get_object_entry_value(value, i), depth+2);
+  }
+
+  print_indent(depth);
+  printf("}\n");
+}
+
+static void
+mrc_json_print_array(mrc_json_t value, int depth)
+{
+  print_indent(depth);
+  printf("[\n");
+
+  int length = mrc_json_get_array_length(value);
+  for (int i = 0; i < length; i++) {
+    mrc_json_print(mrc_json_get_array_entry(value, i), depth+1);
+  }
+
+  print_indent(depth);
+  printf("]\n");
+}
+
+void
+mrc_json_print(mrc_json_t value, unsigned int depth)
+{
+  int type = mrc_json_get_type(value);
+
+  switch (type) {
+  case json_object:
+    mrc_json_print_object(value, depth + 1);
+    break;
+  case json_array:
+    mrc_json_print_array(value, depth + 1);
+    break;
+  case json_integer:
+    print_indent(depth);
+    printf("(int) %d\n", mrc_json_get_integer(value));
+    break;
+  case json_double:
+    print_indent(depth);
+    printf("(double) %d\n", mrc_json_get_double(value));
+    break;
+  case json_string:
+    print_indent(depth);
+    printf("(string) \"%s\"\n", mrc_json_get_string(value));
+    break;
+  default:
+    fprintf(stderr, "json_print: unknown type %d\n", type);
+    assert(0);
+  };
+}
+
+
+
+#if 0
+
 int
 mrc_json_get_integer(struct mrc_json_value *value)
 {
@@ -406,3 +483,5 @@ mrc_json_object_mrc_obj_entry(struct mrc_json_value *value, unsigned int i)
   assert(0);
 
 }
+
+#endif
