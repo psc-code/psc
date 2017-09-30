@@ -6,9 +6,12 @@
 
 enum mrc_json_type {
   MRC_JSON_NONE,
+  MRC_JSON_OBJECT,
+  MRC_JSON_ARRAY,
   MRC_JSON_INTEGER,
   MRC_JSON_DOUBLE,
-  MRC_JSON_OBJECT,
+  MRC_JSON_STRING,
+  MRC_JSON_BOOLEAN,
 
   MRC_JSON_REF,
 
@@ -27,6 +30,8 @@ struct mrc_json_value {
 
     double dbl;
 
+    const char *str;
+
     struct {
       struct mrc_json_object_entry *entries;
       unsigned int length;
@@ -36,6 +41,12 @@ struct mrc_json_value {
       ssize_t off;
       struct mrc_json_class_entry *descr;
     } cls;
+
+    struct {
+      struct mrc_json_value **entries;
+      unsigned int length;
+    } arr;
+
   } u;
 };
 

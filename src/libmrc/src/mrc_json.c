@@ -7,21 +7,22 @@
 int
 mrc_json_get_integer(struct mrc_json_value *value)
 {
-  if (value->type == MRC_JSON_INTEGER) {
-    return value->u.integer;
-  } else {
-    assert(0);
-  }
+  assert(value->type == MRC_JSON_INTEGER);
+  return value->u.integer;
 }
 
 double
 mrc_json_get_double(struct mrc_json_value *value)
 {
-  if (value->type == MRC_JSON_DOUBLE) {
-    return value->u.dbl;
-  } else {
-    assert(0);
-  }
+  assert(value->type == MRC_JSON_DOUBLE);
+  return value->u.dbl;
+}
+
+const char *
+mrc_json_get_string(struct mrc_json_value *value)
+{
+  assert(value->type == MRC_JSON_STRING);
+  return value->u.str;
 }
 
 int
@@ -140,6 +141,21 @@ mrc_json_object_entry(struct mrc_json_value *value, unsigned int i)
   }
 }
 
+unsigned int
+mrc_json_array_length(struct mrc_json_value *value)
+{
+  assert(value->type == MRC_JSON_ARRAY);
+  return value->u.arr.length;
+}
+
+struct mrc_json_value *
+mrc_json_array_entry(struct mrc_json_value *value, unsigned int i)
+{
+  assert(value->type == MRC_JSON_ARRAY);
+  assert(i < value->u.arr.length);
+  return value->u.arr.entries[i];
+}
+
 // ======================================================================
 // mrc_json_print
 
@@ -170,6 +186,23 @@ mrc_json_print_object(struct mrc_json_value* value, int depth)
   printf("}\n");
 }
 
+static void
+mrc_json_print_array(struct mrc_json_value* value, int depth)
+{
+  assert(value);
+
+  print_indent(depth);
+  printf("[\n");
+
+  int length = mrc_json_array_length(value);
+  for (int i = 0; i < length; i++) {
+    mrc_json_print(mrc_json_array_entry(value, i), depth+2);
+  }
+
+  print_indent(depth);
+  printf("]\n");
+}
+
 void
 mrc_json_print(struct mrc_json_value *value, int depth)
 {
@@ -181,6 +214,12 @@ mrc_json_print(struct mrc_json_value *value, int depth)
     print_indent(depth);
     printf("(none)\n");
     break;
+  case MRC_JSON_OBJECT:
+    mrc_json_print_object(value, depth+1);
+    break;
+  case MRC_JSON_ARRAY:
+    mrc_json_print_array(value, depth+1);
+    break;
   case MRC_JSON_INTEGER:
     print_indent(depth);
     printf("(int) %d\n", mrc_json_get_integer(value));
@@ -189,8 +228,9 @@ mrc_json_print(struct mrc_json_value *value, int depth)
     print_indent(depth);
     printf("(double) %g\n", mrc_json_get_double(value));
     break;
-  case MRC_JSON_OBJECT:
-    mrc_json_print_object(value, depth+1);
+  case MRC_JSON_STRING:
+    print_indent(depth);
+    printf("(string) \"%s\"\n", mrc_json_get_string(value));
     break;
   default:
     fprintf(stderr, "MRC_JSON: unhandled type = %d\n", type);
@@ -232,9 +272,21 @@ mrc_descr_entry(struct param *param, char *p)
   case PT_SELECT:
     v->type = MRC_JSON_NONE; // FIXME
     break;
-  case PT_INT3:
-    v->type = MRC_JSON_NONE; // FIXME
+  case PT_INT3: {
+    int *int3 = (int *) p;
+    static struct mrc_json_value entry[3];
+    static struct mrc_json_value *entries[3] = {
+      &entry[0], &entry[1], &entry[2],
+    };
+    for (int d = 0; d < 3; d++) {
+      entry[d].type = MRC_JSON_INTEGER;
+      entry[d].u.integer = int3[d];
+    }
+    v->type = MRC_JSON_ARRAY; // FIXME
+    v->u.arr.length = 3;
+    v->u.arr.entries = entries;
     break;
+  }
   default:
     fprintf(stderr, "unhandled type: %d\n", param->type);
     assert(0);
@@ -251,6 +303,10 @@ mrc_json_object_mrc_obj_length(struct mrc_json_value *value)
 
   int cnt = 2; // mrc_obj type and name
 
+  if (obj->ops) { // mrc_obj subtype
+    cnt++;
+  }
+  
   cnt += mrc_descr_length(cls->param_descr);
 
   if (obj->ops) {
@@ -276,6 +332,13 @@ mrc_json_object_mrc_obj_entry_name(struct mrc_json_value *value, unsigned int i)
     return "mrc_obj_name";
   }
   i--;
+
+  if (obj->ops) {
+    if (i == 0) {
+      return "mrc_obj_subtype";
+    }
+    i--;
+  }
   
   int len = mrc_descr_length(cls->param_descr);
   if (i < len) {
@@ -302,17 +365,29 @@ mrc_json_object_mrc_obj_entry(struct mrc_json_value *value, unsigned int i)
 
   if (i == 0) {
     static struct mrc_json_value v_type;
-    v_type.type = MRC_JSON_NONE;
+    v_type.type = MRC_JSON_STRING;
+    v_type.u.str = obj->cls->name;
     return &v_type;
   }
   i--;
 
   if (i == 0) {
     static struct mrc_json_value v_name;
-    v_name.type = MRC_JSON_NONE;
+    v_name.type = MRC_JSON_STRING;
+    v_name.u.str = obj->name;
     return &v_name;
   }
   i--;
+  
+  if (obj->ops) {
+    if (i == 0) {
+      static struct mrc_json_value v_name;
+      v_name.type = MRC_JSON_STRING;
+      v_name.u.str = obj->ops->name;
+      return &v_name;
+    }
+    i--;
+  }
   
   int len = mrc_descr_length(cls->param_descr);
   if (i < len) {
