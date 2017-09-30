@@ -127,6 +127,9 @@ psc_mfields_cuda_copy_to_single(struct psc_mfields *mflds_cuda, struct psc_mfiel
 
 // ======================================================================
 
+EXTERN_C void cuda_mfields_alloc(struct cuda_mfields *cmflds, int ib[3], int im[3],
+				 int n_fields, int n_patches);
+
 // ----------------------------------------------------------------------
 // psc_mfields_cuda_setup
 
@@ -135,19 +138,29 @@ psc_mfields_cuda_setup(struct psc_mfields *mflds)
 {
   struct psc_mfields_cuda *sub = psc_mfields_cuda(mflds);
 
+  psc_mfields_setup_super(mflds);
+
   struct mrc_patch *patches = mrc_domain_get_patches(mflds->domain,
 						     &mflds->nr_patches);
 
-  psc_mfields_setup_super(mflds);
-
+  int im[3], ib[3];
+  assert(mflds->nr_patches > 0);
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    for (int d = 0; d < 3; d++) {
+      if (p == 0) {
+	ib[d] = -mflds->ibn[d];
+	im[d] = patches[0].ldims[d] + 2 * mflds->ibn[d];
+      } else {
+	assert(patches[p].ldims[d] == patches[0].ldims[d]);
+      }
+    }
+  }
+  
   cuda_base_init();
 
   struct cuda_mfields *cmflds = cuda_mfields_create();
+  cuda_mfields_alloc(cmflds, ib, im, mflds->nr_fields, mflds->nr_patches);
   sub->cmflds = cmflds;
-
-  cmflds->bnd_by_patch = calloc(mflds->nr_patches, sizeof(*cmflds->bnd_by_patch));
-
-  __psc_mfields_cuda_setup(mflds, patches);
 }
 
 // ----------------------------------------------------------------------
@@ -161,7 +174,6 @@ psc_mfields_cuda_destroy(struct psc_mfields *mflds)
 
   __psc_mfields_cuda_destroy(mflds);
 
-  free(cmflds->bnd_by_patch);
   cuda_mfields_destroy(cmflds);
   mflds_cuda->cmflds = NULL;
 }

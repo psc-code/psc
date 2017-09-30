@@ -24,6 +24,13 @@ struct cuda_mfields_bnd_patch {
 };
 
 // ----------------------------------------------------------------------
+// cuda_mfields_bnd
+
+struct cuda_mfields_bnd {
+  struct cuda_mfields_bnd_patch *bnd_by_patch;
+};
+
+// ----------------------------------------------------------------------
 // cuda_mfields
 
 struct cuda_mfields {
@@ -35,8 +42,8 @@ struct cuda_mfields {
   int n_cells;
   fields_cuda_real_t **d_flds_by_patch;
 
+  struct cuda_mfields_bnd cbnd;
   // bnd related
-  struct cuda_mfields_bnd_patch *bnd_by_patch;
   fields_cuda_real_t *d_bnd_buf;
   fields_cuda_real_t *h_bnd_buf;
   int *h_nei_patch;
