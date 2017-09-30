@@ -9,16 +9,8 @@
 int
 main(int argc, char **argv)
 {
-  json_settings settings = {};
-  settings.value_extra = json_builder_extra;  /* space for json-builder state */
-
-  char json_str[] = "{ \"i\": 2.0, \"i3\": [ 2, 3, 4] }";
-
-  char error[json_error_max];
-  mrc_json_t json = {
-    .value = json_parse_ex(&settings, json_str, strlen(json_str), error),
-  };
-  assert(json.value);
+  char json_str[] = "{ \"i\": 2, \"d\": 2.3, \"i3\": [ 2, 3, 4] }";
+  mrc_json_t json = mrc_json_parse(json_str);
 
   char *buf = mrc_json_to_string(json);
   printf("%s\n\n", buf);

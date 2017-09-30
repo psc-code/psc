@@ -5,6 +5,72 @@
 #include <stdio.h>
 
 // ======================================================================
+// mrc_json dispatch
+
+int
+mrc_json_get_type(mrc_json_t json)
+{
+  assert(json.ops && json.ops->get_type);
+  return json.ops->get_type(json);
+}
+
+int
+mrc_json_get_integer(mrc_json_t json)
+{
+  assert(json.ops && json.ops->get_integer);
+  return json.ops->get_integer(json);
+}
+
+double
+mrc_json_get_double(mrc_json_t json)
+{
+  assert(json.ops && json.ops->get_double);
+  return json.ops->get_double(json);
+}
+
+const char *
+mrc_json_get_string(mrc_json_t json)
+{
+  assert(json.ops && json.ops->get_string);
+  return json.ops->get_string(json);
+}
+
+unsigned int
+mrc_json_get_object_length(mrc_json_t json)
+{
+  assert(json.ops && json.ops->get_object_length);
+  return json.ops->get_object_length(json);
+}
+
+const char *
+mrc_json_get_object_entry_name(mrc_json_t json, unsigned int i)
+{
+  assert(json.ops && json.ops->get_object_entry_name);
+  return json.ops->get_object_entry_name(json, i);
+}
+
+mrc_json_t
+mrc_json_get_object_entry_value(mrc_json_t json, unsigned int i)
+{
+  assert(json.ops && json.ops->get_object_entry_value);
+  return json.ops->get_object_entry_value(json, i);
+}
+
+unsigned int
+mrc_json_get_array_length(mrc_json_t json)
+{
+  assert(json.ops && json.ops->get_array_length);
+  return json.ops->get_array_length(json);
+}
+
+mrc_json_t
+mrc_json_get_array_entry(mrc_json_t json, unsigned int i)
+{
+  assert(json.ops && json.ops->get_array_entry);
+  return json.ops->get_array_entry(json, i);
+}
+
+// ======================================================================
 // mrc_json_print
 
 static void
@@ -53,21 +119,21 @@ mrc_json_print(mrc_json_t value, unsigned int depth)
   int type = mrc_json_get_type(value);
 
   switch (type) {
-  case json_object:
+  case MRC_JSON_OBJECT:
     mrc_json_print_object(value, depth + 1);
     break;
-  case json_array:
+  case MRC_JSON_ARRAY:
     mrc_json_print_array(value, depth + 1);
     break;
-  case json_integer:
+  case MRC_JSON_INTEGER:
     print_indent(depth);
     printf("(int) %d\n", mrc_json_get_integer(value));
     break;
-  case json_double:
+  case MRC_JSON_DOUBLE:
     print_indent(depth);
-    printf("(double) %d\n", mrc_json_get_double(value));
+    printf("(double) %g\n", mrc_json_get_double(value));
     break;
-  case json_string:
+  case MRC_JSON_STRING:
     print_indent(depth);
     printf("(string) \"%s\"\n", mrc_json_get_string(value));
     break;
