@@ -3,6 +3,7 @@
 #define MRC_OBJ_H
 
 #include <mrc_common.h>
+#include <mrc_json.h>
 #include <mrc_list.h>
 #include <mrc_params.h>
 
@@ -25,6 +26,7 @@ struct mrc_obj {
   bool view_flag; //< if true, call ::view() at the end of ::setup()
   bool is_setup; //< keep track of whether ::setup() was already called
   void *creation_trace;
+  struct mrc_json_value json;
 };
 
 struct mrc_dict_entry {

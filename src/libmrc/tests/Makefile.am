@@ -5,7 +5,8 @@ EXTRA_DIST = reference_results
 
 bin_PROGRAMS = \
 	test_json_basic \
-	test_json_class
+	test_json_class \
+	test_json_mrc_obj
 
 check_PROGRAMS = \
 	test_mrc_obj \

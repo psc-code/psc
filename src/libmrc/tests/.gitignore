@@ -36,6 +36,7 @@ test_fdtd_amr
 test_mrc_mat
 test_json_basic
 test_json_class
+test_json_mrc_obj
 *.asc
 /run*.xdmf
 /run*.h5

@@ -136,6 +136,8 @@ obj_create(MPI_Comm comm, struct mrc_class *cls, bool basic_only)
     mrc_params_set_default(p, cls->param_descr);
   }
 
+  obj->json.type = MRC_JSON_OBJECT_MRC_OBJ;
+
   // no ref count for this reference, will be deleted on final destroy()
 #pragma omp critical
   list_add_tail(&obj->instance_entry, &cls->instances);
