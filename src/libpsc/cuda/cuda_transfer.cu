@@ -14,33 +14,14 @@
 // ======================================================================
 // fields
 
-EXTERN_C void
-cuda_mfields_alloc(struct cuda_mfields *cmflds, int ib[3], int im[3],
-		   int n_fields, int n_patches)
+void
+cuda_mfields_bnd_ctor(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds)
 {
-  cmflds->n_patches = n_patches;
-  cmflds->n_fields = n_fields;
-  
-  for (int d = 0; d < 3; d++) {
-    cmflds->im[d] = im[d];
-    cmflds->ib[d] = ib[d];
-  }
-
-  cmflds->n_cells_per_patch = im[0] * im[1] * im[2];
-  cmflds->n_cells = n_patches * cmflds->n_cells_per_patch;
-
-  check(cudaMalloc((void **) &cmflds->d_flds,
-		   n_fields * cmflds->n_cells * sizeof(*cmflds->d_flds)));
-
-  // bnd
-  struct cuda_mfields_bnd *cbnd = &cmflds->cbnd;
-  cbnd->bnd_by_patch = new cuda_mfields_bnd_patch[cmflds->n_patches];
-
   unsigned int buf_size = 0;
   for (int p = 0; p < cmflds->n_patches; p++) {
-    if (im[0] == 1) {// + 2*BND) {
+    if (cmflds->im[0] == 1) {// + 2*BND) {
       int B = 2*BND;
-      buf_size = 2*B * (im[1] + im[2] - 2*B);
+      buf_size = 2*B * (cmflds->im[1] + cmflds->im[2] - 2*B);
     } else {
       assert(0);
     }
@@ -48,17 +29,10 @@ cuda_mfields_alloc(struct cuda_mfields *cmflds, int ib[3], int im[3],
   check(cudaMalloc((void **) &cbnd->d_bnd_buf,
 		   MAX_BND_COMPONENTS * buf_size * cmflds->n_patches * sizeof(float)));
   cbnd->h_bnd_buf = new float[MAX_BND_COMPONENTS * cmflds->n_patches * buf_size];
-  float *d_flds = cmflds->d_flds;
 
-  cmflds->d_flds_by_patch = new float *[cmflds->n_patches];
+  cbnd->bnd_by_patch = new cuda_mfields_bnd_patch[cmflds->n_patches];
   for (int p = 0; p < cmflds->n_patches; p++) {
     struct cuda_mfields_bnd_patch *cf = &cbnd->bnd_by_patch[p];
-
-    unsigned int size = cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
-    cmflds->d_flds_by_patch[p] = d_flds;
-    assert(d_flds == cmflds->d_flds + p * cmflds->n_fields * size);
-    d_flds += cmflds->n_fields * size;
-    
     int sz = 1;
     for (int d = 0; d < 3; d++) {
       if (cmflds->im[d] == 1 - 2 * cmflds->ib[d]) { // only 1 non-ghost point
@@ -77,21 +51,8 @@ cuda_mfields_alloc(struct cuda_mfields *cmflds, int ib[3], int im[3],
 }
 
 void
-cuda_mfields_dealloc(struct cuda_mfields *cmflds)
+cuda_mfields_bnd_dtor(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds)
 {
-  check(cudaFree(cmflds->d_flds));
-}
-
-void
-__psc_mfields_cuda_destroy(struct psc_mfields *mflds)
-{
-  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
-  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
-  struct cuda_mfields_bnd *cbnd = &cmflds->cbnd;
-
-  delete[] cmflds->d_flds_by_patch;
-  cuda_mfields_dealloc(cmflds);
-
   check(cudaFree(cbnd->d_bnd_buf));
   check(cudaFree(cbnd->d_nei_patch));
   check(cudaFree(cbnd->d_map_out));
@@ -101,12 +62,59 @@ __psc_mfields_cuda_destroy(struct psc_mfields *mflds)
   delete[] cbnd->h_map_out;
   delete[] cbnd->h_map_in;
 
-  for (int p = 0; p < mflds->nr_patches; p++) {
+  for (int p = 0; p < cmflds->n_patches; p++) {
     struct cuda_mfields_bnd_patch *cf = &cbnd->bnd_by_patch[p];
     delete[] cf->arr;
   }
   
   delete[] cbnd->bnd_by_patch;
+}
+
+// ----------------------------------------------------------------------
+
+EXTERN_C void
+cuda_mfields_alloc(struct cuda_mfields *cmflds, int ib[3], int im[3],
+		   int n_fields, int n_patches)
+{
+  cmflds->n_patches = n_patches;
+  cmflds->n_fields = n_fields;
+  
+  for (int d = 0; d < 3; d++) {
+    cmflds->im[d] = im[d];
+    cmflds->ib[d] = ib[d];
+  }
+
+  cmflds->n_cells_per_patch = im[0] * im[1] * im[2];
+  cmflds->n_cells = n_patches * cmflds->n_cells_per_patch;
+
+  check(cudaMalloc((void **) &cmflds->d_flds,
+		   n_fields * cmflds->n_cells * sizeof(*cmflds->d_flds)));
+
+  cmflds->d_flds_by_patch = new fields_cuda_real_t *[cmflds->n_patches];
+  for (int p = 0; p < cmflds->n_patches; p++) {
+    cmflds->d_flds_by_patch[p] = cmflds->d_flds + p * cmflds->n_fields * cmflds->n_cells_per_patch;
+  }
+
+  // bnd
+  cuda_mfields_bnd_ctor(&cmflds->cbnd, cmflds);
+}
+
+void
+cuda_mfields_dealloc(struct cuda_mfields *cmflds)
+{
+  check(cudaFree(cmflds->d_flds));
+  delete[] cmflds->d_flds_by_patch;
+}
+
+void
+__psc_mfields_cuda_destroy(struct psc_mfields *mflds)
+{
+  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
+  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
+
+  cuda_mfields_bnd_dtor(&cmflds->cbnd, cmflds);
+
+  cuda_mfields_dealloc(cmflds);
 }
 
 EXTERN_C void
