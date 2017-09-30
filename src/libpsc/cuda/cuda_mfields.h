@@ -38,6 +38,7 @@ struct cuda_mfields_bnd {
   int *h_map_in; // maps thread id to a particular offset for ghosts in the flds array 
   int *d_map_in;
   int nr_map_in; // number of entries in the map
+  int n_patches;
 };
 
 // ----------------------------------------------------------------------

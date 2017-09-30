@@ -158,9 +158,10 @@ psc_mfields_cuda_setup(struct psc_mfields *mflds)
   
   cuda_base_init();
 
-  struct cuda_mfields *cmflds = cuda_mfields_create();
-  cuda_mfields_alloc(cmflds, ib, im, mflds->nr_fields, mflds->nr_patches);
-  sub->cmflds = cmflds;
+  sub->cmflds = cuda_mfields_create();
+  cuda_mfields_ctor(sub->cmflds, ib, im, mflds->nr_fields, mflds->nr_patches);
+
+  cuda_mfields_bnd_ctor(&sub->cmflds->cbnd, sub->cmflds);
 }
 
 // ----------------------------------------------------------------------
@@ -172,10 +173,11 @@ psc_mfields_cuda_destroy(struct psc_mfields *mflds)
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
   struct cuda_mfields *cmflds = mflds_cuda->cmflds;
 
-  __psc_mfields_cuda_destroy(mflds);
-
+  cuda_mfields_dtor(cmflds);
   cuda_mfields_destroy(cmflds);
   mflds_cuda->cmflds = NULL;
+
+  cuda_mfields_bnd_dtor(&cmflds->cbnd);
 }
 
 // ----------------------------------------------------------------------

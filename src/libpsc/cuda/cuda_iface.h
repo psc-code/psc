@@ -90,6 +90,17 @@ struct cuda_mfields;
 
 struct cuda_mfields *cuda_mfields_create(void);
 void cuda_mfields_destroy(struct cuda_mfields *cmflds);
+void cuda_mfields_ctor(struct cuda_mfields *cmflds, int ib[3], int im[3],
+		       int n_fields, int n_patches);
+void cuda_mfields_dtor(struct cuda_mfields *cmflds);
+
+// ----------------------------------------------------------------------
+// cuda_mfields_bnd
+
+struct cuda_mfields_bnd;
+
+void cuda_mfields_bnd_ctor(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds);
+void cuda_mfields_bnd_dtor(struct cuda_mfields_bnd *cbnd);
 
 // ----------------------------------------------------------------------
 // cuda_push_mprts_yz
