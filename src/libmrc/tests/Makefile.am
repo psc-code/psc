@@ -3,6 +3,10 @@ AM_CPPFLAGS = -I$(srcdir)/../include
 
 EXTRA_DIST = reference_results
 
+bin_PROGRAMS = \
+	test_json_basic \
+	test_json_class
+
 check_PROGRAMS = \
 	test_mrc_obj \
 	test_io \
