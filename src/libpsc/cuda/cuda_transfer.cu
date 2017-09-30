@@ -12,7 +12,28 @@
 #define MAX_BND_COMPONENTS (3)
 
 // ======================================================================
-// fields
+// cuda_mfields_bnd
+
+// ----------------------------------------------------------------------
+// cuda_mfields_bnd_create
+
+struct cuda_mfields_bnd *
+cuda_mfields_bnd_create()
+{
+  return (struct cuda_mfields_bnd *) calloc(1, sizeof(struct cuda_mfields_bnd));
+}
+
+// ----------------------------------------------------------------------
+// cuda_mfields_bnd_destroy
+
+void
+cuda_mfields_bnd_destroy(struct cuda_mfields_bnd *cbnd)
+{
+  free(cbnd);
+}
+
+// ----------------------------------------------------------------------
+// cuda_mfields_bnd_ctor
 
 void
 cuda_mfields_bnd_ctor(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds)
@@ -52,6 +73,9 @@ cuda_mfields_bnd_ctor(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds
   }
 }
 
+// ----------------------------------------------------------------------
+// cuda_mfields_bnd_dtor
+
 void
 cuda_mfields_bnd_dtor(struct cuda_mfields_bnd *cbnd)
 {
@@ -72,7 +96,10 @@ cuda_mfields_bnd_dtor(struct cuda_mfields_bnd *cbnd)
   delete[] cbnd->bnd_by_patch;
 }
 
+// ======================================================================
+
 // ----------------------------------------------------------------------
+// cuda_mfields_ctor
 
 void
 cuda_mfields_ctor(struct cuda_mfields *cmflds, int ib[3], int im[3],
@@ -97,6 +124,9 @@ cuda_mfields_ctor(struct cuda_mfields *cmflds, int ib[3], int im[3],
     cmflds->d_flds_by_patch[p] = cmflds->d_flds + p * cmflds->n_fields * cmflds->n_cells_per_patch;
   }
 }
+
+// ----------------------------------------------------------------------
+// cuda_mfields_dtor
 
 void
 cuda_mfields_dtor(struct cuda_mfields *cmflds)
@@ -309,7 +339,7 @@ fields_device_pack_yz(struct psc_mfields *mflds, int mb, int me)
 {
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
   struct cuda_mfields *cmflds = mflds_cuda->cmflds;
-  struct cuda_mfields_bnd *cbnd = &cmflds->cbnd;
+  struct cuda_mfields_bnd *cbnd = psc_mfields_cuda(mflds)->cbnd;
 
   unsigned int size = cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
   int gmy = cmflds->im[1], gmz = cmflds->im[2];
@@ -346,7 +376,7 @@ fields_device_pack2_yz(struct psc_mfields *mflds, int mb, int me)
 {
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
   struct cuda_mfields *cmflds = mflds_cuda->cmflds;
-  struct cuda_mfields_bnd *cbnd = &cmflds->cbnd;
+  struct cuda_mfields_bnd *cbnd = psc_mfields_cuda(mflds)->cbnd;
 
   const int NR_COMPONENTS = 3;
   assert(me - mb == NR_COMPONENTS);
@@ -373,7 +403,7 @@ __fields_cuda_fill_ghosts_local(struct psc_mfields *mflds, int mb, int me)
 {
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
   struct cuda_mfields *cmflds = mflds_cuda->cmflds;
-  struct cuda_mfields_bnd *cbnd = &cmflds->cbnd;
+  struct cuda_mfields_bnd *cbnd = psc_mfields_cuda(mflds)->cbnd;
 
   const int B = 2;
   int *im = cmflds->im;
@@ -430,7 +460,7 @@ fields_host_pack_yz(struct psc_mfields *mflds, int mb, int me)
 {
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
   struct cuda_mfields *cmflds = mflds_cuda->cmflds;
-  struct cuda_mfields_bnd *cbnd = &cmflds->cbnd;
+  struct cuda_mfields_bnd *cbnd = psc_mfields_cuda(mflds)->cbnd;
 
   int gmy = cmflds->im[1], gmz = cmflds->im[2];
   unsigned int buf_size = 2*B * (gmy + gmz - 2*B);
@@ -468,9 +498,7 @@ template<int B, int what>
 static void
 fields_host_pack2_yz(struct psc_mfields *mflds, int mb, int me)
 {
-  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
-  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
-  struct cuda_mfields_bnd *cbnd = &cmflds->cbnd;
+  struct cuda_mfields_bnd *cbnd = psc_mfields_cuda(mflds)->cbnd;
 
   real *h_buf = cbnd->h_bnd_buf;
   int tid = 0;
@@ -509,7 +537,7 @@ fields_host_pack3_yz(struct psc_mfields *mflds, int mb, int me)
 {
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
   struct cuda_mfields *cmflds = mflds_cuda->cmflds;
-  struct cuda_mfields_bnd *cbnd = &cmflds->cbnd;
+  struct cuda_mfields_bnd *cbnd = psc_mfields_cuda(mflds)->cbnd;
 
   int *im = cmflds->im;
   int nr_fields = mflds->nr_fields;
@@ -554,7 +582,7 @@ __fields_cuda_from_device_yz(struct psc_mfields *mflds, int mb, int me)
     
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
   struct cuda_mfields *cmflds = mflds_cuda->cmflds;
-  struct cuda_mfields_bnd *cbnd = &cmflds->cbnd;
+  struct cuda_mfields_bnd *cbnd = psc_mfields_cuda(mflds)->cbnd;
 
   int gmy = cmflds->im[1], gmz = cmflds->im[2];
   unsigned int buf_size = 2*B * (gmy + gmz - 2*B);
@@ -592,7 +620,7 @@ __fields_cuda_to_device_yz(struct psc_mfields *mflds, int mb, int me)
   
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
   struct cuda_mfields *cmflds = mflds_cuda->cmflds;
-  struct cuda_mfields_bnd *cbnd = &cmflds->cbnd;
+  struct cuda_mfields_bnd *cbnd = psc_mfields_cuda(mflds)->cbnd;
 
   int gmy = cmflds->im[1], gmz = cmflds->im[2];
   unsigned int buf_size = 2*B * (gmy + gmz - 2*B);
@@ -633,7 +661,7 @@ __fields_cuda_from_device3_yz(struct psc_mfields *mflds, int mb, int me)
     
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
   struct cuda_mfields *cmflds = mflds_cuda->cmflds;
-  struct cuda_mfields_bnd *cbnd = &cmflds->cbnd;
+  struct cuda_mfields_bnd *cbnd = psc_mfields_cuda(mflds)->cbnd;
 
   assert(me - mb <= MAX_BND_COMPONENTS);
   assert(cmflds->ib[1] == -BND);
@@ -676,7 +704,7 @@ __fields_cuda_to_device3_yz(struct psc_mfields *mflds, int mb, int me)
   
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
   struct cuda_mfields *cmflds = mflds_cuda->cmflds;
-  struct cuda_mfields_bnd *cbnd = &cmflds->cbnd;
+  struct cuda_mfields_bnd *cbnd = psc_mfields_cuda(mflds)->cbnd;
 
   assert(me - mb <= MAX_BND_COMPONENTS);
   assert(cmflds->ib[1] == -BND);
@@ -712,7 +740,7 @@ __fields_cuda_from_device_inside(struct psc_mfields *mflds, int mb, int me)
 {
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
   struct cuda_mfields *cmflds = mflds_cuda->cmflds;
-  struct cuda_mfields_bnd *cbnd = &cmflds->cbnd;
+  struct cuda_mfields_bnd *cbnd = psc_mfields_cuda(mflds)->cbnd;
 
   if (cmflds->im[0] == 2 * -cmflds->ib[0] + 1) {
     __fields_cuda_from_device_yz<2*BND>(mflds, mb, me);
@@ -733,7 +761,7 @@ __fields_cuda_from_device_inside_only(struct psc_mfields *mflds, int mb, int me)
 {
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
   struct cuda_mfields *cmflds = mflds_cuda->cmflds;
-  struct cuda_mfields_bnd *cbnd = &cmflds->cbnd;
+  struct cuda_mfields_bnd *cbnd = psc_mfields_cuda(mflds)->cbnd;
 
   if (cmflds->im[0] == 2 * -cmflds->ib[0] + 1) {
     __fields_cuda_from_device3_yz<2*BND>(mflds, mb, me);
@@ -754,7 +782,7 @@ __fields_cuda_to_device_outside(struct psc_mfields *mflds, int mb, int me)
 {
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
   struct cuda_mfields *cmflds = mflds_cuda->cmflds;
-  struct cuda_mfields_bnd *cbnd = &cmflds->cbnd;
+  struct cuda_mfields_bnd *cbnd = psc_mfields_cuda(mflds)->cbnd;
 
   if (cmflds->im[0] == 2 * -cmflds->ib[0] + 1) {
     __fields_cuda_to_device3_yz<BND>(mflds, mb, me);
@@ -775,7 +803,7 @@ __fields_cuda_to_device_inside(struct psc_mfields *mflds, int mb, int me)
 {
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
   struct cuda_mfields *cmflds = mflds_cuda->cmflds;
-  struct cuda_mfields_bnd *cbnd = &cmflds->cbnd;
+  struct cuda_mfields_bnd *cbnd = psc_mfields_cuda(mflds)->cbnd;
 
   if (cmflds->im[0] == 2 * -cmflds->ib[0] + 1) {
     __fields_cuda_to_device_yz<2*BND>(mflds, mb, me);
@@ -852,7 +880,7 @@ __fields_cuda_fill_ghosts_setup(struct psc_mfields *mflds, struct mrc_ddc *ddc)
 {
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
   struct cuda_mfields *cmflds = mflds_cuda->cmflds;
-  struct cuda_mfields_bnd *cbnd = &cmflds->cbnd;
+  struct cuda_mfields_bnd *cbnd = psc_mfields_cuda(mflds)->cbnd;
 
   int *im = cmflds->im;
   assert(im[0] == 1);
@@ -954,7 +982,7 @@ fields_create_map_out_yz(struct psc_mfields *mflds, int B, int *p_nr_map, int **
 {
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
   struct cuda_mfields *cmflds = mflds_cuda->cmflds;
-  struct cuda_mfields_bnd *cbnd = &cmflds->cbnd;
+  struct cuda_mfields_bnd *cbnd = psc_mfields_cuda(mflds)->cbnd;
 
   bool remote_only = true;
   int *im = cmflds->im;
@@ -1032,7 +1060,7 @@ fields_create_map_in_yz(struct psc_mfields *mflds, int B, int *p_nr_map, int **p
 {
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
   struct cuda_mfields *cmflds = mflds_cuda->cmflds;
-  struct cuda_mfields_bnd *cbnd = &cmflds->cbnd;
+  struct cuda_mfields_bnd *cbnd = psc_mfields_cuda(mflds)->cbnd;
 
   bool remote_only = true;
   int *im = cmflds->im;
@@ -1168,7 +1196,7 @@ fields_device_pack3_yz(struct psc_mfields *mflds, int mb, int me)
 {
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
   struct cuda_mfields *cmflds = mflds_cuda->cmflds;
-  struct cuda_mfields_bnd *cbnd = &cmflds->cbnd;
+  struct cuda_mfields_bnd *cbnd = psc_mfields_cuda(mflds)->cbnd;
 
   int *im = cmflds->im;
   assert(im[0] == 1);

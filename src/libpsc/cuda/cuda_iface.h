@@ -99,6 +99,8 @@ void cuda_mfields_dtor(struct cuda_mfields *cmflds);
 
 struct cuda_mfields_bnd;
 
+struct cuda_mfields_bnd *cuda_mfields_bnd_create(void);
+void cuda_mfields_bnd_destroy(struct cuda_mfields_bnd *cbnd);
 void cuda_mfields_bnd_ctor(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds);
 void cuda_mfields_bnd_dtor(struct cuda_mfields_bnd *cbnd);
 

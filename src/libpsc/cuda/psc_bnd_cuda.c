@@ -15,8 +15,7 @@ void
 psc_bnd_fld_cuda_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx)
 {
   struct psc_mfields *mflds = _ctx;
-  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
-  struct cuda_mfields_bnd *cbnd = &cmflds->cbnd;
+  struct cuda_mfields_bnd *cbnd = psc_mfields_cuda(mflds)->cbnd;
   struct cuda_mfields_bnd_patch *cf = &cbnd->bnd_by_patch[p];
   fields_cuda_real_t *buf = _buf;
 
@@ -37,8 +36,7 @@ void
 psc_bnd_fld_cuda_add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx)
 {
   struct psc_mfields *mflds = _ctx;
-  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
-  struct cuda_mfields_bnd *cbnd = &cmflds->cbnd;
+  struct cuda_mfields_bnd *cbnd = psc_mfields_cuda(mflds)->cbnd;
   struct cuda_mfields_bnd_patch *cf = &cbnd->bnd_by_patch[p];
   fields_cuda_real_t *buf = _buf;
 
@@ -59,8 +57,7 @@ void
 psc_bnd_fld_cuda_copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx)
 {
   struct psc_mfields *mflds = _ctx;
-  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
-  struct cuda_mfields_bnd *cbnd = &cmflds->cbnd;
+  struct cuda_mfields_bnd *cbnd = psc_mfields_cuda(mflds)->cbnd;
   struct cuda_mfields_bnd_patch *cf = &cbnd->bnd_by_patch[p];
   fields_cuda_real_t *buf = _buf;
 
