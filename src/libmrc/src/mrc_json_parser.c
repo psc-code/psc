@@ -52,6 +52,14 @@ mrc_json_parser_get_string(mrc_json_t json)
   return value->u.string.ptr;
 }
 
+static bool
+mrc_json_parser_get_boolean(mrc_json_t json)
+{
+  json_value *value = get_jason_value(json);
+  assert(value->type == json_boolean);
+  return value->u.boolean;
+}
+
 static unsigned int
 mrc_json_parser_get_object_length(mrc_json_t json)
 {
@@ -114,6 +122,7 @@ static struct mrc_json_ops mrc_json_parser_ops = {
   .get_integer            = mrc_json_parser_get_integer,
   .get_double             = mrc_json_parser_get_double,
   .get_string             = mrc_json_parser_get_string,
+  .get_boolean            = mrc_json_parser_get_boolean,
   .get_object_length      = mrc_json_parser_get_object_length,
   .get_object_entry_name  = mrc_json_parser_get_object_entry_name,
   .get_object_entry_value = mrc_json_parser_get_object_entry_value,

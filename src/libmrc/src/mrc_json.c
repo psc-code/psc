@@ -35,6 +35,13 @@ mrc_json_get_string(mrc_json_t json)
   return json.ops->get_string(json);
 }
 
+bool
+mrc_json_get_boolean(mrc_json_t json)
+{
+  assert(json.ops && json.ops->get_boolean);
+  return json.ops->get_boolean(json);
+}
+
 unsigned int
 mrc_json_get_object_length(mrc_json_t json)
 {
@@ -119,6 +126,10 @@ mrc_json_print(mrc_json_t value, unsigned int depth)
   int type = mrc_json_get_type(value);
 
   switch (type) {
+  case MRC_JSON_NONE:
+    print_indent(depth);
+    printf("(none)\n");
+    break;
   case MRC_JSON_OBJECT:
     mrc_json_print_object(value, depth + 1);
     break;
@@ -136,6 +147,10 @@ mrc_json_print(mrc_json_t value, unsigned int depth)
   case MRC_JSON_STRING:
     print_indent(depth);
     printf("(string) \"%s\"\n", mrc_json_get_string(value));
+    break;
+  case MRC_JSON_BOOLEAN:
+    print_indent(depth);
+    printf("(boolean) %s\n", mrc_json_get_boolean(value) ? "true" : "false");
     break;
   default:
     fprintf(stderr, "json_print: unknown type %d\n", type);

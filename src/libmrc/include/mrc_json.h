@@ -3,6 +3,7 @@
 #define MRC_JSON_H
 
 #include <unistd.h>
+#include <stdbool.h>
 
 enum mrc_json_type {
   // FIXME? This have to match the json.h types, but I don't to want to include that here
@@ -23,6 +24,7 @@ struct mrc_json_ops {
   int (*get_integer)(mrc_json_t json);
   double (*get_double)(mrc_json_t json);
   const char * (*get_string)(mrc_json_t json);
+  bool (*get_boolean)(mrc_json_t json);
   unsigned int (*get_object_length)(mrc_json_t json);
   const char * (*get_object_entry_name)(mrc_json_t json, unsigned int i);
   mrc_json_t (*get_object_entry_value)(mrc_json_t json, unsigned int i);
@@ -32,6 +34,7 @@ struct mrc_json_ops {
 
 struct mrc_json {
   void *value;
+  int type;
   struct mrc_json_ops *ops;
 };
 
@@ -40,6 +43,7 @@ int mrc_json_get_type(mrc_json_t value);
 int mrc_json_get_integer(mrc_json_t value);
 double mrc_json_get_double(mrc_json_t value);
 const char *mrc_json_get_string(mrc_json_t value);
+bool mrc_json_get_boolean(mrc_json_t value);
 
 unsigned int mrc_json_get_object_length(mrc_json_t value);
 const char *mrc_json_get_object_entry_name(mrc_json_t value, unsigned int i);
