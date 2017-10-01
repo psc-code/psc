@@ -30,11 +30,13 @@ void
 cuda_mparticles_set_domain_info(struct cuda_mparticles *cmprts,
 				mrc_json_t json)
 {
-  cmprts->n_patches = mrc_json_get_object_entry_integer(json, "n_patches");
-  mrc_json_t ldims = mrc_json_get_object_entry(json, "ldims");
-  mrc_json_t bs = mrc_json_get_object_entry(json, "bs");
-  mrc_json_t dx = mrc_json_get_object_entry(json, "dx");
-  mrc_json_t xb_by_patch = mrc_json_get_object_entry(json, "xb_by_patch");
+  mrc_json_t json_info = mrc_json_get_object_entry(json, "info");
+  
+  cmprts->n_patches = mrc_json_get_object_entry_integer(json_info, "n_patches");
+  mrc_json_t ldims = mrc_json_get_object_entry(json_info, "ldims");
+  mrc_json_t bs = mrc_json_get_object_entry(json_info, "bs");
+  mrc_json_t dx = mrc_json_get_object_entry(json_info, "dx");
+  mrc_json_t xb_by_patch = mrc_json_get_object_entry(json_info, "xb_by_patch");
 
   cmprts->xb_by_patch = new float_3[cmprts->n_patches];
   for (int d = 0; d < 3; d++) {

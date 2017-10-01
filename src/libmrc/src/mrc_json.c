@@ -175,14 +175,24 @@ mrc_json_get_object_entry(mrc_json_t json, const char *name)
 int
 mrc_json_get_object_entry_integer(mrc_json_t json, const char *name)
 {
-  return mrc_json_get_integer(mrc_json_get_object_entry(json, name));
+  mrc_json_t entry = mrc_json_get_object_entry(json, name);
+  if (!entry.ops) {
+    fprintf(stderr, "%s: entry \"%s\" not found!\n", __func__, name);
+    assert(0);
+  }
+  return mrc_json_get_integer(entry);
 }
 
 
 double
 mrc_json_get_object_entry_double(mrc_json_t json, const char *name)
 {
-  return mrc_json_get_double(mrc_json_get_object_entry(json, name));
+  mrc_json_t entry = mrc_json_get_object_entry(json, name);
+  if (!entry.ops) {
+    fprintf(stderr, "%s: entry \"%s\" not found!\n", __func__, name);
+    assert(0);
+  }
+  return mrc_json_get_double(entry);
 }
 
 
