@@ -21,7 +21,7 @@ prof_register(const char *name, float simd, int flops, int bytes)
 // cuda_domain_info_ctor_test_1
 
 mrc_json_t
-cuda_domain_info_ctor_test_1(struct cuda_domain_info *info)
+cuda_domain_info_ctor_test_1()
 {
   return mrc_json_parse("{                                         "
 			"  \"n_patches\" : 1,                      "
@@ -33,15 +33,6 @@ cuda_domain_info_ctor_test_1(struct cuda_domain_info *info)
 };
 
 // ----------------------------------------------------------------------
-// cuda_domain_info_dtor
-
-void
-cuda_domain_info_dtor(struct cuda_domain_info *info)
-{
-  free(info->xb_by_patch);
-}
-
-// ----------------------------------------------------------------------
 // cuda_mparticles_add_particles_test_1
 //
 // add 1 particle at the center of each cell, in the "wrong" order in each
@@ -51,17 +42,26 @@ cuda_domain_info_dtor(struct cuda_domain_info *info)
 static void
 set_particle_test_1(struct cuda_mparticles_prt *prt, int n, void *ctx)
 {
-  struct cuda_domain_info *info = ctx;
+  mrc_json_t json = *(mrc_json_t *) ctx;
+  int ldims[3];
+  double dx[3];
 
-  int k = n % info->ldims[2];
-  n /= info->ldims[2];
-  int j = n % info->ldims[1];
-  n /= info->ldims[1];
+  mrc_json_t json_ldims = mrc_json_get_object_entry(json, "ldims");
+  mrc_json_t json_dx = mrc_json_get_object_entry(json, "dx");
+  for (int d = 0; d < 3; d++) {
+    ldims[d] = mrc_json_get_array_entry_integer(json_ldims, d);
+    dx[d] = mrc_json_get_array_entry_double(json_dx, d);
+  }
+
+  int k = n % ldims[2];
+  n /= ldims[2];
+  int j = n % ldims[1];
+  n /= ldims[1];
   int i = n;
 
-  prt->xi[0] = info->dx[0] * (i + .5f);
-  prt->xi[1] = info->dx[1] * (j + .5f);
-  prt->xi[2] = info->dx[2] * (k + .5f);
+  prt->xi[0] = dx[0] * (i + .5f);
+  prt->xi[1] = dx[1] * (j + .5f);
+  prt->xi[2] = dx[2] * (k + .5f);
   prt->pxi[0] = i;
   prt->pxi[1] = j;
   prt->pxi[2] = k;
@@ -71,20 +71,27 @@ set_particle_test_1(struct cuda_mparticles_prt *prt, int n, void *ctx)
 
 void
 cuda_mparticles_add_particles_test_1(struct cuda_mparticles *cmprts,
-				     struct cuda_domain_info *info,
+				     mrc_json_t json,
 				     unsigned int *n_prts_by_patch)
 {
-  for (int p = 0; p < info->n_patches; p++) {
-    n_prts_by_patch[p] = info->ldims[0] * info->ldims[1] * info->ldims[2];
+  int n_patches = mrc_json_get_object_entry_integer(json, "n_patches");
+  int ldims[3];
+
+  mrc_json_t json_ldims = mrc_json_get_object_entry(json, "ldims");
+  for (int d = 0; d < 3; d++) {
+    ldims[d] = mrc_json_get_array_entry_integer(json_ldims, d);
+  }
+  for (int p = 0; p < n_patches; p++) {
+    n_prts_by_patch[p] = ldims[0] * ldims[1] * ldims[2];
   }
 
   cuda_mparticles_reserve_all(cmprts, n_prts_by_patch);
   cuda_mparticles_resize_all(cmprts, n_prts_by_patch);
   
   unsigned int off = 0;
-  for (int p = 0; p < info->n_patches; p++) {
+  for (int p = 0; p < n_patches; p++) {
     cuda_mparticles_set_particles(cmprts, n_prts_by_patch[p], off,
-				  set_particle_test_1, info);
+				  set_particle_test_1, &json);
     off += n_prts_by_patch[p];
   }
 }
@@ -103,13 +110,14 @@ get_particle(struct cuda_mparticles_prt *prt, int n, void *ctx)
 
 void
 get_particles_test(struct cuda_mparticles *cmprts,
-		   struct cuda_domain_info *info,
+		   mrc_json_t json,
 		   unsigned int *n_prts_by_patch)
 {
+  int n_patches = mrc_json_get_object_entry_integer(json, "n_patches");
   unsigned int off = 0;
-  for (int p = 0; p < info->n_patches; p++) {
+  for (int p = 0; p < n_patches; p++) {
     cuda_mparticles_get_particles(cmprts, n_prts_by_patch[p], off,
-				  get_particle, info);
+				  get_particle, NULL);
     off += n_prts_by_patch[p];
   }
 }
@@ -122,19 +130,16 @@ main(void)
 {
   struct cuda_mparticles *cmprts = cuda_mparticles_create();
 
-  struct cuda_domain_info info;
-  mrc_json_t json = cuda_domain_info_ctor_test_1(&info);
+  mrc_json_t json = cuda_domain_info_ctor_test_1();
   mrc_json_print(json, 0);
 
   cuda_mparticles_set_domain_info(cmprts, json);
 
-  //json_builder_free(obj);
-  cuda_domain_info_dtor(&info);
-
   cuda_mparticles_setup(cmprts);
 
-  unsigned int n_prts_by_patch[info.n_patches];
-  cuda_mparticles_add_particles_test_1(cmprts, &info, n_prts_by_patch);
+  int n_patches = mrc_json_get_object_entry_integer(json, "n_patches");
+  unsigned int n_prts_by_patch[n_patches];
+  cuda_mparticles_add_particles_test_1(cmprts, json, n_prts_by_patch);
   printf("added particles\n");
   cuda_mparticles_dump_by_patch(cmprts, n_prts_by_patch);
 
@@ -143,7 +148,7 @@ main(void)
   cuda_mparticles_dump(cmprts);
 
   printf("get_particles_test\n");
-  get_particles_test(cmprts, &info, n_prts_by_patch);
+  get_particles_test(cmprts, json, n_prts_by_patch);
 
   cuda_mparticles_destroy(cmprts);
 }
