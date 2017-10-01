@@ -10,8 +10,6 @@ enum {
   MRC_JSON_DOUBLE3,
 };
 
-// FIXME, should use our own struct / union
-
 static struct mrc_json_ops mrc_json_mrc_obj_ops;
 
 static unsigned int
@@ -33,67 +31,75 @@ mrc_descr_to_mrc_json_t(struct param *param, char *p)
 {
   char *var = p + (unsigned long) param->var;
   switch (param->type) {
-  case PT_INT:
-    return (mrc_json_t) {
-      .value = var,
-      .type = MRC_JSON_INTEGER,
+  case PT_INT: {
+    mrc_json_t json = {
+      .u.mrc.v.integer = * (int *) var,
+      .u.mrc.type = MRC_JSON_INTEGER,
       .ops = &mrc_json_mrc_obj_ops,
     };
-  case PT_BOOL:
-    return (mrc_json_t) {
-      .value = var,
-      .type = MRC_JSON_BOOLEAN,
+    return json;
+  }
+  case PT_BOOL: {
+    mrc_json_t  json = {
+      .u.mrc.v.boolean = * (bool *) var,
+      .u.mrc.type = MRC_JSON_BOOLEAN,
       .ops = &mrc_json_mrc_obj_ops,
     };
+    return json;
+  }
   case PT_DOUBLE:
-  case MRC_VAR_DOUBLE:
-    return (mrc_json_t) {
-      .value = var,
-      .type = MRC_JSON_DOUBLE,
+  case MRC_VAR_DOUBLE: {
+    mrc_json_t  json = {
+      .u.mrc.v.dbl = * (double *) var,
+      .u.mrc.type = MRC_JSON_DOUBLE,
       .ops = &mrc_json_mrc_obj_ops,
     };
-  case PT_INT3:
-    return (mrc_json_t) {
-      .value = var,
-      .type = MRC_JSON_INT3,
+    return json;
+  }
+  case PT_INT3: {
+    mrc_json_t  json = {
+      .u.mrc.v.int3_ptr = (int *) var,
+      .u.mrc.type = MRC_JSON_INT3,
       .ops = &mrc_json_mrc_obj_ops,
     };
+    return json;
+  }
   case PT_DOUBLE3:
-  case MRC_VAR_DOUBLE3:
-    return (mrc_json_t) {
-      .value = var,
-      .type = MRC_JSON_DOUBLE3,
+  case MRC_VAR_DOUBLE3: {
+    mrc_json_t  json = {
+      .u.mrc.v.dbl3_ptr = (double *) var,
+      .u.mrc.type = MRC_JSON_DOUBLE3,
       .ops = &mrc_json_mrc_obj_ops,
     };
-  case MRC_VAR_OBJ:
-    return (mrc_json_t) {
-      .value = *(struct mrc_obj **) var,
-      .type = MRC_JSON_OBJECT,
+    return json;
+  }
+  case MRC_VAR_OBJ: {
+    mrc_json_t  json = {
+      .u.mrc.v.obj = *(struct mrc_obj **) var,
+      .u.mrc.type = MRC_JSON_OBJECT,
       .ops = &mrc_json_mrc_obj_ops,
     };
+    return json;
+  }
   case PT_OBJ: // FIXME? problems with infinite recursion
   case PT_SELECT: // FIXME
-  case PT_INT_ARRAY: // FIXME
-    return (mrc_json_t) {
-      .type = MRC_JSON_NONE,
+  case PT_INT_ARRAY: { // FIXME
+    mrc_json_t  json = {
+      .u.mrc.type = MRC_JSON_NONE,
       .ops = &mrc_json_mrc_obj_ops,
     };
+    return json;
+  }
   default:
     fprintf(stderr, "mrc_descr_to_mrc_json_t: unhandled type %d\n", param->type);
     assert(0);
   }
 }
 
-static struct mrc_obj *
-get_mrc_obj(mrc_json_t json)
-{
-  return json.value;
-}
-
 static int
 mrc_json_mrc_obj_get_type(mrc_json_t json)
 {
-  switch (json.type) {
+  switch (json.u.mrc.type) {
   case MRC_JSON_NONE:
   case MRC_JSON_OBJECT:
   case MRC_JSON_ARRAY:
@@ -101,14 +107,14 @@ mrc_json_mrc_obj_get_type(mrc_json_t json)
   case MRC_JSON_DOUBLE:
   case MRC_JSON_STRING:
   case MRC_JSON_BOOLEAN:
-    return json.type;
+    return json.u.mrc.type;
 
   case MRC_JSON_INT3:
   case MRC_JSON_DOUBLE3:
     return MRC_JSON_ARRAY;
 
   default:
-    fprintf(stderr, "mrc_json_mrc_obj_get_type: unhandled type %d\n", json.type);
+    fprintf(stderr, "mrc_json_mrc_obj_get_type: unhandled type %d\n", json.u.mrc.type);
     assert(0);
   }
 }
@@ -116,35 +122,35 @@ mrc_json_mrc_obj_get_type(mrc_json_t json)
 static int
 mrc_json_mrc_obj_get_integer(mrc_json_t json)
 {
-  assert(json.type == MRC_JSON_INTEGER);
-  return * (int *) json.value;
+  assert(json.u.mrc.type == MRC_JSON_INTEGER);
+  return json.u.mrc.v.integer;
 }
 
 static double
 mrc_json_mrc_obj_get_double(mrc_json_t json)
 {
-  assert(json.type == MRC_JSON_DOUBLE);
-  return * (double *) json.value;
+  assert(json.u.mrc.type == MRC_JSON_DOUBLE);
+  return json.u.mrc.v.dbl;
 }
 
 static const char *
 mrc_json_mrc_obj_get_string(mrc_json_t json)
 {
-  assert(json.type == MRC_JSON_STRING);
-  return (const char *) json.value;
+  assert(json.u.mrc.type == MRC_JSON_STRING);
+  return json.u.mrc.v.string;
 }
 
 static bool
 mrc_json_mrc_obj_get_boolean(mrc_json_t json)
 {
-  assert(json.type == MRC_JSON_BOOLEAN);
-  return * (bool *) json.value;
+  assert(json.u.mrc.type == MRC_JSON_BOOLEAN);
+  return json.u.mrc.v.boolean;
 }
 
 static unsigned int
 mrc_json_mrc_obj_get_object_length(mrc_json_t json)
 {
-  struct mrc_obj *obj = get_mrc_obj(json);
+  struct mrc_obj *obj = json.u.mrc.v.obj;
 
   int cnt = 2; // name and type
 
@@ -164,7 +170,7 @@ mrc_json_mrc_obj_get_object_length(mrc_json_t json)
 static const char *
 mrc_json_mrc_obj_get_object_entry_name(mrc_json_t json, unsigned int i)
 {
-  struct mrc_obj *obj = get_mrc_obj(json);
+  struct mrc_obj *obj = json.u.mrc.v.obj;
 
   if (i == 0) { // name
     return "mrc_obj_name";
@@ -203,33 +209,33 @@ mrc_json_mrc_obj_get_object_entry_name(mrc_json_t json, unsigned int i)
 static mrc_json_t
 mrc_json_mrc_obj_get_object_entry_value(mrc_json_t json, unsigned int i)
 {
-  struct mrc_obj *obj = get_mrc_obj(json);
+  struct mrc_obj *obj = json.u.mrc.v.obj;
 
   if (i == 0) { // name
     return (mrc_json_t) {
-      .value = obj->name,
-      .type  = MRC_JSON_STRING,
-      .ops   = &mrc_json_mrc_obj_ops,
+      .u.mrc.v.string = obj->name,
+      .u.mrc.type     = MRC_JSON_STRING,
+      .ops            = &mrc_json_mrc_obj_ops,
     };
   }
   i--;
 
   if (i == 0) { // type
     return (mrc_json_t) {
-      .value = (char *) obj->cls->name,
-      .type  = MRC_JSON_STRING,
-      .ops   = &mrc_json_mrc_obj_ops,
+      .u.mrc.v.string = obj->cls->name,
+      .u.mrc.type     = MRC_JSON_STRING,
+      .ops            = &mrc_json_mrc_obj_ops,
     };
   }
   i--;
 
   if (obj->ops) {
     if (i == 0) { // subtype
-    return (mrc_json_t) {
-      .value = (char *) obj->ops->name,
-      .type  = MRC_JSON_STRING,
-      .ops   = &mrc_json_mrc_obj_ops,
-    };
+      return (mrc_json_t) {
+	.u.mrc.v.string = obj->ops->name,
+	.u.mrc.type     = MRC_JSON_STRING,
+	.ops            = &mrc_json_mrc_obj_ops,
+      };
     }
     i--;
   }
@@ -256,12 +262,12 @@ mrc_json_mrc_obj_get_object_entry_value(mrc_json_t json, unsigned int i)
 static unsigned int
 mrc_json_mrc_obj_get_array_length(mrc_json_t json)
 {
-  switch (json.type) {
+  switch (json.u.mrc.type) {
   case MRC_JSON_INT3:
   case MRC_JSON_DOUBLE3:
     return 3;
   default:
-    fprintf(stderr, "mrc_json_mrc_obj_get_array_length: unhandled type %d\n", json.type);
+    fprintf(stderr, "mrc_json_mrc_obj_get_array_length: unhandled type %d\n", json.u.mrc.type);
     assert(0);
   }
 }
@@ -269,21 +275,21 @@ mrc_json_mrc_obj_get_array_length(mrc_json_t json)
 static mrc_json_t
 mrc_json_mrc_obj_get_array_entry(mrc_json_t json, unsigned int i)
 {
-  switch (json.type) {
+  switch (json.u.mrc.type) {
   case MRC_JSON_INT3:
     return (mrc_json_t) {
-      .type = MRC_JSON_INTEGER,
-      .value = (int *) json.value + i, // FIXME, should we use value rather than reference?
-      .ops = &mrc_json_mrc_obj_ops,
+      .u.mrc.type      = MRC_JSON_INTEGER,
+      .u.mrc.v.integer = json.u.mrc.v.int3_ptr[i],
+      .ops             = &mrc_json_mrc_obj_ops,
     };
   case MRC_JSON_DOUBLE3:
     return (mrc_json_t) {
-      .type = MRC_JSON_DOUBLE,
-      .value = (double *) json.value + i,
-      .ops = &mrc_json_mrc_obj_ops,
+      .u.mrc.type      = MRC_JSON_DOUBLE,
+      .u.mrc.v.dbl     = json.u.mrc.v.dbl3_ptr[i],
+      .ops             = &mrc_json_mrc_obj_ops,
     };
   default:
-    fprintf(stderr, "mrc_json_mrc_obj_get_array_entry: unhandled type %d\n", json.type);
+    fprintf(stderr, "mrc_json_mrc_obj_get_array_entry: unhandled type %d\n", json.u.mrc.type);
     assert(0);
   }
 }
@@ -305,9 +311,9 @@ mrc_json_t
 mrc_obj_to_json(struct mrc_obj *obj)
 {
   return (mrc_json_t) {
-    .value = obj,
-    .type = MRC_JSON_OBJECT,
-    .ops = &mrc_json_mrc_obj_ops,
+    .u.mrc.v.obj = obj,
+    .u.mrc.type  = MRC_JSON_OBJECT,
+    .ops         = &mrc_json_mrc_obj_ops,
   };
 }
 

@@ -15,7 +15,7 @@ static struct mrc_json_ops mrc_json_parser_ops;
 static inline json_value *
 get_jason_value(mrc_json_t json)
 {
-  return json.value;
+  return json.u.parser.value;
 }
 
 // ======================================================================
@@ -84,7 +84,7 @@ mrc_json_parser_get_object_entry_value(mrc_json_t json, unsigned int i)
   assert(value->type == json_object);
   assert(i < value->u.object.length);
   return (mrc_json_t) {
-    .value = value->u.object.values[i].value,
+    .u.parser.value = value->u.object.values[i].value,
     .ops = &mrc_json_parser_ops,
   };
 }
@@ -104,7 +104,7 @@ mrc_json_parser_get_array_entry(mrc_json_t json, unsigned int i)
   assert(value->type == json_array);
   assert(i < value->u.array.length);
   return (mrc_json_t) {
-    .value = value->u.array.values[i],
+    .u.parser.value = value->u.array.values[i],
     .ops = &mrc_json_parser_ops,
   };
 }
@@ -112,8 +112,8 @@ mrc_json_parser_get_array_entry(mrc_json_t json, unsigned int i)
 char *
 mrc_json_to_string(mrc_json_t json)
 {
-  char *buf = malloc(json_measure(json.value));
-  json_serialize(buf, json.value);
+  char *buf = malloc(json_measure(json.u.parser.value));
+  json_serialize(buf, json.u.parser.value);
   return buf;
 }
 
@@ -139,10 +139,10 @@ mrc_json_parse(const char *buf)
 
   char error[json_error_max];
   mrc_json_t json = {
-    .value = json_parse_ex(&settings, buf, strlen(buf), error),
-    .ops   = &mrc_json_parser_ops,
+    .u.parser.value = json_parse_ex(&settings, buf, strlen(buf), error),
+    .ops            = &mrc_json_parser_ops,
   };
-  if (!json.value) {
+  if (!json.u.parser.value) {
     fprintf(stderr, "mrc_json_parse: %s\n", error);
     assert(0);
   }

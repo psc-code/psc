@@ -32,9 +32,28 @@ struct mrc_json_ops {
   mrc_json_t (*get_array_entry)(mrc_json_t json, unsigned int i);
 };
 
-struct mrc_json {
+struct mrc_json_parser {
   void *value;
+};
+
+struct mrc_json_mrc_obj {
+  union {
+    struct mrc_obj *obj;
+    int integer;
+    double dbl;
+    bool boolean;
+    const char *string;
+    int *int3_ptr;
+    double *dbl3_ptr;
+  } v;
   int type;
+};
+
+struct mrc_json {
+  union {
+    struct mrc_json_parser parser;
+    struct mrc_json_mrc_obj mrc;
+  } u;
   struct mrc_json_ops *ops;
 };
 
