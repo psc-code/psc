@@ -23,50 +23,13 @@ prof_register(const char *name, float simd, int flops, int bytes)
 mrc_json_t
 cuda_domain_info_ctor_test_1(struct cuda_domain_info *info)
 {
-  info->n_patches = 1;
-  info->ldims[0] = 1; info->ldims[1] = 4; info->ldims[2] = 2;
-  info->bs[0] = 1; info->bs[1] = 1; info->bs[2] = 1;
-  info->dx[0] = 1.; info->dx[1] = 10.; info->dx[2] = 10.;
-
-  info->xb_by_patch = calloc(info->n_patches, sizeof(*info->xb_by_patch));
-  for (int p = 0; p < info->n_patches; p++) {
-    info->xb_by_patch[p][0] = 0.;
-    info->xb_by_patch[p][1] = 0.;
-    info->xb_by_patch[p][2] = 0.;
-  }
-
-  json_value *obj = json_object_new(0);
-  
-  json_object_push(obj, "n_patches", json_integer_new(info->n_patches));
-  
-  json_value *arr_ldims = json_array_new(3);
-  json_object_push(obj, "ldims", arr_ldims);
-  
-  json_value *arr_bs = json_array_new(3);
-  json_object_push(obj, "bs", arr_bs);
-  
-  json_value *arr_dx = json_array_new(3);
-  json_object_push(obj, "dx", arr_dx);
-  
-  for (int d = 0; d < 3; d++) {
-    json_array_push(arr_ldims, json_integer_new(info->ldims[d]));
-    json_array_push(arr_bs, json_integer_new(info->bs[d]));
-    json_array_push(arr_dx, json_double_new(info->dx[d]));
-  }
-  
-  json_value *arr_xb_by_patch = json_array_new(info->n_patches);
-  json_object_push(obj, "xb_by_patch", arr_xb_by_patch);
-  for (int p = 0; p < info->n_patches; p++) {
-    json_value *arr_xb = json_array_new(3);
-    json_array_push(arr_xb_by_patch, arr_xb);
-    for (int d = 0; d < 3; d++) {
-      json_array_push(arr_xb, json_double_new(info->xb_by_patch[p][d]));
-    }
-  }
-  
-  mrc_json_t json = mrc_json_from_json_parser(obj);
-
-  return json;
+  return mrc_json_parse("{                                         "
+			"  \"n_patches\" : 1,                      "
+			"  \"ldims\" : [ 1, 4, 2 ],                "
+			"  \"bs\" : [ 1, 1, 1 ],                   "
+			"  \"dx\" : [ 1.0, 10.0, 10.0 ],           "
+			"  \"xb_by_patch\" : [ [ 0.0, 0.0, 0.0 ] ] "
+			"}                                         ");
 };
 
 // ----------------------------------------------------------------------
