@@ -28,42 +28,8 @@ cuda_mparticles_create()
 
 void
 cuda_mparticles_set_domain_info(struct cuda_mparticles *cmprts,
-				const struct cuda_domain_info *info,
 				mrc_json_t json)
 {
-  {
-    json_value *obj = json_object_new(0);
-    json_object_push(obj, "n_patches", json_integer_new(info->n_patches));
-
-    json_value *arr_ldims = json_array_new(3);
-    json_object_push(obj, "ldims", arr_ldims);
-
-    json_value *arr_bs = json_array_new(3);
-    json_object_push(obj, "bs", arr_bs);
-
-    json_value *arr_dx = json_array_new(3);
-    json_object_push(obj, "dx", arr_dx);
-
-    for (int d = 0; d < 3; d++) {
-      json_array_push(arr_ldims, json_integer_new(info->ldims[d]));
-      json_array_push(arr_bs, json_integer_new(info->bs[d]));
-      json_array_push(arr_dx, json_double_new(info->dx[d]));
-    }
-    
-    json_value *arr_xb_by_patch = json_array_new(info->n_patches);
-    json_object_push(obj, "xb_by_patch", arr_xb_by_patch);
-    for (int p = 0; p < info->n_patches; p++) {
-      json_value *arr_xb = json_array_new(3);
-      json_array_push(arr_xb_by_patch, arr_xb);
-      for (int d = 0; d < 3; d++) {
-	json_array_push(arr_xb, json_double_new(info->xb_by_patch[p][d]));
-      }
-    }
-
-    json = mrc_json_from_json_parser(obj);
-    mrc_json_print(json, 0);
-  }
-
   cmprts->n_patches = mrc_json_get_object_entry_integer(json, "n_patches");
   mrc_json_t ldims = mrc_json_get_object_entry(json, "ldims");
   mrc_json_t bs = mrc_json_get_object_entry(json, "bs");

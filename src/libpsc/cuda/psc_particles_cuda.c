@@ -9,6 +9,8 @@
 #include "psc_push_particles.h"
 #include "particles_cuda.h"
 
+#include "json-builder.h"
+
 #include <mrc_io.h>
 
 EXTERN_C void cuda_init(int rank);
@@ -359,8 +361,41 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
     }
   }
 
-  cuda_mparticles_set_domain_info(cmprts, &domain_info, (mrc_json_t) {});
+  json_value *obj = json_object_new(0);
+  
+  json_object_push(obj, "n_patches", json_integer_new(domain_info.n_patches));
+  
+  json_value *arr_ldims = json_array_new(3);
+  json_object_push(obj, "ldims", arr_ldims);
+  
+  json_value *arr_bs = json_array_new(3);
+  json_object_push(obj, "bs", arr_bs);
+  
+  json_value *arr_dx = json_array_new(3);
+  json_object_push(obj, "dx", arr_dx);
+  
+  for (int d = 0; d < 3; d++) {
+    json_array_push(arr_ldims, json_integer_new(domain_info.ldims[d]));
+    json_array_push(arr_bs, json_integer_new(domain_info.bs[d]));
+    json_array_push(arr_dx, json_double_new(domain_info.dx[d]));
+  }
+  
+  json_value *arr_xb_by_patch = json_array_new(domain_info.n_patches);
+  json_object_push(obj, "xb_by_patch", arr_xb_by_patch);
+  for (int p = 0; p < domain_info.n_patches; p++) {
+    json_value *arr_xb = json_array_new(3);
+    json_array_push(arr_xb_by_patch, arr_xb);
+    for (int d = 0; d < 3; d++) {
+      json_array_push(arr_xb, json_double_new(domain_info.xb_by_patch[p][d]));
+    }
+  }
+  
+  mrc_json_t json = mrc_json_from_json_parser(obj);
+  
+  cuda_mparticles_set_domain_info(cmprts, json);
+
   free(domain_info.xb_by_patch);
+  json_builder_free(obj);
 
   cuda_mparticles_setup(cmprts);
 }

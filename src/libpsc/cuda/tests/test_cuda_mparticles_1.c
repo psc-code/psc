@@ -1,6 +1,8 @@
 
 #include "cuda_iface.h"
 
+#include "json-builder.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -18,7 +20,7 @@ prof_register(const char *name, float simd, int flops, int bytes)
 // ----------------------------------------------------------------------
 // cuda_domain_info_ctor_test_1
 
-void
+mrc_json_t
 cuda_domain_info_ctor_test_1(struct cuda_domain_info *info)
 {
   info->n_patches = 1;
@@ -32,6 +34,39 @@ cuda_domain_info_ctor_test_1(struct cuda_domain_info *info)
     info->xb_by_patch[p][1] = 0.;
     info->xb_by_patch[p][2] = 0.;
   }
+
+  json_value *obj = json_object_new(0);
+  
+  json_object_push(obj, "n_patches", json_integer_new(info->n_patches));
+  
+  json_value *arr_ldims = json_array_new(3);
+  json_object_push(obj, "ldims", arr_ldims);
+  
+  json_value *arr_bs = json_array_new(3);
+  json_object_push(obj, "bs", arr_bs);
+  
+  json_value *arr_dx = json_array_new(3);
+  json_object_push(obj, "dx", arr_dx);
+  
+  for (int d = 0; d < 3; d++) {
+    json_array_push(arr_ldims, json_integer_new(info->ldims[d]));
+    json_array_push(arr_bs, json_integer_new(info->bs[d]));
+    json_array_push(arr_dx, json_double_new(info->dx[d]));
+  }
+  
+  json_value *arr_xb_by_patch = json_array_new(info->n_patches);
+  json_object_push(obj, "xb_by_patch", arr_xb_by_patch);
+  for (int p = 0; p < info->n_patches; p++) {
+    json_value *arr_xb = json_array_new(3);
+    json_array_push(arr_xb_by_patch, arr_xb);
+    for (int d = 0; d < 3; d++) {
+      json_array_push(arr_xb, json_double_new(info->xb_by_patch[p][d]));
+    }
+  }
+  
+  mrc_json_t json = mrc_json_from_json_parser(obj);
+
+  return json;
 };
 
 // ----------------------------------------------------------------------
@@ -125,9 +160,12 @@ main(void)
   struct cuda_mparticles *cmprts = cuda_mparticles_create();
 
   struct cuda_domain_info info;
-  cuda_domain_info_ctor_test_1(&info);
+  mrc_json_t json = cuda_domain_info_ctor_test_1(&info);
+  mrc_json_print(json, 0);
 
-  cuda_mparticles_set_domain_info(cmprts, &info, (mrc_json_t) {});
+  cuda_mparticles_set_domain_info(cmprts, json);
+
+  //json_builder_free(obj);
   cuda_domain_info_dtor(&info);
 
   cuda_mparticles_setup(cmprts);
