@@ -132,6 +132,16 @@ static struct mrc_json_ops mrc_json_parser_ops = {
 
 
 mrc_json_t
+mrc_json_from_json_parser(void *value)
+{
+  mrc_json_t json = {
+    .u.parser.value = value,
+    .ops            = &mrc_json_parser_ops,
+  };
+  return json;
+}
+
+mrc_json_t
 mrc_json_parse(const char *buf)
 {
   json_settings settings = {};

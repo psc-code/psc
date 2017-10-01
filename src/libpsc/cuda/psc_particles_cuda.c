@@ -359,7 +359,7 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
     }
   }
 
-  cuda_mparticles_set_domain_info(cmprts, &domain_info);
+  cuda_mparticles_set_domain_info(cmprts, &domain_info, (mrc_json_t) {});
   free(domain_info.xb_by_patch);
 
   cuda_mparticles_setup(cmprts);

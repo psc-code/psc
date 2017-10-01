@@ -2,8 +2,7 @@
 #ifndef CUDA_IFACE_H
 #define CUDA_IFACE_H
 
-#include <stdbool.h>
-
+#include "mrc_json.h"
 #include "psc_particle_buf_cuda.h"
 
 #ifdef __cplusplus
@@ -54,7 +53,8 @@ struct cuda_mparticles *cuda_mparticles_create(void);
 void cuda_mparticles_setup(struct cuda_mparticles *cmprts);
 void cuda_mparticles_destroy(struct cuda_mparticles *cmprts);
 void cuda_mparticles_set_domain_info(struct cuda_mparticles *cuda_mprts,
-				     const struct cuda_domain_info *info);
+				     const struct cuda_domain_info *info,
+				     mrc_json_t json);
 void cuda_mparticles_reserve_all(struct cuda_mparticles *cmprts, unsigned int *n_prts_by_patch);
 void cuda_mparticles_dump(struct cuda_mparticles *cuda_mprts);
 void cuda_mparticles_dump_by_patch(struct cuda_mparticles *cmprts, unsigned int *n_prts_by_patch);

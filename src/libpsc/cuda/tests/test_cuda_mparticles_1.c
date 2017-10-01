@@ -126,7 +126,8 @@ main(void)
 
   struct cuda_domain_info info;
   cuda_domain_info_ctor_test_1(&info);
-  cuda_mparticles_set_domain_info(cmprts, &info);
+
+  cuda_mparticles_set_domain_info(cmprts, &info, (mrc_json_t) {});
   cuda_domain_info_dtor(&info);
 
   cuda_mparticles_setup(cmprts);

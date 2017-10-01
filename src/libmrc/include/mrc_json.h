@@ -5,6 +5,13 @@
 #include <unistd.h>
 #include <stdbool.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+#if 0 // hack to fix indentation
+}
+#endif
+
 enum mrc_json_type {
   // FIXME? This have to match the json.h types, but I don't to want to include that here
   MRC_JSON_NONE,
@@ -67,14 +74,30 @@ bool mrc_json_get_boolean(mrc_json_t value);
 unsigned int mrc_json_get_object_length(mrc_json_t value);
 const char *mrc_json_get_object_entry_name(mrc_json_t value, unsigned int i);
 mrc_json_t mrc_json_get_object_entry_value(mrc_json_t value, unsigned int i);
+mrc_json_t mrc_json_get_object_entry(mrc_json_t value, const char *name);
+int mrc_json_get_object_entry_integer(mrc_json_t value, const char *name);
+double mrc_json_get_object_entry_double(mrc_json_t value, const char *name);
 
 unsigned int mrc_json_get_array_length(mrc_json_t value);
 mrc_json_t mrc_json_get_array_entry(mrc_json_t value, unsigned int i);
+int mrc_json_get_array_entry_integer(mrc_json_t value, unsigned int i);
+double mrc_json_get_array_entry_double(mrc_json_t value, unsigned int i);
 
 void mrc_json_print(mrc_json_t value, unsigned int depth);
 char *mrc_json_to_string(mrc_json_t json);
 
 // parse from actual JSON string
 mrc_json_t mrc_json_parse(const char *buf);
+
+// create mrc_json_t wrapper from json_value *
+mrc_json_t mrc_json_from_json_parser(void *value);
+
+
+#if 0
+{
+#endif
+#ifdef __cplusplus
+}
+#endif
 
 #endif

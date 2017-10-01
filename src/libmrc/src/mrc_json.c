@@ -3,6 +3,7 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <string.h>
 
 // ======================================================================
 // mrc_json dispatch
@@ -158,6 +159,44 @@ mrc_json_print(mrc_json_t value, unsigned int depth)
   };
 }
 
+mrc_json_t
+mrc_json_get_object_entry(mrc_json_t json, const char *name)
+{
+  int len = mrc_json_get_object_length(json);
+  for (int i = 0; i < len; i++) {
+    const char *entry_name = mrc_json_get_object_entry_name(json, i);
+    if (strcmp(name, entry_name) == 0) {
+      return mrc_json_get_object_entry_value(json, i);
+    }
+  }
+  return (mrc_json_t) {};
+}
+
+int
+mrc_json_get_object_entry_integer(mrc_json_t json, const char *name)
+{
+  return mrc_json_get_integer(mrc_json_get_object_entry(json, name));
+}
+
+
+double
+mrc_json_get_object_entry_double(mrc_json_t json, const char *name)
+{
+  return mrc_json_get_double(mrc_json_get_object_entry(json, name));
+}
+
+
+int
+mrc_json_get_array_entry_integer(mrc_json_t json, unsigned int i)
+{
+  return mrc_json_get_integer(mrc_json_get_array_entry(json, i));
+}
+
+double
+mrc_json_get_array_entry_double(mrc_json_t json, unsigned int i)
+{
+  return mrc_json_get_double(mrc_json_get_array_entry(json, i));
+}
 
 
 #if 0

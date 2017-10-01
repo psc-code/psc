@@ -2,6 +2,8 @@
 #include "cuda_mparticles.h"
 #include "cuda_bits.h"
 
+#include "json-builder.h"
+
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
 #include <thrust/sort.h>
@@ -26,23 +28,66 @@ cuda_mparticles_create()
 
 void
 cuda_mparticles_set_domain_info(struct cuda_mparticles *cmprts,
-				const struct cuda_domain_info *info)
+				const struct cuda_domain_info *info,
+				mrc_json_t json)
 {
-  cmprts->n_patches = info->n_patches;
+  {
+    json_value *obj = json_object_new(0);
+    json_object_push(obj, "n_patches", json_integer_new(info->n_patches));
+
+    json_value *arr_ldims = json_array_new(3);
+    json_object_push(obj, "ldims", arr_ldims);
+
+    json_value *arr_bs = json_array_new(3);
+    json_object_push(obj, "bs", arr_bs);
+
+    json_value *arr_dx = json_array_new(3);
+    json_object_push(obj, "dx", arr_dx);
+
+    for (int d = 0; d < 3; d++) {
+      json_array_push(arr_ldims, json_integer_new(info->ldims[d]));
+      json_array_push(arr_bs, json_integer_new(info->bs[d]));
+      json_array_push(arr_dx, json_double_new(info->dx[d]));
+    }
+    
+    json_value *arr_xb_by_patch = json_array_new(info->n_patches);
+    json_object_push(obj, "xb_by_patch", arr_xb_by_patch);
+    for (int p = 0; p < info->n_patches; p++) {
+      json_value *arr_xb = json_array_new(3);
+      json_array_push(arr_xb_by_patch, arr_xb);
+      for (int d = 0; d < 3; d++) {
+	json_array_push(arr_xb, json_double_new(info->xb_by_patch[p][d]));
+      }
+    }
+
+    json = mrc_json_from_json_parser(obj);
+    mrc_json_print(json, 0);
+  }
+
+  cmprts->n_patches = mrc_json_get_object_entry_integer(json, "n_patches");
+  mrc_json_t ldims = mrc_json_get_object_entry(json, "ldims");
+  mrc_json_t bs = mrc_json_get_object_entry(json, "bs");
+  mrc_json_t dx = mrc_json_get_object_entry(json, "dx");
+  mrc_json_t xb_by_patch = mrc_json_get_object_entry(json, "xb_by_patch");
+
   cmprts->xb_by_patch = new float_3[cmprts->n_patches];
   for (int d = 0; d < 3; d++) {
-    cmprts->ldims[d] = info->ldims[d];
-    cmprts->bs[d] = info->bs[d];
-    assert(info->ldims[d] % info->bs[d] == 0);
-    cmprts->b_mx[d] = info->ldims[d] / info->bs[d];
-    cmprts->dx[d] = info->dx[d];
-    cmprts->b_dxi[d] = 1.f / (info->bs[d] * info->dx[d]);
+    cmprts->ldims[d] = mrc_json_get_array_entry_integer(ldims, d);
+    cmprts->bs[d] = mrc_json_get_array_entry_integer(bs, d);
+    cmprts->dx[d] = mrc_json_get_array_entry_double(dx, d);
 
-    assert(info->xb_by_patch);
-    for (int p = 0; p < cmprts->n_patches; p++) {
-      cmprts->xb_by_patch[p][d] = info->xb_by_patch[p][d];
+    assert(cmprts->ldims[d] % cmprts->bs[d] == 0);
+    cmprts->b_mx[d] = cmprts->ldims[d] / cmprts->bs[d];
+    cmprts->b_dxi[d] = 1.f / (cmprts->bs[d] * cmprts->dx[d]);
+  }
+  
+  for (int p = 0; p < cmprts->n_patches; p++) {
+    mrc_json_t xb = mrc_json_get_array_entry(xb_by_patch, p);
+    for (int d = 0; d < 3; d++) {
+      cmprts->xb_by_patch[p][d] = mrc_json_get_array_entry_double(xb, d);
     }
   }
+
   cmprts->n_blocks_per_patch = cmprts->b_mx[0] * cmprts->b_mx[1] * cmprts->b_mx[2];
   cmprts->n_blocks = cmprts->n_patches * cmprts->n_blocks_per_patch;
 }
