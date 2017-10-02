@@ -380,13 +380,9 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
   json_value *obj = json_object_new(0);
   json_object_push(obj, "info", info);
 
-  mrc_json_t json = mrc_json_from_json_parser(obj);
-  
-  cuda_mparticles_set_domain_info(cmprts, json);
+  cuda_mparticles_ctor(cmprts, mrc_json_from_json_parser(obj));
 
   json_builder_free(obj);
-
-  cuda_mparticles_setup(cmprts);
 }
 
 // ----------------------------------------------------------------------

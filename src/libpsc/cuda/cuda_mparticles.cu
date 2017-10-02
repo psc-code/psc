@@ -24,11 +24,10 @@ cuda_mparticles_create()
 }
 
 // ----------------------------------------------------------------------
-// cuda_mparticles_set_domain_info
+// cuda_mparticles_ctor
 
 void
-cuda_mparticles_set_domain_info(struct cuda_mparticles *cmprts,
-				mrc_json_t json)
+cuda_mparticles_ctor(struct cuda_mparticles *cmprts, mrc_json_t json)
 {
   mrc_json_t json_info = mrc_json_get_object_entry(json, "info");
   
@@ -58,14 +57,7 @@ cuda_mparticles_set_domain_info(struct cuda_mparticles *cmprts,
 
   cmprts->n_blocks_per_patch = cmprts->b_mx[0] * cmprts->b_mx[1] * cmprts->b_mx[2];
   cmprts->n_blocks = cmprts->n_patches * cmprts->n_blocks_per_patch;
-}
 
-// ----------------------------------------------------------------------
-// cuda_mparticles_setup
-
-void
-cuda_mparticles_setup(struct cuda_mparticles *cmprts)
-{
   cudaError_t ierr;
 
   ierr = cudaMalloc(&cmprts->d_off, (cmprts->n_blocks + 1) * sizeof(*cmprts->d_off)); cudaCheck(ierr);
