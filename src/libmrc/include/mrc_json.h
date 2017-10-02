@@ -92,6 +92,9 @@ mrc_json_t mrc_json_parse(const char *buf);
 // create mrc_json_t wrapper from json_value *
 mrc_json_t mrc_json_from_json_parser(void *value);
 
+// create mrc_json_t wrapper from mrc_obj
+mrc_json_t mrc_obj_to_json(struct mrc_obj *obj);
+#define MRC_OBJ_TO_JSON(obj) mrc_obj_to_json((struct mrc_obj *) obj)
 
 #if 0
 {
