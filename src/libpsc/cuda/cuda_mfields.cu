@@ -38,13 +38,8 @@ cuda_mfields_ctor(struct cuda_mfields *cmflds, mrc_json_t json)
   
   cmflds->n_patches = mrc_json_get_object_entry_integer(json_info, "n_patches");
   cmflds->n_fields = mrc_json_get_object_entry_integer(json_info, "n_fields");
-
-  mrc_json_t arr_ib = mrc_json_get_object_entry(json_info, "ib");
-  mrc_json_t arr_im = mrc_json_get_object_entry(json_info, "im");
-  for (int d = 0; d < 3; d++) {
-    cmflds->im[d] = mrc_json_get_array_entry_integer(arr_im, d);
-    cmflds->ib[d] = mrc_json_get_array_entry_integer(arr_ib, d);
-  }
+  mrc_json_get_object_entry_int3(json_info, "ib", cmflds->ib);
+  mrc_json_get_object_entry_int3(json_info, "im", cmflds->im);
 
   cmflds->n_cells_per_patch = cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
   cmflds->n_cells = cmflds->n_patches * cmflds->n_cells_per_patch;

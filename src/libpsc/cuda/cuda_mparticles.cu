@@ -32,27 +32,22 @@ cuda_mparticles_ctor(struct cuda_mparticles *cmprts, mrc_json_t json)
   mrc_json_t json_info = mrc_json_get_object_entry(json, "info");
   
   cmprts->n_patches = mrc_json_get_object_entry_integer(json_info, "n_patches");
-  mrc_json_t ldims = mrc_json_get_object_entry(json_info, "ldims");
-  mrc_json_t bs = mrc_json_get_object_entry(json_info, "bs");
-  mrc_json_t dx = mrc_json_get_object_entry(json_info, "dx");
-  mrc_json_t xb_by_patch = mrc_json_get_object_entry(json_info, "xb_by_patch");
+  mrc_json_get_object_entry_int3(json_info, "ldims", cmprts->ldims);
+  mrc_json_get_object_entry_int3(json_info, "bs", cmprts->bs);
+  double dx[3];
+  mrc_json_get_object_entry_double3(json_info, "dx", dx);
 
-  cmprts->xb_by_patch = new float_3[cmprts->n_patches];
   for (int d = 0; d < 3; d++) {
-    cmprts->ldims[d] = mrc_json_get_array_entry_integer(ldims, d);
-    cmprts->bs[d] = mrc_json_get_array_entry_integer(bs, d);
-    cmprts->dx[d] = mrc_json_get_array_entry_double(dx, d);
-
+    cmprts->dx[d] = dx[d];
     assert(cmprts->ldims[d] % cmprts->bs[d] == 0);
     cmprts->b_mx[d] = cmprts->ldims[d] / cmprts->bs[d];
     cmprts->b_dxi[d] = 1.f / (cmprts->bs[d] * cmprts->dx[d]);
   }
   
+  cmprts->xb_by_patch = new float_3[cmprts->n_patches];
+  mrc_json_t xb_by_patch = mrc_json_get_object_entry(json_info, "xb_by_patch");
   for (int p = 0; p < cmprts->n_patches; p++) {
-    mrc_json_t xb = mrc_json_get_array_entry(xb_by_patch, p);
-    for (int d = 0; d < 3; d++) {
-      cmprts->xb_by_patch[p][d] = mrc_json_get_array_entry_double(xb, d);
-    }
+    mrc_json_get_float3(mrc_json_get_array_entry(xb_by_patch, p), cmprts->xb_by_patch[p]);
   }
 
   cmprts->n_blocks_per_patch = cmprts->b_mx[0] * cmprts->b_mx[1] * cmprts->b_mx[2];

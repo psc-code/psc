@@ -159,6 +159,33 @@ mrc_json_print(mrc_json_t value, unsigned int depth)
   };
 }
 
+// ======================================================================
+// helpers
+
+void
+mrc_json_get_int3(mrc_json_t json, int arr[3])
+{
+  for (int d = 0; d < 3; d++) {
+    arr[d] = mrc_json_get_array_entry_integer(json, d);
+  }
+}
+
+void
+mrc_json_get_double3(mrc_json_t json, double arr[3])
+{
+  for (int d = 0; d < 3; d++) {
+    arr[d] = mrc_json_get_array_entry_double(json, d);
+  }
+}
+
+void
+mrc_json_get_float3(mrc_json_t json, float arr[3])
+{
+  for (int d = 0; d < 3; d++) {
+    arr[d] = mrc_json_get_array_entry_double(json, d);
+  }
+}
+
 mrc_json_t
 mrc_json_get_object_entry(mrc_json_t json, const char *name)
 {
@@ -195,6 +222,27 @@ mrc_json_get_object_entry_double(mrc_json_t json, const char *name)
   return mrc_json_get_double(entry);
 }
 
+void
+mrc_json_get_object_entry_int3(mrc_json_t json, const char *name, int arr[3])
+{
+  mrc_json_t entry = mrc_json_get_object_entry(json, name);
+  if (!entry.ops) {
+    fprintf(stderr, "%s: entry \"%s\" not found!\n", __func__, name);
+    assert(0);
+  }
+  return mrc_json_get_int3(entry, arr);
+}
+
+void
+mrc_json_get_object_entry_double3(mrc_json_t json, const char *name, double arr[3])
+{
+  mrc_json_t entry = mrc_json_get_object_entry(json, name);
+  if (!entry.ops) {
+    fprintf(stderr, "%s: entry \"%s\" not found!\n", __func__, name);
+    assert(0);
+  }
+  return mrc_json_get_double3(entry, arr);
+}
 
 int
 mrc_json_get_array_entry_integer(mrc_json_t json, unsigned int i)

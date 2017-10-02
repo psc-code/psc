@@ -71,12 +71,18 @@ double mrc_json_get_double(mrc_json_t value);
 const char *mrc_json_get_string(mrc_json_t value);
 bool mrc_json_get_boolean(mrc_json_t value);
 
+void mrc_json_get_int3(mrc_json_t json, int arr[3]);
+void mrc_json_get_double3(mrc_json_t json, double arr[3]);
+void mrc_json_get_float3(mrc_json_t json, float arr[3]); // will convert double -> float
+
 unsigned int mrc_json_get_object_length(mrc_json_t value);
 const char *mrc_json_get_object_entry_name(mrc_json_t value, unsigned int i);
 mrc_json_t mrc_json_get_object_entry_value(mrc_json_t value, unsigned int i);
 mrc_json_t mrc_json_get_object_entry(mrc_json_t value, const char *name);
 int mrc_json_get_object_entry_integer(mrc_json_t value, const char *name);
 double mrc_json_get_object_entry_double(mrc_json_t value, const char *name);
+void mrc_json_get_object_entry_int3(mrc_json_t value, const char *name, int arr[3]);
+void mrc_json_get_object_entry_double3(mrc_json_t value, const char *name, double arr[3]);
 
 unsigned int mrc_json_get_array_length(mrc_json_t value);
 mrc_json_t mrc_json_get_array_entry(mrc_json_t value, unsigned int i);
