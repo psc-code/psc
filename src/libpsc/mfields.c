@@ -14,6 +14,8 @@
 static void
 _psc_mfields_setup(struct psc_mfields *mflds)
 {
+  assert(mflds->domain);
+  
   mflds->comp_name = calloc(mflds->nr_fields, sizeof(*mflds->comp_name));
 }
 
@@ -54,12 +56,6 @@ _psc_mfields_read(struct psc_mfields *mflds, struct mrc_io *io)
       psc_mfields_set_comp_name(mflds, m, s);
     }
   }
-}
-
-void
-psc_mfields_set_domain(struct psc_mfields *flds, struct mrc_domain *domain)
-{
-  flds->domain = domain;
 }
 
 void
@@ -235,7 +231,7 @@ psc_mfields_get_as(struct psc_mfields *mflds_base, const char *type,
   
   struct psc_mfields *mflds = psc_mfields_create(psc_mfields_comm(mflds_base));
   psc_mfields_set_type(mflds, type);
-  psc_mfields_set_domain(mflds, mflds_base->domain);
+  psc_mfields_set_param_obj(mflds, "domain", mflds_base->domain);
   psc_mfields_set_param_int(mflds, "nr_fields", mflds_base->nr_fields);
   psc_mfields_set_param_int3(mflds, "ibn", mflds_base->ibn);
   psc_mfields_set_param_int(mflds, "first_comp", mflds_base->first_comp);
@@ -314,9 +310,12 @@ psc_mfields_init()
 
 #define VAR(x) (void *)offsetof(struct psc_mfields, x)
 static struct param psc_mfields_descr[] = {
+  { "domain"         , VAR(domain)          , PARAM_OBJ(mrc_domain) },
   { "nr_fields"      , VAR(nr_fields)       , PARAM_INT(1)        },
   { "ibn"            , VAR(ibn)             , PARAM_INT3(0, 0, 0) },
   { "first_comp"     , VAR(first_comp)      , PARAM_INT(0)        },
+
+  { "nr_patches"     , VAR(nr_patches)      , MRC_VAR_INT         },
   {},
 };
 #undef VAR

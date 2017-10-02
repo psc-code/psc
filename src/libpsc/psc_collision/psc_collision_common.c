@@ -443,7 +443,7 @@ psc_collision_sub_setup(struct psc_collision *collision)
 
   coll->mflds = psc_mfields_create(psc_collision_comm(collision));
   psc_mfields_set_type(coll->mflds, FIELDS_TYPE);
-  psc_mfields_set_domain(coll->mflds, ppsc->mrc_domain);
+  psc_mfields_set_param_obj(coll->mflds, "domain", ppsc->mrc_domain);
   psc_mfields_set_param_int(coll->mflds, "nr_fields", 5);
   psc_mfields_set_param_int3(coll->mflds, "ibn", ppsc->ibn);
   psc_mfields_setup(coll->mflds);

@@ -946,7 +946,7 @@ psc_setup_fields(struct psc *psc)
   psc_mfields_list_add(&psc_mfields_base_list, &psc->flds);
   psc_mfields_set_type(psc->flds, psc->prm.fields_base);
   psc_mfields_set_name(psc->flds, "mfields");
-  psc_mfields_set_domain(psc->flds, psc->mrc_domain);
+  psc_mfields_set_param_obj(psc->flds, "domain", psc->mrc_domain);
   psc_mfields_set_param_int(psc->flds, "nr_fields", NR_FIELDS);
   psc_mfields_set_param_int3(psc->flds, "ibn", psc->ibn);
   psc_mfields_setup(psc->flds);

@@ -9,11 +9,15 @@
 
 struct psc_mfields {
   struct mrc_obj obj;
+
+  // state
   int nr_patches;
+  char **comp_name; //> name for each field component
+
+  // parameters
   struct mrc_domain *domain;
   int nr_fields; //> number of field components
-  char **comp_name; //> name for each field component
-  int ibn[3];
+  int ibn[3]; //> number of ghost points
   int first_comp; //> The first component in this field (normally 0)
 };
 
@@ -32,8 +36,6 @@ struct psc_mfields_ops {
 typedef void (*psc_mfields_copy_func_t)(struct psc_mfields *, struct psc_mfields *,
 					int, int);
 
-void psc_mfields_set_domain(struct psc_mfields *flds,
-			    struct mrc_domain *domain);
 void psc_mfields_zero_comp(struct psc_mfields *flds, int m);
 void psc_mfields_zero_range(struct psc_mfields *flds, int mb, int me);
 void psc_mfields_set_comp(struct psc_mfields *flds, int m, double alpha);

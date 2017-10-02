@@ -30,7 +30,7 @@ fld_create(struct psc *psc, int nr_fields)
 {
   struct psc_mfields *fld = psc_mfields_create(psc_comm(psc));
   psc_mfields_set_type(fld, "c");
-  psc_mfields_set_domain(fld, psc->mrc_domain);
+  psc_mfields_set_param_obj(fld, "domain", psc->mrc_domain);
   psc_mfields_set_param_int3(fld, "ibn", psc->ibn);
   psc_mfields_set_param_int(fld, "nr_fields", nr_fields);
   psc_mfields_setup(fld);
@@ -101,7 +101,7 @@ psc_save_fields_ref(struct psc *psc, struct psc_mfields *mflds_base)
 
   if (!mflds_ref) {
     mflds_ref = psc_mfields_create(psc_comm(psc));
-    psc_mfields_set_domain(mflds_ref, psc->mrc_domain);
+    psc_mfields_set_param_obj(mflds_ref, "domain", psc->mrc_domain);
     psc_mfields_set_param_int(mflds_ref, "nr_fields", NR_FIELDS);
     psc_mfields_set_param_int3(mflds_ref, "ibn", psc->ibn);
     psc_mfields_setup(mflds_ref);
@@ -220,7 +220,7 @@ psc_check_currents_ref(struct psc *psc, struct psc_mfields *mflds_base, double t
   psc_mfields_put_as(mflds, mflds_base, 0, 0);
 #endif
   struct psc_mfields *diff = psc_mfields_create(psc_comm(psc));
-  psc_mfields_set_domain(diff, psc->mrc_domain);
+  psc_mfields_set_param_obj(diff, "domain", psc->mrc_domain);
   psc_mfields_set_param_int3(diff, "ibn", psc->ibn);
   psc_mfields_setup(diff);
   // FIXME, make funcs for this (waxpy, norm)

@@ -27,7 +27,7 @@ psc_output_fields_item_create_mfields(struct psc_output_fields_item *item)
   } else {
     psc_mfields_set_type(flds, "c");
   }
-  psc_mfields_set_domain(flds, ppsc->mrc_domain);
+  psc_mfields_set_param_obj(flds, "domain", ppsc->mrc_domain);
   int nr_comp;
   if (ops->flags & POFI_BY_KIND) {
     nr_comp = ops->nr_comp * ppsc->nr_kinds;

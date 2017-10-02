@@ -154,7 +154,7 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
     struct psc_mfields *flds = psc_mfields_create(mrc_domain_comm(psc->mrc_domain));
     psc_mfields_set_type(flds, "c");
     psc_mfields_set_name(flds, psc_mfields_name(pfd->flds[i]));
-    psc_mfields_set_domain(flds, psc->mrc_domain);
+    psc_mfields_set_param_obj(flds, "domain", psc->mrc_domain);
     psc_mfields_set_param_int(flds, "nr_fields", pfd->flds[i]->nr_fields);
     psc_mfields_set_param_int3(flds, "ibn", psc->ibn);
     psc_mfields_setup(flds);

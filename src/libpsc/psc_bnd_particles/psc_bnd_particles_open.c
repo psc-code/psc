@@ -293,7 +293,7 @@ psc_bnd_particles_open_setup(struct psc_bnd_particles *bnd)
   // which could lead so systematic errors, though it seems unlikely.
   bnd->mflds_n_in = psc_mfields_create(psc_bnd_particles_comm(bnd));
   psc_mfields_set_type(bnd->mflds_n_in, "c");
-  psc_mfields_set_domain(bnd->mflds_n_in, ppsc->mrc_domain);
+  psc_mfields_set_param_obj(bnd->mflds_n_in, "domain", ppsc->mrc_domain);
   psc_mfields_set_param_int(bnd->mflds_n_in, "nr_fields", ppsc->nr_kinds);
   psc_mfields_set_param_int3(bnd->mflds_n_in, "ibn", ppsc->ibn);
   psc_mfields_setup(bnd->mflds_n_in);
