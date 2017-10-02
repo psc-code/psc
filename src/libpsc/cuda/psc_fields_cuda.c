@@ -158,8 +158,11 @@ psc_mfields_cuda_setup(struct psc_mfields *mflds)
   
   cuda_base_init();
 
+  mrc_json_t json_mflds = MRC_OBJ_TO_JSON(mflds);
+  mrc_json_print(json_mflds, 0);
+
   sub->cmflds = cuda_mfields_create();
-  cuda_mfields_ctor(sub->cmflds, ib, im, mflds->nr_fields, mflds->nr_patches);
+  cuda_mfields_ctor(sub->cmflds, ib, im, mflds->nr_fields, mflds->nr_patches, json_mflds);
 
   sub->cbnd = cuda_mfields_bnd_create();
   cuda_mfields_bnd_ctor(sub->cbnd, sub->cmflds);

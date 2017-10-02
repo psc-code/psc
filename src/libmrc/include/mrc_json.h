@@ -94,6 +94,7 @@ mrc_json_t mrc_json_from_json_parser(void *value);
 
 // create mrc_json_t wrapper from mrc_obj
 mrc_json_t mrc_obj_to_json(struct mrc_obj *obj);
+// FIXME, maybe instead of this ugly macro we could add something to mrc_obj.h?
 #define MRC_OBJ_TO_JSON(obj) mrc_obj_to_json((struct mrc_obj *) obj)
 
 #if 0

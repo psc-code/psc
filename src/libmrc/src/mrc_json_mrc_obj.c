@@ -32,7 +32,8 @@ mrc_descr_to_mrc_json_t(struct param *param, char *p)
 {
   char *var = p + (unsigned long) param->var;
   switch (param->type) {
-  case PT_INT: {
+  case PT_INT:
+  case MRC_VAR_INT: {
     mrc_json_t json = {
       .u.mrc.v.integer = * (int *) var,
       .u.mrc.type = MRC_JSON_INTEGER,

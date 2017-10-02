@@ -31,12 +31,14 @@ cuda_mfields_destroy(struct cuda_mfields *cmflds)
 
 void
 cuda_mfields_ctor(struct cuda_mfields *cmflds, int ib[3], int im[3],
-		  int n_fields, int n_patches)
+		  int n_fields, int n_patches, mrc_json_t json_mflds)
 {
   cudaError_t ierr;
   
-  cmflds->n_patches = n_patches;
-  cmflds->n_fields = n_fields;
+  cmflds->n_patches = mrc_json_get_object_entry_integer(json_mflds, "nr_patches");
+  assert(cmflds->n_patches == n_patches);
+  cmflds->n_fields = mrc_json_get_object_entry_integer(json_mflds, "nr_fields");
+  assert(cmflds->n_fields == n_fields);
   
   for (int d = 0; d < 3; d++) {
     cmflds->im[d] = im[d];
