@@ -315,7 +315,8 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
 
   psc_mparticles_setup_super(mprts);
 
-  assert(mprts->nr_patches != 0);
+  int n_patches = mprts->nr_patches;
+  assert(n_patches != 0);
   
   if (!mprts->flags) {
     // FIXME, they get set too late, so auto-dispatch "1vb" doesn't work
@@ -325,18 +326,13 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
   int *ldims = ppsc->patch[0].ldims;
   double *dx = ppsc->patch[0].dx;
 
-  // check that all patches have equal size
-  for (int p = 1; p < mprts->nr_patches; p++) {
+    // check that all patches have equal size
+  for (int p = 1; p < n_patches; p++) {
     for (int d = 0; d < 3; d++) {
       assert(ppsc->patch[p].ldims[d] == ldims[d]);
       assert(ppsc->patch[p].dx[d] == dx[d]);
     }
   }
-
-  struct cuda_domain_info domain_info = {};
-
-  domain_info.n_patches = mprts->nr_patches;
-  domain_info.xb_by_patch = calloc(domain_info.n_patches, sizeof(*domain_info.xb_by_patch));
 
   int bs[3];
   for (int d = 0; d < 3; d++) {
@@ -350,20 +346,11 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
     if (ppsc->domain.gdims[d] == 1) {
       bs[d] = 1;
     }
-    domain_info.ldims[d] = ldims[d];
-    domain_info.bs[d]    = bs[d];
-    domain_info.dx[d]    = dx[d];
-
-    for (int p = 0; p < domain_info.n_patches; p++) {
-      domain_info.xb_by_patch[p][0] = ppsc->patch[p].xb[0];
-      domain_info.xb_by_patch[p][1] = ppsc->patch[p].xb[1];
-      domain_info.xb_by_patch[p][2] = ppsc->patch[p].xb[2];
-    }
   }
 
   json_value *info = json_object_new(0);
   
-  json_object_push(info, "n_patches", json_integer_new(domain_info.n_patches));
+  json_object_push(info, "n_patches", json_integer_new(n_patches));
   
   json_value *arr_ldims = json_array_new(3);
   json_object_push(info, "ldims", arr_ldims);
@@ -375,18 +362,18 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
   json_object_push(info, "dx", arr_dx);
   
   for (int d = 0; d < 3; d++) {
-    json_array_push(arr_ldims, json_integer_new(domain_info.ldims[d]));
-    json_array_push(arr_bs, json_integer_new(domain_info.bs[d]));
-    json_array_push(arr_dx, json_double_new(domain_info.dx[d]));
+    json_array_push(arr_ldims, json_integer_new(ldims[d]));
+    json_array_push(arr_bs, json_integer_new(bs[d]));
+    json_array_push(arr_dx, json_double_new(dx[d]));
   }
   
-  json_value *arr_xb_by_patch = json_array_new(domain_info.n_patches);
+  json_value *arr_xb_by_patch = json_array_new(n_patches);
   json_object_push(info, "xb_by_patch", arr_xb_by_patch);
-  for (int p = 0; p < domain_info.n_patches; p++) {
+  for (int p = 0; p < n_patches; p++) {
     json_value *arr_xb = json_array_new(3);
     json_array_push(arr_xb_by_patch, arr_xb);
     for (int d = 0; d < 3; d++) {
-      json_array_push(arr_xb, json_double_new(domain_info.xb_by_patch[p][d]));
+      json_array_push(arr_xb, json_double_new(ppsc->patch[p].xb[d]));
     }
   }
 
@@ -397,7 +384,6 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
   
   cuda_mparticles_set_domain_info(cmprts, json);
 
-  free(domain_info.xb_by_patch);
   json_builder_free(obj);
 
   cuda_mparticles_setup(cmprts);

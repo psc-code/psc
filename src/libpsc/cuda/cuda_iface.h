@@ -24,17 +24,6 @@ typedef double double_3[3];
 typedef float float_4[4];
 
 // ----------------------------------------------------------------------
-// cuda_domain_info
-  
-struct cuda_domain_info {
-  int n_patches;
-  int ldims[3]; // number of cells per patch
-  int bs[3];    // size of each block (a.k.a. super-cell)
-  double dx[3]; // size of a single cell
-  double_3 *xb_by_patch;
-};
-  
-// ----------------------------------------------------------------------
 // cuda_mparticles_prt
 
 struct cuda_mparticles_prt {
