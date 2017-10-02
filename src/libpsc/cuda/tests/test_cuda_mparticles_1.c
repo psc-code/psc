@@ -18,23 +18,6 @@ prof_register(const char *name, float simd, int flops, int bytes)
 }
 
 // ----------------------------------------------------------------------
-// cuda_domain_info_ctor_test_1
-
-mrc_json_t
-cuda_domain_info_ctor_test_1()
-{
-  return mrc_json_parse("{                                           "
-			"  \"info\" : {                              "
-			"    \"n_patches\" : 1,                      "
-			"    \"ldims\" : [ 1, 4, 2 ],                "
-			"    \"bs\" : [ 1, 1, 1 ],                   "
-			"    \"dx\" : [ 1.0, 10.0, 10.0 ],           "
-			"    \"xb_by_patch\" : [ [ 0.0, 0.0, 0.0 ] ] "
-			"  }                                         "
-			"}                                           ");
-};
-
-// ----------------------------------------------------------------------
 // cuda_mparticles_add_particles_test_1
 //
 // add 1 particle at the center of each cell, in the "wrong" order in each
@@ -135,7 +118,15 @@ main(void)
 {
   struct cuda_mparticles *cmprts = cuda_mparticles_create();
 
-  mrc_json_t json = cuda_domain_info_ctor_test_1();
+  mrc_json_t json = mrc_json_parse("{                                           "
+				   "  \"info\" : {                              "
+				   "    \"n_patches\" : 1,                      "
+				   "    \"ldims\" : [ 1, 4, 2 ],                "
+				   "    \"bs\" : [ 1, 1, 1 ],                   "
+				   "    \"dx\" : [ 1.0, 10.0, 10.0 ],           "
+				   "    \"xb_by_patch\" : [ [ 0.0, 0.0, 0.0 ] ] "
+				   "  }                                         "
+				   "}                                           ");
   mrc_json_print(json, 0);
 
   cuda_mparticles_set_domain_info(cmprts, json);
