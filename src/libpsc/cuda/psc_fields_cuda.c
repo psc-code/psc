@@ -9,6 +9,8 @@
 
 #include <mrc_params.h>
 
+#include "json-builder.h"
+
 // OPT, CUDA fields have too many ghostpoints, and 7 points in the invar direction!
 
 // ----------------------------------------------------------------------
@@ -158,14 +160,32 @@ psc_mfields_cuda_setup(struct psc_mfields *mflds)
   
   cuda_base_init();
 
-  mrc_json_t json_mflds = MRC_OBJ_TO_JSON(mflds);
-  mrc_json_print(json_mflds, 0);
+  json_value *info = json_object_new(0);
+  json_object_push(info, "n_patches", json_integer_new(mflds->nr_patches));
+  json_object_push(info, "n_fields", json_integer_new(mflds->nr_fields));
+
+  json_value *arr_ib = json_array_new(3);
+  json_object_push(info, "ib", arr_ib);
+  json_value *arr_im = json_array_new(3);
+  json_object_push(info, "im", arr_im);
+  for (int d = 0; d < 3; d++) {
+    json_array_push(arr_ib, json_integer_new(ib[d]));
+    json_array_push(arr_im, json_integer_new(im[d]));
+  }
+
+  json_value *obj = json_object_new(0);
+  json_object_push(obj, "info", info);
+
+  mrc_json_t json = mrc_json_from_json_parser(obj);
+  mrc_json_print(json, 0);
 
   sub->cmflds = cuda_mfields_create();
-  cuda_mfields_ctor(sub->cmflds, ib, im, mflds->nr_fields, mflds->nr_patches, json_mflds);
+  cuda_mfields_ctor(sub->cmflds, json);
 
   sub->cbnd = cuda_mfields_bnd_create();
   cuda_mfields_bnd_ctor(sub->cbnd, sub->cmflds);
+
+  json_builder_free(obj);
 }
 
 // ----------------------------------------------------------------------

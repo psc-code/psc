@@ -30,26 +30,27 @@ cuda_mfields_destroy(struct cuda_mfields *cmflds)
 // cuda_mfields_ctor
 
 void
-cuda_mfields_ctor(struct cuda_mfields *cmflds, int ib[3], int im[3],
-		  int n_fields, int n_patches, mrc_json_t json_mflds)
+cuda_mfields_ctor(struct cuda_mfields *cmflds, mrc_json_t json)
 {
   cudaError_t ierr;
+
+  mrc_json_t json_info = mrc_json_get_object_entry(json, "info");
   
-  cmflds->n_patches = mrc_json_get_object_entry_integer(json_mflds, "nr_patches");
-  assert(cmflds->n_patches == n_patches);
-  cmflds->n_fields = mrc_json_get_object_entry_integer(json_mflds, "nr_fields");
-  assert(cmflds->n_fields == n_fields);
-  
+  cmflds->n_patches = mrc_json_get_object_entry_integer(json_info, "n_patches");
+  cmflds->n_fields = mrc_json_get_object_entry_integer(json_info, "n_fields");
+
+  mrc_json_t arr_ib = mrc_json_get_object_entry(json_info, "ib");
+  mrc_json_t arr_im = mrc_json_get_object_entry(json_info, "im");
   for (int d = 0; d < 3; d++) {
-    cmflds->im[d] = im[d];
-    cmflds->ib[d] = ib[d];
+    cmflds->im[d] = mrc_json_get_array_entry_integer(arr_im, d);
+    cmflds->ib[d] = mrc_json_get_array_entry_integer(arr_ib, d);
   }
 
-  cmflds->n_cells_per_patch = im[0] * im[1] * im[2];
-  cmflds->n_cells = n_patches * cmflds->n_cells_per_patch;
+  cmflds->n_cells_per_patch = cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
+  cmflds->n_cells = cmflds->n_patches * cmflds->n_cells_per_patch;
 
   ierr = cudaMalloc((void **) &cmflds->d_flds,
-		    n_fields * cmflds->n_cells * sizeof(*cmflds->d_flds)); cudaCheck(ierr);
+		    cmflds->n_fields * cmflds->n_cells * sizeof(*cmflds->d_flds)); cudaCheck(ierr);
 
   cmflds->d_flds_by_patch = new fields_cuda_real_t *[cmflds->n_patches];
   for (int p = 0; p < cmflds->n_patches; p++) {

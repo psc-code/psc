@@ -78,8 +78,7 @@ struct cuda_mfields;
 
 struct cuda_mfields *cuda_mfields_create(void);
 void cuda_mfields_destroy(struct cuda_mfields *cmflds);
-void cuda_mfields_ctor(struct cuda_mfields *cmflds, int ib[3], int im[3],
-		       int n_fields, int n_patches, mrc_json_t json_mflds);
+void cuda_mfields_ctor(struct cuda_mfields *cmflds, mrc_json_t json);
 void cuda_mfields_dtor(struct cuda_mfields *cmflds);
 
 // ----------------------------------------------------------------------
