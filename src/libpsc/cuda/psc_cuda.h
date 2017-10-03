@@ -16,8 +16,8 @@
 EXTERN_C void cuda_axpy_comp_yz(struct psc_mfields *y, int ym, float a, struct psc_mfields *x, int xm, int p);
 EXTERN_C void cuda_zero_comp_yz(struct psc_mfields *x, int xm, int p);
 
-EXTERN_C void cuda_marder_correct_yz(struct psc_mfields *mflds, struct psc_mfields *mf,
-				     int p, int ldims[3], float fac[3],
+EXTERN_C void cuda_marder_correct_yz(struct cuda_mfields *cmflds, struct cuda_mfields *cmf,
+				     int p, float fac[3],
 				     int ly[3], int ry[3],
 				     int lz[3], int rz[3]);
 EXTERN_C void cuda_calc_dive_yz(struct psc_mfields *mflds, struct psc_mfields *mf, int p);

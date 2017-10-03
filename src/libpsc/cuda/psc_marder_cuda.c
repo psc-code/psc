@@ -118,6 +118,8 @@ psc_marder_cuda_correct(struct psc_marder *marder,
 
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "cuda", EX, EX + 3);
   struct psc_mfields *mf = psc_mfields_get_as(mf_base, "cuda", 0, 1);
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
+  struct cuda_mfields *cmf = psc_mfields_cuda(mf)->cmflds;
 
   // OPT, do all patches in one kernel
   for (int p = 0; p < mf_base->nr_patches; p++) {
@@ -142,7 +144,7 @@ psc_marder_cuda_correct(struct psc_marder *marder,
     int lz[3] = { l_nc[0], l_nc[1], l_cc[2] };
     int rz[3] = { r_nc[0] + ldims[0], r_nc[1] + ldims[1], r_cc[2] + ldims[2] };
     
-    cuda_marder_correct_yz(mflds, mf, p, ldims, fac, ly, ry, lz, rz);
+    cuda_marder_correct_yz(cmflds, cmf, p, fac, ly, ry, lz, rz);
   }
 
   psc_mfields_put_as(mflds, mflds_base, EX, EX + 3);
@@ -150,7 +152,7 @@ psc_marder_cuda_correct(struct psc_marder *marder,
 }
 
 // ======================================================================
-// psc_marder: subclass "cuad"
+// psc_marder: subclass "cuda"
 
 struct psc_marder_ops psc_marder_cuda_ops = {
   .name                  = "cuda",

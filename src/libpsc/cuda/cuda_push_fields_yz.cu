@@ -138,22 +138,20 @@ cuda_push_fields_H_yz(struct cuda_mfields *cmflds, real dt)
 				size, grid[1]));
 }
 
-EXTERN_C void
-cuda_marder_correct_yz_gold(struct psc_mfields *mflds, struct psc_mfields *mf,
-			    int p, int ldims[3], float fac[3],
+void
+cuda_marder_correct_yz_gold(struct cuda_mfields *cmflds, struct cuda_mfields *cmf,
+			    int p, float fac[3],
 			    int ly[3], int ry[3],
 			    int lz[3], int rz[3])
 {
-  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
   fields_single_t flds = cuda_mfields_get_host_fields(cmflds);
-  struct cuda_mfields *cmf = psc_mfields_cuda(mf)->cmflds;
   fields_single_t f = cuda_mfields_get_host_fields(cmf);
   
   cuda_mfields_copy_from_device(cmflds, p, flds, EX, EX + 3);
   cuda_mfields_copy_from_device(cmf, p, f, 0, 1);
   
-  for (int iz = -1; iz < ldims[2]; iz++) {
-    for (int iy = -1; iy < ldims[1]; iy++) {
+  for (int iz = -1; iz < cmflds->ldims[2]; iz++) {
+    for (int iy = -1; iy < cmflds->ldims[1]; iy++) {
       if (iy >= -ly[1] && iy < ry[1] &&
 	  iz >= -ly[2] && iz < ry[2]) {
 	_F3_S(flds, EY, 0,iy,iz) += 
@@ -198,39 +196,33 @@ marder_correct_yz(real *d_flds, real *d_f, float facy, float facz,
   }
 }
 
-EXTERN_C void
-cuda_marder_correct_yz(struct psc_mfields *mflds, struct psc_mfields *mf,
-		       int p, int ldims[3], float fac[3],
+void
+cuda_marder_correct_yz(struct cuda_mfields *cmflds, struct cuda_mfields *cmf,
+		       int p, float fac[3],
 		       int ly[3], int ry[3],
 		       int lz[3], int rz[3])
 {
 #if 0
-  cuda_marder_correct_yz_gold(mflds, mf, p, ldims, fac, ly, ry, lz, rz);
+  cuda_marder_correct_yz_gold(mflds, mf, p, fac, ly, ry, lz, rz);
   return;
 #endif
 
-  if (mflds->nr_patches == 0) {
+  if (cmflds->n_patches == 0) {
     return;
   }
 
-  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
-  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
-  struct psc_mfields_cuda *mf_cuda = psc_mfields_cuda(mf);
-  struct cuda_mfields *cmf = mf_cuda->cmflds;
-  struct psc_patch *patch = &ppsc->patch[p];
-
-  unsigned int size = cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
+  unsigned int size = cmflds->n_cells_per_patch;
   int my = cmflds->im[1];
   int mz = cmflds->im[2];
 
   int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
-  int grid[2]  = { (patch->ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
-		   (patch->ldims[2] + 2*BND + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
+  int grid[2]  = { (cmflds->ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
+		   (cmflds->ldims[2] + 2*BND + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
   int dimGrid[2] = { grid[0], grid[1] };
 
   RUN_KERNEL(dimGrid, dimBlock,
-	     marder_correct_yz, (cmflds->d_flds + p * size * mflds->nr_fields,
-				 cmf->d_flds + p * size * mf->nr_fields, fac[1], fac[2],
+	     marder_correct_yz, (cmflds->d_flds + p * size * cmflds->n_fields,
+				 cmf->d_flds + p * size * cmf->n_fields, fac[1], fac[2],
 				 ly[1], ly[2], ry[1], ry[2],
 				 lz[1], lz[2], rz[1], rz[2], my, mz));
 }
