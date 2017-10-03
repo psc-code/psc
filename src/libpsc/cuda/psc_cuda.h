@@ -13,12 +13,6 @@
 
 // ======================================================================
 
-EXTERN_C void cuda_marder_correct_yz(struct cuda_mfields *cmflds, struct cuda_mfields *cmf,
-				     int p, float fac[3],
-				     int ly[3], int ry[3],
-				     int lz[3], int rz[3]);
-EXTERN_C void cuda_calc_dive_yz(struct cuda_mfields *cmflds, struct cuda_mfields *cmf, int p);
-
 EXTERN_C void yz_moments_rho_1st_nc_cuda_run_patches(struct psc_mparticles *mprts, struct psc_mfields *mres);
 EXTERN_C void yz_moments_n_1st_cuda_run_patches(struct psc_mparticles *mprts, struct psc_mfields *mres);
 

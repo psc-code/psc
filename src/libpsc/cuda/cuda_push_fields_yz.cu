@@ -1,12 +1,15 @@
 
 #include "cuda_mfields.h"
-#include "psc_cuda.h"
+
+#include <stdio.h>
+#include "cuda_wrap.h"
+#include "psc_particles_single.h"
 
 // the loops include 2 levels of ghost cells
 // they really only need -1:2 and -1:1, respectively (for 1st order)
 // but always doing 2:2 seems cheap enough
 
-//#define BND 2
+#define BND 2
 
 // FIXME, merge with F3_DEV{,_YZ}, OPT (precalc offset)
 
@@ -314,7 +317,7 @@ calc_dive_yz(real *flds, real *f, float dy, float dz,
 }
 
 void
-cuda_calc_dive_yz(struct cuda_mfields *cmflds, struct cuda_mfields *cmf, int p)
+cuda_mfields_calc_dive_yz(struct cuda_mfields *cmflds, struct cuda_mfields *cmf, int p)
 {
   float dy = cmflds->dx[1];
   float dz = cmflds->dx[2];

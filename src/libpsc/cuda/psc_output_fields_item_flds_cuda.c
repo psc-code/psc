@@ -2,6 +2,7 @@
 #include "psc_output_fields_item_private.h"
 
 #include "psc_cuda.h"
+#include "cuda_iface.h"
 
 // ======================================================================
 
@@ -17,7 +18,7 @@ calc_dive_nc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base
   struct cuda_mfields *cmres = psc_mfields_cuda(mres)->cmflds;
 
   for (int p = 0; p < mres->nr_patches; p++) {
-    cuda_calc_dive_yz(cmflds, cmres, p);
+    cuda_mfields_calc_dive_yz(cmflds, cmres, p);
   }
 
   psc_mfields_put_as(mflds, mflds_base, 0, 0);
