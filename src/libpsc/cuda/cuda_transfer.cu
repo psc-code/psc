@@ -98,37 +98,6 @@ cuda_mfields_bnd_dtor(struct cuda_mfields_bnd *cbnd)
 
 // ======================================================================
 
-EXTERN_C void
-__fields_cuda_to_device(struct psc_mfields *mflds, int p, real *h_flds, int mb, int me)
-{
-  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
-
-  if (mb == me) {
-    return;
-  }
-  assert(mb < me);
-
-  unsigned int size = cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
-  check(cudaMemcpy(cmflds->d_flds_by_patch[p] + mb * size,
-		   h_flds + mb * size,
-		   (me - mb) * size * sizeof(float),
-		   cudaMemcpyHostToDevice));
-}
-
-EXTERN_C void
-__fields_cuda_from_device(struct psc_mfields *mflds, int p, real *h_flds, int mb, int me)
-{
-  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
-
-  unsigned int size = cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
-  check(cudaMemcpy(h_flds + mb * size,
-		   cmflds->d_flds_by_patch[p] + mb * size,
-		   (me - mb) * size * sizeof(float),
-		   cudaMemcpyDeviceToHost));
-}
-
-// ======================================================================
-
 enum {
   PACK,
   UNPACK,

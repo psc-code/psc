@@ -149,8 +149,8 @@ cuda_marder_correct_yz_gold(struct psc_mfields *mflds, struct psc_mfields *mf,
   struct cuda_mfields *cmf = psc_mfields_cuda(mf)->cmflds;
   fields_single_t f = cuda_mfields_get_host_fields(cmf);
   
-  __fields_cuda_from_device(mflds, p, flds.data, EX, EX + 3);
-  __fields_cuda_from_device(mf, p, f.data, 0, 1);
+  cuda_mfields_copy_from_device(cmflds, p, flds, EX, EX + 3);
+  cuda_mfields_copy_from_device(cmf, p, f, 0, 1);
   
   for (int iz = -1; iz < ldims[2]; iz++) {
     for (int iy = -1; iy < ldims[1]; iy++) {
@@ -168,7 +168,7 @@ cuda_marder_correct_yz_gold(struct psc_mfields *mflds, struct psc_mfields *mf,
     }
   }
   
-  __fields_cuda_to_device(mflds, p, flds.data, EX, EX + 3);
+  cuda_mfields_copy_to_device(cmflds, p, flds, EX, EX + 3);
   
   fields_single_t_dtor(&flds);
   fields_single_t_dtor(&f);

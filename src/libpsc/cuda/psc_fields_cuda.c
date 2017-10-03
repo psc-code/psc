@@ -34,7 +34,7 @@ psc_mfields_cuda_copy_from_c(struct psc_mfields *mflds_cuda, struct psc_mfields 
       }
     }
 
-    __fields_cuda_to_device(mflds_cuda, p, flds.data, mb, me);
+    cuda_mfields_copy_to_device(cmflds, p, flds, mb, me);
   }
   
   fields_single_t_dtor(&flds);
@@ -49,7 +49,7 @@ psc_mfields_cuda_copy_to_c(struct psc_mfields *mflds_cuda, struct psc_mfields *m
 
   for (int p = 0; p < mflds_cuda->nr_patches; p++) {
     fields_c_t flds_c = fields_c_t_mflds(mflds_c, p);
-    __fields_cuda_from_device(mflds_cuda, p, flds.data, mb, me);
+    cuda_mfields_copy_from_device(cmflds, p, flds, mb, me);
   
     for (int m = mb; m < me; m++) {
       for (int jz = flds.ib[2]; jz < flds.ib[2] + flds.im[2]; jz++) {
@@ -88,7 +88,7 @@ psc_mfields_cuda_copy_from_single(struct psc_mfields *mflds_cuda, struct psc_mfi
       }
     }
 
-    __fields_cuda_to_device(mflds_cuda, p, flds.data, mb, me);
+    cuda_mfields_copy_to_device(cmflds, p, flds, mb, me);
   }
   
   fields_single_t_dtor(&flds);
@@ -103,7 +103,7 @@ psc_mfields_cuda_copy_to_single(struct psc_mfields *mflds_cuda, struct psc_mfiel
 
   for (int p = 0; p < mflds_cuda->nr_patches; p++) {
     fields_single_t flds_single = fields_single_t_mflds(mflds_single, p);
-    __fields_cuda_from_device(mflds_cuda, p, flds.data, mb, me);
+    cuda_mfields_copy_from_device(cmflds, p, flds, mb, me);
   
     for (int m = mb; m < me; m++) {
       for (int jz = flds.ib[2]; jz < flds.ib[2] + flds.im[2]; jz++) {
@@ -254,7 +254,7 @@ psc_mfields_cuda_write(struct psc_mfields *mflds, struct mrc_io *io)
   fields_single_t flds = cuda_mfields_get_host_fields(cmflds);
 
   for (int p = 0; p < mflds->nr_patches; p++) {
-    __fields_cuda_from_device(mflds, p, flds.data, 0, flds.nr_comp);
+    cuda_mfields_copy_from_device(cmflds, p, flds, 0, flds.nr_comp);
     char name[20]; sprintf(name, "flds%d", p);
     hid_t group = H5Gcreate(group0, name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group);
     
@@ -304,7 +304,7 @@ psc_mfields_cuda_read(struct psc_mfields *mflds, struct mrc_io *io)
     assert(nr_comp == flds.nr_comp);
 
     ierr = H5LTread_dataset_float(group, "fields_cuda", flds.data); CE;
-    __fields_cuda_to_device(mflds, p, flds.data, 0, flds.nr_comp);
+    cuda_mfields_copy_to_device(cmflds, p, flds, 0, flds.nr_comp);
     ierr = H5Gclose(group); CE;
   }
   fields_single_t_dtor(&flds);

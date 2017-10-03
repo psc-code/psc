@@ -81,3 +81,43 @@ cuda_mfields_get_host_fields(struct cuda_mfields *cmflds)
   return fields_single_t_ctor(cmflds->ib, cmflds->im, cmflds->n_fields);
 }
 
+// ----------------------------------------------------------------------
+// cuda_mfields_copy_to_device
+
+void
+cuda_mfields_copy_to_device(struct cuda_mfields *cmflds, int p, fields_single_t h_flds, int mb, int me)
+{
+  cudaError_t ierr;
+  
+  if (mb == me) {
+    return;
+  }
+  assert(mb < me);
+
+  unsigned int size = cmflds->n_cells_per_patch;
+  ierr = cudaMemcpy(cmflds->d_flds_by_patch[p] + mb * size,
+		    h_flds.data + mb * size,
+		    (me - mb) * size * sizeof(float),
+		    cudaMemcpyHostToDevice); cudaCheck(ierr);
+}
+
+// ----------------------------------------------------------------------
+// cuda_mfields_copy_from_device
+
+void
+cuda_mfields_copy_from_device(struct cuda_mfields *cmflds, int p, fields_single_t h_flds, int mb, int me)
+{
+  cudaError_t ierr;
+
+  if (mb == me) {
+    return;
+  }
+  assert(mb < me);
+
+  unsigned int size = cmflds->n_cells_per_patch;
+  ierr = cudaMemcpy(h_flds.data + mb * size,
+		    cmflds->d_flds_by_patch[p] + mb * size,
+		    (me - mb) * size * sizeof(float),
+		    cudaMemcpyDeviceToHost); cudaCheck(ierr);
+}
+
