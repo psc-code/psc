@@ -1,7 +1,6 @@
 
 #include "psc.h"
 #include "cuda_iface.h"
-#include "cuda_mfields.h" // FIXME
 #include "psc_fields_cuda.h"
 #include "psc_fields_c.h"
 #include "psc_fields_single.h"
@@ -316,28 +315,6 @@ psc_mfields_cuda_read(struct psc_mfields *mflds, struct mrc_io *io)
 }
 
 #endif
-
-// ----------------------------------------------------------------------
-// psc_mfields_cuda_get_field_t
-//
-// FIXME, should not exist...
-
-fields_cuda_t
-psc_mfields_cuda_get_field_t(struct psc_mfields *mflds, int p)
-{
-  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
-  fields_cuda_t flds;
-
-  flds.data = NULL;
-  for (int d = 0; d < 3; d++) {
-    flds.ib[d] = cmflds->ib[d];
-    flds.im[d] = cmflds->im[d];
-  }
-  flds.nr_comp = mflds->nr_fields;
-  flds.first_comp = mflds->first_comp;
-
-  return flds;
-}
 
 // ======================================================================
 // psc_mfields: subclass "cuda"
