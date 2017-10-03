@@ -90,30 +90,24 @@ push_fields_H_yz(real *d_flds0, real cny, real cnz, int my, int mz,
 #define BLOCKSIZE_Z 16
 
 EXTERN_C void
-cuda_push_fields_E_yz(struct psc_mfields *mflds)
+cuda_push_fields_E_yz(struct cuda_mfields *cmflds, real dt)
 {
-  if (mflds->nr_patches == 0) {
+  if (cmflds->n_patches == 0) {
     return;
   }
 
-  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
-  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
-  struct psc_patch *patch = &ppsc->patch[0];
+  real cny = .5f * dt / cmflds->dx[1];
+  real cnz = .5f * dt / cmflds->dx[2];
+  assert(cmflds->ldims[0] == 1);
 
-  real dt = ppsc->dt;
-  real cny = .5f * ppsc->dt / patch->dx[1];
-  real cnz = .5f * ppsc->dt / patch->dx[2];
-  assert(patch->ldims[0] == 1);
-
-  unsigned int size = mflds->nr_fields *
-    cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
+  unsigned int size = cmflds->n_fields * cmflds->n_cells_per_patch;
   int my = cmflds->im[1];
   int mz = cmflds->im[2];
 
   int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
-  int grid[2]  = { (patch->ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
-		   (patch->ldims[2] + 2*BND + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
-  int dimGrid[2] = { grid[0], grid[1] * mflds->nr_patches };
+  int grid[2]  = { (cmflds->ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
+		   (cmflds->ldims[2] + 2*BND + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
+  int dimGrid[2] = { grid[0], grid[1] * cmflds->n_patches };
 
   RUN_KERNEL(dimGrid, dimBlock,
 	     push_fields_E_yz, (cmflds->d_flds, dt, cny, cnz, my, mz,
@@ -121,28 +115,23 @@ cuda_push_fields_E_yz(struct psc_mfields *mflds)
 }
 
 EXTERN_C void
-cuda_push_fields_H_yz(struct psc_mfields *mflds)
+cuda_push_fields_H_yz(struct cuda_mfields *cmflds, real dt)
 {
-  if (mflds->nr_patches == 0) {
+  if (cmflds->n_patches == 0) {
     return;
   }
 
-  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
-  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
-  struct psc_patch *patch = &ppsc->patch[0];
+  real cny = .5f * dt / cmflds->dx[1];
+  real cnz = .5f * dt / cmflds->dx[2];
 
-  real cny = .5f * ppsc->dt / patch->dx[1];
-  real cnz = .5f * ppsc->dt / patch->dx[2];
-
-  unsigned int size = mflds->nr_fields *
-    cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
+  unsigned int size = cmflds->n_fields * cmflds->n_cells_per_patch;
   int my = cmflds->im[1];
   int mz = cmflds->im[2];
 
   int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
-  int grid[2]  = { (patch->ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
-		   (patch->ldims[2] + 2*BND + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
-  int dimGrid[2] = { grid[0], grid[1] * mflds->nr_patches };
+  int grid[2]  = { (cmflds->ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
+		   (cmflds->ldims[2] + 2*BND + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
+  int dimGrid[2] = { grid[0], grid[1] * cmflds->n_patches };
 
   RUN_KERNEL(dimGrid, dimBlock,
 	     push_fields_H_yz, (cmflds->d_flds, cny, cnz, my, mz,
@@ -155,8 +144,10 @@ cuda_marder_correct_yz_gold(struct psc_mfields *mflds, struct psc_mfields *mf,
 			    int ly[3], int ry[3],
 			    int lz[3], int rz[3])
 {
-  fields_cuda_t flds = psc_mfields_get_host_fields(mflds);
-  fields_cuda_t f = psc_mfields_get_host_fields(mf);
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
+  fields_cuda_t flds = cuda_mfields_get_host_fields(cmflds);
+  struct cuda_mfields *cmf = psc_mfields_cuda(mf)->cmflds;
+  fields_cuda_t f = cuda_mfields_get_host_fields(cmf);
   
   __fields_cuda_from_device(mflds, p, flds.data, EX, EX + 3);
   __fields_cuda_from_device(mf, p, f.data, 0, 1);

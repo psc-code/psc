@@ -3,7 +3,6 @@
 #define PSC_FIELDS_CUDA_H
 
 #include "psc_fields_private.h"
-#include "cuda_wrap.h"
 
 #define FTYPE FTYPE_CUDA
 #include "psc_fields_common.h"

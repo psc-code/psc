@@ -155,5 +155,3 @@ EXTERN_C void psc_mparticles_cuda_get_cuda_2(struct psc_mparticles *particles,
 
 #endif
 
-EXTERN_C fields_cuda_t psc_mfields_get_host_fields(struct psc_mfields *mflds);
-

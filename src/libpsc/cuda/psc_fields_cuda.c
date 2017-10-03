@@ -13,17 +13,6 @@
 
 // OPT, CUDA fields have too many ghostpoints, and 7 points in the invar direction!
 
-// ----------------------------------------------------------------------
-// psc_mfields_get_host_fields
-
-fields_cuda_t
-psc_mfields_get_host_fields(struct psc_mfields *mflds)
-{
-  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
-
-  return fields_cuda_t_ctor(cmflds->ib, cmflds->im, cmflds->n_fields);
-}
-
 // ======================================================================
 // convert from/to "c"
 
@@ -31,7 +20,8 @@ static void
 psc_mfields_cuda_copy_from_c(struct psc_mfields *mflds_cuda, struct psc_mfields *mflds_c,
 			    int mb, int me)
 {
-  fields_cuda_t flds = psc_mfields_get_host_fields(mflds_cuda);
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds_cuda)->cmflds;
+  fields_cuda_t flds = cuda_mfields_get_host_fields(cmflds);
 
   for (int p = 0; p < mflds_cuda->nr_patches; p++) {
     fields_c_t flds_c = fields_c_t_mflds(mflds_c, p);
@@ -55,7 +45,8 @@ static void
 psc_mfields_cuda_copy_to_c(struct psc_mfields *mflds_cuda, struct psc_mfields *mflds_c,
 			  int mb, int me)
 {
-  fields_cuda_t flds = psc_mfields_get_host_fields(mflds_cuda);
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds_cuda)->cmflds;
+  fields_cuda_t flds = cuda_mfields_get_host_fields(cmflds);
 
   for (int p = 0; p < mflds_cuda->nr_patches; p++) {
     fields_c_t flds_c = fields_c_t_mflds(mflds_c, p);
@@ -82,7 +73,8 @@ static void
 psc_mfields_cuda_copy_from_single(struct psc_mfields *mflds_cuda, struct psc_mfields *mflds_single,
 				  int mb, int me)
 {
-  fields_cuda_t flds = psc_mfields_get_host_fields(mflds_cuda);
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds_cuda)->cmflds;
+  fields_cuda_t flds = cuda_mfields_get_host_fields(cmflds);
 
   for (int p = 0; p < mflds_cuda->nr_patches; p++) {
     fields_single_t flds_single = fields_single_t_mflds(mflds_single, p);
@@ -107,8 +99,9 @@ static void
 psc_mfields_cuda_copy_to_single(struct psc_mfields *mflds_cuda, struct psc_mfields *mflds_single,
 				int mb, int me)
 {
-  fields_cuda_t flds = psc_mfields_get_host_fields(mflds_cuda);
-  
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds_cuda)->cmflds;
+  fields_cuda_t flds = cuda_mfields_get_host_fields(cmflds);
+
   for (int p = 0; p < mflds_cuda->nr_patches; p++) {
     fields_single_t flds_single = fields_single_t_mflds(mflds_single, p);
     __fields_cuda_from_device(mflds_cuda, p, flds.data, mb, me);
@@ -168,9 +161,15 @@ psc_mfields_cuda_setup(struct psc_mfields *mflds)
   json_object_push(info, "ib", arr_ib);
   json_value *arr_im = json_array_new(3);
   json_object_push(info, "im", arr_im);
+  json_value *arr_ldims = json_array_new(3);
+  json_object_push(info, "ldims", arr_ldims);
+  json_value *arr_dx = json_array_new(3);
+  json_object_push(info, "dx", arr_dx);
   for (int d = 0; d < 3; d++) {
     json_array_push(arr_ib, json_integer_new(ib[d]));
     json_array_push(arr_im, json_integer_new(im[d]));
+    json_array_push(arr_ldims, json_integer_new(patches[0].ldims[d]));
+    json_array_push(arr_dx, json_double_new(ppsc->patch[0].dx[d]));
   }
 
   json_value *obj = json_object_new(0);
@@ -249,12 +248,15 @@ psc_mfields_cuda_axpy_comp(struct psc_mfields *y, int my, double alpha,
 static void
 psc_mfields_cuda_write(struct psc_mfields *mflds, struct mrc_io *io)
 {
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
+
   int ierr;
   long h5_file;
   mrc_io_get_h5_file(io, &h5_file);
   hid_t group0 = H5Gopen(h5_file, mrc_io_obj_path(io, mflds), H5P_DEFAULT); H5_CHK(group0);
 
-  fields_cuda_t flds = psc_mfields_get_host_fields(mflds);
+  fields_cuda_t flds = cuda_mfields_get_host_fields(cmflds);
+
   for (int p = 0; p < mflds->nr_patches; p++) {
     __fields_cuda_from_device(mflds, p, flds.data, 0, flds.nr_comp);
     char name[20]; sprintf(name, "flds%d", p);
@@ -283,12 +285,14 @@ psc_mfields_cuda_read(struct psc_mfields *mflds, struct mrc_io *io)
   
   psc_mfields_cuda_setup(mflds);
 
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
+
   int ierr;
   long h5_file;
   mrc_io_get_h5_file(io, &h5_file);
   hid_t group0 = H5Gopen(h5_file, mrc_io_obj_path(io, mflds), H5P_DEFAULT); H5_CHK(group0);
 
-  fields_cuda_t flds = psc_mfields_get_host_fields(mflds);
+  fields_cuda_t flds = cuda_mfields_get_host_fields(cmflds);
   for (int p = 0; p < mflds->nr_patches; p++) {
     char name[20]; sprintf(name, "flds%d", p);
     hid_t group = H5Gopen(group0, name, H5P_DEFAULT); H5_CHK(group);

@@ -2,6 +2,8 @@
 #include "cuda_mfields.h"
 #include "cuda_bits.h"
 
+#include "psc_fields_cuda.h"
+
 #include <cstdio>
 #include <cassert>
 
@@ -40,6 +42,12 @@ cuda_mfields_ctor(struct cuda_mfields *cmflds, mrc_json_t json)
   cmflds->n_fields = mrc_json_get_object_entry_integer(json_info, "n_fields");
   mrc_json_get_object_entry_int3(json_info, "ib", cmflds->ib);
   mrc_json_get_object_entry_int3(json_info, "im", cmflds->im);
+  mrc_json_get_object_entry_int3(json_info, "ldims", cmflds->ldims);
+  double dx[3];
+  mrc_json_get_object_entry_double3(json_info, "dx", dx);
+  for (int d = 0; d < 3; d++) {
+    cmflds->dx[d] = dx[d];
+  }
 
   cmflds->n_cells_per_patch = cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
   cmflds->n_cells = cmflds->n_patches * cmflds->n_cells_per_patch;
@@ -64,5 +72,14 @@ cuda_mfields_dtor(struct cuda_mfields *cmflds)
   ierr = cudaFree(cmflds->d_flds); cudaCheck(ierr);
   
   delete[] cmflds->d_flds_by_patch;
+}
+
+// ----------------------------------------------------------------------
+// cuda_mfields_get_host_fields
+
+fields_cuda_t
+cuda_mfields_get_host_fields(struct cuda_mfields *cmflds)
+{
+  return fields_cuda_t_ctor(cmflds->ib, cmflds->im, cmflds->n_fields);
 }
 
