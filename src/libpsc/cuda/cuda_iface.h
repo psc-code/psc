@@ -4,7 +4,7 @@
 
 #include "mrc_json.h"
 #include "psc_particle_buf_cuda.h"
-#include "psc_fields_cuda.h"
+#include "psc_fields_single.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -79,7 +79,7 @@ struct cuda_mfields *cuda_mfields_create(void);
 void cuda_mfields_destroy(struct cuda_mfields *cmflds);
 void cuda_mfields_ctor(struct cuda_mfields *cmflds, mrc_json_t json);
 void cuda_mfields_dtor(struct cuda_mfields *cmflds);
-fields_cuda_t cuda_mfields_get_host_fields(struct cuda_mfields *cmflds);
+fields_single_t cuda_mfields_get_host_fields(struct cuda_mfields *cmflds);
 
 // ----------------------------------------------------------------------
 // cuda_mfields_bnd

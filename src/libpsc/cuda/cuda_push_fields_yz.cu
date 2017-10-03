@@ -145,9 +145,9 @@ cuda_marder_correct_yz_gold(struct psc_mfields *mflds, struct psc_mfields *mf,
 			    int lz[3], int rz[3])
 {
   struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
-  fields_cuda_t flds = cuda_mfields_get_host_fields(cmflds);
+  fields_single_t flds = cuda_mfields_get_host_fields(cmflds);
   struct cuda_mfields *cmf = psc_mfields_cuda(mf)->cmflds;
-  fields_cuda_t f = cuda_mfields_get_host_fields(cmf);
+  fields_single_t f = cuda_mfields_get_host_fields(cmf);
   
   __fields_cuda_from_device(mflds, p, flds.data, EX, EX + 3);
   __fields_cuda_from_device(mf, p, f.data, 0, 1);
@@ -156,22 +156,22 @@ cuda_marder_correct_yz_gold(struct psc_mfields *mflds, struct psc_mfields *mf,
     for (int iy = -1; iy < ldims[1]; iy++) {
       if (iy >= -ly[1] && iy < ry[1] &&
 	  iz >= -ly[2] && iz < ry[2]) {
-	_F3_CUDA(flds, EY, 0,iy,iz) += 
-	  fac[1] * (_F3_CUDA(f, 0, 0,iy+1,iz) - _F3_CUDA(f, 0, 0,iy,iz));
+	_F3_S(flds, EY, 0,iy,iz) += 
+	  fac[1] * (_F3_S(f, 0, 0,iy+1,iz) - _F3_S(f, 0, 0,iy,iz));
 	}
       
       if (iy >= -lz[1] && iy < rz[1] &&
 	  iz >= -lz[2] && iz < rz[2]) {
-	_F3_CUDA(flds, EZ, 0,iy,iz) += 
-	  fac[2] * (_F3_CUDA(f, 0, 0,iy,iz+1) - _F3_CUDA(f, 0, 0,iy,iz));
+	_F3_S(flds, EZ, 0,iy,iz) += 
+	  fac[2] * (_F3_S(f, 0, 0,iy,iz+1) - _F3_S(f, 0, 0,iy,iz));
       }
     }
   }
   
   __fields_cuda_to_device(mflds, p, flds.data, EX, EX + 3);
   
-  fields_cuda_t_dtor(&flds);
-  fields_cuda_t_dtor(&f);
+  fields_single_t_dtor(&flds);
+  fields_single_t_dtor(&f);
 }
 
 __global__ static void

@@ -2,8 +2,6 @@
 #include "cuda_mfields.h"
 #include "cuda_bits.h"
 
-#include "psc_fields_cuda.h"
-
 #include <cstdio>
 #include <cassert>
 
@@ -77,9 +75,9 @@ cuda_mfields_dtor(struct cuda_mfields *cmflds)
 // ----------------------------------------------------------------------
 // cuda_mfields_get_host_fields
 
-fields_cuda_t
+fields_single_t
 cuda_mfields_get_host_fields(struct cuda_mfields *cmflds)
 {
-  return fields_cuda_t_ctor(cmflds->ib, cmflds->im, cmflds->n_fields);
+  return fields_single_t_ctor(cmflds->ib, cmflds->im, cmflds->n_fields);
 }
 

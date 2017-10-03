@@ -40,12 +40,6 @@
 #elif FTYPE == FTYPE_CUDA
 
 #define fields_FTYPE_real_t fields_cuda_real_t
-#define fields_FTYPE_t fields_cuda_t
-#define fields_FTYPE_t_ctor fields_cuda_t_ctor
-#define fields_FTYPE_t_dtor fields_cuda_t_dtor
-#define fields_FTYPE_t_mflds fields_cuda_t_mflds
-#define fields_FTYPE_t_size fields_cuda_t_size
-#define fields_FTYPE_t_zero_range fields_cuda_t_zero_range
 
 #endif
 
@@ -113,18 +107,13 @@ typedef double fields_FTYPE_real_t;
 #define _F3_FORTRAN(flds, m, i,j,k)		\
   ((flds).data[_F3_OFF(flds, m, i,j,k)])
 
-#elif FTYPE == FTYPE_CUDA
-
-#define _F3_CUDA(flds, m, i,j,k)		\
-  ((flds).data[_F3_OFF(flds, m, i,j,k)])
-
 #endif
 
 #else // BOUNDS_CHECK ------------------------------
 
-#if FTYPE == FTYPE_CUDA
+#if FTYPE == FTYPE_SINGLE
 
-#define _F3_CUDA(flds, m, i,j,k)					\
+#define _F3_S(flds, m, i,j,k)						\
   (*({assert(fldnr >= 0 && fldnr < (pf).nr_comp);			\
       assert(jx >= (flds).ib[0] && jx < (flds).ib[0] + (flds).im[0]);	\
       assert(jy >= (flds).ib[1] && jy < (flds).ib[1] + (flds).im[1]);	\
@@ -135,6 +124,8 @@ typedef double fields_FTYPE_real_t;
 #endif
 
 #endif // BOUNDS_CHECK ------------------------------
+
+#if FTYPE == FTYPE_SINGLE || FTYPE == FTYPE_C || FTYPE == FTYPE_FORTRAN
 
 // ======================================================================
 // fields_FTYPE_t
@@ -242,6 +233,8 @@ fields_FTYPE_t_zero_range(fields_FTYPE_t flds, int mb, int me)
 #endif
   }
 }
+
+#endif // FTYPE == FTYPE_SINGLE || FTYPE == FTYPE_C || FTYPE == FTYPE_FORTRAN
 
 // ----------------------------------------------------------------------
 
