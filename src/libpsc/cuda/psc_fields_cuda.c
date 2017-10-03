@@ -206,9 +206,11 @@ psc_mfields_cuda_destroy(struct psc_mfields *mflds)
 static void
 psc_mfields_cuda_zero_comp(struct psc_mfields *mflds, int m)
 {
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
+
   for (int p = 0; p < mflds->nr_patches; p++) {
     assert(ppsc->domain.gdims[0] == 1);
-    cuda_zero_comp_yz(mflds, m, p);
+    cuda_mfields_zero_comp_yz(cmflds, m, p);
   }
 }
 
@@ -216,12 +218,15 @@ psc_mfields_cuda_zero_comp(struct psc_mfields *mflds, int m)
 // psc_mfields_cuda_axpy_comp
 
 static void
-psc_mfields_cuda_axpy_comp(struct psc_mfields *y, int my, double alpha,
-			   struct psc_mfields *x, int mx)
+psc_mfields_cuda_axpy_comp(struct psc_mfields *mflds_y, int my, double alpha,
+			   struct psc_mfields *mflds_x, int mx)
 {
-  for (int p = 0; p < y->nr_patches; p++) {
+  struct cuda_mfields *cmflds_y = psc_mfields_cuda(mflds_y)->cmflds;
+  struct cuda_mfields *cmflds_x = psc_mfields_cuda(mflds_x)->cmflds;
+
+  for (int p = 0; p < mflds_y->nr_patches; p++) {
     assert(ppsc->domain.gdims[0] == 1);
-    cuda_axpy_comp_yz(y, my, alpha, x, mx, p);
+    cuda_mfields_axpy_comp_yz(cmflds_y, my, alpha, cmflds_x, mx, p);
   }
 }
 

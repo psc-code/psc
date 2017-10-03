@@ -13,9 +13,13 @@ calc_dive_nc(struct psc_output_fields_item *item, struct psc_mfields *mflds_base
 
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "cuda", EX, EX + 3);
   struct psc_mfields *mres = psc_mfields_get_as(mres_base, "cuda", 0, 0);
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
+  struct cuda_mfields *cmres = psc_mfields_cuda(mres)->cmflds;
+
   for (int p = 0; p < mres->nr_patches; p++) {
-    cuda_calc_dive_yz(mflds, mres, p);
+    cuda_calc_dive_yz(cmflds, cmres, p);
   }
+
   psc_mfields_put_as(mflds, mflds_base, 0, 0);
   psc_mfields_put_as(mres, mres_base, 0, 1);
 }

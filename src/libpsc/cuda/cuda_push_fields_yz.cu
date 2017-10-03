@@ -247,18 +247,14 @@ axpy_comp_yz(real *y_flds, int ym, float a, real *x_flds, int xm,
 }
 
 void
-cuda_axpy_comp_yz(struct psc_mfields *mflds_y, int ym, float a, struct psc_mfields *mflds_x, int xm, int p)
+cuda_mfields_axpy_comp_yz(struct cuda_mfields *cmflds_y, int ym, float a, struct cuda_mfields *cmflds_x, int xm, int p)
 {
-  struct cuda_mfields *cmflds_y = psc_mfields_cuda(mflds_y)->cmflds;
-  struct cuda_mfields *cmflds_x = psc_mfields_cuda(mflds_x)->cmflds;
-  struct psc_patch *patch = &ppsc->patch[0];
-
   int my = cmflds_y->im[1];
   int mz = cmflds_y->im[2];
 
   int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
-  int grid[2]  = { (patch->ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
-		   (patch->ldims[2] + 2*BND + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
+  int grid[2]  = { (cmflds_y->ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
+		   (cmflds_y->ldims[2] + 2*BND + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
   int dimGrid[2] = { grid[0], grid[1] };
 
   RUN_KERNEL(dimGrid, dimBlock,
@@ -285,17 +281,14 @@ zero_comp_yz(real *x_flds, int xm, int my, int mz)
 }
 
 void
-cuda_zero_comp_yz(struct psc_mfields *mflds_x, int xm, int p)
+cuda_mfields_zero_comp_yz(struct cuda_mfields *cmflds, int xm, int p)
 {
-  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds_x)->cmflds;
-  struct psc_patch *patch = &ppsc->patch[0];
-
   int my = cmflds->im[1];
   int mz = cmflds->im[2];
 
   int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
-  int grid[2]  = { (patch->ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
-		   (patch->ldims[2] + 2*BND + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
+  int grid[2]  = { (cmflds->ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
+		   (cmflds->ldims[2] + 2*BND + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
   int dimGrid[2] = { grid[0], grid[1] };
 
   RUN_KERNEL(dimGrid, dimBlock,
@@ -320,25 +313,22 @@ calc_dive_yz(real *flds, real *f, float dy, float dz,
      (F3_DDEV(flds, EZ, 0,iy,iz) - F3_DDEV(flds, EZ, 0,iy,iz-1)) / dz);
 }
 
-EXTERN_C void
-cuda_calc_dive_yz(struct psc_mfields *mflds, struct psc_mfields *mf, int p)
+void
+cuda_calc_dive_yz(struct cuda_mfields *cmflds, struct cuda_mfields *cmf, int p)
 {
-  float dy = ppsc->patch[p].dx[1];
-  float dz = ppsc->patch[p].dx[2];
+  float dy = cmflds->dx[1];
+  float dz = cmflds->dx[2];
 
-  struct cuda_mfields *cmflds_flds = psc_mfields_cuda(mflds)->cmflds;
-  struct cuda_mfields *cmflds_f = psc_mfields_cuda(mf)->cmflds;
-  int *ldims = ppsc->patch[0].ldims;
-
-  int my = cmflds_flds->im[1];
-  int mz = cmflds_flds->im[2];
+  int my = cmflds->im[1];
+  int mz = cmflds->im[2];
 
   int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
-  int grid[2]  = { (ldims[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
-		   (ldims[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
+  int grid[2]  = { (cmflds->ldims[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
+		   (cmflds->ldims[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
   int dimGrid[2] = { grid[0], grid[1] };
 
   RUN_KERNEL(dimGrid, dimBlock,
-	     calc_dive_yz, (cmflds_flds->d_flds_by_patch[p], cmflds_f->d_flds_by_patch[p], dy, dz, ldims[1], ldims[2], my, mz));
+	     calc_dive_yz, (cmflds->d_flds_by_patch[p], cmf->d_flds_by_patch[p], dy, dz,
+			    cmflds->ldims[1], cmflds->ldims[2], my, mz));
 }
 
