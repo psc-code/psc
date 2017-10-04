@@ -2,6 +2,8 @@
 #include "cuda_mfields.h"
 #include "cuda_bits.h"
 
+#include <json-builder.h>
+
 #include <cstdio>
 #include <cassert>
 
@@ -70,6 +72,23 @@ cuda_mfields_dtor(struct cuda_mfields *cmflds)
   ierr = cudaFree(cmflds->d_flds); cudaCheck(ierr);
   
   delete[] cmflds->d_flds_by_patch;
+}
+
+// ----------------------------------------------------------------------
+// cuda_mfields_dump
+
+void
+cuda_mfields_dump(struct cuda_mfields *cmflds)
+{
+  json_value *obj = json_object_new(0);
+  json_object_push(obj, "n_patches", json_integer_new(cmflds->n_patches));
+  json_object_push(obj, "n_fields", json_integer_new(cmflds->n_fields));
+
+  mrc_json_t json = mrc_json_from_json_parser(obj);
+
+  const char *buf = mrc_json_to_string(json);
+  printf("cuda_mfields (json):\n%s\n", buf);
+  free((void *) buf);
 }
 
 // ----------------------------------------------------------------------

@@ -58,6 +58,7 @@ libsubdir_la_LIBADD = \
 	cuda_sort2.lo
 
 check_PROGRAMS = \
+	tests/test_cuda_mfields_1 \
 	tests/test_cuda_mparticles_1
 
 #	tests/test_cuda_mparticles
@@ -73,6 +74,11 @@ tests_test_cuda_mparticles_1_LDADD = cuda_mparticles.lo \
   ../../libmrc/src/mrc_json.lo ../../libmrc/src/mrc_json_parser.lo \
   ../../libmrc/src/json-builder.lo ../../libmrc/src/json.lo
 nodist_EXTRA_tests_test_cuda_mparticles_1_SOURCES = dummy.cxx
+
+tests_test_cuda_mfields_1_LDADD = cuda_mfields.lo \
+  ../../libmrc/src/mrc_json.lo ../../libmrc/src/mrc_json_parser.lo \
+  ../../libmrc/src/json-builder.lo ../../libmrc/src/json.lo
+nodist_EXTRA_tests_test_cuda_mfields_1_SOURCES = dummy.cxx
 
 tests_test_cuda_heating_SOURCES = 
 tests_test_cuda_heating_LDADD = tests/test_cuda_heating.o cuda_mparticles.lo cuda_heating.lo \
