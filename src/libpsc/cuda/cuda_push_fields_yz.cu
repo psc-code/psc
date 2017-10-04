@@ -1,9 +1,8 @@
 
 #include "cuda_mfields.h"
 
-#include <stdio.h>
+#include <psc.h>
 #include "cuda_wrap.h"
-#include "psc_particles_single.h"
 
 // the loops include 2 levels of ghost cells
 // they really only need -1:2 and -1:1, respectively (for 1st order)
@@ -28,7 +27,7 @@
   (d_flds)[X3_DEV_OFF_YZ(fldnr, jy,jz)]
 
 __global__ static void
-push_fields_E_yz(real *d_flds0, real dt, real cny, real cnz, int my, int mz,
+push_fields_E_yz(float *d_flds0, float dt, float cny, float cnz, int my, int mz,
 		 unsigned int size, int gridy)
 {
   int bidx_y = blockIdx.y % gridy;
@@ -41,7 +40,7 @@ push_fields_E_yz(real *d_flds0, real dt, real cny, real cnz, int my, int mz,
   iy -= BND;
   iz -= BND;
 
-  real *d_flds = d_flds0 + p * size;
+  float *d_flds = d_flds0 + p * size;
 
   F3_DEV(EX, 0,iy,iz) +=
     cny * (F3_DEV(HZ, 0,iy,iz) - F3_DEV(HZ, 0,iy-1,iz)) -
@@ -60,7 +59,7 @@ push_fields_E_yz(real *d_flds0, real dt, real cny, real cnz, int my, int mz,
 }
 
 __global__ static void
-push_fields_H_yz(real *d_flds0, real cny, real cnz, int my, int mz,
+push_fields_H_yz(float *d_flds0, float cny, float cnz, int my, int mz,
 		 unsigned int size, int gridy)
 {
   int bidx_y = blockIdx.y % gridy;
@@ -73,7 +72,7 @@ push_fields_H_yz(real *d_flds0, real cny, real cnz, int my, int mz,
   iy -= BND;
   iz -= BND;
 
-  real *d_flds = d_flds0 + p * size;
+  float *d_flds = d_flds0 + p * size;
 
   F3_DEV(HX, 0,iy,iz) -=
     cny * (F3_DEV(EZ, 0,iy+1,iz) - F3_DEV(EZ, 0,iy,iz)) -
@@ -93,14 +92,14 @@ push_fields_H_yz(real *d_flds0, real cny, real cnz, int my, int mz,
 #define BLOCKSIZE_Z 16
 
 EXTERN_C void
-cuda_push_fields_E_yz(struct cuda_mfields *cmflds, real dt)
+cuda_push_fields_E_yz(struct cuda_mfields *cmflds, float dt)
 {
   if (cmflds->n_patches == 0) {
     return;
   }
 
-  real cny = .5f * dt / cmflds->dx[1];
-  real cnz = .5f * dt / cmflds->dx[2];
+  float cny = .5f * dt / cmflds->dx[1];
+  float cnz = .5f * dt / cmflds->dx[2];
   assert(cmflds->ldims[0] == 1);
 
   unsigned int size = cmflds->n_fields * cmflds->n_cells_per_patch;
@@ -118,14 +117,14 @@ cuda_push_fields_E_yz(struct cuda_mfields *cmflds, real dt)
 }
 
 EXTERN_C void
-cuda_push_fields_H_yz(struct cuda_mfields *cmflds, real dt)
+cuda_push_fields_H_yz(struct cuda_mfields *cmflds, float dt)
 {
   if (cmflds->n_patches == 0) {
     return;
   }
 
-  real cny = .5f * dt / cmflds->dx[1];
-  real cnz = .5f * dt / cmflds->dx[2];
+  float cny = .5f * dt / cmflds->dx[1];
+  float cnz = .5f * dt / cmflds->dx[2];
 
   unsigned int size = cmflds->n_fields * cmflds->n_cells_per_patch;
   int my = cmflds->im[1];
@@ -176,7 +175,7 @@ cuda_marder_correct_yz_gold(struct cuda_mfields *cmflds, struct cuda_mfields *cm
 }
 
 __global__ static void
-marder_correct_yz(real *d_flds, real *d_f, float facy, float facz,
+marder_correct_yz(float *d_flds, float *d_f, float facy, float facz,
 		  int lyy, int lyz, int ryy, int ryz,
 		  int lzy, int lzz, int rzy, int rzz, int my, int mz)
 {
@@ -233,75 +232,7 @@ cuda_marder_correct_yz(struct cuda_mfields *cmflds, struct cuda_mfields *cmf,
 // ======================================================================
 
 __global__ static void
-axpy_comp_yz(real *y_flds, int ym, float a, real *x_flds, int xm,
-	     int my, int mz)
-{
-  int iy = blockIdx.x * blockDim.x + threadIdx.x;
-  int iz = blockIdx.y * blockDim.y + threadIdx.y;
-
-  if (iy >= my || iz >= mz) {
-    return;
-  }
-
-  iy -= BND;
-  iz -= BND;
-
-  F3_DDEV(y_flds, ym, 0,iy,iz) += a * F3_DDEV(x_flds, xm, 0,iy,iz);
-}
-
-void
-cuda_mfields_axpy_comp_yz(struct cuda_mfields *cmflds_y, int ym, float a, struct cuda_mfields *cmflds_x, int xm, int p)
-{
-  int my = cmflds_y->im[1];
-  int mz = cmflds_y->im[2];
-
-  int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
-  int grid[2]  = { (cmflds_y->ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
-		   (cmflds_y->ldims[2] + 2*BND + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
-  int dimGrid[2] = { grid[0], grid[1] };
-
-  RUN_KERNEL(dimGrid, dimBlock,
-	     axpy_comp_yz, (cmflds_y->d_flds_by_patch[p], ym, a, cmflds_x->d_flds_by_patch[p], xm, my, mz));
-}
-
-// ======================================================================
-// FIXME, this should be more easily doable by just a cudaMemset()
-
-__global__ static void
-zero_comp_yz(real *x_flds, int xm, int my, int mz)
-{
-  int iy = blockIdx.x * blockDim.x + threadIdx.x;
-  int iz = blockIdx.y * blockDim.y + threadIdx.y;
-
-  if (iy >= my || iz >= mz) {
-    return;
-  }
-
-  iy -= BND;
-  iz -= BND;
-
-  F3_DDEV(x_flds, xm, 0,iy,iz) = 0.f;
-}
-
-void
-cuda_mfields_zero_comp_yz(struct cuda_mfields *cmflds, int xm, int p)
-{
-  int my = cmflds->im[1];
-  int mz = cmflds->im[2];
-
-  int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
-  int grid[2]  = { (cmflds->ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
-		   (cmflds->ldims[2] + 2*BND + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
-  int dimGrid[2] = { grid[0], grid[1] };
-
-  RUN_KERNEL(dimGrid, dimBlock,
-	     zero_comp_yz, (cmflds->d_flds_by_patch[p], xm, my, mz));
-}
-
-// ======================================================================
-
-__global__ static void
-calc_dive_yz(real *flds, real *f, float dy, float dz,
+calc_dive_yz(float *flds, float *f, float dy, float dz,
 	     int ldimsy, int ldimsz, int my, int mz)
 {
   int iy = blockIdx.x * blockDim.x + threadIdx.x;

@@ -121,3 +121,87 @@ cuda_mfields_copy_from_device(struct cuda_mfields *cmflds, int p, fields_single_
 		    cudaMemcpyDeviceToHost); cudaCheck(ierr);
 }
 
+#define BND (2) // FIXME
+#define X3_DEV_OFF_YZ(fldnr, jy,jz)					\
+  ((((fldnr)								\
+     *mz + ((jz)+2))							\
+    *my + ((jy)+2))							\
+   *1 + (0))
+
+#define F3_DDEV(d_flds, fldnr,ix,jy,jz)		\
+  (d_flds)[X3_DEV_OFF_YZ(fldnr, jy,jz)]
+
+#define BLOCKSIZE_Y 16
+#define BLOCKSIZE_Z 16
+
+// ----------------------------------------------------------------------
+// cuda_mfields_axpy_comp_yz
+
+__global__ static void
+axpy_comp_yz(float *y_flds, int ym, float a, float *x_flds, int xm,
+	     int my, int mz)
+{
+  int iy = blockIdx.x * blockDim.x + threadIdx.x;
+  int iz = blockIdx.y * blockDim.y + threadIdx.y;
+
+  if (iy >= my || iz >= mz) {
+    return;
+  }
+
+  iy -= BND;
+  iz -= BND;
+
+  F3_DDEV(y_flds, ym, 0,iy,iz) += a * F3_DDEV(x_flds, xm, 0,iy,iz);
+}
+
+void
+cuda_mfields_axpy_comp_yz(struct cuda_mfields *cmflds_y, int ym, float a, struct cuda_mfields *cmflds_x, int xm, int p)
+{
+  int my = cmflds_y->im[1];
+  int mz = cmflds_y->im[2];
+
+  dim3 dimGrid((cmflds_y->ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
+	       (cmflds_y->ldims[2] + 2*BND + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
+  dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
+
+  axpy_comp_yz<<<dimGrid, dimBlock>>>(cmflds_y->d_flds_by_patch[p], ym, a,
+				      cmflds_x->d_flds_by_patch[p], xm, my, mz);
+  cuda_sync_if_enabled();
+}
+
+// ----------------------------------------------------------------------
+// cuda_mfields_zero_comp_yz
+
+// FIXME, this should be more easily doable by just a cudaMemset()
+
+__global__ static void
+zero_comp_yz(float *x_flds, int xm, int my, int mz)
+{
+  int iy = blockIdx.x * blockDim.x + threadIdx.x;
+  int iz = blockIdx.y * blockDim.y + threadIdx.y;
+
+  if (iy >= my || iz >= mz) {
+    return;
+  }
+
+  iy -= BND;
+  iz -= BND;
+
+  F3_DDEV(x_flds, xm, 0,iy,iz) = 0.f;
+}
+
+void
+cuda_mfields_zero_comp_yz(struct cuda_mfields *cmflds, int xm, int p)
+{
+  int my = cmflds->im[1];
+  int mz = cmflds->im[2];
+
+  dim3 dimGrid((cmflds->ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
+	       (cmflds->ldims[2] + 2*BND + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
+  dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
+
+  zero_comp_yz<<<dimGrid, dimBlock>>>(cmflds->d_flds_by_patch[p], xm,
+				      my, mz);
+  cuda_sync_if_enabled();
+}
+
