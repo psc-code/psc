@@ -1,8 +1,8 @@
 
+#include "cuda_bits.h"
 #include "cuda_mfields.h"
 
 #include <psc.h>
-#include "cuda_wrap.h"
 
 // the loops include 2 levels of ghost cells
 // they really only need -1:2 and -1:1, respectively (for 1st order)
@@ -106,14 +106,14 @@ cuda_push_fields_E_yz(struct cuda_mfields *cmflds, float dt)
   int my = cmflds->im[1];
   int mz = cmflds->im[2];
 
-  int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
   int grid[2]  = { (cmflds->ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
 		   (cmflds->ldims[2] + 2*BND + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
-  int dimGrid[2] = { grid[0], grid[1] * cmflds->n_patches };
+  dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
+  dim3 dimGrid(grid[0], grid[1] * cmflds->n_patches);
 
-  RUN_KERNEL(dimGrid, dimBlock,
-	     push_fields_E_yz, (cmflds->d_flds, dt, cny, cnz, my, mz,
-				size, grid[1]));
+  push_fields_E_yz<<<dimGrid, dimBlock>>>(cmflds->d_flds, dt, cny, cnz, my, mz,
+					  size, grid[1]);
+  cuda_sync_if_enabled();
 }
 
 EXTERN_C void
@@ -130,14 +130,14 @@ cuda_push_fields_H_yz(struct cuda_mfields *cmflds, float dt)
   int my = cmflds->im[1];
   int mz = cmflds->im[2];
 
-  int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
   int grid[2]  = { (cmflds->ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
 		   (cmflds->ldims[2] + 2*BND + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
-  int dimGrid[2] = { grid[0], grid[1] * cmflds->n_patches };
+  dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
+  dim3 dimGrid(grid[0], grid[1] * cmflds->n_patches);
 
-  RUN_KERNEL(dimGrid, dimBlock,
-	     push_fields_H_yz, (cmflds->d_flds, cny, cnz, my, mz,
-				size, grid[1]));
+  push_fields_H_yz<<<dimGrid, dimBlock>>>(cmflds->d_flds, cny, cnz, my, mz,
+					  size, grid[1]);
+  cuda_sync_if_enabled();
 }
 
 void
@@ -217,16 +217,16 @@ cuda_marder_correct_yz(struct cuda_mfields *cmflds, struct cuda_mfields *cmf,
   int my = cmflds->im[1];
   int mz = cmflds->im[2];
 
-  int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
   int grid[2]  = { (cmflds->ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
 		   (cmflds->ldims[2] + 2*BND + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
-  int dimGrid[2] = { grid[0], grid[1] };
+  dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
+  dim3 dimGrid(grid[0], grid[1]);
 
-  RUN_KERNEL(dimGrid, dimBlock,
-	     marder_correct_yz, (cmflds->d_flds + p * size * cmflds->n_fields,
-				 cmf->d_flds + p * size * cmf->n_fields, fac[1], fac[2],
-				 ly[1], ly[2], ry[1], ry[2],
-				 lz[1], lz[2], rz[1], rz[2], my, mz));
+  marder_correct_yz<<<dimGrid, dimBlock>>>(cmflds->d_flds + p * size * cmflds->n_fields,
+					   cmf->d_flds + p * size * cmf->n_fields, fac[1], fac[2],
+					   ly[1], ly[2], ry[1], ry[2],
+					   lz[1], lz[2], rz[1], rz[2], my, mz);
+  cuda_sync_if_enabled();
 }
 
 // ======================================================================
@@ -256,13 +256,13 @@ cuda_mfields_calc_dive_yz(struct cuda_mfields *cmflds, struct cuda_mfields *cmf,
   int my = cmflds->im[1];
   int mz = cmflds->im[2];
 
-  int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
-  int grid[2]  = { (cmflds->ldims[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
-		   (cmflds->ldims[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
-  int dimGrid[2] = { grid[0], grid[1] };
+  int grid[2]  = { (cmflds->ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
+		   (cmflds->ldims[2] + 2*BND + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
+  dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
+  dim3 dimGrid(grid[0], grid[1]);
 
-  RUN_KERNEL(dimGrid, dimBlock,
-	     calc_dive_yz, (cmflds->d_flds_by_patch[p], cmf->d_flds_by_patch[p], dy, dz,
-			    cmflds->ldims[1], cmflds->ldims[2], my, mz));
+  calc_dive_yz<<<dimGrid, dimBlock>>>(cmflds->d_flds_by_patch[p], cmf->d_flds_by_patch[p], dy, dz,
+				      cmflds->ldims[1], cmflds->ldims[2], my, mz);
+  cuda_sync_if_enabled();
 }
 
