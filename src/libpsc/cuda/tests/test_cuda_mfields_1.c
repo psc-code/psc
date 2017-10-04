@@ -34,37 +34,23 @@ main(void)
 				   "  }                                         "
 				   "}                                           ");
   mrc_json_print(json, 0);
-  mrc_json_t json_info = mrc_json_get_object_entry(json, "info");
-  int n_patches = mrc_json_get_object_entry_integer(json_info, "n_patches");
-  int n_fields = mrc_json_get_object_entry_integer(json_info, "n_fields");
+  // FIXME, leaked
 
   struct cuda_mfields *cmflds = cuda_mfields_create();
   cuda_mfields_ctor(cmflds, json);
+
+  mrc_json_t json_cmflds = cuda_mfields_to_json(cmflds); // FIXME, leaked
+  int n_patches = mrc_json_get_object_entry_integer(json_cmflds, "n_patches");
+  int n_fields = mrc_json_get_object_entry_integer(json_cmflds, "n_fields");
 
   for (int p = 0; p < n_patches; p++) {
     for (int m = 0; m < n_fields; m++) {
       cuda_mfields_zero_comp_yz(cmflds, m, p);
     }
   }
-  
-  cuda_mfields_dump(cmflds);
 
-#if 0
-  mrc_json_t json_info = mrc_json_get_object_entry(json, "info");
-  int n_patches = mrc_json_get_object_entry_integer(json_info, "n_patches");
-  unsigned int n_prts_by_patch[n_patches];
-  cuda_mparticles_add_particles_test_1(cmprts, n_patches, n_prts_by_patch, json_info);
-  printf("added particles\n");
-  cuda_mparticles_dump_by_patch(cmprts, n_prts_by_patch);
+  cuda_mfields_dump(cmflds, "cmflds.json");
 
-  cuda_mparticles_setup_internals(cmprts);
-  printf("set up internals\n");
-  cuda_mparticles_dump(cmprts);
-
-  printf("get_particles_test\n");
-  get_particles_test(cmprts, n_patches, n_prts_by_patch);
-#endif
-  
   cuda_mfields_dtor(cmflds);
   cuda_mfields_destroy(cmflds);
 }

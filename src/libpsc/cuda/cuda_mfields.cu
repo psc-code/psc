@@ -77,8 +77,11 @@ cuda_mfields_dtor(struct cuda_mfields *cmflds)
 // ----------------------------------------------------------------------
 // cuda_mfields_dump
 
-void
-cuda_mfields_dump(struct cuda_mfields *cmflds)
+// ----------------------------------------------------------------------
+// cuda_mfields_to_json
+
+mrc_json_t
+cuda_mfields_to_json(struct cuda_mfields *cmflds)
 {
   mrc_json_t json = mrc_json_object_new(0);
   mrc_json_object_push_integer(json, "n_patches", cmflds->n_patches);
@@ -116,12 +119,27 @@ cuda_mfields_dump(struct cuda_mfields *cmflds)
     }
   }
   fields_single_t_dtor(&flds);
-  
+
+  return json;
+}
+
+// ----------------------------------------------------------------------
+// cuda_mfields_dump
+
+void
+cuda_mfields_dump(struct cuda_mfields *cmflds, const char *filename)
+{
+  mrc_json_t json = cuda_mfields_to_json(cmflds);
+
   const char *buf = mrc_json_to_string(json);
-  printf("cuda_mfields (json):\n%s\n", buf);
-  FILE *file = fopen("cmflds.json", "w");
-  fwrite(buf, 1, strlen(buf), file);
-  fclose(file);
+  if (filename) {
+    FILE *file = fopen(filename, "w");
+    assert(file);
+    fwrite(buf, 1, strlen(buf), file);
+    fclose(file);
+  } else {
+    printf("cuda_mfields (json):\n%s\n", buf);
+  }
   free((void *) buf);
 
   // FIXME free json

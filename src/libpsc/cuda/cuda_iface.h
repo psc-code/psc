@@ -79,7 +79,8 @@ struct cuda_mfields *cuda_mfields_create(void);
 void cuda_mfields_destroy(struct cuda_mfields *cmflds);
 void cuda_mfields_ctor(struct cuda_mfields *cmflds, mrc_json_t json);
 void cuda_mfields_dtor(struct cuda_mfields *cmflds);
-void cuda_mfields_dump(struct cuda_mfields *cmflds);
+mrc_json_t cuda_mfields_to_json(struct cuda_mfields *cmflds);
+void cuda_mfields_dump(struct cuda_mfields *cmflds, const char *filename);
 
 fields_single_t cuda_mfields_get_host_fields(struct cuda_mfields *cmflds);
 void cuda_mfields_copy_to_device(struct cuda_mfields *cmflds, int p, fields_single_t h_flds, int mb, int me);
