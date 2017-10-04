@@ -11,6 +11,8 @@
 #include "psc_particles_cuda.h"
 #include "psc_fields_cuda.h"
 
+#include "cuda_wrap.h"
+
 // ======================================================================
 
 EXTERN_C void yz_moments_rho_1st_nc_cuda_run_patches(struct psc_mparticles *mprts, struct psc_mfields *mres);

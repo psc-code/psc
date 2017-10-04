@@ -3,6 +3,7 @@
 #include "psc_bnd.h"
 #include "psc_output_fields_item.h"
 #include "psc_cuda.h"
+#include "cuda_iface.h"
 
 #include <mrc_io.h>
 

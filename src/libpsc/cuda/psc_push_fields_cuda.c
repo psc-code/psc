@@ -1,13 +1,7 @@
 
 #include "psc_push_fields_private.h"
 #include "psc_fields_cuda.h"
-#include "psc.h"
-#include "psc_bnd.h"
-#include "psc_bnd_fields.h"
-#include "cuda_wrap.h"
-
-EXTERN_C void cuda_push_fields_E_yz(struct cuda_mfields *cmflds, float dt);
-EXTERN_C void cuda_push_fields_H_yz(struct cuda_mfields *cmflds, float dt);
+#include "cuda_iface.h"
 
 // ----------------------------------------------------------------------
 // psc_push_fields_cuda_push_mflds_E

@@ -5,6 +5,8 @@
 #include "psc_bnd_private.h"
 #include "psc_particles_cuda.h"
 
+#include "cuda_wrap.h"
+
 /* EXTERN_C void cuda_copy_offsets_to_dev(struct psc_particles *prts, unsigned int *h_offsets); */
 /* EXTERN_C void cuda_find_block_indices(struct psc_particles *prts, unsigned int *d_bidx); */
 /* EXTERN_C void cuda_find_block_indices_2(struct psc_particles *prts, unsigned int *d_bidx, */

@@ -3,7 +3,6 @@
 #define PSC_PARTICLE_CUDA_H
 
 #include "psc_particles_private.h"
-#include "cuda_wrap.h"
 #include "psc_particles_single.h"
 
 #include "psc_particle_buf_cuda.h"

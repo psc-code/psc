@@ -4,7 +4,6 @@
 #include "psc_fields_cuda.h"
 #include "psc_fields_c.h"
 #include "psc_fields_single.h"
-#include "psc_cuda.h"
 
 #include <mrc_params.h>
 
