@@ -34,9 +34,19 @@ main(void)
 				   "  }                                         "
 				   "}                                           ");
   mrc_json_print(json, 0);
+  mrc_json_t json_info = mrc_json_get_object_entry(json, "info");
+  int n_patches = mrc_json_get_object_entry_integer(json_info, "n_patches");
+  int n_fields = mrc_json_get_object_entry_integer(json_info, "n_fields");
 
   struct cuda_mfields *cmflds = cuda_mfields_create();
   cuda_mfields_ctor(cmflds, json);
+
+  for (int p = 0; p < n_patches; p++) {
+    for (int m = 0; m < n_fields; m++) {
+      cuda_mfields_zero_comp_yz(cmflds, m, p);
+    }
+  }
+  
   cuda_mfields_dump(cmflds);
 
 #if 0

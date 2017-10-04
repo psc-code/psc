@@ -80,15 +80,51 @@ cuda_mfields_dtor(struct cuda_mfields *cmflds)
 void
 cuda_mfields_dump(struct cuda_mfields *cmflds)
 {
-  json_value *obj = json_object_new(0);
-  json_object_push(obj, "n_patches", json_integer_new(cmflds->n_patches));
-  json_object_push(obj, "n_fields", json_integer_new(cmflds->n_fields));
+  mrc_json_t json = mrc_json_object_new(0);
+  mrc_json_object_push_integer(json, "n_patches", cmflds->n_patches);
+  mrc_json_object_push_integer(json, "n_fields", cmflds->n_fields);
 
-  mrc_json_t json = mrc_json_from_json_parser(obj);
+  mrc_json_object_push(json, "ib", mrc_json_integer_array_new(3, cmflds->ib));
+  mrc_json_object_push(json, "im", mrc_json_integer_array_new(3, cmflds->im));
+  mrc_json_object_push(json, "ldims", mrc_json_integer_array_new(3, cmflds->ldims));
+  double dx[3] = { cmflds->dx[0], cmflds->dx[1], cmflds->dx[2] };
+  mrc_json_object_push(json, "dx", mrc_json_double_array_new(3, dx));
 
+  mrc_json_t json_flds_patches = mrc_json_array_new(cmflds->n_patches);
+  mrc_json_object_push(json, "flds", json_flds_patches);
+
+  fields_single_t flds = cuda_mfields_get_host_fields(cmflds);
+  for (int p = 0; p < cmflds->n_patches; p++) {
+    cuda_mfields_copy_from_device(cmflds, p, flds, 0, cmflds->n_fields);
+
+    mrc_json_t json_flds_comps = mrc_json_array_new(cmflds->n_fields);
+    mrc_json_array_push(json_flds_patches, json_flds_comps);
+    for (int m = 0; m < cmflds->n_fields; m++) {
+      mrc_json_t json_fld_z = mrc_json_array_new(cmflds->im[2]);
+      mrc_json_array_push(json_flds_comps, json_fld_z);
+      for (int k = cmflds->ib[2]; k < cmflds->ib[2] + cmflds->im[2]; k++) {
+	mrc_json_t json_fld_y = mrc_json_array_new(cmflds->im[1]);
+	mrc_json_array_push(json_fld_z, json_fld_y);
+	for (int j = cmflds->ib[1]; j < cmflds->ib[1] + cmflds->im[1]; j++) {
+	  mrc_json_t json_fld_x = mrc_json_array_new(cmflds->im[0]);
+	  mrc_json_array_push(json_fld_y, json_fld_x);
+	  for (int i = cmflds->ib[0]; i < cmflds->ib[0] + cmflds->im[0]; i++) {
+	    mrc_json_array_push_double(json_fld_x, _F3_S(flds, m, i,j,k));
+	  }
+	}
+      }
+    }
+  }
+  fields_single_t_dtor(&flds);
+  
   const char *buf = mrc_json_to_string(json);
   printf("cuda_mfields (json):\n%s\n", buf);
+  FILE *file = fopen("cmflds.json", "w");
+  fwrite(buf, 1, strlen(buf), file);
+  fclose(file);
   free((void *) buf);
+
+  // FIXME free json
 }
 
 // ----------------------------------------------------------------------

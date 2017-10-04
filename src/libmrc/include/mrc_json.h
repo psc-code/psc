@@ -89,6 +89,22 @@ mrc_json_t mrc_json_get_array_entry(mrc_json_t value, unsigned int i);
 int mrc_json_get_array_entry_integer(mrc_json_t value, unsigned int i);
 double mrc_json_get_array_entry_double(mrc_json_t value, unsigned int i);
 
+mrc_json_t mrc_json_object_new(unsigned int length);
+mrc_json_t mrc_json_array_new(unsigned int length);
+mrc_json_t mrc_json_integer_new(int integer);
+mrc_json_t mrc_json_double_new(double dbl);
+mrc_json_t mrc_json_string_new(const char *str);
+mrc_json_t mrc_json_boolean_new(bool boolean);
+mrc_json_t mrc_json_integer_array_new(unsigned int length, int *arr);
+mrc_json_t mrc_json_double_array_new(unsigned int length, double *arr);
+void mrc_json_object_push(mrc_json_t obj, const char *name, mrc_json_t entry);
+void mrc_json_object_push_integer(mrc_json_t obj, const char *name, int integer);
+void mrc_json_object_push_double(mrc_json_t obj, const char *name, double dbl);
+void mrc_json_object_push_double(mrc_json_t obj, const char *name, double dbl);
+void mrc_json_array_push(mrc_json_t arr, mrc_json_t entry);
+void mrc_json_array_push_integer(mrc_json_t arr, int integer);
+void mrc_json_array_push_double(mrc_json_t arr, double dbl);
+
 void mrc_json_print(mrc_json_t value, unsigned int depth);
 char *mrc_json_to_string(mrc_json_t json);
 
