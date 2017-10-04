@@ -85,8 +85,8 @@ void cuda_mfields_dump(struct cuda_mfields *cmflds, const char *filename);
 fields_single_t cuda_mfields_get_host_fields(struct cuda_mfields *cmflds);
 void cuda_mfields_copy_to_device(struct cuda_mfields *cmflds, int p, fields_single_t h_flds, int mb, int me);
 void cuda_mfields_copy_from_device(struct cuda_mfields *cmflds, int p, fields_single_t h_flds, int mb, int me);
-void cuda_mfields_axpy_comp_yz(struct cuda_mfields *y, int ym, float a, struct cuda_mfields *x, int xm, int p);
-void cuda_mfields_zero_comp_yz(struct cuda_mfields *x, int xm, int p);
+void cuda_mfields_axpy_comp_yz(struct cuda_mfields *y, int ym, float a, struct cuda_mfields *x, int xm);
+void cuda_mfields_zero_comp_yz(struct cuda_mfields *x, int xm);
 
 void cuda_mfields_calc_dive_yz(struct cuda_mfields *cmflds, struct cuda_mfields *cmf, int p);
 

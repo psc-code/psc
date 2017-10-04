@@ -207,10 +207,8 @@ psc_mfields_cuda_zero_comp(struct psc_mfields *mflds, int m)
 {
   struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
 
-  for (int p = 0; p < mflds->nr_patches; p++) {
-    assert(ppsc->domain.gdims[0] == 1);
-    cuda_mfields_zero_comp_yz(cmflds, m, p);
-  }
+  assert(ppsc->domain.gdims[0] == 1);
+  cuda_mfields_zero_comp_yz(cmflds, m);
 }
 
 // ----------------------------------------------------------------------
@@ -223,10 +221,8 @@ psc_mfields_cuda_axpy_comp(struct psc_mfields *mflds_y, int my, double alpha,
   struct cuda_mfields *cmflds_y = psc_mfields_cuda(mflds_y)->cmflds;
   struct cuda_mfields *cmflds_x = psc_mfields_cuda(mflds_x)->cmflds;
 
-  for (int p = 0; p < mflds_y->nr_patches; p++) {
-    assert(ppsc->domain.gdims[0] == 1);
-    cuda_mfields_axpy_comp_yz(cmflds_y, my, alpha, cmflds_x, mx, p);
-  }
+  assert(ppsc->domain.gdims[0] == 1);
+  cuda_mfields_axpy_comp_yz(cmflds_y, my, alpha, cmflds_x, mx);
 }
 
 #ifdef HAVE_LIBHDF5_HL

@@ -237,6 +237,12 @@ mrc_json_object_push_double(mrc_json_t obj, const char *name, double dbl)
 }
 
 void
+mrc_json_object_push_boolean(mrc_json_t obj, const char *name, bool boolean)
+{
+  mrc_json_object_push(obj, name, mrc_json_boolean_new(boolean));
+}
+
+void
 mrc_json_array_push(mrc_json_t arr, mrc_json_t entry)
 {
   assert(arr.ops == &mrc_json_parser_ops);

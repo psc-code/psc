@@ -100,7 +100,7 @@ mrc_json_t mrc_json_double_array_new(unsigned int length, double *arr);
 void mrc_json_object_push(mrc_json_t obj, const char *name, mrc_json_t entry);
 void mrc_json_object_push_integer(mrc_json_t obj, const char *name, int integer);
 void mrc_json_object_push_double(mrc_json_t obj, const char *name, double dbl);
-void mrc_json_object_push_double(mrc_json_t obj, const char *name, double dbl);
+void mrc_json_object_push_boolean(mrc_json_t obj, const char *name, bool boolean);
 void mrc_json_array_push(mrc_json_t arr, mrc_json_t entry);
 void mrc_json_array_push_integer(mrc_json_t arr, int integer);
 void mrc_json_array_push_double(mrc_json_t arr, double dbl);

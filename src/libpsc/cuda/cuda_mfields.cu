@@ -83,9 +83,11 @@ cuda_mfields_dtor(struct cuda_mfields *cmflds)
 mrc_json_t
 cuda_mfields_to_json(struct cuda_mfields *cmflds)
 {
-  mrc_json_t json = mrc_json_object_new(0);
+  mrc_json_t json = mrc_json_object_new(9);
   mrc_json_object_push_integer(json, "n_patches", cmflds->n_patches);
   mrc_json_object_push_integer(json, "n_fields", cmflds->n_fields);
+  mrc_json_object_push_integer(json, "n_cells_per_patch", cmflds->n_cells_per_patch);
+  mrc_json_object_push_integer(json, "n_cells", cmflds->n_cells);
 
   mrc_json_object_push(json, "ib", mrc_json_integer_array_new(3, cmflds->ib));
   mrc_json_object_push(json, "im", mrc_json_integer_array_new(3, cmflds->im));
@@ -93,8 +95,11 @@ cuda_mfields_to_json(struct cuda_mfields *cmflds)
   double dx[3] = { cmflds->dx[0], cmflds->dx[1], cmflds->dx[2] };
   mrc_json_object_push(json, "dx", mrc_json_double_array_new(3, dx));
 
+  mrc_json_t json_flds = mrc_json_object_new(2);
+  mrc_json_object_push(json, "flds", json_flds);
+  mrc_json_object_push_boolean(json_flds, "__field5d__", true);
   mrc_json_t json_flds_patches = mrc_json_array_new(cmflds->n_patches);
-  mrc_json_object_push(json, "flds", json_flds_patches);
+  mrc_json_object_push(json_flds, "data", json_flds_patches);
 
   fields_single_t flds = cuda_mfields_get_host_fields(cmflds);
   for (int p = 0; p < cmflds->n_patches; p++) {
@@ -228,7 +233,8 @@ axpy_comp_yz(float *y_flds, int ym, float a, float *x_flds, int xm,
 }
 
 void
-cuda_mfields_axpy_comp_yz(struct cuda_mfields *cmflds_y, int ym, float a, struct cuda_mfields *cmflds_x, int xm, int p)
+cuda_mfields_axpy_comp_yz(struct cuda_mfields *cmflds_y, int ym, float a,
+			  struct cuda_mfields *cmflds_x, int xm)
 {
   int my = cmflds_y->im[1];
   int mz = cmflds_y->im[2];
@@ -237,8 +243,10 @@ cuda_mfields_axpy_comp_yz(struct cuda_mfields *cmflds_y, int ym, float a, struct
 	       (cmflds_y->ldims[2] + 2*BND + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
 
-  axpy_comp_yz<<<dimGrid, dimBlock>>>(cmflds_y->d_flds_by_patch[p], ym, a,
-				      cmflds_x->d_flds_by_patch[p], xm, my, mz);
+  for (int p = 0; p < cmflds_y->n_patches; p++) {
+    axpy_comp_yz<<<dimGrid, dimBlock>>>(cmflds_y->d_flds_by_patch[p], ym, a,
+					cmflds_x->d_flds_by_patch[p], xm, my, mz);
+  }
   cuda_sync_if_enabled();
 }
 
@@ -264,7 +272,7 @@ zero_comp_yz(float *x_flds, int xm, int my, int mz)
 }
 
 void
-cuda_mfields_zero_comp_yz(struct cuda_mfields *cmflds, int xm, int p)
+cuda_mfields_zero_comp_yz(struct cuda_mfields *cmflds, int xm)
 {
   int my = cmflds->im[1];
   int mz = cmflds->im[2];
@@ -273,8 +281,11 @@ cuda_mfields_zero_comp_yz(struct cuda_mfields *cmflds, int xm, int p)
 	       (cmflds->ldims[2] + 2*BND + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
 
-  zero_comp_yz<<<dimGrid, dimBlock>>>(cmflds->d_flds_by_patch[p], xm,
-				      my, mz);
+  // OPT, should be done in a single kernel
+  for (int p = 0; p < cmflds->n_patches; p++) {
+    zero_comp_yz<<<dimGrid, dimBlock>>>(cmflds->d_flds_by_patch[p], xm,
+					my, mz);
+  }
   cuda_sync_if_enabled();
 }
 
