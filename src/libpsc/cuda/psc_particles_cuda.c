@@ -9,8 +9,6 @@
 #include "psc_push_particles.h"
 #include "particles_cuda.h"
 
-#include "json-builder.h"
-
 #include <mrc_io.h>
 
 EXTERN_C void cuda_init(int rank);
@@ -348,41 +346,24 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
     }
   }
 
-  json_value *info = json_object_new(0);
+  mrc_json_t json = mrc_json_object_new(0);
+
+  mrc_json_t info = mrc_json_object_new(0);
+  mrc_json_object_push(json, "info", info);
+  mrc_json_object_push_integer(info, "n_patches", n_patches);
+  mrc_json_object_push_integer_array(info, "ldims", 3, ldims);
+  mrc_json_object_push_integer_array(info, "bs", 3, bs);
+  mrc_json_object_push_double_array(info, "dx", 3, dx);
   
-  json_object_push(info, "n_patches", json_integer_new(n_patches));
-  
-  json_value *arr_ldims = json_array_new(3);
-  json_object_push(info, "ldims", arr_ldims);
-  
-  json_value *arr_bs = json_array_new(3);
-  json_object_push(info, "bs", arr_bs);
-  
-  json_value *arr_dx = json_array_new(3);
-  json_object_push(info, "dx", arr_dx);
-  
-  for (int d = 0; d < 3; d++) {
-    json_array_push(arr_ldims, json_integer_new(ldims[d]));
-    json_array_push(arr_bs, json_integer_new(bs[d]));
-    json_array_push(arr_dx, json_double_new(dx[d]));
-  }
-  
-  json_value *arr_xb_by_patch = json_array_new(n_patches);
-  json_object_push(info, "xb_by_patch", arr_xb_by_patch);
+  mrc_json_t json_xb_by_patch = mrc_json_array_new(n_patches);
+  mrc_json_object_push(info, "xb_by_patch", json_xb_by_patch);
   for (int p = 0; p < n_patches; p++) {
-    json_value *arr_xb = json_array_new(3);
-    json_array_push(arr_xb_by_patch, arr_xb);
-    for (int d = 0; d < 3; d++) {
-      json_array_push(arr_xb, json_double_new(ppsc->patch[p].xb[d]));
-    }
+    mrc_json_array_push_double_array(json_xb_by_patch, 3, ppsc->patch[p].xb);
   }
 
-  json_value *obj = json_object_new(0);
-  json_object_push(obj, "info", info);
+  cuda_mparticles_ctor(cmprts, json);
 
-  cuda_mparticles_ctor(cmprts, mrc_json_from_json_parser(obj));
-
-  json_builder_free(obj);
+  // FIXME json_builder_free(obj);
 }
 
 // ----------------------------------------------------------------------

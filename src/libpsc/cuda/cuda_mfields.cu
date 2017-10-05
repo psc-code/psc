@@ -2,8 +2,6 @@
 #include "cuda_mfields.h"
 #include "cuda_bits.h"
 
-#include <json-builder.h>
-
 #include <cstdio>
 #include <cassert>
 

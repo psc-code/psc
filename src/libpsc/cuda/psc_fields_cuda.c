@@ -7,8 +7,6 @@
 
 #include <mrc_params.h>
 
-#include "json-builder.h"
-
 // OPT, CUDA fields have too many ghostpoints, and 7 points in the invar direction!
 
 // ======================================================================
@@ -148,29 +146,17 @@ psc_mfields_cuda_setup(struct psc_mfields *mflds)
   
   cuda_base_init();
 
-  json_value *info = json_object_new(0);
-  json_object_push(info, "n_patches", json_integer_new(mflds->nr_patches));
-  json_object_push(info, "n_fields", json_integer_new(mflds->nr_fields));
+  mrc_json_t json = mrc_json_object_new(0);
 
-  json_value *arr_ib = json_array_new(3);
-  json_object_push(info, "ib", arr_ib);
-  json_value *arr_im = json_array_new(3);
-  json_object_push(info, "im", arr_im);
-  json_value *arr_ldims = json_array_new(3);
-  json_object_push(info, "ldims", arr_ldims);
-  json_value *arr_dx = json_array_new(3);
-  json_object_push(info, "dx", arr_dx);
-  for (int d = 0; d < 3; d++) {
-    json_array_push(arr_ib, json_integer_new(ib[d]));
-    json_array_push(arr_im, json_integer_new(im[d]));
-    json_array_push(arr_ldims, json_integer_new(patches[0].ldims[d]));
-    json_array_push(arr_dx, json_double_new(ppsc->patch[0].dx[d]));
-  }
+  mrc_json_t info = mrc_json_object_new(0);
+  mrc_json_object_push(json, "info", info);
+  mrc_json_object_push_integer(info, "n_patches", mflds->nr_patches);
+  mrc_json_object_push_integer(info, "n_fields", mflds->nr_fields);
+  mrc_json_object_push_integer_array(info, "ib", 3, ib);
+  mrc_json_object_push_integer_array(info, "im", 3, im);
+  mrc_json_object_push_integer_array(info, "ldims", 3, ppsc->patch[0].ldims);
+  mrc_json_object_push_double_array(info, "dx", 3, ppsc->patch[0].dx);
 
-  json_value *obj = json_object_new(0);
-  json_object_push(obj, "info", info);
-
-  mrc_json_t json = mrc_json_from_json_parser(obj);
   mrc_json_print(json, 0);
 
   sub->cmflds = cuda_mfields_create();
@@ -179,7 +165,7 @@ psc_mfields_cuda_setup(struct psc_mfields *mflds)
   sub->cbnd = cuda_mfields_bnd_create();
   cuda_mfields_bnd_ctor(sub->cbnd, sub->cmflds);
 
-  json_builder_free(obj);
+  // FIXME json_builder_free(obj);
 }
 
 // ----------------------------------------------------------------------

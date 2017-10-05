@@ -101,9 +101,13 @@ void mrc_json_object_push(mrc_json_t obj, const char *name, mrc_json_t entry);
 void mrc_json_object_push_integer(mrc_json_t obj, const char *name, int integer);
 void mrc_json_object_push_double(mrc_json_t obj, const char *name, double dbl);
 void mrc_json_object_push_boolean(mrc_json_t obj, const char *name, bool boolean);
+void mrc_json_object_push_integer_array(mrc_json_t obj, const char *name, unsigned int length, int *arr);
+void mrc_json_object_push_double_array(mrc_json_t obj, const char *name, unsigned int length, double *arr);
 void mrc_json_array_push(mrc_json_t arr, mrc_json_t entry);
 void mrc_json_array_push_integer(mrc_json_t arr, int integer);
 void mrc_json_array_push_double(mrc_json_t arr, double dbl);
+void mrc_json_array_push_integer_array(mrc_json_t arr, unsigned int length, int *int_arr);
+void mrc_json_array_push_double_array(mrc_json_t arr, unsigned int length, double *dbl_arr);
 
 void mrc_json_print(mrc_json_t value, unsigned int depth);
 char *mrc_json_to_string(mrc_json_t json);

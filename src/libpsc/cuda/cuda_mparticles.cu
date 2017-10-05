@@ -2,8 +2,6 @@
 #include "cuda_mparticles.h"
 #include "cuda_bits.h"
 
-#include "json-builder.h"
-
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
 #include <thrust/sort.h>

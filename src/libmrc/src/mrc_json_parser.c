@@ -243,6 +243,19 @@ mrc_json_object_push_boolean(mrc_json_t obj, const char *name, bool boolean)
 }
 
 void
+mrc_json_object_push_integer_array(mrc_json_t obj, const char *name, unsigned int length, int *arr)
+{
+  mrc_json_object_push(obj, name, mrc_json_integer_array_new(length, arr));
+}
+
+void
+mrc_json_object_push_double_array(mrc_json_t obj, const char *name, unsigned int length, double *arr)
+{
+  mrc_json_object_push(obj, name, mrc_json_double_array_new(length, arr));
+}
+
+
+void
 mrc_json_array_push(mrc_json_t arr, mrc_json_t entry)
 {
   assert(arr.ops == &mrc_json_parser_ops);
@@ -263,3 +276,14 @@ mrc_json_array_push_double(mrc_json_t arr, double dbl)
   mrc_json_array_push(arr, mrc_json_double_new(dbl));
 }
 
+void
+mrc_json_array_push_integer_array(mrc_json_t arr, unsigned int length, int *int_arr)
+{
+  mrc_json_array_push(arr, mrc_json_integer_array_new(length, int_arr));
+}
+
+void
+mrc_json_array_push_double_array(mrc_json_t arr, unsigned int length, double *dbl_arr)
+{
+  mrc_json_array_push(arr, mrc_json_double_array_new(length, dbl_arr));
+}

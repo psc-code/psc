@@ -1,8 +1,6 @@
 
 #include "cuda_iface.h"
 
-#include "json-builder.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
