@@ -9,11 +9,6 @@
 #undef THREADS_PER_BLOCK
 #define THREADS_PER_BLOCK (512)
 
-#define NO_CHECKERBOARD
-//#define DEBUG
-
-#include "cuda_common.h"
-
 // FIXME/TODO: we could do this w/o prior reordering, but currently the
 // generic moment calculation code first reorders anyway (which it shouldn't)
 
@@ -22,9 +17,9 @@
 
 class GCurr {
 public:
-  real *d_flds;
+  float *d_flds;
 
-  __device__ GCurr(real *_d_flds) :
+  __device__ GCurr(float *_d_flds) :
     d_flds(_d_flds)
   {
   }
@@ -53,10 +48,10 @@ public:
 } while (0)
 
 __device__ static void
-find_idx_off_1st(const real xi[3], int j[3], real h[3], real shift)
+find_idx_off_1st(const float xi[3], int j[3], float h[3], float shift)
 {
   for (int d = 0; d < 3; d++) {
-    real pos = xi[d] * d_cmprts_const.dxi[d] + shift;
+    float pos = xi[d] * d_cmprts_const.dxi[d] + shift;
     j[d] = __float2int_rd(pos);
     h[d] = pos - j[d];
   }
@@ -114,11 +109,11 @@ rho_1st_nc_cuda_run(int block_start,
       LOAD_PARTICLE_MOM_(prt, d_pxi4, n);
     }
 
-    real fnq = prt.qni_wni * d_cmprts_const.fnqs;
+    float fnq = prt.qni_wni * d_cmprts_const.fnqs;
     
     int lf[3];
-    real of[3];
-    find_idx_off_1st(prt.xi, lf, of, real(0.));
+    float of[3];
+    find_idx_off_1st(prt.xi, lf, of, float(0.));
 
     scurr.add(0, lf[1]  , lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnq);
     scurr.add(0, lf[1]+1, lf[2]  , (      of[1]) * (1.f - of[2]) * fnq);
@@ -162,12 +157,12 @@ n_1st_cuda_run(int block_start,
     }
 
     int kind = __float_as_int(prt.kind_as_float);
-    real wni = prt.qni_wni * d_cmprts_const.q_inv[kind];
-    real fnq = wni * d_cmprts_const.fnqs;
+    float wni = prt.qni_wni * d_cmprts_const.q_inv[kind];
+    float fnq = wni * d_cmprts_const.fnqs;
     
     int lf[3];
-    real of[3];
-    find_idx_off_1st(prt.xi, lf, of, real(-.5));
+    float of[3];
+    find_idx_off_1st(prt.xi, lf, of, float(-.5));
 
     scurr.add(kind, lf[1]  , lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnq);
     scurr.add(kind, lf[1]+1, lf[2]  , (      of[1]) * (1.f - of[2]) * fnq);
@@ -226,11 +221,8 @@ n_1st_cuda_run_patches_no_reorder(struct cuda_mparticles *cmprts, struct cuda_mf
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 static void
-rho_1st_nc_cuda_run_patches(struct psc_mparticles *mprts, struct psc_mfields *mres)
+rho_1st_nc_cuda_run_patches(struct cuda_mparticles *cmprts, struct cuda_mfields *cmres)
 {
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-  struct cuda_mfields *cmres = psc_mfields_cuda(mres)->cmflds;
-    
   cuda_mparticles_reorder(cmprts); // FIXME/OPT?
 
   if (!cmprts->need_reorder) {
@@ -245,11 +237,8 @@ rho_1st_nc_cuda_run_patches(struct psc_mparticles *mprts, struct psc_mfields *mr
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 static void
-n_1st_cuda_run_patches(struct psc_mparticles *mprts, struct psc_mfields *mres)
+n_1st_cuda_run_patches(struct cuda_mparticles *cmprts, struct cuda_mfields *cmres)
 {
-  struct cuda_mparticles *cmprts = psc_mparticles_cuda(mprts)->cmprts;
-  struct cuda_mfields *cmres = psc_mfields_cuda(mres)->cmflds;
-    
   cuda_mparticles_reorder(cmprts); // FIXME/OPT?
 
   if (!cmprts->need_reorder) {
@@ -260,20 +249,20 @@ n_1st_cuda_run_patches(struct psc_mparticles *mprts, struct psc_mfields *mres)
 }
 
 // ----------------------------------------------------------------------
-// yz_moments_rho_1st_nc_cuda_run_patches
+// cuda_moments_yz_rho_1st_nc
 
 void
-yz_moments_rho_1st_nc_cuda_run_patches(struct psc_mparticles *mprts, struct psc_mfields *mres)
+cuda_moments_yz_rho_1st_nc(struct cuda_mparticles *cmprts, struct cuda_mfields *cmres)
 {
-  rho_1st_nc_cuda_run_patches<1, 4, 4>(mprts, mres);
+  rho_1st_nc_cuda_run_patches<1, 4, 4>(cmprts, cmres);
 }
 
 // ----------------------------------------------------------------------
-// yz_moments_n_1st_cuda_run_patches
+// cuda_moments_yz_n_1st
 
 void
-yz_moments_n_1st_cuda_run_patches(struct psc_mparticles *mprts, struct psc_mfields *mres)
+cuda_moments_yz_n_1st(struct cuda_mparticles *cmprts, struct cuda_mfields *cmres)
 {
-  n_1st_cuda_run_patches<1, 4, 4>(mprts, mres);
+  n_1st_cuda_run_patches<1, 4, 4>(cmprts, cmres);
 }
 

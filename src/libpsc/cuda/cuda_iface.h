@@ -113,6 +113,12 @@ void cuda_push_mprts_yz(struct cuda_mparticles *cmprts, struct cuda_mfields *cmf
 			int bs[3], bool ip_ec, bool deposit_vb_3d, bool currmem_global);
 
 // ----------------------------------------------------------------------
+// cuda_moments
+
+void cuda_moments_yz_rho_1st_nc(struct cuda_mparticles *cmprts, struct cuda_mfields *cmres);
+void cuda_moments_yz_n_1st(struct cuda_mparticles *cmprts, struct cuda_mfields *cmres);
+
+// ----------------------------------------------------------------------
 // cuda_heating_run_foil
 
 struct cuda_heating_foil {

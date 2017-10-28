@@ -15,9 +15,6 @@
 
 // ======================================================================
 
-EXTERN_C void yz_moments_rho_1st_nc_cuda_run_patches(struct psc_mparticles *mprts, struct psc_mfields *mres);
-EXTERN_C void yz_moments_n_1st_cuda_run_patches(struct psc_mparticles *mprts, struct psc_mfields *mres);
-
 struct d_particle {
   real xi[3];
   real kind_as_float;
