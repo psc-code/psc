@@ -103,38 +103,69 @@ struct d_particle {
 
 // ======================================================================
 
+// ----------------------------------------------------------------------
+// cuda_mparticles_const
+//
+// cuda_mparticles parameters in CUDA constant memory
+// (to avoid having to pass them in)
+
 #define MAX_KINDS (4)
 
-struct cuda_params {
-  float dt;
+struct cuda_mparticles_const {
   float dxi[3];
   float b_dxi[3];
+  int b_mx[3];
+  float dt;
   float dqs;
+  float dq[MAX_KINDS];
   float fnqs;
   float fnqxs, fnqys, fnqzs;
-  int b_mx[3];
-  float dq[MAX_KINDS];
 };
+
+__constant__ __device__ struct cuda_mparticles_const d_cmprts_const;
+
+static void
+cuda_mparticles_const_set(struct cuda_mparticles *cmprts, struct psc *psc)
+{
+  struct cuda_mparticles_const c;
+  for (int d = 0; d < 3; d++) {
+    c.dxi[d] = 1.f / cmprts->dx[d];
+    c.b_mx[d] = cmprts->b_mx[d];
+    c.b_dxi[d] = cmprts->b_dxi[d];
+  }
+
+  c.dt = psc->dt;
+  c.fnqs   = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
+  c.fnqxs  = cmprts->dx[0] * c.fnqs / psc->dt;
+  c.fnqys  = cmprts->dx[1] * c.fnqs / psc->dt;
+  c.fnqzs  = cmprts->dx[2] * c.fnqs / psc->dt;
+  c.dqs = .5f * psc->coeff.eta * psc->dt;
+
+  assert(psc->nr_kinds <= MAX_KINDS);
+  for (int k = 0; k < psc->nr_kinds; k++) {
+    c.dq[k] = c.dqs * psc->kinds[k].q / psc->kinds[k].m;
+  }
+
+  cudaError_t ierr = cudaMemcpyToSymbol(d_cmprts_const, &c, sizeof(c)); cudaCheck(ierr);
+}
 
 // FIXME -> common.c
 
 __device__ static void
-find_idx_off_1st(const float xi[3], int j[3], float h[3], float shift,
-		 struct cuda_params prm)
+find_idx_off_1st(const float xi[3], int j[3], float h[3], float shift)
 {
   for (int d = 0; d < 3; d++) {
-    float pos = xi[d] * prm.dxi[d] + shift;
+    float pos = xi[d] * d_cmprts_const.dxi[d] + shift;
     j[d] = __float2int_rd(pos);
     h[d] = pos - j[d];
   }
 }
 
 __device__ static void
-find_idx_off_pos_1st(const float xi[3], int j[3], float h[3], float pos[3], float shift,
-		     struct cuda_params prm)
+find_idx_off_pos_1st(const float xi[3], int j[3], float h[3], float pos[3], float shift)
 {
   for (int d = 0; d < 3; d++) {
-    pos[d] = xi[d] * prm.dxi[d] + shift;
+    pos[d] = xi[d] * d_cmprts_const.dxi[d] + shift;
     j[d] = __float2int_rd(pos[d]);
     h[d] = pos[d] - j[d];
   }
@@ -145,42 +176,6 @@ find_idx_off_pos_1st(const float xi[3], int j[3], float h[3], float pos[3], floa
 //#define DEBUG
 
 #include "cuda_common.h"
-
-static __constant__ __device__ float c_dqs[4]; // FIXME hardcoded
-
-static void
-set_consts(struct cuda_params *prm)
-{
-  cudaError ierr = cudaMemcpyToSymbol(c_dqs, prm->dq, sizeof(c_dqs));
-  cudaCheck(ierr);
-}
-
-void // FIXME
-set_params(struct cuda_params *prm, struct psc *psc,
-	   struct cuda_mparticles *cmprts)
-{
-  prm->dt = psc->dt;
-  for (int d = 0; d < 3; d++) {
-    prm->dxi[d] = 1.f / psc->patch[0].dx[d];
-  }
-
-  prm->dqs    = .5f * psc->coeff.eta * psc->dt;
-  prm->fnqs   = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
-  prm->fnqxs  = psc->patch[0].dx[0] * prm->fnqs / psc->dt;
-  prm->fnqys  = psc->patch[0].dx[1] * prm->fnqs / psc->dt;
-  prm->fnqzs  = psc->patch[0].dx[2] * prm->fnqs / psc->dt;
-  assert(psc->nr_kinds <= MAX_KINDS);
-  for (int k = 0; k < psc->nr_kinds; k++) {
-    prm->dq[k] = prm->dqs * psc->kinds[k].q / psc->kinds[k].m;
-  }
-
-  if (cmprts) {
-    for (int d = 0; d < 3; d++) {
-      prm->b_mx[d] = cmprts->b_mx[d];
-      prm->b_dxi[d] = cmprts->b_dxi[d];
-    }
-  }
-}
 
 // ======================================================================
 // field caching
@@ -230,7 +225,7 @@ push_pxi_dt(struct d_particle *p,
 	    float exq, float eyq, float ezq, float hxq, float hyq, float hzq)
 {
   int kind = __float_as_int(p->kind_as_float);
-  float dq = c_dqs[kind];
+  float dq = d_cmprts_const.dq[kind];
   float pxm = p->pxi[0] + dq*exq;
   float pym = p->pxi[1] + dq*eyq;
   float pzm = p->pxi[2] + dq*ezq;
@@ -290,7 +285,7 @@ template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER, enum I
 __device__ static void
 push_part_one(struct d_particle *prt, int n, unsigned int *d_ids, float4 *d_xi4, float4 *d_pxi4,
 	      float4 *d_alt_xi4, float4 *d_alt_pxi4,
-	      float *fld_cache, int ci0[3], struct cuda_params prm)
+	      float *fld_cache, int ci0[3])
 {
   unsigned int id;
   if (REORDER) {
@@ -305,7 +300,7 @@ push_part_one(struct d_particle *prt, int n, unsigned int *d_ids, float4 *d_xi4,
   float exq, eyq, ezq, hxq, hyq, hzq;
   int lg[3];
   float og[3];
-  find_idx_off_1st(prt->xi, lg, og, float(0.), prm);
+  find_idx_off_1st(prt->xi, lg, og, float(0.));
   lg[1] -= ci0[1];
   lg[2] -= ci0[2];
   
@@ -313,7 +308,7 @@ push_part_one(struct d_particle *prt, int n, unsigned int *d_ids, float4 *d_xi4,
     int lh[3];
     float oh[3];
     
-    find_idx_off_1st(prt->xi, lh, oh, float(-.5), prm);
+    find_idx_off_1st(prt->xi, lh, oh, float(-.5));
     lh[1] -= ci0[1];
     lh[2] -= ci0[2];
     INTERP_FIELD_1ST(cached_flds, exq, EX, g, g);
@@ -363,29 +358,29 @@ push_part_one(struct d_particle *prt, int n, unsigned int *d_ids, float4 *d_xi4,
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static int
-find_block_pos_patch(struct cuda_params prm, int *block_pos, int *ci0)
+find_block_pos_patch(int *block_pos, int *ci0)
 {
   block_pos[1] = blockIdx.x;
-  block_pos[2] = blockIdx.y % prm.b_mx[2];
+  block_pos[2] = blockIdx.y % d_cmprts_const.b_mx[2];
 
   ci0[0] = 0;
   ci0[1] = block_pos[1] * BLOCKSIZE_Y;
   ci0[2] = block_pos[2] * BLOCKSIZE_Z;
 
-  return blockIdx.y / prm.b_mx[2];
+  return blockIdx.y / d_cmprts_const.b_mx[2];
 }
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static int
-find_block_pos_patch_q(struct cuda_params prm, int *block_pos, int *ci0, int block_start)
+find_block_pos_patch_q(int *block_pos, int *ci0, int block_start)
 {
-  int grid_dim_y = (prm.b_mx[2] + 1) / 2;
+  int grid_dim_y = (d_cmprts_const.b_mx[2] + 1) / 2;
   block_pos[1] = blockIdx.x * 2;
   block_pos[2] = (blockIdx.y % grid_dim_y) * 2;
   block_pos[1] += block_start & 1;
   block_pos[2] += block_start >> 1;
-  if (block_pos[1] >= prm.b_mx[1] ||
-      block_pos[2] >= prm.b_mx[2])
+  if (block_pos[1] >= d_cmprts_const.b_mx[1] ||
+      block_pos[2] >= d_cmprts_const.b_mx[2])
     return -1;
 
   ci0[0] = 0;
@@ -396,21 +391,21 @@ find_block_pos_patch_q(struct cuda_params prm, int *block_pos, int *ci0, int blo
 }
 
 __device__ static int
-find_bid(struct cuda_params prm)
+find_bid()
 {
-  return blockIdx.y * prm.b_mx[1] + blockIdx.x;
+  return blockIdx.y * d_cmprts_const.b_mx[1] + blockIdx.x;
 }
 
 __device__ static int
-find_bid_q(struct cuda_params prm, int p, int *block_pos)
+find_bid_q(int p, int *block_pos)
 {
   // FIXME won't work if b_mx[1,2] not even (?)
-  return block_pos_to_block_idx(block_pos, prm.b_mx) + p * prm.b_mx[1] * prm.b_mx[2];
+  return block_pos_to_block_idx(block_pos, d_cmprts_const.b_mx) + p * d_cmprts_const.b_mx[1] * d_cmprts_const.b_mx[2];
 }
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static void
-cache_fields(struct cuda_params prm, float *fld_cache, float *d_flds0, int size, int *ci0, int p)
+cache_fields(float *fld_cache, float *d_flds0, int size, int *ci0, int p)
 {
   float *d_flds = d_flds0 + p * size;
 
@@ -467,7 +462,7 @@ public:
     }
   }
 
-  __device__ void add_to_fld(struct cuda_params prm, int *ci0)
+  __device__ void add_to_fld(int *ci0)
   {
     __syncthreads();				\
     int i = threadIdx.x;
@@ -502,7 +497,7 @@ public:
     return scurr[off];
   }
 
-  __device__ void add(int m, int jy, int jz, float val, struct cuda_params prm, int *ci0)
+  __device__ void add(int m, int jy, int jz, float val, int *ci0)
   {
     float *addr = &(*this)(CBLOCK_ID, jy, jz, m);
     atomicAdd(addr, val);
@@ -525,11 +520,11 @@ public:
   {
   }
 
-  __device__ void add_to_fld(struct cuda_params prm, int *ci0)
+  __device__ void add_to_fld(int *ci0)
   {
   }
 
-  __device__ void add(int m, int jy, int jz, float val, struct cuda_params prm, int *ci0)
+  __device__ void add(int m, int jy, int jz, float val, int *ci0)
   {
     float *addr = &D_F3(d_flds, JXI+m, 0,jy+ci0[1],jz+ci0[2]);
     atomicAdd(addr, val);
@@ -585,30 +580,30 @@ calc_dx1(float dx1[3], float x[3], float dx[3], int off[3])
 template<enum DEPOSIT DEPOSIT, class CURR>
 __device__ static void
 curr_vb_cell(int i[3], float x[3], float dx[3], float qni_wni,
-	     CURR &scurr, struct cuda_params prm, int *ci0)
+	     CURR &scurr, int *ci0)
 {
   float xa[3] = { 0.,
 		 x[1] + .5f * dx[1],
 		 x[2] + .5f * dx[2], };
   if (DEPOSIT == DEPOSIT_VB_3D) {
     if (dx[0] != 0.f) {
-      float fnqx = qni_wni * prm.fnqxs;
+      float fnqx = qni_wni * d_cmprts_const.fnqxs;
       float h = (1.f / 12.f) * dx[0] * dx[1] * dx[2];
-      scurr.add(0, i[1]  , i[2]  , fnqx * (dx[0] * (.5f - xa[1]) * (.5f - xa[2]) + h), prm, ci0);
-      scurr.add(0, i[1]+1, i[2]  , fnqx * (dx[0] * (.5f + xa[1]) * (.5f - xa[2]) - h), prm, ci0);
-      scurr.add(0, i[1]  , i[2]+1, fnqx * (dx[0] * (.5f - xa[1]) * (.5f + xa[2]) + h), prm, ci0);
-      scurr.add(0, i[1]+1, i[2]+1, fnqx * (dx[0] * (.5f + xa[1]) * (.5f + xa[2]) - h), prm, ci0);
+      scurr.add(0, i[1]  , i[2]  , fnqx * (dx[0] * (.5f - xa[1]) * (.5f - xa[2]) + h), ci0);
+      scurr.add(0, i[1]+1, i[2]  , fnqx * (dx[0] * (.5f + xa[1]) * (.5f - xa[2]) - h), ci0);
+      scurr.add(0, i[1]  , i[2]+1, fnqx * (dx[0] * (.5f - xa[1]) * (.5f + xa[2]) + h), ci0);
+      scurr.add(0, i[1]+1, i[2]+1, fnqx * (dx[0] * (.5f + xa[1]) * (.5f + xa[2]) - h), ci0);
     }
   }
   if (dx[1] != 0.f) {
-    float fnqy = qni_wni * prm.fnqys;
-    scurr.add(1, i[1],i[2]  , fnqy * dx[1] * (.5f - xa[2]), prm, ci0);
-    scurr.add(1, i[1],i[2]+1, fnqy * dx[1] * (.5f + xa[2]), prm, ci0);
+    float fnqy = qni_wni * d_cmprts_const.fnqys;
+    scurr.add(1, i[1],i[2]  , fnqy * dx[1] * (.5f - xa[2]), ci0);
+    scurr.add(1, i[1],i[2]+1, fnqy * dx[1] * (.5f + xa[2]), ci0);
   }
   if (dx[2] != 0.f) {
-    float fnqz = qni_wni * prm.fnqzs;
-    scurr.add(2, i[1]  ,i[2], fnqz * dx[2] * (.5f - xa[1]), prm, ci0);
-    scurr.add(2, i[1]+1,i[2], fnqz * dx[2] * (.5f + xa[1]), prm, ci0);
+    float fnqz = qni_wni * d_cmprts_const.fnqzs;
+    scurr.add(2, i[1]  ,i[2], fnqz * dx[2] * (.5f - xa[1]), ci0);
+    scurr.add(2, i[1]+1,i[2], fnqz * dx[2] * (.5f + xa[1]), ci0);
   }
 }
 
@@ -634,7 +629,7 @@ template<enum DEPOSIT DEPOSIT, class CURR>
 __device__ static void
 yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 	  CURR &scurr,
-	  struct cuda_params prm, int nr_total_blocks, int p_nr,
+	  int nr_total_blocks, int p_nr,
 	  unsigned int *d_bidx, int bid, int *ci0)
 {
   float vxi[3];
@@ -645,61 +640,61 @@ yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
   float xm[3], xp[3];
   int j[3], k[3];
   
-  find_idx_off_pos_1st(prt->xi, j, h0, xm, float(0.), prm);
+  find_idx_off_pos_1st(prt->xi, j, h0, xm, float(0.));
 
   if (DEPOSIT == DEPOSIT_VB_2D) {
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0) 
-    push_xi(prt, vxi, .5f * prm.dt);
+    push_xi(prt, vxi, .5f * d_cmprts_const.dt);
 
-    float fnqx = vxi[0] * prt->qni_wni * prm.fnqs;
+    float fnqx = vxi[0] * prt->qni_wni * d_cmprts_const.fnqs;
 
     // out-of-plane currents at intermediate time
     int lf[3];
     float of[3];
-    find_idx_off_1st(prt->xi, lf, of, float(0.), prm);
+    find_idx_off_1st(prt->xi, lf, of, float(0.));
     lf[1] -= ci0[1];
     lf[2] -= ci0[2];
 
-    scurr.add(0, lf[1]  , lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnqx, prm, ci0);
-    scurr.add(0, lf[1]+1, lf[2]  , (      of[1]) * (1.f - of[2]) * fnqx, prm, ci0);
-    scurr.add(0, lf[1]  , lf[2]+1, (1.f - of[1]) * (      of[2]) * fnqx, prm, ci0);
-    scurr.add(0, lf[1]+1, lf[2]+1, (      of[1]) * (      of[2]) * fnqx, prm, ci0);
+    scurr.add(0, lf[1]  , lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnqx, ci0);
+    scurr.add(0, lf[1]+1, lf[2]  , (      of[1]) * (1.f - of[2]) * fnqx, ci0);
+    scurr.add(0, lf[1]  , lf[2]+1, (1.f - of[1]) * (      of[2]) * fnqx, ci0);
+    scurr.add(0, lf[1]+1, lf[2]+1, (      of[1]) * (      of[2]) * fnqx, ci0);
 
     // x^(n+1.0), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
-    push_xi(prt, vxi, .5f * prm.dt);
+    push_xi(prt, vxi, .5f * d_cmprts_const.dt);
     STORE_PARTICLE_POS_(*prt, d_xi4, n);
   } else if (DEPOSIT == DEPOSIT_VB_3D) {
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
-    push_xi(prt, vxi, prm.dt);
+    push_xi(prt, vxi, d_cmprts_const.dt);
     STORE_PARTICLE_POS_(*prt, d_xi4, n);
   }
 
   // save block_idx for new particle position at x^(n+1.5)
-  unsigned int block_pos_y = __float2int_rd(prt->xi[1] * prm.b_dxi[1]);
-  unsigned int block_pos_z = __float2int_rd(prt->xi[2] * prm.b_dxi[2]);
-  int nr_blocks = prm.b_mx[1] * prm.b_mx[2];
+  unsigned int block_pos_y = __float2int_rd(prt->xi[1] * d_cmprts_const.b_dxi[1]);
+  unsigned int block_pos_z = __float2int_rd(prt->xi[2] * d_cmprts_const.b_dxi[2]);
+  int nr_blocks = d_cmprts_const.b_mx[1] * d_cmprts_const.b_mx[2];
 
   int block_idx;
-  if (block_pos_y >= prm.b_mx[1] || block_pos_z >= prm.b_mx[2]) {
+  if (block_pos_y >= d_cmprts_const.b_mx[1] || block_pos_z >= d_cmprts_const.b_mx[2]) {
     block_idx = CUDA_BND_S_OOB;
   } else {
-    int bidx = block_pos_z * prm.b_mx[1] + block_pos_y + p_nr * nr_blocks;
-    int b_diff = bid - bidx + prm.b_mx[1] + 1;
-    int d1 = b_diff % prm.b_mx[1];
-    int d2 = b_diff / prm.b_mx[1];
+    int bidx = block_pos_z * d_cmprts_const.b_mx[1] + block_pos_y + p_nr * nr_blocks;
+    int b_diff = bid - bidx + d_cmprts_const.b_mx[1] + 1;
+    int d1 = b_diff % d_cmprts_const.b_mx[1];
+    int d2 = b_diff / d_cmprts_const.b_mx[1];
     block_idx = d2 * 3 + d1;
   }
   d_bidx[n] = block_idx;
 
   // position xm at x^(n+.5)
-  find_idx_off_pos_1st(prt->xi, k, h1, xp, float(0.), prm);
+  find_idx_off_pos_1st(prt->xi, k, h1, xp, float(0.));
 
   // deposit xm -> xp
   int idiff[3] = { 0, k[1] - j[1], k[2] - j[2] };
   int i[3] = { 0, j[1] - ci0[1], j[2] - ci0[2] };
   float x[3] = { 0.f, xm[1] - j[1] - float(.5), xm[2] - j[2] - float(.5) };
   //float dx[3] = { 0.f, xp[1] - xm[1], xp[2] - xm[2] };
-  float dx[3] = { vxi[0] * prm.dt * prm.dxi[0], xp[1] - xm[1], xp[2] - xm[2] };
+  float dx[3] = { vxi[0] * d_cmprts_const.dt * d_cmprts_const.dxi[0], xp[1] - xm[1], xp[2] - xm[2] };
   
   float x1 = x[1] * idiff[1];
   float x2 = x[2] * idiff[2];
@@ -716,16 +711,16 @@ yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 
   float dx1[3];
   calc_dx1(dx1, x, dx, off);
-  curr_vb_cell<DEPOSIT, CURR>(i, x, dx1, prt->qni_wni, scurr, prm, ci0);
+  curr_vb_cell<DEPOSIT, CURR>(i, x, dx1, prt->qni_wni, scurr, ci0);
   curr_vb_cell_upd(i, x, dx1, dx, off);
   
   off[1] = idiff[1] - off[1];
   off[2] = idiff[2] - off[2];
   calc_dx1(dx1, x, dx, off);
-  curr_vb_cell<DEPOSIT, CURR>(i, x, dx1, prt->qni_wni, scurr, prm, ci0);
+  curr_vb_cell<DEPOSIT, CURR>(i, x, dx1, prt->qni_wni, scurr, ci0);
   curr_vb_cell_upd(i, x, dx1, dx, off);
     
-  curr_vb_cell<DEPOSIT, CURR>(i, x, dx, prt->qni_wni, scurr, prm, ci0);
+  curr_vb_cell<DEPOSIT, CURR>(i, x, dx, prt->qni_wni, scurr, ci0);
 }
 
 // ======================================================================
@@ -737,22 +732,22 @@ yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 #define DECLARE_AND_CACHE_FIELDS					\
   __shared__ float fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)]; \
   cache_fields<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>			\
-  (prm, fld_cache, d_flds0, size, ci0, p)
+  (fld_cache, d_flds0, size, ci0, p)
 
 #define FIND_BLOCK_RANGE_CURRMEM(CURRMEM)				\
   int block_pos[3], ci0[3];						\
   int p, bid;								\
   if (CURRMEM == CURRMEM_SHARED) {					\
     p = find_block_pos_patch_q<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>	\
-      (prm, block_pos, ci0, block_start);				\
+      (block_pos, ci0, block_start);					\
     if (p < 0)								\
       return;								\
     									\
-    bid = find_bid_q(prm, p, block_pos);				\
+    bid = find_bid_q(p, block_pos);					\
   } else if (CURRMEM == CURRMEM_GLOBAL) {				\
     p = find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>	\
-      (prm, block_pos, ci0);						\
-    bid = find_bid(prm);						\
+      (block_pos, ci0);							\
+    bid = find_bid();							\
   }									\
   int block_begin = d_off[bid];						\
   int block_end = d_off[bid + 1]					\
@@ -764,7 +759,7 @@ template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER,
 	 enum IP IP, enum DEPOSIT DEPOSIT, enum CURRMEM CURRMEM, class CURR>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
-push_mprts_ab(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
+push_mprts_ab(int block_start, float4 *d_xi4, float4 *d_pxi4,
 	      float4 *d_alt_xi4, float4 *d_alt_pxi4,
 	      unsigned int *d_off, int nr_total_blocks, unsigned int *d_ids, unsigned int *d_bidx,
 	      float *d_flds0, unsigned int size)
@@ -780,18 +775,18 @@ push_mprts_ab(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_
     }
     struct d_particle prt;
     push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER, IP>
-      (&prt, n, d_ids, d_xi4, d_pxi4, d_alt_xi4, d_alt_pxi4, fld_cache, ci0, prm);
+      (&prt, n, d_ids, d_xi4, d_pxi4, d_alt_xi4, d_alt_pxi4, fld_cache, ci0);
 
     if (REORDER) {
       yz_calc_j<DEPOSIT_VB_2D, CURR>
-	(&prt, n, d_alt_xi4, d_alt_pxi4, scurr, prm, nr_total_blocks, p, d_bidx, bid, ci0);
+	(&prt, n, d_alt_xi4, d_alt_pxi4, scurr, nr_total_blocks, p, d_bidx, bid, ci0);
     } else {
       yz_calc_j<DEPOSIT_VB_2D, CURR>
-	(&prt, n, d_xi4, d_pxi4, scurr, prm, nr_total_blocks, p, d_bidx, bid, ci0);
+	(&prt, n, d_xi4, d_pxi4, scurr, nr_total_blocks, p, d_bidx, bid, ci0);
     }
   }
   
-  scurr.add_to_fld(prm, ci0);
+  scurr.add_to_fld(ci0);
 }
 
 // ----------------------------------------------------------------------
@@ -817,10 +812,8 @@ template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER,
 static void
 cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
 {
-  struct cuda_params prm;
-  set_params(&prm, ppsc, cmprts);
-  set_consts(&prm);
   cuda_mfields_const_set(cmflds);
+  cuda_mparticles_const_set(cmprts, ppsc);
 
   unsigned int fld_size = cmflds->n_fields * cmflds->n_cells_per_patch;
 
@@ -828,11 +821,11 @@ cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
 
   int gx, gy;
   if (CURRMEM == CURRMEM_SHARED) {
-    gx =  (prm.b_mx[1] + 1) / 2;
-    gy = ((prm.b_mx[2] + 1) / 2) * cmprts->n_patches;
+    gx =  (cmprts->b_mx[1] + 1) / 2;
+    gy = ((cmprts->b_mx[2] + 1) / 2) * cmprts->n_patches;
   } else if (CURRMEM == CURRMEM_GLOBAL) {
-    gx = prm.b_mx[1];
-    gy = prm.b_mx[2] * cmprts->n_patches;
+    gx = cmprts->b_mx[1];
+    gy = cmprts->b_mx[2] * cmprts->n_patches;
   }
   dim3 dimGrid(gx, gy);
 
@@ -841,7 +834,7 @@ cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
       push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER, IP, DEPOSIT, CURRMEM,
 		    SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> >
 	<<<dimGrid, THREADS_PER_BLOCK>>>
-      (block_start, prm, cmprts->d_xi4, cmprts->d_pxi4,
+      (block_start, cmprts->d_xi4, cmprts->d_pxi4,
        cmprts->d_alt_xi4, cmprts->d_alt_pxi4, cmprts->d_off,
        cmprts->n_blocks, cmprts->d_id, cmprts->d_bidx,
        cmflds->d_flds, fld_size);
@@ -851,7 +844,7 @@ cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
     push_mprts_ab<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER, IP, DEPOSIT, CURRMEM,
     		  GCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> >
       <<<dimGrid, THREADS_PER_BLOCK>>>
-      (0, prm, cmprts->d_xi4, cmprts->d_pxi4,
+      (0, cmprts->d_xi4, cmprts->d_pxi4,
        cmprts->d_alt_xi4, cmprts->d_alt_pxi4, cmprts->d_off,
        cmprts->n_blocks, cmprts->d_id, cmprts->d_bidx,
        cmflds->d_flds, fld_size);

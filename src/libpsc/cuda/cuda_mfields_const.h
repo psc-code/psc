@@ -12,6 +12,11 @@
 // cuda_mfields parameters in CUDA constant memory
 // (to avoid having to pass them in)
 
+struct cuda_mfields_const {
+  int ib[3];
+  int im[3];
+};
+
 __constant__ __device__ struct cuda_mfields_const d_cmflds_const;
 
 static void
