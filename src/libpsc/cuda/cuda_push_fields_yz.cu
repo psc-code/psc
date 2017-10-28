@@ -13,14 +13,6 @@
 
 // OPT: precalc offset
 
-#define D_F3_OFF_YZ(m, jy,jz)						\
-  ((((m)								\
-     *d_cmflds_const.im[2] + ((jz)+2))					\
-    *d_cmflds_const.im[1] + ((jy)+2))					\
-   *1 + (0))
-
-#define D_F3(d_flds, m, jx,jy,jz) ((d_flds)[D_F3_OFF_YZ(m, jy,jz)])
-
 __global__ static void
 push_fields_E_yz(float *d_flds0, float dt, float cny, float cnz,
 		 unsigned int size, int gridy)
