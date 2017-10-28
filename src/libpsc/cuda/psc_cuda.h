@@ -11,7 +11,7 @@
 #include "psc_particles_cuda.h"
 #include "psc_fields_cuda.h"
 
-#include "cuda_wrap.h"
+#include "cuda_bits.h"
 
 // ======================================================================
 

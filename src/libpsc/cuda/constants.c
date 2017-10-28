@@ -40,6 +40,7 @@ PFX(set_constants)(struct psc_mfields *mflds, int p)
   }
 #endif
 
-  check(cudaMemcpyToSymbol(d_consts, &consts, sizeof(consts)));
+  cudaError_t ierr;
+  ierr = cudaMemcpyToSymbol(d_consts, &consts, sizeof(consts)); cudaCheck(ierr);
 }
 

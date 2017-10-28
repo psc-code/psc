@@ -1,5 +1,10 @@
 
-#include "cuda_wrap.h"
+#define CUDA_CONSTANT
+#define CUDA_DEVICE
+#define __forceinline__
+#define atomicAdd(addr, val) \
+  do { *(addr) += (val); } while (0)
+
 
 // ----------------------------------------------------------------------
 // c_prm: constant parameters

@@ -28,7 +28,8 @@ set_constants()
     q_inv[k] = 1.f / psc->kinds[k].q;
   }
 
-  check(cudaMemcpyToSymbol(c_q_inv, q_inv, MAX_KINDS * sizeof(*q_inv)));
+  cudaError_t ierr = cudaMemcpyToSymbol(c_q_inv, q_inv, MAX_KINDS * sizeof(*q_inv));
+  cudaCheck(ierr);
 }
   
 // FIXME/TODO: we could do this w/o prior reordering, but currently the

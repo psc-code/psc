@@ -48,8 +48,11 @@ cuda_mfields_bnd_ctor(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds
       assert(0);
     }
   }
-  check(cudaMalloc((void **) &cbnd->d_bnd_buf,
-		   MAX_BND_COMPONENTS * buf_size * cmflds->n_patches * sizeof(float)));
+  cudaError_t ierr;
+  ierr = cudaMalloc((void **) &cbnd->d_bnd_buf,
+		    MAX_BND_COMPONENTS * buf_size * cmflds->n_patches * sizeof(float));
+  cudaCheck(ierr);
+  
   cbnd->h_bnd_buf = new float[MAX_BND_COMPONENTS * cmflds->n_patches * buf_size];
 
   cbnd->bnd_by_patch = new cuda_mfields_bnd_patch[cmflds->n_patches];
@@ -78,10 +81,12 @@ cuda_mfields_bnd_ctor(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds
 void
 cuda_mfields_bnd_dtor(struct cuda_mfields_bnd *cbnd)
 {
-  check(cudaFree(cbnd->d_bnd_buf));
-  check(cudaFree(cbnd->d_nei_patch));
-  check(cudaFree(cbnd->d_map_out));
-  check(cudaFree(cbnd->d_map_in));
+  cudaError_t ierr;
+
+  ierr = cudaFree(cbnd->d_bnd_buf); cudaCheck(ierr);
+  ierr = cudaFree(cbnd->d_nei_patch); cudaCheck(ierr);
+  ierr = cudaFree(cbnd->d_map_out); cudaCheck(ierr);
+  ierr = cudaFree(cbnd->d_map_in); cudaCheck(ierr);
   delete[] cbnd->h_bnd_buf;
   delete[] cbnd->h_nei_patch;
   delete[] cbnd->h_map_out;
@@ -527,10 +532,11 @@ __fields_cuda_from_device_yz(struct psc_mfields *mflds, int mb, int me)
   prof_stop(pr1);
   
   prof_start(pr2);
-  check(cudaMemcpy(cbnd->h_bnd_buf, cbnd->d_bnd_buf,
-		   (me - mb) * buf_size * mflds->nr_patches *
-		   sizeof(*cbnd->h_bnd_buf),
-		   cudaMemcpyDeviceToHost));
+  cudaError_t ierr;
+  ierr = cudaMemcpy(cbnd->h_bnd_buf, cbnd->d_bnd_buf,
+		    (me - mb) * buf_size * mflds->nr_patches *
+		    sizeof(*cbnd->h_bnd_buf),
+		    cudaMemcpyDeviceToHost); cudaCheck(ierr);
   prof_stop(pr2);
 
   prof_start(pr3);
@@ -565,10 +571,11 @@ __fields_cuda_to_device_yz(struct psc_mfields *mflds, int mb, int me)
   prof_stop(pr1);
 
   prof_start(pr2);
-  check(cudaMemcpy(cbnd->d_bnd_buf, cbnd->h_bnd_buf,
-		   MAX_BND_COMPONENTS * buf_size * mflds->nr_patches *
-		   sizeof(*cbnd->d_bnd_buf),
-		   cudaMemcpyHostToDevice));
+  cudaError_t ierr;
+  ierr = cudaMemcpy(cbnd->d_bnd_buf, cbnd->h_bnd_buf,
+		    MAX_BND_COMPONENTS * buf_size * mflds->nr_patches *
+		    sizeof(*cbnd->d_bnd_buf),
+		    cudaMemcpyHostToDevice); cudaCheck(ierr);
   prof_stop(pr2);
 
   prof_start(pr3);
@@ -612,9 +619,10 @@ __fields_cuda_from_device3_yz(struct psc_mfields *mflds, int mb, int me)
   
   prof_start(pr2);
   assert(B == 4);
-  check(cudaMemcpy(cbnd->h_bnd_buf, cbnd->d_bnd_buf,
-		   (me - mb) * nr_map * sizeof(*cbnd->h_bnd_buf),
-		   cudaMemcpyDeviceToHost));
+  cudaError_t ierr;
+  ierr = cudaMemcpy(cbnd->h_bnd_buf, cbnd->d_bnd_buf,
+		    (me - mb) * nr_map * sizeof(*cbnd->h_bnd_buf),
+		    cudaMemcpyDeviceToHost); cudaCheck(ierr);
   prof_stop(pr2);
 
   prof_start(pr3);
@@ -654,9 +662,10 @@ __fields_cuda_to_device3_yz(struct psc_mfields *mflds, int mb, int me)
   prof_stop(pr1);
 
   prof_start(pr2);
-  check(cudaMemcpy(cbnd->d_bnd_buf, cbnd->h_bnd_buf,
-		   (me - mb) * nr_map * sizeof(*cbnd->d_bnd_buf),
-		   cudaMemcpyHostToDevice));
+  cudaError_t ierr;
+  ierr = cudaMemcpy(cbnd->d_bnd_buf, cbnd->h_bnd_buf,
+		    (me - mb) * nr_map * sizeof(*cbnd->d_bnd_buf),
+		    cudaMemcpyHostToDevice); cudaCheck(ierr);
   prof_stop(pr2);
 
   prof_start(pr3);
@@ -679,10 +688,11 @@ __fields_cuda_from_device_inside(struct psc_mfields *mflds, int mb, int me)
     for (int p = 0; p < mflds->nr_patches; p++) {
       struct cuda_mfields_bnd_patch *cf = &cbnd->bnd_by_patch[p];
       unsigned int size = cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
-      check(cudaMemcpy(cf->arr,
-		       cmflds->d_flds_by_patch[p] + mb * size,
-		       (me - mb) * size * sizeof(float),
-		       cudaMemcpyDeviceToHost));
+      cudaError_t ierr;
+      ierr = cudaMemcpy(cf->arr,
+			cmflds->d_flds_by_patch[p] + mb * size,
+			(me - mb) * size * sizeof(float),
+			cudaMemcpyDeviceToHost); cudaCheck(ierr);
     }
   }
 }
@@ -700,10 +710,11 @@ __fields_cuda_from_device_inside_only(struct psc_mfields *mflds, int mb, int me)
     for (int p = 0; p < mflds->nr_patches; p++) {
       struct cuda_mfields_bnd_patch *cf = &cbnd->bnd_by_patch[p];
       unsigned int size = cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
-      check(cudaMemcpy(cf->arr,
-		       cmflds->d_flds_by_patch[p] + mb * size,
-		       (me - mb) * size * sizeof(float),
-		       cudaMemcpyDeviceToHost));
+      cudaError_t ierr;
+      ierr = cudaMemcpy(cf->arr,
+			cmflds->d_flds_by_patch[p] + mb * size,
+			(me - mb) * size * sizeof(float),
+			cudaMemcpyDeviceToHost); cudaCheck(ierr);
     }
   }
 }
@@ -721,10 +732,11 @@ __fields_cuda_to_device_outside(struct psc_mfields *mflds, int mb, int me)
     for (int p = 0; p < mflds->nr_patches; p++) {
       struct cuda_mfields_bnd_patch *cf = &cbnd->bnd_by_patch[p];
       unsigned int size = cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
-      check(cudaMemcpy(cmflds->d_flds_by_patch[p] + mb * size,
-		       cf->arr,
-		       (me - mb) * size * sizeof(float),
-		       cudaMemcpyHostToDevice));
+      cudaError_t ierr;
+      ierr = cudaMemcpy(cmflds->d_flds_by_patch[p] + mb * size,
+			cf->arr,
+			(me - mb) * size * sizeof(float),
+			cudaMemcpyHostToDevice); cudaCheck(ierr);
     }
   }
 }
@@ -742,10 +754,11 @@ __fields_cuda_to_device_inside(struct psc_mfields *mflds, int mb, int me)
     for (int p = 0; p < mflds->nr_patches; p++) {
       struct cuda_mfields_bnd_patch *cf = &cbnd->bnd_by_patch[p];
       unsigned int size = cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
-      check(cudaMemcpy(cmflds->d_flds_by_patch[p] + mb * size,
-		       cf->arr,
-		       (me - mb) * size * sizeof(float),
-		       cudaMemcpyHostToDevice));
+      cudaError_t ierr;
+      ierr = cudaMemcpy(cmflds->d_flds_by_patch[p] + mb * size,
+			cf->arr,
+			(me - mb) * size * sizeof(float),
+			cudaMemcpyHostToDevice); cudaCheck(ierr);
     }
   }
 }
@@ -834,29 +847,30 @@ __fields_cuda_fill_ghosts_setup(struct psc_mfields *mflds, struct mrc_ddc *ddc)
       cbnd->h_nei_patch[re->patch * 9 + re->dir1 / 3] = re->nei_patch;
     }
 
-    check(cudaMalloc((void **) &cbnd->d_nei_patch,
-		     9 * nr_patches * sizeof(*cbnd->d_nei_patch)));
-    check(cudaMemcpy(cbnd->d_nei_patch, cbnd->h_nei_patch, 
-		     9 * nr_patches * sizeof(*cbnd->d_nei_patch),
-		     cudaMemcpyHostToDevice));
+    cudaError_t ierr;
+    ierr = cudaMalloc((void **) &cbnd->d_nei_patch,
+		      9 * nr_patches * sizeof(*cbnd->d_nei_patch)); cudaCheck(ierr);
+    ierr = cudaMemcpy(cbnd->d_nei_patch, cbnd->h_nei_patch, 
+		      9 * nr_patches * sizeof(*cbnd->d_nei_patch),
+		      cudaMemcpyHostToDevice); cudaCheck(ierr);
 
     fields_create_map_out_yz(mflds, 2, &cbnd->nr_map_out, &cbnd->h_map_out);
 
-    check(cudaMalloc((void **) &cbnd->d_map_out,
-		     cbnd->nr_map_out * sizeof(*cbnd->d_map_out)));
-    check(cudaMemcpy(cbnd->d_map_out, cbnd->h_map_out, 
-		     cbnd->nr_map_out * sizeof(*cbnd->d_map_out),
-		     cudaMemcpyHostToDevice));
+    ierr = cudaMalloc((void **) &cbnd->d_map_out,
+		      cbnd->nr_map_out * sizeof(*cbnd->d_map_out)); cudaCheck(ierr);
+    ierr = cudaMemcpy(cbnd->d_map_out, cbnd->h_map_out, 
+		      cbnd->nr_map_out * sizeof(*cbnd->d_map_out),
+		      cudaMemcpyHostToDevice); cudaCheck(ierr);
 
     fields_create_map_in_yz(mflds, 2, &cbnd->nr_map_in, &cbnd->h_map_in);
     mprintf("map_out %d\n", cbnd->nr_map_out);
     mprintf("map_in %d\n", cbnd->nr_map_in);
 
-    check(cudaMalloc((void **) &cbnd->d_map_in,
-		     cbnd->nr_map_in * sizeof(*cbnd->d_map_in)));
-    check(cudaMemcpy(cbnd->d_map_in, cbnd->h_map_in, 
-		     cbnd->nr_map_in * sizeof(*cbnd->d_map_in),
-		     cudaMemcpyHostToDevice));
+    ierr = cudaMalloc((void **) &cbnd->d_map_in,
+		      cbnd->nr_map_in * sizeof(*cbnd->d_map_in)); cudaCheck(ierr);
+    ierr = cudaMemcpy(cbnd->d_map_in, cbnd->h_map_in, 
+		      cbnd->nr_map_in * sizeof(*cbnd->d_map_in),
+		      cudaMemcpyHostToDevice); cudaCheck(ierr);
   }
 }
 

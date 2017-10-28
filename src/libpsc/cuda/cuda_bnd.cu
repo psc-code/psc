@@ -45,11 +45,11 @@ cuda_fill_ghosts_periodic_yz(struct psc_mfields *mflds, int p, int mb, int me)
   cuda_bnd_set_constants(mflds, p);
 
   struct psc_patch *patch = &ppsc->patch[p];
-  int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
-  int dimGrid[2]  = { (patch->ldims[1] + 2*SW + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
-		      (patch->ldims[2] + 2*SW + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
-  RUN_KERNEL(dimGrid, dimBlock,
-	     fill_ghosts_periodic_yz, (cmflds->d_flds_by_patch[p], mb, me));
+  dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
+  dim3 dimGrid((patch->ldims[1] + 2*SW + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
+	       (patch->ldims[2] + 2*SW + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
+  fill_ghosts_periodic_yz<<<dimGrid, dimBlock>>>(cmflds->d_flds_by_patch[p], mb, me);
+  cuda_sync_if_enabled();
 }
 
 __global__ static void
@@ -81,11 +81,11 @@ cuda_fill_ghosts_periodic_z(struct psc_mfields *mflds, int p, int mb, int me)
   cuda_bnd_set_constants(mflds, p);
 
   struct psc_patch *patch = &ppsc->patch[p];
-  int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
-  int dimGrid[2]  = { (patch->ldims[1] + 2*SW + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
-		      (patch->ldims[2] + 2*SW + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
-  RUN_KERNEL(dimGrid, dimBlock,
-	     fill_ghosts_periodic_z, (cmflds->d_flds_by_patch[p], mb, me));
+  dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
+  dim3 dimGrid((patch->ldims[1] + 2*SW + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
+	       (patch->ldims[2] + 2*SW + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
+  fill_ghosts_periodic_z<<<dimGrid, dimBlock>>>(cmflds->d_flds_by_patch[p], mb, me);
+  cuda_sync_if_enabled();
 }
 
 __global__ static void
@@ -155,12 +155,13 @@ cuda_add_ghosts_periodic_yz(struct psc_mfields *mflds, int p, int mb, int me)
   struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
   cuda_bnd_set_constants(mflds, p);
 
-  struct psc_patch *patch = &ppsc->patch[p];
-  int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
-  int dimGrid[2]  = { (patch->ldims[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
-		      (patch->ldims[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
-  RUN_KERNEL(dimGrid, dimBlock,
-	     add_ghosts_periodic_yz, (cmflds->d_flds_by_patch[p], mb, me));
+  struct psc_patch *patch = &ppsc->patch[p]; 
+  dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
+  dim3 dimGrid((patch->ldims[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
+	       (patch->ldims[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
+
+  add_ghosts_periodic_yz<<<dimGrid, dimBlock>>>(cmflds->d_flds_by_patch[p], mb, me);
+  cuda_sync_if_enabled();
 }
 
 __global__ static void
@@ -193,11 +194,11 @@ cuda_add_ghosts_periodic_z(struct psc_mfields *mflds, int p, int mb, int me)
   cuda_bnd_set_constants(mflds, p);
 
   struct psc_patch *patch = &ppsc->patch[p];
-  int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
-  int dimGrid[2]  = { (patch->ldims[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
-		      (patch->ldims[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
-  RUN_KERNEL(dimGrid, dimBlock,
-	     add_ghosts_periodic_z, (cmflds->d_flds_by_patch[p], mb, me));
+  dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
+  dim3 dimGrid((patch->ldims[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
+	       (patch->ldims[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z);
+  add_ghosts_periodic_z<<<dimGrid, dimBlock>>>(cmflds->d_flds_by_patch[p], mb, me);
+  cuda_sync_if_enabled();
 }
 
 template<bool lo, bool hi>

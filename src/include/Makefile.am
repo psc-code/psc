@@ -1,6 +1,5 @@
 
 include_HEADERS = \
-	cuda_wrap.h \
 	psc.h \
 	psc_balance.h \
 	psc_bnd.h \

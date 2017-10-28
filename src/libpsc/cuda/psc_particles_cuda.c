@@ -482,8 +482,8 @@ psc_mparticles_cuda_read(struct psc_mparticles *mprts, struct mrc_io *io)
     hid_t pgroup = H5Gopen(group, pname, H5P_DEFAULT); H5_CHK(pgroup);
     int n_prts = n_prts_by_patch[p];
     if (n_prts > 0) {
-      float_4 *xi4  = calloc(n_prts, sizeof(float4));
-      float_4 *pxi4 = calloc(n_prts, sizeof(float4));
+      float_4 *xi4  = calloc(n_prts, sizeof(float_4));
+      float_4 *pxi4 = calloc(n_prts, sizeof(float_4));
       
       ierr = H5LTread_dataset_float(pgroup, "xi4", (float *) xi4); CE;
       ierr = H5LTread_dataset_float(pgroup, "pxi4", (float *) pxi4); CE;

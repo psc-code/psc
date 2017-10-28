@@ -4,12 +4,6 @@
 
 #include "cuda_iface.h"
 
-#ifdef __cplusplus
-#define EXTERN_C extern "C"
-#else
-#define EXTERN_C
-#endif
-
 // FIXME, better call it cuda_mfields_real_t
 typedef float fields_cuda_real_t;
 
