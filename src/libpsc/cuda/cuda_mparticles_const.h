@@ -20,6 +20,7 @@ struct cuda_mparticles_const {
   float dt;
   float dqs;
   float dq[MAX_KINDS];
+  float q_inv[MAX_KINDS];
   float fnqs;
   float fnqxs, fnqys, fnqzs;
 };
@@ -46,6 +47,7 @@ cuda_mparticles_const_set(struct cuda_mparticles *cmprts)
   assert(cmprts->n_kinds <= MAX_KINDS);
   for (int k = 0; k < cmprts->n_kinds; k++) {
     c.dq[k] = c.dqs * cmprts->kind_q[k] / cmprts->kind_m[k];
+    c.q_inv[k] = 1.f / cmprts->kind_q[k];
   }
 
   cudaError_t ierr = cudaMemcpyToSymbol(d_cmprts_const, &c, sizeof(c)); cudaCheck(ierr);
