@@ -2,12 +2,9 @@
 #ifndef PARTICLES_CUDA_H
 #define PARTICLES_CUDA_H
 
-#define MAX_KINDS (4)
+#include "cuda_bits.h"
 
-struct cuda_mfields_params {
-  int mx[3];
-  int ilg[3];
-};
+#define MAX_KINDS (4)
 
 struct cuda_mparticles_params {
   float fnqs;
@@ -16,8 +13,6 @@ struct cuda_mparticles_params {
   int b_mx[3];
 };
 
-EXTERN_C void cuda_mfields_params_set(struct cuda_mfields_params *mflds_prm,
-				      struct cuda_mfields *cmflds);
 EXTERN_C void cuda_mparticles_params_set(struct cuda_mparticles_params *mprts_prm,
 					 struct cuda_mparticles *cmprts);
 
