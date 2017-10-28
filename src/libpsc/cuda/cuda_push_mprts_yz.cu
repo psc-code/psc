@@ -125,7 +125,7 @@ struct cuda_mparticles_const {
 __constant__ __device__ struct cuda_mparticles_const d_cmprts_const;
 
 static void
-cuda_mparticles_const_set(struct cuda_mparticles *cmprts, struct psc *psc)
+cuda_mparticles_const_set(struct cuda_mparticles *cmprts)
 {
   struct cuda_mparticles_const c;
   for (int d = 0; d < 3; d++) {
@@ -134,16 +134,16 @@ cuda_mparticles_const_set(struct cuda_mparticles *cmprts, struct psc *psc)
     c.b_dxi[d] = cmprts->b_dxi[d];
   }
 
-  c.dt = psc->dt;
-  c.fnqs   = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
-  c.fnqxs  = cmprts->dx[0] * c.fnqs / psc->dt;
-  c.fnqys  = cmprts->dx[1] * c.fnqs / psc->dt;
-  c.fnqzs  = cmprts->dx[2] * c.fnqs / psc->dt;
-  c.dqs = .5f * psc->coeff.eta * psc->dt;
+  c.dt = cmprts->dt;
+  c.fnqs   = cmprts->fnqs;
+  c.fnqxs  = cmprts->dx[0] * c.fnqs / cmprts->dt;
+  c.fnqys  = cmprts->dx[1] * c.fnqs / cmprts->dt;
+  c.fnqzs  = cmprts->dx[2] * c.fnqs / cmprts->dt;
+  c.dqs = .5f * cmprts->eta * cmprts->dt;
 
-  assert(psc->nr_kinds <= MAX_KINDS);
-  for (int k = 0; k < psc->nr_kinds; k++) {
-    c.dq[k] = c.dqs * psc->kinds[k].q / psc->kinds[k].m;
+  assert(cmprts->n_kinds <= MAX_KINDS);
+  for (int k = 0; k < cmprts->n_kinds; k++) {
+    c.dq[k] = c.dqs * cmprts->kind_q[k] / cmprts->kind_m[k];
   }
 
   cudaError_t ierr = cudaMemcpyToSymbol(d_cmprts_const, &c, sizeof(c)); cudaCheck(ierr);
@@ -813,7 +813,7 @@ static void
 cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
 {
   cuda_mfields_const_set(cmflds);
-  cuda_mparticles_const_set(cmprts, ppsc);
+  cuda_mparticles_const_set(cmprts);
 
   unsigned int fld_size = cmflds->n_fields * cmflds->n_cells_per_patch;
 

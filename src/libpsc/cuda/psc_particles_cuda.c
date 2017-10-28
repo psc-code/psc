@@ -362,6 +362,16 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
 
   double fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   mrc_json_object_push_double(info, "fnqs", fnqs);
+  mrc_json_object_push_double(info, "eta", ppsc->coeff.eta);
+  mrc_json_object_push_double(info, "dt", ppsc->dt);
+
+  double kind_q[ppsc->nr_kinds], kind_m[ppsc->nr_kinds];
+  for (int k = 0; k < ppsc->nr_kinds; k++) {
+    kind_q[k] = ppsc->kinds[k].q;
+    kind_m[k] = ppsc->kinds[k].m;
+  }
+  mrc_json_object_push_double_array(info, "kind_q", ppsc->nr_kinds, kind_q);
+  mrc_json_object_push_double_array(info, "kind_m", ppsc->nr_kinds, kind_m);
 
   cuda_mparticles_ctor(cmprts, json);
 

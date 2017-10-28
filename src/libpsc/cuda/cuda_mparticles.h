@@ -82,6 +82,12 @@ struct cuda_mparticles {
   bool need_reorder;              // particles haven't yet been put into their sorted order
 
   float fnqs;                     // normalization constant
+  float eta;                      // another normalization constant
+  float dt;                       // timestep (FIXME, shouldn't really be here, but it's constant...)
+
+  int n_kinds;
+  float *kind_q;
+  float *kind_m;
 
   struct cuda_mparticles_bnd bnd;
 };

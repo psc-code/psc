@@ -48,8 +48,24 @@ cuda_mparticles_ctor(struct cuda_mparticles *cmprts, mrc_json_t json)
     mrc_json_get_float3(mrc_json_get_array_entry(xb_by_patch, p), cmprts->xb_by_patch[p]);
   }
 
-  cmprts->fnqs = mrc_json_get_object_entry_double(json_info,  "fnqs");
+  cmprts->fnqs = mrc_json_get_object_entry_double(json_info, "fnqs");
+  cmprts->eta  = mrc_json_get_object_entry_double(json_info, "eta");
+  cmprts->dt   = mrc_json_get_object_entry_double(json_info, "dt");
 
+  mrc_json_t json_kind_q = mrc_json_get_object_entry(json_info, "kind_q");
+  cmprts->n_kinds = mrc_json_get_array_length(json_kind_q);
+  cmprts->kind_q = new float[cmprts->n_kinds];
+  // FIXME, could use a mrc_json helper
+  for (int k = 0; k < cmprts->n_kinds; k++) {
+    cmprts->kind_q[k] = mrc_json_get_array_entry_double(json_kind_q, k);
+  }
+  mrc_json_t json_kind_m = mrc_json_get_object_entry(json_info, "kind_m");
+  assert(cmprts->n_kinds == mrc_json_get_array_length(json_kind_m));
+  cmprts->kind_m = new float[cmprts->n_kinds];
+  // FIXME, could use a mrc_json helper
+  for (int k = 0; k < cmprts->n_kinds; k++) {
+    cmprts->kind_m[k] = mrc_json_get_array_entry_double(json_kind_m, k);
+  }
 
   cmprts->n_blocks_per_patch = cmprts->b_mx[0] * cmprts->b_mx[1] * cmprts->b_mx[2];
   cmprts->n_blocks = cmprts->n_patches * cmprts->n_blocks_per_patch;
@@ -94,6 +110,8 @@ cuda_mparticles_destroy(struct cuda_mparticles *cmprts)
   cuda_mparticles_bnd_destroy(cmprts);
   
   delete[] cmprts->xb_by_patch;
+  delete[] cmprts->kind_q;
+  delete[] cmprts->kind_m;
   delete cmprts;
 }
 
