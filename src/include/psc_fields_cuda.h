@@ -48,9 +48,9 @@ struct psc_mfields_cuda {
 
 #define F3_DEV_OFF_YZ(fldnr, jy,jz)					\
   ((((fldnr)								\
-     *prm.mx[2] + ((jz)-prm.ilg[2]))					\
-    *prm.mx[1] + ((jy)-prm.ilg[1]))					\
-   *prm.mx[0] + (0-prm.ilg[0]))
+     *mflds_prm.mx[2] + ((jz)-mflds_prm.ilg[2]))			\
+    *mflds_prm.mx[1] + ((jy)-mflds_prm.ilg[1]))				\
+   *mflds_prm.mx[0] + (0-mflds_prm.ilg[0]))
 
 #define F3_DEV_YZ(fldnr,jy,jz) \
   (d_flds)[F3_DEV_OFF_YZ(fldnr, jy,jz)]

@@ -73,9 +73,6 @@ cuda_mfields_dtor(struct cuda_mfields *cmflds)
 }
 
 // ----------------------------------------------------------------------
-// cuda_mfields_dump
-
-// ----------------------------------------------------------------------
 // cuda_mfields_to_json
 
 mrc_json_t

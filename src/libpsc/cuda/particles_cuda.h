@@ -4,6 +4,11 @@
 
 #define MAX_KINDS (4)
 
+struct cuda_mfields_params {
+  int mx[3];
+  int ilg[3];
+};
+
 struct cuda_params {
   real dt;
   real dxi[3];
@@ -11,14 +16,14 @@ struct cuda_params {
   real dqs;
   real fnqs;
   real fnqxs, fnqys, fnqzs;
-  int mx[3];
-  int ilg[3];
   int b_mx[3];
   real dq[MAX_KINDS];
 };
 
+EXTERN_C void cuda_mfields_params_set(struct cuda_mfields_params *mflds_prm,
+				      struct cuda_mfields *cmflds);
 EXTERN_C void set_params(struct cuda_params *prm, struct psc *psc,
-			 struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds);
+			 struct cuda_mparticles *cmprts);
 EXTERN_C void free_params(struct cuda_params *prm);
 
 // ======================================================================
