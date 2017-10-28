@@ -1,6 +1,7 @@
 
 #include "cuda_mparticles.h"
 #include "cuda_mfields.h"
+#include "cuda_mfields_const.h"
 
 #include "psc_cuda.h"
 #include "particles_cuda.h"
@@ -47,9 +48,9 @@ public:
   {
   }
 
-  __device__ void add(int m, int jy, int jz, float val, struct cuda_mfields_params mflds_prm)
+  __device__ void add(int m, int jy, int jz, float val)
   {
-    float *addr = &F3_DEV_YZ(m, jy,jz);
+    float *addr = &D_F3(d_flds, m, 0,jy,jz);
     atomicAdd(addr, val);
   }
 };
@@ -105,8 +106,7 @@ find_bid(struct cuda_mparticles_params mprts_prm)
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
-rho_1st_nc_cuda_run(int block_start, struct cuda_mfields_params mflds_prm,
-		    struct cuda_mparticles_params mprts_prm,
+rho_1st_nc_cuda_run(int block_start, struct cuda_mparticles_params mprts_prm,
 		    float4 *d_xi4, float4 *d_pxi4,
 		    unsigned int *d_off, int nr_total_blocks, unsigned int *d_ids,
 		    float *d_flds0, unsigned int size)
@@ -141,10 +141,10 @@ rho_1st_nc_cuda_run(int block_start, struct cuda_mfields_params mflds_prm,
     real of[3];
     find_idx_off_1st(prt.xi, lf, of, real(0.), mprts_prm);
 
-    scurr.add(0, lf[1]  , lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnq, mflds_prm);
-    scurr.add(0, lf[1]+1, lf[2]  , (      of[1]) * (1.f - of[2]) * fnq, mflds_prm);
-    scurr.add(0, lf[1]  , lf[2]+1, (1.f - of[1]) * (      of[2]) * fnq, mflds_prm);
-    scurr.add(0, lf[1]+1, lf[2]+1, (      of[1]) * (      of[2]) * fnq, mflds_prm);
+    scurr.add(0, lf[1]  , lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnq);
+    scurr.add(0, lf[1]+1, lf[2]  , (      of[1]) * (1.f - of[2]) * fnq);
+    scurr.add(0, lf[1]  , lf[2]+1, (1.f - of[1]) * (      of[2]) * fnq);
+    scurr.add(0, lf[1]+1, lf[2]+1, (      of[1]) * (      of[2]) * fnq);
   }
 }
 
@@ -154,8 +154,7 @@ rho_1st_nc_cuda_run(int block_start, struct cuda_mfields_params mflds_prm,
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
-n_1st_cuda_run(int block_start, struct cuda_mfields_params mflds_prm,
-	       struct cuda_mparticles_params mprts_prm,
+n_1st_cuda_run(int block_start, struct cuda_mparticles_params mprts_prm,
 	       float4 *d_xi4, float4 *d_pxi4,
 	       unsigned int *d_off, int nr_total_blocks, unsigned int *d_ids,
 	       float *d_flds0, unsigned int size)
@@ -192,10 +191,10 @@ n_1st_cuda_run(int block_start, struct cuda_mfields_params mflds_prm,
     real of[3];
     find_idx_off_1st(prt.xi, lf, of, real(-.5), mprts_prm);
 
-    scurr.add(kind, lf[1]  , lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnq, mflds_prm);
-    scurr.add(kind, lf[1]+1, lf[2]  , (      of[1]) * (1.f - of[2]) * fnq, mflds_prm);
-    scurr.add(kind, lf[1]  , lf[2]+1, (1.f - of[1]) * (      of[2]) * fnq, mflds_prm);
-    scurr.add(kind, lf[1]+1, lf[2]+1, (      of[1]) * (      of[2]) * fnq, mflds_prm);
+    scurr.add(kind, lf[1]  , lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnq);
+    scurr.add(kind, lf[1]+1, lf[2]  , (      of[1]) * (1.f - of[2]) * fnq);
+    scurr.add(kind, lf[1]  , lf[2]+1, (1.f - of[1]) * (      of[2]) * fnq);
+    scurr.add(kind, lf[1]+1, lf[2]+1, (      of[1]) * (      of[2]) * fnq);
   }
 }
 
@@ -210,8 +209,8 @@ rho_1st_nc_cuda_run_patches_no_reorder(struct psc_mparticles *mprts, struct psc_
   struct psc_mfields_cuda *mres_cuda = psc_mfields_cuda(mres);
   struct cuda_mfields *cmres = mres_cuda->cmflds;
 
-  struct cuda_mfields_params mflds_prm;
-  cuda_mfields_params_set(&mflds_prm, cmres);
+  cuda_mfields_const_set(cmres);
+  
   struct cuda_mparticles_params mprts_prm;
   cuda_mparticles_params_set(&mprts_prm, cmprts);
 
@@ -223,7 +222,7 @@ rho_1st_nc_cuda_run_patches_no_reorder(struct psc_mparticles *mprts, struct psc_
 
   rho_1st_nc_cuda_run<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER>
     <<<dimGrid, THREADS_PER_BLOCK>>>
-    (0, mflds_prm, mprts_prm,
+    (0, mprts_prm,
      cmprts->d_xi4, cmprts->d_pxi4,
      cmprts->d_off,
      cmprts->n_blocks, cmprts->d_id,
@@ -242,8 +241,8 @@ n_1st_cuda_run_patches_no_reorder(struct psc_mparticles *mprts, struct psc_mfiel
   struct psc_mfields_cuda *mres_cuda = psc_mfields_cuda(mres);
   struct cuda_mfields *cmres = mres_cuda->cmflds;
 
-  struct cuda_mfields_params mflds_prm;
-  cuda_mfields_params_set(&mflds_prm, cmres);
+  cuda_mfields_const_set(cmres);
+
   struct cuda_mparticles_params mprts_prm;
   cuda_mparticles_params_set(&mprts_prm, cmprts);
 
@@ -256,7 +255,7 @@ n_1st_cuda_run_patches_no_reorder(struct psc_mparticles *mprts, struct psc_mfiel
 
   n_1st_cuda_run<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER>
     <<<dimGrid, THREADS_PER_BLOCK>>>
-    (0, mflds_prm, mprts_prm,
+    (0, mprts_prm,
      cmprts->d_xi4, cmprts->d_pxi4, cmprts->d_off,
      cmprts->n_blocks, cmprts->d_id,
      cmres->d_flds, fld_size);
