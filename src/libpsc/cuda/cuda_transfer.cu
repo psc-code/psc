@@ -148,7 +148,7 @@ k_fields_device_pack_yz(real *d_buf, real *d_flds, int gmy, int gmz,
     jz += gmz - B;
   }
   
-  // FIXME, should use F3_DEV_YZ
+  // FIXME, should use D_F3
   if (WHAT == PACK) {
     d_buf[tid] = d_flds[(((p * nr_fields + m) * gmz + jz) * gmy + jy) * gmx + jx];
   } else if (WHAT == UNPACK) {
@@ -203,7 +203,7 @@ k_fields_device_pack2_yz(real *d_buf, real *d_flds, int *d_nei_patch_by_dir1,
   // copy only ghost areas that interface with remote patches
   if (1||s_p < 0) {
     for (int m = 0; m < NR_COMPONENTS; m++) {
-      // FIXME, should use F3_DEV_YZ
+      // FIXME, should use D_F3
       if (WHAT == PACK) {
 	d_buf[m * nr_ghosts * nr_patches + tid] = d_flds[((p * nr_fields + m) * gmz + jz) * gmy + jy];
       } else if (WHAT == UNPACK) {
@@ -885,7 +885,7 @@ g_fields_device_pack3_yz(int tid, real *d_buf, real *d_flds, int *d_map, int *d_
   // copy only ghost areas that interface with remote patches
   int i = d_map[tid];
   for (int m = 0; m < nr_components; m++) {
-    // FIXME, should use F3_DEV_YZ
+    // FIXME, should use D_F3
     if (WHAT == PACK) {
       d_buf[m * nr_map + tid] = d_flds[i + m * gmz * gmy];
     } else if (WHAT == UNPACK) {
@@ -906,7 +906,7 @@ k_fields_device_pack3_yz(real *d_buf, real *d_flds, int *d_map, int *d_nei_patch
   // copy only ghost areas that interface with remote patches
   int i = d_map[tid];
   for (int m = 0; m < nr_components; m++) {
-    // FIXME, should use F3_DEV_YZ
+    // FIXME, should use D_F3
     if (WHAT == PACK) {
       d_buf[m * nr_map + tid] = d_flds[i + m * gmz * gmy];
     } else if (WHAT == UNPACK) {
