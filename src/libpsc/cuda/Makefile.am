@@ -97,7 +97,6 @@ CUDA_DEPS = \
         constants.c \
         common.c \
         common_push.c \
-        common_fld_cache.c \
         common_curr.c \
         push_part_p1.c \
         push_part_p2.c \
