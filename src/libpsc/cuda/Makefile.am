@@ -94,28 +94,15 @@ CUDA_DEPS = \
         cuda_mfields.h \
 	cuda_bits.h \
         psc_cuda.h \
-        constants.c \
-        common.c \
-        common_push.c \
-        common_curr.c \
-        push_part_p1.c \
-        push_part_p2.c \
-        push_part_kernelcall.c
+        constants.c
+
 #        psc_particles_cuda.h FIXME
 
-cuda_push_part_z3.lo: push_part_p2_noshift.c
-cuda_push_part_yz3.lo: push_part_p2_noshift.c
-cuda_push_part_yz4.lo: push_part_p2_noshift_2.c
-cuda_push_part_yz5.lo: push_part_p2_noshift_3.c push_part_kernelcall_3.c
-cuda_push_part_yz6.lo: push_part_p2_noshift_6.c push_part_kernelcall_6.c
-cuda_push_part_yz_1st.lo: push_part_p1_1st.c push_part_p2_1st.c push_part_kernelcall_6.c
 cuda_push_part_yz_1vb.lo: cuda_common.h particles_cuda.h ../../include/psc_particles_cuda.h
 cuda_moments_1st_nc.lo: cuda_common.h particles_cuda.h ../../include/psc_particles_cuda.h
 
 cuda_spine.lo: b40c/radixsort_reduction_kernel.h b40c/radixsort_scanscatter_kernel.h cuda_sort2_spine.h
-#cuda_sort3.lo: b40c/radixsort_reduction_kernel.h b40c/radixsort_scanscatter_kernel3.h
 cuda_sort2.lo cuda_exchange_particles.lo cuda_sort2_spine.lo: psc_cuda.h cuda_sort2.h
-cuda_sort3.lo: psc_cuda.h cuda_sort2.h
 cuda_exchange_particles.lo: psc_bnd_cuda.h particles_cuda.h ../../include/psc_particles_cuda.h
 cuda_exclusive_scan_2.lo: particles_cuda.h ../../include/psc_particles_cuda.h
 cuda_transfer.lo: particles_cuda.h ../../include/psc_particles_cuda.h
