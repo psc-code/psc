@@ -2,6 +2,7 @@
 #include "cuda_iface.h"
 #include "cuda_mparticles.h"
 #include "cuda_mfields.h"
+#include "cuda_mfields_const.h"
 #include "cuda_bits.h"
 
 #include "psc.h" // FIXME
@@ -33,16 +34,6 @@ struct d_particle {
   real pxi[3];
   real qni_wni;
 };
-
-// FIXME
-#define F3_DEV_OFF_YZ(fldnr, jy,jz)					\
-  ((((fldnr)								\
-     *prm.mx[2] + ((jz)-prm.ilg[2]))					\
-    *prm.mx[1] + ((jy)-prm.ilg[1]))					\
-   *prm.mx[0] + (0-prm.ilg[0]))
-
-#define F3_DEV_YZ(fldnr,jy,jz) \
-  (d_flds)[F3_DEV_OFF_YZ(fldnr, jy,jz)]
 
 // FIXME
 #define CUDA_BND_S_OOB (10)
@@ -451,7 +442,7 @@ cache_fields(struct cuda_params prm, float *fld_cache, float *d_flds0, int size,
     int jz = tmp % (BLOCKSIZE_Z + 4) - 2;
     // OPT? currently it seems faster to do the loop rather than do m by threadidx
     for (int m = EX; m <= HZ; m++) {
-      F3_CACHE(fld_cache, m, jy, jz) = F3_DEV_YZ(m, jy+ci0[1],jz+ci0[2]);
+      F3_CACHE(fld_cache, m, jy, jz) = D_F3(d_flds, m, 0,jy+ci0[1],jz+ci0[2]);
     }
     ti += THREADS_PER_BLOCK;
   }
@@ -513,7 +504,7 @@ public:
 	for (int wid = 0; wid < NR_CBLOCKS; wid++) {
 	  val += (*this)(wid, jy, jz, m);
 	}
-	F3_DEV_YZ(JXI+m, jy+ci0[1],jz+ci0[2]) += val;
+	D_F3(d_flds, JXI+m, 0,jy+ci0[1],jz+ci0[2]) += val;
 	i += THREADS_PER_BLOCK;
       }
     }
@@ -559,7 +550,7 @@ public:
 
   __device__ void add(int m, int jy, int jz, float val, struct cuda_params prm, int *ci0)
   {
-    float *addr = &F3_DEV_YZ(JXI+m, jy+ci0[1],jz+ci0[2]);
+    float *addr = &D_F3(d_flds, JXI+m, 0,jy+ci0[1],jz+ci0[2]);
     atomicAdd(addr, val);
   }
 };
@@ -848,6 +839,7 @@ cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
   struct cuda_params prm;
   set_params(&prm, ppsc, cmprts, cmflds);
   set_consts(&prm);
+  cuda_mfields_const_set(cmflds);
 
   unsigned int fld_size = cmflds->n_fields * cmflds->n_cells_per_patch;
 
@@ -925,9 +917,6 @@ cuda_push_mprts_yz(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds,
   }
 
   if (ip_ec && deposit_vb_3d && !currmem_global) {
-    if (bs[0] == 1 && bs[1] == 2 && bs[2] == 2) {
-      return yz_cuda_push_mprts<1, 4, 4, IP_EC, DEPOSIT_VB_3D, CURRMEM_SHARED>(cmprts, cmflds);
-    }
     if (bs[0] == 1 && bs[1] == 4 && bs[2] == 4) {
       return yz_cuda_push_mprts<1, 4, 4, IP_EC, DEPOSIT_VB_3D, CURRMEM_SHARED>(cmprts, cmflds);
     }
@@ -937,9 +926,6 @@ cuda_push_mprts_yz(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds,
   }
 
   if (ip_ec && deposit_vb_3d && currmem_global) {
-    if (bs[0] == 1 && bs[1] == 2 && bs[2] == 2) {
-      return yz_cuda_push_mprts<1, 4, 4, IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL>(cmprts, cmflds);
-    }
     if (bs[0] == 1 && bs[1] == 4 && bs[2] == 4) {
       return yz_cuda_push_mprts<1, 4, 4, IP_EC, DEPOSIT_VB_3D, CURRMEM_GLOBAL>(cmprts, cmflds);
     }
