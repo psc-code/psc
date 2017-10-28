@@ -97,14 +97,12 @@ CUDA_DEPS = \
 
 #        psc_particles_cuda.h FIXME
 
-cuda_moments_1st_nc.lo: cuda_common.h particles_cuda.h ../../include/psc_particles_cuda.h
-
 cuda_spine.lo: b40c/radixsort_reduction_kernel.h b40c/radixsort_scanscatter_kernel.h cuda_sort2_spine.h
 cuda_sort2.lo cuda_exchange_particles.lo cuda_sort2_spine.lo: psc_cuda.h cuda_sort2.h
-cuda_exchange_particles.lo: psc_bnd_cuda.h particles_cuda.h ../../include/psc_particles_cuda.h
-cuda_exclusive_scan_2.lo: particles_cuda.h ../../include/psc_particles_cuda.h
-cuda_transfer.lo: particles_cuda.h ../../include/psc_particles_cuda.h
-cuda_spine.lo: particles_cuda.h ../../include/psc_particles_cuda.h b40c/radixsort_reduction_kernel.h b40c/radixsort_scanscatter_kernel3.h
+cuda_exchange_particles.lo: psc_bnd_cuda.h ../../include/psc_particles_cuda.h
+cuda_exclusive_scan_2.lo: ../../include/psc_particles_cuda.h
+cuda_transfer.lo: ../../include/psc_particles_cuda.h
+cuda_spine.lo: ../../include/psc_particles_cuda.h b40c/radixsort_reduction_kernel.h b40c/radixsort_scanscatter_kernel3.h
 
 #FIXME, this is just really too hacky...
 
