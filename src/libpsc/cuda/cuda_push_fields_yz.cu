@@ -11,21 +11,15 @@
 
 #define BND 2
 
-// FIXME, merge with F3_DEV{,_YZ}, OPT (precalc offset)
+// OPT: precalc offset
 
-#define X3_DEV_OFF_YZ(fldnr, jy,jz)					\
-  ((((fldnr)								\
+#define D_F3_OFF_YZ(m, jy,jz)						\
+  ((((m)								\
      *d_cmflds_const.im[2] + ((jz)+2))					\
     *d_cmflds_const.im[1] + ((jy)+2))					\
    *1 + (0))
 
-#undef F3_DEV
-
-#define F3_DEV(fldnr,ix,jy,jz)			\
-  (d_flds)[X3_DEV_OFF_YZ(fldnr, jy,jz)]
-
-#define F3_DDEV(d_flds, fldnr,ix,jy,jz)		\
-  (d_flds)[X3_DEV_OFF_YZ(fldnr, jy,jz)]
+#define D_F3(d_flds, m, jx,jy,jz) ((d_flds)[D_F3_OFF_YZ(m, jy,jz)])
 
 __global__ static void
 push_fields_E_yz(float *d_flds0, float dt, float cny, float cnz,
@@ -44,20 +38,20 @@ push_fields_E_yz(float *d_flds0, float dt, float cny, float cnz,
 
   float *d_flds = d_flds0 + p * size;
 
-  F3_DEV(EX, 0,iy,iz) +=
-    cny * (F3_DEV(HZ, 0,iy,iz) - F3_DEV(HZ, 0,iy-1,iz)) -
-    cnz * (F3_DEV(HY, 0,iy,iz) - F3_DEV(HY, 0,iy,iz-1)) -
-    .5f * dt * F3_DEV(JXI, 0,iy,iz);
+  D_F3(d_flds, EX, 0,iy,iz) +=
+    cny * (D_F3(d_flds, HZ, 0,iy,iz) - D_F3(d_flds, HZ, 0,iy-1,iz)) -
+    cnz * (D_F3(d_flds, HY, 0,iy,iz) - D_F3(d_flds, HY, 0,iy,iz-1)) -
+    .5f * dt * D_F3(d_flds, JXI, 0,iy,iz);
   
-  F3_DEV(EY, 0,iy,iz) +=
-    cnz * (F3_DEV(HX, 0,iy,iz) - F3_DEV(HX, 0,iy,iz-1)) -
+  D_F3(d_flds, EY, 0,iy,iz) +=
+    cnz * (D_F3(d_flds, HX, 0,iy,iz) - D_F3(d_flds, HX, 0,iy,iz-1)) -
     0.f -
-    .5f * dt * F3_DEV(JYI, 0,iy,iz);
+    .5f * dt * D_F3(d_flds, JYI, 0,iy,iz);
   
-  F3_DEV(EZ, 0,iy,iz) +=
+  D_F3(d_flds, EZ, 0,iy,iz) +=
     0.f -
-    cny * (F3_DEV(HX, 0,iy,iz) - F3_DEV(HX, 0,iy-1,iz)) -
-    .5f * dt * F3_DEV(JZI, 0,iy,iz);
+    cny * (D_F3(d_flds, HX, 0,iy,iz) - D_F3(d_flds, HX, 0,iy-1,iz)) -
+    .5f * dt * D_F3(d_flds, JZI, 0,iy,iz);
 }
 
 __global__ static void
@@ -77,17 +71,17 @@ push_fields_H_yz(float *d_flds0, float cny, float cnz,
 
   float *d_flds = d_flds0 + p * size;
 
-  F3_DEV(HX, 0,iy,iz) -=
-    cny * (F3_DEV(EZ, 0,iy+1,iz) - F3_DEV(EZ, 0,iy,iz)) -
-    cnz * (F3_DEV(EY, 0,iy,iz+1) - F3_DEV(EY, 0,iy,iz));
+  D_F3(d_flds, HX, 0,iy,iz) -=
+    cny * (D_F3(d_flds, EZ, 0,iy+1,iz) - D_F3(d_flds, EZ, 0,iy,iz)) -
+    cnz * (D_F3(d_flds, EY, 0,iy,iz+1) - D_F3(d_flds, EY, 0,iy,iz));
   
-  F3_DEV(HY, 0,iy,iz) -=
-    cnz * (F3_DEV(EX, 0,iy,iz+1) - F3_DEV(EX, 0,iy,iz)) -
+  D_F3(d_flds, HY, 0,iy,iz) -=
+    cnz * (D_F3(d_flds, EX, 0,iy,iz+1) - D_F3(d_flds, EX, 0,iy,iz)) -
     0.f;
   
-  F3_DEV(HZ, 0,iy,iz) -=
+  D_F3(d_flds, HZ, 0,iy,iz) -=
     0.f -
-    cny * (F3_DEV(EX, 0,iy+1,iz) - F3_DEV(EX, 0,iy,iz));
+    cny * (D_F3(d_flds, EX, 0,iy+1,iz) - D_F3(d_flds, EX, 0,iy,iz));
 }
 
 #define BLOCKSIZE_X 1
@@ -188,14 +182,14 @@ marder_correct_yz(float *d_flds, float *d_f, float facy, float facz,
 
   if (iy >= -lyy && iy < ryy &&
       iz >= -lyz && iz < ryz) {
-    F3_DDEV(d_flds, EY, 0,iy,iz) += 
-      facy * (F3_DDEV(d_f, 0, 0,iy+1,iz) - F3_DDEV(d_f, 0, 0,iy,iz));
+    D_F3(d_flds, EY, 0,iy,iz) += 
+      facy * (D_F3(d_f, 0, 0,iy+1,iz) - D_F3(d_f, 0, 0,iy,iz));
   }
   
   if (iy >= -lzy && iy < rzy &&
       iz >= -lzz && iz < rzz) {
-    F3_DDEV(d_flds, EZ, 0,iy,iz) += 
-      facz * (F3_DDEV(d_f, 0, 0,iy,iz+1) - F3_DDEV(d_f, 0, 0,iy,iz));
+    D_F3(d_flds, EZ, 0,iy,iz) += 
+      facz * (D_F3(d_f, 0, 0,iy,iz+1) - D_F3(d_f, 0, 0,iy,iz));
   }
 }
 
@@ -243,9 +237,9 @@ calc_dive_yz(float *flds, float *f, float dy, float dz,
     return;
   }
 
-  F3_DDEV(f, 0, 0,iy,iz) = 
-    ((F3_DDEV(flds, EY, 0,iy,iz) - F3_DDEV(flds, EY, 0,iy-1,iz)) / dy +
-     (F3_DDEV(flds, EZ, 0,iy,iz) - F3_DDEV(flds, EZ, 0,iy,iz-1)) / dz);
+  D_F3(f, 0, 0,iy,iz) = 
+    ((D_F3(flds, EY, 0,iy,iz) - D_F3(flds, EY, 0,iy-1,iz)) / dy +
+     (D_F3(flds, EZ, 0,iy,iz) - D_F3(flds, EZ, 0,iy,iz-1)) / dz);
 }
 
 void
