@@ -112,8 +112,6 @@ struct cuda_params {
   float dqs;
   float fnqs;
   float fnqxs, fnqys, fnqzs;
-  int mx[3];
-  int ilg[3];
   int b_mx[3];
   float dq[MAX_KINDS];
 };
@@ -159,7 +157,7 @@ set_consts(struct cuda_params *prm)
 
 void // FIXME
 set_params(struct cuda_params *prm, struct psc *psc,
-	   struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
+	   struct cuda_mparticles *cmprts)
 {
   prm->dt = psc->dt;
   for (int d = 0; d < 3; d++) {
@@ -182,23 +180,6 @@ set_params(struct cuda_params *prm, struct psc *psc,
       prm->b_dxi[d] = cmprts->b_dxi[d];
     }
   }
-
-  if (cmflds) {
-    for (int d = 0; d < 3; d++) {
-      prm->mx[d] = cmflds->im[d];
-      prm->ilg[d] = cmflds->ib[d];
-      if (d > 0) {
-	assert(cmflds->ib[d] == -BND);
-      } else {
-	assert(cmflds->im[d] == 1);// + 2*BND);
-      }
-    }
-  }
-}
-
-void // FIXME
-free_params(struct cuda_params *prm)
-{
 }
 
 // ======================================================================
@@ -837,7 +818,7 @@ static void
 cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
 {
   struct cuda_params prm;
-  set_params(&prm, ppsc, cmprts, cmflds);
+  set_params(&prm, ppsc, cmprts);
   set_consts(&prm);
   cuda_mfields_const_set(cmflds);
 
@@ -882,8 +863,6 @@ cuda_push_mprts_ab(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds)
   if (REORDER) {
     cuda_mparticles_swap_alt(cmprts);
   }
-
-  free_params(&prm);
 }
 
 // ----------------------------------------------------------------------
