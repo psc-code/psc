@@ -1,10 +1,10 @@
 
 #include "cuda_mparticles.h"
 #include "cuda_mfields.h"
+#include "cuda_mparticles_const.h"
 #include "cuda_mfields_const.h"
 
 #include "psc_cuda.h"
-#include "particles_cuda.h"
 
 #undef THREADS_PER_BLOCK
 #define THREADS_PER_BLOCK (512)
@@ -72,11 +72,10 @@ public:
 } while (0)
 
 __device__ static void
-find_idx_off_1st(const real xi[3], int j[3], real h[3], real shift,
-		 struct cuda_mparticles_params mprts_prm)
+find_idx_off_1st(const real xi[3], int j[3], real h[3], real shift)
 {
   for (int d = 0; d < 3; d++) {
-    real pos = xi[d] * mprts_prm.dxi[d] + shift;
+    real pos = xi[d] * d_cmprts_const.dxi[d] + shift;
     j[d] = __float2int_rd(pos);
     h[d] = pos - j[d];
   }
@@ -86,18 +85,18 @@ find_idx_off_1st(const real xi[3], int j[3], real h[3], real shift,
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static int
-find_block_pos_patch(struct cuda_mparticles_params mprts_prm, int *block_pos)
+find_block_pos_patch(int *block_pos)
 {
   block_pos[1] = blockIdx.x;
-  block_pos[2] = blockIdx.y % mprts_prm.b_mx[2];
+  block_pos[2] = blockIdx.y % d_cmprts_const.b_mx[2];
 
-  return blockIdx.y / mprts_prm.b_mx[2];
+  return blockIdx.y / d_cmprts_const.b_mx[2];
 }
 
 __device__ static int
-find_bid(struct cuda_mparticles_params mprts_prm)
+find_bid()
 {
-  return blockIdx.y * mprts_prm.b_mx[1] + blockIdx.x;
+  return blockIdx.y * d_cmprts_const.b_mx[1] + blockIdx.x;
 }
 
 // ----------------------------------------------------------------------
@@ -106,15 +105,14 @@ find_bid(struct cuda_mparticles_params mprts_prm)
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
-rho_1st_nc_cuda_run(int block_start, struct cuda_mparticles_params mprts_prm,
+rho_1st_nc_cuda_run(int block_start,
 		    float4 *d_xi4, float4 *d_pxi4,
 		    unsigned int *d_off, int nr_total_blocks, unsigned int *d_ids,
 		    float *d_flds0, unsigned int size)
 {
   int block_pos[3];
-  int p = find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
-    (mprts_prm, block_pos);
-  int bid = find_bid(mprts_prm);
+  int p = find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(block_pos);
+  int bid = find_bid();
   int block_begin = d_off[bid];
   int block_end = d_off[bid + 1];
 
@@ -135,11 +133,11 @@ rho_1st_nc_cuda_run(int block_start, struct cuda_mparticles_params mprts_prm,
       LOAD_PARTICLE_MOM_(prt, d_pxi4, n);
     }
 
-    real fnq = prt.qni_wni * mprts_prm.fnqs;
+    real fnq = prt.qni_wni * d_cmprts_const.fnqs;
     
     int lf[3];
     real of[3];
-    find_idx_off_1st(prt.xi, lf, of, real(0.), mprts_prm);
+    find_idx_off_1st(prt.xi, lf, of, real(0.));
 
     scurr.add(0, lf[1]  , lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnq);
     scurr.add(0, lf[1]+1, lf[2]  , (      of[1]) * (1.f - of[2]) * fnq);
@@ -154,15 +152,14 @@ rho_1st_nc_cuda_run(int block_start, struct cuda_mparticles_params mprts_prm,
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z, bool REORDER>
 __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
-n_1st_cuda_run(int block_start, struct cuda_mparticles_params mprts_prm,
+n_1st_cuda_run(int block_start,
 	       float4 *d_xi4, float4 *d_pxi4,
 	       unsigned int *d_off, int nr_total_blocks, unsigned int *d_ids,
 	       float *d_flds0, unsigned int size)
 {
   int block_pos[3];
-  int p = find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
-    (mprts_prm, block_pos);
-  int bid = find_bid(mprts_prm);
+  int p = find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(block_pos);
+  int bid = find_bid();
   int block_begin = d_off[bid];
   int block_end = d_off[bid + 1];
 
@@ -185,11 +182,11 @@ n_1st_cuda_run(int block_start, struct cuda_mparticles_params mprts_prm,
 
     int kind = __float_as_int(prt.kind_as_float);
     real wni = prt.qni_wni * c_q_inv[kind];
-    real fnq = wni * mprts_prm.fnqs;
+    real fnq = wni * d_cmprts_const.fnqs;
     
     int lf[3];
     real of[3];
-    find_idx_off_1st(prt.xi, lf, of, real(-.5), mprts_prm);
+    find_idx_off_1st(prt.xi, lf, of, real(-.5));
 
     scurr.add(kind, lf[1]  , lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnq);
     scurr.add(kind, lf[1]+1, lf[2]  , (      of[1]) * (1.f - of[2]) * fnq);
@@ -211,19 +208,15 @@ rho_1st_nc_cuda_run_patches_no_reorder(struct psc_mparticles *mprts, struct psc_
 
   cuda_mfields_const_set(cmres);
   
-  struct cuda_mparticles_params mprts_prm;
-  cuda_mparticles_params_set(&mprts_prm, cmprts);
-
   unsigned int fld_size = mres->nr_fields * cmres->im[0] * cmres->im[1] * cmres->im[2];
 
-  int gx = mprts_prm.b_mx[1];
-  int gy = mprts_prm.b_mx[2] * mprts->nr_patches;
+  int gx = cmprts->b_mx[1];
+  int gy = cmprts->b_mx[2] * mprts->nr_patches;
   dim3 dimGrid(gx, gy);
 
   rho_1st_nc_cuda_run<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER>
     <<<dimGrid, THREADS_PER_BLOCK>>>
-    (0, mprts_prm,
-     cmprts->d_xi4, cmprts->d_pxi4,
+    (0, cmprts->d_xi4, cmprts->d_pxi4,
      cmprts->d_off,
      cmprts->n_blocks, cmprts->d_id,
      cmres->d_flds, fld_size);
@@ -243,20 +236,15 @@ n_1st_cuda_run_patches_no_reorder(struct psc_mparticles *mprts, struct psc_mfiel
 
   cuda_mfields_const_set(cmres);
 
-  struct cuda_mparticles_params mprts_prm;
-  cuda_mparticles_params_set(&mprts_prm, cmprts);
+  unsigned int fld_size = mres->nr_fields * cmres->im[0] * cmres->im[1] * cmres->im[2];
 
-  unsigned int fld_size = mres->nr_fields *
-    cmres->im[0] * cmres->im[1] * cmres->im[2];
-
-  int gx = mprts_prm.b_mx[1];
-  int gy = mprts_prm.b_mx[2] * mprts->nr_patches;
+  int gx = cmprts->b_mx[1];
+  int gy = cmprts->b_mx[2] * mprts->nr_patches;
   dim3 dimGrid(gx, gy);
 
   n_1st_cuda_run<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z, REORDER>
     <<<dimGrid, THREADS_PER_BLOCK>>>
-    (0, mprts_prm,
-     cmprts->d_xi4, cmprts->d_pxi4, cmprts->d_off,
+    (0, cmprts->d_xi4, cmprts->d_pxi4, cmprts->d_off,
      cmprts->n_blocks, cmprts->d_id,
      cmres->d_flds, fld_size);
   cuda_sync_if_enabled();
