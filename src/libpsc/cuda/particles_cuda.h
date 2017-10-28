@@ -9,22 +9,17 @@ struct cuda_mfields_params {
   int ilg[3];
 };
 
-struct cuda_params {
-  real dt;
-  real dxi[3];
-  real b_dxi[3];
-  real dqs;
-  real fnqs;
-  real fnqxs, fnqys, fnqzs;
+struct cuda_mparticles_params {
+  float fnqs;
+  float dxi[3];
+  float b_dxi[3];
   int b_mx[3];
-  real dq[MAX_KINDS];
 };
 
 EXTERN_C void cuda_mfields_params_set(struct cuda_mfields_params *mflds_prm,
 				      struct cuda_mfields *cmflds);
-EXTERN_C void set_params(struct cuda_params *prm, struct psc *psc,
-			 struct cuda_mparticles *cmprts);
-EXTERN_C void free_params(struct cuda_params *prm);
+EXTERN_C void cuda_mparticles_params_set(struct cuda_mparticles_params *mprts_prm,
+					 struct cuda_mparticles *cmprts, struct psc *psc);
 
 // ======================================================================
 

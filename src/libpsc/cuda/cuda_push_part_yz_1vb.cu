@@ -20,34 +20,15 @@ cuda_mfields_params_set(struct cuda_mfields_params *mflds_prm,
 }
 
 void
-set_params(struct cuda_params *prm, struct psc *psc,
-	   struct cuda_mparticles *cmprts)
+cuda_mparticles_params_set(struct cuda_mparticles_params *mprts_prm,
+			   struct cuda_mparticles *cmprts, struct psc *psc)
 {
-  prm->dt = psc->dt;
+  mprts_prm->fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
+
   for (int d = 0; d < 3; d++) {
-    prm->dxi[d] = 1.f / psc->patch[0].dx[d];
+    mprts_prm->b_mx[d] = cmprts->b_mx[d];
+    mprts_prm->b_dxi[d] = cmprts->b_dxi[d];
+    mprts_prm->dxi[d] = 1.f / cmprts->dx[d];
   }
-
-  prm->dqs    = .5f * psc->coeff.eta * psc->dt;
-  prm->fnqs   = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
-  prm->fnqxs  = psc->patch[0].dx[0] * prm->fnqs / psc->dt;
-  prm->fnqys  = psc->patch[0].dx[1] * prm->fnqs / psc->dt;
-  prm->fnqzs  = psc->patch[0].dx[2] * prm->fnqs / psc->dt;
-  assert(psc->nr_kinds <= MAX_KINDS);
-  for (int k = 0; k < psc->nr_kinds; k++) {
-    prm->dq[k] = prm->dqs * psc->kinds[k].q / psc->kinds[k].m;
-  }
-
-  if (cmprts) {
-    for (int d = 0; d < 3; d++) {
-      prm->b_mx[d] = cmprts->b_mx[d];
-      prm->b_dxi[d] = cmprts->b_dxi[d];
-    }
-  }
-}
-
-void
-free_params(struct cuda_params *prm)
-{
 }
 
