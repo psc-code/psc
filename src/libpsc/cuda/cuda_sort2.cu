@@ -11,7 +11,6 @@
 
 #include "cuda_sort2.h"
 //#include "cuda_sort2_spine.h"
-#include "particles_cuda.h"
 
 #include <mrc_profile.h>
 

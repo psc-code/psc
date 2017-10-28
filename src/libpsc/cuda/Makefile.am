@@ -44,7 +44,6 @@ libsubdir_la_LIBADD = \
 	cuda_mfields.lo \
 	cuda_transfer.lo \
 	cuda_push_mprts_yz.lo \
-	cuda_push_part_yz_1vb.lo \
 	cuda_push_fields_yz.lo \
 	cuda_bnd.lo \
 	cuda_spine.lo \
@@ -98,7 +97,6 @@ CUDA_DEPS = \
 
 #        psc_particles_cuda.h FIXME
 
-cuda_push_part_yz_1vb.lo: cuda_common.h particles_cuda.h ../../include/psc_particles_cuda.h
 cuda_moments_1st_nc.lo: cuda_common.h particles_cuda.h ../../include/psc_particles_cuda.h
 
 cuda_spine.lo: b40c/radixsort_reduction_kernel.h b40c/radixsort_scanscatter_kernel.h cuda_sort2_spine.h
