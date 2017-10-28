@@ -10,6 +10,8 @@
 // FIXME, hardcoding is bad, needs to be consistent, etc...
 #define MAX_BND_COMPONENTS (3)
 
+#define BND (2)
+
 // ======================================================================
 // cuda_mfields_bnd
 
