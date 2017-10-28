@@ -56,4 +56,9 @@ struct cuda_mfields {
   float dx[3];                    // cell size (in actual length units)
 };
 
+struct cuda_mfields_const {
+  int ib[3];
+  int im[3];
+};
+
 #endif

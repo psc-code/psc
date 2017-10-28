@@ -1,6 +1,7 @@
 
 #include "cuda_bits.h"
 #include "cuda_mfields.h"
+#include "cuda_mfields_const.h"
 
 #include <psc.h>
 
@@ -14,8 +15,8 @@
 
 #define X3_DEV_OFF_YZ(fldnr, jy,jz)					\
   ((((fldnr)								\
-     *mz + ((jz)+2))							\
-    *my + ((jy)+2))							\
+     *d_cmflds_const.im[2] + ((jz)+2))					\
+    *d_cmflds_const.im[1] + ((jy)+2))					\
    *1 + (0))
 
 #undef F3_DEV
@@ -27,7 +28,7 @@
   (d_flds)[X3_DEV_OFF_YZ(fldnr, jy,jz)]
 
 __global__ static void
-push_fields_E_yz(float *d_flds0, float dt, float cny, float cnz, int my, int mz,
+push_fields_E_yz(float *d_flds0, float dt, float cny, float cnz,
 		 unsigned int size, int gridy)
 {
   int bidx_y = blockIdx.y % gridy;
@@ -35,7 +36,8 @@ push_fields_E_yz(float *d_flds0, float dt, float cny, float cnz, int my, int mz,
   int iy = blockIdx.x * blockDim.x + threadIdx.x;
   int iz = bidx_y * blockDim.y + threadIdx.y;
 
-  if (!(iy < my - 2 * (2-BND) && iz < mz - 2 * (2-BND)))
+  if (!(iy < d_cmflds_const.im[1] - 2 * (2-BND) &&
+	iz < d_cmflds_const.im[2] - 2 * (2-BND)))
     return;
   iy -= BND;
   iz -= BND;
@@ -59,7 +61,7 @@ push_fields_E_yz(float *d_flds0, float dt, float cny, float cnz, int my, int mz,
 }
 
 __global__ static void
-push_fields_H_yz(float *d_flds0, float cny, float cnz, int my, int mz,
+push_fields_H_yz(float *d_flds0, float cny, float cnz,
 		 unsigned int size, int gridy)
 {
   int bidx_y = blockIdx.y % gridy;
@@ -67,7 +69,8 @@ push_fields_H_yz(float *d_flds0, float cny, float cnz, int my, int mz,
   int iy = blockIdx.x * blockDim.x + threadIdx.x;
   int iz = bidx_y * blockDim.y + threadIdx.y;
 
-  if (!(iy < my - 2 * (2-BND) && iz < mz - 2 * (2-BND)))
+  if (!(iy < d_cmflds_const.im[1] - 2 * (2-BND) &&
+	iz < d_cmflds_const.im[2] - 2 * (2-BND)))
     return;
   iy -= BND;
   iz -= BND;
@@ -98,21 +101,20 @@ cuda_push_fields_E_yz(struct cuda_mfields *cmflds, float dt)
     return;
   }
 
+  cuda_mfields_const_set(cmflds);
+
   float cny = .5f * dt / cmflds->dx[1];
   float cnz = .5f * dt / cmflds->dx[2];
   assert(cmflds->ldims[0] == 1);
 
   unsigned int size = cmflds->n_fields * cmflds->n_cells_per_patch;
-  int my = cmflds->im[1];
-  int mz = cmflds->im[2];
 
   int grid[2]  = { (cmflds->ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
 		   (cmflds->ldims[2] + 2*BND + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
   dim3 dimGrid(grid[0], grid[1] * cmflds->n_patches);
 
-  push_fields_E_yz<<<dimGrid, dimBlock>>>(cmflds->d_flds, dt, cny, cnz, my, mz,
-					  size, grid[1]);
+  push_fields_E_yz<<<dimGrid, dimBlock>>>(cmflds->d_flds, dt, cny, cnz, size, grid[1]);
   cuda_sync_if_enabled();
 }
 
@@ -123,20 +125,19 @@ cuda_push_fields_H_yz(struct cuda_mfields *cmflds, float dt)
     return;
   }
 
+  cuda_mfields_const_set(cmflds);
+
   float cny = .5f * dt / cmflds->dx[1];
   float cnz = .5f * dt / cmflds->dx[2];
 
   unsigned int size = cmflds->n_fields * cmflds->n_cells_per_patch;
-  int my = cmflds->im[1];
-  int mz = cmflds->im[2];
 
   int grid[2]  = { (cmflds->ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
 		   (cmflds->ldims[2] + 2*BND + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
   dim3 dimBlock(BLOCKSIZE_Y, BLOCKSIZE_Z);
   dim3 dimGrid(grid[0], grid[1] * cmflds->n_patches);
 
-  push_fields_H_yz<<<dimGrid, dimBlock>>>(cmflds->d_flds, cny, cnz, my, mz,
-					  size, grid[1]);
+  push_fields_H_yz<<<dimGrid, dimBlock>>>(cmflds->d_flds, cny, cnz, size, grid[1]);
   cuda_sync_if_enabled();
 }
 
