@@ -15,39 +15,7 @@
 
 // ======================================================================
 
-struct d_particle {
-  real xi[3];
-  real kind_as_float;
-  real pxi[3];
-  real qni_wni;
-};
-
 #define THREADS_PER_BLOCK 256
-
-#define LOAD_PARTICLE(pp, d_p, n) do {					\
-    (pp).xi[0]         = d_p.xi4[n].x;					\
-    (pp).xi[1]         = d_p.xi4[n].y;					\
-    (pp).xi[2]         = d_p.xi4[n].z;					\
-    (pp).kind_as_float = d_p.xi4[n].w;					\
-    (pp).pxi[0]        = d_p.pxi4[n].x;					\
-    (pp).pxi[1]        = d_p.pxi4[n].y;					\
-    (pp).pxi[2]        = d_p.pxi4[n].z;					\
-    (pp).qni_wni       = d_p.pxi4[n].w;					\
-} while (0)
-
-#define STORE_PARTICLE_POS(pp, d_p, n) do {				\
-    d_p.xi4[n].x = (pp).xi[0];						\
-    d_p.xi4[n].y = (pp).xi[1];						\
-    d_p.xi4[n].z = (pp).xi[2];						\
-    d_p.xi4[n].w = (pp).kind_as_float;					\
-} while (0)
-
-#define STORE_PARTICLE_MOM(pp, d_p, n) do {				\
-    d_p.pxi4[n].x = (pp).pxi[0];					\
-    d_p.pxi4[n].y = (pp).pxi[1];					\
-    d_p.pxi4[n].z = (pp).pxi[2];					\
-    d_p.pxi4[n].w = (pp).qni_wni;					\
-} while (0)
 
 EXTERN_C void __fields_cuda_from_device_inside(struct psc_mfields *mflds, int mb, int me);
 EXTERN_C void __fields_cuda_to_device_outside(struct psc_mfields *mflds, int mb, int me);
@@ -58,28 +26,8 @@ EXTERN_C void cuda_fill_ghosts_periodic_z(struct psc_mfields *mflds, int p, int 
 EXTERN_C void cuda_add_ghosts_periodic_yz(struct psc_mfields *mflds, int p, int mb, int me);
 EXTERN_C void cuda_add_ghosts_periodic_z(struct psc_mfields *mflds, int p, int mb, int me);
 
-/* EXTERN_C void cuda_exchange_particles(int p, struct psc_particles *prts); */
-/* EXTERN_C void cuda_find_block_indices_ids(struct psc_particles *prts, unsigned int *d_bidx, */
-/* 					  unsigned int *d_ids); */
-/* EXTERN_C void cuda_find_block_indices_enc_ids(int p, struct psc_particles *prts, unsigned int *d_bidx, */
-/* 					      unsigned int *d_ids); */
-/* EXTERN_C int  cuda_exclusive_scan(int p, struct psc_particles *prts, unsigned int *d_vals, */
-/* 				  unsigned int *d_sums); */
-/* EXTERN_C void cuda_reorder_and_offsets(struct psc_particles *prts, unsigned int *d_bidx, unsigned int *d_ids); */
-
-/* EXTERN_C void cuda_sort_patch(int p, struct psc_particles *prts); */
-/* EXTERN_C void cuda_sort_patch_by_cell(int p, struct psc_particles *prts); */
-
-/* EXTERN_C void sort_patch_by_cell(int p, struct psc_particles *prts); */
-
 EXTERN_C void sort_pairs_device(unsigned int *d_keys, unsigned int *d_vals, int n);
 EXTERN_C void sort_pairs_host(int *d_keys, int *d_vals, int n);
-/* EXTERN_C void sort_patch_prep(int p, struct psc_particles *prts, int **d_cnis, */
-/* 			      int **d_ids); */
-/* EXTERN_C void sort_patch_done(int p, struct psc_particles *prts, int *d_cnis, */
-/* 			      int *d_ids); */
-
-/* EXTERN_C void my_sort_check(struct psc_particles *prts, int *keys, int *ids_ref); */
 
 #define CUDA2_STRIPE_SIZE THREADS_PER_BLOCK
 

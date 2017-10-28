@@ -9,7 +9,6 @@
 
 #define BND (2) // FIXME
 
-#undef THREADS_PER_BLOCK
 #define THREADS_PER_BLOCK (512)
 
 enum IP {
@@ -28,14 +27,6 @@ enum CURRMEM {
 };
 
 // FIXME
-struct d_particle {
-  real xi[3];
-  real kind_as_float;
-  real pxi[3];
-  real qni_wni;
-};
-
-// FIXME
 #define CUDA_BND_S_OOB (10)
 
 
@@ -43,63 +34,6 @@ struct d_particle {
 
 // OPT: precalc offsets into fld_cache (including ci[])
 // OPT: use more shmem?
-
-#define LOAD_PARTICLE_(pp, d_xi4, d_pxi4, n) do {			\
-    float4 xi4 = d_xi4[n];						\
-    (pp).xi[0]         = xi4.x;						\
-    (pp).xi[1]         = xi4.y;						\
-    (pp).xi[2]         = xi4.z;						\
-    (pp).kind_as_float = xi4.w;						\
-    float4 pxi4 = d_pxi4[n];						\
-    (pp).pxi[0]        = pxi4.x;					\
-    (pp).pxi[1]        = pxi4.y;					\
-    (pp).pxi[2]        = pxi4.z;					\
-    (pp).qni_wni       = pxi4.w;					\
-} while (0)
-
-#define LOAD_PARTICLE_POS_(pp, d_xi4, n) do {				\
-    float4 _xi4 = d_xi4[n];						\
-    (pp).xi[0]         = _xi4.x;					\
-    (pp).xi[1]         = _xi4.y;					\
-    (pp).xi[2]         = _xi4.z;					\
-    (pp).kind_as_float = _xi4.w;					\
-} while (0)
-
-#define LOAD_PARTICLE_MOM_(pp, d_pxi4, n) do {				\
-    float4 _pxi4 = d_pxi4[n];						\
-    (pp).pxi[0]        = _pxi4.x;					\
-    (pp).pxi[1]        = _pxi4.y;					\
-    (pp).pxi[2]        = _pxi4.z;					\
-    (pp).qni_wni       = _pxi4.w;					\
-} while (0)
-
-#if 0
-#define STORE_PARTICLE_POS_(pp, d_xi4, n) do {				\
-    d_xi4[n].x = (pp).xi[0];						\
-    d_xi4[n].y = (pp).xi[1];						\
-    d_xi4[n].z = (pp).xi[2];						\
-    d_xi4[n].w = (pp).kind_as_float;					\
-} while (0)
-#else
-#define STORE_PARTICLE_POS_(pp, d_xi4, n) do {				\
-    float4 xi4 = { (pp).xi[0], (pp).xi[1], (pp).xi[2], (pp).kind_as_float }; \
-    d_xi4[n] = xi4;							\
-} while (0)
-#endif
-
-#if 0
-#define STORE_PARTICLE_MOM_(pp, d_pxi4, n) do {				\
-    d_pxi4[n].x = (pp).pxi[0];						\
-    d_pxi4[n].y = (pp).pxi[1];						\
-    d_pxi4[n].z = (pp).pxi[2];						\
-    d_pxi4[n].w = (pp).qni_wni;						\
-} while (0)
-#else
-#define STORE_PARTICLE_MOM_(pp, d_pxi4, n) do {				\
-    float4 pxi4 = { (pp).pxi[0], (pp).pxi[1], (pp).pxi[2], (pp).qni_wni }; \
-    d_pxi4[n] = pxi4;							\
-} while (0)
-#endif
 
 // ======================================================================
 
@@ -244,9 +178,9 @@ push_part_one(struct d_particle *prt, int n, unsigned int *d_ids, float4 *d_xi4,
   unsigned int id;
   if (REORDER) {
     id = d_ids[n];
-    LOAD_PARTICLE_POS_(*prt, d_xi4, id);
+    LOAD_PARTICLE_POS(*prt, d_xi4, id);
   } else {
-    LOAD_PARTICLE_POS_(*prt, d_xi4, n);
+    LOAD_PARTICLE_POS(*prt, d_xi4, n);
   }
   // here we have x^{n+.5}, p^n
 
@@ -299,14 +233,14 @@ push_part_one(struct d_particle *prt, int n, unsigned int *d_ids, float4 *d_xi4,
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
   if (REORDER) {
-    LOAD_PARTICLE_MOM_(*prt, d_pxi4, id);
+    LOAD_PARTICLE_MOM(*prt, d_pxi4, id);
     push_pxi_dt(prt, exq, eyq, ezq, hxq, hyq, hzq);
-    STORE_PARTICLE_MOM_(*prt, d_alt_pxi4, n);
+    STORE_PARTICLE_MOM(*prt, d_alt_pxi4, n);
   } else {
     // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
-    LOAD_PARTICLE_MOM_(*prt, d_pxi4, n);
+    LOAD_PARTICLE_MOM(*prt, d_pxi4, n);
     push_pxi_dt(prt, exq, eyq, ezq, hxq, hyq, hzq);
-    STORE_PARTICLE_MOM_(*prt, d_pxi4, n);
+    STORE_PARTICLE_MOM(*prt, d_pxi4, n);
   }
 }
 
@@ -616,11 +550,11 @@ yz_calc_j(struct d_particle *prt, int n, float4 *d_xi4, float4 *d_pxi4,
 
     // x^(n+1.0), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
     push_xi(prt, vxi, .5f * d_cmprts_const.dt);
-    STORE_PARTICLE_POS_(*prt, d_xi4, n);
+    STORE_PARTICLE_POS(*prt, d_xi4, n);
   } else if (DEPOSIT == DEPOSIT_VB_3D) {
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
     push_xi(prt, vxi, d_cmprts_const.dt);
-    STORE_PARTICLE_POS_(*prt, d_xi4, n);
+    STORE_PARTICLE_POS(*prt, d_xi4, n);
   }
 
   // save block_idx for new particle position at x^(n+1.5)

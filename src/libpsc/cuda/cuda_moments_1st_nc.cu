@@ -4,9 +4,6 @@
 #include "cuda_mparticles_const.h"
 #include "cuda_mfields_const.h"
 
-#include "psc_cuda.h"
-
-#undef THREADS_PER_BLOCK
 #define THREADS_PER_BLOCK (512)
 
 // FIXME/TODO: we could do this w/o prior reordering, but currently the
@@ -30,22 +27,6 @@ public:
     atomicAdd(addr, val);
   }
 };
-
-#define LOAD_PARTICLE_POS_(pp, d_xi4, n) do {				\
-    float4 _xi4 = d_xi4[n];						\
-    (pp).xi[0]         = _xi4.x;					\
-    (pp).xi[1]         = _xi4.y;					\
-    (pp).xi[2]         = _xi4.z;					\
-    (pp).kind_as_float = _xi4.w;					\
-} while (0)
-
-#define LOAD_PARTICLE_MOM_(pp, d_pxi4, n) do {				\
-    float4 _pxi4 = d_pxi4[n];						\
-    (pp).pxi[0]        = _pxi4.x;					\
-    (pp).pxi[1]        = _pxi4.y;					\
-    (pp).pxi[2]        = _pxi4.z;					\
-    (pp).qni_wni       = _pxi4.w;					\
-} while (0)
 
 __device__ static void
 find_idx_off_1st(const float xi[3], int j[3], float h[3], float shift)
@@ -102,11 +83,11 @@ rho_1st_nc_cuda_run(int block_start,
     struct d_particle prt;
     if (REORDER) {
       unsigned int id = d_ids[n];
-      LOAD_PARTICLE_POS_(prt, d_xi4, id);
-      LOAD_PARTICLE_MOM_(prt, d_pxi4, id);
+      LOAD_PARTICLE_POS(prt, d_xi4, id);
+      LOAD_PARTICLE_MOM(prt, d_pxi4, id);
     } else {
-      LOAD_PARTICLE_POS_(prt, d_xi4, n);
-      LOAD_PARTICLE_MOM_(prt, d_pxi4, n);
+      LOAD_PARTICLE_POS(prt, d_xi4, n);
+      LOAD_PARTICLE_MOM(prt, d_pxi4, n);
     }
 
     float fnq = prt.qni_wni * d_cmprts_const.fnqs;
@@ -149,11 +130,11 @@ n_1st_cuda_run(int block_start,
     struct d_particle prt;
     if (REORDER) {
       unsigned int id = d_ids[n];
-      LOAD_PARTICLE_POS_(prt, d_xi4, id);
-      LOAD_PARTICLE_MOM_(prt, d_pxi4, id);
+      LOAD_PARTICLE_POS(prt, d_xi4, id);
+      LOAD_PARTICLE_MOM(prt, d_pxi4, id);
     } else {
-      LOAD_PARTICLE_POS_(prt, d_xi4, n);
-      LOAD_PARTICLE_MOM_(prt, d_pxi4, n);
+      LOAD_PARTICLE_POS(prt, d_xi4, n);
+      LOAD_PARTICLE_MOM(prt, d_pxi4, n);
     }
 
     int kind = __float_as_int(prt.kind_as_float);
