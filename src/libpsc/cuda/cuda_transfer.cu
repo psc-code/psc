@@ -3,7 +3,6 @@
 #include "cuda_mfields.h"
 
 #include "psc_cuda.h"
-#include "particles_cuda.h"
 
 #include <mrc_ddc_private.h>
 #include <mrc_profile.h>

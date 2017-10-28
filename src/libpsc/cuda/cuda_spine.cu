@@ -8,7 +8,6 @@
 #include <thrust/scan.h>
 
 #include "psc_cuda.h"
-#include "particles_cuda.h"
 #include <mrc_profile.h>
 
 #include <b40c/radixsort_reduction_kernel.h>

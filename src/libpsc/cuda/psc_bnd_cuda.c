@@ -2,7 +2,6 @@
 #include "psc_bnd_cuda.h"
 #include "psc_cuda.h"
 #include "psc_bnd_cuda_fields.h"
-#include "particles_cuda.h"
 #include "cuda_mfields.h"
 
 #include <mrc_ddc.h>

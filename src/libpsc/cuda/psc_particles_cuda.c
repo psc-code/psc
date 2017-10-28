@@ -7,7 +7,6 @@
 #include "psc_particles_single.h"
 #include "psc_particles_double.h"
 #include "psc_push_particles.h"
-#include "particles_cuda.h"
 
 #include <mrc_io.h>
 
