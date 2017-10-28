@@ -21,9 +21,9 @@ cuda_mfields_params_set(struct cuda_mfields_params *mflds_prm,
 
 void
 cuda_mparticles_params_set(struct cuda_mparticles_params *mprts_prm,
-			   struct cuda_mparticles *cmprts, struct psc *psc)
+			   struct cuda_mparticles *cmprts)
 {
-  mprts_prm->fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
+  mprts_prm->fnqs = cmprts->fnqs;
 
   for (int d = 0; d < 3; d++) {
     mprts_prm->b_mx[d] = cmprts->b_mx[d];

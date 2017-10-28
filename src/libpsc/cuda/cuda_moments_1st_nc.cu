@@ -212,7 +212,7 @@ rho_1st_nc_cuda_run_patches_no_reorder(struct psc_mparticles *mprts, struct psc_
   struct cuda_mfields_params mflds_prm;
   cuda_mfields_params_set(&mflds_prm, cmres);
   struct cuda_mparticles_params mprts_prm;
-  cuda_mparticles_params_set(&mprts_prm, cmprts, ppsc);
+  cuda_mparticles_params_set(&mprts_prm, cmprts);
 
   unsigned int fld_size = mres->nr_fields * cmres->im[0] * cmres->im[1] * cmres->im[2];
 
@@ -244,7 +244,7 @@ n_1st_cuda_run_patches_no_reorder(struct psc_mparticles *mprts, struct psc_mfiel
   struct cuda_mfields_params mflds_prm;
   cuda_mfields_params_set(&mflds_prm, cmres);
   struct cuda_mparticles_params mprts_prm;
-  cuda_mparticles_params_set(&mprts_prm, cmprts, ppsc);
+  cuda_mparticles_params_set(&mprts_prm, cmprts);
 
   unsigned int fld_size = mres->nr_fields *
     cmres->im[0] * cmres->im[1] * cmres->im[2];

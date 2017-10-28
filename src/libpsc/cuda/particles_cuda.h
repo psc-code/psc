@@ -19,7 +19,7 @@ struct cuda_mparticles_params {
 EXTERN_C void cuda_mfields_params_set(struct cuda_mfields_params *mflds_prm,
 				      struct cuda_mfields *cmflds);
 EXTERN_C void cuda_mparticles_params_set(struct cuda_mparticles_params *mprts_prm,
-					 struct cuda_mparticles *cmprts, struct psc *psc);
+					 struct cuda_mparticles *cmprts);
 
 // ======================================================================
 

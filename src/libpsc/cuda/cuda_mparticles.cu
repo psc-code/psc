@@ -48,6 +48,9 @@ cuda_mparticles_ctor(struct cuda_mparticles *cmprts, mrc_json_t json)
     mrc_json_get_float3(mrc_json_get_array_entry(xb_by_patch, p), cmprts->xb_by_patch[p]);
   }
 
+  cmprts->fnqs = mrc_json_get_object_entry_double(json_info,  "fnqs");
+
+
   cmprts->n_blocks_per_patch = cmprts->b_mx[0] * cmprts->b_mx[1] * cmprts->b_mx[2];
   cmprts->n_blocks = cmprts->n_patches * cmprts->n_blocks_per_patch;
 

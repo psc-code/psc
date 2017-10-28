@@ -360,6 +360,9 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
     mrc_json_array_push_double_array(json_xb_by_patch, 3, ppsc->patch[p].xb);
   }
 
+  double fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+  mrc_json_object_push_double(info, "fnqs", fnqs);
+
   cuda_mparticles_ctor(cmprts, json);
 
   // FIXME json_builder_free(obj);
