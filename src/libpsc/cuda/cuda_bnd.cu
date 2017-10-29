@@ -10,10 +10,10 @@
 #define SW (2) // FIXME
 
 // OPT lots of optimization opportunity in the single-proc/patch ones,
-// but they may not be that important for real production
+// but they may not be that important for float production
 
 __global__ static void
-fill_ghosts_periodic_yz(real *d_flds, int mb, int me)
+fill_ghosts_periodic_yz(float *d_flds, int mb, int me)
 {
   int iy = blockIdx.x * blockDim.x + threadIdx.x;
   int iz = blockIdx.y * blockDim.y + threadIdx.y;
@@ -51,7 +51,7 @@ cuda_fill_ghosts_periodic_yz(struct psc_mfields *mflds, int p, int mb, int me)
 }
 
 __global__ static void
-fill_ghosts_periodic_z(real *d_flds, int mb, int me)
+fill_ghosts_periodic_z(float *d_flds, int mb, int me)
 {
   int iy = blockIdx.x * blockDim.x + threadIdx.x;
   int iz = blockIdx.y * blockDim.y + threadIdx.y;
@@ -87,7 +87,7 @@ cuda_fill_ghosts_periodic_z(struct psc_mfields *mflds, int p, int mb, int me)
 }
 
 __global__ static void
-add_ghosts_periodic_yz(real *d_flds, int mb, int me)
+add_ghosts_periodic_yz(float *d_flds, int mb, int me)
 {
   int iy = blockIdx.x * blockDim.x + threadIdx.x;
   int iz = blockIdx.y * blockDim.y + threadIdx.y;
@@ -163,7 +163,7 @@ cuda_add_ghosts_periodic_yz(struct psc_mfields *mflds, int p, int mb, int me)
 }
 
 __global__ static void
-add_ghosts_periodic_z(real *d_flds, int mb, int me)
+add_ghosts_periodic_z(float *d_flds, int mb, int me)
 {
   int iy = blockIdx.x * blockDim.x + threadIdx.x;
   int iz = blockIdx.y * blockDim.y + threadIdx.y;
@@ -201,7 +201,7 @@ cuda_add_ghosts_periodic_z(struct psc_mfields *mflds, int p, int mb, int me)
 
 template<bool lo, bool hi>
 __global__ static void
-conducting_wall_H_y(real *d_flds)
+conducting_wall_H_y(float *d_flds)
 {
   int iz = blockIdx.x * blockDim.x + threadIdx.x - SW;
 
@@ -225,7 +225,7 @@ conducting_wall_H_y(real *d_flds)
 
 template<bool lo, bool hi>
 __global__ static void
-conducting_wall_E_y(real *d_flds)
+conducting_wall_E_y(float *d_flds)
 {
   int iz = blockIdx.x * blockDim.x + threadIdx.x - SW;
 
@@ -253,7 +253,7 @@ conducting_wall_E_y(real *d_flds)
 
 template<bool lo, bool hi>
 __global__ static void
-conducting_wall_J_y(real *d_flds)
+conducting_wall_J_y(float *d_flds)
 {
   int iz = blockIdx.x * blockDim.x + threadIdx.x - SW;
 

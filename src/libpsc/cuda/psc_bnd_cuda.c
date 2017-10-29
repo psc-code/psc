@@ -19,6 +19,11 @@ EXTERN_C void __fields_cuda_to_device_inside(struct cuda_mfields_bnd *cbnd, stru
 EXTERN_C void __fields_cuda_fill_ghosts_setup(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds);
 EXTERN_C void __fields_cuda_fill_ghosts_local(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
 					      int mb, int me);
+EXTERN_C void cuda_fill_ghosts_periodic_yz(struct psc_mfields *mflds, int p, int mb, int me);
+EXTERN_C void cuda_fill_ghosts_periodic_z(struct psc_mfields *mflds, int p, int mb, int me);
+EXTERN_C void cuda_add_ghosts_periodic_yz(struct psc_mfields *mflds, int p, int mb, int me);
+EXTERN_C void cuda_add_ghosts_periodic_z(struct psc_mfields *mflds, int p, int mb, int me);
+
 
 // ======================================================================
 // ddc funcs

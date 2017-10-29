@@ -13,22 +13,6 @@
 
 #include "cuda_bits.h"
 
-// ======================================================================
-
-EXTERN_C void cuda_fill_ghosts_periodic_yz(struct psc_mfields *mflds, int p, int mb, int me);
-EXTERN_C void cuda_fill_ghosts_periodic_z(struct psc_mfields *mflds, int p, int mb, int me);
-EXTERN_C void cuda_add_ghosts_periodic_yz(struct psc_mfields *mflds, int p, int mb, int me);
-EXTERN_C void cuda_add_ghosts_periodic_z(struct psc_mfields *mflds, int p, int mb, int me);
-
-EXTERN_C void sort_pairs_device(unsigned int *d_keys, unsigned int *d_vals, int n);
-EXTERN_C void sort_pairs_host(int *d_keys, int *d_vals, int n);
-
-#define CUDA2_STRIPE_SIZE THREADS_PER_BLOCK
-
-EXTERN_C void psc_mparticles_cuda_get_cuda_2(struct psc_mparticles *particles,
-					     void *particles_base,
-					     unsigned int flags);
-
 // These are for field boundary exchange, so they could, eventually, miss the
 // interior part
 
