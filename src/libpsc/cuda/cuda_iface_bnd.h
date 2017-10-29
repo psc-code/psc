@@ -31,7 +31,7 @@ struct cuda_mfields_bnd *cuda_mfields_bnd_create(void);
 void cuda_mfields_bnd_destroy(struct cuda_mfields_bnd *cbnd);
 void cuda_mfields_bnd_ctor(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds);
 void cuda_mfields_bnd_dtor(struct cuda_mfields_bnd *cbnd);
-
+struct cuda_mfields_bnd_patch *cuda_mfields_bnd_get_patch(struct cuda_mfields_bnd *cbnd, int p);
 
 
 void __fields_cuda_from_device_inside(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
