@@ -15,8 +15,6 @@
 
 // ======================================================================
 
-#define THREADS_PER_BLOCK 256
-
 EXTERN_C void __fields_cuda_from_device_inside(struct psc_mfields *mflds, int mb, int me);
 EXTERN_C void __fields_cuda_to_device_outside(struct psc_mfields *mflds, int mb, int me);
 EXTERN_C void __fields_cuda_to_device_inside(struct psc_mfields *mflds, int mb, int me);

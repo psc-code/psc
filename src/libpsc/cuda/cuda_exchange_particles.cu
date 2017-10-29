@@ -4,8 +4,9 @@
 #include "cuda_mparticles.h"
 #include "cuda_mparticles_const.h"
 
-#include "psc_cuda.h"
 #include "psc_bnd_cuda.h"
+
+#define THREADS_PER_BLOCK 256
 
 #if 0
 #define PFX(x) xchg_##x

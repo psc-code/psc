@@ -2,12 +2,13 @@
 #undef _GLIBCXX_USE_INT128
 
 #include "cuda_mparticles.h"
+#include "cuda_bits.h"
+#include "psc_particles_cuda.h"
 
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
 #include <thrust/scan.h>
 
-#include "psc_cuda.h"
 #include <mrc_profile.h>
 
 #include <b40c/radixsort_reduction_kernel.h>
@@ -17,6 +18,8 @@ using namespace b40c_thrust;
 
 typedef unsigned int K;
 typedef unsigned int V;
+
+#define THREADS_PER_BLOCK 256
 
 // ======================================================================
 // cuda_mprts_bidx_to_key
