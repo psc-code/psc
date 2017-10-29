@@ -28,9 +28,6 @@ libsubdir_la_SOURCES = \
 	b40c/radixsort_spine_kernel.h \
 	b40c/vector_types.h \
 	cuda_common.h \
-	cuda_sort2.h \
-	cuda_sort2_spine.h \
-	particles_cuda.h \
 	psc_bnd_cuda.h \
 	psc_bnd_cuda_fields.h \
 	psc_cuda.h
@@ -50,9 +47,6 @@ libsubdir_la_LIBADD = \
 	cuda_exchange_particles.lo \
 	cuda_heating.lo \
 	cuda_moments_1st_nc.lo
-
-#	cuda_sort.lo \
-	cuda_sort2.lo
 
 check_PROGRAMS = \
 	tests/test_cuda_mfields_1 \
@@ -95,8 +89,7 @@ CUDA_DEPS = \
 
 #        psc_particles_cuda.h FIXME
 
-cuda_spine.lo: b40c/radixsort_reduction_kernel.h b40c/radixsort_scanscatter_kernel.h cuda_sort2_spine.h
-cuda_sort2.lo cuda_exchange_particles.lo cuda_sort2_spine.lo: psc_cuda.h cuda_sort2.h
+cuda_spine.lo: b40c/radixsort_reduction_kernel.h b40c/radixsort_scanscatter_kernel.h
 cuda_exchange_particles.lo: psc_bnd_cuda.h ../../include/psc_particles_cuda.h cuda_mparticles_const.h
 cuda_transfer.lo: ../../include/psc_particles_cuda.h
 cuda_spine.lo: ../../include/psc_particles_cuda.h b40c/radixsort_reduction_kernel.h b40c/radixsort_scanscatter_kernel3.h

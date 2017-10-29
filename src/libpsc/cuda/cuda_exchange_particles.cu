@@ -4,7 +4,7 @@
 #include "cuda_mparticles.h"
 #include "cuda_mparticles_const.h"
 
-#include "cuda_sort2.h"
+#include "psc_cuda.h"
 #include "psc_bnd_cuda.h"
 
 #if 0
