@@ -2,18 +2,21 @@
 #include "psc_bnd_fields_private.h"
 #include "psc_fields_as_c.h"
 
+#include "cuda_iface.h"
+#include "psc_fields_cuda.h"
+
 #include "psc.h"
 #include <mrc_profile.h>
 
-EXTERN_C void cuda_conducting_wall_H_lo_hi_y(struct psc_mfields *mflds, int p);
-EXTERN_C void cuda_conducting_wall_E_lo_hi_y(struct psc_mfields *mflds, int p);
-EXTERN_C void cuda_conducting_wall_J_lo_hi_y(struct psc_mfields *mflds, int p);
-EXTERN_C void cuda_conducting_wall_H_lo_y(struct psc_mfields *mflds, int p);
-EXTERN_C void cuda_conducting_wall_H_hi_y(struct psc_mfields *mflds, int p);
-EXTERN_C void cuda_conducting_wall_E_lo_y(struct psc_mfields *mflds, int p);
-EXTERN_C void cuda_conducting_wall_E_hi_y(struct psc_mfields *mflds, int p);
-EXTERN_C void cuda_conducting_wall_J_lo_y(struct psc_mfields *mflds, int p);
-EXTERN_C void cuda_conducting_wall_J_hi_y(struct psc_mfields *mflds, int p);
+EXTERN_C void cuda_conducting_wall_H_lo_hi_y(struct cuda_mfields *cmflds, int p);
+EXTERN_C void cuda_conducting_wall_E_lo_hi_y(struct cuda_mfields *cmflds, int p);
+EXTERN_C void cuda_conducting_wall_J_lo_hi_y(struct cuda_mfields *cmflds, int p);
+EXTERN_C void cuda_conducting_wall_H_lo_y(struct cuda_mfields *cmflds, int p);
+EXTERN_C void cuda_conducting_wall_H_hi_y(struct cuda_mfields *cmflds, int p);
+EXTERN_C void cuda_conducting_wall_E_lo_y(struct cuda_mfields *cmflds, int p);
+EXTERN_C void cuda_conducting_wall_E_hi_y(struct cuda_mfields *cmflds, int p);
+EXTERN_C void cuda_conducting_wall_J_lo_y(struct cuda_mfields *cmflds, int p);
+EXTERN_C void cuda_conducting_wall_J_hi_y(struct cuda_mfields *cmflds, int p);
 
 // ----------------------------------------------------------------------
 // psc_bnd_fields_cuda_fill_ghosts_E
@@ -28,6 +31,7 @@ psc_bnd_fields_cuda_fill_ghosts_E(struct psc_bnd_fields *bnd, struct psc_mfields
   }
 
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "cuda", EX, EX + 3);
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
   if (ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
       ppsc->domain.bnd_fld_lo[1] == BND_FLD_CONDUCTING_WALL &&
       ppsc->domain.bnd_fld_hi[1] == BND_FLD_CONDUCTING_WALL &&
@@ -35,10 +39,10 @@ psc_bnd_fields_cuda_fill_ghosts_E(struct psc_bnd_fields *bnd, struct psc_mfields
     int d = 1;
     for (int p = 0; p < mflds->nr_patches; p++) {
       if (ppsc->patch[p].off[d] == 0) {
-	cuda_conducting_wall_E_lo_y(mflds, p);
+	cuda_conducting_wall_E_lo_y(cmflds, p);
       }
       if (ppsc->patch[p].off[d] + ppsc->patch[p].ldims[d] == ppsc->domain.gdims[d]) {
-	cuda_conducting_wall_E_hi_y(mflds, p);
+	cuda_conducting_wall_E_hi_y(cmflds, p);
       }
     }
   } else {
@@ -60,6 +64,7 @@ psc_bnd_fields_cuda_fill_ghosts_H(struct psc_bnd_fields *bnd, struct psc_mfields
   }
 
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "cuda", HX, HX + 3);
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
   if (ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
       ppsc->domain.bnd_fld_lo[1] == BND_FLD_CONDUCTING_WALL &&
       ppsc->domain.bnd_fld_hi[1] == BND_FLD_CONDUCTING_WALL &&
@@ -67,10 +72,10 @@ psc_bnd_fields_cuda_fill_ghosts_H(struct psc_bnd_fields *bnd, struct psc_mfields
     int d = 1;
     for (int p = 0; p < mflds->nr_patches; p++) {
       if (ppsc->patch[p].off[d] == 0) {
-	cuda_conducting_wall_H_lo_y(mflds, p);
+	cuda_conducting_wall_H_lo_y(cmflds, p);
       }
       if (ppsc->patch[p].off[d] + ppsc->patch[p].ldims[d] == ppsc->domain.gdims[d]) {
-	cuda_conducting_wall_H_hi_y(mflds, p);
+	cuda_conducting_wall_H_hi_y(cmflds, p);
 
       }
     }
@@ -93,6 +98,7 @@ psc_bnd_fields_cuda_add_ghosts_J(struct psc_bnd_fields *bnd, struct psc_mfields 
   }
 
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "cuda", JXI, JXI + 3);
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
   if (ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
       ppsc->domain.bnd_fld_lo[1] == BND_FLD_CONDUCTING_WALL &&
       ppsc->domain.bnd_fld_hi[1] == BND_FLD_CONDUCTING_WALL &&
@@ -100,10 +106,10 @@ psc_bnd_fields_cuda_add_ghosts_J(struct psc_bnd_fields *bnd, struct psc_mfields 
     int d = 1;
     for (int p = 0; p < mflds->nr_patches; p++) {
       if (ppsc->patch[p].off[d] == 0) {
-	cuda_conducting_wall_J_lo_y(mflds, p);
+	cuda_conducting_wall_J_lo_y(cmflds, p);
       }
       if (ppsc->patch[p].off[d] + ppsc->patch[p].ldims[d] == ppsc->domain.gdims[d]) {
-	cuda_conducting_wall_J_hi_y(mflds, p);
+	cuda_conducting_wall_J_hi_y(cmflds, p);
       }
     }
   } else {
