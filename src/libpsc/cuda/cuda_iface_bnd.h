@@ -29,18 +29,26 @@ struct cuda_mfields_bnd;
 
 // FIXME This is the alternative to doing it with json, I guess...
 // Should settle on one or the other eventually
+struct cuda_mfields_bnd_entry {
+  int patch;
+  int nei_patch;
+  int dir1;
+};
+
 struct cuda_mfields_bnd_params {
   int n_patches;
   int im[3];
   int ib[3];
 };
 
+
 struct cuda_mfields_bnd *cuda_mfields_bnd_create(void);
 void cuda_mfields_bnd_destroy(struct cuda_mfields_bnd *cbnd);
 void cuda_mfields_bnd_ctor(struct cuda_mfields_bnd *cbnd, struct cuda_mfields_bnd_params *prm);
 void cuda_mfields_bnd_dtor(struct cuda_mfields_bnd *cbnd);
 struct cuda_mfields_bnd_patch *cuda_mfields_bnd_get_patch(struct cuda_mfields_bnd *cbnd, int p);
-void cuda_mfields_bnd_setup_d_nei_patch(struct cuda_mfields_bnd *cbnd);
+void cuda_mfields_bnd_setup_d_nei_patch(struct cuda_mfields_bnd *cbnd, int n_entries,
+					struct cuda_mfields_bnd_entry *entries);
 
 
 void __fields_cuda_from_device_inside(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
