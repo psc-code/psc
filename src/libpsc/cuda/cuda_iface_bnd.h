@@ -41,7 +41,6 @@ void cuda_mfields_bnd_ctor(struct cuda_mfields_bnd *cbnd, struct cuda_mfields_bn
 void cuda_mfields_bnd_dtor(struct cuda_mfields_bnd *cbnd);
 struct cuda_mfields_bnd_patch *cuda_mfields_bnd_get_patch(struct cuda_mfields_bnd *cbnd, int p);
 void cuda_mfields_bnd_setup_d_nei_patch(struct cuda_mfields_bnd *cbnd);
-void cuda_mfields_bnd_setup_map(struct cuda_mfields_bnd *cbnd, int n_fields);
 
 
 void __fields_cuda_from_device_inside(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,

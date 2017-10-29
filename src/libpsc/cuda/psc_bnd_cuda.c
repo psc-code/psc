@@ -195,7 +195,6 @@ psc_bnd_cuda_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, in
   if (!sub->cbnd) {
     sub->cbnd = psc_mfields_cuda(mflds)->cbnd;
     psc_bnd_cuda_fill_ghosts_setup(bnd);
-    cuda_mfields_bnd_setup_map(sub->cbnd, cmflds->n_fields);
   }
 
   struct cuda_mfields_bnd *cbnd = psc_bnd_cuda_cbnd(bnd);

@@ -115,18 +115,20 @@ cuda_mfields_bnd_get_patch(struct cuda_mfields_bnd *cbnd, int p)
 // ----------------------------------------------------------------------
 // cuda_mfields_bnd_get_map
 
+static void cuda_mfields_bnd_setup_map(struct cuda_mfields_bnd *cbnd, int n_fields,
+				       struct cuda_mfields_bnd_map *map);
+
 static struct cuda_mfields_bnd_map *
 cuda_mfields_bnd_get_map(struct cuda_mfields_bnd *cbnd, int n_fields)
 {
   assert(n_fields - 1 < MAX_BND_FIELDS);
   struct cuda_mfields_bnd_map *map = &cbnd->map[n_fields - 1];
 
-  if (map->h_map_out) {
-    return map;
+  if (!map->h_map_out) {
+    cuda_mfields_bnd_setup_map(cbnd, n_fields, map);
   }
-  printf("need map for n_fields %d!\n", n_fields);
-  assert(0);
-  return NULL;
+  
+  return map;
 }
 
 // ======================================================================
@@ -1098,12 +1100,11 @@ fields_create_map_in_yz(struct cuda_mfields_bnd *cbnd, int n_fields,
 // cuda_mfields_bnd_setup_map
 
 void
-cuda_mfields_bnd_setup_map(struct cuda_mfields_bnd *cbnd, int n_fields)
+cuda_mfields_bnd_setup_map(struct cuda_mfields_bnd *cbnd, int n_fields,
+			   struct cuda_mfields_bnd_map *map)
 {
   cudaError_t ierr;
 
-  assert(n_fields - 1 < MAX_BND_FIELDS);
-  struct cuda_mfields_bnd_map *map = &cbnd->map[n_fields - 1];
   fields_create_map_out_yz(cbnd, n_fields, 2, &map->nr_map_out, &map->h_map_out);
   printf("map_out %d\n", map->nr_map_out);
   
