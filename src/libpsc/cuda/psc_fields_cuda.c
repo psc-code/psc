@@ -163,16 +163,6 @@ psc_mfields_cuda_setup(struct psc_mfields *mflds)
   sub->cmflds = cuda_mfields_create();
   cuda_mfields_ctor(sub->cmflds, json);
 
-  struct cuda_mfields_bnd_params prm;
-  prm.n_patches = mflds->nr_patches;
-  for (int d = 0; d < 3; d++) {
-    prm.ib[d] = ib[d];
-    prm.im[d] = im[d];
-  }
-  
-  sub->cbnd = cuda_mfields_bnd_create();
-  cuda_mfields_bnd_ctor(sub->cbnd, &prm);
-
   // FIXME json_builder_free(obj);
 }
 
@@ -187,10 +177,6 @@ psc_mfields_cuda_destroy(struct psc_mfields *mflds)
   cuda_mfields_dtor(sub->cmflds);
   cuda_mfields_destroy(sub->cmflds);
   sub->cmflds = NULL;
-
-  cuda_mfields_bnd_dtor(sub->cbnd);
-  cuda_mfields_bnd_destroy(sub->cbnd);
-  sub->cbnd = NULL;
 }
 
 // ----------------------------------------------------------------------

@@ -150,6 +150,18 @@ psc_bnd_cuda_setup(struct psc_bnd *bnd)
 }
 
 // ----------------------------------------------------------------------
+// psc_bnd_cuda_destroy
+
+static void
+psc_bnd_cuda_destroy(struct psc_bnd *bnd)
+{
+  struct psc_bnd_cuda *sub = psc_bnd_cuda(bnd);
+
+  cuda_mfields_bnd_dtor(sub->cbnd);
+  cuda_mfields_bnd_destroy(sub->cbnd);
+}
+
+// ----------------------------------------------------------------------
 // psc_bnd_cuda_add_ghosts
 
 void
@@ -193,7 +205,16 @@ psc_bnd_cuda_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, in
 
   struct psc_bnd_cuda *sub = psc_bnd_cuda(bnd);
   if (!sub->cbnd) {
-    sub->cbnd = psc_mfields_cuda(mflds)->cbnd;
+    sub->cbnd = cuda_mfields_bnd_create();
+
+    struct cuda_mfields_bnd_params prm;
+    prm.n_patches = cmflds->n_patches;
+    for (int d = 0; d < 3; d++) {
+      prm.ib[d] = cmflds->ib[d];
+      prm.im[d] = cmflds->im[d];
+    }
+  
+    cuda_mfields_bnd_ctor(sub->cbnd, &prm);
     psc_bnd_cuda_fill_ghosts_setup(bnd);
   }
 
@@ -258,6 +279,7 @@ struct psc_bnd_ops psc_bnd_cuda_ops = {
   .name                    = "cuda",
   .size                    = sizeof(struct psc_bnd_cuda),
   .setup                   = psc_bnd_cuda_setup,
+  .destroy                 = psc_bnd_cuda_destroy,
   .create_ddc              = psc_bnd_cuda_create_ddc,
   .add_ghosts              = psc_bnd_cuda_add_ghosts,
   .fill_ghosts             = psc_bnd_cuda_fill_ghosts,
