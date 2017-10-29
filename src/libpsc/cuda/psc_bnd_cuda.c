@@ -115,22 +115,18 @@ psc_bnd_cuda_create_ddc(struct psc_bnd *bnd)
 // psc_bnd_cuda_fill_ghosts_setup
 
 static void
-psc_bnd_cuda_fill_ghosts_setup(struct psc_bnd *bnd, struct cuda_mfields_bnd *cbnd,
+psc_bnd_cuda_fill_ghosts_setup(struct psc_bnd *bnd,
 			       struct cuda_mfields *cmflds, struct mrc_ddc *ddc)
 {
-  if (cbnd->h_nei_patch) {
-    return;
-  }
-  
-  assert(cmflds->im[0] == 1);
+  struct cuda_mfields_bnd *cbnd = psc_bnd_cuda_cbnd(bnd);
   
   struct mrc_ddc_multi *multi = mrc_ddc_multi(ddc);
   struct mrc_ddc_pattern2 *patt2 = &multi->fill_ghosts2;
   struct mrc_ddc_rank_info *ri = patt2->ri;
   
-  cbnd->h_nei_patch = calloc(9 * cmflds->n_patches, sizeof(*cbnd->h_nei_patch));
+  cbnd->h_nei_patch = calloc(9 * cbnd->n_patches, sizeof(*cbnd->h_nei_patch));
   
-  for (int p = 0; p < cmflds->n_patches; p++) {
+  for (int p = 0; p < cbnd->n_patches; p++) {
     for (int dir1 = 0; dir1 < 9; dir1++) {
       cbnd->h_nei_patch[p * 9 + dir1] = -1;
     }
@@ -149,8 +145,9 @@ psc_bnd_cuda_fill_ghosts_setup(struct psc_bnd *bnd, struct cuda_mfields_bnd *cbn
 static void
 psc_bnd_cuda_setup(struct psc_bnd *bnd)
 {
-  MHERE;
-  psc_bnd_setup_super(bnd);
+  psc_bnd_setup_super(bnd); // this calls back to set up ::ddc
+  // FIXME then, we should to the above cbnd setup, but we don't have cbnd/cmflds
+  // at this point... yet
 }
 
 // ----------------------------------------------------------------------
@@ -193,14 +190,15 @@ void
 psc_bnd_cuda_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, int mb, int me)
 {
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "cuda", mb, me);
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
 
   struct psc_bnd_cuda *sub = psc_bnd_cuda(bnd);
   if (!sub->cbnd) {
     sub->cbnd = psc_mfields_cuda(mflds)->cbnd;
+    psc_bnd_cuda_fill_ghosts_setup(bnd, cmflds, bnd->ddc);
   }
 
   struct cuda_mfields_bnd *cbnd = psc_bnd_cuda_cbnd(bnd);
-  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
 
   static int pr1, pr2, pr3, pr4, pr5;
   if (!pr1) {
@@ -227,8 +225,6 @@ psc_bnd_cuda_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, in
     // z-periodic single patch
     cuda_fill_ghosts_periodic_z(cmflds, 0, mb, me);
   } else {
-    psc_bnd_cuda_fill_ghosts_setup(bnd, cbnd, cmflds, bnd->ddc);
-
     prof_start(pr1);
     __fields_cuda_from_device_inside(cbnd, cmflds, mb, me); // FIXME _only
     prof_stop(pr1);
