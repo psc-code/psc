@@ -38,19 +38,6 @@ EXTERN_C void psc_mparticles_cuda_get_cuda_2(struct psc_mparticles *particles,
 
 #undef F3_CF_BOUNDS_CHECK
 
-#if 0
-
-#define F3_CF_OFF(cf, fldnr, jx,jy,jz)					\
-  ((((((fldnr)								\
-       * (cf)->im[2] + ((jz)-(cf)->ib[2]))				\
-      * (cf)->im[1] + ((jy)-(cf)->ib[1]))				\
-     * (cf)->im[0] + ((jx)-(cf)->ib[0]))))
-
-#define F3_CF(cf, fldnr, jx,jy,jz)		\
-  ((cf)->arr[F3_CF_OFF(cf, fldnr, jx,jy,jz)])
-
-#else
-
 #ifdef F3_CF_BOUNDS_CHECK
 #define F3_CF_OFF(cf, fldnr, jx,jy,jz) ({				\
   assert(jx == 0); /* FIXME yz only! */				        \
@@ -67,8 +54,6 @@ EXTERN_C void psc_mparticles_cuda_get_cuda_2(struct psc_mparticles *particles,
 
 #define F3_CF(cf, fldnr, jx,jy,jz)					\
   ((cf)->arr_off[F3_CF_OFF(cf, fldnr, jx,jy,jz)])
-
-#endif
 
 #ifdef F3_CF_BOUNDS_CHECK
 #define F3_CF_0_OFF(cf, fldnr, jx,jy,jz) ({				\
