@@ -15,10 +15,6 @@
 
 // ======================================================================
 
-EXTERN_C void __fields_cuda_from_device_inside(struct psc_mfields *mflds, int mb, int me);
-EXTERN_C void __fields_cuda_to_device_outside(struct psc_mfields *mflds, int mb, int me);
-EXTERN_C void __fields_cuda_to_device_inside(struct psc_mfields *mflds, int mb, int me);
-
 EXTERN_C void cuda_fill_ghosts_periodic_yz(struct psc_mfields *mflds, int p, int mb, int me);
 EXTERN_C void cuda_fill_ghosts_periodic_z(struct psc_mfields *mflds, int p, int mb, int me);
 EXTERN_C void cuda_add_ghosts_periodic_yz(struct psc_mfields *mflds, int p, int mb, int me);

@@ -1,11 +1,20 @@
 
 #include "psc_bnd_cuda.h"
 #include "psc_cuda.h"
+#include "psc_fields_cuda.h"
 #include "psc_bnd_cuda_fields.h"
 #include "cuda_mfields.h"
 
 #include <mrc_ddc.h>
 #include <mrc_profile.h>
+
+EXTERN_C void __fields_cuda_from_device_inside(struct psc_mfields *mflds, int mb, int me);
+EXTERN_C void __fields_cuda_to_device_outside(struct psc_mfields *mflds, int mb, int me);
+EXTERN_C void __fields_cuda_to_device_inside(struct psc_mfields *mflds, int mb, int me);
+EXTERN_C void __fields_cuda_fill_ghosts_setup(struct psc_mfields *mflds, struct mrc_ddc *ddc);
+EXTERN_C void __fields_cuda_from_device_inside_only(struct psc_mfields *mflds, int mb, int me);
+EXTERN_C void __fields_cuda_fill_ghosts_local(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
+					      int mb, int me);
 
 // ======================================================================
 // ddc funcs
@@ -164,11 +173,11 @@ psc_bnd_fld_cuda_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *flds_base,
     psc_mfields_put_as(flds, flds_base, mb, me);
   } else {
     struct psc_mfields *flds_cuda = psc_mfields_get_as(flds_base, "cuda", mb, me);
+    struct cuda_mfields *cmflds = psc_mfields_cuda(flds_cuda)->cmflds;
+    struct cuda_mfields_bnd *cbnd = psc_mfields_cuda(flds_cuda)->cbnd;
 
-    EXTERN_C void __fields_cuda_fill_ghosts_setup(struct psc_mfields *mflds, struct mrc_ddc *ddc);
     __fields_cuda_fill_ghosts_setup(flds_cuda, bnd->ddc);
 
-    EXTERN_C void __fields_cuda_from_device_inside_only(struct psc_mfields *mflds, int mb, int me);
     prof_start(pr1);
     __fields_cuda_from_device_inside(flds_cuda, mb, me); // FIXME _only
     prof_stop(pr1);
@@ -181,8 +190,7 @@ psc_bnd_fld_cuda_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *flds_base,
     mrc_ddc_fill_ghosts_local(bnd->ddc, 0, me - mb, flds_cuda);
 #endif
 #if 1
-    EXTERN_C void __fields_cuda_fill_ghosts_local(struct psc_mfields *mflds, int mb, int me);
-    __fields_cuda_fill_ghosts_local(flds_cuda, mb, me);
+    __fields_cuda_fill_ghosts_local(cbnd, cmflds, mb, me);
 #endif
     prof_stop(pr3);
     prof_start(pr4);
