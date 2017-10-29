@@ -6,7 +6,6 @@
 #include <mrc_profile.h>
 
 // FIXME, hardcoding is bad, needs to be consistent, etc...
-#define MAX_BND_COMPONENTS (3)
 
 #define BND (2)
 
@@ -86,18 +85,21 @@ cuda_mfields_bnd_dtor(struct cuda_mfields_bnd *cbnd)
 
   ierr = cudaFree(cbnd->d_bnd_buf); cudaCheck(ierr);
   ierr = cudaFree(cbnd->d_nei_patch); cudaCheck(ierr);
-  ierr = cudaFree(cbnd->d_map_out); cudaCheck(ierr);
-  ierr = cudaFree(cbnd->d_map_in); cudaCheck(ierr);
   delete[] cbnd->h_bnd_buf;
   delete[] cbnd->h_nei_patch;
-  delete[] cbnd->h_map_out;
-  delete[] cbnd->h_map_in;
+
+  for (int n = 0; n < MAX_BND_FIELDS; n++) {
+    struct cuda_mfields_bnd_map *map = &cbnd->map[n];
+    ierr = cudaFree(map->d_map_out); cudaCheck(ierr);
+    ierr = cudaFree(map->d_map_in); cudaCheck(ierr);
+    delete[] map->h_map_out;
+    delete[] map->h_map_in;
+  }
 
   for (int p = 0; p < cbnd->n_patches; p++) {
     struct cuda_mfields_bnd_patch *cf = &cbnd->bnd_by_patch[p];
     delete[] cf->arr;
   }
-  
   delete[] cbnd->bnd_by_patch;
 }
 
@@ -108,6 +110,23 @@ struct cuda_mfields_bnd_patch *
 cuda_mfields_bnd_get_patch(struct cuda_mfields_bnd *cbnd, int p)
 {
   return &cbnd->bnd_by_patch[p];
+}
+
+// ----------------------------------------------------------------------
+// cuda_mfields_bnd_get_map
+
+static struct cuda_mfields_bnd_map *
+cuda_mfields_bnd_get_map(struct cuda_mfields_bnd *cbnd, int n_fields)
+{
+  assert(n_fields - 1 < MAX_BND_FIELDS);
+  struct cuda_mfields_bnd_map *map = &cbnd->map[n_fields - 1];
+
+  if (map->h_map_out) {
+    return map;
+  }
+  printf("need map for n_fields %d!\n", n_fields);
+  assert(0);
+  return NULL;
 }
 
 // ======================================================================
@@ -486,15 +505,17 @@ fields_host_pack3_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bnd *cbnd,
   int *im = cmflds->im;
   int n_fields = cmflds->n_fields;
 
+  struct cuda_mfields_bnd_map *map = cuda_mfields_bnd_get_map(cbnd, n_fields);
+
   float *h_buf = cbnd->h_bnd_buf;
   int nr_map;
   int *h_map;
   if (B == 2) {
-    h_map = cbnd->h_map_out;
-    nr_map = cbnd->nr_map_out;
+    h_map = map->h_map_out;
+    nr_map = map->nr_map_out;
   } else if (B == 4) {
-    h_map = cbnd->h_map_in;
-    nr_map = cbnd->nr_map_in;
+    h_map = map->h_map_in;
+    nr_map = map->nr_map_in;
   } else {
     assert(0);
   }
@@ -601,6 +622,8 @@ __fields_cuda_from_device3_yz(struct cuda_mfields *cmflds, struct cuda_mfields_b
     pr3 = prof_register("field_host_unpack 3i", 1., 0, 0);
   }
     
+  struct cuda_mfields_bnd_map *map = cuda_mfields_bnd_get_map(cbnd, cmflds->n_fields);
+
   assert(me - mb <= MAX_BND_COMPONENTS);
   assert(cmflds->ib[1] == -BND);
   assert(cmflds->im[1] >= 2 * B);
@@ -608,7 +631,7 @@ __fields_cuda_from_device3_yz(struct cuda_mfields *cmflds, struct cuda_mfields_b
 
   int nr_map;
   if (B == 4) {
-    nr_map = cbnd->nr_map_in;
+    nr_map = map->nr_map_in;
   } else {
     assert(0);
   }
@@ -642,6 +665,8 @@ __fields_cuda_to_device3_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bnd
     pr3 = prof_register("field_device_unpack 3o", 1., 0, 0);
   }
 
+  struct cuda_mfields_bnd_map *map = cuda_mfields_bnd_get_map(cbnd, cmflds->n_fields);
+
   assert(me - mb <= MAX_BND_COMPONENTS);
   assert(cmflds->ib[1] == -BND);
   assert(cmflds->im[1] >= 2 * B);
@@ -649,7 +674,7 @@ __fields_cuda_to_device3_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bnd
 
   int nr_map;
   if (B == 2) {
-    nr_map = cbnd->nr_map_out;
+    nr_map = map->nr_map_out;
   } else {
     assert(0);
   }
@@ -1076,22 +1101,25 @@ void
 cuda_mfields_bnd_setup_map(struct cuda_mfields_bnd *cbnd, int n_fields)
 {
   cudaError_t ierr;
-  fields_create_map_out_yz(cbnd, n_fields, 2, &cbnd->nr_map_out, &cbnd->h_map_out);
+
+  assert(n_fields - 1 < MAX_BND_FIELDS);
+  struct cuda_mfields_bnd_map *map = &cbnd->map[n_fields - 1];
+  fields_create_map_out_yz(cbnd, n_fields, 2, &map->nr_map_out, &map->h_map_out);
+  printf("map_out %d\n", map->nr_map_out);
   
-  ierr = cudaMalloc((void **) &cbnd->d_map_out,
-		    cbnd->nr_map_out * sizeof(*cbnd->d_map_out)); cudaCheck(ierr);
-  ierr = cudaMemcpy(cbnd->d_map_out, cbnd->h_map_out, 
-		    cbnd->nr_map_out * sizeof(*cbnd->d_map_out),
+  ierr = cudaMalloc((void **) &map->d_map_out,
+		    map->nr_map_out * sizeof(*map->d_map_out)); cudaCheck(ierr);
+  ierr = cudaMemcpy(map->d_map_out, map->h_map_out, 
+		    map->nr_map_out * sizeof(*map->d_map_out),
 		    cudaMemcpyHostToDevice); cudaCheck(ierr);
   
-  fields_create_map_in_yz(cbnd, n_fields, 2, &cbnd->nr_map_in, &cbnd->h_map_in);
-  printf("map_out %d\n", cbnd->nr_map_out);
-  printf("map_in %d\n", cbnd->nr_map_in);
+  fields_create_map_in_yz(cbnd, n_fields, 2, &map->nr_map_in, &map->h_map_in);
+  printf("map_in %d\n", map->nr_map_in);
   
-  ierr = cudaMalloc((void **) &cbnd->d_map_in,
-		    cbnd->nr_map_in * sizeof(*cbnd->d_map_in)); cudaCheck(ierr);
-  ierr = cudaMemcpy(cbnd->d_map_in, cbnd->h_map_in, 
-		    cbnd->nr_map_in * sizeof(*cbnd->d_map_in),
+  ierr = cudaMalloc((void **) &map->d_map_in,
+		    map->nr_map_in * sizeof(*map->d_map_in)); cudaCheck(ierr);
+  ierr = cudaMemcpy(map->d_map_in, map->h_map_in, 
+		    map->nr_map_in * sizeof(*map->d_map_in),
 		    cudaMemcpyHostToDevice); cudaCheck(ierr);
 }
 
@@ -1100,17 +1128,19 @@ static void
 fields_device_pack3_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bnd *cbnd,
 		       int mb, int me)
 {
+  struct cuda_mfields_bnd_map *map = cuda_mfields_bnd_get_map(cbnd, cmflds->n_fields);
+
   int *im = cmflds->im;
   assert(im[0] == 1);
   int n_patches = cmflds->n_patches;
   int n_map;
   int *d_map;
   if (B == 2) {
-    n_map = cbnd->nr_map_out;
-    d_map = cbnd->d_map_out;
+    n_map = map->nr_map_out;
+    d_map = map->d_map_out;
   } else if (B == 4) {
-    n_map = cbnd->nr_map_in;
-    d_map = cbnd->d_map_in;
+    n_map = map->nr_map_in;
+    d_map = map->d_map_in;
   } else {
     assert(0);
   }

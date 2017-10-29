@@ -5,6 +5,24 @@
 #include "cuda_iface.h"
 #include "cuda_iface_bnd.h"
 
+#define MAX_BND_FIELDS (17)
+#define MAX_BND_COMPONENTS (3)
+
+// ----------------------------------------------------------------------
+// cuda_mfields_bnd_map
+//
+// the maps differs depending on the number of components in the field
+// (incorporates specific strides)
+
+struct cuda_mfields_bnd_map {
+  int *h_map_out; // maps thread id to a particular offset for ghosts in the flds array 
+  int *d_map_out;
+  int nr_map_out; // number of entries in the map
+  int *h_map_in; // maps thread id to a particular offset for ghosts in the flds array 
+  int *d_map_in;
+  int nr_map_in; // number of entries in the map
+};
+
 // ----------------------------------------------------------------------
 // cuda_mfields_bnd
 
@@ -17,12 +35,7 @@ struct cuda_mfields_bnd {
   fields_cuda_real_t *h_bnd_buf;
   int *h_nei_patch;
   int *d_nei_patch;
-  int *h_map_out; // maps thread id to a particular offset for ghosts in the flds array 
-  int *d_map_out;
-  int nr_map_out; // number of entries in the map
-  int *h_map_in; // maps thread id to a particular offset for ghosts in the flds array 
-  int *d_map_in;
-  int nr_map_in; // number of entries in the map
+  struct cuda_mfields_bnd_map map[MAX_BND_FIELDS];
 };
 
 // ----------------------------------------------------------------------
