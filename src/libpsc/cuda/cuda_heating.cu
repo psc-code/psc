@@ -2,6 +2,7 @@
 #include "cuda_iface.h"
 #include "cuda_mparticles.h"
 #include "cuda_mfields.h"
+#include "cuda_mparticles_const.h"
 #include "cuda_bits.h"
 
 #include <thrust/host_vector.h>
@@ -20,7 +21,6 @@ __device__ static cuda_heating_foil d_foil; // FIXME, could use const memory
 // cuda_heating_params
 
 struct cuda_heating_params {
-  int b_mx[3];
   float_3 *d_xb_by_patch;
 };
 
@@ -33,10 +33,6 @@ static void
 cuda_heating_params_set(struct cuda_mparticles *cmprts)
 {
   cudaError_t ierr;
-
-  for (int d = 0; d < 3; d++) {
-    h_prm.b_mx[d] = cmprts->b_mx[d];
-  }
 
   ierr = cudaMalloc(&h_prm.d_xb_by_patch, cmprts->n_patches * sizeof(float_3));
   cudaCheck(ierr);
@@ -183,31 +179,6 @@ cuda_heating_run_foil_gold(struct cuda_mparticles *cmprts)
 }
 
 // ----------------------------------------------------------------------
-
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
-__device__ static int
-find_block_pos_patch(struct cuda_heating_params prm, int *block_pos, int *ci0)
-{
-  block_pos[1] = blockIdx.x;
-  block_pos[2] = blockIdx.y % prm.b_mx[2];
-
-  ci0[0] = 0;
-  ci0[1] = block_pos[1] * BLOCKSIZE_Y;
-  ci0[2] = block_pos[2] * BLOCKSIZE_Z;
-
-  return blockIdx.y / prm.b_mx[2];
-}
-
-// ----------------------------------------------------------------------
-// find_bid
-
-__device__ static int
-find_bid(struct cuda_heating_params prm)
-{
-  return blockIdx.y * prm.b_mx[1] + blockIdx.x;
-}
-
-// ----------------------------------------------------------------------
 // k_heating_run_foil
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
@@ -217,9 +188,8 @@ k_heating_run_foil(struct cuda_heating_params prm, float4 *d_xi4, float4 *d_pxi4
 		   unsigned int *d_off, curandState *d_curand_states)
 {
   int block_pos[3], ci0[3];
-  int p = find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
-      (prm, block_pos, ci0);
-  int bid = find_bid(prm);
+  int p = find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(block_pos, ci0);
+  int bid = find_bid();
   int id = threadIdx.x + bid * THREADS_PER_BLOCK;
   int block_begin = d_off[bid];
   int block_end = d_off[bid + 1];
@@ -317,6 +287,7 @@ cuda_heating_run_foil(struct cuda_mparticles *cmprts)
   static bool first_time = true;
   static curandState *d_curand_states;
   if (first_time) {
+    cuda_mparticles_const_set(cmprts);
     cuda_heating_params_set(cmprts);
 
     dim3 dimGrid(cmprts->b_mx[1], cmprts->b_mx[2] * cmprts->n_patches);

@@ -28,16 +28,6 @@ public:
   }
 };
 
-__device__ static void
-find_idx_off_1st(const float xi[3], int j[3], float h[3], float shift)
-{
-  for (int d = 0; d < 3; d++) {
-    float pos = xi[d] * d_cmprts_const.dxi[d] + shift;
-    j[d] = __float2int_rd(pos);
-    h[d] = pos - j[d];
-  }
-}
-
 // ======================================================================
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
@@ -48,12 +38,6 @@ find_block_pos_patch(int *block_pos)
   block_pos[2] = blockIdx.y % d_cmprts_const.b_mx[2];
 
   return blockIdx.y / d_cmprts_const.b_mx[2];
-}
-
-__device__ static int
-find_bid()
-{
-  return blockIdx.y * d_cmprts_const.b_mx[1] + blockIdx.x;
 }
 
 // ----------------------------------------------------------------------
