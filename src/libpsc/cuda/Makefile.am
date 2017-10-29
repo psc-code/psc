@@ -84,8 +84,7 @@ CUDA_DEPS = \
         cuda_mparticles.h \
         cuda_mfields.h \
 	cuda_bits.h \
-        psc_cuda.h \
-        constants.c
+        psc_cuda.h
 
 #        psc_particles_cuda.h FIXME
 
