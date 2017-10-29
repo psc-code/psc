@@ -1,7 +1,7 @@
 
 #include "cuda_mparticles.h"
 #include "cuda_mfields.h"
-
+#include "cuda_bits.h"
 #include "psc_cuda.h"
 
 #include <mrc_ddc_private.h>
@@ -118,7 +118,7 @@ enum {
 
 template<int B, int WHAT, int NR_COMPONENTS>
 __global__ static void
-k_fields_device_pack_yz(real *d_buf, real *d_flds, int gmy, int gmz,
+k_fields_device_pack_yz(float *d_buf, float *d_flds, int gmy, int gmz,
 			int nr_patches, int nr_fields)
 {
   unsigned int buf_size = 2*B * (gmy + gmz - 2*B);
@@ -162,7 +162,7 @@ k_fields_device_pack_yz(real *d_buf, real *d_flds, int gmy, int gmz,
 
 template<int B, int WHAT, int NR_COMPONENTS>
 __global__ static void
-k_fields_device_pack2_yz(real *d_buf, real *d_flds, int *d_nei_patch_by_dir1,
+k_fields_device_pack2_yz(float *d_buf, float *d_flds, int *d_nei_patch_by_dir1,
 			 int gmy, int gmz, int nr_patches, int nr_fields)
 {
   unsigned int nr_ghosts = 2*B * (gmy + gmz - 2*B);
@@ -393,7 +393,7 @@ fields_host_pack_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bnd *cbnd,
 
   for (int p = 0; p < cmflds->n_patches; p++) {
     struct cuda_mfields_bnd_patch *cf = &cbnd->bnd_by_patch[p];
-    real *h_buf = cbnd->h_bnd_buf + p * buf_size * (me - mb);
+    float *h_buf = cbnd->h_bnd_buf + p * buf_size * (me - mb);
     
     int gmy = cf->im[1], gmz = cf->im[2];
     int tid = 0;
@@ -425,7 +425,7 @@ static void
 fields_host_pack2_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bnd *cbnd,
 		     int mb, int me)
 {
-  real *h_buf = cbnd->h_bnd_buf;
+  float *h_buf = cbnd->h_bnd_buf;
   int tid = 0;
   for (int m = 0; m < me - mb; m++) {
     for (int p = 0; p < cmflds->n_patches; p++) {
@@ -464,7 +464,7 @@ fields_host_pack3_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bnd *cbnd,
   int *im = cmflds->im;
   int n_fields = cmflds->n_fields;
 
-  real *h_buf = cbnd->h_bnd_buf;
+  float *h_buf = cbnd->h_bnd_buf;
   int nr_map;
   int *h_map;
   if (B == 2) {
@@ -651,16 +651,13 @@ __fields_cuda_to_device3_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bnd
 // ======================================================================
 
 EXTERN_C void
-__fields_cuda_from_device_inside(struct psc_mfields *mflds, int mb, int me)
+__fields_cuda_from_device_inside(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
+				 int mb, int me)
 {
-  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
-  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
-  struct cuda_mfields_bnd *cbnd = psc_mfields_cuda(mflds)->cbnd;
-
   if (cmflds->im[0] == 2 * -cmflds->ib[0] + 1) {
     __fields_cuda_from_device_yz<2*BND>(cmflds, cbnd, mb, me);
   } else {
-    for (int p = 0; p < mflds->nr_patches; p++) {
+    for (int p = 0; p < cmflds->n_patches; p++) {
       struct cuda_mfields_bnd_patch *cf = &cbnd->bnd_by_patch[p];
       unsigned int size = cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
       cudaError_t ierr;
@@ -673,16 +670,13 @@ __fields_cuda_from_device_inside(struct psc_mfields *mflds, int mb, int me)
 }
 
 EXTERN_C void
-__fields_cuda_from_device_inside_only(struct psc_mfields *mflds, int mb, int me)
+__fields_cuda_from_device_inside_only(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
+				      int mb, int me)
 {
-  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
-  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
-  struct cuda_mfields_bnd *cbnd = psc_mfields_cuda(mflds)->cbnd;
-
   if (cmflds->im[0] == 2 * -cmflds->ib[0] + 1) {
     __fields_cuda_from_device3_yz<2*BND>(cmflds, cbnd, mb, me);
   } else {
-    for (int p = 0; p < mflds->nr_patches; p++) {
+    for (int p = 0; p < cmflds->n_patches; p++) {
       struct cuda_mfields_bnd_patch *cf = &cbnd->bnd_by_patch[p];
       unsigned int size = cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
       cudaError_t ierr;
@@ -695,16 +689,13 @@ __fields_cuda_from_device_inside_only(struct psc_mfields *mflds, int mb, int me)
 }
 
 EXTERN_C void
-__fields_cuda_to_device_outside(struct psc_mfields *mflds, int mb, int me)
+__fields_cuda_to_device_outside(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
+				int mb, int me)
 {
-  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
-  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
-  struct cuda_mfields_bnd *cbnd = psc_mfields_cuda(mflds)->cbnd;
-
   if (cmflds->im[0] == 2 * -cmflds->ib[0] + 1) {
     __fields_cuda_to_device3_yz<BND>(cmflds, cbnd, mb, me);
   } else {
-    for (int p = 0; p < mflds->nr_patches; p++) {
+    for (int p = 0; p < cmflds->n_patches; p++) {
       struct cuda_mfields_bnd_patch *cf = &cbnd->bnd_by_patch[p];
       unsigned int size = cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
       cudaError_t ierr;
@@ -717,16 +708,13 @@ __fields_cuda_to_device_outside(struct psc_mfields *mflds, int mb, int me)
 }
 
 EXTERN_C void
-__fields_cuda_to_device_inside(struct psc_mfields *mflds, int mb, int me)
+__fields_cuda_to_device_inside(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
+				int mb, int me)
 {
-  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
-  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
-  struct cuda_mfields_bnd *cbnd = psc_mfields_cuda(mflds)->cbnd;
-
   if (cmflds->im[0] == 2 * -cmflds->ib[0] + 1) {
     __fields_cuda_to_device_yz<2*BND>(cmflds, cbnd, mb, me);
   } else {
-    for (int p = 0; p < mflds->nr_patches; p++) {
+    for (int p = 0; p < cmflds->n_patches; p++) {
       struct cuda_mfields_bnd_patch *cf = &cbnd->bnd_by_patch[p];
       unsigned int size = cmflds->im[0] * cmflds->im[1] * cmflds->im[2];
       cudaError_t ierr;
@@ -797,24 +785,21 @@ static void fields_create_map_in_yz(struct cuda_mfields *cmflds, struct cuda_mfi
 				    int B, int *p_nr_map, int **p_h_map);
 
 EXTERN_C void
-__fields_cuda_fill_ghosts_setup(struct psc_mfields *mflds, struct mrc_ddc *ddc)
+__fields_cuda_fill_ghosts_setup(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
+				struct mrc_ddc *ddc)
 {
-  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
-  struct cuda_mfields *cmflds = mflds_cuda->cmflds;
-  struct cuda_mfields_bnd *cbnd = psc_mfields_cuda(mflds)->cbnd;
-
   int *im = cmflds->im;
   assert(im[0] == 1);
-  int nr_patches = mflds->nr_patches;
+  int n_patches = cmflds->n_patches;
 
   if (!cbnd->h_nei_patch) {
     struct mrc_ddc_multi *multi = mrc_ddc_multi(ddc);
     struct mrc_ddc_pattern2 *patt2 = &multi->fill_ghosts2;
     struct mrc_ddc_rank_info *ri = patt2->ri;
 
-    cbnd->h_nei_patch = new int[9 * nr_patches];
+    cbnd->h_nei_patch = new int[9 * n_patches];
 
-    for (int p = 0; p < nr_patches; p++) {
+    for (int p = 0; p < n_patches; p++) {
       for (int dir1 = 0; dir1 < 9; dir1++) {
 	cbnd->h_nei_patch[p * 9 + dir1] = -1;
       }
@@ -825,10 +810,11 @@ __fields_cuda_fill_ghosts_setup(struct psc_mfields *mflds, struct mrc_ddc *ddc)
     }
 
     cudaError_t ierr;
+    MHERE;
     ierr = cudaMalloc((void **) &cbnd->d_nei_patch,
-		      9 * nr_patches * sizeof(*cbnd->d_nei_patch)); cudaCheck(ierr);
+		      9 * n_patches * sizeof(*cbnd->d_nei_patch)); cudaCheck(ierr);
     ierr = cudaMemcpy(cbnd->d_nei_patch, cbnd->h_nei_patch, 
-		      9 * nr_patches * sizeof(*cbnd->d_nei_patch),
+		      9 * n_patches * sizeof(*cbnd->d_nei_patch),
 		      cudaMemcpyHostToDevice); cudaCheck(ierr);
 
     fields_create_map_out_yz(cmflds, cbnd, 2, &cbnd->nr_map_out, &cbnd->h_map_out);
@@ -853,7 +839,7 @@ __fields_cuda_fill_ghosts_setup(struct psc_mfields *mflds, struct mrc_ddc *ddc)
 
 template<int WHAT>
 static void
-g_fields_device_pack3_yz(int tid, real *d_buf, real *d_flds, int *d_map, int *d_nei_patch_by_dir1,
+g_fields_device_pack3_yz(int tid, float *d_buf, float *d_flds, int *d_map, int *d_nei_patch_by_dir1,
 			 int gmy, int gmz, int nr_patches, int nr_components, int nr_map)
 {
   if (tid >= nr_map)
@@ -873,7 +859,7 @@ g_fields_device_pack3_yz(int tid, real *d_buf, real *d_flds, int *d_map, int *d_
 
 template<int WHAT>
 __global__ static void
-k_fields_device_pack3_yz(real *d_buf, real *d_flds, int *d_map, int *d_nei_patch_by_dir1,
+k_fields_device_pack3_yz(float *d_buf, float *d_flds, int *d_map, int *d_nei_patch_by_dir1,
 			 int gmy, int gmz, int nr_patches, int nr_components, int nr_map)
 {
   int tid = threadIdx.x + blockIdx.x * THREADS_PER_BLOCK;
