@@ -38,7 +38,7 @@ libsubdir_la_LIBADD = \
 	cuda_mparticles_bnd_scan.lo \
 	cuda_mparticles_bnd_spine.lo \
 	cuda_mfields.lo \
-	cuda_transfer.lo \
+	cuda_mfields_bnd.lo \
 	cuda_push_mprts_yz.lo \
 	cuda_push_fields_yz.lo \
 	cuda_bnd.lo \
@@ -88,7 +88,6 @@ CUDA_DEPS = \
 
 cuda_spine.lo: b40c/radixsort_reduction_kernel.h b40c/radixsort_scanscatter_kernel.h
 cuda_exchange_particles.lo: psc_bnd_cuda.h ../../include/psc_particles_cuda.h cuda_mparticles_const.h
-cuda_transfer.lo: ../../include/psc_particles_cuda.h
 cuda_spine.lo: ../../include/psc_particles_cuda.h b40c/radixsort_reduction_kernel.h b40c/radixsort_scanscatter_kernel3.h
 cuda_moments_1st_nc.lo: cuda_mparticles_const.h
 cuda_push_mprts_yz.lo: cuda_mparticles_const.h
