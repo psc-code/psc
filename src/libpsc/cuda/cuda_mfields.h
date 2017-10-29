@@ -3,19 +3,7 @@
 #define CUDA_MFIELDS_H
 
 #include "cuda_iface.h"
-
-// FIXME, better call it cuda_mfields_real_t
-typedef float fields_cuda_real_t;
-
-// ----------------------------------------------------------------------
-// cuda_mfields_bnd_patch
-
-struct cuda_mfields_bnd_patch {
-  fields_cuda_real_t *arr_off;
-  int im[3];
-  int ib[3];
-  fields_cuda_real_t *arr;
-};
+#include "cuda_iface_bnd.h"
 
 // ----------------------------------------------------------------------
 // cuda_mfields_bnd

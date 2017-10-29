@@ -1,6 +1,7 @@
 
 #include "psc.h"
 #include "cuda_iface.h"
+#include "cuda_iface_bnd.h"
 #include "psc_fields_cuda.h"
 #include "psc_fields_c.h"
 #include "psc_fields_single.h"

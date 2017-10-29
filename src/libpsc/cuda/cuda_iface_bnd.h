@@ -9,6 +9,31 @@ extern "C" {
 }
 #endif
 
+// FIXME, better call it cuda_mfields_real_t
+typedef float fields_cuda_real_t;
+
+// ----------------------------------------------------------------------
+// cuda_mfields_bnd_patch
+
+struct cuda_mfields_bnd_patch {
+  fields_cuda_real_t *arr_off;
+  int im[3];
+  int ib[3];
+  fields_cuda_real_t *arr;
+};
+
+// ----------------------------------------------------------------------
+// cuda_mfields_bnd
+
+struct cuda_mfields_bnd;
+
+struct cuda_mfields_bnd *cuda_mfields_bnd_create(void);
+void cuda_mfields_bnd_destroy(struct cuda_mfields_bnd *cbnd);
+void cuda_mfields_bnd_ctor(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds);
+void cuda_mfields_bnd_dtor(struct cuda_mfields_bnd *cbnd);
+
+
+
 void __fields_cuda_from_device_inside(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
 				       int mb, int me);
 void __fields_cuda_from_device_inside_only(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,

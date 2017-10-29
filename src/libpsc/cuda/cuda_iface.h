@@ -97,16 +97,6 @@ void cuda_marder_correct_yz(struct cuda_mfields *cmflds, struct cuda_mfields *cm
 			    int ly[3], int ry[3], int lz[3], int rz[3]);
 
 // ----------------------------------------------------------------------
-// cuda_mfields_bnd
-
-struct cuda_mfields_bnd;
-
-struct cuda_mfields_bnd *cuda_mfields_bnd_create(void);
-void cuda_mfields_bnd_destroy(struct cuda_mfields_bnd *cbnd);
-void cuda_mfields_bnd_ctor(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds);
-void cuda_mfields_bnd_dtor(struct cuda_mfields_bnd *cbnd);
-
-// ----------------------------------------------------------------------
 // cuda_push_mprts_yz
 
 void cuda_push_mprts_yz(struct cuda_mparticles *cmprts, struct cuda_mfields *cmflds,
