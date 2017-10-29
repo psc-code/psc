@@ -51,8 +51,7 @@ libsubdir_la_LIBADD = \
 	cuda_heating.lo \
 	cuda_moments_1st_nc.lo
 
-#	cuda_find_indices.lo \
-	cuda_sort.lo \
+#	cuda_sort.lo \
 	cuda_sort2.lo
 
 check_PROGRAMS = \
