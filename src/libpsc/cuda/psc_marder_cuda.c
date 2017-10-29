@@ -2,7 +2,7 @@
 #include "psc_marder_private.h"
 #include "psc_bnd.h"
 #include "psc_output_fields_item.h"
-#include "psc_cuda.h"
+#include "psc_fields_cuda.h"
 #include "cuda_iface.h"
 
 #include <mrc_io.h>
@@ -10,7 +10,7 @@
 #include <stdlib.h>
 
 // FIXME: checkpointing won't properly restore state
-// FIXME: if they subclass creates objects, it'd be cleaner to have them
+// FIXME: if the subclass creates objects, it'd be cleaner to have them
 // be part of the subclass
 
 // ----------------------------------------------------------------------

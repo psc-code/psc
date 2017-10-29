@@ -1,7 +1,6 @@
 
 #include "psc.h"
 #include "cuda_iface.h"
-#include "psc_cuda.h"
 #include "psc_bnd_cuda.h"
 #include "psc_particles_cuda.h"
 #include "psc_particles_single.h"
