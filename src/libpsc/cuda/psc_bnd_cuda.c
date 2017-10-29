@@ -115,12 +115,11 @@ psc_bnd_cuda_create_ddc(struct psc_bnd *bnd)
 // psc_bnd_cuda_fill_ghosts_setup
 
 static void
-psc_bnd_cuda_fill_ghosts_setup(struct psc_bnd *bnd,
-			       struct cuda_mfields *cmflds, struct mrc_ddc *ddc)
+psc_bnd_cuda_fill_ghosts_setup(struct psc_bnd *bnd)
 {
   struct cuda_mfields_bnd *cbnd = psc_bnd_cuda_cbnd(bnd);
   
-  struct mrc_ddc_multi *multi = mrc_ddc_multi(ddc);
+  struct mrc_ddc_multi *multi = mrc_ddc_multi(bnd->ddc);
   struct mrc_ddc_pattern2 *patt2 = &multi->fill_ghosts2;
   struct mrc_ddc_rank_info *ri = patt2->ri;
   
@@ -137,7 +136,6 @@ psc_bnd_cuda_fill_ghosts_setup(struct psc_bnd *bnd,
   }
 
   cuda_mfields_bnd_setup_d_nei_patch(cbnd);
-  cuda_mfields_bnd_setup_map(cbnd, cmflds->n_fields);
 }
 
 // ----------------------------------------------------------------------
@@ -196,7 +194,8 @@ psc_bnd_cuda_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, in
   struct psc_bnd_cuda *sub = psc_bnd_cuda(bnd);
   if (!sub->cbnd) {
     sub->cbnd = psc_mfields_cuda(mflds)->cbnd;
-    psc_bnd_cuda_fill_ghosts_setup(bnd, cmflds, bnd->ddc);
+    psc_bnd_cuda_fill_ghosts_setup(bnd);
+    cuda_mfields_bnd_setup_map(sub->cbnd, cmflds->n_fields);
   }
 
   struct cuda_mfields_bnd *cbnd = psc_bnd_cuda_cbnd(bnd);

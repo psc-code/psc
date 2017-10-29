@@ -1075,6 +1075,9 @@ fields_create_map_in_yz(struct cuda_mfields_bnd *cbnd, int n_fields,
   delete[] has_nei;
 }
 
+// ----------------------------------------------------------------------
+// cuda_mfields_bnd_setup_map
+
 void
 cuda_mfields_bnd_setup_map(struct cuda_mfields_bnd *cbnd, int n_fields)
 {
