@@ -5,7 +5,7 @@
 #include "psc_bnd_cuda_fields.h"
 #include "cuda_mfields.h"
 
-#include <mrc_ddc.h>
+#include <mrc_ddc_private.h>
 #include <mrc_profile.h>
 
 EXTERN_C void __fields_cuda_from_device_inside(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
@@ -16,8 +16,7 @@ EXTERN_C void __fields_cuda_to_device_outside(struct cuda_mfields_bnd *cbnd, str
 					      int mb, int me);
 EXTERN_C void __fields_cuda_to_device_inside(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
 					     int mb, int me);
-EXTERN_C void __fields_cuda_fill_ghosts_setup(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
-					      struct mrc_ddc *ddc);
+EXTERN_C void __fields_cuda_fill_ghosts_setup(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds);
 EXTERN_C void __fields_cuda_fill_ghosts_local(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
 					      int mb, int me);
 
@@ -110,6 +109,38 @@ psc_bnd_fld_cuda_create(struct psc_bnd *bnd)
 }
 
 // ----------------------------------------------------------------------
+// psc_bnd_fld_cuda_fill_ghosts_setup
+
+static void
+psc_bnd_fld_cuda_fill_ghosts_setup(struct psc_bnd *bnd, struct cuda_mfields_bnd *cbnd,
+				   struct cuda_mfields *cmflds, struct mrc_ddc *ddc)
+{
+  if (cbnd->h_nei_patch) {
+    return;
+  }
+  
+  assert(cmflds->im[0] == 1);
+  
+  struct mrc_ddc_multi *multi = mrc_ddc_multi(ddc);
+  struct mrc_ddc_pattern2 *patt2 = &multi->fill_ghosts2;
+  struct mrc_ddc_rank_info *ri = patt2->ri;
+  
+  cbnd->h_nei_patch = calloc(9 * cmflds->n_patches, sizeof(*cbnd->h_nei_patch));
+  
+  for (int p = 0; p < cmflds->n_patches; p++) {
+    for (int dir1 = 0; dir1 < 9; dir1++) {
+      cbnd->h_nei_patch[p * 9 + dir1] = -1;
+    }
+  }
+  for (int i = 0; i < ri[multi->mpi_rank].n_recv_entries; i++) {
+    struct mrc_ddc_sendrecv_entry *re = &ri[multi->mpi_rank].recv_entry[i];
+    cbnd->h_nei_patch[re->patch * 9 + re->dir1 / 3] = re->nei_patch;
+  }
+  
+  __fields_cuda_fill_ghosts_setup(cbnd, cmflds);
+}
+
+// ----------------------------------------------------------------------
 // psc_bnd_fld_cuda_add_ghosts
 
 void
@@ -177,7 +208,7 @@ psc_bnd_fld_cuda_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base
     // z-periodic single patch
     cuda_fill_ghosts_periodic_z(mflds, 0, mb, me);
   } else {
-    __fields_cuda_fill_ghosts_setup(cbnd, cmflds, bnd->ddc);
+    psc_bnd_fld_cuda_fill_ghosts_setup(bnd, cbnd, cmflds, bnd->ddc);
 
     prof_start(pr1);
     __fields_cuda_from_device_inside(cbnd, cmflds, mb, me); // FIXME _only

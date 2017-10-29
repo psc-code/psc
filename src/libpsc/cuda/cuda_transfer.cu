@@ -4,7 +4,6 @@
 #include "cuda_bits.h"
 #include "psc_cuda.h"
 
-#include <mrc_ddc_private.h>
 #include <mrc_profile.h>
 
 // FIXME, hardcoding is bad, needs to be consistent, etc...
@@ -785,56 +784,32 @@ static void fields_create_map_in_yz(struct cuda_mfields *cmflds, struct cuda_mfi
 				    int B, int *p_nr_map, int **p_h_map);
 
 EXTERN_C void
-__fields_cuda_fill_ghosts_setup(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
-				struct mrc_ddc *ddc)
+__fields_cuda_fill_ghosts_setup(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds)
 {
-  int *im = cmflds->im;
-  assert(im[0] == 1);
-  int n_patches = cmflds->n_patches;
-
-  if (!cbnd->h_nei_patch) {
-    struct mrc_ddc_multi *multi = mrc_ddc_multi(ddc);
-    struct mrc_ddc_pattern2 *patt2 = &multi->fill_ghosts2;
-    struct mrc_ddc_rank_info *ri = patt2->ri;
-
-    cbnd->h_nei_patch = new int[9 * n_patches];
-
-    for (int p = 0; p < n_patches; p++) {
-      for (int dir1 = 0; dir1 < 9; dir1++) {
-	cbnd->h_nei_patch[p * 9 + dir1] = -1;
-      }
-    }
-    for (int i = 0; i < ri[multi->mpi_rank].n_recv_entries; i++) {
-      struct mrc_ddc_sendrecv_entry *re = &ri[multi->mpi_rank].recv_entry[i];
-      cbnd->h_nei_patch[re->patch * 9 + re->dir1 / 3] = re->nei_patch;
-    }
-
-    cudaError_t ierr;
-    MHERE;
-    ierr = cudaMalloc((void **) &cbnd->d_nei_patch,
-		      9 * n_patches * sizeof(*cbnd->d_nei_patch)); cudaCheck(ierr);
-    ierr = cudaMemcpy(cbnd->d_nei_patch, cbnd->h_nei_patch, 
-		      9 * n_patches * sizeof(*cbnd->d_nei_patch),
-		      cudaMemcpyHostToDevice); cudaCheck(ierr);
-
-    fields_create_map_out_yz(cmflds, cbnd, 2, &cbnd->nr_map_out, &cbnd->h_map_out);
-
-    ierr = cudaMalloc((void **) &cbnd->d_map_out,
-		      cbnd->nr_map_out * sizeof(*cbnd->d_map_out)); cudaCheck(ierr);
-    ierr = cudaMemcpy(cbnd->d_map_out, cbnd->h_map_out, 
-		      cbnd->nr_map_out * sizeof(*cbnd->d_map_out),
-		      cudaMemcpyHostToDevice); cudaCheck(ierr);
-
-    fields_create_map_in_yz(cmflds, cbnd, 2, &cbnd->nr_map_in, &cbnd->h_map_in);
-    mprintf("map_out %d\n", cbnd->nr_map_out);
-    mprintf("map_in %d\n", cbnd->nr_map_in);
-
-    ierr = cudaMalloc((void **) &cbnd->d_map_in,
-		      cbnd->nr_map_in * sizeof(*cbnd->d_map_in)); cudaCheck(ierr);
-    ierr = cudaMemcpy(cbnd->d_map_in, cbnd->h_map_in, 
-		      cbnd->nr_map_in * sizeof(*cbnd->d_map_in),
-		      cudaMemcpyHostToDevice); cudaCheck(ierr);
-  }
+  cudaError_t ierr;
+  ierr = cudaMalloc((void **) &cbnd->d_nei_patch,
+		    9 * cmflds->n_patches * sizeof(*cbnd->d_nei_patch)); cudaCheck(ierr);
+  ierr = cudaMemcpy(cbnd->d_nei_patch, cbnd->h_nei_patch, 
+		    9 * cmflds->n_patches * sizeof(*cbnd->d_nei_patch),
+		    cudaMemcpyHostToDevice); cudaCheck(ierr);
+  
+  fields_create_map_out_yz(cmflds, cbnd, 2, &cbnd->nr_map_out, &cbnd->h_map_out);
+  
+  ierr = cudaMalloc((void **) &cbnd->d_map_out,
+		    cbnd->nr_map_out * sizeof(*cbnd->d_map_out)); cudaCheck(ierr);
+  ierr = cudaMemcpy(cbnd->d_map_out, cbnd->h_map_out, 
+		    cbnd->nr_map_out * sizeof(*cbnd->d_map_out),
+		    cudaMemcpyHostToDevice); cudaCheck(ierr);
+  
+  fields_create_map_in_yz(cmflds, cbnd, 2, &cbnd->nr_map_in, &cbnd->h_map_in);
+  mprintf("map_out %d\n", cbnd->nr_map_out);
+  mprintf("map_in %d\n", cbnd->nr_map_in);
+  
+  ierr = cudaMalloc((void **) &cbnd->d_map_in,
+		    cbnd->nr_map_in * sizeof(*cbnd->d_map_in)); cudaCheck(ierr);
+  ierr = cudaMemcpy(cbnd->d_map_in, cbnd->h_map_in, 
+		    cbnd->nr_map_in * sizeof(*cbnd->d_map_in),
+		    cudaMemcpyHostToDevice); cudaCheck(ierr);
 }
 
 template<int WHAT>
