@@ -66,14 +66,8 @@ cuda_mfields_bnd_ctor(struct cuda_mfields_bnd *cbnd, struct cuda_mfields_bnd_par
     struct cuda_mfields_bnd_patch *cf = &cbnd->bnd_by_patch[p];
     int sz = 1;
     for (int d = 0; d < 3; d++) {
-      if (cbnd->im[d] == 1 - 2 * cbnd->ib[d]) { // only 1 non-ghost point
-	HERE; // shouldn't happen anymore
-	cf->im[d] = 1;
-	cf->ib[d] = 0;
-      } else {
-	cf->im[d] = cbnd->im[d];
-	cf->ib[d] = cbnd->ib[d];
-      }
+      cf->im[d] = cbnd->im[d];
+      cf->ib[d] = cbnd->ib[d];
       sz *= cf->im[d];
     }
     cf->arr = new float [MAX_BND_COMPONENTS * sz];
