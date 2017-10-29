@@ -135,8 +135,9 @@ psc_bnd_cuda_fill_ghosts_setup(struct psc_bnd *bnd,
     struct mrc_ddc_sendrecv_entry *re = &ri[multi->mpi_rank].recv_entry[i];
     cbnd->h_nei_patch[re->patch * 9 + re->dir1 / 3] = re->nei_patch;
   }
-  
-  __fields_cuda_fill_ghosts_setup(cbnd, cmflds);
+
+  cuda_mfields_bnd_setup_d_nei_patch(cbnd);
+  cuda_mfields_bnd_setup_map(cbnd, cmflds->n_fields);
 }
 
 // ----------------------------------------------------------------------

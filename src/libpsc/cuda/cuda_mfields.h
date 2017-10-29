@@ -9,6 +9,9 @@
 // cuda_mfields_bnd
 
 struct cuda_mfields_bnd {
+  int n_patches;
+  int im[3];
+  int ib[3];
   struct cuda_mfields_bnd_patch *bnd_by_patch;
   fields_cuda_real_t *d_bnd_buf;
   fields_cuda_real_t *h_bnd_buf;
@@ -20,7 +23,6 @@ struct cuda_mfields_bnd {
   int *h_map_in; // maps thread id to a particular offset for ghosts in the flds array 
   int *d_map_in;
   int nr_map_in; // number of entries in the map
-  int n_patches;
 };
 
 // ----------------------------------------------------------------------

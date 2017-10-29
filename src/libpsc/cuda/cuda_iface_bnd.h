@@ -27,11 +27,21 @@ struct cuda_mfields_bnd_patch {
 
 struct cuda_mfields_bnd;
 
+// FIXME This is the alternative to doing it with json, I guess...
+// Should settle on one or the other eventually
+struct cuda_mfields_bnd_params {
+  int n_patches;
+  int im[3];
+  int ib[3];
+};
+
 struct cuda_mfields_bnd *cuda_mfields_bnd_create(void);
 void cuda_mfields_bnd_destroy(struct cuda_mfields_bnd *cbnd);
-void cuda_mfields_bnd_ctor(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds);
+void cuda_mfields_bnd_ctor(struct cuda_mfields_bnd *cbnd, struct cuda_mfields_bnd_params *prm);
 void cuda_mfields_bnd_dtor(struct cuda_mfields_bnd *cbnd);
 struct cuda_mfields_bnd_patch *cuda_mfields_bnd_get_patch(struct cuda_mfields_bnd *cbnd, int p);
+void cuda_mfields_bnd_setup_d_nei_patch(struct cuda_mfields_bnd *cbnd);
+void cuda_mfields_bnd_setup_map(struct cuda_mfields_bnd *cbnd, int n_fields);
 
 
 void __fields_cuda_from_device_inside(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
@@ -42,7 +52,6 @@ void __fields_cuda_to_device_outside(struct cuda_mfields_bnd *cbnd, struct cuda_
 				      int mb, int me);
 void __fields_cuda_to_device_inside(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
 				     int mb, int me);
-void __fields_cuda_fill_ghosts_setup(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds);
 void __fields_cuda_fill_ghosts_local(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
 				      int mb, int me);
 void cuda_fill_ghosts_periodic_yz(struct cuda_mfields *cmflds, int p, int mb, int me);

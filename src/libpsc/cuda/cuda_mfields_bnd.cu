@@ -37,37 +37,42 @@ cuda_mfields_bnd_destroy(struct cuda_mfields_bnd *cbnd)
 // cuda_mfields_bnd_ctor
 
 void
-cuda_mfields_bnd_ctor(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds)
+cuda_mfields_bnd_ctor(struct cuda_mfields_bnd *cbnd, struct cuda_mfields_bnd_params *prm)
 {
-  cbnd->n_patches = cmflds->n_patches;
+  cbnd->n_patches = prm->n_patches;
+  for (int d = 0; d < 3; d++) {
+    cbnd->im[d] = prm->im[d];
+    cbnd->ib[d] = prm->ib[d];
+  }
   
   unsigned int buf_size = 0;
-  for (int p = 0; p < cmflds->n_patches; p++) {
-    if (cmflds->im[0] == 1) {// + 2*BND) {
+  for (int p = 0; p < cbnd->n_patches; p++) {
+    if (cbnd->im[0] == 1) {// + 2*BND) {
       int B = 2*BND;
-      buf_size = 2*B * (cmflds->im[1] + cmflds->im[2] - 2*B);
+      buf_size = 2*B * (cbnd->im[1] + cbnd->im[2] - 2*B);
     } else {
       assert(0);
     }
   }
   cudaError_t ierr;
   ierr = cudaMalloc((void **) &cbnd->d_bnd_buf,
-		    MAX_BND_COMPONENTS * buf_size * cmflds->n_patches * sizeof(float));
+		    MAX_BND_COMPONENTS * buf_size * cbnd->n_patches * sizeof(float));
   cudaCheck(ierr);
   
-  cbnd->h_bnd_buf = new float[MAX_BND_COMPONENTS * cmflds->n_patches * buf_size];
+  cbnd->h_bnd_buf = new float[MAX_BND_COMPONENTS * cbnd->n_patches * buf_size];
 
-  cbnd->bnd_by_patch = new cuda_mfields_bnd_patch[cmflds->n_patches];
-  for (int p = 0; p < cmflds->n_patches; p++) {
+  cbnd->bnd_by_patch = new cuda_mfields_bnd_patch[cbnd->n_patches];
+  for (int p = 0; p < cbnd->n_patches; p++) {
     struct cuda_mfields_bnd_patch *cf = &cbnd->bnd_by_patch[p];
     int sz = 1;
     for (int d = 0; d < 3; d++) {
-      if (cmflds->im[d] == 1 - 2 * cmflds->ib[d]) { // only 1 non-ghost point
+      if (cbnd->im[d] == 1 - 2 * cbnd->ib[d]) { // only 1 non-ghost point
+	HERE; // shouldn't happen anymore
 	cf->im[d] = 1;
 	cf->ib[d] = 0;
       } else {
-	cf->im[d] = cmflds->im[d];
-	cf->ib[d] = cmflds->ib[d];
+	cf->im[d] = cbnd->im[d];
+	cf->ib[d] = cbnd->ib[d];
       }
       sz *= cf->im[d];
     }
@@ -802,37 +807,18 @@ cuda_fill_ghosts_local_gold(float *h_flds, int *nei_patch_by_dir1, int mb, int m
   }
 }
 
-static void fields_create_map_out_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bnd *cbnd,
-				     int B, int *p_nr_map, int **p_h_map);
-static void fields_create_map_in_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bnd *cbnd,
-				    int B, int *p_nr_map, int **p_h_map);
+// ----------------------------------------------------------------------
+// cuda_mfields_bnd_setup_d_nei_patch(cbnd)
 
 void
-__fields_cuda_fill_ghosts_setup(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds)
+cuda_mfields_bnd_setup_d_nei_patch(struct cuda_mfields_bnd *cbnd)
 {
   cudaError_t ierr;
+
   ierr = cudaMalloc((void **) &cbnd->d_nei_patch,
 		    9 * cbnd->n_patches * sizeof(*cbnd->d_nei_patch)); cudaCheck(ierr);
   ierr = cudaMemcpy(cbnd->d_nei_patch, cbnd->h_nei_patch, 
 		    9 * cbnd->n_patches * sizeof(*cbnd->d_nei_patch),
-		    cudaMemcpyHostToDevice); cudaCheck(ierr);
-  
-  fields_create_map_out_yz(cmflds, cbnd, 2, &cbnd->nr_map_out, &cbnd->h_map_out);
-  
-  ierr = cudaMalloc((void **) &cbnd->d_map_out,
-		    cbnd->nr_map_out * sizeof(*cbnd->d_map_out)); cudaCheck(ierr);
-  ierr = cudaMemcpy(cbnd->d_map_out, cbnd->h_map_out, 
-		    cbnd->nr_map_out * sizeof(*cbnd->d_map_out),
-		    cudaMemcpyHostToDevice); cudaCheck(ierr);
-  
-  fields_create_map_in_yz(cmflds, cbnd, 2, &cbnd->nr_map_in, &cbnd->h_map_in);
-  printf("map_out %d\n", cbnd->nr_map_out);
-  printf("map_in %d\n", cbnd->nr_map_in);
-  
-  ierr = cudaMalloc((void **) &cbnd->d_map_in,
-		    cbnd->nr_map_in * sizeof(*cbnd->d_map_in)); cudaCheck(ierr);
-  ierr = cudaMemcpy(cbnd->d_map_in, cbnd->h_map_in, 
-		    cbnd->nr_map_in * sizeof(*cbnd->d_map_in),
 		    cudaMemcpyHostToDevice); cudaCheck(ierr);
 }
 
@@ -885,13 +871,12 @@ k_fields_device_pack3_yz(float *d_buf, float *d_flds, int *d_map, int *d_nei_pat
 #include <thrust/host_vector.h>
 
 static void
-fields_create_map_out_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bnd *cbnd,
+fields_create_map_out_yz(struct cuda_mfields_bnd *cbnd, int n_fields,
 			 int B, int *p_nr_map, int **p_h_map)
 {
   bool remote_only = true;
-  int *im = cmflds->im;
-  int n_patches = cmflds->n_patches;
-  int n_fields = cmflds->n_fields;
+  int *im = cbnd->im;
+  int n_patches = cbnd->n_patches;
 
   int nr_map = 0;
   for (int p = 0; p < n_patches; p++) {
@@ -960,14 +945,13 @@ fields_create_map_out_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bnd *c
 }
 
 static void
-fields_create_map_in_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bnd *cbnd,
+fields_create_map_in_yz(struct cuda_mfields_bnd *cbnd, int n_fields,
 			int B, int *p_nr_map, int **p_h_map)
 {
   bool remote_only = true;
-  int *im = cmflds->im;
+  int *im = cbnd->im;
   int ldims[3] = { 1, im[1] - 2*2, im[2] - 2*2 };
-  int n_patches = cmflds->n_patches;
-  int n_fields = cmflds->n_fields;
+  int n_patches = cbnd->n_patches;
   bool *has_nei = new bool[9 * n_patches];
   
   // FIXME, we don't need the ghosts here...
@@ -1089,6 +1073,29 @@ fields_create_map_in_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bnd *cb
   }
   assert(tid == nr_map);
   delete[] has_nei;
+}
+
+void
+cuda_mfields_bnd_setup_map(struct cuda_mfields_bnd *cbnd, int n_fields)
+{
+  cudaError_t ierr;
+  fields_create_map_out_yz(cbnd, n_fields, 2, &cbnd->nr_map_out, &cbnd->h_map_out);
+  
+  ierr = cudaMalloc((void **) &cbnd->d_map_out,
+		    cbnd->nr_map_out * sizeof(*cbnd->d_map_out)); cudaCheck(ierr);
+  ierr = cudaMemcpy(cbnd->d_map_out, cbnd->h_map_out, 
+		    cbnd->nr_map_out * sizeof(*cbnd->d_map_out),
+		    cudaMemcpyHostToDevice); cudaCheck(ierr);
+  
+  fields_create_map_in_yz(cbnd, n_fields, 2, &cbnd->nr_map_in, &cbnd->h_map_in);
+  printf("map_out %d\n", cbnd->nr_map_out);
+  printf("map_in %d\n", cbnd->nr_map_in);
+  
+  ierr = cudaMalloc((void **) &cbnd->d_map_in,
+		    cbnd->nr_map_in * sizeof(*cbnd->d_map_in)); cudaCheck(ierr);
+  ierr = cudaMemcpy(cbnd->d_map_in, cbnd->h_map_in, 
+		    cbnd->nr_map_in * sizeof(*cbnd->d_map_in),
+		    cudaMemcpyHostToDevice); cudaCheck(ierr);
 }
 
 template<int B, bool pack>
