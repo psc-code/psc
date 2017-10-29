@@ -114,26 +114,47 @@ psc_bnd_cuda_create_ddc(struct psc_bnd *bnd)
 // ----------------------------------------------------------------------
 // psc_bnd_cuda_fill_ghosts_setup
 
+struct cuda_mfields_bnd_entry {
+  int patch;
+  int nei_patch;
+  int dir1;
+};
+
 static void
 psc_bnd_cuda_fill_ghosts_setup(struct psc_bnd *bnd)
 {
   struct cuda_mfields_bnd *cbnd = psc_bnd_cuda_cbnd(bnd);
-  
-  struct mrc_ddc_multi *multi = mrc_ddc_multi(bnd->ddc);
-  struct mrc_ddc_pattern2 *patt2 = &multi->fill_ghosts2;
-  struct mrc_ddc_rank_info *ri = patt2->ri;
+
+  int n_entries;
+  struct cuda_mfields_bnd_entry *entries;
+  {
+    struct mrc_ddc_multi *multi = mrc_ddc_multi(bnd->ddc);
+    struct mrc_ddc_pattern2 *patt2 = &multi->fill_ghosts2;
+    struct mrc_ddc_rank_info *ri = patt2->ri;
+    
+    n_entries = ri[multi->mpi_rank].n_recv_entries;
+    entries = calloc(n_entries, sizeof(*entries));
+    for (int i = 0; i < n_entries; i++) {
+      struct mrc_ddc_sendrecv_entry *re = &ri[multi->mpi_rank].recv_entry[i];
+      entries[i].patch = re->patch;
+      entries[i].nei_patch = re->nei_patch;
+      entries[i].dir1 = re->dir1;
+      mprintf("i %d patch %d dir1 %d nei_patch %d\n", i, re->patch, re->dir1, re->nei_patch);
+    }
+  }
   
   cbnd->h_nei_patch = calloc(9 * cbnd->n_patches, sizeof(*cbnd->h_nei_patch));
-  
+
   for (int p = 0; p < cbnd->n_patches; p++) {
     for (int dir1 = 0; dir1 < 9; dir1++) {
       cbnd->h_nei_patch[p * 9 + dir1] = -1;
     }
   }
-  for (int i = 0; i < ri[multi->mpi_rank].n_recv_entries; i++) {
-    struct mrc_ddc_sendrecv_entry *re = &ri[multi->mpi_rank].recv_entry[i];
-    cbnd->h_nei_patch[re->patch * 9 + re->dir1 / 3] = re->nei_patch;
+  for (int i = 0; i < n_entries; i++) {
+    cbnd->h_nei_patch[entries[i].patch * 9 + entries[i].dir1 / 3] = entries[i].nei_patch;
   }
+
+  free(entries);
 
   cuda_mfields_bnd_setup_d_nei_patch(cbnd);
 }
