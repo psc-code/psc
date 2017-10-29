@@ -29,8 +29,8 @@ psc_bnd_cuda_cbnd(struct psc_bnd *bnd)
 void
 psc_bnd_fld_cuda_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx)
 {
-  struct psc_mfields *mflds = _ctx;
-  struct cuda_mfields_bnd *cbnd = psc_mfields_cuda(mflds)->cbnd;
+  struct psc_bnd *bnd = _ctx;
+  struct cuda_mfields_bnd *cbnd = psc_bnd_cuda_cbnd(bnd);
   struct cuda_mfields_bnd_patch *cf = cuda_mfields_bnd_get_patch(cbnd, p);
   fields_cuda_real_t *buf = _buf;
 
@@ -50,8 +50,8 @@ psc_bnd_fld_cuda_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void
 void
 psc_bnd_fld_cuda_add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx)
 {
-  struct psc_mfields *mflds = _ctx;
-  struct cuda_mfields_bnd *cbnd = psc_mfields_cuda(mflds)->cbnd;
+  struct psc_bnd *bnd = _ctx;
+  struct cuda_mfields_bnd *cbnd = psc_bnd_cuda_cbnd(bnd);
   struct cuda_mfields_bnd_patch *cf = cuda_mfields_bnd_get_patch(cbnd, p);
   fields_cuda_real_t *buf = _buf;
 
@@ -71,8 +71,8 @@ psc_bnd_fld_cuda_add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], voi
 void
 psc_bnd_fld_cuda_copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx)
 {
-  struct psc_mfields *mflds = _ctx;
-  struct cuda_mfields_bnd *cbnd = psc_mfields_cuda(mflds)->cbnd;
+  struct psc_bnd *bnd = _ctx;
+  struct cuda_mfields_bnd *cbnd = psc_bnd_cuda_cbnd(bnd);
   struct cuda_mfields_bnd_patch *cf = cuda_mfields_bnd_get_patch(cbnd, p);
   fields_cuda_real_t *buf = _buf;
 
@@ -179,7 +179,7 @@ psc_bnd_cuda_add_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, int
     cuda_add_ghosts_periodic_z(cmflds, 0, mb, me);
   } else {
     __fields_cuda_from_device_inside(cbnd, cmflds, mb, me);
-    mrc_ddc_add_ghosts(bnd->ddc, 0, me - mb, mflds);
+    mrc_ddc_add_ghosts(bnd->ddc, 0, me - mb, bnd);
     __fields_cuda_to_device_inside(cbnd, cmflds, mb, me);
   }
 
@@ -234,7 +234,7 @@ psc_bnd_cuda_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, in
     prof_stop(pr1);
 
     prof_start(pr2);
-    mrc_ddc_fill_ghosts_begin(bnd->ddc, 0, me - mb, mflds);
+    mrc_ddc_fill_ghosts_begin(bnd->ddc, 0, me - mb, bnd);
     prof_stop(pr2);
     prof_start(pr3);
 #if 0
