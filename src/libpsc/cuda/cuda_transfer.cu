@@ -2,7 +2,6 @@
 #include "cuda_mparticles.h"
 #include "cuda_mfields.h"
 #include "cuda_bits.h"
-#include "psc_cuda.h"
 
 #include <mrc_profile.h>
 
@@ -300,7 +299,7 @@ fields_device_pack_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bnd *cbnd
       (d_bnd_buf, d_flds, gmy, gmz,
        cmflds->n_patches, cmflds->n_fields);
   } else {
-    mprintf("mb %d me %d\n", mb, me);
+    printf("mb %d me %d\n", mb, me);
     assert(0);
   }
   cuda_sync_if_enabled();
@@ -370,6 +369,22 @@ __fields_cuda_fill_ghosts_local(struct cuda_mfields_bnd *cbnd, struct cuda_mfiel
   thrust::copy(h_flds.begin(), h_flds.end(), d_flds);
 #endif
 }
+
+#ifdef F3_CF_BOUNDS_CHECK
+#define F3_CF_0_OFF(cf, fldnr, jx,jy,jz) ({				\
+  assert(jx == 0); /* FIXME yz only! */				        \
+  assert(jx >= 0 && jx < (cf)->im[0]);					\
+  assert(jy >= 0 && jy < (cf)->im[1]);					\
+  assert(jz >= 0 && jz < (cf)->im[2]);					\
+  int __off = (((fldnr) * (cf)->im[2] + (jz)) * (cf)->im[1] + (jy)) * (cf)->im[0] + (jx); \
+  __off; })
+#else
+#define F3_CF_0_OFF(cf, fldnr, jx,jy,jz)				\
+  ((((fldnr) * (cf)->im[2] + (jz)) * (cf)->im[1] + (jy)) * (cf)->im[0] + (jx))
+#endif
+
+#define F3_CF_0(cf, fldnr, jx,jy,jz)					\
+  ((cf)->arr[F3_CF_0_OFF(cf, fldnr, jx,jy,jz)])
 
 // ======================================================================
 // fields_host_pack
@@ -802,8 +817,8 @@ __fields_cuda_fill_ghosts_setup(struct cuda_mfields_bnd *cbnd, struct cuda_mfiel
 		    cudaMemcpyHostToDevice); cudaCheck(ierr);
   
   fields_create_map_in_yz(cmflds, cbnd, 2, &cbnd->nr_map_in, &cbnd->h_map_in);
-  mprintf("map_out %d\n", cbnd->nr_map_out);
-  mprintf("map_in %d\n", cbnd->nr_map_in);
+  printf("map_out %d\n", cbnd->nr_map_out);
+  printf("map_in %d\n", cbnd->nr_map_in);
   
   ierr = cudaMalloc((void **) &cbnd->d_map_in,
 		    cbnd->nr_map_in * sizeof(*cbnd->d_map_in)); cudaCheck(ierr);

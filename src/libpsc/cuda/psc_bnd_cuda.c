@@ -1,29 +1,13 @@
 
 #include "psc_bnd_cuda.h"
-#include "psc_cuda.h"
 #include "psc_fields_cuda.h"
 #include "psc_bnd_cuda_fields.h"
+#include "cuda_iface.h"
+#include "cuda_iface_bnd.h"
 #include "cuda_mfields.h"
 
 #include <mrc_ddc_private.h>
 #include <mrc_profile.h>
-
-EXTERN_C void __fields_cuda_from_device_inside(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
-					       int mb, int me);
-EXTERN_C void __fields_cuda_from_device_inside_only(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
-						    int mb, int me);
-EXTERN_C void __fields_cuda_to_device_outside(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
-					      int mb, int me);
-EXTERN_C void __fields_cuda_to_device_inside(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
-					     int mb, int me);
-EXTERN_C void __fields_cuda_fill_ghosts_setup(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds);
-EXTERN_C void __fields_cuda_fill_ghosts_local(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
-					      int mb, int me);
-EXTERN_C void cuda_fill_ghosts_periodic_yz(struct cuda_mfields *cmflds, int p, int mb, int me);
-EXTERN_C void cuda_fill_ghosts_periodic_z(struct cuda_mfields *cmflds, int p, int mb, int me);
-EXTERN_C void cuda_add_ghosts_periodic_yz(struct cuda_mfields *cmflds, int p, int mb, int me);
-EXTERN_C void cuda_add_ghosts_periodic_z(struct cuda_mfields *cmflds, int p, int mb, int me);
-
 
 // ======================================================================
 // ddc funcs

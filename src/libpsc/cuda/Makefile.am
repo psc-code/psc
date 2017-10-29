@@ -29,8 +29,7 @@ libsubdir_la_SOURCES = \
 	b40c/vector_types.h \
 	cuda_common.h \
 	psc_bnd_cuda.h \
-	psc_bnd_cuda_fields.h \
-	psc_cuda.h
+	psc_bnd_cuda_fields.h
 
 libsubdir_la_LIBADD = \
 	cuda_base.lo \
@@ -83,8 +82,7 @@ CUDA_DEPS = \
 	cuda_iface.h \
         cuda_mparticles.h \
         cuda_mfields.h \
-	cuda_bits.h \
-        psc_cuda.h
+	cuda_bits.h
 
 #        psc_particles_cuda.h FIXME
 
@@ -95,6 +93,8 @@ cuda_spine.lo: ../../include/psc_particles_cuda.h b40c/radixsort_reduction_kerne
 cuda_moments_1st_nc.lo: cuda_mparticles_const.h
 cuda_push_mprts_yz.lo: cuda_mparticles_const.h
 cuda_heating.lo: cuda_mparticles_const.h
+cuda_transfer.lo: cuda_iface_bnd.h
+cuda_bnd.lo: cuda_iface_bnd.h
 
 #FIXME, this is just really too hacky...
 

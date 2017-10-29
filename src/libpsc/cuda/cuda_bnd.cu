@@ -1,4 +1,6 @@
 
+#include "cuda_iface.h"
+#include "cuda_iface_bnd.h"
 #include "cuda_mfields.h"
 #include "cuda_mfields_const.h"
 
