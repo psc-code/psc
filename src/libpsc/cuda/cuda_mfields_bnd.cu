@@ -339,7 +339,7 @@ fields_device_pack2_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bnd *cbn
   cuda_sync_if_enabled();
 }
 
-EXTERN_C void
+void
 __fields_cuda_fill_ghosts_local(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
 				int mb, int me)
 {
@@ -673,7 +673,7 @@ __fields_cuda_to_device3_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bnd
 
 // ======================================================================
 
-EXTERN_C void
+void
 __fields_cuda_from_device_inside(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
 				 int mb, int me)
 {
@@ -692,7 +692,7 @@ __fields_cuda_from_device_inside(struct cuda_mfields_bnd *cbnd, struct cuda_mfie
   }
 }
 
-EXTERN_C void
+void
 __fields_cuda_from_device_inside_only(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
 				      int mb, int me)
 {
@@ -711,7 +711,7 @@ __fields_cuda_from_device_inside_only(struct cuda_mfields_bnd *cbnd, struct cuda
   }
 }
 
-EXTERN_C void
+void
 __fields_cuda_to_device_outside(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
 				int mb, int me)
 {
@@ -730,7 +730,7 @@ __fields_cuda_to_device_outside(struct cuda_mfields_bnd *cbnd, struct cuda_mfiel
   }
 }
 
-EXTERN_C void
+void
 __fields_cuda_to_device_inside(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
 				int mb, int me)
 {
@@ -807,14 +807,14 @@ static void fields_create_map_out_yz(struct cuda_mfields *cmflds, struct cuda_mf
 static void fields_create_map_in_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bnd *cbnd,
 				    int B, int *p_nr_map, int **p_h_map);
 
-EXTERN_C void
+void
 __fields_cuda_fill_ghosts_setup(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds)
 {
   cudaError_t ierr;
   ierr = cudaMalloc((void **) &cbnd->d_nei_patch,
-		    9 * cmflds->n_patches * sizeof(*cbnd->d_nei_patch)); cudaCheck(ierr);
+		    9 * cbnd->n_patches * sizeof(*cbnd->d_nei_patch)); cudaCheck(ierr);
   ierr = cudaMemcpy(cbnd->d_nei_patch, cbnd->h_nei_patch, 
-		    9 * cmflds->n_patches * sizeof(*cbnd->d_nei_patch),
+		    9 * cbnd->n_patches * sizeof(*cbnd->d_nei_patch),
 		    cudaMemcpyHostToDevice); cudaCheck(ierr);
   
   fields_create_map_out_yz(cmflds, cbnd, 2, &cbnd->nr_map_out, &cbnd->h_map_out);
