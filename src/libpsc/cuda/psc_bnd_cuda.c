@@ -4,7 +4,6 @@
 #include "psc_bnd_cuda_fields.h"
 #include "cuda_iface.h"
 #include "cuda_iface_bnd.h"
-#include "cuda_mfields.h"
 
 #include <mrc_ddc_private.h>
 #include <mrc_profile.h>
@@ -119,37 +118,38 @@ psc_bnd_cuda_setup(struct psc_bnd *bnd)
 {
   struct psc_bnd_cuda *sub = psc_bnd_cuda(bnd);
 
-  psc_bnd_setup_super(bnd); // this calls back to set up ::ddc
+  psc_bnd_setup_super(bnd); // this calls back ::create_ddc() to set up ::ddc
 
   struct cuda_mfields_bnd_params prm;
-
-  struct mrc_ddc_multi *multi = mrc_ddc_multi(bnd->ddc);
-  struct mrc_ddc_pattern2 *patt2 = &multi->fill_ghosts2;
-  struct mrc_ddc_rank_info *ri = patt2->ri;
-    
-  int n_entries = ri[multi->mpi_rank].n_recv_entries;
-  struct cuda_mfields_bnd_entry *entries = calloc(n_entries, sizeof(*entries));
-  for (int i = 0; i < n_entries; i++) {
-    struct mrc_ddc_sendrecv_entry *re = &ri[multi->mpi_rank].recv_entry[i];
-    entries[i].patch     = re->patch;
-    entries[i].nei_patch = re->nei_patch;
-    entries[i].dir1      = re->dir1;
-    //mprintf("i %d patch %d dir1 %d nei_patch %d\n", i, re->patch, re->dir1, re->nei_patch);
-  }
 
   struct psc *psc = bnd->psc;
   prm.n_patches = psc->nr_patches;
   assert(prm.n_patches > 0);
+  // FIXME, it'd be nicer if the interface was ldims / ibn based
   for (int d = 0; d < 3; d++) {
     prm.ib[d] = -psc->ibn[d];
     prm.im[d] = psc->patch[0].ldims[d] + 2 * psc->ibn[d];
   }
   
+  struct mrc_ddc_multi *multi = mrc_ddc_multi(bnd->ddc);
+  struct mrc_ddc_pattern2 *patt2 = &multi->fill_ghosts2;
+  struct mrc_ddc_rank_info *ri = patt2->ri;
+    
+  prm.n_recv_entries = ri[multi->mpi_rank].n_recv_entries;
+  prm.recv_entry = calloc(prm.n_recv_entries, sizeof(*prm.recv_entry));
+
+  for (int i = 0; i < prm.n_recv_entries; i++) {
+    struct mrc_ddc_sendrecv_entry *re = &ri[multi->mpi_rank].recv_entry[i];
+    prm.recv_entry[i].patch     = re->patch;
+    prm.recv_entry[i].nei_patch = re->nei_patch;
+    prm.recv_entry[i].dir1      = re->dir1;
+    //mprintf("i %d patch %d dir1 %d nei_patch %d\n", i, re->patch, re->dir1, re->nei_patch);
+  }
+
   sub->cbnd = cuda_mfields_bnd_create();
   cuda_mfields_bnd_ctor(sub->cbnd, &prm);
-  cuda_mfields_bnd_setup_d_nei_patch(sub->cbnd, n_entries, entries);
 
-  free(entries);
+  free(prm.recv_entry);
 }
 
 // ----------------------------------------------------------------------

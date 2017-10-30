@@ -33,6 +33,33 @@ cuda_mfields_bnd_destroy(struct cuda_mfields_bnd *cbnd)
 }
 
 // ----------------------------------------------------------------------
+// cuda_mfields_bnd_setup_d_nei_patch
+
+static void
+cuda_mfields_bnd_setup_d_nei_patch(struct cuda_mfields_bnd *cbnd, int n_recv_entries,
+				   struct cuda_mfields_bnd_entry *recv_entry)
+{
+  cbnd->h_nei_patch = new int[9 * cbnd->n_patches];
+
+  for (int p = 0; p < cbnd->n_patches; p++) {
+    for (int dir1 = 0; dir1 < 9; dir1++) {
+      cbnd->h_nei_patch[p * 9 + dir1] = -1;
+    }
+  }
+  for (int i = 0; i < n_recv_entries; i++) {
+    cbnd->h_nei_patch[recv_entry[i].patch * 9 + recv_entry[i].dir1 / 3] = recv_entry[i].nei_patch;
+  }
+
+  cudaError_t ierr;
+
+  ierr = cudaMalloc((void **) &cbnd->d_nei_patch,
+		    9 * cbnd->n_patches * sizeof(*cbnd->d_nei_patch)); cudaCheck(ierr);
+  ierr = cudaMemcpy(cbnd->d_nei_patch, cbnd->h_nei_patch, 
+		    9 * cbnd->n_patches * sizeof(*cbnd->d_nei_patch),
+		    cudaMemcpyHostToDevice); cudaCheck(ierr);
+}
+
+// ----------------------------------------------------------------------
 // cuda_mfields_bnd_ctor
 
 void
@@ -73,6 +100,8 @@ cuda_mfields_bnd_ctor(struct cuda_mfields_bnd *cbnd, struct cuda_mfields_bnd_par
     cf->arr_off = cf->arr 
       - ((cf->ib[2] * cf->im[1] + cf->ib[1]) * cf->im[0] + cf->ib[0]);
   }
+
+  cuda_mfields_bnd_setup_d_nei_patch(cbnd, prm->n_recv_entries, prm->recv_entry);
 }
 
 // ----------------------------------------------------------------------
@@ -826,33 +855,6 @@ cuda_fill_ghosts_local_gold(float *h_flds, int *nei_patch_by_dir1, int mb, int m
       r_f[i] = s_f[i];
     }
   }
-}
-
-// ----------------------------------------------------------------------
-// cuda_mfields_bnd_setup_d_nei_patch
-
-void
-cuda_mfields_bnd_setup_d_nei_patch(struct cuda_mfields_bnd *cbnd, int n_entries,
-				   struct cuda_mfields_bnd_entry *entries)
-{
-  cbnd->h_nei_patch = new int[9 * cbnd->n_patches];
-
-  for (int p = 0; p < cbnd->n_patches; p++) {
-    for (int dir1 = 0; dir1 < 9; dir1++) {
-      cbnd->h_nei_patch[p * 9 + dir1] = -1;
-    }
-  }
-  for (int i = 0; i < n_entries; i++) {
-    cbnd->h_nei_patch[entries[i].patch * 9 + entries[i].dir1 / 3] = entries[i].nei_patch;
-  }
-
-  cudaError_t ierr;
-
-  ierr = cudaMalloc((void **) &cbnd->d_nei_patch,
-		    9 * cbnd->n_patches * sizeof(*cbnd->d_nei_patch)); cudaCheck(ierr);
-  ierr = cudaMemcpy(cbnd->d_nei_patch, cbnd->h_nei_patch, 
-		    9 * cbnd->n_patches * sizeof(*cbnd->d_nei_patch),
-		    cudaMemcpyHostToDevice); cudaCheck(ierr);
 }
 
 template<int WHAT>
