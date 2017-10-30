@@ -13,14 +13,6 @@ struct psc_bnd_cuda {
 
 #define psc_bnd_cuda(bnd) mrc_to_subobj(bnd, struct psc_bnd_cuda)
 
-static inline struct cuda_mfields_bnd *
-psc_bnd_cuda_cbnd(struct psc_bnd *bnd)
-{
-  struct psc_bnd_cuda *sub = psc_bnd_cuda(bnd);
-  assert(sub->cbnd);
-  return sub->cbnd;
-}
-
 // ======================================================================
 // ddc funcs
 
@@ -28,7 +20,7 @@ void
 psc_bnd_fld_cuda_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx)
 {
   struct psc_bnd *bnd = _ctx;
-  struct cuda_mfields_bnd *cbnd = psc_bnd_cuda_cbnd(bnd);
+  struct cuda_mfields_bnd *cbnd = psc_bnd_cuda(bnd)->cbnd;
   struct cuda_mfields_bnd_patch *cf = cuda_mfields_bnd_get_patch(cbnd, p);
   fields_cuda_real_t *buf = _buf;
 
@@ -49,7 +41,7 @@ void
 psc_bnd_fld_cuda_add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx)
 {
   struct psc_bnd *bnd = _ctx;
-  struct cuda_mfields_bnd *cbnd = psc_bnd_cuda_cbnd(bnd);
+  struct cuda_mfields_bnd *cbnd = psc_bnd_cuda(bnd)->cbnd;
   struct cuda_mfields_bnd_patch *cf = cuda_mfields_bnd_get_patch(cbnd, p);
   fields_cuda_real_t *buf = _buf;
 
@@ -70,7 +62,7 @@ void
 psc_bnd_fld_cuda_copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx)
 {
   struct psc_bnd *bnd = _ctx;
-  struct cuda_mfields_bnd *cbnd = psc_bnd_cuda_cbnd(bnd);
+  struct cuda_mfields_bnd *cbnd = psc_bnd_cuda(bnd)->cbnd;
   struct cuda_mfields_bnd_patch *cf = cuda_mfields_bnd_get_patch(cbnd, p);
   fields_cuda_real_t *buf = _buf;
 
@@ -169,7 +161,7 @@ psc_bnd_cuda_destroy(struct psc_bnd *bnd)
 void
 psc_bnd_cuda_add_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, int mb, int me)
 {
-  struct cuda_mfields_bnd *cbnd = psc_bnd_cuda_cbnd(bnd);
+  struct cuda_mfields_bnd *cbnd = psc_bnd_cuda(bnd)->cbnd;
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "cuda", mb, me);
   struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
 
@@ -202,7 +194,7 @@ psc_bnd_cuda_add_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, int
 void
 psc_bnd_cuda_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, int mb, int me)
 {
-  struct cuda_mfields_bnd *cbnd = psc_bnd_cuda_cbnd(bnd);
+  struct cuda_mfields_bnd *cbnd = psc_bnd_cuda(bnd)->cbnd;
 
   static int pr1, pr2, pr3, pr4, pr5;
   if (!pr1) {
