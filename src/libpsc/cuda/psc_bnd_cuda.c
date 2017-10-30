@@ -1,7 +1,6 @@
 
-#include "psc_bnd_cuda.h"
+#include "psc_bnd_private.h"
 #include "psc_fields_cuda.h"
-#include "psc_bnd_cuda_fields.h"
 #include "cuda_iface.h"
 #include "cuda_iface_bnd.h"
 

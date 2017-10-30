@@ -1,15 +1,12 @@
 
 #include "psc.h"
 #include "cuda_iface.h"
-#include "psc_bnd_cuda.h"
 #include "psc_particles_cuda.h"
 #include "psc_particles_single.h"
 #include "psc_particles_double.h"
 #include "psc_push_particles.h"
 
 #include <mrc_io.h>
-
-EXTERN_C void cuda_init(int rank);
 
 // ======================================================================
 // psc_mparticles "cuda"

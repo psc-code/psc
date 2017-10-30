@@ -26,10 +26,7 @@ libsubdir_la_SOURCES = \
 	b40c/radixsort_scanscatter_kernel3.h \
 	b40c/radixsort_scanscatter_kernel4.h \
 	b40c/radixsort_spine_kernel.h \
-	b40c/vector_types.h \
-	cuda_common.h \
-	psc_bnd_cuda.h \
-	psc_bnd_cuda_fields.h
+	b40c/vector_types.h
 
 libsubdir_la_LIBADD = \
 	cuda_base.lo \
