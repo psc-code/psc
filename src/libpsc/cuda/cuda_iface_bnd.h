@@ -63,6 +63,10 @@ void cuda_mfields_bnd_to_device_inside(struct cuda_mfields_bnd *cbnd, struct cud
 void cuda_mfields_bnd_fill_ghosts_local(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
 					int mb, int me);
 
+
+// special cases for single GPU, single patch, which can be handled
+// entirely on the GPU
+
 void cuda_fill_ghosts_periodic_yz(struct cuda_mfields *cmflds, int p, int mb, int me);
 void cuda_fill_ghosts_periodic_z(struct cuda_mfields *cmflds, int p, int mb, int me);
 void cuda_add_ghosts_periodic_yz(struct cuda_mfields *cmflds, int p, int mb, int me);
@@ -89,6 +93,21 @@ void cuda_add_ghosts_periodic_z(struct cuda_mfields *cmflds, int p, int mb, int 
 
 #define F3_CF(cf, fldnr, jx,jy,jz)					\
   ((cf)->arr_off[F3_CF_OFF(cf, fldnr, jx,jy,jz)])
+
+
+// ----------------------------------------------------------------------
+// routines for actual domain boundaries
+
+void cuda_conducting_wall_H_lo_hi_y(struct cuda_mfields *cmflds, int p);
+void cuda_conducting_wall_E_lo_hi_y(struct cuda_mfields *cmflds, int p);
+void cuda_conducting_wall_J_lo_hi_y(struct cuda_mfields *cmflds, int p);
+void cuda_conducting_wall_H_lo_y(struct cuda_mfields *cmflds, int p);
+void cuda_conducting_wall_H_hi_y(struct cuda_mfields *cmflds, int p);
+void cuda_conducting_wall_E_lo_y(struct cuda_mfields *cmflds, int p);
+void cuda_conducting_wall_E_hi_y(struct cuda_mfields *cmflds, int p);
+void cuda_conducting_wall_J_lo_y(struct cuda_mfields *cmflds, int p);
+void cuda_conducting_wall_J_hi_y(struct cuda_mfields *cmflds, int p);
+
 
 
 #if 0
