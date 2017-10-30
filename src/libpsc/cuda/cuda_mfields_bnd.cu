@@ -389,8 +389,8 @@ fields_device_pack2_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bnd *cbn
 }
 
 void
-__fields_cuda_fill_ghosts_local(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
-				int mb, int me)
+cuda_mfields_bnd_fill_ghosts_local(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
+				   int mb, int me)
 {
   const int B = 2;
   int *im = cmflds->im;
@@ -729,8 +729,8 @@ __fields_cuda_to_device3_yz(struct cuda_mfields *cmflds, struct cuda_mfields_bnd
 // ======================================================================
 
 void
-__fields_cuda_from_device_inside(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
-				 int mb, int me)
+cuda_mfields_bnd_from_device_inside(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
+				    int mb, int me)
 {
   if (cmflds->im[0] == 2 * -cmflds->ib[0] + 1) {
     __fields_cuda_from_device_yz<2*BND>(cmflds, cbnd, mb, me);
@@ -748,8 +748,8 @@ __fields_cuda_from_device_inside(struct cuda_mfields_bnd *cbnd, struct cuda_mfie
 }
 
 void
-__fields_cuda_from_device_inside_only(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
-				      int mb, int me)
+cuda_mfields_bnd_from_device_inside_only(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
+					 int mb, int me)
 {
   if (cmflds->im[0] == 2 * -cmflds->ib[0] + 1) {
     __fields_cuda_from_device3_yz<2*BND>(cmflds, cbnd, mb, me);
@@ -767,8 +767,8 @@ __fields_cuda_from_device_inside_only(struct cuda_mfields_bnd *cbnd, struct cuda
 }
 
 void
-__fields_cuda_to_device_outside(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
-				int mb, int me)
+cuda_mfields_bnd_to_device_outside(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
+				   int mb, int me)
 {
   if (cmflds->im[0] == 2 * -cmflds->ib[0] + 1) {
     __fields_cuda_to_device3_yz<BND>(cmflds, cbnd, mb, me);
@@ -786,7 +786,7 @@ __fields_cuda_to_device_outside(struct cuda_mfields_bnd *cbnd, struct cuda_mfiel
 }
 
 void
-__fields_cuda_to_device_inside(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
+cuda_mfields_bnd_to_device_inside(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
 				int mb, int me)
 {
   if (cmflds->im[0] == 2 * -cmflds->ib[0] + 1) {

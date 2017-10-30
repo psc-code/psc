@@ -52,16 +52,17 @@ void cuda_mfields_bnd_dtor(struct cuda_mfields_bnd *cbnd);
 struct cuda_mfields_bnd_patch *cuda_mfields_bnd_get_patch(struct cuda_mfields_bnd *cbnd, int p);
 
 
-void __fields_cuda_from_device_inside(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
-				       int mb, int me);
-void __fields_cuda_from_device_inside_only(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
-					    int mb, int me);
-void __fields_cuda_to_device_outside(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
-				      int mb, int me);
-void __fields_cuda_to_device_inside(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
-				     int mb, int me);
-void __fields_cuda_fill_ghosts_local(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
-				      int mb, int me);
+void cuda_mfields_bnd_from_device_inside(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
+					 int mb, int me);
+void cuda_mfields_bnd_from_device_inside_only(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
+					      int mb, int me);
+void cuda_mfields_bnd_to_device_outside(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
+					int mb, int me);
+void cuda_mfields_bnd_to_device_inside(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
+					int mb, int me);
+void cuda_mfields_bnd_fill_ghosts_local(struct cuda_mfields_bnd *cbnd, struct cuda_mfields *cmflds,
+					int mb, int me);
+
 void cuda_fill_ghosts_periodic_yz(struct cuda_mfields *cmflds, int p, int mb, int me);
 void cuda_fill_ghosts_periodic_z(struct cuda_mfields *cmflds, int p, int mb, int me);
 void cuda_add_ghosts_periodic_yz(struct cuda_mfields *cmflds, int p, int mb, int me);

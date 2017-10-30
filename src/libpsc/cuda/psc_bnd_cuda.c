@@ -189,9 +189,9 @@ psc_bnd_cuda_add_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, int
     // z-periodic single patch
     cuda_add_ghosts_periodic_z(cmflds, 0, mb, me);
   } else {
-    __fields_cuda_from_device_inside(cbnd, cmflds, mb, me);
+    cuda_mfields_bnd_from_device_inside(cbnd, cmflds, mb, me);
     mrc_ddc_add_ghosts(bnd->ddc, 0, me - mb, bnd);
-    __fields_cuda_to_device_inside(cbnd, cmflds, mb, me);
+    cuda_mfields_bnd_to_device_inside(cbnd, cmflds, mb, me);
   }
 
   psc_mfields_put_as(mflds, mflds_base, mb, me);
@@ -234,7 +234,7 @@ psc_bnd_cuda_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, in
     cuda_fill_ghosts_periodic_z(cmflds, 0, mb, me);
   } else {
     prof_start(pr1);
-    __fields_cuda_from_device_inside(cbnd, cmflds, mb, me); // FIXME _only
+    cuda_mfields_bnd_from_device_inside(cbnd, cmflds, mb, me); // FIXME _only
     prof_stop(pr1);
 
     prof_start(pr2);
@@ -245,7 +245,7 @@ psc_bnd_cuda_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, in
     mrc_ddc_fill_ghosts_local(bnd->ddc, 0, me - mb, mflds);
 #endif
 #if 1
-    __fields_cuda_fill_ghosts_local(cbnd, cmflds, mb, me);
+    cuda_mfields_bnd_fill_ghosts_local(cbnd, cmflds, mb, me);
 #endif
     prof_stop(pr3);
     prof_start(pr4);
@@ -253,7 +253,7 @@ psc_bnd_cuda_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, in
     prof_stop(pr4);
 
     prof_start(pr5);
-    __fields_cuda_to_device_outside(cbnd, cmflds, mb, me);
+    cuda_mfields_bnd_to_device_outside(cbnd, cmflds, mb, me);
     prof_stop(pr5);
   }
 
