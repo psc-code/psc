@@ -144,9 +144,25 @@ psc_bnd_cuda_fill_ghosts_setup(struct psc_bnd *bnd)
 static void
 psc_bnd_cuda_setup(struct psc_bnd *bnd)
 {
+  struct psc_bnd_cuda *sub = psc_bnd_cuda(bnd);
+
   psc_bnd_setup_super(bnd); // this calls back to set up ::ddc
   // FIXME then, we should to the above cbnd setup, but we don't have cbnd/cmflds
   // at this point... yet
+
+  struct cuda_mfields_bnd_params prm;
+
+  struct psc *psc = bnd->psc;
+  prm.n_patches = psc->nr_patches;
+  assert(prm.n_patches > 0);
+  for (int d = 0; d < 3; d++) {
+    prm.ib[d] = -psc->ibn[d];
+    prm.im[d] = psc->patch[0].ldims[d] + 2 * psc->ibn[d];
+  }
+  
+  sub->cbnd = cuda_mfields_bnd_create();
+  cuda_mfields_bnd_ctor(sub->cbnd, &prm);
+  psc_bnd_cuda_fill_ghosts_setup(bnd);
 }
 
 // ----------------------------------------------------------------------
@@ -200,24 +216,6 @@ psc_bnd_cuda_add_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, int
 void
 psc_bnd_cuda_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, int mb, int me)
 {
-  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "cuda", mb, me);
-  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
-
-  struct psc_bnd_cuda *sub = psc_bnd_cuda(bnd);
-  if (!sub->cbnd) {
-    sub->cbnd = cuda_mfields_bnd_create();
-
-    struct cuda_mfields_bnd_params prm;
-    prm.n_patches = cmflds->n_patches;
-    for (int d = 0; d < 3; d++) {
-      prm.ib[d] = cmflds->ib[d];
-      prm.im[d] = cmflds->im[d];
-    }
-  
-    cuda_mfields_bnd_ctor(sub->cbnd, &prm);
-    psc_bnd_cuda_fill_ghosts_setup(bnd);
-  }
-
   struct cuda_mfields_bnd *cbnd = psc_bnd_cuda_cbnd(bnd);
 
   static int pr1, pr2, pr3, pr4, pr5;
@@ -228,6 +226,9 @@ psc_bnd_cuda_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds_base, in
     pr4 = prof_register("cuda_fill_ghosts_4", 1., 0, 0);
     pr5 = prof_register("cuda_fill_ghosts_5", 1., 0, 0);
   }
+
+  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "cuda", mb, me);
+  struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
 
   int size;
   MPI_Comm_size(psc_bnd_comm(bnd), &size);
