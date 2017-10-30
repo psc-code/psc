@@ -112,12 +112,16 @@ psc_bnd_cuda_create_ddc(struct psc_bnd *bnd)
 }
 
 // ----------------------------------------------------------------------
-// psc_bnd_cuda_fill_ghosts_setup
+// psc_bnd_cuda_setup
 
 static void
-psc_bnd_cuda_fill_ghosts_setup(struct psc_bnd *bnd)
+psc_bnd_cuda_setup(struct psc_bnd *bnd)
 {
-  struct cuda_mfields_bnd *cbnd = psc_bnd_cuda_cbnd(bnd);
+  struct psc_bnd_cuda *sub = psc_bnd_cuda(bnd);
+
+  psc_bnd_setup_super(bnd); // this calls back to set up ::ddc
+
+  struct cuda_mfields_bnd_params prm;
 
   struct mrc_ddc_multi *multi = mrc_ddc_multi(bnd->ddc);
   struct mrc_ddc_pattern2 *patt2 = &multi->fill_ghosts2;
@@ -133,25 +137,6 @@ psc_bnd_cuda_fill_ghosts_setup(struct psc_bnd *bnd)
     //mprintf("i %d patch %d dir1 %d nei_patch %d\n", i, re->patch, re->dir1, re->nei_patch);
   }
 
-  cuda_mfields_bnd_setup_d_nei_patch(cbnd, n_entries, entries);
-
-  free(entries);
-}
-
-// ----------------------------------------------------------------------
-// psc_bnd_cuda_setup
-
-static void
-psc_bnd_cuda_setup(struct psc_bnd *bnd)
-{
-  struct psc_bnd_cuda *sub = psc_bnd_cuda(bnd);
-
-  psc_bnd_setup_super(bnd); // this calls back to set up ::ddc
-  // FIXME then, we should to the above cbnd setup, but we don't have cbnd/cmflds
-  // at this point... yet
-
-  struct cuda_mfields_bnd_params prm;
-
   struct psc *psc = bnd->psc;
   prm.n_patches = psc->nr_patches;
   assert(prm.n_patches > 0);
@@ -162,7 +147,9 @@ psc_bnd_cuda_setup(struct psc_bnd *bnd)
   
   sub->cbnd = cuda_mfields_bnd_create();
   cuda_mfields_bnd_ctor(sub->cbnd, &prm);
-  psc_bnd_cuda_fill_ghosts_setup(bnd);
+  cuda_mfields_bnd_setup_d_nei_patch(sub->cbnd, n_entries, entries);
+
+  free(entries);
 }
 
 // ----------------------------------------------------------------------
