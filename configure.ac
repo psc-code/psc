@@ -243,7 +243,6 @@ AC_CONFIG_FILES([Makefile
                  src/libpsc/psc_output_particles/Makefile
                  src/libpsc/psc_diag/Makefile
                  src/libpsc/psc_patchmanager/Makefile
-                 src/libpsc/psc_pulse/Makefile
                  src/libpsc/psc_push_fields/Makefile
                  src/libpsc/psc_push_particles/Makefile
                  src/libpsc/psc_randomize/Makefile

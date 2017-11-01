@@ -6,12 +6,6 @@
 
 struct psc_bnd_fields {
   struct mrc_obj obj;
-  struct psc_pulse *pulse_x1;
-  struct psc_pulse *pulse_x2;
-  struct psc_pulse *pulse_y1;
-  struct psc_pulse *pulse_y2;
-  struct psc_pulse *pulse_z1;
-  struct psc_pulse *pulse_z2;
 };
 
 struct psc_bnd_fields_ops {

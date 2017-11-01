@@ -13,7 +13,6 @@ SUBDIRS = \
 	psc_output_particles \
 	psc_diag \
 	psc_patchmanager \
-	psc_pulse \
 	psc_push_fields \
 	psc_push_particles \
 	psc_randomize \
@@ -41,7 +40,6 @@ libpsc_la_LIBADD = \
 	psc_output_particles/libsubdir.la \
 	psc_diag/libsubdir.la \
 	psc_patchmanager/libsubdir.la \
-	psc_pulse/libsubdir.la \
 	psc_push_fields/libsubdir.la \
 	psc_push_particles/libsubdir.la \
 	psc_randomize/libsubdir.la \

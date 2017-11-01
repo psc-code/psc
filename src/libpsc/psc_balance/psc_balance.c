@@ -522,13 +522,7 @@ static void psc_balance_seed_patches(struct mrc_domain *domain_old, struct mrc_d
     mrc_domain_get_level_idx3_patch_info(domain_old, info.level, info.idx3, &info_old);
     if (info_old.rank < 0)	//Patch has to be seeded
     {
-      //Seed field
-      double t = ppsc->timestep * ppsc->dt;
-      psc_bnd_fields_setup_patch(psc_push_fields_get_bnd_fields(ppsc->push_fields), p, ppsc->flds, t);
-
-      //Seed particles
       assert(0);
-      //psc_case_init_particles_patch(ppsc->patchmanager.currentcase, p, 0);
     }
   }
 }

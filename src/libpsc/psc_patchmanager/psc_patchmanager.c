@@ -6,7 +6,6 @@
 
 #include "psc_bnd_fields.h"
 #include "psc_push_fields.h"
-#include "psc_pulse.h"
 #include "psc_bnd.h"
 
 #include "psc_domainwindow_private.h"

@@ -3,7 +3,6 @@
 #include <psc_push_fields.h>
 #include <psc_push_particles.h>
 #include <psc_bnd_fields.h>
-#include <psc_pulse.h>
 
 #include <mrc_params.h>
 
@@ -84,6 +83,7 @@ psc_test_microsphere_set_from_options(struct psc *psc)
 
   struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(ppsc->push_fields);
 
+#if 0
   struct psc_pulse *pulse_x1 = psc_bnd_fields_get_pulse_x1(bnd_fields);
   psc_pulse_set_type(pulse_x1, "gauss");
   psc_pulse_set_param_double3(pulse_x1, "m",  (double[3]) { 0., .5 * length[1], .5 * length[2] });
@@ -121,6 +121,7 @@ psc_test_microsphere_set_from_options(struct psc *psc)
   psc_pulse_set_param_double3(pulse_z2, "m",  (double[3]) { .5 * length[0], .5 * length[1], length[2]});
   psc_pulse_set_param_double3(pulse_z2, "dm", (double[3]) { w_normal, w_normal, w_par });
   psc_pulse_set_param_double(pulse_z2, "amplitude_s", 1.);
+#endif
 }
 
 static void

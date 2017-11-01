@@ -54,8 +54,6 @@ include_HEADERS = \
 	psc_particles_single.h \
 	psc_particles_sse2.h \
 	psc_patchmanager.h \
-	psc_pulse.h \
-	psc_pulse_private.h \
 	psc_push_fields.h \
 	psc_push_fields_private.h \
 	psc_push_particles.h \
