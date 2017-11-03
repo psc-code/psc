@@ -6,38 +6,20 @@
 // forward to subclass
 
 void
-psc_bnd_fields_fill_ghosts_a_E(struct psc_bnd_fields *bnd, struct psc_mfields *mflds)
+psc_bnd_fields_fill_ghosts_E(struct psc_bnd_fields *bnd, struct psc_mfields *mflds)
 {
   struct psc_bnd_fields_ops *ops = psc_bnd_fields_ops(bnd);
-  if (ops->fill_ghosts_a_E) {
-    ops->fill_ghosts_a_E(bnd, mflds);
+  if (ops->fill_ghosts_E) {
+    ops->fill_ghosts_E(bnd, mflds);
   }
 }
 
 void
-psc_bnd_fields_fill_ghosts_a_H(struct psc_bnd_fields *bnd, struct psc_mfields *mflds)
+psc_bnd_fields_fill_ghosts_H(struct psc_bnd_fields *bnd, struct psc_mfields *mflds)
 {
   struct psc_bnd_fields_ops *ops = psc_bnd_fields_ops(bnd);
-  if (ops->fill_ghosts_a_H) {
-    ops->fill_ghosts_a_H(bnd, mflds);
-  }
-}
-
-void
-psc_bnd_fields_fill_ghosts_b_H(struct psc_bnd_fields *bnd, struct psc_mfields *mflds)
-{
-  struct psc_bnd_fields_ops *ops = psc_bnd_fields_ops(bnd);
-  if (ops->fill_ghosts_b_H) {
-    ops->fill_ghosts_b_H(bnd, mflds);
-  }
-}
-
-void
-psc_bnd_fields_fill_ghosts_b_E(struct psc_bnd_fields *bnd, struct psc_mfields *mflds)
-{
-  struct psc_bnd_fields_ops *ops = psc_bnd_fields_ops(bnd);
-  if (ops->fill_ghosts_b_E) {
-    ops->fill_ghosts_b_E(bnd, mflds);
+  if (ops->fill_ghosts_H) {
+    ops->fill_ghosts_H(bnd, mflds);
   }
 }
 

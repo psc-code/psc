@@ -74,11 +74,11 @@ psc_push_fields_step_a_default(struct psc_push_fields *push, struct psc_mfields 
   // E at t^n+.5, particles at t^n, but the "double" particles would be at t^n+.5
   psc_marder_run(ppsc->marder, flds, ppsc->particles);
 
-  psc_bnd_fields_fill_ghosts_a_E(push->bnd_fields, flds);
+  psc_bnd_fields_fill_ghosts_E(push->bnd_fields, flds);
   psc_bnd_fill_ghosts(ppsc->bnd, flds, EX, EX + 3);
   
   psc_push_fields_push_H(push, flds);
-  psc_bnd_fields_fill_ghosts_a_H(push->bnd_fields, flds);
+  psc_bnd_fields_fill_ghosts_H(push->bnd_fields, flds);
   psc_bnd_fill_ghosts(ppsc->bnd, flds, HX, HX + 3);
 }
 
@@ -91,7 +91,7 @@ static void
 psc_push_fields_step_b2_default(struct psc_push_fields *push, struct psc_mfields *flds)
 {
   psc_push_fields_push_H(push, flds);
-  psc_bnd_fields_fill_ghosts_b_H(push->bnd_fields, flds);
+  psc_bnd_fields_fill_ghosts_H(push->bnd_fields, flds);
   psc_bnd_fill_ghosts(ppsc->bnd, flds, HX, HX + 3);
   
   psc_bnd_fields_add_ghosts_J(push->bnd_fields, flds);
@@ -99,7 +99,7 @@ psc_push_fields_step_b2_default(struct psc_push_fields *push, struct psc_mfields
   psc_bnd_fill_ghosts(ppsc->bnd, flds, JXI, JXI + 3);
   
   psc_push_fields_push_E(push, flds);
-  psc_bnd_fields_fill_ghosts_b_E(push->bnd_fields, flds);
+  psc_bnd_fields_fill_ghosts_E(push->bnd_fields, flds);
   psc_bnd_fill_ghosts(ppsc->bnd, flds, EX, EX + 3);
 }
 
@@ -119,7 +119,7 @@ psc_push_fields_step_a_opt(struct psc_push_fields *push, struct psc_mfields *mfl
   psc_marder_run(ppsc->marder, mflds, ppsc->particles);
 
   psc_push_fields_push_H(push, mflds);
-  psc_bnd_fields_fill_ghosts_a_H(push->bnd_fields, mflds);
+  psc_bnd_fields_fill_ghosts_H(push->bnd_fields, mflds);
 }
 
 static void
@@ -132,7 +132,7 @@ static void
 psc_push_fields_step_b2_opt(struct psc_push_fields *push, struct psc_mfields *mflds)
 {
   // fill ghosts for H
-  psc_bnd_fields_fill_ghosts_b_H(push->bnd_fields, mflds);
+  psc_bnd_fields_fill_ghosts_H(push->bnd_fields, mflds);
   psc_bnd_fill_ghosts(ppsc->bnd, mflds, HX, HX + 3);
   
   // add and fill ghost for J
@@ -143,7 +143,7 @@ psc_push_fields_step_b2_opt(struct psc_push_fields *push, struct psc_mfields *mf
   ppsc->dt *= 2.;
   psc_push_fields_push_E(push, mflds);
   ppsc->dt /= 2.;
-  psc_bnd_fields_fill_ghosts_b_E(push->bnd_fields, mflds);
+  psc_bnd_fields_fill_ghosts_E(push->bnd_fields, mflds);
 }
 
 // ======================================================================
