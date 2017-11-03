@@ -142,9 +142,7 @@ psc_push_fields_step_b2_opt(struct psc_push_fields *push, struct psc_mfields *mf
   psc_bnd_add_ghosts(ppsc->bnd, mflds, JXI, JXI + 3);
   psc_bnd_fill_ghosts(ppsc->bnd, mflds, JXI, JXI + 3);
 
-  ppsc->dt *= 2.;
-  psc_push_fields_push_E(push, mflds, .5);
-  ppsc->dt /= 2.;
+  psc_push_fields_push_E(push, mflds, 1.);
   psc_bnd_fields_fill_ghosts_E(push->bnd_fields, mflds);
 }
 
