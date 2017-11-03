@@ -119,7 +119,7 @@ cuda_mparticles_copy_from_dev_and_convert(struct cuda_mparticles *cmprts)
   thrust::host_vector<float4> h_bnd_xi4(n_send);
   thrust::host_vector<float4> h_bnd_pxi4(n_send);
 
-  assert(cmprts->n_prts + n_send < cmprts->n_alloced);
+  assert(cmprts->n_prts + n_send <= cmprts->n_alloced);
 
   thrust::copy(d_xi4  + cmprts->n_prts, d_xi4  + cmprts->n_prts + n_send, h_bnd_xi4.begin());
   thrust::copy(d_pxi4 + cmprts->n_prts, d_pxi4 + cmprts->n_prts + n_send, h_bnd_pxi4.begin());
