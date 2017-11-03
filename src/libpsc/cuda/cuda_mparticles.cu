@@ -132,6 +132,7 @@ cuda_mparticles_reserve_all(struct cuda_mparticles *cmprts, unsigned int *n_prts
     return;
   }
 
+  size *= 1.2;// FIXME hack
   unsigned int n_alloced = max(size, 2 * cmprts->n_alloced);
 
   if (cmprts->n_alloced > 0) {
