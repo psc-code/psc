@@ -7,13 +7,14 @@
 // psc_push_fields_cuda_push_mflds_E
 
 static void
-psc_push_fields_cuda_push_mflds_E(struct psc_push_fields *push, struct psc_mfields *mflds_base)
+psc_push_fields_cuda_push_mflds_E(struct psc_push_fields *push, struct psc_mfields *mflds_base,
+				  double dt_fac)
 {
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "cuda", JXI, HX + 3);
   struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
   
   if (ppsc->domain.gdims[0] == 1) {
-    cuda_push_fields_E_yz(cmflds, ppsc->dt);
+    cuda_push_fields_E_yz(cmflds, dt_fac * ppsc->dt);
   } else {
     assert(0);
   }
@@ -25,13 +26,14 @@ psc_push_fields_cuda_push_mflds_E(struct psc_push_fields *push, struct psc_mfiel
 // psc_push_fields_cuda_push_mflds_H
 
 static void
-psc_push_fields_cuda_push_mflds_H(struct psc_push_fields *push, struct psc_mfields *mflds_base)
+psc_push_fields_cuda_push_mflds_H(struct psc_push_fields *push, struct psc_mfields *mflds_base,
+				  double dt_fac)
 {
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "cuda", EX, HX + 3);
   struct cuda_mfields *cmflds = psc_mfields_cuda(mflds)->cmflds;
 
   if (ppsc->domain.gdims[0] == 1) {
-    cuda_push_fields_H_yz(cmflds, ppsc->dt);
+    cuda_push_fields_H_yz(cmflds, dt_fac * ppsc->dt);
   } else {
     assert(0);
   }

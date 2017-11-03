@@ -33,17 +33,17 @@ push_fields_E_yz(float *d_flds0, float dt, float cny, float cnz,
   D_F3(d_flds, EX, 0,iy,iz) +=
     cny * (D_F3(d_flds, HZ, 0,iy,iz) - D_F3(d_flds, HZ, 0,iy-1,iz)) -
     cnz * (D_F3(d_flds, HY, 0,iy,iz) - D_F3(d_flds, HY, 0,iy,iz-1)) -
-    .5f * dt * D_F3(d_flds, JXI, 0,iy,iz);
+    dt * D_F3(d_flds, JXI, 0,iy,iz);
   
   D_F3(d_flds, EY, 0,iy,iz) +=
     cnz * (D_F3(d_flds, HX, 0,iy,iz) - D_F3(d_flds, HX, 0,iy,iz-1)) -
     0.f -
-    .5f * dt * D_F3(d_flds, JYI, 0,iy,iz);
+    dt * D_F3(d_flds, JYI, 0,iy,iz);
   
   D_F3(d_flds, EZ, 0,iy,iz) +=
     0.f -
     cny * (D_F3(d_flds, HX, 0,iy,iz) - D_F3(d_flds, HX, 0,iy-1,iz)) -
-    .5f * dt * D_F3(d_flds, JZI, 0,iy,iz);
+    dt * D_F3(d_flds, JZI, 0,iy,iz);
 }
 
 __global__ static void
@@ -89,8 +89,8 @@ cuda_push_fields_E_yz(struct cuda_mfields *cmflds, float dt)
 
   cuda_mfields_const_set(cmflds);
 
-  float cny = .5f * dt / cmflds->dx[1];
-  float cnz = .5f * dt / cmflds->dx[2];
+  float cny = dt / cmflds->dx[1];
+  float cnz = dt / cmflds->dx[2];
   assert(cmflds->ldims[0] == 1);
 
   unsigned int size = cmflds->n_fields * cmflds->n_cells_per_patch;
@@ -113,8 +113,8 @@ cuda_push_fields_H_yz(struct cuda_mfields *cmflds, float dt)
 
   cuda_mfields_const_set(cmflds);
 
-  float cny = .5f * dt / cmflds->dx[1];
-  float cnz = .5f * dt / cmflds->dx[2];
+  float cny = dt / cmflds->dx[1];
+  float cnz = dt / cmflds->dx[2];
 
   unsigned int size = cmflds->n_fields * cmflds->n_cells_per_patch;
 
