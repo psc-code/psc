@@ -14,6 +14,7 @@
 #define PUSHER_BY_BLOCK
 
 #define psc_push_particles_push_mprts_xyz psc_push_particles_1vbec_single_by_block_push_mprts_xyz
+#define psc_push_particles_stagger_mprts_xyz psc_push_particles_1vbec_single_by_block_stagger_mprts_xyz
 
 #include "1vb.c"
 

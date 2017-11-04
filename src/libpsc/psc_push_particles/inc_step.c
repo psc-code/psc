@@ -236,3 +236,36 @@ push_one(mprts_array_t mprts_arr, int n,
 #endif
 }
 
+// ----------------------------------------------------------------------
+// stagger_one
+
+CUDA_DEVICE static void
+stagger_one(mprts_array_t mprts_arr, int n,
+	    em_cache_t flds_em)
+{
+  particle_t *prt;
+  PARTICLE_LOAD(prt, mprts_arr, n);
+  
+  // field interpolation
+  particle_real_t *xi = &particle_x(prt);
+
+  particle_real_t xm[3];
+  for (int d = 0; d < 3; d++) {
+    xm[d] = xi[d] * c_prm.dxi[d];
+  }
+
+  IF_DIM_X( IP_COEFFS(lg1, lh1, gx, hx, xm[0]); );
+  IF_DIM_Y( IP_COEFFS(lg2, lh2, gy, hy, xm[1]); );
+  IF_DIM_Z( IP_COEFFS(lg3, lh3, gz, hz, xm[2]); );
+  
+  // FIELD INTERPOLATION
+
+  INTERPOLATE_FIELDS(flds_em);
+
+  // x^(n+1/2), p^{n+1/2} -> x^(n+1/2), p^{n}
+  int kind = particle_kind(prt);
+  particle_real_t dq = prm.dq_kind[kind];
+  push_p(&particle_px(prt), E, H, -.5f * dq);
+
+  PARTICLE_STORE(prt, mprts_arr, n);
+}

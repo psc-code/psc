@@ -78,6 +78,45 @@ psc_push_particles_run(struct psc_push_particles *push,
   }
 }
 
+void
+psc_push_particles_stagger(struct psc_push_particles *push,
+			   struct psc_mparticles *mprts_base, struct psc_mfields *mflds_base)
+{
+  struct psc_push_particles_ops *ops = psc_push_particles_ops(push);
+
+  struct psc_mparticles *mprts;
+  if (ops->particles_type) {
+    mprts = psc_mparticles_get_as(mprts_base, ops->particles_type, 0);
+  } else {
+    mprts = mprts_base;
+  }
+  struct psc_mfields *mflds;
+  if (ops->fields_type) {
+    mflds = psc_mfields_get_as(mflds_base, ops->fields_type, EX, EX + 6);
+  } else {
+    mflds = mflds_base;
+  }
+  
+  int *im = ppsc->domain.gdims;
+
+  if (im[0] == 1 && im[1] > 1 && im[2] > 1) { // yz
+    if (!ops->stagger_mprts_yz) {
+      mprintf("WARNING: no stagger_mprts() method!\n");
+    } else {
+      ops->stagger_mprts_yz(push, mprts, mflds);
+    }
+  } else {
+    assert(0);
+  }
+
+  if (ops->particles_type) {
+    psc_mparticles_put_as(mprts, mprts_base, 0);
+  }
+  if (ops->fields_type) {
+    psc_mfields_put_as(mflds, mflds_base, JXI, JXI + 3);
+  }
+}
+
 unsigned int
 psc_push_particles_get_mp_flags(struct psc_push_particles *push)
 {

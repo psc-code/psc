@@ -12,6 +12,7 @@
 #define CALC_J CALC_J_1VB_2D
 
 #define psc_push_particles_push_mprts_yz psc_push_particles_1vb_double_push_mprts_yz
+#define psc_push_particles_stagger_mprts_yz psc_push_particles_1vb_double_stagger_mprts_yz
 
 #include "1vb.c"
 

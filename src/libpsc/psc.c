@@ -511,6 +511,7 @@ _psc_setup(struct psc *psc)
   psc_setup_coeff(psc);
   psc_setup_domain(psc);
 
+  // set particles x^{n+1/2}, p^{n+1/2}
   psc_setup_partition_and_particles(psc);
   psc_setup_fields(psc);
 #ifdef USE_FORTRAN
@@ -518,6 +519,8 @@ _psc_setup(struct psc *psc)
 #endif
 
   psc_setup_member_objs(psc);
+
+  psc_push_particles_stagger(psc->push_particles, psc->particles, psc->flds);
 }
 
 // ----------------------------------------------------------------------

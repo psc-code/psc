@@ -24,6 +24,8 @@ struct psc_push_particles_ops {
 			struct psc_mparticles *mprts, struct psc_mfields *mflds);
   void (*push_mprts_xyz)(struct psc_push_particles *push_particles,
 			 struct psc_mparticles *mprts, struct psc_mfields *mflds);
+  void (*stagger_mprts_yz)(struct psc_push_particles *push_particles,
+			   struct psc_mparticles *mprts, struct psc_mfields *mflds);
   
   unsigned int mp_flags; //< flags for _get_as(CUDA), alloc
   const char *particles_type;
