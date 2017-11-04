@@ -1,6 +1,6 @@
 
 #include "psc_output_particles_private.h"
-#include "psc_particles_as_c.h"
+#include "psc_particles_as_double.h"
 
 #include <mrc_params.h>
 #include <string.h>
@@ -52,10 +52,10 @@ psc_output_particles_ascii_run(struct psc_output_particles *out,
     particle_range_t prts = particle_range_mprts(mprts, p);
     for (int n = 0; n < particle_range_size(prts); n++) {
       particle_t *part = particle_iter_at(prts.begin, n);
-      fprintf(file, "%d %g %g %g %g %g %g %g %g %g\n",
+      fprintf(file, "%d %g %g %g %g %g %g %g %d\n",
 	      n, part->xi, part->yi, part->zi,
 	      part->pxi, part->pyi, part->pzi,
-	      part->qni, part->mni, part->wni);
+	      part->qni_wni, part->kind);
     }
   }
 
