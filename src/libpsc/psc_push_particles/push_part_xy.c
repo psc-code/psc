@@ -8,5 +8,6 @@
 
 #define DIM DIM_XY
 #define ORDER ORDER_2ND
+#define PRTS PRTS_STAGGERED
 #include "push_part_common.c"
 
