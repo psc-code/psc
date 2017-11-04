@@ -95,94 +95,6 @@ copy_to(struct psc_mparticles *mprts, struct psc_mparticles *mprts_to,
 }
 
 // ======================================================================
-// conversion to "c"
-
-static inline void
-calc_vxi(particle_c_real_t vxi[3], particle_c_t *part)
-{
-  particle_c_real_t root =
-    1.f / particle_c_real_sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
-  vxi[0] = part->pxi * root;
-  vxi[1] = part->pyi * root;
-  vxi[2] = part->pzi * root;
-}
-
-static void
-get_particle_c(struct cuda_mparticles_prt *prt, int n, void *_ctx)
-{
-  struct copy_ctx *ctx = _ctx;
-  particle_c_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
-  // don't shift in invariant directions
-  for (int d = 0; d < 3; d++) {
-    if (ppsc->domain.gdims[d] == 1) {
-      dth[d] = 0.;
-    }
-  }
-  
-  particle_c_t *prt_c = psc_mparticles_c_get_one(ctx->mprts, ctx->p, n);
-
-  particle_c_real_t vxi[3];
-  calc_vxi(vxi, prt_c);
-
-  prt->xi[0]   = prt_c->xi + dth[0] * vxi[0];
-  prt->xi[1]   = prt_c->yi + dth[1] * vxi[1];
-  prt->xi[2]   = prt_c->zi + dth[2] * vxi[2];
-  prt->pxi[0]  = prt_c->pxi;
-  prt->pxi[1]  = prt_c->pyi;
-  prt->pxi[2]  = prt_c->pzi;
-  prt->kind    = prt_c->kind;
-  prt->qni_wni = prt_c->qni * prt_c->wni;
-}
-
-static void
-put_particle_c(struct cuda_mparticles_prt *prt, int n, void *_ctx)
-{
-  struct copy_ctx *ctx = _ctx;
-  particle_c_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
-  // don't shift in invariant directions
-  for (int d = 0; d < 3; d++) {
-    if (ppsc->domain.gdims[d] == 1) {
-      dth[d] = 0.;
-    }
-  }
-  
-  particle_c_real_t qni_wni = prt->qni_wni;
-  unsigned int kind = prt->kind;
-  
-  particle_c_t *prt_c = psc_mparticles_c_get_one(ctx->mprts, ctx->p, n);
-  prt_c->xi  = prt->xi[0];
-  prt_c->yi  = prt->xi[1];
-  prt_c->zi  = prt->xi[2];
-  prt_c->pxi = prt->pxi[0];
-  prt_c->pyi = prt->pxi[1];
-  prt_c->pzi = prt->pxi[2];
-  prt_c->qni = ppsc->kinds[kind].q;
-  prt_c->mni = ppsc->kinds[kind].m;
-  prt_c->wni = qni_wni / prt_c->qni;
-  prt_c->kind = kind;
-  
-  particle_c_real_t vxi[3];
-  calc_vxi(vxi, prt_c);
-  prt_c->xi -= dth[0] * vxi[0];
-  prt_c->yi -= dth[1] * vxi[1];
-  prt_c->zi -= dth[2] * vxi[2];
-}
-
-static void
-psc_mparticles_cuda_copy_from_c(struct psc_mparticles *mprts_cuda,
-			       struct psc_mparticles *mprts, unsigned int flags)
-{
-  copy_from(mprts_cuda, mprts, get_particle_c);
-}
-
-static void
-psc_mparticles_cuda_copy_to_c(struct psc_mparticles *mprts_cuda,
-			     struct psc_mparticles *mprts, unsigned int flags)
-{
-  copy_to(mprts_cuda, mprts, put_particle_c);
-}
-
-// ======================================================================
 // conversion to "single"
 
 static void
@@ -284,8 +196,6 @@ psc_mparticles_cuda_copy_to_double(struct psc_mparticles *mprts_cuda,
 // psc_mparticles_cuda_methods
 
 static struct mrc_obj_method psc_mparticles_cuda_methods[] = {
-  MRC_OBJ_METHOD("copy_to_c"       , psc_mparticles_cuda_copy_to_c),
-  MRC_OBJ_METHOD("copy_from_c"     , psc_mparticles_cuda_copy_from_c),
   MRC_OBJ_METHOD("copy_to_single"  , psc_mparticles_cuda_copy_to_single),
   MRC_OBJ_METHOD("copy_from_single", psc_mparticles_cuda_copy_from_single),
   MRC_OBJ_METHOD("copy_to_double"  , psc_mparticles_cuda_copy_to_double),

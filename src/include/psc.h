@@ -66,9 +66,6 @@ typedef int f_int;
 #include "psc_particles_fortran.h"
 #include "psc_fields_fortran.h"
 
-// need c type for initial setup
-#include "psc_particles_c.h"
-
 #include "psc_particles.h"
 #include "psc_fields.h"
 

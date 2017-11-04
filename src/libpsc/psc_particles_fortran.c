@@ -2,61 +2,11 @@
 #include "psc.h"
 #include "psc_particles_as_fortran.h"
 #include "psc_particles_inc.h"
-#include "psc_particles_c.h"
 #include "psc_particles_double.h"
 
 // ======================================================================
 // psc_mparticles: subclass "fortran"
   
-// ----------------------------------------------------------------------
-// conversion to/from "c"
-
-static void
-put_particle_c(particle_fortran_t *prt, int n, struct psc_mparticles *mprts_c, int p)
-{
-  particle_c_t *prt_c = psc_mparticles_c_get_one(mprts_c, p, n);
-  
-  prt_c->xi      = prt->xi;
-  prt_c->yi      = prt->yi;
-  prt_c->zi      = prt->zi;
-  prt_c->pxi     = prt->pxi;
-  prt_c->pyi     = prt->pyi;
-  prt_c->pzi     = prt->pzi;
-  prt_c->qni     = prt->qni;
-  prt_c->wni     = prt->wni;
-  prt_c->mni     = prt->mni;
-}
-
-static void
-get_particle_c(particle_fortran_t *prt, int n, struct psc_mparticles *mprts_c, int p)
-{
-  particle_c_t *prt_c = psc_mparticles_c_get_one(mprts_c, p, n);
-
-  prt->xi      = prt_c->xi;
-  prt->yi      = prt_c->yi;
-  prt->zi      = prt_c->zi;
-  prt->pxi     = prt_c->pxi;
-  prt->pyi     = prt_c->pyi;
-  prt->pzi     = prt_c->pzi;
-  prt->qni     = prt_c->qni;
-  prt->wni     = prt_c->wni;
-  prt->mni     = prt_c->mni;
-}
-
-static void
-psc_mparticles_fortran_copy_to_c(struct psc_mparticles *mprts,
-				 struct psc_mparticles *mprts_c, unsigned int flags)
-{
-  psc_mparticles_copy_to(mprts, mprts_c, flags, put_particle_c);
-}
-
-static void
-psc_mparticles_fortran_copy_from_c(struct psc_mparticles *mprts,
-				   struct psc_mparticles *mprts_c, unsigned int flags)
-{
-  psc_mparticles_copy_from(mprts, mprts_c, flags, get_particle_c);
-}
-
 // ----------------------------------------------------------------------
 // conversion to/from "double"
 
@@ -145,8 +95,6 @@ psc_mparticles_fortran_copy_from_double(struct psc_mparticles *mprts_fortran,
 }
 
 static struct mrc_obj_method psc_mparticles_fortran_methods[] = {
-  MRC_OBJ_METHOD("copy_to_c"       , psc_mparticles_fortran_copy_to_c),
-  MRC_OBJ_METHOD("copy_from_c"     , psc_mparticles_fortran_copy_from_c),
   MRC_OBJ_METHOD("copy_to_double"  , psc_mparticles_fortran_copy_to_double),
   MRC_OBJ_METHOD("copy_from_double", psc_mparticles_fortran_copy_from_double),
   {}
