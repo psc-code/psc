@@ -279,7 +279,7 @@ psc_output_fields_c_run(struct psc_output_fields *out,
 
 static struct param psc_output_fields_c_descr[] = {
   { "data_dir"           , VAR(data_dir)             , PARAM_STRING(".")       },
-  { "output_fields"      , VAR(output_fields)        , PARAM_STRING("n,j,e,h") },
+  { "output_fields"      , VAR(output_fields)        , PARAM_STRING("j,e,h")   },
   { "pfd"                , VAR(pfd_s)                , PARAM_STRING("pfd")     },
   { "tfd"                , VAR(tfd_s)                , PARAM_STRING("tfd")     },
   { "write_pfield"       , VAR(dowrite_pfield)       , PARAM_BOOL(1)           },
