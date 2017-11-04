@@ -77,9 +77,7 @@ psc_push_fields_push_H(struct psc_push_fields *push, struct psc_mfields *flds,
 static void
 psc_push_fields_step_a_default(struct psc_push_fields *push, struct psc_mfields *mflds)
 {
-  psc_push_fields_push_E(push, mflds, .5);
-
-  // E at t^n+.5, particles at t^n, but the "double" particles would be at t^n+.5
+  // E at t^{n+1/2}, particles at t^{n+1/2}
   psc_marder_run(ppsc->marder, mflds, ppsc->particles);
 
   psc_bnd_fields_fill_ghosts_E(push->bnd_fields, mflds);
@@ -112,7 +110,7 @@ psc_push_fields_step_b2_default(struct psc_push_fields *push, struct psc_mfields
   psc_bnd_add_ghosts(ppsc->bnd, mflds, JXI, JXI + 3);
   psc_bnd_fill_ghosts(ppsc->bnd, mflds, JXI, JXI + 3);
   
-  psc_push_fields_push_E(push, mflds, .5);
+  psc_push_fields_push_E(push, mflds, 1.);
   psc_bnd_fields_fill_ghosts_E(push->bnd_fields, mflds);
   psc_bnd_fill_ghosts(ppsc->bnd, mflds, EX, EX + 3);
 }
