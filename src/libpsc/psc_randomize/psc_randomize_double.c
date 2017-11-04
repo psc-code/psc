@@ -1,6 +1,6 @@
 
 #include "psc_randomize_private.h"
-#include "psc_particles_as_c.h"
+#include "psc_particles_as_double.h"
 
 #include <mrc_profile.h>
 
