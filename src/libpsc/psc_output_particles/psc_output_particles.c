@@ -23,8 +23,6 @@ psc_output_particles_init()
 {
 #ifdef HAVE_HDF5
   mrc_class_register_subclass(&mrc_class_psc_output_particles,
-                              &psc_output_particles_hdf5_ops);
-  mrc_class_register_subclass(&mrc_class_psc_output_particles,
                               &psc_output_particles_hdf5_single_ops);
   mrc_class_register_subclass(&mrc_class_psc_output_particles,
                               &psc_output_particles_hdf5_double_ops);
