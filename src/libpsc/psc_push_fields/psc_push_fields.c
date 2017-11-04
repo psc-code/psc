@@ -87,12 +87,12 @@ psc_push_fields_step_a_default(struct psc_push_fields *push, struct psc_mfields 
 static void
 psc_push_fields_step_b1_default(struct psc_push_fields *push, struct psc_mfields *flds)
 {
+  psc_push_fields_push_H(push, flds, .5);
 }
 
 static void
 psc_push_fields_step_b2_default(struct psc_push_fields *push, struct psc_mfields *flds)
 {
-  psc_push_fields_push_H(push, flds, .5);
   psc_bnd_fields_fill_ghosts_H(push->bnd_fields, flds);
   psc_bnd_fill_ghosts(ppsc->bnd, flds, HX, HX + 3);
   

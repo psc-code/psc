@@ -97,9 +97,10 @@ psc_step(struct psc *psc)
     psc_patchmanager_timestep(&psc->patchmanager);
   }
 
+  // p^n, x^{n+1/2}, E^n, B^n
   psc_output(psc);
   psc_balance_run(psc->balance, psc);
-  
+
   psc_randomize_run(psc->randomize, psc->particles);
   psc_sort_run(psc->sort, psc->particles);
 
@@ -110,6 +111,7 @@ psc_step(struct psc *psc)
   
   // field propagation n*dt -> (n+0.5)*dt
   psc_push_fields_step_a(psc->push_fields, psc->flds);
+  // p^n, x^{n+1/2}, E^{n+1/2}, B^{n+1/2}
 
   psc_checks_gauss(psc->checks, psc);
 
@@ -118,9 +120,11 @@ psc_step(struct psc *psc)
   // particle propagation n*dt -> (n+1.0)*dt
   psc_checks_continuity_before_particle_push(psc->checks, psc);
   psc_push_particles_run(psc->push_particles, psc->particles, psc->flds);
+  // p^{n+1}, x^{n+3/2}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
     
   // field propagation (n+0.5)*dt -> (n+1.0)*dt
   psc_push_fields_step_b1(psc->push_fields, psc->flds);
+  // p^{n+1}, x^{n+3/2}, E^{n+1/2}, B^{n+1}, j^{n+1}
 
   psc_bnd_particles_exchange(psc->bnd_particles, psc->particles);
   
@@ -128,6 +132,7 @@ psc_step(struct psc *psc)
   
   // field propagation (n+0.5)*dt -> (n+1.0)*dt
   psc_push_fields_step_b2(psc->push_fields, psc->flds);
+  // p^{n+1}, x^{n+3/2}, E^{n+1}, B^{n+1}, j^{n+1}
   psc_checks_continuity_after_particle_push(psc->checks, psc);
 }
 
