@@ -367,7 +367,9 @@ psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
       inv_sum += 1. / sqr(dx[d] / (1 << (nr_levels - 1)));
     }
   }
-  assert(inv_sum);  //Simulation has 0 dimensions
+  if (!inv_sum) { // simulation has 0 dimensions
+    inv_sum = 1.;
+  }
   psc->dt = psc->prm.cfl * sqrt(1./inv_sum);
 
   mpi_printf(MPI_COMM_WORLD, "::: dt      = %g\n", psc->dt);
