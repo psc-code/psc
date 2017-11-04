@@ -1,7 +1,6 @@
 
 #include "psc_bnd_fld.h"
 #include "psc_bnd_private.h"
-#include "psc_particles_as_c.h"
 
 // ======================================================================
 // psc_bnd: subclass "c"

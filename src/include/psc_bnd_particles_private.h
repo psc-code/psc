@@ -34,7 +34,6 @@ struct psc_bnd_particles_ops {
 // ======================================================================
 
 extern struct psc_bnd_particles_ops psc_bnd_particles_auto_ops;
-extern struct psc_bnd_particles_ops psc_bnd_particles_c_ops;
 extern struct psc_bnd_particles_ops psc_bnd_particles_single_ops;
 extern struct psc_bnd_particles_ops psc_bnd_particles_double_ops;
 extern struct psc_bnd_particles_ops psc_bnd_particles_double_omp_ops;
