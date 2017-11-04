@@ -39,12 +39,10 @@ include_HEADERS = \
 	psc_output_particles.h \
 	psc_output_particles_private.h \
 	psc_particles.h \
-	psc_particles_as_c.h \
 	psc_particles_as_cbe.h \
 	psc_particles_as_double.h \
 	psc_particles_as_fortran.h \
 	psc_particles_as_single.h \
-	psc_particles_c.h \
 	psc_particles_cbe.h \
 	psc_particles_cuda.h \
 	psc_particles_double.h \
