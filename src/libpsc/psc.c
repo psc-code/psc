@@ -149,7 +149,7 @@ static struct param psc_descr[] = {
                     , VAR(prm.write_checkpoint_every_step), PARAM_INT(-1) },
 
   { "fields_base"   , VAR(prm.fields_base)        , PARAM_STRING("c") },
-  { "particles_base", VAR(prm.particles_base)     , PARAM_STRING("c") },
+  { "particles_base", VAR(prm.particles_base)     , PARAM_STRING("double") },
   { "particles_base_flags"
                     , VAR(prm.particles_base_flags)  , PARAM_INT(0) },
   { "stats_every"
