@@ -1,6 +1,6 @@
 
 #include "psc_push_particles_private.h"
-#include "psc_1p5_c.h"
+#include "psc_1p5_double.h"
 
 // ======================================================================
 // psc_push_particles: subclass "1p5_double"

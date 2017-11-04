@@ -1,5 +1,5 @@
 
-#include "psc_1p5_c.h"
+#include "psc_1p5_double.h"
 
 #include <mrc_profile.h>
 #include <math.h>
