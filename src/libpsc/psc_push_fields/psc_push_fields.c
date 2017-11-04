@@ -3,7 +3,6 @@
 
 #include "psc_bnd.h"
 #include "psc_bnd_fields.h"
-#include "psc_marder.h"
 #include <mrc_profile.h>
 #include <mrc_params.h>
 
@@ -79,15 +78,12 @@ psc_push_fields_push_H(struct psc_push_fields *push, struct psc_mfields *flds,
 void
 psc_push_fields_step_a(struct psc_push_fields *push, struct psc_mfields *mflds)
 {
-  // E at t^{n+1/2}, particles at t^{n+1/2}
-  psc_marder_run(ppsc->marder, mflds, ppsc->particles);
-    
   if (push->variant == 0) {
     psc_bnd_fields_fill_ghosts_E(push->bnd_fields, mflds);
     psc_bnd_fill_ghosts(ppsc->bnd, mflds, EX, EX + 3);
   }
 
-  //push H
+  // push H
   psc_push_fields_push_H(push, mflds, .5);
   psc_bnd_fields_fill_ghosts_H(push->bnd_fields, mflds);
   if (push->variant == 0) {

@@ -2,6 +2,7 @@
 #include "psc.h"
 #include "psc_push_particles.h"
 #include "psc_push_fields.h"
+#include "psc_marder.h"
 #include "psc_bnd_particles.h"
 #include "psc_collision.h"
 #include "psc_randomize.h"
@@ -97,7 +98,7 @@ psc_step(struct psc *psc)
     psc_patchmanager_timestep(&psc->patchmanager);
   }
 
-  // p^n, x^{n+1/2}, E^n, B^n
+  // x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n}
   psc_output(psc);
   psc_balance_run(psc->balance, psc);
 
@@ -109,30 +110,34 @@ psc_step(struct psc *psc)
 
   psc_collision_run(psc->collision, psc->particles);
   
-  // field propagation n*dt -> (n+0.5)*dt
+  // E at t^{n+1/2}, particles at t^{n+1/2}
+  psc_marder_run(psc->marder, psc->flds, psc->particles);
+    
+  // field propagation B^{n} -> B^{n+1/2}
   psc_push_fields_step_a(psc->push_fields, psc->flds);
-  // p^n, x^{n+1/2}, E^{n+1/2}, B^{n+1/2}
+  // x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
 
   psc_checks_gauss(psc->checks, psc);
 
   //psc_bnd_particles_open_calc_moments(psc->bnd_particles, psc->particles);
 
-  // particle propagation n*dt -> (n+1.0)*dt
   psc_checks_continuity_before_particle_push(psc->checks, psc);
+
+  // particle propagation p^{n} -> p^{n+1}, x^{n+1/2} -> x^{n+3/2}
   psc_push_particles_run(psc->push_particles, psc->particles, psc->flds);
-  // p^{n+1}, x^{n+3/2}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
+  // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
     
   // field propagation B^{n+1/2} -> B^{n+1}
   psc_push_fields_push_H(psc->push_fields, psc->flds, .5);
-  // p^{n+1}, x^{n+3/2}, E^{n+1/2}, B^{n+1}, j^{n+1}
+  // x^{n+3/2}, p^{n+1}, E^{n+1/2}, B^{n+1}, j^{n+1}
 
   psc_bnd_particles_exchange(psc->bnd_particles, psc->particles);
   
   psc_event_generator_run(psc->event_generator, psc->particles, psc->flds);
   
-  // field propagation (n+0.5)*dt -> (n+1.0)*dt
+  // field propagation E^{n+1/2} -> E^{n+3/2}
   psc_push_fields_step_b2(psc->push_fields, psc->flds);
-  // p^{n+1}, x^{n+3/2}, E^{n+1}, B^{n+1}, j^{n+1}
+  // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
   psc_checks_continuity_after_particle_push(psc->checks, psc);
 }
 
