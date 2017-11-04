@@ -98,7 +98,8 @@ psc_step(struct psc *psc)
     psc_patchmanager_timestep(&psc->patchmanager);
   }
 
-  // x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n}
+  // x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
+
   psc_output(psc);
   psc_balance_run(psc->balance, psc);
 
@@ -113,10 +114,6 @@ psc_step(struct psc *psc)
   // E at t^{n+1/2}, particles at t^{n+1/2}
   psc_marder_run(psc->marder, psc->flds, psc->particles);
     
-  // field propagation B^{n} -> B^{n+1/2}
-  psc_push_fields_step_a(psc->push_fields, psc->flds);
-  // x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
-
   psc_checks_gauss(psc->checks, psc);
 
   //psc_bnd_particles_open_calc_moments(psc->bnd_particles, psc->particles);
@@ -138,6 +135,11 @@ psc_step(struct psc *psc)
   // field propagation E^{n+1/2} -> E^{n+3/2}
   psc_push_fields_step_b2(psc->push_fields, psc->flds);
   // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+1}
+
+  // field propagation B^{n+1} -> B^{n+3/2}
+  psc_push_fields_step_a(psc->push_fields, psc->flds);
+  // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
+
   psc_checks_continuity_after_particle_push(psc->checks, psc);
 }
 
