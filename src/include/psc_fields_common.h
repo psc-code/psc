@@ -114,10 +114,10 @@ typedef double fields_FTYPE_real_t;
 #if FTYPE == FTYPE_SINGLE
 
 #define _F3_S(flds, m, i,j,k)						\
-  (*({assert(fldnr >= 0 && fldnr < (pf).nr_comp);			\
-      assert(jx >= (flds).ib[0] && jx < (flds).ib[0] + (flds).im[0]);	\
-      assert(jy >= (flds).ib[1] && jy < (flds).ib[1] + (flds).im[1]);	\
-      assert(jz >= (flds).ib[2] && jz < (flds).ib[2] + (flds).im[2]);	\
+  (*({assert(m >= 0 && m < (flds).nr_comp);				\
+      assert(i >= (flds).ib[0] && i < (flds).ib[0] + (flds).im[0]);	\
+      assert(j >= (flds).ib[1] && j < (flds).ib[1] + (flds).im[1]);	\
+      assert(k >= (flds).ib[2] && k < (flds).ib[2] + (flds).im[2]);	\
       &((flds).data[_F3_OFF(flds, m, i,j,k)]);				\
     }))
 
