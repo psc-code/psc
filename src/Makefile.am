@@ -20,6 +20,7 @@ bin_PROGRAMS = \
 	psc_bubble \
 	psc_bubble_yz \
 	psc_flatfoil_yz \
+	psc_test_cyclo \
 	psc_test_singlepart \
 	psc_test_microsphere \
 	psc_test_twoparticles \
@@ -47,6 +48,7 @@ nodist_EXTRA_psc_harris_xz_SOURCES = dummy.cxx
 nodist_EXTRA_psc_bubble_SOURCES = dummy.cxx
 nodist_EXTRA_psc_bubble_yz_SOURCES = dummy.cxx
 nodist_EXTRA_psc_flatfoil_yz_SOURCES = dummy.cxx
+nodist_EXTRA_psc_test_cyclo_SOURCES = dummy.cxx
 nodist_EXTRA_psc_test_singlepart_SOURCES = dummy.cxx
 nodist_EXTRA_psc_test_microsphere_SOURCES = dummy.cxx
 nodist_EXTRA_psc_test_twoparticles_SOURCES = dummy.cxx
