@@ -548,7 +548,7 @@ copy_stats(struct psc_output_fields_item *item, struct psc_mfields *mflds_base,
 	   struct psc_mparticles *mprts_base, struct psc_mfields *mres)
 {
   struct psc_collision *collision = ppsc->collision;
-  assert(psc_collision_ops(collision) == &psc_collision_c_ops);
+  assert(psc_collision_ops(collision) == &psc_collision_single_ops);
 
   struct psc_collision_sub *coll = psc_collision_sub(collision);
 

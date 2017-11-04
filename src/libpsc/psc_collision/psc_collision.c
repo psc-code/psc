@@ -28,7 +28,6 @@ static void
 psc_collision_init()
 {
   mrc_class_register_subclass(&mrc_class_psc_collision, &psc_collision_none_ops);
-  mrc_class_register_subclass(&mrc_class_psc_collision, &psc_collision_c_ops);
   mrc_class_register_subclass(&mrc_class_psc_collision, &psc_collision_single_ops);
 #ifdef USE_FORTRAN
   mrc_class_register_subclass(&mrc_class_psc_collision, &psc_collision_fortran_ops);
