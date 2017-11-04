@@ -1,7 +1,7 @@
 
 #include "psc.h"
 
-#include "psc_particles_as_c.h" // only for checking...
+#include "psc_particles_as_double.h" // only for checking...
 
 #include <mrc_profile.h>
 #include <mrc_params.h>
