@@ -42,7 +42,6 @@ typedef void (*psc_mparticles_copy_func_t)(struct psc_mparticles *,
 #define MP_NO_CHECKERBOARD    (0x10000)
 
 extern struct psc_mparticles_ops psc_mparticles_fortran_ops;
-extern struct psc_mparticles_ops psc_mparticles_c_ops;
 extern struct psc_mparticles_ops psc_mparticles_single_ops;
 extern struct psc_mparticles_ops psc_mparticles_double_ops;
 extern struct psc_mparticles_ops psc_mparticles_sse2_ops;

@@ -4,7 +4,7 @@
 #include <psc_push_fields.h>
 #include <psc_sort.h>
 #include <psc_balance.h>
-#include <psc_particles_as_c.h>
+#include <psc_particles_as_double.h>
 #include <psc_event_generator_private.h>
 
 #include <mrc_params.h>
@@ -213,6 +213,8 @@ seed_patch(struct psc *psc, struct psc_mparticles *mprts, int p)
 
     mparticles_patch_reserve(mprts, p, mparticles_get_n_prts(mprts, p) + 2*N_new);
 
+    assert(0);
+#if 0
     struct psc_particle_npt npt = {};
 
     for (int n = 0; n < N_new; n++) {
@@ -240,8 +242,8 @@ seed_patch(struct psc *psc, struct psc_mparticles *mprts, int p)
       psc_setup_particle(psc, &prt, &npt, p, xx);
       mparticles_patch_push_back(mprts, p, prt);
     }
+#endif
   } foreach_3d_end;
-
 }
 
 void

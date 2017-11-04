@@ -1,7 +1,7 @@
 
 #include "psc_testing.h"
 #include "psc_bnd_particles.h"
-#include "psc_particles_as_c.h"
+#include "psc_particles_as_double.h"
 #include <mrc_profile.h>
 #include <mrc_params.h>
 
@@ -13,6 +13,8 @@
 static void
 psc_test_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool count_only)
 {
+  assert(0);
+#if 0
   int rank;
   MPI_Comm_rank(psc_comm(psc), &rank);
 
@@ -52,6 +54,7 @@ psc_test_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool count
       nr_particles_by_patch[p] = i;
     }
   }
+#endif
 }
 
 // FIXME, make generic

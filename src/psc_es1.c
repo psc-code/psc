@@ -4,7 +4,7 @@
 #include <psc_push_fields.h>
 #include <psc_sort.h>
 #include <psc_balance.h>
-#include <psc_particles_as_c.h>
+#include <psc_particles_as_double.h>
 
 #include <mrc_params.h>
 #include <mrc_profile.h>
@@ -296,6 +296,8 @@ psc_es1_init_species(struct psc *psc, int kind, struct psc_es1_species *s,
     vx[i] += s->v1 * sin(theta + s->thetav);
   }
 
+  assert(0);
+#if 0
   // copy to PSC data structure
   for (int i = 0; i < n; i++) {
     if (x[i] < 0.) x[i] += l;
@@ -310,7 +312,8 @@ psc_es1_init_species(struct psc *psc, int kind, struct psc_es1_species *s,
     prt.kind = kind;
     mparticles_patch_push_back(mprts, p, prt);
   }
-
+#endif
+  
   free(x);
   free(vx);
 }

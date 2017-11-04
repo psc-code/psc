@@ -1,7 +1,7 @@
 
 #include "psc_testing.h"
 #include "psc_sort.h"
-#include "psc_particles_as_c.h"
+#include "psc_particles_as_double.h"
 #include "psc_fields_as_c.h"
 #include "psc_push_particles.h"
 #include "psc_bnd.h"

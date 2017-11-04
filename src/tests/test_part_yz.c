@@ -1,13 +1,15 @@
 
 #include "psc_testing.h"
 #include <mrc_params.h>
-#include <psc_particles_as_c.h>
+#include <psc_particles_as_double.h>
 
 #include <string.h>
 
 static void
 psc_test_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool count_only)
 {
+  assert(0);
+#if 0
   assert(psc->nr_patches == 1);
 
   if (count_only) {
@@ -21,6 +23,7 @@ psc_test_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool count
     prt.yi = prt.zi = .5;
     mparticles_patch_push_back(psc->particles, 0, prt);
   }
+#endif
 }
 
 // ======================================================================

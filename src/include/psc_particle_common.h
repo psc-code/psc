@@ -4,7 +4,6 @@
 #define PTYPE_SINGLE          1
 #define PTYPE_DOUBLE          2
 #define PTYPE_SINGLE_BY_BLOCK 3
-#define PTYPE_C               4
 #define PTYPE_FORTRAN         5
 #define PTYPE_CUDA            6
 
@@ -29,13 +28,6 @@
 #define particle_PTYPE_t particle_single_by_block_t
 #define psc_particle_PTYPE psc_particle_single_by_block
 
-#elif PTYPE == PTYPE_C
-
-#define particle_PTYPE_real_t particle_c_real_t
-#define particle_PTYPE_real_fint particle_c_real_fint
-#define particle_PTYPE_t particle_c_t
-#define psc_particle_PTYPE psc_particle_c
-
 #elif PTYPE == PTYPE_FORTRAN
 
 #define particle_PTYPE_real_t particle_fortran_real_t
@@ -59,13 +51,13 @@
 
 typedef float particle_PTYPE_real_t;
 
-#elif PTYPE == PTYPE_DOUBLE || PTYPE == PTYPE_C || PTYPE == PTYPE_FORTRAN
+#elif PTYPE == PTYPE_DOUBLE || PTYPE == PTYPE_FORTRAN
 
 typedef double particle_PTYPE_real_t;
 
 #endif
 
-#if PTYPE == PTYPE_FORTRAN || PTYPE == PTYPE_C || PTYPE == PYTPE_CUDA
+#if PTYPE == PTYPE_FORTRAN || PTYPE == PYTPE_CUDA
 
 // FIXME, this version is hacky, so why not always use floor/floorf?
 static inline int
@@ -111,11 +103,6 @@ particle_PTYPE_real_fint(particle_PTYPE_real_t x)
 #define MPI_PARTICLES_SINGLE_REAL MPI_FLOAT
 #define psc_mparticles_single_by_block(prts) mrc_to_subobj(prts, struct psc_mparticles_single_by_block)
 
-#elif PTYPE == PTYPE_C
-
-#define MPI_PARTICLES_C_REAL MPI_DOUBLE
-#define psc_mparticles_c(prts) mrc_to_subobj(prts, struct psc_mparticles_c)
-
 #elif PTYPE == PTYPE_FORTRAN
 
 #define MPI_PARTICLES_FORTRAN_REAL MPI_DOUBLE
@@ -138,17 +125,6 @@ typedef struct psc_particle_PTYPE {
   particle_PTYPE_real_t qni_wni;
   particle_PTYPE_real_t pxi, pyi, pzi;
   int kind;
-} particle_PTYPE_t;
-
-#elif PTYPE == PTYPE_C
-
-typedef struct psc_particle_PTYPE {
-  particle_PTYPE_real_t xi, yi, zi;
-  particle_PTYPE_real_t pxi, pyi, pzi;
-  particle_PTYPE_real_t qni;
-  particle_PTYPE_real_t mni;
-  particle_PTYPE_real_t wni;
-  long long kind; // 64 bits to match the other members, for bnd exchange
 } particle_PTYPE_t;
 
 #elif PTYPE == PTYPE_FORTRAN

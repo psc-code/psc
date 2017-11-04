@@ -4,7 +4,7 @@
 #include <psc_push_fields.h>
 #include <psc_sort.h>
 #include <psc_balance.h>
-#include <psc_particles_as_c.h>
+#include <psc_particles_as_double.h>
 
 #include <mrc_params.h>
 #include <mrc_profile.h>
@@ -153,6 +153,8 @@ psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 
   struct psc_mparticles *mprts = psc_mparticles_get_as(psc->particles, "c", MP_DONT_COPY);
 
+  assert(0);
+#if 0
   psc_foreach_patch(psc, p) {
     for (int kind = 0; kind < psc->nr_kinds; kind++) {
       struct psc_es1_species *s = &es1->species[kind];
@@ -170,7 +172,7 @@ psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
       } 
     }
   }
-
+#endif
   psc_mparticles_put_as(mprts, psc->particles, 0);
 }
 
