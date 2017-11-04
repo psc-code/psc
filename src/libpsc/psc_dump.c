@@ -1,6 +1,6 @@
 
 #include "psc.h"
-#include "psc_particles_as_c.h"
+#include "psc_particles_as_double.h"
 #include "psc_fields_as_c.h"
 
 #include <stdlib.h>
@@ -73,9 +73,9 @@ ascii_dump_particles(struct psc_mparticles *mprts_base, const char *fname)
     fprintf(file, "i\txi\tyi\tzi\tpxi\tpyi\tpzi\tqni\tmni\twni\n");
     for (int i = 0; i < particle_range_size(prts); i++) {
       particle_t *p = particle_iter_at(prts.begin, i);
-      fprintf(file, "%d\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\n",
+      fprintf(file, "%d\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%d\n",
 	      i, p->xi, p->yi, p->zi,
-	      p->pxi, p->pyi, p->pzi, p->qni, p->mni, p->wni);
+	      p->pxi, p->pyi, p->pzi, p->qni_wni, p->kind);
     }
     fclose(file);
     free(filename);
