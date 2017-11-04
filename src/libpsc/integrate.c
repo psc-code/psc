@@ -122,8 +122,8 @@ psc_step(struct psc *psc)
   psc_push_particles_run(psc->push_particles, psc->particles, psc->flds);
   // p^{n+1}, x^{n+3/2}, E^{n+1/2}, B^{n+1/2}, j^{n+1}
     
-  // field propagation (n+0.5)*dt -> (n+1.0)*dt
-  psc_push_fields_step_b1(psc->push_fields, psc->flds);
+  // field propagation B^{n+1/2} -> B^{n+1}
+  psc_push_fields_push_H(psc->push_fields, psc->flds, .5);
   // p^{n+1}, x^{n+3/2}, E^{n+1/2}, B^{n+1}, j^{n+1}
 
   psc_bnd_particles_exchange(psc->bnd_particles, psc->particles);

@@ -41,7 +41,7 @@ psc_push_fields_push_E(struct psc_push_fields *push, struct psc_mfields *flds,
   psc_stats_start(st_time_field);
 }
 
-static void
+void
 psc_push_fields_push_H(struct psc_push_fields *push, struct psc_mfields *flds,
 		       double dt_fac)
 {
@@ -143,12 +143,6 @@ psc_push_fields_step_a(struct psc_push_fields *push, struct psc_mfields *mflds)
   } else {
     assert(0);
   }
-}
-
-void
-psc_push_fields_step_b1(struct psc_push_fields *push, struct psc_mfields *mflds)
-{
-  psc_push_fields_push_H(push, mflds, .5);
 }
 
 void
