@@ -128,7 +128,6 @@ psc_bnd_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *flds, int mb, int m
 static void
 psc_bnd_init()
 {
-  mrc_class_register_subclass(&mrc_class_psc_bnd, &psc_bnd_auto_ops);
   mrc_class_register_subclass(&mrc_class_psc_bnd, &psc_bnd_c_ops);
   mrc_class_register_subclass(&mrc_class_psc_bnd, &psc_bnd_single_ops);
 #ifdef USE_CUDA

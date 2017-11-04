@@ -5,7 +5,6 @@ noinst_LTLIBRARIES = libsubdir.la
 
 libsubdir_la_SOURCES = \
 	psc_bnd.c \
-	psc_bnd_auto.c \
 	psc_bnd_fld_c.c \
 	psc_bnd_fld_single.c \
 	psc_bnd_c.c \
