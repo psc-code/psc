@@ -9,7 +9,17 @@
 // ----------------------------------------------------------------------
 // calc_3d_dx1
 
-#if DIM == DIM_YZ
+#if DIM == DIM_1
+
+CUDA_DEVICE static void
+calc_j(curr_cache_t curr_cache, particle_real_t *xm, particle_real_t *xp,
+       int *lf, int *lg, particle_t *prt, particle_real_t *vxi)
+{
+  // FIXME
+  //assert(0);
+}
+
+#elif DIM == DIM_YZ
 
 CUDA_DEVICE static inline void
 calc_3d_dx1(particle_real_t dx1[3], particle_real_t x[3], particle_real_t dx[3], int off[3])

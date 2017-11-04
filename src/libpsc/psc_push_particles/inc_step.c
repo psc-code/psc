@@ -3,7 +3,9 @@
 
 #ifndef SFX
 
-#if DIM == DIM_YZ
+#if DIM == DIM_1
+#define SFX(s) s ## _1
+#elif DIM == DIM_YZ
 #define SFX(s) s ## _yz
 #elif DIM == DIM_XYZ
 #define SFX(s) s ## _xyz

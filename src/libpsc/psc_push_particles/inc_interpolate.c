@@ -78,7 +78,16 @@ ip_coeff(int *lg, struct ip_coeff *gg, particle_real_t u)
 
 #if IP_VARIANT == IP_VARIANT_EC
 
-#if DIM == DIM_YZ
+#if DIM == DIM_1
+
+#define IP_FIELD_EX(flds) (F3_CACHE(flds, EX, 0,0,0))
+#define IP_FIELD_EY(flds) (F3_CACHE(flds, EY, 0,0,0))
+#define IP_FIELD_EZ(flds) (F3_CACHE(flds, EZ, 0,0,0))
+#define IP_FIELD_HX(flds) (F3_CACHE(flds, HX, 0,0,0))
+#define IP_FIELD_HY(flds) (F3_CACHE(flds, HY, 0,0,0))
+#define IP_FIELD_HZ(flds) (F3_CACHE(flds, HZ, 0,0,0))
+
+#elif DIM == DIM_YZ
 
 #define IP_FIELD_EX(flds)						\
   (gz.v0*(gy.v0*F3_CACHE(flds, EX, 0,lg2  ,lg3  ) +			\

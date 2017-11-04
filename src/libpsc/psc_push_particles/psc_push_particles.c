@@ -64,6 +64,9 @@ psc_push_particles_run(struct psc_push_particles *push,
   } else if (im[0] > 1 && im[1] > 1 && im[2] > 1) { // xyz
     assert(ops->push_mprts_xyz);
     ops->push_mprts_xyz(push, mprts, mflds);
+  } else {
+    assert(ops->push_mprts_1);
+    ops->push_mprts_1(push, mprts, mflds);
   }
 
   psc_stats_stop(st_time_particle);
@@ -105,8 +108,14 @@ psc_push_particles_stagger(struct psc_push_particles *push,
     } else {
       ops->stagger_mprts_yz(push, mprts, mflds);
     }
+  } else if (im[0] == 1 && im[1] == 1 && im[2] == 1) { // 1
+    if (!ops->stagger_mprts_1) {
+      mprintf("WARNING: no stagger_mprts() method!\n");
+    } else {
+      ops->stagger_mprts_1(push, mprts, mflds);
+    }
   } else {
-    assert(0);
+    mprintf("WARNING: no stagger_mprts() case!\n");
   }
 
   if (ops->particles_type) {

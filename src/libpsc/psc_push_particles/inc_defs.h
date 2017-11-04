@@ -13,6 +13,7 @@
 #define DIM_XZ (DIM_X | DIM_Z)
 #define DIM_YZ (DIM_Y | DIM_Z)
 #define DIM_XYZ (DIM_X | DIM_Y | DIM_Z)
+#define DIM_1 0
 
 // ----------------------------------------------------------------------
 // CALC_J
