@@ -67,49 +67,28 @@ psc_push_fields_push_H(struct psc_push_fields *push, struct psc_mfields *flds,
 // default
 // 
 // That's the traditional way of how things have been done
-
-static void
-psc_push_fields_step_a_default(struct psc_push_fields *push, struct psc_mfields *flds)
-{
-  psc_push_fields_push_E(push, flds, .5);
-
-  // E at t^n+.5, particles at t^n, but the "double" particles would be at t^n+.5
-  psc_marder_run(ppsc->marder, flds, ppsc->particles);
-
-  psc_bnd_fields_fill_ghosts_E(push->bnd_fields, flds);
-  psc_bnd_fill_ghosts(ppsc->bnd, flds, EX, EX + 3);
-  
-  psc_push_fields_push_H(push, flds, .5);
-  psc_bnd_fields_fill_ghosts_H(push->bnd_fields, flds);
-  psc_bnd_fill_ghosts(ppsc->bnd, flds, HX, HX + 3);
-}
-
-static void
-psc_push_fields_step_b1_default(struct psc_push_fields *push, struct psc_mfields *flds)
-{
-  psc_push_fields_push_H(push, flds, .5);
-}
-
-static void
-psc_push_fields_step_b2_default(struct psc_push_fields *push, struct psc_mfields *flds)
-{
-  psc_bnd_fields_fill_ghosts_H(push->bnd_fields, flds);
-  psc_bnd_fill_ghosts(ppsc->bnd, flds, HX, HX + 3);
-  
-  psc_bnd_fields_add_ghosts_J(push->bnd_fields, flds);
-  psc_bnd_add_ghosts(ppsc->bnd, flds, JXI, JXI + 3);
-  psc_bnd_fill_ghosts(ppsc->bnd, flds, JXI, JXI + 3);
-  
-  psc_push_fields_push_E(push, flds, .5);
-  psc_bnd_fields_fill_ghosts_E(push->bnd_fields, flds);
-  psc_bnd_fill_ghosts(ppsc->bnd, flds, EX, EX + 3);
-}
-
+//
 // ======================================================================
 // opt
 //
 // This way does only the minimum amount of communication needed,
 // and does all the communication (including particles) at the same time
+
+static void
+psc_push_fields_step_a_default(struct psc_push_fields *push, struct psc_mfields *mflds)
+{
+  psc_push_fields_push_E(push, mflds, .5);
+
+  // E at t^n+.5, particles at t^n, but the "double" particles would be at t^n+.5
+  psc_marder_run(ppsc->marder, mflds, ppsc->particles);
+
+  psc_bnd_fields_fill_ghosts_E(push->bnd_fields, mflds);
+  psc_bnd_fill_ghosts(ppsc->bnd, mflds, EX, EX + 3);
+  
+  psc_push_fields_push_H(push, mflds, .5);
+  psc_bnd_fields_fill_ghosts_H(push->bnd_fields, mflds);
+  psc_bnd_fill_ghosts(ppsc->bnd, mflds, HX, HX + 3);
+}
 
 static void
 psc_push_fields_step_a_opt(struct psc_push_fields *push, struct psc_mfields *mflds)
@@ -125,9 +104,30 @@ psc_push_fields_step_a_opt(struct psc_push_fields *push, struct psc_mfields *mfl
 }
 
 static void
+psc_push_fields_step_b1_default(struct psc_push_fields *push, struct psc_mfields *mflds)
+{
+  psc_push_fields_push_H(push, mflds, .5);
+}
+
+static void
 psc_push_fields_step_b1_opt(struct psc_push_fields *push, struct psc_mfields *mflds)
 {
   psc_push_fields_push_H(push, mflds, .5);
+}
+
+static void
+psc_push_fields_step_b2_default(struct psc_push_fields *push, struct psc_mfields *mflds)
+{
+  psc_bnd_fields_fill_ghosts_H(push->bnd_fields, mflds);
+  psc_bnd_fill_ghosts(ppsc->bnd, mflds, HX, HX + 3);
+  
+  psc_bnd_fields_add_ghosts_J(push->bnd_fields, mflds);
+  psc_bnd_add_ghosts(ppsc->bnd, mflds, JXI, JXI + 3);
+  psc_bnd_fill_ghosts(ppsc->bnd, mflds, JXI, JXI + 3);
+  
+  psc_push_fields_push_E(push, mflds, .5);
+  psc_bnd_fields_fill_ghosts_E(push->bnd_fields, mflds);
+  psc_bnd_fill_ghosts(ppsc->bnd, mflds, EX, EX + 3);
 }
 
 static void
@@ -149,36 +149,36 @@ psc_push_fields_step_b2_opt(struct psc_push_fields *push, struct psc_mfields *mf
 // ======================================================================
 
 void
-psc_push_fields_step_a(struct psc_push_fields *push, struct psc_mfields *flds)
+psc_push_fields_step_a(struct psc_push_fields *push, struct psc_mfields *mflds)
 {
   if (push->variant == 0) {
-    psc_push_fields_step_a_default(push, flds);
+    psc_push_fields_step_a_default(push, mflds);
   } else if (push->variant == 1) {
-    psc_push_fields_step_a_opt(push, flds);
+    psc_push_fields_step_a_opt(push, mflds);
   } else {
     assert(0);
   }
 }
 
 void
-psc_push_fields_step_b1(struct psc_push_fields *push, struct psc_mfields *flds)
+psc_push_fields_step_b1(struct psc_push_fields *push, struct psc_mfields *mflds)
 {
   if (push->variant == 0) {
-    psc_push_fields_step_b1_default(push, flds);
+    psc_push_fields_step_b1_default(push, mflds);
   } else if (push->variant == 1) {
-    psc_push_fields_step_b1_opt(push, flds);
+    psc_push_fields_step_b1_opt(push, mflds);
   } else {
     assert(0);
   }
 }
 
 void
-psc_push_fields_step_b2(struct psc_push_fields *push, struct psc_mfields *flds)
+psc_push_fields_step_b2(struct psc_push_fields *push, struct psc_mfields *mflds)
 {
   if (push->variant == 0) {
-    psc_push_fields_step_b2_default(push, flds);
+    psc_push_fields_step_b2_default(push, mflds);
   } else if (push->variant == 1) {
-    psc_push_fields_step_b2_opt(push, flds);
+    psc_push_fields_step_b2_opt(push, mflds);
   } else {
     assert(0);
   }
