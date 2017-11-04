@@ -41,6 +41,10 @@ psc_push_particles_run(struct psc_push_particles *push,
   prof_restart(pr_time_step_no_comm);
   psc_stats_start(st_time_particle);
 
+  if (ops->push_mprts) {
+    ops->push_mprts(push, mprts, mflds);
+  } else {
+
   int *im = ppsc->domain.gdims;
 
   if (im[0] > 1 && im[1] == 1 && im[2] == 1) { // x
@@ -69,6 +73,8 @@ psc_push_particles_run(struct psc_push_particles *push,
     ops->push_mprts_1(push, mprts, mflds);
   }
 
+  }
+  
   psc_stats_stop(st_time_particle);
   prof_stop(pr_time_step_no_comm);
   prof_stop(pr);
