@@ -64,96 +64,54 @@ psc_push_fields_push_H(struct psc_push_fields *push, struct psc_mfields *flds,
 }
 
 // ======================================================================
-// default
+// variant 0: default
 // 
 // That's the traditional way of how things have been done
 //
 // ======================================================================
-// opt
+// variant 1: opt
 //
 // This way does only the minimum amount of communication needed,
 // and does all the communication (including particles) at the same time
-
-static void
-psc_push_fields_step_a_default(struct psc_push_fields *push, struct psc_mfields *mflds)
-{
-  // E at t^{n+1/2}, particles at t^{n+1/2}
-  psc_marder_run(ppsc->marder, mflds, ppsc->particles);
-
-  psc_bnd_fields_fill_ghosts_E(push->bnd_fields, mflds);
-  psc_bnd_fill_ghosts(ppsc->bnd, mflds, EX, EX + 3);
-  
-  psc_push_fields_push_H(push, mflds, .5);
-  psc_bnd_fields_fill_ghosts_H(push->bnd_fields, mflds);
-  psc_bnd_fill_ghosts(ppsc->bnd, mflds, HX, HX + 3);
-}
-
-static void
-psc_push_fields_step_a_opt(struct psc_push_fields *push, struct psc_mfields *mflds)
-{
-  // E at t^n+.5, particles at t^n, but the "double" particles would be at t^n+.5
-  psc_marder_run(ppsc->marder, mflds, ppsc->particles);
-
-  psc_push_fields_push_H(push, mflds, .5);
-  psc_bnd_fields_fill_ghosts_H(push->bnd_fields, mflds);
-}
-
-static void
-psc_push_fields_step_b2_default(struct psc_push_fields *push, struct psc_mfields *mflds)
-{
-  // fill ghosts for H
-  psc_bnd_fields_fill_ghosts_H(push->bnd_fields, mflds);
-  psc_bnd_fill_ghosts(ppsc->bnd, mflds, HX, HX + 3);
-  
-  // add and fill ghost for J
-  psc_bnd_fields_add_ghosts_J(push->bnd_fields, mflds);
-  psc_bnd_add_ghosts(ppsc->bnd, mflds, JXI, JXI + 3);
-  psc_bnd_fill_ghosts(ppsc->bnd, mflds, JXI, JXI + 3);
-  
-  psc_push_fields_push_E(push, mflds, 1.);
-  psc_bnd_fields_fill_ghosts_E(push->bnd_fields, mflds);
-  psc_bnd_fill_ghosts(ppsc->bnd, mflds, EX, EX + 3);
-}
-
-static void
-psc_push_fields_step_b2_opt(struct psc_push_fields *push, struct psc_mfields *mflds)
-{
-  // fill ghosts for H
-  psc_bnd_fields_fill_ghosts_H(push->bnd_fields, mflds);
-  psc_bnd_fill_ghosts(ppsc->bnd, mflds, HX, HX + 3);
-  
-  // add and fill ghost for J
-  psc_bnd_fields_add_ghosts_J(push->bnd_fields, mflds);
-  psc_bnd_add_ghosts(ppsc->bnd, mflds, JXI, JXI + 3);
-  psc_bnd_fill_ghosts(ppsc->bnd, mflds, JXI, JXI + 3);
-
-  psc_push_fields_push_E(push, mflds, 1.);
-  psc_bnd_fields_fill_ghosts_E(push->bnd_fields, mflds);
-}
 
 // ======================================================================
 
 void
 psc_push_fields_step_a(struct psc_push_fields *push, struct psc_mfields *mflds)
 {
+  // E at t^{n+1/2}, particles at t^{n+1/2}
+  psc_marder_run(ppsc->marder, mflds, ppsc->particles);
+    
   if (push->variant == 0) {
-    psc_push_fields_step_a_default(push, mflds);
-  } else if (push->variant == 1) {
-    psc_push_fields_step_a_opt(push, mflds);
-  } else {
-    assert(0);
+    psc_bnd_fields_fill_ghosts_E(push->bnd_fields, mflds);
+    psc_bnd_fill_ghosts(ppsc->bnd, mflds, EX, EX + 3);
+  }
+
+  //push H
+  psc_push_fields_push_H(push, mflds, .5);
+  psc_bnd_fields_fill_ghosts_H(push->bnd_fields, mflds);
+  if (push->variant == 0) {
+    psc_bnd_fill_ghosts(ppsc->bnd, mflds, HX, HX + 3);
   }
 }
 
 void
 psc_push_fields_step_b2(struct psc_push_fields *push, struct psc_mfields *mflds)
 {
+  // fill ghosts for H
+  psc_bnd_fields_fill_ghosts_H(push->bnd_fields, mflds);
+  psc_bnd_fill_ghosts(ppsc->bnd, mflds, HX, HX + 3);
+    
+  // add and fill ghost for J
+  psc_bnd_fields_add_ghosts_J(push->bnd_fields, mflds);
+  psc_bnd_add_ghosts(ppsc->bnd, mflds, JXI, JXI + 3);
+  psc_bnd_fill_ghosts(ppsc->bnd, mflds, JXI, JXI + 3);
+
+  // push E
+  psc_push_fields_push_E(push, mflds, 1.);
+  psc_bnd_fields_fill_ghosts_E(push->bnd_fields, mflds);
   if (push->variant == 0) {
-    psc_push_fields_step_b2_default(push, mflds);
-  } else if (push->variant == 1) {
-    psc_push_fields_step_b2_opt(push, mflds);
-  } else {
-    assert(0);
+    psc_bnd_fill_ghosts(ppsc->bnd, mflds, EX, EX + 3);
   }
 }
 
