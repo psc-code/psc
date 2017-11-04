@@ -33,9 +33,6 @@ static void
 psc_sort_init()
 {
   mrc_class_register_subclass(&mrc_class_psc_sort, &psc_sort_none_ops);
-  mrc_class_register_subclass(&mrc_class_psc_sort, &psc_sort_qsort_ops);
-  mrc_class_register_subclass(&mrc_class_psc_sort, &psc_sort_countsort_ops);
-  mrc_class_register_subclass(&mrc_class_psc_sort, &psc_sort_countsort2_ops);
   mrc_class_register_subclass(&mrc_class_psc_sort, &psc_sort_qsort_single_ops);
   mrc_class_register_subclass(&mrc_class_psc_sort, &psc_sort_countsort_single_ops);
   mrc_class_register_subclass(&mrc_class_psc_sort, &psc_sort_countsort2_single_ops);

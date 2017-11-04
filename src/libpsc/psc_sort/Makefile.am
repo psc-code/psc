@@ -8,8 +8,7 @@ libsubdir_la_SOURCES = \
 	psc_sort.c \
 	psc_sort_none.c \
 	psc_sort_single.c \
-	psc_sort_double.c \
-	psc_sort_c.c
+	psc_sort_double.c
 
 EXTRA_libsubdir_la_SOURCES = \
         psc_sort_common.c
