@@ -33,8 +33,17 @@ typedef fields_t flds_em_t;
 
 typedef flds_em_t em_cache_t;
 
-#define F3_CACHE(em_cache, m, jx, jy, jz)	\
-  (F3_EM(em_cache, m, jx,jy,jz))
+#ifndef EM_CACHE_DIM
+#define EM_CACHE_DIM DIM_XYZ
+#endif
+
+#if EM_CACHE_DIM == DIM_XYZ
+#define F3_CACHE(em_cache, m, i,j,k)  (F3_EM(em_cache, m, i,j,k))
+#elif EM_CACHE_DIM == DIM_1
+#define F3_CACHE(em_cache, m, i,j,k)  (F3_EM(em_cache, m, 0,0,0))
+#else
+#error unhandled EM_CACHE_DIM
+#endif
 
 CUDA_DEVICE static inline em_cache_t
 em_cache_create(flds_em_t flds_em, int ci0[3])
