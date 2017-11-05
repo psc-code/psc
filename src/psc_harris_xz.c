@@ -265,6 +265,8 @@ psc_harris_setup(struct psc *psc)
   // initializes fields, particles, etc.
   psc_setup_super(psc);
 
+  psc->dt = 0.0714471;
+
 #if 0
   MPI_Comm comm = psc_comm(psc);
   mpi_printf(comm, "dt = %g, dy = %g dz = %g\n", psc->dt,
