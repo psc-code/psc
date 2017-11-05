@@ -7,6 +7,8 @@ typedef flds_curr_t curr_cache_t;
 
 #if CURR_CACHE_DIM == DIM_XYZ
 #define F3_CURR_CACHE(curr_cache, m, i,j,k)  (F3_CURR(curr_cache, m, i,j,k))
+#elif CURR_CACHE_DIM == DIM_XZ
+#define F3_CURR_CACHE(curr_cache, m, i,j,k)  (F3_CURR(curr_cache, m, i,0,k))
 #elif CURR_CACHE_DIM == DIM_1
 #define F3_CURR_CACHE(curr_cache, m, i,j,k)  (F3_CURR(curr_cache, m, 0,0,0))
 #else

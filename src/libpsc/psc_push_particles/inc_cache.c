@@ -39,6 +39,8 @@ typedef flds_em_t em_cache_t;
 
 #if EM_CACHE_DIM == DIM_XYZ
 #define F3_CACHE(em_cache, m, i,j,k)  (F3_EM(em_cache, m, i,j,k))
+#elif EM_CACHE_DIM == DIM_XZ
+#define F3_CACHE(em_cache, m, i,j,k)  (F3_EM(em_cache, m, i,0,k))
 #elif EM_CACHE_DIM == DIM_1
 #define F3_CACHE(em_cache, m, i,j,k)  (F3_EM(em_cache, m, 0,0,0))
 #else

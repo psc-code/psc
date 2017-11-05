@@ -234,6 +234,16 @@ push_one(mprts_array_t mprts_arr, int n,
   IF_DIM_Z( lg[2] = lg3; );
   calc_j(curr_cache, xm, xp, lf, lg, prt, vxi);
 
+#if !(PUSH_DIM & DIM_X)
+  prt->xi = 0.f;
+#endif
+#if !(PUSH_DIM & DIM_Y)
+  prt->yi = 0.f;
+#endif
+#if !(PUSH_DIM & DIM_Z)
+  prt->zi = 0.f;
+#endif
+
   PARTICLE_STORE(prt, mprts_arr, n);
 #endif
 }
