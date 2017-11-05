@@ -89,7 +89,7 @@ psc_harris_create(struct psc *psc)
   psc->domain.length[2] = 1.;
 
   psc->domain.gdims[0] = 80;
-  psc->domain.gdims[1] = 2;
+  psc->domain.gdims[1] = 1;
   psc->domain.gdims[2] = 80;
 
   psc->domain.bnd_fld_lo[0] = BND_FLD_PERIODIC;
