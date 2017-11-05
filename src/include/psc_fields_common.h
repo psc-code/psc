@@ -131,6 +131,16 @@ typedef double fields_FTYPE_real_t;
       &((flds).data[_F3_OFF(flds, m, i,j,k)]);				\
     }))
 
+#elif FTYPE == FTYPE_FORTRAN
+
+#define _F3_FORTRAN(flds, m, i,j,k)					\
+  (*({assert(m >= 0 && m < (flds).nr_comp);				\
+      assert(i >= (flds).ib[0] && i < (flds).ib[0] + (flds).im[0]);	\
+      assert(j >= (flds).ib[1] && j < (flds).ib[1] + (flds).im[1]);	\
+      assert(k >= (flds).ib[2] && k < (flds).ib[2] + (flds).im[2]);	\
+      &((flds).data[_F3_OFF(flds, m, i,j,k)]);				\
+    }))
+
 #endif
 
 #endif // BOUNDS_CHECK ------------------------------
