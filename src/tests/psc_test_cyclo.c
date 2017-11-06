@@ -232,10 +232,9 @@ psc_test_cyclo_step(struct psc *psc)
           fabs(p->pyi - uy) > tol ||
           fabs(p->pzi - uz) > tol) {
         failed++;
-	mprintf("%d %g %g %g %g %g %g %g %d\n", n,
-		p->xi, p->yi, p->pzi,
-		p->pxi, p->pyi, p->pzi, p->qni_wni, p->kind);
-	mprintf("%d delta %g %g %g\n", n,
+	mprintf("n %d: xi [%g %g %g] pxi [%g %g %g] qni_wni %g kind %d delta %g %g %g\n", n,
+		p->xi, p->yi, p->zi,
+		p->pxi, p->pyi, p->pzi, p->qni_wni, p->kind, 
 		p->pxi - ux, p->pyi - uy, p->pzi - uz);
       }
     }
