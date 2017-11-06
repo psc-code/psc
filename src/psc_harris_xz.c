@@ -88,9 +88,9 @@ psc_harris_create(struct psc *psc)
   psc->domain.length[1] = 1.;
   psc->domain.length[2] = 1.;
 
-  psc->domain.gdims[0] = 80;
+  psc->domain.gdims[0] = 64;
   psc->domain.gdims[1] = 1;
-  psc->domain.gdims[2] = 80;
+  psc->domain.gdims[2] = 32;
 
   psc->domain.bnd_fld_lo[0] = BND_FLD_PERIODIC;
   psc->domain.bnd_fld_hi[0] = BND_FLD_PERIODIC;
@@ -132,7 +132,9 @@ psc_harris_setup(struct psc *psc)
 
 #if 0
   double cfl_req   = 0.99;  // How close to Courant should we try to run
+#endif
   double wpedt_max = 0.36;  // Max dt allowed if Courant not too restrictive
+#if 0
   double damp      = 0.0;   // Level of radiation damping
   int rng_seed     = 1;     // Random number seed increment
 #endif
@@ -170,11 +172,11 @@ psc_harris_setup(struct psc *psc)
   /* double v_A= (wci/wpi)/sqrt(nb_n0); // based on nb */
 
   // Numerical parameters
-  double nppc  = 40; // Average number of macro particle per cell per species
+  double nppc  = 100; // Average number of macro particle per cell per species
 
-  double Lx    = 20*di;      // size of box in x dimension
-  double Ly    = 0.00781*di; // size of box in y dimension
-  double Lz    = 20*di;      // size of box in z dimension
+  double Lx    = 25.6*di;      // size of box in x dimension
+  double Ly    = 1*di; // size of box in y dimension
+  double Lz    = 12.8*di;      // size of box in z dimension
 
   sub->L = L;
   sub->Lx = Lx;
@@ -262,7 +264,12 @@ psc_harris_setup(struct psc *psc)
   // initializes fields, particles, etc.
   psc_setup_super(psc);
 
-  psc->dt = 0.0714471;
+  if (wpe*psc->dt > wpedt_max) {
+    psc->dt = wpedt_max/wpe;  // override timestep if plasma frequency limited
+    mprintf("::: dt reduced to %g\n", psc->dt);
+  }
+  
+  //  psc->dt = 0.0714471;
 
 #if 0
   MPI_Comm comm = psc_comm(psc);
