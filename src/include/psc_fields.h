@@ -31,6 +31,7 @@ struct psc_mfields_ops {
   void (*copy_comp)(struct psc_mfields *to, int mto, struct psc_mfields *from, int mfrom);
   void (*axpy_comp)(struct psc_mfields *y, int my, double alpha,
 		    struct psc_mfields *x, int mx);
+  double (*max_comp)(struct psc_mfields *mflds, int m);
 };
 
 typedef void (*psc_mfields_copy_func_t)(struct psc_mfields *, struct psc_mfields *,
@@ -46,6 +47,9 @@ void psc_mfields_axpy(struct psc_mfields *yf, double alpha,
 		      struct psc_mfields *xf);
 void psc_mfields_axpy_comp(struct psc_mfields *yf, int ym, double alpha,
 			   struct psc_mfields *xf, int xm);
+
+double psc_mfields_max_comp(struct psc_mfields *mflds, int m);
+
 void psc_mfields_set_comp_name(struct psc_mfields *flds, int m, const char *s);
 const char *psc_mfields_comp_name(struct psc_mfields *flds, int m);
 struct psc_mfields *psc_mfields_get_as(struct psc_mfields *mflds_base,

@@ -146,6 +146,15 @@ psc_mfields_axpy(struct psc_mfields *yf, double alpha,
   }
 }
 
+double
+psc_mfields_max_comp(struct psc_mfields *mflds, int m)
+{
+  struct psc_mfields_ops *ops = psc_mfields_ops(mflds);
+
+  assert(ops && ops->max_comp);
+  return ops->max_comp(mflds, m);
+}
+
 static void
 copy_to_mrc_fld(struct mrc_fld *m3, struct psc_mfields *mflds_base)
 {

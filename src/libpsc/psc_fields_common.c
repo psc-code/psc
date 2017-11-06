@@ -75,6 +75,25 @@ fields_t_axpy_comp(fields_t y, int m_y, fields_real_t a, fields_t x, int m_x)
 }
 
 
+// ----------------------------------------------------------------------
+// fields_t_max_comp
+
+static inline double
+fields_t_max_comp(fields_t f, int m)
+{
+  fields_real_t rv = -1e-37; // FIXME
+  for (int jz = f.ib[2]; jz < f.ib[2] + f.im[2]; jz++) {
+    for (int jy = f.ib[1]; jy < f.ib[1] + f.im[1]; jy++) {
+      for (int jx = f.ib[0]; jx < f.ib[0] + f.im[0]; jx++) {
+	rv = fmaxf(rv, _F3(f, m, jx,jy,jz)); // FIXME, should be based on fields_real_t
+      }
+    }
+  }
+
+  return rv;
+}
+
+
 // ======================================================================
 // psc_mfields
 
@@ -298,6 +317,19 @@ MPFX(axpy_comp)(struct psc_mfields *y, int my, double alpha,
 }
 
 // ----------------------------------------------------------------------
+// psc_mfields_max_comp
+
+static double
+MPFX(max_comp)(struct psc_mfields *mflds, int m)
+{
+  double rv = -1e37; // FIXME
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    rv = fmax(rv, fields_t_max_comp(fields_t_mflds(mflds, p), m));
+  }
+  return rv;
+}
+
+// ----------------------------------------------------------------------
 // psc_mfields_get_field_t
 
 fields_t
@@ -339,5 +371,6 @@ struct psc_mfields_ops MPFX(ops) = {
   .scale_comp            = MPFX(scale_comp),
   .copy_comp             = MPFX(copy_comp),
   .axpy_comp             = MPFX(axpy_comp),
+  .max_comp              = MPFX(max_comp),
 };
 
