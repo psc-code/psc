@@ -1,7 +1,7 @@
 
 #include "psc.h"
 #include "psc_particles_as_single.h"
-#include "psc_fields_as_single.h"
+#include "psc_fields_as_c.h"
 
 // ======================================================================
 // !!! These moments are shifted to (n+.5) * dt, rather than n * dt,
