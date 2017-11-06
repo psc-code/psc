@@ -110,9 +110,6 @@ psc_harris_create(struct psc *psc)
   psc_push_particles_set_type(psc->push_particles, "1vb");
 }
 
-// ----------------------------------------------------------------------
-// psc_harris_setup2
-
 static inline double trunc_granular( double a, double b )
 {
   return b * (int)(a/b);
