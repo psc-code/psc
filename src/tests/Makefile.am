@@ -10,6 +10,7 @@ libpsctest_la_SOURCES = \
 LDADD = libpsctest.la ../libpsc/libpsc.la ../libmrc/src/libmrc.la
 
 noinst_PROGRAMS = \
+	psc_test_cyclo \
 	test_psc_mparticles \
 	test_part_yz \
 	test_exchange_particles_multi
@@ -39,11 +40,14 @@ nodist_EXTRA_thrust1_SOURCES = dummy.cxx
 
 endif
 
-TESTS = test_part_yz_fortran.sh \
-	test_part_yz_generic_c.sh \
-	test_part_yz_1st.sh \
-	test_exchange_particles_multi_0.sh \
-	test_exchange_particles_multi_1.sh
+TESTS = \
+	psc_test_cyclo
+
+# test_part_yz_fortran.sh \
+# 	test_part_yz_generic_c.sh \
+# 	test_part_yz_1st.sh \
+# 	test_exchange_particles_multi_0.sh \
+# 	test_exchange_particles_multi_1.sh
 
 #	test_part_xy \
 	test_part_xz \
@@ -53,19 +57,19 @@ TESTS = test_part_yz_fortran.sh \
 	test_exchange_particles \
 	test_sort.sh
 
-if USE_CUDA
-TESTS += \
-	test_psc_mparticles_c_cuda.sh \
-	test_psc_mparticles_cuda_c.sh \
-	test_part_yz_cuda.sh \
-	test_part_yz_cuda_1st.sh \
-	test_part_yz_cuda_1vb.sh
-endif
+# if USE_CUDA
+# TESTS += \
+# 	test_psc_mparticles_c_cuda.sh \
+# 	test_psc_mparticles_cuda_c.sh \
+# 	test_part_yz_cuda.sh \
+# 	test_part_yz_cuda_1st.sh \
+# 	test_part_yz_cuda_1vb.sh
+# endif
 
-if USE_SSE2
-TESTS += \
-	test_part_yz_sse2.sh
-endif
+# if USE_SSE2
+# TESTS += \
+# 	test_part_yz_sse2.sh
+# endif
 
 CUDA_DEPS = cuda_mparticles.h
 CUDACC_FLAGS = -g --ptxas-options=-v --use_fast_math -arch=sm_30
@@ -79,6 +83,7 @@ CUDACC_FLAGS = -g --ptxas-options=-v --use_fast_math -arch=sm_30
 	$(CUDACC) $(CUDACC_FLAGS) -c $< -o ${@:.lo=.o} || rm -f $@
 
 # HACK to have automake use the CXX linker 
+nodist_EXTRA_psc_test_cyclo_SOURCES = dummy.cxx
 nodist_EXTRA_test_psc_mparticles_SOURCES = dummy.cxx
 nodist_EXTRA_test_part_yz_SOURCES = dummy.cxx
 #nodist_EXTRA_test_part_xy_SOURCES = dummy.cxx

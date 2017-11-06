@@ -20,7 +20,6 @@ bin_PROGRAMS = \
 	psc_bubble \
 	psc_bubble_yz \
 	psc_flatfoil_yz \
-	psc_test_cyclo \
 	psc_test_singlepart \
 	psc_test_microsphere \
 	psc_test_twoparticles \
