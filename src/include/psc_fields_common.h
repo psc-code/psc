@@ -1,6 +1,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #define FTYPE_SINGLE          1
 #define FTYPE_C               2
