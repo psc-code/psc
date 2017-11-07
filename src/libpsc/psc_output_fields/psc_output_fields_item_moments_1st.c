@@ -26,7 +26,7 @@ add_ghosts_reflecting_lo(fields_t flds, int p, int d, int mb, int me)
       }
     }
   } else if (d == 2) {
-    for (int iy = 0*-1; iy < patch->ldims[1] + 0*1; iy++) {
+    for (int iy = -1; iy < patch->ldims[1] + 1; iy++) {
       for (int ix = -bx; ix < patch->ldims[0] + bx; ix++) {
 	int iz = 0; {
 	  for (int m = mb; m < me; m++) {
@@ -57,7 +57,7 @@ add_ghosts_reflecting_hi(fields_t flds, int p, int d, int mb, int me)
       }
     }
   } else if (d == 2) {
-    for (int iy = 0*-1; iy < patch->ldims[1] + 0*1; iy++) {
+    for (int iy = -1; iy < patch->ldims[1] + 1; iy++) {
       for (int ix = -bx; ix < patch->ldims[0] + bx; ix++) {
 	int iz = patch->ldims[2] - 1; {
 	  for (int m = mb; m < me; m++) {
