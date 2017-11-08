@@ -50,7 +50,7 @@ params_push_fields_set(struct psc *psc, double dt_fac)
 static void								\
 func(struct psc_push_fields *push, fields_t flds)			\
 {									\
-  psc_foreach_3d(ppsc, 0, i,j,k, 1, 2) {				\
+  foreach_3d(ppsc, 0, i,j,k, 1, 2) {					\
     F3(flds, EX, i,j,k) +=						\
       prm.cny * (F3(flds, HZ, i,j,k) - F3(flds, HZ, i,j-1,k)) -		\
       prm.cnz * (F3(flds, HY, i,j,k) - F3(flds, HY, i,j,k-1)) -		\
@@ -102,7 +102,7 @@ psc_push_fields_sub_push_E_yz(struct psc_push_fields *push, fields_t flds)
 static void								\
 func(struct psc_push_fields *push, fields_t flds)			\
 {									\
-  psc_foreach_3d(ppsc, 0, i,j,k, 2, 1) {				\
+  foreach_3d(ppsc, 0, i,j,k, 2, 1) {					\
     F3(flds, HX, i,j,k) -=						\
       prm.cny * (F3(flds, EZ, i,j+1,k) - F3(flds, EZ, i,j,k)) -		\
       prm.cnz * (F3(flds, EY, i,j,k+1) - F3(flds, EY, i,j,k));		\
