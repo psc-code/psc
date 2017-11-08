@@ -1,5 +1,6 @@
 psc_test_cyclo
 psc_test_accel
+psc_test_em_fields
 test_bnd
 test_bnd_multi
 test_exchange_particles

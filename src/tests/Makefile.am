@@ -12,6 +12,7 @@ LDADD = libpsctest.la ../libpsc/libpsc.la ../libmrc/src/libmrc.la
 noinst_PROGRAMS = \
 	psc_test_cyclo \
 	psc_test_accel \
+	psc_test_em_wave \
 	test_psc_mparticles \
 	test_part_yz \
 	test_exchange_particles_multi
@@ -87,6 +88,7 @@ CUDACC_FLAGS = -g --ptxas-options=-v --use_fast_math -arch=sm_30
 # HACK to have automake use the CXX linker 
 nodist_EXTRA_psc_test_cyclo_SOURCES = dummy.cxx
 nodist_EXTRA_psc_test_accel_SOURCES = dummy.cxx
+nodist_EXTRA_psc_test_em_wave_SOURCES = dummy.cxx
 nodist_EXTRA_test_psc_mparticles_SOURCES = dummy.cxx
 nodist_EXTRA_test_part_yz_SOURCES = dummy.cxx
 #nodist_EXTRA_test_part_xy_SOURCES = dummy.cxx
