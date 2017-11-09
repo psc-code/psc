@@ -44,8 +44,10 @@ nodist_EXTRA_thrust1_SOURCES = dummy.cxx
 endif
 
 TESTS = \
+	psc_test_mfields_single \
 	psc_test_cyclo \
-	psc_test_accel
+	psc_test_accel \
+	psc_test_em_wave
 
 # test_part_yz_fortran.sh \
 # 	test_part_yz_generic_c.sh \

@@ -7,6 +7,7 @@
 #define FTYPE_C               2
 #define FTYPE_FORTRAN         3
 #define FTYPE_CUDA            4
+#define FTYPE_VPIC            5
 
 #if FTYPE == FTYPE_SINGLE
 
@@ -42,12 +43,17 @@
 
 #define fields_FTYPE_real_t fields_cuda_real_t
 
+#elif FTYPE == FTYPE_VPIC
+
+#define fields_FTYPE_real_t fields_vpic_real_t
+#define fields_FTYPE_t fields_vpic_t
+
 #endif
 
 // ----------------------------------------------------------------------
 // fields_FYTPE_real_t
 
-#if FTYPE == FTYPE_SINGLE || FTYPE == FTYPE_CUDA
+#if FTYPE == FTYPE_SINGLE || FTYPE == FTYPE_CUDA || FTYPE == FTYPE_VPIC
 
 typedef float fields_FTYPE_real_t;
 
@@ -75,6 +81,10 @@ typedef double fields_FTYPE_real_t;
 #elif FTYPE == FTYPE_CUDA
 
 #define MPI_FIELDS_CUDA_REAL MPI_FLOAT
+
+#elif FTYPE == FTYPE_VPIC
+
+#define MPI_FIELDS_VPIC_REAL MPI_FLOAT
 
 #endif
 
@@ -146,7 +156,7 @@ typedef double fields_FTYPE_real_t;
 
 #endif // BOUNDS_CHECK ------------------------------
 
-#if FTYPE == FTYPE_SINGLE || FTYPE == FTYPE_C || FTYPE == FTYPE_FORTRAN
+#if FTYPE == FTYPE_SINGLE || FTYPE == FTYPE_C || FTYPE == FTYPE_FORTRAN || FTYPE == FTYPE_VPIC
 
 // ======================================================================
 // fields_FTYPE_t

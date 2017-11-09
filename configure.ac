@@ -99,6 +99,17 @@ AS_IF([test "x$have_papi" != "xyes"],
 
 # Checks for options
 
+AH_TEMPLATE([USE_VPIC], [interface with VPIC])
+AC_ARG_ENABLE(
+  [vpic],
+  [AS_HELP_STRING([--enable-vpic], [interface with vpic])],
+  [AS_IF([test "$enable_vpic" = "yes"],
+    [AC_DEFINE([USE_VPIC])
+    dnl LIBS="$LIBS $CUDALIBS"])
+  ]
+)
+AM_CONDITIONAL([USE_VPIC], [test "$enable_vpic" = "yes"])
+
 AC_ARG_VAR([CUDACC], [CUDA compiler])
 AC_ARG_VAR([CUDACFLAGS], [flags to pass to the CUDA compiler])
 AC_ARG_VAR([CUDALIBS], [libraries needed to link CUDA code])
@@ -252,6 +263,7 @@ AC_CONFIG_FILES([Makefile
                  src/libpsc/psc_inject/Makefile
                  src/libpsc/fortran/Makefile
                  src/libpsc/sse2/Makefile
+                 src/libpsc/vpic/Makefile
                  src/libpsc/cuda/Makefile
                  src/libpsc/cuda2/Makefile
                  src/libpsc/acc/Makefile

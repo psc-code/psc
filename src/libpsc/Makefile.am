@@ -22,6 +22,7 @@ SUBDIRS = \
 	psc_inject \
 	fortran \
 	sse2 \
+	vpic \
 	cuda \
 	cuda2 \
 	acc
@@ -53,6 +54,11 @@ if USE_SSE2
 libpsc_la_LIBADD += \
 	sse2/libsubdir.la
 endif USE_SSE2
+
+if USE_VPIC
+libpsc_la_LIBADD += \
+	vpic/libsubdir.la
+endif USE_VPIC
 
 if USE_CUDA
 libpsc_la_LIBADD += \

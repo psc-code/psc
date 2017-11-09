@@ -62,6 +62,7 @@ void psc_mfields_write_as_mrc_fld(struct psc_mfields *mflds, struct mrc_io *io);
 extern struct psc_mfields_ops psc_mfields_c_ops;
 extern struct psc_mfields_ops psc_mfields_fortran_ops;
 extern struct psc_mfields_ops psc_mfields_single_ops;
+extern struct psc_mfields_ops psc_mfields_vpic_ops;
 extern struct psc_mfields_ops psc_mfields_cuda_ops;
 
 struct psc_mfields_list_entry {
