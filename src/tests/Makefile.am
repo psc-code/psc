@@ -10,6 +10,7 @@ libpsctest_la_SOURCES = \
 LDADD = libpsctest.la ../libpsc/libpsc.la ../libmrc/src/libmrc.la
 
 noinst_PROGRAMS = \
+	psc_test_mfields_single \
 	psc_test_cyclo \
 	psc_test_accel \
 	psc_test_em_wave \
@@ -86,6 +87,7 @@ CUDACC_FLAGS = -g --ptxas-options=-v --use_fast_math -arch=sm_30
 	$(CUDACC) $(CUDACC_FLAGS) -c $< -o ${@:.lo=.o} || rm -f $@
 
 # HACK to have automake use the CXX linker 
+nodist_EXTRA_psc_test_mfields_single_SOURCES = dummy.cxx
 nodist_EXTRA_psc_test_cyclo_SOURCES = dummy.cxx
 nodist_EXTRA_psc_test_accel_SOURCES = dummy.cxx
 nodist_EXTRA_psc_test_em_wave_SOURCES = dummy.cxx
