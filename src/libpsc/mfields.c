@@ -25,10 +25,12 @@ _psc_mfields_setup(struct psc_mfields *mflds)
 static void
 _psc_mfields_destroy(struct psc_mfields *mflds)
 {
-  for (int m = 0; m < mflds->nr_fields; m++) {
-    free(mflds->comp_name[m]);
+  if (mflds->comp_name) {
+    for (int m = 0; m < mflds->nr_fields; m++) {
+      free(mflds->comp_name[m]);
+    }
+    free(mflds->comp_name);
   }
-  free(mflds->comp_name);
 }
 
 static void
