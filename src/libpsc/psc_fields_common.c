@@ -335,6 +335,7 @@ MPFX(max_comp)(struct psc_mfields *mflds, int m)
 fields_t
 MPFX(get_field_t)(struct psc_mfields *mflds, int p)
 {
+  assert((struct psc_mfields_ops *) mflds->obj.ops == &MPFX(ops));
   struct MPFX(sub) *sub = mrc_to_subobj(mflds, struct MPFX(sub));
   fields_t flds;
 
