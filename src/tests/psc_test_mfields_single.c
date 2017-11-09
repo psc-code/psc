@@ -1,5 +1,6 @@
 
 #include "psc_fields.h"
+#include "psc_fields_as_single.h"
 
 #include "psc.h"
 
@@ -13,10 +14,15 @@ static struct psc_mfields *
 make_mfields(MPI_Comm comm)
 {
   struct mrc_domain *domain = mrc_domain_create(comm);
+  mrc_domain_set_from_options(domain);
   mrc_domain_setup(domain);
   
   struct psc_mfields *mflds = psc_mfields_create(comm);
+  psc_mfields_set_type(mflds, FIELDS_TYPE);
   psc_mfields_set_param_obj(mflds, "domain", domain);
+  psc_mfields_set_param_int(mflds, "nr_fields", 3);
+  psc_mfields_set_param_int3(mflds, "ibn", (int [3]) { 1, 1, 1 });
+  psc_mfields_set_from_options(mflds);
   psc_mfields_setup(mflds);
 
   // FIXME, I should be able to do this, but mflds still refers to it, and I'm
