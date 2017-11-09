@@ -212,6 +212,53 @@ psc_test_em_wave_check_single(struct psc *psc)
 }
 
 // ----------------------------------------------------------------------
+// psc_test_em_wave_check_vpic
+
+static void
+psc_test_em_wave_check_vpic(struct psc *psc)
+{
+#if 0
+  struct psc_test_em_wave *sub = psc_test_em_wave(psc);
+  double om = -sub->om; // FIXME, looks like we need a minus sign here, but why?
+  double t = psc->timestep * psc->dt;
+  double *k = sub->k, *E = sub->E, *B = sub->B;
+  double tol = sub->tol;
+#endif
+
+  printf("=== vpic: checking EM fields at time step %d\n", psc->timestep);
+  struct psc_mfields *mflds = psc_mfields_get_as(psc->flds, "vpic", EX, EX + 6);
+  
+#if 0
+  int failed = 0;
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    fields_single_t flds = fields_single_t_mflds(mflds, p);
+
+    foreach_3d(psc, p, jx,jy,jz, 0, 0) {
+      double dx = psc->patch[p].dx[0], dy = psc->patch[p].dx[1], dz = psc->patch[p].dx[2];
+      double xx = CRDX(p, jx), yy = CRDY(p, jy), zz = CRDZ(p, jz);
+
+      failed += is_equal_tol(tol, _F3_S(flds, EX, jx,jy,jz),
+			     E[0] * sin(om*t - (k[0]*(xx + .5f*dx) + k[1]*(yy         ) + k[2]*(zz         ))));
+      failed += is_equal_tol(tol, _F3_S(flds, EY, jx,jy,jz),
+			     E[1] * sin(om*t - (k[0]*(xx         ) + k[1]*(yy + .5f*dy) + k[2]*(zz         ))));
+      failed += is_equal_tol(tol, _F3_S(flds, EZ, jx,jy,jz),
+			     E[2] * sin(om*t - (k[0]*(xx         ) + k[1]*(yy         ) + k[2]*(zz + .5f*dz))));
+
+      failed += is_equal_tol(tol, _F3_S(flds, HX, jx,jy,jz),
+			     B[0] * sin(om*t - (k[0]*(xx         ) + k[1]*(yy + .5f*dy) + k[2]*(zz + .5f*dz))));
+      failed += is_equal_tol(tol, _F3_S(flds, HY, jx,jy,jz),
+			     B[1] * sin(om*t - (k[0]*(xx + .5f*dx) + k[1]*(yy         ) + k[2]*(zz + .5f*dz))));
+      failed += is_equal_tol(tol, _F3_S(flds, HZ, jx,jy,jz),
+			     B[2] * sin(om*t - (k[0]*(xx + .5f*dx) + k[1]*(yy + .5f*dy) + k[2]*(zz         ))));
+    } foreach_3d_end;
+  }
+  assert(failed == 0);
+#endif
+
+  psc_mfields_put_as(mflds, psc->flds, 0, 0);
+}
+
+// ----------------------------------------------------------------------
 // psc_test_em_wave_step
 
 static void
@@ -221,6 +268,7 @@ psc_test_em_wave_step(struct psc *psc)
 
   psc_test_em_wave_check(psc);
   psc_test_em_wave_check_single(psc);
+  psc_test_em_wave_check_vpic(psc);
   
   psc_push_fields_push_H(psc->push_fields, psc->flds, .5);
   psc_push_fields_step_b2(psc->push_fields, psc->flds);
