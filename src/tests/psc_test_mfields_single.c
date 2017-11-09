@@ -57,6 +57,37 @@ test_setup(MPI_Comm comm)
 }
 
 // ----------------------------------------------------------------------
+// test_print
+
+static void
+test_print(MPI_Comm comm)
+{
+  struct psc_mfields *mflds = make_mfields(comm);
+  psc_mfields_view(mflds);
+
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    fields_t flds = fields_t_mflds(mflds, p);
+
+    for (int m = 0; m < flds.nr_comp; m++) {
+      for (int jz = flds.ib[2]; jz < flds.ib[2] + flds.im[2]; jz++) {
+	for (int jy = flds.ib[1]; jy < flds.ib[1] + flds.im[1]; jy++) {
+	  mprintf("mflds[%d, %d:%d,%d,%d, %d] =",
+		  m, flds.ib[0], flds.ib[0] + flds.im[0], jy, jz, p);
+	  for (int jx = flds.ib[0]; jx < flds.ib[0] + flds.im[0]; jx++) {
+	    printf(" %g", _F3(flds, m, jx,jy,jz));
+	  }
+	  printf("\n");
+	}
+	printf("\n");
+      }
+      printf("\n");
+    }
+  }
+  
+  psc_mfields_destroy(mflds);
+}
+
+// ----------------------------------------------------------------------
 // dummy_psc_main
 //
 // FIXME, just a hack
@@ -84,6 +115,9 @@ main(int argc, char **argv)
 
   mprintf("-- test_setup\n");
   test_setup(comm);
+  
+  mprintf("-- test_print\n");
+  test_print(comm);
   
   MPI_Finalize();
 }
