@@ -5,7 +5,7 @@
 #include <psc_collision.h>
 #include <psc_balance.h>
 
-#include <psc_particles_as_single.h>
+#include <psc_fields_as_c.h>
 
 #include <mrc_params.h>
 
@@ -96,39 +96,15 @@ psc_test_em_wave_step(struct psc *psc)
 {
   struct psc_test_em_wave *sub = psc_test_em_wave(psc);
 
-  psc_push_particles_run(psc->push_particles, psc->particles, psc->flds);
+  psc_output(psc);
 
-  int n = psc->timestep;
-  double ux = 1. * (n+1);
-  double uy = 2. * (n+1);
-  double uz = 3. * (n+1);
+  struct psc_mfields *mflds = psc_mfields_get_as(psc->flds, FIELDS_TYPE, EX, EX + 6);
+
+  psc_mfields_put_as(mflds, psc->flds, 0, 0);
   
-  double tol = sub->tol;
-  int failed = 0;
-
-  struct psc_mparticles *mprts = psc_mparticles_get_as(psc->particles, PARTICLE_TYPE, 0);
-
-  for (int p = 0; p < psc->nr_patches; p++) {
-    particle_range_t prts = particle_range_mprts(mprts, p);
-    unsigned int n_prts = particle_range_size(prts);
-
-    for (int n = 0; n < n_prts; n++) {
-      particle_t *p = particle_iter_at(prts.begin, n);
-      if (fabs(p->pxi - ux) > tol ||
-          fabs(p->pyi - uy) > tol ||
-          fabs(p->pzi - uz) > tol) {
-        failed++;
-	mprintf("n %d: xi [%g %g %g] pxi [%g %g %g] qni_wni %g kind %d delta %g %g %g\n", n,
-		p->xi, p->yi, p->zi,
-		p->pxi, p->pyi, p->pzi, p->qni_wni, p->kind, 
-		p->pxi - ux, p->pyi - uy, p->pzi - uz);
-      }
-    }
-  }
-
-  psc_mparticles_put_as(mprts, psc->particles, MP_DONT_COPY);
-
-  assert(!failed);
+  psc_push_fields_push_H(psc->push_fields, psc->flds, .5);
+  psc_push_fields_step_b2(psc->push_fields, psc->flds);
+  psc_push_fields_step_a(psc->push_fields, psc->flds);
 }
 
 // ======================================================================
@@ -140,7 +116,7 @@ struct psc_ops psc_test_em_wave_ops = {
   .param_descr      = psc_test_em_wave_descr,
   .create           = psc_test_em_wave_create,
   .init_field       = psc_test_em_wave_init_field,
-  //  .step             = psc_test_em_wave_step,
+  .step             = psc_test_em_wave_step,
 };
 
 // ======================================================================
