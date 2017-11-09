@@ -105,6 +105,8 @@ AC_ARG_ENABLE(
   [AS_HELP_STRING([--enable-vpic], [interface with vpic])],
   [AS_IF([test "$enable_vpic" = "yes"],
     [AC_DEFINE([USE_VPIC])
+     VPIC_DIR=/Users/kai/build/vpic
+     CFLAGS="$CFLAGS -I$VPIC_DIR/src/vpic"
     dnl LIBS="$LIBS $CUDALIBS"])
   ]
 )

@@ -3,6 +3,38 @@
 
 #include "psc_fields_c.h"
 
+#include "mrc_domain.h"
+
+#include "vpic_iface.h"
+
+// ----------------------------------------------------------------------
+// psc_mfields_vpic_setup
+
+static void
+psc_mfields_vpic_setup(struct psc_mfields *mflds)
+{
+  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
+
+  psc_mfields_setup_super(mflds);
+
+  struct mrc_patch *patches = mrc_domain_get_patches(mflds->domain,
+						     &mflds->nr_patches);
+  assert(mflds->nr_patches == 1);
+
+  struct vpic_info info = {
+    /* .dx = dx[0], */
+    /* .dy = dx[1], */
+    /* .dz = dx[2], */
+    /* .dt = , */
+    .c = 1.,
+    .eps0 = 1.,
+  };
+
+  vpic_base_init(&info);
+
+  //  sub->vmflds = cuda_mfields_create();
+  //  cuda_mfields_ctor(sub->vmflds, json);
+}
 
 // ======================================================================
 // convert from/to "c"
@@ -68,8 +100,8 @@ struct psc_mfields_ops psc_mfields_vpic_ops = {
   .name                  = "vpic",
   .size                  = sizeof(struct psc_mfields_vpic),
   .methods               = psc_mfields_vpic_methods,
-#if 0
   .setup                 = psc_mfields_vpic_setup,
+#if 0
   .destroy               = psc_mfields_vpic_destroy,
 #ifdef HAVE_LIBHDF5_HL
   .write                 = psc_mfields_vpic_write,
