@@ -11,6 +11,7 @@
 #include "vpic_iface.h"
 #include "vpic_mfields.h"
 #include "vpic_mparticles.h"
+#include "vpic_push_particles.h"
 
 #include "vpic.h"
 
@@ -47,7 +48,8 @@ void vpic_performance_sort(struct vpic_mparticles *vmprts)
     } 
 }
 
-void vpic_clear_accumulator_array(struct vpic_mparticles *vmprts)
+void vpic_clear_accumulator_array(struct vpic_push_particles *vpushp,
+				  struct vpic_mparticles *vmprts)
 {
   // At this point, fields are at E_0 and B_0 and the particle positions
   // are at r_0 and u_{-1/2}.  Further the mover lists for the particles should
@@ -55,7 +57,7 @@ void vpic_clear_accumulator_array(struct vpic_mparticles *vmprts)
   // Advance the particle lists.
 
   if( vmprts->species_list )
-    TIC clear_accumulator_array( simulation->accumulator_array ); TOC( clear_accumulators, 1 );
+    TIC clear_accumulator_array( vpushp->accumulator_array ); TOC( clear_accumulators, 1 );
 }
 
 void vpic_collisions()
@@ -79,12 +81,12 @@ void vpic_collisions()
   TIC simulation->user_particle_collisions(); TOC( user_particle_collisions, 1 );
 }
 
-void vpic_advance_p(struct vpic_mparticles *vmprts)
+void vpic_advance_p(struct vpic_push_particles *vpushp, struct vpic_mparticles *vmprts)
 {
   species_t *sp;
 
   LIST_FOR_EACH( sp, vmprts->species_list )
-    TIC advance_p( sp, simulation->accumulator_array, simulation->interpolator_array ); TOC( advance_p, 1 );
+    TIC advance_p( sp, vpushp->accumulator_array, vpushp->interpolator_array ); TOC( advance_p, 1 );
 }
 
 void vpic_emitter()
@@ -100,16 +102,18 @@ void vpic_emitter()
   TIC simulation->user_particle_injection(); TOC( user_particle_injection, 1 );
 }
 
-void vpic_reduce_accumulator_array(struct vpic_mparticles *vmprts)
+void vpic_reduce_accumulator_array(struct vpic_push_particles *vpushp,
+				   struct vpic_mparticles *vmprts)
 {
   // This should be after the emission and injection to allow for the
   // possibility of thread parallelizing these operations
 
   if( vmprts->species_list )
-    TIC reduce_accumulator_array( simulation->accumulator_array ); TOC( reduce_accumulators, 1 );
+    TIC reduce_accumulator_array( vpushp->accumulator_array ); TOC( reduce_accumulators, 1 );
 }
 
-void vpic_boundary_p(struct vpic_mparticles *vmprts, struct vpic_mfields *vmflds)
+void vpic_boundary_p(struct vpic_push_particles *vpushp,
+		     struct vpic_mparticles *vmprts, struct vpic_mfields *vmflds)
 {
   // At this point, most particle positions are at r_1 and u_{1/2}. Particles
   // that had boundary interactions are now on the guard list. Process the
@@ -120,7 +124,7 @@ void vpic_boundary_p(struct vpic_mparticles *vmprts, struct vpic_mfields *vmflds
   TIC
     for( int round=0; round<simulation->num_comm_round; round++ )
       boundary_p( simulation->particle_bc_list, vmprts->species_list,
-                  vmflds->field_array, simulation->accumulator_array );
+                  vmflds->field_array, vpushp->accumulator_array );
   TOC( boundary_p, simulation->num_comm_round );
 
   species_t *sp;
@@ -150,7 +154,8 @@ void vpic_boundary_p(struct vpic_mparticles *vmprts, struct vpic_mfields *vmflds
   }
 }
 
-void vpic_calc_jf(struct vpic_mfields *vmflds, struct vpic_mparticles *vmprts)
+void vpic_calc_jf(struct vpic_push_particles *vpushp,
+		  struct vpic_mfields *vmflds, struct vpic_mparticles *vmprts)
 {
   // At this point, all particle positions are at r_1 and u_{1/2}, the
   // guard lists are empty and the accumulators on each processor are current.
@@ -159,7 +164,7 @@ void vpic_calc_jf(struct vpic_mfields *vmflds, struct vpic_mparticles *vmprts)
   assert(vmflds->field_array);
   TIC FAK->clear_jf( vmflds->field_array ); TOC( clear_jf, 1 );
   if( vmprts->species_list )
-    TIC unload_accumulator_array( vmflds->field_array, simulation->accumulator_array ); TOC( unload_accumulator, 1 );
+    TIC unload_accumulator_array( vmflds->field_array, vpushp->accumulator_array ); TOC( unload_accumulator, 1 );
   TIC FAK->synchronize_jf( vmflds->field_array ); TOC( synchronize_jf, 1 );
 }
 
@@ -243,10 +248,11 @@ void vpic_sync_faces(struct vpic_mfields *vmflds)
   if( rank()==0 ) MESSAGE(( "Domain desynchronization error = %e (arb units)", err ));
 }
 
-void vpic_load_interpolator_array(struct vpic_mfields *vmflds, struct vpic_mparticles *vmprts)
+void vpic_load_interpolator_array(struct vpic_push_particles *vpushp,
+				  struct vpic_mfields *vmflds, struct vpic_mparticles *vmprts)
 {
   if( vmprts->species_list )
-    TIC load_interpolator_array( simulation->interpolator_array, vmflds->field_array ); TOC( load_interpolator, 1 );
+    TIC load_interpolator_array( vpushp->interpolator_array, vmflds->field_array ); TOC( load_interpolator, 1 );
 }
 
 void vpic_print_status()
