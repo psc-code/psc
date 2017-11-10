@@ -5,6 +5,7 @@
 #include <psc_collision.h>
 #include <psc_balance.h>
 #include <psc_marder.h>
+#include <psc_sort.h>
 
 #include <psc_particles_as_single.h>
 
@@ -111,6 +112,11 @@ psc_harris_create(struct psc *psc)
 
   // FIXME: can only use 1st order pushers with current conducting wall b.c.
   psc_push_particles_set_type(psc->push_particles, "1vb");
+
+  psc_sort_set_type(psc->sort, "vpic");
+  // FIXME: the "vpic" sort actually keeps track of per-species sorting intervals
+  // internally
+  psc_sort_set_param_int(psc->sort, "every", 1);
 }
 
 static inline double trunc_granular( double a, double b )
@@ -476,7 +482,8 @@ psc_harris_marder_run(struct psc_marder *marder, int step)
 static void
 psc_harris_step(struct psc *psc)
 {
-  vpic_performance_sort();
+  psc_sort_run(psc->sort, psc->particles);
+
   vpic_clear_accumulator_array();
   vpic_collisions();
   vpic_advance_p();

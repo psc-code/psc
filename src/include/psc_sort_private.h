@@ -23,6 +23,7 @@ extern struct psc_sort_ops psc_sort_countsort2_single_ops;
 extern struct psc_sort_ops psc_sort_qsort_double_ops;
 extern struct psc_sort_ops psc_sort_countsort_double_ops;
 extern struct psc_sort_ops psc_sort_countsort2_double_ops;
+extern struct psc_sort_ops psc_sort_vpic_ops;
 
 #define psc_sort_ops(sort) ((struct psc_sort_ops *)((sort)->obj.ops))
 
