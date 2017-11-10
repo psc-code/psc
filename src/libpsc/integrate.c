@@ -100,7 +100,6 @@ psc_step(struct psc *psc)
 
   // x^{n+1/2}, p^{n}, E^{n+1/2}, B^{n+1/2}
 
-  psc_output(psc);
   psc_balance_run(psc->balance, psc);
 
   psc_randomize_run(psc->randomize, psc->particles);
@@ -154,6 +153,9 @@ extern void dynamicwindow_timestep();
 void
 psc_integrate(struct psc *psc)
 {
+  // FIXME, mv -> end of initialize
+  psc_output(psc);
+
   static int pr;
   if (!pr) {
     pr = prof_register("psc_step", 1., 0, 0);
@@ -185,6 +187,10 @@ psc_integrate(struct psc *psc)
 
     psc_step(psc);
 
+    psc->timestep++; // FIXME, too hacky
+    psc_output(psc);
+    psc->timestep--;
+    
     psc_stats_stop(st_time_step);
     prof_stop(pr);
 
