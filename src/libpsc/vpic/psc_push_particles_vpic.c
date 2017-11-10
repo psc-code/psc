@@ -16,7 +16,7 @@ psc_push_particles_vpic_prep(struct psc_push_particles *push,
   // Fields are updated ... load the interpolator for next time step and
   // particle diagnostics in user_diagnostics if there are any particle
   // species to worry about
-  vpic_load_interpolator_array();
+  vpic_load_interpolator_array(psc_mfields_vpic(mflds_base)->vmflds);
 }
 
 // ----------------------------------------------------------------------

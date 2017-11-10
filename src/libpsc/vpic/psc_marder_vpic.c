@@ -1,6 +1,7 @@
 
 #include "psc_marder_private.h"
 
+#include "psc_fields_vpic.h"
 #include "vpic_iface.h"
 
 // ----------------------------------------------------------------------
@@ -18,21 +19,21 @@ psc_marder_vpic_run(struct psc_marder *marder,
   int clean_div_e_interval = marder->clean_div_e_interval;
   if (clean_div_e_interval > 0 &&
       step % clean_div_e_interval == 0) {
-    vpic_clean_div_e();
+    vpic_clean_div_e(psc_mfields_vpic(mflds_base)->vmflds);
   }
 
   // Divergence clean b
   int clean_div_b_interval = marder->clean_div_b_interval;
   if (clean_div_b_interval > 0 &&
       step % clean_div_b_interval == 0) {
-    vpic_clean_div_b();
+    vpic_clean_div_b(psc_mfields_vpic(mflds_base)->vmflds);
   }
 
   // Synchronize the shared faces
   int sync_shared_interval = marder->sync_shared_interval;
   if (sync_shared_interval > 0 &&
       step % sync_shared_interval == 0) {
-    vpic_sync_faces();
+    vpic_sync_faces(psc_mfields_vpic(mflds_base)->vmflds);
   }
 }
 

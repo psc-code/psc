@@ -31,7 +31,7 @@ int rank()
 
 // ======================================================================
 
-#define FAK simulation->field_array->kernel
+#define FAK vmflds->field_array->kernel
 
 void vpic_performance_sort()
 {
@@ -178,13 +178,13 @@ vpic_current_injection()
 void vpic_advance_b(struct vpic_mfields *vmflds, double frac)
 {
   assert(vmflds->field_array);
-  TIC FAK->advance_b( simulation->field_array, frac ); TOC( advance_b, 1 );
+  TIC FAK->advance_b( vmflds->field_array, frac ); TOC( advance_b, 1 );
 }
 
 void vpic_advance_e(struct vpic_mfields *vmflds, double frac)
 {
   assert(vmflds->field_array);
-  TIC FAK->advance_e( simulation->field_array, frac ); TOC( advance_e, 1 );
+  TIC FAK->advance_e( vmflds->field_array, frac ); TOC( advance_e, 1 );
 }
 
 void vpic_field_injection()
@@ -196,56 +196,56 @@ void vpic_field_injection()
   TIC simulation->user_field_injection(); TOC( user_field_injection, 1 );
 }
 
-void vpic_clean_div_e()
+void vpic_clean_div_e(struct vpic_mfields *vmflds)
 {
   if( rank()==0 ) MESSAGE(( "Divergence cleaning electric field" ));
 
-  TIC FAK->clear_rhof( simulation->field_array ); TOC( clear_rhof,1 );
+  TIC FAK->clear_rhof( vmflds->field_array ); TOC( clear_rhof,1 );
   if( simulation->species_list ) {
     species_t *sp;
     TIC LIST_FOR_EACH( sp, simulation->species_list )
-      accumulate_rho_p( simulation->field_array, sp ); TOC( accumulate_rho_p, simulation->species_list->id );
+      accumulate_rho_p( vmflds->field_array, sp ); TOC( accumulate_rho_p, simulation->species_list->id );
   }
-  TIC FAK->synchronize_rho( simulation->field_array ); TOC( synchronize_rho, 1 );
+  TIC FAK->synchronize_rho( vmflds->field_array ); TOC( synchronize_rho, 1 );
   
   for( int round=0; round<simulation->num_div_e_round; round++ ) {
-    TIC FAK->compute_div_e_err( simulation->field_array ); TOC( compute_div_e_err, 1 );
+    TIC FAK->compute_div_e_err( vmflds->field_array ); TOC( compute_div_e_err, 1 );
     if( round==0 || round==simulation->num_div_e_round-1 ) {
       double err;
-      TIC err = FAK->compute_rms_div_e_err( simulation->field_array ); TOC( compute_rms_div_e_err, 1 );
+      TIC err = FAK->compute_rms_div_e_err( vmflds->field_array ); TOC( compute_rms_div_e_err, 1 );
       if( rank()==0 ) MESSAGE(( "%s rms error = %e (charge/volume)", round==0 ? "Initial" : "Cleaned", err ));
     }
-    TIC FAK->clean_div_e( simulation->field_array ); TOC( clean_div_e, 1 );
+    TIC FAK->clean_div_e( vmflds->field_array ); TOC( clean_div_e, 1 );
   }
 }
 
-void vpic_clean_div_b()
+void vpic_clean_div_b(struct vpic_mfields *vmflds)
 {
   if( rank()==0 ) MESSAGE(( "Divergence cleaning magnetic field" ));
   
   for( int round=0; round<simulation->num_div_b_round; round++ ) {
-    TIC FAK->compute_div_b_err( simulation->field_array ); TOC( compute_div_b_err, 1 );
+    TIC FAK->compute_div_b_err( vmflds->field_array ); TOC( compute_div_b_err, 1 );
     if( round==0 || round==simulation->num_div_b_round-1 ) {
       double err;
-      TIC err = FAK->compute_rms_div_b_err( simulation->field_array ); TOC( compute_rms_div_b_err, 1 );
+      TIC err = FAK->compute_rms_div_b_err( vmflds->field_array ); TOC( compute_rms_div_b_err, 1 );
       if( rank()==0 ) MESSAGE(( "%s rms error = %e (charge/volume)", round==0 ? "Initial" : "Cleaned", err ));
     }
-    TIC FAK->clean_div_b( simulation->field_array ); TOC( clean_div_b, 1 );
+    TIC FAK->clean_div_b( vmflds->field_array ); TOC( clean_div_b, 1 );
   }
 }
 
-void vpic_sync_faces()
+void vpic_sync_faces(struct vpic_mfields *vmflds)
 {
   if( rank()==0 ) MESSAGE(( "Synchronizing shared tang e, norm b, rho_b" ));
   double err;
-  TIC err = FAK->synchronize_tang_e_norm_b( simulation->field_array ); TOC( synchronize_tang_e_norm_b, 1 );
+  TIC err = FAK->synchronize_tang_e_norm_b( vmflds->field_array ); TOC( synchronize_tang_e_norm_b, 1 );
   if( rank()==0 ) MESSAGE(( "Domain desynchronization error = %e (arb units)", err ));
 }
 
-void vpic_load_interpolator_array()
+void vpic_load_interpolator_array(struct vpic_mfields *vmflds)
 {
   if( simulation->species_list )
-    TIC load_interpolator_array( simulation->interpolator_array, simulation->field_array ); TOC( load_interpolator, 1 );
+    TIC load_interpolator_array( simulation->interpolator_array, vmflds->field_array ); TOC( load_interpolator, 1 );
 }
 
 void vpic_print_status()
