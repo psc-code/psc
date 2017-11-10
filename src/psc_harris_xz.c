@@ -112,7 +112,7 @@ psc_harris_create(struct psc *psc)
   psc->domain.bnd_part_hi[2] = BND_PART_REFLECTING;
 
   // FIXME: can only use 1st order pushers with current conducting wall b.c.
-  psc_push_particles_set_type(psc->push_particles, "1vb");
+  psc_push_particles_set_type(psc->push_particles, "vpic");
 
   psc_sort_set_type(psc->sort, "vpic");
   // FIXME: the "vpic" sort actually keeps track of per-species sorting intervals
@@ -487,15 +487,8 @@ psc_harris_step(struct psc *psc)
 {
   psc_sort_run(psc->sort, psc->particles);
   psc_collision_run(psc->collision, psc->particles);
+  psc_push_particles_run(psc->push_particles, psc->particles, psc->flds);
   
-  vpic_clear_accumulator_array();
-  vpic_advance_p();
-  vpic_emitter();
-  vpic_reduce_accumulator_array();
-  vpic_boundary_p();
-  vpic_calc_jf();
-  vpic_current_injection();
-
   // Half advance the magnetic field from B_0 to B_{1/2}
   vpic_advance_b(0.5);
   // Advance the electric field from E_0 to E_1
