@@ -12,7 +12,7 @@
 // ----------------------------------------------------------------------
 // vpic_base_init
 
-static vpic_simulation * simulation = NULL;
+extern vpic_simulation *simulation;
 
 void
 vpic_base_init(struct vpic_info *info)

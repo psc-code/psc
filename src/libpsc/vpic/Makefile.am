@@ -18,7 +18,8 @@ libsubdir_la_SOURCES = \
 	\
 	vpic_base.cxx \
 	main.cxx \
-	wrapper.cxx
+	wrapper.cxx \
+	advance.cc
 
 libsubdir_la_LIBADD = -L/Users/kai/build/vpic/build -lvpic
 
