@@ -26,6 +26,7 @@ libsubdir_la_SOURCES = \
 	psc_fields_vpic.c \
 	\
 	vpic_base.cxx \
+	vpic_mfields.cxx \
 	main.cxx \
 	wrapper.cxx \
 	advance.cc
