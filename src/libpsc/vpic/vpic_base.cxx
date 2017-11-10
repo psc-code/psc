@@ -49,13 +49,78 @@ vpic_base_init(struct vpic_info *info)
   simulation->initialize( 0, NULL );
 }
 
+void vpic_performance_sort();
+void vpic_clear_accumulator_array();
+void vpic_collisions();
+void vpic_advance_p();
+void vpic_emitter();
+void vpic_reduce_accumulator_array();
+void vpic_boundary_p();
+void vpic_calc_jf();
+void vpic_current_injection();
+void vpic_advance_b(double frac);
+void vpic_advance_e(double frac);
+void vpic_field_injection();
+void vpic_clean_div_e();
+void vpic_clean_div_b();
+void vpic_sync_faces();
+void vpic_load_interpolator_array();
+void vpic_print_status();
+void vpic_diagnostics();
+
+void vpic_step(void)
+{
+  vpic_performance_sort();
+  vpic_clear_accumulator_array();
+  vpic_collisions();
+  vpic_advance_p();
+  vpic_emitter();
+  vpic_reduce_accumulator_array();
+  vpic_boundary_p();
+  vpic_calc_jf();
+  vpic_current_injection();
+
+  // Half advance the magnetic field from B_0 to B_{1/2}
+  vpic_advance_b(0.5);
+  // Advance the electric field from E_0 to E_1
+  vpic_advance_e(1.0);
+  vpic_field_injection();
+  // Half advance the magnetic field from B_{1/2} to B_1
+  vpic_advance_b(0.5);
+
+  // Divergence clean e
+  if( (simulation->clean_div_e_interval>0) && ((simulation->grid->step % simulation->clean_div_e_interval)==0) ) {
+    vpic_clean_div_e();
+  }
+
+  // Divergence clean b
+  if( (simulation->clean_div_b_interval>0) && ((simulation->grid->step % simulation->clean_div_b_interval)==0) ) {
+    vpic_clean_div_b();
+  }
+
+  // Synchronize the shared faces
+  if( (simulation->sync_shared_interval>0) && ((simulation->grid->step % simulation->sync_shared_interval)==0) ) {
+    vpic_sync_faces();
+  }
+
+  // Fields are updated ... load the interpolator for next time step and
+  // particle diagnostics in user_diagnostics if there are any particle
+  // species to worry about
+  vpic_load_interpolator_array();
+
+  simulation->grid->step++;
+
+  vpic_print_status();
+  vpic_diagnostics();
+}
+
 void
 vpic_base_integrate()
 {
   if( world_rank==0 ) log_printf( "*** Advancing\n" );
   double elapsed = wallclock();
   while (!vpic_done()) {
-    simulation->advance();
+    vpic_step();
   }
   elapsed = wallclock() - elapsed;
   if (world_rank==0) {
