@@ -40,6 +40,31 @@ void vpic_push_particles_prep(struct vpic_push_particles *vpushp,
 			      struct vpic_mfields *vmflds);
 
 // ----------------------------------------------------------------------
+// vpic_push_fields
+
+void vpic_push_fields_advance_b(struct vpic_mfields *vmflds, double frac);
+void vpic_push_fields_advance_e(struct vpic_mfields *vmflds, double frac);
+
+// ----------------------------------------------------------------------
+// vpic_marder
+
+struct vpic_marder;
+
+struct vpic_marder *vpic_marder_create();
+void vpic_marder_ctor_from_simulation(struct vpic_marder *vmarder);
+void vpic_marder_run(struct vpic_marder *vmarder, struct vpic_mfields *vmflds,
+		     struct vpic_mparticles *vmprts, int step);
+
+// ----------------------------------------------------------------------
+// other (may want an object eventually)
+
+void vpic_sort_run(struct vpic_mparticles *vmprts, int step);
+void vpic_collision_run();
+void vpic_emitter();
+void vpic_current_injection();
+void vpic_field_injection();
+
+// ----------------------------------------------------------------------
 
 struct vpic_info {
   double dx, dy, dz;
@@ -56,19 +81,7 @@ struct vpic_simulation_info {
 };
 
 void vpic_base_init(struct vpic_simulation_info *info);
-void vpic_base_integrate();
 
-bool vpic_done();
-void vpic_performance_sort(struct vpic_mparticles *vmprts);
-void vpic_collisions();
-void vpic_emitter();
-void vpic_current_injection();
-void vpic_advance_b(struct vpic_mfields *vmflds, double frac);
-void vpic_advance_e(struct vpic_mfields *vmflds, double frac);
-void vpic_field_injection();
-void vpic_clean_div_e(struct vpic_mfields *vmflds, struct vpic_mparticles *vmprts);
-void vpic_clean_div_b(struct vpic_mfields *vmflds);
-void vpic_sync_faces(struct vpic_mfields *vmflds);
 void vpic_print_status();
 void vpic_diagnostics();
 void vpic_inc_step(int step);

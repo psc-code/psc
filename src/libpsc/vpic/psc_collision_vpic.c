@@ -10,7 +10,7 @@ static void
 psc_collision_vpic_run(struct psc_collision *collision,
 		       struct psc_mparticles *mprts_base)
 {
-  vpic_collisions();
+  vpic_collision_run();
 }
 
 // ----------------------------------------------------------------------

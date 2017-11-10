@@ -12,6 +12,7 @@
 #include "vpic_mfields.h"
 #include "vpic_mparticles.h"
 #include "vpic_push_particles.h"
+#include "vpic_marder.h"
 
 #include "vpic.h"
 
@@ -35,25 +36,26 @@ int rank()
 
 #define FAK vmflds->field_array->kernel
 
-void vpic_performance_sort(struct vpic_mparticles *vmprts)
+// ======================================================================
+// vpic_sort
+
+void vpic_sort_run(struct vpic_mparticles *vmprts, int step)
 {
   // Sort the particles for performance if desired.
 
   species_t *sp;
 
   LIST_FOR_EACH( sp, vmprts->species_list )
-    if( (sp->sort_interval>0) && ((step() % sp->sort_interval)==0) ) {
+    if( (sp->sort_interval>0) && ((step % sp->sort_interval)==0) ) {
       if( rank()==0 ) MESSAGE(( "Performance sorting \"%s\"", sp->name ));
       TIC sort_p( sp ); TOC( sort_p, 1 );
     } 
 }
 
-void vpic_clear_accumulator_array(struct vpic_push_particles *vpushp)
-{
-  TIC clear_accumulator_array( vpushp->accumulator_array ); TOC( clear_accumulators, 1 );
-}
+// ======================================================================
+// vpic_collision
 
-void vpic_collisions()
+void vpic_collision_run()
 {
   // Note: Particles should not have moved since the last performance sort
   // when calling collision operators.
@@ -74,13 +76,8 @@ void vpic_collisions()
   TIC simulation->user_particle_collisions(); TOC( user_particle_collisions, 1 );
 }
 
-void vpic_advance_p(struct vpic_push_particles *vpushp, struct vpic_mparticles *vmprts)
-{
-  species_t *sp;
-
-  LIST_FOR_EACH( sp, vmprts->species_list )
-    TIC advance_p( sp, vpushp->accumulator_array, vpushp->interpolator_array ); TOC( advance_p, 1 );
-}
+// ======================================================================
+// vpic_emitter
 
 void vpic_emitter()
 {
@@ -89,13 +86,49 @@ void vpic_emitter()
   TIC simulation->user_particle_injection(); TOC( user_particle_injection, 1 );
 }
 
-void vpic_reduce_accumulator_array(struct vpic_push_particles *vpushp)
+// ======================================================================
+// vpic_current_injection
+
+void vpic_current_injection()
+{
+  TIC simulation->user_current_injection(); TOC( user_current_injection, 1 );
+}
+
+// ======================================================================
+// vpic_field_injection
+
+void vpic_field_injection()
+{
+  // Let the user add their own contributions to the electric field. It is the
+  // users responsibility to insure injected electric fields are consistent
+  // across domains.
+
+  TIC simulation->user_field_injection(); TOC( user_field_injection, 1 );
+}
+
+// ======================================================================
+// vpic_push_particles
+
+void vpic_push_particles_clear_accumulator_array(struct vpic_push_particles *vpushp)
+{
+  TIC clear_accumulator_array( vpushp->accumulator_array ); TOC( clear_accumulators, 1 );
+}
+
+void vpic_push_particles_advance_p(struct vpic_push_particles *vpushp, struct vpic_mparticles *vmprts)
+{
+  species_t *sp;
+
+  LIST_FOR_EACH( sp, vmprts->species_list )
+    TIC advance_p( sp, vpushp->accumulator_array, vpushp->interpolator_array ); TOC( advance_p, 1 );
+}
+
+void vpic_push_particles_reduce_accumulator_array(struct vpic_push_particles *vpushp)
 {
   TIC reduce_accumulator_array( vpushp->accumulator_array ); TOC( reduce_accumulators, 1 );
 }
 
-void vpic_boundary_p(struct vpic_push_particles *vpushp,
-		     struct vpic_mparticles *vmprts, struct vpic_mfields *vmflds)
+void vpic_push_particles_boundary_p(struct vpic_push_particles *vpushp,
+				    struct vpic_mparticles *vmprts, struct vpic_mfields *vmflds)
 {
   TIC
     for( int round=0; round<simulation->num_comm_round; round++ )
@@ -130,15 +163,24 @@ void vpic_boundary_p(struct vpic_push_particles *vpushp,
   }
 }
 
-void vpic_mfields_clear_jf(struct vpic_mfields *vmflds)
-{
-  TIC FAK->clear_jf( vmflds->field_array ); TOC( clear_jf, 1 );
-}
-
 void vpic_push_particles_unload_accumulator_array(struct vpic_push_particles *vpushp,
 						  struct vpic_mfields *vmflds)
 {
   TIC unload_accumulator_array( vmflds->field_array, vpushp->accumulator_array ); TOC( unload_accumulator, 1 );
+}
+
+void vpic_push_particles_load_interpolator_array(struct vpic_push_particles *vpushp,
+						 struct vpic_mfields *vmflds)
+{
+  TIC load_interpolator_array( vpushp->interpolator_array, vmflds->field_array ); TOC( load_interpolator, 1 );
+}
+
+// ======================================================================
+// vpic_mfields
+
+void vpic_mfields_clear_jf(struct vpic_mfields *vmflds)
+{
+  TIC FAK->clear_jf( vmflds->field_array ); TOC( clear_jf, 1 );
 }
 
 void vpic_mfields_synchronize_jf(struct vpic_mfields *vmflds)
@@ -146,33 +188,24 @@ void vpic_mfields_synchronize_jf(struct vpic_mfields *vmflds)
   TIC FAK->synchronize_jf( vmflds->field_array ); TOC( synchronize_jf, 1 );
 }
 
-void vpic_current_injection()
-{
-  TIC simulation->user_current_injection(); TOC( user_current_injection, 1 );
-}
+// ======================================================================
+// vpic_push_fields
 
-void vpic_advance_b(struct vpic_mfields *vmflds, double frac)
+void vpic_push_fields_advance_b(struct vpic_mfields *vmflds, double frac)
 {
-  assert(vmflds->field_array);
   TIC FAK->advance_b( vmflds->field_array, frac ); TOC( advance_b, 1 );
 }
 
-void vpic_advance_e(struct vpic_mfields *vmflds, double frac)
+void vpic_push_fields_advance_e(struct vpic_mfields *vmflds, double frac)
 {
-  assert(vmflds->field_array);
   TIC FAK->advance_e( vmflds->field_array, frac ); TOC( advance_e, 1 );
 }
 
-void vpic_field_injection()
-{
-  // Let the user add their own contributions to the electric field. It is the
-  // users responsibility to insure injected electric fields are consistent
-  // across domains.
+// ======================================================================
+// vpic_marder
 
-  TIC simulation->user_field_injection(); TOC( user_field_injection, 1 );
-}
-
-void vpic_clean_div_e(struct vpic_mfields *vmflds, struct vpic_mparticles *vmprts)
+void vpic_marder_clean_div_e(struct vpic_marder *vmarder, struct vpic_mfields *vmflds,
+			     struct vpic_mparticles *vmprts)
 {
   if( rank()==0 ) MESSAGE(( "Divergence cleaning electric field" ));
 
@@ -184,9 +217,9 @@ void vpic_clean_div_e(struct vpic_mfields *vmflds, struct vpic_mparticles *vmprt
   }
   TIC FAK->synchronize_rho( vmflds->field_array ); TOC( synchronize_rho, 1 );
   
-  for( int round=0; round<simulation->num_div_e_round; round++ ) {
+  for( int round=0; round<vmarder->num_div_e_round; round++ ) {
     TIC FAK->compute_div_e_err( vmflds->field_array ); TOC( compute_div_e_err, 1 );
-    if( round==0 || round==simulation->num_div_e_round-1 ) {
+    if( round==0 || round==vmarder->num_div_e_round-1 ) {
       double err;
       TIC err = FAK->compute_rms_div_e_err( vmflds->field_array ); TOC( compute_rms_div_e_err, 1 );
       if( rank()==0 ) MESSAGE(( "%s rms error = %e (charge/volume)", round==0 ? "Initial" : "Cleaned", err ));
@@ -195,13 +228,13 @@ void vpic_clean_div_e(struct vpic_mfields *vmflds, struct vpic_mparticles *vmprt
   }
 }
 
-void vpic_clean_div_b(struct vpic_mfields *vmflds)
+void vpic_marder_clean_div_b(struct vpic_marder *vmarder, struct vpic_mfields *vmflds)
 {
   if( rank()==0 ) MESSAGE(( "Divergence cleaning magnetic field" ));
   
-  for( int round=0; round<simulation->num_div_b_round; round++ ) {
+  for( int round=0; round<vmarder->num_div_b_round; round++ ) {
     TIC FAK->compute_div_b_err( vmflds->field_array ); TOC( compute_div_b_err, 1 );
-    if( round==0 || round==simulation->num_div_b_round-1 ) {
+    if( round==0 || round==vmarder->num_div_b_round-1 ) {
       double err;
       TIC err = FAK->compute_rms_div_b_err( vmflds->field_array ); TOC( compute_rms_div_b_err, 1 );
       if( rank()==0 ) MESSAGE(( "%s rms error = %e (charge/volume)", round==0 ? "Initial" : "Cleaned", err ));
@@ -210,7 +243,7 @@ void vpic_clean_div_b(struct vpic_mfields *vmflds)
   }
 }
 
-void vpic_sync_faces(struct vpic_mfields *vmflds)
+void vpic_marder_sync_faces(struct vpic_marder *marder, struct vpic_mfields *vmflds)
 {
   if( rank()==0 ) MESSAGE(( "Synchronizing shared tang e, norm b, rho_b" ));
   double err;
@@ -218,11 +251,8 @@ void vpic_sync_faces(struct vpic_mfields *vmflds)
   if( rank()==0 ) MESSAGE(( "Domain desynchronization error = %e (arb units)", err ));
 }
 
-void vpic_push_particles_load_interpolator_array(struct vpic_push_particles *vpushp,
-						 struct vpic_mfields *vmflds)
-{
-  TIC load_interpolator_array( vpushp->interpolator_array, vmflds->field_array ); TOC( load_interpolator, 1 );
-}
+// ======================================================================
+// vpic_print_status
 
 void vpic_print_status()
 {
@@ -233,14 +263,12 @@ void vpic_print_status()
   }
 }
 
+// ======================================================================
+// vpic_diagnostics
+
 void vpic_diagnostics()
 {
   // Let the user compute diagnostics
   TIC simulation->user_diagnostics(); TOC( user_diagnostics, 1 );
-}
-
-bool vpic_done()
-{
-  return simulation->num_step>0 && step()>=simulation->num_step;
 }
 

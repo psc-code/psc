@@ -7,7 +7,10 @@
 static void
 psc_sort_vpic_run(struct psc_sort *sort, struct psc_mparticles *mprts_base)
 {
-  vpic_performance_sort(psc_mparticles_vpic(mprts_base)->vmprts);
+  struct vpic_mparticles *vmprts = psc_mparticles_vpic(mprts_base)->vmprts;
+  struct psc *psc = ppsc; // FIXME
+
+  vpic_sort_run(vmprts, psc->timestep);
 }
 
 // ----------------------------------------------------------------------
