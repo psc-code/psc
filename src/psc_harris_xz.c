@@ -458,6 +458,21 @@ psc_harris_read(struct psc *psc, struct mrc_io *io)
 // PSC/VPIC coupling that should eventually move out of this file
 
 // ----------------------------------------------------------------------
+// psc_harris_output
+
+static void
+psc_harris_output(struct psc *psc)
+{
+  // currently, vpic does its first output as part of its own initialize,
+  // so let's not do it again here
+  if (psc->timestep > 0) {
+    vpic_inc_step(psc->timestep);
+    vpic_print_status();
+    vpic_diagnostics();
+  }
+}
+
+// ----------------------------------------------------------------------
 // psc_harris_step
 
 static void
@@ -490,10 +505,6 @@ psc_harris_step(struct psc *psc)
   // particle diagnostics in user_diagnostics if there are any particle
   // species to worry about
   vpic_load_interpolator_array();
-
-  vpic_inc_step(psc->timestep);
-  vpic_print_status();
-  vpic_diagnostics();
 }
 
 // ======================================================================
@@ -509,6 +520,7 @@ struct psc_ops psc_harris_ops = {
   .init_field       = psc_harris_init_field,
   .setup_particles  = psc_harris_setup_particles,
   .step             = psc_harris_step,
+  .output           = psc_harris_output,
 };
 
 // ======================================================================

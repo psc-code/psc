@@ -58,8 +58,8 @@ vpic_base_init(struct vpic_simulation_info *info)
 
 void vpic_inc_step(int step)
 {
-  assert(simulation->grid->step == step);
   simulation->grid->step++;
+  assert(simulation->grid->step == step);
 }
 
 
