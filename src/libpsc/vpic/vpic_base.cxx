@@ -54,9 +54,11 @@ vpic_base_integrate()
 {
   if( world_rank==0 ) log_printf( "*** Advancing\n" );
   double elapsed = wallclock();
-  while( simulation->advance() ); 
+  while (!vpic_done()) {
+    simulation->advance();
+  }
   elapsed = wallclock() - elapsed;
-  if( world_rank==0 ) {
+  if (world_rank==0) {
     int  s = (int)elapsed, m  = s/60, h  = m/60, d  = h/24, w = d/ 7;
     /**/ s -= m*60,        m -= h*60, h -= d*24, d -= w*7;
     log_printf( "*** Done (%gs / %iw:%id:%ih:%im:%is elapsed)\n",

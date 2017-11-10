@@ -19,6 +19,8 @@ struct vpic_info {
 void vpic_base_init(struct vpic_info *info);
 void vpic_base_integrate();
 
+bool vpic_done();
+
 #if 0
 {
 #endif

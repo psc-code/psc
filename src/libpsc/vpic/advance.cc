@@ -8,6 +8,8 @@
  *
  */
 
+#include "vpic_iface.h"
+
 #include "vpic.h"
 
 // ======================================================================
@@ -246,18 +248,13 @@ void vpic_diagnostics()
   TIC simulation->user_diagnostics(); TOC( user_diagnostics, 1 );
 }
 
+bool vpic_done()
+{
+  return simulation->num_step>0 && step()>=simulation->num_step;
+}
 
-#undef FAK
-#define FAK field_array->kernel
-
-int vpic_simulation::advance(void) {
-  species_t *sp;
-  double err;
-
-  // Determine if we are done ... see note below why this is done here
-
-  if( num_step>0 && step()>=num_step ) return 0;
-
+int vpic_simulation::advance(void)
+{
   vpic_performance_sort();
   vpic_clear_accumulator_array();
   vpic_collisions();
