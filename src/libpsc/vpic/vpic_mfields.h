@@ -15,10 +15,10 @@ struct vpic_mfields {
   vpic_mfields() :
     field_array(0) {
   }
-};
 
-void vpic_mfields_clear_jf(struct vpic_mfields *vmflds);
-void vpic_mfields_synchronize_jf(struct vpic_mfields *vmflds);
+  void clear_jf();
+  void synchronize_jf();
+};
 
 #endif
 

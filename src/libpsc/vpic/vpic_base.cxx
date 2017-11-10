@@ -117,11 +117,11 @@ void vpic_push_particles_push_mprts(struct vpic_push_particles *vpushp,
   // guard lists are empty and the accumulators on each processor are current.
   // Convert the accumulators into currents.
 
-  vpic_mfields_clear_jf(vmflds);
+  vmflds->clear_jf();
   if (vmprts->species_list) {
     vpic_push_particles_unload_accumulator_array(vpushp, vmflds);
   }
-  vpic_mfields_synchronize_jf(vmflds);
+  vmflds->synchronize_jf();
 
   // At this point, the particle currents are known at jf_{1/2}.
   // Let the user add their own current contributions. It is the users

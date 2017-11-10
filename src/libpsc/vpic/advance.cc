@@ -28,10 +28,6 @@ int rank()
 }
 
 // ======================================================================
-
-#define FAK vmflds->field_array->kernel
-
-// ======================================================================
 // vpic_sort
 
 void vpic_sort_run(struct vpic_mparticles *vmprts, int step)
@@ -173,15 +169,20 @@ void vpic_push_particles_load_interpolator_array(struct vpic_push_particles *vpu
 // ======================================================================
 // vpic_mfields
 
-void vpic_mfields_clear_jf(struct vpic_mfields *vmflds)
+#define FAK field_array->kernel
+
+void vpic_mfields::clear_jf()
 {
-  TIC FAK->clear_jf( vmflds->field_array ); TOC( clear_jf, 1 );
+  TIC FAK->clear_jf( field_array ); TOC( clear_jf, 1 );
 }
 
-void vpic_mfields_synchronize_jf(struct vpic_mfields *vmflds)
+void vpic_mfields::synchronize_jf()
 {
-  TIC FAK->synchronize_jf( vmflds->field_array ); TOC( synchronize_jf, 1 );
+  TIC FAK->synchronize_jf( field_array ); TOC( synchronize_jf, 1 );
 }
+
+#undef FAK
+#define FAK vmflds->field_array->kernel
 
 // ======================================================================
 // vpic_push_fields
