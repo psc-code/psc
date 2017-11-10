@@ -9,6 +9,16 @@ extern "C" {
 }
 #endif
 
+// ----------------------------------------------------------------------
+// vpic_mfields
+
+struct vpic_mfields;
+
+struct vpic_mfields *vpic_mfields_create();
+void vpic_mfields_ctor_from_simulation(struct vpic_mfields *vmflds);
+
+// ----------------------------------------------------------------------
+
 struct vpic_info {
   double dx, dy, dz;
   double dt;
@@ -33,11 +43,11 @@ void vpic_collisions();
 void vpic_advance_p();
 void vpic_emitter();
 void vpic_reduce_accumulator_array();
-void vpic_boundary_p();
-void vpic_calc_jf();
+void vpic_boundary_p(struct vpic_mfields *vmflds);
+void vpic_calc_jf(struct vpic_mfields *vmflds);
 void vpic_current_injection();
-void vpic_advance_b(double frac);
-void vpic_advance_e(double frac);
+void vpic_advance_b(struct vpic_mfields *vmflds, double frac);
+void vpic_advance_e(struct vpic_mfields *vmflds, double frac);
 void vpic_field_injection();
 void vpic_clean_div_e();
 void vpic_clean_div_b();

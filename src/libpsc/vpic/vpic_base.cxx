@@ -1,5 +1,6 @@
 
 #include "vpic_iface.h"
+#include "vpic_mfields.h"
 
 #include <vpic.h>
 
@@ -11,10 +12,33 @@
 
 #define MHERE do { int __rank; MPI_Comm_rank(MPI_COMM_WORLD, &__rank); printf("[%d] HERE: in %s() at %s:%d\n", __rank, __FUNCTION__, __FILE__, __LINE__); } while(0)
 
+extern vpic_simulation *simulation;
+
+// ======================================================================
+// vpic_mfields
+
+// ----------------------------------------------------------------------
+// vpic_mfields_create
+
+struct vpic_mfields *
+vpic_mfields_create()
+{
+  return new vpic_mfields;
+}
+
+// ----------------------------------------------------------------------
+// vpic_mfields_ctor_from_simulation
+
+void
+vpic_mfields_ctor_from_simulation(struct vpic_mfields *vmflds)
+{
+  vmflds->field_array = simulation->field_array;
+}
+
+// ======================================================================
+
 // ----------------------------------------------------------------------
 // vpic_base_init
-
-extern vpic_simulation *simulation;
 
 void
 vpic_base_init(struct vpic_simulation_info *info)

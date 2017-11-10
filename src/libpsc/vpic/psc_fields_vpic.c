@@ -13,7 +13,7 @@
 static void
 psc_mfields_vpic_setup(struct psc_mfields *mflds)
 {
-  //  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
+  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
 
   psc_mfields_setup_super(mflds);
 
@@ -32,8 +32,8 @@ psc_mfields_vpic_setup(struct psc_mfields *mflds)
 
   /* vpic_base_init(&info); */
 
-  //  sub->vmflds = cuda_mfields_create();
-  //  cuda_mfields_ctor(sub->vmflds, json);
+  sub->vmflds = vpic_mfields_create();
+  //vpic_mfields_ctor(sub->vmflds);
 }
 
 // ======================================================================

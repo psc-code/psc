@@ -9,6 +9,7 @@
  */
 
 #include "vpic_iface.h"
+#include "vpic_mfields.h"
 
 #include "vpic.h"
 
@@ -107,17 +108,18 @@ void vpic_reduce_accumulator_array()
     TIC reduce_accumulator_array( simulation->accumulator_array ); TOC( reduce_accumulators, 1 );
 }
 
-void vpic_boundary_p()
+void vpic_boundary_p(struct vpic_mfields *vmflds)
 {
   // At this point, most particle positions are at r_1 and u_{1/2}. Particles
   // that had boundary interactions are now on the guard list. Process the
   // guard lists. Particles that absorbed are added to rhob (using a corrected
   // local accumulation).
 
+  assert(vmflds->field_array);
   TIC
     for( int round=0; round<simulation->num_comm_round; round++ )
       boundary_p( simulation->particle_bc_list, simulation->species_list,
-                  simulation->field_array, simulation->accumulator_array );
+                  vmflds->field_array, simulation->accumulator_array );
   TOC( boundary_p, simulation->num_comm_round );
 
   species_t *sp;
@@ -139,7 +141,7 @@ void vpic_boundary_p()
       int i = pm->i; // particle index we are removing
       p0[i].i >>= 3; // shift particle voxel down
       // accumulate the particle's charge to the mesh
-      accumulate_rhob( simulation->field_array->f, p0+i, sp->g, sp->q );
+      accumulate_rhob( vmflds->field_array->f, p0+i, sp->g, sp->q );
       p0[i] = p0[sp->np-1]; // put the last particle into position i
       sp->np--; // decrement the number of particles
     }
@@ -147,16 +149,17 @@ void vpic_boundary_p()
   }
 }
 
-void vpic_calc_jf()
+void vpic_calc_jf(struct vpic_mfields *vmflds)
 {
   // At this point, all particle positions are at r_1 and u_{1/2}, the
   // guard lists are empty and the accumulators on each processor are current.
   // Convert the accumulators into currents.
 
-  TIC FAK->clear_jf( simulation->field_array ); TOC( clear_jf, 1 );
+  assert(vmflds->field_array);
+  TIC FAK->clear_jf( vmflds->field_array ); TOC( clear_jf, 1 );
   if( simulation->species_list )
-    TIC unload_accumulator_array( simulation->field_array, simulation->accumulator_array ); TOC( unload_accumulator, 1 );
-  TIC FAK->synchronize_jf( simulation->field_array ); TOC( synchronize_jf, 1 );
+    TIC unload_accumulator_array( vmflds->field_array, simulation->accumulator_array ); TOC( unload_accumulator, 1 );
+  TIC FAK->synchronize_jf( vmflds->field_array ); TOC( synchronize_jf, 1 );
 }
 
 void
@@ -172,13 +175,15 @@ vpic_current_injection()
   TIC simulation->user_current_injection(); TOC( user_current_injection, 1 );
 }
 
-void vpic_advance_b(double frac)
+void vpic_advance_b(struct vpic_mfields *vmflds, double frac)
 {
+  assert(vmflds->field_array);
   TIC FAK->advance_b( simulation->field_array, frac ); TOC( advance_b, 1 );
 }
 
-void vpic_advance_e(double frac)
+void vpic_advance_e(struct vpic_mfields *vmflds, double frac)
 {
+  assert(vmflds->field_array);
   TIC FAK->advance_e( simulation->field_array, frac ); TOC( advance_e, 1 );
 }
 

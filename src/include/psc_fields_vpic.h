@@ -11,8 +11,9 @@
 // ----------------------------------------------------------------------
 
 struct psc_mfields_vpic {
+  struct vpic_mfields *vmflds;
 };
 
-#define psc_mfields_vpic(pf) mrc_to_subobj(pf, struct psc_mfields_vpic)
+#define psc_mfields_vpic(mflds) mrc_to_subobj(mflds, struct psc_mfields_vpic)
 
 #endif
