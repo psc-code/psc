@@ -146,6 +146,7 @@ static inline double trunc_granular( double a, double b )
   return b * (int)(a/b);
 }
 
+#if 0
 // ----------------------------------------------------------------------
 // psc_harris_setup
 
@@ -321,6 +322,207 @@ psc_harris_setup(struct psc *psc)
   mpi_printf(comm, "pert A0 / (B0 d_i) = %g\n", harris->AA / (harris->B0 * d_i));
   mpi_printf(comm, "lambda_De = %g\n", sqrt(harris->Te));
 #endif
+}
+#endif
+
+// ----------------------------------------------------------------------
+// psc_harris_setup
+
+static void
+psc_harris_setup(struct psc *psc)
+{
+  struct psc_harris *sub = psc_harris(psc);
+
+  struct vpic_simulation_info info;
+  vpic_simulation_init(&info);
+
+  psc->prm.nmax = info.num_step;
+  psc->prm.stats_every = info.status_interval;
+  
+  psc_marder_set_param_int(psc->marder, "clean_div_e_interval",
+			     info.clean_div_e_interval);
+  psc_marder_set_param_int(psc->marder, "clean_div_b_interval",
+			   info.clean_div_b_interval);
+  psc_marder_set_param_int(psc->marder, "sync_shared_interval",
+			   info.sync_shared_interval);
+  
+  // use natural PIC units
+  double ec   = 1;         // Charge normalization
+  double me   = 1;         // Mass normalization
+  double c    = 1;         // Speed of light
+  /* double de   = 1;         // Length normalization (electron inertial length) */
+  double eps0 = 1;         // Permittivity of space
+
+#if 0
+  double cfl_req   = 0.99;  // How close to Courant should we try to run
+#endif
+  double wpedt_max = 0.36;  // Max dt allowed if Courant not too restrictive
+#if 0
+  double damp      = 0.0;   // Level of radiation damping
+  int rng_seed     = 1;     // Random number seed increment
+#endif
+
+  // Physics parameters
+  double mi_me   = 25.0;  // Ion mass / electron mass
+  double L_di    = 0.5;    // Sheet thickness / ion inertial length
+  double Ti_Te   = 5.0;    // Ion temperature / electron temperature
+  /* double Z   = 1.0;      // Ion charge */
+  double nb_n0   = 0.228;   // background plasma density
+  double Tbe_Te  = 0.7598;  // Ratio of background T_e to Harris T_e
+  double Tbi_Ti  = 0.3039;  // Ratio of background T_i to Harris T_i
+  double wpe_wce = 2.0;    // electron plasma freq / electron cyclotron freq
+  double bg = 0.0;
+  double theta   = 0;      // B0 = Bx
+
+  double cs   = cos(theta);
+  double sn   = sin(theta);
+
+  //derived quantities
+  double mi = me*mi_me;       // Ion mass
+  double Te = me*c*c/(2*eps0*wpe_wce*wpe_wce*(1+Ti_Te)); // Electron temperature
+  double Ti = Te*Ti_Te;       // Ion temperature
+  double vthe = sqrt(Te/me);                        // Electron thermal velocity
+  double vthi = sqrt(Ti/mi);  // Ion thermal velocity
+  double vtheb = sqrt(Tbe_Te*Te/me);  // normalized background e thermal vel. */
+  double vthib = sqrt(Tbi_Ti*Ti/mi);  // normalized background ion thermal vel. */
+  double wci  = 1.0/(mi_me*wpe_wce);  // Ion cyclotron frequency
+  double wce  = wci*mi_me;            // Electron cyclotron freqeuncy
+  double wpe  = wce*wpe_wce;          // electron plasma frequency
+  double wpi  = wpe/sqrt(mi_me);      // ion plasma frequency
+  double di   = c/wpi;                // ion inertial length
+  double L    = L_di*di;              // Harris sheet thickness
+  /* double rhoi_L = sqrt(Ti_Te/(1.0+Ti_Te))/L_di; */
+  /* double v_A= (wci/wpi)/sqrt(nb_n0); // based on nb */
+
+  // Numerical parameters
+  double nppc  = 100; // Average number of macro particle per cell per species
+
+  double Lx    = 25.6*di;      // size of box in x dimension
+  double Ly    = 1*di; // size of box in y dimension
+  double Lz    = 12.8*di;      // size of box in z dimension
+
+  sub->L = L;
+  sub->Lx = Lx;
+  sub->Ly = Ly;
+  sub->Lz = Lz;
+
+  int *gdims = psc->domain.gdims, *np = psc->domain.np;
+  sub->n_global_patches = np[0] * np[1] * np[2];
+  
+  double b0 = me*c*wce/ec; // Asymptotic magnetic field strength
+  double n0 = me*eps0*wpe*wpe/(ec*ec);  // Peak electron (ion) density
+  double vdri = 2*c*Ti/(ec*b0*L);   // Ion drift velocity
+  double vdre = -vdri/(Ti_Te);      // electron drift velocity
+  
+  double Npe_sheet = 2*n0*Lx*Ly*L*tanh(0.5*Lz/L); // N physical e's in sheet
+  double Npe_back  = nb_n0*n0*Ly*Lz*Lx;           // N physical e's in backgrnd
+  double Npe       = Npe_sheet + Npe_back;
+  double Ne        = nppc*gdims[0]*gdims[1]*gdims[2];  // total macro electrons in box
+  double Ne_sheet  = Ne*Npe_sheet/Npe;
+  double Ne_back   = Ne*Npe_back/Npe;
+  Ne_sheet = trunc_granular(Ne_sheet, sub->n_global_patches); // Make it divisible by nproc
+  Ne_back  = trunc_granular(Ne_back, sub->n_global_patches);  // Make it divisible by nproc
+  Ne = Ne_sheet + Ne_back;
+  //double qe_s = -ec*Npe_sheet/Ne_sheet;  // Charge per macro electron
+  //double qi_s =  ec*Npe_sheet/Ne_sheet;  // Charge per macro electron
+  double weight_s = ec*Npe_sheet/Ne_sheet;  // Charge per macro electron
+  //double qe_b = -ec*Npe_back/Ne_back;  // Charge per macro electron
+  //double qi_b =  ec*Npe_back/Ne_back;  // Charge per macro electron
+  double weight_b =  ec*Npe_back/Ne_back;  // Charge per macro electron
+
+  sub->b0 = b0;
+  sub->bg = bg;
+  sub->Npe_sheet = Npe_sheet;
+  sub->Npe_back = Npe_back;
+  sub->Npe = Npe;
+  sub->Ne_sheet = Ne_sheet;
+  sub->Ne_back = Ne_back;
+  sub->Ne = Ne;
+  sub->weight_s = weight_s;
+  sub->weight_b = weight_b;
+  sub->vthe = vthe;
+  sub->vthi = vthi;
+  sub->vtheb = vtheb;
+  sub->vthib = vthib;
+  sub->cs = cs;
+  sub->sn = sn;
+
+  psc->domain.length[0] = Lx;
+  psc->domain.length[1] = Ly;
+  psc->domain.length[2] = Lz;
+
+  psc->domain.corner[0] = 0.;
+  psc->domain.corner[1] = -.5 * Ly;
+  psc->domain.corner[2] = -.5 * Lz;
+  
+  double gdri = 1/sqrt(1-vdri*vdri/(c*c));  // gamma of ion drift frame
+  double gdre = 1/sqrt(1-vdre*vdre/(c*c)); // gamma of electron drift frame
+  double udri = vdri*gdri;                 // 4-velocity of ion drift frame
+  double udre = vdre*gdre;                 // 4-velocity of electron drift frame
+
+  sub->gdre = gdre;
+  sub->gdri = gdri;
+  sub->udre = udre;
+  sub->udri = udri;
+
+  sub->L = L;
+  sub->tanhf = tanh(0.5*Lz/L);
+  sub->Lpert = Lx; // wavelength of perturbation
+  sub->dbz =  0.03*b0; // Perturbation in Bz relative to Bo (Only change here)
+  sub->dbx = -sub->dbz * sub->Lpert/(2.0*Lz); // Set Bx perturbation so that div(B) = 0
+
+  MPI_Comm comm = psc_comm(psc);
+  mpi_printf(comm, "b0 = %g\n", b0);
+  mpi_printf(comm, "n0 = %g\n", n0);
+  mpi_printf(comm, "Ti = %g Te = %g\n", Ti, Te);
+  mpi_printf(comm, "vthi = %g vthe = %g\n", vthi, vthe);
+  mpi_printf(comm, "vdri = %g vdre = %g\n", vdri, vdre);
+  mpi_printf(comm, "Npe = %g, Npe_sheet = %g Npe_back = %g\n",
+	     sub->Npe, sub->Npe_sheet, sub->Npe_back);
+  mpi_printf(comm, "Ne = %g, Ne_sheet = %g Ne_back = %g\n",
+	     sub->Ne, sub->Ne_sheet, sub->Ne_back);
+  mpi_printf(comm, "weight_s = %g, weight_b = %g\n",
+	     sub->weight_s, sub->weight_b);
+  
+  // initializes fields, particles, etc.
+  psc_setup_super(psc);
+
+  if (wpe*psc->dt > wpedt_max) {
+    psc->dt = wpedt_max/wpe;  // override timestep if plasma frequency limited
+    mprintf("::: dt reduced to %g\n", psc->dt);
+  }
+  
+  //  psc->dt = 0.0714471;
+
+#if 0
+  MPI_Comm comm = psc_comm(psc);
+  mpi_printf(comm, "dt = %g, dy = %g dz = %g\n", psc->dt,
+	     psc->patch[0].dx[1], psc->patch[0].dx[2]);
+  mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., d_i);
+  mpi_printf(comm, "v_A = %g\n", harris->B0 / sqrt(harris->mi_over_me));
+  double om_ci = harris->B0 / harris->mi_over_me;
+  double om_ce = harris->B0;
+  mpi_printf(comm, "om_ci = %g om_ce = %g\n", om_ci, om_ce);
+  mpi_printf(comm, "om_pi = %g om_pe = %g\n", 1. / sqrt(harris->mi_over_me), 1.);
+  mpi_printf(comm, "Ti = %g Te = %g\n", harris->Ti, harris->Te);
+  double vthi = sqrt(2 * harris->Ti / harris->mi_over_me);
+  double vthe = sqrt(2 * harris->Te);
+  mpi_printf(comm, "vthi = %g vthe = %g\n", vthi, vthe);
+  mpi_printf(comm, "rhoi = %g\n", vthi / om_ci);
+  mpi_printf(comm, "L / rhoi = %g\n", harris->LLL / (vthi / om_ci));
+  mpi_printf(comm, "pert A0 / (B0 d_i) = %g\n", harris->AA / (harris->B0 * d_i));
+  mpi_printf(comm, "lambda_De = %g\n", sqrt(harris->Te));
+#endif
+
+  vpic_simulation_init2();
+  
+  vpic_marder_ctor_from_simulation(psc_marder_vpic(psc->marder)->vmarder);
+  
+  vpic_mfields_ctor_from_simulation(psc_mfields_vpic(psc->flds)->vmflds);
+  
+  vpic_mparticles_ctor_from_simulation(psc_mparticles_vpic(psc->particles)->vmprts);
+
+  vpic_push_particles_ctor_from_simulation(psc_push_particles_vpic(psc->push_particles)->vpushp);
 }
 
 // ----------------------------------------------------------------------
@@ -535,31 +737,11 @@ main(int argc, char **argv)
     // psc_bubble_set_from_options()
     psc_set_from_options(psc);
     
-    struct vpic_simulation_info info;
-    vpic_simulation_init(&info);
-
     // psc_setup() will set up the various sub-objects (particle pusher, ...)
     // and set up the initial domain partition, the particles and the fields.
     // The standard implementation, used here, will set particles using
     // psc_bubble_init_npt and the fields using setup_field()
     psc_setup(psc);
-
-    psc->prm.nmax = info.num_step;
-    psc->prm.stats_every = info.status_interval;
-    
-    psc_marder_set_param_int(psc->marder, "clean_div_e_interval",
-			     info.clean_div_e_interval);
-    psc_marder_set_param_int(psc->marder, "clean_div_b_interval",
-			     info.clean_div_b_interval);
-    psc_marder_set_param_int(psc->marder, "sync_shared_interval",
-			     info.sync_shared_interval);
-    vpic_marder_ctor_from_simulation(psc_marder_vpic(psc->marder)->vmarder);
-
-    vpic_mfields_ctor_from_simulation(psc_mfields_vpic(psc->flds)->vmflds);
-
-    vpic_mparticles_ctor_from_simulation(psc_mparticles_vpic(psc->particles)->vmprts);
-
-    vpic_push_particles_ctor_from_simulation(psc_push_particles_vpic(psc->push_particles)->vpushp);
   } else {
     // get psc object from checkpoint file
 

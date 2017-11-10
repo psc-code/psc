@@ -45,17 +45,28 @@ void vpic_base_init(int *pargc, char ***pargv)
   }
 }
 
+
 void vpic_simulation_init(struct vpic_simulation_info *info)
 {
   if( world_rank==0 ) log_printf( "*** Initializing\n" );
   simulation = new vpic_simulation;
-  simulation->initialize( 0, NULL );
+
+  // Call the user initialize the simulation
+
+  int argc = 0; char **argv = NULL;
+  TIC simulation->user_initialization(argc, argv); TOC( user_initialization, 1 );
 
   info->num_step = simulation->num_step;
   info->clean_div_e_interval = simulation->clean_div_e_interval;
   info->clean_div_b_interval = simulation->clean_div_b_interval;
   info->sync_shared_interval = simulation->sync_shared_interval;
   info->status_interval = simulation->status_interval;
+}
+
+void vpic_simulation_init2()
+{
+  int argc = 0; char **argv = NULL;
+  simulation->initialize(argc, argv);
 }
 
 #define FAK field_array->kernel
@@ -65,10 +76,6 @@ vpic_simulation::initialize( int argc,
                              char **argv ) {
   double err;
   species_t * sp;
-
-  // Call the user initialize the simulation
-
-  TIC user_initialization( argc, argv ); TOC( user_initialization, 1 );
 
   // Do some consistency checks on user initialized fields
 

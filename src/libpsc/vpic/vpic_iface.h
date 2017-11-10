@@ -108,6 +108,8 @@ struct vpic_simulation_info {
 
 void vpic_base_init(int *pargc, char ***pargv);
 void vpic_simulation_init(struct vpic_simulation_info *info);
+void vpic_simulation_init2(void);
+
 
 void vpic_print_status();
 void vpic_diagnostics();
