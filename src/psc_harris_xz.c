@@ -477,7 +477,9 @@ psc_harris_output(struct psc *psc)
   // so let's not do it again here
   if (psc->timestep > 0) {
     vpic_inc_step(psc->timestep);
-    vpic_print_status();
+    if (psc->prm.stats_every > 0 && psc->timestep % psc->prm.stats_every == 0) {
+      vpic_print_status();
+    }
     vpic_diagnostics();
   }
 }

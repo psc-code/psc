@@ -257,10 +257,8 @@ void vpic_marder_sync_faces(struct vpic_marder *marder, struct vpic_mfields *vmf
 void vpic_print_status()
 {
   // Print out status
-  if( (simulation->status_interval>0) && ((step() % simulation->status_interval)==0) ) {
-    if( rank()==0 ) MESSAGE(( "Completed step %i of %i", step(), simulation->num_step ));
-    update_profile( rank()==0 );
-  }
+  if( rank()==0 ) MESSAGE(( "Completed step %i of %i", step(), simulation->num_step ));
+  update_profile( rank()==0 );
 }
 
 // ======================================================================
