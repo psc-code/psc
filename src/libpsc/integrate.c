@@ -111,11 +111,6 @@ psc_step(struct psc *psc)
 
   psc_collision_run(psc->collision, psc->particles);
   
-  // E at t^{n+1/2}, particles at t^{n+1/2}
-  psc_marder_run(psc->marder, psc->flds, psc->particles);
-    
-  psc_checks_gauss(psc->checks, psc);
-
   //psc_bnd_particles_open_calc_moments(psc->bnd_particles, psc->particles);
 
   psc_checks_continuity_before_particle_push(psc->checks, psc);
@@ -141,6 +136,13 @@ psc_step(struct psc *psc)
   // x^{n+3/2}, p^{n+1}, E^{n+3/2}, B^{n+3/2}
 
   psc_checks_continuity_after_particle_push(psc->checks, psc);
+
+  // E at t^{n+3/2}, particles at t^{n+3/2}
+  // B at t^{n+3/2} (Note: that is not it's natural time,
+  // but div B should be == 0 at any time...)
+  psc_marder_run(psc->marder, psc->flds, psc->particles);
+    
+  psc_checks_gauss(psc->checks, psc);
 }
 
 extern void dynamicwindow_timestep();
