@@ -48,16 +48,9 @@ void vpic_performance_sort(struct vpic_mparticles *vmprts)
     } 
 }
 
-void vpic_clear_accumulator_array(struct vpic_push_particles *vpushp,
-				  struct vpic_mparticles *vmprts)
+void vpic_clear_accumulator_array(struct vpic_push_particles *vpushp)
 {
-  // At this point, fields are at E_0 and B_0 and the particle positions
-  // are at r_0 and u_{-1/2}.  Further the mover lists for the particles should
-  // empty and all particles should be inside the local computational domain.
-  // Advance the particle lists.
-
-  if( vmprts->species_list )
-    TIC clear_accumulator_array( vpushp->accumulator_array ); TOC( clear_accumulators, 1 );
+  TIC clear_accumulator_array( vpushp->accumulator_array ); TOC( clear_accumulators, 1 );
 }
 
 void vpic_collisions()
@@ -91,36 +84,19 @@ void vpic_advance_p(struct vpic_push_particles *vpushp, struct vpic_mparticles *
 
 void vpic_emitter()
 {
-  // Because the partial position push when injecting aged particles might
-  // place those particles onto the guard list (boundary interaction) and
-  // because advance_p requires an empty guard list, particle injection must
-  // be done after advance_p and before guard list processing. Note:
-  // user_particle_injection should be a stub if species_list is empty.
-
   if( simulation->emitter_list )
     TIC apply_emitter_list( simulation->emitter_list ); TOC( emission_model, 1 );
   TIC simulation->user_particle_injection(); TOC( user_particle_injection, 1 );
 }
 
-void vpic_reduce_accumulator_array(struct vpic_push_particles *vpushp,
-				   struct vpic_mparticles *vmprts)
+void vpic_reduce_accumulator_array(struct vpic_push_particles *vpushp)
 {
-  // This should be after the emission and injection to allow for the
-  // possibility of thread parallelizing these operations
-
-  if( vmprts->species_list )
-    TIC reduce_accumulator_array( vpushp->accumulator_array ); TOC( reduce_accumulators, 1 );
+  TIC reduce_accumulator_array( vpushp->accumulator_array ); TOC( reduce_accumulators, 1 );
 }
 
 void vpic_boundary_p(struct vpic_push_particles *vpushp,
 		     struct vpic_mparticles *vmprts, struct vpic_mfields *vmflds)
 {
-  // At this point, most particle positions are at r_1 and u_{1/2}. Particles
-  // that had boundary interactions are now on the guard list. Process the
-  // guard lists. Particles that absorbed are added to rhob (using a corrected
-  // local accumulation).
-
-  assert(vmflds->field_array);
   TIC
     for( int round=0; round<simulation->num_comm_round; round++ )
       boundary_p( simulation->particle_bc_list, vmprts->species_list,
@@ -154,30 +130,24 @@ void vpic_boundary_p(struct vpic_push_particles *vpushp,
   }
 }
 
-void vpic_calc_jf(struct vpic_push_particles *vpushp,
-		  struct vpic_mfields *vmflds, struct vpic_mparticles *vmprts)
+void vpic_mfields_clear_jf(struct vpic_mfields *vmflds)
 {
-  // At this point, all particle positions are at r_1 and u_{1/2}, the
-  // guard lists are empty and the accumulators on each processor are current.
-  // Convert the accumulators into currents.
-
-  assert(vmflds->field_array);
   TIC FAK->clear_jf( vmflds->field_array ); TOC( clear_jf, 1 );
-  if( vmprts->species_list )
-    TIC unload_accumulator_array( vmflds->field_array, vpushp->accumulator_array ); TOC( unload_accumulator, 1 );
+}
+
+void vpic_push_particles_unload_accumulator_array(struct vpic_push_particles *vpushp,
+						  struct vpic_mfields *vmflds)
+{
+  TIC unload_accumulator_array( vmflds->field_array, vpushp->accumulator_array ); TOC( unload_accumulator, 1 );
+}
+
+void vpic_mfields_synchronize_jf(struct vpic_mfields *vmflds)
+{
   TIC FAK->synchronize_jf( vmflds->field_array ); TOC( synchronize_jf, 1 );
 }
 
-void
-vpic_current_injection()
+void vpic_current_injection()
 {
-  // At this point, the particle currents are known at jf_{1/2}.
-  // Let the user add their own current contributions. It is the users
-  // responsibility to insure injected currents are consistent across domains.
-  // It is also the users responsibility to update rhob according to
-  // rhob_1 = rhob_0 + div juser_{1/2} (corrected local accumulation) if
-  // the user wants electric field divergence cleaning to work.
-
   TIC simulation->user_current_injection(); TOC( user_current_injection, 1 );
 }
 
@@ -248,11 +218,10 @@ void vpic_sync_faces(struct vpic_mfields *vmflds)
   if( rank()==0 ) MESSAGE(( "Domain desynchronization error = %e (arb units)", err ));
 }
 
-void vpic_load_interpolator_array(struct vpic_push_particles *vpushp,
-				  struct vpic_mfields *vmflds, struct vpic_mparticles *vmprts)
+void vpic_push_particles_load_interpolator_array(struct vpic_push_particles *vpushp,
+						 struct vpic_mfields *vmflds)
 {
-  if( vmprts->species_list )
-    TIC load_interpolator_array( vpushp->interpolator_array, vmflds->field_array ); TOC( load_interpolator, 1 );
+  TIC load_interpolator_array( vpushp->interpolator_array, vmflds->field_array ); TOC( load_interpolator, 1 );
 }
 
 void vpic_print_status()

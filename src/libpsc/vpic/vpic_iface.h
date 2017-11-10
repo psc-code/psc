@@ -35,6 +35,9 @@ void vpic_push_particles_ctor_from_simulation(struct vpic_push_particles *vpushp
 void vpic_push_particles_push_mprts(struct vpic_push_particles *vpushp,
 				    struct vpic_mparticles *vmprts,
 				    struct vpic_mfields *vmflds);
+void vpic_push_particles_prep(struct vpic_push_particles *vpushp,
+			      struct vpic_mparticles *mprts,
+			      struct vpic_mfields *vmflds);
 
 // ----------------------------------------------------------------------
 
@@ -57,18 +60,8 @@ void vpic_base_integrate();
 
 bool vpic_done();
 void vpic_performance_sort(struct vpic_mparticles *vmprts);
-void vpic_clear_accumulator_array(struct vpic_push_particles *vpushp,
-				  struct vpic_mparticles *vmprts);
 void vpic_collisions();
-void vpic_advance_p(struct vpic_push_particles *vpushp,
-		    struct vpic_mparticles *vmprts);
 void vpic_emitter();
-void vpic_reduce_accumulator_array(struct vpic_push_particles *vpushp,
-				   struct vpic_mparticles *vmprts);
-void vpic_boundary_p(struct vpic_push_particles *vpushp,
-		     struct vpic_mparticles *vmprts, struct vpic_mfields *vmflds);
-void vpic_calc_jf(struct vpic_push_particles *vpushp,
-		  struct vpic_mfields *vmflds, struct vpic_mparticles *vmprts);
 void vpic_current_injection();
 void vpic_advance_b(struct vpic_mfields *vmflds, double frac);
 void vpic_advance_e(struct vpic_mfields *vmflds, double frac);
@@ -76,8 +69,6 @@ void vpic_field_injection();
 void vpic_clean_div_e(struct vpic_mfields *vmflds, struct vpic_mparticles *vmprts);
 void vpic_clean_div_b(struct vpic_mfields *vmflds);
 void vpic_sync_faces(struct vpic_mfields *vmflds);
-void vpic_load_interpolator_array(struct vpic_push_particles *vpushp,
-				  struct vpic_mfields *vmflds, struct vpic_mparticles *vmprts);
 void vpic_print_status();
 void vpic_diagnostics();
 void vpic_inc_step(int step);

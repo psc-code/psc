@@ -34,7 +34,7 @@ psc_push_particles_vpic_prep(struct psc_push_particles *push,
   struct vpic_mfields *vmflds = psc_mfields_vpic(mflds_base)->vmflds;
   struct vpic_mparticles *vmprts = psc_mparticles_vpic(mprts_base)->vmprts;
 
-  vpic_load_interpolator_array(vpushp, vmflds, vmprts);
+  vpic_push_particles_prep(vpushp, vmprts, vmflds);
 }
 
 // ----------------------------------------------------------------------
