@@ -436,6 +436,43 @@ psc_harris_read(struct psc *psc, struct mrc_io *io)
   psc_read_super(psc, io);
 }
 
+// ======================================================================
+// PSC/VPIC coupling that should eventually move out of this file
+
+// ----------------------------------------------------------------------
+// psc_harris_marder_run
+
+static void
+psc_harris_marder_run(struct psc_marder *marder, int step)
+{
+  // Divergence clean e
+  int clean_div_e_interval;
+  psc_marder_get_param_int(marder, "clean_div_e_interval", &clean_div_e_interval);
+  if (clean_div_e_interval > 0 &&
+      step % clean_div_e_interval == 0) {
+    vpic_clean_div_e();
+  }
+
+  // Divergence clean b
+  int clean_div_b_interval;
+  psc_marder_get_param_int(marder, "clean_div_b_interval", &clean_div_b_interval);
+  if (clean_div_b_interval > 0 &&
+      step % clean_div_b_interval == 0) {
+    vpic_clean_div_b();
+  }
+
+  // Synchronize the shared faces
+  int sync_shared_interval;
+  psc_marder_get_param_int(marder, "sync_shared_interval", &sync_shared_interval);
+  if (sync_shared_interval > 0 &&
+      step % sync_shared_interval == 0) {
+    vpic_sync_faces();
+  }
+}
+
+// ----------------------------------------------------------------------
+// psc_harris_step
+
 static void
 psc_harris_step(struct psc *psc)
 {
@@ -457,7 +494,7 @@ psc_harris_step(struct psc *psc)
   // Half advance the magnetic field from B_{1/2} to B_1
   vpic_advance_b(0.5);
 
-  vpic_step();
+  psc_harris_marder_run(psc->marder, psc->timestep);
 
   // Fields are updated ... load the interpolator for next time step and
   // particle diagnostics in user_diagnostics if there are any particle

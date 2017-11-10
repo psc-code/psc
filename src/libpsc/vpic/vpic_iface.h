@@ -47,8 +47,6 @@ void vpic_print_status();
 void vpic_diagnostics();
 void vpic_inc_step(int step);
 
-void vpic_step();
-
 
 #if 0
 {

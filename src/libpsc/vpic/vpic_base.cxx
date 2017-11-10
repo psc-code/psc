@@ -62,21 +62,4 @@ void vpic_inc_step(int step)
   simulation->grid->step++;
 }
 
-void vpic_step(void)
-{
-  // Divergence clean e
-  if( (simulation->clean_div_e_interval>0) && ((simulation->grid->step % simulation->clean_div_e_interval)==0) ) {
-    vpic_clean_div_e();
-  }
-
-  // Divergence clean b
-  if( (simulation->clean_div_b_interval>0) && ((simulation->grid->step % simulation->clean_div_b_interval)==0) ) {
-    vpic_clean_div_b();
-  }
-
-  // Synchronize the shared faces
-  if( (simulation->sync_shared_interval>0) && ((simulation->grid->step % simulation->sync_shared_interval)==0) ) {
-    vpic_sync_faces();
-  }
-}
 
