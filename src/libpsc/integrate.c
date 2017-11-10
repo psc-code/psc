@@ -157,6 +157,8 @@ psc_integrate(struct psc *psc)
 {
   // FIXME, mv -> end of initialize
   psc_output(psc);
+  psc_stats_log(psc);
+  print_profiling(psc);
 
   static int pr;
   if (!pr) {
@@ -176,7 +178,7 @@ psc_integrate(struct psc *psc)
   double elapsed = MPI_Wtime();
 
   bool first_iteration = true;
-  for (; psc->timestep < psc->prm.nmax; psc->timestep++) {
+  while (psc->timestep < psc->prm.nmax) {
     prof_start(pr);
     psc_stats_start(st_time_step);
 
@@ -191,7 +193,6 @@ psc_integrate(struct psc *psc)
 
     psc->timestep++; // FIXME, too hacky
     psc_output(psc);
-    psc->timestep--;
     
     psc_stats_stop(st_time_step);
     prof_stop(pr);
