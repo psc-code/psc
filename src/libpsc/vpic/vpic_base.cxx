@@ -16,19 +16,17 @@ extern vpic_simulation *simulation;
 // ----------------------------------------------------------------------
 // vpic_base_init
 
-void
-vpic_base_init(struct vpic_simulation_info *info)
+void vpic_base_init(int *pargc, char ***pargv)
 {
-  if (simulation) {
+  static bool vpic_base_inited = false;
+
+  if (vpic_base_inited) {
     return;
   }
+  vpic_base_inited = true;
   
   //  boot_services( &argc, &argv );
   {
-    int argc = 0;
-    char *_argv[] = {}, **argv = _argv;
-    int *pargc = &argc;
-    char ***pargv = &argv;
     // Start up the checkpointing service.  This should be first.
     
     boot_checkpt( pargc, pargv );
@@ -45,7 +43,10 @@ vpic_base_init(struct vpic_simulation_info *info)
     _boot_timestamp = 0;
     _boot_timestamp = uptime();
   }
+}
 
+void vpic_simulation_init(struct vpic_simulation_info *info)
+{
   if( world_rank==0 ) log_printf( "*** Initializing\n" );
   simulation = new vpic_simulation;
   simulation->initialize( 0, NULL );

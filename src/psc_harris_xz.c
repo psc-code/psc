@@ -512,6 +512,7 @@ main(int argc, char **argv)
   MPI_Init(&argc, &argv);
   libmrc_params_init(argc, argv);
   mrc_set_flags(MRC_FLAG_SUPPRESS_UNPREFIXED_OPTION_WARNING);
+  vpic_base_init(&argc, &argv);
 
   mrc_class_register_subclass(&mrc_class_psc, &psc_harris_ops);
 
@@ -534,14 +535,14 @@ main(int argc, char **argv)
     // psc_bubble_set_from_options()
     psc_set_from_options(psc);
     
+    struct vpic_simulation_info info;
+    vpic_simulation_init(&info);
+
     // psc_setup() will set up the various sub-objects (particle pusher, ...)
     // and set up the initial domain partition, the particles and the fields.
     // The standard implementation, used here, will set particles using
     // psc_bubble_init_npt and the fields using setup_field()
     psc_setup(psc);
-
-    struct vpic_simulation_info info;
-    vpic_base_init(&info);
 
     psc->prm.nmax = info.num_step;
     psc->prm.stats_every = info.status_interval;
