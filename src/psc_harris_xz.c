@@ -15,6 +15,7 @@
 
 #include <psc_fields_vpic.h>
 #include <psc_particles_vpic.h>
+#include <psc_push_particles_vpic.h>
 
 #include <psc_particles_as_single.h>
 
@@ -547,6 +548,7 @@ main(int argc, char **argv)
 
     vpic_mfields_ctor_from_simulation(psc_mfields_vpic(psc->flds)->vmflds);
     vpic_mparticles_ctor_from_simulation(psc_mparticles_vpic(psc->particles)->vmprts);
+    vpic_push_particles_ctor_from_simulation(psc_push_particles_vpic(psc->push_particles)->vpushp);
   } else {
     // get psc object from checkpoint file
 

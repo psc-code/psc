@@ -2,6 +2,7 @@
 #include "vpic_iface.h"
 #include "vpic_mfields.h"
 #include "vpic_mparticles.h"
+#include "vpic_push_particles.h"
 
 #include <vpic.h>
 
@@ -55,6 +56,27 @@ void
 vpic_mparticles_ctor_from_simulation(struct vpic_mparticles *vmprts)
 {
   vmprts->species_list = simulation->species_list;
+}
+
+// ======================================================================
+// vpic_push_particles
+
+// ----------------------------------------------------------------------
+// vpic_push_particles_create
+
+struct vpic_push_particles *
+vpic_push_particles_create()
+{
+  return new vpic_push_particles;
+}
+
+// ----------------------------------------------------------------------
+// vpic_push_particles_ctor_from_simulation
+
+void
+vpic_push_particles_ctor_from_simulation(struct vpic_push_particles *vpushp)
+{
+  vpushp->interpolator_array = simulation->interpolator_array;
 }
 
 // ======================================================================

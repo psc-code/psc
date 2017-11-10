@@ -1,9 +1,22 @@
 
 #include "psc_push_particles_private.h"
 
+#include "psc_push_particles_vpic.h"
 #include "psc_fields_vpic.h"
 #include "psc_particles_vpic.h"
 #include "vpic_iface.h"
+
+// ----------------------------------------------------------------------
+// psc_push_particles_vpic_setup
+
+static void
+psc_push_particles_vpic_setup(struct psc_push_particles *push)
+{
+  struct psc_push_particles_vpic *sub = psc_push_particles_vpic(push);
+
+  sub->vpushp = vpic_push_particles_create();
+  psc_push_particles_setup_super(push);
+}
 
 // ----------------------------------------------------------------------
 // psc_push_particles_vpic_prep
@@ -50,6 +63,8 @@ psc_push_particles_vpic_push_mprts(struct psc_push_particles *push,
 
 struct psc_push_particles_ops psc_push_particles_vpic_ops = {
   .name                  = "vpic",
+  .size                  = sizeof(struct psc_push_particles_vpic),
+  .setup                 = psc_push_particles_vpic_setup,
   .prep                  = psc_push_particles_vpic_prep,
   .push_mprts            = psc_push_particles_vpic_push_mprts,
 };

@@ -26,6 +26,14 @@ struct vpic_mparticles *vpic_mparticles_create();
 void vpic_mparticles_ctor_from_simulation(struct vpic_mparticles *vmprts);
 
 // ----------------------------------------------------------------------
+// vpic_push_particles
+
+struct vpic_push_particles;
+
+struct vpic_push_particles *vpic_push_particles_create();
+void vpic_push_particles_ctor_from_simulation(struct vpic_push_particles *vpushp);
+
+// ----------------------------------------------------------------------
 
 struct vpic_info {
   double dx, dy, dz;
