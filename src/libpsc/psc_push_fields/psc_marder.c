@@ -57,26 +57,30 @@ psc_marder_run(struct psc_marder *marder,
     return;
 
   prof_start(pr);
-  prof_start(pr_A);
-
   struct psc_marder_ops *ops = psc_marder_ops(marder);
   assert(ops);
 
-  psc_output_fields_item_run(marder->item_rho, flds, particles, marder->rho);
+  if (ops->run) {
+    ops->run(marder, flds, particles);
+  } else {
+    prof_start(pr_A);
 
-  // need to fill ghost cells first (should be unnecessary with only variant 1) FIXME
-  psc_bnd_fill_ghosts(ppsc->bnd, flds, EX, EX+3);
+    psc_output_fields_item_run(marder->item_rho, flds, particles, marder->rho);
 
-  prof_stop(pr_A);
-
-  prof_start(pr_B);
-  for (int i = 0; i < marder->loop; i++) {
-    marder_calc_aid_fields(marder, flds, particles, marder->div_e, marder->rho);
-    ops->correct(marder, flds, marder->div_e);
+    // need to fill ghost cells first (should be unnecessary with only variant 1) FIXME
     psc_bnd_fill_ghosts(ppsc->bnd, flds, EX, EX+3);
-  }
-  prof_stop(pr_B);
 
+    prof_stop(pr_A);
+
+    prof_start(pr_B);
+    for (int i = 0; i < marder->loop; i++) {
+      marder_calc_aid_fields(marder, flds, particles, marder->div_e, marder->rho);
+      ops->correct(marder, flds, marder->div_e);
+      psc_bnd_fill_ghosts(ppsc->bnd, flds, EX, EX+3);
+    }
+    prof_stop(pr_B);
+  }
+  
   prof_stop(pr);
 }
 
@@ -90,6 +94,9 @@ psc_marder_init()
   mrc_class_register_subclass(&mrc_class_psc_marder, &psc_marder_single_ops);
 #ifdef USE_CUDA
   mrc_class_register_subclass(&mrc_class_psc_marder, &psc_marder_cuda_ops);
+#endif
+#ifdef USE_VPIC
+  mrc_class_register_subclass(&mrc_class_psc_marder, &psc_marder_vpic_ops);
 #endif
 }
 

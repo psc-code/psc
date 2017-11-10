@@ -8,6 +8,8 @@
 #include <psc_sort.h>
 #include <psc_collision.h>
 #include <psc_bnd_particles.h>
+#include <psc_checks.h>
+#include <psc_event_generator.h>
 
 #include <psc_particles_as_single.h>
 
@@ -124,6 +126,9 @@ psc_harris_create(struct psc *psc)
   psc_bnd_particles_set_type(psc->bnd_particles, "vpic");
 
   psc_push_fields_set_type(psc->push_fields, "vpic");
+  psc_marder_set_type(psc->marder, "vpic");
+  // FIXME, marder "vpic" manages its own cleaning intervals
+  psc_marder_set_param_int(psc->marder, "every_step", 1);
 }
 
 static inline double trunc_granular( double a, double b )
@@ -453,37 +458,6 @@ psc_harris_read(struct psc *psc, struct mrc_io *io)
 // PSC/VPIC coupling that should eventually move out of this file
 
 // ----------------------------------------------------------------------
-// psc_harris_marder_run
-
-static void
-psc_harris_marder_run(struct psc_marder *marder, int step)
-{
-  // Divergence clean e
-  int clean_div_e_interval;
-  psc_marder_get_param_int(marder, "clean_div_e_interval", &clean_div_e_interval);
-  if (clean_div_e_interval > 0 &&
-      step % clean_div_e_interval == 0) {
-    vpic_clean_div_e();
-  }
-
-  // Divergence clean b
-  int clean_div_b_interval;
-  psc_marder_get_param_int(marder, "clean_div_b_interval", &clean_div_b_interval);
-  if (clean_div_b_interval > 0 &&
-      step % clean_div_b_interval == 0) {
-    vpic_clean_div_b();
-  }
-
-  // Synchronize the shared faces
-  int sync_shared_interval;
-  psc_marder_get_param_int(marder, "sync_shared_interval", &sync_shared_interval);
-  if (sync_shared_interval > 0 &&
-      step % sync_shared_interval == 0) {
-    vpic_sync_faces();
-  }
-}
-
-// ----------------------------------------------------------------------
 // psc_harris_step
 
 static void
@@ -492,17 +466,25 @@ psc_harris_step(struct psc *psc)
   psc_sort_run(psc->sort, psc->particles);
   psc_collision_run(psc->collision, psc->particles);
 
+  psc_checks_continuity_before_particle_push(psc->checks, psc);
+
   psc_push_particles_run(psc->push_particles, psc->particles, psc->flds);
 
   psc_push_fields_push_H(psc->push_fields, psc->flds, .5);
 
   psc_bnd_particles_exchange(psc->bnd_particles, psc->particles);
 
-  psc_push_fields_push_E(psc->push_fields, psc->flds, 1.);
+  psc_event_generator_run(psc->event_generator, psc->particles, psc->flds);
+  
+  psc_push_fields_push_E(psc->push_fields, psc->flds, 1.); // FIXME, should be _b2
   vpic_field_injection();
-  psc_push_fields_push_H(psc->push_fields, psc->flds, .5);
+  psc_push_fields_push_H(psc->push_fields, psc->flds, .5); // FIXME, should be _a
 
-  psc_harris_marder_run(psc->marder, psc->timestep);
+  psc_checks_continuity_after_particle_push(psc->checks, psc);
+
+  psc_marder_run(psc->marder, psc->flds, psc->particles);
+
+  psc_checks_gauss(psc->checks, psc);
 
   // Fields are updated ... load the interpolator for next time step and
   // particle diagnostics in user_diagnostics if there are any particle

@@ -28,6 +28,7 @@ struct psc_marder {
 struct psc_marder_ops {
   MRC_SUBCLASS_OPS(struct psc_marder);
   void (*correct)(struct psc_marder *marder, struct psc_mfields *mflds, struct psc_mfields *f);
+  void (*run)(struct psc_marder *marder, struct psc_mfields *mflds, struct psc_mparticles *mprts);
 };
 
 #define psc_marder_ops(marder) ((struct psc_marder_ops *)(marder->obj.ops))
@@ -35,5 +36,6 @@ struct psc_marder_ops {
 extern struct psc_marder_ops psc_marder_c_ops;
 extern struct psc_marder_ops psc_marder_single_ops;
 extern struct psc_marder_ops psc_marder_cuda_ops;
+extern struct psc_marder_ops psc_marder_vpic_ops;
 
 #endif
