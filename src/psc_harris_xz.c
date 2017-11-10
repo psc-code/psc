@@ -504,7 +504,7 @@ psc_harris_step(struct psc *psc)
   // Fields are updated ... load the interpolator for next time step and
   // particle diagnostics in user_diagnostics if there are any particle
   // species to worry about
-  vpic_load_interpolator_array();
+  psc_push_particles_prep(psc->push_particles, psc->particles, psc->flds);
 }
 
 // ======================================================================

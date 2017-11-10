@@ -14,6 +14,30 @@ extern int pr_time_step_no_comm;
 extern double *psc_balance_comp_time_by_patch;
 
 void
+psc_push_particles_prep(struct psc_push_particles *push,
+			struct psc_mparticles *mprts_base, struct psc_mfields *mflds_base)
+{
+  static int pr;
+  if (!pr) {
+    pr = prof_register("push_particles_prep", 1., 0, 0);
+  }  
+
+  struct psc_push_particles_ops *ops = psc_push_particles_ops(push);
+
+  prof_start(pr);
+  prof_restart(pr_time_step_no_comm);
+  psc_stats_start(st_time_particle);
+
+  if (ops->prep) {
+    ops->prep(push, mprts_base, mflds_base);
+  }
+
+  psc_stats_stop(st_time_particle);
+  prof_stop(pr_time_step_no_comm);
+  prof_stop(pr);
+}
+
+void
 psc_push_particles_run(struct psc_push_particles *push,
 		       struct psc_mparticles *mprts_base, struct psc_mfields *mflds_base)
 {

@@ -12,6 +12,8 @@ struct psc_push_particles_ops {
   MRC_SUBCLASS_OPS(struct psc_push_particles);
   void (*push_mprts)(struct psc_push_particles *push_particles,
 		     struct psc_mparticles *mprts, struct psc_mfields *mflds);
+  void (*prep)(struct psc_push_particles *push_particles,
+	       struct psc_mparticles *mprts, struct psc_mfields *mflds);
   void (*push_mprts_x)(struct psc_push_particles *push_particles,
 		       struct psc_mparticles *mprts, struct psc_mfields *mflds);
   void (*push_mprts_y)(struct psc_push_particles *push_particles,

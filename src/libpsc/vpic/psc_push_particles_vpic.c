@@ -4,6 +4,17 @@
 #include "vpic_iface.h"
 
 // ----------------------------------------------------------------------
+// psc_push_particles_vpic_prep
+
+static void
+psc_push_particles_vpic_prep(struct psc_push_particles *push,
+			     struct psc_mparticles *mprts_base,
+			     struct psc_mfields *mflds_base)
+{
+  vpic_load_interpolator_array();
+}
+
+// ----------------------------------------------------------------------
 // psc_push_particles_vpic_run
 
 static void
@@ -20,7 +31,6 @@ psc_push_particles_vpic_push_mprts(struct psc_push_particles *push,
   vpic_boundary_p();
   vpic_calc_jf();
   vpic_current_injection();
-
 }
 
 // ----------------------------------------------------------------------
@@ -28,6 +38,7 @@ psc_push_particles_vpic_push_mprts(struct psc_push_particles *push,
 
 struct psc_push_particles_ops psc_push_particles_vpic_ops = {
   .name                  = "vpic",
+  .prep                  = psc_push_particles_vpic_prep,
   .push_mprts            = psc_push_particles_vpic_push_mprts,
 };
 
