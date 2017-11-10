@@ -7,6 +7,7 @@
 #include <psc_marder.h>
 #include <psc_sort.h>
 #include <psc_collision.h>
+#include <psc_bnd_particles.h>
 
 #include <psc_particles_as_single.h>
 
@@ -120,6 +121,7 @@ psc_harris_create(struct psc *psc)
 
   // FIXME: can only use 1st order pushers with current conducting wall b.c.
   psc_push_particles_set_type(psc->push_particles, "vpic");
+  psc_bnd_particles_set_type(psc->bnd_particles, "vpic");
 
   psc_push_fields_set_type(psc->push_fields, "vpic");
 }
@@ -493,6 +495,9 @@ psc_harris_step(struct psc *psc)
   psc_push_particles_run(psc->push_particles, psc->particles, psc->flds);
 
   psc_push_fields_push_H(psc->push_fields, psc->flds, .5);
+
+  psc_bnd_particles_exchange(psc->bnd_particles, psc->particles);
+
   psc_push_fields_push_E(psc->push_fields, psc->flds, 1.);
   vpic_field_injection();
   psc_push_fields_push_H(psc->push_fields, psc->flds, .5);

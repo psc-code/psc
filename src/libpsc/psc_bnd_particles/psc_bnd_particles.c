@@ -121,6 +121,9 @@ psc_bnd_particles_init()
 #ifdef USE_CUDA
   mrc_class_register_subclass(&mrc_class_psc_bnd_particles, &psc_bnd_particles_cuda_ops);
 #endif
+#ifdef USE_VPIC
+  mrc_class_register_subclass(&mrc_class_psc_bnd_particles, &psc_bnd_particles_vpic_ops);
+#endif
 }
 
 // ======================================================================
