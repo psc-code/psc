@@ -22,11 +22,6 @@
 
 extern vpic_simulation *simulation;
 
-int64_t & step()
-{
-  return simulation->step();
-}
-
 int rank()
 {
   return simulation->rank();
@@ -256,8 +251,6 @@ void vpic_marder_sync_faces(struct vpic_marder *marder, struct vpic_mfields *vmf
 
 void vpic_print_status()
 {
-  // Print out status
-  if( rank()==0 ) MESSAGE(( "Completed step %i of %i", step(), simulation->num_step ));
   update_profile( rank()==0 );
 }
 

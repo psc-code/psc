@@ -478,6 +478,8 @@ psc_harris_output(struct psc *psc)
   if (psc->timestep > 0) {
     vpic_inc_step(psc->timestep);
     if (psc->prm.stats_every > 0 && psc->timestep % psc->prm.stats_every == 0) {
+      mpi_printf(psc_comm(psc), "Completed step %d of %d\n",
+		 psc->timestep, psc->prm.nmax);
       vpic_print_status();
     }
     vpic_diagnostics();
