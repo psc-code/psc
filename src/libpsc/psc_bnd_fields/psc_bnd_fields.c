@@ -47,6 +47,9 @@ psc_bnd_fields_init()
 #ifdef USE_CUDA
   mrc_class_register_subclass(&mrc_class_psc_bnd_fields, &psc_bnd_fields_cuda_ops);
 #endif
+#ifdef USE_VPIC
+  mrc_class_register_subclass(&mrc_class_psc_bnd_fields, &psc_bnd_fields_vpic_ops);
+#endif
 }
 
 // ======================================================================

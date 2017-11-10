@@ -133,6 +133,9 @@ psc_bnd_init()
 #ifdef USE_CUDA
   mrc_class_register_subclass(&mrc_class_psc_bnd, &psc_bnd_cuda_ops);
 #endif
+#ifdef USE_VPIC
+  mrc_class_register_subclass(&mrc_class_psc_bnd, &psc_bnd_vpic_ops);
+#endif
 }
 
 // ======================================================================

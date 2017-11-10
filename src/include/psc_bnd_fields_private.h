@@ -22,6 +22,7 @@ extern struct psc_bnd_fields_ops psc_bnd_fields_none_ops;
 extern struct psc_bnd_fields_ops psc_bnd_fields_c_ops;
 extern struct psc_bnd_fields_ops psc_bnd_fields_single_ops;
 extern struct psc_bnd_fields_ops psc_bnd_fields_cuda_ops;
+extern struct psc_bnd_fields_ops psc_bnd_fields_vpic_ops;
 
 #define psc_bnd_fields_ops(bnd_fields) ((struct psc_bnd_fields_ops *)((bnd_fields)->obj.ops))
 

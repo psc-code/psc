@@ -8,6 +8,8 @@
 #include <psc_sort.h>
 #include <psc_collision.h>
 #include <psc_bnd_particles.h>
+#include <psc_bnd.h>
+#include <psc_bnd_fields.h>
 #include <psc_checks.h>
 #include <psc_event_generator.h>
 
@@ -126,6 +128,9 @@ psc_harris_create(struct psc *psc)
   psc_bnd_particles_set_type(psc->bnd_particles, "vpic");
 
   psc_push_fields_set_type(psc->push_fields, "vpic");
+  psc_bnd_set_type(psc->bnd, "vpic");
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc->push_fields);
+  psc_bnd_fields_set_type(bnd_fields, "vpic");
   psc_marder_set_type(psc->marder, "vpic");
   // FIXME, marder "vpic" manages its own cleaning intervals
   psc_marder_set_param_int(psc->marder, "every_step", 1);
@@ -491,8 +496,8 @@ psc_harris_step(struct psc *psc)
 
   psc_event_generator_run(psc->event_generator, psc->particles, psc->flds);
   
-  psc_push_fields_push_E(psc->push_fields, psc->flds, 1.); // FIXME, should be _b2
-  psc_push_fields_push_H(psc->push_fields, psc->flds, .5); // FIXME, should be _a
+  psc_push_fields_step_b2(psc->push_fields, psc->flds);
+  psc_push_fields_step_a(psc->push_fields, psc->flds);
 
   psc_checks_continuity_after_particle_push(psc->checks, psc);
 
