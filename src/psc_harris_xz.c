@@ -525,6 +525,7 @@ psc_harris_setup(struct psc *psc)
   vpic_push_particles_ctor_from_simulation(psc_push_particles_vpic(psc->push_particles)->vpushp);
 }
 
+#if 0
 // ----------------------------------------------------------------------
 // psc_harris_init_field
 
@@ -654,8 +655,7 @@ psc_harris_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool cou
 
   psc_mparticles_put_as(mprts, psc->particles, 0);
 }
-
-
+#endif
 
 // ----------------------------------------------------------------------
 // psc_harris_read
@@ -698,8 +698,10 @@ struct psc_ops psc_harris_ops = {
   .create           = psc_harris_create,
   .setup            = psc_harris_setup,
   .read             = psc_harris_read,
+#if 0
   .init_field       = psc_harris_init_field,
   .setup_particles  = psc_harris_setup_particles,
+#endif
   .output           = psc_harris_output,
 };
 
