@@ -13,12 +13,12 @@
 static void
 psc_mfields_vpic_setup(struct psc_mfields *mflds)
 {
-  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
+  //  struct psc_mfields_vpic *sub = psc_mfields_vpic(mflds);
 
   psc_mfields_setup_super(mflds);
 
-  struct mrc_patch *patches = mrc_domain_get_patches(mflds->domain,
-						     &mflds->nr_patches);
+  mrc_domain_get_patches(mflds->domain,
+			 &mflds->nr_patches);
   assert(mflds->nr_patches == 1);
 
   struct vpic_info info = {
