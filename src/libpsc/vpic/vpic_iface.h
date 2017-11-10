@@ -32,6 +32,9 @@ struct vpic_push_particles;
 
 struct vpic_push_particles *vpic_push_particles_create();
 void vpic_push_particles_ctor_from_simulation(struct vpic_push_particles *vpushp);
+void vpic_push_particles_push_mprts(struct vpic_push_particles *vpushp,
+				    struct vpic_mparticles *vmprts,
+				    struct vpic_mfields *vmflds);
 
 // ----------------------------------------------------------------------
 

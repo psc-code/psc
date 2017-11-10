@@ -48,16 +48,8 @@ psc_push_particles_vpic_push_mprts(struct psc_push_particles *push,
   struct vpic_push_particles *vpushp = psc_push_particles_vpic(push)->vpushp;
   struct vpic_mfields *vmflds = psc_mfields_vpic(mflds_base)->vmflds;
   struct vpic_mparticles *vmprts = psc_mparticles_vpic(mprts_base)->vmprts;
-  
-  // FIXME, this is kinda too much stuff all in here,
-  // so it should be split up, but it'll do for now
-  vpic_clear_accumulator_array(vpushp, vmprts);
-  vpic_advance_p(vpushp, vmprts);
-  vpic_emitter();
-  vpic_reduce_accumulator_array(vpushp, vmprts);
-  vpic_boundary_p(vpushp, vmprts, vmflds);
-  vpic_calc_jf(vpushp, vmflds, vmprts);
-  vpic_current_injection();
+
+  vpic_push_particles_push_mprts(vpushp, vmprts, vmflds);
 }
 
 // ----------------------------------------------------------------------

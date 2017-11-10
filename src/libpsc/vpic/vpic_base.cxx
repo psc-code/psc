@@ -80,6 +80,24 @@ vpic_push_particles_ctor_from_simulation(struct vpic_push_particles *vpushp)
   vpushp->accumulator_array = simulation->accumulator_array;
 }
 
+// ----------------------------------------------------------------------
+// vpic_push_particles_push_mprts
+
+void vpic_push_particles_push_mprts(struct vpic_push_particles *vpushp,
+				    struct vpic_mparticles *vmprts,
+				    struct vpic_mfields *vmflds)
+{
+  // FIXME, this is kinda too much stuff all in here,
+  // so it should be split up, but it'll do for now
+  vpic_clear_accumulator_array(vpushp, vmprts);
+  vpic_advance_p(vpushp, vmprts);
+  vpic_emitter();
+  vpic_reduce_accumulator_array(vpushp, vmprts);
+  vpic_boundary_p(vpushp, vmprts, vmflds);
+  vpic_calc_jf(vpushp, vmflds, vmprts);
+  vpic_current_injection();
+}
+
 // ======================================================================
 
 // ----------------------------------------------------------------------
