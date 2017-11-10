@@ -15,6 +15,7 @@ noinst_LTLIBRARIES = libsubdir.la
 
 libsubdir_la_SOURCES = \
 	psc_sort_vpic.c \
+	psc_collision_vpic.c \
 	psc_fields_vpic.c \
 	\
 	vpic_base.cxx \

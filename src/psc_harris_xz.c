@@ -6,6 +6,7 @@
 #include <psc_balance.h>
 #include <psc_marder.h>
 #include <psc_sort.h>
+#include <psc_collision.h>
 
 #include <psc_particles_as_single.h>
 
@@ -117,6 +118,8 @@ psc_harris_create(struct psc *psc)
   // FIXME: the "vpic" sort actually keeps track of per-species sorting intervals
   // internally
   psc_sort_set_param_int(psc->sort, "every", 1);
+
+  psc_collision_set_type(psc->collision, "vpic");
 }
 
 static inline double trunc_granular( double a, double b )
@@ -483,9 +486,9 @@ static void
 psc_harris_step(struct psc *psc)
 {
   psc_sort_run(psc->sort, psc->particles);
-
+  psc_collision_run(psc->collision, psc->particles);
+  
   vpic_clear_accumulator_array();
-  vpic_collisions();
   vpic_advance_p();
   vpic_emitter();
   vpic_reduce_accumulator_array();

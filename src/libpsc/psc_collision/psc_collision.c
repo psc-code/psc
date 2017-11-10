@@ -32,6 +32,9 @@ psc_collision_init()
 #ifdef USE_FORTRAN
   mrc_class_register_subclass(&mrc_class_psc_collision, &psc_collision_fortran_ops);
 #endif
+#ifdef USE_VPIC
+  mrc_class_register_subclass(&mrc_class_psc_collision, &psc_collision_vpic_ops);
+#endif
 }
 
 // ======================================================================
